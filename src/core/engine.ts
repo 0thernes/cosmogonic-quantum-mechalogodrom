@@ -1,0 +1,67 @@
+import * as THREE from 'three';
+import type { QualityProfile } from '../types';
+
+/**
+ * Owns the WebGL renderer, root scene and perspective camera
+ * (legacy lines 182-194).
+ *
+ * Faithful constants: antialias on, `high-performance` power preference,
+ * ACES filmic tone mapping at exposure 1.15, `FogExp2(0x020310, 0.003)`,
+ * 68° FOV camera with near/far 0.1..900 parked at (0, 25, 55). Shadow maps
+ * follow the quality profile. `outputColorSpace` is left at the modern
+ * three default (sRGB) — set explicitly for clarity.
+ */
+export class Engine {
+  /** WebGL renderer bound to the app canvas. */
+  readonly renderer: THREE.WebGLRenderer;
+  /** Root scene; `scene.fog` is mutated live by the WeatherSystem. */
+  readonly scene: THREE.Scene;
+  /** Main perspective camera; world.ts drives its position per view mode. */
+  readonly camera: THREE.PerspectiveCamera;
+  private readonly dprCap: number;
+
+  /**
+   * Build renderer/scene/camera against `canvas` using the resolved quality
+   * profile. One-time setup; no per-frame cost.
+   */
+  constructor(canvas: HTMLCanvasElement, quality: QualityProfile) {
+    this.dprCap = quality.dprCap;
+    this.renderer = new THREE.WebGLRenderer({
+      canvas,
+      antialias: true,
+      powerPreference: 'high-performance',
+    });
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, this.dprCap));
+    this.renderer.setSize(window.innerWidth, window.innerHeight);
+    this.renderer.shadowMap.enabled = quality.shadows;
+    this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    this.renderer.toneMappingExposure = 1.15;
+    this.renderer.outputColorSpace = THREE.SRGBColorSpace;
+
+    this.scene = new THREE.Scene();
+    this.scene.fog = new THREE.FogExp2(0x020310, 0.003);
+
+    this.camera = new THREE.PerspectiveCamera(68, window.innerWidth / window.innerHeight, 0.1, 900);
+    this.camera.position.set(0, 25, 55);
+  }
+
+  /**
+   * Resize to the current viewport AND reapply the capped device pixel ratio
+   * (Known Bug 6 fix — legacy line 878 never reset DPR after a monitor move).
+   * Pixel ratio is set BEFORE setSize so the drawing buffer is sized once.
+   * Bind to `window` resize in main.ts. O(1).
+   */
+  onResize(): void {
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    this.camera.aspect = w / h;
+    this.camera.updateProjectionMatrix();
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, this.dprCap));
+    this.renderer.setSize(w, h);
+  }
+
+  /** Render one frame (scene through camera). Allocation-free. */
+  render(): void {
+    this.renderer.render(this.scene, this.camera);
+  }
+}

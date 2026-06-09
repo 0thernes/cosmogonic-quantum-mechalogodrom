@@ -1,0 +1,421 @@
+/**
+ * The 26 per-entity behavior fields, ported faithfully from the legacy entity update loop
+ * (legacy/cosmogonic-quantum-mechalogodrom.html lines 709-763) — same constants, same magic
+ * numbers, same force shapes.
+ *
+ * Internal API (consumed only by `entities.ts`): the EntityManager owns ONE long-lived
+ * {@link BehaviorEnv}, rewrites its per-frame/per-entity fields in place, and calls
+ * {@link applyBehavior} once per entity per frame. Neighbor lookups go through `ctx.grid`
+ * (the shared query buffer is fully consumed before any other query runs). All randomness
+ * flows through the injected `ctx.rng` (contract rule 7 — never the built-in random).
+ */
+import * as THREE from 'three';
+import { clamp, dist2, dist2XZ } from '../math/scalar';
+import { MONOLITH_CONFIG } from './constants';
+import type { Behavior } from './constants';
+import type { Entity, EntityData, SimContext } from '../types';
+
+/** Module-level scratch vectors — behavior math allocates nothing per frame. */
+const V1 = new THREE.Vector3();
+const V2 = new THREE.Vector3();
+
+/**
+ * Long-lived parameter bag for behavior handlers. The EntityManager constructs exactly one and
+ * mutates the per-frame (`dt`, `t`, `cm`) and per-entity (`sp2`, `sinWF`, `cosWF`, `doTheory`)
+ * fields in place, keeping the hot path allocation-free.
+ */
+export interface BehaviorEnv {
+  /** Shared sim dependencies (grid, rng, state, quality, ...). */
+  readonly ctx: SimContext;
+  /** Spawn hook for the 'split' behavior — EntityManager.spawn (returns null at the cap). */
+  readonly spawn: (pos: THREE.Vector3, mi: number, scale: number) => Entity | null;
+  /** Frame delta in seconds (already timeScaled by the composition root). */
+  dt: number;
+  /** Sim elapsed time in seconds. */
+  t: number;
+  /** Chaos multiplier `min(chaos / 2, 3)` (legacy `cMul()`, line 639). */
+  cm: number;
+  /** Per-entity speed `spd * cm` (legacy `sp2`, line 703). */
+  sp2: number;
+  /** `sin(t * wf + ph)` for the current entity (legacy `sinWF`, line 705). */
+  sinWF: number;
+  /** `cos(t * wf + ph)` for the current entity (legacy `cosWF`, line 705). */
+  cosWF: number;
+  /** Theory-behavior stagger gate `(frame + index) % 2 === 0` (legacy line 707). */
+  doTheory: boolean;
+}
+
+type Handler = (e: Entity, u: EntityData, env: BehaviorEnv) => void;
+
+/** Trig wander on XZ (legacy line 710). O(1). */
+function drift(_e: Entity, u: EntityData, env: BehaviorEnv): void {
+  u.vel.x += env.sinWF * 0.002 * env.sp2;
+  u.vel.z += Math.cos(env.t * u.wf * 0.7 + u.ph) * 0.002 * env.sp2;
+}
+
+/** Circular acceleration around the origin (legacy line 711). O(1). */
+function orbit(_e: Entity, u: EntityData, env: BehaviorEnv): void {
+  const oa = env.t * env.sp2 * 0.3 + u.ph;
+  u.vel.x += Math.cos(oa) * 0.003;
+  u.vel.z += Math.sin(oa) * 0.003;
+}
+
+/** Scale heartbeat (legacy line 712). O(1). */
+function pulse(e: Entity, u: EntityData, env: BehaviorEnv): void {
+  e.scale.setScalar(u.sc * (1 + env.sinWF * u.wa * env.cm * 2));
+}
+
+/** Chase a slowly wandering attractor point (legacy line 713). O(1). */
+function swarm(e: Entity, u: EntityData, env: BehaviorEnv): void {
+  u.vel.x += (Math.sin(env.t * 0.1) * 10 - e.position.x) * 0.0003 * env.sp2;
+  u.vel.z += (Math.cos(env.t * 0.1) * 10 - e.position.z) * 0.0003 * env.sp2;
+}
+
+/** Run outward from the origin, damped past radius 55 (legacy line 718). O(1). */
+function flee(e: Entity, u: EntityData, env: BehaviorEnv): void {
+  V1.copy(e.position)
+    .normalize()
+    .multiplyScalar(0.0003 * env.sp2);
+  u.vel.add(V1);
+  if (e.position.lengthSq() > 3025) u.vel.multiplyScalar(0.9);
+}
+
+/** Seek the nearest monolith on XZ, stopping inside radius 5 (legacy line 717). O(m). */
+function hunt(e: Entity, u: EntityData, env: BehaviorEnv): void {
+  let best = 9999;
+  let hx = 0;
+  let hz = 0;
+  for (let k = 0; k < MONOLITH_CONFIG.length; k++) {
+    const mc = MONOLITH_CONFIG[k];
+    if (!mc) continue; // invariant: dense config array
+    const dd = dist2XZ(e.position.x, e.position.z, mc[0], mc[1]);
+    if (dd < best) {
+      best = dd;
+      hx = mc[0];
+      hz = mc[1];
+    }
+  }
+  if (best > 25) {
+    u.vel.x += (hx - e.position.x) * 0.0001 * env.sp2;
+    u.vel.z += (hz - e.position.z) * 0.0001 * env.sp2;
+  }
+}
+
+/** Chaos-gated mitosis: half-scale child of the same morphotype (legacy line 719). O(1). */
+function split(e: Entity, u: EntityData, env: BehaviorEnv): void {
+  const rng = env.ctx.rng;
+  if (u.age > 100 && rng() < 0.001 * env.cm) {
+    const child = env.spawn(e.position, u.mi, 0.5);
+    if (child) {
+      child.userData.vel.set((rng() - 0.5) * 0.2, (rng() - 0.5) * 0.2, (rng() - 0.5) * 0.2);
+    }
+  }
+}
+
+/** Tight XY corkscrew (legacy line 716). O(1). */
+function coil(_e: Entity, u: EntityData, env: BehaviorEnv): void {
+  u.vel.x += Math.sin(env.t * 3 * env.sp2 + u.ph) * 0.003;
+  u.vel.y += Math.cos(env.t * 2 * env.sp2 + u.ph) * 0.002;
+}
+
+/** Rising rotational sweep (legacy line 714). O(1). */
+function spiral(_e: Entity, u: EntityData, env: BehaviorEnv): void {
+  u.vel.x += Math.cos(env.t * env.sp2 + u.ph) * 0.004;
+  u.vel.y += Math.sin(env.t * env.sp2 * 0.5) * 0.002;
+  u.vel.z += Math.sin(env.t * env.sp2 + u.ph) * 0.004;
+}
+
+/** Gentle radial outflow (legacy line 715). O(1). */
+function expand(e: Entity, u: EntityData, env: BehaviorEnv): void {
+  V1.copy(e.position)
+    .normalize()
+    .multiplyScalar(0.0005 * env.sp2);
+  u.vel.add(V1);
+}
+
+/** Fast 90°-offset oscillation on XZ (legacy line 720). O(1). */
+function zigzag(_e: Entity, u: EntityData, env: BehaviorEnv): void {
+  u.vel.x += Math.sin(env.t * 8 + u.ph) * 0.004 * env.sp2;
+  u.vel.z += Math.cos(env.t * 8 + u.ph + Math.PI / 2) * 0.004 * env.sp2;
+}
+
+/** Vertical sine bob (legacy line 721). O(1). */
+function sine(_e: Entity, u: EntityData, env: BehaviorEnv): void {
+  u.vel.y += env.sinWF * 0.003 * env.sp2;
+}
+
+/** Floor bounce with constant gravity (legacy line 722). O(1). */
+function bounce(e: Entity, u: EntityData, _env: BehaviorEnv): void {
+  if (e.position.y < -8) u.vel.y = Math.abs(u.vel.y) * 0.8 + 0.05;
+  u.vel.y -= 0.001;
+}
+
+/** Cohere toward XZ neighbors within distance 8 (legacy lines 723-727). O(k). */
+function flock(e: Entity, u: EntityData, env: BehaviorEnv): void {
+  const nb = env.ctx.grid.query(e.position.x, e.position.z, 8);
+  let fx = 0;
+  let fz = 0;
+  let fn = 0;
+  for (let i = 0; i < nb.length; i++) {
+    const ne = nb[i];
+    if (!ne || ne === e) continue;
+    const dx = ne.position.x - e.position.x;
+    const dz = ne.position.z - e.position.z;
+    if (dx * dx + dz * dz < 64) {
+      fx += dx;
+      fz += dz;
+      fn++;
+    }
+  }
+  if (fn > 0) {
+    u.vel.x += (fx / fn) * 0.0002 * env.sp2;
+    u.vel.z += (fz / fn) * 0.0002 * env.sp2;
+  }
+}
+
+/** Pure random-walk jitter (legacy line 728). O(1). */
+function scatter(_e: Entity, u: EntityData, env: BehaviorEnv): void {
+  const rng = env.ctx.rng;
+  u.vel.x += (rng() - 0.5) * 0.01 * env.sp2;
+  u.vel.z += (rng() - 0.5) * 0.01 * env.sp2;
+}
+
+/** Tangential swirl around the world axis (legacy line 729). O(1). */
+function vortex(e: Entity, u: EntityData, env: BehaviorEnv): void {
+  const vd = e.position.length() || 1;
+  u.vel.x += (-e.position.z / vd) * 0.003 * env.sp2;
+  u.vel.z += (e.position.x / vd) * 0.003 * env.sp2;
+  u.vel.y += Math.sin(env.t + u.ph) * 0.001;
+}
+
+/** Snap toward the nearest 4-unit XZ grid point (legacy line 730). O(1). */
+function lattice(e: Entity, u: EntityData, env: BehaviorEnv): void {
+  u.vel.x += (Math.round(e.position.x / 4) * 4 - e.position.x) * 0.002 * env.sp2;
+  u.vel.z += (Math.round(e.position.z / 4) * 4 - e.position.z) * 0.002 * env.sp2;
+}
+
+/** Traveling wave keyed on world X (legacy line 731). O(1). */
+function wave(e: Entity, u: EntityData, env: BehaviorEnv): void {
+  u.vel.y += Math.sin(e.position.x * 0.3 + env.t * 2 + u.ph) * 0.003 * env.sp2;
+  u.vel.x += env.cosWF * 0.001 * env.sp2;
+}
+
+/** Corkscrew with half-rate vertical phase (legacy line 732). O(1). */
+function helix(_e: Entity, u: EntityData, env: BehaviorEnv): void {
+  const ha = env.t * env.sp2 + u.ph;
+  u.vel.x += Math.cos(ha) * 0.003;
+  u.vel.z += Math.sin(ha) * 0.003;
+  u.vel.y += Math.sin(ha * 0.5) * 0.002;
+}
+
+/** Golden-ratio phase drift with rare random tunneling jumps (legacy line 733). O(1). */
+function quantum(_e: Entity, u: EntityData, env: BehaviorEnv): void {
+  u.qP += env.dt * u.wf;
+  const qc = Math.sin(u.qP) * Math.cos(u.qP * 1.618);
+  u.vel.x += qc * 0.003 * env.sp2;
+  u.vel.z += Math.sin(u.qP * 0.7) * 0.003 * env.sp2;
+  u.vel.y += Math.cos(u.qP * 1.3) * 0.002 * env.sp2;
+  const rng = env.ctx.rng;
+  if (rng() < 0.005 * env.cm) {
+    u.vel.set((rng() - 0.5) * 0.3, (rng() - 0.5) * 0.2, (rng() - 0.5) * 0.3);
+  }
+}
+
+/**
+ * Prisoner's-dilemma payoffs against XZ neighbors within distance 10; low payoff flips
+ * strategy (legacy lines 735-739). O(k).
+ */
+function nash(e: Entity, u: EntityData, env: BehaviorEnv): void {
+  const nb = env.ctx.grid.query(e.position.x, e.position.z, 10);
+  for (let i = 0; i < nb.length; i++) {
+    const ne = nb[i];
+    if (!ne || ne === e) continue;
+    if (dist2XZ(e.position.x, e.position.z, ne.position.x, ne.position.z) < 100) {
+      const them = ne.userData.strategy;
+      u.payoff = u.strategy === 0 ? (them === 0 ? 3 : 0) : them === 0 ? 5 : 1;
+      V1.copy(ne.position)
+        .sub(e.position)
+        .normalize()
+        .multiplyScalar(them === 0 ? 0.001 * env.sp2 : -0.0008 * env.sp2);
+      u.vel.add(V1);
+    }
+  }
+  if (u.payoff < 1.5 && env.ctx.rng() < 0.01 * env.cm) u.strategy = u.strategy === 0 ? 1 : 0;
+}
+
+/**
+ * Wealth diffusion: random income, size ∝ wealth, and trade with neighbors whose wealth gap
+ * exceeds 20 (legacy lines 740-744). O(k).
+ */
+function market(e: Entity, u: EntityData, env: BehaviorEnv): void {
+  const rng = env.ctx.rng;
+  u.energy += (rng() - 0.5) * env.cm * 0.5;
+  u.energy = clamp(u.energy, 0, 100);
+  e.scale.setScalar(u.sc * (0.5 + u.energy / 100));
+  const nb = env.ctx.grid.query(e.position.x, e.position.z, 12);
+  for (let i = 0; i < nb.length; i++) {
+    const ne = nb[i];
+    if (!ne || ne === e) continue;
+    if (dist2XZ(e.position.x, e.position.z, ne.position.x, ne.position.z) < 144) {
+      const diff = ne.userData.energy - u.energy;
+      if (Math.abs(diff) > 20) {
+        V1.copy(ne.position)
+          .sub(e.position)
+          .normalize()
+          .multiplyScalar(diff * 0.00005 * env.sp2);
+        u.vel.add(V1);
+        u.energy += diff * 0.01;
+        ne.userData.energy -= diff * 0.01;
+      }
+    }
+  }
+}
+
+/**
+ * Type-theory attraction: same type pulls hard, adjacent (subtype) weakly, others repel
+ * (legacy lines 745-748). O(k).
+ */
+function typemorph(e: Entity, u: EntityData, env: BehaviorEnv): void {
+  const nb = env.ctx.grid.query(e.position.x, e.position.z, 10);
+  for (let i = 0; i < nb.length; i++) {
+    const ne = nb[i];
+    if (!ne || ne === e) continue;
+    if (dist2XZ(e.position.x, e.position.z, ne.position.x, ne.position.z) < 100) {
+      const same = u.typeId === ne.userData.typeId;
+      const sub = Math.abs(u.typeId - ne.userData.typeId) === 1;
+      V1.copy(ne.position)
+        .sub(e.position)
+        .normalize()
+        .multiplyScalar((same ? 0.002 : sub ? 0.0005 : -0.0003) * env.sp2);
+      u.vel.add(V1);
+    }
+  }
+}
+
+/**
+ * Set-theory clustering: drift toward the centroid of same-group neighbors within 15, repel
+ * from other-group members within 6 (legacy lines 749-753). O(k).
+ */
+function setunion(e: Entity, u: EntityData, env: BehaviorEnv): void {
+  const nb = env.ctx.grid.query(e.position.x, e.position.z, 15);
+  V2.set(0, 0, 0);
+  let cnt = 0;
+  for (let i = 0; i < nb.length; i++) {
+    const ne = nb[i];
+    if (!ne || ne === e) continue;
+    const dd = dist2XZ(e.position.x, e.position.z, ne.position.x, ne.position.z);
+    if (ne.userData.setGroup === u.setGroup && dd < 225) {
+      V2.add(ne.position);
+      cnt++;
+    } else if (ne.userData.setGroup !== u.setGroup && dd < 36) {
+      V1.copy(e.position)
+        .sub(ne.position)
+        .normalize()
+        .multiplyScalar(0.002 * env.sp2);
+      u.vel.add(V1);
+    }
+  }
+  if (cnt > 0) {
+    V2.divideScalar(cnt)
+      .sub(e.position)
+      .normalize()
+      .multiplyScalar(0.001 * env.sp2);
+    u.vel.add(V2);
+  }
+}
+
+/**
+ * Spring toward the nearest non-touching neighbor at an ideal edge length of `4 + typeId`
+ * (legacy lines 754-758). Uses full 3D distance like the legacy `d2`. O(k).
+ */
+function graphseek(e: Entity, u: EntityData, env: BehaviorEnv): void {
+  const nb = env.ctx.grid.query(e.position.x, e.position.z, 16);
+  let minD2 = 9999;
+  let minE: Entity | null = null;
+  for (let i = 0; i < nb.length; i++) {
+    const ne = nb[i];
+    if (!ne || ne === e) continue;
+    const dd = dist2(
+      e.position.x,
+      e.position.y,
+      e.position.z,
+      ne.position.x,
+      ne.position.y,
+      ne.position.z,
+    );
+    if (dd < minD2 && dd > 2.25) {
+      minD2 = dd;
+      minE = ne;
+    }
+  }
+  if (minE) {
+    const optD = 4 + u.typeId;
+    V1.copy(minE.position)
+      .sub(e.position)
+      .normalize()
+      .multiplyScalar((Math.sqrt(minD2) - optD) * 0.0008 * env.sp2);
+    u.vel.add(V1);
+  }
+}
+
+/** Scaled Lorenz-attractor accelerations with rare random kicks (legacy lines 759-763). O(1). */
+function lorenz(e: Entity, u: EntityData, env: BehaviorEnv): void {
+  const lx = e.position.x * 0.1;
+  const ly = (e.position.y + 10) * 0.1;
+  const lz = e.position.z * 0.1;
+  u.vel.x += 10 * (ly - lx) * env.dt * 0.002 * env.sp2;
+  u.vel.y += (lx * (28 - lz) - ly) * env.dt * 0.001 * env.sp2;
+  u.vel.z += (lx * ly - 2.667 * lz) * env.dt * 0.002 * env.sp2;
+  const rng = env.ctx.rng;
+  if (rng() < 0.01 * env.cm) {
+    V1.set((rng() - 0.5) * 0.1, (rng() - 0.5) * 0.05, (rng() - 0.5) * 0.1);
+    u.vel.add(V1);
+  }
+}
+
+/** The five theory behaviors run only on staggered frames (legacy `doTheory &&` gates). */
+const THEORY = new Set<Behavior>(['nash', 'market', 'typemorph', 'setunion', 'graphseek']);
+
+/** Behavior name → handler, exhaustive over the 26-name `Behavior` union. */
+const HANDLERS: Readonly<Record<Behavior, Handler>> = {
+  drift,
+  orbit,
+  pulse,
+  swarm,
+  flee,
+  hunt,
+  split,
+  coil,
+  spiral,
+  expand,
+  zigzag,
+  sine,
+  bounce,
+  flock,
+  scatter,
+  vortex,
+  lattice,
+  wave,
+  helix,
+  quantum,
+  nash,
+  market,
+  typemorph,
+  setunion,
+  graphseek,
+  lorenz,
+};
+
+/**
+ * Apply the entity's behavior field for this frame. Theory behaviors (nash / market /
+ * typemorph / setunion / graphseek) are skipped when `env.doTheory` is false — the legacy
+ * `(frame + i) % 2` stagger (line 707), under which a theory entity simply idles that frame.
+ *
+ * Hot path: allocation-free. O(k) where k = neighbors returned by the grid query (O(1) for
+ * non-neighbor behaviors; O(m) for 'hunt', m = MONOLITH_CONFIG.length).
+ */
+export function applyBehavior(e: Entity, env: BehaviorEnv): void {
+  const u = e.userData;
+  if (!env.doTheory && THEORY.has(u.beh)) return;
+  HANDLERS[u.beh](e, u, env);
+}

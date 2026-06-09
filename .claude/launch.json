@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "cqm",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": ["server.ts"],
+      "port": 3000
+    }
+  ]
+}

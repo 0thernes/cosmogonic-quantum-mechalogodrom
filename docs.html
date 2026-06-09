@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Docs — Cosmogonic Quantum Mechalogodrom</title>
+    <meta
+      name="description"
+      content="Architecture, data model, and frame pipeline of the Cosmogonic Quantum Mechalogodrom."
+    />
+    <meta name="theme-color" content="#030612" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='15' fill='%23030612'/%3E%3Cellipse cx='16' cy='16' rx='13' ry='5' fill='none' stroke='%230ef' stroke-width='1.6' transform='rotate(28 16 16)'/%3E%3Cellipse cx='16' cy='16' rx='13' ry='5' fill='none' stroke='%23fa0' stroke-width='1.6' transform='rotate(-28 16 16)'/%3E%3Ccircle cx='16' cy='16' r='4.5' fill='%230ef'/%3E%3C/svg%3E"
+    />
+    <style>
+      :root {
+        --void: #030612;
+        --accent: #0ef;
+        --warn: #fa0;
+        --ink: #b8c8e8;
+      }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        background:
+          radial-gradient(1200px 600px at 70% -10%, rgba(0, 160, 240, 0.08), transparent),
+          var(--void);
+        color: var(--ink);
+        font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', monospace;
+        line-height: 1.6;
+        padding: 32px 16px 80px;
+      }
+      main {
+        max-width: 920px;
+        margin: 0 auto;
+      }
+      header {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-bottom: 28px;
+      }
+      h1 {
+        font-family:
+          'Inter Variable',
+          'Inter',
+          -apple-system,
+          sans-serif;
+        font-size: 15px;
+        font-weight: 600;
+        letter-spacing: 4px;
+        text-transform: uppercase;
+        color: var(--accent);
+        text-shadow: 0 0 18px rgba(0, 220, 255, 0.35);
+      }
+      h2 {
+        font-family:
+          'Inter Variable',
+          'Inter',
+          -apple-system,
+          sans-serif;
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        color: var(--warn);
+        margin: 36px 0 8px;
+      }
+      p {
+        font-size: 12px;
+        color: rgba(184, 200, 232, 0.75);
+        max-width: 70ch;
+      }
+      a {
+        color: var(--accent);
+        text-decoration: none;
+        border-bottom: 1px solid rgba(0, 238, 255, 0.25);
+      }
+      a:hover {
+        border-bottom-color: var(--accent);
+      }
+      .card {
+        background: rgba(3, 6, 18, 0.85);
+        border: 1px solid rgba(0, 160, 240, 0.15);
+        border-radius: 10px;
+        padding: 16px;
+        margin-top: 12px;
+        overflow-x: auto;
+        backdrop-filter: blur(12px);
+        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.4);
+      }
+      pre.mermaid {
+        display: flex;
+        justify-content: center;
+        color: transparent; /* hide raw source flash before render */
+      }
+      pre.mermaid[data-processed='true'] {
+        color: inherit;
+      }
+      footer {
+        margin-top: 48px;
+        font-size: 10px;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        color: rgba(184, 200, 232, 0.4);
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>Mechalogodrom Docs</h1>
+        <nav>
+          <a href="/" aria-label="Back to the simulation" title="Back to the simulation"
+            >&larr; back to the simulation</a
+          >
+        </nav>
+      </header>
+
+      <p>
+        Living diagrams for the Cosmogonic Quantum Mechalogodrom — a deterministic, seeded WebGL
+        ecosystem served by Bun. These mirror the markdown sources in
+        <code>docs/ARCHITECTURE.md</code> and <code>docs/ERD.md</code>.
+      </p>
+
+      <h2>Module architecture</h2>
+      <p>
+        <code>world.ts</code> is the composition root: it owns the mutable <code>SimState</code>,
+        builds the <code>SimContext</code> dependency bag, and ticks every system each frame. Leaf
+        modules (math, constants, songs, logging, memory) never import the type hub at runtime.
+      </p>
+      <div class="card">
+        <pre class="mermaid">
+graph TD
+  SRV["server.ts (Bun.serve)"] -->|"/"| IDX["index.html"]
+  SRV -->|"/docs"| DOC["docs.html"]
+  SRV -->|"GET/POST /api/audit"| RING["in-memory audit ring (200)"]
+  IDX --> MAIN["src/main.ts"]
+  MAIN --> WORLD["src/world.ts (composition root)"]
+  MAIN --> HTMX["htmx.org (audit panel polling)"]
+  WORLD --> ENG["core/engine"]
+  WORLD --> QUAL["core/quality"]
+  WORLD --> ENT["sim/entities + sim/behaviors"]
+  WORLD --> SHOG["sim/shoggoths"]
+  WORLD --> PUP["sim/puppet-masters"]
+  WORLD --> WEA["sim/weather"]
+  WORLD --> QUA["sim/quantum"]
+  WORLD --> CONN["sim/connectome"]
+  WORLD --> ENV["sim/environment"]
+  WORLD --> ALG["sim/algorithms"]
+  WORLD --> AUD["audio/engine"]
+  AUD --> SONGS["audio/songs"]
+  WORLD --> UI["ui/hud + ui/panels + ui/input + ui/graphs"]
+  WORLD --> MEM["memory/store"]
+  WORLD --> TRAIL["logging/audit"]
+  TRAIL -->|"fire-and-forget POST"| RING
+  ENT --> GRID["math/spatial-hash"]
+  ENT --> RNG["math/rng (mulberry32)"]
+  ENT --> MORPH["sim/morphotypes"]
+  MORPH --> GEO["sim/geometry-cache"]
+        </pre>
+      </div>
+
+      <h2>Data model (ERD)</h2>
+      <p>
+        Entities are three.js meshes whose <code>userData</code> carries simulation state; each is
+        stamped from one of 100 deterministic morphotypes, which in turn exhibits one of 26
+        behavioral fields. Preferences persist across sessions; every user action lands in the audit
+        trail.
+      </p>
+      <div class="card">
+        <pre class="mermaid">
+erDiagram
+  MORPHOTYPE ||--o{ ENTITY : "stamps"
+  BEHAVIOR ||--o{ MORPHOTYPE : "drives"
+  SHOGGOTH }o--o{ ENTITY : "consumes / corrupts"
+  PUPPET_MASTER }o--o{ ENTITY : "commands"
+  WEATHER ||--o{ ENTITY : "perturbs"
+  PERSISTED_STATE ||--o| SONG : "selects"
+  PERSISTED_STATE ||--o{ AUDIT_EVENT : "chronicled by"
+
+  ENTITY {
+    int mi "morphotype index 0..99"
+    vec3 vel
+    float age
+    float life
+    float sortVal "sorting-field value"
+    float nW "neural weight"
+    float energy "market wealth 0..100"
+    int strategy "nash 0|1"
+  }
+  MORPHOTYPE {
+    int id "0..99"
+    int gi "geometry cache index"
+    color col
+    color em
+    string beh "one of 26 behaviors"
+  }
+  BEHAVIOR {
+    string name "26 fields, legacy order"
+  }
+  SHOGGOTH {
+    vec3 drift "lorenz-ish"
+    int tendrils
+  }
+  PUPPET_MASTER {
+    string name "AETHON | SELENE | KRONOS"
+    string action
+  }
+  WEATHER {
+    string kind "CLEAR..FOG"
+    float wind
+    float temperature
+  }
+  SONG {
+    string name
+    int bpm
+    string wave
+  }
+  AUDIT_EVENT {
+    float ts
+    string action
+    json detail
+  }
+  PERSISTED_STATE {
+    int version
+    int seed "mulberry32 seed"
+    int songIdx
+    int sessions
+  }
+        </pre>
+      </div>
+
+      <h2>Frame pipeline</h2>
+      <p>
+        One requestAnimationFrame tick, clamped to 50&nbsp;ms and scaled by
+        <code>timeScale</code>. The spatial grid rebuilds every 2nd frame, telemetry refreshes every
+        8th, sparklines redraw every 18th.
+      </p>
+      <div class="card">
+        <pre class="mermaid">
+sequenceDiagram
+  participant RAF as rAF
+  participant W as world.ts
+  participant SYS as sim systems
+  participant G as SpatialHash
+  participant UI as ui/*
+  participant R as Engine
+
+  RAF->>W: tick (dt = min(delta, 0.05) * timeScale)
+  W->>W: camera (free/orbit/fly/top)
+  W->>SYS: weather.apply / puppetMasters.update
+  W->>G: clear + insert all entities (every 2nd frame)
+  W->>SYS: shoggoths.update
+  W->>SYS: sort step ALGOS[algoIdx].step(values, length, i)
+  W->>SYS: entities.update (26 behaviors, physics, split, death)
+  W->>SYS: connectome.update (cadence by n)
+  W->>SYS: quantum.update / environment.update
+  W->>UI: telemetry snapshot incl. mutations (every 8th frame)
+  W->>R: render(scene, camera)
+        </pre>
+      </div>
+
+      <h2>Determinism</h2>
+      <p>
+        The simulation never calls the built-in unseeded random source: all randomness flows through
+        an injected <code>mulberry32</code> Rng seeded from persisted state, so any run is
+        reproducible from its seed. See <code>docs/adr/0004-deterministic-rng.md</code>.
+      </p>
+
+      <footer>Cosmogonic Quantum Mechalogodrom — MIT — <a href="/">return to the dome</a></footer>
+    </main>
+
+    <!-- External entry: Bun's HTML bundler does not process inline script bodies,
+         so the npm mermaid import lives in src/docs-page.ts (bundled from here). -->
+    <script type="module" src="./src/docs-page.ts"></script>
+  </body>
+</html>

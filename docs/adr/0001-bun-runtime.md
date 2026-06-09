@@ -1,0 +1,55 @@
+# ADR 0001 — Bun as runtime, bundler, and test runner
+
+- Status: Accepted
+- Date: 2026-06-09
+
+## Context
+
+The legacy artifact is a single 882-line HTML file loading three.js r128 from
+a CDN — zero build step, zero tests, zero server. The port splits it into
+~30 strict TypeScript modules that need: a dev server with hot reload, a
+bundler that understands HTML entry points with TypeScript and Tailwind, a
+test runner for the DOM-free leaf modules, and a place to host two tiny API
+endpoints (`/api/health`, `/api/audit`) for the HTMX audit panel.
+
+Assembling that from Node would mean picking and configuring a bundler
+(Vite/webpack/esbuild), a test runner (vitest/jest), a TS executor (tsx), and
+a server framework (express/hono) — four tools, four configs, four version
+matrices.
+
+## Decision
+
+Use **Bun (≥ 1.3)** for everything:
+
+- **Server**: `Bun.serve` fullstack routes in `server.ts`, importing
+  `index.html` and `docs.html` directly. Bun bundles their `<script
+type="module">` TypeScript and Tailwind CSS (via `bun-plugin-tailwind`) on
+  the fly; `bun --hot server.ts` gives hot reload.
+- **Build**: `bun build ./index.html ./docs.html --outdir=dist --minify`
+  emits the static bundle.
+- **Tests**: `bun test` runs `tests/*.test.ts` with no DOM; browser-adjacent
+  modules use tiny shims (Map-backed `localStorage`, stubbed `fetch`).
+- **Benchmarks**: `bun bench/index.ts` with mitata.
+- **TypeScript**: executed by Bun directly; `tsc --noEmit` is retained purely
+  as the type gate inside `bun run check`.
+
+## Consequences
+
+**Positive**
+
+- One toolchain, one lockfile (`bun.lock`), one command gate
+  (`bun run check` = format + types + lint + test + build).
+- HTML-as-entry-point matches how the legacy artifact thought about itself —
+  `index.html` stays the source of truth for the shell.
+- Fast cold starts and test runs; CI is a single `oven-sh/setup-bun` step.
+
+**Negative / accepted risks**
+
+- `server.ts` uses Bun-specific APIs (`Bun.serve`, HTML imports) and will not
+  run under Node without rework. Accepted: the server is ~100 lines.
+- Contributors must install Bun; documented in CONTRIBUTING.md.
+- Bundler semantics (HTML imports, Tailwind plugin) are pinned to Bun's
+  implementation — `bunfig.toml` and `bun.lock` are committed to keep CI and
+  local behavior identical.
+- `bun test` is not a full jsdom environment; tests that would need a real
+  DOM are out of scope by contract (leaf modules must be DOM-free).

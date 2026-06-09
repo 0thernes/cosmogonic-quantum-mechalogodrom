@@ -1,0 +1,140 @@
+/**
+ * Cosmogonic Quantum Mechalogodrom — Tailwind v4 stylesheet.
+ *
+ * Visual styling lives as utilities in index.html. This file holds the theme
+ * tokens plus the few rules utilities cannot express: stateful classes toggled
+ * by JS (`.col`, `.show`, `.on`), pointer-media joystick layout, safe-area
+ * padding, and styling for the server-rendered audit fragment.
+ */
+@import 'tailwindcss';
+@import '@fontsource-variable/inter';
+@import '@fontsource/jetbrains-mono/300.css';
+@import '@fontsource/jetbrains-mono/400.css';
+@import '@fontsource/jetbrains-mono/600.css';
+
+@theme {
+  --color-void: #030612;
+  --color-accent: #0ef;
+  --color-warn: #fa0;
+  --font-ui: 'Inter Variable', 'Inter', -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', ui-monospace, monospace;
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ── Panel collapse ─────────────────────────────────────────────
+   ui/panels.ts bindPanelToggles(): clicking [data-panel-toggle]
+   toggles `.col` on its parent panel. */
+.panel.col .panel-body {
+  display: none;
+}
+.panel .chev {
+  transition: transform 0.2s;
+}
+.panel.col .chev {
+  transform: rotate(-90deg);
+}
+
+/* ── Control-pad held state ─────────────────────────────────────
+   ui/input.ts adds `.on` while a [data-a] button is held
+   (pointerdown..pointerup/leave/cancel). Mirrors :active. */
+[data-a].on {
+  color: #fff;
+  background: rgba(0, 140, 255, 0.3);
+  border-color: rgba(0, 180, 255, 0.4);
+  box-shadow: 0 0 12px rgba(0, 120, 255, 0.25);
+}
+[data-a='split'].on,
+[data-a='burst'].on,
+[data-a='mutate'].on,
+[data-a='chaos'].on {
+  background: rgba(255, 100, 0, 0.25);
+  border-color: rgba(255, 140, 0, 0.4);
+  box-shadow: 0 0 12px rgba(255, 120, 0, 0.25);
+}
+
+/* ── HUD fades ──────────────────────────────────────────────────
+   ui/hud.ts toggles `.show` (sector: 2.5s visible, toast: 3s). */
+#sec {
+  opacity: 0;
+  transition: opacity 1.2s;
+}
+#sec.show {
+  opacity: 0.55;
+}
+#nm {
+  opacity: 0;
+  transition: opacity 0.8s;
+}
+#nm.show {
+  opacity: 0.8;
+}
+
+/* ── Safe-area padding (legacy --sab) ──────────────────────────── */
+#bar {
+  padding-bottom: calc(5px + env(safe-area-inset-bottom, 0px));
+}
+
+/* ── Joystick + algorithm readout placement (pointer media) ───── */
+@media (hover: hover) and (pointer: fine) {
+  #joy {
+    display: none;
+  }
+  #alg {
+    bottom: calc(44px + env(safe-area-inset-bottom, 0px));
+  }
+}
+@media (hover: none), (pointer: coarse) {
+  #joy {
+    bottom: calc(44px + env(safe-area-inset-bottom, 0px));
+    left: 6px;
+  }
+  #alg {
+    bottom: calc(140px + env(safe-area-inset-bottom, 0px));
+  }
+}
+@media (max-width: 480px) {
+  #alg {
+    max-width: 108px;
+    bottom: calc(124px + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+/* ── Audit fragment (server-rendered <ol> of <li>, newest first) ─ */
+#audit-list ol {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  list-style: none;
+}
+#audit-list ol:empty::after {
+  content: 'awaiting events…';
+  font: 300 8px var(--font-ui);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: rgba(184, 200, 232, 0.4);
+}
+#audit-list li {
+  font: 400 9px/1.5 var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  color: #9fb6d9;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  padding: 1px 0;
+  overflow-wrap: anywhere;
+}
+#audit-list time {
+  color: var(--color-accent);
+  margin-right: 4px;
+}
+#audit-list strong {
+  font: 600 8px var(--font-ui);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: #fff;
+  margin-right: 4px;
+}
+#audit-list code {
+  color: #8fa8c8;
+}

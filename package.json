@@ -1,0 +1,39 @@
+{
+  "name": "cosmogonic-quantum-mechalogodrom",
+  "version": "0.1.0",
+  "description": "Procedural WebGL cosmic ecosystem — morphogenic organisms, Shoggoths, puppet-master NPCs, atmospheric weather, a neural connectome, and quantum diffusion. Bun + TypeScript + Three.js + Tailwind CSS + HTMX.",
+  "license": "MIT",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "bun --hot server.ts",
+    "start": "bun server.ts",
+    "build": "bun scripts/build.ts",
+    "typecheck": "tsc --noEmit",
+    "lint": "oxlint src server.ts tests bench scripts",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "bun test",
+    "bench": "bun bench/index.ts",
+    "check": "bun run format:check && bun run typecheck && bun run lint && bun test && bun run build"
+  },
+  "dependencies": {
+    "@fontsource-variable/inter": "^5.2.8",
+    "@fontsource/jetbrains-mono": "^5.2.8",
+    "htmx.org": "^2.0.10",
+    "mermaid": "^11.15.0",
+    "simplex-noise": "^4.0.3",
+    "three": "^0.184.0"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.3.14",
+    "@types/three": "^0.184.1",
+    "bun-plugin-tailwind": "^0.1.2",
+    "mitata": "^1.0.34",
+    "oxlint": "^1.69.0",
+    "prettier": "^3.8.4",
+    "prettier-plugin-tailwindcss": "^0.8.0",
+    "tailwindcss": "^4.3.0",
+    "typescript": "^6.0.3"
+  }
+}
