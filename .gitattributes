@@ -1,0 +1,7 @@
+# Keep the working tree LF everywhere (EditorConfig + Prettier both write LF).
+# Prevents global core.autocrlf from producing phantom-dirty checkouts.
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.webp binary
+*.woff2 binary
