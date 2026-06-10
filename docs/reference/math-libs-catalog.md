@@ -2,9 +2,45 @@
 
 A comprehensive technical reference for senior engineers. Covers quantum simulation, symbolic algebra, numerical methods, GPU compute, WebAssembly physics, signal processing, cryptographic math, and more. Package names are given as inline `code`; npm install targets are in bold where they differ from common usage.
 
+> **Provenance & maintenance.** Imported into the Cosmogonic Quantum
+> Mechalogodrom repo on 2026-06-10 from `Downloads\Comet AI\math_libs.md`
+> (original preserved verbatim in git history, commit "provenance baseline").
+> Annotations marked **[CQM]** record THIS repo's hands-on adoption decisions —
+> versions and licenses read directly from `node_modules`, refusals justified
+> in [ADR 0005](../adr/0005-math-stack-selection.md). Claims sourced from a
+> capacity-degraded research pass are marked **UNVERIFIED** per Master File III
+> (insufficient measurements mean UNKNOWN, not false). Treat unannotated
+> sections as upstream reference text, not endorsements.
+
+## [CQM] Adoption ledger (verified hands-on, 2026-06-10)
+
+| Catalog domain | Package                                                          | Installed | License | Where it lives                                         |
+| -------------- | ---------------------------------------------------------------- | --------- | ------- | ------------------------------------------------------ |
+| §4 Statistics  | `simple-statistics`                                              | v7.9.0    | ISC     | `src/sim/analytics.ts` — rolling telemetry regression  |
+| §10 Crypto     | `@noble/hashes`                                                  | v2.2.0    | MIT     | `src/sim/lore.ts` — sha256 deterministic lore          |
+| §11 Geometry   | `d3-delaunay`                                                    | v6.0.4    | ISC     | `src/sim/constellations.ts` — Voronoi sky-web          |
+| §12 Graph      | `graphology` (+`-communities-louvain` v2.0.2, `-metrics` v2.4.0) | v0.26.0   | MIT     | `src/sim/graph-mind.ts` — connectome tribes + pagerank |
+| §15 3D Math    | `three` (math layer)                                             | v0.184.0  | MIT     | throughout the sim                                     |
+| §9 Signal      | Web Audio `AnalyserNode` (native)                                | —         | —       | `src/audio/analysis.ts` — audio-reactive bands         |
+| §18 Chaos/CA   | Gray-Scott (owned CPU kernel)                                    | —         | —       | `src/sim/reaction-diffusion.ts`                        |
+| §1 Quantum     | **owned pure-TS statevector** (refused `quantum-circuit`)        | —         | —       | `src/math/quantum.ts` + `src/sim/qcircuit.ts`          |
+
+Refusal principle (Master File II, law 4): every dependency is an apprentice —
+few are taken, each is isolated behind an owned facade with a written escape
+route. The full per-domain status lives in
+[domain-key-libraries.csv](./domain-key-libraries.csv) (also fixed here: the
+original CSV carried Excel-escape artifacts `'@stdlib` and `'@noble/curves`).
+
 ---
 
 ## 1. Quantum Circuit Simulation
+
+> **[CQM]** REFUSED `quantum-circuit` for this repo: research leads (UNVERIFIED
+> — verification pass was capacity-killed) describe ~14.5 MB unpacked CJS with
+> `antlr4` + `mathjs` runtime deps and no ESM entry or types. For a 5-qubit
+> register (32 amplitudes) an owned ~200-line allocation-free statevector in
+> `src/math/quantum.ts` is faster, typed, and fully testable. Re-evaluate only
+> if OpenQASM interop or >12 qubits ever becomes a requirement (ADR 0005).
 
 ### Q.js — `quantum-javascript`
 
@@ -59,6 +95,7 @@ Symbolic math library focused on algebraic manipulation with LaTeX output. Handl
 ### numeric.js — `numeric`
 
 Mature (though minimally maintained) numerical library covering:
+
 - **Matrix decompositions:** LU, Cholesky, QR, SVD, eigenvalue decomposition (for symmetric matrices)
 - **Sparse matrix support:** CSR format, sparse LU
 - **ODE solvers:** adaptive RK45, implicit solvers
@@ -98,6 +135,7 @@ TypeScript-first dense matrix library from the ml.js ecosystem. Full decompositi
 ### jStat — `jstat`
 
 Statistics library modeled on R's API surface. Supports:
+
 - **Distributions:** normal, Student's t, F, chi-squared, beta, gamma, Poisson, binomial, uniform, exponential, Cauchy, Weibull, log-normal — each with PDF, CDF, inverse CDF, mean, variance
 - **Statistical tests:** t-test (one/two-sample, paired), F-test, chi-square test, ANOVA
 - **Regression:** OLS linear regression with coefficient estimation, R², residuals
@@ -110,6 +148,7 @@ Zero-dependency, functional-style statistics library. Covers descriptive statist
 ### danfo.js — `danfojs`
 
 Pandas-equivalent DataFrame API for JS, built on TensorFlow.js tensors as the underlying storage layer. Supports:
+
 - `DataFrame` and `Series` with labeled axes
 - `groupby`, `pivot`, `merge`, `concat`, `resample` (time series)
 - Statistical aggregations: `mean()`, `std()`, `describe()`, `corr()`, `cov()`
@@ -150,6 +189,13 @@ JavaScript port of the Taichi programming model. WebGPU-native compute with a da
 
 ### gpu-io
 
+> **[CQM]** DEFERRED. Research leads (UNVERIFIED) indicate genuine three.js
+> context sharing via `GPUComposer.initWithThreeRenderer(renderer)` +
+> `layer.attachToThreeTexture(texture)`, with mandatory GL state resets when
+> crossing libraries. This repo's Gray-Scott runs as an owned CPU kernel at
+> 128² (<0.5 ms every 2nd frame — measured budget headroom); gpu-io is the
+> documented upgrade path if the grid ever needs 512²+ or Lenia-class rules.
+
 WebGL2-based GPU compute library targeting physics simulations and mathematical calculations. Provides `GPUComposer`, `GPUProgram`, and `GPULayer` abstractions over WebGL2 framebuffers for ping-pong computation. Used extensively for reaction-diffusion systems, cellular automata (Game of Life, Lenia), fluid simulation (Navier-Stokes), and Turing pattern generation. No WebGPU requirement; runs on any WebGL2-capable device.
 
 ---
@@ -172,12 +218,12 @@ JavaScript/WASM port of the **Bullet Physics** engine via Emscripten. Supports r
 
 Modernized fork of the unmaintained `cannon.js`. Pure JavaScript 3D physics; no WASM dependency, making it easier to debug but slower than Rapier. Supports rigid bodies, broadphase (AABB tree, naive), narrowphase (GJK/EPA for convex shapes), constraint solver (iterative impulse), materials and contact materials, friction/restitution. ES module build with TypeScript declarations.
 
-| Library | Backend | 3D/2D | TypeScript | Performance |
-|---|---|---|---|---|
-| Rapier.js | Rust WASM | Both | Yes | Fastest |
-| Ammo.js | C++ WASM | 3D | Partial | Fast |
-| Cannon-es | Pure JS | 3D | Yes | Moderate |
-| Matter.js | Pure JS | 2D | Partial | Moderate |
+| Library   | Backend   | 3D/2D | TypeScript | Performance |
+| --------- | --------- | ----- | ---------- | ----------- |
+| Rapier.js | Rust WASM | Both  | Yes        | Fastest     |
+| Ammo.js   | C++ WASM  | 3D    | Partial    | Fast        |
+| Cannon-es | Pure JS   | 3D    | Yes        | Moderate    |
+| Matter.js | Pure JS   | 2D    | Partial    | Moderate    |
 
 ---
 
@@ -242,6 +288,12 @@ FFT implementation from the ml.js ecosystem. Standard Cooley-Tukey; integrates w
 
 ### Web Audio API — (native browser)
 
+> **[CQM]** ADOPTED as the §9 choice. The sim's music is WebAudio-synthesized,
+> so a single `AnalyserNode` (fftSize 256) fan-out-connected from the music and
+> SFX gain nodes gives 4-band audio reactivity at zero bundle bytes, polled
+> allocation-free into a pre-allocated `Uint8Array` (`src/audio/analysis.ts`).
+> Meyda refused: MFCC-grade feature extraction is overweight for 4 bands.
+
 The browser's built-in audio graph. `AnalyserNode` provides real-time FFT via `getFloatFrequencyData()` (dB-scaled) and `getByteTimeDomainData()` (waveform). `FFT size` configurable as powers of 2 (32–32768). Not a library but the foundational API that DSP.js and Meyda extend. `AudioWorklet` enables custom sample-accurate processing in a dedicated thread.
 
 ---
@@ -251,6 +303,7 @@ The browser's built-in audio graph. `AnalyserNode` provides real-time FFT via `g
 ### noble-curves — `@noble/curves`
 
 Audited, zero-dependency elliptic curve cryptography library in TypeScript. Implements:
+
 - `secp256k1` (Bitcoin, Ethereum ECDSA/Schnorr)
 - `ed25519` / `ed448` (EdDSA, Diffie-Hellman via `x25519`, `x448`)
 - `p256` / `p384` / `p521` (NIST curves, TLS)
@@ -305,11 +358,19 @@ Lightweight 2D geometry library: polygon area (shoelace formula), centroid, conv
 
 ### Graphology — `graphology`
 
+> **[CQM]** ADOPTED: `graphology` v0.26.0 + `graphology-communities-louvain`
+> v2.0.2 + `graphology-metrics` v2.4.0 (all MIT, verified from node_modules).
+> The connectome mirrors into a Graph on a 240-frame cadence; louvain (seeded
+> with the sim Rng for determinism) paints link tribes and feeds community
+> indices back into entity behavior; pagerank (600-frame cadence) crowns the
+> top-20 entities with emissive halos (`src/sim/graph-mind.ts`).
+
 The most actively maintained graph library in the JS ecosystem. Supports directed, undirected, mixed, and multi-graphs (parallel edges) in a unified API. TypeScript throughout; strong typing on node/edge attributes. ~50K weekly downloads. Core operations: `addNode`, `addEdge`, `dropNode`, `updateEdgeAttribute`, adjacency iteration, neighbor iteration, serialization to/from JSON (graphology-gexf, graphology-graphml).
 
-### graphology-* ecosystem
+### graphology-\* ecosystem
 
 Modular algorithm packages on top of Graphology:
+
 - `graphology-shortest-path`: Dijkstra (weighted) and unweighted BFS shortest path; `bidirectional-dijkstra` for large graphs
 - `graphology-pagerank`: PageRank with configurable damping factor and convergence tolerance
 - `graphology-metrics`: betweenness centrality, closeness centrality, eccentricity, modularity score
@@ -324,7 +385,7 @@ JavaScript port of NetworkX 1.6 (Python). Implements classic graph algorithms: s
 
 ### Cytoscape.js — `cytoscape`
 
-Full-featured graph analysis and visualization library. Analysis: Dijkstra, A*, Bellman-Ford, Floyd-Warshall, minimum spanning tree (Kruskal), PageRank, betweenness centrality, Karger-Stein min-cut, topological sort, strongly connected components (Tarjan). Layout algorithms: force-directed (Cola, Cose), hierarchical (Dagre), circular, grid, breadthfirst. TypeScript declarations included; extensible via plugin architecture.
+Full-featured graph analysis and visualization library. Analysis: Dijkstra, A\*, Bellman-Ford, Floyd-Warshall, minimum spanning tree (Kruskal), PageRank, betweenness centrality, Karger-Stein min-cut, topological sort, strongly connected components (Tarjan). Layout algorithms: force-directed (Cola, Cose), hierarchical (Dagre), circular, grid, breadthfirst. TypeScript declarations included; extensible via plugin architecture.
 
 ---
 
@@ -341,6 +402,7 @@ Nonlinear least-squares curve fitting via the Levenberg-Marquardt algorithm (dam
 ### BFGS / L-BFGS in JS
 
 No canonical npm package dominates, but several implementations exist:
+
 - `fmin` — BFGS and L-BFGS-B (box-constrained) in pure JS; Wolf conditions satisfied
 - `optimization-js` — gradient-free (Nelder-Mead, Powell) and gradient-based (gradient descent, conjugate gradient) methods
 - TensorFlow.js includes L-BFGS through `tf.train.adam` and related optimizers for tensor-valued objectives
@@ -364,6 +426,7 @@ Architecture-agnostic neural network library. `Network`, `Layer`, and `Neuron` p
 ### ml.js ecosystem — `ml`
 
 Umbrella package for the ml.js monorepo. Core modules:
+
 - `ml-cart` — CART decision trees (classification and regression)
 - `ml-random-forest` — Random forest classifier/regressor
 - `ml-knn` — k-Nearest Neighbors with Euclidean/Manhattan distance
@@ -393,7 +456,7 @@ De facto standard math library for WebGL applications. All types — `vec2`, `ve
 
 Complete 3D math utility layer, independent of Three.js's renderer. Classes: `Vector2/3/4` (arithmetic, dot, cross, project, reflect, lerp), `Matrix3/4` (determinant, inverse, compose/decompose into position/quaternion/scale), `Quaternion` (SLERP, `setFromEuler`, `setFromRotationMatrix`, `setFromAxisAngle`), `Euler` (XYZ/YXZ/ZXY/ZYX/ZXZ/XZX order conventions), `Frustum` (6-plane culling), `Ray` (intersection with sphere, box, plane, triangle), `Box3`, `Sphere`, `Plane`, `Triangle`, `Color`. Useful as a standalone math dependency even without Three.js's rendering pipeline.
 
-### glsl-* scijs ecosystem
+### glsl-\* scijs ecosystem
 
 A collection of scijs packages providing GLSL-compatible mathematical operations in JS: `glsl-inverse` (matrix inverse), `glsl-transpose`, `glsl-look-at`, `glsl-projection` (perspective/orthographic projection matrices), `glsl-ray-sphere-intersection`. These packages match GLSL built-in function signatures, enabling symmetric CPU (JS) / GPU (GLSL) implementations.
 
@@ -407,7 +470,7 @@ Exact rational arithmetic using BigInt internally. Represents numbers as irreduc
 
 ### Decimal.js — `decimal.js`
 
-*(See also Cryptography section.)* Arbitrary precision base-10 arithmetic with configurable precision and rounding modes (`ROUND_UP`, `ROUND_DOWN`, `ROUND_CEIL`, `ROUND_FLOOR`, `ROUND_HALF_UP`, `ROUND_HALF_EVEN` (banker's rounding), etc.). Implements full transcendental function suite. The `toSignificantDigits()` and `toDecimalPlaces()` methods provide controlled output formatting. Key differentiator from `big.js`: full trigonometric and logarithmic functions.
+_(See also Cryptography section.)_ Arbitrary precision base-10 arithmetic with configurable precision and rounding modes (`ROUND_UP`, `ROUND_DOWN`, `ROUND_CEIL`, `ROUND_FLOOR`, `ROUND_HALF_UP`, `ROUND_HALF_EVEN` (banker's rounding), etc.). Implements full transcendental function suite. The `toSignificantDigits()` and `toDecimalPlaces()` methods provide controlled output formatting. Key differentiator from `big.js`: full trigonometric and logarithmic functions.
 
 ### big.js — `big.js`
 
@@ -417,12 +480,12 @@ Minimal arbitrary-precision decimal library; 6KB minified. Supports `+`, `-`, `*
 
 Arbitrary-precision integer arithmetic. Operations: `add`, `subtract`, `multiply`, `divide`, `mod`, `pow`, `modPow` (for RSA), `gcd`, `lcm`, bitwise (`and`, `or`, `xor`, `not`, `shiftLeft`, `shiftRight`), `isProbablePrime` (Miller-Rabin with configurable certainty), `nextProbablePrime`. Polyfills `BigInt` operations on environments lacking native BigInt.
 
-| Library | Type | Transcendentals | Size | Use case |
-|---|---|---|---|---|
-| `fraction.js` | Rational (p/q) | No | Small | Exact fractions |
-| `decimal.js` | Decimal | Yes | Medium | High-precision float |
-| `big.js` | Decimal | No | 6KB | Minimal precision |
-| `big-integer` | Integer | No | Small | Modular arithmetic |
+| Library       | Type           | Transcendentals | Size   | Use case             |
+| ------------- | -------------- | --------------- | ------ | -------------------- |
+| `fraction.js` | Rational (p/q) | No              | Small  | Exact fractions      |
+| `decimal.js`  | Decimal        | Yes             | Medium | High-precision float |
+| `big.js`      | Decimal        | No              | 6KB    | Minimal precision    |
+| `big-integer` | Integer        | No              | Small  | Modular arithmetic   |
 
 ---
 
@@ -463,6 +526,7 @@ GPU-accelerated cellular automata and reaction-diffusion simulation. The `GPUCom
 ### Mandelbrot / Julia Sets / IFS Fractals
 
 No dominant npm package; standard implementations use:
+
 - **Canvas 2D API** with escape-time algorithm: iterate `z_{n+1} = z_n^2 + c` per pixel; color by iteration count or smooth coloring (continuous dwell via `log(log|z|)`). Arbitrary-precision zoom requires multi-precision arithmetic (`decimal.js` or custom perturbation theory with double-double arithmetic)
 - **WebGL fragment shaders** for GPU-parallelized escape-time; real-time zoom at 60fps; GLSL float precision limits zoom depth to ~1e-6 without perturbation theory
 - **IFS (Iterated Function Systems):** affine transformations applied stochastically (chaos game); renders Barnsley fern, Sierpinski triangle; trivially implemented in Canvas 2D
@@ -470,6 +534,7 @@ No dominant npm package; standard implementations use:
 ### Strange Attractors (Lorenz, Rössler)
 
 Typically pure-JS canvas loops integrating the attractor ODEs with RK4 or Euler:
+
 - **Lorenz:** `dx/dt = σ(y-x)`, `dy/dt = x(ρ-z)-y`, `dz/dt = xy-βz` with σ=10, ρ=28, β=8/3
 - **Rössler:** `dx/dt = -y-z`, `dy/dt = x+ay`, `dz/dt = b+z(x-c)`
 
@@ -489,7 +554,7 @@ Trajectory rendered as a polyline on Canvas or as a 3D line in Three.js. `ode45-
 
 ### Rapier.js — `@dimforge/rapier2d` / `@dimforge/rapier3d`
 
-*(See WASM section.)* Position-based dynamics for soft bodies; constraint solver for articulated rigid body chains (robots, ragdolls). Contact events, proximity events, and ray/shape casting APIs. The 2D and 3D packages are independent WASM builds.
+_(See WASM section.)_ Position-based dynamics for soft bodies; constraint solver for articulated rigid body chains (robots, ragdolls). Contact events, proximity events, and ray/shape casting APIs. The 2D and 3D packages are independent WASM builds.
 
 ### oimo.js — `oimo`
 
@@ -506,6 +571,7 @@ Modular physics engine with a behavior/renderer plugin architecture. Integrators
 ### RxJS — `rxjs`
 
 Reactive extensions for JavaScript. Mathematical pipelines over observable data streams using higher-order operators:
+
 - `scan(accumulator, seed)` — running fold; streaming mean, variance, Kalman filter state
 - `reduce(accumulator)` — final aggregation over completed stream
 - `bufferTime(ms)` / `bufferCount(n)` — windowed batch collection for sliding statistics
@@ -523,50 +589,50 @@ D3-based statistical visualization library with a mark-based grammar. Built-in s
 
 ## Quick Reference: Package Index
 
-| Category | Package | npm install |
-|---|---|---|
-| Quantum | Q.js | `quantum-javascript` |
-| Quantum | quantum-circuit | `quantum-circuit` |
-| CAS | Algebrite | `algebrite` |
-| CAS | Math.js | `mathjs` |
-| CAS | Nerdamer | `nerdamer` |
-| Numerical | numeric.js | `numeric` |
-| Numerical | stdlib | `@stdlib/stdlib` |
-| Numerical | ndarray | `ndarray` |
-| Numerical | ml-matrix | `ml-matrix` |
-| Statistics | jStat | `jstat` |
-| Statistics | simple-statistics | `simple-statistics` |
-| Statistics | danfo.js | `danfojs` |
-| GPU | TensorFlow.js | `@tensorflow/tfjs` |
-| GPU | GPU.js | `gpu.js` |
-| GPU | TypeGPU | `typegpu` |
-| WASM | Rapier 3D | `@dimforge/rapier3d` |
-| WASM | Cannon-es | `cannon-es` |
-| Autograd | deepnet.js | `deepnet.js` |
-| ODE | ode45-cash-karp | `ode45-cash-karp` |
-| Signal | fft.js | `fft.js` |
-| Signal | Meyda | `meyda` |
-| Crypto | noble-curves | `@noble/curves` |
-| Crypto | noble-hashes | `@noble/hashes` |
-| Crypto | Decimal.js | `decimal.js` |
-| Geometry | d3-delaunay | `d3-delaunay` |
-| Geometry | RBush | `rbush` |
-| Graph | Graphology | `graphology` |
-| Graph | Cytoscape.js | `cytoscape` |
-| Optimization | LM | `ml-levenberg-marquardt` |
-| ML | Brain.js | `brain.js` |
-| ML | ONNX Runtime | `onnxruntime-web` |
-| ML | Transformers.js | `@xenova/transformers` |
-| 3D Math | gl-matrix | `gl-matrix` |
-| 3D Math | Three.js | `three` |
-| Precision | Fraction.js | `fraction.js` |
-| Precision | big.js | `big.js` |
-| Precision | BigInteger.js | `big-integer` |
-| Visualization | D3.js | `d3` |
-| Visualization | Plotly.js | `plotly.js` |
-| Visualization | Mafs | `mafs` |
-| Visualization | JSXGraph | `jsxgraph` |
-| Physics 2D | Matter.js | `matter-js` |
-| Physics 2D | p2.js | `p2` |
-| Reactive | RxJS | `rxjs` |
-| Reactive | Observable Plot | `@observablehq/plot` |
+| Category      | Package           | npm install              |
+| ------------- | ----------------- | ------------------------ |
+| Quantum       | Q.js              | `quantum-javascript`     |
+| Quantum       | quantum-circuit   | `quantum-circuit`        |
+| CAS           | Algebrite         | `algebrite`              |
+| CAS           | Math.js           | `mathjs`                 |
+| CAS           | Nerdamer          | `nerdamer`               |
+| Numerical     | numeric.js        | `numeric`                |
+| Numerical     | stdlib            | `@stdlib/stdlib`         |
+| Numerical     | ndarray           | `ndarray`                |
+| Numerical     | ml-matrix         | `ml-matrix`              |
+| Statistics    | jStat             | `jstat`                  |
+| Statistics    | simple-statistics | `simple-statistics`      |
+| Statistics    | danfo.js          | `danfojs`                |
+| GPU           | TensorFlow.js     | `@tensorflow/tfjs`       |
+| GPU           | GPU.js            | `gpu.js`                 |
+| GPU           | TypeGPU           | `typegpu`                |
+| WASM          | Rapier 3D         | `@dimforge/rapier3d`     |
+| WASM          | Cannon-es         | `cannon-es`              |
+| Autograd      | deepnet.js        | `deepnet.js`             |
+| ODE           | ode45-cash-karp   | `ode45-cash-karp`        |
+| Signal        | fft.js            | `fft.js`                 |
+| Signal        | Meyda             | `meyda`                  |
+| Crypto        | noble-curves      | `@noble/curves`          |
+| Crypto        | noble-hashes      | `@noble/hashes`          |
+| Crypto        | Decimal.js        | `decimal.js`             |
+| Geometry      | d3-delaunay       | `d3-delaunay`            |
+| Geometry      | RBush             | `rbush`                  |
+| Graph         | Graphology        | `graphology`             |
+| Graph         | Cytoscape.js      | `cytoscape`              |
+| Optimization  | LM                | `ml-levenberg-marquardt` |
+| ML            | Brain.js          | `brain.js`               |
+| ML            | ONNX Runtime      | `onnxruntime-web`        |
+| ML            | Transformers.js   | `@xenova/transformers`   |
+| 3D Math       | gl-matrix         | `gl-matrix`              |
+| 3D Math       | Three.js          | `three`                  |
+| Precision     | Fraction.js       | `fraction.js`            |
+| Precision     | big.js            | `big.js`                 |
+| Precision     | BigInteger.js     | `big-integer`            |
+| Visualization | D3.js             | `d3`                     |
+| Visualization | Plotly.js         | `plotly.js`              |
+| Visualization | Mafs              | `mafs`                   |
+| Visualization | JSXGraph          | `jsxgraph`               |
+| Physics 2D    | Matter.js         | `matter-js`              |
+| Physics 2D    | p2.js             | `p2`                     |
+| Reactive      | RxJS              | `rxjs`                   |
+| Reactive      | Observable Plot   | `@observablehq/plot`     |
