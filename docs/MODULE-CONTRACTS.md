@@ -704,3 +704,104 @@ Entity deaths call rd.perturb(death position normalized to ground UV).
 PuppetEvents fan out to qcircuit.onPuppetEvent + lore epithet in the toast.
 Sort swaps call qcircuit.onSortSwap(a, b).
 ```
+
+---
+
+# CONTRACTS V3 — PANTHEON (0.3.0) — the /goal mandate
+
+Summoner decree: up to 10,000 entities in an arena 5× larger; 10 creature
+phyla (250 each at full tier) plus wildcard outliers; 10 colossal non-human
+intelligences (TITANS) running a global economy and waging war under explicit
+game theory; full-device responsive UI with real touch controls; live
+data-viz; the QUANTUM-tier soundtrack (SHIPPED in 0.2.1 — songs.ts rescore).
+All V1/V2 ground rules bind. Pending audit-fix findings (21, catalogued in the
+wfmdqlias output) land FIRST in the same wave.
+
+## V3.1 Scale & rendering (writer: scale)
+
+- `core/quality.ts`: tier ladder via hardwareConcurrency + (deviceMemory ?? 8)
+  - viewport: `phone 650 / laptop 2000 / desktop 5000 / ultra 10000` entities;
+    quantum/links/stars scale proportionally; document the heuristics.
+- `sim/constants.ts`: `ARENA = 5` export; all world geometry × ARENA: ground
+  240→1200 (segments capped — displacement via larger wavelengths, not 5×
+  vertices), containment radii (65/3600/4225 family), spawn volumes, monolith/
+  diorama layout coordinates, camera far 900→2600, fog density ÷ ~ARENA,
+  spatial-hash cell 8→16 (re-bench query radius hit rates), star shell radii.
+- **InstancedMesh pools** (`sim/instanced-entities.ts`): above 1000 entities
+  the per-entity `THREE.Mesh` path is replaced by one InstancedMesh per cached
+  geometry (40 pools) with per-instance color + emissive-scalar attributes;
+  EntityManager keeps the SAME public API (list of logical entities with
+  userData) but `mesh` becomes a {poolId, slot} handle behind the Entity
+  interface — contract the facade precisely before implementing; ≤1000 keeps
+  the V1 path (tier decides at boot, no runtime switching). Benchmarks before
+  AND after; 10k @ 60fps on the ultra tier is the acceptance gate (instancing,
+  not draw-call-per-entity, is how).
+
+## V3.2 Taxonomy (writer: phyla)
+
+- `sim/phyla.ts`: 10 named phyla (lore-named via LoreEngine at boot), each a
+  template distribution over geometry families, palette band, behavior pool,
+  size/speed ranges, preferred sector. `createMorphotypes` grows to
+  MORPH_COUNT 250 per phylum at ultra (scaled down per tier proportionally);
+  morphotype → phylum index recorded in EntityData (`phylum: number`).
+- Wildcard outliers: per-boot, seeded, ~1% of spawns draw an OUTLIER template:
+  composite geometry (two cached geos merged at boot into extra pool slots),
+  exotic behavior pairs (two behaviors blended), impossible palettes, named
+  `lore.name('omen', i)`-style. Unknown features = seeded parameter excursions
+  far outside phylum ranges, clamped only by NaN-safety bounds.
+
+## V3.3 TITANS (writer: titans) — deps: none new; uses math/games
+
+- `math/games.ts` (leaf): payoff matrices + iterated strategies (titForTat,
+  grimTrigger, pavlov, alwaysDefect, generous variants), one
+  `playRound(matrix, a, b, history)` pure function, replicator-dynamics step
+  for population shares. Tests: known equilibria (PD defect-defect lock-in,
+  stag-hunt coordination under generosity, replicator fixed points).
+- `sim/titans.ts`: 10 colossal roaming intelligences (scaled shoggoth-class
+  rigs, distinct silhouettes, lore names + epithets). Each holds an economy
+  state {energy, matter, entropy}: PRODUCES by harvesting (entities consumed
+  → matter; quantum collapses witnessed → energy; RD pattern density in their
+  cell → entropy relief), CONSUMES per tick (upkeep scaling with size),
+  WASTES (emits rd.perturb scars + local weather bias). Pairwise diplomacy on
+  a slow cadence (every 600f, staggered): iterated PD with per-pair history →
+  WAR/TRUCE/ALLIANCE states; WAR = territory strikes (localized burst+scatter
+  at the rival's position, conscription remorphs nearby entities into the
+  aggressor's phylum palette). Global ledger + war matrix exposed for
+  telemetry/data-viz; every act audited with lore epithets. Game-theory depth:
+  strategy mutation on bankruptcy (replicator over the 5 strategies), payoffs
+  coupled to actual resource flows, not constants.
+
+## V3.4 Responsive UI + touch (writer: responsive)
+
+- Breakpoint system (app.css + index.html): phone portrait/landscape,
+  foldable hinge-safe (env(fold)-tolerant flex wrap), tablet, laptop, TV
+  (≥1900px: 10-foot UI — panel scale ×1.6, focus rings for d-pad).
+  Flexbox/grid throughout; no fixed pixel panel positions at small sizes —
+  telemetry and control become collapsible sheets docked top/bottom.
+- Touch controls v2: replace the static directional pad on coarse pointers
+  with (a) the existing drag joystick (move), (b) a second right-side drag
+  pad for look (wired through input.look), (c) a radial action wheel
+  (Split/Burst/Mutate/Chaos+ + Apoc center-long-press), all ≥44px targets,
+  with haptics via navigator.vibrate where available (≤30ms, reduced-motion
+  respected). Keyboard/mouse paths unchanged.
+- `subSectorAt`/HUD font scale clamps for TV distance.
+
+## V3.5 Live data-viz (writer: dataviz)
+
+- `ui/observatory.ts` + panel `#oP`: canvas-rendered live charts, allocation-
+  aware (pre-allocated rings, one 2d ctx each, redraw ≤ every 18f): stacked
+  phylum population area, titan economy ledger lines (10 series), war-state
+  matrix heat grid (10×10), RD pattern-energy + qEntropy timelines, trend
+  band. Collapsible like other panels; HTMX-free (pure client); throttled on
+  phone tier. TelemetrySnapshot grows: `phylumCounts: readonly number[]`,
+  `titanLedger: readonly { name; energy; matter; war: number }[]` (REUSED
+  arrays, documented).
+
+## V3.6 Integration (integrator)
+
+Frame additions: titans.update (per frame, internally cadenced), diplomacy
+600f staggered, observatory.update 18f. The 21 pending audit fixes land
+before V3 wiring. Acceptance: ultra tier 10k entities ≥55fps desktop, phone
+tier unchanged ≥30fps budget share, zero console errors over a 3-minute soak
+incl. a forced war + apocalypse; same-seed determinism preserved (titan
+decisions draw from ctx.rng on frame cadences only).
