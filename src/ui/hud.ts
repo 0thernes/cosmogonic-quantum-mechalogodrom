@@ -1,6 +1,6 @@
 /**
- * Heads-up display: sector banner (`#sec`), puppet-master toast (`#nm`), and the algorithm
- * readout (`#a-name` / `#a-step`).
+ * Heads-up display: sector banner (`#sec`), puppet-master toast (`#nm`), the algorithm
+ * readout (`#a-name` / `#a-step`), and the V2 lore line (`#lore`).
  *
  * Port of the legacy `showS` (line 597), `showNM` (line 491), and the per-frame algorithm text
  * writes (lines 695-696). Known Bug 4 fix: all element refs are resolved once in the
@@ -29,15 +29,22 @@ export class Hud {
   private readonly nm: HTMLElement;
   private readonly aName: HTMLElement;
   private readonly aStep: HTMLElement;
+  private readonly lore: HTMLElement;
   private secTimer = 0;
   private nmTimer = 0;
+  /** Last lore name written to `#lore` — setLore skips the DOM write when unchanged. */
+  private loreName = '';
 
-  /** Caches `#sec`, `#nm`, `#a-name`, `#a-step` once (Known Bug 4). Throws if any is absent. */
+  /**
+   * Caches `#sec`, `#nm`, `#a-name`, `#a-step` (Known Bug 4) and `#lore` (V2) once.
+   * Throws if any is absent.
+   */
   constructor() {
     this.sec = mustGet('sec');
     this.nm = mustGet('nm');
     this.aName = mustGet('a-name');
     this.aStep = mustGet('a-step');
+    this.lore = mustGet('lore');
   }
 
   /**
@@ -70,5 +77,16 @@ export class Hud {
   setAlgo(name: string, step: number, swapped: boolean): void {
     this.aName.textContent = name;
     this.aStep.textContent = `step ${step}${swapped ? ' ⇄' : ''}`;
+  }
+
+  /**
+   * Update the `#lore` line (Voronoi sub-sector lore name, CONTRACTS V2) under `#a-step`.
+   * Writes the DOM only when the name actually changes, so world.ts may call this every
+   * telemetry tick without layout churn. O(1), allocation-free on the unchanged path.
+   */
+  setLore(name: string): void {
+    if (name === this.loreName) return;
+    this.loreName = name;
+    this.lore.textContent = name;
   }
 }

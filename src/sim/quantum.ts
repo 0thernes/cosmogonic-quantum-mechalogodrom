@@ -39,6 +39,8 @@ export class QuantumCloud {
   /** Scratch list of particle indices respawned this frame (for partial color uploads). */
   private readonly respawned: Int32Array;
   private signalValue = 0;
+  /** 32-entry band-hue buffer from QuantumCircuitSystem.bands(); null ⇒ legacy colors (V2). */
+  private quantumBands: Float32Array | null = null;
 
   /** Seeds particle positions, colors, and psi parameters (legacy 433-439). */
   constructor(ctx: SimContext) {
@@ -96,6 +98,16 @@ export class QuantumCloud {
   /** Mean |psi| across all particles from the last update (legacy `qSig`, telemetry #v6). */
   get signal(): number {
     return this.signalValue;
+  }
+
+  /**
+   * Installs (or clears with null) the quantum-register band-hue buffer (CONTRACTS V2).
+   * While set, the 6-frame color refresh blends each particle's legacy psi hue 50/50 with
+   * `bands[particleIndex % 32]`. The buffer is read live at each refresh, so callers may keep
+   * passing the same reused Float32Array from QuantumCircuitSystem.bands(). O(1).
+   */
+  setQuantumBands(bands: Float32Array | null): void {
+    this.quantumBands = bands;
   }
 
   /**
@@ -164,8 +176,12 @@ export class QuantumCloud {
       pos[i3 + 1] = py;
       pos[i3 + 2] = pz;
       if (colorTick) {
+        // Legacy psi hue, 50/50-blended with the register band hue when bands are installed (V2).
+        let hue = (t * 0.02 + ph * 0.1) % 1;
+        const qb = this.quantumBands;
+        if (qb !== null) hue = (hue + (qb[qi % 32] ?? 0)) * 0.5;
         TMP_COLOR.setHSL(
-          (t * 0.02 + ph * 0.1) % 1,
+          hue,
           0.5 + Math.min(Math.abs(psi) * 3, 1),
           0.3 + Math.min(Math.abs(psi) * 2, 0.7),
         );

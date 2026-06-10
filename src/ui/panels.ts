@@ -3,7 +3,8 @@
  *
  * Port of the legacy stats block (lines 855-874) with Known Bug 4 fixed (all element refs are
  * cached once instead of `getElementById` every tick) and Known Bug 14 fixed (the previously
- * write-only `mutations` counter is surfaced on row `#v8`).
+ * write-only `mutations` counter is surfaced on row `#v8`). CONTRACTS V2 adds the rows `#v9`
+ * (graph-mind tribes), `#v10` (population trend per minute), and `#v11` (quantum entropy).
  */
 import type { TelemetrySnapshot } from '../types';
 import { Sparkline } from './graphs';
@@ -31,8 +32,9 @@ function mustGetCanvas(id: string): HTMLCanvasElement {
 const REDRAW_EVERY = 3;
 
 /**
- * Renders a `TelemetrySnapshot` into the stat rows `#v0..#v8`, the environment rows
- * `#ew #ewi #et #es #ep`, and the four sparklines `#g0..#g3`.
+ * Renders a `TelemetrySnapshot` into the stat rows `#v0..#v11` (V2 adds `#v9` TRIBES,
+ * `#v10` TREND, `#v11` QBIT-S), the environment rows `#ew #ewi #et #es #ep`, and the four
+ * sparklines `#g0..#g3`.
  */
 export class TelemetryPanel {
   private readonly rows: readonly [
@@ -45,6 +47,9 @@ export class TelemetryPanel {
     HTMLElement, // v6 quantum
     HTMLElement, // v7 song
     HTMLElement, // v8 mutations (Known Bug 14)
+    HTMLElement, // v9 tribes (V2: graph-mind communities)
+    HTMLElement, // v10 trend (V2: population slope per minute)
+    HTMLElement, // v11 qbit-s (V2: quantum register entropy)
   ];
   private readonly ew: HTMLElement;
   private readonly ewi: HTMLElement;
@@ -57,7 +62,7 @@ export class TelemetryPanel {
   private readonly gLinks: Sparkline;
   private tick = 0;
 
-  /** Caches `#v0..#v8`, `#ew #ewi #et #es #ep` and builds the 4 sparklines (`#g0..#g3`). */
+  /** Caches `#v0..#v11`, `#ew #ewi #et #es #ep` and builds the 4 sparklines (`#g0..#g3`). */
   constructor() {
     this.rows = [
       mustGet('v0'),
@@ -69,6 +74,9 @@ export class TelemetryPanel {
       mustGet('v6'),
       mustGet('v7'),
       mustGet('v8'),
+      mustGet('v9'),
+      mustGet('v10'),
+      mustGet('v11'),
     ];
     this.ew = mustGet('ew');
     this.ewi = mustGet('ewi');
@@ -100,6 +108,12 @@ export class TelemetryPanel {
     r[6].textContent = s.quantum.toFixed(3);
     r[7].textContent = s.songName;
     r[8].textContent = String(s.mutations); // Known Bug 14: surface the mutations counter
+    r[9].textContent = String(s.tribes); // V2: graph-mind community count
+    // V2: population trend, always signed (`+x.x/m` / `-x.x/m`). Round first so values in
+    // (-0.05, 0) render as `+0.0/m` rather than `-0.0/m`.
+    const trend = Math.round(s.trend * 10) / 10;
+    r[10].textContent = `${trend >= 0 ? '+' : ''}${trend.toFixed(1)}/m`;
+    r[11].textContent = s.qEntropy.toFixed(2); // V2: quantum register entropy 0..1
     this.ew.textContent = s.weather;
     this.ewi.textContent = s.wind.toFixed(1);
     this.et.textContent = `${s.temperature.toFixed(0)}C`;

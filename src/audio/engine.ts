@@ -23,6 +23,10 @@
  * Allocation note: oscillator/gain/filter nodes are created per musical beat / SFX
  * trigger (WebAudio's fire-and-forget model), never per animation frame — there is no
  * per-frame `update()` in this module.
+ *
+ * V2 (0.2.0): adds the shared analyser tap ({@link AudioEngine.tapAnalyser}) feeding
+ * src/audio/analysis.ts — ONE lazily created AnalyserNode fan-out connected from both
+ * busses, so tapping never changes what is audible.
  */
 import type { Rng } from '../math/rng';
 import type { SfxType, SimState } from '../types';
@@ -59,6 +63,8 @@ export class AudioEngine {
   private _sfxOn = false;
   /** Preview cursor for {@link cycleSfxPreview} (legacy `sfxIdx`). */
   private sfxIdx = 0;
+  /** Shared analysis tap (V2); created lazily by {@link tapAnalyser}, once per engine. */
+  private analyser: AnalyserNode | null = null;
 
   /**
    * @param state Shared sim state; the engine reads/advances `songIdx` only.
@@ -116,6 +122,28 @@ export class AudioEngine {
         void this.ctx.resume();
       }
     });
+  }
+
+  /**
+   * Lazily create and return the shared analysis tap (CONTRACTS V2): a single
+   * AnalyserNode (fftSize 256, smoothingTimeConstant 0.8) fan-out connected from BOTH
+   * the music and SFX gain busses in addition to their existing destination links, so
+   * tapping never alters what is audible. Returns null until {@link init} has created
+   * the AudioContext (or forever, when Web Audio is unsupported — graceful silence).
+   * O(1); the node and its two connections are created exactly once per engine.
+   */
+  tapAnalyser(): AnalyserNode | null {
+    if (!this.ctx || !this.musicGain || !this.sfxGain) return null;
+    if (!this.analyser) {
+      this.analyser = this.ctx.createAnalyser();
+      this.analyser.fftSize = 256;
+      this.analyser.smoothingTimeConstant = 0.8;
+      // Fan-out: GainNode.connect supports multiple destinations, so both busses keep
+      // feeding ctx.destination while also feeding the analyser (a sink-only tap).
+      this.musicGain.connect(this.analyser);
+      this.sfxGain.connect(this.analyser);
+    }
+    return this.analyser;
   }
 
   /**

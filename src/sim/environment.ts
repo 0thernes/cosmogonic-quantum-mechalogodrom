@@ -376,6 +376,8 @@ export class EnvironmentSystem {
   private readonly monoliths: MonolithRig[] = [];
   private readonly dioramas: DioramaRig[] = [];
   private readonly pipes: PipeRig[] = [];
+  /** Ground material handle for the V2 reaction-diffusion emissiveMap coupling. */
+  private readonly groundMaterial: THREE.MeshStandardMaterial;
 
   /** Builds the whole environment into `ctx.scene`. One-time cost, never disposed. */
   constructor(ctx: SimContext) {
@@ -452,16 +454,14 @@ export class EnvironmentSystem {
       groundPos.setZ(i, sin(gx * 0.06) * cos(gy * 0.05) * 4 + sin(gx * 0.2 + gy * 0.15) - 3);
     }
     groundGeo.computeVertexNormals();
-    const ground = new THREE.Mesh(
-      groundGeo,
-      new THREE.MeshStandardMaterial({
-        color: 0x080812,
-        roughness: 0.95,
-        metalness: 0.1,
-        emissive: 0x040410,
-        emissiveIntensity: 0.3,
-      }),
-    );
+    this.groundMaterial = new THREE.MeshStandardMaterial({
+      color: 0x080812,
+      roughness: 0.95,
+      metalness: 0.1,
+      emissive: 0x040410,
+      emissiveIntensity: 0.3,
+    });
+    const ground = new THREE.Mesh(groundGeo, this.groundMaterial);
     ground.rotation.x = -PI / 2;
     ground.position.y = -10;
     ground.receiveShadow = quality.shadows;
@@ -587,6 +587,22 @@ export class EnvironmentSystem {
     lts[5].intensity = 1.5 + cos(t * 1.8) * cm;
     lts[5].position.x = sin(t * 0.2) * 18;
     lts[5].position.z = cos(t * 0.2) * 18;
+  }
+
+  /**
+   * Attach the reaction-diffusion U-field texture as the ground material's
+   * emissiveMap (CONTRACTS V2 amendment). The emissiveIntensity coupling lifts
+   * the ground glow from its build value (0.3) to 0.85 so the field's dark
+   * living veins read against the void — with the uniform white texture an
+   * unperturbed field produces, the ground stays visually close to v1.
+   * (0.3 was rejected: veins invisible; 1.5 was rejected: washes out the grid
+   * helper.) `needsUpdate` is set once because adding a map to an
+   * already-compiled material requires a shader recompile. O(1), call once.
+   */
+  attachGroundEmissiveMap(tex: THREE.Texture): void {
+    this.groundMaterial.emissiveMap = tex;
+    this.groundMaterial.emissiveIntensity = 0.85;
+    this.groundMaterial.needsUpdate = true;
   }
 
   /**

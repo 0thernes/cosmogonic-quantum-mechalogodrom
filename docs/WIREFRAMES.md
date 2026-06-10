@@ -23,6 +23,9 @@ port.
 │ │ QUANTUM            0.041 │       M O N O L I T H  A R R A Y    └─────────────────┘│
 │ │ SONG            ETHEREAL │        #sec sector title, centered                     │
 │ │ MUTATIONS           2733 │        at 42% height, 2.5 s fade                       │
+│ │ TRIBES                 5 │                                                        │
+│ │ TREND             +2.4/m │                                                        │
+│ │ QBIT-S              0.87 │                                                        │
 │ │ ── environment ───────── │                                                        │
 │ │ WEATHER           AURORA │                                     ┌ AUDIT ──────── ▾ ┐
 │ │ WIND                 2.3 │                                     │ 1. weather AURORA││
@@ -33,8 +36,8 @@ port.
 │ ┌ #alg ───────────────┐                                          └──────────────────┘
 │ │ HEAP SIFT           │                                                              │
 │ │ step 4812 ⇄         │  ┌──────────────────── #bar toolbar ─────────────────────┐   │
-│ └─────────────────────┘  │ [♫][Song][SFX][Fx][⟳][⏱][Wire][View][Algo][☁][☠]      │   │
-│                          └────────────────────────────────────────────────────────┘  │
+│ │ VEL-KORAH (#lore)   │  │ [♫][Song][SFX][Fx][⟳][⏱][Wire][View][Algo][☁][☠][Lab] │   │
+│ └─────────────────────┘  └────────────────────────────────────────────────────────┘  │
 └────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -61,13 +64,14 @@ port.
 │ │ COMB     │                      │
 │ │ SWEEP    │                      │
 │ │ step 217 │                      │
+│ │ VEL-KORAH│                      │
 │ └──────────┘                      │
 │  ╭────────╮                       │
 │  │  #jP   │   ┌─ #bar ─────────┐  │
 │  │  (#jK) │   │[♫][Song][SFX]  │  │
 │  │   ◉    │   │[Fx][⟳][⏱][Wire]│  │
 │  ╰────────╯   │[View][Algo][☁] │  │
-│   joystick    │[☠]  (wraps)    │  │
+│   joystick    │[☠][Lab] (wraps)│  │
 │               └────────────────┘  │
 │        ▒▒ safe-area-inset ▒▒      │
 └──────────────────────────────────┘
@@ -86,10 +90,11 @@ port.
 | Puppet toast    | `#nm`  | top-center pill, pointer-events none                                                               | content                                                    |
 | Audit panel     | `#aP`  | bottom-right (new in port), collapsible like `#sP`/`#cP`                                           | matches `#cP` width                                        |
 
-Panels share the `.P` treatment: translucent void background, 1px translucent
-cyan border, `border-radius: 10px`, `backdrop-blur(12px) saturate(1.4)`.
-Headers (`[data-panel-toggle]`) toggle the parent's `col` class — collapsed
-panels hide the body and rotate the chevron −90°.
+Panels share the glass treatment: translucent void background (`bg-void/90`),
+1px translucent cyan border, `rounded-panel` (10px), `backdrop-blur-xl`
+(24px) + `saturate(1.5)`, `shadow-panel`. Headers (`[data-panel-toggle]`)
+toggle the parent's `col` class — collapsed panels hide the body and rotate
+the chevron −90°.
 
 ## Type scale
 
@@ -97,13 +102,13 @@ Two families only: **Inter Variable** for UI labels, **JetBrains Mono** for
 anything numeric. The legacy prototype used 6–9px text; the port raises the
 scale for legibility while keeping the same hierarchy.
 
-| Token      | Font / weight      | Size                     | Tracking / case                               | Used for                                          |
-| ---------- | ------------------ | ------------------------ | --------------------------------------------- | ------------------------------------------------- |
-| `label-xs` | Inter 300–400      | 10px                     | uppercase, tracking-widest                    | telemetry keys (`.sk`), env rows, button captions |
-| `label-sm` | Inter 600          | 11px                     | uppercase, 2px tracking                       | panel headers (`.Ph h3`), toast `#nm`, algo name  |
-| `value-sm` | JetBrains Mono 600 | 12px                     | `tabular-nums`                                | telemetry values (`.sv`), algo step counter       |
-| `value-md` | JetBrains Mono 400 | 14px                     | `tabular-nums`                                | audit entries, larger readouts                    |
-| `display`  | Inter 300          | `clamp(14px, 4vw, 28px)` | uppercase, `clamp(4px, 1.5vw, 14px)` tracking | sector title `#sec`                               |
+| Token / utility | Font / weight        | Size                     | Tracking / case                           | Used for                                             |
+| --------------- | -------------------- | ------------------------ | ----------------------------------------- | ---------------------------------------------------- |
+| `text-4xs`      | Inter 300–400        | 8px                      | uppercase, wide tracking                  | telemetry keys, env rows, control-pad captions, lore |
+| `text-3xs`      | Inter / Mono         | 9px                      | uppercase (ui) / tabular (mono)           | toolbar captions, algo name + step, audit entries    |
+| `text-2xs`      | Inter 600 / Mono 600 | 10px                     | uppercase headers / `tabular-nums` values | panel headers, toast `#nm`, telemetry values         |
+| `text-xs`       | (Tailwind std)       | 12px                     | —                                         | panel chevrons                                       |
+| `text-display`  | Inter 300            | `clamp(14px, 4vw, 28px)` | uppercase, `tracking-display` clamp       | sector title `#sec`                                  |
 
 Rules:
 
@@ -116,12 +121,15 @@ tabular-nums`** — telemetry values must not jitter horizontally as digits
 
 ## Color tokens
 
-Defined via `@theme` in `src/styles/app.css`:
+Defined via `@theme static` in `src/styles/app.css`. The full token registry
+(semantic danger family, ink family, control-pad `ctrl-*` blues, sim-action
+`sim-*` oranges, the 8-hue `tribe-*` palette, radii, shadows, motion) is
+documented in [DESIGN-SYSTEM.md](DESIGN-SYSTEM.md) — the core three:
 
 | Token            | Value     | Usage                                          |
 | ---------------- | --------- | ---------------------------------------------- |
 | `--color-void`   | `#030612` | page/scene background, panel base color        |
-| `--color-accent` | `#0ef`    | panel headers, accents, focus rings            |
+| `--color-accent` | `#0ef`    | panel headers, accents, focus rings, nav links |
 | `--color-warn`   | `#fa0`    | telemetry keys (amber at ~70% alpha), warnings |
 
 Derived surface treatments (matching the legacy feel):
@@ -160,3 +168,12 @@ Sparkline strokes (canvas, not CSS): entities `rgba(0,200,255,1)`, chaos
 - Breakpoints: ≤ 480px (compact), 481–768px (mid), ≥ 1200px (wide),
   height ≤ 450px (squat — panel bodies capped at ~30vh). Joystick visibility
   flips on `(hover:none), (pointer:coarse)`.
+- **Keyboard focus**: every `button` and `a` shows a 2px `--color-accent`
+  outline (offset 2px) on `:focus-visible` only — pointer taps stay clean.
+- **Reduced motion**: `prefers-reduced-motion: reduce` damps all transition
+  and animation durations to 1ms (fades become snaps); the 2.5s/3s hold
+  timers in `ui/hud.ts` still govern visibility.
+- V2 surfaces: telemetry rows `#v9` TRIBES / `#v10` TREND (signed `+x.x/m`)
+  / `#v11` QBIT-S sit under MUTATIONS; the `#lore` sub-sector line renders
+  under `#a-step` in `#alg`; `[Lab]` in `#bar` is an accent-family nav link
+  to `/lab` (aria-labeled), visually distinct from action buttons.

@@ -51,15 +51,26 @@ graph TD
     environment["environment.ts<br/>EnvironmentSystem"]
   end
 
+  subgraph simv2["src/sim — Wildbeyond V2"]
+    qcircuit["qcircuit.ts<br/>QuantumCircuitSystem"]
+    rd["reaction-diffusion.ts<br/>ReactionDiffusionSystem (Gray-Scott 128²)"]
+    graphmind["graph-mind.ts<br/>GraphMind (graphology · louvain · pagerank)"]
+    constellations["constellations.ts<br/>ConstellationSystem (d3-delaunay)"]
+    lore["lore.ts<br/>LoreEngine (@noble/hashes sha256)"]
+    analytics["analytics.ts<br/>AnalyticsSystem (simple-statistics)"]
+  end
+
   subgraph mathl["src/math (leaves)"]
     scalar["scalar.ts"]
     rng["rng.ts<br/>mulberry32 · hashSeed"]
     shash["spatial-hash.ts<br/>SpatialHash"]
+    qreg["quantum.ts<br/>QuantumRegister (statevector, n ≤ 8)"]
   end
 
   subgraph audiol["src/audio"]
     songs["songs.ts (leaf)<br/>SONGS · SFX_TYPES"]
     aengine["engine.ts<br/>AudioEngine"]
+    analysis["analysis.ts<br/>AudioAnalysis (AnalyserNode bands)"]
   end
 
   subgraph uil["src/ui"]
@@ -102,6 +113,12 @@ graph TD
   world --> audit
   world --> shash
   world --> rng
+  world --> qcircuit
+  world --> rd
+  world --> graphmind
+  world --> constellations
+  world --> analytics
+  world --> analysis
 
   entities --> behaviors
   behaviors --> scalar
@@ -110,6 +127,19 @@ graph TD
   environment --> constants
   panels --> graphs
   aengine --> songs
+
+  qcircuit --> qreg
+  graphmind --> connectome
+  graphmind --> entities
+  constellations --> lore
+  analysis --> aengine
+
+  qcircuit -. "bands() → setQuantumBands (every 6f)" .-> quantum
+  rd -. "DataTexture → attachGroundEmissiveMap" .-> environment
+  analytics -. "record('omen', …) on |z| > 2.5" .-> audit
+  puppets -. "PuppetEvent → gate sequence" .-> qcircuit
+  entities -. "deaths → perturb(u, v)" .-> rd
+  graphmind -. "setCommunityOf → tribe link palette" .-> connectome
 
   server --> indexhtml
   server --> docshtml
@@ -128,6 +158,17 @@ Notes:
   rebuilds — systems never own the grid.
 - The `hunt` behavior is the one sim consumer that imports `MONOLITH_CONFIG`
   directly from `constants.ts` (it steers toward the nearest of 16 monoliths).
+- `math/quantum.ts` (QuantumRegister), `sim/lore.ts` (LoreEngine), and the
+  dotted V2 edges express PHILOSOPHY.md rule 4 — every Wildbeyond system reads
+  from AND writes to at least one existing system. The dotted arrows are the
+  feedback web: register bands recolor the quantum cloud, the RD field lights
+  the ground, Louvain tribes recolor connectome links and rewrite entity
+  set-groups, analytics omens land in the audit ring, audio bands shimmer the
+  lights/constellations/cloud.
+- New external dependencies stay behind owned facades (ADR 0005): graphology +
+  louvain + metrics inside `graph-mind.ts`, d3-delaunay inside
+  `constellations.ts`, @noble/hashes inside `lore.ts`, simple-statistics inside
+  `analytics.ts`. No other module imports them.
 
 ## Frame pipeline
 
@@ -144,21 +185,41 @@ flowchart LR
   shog --> sort["sort step<br/>ALGOS[algoIdx]"]
   sort --> ents["entities.update"]
   ents --> conn["connectome.update<br/>(cadence by n)"]
-  conn --> q["quantum.update"]
-  q --> env["environment.update"]
+  conn --> qc["qcircuit.update<br/>(every 30th frame)"]
+  qc --> q["quantum.update"]
+  q --> rd["rd.step<br/>(every 2nd frame, offset 1)"]
+  rd --> gm["graphMind<br/>communities 240f · rank 600f+120"]
+  gm --> an["analytics<br/>push 8f · analyze 60f"]
+  an --> cons["constellations.update<br/>(every frame, O(1))"]
+  cons --> env["environment.update"]
   env --> telem["telemetry<br/>(every 8th frame)"]
   telem --> render([engine.render])
+
+  pm -. "PuppetEvent → onPuppetEvent" .-> qc
+  sort -. "swap → onSortSwap(a, b)" .-> qc
+  qc -. "bands() every 6f" .-> q
+  ents -. "deaths → rd.perturb(u, v)" .-> rd
+  ab["audio bands<br/>(polled every frame)"] -.-> cons
 ```
 
-Cadences, straight from the legacy loop:
+Cadences — V1 rows straight from the legacy loop, V2 rows from
+MODULE-CONTRACTS.md §Frame pipeline V2:
 
-| Step             | Cadence                                                     |
-| ---------------- | ----------------------------------------------------------- |
-| Grid rebuild     | Every 2nd frame (halves the O(n) rebuild cost)              |
-| Connectome       | Every frame (n ≤ 400), every 2nd (≤ 700), every 3rd (> 700) |
-| Quantum colors   | Every 6th frame (positions upload every frame)              |
-| Telemetry text   | Every 8th frame                                             |
-| Sparkline redraw | Every 18th frame                                            |
+| Step                        | Cadence                                                                                                                              |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| Grid rebuild                | Every 2nd frame (halves the O(n) rebuild cost)                                                                                       |
+| Connectome                  | Every frame (n ≤ 400), every 2nd (≤ 700), every 3rd (> 700)                                                                          |
+| Quantum colors              | Every 6th frame (positions upload every frame)                                                                                       |
+| Telemetry text              | Every 8th frame                                                                                                                      |
+| Sparkline redraw            | Every 18th frame                                                                                                                     |
+| Quantum circuit (V2)        | `update()` every 30th frame (ry drift + entropy); measures every 8th update (≈ 240f); gate events (puppet / sort swap) as they occur |
+| Register bands → cloud (V2) | Every 6th frame, aligned with the cloud's color pass                                                                                 |
+| Reaction-diffusion (V2)     | `step()` every 2nd frame, offset 1 from the grid rebuild (the two never share a frame)                                               |
+| Louvain communities (V2)    | Every 240th frame                                                                                                                    |
+| PageRank (V2)               | Every 600th frame, offset 120 from the Louvain pass                                                                                  |
+| Analytics (V2)              | `push()` every 8th frame (with telemetry); `analyze()` every 60th frame                                                              |
+| Constellations (V2)         | Every frame — O(1) opacity/pulse only (Voronoi built once at construction)                                                           |
+| Audio band poll (V2)        | Every frame — O(128) analyser read, zeros until audio is initialized                                                                 |
 
 ## Data flow
 
@@ -185,6 +246,26 @@ no client-side rendering code involved.
 `PersistedState` (or `null` on corruption — it never throws), from which
 `world.ts` seeds the RNG and restores song/algorithm/view/weather/SFX
 preferences; preference-changing actions call `save()`.
+
+**4. Feedback web (V2).** The Wildbeyond systems close loops between
+previously independent subsystems, all fanned out by `world.ts`:
+
+- Entity deaths call `rd.perturb(u, v)` at the death position normalized to
+  ground UV — the population's mortality literally scars the ground texture.
+- `PuppetEvent`s fan out to `qcircuit.onPuppetEvent` (characteristic gate
+  sequences: AETHON → rx(chaos·π/4), SELENE → h+cz, KRONOS → x+swap) and to a
+  `LoreEngine` epithet rendered in the HUD toast.
+- Sort swaps call `qcircuit.onSortSwap(a, b)` (parity-chosen cx targets) — the
+  sorting field drives the register, the register's bands recolor the quantum
+  cloud, and a measurement collapse implodes it locally.
+- `GraphMind` reads `connectome.pairs`, writes community indices into entity
+  `setGroup`s (making the set-theory behavior tribe-aware) and installs the
+  8-hue link palette via `connectome.setCommunityOf`.
+- `AudioAnalysis` bands modulate point-light shimmer (bass), constellation
+  pulse (treble), and quantum-cloud point size (level), all with multipliers
+  ≤ 0.35 so a silent world is visually identical to v1.
+- `AnalyticsSystem` watches telemetry rings and emits lore-named omens into
+  the same audit pipeline as user actions (loop 2 above).
 
 ## Quality profile
 

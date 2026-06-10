@@ -67,6 +67,23 @@ step by construction; the rest are O(1)–O(small constant). Exactly one `step`
 runs per frame, so even the slowest costs <0.002% of the frame budget. See
 [COMPLEXITY.md](./COMPLEXITY.md) for the formal table.
 
+### Wildbeyond V2 hot paths (added 2026-06-10, Bun 1.3.11 x64-win32, same CPU)
+
+| Benchmark                               | avg/iter | Frame-budget share at cadence                   |
+| --------------------------------------- | -------- | ----------------------------------------------- |
+| `QuantumRegister.apply('h')` (n=5)      | 31.4 ns  | negligible (event-driven)                       |
+| `QuantumRegister.apply('cx')` (n=5)     | 18.7 ns  | negligible (per sort swap)                      |
+| `QuantumRegister.probabilities()` (n=5) | 12.9 ns  | negligible (every 6th frame)                    |
+| `QuantumRegister.entropy()` (n=5)       | 138 ns   | negligible (every 30th frame)                   |
+| `ReactionDiffusionSystem.step()` (128²) | 76.2 µs  | 0.46%/call → ~0.23% amortized (every 2nd frame) |
+
+The RD kernel's first naive stencil measured 601 µs; a sliding 3×3 window
+rewrite (3 loads per species per cell, bit-identical results) brought it to
+76 µs — recorded per the calibration-archive rite. Reproduce:
+`bun bench/quantum.bench.ts` · `bun bench/reaction-diffusion.bench.ts`.
+Note: two Bun installs exist on PATH (bare `bun` = 1.3.11, `bun run` = 1.3.14);
+receipts above cite the version that executed them.
+
 ## Interpretation
 
 The entire deterministic core (grid rebuild + a frame's worth of neighbor

@@ -36,7 +36,14 @@ import { WeatherSystem } from './sim/weather';
 import { QuantumCloud } from './sim/quantum';
 import { Connectome } from './sim/connectome';
 import { EnvironmentSystem } from './sim/environment';
+import { QuantumCircuitSystem } from './sim/qcircuit';
+import { ReactionDiffusionSystem } from './sim/reaction-diffusion';
+import { GraphMind } from './sim/graph-mind';
+import { ConstellationSystem } from './sim/constellations';
+import { LoreEngine } from './sim/lore';
+import { AnalyticsSystem } from './sim/analytics';
 import { AudioEngine } from './audio/engine';
+import { AudioAnalysis } from './audio/analysis';
 import { Hud } from './ui/hud';
 import { TelemetryPanel, bindPanelToggles } from './ui/panels';
 import { InputSystem } from './ui/input';
@@ -81,6 +88,17 @@ export class World {
   private readonly hud: Hud;
   private readonly panel: TelemetryPanel;
   private readonly input: InputSystem;
+
+  // ── Wildbeyond V2 systems (CONTRACTS V2) ──
+  private readonly lore: LoreEngine;
+  private readonly qc: QuantumCircuitSystem;
+  private readonly rd: ReactionDiffusionSystem;
+  private readonly graphMind: GraphMind;
+  private readonly constellations: ConstellationSystem;
+  private readonly audioAnalysis: AudioAnalysis;
+  private readonly analytics: AnalyticsSystem;
+  /** Last collapse basis seen, to detect measurement events across frames. */
+  private lastCollapseSeen = -1;
 
   /** Pre-allocated sort-value buffer (Known Bug 4 fix). */
   private readonly sortVals: Float32Array;
@@ -140,14 +158,32 @@ export class World {
     this.entities = new EntityManager(ctx);
     this.entities.reset(300);
     this.shoggoths = new ShoggothSystem(ctx, this.entities);
-    // Callback fires from update(), well after `hud` is assigned below; the
-    // PuppetEvent argument is a reused scratch object — read synchronously.
-    this.puppets = new PuppetMasterSystem(ctx, this.entities, (e) =>
-      this.hud.showToast(e.name, e.action),
-    );
+    // Callback fires from update(), well after `hud`/`qc`/`lore` are assigned
+    // below; the PuppetEvent argument is a reused scratch object — read
+    // synchronously (qc.onPuppetEvent reads e.name synchronously too).
+    this.puppets = new PuppetMasterSystem(ctx, this.entities, (e) => {
+      this.qc.onPuppetEvent(e);
+      this.hud.showToast(`${e.name} ${this.lore.epithet('puppet', e.name)}`, e.action);
+    });
     this.weather = new WeatherSystem(ctx, this.engine);
     this.quantum = new QuantumCloud(ctx);
     this.connectome = new Connectome(ctx, this.entities);
+
+    // ── Wildbeyond V2 wiring (cadences in step(); see ARCHITECTURE.md) ──
+    this.lore = new LoreEngine(this.persisted.seed);
+    this.qc = new QuantumCircuitSystem(ctx);
+    // The bands buffer is live/reused — hand it to the cloud once; qc.bands()
+    // refreshes its contents in place on the 6-frame cadence.
+    this.quantum.setQuantumBands(this.qc.bands());
+    this.rd = new ReactionDiffusionSystem(ctx);
+    this.environment.attachGroundEmissiveMap(this.rd.texture);
+    // Boot scars: the Gray-Scott fixed point is uniform — seed a few
+    // disturbances so the ground skin starts breathing (rd writer note).
+    for (let i = 0; i < 4; i++) this.rd.perturb(this.rng(), this.rng());
+    this.graphMind = new GraphMind(ctx, this.entities, this.connectome);
+    this.constellations = new ConstellationSystem(ctx, this.lore);
+    this.audioAnalysis = new AudioAnalysis(this.audio);
+    this.analytics = new AnalyticsSystem(ctx);
 
     this.hud = new Hud();
     this.panel = new TelemetryPanel();
@@ -212,7 +248,13 @@ export class World {
     this.handleHotkeys(dt);
     s.chaos = Math.max(CHAOS_MIN, s.chaos - dt * 0.005);
 
+    // One bands poll per frame, shared by every consumer (reused object).
+    const bands = this.audioAnalysis.update();
+
     this.weather.apply(dt, t);
+    // Bass shimmer on exposure — small additive nudge; the weather lerp pulls
+    // it back every frame so it cannot accumulate (multiplier ≤ 0.35 rule).
+    this.engine.renderer.toneMappingExposure += bands.bass * 0.05;
     this.puppets.update(dt, t);
 
     if (s.frame % 2 === 0) {
@@ -241,12 +283,44 @@ export class World {
     const cadence = n > 700 ? 3 : n > 400 ? 2 : 1;
     if (s.frame % cadence === 0) this.connectome.update(dt, t);
 
+    // ── V2 cadences (ARCHITECTURE.md frame pipeline) ──
+    if (s.frame % 30 === 0) {
+      this.qc.update();
+      if (this.qc.lastCollapse !== this.lastCollapseSeen) {
+        this.lastCollapseSeen = this.qc.lastCollapse;
+        this.onCollapse(this.qc.lastCollapse);
+      }
+    }
+    if (s.frame % 6 === 0) this.qc.bands(); // refresh the live buffer the cloud reads
+
     this.quantum.update(dt, t);
+
+    if (s.frame % 2 === 1) this.rd.step(); // offset 1 from the grid rebuild
+    if (s.frame % 240 === 0) this.graphMind.updateCommunities();
+    // Offset 300 provably never collides with the 240f communities cadence.
+    if (s.frame % 600 === 300) this.graphMind.updateRank();
+
+    this.constellations.update(t, bands);
     this.environment.update(dt, t);
 
-    if (s.frame % 8 === 0) this.panel.update(this.snapshot());
+    if (s.frame % 8 === 0) {
+      this.analytics.push(n, this.energy, this.connectome.links);
+      this.panel.update(this.snapshot());
+    }
+    if (s.frame % 60 === 0) this.analytics.analyze(); // after push at coinciding frames
 
     this.engine.render();
+  }
+
+  /**
+   * A quantum measurement collapsed the register: soft chime, a Gray-Scott
+   * scar at a seeded location, and an audit record named from the lore.
+   */
+  private onCollapse(basis: number): void {
+    if (basis < 0) return;
+    this.audio.play('crystallize');
+    this.rd.perturb(this.rng(), this.rng(), 6);
+    this.audit.record('collapse', { basis, star: this.lore.name('star', basis) });
   }
 
   /** Legacy chaos multiplier cMul(): min(chaos/2, 3). */
@@ -349,6 +423,7 @@ export class World {
         eb.userData.vel.add(this.sv1.negate());
         ea.material.emissiveIntensity = 2;
         eb.material.emissiveIntensity = 2;
+        this.qc.onSortSwap(swap[0], swap[1]); // CNOT with parity-chosen targets
         swapped = true;
       }
     }
@@ -373,6 +448,11 @@ export class World {
     sn.temperature = s.temperature;
     sn.shoggoths = this.shoggoths.count;
     sn.puppeteers = this.puppets.count;
+    sn.tribes = this.graphMind.tribes;
+    sn.trend = this.analytics.trendPerMin;
+    sn.qEntropy = this.qc.entropy;
+    sn.lore = this.constellations.subSectorAt(this.engine.camera.position);
+    this.hud.setLore(sn.lore); // O(1) no-op when unchanged
     return sn;
   }
 
@@ -390,6 +470,8 @@ export class World {
       if (!e || e.userData.age <= 50) continue;
       picked++;
       e.userData.belly = 60;
+      // Birth scars the living ground (UV map per rd writer: 240×240 plane).
+      this.rd.perturb(0.5 + e.position.x / 240, 0.5 - e.position.z / 240, 3);
       for (let j = 0; j < 4; j++) {
         this.sv1.set((this.rng() - 0.5) * 3, (this.rng() - 0.5) * 2, (this.rng() - 0.5) * 3);
         this.sv2.copy(e.position).add(this.sv1);
@@ -442,6 +524,8 @@ export class World {
     this.doBurst();
     this.doBurst();
     this.doBurst();
+    // The apocalypse brands the ground itself.
+    for (let i = 0; i < 3; i++) this.rd.perturb(this.rng(), this.rng(), 9);
   }
 
   /** Legacy rSim: genesis reset (entities + counters; prefs untouched). */

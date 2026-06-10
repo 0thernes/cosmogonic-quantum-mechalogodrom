@@ -1,10 +1,11 @@
 /**
  * Cosmogonic Quantum Mechalogodrom — Tailwind v4 stylesheet.
  *
- * Visual styling lives as utilities in index.html. This file holds the theme
- * tokens plus the few rules utilities cannot express: stateful classes toggled
- * by JS (`.col`, `.show`, `.on`), pointer-media joystick layout, safe-area
- * padding, and styling for the server-rendered audit fragment.
+ * Visual styling lives as utilities in index.html. This file holds the design
+ * tokens (documented in docs/DESIGN-SYSTEM.md) plus the few rules utilities
+ * cannot express: stateful classes toggled by JS (`.col`, `.show`, `.on`),
+ * keyboard focus rings, reduced-motion damping, pointer-media joystick layout,
+ * safe-area padding, and styling for the server-rendered audit fragment.
  */
 @import 'tailwindcss';
 @import '@fontsource-variable/inter';
@@ -12,16 +13,105 @@
 @import '@fontsource/jetbrains-mono/400.css';
 @import '@fontsource/jetbrains-mono/600.css';
 
-@theme {
+/* `static`: emit every token as a :root custom property even when no utility
+   references it — the tribe palette and motion tokens are runtime-readable
+   (getComputedStyle) for canvas/three.js consumers and future UI. */
+@theme static {
+  /* ── Core color roles ───────────────────────────────────────── */
   --color-void: #030612;
   --color-accent: #0ef;
   --color-warn: #fa0;
+  --color-danger: #ef4444;
+  --color-danger-line: #f87171;
+  --color-danger-ink: #fca5a5;
+
+  /* ── Ink (text-on-glass) roles ──────────────────────────────── */
+  --color-ink: #9fb6d9;
+  --color-ink-dim: #8fa8c8;
+  --color-ink-ghost: rgba(184, 200, 232, 0.4);
+
+  /* ── Control-pad (held [data-a] movement keys) — blue family ── */
+  --color-ctrl-line: #0078dc; /* idle border */
+  --color-ctrl-bg: #0050a0; /* idle fill */
+  --color-ctrl-ink: #88bbff; /* idle caption */
+  --color-ctrl-hot: #008cff; /* held fill */
+  --color-ctrl-glow: #00b4ff; /* held border */
+  --color-ctrl-halo: #0078ff; /* held outer glow */
+
+  /* ── Sim-action ([data-a] split/burst/mutate/chaos) — orange ── */
+  --color-sim-line: #ff6400; /* idle border + held fill */
+  --color-sim-bg: #ff5000; /* idle fill */
+  --color-sim-ink: #ffaa88; /* idle caption */
+  --color-sim-glow: #ff8c00; /* held border */
+  --color-sim-halo: #ff7800; /* held outer glow */
+
+  /* ── Tribe palette (graph-mind communities, V2) ─────────────────
+     8 evenly spaced hues; community k renders at hue k/8 turns.
+     three.js side MUST match: color.setHSL(k / 8, 0.85, 0.6). */
+  --color-tribe-0: hsl(0deg 85% 60%);
+  --color-tribe-1: hsl(45deg 85% 60%);
+  --color-tribe-2: hsl(90deg 85% 60%);
+  --color-tribe-3: hsl(135deg 85% 60%);
+  --color-tribe-4: hsl(180deg 85% 60%);
+  --color-tribe-5: hsl(225deg 85% 60%);
+  --color-tribe-6: hsl(270deg 85% 60%);
+  --color-tribe-7: hsl(315deg 85% 60%);
+
+  /* ── Typography ─────────────────────────────────────────────── */
   --font-ui: 'Inter Variable', 'Inter', -apple-system, 'Segoe UI', sans-serif;
   --font-mono: 'JetBrains Mono', 'SF Mono', ui-monospace, monospace;
+  /* Micro type scale (font-size only — line-height inherits, matching
+     the arbitrary text-[Npx] utilities these tokens replaced). */
+  --text-2xs: 10px; /* telemetry values, panel headers, toast */
+  --text-3xs: 9px; /* toolbar captions, algo name, docs/lab links */
+  --text-4xs: 8px; /* telemetry keys, env rows, control-pad captions */
+  --text-display: clamp(14px, 4vw, 28px); /* sector banner #sec */
+  --tracking-display: clamp(4px, 1.5vw, 14px); /* #sec letterspacing */
+
+  /* ── Radii ──────────────────────────────────────────────────── */
+  --radius-panel: 10px; /* glass panels, toolbar, algo card */
+  --radius-btn: 5px; /* control-pad keys, toolbar buttons, links */
+
+  /* ── Elevation / shadow ─────────────────────────────────────── */
+  --shadow-panel: 0 4px 30px rgba(0, 0, 0, 0.4);
+  --text-shadow-glow-accent: 0 0 12px rgba(0, 220, 255, 0.35); /* panel headers */
+  --text-shadow-banner: 0 0 40px rgba(0, 180, 255, 0.4), 0 0 80px rgba(0, 80, 200, 0.15);
+  --text-shadow-toast: 0 0 20px rgba(255, 150, 0, 0.5);
+
+  /* ── Motion (durations; easing is the browser default ease) ──── */
+  --motion-tap: 100ms; /* button press feedback (duration-100) */
+  --motion-chev: 200ms; /* panel collapse chevron rotation */
+  --motion-toast: 800ms; /* #nm opacity fade */
+  --motion-banner: 1200ms; /* #sec opacity fade */
 }
 
 * {
   -webkit-tap-highlight-color: transparent;
+}
+
+/* ── Keyboard focus ─────────────────────────────────────────────
+   Every interactive element (toolbar buttons, control-pad keys,
+   chevrons, Docs//lab links) gets a visible accent ring on
+   keyboard focus only — pointer taps stay ring-free. */
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* ── Reduced motion ─────────────────────────────────────────────
+   Damp (near-instant, not disabled) all transitions and animations
+   when the OS asks for reduced motion. HUD fades become snaps; the
+   `.show` hold timers in ui/hud.ts still govern visibility. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    transition-duration: 1ms !important;
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 /* ── Panel collapse ─────────────────────────────────────────────
@@ -31,7 +121,7 @@
   display: none;
 }
 .panel .chev {
-  transition: transform 0.2s;
+  transition: transform var(--motion-chev);
 }
 .panel.col .chev {
   transform: rotate(-90deg);
@@ -41,32 +131,32 @@
    ui/input.ts adds `.on` while a [data-a] button is held
    (pointerdown..pointerup/leave/cancel). Mirrors :active. */
 [data-a].on {
-  color: #fff;
-  background: rgba(0, 140, 255, 0.3);
-  border-color: rgba(0, 180, 255, 0.4);
-  box-shadow: 0 0 12px rgba(0, 120, 255, 0.25);
+  color: var(--color-white);
+  background: --alpha(var(--color-ctrl-hot) / 30%);
+  border-color: --alpha(var(--color-ctrl-glow) / 40%);
+  box-shadow: 0 0 12px --alpha(var(--color-ctrl-halo) / 25%);
 }
 [data-a='split'].on,
 [data-a='burst'].on,
 [data-a='mutate'].on,
 [data-a='chaos'].on {
-  background: rgba(255, 100, 0, 0.25);
-  border-color: rgba(255, 140, 0, 0.4);
-  box-shadow: 0 0 12px rgba(255, 120, 0, 0.25);
+  background: --alpha(var(--color-sim-line) / 25%);
+  border-color: --alpha(var(--color-sim-glow) / 40%);
+  box-shadow: 0 0 12px --alpha(var(--color-sim-halo) / 25%);
 }
 
 /* ── HUD fades ──────────────────────────────────────────────────
    ui/hud.ts toggles `.show` (sector: 2.5s visible, toast: 3s). */
 #sec {
   opacity: 0;
-  transition: opacity 1.2s;
+  transition: opacity var(--motion-banner);
 }
 #sec.show {
   opacity: 0.55;
 }
 #nm {
   opacity: 0;
-  transition: opacity 0.8s;
+  transition: opacity var(--motion-toast);
 }
 #nm.show {
   opacity: 0.8;
@@ -111,16 +201,16 @@
 }
 #audit-list ol:empty::after {
   content: 'awaiting events…';
-  font: 300 8px var(--font-ui);
+  font: 300 var(--text-4xs) var(--font-ui);
   letter-spacing: 1px;
   text-transform: uppercase;
-  color: rgba(184, 200, 232, 0.4);
+  color: var(--color-ink-ghost);
 }
 #audit-list li {
-  font: 400 9px/1.5 var(--font-mono);
+  font: 400 var(--text-3xs) / 1.5 var(--font-mono);
   font-variant-numeric: tabular-nums;
-  color: #9fb6d9;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  color: var(--color-ink);
+  border-bottom: 1px solid --alpha(var(--color-white) / 3%);
   padding: 1px 0;
   overflow-wrap: anywhere;
 }
@@ -129,12 +219,12 @@
   margin-right: 4px;
 }
 #audit-list strong {
-  font: 600 8px var(--font-ui);
+  font: 600 var(--text-4xs) var(--font-ui);
   letter-spacing: 1px;
   text-transform: uppercase;
-  color: #fff;
+  color: var(--color-white);
   margin-right: 4px;
 }
 #audit-list code {
-  color: #8fa8c8;
+  color: var(--color-ink-dim);
 }

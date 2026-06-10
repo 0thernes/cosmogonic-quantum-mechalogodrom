@@ -59,7 +59,8 @@ export interface EntityData {
   strategy: 0 | 1;
   /** Type-theory tag 0..4. */
   typeId: number;
-  /** Set-theory group 0..3. */
+  /** Set-theory group; boots 0..3, but GraphMind louvain rewrites it with raw
+   *  community indices that may exceed 3 (behaviors only compare equality). */
   setGroup: number;
   /** Last Nash payoff. */
   payoff: number;

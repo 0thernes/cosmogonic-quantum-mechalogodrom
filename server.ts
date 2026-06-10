@@ -4,6 +4,8 @@
  * Routes:
  * - `/`               → bundled app shell (`index.html`, scripts/styles bundled by Bun)
  * - `/docs`           → bundled architecture docs (`docs.html`, mermaid diagrams)
+ * - `/lab`            → the self-contained p5.js lab artifact, served as a static
+ *                       file (deliberately NOT bundled — it is CDN-only by design)
  * - `GET  /api/health`→ JSON `{ ok, uptime, version }`
  * - `GET  /api/audit` → HTML fragment (`<ol>` of recent audit entries, newest first)
  *                       polled by the HTMX audit panel every 5s
@@ -20,7 +22,7 @@ import type { AuditEntry } from './src/types';
 const log = createLogger('server');
 
 /** Reported by `GET /api/health`; mirrors package.json `version`. */
-const VERSION = '0.1.0';
+const VERSION = '0.2.0';
 
 /** Maximum number of audit entries retained in memory (matches the client-side cap). */
 const AUDIT_CAP = 200;
@@ -107,6 +109,14 @@ const server = Bun.serve({
   routes: {
     '/': index,
     '/docs': docs,
+    '/lab': {
+      GET(req) {
+        logRequest(req, 200);
+        return new Response(Bun.file(new URL('./lab/quantum-wildbeyond.html', import.meta.url)), {
+          headers: { 'Content-Type': 'text/html; charset=utf-8' },
+        });
+      },
+    },
     '/api/health': {
       GET(req) {
         logRequest(req, 200);

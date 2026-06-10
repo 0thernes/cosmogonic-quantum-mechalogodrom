@@ -23,6 +23,20 @@ erDiagram
   PERSISTED_STATE }o--|| SONG : "songIdx"
   PERSISTED_STATE }o--|| WEATHER : "weatherIdx"
 
+  PUPPET_MASTER }o--|| QUANTUM_REGISTER : "gate signatures (rx | h+cz | x+swap)"
+  ENTITY }o--|| RD_FIELD : "deaths perturb at ground UV"
+  WEATHER ||--o{ RD_FIELD : "tunes feed / kill / diffusion"
+  GRAPH_TRIBE ||--o{ ENTITY : "members (setGroup write-back)"
+  GRAPH_TRIBE ||--|| LORE_NAME : "named (kind = tribe)"
+  CONSTELLATION_CELL ||--|| LORE_NAME : "named (kind = sector)"
+  PERSISTED_STATE ||--o{ LORE_NAME : "seed derives via sha256"
+  PUPPET_MASTER ||--o{ LORE_NAME : "epithets in toasts"
+  SONG ||--o{ AUDIO_BANDS : "spectrum via AnalyserNode tap"
+  AUDIO_BANDS }o--o{ CONSTELLATION_CELL : "treble pulses cell edges"
+  ENTITY }o--|| ANALYTICS_WINDOW : "population sampled every 8th frame"
+  ANALYTICS_WINDOW ||--o{ AUDIT_EVENT : "omens when |z| > 2.5"
+  ANALYTICS_WINDOW }o--o{ LORE_NAME : "omens named (kind = omen)"
+
   ENTITY {
     int mi "morphotype index 0..99"
     string beh "one of 26 behaviors (overridable)"
@@ -102,6 +116,50 @@ erDiagram
     bool sfxOn ""
     int sessions "boot counter"
   }
+  QUANTUM_REGISTER {
+    int qubits "5 in the sim (1..8 enforced)"
+    float64array amps "2^n complex amplitudes (re/im pair)"
+    float entropy "normalized Shannon 0..1 -> telemetry #v11"
+    int lastCollapse "basis index of last measure, -1 if none"
+  }
+  RD_FIELD {
+    int size "128 (SIZE x SIZE Gray-Scott grid)"
+    float32array u "activator -> DataTexture ground emissiveMap"
+    float32array v "inhibitor (typed-array ping-pong)"
+    float feed "raised by STORM"
+    float kill "raised by VOID"
+    float diffusion "boosted by AURORA; chaos scales reaction"
+  }
+  GRAPH_TRIBE {
+    int index "community id from seeded louvain (240f cadence)"
+    int memberCount "entities carrying it in setGroup"
+    float hue "slot in the 8-hue connectome link palette"
+    float pagerank "600f cadence; top-20 get emissive floor"
+  }
+  CONSTELLATION_CELL {
+    vec2 site "monolith/diorama XZ (24 fixed sites)"
+    polygon region "voronoi cell, faint edges at y~55"
+    string loreName "sub-sector shown in #lore"
+  }
+  LORE_NAME {
+    string kind "sector | tribe | star | omen"
+    int index "input to the digest, memoized"
+    string name "2-4 syllables from sha256(seed||kind||index)"
+    string epithet "puppet | weather | collapse keys"
+  }
+  AUDIO_BANDS {
+    float bass "0..1 -> point-light shimmer"
+    float mid "0..1"
+    float treble "0..1 -> constellation pulse"
+    float level "0..1 -> quantum-cloud point-size breathe"
+  }
+  ANALYTICS_WINDOW {
+    ring population "120 samples, pushed every 8th frame"
+    ring energy "120 samples"
+    ring links "120 samples"
+    float trendPerMin "regression slope -> telemetry #v10"
+    float zThreshold "2.5; omen at most once per 30 s"
+  }
 ```
 
 ## ERM — relationship narrative
@@ -141,6 +199,44 @@ erDiagram
   events; stored three ways with no foreign keys back — a local ring
   (`AuditTrail`, cap 200), `localStorage` (`cqm.audit.v1`), and the server's
   in-memory ring via `POST /api/audit`.
+
+### Wildbeyond V2 relationships
+
+- **PUPPET_MASTER → QUANTUM_REGISTER (N:1).** All three masters act on the
+  single 5-qubit register through characteristic gate signatures — AETHON
+  applies `rx(chaos·π/4)`, SELENE `h+cz`, KRONOS `x+swap` — and the sorting
+  field's swaps apply parity-targeted `cx`. The register answers back: its 32
+  Born-rule probabilities become hue bands for the quantum cloud, its
+  normalized entropy is telemetry `#v11`, and each measurement collapse
+  implodes the cloud locally around the measured basis index.
+- **ENTITY / WEATHER → RD_FIELD (N:1 / 1:1 coupling).** Entity deaths perturb
+  the Gray-Scott field at their position normalized to ground UV; the active
+  weather tunes its parameters (STORM raises feed, VOID raises kill, AURORA
+  boosts diffusion) and `chaos` scales the reaction rate. The field's U
+  channel is the ground's emissive map — the ecosystem's history grows as
+  living skin under it.
+- **GRAPH_TRIBE ↔ ENTITY (1:N, recomputed).** Every 240 frames a seeded
+  Louvain pass over the connectome's link pairs partitions entities into
+  tribes. Tribes are written back into member entities' `setGroup` (the
+  set-theory behavior becomes tribe-aware — true feedback) and install an
+  8-hue palette on connectome links; a PageRank pass every 600 frames grants
+  the top-20 an emissive floor while their rank holds. Tribe identity is not
+  persisted — it is re-derived from live topology each pass.
+- **CONSTELLATION_CELL → LORE_NAME (1:1).** The 24 Voronoi cells over the
+  static monolith/diorama sites are built once; each is named by the
+  `LoreEngine`, and the camera's `subSectorAt` lookup feeds the `#lore` line.
+- **LORE_NAME (derived, memoized).** No name is stored or chosen — every
+  sector/tribe/star/omen name and puppet/weather/collapse epithet is digested
+  out of `sha256(seed‖kind‖index)`. `PERSISTED_STATE.seed` is therefore the
+  foreign key to the entire mythology: same seed, same names, forever.
+- **SONG → AUDIO_BANDS → world (1:1 tap).** One AnalyserNode taps the music
+  and SFX gains; per-frame polling yields bass/mid/treble/level, which
+  modulate lights, constellation pulses, and the quantum cloud at ≤ 0.35
+  strength. The cosmos hears itself sing and flinches.
+- **ANALYTICS_WINDOW → AUDIT_EVENT (1:N, throttled).** Rolling 120-sample
+  rings of population/energy/links yield a regression trend (telemetry
+  `#v10`); a population z-score beyond ±2.5 emits a lore-named omen into the
+  same audit pipeline as user actions, at most once per 30 s.
 
 ## ERP — process models
 
@@ -206,6 +302,58 @@ stateDiagram-v2
     (Bug 1) instead of drifting
     ultrasonic
   end note
+```
+
+### Quantum collapse feedback loop (V2)
+
+```mermaid
+sequenceDiagram
+  participant PM as PuppetMasterSystem
+  participant W as world.ts
+  participant QC as QuantumCircuitSystem
+  participant QR as QuantumRegister
+  participant Q as QuantumCloud
+  participant T as TelemetryPanel
+
+  PM->>W: PuppetEvent (SELENE, weather)
+  W->>QC: onPuppetEvent(e)
+  QC->>QR: apply('h', t) + apply('cz', t, c)
+  Note over W,QC: every 30th frame
+  W->>QC: update()
+  QC->>QR: apply('ry', theta(chaos)) + entropy()
+  Note over QC,QR: every 8th update (~240f)
+  QC->>QR: measure(rng) -> basis index
+  Note over W,Q: every 6th frame
+  W->>QC: bands()
+  QC-->>W: reused Float32Array(32)
+  W->>Q: setQuantumBands(bands)
+  Q->>Q: hue from bands[i % 32]; implosion on collapse change
+  W->>T: qEntropy -> #v11 (every 8th frame)
+```
+
+### Anomaly → omen pipeline (V2)
+
+```mermaid
+sequenceDiagram
+  participant W as world.ts
+  participant A as AnalyticsSystem
+  participant L as LoreEngine
+  participant AT as AuditTrail
+  participant Srv as server.ts
+
+  loop every 8th frame
+    W->>A: push(population, energy, links)
+  end
+  loop every 60th frame
+    W->>A: analyze()
+    A->>A: mean / stddev / regression slope
+    alt |z| > 2.5 and 30 s cooldown elapsed
+      A->>L: name('omen', index)
+      L-->>A: sha256-derived omen name
+      A->>AT: record('omen', { z, name, ... })
+      AT--)Srv: POST /api/audit (fire-and-forget)
+    end
+  end
 ```
 
 ### Weather state machine

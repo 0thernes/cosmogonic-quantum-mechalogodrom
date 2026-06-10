@@ -1,0 +1,978 @@
+<!doctype html>
+<!--
+  Quantum Wildbeyond — Collapse Field
+  Algorithmic-art lab artifact of the Cosmogonic Quantum Mechalogodrom (docs/PHILOSOPHY.md).
+
+  Substrate (the wavefunction, all of it honest math):
+    - A blended vector field: the Lorenz system projected onto its X–Z plane (each particle
+      carries a hidden Y integrated against the real ODE) crossed with curl noise (the exact
+      perpendicular gradient of a Perlin potential, so the noise half is divergence-free).
+    - A Voronoi shatter built geometrically (perpendicular-bisector half-plane clipping) over
+      24 seeded sites — the 24 basis cells, echoing the cosmos' 24 monolith+diorama sites.
+    - Seeded measurement-collapse events: the basis cell is chosen by Born rule (probability
+      proportional to particle occupancy), amplitudes localize onto it, and an interference
+      ring expands outward, kicking the flow it passes through (feedback over garnish).
+
+  Determinism: one seed, one cosmos — all randomness flows through p5's randomSeed/noiseSeed.
+  Performance: typed arrays allocated once; the draw() body allocates no arrays; trails via
+  background-alpha fade; ring pool is fixed-size. O(P) per frame, P = particle count.
+
+  Based on the Anthropic algorithmic-art viewer template (structure, branding, seed controls
+  preserved); p5.js from CDN; fully self-contained.
+-->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Quantum Wildbeyond — Collapse Field</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&family=Lora:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      /* Anthropic Brand Colors */
+      :root {
+        --anthropic-dark: #141413;
+        --anthropic-light: #faf9f5;
+        --anthropic-mid-gray: #b0aea5;
+        --anthropic-light-gray: #e8e6dc;
+        --anthropic-orange: #d97757;
+        --anthropic-blue: #6a9bcc;
+        --anthropic-green: #788c5d;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: 'Poppins', sans-serif;
+        background: linear-gradient(135deg, var(--anthropic-light) 0%, #f5f3ee 100%);
+        min-height: 100vh;
+        color: var(--anthropic-dark);
+      }
+
+      .container {
+        display: flex;
+        min-height: 100vh;
+        padding: 20px;
+        gap: 20px;
+      }
+
+      /* Sidebar */
+      .sidebar {
+        width: 320px;
+        flex-shrink: 0;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        padding: 24px;
+        border-radius: 12px;
+        box-shadow: 0 10px 30px rgba(20, 20, 19, 0.1);
+        overflow-y: auto;
+        overflow-x: hidden;
+      }
+
+      .sidebar h1 {
+        font-family: 'Lora', serif;
+        font-size: 24px;
+        font-weight: 500;
+        color: var(--anthropic-dark);
+        margin-bottom: 8px;
+      }
+
+      .sidebar .subtitle {
+        color: var(--anthropic-mid-gray);
+        font-size: 14px;
+        margin-bottom: 32px;
+        line-height: 1.4;
+      }
+
+      /* Control Sections */
+      .control-section {
+        margin-bottom: 32px;
+      }
+
+      .control-section h3 {
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--anthropic-dark);
+        margin-bottom: 16px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .control-section h3::before {
+        content: '•';
+        color: var(--anthropic-orange);
+        font-weight: bold;
+      }
+
+      /* Seed Controls */
+      .seed-input {
+        width: 100%;
+        background: var(--anthropic-light);
+        padding: 12px;
+        border-radius: 8px;
+        font-family: 'Courier New', monospace;
+        font-size: 14px;
+        margin-bottom: 12px;
+        border: 1px solid var(--anthropic-light-gray);
+        text-align: center;
+      }
+
+      .seed-input:focus {
+        outline: none;
+        border-color: var(--anthropic-orange);
+        box-shadow: 0 0 0 2px rgba(217, 119, 87, 0.1);
+        background: white;
+      }
+
+      .seed-controls {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        margin-bottom: 8px;
+      }
+
+      .regen-button {
+        margin-bottom: 0;
+      }
+
+      /* Parameter Controls */
+      .control-group {
+        margin-bottom: 20px;
+      }
+
+      .control-group label {
+        display: block;
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--anthropic-dark);
+        margin-bottom: 8px;
+      }
+
+      .slider-container {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .slider-container input[type='range'] {
+        flex: 1;
+        height: 4px;
+        background: var(--anthropic-light-gray);
+        border-radius: 2px;
+        outline: none;
+        -webkit-appearance: none;
+      }
+
+      .slider-container input[type='range']::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 16px;
+        height: 16px;
+        background: var(--anthropic-orange);
+        border-radius: 50%;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+
+      .slider-container input[type='range']::-webkit-slider-thumb:hover {
+        transform: scale(1.1);
+        background: #c86641;
+      }
+
+      .slider-container input[type='range']::-moz-range-thumb {
+        width: 16px;
+        height: 16px;
+        background: var(--anthropic-orange);
+        border-radius: 50%;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+
+      .value-display {
+        font-family: 'Courier New', monospace;
+        font-size: 12px;
+        color: var(--anthropic-mid-gray);
+        min-width: 60px;
+        text-align: right;
+      }
+
+      /* Color Pickers */
+      .color-group {
+        margin-bottom: 16px;
+      }
+
+      .color-group label {
+        display: block;
+        font-size: 12px;
+        color: var(--anthropic-mid-gray);
+        margin-bottom: 4px;
+      }
+
+      .color-picker-container {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .color-picker-container input[type='color'] {
+        width: 32px;
+        height: 32px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        background: none;
+        padding: 0;
+      }
+
+      .color-value {
+        font-family: 'Courier New', monospace;
+        font-size: 12px;
+        color: var(--anthropic-mid-gray);
+      }
+
+      /* Buttons */
+      .button {
+        background: var(--anthropic-orange);
+        color: white;
+        border: none;
+        padding: 10px 16px;
+        border-radius: 6px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        width: 100%;
+      }
+
+      .button:hover {
+        background: #c86641;
+        transform: translateY(-1px);
+      }
+
+      .button:active {
+        transform: translateY(0);
+      }
+
+      .button.secondary {
+        background: var(--anthropic-blue);
+      }
+
+      .button.secondary:hover {
+        background: #5a8bb8;
+      }
+
+      .button.tertiary {
+        background: var(--anthropic-green);
+      }
+
+      .button.tertiary:hover {
+        background: #6b7b52;
+      }
+
+      .button-row {
+        display: flex;
+        gap: 8px;
+      }
+
+      .button-row .button {
+        flex: 1;
+      }
+
+      /* Canvas Area */
+      .canvas-area {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 0;
+      }
+
+      #canvas-container {
+        width: 100%;
+        max-width: 1000px;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 20px 40px rgba(20, 20, 19, 0.1);
+        background: white;
+      }
+
+      #canvas-container canvas {
+        display: block;
+        width: 100% !important;
+        height: auto !important;
+      }
+
+      /* Loading State */
+      .loading {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        color: var(--anthropic-mid-gray);
+      }
+
+      /* Responsive - Stack on mobile */
+      @media (max-width: 600px) {
+        .container {
+          flex-direction: column;
+        }
+
+        .sidebar {
+          width: 100%;
+        }
+
+        .canvas-area {
+          padding: 20px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <!-- Control Sidebar -->
+      <div class="sidebar">
+        <h1>Quantum Wildbeyond</h1>
+        <div class="subtitle">
+          Collapse field — particles ride a blended Lorenz-XZ × curl-noise flow until a seeded
+          measurement collapses them, Born-rule, into one of 24 Voronoi basis cells and rings the
+          void with interference. From the Cosmogonic Quantum Mechalogodrom.
+        </div>
+
+        <!-- Seed Section (ALWAYS KEEP THIS) -->
+        <div class="control-section">
+          <h3>Seed</h3>
+          <input
+            type="number"
+            id="seed-input"
+            class="seed-input"
+            value="12345"
+            onchange="updateSeed()"
+          />
+          <div class="seed-controls">
+            <button class="button secondary" onclick="previousSeed()">← Prev</button>
+            <button class="button secondary" onclick="nextSeed()">Next →</button>
+          </div>
+          <div class="seed-controls">
+            <button class="button tertiary" onclick="randomSeedAndUpdate()">↻ Random</button>
+            <button class="button tertiary" onclick="jumpToSeed()">⤳ Jump</button>
+          </div>
+        </div>
+
+        <!-- Parameters Section -->
+        <div class="control-section">
+          <h3>Parameters</h3>
+
+          <!-- Particles -->
+          <div class="control-group">
+            <label>Particles</label>
+            <div class="slider-container">
+              <input
+                type="range"
+                id="particles"
+                min="500"
+                max="4000"
+                step="50"
+                value="1800"
+                oninput="updateParam('particles', this.value)"
+              />
+              <span class="value-display" id="particles-value">1800</span>
+            </div>
+          </div>
+
+          <!-- Collapse Rate -->
+          <div class="control-group">
+            <label>Collapse Rate (events/s)</label>
+            <div class="slider-container">
+              <input
+                type="range"
+                id="collapseRate"
+                min="0"
+                max="2"
+                step="0.05"
+                value="0.6"
+                oninput="updateParam('collapseRate', this.value)"
+              />
+              <span class="value-display" id="collapseRate-value">0.60</span>
+            </div>
+          </div>
+
+          <!-- Field Blend -->
+          <div class="control-group">
+            <label>Field Blend (Lorenz ↔ Noise)</label>
+            <div class="slider-container">
+              <input
+                type="range"
+                id="fieldBlend"
+                min="0"
+                max="1"
+                step="0.01"
+                value="0.45"
+                oninput="updateParam('fieldBlend', this.value)"
+              />
+              <span class="value-display" id="fieldBlend-value">0.45</span>
+            </div>
+          </div>
+
+          <!-- Trail Fade -->
+          <div class="control-group">
+            <label>Trail Fade</label>
+            <div class="slider-container">
+              <input
+                type="range"
+                id="trailFade"
+                min="2"
+                max="40"
+                step="1"
+                value="10"
+                oninput="updateParam('trailFade', this.value)"
+              />
+              <span class="value-display" id="trailFade-value">10</span>
+            </div>
+          </div>
+
+          <!-- Palette Shift -->
+          <div class="control-group">
+            <label>Palette Shift</label>
+            <div class="slider-container">
+              <input
+                type="range"
+                id="paletteShift"
+                min="0"
+                max="360"
+                step="1"
+                value="0"
+                oninput="updateParam('paletteShift', this.value)"
+              />
+              <span class="value-display" id="paletteShift-value">0</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Actions Section (ALWAYS KEEP THIS) -->
+        <div class="control-section">
+          <h3>Actions</h3>
+          <div class="button-row">
+            <button class="button" onclick="regenerateArt()">Regenerate</button>
+            <button class="button secondary" onclick="resetParameters()">Reset</button>
+            <button class="button tertiary" onclick="downloadArt()">Download</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Canvas Area -->
+      <div class="canvas-area">
+        <div id="canvas-container">
+          <div class="loading">Initializing generative art...</div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // ═══════════════════════════════════════════════════════════════════════
+      // GENERATIVE ART PARAMETERS
+      // ═══════════════════════════════════════════════════════════════════════
+
+      let params = {
+        seed: 12345,
+        particles: 1800, // 500..4000
+        collapseRate: 0.6, // measurement events per second, 0..2
+        fieldBlend: 0.45, // 0 = pure Lorenz-XZ, 1 = pure curl noise
+        trailFade: 10, // background-alpha fade per frame (255 scale), 2..40
+        paletteShift: 0, // global hue rotation, degrees
+      };
+
+      let defaultParams = { ...params }; // Store defaults for reset
+
+      // ═══════════════════════════════════════════════════════════════════════
+      // COLLAPSE FIELD — substrate constants
+      // ═══════════════════════════════════════════════════════════════════════
+
+      const W = 1200;
+      const H = 1200;
+      const MAXP = 4000; // hard particle cap — typed arrays sized once, never per frame
+      const SITE_COUNT = 24; // basis cells, echoing the cosmos' 24 monolith+diorama sites
+      const RING_POOL = 16; // fixed interference-ring pool (no per-event allocation)
+      const SIGMA = 10; // Lorenz σ
+      const RHO = 28; // Lorenz ρ
+      const BETA = 8 / 3; // Lorenz β
+      const LORENZ_DT = 0.02; // Euler step for each particle's hidden Y
+      const BASE_HUE = 193; // void cyan
+      const MIN_NOISE_BLEND = 0.06; // floor keeps pure-Lorenz mode from stalling at fixed points
+      const NOISE_SCALE = 0.0042; // Perlin potential frequency (canvas px → noise space)
+      const NOISE_EPS = 2.0; // finite-difference half-step for the curl, in px
+      const BASE_SPEED = 2.1; // px per frame after direction normalization
+      const RING_SPEED = 3.4; // wavefront expansion, px per frame
+      const RING_MAX_R = 480; // ring dies past this radius
+      const RING_BAND = 26; // half-width of the wavefront's particle-kick band, px
+
+      // ═══════════════════════════════════════════════════════════════════════
+      // STATE — every buffer allocated exactly once; draw() allocates no arrays
+      // ═══════════════════════════════════════════════════════════════════════
+
+      const px = new Float32Array(MAXP); // particle x
+      const py = new Float32Array(MAXP); // particle y
+      const ly = new Float32Array(MAXP); // hidden Lorenz Y per particle (the unseen coordinate)
+      const sv = new Float32Array(MAXP); // per-particle speed/hue variation
+      const nearestSite = new Int16Array(MAXP); // scratch: nearest basis cell per particle
+      const siteX = new Float32Array(SITE_COUNT);
+      const siteY = new Float32Array(SITE_COUNT);
+      const siteCounts = new Int32Array(SITE_COUNT); // scratch: Born-rule occupancy histogram
+      const rings = []; // pool of {x, y, r, hue, active}, filled once in setup()
+      let voro = null; // offscreen Voronoi shatter overlay (rebuilt per regeneration)
+      let frame0 = 0; // frame of the last regeneration — pins the noise-time origin,
+      // so the same seed replays the same evolution even mid-session
+
+      // Field scratch (module-level so fieldAt() is allocation-free).
+      let fvx = 0;
+      let fvy = 0;
+
+      function setup() {
+        let canvas = createCanvas(W, H);
+        canvas.parent('canvas-container');
+        pixelDensity(1); // exact 1200×1200 pixel budget on every display
+        noiseDetail(3, 0.55);
+
+        voro = createGraphics(W, H);
+        voro.pixelDensity(1);
+
+        for (let i = 0; i < RING_POOL; i++) {
+          rings.push({ x: 0, y: 0, r: 0, hue: 0, active: false });
+        }
+
+        initializeSystem();
+
+        // Remove loading message
+        document.querySelector('.loading').style.display = 'none';
+      }
+
+      /**
+       * Re-collapses the whole cosmos from params.seed: seeds both RNG streams,
+       * places the 24 basis sites, bakes the Voronoi shatter overlay, scatters
+       * particles, clears rings and canvas. O(P + SITE_COUNT³). Regeneration-time
+       * only — allocation here is fine; the per-frame path stays clean.
+       */
+      function initializeSystem() {
+        randomSeed(params.seed);
+        noiseSeed(params.seed);
+        frame0 = frameCount;
+
+        placeSites();
+        buildVoronoiOverlay();
+
+        const n = Math.min(MAXP, Math.round(params.particles));
+        for (let i = 0; i < n; i++) {
+          px[i] = random(W);
+          py[i] = random(H);
+          ly[i] = random(-30, 30);
+          sv[i] = random(0.7, 1.3);
+        }
+
+        for (let i = 0; i < RING_POOL; i++) rings[i].active = false;
+
+        colorMode(RGB, 255, 255, 255, 255);
+        background(4, 7, 17); // the void, opaque — trails accumulate from here
+      }
+
+      /**
+       * Mitchell best-candidate placement of the 24 sites: each new site is the
+       * candidate (of 14) farthest from all placed sites — evenly wild, fully
+       * seeded. O(SITE_COUNT² · candidates), regeneration-time only.
+       */
+      function placeSites() {
+        const margin = 70;
+        for (let s = 0; s < SITE_COUNT; s++) {
+          let bx = 0;
+          let by = 0;
+          let bestD = -1;
+          for (let c = 0; c < 14; c++) {
+            const cx = random(margin, W - margin);
+            const cy = random(margin, H - margin);
+            let dmin = Infinity;
+            for (let q = 0; q < s; q++) {
+              const dx = cx - siteX[q];
+              const dy = cy - siteY[q];
+              const d2 = dx * dx + dy * dy;
+              if (d2 < dmin) dmin = d2;
+            }
+            if (dmin > bestD) {
+              bestD = dmin;
+              bx = cx;
+              by = cy;
+            }
+          }
+          siteX[s] = bx;
+          siteY[s] = by;
+        }
+      }
+
+      /**
+       * Bakes the Voronoi shatter into the offscreen overlay, computed honestly:
+       * for every site pair the perpendicular bisector is clipped against all
+       * other "closer-to-i" half-planes; whatever segment survives is a true
+       * Voronoi edge. O(SITE_COUNT³) ≈ 6.6k ops, regeneration-time only. Baked
+       * at moderate alpha; draw() re-stamps it each frame at a strength tied to
+       * the trail fade, so its steady-state brightness stays a faint ghost.
+       */
+      function buildVoronoiOverlay() {
+        voro.clear();
+        voro.strokeWeight(1);
+        voro.stroke(120, 200, 255, 140);
+        voro.noFill();
+        const T = 2000; // bisector half-extent, comfortably beyond the canvas
+        for (let i = 0; i < SITE_COUNT; i++) {
+          for (let j = i + 1; j < SITE_COUNT; j++) {
+            const mx = (siteX[i] + siteX[j]) / 2;
+            const my = (siteY[i] + siteY[j]) / 2;
+            // Bisector direction = perpendicular of (j - i), normalized.
+            let dx = -(siteY[j] - siteY[i]);
+            let dy = siteX[j] - siteX[i];
+            const dl = Math.hypot(dx, dy) || 1;
+            dx /= dl;
+            dy /= dl;
+            let tmin = -T;
+            let tmax = T;
+            let alive = true;
+            for (let k = 0; k < SITE_COUNT && alive; k++) {
+              if (k === i || k === j) continue;
+              // Half-plane "closer to i than k": (P - midpoint(i,k)) · (k - i) <= 0.
+              const nx = siteX[k] - siteX[i];
+              const ny = siteY[k] - siteY[i];
+              const a = dx * nx + dy * ny;
+              const b =
+                (mx - (siteX[i] + siteX[k]) / 2) * nx + (my - (siteY[i] + siteY[k]) / 2) * ny;
+              if (Math.abs(a) < 1e-9) {
+                if (b > 0) alive = false;
+              } else {
+                const t0 = -b / a;
+                if (a > 0) tmax = Math.min(tmax, t0);
+                else tmin = Math.max(tmin, t0);
+                if (tmin >= tmax) alive = false;
+              }
+            }
+            if (alive) {
+              voro.line(mx + dx * tmin, my + dy * tmin, mx + dx * tmax, my + dy * tmax);
+            }
+          }
+        }
+        // Basis sites: a dot and a faint halo each.
+        voro.noStroke();
+        voro.fill(140, 215, 255, 255);
+        for (let s = 0; s < SITE_COUNT; s++) voro.circle(siteX[s], siteY[s], 5);
+        voro.noFill();
+        voro.stroke(140, 215, 255, 160);
+        for (let s = 0; s < SITE_COUNT; s++) voro.circle(siteX[s], siteY[s], 14);
+      }
+
+      /**
+       * The blended vector field at particle i. Writes a unit direction into the
+       * module scratch (fvx, fvy) and advances the particle's hidden Lorenz Y by
+       * one Euler step of the true ODE (dY/dt = X(ρ−Z) − Y). The noise half is a
+       * genuine curl (perpendicular Perlin gradient), hence divergence-free.
+       * O(1) per call; 4 noise() samples. Allocation-free.
+       */
+      function fieldAt(i, t) {
+        // Canvas → Lorenz X–Z plane (screen y points down, Z points up).
+        const X = (px[i] / W - 0.5) * 52;
+        const Z = (1 - py[i] / H) * 55;
+        ly[i] += (X * (RHO - Z) - ly[i]) * LORENZ_DT;
+
+        // Lorenz velocity projected to the X–Z plane, normalized.
+        let lvx = SIGMA * (ly[i] - X);
+        let lvy = -(X * ly[i] - BETA * Z); // dZ/dt, sign-flipped into screen space
+        const lm = Math.hypot(lvx, lvy) || 1;
+        lvx /= lm;
+        lvy /= lm;
+
+        // Curl noise: v = (∂n/∂y, −∂n/∂x) by central differences, normalized.
+        const nx = px[i] * NOISE_SCALE;
+        const ny = py[i] * NOISE_SCALE;
+        const e = NOISE_EPS * NOISE_SCALE;
+        let cvx = noise(nx, ny + e, t) - noise(nx, ny - e, t);
+        let cvy = noise(nx - e, ny, t) - noise(nx + e, ny, t);
+        const cm = Math.hypot(cvx, cvy);
+        if (cm > 1e-9) {
+          cvx /= cm;
+          cvy /= cm;
+        }
+
+        // Blend (a noise floor keeps pure-Lorenz mode from freezing at fixed points).
+        const f = MIN_NOISE_BLEND + (1 - MIN_NOISE_BLEND) * params.fieldBlend;
+        let bx = (1 - f) * lvx + f * cvx;
+        let by = (1 - f) * lvy + f * cvy;
+        const bm = Math.hypot(bx, by);
+        if (bm < 1e-4) {
+          // Opposing fields cancel — let the noise half break the tie.
+          fvx = cvx;
+          fvy = cvy;
+        } else {
+          fvx = bx / bm;
+          fvy = by / bm;
+        }
+      }
+
+      /**
+       * One seeded measurement-collapse event. The basis cell is chosen by Born
+       * rule — probability proportional to particle occupancy of each Voronoi
+       * cell — then the measured cell's particles localize toward their site
+       * (drawn as bright convergence streaks) and an interference ring claims a
+       * pool slot. O(P · SITE_COUNT), event-time only (~1/s at defaults).
+       */
+      function collapseEvent() {
+        const n = Math.min(MAXP, Math.round(params.particles));
+        siteCounts.fill(0);
+        for (let i = 0; i < n; i++) {
+          let best = 0;
+          let bd = Infinity;
+          for (let s = 0; s < SITE_COUNT; s++) {
+            const dx = px[i] - siteX[s];
+            const dy = py[i] - siteY[s];
+            const d2 = dx * dx + dy * dy;
+            if (d2 < bd) {
+              bd = d2;
+              best = s;
+            }
+          }
+          nearestSite[i] = best;
+          siteCounts[best]++;
+        }
+
+        // Born rule: P(cell) = occupancy / total.
+        let pick = random() * n;
+        let chosen = 0;
+        for (let s = 0; s < SITE_COUNT; s++) {
+          pick -= siteCounts[s];
+          if (pick < 0) {
+            chosen = s;
+            break;
+          }
+        }
+
+        const hueC = (BASE_HUE + 180 + params.paletteShift + chosen * 7) % 360;
+
+        // Localization: measured amplitudes snap toward the basis state.
+        strokeWeight(1);
+        stroke(hueC, 25, 100, 32);
+        for (let i = 0; i < n; i++) {
+          if (nearestSite[i] !== chosen) continue;
+          const ox = px[i];
+          const oy = py[i];
+          px[i] += (siteX[chosen] - ox) * 0.14;
+          py[i] += (siteY[chosen] - oy) * 0.14;
+          line(ox, oy, px[i], py[i]);
+        }
+
+        // Claim an interference ring from the fixed pool.
+        for (let r = 0; r < RING_POOL; r++) {
+          const rg = rings[r];
+          if (rg.active) continue;
+          rg.active = true;
+          rg.x = siteX[chosen];
+          rg.y = siteY[chosen];
+          rg.r = 4;
+          rg.hue = hueC;
+          break;
+        }
+      }
+
+      /**
+       * Frame body. Order: alpha-fade trails → re-stamp the shatter overlay →
+       * maybe collapse → advect + draw particles (ring wavefronts kick what they
+       * pass through) → advance + draw rings. O(P · (1 + active rings)) with no
+       * array allocation; the only sqrt-bearing ring test is gated by a squared
+       * bounding check.
+       */
+      function draw() {
+        const t = (frameCount - frame0) * 0.0022;
+
+        // 1. Trails: translucent void wash instead of a hard clear.
+        colorMode(RGB, 255, 255, 255, 255);
+        noStroke();
+        fill(4, 7, 17, params.trailFade);
+        rect(0, 0, W, H);
+
+        // 2. The shatter ghosts through the trails. Stamp strength tracks the
+        //    fade: with stamp alpha a and fade alpha f per frame, steady-state
+        //    line weight ≈ a / (a + f); a = (0.55 baked) · (0.6 f) ≈ f/3 pins it
+        //    near 25% of line color for EVERY trailFade setting — always faint.
+        drawingContext.globalAlpha = (0.6 * params.trailFade) / 255;
+        image(voro, 0, 0);
+        drawingContext.globalAlpha = 1;
+
+        colorMode(HSB, 360, 100, 100, 100);
+
+        // 3. Seeded measurement: expectation = collapseRate events per second.
+        if (random() < params.collapseRate / 60) collapseEvent();
+
+        // 4. Particles.
+        strokeWeight(1.1);
+        const n = Math.min(MAXP, Math.round(params.particles));
+        for (let i = 0; i < n; i++) {
+          const ox = px[i];
+          const oy = py[i];
+
+          fieldAt(i, t);
+          let vx = fvx * BASE_SPEED * sv[i];
+          let vy = fvy * BASE_SPEED * sv[i];
+
+          // Interference: active wavefronts push the flow radially as they pass.
+          for (let r = 0; r < RING_POOL; r++) {
+            const rg = rings[r];
+            if (!rg.active) continue;
+            const dx = ox - rg.x;
+            const dy = oy - rg.y;
+            const d2 = dx * dx + dy * dy;
+            const lo = rg.r - RING_BAND;
+            const hi = rg.r + RING_BAND;
+            if (d2 > hi * hi || (lo > 0 && d2 < lo * lo)) continue;
+            const d = Math.sqrt(d2) || 1;
+            const w = 1 - Math.abs(d - rg.r) / RING_BAND;
+            const k = 2.2 * w * (1 - rg.r / RING_MAX_R);
+            vx += (dx / d) * k;
+            vy += (dy / d) * k;
+          }
+
+          px[i] = ox + vx;
+          py[i] = oy + vy;
+
+          // Departed the void → reborn elsewhere (seeded stream, no streak drawn).
+          if (px[i] < -20 || px[i] > W + 20 || py[i] < -20 || py[i] > H + 20) {
+            px[i] = random(W);
+            py[i] = random(H);
+            ly[i] = random(-30, 30);
+            continue;
+          }
+
+          // Hue keyed off the hidden Lorenz Y — the unseen coordinate paints the seen.
+          const hue =
+            (((BASE_HUE + params.paletteShift + ly[i] * 0.22 + (sv[i] - 1) * 60) % 360) + 360) %
+            360;
+          stroke(hue, 76, 96, 40);
+          line(ox, oy, px[i], py[i]);
+        }
+
+        // 5. Interference rings: three fringes, amplitude decaying with radius.
+        noFill();
+        for (let r = 0; r < RING_POOL; r++) {
+          const rg = rings[r];
+          if (!rg.active) continue;
+          rg.r += RING_SPEED;
+          if (rg.r > RING_MAX_R) {
+            rg.active = false;
+            continue;
+          }
+          const a = 1 - rg.r / RING_MAX_R;
+          strokeWeight(1.6);
+          stroke(rg.hue, 60, 100, 52 * a);
+          circle(rg.x, rg.y, rg.r * 2);
+          stroke(rg.hue, 45, 100, 34 * a);
+          circle(rg.x, rg.y, rg.r * 1.6);
+          stroke(rg.hue, 30, 100, 22 * a);
+          circle(rg.x, rg.y, rg.r * 1.24);
+          if (rg.r < 48) {
+            // Measurement flash at the freshly collapsed basis site.
+            noStroke();
+            fill(rg.hue, 20, 100, 70 * (1 - rg.r / 48));
+            circle(rg.x, rg.y, 18);
+            noFill();
+          }
+        }
+      }
+
+      // ═══════════════════════════════════════════════════════════════════════
+      // UI CONTROL HANDLERS
+      // ═══════════════════════════════════════════════════════════════════════
+
+      function formatParam(paramName, v) {
+        if (paramName === 'collapseRate' || paramName === 'fieldBlend') return v.toFixed(2);
+        return String(Math.round(v));
+      }
+
+      function updateParam(paramName, value) {
+        const v = parseFloat(value);
+        params[paramName] = v;
+        document.getElementById(paramName + '-value').textContent = formatParam(paramName, v);
+        // Population changes re-collapse the cosmos; the rest retune the live run.
+        if (paramName === 'particles') initializeSystem();
+      }
+
+      function regenerateArt() {
+        initializeSystem();
+      }
+
+      function downloadArt() {
+        saveCanvas('quantum-wildbeyond-' + params.seed, 'png');
+      }
+
+      // ═══════════════════════════════════════════════════════════════════════
+      // SEED CONTROL FUNCTIONS - ALWAYS KEEP THESE
+      // ═══════════════════════════════════════════════════════════════════════
+
+      function updateSeedDisplay() {
+        document.getElementById('seed-input').value = params.seed;
+      }
+
+      function updateSeed() {
+        let input = document.getElementById('seed-input');
+        let newSeed = parseInt(input.value);
+        if (newSeed && newSeed > 0) {
+          params.seed = newSeed;
+          initializeSystem();
+        } else {
+          // Reset to current seed if invalid
+          updateSeedDisplay();
+        }
+      }
+
+      function jumpToSeed() {
+        updateSeed();
+      }
+
+      function previousSeed() {
+        params.seed = Math.max(1, params.seed - 1);
+        updateSeedDisplay();
+        initializeSystem();
+      }
+
+      function nextSeed() {
+        params.seed = params.seed + 1;
+        updateSeedDisplay();
+        initializeSystem();
+      }
+
+      function randomSeedAndUpdate() {
+        params.seed = Math.floor(Math.random() * 999999) + 1;
+        updateSeedDisplay();
+        initializeSystem();
+      }
+
+      function resetParameters() {
+        params = { ...defaultParams };
+
+        // Update UI elements
+        const names = ['particles', 'collapseRate', 'fieldBlend', 'trailFade', 'paletteShift'];
+        for (let i = 0; i < names.length; i++) {
+          const name = names[i];
+          document.getElementById(name).value = params[name];
+          document.getElementById(name + '-value').textContent = formatParam(name, params[name]);
+        }
+
+        updateSeedDisplay();
+        initializeSystem();
+      }
+
+      // Initialize UI on load
+      window.addEventListener('load', function () {
+        updateSeedDisplay();
+      });
+    </script>
+  </body>
+</html>
