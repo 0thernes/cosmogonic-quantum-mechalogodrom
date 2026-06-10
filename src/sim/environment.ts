@@ -9,6 +9,32 @@ const cos = Math.cos;
 const abs = Math.abs;
 const PI = Math.PI;
 
+/**
+ * Light-unit conversion gain for the r128 → r0.184 lighting migration.
+ *
+ * The legacy monolith was authored under three r128, whose lights used the old
+ * non-physical intensity unit. three r0.184 interprets light intensity in
+ * (roughly) physical units, leaving the colored point-light rig 80–320× dimmer
+ * than the legacy reference once `WebGLRenderer.useLegacyLights` was removed.
+ * Rather than retune every light by hand, we fold the whole correction into one
+ * calibrated gain so the rig stays legacy-faithful and tunable from a single
+ * place.
+ *
+ * - Ambient + directional (sun): multiply legacy intensity by `LEGACY_LIGHT_GAIN`.
+ * - PointLights: multiply legacy intensity by `POINT_LIGHT_GAIN`
+ *   (= `LEGACY_LIGHT_GAIN * 0.5`) AND set `decay = 0`, since the legacy
+ *   distance-attenuation model used no physical inverse-square falloff. The
+ *   half factor restores the legacy brightness balance between the broad
+ *   ambient/sun fill and the punchier colored point sources.
+ *
+ * Every per-frame intensity write (the animated waves) is scaled by the same
+ * gain so the waves keep their legacy SHAPE at the new unit scale.
+ */
+export const LEGACY_LIGHT_GAIN = PI;
+
+/** PointLight-specific gain — see {@link LEGACY_LIGHT_GAIN}. */
+const POINT_LIGHT_GAIN = LEGACY_LIGHT_GAIN * 0.5;
+
 /** Halo ring orbiting a monolith; `axis` picks the rotation axis (legacy `ra`). */
 interface HaloRing {
   mesh: THREE.Mesh<THREE.RingGeometry, THREE.MeshBasicMaterial>;
@@ -204,7 +230,12 @@ function buildMonolith(
     rings.push({ mesh: halo, speed: 0.3 + ri * 0.2, axis: ri });
   }
 
-  const crown = new THREE.PointLight(new THREE.Color().setHSL(hue, 0.9, 0.5), 2.5, 20);
+  const crown = new THREE.PointLight(
+    new THREE.Color().setHSL(hue, 0.9, 0.5),
+    2.5 * POINT_LIGHT_GAIN,
+    20,
+  );
+  crown.decay = 0; // legacy r128 falloff model — see LEGACY_LIGHT_GAIN
   crown.position.y = h + 2;
   g.add(crown);
 

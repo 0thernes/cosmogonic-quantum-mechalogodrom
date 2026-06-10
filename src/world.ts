@@ -99,6 +99,9 @@ export class World {
   private readonly analytics: AnalyticsSystem;
   /** Last collapse basis seen, to detect measurement events across frames. */
   private lastCollapseSeen = -1;
+  /** Exposure shimmer applied last frame — removed before the weather lerp so
+   *  the audio coupling is a bounded offset, never an accumulating feedback. */
+  private lastShimmer = 0;
 
   /** Pre-allocated sort-value buffer (Known Bug 4 fix). */
   private readonly sortVals: Float32Array;
@@ -139,7 +142,10 @@ export class World {
     };
 
     this.grid = new SpatialHash<Entity>(8);
-    this.audio = new AudioEngine(this.state, this.rng);
+    // Audio gets its OWN derived stream: its setInterval callbacks drain rng at
+    // wall-clock moments, which would make the sim stream timing-dependent and
+    // break same-seed reproducibility (audit finding, 0.2.1).
+    this.audio = new AudioEngine(this.state, mulberry32((this.persisted.seed ^ 0xa0d10) >>> 0));
 
     const geos = createGeometryCache();
     const ctx: SimContext = {
@@ -251,10 +257,14 @@ export class World {
     // One bands poll per frame, shared by every consumer (reused object).
     const bands = this.audioAnalysis.update();
 
+    // Bass shimmer as a BOUNDED offset around the weather-owned exposure:
+    // remove last frame's shimmer, let weather lerp its base value, re-apply.
+    // (The previous += version accumulated ~15x past the weather pullback and
+    // tone-mapped the whole world to white once music played — fixed.)
+    this.engine.renderer.toneMappingExposure -= this.lastShimmer;
     this.weather.apply(dt, t);
-    // Bass shimmer on exposure — small additive nudge; the weather lerp pulls
-    // it back every frame so it cannot accumulate (multiplier ≤ 0.35 rule).
-    this.engine.renderer.toneMappingExposure += bands.bass * 0.05;
+    this.lastShimmer = bands.bass * 0.22;
+    this.engine.renderer.toneMappingExposure += this.lastShimmer;
     this.puppets.update(dt, t);
 
     if (s.frame % 2 === 0) {
@@ -360,6 +370,13 @@ export class World {
       if (cv.rx) cam.rotation.x += cv.rx * rs;
       if (cv.ry) cam.rotation.y += cv.ry * rs;
       if (cv.rz) cam.rotation.z += cv.rz * rs;
+      // Mouse-look + wheel zoom (InputSystem contract amendment, 0.2.1).
+      const lk = this.input.look;
+      if (lk.dx !== 0 || lk.dy !== 0) {
+        cam.rotation.y -= lk.dx * 0.003;
+        cam.rotation.x -= lk.dy * 0.003;
+      }
+      if (this.input.zoom !== 0) cam.translateZ(this.input.zoom * 0.02);
     } else if (mode === 'orbit') {
       const oR = 65 + Math.sin(t * 0.05) * 18;
       cam.position.set(
@@ -381,6 +398,11 @@ export class World {
       cam.lookAt(0, 0, 0);
       cam.rotation.z = t * 0.015;
     }
+    // Consume-and-zero in EVERY mode so stale drag/wheel deltas never
+    // accumulate while orbit/fly/top views ignore them.
+    this.input.look.dx = 0;
+    this.input.look.dy = 0;
+    this.input.zoom = 0;
   }
 
   /** Held-key macros (legacy 665-666): Space/Shift/M repeat, Tab feeds chaos. */

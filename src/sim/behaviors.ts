@@ -20,6 +20,20 @@ const V1 = new THREE.Vector3();
 const V2 = new THREE.Vector3();
 
 /**
+ * Clamp bound for the 'lorenz' attractor samples, in attractor units (world units × 0.1).
+ * The classical Lorenz attractor lives within |x|, |y| ≲ 20, z ∈ [0, 48]; inside the
+ * containment arena (|x|, |z| ≤ 65, y ∈ [-9, 40]) the samples never exceed ±6.5, so the clamp
+ * is invisible in normal play. Without it, an escapee's position feeds the quadratic terms
+ * (`lx·lz`, `lx·ly`), whose superexponential growth outruns the 0.98 damping and the -0.005
+ * containment impulse at high chaos (cm = 3): position overflows to ±Infinity, after which
+ * `lx·(28 - lz) - ly` evaluates ∞ - ∞ = NaN and the containment `normalize()` computes
+ * ∞ · (1 / ∞) = NaN — the NaN then spreads population-wide through the spatial hash
+ * (NaN | 0 === 0 buckets NaN positions into the world-origin cell). Bounded samples keep the
+ * injected acceleration finite for ANY position and steer far escapees back toward the basin.
+ */
+const LORENZ_BOUND = 25;
+
+/**
  * Long-lived parameter bag for behavior handlers. The EntityManager constructs exactly one and
  * mutates the per-frame (`dt`, `t`, `cm`) and per-entity (`sp2`, `sinWF`, `cosWF`, `doTheory`)
  * fields in place, keeping the hot path allocation-free.
@@ -358,11 +372,15 @@ function graphseek(e: Entity, u: EntityData, env: BehaviorEnv): void {
   }
 }
 
-/** Scaled Lorenz-attractor accelerations with rare random kicks (legacy lines 759-763). O(1). */
+/**
+ * Scaled Lorenz-attractor accelerations with rare random kicks (legacy lines 759-763). O(1).
+ * Samples are clamped to ±{@link LORENZ_BOUND} — identical inside the arena, divergence-proof
+ * outside (see the bound's doc and tests/nan-stability.test.ts for the sealed NaN source).
+ */
 function lorenz(e: Entity, u: EntityData, env: BehaviorEnv): void {
-  const lx = e.position.x * 0.1;
-  const ly = (e.position.y + 10) * 0.1;
-  const lz = e.position.z * 0.1;
+  const lx = clamp(e.position.x * 0.1, -LORENZ_BOUND, LORENZ_BOUND);
+  const ly = clamp((e.position.y + 10) * 0.1, -LORENZ_BOUND, LORENZ_BOUND);
+  const lz = clamp(e.position.z * 0.1, -LORENZ_BOUND, LORENZ_BOUND);
   u.vel.x += 10 * (ly - lx) * env.dt * 0.002 * env.sp2;
   u.vel.y += (lx * (28 - lz) - ly) * env.dt * 0.001 * env.sp2;
   u.vel.z += (lx * ly - 2.667 * lz) * env.dt * 0.002 * env.sp2;

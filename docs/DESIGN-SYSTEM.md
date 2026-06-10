@@ -94,6 +94,30 @@ default/active/focus/collapsed as applicable.
 - Verified: `bun run build` compiles every token utility (checked in
   `dist/*.css`); 229 tests pass; prettier/oxlint/tsc clean.
 
+### Remediation record (0.2.x controls + color pass)
+
+User report: controls felt flatter and less colorful than the legacy
+original. Root causes and fixes (legacy lines 40-92 as reference):
+
+- **Toolbar had drifted off the legacy greens** to pale `emerald-*` palette
+  names → new `bar-*` token family pinned to the legacy `#bar` values
+  (`#00e664` / `#00b45a` / `#8ea` / `#00ff64`); `#bar` border now
+  `bar-line/15` (legacy `rgba(100,255,100,.1)` green tinge).
+- **Danger had drifted to pale `red-400/300`-range hexes** → restored legacy
+  reds: `#f00` fills, `#ff3232` borders, `#f88` ink.
+- **No hover affordance anywhere** (legacy had none either, but desktop
+  expects it) → three-step idle/hover/active ramp on every button; idle
+  tints raised one step (borders /15→/30, fills /10→/15) so the blue/orange
+  color coding reads at rest; `.on` glow strengthened to match.
+- **Targets**: control keys `h-7`→`h-8` (32px), toolbar `min-h-6.5`→`min-h-7`
+  (28px) + `px-2`→`px-2.5`.
+- **Key hints**: `<kbd>` chips on all 16 pad keys (movement letters + ⇧␣M⇥
+  held macros); sim-key `aria-label`/`title` now name their held-key twins.
+- **Canvas became an input surface**: pointer-drag mouse-look + wheel zoom
+  (`InputSystem.look`/`zoom`), `cursor-grab/grabbing` + `touch-none` on `#c`.
+- No ids, data-attributes, or module APIs changed; `InputSystem` gained the
+  additive `look`/`zoom` contract amendment (documented in input.ts JSDoc).
+
 ---
 
 ## Tokens
@@ -107,9 +131,9 @@ All tokens live in the `@theme static` block of `src/styles/app.css`.
 | `--color-void`        | `#030612`               | Page/scene background, panel glass base            |
 | `--color-accent`      | `#0ef`                  | Panel headers, focus rings, nav links, audit times |
 | `--color-warn`        | `#fa0`                  | Telemetry keys (at /70), warnings                  |
-| `--color-danger`      | `#ef4444`               | Destructive fills (apocalypse active)              |
-| `--color-danger-line` | `#f87171`               | Destructive borders                                |
-| `--color-danger-ink`  | `#fca5a5`               | Destructive captions                               |
+| `--color-danger`      | `#f00`                  | Destructive fills (/5 idle, /15 hover, /25 active) |
+| `--color-danger-line` | `#ff3232`               | Destructive borders (legacy `rgba(255,50,50)`)     |
+| `--color-danger-ink`  | `#f88`                  | Destructive captions (legacy `#f88`)               |
 | `--color-ink`         | `#9fb6d9`               | Audit body text                                    |
 | `--color-ink-dim`     | `#8fa8c8`               | Audit `code` detail text                           |
 | `--color-ink-ghost`   | `rgba(184,200,232,0.4)` | Empty-state placeholder text                       |
@@ -124,9 +148,15 @@ Sim-action family (split/burst/mutate/chaos, orange): `--color-sim-line
 #ff6400` · `--color-sim-bg #ff5000` · `--color-sim-ink #ffaa88` ·
 `--color-sim-glow #ff8c00` · `--color-sim-halo #ff7800`.
 
+Toolbar family (one-shot `[data-action]` buttons + `#bar` border, green —
+the legacy `#bar` palette, restored in the 0.2.x controls pass):
+`--color-bar-line #00e664` (borders) · `--color-bar-bg #00b45a` (idle fill)
+· `--color-bar-ink #8ea` (caption) · `--color-bar-hot #00ff64`
+(hover/active fill).
+
 Standard-palette tint roles (kept on Tailwind names, not re-tokenized):
-toolbar = `emerald-*`, algo card = `purple-*`, toast = `orange-*`,
-joystick = `sky/cyan-*`, panel borders = `cyan-300/15`.
+algo card = `purple-*`, toast = `orange-*`, joystick = `sky/cyan-*`,
+panel borders = `cyan-300/15`.
 
 ### Tribe palette (graph-mind communities, V2)
 
@@ -234,32 +264,44 @@ backlog).
 
 ### ToolbarButton (`#bar [data-action]`)
 
-One-shot action: `min-h-6.5 rounded-btn border px-2 py-1 font-ui text-3xs`.
-Variants: **standard** (emerald tint) and **danger** (`danger-*` tokens,
-apocalypse only). States: default → `active:` fill+white text (100ms). Every
-icon-only button has `aria-label` **and** `title` (Known Bug 7). Container is
-`role="toolbar"` + `aria-label="Simulation toolbar"`.
+One-shot action: `min-h-7 rounded-btn border px-2.5 py-1 font-ui text-3xs`.
+Variants: **standard** (green `bar-*` tokens — the legacy `#bar` family) and
+**danger** (`danger-*` tokens, apocalypse only).
+
+| State  | Visual (standard / danger)                                           |
+| ------ | -------------------------------------------------------------------- |
+| Idle   | `bar-line/20` border, `bar-bg/10` fill, `bar-ink` / `danger-*` tints |
+| Hover  | `bar-hot/15` fill, `bar-line/40` border, white text (hover pointers) |
+| Active | `bar-hot/25` (`danger/25`) fill, white text, 100ms transition        |
+
+Every icon-only button has `aria-label` **and** `title` (Known Bug 7).
+Container is `role="toolbar"` + `aria-label="Simulation toolbar"` with a
+`bar-line/15` border (legacy green-tinged bar).
 
 ### NavLink (Docs · `/lab`)
 
 Anchor styled as a toolbar button but in the **accent (cyan) family** —
 navigation is visually distinct from simulation actions. `/lab` sits in
 `#bar` (aria-label "Open the Quantum Wildbeyond lab artifact"); Docs floats
-bottom-right. States: default → `hover:text-accent` → `active:` fill.
+bottom-right. States: default → hover (`accent/10` fill, `accent/40`
+border, full-accent text) → `active:` fill.
 
 ### ControlPad key (`#cP [data-a]`)
 
-Held control: `h-7 rounded-btn text-4xs`, blue `ctrl-*` family for movement
+Held control: `h-8 rounded-btn text-4xs`, blue `ctrl-*` family for movement
 (fwd/back/left/right/up/down/rleft/rright/tup/tdown/yleft/yright), orange
-`sim-*` family for split/burst/mutate/chaos.
+`sim-*` family for split/burst/mutate/chaos. Each key leads with a `<kbd>`
+chip naming its keyboard twin (movement letters; sim macros ⇧/␣/M/⇥) —
+14px family-tinted mono badge, styled by `[data-a] kbd` in `app.css`.
 
 | State | Visual                                                                         | Behavior                                   |
 | ----- | ------------------------------------------------------------------------------ | ------------------------------------------ |
-| Idle  | Tinted border/fill, family ink caption                                         | —                                          |
+| Idle  | Tinted border (/30) + fill (/15), family ink caption                           | —                                          |
+| Hover | Hot fill /20, glow border /45, white text (hover-capable pointers only)        | CSS `hover:` utilities                     |
 | Held  | `.on` (JS) and `:active` (CSS): hot fill, glow border, halo shadow, white text | `ui/input.ts` pointerdown..up/leave/cancel |
 
 A11y: every key has `aria-label` + `title` naming its keyboard twin
-(e.g. "Move forward (W)").
+(e.g. "Move forward (W)", "Burst-spawn entities (hold Space)").
 
 ### TelemetryRow (`#v0..#v11`, env rows `#ew #ewi #et #es #ep`)
 
@@ -311,6 +353,18 @@ Touch-only (`hover:none`/`pointer:coarse` media), 88px pad / 30px knob,
 sky/cyan tints. Pointer tracked by identifier (Known Bug 8). Not focusable
 and intentionally outside the tab order — every joystick capability has a
 keyboard/button equivalent in `#cP`. Backlog: visual held state on `#jK`.
+
+### Canvas look surface (`#c`)
+
+The WebGL canvas is itself an input surface (0.2.x): `cursor-grab` idle →
+`cursor-grabbing` while `:active` signals draggability; `touch-none` keeps
+browser gestures from eating touch drags. A pointer that goes **down on the
+canvas** (mouse, pen, or touch outside the joystick — all UI floats above
+the canvas) is captured and its drag accumulates into `InputSystem.look`;
+the wheel accumulates into `InputSystem.zoom`. The world consumes-and-zeroes
+both each frame in free view. First pointer wins; pad/toolbar/joystick
+interaction never steers the camera. Not focusable — keyboard users have
+full camera control via W A S D Q E Z X R F C V.
 
 ---
 

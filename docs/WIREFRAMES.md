@@ -134,17 +134,17 @@ documented in [DESIGN-SYSTEM.md](DESIGN-SYSTEM.md) — the core three:
 
 Derived surface treatments (matching the legacy feel):
 
-| Surface             | Treatment                                                                                                 |
-| ------------------- | --------------------------------------------------------------------------------------------------------- |
-| Panel glass         | `rgba(3,6,18,0.93)` + `backdrop-blur(12px) saturate(1.4)` + inset top highlight `rgba(255,255,255,0.03)`  |
-| Panel border        | `rgba(0,160,240,0.15)` (cyan)                                                                             |
-| Toolbar buttons     | green tint — border `rgba(0,230,100,0.12)`, text `#8ea`, active `rgba(0,255,100,0.2)`                     |
-| Danger (apocalypse) | red tint — border `rgba(255,50,50,0.2)`, text `#f88`                                                      |
-| Algo card           | violet tint — border `rgba(160,100,255,0.12)`, step text `#c8b0ff`                                        |
-| Puppet toast        | orange pill — `rgba(255,100,0,0.06)` bg, border `rgba(255,150,0,0.1)`                                     |
-| Control buttons     | blue tint — `rgba(0,80,160,0.1)` bg, text `#8bf`; sim buttons (`SPLIT`/`BURST`/...) orange variant `#fa8` |
-| Body text           | `#b8c8e8`                                                                                                 |
-| Telemetry values    | `#eef`                                                                                                    |
+| Surface             | Treatment                                                                                                                      |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| Panel glass         | `rgba(3,6,18,0.93)` + `backdrop-blur(12px) saturate(1.4)` + inset top highlight `rgba(255,255,255,0.03)`                       |
+| Panel border        | `rgba(0,160,240,0.15)` (cyan)                                                                                                  |
+| Toolbar buttons     | green tint — `bar-*` tokens: border `#00e664`/20, ink `#8ea`, hover fill `#00ff64`/15, active `/25` (legacy `#bar` greens)     |
+| Danger (apocalypse) | red tint — `danger-*` tokens: border `#ff3232`, ink `#f88`, `#f00` fill at /5 idle → /15 hover → /25 active (legacy reds)      |
+| Algo card           | violet tint — border `rgba(160,100,255,0.12)`, step text `#c8b0ff`                                                             |
+| Puppet toast        | orange pill — `rgba(255,100,0,0.06)` bg, border `rgba(255,150,0,0.1)`                                                          |
+| Control buttons     | blue `ctrl-*` tint — `#0050a0`/15 fill, ink `#8bf`, hover `#008cff`/20; sim keys (`SPLIT`/`BURST`/...) orange `sim-*` (`#fa8`) |
+| Body text           | `#b8c8e8`                                                                                                                      |
+| Telemetry values    | `#eef`                                                                                                                         |
 
 Sparkline strokes (canvas, not CSS): entities `rgba(0,200,255,1)`, chaos
 `rgba(255,80,0,1)`, energy `rgba(100,255,100,1)`, connectome
@@ -155,9 +155,21 @@ Sparkline strokes (canvas, not CSS): entities `rgba(0,200,255,1)`, chaos
 - Global gap `6px`; panel radius `10px`; safe-area insets via
   `env(safe-area-inset-top/bottom)` (toolbar and joystick respect the bottom
   inset).
-- Buttons: control pad 28px tall (24px ≤ 480px, 30px ≥ 1200px); toolbar
-  buttons min-height 26px (22px ≤ 480px). Touch targets stay ≥ 24px even at
-  the smallest breakpoint.
+- Buttons: control-pad keys 32px tall (`h-8`); toolbar buttons min-height
+  28px (`min-h-7`, `px-2.5`). One size at every breakpoint — the legacy
+  22–24px small-screen shrink is gone; touch targets never drop below 28px.
+- **Three-step affordance** on every button: idle tint → `hover:` brighter
+  fill/border + white text (hover-capable pointers only, Tailwind v4 gates
+  `hover:` behind `(hover: hover)`) → `active:`/`.on` hot fill + glow halo.
+- **Key hints**: each control-pad key leads with a `<kbd>` chip naming its
+  keyboard twin (`W A S D Q E Z X R F C V`; sim macros ⇧ Shift / ␣ Space /
+  M / ⇥ Tab). Chips are family-tinted (blue/orange) mono badges, styled by
+  the `[data-a] kbd` rule in `app.css`.
+- **Canvas look + zoom**: dragging the WebGL canvas (`cursor: grab` →
+  `grabbing`) rotates the free-view camera (mouse, pen, or touch outside the
+  joystick; pointer-captured, accumulated in `InputSystem.look`); the mouse
+  wheel zooms (`InputSystem.zoom`). The world consumes-and-zeroes both each
+  frame. Pointers that go down on panels/toolbar/joystick never steer.
 - Every icon-only toolbar button carries `aria-label` **and** `title`
   (Known Bug 7): ♫ "Toggle music", ⟳ "Reset simulation", ⏱ "Cycle time
   scale", ☁ "Cycle weather", ☠ "Apocalypse".

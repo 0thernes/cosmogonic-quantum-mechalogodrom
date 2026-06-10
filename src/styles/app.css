@@ -4,8 +4,9 @@
  * Visual styling lives as utilities in index.html. This file holds the design
  * tokens (documented in docs/DESIGN-SYSTEM.md) plus the few rules utilities
  * cannot express: stateful classes toggled by JS (`.col`, `.show`, `.on`),
- * keyboard focus rings, reduced-motion damping, pointer-media joystick layout,
- * safe-area padding, and styling for the server-rendered audit fragment.
+ * keyboard focus rings, control-pad `<kbd>` key-hint chips, reduced-motion
+ * damping, pointer-media joystick layout, safe-area padding, and styling for
+ * the server-rendered audit fragment.
  */
 @import 'tailwindcss';
 @import '@fontsource-variable/inter';
@@ -21,9 +22,11 @@
   --color-void: #030612;
   --color-accent: #0ef;
   --color-warn: #fa0;
-  --color-danger: #ef4444;
-  --color-danger-line: #f87171;
-  --color-danger-ink: #fca5a5;
+  /* Danger family — legacy apocalypse reds (lines 58-59): fill rgba(255,0,0,…),
+     border rgba(255,50,50,…), caption #f88. */
+  --color-danger: #f00; /* fills (idle /5, hover /15, active /25) */
+  --color-danger-line: #ff3232; /* borders */
+  --color-danger-ink: #f88; /* caption */
 
   /* ── Ink (text-on-glass) roles ──────────────────────────────── */
   --color-ink: #9fb6d9;
@@ -44,6 +47,13 @@
   --color-sim-ink: #ffaa88; /* idle caption */
   --color-sim-glow: #ff8c00; /* held border */
   --color-sim-halo: #ff7800; /* held outer glow */
+
+  /* ── Toolbar ([data-action] one-shot buttons) — green family ──
+     Legacy #bar greens (lines 48-57): green-tinged glass bar. */
+  --color-bar-line: #00e664; /* borders (legacy rgba(0,230,100,.12)) */
+  --color-bar-bg: #00b45a; /* idle fill (legacy rgba(0,180,90,.06)) */
+  --color-bar-ink: #8ea; /* idle caption (legacy #8ea) */
+  --color-bar-hot: #00ff64; /* hover/active fill (legacy rgba(0,255,100,.2)) */
 
   /* ── Tribe palette (graph-mind communities, V2) ─────────────────
      8 evenly spaced hues; community k renders at hue k/8 turns.
@@ -133,16 +143,44 @@ a:focus-visible {
 [data-a].on {
   color: var(--color-white);
   background: --alpha(var(--color-ctrl-hot) / 30%);
-  border-color: --alpha(var(--color-ctrl-glow) / 40%);
-  box-shadow: 0 0 12px --alpha(var(--color-ctrl-halo) / 25%);
+  border-color: --alpha(var(--color-ctrl-glow) / 50%);
+  box-shadow: 0 0 12px --alpha(var(--color-ctrl-halo) / 35%);
 }
 [data-a='split'].on,
 [data-a='burst'].on,
 [data-a='mutate'].on,
 [data-a='chaos'].on {
-  background: --alpha(var(--color-sim-line) / 25%);
-  border-color: --alpha(var(--color-sim-glow) / 40%);
-  box-shadow: 0 0 12px --alpha(var(--color-sim-halo) / 25%);
+  background: --alpha(var(--color-sim-line) / 30%);
+  border-color: --alpha(var(--color-sim-glow) / 50%);
+  box-shadow: 0 0 12px --alpha(var(--color-sim-halo) / 35%);
+}
+
+/* ── Control-pad key hints ──────────────────────────────────────
+   <kbd> chips inside [data-a] buttons name each control's keyboard
+   twin (W A S D … for movement; Shift/Space/M/Tab for the held sim
+   macros). Family-tinted: ctrl blue by default, sim orange for
+   split/burst/mutate/chaos. Pointer events pass through to the
+   button (the [data-a] listeners are on the button itself). */
+[data-a] kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 14px;
+  height: 14px;
+  margin-right: 4px;
+  padding: 0 2px;
+  border: 1px solid --alpha(var(--color-ctrl-glow) / 35%);
+  border-radius: 3px;
+  background: --alpha(var(--color-ctrl-bg) / 40%);
+  font: 600 var(--text-4xs) var(--font-mono);
+  color: var(--color-white);
+}
+[data-a='split'] kbd,
+[data-a='burst'] kbd,
+[data-a='mutate'] kbd,
+[data-a='chaos'] kbd {
+  border-color: --alpha(var(--color-sim-glow) / 35%);
+  background: --alpha(var(--color-sim-bg) / 30%);
 }
 
 /* ── HUD fades ──────────────────────────────────────────────────

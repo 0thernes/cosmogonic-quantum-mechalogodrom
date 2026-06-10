@@ -8,8 +8,17 @@ import type { QualityProfile } from '../types';
  * Faithful constants: antialias on, `high-performance` power preference,
  * ACES filmic tone mapping at exposure 1.15, `FogExp2(0x020310, 0.003)`,
  * 68° FOV camera with near/far 0.1..900 parked at (0, 25, 55). Shadow maps
- * follow the quality profile. `outputColorSpace` is left at the modern
- * three default (sRGB) — set explicitly for clarity.
+ * follow the quality profile.
+ *
+ * r128 color-fidelity fix: `outputColorSpace` is forced to
+ * `LinearSRGBColorSpace`. The legacy r128 monolith ran with the old default
+ * (no sRGB output encode), so every emissive/HSL color value was authored
+ * against a linear-out pipeline. Modern three defaults to `SRGBColorSpace`,
+ * which double-encodes those already-tuned values and shifts the whole palette
+ * brighter/desaturated. Keeping ACES tone mapping + exposure 1.15 on top of a
+ * linear output buffer reproduces the legacy look exactly. NOTE: this pairs
+ * with `THREE.ColorManagement.enabled = false`, which the integrator sets in
+ * main.ts BEFORE constructing this Engine (ordering matters — see notes).
  */
 export class Engine {
   /** WebGL renderer bound to the app canvas. */
@@ -36,7 +45,7 @@ export class Engine {
     this.renderer.shadowMap.enabled = quality.shadows;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 1.15;
-    this.renderer.outputColorSpace = THREE.SRGBColorSpace;
+    this.renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
 
     this.scene = new THREE.Scene();
     this.scene.fog = new THREE.FogExp2(0x020310, 0.003);

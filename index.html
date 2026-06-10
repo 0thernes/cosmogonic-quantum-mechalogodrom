@@ -24,7 +24,11 @@
     <link rel="stylesheet" href="./src/styles/app.css" />
   </head>
   <body class="touch-none overflow-hidden bg-black font-mono text-slate-300">
-    <canvas id="c" class="fixed inset-0 z-0 block"></canvas>
+    <!-- Drag = mouse-look, wheel = zoom (ui/input.ts pointer capture; world consumes) -->
+    <canvas
+      id="c"
+      class="fixed inset-0 z-0 block cursor-grab touch-none active:cursor-grabbing"
+    ></canvas>
 
     <!-- Sector banner (ui/hud.ts toggles .show) -->
     <div
@@ -237,9 +241,9 @@
             data-a="fwd"
             aria-label="Move forward (W)"
             title="Move forward (W)"
-            class="inline-flex h-7 items-center justify-center rounded-btn border border-ctrl-line/15 bg-ctrl-bg/10 px-1 font-ui text-4xs whitespace-nowrap text-ctrl-ink transition-all duration-100 select-none active:border-ctrl-glow/40 active:bg-ctrl-hot/30 active:text-white"
+            class="inline-flex h-8 items-center justify-center rounded-btn border border-ctrl-line/30 bg-ctrl-bg/15 px-1 font-ui text-4xs whitespace-nowrap text-ctrl-ink transition-all duration-100 select-none hover:border-ctrl-glow/45 hover:bg-ctrl-hot/20 hover:text-white active:border-ctrl-glow/50 active:bg-ctrl-hot/30 active:text-white"
           >
-            W &#8593;
+            <kbd>W</kbd> &#8593;
           </button>
           <span></span>
           <button
@@ -247,36 +251,36 @@
             data-a="left"
             aria-label="Strafe left (A)"
             title="Strafe left (A)"
-            class="inline-flex h-7 items-center justify-center rounded-btn border border-ctrl-line/15 bg-ctrl-bg/10 px-1 font-ui text-4xs whitespace-nowrap text-ctrl-ink transition-all duration-100 select-none active:border-ctrl-glow/40 active:bg-ctrl-hot/30 active:text-white"
+            class="inline-flex h-8 items-center justify-center rounded-btn border border-ctrl-line/30 bg-ctrl-bg/15 px-1 font-ui text-4xs whitespace-nowrap text-ctrl-ink transition-all duration-100 select-none hover:border-ctrl-glow/45 hover:bg-ctrl-hot/20 hover:text-white active:border-ctrl-glow/50 active:bg-ctrl-hot/30 active:text-white"
           >
-            A &#8592;
+            <kbd>A</kbd> &#8592;
           </button>
           <button
             type="button"
             data-a="back"
             aria-label="Move backward (S)"
             title="Move backward (S)"
-            class="inline-flex h-7 items-center justify-center rounded-btn border border-ctrl-line/15 bg-ctrl-bg/10 px-1 font-ui text-4xs whitespace-nowrap text-ctrl-ink transition-all duration-100 select-none active:border-ctrl-glow/40 active:bg-ctrl-hot/30 active:text-white"
+            class="inline-flex h-8 items-center justify-center rounded-btn border border-ctrl-line/30 bg-ctrl-bg/15 px-1 font-ui text-4xs whitespace-nowrap text-ctrl-ink transition-all duration-100 select-none hover:border-ctrl-glow/45 hover:bg-ctrl-hot/20 hover:text-white active:border-ctrl-glow/50 active:bg-ctrl-hot/30 active:text-white"
           >
-            S &#8595;
+            <kbd>S</kbd> &#8595;
           </button>
           <button
             type="button"
             data-a="right"
             aria-label="Strafe right (D)"
             title="Strafe right (D)"
-            class="inline-flex h-7 items-center justify-center rounded-btn border border-ctrl-line/15 bg-ctrl-bg/10 px-1 font-ui text-4xs whitespace-nowrap text-ctrl-ink transition-all duration-100 select-none active:border-ctrl-glow/40 active:bg-ctrl-hot/30 active:text-white"
+            class="inline-flex h-8 items-center justify-center rounded-btn border border-ctrl-line/30 bg-ctrl-bg/15 px-1 font-ui text-4xs whitespace-nowrap text-ctrl-ink transition-all duration-100 select-none hover:border-ctrl-glow/45 hover:bg-ctrl-hot/20 hover:text-white active:border-ctrl-glow/50 active:bg-ctrl-hot/30 active:text-white"
           >
-            D &#8594;
+            <kbd>D</kbd> &#8594;
           </button>
           <button
             type="button"
             data-a="up"
             aria-label="Ascend (Q)"
             title="Ascend (Q)"
-            class="inline-flex h-7 items-center justify-center rounded-btn border border-ctrl-line/15 bg-ctrl-bg/10 px-1 font-ui text-4xs whitespace-nowrap text-ctrl-ink transition-all duration-100 select-none active:border-ctrl-glow/40 active:bg-ctrl-hot/30 active:text-white"
+            class="inline-flex h-8 items-center justify-center rounded-btn border border-ctrl-line/30 bg-ctrl-bg/15 px-1 font-ui text-4xs whitespace-nowrap text-ctrl-ink transition-all duration-100 select-none hover:border-ctrl-glow/45 hover:bg-ctrl-hot/20 hover:text-white active:border-ctrl-glow/50 active:bg-ctrl-hot/30 active:text-white"
           >
-            Q Up
+            <kbd>Q</kbd> Up
           </button>
           <span></span>
           <button
@@ -284,9 +288,9 @@
             data-a="down"
             aria-label="Descend (E)"
             title="Descend (E)"
-            class="inline-flex h-7 items-center justify-center rounded-btn border border-ctrl-line/15 bg-ctrl-bg/10 px-1 font-ui text-4xs whitespace-nowrap text-ctrl-ink transition-all duration-100 select-none active:border-ctrl-glow/40 active:bg-ctrl-hot/30 active:text-white"
+            class="inline-flex h-8 items-center justify-center rounded-btn border border-ctrl-line/30 bg-ctrl-bg/15 px-1 font-ui text-4xs whitespace-nowrap text-ctrl-ink transition-all duration-100 select-none hover:border-ctrl-glow/45 hover:bg-ctrl-hot/20 hover:text-white active:border-ctrl-glow/50 active:bg-ctrl-hot/30 active:text-white"
           >
-            E Dn
+            <kbd>E</kbd> Dn
           </button>
         </div>
         <div class="flex flex-wrap justify-center gap-0.5">
@@ -295,92 +299,92 @@
             data-a="rleft"
             aria-label="Roll left (Z)"
             title="Roll left (Z)"
-            class="inline-flex h-7 items-center justify-center rounded-btn border border-ctrl-line/15 bg-ctrl-bg/10 px-1 font-ui text-4xs whitespace-nowrap text-ctrl-ink transition-all duration-100 select-none active:border-ctrl-glow/40 active:bg-ctrl-hot/30 active:text-white"
+            class="inline-flex h-8 items-center justify-center rounded-btn border border-ctrl-line/30 bg-ctrl-bg/15 px-1 font-ui text-4xs whitespace-nowrap text-ctrl-ink transition-all duration-100 select-none hover:border-ctrl-glow/45 hover:bg-ctrl-hot/20 hover:text-white active:border-ctrl-glow/50 active:bg-ctrl-hot/30 active:text-white"
           >
-            Z Rl
+            <kbd>Z</kbd> Rl
           </button>
           <button
             type="button"
             data-a="rright"
             aria-label="Roll right (X)"
             title="Roll right (X)"
-            class="inline-flex h-7 items-center justify-center rounded-btn border border-ctrl-line/15 bg-ctrl-bg/10 px-1 font-ui text-4xs whitespace-nowrap text-ctrl-ink transition-all duration-100 select-none active:border-ctrl-glow/40 active:bg-ctrl-hot/30 active:text-white"
+            class="inline-flex h-8 items-center justify-center rounded-btn border border-ctrl-line/30 bg-ctrl-bg/15 px-1 font-ui text-4xs whitespace-nowrap text-ctrl-ink transition-all duration-100 select-none hover:border-ctrl-glow/45 hover:bg-ctrl-hot/20 hover:text-white active:border-ctrl-glow/50 active:bg-ctrl-hot/30 active:text-white"
           >
-            X Rr
+            <kbd>X</kbd> Rr
           </button>
           <button
             type="button"
             data-a="tup"
             aria-label="Tilt up (R)"
             title="Tilt up (R)"
-            class="inline-flex h-7 items-center justify-center rounded-btn border border-ctrl-line/15 bg-ctrl-bg/10 px-1 font-ui text-4xs whitespace-nowrap text-ctrl-ink transition-all duration-100 select-none active:border-ctrl-glow/40 active:bg-ctrl-hot/30 active:text-white"
+            class="inline-flex h-8 items-center justify-center rounded-btn border border-ctrl-line/30 bg-ctrl-bg/15 px-1 font-ui text-4xs whitespace-nowrap text-ctrl-ink transition-all duration-100 select-none hover:border-ctrl-glow/45 hover:bg-ctrl-hot/20 hover:text-white active:border-ctrl-glow/50 active:bg-ctrl-hot/30 active:text-white"
           >
-            R Tu
+            <kbd>R</kbd> Tu
           </button>
           <button
             type="button"
             data-a="tdown"
             aria-label="Tilt down (F)"
             title="Tilt down (F)"
-            class="inline-flex h-7 items-center justify-center rounded-btn border border-ctrl-line/15 bg-ctrl-bg/10 px-1 font-ui text-4xs whitespace-nowrap text-ctrl-ink transition-all duration-100 select-none active:border-ctrl-glow/40 active:bg-ctrl-hot/30 active:text-white"
+            class="inline-flex h-8 items-center justify-center rounded-btn border border-ctrl-line/30 bg-ctrl-bg/15 px-1 font-ui text-4xs whitespace-nowrap text-ctrl-ink transition-all duration-100 select-none hover:border-ctrl-glow/45 hover:bg-ctrl-hot/20 hover:text-white active:border-ctrl-glow/50 active:bg-ctrl-hot/30 active:text-white"
           >
-            F Td
+            <kbd>F</kbd> Td
           </button>
           <button
             type="button"
             data-a="yleft"
             aria-label="Yaw left (C)"
             title="Yaw left (C)"
-            class="inline-flex h-7 items-center justify-center rounded-btn border border-ctrl-line/15 bg-ctrl-bg/10 px-1 font-ui text-4xs whitespace-nowrap text-ctrl-ink transition-all duration-100 select-none active:border-ctrl-glow/40 active:bg-ctrl-hot/30 active:text-white"
+            class="inline-flex h-8 items-center justify-center rounded-btn border border-ctrl-line/30 bg-ctrl-bg/15 px-1 font-ui text-4xs whitespace-nowrap text-ctrl-ink transition-all duration-100 select-none hover:border-ctrl-glow/45 hover:bg-ctrl-hot/20 hover:text-white active:border-ctrl-glow/50 active:bg-ctrl-hot/30 active:text-white"
           >
-            C Yl
+            <kbd>C</kbd> Yl
           </button>
           <button
             type="button"
             data-a="yright"
             aria-label="Yaw right (V)"
             title="Yaw right (V)"
-            class="inline-flex h-7 items-center justify-center rounded-btn border border-ctrl-line/15 bg-ctrl-bg/10 px-1 font-ui text-4xs whitespace-nowrap text-ctrl-ink transition-all duration-100 select-none active:border-ctrl-glow/40 active:bg-ctrl-hot/30 active:text-white"
+            class="inline-flex h-8 items-center justify-center rounded-btn border border-ctrl-line/30 bg-ctrl-bg/15 px-1 font-ui text-4xs whitespace-nowrap text-ctrl-ink transition-all duration-100 select-none hover:border-ctrl-glow/45 hover:bg-ctrl-hot/20 hover:text-white active:border-ctrl-glow/50 active:bg-ctrl-hot/30 active:text-white"
           >
-            V Yr
+            <kbd>V</kbd> Yr
           </button>
         </div>
         <div class="mt-1.5 grid grid-cols-2 gap-0.5">
           <button
             type="button"
             data-a="split"
-            aria-label="Split mature entities"
-            title="Split mature entities"
-            class="inline-flex h-7 items-center justify-center rounded-btn border border-sim-line/20 bg-sim-bg/10 px-1 font-ui text-4xs whitespace-nowrap text-sim-ink transition-all duration-100 select-none active:bg-sim-line/25 active:text-white"
+            aria-label="Split mature entities (hold Shift)"
+            title="Split mature entities (hold Shift)"
+            class="inline-flex h-8 items-center justify-center rounded-btn border border-sim-line/30 bg-sim-bg/15 px-1 font-ui text-4xs whitespace-nowrap text-sim-ink transition-all duration-100 select-none hover:border-sim-glow/45 hover:bg-sim-line/20 hover:text-white active:border-sim-glow/55 active:bg-sim-line/30 active:text-white"
           >
-            Split
+            <kbd>&#8679;</kbd> Split
           </button>
           <button
             type="button"
             data-a="burst"
-            aria-label="Burst-spawn entities"
-            title="Burst-spawn entities"
-            class="inline-flex h-7 items-center justify-center rounded-btn border border-sim-line/20 bg-sim-bg/10 px-1 font-ui text-4xs whitespace-nowrap text-sim-ink transition-all duration-100 select-none active:bg-sim-line/25 active:text-white"
+            aria-label="Burst-spawn entities (hold Space)"
+            title="Burst-spawn entities (hold Space)"
+            class="inline-flex h-8 items-center justify-center rounded-btn border border-sim-line/30 bg-sim-bg/15 px-1 font-ui text-4xs whitespace-nowrap text-sim-ink transition-all duration-100 select-none hover:border-sim-glow/45 hover:bg-sim-line/20 hover:text-white active:border-sim-glow/55 active:bg-sim-line/30 active:text-white"
           >
-            Burst
+            <kbd>&#9251;</kbd> Burst
           </button>
           <button
             type="button"
             data-a="mutate"
-            aria-label="Mutate all entities"
-            title="Mutate all entities"
-            class="inline-flex h-7 items-center justify-center rounded-btn border border-sim-line/20 bg-sim-bg/10 px-1 font-ui text-4xs whitespace-nowrap text-sim-ink transition-all duration-100 select-none active:bg-sim-line/25 active:text-white"
+            aria-label="Mutate all entities (hold M)"
+            title="Mutate all entities (hold M)"
+            class="inline-flex h-8 items-center justify-center rounded-btn border border-sim-line/30 bg-sim-bg/15 px-1 font-ui text-4xs whitespace-nowrap text-sim-ink transition-all duration-100 select-none hover:border-sim-glow/45 hover:bg-sim-line/20 hover:text-white active:border-sim-glow/55 active:bg-sim-line/30 active:text-white"
           >
-            Mutate
+            <kbd>M</kbd> Mutate
           </button>
           <button
             type="button"
             data-a="chaos"
-            aria-label="Boost chaos"
-            title="Boost chaos"
-            class="inline-flex h-7 items-center justify-center rounded-btn border border-sim-line/20 bg-sim-bg/10 px-1 font-ui text-4xs whitespace-nowrap text-sim-ink transition-all duration-100 select-none active:bg-sim-line/25 active:text-white"
+            aria-label="Boost chaos (hold Tab)"
+            title="Boost chaos (hold Tab)"
+            class="inline-flex h-8 items-center justify-center rounded-btn border border-sim-line/30 bg-sim-bg/15 px-1 font-ui text-4xs whitespace-nowrap text-sim-ink transition-all duration-100 select-none hover:border-sim-glow/45 hover:bg-sim-line/20 hover:text-white active:border-sim-glow/55 active:bg-sim-line/30 active:text-white"
           >
-            Chaos+
+            <kbd>&#8677;</kbd> Chaos+
           </button>
         </div>
       </div>
@@ -424,14 +428,14 @@
       id="bar"
       role="toolbar"
       aria-label="Simulation toolbar"
-      class="fixed bottom-1.5 left-1/2 z-20 flex max-w-[calc(100vw-12px)] -translate-x-1/2 flex-wrap items-center justify-center gap-1 rounded-panel border border-emerald-300/10 bg-void/90 px-2 py-1.25 backdrop-blur-xl"
+      class="fixed bottom-1.5 left-1/2 z-20 flex max-w-[calc(100vw-12px)] -translate-x-1/2 flex-wrap items-center justify-center gap-1 rounded-panel border border-bar-line/15 bg-void/90 px-2 py-1.25 backdrop-blur-xl"
     >
       <button
         type="button"
         data-action="music"
         aria-label="Toggle music"
         title="Toggle music"
-        class="flex min-h-6.5 items-center gap-1 rounded-btn border border-emerald-300/15 bg-emerald-500/5 px-2 py-1 font-ui text-3xs whitespace-nowrap text-emerald-200/90 transition-all duration-100 select-none active:bg-emerald-400/20 active:text-white"
+        class="flex min-h-7 items-center gap-1 rounded-btn border border-bar-line/20 bg-bar-bg/10 px-2.5 py-1 font-ui text-3xs whitespace-nowrap text-bar-ink transition-all duration-100 select-none hover:border-bar-line/40 hover:bg-bar-hot/15 hover:text-white active:bg-bar-hot/25 active:text-white"
       >
         &#9835;
       </button>
@@ -440,7 +444,7 @@
         data-action="song"
         aria-label="Next song"
         title="Next song"
-        class="flex min-h-6.5 items-center gap-1 rounded-btn border border-emerald-300/15 bg-emerald-500/5 px-2 py-1 font-ui text-3xs whitespace-nowrap text-emerald-200/90 transition-all duration-100 select-none active:bg-emerald-400/20 active:text-white"
+        class="flex min-h-7 items-center gap-1 rounded-btn border border-bar-line/20 bg-bar-bg/10 px-2.5 py-1 font-ui text-3xs whitespace-nowrap text-bar-ink transition-all duration-100 select-none hover:border-bar-line/40 hover:bg-bar-hot/15 hover:text-white active:bg-bar-hot/25 active:text-white"
       >
         Song
       </button>
@@ -449,7 +453,7 @@
         data-action="sfx"
         aria-label="Toggle sound effects"
         title="Toggle sound effects"
-        class="flex min-h-6.5 items-center gap-1 rounded-btn border border-emerald-300/15 bg-emerald-500/5 px-2 py-1 font-ui text-3xs whitespace-nowrap text-emerald-200/90 transition-all duration-100 select-none active:bg-emerald-400/20 active:text-white"
+        class="flex min-h-7 items-center gap-1 rounded-btn border border-bar-line/20 bg-bar-bg/10 px-2.5 py-1 font-ui text-3xs whitespace-nowrap text-bar-ink transition-all duration-100 select-none hover:border-bar-line/40 hover:bg-bar-hot/15 hover:text-white active:bg-bar-hot/25 active:text-white"
       >
         SFX
       </button>
@@ -458,7 +462,7 @@
         data-action="sfxcycle"
         aria-label="Preview next sound effect"
         title="Preview next sound effect"
-        class="flex min-h-6.5 items-center gap-1 rounded-btn border border-emerald-300/15 bg-emerald-500/5 px-2 py-1 font-ui text-3xs whitespace-nowrap text-emerald-200/90 transition-all duration-100 select-none active:bg-emerald-400/20 active:text-white"
+        class="flex min-h-7 items-center gap-1 rounded-btn border border-bar-line/20 bg-bar-bg/10 px-2.5 py-1 font-ui text-3xs whitespace-nowrap text-bar-ink transition-all duration-100 select-none hover:border-bar-line/40 hover:bg-bar-hot/15 hover:text-white active:bg-bar-hot/25 active:text-white"
       >
         Fx
       </button>
@@ -467,7 +471,7 @@
         data-action="reset"
         aria-label="Reset simulation"
         title="Reset simulation"
-        class="flex min-h-6.5 items-center gap-1 rounded-btn border border-emerald-300/15 bg-emerald-500/5 px-2 py-1 font-ui text-3xs whitespace-nowrap text-emerald-200/90 transition-all duration-100 select-none active:bg-emerald-400/20 active:text-white"
+        class="flex min-h-7 items-center gap-1 rounded-btn border border-bar-line/20 bg-bar-bg/10 px-2.5 py-1 font-ui text-3xs whitespace-nowrap text-bar-ink transition-all duration-100 select-none hover:border-bar-line/40 hover:bg-bar-hot/15 hover:text-white active:bg-bar-hot/25 active:text-white"
       >
         &#8635;
       </button>
@@ -476,7 +480,7 @@
         data-action="time"
         aria-label="Cycle time scale"
         title="Cycle time scale"
-        class="flex min-h-6.5 items-center gap-1 rounded-btn border border-emerald-300/15 bg-emerald-500/5 px-2 py-1 font-ui text-3xs whitespace-nowrap text-emerald-200/90 transition-all duration-100 select-none active:bg-emerald-400/20 active:text-white"
+        class="flex min-h-7 items-center gap-1 rounded-btn border border-bar-line/20 bg-bar-bg/10 px-2.5 py-1 font-ui text-3xs whitespace-nowrap text-bar-ink transition-all duration-100 select-none hover:border-bar-line/40 hover:bg-bar-hot/15 hover:text-white active:bg-bar-hot/25 active:text-white"
       >
         &#9201;
       </button>
@@ -485,7 +489,7 @@
         data-action="wire"
         aria-label="Toggle wireframe"
         title="Toggle wireframe"
-        class="flex min-h-6.5 items-center gap-1 rounded-btn border border-emerald-300/15 bg-emerald-500/5 px-2 py-1 font-ui text-3xs whitespace-nowrap text-emerald-200/90 transition-all duration-100 select-none active:bg-emerald-400/20 active:text-white"
+        class="flex min-h-7 items-center gap-1 rounded-btn border border-bar-line/20 bg-bar-bg/10 px-2.5 py-1 font-ui text-3xs whitespace-nowrap text-bar-ink transition-all duration-100 select-none hover:border-bar-line/40 hover:bg-bar-hot/15 hover:text-white active:bg-bar-hot/25 active:text-white"
       >
         Wire
       </button>
@@ -494,7 +498,7 @@
         data-action="view"
         aria-label="Cycle camera view"
         title="Cycle camera view"
-        class="flex min-h-6.5 items-center gap-1 rounded-btn border border-emerald-300/15 bg-emerald-500/5 px-2 py-1 font-ui text-3xs whitespace-nowrap text-emerald-200/90 transition-all duration-100 select-none active:bg-emerald-400/20 active:text-white"
+        class="flex min-h-7 items-center gap-1 rounded-btn border border-bar-line/20 bg-bar-bg/10 px-2.5 py-1 font-ui text-3xs whitespace-nowrap text-bar-ink transition-all duration-100 select-none hover:border-bar-line/40 hover:bg-bar-hot/15 hover:text-white active:bg-bar-hot/25 active:text-white"
       >
         View
       </button>
@@ -503,7 +507,7 @@
         data-action="algo"
         aria-label="Cycle sorting algorithm"
         title="Cycle sorting algorithm"
-        class="flex min-h-6.5 items-center gap-1 rounded-btn border border-emerald-300/15 bg-emerald-500/5 px-2 py-1 font-ui text-3xs whitespace-nowrap text-emerald-200/90 transition-all duration-100 select-none active:bg-emerald-400/20 active:text-white"
+        class="flex min-h-7 items-center gap-1 rounded-btn border border-bar-line/20 bg-bar-bg/10 px-2.5 py-1 font-ui text-3xs whitespace-nowrap text-bar-ink transition-all duration-100 select-none hover:border-bar-line/40 hover:bg-bar-hot/15 hover:text-white active:bg-bar-hot/25 active:text-white"
       >
         Algo
       </button>
@@ -512,7 +516,7 @@
         data-action="weather"
         aria-label="Cycle weather"
         title="Cycle weather"
-        class="flex min-h-6.5 items-center gap-1 rounded-btn border border-emerald-300/15 bg-emerald-500/5 px-2 py-1 font-ui text-3xs whitespace-nowrap text-emerald-200/90 transition-all duration-100 select-none active:bg-emerald-400/20 active:text-white"
+        class="flex min-h-7 items-center gap-1 rounded-btn border border-bar-line/20 bg-bar-bg/10 px-2.5 py-1 font-ui text-3xs whitespace-nowrap text-bar-ink transition-all duration-100 select-none hover:border-bar-line/40 hover:bg-bar-hot/15 hover:text-white active:bg-bar-hot/25 active:text-white"
       >
         &#9729;
       </button>
@@ -521,7 +525,7 @@
         data-action="apoc"
         aria-label="Trigger apocalypse"
         title="Trigger apocalypse"
-        class="flex min-h-6.5 items-center gap-1 rounded-btn border border-danger-line/20 bg-danger/5 px-2 py-1 font-ui text-3xs whitespace-nowrap text-danger-ink transition-all duration-100 select-none active:bg-danger/20 active:text-white"
+        class="flex min-h-7 items-center gap-1 rounded-btn border border-danger-line/30 bg-danger/5 px-2.5 py-1 font-ui text-3xs whitespace-nowrap text-danger-ink transition-all duration-100 select-none hover:border-danger-line/60 hover:bg-danger/15 hover:text-white active:bg-danger/25 active:text-white"
       >
         &#9760;
       </button>
@@ -530,7 +534,7 @@
         href="/lab"
         aria-label="Open the Quantum Wildbeyond lab artifact"
         title="Open the Quantum Wildbeyond lab artifact"
-        class="flex min-h-6.5 items-center gap-1 rounded-btn border border-accent/15 bg-accent/5 px-2 py-1 font-ui text-3xs tracking-widest whitespace-nowrap text-accent/80 uppercase transition-all duration-100 select-none hover:text-accent active:bg-accent/20 active:text-white"
+        class="flex min-h-7 items-center gap-1 rounded-btn border border-accent/15 bg-accent/5 px-2.5 py-1 font-ui text-3xs tracking-widest whitespace-nowrap text-accent/80 uppercase transition-all duration-100 select-none hover:border-accent/40 hover:bg-accent/10 hover:text-accent active:bg-accent/20 active:text-white"
         >Lab</a
       >
     </div>
@@ -573,7 +577,7 @@
 
     <a
       href="/docs"
-      class="fixed right-1.5 bottom-1.5 z-20 rounded-btn border border-cyan-300/15 bg-void/90 px-2 py-1 font-ui text-3xs tracking-widest text-accent/80 uppercase backdrop-blur-md hover:text-accent"
+      class="fixed right-1.5 bottom-1.5 z-20 rounded-btn border border-cyan-300/15 bg-void/90 px-2 py-1 font-ui text-3xs tracking-widest text-accent/80 uppercase backdrop-blur-md transition-all duration-100 hover:border-accent/40 hover:bg-accent/10 hover:text-accent"
       aria-label="Open architecture documentation"
       title="Open architecture documentation"
       >Docs</a

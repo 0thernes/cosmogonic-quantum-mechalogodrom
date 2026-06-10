@@ -3,12 +3,17 @@
  * persisted-state load, world construction, and the requestAnimationFrame loop.
  */
 import 'htmx.org';
+import * as THREE from 'three';
 import { detectQuality } from './core/quality';
 import { Engine } from './core/engine';
 import { MemoryStore } from './memory/store';
 import { AuditTrail } from './logging/audit';
 import { createLogger } from './logging/logger';
 import { World } from './world';
+
+// Legacy r128 color fidelity: the original rendered without color management;
+// disable it BEFORE any THREE.Color is constructed (audit finding, 0.2.1).
+THREE.ColorManagement.enabled = false;
 
 const log = createLogger('main');
 

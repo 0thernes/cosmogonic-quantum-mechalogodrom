@@ -13,6 +13,13 @@
  * New over legacy: yaw buttons `yleft`/`yright` drive `camVel.ry` ±1, giving touch users the
  * C/V yaw the keyboard has (this makes the legacy dead `camVel.ry` path live).
  *
+ * New over legacy (0.2.x contract amendment): pointer-look and wheel zoom on the `#c` canvas.
+ * A drag that STARTS on the canvas (mouse, pen, or a touch outside the joystick) accumulates
+ * deltas into `look.dx`/`look.dy`; the wheel accumulates into `zoom`. The world consumes both
+ * each frame in free view (`rotation.y -= dx * 0.003`, `rotation.x -= dy * 0.003`,
+ * `translateZ(zoom * k)`) and zeroes them. Pointer capture keeps fast drags tracking; UI
+ * elements all float above the canvas, so panel/toolbar interaction never steers the camera.
+ *
  * Audio unlock: this module has no audio knowledge. The composition root wires
  * `AudioEngine.init()` into its `UiActions` implementations, so the first user gesture that
  * dispatches an action unlocks the AudioContext — input just forwards.
@@ -72,8 +79,9 @@ const TOOLBAR_MAP: Readonly<Record<string, keyof UiActions>> = {
 
 /**
  * Binds all DOM input once at construction and exposes live, read-only views of the input
- * state. The frame loop polls `keys`, `camVel`, and `touch` — no per-frame work happens here
- * (everything is event-driven), so the system contributes zero allocation to the render loop.
+ * state. The frame loop polls `keys`, `camVel`, `touch`, `look`, and `zoom` — no per-frame
+ * work happens here (everything is event-driven), so the system contributes zero allocation
+ * to the render loop. `look` and `zoom` are accumulators the world consumes-and-zeroes.
  */
 export class InputSystem {
   /** Live lowercase key-name → held map (legacy `keys`). Mutated only by this system. */
@@ -82,11 +90,30 @@ export class InputSystem {
   readonly camVel = { x: 0, y: 0, z: 0, rx: 0, ry: 0, rz: 0 };
   /** Joystick state (legacy `touchActive`/`touchX`/`touchY`), each axis in [-1, 1]. */
   readonly touch = { active: false, x: 0, y: 0 };
+  /**
+   * Pointer-look deltas in CSS pixels, accumulated while a drag that started on the `#c`
+   * canvas is active. CONTRACT AMENDMENT (0.2.x): the world reads `dx`/`dy` once per frame
+   * (free view: `rotation.y -= dx * 0.003`, `rotation.x -= dy * 0.003`) and MUST zero both
+   * fields afterwards. The object identity is stable; only its fields mutate.
+   */
+  readonly look = { dx: 0, dy: 0 };
+  /**
+   * Accumulated wheel delta (deltaMode-normalized to ~pixels; positive = zoom out).
+   * CONTRACT AMENDMENT (0.2.x): the world consumes it each frame
+   * (`camera.translateZ(zoom * 0.02)` in free view) and resets it to 0. A mutable field by
+   * necessity — a `readonly` primitive could not be consumed-and-zeroed by the reader.
+   */
+  zoom = 0;
 
   private readonly actions: UiActions;
   private readonly keyState: Record<string, boolean> = {};
   /** Identifier of the touch steering the joystick; null when idle (Known Bug 8). */
   private joyId: number | null = null;
+  /** pointerId of the pointer dragging the camera look; null when idle. */
+  private lookId: number | null = null;
+  /** Last look-drag pointer position (clientX/clientY), valid while `lookId` is set. */
+  private lookLastX = 0;
+  private lookLastY = 0;
   /** Re-assigned by bindJoystick; default no-op keeps blur handling safe without a joystick. */
   private resetJoy: () => void = () => {};
   /** Bound `[data-a]` buttons, kept so blur can drop any lingering `.on` highlight. */
@@ -99,6 +126,7 @@ export class InputSystem {
     this.bindPadButtons();
     this.bindToolbar();
     this.bindJoystick();
+    this.bindPointerLook();
   }
 
   /** Keyboard state + Tab/Space preventDefault (legacy 606-607); blur clear is Known Bug 11. */
@@ -227,8 +255,59 @@ export class InputSystem {
   }
 
   /**
-   * Known Bug 11: release everything held — key map, button-driven camVel, joystick, and any
-   * lingering `.on` button highlight. Runs on window blur only, so allocation here is fine.
+   * Mouse-look + wheel zoom on the `#c` canvas (0.2.x contract amendment; see class fields).
+   * Only pointers that go DOWN on the canvas itself steer the camera — every UI surface
+   * (panels, toolbar, joystick) stacks above it, so taps there never reach the canvas. The
+   * first pointer wins (`lookId` gate, mirroring the joystick's identifier tracking) and is
+   * captured so fast drags keep delivering moves outside the window. Touch drags work because
+   * the canvas carries `touch-none` (no scroll/zoom gesture competes). All handlers are
+   * event-driven and allocation-free; per-event work is O(1).
+   */
+  private bindPointerLook(): void {
+    const canvas = document.getElementById('c');
+    if (!canvas) {
+      console.warn('InputSystem: canvas #c not found — pointer look disabled');
+      return;
+    }
+    canvas.addEventListener('pointerdown', (e) => {
+      if (this.lookId !== null || e.button !== 0) return;
+      this.lookId = e.pointerId;
+      this.lookLastX = e.clientX;
+      this.lookLastY = e.clientY;
+      try {
+        canvas.setPointerCapture(e.pointerId);
+      } catch {
+        // NotFoundError when the pointer is already gone (released mid-dispatch, or a
+        // synthetic test event). The drag still works uncaptured; pointerup ends it.
+      }
+    });
+    canvas.addEventListener('pointermove', (e) => {
+      if (e.pointerId !== this.lookId) return;
+      this.look.dx += e.clientX - this.lookLastX;
+      this.look.dy += e.clientY - this.lookLastY;
+      this.lookLastX = e.clientX;
+      this.lookLastY = e.clientY;
+    });
+    const end = (e: PointerEvent): void => {
+      if (e.pointerId === this.lookId) this.lookId = null;
+    };
+    canvas.addEventListener('pointerup', end);
+    canvas.addEventListener('pointercancel', end);
+    // Wheel zoom: normalize the rare line/page delta modes to ~pixels, accumulate for world.
+    canvas.addEventListener(
+      'wheel',
+      (e) => {
+        e.preventDefault(); // page never scrolls; keep browser zoom gestures off the canvas
+        this.zoom += e.deltaY * (e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? 100 : 1);
+      },
+      { passive: false },
+    );
+  }
+
+  /**
+   * Known Bug 11: release everything held — key map, button-driven camVel, joystick, look
+   * drag, and any lingering `.on` button highlight. Runs on window blur only, so allocation
+   * here is fine.
    */
   private clearHeldInput(): void {
     for (const k of Object.keys(this.keyState)) this.keyState[k] = false;
@@ -239,6 +318,10 @@ export class InputSystem {
     this.camVel.ry = 0;
     this.camVel.rz = 0;
     this.resetJoy();
+    this.lookId = null;
+    this.look.dx = 0;
+    this.look.dy = 0;
+    this.zoom = 0;
     for (const btn of this.padButtons) btn.classList.remove('on');
   }
 }
