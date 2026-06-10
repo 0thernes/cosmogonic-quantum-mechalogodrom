@@ -171,6 +171,12 @@ export class World {
       temperature: 20,
       shoggoths: this.shoggoths.count,
       puppeteers: this.puppets.count,
+      // V2 fields — placeholders until the Wildbeyond systems are integrated
+      // (qcircuit/graph-mind/analytics/lore wiring tracked in task #12).
+      tribes: 0,
+      trend: 0,
+      qEntropy: 0,
+      lore: '---',
     };
 
     this.log.info('world ready', {

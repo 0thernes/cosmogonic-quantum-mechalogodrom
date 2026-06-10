@@ -213,6 +213,14 @@ export interface TelemetrySnapshot {
   temperature: number;
   shoggoths: number;
   puppeteers: number;
+  /** Graph communities found by the last louvain pass (V2). */
+  tribes: number;
+  /** Population slope per minute from rolling regression (V2). */
+  trend: number;
+  /** Normalized 0..1 Shannon entropy of the quantum register (V2). */
+  qEntropy: number;
+  /** Lore name of the camera's Voronoi sub-sector (V2). */
+  lore: string;
 }
 
 /** User-facing actions; world.ts implements them, src/ui binds them to the DOM. */

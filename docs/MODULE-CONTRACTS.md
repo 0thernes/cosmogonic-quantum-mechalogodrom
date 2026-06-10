@@ -442,3 +442,265 @@ rAF → dt = min(clock.delta, 0.05) * timeScale
   → entities.update → connectome.update (cadence by n) → quantum.update
   → environment.update → telemetry (every 8th frame) → render
 ```
+
+---
+
+# CONTRACTS V2 — Quantum Wildbeyond expansion (0.2.0)
+
+Seven new systems per docs/PHILOSOPHY.md. Every system must READ from and WRITE
+to at least one existing system (philosophy rule 4). All V1 ground rules apply
+(strict TS, seeded Rng only, allocation-free update bodies, JSDoc + complexity).
+File ownership is EXCLUSIVE — the named writer is the only agent touching a file.
+
+## New telemetry/DOM contract additions
+
+- `TelemetrySnapshot` (src/types.ts — integrator-owned, already updated) gains:
+  `tribes: number` (graph communities), `trend: number` (population slope per
+  minute), `qEntropy: number` (normalized 0..1 Shannon entropy of the quantum
+  register), `lore: string` (current sub-sector lore name).
+- index.html gains telemetry rows `#v9` (TRIBES), `#v10` (TREND, format `+x.x/m`
+  or `-x.x/m`), `#v11` (QBIT-S, qEntropy.toFixed(2)), and a lore line `#lore`
+  inside the `#alg` card under `#a-step`. TelemetryPanel caches and renders them.
+
+## src/math/quantum.ts (writer: quantum) — statevector core
+
+```ts
+// Minimal statevector quantum register. Backend: pure TS (2^n complex amps as a
+// Float64Array pair, allocation-free gate application). n <= 8 enforced.
+export type GateName =
+  | 'h'
+  | 'x'
+  | 'y'
+  | 'z'
+  | 's'
+  | 't'
+  | 'rx'
+  | 'ry'
+  | 'rz'
+  | 'cx'
+  | 'cz'
+  | 'swap';
+export class QuantumRegister {
+  constructor(qubits: number); // throws if qubits < 1 or > 8
+  readonly qubits: number;
+  apply(gate: GateName, target: number, control?: number, theta?: number): void; // O(2^n)
+  // Born-rule probabilities into a REUSED Float64Array (valid until next call). O(2^n).
+  probabilities(): Float64Array;
+  // Normalized Shannon entropy of probabilities, 0..1. O(2^n).
+  entropy(): number;
+  // Probabilistic collapse using rng; returns basis index, resets register to |i>.
+  measure(rng: Rng): number;
+  reset(): void; // back to |0...0>
+}
+```
+
+Pure TS implementation (no npm backend): for n=5 this is 32 complex amplitudes —
+faster, smaller, and more testable than any bundled simulator; the
+`quantum-circuit` npm package is CJS/oversized for this use (decision recorded
+in ADR 0005, subject to the deep-research report's verdict).
+Tests (tests/quantum.test.ts): H gives uniform probs; H·H = identity (within
+1e-12); X flips; CX entangles a Bell pair (entropy = 1 bit normalized); measure()
+respects rng stream determinism; probabilities sum to 1 ± 1e-9.
+Bench (bench/quantum.bench.ts): apply('h'), apply('cx'), probabilities() at n=5.
+
+## src/sim/qcircuit.ts (writer: quantum)
+
+```ts
+export class QuantumCircuitSystem {
+  constructor(ctx: SimContext, register?: QuantumRegister); // default 5 qubits
+  readonly entropy: number; // updated on cadence
+  readonly lastCollapse: number; // basis index of last measurement, -1 if none
+  // Event feeds: puppet-master actions apply characteristic gate sequences
+  // (AETHON→rx(chaos·π/4), SELENE→h+cz, KRONOS→x+swap); sort swaps apply cx
+  // with parity-chosen targets. Cheap O(2^n) per event.
+  onPuppetEvent(e: PuppetEvent): void;
+  onSortSwap(a: number, b: number): void;
+  // World calls every 30 frames: drift gate ry(theta from chaos), recompute
+  // entropy; every 8th update() measure() and expose the collapse.
+  update(): void;
+  // Per-6-frame hook for QuantumCloud: per-band hues derived from the 32 basis
+  // probabilities, written into a REUSED Float32Array (32 entries, 0..1).
+  bands(): Float32Array;
+}
+```
+
+QuantumCloud amendment (writer: quantum also owns src/sim/quantum.ts edits): add
+`setQuantumBands(bands: Float32Array | null): void`; when set, the particle
+color refresh keys hue off `bands[particleIndex % 32]` blended with the legacy
+psi hue; a change in `lastCollapse` (world passes it via the same setter call
+pattern) triggers a localized cloud implosion reusing the existing
+collapse/respawn path — no new allocation.
+
+## src/sim/reaction-diffusion.ts (writer: rd)
+
+```ts
+// Gray-Scott reaction-diffusion on a SIZE×SIZE grid (default 128), CPU
+// typed-array ping-pong (two Float32Array pairs), allocation-free step.
+// O(SIZE²) per step — <0.5 ms at 128; world runs it every 2nd frame.
+export class ReactionDiffusionSystem {
+  constructor(ctx: SimContext, size?: number);
+  // three.js DataTexture bound to the U field — attach as ground emissiveMap.
+  readonly texture: THREE.DataTexture;
+  // Weather-coupled params: STORM raises feed, VOID raises kill, AURORA boosts
+  // diffusion; chaos scales reaction rate. Reads ctx.state each step.
+  step(): void;
+  // Drop a seed disturbance at normalized (u,v) — wired to entity deaths.
+  perturb(u: number, v: number, radius?: number): void;
+}
+```
+
+EnvironmentSystem amendment (writer: rd MAY edit src/sim/environment.ts ONLY to
+add `attachGroundEmissiveMap(tex: THREE.Texture): void` and an emissiveIntensity
+coupling on the ground material; touch nothing else in the file).
+Tests (tests/reaction-diffusion.test.ts): field stays finite over 500 steps;
+uniform field stays uniform without perturbation; perturbation breaks symmetry;
+identical fields across two same-seed runs.
+Bench (bench/reaction-diffusion.bench.ts): one step() at size 128.
+
+## src/sim/graph-mind.ts (writer: graph) — deps: graphology, graphology-communities-louvain, graphology-metrics
+
+```ts
+// Mirrors the connectome into a graphology Graph on a slow cadence and runs
+// community detection + pagerank; results drive link colors and entity halos.
+export class GraphMind {
+  constructor(ctx: SimContext, entities: EntityManager, connectome: Connectome);
+  readonly tribes: number; // community count from last louvain pass
+  // World calls every 240 frames: rebuild graph from connectome.pairs, run
+  // louvain (rng option = ctx.rng for determinism), write community index into
+  // each member entity's userData.setGroup (the set-theory behavior becomes
+  // tribe-aware — true feedback), and install a community palette on the
+  // connectome via setCommunityOf.
+  updateCommunities(): void;
+  // World calls every 600 frames (offset 120): pagerank; the top-20 entities
+  // get an emissiveIntensity floor boost while their rank holds.
+  updateRank(): void;
+}
+```
+
+Connectome amendment (writer: graph also owns src/sim/connectome.ts edits):
+expose `readonly pairs: Uint32Array` + `readonly pairCount: number` (entity-list
+index pairs per link, filled during the rebuild it already performs — zero extra
+cost) and `setCommunityOf(fn: ((entityIndex: number) => number) | null): void` —
+when set, link hue offsets by community index (8-hue palette) instead of pure
+time hue.
+Tests (tests/graph-mind.test.ts): graph build from synthetic pairs; louvain on a
+two-cluster synthetic graph finds ≥ 2 communities; deterministic with seeded rng.
+
+## src/sim/constellations.ts (writer: cosmos) — dep: d3-delaunay
+
+```ts
+// Voronoi sky-web over the 24 static monolith+diorama XZ sites, built ONCE at
+// construction (O(n log n)): cell edges as faint LineSegments at y≈55 plus site
+// links along Delaunay edges. Per-frame update is O(1) opacity/pulse work.
+export class ConstellationSystem {
+  constructor(ctx: SimContext, lore: LoreEngine);
+  // O(log n) point location via voronoi.find; returns the lore name of the cell.
+  subSectorAt(pos: THREE.Vector3): string;
+  update(t: number, bands: AudioBands): void;
+}
+```
+
+## src/sim/lore.ts (writer: cosmos) — dep: @noble/hashes (sha2 / sha256)
+
+```ts
+// Deterministic cosmic lore: sha256(seed || kind || index) → syllabic names
+// (digest bytes index a curated syllable table), epithets and omens. Pure leaf.
+export class LoreEngine {
+  constructor(seed: number);
+  name(kind: 'sector' | 'tribe' | 'star' | 'omen', index: number): string; // memoized
+  epithet(kind: 'puppet' | 'weather' | 'collapse', key: string): string; // memoized
+}
+```
+
+Tests (tests/lore.test.ts): same seed+args ⇒ same name; different seeds diverge;
+names are 2–4 syllables from a pronounceable charset.
+
+## src/audio/analysis.ts (writer: audio2) + AudioEngine amendment
+
+AudioEngine (writer: audio2 also owns src/audio/engine.ts edits): add
+`tapAnalyser(): AnalyserNode | null` — lazily creates ONE AnalyserNode (fftSize
+256, smoothingTimeConstant 0.8) and fan-out connects both the music and sfx gain
+nodes into it (in addition to destination); returns null before init().
+
+```ts
+// src/audio/analysis.ts
+export interface AudioBands {
+  bass: number;
+  mid: number;
+  treble: number;
+  level: number;
+} // 0..1
+export class AudioAnalysis {
+  constructor(audio: AudioEngine);
+  // Per-frame poll into a pre-allocated Uint8Array; exponential smoothing;
+  // zeros when audio is uninitialized. O(fftSize/2). Returns a REUSED object.
+  update(): AudioBands;
+}
+```
+
+World couples bands: point-light shimmer (bass), constellation pulse (treble),
+quantum-cloud point-size breathe (level) — multipliers ≤ 0.35 so a silent world
+looks identical to v1.
+
+## src/sim/analytics.ts (writer: analytics) — dep: simple-statistics
+
+```ts
+// Rolling-window telemetry science: 120-sample ring buffers (population,
+// energy, links). Every 60 frames: mean/stddev + linearRegression slope →
+// trend per minute; population z-score anomalies (|z| > 2.5) emit lore omens
+// via audit.record('omen', ...) at most once per 30 s.
+export class AnalyticsSystem {
+  constructor(ctx: SimContext);
+  readonly trendPerMin: number;
+  push(population: number, energy: number, links: number): void; // every 8th frame
+  analyze(): void; // every 60 frames
+}
+```
+
+Tests (tests/analytics.test.ts): slope sign correctness on synthetic ramps;
+anomaly fires once per window on a step impulse; ring buffers are pre-allocated.
+
+## lab/quantum-wildbeyond.html (writer: lab) — algorithmic-art deliverable
+
+Self-contained p5.js artifact expressing docs/PHILOSOPHY.md. MUST start from the
+skill template at
+`C:\Users\Alexa\AppData\Roaming\Claude\local-agent-mode-sessions\skills-plugin\cdc38a9f-1e3b-4c72-a4e7-8d39e1ccb11d\5da6077d-38bd-4073-b218-1373e774ec00\skills\algorithmic-art\templates\viewer.html`
+(Read it FIRST; keep header/sidebar/branding/seed controls/action buttons
+EXACTLY; replace only the algorithm + parameter controls). Algorithm: "collapse
+field" — particles flowing a blended Lorenz-XZ/curl-noise field, a Voronoi
+shatter overlay echoing the 24 cosmos sites, interference rings on seeded
+measurement events; params: particle count, collapse rate, field blend, trail
+fade, palette shift. Seeded via randomSeed/noiseSeed. p5 from CDN only.
+The server.ts `/lab` route is the INTEGRATOR's job — do not touch server.ts.
+
+## Design system (writer: design) — owns index.html, src/styles/app.css, src/ui/panels.ts, src/ui/hud.ts, docs/WIREFRAMES.md
+
+1. Produce docs/DESIGN-SYSTEM.md: full audit per the /design-system skill format
+   (summary + score; naming consistency; token-coverage table counting hardcoded
+   hex/px in app.css + index.html; component completeness for Panel,
+   ToolbarButton, ControlPad key, TelemetryRow, Banner `#sec`, Toast `#nm`,
+   AlgoCard, Sparkline, AuditFeed, Joystick — states/variants/docs scores), then
+   token documentation (color roles incl. semantic accent/warn/danger + 8-hue
+   tribe palette, type scale, spacing scale, radii, blur/elevation, motion
+   durations + easings) and component docs with a11y notes.
+2. Apply fixes: hoist remaining hardcoded values into @theme tokens; add
+   :focus-visible rings on all interactive elements; prefers-reduced-motion
+   damping for pulses/transitions; add telemetry rows #v9/#v10/#v11 + the #lore
+   line + a small /lab link in #bar (aria-labeled).
+3. Keep the visual identity (void/cyan glass) — elevate, don't redesign.
+4. TelemetryPanel renders the new rows; hud.ts gains `setLore(name: string)`.
+
+## Frame pipeline V2 additions (integrator reference)
+
+```
+... entities.update → connectome.update (cadence)
+  → qcircuit.update (every 30f; bands → quantum cloud every 6f)
+  → rd.step (every 2nd frame, offset 1 from grid rebuild)
+  → graphMind.updateCommunities (every 240f) / updateRank (every 600f, offset 120)
+  → analytics.push (every 8f with telemetry) / analyze (every 60f)
+  → constellations.update (per frame, O(1)) with audio bands
+  → environment.update → telemetry → render
+Entity deaths call rd.perturb(death position normalized to ground UV).
+PuppetEvents fan out to qcircuit.onPuppetEvent + lore epithet in the toast.
+Sort swaps call qcircuit.onSortSwap(a, b).
+```
