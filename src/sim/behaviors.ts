@@ -55,8 +55,23 @@ export interface BehaviorEnv {
   sinWF: number;
   /** `cos(t * wf + ph)` for the current entity (legacy `cosWF`, line 705). */
   cosWF: number;
-  /** Theory-behavior stagger gate `(frame + index) % 2 === 0` (legacy line 707). */
+  /**
+   * Theory-behavior stagger gate. At tiers ≤ 5,000 entities this is the legacy
+   * `(frame + index) % 2 === 0` (each theory entity runs its grid-query work every
+   * other frame); at the ultra tier (> 5,000) the entity loop widens the stride so
+   * the five neighbor-query theory behaviors run every 3rd frame instead, spacing
+   * out the dominant per-frame cost wall (see EntityManager.update). The behavior
+   * forces are unchanged — only the cadence at which an entity re-evaluates them.
+   */
   doTheory: boolean;
+  /**
+   * Flock stagger gate. The 'flock' behavior issues a grid query EVERY frame (it is
+   * not a theory behavior), so at 10k entities it is, on its own, ~30% of the
+   * neighbor-visit budget. At tiers ≤ 5,000 this is always `true` (byte-identical to
+   * the legacy every-frame flock); at the ultra tier the loop runs it every other
+   * frame. 'flock' draws no rng, so this gate never perturbs the seeded stream.
+   */
+  doFlock: boolean;
 }
 
 type Handler = (e: Entity, u: EntityData, env: BehaviorEnv) => void;
@@ -427,7 +442,11 @@ const HANDLERS: Readonly<Record<Behavior, Handler>> = {
 /**
  * Apply the entity's behavior field for this frame. Theory behaviors (nash / market /
  * typemorph / setunion / graphseek) are skipped when `env.doTheory` is false — the legacy
- * `(frame + i) % 2` stagger (line 707), under which a theory entity simply idles that frame.
+ * `(frame + i) % 2` stagger (line 707), under which a theory entity simply idles that frame
+ * (widened to every 3rd frame at the ultra tier). 'flock' is likewise skipped when
+ * `env.doFlock` is false (ultra-only; always true ≤ 5,000 entities). On a skipped frame the
+ * entity keeps its current velocity — the force is simply re-evaluated less often, identically
+ * to the legacy theory stagger.
  *
  * Hot path: allocation-free. O(k) where k = neighbors returned by the grid query (O(1) for
  * non-neighbor behaviors; O(m) for 'hunt', m = MONOLITH_CONFIG.length).
@@ -435,5 +454,6 @@ const HANDLERS: Readonly<Record<Behavior, Handler>> = {
 export function applyBehavior(e: Entity, env: BehaviorEnv): void {
   const u = e.userData;
   if (!env.doTheory && THEORY.has(u.beh)) return;
+  if (!env.doFlock && u.beh === 'flock') return;
   HANDLERS[u.beh](e, u, env);
 }

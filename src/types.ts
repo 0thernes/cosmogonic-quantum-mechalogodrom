@@ -22,7 +22,23 @@ export interface QualityProfile {
   tier: QualityTier;
   isMobile: boolean;
   dprCap: number;
+  /**
+   * Hard population ceiling — the largest the world will EVER hold. All capacity buffers
+   * (instanced pools, connectome/graph index tables, atmosphere particulate count and its
+   * rng-draw count) are sized from this, and the spawn guard rejects above it. Always
+   * reachable via user-driven bursts/apocalypse, even when {@link targetEntities} is lower.
+   */
   maxEntities: number;
+  /**
+   * Adaptive steady-state population target (CONTRACTS V3.6/V4.5). ORGANIC growth — auto-split
+   * and sparse-respawn — stops at this count, so an idle world settles here rather than at the
+   * hard ceiling. For every tier except ultra this equals {@link maxEntities} (no behavioral
+   * change). At the ultra tier it is set below 10,000 (the measured count that holds the ≥55fps
+   * desktop acceptance gate while leaving GPU-render headroom — see docs/BENCHMARKS.md);
+   * bursts still push the live count up to {@link maxEntities}, which then organically relaxes
+   * back toward this target. Must be ≤ maxEntities.
+   */
+  targetEntities: number;
   quantumCount: number;
   maxLinks: number;
   shadows: boolean;

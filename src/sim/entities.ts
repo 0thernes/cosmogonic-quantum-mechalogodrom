@@ -67,6 +67,7 @@ export class EntityManager {
       sinWF: 0,
       cosWF: 0,
       doTheory: false,
+      doFlock: true,
     };
   }
 
@@ -225,6 +226,25 @@ export class EntityManager {
     env.dt = dt;
     env.t = t;
     env.cm = cm;
+    // Ultra-tier neighbor-query throttle (CONTRACTS V3.6 — calibration in
+    // docs/BENCHMARKS.md "Ultra-tier 10k optimization"). The five theory behaviors and
+    // 'flock' dominate the per-frame cost wall at 10k (≈292k neighbor visits/frame, with
+    // theory at ~205k and flock alone at ~88k). For maxEntities ≤ 5,000 (phone/laptop/
+    // desktop) this resolves to the LEGACY stride 2 and flock-every-frame — byte-identical
+    // streams and visuals, so every existing test and determinism property is untouched.
+    // Above 5,000 (ultra only) the theory stride widens to 3 and flock staggers to every
+    // other frame, cutting the dominant neighbor work ~⅓ and ~½ respectively. The forces
+    // are identical; only an entity's re-evaluation cadence changes (exactly how the legacy
+    // theory stagger has always worked). Neither gate touches the rng draw count at ≤5,000.
+    const ultra = maxEntities > 5000;
+    const theoryStride = ultra ? 3 : 2;
+    const flockEvery = ultra ? 2 : 1;
+    // Adaptive steady-state target: ORGANIC growth (auto-split, sparse respawn) stops here so
+    // an idle ultra world settles below the 10k ceiling. Equals maxEntities on every other tier
+    // (target===max ⇒ byte-identical to legacy). The hard spawn cap inside spawn() still uses
+    // maxEntities, so user bursts/apocalypse can transiently exceed the target up to 10k, after
+    // which the lack of auto-split lets the population relax back toward `target` (CONTRACTS V4.5).
+    const target = Math.min(ctx.quality.targetEntities, maxEntities);
     MORPHS_SEEN.clear();
     this.phylumCounts.fill(0);
     const phylumCounts = this.phylumCounts;
@@ -247,7 +267,10 @@ export class EntityManager {
       env.sp2 = sp2;
       env.sinWF = sinWF;
       env.cosWF = cosWF;
-      env.doTheory = (frame + i) % 2 === 0; // theory-behavior stagger (legacy line 707)
+      // Theory-behavior stagger (legacy line 707, stride 2 ≤ 5,000 entities; stride 3 ultra).
+      env.doTheory = (frame + i) % theoryStride === 0;
+      // Flock stagger: every frame ≤ 5,000 (legacy), every other frame at ultra.
+      env.doFlock = flockEvery === 1 || (frame + i) % flockEvery === 0;
       // V3.2 OUTLIER blend: a wildcard with a second behavior runs it on odd
       // (frame+i) parity — temporal 50/50 blending, allocation-free (swap,
       // dispatch, restore). Members (beh2 = null) take the legacy path.
@@ -302,8 +325,12 @@ export class EntityManager {
       energy += u.vel.length();
 
       // Auto-split (legacy lines 787-788). sT re-arms only on a successful roll, like legacy.
+      // Organic growth is gated by the adaptive `target` (= maxEntities on every tier except
+      // ultra): an idle world stops splitting at the target instead of climbing to the ceiling.
+      // At target === maxEntities (≤5,000) the short-circuited `rng()` is drawn on exactly the
+      // legacy frames, so the seeded stream is byte-identical.
       u.sT -= dt * 30 * cm;
-      if (u.sT <= 0 && list.length < maxEntities && rng() < 0.06) {
+      if (u.sT <= 0 && list.length < target && rng() < 0.06) {
         u.sT = 300 + rng() * 500;
         SPAWN_AT.set(
           e.position.x + (rng() - 0.5) * 2,
@@ -319,8 +346,10 @@ export class EntityManager {
         const ex = e.position.x;
         const ez = e.position.z;
         this.disposeAt(i);
-        // Sparse floor scales with the tier (legacy 100 of 1000 = 10%).
-        if (list.length < Math.max(100, maxEntities * 0.1)) {
+        // Sparse floor scales with the adaptive target (legacy 100 of 1000 = 10%; = maxEntities
+        // on tiers ≤ 5,000, so byte-identical there). Keeps "repopulate when sparse" proportional
+        // to the steady-state target rather than the 10k ceiling.
+        if (list.length < Math.max(100, target * 0.1)) {
           for (let r = 0; r < 3; r++) {
             SPAWN_AT.set(
               (rng() - 0.5) * 40 * 2.5 + ex * 0.3,

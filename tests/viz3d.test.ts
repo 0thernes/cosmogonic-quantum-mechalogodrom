@@ -30,6 +30,7 @@ function makeCtx(tier: QualityTier, maxEntities: number, seed = 1): SimContext {
       instanced: tier !== 'phone',
       dprCap: 2,
       maxEntities,
+      targetEntities: maxEntities,
       quantumCount: 10,
       maxLinks: 10,
       shadows: false,

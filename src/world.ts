@@ -28,6 +28,7 @@ import {
   CHAOS_MIN,
   GRID_CELL,
   GROUND_EXTENT,
+  ULTRA_GRID_CELL,
   VIEW_MODES,
   WEATHERS,
 } from './sim/constants';
@@ -168,7 +169,17 @@ export class World {
       elapsed: 0,
     };
 
-    this.grid = new SpatialHash<Entity>(GRID_CELL);
+    // Spatial-hash cell size. The legacy GRID_CELL (16, = 8 × ARENA-scaled) is kept for every
+    // tier ≤ 5,000 entities — same cells, same query neighbor sets, same rng-relevant decisions
+    // (nash/market draw rng conditional on neighbor payoffs, so the cell size is part of the
+    // seeded stream; tuning it at ≤5,000 would break reproducibility). At the ultra tier (10k)
+    // the arena packs ~4× denser, so a 3×3 GRID_CELL block returns ~214 candidates per query.
+    // A 10-unit cell (measured sweet spot, docs/BENCHMARKS.md) cuts that ~36% while keeping the
+    // visited-cell count low for the radius-8..16 behavior queries — the smaller cells below 10
+    // were rejected (per-query cell-iteration overhead overtook the neighbor savings). V3.6.
+    this.grid = new SpatialHash<Entity>(
+      this.quality.maxEntities > 5000 ? ULTRA_GRID_CELL : GRID_CELL,
+    );
     // Audio gets its OWN derived stream: its setInterval callbacks drain rng at
     // wall-clock moments, which would make the sim stream timing-dependent and
     // break same-seed reproducibility (audit finding, 0.2.1).
@@ -294,9 +305,13 @@ export class World {
     });
   }
 
-  /** Boot/reset population: 30% of the tier cap (legacy 300 of 1000). */
+  /**
+   * Boot/reset population: 30% of the adaptive steady-state target (legacy 300 of 1000).
+   * Uses `targetEntities` (= maxEntities on every tier except ultra) so the world boots toward
+   * its idle equilibrium, not the 10k ceiling — organic auto-split then fills to the target.
+   */
   private bootPopulation(): number {
-    return Math.max(300, Math.round(this.quality.maxEntities * 0.3));
+    return Math.max(300, Math.round(this.quality.targetEntities * 0.3));
   }
 
   /**
@@ -362,7 +377,12 @@ export class World {
     this.morphCount = stats.morphCount;
 
     const n = this.entities.list.length;
-    const cadence = n > 700 ? 3 : n > 400 ? 2 : 1;
+    // Connectome rebuild cadence by live population. Legacy ladder 1/2/3 at ≤400/≤700/>700
+    // is preserved exactly through the desktop tier; the ultra-class rungs (/4 above 2,000,
+    // /6 above 5,000) keep the O(n·k) link rebuild + GPU upload off the 10k cost wall. The
+    // connectome draws no rng, so cadence changes are determinism-neutral (GraphMind, which
+    // does draw rng, runs on its own 240/600f cadence over whatever pairs exist). V3.6.
+    const cadence = n > 5000 ? 6 : n > 2000 ? 4 : n > 700 ? 3 : n > 400 ? 2 : 1;
     if (s.frame % cadence === 0) this.connectome.update(dt, t);
 
     // ── V2 cadences (ARCHITECTURE.md frame pipeline) ──

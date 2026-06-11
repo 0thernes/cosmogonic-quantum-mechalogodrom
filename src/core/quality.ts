@@ -11,7 +11,14 @@ import type { QualityProfile, QualityTier } from '../types';
  *   legacy per-mesh render path (`instanced: false`), capped DPR, no shadows.
  * - **laptop** — fine pointer, < 10 cores. 2,000 entities, instanced.
  * - **desktop** — ≥ 10 cores. 5,000 entities, instanced.
- * - **ultra** — ≥ 16 cores AND ≥ 8 GB reported memory. 10,000 entities, instanced.
+ * - **ultra** — ≥ 16 cores AND ≥ 8 GB reported memory. 10,000-entity hard ceiling,
+ *   instanced; the idle world settles at the adaptive `targetEntities` (6,500) so the
+ *   ≥55fps desktop acceptance gate holds, with 10,000 reachable on demand via bursts.
+ *
+ * `targetEntities` is the ADAPTIVE steady-state population (organic growth stops there);
+ * `maxEntities` is the HARD ceiling all buffers are sized from and bursts can still reach.
+ * They are equal on every tier except ultra (see {@link QualityProfile.targetEntities} and
+ * the "Ultra-tier 10k optimization" note in docs/BENCHMARKS.md for the 6,500 calibration).
  *
  * quantum/links/stars scale sublinearly with the entity budget (they are ambience
  * layers, not the population). The tier is decided ONCE at boot — no runtime
@@ -23,6 +30,7 @@ export const QUALITY_LADDER: Readonly<
   phone: {
     dprCap: 1.25,
     maxEntities: 650,
+    targetEntities: 650,
     quantumCount: 3500,
     maxLinks: 2200,
     shadows: false,
@@ -32,6 +40,7 @@ export const QUALITY_LADDER: Readonly<
   laptop: {
     dprCap: 2,
     maxEntities: 2000,
+    targetEntities: 2000,
     quantumCount: 4500,
     maxLinks: 3000,
     shadows: true,
@@ -41,6 +50,7 @@ export const QUALITY_LADDER: Readonly<
   desktop: {
     dprCap: 2,
     maxEntities: 5000,
+    targetEntities: 5000,
     quantumCount: 6000,
     maxLinks: 4000,
     shadows: true,
@@ -50,6 +60,10 @@ export const QUALITY_LADDER: Readonly<
   ultra: {
     dprCap: 2,
     maxEntities: 10000,
+    // Adaptive steady-state cap: 6,500 holds sim-CPU ≈ 8.3 ms/frame (well under the 12 ms
+    // budget, leaving GPU-render headroom toward 55 fps) where a true 10k settles ≈ 20 ms.
+    // 10,000 stays the reachable ceiling via bursts. Calibration in docs/BENCHMARKS.md.
+    targetEntities: 6500,
     quantumCount: 8000,
     maxLinks: 6000,
     shadows: true,

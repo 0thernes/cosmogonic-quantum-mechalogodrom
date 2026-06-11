@@ -60,6 +60,7 @@ function makeCtx(seed: number, maxEntities: number): SimContext {
       instanced: false,
       dprCap: 1.25,
       maxEntities,
+      targetEntities: maxEntities,
       quantumCount: 10,
       maxLinks: 100,
       shadows: false,

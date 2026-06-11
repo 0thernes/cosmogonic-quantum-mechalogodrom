@@ -38,6 +38,19 @@ export const MID_RADIUS2 = MID_RADIUS * MID_RADIUS;
 /** Spatial-hash cell edge (legacy 8 → 16: queries stay 1-2 cells at 5× spread). */
 export const GRID_CELL = 16;
 
+/**
+ * Ultra-tier (10k entities) spatial-hash cell edge. At 10k the arena is ~4× denser than the
+ * desktop tier, so the legacy 16-unit cell returns ~214 candidates per behavior query. A
+ * 10-unit cell is the measured cost sweet spot (docs/BENCHMARKS.md "Ultra-tier 10k
+ * optimization"): it cuts neighbors-per-query ~36% (214 → 136) while the radius-8..16 queries
+ * still span only a 3×3 / 5×5 cell block. Rejected: 8 (15.8ms, per-query cell overhead climbs),
+ * 6 (16.3ms), 4 (16.0ms) — all WORSE than 10 (13.5ms) and even than 16, because shrinking the
+ * cell multiplies the (2·ceil(r/cs)+1)² cells visited faster than it thins each cell. Applied
+ * ONLY above 5,000 entities (world.ts): at ≤5,000 the cell size is part of the seeded rng
+ * stream (nash/market draw conditional on neighbor payoffs) and must stay at GRID_CELL.
+ */
+export const ULTRA_GRID_CELL = 10;
+
 /** Camera far plane (legacy 900 → 2600 so the 5× rim and star shells resolve). */
 export const CAMERA_FAR = 2600;
 

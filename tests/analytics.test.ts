@@ -57,6 +57,7 @@ function makeFixture(): Fixture {
     instanced: false,
     dprCap: 2,
     maxEntities: 650,
+    targetEntities: 650,
     quantumCount: 1500,
     maxLinks: 4000,
     shadows: true,

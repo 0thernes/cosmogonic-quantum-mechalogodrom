@@ -59,6 +59,7 @@ function makeCtx(seed: number, maxEntities: number, state: SimState = makeState(
       instanced: true,
       dprCap: 2,
       maxEntities,
+      targetEntities: maxEntities,
       quantumCount: 100,
       maxLinks: 100,
       shadows: false,

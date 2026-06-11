@@ -50,6 +50,7 @@ function makeCtx(maxEntities: number, geos: THREE.BufferGeometry[]): SimContext 
       instanced: true,
       dprCap: 2,
       maxEntities,
+      targetEntities: maxEntities,
       quantumCount: 0,
       maxLinks: 0,
       shadows: false,

@@ -7,6 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Performance
+
+- **Ultra-tier 10k frame-cost optimization** (CONTRACTS V3.6/V4.5 amendment).
+  Headless forensic profiling (a throwaway `scripts/perf-probe.ts` mirroring the
+  exact `world.ts` `step()` cadences, since deleted) measured the sim-CPU cost at
+  the 10,000-entity ceiling at **23.67 ms/frame** (42 fps render-free), dominated
+  by `entities.update`'s O(n·k) neighbor-query loop (≈ 292k neighbor visits/frame;
+  `flock` alone ran unthrottled every frame). Four ultra-only levers — all gated
+  `maxEntities > 5000` so phone/laptop/desktop stay byte-identical and every
+  determinism test is untouched — cut it to **18.46 ms/frame** (54 fps render-free):
+  theory-behavior stagger 2→3, `flock` to half-rate, spatial-hash cell 16→10
+  (`ULTRA_GRID_CELL`), and the connectome rebuild cadence ladder extended /4 (>2k)
+  and /6 (>5k).
+- **Adaptive ultra population target** (`QualityProfile.targetEntities`). Organic
+  growth now settles an idle ultra world at **6,500** entities (sim-CPU ≈ 9.5
+  ms/frame → 105 fps render-free), where the ≥55fps desktop acceptance gate holds
+  with GPU-render headroom; **10,000 remains the reachable hard ceiling** via
+  bursts/apocalypse, after which the world relaxes back toward the target. Every
+  capacity buffer (pools, index tables, atmosphere rng-draw count) is still sized
+  from the 10k ceiling — determinism preserved. `targetEntities === maxEntities`
+  on all other tiers (no behavioral change).
+- **Regression guard** `tests/perf-budget.test.ts`: asserts the median
+  entity-update frame at 8k entities stays under a loose 120 ms wall-clock bound
+  (catches a 5×-class regression without flaking on CI).
+- Full per-stage breakdown, tuned constants, and **rejected calibration values**
+  recorded in `docs/BENCHMARKS.md` ("Ultra-tier 10k optimization"). The harness
+  excludes GPU draw cost (~21 ms at 10k), which is why 55fps at a true idle-settled
+  10k is met via the adaptive target rather than raw CPU optimization.
+
 ## [0.4.0] - 2026-06-11
 
 The **XENOGENESIS** expansion (CONTRACTS V4): the cosmos becomes an alien,
