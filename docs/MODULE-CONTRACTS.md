@@ -986,3 +986,108 @@ Deviations from and clarifications of the V3 goal spec, as landed:
     (one binding path for haptics + `.on` highlight); only the apocalypse
     core has bespoke long-press logic (600 ms, disarm on up/leave/cancel,
     cleared on window blur with the rest of the held input).
+
+---
+
+# CONTRACTS V4 — XENOGENESIS (0.4.0) — atmosphere, 3D analytics, multi-page observatory, touch
+
+Summoner decree additions: an alien immortal sentient biome with an ATMOSPHERE;
+data analytics in 3D and in multiple pages (2nd/3rd/4th) showing variance/variation;
+true touch controls (not static d-pad) across phone→foldable→tablet→laptop→43"TV.
+All V1–V3 ground rules bind. Exclusive file ownership; integrator wires world/main.
+
+## V4.1 Atmosphere (writer: atmosphere) — NEW files only
+
+`src/sim/atmosphere.ts`: an alien sky + air system, built once, animated O(1)/frame.
+
+- A large inverted sky dome (BackSide sphere, radius ~ camera.far\*0.9) whose vertex
+  colors paint a NON-EARTH gradient (e.g. deep oxblood horizon → violet zenith →
+  teal counter-glow), tied to weather + chaos so STORM/VOID/AURORA visibly recolor
+  the sky. No external shaders — bake vertex colors, MeshBasicMaterial vertexColors,
+  fog-exempt (`fog:false`).
+- 3 drifting atmospheric haze bands (large translucent Planes / curved ribbons) at
+  high altitude that slowly advect with `ctx.state.wind`, opacity pulsing with audio
+  bass (≤0.3) — the "breathing air".
+- A fine particulate layer (THREE.Points, count scaled by quality tier: ~tier/4)
+  filling the arena volume, slow brownian drift seeded from ctx.rng, additive, tiny.
+- Aurora curtain (AURORA weather only): emissive vertical ribbon that brightens with
+  qEntropy. `update(dt, t, bands, qEntropy)`; reads ctx.state for weather/wind/chaos.
+- Constructor draws a documented, fixed number of ctx.rng samples (note the count so
+  the integrator can place construction deterministically in the boot stream).
+  Tests `tests/atmosphere.test.ts`: builds without DOM (THREE works headless), object
+  counts, sky vertex-color determinism from seed, update() stays finite over 5k frames.
+
+## V4.2 In-scene 3D analytics (writer: viz3d) — NEW files only
+
+`src/sim/viz3d.ts`: holographic data sculptures floating in the world (real geometry,
+not canvas) — the "3D analytics" the decree wants.
+
+- Phylum population towers: 10 emissive bars in a ring whose heights track live
+  per-phylum counts (smoothed).
+- Titan economy obelisks: 10 translucent prisms whose height=matter, glow=energy,
+  hue=war-state, arranged in a second ring.
+- A war-network: up to 45 line segments between titan obelisks, colored/opacity by
+  warMatrix state, updated on the same slow cadence.
+- All allocation-free per frame; geometry reused, only attributes/scales/colors
+  mutated. `update(snapshot)` consuming the same ObservatorySnapshot shape (structural
+  type — redefine locally, do not import ui). Place the sculptures high above the
+  arena floor so they read as an instrument panel for the gods. Tier-gated: a
+  `lowDetail` flag (phone tier) halves bar counts.
+  Tests `tests/viz3d.test.ts`: headless build, count math, height/finite invariants.
+
+## V4.3 Observatory multi-page + variance (writer: obs — extends src/ui/observatory.ts ONLY)
+
+Extend `Observatory` to FOUR pages (the decree's 2nd/3rd/4th pages):
+
+- Canvas id contract (the ui-shell writer provides matching DOM): page p uses
+  `#obs-c{4p+0..4p+3}` → p0 obs-c0..3 (existing), p1 obs-c4..7, p2 obs-c8..11,
+  p3 obs-c12..15. Constructor resolves all 16 (missing ⇒ that page no-ops).
+- `setPage(p: 0|1|2|3): void` — only the active page is drawn each `draw()`.
+- Page 0 (existing): phylum area, titan ledger, war heat, env timelines.
+- Page 1 VARIANCE: rolling stddev bands (mean±σ) for population/energy/links;
+  population histogram; phylum diversity (Shannon H) timeline; qEntropy vs trend
+  scatter/phase. Use simple-statistics (already a dep).
+- Page 2 ECOLOGY: per-phylum population small-multiples (10 mini sparklines);
+  birth/death flux; titan matter-vs-energy phase portraits.
+- Page 3 CONFLICT: war-intensity timeline; alliance/truce/war stacked counts;
+  per-titan resource bars; biome "sentience index" gauge (a documented scalar the
+  integrator passes — aggregate of tribes·qEntropy·|trend|, normalized 0..1).
+- Snapshot grows (structural, integrator supplies): keep existing fields; ADD
+  `phylaCounts: ArrayLike<number>` history is internal; ADD optional
+  `sentience: number` (0..1) for page 3. All push() copies remain O(series),
+  allocation-free; pre-allocate every page's rings at construction.
+  Pure math (stddev windows, Shannon H, histogram binning) as exported tested helpers.
+
+## V4.4 UI shell: touch + responsive + observatory DOM (writer: ui-shell)
+
+Owns `index.html`, `src/styles/app.css`, NEW `src/ui/touch.ts`. Reconcile with what
+`src/ui/input.ts` ALREADY expects (read it first — it references `#lp`/`#lpK` look pad
+and a radial wheel with `#wheel-apoc` + `[data-a]` petals).
+
+- `src/ui/touch.ts`: `TouchControls` constructed only on coarse pointers; binds the
+  right-side look pad (`#lp` track, `#lpK` knob) writing into the SAME `look`
+  accumulator object `InputSystem` exposes (constructor takes `(look, zoom, actions)`
+  or reads input — match input.ts's actual surface), and a radial action wheel
+  (Split/Burst/Mutate/Chaos+ petals as `[data-a]`, center `#wheel-apoc` long-press
+  600ms → apocalypse with progress ring, cancel-on-leave). ≥44px targets, aria roles,
+  `navigator.vibrate(≤30)` guarded by prefers-reduced-motion + try/catch.
+- `index.html`: add the look pad + radial wheel DOM (coarse-pointer only via CSS),
+  the `#oP` observatory panel with a 4-tab header (`[data-obs-page="0..3"]`) and all
+  16 canvases `#obs-c0..#obs-c15` grouped by page, plus mount points the responsive
+  layout needs. Keep EVERY existing id/data-attr working (panels.ts/hud.ts must still
+  find their nodes).
+- `src/styles/app.css`: responsive system — phone portrait (panels become
+  top/bottom collapsible sheets), foldable (hinge-safe flex wrap, env() insets),
+  tablet/laptop (current), TV ≥1900px (10-foot: ~1.6× panel scale via clamp(),
+  stronger focus rings). Flex/grid + container queries + clamp; no fixed px panel
+  geometry at small sizes. Only the active observatory page's canvases shown.
+- Document the exact TouchControls + observatory page-button wiring for the integrator.
+
+## V4.5 Integration (integrator)
+
+Construct atmosphere + viz3d (deterministic boot-stream placement per their rng-count
+notes); `atmosphere.update(dt,t,bands,qc.entropy)` and `viz3d.update(snapshot)` per
+frame (viz3d internally cadenced); wire observatory page tabs → `observatory.setPage`;
+add `sentience` to the snapshot = clamp01(tribes/256 _ (0.5+qEntropy) _ (0.5+min(|trend|/50,1))/1.5).
+Acceptance: ultra 10k ≥55fps desktop; phone tier ≥30fps; zero console errors over a
+3-min soak with music; same-seed determinism preserved; sky/air visibly alien.
