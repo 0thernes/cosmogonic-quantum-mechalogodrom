@@ -46,6 +46,30 @@ function noteFreq(i: number): number {
 }
 
 /**
+ * Per-song intensity envelope (V5.2 dynamics): a slow rising/falling swell over a
+ * 32-beat phrase that scales voice gains and filter brightness so every piece breathes
+ * — building dread, cresting, and ebbing rather than droning flat. Returns a multiplier
+ * in roughly [0.55, 1.15]: a raised-cosine swell (one full build-and-release per phrase)
+ * plus a gentler 8-beat ripple for motion within the phrase. Pure, allocation-free, O(1).
+ *
+ * @param st Absolute beat counter since the song (re)started.
+ */
+function intensityAt(st: number): number {
+  const phrase = ((st % 32) / 32) * Math.PI * 2; // one full cycle per 32-beat phrase
+  const swell = 0.5 - 0.5 * Math.cos(phrase); // 0 → 1 → 0 raised cosine
+  const ripple = 0.5 + 0.5 * Math.sin(st * (Math.PI / 4)); // 8-beat sub-motion
+  return 0.55 + swell * 0.5 + ripple * 0.1;
+}
+
+/**
+ * Master headroom (V5.2): steady-state music-bus gain. The 0.5.0 rescore stacks many
+ * more simultaneous voices (sub-bass octave, a third detuned chord layer, chord-tone
+ * arpeggiation) than the legacy two-voice texture, so the bus sits lower than the legacy
+ * 0.25 to keep the summed signal clear of the 0 dBFS clip ceiling at high density.
+ */
+const MUSIC_BUS_GAIN = 0.2;
+
+/**
  * Lazily initialized Web Audio engine. Construct once in world.ts, call {@link init}
  * from the first user gesture (autoplay policy), then drive it through the toggle/cycle
  * actions and {@link play}.
@@ -308,18 +332,86 @@ export class AudioEngine {
   }
 
   /**
-   * Chord/melody/bass scheduler (legacy `stM`, lines 553-561). One tick per beat
-   * (`60000 / bpm` ms): a detuned, lowpass-filtered chord every beat, a melody note every
-   * 2nd beat, a bass note every 4th; the chord index advances every 8 beats. Pitch
-   * multiplier wraps every 4 octave steps (Known Bug 1 fix) and the tick is skipped while
-   * the tab is hidden (Known Bug 3 fix).
+   * Spawn one enveloped, optionally-filtered oscillator voice on the music bus
+   * (V5.2 helper). Consolidates the repeated WebAudio node-wiring the deepened
+   * synthesis needs. Fire-and-forget: nodes are GC'd after `stop`. O(1); allocates
+   * only the handful of WebAudio nodes WebAudio's model requires per note (never
+   * per animation frame — this runs on the scheduler's beat interval).
+   *
+   * @param t Context start time for the voice.
+   * @param freq Oscillator frequency in Hz (already octave-scaled by the caller).
+   * @param wave Oscillator waveform.
+   * @param peak Peak gain after the attack ramp (already intensity-scaled).
+   * @param attack Attack time in seconds.
+   * @param dur Total lifetime in seconds; the gain decays to silence by `t + dur`.
+   * @param detune Detune in cents (caller draws jitter from the forked rng).
+   * @param cutoff Optional lowpass cutoff in Hz; when finite, a 1-pole-ish biquad is
+   *   inserted (Q 2) so chord/arp voices share the song's swelling filter colour.
+   */
+  private voice(
+    t: number,
+    freq: number,
+    wave: OscillatorType,
+    peak: number,
+    attack: number,
+    dur: number,
+    detune: number,
+    cutoff: number,
+  ): void {
+    const ctx = this.ctx;
+    const mGn = this.musicGain;
+    if (!ctx || !mGn) return;
+    const o = ctx.createOscillator();
+    const gn = ctx.createGain();
+    o.type = wave;
+    o.frequency.value = freq;
+    o.detune.value = detune;
+    gn.gain.setValueAtTime(0, t);
+    gn.gain.linearRampToValueAtTime(peak, t + attack);
+    gn.gain.exponentialRampToValueAtTime(0.001, t + dur);
+    if (cutoff > 0 && Number.isFinite(cutoff)) {
+      const f = ctx.createBiquadFilter();
+      f.type = 'lowpass';
+      f.frequency.value = cutoff;
+      f.Q.value = 2;
+      o.connect(f);
+      f.connect(gn);
+    } else {
+      o.connect(gn);
+    }
+    gn.connect(mGn);
+    o.start(t);
+    o.stop(t + dur);
+  }
+
+  /**
+   * Chord/melody/bass scheduler (legacy `stM`, lines 553-561), deepened for the 0.5.0
+   * "Resonance" rescore (V5.2). One tick per beat (`60000 / bpm` ms):
+   *
+   * - a detuned, lowpass-filtered chord every beat, now THREE voices per chord note
+   *   (centre + two opposed-detune partials) for a thick, beating chorus;
+   * - a slow filter-cutoff LFO swell (two summed sines) over the song's `fBase`, so the
+   *   harmony opens and closes rather than sitting at a fixed brightness;
+   * - chord-tone arpeggiation on the off-beat — a short plucked tone walking the chord;
+   * - a melody note every 2nd beat;
+   * - a bass note every 4th beat PLUS a sub-bass octave one octave below it;
+   * - a per-song rising/falling intensity envelope ({@link intensityAt}) scaling every
+   *   voice's gain and the filter brightness so each piece breathes dramatically.
+   *
+   * The chord index advances every 8 beats. Pitch multiplier wraps every 4 octave steps
+   * (Known Bug 1 fix) and the tick is skipped while the tab is hidden (Known Bug 3 fix).
+   * Master headroom is held by {@link MUSIC_BUS_GAIN} and conservative per-voice peaks so
+   * the denser texture stays clear of clipping. All jitter draws from the forked `this.rng`
+   * (never the global RNG), preserving the engine's independent deterministic stream.
+   *
+   * Complexity: O(chord notes) WebAudio nodes per beat — a small constant; no per-frame work.
    */
   private startScheduler(): void {
     this.init();
     const ctx = this.ctx;
     const mGn = this.musicGain;
     if (!ctx || !mGn) return;
-    mGn.gain.setTargetAtTime(0.25, ctx.currentTime, 0.5);
+    mGn.gain.setTargetAtTime(MUSIC_BUS_GAIN, ctx.currentTime, 0.5);
     let st = 0;
     let ci = 0;
     const song = SONGS[this.state.songIdx % SONGS.length];
@@ -333,51 +425,81 @@ export class AudioEngine {
         if (!ch) return; // Unreachable: every song has at least one chord.
         // Known Bug 1 fix: wrap the octave climb instead of drifting ultrasonic forever.
         const octave = 0.5 + (Math.floor(st / 8) % 4) * 0.5;
+        const intensity = intensityAt(st);
+        // Filter-cutoff LFO swell: a slow deep sweep (≈21-beat period) plus the legacy
+        // fast ripple, widened by the current intensity so loud phrases open up brighter.
+        const cutoff =
+          song.fBase + (Math.sin(st * 0.3) * 260 + Math.sin(st * 0.1) * 220) * intensity;
         ch.forEach((n, i) => {
-          const o = ctx.createOscillator();
-          const gn = ctx.createGain();
-          const f = ctx.createBiquadFilter();
-          o.type = song.wave;
-          o.frequency.value = noteFreq(n + (st % 3)) * octave;
-          o.detune.value = (this.rng() - 0.5) * 18;
-          f.type = 'lowpass';
-          f.frequency.value = song.fBase + Math.sin(st * 0.1) * 300;
-          f.Q.value = 2;
-          gn.gain.setValueAtTime(0, t);
-          gn.gain.linearRampToValueAtTime(0.05, t + 0.3);
-          gn.gain.exponentialRampToValueAtTime(0.001, t + 3.5);
-          o.connect(f);
-          f.connect(gn);
-          gn.connect(mGn);
-          o.start(t + i * 0.12);
-          o.stop(t + 3.5);
+          const base = noteFreq(n + (st % 3)) * octave;
+          const peak = 0.045 * intensity;
+          // Centre voice + two opposed detuned partials = a thick, slowly-beating chorus.
+          this.voice(
+            t + i * 0.12,
+            base,
+            song.wave,
+            peak,
+            0.3,
+            3.5,
+            (this.rng() - 0.5) * 18,
+            cutoff,
+          );
+          this.voice(
+            t + i * 0.12,
+            base,
+            song.wave,
+            peak * 0.6,
+            0.35,
+            3.5,
+            (this.rng() - 0.5) * 14 - 9,
+            cutoff,
+          );
+          this.voice(
+            t + i * 0.12,
+            base,
+            song.wave,
+            peak * 0.6,
+            0.35,
+            3.5,
+            (this.rng() - 0.5) * 14 + 9,
+            cutoff,
+          );
         });
+        // Chord-tone arpeggiation: on the off-beat, pluck one rising chord tone an octave
+        // up — a glinting filigree over the held chord that walks the voicing across beats.
+        if (st % 2 === 1) {
+          const an = ch[st % ch.length];
+          if (an !== undefined) {
+            this.voice(
+              t,
+              noteFreq(an) * octave * 2,
+              'triangle',
+              0.026 * intensity,
+              0.01,
+              0.5,
+              (this.rng() - 0.5) * 10,
+              0,
+            );
+          }
+        }
         if (st % 2 === 0) {
-          const o = ctx.createOscillator();
-          const gn = ctx.createGain();
-          o.type = 'sine';
-          o.frequency.value = noteFreq(song.mel[st % song.mel.length] ?? 0) * 2;
-          gn.gain.setValueAtTime(0, t);
-          gn.gain.linearRampToValueAtTime(0.03, t + 0.1);
-          gn.gain.exponentialRampToValueAtTime(0.001, t + 2.5);
-          o.connect(gn);
-          gn.connect(mGn);
-          o.start(t);
-          o.stop(t + 2.5);
+          this.voice(
+            t,
+            noteFreq(song.mel[st % song.mel.length] ?? 0) * 2,
+            'sine',
+            0.032 * intensity,
+            0.1,
+            2.5,
+            0,
+            0,
+          );
         }
         const root = ch[0];
         if (st % 4 === 0 && root !== undefined) {
-          const o = ctx.createOscillator();
-          const gn = ctx.createGain();
-          o.type = song.bass;
-          o.frequency.value = noteFreq(root) * 0.25;
-          gn.gain.setValueAtTime(0, t);
-          gn.gain.linearRampToValueAtTime(0.04, t + 0.5);
-          gn.gain.exponentialRampToValueAtTime(0.001, t + 4);
-          o.connect(gn);
-          gn.connect(mGn);
-          o.start(t);
-          o.stop(t + 4);
+          const bassFreq = noteFreq(root) * 0.25;
+          this.voice(t, bassFreq, song.bass, 0.04 * intensity, 0.5, 4, 0, 0);
+          // Sub-bass octave: a pure sine an octave below the bass for subterranean weight.
+          this.voice(t, bassFreq * 0.5, 'sine', 0.05 * intensity, 0.5, 4, 0, 0);
         }
         st++;
         if (st % 8 === 0) ci++;

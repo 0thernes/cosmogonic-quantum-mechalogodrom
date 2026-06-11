@@ -1,11 +1,20 @@
 /**
- * Observatory — the live data-viz panel (CONTRACTS V3.5 + V4.3 multi-page XENOGENESIS).
+ * Observatory — the live data-viz panel (CONTRACTS V3.5 + V4.3 multi-page XENOGENESIS +
+ * V5.1 RESONANCE legibility).
  *
  * FOUR pages of canvas charts, redrawn on a slow cadence (world calls `draw()` every ~18
  * frames). Page p uses canvases `#obs-c{4p+0..4p+3}` (p0 → obs-c0..3, p1 → obs-c4..7,
  * p2 → obs-c8..11, p3 → obs-c12..15). `setPage(p)` selects the active page; `draw()` renders
  * ONLY that page's four canvases. A page whose canvases (or 2d contexts) are missing no-ops
  * and logs a single `console.warn` the first time it is drawn.
+ *
+ * V5.1 legibility pass: EVERY one of the 16 canvases now draws, in-canvas via the 2d context
+ * (no DOM/HTML labels), an uppercase accent TITLE strip (top-left), a right-aligned value/unit
+ * readout and/or a color-keyed bottom legend, and faint gridlines + axis ticks where a chart has
+ * a meaningful scale. Strokes are thicker, fills brighter, and a soft additive glow (canvas
+ * shadow) outlines each series so the narrow ~200px panel reads clearly; charts fill the body
+ * below the title band with no large dead zones. The FIRST {@link push} is replayed once so every
+ * ≥2-column chart shows real content from boot instead of a blank panel — see {@link primed}.
  *
  * - Page 0 (V3.5, unchanged): stacked phylum-population area, titan economy ledger,
  *   10×10 war-matrix heat grid, environment triple-line (rdEnergy/qEntropy/trend).
@@ -317,6 +326,27 @@ export function histogramBins(
   return peak;
 }
 
+/**
+ * Compact human-readable number for in-canvas legends/value readouts: integers below 1000 print
+ * verbatim, larger magnitudes collapse to a 1-decimal SI-ish suffix (`k`/`M`), and fractional
+ * values keep up to `frac` decimals (default 2) with trailing zeros trimmed. Non-finite → `'—'`.
+ * Sign is preserved. Pure, allocation-light (one string), no DOM — testable under bun. O(1).
+ *
+ * @param v Value to format. @param frac Max fraction digits for |v| < 1000 (default 2).
+ */
+export function fmtCompact(v: number, frac = 2): string {
+  if (!Number.isFinite(v)) return '—';
+  const sign = v < 0 ? '-' : '';
+  const a = Math.abs(v);
+  if (a >= 1e6) return `${sign}${(a / 1e6).toFixed(1)}M`;
+  if (a >= 1e3) return `${sign}${(a / 1e3).toFixed(1)}k`;
+  if (a >= 100 || Number.isInteger(a)) return `${sign}${Math.round(a)}`;
+  // Trim trailing zeros from the fractional rendering (e.g. 0.50 → 0.5, 3.00 → 3).
+  const fixed = a.toFixed(frac);
+  const trimmed = fixed.replace(/\.?0+$/, '');
+  return `${sign}${trimmed}`;
+}
+
 /** Fallback literals mirroring the app.css `@theme` tokens (used when tokens are unset). */
 const TRIBE_FALLBACKS: readonly string[] = [
   'hsl(0deg 85% 60%)',
@@ -335,8 +365,18 @@ const DANGER_FALLBACK = '#ff3232';
 const BACKING = 'rgba(0,0,8,.85)';
 /** Dim slate for truce cells and axis midlines. */
 const DIM = 'rgba(148,163,184,1)';
+/** Faint slate for gridlines/ticks (low-contrast scaffolding behind the data). */
+const GRID = 'rgba(148,163,184,0.22)';
+/** Bright readout text for legends/values — near-white so numbers pop on the dark backing. */
+const INK = 'rgba(226,232,240,0.92)';
 /** 2× backing-store font ≈ 10.5px CSS; reset by canvas resizes, so set per draw. */
 const LABEL_FONT = '600 21px "JetBrains Mono", ui-monospace, monospace';
+/** 2× backing-store TITLE font ≈ 9px CSS uppercase; the per-chart heading (V5.1). */
+const TITLE_FONT = '700 18px "JetBrains Mono", ui-monospace, monospace';
+/** 2× backing-store legend/value font ≈ 8px CSS; the unit/value readouts (V5.1). */
+const VALUE_FONT = '600 16px "JetBrains Mono", ui-monospace, monospace';
+/** Top inset (backing px) reserved for the title strip so data never collides with it. */
+const TITLE_BAND = 30;
 
 /** Active page index (which quad of canvases `draw()` renders). */
 export type ObsPage = 0 | 1 | 2 | 3;
@@ -437,6 +477,15 @@ export class Observatory {
   private ph = 0;
 
   /**
+   * False until the very first {@link push}; the first sample is written TWICE so every
+   * timeline/area/band chart (all of which need ≥ 2 columns to draw a segment) shows content
+   * from boot instead of a blank panel (V5.1). The doubled column is a faithful copy of the
+   * first real reading — no synthetic value is invented — so the seeded chart reads the world's
+   * actual opening state. O(1).
+   */
+  private primed = false;
+
+  /**
    * Resolves the 16 canvases, their 2d contexts and the theme tokens once, and pre-allocates
    * every page's rings and scratch. A page whose four canvases all resolve a context is
    * `ready`; otherwise it no-ops and warns the first time it would draw. With no DOM at all
@@ -483,7 +532,8 @@ export class Observatory {
     colors.push(this.accent, this.warnColor); // series 8 and 9
     this.seriesColors = colors;
     this.warColors = [DIM, this.danger, this.accent];
-    this.warAlphas = [0.16, 0.85, 0.6];
+    // V5.1: brighter floors so war/alliance cells read at a glance on the narrow heat grid.
+    this.warAlphas = [0.22, 0.95, 0.8];
     this.names = Array.from({ length: OBS_SERIES }, () => '');
     this.statColors = [this.accent, this.warnColor, this.danger];
     this.warStackColors = [DIM, this.danger, this.accent];
@@ -592,6 +642,15 @@ export class Observatory {
     // Page 3: sentience gauge scalar (clamped to 0..1).
     const sen = snapshot.sentience ?? 0;
     this.sentienceLatest = Number.isFinite(sen) ? (sen < 0 ? 0 : sen > 1 ? 1 : sen) : 0;
+
+    // V5.1 seed: replay the FIRST real sample once so every ≥2-column chart is non-blank from
+    // boot. The replay re-enters with `primed` set, so it appends a second identical column and
+    // does not recurse further. Flux records a 0 delta on the replay (population unchanged),
+    // which is the honest reading for a steady opening frame.
+    if (!this.primed) {
+      this.primed = true;
+      this.push(snapshot);
+    }
   }
 
   /**
@@ -652,8 +711,10 @@ export class Observatory {
   /**
    * Refresh the HiDPI backing store (2× CSS pixels — the Sparkline `ensureGS` convention;
    * width/height are touched only when stale because assignment clears the canvas) and lay
-   * the dark backing fill. Returns false when the canvas has no layout size (hidden panel).
-   * O(1).
+   * the dark backing fill. Resets the shared 2d state (alpha/glow/text alignment/line cap) so a
+   * style left behind by the previous canvas of the page can never bleed into this one — the
+   * V5.1 charts toggle alpha and glow heavily, so a clean slate per canvas is load-bearing.
+   * Returns false when the canvas has no layout size (hidden panel). O(1).
    */
   private prep(c: HTMLCanvasElement, x: CanvasRenderingContext2D): boolean {
     const w = c.offsetWidth * 2;
@@ -665,48 +726,152 @@ export class Observatory {
     this.pw = c.width;
     this.ph = c.height;
     if (this.pw === 0 || this.ph === 0) return false;
+    // Reset shared context state before the backing fill (alpha must be 1 or the fill is faint).
+    x.globalAlpha = 1;
+    x.shadowBlur = 0;
+    x.shadowColor = 'transparent';
+    x.lineCap = 'butt';
+    x.textAlign = 'start';
+    x.textBaseline = 'alphabetic';
     x.clearRect(0, 0, this.pw, this.ph);
     x.fillStyle = BACKING;
     x.fillRect(0, 0, this.pw, this.ph);
     return true;
   }
 
+  // ============================================================================================
+  // V5.1 in-canvas chrome: titles, legends, axes, glow. All allocation-free (no per-draw
+  // arrays); every label is rasterized through the 2d context per the contract (no DOM edits).
+  // ============================================================================================
+
   /**
-   * Stroke one ring series as a normalized polyline: value `lo` maps to the 8% bottom margin,
-   * `lo + range` to the 8% top margin (so a symmetric `lo = -a, range = 2a` centers zero on
-   * the canvas midline). O(m) where m = downsampled points; allocation-free.
+   * Draw the chart TITLE strip: an uppercase accent heading top-left over a faint underline that
+   * spans the canvas, reserving {@link TITLE_BAND} backing px so the plot body never collides
+   * with it. Returns nothing; callers offset their plot region by `TITLE_BAND`. O(1).
    */
-  private polyline(
-    x: CanvasRenderingContext2D,
-    ring: SeriesRing,
-    s: number,
-    n: number,
-    stride: number,
-    w: number,
-    h: number,
-    lo: number,
-    range: number,
-    color: string,
-  ): void {
-    const m = Math.floor((n - 1) / stride) + 1;
-    x.strokeStyle = color;
+  private title(x: CanvasRenderingContext2D, text: string, w: number): void {
+    x.globalAlpha = 1;
+    x.textAlign = 'start';
+    x.textBaseline = 'alphabetic';
+    x.font = TITLE_FONT;
+    x.fillStyle = this.accent;
+    x.fillText(text.toUpperCase(), 8, 19);
+    // Separator hairline under the title band.
+    x.globalAlpha = 1;
+    x.strokeStyle = GRID;
+    x.lineWidth = 1;
     x.beginPath();
-    for (let k = 0; k < m; k++) {
-      const i = k === m - 1 ? n - 1 : k * stride;
-      const px = (i / (n - 1)) * w;
-      const py = h * 0.92 - ((ring.at(s, i) - lo) / range) * h * 0.84;
-      if (k === 0) x.moveTo(px, py);
-      else x.lineTo(px, py);
-    }
+    x.moveTo(0, TITLE_BAND - 4);
+    x.lineTo(w, TITLE_BAND - 4);
     x.stroke();
   }
 
-  /** Small page-title caption in the top-left, in the accent color. O(1). */
-  private caption(x: CanvasRenderingContext2D, text: string, color: string): void {
+  /**
+   * Right-aligned value/unit readout on the title row (e.g. `107 ent`), in the bright readout
+   * ink so the latest reading is legible at a glance. O(1).
+   */
+  private readout(x: CanvasRenderingContext2D, text: string, w: number): void {
     x.globalAlpha = 1;
-    x.font = LABEL_FONT;
-    x.fillStyle = color;
-    x.fillText(text, 8, 24);
+    x.font = VALUE_FONT;
+    x.fillStyle = INK;
+    x.textAlign = 'end';
+    x.textBaseline = 'alphabetic';
+    x.fillText(text, w - 6, 18);
+    x.textAlign = 'start';
+  }
+
+  /**
+   * A compact color-keyed legend laid out along the bottom edge: for each entry a filled swatch
+   * plus its label, flowing left-to-right and wrapping is avoided by keeping entries short. The
+   * `labels`/`colors` are read in lockstep up to `count`; values come from `getVal` (or are
+   * omitted when null). Drawn in the readout ink so it reads on the dark fill. O(count).
+   */
+  private legend(
+    x: CanvasRenderingContext2D,
+    labels: readonly string[],
+    colors: readonly string[],
+    count: number,
+    w: number,
+    h: number,
+    getVal: ((i: number) => string) | null,
+  ): void {
+    x.globalAlpha = 1;
+    x.font = VALUE_FONT;
+    x.textBaseline = 'middle';
+    x.textAlign = 'start';
+    const cy = h - 8;
+    const sw = 12; // swatch edge
+    let cx = 8;
+    for (let i = 0; i < count; i++) {
+      const label = labels[i] ?? '';
+      const val = getVal ? getVal(i) : '';
+      const text = val.length > 0 ? `${label} ${val}` : label;
+      x.globalAlpha = 1;
+      x.fillStyle = colors[i] ?? ACCENT_FALLBACK;
+      x.fillRect(cx, cy - sw / 2, sw, sw);
+      cx += sw + 4;
+      x.fillStyle = INK;
+      x.fillText(text, cx, cy);
+      cx += x.measureText(text).width + 14;
+      if (cx > w - 20 && i < count - 1) break; // never overflow the narrow panel
+    }
+    x.textBaseline = 'alphabetic';
+  }
+
+  /**
+   * Horizontal gridlines + right-edge y-axis tick labels for a framed timeline plot. `ticks`
+   * evenly-spaced lines span the plot region `[top, bottom]`; each is labeled with the data
+   * value it represents (`lo` at the bottom → `lo + range` at the top), formatted compactly with
+   * an optional unit. Faint lines sit BEHIND the data (call before stroking series). O(ticks).
+   */
+  private grid(
+    x: CanvasRenderingContext2D,
+    w: number,
+    top: number,
+    bottom: number,
+    lo: number,
+    range: number,
+    ticks: number,
+    unit: string,
+  ): void {
+    x.font = VALUE_FONT;
+    x.textBaseline = 'middle';
+    x.textAlign = 'end';
+    x.lineWidth = 1;
+    for (let t = 0; t <= ticks; t++) {
+      const f = t / ticks;
+      const py = bottom - f * (bottom - top);
+      x.globalAlpha = 1;
+      x.strokeStyle = GRID;
+      x.beginPath();
+      x.moveTo(0, py);
+      x.lineTo(w, py);
+      x.stroke();
+      const val = lo + f * range;
+      const label = unit.length > 0 ? `${fmtCompact(val)}${unit}` : fmtCompact(val);
+      x.globalAlpha = 0.85;
+      x.fillStyle = INK;
+      x.fillText(label, w - 3, py - 7);
+    }
+    x.textAlign = 'start';
+    x.textBaseline = 'alphabetic';
+    x.globalAlpha = 1;
+  }
+
+  /**
+   * Enable a soft additive glow around subsequent strokes/fills in `color`; pair with
+   * {@link glowOff}. Implemented via canvas shadow (shadowBlur/shadowColor), which the contract
+   * permits and which is allocation-free. O(1).
+   */
+  private glowOn(x: CanvasRenderingContext2D, color: string, blur: number): void {
+    x.shadowColor = color;
+    x.shadowBlur = blur;
+  }
+
+  /** Clear the glow set by {@link glowOn}. O(1). */
+  private glowOff(x: CanvasRenderingContext2D): void {
+    x.shadowBlur = 0;
+    x.shadowColor = 'transparent';
   }
 
   // ============================================================================================
@@ -722,9 +887,14 @@ export class Observatory {
     if (!c || !x || !this.prep(c, x)) return;
     const w = this.pw;
     const h = this.ph;
+    const top = TITLE_BAND;
+    const ph = h - top;
     const ring = this.phylumRing;
     const n = ring.count;
-    if (n < 2) return;
+    if (n < 2) {
+      this.title(x, 'phylum population', w);
+      return;
+    }
     const stride = strideFor(n, Math.max(2, w >> 1));
     const m = Math.floor((n - 1) / stride) + 1;
     let maxTotal = 0;
@@ -738,36 +908,53 @@ export class Observatory {
       if (acc > maxTotal) maxTotal = acc;
     }
     if (maxTotal <= 0) maxTotal = 1;
-    x.lineWidth = 1.2;
+    // Current total = the top of the highest band at the newest column.
+    const curTotal = this.stackScratch[(OBS_SERIES - 1) * OBS_RING_CAPACITY + (m - 1)] ?? 0;
+    // Reference gridlines (population totals) drawn first, behind the stacked bands.
+    this.grid(x, w, top + 2, h - 2, 0, maxTotal, 3, '');
     for (let s = 0; s < OBS_SERIES; s++) {
       const color = this.seriesColors[s] ?? ACCENT_FALLBACK;
       x.strokeStyle = color;
       x.fillStyle = color;
-      x.globalAlpha = 1;
+      // Fill the band first (translucent), then a BRIGHT top edge with glow so each phylum reads.
+      x.globalAlpha = 0.42;
       x.beginPath();
       for (let k = 0; k < m; k++) {
         const i = k === m - 1 ? n - 1 : k * stride;
         const px = (i / (n - 1)) * w;
-        const top = this.stackScratch[s * OBS_RING_CAPACITY + k] ?? 0;
-        const py = h - (top / maxTotal) * h * 0.92;
+        const tp = this.stackScratch[s * OBS_RING_CAPACITY + k] ?? 0;
+        const py = h - (tp / maxTotal) * ph * 0.98;
         if (k === 0) x.moveTo(px, py);
         else x.lineTo(px, py);
       }
-      // Sparkline order: stroke the top edge, then close the band along the previous
-      // cumulative (or the baseline for series 0) and fill translucently.
-      x.stroke();
       for (let k = m - 1; k >= 0; k--) {
         const i = k === m - 1 ? n - 1 : k * stride;
         const px = (i / (n - 1)) * w;
         const bottom = s === 0 ? 0 : (this.stackScratch[(s - 1) * OBS_RING_CAPACITY + k] ?? 0);
-        const py = h - (bottom / maxTotal) * h * 0.92;
+        const py = h - (bottom / maxTotal) * ph * 0.98;
         x.lineTo(px, py);
       }
       x.closePath();
-      x.globalAlpha = 0.35;
       x.fill();
+      // Bright top edge.
+      x.globalAlpha = 1;
+      x.lineWidth = 1.8;
+      this.glowOn(x, color, 6);
+      x.beginPath();
+      for (let k = 0; k < m; k++) {
+        const i = k === m - 1 ? n - 1 : k * stride;
+        const px = (i / (n - 1)) * w;
+        const tp = this.stackScratch[s * OBS_RING_CAPACITY + k] ?? 0;
+        const py = h - (tp / maxTotal) * ph * 0.98;
+        if (k === 0) x.moveTo(px, py);
+        else x.lineTo(px, py);
+      }
+      x.stroke();
+      this.glowOff(x);
     }
     x.globalAlpha = 1;
+    this.title(x, 'phylum population', w);
+    this.readout(x, `Σ ${fmtCompact(curTotal)} ent`, w);
   }
 
   /**
@@ -780,9 +967,13 @@ export class Observatory {
     if (!c || !x || !this.prep(c, x)) return;
     const w = this.pw;
     const h = this.ph;
+    const top = TITLE_BAND;
     const ring = this.ledgerRing;
     const n = ring.count;
-    if (n < 2) return;
+    if (n < 2) {
+      this.title(x, 'titan ledger', w);
+      return;
+    }
     const stride = strideFor(n, Math.max(2, w >> 1));
     const m = Math.floor((n - 1) / stride) + 1;
     let lo = Infinity;
@@ -797,25 +988,32 @@ export class Observatory {
     }
     if (!(hi > lo)) hi = lo + 1; // flat window: avoid division by zero
     const range = hi - lo;
-    x.lineWidth = 1.4;
-    x.globalAlpha = 0.9;
+    // Net-holdings reference grid (3 ticks) behind the lines.
+    this.grid(x, w, top + 2, h - 2, lo, range, 3, '');
+    // Plot inside [top, h]: reuse polyline's 0.92/0.84 framing but shifted down past the title.
+    const pTop = top;
+    const pH = h - top;
+    x.lineWidth = 2.1;
     for (let s = 0; s < OBS_SERIES; s++) {
-      this.polyline(
-        x,
-        ring,
-        s,
-        n,
-        stride,
-        w,
-        h,
-        lo,
-        range,
-        this.seriesColors[s] ?? ACCENT_FALLBACK,
-      );
+      const color = this.seriesColors[s] ?? ACCENT_FALLBACK;
+      x.globalAlpha = 0.95;
+      this.glowOn(x, color, 4);
+      x.strokeStyle = color;
+      x.beginPath();
+      for (let k = 0; k < m; k++) {
+        const i = k === m - 1 ? n - 1 : k * stride;
+        const px = (i / (n - 1)) * w;
+        const py = pTop + pH * 0.92 - ((ring.at(s, i) - lo) / range) * pH * 0.84;
+        if (k === 0) x.moveTo(px, py);
+        else x.lineTo(px, py);
+      }
+      x.stroke();
+      this.glowOff(x);
       if ((this.warsLatest[s] ?? 0) > 0) {
-        const py = h * 0.92 - ((ring.at(s, n - 1) - lo) / range) * h * 0.84;
+        const py = pTop + pH * 0.92 - ((ring.at(s, n - 1) - lo) / range) * pH * 0.84;
+        x.globalAlpha = 1;
         x.fillStyle = this.danger;
-        x.fillRect(w - 7, py - 3.5, 7, 7);
+        x.fillRect(w - 9, py - 4, 9, 9);
       }
     }
     let best = 0;
@@ -827,14 +1025,16 @@ export class Observatory {
         best = s;
       }
     }
-    const nm = this.names[best] ?? '';
-    if (nm.length > 0) {
-      x.globalAlpha = 1;
-      x.font = LABEL_FONT;
-      x.fillStyle = this.seriesColors[best] ?? ACCENT_FALLBACK;
-      x.fillText(nm, 8, 24);
-    }
     x.globalAlpha = 1;
+    this.title(x, 'titan ledger', w);
+    const nm = this.names[best] ?? '';
+    // Dominant titan: its lore name in its own color, with the net-holdings value.
+    x.font = VALUE_FONT;
+    x.textAlign = 'end';
+    x.textBaseline = 'alphabetic';
+    x.fillStyle = nm.length > 0 ? (this.seriesColors[best] ?? ACCENT_FALLBACK) : INK;
+    x.fillText(`${nm.length > 0 ? `${nm} ` : ''}${fmtCompact(bestV)}`, w - 6, 18);
+    x.textAlign = 'start';
   }
 
   /**
@@ -844,18 +1044,31 @@ export class Observatory {
   private drawWarGrid(): void {
     const { c, x } = this.slot(2);
     if (!c || !x || !this.prep(c, x)) return;
-    const cw = this.pw / 10;
-    const ch = this.ph / 10;
+    const w = this.pw;
+    const h = this.ph;
+    const top = TITLE_BAND;
+    const legendH = 18;
+    const gridTop = top + 2;
+    const gridH = h - gridTop - legendH;
+    const cw = w / 10;
+    const ch = gridH / 10;
     const pad = Math.min(2, cw * 0.08);
+    let wars = 0;
+    let allies = 0;
     for (let r = 0; r < 10; r++) {
       for (let q = 0; q < 10; q++) {
         const idx = warPaletteIndex(this.warScratch[r * 10 + q] ?? 0);
+        if (idx === 1) wars++;
+        else if (idx === 2) allies++;
         x.fillStyle = this.warColors[idx] ?? DIM;
         x.globalAlpha = this.warAlphas[idx] ?? 1;
-        x.fillRect(q * cw + pad, r * ch + pad, cw - pad * 2, ch - pad * 2);
+        x.fillRect(q * cw + pad, gridTop + r * ch + pad, cw - pad * 2, ch - pad * 2);
       }
     }
     x.globalAlpha = 1;
+    this.title(x, 'war matrix 10×10', w);
+    this.readout(x, `${wars}⚔ ${allies}∞`, w);
+    this.legend(x, ['truce', 'war', 'ally'], this.warColors, 3, w, h, null);
   }
 
   /**
@@ -867,9 +1080,13 @@ export class Observatory {
     if (!c || !x || !this.prep(c, x)) return;
     const w = this.pw;
     const h = this.ph;
+    const top = TITLE_BAND;
     const ring = this.envRing;
     const n = ring.count;
-    if (n < 2) return;
+    if (n < 2) {
+      this.title(x, 'environment', w);
+      return;
+    }
     const stride = strideFor(n, Math.max(2, w >> 1));
     const m = Math.floor((n - 1) / stride) + 1;
     let rdMax = 1e-6;
@@ -881,20 +1098,66 @@ export class Observatory {
       const tr = Math.abs(ring.at(2, i));
       if (tr > trendAbs) trendAbs = tr;
     }
-    // Trend midline (zero axis).
-    x.strokeStyle = DIM;
-    x.globalAlpha = 0.3;
+    const pTop = top;
+    const pH = h - top - 18; // leave room for the legend strip
+    const mid = pTop + pH * 0.5;
+    // Zero-trend midline + two faint guide rails.
+    x.strokeStyle = GRID;
+    x.globalAlpha = 1;
     x.lineWidth = 1;
     x.beginPath();
-    x.moveTo(0, h * 0.5);
-    x.lineTo(w, h * 0.5);
+    x.moveTo(0, mid);
+    x.lineTo(w, mid);
+    x.moveTo(0, pTop + pH * 0.16);
+    x.lineTo(w, pTop + pH * 0.16);
+    x.moveTo(0, pTop + pH * 0.84);
+    x.lineTo(w, pTop + pH * 0.84);
     x.stroke();
-    x.globalAlpha = 0.95;
-    x.lineWidth = 1.4;
-    this.polyline(x, ring, 0, n, stride, w, h, 0, rdMax, this.accent);
-    this.polyline(x, ring, 1, n, stride, w, h, 0, 1, this.warnColor);
-    this.polyline(x, ring, 2, n, stride, w, h, -trendAbs, trendAbs * 2, this.danger);
+    x.lineWidth = 2;
+    this.envLine(x, ring, 0, n, stride, w, pTop, pH, 0, rdMax, this.accent);
+    this.envLine(x, ring, 1, n, stride, w, pTop, pH, 0, 1, this.warnColor);
+    this.envLine(x, ring, 2, n, stride, w, pTop, pH, -trendAbs, trendAbs * 2, this.danger);
     x.globalAlpha = 1;
+    this.title(x, 'environment', w);
+    const rd = ring.at(0, n - 1);
+    const qe = ring.at(1, n - 1);
+    const tr = ring.at(2, n - 1);
+    this.legend(x, ['rd', 'qH', 'trend'], this.statColors, 3, w, h, (i) =>
+      i === 0 ? fmtCompact(rd) : i === 1 ? fmtCompact(qe) : fmtCompact(tr),
+    );
+  }
+
+  /**
+   * Stroke one env/timeline series into a plot region offset below the title band, normalizing
+   * `lo`→8% bottom margin and `lo+range`→8% top with a soft glow. O(m); allocation-free.
+   */
+  private envLine(
+    x: CanvasRenderingContext2D,
+    ring: SeriesRing,
+    s: number,
+    n: number,
+    stride: number,
+    w: number,
+    pTop: number,
+    pH: number,
+    lo: number,
+    range: number,
+    color: string,
+  ): void {
+    const m = Math.floor((n - 1) / stride) + 1;
+    x.globalAlpha = 1;
+    x.strokeStyle = color;
+    this.glowOn(x, color, 4);
+    x.beginPath();
+    for (let k = 0; k < m; k++) {
+      const i = k === m - 1 ? n - 1 : k * stride;
+      const px = (i / (n - 1)) * w;
+      const py = pTop + pH * 0.92 - ((ring.at(s, i) - lo) / range) * pH * 0.84;
+      if (k === 0) x.moveTo(px, py);
+      else x.lineTo(px, py);
+    }
+    x.stroke();
+    this.glowOff(x);
   }
 
   // ============================================================================================
@@ -912,11 +1175,27 @@ export class Observatory {
     if (!c || !x || !this.prep(c, x)) return;
     const w = this.pw;
     const h = this.ph;
+    const top = TITLE_BAND;
     const ring = this.statRing;
     const n = ring.count;
-    if (n < 2) return;
+    if (n < 2) {
+      this.title(x, 'variance ±σ', w);
+      return;
+    }
     const stride = strideFor(n, Math.max(2, w >> 1));
     const m = Math.floor((n - 1) / stride) + 1;
+    const pTop = top;
+    const pH = h - top - 18; // legend strip
+    // Faint horizontal rails so the three independently-normalized series share a frame.
+    x.strokeStyle = GRID;
+    x.lineWidth = 1;
+    for (let g = 0; g <= 2; g++) {
+      const gy = pTop + (g / 2) * pH;
+      x.beginPath();
+      x.moveTo(0, gy);
+      x.lineTo(w, gy);
+      x.stroke();
+    }
     for (let s = 0; s < OBS_STAT_SERIES; s++) {
       let lo = Infinity;
       let hi = -Infinity;
@@ -934,32 +1213,49 @@ export class Observatory {
       if (!(hi > lo)) hi = lo + 1;
       const range = hi - lo;
       const color = this.statColors[s] ?? ACCENT_FALLBACK;
-      // ±σ band as a closed translucent ribbon around the mean polyline.
+      // ±σ band as a closed translucent ribbon around the mean polyline (brighter than V4).
       x.fillStyle = color;
-      x.globalAlpha = 0.18;
+      x.globalAlpha = 0.26;
       x.beginPath();
       for (let k = 0; k < m; k++) {
         const i = k === m - 1 ? n - 1 : k * stride;
         const px = (i / (n - 1)) * w;
-        const py = h * 0.92 - ((ring.at(s, i) + sd - lo) / range) * h * 0.84;
+        const py = pTop + pH * 0.92 - ((ring.at(s, i) + sd - lo) / range) * pH * 0.84;
         if (k === 0) x.moveTo(px, py);
         else x.lineTo(px, py);
       }
       for (let k = m - 1; k >= 0; k--) {
         const i = k === m - 1 ? n - 1 : k * stride;
         const px = (i / (n - 1)) * w;
-        const py = h * 0.92 - ((ring.at(s, i) - sd - lo) / range) * h * 0.84;
+        const py = pTop + pH * 0.92 - ((ring.at(s, i) - sd - lo) / range) * pH * 0.84;
         x.lineTo(px, py);
       }
       x.closePath();
       x.fill();
-      // Mean polyline.
-      x.globalAlpha = 0.95;
-      x.lineWidth = 1.4;
-      this.polyline(x, ring, s, n, stride, w, h, lo, range, color);
+      // Bright mean polyline with glow.
+      x.globalAlpha = 1;
+      x.lineWidth = 2.1;
+      x.strokeStyle = color;
+      this.glowOn(x, color, 4);
+      x.beginPath();
+      for (let k = 0; k < m; k++) {
+        const i = k === m - 1 ? n - 1 : k * stride;
+        const px = (i / (n - 1)) * w;
+        const py = pTop + pH * 0.92 - ((ring.at(s, i) - lo) / range) * pH * 0.84;
+        if (k === 0) x.moveTo(px, py);
+        else x.lineTo(px, py);
+      }
+      x.stroke();
+      this.glowOff(x);
     }
     x.globalAlpha = 1;
-    this.caption(x, 'pop/energy/links ±σ', this.accent);
+    this.title(x, 'variance  mean±σ', w);
+    const pop = ring.at(0, n - 1);
+    const en = ring.at(1, n - 1);
+    const lk = ring.at(2, n - 1);
+    this.legend(x, ['pop', 'energy', 'links'], this.statColors, 3, w, h, (i) =>
+      i === 0 ? fmtCompact(pop) : i === 1 ? fmtCompact(en) : fmtCompact(lk),
+    );
   }
 
   /**
@@ -971,22 +1267,57 @@ export class Observatory {
     if (!c || !x || !this.prep(c, x)) return;
     const w = this.pw;
     const h = this.ph;
+    const top = TITLE_BAND;
     const ring = this.statRing;
     const n = ring.count;
-    if (n < 1) return;
+    if (n < 1) {
+      this.title(x, 'pop histogram', w);
+      return;
+    }
     const peak = histogramBins(ring, 0, n, OBS_RING_CAPACITY, this.histScratch);
-    if (peak <= 0) return;
+    // Window [min, max] for the x-axis labels (matches histogramBins' own span).
+    let lo = Infinity;
+    let hi = -Infinity;
+    for (let i = 0; i < n; i++) {
+      const v = ring.at(0, i);
+      if (v < lo) lo = v;
+      if (v > hi) hi = v;
+    }
     const bins = this.histScratch.length;
+    const pTop = top + 2;
+    const baseY = h - 16; // axis baseline; below it sits the x-range labels
+    const pH = baseY - pTop;
+    // Count gridlines behind the bars.
+    if (peak > 0) this.grid(x, w, pTop, baseY, 0, peak, 2, '');
     const bw = w / bins;
-    x.fillStyle = this.accent;
-    x.globalAlpha = 0.75;
     for (let b = 0; b < bins; b++) {
       const cnt = this.histScratch[b] ?? 0;
-      const bh = (cnt / peak) * h * 0.84;
-      x.fillRect(b * bw + 1, h * 0.95 - bh, bw - 2, bh);
+      const bh = peak > 0 ? (cnt / peak) * pH * 0.92 : 0;
+      // Bright accent bars with a glow; taller bins read hotter.
+      x.globalAlpha = cnt > 0 ? 0.9 : 0.12;
+      x.fillStyle = this.accent;
+      this.glowOn(x, this.accent, cnt > 0 ? 5 : 0);
+      x.fillRect(b * bw + 1, baseY - bh, bw - 2, bh);
+      this.glowOff(x);
     }
+    // X-axis baseline + range endpoints.
     x.globalAlpha = 1;
-    this.caption(x, 'population histogram', this.accent);
+    x.strokeStyle = GRID;
+    x.lineWidth = 1;
+    x.beginPath();
+    x.moveTo(0, baseY);
+    x.lineTo(w, baseY);
+    x.stroke();
+    x.font = VALUE_FONT;
+    x.fillStyle = INK;
+    x.textBaseline = 'alphabetic';
+    x.textAlign = 'start';
+    x.fillText(Number.isFinite(lo) ? fmtCompact(lo) : '0', 2, h - 4);
+    x.textAlign = 'end';
+    x.fillText(Number.isFinite(hi) ? fmtCompact(hi) : '0', w - 2, h - 4);
+    x.textAlign = 'start';
+    this.title(x, 'pop histogram', w);
+    this.readout(x, `peak ${fmtCompact(peak)}`, w);
   }
 
   /**
@@ -999,22 +1330,51 @@ export class Observatory {
     if (!c || !x || !this.prep(c, x)) return;
     const w = this.pw;
     const h = this.ph;
+    const top = TITLE_BAND;
     const ring = this.diversityRing;
     const n = ring.count;
-    if (n < 2) return;
+    if (n < 2) {
+      this.title(x, 'diversity H', w);
+      return;
+    }
     const stride = strideFor(n, Math.max(2, w >> 1));
-    x.strokeStyle = DIM;
-    x.globalAlpha = 0.3;
-    x.lineWidth = 1;
+    const m = Math.floor((n - 1) / stride) + 1;
+    const pTop = top + 2;
+    const pH = h - pTop - 4;
+    // Fixed 0..1 grid (H is normalized), labeled 0 / .5 / 1.
+    this.grid(x, w, pTop, h - 4, 0, 1, 2, '');
+    // Filled area under the line to read biodiversity collapse as the floor draining.
+    x.fillStyle = this.warnColor;
+    x.globalAlpha = 0.22;
     x.beginPath();
-    x.moveTo(0, h * 0.5);
-    x.lineTo(w, h * 0.5);
-    x.stroke();
-    x.globalAlpha = 0.95;
-    x.lineWidth = 1.6;
-    this.polyline(x, ring, 0, n, stride, w, h, 0, 1, this.warnColor);
+    x.moveTo(0, h - 4);
+    for (let k = 0; k < m; k++) {
+      const i = k === m - 1 ? n - 1 : k * stride;
+      const px = (i / (n - 1)) * w;
+      const py = h - 4 - ring.at(0, i) * pH;
+      x.lineTo(px, py);
+    }
+    x.lineTo(w, h - 4);
+    x.closePath();
+    x.fill();
+    // Bright glowing line.
     x.globalAlpha = 1;
-    this.caption(x, 'phylum diversity H', this.warnColor);
+    x.lineWidth = 2.4;
+    x.strokeStyle = this.warnColor;
+    this.glowOn(x, this.warnColor, 5);
+    x.beginPath();
+    for (let k = 0; k < m; k++) {
+      const i = k === m - 1 ? n - 1 : k * stride;
+      const px = (i / (n - 1)) * w;
+      const py = h - 4 - ring.at(0, i) * pH;
+      if (k === 0) x.moveTo(px, py);
+      else x.lineTo(px, py);
+    }
+    x.stroke();
+    this.glowOff(x);
+    x.globalAlpha = 1;
+    this.title(x, 'phylum diversity H', w);
+    this.readout(x, `H ${fmtCompact(ring.at(0, n - 1))}`, w);
   }
 
   /**
@@ -1028,9 +1388,13 @@ export class Observatory {
     if (!c || !x || !this.prep(c, x)) return;
     const w = this.pw;
     const h = this.ph;
+    const top = TITLE_BAND;
     const ring = this.envRing;
     const n = ring.count;
-    if (n < 2) return;
+    if (n < 2) {
+      this.title(x, 'qH × trend', w);
+      return;
+    }
     const stride = strideFor(n, Math.max(2, w >> 1));
     const m = Math.floor((n - 1) / stride) + 1;
     let trendAbs = 1e-6;
@@ -1039,32 +1403,63 @@ export class Observatory {
       const tr = Math.abs(ring.at(2, i));
       if (tr > trendAbs) trendAbs = tr;
     }
-    // Crosshair at (qEntropy 0.5, trend 0).
-    x.strokeStyle = DIM;
-    x.globalAlpha = 0.25;
+    const pTop = top + 2;
+    const pH = h - pTop - 16;
+    const midY = pTop + pH * 0.5;
+    const midX = w * 0.5;
+    // Crosshair + box at (qEntropy 0.5, trend 0).
+    x.strokeStyle = GRID;
+    x.globalAlpha = 1;
     x.lineWidth = 1;
     x.beginPath();
-    x.moveTo(0, h * 0.5);
-    x.lineTo(w, h * 0.5);
-    x.moveTo(w * 0.5, 0);
-    x.lineTo(w * 0.5, h);
+    x.moveTo(0, midY);
+    x.lineTo(w, midY);
+    x.moveTo(midX, pTop);
+    x.lineTo(midX, pTop + pH);
+    x.stroke();
+    // Connect the trajectory faintly so the phase path is visible, then dot the samples.
+    x.globalAlpha = 0.45;
+    x.strokeStyle = this.warnColor;
+    x.lineWidth = 1.3;
+    x.beginPath();
+    for (let k = 0; k < m; k++) {
+      const i = k === m - 1 ? n - 1 : k * stride;
+      const qx = ring.at(1, i);
+      const tr = ring.at(2, i);
+      const px = (qx < 0 ? 0 : qx > 1 ? 1 : qx) * w;
+      const py = midY - (tr / (trendAbs * 2)) * pH * 0.84;
+      if (k === 0) x.moveTo(px, py);
+      else x.lineTo(px, py);
+    }
     x.stroke();
     for (let k = 0; k < m; k++) {
       const i = k === m - 1 ? n - 1 : k * stride;
       const qx = ring.at(1, i); // qEntropy ∈ [0, 1]
       const tr = ring.at(2, i);
       const px = (qx < 0 ? 0 : qx > 1 ? 1 : qx) * w;
-      const py = h * 0.5 - (tr / (trendAbs * 2)) * h * 0.84;
+      const py = midY - (tr / (trendAbs * 2)) * pH * 0.84;
       const newest = i === n - 1;
       x.globalAlpha = newest ? 1 : 0.3 + 0.5 * (k / Math.max(1, m - 1));
       x.fillStyle = newest ? this.accent : this.warnColor;
-      const rad = newest ? 4 : 2;
+      const rad = newest ? 5 : 2.4;
+      if (newest) this.glowOn(x, this.accent, 7);
       x.beginPath();
       x.arc(px, py, rad, 0, Math.PI * 2);
       x.fill();
+      if (newest) this.glowOff(x);
     }
-    x.globalAlpha = 1;
-    this.caption(x, 'qEntropy × trend', this.accent);
+    // Axis annotations.
+    x.globalAlpha = 0.85;
+    x.font = VALUE_FONT;
+    x.fillStyle = INK;
+    x.textBaseline = 'alphabetic';
+    x.textAlign = 'start';
+    x.fillText('qH 0', 2, h - 4);
+    x.textAlign = 'end';
+    x.fillText('1', w - 2, h - 4);
+    x.textAlign = 'start';
+    this.title(x, 'qH × trend phase', w);
+    this.readout(x, `±${fmtCompact(trendAbs)}/m`, w);
   }
 
   // ============================================================================================
@@ -1081,40 +1476,81 @@ export class Observatory {
     if (!c || !x || !this.prep(c, x)) return;
     const w = this.pw;
     const h = this.ph;
+    const top = TITLE_BAND;
     const ring = this.phylumRing;
     const n = ring.count;
-    if (n < 2) return;
+    if (n < 2) {
+      this.title(x, 'phyla small-multiples', w);
+      return;
+    }
     const cols = 5;
     const rows = 2;
+    const gridH = h - top;
     const cw = w / cols;
-    const ch = h / rows;
+    const ch = gridH / rows;
     const stride = strideFor(n, Math.max(2, (cw | 0) >> 1));
     const m = Math.floor((n - 1) / stride) + 1;
-    x.lineWidth = 1.3;
     for (let s = 0; s < OBS_SERIES; s++) {
       const gx = (s % cols) * cw;
-      const gy = Math.floor(s / cols) * ch;
+      const gy = top + Math.floor(s / cols) * ch;
+      // Faint cell frame so the 10 panels read as a grid.
+      x.globalAlpha = 1;
+      x.strokeStyle = GRID;
+      x.lineWidth = 1;
+      x.strokeRect(gx + 1, gy + 1, cw - 2, ch - 2);
       // Per-cell max for an independent vertical scale.
       let hi = 1e-6;
+      let cur = 0;
       for (let k = 0; k < m; k++) {
         const i = k === m - 1 ? n - 1 : k * stride;
         const v = ring.at(s, i);
         if (v > hi) hi = v;
+        if (i === n - 1) cur = v;
       }
-      x.strokeStyle = this.seriesColors[s] ?? ACCENT_FALLBACK;
-      x.globalAlpha = 0.9;
+      const color = this.seriesColors[s] ?? ACCENT_FALLBACK;
+      // Translucent area + bright glowing line.
+      x.fillStyle = color;
+      x.globalAlpha = 0.28;
+      x.beginPath();
+      x.moveTo(gx, gy + ch * 0.94);
+      for (let k = 0; k < m; k++) {
+        const i = k === m - 1 ? n - 1 : k * stride;
+        const px = gx + (i / (n - 1)) * cw;
+        const py = gy + ch * 0.94 - (ring.at(s, i) / hi) * ch * 0.72;
+        x.lineTo(px, py);
+      }
+      x.lineTo(gx + cw, gy + ch * 0.94);
+      x.closePath();
+      x.fill();
+      x.strokeStyle = color;
+      x.globalAlpha = 1;
+      x.lineWidth = 1.8;
+      this.glowOn(x, color, 3);
       x.beginPath();
       for (let k = 0; k < m; k++) {
         const i = k === m - 1 ? n - 1 : k * stride;
         const px = gx + (i / (n - 1)) * cw;
-        const py = gy + ch * 0.92 - (ring.at(s, i) / hi) * ch * 0.8;
+        const py = gy + ch * 0.94 - (ring.at(s, i) / hi) * ch * 0.72;
         if (k === 0) x.moveTo(px, py);
         else x.lineTo(px, py);
       }
       x.stroke();
+      this.glowOff(x);
+      // Per-cell index + current count label.
+      x.globalAlpha = 0.92;
+      x.font = VALUE_FONT;
+      x.fillStyle = color;
+      x.textBaseline = 'top';
+      x.textAlign = 'start';
+      x.fillText(`${s}`, gx + 4, gy + 3);
+      x.fillStyle = INK;
+      x.textAlign = 'end';
+      x.fillText(fmtCompact(cur), gx + cw - 3, gy + 3);
+      x.textAlign = 'start';
+      x.textBaseline = 'alphabetic';
     }
     x.globalAlpha = 1;
-    this.caption(x, 'phyla (small multiples)', this.accent);
+    this.title(x, 'phyla small-multiples', w);
   }
 
   /**
@@ -1127,9 +1563,13 @@ export class Observatory {
     if (!c || !x || !this.prep(c, x)) return;
     const w = this.pw;
     const h = this.ph;
+    const top = TITLE_BAND;
     const ring = this.fluxRing;
     const n = ring.count;
-    if (n < 2) return;
+    if (n < 2) {
+      this.title(x, 'birth / death flux', w);
+      return;
+    }
     const stride = strideFor(n, Math.max(2, w >> 1));
     const m = Math.floor((n - 1) / stride) + 1;
     let mag = 1e-6;
@@ -1140,25 +1580,45 @@ export class Observatory {
       if (b > mag) mag = b;
       if (d > mag) mag = d;
     }
-    const mid = h * 0.5;
-    // Midline.
-    x.strokeStyle = DIM;
-    x.globalAlpha = 0.3;
+    const pTop = top + 2;
+    const pH = h - pTop - 18; // legend strip
+    const mid = pTop + pH * 0.5;
+    const half = pH * 0.45;
+    // Midline + ±peak rails labeled with the magnitude.
+    x.strokeStyle = GRID;
+    x.globalAlpha = 1;
     x.lineWidth = 1;
     x.beginPath();
     x.moveTo(0, mid);
     x.lineTo(w, mid);
+    x.moveTo(0, mid - half);
+    x.lineTo(w, mid - half);
+    x.moveTo(0, mid + half);
+    x.lineTo(w, mid + half);
     x.stroke();
+    x.font = VALUE_FONT;
+    x.fillStyle = INK;
+    x.globalAlpha = 0.85;
+    x.textAlign = 'end';
+    x.textBaseline = 'middle';
+    x.fillText(`+${fmtCompact(mag)}`, w - 3, mid - half + 7);
+    x.fillText(`-${fmtCompact(mag)}`, w - 3, mid + half - 7);
+    x.textAlign = 'start';
+    x.textBaseline = 'alphabetic';
     // Births up (accent), deaths down (danger) as filled areas from the midline.
-    this.fluxArea(x, ring, 0, n, stride, w, mid, mag, -1, this.accent);
-    this.fluxArea(x, ring, 1, n, stride, w, mid, mag, 1, this.danger);
+    this.fluxArea(x, ring, 0, n, stride, w, mid, half, mag, -1, this.accent);
+    this.fluxArea(x, ring, 1, n, stride, w, mid, half, mag, 1, this.danger);
     x.globalAlpha = 1;
-    this.caption(x, 'birth / death flux', this.accent);
+    this.title(x, 'birth / death flux', w);
+    this.legend(x, ['births', 'deaths'], [this.accent, this.danger], 2, w, h, (i) =>
+      fmtCompact(ring.at(i, n - 1)),
+    );
   }
 
   /**
    * Fill one flux series as an area anchored on the midline, growing `dir` (−1 up / +1 down)
-   * proportional to the magnitude scale `mag`. O(m); allocation-free.
+   * proportional to `mag` and capped at `half` px, with a bright glowing top edge. O(m);
+   * allocation-free.
    */
   private fluxArea(
     x: CanvasRenderingContext2D,
@@ -1168,24 +1628,40 @@ export class Observatory {
     stride: number,
     w: number,
     mid: number,
+    half: number,
     mag: number,
     dir: 1 | -1,
     color: string,
   ): void {
     const m = Math.floor((n - 1) / stride) + 1;
     x.fillStyle = color;
-    x.globalAlpha = 0.5;
+    x.globalAlpha = 0.55;
     x.beginPath();
     x.moveTo(0, mid);
     for (let k = 0; k < m; k++) {
       const i = k === m - 1 ? n - 1 : k * stride;
       const px = (i / (n - 1)) * w;
-      const py = mid + dir * (ring.at(s, i) / mag) * mid * 0.9;
+      const py = mid + dir * (ring.at(s, i) / mag) * half;
       x.lineTo(px, py);
     }
     x.lineTo(w, mid);
     x.closePath();
     x.fill();
+    // Bright glowing edge over the filled area.
+    x.globalAlpha = 1;
+    x.lineWidth = 1.8;
+    x.strokeStyle = color;
+    this.glowOn(x, color, 4);
+    x.beginPath();
+    for (let k = 0; k < m; k++) {
+      const i = k === m - 1 ? n - 1 : k * stride;
+      const px = (i / (n - 1)) * w;
+      const py = mid + dir * (ring.at(s, i) / mag) * half;
+      if (k === 0) x.moveTo(px, py);
+      else x.lineTo(px, py);
+    }
+    x.stroke();
+    this.glowOff(x);
   }
 
   /**
@@ -1199,6 +1675,7 @@ export class Observatory {
     if (!c || !x || !this.prep(c, x)) return;
     const w = this.pw;
     const h = this.ph;
+    const top = TITLE_BAND;
     let mLo = Infinity;
     let mHi = -Infinity;
     let eLo = Infinity;
@@ -1215,30 +1692,62 @@ export class Observatory {
     if (!(eHi > eLo)) eHi = eLo + 1;
     const mRange = mHi - mLo;
     const eRange = eHi - eLo;
-    // Axes.
-    x.strokeStyle = DIM;
-    x.globalAlpha = 0.25;
+    const x0 = w * 0.1;
+    const baseY = h - 16;
+    const pTop = top + 2;
+    const pH = baseY - pTop;
+    const pW = w - x0 - 4;
+    // Axes + faint inner grid.
+    x.strokeStyle = GRID;
+    x.globalAlpha = 1;
     x.lineWidth = 1;
     x.beginPath();
-    x.moveTo(0, h * 0.92);
-    x.lineTo(w, h * 0.92);
-    x.moveTo(w * 0.08, 0);
-    x.lineTo(w * 0.08, h);
+    for (let g = 1; g < 3; g++) {
+      const gy = baseY - (g / 3) * pH;
+      x.moveTo(x0, gy);
+      x.lineTo(w, gy);
+      const gx = x0 + (g / 3) * pW;
+      x.moveTo(gx, pTop);
+      x.lineTo(gx, baseY);
+    }
+    x.stroke();
+    x.lineWidth = 1.4;
+    x.strokeStyle = DIM;
+    x.globalAlpha = 0.5;
+    x.beginPath();
+    x.moveTo(x0, baseY);
+    x.lineTo(w, baseY);
+    x.moveTo(x0, pTop);
+    x.lineTo(x0, baseY);
     x.stroke();
     for (let s = 0; s < OBS_SERIES; s++) {
       const mt = this.matterScratch[s] ?? 0;
       const en = this.energyScratch[s] ?? 0;
-      const px = w * 0.08 + ((mt - mLo) / mRange) * w * 0.86;
-      const py = h * 0.92 - ((en - eLo) / eRange) * h * 0.84;
+      const px = x0 + ((mt - mLo) / mRange) * pW;
+      const py = baseY - ((en - eLo) / eRange) * pH;
       const atWar = (this.warsLatest[s] ?? 0) > 0;
-      x.globalAlpha = 0.9;
-      x.fillStyle = atWar ? this.danger : (this.seriesColors[s] ?? ACCENT_FALLBACK);
+      const color = atWar ? this.danger : (this.seriesColors[s] ?? ACCENT_FALLBACK);
+      x.globalAlpha = 1;
+      x.fillStyle = color;
+      this.glowOn(x, color, atWar ? 7 : 4);
       x.beginPath();
-      x.arc(px, py, atWar ? 5 : 4, 0, Math.PI * 2);
+      x.arc(px, py, atWar ? 6 : 4.5, 0, Math.PI * 2);
       x.fill();
+      this.glowOff(x);
     }
-    x.globalAlpha = 1;
-    this.caption(x, 'titan matter × energy', this.accent);
+    // Axis labels.
+    x.globalAlpha = 0.85;
+    x.font = VALUE_FONT;
+    x.fillStyle = INK;
+    x.textBaseline = 'alphabetic';
+    x.textAlign = 'start';
+    x.fillText('matter→', x0 + 2, h - 4);
+    x.save();
+    x.translate(8, baseY);
+    x.rotate(-Math.PI / 2);
+    x.fillText('energy→', 0, 0);
+    x.restore();
+    this.title(x, 'titan matter × energy', w);
   }
 
   /**
@@ -1250,23 +1759,35 @@ export class Observatory {
     if (!c || !x || !this.prep(c, x)) return;
     const w = this.pw;
     const h = this.ph;
-    const rowH = h / OBS_SERIES;
-    x.font = LABEL_FONT;
+    const top = TITLE_BAND;
+    const rowH = (h - top) / OBS_SERIES;
     x.textBaseline = 'middle';
     for (let s = 0; s < OBS_SERIES; s++) {
-      const cy = rowH * (s + 0.5);
+      const cy = top + rowH * (s + 0.5);
+      const color = this.seriesColors[s] ?? ACCENT_FALLBACK;
+      // Color swatch (glowing) keyed to the phase portrait / small multiples.
       x.globalAlpha = 1;
-      x.fillStyle = this.seriesColors[s] ?? ACCENT_FALLBACK;
-      x.fillRect(8, cy - rowH * 0.25, rowH * 0.4, rowH * 0.5);
-      const nm = this.names[s] ?? '';
-      if (nm.length > 0) {
-        x.fillStyle = DIM;
-        x.fillText(nm, 8 + rowH * 0.4 + 8, cy);
-      }
+      x.fillStyle = color;
+      this.glowOn(x, color, 3);
+      x.fillRect(8, cy - rowH * 0.28, rowH * 0.5, rowH * 0.56);
+      this.glowOff(x);
+      const nm = this.names[s] ?? `titan ${s}`;
+      x.font = VALUE_FONT;
+      x.fillStyle = INK;
+      x.textAlign = 'start';
+      x.fillText(nm, 12 + rowH * 0.5, cy);
+      // Per-titan matter / energy readout on the right.
+      const mt = this.matterScratch[s] ?? 0;
+      const en = this.energyScratch[s] ?? 0;
+      const atWar = (this.warsLatest[s] ?? 0) > 0;
+      x.textAlign = 'end';
+      x.fillStyle = atWar ? this.danger : DIM;
+      x.fillText(`${fmtCompact(mt)}m ${fmtCompact(en)}e`, w - 4, cy);
+      x.textAlign = 'start';
     }
     x.textBaseline = 'alphabetic';
     x.globalAlpha = 1;
-    void w;
+    this.title(x, 'titan roster', w);
   }
 
   // ============================================================================================
@@ -1282,9 +1803,13 @@ export class Observatory {
     if (!c || !x || !this.prep(c, x)) return;
     const w = this.pw;
     const h = this.ph;
+    const top = TITLE_BAND;
     const ring = this.warIntensityRing;
     const n = ring.count;
-    if (n < 2) return;
+    if (n < 2) {
+      this.title(x, 'war intensity', w);
+      return;
+    }
     const stride = strideFor(n, Math.max(2, w >> 1));
     // Auto-scale to the window peak so low-grade conflict is still legible.
     const m = Math.floor((n - 1) / stride) + 1;
@@ -1294,11 +1819,43 @@ export class Observatory {
       const v = ring.at(0, i);
       if (v > hi) hi = v;
     }
-    x.globalAlpha = 0.95;
-    x.lineWidth = 1.6;
-    this.polyline(x, ring, 0, n, stride, w, h, 0, hi, this.danger);
+    const pTop = top + 2;
+    const baseY = h - 4;
+    const pH = baseY - pTop;
+    // Gridlines labeled as % of cells at war.
+    this.grid(x, w, pTop, baseY, 0, hi * 100, 2, '%');
+    // Filled area under the danger line.
+    x.fillStyle = this.danger;
+    x.globalAlpha = 0.3;
+    x.beginPath();
+    x.moveTo(0, baseY);
+    for (let k = 0; k < m; k++) {
+      const i = k === m - 1 ? n - 1 : k * stride;
+      const px = (i / (n - 1)) * w;
+      const py = baseY - (ring.at(0, i) / hi) * pH;
+      x.lineTo(px, py);
+    }
+    x.lineTo(w, baseY);
+    x.closePath();
+    x.fill();
+    // Bright glowing line.
     x.globalAlpha = 1;
-    this.caption(x, 'war intensity', this.danger);
+    x.lineWidth = 2.4;
+    x.strokeStyle = this.danger;
+    this.glowOn(x, this.danger, 6);
+    x.beginPath();
+    for (let k = 0; k < m; k++) {
+      const i = k === m - 1 ? n - 1 : k * stride;
+      const px = (i / (n - 1)) * w;
+      const py = baseY - (ring.at(0, i) / hi) * pH;
+      if (k === 0) x.moveTo(px, py);
+      else x.lineTo(px, py);
+    }
+    x.stroke();
+    this.glowOff(x);
+    x.globalAlpha = 1;
+    this.title(x, 'war intensity', w);
+    this.readout(x, `${fmtCompact(ring.at(0, n - 1) * 100)}% cells`, w);
   }
 
   /**
@@ -1311,34 +1868,66 @@ export class Observatory {
     if (!c || !x || !this.prep(c, x)) return;
     const w = this.pw;
     const h = this.ph;
+    const top = TITLE_BAND;
     const ring = this.warCountsRing;
     const n = ring.count;
-    if (n < 2) return;
+    if (n < 2) {
+      this.title(x, 'truce / war / ally', w);
+      return;
+    }
     const stride = strideFor(n, Math.max(2, w >> 1));
     const m = Math.floor((n - 1) / stride) + 1;
     // Series == stack slot: truce@0 (bottom), war@1, alliance@2 (top).
     const total = WAR_CELLS;
+    const pTop = top + 2;
+    const baseY = h - 18; // legend strip
+    const pH = baseY - pTop;
+    // Percentage rails (0/50/100% of the 100 cells).
+    this.grid(x, w, pTop, baseY, 0, 100, 2, '');
     // Draw from the top series down so each band sits on the cumulative of the ones below.
     for (let s = 2; s >= 0; s--) {
-      x.fillStyle = this.warStackColors[s] ?? DIM;
-      x.globalAlpha = s === 0 ? 0.25 : 0.6;
+      const color = this.warStackColors[s] ?? DIM;
+      x.fillStyle = color;
+      x.globalAlpha = s === 0 ? 0.32 : 0.78;
       x.beginPath();
       for (let k = 0; k < m; k++) {
         const i = k === m - 1 ? n - 1 : k * stride;
         const px = (i / (n - 1)) * w;
         let acc = 0;
         for (let u = 0; u <= s; u++) acc += ring.at(u, i);
-        const py = h - (acc / total) * h;
+        const py = baseY - (acc / total) * pH;
         if (k === 0) x.moveTo(px, py);
         else x.lineTo(px, py);
       }
-      x.lineTo(w, h);
-      x.lineTo(0, h);
+      x.lineTo(w, baseY);
+      x.lineTo(0, baseY);
       x.closePath();
       x.fill();
+      // Bright edge on the war + alliance bands so transitions are visible.
+      if (s > 0) {
+        x.globalAlpha = 1;
+        x.lineWidth = 1.6;
+        x.strokeStyle = color;
+        this.glowOn(x, color, 3);
+        x.beginPath();
+        for (let k = 0; k < m; k++) {
+          const i = k === m - 1 ? n - 1 : k * stride;
+          const px = (i / (n - 1)) * w;
+          let acc = 0;
+          for (let u = 0; u <= s; u++) acc += ring.at(u, i);
+          const py = baseY - (acc / total) * pH;
+          if (k === 0) x.moveTo(px, py);
+          else x.lineTo(px, py);
+        }
+        x.stroke();
+        this.glowOff(x);
+      }
     }
     x.globalAlpha = 1;
-    this.caption(x, 'truce / war / alliance', this.accent);
+    this.title(x, 'truce / war / ally', w);
+    this.legend(x, ['truce', 'war', 'ally'], this.warStackColors, 3, w, h, (i) =>
+      fmtCompact(ring.at(i, n - 1)),
+    );
   }
 
   /**
@@ -1352,9 +1941,13 @@ export class Observatory {
     if (!c || !x || !this.prep(c, x)) return;
     const w = this.pw;
     const h = this.ph;
+    const top = TITLE_BAND;
     const ring = this.ledgerRing;
     const n = ring.count;
-    if (n < 1) return;
+    if (n < 1) {
+      this.title(x, 'titan resources', w);
+      return;
+    }
     let lo = Infinity;
     let hi = -Infinity;
     for (let s = 0; s < OBS_SERIES; s++) {
@@ -1364,71 +1957,117 @@ export class Observatory {
     }
     if (!(hi > lo)) hi = lo + 1;
     const range = hi - lo;
-    const rowH = h / OBS_SERIES;
+    const rowH = (h - top) / OBS_SERIES;
+    x.textBaseline = 'middle';
     for (let s = 0; s < OBS_SERIES; s++) {
       const v = ring.at(s, n - 1);
       const frac = (v - lo) / range;
       const bw = 8 + frac * (w - 16);
-      const cy = rowH * s + rowH * 0.15;
-      const bh = rowH * 0.7;
-      x.globalAlpha = 0.85;
-      x.fillStyle = this.seriesColors[s] ?? ACCENT_FALLBACK;
+      const cy = top + rowH * s + rowH * 0.16;
+      const bh = rowH * 0.68;
+      const color = this.seriesColors[s] ?? ACCENT_FALLBACK;
+      const atWar = (this.warsLatest[s] ?? 0) > 0;
+      // Track behind the bar so empty rows aren't dead space.
+      x.globalAlpha = 1;
+      x.fillStyle = GRID;
+      x.fillRect(8, cy, w - 16, bh);
+      // Bright glowing bar.
+      x.fillStyle = color;
+      this.glowOn(x, color, 3);
       x.fillRect(8, cy, bw, bh);
-      if ((this.warsLatest[s] ?? 0) > 0) {
+      this.glowOff(x);
+      if (atWar) {
         x.globalAlpha = 1;
         x.strokeStyle = this.danger;
         x.lineWidth = 2;
         x.strokeRect(8, cy, bw, bh);
       }
+      // Name (left) + value (right) over the bar.
+      const nm = this.names[s] ?? `titan ${s}`;
+      x.font = VALUE_FONT;
+      x.globalAlpha = 1;
+      x.fillStyle = INK;
+      x.textAlign = 'start';
+      x.fillText(nm, 12, cy + bh * 0.5);
+      x.textAlign = 'end';
+      x.fillStyle = atWar ? this.danger : INK;
+      x.fillText(fmtCompact(v), w - 4, cy + bh * 0.5);
+      x.textAlign = 'start';
     }
+    x.textBaseline = 'alphabetic';
     x.globalAlpha = 1;
-    this.caption(x, 'titan resources', this.accent);
+    this.title(x, 'titan resources', w);
   }
 
   /**
-   * `#obs-c15`: biome "sentience" gauge — a 240° arc dial filled to `sentienceLatest` (0..1),
-   * colored from warn (low) toward accent (high) and captioned with the percentage. Fed by the
-   * optional `snapshot.sentience`; a missing value reads as 0. O(1).
+   * `#obs-c15`: biome "sentience" gauge — a 270° arc dial filled to `sentienceLatest` (0..1),
+   * colored from warn (low) toward accent (high), with quarter ticks, a glowing needle and the
+   * percentage in the hub plus a `BIOME SENTIENCE` title. Fed by the optional `snapshot.sentience`;
+   * a missing value reads as 0. O(1).
    */
   private drawSentienceGauge(): void {
     const { c, x } = this.slot(3);
     if (!c || !x || !this.prep(c, x)) return;
     const w = this.pw;
     const h = this.ph;
+    const top = TITLE_BAND;
     const cx = w * 0.5;
-    const cy = h * 0.62;
-    const radius = Math.min(w, h) * 0.36;
+    const cy = top + (h - top) * 0.56;
+    const radius = Math.min(w, h - top) * 0.38;
     const start = Math.PI * 0.75;
     const sweep = Math.PI * 1.5; // 270° dial
     const v = this.sentienceLatest;
+    const hot = v >= 0.5 ? this.accent : this.warnColor;
+    const lw = Math.max(7, radius * 0.2);
     // Track.
-    x.globalAlpha = 0.25;
+    x.globalAlpha = 0.35;
     x.strokeStyle = DIM;
-    x.lineWidth = Math.max(6, radius * 0.18);
+    x.lineWidth = lw;
+    x.lineCap = 'round';
     x.beginPath();
     x.arc(cx, cy, radius, start, start + sweep);
     x.stroke();
-    // Filled value arc (warn → accent as it climbs).
-    x.globalAlpha = 0.95;
-    x.strokeStyle = v >= 0.5 ? this.accent : this.warnColor;
+    // Filled value arc (warn → accent as it climbs) with glow.
+    x.globalAlpha = 1;
+    x.strokeStyle = hot;
+    this.glowOn(x, hot, 8);
     x.beginPath();
     x.arc(cx, cy, radius, start, start + sweep * v);
     x.stroke();
+    this.glowOff(x);
+    x.lineCap = 'butt';
+    // Quarter ticks around the dial (0/25/50/75/100%).
+    x.globalAlpha = 0.7;
+    x.strokeStyle = INK;
+    x.lineWidth = 1.5;
+    for (let t = 0; t <= 4; t++) {
+      const ta = start + sweep * (t / 4);
+      const r0 = radius + lw * 0.6;
+      const r1 = radius + lw * 0.95;
+      x.beginPath();
+      x.moveTo(cx + Math.cos(ta) * r0, cy + Math.sin(ta) * r0);
+      x.lineTo(cx + Math.cos(ta) * r1, cy + Math.sin(ta) * r1);
+      x.stroke();
+    }
     // Needle.
     const ang = start + sweep * v;
     x.globalAlpha = 1;
-    x.strokeStyle = v >= 0.5 ? this.accent : this.warnColor;
-    x.lineWidth = 2;
+    x.strokeStyle = hot;
+    x.lineWidth = 2.4;
+    this.glowOn(x, hot, 5);
     x.beginPath();
     x.moveTo(cx, cy);
     x.lineTo(cx + Math.cos(ang) * radius * 0.92, cy + Math.sin(ang) * radius * 0.92);
     x.stroke();
-    // Readout.
+    this.glowOff(x);
+    // Center readout.
     x.font = LABEL_FONT;
-    x.fillStyle = v >= 0.5 ? this.accent : this.warnColor;
+    x.fillStyle = hot;
     x.textAlign = 'center';
+    x.textBaseline = 'middle';
     x.fillText(`${Math.round(v * 100)}%`, cx, cy);
+    x.textBaseline = 'alphabetic';
     x.textAlign = 'start';
-    this.caption(x, 'biome sentience', this.accent);
+    this.title(x, 'biome sentience', w);
   }
 }

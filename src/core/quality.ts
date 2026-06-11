@@ -60,10 +60,12 @@ export const QUALITY_LADDER: Readonly<
   ultra: {
     dprCap: 2,
     maxEntities: 10000,
-    // Adaptive steady-state cap: 6,500 holds sim-CPU ≈ 8.3 ms/frame (well under the 12 ms
-    // budget, leaving GPU-render headroom toward 55 fps) where a true 10k settles ≈ 20 ms.
-    // 10,000 stays the reachable ceiling via bursts. Calibration in docs/BENCHMARKS.md.
-    targetEntities: 6500,
+    // The ultra tier fills its 10,000 ceiling — an ultra classification requires ≥16 cores,
+    // which implies a GPU that can carry it (the perf optimizations keep sim-CPU ≈ 18 ms at
+    // 10k; a discrete GPU absorbs the draw). `targetEntities === maxEntities` on every tier,
+    // so organic growth deterministically settles at the ceiling (same seed + same device →
+    // same cosmos). Per-frame neighbor-query throttles (docs/BENCHMARKS.md) keep it smooth.
+    targetEntities: 10000,
     quantumCount: 8000,
     maxLinks: 6000,
     shadows: true,

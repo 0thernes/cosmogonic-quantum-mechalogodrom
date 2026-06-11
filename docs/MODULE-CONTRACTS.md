@@ -1119,3 +1119,43 @@ The amendment lands as:
 Net: sim-CPU at the 10k ceiling 23.67ms → 18.46ms (42 → 54 fps render-free); at the 6,500
 idle target 9.52ms (105 fps render-free). The acceptance gate is met at the adaptive idle
 target with GPU headroom; 10k stays reachable as the bounded worst case.
+
+---
+
+# CONTRACTS V5 — RESONANCE (0.5.0) — user feedback pass
+
+Concrete user feedback on 0.4.0. Exclusive file ownership; integrator owns world.ts/main.ts/types.ts/quality.ts.
+
+## V5.1 Observatory legibility (writer: obs — src/ui/observatory.ts ONLY)
+
+Pages 1-3 (VAR/ECO/WAR) render but are FAINT, SPARSE, and UNLABELED — they read as "broken". Fix WITHOUT touching index.html (draw all labels IN-CANVAS via the 2d context):
+
+- Every chart gets a TITLE (top-left, ~9px uppercase, accent color) + value/unit legend + axis ticks where meaningful. The user must be able to tell what each chart IS.
+- Make lines/fills BOLD and high-contrast (thicker strokes, brighter fills, glow). Fill the canvas area — no large dead zones. Use the full HiDPI backing.
+- Ensure pages have meaningful content from boot (seed rings with the current value so a fresh world isn't blank; histograms/phase plots show axes immediately).
+- Page 0 also gets titles/legends. Keep the 16-canvas / 4-page / setPage API and all existing tests; extend tests for the new pure helpers if any. The panel is narrow (~200px) — design for that width AND for the wider TV/desktop layouts (responsive to canvas size, which it already reads).
+
+## V5.2 Audio power (writer: audio — src/audio/songs.ts + src/audio/engine.ts)
+
+The user loves QUANTUM and BLACK MERIDIAN — wants ALL songs powerful, dynamic, ominous, deep, dramatic (Final Fantasy extreme dark-endgame), each DISTINCT. Two fronts:
+
+- ENGINE (engine.ts): deepen the synthesis for ALL songs — add a sub-bass octave under the bass, a third chord voice/detune layer, gentle arpeggiation of chord tones, slow filter-cutoff LFO swells, and per-song dynamics (intensity that rises/falls). Keep allocation-safe, keep the Known-Bug fixes (octave wrap, clearInterval, document.hidden guard) and the forked-rng determinism. Master gain headroom managed (no clipping at the new density).
+- SONGS (songs.ts): keep QUANTUM and BLACK MERIDIAN; raise VOIDCROWN, ELDER ENGINE, LAST THEOREM to the same tier — richer chord sets (4-note voicings, dramatic intervals), longer evolving melodies, distinct character each (e.g. funereal vs mechanical vs tragic-soaring). Add 1-2 NEW songs if it strengthens the set (update SONGS length consumers via songName — telemetry already reads it). Determinism/leaf rules hold.
+
+## V5.3 25 visible sorting algorithms (writer: algos — src/sim/algorithms.ts + tests)
+
+Restore the legacy spirit: ~25 selectable sorting-field algorithms, each VISIBLY distinct in how it organizes the world. Expand ALGOS from 20 to 25 (add 5 more genuinely distinct step strategies — e.g. tim-merge runs, bitonic networks, patience/bucket phases, bogo-bounded, brick/odd-even variants) keeping the SortAlgo contract (pure, O(length), allocation-free, never reads index >= length). Each must propose swaps with a DIFFERENT spatial signature. Extend tests/algorithms.test.ts to cover all 25 (no out-of-range, inversion-reduction or documented perpetual-field behavior). NOTE: the VISIBILITY of the active algorithm (color-by-sortVal, more swaps/frame, HUD activity) is the INTEGRATOR's world.ts job — you just provide 25 honest distinct algorithms.
+
+## V5.4 Lab fill + info (writer: lab — lab/quantum-wildbeyond.html ONLY)
+
+The lab artifact is ~40% empty space and information-thin vs the main world. Fill it: use the full canvas (no dead margins), add live readout overlays (particle count, collapse events, field-blend, fps, seed, the active algorithm/field math), more visual density and a legend explaining the collapse-field math. Keep it self-contained p5 from CDN, seeded, 60fps, starting from its current structure (do not regress the working seed controls/params).
+
+## V5.5 Mobile ergonomics (writer: shell — index.html + src/styles/app.css ONLY)
+
+"Fit on a phone/tablet, slide view boxes, ergonomic." The user has PORTRAIT QHD monitors, a phone, tablet, 4K TV. Make panels COLLAPSE into edge-docked slide-out sheets on small/portrait viewports (a tab/handle to open each: Telemetry, Control, Observatory, Audit), so the 3D world is unobstructed and any panel slides in on demand. Touch: ensure the look pad (#lp) + radial wheel + joystick are visible and >=44px on coarse pointers, and that BOTH a left move-pad and right look-pad coexist ergonomically (thumbs). Portrait layout must not overflow. Keep ALL ids/data-attrs (panels.ts/hud.ts/input.ts/world.bindObservatoryTabs depend on them: #v0..#v11, #snt, #etn, #ew.., #g0..#g3, #obs-c0..15, [data-obs-page], [data-a], [data-action], #lp/#lpK, #wheel-apoc, #jP/#jK, #sec/#nm/#alg/#a-name/#a-step/#lore, #aP/#audit-list). Use flex/grid/container-queries/clamp; coarse-pointer + portrait media queries.
+
+## V5.6 Integrator (world.ts/main.ts/quality.ts/types.ts)
+
+- DONE: ultra targetEntities → 10000 (fills ceiling, deterministic per-device).
+- Sort-step VISIBILITY: color entities by sortVal along a gradient so the active algorithm's organizing is SEEN; raise swaps/frame at the active algo; surface the algorithm's activity (swap count / passes) on the #alg HUD card. Make algorithm cycling obviously change the spatial behavior.
+- Wire the 25 algos (cycling already modular), new songs (modular), and verify the observatory/audio/lab/shell changes integrate. Gate + soak + commit 0.5.0.

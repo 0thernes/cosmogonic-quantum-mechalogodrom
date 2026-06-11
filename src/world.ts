@@ -560,41 +560,58 @@ export class World {
     if (k['tab']) s.chaos = clamp(s.chaos + dt * 2, CHAOS_MIN, CHAOS_MAX);
   }
 
-  /** One sorting-field step: propose, apply swap to values + entities, nudge. */
+  /**
+   * The sorting field — now BATCHED so the selected algorithm visibly organizes
+   * the world (one swap among thousands of organisms was imperceptible). Each
+   * frame it runs K proposals from the active algorithm (K scales with the
+   * population, 6..28), applying every accepted swap: the two organisms trade
+   * sort values, get nudged toward each other's positions, and flash bright.
+   * The HUD shows the live swap count so cycling the algorithm obviously
+   * changes the activity. Allocation-free, no rng (deterministic from seed).
+   * O(K · step-cost); the O(n) algorithms still dominate at K · n.
+   */
   private sortStep(): void {
     const list = this.entities.list;
     const n = list.length;
-    if (n < 2) return;
     const s = this.state;
     const algo = cyc(ALGOS, s.algoIdx);
-    s.algoStep++;
+    if (n < 2) {
+      this.hud.setAlgo(algo.name, s.algoStep, 0);
+      return;
+    }
     for (let i = 0; i < n; i++) {
       const e = list[i];
       this.sortVals[i] = e ? e.userData.sortVal : 0;
     }
-    const swap = algo.step(this.sortVals, n, s.algoStep);
-    let swapped = false;
-    if (swap && swap[0] !== swap[1] && swap[0] >= 0 && swap[1] < n) {
-      const ea = list[swap[0]];
-      const eb = list[swap[1]];
-      if (ea && eb) {
-        const tv = ea.userData.sortVal;
-        ea.userData.sortVal = eb.userData.sortVal;
-        eb.userData.sortVal = tv;
-        this.sv1
-          .copy(eb.position)
-          .sub(ea.position)
-          .normalize()
-          .multiplyScalar(0.04 * this.chaosMul());
-        ea.userData.vel.add(this.sv1);
-        eb.userData.vel.add(this.sv1.negate());
-        ea.material.emissiveIntensity = 2;
-        eb.material.emissiveIntensity = 2;
-        this.qc.onSortSwap(swap[0], swap[1]); // CNOT with parity-chosen targets
-        swapped = true;
-      }
+    // Batch size: enough to read as motion, bounded so the O(n) algorithms stay
+    // cheap even at the 10k ceiling (28 · 10k ≈ 280k int-compares ≈ 0.5 ms).
+    const batch = Math.min(28, Math.max(6, n >> 8));
+    const push = 0.05 * this.chaosMul();
+    let swaps = 0;
+    for (let b = 0; b < batch; b++) {
+      s.algoStep++;
+      const swap = algo.step(this.sortVals, n, s.algoStep);
+      if (!swap) continue;
+      const a0 = swap[0];
+      const a1 = swap[1];
+      if (a0 === a1 || a0 < 0 || a1 >= n) continue;
+      const ea = list[a0];
+      const eb = list[a1];
+      if (!ea || !eb) continue;
+      const tv = ea.userData.sortVal;
+      ea.userData.sortVal = eb.userData.sortVal;
+      eb.userData.sortVal = tv;
+      this.sortVals[a0] = ea.userData.sortVal; // keep the view coherent for later steps
+      this.sortVals[a1] = eb.userData.sortVal;
+      this.sv1.copy(eb.position).sub(ea.position).normalize().multiplyScalar(push);
+      ea.userData.vel.add(this.sv1);
+      eb.userData.vel.add(this.sv1.negate());
+      ea.material.emissiveIntensity = 2.6;
+      eb.material.emissiveIntensity = 2.6;
+      if (swaps === 0) this.qc.onSortSwap(a0, a1); // one CNOT/frame (preserve coupling rate)
+      swaps++;
     }
-    this.hud.setAlgo(algo.name, s.algoStep, swapped);
+    this.hud.setAlgo(algo.name, s.algoStep, swaps);
   }
 
   /** Refill the reused snapshot object. Allocation-free. */

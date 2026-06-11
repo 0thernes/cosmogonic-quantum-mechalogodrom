@@ -47,16 +47,30 @@
       ></div>
     </div>
 
-    <!-- Responsive panel overlay (CONTRACTS V3.4). Placement lives in src/styles/app.css:
-         grid columns on tablet/laptop/TV, stacked sheets on phone portrait, side rails in
-         low-height landscape. Panels carry only glass styling — never position utilities. -->
+    <!-- Responsive panel overlay (CONTRACTS V3.4/V5.5). Placement lives in src/styles/app.css:
+         grid columns on tablet/laptop/TV, EDGE-DOCKED SLIDE-OUT SHEETS on small/portrait/coarse
+         viewports (each panel hides off-screen behind an always-visible [data-sheet-handle] tab;
+         the tiny inline script at the end of <body> toggles `.open`). Panels carry only glass
+         styling — never position utilities. V5.5: every panel also carries a [data-sheet-handle]
+         edge tab, shown only in sheet mode, so the 3D world stays unobstructed. -->
     <div id="ui">
-      <!-- Telemetry panel (phone portrait: swipeable top sheet, collapsed to a 2-row strip) -->
+      <!-- Telemetry panel (small/portrait: left edge-docked slide-out sheet) -->
       <section
         id="sP"
-        class="panel overflow-hidden rounded-panel border border-cyan-300/15 bg-void/90 shadow-panel backdrop-blur-xl backdrop-saturate-150"
+        class="panel sheet sheet-l overflow-hidden rounded-panel border border-cyan-300/15 bg-void/90 shadow-panel backdrop-blur-xl backdrop-saturate-150"
         aria-label="Telemetry"
       >
+        <button
+          type="button"
+          data-sheet-handle="sP"
+          class="sheet-handle"
+          aria-controls="sP"
+          aria-expanded="false"
+          aria-label="Open or close telemetry sheet"
+          title="Telemetry"
+        >
+          <span class="sheet-handle-label">TEL</span>
+        </button>
         <div
           data-panel-toggle
           class="flex min-h-7.5 cursor-pointer items-center justify-between border-b border-white/5 px-2.5 py-1.5 select-none"
@@ -236,13 +250,25 @@
          all still resolve their nodes. -->
       <section
         id="oP"
-        class="panel overflow-hidden rounded-panel border border-cyan-300/15 bg-void/90 shadow-panel backdrop-blur-xl backdrop-saturate-150"
+        class="panel sheet sheet-r overflow-hidden rounded-panel border border-cyan-300/15 bg-void/90 shadow-panel backdrop-blur-xl backdrop-saturate-150"
         aria-label="Observatory"
       >
+        <button
+          type="button"
+          data-sheet-handle="oP"
+          class="sheet-handle"
+          aria-controls="oP"
+          aria-expanded="false"
+          aria-label="Open or close observatory sheet"
+          title="Observatory"
+        >
+          <span class="sheet-handle-label">OBS</span>
+        </button>
         <div
           data-panel-toggle
           class="flex min-h-7.5 cursor-pointer items-center justify-between border-b border-white/5 px-2.5 py-1.5 select-none"
         >
+          <span class="sheet-grip" aria-hidden="true"></span>
           <h2
             class="font-ui text-2xs font-semibold tracking-widest text-accent uppercase text-shadow-glow-accent"
           >
@@ -425,12 +451,24 @@
         </div>
       </section>
 
-      <!-- Control panel (phone portrait: bottom sheet) -->
+      <!-- Control panel (small/portrait fine-pointer: left edge-docked sheet, lower; on coarse
+           pointers this panel is display:none — the joystick + look pad + wheel replace it). -->
       <section
         id="cP"
-        class="panel overflow-hidden rounded-panel border border-cyan-300/15 bg-void/90 shadow-panel backdrop-blur-xl backdrop-saturate-150"
+        class="panel sheet sheet-l sheet-lower overflow-hidden rounded-panel border border-cyan-300/15 bg-void/90 shadow-panel backdrop-blur-xl backdrop-saturate-150"
         aria-label="Control"
       >
+        <button
+          type="button"
+          data-sheet-handle="cP"
+          class="sheet-handle"
+          aria-controls="cP"
+          aria-expanded="false"
+          aria-label="Open or close control sheet"
+          title="Control"
+        >
+          <span class="sheet-handle-label">CTL</span>
+        </button>
         <div
           data-panel-toggle
           class="flex min-h-7.5 cursor-pointer items-center justify-between border-b border-white/5 px-2.5 py-1.5 select-none"
@@ -616,13 +654,25 @@
         hx-trigger="load, every 5s"
         hx-swap="innerHTML"
         hx-target="#audit-list"
-        class="panel overflow-hidden rounded-panel border border-cyan-300/15 bg-void/90 shadow-panel backdrop-blur-xl backdrop-saturate-150"
+        class="panel sheet sheet-r sheet-lower overflow-hidden rounded-panel border border-cyan-300/15 bg-void/90 shadow-panel backdrop-blur-xl backdrop-saturate-150"
         aria-label="Audit trail"
       >
+        <button
+          type="button"
+          data-sheet-handle="aP"
+          class="sheet-handle"
+          aria-controls="aP"
+          aria-expanded="false"
+          aria-label="Open or close audit sheet"
+          title="Audit"
+        >
+          <span class="sheet-handle-label">AUD</span>
+        </button>
         <div
           data-panel-toggle
           class="flex min-h-7.5 cursor-pointer items-center justify-between border-b border-white/5 px-2.5 py-1.5 select-none"
         >
+          <span class="sheet-grip" aria-hidden="true"></span>
           <h2
             class="font-ui text-2xs font-semibold tracking-widest text-accent uppercase text-shadow-glow-accent"
           >
@@ -845,6 +895,53 @@
       title="Open architecture documentation"
       >Docs</a
     >
+
+    <!-- V5.5 edge-docked sheet toggler (CLASS-ONLY; no module imports, no sim/state access).
+         Each [data-sheet-handle="<panelId>"] tab toggles `.open` on its panel. CSS owns ALL
+         geometry (transform/translate, handle placement) and gates the whole mechanism behind
+         the small/portrait/coarse media queries — this script merely flips classes and keeps
+         aria-expanded honest. At most one sheet per edge (left/right) is open at a time so the
+         3D world stays unobstructed; Escape closes any open sheet. Inert outside sheet mode:
+         the handles are display:none on desktop, so clicks can't reach this. -->
+    <script>
+      (function () {
+        'use strict';
+        var handles = document.querySelectorAll('[data-sheet-handle]');
+        function edgeOf(panel) {
+          return panel.classList.contains('sheet-r') ? 'r' : 'l';
+        }
+        function setOpen(panel, open) {
+          panel.classList.toggle('open', open);
+          var h = panel.querySelector('[data-sheet-handle]');
+          if (h) h.setAttribute('aria-expanded', open ? 'true' : 'false');
+        }
+        function toggle(panel) {
+          var willOpen = !panel.classList.contains('open');
+          if (willOpen) {
+            // One sheet per edge: close any sibling already open on the same side.
+            var edge = edgeOf(panel);
+            for (var i = 0; i < handles.length; i++) {
+              var other = handles[i].parentElement;
+              if (other && other !== panel && edgeOf(other) === edge) setOpen(other, false);
+            }
+          }
+          setOpen(panel, willOpen);
+        }
+        for (var i = 0; i < handles.length; i++) {
+          (function (handle) {
+            handle.addEventListener('click', function () {
+              var panel = handle.parentElement;
+              if (panel) toggle(panel);
+            });
+          })(handles[i]);
+        }
+        document.addEventListener('keydown', function (e) {
+          if (e.key !== 'Escape') return;
+          var open = document.querySelectorAll('.sheet.open');
+          for (var j = 0; j < open.length; j++) setOpen(open[j], false);
+        });
+      })();
+    </script>
 
     <script type="module" src="./src/main.ts"></script>
   </body>

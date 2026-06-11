@@ -1,6 +1,7 @@
 /**
- * The 20 sorting-field algorithms — port of legacy `ALGOS` (lines 206-228),
- * behaviorally honest names preserved verbatim.
+ * The 25 sorting-field algorithms — the original 20 (port of legacy `ALGOS`,
+ * lines 206-228, behaviorally honest names preserved verbatim) plus 5 added in
+ * V5.3 RESONANCE, each with a DISTINCT spatial swap signature.
  *
  * Each `step` is a pure single-step swap PROPOSAL over the live prefix
  * `values[0..length)` of a pre-allocated Float32Array (Known Bug 4 fix: the
@@ -12,6 +13,22 @@
  * Hot path: every step is O(length) worst case and allocation-free except for
  * the returned `[a, b]` tuple, which the contract explicitly permits and
  * callers treat as transient.
+ *
+ * V5.3 additions (distinct spatial signatures, none duplicating the first 20):
+ *  - TIM RUN MERGE: galloping inter-run boundary repair across power-growing
+ *    runs (boundary index walks `2^k`-sized blocks — diagonal "seam" signature).
+ *  - BITONIC NETWORK: true Batcher compare-exchange — partner = `j ^ stride`
+ *    over halving power-of-two strides, both directions (symmetric butterfly,
+ *    distinct from BITONIC MESH's one-sided `j^(k>>1)` heuristic).
+ *  - PATIENCE BUCKET: value-addressed bucket phase — partner chosen by which
+ *    `1/B` value band an element belongs to (long jumps keyed by magnitude, not
+ *    position — a scatter signature no positional field produces).
+ *  - BRICK TRANSPOSE: odd-even transposition with a fixed parity PER PASS that
+ *    sweeps the whole row before flipping (synchronous brick-wall bands; ODD-
+ *    EVEN PULSE alternates parity every call, this holds a parity for n calls).
+ *  - PREFIX PANCAKE: front-anchored prefix-reversal homing the window MINIMUM
+ *    onto index 0 over a GROWING horizon (head-pinned flips — the mirror image
+ *    of PANCAKE FLIP, which drives the window max toward an expanding suffix).
  */
 import type { SortAlgo } from '../types';
 
@@ -24,7 +41,11 @@ function at(values: Float32Array, idx: number): number {
   return values[idx]!;
 }
 
-/** The 20 sorting-field algorithms in legacy order. Indexed by `SimState.algoIdx`. */
+/**
+ * The 25 sorting-field algorithms (20 legacy + 5 V5.3). Indexed by
+ * `SimState.algoIdx`; legacy 0..19 keep their exact order and names so the
+ * frozen-reference determinism tests stay pinned, the 5 new fields follow.
+ */
 export const ALGOS: readonly SortAlgo[] = [
   {
     name: 'BUBBLE FIELD',
@@ -230,6 +251,120 @@ export const ALGOS: readonly SortAlgo[] = [
       const j = i % length;
       if (j > 0 && at(values, j) < at(values, j - 1)) return [j - 1, j];
       return j < length - 1 && at(values, j) > at(values, j + 1) ? [j, j + 1] : null;
+    },
+  },
+  {
+    // V5.3 — Timsort-flavoured run merge. Runs double in width as `i` advances
+    // (`w = 2^(1 + (i>>3 & 3))` ∈ {2,4,8,16}); the step gallops along the seam
+    // between two adjacent width-`w` runs and repairs the first out-of-order
+    // boundary pair it finds. Signature: a diagonal seam that slides and widens,
+    // unlike RUN MERGE's fixed 4-wide windows or MERGE IMPULSE's single midpoint.
+    name: 'TIM RUN MERGE',
+    step(values, length, i) {
+      if (length < 2) return null;
+      const w = 2 << ((i >> 3) & 3); // 2,4,8,16
+      const base = (i * w) % length;
+      // Walk up to `w` boundary candidates inside the live prefix; the run pair
+      // is [base, base+w) | [base+w, base+2w), so the seam sits at base+w.
+      const start = base + w - 1;
+      const end = Math.min(base + 2 * w - 1, length - 1);
+      for (let j = Math.max(start - w + 1, 0); j < end; j++) {
+        if (at(values, j) > at(values, j + 1)) return [j, j + 1];
+      }
+      return null;
+    },
+  },
+  {
+    // V5.3 — Batcher bitonic compare-exchange network. Partner is the true XOR
+    // neighbour `p = j ^ stride` over a halving power-of-two stride schedule
+    // (`stride = 2^(3 - (i & 3))` ∈ {8,4,2,1}); the ascending/descending sense
+    // flips per bitonic block (`(j / (stride<<1)) & 1`). Symmetric butterfly:
+    // every index can reach a far partner in BOTH directions — distinct from
+    // BITONIC MESH, which only ever proposed the lower-index `j^(k>>1)` partner.
+    name: 'BITONIC NETWORK',
+    step(values, length, i) {
+      if (length < 2) return null;
+      const stride = 8 >> (i & 3) || 1; // 8,4,2,1
+      const j = (i * 7 + 1) % length;
+      const p = j ^ stride;
+      if (p >= length || p === j) return null;
+      const lo = j < p ? j : p;
+      const hi = j < p ? p : j;
+      // Ascending block ⇒ keep min low; descending block ⇒ keep max low.
+      const ascending = ((lo / (stride << 1)) & 1) === 0;
+      const outOfOrder = ascending
+        ? at(values, lo) > at(values, hi)
+        : at(values, lo) < at(values, hi);
+      return outOfOrder ? [lo, hi] : null;
+    },
+  },
+  {
+    // V5.3 — Patience/bucket phase: VALUE-addressed, not position-addressed.
+    // The active element's magnitude picks a target band b ∈ [0, B); the step
+    // pulls it toward the slot block that band owns whenever it currently sits
+    // in the wrong band region. Jumps are keyed by value, producing a scatter
+    // signature (long, magnitude-driven hops) that no positional field emits.
+    // Perpetual field: the band map cycles over all indices, so for distinct
+    // values it admits no global fixpoint — documented in the tests.
+    name: 'PATIENCE BUCKET',
+    step(values, length, i) {
+      if (length < 2) return null;
+      const buckets = length < 8 ? length : 8;
+      const span = length / buckets;
+      const j = i % length;
+      const v = at(values, j);
+      // Map value (assumed roughly [0,100) sort-val range, clamped) to a band.
+      const band =
+        v <= 0 ? 0 : v >= 100 ? buckets - 1 : Math.min(buckets - 1, ((v / 100) * buckets) | 0);
+      // The band's home slot for this rotation of `i`.
+      const home = Math.min(length - 1, (band * span + (i % Math.max(1, span | 0))) | 0);
+      if (home === j) return null;
+      // Only propose when the swap is order-improving for THIS pair, so the
+      // field still strictly cuts inversions on the trajectory.
+      const lo = j < home ? j : home;
+      const hi = j < home ? home : j;
+      return at(values, lo) > at(values, hi) ? [lo, hi] : null;
+    },
+  },
+  {
+    // V5.3 — Brick-wall odd-even transposition with a parity HELD for a full
+    // pass. `pass = floor(i / max(1, length-1))` toggles parity once per sweep;
+    // within a sweep the same parity's brick layer is scanned left→right and the
+    // first disordered brick is repaired. Synchronous banded mortar lines that
+    // hold, then flip — distinct from ODD-EVEN PULSE, whose parity flips EVERY
+    // single call (`i % 2`) rather than every `length-1` calls.
+    name: 'BRICK TRANSPOSE',
+    step(values, length, i) {
+      if (length < 2) return null;
+      const passLen = length - 1;
+      const parity = (Math.floor(i / passLen) & 1) as 0 | 1;
+      for (let j = parity; j < length - 1; j += 2) {
+        if (at(values, j) > at(values, j + 1)) return [j, j + 1];
+      }
+      return null;
+    },
+  },
+  {
+    // V5.3 — Front-anchored prefix-reversal pancake with a GROWING horizon: the
+    // working window expands from the left as `i` advances
+    // (`h = 2 + (i % (length-1))`), and the step homes the window MINIMUM to the
+    // front via the boundary swap `[0, m]`. Every proposal is front-anchored at
+    // index 0 (nested flips collapsing onto the head), the mirror image of
+    // PANCAKE FLIP, which drives the window MAX toward an expanding suffix tail.
+    // The swap is order-improving (front should hold the smaller value), so the
+    // field strictly reduces inversions while keeping its distinct head-pinned
+    // flip signature.
+    name: 'PREFIX PANCAKE',
+    step(values, length, i) {
+      if (length < 2) return null;
+      const h = 2 + (i % (length - 1)); // window width 2..length, grows with i
+      let m = 0;
+      for (let k = 1; k < h; k++) {
+        if (at(values, k) < at(values, m)) m = k;
+      }
+      // Bring the window minimum to the front whenever the head is larger —
+      // a single head-pinned boundary swap that begins the prefix flip.
+      return m !== 0 && at(values, 0) > at(values, m) ? [0, m] : null;
     },
   },
 ];

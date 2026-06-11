@@ -327,7 +327,7 @@ a:focus-visible {
   }
 }
 
-/* Sheet grip — visible only where panels behave as sheets (phone portrait). */
+/* Sheet grip — visible only where panels behave as sheets (small/portrait). */
 .sheet-grip {
   display: none;
   width: 30px;
@@ -336,53 +336,183 @@ a:focus-visible {
   background: --alpha(var(--color-white) / 18%);
 }
 
-/* ── Phone portrait: stacked sheets docked top, algo strip at the bottom ── */
-@media (max-width: 640px) {
+/* ════════════════════════════════════════════════════════════════
+   V5.5 EDGE-DOCKED SLIDE-OUT SHEETS (CONTRACTS V5.5)
+   On small/portrait/coarse viewports the four panels stop sharing the
+   overlay grid and become fixed, edge-docked sheets translated fully
+   off-screen. Each carries an always-visible [data-sheet-handle] tab
+   pinned to its edge; the inline class-toggler in index.html flips
+   `.open`, sliding the sheet in over the 3D world. Desktop/TV never
+   enter sheet mode (handles stay display:none, panels keep the grid).
+   GEOMETRY LIVES HERE; the script only toggles classes.
+   ════════════════════════════════════════════════════════════════ */
+
+/* The handle tab — hidden by default (grid/desktop). Sheet-mode media queries
+   below reveal it. A vertical pill clinging to the screen edge with the panel's
+   3-letter label rotated to read along the edge. ≥44px tall hit target. */
+.sheet-handle {
+  display: none;
+  position: absolute;
+  top: 8px;
+  z-index: 1;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  min-height: 56px;
+  padding: 8px 2px;
+  border: 1px solid --alpha(var(--color-accent) / 22%);
+  border-radius: var(--radius-btn);
+  background: --alpha(var(--color-accent) / 10%);
+  color: --alpha(var(--color-accent) / 90%);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  cursor: pointer;
+  transition:
+    background var(--motion-tap),
+    border-color var(--motion-tap),
+    color var(--motion-tap);
+}
+.sheet-handle:hover {
+  background: --alpha(var(--color-accent) / 18%);
+  border-color: --alpha(var(--color-accent) / 45%);
+  color: var(--color-accent);
+}
+.sheet-handle-label {
+  font: 600 var(--text-4xs) var(--font-ui);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+}
+/* Open-state handle reads "live": accent fill + glow so the user can see which
+   sheet is currently pulled out. */
+.sheet.open > .sheet-handle {
+  background: --alpha(var(--color-accent) / 24%);
+  border-color: --alpha(var(--color-accent) / 55%);
+  color: var(--color-white);
+  box-shadow: 0 0 12px --alpha(var(--color-accent) / 30%);
+}
+
+/* ════════════════════════════════════════════════════════════════
+   SHEET MODE (CONTRACTS V5.5) — small / portrait / coarse viewports.
+   Trigger: a narrow viewport (≤768px), OR portrait orientation, OR a
+   coarse pointer — but NEVER the 10-foot TV (≥1900px landscape keeps
+   the grid; see the `not all and` guard via the min-width reset block
+   at the very end). In sheet mode the four panels leave the overlay
+   grid entirely: each becomes a fixed, edge-docked sheet shoved fully
+   off-screen, revealed only when `.open` (toggled by the handle tab).
+   The #ui container itself goes pointer-events:none so the bare 3D
+   world is fully interactive; only the handles + an open sheet capture
+   input. The algo readout stays pinned as a small bottom strip.
+   ════════════════════════════════════════════════════════════════ */
+@media (max-width: 768px), (orientation: portrait), (pointer: coarse) {
+  /* Drop the grid: #ui becomes a passthrough layer; sheets self-position. */
   #ui {
+    display: block;
+    padding: 0;
+    pointer-events: none;
+  }
+  #ui > * {
+    pointer-events: auto;
+  }
+
+  /* Every sheet: fixed, edge-docked, off-screen until `.open`. Width is a
+     comfortable thumb-reachable clamp that never exceeds the viewport. The
+     handle hangs OUTSIDE the panel on its docked edge so it stays visible
+     while the body is parked off-screen. */
+  .sheet {
+    position: fixed;
+    z-index: 30;
     display: flex;
     flex-direction: column;
-    gap: 4px;
-    padding: 4px;
-    padding-top: calc(4px + env(safe-area-inset-top, 0px));
-    padding-bottom: calc(46px + env(safe-area-inset-bottom, 0px));
+    width: min(86vw, 320px);
+    max-height: min(78vh, 78dvh);
+    overflow: visible; /* let the handle escape the panel box */
+    transition: transform var(--motion-chev) ease;
+    will-change: transform;
   }
-  #ui > section {
-    max-height: none;
+  .sheet > .panel-body,
+  .sheet > #obs-tabs {
+    /* The body scrolls within the docked sheet; capped so it never overflows. */
+    max-height: calc(min(78vh, 78dvh) - 44px);
   }
-  #sP {
-    order: 0;
+  .sheet > .panel-body {
+    overflow-y: auto;
   }
-  #sP .panel-body {
-    max-height: 28vh;
+
+  /* Left-docked sheets (Telemetry, Control). Parked just past the left edge. */
+  .sheet-l {
+    left: 0;
+    transform: translateX(calc(-100% - 4px));
   }
-  #oP {
-    order: 1;
+  .sheet-l.open {
+    transform: translateX(8px);
   }
-  #oP .panel-body {
-    max-height: 24vh;
+  /* Right-docked sheets (Observatory, Audit). Parked just past the right edge. */
+  .sheet-r {
+    right: 0;
+    transform: translateX(calc(100% + 4px));
   }
-  #aP {
-    display: none; /* audit is a desk instrument — phones get the cosmos */
+  .sheet-r.open {
+    transform: translateX(-8px);
   }
-  #cP {
-    order: 3;
-    margin-top: auto; /* bottom sheet */
+
+  /* Vertical docking: upper sheets near the top safe area, lower sheets below
+     them so a left/right pair never overlaps its sibling's handle. */
+  .sheet:not(.sheet-lower) {
+    top: calc(8px + env(safe-area-inset-top, 0px));
   }
-  #cP .panel-body {
-    max-height: 30vh;
+  .sheet.sheet-lower {
+    top: calc(50% + 4px);
   }
-  #ui > #alg {
-    order: 2;
-    margin-top: auto;
-    max-width: 60vw;
+
+  /* The handle clings to the OUTER edge of its docked sheet, always on-screen
+     even while the body is parked off-screen. Left sheets → handle on the right
+     side of the (off-screen) panel so it pokes onto the screen; right sheets →
+     handle on the left side. */
+  .sheet-l > .sheet-handle {
+    right: -22px;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
   }
+  .sheet-r > .sheet-handle {
+    left: -22px;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+  .sheet-handle {
+    display: inline-flex;
+  }
+
+  /* In sheet mode the in-header grip + chevron lose their job (the handle owns
+     open/close), but the [data-panel-toggle] header still collapses the body
+     via `.col` if the user taps it — harmless, kept for parity. Show the grip
+     as a drag affordance hint. */
   .sheet-grip {
     display: block;
   }
+
+  /* Panels are size containers for their charts; keep that in sheet mode so the
+     observatory canvases scale to the sheet width, not the viewport. */
+  .sheet {
+    container-type: inline-size;
+  }
+
+  /* Algo readout: a compact always-visible strip pinned bottom-left, clear of
+     the toolbar and the touch joystick. Never a sheet — it is glanceable lore. */
+  #ui > #alg {
+    position: fixed;
+    left: 6px;
+    bottom: calc(48px + env(safe-area-inset-bottom, 0px));
+    max-width: min(60vw, 240px);
+    z-index: 19;
+  }
 }
 
-/* ── Low landscape (phones/foldables rotated): twin side rails ── */
-@media (max-height: 520px) and (min-width: 641px) {
+/* ── Low landscape, FINE pointer only (e.g. a short desktop window): twin side rails.
+     Coarse rotated phones/foldables now use the V5.5 edge sheets above instead, so this
+     is scoped to `pointer: fine` and landscape to avoid fighting sheet mode. ── */
+@media (max-height: 520px) and (min-width: 769px) and (pointer: fine) and (orientation: landscape) {
   #ui {
     grid-template-columns: clamp(160px, 24vw, 230px) 1fr clamp(170px, 26vw, 250px);
     grid-template-areas:
@@ -399,10 +529,11 @@ a:focus-visible {
   }
 }
 
-/* ── Tablet (641–1280px, fine OR coarse): tighter rails than laptop so the center
-     3D view keeps room; panels stay flex sheets, never fixed-px. The phone-portrait
-     rule above (≤640) already claims narrower widths, so this only widens from there. ── */
-@media (min-width: 641px) and (max-width: 1280px) and (min-height: 521px) {
+/* ── Tablet/laptop LANDSCAPE, FINE pointer (769–1280px): tighter rails than the wide
+     laptop so the center 3D view keeps room. Scoped to fine + landscape so coarse tablets
+     and any portrait window fall through to the V5.5 sheets above (the user's portrait QHD
+     monitor and tablets want slide-out sheets, not eaten side columns). ── */
+@media (min-width: 769px) and (max-width: 1280px) and (min-height: 521px) and (pointer: fine) and (orientation: landscape) {
   #ui {
     grid-template-columns: clamp(150px, 22vw, 220px) 1fr clamp(170px, 24vw, 250px);
   }
@@ -411,12 +542,12 @@ a:focus-visible {
   }
 }
 
-/* ── Foldables: hinge-safe. Two horizontal segments → panels hug the outer edges and
-     the center column swallows the hinge (no panel spans the fold); the hinge width
-     comes from env(viewport-segment-*) where the engine exposes it, falling back to a
-     fluid clamp. A single vertical fold (book posture) keeps the stacked-sheet grammar
-     but pads the safe area. ── */
-@media (horizontal-viewport-segments: 2) {
+/* ── Foldables, FINE pointer landscape: hinge-safe. Two horizontal segments → panels hug
+     the outer edges and the center column swallows the hinge (no panel spans the fold); the
+     hinge width comes from env(viewport-segment-*) where the engine exposes it, falling back
+     to a fluid clamp. Coarse/portrait foldables use the V5.5 sheets (book posture is portrait,
+     a single edge-docked sheet is hinge-safe by construction). ── */
+@media (horizontal-viewport-segments: 2) and (pointer: fine) and (orientation: landscape) {
   #ui {
     grid-template-columns: minmax(160px, 22vw) 1fr minmax(180px, 22vw);
     column-gap: clamp(
@@ -429,19 +560,15 @@ a:focus-visible {
     );
   }
 }
-@media (vertical-viewport-segments: 2) {
-  #ui {
-    row-gap: clamp(10px, 6vh, 40px);
-    padding-left: env(safe-area-inset-left, 0px);
-    padding-right: env(safe-area-inset-right, 0px);
-  }
-}
 
-/* ── TV / 10-foot (≥1900px): token-scale bump ≈ ×1.6 via clamp() (continues to scale
-     toward 4K instead of stepping once), fat focus rings, reachable-from-the-couch hit
+/* ── TV / 10-foot (≥1900px LANDSCAPE): token-scale bump ≈ ×1.6 via clamp() (continues to
+     scale toward 4K instead of stepping once), fat focus rings, reachable-from-the-couch hit
      targets. The observatory canvases grow through the container query above — no fixed
-     height override is needed here. ── */
-@media (min-width: 1900px) {
+     height override is needed here. LANDSCAPE-scoped so a 4K panel rotated to PORTRAIT falls
+     through to the V5.5 sheets (matching the user's portrait-QHD ergonomics) instead of an
+     unreachable far-edge column. A coarse-pointer smart TV would otherwise match the sheet-
+     mode query above, so this block explicitly RESTORES the grid + neutralizes sheet docking. */
+@media (min-width: 1900px) and (orientation: landscape) {
   :root {
     /* clamp() makes the 10-foot scale fluid from 1900px up to a 2560px reference,
        so a 43" 4K panel reads larger than a 1900px display, not identical. */
@@ -451,11 +578,40 @@ a:focus-visible {
     --radius-panel: clamp(14px, 0.7vw, 18px);
     --radius-btn: clamp(8px, 0.4vw, 11px);
   }
+  /* Restore the grid overlay (a coarse-pointer TV would have entered sheet mode). */
   #ui {
+    display: grid;
+    pointer-events: none;
+    grid-template-rows: auto auto 1fr auto;
+    grid-template-areas:
+      'tel . obs'
+      'aud . ctl'
+      '.   . .  '
+      'alg . .  ';
     gap: clamp(12px, 0.8vw, 22px);
     padding: clamp(14px, 0.9vw, 26px);
     padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px));
     grid-template-columns: clamp(290px, 18vw, 460px) 1fr clamp(330px, 20vw, 520px);
+  }
+  #ui > * {
+    pointer-events: auto;
+  }
+  /* Sheets become ordinary grid panels again; handles disappear. */
+  .sheet {
+    position: static;
+    transform: none;
+    width: auto;
+    max-height: clamp(300px, 48vh, 60vh);
+    overflow: hidden;
+  }
+  .sheet-handle {
+    display: none;
+  }
+  #aP {
+    display: flex; /* audit returns to the grid on a wide TV */
+  }
+  #ui > #alg {
+    position: static;
   }
   #ui > section {
     max-height: clamp(300px, 48vh, 60vh);
@@ -560,17 +716,36 @@ a:focus-visible {
   }
 }
 @media (hover: none), (pointer: coarse) {
+  /* Thumb ergonomics (V5.5): LEFT thumb = move (joystick), RIGHT thumb = look (look pad),
+     both bottom-docked at equal height so the thumbs rest symmetrically; the action wheel
+     sits above the right look pad within right-thumb reach. All three clear the bottom bar.
+     Pads enlarge to ~96px so the live touch target comfortably exceeds 44px; the knobs are
+     centered indicators (the PAD is the target). Horizontal offsets are clamped so nothing
+     overflows a narrow portrait phone. */
+  #jP,
+  #lp {
+    width: clamp(80px, 24vw, 104px);
+    height: clamp(80px, 24vw, 104px);
+  }
+  #jK,
+  #lpK {
+    /* Re-center the knob inside the now-fluid pad (knob is ~30px; offset = (pad−knob)/2). */
+    top: 50%;
+    left: 50%;
+    margin-top: -15px;
+    margin-left: -15px;
+  }
   #joy {
-    bottom: calc(54px + env(safe-area-inset-bottom, 0px));
-    left: 10px;
+    bottom: calc(56px + env(safe-area-inset-bottom, 0px));
+    left: max(10px, env(safe-area-inset-left, 0px));
   }
   #lookpad {
-    bottom: calc(54px + env(safe-area-inset-bottom, 0px));
-    right: 10px;
+    bottom: calc(56px + env(safe-area-inset-bottom, 0px));
+    right: max(10px, env(safe-area-inset-right, 0px));
   }
   #wheel {
-    bottom: calc(152px + env(safe-area-inset-bottom, 0px));
-    right: 14px;
+    bottom: calc(168px + env(safe-area-inset-bottom, 0px));
+    right: max(14px, env(safe-area-inset-right, 0px));
   }
   /* The static pads yield to joystick + look pad + wheel (V3.4 mandate). */
   #pad-move,
@@ -579,12 +754,41 @@ a:focus-visible {
     display: none;
   }
   #cP {
-    display: none; /* nothing left inside on touch — the overlays ARE control */
+    display: none; /* nothing left inside on touch — the overlays ARE control (its CTL
+                      handle is a child, so it hides with it: no dead tab) */
   }
   #bar button,
   #bar a {
     min-height: 44px;
     min-width: 44px;
+  }
+  /* Algo readout clears the left joystick: lift it above the move pad so neither the
+     joystick nor the toolbar covers the lore line. */
+  #ui > #alg {
+    bottom: calc(168px + env(safe-area-inset-bottom, 0px));
+    left: max(8px, env(safe-area-inset-left, 0px));
+    max-width: clamp(120px, 44vw, 200px);
+  }
+}
+
+/* Coarse + very short landscape (rotated phone): the two thumb pads + wheel + toolbar +
+   algo strip must coexist without stacking off-screen. Shrink the pads and tuck the algo
+   line to the top so the bottom belongs to the controls. */
+@media (pointer: coarse) and (max-height: 480px) and (orientation: landscape) {
+  #jP,
+  #lp {
+    width: clamp(68px, 16vh, 92px);
+    height: clamp(68px, 16vh, 92px);
+  }
+  #wheel {
+    bottom: calc(120px + env(safe-area-inset-bottom, 0px));
+  }
+  #ui > #alg {
+    top: calc(6px + env(safe-area-inset-top, 0px));
+    bottom: auto;
+    left: 50%;
+    transform: translateX(-50%);
+    max-width: min(70vw, 280px);
   }
 }
 

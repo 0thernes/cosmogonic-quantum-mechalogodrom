@@ -5,7 +5,46 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.5.0] - 2026-06-11
+
+The **RESONANCE** pass (CONTRACTS V5) — a round of direct user feedback on 0.4.0.
+
+### Fixed / Changed
+
+- **Observatory legibility**: the VAR / ECO / WAR pages rendered but were faint,
+  sparse, and unlabeled — they read as broken. Every one of the 16 canvases now
+  carries an in-canvas title, value/unit readout, axis ticks/gridlines, bold
+  high-contrast strokes and additive glow, and a boot-seed prime so a fresh
+  world is never blank. (`src/ui/observatory.ts`.)
+- **Population fills its ceiling**: the ultra tier now grows to the full 10,000
+  entities (was an adaptive 6,500 throttle) — an ultra classification implies a
+  discrete GPU, and the per-frame neighbour-query optimizations keep it smooth.
+  `targetEntities === maxEntities` on every tier; determinism preserved per
+  device. (`src/core/quality.ts`.)
+- **Algorithms are visible again**: the active sorting field now batches swaps
+  per frame (6–28, scaled to population) so it visibly organizes the world
+  instead of nudging one organism among thousands; swapped organisms flash
+  brighter and the HUD shows a live swap-count (`step N · M ⇄`). Cycling the
+  algorithm now obviously changes the activity. (`src/world.ts`, `src/ui/hud.ts`.)
+- **25 sorting fields** (was 20): added TIM RUN MERGE, BITONIC NETWORK, PATIENCE
+  BUCKET, BRICK TRANSPOSE, and a fifth — each with a distinct spatial swap
+  signature. (`src/sim/algorithms.ts`.)
+- **Audio raised to the QUANTUM/BLACK MERIDIAN tier**: VOIDCROWN, ELDER ENGINE,
+  and LAST THEOREM rebuilt with full 4-note dramatic voicings and 16-step
+  evolving melodies; a new cataclysmic finale, **STARKILLER REQUIEM**; the
+  synthesis deepened across all songs with a sub-bass octave, a third detuned
+  chord voice, chord-tone arpeggiation, slow filter-cutoff LFO swells, and a
+  per-song rising/falling intensity envelope. (`src/audio/songs.ts`, `engine.ts`.)
+- **Lab artifact filled**: the collapse-field now grows to the full viewport
+  (was ~40% dead margin) with a live in-canvas HUD (seed, particle count,
+  collapse events, last measurement + Born probability, field blend, fps) and a
+  "THE MATH" legend explaining the Lorenz-XZ + curl-noise blend and the Born
+  rule. (`lab/quantum-wildbeyond.html`.)
+- **Mobile/portrait ergonomics**: on small / portrait / coarse-pointer viewports
+  the four panels become edge-docked **slide-out sheets** — each parked
+  off-screen behind an always-visible handle tab (TEL/CTL/OBS/AUD) that slides it
+  in over the unobstructed 3D world; one sheet per edge, Escape closes all. The
+  audit panel is a sheet now instead of hidden. (`index.html`, `src/styles/app.css`.)
 
 ### Performance
 

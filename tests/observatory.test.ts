@@ -11,6 +11,7 @@
  */
 import { describe, expect, spyOn, test } from 'bun:test';
 import {
+  fmtCompact,
   histogramBins,
   OBS_CANVAS_PER_PAGE,
   OBS_ENV_SERIES,
@@ -354,6 +355,116 @@ describe('histogramBins (population histogram, V4.3)', () => {
     histogramBins(ring, 0, ring.count, 3, out); // fewer samples → buffer must be re-zeroed
     const secondTotal = out.reduce((a, b) => a + b, 0);
     expect(secondTotal).toBe(3);
+  });
+});
+
+describe('fmtCompact (in-canvas value readouts, V5.1)', () => {
+  test('small integers print verbatim', () => {
+    expect(fmtCompact(0)).toBe('0');
+    expect(fmtCompact(7)).toBe('7');
+    expect(fmtCompact(999)).toBe('999');
+    expect(fmtCompact(-42)).toBe('-42');
+  });
+
+  test('thousands and millions collapse to a 1-decimal suffix', () => {
+    expect(fmtCompact(1000)).toBe('1.0k');
+    expect(fmtCompact(1500)).toBe('1.5k');
+    expect(fmtCompact(12_345)).toBe('12.3k');
+    expect(fmtCompact(2_500_000)).toBe('2.5M');
+    expect(fmtCompact(-3400)).toBe('-3.4k');
+  });
+
+  test('fractional values keep up to the requested decimals, trailing zeros trimmed', () => {
+    expect(fmtCompact(0.5)).toBe('0.5');
+    expect(fmtCompact(0.25)).toBe('0.25');
+    expect(fmtCompact(0.2)).toBe('0.2');
+    expect(fmtCompact(3.1)).toBe('3.1');
+    // Below 100 but with a clean integer value renders without a decimal point.
+    expect(fmtCompact(50)).toBe('50');
+    // Custom precision.
+    expect(fmtCompact(0.123, 1)).toBe('0.1');
+  });
+
+  test('values in [100, 1000) round to whole numbers', () => {
+    expect(fmtCompact(100)).toBe('100');
+    expect(fmtCompact(523.7)).toBe('524');
+  });
+
+  test('non-finite inputs render the em-dash placeholder', () => {
+    expect(fmtCompact(Number.NaN)).toBe('—');
+    expect(fmtCompact(Number.POSITIVE_INFINITY)).toBe('—');
+    expect(fmtCompact(Number.NEGATIVE_INFINITY)).toBe('—');
+  });
+});
+
+describe('Observatory boot-seed priming (V5.1, non-blank from first push)', () => {
+  // Inspect the private rings to assert the first push lands TWO columns (so every
+  // ≥2-sample timeline/area/band chart has a segment to draw immediately).
+  interface RingPeek {
+    readonly count: number;
+    at(s: number, i: number): number;
+  }
+  interface ObsInternals {
+    phylumRing: RingPeek;
+    statRing: RingPeek;
+    fluxRing: RingPeek;
+    diversityRing: RingPeek;
+  }
+
+  test('the first push seeds a duplicate opening column across every page ring', () => {
+    const warn = spyOn(console, 'warn').mockImplementation(() => {});
+    try {
+      const obs = new Observatory();
+      const inner = obs as unknown as ObsInternals;
+      expect(inner.phylumRing.count).toBe(0);
+      obs.push({
+        phylumCounts: [4, 6, 0, 0, 0, 0, 0, 0, 0, 0],
+        titanLedger: [{ name: 'SEED', energy: 3, matter: 2, entropy: 1, war: 0 }],
+        warMatrix: new Uint8Array(WAR_CELLS),
+        rdEnergy: 0.2,
+        qEntropy: 0.5,
+        trend: 1,
+        entities: 10,
+        energy: 30,
+        links: 5,
+      });
+      // One real push primed a second identical column: count is 2, both columns equal.
+      expect(inner.phylumRing.count).toBe(2);
+      expect(inner.statRing.count).toBe(2);
+      expect(inner.diversityRing.count).toBe(2);
+      expect(inner.phylumRing.at(0, 0)).toBe(inner.phylumRing.at(0, 1));
+      expect(inner.statRing.at(0, 0)).toBe(inner.statRing.at(0, 1));
+      expect(inner.statRing.at(0, 0)).toBe(10); // entities → population series
+      // The replay records a zero birth/death flux (population unchanged on the seed frame).
+      expect(inner.fluxRing.count).toBe(2);
+      expect(inner.fluxRing.at(0, 1)).toBe(0);
+      expect(inner.fluxRing.at(1, 1)).toBe(0);
+    } finally {
+      warn.mockRestore();
+    }
+  });
+
+  test('subsequent pushes add a single column each (priming only fires once)', () => {
+    const warn = spyOn(console, 'warn').mockImplementation(() => {});
+    try {
+      const obs = new Observatory();
+      const inner = obs as unknown as ObsInternals;
+      const snap: ObservatorySnapshot = {
+        phylumCounts: [1, 1, 1],
+        titanLedger: [{ name: 'X', energy: 1, matter: 1, entropy: 1, war: 0 }],
+        warMatrix: new Uint8Array(WAR_CELLS),
+        rdEnergy: 0,
+        qEntropy: 0,
+        trend: 0,
+      };
+      obs.push(snap); // primes → 2
+      expect(inner.phylumRing.count).toBe(2);
+      obs.push(snap); // +1 → 3
+      obs.push(snap); // +1 → 4
+      expect(inner.phylumRing.count).toBe(4);
+    } finally {
+      warn.mockRestore();
+    }
   });
 });
 

@@ -23,7 +23,7 @@ import { createLogger } from './src/logging/logger';
 const log = createLogger('server');
 
 /** Reported by `GET /api/health`; mirrors package.json `version`. */
-const VERSION = '0.4.0';
+const VERSION = '0.5.0';
 
 /** Maximum number of audit entries retained in memory (matches the client-side cap). */
 const AUDIT_CAP = 200;

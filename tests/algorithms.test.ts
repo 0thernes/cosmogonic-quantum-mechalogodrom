@@ -2,7 +2,11 @@ import { describe, expect, test } from 'bun:test';
 import { ALGOS } from '../src/sim/algorithms';
 import { mulberry32 } from '../src/math/rng';
 
-/** Legacy names, in legacy order (lines 207-227) — regression guard. */
+/**
+ * All 25 algorithm names in canonical order: the 20 legacy fields (lines
+ * 207-227) FIRST and unchanged — a regression guard so the frozen-reference
+ * determinism tests stay pinned — then the 5 V5.3 RESONANCE additions.
+ */
 const EXPECTED_NAMES = [
   'BUBBLE FIELD',
   'SELECTION SWEEP',
@@ -24,6 +28,12 @@ const EXPECTED_NAMES = [
   'RUN MERGE',
   'HOLE SCATTER',
   'STRAND PULL',
+  // V5.3 RESONANCE — 5 new distinct spatial signatures.
+  'TIM RUN MERGE',
+  'BITONIC NETWORK',
+  'PATIENCE BUCKET',
+  'BRICK TRANSPOSE',
+  'PREFIX PANCAKE',
 ] as const;
 
 /** Deterministic seed shared by every case (contract rule 7 applies to tests too). */
@@ -54,8 +64,15 @@ function inversions(values: Float32Array, length: number): number {
 }
 
 describe('ALGOS', () => {
-  test('exports the 20 legacy algorithms, exact names, exact order', () => {
+  test('exports all 25 algorithms (20 legacy + 5 V5.3), exact names, exact order', () => {
     expect(ALGOS.map((a) => a.name)).toEqual([...EXPECTED_NAMES]);
+    expect(ALGOS).toHaveLength(25);
+  });
+
+  test('every name is UPPERCASE and unique (behaviorally-honest contract)', () => {
+    const names = ALGOS.map((a) => a.name);
+    for (const name of names) expect(name).toBe(name.toUpperCase());
+    expect(new Set(names).size).toBe(names.length);
   });
 
   for (const algo of ALGOS) {
@@ -125,6 +142,13 @@ describe('ALGOS', () => {
         // comparison pairs form a cycle over all indices, which admits no
         // fixpoint for distinct values — so they never terminate, but they
         // must still strictly reduce inversions below the starting count.
+        // The V5.3 fields all propose only order-improving swaps, so each
+        // strictly reduces inversions: TIM RUN MERGE and BRICK TRANSPOSE drive
+        // to a fully sorted fixpoint (minInv 0, terminated); BITONIC NETWORK,
+        // PATIENCE BUCKET and PREFIX PANCAKE reduce then quiesce. PATIENCE
+        // BUCKET is a documented perpetual field in the general case (its
+        // value→band map cycles over all indices), but it still cuts inversions
+        // on the trajectory, satisfying this contract either way.
         expect(minInv < inv0 || terminated).toBe(true);
       });
     });

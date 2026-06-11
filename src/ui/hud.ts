@@ -70,13 +70,14 @@ export class Hud {
   }
 
   /**
-   * Update the algorithm readout: name plus `step N` with a `⇄` suffix when the last step
-   * swapped (legacy lines 695-696). O(1) — called from the frame loop; the only allocation is
-   * the label string the DOM requires.
+   * Update the algorithm readout: name plus `step N` and a live `M ⇄` swap-count
+   * for the active sorting field this frame, so a selected algorithm visibly
+   * "does something" (M = 0 ⇒ the field is momentarily sorted/idle). O(1) — the
+   * only allocation is the label string the DOM requires.
    */
-  setAlgo(name: string, step: number, swapped: boolean): void {
+  setAlgo(name: string, step: number, swaps: number): void {
     this.aName.textContent = name;
-    this.aStep.textContent = `step ${step}${swapped ? ' ⇄' : ''}`;
+    this.aStep.textContent = swaps > 0 ? `step ${step} · ${swaps} ⇄` : `step ${step}`;
   }
 
   /**
