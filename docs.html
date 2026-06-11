@@ -356,7 +356,7 @@ erDiagram
     int index "seeded louvain community (240f)"
     int memberCount "entities carrying it in setGroup"
     float hue "slot in the 8-hue link palette"
-    float pagerank "600f offset 300; top-20 emissive floor"
+    float pagerank "600f offset 300, top-20 emissive floor"
   }
   CONSTELLATION_CELL {
     vec2 site "monolith/diorama XZ (24 fixed sites)"
@@ -379,7 +379,7 @@ erDiagram
     ring energy "120 samples"
     ring links "120 samples"
     float trendPerMin "regression slope, telemetry v10"
-    float zThreshold "2.5; one omen per 30 s max"
+    float zThreshold "2.5, one omen per 30 s max"
   }
         </pre>
       </div>
@@ -411,11 +411,11 @@ sequenceDiagram
   W->>SYS: weather.apply / puppetMasters.update
   W->>G: clear + insert all entities (every 2nd frame)
   W->>SYS: shoggoths.update
-  W->>SYS: sort step ALGOS[algoIdx] (swaps feed qcircuit.onSortSwap)
-  W->>SYS: entities.update (26 behaviors; deaths scar the RD field)
+  W->>SYS: sort step ALGOS[algoIdx], swaps feed qcircuit.onSortSwap
+  W->>SYS: entities.update — 26 behaviors, deaths scar the RD field
   W->>SYS: connectome.update (every 1/2/3 frames by n)
-  W->>V2: qcircuit.update (every 30th; bands to cloud every 6th)
-  W->>SYS: quantum.update (cloud; implodeAt on collapse)
+  W->>V2: qcircuit.update (every 30th, bands to cloud every 6th)
+  W->>SYS: quantum.update (cloud, implodeAt on collapse)
   W->>V2: rd.step (every 2nd frame, offset 1)
   W->>V2: graphMind communities (every 240th) / rank (every 600th, offset 300)
   W->>V2: constellations.update (every frame, O(1) pulse)
