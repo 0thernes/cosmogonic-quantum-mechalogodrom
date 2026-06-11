@@ -21,7 +21,16 @@ import type {
 } from './types';
 import type { Entity } from './types';
 import type { ViewMode, Weather } from './sim/constants';
-import { CHAOS_MAX, CHAOS_MIN, VIEW_MODES, WEATHERS } from './sim/constants';
+import {
+  ARENA_MID,
+  ARENA_Y,
+  CHAOS_MAX,
+  CHAOS_MIN,
+  GRID_CELL,
+  GROUND_EXTENT,
+  VIEW_MODES,
+  WEATHERS,
+} from './sim/constants';
 import { ALGOS } from './sim/algorithms';
 import { SONGS } from './audio/songs';
 import { mulberry32, type Rng } from './math/rng';
@@ -29,9 +38,12 @@ import { clamp } from './math/scalar';
 import { SpatialHash } from './math/spatial-hash';
 import { createGeometryCache } from './sim/geometry-cache';
 import { createMorphotypes } from './sim/morphotypes';
+import { createPhyla } from './sim/phyla';
 import { EntityManager } from './sim/entities';
+import { InstancedEntityRenderer } from './sim/instanced-entities';
 import { ShoggothSystem } from './sim/shoggoths';
 import { PuppetMasterSystem } from './sim/puppet-masters';
+import { TitanSystem } from './sim/titans';
 import { WeatherSystem } from './sim/weather';
 import { QuantumCloud } from './sim/quantum';
 import { Connectome } from './sim/connectome';
@@ -45,6 +57,7 @@ import { AnalyticsSystem } from './sim/analytics';
 import { AudioEngine } from './audio/engine';
 import { AudioAnalysis } from './audio/analysis';
 import { Hud } from './ui/hud';
+import { Observatory } from './ui/observatory';
 import { TelemetryPanel, bindPanelToggles } from './ui/panels';
 import { InputSystem } from './ui/input';
 import type { AuditTrail } from './logging/audit';
@@ -89,6 +102,16 @@ export class World {
   private readonly panel: TelemetryPanel;
   private readonly input: InputSystem;
 
+  // ── PANTHEON V3 systems (CONTRACTS V3) ──
+  private readonly titans: TitanSystem;
+  private readonly observatory: Observatory;
+  /** Pool renderer; null on the phone tier (V1 per-mesh path — V3.1). */
+  private readonly instanced: InstancedEntityRenderer | null;
+  /** Total morphotypes minted at boot (250 in phylum mode). */
+  private readonly morphTotal: number;
+  /** Strided mean of the RD V field, refreshed every 60 frames (V3.5). */
+  private rdEnergy = 0;
+
   // ── Wildbeyond V2 systems (CONTRACTS V2) ──
   private readonly lore: LoreEngine;
   private readonly qc: QuantumCircuitSystem;
@@ -99,9 +122,6 @@ export class World {
   private readonly analytics: AnalyticsSystem;
   /** Last collapse basis seen, to detect measurement events across frames. */
   private lastCollapseSeen = -1;
-  /** Exposure shimmer applied last frame — removed before the weather lerp so
-   *  the audio coupling is a bounded offset, never an accumulating feedback. */
-  private lastShimmer = 0;
 
   /** Pre-allocated sort-value buffer (Known Bug 4 fix). */
   private readonly sortVals: Float32Array;
@@ -141,19 +161,24 @@ export class World {
       elapsed: 0,
     };
 
-    this.grid = new SpatialHash<Entity>(8);
+    this.grid = new SpatialHash<Entity>(GRID_CELL);
     // Audio gets its OWN derived stream: its setInterval callbacks drain rng at
     // wall-clock moments, which would make the sim stream timing-dependent and
     // break same-seed reproducibility (audit finding, 0.2.1).
     this.audio = new AudioEngine(this.state, mulberry32((this.persisted.seed ^ 0xa0d10) >>> 0));
 
+    // Lore precedes the taxonomy: phyla are lore-named at mint (CONTRACTS V3.2).
+    this.lore = new LoreEngine(this.persisted.seed);
     const geos = createGeometryCache();
+    const phyla = createPhyla(this.rng, (i) => this.lore.name('tribe', i), geos.length);
+    const morphs = createMorphotypes(this.rng, geos.length, phyla);
+    this.morphTotal = morphs.length;
     const ctx: SimContext = {
       scene: this.engine.scene,
       quality: this.quality,
       rng: this.rng,
       grid: this.grid,
-      morphs: createMorphotypes(this.rng, geos.length),
+      morphs,
       geos,
       state: this.state,
       audit: this.audit,
@@ -162,7 +187,8 @@ export class World {
 
     this.environment = new EnvironmentSystem(ctx);
     this.entities = new EntityManager(ctx);
-    this.entities.reset(300);
+    this.instanced = this.quality.instanced ? new InstancedEntityRenderer(ctx) : null;
+    this.entities.reset(this.bootPopulation());
     this.shoggoths = new ShoggothSystem(ctx, this.entities);
     // Callback fires from update(), well after `hud`/`qc`/`lore` are assigned
     // below; the PuppetEvent argument is a reused scratch object — read
@@ -176,23 +202,33 @@ export class World {
     this.connectome = new Connectome(ctx, this.entities);
 
     // ── Wildbeyond V2 wiring (cadences in step(); see ARCHITECTURE.md) ──
-    this.lore = new LoreEngine(this.persisted.seed);
     this.qc = new QuantumCircuitSystem(ctx);
     // The bands buffer is live/reused — hand it to the cloud once; qc.bands()
     // refreshes its contents in place on the 6-frame cadence.
     this.quantum.setQuantumBands(this.qc.bands());
     this.rd = new ReactionDiffusionSystem(ctx);
     this.environment.attachGroundEmissiveMap(this.rd.texture);
+    // Death→ground feedback: every disposal (age-death AND shoggoth
+    // consumption, single-fire inside disposeAt) scars the living ground at
+    // its UV — the mortality loop the contract headlines.
+    this.entities.onDeath = (x, z) => this.rd.perturb(0.5 + x / 240, 0.5 - z / 240);
     // Boot scars: the Gray-Scott fixed point is uniform — seed a few
     // disturbances so the ground skin starts breathing (rd writer note).
     for (let i = 0; i < 4; i++) this.rd.perturb(this.rng(), this.rng());
+    // Deaths scar the living ground at the corpse's UV (CONTRACTS V2 feedback web).
+    this.entities.onDeath = (x, z) =>
+      this.rd.perturb(0.5 + x / GROUND_EXTENT, 0.5 - z / GROUND_EXTENT, 2);
+    // ── PANTHEON V3.3: the ten colossi and their economy/war layer ──
+    this.titans = new TitanSystem(ctx, this.entities, this.lore, this.rd);
     this.graphMind = new GraphMind(ctx, this.entities, this.connectome);
     this.constellations = new ConstellationSystem(ctx, this.lore);
     this.audioAnalysis = new AudioAnalysis(this.audio);
-    this.analytics = new AnalyticsSystem(ctx);
+    // Omens arrive lore-named: same seed, same prophecy vocabulary.
+    this.analytics = new AnalyticsSystem(ctx, (i) => this.lore.name('omen', i));
 
     this.hud = new Hud();
     this.panel = new TelemetryPanel();
+    this.observatory = new Observatory();
     bindPanelToggles();
     this.input = new InputSystem(this.buildActions());
 
@@ -219,13 +255,29 @@ export class World {
       trend: 0,
       qEntropy: 0,
       lore: '---',
+      // V3 — REUSED live views (documented in types.ts): consumers copy.
+      maxLinks: this.quality.maxLinks,
+      morphTotal: this.morphTotal,
+      titans: this.titans.count,
+      phylumCounts: this.entities.phylumCounts,
+      titanLedger: this.titans.ledger,
+      warMatrix: this.titans.warMatrix,
+      rdEnergy: 0,
     };
 
     this.log.info('world ready', {
       seed: this.persisted.seed,
+      tier: this.quality.tier,
       maxEntities: this.quality.maxEntities,
+      morphs: this.morphTotal,
+      titans: this.titans.count,
       geometries: geos.length,
     });
+  }
+
+  /** Boot/reset population: 30% of the tier cap (legacy 300 of 1000). */
+  private bootPopulation(): number {
+    return Math.max(300, Math.round(this.quality.maxEntities * 0.3));
   }
 
   /**
@@ -256,15 +308,13 @@ export class World {
 
     // One bands poll per frame, shared by every consumer (reused object).
     const bands = this.audioAnalysis.update();
+    // Audio couplings, each ≤ 0.35 per contract: bass shimmers the six-lamp
+    // rig (inside environment.update — the contracted LOCAL coupling, which
+    // replaced the global exposure offset), level breathes the cloud points.
+    this.environment.setAudioBass(bands.bass);
+    this.quantum.setBreath(bands.level);
 
-    // Bass shimmer as a BOUNDED offset around the weather-owned exposure:
-    // remove last frame's shimmer, let weather lerp its base value, re-apply.
-    // (The previous += version accumulated ~15x past the weather pullback and
-    // tone-mapped the whole world to white once music played — fixed.)
-    this.engine.renderer.toneMappingExposure -= this.lastShimmer;
     this.weather.apply(dt, t);
-    this.lastShimmer = bands.bass * 0.22;
-    this.engine.renderer.toneMappingExposure += this.lastShimmer;
     this.puppets.update(dt, t);
 
     if (s.frame % 2 === 0) {
@@ -276,6 +326,9 @@ export class World {
       }
     }
     this.shoggoths.update(dt, t);
+    // Titans roam every frame; economy/diplomacy/strikes are internally cadenced
+    // off s.frame (CONTRACTS V3.3) — after the grid so strikes can query it.
+    this.titans.update(dt, t);
 
     const sector = this.environment.sectorAt(this.engine.camera.position);
     if (sector !== this.lastSector) {
@@ -306,12 +359,24 @@ export class World {
     this.quantum.update(dt, t);
 
     if (s.frame % 2 === 1) this.rd.step(); // offset 1 from the grid rebuild
-    if (s.frame % 240 === 0) this.graphMind.updateCommunities();
-    // Offset 300 provably never collides with the 240f communities cadence.
-    if (s.frame % 600 === 300) this.graphMind.updateRank();
+    this.titans.drainPerturb(); // route any pending waste scar AFTER the RD step
+    // Graph passes double their period above 2,500 entities — louvain over a
+    // 10k-node mirror would spike the budget at the V2 cadence (V3.6 note).
+    const gmScale = n > 2500 ? 2 : 1;
+    if (s.frame % (240 * gmScale) === 0) this.graphMind.updateCommunities();
+    // Offset 300 provably never collides with the communities cadence above.
+    if (s.frame % (600 * gmScale) === 300) this.graphMind.updateRank();
 
     this.constellations.update(t, bands);
     this.environment.update(dt, t);
+
+    if (s.frame % 60 === 30) {
+      // RD pattern energy: strided mean of the V field (offset 30 — never
+      // shares a frame with analytics/analyze). Feeds titan entropy relief
+      // (PRODUCE hook) and the observatory environment timeline.
+      this.rdEnergy = this.sampleRdEnergy();
+      this.titans.feedEntropy(this.rdEnergy * 2);
+    }
 
     if (s.frame % 8 === 0) {
       this.analytics.push(n, this.energy, this.connectome.links);
@@ -319,7 +384,35 @@ export class World {
     }
     if (s.frame % 60 === 0) this.analytics.analyze(); // after push at coinciding frames
 
+    // Observatory: push+draw every 18f (36f on phone) AFTER the telemetry
+    // snapshot refresh so its rings sample the same values the panel shows.
+    const obsCadence = this.quality.isMobile ? 36 : 18;
+    if (s.frame % obsCadence === 0) {
+      this.observatory.push(this.snapshot());
+      this.observatory.draw();
+    }
+
+    // Pool mirror runs LAST — after every system that mutates entity visuals
+    // (sort flash, graph rank floor, belly pulse, conscription tints).
+    if (this.instanced) this.instanced.sync(this.entities.list, s.wireframe);
+
     this.engine.render();
+  }
+
+  /**
+   * Strided mean of the reaction-diffusion V field (stride 16 ≈ 1k reads of
+   * 16k texels) — the "pattern energy" of the living ground. Allocation-free.
+   */
+  private sampleRdEnergy(): number {
+    const v = this.rd.fieldV;
+    if (v.length === 0) return 0;
+    let sum = 0;
+    let count = 0;
+    for (let i = 0; i < v.length; i += 16) {
+      sum += v[i] ?? 0;
+      count++;
+    }
+    return count > 0 ? sum / count : 0;
   }
 
   /**
@@ -329,7 +422,10 @@ export class World {
   private onCollapse(basis: number): void {
     if (basis < 0) return;
     this.audio.play('crystallize');
+    this.quantum.implodeAt(basis); // the index%32===basis particle subset collapses
     this.rd.perturb(this.rng(), this.rng(), 6);
+    // Every titan witnesses the measurement and banks energy (V3.3 PRODUCE hook).
+    this.titans.onCollapseWitness();
     this.audit.record('collapse', { basis, star: this.lore.name('star', basis) });
   }
 
@@ -338,10 +434,10 @@ export class World {
     return Math.min(this.state.chaos / 2, 3);
   }
 
-  /** Camera modes free/orbit/fly/top — verbatim legacy motion constants. */
+  /** Camera modes free/orbit/fly/top — legacy motion constants × ARENA_MID (V3.1). */
   private updateCamera(dt: number, t: number): void {
     const cam = this.engine.camera;
-    const spd = 14 * dt;
+    const spd = 14 * ARENA_MID * dt;
     const rs = 1.5 * dt;
     const mode: ViewMode = cyc(VIEW_MODES, this.state.viewIdx);
     if (mode === 'free') {
@@ -376,25 +472,29 @@ export class World {
         cam.rotation.y -= lk.dx * 0.003;
         cam.rotation.x -= lk.dy * 0.003;
       }
-      if (this.input.zoom !== 0) cam.translateZ(this.input.zoom * 0.02);
+      if (this.input.zoom !== 0) cam.translateZ(this.input.zoom * 0.05);
     } else if (mode === 'orbit') {
-      const oR = 65 + Math.sin(t * 0.05) * 18;
+      const oR = (65 + Math.sin(t * 0.05) * 18) * ARENA_MID;
       cam.position.set(
         Math.cos(t * 0.12) * oR,
-        22 + Math.sin(t * 0.08) * 18,
+        (22 + Math.sin(t * 0.08) * 18) * ARENA_Y,
         Math.sin(t * 0.12) * oR,
       );
-      cam.lookAt(0, 8, 0);
+      cam.lookAt(0, 8 * ARENA_Y, 0);
     } else if (mode === 'fly') {
       const ft = t * 0.06;
       cam.position.set(
-        Math.sin(ft) * 45 + Math.cos(ft * 1.3) * 22,
-        16 + Math.sin(ft * 0.4) * 22,
-        Math.cos(ft) * 45 + Math.sin(ft * 0.7) * 28,
+        (Math.sin(ft) * 45 + Math.cos(ft * 1.3) * 22) * ARENA_MID,
+        (16 + Math.sin(ft * 0.4) * 22) * ARENA_Y,
+        (Math.cos(ft) * 45 + Math.sin(ft * 0.7) * 28) * ARENA_MID,
       );
-      cam.lookAt(Math.sin(ft * 0.3) * 12, 5 + Math.sin(ft * 0.5) * 12, Math.cos(ft * 0.3) * 12);
+      cam.lookAt(
+        Math.sin(ft * 0.3) * 12 * ARENA_MID,
+        (5 + Math.sin(ft * 0.5) * 12) * ARENA_Y,
+        Math.cos(ft * 0.3) * 12 * ARENA_MID,
+      );
     } else {
-      cam.position.set(0, 90, 0);
+      cam.position.set(0, 90 * ARENA_MID + 75, 0); // top-down survey of the 5× floor
       cam.lookAt(0, 0, 0);
       cam.rotation.z = t * 0.015;
     }
@@ -474,6 +574,9 @@ export class World {
     sn.trend = this.analytics.trendPerMin;
     sn.qEntropy = this.qc.entropy;
     sn.lore = this.constellations.subSectorAt(this.engine.camera.position);
+    // V3: phylumCounts/titanLedger/warMatrix are LIVE reused views installed at
+    // boot — only the scalar needs refreshing here.
+    sn.rdEnergy = this.rdEnergy;
     this.hud.setLore(sn.lore); // O(1) no-op when unchanged
     return sn;
   }
@@ -492,14 +595,14 @@ export class World {
       if (!e || e.userData.age <= 50) continue;
       picked++;
       e.userData.belly = 60;
-      // Birth scars the living ground (UV map per rd writer: 240×240 plane).
-      this.rd.perturb(0.5 + e.position.x / 240, 0.5 - e.position.z / 240, 3);
+      // Birth scars the living ground (UV over the GROUND_EXTENT plane).
+      this.rd.perturb(0.5 + e.position.x / GROUND_EXTENT, 0.5 - e.position.z / GROUND_EXTENT, 3);
       for (let j = 0; j < 4; j++) {
         this.sv1.set((this.rng() - 0.5) * 3, (this.rng() - 0.5) * 2, (this.rng() - 0.5) * 3);
         this.sv2.copy(e.position).add(this.sv1);
         const child = this.entities.spawn(
           this.sv2,
-          (e.userData.mi + 1 + Math.floor(this.rng() * 10)) % 100,
+          (e.userData.mi + 1 + Math.floor(this.rng() * 10)) % this.morphTotal,
           0.6,
         );
         if (child) child.userData.vel.copy(this.sv1.normalize().multiplyScalar(0.15));
@@ -507,14 +610,18 @@ export class World {
     }
   }
 
-  /** Legacy doBurst: up to 30 spawns in the core volume. */
+  /** Legacy doBurst, tier-scaled: 30..100 spawns in the (×ARENA_MID) core volume. */
   private doBurst(): void {
     this.audio.play('burst');
     const room = this.quality.maxEntities - this.entities.list.length;
-    const count = Math.min(30, room);
+    const count = Math.min(Math.max(30, Math.floor(this.quality.maxEntities / 100)), room);
     for (let i = 0; i < count; i++) {
-      this.sv1.set((this.rng() - 0.5) * 25, this.rng() * 14, (this.rng() - 0.5) * 25);
-      this.entities.spawn(this.sv1, Math.floor(this.rng() * 100), 0.5 + this.rng());
+      this.sv1.set(
+        (this.rng() - 0.5) * 25 * ARENA_MID,
+        this.rng() * 14 * ARENA_Y,
+        (this.rng() - 0.5) * 25 * ARENA_MID,
+      );
+      this.entities.spawn(this.sv1, Math.floor(this.rng() * this.morphTotal), 0.5 + this.rng());
     }
   }
 
@@ -525,7 +632,7 @@ export class World {
     this.state.mutations += list.length;
     for (let i = 0; i < list.length; i++) {
       const e = list[i];
-      if (e) this.entities.remorph(e, Math.floor(this.rng() * 100));
+      if (e) this.entities.remorph(e, Math.floor(this.rng() * this.morphTotal));
     }
   }
 
@@ -552,7 +659,7 @@ export class World {
 
   /** Legacy rSim: genesis reset (entities + counters; prefs untouched). */
   private resetSim(): void {
-    this.entities.reset(300);
+    this.entities.reset(this.bootPopulation());
     this.state.chaos = 0.5;
     this.state.mutations = 0;
     this.state.algoStep = 0;

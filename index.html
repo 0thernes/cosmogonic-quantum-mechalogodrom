@@ -47,381 +47,479 @@
       ></div>
     </div>
 
-    <!-- Telemetry panel -->
-    <section
-      id="sP"
-      class="panel fixed top-[calc(6px+env(safe-area-inset-top,0px))] left-1.5 z-20 w-[clamp(150px,24vw,220px)] overflow-hidden rounded-panel border border-cyan-300/15 bg-void/90 shadow-panel backdrop-blur-xl backdrop-saturate-150"
-      aria-label="Telemetry"
-    >
-      <div
-        data-panel-toggle
-        class="flex min-h-7.5 cursor-pointer items-center justify-between border-b border-white/5 px-2.5 py-1.5 select-none"
+    <!-- Responsive panel overlay (CONTRACTS V3.4). Placement lives in src/styles/app.css:
+         grid columns on tablet/laptop/TV, stacked sheets on phone portrait, side rails in
+         low-height landscape. Panels carry only glass styling — never position utilities. -->
+    <div id="ui">
+      <!-- Telemetry panel (phone portrait: swipeable top sheet, collapsed to a 2-row strip) -->
+      <section
+        id="sP"
+        class="panel overflow-hidden rounded-panel border border-cyan-300/15 bg-void/90 shadow-panel backdrop-blur-xl backdrop-saturate-150"
+        aria-label="Telemetry"
       >
-        <h2
-          class="font-ui text-2xs font-semibold tracking-widest text-accent uppercase text-shadow-glow-accent"
+        <div
+          data-panel-toggle
+          class="flex min-h-7.5 cursor-pointer items-center justify-between border-b border-white/5 px-2.5 py-1.5 select-none"
         >
-          Telemetry
-        </h2>
-        <button
-          type="button"
-          class="chev flex h-5 w-5 shrink-0 items-center justify-center rounded border-0 bg-white/5 text-xs text-sky-300"
-          aria-label="Collapse or expand telemetry panel"
-          title="Collapse or expand telemetry panel"
-        >
-          &#9662;
-        </button>
-      </div>
-      <div class="panel-body max-h-[calc(65vh-40px)] overflow-y-auto p-2">
-        <div class="flex items-baseline justify-between py-0.5">
-          <span class="font-ui text-4xs font-light tracking-[0.1em] text-warn/70 uppercase"
-            >Entities</span
+          <span class="sheet-grip" aria-hidden="true"></span>
+          <h2
+            class="font-ui text-2xs font-semibold tracking-widest text-accent uppercase text-shadow-glow-accent"
           >
-          <span id="v0" class="font-mono text-2xs font-semibold text-slate-100 tabular-nums"
-            >0</span
+            Telemetry
+          </h2>
+          <button
+            type="button"
+            class="chev flex h-5 w-5 shrink-0 items-center justify-center rounded border-0 bg-white/5 text-xs text-sky-300"
+            aria-label="Collapse or expand telemetry panel"
+            title="Collapse or expand telemetry panel"
           >
+            &#9662;
+          </button>
         </div>
-        <canvas id="g0" class="my-0.5 block h-6 w-full rounded border border-white/5"></canvas>
-        <div class="flex items-baseline justify-between py-0.5">
-          <span class="font-ui text-4xs font-light tracking-[0.1em] text-warn/70 uppercase"
-            >Chaos</span
-          >
-          <span id="v1" class="font-mono text-2xs font-semibold text-slate-100 tabular-nums"
-            >0</span
-          >
+        <div class="panel-body max-h-[calc(65vh-40px)] overflow-y-auto p-2">
+          <div class="flex items-baseline justify-between py-0.5">
+            <span class="font-ui text-4xs font-light tracking-[0.1em] text-warn/70 uppercase"
+              >Entities</span
+            >
+            <span id="v0" class="font-mono text-2xs font-semibold text-slate-100 tabular-nums"
+              >0</span
+            >
+          </div>
+          <canvas id="g0" class="my-0.5 block h-6 w-full rounded border border-white/5"></canvas>
+          <div class="flex items-baseline justify-between py-0.5">
+            <span class="font-ui text-4xs font-light tracking-[0.1em] text-warn/70 uppercase"
+              >Chaos</span
+            >
+            <span id="v1" class="font-mono text-2xs font-semibold text-slate-100 tabular-nums"
+              >0</span
+            >
+          </div>
+          <canvas id="g1" class="my-0.5 block h-6 w-full rounded border border-white/5"></canvas>
+          <div class="flex items-baseline justify-between py-0.5">
+            <span class="font-ui text-4xs font-light tracking-[0.1em] text-warn/70 uppercase"
+              >Energy</span
+            >
+            <span id="v2" class="font-mono text-2xs font-semibold text-slate-100 tabular-nums"
+              >0</span
+            >
+          </div>
+          <canvas id="g2" class="my-0.5 block h-6 w-full rounded border border-white/5"></canvas>
+          <div class="flex items-baseline justify-between py-0.5">
+            <span class="font-ui text-4xs font-light tracking-[0.1em] text-warn/70 uppercase"
+              >Connectome</span
+            >
+            <span id="v3" class="font-mono text-2xs font-semibold text-slate-100 tabular-nums"
+              >0</span
+            >
+          </div>
+          <canvas id="g3" class="my-0.5 block h-6 w-full rounded border border-white/5"></canvas>
+          <div class="flex items-baseline justify-between py-0.5">
+            <span class="font-ui text-4xs font-light tracking-[0.1em] text-warn/70 uppercase"
+              >Morphs</span
+            >
+            <span id="v4" class="font-mono text-2xs font-semibold text-slate-100 tabular-nums"
+              >0</span
+            >
+          </div>
+          <div class="flex items-baseline justify-between py-0.5">
+            <span class="font-ui text-4xs font-light tracking-[0.1em] text-warn/70 uppercase"
+              >Algorithm</span
+            >
+            <span id="v5" class="font-mono text-2xs font-semibold text-slate-100 tabular-nums"
+              >---</span
+            >
+          </div>
+          <div class="flex items-baseline justify-between py-0.5">
+            <span class="font-ui text-4xs font-light tracking-[0.1em] text-warn/70 uppercase"
+              >Quantum</span
+            >
+            <span id="v6" class="font-mono text-2xs font-semibold text-slate-100 tabular-nums"
+              >0</span
+            >
+          </div>
+          <div class="flex items-baseline justify-between py-0.5">
+            <span class="font-ui text-4xs font-light tracking-[0.1em] text-warn/70 uppercase"
+              >Song</span
+            >
+            <span id="v7" class="font-mono text-2xs font-semibold text-slate-100 tabular-nums"
+              >---</span
+            >
+          </div>
+          <!-- Known Bug 14: surfaced write-only mutations counter -->
+          <div class="flex items-baseline justify-between py-0.5">
+            <span class="font-ui text-4xs font-light tracking-[0.1em] text-warn/70 uppercase"
+              >Mutations</span
+            >
+            <span id="v8" class="font-mono text-2xs font-semibold text-slate-100 tabular-nums"
+              >0</span
+            >
+          </div>
+          <!-- V2 telemetry: graph-mind communities -->
+          <div class="flex items-baseline justify-between py-0.5">
+            <span class="font-ui text-4xs font-light tracking-[0.1em] text-warn/70 uppercase"
+              >Tribes</span
+            >
+            <span id="v9" class="font-mono text-2xs font-semibold text-slate-100 tabular-nums"
+              >0</span
+            >
+          </div>
+          <!-- V2 telemetry: population slope per minute (analytics regression) -->
+          <div class="flex items-baseline justify-between py-0.5">
+            <span class="font-ui text-4xs font-light tracking-[0.1em] text-warn/70 uppercase"
+              >Trend</span
+            >
+            <span id="v10" class="font-mono text-2xs font-semibold text-slate-100 tabular-nums"
+              >+0.0/m</span
+            >
+          </div>
+          <!-- V2 telemetry: normalized Shannon entropy of the quantum register -->
+          <div class="flex items-baseline justify-between py-0.5">
+            <span class="font-ui text-4xs font-light tracking-[0.1em] text-warn/70 uppercase"
+              >Qbit-S</span
+            >
+            <span id="v11" class="font-mono text-2xs font-semibold text-slate-100 tabular-nums"
+              >0.00</span
+            >
+          </div>
+          <div class="mt-1 block border-t border-white/5 py-0.5 font-ui text-4xs text-sky-300">
+            Weather
+            <span id="ew" class="float-right font-mono font-semibold text-sky-100 tabular-nums"
+              >CLEAR</span
+            >
+          </div>
+          <div class="block border-t border-white/5 py-0.5 font-ui text-4xs text-sky-300">
+            Wind
+            <span id="ewi" class="float-right font-mono font-semibold text-sky-100 tabular-nums"
+              >0</span
+            >
+          </div>
+          <div class="block border-t border-white/5 py-0.5 font-ui text-4xs text-sky-300">
+            Temp
+            <span id="et" class="float-right font-mono font-semibold text-sky-100 tabular-nums"
+              >20C</span
+            >
+          </div>
+          <div class="block border-t border-white/5 py-0.5 font-ui text-4xs text-sky-300">
+            Shoggoths
+            <span id="es" class="float-right font-mono font-semibold text-sky-100 tabular-nums"
+              >0</span
+            >
+          </div>
+          <div class="block border-t border-white/5 py-0.5 font-ui text-4xs text-sky-300">
+            Puppeteers
+            <span id="ep" class="float-right font-mono font-semibold text-sky-100 tabular-nums"
+              >0</span
+            >
+          </div>
+          <!-- V3: the ten colossal non-human intelligences -->
+          <div class="block border-t border-white/5 py-0.5 font-ui text-4xs text-sky-300">
+            Titans
+            <span id="etn" class="float-right font-mono font-semibold text-sky-100 tabular-nums"
+              >0</span
+            >
+          </div>
         </div>
-        <canvas id="g1" class="my-0.5 block h-6 w-full rounded border border-white/5"></canvas>
-        <div class="flex items-baseline justify-between py-0.5">
-          <span class="font-ui text-4xs font-light tracking-[0.1em] text-warn/70 uppercase"
-            >Energy</span
-          >
-          <span id="v2" class="font-mono text-2xs font-semibold text-slate-100 tabular-nums"
-            >0</span
-          >
-        </div>
-        <canvas id="g2" class="my-0.5 block h-6 w-full rounded border border-white/5"></canvas>
-        <div class="flex items-baseline justify-between py-0.5">
-          <span class="font-ui text-4xs font-light tracking-[0.1em] text-warn/70 uppercase"
-            >Connectome</span
-          >
-          <span id="v3" class="font-mono text-2xs font-semibold text-slate-100 tabular-nums"
-            >0</span
-          >
-        </div>
-        <canvas id="g3" class="my-0.5 block h-6 w-full rounded border border-white/5"></canvas>
-        <div class="flex items-baseline justify-between py-0.5">
-          <span class="font-ui text-4xs font-light tracking-[0.1em] text-warn/70 uppercase"
-            >Morphs</span
-          >
-          <span id="v4" class="font-mono text-2xs font-semibold text-slate-100 tabular-nums"
-            >0</span
-          >
-        </div>
-        <div class="flex items-baseline justify-between py-0.5">
-          <span class="font-ui text-4xs font-light tracking-[0.1em] text-warn/70 uppercase"
-            >Algorithm</span
-          >
-          <span id="v5" class="font-mono text-2xs font-semibold text-slate-100 tabular-nums"
-            >---</span
-          >
-        </div>
-        <div class="flex items-baseline justify-between py-0.5">
-          <span class="font-ui text-4xs font-light tracking-[0.1em] text-warn/70 uppercase"
-            >Quantum</span
-          >
-          <span id="v6" class="font-mono text-2xs font-semibold text-slate-100 tabular-nums"
-            >0</span
-          >
-        </div>
-        <div class="flex items-baseline justify-between py-0.5">
-          <span class="font-ui text-4xs font-light tracking-[0.1em] text-warn/70 uppercase"
-            >Song</span
-          >
-          <span id="v7" class="font-mono text-2xs font-semibold text-slate-100 tabular-nums"
-            >---</span
-          >
-        </div>
-        <!-- Known Bug 14: surfaced write-only mutations counter -->
-        <div class="flex items-baseline justify-between py-0.5">
-          <span class="font-ui text-4xs font-light tracking-[0.1em] text-warn/70 uppercase"
-            >Mutations</span
-          >
-          <span id="v8" class="font-mono text-2xs font-semibold text-slate-100 tabular-nums"
-            >0</span
-          >
-        </div>
-        <!-- V2 telemetry: graph-mind communities -->
-        <div class="flex items-baseline justify-between py-0.5">
-          <span class="font-ui text-4xs font-light tracking-[0.1em] text-warn/70 uppercase"
-            >Tribes</span
-          >
-          <span id="v9" class="font-mono text-2xs font-semibold text-slate-100 tabular-nums"
-            >0</span
-          >
-        </div>
-        <!-- V2 telemetry: population slope per minute (analytics regression) -->
-        <div class="flex items-baseline justify-between py-0.5">
-          <span class="font-ui text-4xs font-light tracking-[0.1em] text-warn/70 uppercase"
-            >Trend</span
-          >
-          <span id="v10" class="font-mono text-2xs font-semibold text-slate-100 tabular-nums"
-            >+0.0/m</span
-          >
-        </div>
-        <!-- V2 telemetry: normalized Shannon entropy of the quantum register -->
-        <div class="flex items-baseline justify-between py-0.5">
-          <span class="font-ui text-4xs font-light tracking-[0.1em] text-warn/70 uppercase"
-            >Qbit-S</span
-          >
-          <span id="v11" class="font-mono text-2xs font-semibold text-slate-100 tabular-nums"
-            >0.00</span
-          >
-        </div>
-        <div class="mt-1 block border-t border-white/5 py-0.5 font-ui text-4xs text-sky-300">
-          Weather
-          <span id="ew" class="float-right font-mono font-semibold text-sky-100 tabular-nums"
-            >CLEAR</span
-          >
-        </div>
-        <div class="block border-t border-white/5 py-0.5 font-ui text-4xs text-sky-300">
-          Wind
-          <span id="ewi" class="float-right font-mono font-semibold text-sky-100 tabular-nums"
-            >0</span
-          >
-        </div>
-        <div class="block border-t border-white/5 py-0.5 font-ui text-4xs text-sky-300">
-          Temp
-          <span id="et" class="float-right font-mono font-semibold text-sky-100 tabular-nums"
-            >20C</span
-          >
-        </div>
-        <div class="block border-t border-white/5 py-0.5 font-ui text-4xs text-sky-300">
-          Shoggoths
-          <span id="es" class="float-right font-mono font-semibold text-sky-100 tabular-nums"
-            >0</span
-          >
-        </div>
-        <div class="block border-t border-white/5 py-0.5 font-ui text-4xs text-sky-300">
-          Puppeteers
-          <span id="ep" class="float-right font-mono font-semibold text-sky-100 tabular-nums"
-            >0</span
-          >
-        </div>
-      </div>
-    </section>
+      </section>
 
-    <!-- Control panel -->
-    <section
-      id="cP"
-      class="panel fixed top-[calc(6px+env(safe-area-inset-top,0px))] right-1.5 z-20 w-[clamp(130px,21vw,175px)] overflow-hidden rounded-panel border border-cyan-300/15 bg-void/90 shadow-panel backdrop-blur-xl backdrop-saturate-150"
-      aria-label="Control"
-    >
-      <div
-        data-panel-toggle
-        class="flex min-h-7.5 cursor-pointer items-center justify-between border-b border-white/5 px-2.5 py-1.5 select-none"
+      <!-- Observatory panel (CONTRACTS V3.5 SHELL — header + #observatory-body mount only).
+         ui/observatory.ts (dataviz writer) caches the #obs-c0..#obs-c3 canvases and renders
+         the live charts into them; nothing else writes here. Collapsible like every panel. -->
+      <section
+        id="oP"
+        class="panel overflow-hidden rounded-panel border border-cyan-300/15 bg-void/90 shadow-panel backdrop-blur-xl backdrop-saturate-150"
+        aria-label="Observatory"
       >
-        <h2
-          class="font-ui text-2xs font-semibold tracking-widest text-accent uppercase text-shadow-glow-accent"
+        <div
+          data-panel-toggle
+          class="flex min-h-7.5 cursor-pointer items-center justify-between border-b border-white/5 px-2.5 py-1.5 select-none"
         >
-          Control
-        </h2>
-        <button
-          type="button"
-          class="chev flex h-5 w-5 shrink-0 items-center justify-center rounded border-0 bg-white/5 text-xs text-sky-300"
-          aria-label="Collapse or expand control panel"
-          title="Collapse or expand control panel"
-        >
-          &#9662;
-        </button>
-      </div>
-      <div class="panel-body max-h-[calc(65vh-40px)] overflow-y-auto p-2">
-        <div class="mb-1 grid grid-cols-3 gap-0.5">
-          <span></span>
+          <h2
+            class="font-ui text-2xs font-semibold tracking-widest text-accent uppercase text-shadow-glow-accent"
+          >
+            Observatory
+          </h2>
           <button
             type="button"
-            data-a="fwd"
-            aria-label="Move forward (W)"
-            title="Move forward (W)"
-            class="inline-flex h-8 items-center justify-center rounded-btn border border-ctrl-line/30 bg-ctrl-bg/15 px-1 font-ui text-4xs whitespace-nowrap text-ctrl-ink transition-all duration-100 select-none hover:border-ctrl-glow/45 hover:bg-ctrl-hot/20 hover:text-white active:border-ctrl-glow/50 active:bg-ctrl-hot/30 active:text-white"
+            class="chev flex h-5 w-5 shrink-0 items-center justify-center rounded border-0 bg-white/5 text-xs text-sky-300"
+            aria-label="Collapse or expand observatory panel"
+            title="Collapse or expand observatory panel"
           >
-            <kbd>W</kbd> &#8593;
-          </button>
-          <span></span>
-          <button
-            type="button"
-            data-a="left"
-            aria-label="Strafe left (A)"
-            title="Strafe left (A)"
-            class="inline-flex h-8 items-center justify-center rounded-btn border border-ctrl-line/30 bg-ctrl-bg/15 px-1 font-ui text-4xs whitespace-nowrap text-ctrl-ink transition-all duration-100 select-none hover:border-ctrl-glow/45 hover:bg-ctrl-hot/20 hover:text-white active:border-ctrl-glow/50 active:bg-ctrl-hot/30 active:text-white"
-          >
-            <kbd>A</kbd> &#8592;
-          </button>
-          <button
-            type="button"
-            data-a="back"
-            aria-label="Move backward (S)"
-            title="Move backward (S)"
-            class="inline-flex h-8 items-center justify-center rounded-btn border border-ctrl-line/30 bg-ctrl-bg/15 px-1 font-ui text-4xs whitespace-nowrap text-ctrl-ink transition-all duration-100 select-none hover:border-ctrl-glow/45 hover:bg-ctrl-hot/20 hover:text-white active:border-ctrl-glow/50 active:bg-ctrl-hot/30 active:text-white"
-          >
-            <kbd>S</kbd> &#8595;
-          </button>
-          <button
-            type="button"
-            data-a="right"
-            aria-label="Strafe right (D)"
-            title="Strafe right (D)"
-            class="inline-flex h-8 items-center justify-center rounded-btn border border-ctrl-line/30 bg-ctrl-bg/15 px-1 font-ui text-4xs whitespace-nowrap text-ctrl-ink transition-all duration-100 select-none hover:border-ctrl-glow/45 hover:bg-ctrl-hot/20 hover:text-white active:border-ctrl-glow/50 active:bg-ctrl-hot/30 active:text-white"
-          >
-            <kbd>D</kbd> &#8594;
-          </button>
-          <button
-            type="button"
-            data-a="up"
-            aria-label="Ascend (Q)"
-            title="Ascend (Q)"
-            class="inline-flex h-8 items-center justify-center rounded-btn border border-ctrl-line/30 bg-ctrl-bg/15 px-1 font-ui text-4xs whitespace-nowrap text-ctrl-ink transition-all duration-100 select-none hover:border-ctrl-glow/45 hover:bg-ctrl-hot/20 hover:text-white active:border-ctrl-glow/50 active:bg-ctrl-hot/30 active:text-white"
-          >
-            <kbd>Q</kbd> Up
-          </button>
-          <span></span>
-          <button
-            type="button"
-            data-a="down"
-            aria-label="Descend (E)"
-            title="Descend (E)"
-            class="inline-flex h-8 items-center justify-center rounded-btn border border-ctrl-line/30 bg-ctrl-bg/15 px-1 font-ui text-4xs whitespace-nowrap text-ctrl-ink transition-all duration-100 select-none hover:border-ctrl-glow/45 hover:bg-ctrl-hot/20 hover:text-white active:border-ctrl-glow/50 active:bg-ctrl-hot/30 active:text-white"
-          >
-            <kbd>E</kbd> Dn
+            &#9662;
           </button>
         </div>
-        <div class="flex flex-wrap justify-center gap-0.5">
-          <button
-            type="button"
-            data-a="rleft"
-            aria-label="Roll left (Z)"
-            title="Roll left (Z)"
-            class="inline-flex h-8 items-center justify-center rounded-btn border border-ctrl-line/30 bg-ctrl-bg/15 px-1 font-ui text-4xs whitespace-nowrap text-ctrl-ink transition-all duration-100 select-none hover:border-ctrl-glow/45 hover:bg-ctrl-hot/20 hover:text-white active:border-ctrl-glow/50 active:bg-ctrl-hot/30 active:text-white"
-          >
-            <kbd>Z</kbd> Rl
-          </button>
-          <button
-            type="button"
-            data-a="rright"
-            aria-label="Roll right (X)"
-            title="Roll right (X)"
-            class="inline-flex h-8 items-center justify-center rounded-btn border border-ctrl-line/30 bg-ctrl-bg/15 px-1 font-ui text-4xs whitespace-nowrap text-ctrl-ink transition-all duration-100 select-none hover:border-ctrl-glow/45 hover:bg-ctrl-hot/20 hover:text-white active:border-ctrl-glow/50 active:bg-ctrl-hot/30 active:text-white"
-          >
-            <kbd>X</kbd> Rr
-          </button>
-          <button
-            type="button"
-            data-a="tup"
-            aria-label="Tilt up (R)"
-            title="Tilt up (R)"
-            class="inline-flex h-8 items-center justify-center rounded-btn border border-ctrl-line/30 bg-ctrl-bg/15 px-1 font-ui text-4xs whitespace-nowrap text-ctrl-ink transition-all duration-100 select-none hover:border-ctrl-glow/45 hover:bg-ctrl-hot/20 hover:text-white active:border-ctrl-glow/50 active:bg-ctrl-hot/30 active:text-white"
-          >
-            <kbd>R</kbd> Tu
-          </button>
-          <button
-            type="button"
-            data-a="tdown"
-            aria-label="Tilt down (F)"
-            title="Tilt down (F)"
-            class="inline-flex h-8 items-center justify-center rounded-btn border border-ctrl-line/30 bg-ctrl-bg/15 px-1 font-ui text-4xs whitespace-nowrap text-ctrl-ink transition-all duration-100 select-none hover:border-ctrl-glow/45 hover:bg-ctrl-hot/20 hover:text-white active:border-ctrl-glow/50 active:bg-ctrl-hot/30 active:text-white"
-          >
-            <kbd>F</kbd> Td
-          </button>
-          <button
-            type="button"
-            data-a="yleft"
-            aria-label="Yaw left (C)"
-            title="Yaw left (C)"
-            class="inline-flex h-8 items-center justify-center rounded-btn border border-ctrl-line/30 bg-ctrl-bg/15 px-1 font-ui text-4xs whitespace-nowrap text-ctrl-ink transition-all duration-100 select-none hover:border-ctrl-glow/45 hover:bg-ctrl-hot/20 hover:text-white active:border-ctrl-glow/50 active:bg-ctrl-hot/30 active:text-white"
-          >
-            <kbd>C</kbd> Yl
-          </button>
-          <button
-            type="button"
-            data-a="yright"
-            aria-label="Yaw right (V)"
-            title="Yaw right (V)"
-            class="inline-flex h-8 items-center justify-center rounded-btn border border-ctrl-line/30 bg-ctrl-bg/15 px-1 font-ui text-4xs whitespace-nowrap text-ctrl-ink transition-all duration-100 select-none hover:border-ctrl-glow/45 hover:bg-ctrl-hot/20 hover:text-white active:border-ctrl-glow/50 active:bg-ctrl-hot/30 active:text-white"
-          >
-            <kbd>V</kbd> Yr
-          </button>
+        <div class="panel-body max-h-[calc(65vh-40px)] overflow-y-auto p-2">
+          <div id="observatory-body" class="flex flex-col gap-1">
+            <canvas
+              id="obs-c0"
+              role="img"
+              aria-label="Stacked phylum population area chart"
+              class="block h-14 w-full rounded border border-white/5"
+            ></canvas>
+            <canvas
+              id="obs-c1"
+              role="img"
+              aria-label="Titan economy ledger line chart"
+              class="block h-14 w-full rounded border border-white/5"
+            ></canvas>
+            <canvas
+              id="obs-c2"
+              role="img"
+              aria-label="Titan war-state matrix heat grid"
+              class="block h-14 w-full rounded border border-white/5"
+            ></canvas>
+            <canvas
+              id="obs-c3"
+              role="img"
+              aria-label="Pattern energy, quantum entropy and population trend timelines"
+              class="block h-14 w-full rounded border border-white/5"
+            ></canvas>
+          </div>
         </div>
-        <div class="mt-1.5 grid grid-cols-2 gap-0.5">
-          <button
-            type="button"
-            data-a="split"
-            aria-label="Split mature entities (hold Shift)"
-            title="Split mature entities (hold Shift)"
-            class="inline-flex h-8 items-center justify-center rounded-btn border border-sim-line/30 bg-sim-bg/15 px-1 font-ui text-4xs whitespace-nowrap text-sim-ink transition-all duration-100 select-none hover:border-sim-glow/45 hover:bg-sim-line/20 hover:text-white active:border-sim-glow/55 active:bg-sim-line/30 active:text-white"
-          >
-            <kbd>&#8679;</kbd> Split
-          </button>
-          <button
-            type="button"
-            data-a="burst"
-            aria-label="Burst-spawn entities (hold Space)"
-            title="Burst-spawn entities (hold Space)"
-            class="inline-flex h-8 items-center justify-center rounded-btn border border-sim-line/30 bg-sim-bg/15 px-1 font-ui text-4xs whitespace-nowrap text-sim-ink transition-all duration-100 select-none hover:border-sim-glow/45 hover:bg-sim-line/20 hover:text-white active:border-sim-glow/55 active:bg-sim-line/30 active:text-white"
-          >
-            <kbd>&#9251;</kbd> Burst
-          </button>
-          <button
-            type="button"
-            data-a="mutate"
-            aria-label="Mutate all entities (hold M)"
-            title="Mutate all entities (hold M)"
-            class="inline-flex h-8 items-center justify-center rounded-btn border border-sim-line/30 bg-sim-bg/15 px-1 font-ui text-4xs whitespace-nowrap text-sim-ink transition-all duration-100 select-none hover:border-sim-glow/45 hover:bg-sim-line/20 hover:text-white active:border-sim-glow/55 active:bg-sim-line/30 active:text-white"
-          >
-            <kbd>M</kbd> Mutate
-          </button>
-          <button
-            type="button"
-            data-a="chaos"
-            aria-label="Boost chaos (hold Tab)"
-            title="Boost chaos (hold Tab)"
-            class="inline-flex h-8 items-center justify-center rounded-btn border border-sim-line/30 bg-sim-bg/15 px-1 font-ui text-4xs whitespace-nowrap text-sim-ink transition-all duration-100 select-none hover:border-sim-glow/45 hover:bg-sim-line/20 hover:text-white active:border-sim-glow/55 active:bg-sim-line/30 active:text-white"
-          >
-            <kbd>&#8677;</kbd> Chaos+
-          </button>
-        </div>
-      </div>
-    </section>
+      </section>
 
-    <!-- Audit panel (HTMX polls the server-side ring; htmx.org is imported by src/main.ts) -->
-    <section
-      id="aP"
-      hx-get="/api/audit"
-      hx-trigger="load, every 5s"
-      hx-swap="innerHTML"
-      hx-target="#audit-list"
-      class="panel fixed right-1.5 bottom-[calc(44px+env(safe-area-inset-bottom,0px))] z-20 w-[clamp(170px,24vw,250px)] overflow-hidden rounded-panel border border-cyan-300/15 bg-void/90 shadow-panel backdrop-blur-xl backdrop-saturate-150"
-      aria-label="Audit trail"
-    >
-      <div
-        data-panel-toggle
-        class="flex min-h-7.5 cursor-pointer items-center justify-between border-b border-white/5 px-2.5 py-1.5 select-none"
+      <!-- Control panel (phone portrait: bottom sheet) -->
+      <section
+        id="cP"
+        class="panel overflow-hidden rounded-panel border border-cyan-300/15 bg-void/90 shadow-panel backdrop-blur-xl backdrop-saturate-150"
+        aria-label="Control"
       >
-        <h2
-          class="font-ui text-2xs font-semibold tracking-widest text-accent uppercase text-shadow-glow-accent"
+        <div
+          data-panel-toggle
+          class="flex min-h-7.5 cursor-pointer items-center justify-between border-b border-white/5 px-2.5 py-1.5 select-none"
         >
-          Audit
-        </h2>
-        <button
-          type="button"
-          class="chev flex h-5 w-5 shrink-0 items-center justify-center rounded border-0 bg-white/5 text-xs text-sky-300"
-          aria-label="Collapse or expand audit panel"
-          title="Collapse or expand audit panel"
+          <span class="sheet-grip" aria-hidden="true"></span>
+          <h2
+            class="font-ui text-2xs font-semibold tracking-widest text-accent uppercase text-shadow-glow-accent"
+          >
+            Control
+          </h2>
+          <button
+            type="button"
+            class="chev flex h-5 w-5 shrink-0 items-center justify-center rounded border-0 bg-white/5 text-xs text-sky-300"
+            aria-label="Collapse or expand control panel"
+            title="Collapse or expand control panel"
+          >
+            &#9662;
+          </button>
+        </div>
+        <div class="panel-body max-h-[calc(65vh-40px)] overflow-y-auto p-2">
+          <!-- V3.4: #pad-move/#pad-rot/#pad-sim are hidden on coarse pointers — the
+               joystick + look pad + action wheel replace them (app.css). -->
+          <div id="pad-move" class="mb-1 grid grid-cols-3 gap-0.5">
+            <span></span>
+            <button
+              type="button"
+              data-a="fwd"
+              aria-label="Move forward (W)"
+              title="Move forward (W)"
+              class="inline-flex h-8 items-center justify-center rounded-btn border border-ctrl-line/30 bg-ctrl-bg/15 px-1 font-ui text-4xs whitespace-nowrap text-ctrl-ink transition-all duration-100 select-none hover:border-ctrl-glow/45 hover:bg-ctrl-hot/20 hover:text-white active:border-ctrl-glow/50 active:bg-ctrl-hot/30 active:text-white"
+            >
+              <kbd>W</kbd> &#8593;
+            </button>
+            <span></span>
+            <button
+              type="button"
+              data-a="left"
+              aria-label="Strafe left (A)"
+              title="Strafe left (A)"
+              class="inline-flex h-8 items-center justify-center rounded-btn border border-ctrl-line/30 bg-ctrl-bg/15 px-1 font-ui text-4xs whitespace-nowrap text-ctrl-ink transition-all duration-100 select-none hover:border-ctrl-glow/45 hover:bg-ctrl-hot/20 hover:text-white active:border-ctrl-glow/50 active:bg-ctrl-hot/30 active:text-white"
+            >
+              <kbd>A</kbd> &#8592;
+            </button>
+            <button
+              type="button"
+              data-a="back"
+              aria-label="Move backward (S)"
+              title="Move backward (S)"
+              class="inline-flex h-8 items-center justify-center rounded-btn border border-ctrl-line/30 bg-ctrl-bg/15 px-1 font-ui text-4xs whitespace-nowrap text-ctrl-ink transition-all duration-100 select-none hover:border-ctrl-glow/45 hover:bg-ctrl-hot/20 hover:text-white active:border-ctrl-glow/50 active:bg-ctrl-hot/30 active:text-white"
+            >
+              <kbd>S</kbd> &#8595;
+            </button>
+            <button
+              type="button"
+              data-a="right"
+              aria-label="Strafe right (D)"
+              title="Strafe right (D)"
+              class="inline-flex h-8 items-center justify-center rounded-btn border border-ctrl-line/30 bg-ctrl-bg/15 px-1 font-ui text-4xs whitespace-nowrap text-ctrl-ink transition-all duration-100 select-none hover:border-ctrl-glow/45 hover:bg-ctrl-hot/20 hover:text-white active:border-ctrl-glow/50 active:bg-ctrl-hot/30 active:text-white"
+            >
+              <kbd>D</kbd> &#8594;
+            </button>
+            <button
+              type="button"
+              data-a="up"
+              aria-label="Ascend (Q)"
+              title="Ascend (Q)"
+              class="inline-flex h-8 items-center justify-center rounded-btn border border-ctrl-line/30 bg-ctrl-bg/15 px-1 font-ui text-4xs whitespace-nowrap text-ctrl-ink transition-all duration-100 select-none hover:border-ctrl-glow/45 hover:bg-ctrl-hot/20 hover:text-white active:border-ctrl-glow/50 active:bg-ctrl-hot/30 active:text-white"
+            >
+              <kbd>Q</kbd> Up
+            </button>
+            <span></span>
+            <button
+              type="button"
+              data-a="down"
+              aria-label="Descend (E)"
+              title="Descend (E)"
+              class="inline-flex h-8 items-center justify-center rounded-btn border border-ctrl-line/30 bg-ctrl-bg/15 px-1 font-ui text-4xs whitespace-nowrap text-ctrl-ink transition-all duration-100 select-none hover:border-ctrl-glow/45 hover:bg-ctrl-hot/20 hover:text-white active:border-ctrl-glow/50 active:bg-ctrl-hot/30 active:text-white"
+            >
+              <kbd>E</kbd> Dn
+            </button>
+          </div>
+          <div id="pad-rot" class="flex flex-wrap justify-center gap-0.5">
+            <button
+              type="button"
+              data-a="rleft"
+              aria-label="Roll left (Z)"
+              title="Roll left (Z)"
+              class="inline-flex h-8 items-center justify-center rounded-btn border border-ctrl-line/30 bg-ctrl-bg/15 px-1 font-ui text-4xs whitespace-nowrap text-ctrl-ink transition-all duration-100 select-none hover:border-ctrl-glow/45 hover:bg-ctrl-hot/20 hover:text-white active:border-ctrl-glow/50 active:bg-ctrl-hot/30 active:text-white"
+            >
+              <kbd>Z</kbd> Rl
+            </button>
+            <button
+              type="button"
+              data-a="rright"
+              aria-label="Roll right (X)"
+              title="Roll right (X)"
+              class="inline-flex h-8 items-center justify-center rounded-btn border border-ctrl-line/30 bg-ctrl-bg/15 px-1 font-ui text-4xs whitespace-nowrap text-ctrl-ink transition-all duration-100 select-none hover:border-ctrl-glow/45 hover:bg-ctrl-hot/20 hover:text-white active:border-ctrl-glow/50 active:bg-ctrl-hot/30 active:text-white"
+            >
+              <kbd>X</kbd> Rr
+            </button>
+            <button
+              type="button"
+              data-a="tup"
+              aria-label="Tilt up (R)"
+              title="Tilt up (R)"
+              class="inline-flex h-8 items-center justify-center rounded-btn border border-ctrl-line/30 bg-ctrl-bg/15 px-1 font-ui text-4xs whitespace-nowrap text-ctrl-ink transition-all duration-100 select-none hover:border-ctrl-glow/45 hover:bg-ctrl-hot/20 hover:text-white active:border-ctrl-glow/50 active:bg-ctrl-hot/30 active:text-white"
+            >
+              <kbd>R</kbd> Tu
+            </button>
+            <button
+              type="button"
+              data-a="tdown"
+              aria-label="Tilt down (F)"
+              title="Tilt down (F)"
+              class="inline-flex h-8 items-center justify-center rounded-btn border border-ctrl-line/30 bg-ctrl-bg/15 px-1 font-ui text-4xs whitespace-nowrap text-ctrl-ink transition-all duration-100 select-none hover:border-ctrl-glow/45 hover:bg-ctrl-hot/20 hover:text-white active:border-ctrl-glow/50 active:bg-ctrl-hot/30 active:text-white"
+            >
+              <kbd>F</kbd> Td
+            </button>
+            <button
+              type="button"
+              data-a="yleft"
+              aria-label="Yaw left (C)"
+              title="Yaw left (C)"
+              class="inline-flex h-8 items-center justify-center rounded-btn border border-ctrl-line/30 bg-ctrl-bg/15 px-1 font-ui text-4xs whitespace-nowrap text-ctrl-ink transition-all duration-100 select-none hover:border-ctrl-glow/45 hover:bg-ctrl-hot/20 hover:text-white active:border-ctrl-glow/50 active:bg-ctrl-hot/30 active:text-white"
+            >
+              <kbd>C</kbd> Yl
+            </button>
+            <button
+              type="button"
+              data-a="yright"
+              aria-label="Yaw right (V)"
+              title="Yaw right (V)"
+              class="inline-flex h-8 items-center justify-center rounded-btn border border-ctrl-line/30 bg-ctrl-bg/15 px-1 font-ui text-4xs whitespace-nowrap text-ctrl-ink transition-all duration-100 select-none hover:border-ctrl-glow/45 hover:bg-ctrl-hot/20 hover:text-white active:border-ctrl-glow/50 active:bg-ctrl-hot/30 active:text-white"
+            >
+              <kbd>V</kbd> Yr
+            </button>
+          </div>
+          <div id="pad-sim" class="mt-1.5 grid grid-cols-2 gap-0.5">
+            <button
+              type="button"
+              data-a="split"
+              aria-label="Split mature entities (hold Shift)"
+              title="Split mature entities (hold Shift)"
+              class="inline-flex h-8 items-center justify-center rounded-btn border border-sim-line/30 bg-sim-bg/15 px-1 font-ui text-4xs whitespace-nowrap text-sim-ink transition-all duration-100 select-none hover:border-sim-glow/45 hover:bg-sim-line/20 hover:text-white active:border-sim-glow/55 active:bg-sim-line/30 active:text-white"
+            >
+              <kbd>&#8679;</kbd> Split
+            </button>
+            <button
+              type="button"
+              data-a="burst"
+              aria-label="Burst-spawn entities (hold Space)"
+              title="Burst-spawn entities (hold Space)"
+              class="inline-flex h-8 items-center justify-center rounded-btn border border-sim-line/30 bg-sim-bg/15 px-1 font-ui text-4xs whitespace-nowrap text-sim-ink transition-all duration-100 select-none hover:border-sim-glow/45 hover:bg-sim-line/20 hover:text-white active:border-sim-glow/55 active:bg-sim-line/30 active:text-white"
+            >
+              <kbd>&#9251;</kbd> Burst
+            </button>
+            <button
+              type="button"
+              data-a="mutate"
+              aria-label="Mutate all entities (hold M)"
+              title="Mutate all entities (hold M)"
+              class="inline-flex h-8 items-center justify-center rounded-btn border border-sim-line/30 bg-sim-bg/15 px-1 font-ui text-4xs whitespace-nowrap text-sim-ink transition-all duration-100 select-none hover:border-sim-glow/45 hover:bg-sim-line/20 hover:text-white active:border-sim-glow/55 active:bg-sim-line/30 active:text-white"
+            >
+              <kbd>M</kbd> Mutate
+            </button>
+            <button
+              type="button"
+              data-a="chaos"
+              aria-label="Boost chaos (hold Tab)"
+              title="Boost chaos (hold Tab)"
+              class="inline-flex h-8 items-center justify-center rounded-btn border border-sim-line/30 bg-sim-bg/15 px-1 font-ui text-4xs whitespace-nowrap text-sim-ink transition-all duration-100 select-none hover:border-sim-glow/45 hover:bg-sim-line/20 hover:text-white active:border-sim-glow/55 active:bg-sim-line/30 active:text-white"
+            >
+              <kbd>&#8677;</kbd> Chaos+
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Audit panel (HTMX polls the server-side ring; htmx.org is imported by src/main.ts) -->
+      <section
+        id="aP"
+        hx-get="/api/audit"
+        hx-trigger="load, every 5s"
+        hx-swap="innerHTML"
+        hx-target="#audit-list"
+        class="panel overflow-hidden rounded-panel border border-cyan-300/15 bg-void/90 shadow-panel backdrop-blur-xl backdrop-saturate-150"
+        aria-label="Audit trail"
+      >
+        <div
+          data-panel-toggle
+          class="flex min-h-7.5 cursor-pointer items-center justify-between border-b border-white/5 px-2.5 py-1.5 select-none"
         >
-          &#9662;
-        </button>
+          <h2
+            class="font-ui text-2xs font-semibold tracking-widest text-accent uppercase text-shadow-glow-accent"
+          >
+            Audit
+          </h2>
+          <button
+            type="button"
+            class="chev flex h-5 w-5 shrink-0 items-center justify-center rounded border-0 bg-white/5 text-xs text-sky-300"
+            aria-label="Collapse or expand audit panel"
+            title="Collapse or expand audit panel"
+          >
+            &#9662;
+          </button>
+        </div>
+        <div class="panel-body max-h-[26vh] overflow-y-auto p-2">
+          <div id="audit-list"></div>
+        </div>
+      </section>
+
+      <!-- Sorting-field readout (grid area `alg`; phone portrait: bottom-cluster strip) -->
+      <div
+        id="alg"
+        class="pointer-events-none rounded-panel border border-purple-300/15 bg-void/90 px-2.5 py-1.25 backdrop-blur-lg"
+      >
+        <div
+          id="a-name"
+          class="overflow-hidden font-ui text-3xs font-semibold tracking-wide text-ellipsis whitespace-nowrap text-white"
+        >
+          BUBBLE FIELD
+        </div>
+        <div
+          id="a-step"
+          class="overflow-hidden font-mono text-4xs font-light text-ellipsis whitespace-nowrap text-purple-200 tabular-nums"
+        >
+          ---
+        </div>
+        <!-- V2: lore name of the camera's Voronoi sub-sector (ui/hud.ts setLore) -->
+        <div
+          id="lore"
+          class="overflow-hidden font-ui text-4xs font-light tracking-widest text-ellipsis whitespace-nowrap text-purple-300/80 uppercase"
+        >
+          ---
+        </div>
       </div>
-      <div class="panel-body max-h-[26vh] overflow-y-auto p-2">
-        <div id="audit-list"></div>
-      </div>
-    </section>
+    </div>
 
     <!-- Bottom toolbar -->
     <div
@@ -539,33 +637,8 @@
       >
     </div>
 
-    <!-- Sorting-field readout (bottom position set per pointer media in app.css) -->
-    <div
-      id="alg"
-      class="pointer-events-none fixed left-1.5 z-20 max-w-[clamp(115px,26vw,185px)] rounded-panel border border-purple-300/15 bg-void/90 px-2.5 py-1.25 backdrop-blur-lg"
-    >
-      <div
-        id="a-name"
-        class="overflow-hidden font-ui text-3xs font-semibold tracking-wide text-ellipsis whitespace-nowrap text-white"
-      >
-        BUBBLE FIELD
-      </div>
-      <div
-        id="a-step"
-        class="overflow-hidden font-mono text-4xs font-light text-ellipsis whitespace-nowrap text-purple-200 tabular-nums"
-      >
-        ---
-      </div>
-      <!-- V2: lore name of the camera's Voronoi sub-sector (ui/hud.ts setLore) -->
-      <div
-        id="lore"
-        class="overflow-hidden font-ui text-4xs font-light tracking-widest text-ellipsis whitespace-nowrap text-purple-300/80 uppercase"
-      >
-        ---
-      </div>
-    </div>
-
-    <!-- Touch joystick (shown via pointer media query in app.css; ui/input.ts tracks by identifier) -->
+    <!-- Touch joystick — MOVE (left thumb; shown on coarse pointers via app.css;
+         ui/input.ts tracks its touch by identifier) -->
     <div id="joy" class="fixed z-[25]">
       <div id="jP" class="relative h-22 w-22 rounded-full border border-sky-400/15 bg-sky-900/10">
         <div
@@ -573,6 +646,48 @@
           class="absolute top-7.25 left-7.25 h-7.5 w-7.5 rounded-full border-2 border-cyan-400/30 bg-cyan-400/25"
         ></div>
       </div>
+    </div>
+
+    <!-- Touch look pad — LOOK (right thumb; V3.4, feeds input.look like a mouse drag) -->
+    <div id="lookpad" class="fixed z-[25]">
+      <div
+        id="lp"
+        class="relative h-22 w-22 rounded-full border border-purple-400/15 bg-purple-900/10"
+      >
+        <div
+          id="lpK"
+          class="absolute top-7.25 left-7.25 h-7.5 w-7.5 rounded-full border-2 border-purple-400/30 bg-purple-400/25"
+        ></div>
+      </div>
+    </div>
+
+    <!-- Radial action wheel (V3.4): four [data-a] petals + apocalypse long-press core -->
+    <div id="wheel" class="fixed z-[25]" role="group" aria-label="Quick simulation actions">
+      <button type="button" class="wheel-btn wheel-n" data-a="split" aria-label="Split entities">
+        SPL
+      </button>
+      <button type="button" class="wheel-btn wheel-e" data-a="burst" aria-label="Burst spawn">
+        BRS
+      </button>
+      <button
+        type="button"
+        class="wheel-btn wheel-s"
+        data-a="mutate"
+        aria-label="Mutate population"
+      >
+        MUT
+      </button>
+      <button type="button" class="wheel-btn wheel-w" data-a="chaos" aria-label="Boost chaos">
+        CHS
+      </button>
+      <button
+        type="button"
+        id="wheel-apoc"
+        aria-label="Hold to trigger apocalypse"
+        title="Hold to trigger apocalypse"
+      >
+        &#9760;
+      </button>
     </div>
 
     <a

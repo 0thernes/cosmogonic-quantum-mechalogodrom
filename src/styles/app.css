@@ -205,28 +205,296 @@ a:focus-visible {
   padding-bottom: calc(5px + env(safe-area-inset-bottom, 0px));
 }
 
-/* ── Joystick + algorithm readout placement (pointer media) ───── */
-@media (hover: hover) and (pointer: fine) {
-  #joy {
+/* ════════════════════════════════════════════════════════════════
+   RESPONSIVE PANEL SYSTEM (CONTRACTS V3.4)
+   One overlay grid, four device grammars:
+   - laptop/desktop (default): three-column grid — telemetry+audit left,
+     free 3D center, observatory+control right, algo readout bottom-left.
+   - phone portrait (≤640px): vertical sheet stack — telemetry top sheet,
+     observatory under it, algo strip, audit hidden; control pad is
+     REPLACED by touch controls v2 on coarse pointers.
+   - phone/foldable landscape (coarse + ≤520px tall): twin side rails.
+   - TV ≥1900px: 10-foot mode — type/token scale ×~1.6, fat focus rings.
+   Panels carry ONLY glass styling in markup; ALL placement lives here.
+   ════════════════════════════════════════════════════════════════ */
+#ui {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  pointer-events: none;
+  gap: 6px;
+  padding: 6px;
+  padding-top: calc(6px + env(safe-area-inset-top, 0px));
+  padding-bottom: calc(50px + env(safe-area-inset-bottom, 0px)); /* clear #bar */
+  grid-template-columns: clamp(170px, 18vw, 235px) 1fr clamp(190px, 20vw, 280px);
+  grid-template-rows: auto auto 1fr auto;
+  grid-template-areas:
+    'tel . obs'
+    'aud . ctl'
+    '.   . .  '
+    'alg . .  ';
+}
+#ui > * {
+  pointer-events: auto;
+  min-width: 0;
+  min-height: 0;
+}
+#sP {
+  grid-area: tel;
+}
+#aP {
+  grid-area: aud;
+}
+#oP {
+  grid-area: obs;
+}
+#cP {
+  grid-area: ctl;
+}
+#ui > #alg {
+  grid-area: alg;
+  align-self: end;
+  justify-self: start;
+  max-width: clamp(115px, 26vw, 185px);
+  pointer-events: none;
+}
+/* Panels are flex shells so a viewport clamp squeezes the scrolling body. */
+#ui > section {
+  display: flex;
+  flex-direction: column;
+  max-height: calc(50vh - 34px);
+}
+#ui > section > .panel-body {
+  flex: 1 1 auto;
+}
+
+/* Sheet grip — visible only where panels behave as sheets (phone portrait). */
+.sheet-grip {
+  display: none;
+  width: 30px;
+  height: 3px;
+  border-radius: 2px;
+  background: --alpha(var(--color-white) / 18%);
+}
+
+/* ── Phone portrait: stacked sheets docked top, algo strip at the bottom ── */
+@media (max-width: 640px) {
+  #ui {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 4px;
+    padding-top: calc(4px + env(safe-area-inset-top, 0px));
+    padding-bottom: calc(46px + env(safe-area-inset-bottom, 0px));
+  }
+  #ui > section {
+    max-height: none;
+  }
+  #sP {
+    order: 0;
+  }
+  #sP .panel-body {
+    max-height: 28vh;
+  }
+  #oP {
+    order: 1;
+  }
+  #oP .panel-body {
+    max-height: 24vh;
+  }
+  #aP {
+    display: none; /* audit is a desk instrument — phones get the cosmos */
+  }
+  #cP {
+    order: 3;
+    margin-top: auto; /* bottom sheet */
+  }
+  #cP .panel-body {
+    max-height: 30vh;
+  }
+  #ui > #alg {
+    order: 2;
+    margin-top: auto;
+    max-width: 60vw;
+  }
+  .sheet-grip {
+    display: block;
+  }
+}
+
+/* ── Low landscape (phones/foldables rotated): twin side rails ── */
+@media (max-height: 520px) and (min-width: 641px) {
+  #ui {
+    grid-template-columns: clamp(160px, 24vw, 230px) 1fr clamp(170px, 26vw, 250px);
+    grid-template-areas:
+      'tel . obs'
+      'tel . ctl'
+      '.   . .  '
+      'alg . .  ';
+  }
+  #aP {
     display: none;
   }
-  #alg {
-    bottom: calc(44px + env(safe-area-inset-bottom, 0px));
+  #ui > section {
+    max-height: calc(100vh - 64px);
+  }
+}
+
+/* ── Foldables, two horizontal segments: panels hug the outer edges and the
+     center column swallows the hinge — no panel ever spans the fold. ── */
+@media (horizontal-viewport-segments: 2) {
+  #ui {
+    grid-template-columns: minmax(170px, 22vw) 1fr minmax(190px, 22vw);
+    column-gap: clamp(12px, 4vw, 48px);
+  }
+}
+
+/* ── TV / 10-foot (≥1900px): token-scale bump ≈ ×1.6, fat focus rings,
+     reachable-from-the-couch hit targets. ── */
+@media (min-width: 1900px) {
+  :root {
+    --text-2xs: 16px;
+    --text-3xs: 14px;
+    --text-4xs: 13px;
+    --radius-panel: 14px;
+    --radius-btn: 8px;
+  }
+  #ui {
+    gap: 12px;
+    padding: 14px;
+    padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px));
+    grid-template-columns: clamp(290px, 18vw, 390px) 1fr clamp(330px, 20vw, 440px);
+  }
+  #ui > section {
+    max-height: calc(48vh - 30px);
+  }
+  #sP .panel-body canvas {
+    height: 42px;
+  }
+  #observatory-body canvas {
+    height: 96px;
+  }
+  #bar button,
+  #bar a {
+    min-height: 44px;
+    padding: 8px 14px;
+  }
+  button:focus-visible,
+  a:focus-visible {
+    outline-width: 3px;
+    outline-offset: 3px;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════
+   TOUCH CONTROLS V2 (CONTRACTS V3.4)
+   Coarse pointers: drag joystick (move, left thumb) + drag look pad
+   (look, right thumb) + radial action wheel (sim acts, apocalypse
+   long-press core). The static pads inside #cP are hidden — fine
+   pointers keep them and never see the overlays.
+   ════════════════════════════════════════════════════════════════ */
+#wheel {
+  width: 132px;
+  height: 132px;
+}
+.wheel-btn,
+#wheel-apoc {
+  position: absolute;
+  width: 44px; /* ≥44px targets per the V3.4 contract */
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font: 600 var(--text-4xs) var(--font-ui);
+  letter-spacing: 0.08em;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+.wheel-btn {
+  color: var(--color-sim-ink);
+  background: --alpha(var(--color-sim-bg) / 18%);
+  border: 1px solid --alpha(var(--color-sim-line) / 35%);
+}
+.wheel-btn.on {
+  color: var(--color-white);
+  background: --alpha(var(--color-sim-line) / 35%);
+  border-color: --alpha(var(--color-sim-glow) / 55%);
+  box-shadow: 0 0 12px --alpha(var(--color-sim-halo) / 35%);
+}
+.wheel-n {
+  top: 0;
+  left: 44px;
+}
+.wheel-e {
+  top: 44px;
+  right: 0;
+}
+.wheel-s {
+  bottom: 0;
+  left: 44px;
+}
+.wheel-w {
+  top: 44px;
+  left: 0;
+}
+#wheel-apoc {
+  top: 44px;
+  left: 44px;
+  font-size: 17px;
+  color: var(--color-danger-ink);
+  background: --alpha(var(--color-danger) / 12%);
+  border: 1px solid --alpha(var(--color-danger-line) / 45%);
+}
+/* Long-press arming feedback: ring swells over the 600ms hold (input.ts). */
+#wheel-apoc.arming {
+  animation: apoc-arm 600ms linear forwards;
+}
+@keyframes apoc-arm {
+  from {
+    box-shadow: 0 0 0 0 --alpha(var(--color-danger) / 55%);
+  }
+  to {
+    box-shadow: 0 0 0 16px --alpha(var(--color-danger) / 0%);
+    background: --alpha(var(--color-danger) / 45%);
+    color: var(--color-white);
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  #joy,
+  #lookpad,
+  #wheel {
+    display: none;
   }
 }
 @media (hover: none), (pointer: coarse) {
   #joy {
-    bottom: calc(44px + env(safe-area-inset-bottom, 0px));
-    left: 6px;
+    bottom: calc(54px + env(safe-area-inset-bottom, 0px));
+    left: 10px;
   }
-  #alg {
-    bottom: calc(140px + env(safe-area-inset-bottom, 0px));
+  #lookpad {
+    bottom: calc(54px + env(safe-area-inset-bottom, 0px));
+    right: 10px;
   }
-}
-@media (max-width: 480px) {
-  #alg {
-    max-width: 108px;
-    bottom: calc(124px + env(safe-area-inset-bottom, 0px));
+  #wheel {
+    bottom: calc(152px + env(safe-area-inset-bottom, 0px));
+    right: 14px;
+  }
+  /* The static pads yield to joystick + look pad + wheel (V3.4 mandate). */
+  #pad-move,
+  #pad-rot,
+  #pad-sim {
+    display: none;
+  }
+  #cP {
+    display: none; /* nothing left inside on touch — the overlays ARE control */
+  }
+  #bar button,
+  #bar a {
+    min-height: 44px;
+    min-width: 44px;
   }
 }
 

@@ -75,6 +75,12 @@ export class AnalyticsSystem {
   /** Sim time of the last omen record; -Infinity ⇒ never recorded. */
   private lastOmenAt = Number.NEGATIVE_INFINITY;
 
+  /** Optional omen namer (audit fix C); null ⇒ records carry no `name` (original shape). */
+  private readonly nameOmen: ((i: number) => string) | null;
+
+  /** Monotonic index handed to {@link nameOmen} — counts named omen records only. */
+  private omenIndex = 0;
+
   /**
    * Reused regression buffers (contract rule 5): `pairs` holds WINDOW [x, y]
    * tuples constructed once in the constructor; `points` and `values` are
@@ -85,9 +91,16 @@ export class AnalyticsSystem {
   private readonly points: [number, number][] = [];
   private readonly values: number[] = [];
 
-  /** Stores the context and pre-allocates all buffers. O(WINDOW), once. */
-  constructor(ctx: SimContext) {
+  /**
+   * Stores the context and pre-allocates all buffers. O(WINDOW), once.
+   *
+   * @param nameOmen Optional lore namer: when provided, every omen audit record gains a
+   * `name: nameOmen(omenIndex++)` field (the index increments per named record). Behavior
+   * is identical to the unnamed form when absent (audit fix C).
+   */
+  constructor(ctx: SimContext, nameOmen?: (i: number) => string) {
     this.ctx = ctx;
+    this.nameOmen = nameOmen ?? null;
     for (let i = 0; i < WINDOW; i++) {
       this.pairs.push([0, 0]);
     }
@@ -185,7 +198,7 @@ export class AnalyticsSystem {
       energySum += this.energy[idx]!;
       linksSum += this.links[idx]!;
     }
-    this.ctx.audit.record('omen', {
+    const detail: Record<string, unknown> = {
       z: round2(z),
       population: latest,
       mean: round2(mu),
@@ -194,6 +207,10 @@ export class AnalyticsSystem {
       energyMean: round2(energySum / n),
       linksMean: round2(linksSum / n),
       elapsed: round2(now),
-    });
+    };
+    if (this.nameOmen) {
+      detail.name = this.nameOmen(this.omenIndex++);
+    }
+    this.ctx.audit.record('omen', detail);
   }
 }

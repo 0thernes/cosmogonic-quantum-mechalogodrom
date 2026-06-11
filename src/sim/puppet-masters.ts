@@ -5,7 +5,8 @@
  */
 import * as THREE from 'three';
 import { clamp } from '../math/scalar';
-import { CHAOS_MAX, CHAOS_MIN, MORPH_COUNT, WEATHERS } from './constants';
+import { ARENA_MID, ARENA_Y, CHAOS_MAX, CHAOS_MIN, WEATHERS } from './constants';
+import { POINT_LIGHT_GAIN } from './environment';
 import type { PuppetEvent, SimContext } from '../types';
 import type { EntityManager } from './entities';
 
@@ -26,10 +27,36 @@ interface PuppetConfig {
   readonly iv: number;
 }
 
+// Legacy orbits × ARENA_MID, hover heights × ARENA_Y (V3.1 — the trio patrols the
+// populated mid-field of the 5× arena instead of hugging the old 65u core).
 const CONFIGS: readonly PuppetConfig[] = [
-  { name: 'AETHON', hue: 0.08, orb: 45, spd: 0.07, y: 35, act: 'chaos', iv: 400 },
-  { name: 'SELENE', hue: 0.6, orb: 55, spd: -0.05, y: 42, act: 'weather', iv: 600 },
-  { name: 'KRONOS', hue: 0.3, orb: 50, spd: 0.03, y: 38, act: 'mutate', iv: 500 },
+  {
+    name: 'AETHON',
+    hue: 0.08,
+    orb: 45 * ARENA_MID,
+    spd: 0.07,
+    y: 35 * ARENA_Y,
+    act: 'chaos',
+    iv: 400,
+  },
+  {
+    name: 'SELENE',
+    hue: 0.6,
+    orb: 55 * ARENA_MID,
+    spd: -0.05,
+    y: 42 * ARENA_Y,
+    act: 'weather',
+    iv: 600,
+  },
+  {
+    name: 'KRONOS',
+    hue: 0.3,
+    orb: 50 * ARENA_MID,
+    spd: 0.03,
+    y: 38 * ARENA_Y,
+    act: 'mutate',
+    iv: 500,
+  },
 ];
 
 // Pre-built toast strings so action ticks never build strings inside update().
@@ -90,7 +117,12 @@ export class PuppetMasterSystem {
       );
       ring.rotation.x = Math.PI / 2;
       mesh.add(ring);
-      const light = new THREE.PointLight(new THREE.Color().setHSL(cfg.hue, 0.9, 0.5), 3, 25);
+      const light = new THREE.PointLight(
+        new THREE.Color().setHSL(cfg.hue, 0.9, 0.5),
+        3 * POINT_LIGHT_GAIN,
+        25,
+        0, // legacy r128 falloff model — see LEGACY_LIGHT_GAIN in environment.ts
+      );
       mesh.add(light);
       ctx.scene.add(mesh);
       this.pms.push({ cfg, mesh, mat, ring, light, ti: 0 });
@@ -121,7 +153,7 @@ export class PuppetMasterSystem {
       pm.mesh.rotation.x += dt * 0.5;
       pm.mesh.rotation.y += dt * 0.7;
       pm.ring.rotation.z = t * 2;
-      pm.light.intensity = 2 + Math.sin(t * 3 + cfg.hue * 20) * 1.5;
+      pm.light.intensity = (2 + Math.sin(t * 3 + cfg.hue * 20) * 1.5) * POINT_LIGHT_GAIN;
       pm.mat.emissiveIntensity = 1.5 + Math.sin(t * 2 + cfg.hue * 15) * 0.8;
       pm.ti += dt * 30;
       if (pm.ti >= cfg.iv) {
@@ -154,7 +186,8 @@ export class PuppetMasterSystem {
         const mc = Math.min(30, list.length);
         for (let mi = 0; mi < mc; mi++) {
           const target = list[Math.floor(rng() * list.length)];
-          if (target) this.entities.remorph(target, Math.floor(rng() * MORPH_COUNT));
+          // Remorph rolls over the LIVE morph table (250 in phylum mode).
+          if (target) this.entities.remorph(target, Math.floor(rng() * ctx.morphs.length));
         }
         // Known Bug 14: the counter is now read by telemetry (#v8), so keep it accurate.
         ctx.state.mutations += mc;

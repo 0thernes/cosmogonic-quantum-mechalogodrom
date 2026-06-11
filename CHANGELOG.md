@@ -7,6 +7,174 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-06-10
+
+The **PANTHEON** expansion (CONTRACTS V3): the arena grows 5×, the population
+grows to 10,000, ten lore-named creature phyla with wildcard outliers populate
+it, and ten colossal non-human intelligences (TITANS) run a global economy and
+wage game-theoretic war over it — observed live from a four-chart Observatory,
+playable from a phone to a 43″ TV. The QUANTUM-tier soundtrack (4 new dark
+songs around the untouched QUANTUM) shipped in the 0.3.0 groundwork commit.
+
+### Added
+
+- **Quality tier ladder** (`core/quality.ts`): phone 650 (legacy per-mesh
+  path) / laptop 2,000 / desktop 5,000 / ultra 10,000 entities, resolved once
+  at boot from pointer type + `hardwareConcurrency` + `deviceMemory ?? 8`;
+  quantum/links/stars budgets scale sublinearly per rung. `QualityProfile`
+  gains `tier` + `instanced`.
+- **5× arena** (`sim/constants.ts`): `ARENA = 5` (XZ), `ARENA_Y = 2`
+  (vertical), `ARENA_MID = 2.5` (mid-field actors) drive everything — ground
+  240→1200 (same 60×60 segments, wavelengths ÷ARENA, swell ×ARENA_Y),
+  containment 65→325 (4225→105625), monolith/diorama layouts ×5 floor and ×2
+  height from one legacy-authored table, camera far 900→2600, fog ÷ARENA,
+  star shells ×3, spatial-hash cell 8→16, sky-web at y 110, camera modes and
+  speeds ×ARENA_MID, sector rectangles ×ARENA.
+- **InstancedMesh pools** (`sim/instanced-entities.ts`): above the phone tier
+  every entity renders through one InstancedMesh per (cached geometry ×
+  transparency) pair — ≤80 draw calls for 10,000 organisms instead of 10,000.
+  Per-instance matrix + `instanceColor` + custom vec4 emissive·intensity/alpha
+  attribute patched via `onBeforeCompile`; pools are lazily built at uniform
+  share ×4 headroom and grow ×2 event-driven, uploads clipped to live ranges.
+  The EntityManager facade is UNCHANGED — entities stay real meshes (never
+  scene-added), mirrored once per frame after all visual mutations.
+- **Phyla taxonomy live** (V3.2 wiring): `createPhyla` mints 10 lore-named
+  phyla; `createMorphotypes(rng, geoCount, phyla)` emits 250 morphotypes in
+  contiguous 25-morph blocks with ~1% wildcard OUTLIERS (band-ignoring
+  palettes, blended behavior pairs, ×3 parameter excursions). `EntityData`
+  gains `phylum`/`beh2`; outliers temporally blend their two behaviors on
+  (frame+i) parity; null-position spawns bias toward the phylum's home wedge
+  (matching its titan's patrol post); `EntityManager.phylumCounts` recounts
+  per update. All morph rolls now span the LIVE morph table (`morphs.length`,
+  not the legacy 100), across world/shoggoths/puppets/titans.
+- **TITANS** (`sim/titans.ts` + `math/games.ts`, V3.3 wiring): ten colossal
+  (×3 scale) silhouette archetypes patrol phylum wedges inside ±300; each runs
+  an {energy, matter, entropy} economy — harvest (entities consumed → matter),
+  metabolize, witness quantum collapses (energy, wired through `onCollapse`),
+  bathe in RD pattern density (entropy relief, fed every 60f from the live V
+  field), pay size-scaled upkeep, and WASTE entropy as ground scars drained to
+  the reaction-diffusion field each frame. Staggered iterated-PD diplomacy
+  (45 pairs over a 600f cycle) derives TRUCE/ALLIANCE/WAR; wars fire territory
+  strikes (energy raid + loot + champion-morph burst + scatter + conscription
+  remorphs); bankruptcy mutates strategy by replicator dynamics over the live
+  strategy census. Payoffs flow through the actual energy ledger.
+- **Observatory live** (V3.5 wiring): world pushes the telemetry snapshot into
+  the four-chart observatory every 18f (36f phone) — stacked phylum areas,
+  titan wealth polylines + war markers, 10×10 war-matrix heat grid, and
+  rdEnergy/qEntropy/trend timelines. `TelemetrySnapshot` grows
+  `maxLinks/morphTotal/titans/phylumCounts/titanLedger/warMatrix/rdEnergy`
+  (REUSED views, documented); telemetry panel gains the TITANS row and scales
+  its sparklines from the snapshot caps.
+- **Touch controls v2** (V3.4): on coarse pointers the static pads are
+  replaced by the drag joystick (move), a right-thumb LOOK PAD feeding the
+  same `look` accumulator as mouse drags, and a radial ACTION WHEEL
+  (Split/Burst/Mutate/Chaos petals ≥44px + 600ms apocalypse long-press core
+  with a CSS arming ring). Sim actions pulse `navigator.vibrate` ≤30ms,
+  silenced under `prefers-reduced-motion`.
+- **Responsive overlay** (V3.4, `#ui` in app.css): desktop three-column grid
+  (telemetry+audit left, observatory+control right, free 3D center), phone
+  portrait sheet stack with grips (audit yields), low-landscape twin rails,
+  foldable hinge-safe columns (`horizontal-viewport-segments: 2` — panels
+  never span the fold), TV ≥1900px 10-foot mode (type tokens ×~1.6, 44px
+  toolbar targets, 3px focus rings). Panels carry only glass styling; ALL
+  placement lives in CSS.
+- **Tests**: games equilibria (PD defect lock-in, TFT cooperation, grim window
+  forgiveness, Pavlov fixed points, GTFT forgiveness threshold, replicator
+  fixed points/absorption/seals), quality ladder (tier resolution + budget
+  monotonicity), instanced pools (sizing math + headless sync: mirroring,
+  emissive/alpha channels, matrix tracking, growth, wireframe sweep).
+
+### Changed
+
+- Boot/reset population is 30% of the tier cap (legacy 300 of 1,000); burst
+  scales 30→100 at ultra; sparse-respawn floor scales to 10% of the cap.
+- Graph-mind cadences double above 2,500 entities (Louvain on a 10k mirror
+  would spike the V2 240f budget).
+- Death→ground feedback (`EntityManager.onDeath` → `rd.perturb`) is wired in
+  the composition root over the 1200u ground UV, completing the 0.2.1 API.
+- `ObservatorySnapshot.ledger` renamed `titanLedger` so the reused
+  `TelemetrySnapshot` satisfies it structurally.
+
+### Known compromises (documented in MODULE-CONTRACTS §V3 notes)
+
+- Instanced pools render metalness/roughness at 0.5/0.5 (per-instance PBR
+  scalars are not worth two more attributes; emissive carries identity) and
+  cast no shadows (legacy capped casters at 120 anyway).
+- Pool transparency is a two-variant split per geometry at per-instance
+  alpha — within-pool instance sorting is not performed.
+
+## [0.2.1] - 2026-06-10
+
+The audit wave: SKEPTIC-confirmed findings from the adversarial 0.2.0 audit,
+landed as a patch release. Contract additions are recorded in
+`docs/MODULE-CONTRACTS.md` §CONTRACT AMENDMENTS — 0.2.1.
+
+### Added
+
+- **Mouse-look + wheel zoom** on the canvas: pointer drags that start on `#c`
+  accumulate into `InputSystem.look` (`{dx, dy}`, pointer-captured, first
+  pointer wins) and the wheel into a deltaMode-normalized `zoom` accumulator;
+  the world consumes-and-zeroes both every frame (applied in free view only),
+  and window blur clears them along with all other held input (Known Bug 11
+  extension).
+- **Feedback-web APIs made explicit**: `EntityManager.onDeath` (world wires
+  deaths to `rd.perturb` at ground UV), `QuantumCloud.implodeAt(basis)`
+  (localized implosion on register collapse) and `setBreath(level)`
+  (audio-level point-size breathe), `EnvironmentSystem.setAudioBass(bass)`
+  (six-light rig shimmer), and `AnalyticsSystem.nameOmen` (world injects
+  `lore.name('omen', i)` so omens are lore-named).
+
+### Changed
+
+- **Audio coupling set finalized**: bass → six-light rig shimmer
+  (`EnvironmentSystem.setAudioBass`), treble → constellation pulse, level →
+  quantum-cloud point size (`QuantumCloud.setBreath`), all multipliers
+  ≤ 0.35. The bass → tone-mapping-exposure offset is removed entirely —
+  exposure is owned by the weather system alone.
+
+### Fixed
+
+- **NaN lorenz seal**: the `lorenz` behavior clamps its attractor samples to
+  ±25, so an escapee's position can no longer drive the quadratic terms to
+  ±Infinity and spread NaN population-wide through the spatial hash
+  (regression-tested in `tests/nan-stability.test.ts`).
+- **Exposure accumulation**: the audio bass shimmer compounded into
+  `toneMappingExposure` (~15× past the weather pullback once music played,
+  tone-mapping the world to white); fixed first as a bounded
+  remove-before-lerp offset, then removed outright in favor of the rig
+  coupling above.
+- **Color-pipeline legacy fidelity**: `outputColorSpace` is forced to
+  `LinearSRGBColorSpace` (with `THREE.ColorManagement` disabled before engine
+  construction) and the point-light rig is rescaled with explicit
+  legacy-light gains, so the palette authored against three r128's
+  linear-out, legacy-light-unit pipeline renders exactly as the monolith did.
+- **Controls color restoration**: the legacy control families are back as
+  `@theme` tokens — the green-glass toolbar (`#bar`) and the apocalypse red
+  danger family — instead of the flattened accent palette.
+- **Determinism**: the audio engine draws from its own derived RNG stream
+  (`seed ^ 0xa0d10`), so wall-clock scheduler callbacks can no longer drain
+  the sim stream and break same-seed reproducibility.
+- **Docs match the executed pipeline**: PageRank runs every 600th frame at
+  offset 300 (offset 120 — as previously documented — would collide with the
+  240-frame Louvain pass at frame 720 and every 1,200 frames after); the
+  documented frame order now ends graph mind → constellations → environment →
+  telemetry + analytics push (8f) → analytics analyze (60f) → render; the
+  `/docs` diagrams are regenerated (V2 module graph + `/lab` route, V2 ERD,
+  V2 frame pipeline with cadences).
+
+### Security
+
+- **Server hardening**: `POST /api/audit` bodies are capped at 8 KB (413
+  beyond, declared and actual), audit `detail` payloads are truncated at
+  storage time, and the HTMX fragment HTML-escapes every user-controlled
+  string.
+- **Store validation**: `MemoryStore.load()` field-validates the persisted
+  JSON (finite numbers, booleans, known version) and returns `null` on any
+  mismatch — corrupt or hostile `localStorage` can never throw or smuggle
+  values into the sim.
+- **SRI**: the `/lab` artifact pins its p5.js CDN script with a sha384
+  `integrity` hash + `crossorigin="anonymous"`.
+
 ## [0.2.0] - 2026-06-10
 
 The **Quantum Wildbeyond** expansion. Seven new systems implementing
@@ -185,5 +353,7 @@ to the legacy prototype:
   write-only.
 
 [Unreleased]: ./CHANGELOG.md
+[0.3.0]: ./CHANGELOG.md
+[0.2.1]: ./CHANGELOG.md
 [0.2.0]: ./CHANGELOG.md
 [0.1.0]: ./CHANGELOG.md

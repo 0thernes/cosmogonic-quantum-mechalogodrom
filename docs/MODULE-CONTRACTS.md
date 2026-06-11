@@ -527,9 +527,9 @@ export class QuantumCircuitSystem {
 QuantumCloud amendment (writer: quantum also owns src/sim/quantum.ts edits): add
 `setQuantumBands(bands: Float32Array | null): void`; when set, the particle
 color refresh keys hue off `bands[particleIndex % 32]` blended with the legacy
-psi hue; a change in `lastCollapse` (world passes it via the same setter call
-pattern) triggers a localized cloud implosion reusing the existing
-collapse/respawn path — no new allocation.
+psi hue; a change in `lastCollapse` triggers a localized cloud implosion via
+`implodeAt(basis)` (explicit API per the 0.2.1 amendments below) reusing the
+existing collapse/respawn path — no new allocation.
 
 ## src/sim/reaction-diffusion.ts (writer: rd)
 
@@ -571,8 +571,11 @@ export class GraphMind {
   // tribe-aware — true feedback), and install a community palette on the
   // connectome via setCommunityOf.
   updateCommunities(): void;
-  // World calls every 600 frames (offset 120): pagerank; the top-20 entities
-  // get an emissiveIntensity floor boost while their rank holds.
+  // World calls every 600 frames (offset 300 — NOT 120: offset 120 collides
+  // with the 240f louvain cadence at frame 720 and every 1200f after, stacking
+  // both heavy passes on one frame; 300 mod 240 alternates 60/180 and never
+  // collides): pagerank; the top-20 entities get an emissiveIntensity floor
+  // boost while their rank holds.
   updateRank(): void;
 }
 ```
@@ -638,9 +641,14 @@ export class AudioAnalysis {
 }
 ```
 
-World couples bands: point-light shimmer (bass), constellation pulse (treble),
-quantum-cloud point-size breathe (level) — multipliers ≤ 0.35 so a silent world
-looks identical to v1.
+World couples bands — the FINAL shipped set (0.2.1): bass shimmers the
+six-light rig via `EnvironmentSystem.setAudioBass`, treble pulses the
+constellation cells (the `bands` argument of `constellations.update`), level
+breathes the quantum-cloud point size via `QuantumCloud.setBreath` —
+multipliers ≤ 0.35 so a silent world looks identical to v1. There is NO
+exposure coupling: an earlier bass → toneMappingExposure offset accumulated
+past the weather pullback and was removed in 0.2.1; exposure is owned by
+`WeatherSystem.apply` exclusively.
 
 ## src/sim/analytics.ts (writer: analytics) — dep: simple-statistics
 
@@ -695,14 +703,128 @@ The server.ts `/lab` route is the INTEGRATOR's job — do not touch server.ts.
 ```
 ... entities.update → connectome.update (cadence)
   → qcircuit.update (every 30f; bands → quantum cloud every 6f)
+  → quantum.update
   → rd.step (every 2nd frame, offset 1 from grid rebuild)
-  → graphMind.updateCommunities (every 240f) / updateRank (every 600f, offset 120)
-  → analytics.push (every 8f with telemetry) / analyze (every 60f)
+  → graphMind.updateCommunities (every 240f) / updateRank (every 600f, offset 300)
   → constellations.update (per frame, O(1)) with audio bands
-  → environment.update → telemetry → render
-Entity deaths call rd.perturb(death position normalized to ground UV).
+  → environment.update
+  → telemetry + analytics.push (every 8f)
+  → analytics.analyze (every 60f)
+  → render
+Entity deaths (EntityManager.onDeath) call rd.perturb(death position
+normalized to ground UV).
 PuppetEvents fan out to qcircuit.onPuppetEvent + lore epithet in the toast.
 Sort swaps call qcircuit.onSortSwap(a, b).
+A changed qcircuit.lastCollapse triggers QuantumCloud.implodeAt(basis).
+```
+
+---
+
+# CONTRACT AMENDMENTS — 0.2.1 (audit wave)
+
+Binding API additions applied with the SKEPTIC-confirmed audit fixes. All V1/V2
+ground rules hold (strict TS, seeded Rng, allocation-free per-frame paths,
+JSDoc + complexity). `world.ts` (integrator) owns all wiring shown.
+
+## src/ui/input.ts — InputSystem amendment
+
+```ts
+export class InputSystem {
+  // ... V1 surface unchanged (keys, camVel, touch) ...
+  /**
+   * Pointer-look deltas (CSS px), accumulated while a drag that STARTED on the
+   * `#c` canvas is active (pointer capture; first pointer wins, mirroring the
+   * joystick's identifier tracking). The world reads dx/dy once per frame in
+   * free view (rotation.y -= dx * 0.003, rotation.x -= dy * 0.003) and MUST
+   * zero both fields afterwards — in EVERY view mode, so stale deltas never
+   * accumulate while orbit/fly/top ignore them. Stable object identity.
+   */
+  readonly look: { dx: number; dy: number };
+  /**
+   * Wheel-zoom accumulator, deltaMode-normalized to ~pixels (line ×16,
+   * page ×100); positive = zoom out. World consumes it each frame
+   * (translateZ(zoom * 0.02) in free view) and resets it to 0. Mutable by
+   * necessity: a readonly primitive could not be consumed-and-zeroed.
+   */
+  zoom: number;
+}
+```
+
+The Known Bug 11 blur reset extends to the new state: window blur clears the
+key map, camVel, joystick, the active look drag, and the look/zoom
+accumulators.
+
+## src/sim/entities.ts — EntityManager.onDeath
+
+```ts
+export class EntityManager {
+  // ...
+  /**
+   * Death hook, invoked synchronously inside update() for every natural death
+   * (age > life · tempMod), BEFORE the entity is disposed — position is still
+   * valid. Null disables (default). The reused Entity reference must be read
+   * synchronously; the hook body must be allocation-free (it runs on the
+   * per-frame path).
+   */
+  onDeath: ((e: Entity) => void) | null;
+}
+```
+
+World wiring: `entities.onDeath = (e) => rd.perturb(0.5 + e.position.x / 240,
+0.5 - e.position.z / 240)` — the ground-UV mapping of the 240×240 plane (same
+mapping `doSplit` uses).
+
+## src/sim/quantum.ts — QuantumCloud.implodeAt + setBreath
+
+```ts
+export class QuantumCloud {
+  // ...
+  /**
+   * Localized implosion anchored by basis index (0..31 for the 5-qubit
+   * register): particles in the basis-keyed region run the existing
+   * collapse/respawn path. O(q) worst case, no allocation. World calls it
+   * when qcircuit.lastCollapse changes (every-30f check).
+   */
+  implodeAt(basis: number): void;
+  /**
+   * Audio-level point-size breathe (FINAL audio coupling set): size =
+   * base · (1 + 0.35 · level), level clamped to [0, 1]; 0 restores the exact
+   * legacy size. O(1) — applied during update().
+   */
+  setBreath(level: number): void;
+}
+```
+
+## src/sim/environment.ts — EnvironmentSystem.setAudioBass
+
+```ts
+export class EnvironmentSystem {
+  // ...
+  /**
+   * Bass shimmer on the fixed six-PointLight rig (legacy `lts`): each light's
+   * animated intensity baseline is modulated by ≤ 0.35 · bass, bass clamped
+   * to [0, 1]; 0 is exactly the legacy rig. O(6) ≡ O(1), applied in update().
+   * This REPLACES the removed bass → toneMappingExposure offset — exposure is
+   * weather-owned.
+   */
+  setAudioBass(bass: number): void;
+}
+```
+
+## src/sim/analytics.ts — AnalyticsSystem.nameOmen
+
+```ts
+export class AnalyticsSystem {
+  // ...
+  /**
+   * Lore-namer hook for omen audit records. Called at most once per omen
+   * (rare path — the 30 s cooldown gates it) with a monotonically increasing
+   * omen counter; the returned name is recorded as `name` in the omen detail.
+   * Null (default) records the omen unnamed. World wires
+   * `analytics.nameOmen = (i) => lore.name('omen', i)`.
+   */
+  nameOmen: ((index: number) => string) | null;
+}
 ```
 
 ---
@@ -805,3 +927,62 @@ before V3 wiring. Acceptance: ultra tier 10k entities ≥55fps desktop, phone
 tier unchanged ≥30fps budget share, zero console errors over a 3-minute soak
 incl. a forced war + apocalypse; same-seed determinism preserved (titan
 decisions draw from ctx.rng on frame cadences only).
+
+---
+
+## CONTRACT AMENDMENTS — 0.3.0 (integration wave, binding)
+
+Deviations from and clarifications of the V3 goal spec, as landed:
+
+1. **Arena scale split** — one `ARENA = 5` would make 50-110u monoliths
+   250-550u skyscrapers and lift every hover height into fog. Landed as
+   three knobs in `sim/constants.ts`: `ARENA = 5` (XZ coordinates,
+   containment, sectors), `ARENA_Y = 2` (heights, ceilings, sky-web), and
+   `ARENA_MID = 2.5` (mid-field actors: shoggoth posts, puppet orbits,
+   quantum-cloud volumes, light-rig spread, camera motion). The legacy
+   tuple tables stay authored at 1× and scale once at module init.
+2. **Morph-table modulo** — every morph roll that was `% MORPH_COUNT` (100)
+   is now `% ctx.morphs.length` (250 in phylum mode). `MORPH_COUNT` remains
+   ONLY as the legacy-mode population size inside `createMorphotypes`.
+3. **Outlier behavior blending** — `beh`+`beh2` blend TEMPORALLY: the
+   second behavior runs on odd `(frame + i)` parity via swap-dispatch-restore
+   (allocation-free), not as a vector average — behaviors mutate
+   heterogeneous state and cannot be averaged safely.
+4. **Instanced pools** — two pools per cached geometry (opaque,
+   translucent), so ≤80 total; pooled materials run metalness/roughness at
+   0.5/0.5 (per-instance PBR scalars rejected: two more attributes for an
+   effect emissive dominates anyway) and cast NO shadows (legacy capped
+   entity casters at 120). Per-instance channels: matrix, `instanceColor`,
+   and a vec4 `instEmissive` (rgb = emissive·intensity, a = opacity) patched
+   into MeshStandardMaterial via `onBeforeCompile` (replaces
+   `totalEmissiveRadiance`, multiplies `diffuseColor.a`). Pools are lazily
+   built at `ceil(maxEntities/geoCount)·4` capacity, grow ×2 (event-driven
+   rebuild), clamp at `maxEntities`; `frustumCulled = false` (instances span
+   the arena). Data meshes set `matrixAutoUpdate = false`; the renderer calls
+   `updateMatrix()` during its sync pass, which runs LAST in the frame
+   (after sort flash / rank floor / conscription tints), just before render.
+5. **Boot population** — 30% of the tier cap (min 300), and the
+   sparse-respawn floor is 10% of the cap: absolute legacy counts are
+   meaningless across a 15× budget spread.
+6. **Graph-mind cadence** — communities/rank periods DOUBLE above 2,500
+   entities (240→480f, 600→1200f at offset 300). Collision-freedom of the
+   offsets is preserved under the shared ×2.
+7. **Titan retunes at integration** — `COLOSSAL = 3` silhouette scale
+   (drafted rigs were authored against the 1× world), patrol radius
+   130+45·(i%3) (phylum-wedge aligned), vertical band 12..90, waste-scar V
+   flipped to `0.5 − z/GROUND_EXTENT` (the rotated ground plane's UV
+   convention, matching world.ts splits/deaths).
+8. **Snapshot unification** — `TelemetrySnapshot` grew
+   `maxLinks/morphTotal/titans/phylumCounts/titanLedger/warMatrix/rdEnergy`
+   and structurally satisfies `ObservatorySnapshot` (whose `ledger` field
+   was renamed `titanLedger`); one reused snapshot serves panel and
+   observatory. `phylumCounts`/`titanLedger`/`warMatrix` are LIVE reused
+   views — consumers copy what they retain.
+9. **RD pattern energy** — defined as the stride-16 mean of the Gray-Scott
+   V field, sampled every 60 frames at offset 30 (never shares a frame with
+   `analytics.analyze`), feeding titan entropy relief (×2 gain into
+   `feedEntropy`) and the observatory environment timeline.
+10. **Touch v2 ownership** — the wheel petals are plain `[data-a]` buttons
+    (one binding path for haptics + `.on` highlight); only the apocalypse
+    core has bespoke long-press logic (600 ms, disarm on up/leave/cancel,
+    cleared on window blur with the rest of the held input).

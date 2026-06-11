@@ -5,11 +5,18 @@
  * Known Bug 13 partial-upload fix applied to off-cadence color writes.
  */
 import * as THREE from 'three';
-import { TAU } from '../math/scalar';
+import { TAU, clamp } from '../math/scalar';
+import { ARENA_MID, ARENA_Y, MID_RADIUS2 } from './constants';
 import type { SimContext } from '../types';
 
 // Module-level scratch color — reused for every HSL conversion (keeps update() allocation-free).
 const TMP_COLOR = new THREE.Color();
+
+/** Legacy PointsMaterial size; `setBreath()` scales around it (silent world ⇒ exactly this). */
+const BASE_POINT_SIZE = 0.07;
+
+/** Register basis-state count (5 qubits ⇒ 32): band hues and implosion subsets index mod this. */
+const BASIS_COUNT = 32;
 
 /**
  * Owns the quantum particle Points object. Structure-of-arrays storage (typed arrays) replaces
@@ -38,6 +45,8 @@ export class QuantumCloud {
   private readonly collapseT: Float32Array;
   /** Scratch list of particle indices respawned this frame (for partial color uploads). */
   private readonly respawned: Int32Array;
+  /** The Points material — retained so `setBreath()` can drive its size (audit fix B). */
+  private readonly material: THREE.PointsMaterial;
   private signalValue = 0;
   /** 32-entry band-hue buffer from QuantumCircuitSystem.bands(); null ⇒ legacy colors (V2). */
   private quantumBands: Float32Array | null = null;
@@ -61,9 +70,10 @@ export class QuantumCloud {
     this.respawned = new Int32Array(n);
     for (let qi = 0; qi < n; qi++) {
       const i3 = qi * 3;
-      this.positions[i3] = (rng() - 0.5) * 90;
-      this.positions[i3 + 1] = rng() * 45 - 12;
-      this.positions[i3 + 2] = (rng() - 0.5) * 90;
+      // Legacy ±45/±45 × ARENA_MID in XZ, × ARENA_Y vertically (V3.1 mid-field).
+      this.positions[i3] = (rng() - 0.5) * 90 * ARENA_MID;
+      this.positions[i3 + 1] = (rng() * 45 - 12) * ARENA_Y;
+      this.positions[i3 + 2] = (rng() - 0.5) * 90 * ARENA_MID;
       TMP_COLOR.setHSL(rng(), 0.6, 0.45);
       this.colors[i3] = TMP_COLOR.r;
       this.colors[i3 + 1] = TMP_COLOR.g;
@@ -80,19 +90,15 @@ export class QuantumCloud {
     this.colAttr = new THREE.BufferAttribute(this.colors, 3);
     geo.setAttribute('position', this.posAttr);
     geo.setAttribute('color', this.colAttr);
-    ctx.scene.add(
-      new THREE.Points(
-        geo,
-        new THREE.PointsMaterial({
-          size: 0.07,
-          vertexColors: true,
-          transparent: true,
-          opacity: 0.4,
-          sizeAttenuation: true,
-          depthWrite: false,
-        }),
-      ),
-    );
+    this.material = new THREE.PointsMaterial({
+      size: BASE_POINT_SIZE,
+      vertexColors: true,
+      transparent: true,
+      opacity: 0.4,
+      sizeAttenuation: true,
+      depthWrite: false,
+    });
+    ctx.scene.add(new THREE.Points(geo, this.material));
   }
 
   /** Mean |psi| across all particles from the last update (legacy `qSig`, telemetry #v6). */
@@ -108,6 +114,31 @@ export class QuantumCloud {
    */
   setQuantumBands(bands: Float32Array | null): void {
     this.quantumBands = bands;
+  }
+
+  /**
+   * Register-measurement implosion (audit fix B): flags the particle subset
+   * `index % 32 === basis` as collapsed through the EXISTING collapse-timer path —
+   * `update()` freezes each for 2 s, then respawns it elsewhere with a fresh color via the
+   * partial-upload machinery. Already-collapsed members simply restart their 2 s freeze.
+   * Out-of-range or fractional `basis` selects the empty subset (no-op). O(n/32),
+   * allocation-free.
+   */
+  implodeAt(basis: number): void {
+    if (!Number.isInteger(basis) || basis < 0 || basis >= BASIS_COUNT) return;
+    for (let qi = basis; qi < this.n; qi += BASIS_COUNT) {
+      this.collapsed[qi] = 1;
+      this.collapseT[qi] = 0;
+    }
+  }
+
+  /**
+   * Audio-reactive point-size breathe (audit fix B; CONTRACTS V2 audio coupling):
+   * `size = 0.07 · (1 + 0.35 · clamp01(level))`. The multiplier is ≤ 0.35, so a silent
+   * world (level 0) renders exactly the legacy size. O(1), allocation-free.
+   */
+  setBreath(level: number): void {
+    this.material.size = BASE_POINT_SIZE * (1 + 0.35 * clamp(level, 0, 1));
   }
 
   /**
@@ -149,9 +180,9 @@ export class QuantumCloud {
           // Respawn: new position + fresh color outside the 6-frame refresh cadence.
           this.collapsed[qi] = 0;
           this.collapseT[qi] = 0;
-          px = (rng() - 0.5) * 60;
-          py = rng() * 30 - 8;
-          pz = (rng() - 0.5) * 60;
+          px = (rng() - 0.5) * 60 * ARENA_MID;
+          py = (rng() * 30 - 8) * ARENA_Y;
+          pz = (rng() - 0.5) * 60 * ARENA_MID;
           TMP_COLOR.setHSL(rng(), 0.7, 0.5);
           col[i3] = TMP_COLOR.r;
           col[i3 + 1] = TMP_COLOR.g;
@@ -167,10 +198,10 @@ export class QuantumCloud {
       ph += dt * f;
       this.phase[qi] = ph;
       qs += Math.abs(psi);
-      if (px * px + pz * pz > 3600 || Math.abs(py) > 38) {
-        px = (rng() - 0.5) * 35;
-        py = rng() * 22 - 5;
-        pz = (rng() - 0.5) * 35;
+      if (px * px + pz * pz > MID_RADIUS2 || Math.abs(py) > 38 * ARENA_Y) {
+        px = (rng() - 0.5) * 35 * ARENA_MID;
+        py = (rng() * 22 - 5) * ARENA_Y;
+        pz = (rng() - 0.5) * 35 * ARENA_MID;
       }
       pos[i3] = px;
       pos[i3 + 1] = py;
@@ -179,7 +210,7 @@ export class QuantumCloud {
         // Legacy psi hue, 50/50-blended with the register band hue when bands are installed (V2).
         let hue = (t * 0.02 + ph * 0.1) % 1;
         const qb = this.quantumBands;
-        if (qb !== null) hue = (hue + (qb[qi % 32] ?? 0)) * 0.5;
+        if (qb !== null) hue = (hue + (qb[qi % BASIS_COUNT] ?? 0)) * 0.5;
         TMP_COLOR.setHSL(
           hue,
           0.5 + Math.min(Math.abs(psi) * 3, 1),

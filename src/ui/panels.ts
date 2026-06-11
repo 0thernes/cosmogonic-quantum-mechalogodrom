@@ -56,6 +56,8 @@ export class TelemetryPanel {
   private readonly et: HTMLElement;
   private readonly es: HTMLElement;
   private readonly ep: HTMLElement;
+  /** V3: titan count row. */
+  private readonly etn: HTMLElement;
   private readonly gEntities: Sparkline;
   private readonly gChaos: Sparkline;
   private readonly gEnergy: Sparkline;
@@ -83,6 +85,7 @@ export class TelemetryPanel {
     this.et = mustGet('et');
     this.es = mustGet('es');
     this.ep = mustGet('ep');
+    this.etn = mustGet('etn');
     // Colors and fixed maxes mirror the legacy drawGraph calls (lines 872-873). The
     // quality-dependent maxes (MAX_E, MNN) are not known at construction time; they are kept
     // current from each snapshot in update().
@@ -103,7 +106,7 @@ export class TelemetryPanel {
     r[1].textContent = s.chaos.toFixed(1);
     r[2].textContent = s.energy.toFixed(0);
     r[3].textContent = String(s.links);
-    r[4].textContent = `${s.morphs}/100`;
+    r[4].textContent = `${s.morphs}/${s.morphTotal}`; // V3: 250 in phylum mode
     r[5].textContent = s.algoName;
     r[6].textContent = s.quantum.toFixed(3);
     r[7].textContent = s.songName;
@@ -119,12 +122,11 @@ export class TelemetryPanel {
     this.et.textContent = `${s.temperature.toFixed(0)}C`;
     this.es.textContent = String(s.shoggoths);
     this.ep.textContent = String(s.puppeteers);
-    // Full-scale tracking: entities graph scales to the quality cap (legacy MAX_E). The links
-    // graph scales to the legacy MNN, which pairs with MAX_E in detectQuality
-    // (mobile 650 → 2200, desktop 1000 → 4000) — derived here since the snapshot carries only
-    // maxEntities.
+    this.etn.textContent = String(s.titans); // V3: the ten colossi
+    // Full-scale tracking: both graphs scale to the active tier's caps, which
+    // the snapshot now carries directly (V3 — no more derived pairing table).
     this.gEntities.max = s.maxEntities;
-    this.gLinks.max = s.maxEntities <= 650 ? 2200 : 4000;
+    this.gLinks.max = s.maxLinks;
     // Legacy pushG calls (line 869): entities, chaos*10, energy, links.
     this.gEntities.push(s.entities);
     this.gChaos.push(s.chaos * 10);

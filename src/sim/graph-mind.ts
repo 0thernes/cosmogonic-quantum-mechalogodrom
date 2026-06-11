@@ -3,7 +3,9 @@
  *
  * On a slow cadence it mirrors the connectome's link pairs into a graphology graph and runs
  * real graph science over the living network: Louvain community detection (every 240 frames)
- * and PageRank centrality (every 600 frames, offset 120). Results feed BACK into the
+ * and PageRank centrality (every 600 frames, offset 300 — offset 120 would land on the 240f
+ * Louvain cadence at frame 720 and every 1200 frames after; 300 mod 240 alternates 60/180 and
+ * never collides, so the two heavy passes never share a frame). Results feed BACK into the
  * simulation (philosophy rule 4): community indices are written into each member's
  * `userData.setGroup`, making the set-theory behavior tribe-aware; an 8-hue community palette
  * is installed on the connectome's link coloring; and the top-ranked entities receive an
@@ -33,7 +35,7 @@ const RANK_EMISSIVE_FLOOR = 2.0;
 /**
  * Community detection + centrality over the connectome graph. The composition root constructs
  * one and calls {@link updateCommunities} every 240 frames and {@link updateRank} every 600
- * frames (offset 120) — both methods rebuild the graph from the connectome's latest pairs, so
+ * frames (offset 300) — both methods rebuild the graph from the connectome's latest pairs, so
  * neither depends on the other having run first.
  */
 export class GraphMind {
@@ -131,7 +133,7 @@ export class GraphMind {
    * emissive-intensity floor of {@link RANK_EMISSIVE_FLOOR}, and entities that held the halo
    * but fell out of the top set are restored to their morph baseline. Ties rank by ascending
    * entity index (stable sort over numerically ordered keys) — deterministic.
-   * Slow-cadence path (every 600 frames, offset 120): O((V + E)·i + V log V).
+   * Slow-cadence path (every 600 frames, offset 300): O((V + E)·i + V log V).
    */
   updateRank(): void {
     this.rebuildGraph();

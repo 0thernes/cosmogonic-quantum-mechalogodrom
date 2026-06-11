@@ -90,6 +90,7 @@ graph TD
     server["server.ts (Bun.serve)"]
     indexhtml["index.html"]
     docshtml["docs.html"]
+    labhtml["lab/quantum-wildbeyond.html<br/>(/lab, static)"]
   end
 
   main --> world
@@ -134,15 +135,19 @@ graph TD
   constellations --> lore
   analysis --> aengine
 
-  qcircuit -. "bands() → setQuantumBands (every 6f)" .-> quantum
+  qcircuit -. "bands() → setQuantumBands (every 6f) · collapse → implodeAt" .-> quantum
   rd -. "DataTexture → attachGroundEmissiveMap" .-> environment
-  analytics -. "record('omen', …) on |z| > 2.5" .-> audit
+  analytics -. "record('omen', …) on |z| > 2.5, lore-named via nameOmen" .-> audit
   puppets -. "PuppetEvent → gate sequence" .-> qcircuit
-  entities -. "deaths → perturb(u, v)" .-> rd
+  entities -. "onDeath → perturb(u, v)" .-> rd
   graphmind -. "setCommunityOf → tribe link palette" .-> connectome
+  analysis -. "bass → setAudioBass (rig shimmer ≤ 0.35)" .-> environment
+  analysis -. "treble → cell pulse" .-> constellations
+  analysis -. "level → setBreath (point size ≤ 0.35)" .-> quantum
 
   server --> indexhtml
   server --> docshtml
+  server --> labhtml
   server --> logger
 
   audit -. "fire-and-forget POST /api/audit" .-> server
@@ -188,18 +193,20 @@ flowchart LR
   conn --> qc["qcircuit.update<br/>(every 30th frame)"]
   qc --> q["quantum.update"]
   q --> rd["rd.step<br/>(every 2nd frame, offset 1)"]
-  rd --> gm["graphMind<br/>communities 240f · rank 600f+120"]
-  gm --> an["analytics<br/>push 8f · analyze 60f"]
-  an --> cons["constellations.update<br/>(every frame, O(1))"]
+  rd --> gm["graphMind<br/>communities 240f · rank 600f+300"]
+  gm --> cons["constellations.update<br/>(every frame, O(1))"]
   cons --> env["environment.update"]
-  env --> telem["telemetry<br/>(every 8th frame)"]
-  telem --> render([engine.render])
+  env --> telem["telemetry + analytics.push<br/>(every 8th frame)"]
+  telem --> an["analytics.analyze<br/>(every 60th frame)"]
+  an --> render([engine.render])
 
   pm -. "PuppetEvent → onPuppetEvent" .-> qc
   sort -. "swap → onSortSwap(a, b)" .-> qc
-  qc -. "bands() every 6f" .-> q
-  ents -. "deaths → rd.perturb(u, v)" .-> rd
-  ab["audio bands<br/>(polled every frame)"] -.-> cons
+  qc -. "bands() every 6f · collapse → implodeAt" .-> q
+  ents -. "onDeath → rd.perturb(u, v)" .-> rd
+  ab["audio bands<br/>(polled every frame)"] -. "treble → pulse" .-> cons
+  ab -. "bass → setAudioBass" .-> env
+  ab -. "level → setBreath" .-> q
 ```
 
 Cadences — V1 rows straight from the legacy loop, V2 rows from
@@ -216,7 +223,7 @@ MODULE-CONTRACTS.md §Frame pipeline V2:
 | Register bands → cloud (V2) | Every 6th frame, aligned with the cloud's color pass                                                                                 |
 | Reaction-diffusion (V2)     | `step()` every 2nd frame, offset 1 from the grid rebuild (the two never share a frame)                                               |
 | Louvain communities (V2)    | Every 240th frame                                                                                                                    |
-| PageRank (V2)               | Every 600th frame, offset 120 from the Louvain pass                                                                                  |
+| PageRank (V2)               | Every 600th frame, offset 300 — never shares a frame with the 240f Louvain pass (offset 120 would, at frame 720 and every 1,200f)    |
 | Analytics (V2)              | `push()` every 8th frame (with telemetry); `analyze()` every 60th frame                                                              |
 | Constellations (V2)         | Every frame — O(1) opacity/pulse only (Voronoi built once at construction)                                                           |
 | Audio band poll (V2)        | Every frame — O(128) analyser read, zeros until audio is initialized                                                                 |
@@ -250,22 +257,30 @@ preferences; preference-changing actions call `save()`.
 **4. Feedback web (V2).** The Wildbeyond systems close loops between
 previously independent subsystems, all fanned out by `world.ts`:
 
-- Entity deaths call `rd.perturb(u, v)` at the death position normalized to
-  ground UV — the population's mortality literally scars the ground texture.
+- Entity deaths fire `EntityManager.onDeath`, which `world.ts` wires to
+  `rd.perturb(u, v)` at the death position normalized to ground UV — the
+  population's mortality literally scars the ground texture.
 - `PuppetEvent`s fan out to `qcircuit.onPuppetEvent` (characteristic gate
   sequences: AETHON → rx(chaos·π/4), SELENE → h+cz, KRONOS → x+swap) and to a
   `LoreEngine` epithet rendered in the HUD toast.
 - Sort swaps call `qcircuit.onSortSwap(a, b)` (parity-chosen cx targets) — the
   sorting field drives the register, the register's bands recolor the quantum
-  cloud, and a measurement collapse implodes it locally.
+  cloud, and each measurement collapse implodes it locally via
+  `QuantumCloud.implodeAt(basis)`.
 - `GraphMind` reads `connectome.pairs`, writes community indices into entity
   `setGroup`s (making the set-theory behavior tribe-aware) and installs the
   8-hue link palette via `connectome.setCommunityOf`.
-- `AudioAnalysis` bands modulate point-light shimmer (bass), constellation
-  pulse (treble), and quantum-cloud point size (level), all with multipliers
-  ≤ 0.35 so a silent world is visually identical to v1.
+- `AudioAnalysis` bands are polled once per frame and fan out to exactly three
+  couplings: bass shimmers the six-light rig via
+  `EnvironmentSystem.setAudioBass`, treble pulses the constellation cells
+  (passed into `constellations.update`), and level breathes the quantum-cloud
+  point size via `QuantumCloud.setBreath` — all with multipliers ≤ 0.35 so a
+  silent world is visually identical to v1. Exposure belongs to the weather
+  alone (an earlier exposure-offset coupling was removed in 0.2.1 after it
+  accumulated and white-washed the tone mapping).
 - `AnalyticsSystem` watches telemetry rings and emits lore-named omens into
-  the same audit pipeline as user actions (loop 2 above).
+  the same audit pipeline as user actions (loop 2 above); the name comes from
+  the world-injected `nameOmen` hook (`lore.name('omen', i)`).
 
 ## Quality profile
 
@@ -289,6 +304,10 @@ when the window moved between monitors).
 
 `server.ts` is a Bun fullstack server: it imports `index.html` and
 `docs.html` directly (Bun bundles their TypeScript and Tailwind on the fly)
-and routes `/`, `/docs`, `GET /api/health`, `GET|POST /api/audit`, with a 404
-fallback. Port `Number(process.env.PORT) || 3000`. Requests are logged via
+and routes `/`, `/docs`, `/lab` (the self-contained p5.js artifact, served
+static and unbundled by design), `GET /api/health`, `GET|POST /api/audit`,
+with a 404 fallback. Hardening (0.2.1): `POST /api/audit` bodies are capped
+at 8 KB (413 beyond), and the HTMX audit fragment HTML-escapes every
+user-controlled string with details truncated at storage time. Port
+`Number(process.env.PORT) || 3000`. Requests are logged via
 `createLogger('server')` into the shared 512-entry ring.

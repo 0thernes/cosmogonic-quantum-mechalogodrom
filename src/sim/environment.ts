@@ -1,8 +1,16 @@
 import * as THREE from 'three';
 import type { Rng } from '../math/rng';
-import { TAU, lerp } from '../math/scalar';
+import { TAU, clamp, lerp } from '../math/scalar';
 import type { SimContext, SimState } from '../types';
-import { DIORAMA_CONFIG, MONOLITH_CONFIG, PIPE_LINKS } from './constants';
+import {
+  ARENA,
+  ARENA_MID,
+  ARENA_Y,
+  DIORAMA_CONFIG,
+  GROUND_EXTENT,
+  MONOLITH_CONFIG,
+  PIPE_LINKS,
+} from './constants';
 
 const sin = Math.sin;
 const cos = Math.cos;
@@ -32,8 +40,12 @@ const PI = Math.PI;
  */
 export const LEGACY_LIGHT_GAIN = PI;
 
-/** PointLight-specific gain — see {@link LEGACY_LIGHT_GAIN}. */
-const POINT_LIGHT_GAIN = LEGACY_LIGHT_GAIN * 0.5;
+/**
+ * PointLight-specific gain — see {@link LEGACY_LIGHT_GAIN}. Imported by every
+ * module that owns PointLights (shoggoths, puppet-masters) so the whole rig
+ * calibrates from the single `LEGACY_LIGHT_GAIN` knob.
+ */
+export const POINT_LIGHT_GAIN = LEGACY_LIGHT_GAIN * 0.5;
 
 /** Halo ring orbiting a monolith; `axis` picks the rotation axis (legacy `ra`). */
 interface HaloRing {
@@ -233,7 +245,7 @@ function buildMonolith(
   const crown = new THREE.PointLight(
     new THREE.Color().setHSL(hue, 0.9, 0.5),
     2.5 * POINT_LIGHT_GAIN,
-    20,
+    20 * ARENA_Y, // legacy 20 — crowns sit twice as high under V3.1
   );
   crown.decay = 0; // legacy r128 falloff model — see LEGACY_LIGHT_GAIN
   crown.position.y = h + 2;
@@ -324,7 +336,12 @@ function buildDiorama(
   }
   g.add(minisGroup);
 
-  const glow = new THREE.PointLight(new THREE.Color().setHSL(hue, 0.8, 0.5), 1.8, r * 2);
+  const glow = new THREE.PointLight(
+    new THREE.Color().setHSL(hue, 0.8, 0.5),
+    1.8 * POINT_LIGHT_GAIN,
+    r * 2,
+    0, // legacy r128 falloff model — see LEGACY_LIGHT_GAIN
+  );
   glow.position.y = r * 0.3;
   g.add(glow);
 
@@ -350,8 +367,16 @@ function buildPipe(
 ): PipeRig {
   const curve = new THREE.CatmullRomCurve3([
     new THREE.Vector3(sx, sy, sz),
-    new THREE.Vector3(lerp(sx, ex, 0.3), Math.max(sy, ey) + 10 + rng() * 14, lerp(sz, ez, 0.3)),
-    new THREE.Vector3(lerp(sx, ex, 0.7), Math.max(sy, ey) + 8 + rng() * 12, lerp(sz, ez, 0.7)),
+    new THREE.Vector3(
+      lerp(sx, ex, 0.3),
+      Math.max(sy, ey) + (10 + rng() * 14) * ARENA_Y,
+      lerp(sz, ez, 0.3),
+    ),
+    new THREE.Vector3(
+      lerp(sx, ex, 0.7),
+      Math.max(sy, ey) + (8 + rng() * 12) * ARENA_Y,
+      lerp(sz, ez, 0.7),
+    ),
     new THREE.Vector3(ex, ey, ez),
   ]);
   const tube = new THREE.Mesh(
@@ -409,37 +434,41 @@ export class EnvironmentSystem {
   private readonly pipes: PipeRig[] = [];
   /** Ground material handle for the V2 reaction-diffusion emissiveMap coupling. */
   private readonly groundMaterial: THREE.MeshStandardMaterial;
+  /** Audio bass band 0..1 (CONTRACTS V2 coupling); 0 = silent ⇒ output identical to v1. */
+  private audioBass = 0;
 
   /** Builds the whole environment into `ctx.scene`. One-time cost, never disposed. */
   constructor(ctx: SimContext) {
     this.state = ctx.state;
     const { scene, quality, rng } = ctx;
 
-    // ── Lighting (legacy 369-382) ──
-    scene.add(new THREE.AmbientLight(0x0a0a22, 0.55));
-    const sun = new THREE.DirectionalLight(0xffeedd, 0.65);
-    sun.position.set(35, 65, 25);
+    // ── Lighting (legacy 369-382; intensities × LEGACY_LIGHT_GAIN for r0.184 units;
+    //    rig spread/ranges × ARENA_MID so the core glow covers the 5× floor) ──
+    scene.add(new THREE.AmbientLight(0x0a0a22, 0.55 * LEGACY_LIGHT_GAIN));
+    const sun = new THREE.DirectionalLight(0xffeedd, 0.65 * LEGACY_LIGHT_GAIN);
+    sun.position.set(35 * ARENA_MID, 65 * ARENA_Y, 25 * ARENA_MID);
     sun.castShadow = quality.shadows;
     sun.shadow.mapSize.set(1024, 1024);
-    sun.shadow.camera.left = -70;
-    sun.shadow.camera.right = 70;
-    sun.shadow.camera.top = 70;
-    sun.shadow.camera.bottom = -70;
+    sun.shadow.camera.left = -70 * ARENA;
+    sun.shadow.camera.right = 70 * ARENA;
+    sun.shadow.camera.top = 70 * ARENA;
+    sun.shadow.camera.bottom = -70 * ARENA;
     scene.add(sun);
+    // Legacy intensities × POINT_LIGHT_GAIN, decay 0 (legacy r128 falloff model).
     this.lts = [
-      new THREE.PointLight(0xff0066, 3, 70),
-      new THREE.PointLight(0x00ffcc, 2.5, 55),
-      new THREE.PointLight(0xffaa00, 3, 45),
-      new THREE.PointLight(0x4488ff, 5, 40),
-      new THREE.PointLight(0xff2200, 2, 35),
-      new THREE.PointLight(0x8800ff, 2, 40),
+      new THREE.PointLight(0xff0066, 3 * POINT_LIGHT_GAIN, 70 * ARENA_MID, 0),
+      new THREE.PointLight(0x00ffcc, 2.5 * POINT_LIGHT_GAIN, 55 * ARENA_MID, 0),
+      new THREE.PointLight(0xffaa00, 3 * POINT_LIGHT_GAIN, 45 * ARENA_MID, 0),
+      new THREE.PointLight(0x4488ff, 5 * POINT_LIGHT_GAIN, 40 * ARENA_MID, 0),
+      new THREE.PointLight(0xff2200, 2 * POINT_LIGHT_GAIN, 35 * ARENA_MID, 0),
+      new THREE.PointLight(0x8800ff, 2 * POINT_LIGHT_GAIN, 40 * ARENA_MID, 0),
     ];
-    this.lts[0].position.set(-25, 18, -25);
-    this.lts[1].position.set(18, 10, 18);
+    this.lts[0].position.set(-25 * ARENA_MID, 18 * ARENA_Y, -25 * ARENA_MID);
+    this.lts[1].position.set(18 * ARENA_MID, 10 * ARENA_Y, 18 * ARENA_MID);
     this.lts[2].position.set(0, -5, 0);
-    this.lts[3].position.set(0, 6, 0);
-    this.lts[4].position.set(10, 14, -10);
-    this.lts[5].position.set(-12, 22, 12);
+    this.lts[3].position.set(0, 6 * ARENA_Y, 0);
+    this.lts[4].position.set(10 * ARENA_MID, 14 * ARENA_Y, -10 * ARENA_MID);
+    this.lts[5].position.set(-12 * ARENA_MID, 22 * ARENA_Y, 12 * ARENA_MID);
     for (const l of this.lts) scene.add(l);
 
     // ── Monoliths (legacy 384-401) ──
@@ -476,13 +505,20 @@ export class EnvironmentSystem {
       );
     }
 
-    // ── Ground + grid (legacy 449-456) ──
-    const groundGeo = new THREE.PlaneGeometry(240, 240, 60, 60);
+    // ── Ground + grid (legacy 449-456; V3.1: 240→1200 edge, SAME 60×60 segments —
+    //    displacement frequencies ÷ ARENA so the dunes stretch instead of alias,
+    //    amplitude × ARENA_Y so the swell still reads at distance) ──
+    const groundGeo = new THREE.PlaneGeometry(GROUND_EXTENT, GROUND_EXTENT, 60, 60);
     const groundPos = groundGeo.getAttribute('position');
     for (let i = 0; i < groundPos.count; i++) {
       const gx = groundPos.getX(i);
       const gy = groundPos.getY(i);
-      groundPos.setZ(i, sin(gx * 0.06) * cos(gy * 0.05) * 4 + sin(gx * 0.2 + gy * 0.15) - 3);
+      groundPos.setZ(
+        i,
+        sin((gx * 0.06) / ARENA) * cos((gy * 0.05) / ARENA) * 4 * ARENA_Y +
+          sin((gx * 0.2 + gy * 0.15) / ARENA) * ARENA_Y -
+          3,
+      );
     }
     groundGeo.computeVertexNormals();
     this.groundMaterial = new THREE.MeshStandardMaterial({
@@ -497,7 +533,7 @@ export class EnvironmentSystem {
     ground.position.y = -10;
     ground.receiveShadow = quality.shadows;
     scene.add(ground);
-    const grid = new THREE.GridHelper(240, 50, 0x0a1530, 0x060d20);
+    const grid = new THREE.GridHelper(GROUND_EXTENT, 50 * 2, 0x0a1530, 0x060d20);
     grid.position.y = -9.5;
     grid.material.transparent = true;
     grid.material.opacity = 0.22;
@@ -510,7 +546,8 @@ export class EnvironmentSystem {
     const starCol = new Float32Array(starCount * 3);
     const c = new THREE.Color();
     for (let i = 0; i < starCount; i++) {
-      const sr = 100 + rng() * 240;
+      // Legacy shell 100..340 × 3 — outside the arena rim, inside CAMERA_FAR.
+      const sr = (100 + rng() * 240) * 3;
       const sa = rng() * TAU;
       const sb = (rng() - 0.5) * PI;
       starPos[i * 3] = cos(sb) * cos(sa) * sr;
@@ -527,7 +564,7 @@ export class EnvironmentSystem {
       new THREE.Points(
         starGeo,
         new THREE.PointsMaterial({
-          size: 0.35,
+          size: 0.35 * 3, // shells ×3 ⇒ size ×3 keeps the apparent star scale
           vertexColors: true,
           transparent: true,
           opacity: 0.45,
@@ -536,10 +573,10 @@ export class EnvironmentSystem {
       ),
     );
 
-    // ── Nebula planes (legacy 464) ──
+    // ── Nebula planes (legacy 464; sizes/positions × ARENA_MID/ARENA_Y) ──
     for (let i = 0; i < 6; i++) {
       const nebula = new THREE.Mesh(
-        new THREE.PlaneGeometry(100 + rng() * 80, 50 + rng() * 40),
+        new THREE.PlaneGeometry((100 + rng() * 80) * ARENA_MID, (50 + rng() * 40) * ARENA_MID),
         new THREE.MeshBasicMaterial({
           color: new THREE.Color().setHSL(rng(), 0.4, 0.06),
           transparent: true,
@@ -548,7 +585,11 @@ export class EnvironmentSystem {
           depthWrite: false,
         }),
       );
-      nebula.position.set((rng() - 0.5) * 130, 15 + rng() * 70, (rng() - 0.5) * 130 - 50);
+      nebula.position.set(
+        (rng() - 0.5) * 130 * ARENA_MID,
+        (15 + rng() * 70) * ARENA_Y,
+        ((rng() - 0.5) * 130 - 50) * ARENA_MID,
+      );
       nebula.rotation.set(rng() * PI, rng() * PI, rng() * PI);
       scene.add(nebula);
     }
@@ -559,7 +600,9 @@ export class EnvironmentSystem {
    * pulse, monolith halo spin + crown flicker, diorama rotation + mini orbits
    * + glow, and the 6-light intensity waves (incl. lts[3] hue cycle and
    * lts[5] slow orbit). The chaos multiplier is legacy `cMul()` =
-   * `min(chaos / 2, 3)`.
+   * `min(chaos / 2, 3)`. All light waves are scaled by `POINT_LIGHT_GAIN`
+   * (r0.184 unit migration) and the six rig waves additionally by the audio
+   * bass shimmer `(1 + bass * 0.35)` — see {@link setAudioBass}.
    *
    * Allocation-free: `getPointAt` writes into the packet's own position
    * vector (Known Bug 12 fix). O(p·k + m·r + d·12) — all constant-bounded by
@@ -582,9 +625,9 @@ export class EnvironmentSystem {
       pipe.tube.material.emissiveIntensity = 0.2 + sin(t * 3) * 0.15 * cm;
     }
 
-    // Monoliths (legacy 844)
+    // Monoliths (legacy 844; wave × POINT_LIGHT_GAIN keeps the legacy shape at r0.184 units)
     for (const mono of this.monoliths) {
-      mono.crown.intensity = 2 + sin(t * 2 + mono.hue * 10) * 2 * cm;
+      mono.crown.intensity = (2 + sin(t * 2 + mono.hue * 10) * 2 * cm) * POINT_LIGHT_GAIN;
       for (const ring of mono.rings) {
         if (ring.axis === 0) ring.mesh.rotation.x = t * ring.speed;
         else if (ring.axis === 1) ring.mesh.rotation.y = t * ring.speed;
@@ -604,20 +647,33 @@ export class EnvironmentSystem {
         mini.mesh.rotation.x += dt * mini.s;
         mini.mesh.rotation.y += dt * mini.s * 0.7;
       }
-      dio.glow.intensity = 1.5 + sin(t * 2 + dio.hue * 10) * cm;
+      dio.glow.intensity = (1.5 + sin(t * 2 + dio.hue * 10) * cm) * POINT_LIGHT_GAIN;
     }
 
-    // Light waves (legacy 850-852)
+    // Light waves (legacy 850-852; legacy wave × POINT_LIGHT_GAIN × audio-bass shimmer).
+    // bass = 0 ⇒ shimmer factor 1 ⇒ identical to v1 (CONTRACTS V2: multiplier ≤ 0.35).
+    const lg = POINT_LIGHT_GAIN * (1 + this.audioBass * 0.35);
     const lts = this.lts;
-    lts[0].intensity = 2 + sin(t * 1.5) * 1.5 * cm;
-    lts[1].intensity = 2 + cos(t * 1.2) * cm;
-    lts[2].intensity = 2 + sin(t * 2.3) * 1.5;
-    lts[3].intensity = 4 + sin(t * 4) * 2 * cm;
+    lts[0].intensity = (2 + sin(t * 1.5) * 1.5 * cm) * lg;
+    lts[1].intensity = (2 + cos(t * 1.2) * cm) * lg;
+    lts[2].intensity = (2 + sin(t * 2.3) * 1.5) * lg;
+    lts[3].intensity = (4 + sin(t * 4) * 2 * cm) * lg;
     lts[3].color.setHSL((t * 0.1) % 1, 0.8, 0.5);
-    lts[4].intensity = 1 + sin(t * 3) * cm * 2;
-    lts[5].intensity = 1.5 + cos(t * 1.8) * cm;
-    lts[5].position.x = sin(t * 0.2) * 18;
-    lts[5].position.z = cos(t * 0.2) * 18;
+    lts[4].intensity = (1 + sin(t * 3) * cm * 2) * lg;
+    lts[5].intensity = (1.5 + cos(t * 1.8) * cm) * lg;
+    lts[5].position.x = sin(t * 0.2) * 18 * ARENA_MID;
+    lts[5].position.z = cos(t * 0.2) * 18 * ARENA_MID;
+  }
+
+  /**
+   * Audio coupling (CONTRACTS V2): store the current bass band, clamped to
+   * 0..1. Inside `update()` it multiplies the six rig-light intensity waves by
+   * `(1 + bass * 0.35)` — at 0 (silence / audio uninitialized) the lighting is
+   * exactly the legacy waveform. Allocation-free; O(1). World calls this per
+   * frame with `AudioAnalysis.update().bass` before `environment.update`.
+   */
+  setAudioBass(b: number): void {
+    this.audioBass = clamp(b, 0, 1);
   }
 
   /**
@@ -638,14 +694,15 @@ export class EnvironmentSystem {
 
   /**
    * Named sector for a world position — same rectangle tests and precedence
-   * as legacy 675-682. Pure and allocation-free; O(1).
+   * as legacy 675-682, rectangles × ARENA (heights × ARENA_Y) to track the
+   * scaled monolith/diorama layout. Pure and allocation-free; O(1).
    */
   sectorAt(pos: THREE.Vector3): string {
-    if (abs(pos.z + 65) < 22 && abs(pos.x) < 22) return 'SPIRE DISTRICT';
-    if (pos.y > 28) return 'DIORAMA BELT';
-    if (abs(pos.x) > 45) return 'OUTER RING';
-    if (pos.z > 18) return 'GENESIS FIELD';
-    if (abs(pos.z + 35) < 18) return 'MONOLITH ARRAY';
+    if (abs(pos.z + 65 * ARENA) < 22 * ARENA && abs(pos.x) < 22 * ARENA) return 'SPIRE DISTRICT';
+    if (pos.y > 28 * ARENA_Y) return 'DIORAMA BELT';
+    if (abs(pos.x) > 45 * ARENA) return 'OUTER RING';
+    if (pos.z > 18 * ARENA) return 'GENESIS FIELD';
+    if (abs(pos.z + 35 * ARENA) < 18 * ARENA) return 'MONOLITH ARRAY';
     return 'NEXUS PRIME';
   }
 }

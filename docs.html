@@ -138,32 +138,122 @@
       <div class="card">
         <pre class="mermaid">
 graph TD
-  SRV["server.ts (Bun.serve)"] -->|"/"| IDX["index.html"]
-  SRV -->|"/docs"| DOC["docs.html"]
-  SRV -->|"GET/POST /api/audit"| RING["in-memory audit ring (200)"]
-  IDX --> MAIN["src/main.ts"]
-  MAIN --> WORLD["src/world.ts (composition root)"]
-  MAIN --> HTMX["htmx.org (audit panel polling)"]
-  WORLD --> ENG["core/engine"]
-  WORLD --> QUAL["core/quality"]
-  WORLD --> ENT["sim/entities + sim/behaviors"]
-  WORLD --> SHOG["sim/shoggoths"]
-  WORLD --> PUP["sim/puppet-masters"]
-  WORLD --> WEA["sim/weather"]
-  WORLD --> QUA["sim/quantum"]
-  WORLD --> CONN["sim/connectome"]
-  WORLD --> ENV["sim/environment"]
-  WORLD --> ALG["sim/algorithms"]
-  WORLD --> AUD["audio/engine"]
-  AUD --> SONGS["audio/songs"]
-  WORLD --> UI["ui/hud + ui/panels + ui/input + ui/graphs"]
-  WORLD --> MEM["memory/store"]
-  WORLD --> TRAIL["logging/audit"]
-  TRAIL -->|"fire-and-forget POST"| RING
-  ENT --> GRID["math/spatial-hash"]
-  ENT --> RNG["math/rng (mulberry32)"]
-  ENT --> MORPH["sim/morphotypes"]
-  MORPH --> GEO["sim/geometry-cache"]
+  subgraph SERVERL["Server"]
+    SRV["server.ts (Bun.serve)"]
+    IDX["index.html (/)"]
+    DOC["docs.html (/docs)"]
+    LAB["lab/quantum-wildbeyond.html (/lab, static p5.js)"]
+    RING["in-memory audit ring (200)"]
+  end
+  subgraph ENTRY["Entry and composition"]
+    MAIN["src/main.ts"]
+    WORLD["src/world.ts (composition root)"]
+  end
+  subgraph COREL["src/core"]
+    QUAL["quality.ts (detectQuality)"]
+    ENG["engine.ts (renderer, scene, camera)"]
+  end
+  subgraph SIML["src/sim (V1)"]
+    CONST["constants.ts (leaf)"]
+    GEO["geometry-cache.ts (41 shared geometries)"]
+    MORPH["morphotypes.ts (100 morphotypes)"]
+    ALG["algorithms.ts (20 sort fields)"]
+    BEH["behaviors.ts (26 fields)"]
+    ENT["entities.ts (EntityManager)"]
+    SHOG["shoggoths.ts"]
+    PUP["puppet-masters.ts"]
+    WEA["weather.ts"]
+    QUA["quantum.ts (QuantumCloud)"]
+    CONN["connectome.ts"]
+    ENV["environment.ts"]
+  end
+  subgraph SIMV2["src/sim (Wildbeyond V2)"]
+    QC["qcircuit.ts (QuantumCircuitSystem)"]
+    RD["reaction-diffusion.ts (Gray-Scott 128x128)"]
+    GM["graph-mind.ts (graphology louvain + pagerank)"]
+    CONS["constellations.ts (d3-delaunay)"]
+    LORE["lore.ts (sha256 lore)"]
+    ANA["analytics.ts (simple-statistics)"]
+  end
+  subgraph MATHL["src/math (leaves)"]
+    SCAL["scalar.ts"]
+    RNG["rng.ts (mulberry32)"]
+    GRID["spatial-hash.ts"]
+    QREG["quantum.ts (QuantumRegister)"]
+  end
+  subgraph AUDIOL["src/audio"]
+    SONGS["songs.ts (leaf)"]
+    AUD["engine.ts (AudioEngine)"]
+    BANDS["analysis.ts (AudioBands)"]
+  end
+  subgraph UIL["src/ui"]
+    INPUT["input.ts (keys, look, zoom)"]
+    HUD["hud.ts"]
+    PANELS["panels.ts"]
+    GRAPHS["graphs.ts (Sparkline)"]
+  end
+  subgraph PERSIST["src/logging + src/memory"]
+    LOGGER["logger.ts (leaf ring)"]
+    TRAIL["audit.ts (AuditTrail)"]
+    MEM["store.ts (MemoryStore)"]
+  end
+
+  SRV --> IDX
+  SRV --> DOC
+  SRV --> LAB
+  SRV --> RING
+  IDX --> MAIN
+  MAIN --> WORLD
+  WORLD --> QUAL
+  WORLD --> ENG
+  WORLD --> GEO
+  WORLD --> MORPH
+  WORLD --> ALG
+  WORLD --> ENT
+  WORLD --> SHOG
+  WORLD --> PUP
+  WORLD --> WEA
+  WORLD --> QUA
+  WORLD --> CONN
+  WORLD --> ENV
+  WORLD --> QC
+  WORLD --> RD
+  WORLD --> GM
+  WORLD --> CONS
+  WORLD --> ANA
+  WORLD --> AUD
+  WORLD --> BANDS
+  WORLD --> INPUT
+  WORLD --> HUD
+  WORLD --> PANELS
+  WORLD --> MEM
+  WORLD --> TRAIL
+  WORLD --> GRID
+  WORLD --> RNG
+  ENT --> BEH
+  BEH --> SCAL
+  BEH --> CONST
+  MORPH --> CONST
+  ENV --> CONST
+  PANELS --> GRAPHS
+  AUD --> SONGS
+  QC --> QREG
+  GM --> CONN
+  GM --> ENT
+  CONS --> LORE
+  BANDS --> AUD
+
+  QC -. "bands every 6f, collapse implodeAt" .-> QUA
+  RD -. "DataTexture as ground emissiveMap" .-> ENV
+  ANA -. "lore-named omens, abs(z) > 2.5" .-> TRAIL
+  PUP -. "PuppetEvent gate sequences" .-> QC
+  ENT -. "onDeath: rd.perturb at ground UV" .-> RD
+  GM -. "setCommunityOf tribe palette" .-> CONN
+  BANDS -. "bass: setAudioBass rig shimmer" .-> ENV
+  BANDS -. "treble: cell pulse" .-> CONS
+  BANDS -. "level: setBreath point size" .-> QUA
+  TRAIL -. "fire-and-forget POST /api/audit" .-> RING
+  IDX -. "HTMX GET /api/audit every 5s" .-> SRV
         </pre>
       </div>
 
@@ -185,6 +275,20 @@ erDiagram
   PERSISTED_STATE ||--o| SONG : "selects"
   PERSISTED_STATE ||--o{ AUDIT_EVENT : "chronicled by"
 
+  PUPPET_MASTER }o--|| QUANTUM_REGISTER : "gate signatures (rx / h+cz / x+swap)"
+  ENTITY }o--|| RD_FIELD : "deaths perturb at ground UV (onDeath)"
+  WEATHER ||--o{ RD_FIELD : "tunes feed / kill / diffusion"
+  GRAPH_TRIBE ||--o{ ENTITY : "members (setGroup write-back)"
+  GRAPH_TRIBE ||--|| LORE_NAME : "named (kind = tribe)"
+  CONSTELLATION_CELL ||--|| LORE_NAME : "named (kind = sector)"
+  PERSISTED_STATE ||--o{ LORE_NAME : "seed derives via sha256"
+  PUPPET_MASTER ||--o{ LORE_NAME : "epithets in toasts"
+  SONG ||--o{ AUDIO_BANDS : "spectrum via AnalyserNode tap"
+  AUDIO_BANDS }o--o{ CONSTELLATION_CELL : "treble pulses cell edges"
+  ENTITY }o--|| ANALYTICS_WINDOW : "population sampled every 8th frame"
+  ANALYTICS_WINDOW ||--o{ AUDIT_EVENT : "omens when abs(z) > 2.5"
+  ANALYTICS_WINDOW }o--o{ LORE_NAME : "omens named via nameOmen"
+
   ENTITY {
     int mi "morphotype index 0..99"
     vec3 vel
@@ -193,7 +297,7 @@ erDiagram
     float sortVal "sorting-field value"
     float nW "neural weight"
     float energy "market wealth 0..100"
-    int strategy "nash 0|1"
+    int setGroup "set-theory group, tribe-rewritten"
   }
   MORPHOTYPE {
     int id "0..99"
@@ -210,7 +314,7 @@ erDiagram
     int tendrils
   }
   PUPPET_MASTER {
-    string name "AETHON | SELENE | KRONOS"
+    string name "AETHON or SELENE or KRONOS"
     string action
   }
   WEATHER {
@@ -230,9 +334,52 @@ erDiagram
   }
   PERSISTED_STATE {
     int version
-    int seed "mulberry32 seed"
+    int seed "mulberry32 seed, key to the mythology"
     int songIdx
     int sessions
+  }
+  QUANTUM_REGISTER {
+    int qubits "5 in the sim (1..8 enforced)"
+    float64array amps "2^n complex amplitudes"
+    float entropy "normalized Shannon, telemetry v11"
+    int lastCollapse "last measured basis, -1 if none"
+  }
+  RD_FIELD {
+    int size "128 (Gray-Scott grid side)"
+    float32array u "activator, ground emissiveMap"
+    float32array v "inhibitor (ping-pong)"
+    float feed "raised by STORM"
+    float kill "raised by VOID"
+    float diffusion "boosted by AURORA"
+  }
+  GRAPH_TRIBE {
+    int index "seeded louvain community (240f)"
+    int memberCount "entities carrying it in setGroup"
+    float hue "slot in the 8-hue link palette"
+    float pagerank "600f offset 300; top-20 emissive floor"
+  }
+  CONSTELLATION_CELL {
+    vec2 site "monolith/diorama XZ (24 fixed sites)"
+    polygon region "voronoi cell, edges at y about 55"
+    string loreName "sub-sector shown in the lore line"
+  }
+  LORE_NAME {
+    string kind "sector, tribe, star, omen"
+    int index "digest input, memoized"
+    string name "syllables from sha256(seed,kind,index)"
+  }
+  AUDIO_BANDS {
+    float bass "0..1 setAudioBass rig shimmer"
+    float mid "0..1"
+    float treble "0..1 constellation pulse"
+    float level "0..1 setBreath cloud point size"
+  }
+  ANALYTICS_WINDOW {
+    ring population "120 samples, every 8th frame"
+    ring energy "120 samples"
+    ring links "120 samples"
+    float trendPerMin "regression slope, telemetry v10"
+    float zThreshold "2.5; one omen per 30 s max"
   }
         </pre>
       </div>
@@ -241,7 +388,11 @@ erDiagram
       <p>
         One requestAnimationFrame tick, clamped to 50&nbsp;ms and scaled by
         <code>timeScale</code>. The spatial grid rebuilds every 2nd frame, telemetry refreshes every
-        8th, sparklines redraw every 18th.
+        8th, sparklines redraw every 18th. The Wildbeyond V2 systems run on documented cadences:
+        quantum circuit every 30th frame (bands to the cloud every 6th), reaction-diffusion every
+        2nd frame offset 1 from the grid rebuild, Louvain every 240th, PageRank every 600th at
+        offset 300 (so the two graph passes never share a frame), analytics push every 8th and
+        analyze every 60th.
       </p>
       <div class="card">
         <pre class="mermaid">
@@ -249,20 +400,28 @@ sequenceDiagram
   participant RAF as rAF
   participant W as world.ts
   participant SYS as sim systems
+  participant V2 as wildbeyond V2
   participant G as SpatialHash
   participant UI as ui/*
   participant R as Engine
 
   RAF->>W: tick (dt = min(delta, 0.05) * timeScale)
-  W->>W: camera (free/orbit/fly/top)
+  W->>W: camera (free/orbit/fly/top), consume look/zoom
+  W->>V2: audio bands poll (every frame, O(128))
   W->>SYS: weather.apply / puppetMasters.update
   W->>G: clear + insert all entities (every 2nd frame)
   W->>SYS: shoggoths.update
-  W->>SYS: sort step ALGOS[algoIdx].step(values, length, i)
-  W->>SYS: entities.update (26 behaviors, physics, split, death)
-  W->>SYS: connectome.update (cadence by n)
-  W->>SYS: quantum.update / environment.update
-  W->>UI: telemetry snapshot incl. mutations (every 8th frame)
+  W->>SYS: sort step ALGOS[algoIdx] (swaps feed qcircuit.onSortSwap)
+  W->>SYS: entities.update (26 behaviors; deaths scar the RD field)
+  W->>SYS: connectome.update (every 1/2/3 frames by n)
+  W->>V2: qcircuit.update (every 30th; bands to cloud every 6th)
+  W->>SYS: quantum.update (cloud; implodeAt on collapse)
+  W->>V2: rd.step (every 2nd frame, offset 1)
+  W->>V2: graphMind communities (every 240th) / rank (every 600th, offset 300)
+  W->>V2: constellations.update (every frame, O(1) pulse)
+  W->>SYS: environment.update (setAudioBass rig shimmer)
+  W->>UI: telemetry snapshot + analytics.push (every 8th frame)
+  W->>V2: analytics.analyze (every 60th frame)
   W->>R: render(scene, camera)
         </pre>
       </div>

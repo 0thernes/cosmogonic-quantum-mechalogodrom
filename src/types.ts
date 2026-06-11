@@ -13,8 +13,13 @@ import type { SpatialHash } from './math/spatial-hash';
 import type { AuditTrail } from './logging/audit';
 import type { Behavior, ViewMode, Weather } from './sim/constants';
 
+/** Quality tier ladder (CONTRACTS V3.1): decided once at boot, never switched. */
+export type QualityTier = 'phone' | 'laptop' | 'desktop' | 'ultra';
+
 /** Device-adaptive quality profile, resolved once at boot. */
 export interface QualityProfile {
+  /** Resolved tier (phone 650 / laptop 2000 / desktop 5000 / ultra 10000 entities). */
+  tier: QualityTier;
   isMobile: boolean;
   dprCap: number;
   maxEntities: number;
@@ -22,6 +27,8 @@ export interface QualityProfile {
   maxLinks: number;
   shadows: boolean;
   starCount: number;
+  /** True above the phone tier: entities render through InstancedMesh pools (V3.1). */
+  instanced: boolean;
 }
 
 /** Per-entity simulation state stored on the mesh (`userData`). */
@@ -64,13 +71,17 @@ export interface EntityData {
   setGroup: number;
   /** Last Nash payoff. */
   payoff: number;
+  /** Phylum index 0..9 (CONTRACTS V3.2); -1 = unaffiliated legacy morph. */
+  phylum: number;
+  /** OUTLIER second behavior, temporally blended with `beh`; null for members. */
+  beh2: Behavior | null;
 }
 
 export interface Entity extends THREE.Mesh<THREE.BufferGeometry, THREE.MeshStandardMaterial> {
   userData: EntityData;
 }
 
-/** One of the 100 procedurally generated morphotypes. */
+/** One procedurally generated morphotype (100 legacy / 250 in phylum mode). */
 export interface MorphType {
   id: number;
   /** Index into the geometry cache. */
@@ -222,6 +233,30 @@ export interface TelemetrySnapshot {
   qEntropy: number;
   /** Lore name of the camera's Voronoi sub-sector (V2). */
   lore: string;
+  /** Link-buffer capacity of the active tier (V3 — sparkline full scale). */
+  maxLinks: number;
+  /** Total morphotypes minted at boot (V3: 250 in phylum mode). */
+  morphTotal: number;
+  /** Number of titans (V3 — telemetry row). */
+  titans: number;
+  /** Live population per phylum (V3.5). REUSED array — copy to retain. */
+  phylumCounts: ArrayLike<number>;
+  /** Titan economy rows (V3.5). REUSED array of REUSED rows — copy to retain. */
+  titanLedger: ArrayLike<TitanLedger>;
+  /** 10×10 row-major titan relation matrix: 0 truce, 1 alliance, 2 war (V3.5). REUSED. */
+  warMatrix: ArrayLike<number>;
+  /** Reaction-diffusion pattern energy: strided mean of the V field (V3.5). */
+  rdEnergy: number;
+}
+
+/** One titan's public economy row (structural twin of sim/titans TitanLedgerEntry). */
+export interface TitanLedger {
+  name: string;
+  energy: number;
+  matter: number;
+  entropy: number;
+  /** Rivals this titan is currently at war with (0..9). */
+  war: number;
 }
 
 /** User-facing actions; world.ts implements them, src/ui binds them to the DOM. */

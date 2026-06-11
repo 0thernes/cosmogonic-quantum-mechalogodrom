@@ -52,7 +52,9 @@ function makeFixture(): Fixture {
     elapsed: 0,
   };
   const quality: QualityProfile = {
+    tier: 'laptop' as const,
     isMobile: false,
+    instanced: false,
     dprCap: 2,
     maxEntities: 650,
     quantumCount: 1500,
@@ -186,6 +188,40 @@ describe('AnalyticsSystem', () => {
     pushSample(sys, state, 500);
     sys.analyze();
     expect(audit.omens()).toBe(0); // < 30 samples: suppressed
+  });
+
+  test('nameOmen names omen records with a monotonic index (audit fix C)', () => {
+    const { ctx, state, audit } = makeFixture();
+    const seen: number[] = [];
+    const sys = new AnalyticsSystem(ctx, (i) => {
+      seen.push(i);
+      return `OMEN-${i}`;
+    });
+    for (let j = 0; j < 40; j++) {
+      pushSample(sys, state, 100);
+    }
+    pushSample(sys, state, 500); // step impulse
+    sys.analyze();
+    expect(audit.omens()).toBe(1);
+    state.elapsed += 31; // cooldown expiry; window still anomalous
+    sys.analyze();
+    expect(audit.omens()).toBe(2);
+    const names = audit.calls.filter((c) => c.action === 'omen').map((c) => c.detail?.name);
+    expect(names).toEqual(['OMEN-0', 'OMEN-1']);
+    expect(seen).toEqual([0, 1]); // namer called once per RECORDED omen, not per analyze()
+  });
+
+  test('omen detail shape is unchanged when nameOmen is absent', () => {
+    const { ctx, state, audit } = makeFixture();
+    const sys = new AnalyticsSystem(ctx);
+    for (let j = 0; j < 40; j++) {
+      pushSample(sys, state, 100);
+    }
+    pushSample(sys, state, 500);
+    sys.analyze();
+    const omen = audit.calls.find((c) => c.action === 'omen');
+    expect(omen?.detail).toBeDefined();
+    expect(omen !== undefined && omen.detail !== undefined && 'name' in omen.detail).toBe(false);
   });
 
   test('rings are pre-allocated 120-sample Float64Arrays and never replaced', () => {

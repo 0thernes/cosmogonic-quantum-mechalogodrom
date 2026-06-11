@@ -5,7 +5,7 @@
  */
 import * as THREE from 'three';
 import { lerp } from '../math/scalar';
-import { WEATHERS, type Weather } from './constants';
+import { FOG_SCALE, WEATHERS, type Weather } from './constants';
 import type { SimContext } from '../types';
 import type { Engine } from '../core/engine';
 
@@ -57,9 +57,10 @@ export class WeatherSystem {
       w === 'VOID' ? -40 : w === 'STORM' ? 5 : w === 'AURORA' ? -10 : 20,
       dt * 0.1,
     );
+    // Legacy density targets × FOG_SCALE (÷ ARENA) — same optical depth at 5× sightlines.
     this.fog.density = lerp(
       this.fog.density,
-      w === 'FOG' ? 0.012 : w === 'VOID' ? 0.008 : w === 'STORM' ? 0.006 : 0.003,
+      (w === 'FOG' ? 0.012 : w === 'VOID' ? 0.008 : w === 'STORM' ? 0.006 : 0.003) * FOG_SCALE,
       dt * 0.3,
     );
     if (w === 'AURORA') this.fog.color.setHSL((t * 0.02) % 1, 0.4, 0.04);

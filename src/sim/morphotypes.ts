@@ -1,48 +1,20 @@
 /**
- * Morphotype generation — port of legacy lines 276-289 (`MT` build loop).
+ * Morphotype generation — port of legacy lines 276-289 (`MT` build loop),
+ * extended for CONTRACTS V3.2 (PANTHEON) with optional phylum templating.
  *
  * A morphotype is the genome an entity instantiates: geometry index, PBR
  * material palette, behavior, and motion parameters. Generation is fully
  * deterministic from the injected {@link Rng} (Known Bug 9 fix: the legacy
  * file's ambient `rng` is replaced by an explicit seeded mulberry32).
- */
-import * as THREE from 'three';
-import type { Rng } from '../math/rng';
-import type { MorphType } from '../types';
-import { BEHAVIORS, MORPH_COUNT } from './constants';
-
-/**
- * Generates the {@link MORPH_COUNT} (100) morphotypes, deterministic from
- * `rng`. Consumes exactly 15 rng draws per morphotype in legacy evaluation
- * order (hue, col S/L, em H/S/L, emI, met, rou, op, srMin, srMax, spd, wf,
- * wa) so a given seed reproduces the legacy population byte-for-byte.
  *
- * `geoCount` is the geometry-cache length; morphotype `i` borrows geometry
- * `i % geoCount` (legacy `_i % cachedGeos.length`). O(MORPH_COUNT), boot-time.
+ * The implementation lives in {@link module:sim/phyla} so the taxonomy layer
+ * (phyla + outliers) and the morphotype layer share one definition and can
+ * never drift in their rng draw order. This module re-exports it under the
+ * historical name/signature, plus the optional third `phyla` argument:
+ *
+ * - **No `phyla`**: the original 100-morphotype population, BIT-IDENTICAL to the
+ *   legacy build (15 rng draws per morphotype, same field order).
+ * - **With `phyla`**: `25 × phyla.length` morphotypes, each stamped with its
+ *   phylum's traits plus ~1% wildcard outliers. See `sim/phyla.ts`.
  */
-export function createMorphotypes(rng: Rng, geoCount: number): MorphType[] {
-  const out: MorphType[] = [];
-  for (let i = 0; i < MORPH_COUNT; i++) {
-    const h = rng();
-    const bi = i % BEHAVIORS.length;
-    // Invariant: bi ∈ [0, BEHAVIORS.length) — modulo of a non-negative index.
-    const beh = BEHAVIORS[bi]!;
-    out.push({
-      id: i,
-      gi: i % geoCount,
-      col: new THREE.Color().setHSL(h, 0.4 + rng() * 0.6, 0.1 + rng() * 0.55),
-      em: new THREE.Color().setHSL(rng(), 0.5 + rng() * 0.5, 0.15 + rng() * 0.4),
-      emI: 0.1 + rng() * 0.9,
-      met: 0.05 + rng() * 0.9,
-      rou: 0.05 + rng() * 0.9,
-      op: 0.25 + rng() * 0.75,
-      beh,
-      srMin: 0.1 + rng() * 0.2,
-      srMax: 0.3 + rng() * 1.2,
-      spd: 0.15 + rng() * 2.5,
-      wf: 0.3 + rng() * 5,
-      wa: 0.03 + rng() * 0.35,
-    });
-  }
-  return out;
-}
+export { createMorphotypes, type PhylumMorphType, type Phylum } from './phyla';

@@ -116,6 +116,42 @@ describe('MemoryStore', () => {
     }
   });
 
+  test('load() rejects tampered-but-typed v1 blobs (non-integer or negative indices)', () => {
+    const store = new MemoryStore(KEY);
+    const bad: ReadonlyArray<Record<string, unknown>> = [
+      { ...sample, songIdx: 1.5 },
+      { ...sample, algoIdx: -1 },
+      { ...sample, viewIdx: 0.999999 },
+      { ...sample, weatherIdx: -0.25 },
+      { ...sample, sessions: 3.14 },
+      { ...sample, sessions: -7 },
+    ];
+    for (const payload of bad) {
+      localStorage.setItem(KEY, JSON.stringify(payload));
+      expect(store.load()).toBeNull();
+    }
+  });
+
+  test('load() rejects tampered-but-typed v1 blobs (huge values past the safe-integer range)', () => {
+    const store = new MemoryStore(KEY);
+    const bad: ReadonlyArray<Record<string, unknown>> = [
+      { ...sample, songIdx: 2 ** 53 },
+      { ...sample, viewIdx: Number.MAX_SAFE_INTEGER + 2 },
+      { ...sample, algoIdx: 1e21 },
+      { ...sample, sessions: 1e308 },
+    ];
+    for (const payload of bad) {
+      localStorage.setItem(KEY, JSON.stringify(payload));
+      expect(store.load()).toBeNull();
+    }
+  });
+
+  test('load() still accepts large-but-safe integer counters', () => {
+    const big = { ...sample, sessions: Number.MAX_SAFE_INTEGER };
+    localStorage.setItem(KEY, JSON.stringify(big));
+    expect(new MemoryStore(KEY).load()).toEqual(big);
+  });
+
   test('load() normalizes seed to uint32 and strips unknown keys', () => {
     localStorage.setItem(KEY, JSON.stringify({ ...sample, seed: -1, legacyCruft: true }));
     const loaded = new MemoryStore(KEY).load();

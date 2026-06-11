@@ -134,7 +134,7 @@ erDiagram
     int index "community id from seeded louvain (240f cadence)"
     int memberCount "entities carrying it in setGroup"
     float hue "slot in the 8-hue connectome link palette"
-    float pagerank "600f cadence; top-20 get emissive floor"
+    float pagerank "600f cadence, offset 300; top-20 get emissive floor"
   }
   CONSTELLATION_CELL {
     vec2 site "monolith/diorama XZ (24 fixed sites)"
@@ -209,8 +209,9 @@ erDiagram
   Born-rule probabilities become hue bands for the quantum cloud, its
   normalized entropy is telemetry `#v11`, and each measurement collapse
   implodes the cloud locally around the measured basis index.
-- **ENTITY / WEATHER → RD_FIELD (N:1 / 1:1 coupling).** Entity deaths perturb
-  the Gray-Scott field at their position normalized to ground UV; the active
+- **ENTITY / WEATHER → RD_FIELD (N:1 / 1:1 coupling).** Entity deaths (via the
+  `EntityManager.onDeath` hook the world wires to `rd.perturb`) perturb the
+  Gray-Scott field at their position normalized to ground UV; the active
   weather tunes its parameters (STORM raises feed, VOID raises kill, AURORA
   boosts diffusion) and `chaos` scales the reaction rate. The field's U
   channel is the ground's emissive map — the ecosystem's history grows as
@@ -219,9 +220,10 @@ erDiagram
   Louvain pass over the connectome's link pairs partitions entities into
   tribes. Tribes are written back into member entities' `setGroup` (the
   set-theory behavior becomes tribe-aware — true feedback) and install an
-  8-hue palette on connectome links; a PageRank pass every 600 frames grants
-  the top-20 an emissive floor while their rank holds. Tribe identity is not
-  persisted — it is re-derived from live topology each pass.
+  8-hue palette on connectome links; a PageRank pass every 600 frames (offset
+  300, so it never shares a frame with the Louvain pass) grants the top-20 an
+  emissive floor while their rank holds. Tribe identity is not persisted — it
+  is re-derived from live topology each pass.
 - **CONSTELLATION_CELL → LORE_NAME (1:1).** The 24 Voronoi cells over the
   static monolith/diorama sites are built once; each is named by the
   `LoreEngine`, and the camera's `subSectorAt` lookup feeds the `#lore` line.
@@ -230,12 +232,15 @@ erDiagram
   out of `sha256(seed‖kind‖index)`. `PERSISTED_STATE.seed` is therefore the
   foreign key to the entire mythology: same seed, same names, forever.
 - **SONG → AUDIO_BANDS → world (1:1 tap).** One AnalyserNode taps the music
-  and SFX gains; per-frame polling yields bass/mid/treble/level, which
-  modulate lights, constellation pulses, and the quantum cloud at ≤ 0.35
-  strength. The cosmos hears itself sing and flinches.
+  and SFX gains; per-frame polling yields bass/mid/treble/level, which fan
+  out to exactly three couplings — bass shimmers the six-light rig
+  (`EnvironmentSystem.setAudioBass`), treble pulses the constellation cells,
+  level breathes the quantum-cloud point size (`QuantumCloud.setBreath`) — at
+  ≤ 0.35 strength. The cosmos hears itself sing and flinches.
 - **ANALYTICS_WINDOW → AUDIT_EVENT (1:N, throttled).** Rolling 120-sample
   rings of population/energy/links yield a regression trend (telemetry
-  `#v10`); a population z-score beyond ±2.5 emits a lore-named omen into the
+  `#v10`); a population z-score beyond ±2.5 emits a lore-named omen (the
+  world-injected `nameOmen` hook digests the name out of the seed) into the
   same audit pipeline as user actions, at most once per 30 s.
 
 ## ERP — process models
@@ -323,11 +328,12 @@ sequenceDiagram
   QC->>QR: apply('ry', theta(chaos)) + entropy()
   Note over QC,QR: every 8th update (~240f)
   QC->>QR: measure(rng) -> basis index
+  W->>Q: implodeAt(basis) on lastCollapse change
   Note over W,Q: every 6th frame
   W->>QC: bands()
   QC-->>W: reused Float32Array(32)
   W->>Q: setQuantumBands(bands)
-  Q->>Q: hue from bands[i % 32]; implosion on collapse change
+  Q->>Q: hue from bands[i % 32]
   W->>T: qEntropy -> #v11 (every 8th frame)
 ```
 
@@ -348,7 +354,7 @@ sequenceDiagram
     W->>A: analyze()
     A->>A: mean / stddev / regression slope
     alt |z| > 2.5 and 30 s cooldown elapsed
-      A->>L: name('omen', index)
+      A->>L: nameOmen(index) -> name('omen', index)
       L-->>A: sha256-derived omen name
       A->>AT: record('omen', { z, name, ... })
       AT--)Srv: POST /api/audit (fire-and-forget)

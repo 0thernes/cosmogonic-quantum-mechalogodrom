@@ -12,7 +12,9 @@
  */
 import * as THREE from 'three';
 import { TAU, lerp } from '../math/scalar';
-import { MORPH_COUNT } from './constants';
+import { ARENA, ARENA_Y, CONTAIN_RADIUS2, ARENA_RADIUS } from './constants';
+import { PHYLUM_COUNT } from './phyla';
+import type { PhylumMorphType } from './phyla';
 import { applyBehavior } from './behaviors';
 import type { BehaviorEnv } from './behaviors';
 import type { Entity, SimContext, UpdateStats } from '../types';
@@ -34,6 +36,21 @@ const STATS: UpdateStats = { energy: 0, morphCount: 0 };
 export class EntityManager {
   /** Live entities in spawn order. Index order is meaningful to the sorting field. */
   readonly list: Entity[] = [];
+  /**
+   * Live population per phylum (CONTRACTS V3.2/V3.5), recounted by every
+   * `update()`. REUSED Float32Array — telemetry/observatory copy what they keep.
+   * Unaffiliated (legacy, phylum -1) organisms are not counted.
+   */
+  readonly phylumCounts = new Float32Array(PHYLUM_COUNT);
+  /**
+   * Death→ground feedback hook (CONTRACTS V2 frame pipeline): invoked with the dying
+   * entity's world x/z exactly once per disposal routed through `disposeAt()` — which
+   * covers BOTH the age-death branch of `update()` and external consumers like shoggoth
+   * consumption. NOT fired by `reset()`: mass disposal is a genesis event, not a death.
+   * The composition root wires this to ReactionDiffusionSystem.perturb; null disables.
+   * Mutable public field by design (audit fix A). Allocation-free to invoke.
+   */
+  onDeath: ((x: number, z: number) => void) | null = null;
   private readonly ctx: SimContext;
   /** Single long-lived behavior env; per-entity fields are rewritten in `update()` (no alloc). */
   private readonly env: BehaviorEnv;
@@ -62,10 +79,12 @@ export class EntityManager {
   spawn(pos: THREE.Vector3 | null, mi: number, scale = 1): Entity | null {
     const ctx = this.ctx;
     if (this.list.length >= ctx.quality.maxEntities) return null;
-    const m = ctx.morphs[mi % MORPH_COUNT];
-    if (!m) return null; // invariant: morphs has MORPH_COUNT entries — defensive only
+    const morphCount = ctx.morphs.length;
+    if (morphCount === 0) return null; // defensive: empty taxonomy
+    const m: PhylumMorphType | undefined = ctx.morphs[mi % morphCount];
+    if (!m) return null; // invariant: morphs is dense — defensive only
     const geo = ctx.geos[m.gi];
-    if (!geo) return null; // invariant: gi = id % geos.length by construction
+    if (!geo) return null; // invariant: gi < geos.length by construction
     const rng = ctx.rng;
     const s = lerp(m.srMin, m.srMax, rng()) * scale;
     const isTransparent = m.op < 0.6;
@@ -82,11 +101,28 @@ export class EntityManager {
     });
     const mesh = new THREE.Mesh(geo, mat) as Entity;
     mesh.scale.setScalar(s);
-    if (pos) mesh.position.copy(pos);
-    else mesh.position.set((rng() - 0.5) * 70, rng() * 30 - 8, (rng() - 0.5) * 70);
-    mesh.castShadow = ctx.quality.shadows && this.list.length < 120;
+    const phylum = m.phylum ?? -1;
+    if (pos) {
+      mesh.position.copy(pos);
+    } else if (phylum >= 0) {
+      // V3.2 home-sector bias: phylum p spawns in its angular wedge of the
+      // arena (matching titan p's patrol angle), radius 12%..67% of the rim.
+      const ang = (phylum / PHYLUM_COUNT) * TAU + (rng() - 0.5) * 0.9;
+      const rad = (0.12 + rng() * 0.55) * ARENA_RADIUS;
+      mesh.position.set(Math.cos(ang) * rad, rng() * 30 - 8, Math.sin(ang) * rad);
+    } else {
+      // Legacy random volume × ARENA (V3.1 spawn-volume scale).
+      mesh.position.set((rng() - 0.5) * 70 * ARENA, rng() * 30 - 8, (rng() - 0.5) * 70 * ARENA);
+    }
+    if (ctx.quality.instanced) {
+      // V3.1: pooled rendering — the data mesh NEVER joins the scene graph; the
+      // InstancedEntityRenderer mirrors it per frame. updateMatrix() is manual.
+      mesh.matrixAutoUpdate = false;
+    } else {
+      mesh.castShadow = ctx.quality.shadows && this.list.length < 120;
+    }
     mesh.userData = {
-      mi: mi % MORPH_COUNT,
+      mi: mi % morphCount,
       vel: new THREE.Vector3((rng() - 0.5) * 0.1, (rng() - 0.5) * 0.05, (rng() - 0.5) * 0.1),
       age: 0,
       life: 200 + rng() * 900,
@@ -107,8 +143,10 @@ export class EntityManager {
       typeId: Math.floor(rng() * 5),
       setGroup: Math.floor(rng() * 4),
       payoff: 0,
+      phylum,
+      beh2: m.beh2 ?? null,
     };
-    ctx.scene.add(mesh);
+    if (!ctx.quality.instanced) ctx.scene.add(mesh);
     this.list.push(mesh);
     return mesh;
   }
@@ -119,14 +157,16 @@ export class EntityManager {
    * Does NOT remove the entity from `list`; use `disposeAt()` for that. O(1).
    */
   dispose(e: Entity): void {
+    // Instanced mode: the mesh was never added — remove() is a safe no-op there.
     this.ctx.scene.remove(e);
     e.material.dispose();
   }
 
   /**
    * Dispose the entity at `index` and remove it from `list`, preserving order (the sorting
-   * field reads positional order, matching the legacy `splice`). Allocation-free ordered
-   * removal. O(n − index).
+   * field reads positional order, matching the legacy `splice`). Fires {@link onDeath} (when
+   * wired) with the entity's x/z — exactly once per disposal, after the list is consistent,
+   * so the callback may safely spawn. Allocation-free ordered removal. O(n − index).
    */
   disposeAt(index: number): void {
     const list = this.list;
@@ -138,6 +178,8 @@ export class EntityManager {
       if (next) list[j - 1] = next; // invariant: j < length ⇒ defined
     }
     list.length -= 1;
+    const onDeath = this.onDeath;
+    if (onDeath) onDeath(e.position.x, e.position.z);
   }
 
   /**
@@ -153,7 +195,8 @@ export class EntityManager {
     }
     list.length = 0;
     const rng = this.ctx.rng;
-    for (let i = 0; i < count; i++) this.spawn(null, Math.floor(rng() * MORPH_COUNT));
+    const morphCount = Math.max(1, this.ctx.morphs.length);
+    for (let i = 0; i < count; i++) this.spawn(null, Math.floor(rng() * morphCount));
   }
 
   /**
@@ -183,6 +226,8 @@ export class EntityManager {
     env.t = t;
     env.cm = cm;
     MORPHS_SEEN.clear();
+    this.phylumCounts.fill(0);
+    const phylumCounts = this.phylumCounts;
     let energy = 0;
 
     for (let i = list.length - 1; i >= 0; i--) {
@@ -191,6 +236,9 @@ export class EntityManager {
       const u = e.userData;
       u.age += dt * 30;
       MORPHS_SEEN.add(u.mi);
+      if (u.phylum >= 0 && u.phylum < PHYLUM_COUNT) {
+        phylumCounts[u.phylum] = (phylumCounts[u.phylum] ?? 0) + 1;
+      }
 
       const sp2 = u.spd * cm;
       const wfph = t * u.wf + u.ph;
@@ -200,7 +248,18 @@ export class EntityManager {
       env.sinWF = sinWF;
       env.cosWF = cosWF;
       env.doTheory = (frame + i) % 2 === 0; // theory-behavior stagger (legacy line 707)
-      applyBehavior(e, env);
+      // V3.2 OUTLIER blend: a wildcard with a second behavior runs it on odd
+      // (frame+i) parity — temporal 50/50 blending, allocation-free (swap,
+      // dispatch, restore). Members (beh2 = null) take the legacy path.
+      const b2 = u.beh2;
+      if (b2 !== null && ((frame + i) & 1) === 1) {
+        const b1 = u.beh;
+        u.beh = b2;
+        applyBehavior(e, env);
+        u.beh = b1;
+      } else {
+        applyBehavior(e, env);
+      }
 
       // Neural activation decay (legacy lines 766-768).
       u.act *= 0.95;
@@ -233,13 +292,13 @@ export class EntityManager {
         if (u.belly <= 0) e.scale.setScalar(u.sc);
       }
 
-      // Containment — squared distance, no sqrt (legacy lines 782-783).
-      if (e.position.lengthSq() > 4225) {
+      // Containment — squared distance, no sqrt (legacy 4225 × ARENA²; V3.1).
+      if (e.position.lengthSq() > CONTAIN_RADIUS2) {
         MOVE.copy(e.position).normalize().multiplyScalar(-0.005);
         u.vel.add(MOVE);
       }
       if (e.position.y < -9) u.vel.y += 0.01;
-      if (e.position.y > 40) u.vel.y -= 0.005;
+      if (e.position.y > 40 * ARENA_Y) u.vel.y -= 0.005;
       energy += u.vel.length();
 
       // Auto-split (legacy lines 787-788). sT re-arms only on a successful roll, like legacy.
@@ -251,18 +310,24 @@ export class EntityManager {
           e.position.y + rng(),
           e.position.z + (rng() - 0.5) * 2,
         );
-        this.spawn(SPAWN_AT, (u.mi + Math.floor(rng() * 5)) % MORPH_COUNT, 0.7);
+        this.spawn(SPAWN_AT, (u.mi + Math.floor(rng() * 5)) % ctx.morphs.length, 0.7);
       }
 
       // Temperature-modified death + respawn-when-sparse (legacy lines 790-795).
+      // onDeath fires inside disposeAt — exactly once per death, never doubled here.
       if (u.age > u.life * tMod) {
         const ex = e.position.x;
         const ez = e.position.z;
         this.disposeAt(i);
-        if (list.length < 100) {
+        // Sparse floor scales with the tier (legacy 100 of 1000 = 10%).
+        if (list.length < Math.max(100, maxEntities * 0.1)) {
           for (let r = 0; r < 3; r++) {
-            SPAWN_AT.set((rng() - 0.5) * 40 + ex * 0.3, rng() * 3, (rng() - 0.5) * 40 + ez * 0.3);
-            this.spawn(SPAWN_AT, Math.floor(rng() * MORPH_COUNT));
+            SPAWN_AT.set(
+              (rng() - 0.5) * 40 * 2.5 + ex * 0.3,
+              rng() * 3,
+              (rng() - 0.5) * 40 * 2.5 + ez * 0.3,
+            );
+            this.spawn(SPAWN_AT, Math.floor(rng() * ctx.morphs.length));
           }
         }
       }
@@ -280,8 +345,10 @@ export class EntityManager {
    */
   remorph(e: Entity, mi: number): void {
     const ctx = this.ctx;
-    const m = ctx.morphs[mi % MORPH_COUNT];
-    if (!m) return; // invariant: morphs has MORPH_COUNT entries — defensive only
+    const morphCount = ctx.morphs.length;
+    if (morphCount === 0) return; // defensive: empty taxonomy
+    const m: PhylumMorphType | undefined = ctx.morphs[mi % morphCount];
+    if (!m) return; // invariant: morphs is dense — defensive only
     const geo = ctx.geos[m.gi];
     if (geo) e.geometry = geo; // shared from the cache — swap only, never dispose
     const mat = e.material;
@@ -297,11 +364,13 @@ export class EntityManager {
     mat.wireframe = ctx.state.wireframe;
     mat.needsUpdate = true;
     const u = e.userData;
-    u.mi = mi % MORPH_COUNT;
+    u.mi = mi % morphCount;
     u.beh = m.beh;
     u.spd = m.spd;
     u.wf = 0.3 + ctx.rng() * 6;
     u.wa = 0.03 + ctx.rng() * 0.5;
+    u.phylum = m.phylum ?? -1; // true morphogenesis crosses phylum lines (V3.2)
+    u.beh2 = m.beh2 ?? null;
     e.scale.setScalar(u.sc);
   }
 

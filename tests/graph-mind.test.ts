@@ -46,7 +46,9 @@ function makeCtx(seed: number): SimContext {
   return {
     scene: new THREE.Scene(),
     quality: {
+      tier: 'laptop' as const,
       isMobile: false,
+      instanced: false,
       dprCap: 2,
       maxEntities: 650,
       quantumCount: 0,

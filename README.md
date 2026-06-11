@@ -11,15 +11,16 @@ Every magic number survived the port.
 
 ## Features
 
-- **26 behavioral fields** driving up to 1,000 organisms: classic motion
+- **26 behavioral fields** driving up to 10,000 organisms: classic motion
   (drift, orbit, swarm, vortex, helix...), neighbor dynamics via a spatial
   hash (flock), and theory behaviors — Nash equilibria (`nash`), wealth
   exchange (`market`), subtyping attraction (`typemorph`), set membership
   (`setunion`), optimal-distance graphs (`graphseek`), and a Lorenz attractor
   (`lorenz`).
-- **100 procedural morphotypes** over ~41 shared, never-disposed
-  `BufferGeometry` instances; remorphing swaps geometry refs and rewrites the
-  material with zero allocation.
+- **250 procedural morphotypes** (10 lore-named phyla × 25, ~1% wildcard
+  outliers) over ~41 shared, never-disposed `BufferGeometry` instances;
+  remorphing swaps geometry refs and rewrites the material with zero
+  allocation.
 - **20 sorting-field algorithms** with behaviorally honest names (BUBBLE
   FIELD, HEAP SIFT, BITONIC MESH, STOOGE DRIFT...) that nudge organisms
   through space one swap proposal per frame.
@@ -61,12 +62,56 @@ math under every effect, and every system reads from AND writes to another:
   monolith/diorama sites, with every sector/tribe/omen name derived from
   sha256 digests of the seed (@noble/hashes): same seed, same mythology.
 - **Audio analysis** — an AnalyserNode tap turns the synthesized music back
-  into light (bass → lamps, treble → constellations, level → cloud breathing).
+  into light (bass → the six-lamp rig, treble → constellations, level → cloud
+  breathing), every coupling capped at 0.35 so silence looks exactly like v1.
 - **Analytics + omens** — rolling-window regression (simple-statistics) puts a
   population trend in the telemetry; z-score anomalies emit lore-named omens
   into the audit trail.
 - **Lab artifact** — a self-contained seeded p5.js "collapse field" at
   [/lab](http://localhost:3000/lab) (`lab/quantum-wildbeyond.html`).
+
+### PANTHEON (0.3.0)
+
+The arena grows 5× and the ecosystem becomes a civilization
+(`docs/MODULE-CONTRACTS.md` §CONTRACTS V3):
+
+- **10,000 entities** on the ultra tier through InstancedMesh pools — ≤80
+  draw calls for the whole population, per-instance color/emissive/alpha,
+  with a four-rung quality ladder (phone 650 / laptop 2,000 / desktop 5,000 /
+  ultra 10,000) resolved once at boot.
+- **10 creature phyla**, lore-named at mint, each a template distribution
+  (hue band, geometry family, behavior pool, size/speed ranges, home wedge)
+  — plus seeded wildcard OUTLIERS with impossible palettes, blended behavior
+  pairs and ×3 parameter excursions.
+- **10 TITANS** — colossal non-human intelligences patrolling their phyla's
+  wedges, each running an {energy, matter, entropy} economy: they harvest
+  organisms, metabolize, witness quantum collapses, bathe in the
+  reaction-diffusion pattern, pay upkeep, and dump entropy as ground scars.
+  Diplomacy is a staggered iterated prisoner's dilemma over all 45 pairs
+  (tit-for-tat, grim trigger, Pavlov, always-defect, generous TFT);
+  defection-heavy windows become WARS with territory strikes, loot and
+  conscription; bankruptcy mutates strategy by replicator dynamics. Payoffs
+  flow through the real energy ledger — game theory with consequences.
+- **Observatory** — four live canvas charts: stacked phylum populations,
+  titan wealth polylines with war markers, a 10×10 war-matrix heat grid, and
+  rdEnergy/qEntropy/trend timelines.
+- **Full-device UI** — one responsive overlay grid: desktop columns, phone
+  sheet stacks, foldable hinge-safe rails, 43″-TV 10-foot mode; touch
+  controls v2 (drag joystick + look pad + radial action wheel with an
+  apocalypse long-press) with ≤30 ms haptics.
+- **Pantheon rescore** — four new QUANTUM-tier dark songs (VOIDCROWN, BLACK
+  MERIDIAN, ELDER ENGINE, LAST THEOREM) around the untouched QUANTUM.
+
+### 0.2.1 — the audit wave
+
+Twenty-one adversarially confirmed audit findings landed as a patch release:
+the Lorenz NaN blow-up is sealed, the audio exposure feedback is gone (bass
+now shimmers the six-lamp rig instead), the color pipeline reproduces the
+legacy r128 palette exactly (LinearSRGB output + calibrated light units), the
+legacy control colors are restored, the canvas gains **mouse-look and wheel
+zoom**, and the server, persistence store, and `/lab` CDN script are hardened
+(body caps + HTML escaping, field-validated state, SRI). Details in
+[CHANGELOG.md](./CHANGELOG.md).
 
 Work on this codebase is governed by the three **master files** in
 [masters/](./masters/) — Executor, Architect, Physicist — bound by
@@ -114,8 +159,9 @@ graph TD
   main["src/main.ts (entry)"] --> world["src/world.ts (composition root)"]
   world --> core["src/core — quality, engine"]
   world --> sim["src/sim — entities, behaviors, shoggoths,\npuppet-masters, weather, quantum,\nconnectome, environment, algorithms"]
+  world --> v2["src/sim V2 — qcircuit, reaction-diffusion,\ngraph-mind, constellations, lore, analytics"]
   world --> ui["src/ui — input, hud, panels, graphs"]
-  world --> audio["src/audio/engine.ts"]
+  world --> audio["src/audio — engine.ts, analysis.ts (bands)"]
   world --> mem["src/memory/store.ts"]
   world --> audit["src/logging/audit.ts"]
   sim --> math["src/math — scalar, rng, spatial-hash"]
@@ -129,9 +175,10 @@ Per frame: camera → weather → puppet masters → grid rebuild (every 2nd
 frame) → shoggoths → sort step → entities → connectome → quantum circuit
 (every 30th frame, bands → cloud every 6th) → quantum cloud →
 reaction-diffusion (every 2nd frame, offset 1) → graph mind (communities
-every 240th, rank every 600th) → analytics (push every 8th, analyze every
-60th) → constellations → environment → telemetry (every 8th frame) →
-render. Full detail in [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md).
+every 240th, rank every 600th offset 300) → constellations → environment →
+telemetry + analytics push (every 8th frame) → analytics analyze (every
+60th) → render. Full detail in
+[docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md).
 
 ## Repository layout
 

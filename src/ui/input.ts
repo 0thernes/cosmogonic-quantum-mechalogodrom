@@ -20,6 +20,14 @@
  * `translateZ(zoom * k)`) and zeroes them. Pointer capture keeps fast drags tracking; UI
  * elements all float above the canvas, so panel/toolbar interaction never steers the camera.
  *
+ * Touch controls v2 (CONTRACTS V3.4): on coarse pointers the static directional pad is
+ * replaced (via CSS) by the drag joystick (move), a right-side LOOK PAD (`#lp`/`#lpK`)
+ * that feeds the same `look` accumulator as mouse drags, and a radial ACTION WHEEL whose
+ * petals are ordinary `[data-a]` sim buttons plus a center `#wheel-apoc` long-press
+ * (600 ms hold → apocalypse; `.arming` class while held for the CSS progress ring).
+ * Sim actions buzz `navigator.vibrate` ≤ 30 ms where available, skipped under
+ * `prefers-reduced-motion`. Keyboard/mouse paths are byte-identical to 0.2.x.
+ *
  * Audio unlock: this module has no audio knowledge. The composition root wires
  * `AudioEngine.init()` into its `UiActions` implementations, so the first user gesture that
  * dispatches an action unlocks the AudioContext — input just forwards.
@@ -53,6 +61,24 @@ const MOVE_MAP: Readonly<Record<string, readonly [Axis, number]>> = {
 
 /** Legacy button-press camVel magnitude (line 615: `m[1] * 0.3`). */
 const MOVE_GAIN = 0.3;
+
+/** Look-pad drag → look-delta gain (pad pixels are scarcer than canvas pixels). */
+const LOOKPAD_GAIN = 2.2;
+
+/** Apocalypse long-press arming time, ms (V3.4 action wheel). */
+const APOC_HOLD_MS = 600;
+
+/** Haptic pulse length for sim actions, ms (≤ 30 per the V3.4 contract). */
+const HAPTIC_MS = 18;
+
+/** Buzz the device if it can and the user has not asked for reduced motion. O(1). */
+function buzz(ms: number): void {
+  if (typeof navigator === 'undefined' || typeof navigator.vibrate !== 'function') return;
+  if (typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    return;
+  }
+  navigator.vibrate(ms);
+}
 
 /** `[data-a]` sim buttons → UiActions methods (legacy line 615 inline dispatch). */
 const SIM_MAP: Readonly<Record<string, keyof UiActions>> = {
@@ -116,6 +142,12 @@ export class InputSystem {
   private lookLastY = 0;
   /** Re-assigned by bindJoystick; default no-op keeps blur handling safe without a joystick. */
   private resetJoy: () => void = () => {};
+  /** Re-assigned by bindLookPad; default no-op (V3.4). */
+  private resetLookPad: () => void = () => {};
+  /** Re-assigned by bindActionWheel; default no-op (V3.4). */
+  private disarmApoc: () => void = () => {};
+  /** Pending apocalypse long-press timer id; null when disarmed (V3.4). */
+  private apocTimer: number | null = null;
   /** Bound `[data-a]` buttons, kept so blur can drop any lingering `.on` highlight. */
   private padButtons: HTMLElement[] = [];
 
@@ -126,6 +158,8 @@ export class InputSystem {
     this.bindPadButtons();
     this.bindToolbar();
     this.bindJoystick();
+    this.bindLookPad();
+    this.bindActionWheel();
     this.bindPointerLook();
   }
 
@@ -156,7 +190,10 @@ export class InputSystem {
       const down = (): void => {
         btn.classList.add('on');
         if (move) this.camVel[move[0]] = move[1] * MOVE_GAIN;
-        if (sim) this.actions[sim]();
+        if (sim) {
+          this.actions[sim]();
+          buzz(HAPTIC_MS); // V3.4: tactile ack on touch devices
+        }
       };
       const up = (): void => {
         btn.classList.remove('on');
@@ -255,6 +292,108 @@ export class InputSystem {
   }
 
   /**
+   * Right-side LOOK PAD (V3.4): a second drag surface (`#lp` pad, `#lpK` knob)
+   * shown on coarse pointers only (CSS), feeding the SAME `look.dx/dy`
+   * accumulator as canvas drags — the world's consume-and-zero contract is
+   * unchanged. Tracks its own touch identifier exactly like the joystick
+   * (Known Bug 8 discipline). Missing elements disable the pad silently
+   * (desktop markup may omit it).
+   */
+  private bindLookPad(): void {
+    const pad = document.getElementById('lp');
+    const knob = document.getElementById('lpK');
+    if (!pad || !knob) return; // pad is a coarse-pointer affordance — absent markup is fine
+    let id: number | null = null;
+    let lastX = 0;
+    let lastY = 0;
+    const reset = (): void => {
+      id = null;
+      knob.style.transform = 'translate(0,0)';
+    };
+    this.resetLookPad = reset;
+    pad.addEventListener(
+      'touchstart',
+      (e) => {
+        if (id !== null) return; // one steering finger — ignore extras
+        const t = e.changedTouches[0];
+        if (!t) return;
+        id = t.identifier;
+        lastX = t.clientX;
+        lastY = t.clientY;
+      },
+      { passive: true },
+    );
+    pad.addEventListener(
+      'touchmove',
+      (e) => {
+        e.preventDefault(); // the pad must never scroll the page
+        if (id === null) return;
+        for (let i = 0; i < e.touches.length; i++) {
+          const t = e.touches[i];
+          if (!t || t.identifier !== id) continue;
+          this.look.dx += (t.clientX - lastX) * LOOKPAD_GAIN;
+          this.look.dy += (t.clientY - lastY) * LOOKPAD_GAIN;
+          lastX = t.clientX;
+          lastY = t.clientY;
+          // Knob visual: clamp to a 24px throw around the pad centre.
+          const r = pad.getBoundingClientRect();
+          const kx = clamp(t.clientX - (r.left + r.width / 2), -24, 24);
+          const ky = clamp(t.clientY - (r.top + r.height / 2), -24, 24);
+          knob.style.transform = `translate(${kx}px,${ky}px)`;
+          return;
+        }
+      },
+      { passive: false },
+    );
+    const end = (e: TouchEvent): void => {
+      if (id === null) return;
+      for (let i = 0; i < e.changedTouches.length; i++) {
+        const t = e.changedTouches[i];
+        if (t && t.identifier === id) {
+          reset();
+          return;
+        }
+      }
+    };
+    pad.addEventListener('touchend', end, { passive: true });
+    pad.addEventListener('touchcancel', end, { passive: true });
+  }
+
+  /**
+   * Action-wheel center (V3.4): `#wheel-apoc` arms on pointerdown and fires the
+   * apocalypse only after a full {@link APOC_HOLD_MS} hold — a destructive act
+   * must never be a stray tap. `.arming` drives the CSS progress ring; leave/
+   * cancel/up before the deadline disarms. The four wheel petals are plain
+   * `[data-a]` buttons handled by {@link bindPadButtons}.
+   */
+  private bindActionWheel(): void {
+    const core = document.getElementById('wheel-apoc');
+    if (!core) return; // wheel is a coarse-pointer affordance — absent markup is fine
+    const disarm = (): void => {
+      if (this.apocTimer !== null) {
+        clearTimeout(this.apocTimer);
+        this.apocTimer = null;
+      }
+      core.classList.remove('arming');
+    };
+    this.disarmApoc = disarm;
+    core.addEventListener('pointerdown', () => {
+      disarm();
+      core.classList.add('arming');
+      buzz(HAPTIC_MS);
+      this.apocTimer = setTimeout(() => {
+        this.apocTimer = null;
+        core.classList.remove('arming');
+        this.actions.apocalypse();
+        buzz(30); // the one full-strength pulse — still ≤ 30 ms
+      }, APOC_HOLD_MS) as unknown as number;
+    });
+    core.addEventListener('pointerup', disarm);
+    core.addEventListener('pointerleave', disarm);
+    core.addEventListener('pointercancel', disarm);
+  }
+
+  /**
    * Mouse-look + wheel zoom on the `#c` canvas (0.2.x contract amendment; see class fields).
    * Only pointers that go DOWN on the canvas itself steer the camera — every UI surface
    * (panels, toolbar, joystick) stacks above it, so taps there never reach the canvas. The
@@ -318,6 +457,8 @@ export class InputSystem {
     this.camVel.ry = 0;
     this.camVel.rz = 0;
     this.resetJoy();
+    this.resetLookPad();
+    this.disarmApoc();
     this.lookId = null;
     this.look.dx = 0;
     this.look.dy = 0;

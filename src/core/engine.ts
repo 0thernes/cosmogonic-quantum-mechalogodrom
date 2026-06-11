@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { CAMERA_FAR, FOG_SCALE } from '../sim/constants';
 import type { QualityProfile } from '../types';
 
 /**
@@ -6,9 +7,9 @@ import type { QualityProfile } from '../types';
  * (legacy lines 182-194).
  *
  * Faithful constants: antialias on, `high-performance` power preference,
- * ACES filmic tone mapping at exposure 1.15, `FogExp2(0x020310, 0.003)`,
- * 68° FOV camera with near/far 0.1..900 parked at (0, 25, 55). Shadow maps
- * follow the quality profile.
+ * ACES filmic tone mapping at exposure 1.15, `FogExp2(0x020310, 0.003 · FOG_SCALE)`,
+ * 68° FOV camera with near/far 0.1..CAMERA_FAR parked at (0, 50, 140). The far
+ * plane and fog density carry the V3.1 ARENA scale (legacy 900 / 0.003 at 1×).
  *
  * r128 color-fidelity fix: `outputColorSpace` is forced to
  * `LinearSRGBColorSpace`. The legacy r128 monolith ran with the old default
@@ -48,10 +49,15 @@ export class Engine {
     this.renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
 
     this.scene = new THREE.Scene();
-    this.scene.fog = new THREE.FogExp2(0x020310, 0.003);
+    this.scene.fog = new THREE.FogExp2(0x020310, 0.003 * FOG_SCALE);
 
-    this.camera = new THREE.PerspectiveCamera(68, window.innerWidth / window.innerHeight, 0.1, 900);
-    this.camera.position.set(0, 25, 55);
+    this.camera = new THREE.PerspectiveCamera(
+      68,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      CAMERA_FAR,
+    );
+    this.camera.position.set(0, 50, 140);
   }
 
   /**

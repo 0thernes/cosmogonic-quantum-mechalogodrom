@@ -34,17 +34,36 @@ function isFiniteNumber(v: unknown): v is number {
   return typeof v === 'number' && Number.isFinite(v);
 }
 
-/** Validate a version-1 payload field by field; null when any field is off. */
+/**
+ * Narrow to a non-negative safe integer — the only shape valid for array
+ * indices and monotonic counters. Rejects floats, negatives, NaN, ±Infinity,
+ * and float-integers at or beyond 2^53 (Number.isSafeInteger).
+ */
+function isIndexLike(v: unknown): v is number {
+  return typeof v === 'number' && Number.isSafeInteger(v) && v >= 0;
+}
+
+/**
+ * Validate a version-1 payload field by field; null when any field is off.
+ *
+ * Tamper policy — REJECT, not normalize: songIdx/algoIdx/viewIdx/weatherIdx/
+ * sessions must already be non-negative safe integers; a tampered-but-typed
+ * blob (1.5, -1, 2^53, 1e308…) discards the WHOLE payload so the caller falls
+ * back to a coherent `defaults()` rather than a half-sanitized state. The one
+ * exception stays: `seed` accepts any finite number and keeps its uint32
+ * normalization (`>>> 0`), because every finite input maps deterministically
+ * to a valid seed.
+ */
 function validateV1(r: Record<string, unknown>): PersistedStateV1 | null {
   const { seed, songIdx, algoIdx, viewIdx, weatherIdx, sfxOn, sessions } = r;
   if (
     !isFiniteNumber(seed) ||
-    !isFiniteNumber(songIdx) ||
-    !isFiniteNumber(algoIdx) ||
-    !isFiniteNumber(viewIdx) ||
-    !isFiniteNumber(weatherIdx) ||
+    !isIndexLike(songIdx) ||
+    !isIndexLike(algoIdx) ||
+    !isIndexLike(viewIdx) ||
+    !isIndexLike(weatherIdx) ||
     typeof sfxOn !== 'boolean' ||
-    !isFiniteNumber(sessions)
+    !isIndexLike(sessions)
   ) {
     return null;
   }

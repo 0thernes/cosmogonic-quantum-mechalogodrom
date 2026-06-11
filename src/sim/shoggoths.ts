@@ -5,7 +5,8 @@
  */
 import * as THREE from 'three';
 import { TAU, dist2 } from '../math/scalar';
-import { MORPH_COUNT } from './constants';
+import { ARENA_MID, MID_RADIUS2 } from './constants';
+import { POINT_LIGHT_GAIN } from './environment';
 import type { SimContext } from '../types';
 import type { EntityManager } from './entities';
 
@@ -55,15 +56,15 @@ export class ShoggothSystem {
   private readonly entities: EntityManager;
   private readonly shogs: Shoggoth[] = [];
 
-  /** Builds the three legacy shoggoths at (-30,8,-40), (35,12,30), (0,6,-70). */
+  /** Builds the three shoggoths at the legacy posts × ARENA_MID (V3.1 mid-field). */
   constructor(ctx: SimContext, entities: EntityManager) {
     this.ctx = ctx;
     this.entities = entities;
     const root = new THREE.Group();
     ctx.scene.add(root);
-    this.spawnShoggoth(root, -30, 8, -40);
-    this.spawnShoggoth(root, 35, 12, 30);
-    this.spawnShoggoth(root, 0, 6, -70);
+    this.spawnShoggoth(root, -30 * ARENA_MID, 8, -40 * ARENA_MID);
+    this.spawnShoggoth(root, 35 * ARENA_MID, 12, 30 * ARENA_MID);
+    this.spawnShoggoth(root, 0, 6, -70 * ARENA_MID);
   }
 
   /** Number of active shoggoths (constant 3 — feeds the telemetry `shoggoths` field). */
@@ -136,10 +137,10 @@ export class ShoggothSystem {
     );
     group.add(tendrils);
 
-    // Aura lights (legacy 514).
-    const aura = new THREE.PointLight(0x220044, 4, 30);
+    // Aura lights (legacy 514) — intensity × POINT_LIGHT_GAIN, decay 0 (r128 falloff model).
+    const aura = new THREE.PointLight(0x220044, 4 * POINT_LIGHT_GAIN, 30, 0);
     group.add(aura);
-    const aura2 = new THREE.PointLight(0x440000, 2, 15);
+    const aura2 = new THREE.PointLight(0x440000, 2 * POINT_LIGHT_GAIN, 15, 0);
     aura2.position.y = 2;
     group.add(aura2);
 
@@ -192,7 +193,7 @@ export class ShoggothSystem {
       sg.vel.multiplyScalar(0.99);
       V1.copy(sg.vel).multiplyScalar(dt * 60);
       p.add(V1);
-      if (p.lengthSq() > 3600) {
+      if (p.lengthSq() > MID_RADIUS2) {
         V1.copy(p).normalize().multiplyScalar(-0.01);
         sg.vel.add(V1);
       }
@@ -212,9 +213,9 @@ export class ShoggothSystem {
         if (!eyeMat) continue; // noUncheckedIndexedAccess: ei < length
         eyeMat.opacity = 0.3 + Math.abs(Math.sin(t * 2 + (sg.eyePhases[ei] ?? 0))) * 0.7;
       }
-      sg.aura.intensity = 3 + Math.sin(t * 2 + sg.ph) * 2;
+      sg.aura.intensity = (3 + Math.sin(t * 2 + sg.ph) * 2) * POINT_LIGHT_GAIN;
       sg.aura.color.setHSL(hue, 0.7, 0.3);
-      sg.aura2.intensity = 1.5 + Math.cos(t * 3 + sg.ph) * 1;
+      sg.aura2.intensity = (1.5 + Math.cos(t * 3 + sg.ph) * 1) * POINT_LIGHT_GAIN;
 
       // Tendrils — O(k) via grid query, squared-distance threshold (legacy 531-534).
       const nearby = ctx.grid.query(p.x, p.z, TENDRIL_RADIUS);
@@ -267,7 +268,8 @@ export class ShoggothSystem {
           for (let sj = 0; sj < 2; sj++) {
             V3.set((rng() - 0.5) * 4, rng() * 2 - 1, (rng() - 0.5) * 4);
             V2.copy(p).add(V3);
-            const child = this.entities.spawn(V2, Math.floor(rng() * MORPH_COUNT), 0.6);
+            // Corrupted child draws over the LIVE morph table (250 in phylum mode).
+            const child = this.entities.spawn(V2, Math.floor(rng() * ctx.morphs.length), 0.6);
             if (child) {
               child.material.color.setHSL(rng() * 0.1 + 0.7, 0.5, 0.08);
               child.material.emissive.set(0x110022);

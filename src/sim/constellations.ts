@@ -12,13 +12,13 @@ import type { Voronoi } from 'd3-delaunay';
 import type { AudioBands } from '../audio/analysis';
 import { clamp } from '../math/scalar';
 import type { SimContext, SimState } from '../types';
-import { CHAOS_MAX, DIORAMA_CONFIG, MONOLITH_CONFIG } from './constants';
+import { ARENA, ARENA_Y, CHAOS_MAX, DIORAMA_CONFIG, MONOLITH_CONFIG } from './constants';
 import type { LoreEngine } from './lore';
 
-/** Altitude of the sky-web plane. */
-const SKY_Y = 55;
-/** Voronoi clip-bounds padding around the site extent. */
-const BOUNDS_PAD = 30;
+/** Altitude of the sky-web plane (legacy 55 × ARENA_Y — above the doubled skyline). */
+const SKY_Y = 55 * ARENA_Y;
+/** Voronoi clip-bounds padding around the site extent (legacy 30 × ARENA). */
+const BOUNDS_PAD = 30 * ARENA;
 /** Resting opacity of the Voronoi cell walls (silent, chaos-calm baseline). */
 const CELL_BASE_OPACITY = 0.1;
 /** Resting opacity of the Delaunay site links. */
