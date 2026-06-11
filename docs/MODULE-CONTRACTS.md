@@ -1159,3 +1159,42 @@ The lab artifact is ~40% empty space and information-thin vs the main world. Fil
 - DONE: ultra targetEntities → 10000 (fills ceiling, deterministic per-device).
 - Sort-step VISIBILITY: color entities by sortVal along a gradient so the active algorithm's organizing is SEEN; raise swaps/frame at the active algo; surface the algorithm's activity (swap count / passes) on the #alg HUD card. Make algorithm cycling obviously change the spatial behavior.
 - Wire the 25 algos (cycling already modular), new songs (modular), and verify the observatory/audio/lab/shell changes integrate. Gate + soak + commit 0.5.0.
+
+---
+
+# CONTRACTS V6 — ATELIER (0.6.0) — second user-feedback pass
+
+User feedback on 0.5.0. Exclusive file ownership; integrator owns world.ts/main.ts/types.ts/quality.ts and wires the algo picker + per-algo audiovisual + populates the algo list from ALGOS.
+
+## V6.1 Observatory ergonomics (writer: obs-draw — src/ui/observatory.ts ONLY)
+
+User: "letters are over the data", "Titan Resources all scrunched/smashed", "Titan Roster a mess", "more space and padding, proper ergonomic wireframing". Fix the LAYOUT inside every chart:
+
+- Reserve a TITLE BAND (top ~16px of backing height) and draw the plot body BELOW it, inset by PAD≈6px on all sides — the title/legend text must NEVER overlap plotted data. Right-aligned value readouts sit in the title band, not over the plot.
+- c14 TITAN RESOURCES + c11 TITAN ROSTER: give each of the 10 rows real height with row gaps; TRUNCATE titan names (ellipsis) so name+value never collide; bars/swatches inset with padding; if 10 rows don't fit the canvas height, scale row height to fit or show a compact 2-column grid. No overlapping text anywhere.
+- Assume the canvases are now TALLER (the ui-shell writer raises their CSS height ≥ 72px desktop): lay out responsively from canvas.width/height (you already read them). Keep the setPage/16-canvas/push API + all tests green.
+
+## V6.2 UI shell: bigger observatory + algorithm picker (writer: ui-shell — index.html + src/styles/app.css ONLY)
+
+(a) OBSERVATORY SPACE: raise the observatory canvas heights (≥72px on desktop/TV, taller where room allows) and add panel padding/gaps so charts breathe; the panel may be WIDER on desktop/TV (the user has 4K + QHD monitors). Keep #obs-c0..15, [data-obs-page], .obs-page, #obs-tabs intact and the mobile slide-sheet behavior.
+(b) ALGORITHM PICKER: add a new collapsible panel #algoP (a peer of #cP, with the same glass/sheet treatment + a [data-sheet-handle] "ALG" tab on mobile) containing a SCROLLABLE list container #algo-list (max-height with overflow-y:auto) — leave it EMPTY (the integrator populates it from ALGOS with 25 rows). Style a `.algo-row` class (clickable, hover, an `.active` state with accent highlight, a tabular name + a small right-aligned progress bar element `.algo-prog`) and an `#algo-active` readout line. Provide the exact class/id names you used in your notes so the integrator can populate + wire. Keep build green.
+
+## V6.3 Lab: 4 pages of 3D data visuals (writer: lab — lab/quantum-wildbeyond.html ONLY)
+
+User: "only 1 subdomain for the lab, there should be 4 to preview"; "2nd/3rd/4th pages with 3D Data Visuals for each aspect, ~8 different visuals on one page and 8 on another." Make the lab a FOUR-PAGE app (tabs/nav PAGE 1..4, keep the Anthropic-branded sidebar + seed/param controls working on every page):
+
+- Page 1: the existing collapse-field (keep it, it works).
+- Pages 2-4: live generative DATA-VISUAL boards — each page packs MULTIPLE (aim 6-8) distinct mini-visuals in a responsive grid (p5 instances or sub-canvases), each a different way of showing the world's math/aspects: e.g. phase portraits (Lorenz/Rössler), a reaction-diffusion Gray-Scott tile, a Voronoi/Delaunay tessellation, a quantum statevector bar/Bloch viz, a graph/network force layout, an FFT/spectrum, a histogram/violin, a strange-attractor 3D (WEBGL) ribbon, a cellular-automaton, a chaos-game fractal. Each titled + a one-line legend. All seeded, 60fps target (throttle/iterate counts to hold it), self-contained p5 1.7 (+ optional p5 WEBGL) from CDN, no external data — generate the data live from seeded math. Page nav must not reset the seed. Report the page/visual map.
+
+## V6.4 Docs report page (writer: docs-report — docs.html ONLY)
+
+User: "a report page explaining all this — the entire ERM/ERD/ERP, File/Folder Architecture etc — like a GitHub Page but built privately locally, in Docs." Expand docs.html (starts clean — the mermaid ; bug is fixed; KEEP all 3 working diagrams) into a rich single-page report:
+
+- A FILE/FOLDER ARCHITECTURE tree (the real repo layout: server.ts, index.html, docs.html, lab/, src/{core,sim,math,audio,ui,logging,memory}, docs/, tests/, bench/, masters/) rendered as a styled tree/list with one-line purpose per entry.
+- ERD (entity-relationship diagram — keep/extend the existing erDiagram), ERM (entity-relationship MODEL: a prose/table explanation of the entities + relationships + cardinalities), ERP (entity-relationship/process model: the frame-pipeline sequence diagram + a short process narrative). Label each section ERD / ERM / ERP explicitly.
+- Sections explaining the systems (V1 sim, V2 wildbeyond, V3 pantheon, V4 atmosphere, V5 resonance) at a readable depth, a tech-stack list, the determinism model, and links back to "/" and "/lab". Keep it self-contained (inline CSS + the mermaid module script already wired), dark-themed to match, MERMAID-SAFE (NO ';' or unescaped special chars inside diagram labels — that was the crash). Verify it still renders 3+ diagrams with no parse error.
+
+## V6.5 Integrator (world.ts/main.ts)
+
+- Populate #algo-list from ALGOS (25 `.algo-row` with name + `.algo-prog`), bind click → set state.algoIdx + showSector(name) + a distinct selection SFX/tone per algo; mark `.active`; update `#algo-active` + per-row progress from a sorted-fraction/inversion estimate each telemetry tick. Each algorithm already light-flashes via the batched sortStep; add a per-algo characteristic (e.g. swap-tone pitch derived from algoIdx) so each "sounds" different as it runs.
+- Wire any observatory snapshot fields the obs-draw writer needs (none expected). Gate + soak + commit 0.6.0.

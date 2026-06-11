@@ -179,6 +179,153 @@ a:focus-visible {
   display: flex;
 }
 
+/* ── Algorithm picker (CONTRACTS V6.2b) ─────────────────────────────────
+   The #algoP panel's #algo-list is a vertical, scrollable column of `.algo-row`
+   entries the INTEGRATOR appends from ALGOS (25 rows): each row names a sorting
+   field and carries a thin right-aligned `.algo-prog` progress bar (sorted-fraction
+   / inversion estimate). Rows are clickable (set state.algoIdx), highlight on hover,
+   and carry an `.active` accent state for the current field. `#algo-active` is the
+   readout line below the list. All purple-family tinting to match the #alg lore card.
+   Markup ships EMPTY; these rules pre-style whatever the integrator injects. */
+
+/* Scroll container: capped height so the 25 rows scroll inside the panel rather than
+   blowing it out. The panel itself also scrolls, but this keeps the list a bounded,
+   self-contained region with its own thin scrollbar. */
+.algo-list {
+  max-height: 40vh;
+  overflow-y: auto;
+  /* Firefox thin scrollbar (WebKit/Blink styled below). */
+  scrollbar-width: thin;
+  scrollbar-color: --alpha(var(--color-accent) / 35%) transparent;
+  /* Reserve room so the last row's progress bar never hides under the scrollbar. */
+  padding-right: 2px;
+}
+.algo-list::-webkit-scrollbar {
+  width: 7px;
+}
+.algo-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+.algo-list::-webkit-scrollbar-thumb {
+  border-radius: 4px;
+  background: --alpha(var(--color-accent) / 30%);
+}
+.algo-list::-webkit-scrollbar-thumb:hover {
+  background: --alpha(var(--color-accent) / 50%);
+}
+
+/* A single algorithm row: clickable flex line — name on the left, the thin
+   `.algo-prog` progress bar on the right. ≥28px tall with comfortable padding. */
+.algo-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 28px;
+  padding: 5px 8px;
+  border: 1px solid --alpha(var(--color-white) / 6%);
+  border-radius: var(--radius-btn);
+  background: --alpha(var(--color-white) / 3%);
+  cursor: pointer;
+  user-select: none;
+  transition:
+    background var(--motion-tap),
+    border-color var(--motion-tap),
+    color var(--motion-tap);
+}
+/* Row label — the algorithm name. Truncates so a long name never pushes the bar
+   off-row. `.algo-row` children the integrator injects should use `.algo-name` for
+   the text node and `.algo-prog` for the bar; both are pre-styled here. */
+.algo-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  font: 600 var(--text-3xs) var(--font-ui);
+  letter-spacing: 0.02em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: --alpha(var(--color-ink) / 90%);
+}
+.algo-row:hover {
+  background: --alpha(var(--color-accent) / 10%);
+  border-color: --alpha(var(--color-accent) / 30%);
+}
+.algo-row:hover .algo-name {
+  color: var(--color-white);
+}
+.algo-row.active {
+  background: --alpha(var(--color-accent) / 18%);
+  border-color: --alpha(var(--color-accent) / 55%);
+  box-shadow: 0 0 10px --alpha(var(--color-accent) / 22%);
+}
+.algo-row.active .algo-name {
+  color: var(--color-white);
+}
+.algo-row:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
+}
+
+/* The per-row progress bar (sorted-fraction / inversion estimate). A fixed-width thin
+   track on the right; the integrator drives the fill by setting `--algo-prog` (0..1)
+   or width on a child fill element. Both conventions are supported: a child
+   `.algo-prog-fill` if present, else the `--algo-prog` custom property on `.algo-prog`. */
+.algo-prog {
+  position: relative;
+  flex: 0 0 auto;
+  width: clamp(36px, 28%, 72px);
+  height: 4px;
+  border-radius: 3px;
+  overflow: hidden;
+  background: --alpha(var(--color-white) / 10%);
+}
+.algo-prog::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform-origin: left center;
+  transform: scaleX(var(--algo-prog, 0));
+  border-radius: 3px;
+  background: linear-gradient(
+    90deg,
+    --alpha(var(--color-accent) / 55%),
+    --alpha(var(--color-accent) / 95%)
+  );
+  transition: transform var(--motion-chev) ease;
+}
+.algo-row.active .algo-prog::before {
+  background: linear-gradient(90deg, var(--color-accent), var(--color-warn));
+}
+/* Optional explicit fill element (if the integrator injects `.algo-prog-fill` instead
+   of using the `--algo-prog` property, this gives it the same look). */
+.algo-prog-fill {
+  position: absolute;
+  inset: 0;
+  width: 0;
+  border-radius: 3px;
+  background: linear-gradient(
+    90deg,
+    --alpha(var(--color-accent) / 55%),
+    --alpha(var(--color-accent) / 95%)
+  );
+  transition: width var(--motion-chev) ease;
+}
+/* When an explicit fill element is used, the pseudo-fill must not double up. */
+.algo-prog:has(.algo-prog-fill)::before {
+  display: none;
+}
+
+/* Empty-list affordance: before the integrator populates #algo-list, show a hint
+   instead of a blank box (matches the audit-list empty state pattern). */
+.algo-list:empty::after {
+  content: 'loading fields…';
+  display: block;
+  padding: 8px 4px;
+  font: 300 var(--text-4xs) var(--font-ui);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--color-ink-ghost);
+}
+
 /* ── Control-pad held state ─────────────────────────────────────
    ui/input.ts adds `.on` while a [data-a] button is held
    (pointerdown..pointerup/leave/cancel). Mirrors :active. */
@@ -269,12 +416,15 @@ a:focus-visible {
   padding: 6px;
   padding-top: calc(6px + env(safe-area-inset-top, 0px));
   padding-bottom: calc(50px + env(safe-area-inset-bottom, 0px)); /* clear #bar */
-  grid-template-columns: clamp(170px, 18vw, 235px) 1fr clamp(190px, 20vw, 280px);
+  /* Right column widened (CONTRACTS V6.2a) so the observatory has more room to breathe on
+     desktop/QHD; the TV block below grows it further. Left column hosts telemetry, audit and
+     the new algorithm picker (#algoP), stacked top→bottom. */
+  grid-template-columns: clamp(180px, 19vw, 260px) 1fr clamp(220px, 23vw, 340px);
   grid-template-rows: auto auto 1fr auto;
   grid-template-areas:
     'tel . obs'
     'aud . ctl'
-    '.   . .  '
+    'agp . .  '
     'alg . .  ';
 }
 #ui > * {
@@ -293,6 +443,12 @@ a:focus-visible {
 }
 #cP {
   grid-area: ctl;
+}
+/* Algorithm picker fills the tall free-left row (row 3) so its 25-row scroll list gets real
+   height; the algo readout sits in row 4 below it, both clear of the center 3D view. */
+#algoP {
+  grid-area: agp;
+  align-self: start;
 }
 #ui > #alg {
   grid-area: alg;
@@ -314,16 +470,34 @@ a:focus-visible {
 #ui > section > .panel-body {
   flex: 1 1 auto;
 }
+/* The observatory holds four tall charts per page — give it more vertical room than the
+   other panels so the raised canvas heights aren't clipped behind its scroll (CONTRACTS
+   V6.2a). The TV block below grows it further still. */
+#ui > section#oP {
+  max-height: clamp(240px, 72vh, 82vh);
+}
+#oP > .obs-body {
+  max-height: none;
+}
 
 /* Observatory canvases scale with the panel's own width (container query), clamped so
    they stay legible on a phone sheet and grow toward 10-foot legibility on a TV column.
-   Applies to every page's canvases (page 0..3 share the rule). */
+   Applies to every page's canvases (page 0..3 share the rule).
+   CONTRACTS V6.2a: charts must BREATHE. A narrow phone sheet stays compact (≥56px floor);
+   any container ≥300px (desktop column, wide sheet, TV) lifts the floor to ≥72px and lets
+   the canvas grow taller (higher cqi gain + ceiling) so the obs-draw writer's title band +
+   padded plot body never crowd the data. */
 #observatory-body canvas {
-  height: clamp(44px, 9cqi, 120px);
+  height: clamp(56px, 11cqi, 132px);
 }
-@container (min-width: 360px) {
+@container (min-width: 300px) {
   #observatory-body canvas {
-    height: clamp(56px, 7cqi, 132px);
+    height: clamp(72px, 13cqi, 168px);
+  }
+}
+@container (min-width: 480px) {
+  #observatory-body canvas {
+    height: clamp(84px, 14cqi, 200px);
   }
 }
 
@@ -466,6 +640,19 @@ a:focus-visible {
     top: calc(50% + 4px);
   }
 
+  /* THREE left sheets now share the left edge (telemetry upper, control + algo-picker
+     lower). On coarse pointers #cP is display:none, so only #sP + #algoP coexist there.
+     But on a FINE-pointer portrait/narrow viewport (e.g. the user's portrait QHD monitor)
+     all three are visible — give #cP and #algoP distinct vertical bands so their handles
+     never stack on top of each other (CONTRACTS V6.2b). Each band is ≥64px apart (handle
+     is 56px tall + gap). */
+  #cP.sheet-lower {
+    top: calc(50% - 60px);
+  }
+  #algoP.sheet-lower {
+    top: calc(50% + 8px);
+  }
+
   /* The handle clings to the OUTER edge of its docked sheet, always on-screen
      even while the body is parked off-screen. Left sheets → handle on the right
      side of the (off-screen) panel so it pokes onto the screen; right sheets →
@@ -518,7 +705,7 @@ a:focus-visible {
     grid-template-areas:
       'tel . obs'
       'tel . ctl'
-      '.   . .  '
+      'agp . .  '
       'alg . .  ';
   }
   #aP {
@@ -578,7 +765,9 @@ a:focus-visible {
     --radius-panel: clamp(14px, 0.7vw, 18px);
     --radius-btn: clamp(8px, 0.4vw, 11px);
   }
-  /* Restore the grid overlay (a coarse-pointer TV would have entered sheet mode). */
+  /* Restore the grid overlay (a coarse-pointer TV would have entered sheet mode).
+     Right column widened further for 4K observatory legibility (CONTRACTS V6.2a); the
+     algorithm picker (#algoP) takes the tall free-left row (agp). */
   #ui {
     display: grid;
     pointer-events: none;
@@ -586,12 +775,12 @@ a:focus-visible {
     grid-template-areas:
       'tel . obs'
       'aud . ctl'
-      '.   . .  '
+      'agp . .  '
       'alg . .  ';
     gap: clamp(12px, 0.8vw, 22px);
     padding: clamp(14px, 0.9vw, 26px);
     padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px));
-    grid-template-columns: clamp(290px, 18vw, 460px) 1fr clamp(330px, 20vw, 520px);
+    grid-template-columns: clamp(300px, 18vw, 480px) 1fr clamp(360px, 22vw, 600px);
   }
   #ui > * {
     pointer-events: auto;

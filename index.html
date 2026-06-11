@@ -337,114 +337,114 @@
             War
           </button>
         </div>
-        <div class="panel-body max-h-[calc(65vh-40px)] overflow-y-auto p-2">
-          <div id="observatory-body" class="flex flex-col gap-1">
+        <div class="panel-body obs-body max-h-[calc(65vh-40px)] overflow-y-auto p-2.5">
+          <div id="observatory-body" class="flex flex-col gap-2">
             <!-- Page 0 — OVERVIEW (V3.5 verbatim: ids + aria-labels unchanged) -->
-            <div class="obs-page active flex flex-col gap-1" data-obs-pane="0">
+            <div class="obs-page active flex flex-col gap-2" data-obs-pane="0">
               <canvas
                 id="obs-c0"
                 role="img"
                 aria-label="Stacked phylum population area chart"
-                class="block h-14 w-full rounded border border-white/5"
+                class="block h-[72px] w-full rounded border border-white/5"
               ></canvas>
               <canvas
                 id="obs-c1"
                 role="img"
                 aria-label="Titan economy ledger line chart"
-                class="block h-14 w-full rounded border border-white/5"
+                class="block h-[72px] w-full rounded border border-white/5"
               ></canvas>
               <canvas
                 id="obs-c2"
                 role="img"
                 aria-label="Titan war-state matrix heat grid"
-                class="block h-14 w-full rounded border border-white/5"
+                class="block h-[72px] w-full rounded border border-white/5"
               ></canvas>
               <canvas
                 id="obs-c3"
                 role="img"
                 aria-label="Pattern energy, quantum entropy and population trend timelines"
-                class="block h-14 w-full rounded border border-white/5"
+                class="block h-[72px] w-full rounded border border-white/5"
               ></canvas>
             </div>
             <!-- Page 1 — VARIANCE -->
-            <div class="obs-page flex flex-col gap-1" data-obs-pane="1">
+            <div class="obs-page flex flex-col gap-2" data-obs-pane="1">
               <canvas
                 id="obs-c4"
                 role="img"
                 aria-label="Population, energy and links mean plus or minus standard-deviation bands"
-                class="block h-14 w-full rounded border border-white/5"
+                class="block h-[72px] w-full rounded border border-white/5"
               ></canvas>
               <canvas
                 id="obs-c5"
                 role="img"
                 aria-label="Population histogram"
-                class="block h-14 w-full rounded border border-white/5"
+                class="block h-[72px] w-full rounded border border-white/5"
               ></canvas>
               <canvas
                 id="obs-c6"
                 role="img"
                 aria-label="Phylum diversity Shannon entropy timeline"
-                class="block h-14 w-full rounded border border-white/5"
+                class="block h-[72px] w-full rounded border border-white/5"
               ></canvas>
               <canvas
                 id="obs-c7"
                 role="img"
                 aria-label="Quantum entropy versus population trend phase scatter"
-                class="block h-14 w-full rounded border border-white/5"
+                class="block h-[72px] w-full rounded border border-white/5"
               ></canvas>
             </div>
             <!-- Page 2 — ECOLOGY -->
-            <div class="obs-page flex flex-col gap-1" data-obs-pane="2">
+            <div class="obs-page flex flex-col gap-2" data-obs-pane="2">
               <canvas
                 id="obs-c8"
                 role="img"
                 aria-label="Per-phylum population small-multiple sparklines"
-                class="block h-14 w-full rounded border border-white/5"
+                class="block h-[72px] w-full rounded border border-white/5"
               ></canvas>
               <canvas
                 id="obs-c9"
                 role="img"
                 aria-label="Birth and death flux timeline"
-                class="block h-14 w-full rounded border border-white/5"
+                class="block h-[72px] w-full rounded border border-white/5"
               ></canvas>
               <canvas
                 id="obs-c10"
                 role="img"
                 aria-label="Titan matter versus energy phase portraits"
-                class="block h-14 w-full rounded border border-white/5"
+                class="block h-[72px] w-full rounded border border-white/5"
               ></canvas>
               <canvas
                 id="obs-c11"
                 role="img"
                 aria-label="Per-phylum population secondary small-multiples"
-                class="block h-14 w-full rounded border border-white/5"
+                class="block h-[72px] w-full rounded border border-white/5"
               ></canvas>
             </div>
             <!-- Page 3 — CONFLICT -->
-            <div class="obs-page flex flex-col gap-1" data-obs-pane="3">
+            <div class="obs-page flex flex-col gap-2" data-obs-pane="3">
               <canvas
                 id="obs-c12"
                 role="img"
                 aria-label="War-intensity timeline"
-                class="block h-14 w-full rounded border border-white/5"
+                class="block h-[72px] w-full rounded border border-white/5"
               ></canvas>
               <canvas
                 id="obs-c13"
                 role="img"
                 aria-label="Alliance, truce and war stacked counts"
-                class="block h-14 w-full rounded border border-white/5"
+                class="block h-[72px] w-full rounded border border-white/5"
               ></canvas>
               <canvas
                 id="obs-c14"
                 role="img"
                 aria-label="Per-titan resource bars"
-                class="block h-14 w-full rounded border border-white/5"
+                class="block h-[72px] w-full rounded border border-white/5"
               ></canvas>
               <canvas
                 id="obs-c15"
                 role="img"
                 aria-label="Biome sentience index gauge"
-                class="block h-14 w-full rounded border border-white/5"
+                class="block h-[72px] w-full rounded border border-white/5"
               ></canvas>
             </div>
           </div>
@@ -643,6 +643,75 @@
             >
               <kbd>&#8677;</kbd> Chaos+
             </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Algorithm picker (CONTRACTS V6.2b). A peer of #cP: same glass/rounded/backdrop
+           treatment; on small/portrait/coarse viewports it is a LEFT edge-docked slide-out
+           sheet (.sheet sheet-l) with an always-visible [data-sheet-handle="algoP"] "ALG" tab.
+           The body holds a header "Sorting Fields", a SCROLLABLE #algo-list (max-height ~40vh,
+           overflow-y:auto) left EMPTY for the integrator to populate with 25 `.algo-row`
+           entries from ALGOS (each: tabular name + right-aligned `.algo-prog` progress bar;
+           hover + `.active` accent states), and an `#algo-active` readout line below the list
+           naming the currently-selected sorting field. Collapsible like every panel. -->
+      <section
+        id="algoP"
+        class="panel sheet sheet-l sheet-lower overflow-hidden rounded-panel border border-cyan-300/15 bg-void/90 shadow-panel backdrop-blur-xl backdrop-saturate-150"
+        aria-label="Sorting fields"
+      >
+        <button
+          type="button"
+          data-sheet-handle="algoP"
+          class="sheet-handle"
+          aria-controls="algoP"
+          aria-expanded="false"
+          aria-label="Open or close sorting-fields sheet"
+          title="Sorting fields"
+        >
+          <span class="sheet-handle-label">ALG</span>
+        </button>
+        <div
+          data-panel-toggle
+          class="flex min-h-7.5 cursor-pointer items-center justify-between border-b border-white/5 px-2.5 py-1.5 select-none"
+        >
+          <span class="sheet-grip" aria-hidden="true"></span>
+          <h2
+            class="font-ui text-2xs font-semibold tracking-widest text-accent uppercase text-shadow-glow-accent"
+          >
+            Sorting Fields
+          </h2>
+          <button
+            type="button"
+            class="chev flex h-5 w-5 shrink-0 items-center justify-center rounded border-0 bg-white/5 text-xs text-sky-300"
+            aria-label="Collapse or expand sorting-fields panel"
+            title="Collapse or expand sorting-fields panel"
+          >
+            &#9662;
+          </button>
+        </div>
+        <div class="panel-body max-h-[calc(65vh-40px)] overflow-y-auto p-2.5">
+          <!-- Scrollable list — integrator appends 25 `.algo-row` children here (one per ALGOS
+               entry). Left EMPTY in markup; role="listbox" so the populated rows can be
+               role="option" + aria-selected. -->
+          <div
+            id="algo-list"
+            role="listbox"
+            aria-label="Sorting field algorithms"
+            class="algo-list flex flex-col gap-1"
+          ></div>
+          <!-- Active-field readout (integrator writes the current algorithm name here). -->
+          <div
+            id="algo-active"
+            aria-live="polite"
+            class="mt-2 flex items-baseline justify-between gap-2 border-t border-white/5 pt-1.5 font-ui text-4xs tracking-[0.1em] text-purple-300/80 uppercase"
+          >
+            <span class="shrink-0">Active</span>
+            <span
+              id="algo-active-name"
+              class="overflow-hidden font-mono text-3xs font-semibold tracking-normal text-ellipsis whitespace-nowrap text-purple-100 normal-case tabular-nums"
+              >---</span
+            >
           </div>
         </div>
       </section>

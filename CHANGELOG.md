@@ -5,6 +5,43 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0] - 2026-06-11
+
+The **ATELIER** pass (CONTRACTS V6) — a second round of direct user feedback.
+
+### Fixed
+
+- **`/docs` no longer crashes**: Mermaid treats `;` as a statement separator, so
+  semicolons inside sequence- and ER-diagram labels threw a parse error. Replaced
+  them; all three diagrams render. (`docs.html`.)
+- **Observatory legibility — no more text over data**: every chart reserves a
+  title band and insets the plot body with padding so titles/legends/readouts
+  never overlap the plotted data. The cramped **Titan Roster** and **Titan
+  Resources** panels were reworked — real row heights with gaps, a single-column
+  or compact two-column fallback, ellipsis-truncated names that can't collide
+  with their values, and bars in a separate band from their labels. The
+  observatory canvases are taller (≥72px desktop) and the panel roomier/wider on
+  desktop and TV. (`src/ui/observatory.ts`, `index.html`, `src/styles/app.css`.)
+
+### Added
+
+- **Visible 25-algorithm picker**: a new collapsible "Sorting Fields" panel lists
+  all 25 sorting algorithms as clickable rows (no longer just a cycle button);
+  selecting one highlights it, announces it with a distinct per-field tone (the
+  eight SFX timbres cycle by index), and a live progress bar on the active row
+  tracks how sorted the field currently is. The toolbar cycle button shares the
+  same selection path. (`index.html`, `src/styles/app.css`, `src/world.ts`,
+  `src/ui/hud.ts`.)
+- **Four-page Lab**: the lab artifact is now a 4-page app — page 1 the collapse
+  field, pages 2-4 boards of multiple live, seeded generative data-visuals
+  (phase portraits, reaction-diffusion, Voronoi, statevector, attractors,
+  fractals, networks, spectra…) including p5 WEBGL 3D views. Page nav preserves
+  the seed. (`lab/quantum-wildbeyond.html`.)
+- **Architecture report at `/docs`**: expanded into a local GitHub-Pages-style
+  report — a file/folder architecture tree of the real repo, explicitly labelled
+  **ERD / ERM / ERP** sections, per-era system explanations, the tech stack, and
+  the determinism/perf model. (`docs.html`.)
+
 ## [0.5.0] - 2026-06-11
 
 The **RESONANCE** pass (CONTRACTS V5) — a round of direct user feedback on 0.4.0.

@@ -1,30 +1,34 @@
 <!doctype html>
 <!--
-  Quantum Wildbeyond — Collapse Field
+  Quantum Wildbeyond — Observatory Lab (4 pages)
   Algorithmic-art lab artifact of the Cosmogonic Quantum Mechalogodrom (docs/PHILOSOPHY.md).
 
-  Substrate (the wavefunction, all of it honest math):
-    - A blended vector field: the Lorenz system projected onto its X–Z plane (each particle
-      carries a hidden Y integrated against the real ODE) crossed with curl noise (the exact
-      perpendicular gradient of a Perlin potential, so the noise half is divergence-free).
-    - A Voronoi shatter built geometrically (perpendicular-bisector half-plane clipping) over
-      24 seeded sites — the 24 basis cells, echoing the cosmos' 24 monolith+diorama sites.
-    - Seeded measurement-collapse events: the basis cell is chosen by Born rule (probability
-      proportional to particle occupancy), amplitudes localize onto it, and an interference
-      ring expands outward, kicking the flow it passes through (feedback over garnish).
+  FOUR PAGES, one seed:
+    - Page 1  COLLAPSE FIELD — the original live field (kept verbatim):
+        A blended Lorenz-XZ × curl-noise flow, a geometric Voronoi shatter over 24 seeded
+        sites, and Born-rule measurement-collapse events that ring the void with interference.
+    - Pages 2-4  DATA-VISUAL BOARDS — responsive grids of distinct live, seeded mini-visuals,
+        each a different honest view of the world's math. Every board is its own p5 instance
+        with its own seeded Rng; off-screen boards are paused (noLoop) so only the visible page
+        spends frame budget. Iteration/particle counts are capped to hold ~60fps.
 
-  Determinism: one seed, one cosmos — all randomness flows through p5's randomSeed/noiseSeed.
-  Performance: typed arrays allocated once; the draw() body allocates no arrays; trails via
-  background-alpha fade; ring pool is fixed-size. O(P) per frame, P = particle count.
+  Determinism: one master seed drives every page. Page 1 uses p5's randomSeed/noiseSeed; the
+  board visuals each derive a per-tile seed from (masterSeed, tileId) and run a tiny self-
+  contained mulberry32 Rng — no Math.random in any generative path. Page nav never resets the
+  seed; changing the seed re-derives every page.
+
+  Performance: typed arrays allocated once per visual; per-frame draw bodies allocate no arrays;
+  trails via background-alpha fade; fixed pools. Visible-page-only animation. p5.js 1.7 (WEBGL
+  included) from CDN; fully self-contained, no external data.
 
   Based on the Anthropic algorithmic-art viewer template (structure, branding, seed controls
-  preserved); p5.js from CDN; fully self-contained.
+  preserved).
 -->
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Quantum Wildbeyond — Collapse Field</title>
+    <title>Quantum Wildbeyond — Observatory Lab</title>
     <script
       src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"
       integrity="sha384-Mhzoc5EVkjFUVtIW2M3h8BgXtFlUsUpu9lTCThPrV7+k6MN6vTi079rew0LkvgFb"
@@ -46,6 +50,7 @@
         --anthropic-orange: #d97757;
         --anthropic-blue: #6a9bcc;
         --anthropic-green: #788c5d;
+        --void: #040711;
       }
 
       * {
@@ -79,6 +84,10 @@
         box-shadow: 0 10px 30px rgba(20, 20, 19, 0.1);
         overflow-y: auto;
         overflow-x: hidden;
+        align-self: flex-start;
+        position: sticky;
+        top: 20px;
+        max-height: calc(100vh - 40px);
       }
 
       .sidebar h1 {
@@ -92,13 +101,13 @@
       .sidebar .subtitle {
         color: var(--anthropic-mid-gray);
         font-size: 14px;
-        margin-bottom: 32px;
+        margin-bottom: 28px;
         line-height: 1.4;
       }
 
       /* Control Sections */
       .control-section {
-        margin-bottom: 32px;
+        margin-bottom: 28px;
       }
 
       .control-section h3 {
@@ -144,8 +153,51 @@
         margin-bottom: 8px;
       }
 
-      .regen-button {
-        margin-bottom: 0;
+      /* Page navigation (PAGE 1..4) */
+      .page-nav {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 8px;
+        margin-bottom: 12px;
+      }
+
+      .page-tab {
+        background: var(--anthropic-light);
+        color: var(--anthropic-dark);
+        border: 1px solid var(--anthropic-light-gray);
+        padding: 12px 4px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.18s ease;
+        text-align: center;
+      }
+
+      .page-tab:hover {
+        border-color: var(--anthropic-orange);
+        transform: translateY(-1px);
+      }
+
+      .page-tab.active {
+        background: var(--anthropic-orange);
+        color: white;
+        border-color: var(--anthropic-orange);
+        box-shadow: 0 4px 12px rgba(217, 119, 87, 0.3);
+      }
+
+      .page-desc {
+        font-size: 12px;
+        color: var(--anthropic-mid-gray);
+        line-height: 1.45;
+        min-height: 34px;
+      }
+
+      .page-prev-next {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        margin-top: 10px;
       }
 
       /* Parameter Controls */
@@ -209,41 +261,7 @@
         text-align: right;
       }
 
-      /* Color Pickers */
-      .color-group {
-        margin-bottom: 16px;
-      }
-
-      .color-group label {
-        display: block;
-        font-size: 12px;
-        color: var(--anthropic-mid-gray);
-        margin-bottom: 4px;
-      }
-
-      .color-picker-container {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-      }
-
-      .color-picker-container input[type='color'] {
-        width: 32px;
-        height: 32px;
-        border: none;
-        border-radius: 6px;
-        cursor: pointer;
-        background: none;
-        padding: 0;
-      }
-
-      .color-value {
-        font-family: 'Courier New', monospace;
-        font-size: 12px;
-        color: var(--anthropic-mid-gray);
-      }
-
-      /* Toggle switch (Readout Overlay) — Anthropic-orange when on */
+      /* Toggle switch — Anthropic-orange when on */
       .toggle-row {
         display: flex;
         align-items: center;
@@ -343,7 +361,24 @@
         flex: 1;
       }
 
-      /* Canvas Area */
+      /* Main stage */
+      .stage {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+      }
+
+      /* A single page; only one is visible at a time */
+      .lab-page {
+        display: none;
+      }
+
+      .lab-page.active {
+        display: block;
+      }
+
+      /* Page 1 — the collapse field, a single square canvas */
       .canvas-area {
         flex: 1;
         display: flex;
@@ -352,11 +387,9 @@
         min-width: 0;
       }
 
-      /* The field is a square (1200×1200 backing). To kill the dead margins the
-         user saw, the container grows to whichever is smaller — the full column
-         width or the full viewport height — so the void reaches the edges on
-         portrait monitors, wide laptops, and the TV alike. No fixed max-width
-         cap letterboxing it into a small square. */
+      /* The field is a square (1200×1200 backing). The container grows to whichever
+         is smaller — the full column width or the full viewport height — so the void
+         reaches the edges on portrait monitors, wide laptops, and the TV alike. */
       #canvas-container {
         width: min(100%, calc(100vh - 40px));
         max-width: 1400px;
@@ -366,10 +399,87 @@
         box-shadow:
           0 20px 40px rgba(20, 20, 19, 0.18),
           0 0 0 1px rgba(106, 155, 204, 0.12);
-        background: #040711;
+        background: var(--void);
       }
 
       #canvas-container canvas {
+        display: block;
+        width: 100% !important;
+        height: 100% !important;
+      }
+
+      /* Board header (pages 2-4) */
+      .board-head {
+        margin-bottom: 16px;
+      }
+
+      .board-head h2 {
+        font-family: 'Lora', serif;
+        font-size: 22px;
+        font-weight: 500;
+        color: var(--anthropic-dark);
+        margin-bottom: 4px;
+      }
+
+      .board-head p {
+        font-size: 13px;
+        color: var(--anthropic-mid-gray);
+        line-height: 1.45;
+      }
+
+      /* Responsive grid of mini-visual tiles */
+      .board-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 16px;
+      }
+
+      .viz-tile {
+        background: var(--void);
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow:
+          0 12px 28px rgba(20, 20, 19, 0.16),
+          0 0 0 1px rgba(106, 155, 204, 0.12);
+        display: flex;
+        flex-direction: column;
+        position: relative;
+      }
+
+      .viz-tile .viz-titlebar {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        padding: 10px 12px 18px;
+        background: linear-gradient(180deg, rgba(4, 7, 17, 0.92) 0%, rgba(4, 7, 17, 0) 100%);
+        z-index: 2;
+        pointer-events: none;
+      }
+
+      .viz-tile .viz-name {
+        font-size: 12.5px;
+        font-weight: 600;
+        letter-spacing: 0.03em;
+        color: #cfe6ff;
+        text-transform: uppercase;
+      }
+
+      .viz-tile .viz-legend {
+        font-size: 10.5px;
+        color: #8aa3bd;
+        line-height: 1.35;
+        margin-top: 2px;
+        font-family: 'Courier New', monospace;
+      }
+
+      .viz-canvas {
+        width: 100%;
+        aspect-ratio: 1 / 1;
+        position: relative;
+      }
+
+      .viz-canvas canvas {
         display: block;
         width: 100% !important;
         height: 100% !important;
@@ -382,39 +492,64 @@
         justify-content: center;
         font-size: 18px;
         color: var(--anthropic-mid-gray);
+        height: 100%;
       }
 
       /* Responsive - Stack on mobile */
-      @media (max-width: 600px) {
+      @media (max-width: 720px) {
         .container {
           flex-direction: column;
         }
 
         .sidebar {
           width: 100%;
+          position: static;
+          max-height: none;
         }
 
         .canvas-area {
           padding: 0;
         }
 
-        /* On a phone, fill the column width; height follows the square ratio. */
         #canvas-container {
           width: 100%;
           max-width: none;
+        }
+
+        .board-grid {
+          grid-template-columns: 1fr;
         }
       }
     </style>
   </head>
   <body>
     <div class="container">
-      <!-- Control Sidebar -->
+      <!-- Control Sidebar (present on every page) -->
       <div class="sidebar">
         <h1>Quantum Wildbeyond</h1>
         <div class="subtitle">
-          Collapse field — particles ride a blended Lorenz-XZ × curl-noise flow until a seeded
-          measurement collapses them, Born-rule, into one of 24 Voronoi basis cells and rings the
-          void with interference. From the Cosmogonic Quantum Mechalogodrom.
+          A four-page observatory of the Cosmogonic Quantum Mechalogodrom. One seed drives every
+          page: the live collapse field and three boards of generative data-visuals, all honest
+          seeded math.
+        </div>
+
+        <!-- Page navigation (ALWAYS KEEP THE SEED; nav never re-rolls it) -->
+        <div class="control-section">
+          <h3>Pages</h3>
+          <div class="page-nav" id="page-nav">
+            <button class="page-tab active" data-page="1" onclick="setPage(1)">1</button>
+            <button class="page-tab" data-page="2" onclick="setPage(2)">2</button>
+            <button class="page-tab" data-page="3" onclick="setPage(3)">3</button>
+            <button class="page-tab" data-page="4" onclick="setPage(4)">4</button>
+          </div>
+          <div class="page-desc" id="page-desc">
+            Page 1 — Collapse Field: the live Lorenz × curl-noise flow with Born-rule measurement
+            collapse.
+          </div>
+          <div class="page-prev-next">
+            <button class="button secondary" onclick="prevPage()">← Page</button>
+            <button class="button secondary" onclick="nextPage()">Page →</button>
+          </div>
         </div>
 
         <!-- Seed Section (ALWAYS KEEP THIS) -->
@@ -437,9 +572,9 @@
           </div>
         </div>
 
-        <!-- Parameters Section -->
+        <!-- Parameters Section (Page 1 collapse field) -->
         <div class="control-section">
-          <h3>Parameters</h3>
+          <h3>Field Parameters</h3>
 
           <!-- Particles -->
           <div class="control-group">
@@ -553,17 +688,65 @@
         </div>
       </div>
 
-      <!-- Main Canvas Area -->
-      <div class="canvas-area">
-        <div id="canvas-container">
-          <div class="loading">Initializing generative art...</div>
-        </div>
+      <!-- Main Stage: one page visible at a time -->
+      <div class="stage">
+        <!-- Page 1 — the collapse field (the original, kept) -->
+        <section class="lab-page active" id="page-1" data-page="1">
+          <div class="canvas-area">
+            <div id="canvas-container">
+              <div class="loading">Initializing collapse field…</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Page 2 — PHASE & FLOW board -->
+        <section class="lab-page" id="page-2" data-page="2">
+          <div class="board-head">
+            <h2>Board II — Phase &amp; Flow</h2>
+            <p>
+              Seven live deterministic systems: the strange attractors, reaction–diffusion, and
+              tessellations whose flows the cosmos rides. Every tile reseeds from the master seed.
+            </p>
+          </div>
+          <div class="board-grid" id="board-2"></div>
+        </section>
+
+        <!-- Page 3 — QUANTUM & SPECTRUM board -->
+        <section class="lab-page" id="page-3" data-page="3">
+          <div class="board-head">
+            <h2>Board III — Quantum &amp; Spectrum</h2>
+            <p>
+              Seven views of measurement and signal: an evolving statevector, the Bloch disc, the
+              spectrum, distributions, automata, and escape-time fractals.
+            </p>
+          </div>
+          <div class="board-grid" id="board-3"></div>
+        </section>
+
+        <!-- Page 4 — NETWORK & DEPTH board -->
+        <section class="lab-page" id="page-4" data-page="4">
+          <div class="board-head">
+            <h2>Board IV — Network &amp; Depth</h2>
+            <p>
+              Seven structural views: the connectome and gravity wells in motion, a 3D attractor
+              ribbon (WEBGL), bifurcation, and deep escape-time zooms.
+            </p>
+          </div>
+          <div class="board-grid" id="board-4"></div>
+        </section>
       </div>
     </div>
 
     <script>
       // ═══════════════════════════════════════════════════════════════════════
-      // GENERATIVE ART PARAMETERS
+      // SHARED SEED + PAGE STATE
+      //
+      // One master seed drives every page. Page 1 (the collapse field) feeds the
+      // seed into p5's randomSeed/noiseSeed exactly as before. The board visuals
+      // (pages 2-4) each derive their own per-tile seed from (masterSeed, tileId)
+      // via a hash, and run a tiny self-contained mulberry32 Rng — so no two tiles
+      // share a stream and none of them touch Math.random in a generative path.
+      // Page nav NEVER changes the seed; only the seed controls do.
       // ═══════════════════════════════════════════════════════════════════════
 
       let params = {
@@ -573,13 +756,75 @@
         fieldBlend: 0.45, // 0 = pure Lorenz-XZ, 1 = pure curl noise
         trailFade: 8, // background-alpha fade per frame (255 scale), 2..40 — longer trails
         paletteShift: 0, // global hue rotation, degrees
-        showHud: true, // live readout overlay (count / collapses / fps / seed / math legend)
+        showHud: true, // live readout overlay on Page 1
       };
 
-      let defaultParams = { ...params }; // Store defaults for reset
+      const defaultParams = { ...params };
+
+      let currentPage = 1; // 1..4
+      const PAGE_DESCS = {
+        1: 'Page 1 — Collapse Field: the live Lorenz × curl-noise flow with Born-rule measurement collapse.',
+        2: 'Page 2 — Phase & Flow: strange attractors, reaction–diffusion, and tessellations (7 visuals).',
+        3: 'Page 3 — Quantum & Spectrum: statevectors, the Bloch disc, spectra, and escape-time (7 visuals).',
+        4: 'Page 4 — Network & Depth: connectome, gravity, a 3D ribbon, bifurcation, and deep zooms (7 visuals).',
+      };
 
       // ═══════════════════════════════════════════════════════════════════════
-      // COLLAPSE FIELD — substrate constants
+      // SEEDED RNG — mulberry32 (board visuals). Deterministic, allocation-free
+      // once constructed. derivedSeed mixes the master seed with a string tileId
+      // so each tile gets an independent, reproducible stream.
+      // ═══════════════════════════════════════════════════════════════════════
+
+      /**
+       * mulberry32 PRNG. O(1) per draw, no allocation after construction.
+       * @param {number} a 32-bit seed
+       * @returns {{next:()=>number, range:(lo:number,hi:number)=>number, int:(n:number)=>number, gauss:()=>number}}
+       */
+      function makeRng(a) {
+        let s = a >>> 0;
+        const next = () => {
+          s |= 0;
+          s = (s + 0x6d2b79f5) | 0;
+          let t = Math.imul(s ^ (s >>> 15), 1 | s);
+          t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+          return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+        };
+        return {
+          next,
+          range: (lo, hi) => lo + (hi - lo) * next(),
+          int: (n) => Math.floor(next() * n),
+          // Box–Muller, one of the pair (good enough; no cached partner needed).
+          gauss: () => {
+            const u = Math.max(1e-9, next());
+            const v = next();
+            return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+          },
+        };
+      }
+
+      /**
+       * Derive a 32-bit tile seed from the master seed and a string id. Stable hash
+       * (FNV-1a-ish) so the same (seed, tileId) always maps to the same stream.
+       * @param {number} masterSeed
+       * @param {string} tileId
+       * @returns {number}
+       */
+      function derivedSeed(masterSeed, tileId) {
+        let h = (2166136261 ^ (masterSeed >>> 0)) >>> 0;
+        for (let i = 0; i < tileId.length; i++) {
+          h ^= tileId.charCodeAt(i);
+          h = Math.imul(h, 16777619) >>> 0;
+        }
+        // Final avalanche.
+        h ^= h >>> 16;
+        h = Math.imul(h, 2246822507) >>> 0;
+        h ^= h >>> 13;
+        return h >>> 0;
+      }
+
+      // ═══════════════════════════════════════════════════════════════════════
+      // PAGE 1 — COLLAPSE FIELD (the original lab, preserved). Runs as the default
+      // global p5 sketch (setup/draw at window scope).
       // ═══════════════════════════════════════════════════════════════════════
 
       const W = 1200;
@@ -601,14 +846,10 @@
       const RING_BAND = 26; // half-width of the wavefront's particle-kick band, px
 
       // ─── HUD overlay layout (canvas-space px, sized against the 1200² field) ───
-      const HUD_PAD = 22; // inset of the cards from the canvas edge
-      const HUD_W = 300; // card width
-      const HUD_CARD_H = 224; // telemetry card height
-      const HUD_MATH_H = 198; // math-legend card height
-      // The collapse-field math, as a legend. Each entry is [text, kind]:
-      //   kind 0 → formula line (cyan mono), kind 1 → caption line (gray).
-      // Honest to the implementation: the blended unit field, the Lorenz ODE the
-      // hidden Y integrates, the divergence-free curl, and the Born-rule pick.
+      const HUD_PAD = 22;
+      const HUD_W = 300;
+      const HUD_CARD_H = 224;
+      const HUD_MATH_H = 198;
       const HUD_MATH_LINES = [
         ['v = (1−f)·L̂ + f·N̂   (then renormalized)', 0],
         ['blend f = 0.06 + 0.94·fieldBlend', 1],
@@ -619,39 +860,32 @@
         ['→ amplitudes localize; ring kicks the flow', 1],
       ];
 
-      // ═══════════════════════════════════════════════════════════════════════
-      // STATE — every buffer allocated exactly once; draw() allocates no arrays
-      // ═══════════════════════════════════════════════════════════════════════
-
-      const px = new Float32Array(MAXP); // particle x
-      const py = new Float32Array(MAXP); // particle y
-      const ly = new Float32Array(MAXP); // hidden Lorenz Y per particle (the unseen coordinate)
-      const sv = new Float32Array(MAXP); // per-particle speed/hue variation
-      const nearestSite = new Int16Array(MAXP); // scratch: nearest basis cell per particle
+      const px = new Float32Array(MAXP);
+      const py = new Float32Array(MAXP);
+      const ly = new Float32Array(MAXP);
+      const sv = new Float32Array(MAXP);
+      const nearestSite = new Int16Array(MAXP);
       const siteX = new Float32Array(SITE_COUNT);
       const siteY = new Float32Array(SITE_COUNT);
-      const siteCounts = new Int32Array(SITE_COUNT); // scratch: Born-rule occupancy histogram
-      const rings = []; // pool of {x, y, r, hue, active}, filled once in setup()
-      let voro = null; // offscreen Voronoi shatter overlay (rebuilt per regeneration)
-      let frame0 = 0; // frame of the last regeneration — pins the noise-time origin,
-      // so the same seed replays the same evolution even mid-session
+      const siteCounts = new Int32Array(SITE_COUNT);
+      const rings = [];
+      let voro = null;
+      let frame0 = 0;
 
-      // Field scratch (module-level so fieldAt() is allocation-free).
       let fvx = 0;
       let fvy = 0;
 
-      // ─── HUD telemetry (display-only; NEVER reads the seeded rng streams) ───
-      let collapseCount = 0; // measurement-collapse events since the last regeneration
-      let lastChosenCell = -1; // basis cell index of the most recent collapse
-      let lastBornP = 0; // Born-rule probability that cell carried at collapse time
-      let fpsSmooth = 60; // exponentially smoothed frame rate for a steady readout
-      let effectiveBlend = 0; // last frame's actual noise-mix f (with the 6% floor folded in)
+      let collapseCount = 0;
+      let lastChosenCell = -1;
+      let lastBornP = 0;
+      let fpsSmooth = 60;
+      let effectiveBlend = 0;
       let hudFont = 'Courier New, monospace';
 
       function setup() {
-        let canvas = createCanvas(W, H);
+        const canvas = createCanvas(W, H);
         canvas.parent('canvas-container');
-        pixelDensity(1); // exact 1200×1200 pixel budget on every display
+        pixelDensity(1);
         noiseDetail(3, 0.55);
 
         voro = createGraphics(W, H);
@@ -663,22 +897,19 @@
 
         initializeSystem();
 
-        // Remove loading message
-        document.querySelector('.loading').style.display = 'none';
+        const loadingEl = document.querySelector('#canvas-container .loading');
+        if (loadingEl) loadingEl.style.display = 'none';
       }
 
       /**
-       * Re-collapses the whole cosmos from params.seed: seeds both RNG streams,
-       * places the 24 basis sites, bakes the Voronoi shatter overlay, scatters
-       * particles, clears rings and canvas. O(P + SITE_COUNT³). Regeneration-time
-       * only — allocation here is fine; the per-frame path stays clean.
+       * Re-collapses the whole cosmos from params.seed. O(P + SITE_COUNT³).
+       * Regeneration-time only; the per-frame path stays allocation-free.
        */
       function initializeSystem() {
         randomSeed(params.seed);
         noiseSeed(params.seed);
         frame0 = frameCount;
 
-        // HUD telemetry resets with the cosmos (display-only — no rng touched).
         collapseCount = 0;
         lastChosenCell = -1;
         lastBornP = 0;
@@ -698,13 +929,11 @@
         for (let i = 0; i < RING_POOL; i++) rings[i].active = false;
 
         colorMode(RGB, 255, 255, 255, 255);
-        background(4, 7, 17); // the void, opaque — trails accumulate from here
+        background(4, 7, 17);
       }
 
       /**
-       * Mitchell best-candidate placement of the 24 sites: each new site is the
-       * candidate (of 14) farthest from all placed sites — evenly wild, fully
-       * seeded. O(SITE_COUNT² · candidates), regeneration-time only.
+       * Mitchell best-candidate placement of the 24 sites. Regeneration-time only.
        */
       function placeSites() {
         const margin = 70;
@@ -734,24 +963,19 @@
       }
 
       /**
-       * Bakes the Voronoi shatter into the offscreen overlay, computed honestly:
-       * for every site pair the perpendicular bisector is clipped against all
-       * other "closer-to-i" half-planes; whatever segment survives is a true
-       * Voronoi edge. O(SITE_COUNT³) ≈ 6.6k ops, regeneration-time only. Baked
-       * at moderate alpha; draw() re-stamps it each frame at a strength tied to
-       * the trail fade, so its steady-state brightness stays a faint ghost.
+       * Bakes the Voronoi shatter into the offscreen overlay via honest
+       * perpendicular-bisector half-plane clipping. O(SITE_COUNT³), regen-time only.
        */
       function buildVoronoiOverlay() {
         voro.clear();
-        voro.strokeWeight(1.5); // thicker edges — the shatter reads more present
+        voro.strokeWeight(1.5);
         voro.stroke(120, 200, 255, 175);
         voro.noFill();
-        const T = 2000; // bisector half-extent, comfortably beyond the canvas
+        const T = 2000;
         for (let i = 0; i < SITE_COUNT; i++) {
           for (let j = i + 1; j < SITE_COUNT; j++) {
             const mx = (siteX[i] + siteX[j]) / 2;
             const my = (siteY[i] + siteY[j]) / 2;
-            // Bisector direction = perpendicular of (j - i), normalized.
             let dx = -(siteY[j] - siteY[i]);
             let dy = siteX[j] - siteX[i];
             const dl = Math.hypot(dx, dy) || 1;
@@ -762,7 +986,6 @@
             let alive = true;
             for (let k = 0; k < SITE_COUNT && alive; k++) {
               if (k === i || k === j) continue;
-              // Half-plane "closer to i than k": (P - midpoint(i,k)) · (k - i) <= 0.
               const nx = siteX[k] - siteX[i];
               const ny = siteY[k] - siteY[i];
               const a = dx * nx + dy * ny;
@@ -782,8 +1005,6 @@
             }
           }
         }
-        // Basis sites: a bright core, an inner ring, and a faint outer halo —
-        // 24 instrument marks the eye can land on across the now-fuller field.
         voro.noStroke();
         voro.fill(180, 230, 255, 90);
         for (let s = 0; s < SITE_COUNT; s++) voro.circle(siteX[s], siteY[s], 22);
@@ -798,26 +1019,20 @@
       }
 
       /**
-       * The blended vector field at particle i. Writes a unit direction into the
-       * module scratch (fvx, fvy) and advances the particle's hidden Lorenz Y by
-       * one Euler step of the true ODE (dY/dt = X(ρ−Z) − Y). The noise half is a
-       * genuine curl (perpendicular Perlin gradient), hence divergence-free.
-       * O(1) per call; 4 noise() samples. Allocation-free.
+       * The blended vector field at particle i. Writes a unit direction into module
+       * scratch (fvx, fvy) and advances the hidden Lorenz Y. Allocation-free.
        */
       function fieldAt(i, t) {
-        // Canvas → Lorenz X–Z plane (screen y points down, Z points up).
         const X = (px[i] / W - 0.5) * 52;
         const Z = (1 - py[i] / H) * 55;
         ly[i] += (X * (RHO - Z) - ly[i]) * LORENZ_DT;
 
-        // Lorenz velocity projected to the X–Z plane, normalized.
         let lvx = SIGMA * (ly[i] - X);
-        let lvy = -(X * ly[i] - BETA * Z); // dZ/dt, sign-flipped into screen space
+        let lvy = -(X * ly[i] - BETA * Z);
         const lm = Math.hypot(lvx, lvy) || 1;
         lvx /= lm;
         lvy /= lm;
 
-        // Curl noise: v = (∂n/∂y, −∂n/∂x) by central differences, normalized.
         const nx = px[i] * NOISE_SCALE;
         const ny = py[i] * NOISE_SCALE;
         const e = NOISE_EPS * NOISE_SCALE;
@@ -829,13 +1044,11 @@
           cvy /= cm;
         }
 
-        // Blend (a noise floor keeps pure-Lorenz mode from freezing at fixed points).
         const f = MIN_NOISE_BLEND + (1 - MIN_NOISE_BLEND) * params.fieldBlend;
         let bx = (1 - f) * lvx + f * cvx;
         let by = (1 - f) * lvy + f * cvy;
         const bm = Math.hypot(bx, by);
         if (bm < 1e-4) {
-          // Opposing fields cancel — let the noise half break the tie.
           fvx = cvx;
           fvy = cvy;
         } else {
@@ -845,11 +1058,8 @@
       }
 
       /**
-       * One seeded measurement-collapse event. The basis cell is chosen by Born
-       * rule — probability proportional to particle occupancy of each Voronoi
-       * cell — then the measured cell's particles localize toward their site
-       * (drawn as bright convergence streaks) and an interference ring claims a
-       * pool slot. O(P · SITE_COUNT), event-time only (~1/s at defaults).
+       * One seeded measurement-collapse event (Born rule). O(P · SITE_COUNT),
+       * event-time only.
        */
       function collapseEvent() {
         const n = Math.min(MAXP, Math.round(params.particles));
@@ -870,7 +1080,6 @@
           siteCounts[best]++;
         }
 
-        // Born rule: P(cell) = occupancy / total.
         let pick = random() * n;
         let chosen = 0;
         for (let s = 0; s < SITE_COUNT; s++) {
@@ -881,15 +1090,12 @@
           }
         }
 
-        // HUD telemetry (display-only — recorded AFTER the single rng draw above,
-        // so the seeded stream is byte-identical with or without the overlay).
         collapseCount++;
         lastChosenCell = chosen;
         lastBornP = n > 0 ? siteCounts[chosen] / n : 0;
 
         const hueC = (BASE_HUE + 180 + params.paletteShift + chosen * 7) % 360;
 
-        // Localization: measured amplitudes snap toward the basis state.
         strokeWeight(1);
         stroke(hueC, 25, 100, 32);
         for (let i = 0; i < n; i++) {
@@ -901,7 +1107,6 @@
           line(ox, oy, px[i], py[i]);
         }
 
-        // Claim an interference ring from the fixed pool.
         for (let r = 0; r < RING_POOL; r++) {
           const rg = rings[r];
           if (rg.active) continue;
@@ -915,41 +1120,27 @@
       }
 
       /**
-       * Frame body. Order: alpha-fade trails → re-stamp the shatter overlay →
-       * maybe collapse → advect + draw particles (ring wavefronts kick what they
-       * pass through) → advance + draw rings. O(P · (1 + active rings)) with no
-       * array allocation; the only sqrt-bearing ring test is gated by a squared
-       * bounding check.
+       * Frame body for the collapse field. O(P · (1 + active rings)), no allocation.
        */
       function draw() {
         const t = (frameCount - frame0) * 0.0022;
 
-        // 0. HUD telemetry sampling (display-only — no rng, no draw-order impact).
-        //    Smooth p5's per-frame rate so the readout doesn't strobe; record the
-        //    actual noise-mix f the field will use this frame.
         fpsSmooth += (frameRate() - fpsSmooth) * 0.1;
         effectiveBlend = MIN_NOISE_BLEND + (1 - MIN_NOISE_BLEND) * params.fieldBlend;
 
-        // 1. Trails: translucent void wash instead of a hard clear.
         colorMode(RGB, 255, 255, 255, 255);
         noStroke();
         fill(4, 7, 17, params.trailFade);
         rect(0, 0, W, H);
 
-        // 2. The shatter ghosts through the trails. Stamp strength tracks the
-        //    fade: with stamp alpha a and fade alpha f per frame, steady-state
-        //    line weight ≈ a / (a + f); a = (0.55 baked) · (0.6 f) ≈ f/3 pins it
-        //    near 25% of line color for EVERY trailFade setting — always faint.
         drawingContext.globalAlpha = (0.6 * params.trailFade) / 255;
         image(voro, 0, 0);
         drawingContext.globalAlpha = 1;
 
         colorMode(HSB, 360, 100, 100, 100);
 
-        // 3. Seeded measurement: expectation = collapseRate events per second.
         if (random() < params.collapseRate / 60) collapseEvent();
 
-        // 4. Particles.
         strokeWeight(1.1);
         const n = Math.min(MAXP, Math.round(params.particles));
         for (let i = 0; i < n; i++) {
@@ -960,7 +1151,6 @@
           let vx = fvx * BASE_SPEED * sv[i];
           let vy = fvy * BASE_SPEED * sv[i];
 
-          // Interference: active wavefronts push the flow radially as they pass.
           for (let r = 0; r < RING_POOL; r++) {
             const rg = rings[r];
             if (!rg.active) continue;
@@ -980,7 +1170,6 @@
           px[i] = ox + vx;
           py[i] = oy + vy;
 
-          // Departed the void → reborn elsewhere (seeded stream, no streak drawn).
           if (px[i] < -20 || px[i] > W + 20 || py[i] < -20 || py[i] > H + 20) {
             px[i] = random(W);
             py[i] = random(H);
@@ -988,15 +1177,13 @@
             continue;
           }
 
-          // Hue keyed off the hidden Lorenz Y — the unseen coordinate paints the seen.
           const hue =
             (((BASE_HUE + params.paletteShift + ly[i] * 0.22 + (sv[i] - 1) * 60) % 360) + 360) %
             360;
-          stroke(hue, 80, 98, 52); // richer trails: higher saturation/brightness/alpha
+          stroke(hue, 80, 98, 52);
           line(ox, oy, px[i], py[i]);
         }
 
-        // 5. Interference rings: three fringes, amplitude decaying with radius.
         noFill();
         for (let r = 0; r < RING_POOL; r++) {
           const rg = rings[r];
@@ -1015,7 +1202,6 @@
           stroke(rg.hue, 30, 100, 22 * a);
           circle(rg.x, rg.y, rg.r * 1.24);
           if (rg.r < 48) {
-            // Measurement flash at the freshly collapsed basis site.
             noStroke();
             fill(rg.hue, 20, 100, 70 * (1 - rg.r / 48));
             circle(rg.x, rg.y, 18);
@@ -1023,19 +1209,8 @@
           }
         }
 
-        // 6. Live readout overlay — last, so it floats above the field.
         if (params.showHud) drawHud(n);
       }
-
-      // ═══════════════════════════════════════════════════════════════════════
-      // HUD OVERLAY — live readouts + collapse-field MATH legend
-      //
-      // Drawn entirely in the canvas (no external DOM), so it scales with the
-      // field and survives Download as part of the frame. Wrapped in push()/pop()
-      // and RGB colorMode; it issues ONLY text/rect/fill calls — never random()
-      // or noise() — so the seeded sim streams are untouched and same-seed
-      // replays stay byte-identical whether the overlay is on or off.
-      // ═══════════════════════════════════════════════════════════════════════
 
       /** One left-aligned label/value telemetry row. Allocation-free. */
       function hudRow(label, value, x, y, valueColor) {
@@ -1051,24 +1226,18 @@
         textStyle(NORMAL);
       }
 
-      /**
-       * Paints the telemetry card (top-left) and the math legend (bottom-left).
-       * O(1) — a fixed set of text rows. `n` is the live particle count this
-       * frame. Reads only display-state captured elsewhere; draws no rng.
-       */
+      /** Paints the telemetry + math-legend cards. O(1). Draws no rng. */
       function drawHud(n) {
         push();
         colorMode(RGB, 255, 255, 255, 255);
         textFont(hudFont);
 
-        // Accent colors (match the void-cyan / Anthropic-orange brand).
         const cyan = [120, 200, 255];
         const orange = [217, 119, 87];
         const green = [150, 200, 130];
         const fps = fpsSmooth;
         const fpsColor = fps >= 55 ? green : fps >= 30 ? [230, 200, 110] : orange;
 
-        // ── Telemetry card (top-left) ──
         const cx = HUD_PAD;
         let cy = HUD_PAD;
         noStroke();
@@ -1079,7 +1248,7 @@
         noFill();
         rect(cx + 0.5, cy + 0.5, HUD_W - 1, HUD_CARD_H - 1, 10);
 
-        const ix = cx + 18; // inner left
+        const ix = cx + 18;
         let iy = cy + 16;
         noStroke();
         fill(cyan[0], cyan[1], cyan[2]);
@@ -1117,7 +1286,6 @@
         iy += lineH;
         hudRow('fps', fps.toFixed(1), ix, iy, fpsColor);
 
-        // ── Math legend (bottom-left) ──
         const ly0 = H - HUD_PAD - HUD_MATH_H;
         noStroke();
         fill(6, 10, 22, 205);
@@ -1142,7 +1310,6 @@
         const mlH = 17;
         for (let k = 0; k < HUD_MATH_LINES.length; k++) {
           const seg = HUD_MATH_LINES[k];
-          // seg = [text, kind]; kind 0 = formula (mono cyan), 1 = caption (gray).
           if (seg[1] === 1) {
             fill(140, 158, 176);
           } else {
@@ -1153,6 +1320,1504 @@
         }
 
         pop();
+      }
+
+      // ═══════════════════════════════════════════════════════════════════════
+      // BOARD VISUALS (pages 2-4) — each an INSTANCE-MODE p5 sketch.
+      //
+      // A tile spec is { id, name, legend, make }. `make(p, rng, S)` wires the
+      // instance: it returns nothing but installs p.setup/p.draw. S is the tile's
+      // backing resolution (square). Every visual:
+      //   • seeds from `rng` (derived from master seed + tile id) — no Math.random;
+      //   • caps its work (particle/iteration counts) to hold ~60fps;
+      //   • paints its own title-safe top inset (titlebar is a DOM overlay).
+      // Boards are built once; off-screen boards are paused via instance.noLoop().
+      // ═══════════════════════════════════════════════════════════════════════
+
+      const TILE_RES = 420; // backing px per tile (CSS scales it to the grid cell)
+      const VOID = [4, 7, 17];
+      const boardInstances = []; // { page, instance }
+      let boardsBuilt = false;
+
+      /** Common dark wash + faint frame; leaves room under the DOM titlebar. */
+      function tileBackdrop(p, S) {
+        p.background(VOID[0], VOID[1], VOID[2]);
+        p.noFill();
+        p.stroke(106, 155, 204, 22);
+        p.strokeWeight(1);
+        p.rect(0.5, 0.5, S - 1, S - 1);
+      }
+
+      // ─────────────────────────────────────────────────────────────────────────
+      // Tile makers. Each is a closure factory: make(p, rng, S).
+      // ─────────────────────────────────────────────────────────────────────────
+
+      /** Lorenz attractor phase portrait (X–Z), RK-free Euler, trailed. */
+      function makeLorenz(p, rng, S) {
+        let x = rng.range(-1, 1);
+        let y = rng.range(-1, 1);
+        let z = rng.range(10, 30);
+        const sg = 10;
+        const rh = 28;
+        const bt = 8 / 3;
+        const dt = 0.006;
+        const STEPS = 90; // segments per frame — bounded work
+        p.setup = () => {
+          p.createCanvas(S, S);
+          p.pixelDensity(1);
+          p.colorMode(p.HSB, 360, 100, 100, 100);
+          p.background(VOID[0], VOID[1], VOID[2]);
+        };
+        p.draw = () => {
+          p.colorMode(p.RGB, 255, 255, 255, 255);
+          p.noStroke();
+          p.fill(VOID[0], VOID[1], VOID[2], 14);
+          p.rect(0, 0, S, S);
+          p.colorMode(p.HSB, 360, 100, 100, 100);
+          p.strokeWeight(1.3);
+          const cx = S * 0.5;
+          const cy = S * 0.62;
+          const sc = S / 62;
+          for (let s = 0; s < STEPS; s++) {
+            const px0 = cx + x * sc;
+            const py0 = cy - (z - 25) * sc;
+            const dx = sg * (y - x);
+            const dy = x * (rh - z) - y;
+            const dz = x * y - bt * z;
+            x += dx * dt;
+            y += dy * dt;
+            z += dz * dt;
+            const px1 = cx + x * sc;
+            const py1 = cy - (z - 25) * sc;
+            const sp = Math.min(1, Math.hypot(dx, dz) / 260);
+            p.stroke((193 + sp * 120) % 360, 80, 100, 60);
+            p.line(px0, py0, px1, py1);
+          }
+        };
+      }
+
+      /** Rössler attractor phase portrait (X–Y), trailed. */
+      function makeRossler(p, rng, S) {
+        let x = rng.range(-4, 4);
+        let y = rng.range(-4, 4);
+        let z = rng.range(0, 4);
+        const a = 0.2;
+        const b = 0.2;
+        const c = 5.7;
+        const dt = 0.03;
+        const STEPS = 110;
+        p.setup = () => {
+          p.createCanvas(S, S);
+          p.pixelDensity(1);
+          p.colorMode(p.HSB, 360, 100, 100, 100);
+          p.background(VOID[0], VOID[1], VOID[2]);
+        };
+        p.draw = () => {
+          p.colorMode(p.RGB, 255, 255, 255, 255);
+          p.noStroke();
+          p.fill(VOID[0], VOID[1], VOID[2], 12);
+          p.rect(0, 0, S, S);
+          p.colorMode(p.HSB, 360, 100, 100, 100);
+          p.strokeWeight(1.3);
+          const cx = S * 0.5;
+          const cy = S * 0.52;
+          const sc = S / 36;
+          for (let s = 0; s < STEPS; s++) {
+            const px0 = cx + x * sc;
+            const py0 = cy + y * sc;
+            const dx = -y - z;
+            const dy = x + a * y;
+            const dz = b + z * (x - c);
+            x += dx * dt;
+            y += dy * dt;
+            z += dz * dt;
+            const px1 = cx + x * sc;
+            const py1 = cy + y * sc;
+            p.stroke((30 + Math.min(1, z / 22) * 60) % 360, 85, 100, 62);
+            p.line(px0, py0, px1, py1);
+          }
+        };
+      }
+
+      /** Gray–Scott reaction–diffusion on a small grid; bilinear-upscaled to S. */
+      function makeGrayScott(p, rng, S) {
+        const N = 96; // sim grid (cap: 96² cells, a few iters/frame)
+        const a = new Float32Array(N * N);
+        const b = new Float32Array(N * N);
+        const a2 = new Float32Array(N * N);
+        const b2 = new Float32Array(N * N);
+        // Stability: explicit Euler needs dA·dt ≤ 0.25 for the 5-point Laplacian.
+        // dA·dt = 0.2, dB·dt = 0.1 sits safely inside that bound, so the field
+        // never blows up to NaN; feed/kill put it in the worm-and-spot regime.
+        const dA = 1.0;
+        const dB = 0.5;
+        const dt = 0.2;
+        const feed = 0.0545;
+        const kill = 0.062;
+        let img = null;
+        const ITERS = 10; // diffusion sweeps per frame — capped
+        const seedReaction = () => {
+          a.fill(1);
+          b.fill(0);
+          for (let s = 0; s < 22; s++) {
+            const cx = rng.int(N);
+            const cy = rng.int(N);
+            const rad = 3 + rng.int(4);
+            for (let yy = -rad; yy <= rad; yy++) {
+              for (let xx = -rad; xx <= rad; xx++) {
+                const gx = (cx + xx + N) % N;
+                const gy = (cy + yy + N) % N;
+                if (xx * xx + yy * yy <= rad * rad) b[gy * N + gx] = 1;
+              }
+            }
+          }
+        };
+        p.setup = () => {
+          p.createCanvas(S, S);
+          p.pixelDensity(1);
+          img = p.createImage(N, N);
+          seedReaction();
+          p.noStroke();
+        };
+        p.draw = () => {
+          for (let it = 0; it < ITERS; it++) {
+            for (let y = 0; y < N; y++) {
+              const ym = ((y - 1 + N) % N) * N;
+              const yp = ((y + 1) % N) * N;
+              const yc = y * N;
+              for (let x = 0; x < N; x++) {
+                const xm = (x - 1 + N) % N;
+                const xp = (x + 1) % N;
+                const i = yc + x;
+                const la = a[ym + x] + a[yp + x] + a[yc + xm] + a[yc + xp] - 4 * a[i];
+                const lb = b[ym + x] + b[yp + x] + b[yc + xm] + b[yc + xp] - 4 * b[i];
+                const av = a[i];
+                const bv = b[i];
+                const abb = av * bv * bv;
+                a2[i] = av + (dA * la - abb + feed * (1 - av)) * dt;
+                b2[i] = bv + (dB * lb + abb - (kill + feed) * bv) * dt;
+              }
+            }
+            a.set(a2);
+            b.set(b2);
+          }
+          img.loadPixels();
+          for (let i = 0; i < N * N; i++) {
+            // b (the activator) carries the spots/worms — map it to a bright skin.
+            const v = Math.max(0, Math.min(1, b[i] * 3.2));
+            const q = i * 4;
+            img.pixels[q] = 10 + v * 110;
+            img.pixels[q + 1] = 30 + v * 190;
+            img.pixels[q + 2] = 70 + v * 175;
+            img.pixels[q + 3] = 255;
+          }
+          img.updatePixels();
+          p.image(img, 0, 0, S, S);
+        };
+      }
+
+      /** Voronoi / Delaunay tessellation over seeded sites (brute nearest-cell). */
+      function makeVoronoi(p, rng, S) {
+        const M = 26;
+        const sx = new Float32Array(M);
+        const sy = new Float32Array(M);
+        const sh = new Float32Array(M);
+        const RES = 130; // nearest-cell raster grid (cap)
+        let img = null;
+        p.setup = () => {
+          p.createCanvas(S, S);
+          p.pixelDensity(1);
+          for (let i = 0; i < M; i++) {
+            sx[i] = rng.range(0.05, 0.95);
+            sy[i] = rng.range(0.05, 0.95);
+            sh[i] = rng.range(180, 300);
+          }
+          img = p.createImage(RES, RES);
+          img.loadPixels();
+          for (let gy = 0; gy < RES; gy++) {
+            for (let gx = 0; gx < RES; gx++) {
+              const fx = gx / RES;
+              const fy = gy / RES;
+              let best = 0;
+              let bd = Infinity;
+              let bd2 = Infinity;
+              for (let s = 0; s < M; s++) {
+                const dx = fx - sx[s];
+                const dy = fy - sy[s];
+                const d2 = dx * dx + dy * dy;
+                if (d2 < bd) {
+                  bd2 = bd;
+                  bd = d2;
+                  best = s;
+                } else if (d2 < bd2) {
+                  bd2 = d2;
+                }
+              }
+              const edge = Math.sqrt(bd2) - Math.sqrt(bd);
+              const shade = edge < 0.012 ? 0.25 : 0.7 + 0.3 * Math.min(1, edge * 8);
+              const hue = sh[best];
+              const rgb = hsvToRgb(hue, 0.5, 0.32 + shade * 0.5);
+              const q = (gy * RES + gx) * 4;
+              img.pixels[q] = rgb[0];
+              img.pixels[q + 1] = rgb[1];
+              img.pixels[q + 2] = rgb[2];
+              img.pixels[q + 3] = 255;
+            }
+          }
+          img.updatePixels();
+        };
+        let phase = 0;
+        p.draw = () => {
+          p.image(img, 0, 0, S, S);
+          // Delaunay-ish: connect each site to its 3 nearest neighbors, pulsing.
+          phase += 0.02;
+          p.colorMode(p.HSB, 360, 100, 100, 100);
+          p.strokeWeight(1);
+          for (let i = 0; i < M; i++) {
+            for (let j = i + 1; j < M; j++) {
+              const dx = sx[i] - sx[j];
+              const dy = sy[i] - sy[j];
+              const d = Math.hypot(dx, dy);
+              if (d < 0.2) {
+                const a = (1 - d / 0.2) * (40 + 25 * Math.sin(phase + i));
+                p.stroke(200, 30, 100, a);
+                p.line(sx[i] * S, sy[i] * S, sx[j] * S, sy[j] * S);
+              }
+            }
+          }
+          p.noStroke();
+          for (let i = 0; i < M; i++) {
+            p.fill(sh[i], 40, 100, 90);
+            p.circle(sx[i] * S, sy[i] * S, 5);
+          }
+        };
+      }
+
+      /** Chaos-game: Barnsley fern (seeded affine IFS, point-accreted). */
+      function makeFern(p, rng, S) {
+        let x = 0;
+        let y = 0;
+        const PTS = 700; // points per frame (cap)
+        p.setup = () => {
+          p.createCanvas(S, S);
+          p.pixelDensity(1);
+          p.background(VOID[0], VOID[1], VOID[2]);
+          p.noStroke();
+        };
+        p.draw = () => {
+          p.colorMode(p.RGB, 255, 255, 255, 255);
+          p.fill(VOID[0], VOID[1], VOID[2], 6);
+          p.rect(0, 0, S, S);
+          p.colorMode(p.HSB, 360, 100, 100, 100);
+          for (let i = 0; i < PTS; i++) {
+            const r = rng.next();
+            let nx;
+            let ny;
+            if (r < 0.01) {
+              nx = 0;
+              ny = 0.16 * y;
+            } else if (r < 0.86) {
+              nx = 0.85 * x + 0.04 * y;
+              ny = -0.04 * x + 0.85 * y + 1.6;
+            } else if (r < 0.93) {
+              nx = 0.2 * x - 0.26 * y;
+              ny = 0.23 * x + 0.22 * y + 1.6;
+            } else {
+              nx = -0.15 * x + 0.28 * y;
+              ny = 0.26 * x + 0.24 * y + 0.44;
+            }
+            x = nx;
+            y = ny;
+            const sxp = S * 0.5 + (x / 5.6) * S * 0.92;
+            const syp = S - (y / 10) * S * 0.96;
+            p.fill((110 + y * 8) % 360, 70, 95, 60);
+            p.circle(sxp, syp, 1.3);
+          }
+        };
+      }
+
+      /** Clifford strange attractor (2D), density-accreted. */
+      function makeClifford(p, rng, S) {
+        // Bias toward the wilder, well-known Clifford regime (|a|,|b| ≳ 1.4).
+        const a = (rng.next() < 0.5 ? -1 : 1) * rng.range(1.4, 2.0);
+        const b = (rng.next() < 0.5 ? -1 : 1) * rng.range(1.4, 2.0);
+        const c = rng.range(-1.8, 1.8);
+        const d = rng.range(-1.8, 1.8);
+        // True bounds: |x| ≤ 1+|c|, |y| ≤ 1+|d| — scale to fill the tile.
+        const spanX = 1 + Math.abs(c);
+        const spanY = 1 + Math.abs(d);
+        const span = Math.max(spanX, spanY) * 1.04;
+        let x = rng.range(-0.5, 0.5);
+        let y = rng.range(-0.5, 0.5);
+        // Burn off the transient so the first frame already lands on the attractor.
+        for (let i = 0; i < 80; i++) {
+          const nx = Math.sin(a * y) + c * Math.cos(a * x);
+          const ny = Math.sin(b * x) + d * Math.cos(b * y);
+          x = nx;
+          y = ny;
+        }
+        const PTS = 1600;
+        p.setup = () => {
+          p.createCanvas(S, S);
+          p.pixelDensity(1);
+          p.background(VOID[0], VOID[1], VOID[2]);
+          p.noStroke();
+        };
+        p.draw = () => {
+          p.colorMode(p.RGB, 255, 255, 255, 255);
+          p.fill(VOID[0], VOID[1], VOID[2], 6);
+          p.rect(0, 0, S, S);
+          p.colorMode(p.HSB, 360, 100, 100, 100);
+          for (let i = 0; i < PTS; i++) {
+            const nx = Math.sin(a * y) + c * Math.cos(a * x);
+            const ny = Math.sin(b * x) + d * Math.cos(b * y);
+            x = nx;
+            y = ny;
+            const sxp = S * 0.5 + (x / span) * S * 0.46;
+            const syp = S * 0.5 + (y / span) * S * 0.46;
+            const hue = (250 + Math.hypot(x, y) * 36) % 360;
+            p.fill(hue, 65, 100, 62);
+            p.circle(sxp, syp, 1.3);
+          }
+        };
+      }
+
+      /** Curl-noise flow field rendered as drifting tracer streaks. */
+      function makeFlowField(p, rng, S) {
+        const NP = 220; // tracers (cap)
+        const fxs = new Float32Array(NP);
+        const fys = new Float32Array(NP);
+        const ns = 0.0075;
+        const sOff = rng.range(0, 1000);
+        let t = sOff;
+        p.setup = () => {
+          p.createCanvas(S, S);
+          p.pixelDensity(1);
+          p.noiseSeed((sOff * 1000) | 0);
+          for (let i = 0; i < NP; i++) {
+            fxs[i] = rng.range(0, S);
+            fys[i] = rng.range(0, S);
+          }
+          p.background(VOID[0], VOID[1], VOID[2]);
+        };
+        p.draw = () => {
+          p.colorMode(p.RGB, 255, 255, 255, 255);
+          p.noStroke();
+          p.fill(VOID[0], VOID[1], VOID[2], 16);
+          p.rect(0, 0, S, S);
+          p.colorMode(p.HSB, 360, 100, 100, 100);
+          p.strokeWeight(1.1);
+          t += 0.004;
+          const e = 1.5;
+          for (let i = 0; i < NP; i++) {
+            const x = fxs[i];
+            const y = fys[i];
+            const nx = x * ns;
+            const ny = y * ns;
+            const cvx = p.noise(nx, ny + e * ns, t) - p.noise(nx, ny - e * ns, t);
+            const cvy = p.noise(nx - e * ns, ny, t) - p.noise(nx + e * ns, ny, t);
+            const m = Math.hypot(cvx, cvy) || 1;
+            const vx = (cvx / m) * 1.6;
+            const vy = (cvy / m) * 1.6;
+            const x2 = x + vx;
+            const y2 = y + vy;
+            p.stroke((180 + p.noise(nx, ny, t) * 160) % 360, 70, 100, 55);
+            p.line(x, y, x2, y2);
+            fxs[i] = x2 < 0 || x2 > S ? rng.range(0, S) : x2;
+            fys[i] = y2 < 0 || y2 > S ? rng.range(0, S) : y2;
+          }
+        };
+      }
+
+      /** Quantum statevector: |amp|² bars for an n-qubit register evolved by a
+       *  fixed seeded unitary (single-qubit rotations + a CNOT chain), Trotterized. */
+      function makeStatevector(p, rng, S) {
+        const NQ = 4; // 16 basis states — readable bars
+        const DIM = 1 << NQ;
+        const re = new Float64Array(DIM);
+        const im = new Float64Array(DIM);
+        const re2 = new Float64Array(DIM);
+        const im2 = new Float64Array(DIM);
+        const theta = new Float64Array(NQ);
+        for (let q = 0; q < NQ; q++) theta[q] = rng.range(0.05, 0.22);
+        let t = 0;
+        const applyRx = (q, ang) => {
+          const c = Math.cos(ang / 2);
+          const s = Math.sin(ang / 2);
+          const bit = 1 << q;
+          for (let i = 0; i < DIM; i++) {
+            if (i & bit) continue;
+            const j = i | bit;
+            const ar = re[i];
+            const ai = im[i];
+            const br = re[j];
+            const bi = im[j];
+            re2[i] = c * ar + s * bi;
+            im2[i] = c * ai - s * br;
+            re2[j] = c * br + s * ai;
+            im2[j] = c * bi - s * ar;
+          }
+          re.set(re2);
+          im.set(im2);
+        };
+        const applyCnot = (ctrl, targ) => {
+          const cb = 1 << ctrl;
+          const tb = 1 << targ;
+          for (let i = 0; i < DIM; i++) {
+            if (i & cb && !(i & tb)) {
+              const j = i | tb;
+              const tr = re[i];
+              const ti = im[i];
+              re[i] = re[j];
+              im[i] = im[j];
+              re[j] = tr;
+              im[j] = ti;
+            }
+          }
+        };
+        p.setup = () => {
+          p.createCanvas(S, S);
+          p.pixelDensity(1);
+          re.fill(0);
+          im.fill(0);
+          re[0] = 1;
+          p.colorMode(p.HSB, 360, 100, 100, 100);
+        };
+        p.draw = () => {
+          // One Trotter step of the seeded "Hamiltonian" each frame.
+          for (let q = 0; q < NQ; q++) applyRx(q, theta[q]);
+          for (let q = 0; q < NQ - 1; q++) applyCnot(q, q + 1);
+          t += 1;
+          p.background(VOID[0], VOID[1], VOID[2]);
+          const pad = 18;
+          const top = 44;
+          const bw = (S - pad * 2) / DIM;
+          const base = S - 26;
+          p.noStroke();
+          for (let i = 0; i < DIM; i++) {
+            const prob = re[i] * re[i] + im[i] * im[i];
+            const h = (base - top) * Math.min(1, prob * 1.6);
+            const x = pad + i * bw;
+            p.fill((200 + i * 9) % 360, 70, 100, 90);
+            p.rect(x + 1, base - h, bw - 2, h, 2);
+          }
+          p.stroke(106, 30, 60, 50);
+          p.line(pad, base, S - pad, base);
+        };
+      }
+
+      /** Bloch disc: a single qubit precessing under a seeded Hamiltonian,
+       *  projected to the X–Z plane of the Bloch sphere, with a trailing arc. */
+      function makeBloch(p, rng, S) {
+        // State on the Bloch sphere via (theta, phi); precession about a tilted axis.
+        let th = rng.range(0.3, Math.PI - 0.3);
+        let ph = rng.range(0, Math.PI * 2);
+        const wz = rng.range(0.02, 0.05);
+        const wx = rng.range(0.008, 0.02);
+        const trailX = new Float32Array(120);
+        const trailY = new Float32Array(120);
+        let tp = 0;
+        let filled = 0;
+        p.setup = () => {
+          p.createCanvas(S, S);
+          p.pixelDensity(1);
+          p.colorMode(p.HSB, 360, 100, 100, 100);
+        };
+        p.draw = () => {
+          // Integrate a tilted-axis precession (honest unit-vector rotation).
+          ph += wz;
+          th += wx * Math.sin(ph);
+          if (th < 0.05) th = 0.05;
+          if (th > Math.PI - 0.05) th = Math.PI - 0.05;
+          const bx = Math.sin(th) * Math.cos(ph);
+          const bz = Math.cos(th);
+          p.background(VOID[0], VOID[1], VOID[2]);
+          const cx = S * 0.5;
+          const cy = S * 0.52;
+          const R = S * 0.36;
+          p.noFill();
+          p.stroke(200, 40, 70, 60);
+          p.strokeWeight(1.4);
+          p.circle(cx, cy, R * 2);
+          p.stroke(200, 20, 50, 30);
+          p.line(cx - R, cy, cx + R, cy);
+          p.line(cx, cy - R, cx, cy + R);
+          const ex = cx + bx * R;
+          const ey = cy - bz * R;
+          trailX[tp] = ex;
+          trailY[tp] = ey;
+          tp = (tp + 1) % trailX.length;
+          if (filled < trailX.length) filled++;
+          p.strokeWeight(1.2);
+          for (let k = 1; k < filled; k++) {
+            const i0 = (tp - k + trailX.length) % trailX.length;
+            const i1 = (tp - k - 1 + trailX.length) % trailX.length;
+            if (i1 === tp) break;
+            const al = 70 * (1 - k / filled);
+            p.stroke(280, 60, 100, al);
+            p.line(trailX[i0], trailY[i0], trailX[i1], trailY[i1]);
+          }
+          p.stroke(30, 80, 100, 90);
+          p.strokeWeight(2);
+          p.line(cx, cy, ex, ey);
+          p.noStroke();
+          p.fill(30, 80, 100, 100);
+          p.circle(ex, ey, 7);
+        };
+      }
+
+      /** FFT-free spectrum: a seeded sum of sinusoids, its magnitude spectrum
+       *  computed honestly by a small DFT, drawn as a live bar spectrum. */
+      function makeSpectrum(p, rng, S) {
+        const NF = 8; // component count
+        const freq = new Float64Array(NF);
+        const amp = new Float64Array(NF);
+        const phs = new Float64Array(NF);
+        for (let i = 0; i < NF; i++) {
+          freq[i] = 1 + rng.int(28);
+          amp[i] = rng.range(0.3, 1);
+          phs[i] = rng.range(0, Math.PI * 2);
+        }
+        const NS = 128; // signal samples
+        const BINS = 48; // spectrum bins shown
+        const sig = new Float64Array(NS);
+        const mag = new Float64Array(BINS);
+        let t = 0;
+        p.setup = () => {
+          p.createCanvas(S, S);
+          p.pixelDensity(1);
+          p.colorMode(p.HSB, 360, 100, 100, 100);
+        };
+        p.draw = () => {
+          t += 0.05;
+          for (let n = 0; n < NS; n++) {
+            let v = 0;
+            const x = (n / NS) * Math.PI * 2;
+            for (let i = 0; i < NF; i++) v += amp[i] * Math.sin(freq[i] * x + phs[i] + t);
+            sig[n] = v;
+          }
+          // Honest DFT magnitude for the first BINS frequencies.
+          for (let k = 0; k < BINS; k++) {
+            let reS = 0;
+            let imS = 0;
+            for (let n = 0; n < NS; n++) {
+              const ang = (-2 * Math.PI * k * n) / NS;
+              reS += sig[n] * Math.cos(ang);
+              imS += sig[n] * Math.sin(ang);
+            }
+            mag[k] = Math.sqrt(reS * reS + imS * imS) / NS;
+          }
+          p.background(VOID[0], VOID[1], VOID[2]);
+          // Signal trace (top third).
+          p.noFill();
+          p.stroke(180, 60, 100, 70);
+          p.strokeWeight(1.2);
+          p.beginShape();
+          for (let n = 0; n < NS; n++) {
+            const x = 14 + (n / (NS - 1)) * (S - 28);
+            const y = S * 0.22 + sig[n] * (S * 0.06);
+            p.vertex(x, y);
+          }
+          p.endShape();
+          // Spectrum bars (bottom two thirds).
+          const base = S - 24;
+          const top = S * 0.38;
+          const bw = (S - 28) / BINS;
+          p.noStroke();
+          for (let k = 0; k < BINS; k++) {
+            const h = (base - top) * Math.min(1, mag[k] * 1.4);
+            const x = 14 + k * bw;
+            p.fill((40 + k * 5) % 360, 80, 100, 90);
+            p.rect(x + 0.5, base - h, bw - 1, h);
+          }
+        };
+      }
+
+      /** Histogram of a seeded Gaussian mixture, accumulating samples each frame. */
+      function makeHistogram(p, rng, S) {
+        const BINS = 36;
+        const bins = new Float64Array(BINS);
+        const k1 = rng.range(-1.4, -0.3);
+        const k2 = rng.range(0.3, 1.4);
+        const sd1 = rng.range(0.3, 0.6);
+        const sd2 = rng.range(0.25, 0.55);
+        let total = 0;
+        const PER = 240; // samples/frame (cap)
+        p.setup = () => {
+          p.createCanvas(S, S);
+          p.pixelDensity(1);
+          p.colorMode(p.HSB, 360, 100, 100, 100);
+        };
+        p.draw = () => {
+          for (let s = 0; s < PER; s++) {
+            const pick = rng.next() < 0.5 ? k1 + rng.gauss() * sd1 : k2 + rng.gauss() * sd2;
+            const norm = (pick + 2.5) / 5;
+            if (norm >= 0 && norm < 1) {
+              bins[Math.floor(norm * BINS)]++;
+              total++;
+            }
+          }
+          p.background(VOID[0], VOID[1], VOID[2]);
+          let peak = 1;
+          for (let i = 0; i < BINS; i++) if (bins[i] > peak) peak = bins[i];
+          const base = S - 26;
+          const top = 44;
+          const bw = (S - 28) / BINS;
+          p.noStroke();
+          for (let i = 0; i < BINS; i++) {
+            const h = (base - top) * (bins[i] / peak);
+            const x = 14 + i * bw;
+            p.fill((150 + (i / BINS) * 90) % 360, 70, 100, 92);
+            p.rect(x + 0.5, base - h, bw - 1, h, 1.5);
+          }
+          p.stroke(106, 30, 60, 50);
+          p.strokeWeight(1);
+          p.line(14, base, S - 14, base);
+        };
+      }
+
+      /** Violin / density plot: two seeded distributions mirrored as KDE silhouettes. */
+      function makeViolin(p, rng, S) {
+        const NV = 3;
+        const centers = new Float64Array(NV);
+        const spreads = new Float64Array(NV);
+        const hues = new Float64Array(NV);
+        for (let v = 0; v < NV; v++) {
+          centers[v] = rng.range(-0.6, 0.6);
+          spreads[v] = rng.range(0.18, 0.4);
+          hues[v] = rng.range(180, 320);
+        }
+        const RES = 64; // vertical density resolution
+        const dens = new Float64Array(NV * RES);
+        const SAMP = 200; // samples/frame folded into each violin
+        const counts = new Float64Array(NV);
+        p.setup = () => {
+          p.createCanvas(S, S);
+          p.pixelDensity(1);
+          p.colorMode(p.HSB, 360, 100, 100, 100);
+        };
+        p.draw = () => {
+          for (let v = 0; v < NV; v++) {
+            for (let s = 0; s < SAMP; s++) {
+              const val = centers[v] + rng.gauss() * spreads[v];
+              const norm = (val + 1.5) / 3;
+              if (norm >= 0 && norm < 1) {
+                dens[v * RES + Math.floor(norm * RES)]++;
+                counts[v]++;
+              }
+            }
+          }
+          p.background(VOID[0], VOID[1], VOID[2]);
+          const colW = S / NV;
+          for (let v = 0; v < NV; v++) {
+            let peak = 1;
+            for (let i = 0; i < RES; i++) if (dens[v * RES + i] > peak) peak = dens[v * RES + i];
+            const cx = colW * (v + 0.5);
+            const maxW = colW * 0.42;
+            p.noStroke();
+            p.fill(hues[v], 60, 90, 70);
+            p.beginShape();
+            for (let i = 0; i < RES; i++) {
+              const y = 30 + (i / (RES - 1)) * (S - 56);
+              const w = (dens[v * RES + i] / peak) * maxW;
+              p.vertex(cx - w, y);
+            }
+            for (let i = RES - 1; i >= 0; i--) {
+              const y = 30 + (i / (RES - 1)) * (S - 56);
+              const w = (dens[v * RES + i] / peak) * maxW;
+              p.vertex(cx + w, y);
+            }
+            p.endShape(p.CLOSE);
+            p.stroke(hues[v], 30, 100, 80);
+            p.strokeWeight(1);
+            p.line(cx, 30, cx, S - 26);
+          }
+        };
+      }
+
+      /** Elementary cellular automaton (seeded rule), scrolling rows downward. */
+      function makeCellular(p, rng, S) {
+        const N = 121; // cells across
+        const rule = 18 + (rng.int(2) ? 90 : 0) + rng.int(36); // varied seeded rule number (Rule-30/110 family)
+        let row = new Uint8Array(N);
+        const next = new Uint8Array(N);
+        let y = 0;
+        const cw = S / N;
+        const ruleBit = (a, b, c) => (rule >> ((a << 2) | (b << 1) | c)) & 1;
+        p.setup = () => {
+          p.createCanvas(S, S);
+          p.pixelDensity(1);
+          p.background(VOID[0], VOID[1], VOID[2]);
+          for (let i = 0; i < N; i++) row[i] = rng.next() < 0.5 ? 1 : 0;
+          p.colorMode(p.HSB, 360, 100, 100, 100);
+          p.noStroke();
+        };
+        const ROWS_PER_FRAME = 2;
+        p.draw = () => {
+          for (let r = 0; r < ROWS_PER_FRAME; r++) {
+            for (let i = 0; i < N; i++) {
+              if (row[i]) {
+                p.fill((200 + y * 1.5) % 360, 60, 100, 95);
+                p.rect(i * cw, y * cw, cw + 0.5, cw + 0.5);
+              }
+            }
+            for (let i = 0; i < N; i++) {
+              const a = row[(i - 1 + N) % N];
+              const b = row[i];
+              const c = row[(i + 1) % N];
+              next[i] = ruleBit(a, b, c);
+            }
+            row.set(next);
+            y++;
+            if (y * cw > S) {
+              y = 0;
+              p.fill(VOID[0], VOID[1], VOID[2]);
+              p.colorMode(p.RGB, 255, 255, 255);
+              p.rect(0, 0, S, S);
+              p.colorMode(p.HSB, 360, 100, 100, 100);
+              for (let i = 0; i < N; i++) row[i] = rng.next() < 0.5 ? 1 : 0;
+            }
+          }
+        };
+      }
+
+      /** Julia-set escape-time fractal; the seeded constant c slowly orbits. */
+      function makeJulia(p, rng, S) {
+        const RES = 150; // escape-time raster (cap), upscaled to S
+        let img = null;
+        const cr0 = rng.range(-0.8, 0.4);
+        const ci0 = rng.range(-0.7, 0.7);
+        const orbR = rng.range(0.04, 0.12);
+        const orbS = rng.range(0.004, 0.01);
+        let ang = rng.range(0, Math.PI * 2);
+        const MAXIT = 48;
+        p.setup = () => {
+          p.createCanvas(S, S);
+          p.pixelDensity(1);
+          img = p.createImage(RES, RES);
+        };
+        p.draw = () => {
+          ang += orbS;
+          const cr = cr0 + Math.cos(ang) * orbR;
+          const ci = ci0 + Math.sin(ang) * orbR;
+          img.loadPixels();
+          for (let gy = 0; gy < RES; gy++) {
+            for (let gx = 0; gx < RES; gx++) {
+              let zx = (gx / RES - 0.5) * 3.2;
+              let zy = (gy / RES - 0.5) * 3.2;
+              let it = 0;
+              for (; it < MAXIT; it++) {
+                const x2 = zx * zx;
+                const y2 = zy * zy;
+                if (x2 + y2 > 4) break;
+                const t = 2 * zx * zy;
+                zx = x2 - y2 + cr;
+                zy = t + ci;
+              }
+              const q = (gy * RES + gx) * 4;
+              if (it >= MAXIT) {
+                img.pixels[q] = 4;
+                img.pixels[q + 1] = 7;
+                img.pixels[q + 2] = 17;
+              } else {
+                const v = it / MAXIT;
+                const rgb = hsvToRgb((200 + v * 160) % 360, 0.75, 0.25 + v * 0.7);
+                img.pixels[q] = rgb[0];
+                img.pixels[q + 1] = rgb[1];
+                img.pixels[q + 2] = rgb[2];
+              }
+              img.pixels[q + 3] = 255;
+            }
+          }
+          img.updatePixels();
+          p.image(img, 0, 0, S, S);
+        };
+      }
+
+      /** Force-directed graph: a seeded random graph relaxed by spring + repulsion. */
+      function makeForceGraph(p, rng, S) {
+        const NV2 = 26;
+        const gx = new Float32Array(NV2);
+        const gy = new Float32Array(NV2);
+        const vx = new Float32Array(NV2);
+        const vy = new Float32Array(NV2);
+        const grp = new Int8Array(NV2);
+        const edges = []; // built once at setup
+        p.setup = () => {
+          p.createCanvas(S, S);
+          p.pixelDensity(1);
+          for (let i = 0; i < NV2; i++) {
+            gx[i] = rng.range(S * 0.2, S * 0.8);
+            gy[i] = rng.range(S * 0.2, S * 0.8);
+            grp[i] = rng.int(3);
+          }
+          // Preferential-ish attachment for clustered structure.
+          for (let i = 1; i < NV2; i++) {
+            const links = 1 + rng.int(2);
+            for (let l = 0; l < links; l++) {
+              let j = rng.int(i);
+              if (rng.next() < 0.5) j = rng.int(NV2);
+              if (j !== i) edges.push([i, j]);
+            }
+          }
+          p.colorMode(p.HSB, 360, 100, 100, 100);
+        };
+        const grpHue = [200, 30, 280];
+        p.draw = () => {
+          // Repulsion (O(V²), V=26 → 676 ops) + spring along edges.
+          for (let i = 0; i < NV2; i++) {
+            let fx = 0;
+            let fy = 0;
+            for (let j = 0; j < NV2; j++) {
+              if (i === j) continue;
+              const dx = gx[i] - gx[j];
+              const dy = gy[i] - gy[j];
+              const d2 = dx * dx + dy * dy + 16;
+              const f = 320 / d2;
+              fx += dx * f;
+              fy += dy * f;
+            }
+            // Mild centering.
+            fx += (S * 0.5 - gx[i]) * 0.002;
+            fy += (S * 0.5 - gy[i]) * 0.002;
+            vx[i] = (vx[i] + fx) * 0.82;
+            vy[i] = (vy[i] + fy) * 0.82;
+          }
+          for (let e = 0; e < edges.length; e++) {
+            const i = edges[e][0];
+            const j = edges[e][1];
+            const dx = gx[j] - gx[i];
+            const dy = gy[j] - gy[i];
+            const d = Math.hypot(dx, dy) || 1;
+            const f = (d - S * 0.16) * 0.01;
+            vx[i] += (dx / d) * f;
+            vy[i] += (dy / d) * f;
+            vx[j] -= (dx / d) * f;
+            vy[j] -= (dy / d) * f;
+          }
+          for (let i = 0; i < NV2; i++) {
+            gx[i] = Math.max(12, Math.min(S - 12, gx[i] + vx[i]));
+            gy[i] = Math.max(12, Math.min(S - 12, gy[i] + vy[i]));
+          }
+          p.background(VOID[0], VOID[1], VOID[2]);
+          p.strokeWeight(1);
+          p.stroke(200, 30, 80, 30);
+          for (let e = 0; e < edges.length; e++) {
+            const i = edges[e][0];
+            const j = edges[e][1];
+            p.line(gx[i], gy[i], gx[j], gy[j]);
+          }
+          p.noStroke();
+          for (let i = 0; i < NV2; i++) {
+            p.fill(grpHue[grp[i]], 70, 100, 95);
+            p.circle(gx[i], gy[i], 8);
+          }
+        };
+      }
+
+      /** N-body gravity: a seeded cluster integrated with softened Newtonian pulls. */
+      function makeNbody(p, rng, S) {
+        const NB = 22;
+        const bx = new Float32Array(NB);
+        const by = new Float32Array(NB);
+        const bvx = new Float32Array(NB);
+        const bvy = new Float32Array(NB);
+        const bm = new Float32Array(NB);
+        p.setup = () => {
+          p.createCanvas(S, S);
+          p.pixelDensity(1);
+          for (let i = 0; i < NB; i++) {
+            const r = rng.range(S * 0.08, S * 0.36);
+            const a = rng.range(0, Math.PI * 2);
+            bx[i] = S * 0.5 + Math.cos(a) * r;
+            by[i] = S * 0.5 + Math.sin(a) * r;
+            // Tangential kick for orbital motion.
+            bvx[i] = -Math.sin(a) * 0.5;
+            bvy[i] = Math.cos(a) * 0.5;
+            bm[i] = rng.range(1, 5);
+          }
+          p.background(VOID[0], VOID[1], VOID[2]);
+          p.colorMode(p.HSB, 360, 100, 100, 100);
+        };
+        const G = 0.6;
+        p.draw = () => {
+          for (let i = 0; i < NB; i++) {
+            let fx = 0;
+            let fy = 0;
+            for (let j = 0; j < NB; j++) {
+              if (i === j) continue;
+              const dx = bx[j] - bx[i];
+              const dy = by[j] - by[i];
+              const d2 = dx * dx + dy * dy + 60;
+              const inv = 1 / (d2 * Math.sqrt(d2));
+              const f = G * bm[j] * inv;
+              fx += dx * f;
+              fy += dy * f;
+            }
+            bvx[i] += fx;
+            bvy[i] += fy;
+          }
+          for (let i = 0; i < NB; i++) {
+            bx[i] += bvx[i];
+            by[i] += bvy[i];
+            // Soft wrap to keep the cluster on stage.
+            if (bx[i] < 0 || bx[i] > S) bvx[i] *= -0.9;
+            if (by[i] < 0 || by[i] > S) bvy[i] *= -0.9;
+            bx[i] = Math.max(0, Math.min(S, bx[i]));
+            by[i] = Math.max(0, Math.min(S, by[i]));
+          }
+          p.colorMode(p.RGB, 255, 255, 255, 255);
+          p.noStroke();
+          p.fill(VOID[0], VOID[1], VOID[2], 28);
+          p.rect(0, 0, S, S);
+          p.colorMode(p.HSB, 360, 100, 100, 100);
+          p.noStroke();
+          for (let i = 0; i < NB; i++) {
+            const sp = Math.hypot(bvx[i], bvy[i]);
+            p.fill((40 - Math.min(40, sp * 30) + 360) % 360, 80, 100, 90);
+            p.circle(bx[i], by[i], 3 + bm[i]);
+          }
+        };
+      }
+
+      /** 3D strange-attractor ribbon (WEBGL): an Aizawa attractor traced and rotated. */
+      function makeRibbon3D(p, rng, S) {
+        const PTS = 1400; // precomputed ribbon points (cap)
+        const xs = new Float32Array(PTS);
+        const ys = new Float32Array(PTS);
+        const zs = new Float32Array(PTS);
+        let rot = 0;
+        p.setup = () => {
+          p.createCanvas(S, S, p.WEBGL);
+          p.pixelDensity(1);
+          let x = rng.range(0.1, 0.6);
+          let y = rng.range(0, 0.4);
+          let z = rng.range(0, 0.4);
+          const a = 0.95;
+          const b = 0.7;
+          const c = 0.6;
+          const d = 3.5;
+          const e = 0.25;
+          const f = 0.1;
+          const dt = 0.01;
+          for (let i = 0; i < PTS; i++) {
+            const dx = (z - b) * x - d * y;
+            const dy = d * x + (z - b) * y;
+            const dz =
+              c + a * z - (z * z * z) / 3 - (x * x + y * y) * (1 + e * z) + f * z * x * x * x;
+            x += dx * dt;
+            y += dy * dt;
+            z += dz * dt;
+            xs[i] = x;
+            ys[i] = y;
+            zs[i] = z;
+          }
+          p.colorMode(p.HSB, 360, 100, 100, 100);
+        };
+        p.draw = () => {
+          p.background(VOID[0], VOID[1], VOID[2]);
+          rot += 0.006;
+          p.rotateY(rot);
+          p.rotateX(0.5 + Math.sin(rot * 0.5) * 0.2);
+          const sc = S * 0.32;
+          p.noFill();
+          p.strokeWeight(1.4);
+          p.beginShape();
+          for (let i = 0; i < PTS; i++) {
+            const hue = (200 + zs[i] * 60) % 360;
+            p.stroke(hue, 75, 100, 70);
+            p.vertex(xs[i] * sc, ys[i] * sc, (zs[i] - 0.8) * sc);
+          }
+          p.endShape();
+        };
+      }
+
+      /** Mandelbrot escape-time, deep zoom toward a seeded boundary point. */
+      function makeMandelbrot(p, rng, S) {
+        const RES = 150;
+        let img = null;
+        // Seeded target near the boundary; we zoom in slowly then reset.
+        const tx = rng.range(-0.75, -0.74);
+        const ty = rng.range(0.09, 0.12);
+        let zoom = 1;
+        let dir = 1;
+        const MAXIT = 70;
+        p.setup = () => {
+          p.createCanvas(S, S);
+          p.pixelDensity(1);
+          img = p.createImage(RES, RES);
+        };
+        p.draw = () => {
+          zoom *= dir > 0 ? 1.012 : 1 / 1.012;
+          if (zoom > 60) dir = -1;
+          if (zoom < 1) dir = 1;
+          const span = 3.0 / zoom;
+          img.loadPixels();
+          for (let gy = 0; gy < RES; gy++) {
+            for (let gx = 0; gx < RES; gx++) {
+              const cr = tx + (gx / RES - 0.5) * span;
+              const ci = ty + (gy / RES - 0.5) * span;
+              let zx = 0;
+              let zy = 0;
+              let it = 0;
+              for (; it < MAXIT; it++) {
+                const x2 = zx * zx;
+                const y2 = zy * zy;
+                if (x2 + y2 > 4) break;
+                zy = 2 * zx * zy + ci;
+                zx = x2 - y2 + cr;
+              }
+              const q = (gy * RES + gx) * 4;
+              if (it >= MAXIT) {
+                img.pixels[q] = 4;
+                img.pixels[q + 1] = 7;
+                img.pixels[q + 2] = 17;
+              } else {
+                const v = it / MAXIT;
+                const rgb = hsvToRgb((30 + v * 220) % 360, 0.8, 0.2 + v * 0.8);
+                img.pixels[q] = rgb[0];
+                img.pixels[q + 1] = rgb[1];
+                img.pixels[q + 2] = rgb[2];
+              }
+              img.pixels[q + 3] = 255;
+            }
+          }
+          img.updatePixels();
+          p.image(img, 0, 0, S, S);
+        };
+      }
+
+      /** Sierpinski chaos game: midpoint-to-random-vertex, point-accreted. */
+      function makeSierpinski(p, rng, S) {
+        const verts = [];
+        const NVERTS = 3 + rng.int(3); // triangle..pentagon — varied gaskets
+        const cx = S * 0.5;
+        const cy = S * 0.52;
+        const R = S * 0.44;
+        const ratio = NVERTS <= 3 ? 0.5 : 1 - 1 / (NVERTS - 1);
+        for (let i = 0; i < NVERTS; i++) {
+          const a = -Math.PI / 2 + (i / NVERTS) * Math.PI * 2;
+          verts.push([cx + Math.cos(a) * R, cy + Math.sin(a) * R]);
+        }
+        let x = cx;
+        let y = cy;
+        const PTS = 900;
+        p.setup = () => {
+          p.createCanvas(S, S);
+          p.pixelDensity(1);
+          p.background(VOID[0], VOID[1], VOID[2]);
+          p.colorMode(p.HSB, 360, 100, 100, 100);
+          p.noStroke();
+        };
+        p.draw = () => {
+          p.colorMode(p.RGB, 255, 255, 255, 255);
+          p.fill(VOID[0], VOID[1], VOID[2], 4);
+          p.rect(0, 0, S, S);
+          p.colorMode(p.HSB, 360, 100, 100, 100);
+          for (let i = 0; i < PTS; i++) {
+            const v = verts[rng.int(NVERTS)];
+            x += (v[0] - x) * ratio;
+            y += (v[1] - y) * ratio;
+            const hue = (190 + (x / S) * 120) % 360;
+            p.fill(hue, 65, 100, 55);
+            p.circle(x, y, 1.3);
+          }
+        };
+      }
+
+      /** Logistic-map bifurcation diagram, swept left→right, re-drawn continuously. */
+      function makeBifurcation(p, rng, S) {
+        let col = 0;
+        const jitter = rng.range(0, 0.001);
+        p.setup = () => {
+          p.createCanvas(S, S);
+          p.pixelDensity(1);
+          p.background(VOID[0], VOID[1], VOID[2]);
+          p.colorMode(p.HSB, 360, 100, 100, 100);
+          p.noStroke();
+        };
+        const COLS_PER_FRAME = 3;
+        p.draw = () => {
+          for (let c = 0; c < COLS_PER_FRAME; c++) {
+            const r = 2.6 + (col / S) * (4.0 - 2.6) + jitter;
+            let x = 0.5;
+            for (let i = 0; i < 120; i++) x = r * x * (1 - x); // transient burn-in
+            for (let i = 0; i < 120; i++) {
+              x = r * x * (1 - x);
+              const yy = S - x * S;
+              p.fill((40 + (col / S) * 220) % 360, 70, 100, 30);
+              p.circle(col, yy, 1);
+            }
+            col++;
+            if (col >= S) {
+              col = 0;
+              p.colorMode(p.RGB, 255, 255, 255);
+              p.background(VOID[0], VOID[1], VOID[2]);
+              p.colorMode(p.HSB, 360, 100, 100, 100);
+            }
+          }
+        };
+      }
+
+      /** Double-pendulum phase trace: a seeded chaotic pendulum, its bob path drawn. */
+      function makeDoublePendulum(p, rng, S) {
+        let a1 = rng.range(Math.PI * 0.3, Math.PI * 0.9);
+        let a2 = rng.range(Math.PI * 0.3, Math.PI * 0.9);
+        let v1 = 0;
+        let v2 = 0;
+        const m1 = 1.2;
+        const m2 = 1;
+        const l1 = S * 0.2;
+        const l2 = S * 0.2;
+        const g = 0.6;
+        let px2 = 0;
+        let py2 = 0;
+        let have = false;
+        p.setup = () => {
+          p.createCanvas(S, S);
+          p.pixelDensity(1);
+          p.background(VOID[0], VOID[1], VOID[2]);
+          p.colorMode(p.HSB, 360, 100, 100, 100);
+        };
+        const SUBS = 4; // physics substeps/frame for stability
+        p.draw = () => {
+          p.colorMode(p.RGB, 255, 255, 255, 255);
+          p.noStroke();
+          p.fill(VOID[0], VOID[1], VOID[2], 10);
+          p.rect(0, 0, S, S);
+          p.colorMode(p.HSB, 360, 100, 100, 100);
+          const ox = S * 0.5;
+          const oy = S * 0.42;
+          for (let s = 0; s < SUBS; s++) {
+            const num1 = -g * (2 * m1 + m2) * Math.sin(a1);
+            const num2 = -m2 * g * Math.sin(a1 - 2 * a2);
+            const num3 = -2 * Math.sin(a1 - a2) * m2;
+            const num4 = v2 * v2 * l2 + v1 * v1 * l1 * Math.cos(a1 - a2);
+            const den = l1 * (2 * m1 + m2 - m2 * Math.cos(2 * a1 - 2 * a2));
+            const ac1 = (num1 + num2 + num3 * num4) / den;
+            const n21 = 2 * Math.sin(a1 - a2);
+            const n22 = v1 * v1 * l1 * (m1 + m2);
+            const n23 = g * (m1 + m2) * Math.cos(a1);
+            const n24 = v2 * v2 * l2 * m2 * Math.cos(a1 - a2);
+            const den2 = l2 * (2 * m1 + m2 - m2 * Math.cos(2 * a1 - 2 * a2));
+            const ac2 = (n21 * (n22 + n23 + n24)) / den2;
+            v1 += ac1 * 0.04;
+            v2 += ac2 * 0.04;
+            a1 += v1 * 0.04;
+            a2 += v2 * 0.04;
+            v1 *= 0.9999;
+            v2 *= 0.9999;
+          }
+          const x1 = ox + l1 * Math.sin(a1);
+          const y1 = oy + l1 * Math.cos(a1);
+          const x2 = x1 + l2 * Math.sin(a2);
+          const y2 = y1 + l2 * Math.cos(a2);
+          if (have) {
+            p.stroke(300, 70, 100, 70);
+            p.strokeWeight(1.4);
+            p.line(px2, py2, x2, y2);
+          }
+          px2 = x2;
+          py2 = y2;
+          have = true;
+          p.stroke(200, 20, 90, 60);
+          p.strokeWeight(2);
+          p.line(ox, oy, x1, y1);
+          p.line(x1, y1, x2, y2);
+          p.noStroke();
+          p.fill(30, 80, 100, 100);
+          p.circle(x1, y1, 6);
+          p.circle(x2, y2, 7);
+        };
+      }
+
+      // HSV → RGB helper (h in [0,360), s,v in [0,1]). Allocation: a fixed 3-array.
+      const _rgbScratch = [0, 0, 0];
+      function hsvToRgb(h, s, v) {
+        const c = v * s;
+        const hp = (h % 360) / 60;
+        const x = c * (1 - Math.abs((hp % 2) - 1));
+        let r = 0;
+        let g = 0;
+        let b = 0;
+        if (hp < 1) {
+          r = c;
+          g = x;
+        } else if (hp < 2) {
+          r = x;
+          g = c;
+        } else if (hp < 3) {
+          g = c;
+          b = x;
+        } else if (hp < 4) {
+          g = x;
+          b = c;
+        } else if (hp < 5) {
+          r = x;
+          b = c;
+        } else {
+          r = c;
+          b = x;
+        }
+        const m = v - c;
+        _rgbScratch[0] = Math.round((r + m) * 255);
+        _rgbScratch[1] = Math.round((g + m) * 255);
+        _rgbScratch[2] = Math.round((b + m) * 255);
+        return _rgbScratch;
+      }
+
+      // ─────────────────────────────────────────────────────────────────────────
+      // BOARD SPEC — the page→visual map. 7 tiles per board (21 total).
+      // ─────────────────────────────────────────────────────────────────────────
+
+      const BOARDS = {
+        2: [
+          {
+            id: 'lorenz',
+            name: 'Lorenz Attractor',
+            legend: 'σ=10 ρ=28 β=8/3 · X–Z phase portrait',
+            make: makeLorenz,
+          },
+          {
+            id: 'rossler',
+            name: 'Rössler Attractor',
+            legend: 'a=b=0.2 c=5.7 · spiral → chaos band',
+            make: makeRossler,
+          },
+          {
+            id: 'grayscott',
+            name: 'Gray–Scott Reaction',
+            legend: 'F=0.0545 k=0.062 · turing skin',
+            make: makeGrayScott,
+          },
+          {
+            id: 'voronoi',
+            name: 'Voronoi Tessellation',
+            legend: '26 sites · cells + Delaunay links',
+            make: makeVoronoi,
+          },
+          {
+            id: 'fern',
+            name: 'Barnsley Fern (IFS)',
+            legend: 'chaos game · 4 affine maps',
+            make: makeFern,
+          },
+          {
+            id: 'clifford',
+            name: 'Clifford Attractor',
+            legend: 'sin/cos map · density accretion',
+            make: makeClifford,
+          },
+          {
+            id: 'flow',
+            name: 'Curl-Noise Flow',
+            legend: 'div-free Perlin curl · tracer streaks',
+            make: makeFlowField,
+          },
+        ],
+        3: [
+          {
+            id: 'statevector',
+            name: 'Quantum Statevector',
+            legend: '4 qubits · |amp|² under seeded unitary',
+            make: makeStatevector,
+          },
+          {
+            id: 'bloch',
+            name: 'Bloch Disc',
+            legend: '1 qubit · tilted-axis precession trail',
+            make: makeBloch,
+          },
+          {
+            id: 'spectrum',
+            name: 'DFT Spectrum',
+            legend: 'sum of sinusoids · live magnitude bins',
+            make: makeSpectrum,
+          },
+          {
+            id: 'histogram',
+            name: 'Mixture Histogram',
+            legend: '2-Gaussian mix · accumulating samples',
+            make: makeHistogram,
+          },
+          {
+            id: 'violin',
+            name: 'Density Violins',
+            legend: '3 KDE silhouettes · seeded spreads',
+            make: makeViolin,
+          },
+          {
+            id: 'cellular',
+            name: 'Cellular Automaton',
+            legend: 'seeded elementary rule · scrolling',
+            make: makeCellular,
+          },
+          {
+            id: 'julia',
+            name: 'Julia Escape-Time',
+            legend: 'z²+c · c orbits a seeded point',
+            make: makeJulia,
+          },
+        ],
+        4: [
+          {
+            id: 'forcegraph',
+            name: 'Force-Directed Graph',
+            legend: 'spring + repulsion · 3 communities',
+            make: makeForceGraph,
+          },
+          {
+            id: 'nbody',
+            name: 'N-Body Gravity',
+            legend: 'softened Newtonian · 22 bodies',
+            make: makeNbody,
+          },
+          {
+            id: 'ribbon3d',
+            name: 'Aizawa Ribbon (3D)',
+            legend: 'WEBGL · strange attractor, rotating',
+            make: makeRibbon3D,
+          },
+          {
+            id: 'mandelbrot',
+            name: 'Mandelbrot Zoom',
+            legend: 'escape-time · seeded boundary dive',
+            make: makeMandelbrot,
+          },
+          {
+            id: 'sierpinski',
+            name: 'Sierpinski Chaos Game',
+            legend: 'n-gon gasket · midpoint iteration',
+            make: makeSierpinski,
+          },
+          {
+            id: 'bifurcation',
+            name: 'Logistic Bifurcation',
+            legend: 'xₙ₊₁=r·x(1−x) · r swept 2.6→4.0',
+            make: makeBifurcation,
+          },
+          {
+            id: 'pendulum',
+            name: 'Double Pendulum',
+            legend: 'chaotic · bob-2 phase trace',
+            make: makeDoublePendulum,
+          },
+        ],
+      };
+
+      /**
+       * Build every board tile once. Each tile gets a DOM card (titlebar + canvas
+       * host) and an instance-mode p5 sketch seeded from (masterSeed, tileId). All
+       * instances start paused; setPage() loops only the visible board.
+       * O(total tiles) — one-time.
+       */
+      function buildBoards() {
+        if (boardsBuilt) return;
+        for (let page = 2; page <= 4; page++) {
+          const grid = document.getElementById('board-' + page);
+          const specs = BOARDS[page];
+          for (let k = 0; k < specs.length; k++) {
+            const spec = specs[k];
+            const tile = document.createElement('div');
+            tile.className = 'viz-tile';
+            const bar = document.createElement('div');
+            bar.className = 'viz-titlebar';
+            const nm = document.createElement('div');
+            nm.className = 'viz-name';
+            nm.textContent = spec.name;
+            const lg = document.createElement('div');
+            lg.className = 'viz-legend';
+            lg.textContent = spec.legend;
+            bar.appendChild(nm);
+            bar.appendChild(lg);
+            const host = document.createElement('div');
+            host.className = 'viz-canvas';
+            const hostId = 'viz-host-' + page + '-' + spec.id;
+            host.id = hostId;
+            tile.appendChild(bar);
+            tile.appendChild(host);
+            grid.appendChild(tile);
+
+            // Instance-mode sketch. Closure captures spec for re-seeding on regen.
+            const sketch = (pp) => {
+              const rng = makeRng(derivedSeed(params.seed, spec.id));
+              spec.make(pp, rng, TILE_RES);
+            };
+            const inst = new p5(sketch, host);
+            inst.noLoop(); // paused until its page is shown
+            boardInstances.push({ page, instance: inst, spec, hostId });
+          }
+        }
+        boardsBuilt = true;
+      }
+
+      /**
+       * Rebuild every board instance from the current seed (after a seed change).
+       * Removes old instances and reconstructs them so each tile reseeds cleanly.
+       * O(total tiles) — seed-change only.
+       */
+      function rebuildBoards() {
+        for (let i = 0; i < boardInstances.length; i++) boardInstances[i].instance.remove();
+        boardInstances.length = 0;
+        for (let page = 2; page <= 4; page++) {
+          const specs = BOARDS[page];
+          for (let k = 0; k < specs.length; k++) {
+            const spec = specs[k];
+            const host = document.getElementById('viz-host-' + page + '-' + spec.id);
+            host.innerHTML = '';
+            const sketch = (pp) => {
+              const rng = makeRng(derivedSeed(params.seed, spec.id));
+              spec.make(pp, rng, TILE_RES);
+            };
+            const inst = new p5(sketch, host);
+            inst.noLoop();
+            boardInstances.push({ page, instance: inst, spec, hostId: host.id });
+          }
+        }
+        syncBoardLoops();
+      }
+
+      /** Loop only the instances on the visible board; pause all others. */
+      function syncBoardLoops() {
+        for (let i = 0; i < boardInstances.length; i++) {
+          const bi = boardInstances[i];
+          if (bi.page === currentPage) bi.instance.loop();
+          else bi.instance.noLoop();
+        }
+      }
+
+      // ═══════════════════════════════════════════════════════════════════════
+      // PAGE NAV — switches the visible page WITHOUT touching the seed. Page 1's
+      // global sketch is looped only on page 1; board instances loop only on their
+      // page. This keeps the frame budget on the visible page alone.
+      // ═══════════════════════════════════════════════════════════════════════
+
+      /** Show page n (1..4). Pauses every off-screen sketch. */
+      function setPage(n) {
+        currentPage = n;
+        for (let pgi = 1; pgi <= 4; pgi++) {
+          const sec = document.getElementById('page-' + pgi);
+          if (sec) sec.classList.toggle('active', pgi === n);
+          const tab = document.querySelector('.page-tab[data-page="' + pgi + '"]');
+          if (tab) tab.classList.toggle('active', pgi === n);
+        }
+        const desc = document.getElementById('page-desc');
+        if (desc) desc.textContent = PAGE_DESCS[n];
+
+        // Page 1 is the global sketch; pause it off-page so it does not burn frames.
+        if (typeof window.loop === 'function') {
+          if (n === 1) window.loop();
+          else window.noLoop();
+        }
+        if (boardsBuilt) syncBoardLoops();
+      }
+
+      function prevPage() {
+        setPage(currentPage > 1 ? currentPage - 1 : 4);
+      }
+
+      function nextPage() {
+        setPage(currentPage < 4 ? currentPage + 1 : 1);
       }
 
       // ═══════════════════════════════════════════════════════════════════════
@@ -1168,39 +2833,47 @@
         const v = parseFloat(value);
         params[paramName] = v;
         document.getElementById(paramName + '-value').textContent = formatParam(paramName, v);
-        // Population changes re-collapse the cosmos; the rest retune the live run.
+        // Population changes re-collapse the field; the rest retune the live run.
         if (paramName === 'particles') initializeSystem();
       }
 
       function updateHudToggle(checked) {
-        // Display-only toggle; touches no sim state and no rng. Safe mid-run.
         params.showHud = !!checked;
       }
 
       function regenerateArt() {
         initializeSystem();
+        rebuildBoards();
       }
 
       function downloadArt() {
+        // Page 1 saves the global canvas; boards save the focused tile is out of
+        // scope — keep the original collapse-field export.
         saveCanvas('quantum-wildbeyond-' + params.seed, 'png');
       }
 
       // ═══════════════════════════════════════════════════════════════════════
-      // SEED CONTROL FUNCTIONS - ALWAYS KEEP THESE
+      // SEED CONTROL FUNCTIONS - ALWAYS KEEP THESE. A seed change re-derives BOTH
+      // the collapse field and every board (so all pages stay in lockstep), but
+      // never changes which page is showing.
       // ═══════════════════════════════════════════════════════════════════════
 
       function updateSeedDisplay() {
         document.getElementById('seed-input').value = params.seed;
       }
 
+      function applySeedToAll() {
+        initializeSystem();
+        rebuildBoards();
+      }
+
       function updateSeed() {
-        let input = document.getElementById('seed-input');
-        let newSeed = parseInt(input.value);
+        const input = document.getElementById('seed-input');
+        const newSeed = parseInt(input.value, 10);
         if (newSeed && newSeed > 0) {
           params.seed = newSeed;
-          initializeSystem();
+          applySeedToAll();
         } else {
-          // Reset to current seed if invalid
           updateSeedDisplay();
         }
       }
@@ -1212,42 +2885,43 @@
       function previousSeed() {
         params.seed = Math.max(1, params.seed - 1);
         updateSeedDisplay();
-        initializeSystem();
+        applySeedToAll();
       }
 
       function nextSeed() {
         params.seed = params.seed + 1;
         updateSeedDisplay();
-        initializeSystem();
+        applySeedToAll();
       }
 
       function randomSeedAndUpdate() {
         params.seed = Math.floor(Math.random() * 999999) + 1;
         updateSeedDisplay();
-        initializeSystem();
+        applySeedToAll();
       }
 
       function resetParameters() {
         params = { ...defaultParams };
 
-        // Update slider UI elements
         const names = ['particles', 'collapseRate', 'fieldBlend', 'trailFade', 'paletteShift'];
         for (let i = 0; i < names.length; i++) {
           const name = names[i];
           document.getElementById(name).value = params[name];
           document.getElementById(name + '-value').textContent = formatParam(name, params[name]);
         }
-
-        // Restore the overlay toggle (a checkbox, not a slider).
         document.getElementById('showHud').checked = params.showHud;
 
         updateSeedDisplay();
-        initializeSystem();
+        applySeedToAll();
       }
 
-      // Initialize UI on load
+      // Initialize UI + boards on load. The global (page-1) sketch self-starts via
+      // p5's window-scope setup/draw; we build the boards and pause the off-page
+      // sketches once the DOM is ready.
       window.addEventListener('load', function () {
         updateSeedDisplay();
+        buildBoards();
+        setPage(1); // pauses boards, loops only the collapse field
       });
     </script>
   </body>

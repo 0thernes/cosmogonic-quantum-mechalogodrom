@@ -22,15 +22,18 @@ import {
   OBS_STAT_SERIES,
   OBS_VARIANCE_WINDOW,
   Observatory,
+  plotRect,
   readToken,
+  rosterLayout,
   SeriesRing,
   shannonEntropy,
   strideFor,
+  truncateToWidth,
   WAR_CELLS,
   warPaletteIndex,
   windowMeanStd,
 } from '../src/ui/observatory';
-import type { MeanStd, ObservatorySnapshot } from '../src/ui/observatory';
+import type { MeanStd, ObservatorySnapshot, PlotRect } from '../src/ui/observatory';
 import { mean, sampleStandardDeviation } from 'simple-statistics';
 
 describe('observatory contract constants', () => {
@@ -394,6 +397,113 @@ describe('fmtCompact (in-canvas value readouts, V5.1)', () => {
     expect(fmtCompact(Number.NaN)).toBe('—');
     expect(fmtCompact(Number.POSITIVE_INFINITY)).toBe('—');
     expect(fmtCompact(Number.NEGATIVE_INFINITY)).toBe('—');
+  });
+});
+
+describe('plotRect (V6.1 title-band + padding scheme)', () => {
+  test('insets the plot body below the title band and by PAD on the other three sides', () => {
+    const r = plotRect(400, 200);
+    // Top is the reserved title band (30 backing px); left/right/bottom are inset by PAD (12).
+    expect(r.top).toBe(30);
+    expect(r.left).toBe(12);
+    expect(r.right).toBe(400 - 12);
+    expect(r.bottom).toBe(200 - 12);
+    expect(r.width).toBe(r.right - r.left);
+    expect(r.height).toBe(r.bottom - r.top);
+    // The body never overlaps the title band: its top edge sits AT the band, never above it.
+    expect(r.top).toBeGreaterThan(0);
+    expect(r.width).toBeGreaterThan(0);
+    expect(r.height).toBeGreaterThan(0);
+  });
+
+  test('degenerate (tiny) canvases clamp to a well-ordered zero-area rect, never negative', () => {
+    const r = plotRect(8, 8);
+    expect(r.right).toBeGreaterThanOrEqual(r.left);
+    expect(r.bottom).toBeGreaterThanOrEqual(r.top);
+    expect(r.width).toBeGreaterThanOrEqual(0);
+    expect(r.height).toBeGreaterThanOrEqual(0);
+  });
+
+  test('the readout band (above top) and the plot body do not share vertical space', () => {
+    // Any y the title/readout uses is < top; any y the plot uses is in [top, bottom].
+    const r = plotRect(300, 144);
+    const titleBaselineY = 19; // matches the title()/readout() draw baselines
+    expect(titleBaselineY).toBeLessThan(r.top);
+  });
+});
+
+describe('rosterLayout (V6.1 c11 roster / c14 resource-bar rows)', () => {
+  const tall: PlotRect = plotRect(300, 460); // 10 rows fit single-file with room to spare
+  const short: PlotRect = plotRect(300, 120); // 10 rows would be too short → 2 columns
+
+  test('a tall region keeps a single column with one cell per titan', () => {
+    const lay = rosterLayout(tall, OBS_SERIES, 34, 6);
+    expect(lay.cols).toBe(1);
+    expect(lay.rows).toBe(OBS_SERIES);
+    expect(lay.cellW).toBeCloseTo(tall.width, 10);
+    expect(lay.cellH).toBeCloseTo(tall.height / OBS_SERIES, 10);
+    // Every row clears the minimum height so a name + value never have to overlap.
+    expect(lay.cellH).toBeGreaterThanOrEqual(34);
+    expect(lay.innerH).toBeCloseTo(lay.cellH - 6, 10);
+    expect(lay.innerH).toBeGreaterThan(0);
+  });
+
+  test('a short region falls back to a compact 2-column grid so 10 rows still fit', () => {
+    const lay = rosterLayout(short, OBS_SERIES, 34, 6);
+    expect(lay.cols).toBe(2);
+    expect(lay.rows).toBe(Math.ceil(OBS_SERIES / 2)); // 5 rows per column
+    expect(lay.cellW).toBeCloseTo(short.width / 2, 10);
+    // Two columns double the per-row height vs. the single-column attempt.
+    const single = short.height / OBS_SERIES;
+    expect(lay.cellH).toBeGreaterThan(single);
+  });
+
+  test('innerH is always positive and gap is reserved inside each cell', () => {
+    for (const region of [tall, short, plotRect(220, 72)]) {
+      const lay = rosterLayout(region, OBS_SERIES, 34, 6);
+      expect(lay.innerH).toBeGreaterThan(0);
+      expect(lay.innerH).toBeLessThanOrEqual(lay.cellH);
+      expect(lay.cols === 1 || lay.cols === 2).toBe(true);
+    }
+  });
+
+  test('n is clamped to at least 1 (no divide-by-zero on an empty roster)', () => {
+    const lay = rosterLayout(tall, 0, 34, 6);
+    expect(lay.rows).toBeGreaterThanOrEqual(1);
+    expect(Number.isFinite(lay.cellH)).toBe(true);
+  });
+});
+
+describe('truncateToWidth (V6.1 ellipsis truncation, name never collides with value)', () => {
+  // A deterministic fixed-advance measurer: every glyph is `unit` px wide.
+  const measurer = (unit: number): Pick<CanvasRenderingContext2D, 'measureText'> => ({
+    measureText: (s: string) => ({ width: s.length * unit }) as TextMetrics,
+  });
+
+  test('returns the text unchanged when it already fits', () => {
+    const x = measurer(10);
+    expect(truncateToWidth(x, 'NYX', 100)).toBe('NYX');
+  });
+
+  test('appends an ellipsis and drops characters when it overflows', () => {
+    const x = measurer(10);
+    // 'AETHON' is 60px; budget 45px fits 'AET…' (4 glyphs = 40px) but not 'AETH…' (50px).
+    const out = truncateToWidth(x, 'AETHON', 45);
+    expect(out.endsWith('…')).toBe(true);
+    expect(out.length).toBeLessThan('AETHON'.length + 1);
+    expect(out.length * 10).toBeLessThanOrEqual(45);
+  });
+
+  test('empty string or non-positive width yields an empty string', () => {
+    const x = measurer(10);
+    expect(truncateToWidth(x, '', 100)).toBe('');
+    expect(truncateToWidth(x, 'NYX', 0)).toBe('');
+    expect(truncateToWidth(x, 'NYX', -5)).toBe('');
+  });
+
+  test('a width too small for even one glyph collapses to the bare ellipsis', () => {
+    const x = measurer(10);
+    expect(truncateToWidth(x, 'AETHON', 5)).toBe('…');
   });
 });
 

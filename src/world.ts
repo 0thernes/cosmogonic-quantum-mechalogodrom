@@ -33,7 +33,7 @@ import {
   WEATHERS,
 } from './sim/constants';
 import { ALGOS } from './sim/algorithms';
-import { SONGS } from './audio/songs';
+import { SONGS, SFX_TYPES } from './audio/songs';
 import { mulberry32, type Rng } from './math/rng';
 import { clamp } from './math/scalar';
 import { SpatialHash } from './math/spatial-hash';
@@ -130,6 +130,12 @@ export class World {
   private readonly viz3dSnap: Viz3DSnapshot;
   /** Last collapse basis seen, to detect measurement events across frames. */
   private lastCollapseSeen = -1;
+  /** Cached `.algo-row` elements (one per ALGOS entry) for the picker panel. */
+  private readonly algoRows: HTMLElement[] = [];
+  /** `#algo-active` readout, or null when the picker DOM is absent. */
+  private algoActiveEl: HTMLElement | null = null;
+  /** Sorted-ness of the active field, 0 (chaotic) .. 1 (sorted) — picker progress. */
+  private sortedFraction = 0;
 
   /** Pre-allocated sort-value buffer (Known Bug 4 fix). */
   private readonly sortVals: Float32Array;
@@ -252,6 +258,7 @@ export class World {
     this.observatory = new Observatory();
     bindPanelToggles();
     this.bindObservatoryTabs();
+    this.bindAlgoPicker();
     this.input = new InputSystem(this.buildActions());
 
     this.sortVals = new Float32Array(this.quality.maxEntities);
@@ -426,6 +433,7 @@ export class World {
     if (s.frame % 8 === 0) {
       this.analytics.push(n, this.energy, this.connectome.links);
       this.panel.update(this.snapshot());
+      this.updateAlgoPicker(); // live progress on the active field's row
     }
     if (s.frame % 60 === 0) this.analytics.analyze(); // after push at coinciding frames
 
@@ -611,6 +619,15 @@ export class World {
       if (swaps === 0) this.qc.onSortSwap(a0, a1); // one CNOT/frame (preserve coupling rate)
       swaps++;
     }
+    // Sorted-ness proxy for the picker progress bar: the fraction of adjacent
+    // pairs already in order (O(n), cheap; reaches 1 as a terminating field
+    // settles, hovers for the perpetual fields). The sortVals view is current
+    // after the batch above.
+    let ordered = 0;
+    const sv = this.sortVals;
+    // i ∈ [1, n) and n = list.length ≤ sortVals.length, so both reads are in bounds.
+    for (let i = 1; i < n; i++) if (sv[i - 1]! <= sv[i]!) ordered++;
+    this.sortedFraction = n > 1 ? ordered / (n - 1) : 1;
     this.hud.setAlgo(algo.name, s.algoStep, swaps);
   }
 
@@ -762,6 +779,92 @@ export class World {
     }
   }
 
+  /**
+   * Populate the algorithm picker (`#algo-list`) with one clickable `.algo-row`
+   * per sorting field, so all 25 are visible and selectable (not just a cycle
+   * button). Each row click selects that field. Degrades silently if the picker
+   * DOM is absent. O(ALGOS).
+   */
+  private bindAlgoPicker(): void {
+    const listEl = document.getElementById('algo-list');
+    if (!listEl) return;
+    // The ui-shell ships #algo-active as a container with an inner name span.
+    this.algoActiveEl = document.getElementById('algo-active-name');
+    const frag = document.createDocumentFragment();
+    for (let i = 0; i < ALGOS.length; i++) {
+      const algo = ALGOS[i];
+      if (!algo) continue;
+      const row = document.createElement('div');
+      row.className = 'algo-row';
+      row.dataset['algo'] = String(i);
+      row.setAttribute('role', 'option'); // #algo-list is a role=listbox
+      row.setAttribute('tabindex', '0');
+      row.setAttribute('aria-label', `Select ${algo.name} sorting field`);
+      const name = document.createElement('span');
+      name.className = 'algo-name';
+      name.textContent = algo.name;
+      const prog = document.createElement('div');
+      prog.className = 'algo-prog';
+      row.append(name, prog);
+      row.addEventListener('click', () => this.selectAlgo(i, true));
+      row.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          this.selectAlgo(i, true);
+        }
+      });
+      frag.appendChild(row);
+      this.algoRows.push(row);
+    }
+    listEl.appendChild(frag);
+    this.refreshAlgoActive();
+  }
+
+  /**
+   * Select a sorting field by index (picker click, toolbar cycle, keyboard).
+   * `fromUser` adds the audio unlock + a distinct per-field selection tone (the
+   * 8 SFX timbres cycle by index, so each field announces itself differently).
+   */
+  private selectAlgo(idx: number, fromUser: boolean): void {
+    const s = this.state;
+    const n = ALGOS.length;
+    s.algoIdx = ((idx % n) + n) % n;
+    s.algoStep = 0;
+    const algo = cyc(ALGOS, s.algoIdx);
+    this.persisted.algoIdx = s.algoIdx;
+    this.save();
+    this.hud.showSector(algo.name);
+    this.audit.record('algo', { name: algo.name });
+    if (fromUser) {
+      this.unlock();
+      this.audio.play(SFX_TYPES[s.algoIdx % SFX_TYPES.length] ?? 'crystallize');
+    }
+    this.refreshAlgoActive();
+  }
+
+  /** Sync the picker's active row + readout to `state.algoIdx`; reset progress bars. */
+  private refreshAlgoActive(): void {
+    const active = this.state.algoIdx;
+    for (let i = 0; i < this.algoRows.length; i++) {
+      const row = this.algoRows[i];
+      if (!row) continue;
+      row.classList.toggle('active', i === active);
+      if (i !== active) {
+        const prog = row.querySelector<HTMLElement>('.algo-prog');
+        if (prog) prog.style.width = '0%';
+      }
+    }
+    if (this.algoActiveEl) this.algoActiveEl.textContent = cyc(ALGOS, active).name;
+  }
+
+  /** Drive the active row's progress bar from the live sorted fraction. O(1). */
+  private updateAlgoPicker(): void {
+    const row = this.algoRows[this.state.algoIdx];
+    if (!row) return;
+    const prog = row.querySelector<HTMLElement>('.algo-prog');
+    if (prog) prog.style.width = `${Math.round(this.sortedFraction * 100)}%`;
+  }
+
   private buildActions(): UiActions {
     const s = this.state;
     return {
@@ -850,15 +953,8 @@ export class World {
         return mode;
       },
       cycleAlgo: () => {
-        this.unlock();
-        s.algoIdx = (s.algoIdx + 1) % ALGOS.length;
-        s.algoStep = 0;
-        const name = cyc(ALGOS, s.algoIdx).name;
-        this.persisted.algoIdx = s.algoIdx;
-        this.save();
-        this.hud.showSector(name);
-        this.audit.record('algo', { name });
-        return name;
+        this.selectAlgo(s.algoIdx + 1, true); // shares the picker selection path
+        return cyc(ALGOS, s.algoIdx).name;
       },
       cycleWeather: (): Weather => {
         this.unlock();

@@ -377,6 +377,135 @@ const TITLE_FONT = '700 18px "JetBrains Mono", ui-monospace, monospace';
 const VALUE_FONT = '600 16px "JetBrains Mono", ui-monospace, monospace';
 /** Top inset (backing px) reserved for the title strip so data never collides with it. */
 const TITLE_BAND = 30;
+/**
+ * Uniform inset (backing px ≈ 6 CSS px at the 2× store) applied on all sides of every chart's
+ * plot body BELOW the title band (V6.1). Guarantees title/legend/value text never collides with
+ * plotted data: the plot region is `[PAD, TITLE_BAND] .. [w − PAD, h − PAD]`.
+ */
+const PAD = 12;
+/**
+ * Smallest single-column row height (backing px) the titan roster / resource bars accept before
+ * {@link rosterLayout} falls back to a compact 2-column grid (V6.1). ≈ two text lines tall at the
+ * {@link VALUE_FONT} so a name and its value always have vertical breathing room.
+ */
+const ROSTER_MIN_ROW_H = 34;
+/** Vertical gap reserved between consecutive roster/bar rows (backing px). */
+const ROW_GAP = 6;
+/** Horizontal inset from a roster/bar cell edge to its swatch/bar/text (backing px). */
+const ROW_INSET = 6;
+
+/**
+ * Rectangular plot region for a chart, in backing px: the canvas inset by {@link PAD} on the
+ * left/right/bottom and by `TITLE_BAND` on the top. All draw bodies derive their geometry from
+ * one of these so the title band and the {@link PAD} margins are honored identically everywhere.
+ */
+export interface PlotRect {
+  /** Left edge (= {@link PAD}). */
+  left: number;
+  /** Top edge (= `TITLE_BAND`). */
+  top: number;
+  /** Right edge (= `w − PAD`). */
+  right: number;
+  /** Bottom edge (= `h − PAD`). */
+  bottom: number;
+  /** Region width (`right − left`, ≥ 0). */
+  width: number;
+  /** Region height (`bottom − top`, ≥ 0). */
+  height: number;
+}
+
+/**
+ * Compute the padded plot region for a `w × h` backing store: inset {@link PAD} on the left,
+ * right and bottom and `TITLE_BAND` on top, then clamp so a tiny canvas yields a degenerate
+ * (zero-area) but still well-ordered rect rather than negative spans. Pure, allocation-light (one
+ * object), no DOM — testable under bun. O(1).
+ *
+ * @param w Backing-store width. @param h Backing-store height.
+ */
+export function plotRect(w: number, h: number): PlotRect {
+  const left = PAD;
+  const top = TITLE_BAND;
+  const right = Math.max(left, w - PAD);
+  const bottom = Math.max(top, h - PAD);
+  return { left, top, right, bottom, width: right - left, height: bottom - top };
+}
+
+/**
+ * Result of {@link rosterLayout}: the geometry for laying out `n` titan rows responsively inside a
+ * plot region — either a single column or a compact 2-column grid when rows would otherwise be too
+ * short to read. All coordinates are backing px relative to the canvas origin.
+ */
+export interface RosterLayout {
+  /** Columns of cells (1 single-file, 2 compact grid). */
+  cols: 1 | 2;
+  /** Rows of cells per column (`ceil(n / cols)`). */
+  rows: number;
+  /** Width of one cell (column stride). */
+  cellW: number;
+  /** Height of one cell (row stride, including the inter-row gap). */
+  cellH: number;
+  /** Vertical gap reserved between consecutive rows (subtracted from the drawable cell). */
+  gap: number;
+  /** Drawable height inside a cell after the row gap (`cellH − gap`, ≥ 1). */
+  innerH: number;
+}
+
+/**
+ * Lay out `n` roster rows (titan names + a bar/swatch + a value) inside a padded {@link PlotRect}
+ * so every row has real height with a gap and nothing has to overlap (V6.1). Tries a single column
+ * first; if that makes each row shorter than `minRowH` backing px it switches to a compact
+ * 2-column grid (halving the row count, doubling the per-row height) so 10 titans still fit a
+ * short canvas legibly. Pure, allocation-light (one object), no DOM — testable under bun. O(1).
+ *
+ * @param region Padded plot region from {@link plotRect}.
+ * @param n Row count (≥ 1; e.g. {@link OBS_SERIES}).
+ * @param minRowH Minimum single-column row height before falling back to two columns (backing px).
+ * @param gap Inter-row gap to reserve inside each cell (backing px).
+ */
+export function rosterLayout(
+  region: PlotRect,
+  n: number,
+  minRowH: number,
+  gap: number,
+): RosterLayout {
+  const count = n < 1 ? 1 : n;
+  const singleRowH = region.height / count;
+  const cols: 1 | 2 = singleRowH < minRowH && count > 1 ? 2 : 1;
+  const rows = Math.ceil(count / cols);
+  const cellW = region.width / cols;
+  const cellH = region.height / rows;
+  const innerH = Math.max(1, cellH - gap);
+  return { cols, rows, cellW, cellH, gap, innerH };
+}
+
+/**
+ * Truncate `text` to fit `maxWidth` backing px under the caller's already-set font, appending an
+ * ellipsis when characters are dropped. Measures via the live 2d context (`measureText`) so the
+ * result respects the actual rasterized width; an empty string or non-positive width yields `''`.
+ * Allocation-light (slices a few candidate substrings), no ring/array growth. O(L) on the string
+ * length in the worst case (one trailing-char trim loop). Pairs with the row layout so a long
+ * titan name never collides with its right-aligned value.
+ *
+ * @param x 2d context whose CURRENT font is used for measurement.
+ * @param text Source label. @param maxWidth Available width in backing px.
+ */
+export function truncateToWidth(
+  x: Pick<CanvasRenderingContext2D, 'measureText'>,
+  text: string,
+  maxWidth: number,
+): string {
+  if (maxWidth <= 0 || text.length === 0) return '';
+  if (x.measureText(text).width <= maxWidth) return text;
+  const ell = '…';
+  // Drop trailing characters until the name + ellipsis fits; never return below the ellipsis.
+  let end = text.length - 1;
+  while (end > 0) {
+    const candidate = text.slice(0, end) + ell;
+    if (x.measureText(candidate).width <= maxWidth) return candidate;
+    end--;
+  }
+  return ell;
+}
 
 /** Active page index (which quad of canvases `draw()` renders). */
 export type ObsPage = 0 | 1 | 2 | 3;
@@ -1751,40 +1880,58 @@ export class Observatory {
   }
 
   /**
-   * `#obs-c11`: ecology legend strip — 10 titan name chips in their series colors so the phase
-   * portrait and small multiples are decodable. Names come from the latest push. O(S).
+   * `#obs-c11`: titan roster — one row per titan (color swatch + truncated lore name + a
+   * matter/energy readout) laid out responsively in the padded plot region (V6.1). Rows get real
+   * height with a gap via {@link rosterLayout}, collapsing to a compact 2-column grid when a short
+   * canvas can't give 10 single-file rows room; names are ellipsis-truncated by
+   * {@link truncateToWidth} so they never collide with the right-aligned value. Names come from
+   * the latest push. O(S).
    */
   private drawEcologyLegend(): void {
     const { c, x } = this.slot(3);
     if (!c || !x || !this.prep(c, x)) return;
     const w = this.pw;
     const h = this.ph;
-    const top = TITLE_BAND;
-    const rowH = (h - top) / OBS_SERIES;
+    const region = plotRect(w, h);
+    const lay = rosterLayout(region, OBS_SERIES, ROSTER_MIN_ROW_H, ROW_GAP);
+    x.font = VALUE_FONT;
     x.textBaseline = 'middle';
     for (let s = 0; s < OBS_SERIES; s++) {
-      const cy = top + rowH * (s + 0.5);
+      const col = lay.cols === 2 ? Math.floor(s / lay.rows) : 0;
+      const rowInCol = lay.cols === 2 ? s % lay.rows : s;
+      const cellX = region.left + col * lay.cellW;
+      const cellTop = region.top + rowInCol * lay.cellH;
+      const cy = cellTop + lay.innerH * 0.5;
       const color = this.seriesColors[s] ?? ACCENT_FALLBACK;
-      // Color swatch (glowing) keyed to the phase portrait / small multiples.
+      const swatch = Math.min(lay.innerH * 0.7, lay.cellW * 0.18);
+      const swX = cellX + ROW_INSET;
+      // Color swatch (glowing), inset from the cell edge, keyed to the phase portrait.
       x.globalAlpha = 1;
       x.fillStyle = color;
       this.glowOn(x, color, 3);
-      x.fillRect(8, cy - rowH * 0.28, rowH * 0.5, rowH * 0.56);
+      x.fillRect(swX, cy - swatch * 0.5, swatch, swatch);
       this.glowOff(x);
-      const nm = this.names[s] ?? `titan ${s}`;
-      x.font = VALUE_FONT;
-      x.fillStyle = INK;
-      x.textAlign = 'start';
-      x.fillText(nm, 12 + rowH * 0.5, cy);
-      // Per-titan matter / energy readout on the right.
+      // Per-titan matter / energy readout pinned to the cell's right edge first, so the name's
+      // available width is the remaining gap (name + value can never collide).
       const mt = this.matterScratch[s] ?? 0;
       const en = this.energyScratch[s] ?? 0;
       const atWar = (this.warsLatest[s] ?? 0) > 0;
+      const valText = `${fmtCompact(mt)}m ${fmtCompact(en)}e`;
+      const cellRight = cellX + lay.cellW - ROW_INSET;
+      const valW = x.measureText(valText).width;
+      x.globalAlpha = 1;
       x.textAlign = 'end';
       x.fillStyle = atWar ? this.danger : DIM;
-      x.fillText(`${fmtCompact(mt)}m ${fmtCompact(en)}e`, w - 4, cy);
+      x.fillText(valText, cellRight, cy);
+      // Truncated name in the space between the swatch and the value column.
+      const nameX = swX + swatch + ROW_INSET;
+      const nameW = cellRight - valW - ROW_INSET - nameX;
+      const nm = truncateToWidth(x, this.names[s] || `titan ${s}`, nameW);
       x.textAlign = 'start';
+      x.fillStyle = INK;
+      x.fillText(nm, nameX, cy);
     }
+    x.textAlign = 'start';
     x.textBaseline = 'alphabetic';
     x.globalAlpha = 1;
     this.title(x, 'titan roster', w);
@@ -1941,7 +2088,6 @@ export class Observatory {
     if (!c || !x || !this.prep(c, x)) return;
     const w = this.pw;
     const h = this.ph;
-    const top = TITLE_BAND;
     const ring = this.ledgerRing;
     const n = ring.count;
     if (n < 1) {
@@ -1957,43 +2103,58 @@ export class Observatory {
     }
     if (!(hi > lo)) hi = lo + 1;
     const range = hi - lo;
-    const rowH = (h - top) / OBS_SERIES;
-    x.textBaseline = 'middle';
+    const region = plotRect(w, h);
+    const lay = rosterLayout(region, OBS_SERIES, ROSTER_MIN_ROW_H, ROW_GAP);
+    x.font = VALUE_FONT;
     for (let s = 0; s < OBS_SERIES; s++) {
+      const col = lay.cols === 2 ? Math.floor(s / lay.rows) : 0;
+      const rowInCol = lay.cols === 2 ? s % lay.rows : s;
+      const cellX = region.left + col * lay.cellW;
+      const cellTop = region.top + rowInCol * lay.cellH;
+      const trackX = cellX + ROW_INSET;
+      const trackW = Math.max(1, lay.cellW - ROW_INSET * 2);
+      // Split the row: a TEXT band (name left, value right) ABOVE a BAR track, so letters never
+      // sit on the plotted bar (the user's "letters over the data" complaint). The bar reads the
+      // bottom ~52% of the drawable cell; labels live in the top ~48%.
+      const labelY = cellTop + lay.innerH * 0.28;
+      const barTop = cellTop + lay.innerH * 0.56;
+      const barH = Math.max(2, lay.innerH * 0.4);
       const v = ring.at(s, n - 1);
       const frac = (v - lo) / range;
-      const bw = 8 + frac * (w - 16);
-      const cy = top + rowH * s + rowH * 0.16;
-      const bh = rowH * 0.68;
+      const bw = Math.max(2, frac * trackW);
       const color = this.seriesColors[s] ?? ACCENT_FALLBACK;
       const atWar = (this.warsLatest[s] ?? 0) > 0;
-      // Track behind the bar so empty rows aren't dead space.
+      // Track behind the bar so empty/short rows aren't dead space.
       x.globalAlpha = 1;
       x.fillStyle = GRID;
-      x.fillRect(8, cy, w - 16, bh);
+      x.fillRect(trackX, barTop, trackW, barH);
       // Bright glowing bar.
       x.fillStyle = color;
       this.glowOn(x, color, 3);
-      x.fillRect(8, cy, bw, bh);
+      x.fillRect(trackX, barTop, bw, barH);
       this.glowOff(x);
       if (atWar) {
         x.globalAlpha = 1;
         x.strokeStyle = this.danger;
         x.lineWidth = 2;
-        x.strokeRect(8, cy, bw, bh);
+        x.strokeRect(trackX, barTop, bw, barH);
       }
-      // Name (left) + value (right) over the bar.
-      const nm = this.names[s] ?? `titan ${s}`;
-      x.font = VALUE_FONT;
+      // Value pinned right first so the name's budget excludes it (no name/value collision).
+      const valText = fmtCompact(v);
+      const valW = x.measureText(valText).width;
       x.globalAlpha = 1;
-      x.fillStyle = INK;
-      x.textAlign = 'start';
-      x.fillText(nm, 12, cy + bh * 0.5);
+      x.textBaseline = 'middle';
       x.textAlign = 'end';
       x.fillStyle = atWar ? this.danger : INK;
-      x.fillText(fmtCompact(v), w - 4, cy + bh * 0.5);
+      x.fillText(valText, trackX + trackW, labelY);
+      // Truncated name in the remaining width to the left of the value.
+      const nameW = trackW - valW - ROW_INSET * 2;
+      const nm = truncateToWidth(x, this.names[s] || `titan ${s}`, nameW);
       x.textAlign = 'start';
+      x.fillStyle = INK;
+      x.fillText(nm, trackX, labelY);
     }
+    x.textAlign = 'start';
     x.textBaseline = 'alphabetic';
     x.globalAlpha = 1;
     this.title(x, 'titan resources', w);
