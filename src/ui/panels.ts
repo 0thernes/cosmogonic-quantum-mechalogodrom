@@ -58,6 +58,8 @@ export class TelemetryPanel {
   private readonly ep: HTMLElement;
   /** V3: titan count row. */
   private readonly etn: HTMLElement;
+  /** V4: biome sentience index row (rendered as a percentage). */
+  private readonly snt: HTMLElement;
   private readonly gEntities: Sparkline;
   private readonly gChaos: Sparkline;
   private readonly gEnergy: Sparkline;
@@ -86,6 +88,7 @@ export class TelemetryPanel {
     this.es = mustGet('es');
     this.ep = mustGet('ep');
     this.etn = mustGet('etn');
+    this.snt = mustGet('snt');
     // Colors and fixed maxes mirror the legacy drawGraph calls (lines 872-873). The
     // quality-dependent maxes (MAX_E, MNN) are not known at construction time; they are kept
     // current from each snapshot in update().
@@ -123,6 +126,7 @@ export class TelemetryPanel {
     this.es.textContent = String(s.shoggoths);
     this.ep.textContent = String(s.puppeteers);
     this.etn.textContent = String(s.titans); // V3: the ten colossi
+    this.snt.textContent = `${Math.round(s.sentience * 100)}%`; // V4: biome aliveness
     // Full-scale tracking: both graphs scale to the active tier's caps, which
     // the snapshot now carries directly (V3 — no more derived pairing table).
     this.gEntities.max = s.maxEntities;
