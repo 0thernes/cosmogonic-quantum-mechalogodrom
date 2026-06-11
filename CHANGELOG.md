@@ -7,6 +7,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-06-11
+
+The **XENOGENESIS** expansion (CONTRACTS V4): the cosmos becomes an alien,
+immortal, sentient biome — it gets an atmosphere, watches itself through a
+holographic 3D instrument panel and a four-page analytics observatory, and
+rates its own aliveness.
+
+### Added
+
+- **Alien atmosphere** (`src/sim/atmosphere.ts`) — an inverted sky dome with a
+  non-Earth baked gradient (deep-oxblood horizon → violet zenith → teal
+  counter-glow) that recolors with weather and chaos, three wind-advected haze
+  ribbons that breathe with the music's bass, a tier-scaled particulate air
+  volume, and an aurora curtain that brightens with quantum entropy.
+- **In-scene 3D analytics** (`src/sim/viz3d.ts`) — a holographic instrument
+  panel floating above the arena: a ring of ten phylum-population towers, a ring
+  of ten titan economy obelisks (height = matter, glow = energy, hue = war), and
+  a live war-network of up to 45 segments between them.
+- **Four-page Observatory** (`src/ui/observatory.ts`) — page 0 overview, page 1
+  **variance** (rolling mean±σ bands, population histogram, Shannon diversity,
+  qEntropy–trend phase), page 2 **ecology** (per-phylum small-multiples,
+  birth/death flux, titan matter–energy portraits), page 3 **conflict** (war
+  intensity, alliance/truce/war stacks, per-titan resource bars, a biome
+  sentience gauge), switched by accessible tabs.
+- **Biome sentience index** in the telemetry snapshot — community structure ×
+  quantum coherence × demographic momentum, normalized 0..1.
+
+### Changed
+
+- Consolidated the touch surface onto `InputSystem` (look pad + radial action
+  wheel + long-press apocalypse + guarded haptics) and removed the redundant
+  `TouchControls` twin to avoid double-binding.
+- Removed a stale duplicate `onDeath` ground-feedback assignment in `world.ts`.
+
 ## [0.3.0] - 2026-06-10
 
 The **PANTHEON** expansion (CONTRACTS V3): the arena grows 5×, the population

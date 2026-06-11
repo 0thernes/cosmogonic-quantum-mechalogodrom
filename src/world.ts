@@ -52,6 +52,8 @@ import { QuantumCircuitSystem } from './sim/qcircuit';
 import { ReactionDiffusionSystem } from './sim/reaction-diffusion';
 import { GraphMind } from './sim/graph-mind';
 import { ConstellationSystem } from './sim/constellations';
+import { AtmosphereSystem } from './sim/atmosphere';
+import { Viz3DSystem, type Viz3DSnapshot } from './sim/viz3d';
 import { LoreEngine } from './sim/lore';
 import { AnalyticsSystem } from './sim/analytics';
 import { AudioEngine } from './audio/engine';
@@ -118,8 +120,13 @@ export class World {
   private readonly rd: ReactionDiffusionSystem;
   private readonly graphMind: GraphMind;
   private readonly constellations: ConstellationSystem;
+  private readonly atmosphere: AtmosphereSystem;
+  private readonly viz3d: Viz3DSystem;
   private readonly audioAnalysis: AudioAnalysis;
   private readonly analytics: AnalyticsSystem;
+  /** Reused adapter mapping `titanLedger`→`ledger` for Viz3DSnapshot; fields
+   *  point at the live snapshot views, repopulated each frame (allocation-free). */
+  private readonly viz3dSnap: Viz3DSnapshot;
   /** Last collapse basis seen, to detect measurement events across frames. */
   private lastCollapseSeen = -1;
 
@@ -210,14 +217,12 @@ export class World {
     this.environment.attachGroundEmissiveMap(this.rd.texture);
     // Death→ground feedback: every disposal (age-death AND shoggoth
     // consumption, single-fire inside disposeAt) scars the living ground at
-    // its UV — the mortality loop the contract headlines.
-    this.entities.onDeath = (x, z) => this.rd.perturb(0.5 + x / 240, 0.5 - z / 240);
+    // the corpse's UV — the mortality loop the contract headlines.
+    this.entities.onDeath = (x, z) =>
+      this.rd.perturb(0.5 + x / GROUND_EXTENT, 0.5 - z / GROUND_EXTENT, 2);
     // Boot scars: the Gray-Scott fixed point is uniform — seed a few
     // disturbances so the ground skin starts breathing (rd writer note).
     for (let i = 0; i < 4; i++) this.rd.perturb(this.rng(), this.rng());
-    // Deaths scar the living ground at the corpse's UV (CONTRACTS V2 feedback web).
-    this.entities.onDeath = (x, z) =>
-      this.rd.perturb(0.5 + x / GROUND_EXTENT, 0.5 - z / GROUND_EXTENT, 2);
     // ── PANTHEON V3.3: the ten colossi and their economy/war layer ──
     this.titans = new TitanSystem(ctx, this.entities, this.lore, this.rd);
     this.graphMind = new GraphMind(ctx, this.entities, this.connectome);
@@ -225,11 +230,17 @@ export class World {
     this.audioAnalysis = new AudioAnalysis(this.audio);
     // Omens arrive lore-named: same seed, same prophecy vocabulary.
     this.analytics = new AnalyticsSystem(ctx, (i) => this.lore.name('omen', i));
+    // ── XENOGENESIS V4: alien air + holographic 3D analytics ──
+    // Atmosphere draws 13 + 5·floor(maxEntities/4) rng samples — constructed
+    // last among rng-consuming sim systems so it never shifts their streams.
+    this.atmosphere = new AtmosphereSystem(ctx);
+    this.viz3d = new Viz3DSystem(ctx); // zero rng draws — placement-neutral
 
     this.hud = new Hud();
     this.panel = new TelemetryPanel();
     this.observatory = new Observatory();
     bindPanelToggles();
+    this.bindObservatoryTabs();
     this.input = new InputSystem(this.buildActions());
 
     this.sortVals = new Float32Array(this.quality.maxEntities);
@@ -264,6 +275,13 @@ export class World {
       warMatrix: this.titans.warMatrix,
       rdEnergy: 0,
       sentience: 0,
+    };
+    // The three V3.5 arrays are stable LIVE views (contents mutate in place),
+    // so this adapter is built once and never repopulated — just a field rename.
+    this.viz3dSnap = {
+      phylumCounts: this.snap.phylumCounts,
+      ledger: this.snap.titanLedger,
+      warMatrix: this.snap.warMatrix,
     };
 
     this.log.info('world ready', {
@@ -369,6 +387,12 @@ export class World {
     if (s.frame % (600 * gmScale) === 300) this.graphMind.updateRank();
 
     this.constellations.update(t, bands);
+    // Alien sky + air: dome recolors with weather/chaos, haze advects with wind
+    // and breathes with bass, aurora brightens with quantum entropy (V4.1).
+    this.atmosphere.update(dt, t, bands, this.qc.entropy);
+    // Holographic 3D analytics panel reads the LIVE reused snapshot views
+    // (phylumCounts/titanLedger/warMatrix), always current; internally cadenced.
+    this.viz3d.update(this.viz3dSnap);
     this.environment.update(dt, t);
 
     if (s.frame % 60 === 30) {
@@ -676,6 +700,31 @@ export class World {
   }
 
   /** UiActions implementation handed to InputSystem. */
+  /**
+   * Wire the observatory's four page tabs (`[data-obs-page="0..3"]`) to
+   * `observatory.setPage`, toggling the active pane + `aria-selected`. Degrades
+   * silently if the tab DOM is absent (e.g. a stripped index.html). O(tabs).
+   */
+  private bindObservatoryTabs(): void {
+    const tabs = Array.from(document.querySelectorAll<HTMLElement>('[data-obs-page]'));
+    if (tabs.length === 0) return;
+    const panes = Array.from(document.querySelectorAll<HTMLElement>('.obs-page'));
+    const select = (p: number): void => {
+      if (p < 0 || p > 3) return;
+      this.observatory.setPage(p as 0 | 1 | 2 | 3);
+      for (const tab of tabs) {
+        const on = Number(tab.dataset['obsPage']) === p;
+        tab.setAttribute('aria-selected', on ? 'true' : 'false');
+      }
+      // Panes carry no page attribute — the Nth `.obs-page` IS page N.
+      panes.forEach((pane, i) => pane.classList.toggle('active', i === p));
+      this.observatory.draw(); // immediate repaint so the switch feels instant
+    };
+    for (const tab of tabs) {
+      tab.addEventListener('click', () => select(Number(tab.dataset['obsPage'])));
+    }
+  }
+
   private buildActions(): UiActions {
     const s = this.state;
     return {

@@ -136,6 +136,48 @@ a:focus-visible {
 .panel.col .chev {
   transform: rotate(-90deg);
 }
+/* The page-tab strip collapses with the panel body (V4.3 multi-page observatory). */
+.panel.col #obs-tabs {
+  display: none;
+}
+
+/* ── Observatory page tabs + page visibility (CONTRACTS V4.3/V4.4) ──────
+   #obs-tabs holds four role="tab" buttons [data-obs-page="0..3"]; the
+   integrator binds each to observatory.setPage(p) and flips aria-selected +
+   the `.active` class on the matching `.obs-page` pane. Only the active
+   page's canvases are laid out — the rest are display:none so their 2d
+   contexts stay allocated but cost no layout/paint. */
+.obs-tab {
+  min-height: 28px;
+  padding: 3px 4px;
+  border: 1px solid --alpha(var(--color-accent) / 18%);
+  border-radius: var(--radius-btn);
+  background: --alpha(var(--color-accent) / 6%);
+  font: 600 var(--text-4xs) var(--font-ui);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: --alpha(var(--color-accent) / 75%);
+  transition:
+    background var(--motion-tap),
+    color var(--motion-tap),
+    border-color var(--motion-tap);
+}
+.obs-tab:hover {
+  background: --alpha(var(--color-accent) / 12%);
+  color: var(--color-accent);
+}
+.obs-tab[aria-selected='true'] {
+  background: --alpha(var(--color-accent) / 22%);
+  border-color: --alpha(var(--color-accent) / 50%);
+  color: var(--color-white);
+  box-shadow: 0 0 10px --alpha(var(--color-accent) / 25%);
+}
+.obs-page {
+  display: none;
+}
+.obs-page.active {
+  display: flex;
+}
 
 /* ── Control-pad held state ─────────────────────────────────────
    ui/input.ts adds `.on` while a [data-a] button is held
@@ -259,14 +301,30 @@ a:focus-visible {
   max-width: clamp(115px, 26vw, 185px);
   pointer-events: none;
 }
-/* Panels are flex shells so a viewport clamp squeezes the scrolling body. */
+/* Panels are flex shells so a viewport clamp squeezes the scrolling body. Each is
+   also a size container so chart canvases can scale to the panel width (not just the
+   viewport) via the container query below — a 10-foot TV column and a phone sheet then
+   size their charts proportionally with one rule. */
 #ui > section {
   display: flex;
   flex-direction: column;
-  max-height: calc(50vh - 34px);
+  max-height: clamp(180px, 50vh, 60vh);
+  container-type: inline-size;
 }
 #ui > section > .panel-body {
   flex: 1 1 auto;
+}
+
+/* Observatory canvases scale with the panel's own width (container query), clamped so
+   they stay legible on a phone sheet and grow toward 10-foot legibility on a TV column.
+   Applies to every page's canvases (page 0..3 share the rule). */
+#observatory-body canvas {
+  height: clamp(44px, 9cqi, 120px);
+}
+@container (min-width: 360px) {
+  #observatory-body canvas {
+    height: clamp(56px, 7cqi, 132px);
+  }
 }
 
 /* Sheet grip — visible only where panels behave as sheets (phone portrait). */
@@ -341,45 +399,77 @@ a:focus-visible {
   }
 }
 
-/* ── Foldables, two horizontal segments: panels hug the outer edges and the
-     center column swallows the hinge — no panel ever spans the fold. ── */
-@media (horizontal-viewport-segments: 2) {
+/* ── Tablet (641–1280px, fine OR coarse): tighter rails than laptop so the center
+     3D view keeps room; panels stay flex sheets, never fixed-px. The phone-portrait
+     rule above (≤640) already claims narrower widths, so this only widens from there. ── */
+@media (min-width: 641px) and (max-width: 1280px) and (min-height: 521px) {
   #ui {
-    grid-template-columns: minmax(170px, 22vw) 1fr minmax(190px, 22vw);
-    column-gap: clamp(12px, 4vw, 48px);
+    grid-template-columns: clamp(150px, 22vw, 220px) 1fr clamp(170px, 24vw, 250px);
+  }
+  #ui > section {
+    max-height: clamp(180px, 46vh, 56vh);
   }
 }
 
-/* ── TV / 10-foot (≥1900px): token-scale bump ≈ ×1.6, fat focus rings,
-     reachable-from-the-couch hit targets. ── */
+/* ── Foldables: hinge-safe. Two horizontal segments → panels hug the outer edges and
+     the center column swallows the hinge (no panel spans the fold); the hinge width
+     comes from env(viewport-segment-*) where the engine exposes it, falling back to a
+     fluid clamp. A single vertical fold (book posture) keeps the stacked-sheet grammar
+     but pads the safe area. ── */
+@media (horizontal-viewport-segments: 2) {
+  #ui {
+    grid-template-columns: minmax(160px, 22vw) 1fr minmax(180px, 22vw);
+    column-gap: clamp(
+      12px,
+      calc(
+        env(viewport-segment-left, 0px) + env(viewport-segment-right, 0px) -
+          env(viewport-segment-width, 0px)
+      ),
+      48px
+    );
+  }
+}
+@media (vertical-viewport-segments: 2) {
+  #ui {
+    row-gap: clamp(10px, 6vh, 40px);
+    padding-left: env(safe-area-inset-left, 0px);
+    padding-right: env(safe-area-inset-right, 0px);
+  }
+}
+
+/* ── TV / 10-foot (≥1900px): token-scale bump ≈ ×1.6 via clamp() (continues to scale
+     toward 4K instead of stepping once), fat focus rings, reachable-from-the-couch hit
+     targets. The observatory canvases grow through the container query above — no fixed
+     height override is needed here. ── */
 @media (min-width: 1900px) {
   :root {
-    --text-2xs: 16px;
-    --text-3xs: 14px;
-    --text-4xs: 13px;
-    --radius-panel: 14px;
-    --radius-btn: 8px;
+    /* clamp() makes the 10-foot scale fluid from 1900px up to a 2560px reference,
+       so a 43" 4K panel reads larger than a 1900px display, not identical. */
+    --text-2xs: clamp(15px, 0.85vw, 22px);
+    --text-3xs: clamp(13px, 0.72vw, 19px);
+    --text-4xs: clamp(12px, 0.66vw, 17px);
+    --radius-panel: clamp(14px, 0.7vw, 18px);
+    --radius-btn: clamp(8px, 0.4vw, 11px);
   }
   #ui {
-    gap: 12px;
-    padding: 14px;
+    gap: clamp(12px, 0.8vw, 22px);
+    padding: clamp(14px, 0.9vw, 26px);
     padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px));
-    grid-template-columns: clamp(290px, 18vw, 390px) 1fr clamp(330px, 20vw, 440px);
+    grid-template-columns: clamp(290px, 18vw, 460px) 1fr clamp(330px, 20vw, 520px);
   }
   #ui > section {
-    max-height: calc(48vh - 30px);
+    max-height: clamp(300px, 48vh, 60vh);
   }
   #sP .panel-body canvas {
-    height: 42px;
-  }
-  #observatory-body canvas {
-    height: 96px;
+    height: clamp(40px, 2.4vw, 60px);
   }
   #bar button,
   #bar a {
     min-height: 44px;
-    padding: 8px 14px;
+    padding: clamp(8px, 0.5vw, 14px) clamp(14px, 0.9vw, 24px);
   }
+  /* Couch-distance focus: fatter accent ring on every interactive element (d-pad,
+     toolbar, tabs, links) so the focused control is unmistakable from across a room. */
   button:focus-visible,
   a:focus-visible {
     outline-width: 3px;

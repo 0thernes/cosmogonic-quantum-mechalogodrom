@@ -221,9 +221,12 @@
         </div>
       </section>
 
-      <!-- Observatory panel (CONTRACTS V3.5 SHELL — header + #observatory-body mount only).
-         ui/observatory.ts (dataviz writer) caches the #obs-c0..#obs-c3 canvases and renders
-         the live charts into them; nothing else writes here. Collapsible like every panel. -->
+      <!-- Observatory panel (CONTRACTS V4.3 multi-page SHELL — header + 4-tab nav + 16
+         canvases grouped into 4 pages). ui/observatory.ts (obs writer) caches every
+         #obs-c0..#obs-c15 canvas and draws only the active page; the integrator wires the
+         [data-obs-page] tabs to observatory.setPage(p). Collapsible like every panel.
+         Page 0 keeps the V3.5 ids/aria-labels verbatim so panels.ts/hud.ts/observatory.ts
+         all still resolve their nodes. -->
       <section
         id="oP"
         class="panel overflow-hidden rounded-panel border border-cyan-300/15 bg-void/90 shadow-panel backdrop-blur-xl backdrop-saturate-150"
@@ -247,32 +250,170 @@
             &#9662;
           </button>
         </div>
+        <!-- Page tabs: integrator binds each [data-obs-page] to observatory.setPage(p);
+             app.css drives aria-selected styling and active-page canvas visibility. -->
+        <div
+          id="obs-tabs"
+          role="tablist"
+          aria-label="Observatory pages"
+          aria-controls="observatory-body"
+          class="flex gap-0.5 border-b border-white/5 px-1.5 py-1"
+        >
+          <button
+            type="button"
+            role="tab"
+            data-obs-page="0"
+            aria-selected="true"
+            aria-label="Overview page"
+            title="Overview: phyla, titans, war, environment"
+            class="obs-tab flex-1"
+          >
+            Over
+          </button>
+          <button
+            type="button"
+            role="tab"
+            data-obs-page="1"
+            aria-selected="false"
+            aria-label="Variance page"
+            title="Variance: stddev bands, histogram, diversity, phase"
+            class="obs-tab flex-1"
+          >
+            Var
+          </button>
+          <button
+            type="button"
+            role="tab"
+            data-obs-page="2"
+            aria-selected="false"
+            aria-label="Ecology page"
+            title="Ecology: per-phylum sparklines, flux, titan phase portraits"
+            class="obs-tab flex-1"
+          >
+            Eco
+          </button>
+          <button
+            type="button"
+            role="tab"
+            data-obs-page="3"
+            aria-selected="false"
+            aria-label="Conflict page"
+            title="Conflict: war intensity, alliance counts, sentience gauge"
+            class="obs-tab flex-1"
+          >
+            War
+          </button>
+        </div>
         <div class="panel-body max-h-[calc(65vh-40px)] overflow-y-auto p-2">
           <div id="observatory-body" class="flex flex-col gap-1">
-            <canvas
-              id="obs-c0"
-              role="img"
-              aria-label="Stacked phylum population area chart"
-              class="block h-14 w-full rounded border border-white/5"
-            ></canvas>
-            <canvas
-              id="obs-c1"
-              role="img"
-              aria-label="Titan economy ledger line chart"
-              class="block h-14 w-full rounded border border-white/5"
-            ></canvas>
-            <canvas
-              id="obs-c2"
-              role="img"
-              aria-label="Titan war-state matrix heat grid"
-              class="block h-14 w-full rounded border border-white/5"
-            ></canvas>
-            <canvas
-              id="obs-c3"
-              role="img"
-              aria-label="Pattern energy, quantum entropy and population trend timelines"
-              class="block h-14 w-full rounded border border-white/5"
-            ></canvas>
+            <!-- Page 0 — OVERVIEW (V3.5 verbatim: ids + aria-labels unchanged) -->
+            <div class="obs-page active flex flex-col gap-1" data-obs-pane="0">
+              <canvas
+                id="obs-c0"
+                role="img"
+                aria-label="Stacked phylum population area chart"
+                class="block h-14 w-full rounded border border-white/5"
+              ></canvas>
+              <canvas
+                id="obs-c1"
+                role="img"
+                aria-label="Titan economy ledger line chart"
+                class="block h-14 w-full rounded border border-white/5"
+              ></canvas>
+              <canvas
+                id="obs-c2"
+                role="img"
+                aria-label="Titan war-state matrix heat grid"
+                class="block h-14 w-full rounded border border-white/5"
+              ></canvas>
+              <canvas
+                id="obs-c3"
+                role="img"
+                aria-label="Pattern energy, quantum entropy and population trend timelines"
+                class="block h-14 w-full rounded border border-white/5"
+              ></canvas>
+            </div>
+            <!-- Page 1 — VARIANCE -->
+            <div class="obs-page flex flex-col gap-1" data-obs-pane="1">
+              <canvas
+                id="obs-c4"
+                role="img"
+                aria-label="Population, energy and links mean plus or minus standard-deviation bands"
+                class="block h-14 w-full rounded border border-white/5"
+              ></canvas>
+              <canvas
+                id="obs-c5"
+                role="img"
+                aria-label="Population histogram"
+                class="block h-14 w-full rounded border border-white/5"
+              ></canvas>
+              <canvas
+                id="obs-c6"
+                role="img"
+                aria-label="Phylum diversity Shannon entropy timeline"
+                class="block h-14 w-full rounded border border-white/5"
+              ></canvas>
+              <canvas
+                id="obs-c7"
+                role="img"
+                aria-label="Quantum entropy versus population trend phase scatter"
+                class="block h-14 w-full rounded border border-white/5"
+              ></canvas>
+            </div>
+            <!-- Page 2 — ECOLOGY -->
+            <div class="obs-page flex flex-col gap-1" data-obs-pane="2">
+              <canvas
+                id="obs-c8"
+                role="img"
+                aria-label="Per-phylum population small-multiple sparklines"
+                class="block h-14 w-full rounded border border-white/5"
+              ></canvas>
+              <canvas
+                id="obs-c9"
+                role="img"
+                aria-label="Birth and death flux timeline"
+                class="block h-14 w-full rounded border border-white/5"
+              ></canvas>
+              <canvas
+                id="obs-c10"
+                role="img"
+                aria-label="Titan matter versus energy phase portraits"
+                class="block h-14 w-full rounded border border-white/5"
+              ></canvas>
+              <canvas
+                id="obs-c11"
+                role="img"
+                aria-label="Per-phylum population secondary small-multiples"
+                class="block h-14 w-full rounded border border-white/5"
+              ></canvas>
+            </div>
+            <!-- Page 3 — CONFLICT -->
+            <div class="obs-page flex flex-col gap-1" data-obs-pane="3">
+              <canvas
+                id="obs-c12"
+                role="img"
+                aria-label="War-intensity timeline"
+                class="block h-14 w-full rounded border border-white/5"
+              ></canvas>
+              <canvas
+                id="obs-c13"
+                role="img"
+                aria-label="Alliance, truce and war stacked counts"
+                class="block h-14 w-full rounded border border-white/5"
+              ></canvas>
+              <canvas
+                id="obs-c14"
+                role="img"
+                aria-label="Per-titan resource bars"
+                class="block h-14 w-full rounded border border-white/5"
+              ></canvas>
+              <canvas
+                id="obs-c15"
+                role="img"
+                aria-label="Biome sentience index gauge"
+                class="block h-14 w-full rounded border border-white/5"
+              ></canvas>
+            </div>
           </div>
         </div>
       </section>
