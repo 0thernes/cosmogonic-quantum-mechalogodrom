@@ -247,6 +247,13 @@ export interface TelemetrySnapshot {
   warMatrix: ArrayLike<number>;
   /** Reaction-diffusion pattern energy: strided mean of the V field (V3.5). */
   rdEnergy: number;
+  /**
+   * Biome "sentience index" 0..1 (V4) — the alien immortal biome's measure of
+   * self-organization: an aggregate of community structure (tribes), quantum
+   * coherence (entropy) and demographic momentum (|trend|). Read by the
+   * observatory conflict page and the telemetry sentience readout.
+   */
+  sentience: number;
 }
 
 /** One titan's public economy row (structural twin of sim/titans TitanLedgerEntry). */

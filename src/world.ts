@@ -263,6 +263,7 @@ export class World {
       titanLedger: this.titans.ledger,
       warMatrix: this.titans.warMatrix,
       rdEnergy: 0,
+      sentience: 0,
     };
 
     this.log.info('world ready', {
@@ -577,6 +578,14 @@ export class World {
     // V3: phylumCounts/titanLedger/warMatrix are LIVE reused views installed at
     // boot — only the scalar needs refreshing here.
     sn.rdEnergy = this.rdEnergy;
+    // Biome sentience index (V4.5): community structure × quantum coherence ×
+    // demographic momentum, normalized 0..1. The cosmos rating its own aliveness.
+    sn.sentience = clamp(
+      ((sn.tribes / 256) * (0.5 + sn.qEntropy) * (0.5 + Math.min(Math.abs(sn.trend) / 50, 1))) /
+        1.5,
+      0,
+      1,
+    );
     this.hud.setLore(sn.lore); // O(1) no-op when unchanged
     return sn;
   }
