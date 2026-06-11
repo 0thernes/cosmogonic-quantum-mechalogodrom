@@ -614,8 +614,10 @@ export class World {
       this.sv1.copy(eb.position).sub(ea.position).normalize().multiplyScalar(push);
       ea.userData.vel.add(this.sv1);
       eb.userData.vel.add(this.sv1.negate());
-      ea.material.emissiveIntensity = 2.6;
-      eb.material.emissiveIntensity = 2.6;
+      // Brighter sparkle per swap so the field's working front reads as a
+      // shimmering light show across the world (entities.update fades it back).
+      ea.material.emissiveIntensity = 4;
+      eb.material.emissiveIntensity = 4;
       if (swaps === 0) this.qc.onSortSwap(a0, a1); // one CNOT/frame (preserve coupling rate)
       swaps++;
     }
@@ -838,8 +840,24 @@ export class World {
     if (fromUser) {
       this.unlock();
       this.audio.play(SFX_TYPES[s.algoIdx % SFX_TYPES.length] ?? 'crystallize');
+      this.sortPerformance(); // the field ignites — a shimmer sweeps the population
     }
     this.refreshAlgoActive();
+  }
+
+  /**
+   * Visible "ignition" when a sorting field is chosen: a stride sample (~500
+   * organisms regardless of population) flashes bright, sweeping a shimmer
+   * across the world so the algorithm announces its performance. Visual only —
+   * entities.update lerps the boosted emissive back down. O(n / stride).
+   */
+  private sortPerformance(): void {
+    const list = this.entities.list;
+    const stride = Math.max(1, (list.length / 500) | 0);
+    for (let i = 0; i < list.length; i += stride) {
+      const e = list[i];
+      if (e) e.material.emissiveIntensity = 4.5;
+    }
   }
 
   /** Sync the picker's active row + readout to `state.algoIdx`; reset progress bars. */

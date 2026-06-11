@@ -65,6 +65,9 @@ const MOVE_GAIN = 0.3;
 /** Look-pad drag → look-delta gain (pad pixels are scarcer than canvas pixels). */
 const LOOKPAD_GAIN = 2.2;
 
+/** Two-finger pinch: change in finger spread (px) → `zoom` accumulator gain. */
+const PINCH_ZOOM_GAIN = 2;
+
 /** Apocalypse long-press arming time, ms (V3.4 action wheel). */
 const APOC_HOLD_MS = 600;
 
@@ -140,6 +143,10 @@ export class InputSystem {
   /** Last look-drag pointer position (clientX/clientY), valid while `lookId` is set. */
   private lookLastX = 0;
   private lookLastY = 0;
+  /** True while a two-finger pinch is in progress (suppresses one-finger look). */
+  private pinching = false;
+  /** Finger spread (px) at the previous pinch sample; 0 when not pinching. */
+  private pinchDist = 0;
   /** Re-assigned by bindJoystick; default no-op keeps blur handling safe without a joystick. */
   private resetJoy: () => void = () => {};
   /** Re-assigned by bindLookPad; default no-op (V3.4). */
@@ -441,6 +448,46 @@ export class InputSystem {
       },
       { passive: false },
     );
+    // Two-finger pinch zoom: the change in finger spread feeds the same `zoom`
+    // accumulator as the wheel. Spreading fingers apart pulls the camera in
+    // (zoom in); pinching together pushes it out. While pinching, one-finger
+    // look is suppressed so the gesture cannot also yank the camera around.
+    const spread = (e: TouchEvent): number => {
+      const a = e.touches[0];
+      const b = e.touches[1];
+      if (!a || !b) return 0;
+      return Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
+    };
+    canvas.addEventListener(
+      'touchstart',
+      (e) => {
+        if (e.touches.length >= 2) {
+          this.pinching = true;
+          this.lookId = null; // a pinch is not a look drag
+          this.pinchDist = spread(e);
+        }
+      },
+      { passive: true },
+    );
+    canvas.addEventListener(
+      'touchmove',
+      (e) => {
+        if (!this.pinching || e.touches.length < 2) return;
+        e.preventDefault();
+        const d = spread(e);
+        if (d > 0 && this.pinchDist > 0) this.zoom += (this.pinchDist - d) * PINCH_ZOOM_GAIN;
+        this.pinchDist = d;
+      },
+      { passive: false },
+    );
+    const endPinch = (e: TouchEvent): void => {
+      if (e.touches.length < 2) {
+        this.pinching = false;
+        this.pinchDist = 0;
+      }
+    };
+    canvas.addEventListener('touchend', endPinch, { passive: true });
+    canvas.addEventListener('touchcancel', endPinch, { passive: true });
   }
 
   /**
@@ -456,6 +503,8 @@ export class InputSystem {
     this.camVel.rx = 0;
     this.camVel.ry = 0;
     this.camVel.rz = 0;
+    this.pinching = false;
+    this.pinchDist = 0;
     this.resetJoy();
     this.resetLookPad();
     this.disarmApoc();

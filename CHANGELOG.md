@@ -5,6 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.1] - 2026-06-11
+
+### Added
+
+- **Pinch-to-zoom** on touch devices: a two-finger pinch on the world feeds the
+  same `zoom` accumulator as the mouse wheel — spread apart to pull the camera
+  in, pinch together to push out. One-finger look is suppressed during the
+  gesture so it can't also yank the camera. Joins the existing joystick (move),
+  look pad (look), and radial action wheel for full keyboard-parity touch.
+  (`src/ui/input.ts`.)
+- **Sorting-field light show**: selecting an algorithm now ignites a bright
+  shimmer sweep across the population (~500 organisms flash regardless of
+  count), and each swap flashes brighter (emissive 2.6 → 4), so the chosen
+  field visibly performs as it sorts. (`src/world.ts`.)
+
+### Notes
+
+- Verified the 25 sorting fields work: each provably reduces inversions (or is a
+  documented perpetual field) in `tests/algorithms.test.ts`, and the live HUD
+  shows the per-frame swap count climbing. (A "frozen" sim in a preview only
+  means the browser tab is backgrounded — `requestAnimationFrame` pauses when
+  `document.hidden`.)
+
 ## [0.6.0] - 2026-06-11
 
 The **ATELIER** pass (CONTRACTS V6) — a second round of direct user feedback.

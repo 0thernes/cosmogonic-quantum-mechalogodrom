@@ -1,6 +1,6 @@
 {
   "name": "cosmogonic-quantum-mechalogodrom",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "Procedural WebGL cosmic ecosystem — morphogenic organisms, Shoggoths, puppet-master NPCs, atmospheric weather, a neural connectome, and quantum diffusion. Bun + TypeScript + Three.js + Tailwind CSS + HTMX.",
   "license": "MIT",
   "private": true,
