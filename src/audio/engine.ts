@@ -332,6 +332,56 @@ export class AudioEngine {
   }
 
   /**
+   * Play a UNIQUE cue tone for sorting field `idx` of `total` — each of the 25
+   * fields announces itself with its own sound. The pitch climbs ~3 octaves
+   * across the index range and the waveform rotates through four timbres, so no
+   * two fields sound alike; a plucked downward chirp plus a shimmering octave
+   * partial give it sparkle to match the on-screen light show. Honors the SFX
+   * toggle; silent when audio is off or unavailable. O(1) — a few WebAudio nodes
+   * per call (a user gesture, never per frame).
+   */
+  cue(idx: number, total: number): void {
+    const ctx = this.ctx;
+    const out = this.sfxGain;
+    if (!ctx || !out || !this._sfxOn) return;
+    const t = ctx.currentTime;
+    const n = Math.max(1, total);
+    const i = ((idx % n) + n) % n;
+    const base = 196 * Math.pow(2, (i * (36 / n)) / 12); // G3-rooted, ~3 octaves over the list
+    const waves: OscillatorType[] = ['sine', 'triangle', 'square', 'sawtooth'];
+    // Body voice: plucked, with a quick downward chirp and a lowpass for tone.
+    const o = ctx.createOscillator();
+    const gn = ctx.createGain();
+    const f = ctx.createBiquadFilter();
+    o.type = waves[i % 4] ?? 'sine';
+    o.frequency.setValueAtTime(base * 1.5, t);
+    o.frequency.exponentialRampToValueAtTime(base, t + 0.12);
+    f.type = 'lowpass';
+    f.frequency.value = base * 6;
+    f.Q.value = 4;
+    gn.gain.setValueAtTime(0.0001, t);
+    gn.gain.exponentialRampToValueAtTime(0.09, t + 0.01);
+    gn.gain.exponentialRampToValueAtTime(0.001, t + 0.6);
+    o.connect(f);
+    f.connect(gn);
+    gn.connect(out);
+    o.start(t);
+    o.stop(t + 0.7);
+    // Shimmer partial: a quieter octave sine for sparkle.
+    const o2 = ctx.createOscillator();
+    const gn2 = ctx.createGain();
+    o2.type = 'sine';
+    o2.frequency.setValueAtTime(base * 2, t);
+    gn2.gain.setValueAtTime(0.0001, t);
+    gn2.gain.exponentialRampToValueAtTime(0.04, t + 0.01);
+    gn2.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
+    o2.connect(gn2);
+    gn2.connect(out);
+    o2.start(t);
+    o2.stop(t + 0.4);
+  }
+
+  /**
    * Spawn one enveloped, optionally-filtered oscillator voice on the music bus
    * (V5.2 helper). Consolidates the repeated WebAudio node-wiring the deepened
    * synthesis needs. Fire-and-forget: nodes are GC'd after `stop`. O(1); allocates

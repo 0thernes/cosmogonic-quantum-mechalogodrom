@@ -33,7 +33,7 @@ import {
   WEATHERS,
 } from './sim/constants';
 import { ALGOS } from './sim/algorithms';
-import { SONGS, SFX_TYPES } from './audio/songs';
+import { SONGS } from './audio/songs';
 import { mulberry32, type Rng } from './math/rng';
 import { clamp } from './math/scalar';
 import { SpatialHash } from './math/spatial-hash';
@@ -839,7 +839,7 @@ export class World {
     this.audit.record('algo', { name: algo.name });
     if (fromUser) {
       this.unlock();
-      this.audio.play(SFX_TYPES[s.algoIdx % SFX_TYPES.length] ?? 'crystallize');
+      this.audio.cue(s.algoIdx, ALGOS.length); // each field has its own unique tone
       this.sortPerformance(); // the field ignites — a shimmer sweeps the population
     }
     this.refreshAlgoActive();

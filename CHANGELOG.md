@@ -19,6 +19,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   shimmer sweep across the population (~500 organisms flash regardless of
   count), and each swap flashes brighter (emissive 2.6 → 4), so the chosen
   field visibly performs as it sorts. (`src/world.ts`.)
+- **A unique sound per sorting field**: `AudioEngine.cue(idx, total)` gives each
+  of the 25 fields its own tone — the pitch climbs ~3 octaves across the list
+  and the waveform rotates through four timbres, with a shimmering octave
+  partial, so no two fields sound alike. (`src/audio/engine.ts`, `src/world.ts`.)
 
 ### Notes
 
