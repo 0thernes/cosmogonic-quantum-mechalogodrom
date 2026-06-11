@@ -124,7 +124,7 @@ export class InstancedEntityRenderer {
     this.scene = ctx.scene;
     this.geos = ctx.geos;
     this.maxEntities = ctx.quality.maxEntities;
-    this.pools = new Array<Pool | null>(ctx.geos.length * 2).fill(null);
+    this.pools = Array.from<Pool | null>({ length: ctx.geos.length * 2 }).fill(null);
     this.counts = new Uint32Array(ctx.geos.length * 2);
     this.cursors = new Uint32Array(ctx.geos.length * 2);
     for (let i = 0; i < ctx.geos.length; i++) {
