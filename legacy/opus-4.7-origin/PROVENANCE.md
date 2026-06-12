@@ -7,6 +7,10 @@ project before this repository was built.
 ## What it was
 
 - Location (now removed): `Z:\[Vibe Coded (AI)]\CLAUDECODE\Cosmogonic Quantum Mechalogodrom\`
+  — note: on 2026-06-11, *after* the old folder was deleted, **this repository
+  itself was moved to that same path** (it previously lived one level deeper,
+  under a since-removed `Garbage Code Slop\` folder). So today that path is this
+  repo — the old single-file project is gone, not hiding here.
 - Built by **Claude Opus 4.7**, dated **2026-05-17 … 2026-05-22** (4 commits).
 - Contents: a single `cosmogonic-quantum-mechalogodrom.html` (+ a byte-identical
   `index.html` copy), a short `README.md`, a development-history markdown, and
