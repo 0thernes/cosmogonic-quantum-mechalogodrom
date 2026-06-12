@@ -5,6 +5,52 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.1] - 2026-06-12
+
+**Beyond beyonds** — a swarm re-audit (8 agents) of the V7 build found it reading
+"familiar" and N(2) too tame; this pass pushes the marquee features past it, in
+five gated waves. Every coupling stays deterministic + allocation-disciplined,
+and **N(1) is byte-identical** (the 436-test suite is unchanged throughout).
+
+### Changed
+
+- **SIMULATION N(2) becomes a real nightmare.** The swarm found its core lever
+  mis-calibrated — the chaos floor (3.5) sat _below_ the `min(chaos/2,3)`
+  saturation point, so "BREAK FREE" was milder than a normal chaos-boost — and
+  three contracted clauses missing. Now: chaos floor → 6 (saturation), **writhing
+  behaviour** (the chaos-jitter velocity ×3, applied after the rng draw so N1 is
+  exact), an **inverted/glitched palette** (per-instance `mix(c,(1−c).bgr,n)` +
+  channel rotation, written to the instance attributes only → auto-reverts),
+  **detuned/darker audio** (voices −35 cents + filter ×0.6, SFX −18%, on the
+  forked audio rng), and a **GPU vertex-melt** — organisms physically writhe via
+  per-instance normal displacement in the pool shader (gated on `uNightmare`, so
+  N1 vertices are untouched). All gated on `sim===2`.
+
+### Added
+
+- **Keplerian singularity particles** — every black/white/grey hole, strange
+  star and entropy field now spawns an additive `THREE.Points` cloud on real
+  orbital mechanics (ω ∝ √(G/ρ³), inner faster): black holes **spiral matter
+  in**, white holes **fountain it out**, entropy disperses. Seeded at summon,
+  pure-math per frame.
+- **HOLOGRAM + IRIDESCENT render modes** (5 → 7): GPU shader modes — thin-film
+  oil-slick interference (cosine palette × view angle), and a fresnel-rim
+  hologram with bass-pulsing scanlines (which also rescues CHROME's no-envMap
+  deadness).
+- **Per-algo signature ignition** — each of the 25 fields flares in its _own_
+  topology (value SWEEP, parity BANDS, BUTTERFLY, value BUCKETS, RADIAL burst)
+  instead of one universal flash; the per-swap sparkle brightens with **treble**
+  (visual-only, so the seeded sim is untouched).
+
+### Fixed
+
+- Singularity holes were O(n)+sqrt over the whole population every frame for 9s
+  with no stride (ENTROPY was strided, the holes weren't) — now half-rate strided
+  at the ultra tier (2× accel), off the 10k budget cliff.
+- `sortPerformance` near-origin kick could teleport-pop a body at |p|≈0.01
+  (denominator now clamped ≥1); the per-swap flash uses `max()` not a hard set,
+  so it can't dim a body the neural cap pushed above 4.
+
 ## [0.7.0] - 2026-06-11
 
 The **XENOCATACLYSM** decree (CONTRACTS V7) — the third user-feedback pass: make
@@ -593,6 +639,7 @@ to the legacy prototype:
 - The `mutations` counter is surfaced in telemetry (`#v8`) instead of being
   write-only.
 
+[0.7.1]: ./CHANGELOG.md
 [0.7.0]: ./CHANGELOG.md
 [0.6.1]: ./CHANGELOG.md
 [0.6.0]: ./CHANGELOG.md
