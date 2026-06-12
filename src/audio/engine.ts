@@ -103,6 +103,13 @@ export class AudioEngine {
   private readonly bandCursor = new Map<number, number>();
   /** Shared white-noise buffer for noisy specs (filled once, seeded by a local LCG). */
   private noiseBuf: AudioBuffer | null = null;
+  /**
+   * SIMULATION N(2) audio bend (CONTRACTS V7.6): 0 in GENESIS, 1 in BREAK FREE. When 1, every
+   * music voice detunes ~35 cents flat and its filter darkens, and every SFX sting bends ~18%
+   * down — the whole soundscape sags sick and ominous. Forked-rng / wall-clock-scheduled, so
+   * it provably cannot touch sim reproducibility.
+   */
+  private nightmareBend = 0;
 
   /**
    * @param state Shared sim state; the engine reads/advances `songIdx` only.
@@ -220,6 +227,16 @@ export class AudioEngine {
   }
 
   /**
+   * Toggle the SIMULATION N(2) audio bend (CONTRACTS V7.6) — detunes + darkens the whole
+   * soundscape. Takes effect on subsequently-scheduled voices/stings (no per-frame audio work
+   * exists; the scheduler is fire-and-forget per beat). O(1). World calls it from
+   * `applySimVisuals`.
+   */
+  setNightmare(on: boolean): void {
+    this.nightmareBend = on ? 1 : 0;
+  }
+
+  /**
    * Advance to the next song (legacy `cycleSong`, line 590) and return its display name.
    * If music is playing, the scheduler restarts on the new song immediately.
    */
@@ -309,7 +326,8 @@ export class AudioEngine {
     const out = this.sfxGain;
     if (!ctx || !out) return;
     const t = ctx.currentTime;
-    const jf = 1 + (jitter - 0.5) * spec.jitter;
+    // N(2) bend: every sting drops ~18% in pitch — sick, detuned, wrong (CONTRACTS V7.6).
+    const jf = (1 + (jitter - 0.5) * spec.jitter) * (1 - 0.18 * this.nightmareBend);
     const f0 = Math.max(20, spec.f0 * jf);
     const f1 = Math.max(20, spec.f1 * jf);
     const peak = Math.max(0.0005, spec.peak);
@@ -452,14 +470,15 @@ export class AudioEngine {
     const gn = ctx.createGain();
     o.type = wave;
     o.frequency.value = freq;
-    o.detune.value = detune;
+    // N(2): detune ~35 cents flat (sick sag) + darken the filter (CONTRACTS V7.6).
+    o.detune.value = detune - this.nightmareBend * 35;
     gn.gain.setValueAtTime(0, t);
     gn.gain.linearRampToValueAtTime(peak, t + attack);
     gn.gain.exponentialRampToValueAtTime(0.001, t + dur);
     if (cutoff > 0 && Number.isFinite(cutoff)) {
       const f = ctx.createBiquadFilter();
       f.type = 'lowpass';
-      f.frequency.value = cutoff;
+      f.frequency.value = cutoff * (1 - 0.4 * this.nightmareBend);
       f.Q.value = 2;
       o.connect(f);
       f.connect(gn);

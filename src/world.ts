@@ -42,7 +42,7 @@ import { createGeometryCache } from './sim/geometry-cache';
 import { createMorphotypes } from './sim/morphotypes';
 import { createPhyla } from './sim/phyla';
 import { EntityManager } from './sim/entities';
-import { InstancedEntityRenderer } from './sim/instanced-entities';
+import { InstancedEntityRenderer, type InstanceFrame } from './sim/instanced-entities';
 import { ShoggothSystem } from './sim/shoggoths';
 import { PuppetMasterSystem } from './sim/puppet-masters';
 import { TitanSystem } from './sim/titans';
@@ -84,8 +84,14 @@ const SFX_SUBBOOM = SFX_EXTRA_BANDS['subboom']?.start ?? 0;
 const SFX_FMCLANG = SFX_EXTRA_BANDS['fmclang']?.start ?? 0;
 const SFX_STRANGE = SFX_EXTRA_BANDS['strange']?.start ?? 0;
 
-/** SIMULATION N(2) chaos floor (V7.6): the nightmare never settles below this agitation. */
-const CHAOS_NIGHTMARE_FLOOR = 3.5;
+/**
+ * SIMULATION N(2) chaos floor (V7.6): the nightmare never settles below this. Set at the cMul
+ * SATURATION point — `chaosMul()` is `min(chaos/2, 3)`, which maxes at chaos = 6 — so N(2)
+ * pins every chaos consumer (behaviour agitation, sort push, sky tremor) to its ceiling. The
+ * earlier 3.5 sat BELOW saturation (cm 1.75 — milder than an ordinary chaos-boost); the
+ * dedicated jitterGain in entities.update() carries the agitation PAST the clamp on top.
+ */
+const CHAOS_NIGHTMARE_FLOOR = 6;
 
 export interface WorldOptions {
   engine: Engine;
@@ -140,6 +146,8 @@ export class World {
   private readonly singularities: SingularitySystem;
   /** Cycle cursor for the chaos control's singularity chooser. */
   private singularityCursor = 0;
+  /** Reused per-frame scalar block handed to the instanced renderer (alloc-free). */
+  private readonly instFrame: InstanceFrame = { t: 0, chaos: 0, bass: 0, nightmare: 0 };
   private readonly audioAnalysis: AudioAnalysis;
   private readonly analytics: AnalyticsSystem;
   /** Reused adapter mapping `titanLedger`→`ledger` for Viz3DSnapshot; fields
@@ -486,8 +494,16 @@ export class World {
     }
 
     // Pool mirror runs LAST — after every system that mutates entity visuals
-    // (sort flash, graph rank floor, belly pulse, conscription tints).
-    if (this.instanced) this.instanced.sync(this.entities.list, s.renderMode);
+    // (sort flash, graph rank floor, belly pulse, conscription tints). The reused frame block
+    // carries the N(2) nightmare scalar (inverted palette) + t/chaos/bass for the GPU effects.
+    if (this.instanced) {
+      const fr = this.instFrame;
+      fr.t = t;
+      fr.chaos = s.chaos;
+      fr.bass = bands.bass;
+      fr.nightmare = s.sim === 2 ? 1 : 0;
+      this.instanced.sync(this.entities.list, s.renderMode, fr);
+    }
 
     this.engine.render();
   }
@@ -668,10 +684,11 @@ export class World {
       this.sv1.copy(eb.position).sub(ea.position).normalize().multiplyScalar(push);
       ea.userData.vel.add(this.sv1);
       eb.userData.vel.add(this.sv1.negate());
-      // Brighter sparkle per swap so the field's working front reads as a
-      // shimmering light show across the world (entities.update fades it back).
-      ea.material.emissiveIntensity = 4;
-      eb.material.emissiveIntensity = 4;
+      // Brighter sparkle per swap so the field's working front reads as a shimmering light
+      // show (entities.update fades it back). max(), not a hard set, so a swap can't DIM a body
+      // the neural-activation cap or a belly pulse already pushed above 4. (audit 13b)
+      ea.material.emissiveIntensity = Math.max(ea.material.emissiveIntensity, 4);
+      eb.material.emissiveIntensity = Math.max(eb.material.emissiveIntensity, 4);
       if (swaps === 0) this.qc.onSortSwap(a0, a1); // one CNOT/frame (preserve coupling rate)
       swaps++;
     }
@@ -807,6 +824,7 @@ export class World {
   private applySimVisuals(): void {
     const night = this.state.sim === 2;
     this.atmosphere.setNightmare(night);
+    this.audio.setNightmare(night); // detune + darken the whole soundscape (V7.6)
     document.title = night
       ? 'COSMOGONIC QUANTUM MECHALOGODROM — SIMULATION N(2)'
       : 'COSMOGONIC QUANTUM MECHALOGODROM';
@@ -1012,7 +1030,9 @@ export class World {
       // A gentle outward shimmer kick so the ignition visibly ripples the swarm — the field
       // "performs" when chosen. Deterministic (no rng), allocation-free direct vector math.
       const p = e.position;
-      const inv = 0.25 / (Math.hypot(p.x, p.y, p.z) || 1);
+      // Clamp the denominator to ≥1 (not just the |p|=0 guard): a body at |p|≈0.01 would
+      // otherwise get inv≈25 and teleport-pop. Now the kick caps at 0.25/axis. (audit 13a)
+      const inv = 0.25 / Math.max(Math.hypot(p.x, p.y, p.z), 1);
       e.userData.vel.x += p.x * inv;
       e.userData.vel.y += p.y * inv;
       e.userData.vel.z += p.z * inv;

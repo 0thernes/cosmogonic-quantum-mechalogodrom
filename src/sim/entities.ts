@@ -259,6 +259,12 @@ export class EntityManager {
     const windX = state.wind.x * cm * 0.0005; // legacy windScale folded in (line 700)
     const windZ = state.wind.z * cm * 0.0005;
     const tMod = state.temperature < 0 ? 0.7 : state.temperature > 30 ? 1.3 : 1.0;
+    // SIMULATION N(2) "BREAK FREE" (CONTRACTS V7.6): the chaos-jitter velocity is amplified
+    // beyond what the saturated cMul clamp (maxes at chaos=6) can reach, so the population
+    // writhes far harder than any N(1) chaos-boost — the contracted "behaviour unhinged"
+    // lever, decoupled from the clamp. The gain is applied AFTER each rng() draw (never gates a
+    // conditional draw), so at N(1) (gain = 1, exact ×1.0) the seeded stream is byte-identical.
+    const jitterGain = state.sim === 2 ? 3 : 1;
     const frame = state.frame;
     const env = this.env;
     env.dt = dt;
@@ -350,9 +356,11 @@ export class EntityManager {
       }
 
       // Chaos jitter + wind physics, damping, integration (legacy lines 771-776).
-      u.vel.x += (rng() - 0.5) * 0.003 * cm + windX;
-      u.vel.y += (rng() - 0.5) * 0.0015 * cm;
-      u.vel.z += (rng() - 0.5) * 0.003 * cm + windZ;
+      // `jitterGain` is applied to the jitter term ONLY, after the rng() draw — at N(1)
+      // (gain = 1, an exact ×1.0) every byte is identical; at N(2) the swarm writhes (×3).
+      u.vel.x += (rng() - 0.5) * 0.003 * cm * jitterGain + windX;
+      u.vel.y += (rng() - 0.5) * 0.0015 * cm * jitterGain;
+      u.vel.z += (rng() - 0.5) * 0.003 * cm * jitterGain + windZ;
       u.vel.multiplyScalar(0.98);
       MOVE.copy(u.vel).multiplyScalar(dt * 60);
       e.position.add(MOVE);

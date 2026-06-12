@@ -1347,6 +1347,31 @@ types.ts.
   - Determinism: sim variant is a fixed multiplier set, not a new rng stream;
     same seed + same sim variant ⇒ same cosmos.
 
+### V7.6 AMENDMENT — BREAK FREE made real (0.7.1, post-swarm)
+
+The 0.7.0 N(2) shipped only sky-recolor + chaos-floor + branding; the swarm
+audit found its core lever MIS-CALIBRATED (chaos floor 3.5 sat below the
+`min(chaos/2,3)` saturation point, so "BREAK FREE" was milder than a normal
+chaos-boost) and three contracted clauses (behaviour, audio, palette/tint)
+absent. Now implemented, every coupling bounded + gated on the derived
+`nightmare` (1 iff `sim===2`, else 0), so **N(1) stays byte-identical** (proven
+by the unchanged determinism suite):
+
+- **Chaos floor → 6** (`world.ts` `CHAOS_NIGHTMARE_FLOOR`) — the cMul saturation
+  point, pinning every chaos consumer to its ceiling.
+- **Writhing behaviour** (`entities.ts` `update`) — the chaos-jitter velocity is
+  scaled by `jitterGain = sim===2 ? 3 : 1`, applied AFTER each `rng()` draw (an
+  exact ×1.0 at N1 — same draw count/order), carrying agitation PAST the clamp.
+- **Inverted/glitched palette** (`instanced-entities.ts` `sync` pass-2) — when
+  `frame.nightmare>0`, per-instance colour := `mix(c, (1−c).bgr, n)` with an
+  `i%3` channel rotation, plus inverted+hotter emissive; written to the instance
+  ATTRIBUTES only (never the morphotype base), so flipping to N1 auto-reverts.
+- **Detuned/darker audio** (`audio/engine.ts` `setNightmare`) — voices detune −35
+  cents + filter ×0.6, SFX stings bend −18%, on the FORKED audio rng (cannot
+  touch sim reproducibility).
+- The atmosphere nightmare sky (0.7.0) and branding remain. A GPU melt/distortion
+  shader pass is a separate wave; the above are the CPU/audio/attribute levers.
+
 ## V7 acceptance
 
 Full `bun run check` green after EACH wave's commit; ultra 10k unbroken; phone

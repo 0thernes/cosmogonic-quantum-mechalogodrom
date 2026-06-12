@@ -144,7 +144,7 @@ export class InstancedEntityRenderer {
    * write), event-driven pool construction/growth only, GPU uploads clipped to
    * each pool's live range. Call once per frame after all entity mutations.
    */
-  sync(list: readonly Entity[], mode: RenderMode): void {
+  sync(list: readonly Entity[], mode: RenderMode, frame: InstanceFrame = ZERO_FRAME): void {
     const counts = this.counts;
     const cursors = this.cursors;
     counts.fill(0);
@@ -168,7 +168,10 @@ export class InstancedEntityRenderer {
       else if (need > pool.capacity) this.growPool(k, pool, need);
     }
 
-    // Pass 2 — write matrices/colors/emissive into the pools.
+    // Pass 2 — write matrices/colors/emissive into the pools. The N(2) inverted palette
+    // (CONTRACTS V7.6) is folded in HERE — it rewrites the per-instance attributes only, never
+    // the morphotype base material, so flipping back to N(1) (nightmare→0) is automatic.
+    const night = frame.nightmare;
     cursors.fill(0);
     for (let i = 0; i < list.length; i++) {
       const e = list[i];
@@ -183,14 +186,39 @@ export class InstancedEntityRenderer {
       cursors[k] = slot + 1;
       e.updateMatrix();
       pool.mesh.setMatrixAt(slot, e.matrix);
-      pool.mesh.setColorAt(slot, e.material.color);
+      const c = e.material.color;
       const em = e.material.emissive;
       const eI = e.material.emissiveIntensity;
       const a = pool.emissive.array as Float32Array;
       const o = slot * 4;
-      a[o] = em.r * eI;
-      a[o + 1] = em.g * eI;
-      a[o + 2] = em.b * eI;
+      if (night > 0) {
+        // Inverted, channel-permuted ("glitched") colour: target = vec3(1) − c.bgr, then a
+        // per-instance 3-way channel rotation by (i % 3) so the inversion is non-uniform. Mix
+        // toward it by `night`. Pure arithmetic on the existing colour — no rng.
+        const ir = 1 - c.b;
+        const ig = 1 - c.g;
+        const ib = 1 - c.r;
+        const rot = i % 3;
+        const tr = rot === 0 ? ir : rot === 1 ? ig : ib;
+        const tg = rot === 0 ? ig : rot === 1 ? ib : ir;
+        const tb = rot === 0 ? ib : rot === 1 ? ir : ig;
+        NIGHT_COL.setRGB(
+          c.r + (tr - c.r) * night,
+          c.g + (tg - c.g) * night,
+          c.b + (tb - c.b) * night,
+        );
+        pool.mesh.setColorAt(slot, NIGHT_COL);
+        // Emissive inverted + hotter, so the glow goes wrong too.
+        const eIn = eI * (1 + 0.6 * night);
+        a[o] = (em.r + (1 - em.b - em.r) * night) * eIn;
+        a[o + 1] = (em.g + (1 - em.g - em.g) * night) * eIn;
+        a[o + 2] = (em.b + (1 - em.r - em.b) * night) * eIn;
+      } else {
+        pool.mesh.setColorAt(slot, c);
+        a[o] = em.r * eI;
+        a[o + 1] = em.g * eI;
+        a[o + 2] = em.b * eI;
+      }
       a[o + 3] = e.material.transparent ? Math.max(e.material.opacity, MIN_ALPHA) : 1;
     }
 
@@ -297,3 +325,20 @@ export class InstancedEntityRenderer {
 
 /** Scratch color for the instanceColor warm-up write. */
 const WHITE = new THREE.Color(0xffffff);
+/** Scratch color for the N(2) inverted-palette write (reused per instance — no per-frame alloc). */
+const NIGHT_COL = new THREE.Color();
+
+/**
+ * Per-frame scalars the integrator hands to {@link InstancedEntityRenderer.sync} (CONTRACTS
+ * V7.6 / the V7-beyond shader block). A reused object — never allocated per frame.
+ * `nightmare` 0..1 drives the inverted palette (and, in the GPU wave, the melt shader).
+ */
+export interface InstanceFrame {
+  t: number;
+  chaos: number;
+  bass: number;
+  nightmare: number;
+}
+
+/** Default zero frame — keeps the legacy `sync(list, mode)` call shape working unchanged. */
+const ZERO_FRAME: InstanceFrame = { t: 0, chaos: 0, bass: 0, nightmare: 0 };
