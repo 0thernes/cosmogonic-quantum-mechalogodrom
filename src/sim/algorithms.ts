@@ -368,3 +368,37 @@ export const ALGOS: readonly SortAlgo[] = [
     },
   },
 ];
+
+/**
+ * A distinct display glyph per sorting field (CONTRACTS V7.2), in ALGOS order, so each
+ * `.algo-row` reads differently at a glance. High-coverage Unicode (Geometric Shapes +
+ * Dingbats stars); a missing glyph degrades to a tofu box but never breaks layout. Indexed
+ * by `algoIdx` (cyclically, so any future ALGOS growth still resolves). Length 25.
+ */
+export const ALGO_GLYPHS: readonly string[] = [
+  '◆',
+  '◇',
+  '◈',
+  '●',
+  '◐',
+  '◑',
+  '◒',
+  '◓',
+  '◢',
+  '◣',
+  '▲',
+  '▼',
+  '★',
+  '☆',
+  '✦',
+  '✶',
+  '✷',
+  '✸',
+  '✹',
+  '✺',
+  '❖',
+  '❂',
+  '✳',
+  '⬢',
+  '⬡',
+];

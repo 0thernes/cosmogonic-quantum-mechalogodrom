@@ -129,6 +129,14 @@ export interface SimState {
   algoIdx: number;
   songIdx: number;
   algoStep: number;
+  /**
+   * Sorting-field run mode (CONTRACTS V7.2; session-only, not persisted): `'single'` runs
+   * the one selected field, `'all'` blends swap proposals from EVERY field each frame, and
+   * `'auto'` advances through all fields in succession on {@link algoTimer}.
+   */
+  algoMode: 'single' | 'all' | 'auto';
+  /** Seconds elapsed on the current AUTO field; advances to the next at the cadence. */
+  algoTimer: number;
   frame: number;
   elapsed: number;
 }

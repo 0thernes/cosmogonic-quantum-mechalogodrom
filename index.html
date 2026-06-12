@@ -700,6 +700,30 @@
             aria-label="Sorting field algorithms"
             class="algo-list flex flex-col gap-1"
           ></div>
+          <!-- RUN ALL / AUTO batch-mode controls (CONTRACTS V7.2). The integrator toggles
+               state.algoMode and adds `.on` to the active button. -->
+          <div class="algo-modes mt-2 flex gap-1.5">
+            <button
+              type="button"
+              id="algo-all"
+              class="algo-mode-btn"
+              aria-pressed="false"
+              aria-label="Run all sorting fields at once"
+              title="Run every field at once"
+            >
+              <span class="algo-mode-glyph" aria-hidden="true">✶</span> ALL
+            </button>
+            <button
+              type="button"
+              id="algo-auto"
+              class="algo-mode-btn"
+              aria-pressed="false"
+              aria-label="Auto-cycle through every sorting field in succession"
+              title="Cycle through every field in succession"
+            >
+              <span class="algo-mode-glyph" aria-hidden="true">▸</span> AUTO
+            </button>
+          </div>
           <!-- Active-field readout (integrator writes the current algorithm name here). -->
           <div
             id="algo-active"

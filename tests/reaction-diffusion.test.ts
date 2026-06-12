@@ -27,6 +27,8 @@ function makeState(overrides: Partial<SimState> = {}): SimState {
     algoIdx: 0,
     songIdx: 0,
     algoStep: 0,
+    algoMode: 'single',
+    algoTimer: 0,
     frame: 0,
     elapsed: 0,
     ...overrides,

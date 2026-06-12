@@ -72,6 +72,8 @@ function makeCtx(maxEntities: number, geos: THREE.BufferGeometry[]): SimContext 
       algoIdx: 0,
       songIdx: 0,
       algoStep: 0,
+      algoMode: 'single',
+      algoTimer: 0,
       frame: 0,
       elapsed: 0,
     },

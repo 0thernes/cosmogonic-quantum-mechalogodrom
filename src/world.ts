@@ -32,7 +32,7 @@ import {
   VIEW_MODES,
   WEATHERS,
 } from './sim/constants';
-import { ALGOS } from './sim/algorithms';
+import { ALGOS, ALGO_GLYPHS } from './sim/algorithms';
 import { SONGS } from './audio/songs';
 import { mulberry32, type Rng } from './math/rng';
 import { clamp } from './math/scalar';
@@ -73,6 +73,9 @@ function cyc<T>(arr: readonly T[], i: number): T {
   if (v === undefined) throw new Error('cyc: empty array');
   return v;
 }
+
+/** AUTO mode dwell: seconds on each sorting field before advancing to the next (V7.2). */
+const ALGO_AUTO_PERIOD = 6;
 
 export interface WorldOptions {
   engine: Engine;
@@ -134,8 +137,13 @@ export class World {
   private readonly algoRows: HTMLElement[] = [];
   /** `#algo-active` readout, or null when the picker DOM is absent. */
   private algoActiveEl: HTMLElement | null = null;
+  /** RUN ALL / AUTO mode buttons (V7.2), or null when the picker DOM is absent. */
+  private algoAllBtn: HTMLElement | null = null;
+  private algoAutoBtn: HTMLElement | null = null;
   /** Sorted-ness of the active field, 0 (chaotic) .. 1 (sorted) — picker progress. */
   private sortedFraction = 0;
+  /** Round-robin cursor for RUN ALL mode (which field each blended proposal draws from). */
+  private allModeCursor = 0;
 
   /** Pre-allocated sort-value buffer (Known Bug 4 fix). */
   private readonly sortVals: Float32Array;
@@ -171,6 +179,8 @@ export class World {
       algoIdx: this.persisted.algoIdx % ALGOS.length,
       songIdx: this.persisted.songIdx % SONGS.length,
       algoStep: 0,
+      algoMode: 'single',
+      algoTimer: 0,
       frame: 0,
       elapsed: 0,
     };
@@ -377,6 +387,7 @@ export class World {
       this.hud.showSector(sector);
     }
 
+    this.tickAlgoAuto(dt);
     this.sortStep();
 
     const stats = this.entities.update(dt, t);
@@ -583,22 +594,33 @@ export class World {
     const n = list.length;
     const s = this.state;
     const algo = cyc(ALGOS, s.algoIdx);
+    const mode = s.algoMode;
+    // Display name reflects the run mode (V7.2): the active field (single/auto, with a ▸
+    // marker while auto-cycling) or ALL FIELDS while every signature works at once.
+    const displayName =
+      mode === 'all' ? 'ALL FIELDS' : mode === 'auto' ? `▸ ${algo.name}` : algo.name;
     if (n < 2) {
-      this.hud.setAlgo(algo.name, s.algoStep, 0);
+      this.hud.setAlgo(displayName, s.algoStep, 0);
       return;
     }
     for (let i = 0; i < n; i++) {
       const e = list[i];
       this.sortVals[i] = e ? e.userData.sortVal : 0;
     }
-    // Batch size: enough to read as motion, bounded so the O(n) algorithms stay
-    // cheap even at the 10k ceiling (28 · 10k ≈ 280k int-compares ≈ 0.5 ms).
-    const batch = Math.min(28, Math.max(6, n >> 8));
+    // Batch size: enough to read as motion, bounded so the O(n) algorithms stay cheap even at
+    // the 10k ceiling. RUN ALL blends every field, so it runs a wider batch (one stride past
+    // the field count) for a visibly busier, world-wide reorganization.
+    const batch =
+      mode === 'all' ? Math.min(48, Math.max(25, n >> 7)) : Math.min(28, Math.max(6, n >> 8));
     const push = 0.05 * this.chaosMul();
     let swaps = 0;
     for (let b = 0; b < batch; b++) {
       s.algoStep++;
-      const swap = algo.step(this.sortVals, n, s.algoStep);
+      // RUN ALL: each proposal is drawn from the NEXT field round-robin, so the whole
+      // population organizes under all 25 signatures simultaneously. Otherwise the one
+      // active field (single, or the auto-cycled current field) proposes.
+      const stepAlgo = mode === 'all' ? cyc(ALGOS, this.allModeCursor++) : algo;
+      const swap = stepAlgo.step(this.sortVals, n, s.algoStep);
       if (!swap) continue;
       const a0 = swap[0];
       const a1 = swap[1];
@@ -633,7 +655,7 @@ export class World {
     // i ∈ [1, n) and n = list.length ≤ sortVals.length, so both reads are in bounds.
     for (let i = 1; i < n; i++) if (sv[i - 1]! <= sv[i]!) ordered++;
     this.sortedFraction = n > 1 ? ordered / (n - 1) : 1;
-    this.hud.setAlgo(algo.name, s.algoStep, swaps);
+    this.hud.setAlgo(displayName, s.algoStep, swaps);
   }
 
   /** Refill the reused snapshot object. Allocation-free. */
@@ -795,8 +817,9 @@ export class World {
     if (!listEl) return;
     // The ui-shell ships #algo-active as a container with an inner name span.
     this.algoActiveEl = document.getElementById('algo-active-name');
+    const n = ALGOS.length;
     const frag = document.createDocumentFragment();
-    for (let i = 0; i < ALGOS.length; i++) {
+    for (let i = 0; i < n; i++) {
       const algo = ALGOS[i];
       if (!algo) continue;
       const row = document.createElement('div');
@@ -805,12 +828,19 @@ export class World {
       row.setAttribute('role', 'option'); // #algo-list is a role=listbox
       row.setAttribute('tabindex', '0');
       row.setAttribute('aria-label', `Select ${algo.name} sorting field`);
+      // V7.2: a deterministic per-field accent hue + a distinct leading glyph so every
+      // row reads uniquely (CSS consumes `--algo-hue`; the glyph is its own span).
+      row.style.setProperty('--algo-hue', String(Math.round((i * 360) / n)));
+      const glyph = document.createElement('span');
+      glyph.className = 'algo-glyph';
+      glyph.setAttribute('aria-hidden', 'true');
+      glyph.textContent = ALGO_GLYPHS[i % ALGO_GLYPHS.length] ?? '◆';
       const name = document.createElement('span');
       name.className = 'algo-name';
       name.textContent = algo.name;
       const prog = document.createElement('div');
       prog.className = 'algo-prog';
-      row.append(name, prog);
+      row.append(glyph, name, prog);
       row.addEventListener('click', () => this.selectAlgo(i, true));
       row.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' || e.key === ' ') {
@@ -822,6 +852,31 @@ export class World {
       this.algoRows.push(row);
     }
     listEl.appendChild(frag);
+    // V7.2 RUN ALL / AUTO controls (degrade silently if the ui-shell omits them).
+    this.algoAllBtn = document.getElementById('algo-all');
+    this.algoAutoBtn = document.getElementById('algo-auto');
+    this.algoAllBtn?.addEventListener('click', () => this.setAlgoMode('all'));
+    this.algoAutoBtn?.addEventListener('click', () => this.setAlgoMode('auto'));
+    this.refreshAlgoActive();
+  }
+
+  /**
+   * Toggle a batch sort mode (V7.2). Clicking an active mode returns to `'single'`. RUN ALL
+   * blends proposals from every field each frame; AUTO marches through all 25 in succession.
+   * Fires a cue + ignites the population so the switch is felt, and audits the change.
+   */
+  private setAlgoMode(mode: 'all' | 'auto'): void {
+    const s = this.state;
+    s.algoMode = s.algoMode === mode ? 'single' : mode;
+    s.algoTimer = 0;
+    this.allModeCursor = 0;
+    this.unlock();
+    this.audio.cue(s.algoIdx, ALGOS.length);
+    this.sortPerformance();
+    const label =
+      s.algoMode === 'all' ? 'ALL FIELDS' : s.algoMode === 'auto' ? 'AUTO CYCLE' : 'SINGLE FIELD';
+    this.hud.showSector(label);
+    this.audit.record('algo-mode', { mode: s.algoMode });
     this.refreshAlgoActive();
   }
 
@@ -835,6 +890,9 @@ export class World {
     const n = ALGOS.length;
     s.algoIdx = ((idx % n) + n) % n;
     s.algoStep = 0;
+    // Picking a specific field by hand leaves any RUN ALL / AUTO batch mode (V7.2). AUTO's own
+    // internal advance passes fromUser=false and keeps the mode (see sortStep).
+    if (fromUser) s.algoMode = 'single';
     const algo = cyc(ALGOS, s.algoIdx);
     this.persisted.algoIdx = s.algoIdx;
     this.save();
@@ -856,34 +914,84 @@ export class World {
    */
   private sortPerformance(): void {
     const list = this.entities.list;
-    const stride = Math.max(1, (list.length / 500) | 0);
+    const stride = Math.max(1, (list.length / 800) | 0);
     for (let i = 0; i < list.length; i += stride) {
       const e = list[i];
-      if (e) e.material.emissiveIntensity = 4.5;
+      if (!e) continue;
+      e.material.emissiveIntensity = 5.5; // a brighter flare than the per-swap 4 (V7.2)
+      // A gentle outward shimmer kick so the ignition visibly ripples the swarm — the field
+      // "performs" when chosen. Deterministic (no rng), allocation-free direct vector math.
+      const p = e.position;
+      const inv = 0.25 / (Math.hypot(p.x, p.y, p.z) || 1);
+      e.userData.vel.x += p.x * inv;
+      e.userData.vel.y += p.y * inv;
+      e.userData.vel.z += p.z * inv;
     }
   }
 
-  /** Sync the picker's active row + readout to `state.algoIdx`; reset progress bars. */
+  /**
+   * AUTO mode (V7.2): march through every sorting field in succession. Advances to the next
+   * field every {@link ALGO_AUTO_PERIOD} seconds of sim time, announcing + igniting each.
+   * No-op outside AUTO. Called once per frame from step(). O(1) amortized.
+   */
+  private tickAlgoAuto(dt: number): void {
+    const s = this.state;
+    if (s.algoMode !== 'auto') return;
+    s.algoTimer += dt;
+    if (s.algoTimer < ALGO_AUTO_PERIOD) return;
+    s.algoTimer = 0;
+    this.selectAlgo(s.algoIdx + 1, false); // fromUser=false keeps AUTO mode engaged
+    this.unlock();
+    this.audio.cue(s.algoIdx, ALGOS.length); // each new field announces itself
+    this.sortPerformance();
+  }
+
+  /** Sync the picker's active row + readout + mode buttons to the current state. */
   private refreshAlgoActive(): void {
-    const active = this.state.algoIdx;
+    const s = this.state;
+    const active = s.algoIdx;
+    // RUN ALL lights no single row (every field works at once); single/auto light the current.
+    const highlightRow = s.algoMode !== 'all';
     for (let i = 0; i < this.algoRows.length; i++) {
       const row = this.algoRows[i];
       if (!row) continue;
-      row.classList.toggle('active', i === active);
+      row.classList.toggle('active', highlightRow && i === active);
       if (i !== active) {
         const prog = row.querySelector<HTMLElement>('.algo-prog');
-        if (prog) prog.style.width = '0%';
+        if (prog) prog.style.setProperty('--algo-prog', '0');
       }
     }
-    if (this.algoActiveEl) this.algoActiveEl.textContent = cyc(ALGOS, active).name;
+    this.algoAllBtn?.classList.toggle('on', s.algoMode === 'all');
+    this.algoAllBtn?.setAttribute('aria-pressed', s.algoMode === 'all' ? 'true' : 'false');
+    this.algoAutoBtn?.classList.toggle('on', s.algoMode === 'auto');
+    this.algoAutoBtn?.setAttribute('aria-pressed', s.algoMode === 'auto' ? 'true' : 'false');
+    if (this.algoActiveEl) {
+      this.algoActiveEl.textContent =
+        s.algoMode === 'all'
+          ? 'ALL FIELDS'
+          : (s.algoMode === 'auto' ? '▸ ' : '') + cyc(ALGOS, active).name;
+    }
   }
 
-  /** Drive the active row's progress bar from the live sorted fraction. O(1). */
+  /**
+   * Drive the progress bar(s) from the live sorted fraction via the `--algo-prog` custom
+   * property the shipped CSS fills with (the prior code set `style.width`, which resized the
+   * track box, not the fill — the bar never moved). In RUN ALL every row pulses together. O(1)
+   * single/auto, O(rows) in all mode (25). Called on the telemetry cadence.
+   */
   private updateAlgoPicker(): void {
+    const frac = String(this.sortedFraction);
+    if (this.state.algoMode === 'all') {
+      for (const row of this.algoRows) {
+        const prog = row.querySelector<HTMLElement>('.algo-prog');
+        if (prog) prog.style.setProperty('--algo-prog', frac);
+      }
+      return;
+    }
     const row = this.algoRows[this.state.algoIdx];
     if (!row) return;
     const prog = row.querySelector<HTMLElement>('.algo-prog');
-    if (prog) prog.style.width = `${Math.round(this.sortedFraction * 100)}%`;
+    if (prog) prog.style.setProperty('--algo-prog', frac);
   }
 
   private buildActions(): UiActions {

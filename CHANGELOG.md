@@ -22,6 +22,24 @@ gated waves (see [docs/MODULE-CONTRACTS.md](./docs/MODULE-CONTRACTS.md) §V7).
   per-trigger pitch jitter so repeating the same action never sounds identical.
   New `playId(n)` fires a palette entry directly. (`src/audio/songs.ts`,
   `src/audio/engine.ts`, `tests/songs.test.ts`.)
+- **Living algorithm picker** — every one of the 25 `.algo-row` entries now reads
+  uniquely: a deterministic per-field accent hue and a distinct leading glyph
+  (`ALGO_GLYPHS`), with reactive hover/active/focus states (hue glow, scale, the
+  fill bar tinted to the field's colour). Selecting a field ignites the
+  population — ~800 organisms flare brighter and ripple outward.
+- **RUN ALL** and **AUTO** sorting modes — a new pair of picker buttons: RUN ALL
+  blends swap proposals from every one of the 25 fields each frame (the whole
+  world organizes under all signatures at once); AUTO marches through all 25 in
+  succession, announcing and igniting each. The HUD card and the active-field
+  readout show the mode. (`index.html`, `src/styles/app.css`, `src/world.ts`,
+  `src/sim/algorithms.ts`, `src/types.ts`.)
+
+### Fixed
+
+- The algorithm-picker progress bar never moved: the integrator set
+  `style.width` on the `.algo-prog` track (resizing the box) while the shipped
+  CSS fills via the `--algo-prog` custom property (`scaleX`). Now driven through
+  `--algo-prog`, so the sorted-fraction bar actually fills. (`src/world.ts`.)
 
 ## [0.6.1] - 2026-06-11
 

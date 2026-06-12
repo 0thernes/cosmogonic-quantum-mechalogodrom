@@ -217,20 +217,36 @@ a:focus-visible {
 /* A single algorithm row: clickable flex line — name on the left, the thin
    `.algo-prog` progress bar on the right. ≥28px tall with comfortable padding. */
 .algo-row {
+  /* Per-field accent (CONTRACTS V7.2): the integrator sets `--algo-hue` (0..360) on each row
+     so every field reads in its own colour. Fallback keeps a row sane if the prop is absent. */
+  --algo-hue: 190;
+  --algo-accent: hsl(var(--algo-hue) 85% 62%);
   display: flex;
   align-items: center;
   gap: 8px;
-  min-height: 28px;
+  min-height: 30px;
   padding: 5px 8px;
-  border: 1px solid --alpha(var(--color-white) / 6%);
+  border: 1px solid hsl(var(--algo-hue) 70% 60% / 0.22);
   border-radius: var(--radius-btn);
-  background: --alpha(var(--color-white) / 3%);
+  background: hsl(var(--algo-hue) 70% 55% / 0.07);
   cursor: pointer;
   user-select: none;
   transition:
     background var(--motion-tap),
     border-color var(--motion-tap),
+    transform var(--motion-tap),
+    box-shadow var(--motion-tap),
     color var(--motion-tap);
+}
+/* Per-field glyph: a distinct leading symbol in the row's own hue (CONTRACTS V7.2). */
+.algo-glyph {
+  flex: 0 0 auto;
+  width: 1.1em;
+  text-align: center;
+  font-size: var(--text-2xs);
+  line-height: 1;
+  color: var(--algo-accent);
+  text-shadow: 0 0 6px hsl(var(--algo-hue) 85% 62% / 0.55);
 }
 /* Row label — the algorithm name. Truncates so a long name never pushes the bar
    off-row. `.algo-row` children the integrator injects should use `.algo-name` for
@@ -246,22 +262,32 @@ a:focus-visible {
   color: --alpha(var(--color-ink) / 90%);
 }
 .algo-row:hover {
-  background: --alpha(var(--color-accent) / 10%);
-  border-color: --alpha(var(--color-accent) / 30%);
+  background: hsl(var(--algo-hue) 80% 58% / 0.16);
+  border-color: hsl(var(--algo-hue) 85% 62% / 0.5);
+  transform: scale(1.035);
+  box-shadow: 0 0 12px hsl(var(--algo-hue) 85% 62% / 0.3);
 }
 .algo-row:hover .algo-name {
   color: var(--color-white);
 }
+.algo-row:active {
+  transform: scale(0.99);
+}
 .algo-row.active {
-  background: --alpha(var(--color-accent) / 18%);
-  border-color: --alpha(var(--color-accent) / 55%);
-  box-shadow: 0 0 10px --alpha(var(--color-accent) / 22%);
+  background: hsl(var(--algo-hue) 82% 56% / 0.26);
+  border-color: hsl(var(--algo-hue) 90% 64% / 0.85);
+  box-shadow:
+    0 0 16px hsl(var(--algo-hue) 88% 62% / 0.4),
+    inset 0 0 8px hsl(var(--algo-hue) 88% 62% / 0.18);
 }
 .algo-row.active .algo-name {
   color: var(--color-white);
 }
+.algo-row.active .algo-glyph {
+  text-shadow: 0 0 10px hsl(var(--algo-hue) 90% 64% / 0.9);
+}
 .algo-row:focus-visible {
-  outline: 2px solid var(--color-accent);
+  outline: 2px solid var(--algo-accent);
   outline-offset: 1px;
 }
 
@@ -287,13 +313,13 @@ a:focus-visible {
   border-radius: 3px;
   background: linear-gradient(
     90deg,
-    --alpha(var(--color-accent) / 55%),
-    --alpha(var(--color-accent) / 95%)
+    hsl(var(--algo-hue) 80% 55% / 0.55),
+    hsl(var(--algo-hue) 90% 65% / 0.95)
   );
   transition: transform var(--motion-chev) ease;
 }
 .algo-row.active .algo-prog::before {
-  background: linear-gradient(90deg, var(--color-accent), var(--color-warn));
+  background: linear-gradient(90deg, var(--algo-accent), var(--color-warn));
 }
 /* Optional explicit fill element (if the integrator injects `.algo-prog-fill` instead
    of using the `--algo-prog` property, this gives it the same look). */
@@ -312,6 +338,71 @@ a:focus-visible {
 /* When an explicit fill element is used, the pseudo-fill must not double up. */
 .algo-prog:has(.algo-prog-fill)::before {
   display: none;
+}
+
+/* RUN ALL / AUTO batch-mode buttons (CONTRACTS V7.2). Glass pills under the field list;
+   the integrator toggles `.on` (and aria-pressed) on the active mode. ≥44px touch height on
+   coarse pointers via the min-height below. */
+.algo-mode-btn {
+  flex: 1 1 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-height: 30px;
+  padding: 4px 8px;
+  border: 1px solid --alpha(var(--color-accent) / 30%);
+  border-radius: var(--radius-btn);
+  background: --alpha(var(--color-accent) / 8%);
+  font: 700 var(--text-3xs) var(--font-ui);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: --alpha(var(--color-ink) / 90%);
+  cursor: pointer;
+  transition:
+    background var(--motion-tap),
+    border-color var(--motion-tap),
+    transform var(--motion-tap),
+    box-shadow var(--motion-tap);
+}
+.algo-mode-btn .algo-mode-glyph {
+  color: var(--color-accent);
+}
+.algo-mode-btn:hover {
+  background: --alpha(var(--color-accent) / 16%);
+  border-color: --alpha(var(--color-accent) / 50%);
+  transform: scale(1.03);
+}
+.algo-mode-btn:active {
+  transform: scale(0.98);
+}
+.algo-mode-btn:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
+}
+/* Engaged state — bright accent fill + glow so the running batch mode is obvious. */
+.algo-mode-btn.on {
+  background: --alpha(var(--color-accent) / 28%);
+  border-color: --alpha(var(--color-accent) / 80%);
+  color: var(--color-white);
+  box-shadow: 0 0 12px --alpha(var(--color-accent) / 40%);
+}
+.algo-mode-btn.on .algo-mode-glyph {
+  color: var(--color-white);
+}
+@media (min-width: 1px) and (hover: none), (pointer: coarse) {
+  .algo-mode-btn {
+    min-height: 44px;
+  }
+}
+/* Honor reduced-motion: drop the reactive scale transforms on rows + mode buttons. */
+@media (prefers-reduced-motion: reduce) {
+  .algo-row:hover,
+  .algo-row:active,
+  .algo-mode-btn:hover,
+  .algo-mode-btn:active {
+    transform: none;
+  }
 }
 
 /* Empty-list affordance: before the integrator populates #algo-list, show a hint
