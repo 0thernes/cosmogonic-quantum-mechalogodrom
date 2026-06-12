@@ -159,6 +159,31 @@ Two direct user-feedback passes (CONTRACTS V5/V6):
 - **Four-page Lab** at `/lab` and a GitHub-Pages-style **architecture report**
   at `/docs` with explicit ERD / ERM / ERP sections.
 
+### XENOCATACLYSM (0.7.0)
+
+The third user-feedback decree — make the world visibly come alive
+(`docs/MODULE-CONTRACTS.md` §CONTRACTS V7):
+
+- **100 distinct sound effects** (was 8) — a procedurally generated, seeded
+  palette across twelve timbral families plus a 25-slot cue band (one engineered
+  voice per sorting field), voiced by one data-driven synth; repeating the same
+  action never sounds identical.
+- **A living algorithm picker** — every sorting-field row reads in its own
+  colour with its own glyph and reactive touch states, selecting one ignites the
+  population, plus **RUN ALL** (every field at once) and **AUTO** (march through
+  all 25) modes.
+- **Five render modes** — SOLID, WIRE, GHOST (x-ray), NEON (self-glow), CHROME
+  (mirror), cycled from the toolbar over both the per-mesh and instanced paths.
+- **Cosmological singularities** on the chaos control — ENTROPY, BLACK HOLE
+  (r⁻² pull + consuming event horizon + accretion disk), WHITE HOLE (ejection),
+  GREY HOLE (absorb↔emit), STRANGE STAR (quark-matter conversion front), each a
+  deterministic force-field with a self-built, auto-expiring rig.
+- **Dramatic weather** — STORM gales with deterministic lightning, a −60 °C VOID
+  deep freeze, a luminous AURORA, a pale FOG whiteout — each unmistakable.
+- **SIMULATION N(1) / N(2)** — toggle between GENESIS (the shipped cosmos) and
+  BREAK FREE (the nightmare: raised chaos floor, a lurid inverted sky, rebranded
+  title); persisted across sessions.
+
 Work on this codebase is governed by the three **master files** in
 [masters/](./masters/) — Executor, Architect, Physicist — bound by
 [CLAUDE.md](./CLAUDE.md) and the binding per-module spec in

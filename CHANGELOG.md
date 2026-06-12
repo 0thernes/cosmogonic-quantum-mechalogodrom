@@ -5,10 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased] — XENOCATACLYSM (CONTRACTS V7, in progress)
+## [0.7.0] - 2026-06-11
 
-The third user-feedback decree: make the world visibly come alive. Landing in
-gated waves (see [docs/MODULE-CONTRACTS.md](./docs/MODULE-CONTRACTS.md) §V7).
+The **XENOCATACLYSM** decree (CONTRACTS V7) — the third user-feedback pass: make
+the world visibly come alive. Landed in six gated waves (see
+[docs/MODULE-CONTRACTS.md](./docs/MODULE-CONTRACTS.md) §V7).
 
 ### Added
 
@@ -592,7 +593,11 @@ to the legacy prototype:
 - The `mutations` counter is surfaced in telemetry (`#v8`) instead of being
   write-only.
 
-[Unreleased]: ./CHANGELOG.md
+[0.7.0]: ./CHANGELOG.md
+[0.6.1]: ./CHANGELOG.md
+[0.6.0]: ./CHANGELOG.md
+[0.5.0]: ./CHANGELOG.md
+[0.4.0]: ./CHANGELOG.md
 [0.3.0]: ./CHANGELOG.md
 [0.2.1]: ./CHANGELOG.md
 [0.2.0]: ./CHANGELOG.md
