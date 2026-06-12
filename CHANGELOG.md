@@ -40,6 +40,17 @@ gated waves (see [docs/MODULE-CONTRACTS.md](./docs/MODULE-CONTRACTS.md) §V7).
   instanced pooled paths; SOLID is byte-identical to the previous look.
   (`src/sim/constants.ts`, `src/sim/entities.ts`, `src/sim/instanced-entities.ts`,
   `src/world.ts`, `src/ui/input.ts`, `index.html`, `tests/render-modes.test.ts`.)
+- **Cosmological singularities** on a new chaos-control button — summon real
+  cosmology at a point in the arena, one at a time: **ENTROPY** (heat death —
+  thermalizes velocities, greys the glow, raises the heat), **BLACK HOLE** (r⁻²
+  pull, an event horizon that consumes and scars the ground, a heated accretion
+  disk), **WHITE HOLE** (the time-reversed hole — nothing may enter; r⁻² ejection),
+  **GREY HOLE** (alternating absorb↔emit, the evaporating hole), and **STRANGE
+  STAR** (a quark-matter conversion front that recolours organisms into strange
+  matter — the strangelet chain reaction). Each is a deterministic force-field +
+  a self-built, auto-expiring visual rig, with a thematic palette voice and a
+  lore-named audit. (`src/sim/singularities.ts`, `src/world.ts`, `src/types.ts`,
+  `src/ui/input.ts`, `index.html`, `tests/singularities.test.ts`.)
 
 ### Fixed
 

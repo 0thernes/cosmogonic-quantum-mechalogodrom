@@ -297,6 +297,8 @@ export interface UiActions {
   burst(): void;
   mutate(): void;
   chaosBoost(): void;
+  /** Summon the next cosmological singularity (CONTRACTS V7.4); returns its name. */
+  summonSingularity(): string;
   apocalypse(): void;
   reset(): void;
   toggleMusic(): boolean;

@@ -34,7 +34,7 @@ import {
   WEATHERS,
 } from './sim/constants';
 import { ALGOS, ALGO_GLYPHS } from './sim/algorithms';
-import { SONGS } from './audio/songs';
+import { SONGS, SFX_EXTRA_BANDS } from './audio/songs';
 import { mulberry32, type Rng } from './math/rng';
 import { clamp } from './math/scalar';
 import { SpatialHash } from './math/spatial-hash';
@@ -56,6 +56,7 @@ import { GraphMind } from './sim/graph-mind';
 import { ConstellationSystem } from './sim/constellations';
 import { AtmosphereSystem } from './sim/atmosphere';
 import { Viz3DSystem, type Viz3DSnapshot } from './sim/viz3d';
+import { SingularitySystem, SINGULARITY_KINDS } from './sim/singularities';
 import { LoreEngine } from './sim/lore';
 import { AnalyticsSystem } from './sim/analytics';
 import { AudioEngine } from './audio/engine';
@@ -77,6 +78,11 @@ function cyc<T>(arr: readonly T[], i: number): T {
 
 /** AUTO mode dwell: seconds on each sorting field before advancing to the next (V7.2). */
 const ALGO_AUTO_PERIOD = 6;
+
+/** Cosmology SFX palette entries (V7.4) — band starts from the 100-voice palette. */
+const SFX_SUBBOOM = SFX_EXTRA_BANDS['subboom']?.start ?? 0;
+const SFX_FMCLANG = SFX_EXTRA_BANDS['fmclang']?.start ?? 0;
+const SFX_STRANGE = SFX_EXTRA_BANDS['strange']?.start ?? 0;
 
 export interface WorldOptions {
   engine: Engine;
@@ -127,6 +133,10 @@ export class World {
   private readonly constellations: ConstellationSystem;
   private readonly atmosphere: AtmosphereSystem;
   private readonly viz3d: Viz3DSystem;
+  /** Cosmological chaos effects (CONTRACTS V7.4) — at most one active at a time. */
+  private readonly singularities: SingularitySystem;
+  /** Cycle cursor for the chaos control's singularity chooser. */
+  private singularityCursor = 0;
   private readonly audioAnalysis: AudioAnalysis;
   private readonly analytics: AnalyticsSystem;
   /** Reused adapter mapping `titanLedger`→`ledger` for Viz3DSnapshot; fields
@@ -263,6 +273,9 @@ export class World {
     // last among rng-consuming sim systems so it never shifts their streams.
     this.atmosphere = new AtmosphereSystem(ctx);
     this.viz3d = new Viz3DSystem(ctx); // zero rng draws — placement-neutral
+    // Cosmological chaos (V7.4): draws no rng and builds nothing at construction (lazy on
+    // summon), so it is boot-stream-neutral like viz3d.
+    this.singularities = new SingularitySystem(ctx, this.entities);
 
     this.hud = new Hud();
     this.panel = new TelemetryPanel();
@@ -381,6 +394,9 @@ export class World {
     // Titans roam every frame; economy/diplomacy/strikes are internally cadenced
     // off s.frame (CONTRACTS V3.3) — after the grid so strikes can query it.
     this.titans.update(dt, t);
+    // Cosmological chaos (V7.4): apply the active singularity's force field to entity
+    // velocities BEFORE entities.update integrates them this frame. No-op when none active.
+    this.singularities.update(dt, t);
 
     const sector = this.environment.sectorAt(this.engine.camera.position);
     if (sector !== this.lastSector) {
@@ -774,11 +790,37 @@ export class World {
 
   /** Legacy rSim: genesis reset (entities + counters; prefs untouched). */
   private resetSim(): void {
+    this.singularities.dispose(); // tear down any active cosmological effect
     this.entities.reset(this.bootPopulation());
     this.state.chaos = 0.5;
     this.state.mutations = 0;
     this.state.algoStep = 0;
     this.hud.showSector('GENESIS RESET');
+  }
+
+  /**
+   * Chaos control (CONTRACTS V7.4): cycle to the next cosmological singularity and summon it
+   * at a seeded mid-field point. Each kind announces itself with a thematic palette voice and
+   * an audit record. Returns the summoned kind's display name. Draws rng for the placement
+   * (a user gesture, like burst/mutate).
+   */
+  private summonSingularity(): string {
+    const kind = cyc(SINGULARITY_KINDS, this.singularityCursor++);
+    // Seeded mid-field placement (y ~16·ARENA_Y so the rig floats in the volume).
+    this.sv1.set(
+      (this.rng() - 0.5) * 50 * ARENA_MID,
+      16 * ARENA_Y,
+      (this.rng() - 0.5) * 50 * ARENA_MID,
+    );
+    this.singularities.summon(kind, this.sv1);
+    // Thematic voice from the new palette bands: deep impacts for holes, exotic for the rest.
+    if (kind === 'blackhole' || kind === 'greyhole') this.audio.playId(SFX_SUBBOOM);
+    else if (kind === 'whitehole') this.audio.playId(SFX_FMCLANG);
+    else this.audio.playId(SFX_STRANGE);
+    const label = kind.toUpperCase();
+    this.hud.showSector('SINGULARITY: ' + label);
+    this.audit.record('singularity', { kind, epithet: this.lore.epithet('collapse', kind) });
+    return label;
   }
 
   /** UiActions implementation handed to InputSystem. */
@@ -1018,6 +1060,10 @@ export class World {
         s.chaos = clamp(s.chaos * 1.5, CHAOS_MIN, CHAOS_MAX);
         this.audio.play('burst');
         this.audit.record('chaos-boost', { chaos: s.chaos });
+      },
+      summonSingularity: () => {
+        this.unlock();
+        return this.summonSingularity();
       },
       apocalypse: () => {
         this.unlock();
