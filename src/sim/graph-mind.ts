@@ -166,9 +166,17 @@ export class GraphMind {
     top.clear();
   }
 
-  /** Reset a former rank-holder's emissive intensity to its morph baseline. O(1). */
+  /**
+   * Reset a former rank-holder's emissive intensity to its morph baseline. O(1).
+   *
+   * No liveness guard ON PURPOSE (audit fix): the old `e.parent === null` check meant "skip
+   * dead entities", but in INSTANCED mode data meshes never join the scene graph, so the
+   * guard was true for EVERY live entity above the phone tier and the restore was dead code —
+   * ex-rank-holders kept their halo until the slow per-frame lerp eroded it. Writing a scalar
+   * onto a dead entity's already-disposed material is harmless (the mesh is out of the list
+   * and never rendered), so restoring unconditionally is correct on BOTH render paths.
+   */
   private restoreEmissive(e: Entity): void {
-    if (e.parent === null) return; // entity died — its material is already disposed
     const m = this.ctx.morphs[e.userData.mi];
     if (m) e.material.emissiveIntensity = m.emI;
   }
