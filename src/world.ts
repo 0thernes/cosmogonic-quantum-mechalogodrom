@@ -28,6 +28,7 @@ import {
   CHAOS_MIN,
   GRID_CELL,
   GROUND_EXTENT,
+  RENDER_MODES,
   ULTRA_GRID_CELL,
   VIEW_MODES,
   WEATHERS,
@@ -171,7 +172,7 @@ export class World {
       chaos: 0.5,
       mutations: 0,
       timeScale: 1,
-      wireframe: false,
+      renderMode: 'solid',
       weatherIdx: this.persisted.weatherIdx % WEATHERS.length,
       temperature: 20,
       wind: { x: 0, z: 0 },
@@ -458,7 +459,7 @@ export class World {
 
     // Pool mirror runs LAST — after every system that mutates entity visuals
     // (sort flash, graph rank floor, belly pulse, conscription tints).
-    if (this.instanced) this.instanced.sync(this.entities.list, s.wireframe);
+    if (this.instanced) this.instanced.sync(this.entities.list, s.renderMode);
 
     this.engine.render();
   }
@@ -1064,12 +1065,15 @@ export class World {
         this.audit.record('time-scale', { value: s.timeScale });
         return s.timeScale;
       },
-      toggleWireframe: () => {
+      cycleRenderMode: () => {
         this.unlock();
-        s.wireframe = !s.wireframe; // flag first — spawn/remorph read it
-        this.entities.setWireframe(s.wireframe);
-        this.audit.record('wireframe', { on: s.wireframe });
-        return s.wireframe;
+        const i = RENDER_MODES.indexOf(s.renderMode);
+        const mode = cyc(RENDER_MODES, i + 1);
+        s.renderMode = mode; // set first — spawn/remorph read it for new/rewritten materials
+        this.entities.setRenderMode(mode);
+        this.hud.showSector('RENDER: ' + mode.toUpperCase());
+        this.audit.record('render-mode', { mode });
+        return mode;
       },
       cycleView: () => {
         this.unlock();

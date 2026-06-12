@@ -44,7 +44,7 @@ function makeCtx(tier: QualityTier, maxEntities: number, seed = 1): SimContext {
       chaos: 1,
       mutations: 0,
       timeScale: 1,
-      wireframe: false,
+      renderMode: 'solid',
       weatherIdx: 0,
       temperature: 20,
       wind: { x: 0, z: 0 },

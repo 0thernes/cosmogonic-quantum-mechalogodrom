@@ -1270,16 +1270,27 @@ types.ts.
 
 - The binary wireframe toggle becomes a **5-mode render cycle** owned by
   `EntityManager.setRenderMode(mode: RenderMode)` (exported union
-  `'solid'|'wire'|'ghost'|'neon'|'points'`), superseding `setWireframe`
-  (kept as a thin alias for any caller). Modes: SOLID (default PBR), WIRE
-  (wireframe), GHOST (low-opacity translucent x-ray), NEON (emissive-boosted,
-  flat), POINTS (geometry drawn as points). The manager applies the mode to live
-  - future materials allocation-free (flags only; no geometry rebuild). The
-    toolbar `wire` button cycles the modes (relabeled VIEW/RENDER); `SimState.wireframe`
-    becomes `renderMode: RenderMode` (integrator migrates persistence: the old
-    boolean maps `true→'wire'`, `false→'solid'`). Instanced renderer honors the
-    mode on its pooled materials. Phone/instanced POINTS may fall back to SOLID if
-    pooled points are impractical — document the fallback.
+  `'solid'|'wire'|'ghost'|'neon'|'chrome'`), superseding `setWireframe`
+  (kept as a thin alias: `setWireframe(on) → setRenderMode(on ? 'wire' : 'solid')`).
+  Modes: SOLID (default PBR), WIRE (wireframe), GHOST (low-opacity translucent
+  x-ray, depthWrite off), NEON (emissive target ×3 — each organism self-glows its
+  own hue), CHROME (metalness 1 / roughness ~0 liquid-metal mirror). All five are
+  MeshStandardMaterial FLAG changes only (no geometry/object-type swap), so they
+  apply allocation-free to BOTH the per-entity (phone) and the instanced (pooled)
+  paths. **Amendment:** the original spec named POINTS as the 5th mode; drawing
+  points requires a `THREE.Points` object swap that would break the
+  InstancedMesh-pool facade and the `{poolId,slot}` Entity handle, so it is
+  replaced by CHROME (a material-flag mode that honors the facade). The toolbar
+  `wire` action becomes `cycleRenderMode(): RenderMode`; `SimState.wireframe`
+  becomes `renderMode: RenderMode` (session-only, like `algoMode` — wireframe was
+  never persisted, so there is no persistence migration). The instanced renderer
+  applies the mode's pool-level flags (wireframe/metalness/roughness) on change
+  and on pool build; per-instance colour/emissive/alpha already flow from each
+  entity material, which `setRenderMode` updates. The mode→flags mapping lives as
+  pure data (`RENDER_MODE_FX`) in `sim/constants.ts`; `update()`'s per-frame
+  emissive target multiplies by the mode's `emissiveBoost` so NEON holds (the only
+  `update()` coupling; `emissiveBoost === 1` for every non-NEON mode keeps the
+  ≤5,000-tier visuals byte-identical).
 
 ## V7.4 — Cosmological chaos (writer: cosmo — NEW src/sim/singularities.ts; integrator wires)
 

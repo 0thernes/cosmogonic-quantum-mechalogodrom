@@ -34,7 +34,7 @@ function makeState(): SimState {
     chaos: CHAOS_MAX,
     mutations: 0,
     timeScale: 3,
-    wireframe: false,
+    renderMode: 'solid',
     weatherIdx: 0,
     temperature: 20,
     wind: { x: 0, z: 0 },

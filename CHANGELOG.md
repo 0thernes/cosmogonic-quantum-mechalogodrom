@@ -33,6 +33,13 @@ gated waves (see [docs/MODULE-CONTRACTS.md](./docs/MODULE-CONTRACTS.md) §V7).
   succession, announcing and igniting each. The HUD card and the active-field
   readout show the mode. (`index.html`, `src/styles/app.css`, `src/world.ts`,
   `src/sim/algorithms.ts`, `src/types.ts`.)
+- **Five render modes** (the toolbar "Wire" button becomes "Render"): cycle
+  SOLID → WIRE → GHOST (low-opacity x-ray) → NEON (each organism self-glows its
+  own hue) → CHROME (liquid-metal mirror). Pure MeshStandardMaterial flag changes
+  (no geometry/object swap), applied allocation-free to BOTH the per-mesh and the
+  instanced pooled paths; SOLID is byte-identical to the previous look.
+  (`src/sim/constants.ts`, `src/sim/entities.ts`, `src/sim/instanced-entities.ts`,
+  `src/world.ts`, `src/ui/input.ts`, `index.html`, `tests/render-modes.test.ts`.)
 
 ### Fixed
 

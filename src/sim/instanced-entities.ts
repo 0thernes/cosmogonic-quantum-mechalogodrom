@@ -31,10 +31,16 @@
  * untouched.
  */
 import * as THREE from 'three';
+import { RENDER_MODE_FX } from './constants';
+import type { RenderMode } from './constants';
 import type { Entity, SimContext } from '../types';
 
 /** Capacity headroom multiplier over the uniform per-pool share. */
 const HEADROOM = 4;
+
+/** Pool-material base metalness/roughness (per-instance PBR is not representable — V3.1). */
+const POOL_METALNESS = 0.5;
+const POOL_ROUGHNESS = 0.5;
 
 /** Fixed translucent-pool blending opacity is carried per instance — this is the floor. */
 const MIN_ALPHA = 0.05;
@@ -116,8 +122,8 @@ export class InstancedEntityRenderer {
   private readonly counts: Uint32Array;
   /** Per-slot write cursors for pass 2. */
   private readonly cursors: Uint32Array;
-  /** Wireframe state last applied to pool materials. */
-  private wireframe = false;
+  /** Render mode last applied to pool materials (CONTRACTS V7.3). */
+  private mode: RenderMode = 'solid';
 
   /** Stores references and builds the geometry-id lookup. No pools yet. O(geos). */
   constructor(ctx: SimContext) {
@@ -138,7 +144,7 @@ export class InstancedEntityRenderer {
    * write), event-driven pool construction/growth only, GPU uploads clipped to
    * each pool's live range. Call once per frame after all entity mutations.
    */
-  sync(list: readonly Entity[], wireframe: boolean): void {
+  sync(list: readonly Entity[], mode: RenderMode): void {
     const counts = this.counts;
     const cursors = this.cursors;
     counts.fill(0);
@@ -188,9 +194,11 @@ export class InstancedEntityRenderer {
       a[o + 3] = e.material.transparent ? Math.max(e.material.opacity, MIN_ALPHA) : 1;
     }
 
-    // Publish: live counts, clipped uploads, wireframe.
-    const wireChanged = wireframe !== this.wireframe;
-    this.wireframe = wireframe;
+    // Publish: live counts, clipped uploads, render mode (V7.3). Per-instance colour/emissive/
+    // alpha already came from each entity material above; only the pool-level flags
+    // (wireframe/metalness/roughness) need pushing, and only when the mode changes.
+    const modeChanged = mode !== this.mode;
+    this.mode = mode;
     for (let k = 0; k < this.pools.length; k++) {
       const pool = this.pools[k];
       if (!pool) continue;
@@ -211,10 +219,23 @@ export class InstancedEntityRenderer {
         pool.emissive.addUpdateRange(0, used * 4);
         pool.emissive.needsUpdate = true;
       }
-      if (wireChanged) {
-        (pool.mesh.material as THREE.MeshStandardMaterial).wireframe = wireframe;
+      if (modeChanged) {
+        this.applyModeToPool(pool.mesh.material as THREE.MeshStandardMaterial);
       }
     }
+  }
+
+  /**
+   * Apply the current {@link RenderMode}'s pool-level flags to a pool material (CONTRACTS
+   * V7.3). Pools carry uniform PBR (per-instance metalness/roughness is not representable),
+   * so a mode's metalness/roughness/wireframe apply pool-wide; per-instance opacity/emissive
+   * stay on the instance attributes. O(1).
+   */
+  private applyModeToPool(mat: THREE.MeshStandardMaterial): void {
+    const fx = RENDER_MODE_FX[this.mode];
+    mat.wireframe = fx.wireframe;
+    mat.metalness = fx.metalness ?? POOL_METALNESS;
+    mat.roughness = fx.roughness ?? POOL_ROUGHNESS;
   }
 
   /** Build a pool for slot `k` sized for `need` (event-driven). */
@@ -230,13 +251,13 @@ export class InstancedEntityRenderer {
     if (!geo) throw new Error(`InstancedEntityRenderer: missing geometry ${gi}`);
     const mat = new THREE.MeshStandardMaterial({
       color: 0xffffff,
-      metalness: 0.5,
-      roughness: 0.5,
+      metalness: POOL_METALNESS,
+      roughness: POOL_ROUGHNESS,
       transparent,
       opacity: 1,
       side: transparent ? THREE.DoubleSide : THREE.FrontSide,
-      wireframe: this.wireframe,
     });
+    this.applyModeToPool(mat); // carry the current render mode onto a freshly built pool (V7.3)
     patchPoolMaterial(mat);
     const mesh = new THREE.InstancedMesh(geo, mat, capacity);
     mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);

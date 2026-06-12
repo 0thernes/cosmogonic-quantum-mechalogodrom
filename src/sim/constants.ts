@@ -105,6 +105,83 @@ export const VIEW_MODES = ['free', 'orbit', 'fly', 'top'] as const;
 /** One of the four camera view modes. */
 export type ViewMode = (typeof VIEW_MODES)[number];
 
+/**
+ * Entity render styles (CONTRACTS V7.3), cycled by the toolbar from SOLID through every
+ * mode. SOLID is the default PBR look; the rest are pure MeshStandardMaterial flag changes
+ * (no geometry/object swap) so they apply allocation-free to both the per-mesh and the
+ * instanced render paths.
+ */
+export const RENDER_MODES = ['solid', 'wire', 'ghost', 'neon', 'chrome'] as const;
+
+/** One of the five entity render styles. */
+export type RenderMode = (typeof RENDER_MODES)[number];
+
+/**
+ * Material-flag overrides per {@link RenderMode}, applied on top of a morphotype's base
+ * material. `null` means "keep the material's base value"; `emissiveBoost` multiplies the
+ * morphotype emissiveIntensity target (NEON makes each organism self-glow its own hue, the
+ * one mode `update()` reads — `1` everywhere else keeps the per-frame emissive identical).
+ * Pure leaf data (no THREE import) so `sim/constants.ts` stays a DOM-free leaf.
+ */
+export interface RenderModeFx {
+  wireframe: boolean;
+  metalness: number | null;
+  roughness: number | null;
+  opacity: number | null;
+  transparent: boolean | null;
+  depthWrite: boolean | null;
+  emissiveBoost: number;
+}
+
+/** The {@link RenderMode} → {@link RenderModeFx} table (CONTRACTS V7.3). */
+export const RENDER_MODE_FX: Readonly<Record<RenderMode, RenderModeFx>> = {
+  solid: {
+    wireframe: false,
+    metalness: null,
+    roughness: null,
+    opacity: null,
+    transparent: null,
+    depthWrite: null,
+    emissiveBoost: 1,
+  },
+  wire: {
+    wireframe: true,
+    metalness: null,
+    roughness: null,
+    opacity: null,
+    transparent: null,
+    depthWrite: null,
+    emissiveBoost: 1,
+  },
+  ghost: {
+    wireframe: false,
+    metalness: 0,
+    roughness: 1,
+    opacity: 0.3,
+    transparent: true,
+    depthWrite: false,
+    emissiveBoost: 1,
+  },
+  neon: {
+    wireframe: false,
+    metalness: 0,
+    roughness: 1,
+    opacity: null,
+    transparent: null,
+    depthWrite: null,
+    emissiveBoost: 3,
+  },
+  chrome: {
+    wireframe: false,
+    metalness: 1,
+    roughness: 0.05,
+    opacity: null,
+    transparent: null,
+    depthWrite: null,
+    emissiveBoost: 1,
+  },
+};
+
 /** Lower clamp for the chaos parameter, legacy line 168. */
 export const CHAOS_MIN = 0.1;
 

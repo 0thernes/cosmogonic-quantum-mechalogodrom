@@ -12,12 +12,48 @@
  */
 import * as THREE from 'three';
 import { TAU, lerp } from '../math/scalar';
-import { ARENA, ARENA_Y, CONTAIN_RADIUS2, ARENA_RADIUS } from './constants';
+import { ARENA, ARENA_Y, CONTAIN_RADIUS2, ARENA_RADIUS, RENDER_MODE_FX } from './constants';
+import type { RenderMode } from './constants';
 import { PHYLUM_COUNT } from './phyla';
 import type { PhylumMorphType } from './phyla';
 import { applyBehavior } from './behaviors';
 import type { BehaviorEnv } from './behaviors';
 import type { Entity, SimContext, UpdateStats } from '../types';
+
+/** Base material parameters a {@link RenderMode} is layered on top of. */
+interface RenderModeBase {
+  met: number;
+  rou: number;
+  op: number;
+  emI: number;
+}
+
+/**
+ * Apply a {@link RenderMode} to a MeshStandardMaterial on top of its morphotype base
+ * (CONTRACTS V7.3). `null` fx fields fall back to the base; NEON's emissive boost is the
+ * INITIAL value only — `update()` re-targets it each frame so the glow holds. Used by the
+ * per-mesh path here AND by the instanced renderer's pool materials. Allocation-free. O(1).
+ */
+export function applyRenderModeTo(
+  mat: THREE.MeshStandardMaterial,
+  mode: RenderMode,
+  base: RenderModeBase,
+): void {
+  const fx = RENDER_MODE_FX[mode];
+  const baseTransparent = base.op < 0.6;
+  const transparent = fx.transparent ?? baseTransparent;
+  mat.wireframe = fx.wireframe;
+  mat.metalness = fx.metalness ?? base.met;
+  mat.roughness = fx.roughness ?? base.rou;
+  mat.transparent = transparent;
+  mat.opacity = fx.opacity ?? (baseTransparent ? base.op : 1.0);
+  mat.side = transparent ? THREE.DoubleSide : THREE.FrontSide;
+  // Legacy never set depthWrite (three defaults true, even for translucent morphs); only GHOST
+  // turns it off. `?? true` both preserves the legacy look AND restores it when leaving ghost.
+  mat.depthWrite = fx.depthWrite ?? true;
+  mat.emissiveIntensity = base.emI * fx.emissiveBoost;
+  mat.needsUpdate = true;
+}
 
 /** Scratch vector for velocity integration / containment impulses (no per-frame allocation). */
 const MOVE = new THREE.Vector3();
@@ -98,8 +134,10 @@ export class EntityManager {
       transparent: isTransparent,
       opacity: isTransparent ? m.op : 1.0,
       side: isTransparent ? THREE.DoubleSide : THREE.FrontSide,
-      wireframe: ctx.state.wireframe,
     });
+    // Layer the active render style on top of the morphotype base (CONTRACTS V7.3).
+    // For SOLID this re-sets identical values, so the legacy look is byte-identical.
+    applyRenderModeTo(mat, ctx.state.renderMode, m);
     const mesh = new THREE.Mesh(geo, mat) as Entity;
     mesh.scale.setScalar(s);
     const phylum = m.phylum ?? -1;
@@ -249,6 +287,11 @@ export class EntityManager {
     this.phylumCounts.fill(0);
     const phylumCounts = this.phylumCounts;
     let energy = 0;
+    // Render-mode emissive coupling (CONTRACTS V7.3): the per-frame emissive target scales by
+    // the mode's boost so NEON's self-glow holds against the decay below. 1 for every other
+    // mode ⇒ this loop stays byte-identical outside NEON.
+    const emiBoost = RENDER_MODE_FX[state.renderMode].emissiveBoost;
+    const emiCap = 2.5 * emiBoost;
 
     for (let i = list.length - 1; i >= 0; i--) {
       const e = list[i];
@@ -295,10 +338,15 @@ export class EntityManager {
       u.act *= 0.95;
       u.act += cm * 0.01 * sinWF;
       if (u.act > 1) {
-        e.material.emissiveIntensity = Math.min(e.material.emissiveIntensity + 0.1, 2.5);
+        e.material.emissiveIntensity = Math.min(e.material.emissiveIntensity + 0.1, emiCap);
       } else {
         const m = ctx.morphs[u.mi];
-        if (m) e.material.emissiveIntensity = lerp(e.material.emissiveIntensity, m.emI, dt * 2);
+        if (m)
+          e.material.emissiveIntensity = lerp(
+            e.material.emissiveIntensity,
+            m.emI * emiBoost,
+            dt * 2,
+          );
       }
 
       // Chaos jitter + wind physics, damping, integration (legacy lines 771-776).
@@ -390,15 +438,9 @@ export class EntityManager {
     const mat = e.material;
     mat.color.copy(m.col);
     mat.emissive.copy(m.em);
-    mat.emissiveIntensity = m.emI;
-    mat.metalness = m.met;
-    mat.roughness = m.rou;
-    const isTransparent = m.op < 0.6;
-    mat.transparent = isTransparent;
-    mat.opacity = isTransparent ? m.op : 1.0;
-    mat.side = isTransparent ? THREE.DoubleSide : THREE.FrontSide;
-    mat.wireframe = ctx.state.wireframe;
-    mat.needsUpdate = true;
+    // metalness/roughness/transparent/opacity/side/wireframe/emissive + depthWrite are all set
+    // by applyRenderModeTo on top of the morphotype base (CONTRACTS V7.3).
+    applyRenderModeTo(mat, ctx.state.renderMode, m);
     const u = e.userData;
     u.mi = mi % morphCount;
     u.beh = m.beh;
@@ -411,17 +453,28 @@ export class EntityManager {
   }
 
   /**
-   * Apply wireframe rendering to every live entity's material (legacy `tW`, line 594). The
-   * `ctx.state.wireframe` flag itself is owned by the composition root; spawns and remorphs
-   * read it for new/rewritten materials. O(n).
+   * Apply a {@link RenderMode} to every live entity's material (CONTRACTS V7.3, supersedes the
+   * legacy `tW` wireframe toggle, line 594). `ctx.state.renderMode` is owned by the composition
+   * root; spawns and remorphs read it for new/rewritten materials. Each material is rebased on
+   * its morphotype so switching back to SOLID restores the exact base look. O(n).
    */
-  setWireframe(on: boolean): void {
+  setRenderMode(mode: RenderMode): void {
+    const ctx = this.ctx;
+    const morphCount = ctx.morphs.length;
     const list = this.list;
     for (let i = 0; i < list.length; i++) {
       const e = list[i];
       if (!e) continue; // invariant: list is dense
-      e.material.wireframe = on;
-      e.material.needsUpdate = true;
+      const m = morphCount > 0 ? ctx.morphs[e.userData.mi % morphCount] : undefined;
+      if (m) applyRenderModeTo(e.material, mode, m);
     }
+  }
+
+  /**
+   * Back-compat alias (CONTRACTS V7.3): the old binary wireframe toggle maps onto the new
+   * render-mode cycle. O(n).
+   */
+  setWireframe(on: boolean): void {
+    this.setRenderMode(on ? 'wire' : 'solid');
   }
 }

@@ -64,7 +64,7 @@ function makeCtx(maxEntities: number, geos: THREE.BufferGeometry[]): SimContext 
       chaos: 0.5,
       mutations: 0,
       timeScale: 1,
-      wireframe: false,
+      renderMode: 'solid',
       weatherIdx: 0,
       temperature: 20,
       wind: { x: 0, z: 0 },
@@ -105,7 +105,7 @@ describe('InstancedEntityRenderer.sync (headless)', () => {
     const a = makeEntity(geos[0]!, false);
     const b = makeEntity(geos[0]!, false);
     const c = makeEntity(geos[1]!, true);
-    r.sync([a, b, c], false);
+    r.sync([a, b, c], 'solid');
 
     const pools = ctx.scene.children.filter((o) => o instanceof THREE.InstancedMesh);
     expect(pools.length).toBe(2); // sphere-opaque + box-transparent
@@ -118,7 +118,7 @@ describe('InstancedEntityRenderer.sync (headless)', () => {
     const ctx = makeCtx(64, geos);
     const r = new InstancedEntityRenderer(ctx);
     const e = makeEntity(geos[0]!, true);
-    r.sync([e], false);
+    r.sync([e], 'solid');
     const pool = ctx.scene.children.find(
       (o) => o instanceof THREE.InstancedMesh,
     ) as THREE.InstancedMesh;
@@ -135,7 +135,7 @@ describe('InstancedEntityRenderer.sync (headless)', () => {
     const ctx = makeCtx(64, geos);
     const r = new InstancedEntityRenderer(ctx);
     const e = makeEntity(geos[0]!, false);
-    r.sync([e], false);
+    r.sync([e], 'solid');
     const pool = ctx.scene.children.find(
       (o) => o instanceof THREE.InstancedMesh,
     ) as THREE.InstancedMesh;
@@ -144,11 +144,11 @@ describe('InstancedEntityRenderer.sync (headless)', () => {
     const pos = new THREE.Vector3().setFromMatrixPosition(m);
     expect(pos.x).toBeCloseTo(3, 6);
     e.position.set(-9, 1, 2);
-    r.sync([e], false);
+    r.sync([e], 'solid');
     pool.getMatrixAt(0, m);
     pos.setFromMatrixPosition(m);
     expect(pos.x).toBeCloseTo(-9, 6);
-    r.sync([], false);
+    r.sync([], 'solid');
     expect(pool.count).toBe(0);
   });
 
@@ -159,14 +159,14 @@ describe('InstancedEntityRenderer.sync (headless)', () => {
     const ctx = makeCtx(4096, geos);
     const r = new InstancedEntityRenderer(ctx);
     const first = [makeEntity(geos[0]!, false)];
-    r.sync(first, false);
+    r.sync(first, 'solid');
     const before = ctx.scene.children.find(
       (o) => o instanceof THREE.InstancedMesh,
     ) as THREE.InstancedMesh;
     const cap0 = before.instanceMatrix.count;
     const many: Entity[] = [];
     for (let i = 0; i < cap0 + 1; i++) many.push(makeEntity(geos[0]!, false));
-    r.sync(many, false);
+    r.sync(many, 'solid');
     const after = ctx.scene.children.find(
       (o) => o instanceof THREE.InstancedMesh,
     ) as THREE.InstancedMesh;
@@ -179,12 +179,12 @@ describe('InstancedEntityRenderer.sync (headless)', () => {
     const ctx = makeCtx(64, geos);
     const r = new InstancedEntityRenderer(ctx);
     const e = makeEntity(geos[0]!, false);
-    r.sync([e], true);
+    r.sync([e], 'wire');
     const pool = ctx.scene.children.find(
       (o) => o instanceof THREE.InstancedMesh,
     ) as THREE.InstancedMesh;
     expect((pool.material as THREE.MeshStandardMaterial).wireframe).toBeTrue();
-    r.sync([e], false);
+    r.sync([e], 'solid');
     expect((pool.material as THREE.MeshStandardMaterial).wireframe).toBeFalse();
   });
 });

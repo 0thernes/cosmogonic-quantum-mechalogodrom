@@ -11,7 +11,7 @@ import type * as THREE from 'three';
 import type { Rng } from './math/rng';
 import type { SpatialHash } from './math/spatial-hash';
 import type { AuditTrail } from './logging/audit';
-import type { Behavior, ViewMode, Weather } from './sim/constants';
+import type { Behavior, RenderMode, ViewMode, Weather } from './sim/constants';
 
 /** Quality tier ladder (CONTRACTS V3.1): decided once at boot, never switched. */
 export type QualityTier = 'phone' | 'laptop' | 'desktop' | 'ultra';
@@ -121,7 +121,8 @@ export interface SimState {
   chaos: number;
   mutations: number;
   timeScale: number;
-  wireframe: boolean;
+  /** Entity render style (CONTRACTS V7.3; session-only, cycled by the toolbar). */
+  renderMode: RenderMode;
   weatherIdx: number;
   temperature: number;
   wind: { x: number; z: number };
@@ -303,7 +304,8 @@ export interface UiActions {
   cycleSong(): string;
   cycleSfxPreview(): string;
   cycleTimeScale(): number;
-  toggleWireframe(): boolean;
+  /** Cycle the entity render style (CONTRACTS V7.3); returns the new mode. */
+  cycleRenderMode(): RenderMode;
   cycleView(): ViewMode;
   cycleAlgo(): string;
   cycleWeather(): Weather;

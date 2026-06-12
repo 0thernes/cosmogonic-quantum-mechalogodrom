@@ -99,7 +99,7 @@ const TOOLBAR_MAP: Readonly<Record<string, keyof UiActions>> = {
   sfxcycle: 'cycleSfxPreview',
   reset: 'reset',
   time: 'cycleTimeScale',
-  wire: 'toggleWireframe',
+  wire: 'cycleRenderMode',
   view: 'cycleView',
   algo: 'cycleAlgo',
   weather: 'cycleWeather',
