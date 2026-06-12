@@ -21,19 +21,20 @@ Every magic number survived the port.
   outliers) over ~41 shared, never-disposed `BufferGeometry` instances;
   remorphing swaps geometry refs and rewrites the material with zero
   allocation.
-- **20 sorting-field algorithms** with behaviorally honest names (BUBBLE
-  FIELD, HEAP SIFT, BITONIC MESH, STOOGE DRIFT...) that nudge organisms
-  through space one swap proposal per frame.
+- **25 sorting-field algorithms** with behaviorally honest names (BUBBLE
+  FIELD, HEAP SIFT, BITONIC MESH, STOOGE DRIFT, TIM RUN MERGE, PATIENCE
+  BUCKET...) that organize organisms through space in batched swap proposals
+  per frame — each selectable from a picker panel with its own cue tone.
 - **3 Shoggoths** — Lorenz-ish drifters with grid-queried tendrils that
   consume organisms and respawn corrupted ones.
 - **3 puppet masters** — AETHON stokes chaos, SELENE shifts weather, KRONOS
   reshapes organisms — on their own timers, announced via toast.
 - **6 weather states** (CLEAR, RAIN, STORM, AURORA, VOID, FOG) modulating
   wind, temperature (and thus lifespan), fog density, and exposure.
-- **Quantum cloud** of 3,500–6,000 particles with wavefunction wobble,
-  collapse, and respawn; **neural connectome** of up to 2,200–4,000 links with
+- **Quantum cloud** of 3,500–8,000 particles with wavefunction wobble,
+  collapse, and respawn; **neural connectome** of up to 2,200–6,000 links with
   partial GPU uploads.
-- **5 procedural Web Audio songs** + 8 synthesized SFX — no audio assets, just
+- **6 procedural Web Audio songs** + 8 synthesized SFX — no audio assets, just
   oscillators.
 - **Deterministic seeded RNG** (`mulberry32`) injected everywhere; the global
   random number generator is banned in sim logic.
@@ -113,6 +114,51 @@ zoom**, and the server, persistence store, and `/lab` CDN script are hardened
 (body caps + HTML escaping, field-validated state, SRI). Details in
 [CHANGELOG.md](./CHANGELOG.md).
 
+### XENOGENESIS (0.4.0)
+
+The cosmos becomes an alien, immortal, sentient biome (CONTRACTS V4):
+
+- **Alien atmosphere** — an inverted sky dome with a non-Earth baked gradient
+  (oxblood horizon → violet zenith → teal counter-glow) recoloring with weather
+  and chaos, wind-advected haze ribbons breathing with the music's bass, a
+  tier-scaled particulate air volume, and an aurora curtain brightening with
+  quantum entropy.
+- **In-scene 3D analytics** — a holographic instrument panel floating above the
+  arena: ten phylum-population towers, ten titan economy obelisks (height =
+  matter, glow = energy, hue = war state), and a live war-network of up to 45
+  segments.
+- **Four-page Observatory** — overview, variance (mean±σ bands, histogram,
+  Shannon diversity, qEntropy–trend phase), ecology (per-phylum
+  small-multiples, birth/death flux, titan phase portraits), and conflict (war
+  intensity, per-titan resources, a biome **sentience index** gauge).
+- Touch consolidated onto `InputSystem`: look pad, radial action wheel,
+  long-press apocalypse, guarded haptics.
+
+### RESONANCE (0.5.0) + ATELIER (0.6.x)
+
+Two direct user-feedback passes (CONTRACTS V5/V6):
+
+- **25 sorting fields** (was 20) with batched, _visible_ swaps — the active
+  algorithm organizes the world with a shimmer light show, a live swap-count
+  HUD, and (0.6.1) a unique cue tone per field; a collapsible picker panel
+  lists all 25 with a live sorted-fraction progress bar.
+- **Soundtrack raised to the QUANTUM tier** — VOIDCROWN, ELDER ENGINE, and LAST
+  THEOREM rebuilt with 4-note voicings and 16-step evolving melodies, plus the
+  new finale **STARKILLER REQUIEM** (6 songs total); the synthesis gains
+  sub-bass, a third detuned voice, arpeggiation, and filter-LFO swells.
+- **Ultra tier fills 10,000 entities** via per-frame neighbor-query throttles
+  (theory-behavior stagger, half-rate flock, `ULTRA_GRID_CELL`, connectome
+  cadence ladder) — calibration history in
+  [docs/BENCHMARKS.md](./docs/BENCHMARKS.md).
+- **Observatory legibility** — every chart gains an in-canvas title band,
+  axis ticks, bold strokes, and overlap-free layouts; canvases are taller and
+  the panel wider on desktop/TV.
+- **Mobile ergonomics** — panels become edge-docked slide-out sheets
+  (TEL/CTL/OBS/AUD handles) over an unobstructed world; **pinch-to-zoom**
+  (0.6.1) joins the joystick, look pad, and radial wheel.
+- **Four-page Lab** at `/lab` and a GitHub-Pages-style **architecture report**
+  at `/docs` with explicit ERD / ERM / ERP sections.
+
 Work on this codebase is governed by the three **master files** in
 [masters/](./masters/) — Executor, Architect, Physicist — bound by
 [CLAUDE.md](./CLAUDE.md) and the binding per-module spec in
@@ -160,11 +206,12 @@ graph TD
   world --> core["src/core — quality, engine"]
   world --> sim["src/sim — entities, behaviors, shoggoths,\npuppet-masters, weather, quantum,\nconnectome, environment, algorithms"]
   world --> v2["src/sim V2 — qcircuit, reaction-diffusion,\ngraph-mind, constellations, lore, analytics"]
-  world --> ui["src/ui — input, hud, panels, graphs"]
+  world --> v34["src/sim V3/V4 — phyla, titans,\ninstanced-entities, atmosphere, viz3d"]
+  world --> ui["src/ui — input, hud, panels,\ngraphs, observatory"]
   world --> audio["src/audio — engine.ts, analysis.ts (bands)"]
   world --> mem["src/memory/store.ts"]
   world --> audit["src/logging/audit.ts"]
-  sim --> math["src/math — scalar, rng, spatial-hash"]
+  sim --> math["src/math — scalar, rng, spatial-hash,\nquantum (statevector), games (PD)"]
   sim --> constants["src/sim/constants.ts"]
   audio --> songs["src/audio/songs.ts"]
   audit -. "POST /api/audit" .-> server["server.ts (Bun.serve)"]
@@ -191,16 +238,17 @@ telemetry + analytics push (every 8th frame) → analytics analyze (every
 │   ├── main.ts          # Browser entry — boots world, htmx, resize binding
 │   ├── world.ts         # Composition root — SimContext, frame pipeline, UiActions
 │   ├── types.ts         # Shared type hub (type-only imports keep the graph acyclic)
-│   ├── core/            # quality.ts (device profile) · engine.ts (renderer/scene/camera)
+│   ├── docs-page.ts     # /docs report page script (mermaid init + diagram sources)
+│   ├── core/            # quality.ts (tier ladder) · engine.ts (renderer/scene/camera)
 │   ├── math/            # scalar.ts · rng.ts (mulberry32) · spatial-hash.ts ·
-│   │                    # quantum.ts (statevector QuantumRegister)
-│   ├── sim/             # constants · geometry-cache · morphotypes · algorithms ·
-│   │                    # behaviors · entities · shoggoths · puppet-masters ·
-│   │                    # weather · quantum · connectome · environment ·
-│   │                    # qcircuit · reaction-diffusion · graph-mind ·
-│   │                    # constellations · lore · analytics
+│   │                    # quantum.ts (statevector QuantumRegister) · games.ts (PD strategies)
+│   ├── sim/             # constants · geometry-cache · morphotypes · phyla · algorithms ·
+│   │                    # behaviors · entities · instanced-entities · shoggoths ·
+│   │                    # puppet-masters · titans · weather · quantum · connectome ·
+│   │                    # environment · qcircuit · reaction-diffusion · graph-mind ·
+│   │                    # constellations · lore · analytics · atmosphere · viz3d
 │   ├── audio/           # songs.ts (data) · engine.ts (scheduler + SFX) · analysis.ts (bands)
-│   ├── ui/              # graphs.ts · hud.ts · panels.ts · input.ts
+│   ├── ui/              # graphs.ts · hud.ts · panels.ts · input.ts · observatory.ts
 │   ├── logging/         # logger.ts (ring buffer) · audit.ts (AuditTrail)
 │   ├── memory/          # store.ts (versioned localStorage persistence)
 │   └── styles/app.css   # Tailwind 4 @theme tokens + glass panel rules
@@ -217,8 +265,8 @@ telemetry + analytics push (every 8th frame) → analytics analyze (every
 ## Documentation
 
 - [docs/MODULE-CONTRACTS.md](./docs/MODULE-CONTRACTS.md) — the binding
-  per-module spec (V1 + the Wildbeyond V2 contracts), including the Known
-  Bugs table fixed during the port
+  per-module spec (V1 through V6: port, Wildbeyond, Pantheon, Xenogenesis,
+  Resonance, Atelier), including the Known Bugs table fixed during the port
 - [docs/PHILOSOPHY.md](./docs/PHILOSOPHY.md) — the Quantum Wildbeyond
   aesthetic constitution (real math under every effect)
 - [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) — module graph, data flow,

@@ -6,24 +6,24 @@ unless marked otherwise.
 
 ## Symbols
 
-| Symbol | Meaning                                                                         |
-| ------ | ------------------------------------------------------------------------------- |
-| `n`    | Live entities — capped at `quality.maxEntities` (650 mobile, 1,000 desktop)     |
-| `k`    | Items returned by one `SpatialHash.query` (bounded by local density)            |
-| `C`    | Cells scanned by a query = `(2⌈r/8⌉ + 1)²` for radius `r`, cell size 8          |
-| `c`    | Occupied grid cells (≤ `n`)                                                     |
-| `q`    | Quantum particles — `quality.quantumCount` (3,500 mobile, 6,000 desktop)        |
-| `L`    | Connectome link cap — `quality.maxLinks` (2,200 mobile, 4,000 desktop)          |
-| `m`    | Monoliths (16, fixed)                                                           |
-| `s`    | Shoggoths (3, fixed)                                                            |
-| `p`    | Pipelines (21) × packets (3–6 each), fixed                                      |
-| `w`    | Sparkline rolling window (100 samples)                                          |
-| `2^n`  | Quantum basis states — n = 5 qubits in the sim → 32 amplitudes (n ≤ 8 hard cap) |
-| `SIZE` | Reaction-diffusion grid side (default 128 → SIZE² = 16,384 cells)               |
-| `V`    | Graph nodes mirrored from live entities (≤ `n`)                                 |
-| `E`    | Graph edges mirrored from connectome links (≤ `L`)                              |
-| `B`    | Analyser frequency bins — fftSize 256 → 128                                     |
-| `W`    | Analytics ring window (120 samples; distinct from sparkline `w`)                |
+| Symbol | Meaning                                                                                                                               |
+| ------ | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `n`    | Live entities — capped at `quality.maxEntities` (tier ladder 650 / 2,000 / 5,000 / 10,000)                                            |
+| `k`    | Items returned by one `SpatialHash.query` (bounded by local density)                                                                  |
+| `C`    | Cells scanned by a query = `(2⌈r/s⌉ + 1)²` for radius `r`, cell size `s` = `GRID_CELL` 16 (`ULTRA_GRID_CELL` 10 above 5,000 entities) |
+| `c`    | Occupied grid cells (≤ `n`)                                                                                                           |
+| `q`    | Quantum particles — `quality.quantumCount` (3,500 phone … 8,000 ultra)                                                                |
+| `L`    | Connectome link cap — `quality.maxLinks` (2,200 phone … 6,000 ultra)                                                                  |
+| `m`    | Monoliths (16, fixed)                                                                                                                 |
+| `s`    | Shoggoths (3, fixed)                                                                                                                  |
+| `p`    | Pipelines (21) × packets (3–6 each), fixed                                                                                            |
+| `w`    | Sparkline rolling window (100 samples)                                                                                                |
+| `2^n`  | Quantum basis states — n = 5 qubits in the sim → 32 amplitudes (n ≤ 8 hard cap)                                                       |
+| `SIZE` | Reaction-diffusion grid side (default 128 → SIZE² = 16,384 cells)                                                                     |
+| `V`    | Graph nodes mirrored from live entities (≤ `n`)                                                                                       |
+| `E`    | Graph edges mirrored from connectome links (≤ `L`)                                                                                    |
+| `B`    | Analyser frequency bins — fftSize 256 → 128                                                                                           |
+| `W`    | Analytics ring window (120 samples; distinct from sparkline `w`)                                                                      |
 
 ## Hot-path table
 
@@ -58,11 +58,17 @@ unless marked otherwise.
 | `AnalyticsSystem.push`                                  | `sim/analytics`               | O(1)                                 | every 8th frame (with telemetry)                                 | Three pre-allocated 120-sample ring writes                                                                                                                                                                                                                            |
 | `AnalyticsSystem.analyze`                               | `sim/analytics`               | O(W) = O(120)                        | every 60th frame                                                 | mean/stddev + linear-regression slope → trend/min; population z-score omen at \|z\| > 2.5, throttled to once per 30 s                                                                                                                                                 |
 
-## Dominant costs at the desktop cap (n = 1,000)
+## Dominant costs at the V1 desktop-class population (n = 1,000)
 
-1. **Entity loop** — O(n) base plus neighbor queries for the ~270 entities
-   running `flock`/theory behaviors (≈ 4 morphotypes per behavior × 100
-   morphotypes ÷ 26 behaviors, halved by staggering). With healthy spatial
+(The ranking below is the V1/V2 baseline; the V3+ tier ladder scales `n` to
+10,000 on ultra, where the measured per-stage breakdown and the four
+ultra-only throttles — theory stagger stride 3, half-rate `flock`,
+`ULTRA_GRID_CELL` 10, connectome cadence /4 and /6 — live in
+[BENCHMARKS.md](./BENCHMARKS.md) "Ultra-tier 10k optimization".)
+
+1. **Entity loop** — O(n) base plus neighbor queries for the entities
+   running `flock`/theory behaviors (assigned through each phylum's behavior
+   pool, halved by staggering — stride 3 on ultra). With healthy spatial
    distribution `k̄` stays in the tens.
 2. **Connectome** — the only O(n·k) consumer that also writes 2 × 3 floats
    per link into 24,000-float buffers; its cadence backs off to every 3rd

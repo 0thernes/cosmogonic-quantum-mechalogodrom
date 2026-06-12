@@ -12,13 +12,13 @@ import type { QualityProfile, QualityTier } from '../types';
  * - **laptop** — fine pointer, < 10 cores. 2,000 entities, instanced.
  * - **desktop** — ≥ 10 cores. 5,000 entities, instanced.
  * - **ultra** — ≥ 16 cores AND ≥ 8 GB reported memory. 10,000-entity hard ceiling,
- *   instanced; the idle world settles at the adaptive `targetEntities` (6,500) so the
- *   ≥55fps desktop acceptance gate holds, with 10,000 reachable on demand via bursts.
+ *   instanced; since 0.5.0 the tier FILLS that ceiling (`targetEntities === maxEntities`),
+ *   the per-frame neighbor-query throttles in docs/BENCHMARKS.md keeping sim-CPU smooth.
  *
- * `targetEntities` is the ADAPTIVE steady-state population (organic growth stops there);
- * `maxEntities` is the HARD ceiling all buffers are sized from and bursts can still reach.
- * They are equal on every tier except ultra (see {@link QualityProfile.targetEntities} and
- * the "Ultra-tier 10k optimization" note in docs/BENCHMARKS.md for the 6,500 calibration).
+ * `targetEntities` is the steady-state population organic growth settles at;
+ * `maxEntities` is the HARD ceiling all buffers are sized from. They are equal on every
+ * tier (the earlier ultra 6,500 adaptive throttle was retired in 0.5.0 — history in
+ * the "Ultra-tier 10k optimization" note in docs/BENCHMARKS.md and CHANGELOG 0.5.0).
  *
  * quantum/links/stars scale sublinearly with the entity budget (they are ambience
  * layers, not the population). The tier is decided ONCE at boot — no runtime

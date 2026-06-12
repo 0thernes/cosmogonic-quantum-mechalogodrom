@@ -39,8 +39,8 @@ graph TD
   subgraph siml["src/sim"]
     constants["constants.ts (leaf)<br/>WEATHERS · BEHAVIORS · VIEW_MODES<br/>MONOLITH_CONFIG · PIPE_LINKS · DIORAMA_CONFIG"]
     geocache["geometry-cache.ts<br/>~41 shared BufferGeometries"]
-    morphotypes["morphotypes.ts<br/>100 MorphTypes"]
-    algorithms["algorithms.ts<br/>ALGOS (20 sort fields)"]
+    morphotypes["morphotypes.ts<br/>250 MorphTypes (10 phyla × 25)"]
+    algorithms["algorithms.ts<br/>ALGOS (25 sort fields)"]
     behaviors["behaviors.ts<br/>26 behavioral fields"]
     entities["entities.ts<br/>EntityManager"]
     shoggoths["shoggoths.ts<br/>ShoggothSystem"]
@@ -60,11 +60,20 @@ graph TD
     analytics["analytics.ts<br/>AnalyticsSystem (simple-statistics)"]
   end
 
+  subgraph simv34["src/sim — Pantheon V3 + Xenogenesis V4"]
+    phyla["phyla.ts<br/>10 lore-named phyla + outliers"]
+    instanced["instanced-entities.ts<br/>InstancedEntityRenderer (≤80 pools)"]
+    titans["titans.ts<br/>TitanSystem (economy · diplomacy · war)"]
+    atmosphere["atmosphere.ts<br/>AtmosphereSystem (sky dome · haze · aurora)"]
+    viz3d["viz3d.ts<br/>Viz3DSystem (holographic data sculptures)"]
+  end
+
   subgraph mathl["src/math (leaves)"]
     scalar["scalar.ts"]
     rng["rng.ts<br/>mulberry32 · hashSeed"]
     shash["spatial-hash.ts<br/>SpatialHash"]
     qreg["quantum.ts<br/>QuantumRegister (statevector, n ≤ 8)"]
+    games["games.ts<br/>PD strategies · replicator step"]
   end
 
   subgraph audiol["src/audio"]
@@ -74,10 +83,11 @@ graph TD
   end
 
   subgraph uil["src/ui"]
-    input["input.ts<br/>InputSystem"]
+    input["input.ts<br/>InputSystem (keys · touch · look · zoom)"]
     hud["hud.ts<br/>Hud"]
     panels["panels.ts<br/>TelemetryPanel"]
     graphs["graphs.ts<br/>Sparkline"]
+    observatory["observatory.ts<br/>Observatory (4 pages · 16 canvases)"]
   end
 
   subgraph persist["src/logging + src/memory"]
@@ -120,6 +130,21 @@ graph TD
   world --> constellations
   world --> analytics
   world --> analysis
+  world --> phyla
+  world --> instanced
+  world --> titans
+  world --> atmosphere
+  world --> viz3d
+  world --> observatory
+
+  titans --> games
+  morphotypes --> phyla
+
+  titans -. "waste scars → rd.perturb · conscription remorphs" .-> entities
+  titans -. "entropy relief ← RD pattern energy (60f)" .-> rd
+  instanced -. "sync(list) LAST in frame" .-> entities
+  atmosphere -. "reads weather/wind/chaos · bass + qEntropy" .-> analysis
+  viz3d -. "reads phylumCounts/titanLedger/warMatrix" .-> titans
 
   entities --> behaviors
   behaviors --> scalar
@@ -284,17 +309,25 @@ previously independent subsystems, all fanned out by `world.ts`:
 
 ## Quality profile
 
-`detectQuality()` resolves once at boot from `matchMedia` + viewport
-heuristics (legacy lines 153–162, 457):
+`detectQuality()` resolves once at boot — `matchMedia` + viewport heuristics
+decide phone, then `hardwareConcurrency` + `deviceMemory` (assumed 8 GB when
+hidden) climb the four-rung ladder (CONTRACTS V3.1; the legacy binary split
+lives on as the phone rung). The tier never switches at runtime — the
+instanced/per-mesh render paths must not swap mid-session.
 
-| Knob           | Mobile | Desktop |
-| -------------- | ------ | ------- |
-| `dprCap`       | 1.25   | 2       |
-| `maxEntities`  | 650    | 1,000   |
-| `quantumCount` | 3,500  | 6,000   |
-| `maxLinks`     | 2,200  | 4,000   |
-| `shadows`      | off    | on      |
-| `starCount`    | 2,000  | 4,000   |
+| Knob           | Phone | Laptop | Desktop | Ultra  |
+| -------------- | ----- | ------ | ------- | ------ |
+| `dprCap`       | 1.25  | 2      | 2       | 2      |
+| `maxEntities`  | 650   | 2,000  | 5,000   | 10,000 |
+| `quantumCount` | 3,500 | 4,500  | 6,000   | 8,000  |
+| `maxLinks`     | 2,200 | 3,000  | 4,000   | 6,000  |
+| `shadows`      | off   | on     | on      | on     |
+| `starCount`    | 2,000 | 3,000  | 4,500   | 6,000  |
+| `instanced`    | off   | on     | on      | on     |
+
+`targetEntities === maxEntities` on every tier (the ultra 6,500 adaptive
+throttle was retired in 0.5.0; the per-frame neighbor-query throttles in
+docs/BENCHMARKS.md carry the 10k ceiling instead).
 
 `Engine.onResize()` reapplies `setPixelRatio(min(devicePixelRatio, dprCap))`
 on every resize (Known Bug 6 — the legacy version set it once and went blurry

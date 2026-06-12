@@ -38,7 +38,7 @@ erDiagram
   ANALYTICS_WINDOW }o--o{ LORE_NAME : "omens named (kind = omen)"
 
   ENTITY {
-    int mi "morphotype index 0..99"
+    int mi "morphotype index 0..morphTotal-1 (250 in phylum mode)"
     string beh "one of 26 behaviors (overridable)"
     float age ""
     float life "death at age > life * tempMod"
@@ -54,8 +54,8 @@ erDiagram
     float belly "post-split digestion pulse"
   }
   MORPHOTYPE {
-    int id "0..99"
-    int gi "geometry-cache index (id mod ~41)"
+    int id "0..249 (10 phyla x 25; legacy mode 0..99)"
+    int gi "geometry-cache index into the ~41 shared geometries"
     color col ""
     color em "emissive"
     float emI ""
@@ -95,8 +95,8 @@ erDiagram
     float windFactor "STORM x5 .. CLEAR x0.5"
   }
   SONG {
-    string name "FF SOMBER CRYSTAL INDUSTRIAL ETHEREAL QUANTUM"
-    int bpm "86 60 120 72 140"
+    string name "VOIDCROWN BLACK-MERIDIAN ELDER-ENGINE LAST-THEOREM QUANTUM STARKILLER-REQUIEM"
+    int bpm "56 156 96 112 140 72"
     string wave "chord oscillator type"
     string bass "bass oscillator type"
     float fBase "lowpass filter base Hz"
@@ -164,15 +164,16 @@ erDiagram
 
 ## ERM — relationship narrative
 
-- **MORPHOTYPE → ENTITY (1:N).** Each of the 100 morphotypes is a template:
+- **MORPHOTYPE → ENTITY (1:N).** Each of the 250 morphotypes (10 lore-named
+  phyla × 25 since PANTHEON 0.3.0; 100 in legacy mode) is a template:
   color, emissive, metalness, roughness, opacity, scale range, speed, wobble,
   and a behavior. An entity is born from one morphotype (`userData.mi`) and
   copies its parameters; `EntityManager.remorph` re-points an existing entity
   at a different morphotype with a geometry-ref swap and material rewrite
   (zero allocation, no scene churn).
-- **BEHAVIOR → MORPHOTYPE / ENTITY (1:N).** The 26 behaviors are assigned to
-  morphotypes round-robin (`id % 26`), so each behavior owns roughly 4
-  morphotypes. Entities normally inherit the behavior through their
+- **BEHAVIOR → MORPHOTYPE / ENTITY (1:N).** The 26 behaviors are drawn from
+  each phylum's behavior pool at mint (legacy mode: round-robin `id % 26`).
+  Entities normally inherit the behavior through their
   morphotype, but it is overridable per entity: Shoggoth-corrupted spawns are
   forced to `lorenz` regardless of morphotype.
 - **ENTITY → ENTITY (1:N, self).** Organisms reproduce: the user `split`
@@ -194,7 +195,7 @@ erDiagram
   lifespan (cold ×0.7, hot ×1.3 on the death threshold).
 - **SONG / PERSISTED_STATE (N:1 references).** `PersistedState` stores
   indices, not copies: `songIdx`, `algoIdx`, `viewIdx`, `weatherIdx` point
-  into the fixed catalogs (5 songs, 20 algorithms, 4 view modes, 6 weathers).
+  into the fixed catalogs (6 songs, 25 algorithms, 4 view modes, 6 weathers).
 - **AUDIT_EVENT (append-only ring).** Produced by user actions and puppet
   events; stored three ways with no foreign keys back — a local ring
   (`AuditTrail`, cap 200), `localStorage` (`cqm.audit.v1`), and the server's
