@@ -333,7 +333,12 @@ describe('GraphMind.updateRank', () => {
     expect(at(list, 25).material.emissiveIntensity).toBe(2.0);
   });
 
-  test('a dead former rank-holder is left alone (material already disposed)', () => {
+  test('a former rank-holder is restored even when scene-detached (instanced-mode fix)', () => {
+    // The old `parent === null` "death guard" was TRUE for every live entity in instanced
+    // mode (data meshes never join the scene), making restore dead code above the phone
+    // tier. The restore now runs unconditionally: a scalar write onto a genuinely dead
+    // entity's disposed material is harmless, and a LIVE scene-detached (pooled) entity
+    // gets its baseline back — the behaviour this test now pins.
     const ctx = makeCtx(100);
     const list = Array.from({ length: 6 }, (_, i) => makeEntity(i, 0, 0));
     const fake = makeFakeConnectome(clique(0, 5));
@@ -342,10 +347,10 @@ describe('GraphMind.updateRank', () => {
     gm.updateRank();
     expect(at(list, 0).material.emissiveIntensity).toBe(2.0);
 
-    at(list, 0).parent = null; // entity died between rank passes
+    at(list, 0).parent = null; // scene-detached — exactly how every pooled entity lives
     setFakeEdges(fake, clique(1, 5));
     gm.updateRank();
-    expect(at(list, 0).material.emissiveIntensity).toBe(2.0); // untouched, no write to disposed mat
+    expect(at(list, 0).material.emissiveIntensity).toBe(MORPH_EMI); // restored to baseline
   });
 
   test('empty graph clears every halo', () => {
