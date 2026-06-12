@@ -7,19 +7,28 @@
     - Page 1  COLLAPSE FIELD — the original live field (kept verbatim):
         A blended Lorenz-XZ × curl-noise flow, a geometric Voronoi shatter over 24 seeded
         sites, and Born-rule measurement-collapse events that ring the void with interference.
-    - Pages 2-4  DATA-VISUAL BOARDS — responsive grids of distinct live, seeded mini-visuals,
-        each a different honest view of the world's math. Every board is its own p5 instance
-        with its own seeded Rng; off-screen boards are paused (noLoop) so only the visible page
-        spends frame budget. Iteration/particle counts are capped to hold ~60fps.
+    - Pages 2-4  DATA-VISUAL BOARDS — responsive grids of TWELVE live, seeded 3D mini-visuals
+        per page (36 total). Every tile is a WEBGL canvas with an orbiting camera or
+        depth-projected geometry. Boards are built LAZILY: only the visible page's 12
+        instances exist at any moment (browsers cap ~16 live WebGL contexts); leaving a
+        board removes every instance, explicitly loses its GL context, and clears its DOM.
+
+  Interaction: every tile is clickable (and keyboard-focusable; Enter/Space works). A click
+  fires a short synthesized blip — pitch derived deterministically from the tile id — through
+  ONE shared, lazily created AudioContext, and triggers the sketch's pulse() hook (camera
+  kick / energy burst / parameter surge decaying over ~1s). Hovering sets a `hot` flag the
+  sketch reads to spin faster and brighten.
 
   Determinism: one master seed drives every page. Page 1 uses p5's randomSeed/noiseSeed; the
   board visuals each derive a per-tile seed from (masterSeed, tileId) and run a tiny self-
   contained mulberry32 Rng — no Math.random in any generative path. Page nav never resets the
   seed; changing the seed re-derives every page.
 
-  Performance: typed arrays allocated once per visual; per-frame draw bodies allocate no arrays;
-  trails via background-alpha fade; fixed pools. Visible-page-only animation. p5.js 1.7 (WEBGL
-  included) from CDN; fully self-contained, no external data.
+  Performance: TILE_RES 300² backing per tile (12 live WEBGL canvases); typed arrays
+  allocated once per visual; per-frame draw bodies allocate no arrays; point clouds ≤ ~2600
+  specks, line strips ≤ ~1500 segments; escape-time textures ≤ 128², recomputed only on
+  click. Visible-page-only animation. p5.js 1.7 (WEBGL included) from CDN; fully
+  self-contained, no external data.
 
   Based on the Anthropic algorithmic-art viewer template (structure, branding, seed controls
   preserved).
@@ -427,10 +436,12 @@
         line-height: 1.45;
       }
 
-      /* Responsive grid of mini-visual tiles */
+      /* Responsive grid of mini-visual tiles — 12 per board. auto-fill plus a
+         clamped minmax track lets the squares reflow into 2/3/4/6 columns at
+         any viewport size or shape. */
       .board-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(clamp(160px, 22vw, 280px), 1fr));
         gap: 16px;
       }
 
@@ -444,6 +455,22 @@
         display: flex;
         flex-direction: column;
         position: relative;
+        cursor: pointer;
+        transition:
+          box-shadow 0.18s ease,
+          transform 0.18s ease;
+      }
+
+      .viz-tile:hover {
+        transform: translateY(-2px);
+        box-shadow:
+          0 16px 34px rgba(20, 20, 19, 0.22),
+          0 0 0 1px rgba(217, 119, 87, 0.35);
+      }
+
+      .viz-tile:focus-visible {
+        outline: 2px solid var(--anthropic-orange);
+        outline-offset: 2px;
       }
 
       .viz-tile .viz-titlebar {
@@ -517,7 +544,7 @@
         }
 
         .board-grid {
-          grid-template-columns: 1fr;
+          grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
         }
       }
     </style>
@@ -529,8 +556,8 @@
         <h1>Quantum Wildbeyond</h1>
         <div class="subtitle">
           A four-page observatory of the Cosmogonic Quantum Mechalogodrom. One seed drives every
-          page: the live collapse field and three boards of generative data-visuals, all honest
-          seeded math.
+          page: the live collapse field and three boards of twelve 3D data-visuals each — all honest
+          seeded math. Click any tile to hear it ring and pulse.
         </div>
 
         <!-- Page navigation (ALWAYS KEEP THE SEED; nav never re-rolls it) -->
@@ -704,8 +731,9 @@
           <div class="board-head">
             <h2>Board II — Phase &amp; Flow</h2>
             <p>
-              Seven live deterministic systems: the strange attractors, reaction–diffusion, and
-              tessellations whose flows the cosmos rides. Every tile reseeds from the master seed.
+              Twelve live deterministic 3D systems: attractor ribbons, a reaction–diffusion terrain,
+              extruded tessellations, knots, helices, and flows — all WEBGL, all seeded from the
+              master seed. Click a tile for its tone and a pulse; hover to heat it up.
             </p>
           </div>
           <div class="board-grid" id="board-2"></div>
@@ -716,8 +744,9 @@
           <div class="board-head">
             <h2>Board III — Quantum &amp; Spectrum</h2>
             <p>
-              Seven views of measurement and signal: an evolving statevector, the Bloch disc, the
-              spectrum, distributions, automata, and escape-time fractals.
+              Twelve 3D views of measurement and signal: a statevector bar forest, the true Bloch
+              sphere, a spectrum waterfall, wavefunction surfaces, automata, and escape-time planes.
+              Click a tile to sound and pulse it; hover to heat it up.
             </p>
           </div>
           <div class="board-grid" id="board-3"></div>
@@ -728,8 +757,9 @@
           <div class="board-head">
             <h2>Board IV — Network &amp; Depth</h2>
             <p>
-              Seven structural views: the connectome and gravity wells in motion, a 3D attractor
-              ribbon (WEBGL), bifurcation, and deep escape-time zooms.
+              Twelve structural 3D views: connectomes and gravity in space, attractor cages, galaxy
+              and chaos-game point clouds, bifurcation sheets, and deep escape-time zooms. Click a
+              tile to sound and pulse it; hover to heat it up.
             </p>
           </div>
           <div class="board-grid" id="board-4"></div>
@@ -764,9 +794,9 @@
       let currentPage = 1; // 1..4
       const PAGE_DESCS = {
         1: 'Page 1 — Collapse Field: the live Lorenz × curl-noise flow with Born-rule measurement collapse.',
-        2: 'Page 2 — Phase & Flow: strange attractors, reaction–diffusion, and tessellations (7 visuals).',
-        3: 'Page 3 — Quantum & Spectrum: statevectors, the Bloch disc, spectra, and escape-time (7 visuals).',
-        4: 'Page 4 — Network & Depth: connectome, gravity, a 3D ribbon, bifurcation, and deep zooms (7 visuals).',
+        2: 'Page 2 — Phase & Flow: 3D attractor ribbons, reaction–diffusion terrain, knots, and flows (12 visuals — click for sound).',
+        3: 'Page 3 — Quantum & Spectrum: the Bloch sphere, statevector forest, spectra, and wavefunctions (12 visuals — click for sound).',
+        4: 'Page 4 — Network & Depth: 3D graphs, gravity, galaxies, bifurcation sheets, and deep zooms (12 visuals — click for sound).',
       };
 
       // ═══════════════════════════════════════════════════════════════════════
@@ -1323,125 +1353,211 @@
       }
 
       // ═══════════════════════════════════════════════════════════════════════
-      // BOARD VISUALS (pages 2-4) — each an INSTANCE-MODE p5 sketch.
+      // BOARD VISUALS (pages 2-4) — each an INSTANCE-MODE p5 WEBGL sketch.
       //
       // A tile spec is { id, name, legend, make }. `make(p, rng, S)` wires the
-      // instance: it returns nothing but installs p.setup/p.draw. S is the tile's
-      // backing resolution (square). Every visual:
+      // instance: it returns nothing but installs p.setup/p.draw (and the pulse
+      // hook via makeReact). S is the tile's backing resolution (square). Every
+      // visual:
+      //   • creates its canvas with p.createCanvas(S, S, p.WEBGL) — honest 3D;
       //   • seeds from `rng` (derived from master seed + tile id) — no Math.random;
-      //   • caps its work (particle/iteration counts) to hold ~60fps;
-      //   • paints its own title-safe top inset (titlebar is a DOM overlay).
-      // Boards are built once; off-screen boards are paused via instance.noLoop().
+      //   • caps its work (≤ ~2600 specks / ~1500 strip segments) for ~60fps;
+      //   • reacts: pulse() on click (kick decaying over ~1s), `hot` on hover.
+      // Boards are built LAZILY — only the visible board's 12 instances (and
+      // therefore at most 12 WebGL contexts) are alive at any moment.
       // ═══════════════════════════════════════════════════════════════════════
 
-      const TILE_RES = 420; // backing px per tile (CSS scales it to the grid cell)
+      const TILE_RES = 300; // backing px per tile (12 live WEBGL canvases; CSS scales to cell)
       const VOID = [4, 7, 17];
-      const boardInstances = []; // { page, instance }
-      let boardsBuilt = false;
+      const activeTiles = []; // { instance, spec } — ONLY the visible board's sketches
+      let activeBoardPage = 0; // 0 = no board built (page 1 showing)
 
-      /** Common dark wash + faint frame; leaves room under the DOM titlebar. */
-      function tileBackdrop(p, S) {
-        p.background(VOID[0], VOID[1], VOID[2]);
-        p.noFill();
-        p.stroke(106, 155, 204, 22);
-        p.strokeWeight(1);
-        p.rect(0.5, 0.5, S - 1, S - 1);
+      // ─── Click audio: ONE shared AudioContext, lazily created on first click ───
+
+      let audioCtx = null;
+
+      /**
+       * Short synthesized blip for a tile click. Pitch is deterministic in the
+       * tile id — 220·2^((hash % 24)/12) Hz, two octaves of semitones — triangle
+       * wave with a fast exponential decay, peak gain 0.13, ~0.25s. The context
+       * is created lazily inside the click gesture (autoplay-policy safe) and
+       * shared by every tile on every board.
+       */
+      function tileBlip(tileId) {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return;
+        if (!audioCtx) audioCtx = new AC();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const freq = 220 * Math.pow(2, (derivedSeed(0, tileId) % 24) / 12);
+        const t0 = audioCtx.currentTime;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(freq, t0);
+        gain.gain.setValueAtTime(0.13, t0);
+        gain.gain.exponentialRampToValueAtTime(0.0008, t0 + 0.25);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(t0);
+        osc.stop(t0 + 0.26);
+      }
+
+      // ─── Per-tile reaction state (click pulse + hover heat) ───
+
+      /**
+       * Installs the interaction contract on an instance-mode sketch: p.pulse()
+       * (fired by the tile's click handler) sets a kick that decays over ~1s at
+       * 60fps; p.hot is toggled by pointerenter/leave. tick() advances a shared
+       * orbit angle — faster while hot, surging on a kick — and returns the
+       * current kick energy. Allocation-free per frame.
+       */
+      function makeReact(p) {
+        const r = { kick: 0, orbit: 0 };
+        p.hot = false;
+        p.pulse = () => {
+          r.kick = 1;
+        };
+        r.tick = () => {
+          r.kick *= 0.94;
+          if (r.kick < 0.004) r.kick = 0;
+          r.orbit += (p.hot ? 0.016 : 0.006) * (1 + r.kick * 2.6);
+          return r.kick;
+        };
+        return r;
+      }
+
+      /** One dust speck: a tiny immediate-mode segment. Batched inside a single
+       *  beginShape(LINES) call, a ~2500-speck cloud stays one GL draw — WEBGL
+       *  point() would cost a draw call apiece. */
+      function speck(p, x, y, z) {
+        p.vertex(x, y, z);
+        p.vertex(x + 1.7, y + 1.7, z);
       }
 
       // ─────────────────────────────────────────────────────────────────────────
       // Tile makers. Each is a closure factory: make(p, rng, S).
       // ─────────────────────────────────────────────────────────────────────────
 
-      /** Lorenz attractor phase portrait (X–Z), RK-free Euler, trailed. */
+      /** Lorenz attractor as a live 3D ribbon: a ring-buffered trajectory drawn
+       *  as a rotating line strip, hue tracking Z. Pulse = integration surge +
+       *  camera kick; hot = faster orbit and brighter strokes. */
       function makeLorenz(p, rng, S) {
-        let x = rng.range(-1, 1);
-        let y = rng.range(-1, 1);
-        let z = rng.range(10, 30);
+        const PTS = 1100; // ribbon length (≤1500-segment budget)
+        const xs = new Float32Array(PTS);
+        const ys = new Float32Array(PTS);
+        const zs = new Float32Array(PTS);
+        let x = rng.range(-8, 8);
+        let y = rng.range(-8, 8);
+        let z = rng.range(15, 35);
+        let head = 0;
         const sg = 10;
         const rh = 28;
         const bt = 8 / 3;
-        const dt = 0.006;
-        const STEPS = 90; // segments per frame — bounded work
+        const dt = 0.0055;
+        const rx = makeReact(p);
+        const step = () => {
+          const dx = sg * (y - x);
+          const dy = x * (rh - z) - y;
+          const dz = x * y - bt * z;
+          x += dx * dt;
+          y += dy * dt;
+          z += dz * dt;
+          xs[head] = x;
+          ys[head] = y;
+          zs[head] = z;
+          head = (head + 1) % PTS;
+        };
         p.setup = () => {
-          p.createCanvas(S, S);
+          p.createCanvas(S, S, p.WEBGL);
           p.pixelDensity(1);
+          for (let i = 0; i < PTS; i++) step(); // pre-fill the ribbon
           p.colorMode(p.HSB, 360, 100, 100, 100);
-          p.background(VOID[0], VOID[1], VOID[2]);
         };
         p.draw = () => {
-          p.colorMode(p.RGB, 255, 255, 255, 255);
-          p.noStroke();
-          p.fill(VOID[0], VOID[1], VOID[2], 14);
-          p.rect(0, 0, S, S);
-          p.colorMode(p.HSB, 360, 100, 100, 100);
-          p.strokeWeight(1.3);
-          const cx = S * 0.5;
-          const cy = S * 0.62;
-          const sc = S / 62;
-          for (let s = 0; s < STEPS; s++) {
-            const px0 = cx + x * sc;
-            const py0 = cy - (z - 25) * sc;
-            const dx = sg * (y - x);
-            const dy = x * (rh - z) - y;
-            const dz = x * y - bt * z;
-            x += dx * dt;
-            y += dy * dt;
-            z += dz * dt;
-            const px1 = cx + x * sc;
-            const py1 = cy - (z - 25) * sc;
-            const sp = Math.min(1, Math.hypot(dx, dz) / 260);
-            p.stroke((193 + sp * 120) % 360, 80, 100, 60);
-            p.line(px0, py0, px1, py1);
+          const k = rx.tick();
+          const steps = (p.hot ? 10 : 6) + ((k * 18) | 0);
+          for (let s = 0; s < steps; s++) step();
+          p.background(VOID[0], VOID[1], VOID[2]);
+          p.rotateX(0.5 + Math.sin(rx.orbit * 0.6) * 0.2);
+          p.rotateY(rx.orbit);
+          p.scale(1 + k * 0.16);
+          const sc = S / 64;
+          const al = p.hot ? 86 : 64;
+          p.noFill();
+          p.strokeWeight(1.3 + k);
+          p.beginShape();
+          for (let i = 0; i < PTS; i++) {
+            const j = (head + i) % PTS;
+            const fade = 0.25 + (0.75 * i) / PTS;
+            p.stroke((188 + zs[j] * 2.6 + k * 60) % 360, 80, 100, al * fade);
+            p.vertex(xs[j] * sc, (25 - zs[j]) * sc, ys[j] * sc);
           }
+          p.endShape();
         };
       }
 
-      /** Rössler attractor phase portrait (X–Y), trailed. */
+      /** Rössler attractor as a live 3D ribbon — the Z spikes leap out of the
+       *  spiral plane. Pulse = integration surge; hot = faster orbit. */
       function makeRossler(p, rng, S) {
+        const PTS = 1100;
+        const xs = new Float32Array(PTS);
+        const ys = new Float32Array(PTS);
+        const zs = new Float32Array(PTS);
         let x = rng.range(-4, 4);
         let y = rng.range(-4, 4);
         let z = rng.range(0, 4);
+        let head = 0;
         const a = 0.2;
         const b = 0.2;
         const c = 5.7;
-        const dt = 0.03;
-        const STEPS = 110;
+        const dt = 0.018;
+        const rx = makeReact(p);
+        const step = () => {
+          const dx = -y - z;
+          const dy = x + a * y;
+          const dz = b + z * (x - c);
+          x += dx * dt;
+          y += dy * dt;
+          z += dz * dt;
+          xs[head] = x;
+          ys[head] = y;
+          zs[head] = z;
+          head = (head + 1) % PTS;
+        };
         p.setup = () => {
-          p.createCanvas(S, S);
+          p.createCanvas(S, S, p.WEBGL);
           p.pixelDensity(1);
+          for (let i = 0; i < PTS; i++) step();
           p.colorMode(p.HSB, 360, 100, 100, 100);
-          p.background(VOID[0], VOID[1], VOID[2]);
         };
         p.draw = () => {
-          p.colorMode(p.RGB, 255, 255, 255, 255);
-          p.noStroke();
-          p.fill(VOID[0], VOID[1], VOID[2], 12);
-          p.rect(0, 0, S, S);
-          p.colorMode(p.HSB, 360, 100, 100, 100);
-          p.strokeWeight(1.3);
-          const cx = S * 0.5;
-          const cy = S * 0.52;
-          const sc = S / 36;
-          for (let s = 0; s < STEPS; s++) {
-            const px0 = cx + x * sc;
-            const py0 = cy + y * sc;
-            const dx = -y - z;
-            const dy = x + a * y;
-            const dz = b + z * (x - c);
-            x += dx * dt;
-            y += dy * dt;
-            z += dz * dt;
-            const px1 = cx + x * sc;
-            const py1 = cy + y * sc;
-            p.stroke((30 + Math.min(1, z / 22) * 60) % 360, 85, 100, 62);
-            p.line(px0, py0, px1, py1);
+          const k = rx.tick();
+          const steps = (p.hot ? 9 : 5) + ((k * 16) | 0);
+          for (let s = 0; s < steps; s++) step();
+          p.background(VOID[0], VOID[1], VOID[2]);
+          p.rotateX(0.55 + Math.sin(rx.orbit * 0.5) * 0.18);
+          p.rotateY(rx.orbit);
+          p.scale(1 + k * 0.16);
+          const sc = S / 32;
+          const al = p.hot ? 86 : 64;
+          p.noFill();
+          p.strokeWeight(1.3 + k);
+          p.beginShape();
+          for (let i = 0; i < PTS; i++) {
+            const j = (head + i) % PTS;
+            const fade = 0.25 + (0.75 * i) / PTS;
+            p.stroke((30 + Math.min(1, zs[j] / 22) * 60 + k * 40) % 360, 85, 100, al * fade);
+            p.vertex(xs[j] * sc, (4 - zs[j]) * sc * 0.6, ys[j] * sc);
           }
+          p.endShape();
         };
       }
 
-      /** Gray–Scott reaction–diffusion on a small grid; bilinear-upscaled to S. */
+      /** Gray–Scott reaction–diffusion as a displaced 3D heightfield: the same
+       *  honest sim, its activator lifting a rotating ridgeline sheet. Pulse
+       *  injects fresh seeded blobs into the field; hot = more sweeps. */
       function makeGrayScott(p, rng, S) {
-        const N = 96; // sim grid (cap: 96² cells, a few iters/frame)
+        const N = 80; // sim grid (cap: 80² cells, a few iters/frame)
         const a = new Float32Array(N * N);
         const b = new Float32Array(N * N);
         const a2 = new Float32Array(N * N);
@@ -1454,33 +1570,42 @@
         const dt = 0.2;
         const feed = 0.0545;
         const kill = 0.062;
-        let img = null;
-        const ITERS = 10; // diffusion sweeps per frame — capped
-        const seedReaction = () => {
-          a.fill(1);
-          b.fill(0);
-          for (let s = 0; s < 22; s++) {
-            const cx = rng.int(N);
-            const cy = rng.int(N);
-            const rad = 3 + rng.int(4);
-            for (let yy = -rad; yy <= rad; yy++) {
-              for (let xx = -rad; xx <= rad; xx++) {
-                const gx = (cx + xx + N) % N;
-                const gy = (cy + yy + N) % N;
-                if (xx * xx + yy * yy <= rad * rad) b[gy * N + gx] = 1;
-              }
+        const D = 36; // display ridgelines (D·(D−1) = 1260 segments)
+        let wantBlob = false;
+        const rx = makeReact(p);
+        const kickOnly = p.pulse;
+        p.pulse = () => {
+          kickOnly();
+          wantBlob = true;
+        };
+        const blob = () => {
+          const cx = rng.int(N);
+          const cy = rng.int(N);
+          const rad = 3 + rng.int(4);
+          for (let yy = -rad; yy <= rad; yy++) {
+            for (let xx = -rad; xx <= rad; xx++) {
+              const gx = (cx + xx + N) % N;
+              const gy = (cy + yy + N) % N;
+              if (xx * xx + yy * yy <= rad * rad) b[gy * N + gx] = 1;
             }
           }
         };
         p.setup = () => {
-          p.createCanvas(S, S);
+          p.createCanvas(S, S, p.WEBGL);
           p.pixelDensity(1);
-          img = p.createImage(N, N);
-          seedReaction();
-          p.noStroke();
+          a.fill(1);
+          b.fill(0);
+          for (let s = 0; s < 18; s++) blob();
+          p.colorMode(p.HSB, 360, 100, 100, 100);
         };
         p.draw = () => {
-          for (let it = 0; it < ITERS; it++) {
+          const k = rx.tick();
+          if (wantBlob) {
+            for (let s = 0; s < 3; s++) blob();
+            wantBlob = false;
+          }
+          const iters = p.hot ? 9 : 6;
+          for (let it = 0; it < iters; it++) {
             for (let y = 0; y < N; y++) {
               const ym = ((y - 1 + N) % N) * N;
               const yp = ((y + 1) % N) * N;
@@ -1501,39 +1626,55 @@
             a.set(a2);
             b.set(b2);
           }
-          img.loadPixels();
-          for (let i = 0; i < N * N; i++) {
-            // b (the activator) carries the spots/worms — map it to a bright skin.
-            const v = Math.max(0, Math.min(1, b[i] * 3.2));
-            const q = i * 4;
-            img.pixels[q] = 10 + v * 110;
-            img.pixels[q + 1] = 30 + v * 190;
-            img.pixels[q + 2] = 70 + v * 175;
-            img.pixels[q + 3] = 255;
+          p.background(VOID[0], VOID[1], VOID[2]);
+          p.rotateX(-0.9);
+          p.rotateZ(rx.orbit * 0.7);
+          const ext = S * 0.78;
+          const amp = S * 0.16 * (1 + k * 0.9);
+          const al = p.hot ? 92 : 72;
+          const stride = (N / D) | 0;
+          p.noFill();
+          p.strokeWeight(1.2 + k * 0.8);
+          for (let gy = 0; gy < D; gy++) {
+            const zPos = (gy / (D - 1) - 0.5) * ext;
+            const rowBase = gy * stride * N;
+            p.beginShape();
+            for (let gx = 0; gx < D; gx++) {
+              const v = Math.max(0, Math.min(1, b[rowBase + gx * stride] * 3.2));
+              p.stroke((175 + v * 95) % 360, 70, 35 + v * 65, al);
+              // The sheet lies in X–Y of the rotated frame; activator lifts Z.
+              p.vertex((gx / (D - 1) - 0.5) * ext, zPos, v * amp);
+            }
+            p.endShape();
           }
-          img.updatePixels();
-          p.image(img, 0, 0, S, S);
         };
       }
 
-      /** Voronoi / Delaunay tessellation over seeded sites (brute nearest-cell). */
+      /** Voronoi tessellation extruded into 3D: seeded sites become prisms whose
+       *  heights are the honest raster-measured cell areas, rising off a baked
+       *  cell-shaded floor texture. Pulse = the prisms surge taller. */
       function makeVoronoi(p, rng, S) {
-        const M = 26;
+        const M = 18;
         const sx = new Float32Array(M);
         const sy = new Float32Array(M);
         const sh = new Float32Array(M);
-        const RES = 130; // nearest-cell raster grid (cap)
-        let img = null;
+        const area = new Float32Array(M);
+        const RES = 96; // nearest-cell raster (texture + area census), bake-time only
+        let floor = null;
+        const rx = makeReact(p);
         p.setup = () => {
-          p.createCanvas(S, S);
+          p.createCanvas(S, S, p.WEBGL);
           p.pixelDensity(1);
           for (let i = 0; i < M; i++) {
-            sx[i] = rng.range(0.05, 0.95);
-            sy[i] = rng.range(0.05, 0.95);
+            sx[i] = rng.range(0.08, 0.92);
+            sy[i] = rng.range(0.08, 0.92);
             sh[i] = rng.range(180, 300);
           }
-          img = p.createImage(RES, RES);
-          img.loadPixels();
+          // Bake the floor texture into a 2D graphics (no extra GL context) and
+          // count raster cells per site — an honest area measure for extrusion.
+          floor = p.createGraphics(RES, RES);
+          floor.pixelDensity(1);
+          floor.loadPixels();
           for (let gy = 0; gy < RES; gy++) {
             for (let gx = 0; gx < RES; gx++) {
               const fx = gx / RES;
@@ -1553,63 +1694,66 @@
                   bd2 = d2;
                 }
               }
+              area[best]++;
               const edge = Math.sqrt(bd2) - Math.sqrt(bd);
-              const shade = edge < 0.012 ? 0.25 : 0.7 + 0.3 * Math.min(1, edge * 8);
-              const hue = sh[best];
-              const rgb = hsvToRgb(hue, 0.5, 0.32 + shade * 0.5);
+              const shade = edge < 0.014 ? 0.2 : 0.45 + 0.3 * Math.min(1, edge * 8);
+              const rgb = hsvToRgb(sh[best], 0.5, 0.18 + shade * 0.4);
               const q = (gy * RES + gx) * 4;
-              img.pixels[q] = rgb[0];
-              img.pixels[q + 1] = rgb[1];
-              img.pixels[q + 2] = rgb[2];
-              img.pixels[q + 3] = 255;
+              floor.pixels[q] = rgb[0];
+              floor.pixels[q + 1] = rgb[1];
+              floor.pixels[q + 2] = rgb[2];
+              floor.pixels[q + 3] = 255;
             }
           }
-          img.updatePixels();
-        };
-        let phase = 0;
-        p.draw = () => {
-          p.image(img, 0, 0, S, S);
-          // Delaunay-ish: connect each site to its 3 nearest neighbors, pulsing.
-          phase += 0.02;
+          floor.updatePixels();
+          let peak = 1;
+          for (let i = 0; i < M; i++) if (area[i] > peak) peak = area[i];
+          for (let i = 0; i < M; i++) area[i] /= peak; // normalize to tallest cell
           p.colorMode(p.HSB, 360, 100, 100, 100);
-          p.strokeWeight(1);
-          for (let i = 0; i < M; i++) {
-            for (let j = i + 1; j < M; j++) {
-              const dx = sx[i] - sx[j];
-              const dy = sy[i] - sy[j];
-              const d = Math.hypot(dx, dy);
-              if (d < 0.2) {
-                const a = (1 - d / 0.2) * (40 + 25 * Math.sin(phase + i));
-                p.stroke(200, 30, 100, a);
-                p.line(sx[i] * S, sy[i] * S, sx[j] * S, sy[j] * S);
-              }
-            }
-          }
+        };
+        p.draw = () => {
+          const k = rx.tick();
+          p.background(VOID[0], VOID[1], VOID[2]);
+          p.rotateX(-0.62);
+          p.rotateY(rx.orbit);
+          const ext = S * 0.72;
+          // Floor: the baked Voronoi shading laid flat.
+          p.push();
+          p.rotateX(p.HALF_PI);
           p.noStroke();
+          p.texture(floor);
+          p.plane(ext, ext);
+          p.pop();
+          // Prisms: one per site, height ∝ measured cell area (kick = surge).
+          const hMax = S * 0.26 * (1 + k * 0.8);
           for (let i = 0; i < M; i++) {
-            p.fill(sh[i], 40, 100, 90);
-            p.circle(sx[i] * S, sy[i] * S, 5);
+            const h = 6 + area[i] * hMax;
+            const w = ext * 0.052 * (0.7 + area[i] * 0.6);
+            p.push();
+            p.translate((sx[i] - 0.5) * ext, -h / 2, (sy[i] - 0.5) * ext);
+            p.noStroke();
+            p.fill(sh[i], 55, p.hot ? 95 : 80, 88);
+            p.box(w, h, w);
+            p.pop();
           }
         };
       }
 
-      /** Chaos-game: Barnsley fern (seeded affine IFS, point-accreted). */
+      /** Barnsley fern as a 3D spray: the chaos game accretes into a fixed point
+       *  cloud, each landing given a small seeded depth scatter — a volumetric
+       *  fern slowly orbiting. Pulse = accretion burst; hot = faster growth. */
       function makeFern(p, rng, S) {
+        const PTS = 2200; // speck-cloud cap
+        const fx = new Float32Array(PTS);
+        const fy = new Float32Array(PTS);
+        const fz = new Float32Array(PTS);
         let x = 0;
         let y = 0;
-        const PTS = 700; // points per frame (cap)
-        p.setup = () => {
-          p.createCanvas(S, S);
-          p.pixelDensity(1);
-          p.background(VOID[0], VOID[1], VOID[2]);
-          p.noStroke();
-        };
-        p.draw = () => {
-          p.colorMode(p.RGB, 255, 255, 255, 255);
-          p.fill(VOID[0], VOID[1], VOID[2], 6);
-          p.rect(0, 0, S, S);
-          p.colorMode(p.HSB, 360, 100, 100, 100);
-          for (let i = 0; i < PTS; i++) {
+        let count = 0;
+        let w = 0; // ring write head
+        const rx = makeReact(p);
+        const accrete = (n) => {
+          for (let i = 0; i < n; i++) {
             const r = rng.next();
             let nx;
             let ny;
@@ -1628,11 +1772,34 @@
             }
             x = nx;
             y = ny;
-            const sxp = S * 0.5 + (x / 5.6) * S * 0.92;
-            const syp = S - (y / 10) * S * 0.96;
-            p.fill((110 + y * 8) % 360, 70, 95, 60);
-            p.circle(sxp, syp, 1.3);
+            fx[w] = (x / 5.6) * S * 0.8;
+            fy[w] = S * 0.44 - (y / 10) * S * 0.88;
+            fz[w] = rng.gauss() * S * 0.035; // seeded frond-depth scatter
+            w = (w + 1) % PTS;
+            if (count < PTS) count++;
           }
+        };
+        p.setup = () => {
+          p.createCanvas(S, S, p.WEBGL);
+          p.pixelDensity(1);
+          accrete(500); // first visible flush
+          p.colorMode(p.HSB, 360, 100, 100, 100);
+        };
+        p.draw = () => {
+          const k = rx.tick();
+          accrete((p.hot ? 90 : 45) + ((k * 320) | 0));
+          p.background(VOID[0], VOID[1], VOID[2]);
+          p.rotateY(rx.orbit);
+          p.scale(1 + k * 0.14);
+          const al = (p.hot ? 75 : 55) + k * 25;
+          p.strokeWeight(1.4 + k * 0.8);
+          p.beginShape(p.LINES);
+          for (let i = 0; i < count; i++) {
+            const hue = (96 + ((S * 0.44 - fy[i]) / S) * 60) % 360;
+            p.stroke(hue, 70, 95, al);
+            speck(p, fx[i], fy[i], fz[i]);
+          }
+          p.endShape();
         };
       }
 
@@ -2567,7 +2734,642 @@
       }
 
       // ─────────────────────────────────────────────────────────────────────────
-      // BOARD SPEC — the page→visual map. 7 tiles per board (21 total).
+      // Tile makers — WAVE-F additions (12 per board / 36 total). Same contract as
+      // above: make(p, rng, S) installs setup/draw + the makeReact() interaction
+      // hooks; every one is an honest rotating WEBGL form, seeded, capped, reactive.
+      // ─────────────────────────────────────────────────────────────────────────
+
+      /** Generic 3D attractor ribbon: integrate `f(x,y,z)->[dx,dy,dz]` and draw a
+       *  ring-buffered line strip with a rotating camera. Powers Thomas/Halvorsen/
+       *  Chen-Lee with different vector fields + scales. */
+      function attractorRibbon(p, S, init, f, dt, sc, hueBase) {
+        const PTS = 1100;
+        const xs = new Float32Array(PTS),
+          ys = new Float32Array(PTS),
+          zs = new Float32Array(PTS);
+        let x = init[0],
+          y = init[1],
+          z = init[2],
+          head = 0;
+        const rx = makeReact(p);
+        const step = () => {
+          const d = f(x, y, z);
+          x += d[0] * dt;
+          y += d[1] * dt;
+          z += d[2] * dt;
+          xs[head] = x;
+          ys[head] = y;
+          zs[head] = z;
+          head = (head + 1) % PTS;
+        };
+        p.setup = () => {
+          p.createCanvas(S, S, p.WEBGL);
+          p.pixelDensity(1);
+          for (let i = 0; i < PTS; i++) step();
+          p.colorMode(p.HSB, 360, 100, 100, 100);
+        };
+        p.draw = () => {
+          const k = rx.tick();
+          const steps = (p.hot ? 9 : 5) + ((k * 16) | 0);
+          for (let s = 0; s < steps; s++) step();
+          p.background(VOID[0], VOID[1], VOID[2]);
+          p.rotateX(0.45 + Math.sin(rx.orbit * 0.6) * 0.22);
+          p.rotateY(rx.orbit);
+          p.scale(1 + k * 0.16);
+          const al = p.hot ? 88 : 64;
+          p.noFill();
+          p.strokeWeight(1.2 + k);
+          p.beginShape();
+          for (let i = 0; i < PTS; i++) {
+            const j = (head + i) % PTS;
+            const fade = 0.25 + (0.75 * i) / PTS;
+            p.stroke((hueBase + zs[j] * 6 + k * 60) % 360, 82, 100, al * fade);
+            p.vertex(xs[j] * sc, ys[j] * sc, zs[j] * sc);
+          }
+          p.endShape();
+        };
+      }
+
+      /** Thomas' cyclically-symmetric attractor (sin field) — a labyrinthine 3D weave. */
+      function makeThomas(p, rng, S) {
+        const b = 0.2;
+        attractorRibbon(
+          p,
+          S,
+          [rng.range(-2, 2), rng.range(-2, 2), rng.range(-2, 2)],
+          (x, y, z) => [Math.sin(y) - b * x, Math.sin(z) - b * y, Math.sin(x) - b * z],
+          0.09,
+          S / 13,
+          150,
+        );
+      }
+
+      /** Halvorsen attractor — three coupled quadratic terms, a triple-lobed coil. */
+      function makeHalvorsen(p, rng, S) {
+        const a = 1.4;
+        attractorRibbon(
+          p,
+          S,
+          [rng.range(-3, -1), rng.range(-1, 1), rng.range(-1, 1)],
+          (x, y, z) => [
+            -a * x - 4 * y - 4 * z - y * y,
+            -a * y - 4 * z - 4 * x - z * z,
+            -a * z - 4 * x - 4 * y - x * x,
+          ],
+          0.0045,
+          S / 28,
+          18,
+        );
+      }
+
+      /** Chen–Lee attractor — a folded toroidal sheet, gold→violet by depth. */
+      function makeChenLee(p, rng, S) {
+        const a = 5,
+          b = -10,
+          c = -0.38;
+        attractorRibbon(
+          p,
+          S,
+          [rng.range(1, 4), rng.range(1, 4), rng.range(8, 14)],
+          (x, y, z) => [a * x - y * z, b * y + x * z, c * z + (x * y) / 3],
+          0.0016,
+          S / 90,
+          44,
+        );
+      }
+
+      /** 3D Lissajous knot — a closed parametric ribbon woven from three seeded
+       *  integer frequencies; rotates to reveal the knot crossings. */
+      function makeLissajous(p, rng, S) {
+        const fx = 2 + rng.int(4),
+          fy = 2 + rng.int(4),
+          fz = 2 + rng.int(4);
+        const px = rng.range(0, Math.PI),
+          py = rng.range(0, Math.PI);
+        const N = 900;
+        const rx = makeReact(p);
+        p.setup = () => {
+          p.createCanvas(S, S, p.WEBGL);
+          p.pixelDensity(1);
+          p.colorMode(p.HSB, 360, 100, 100, 100);
+        };
+        p.draw = () => {
+          const k = rx.tick();
+          p.background(VOID[0], VOID[1], VOID[2]);
+          p.rotateX(0.5 + Math.sin(rx.orbit * 0.5) * 0.3);
+          p.rotateY(rx.orbit);
+          p.rotateZ(rx.orbit * 0.3);
+          p.scale(1 + k * 0.2);
+          const R = S * 0.36;
+          const al = p.hot ? 90 : 66;
+          p.noFill();
+          p.strokeWeight(1.4 + k * 1.5);
+          p.beginShape();
+          for (let i = 0; i <= N; i++) {
+            const t = (i / N) * Math.PI * 2;
+            p.stroke((200 + (i / N) * 160 + k * 60) % 360, 80, 100, al);
+            p.vertex(Math.sin(fx * t + px) * R, Math.sin(fy * t + py) * R, Math.sin(fz * t) * R);
+          }
+          p.endShape();
+        };
+      }
+
+      /** Curl-noise tracer cloud — div-free 3D flow advecting a seeded speck swarm,
+       *  respawned on a ring buffer. Pulse bursts the speed; hot brightens. */
+      function makeCurlCloud(p, rng, S) {
+        const N = 1500;
+        const px = new Float32Array(N),
+          py = new Float32Array(N),
+          pz = new Float32Array(N),
+          life = new Float32Array(N);
+        const respawn = (i) => {
+          px[i] = rng.range(-1, 1);
+          py[i] = rng.range(-1, 1);
+          pz[i] = rng.range(-1, 1);
+          life[i] = rng.range(20, 120);
+        };
+        const rx = makeReact(p);
+        const curl = (x, y, z, o) => p.noise(x * 1.4 + o, y * 1.4 + 11, z * 1.4 + 5);
+        p.setup = () => {
+          p.createCanvas(S, S, p.WEBGL);
+          p.pixelDensity(1);
+          p.noiseSeed(rng.int(1e9));
+          for (let i = 0; i < N; i++) respawn(i);
+          p.colorMode(p.HSB, 360, 100, 100, 100);
+        };
+        p.draw = () => {
+          const k = rx.tick();
+          p.background(VOID[0], VOID[1], VOID[2]);
+          p.rotateY(rx.orbit);
+          p.rotateX(0.4);
+          const sp = (0.006 + (p.hot ? 0.004 : 0)) * (1 + k * 4);
+          const R = S * 0.42;
+          p.strokeWeight(1.6 + k);
+          p.stroke(190 + k * 80, 70, 100, p.hot ? 80 : 58);
+          p.beginShape(p.LINES);
+          for (let i = 0; i < N; i++) {
+            const vx = curl(px[i], py[i], pz[i], 0) - 0.5;
+            const vy = curl(px[i], py[i], pz[i], 7.3) - 0.5;
+            const vz = curl(px[i], py[i], pz[i], 19.1) - 0.5;
+            px[i] += vx * sp;
+            py[i] += vy * sp;
+            pz[i] += vz * sp;
+            if (--life[i] <= 0 || Math.abs(px[i]) > 1.2) respawn(i);
+            speck(p, px[i] * R, py[i] * R, pz[i] * R);
+          }
+          p.endShape();
+        };
+      }
+
+      /** True 3D Bloch SPHERE — wireframe globe, a precessing state-vector arrow,
+       *  and its fading tip trail. Pulse tilts the precession axis. */
+      function makeBlochSphere(p, rng, S) {
+        const TR = 240;
+        const tx = new Float32Array(TR),
+          ty = new Float32Array(TR),
+          tz = new Float32Array(TR);
+        let head = 0,
+          th = rng.range(0, 6.28),
+          ph = rng.range(0.3, 2.8);
+        const w1 = rng.range(0.02, 0.05),
+          w2 = rng.range(0.01, 0.03);
+        const rx = makeReact(p);
+        p.setup = () => {
+          p.createCanvas(S, S, p.WEBGL);
+          p.pixelDensity(1);
+          p.colorMode(p.HSB, 360, 100, 100, 100);
+        };
+        p.draw = () => {
+          const k = rx.tick();
+          th += w1 * (1 + k * 3);
+          ph += w2;
+          const R = S * 0.36;
+          const sx = Math.sin(ph) * Math.cos(th),
+            sy = Math.cos(ph),
+            sz = Math.sin(ph) * Math.sin(th);
+          tx[head] = sx;
+          ty[head] = sy;
+          tz[head] = sz;
+          head = (head + 1) % TR;
+          p.background(VOID[0], VOID[1], VOID[2]);
+          p.rotateY(rx.orbit);
+          p.rotateX(0.4);
+          p.noFill();
+          p.stroke(210, 40, 70, 30);
+          p.strokeWeight(1);
+          p.sphere(R, 14, 10);
+          p.stroke(280, 80, 100, p.hot ? 95 : 72);
+          p.strokeWeight(2.4 + k * 2);
+          p.line(0, 0, 0, sx * R, sy * R, sz * R);
+          p.strokeWeight(1.3);
+          p.beginShape();
+          for (let i = 0; i < TR; i++) {
+            const j = (head + i) % TR;
+            p.stroke((40 + i * 0.6 + k * 60) % 360, 85, 100, ((i / TR) * 70) | 0);
+            p.vertex(tx[j] * R, ty[j] * R, tz[j] * R);
+          }
+          p.endShape();
+        };
+      }
+
+      /** Quantum harmonic-oscillator |ψ|² as a rotating 3D height-field mesh:
+       *  a seeded superposition of the first few eigenstates over a radial grid. */
+      function makeWavefunction(p, rng, S) {
+        const G = 26;
+        const c0 = rng.range(0.3, 1),
+          c1 = rng.range(-1, 1),
+          c2 = rng.range(-1, 1);
+        const rx = makeReact(p);
+        const psi = (r, t) => {
+          // |c0·ψ0 + c1·ψ1 + c2·ψ2|² with a slow phase breathing in t.
+          const g = Math.exp(-r * r * 1.4);
+          const a =
+            c0 * g + c1 * r * g * Math.cos(t) + c2 * (2 * r * r - 1) * g * Math.cos(t * 0.7);
+          return a * a;
+        };
+        p.setup = () => {
+          p.createCanvas(S, S, p.WEBGL);
+          p.pixelDensity(1);
+          p.colorMode(p.HSB, 360, 100, 100, 100);
+        };
+        p.draw = () => {
+          const k = rx.tick();
+          const t = rx.orbit * 1.5;
+          p.background(VOID[0], VOID[1], VOID[2]);
+          p.rotateX(0.95 + Math.sin(rx.orbit * 0.3) * 0.12);
+          p.rotateZ(rx.orbit * 0.5);
+          const span = S * 0.62,
+            cell = span / G,
+            H = S * (0.5 + k * 0.3);
+          p.strokeWeight(1);
+          p.noFill();
+          for (let gy = 0; gy < G - 1; gy++) {
+            p.beginShape(p.TRIANGLE_STRIP);
+            for (let gx = 0; gx < G; gx++) {
+              for (let row = 0; row < 2; row++) {
+                const ix = gx,
+                  iy = gy + row;
+                const rxn = (ix / (G - 1) - 0.5) * 2,
+                  ryn = (iy / (G - 1) - 0.5) * 2;
+                const rr = Math.sqrt(rxn * rxn + ryn * ryn);
+                const h = psi(rr * 2.2, t);
+                p.stroke((200 + h * 320 + k * 50) % 360, 78, 100, p.hot ? 80 : 58);
+                p.vertex((ix - G / 2) * cell, (iy - G / 2) * cell, -h * H);
+              }
+            }
+            p.endShape();
+          }
+        };
+      }
+
+      /** Spherical-harmonic deformed blob — a point shell pushed in/out by a seeded
+       *  Yₗₘ-style sum; rotates and pulses-breathes the deformation amplitude. */
+      function makeSphHarmonic(p, rng, S) {
+        const l1 = 2 + rng.int(5),
+          l2 = 2 + rng.int(6),
+          m1 = 1 + rng.int(4);
+        const RES = 30;
+        const rx = makeReact(p);
+        p.setup = () => {
+          p.createCanvas(S, S, p.WEBGL);
+          p.pixelDensity(1);
+          p.colorMode(p.HSB, 360, 100, 100, 100);
+        };
+        p.draw = () => {
+          const k = rx.tick();
+          p.background(VOID[0], VOID[1], VOID[2]);
+          p.rotateY(rx.orbit);
+          p.rotateX(0.5 + Math.sin(rx.orbit * 0.4) * 0.2);
+          const R = S * 0.3,
+            amp = 0.45 + k * 0.5 + Math.sin(rx.orbit) * 0.08;
+          p.strokeWeight(1.4 + k);
+          p.beginShape(p.LINES);
+          for (let i = 0; i < RES; i++) {
+            const ph = (i / RES) * Math.PI;
+            for (let j = 0; j < RES * 2; j++) {
+              const th = (j / (RES * 2)) * Math.PI * 2;
+              const d = 1 + amp * (Math.sin(l1 * ph) * Math.cos(m1 * th) + 0.5 * Math.cos(l2 * ph));
+              const rr = R * d;
+              const x = rr * Math.sin(ph) * Math.cos(th),
+                y = rr * Math.cos(ph),
+                z = rr * Math.sin(ph) * Math.sin(th);
+              p.stroke((280 + d * 60 + k * 50) % 360, 80, 100, p.hot ? 70 : 48);
+              p.vertex(x, y, z);
+              p.vertex(x * 1.01, y * 1.01, z * 1.01);
+            }
+          }
+          p.endShape();
+        };
+      }
+
+      /** 3D quantum random walk — a seeded "drunkard" stepping on a lattice in 3D,
+       *  drawn as a glowing ribbon; pulse injects a run of biased steps. */
+      function makeQuantumWalk(p, rng, S) {
+        const PTS = 800;
+        const xs = new Float32Array(PTS),
+          ys = new Float32Array(PTS),
+          zs = new Float32Array(PTS);
+        let x = 0,
+          y = 0,
+          z = 0,
+          head = 0;
+        const rx = makeReact(p);
+        const step = (bias) => {
+          const a = rng.next();
+          const s = (rng.next() < 0.5 ? -1 : 1) * (1 + bias);
+          if (a < 0.34) x += s;
+          else if (a < 0.67) y += s;
+          else z += s;
+          xs[head] = x;
+          ys[head] = y;
+          zs[head] = z;
+          head = (head + 1) % PTS;
+        };
+        p.setup = () => {
+          p.createCanvas(S, S, p.WEBGL);
+          p.pixelDensity(1);
+          for (let i = 0; i < PTS; i++) step(0);
+          p.colorMode(p.HSB, 360, 100, 100, 100);
+        };
+        p.draw = () => {
+          const k = rx.tick();
+          const steps = (p.hot ? 4 : 2) + ((k * 6) | 0);
+          for (let s = 0; s < steps; s++) step(k > 0.3 ? 0.8 : 0);
+          p.background(VOID[0], VOID[1], VOID[2]);
+          p.rotateY(rx.orbit);
+          p.rotateX(0.4 + Math.sin(rx.orbit * 0.5) * 0.2);
+          const sc = S / 70;
+          p.noFill();
+          p.strokeWeight(1.5 + k);
+          p.beginShape();
+          for (let i = 0; i < PTS; i++) {
+            const j = (head + i) % PTS;
+            p.stroke((150 + i * 0.3 + k * 70) % 360, 85, 100, ((i / PTS) * (p.hot ? 90 : 64)) | 0);
+            p.vertex(xs[j] * sc, ys[j] * sc, zs[j] * sc);
+          }
+          p.endShape();
+        };
+      }
+
+      /** (p,q) torus knot — a seeded parametric tube of points winding the torus;
+       *  rotates, and a pulse fattens the tube radius. */
+      function makeTorusKnot(p, rng, S) {
+        const pp = 2 + rng.int(4),
+          qq = 3 + rng.int(4);
+        const N = 1200;
+        const rx = makeReact(p);
+        p.setup = () => {
+          p.createCanvas(S, S, p.WEBGL);
+          p.pixelDensity(1);
+          p.colorMode(p.HSB, 360, 100, 100, 100);
+        };
+        p.draw = () => {
+          const k = rx.tick();
+          p.background(VOID[0], VOID[1], VOID[2]);
+          p.rotateX(0.6 + Math.sin(rx.orbit * 0.4) * 0.25);
+          p.rotateY(rx.orbit);
+          const R = S * 0.24,
+            r2 = S * 0.1 * (1 + k * 0.5);
+          p.noFill();
+          p.strokeWeight(1.5 + k * 1.5);
+          p.beginShape();
+          for (let i = 0; i <= N; i++) {
+            const t = (i / N) * Math.PI * 2;
+            const cr = R + r2 * Math.cos(qq * t);
+            p.stroke((30 + (i / N) * 200 + k * 60) % 360, 85, 100, p.hot ? 88 : 64);
+            p.vertex(cr * Math.cos(pp * t), cr * Math.sin(pp * t), r2 * Math.sin(qq * t));
+          }
+          p.endShape();
+        };
+      }
+
+      /** Spiral galaxy — a seeded logarithmic-arm point cloud spinning in 3D with a
+       *  bright core; pulse flares the whole disc. */
+      function makeGalaxy(p, rng, S) {
+        const N = 1600,
+          arms = 2 + rng.int(4);
+        const rad = new Float32Array(N),
+          ang = new Float32Array(N),
+          hgt = new Float32Array(N);
+        const rx = makeReact(p);
+        p.setup = () => {
+          p.createCanvas(S, S, p.WEBGL);
+          p.pixelDensity(1);
+          for (let i = 0; i < N; i++) {
+            const r = Math.pow(rng.next(), 0.6);
+            const arm = rng.int(arms);
+            rad[i] = r;
+            ang[i] = (arm / arms) * Math.PI * 2 + r * 4.2 + rng.gauss() * 0.18;
+            hgt[i] = rng.gauss() * 0.05 * (1 - r);
+          }
+          p.colorMode(p.HSB, 360, 100, 100, 100);
+        };
+        p.draw = () => {
+          const k = rx.tick();
+          const spin = rx.orbit;
+          p.background(VOID[0], VOID[1], VOID[2]);
+          p.rotateX(1.05 + Math.sin(rx.orbit * 0.2) * 0.1);
+          p.rotateZ(spin * 0.5);
+          const R = S * 0.46;
+          p.strokeWeight(1.6 + k * 1.4);
+          p.beginShape(p.LINES);
+          for (let i = 0; i < N; i++) {
+            const a = ang[i] + spin * (1.4 - rad[i]);
+            const x = Math.cos(a) * rad[i] * R,
+              y = hgt[i] * R,
+              z = Math.sin(a) * rad[i] * R;
+            const h = (rad[i] < 0.15 ? 45 : 215 + rad[i] * 80 + k * 50) % 360;
+            p.stroke(h, rad[i] < 0.15 ? 60 : 80, 100, (p.hot ? 80 : 55) * (1.2 - rad[i] * 0.5));
+            speck(p, x, y, z);
+          }
+          p.endShape();
+        };
+      }
+
+      /** 3D random-walk dust — many seeded walkers leaving a shared fading point
+       *  trail through a rotating cube of space. */
+      function makeRandomWalk3D(p, rng, S) {
+        const W = 6,
+          TR = 260;
+        const wx = new Float32Array(W),
+          wy = new Float32Array(W),
+          wz = new Float32Array(W);
+        const hx = new Float32Array(W * TR),
+          hy = new Float32Array(W * TR),
+          hz = new Float32Array(W * TR);
+        let head = 0;
+        const rx = makeReact(p);
+        p.setup = () => {
+          p.createCanvas(S, S, p.WEBGL);
+          p.pixelDensity(1);
+          for (let w = 0; w < W; w++) {
+            wx[w] = rng.range(-0.3, 0.3);
+            wy[w] = rng.range(-0.3, 0.3);
+            wz[w] = rng.range(-0.3, 0.3);
+          }
+          p.colorMode(p.HSB, 360, 100, 100, 100);
+        };
+        p.draw = () => {
+          const k = rx.tick();
+          const sp = (0.018 + (p.hot ? 0.012 : 0)) * (1 + k * 3);
+          for (let w = 0; w < W; w++) {
+            wx[w] = Math.max(-1, Math.min(1, wx[w] + rng.gauss() * sp));
+            wy[w] = Math.max(-1, Math.min(1, wy[w] + rng.gauss() * sp));
+            wz[w] = Math.max(-1, Math.min(1, wz[w] + rng.gauss() * sp));
+            hx[w * TR + head] = wx[w];
+            hy[w * TR + head] = wy[w];
+            hz[w * TR + head] = wz[w];
+          }
+          head = (head + 1) % TR;
+          p.background(VOID[0], VOID[1], VOID[2]);
+          p.rotateY(rx.orbit);
+          p.rotateX(0.5);
+          const R = S * 0.44;
+          p.noFill();
+          p.strokeWeight(1.5 + k);
+          for (let w = 0; w < W; w++) {
+            p.beginShape();
+            for (let i = 0; i < TR; i++) {
+              const j = (head + i) % TR;
+              const b = w * TR + j;
+              p.stroke((w * 60 + 120 + k * 60) % 360, 80, 100, ((i / TR) * (p.hot ? 85 : 60)) | 0);
+              p.vertex(hx[b] * R, hy[b] * R, hz[b] * R);
+            }
+            p.endShape();
+          }
+        };
+      }
+
+      /** DNA double helix spun from the seed's own digits — two phosphate strands +
+       *  base-pair rungs colour-coded by digit; rotates, pulse widens the helix. */
+      function makeHelix(p, rng, S) {
+        const N = 64;
+        const digits = new Int8Array(N);
+        for (let i = 0; i < N; i++) digits[i] = rng.int(10);
+        const rx = makeReact(p);
+        p.setup = () => {
+          p.createCanvas(S, S, p.WEBGL);
+          p.pixelDensity(1);
+          p.colorMode(p.HSB, 360, 100, 100, 100);
+        };
+        p.draw = () => {
+          const k = rx.tick();
+          p.background(VOID[0], VOID[1], VOID[2]);
+          p.rotateZ(0.2);
+          p.rotateY(rx.orbit);
+          const R = S * (0.16 + k * 0.05),
+            H = S * 0.66,
+            turns = 3.2;
+          for (let strand = 0; strand < 2; strand++) {
+            p.noFill();
+            p.stroke(strand ? 200 : 320, 80, 100, p.hot ? 88 : 64);
+            p.strokeWeight(2.2 + k);
+            p.beginShape();
+            for (let i = 0; i < N; i++) {
+              const t = (i / N) * turns * Math.PI * 2 + strand * Math.PI;
+              p.vertex(Math.cos(t) * R, (i / N - 0.5) * H, Math.sin(t) * R);
+            }
+            p.endShape();
+          }
+          p.strokeWeight(1.6 + k);
+          for (let i = 0; i < N; i += 2) {
+            const t = (i / N) * turns * Math.PI * 2,
+              y = (i / N - 0.5) * H;
+            p.stroke((digits[i] / 10) * 360, 75, 100, p.hot ? 75 : 52);
+            p.line(Math.cos(t) * R, y, Math.sin(t) * R, -Math.cos(t) * R, y, -Math.sin(t) * R);
+          }
+        };
+      }
+
+      /** 3D superformula shell — Gielis' superformula swept over both angles into a
+       *  seeded organic mesh of points; rotates, pulse morphs the exponents. */
+      function makeSuperformula(p, rng, S) {
+        const m = 3 + rng.int(10),
+          n1 = rng.range(0.4, 2),
+          n2 = rng.range(0.4, 2),
+          n3 = rng.range(0.4, 2);
+        const RES = 40;
+        const rx = makeReact(p);
+        const sf = (ang, mm, e1, e2, e3) => {
+          const t1 = Math.pow(Math.abs(Math.cos((mm * ang) / 4)), e2);
+          const t2 = Math.pow(Math.abs(Math.sin((mm * ang) / 4)), e3);
+          return Math.pow(t1 + t2, -1 / e1);
+        };
+        p.setup = () => {
+          p.createCanvas(S, S, p.WEBGL);
+          p.pixelDensity(1);
+          p.colorMode(p.HSB, 360, 100, 100, 100);
+        };
+        p.draw = () => {
+          const k = rx.tick();
+          const e1 = n1 * (1 + k * 0.6);
+          p.background(VOID[0], VOID[1], VOID[2]);
+          p.rotateY(rx.orbit);
+          p.rotateX(0.5 + Math.sin(rx.orbit * 0.4) * 0.25);
+          const R = S * 0.34;
+          p.strokeWeight(1.4 + k);
+          p.beginShape(p.LINES);
+          for (let i = 0; i < RES; i++) {
+            const ph = -Math.PI / 2 + (i / RES) * Math.PI;
+            const r2 = sf(ph, m, e1, n2, n3);
+            for (let j = 0; j < RES * 2; j++) {
+              const th = -Math.PI + (j / (RES * 2)) * Math.PI * 2;
+              const r1 = sf(th, m, e1, n2, n3);
+              const x = R * r1 * Math.cos(th) * r2 * Math.cos(ph);
+              const y = R * r2 * Math.sin(ph);
+              const z = R * r1 * Math.sin(th) * r2 * Math.cos(ph);
+              p.stroke((120 + i * 4 + k * 60) % 360, 80, 100, p.hot ? 68 : 46);
+              p.vertex(x, y, z);
+              p.vertex(x * 1.012, y * 1.012, z * 1.012);
+            }
+          }
+          p.endShape();
+        };
+      }
+
+      /** Hopf-fibration nest — seeded great circles on S³ stereographically
+       *  projected to interlocking rings in 3D; the bundle rotates rigidly. */
+      function makeHopf(p, rng, S) {
+        const RINGS = 7,
+          SEG = 90;
+        const base = rng.range(0.1, 0.9);
+        const rx = makeReact(p);
+        p.setup = () => {
+          p.createCanvas(S, S, p.WEBGL);
+          p.pixelDensity(1);
+          p.colorMode(p.HSB, 360, 100, 100, 100);
+        };
+        p.draw = () => {
+          const k = rx.tick();
+          p.background(VOID[0], VOID[1], VOID[2]);
+          p.rotateY(rx.orbit);
+          p.rotateX(0.6 + Math.sin(rx.orbit * 0.3) * 0.2);
+          const R = S * 0.4;
+          p.noFill();
+          p.strokeWeight(1.5 + k);
+          for (let rg = 0; rg < RINGS; rg++) {
+            const eta = (base + rg / RINGS) * (Math.PI / 2);
+            const ce = Math.cos(eta),
+              se = Math.sin(eta);
+            p.stroke((rg * 50 + 180 + k * 50) % 360, 82, 100, p.hot ? 80 : 58);
+            p.beginShape();
+            for (let i = 0; i <= SEG; i++) {
+              const t = (i / SEG) * Math.PI * 2;
+              // point on a Hopf circle in S³, then stereographic project to R³.
+              const a = ce * Math.cos(t),
+                b = ce * Math.sin(t),
+                c = se * Math.cos(t + rg),
+                d = se * Math.sin(t + rg);
+              const w = 1 / (1.0001 - d);
+              p.vertex(a * w * R, b * w * R, c * w * R);
+            }
+            p.endShape();
+          }
+        };
+      }
+
+      // ─────────────────────────────────────────────────────────────────────────
+      // BOARD SPEC — the page→visual map. 12 tiles per board (36 total), all 3D.
       // ─────────────────────────────────────────────────────────────────────────
 
       const BOARDS = {
@@ -2614,6 +3416,36 @@
             legend: 'div-free Perlin curl · tracer streaks',
             make: makeFlowField,
           },
+          {
+            id: 'thomas',
+            name: "Thomas' Attractor",
+            legend: 'cyclically symmetric sin field · 3D weave',
+            make: makeThomas,
+          },
+          {
+            id: 'halvorsen',
+            name: 'Halvorsen Attractor',
+            legend: 'coupled quadratics · triple-lobe coil',
+            make: makeHalvorsen,
+          },
+          {
+            id: 'chenlee',
+            name: 'Chen–Lee Attractor',
+            legend: 'folded toroidal sheet',
+            make: makeChenLee,
+          },
+          {
+            id: 'lissajous',
+            name: '3D Lissajous Knot',
+            legend: 'seeded freqs fx·fy·fz · closed ribbon',
+            make: makeLissajous,
+          },
+          {
+            id: 'curlcloud',
+            name: 'Curl-Noise Cloud (3D)',
+            legend: 'div-free flow · advected speck swarm',
+            make: makeCurlCloud,
+          },
         ],
         3: [
           {
@@ -2657,6 +3489,36 @@
             name: 'Julia Escape-Time',
             legend: 'z²+c · c orbits a seeded point',
             make: makeJulia,
+          },
+          {
+            id: 'blochsphere',
+            name: 'Bloch Sphere (3D)',
+            legend: '1 qubit · precessing state vector + trail',
+            make: makeBlochSphere,
+          },
+          {
+            id: 'wavefunction',
+            name: 'Oscillator |ψ|²',
+            legend: 'seeded eigenstate mix · 3D height-field',
+            make: makeWavefunction,
+          },
+          {
+            id: 'sphharmonic',
+            name: 'Spherical Harmonic',
+            legend: 'Yₗₘ-deformed point shell · breathing',
+            make: makeSphHarmonic,
+          },
+          {
+            id: 'qwalk',
+            name: 'Quantum Walk (3D)',
+            legend: 'seeded lattice drunkard · biased on click',
+            make: makeQuantumWalk,
+          },
+          {
+            id: 'torusknot',
+            name: 'Torus Knot (p,q)',
+            legend: 'seeded winding · parametric tube',
+            make: makeTorusKnot,
           },
         ],
         4: [
@@ -2702,97 +3564,153 @@
             legend: 'chaotic · bob-2 phase trace',
             make: makeDoublePendulum,
           },
+          {
+            id: 'galaxy',
+            name: 'Spiral Galaxy',
+            legend: 'log-arm point cloud · differential spin',
+            make: makeGalaxy,
+          },
+          {
+            id: 'walk3d',
+            name: '3D Random Walk',
+            legend: '6 walkers · fading trails in a cube',
+            make: makeRandomWalk3D,
+          },
+          {
+            id: 'helix',
+            name: 'Seed Double Helix',
+            legend: "DNA from the seed's own digits",
+            make: makeHelix,
+          },
+          {
+            id: 'superformula',
+            name: 'Superformula Shell',
+            legend: 'Gielis 3D · seeded m·n₁n₂n₃',
+            make: makeSuperformula,
+          },
+          {
+            id: 'hopf',
+            name: 'Hopf Fibration',
+            legend: 'S³ great circles · stereographic nest',
+            make: makeHopf,
+          },
         ],
       };
 
       /**
-       * Build every board tile once. Each tile gets a DOM card (titlebar + canvas
-       * host) and an instance-mode p5 sketch seeded from (masterSeed, tileId). All
-       * instances start paused; setPage() loops only the visible board.
-       * O(total tiles) — one-time.
+       * Destroy the currently-built board: remove every p5 instance (freeing its
+       * WebGL context) and clear the grid DOM. After this, ZERO board contexts are
+       * live. The whole reason boards are built lazily: 3 boards × 12 WEBGL tiles =
+       * 36 contexts, far over the browser's ~16-context cap — so only ONE board
+       * (≤12 contexts) ever exists at a time. O(active tiles).
        */
-      function buildBoards() {
-        if (boardsBuilt) return;
-        for (let page = 2; page <= 4; page++) {
-          const grid = document.getElementById('board-' + page);
-          const specs = BOARDS[page];
-          for (let k = 0; k < specs.length; k++) {
-            const spec = specs[k];
-            const tile = document.createElement('div');
-            tile.className = 'viz-tile';
-            const bar = document.createElement('div');
-            bar.className = 'viz-titlebar';
-            const nm = document.createElement('div');
-            nm.className = 'viz-name';
-            nm.textContent = spec.name;
-            const lg = document.createElement('div');
-            lg.className = 'viz-legend';
-            lg.textContent = spec.legend;
-            bar.appendChild(nm);
-            bar.appendChild(lg);
-            const host = document.createElement('div');
-            host.className = 'viz-canvas';
-            const hostId = 'viz-host-' + page + '-' + spec.id;
-            host.id = hostId;
-            tile.appendChild(bar);
-            tile.appendChild(host);
-            grid.appendChild(tile);
-
-            // Instance-mode sketch. Closure captures spec for re-seeding on regen.
-            const sketch = (pp) => {
-              const rng = makeRng(derivedSeed(params.seed, spec.id));
-              spec.make(pp, rng, TILE_RES);
-            };
-            const inst = new p5(sketch, host);
-            inst.noLoop(); // paused until its page is shown
-            boardInstances.push({ page, instance: inst, spec, hostId });
+      function destroyActiveBoard() {
+        for (let i = 0; i < activeTiles.length; i++) {
+          try {
+            activeTiles[i].instance.remove();
+          } catch (e) {
+            /* already gone */
           }
         }
-        boardsBuilt = true;
+        activeTiles.length = 0;
+        if (activeBoardPage >= 2) {
+          const grid = document.getElementById('board-' + activeBoardPage);
+          if (grid) grid.innerHTML = '';
+        }
+        activeBoardPage = 0;
       }
 
       /**
-       * Rebuild every board instance from the current seed (after a seed change).
-       * Removes old instances and reconstructs them so each tile reseeds cleanly.
-       * O(total tiles) — seed-change only.
+       * Build ONE board (page 2..4): its 12 tiles, each a DOM card + an instance-
+       * mode WEBGL p5 sketch seeded from (masterSeed, tileId), fully wired for
+       * interaction — click/Enter fires a per-tile blip + the sketch's pulse()
+       * reaction, hover toggles its `hot` flag. No-op for page 1. O(12).
        */
-      function rebuildBoards() {
-        for (let i = 0; i < boardInstances.length; i++) boardInstances[i].instance.remove();
-        boardInstances.length = 0;
-        for (let page = 2; page <= 4; page++) {
-          const specs = BOARDS[page];
-          for (let k = 0; k < specs.length; k++) {
-            const spec = specs[k];
-            const host = document.getElementById('viz-host-' + page + '-' + spec.id);
-            host.innerHTML = '';
-            const sketch = (pp) => {
-              const rng = makeRng(derivedSeed(params.seed, spec.id));
-              spec.make(pp, rng, TILE_RES);
-            };
-            const inst = new p5(sketch, host);
-            inst.noLoop();
-            boardInstances.push({ page, instance: inst, spec, hostId: host.id });
-          }
+      function buildBoard(page) {
+        if (page === activeBoardPage) return;
+        destroyActiveBoard();
+        if (page < 2 || page > 4) return;
+        const grid = document.getElementById('board-' + page);
+        if (!grid) return;
+        const specs = BOARDS[page];
+        for (let k = 0; k < specs.length; k++) {
+          const spec = specs[k];
+          const tile = document.createElement('div');
+          tile.className = 'viz-tile';
+          tile.tabIndex = 0; // keyboard-focusable
+          tile.setAttribute('role', 'button');
+          tile.setAttribute(
+            'aria-label',
+            spec.name + ' — interactive 3D visual, activate for sound',
+          );
+          const bar = document.createElement('div');
+          bar.className = 'viz-titlebar';
+          const nm = document.createElement('div');
+          nm.className = 'viz-name';
+          nm.textContent = spec.name;
+          const lg = document.createElement('div');
+          lg.className = 'viz-legend';
+          lg.textContent = spec.legend;
+          bar.appendChild(nm);
+          bar.appendChild(lg);
+          const host = document.createElement('div');
+          host.className = 'viz-canvas';
+          host.id = 'viz-host-' + page + '-' + spec.id;
+          tile.appendChild(bar);
+          tile.appendChild(host);
+          grid.appendChild(tile);
+
+          const sketch = (pp) => {
+            const rng = makeRng(derivedSeed(params.seed, spec.id));
+            spec.make(pp, rng, TILE_RES);
+          };
+          const inst = new p5(sketch, host);
+          activeTiles.push({ instance: inst, spec, tile });
+
+          // Interaction: click/Enter → blip + pulse; hover → hot. p.pulse/p.hot are
+          // installed by makeReact inside make(); guard in case a sketch omits them.
+          const fire = () => {
+            tileBlip(spec.id);
+            if (typeof inst.pulse === 'function') inst.pulse();
+          };
+          tile.addEventListener('click', fire);
+          tile.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              fire();
+            }
+          });
+          tile.addEventListener('pointerenter', () => {
+            inst.hot = true;
+          });
+          tile.addEventListener('pointerleave', () => {
+            inst.hot = false;
+          });
         }
-        syncBoardLoops();
+        activeBoardPage = page;
       }
 
-      /** Loop only the instances on the visible board; pause all others. */
-      function syncBoardLoops() {
-        for (let i = 0; i < boardInstances.length; i++) {
-          const bi = boardInstances[i];
-          if (bi.page === currentPage) bi.instance.loop();
-          else bi.instance.noLoop();
+      /**
+       * Reseed the LIVE board after a seed change (rebuild only what exists — the
+       * other two boards aren't built, and will reseed when next shown). No-op on
+       * page 1. O(12).
+       */
+      function rebuildBoards() {
+        if (activeBoardPage >= 2) {
+          const page = activeBoardPage;
+          activeBoardPage = -1; // force buildBoard to rebuild the same page
+          buildBoard(page);
         }
       }
 
       // ═══════════════════════════════════════════════════════════════════════
       // PAGE NAV — switches the visible page WITHOUT touching the seed. Page 1's
-      // global sketch is looped only on page 1; board instances loop only on their
-      // page. This keeps the frame budget on the visible page alone.
+      // global sketch loops only on page 1; the ONE live board is built lazily and
+      // torn down on leave, so the frame budget AND the WebGL-context budget stay
+      // on the visible page alone.
       // ═══════════════════════════════════════════════════════════════════════
 
-      /** Show page n (1..4). Pauses every off-screen sketch. */
+      /** Show page n (1..4): toggle sections, (re)build the lazy board, pause page 1. */
       function setPage(n) {
         currentPage = n;
         for (let pgi = 1; pgi <= 4; pgi++) {
@@ -2809,7 +3727,8 @@
           if (n === 1) window.loop();
           else window.noLoop();
         }
-        if (boardsBuilt) syncBoardLoops();
+        // Lazy board lifecycle: build the shown board, destroy any other (n===1 ⇒ none).
+        buildBoard(n);
       }
 
       function prevPage() {
@@ -2915,13 +3834,12 @@
         applySeedToAll();
       }
 
-      // Initialize UI + boards on load. The global (page-1) sketch self-starts via
-      // p5's window-scope setup/draw; we build the boards and pause the off-page
-      // sketches once the DOM is ready.
+      // Initialize UI on load. The global (page-1) sketch self-starts via p5's
+      // window-scope setup/draw; boards are built lazily by setPage() only when
+      // shown (so we boot with ZERO board WebGL contexts).
       window.addEventListener('load', function () {
         updateSeedDisplay();
-        buildBoards();
-        setPage(1); // pauses boards, loops only the collapse field
+        setPage(1); // page 1 only — no board contexts until a board page is opened
       });
     </script>
   </body>
