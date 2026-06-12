@@ -5,9 +5,10 @@
  * The 10x scale-up to the ultra tier (10,000 entities) put the per-frame simulation cost on a
  * cliff dominated by the O(n·k) behavior loop's spatial-grid neighbor queries. After the
  * ultra-tier throttles landed (theory-stride 3, flock half-rate, 10-unit grid cell, connectome
- * cadence /6, adaptive 6,500 steady-state target — see docs/BENCHMARKS.md "Ultra-tier 10k
- * optimization") the sim-CPU portion of a frame at the full 10k ceiling measures ≈ 18 ms on the
- * reference machine and ≈ 9.5 ms at the 6,500 steady-state target.
+ * cadence /6 — see docs/BENCHMARKS.md "Ultra-tier 10k optimization") the sim-CPU portion of a
+ * frame at the full 10k ceiling measures ≈ 18 ms on the reference machine. (The 6,500 adaptive
+ * steady-state target that originally accompanied those throttles was retired in 0.5.0 —
+ * `targetEntities === maxEntities` on every tier now; the throttles alone carry the 10k cost.)
  *
  * This experiment drives the EXACT EntityManager update loop + the world.ts grid-rebuild cadence
  * at a HIGH population and asserts the median per-frame wall time stays under a GENEROUS bound.

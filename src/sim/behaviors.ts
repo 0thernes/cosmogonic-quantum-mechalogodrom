@@ -11,7 +11,7 @@
  */
 import * as THREE from 'three';
 import { clamp, dist2, dist2XZ } from '../math/scalar';
-import { MONOLITH_CONFIG } from './constants';
+import { ARENA, MONOLITH_CONFIG } from './constants';
 import type { Behavior } from './constants';
 import type { Entity, EntityData, SimContext } from '../types';
 
@@ -100,18 +100,34 @@ function swarm(e: Entity, u: EntityData, env: BehaviorEnv): void {
   u.vel.z += (Math.cos(env.t * 0.1) * 10 - e.position.z) * 0.0003 * env.sp2;
 }
 
-/** Run outward from the origin, damped past radius 55 (legacy line 718). O(1). */
+/**
+ * flee's outer-damping threshold, ARENA-scaled like the containment it mirrors: legacy damped
+ * past radius 55 of the 65u arena (55² = 3025); the V3 arena is 325u, so the ring starts at
+ * 275 (= 55 · ARENA). Unscaled, the ×0.9/frame damping covered ~97% of the arena area and
+ * froze every flee organism (audit fix, 0.6.x). dist² units.
+ */
+const FLEE_DAMP_R2 = 3025 * ARENA * ARENA;
+/**
+ * hunt's arrive radius, ARENA-scaled: legacy stopped inside radius 5 (25 in dist² units) of
+ * a 65u arena; the monolith ring now sits ×5 farther out. dist² units.
+ */
+const HUNT_STOP_R2 = 25 * ARENA * ARENA;
+
+/** Run outward from the origin, damped past radius 275 (legacy 55, line 718). O(1). */
 function flee(e: Entity, u: EntityData, env: BehaviorEnv): void {
   V1.copy(e.position)
     .normalize()
     .multiplyScalar(0.0003 * env.sp2);
   u.vel.add(V1);
-  if (e.position.lengthSq() > 3025) u.vel.multiplyScalar(0.9);
+  if (e.position.lengthSq() > FLEE_DAMP_R2) u.vel.multiplyScalar(0.9);
 }
 
-/** Seek the nearest monolith on XZ, stopping inside radius 5 (legacy line 717). O(m). */
+/** Seek the nearest monolith on XZ, stopping inside radius 25 (legacy 5, line 717). O(m). */
 function hunt(e: Entity, u: EntityData, env: BehaviorEnv): void {
-  let best = 9999;
+  // Infinity sentinel: the legacy 9999 (≈ radius 100 in dist² units) predates the ×5
+  // monolith layout — entities farther than 100u from every monolith never updated
+  // (hx, hz) from (0, 0) and steered toward the world origin instead (audit fix, 0.6.x).
+  let best = Infinity;
   let hx = 0;
   let hz = 0;
   for (let k = 0; k < MONOLITH_CONFIG.length; k++) {
@@ -124,7 +140,7 @@ function hunt(e: Entity, u: EntityData, env: BehaviorEnv): void {
       hz = mc[1];
     }
   }
-  if (best > 25) {
+  if (best > HUNT_STOP_R2) {
     u.vel.x += (hx - e.position.x) * 0.0001 * env.sp2;
     u.vel.z += (hz - e.position.z) * 0.0001 * env.sp2;
   }

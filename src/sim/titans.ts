@@ -18,9 +18,14 @@
  * strategy via replicator dynamics over the 5-strategy population.
  *
  * Determinism: ctx.rng is drawn ONLY on frame cadences (boot, economy ticks, diplomacy slots,
- * strike slots) — the per-frame roam/animation path is pure trigonometry of (t, phase), so a
- * seed reproduces every titan decision. Hot path is allocation-free (module scratch vectors;
- * ledger entries and the perturb request are REUSED objects).
+ * strike slots), so the SEEDED DECISION stream (which strategy, which victim band, which war
+ * fires) is reproducible per-tick. The roam integration itself is stateful Euler with a
+ * per-frame `vel *= 0.985` damp and dt-scaled impulses (legacy-parity physics), so the exact
+ * titan TRAJECTORY — and thus which entities a harvest/strike happens to catch — is
+ * reproducible given an identical dt sequence (the fixed-timestep contract of ADR 0004), not
+ * across arbitrary frame-rate jitter. Same seed + same dt stream ⇒ same cosmos. Hot path is
+ * allocation-free (module scratch vectors; ledger entries and the perturb request are REUSED
+ * objects).
  */
 import * as THREE from 'three';
 import { TAU, clamp, dist2XZ } from '../math/scalar';

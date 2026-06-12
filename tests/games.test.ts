@@ -160,8 +160,12 @@ describe('replicator dynamics', () => {
   });
 
   test('degenerate all-zero result resets to uniform; non-finite fitness is sealed', () => {
-    const shares = new Float64Array([0.5, 0.5]);
-    replicatorStep(shares, new Float64Array([-10, -10]), 1); // both shares clamp to 0
+    // Both shares START at 0 → every update stays 0 → total 0 → the reset branch
+    // (games.ts: `if (total <= 0 || !isFinite) { share = 1/n }`) fires and restores uniform.
+    // (The earlier [0.5, 0.5] + uniform-negative-fitness case never reset — uniform fitness is
+    // an ordinary fixed point, total stayed 1 — so it tested the wrong branch.)
+    const shares = new Float64Array([0, 0]);
+    replicatorStep(shares, new Float64Array([-10, -10]), 1);
     expect(shares[0]).toBeCloseTo(0.5, 12);
     expect(shares[1]).toBeCloseTo(0.5, 12);
     const s2 = new Float64Array([0.5, 0.5]);

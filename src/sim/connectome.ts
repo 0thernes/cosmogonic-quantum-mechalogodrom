@@ -22,6 +22,15 @@ const LINK_REACH2 = 64;
 const TRIBE_HUE_STEP = 1 / 8;
 /** Within-tribe neural-weight shimmer — half a palette step so tribes stay distinguishable. */
 const TRIBE_NW_JITTER = TRIBE_HUE_STEP / 2;
+/**
+ * Hard bound on the neural activation accumulator. The link pass below is a positive-feedback
+ * web (every link pumps a's `act` into b at gain `nw · 0.01`), against which the only decay is
+ * entities.ts's per-frame `act *= 0.95`. Linearized, a dense mutual cluster of ~21+ entities
+ * inside the 8u link radius at the every-frame cadence rung out-gains the decay and `act`
+ * diverges to Infinity. ±4 is far above the |act| ≲ 1 a healthy web produces, so the clamp is
+ * invisible in normal play; the `!(<)` comparison form below also seals NaN (audit fix, 0.6.x).
+ */
+const ACT_MAX = 4;
 
 // Module-level scratch color — reused for every link (keeps update() allocation-free).
 const TMP_COLOR = new THREE.Color();
@@ -203,7 +212,10 @@ export class Connectome {
           }
           const nI = 1 - nd * 0.125;
           const nw = (ea.userData.nW + eb.userData.nW) * 0.5;
-          eb.userData.act += ea.userData.act * nw * 0.01;
+          // Bounded activation propagation: `!(< ACT_MAX)` routes both overflow AND NaN to
+          // the cap, the symmetric branch floors the (rare) negative side. O(1), no allocation.
+          const act = eb.userData.act + ea.userData.act * nw * 0.01;
+          eb.userData.act = !(act < ACT_MAX) ? ACT_MAX : act > -ACT_MAX ? act : -ACT_MAX;
           const hue = communityOf
             ? ((communityOf(ni) & 7) * TRIBE_HUE_STEP + nw * TRIBE_NW_JITTER) % 1
             : (t * 0.04 + nw * 0.5) % 1;

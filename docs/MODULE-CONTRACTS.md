@@ -1105,8 +1105,15 @@ The amendment lands as:
    target; the ceiling still sizes every buffer (pools, index tables, atmosphere rng-draw
    count) and is reachable via user bursts/apocalypse, after which the world relaxes back
    toward the target. `targetEntities === maxEntities` on phone/laptop/desktop (no behavioral
-   change); ultra sets it to **6,500** (measured: sim-CPU ≈ 9.5ms/frame there vs ≈ 18.5ms at
+   change); ultra set it to **6,500** (measured: sim-CPU ≈ 9.5ms/frame there vs ≈ 18.5ms at
    10k). 10,000 remains the reachable hard ceiling.
+   **> SUPERSEDED by V5.6 (0.5.0):** the ultra throttle was retired on user feedback —
+   `targetEntities === maxEntities === 10,000` on ultra too, so an idle ultra world now fills
+   its ceiling. The mechanism (clauses 2-3) still ships and carries the 10k cost; only this
+   clause's 6,500 idle target is reverted. The honest acceptance statement is therefore that
+   the ≥55fps gate holds at the idle-settled 10k **on a discrete-GPU ultra machine** (the
+   ≥16-core classification implies one), with the per-frame throttles below keeping sim-CPU
+   ≈18ms; on the CPU-bound reference machine the gate is a render-free figure.
 2. **Ultra-only per-frame throttles** (all gated `maxEntities > 5000`, so ≤5,000 stays
    byte-identical and every determinism test is untouched): theory-behavior stagger stride
    2→3; `flock` (the one every-frame neighbor behavior) staggered to half-rate; spatial-hash

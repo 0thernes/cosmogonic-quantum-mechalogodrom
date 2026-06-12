@@ -30,13 +30,13 @@ export interface QualityProfile {
    */
   maxEntities: number;
   /**
-   * Adaptive steady-state population target (CONTRACTS V3.6/V4.5). ORGANIC growth — auto-split
-   * and sparse-respawn — stops at this count, so an idle world settles here rather than at the
-   * hard ceiling. For every tier except ultra this equals {@link maxEntities} (no behavioral
-   * change). At the ultra tier it is set below 10,000 (the measured count that holds the ≥55fps
-   * desktop acceptance gate while leaving GPU-render headroom — see docs/BENCHMARKS.md);
-   * bursts still push the live count up to {@link maxEntities}, which then organically relaxes
-   * back toward this target. Must be ≤ maxEntities.
+   * Steady-state population target (CONTRACTS V3.6/V4.5; ultra value revised in V5.6/0.5.0).
+   * ORGANIC growth — auto-split and sparse-respawn — stops at this count, so an idle world
+   * settles here. Since 0.5.0 this equals {@link maxEntities} on EVERY tier (the ultra 6,500
+   * adaptive throttle was retired on user feedback — an idle ultra world now fills its 10,000
+   * ceiling, carried by the per-frame neighbor-query throttles in docs/BENCHMARKS.md). The
+   * field is retained because bursts can still transiently exceed it on tiers where it might
+   * diverge from the ceiling again. Must be ≤ maxEntities.
    */
   targetEntities: number;
   quantumCount: number;

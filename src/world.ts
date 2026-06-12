@@ -602,7 +602,10 @@ export class World {
       if (!swap) continue;
       const a0 = swap[0];
       const a1 = swap[1];
-      if (a0 === a1 || a0 < 0 || a1 >= n) continue;
+      // Full bounds on BOTH indices (the batched run-all/auto modes cycle every algo, so a
+      // misbehaving step's out-of-range proposal must be rejected, not silently read as
+      // undefined). Cheap O(1) guard; dense-array reads below stay in range.
+      if (a0 === a1 || a0 < 0 || a0 >= n || a1 < 0 || a1 >= n) continue;
       const ea = list[a0];
       const eb = list[a1];
       if (!ea || !eb) continue;

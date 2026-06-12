@@ -4,7 +4,7 @@
  * corrupted lorenz-driven children. Faithful port of legacy lines 505-539.
  */
 import * as THREE from 'three';
-import { TAU, dist2 } from '../math/scalar';
+import { TAU, clamp, dist2 } from '../math/scalar';
 import { ARENA_MID, MID_RADIUS2 } from './constants';
 import { POINT_LIGHT_GAIN } from './environment';
 import type { SimContext } from '../types';
@@ -18,6 +18,8 @@ const TENDRIL_RADIUS = 15;
 const TENDRIL_REACH2 = 225;
 /** Squared consumption reach — 12^2 (legacy threshold 144). */
 const CONSUME_REACH2 = 144;
+/** Attractor-unit clamp for Lorenz drift samples (mirrors the entity 'lorenz' NaN seal). */
+const LORENZ_BOUND = 25;
 
 // Module-level scratch — reused every frame, never retained (keeps update() allocation-free).
 const V1 = new THREE.Vector3();
@@ -183,10 +185,15 @@ export class ShoggothSystem {
       const g = sg.group;
       const p = g.position;
 
-      // Lorenz-ish drift (legacy 522-526).
-      const lx = p.x * 0.05;
-      const ly = p.y * 0.05;
-      const lz = p.z * 0.05;
+      // Lorenz-ish drift (legacy 522-526). Samples are clamped to ±LORENZ_BOUND (same seal as
+      // the entity 'lorenz' behavior): an escapee's raw position feeds the quadratic cross
+      // terms (lx·(28−lz), lx·ly), whose superexponential growth could outrun the 0.99 damp
+      // and the containment impulse into ±Infinity → NaN, which the tendril tug would then
+      // spread into entity velocities. Bounded samples keep the impulse finite for ANY
+      // position; the drift draws no rng, so the seeded stream is untouched.
+      const lx = clamp(p.x * 0.05, -LORENZ_BOUND, LORENZ_BOUND);
+      const ly = clamp(p.y * 0.05, -LORENZ_BOUND, LORENZ_BOUND);
+      const lz = clamp(p.z * 0.05, -LORENZ_BOUND, LORENZ_BOUND);
       sg.vel.x += Math.sin(t * 0.7 + sg.ph) * (10 * (ly - lx)) * dt * 0.0003;
       sg.vel.y += Math.cos(t * 0.5 + sg.ph) * (lx * (28 - lz) - ly) * dt * 0.0002;
       sg.vel.z += Math.sin(t * 0.3 + sg.ph) * (lx * ly - 2.667 * lz) * dt * 0.0003;

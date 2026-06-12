@@ -16,6 +16,8 @@ const sin = Math.sin;
 const cos = Math.cos;
 const abs = Math.abs;
 const PI = Math.PI;
+/** Non-negative floor for chaos-driven intensity/opacity waves (also seals NaN → 0). O(1). */
+const nn = (v: number): number => (v > 0 ? v : 0);
 
 /**
  * Light-unit conversion gain for the r128 → r0.184 lighting migration.
@@ -621,13 +623,17 @@ export class EnvironmentSystem {
         pkt.mesh.rotation.y += dt * 2;
         pkt.mesh.material.opacity = 0.4 + sin(t * 5 + pkt.t * TAU) * 0.3;
       }
-      pipe.tube.material.opacity = 0.1 + sin(t * 2) * 0.05 * cm;
-      pipe.tube.material.emissiveIntensity = 0.2 + sin(t * 3) * 0.15 * cm;
+      // nn() floors the chaos-driven waves at 0: at max chaos (cm = 3) these sinusoids dip
+      // negative, which makes a PointLight SUBTRACT radiance (unphysical dark halos read as a
+      // bug) and emissive/opacity go negative. Physical plausibility wins over bit-parity with
+      // the legacy r128 waveform here — the tuned-constant decision on record (Master File III).
+      pipe.tube.material.opacity = nn(0.1 + sin(t * 2) * 0.05 * cm);
+      pipe.tube.material.emissiveIntensity = nn(0.2 + sin(t * 3) * 0.15 * cm);
     }
 
     // Monoliths (legacy 844; wave × POINT_LIGHT_GAIN keeps the legacy shape at r0.184 units)
     for (const mono of this.monoliths) {
-      mono.crown.intensity = (2 + sin(t * 2 + mono.hue * 10) * 2 * cm) * POINT_LIGHT_GAIN;
+      mono.crown.intensity = nn(2 + sin(t * 2 + mono.hue * 10) * 2 * cm) * POINT_LIGHT_GAIN;
       for (const ring of mono.rings) {
         if (ring.axis === 0) ring.mesh.rotation.x = t * ring.speed;
         else if (ring.axis === 1) ring.mesh.rotation.y = t * ring.speed;
@@ -647,20 +653,20 @@ export class EnvironmentSystem {
         mini.mesh.rotation.x += dt * mini.s;
         mini.mesh.rotation.y += dt * mini.s * 0.7;
       }
-      dio.glow.intensity = (1.5 + sin(t * 2 + dio.hue * 10) * cm) * POINT_LIGHT_GAIN;
+      dio.glow.intensity = nn(1.5 + sin(t * 2 + dio.hue * 10) * cm) * POINT_LIGHT_GAIN;
     }
 
     // Light waves (legacy 850-852; legacy wave × POINT_LIGHT_GAIN × audio-bass shimmer).
     // bass = 0 ⇒ shimmer factor 1 ⇒ identical to v1 (CONTRACTS V2: multiplier ≤ 0.35).
     const lg = POINT_LIGHT_GAIN * (1 + this.audioBass * 0.35);
     const lts = this.lts;
-    lts[0].intensity = (2 + sin(t * 1.5) * 1.5 * cm) * lg;
-    lts[1].intensity = (2 + cos(t * 1.2) * cm) * lg;
-    lts[2].intensity = (2 + sin(t * 2.3) * 1.5) * lg;
-    lts[3].intensity = (4 + sin(t * 4) * 2 * cm) * lg;
+    lts[0].intensity = nn(2 + sin(t * 1.5) * 1.5 * cm) * lg;
+    lts[1].intensity = nn(2 + cos(t * 1.2) * cm) * lg;
+    lts[2].intensity = (2 + sin(t * 2.3) * 1.5) * lg; // cm-free wave, never negative
+    lts[3].intensity = nn(4 + sin(t * 4) * 2 * cm) * lg;
     lts[3].color.setHSL((t * 0.1) % 1, 0.8, 0.5);
-    lts[4].intensity = (1 + sin(t * 3) * cm * 2) * lg;
-    lts[5].intensity = (1.5 + cos(t * 1.8) * cm) * lg;
+    lts[4].intensity = nn(1 + sin(t * 3) * cm * 2) * lg;
+    lts[5].intensity = nn(1.5 + cos(t * 1.8) * cm) * lg;
     lts[5].position.x = sin(t * 0.2) * 18 * ARENA_MID;
     lts[5].position.z = cos(t * 0.2) * 18 * ARENA_MID;
   }

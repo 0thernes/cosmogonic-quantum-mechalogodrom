@@ -218,18 +218,26 @@ export class QuantumRegister {
   measure(rng: Rng): number {
     const { re, im, dim } = this;
     const r = rng();
-    // Fallback to the last index covers the floating-point shortfall when Σp = 1 − ε ≤ r.
-    let chosen = dim - 1;
+    // On the floating-point shortfall (Σp = 1 − ε ≤ r) the cumulative loop falls through; the
+    // fallback then collapses to the MOST PROBABLE basis state rather than the last index,
+    // which could carry near-zero amplitude (a measurement must never land on a ~0-probability
+    // outcome). Tracked in the same O(2^n) pass — still allocation-free.
+    let chosen = 0;
+    let bestP = -1;
     let acc = 0;
+    let picked = -1;
     for (let i = 0; i < dim; i++) {
       const rr = re[i] ?? 0;
       const ii = im[i] ?? 0;
-      acc += rr * rr + ii * ii;
-      if (r < acc) {
+      const p = rr * rr + ii * ii;
+      if (p > bestP) {
+        bestP = p;
         chosen = i;
-        break;
       }
+      acc += p;
+      if (picked < 0 && r < acc) picked = i;
     }
+    if (picked >= 0) chosen = picked;
     re.fill(0);
     im.fill(0);
     re[chosen] = 1;

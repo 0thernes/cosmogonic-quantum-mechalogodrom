@@ -271,11 +271,18 @@ export class EntityManager {
       env.doTheory = (frame + i) % theoryStride === 0;
       // Flock stagger: every frame ≤ 5,000 (legacy), every other frame at ultra.
       env.doFlock = flockEvery === 1 || (frame + i) % flockEvery === 0;
-      // V3.2 OUTLIER blend: a wildcard with a second behavior runs it on odd
-      // (frame+i) parity — temporal 50/50 blending, allocation-free (swap,
-      // dispatch, restore). Members (beh2 = null) take the legacy path.
+      // V3.2 OUTLIER blend: a wildcard with a second behavior runs it on the odd
+      // TWO-FRAME block (((frame+i) >> 1) & 1) — temporal 50/50 blending,
+      // allocation-free (swap, dispatch, restore). The block parity is decoupled
+      // from the stagger parity on purpose: the original raw (frame+i) & 1 gate
+      // was the exact complement of the stride-2 theory gate above, so a theory
+      // second behavior (nash/market/typemorph/setunion/graphseek — 5 of 26) was
+      // a guaranteed no-op, and flock-beh2 likewise at ultra (audit fix, 0.6.x).
+      // Within a beh2 block the (frame+i) parity still alternates, so blended
+      // theory/flock work keeps its contracted stagger cadence at 50% share.
+      // Members (beh2 = null) take the legacy path.
       const b2 = u.beh2;
-      if (b2 !== null && ((frame + i) & 1) === 1) {
+      if (b2 !== null && (((frame + i) >> 1) & 1) === 1) {
         const b1 = u.beh;
         u.beh = b2;
         applyBehavior(e, env);
