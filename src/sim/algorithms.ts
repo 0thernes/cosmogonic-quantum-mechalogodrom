@@ -402,3 +402,45 @@ export const ALGO_GLYPHS: readonly string[] = [
   '⬢',
   '⬡',
 ];
+
+/**
+ * Ignition signature for each field (CONTRACTS V7-beyond) — how the population FLARES when the
+ * field is selected, chosen to echo the field's own spatial swap topology so each of the 25
+ * looks unmistakably itself instead of one universal radial flash:
+ * - `sweep` — a brightness gradient front-to-back (insertion/comb/pancake/prefix flips);
+ * - `parity` — alternating index BANDS light up (odd-even / brick transposition combs);
+ * - `butterfly` — interleaved two-scale bands (bitonic / heap / shell gap networks);
+ * - `bucket` — entities banded by their sort-VALUE into cohorts (radix / count / patience / merge);
+ * - `radial` — the default outward burst (bubble / pivot / stooge / scatter).
+ * Parallel to {@link ALGOS} (same order, length 25); the integrator reads `ALGO_IGNITE[algoIdx]`.
+ */
+export type IgnitePattern = 'sweep' | 'parity' | 'butterfly' | 'bucket' | 'radial';
+
+/** Per-field ignition signature, in ALGOS order. */
+export const ALGO_IGNITE: readonly IgnitePattern[] = [
+  'radial', // BUBBLE FIELD
+  'sweep', // SELECTION SWEEP
+  'sweep', // INSERTION PUSH
+  'bucket', // MERGE IMPULSE
+  'radial', // PIVOT FIELD
+  'butterfly', // HEAP SIFT
+  'butterfly', // SHELL GAP
+  'parity', // COCKTAIL WAVE
+  'sweep', // COMB SWEEP
+  'sweep', // GNOME CRAWL
+  'bucket', // CYCLE PHASE
+  'sweep', // PANCAKE FLIP
+  'butterfly', // BITONIC MESH
+  'radial', // STOOGE DRIFT
+  'parity', // ODD-EVEN PULSE
+  'bucket', // COUNT PHASE
+  'bucket', // RADIX PHASE
+  'bucket', // RUN MERGE
+  'radial', // HOLE SCATTER
+  'sweep', // STRAND PULL
+  'bucket', // TIM RUN MERGE
+  'butterfly', // BITONIC NETWORK
+  'bucket', // PATIENCE BUCKET
+  'parity', // BRICK TRANSPOSE
+  'sweep', // PREFIX PANCAKE
+];

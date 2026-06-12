@@ -33,7 +33,7 @@ import {
   VIEW_MODES,
   WEATHERS,
 } from './sim/constants';
-import { ALGOS, ALGO_GLYPHS } from './sim/algorithms';
+import { ALGOS, ALGO_GLYPHS, ALGO_IGNITE } from './sim/algorithms';
 import { SONGS, SFX_EXTRA_BANDS } from './audio/songs';
 import { mulberry32, type Rng } from './math/rng';
 import { clamp } from './math/scalar';
@@ -60,7 +60,7 @@ import { SingularitySystem, SINGULARITY_KINDS } from './sim/singularities';
 import { LoreEngine } from './sim/lore';
 import { AnalyticsSystem } from './sim/analytics';
 import { AudioEngine } from './audio/engine';
-import { AudioAnalysis } from './audio/analysis';
+import { AudioAnalysis, type AudioBands } from './audio/analysis';
 import { Hud } from './ui/hud';
 import { Observatory } from './ui/observatory';
 import { TelemetryPanel, bindPanelToggles } from './ui/panels';
@@ -425,7 +425,7 @@ export class World {
     }
 
     this.tickAlgoAuto(dt);
-    this.sortStep();
+    this.sortStep(bands);
 
     const stats = this.entities.update(dt, t);
     this.energy = stats.energy; // stats object is reused — copy immediately
@@ -634,7 +634,7 @@ export class World {
    * changes the activity. Allocation-free, no rng (deterministic from seed).
    * O(K · step-cost); the O(n) algorithms still dominate at K · n.
    */
-  private sortStep(): void {
+  private sortStep(bands: AudioBands): void {
     const list = this.entities.list;
     const n = list.length;
     const s = this.state;
@@ -653,10 +653,16 @@ export class World {
       this.sortVals[i] = e ? e.userData.sortVal : 0;
     }
     // Batch size: enough to read as motion, bounded so the O(n) algorithms stay cheap even at
-    // the 10k ceiling. RUN ALL blends every field, so it runs a wider batch (one stride past
-    // the field count) for a visibly busier, world-wide reorganization.
+    // the 10k ceiling. RUN ALL blends every field, so it runs a wider batch. Kept DETERMINISTIC
+    // (population only) on purpose — the batch drives entity velocity nudges that feed the
+    // neighbour-dependent rng (nash/market), so coupling it to wall-clock audio would diverge
+    // the seeded sim. The audio reactivity lives in the FLASH below, which is visual-only.
     const batch =
       mode === 'all' ? Math.min(48, Math.max(25, n >> 7)) : Math.min(28, Math.max(6, n >> 8));
+    // Treble = sparkle: the per-swap emissive flash brightens with the highs (4..8). Emissive is
+    // purely visual (entities.update never feeds it back into positions/rng), so the swarm
+    // visibly sparkles ON THE BEAT without touching sim reproducibility (V7-beyond).
+    const flash = 4 + bands.treble * 4;
     const push = 0.05 * this.chaosMul();
     let swaps = 0;
     for (let b = 0; b < batch; b++) {
@@ -687,8 +693,8 @@ export class World {
       // Brighter sparkle per swap so the field's working front reads as a shimmering light
       // show (entities.update fades it back). max(), not a hard set, so a swap can't DIM a body
       // the neural-activation cap or a belly pulse already pushed above 4. (audit 13b)
-      ea.material.emissiveIntensity = Math.max(ea.material.emissiveIntensity, 4);
-      eb.material.emissiveIntensity = Math.max(eb.material.emissiveIntensity, 4);
+      ea.material.emissiveIntensity = Math.max(ea.material.emissiveIntensity, flash);
+      eb.material.emissiveIntensity = Math.max(eb.material.emissiveIntensity, flash);
       if (swaps === 0) this.qc.onSortSwap(a0, a1); // one CNOT/frame (preserve coupling rate)
       swaps++;
     }
@@ -1015,27 +1021,56 @@ export class World {
   }
 
   /**
-   * Visible "ignition" when a sorting field is chosen: a stride sample (~500
-   * organisms regardless of population) flashes bright, sweeping a shimmer
-   * across the world so the algorithm announces its performance. Visual only —
-   * entities.update lerps the boosted emissive back down. O(n / stride).
+   * Visible "ignition" when a sorting field is chosen (CONTRACTS V7-beyond): the population
+   * flares in the ACTIVE FIELD'S OWN signature — a value-gradient SWEEP, alternating PARITY
+   * bands, a two-scale BUTTERFLY, sort-VALUE BUCKETS, or the default RADIAL burst — so each of
+   * the 25 looks unmistakably itself (real index/value math under the effect). Every lit body
+   * also gets the outward shimmer kick so the swarm visibly "goes wild". Visual + a gentle
+   * impulse only (entities.update fades the emissive back); deterministic (no rng),
+   * allocation-free. O(n) — a one-shot user event, not a per-frame path.
    */
   private sortPerformance(): void {
     const list = this.entities.list;
-    const stride = Math.max(1, (list.length / 800) | 0);
-    for (let i = 0; i < list.length; i += stride) {
+    const n = list.length;
+    if (n === 0) return;
+    const pattern = ALGO_IGNITE[this.state.algoIdx % ALGO_IGNITE.length] ?? 'radial';
+    for (let i = 0; i < n; i++) {
       const e = list[i];
       if (!e) continue;
-      e.material.emissiveIntensity = 5.5; // a brighter flare than the per-swap 4 (V7.2)
-      // A gentle outward shimmer kick so the ignition visibly ripples the swarm — the field
-      // "performs" when chosen. Deterministic (no rng), allocation-free direct vector math.
-      const p = e.position;
-      // Clamp the denominator to ≥1 (not just the |p|=0 guard): a body at |p|≈0.01 would
-      // otherwise get inv≈25 and teleport-pop. Now the kick caps at 0.25/axis. (audit 13a)
-      const inv = 0.25 / Math.max(Math.hypot(p.x, p.y, p.z), 1);
-      e.userData.vel.x += p.x * inv;
-      e.userData.vel.y += p.y * inv;
-      e.userData.vel.z += p.z * inv;
+      // Per-pattern "lit" intensity from the field's own index/value math.
+      let lit: number;
+      switch (pattern) {
+        case 'sweep': // brightness gradient front-to-back (flip-wave)
+          lit = 1 + 5 * (1 - i / n);
+          break;
+        case 'parity': // alternating index bands (block of 8) — a comb
+          lit = (i >> 3) & 1 ? 6.5 : 1.2;
+          break;
+        case 'butterfly': // interleaved two-scale bands — a Batcher butterfly
+          lit = (((i >> 2) & 1) ^ ((i >> 5) & 1)) === 1 ? 6.5 : 1.2;
+          break;
+        case 'bucket': {
+          // banded by SORT VALUE into 5 cohorts (radix/patience/count signature)
+          const sv = e.userData.sortVal;
+          const cohort = sv < 0.2 ? 0 : sv < 0.4 ? 1 : sv < 0.6 ? 2 : sv < 0.8 ? 3 : 4;
+          lit = 3 + cohort * 0.9;
+          break;
+        }
+        default: // radial: every ~7th body bursts, the rest dim
+          lit = i % 7 === 0 ? 6 : 1.5;
+          break;
+      }
+      e.material.emissiveIntensity = Math.max(e.material.emissiveIntensity, lit);
+      // Outward shimmer kick on the brightly-lit bodies so the ignition ripples the swarm.
+      if (lit > 3) {
+        const p = e.position;
+        // Clamp the denominator to ≥1 (not just the |p|=0 guard): a body at |p|≈0.01 would
+        // otherwise get inv≈25 and teleport-pop. Now the kick caps at 0.25/axis. (audit 13a)
+        const inv = 0.25 / Math.max(Math.hypot(p.x, p.y, p.z), 1);
+        e.userData.vel.x += p.x * inv;
+        e.userData.vel.y += p.y * inv;
+        e.userData.vel.z += p.z * inv;
+      }
     }
   }
 
