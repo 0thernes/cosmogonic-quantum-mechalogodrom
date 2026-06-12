@@ -83,15 +83,44 @@ interface Pool {
   used: number;
 }
 
-/** Patch a pool material with the per-instance emissive+alpha attribute. */
-function patchPoolMaterial(mat: THREE.MeshStandardMaterial): void {
+/** Shared per-frame shader uniforms (CONTRACTS V7-beyond). One bag linked into EVERY pool
+ *  material's compiled shader, so a single per-frame write drives all pools — robust to pool
+ *  growth/remorph (a new compile re-links the same uniform objects). */
+interface ShaderUniforms {
+  uTime: { value: number };
+  uNightmare: { value: number };
+  uChaos: { value: number };
+  uBass: { value: number };
+}
+
+/**
+ * Patch a pool material with the per-instance emissive+alpha attribute (V3.1) AND the V7-beyond
+ * shader block: shared uniforms + a SIMULATION N(2) vertex-melt that displaces each instance
+ * along its surface normal by a time+position+instance warp, gated on `uNightmare` (0 at N1 →
+ * the branch is skipped → vertices untouched → byte-identical). Per-instance phase comes from
+ * `gl_InstanceID` (WebGL2 built-in — no extra attribute). Pure GPU; zero per-entity CPU cost.
+ */
+function patchPoolMaterial(mat: THREE.MeshStandardMaterial, uniforms: ShaderUniforms): void {
   mat.onBeforeCompile = (shader) => {
+    shader.uniforms['uTime'] = uniforms.uTime;
+    shader.uniforms['uNightmare'] = uniforms.uNightmare;
+    shader.uniforms['uChaos'] = uniforms.uChaos;
+    shader.uniforms['uBass'] = uniforms.uBass;
     shader.vertexShader = shader.vertexShader
       .replace(
         '#include <common>',
-        '#include <common>\nattribute vec4 instEmissive;\nvarying vec4 vInstEmissive;',
+        '#include <common>\nattribute vec4 instEmissive;\nvarying vec4 vInstEmissive;\nuniform float uTime;\nuniform float uNightmare;',
       )
-      .replace('#include <begin_vertex>', '#include <begin_vertex>\nvInstEmissive = instEmissive;');
+      .replace(
+        '#include <begin_vertex>',
+        '#include <begin_vertex>\n' +
+          'vInstEmissive = instEmissive;\n' +
+          'if (uNightmare > 0.0) {\n' +
+          '  float ph = float(gl_InstanceID) * 0.6180339887;\n' +
+          '  float warp = sin(position.y * 8.0 + uTime * 3.0 + ph) * 0.5 + sin(position.x * 6.0 - uTime * 2.0 + ph) * 0.5;\n' +
+          '  transformed += objectNormal * (uNightmare * warp * 0.18);\n' +
+          '}',
+      );
     shader.fragmentShader = shader.fragmentShader
       .replace('#include <common>', '#include <common>\nvarying vec4 vInstEmissive;')
       .replace(
@@ -124,6 +153,13 @@ export class InstancedEntityRenderer {
   private readonly cursors: Uint32Array;
   /** Render mode last applied to pool materials (CONTRACTS V7.3). */
   private mode: RenderMode = 'solid';
+  /** Shared shader uniforms (V7-beyond) — one bag linked into every pool, written once/frame. */
+  private readonly shaderUniforms: ShaderUniforms = {
+    uTime: { value: 0 },
+    uNightmare: { value: 0 },
+    uChaos: { value: 0 },
+    uBass: { value: 0 },
+  };
 
   /** Stores references and builds the geometry-id lookup. No pools yet. O(geos). */
   constructor(ctx: SimContext) {
@@ -145,6 +181,12 @@ export class InstancedEntityRenderer {
    * each pool's live range. Call once per frame after all entity mutations.
    */
   sync(list: readonly Entity[], mode: RenderMode, frame: InstanceFrame = ZERO_FRAME): void {
+    // Drive the shared shader uniforms (V7-beyond) — one write reaches every pool. At N1
+    // (nightmare 0) the GPU melt branch is skipped, so the scene is byte-identical.
+    this.shaderUniforms.uTime.value = frame.t;
+    this.shaderUniforms.uNightmare.value = frame.nightmare;
+    this.shaderUniforms.uChaos.value = frame.chaos;
+    this.shaderUniforms.uBass.value = frame.bass;
     const counts = this.counts;
     const cursors = this.cursors;
     counts.fill(0);
@@ -286,7 +328,7 @@ export class InstancedEntityRenderer {
       side: transparent ? THREE.DoubleSide : THREE.FrontSide,
     });
     this.applyModeToPool(mat); // carry the current render mode onto a freshly built pool (V7.3)
-    patchPoolMaterial(mat);
+    patchPoolMaterial(mat, this.shaderUniforms);
     const mesh = new THREE.InstancedMesh(geo, mat, capacity);
     mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
     // Instances roam the whole arena — per-pool sphere culling is meaningless.
