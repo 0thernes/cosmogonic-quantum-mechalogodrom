@@ -329,6 +329,11 @@ export class InstancedEntityRenderer {
     mat.wireframe = fx.wireframe;
     mat.metalness = fx.metalness ?? POOL_METALNESS;
     mat.roughness = fx.roughness ?? POOL_ROUGHNESS;
+    // Honor the mode's depthWrite (audit 13c): GHOST's x-ray look needs depthWrite OFF on the
+    // pools too, or desktop/ultra GHOST over-draws and self-sorts differently than the
+    // per-mesh phone path. Pool transparency itself stays structural (the opaque/translucent
+    // pool split); per-instance opacity already flows through the instEmissive alpha lane.
+    mat.depthWrite = fx.depthWrite ?? true;
   }
 
   /** Build a pool for slot `k` sized for `need` (event-driven). */

@@ -182,15 +182,20 @@ export class SingularitySystem {
         this.applyEntropy(dt);
         break;
       case 'blackhole':
-        this.applyHole(dt, +1, true);
+        this.applyHole(dt, +1, MAX_CONSUME);
         break;
       case 'whitehole':
-        this.applyHole(dt, -1, false);
+        this.applyHole(dt, -1, 0);
         break;
-      case 'greyhole':
-        // Alternating absorb (+) / emit (−) on a slow pulse — the leaking hole.
-        this.applyHole(dt, Math.sin(t * 1.3) >= 0 ? +1 : -1, false);
+      case 'greyhole': {
+        // Alternating absorb (+) / emit (−) on a slow pulse — the leaking hole. The absorb
+        // half-cycle CONSUMES at a quarter of a black hole's rate (audit fix: the old
+        // consume=false forced the eject branch, so a greyhole could never retain anything —
+        // its "absorb" was in fact fully ejecting); the emit half ejects like a white hole.
+        const absorbing = Math.sin(t * 1.3) >= 0;
+        this.applyHole(dt, absorbing ? +1 : -1, absorbing ? MAX_CONSUME >> 2 : 0);
         break;
+      }
       case 'strangestar':
         this.applyStrange();
         break;
@@ -219,11 +224,11 @@ export class SingularitySystem {
   }
 
   /**
-   * Radial gravity. `sign` = +1 pulls (black/grey absorb), −1 repels (white/grey emit). When
-   * `consume` and an organism crosses the horizon it is disposed (scarring the RD ground);
-   * for the repulsive case a crosser is thrown back out past the horizon instead.
+   * Radial gravity. `sign` = +1 pulls (black/grey absorb), −1 repels (white/grey emit).
+   * `consumeCap` = max organisms disposed per frame at the horizon (0 ⇒ a non-consuming hole:
+   * crossers are thrown back out past the horizon instead — the white-hole/emit branch).
    */
-  private applyHole(dt: number, sign: number, consume: boolean): void {
+  private applyHole(dt: number, sign: number, consumeCap: number): void {
     const list = this.entities.list;
     const c = this.center;
     // Ultra-tier half-rate stride (matches the entity theory-stagger contract): at >5,000
@@ -243,7 +248,7 @@ export class SingularitySystem {
       if (r2 > REACH2 || r2 < 1e-6) continue;
       const r = Math.sqrt(r2);
       if (r < HORIZON) {
-        if (consume && eaten < MAX_CONSUME) {
+        if (consumeCap > 0 && eaten < consumeCap) {
           // Crossed the event horizon — consumed. disposeAt fires the world's onDeath hook,
           // which scars the RD ground at the corpse's UV (the mortality feedback loop).
           this.entities.disposeAt(i);
@@ -251,8 +256,8 @@ export class SingularitySystem {
           eaten++;
           continue;
         }
-        if (!consume) {
-          // White hole: nothing may enter — eject the crosser back out past the horizon.
+        if (consumeCap === 0) {
+          // Non-consuming hole: nothing may enter — eject the crosser back out past the horizon.
           V.multiplyScalar(1 / r); // unit toward centre
           e.position.copy(c).addScaledVector(V, -HORIZON * 1.05);
           e.userData.vel.addScaledVector(V, -0.6);

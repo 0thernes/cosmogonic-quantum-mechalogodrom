@@ -41,6 +41,14 @@ describe('QUALITY_LADDER', () => {
     expect(QUALITY_LADDER.ultra.instanced).toBeTrue();
   });
 
+  test('targetEntities === maxEntities on EVERY tier (the contested 0.5.0 contract fix)', () => {
+    // The ultra 6,500 adaptive throttle was retired in 0.5.0 on user feedback; this pin
+    // guards the explicitly contested decision (audit: "the 0.5.0 contract fix is unguarded").
+    for (const tier of ['phone', 'laptop', 'desktop', 'ultra'] as const) {
+      expect(QUALITY_LADDER[tier].targetEntities).toBe(QUALITY_LADDER[tier].maxEntities);
+    }
+  });
+
   test('ambience budgets are monotone up the ladder', () => {
     const tiers = ['phone', 'laptop', 'desktop', 'ultra'] as const;
     for (let i = 1; i < tiers.length; i++) {

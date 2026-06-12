@@ -302,7 +302,11 @@ export class TitanSystem {
   setStrategy(index: number, s: number): void {
     const t = this.titans[index];
     if (!t) return;
-    t.strategy = clamp(Math.floor(s), 0, STRATEGIES.length - 1);
+    // NaN seal (audit fix): Math.floor(NaN) = NaN passes straight through clamp's comparisons
+    // (both false → returns NaN), and a NaN strategy permanently mutes the titan's diplomacy
+    // (every STRATEGIES[strategy] lookup misses). Non-finite input falls back to strategy 0.
+    const si = Math.floor(s);
+    t.strategy = Number.isFinite(si) ? clamp(si, 0, STRATEGIES.length - 1) : 0;
   }
 
   /**

@@ -358,23 +358,26 @@ export class AudioEngine {
     gn.connect(out);
     o.start(t);
     o.stop(t + spec.dur + 0.05);
-    // FM modulator → carrier frequency.
+    // FM modulator → carrier frequency. Depth is clamped to 80% of the (jittered) carrier so
+    // the instantaneous frequency can never swing negative — WebAudio clamps a negative
+    // frequency to ~0, which silenced the tails of the most alien specs when the carrier
+    // ramped toward 20-28 Hz with depths up to 600 Hz (audit 13d).
     if (spec.fmRatio > 0 && spec.fmDepth > 0) {
       const mod = ctx.createOscillator();
       const mg = ctx.createGain();
       mod.frequency.value = f0 * spec.fmRatio;
-      mg.gain.value = spec.fmDepth;
+      mg.gain.value = Math.min(spec.fmDepth, f0 * 0.8);
       mod.connect(mg);
       mg.connect(o.frequency);
       mod.start(t);
       mod.stop(t + spec.dur + 0.05);
     }
-    // Pitch-LFO (vibrato/wobble) → carrier frequency.
+    // Pitch-LFO (vibrato/wobble) → carrier frequency. Same negative-frequency clamp.
     if (spec.lfoRate > 0 && spec.lfoDepth > 0) {
       const lfo = ctx.createOscillator();
       const lg = ctx.createGain();
       lfo.frequency.value = spec.lfoRate;
-      lg.gain.value = spec.lfoDepth;
+      lg.gain.value = Math.min(spec.lfoDepth, f0 * 0.8);
       lfo.connect(lg);
       lg.connect(o.frequency);
       lfo.start(t);

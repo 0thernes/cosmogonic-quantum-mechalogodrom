@@ -670,7 +670,8 @@ export class World {
       // RUN ALL: each proposal is drawn from the NEXT field round-robin, so the whole
       // population organizes under all 25 signatures simultaneously. Otherwise the one
       // active field (single, or the auto-cycled current field) proposes.
-      const stepAlgo = mode === 'all' ? cyc(ALGOS, this.allModeCursor++) : algo;
+      const stepAlgo = mode === 'all' ? cyc(ALGOS, this.allModeCursor) : algo;
+      if (mode === 'all') this.allModeCursor = (this.allModeCursor + 1) % ALGOS.length; // bounded
       const swap = stepAlgo.step(this.sortVals, n, s.algoStep);
       if (!swap) continue;
       const a0 = swap[0];
@@ -863,6 +864,15 @@ export class World {
   private resetSim(): void {
     this.singularities.dispose(); // tear down any active cosmological effect
     this.entities.reset(this.bootPopulation());
+    // Rebuild the spatial grid NOW (audit fix): the frame loop only rebuilds on even frames,
+    // so for up to one frame every grid query would otherwise return the DISPOSED pre-reset
+    // population — shoggoth tendrils/behaviors tugging on corpses.
+    this.grid.clear();
+    const list = this.entities.list;
+    for (let i = 0; i < list.length; i++) {
+      const e = list[i];
+      if (e) this.grid.insert(e);
+    }
     this.state.chaos = 0.5;
     this.state.mutations = 0;
     this.state.algoStep = 0;

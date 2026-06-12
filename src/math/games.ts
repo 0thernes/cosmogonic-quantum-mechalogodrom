@@ -85,10 +85,14 @@ export function createHistory(): PairHistory {
  * encoding, relied on by the titan diplomacy cycle. O(1), allocation-free.
  */
 export function pushHistory(h: PairHistory, a: Move, b: Move, window = HISTORY_WINDOW): void {
-  const mask = (1 << window) - 1;
+  // Enforce the documented "window ≤ 30" bit-encoding cap (audit fix): JS shift counts are
+  // taken mod 32, so an unclamped window = 32 would make `1 << 32` = 1 ⇒ mask = 0 and every
+  // push would silently ERASE both move rings while `rounds` still saturated.
+  const w = window < 30 ? window : 30;
+  const mask = (1 << w) - 1;
   h.movesA = ((h.movesA << 1) | a) & mask;
   h.movesB = ((h.movesB << 1) | b) & mask;
-  h.rounds = h.rounds < window ? h.rounds + 1 : window;
+  h.rounds = h.rounds < w ? h.rounds + 1 : w;
 }
 
 /** Branch-free 32-bit population count (Hacker's Delight). O(1). */

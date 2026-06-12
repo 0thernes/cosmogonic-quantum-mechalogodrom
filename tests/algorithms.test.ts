@@ -142,13 +142,18 @@ describe('ALGOS', () => {
         // comparison pairs form a cycle over all indices, which admits no
         // fixpoint for distinct values — so they never terminate, but they
         // must still strictly reduce inversions below the starting count.
-        // The V5.3 fields all propose only order-improving swaps, so each
-        // strictly reduces inversions: TIM RUN MERGE and BRICK TRANSPOSE drive
-        // to a fully sorted fixpoint (minInv 0, terminated); BITONIC NETWORK,
-        // PATIENCE BUCKET and PREFIX PANCAKE reduce then quiesce. PATIENCE
-        // BUCKET is a documented perpetual field in the general case (its
-        // value→band map cycles over all indices), but it still cuts inversions
-        // on the trajectory, satisfying this contract either way.
+        // The V5.3 fields each cut inversions over the trajectory: TIM RUN
+        // MERGE and BRICK TRANSPOSE propose only order-improving swaps and
+        // drive to a fully sorted fixpoint (minInv 0, terminated); BITONIC
+        // NETWORK deliberately proposes ANTI-sorted swaps inside its
+        // descending blocks (the Batcher network's two directions), so single
+        // steps may RAISE inversions — but the full network still nets a
+        // reduction, which is exactly what this trajectory-minimum assertion
+        // measures. PATIENCE BUCKET is a documented perpetual field in the
+        // general case (its value→band map cycles over all indices), but it
+        // still cuts inversions on the trajectory, satisfying this contract
+        // either way. (Audit fix: the previous comment falsely claimed ALL
+        // V5.3 fields propose only order-improving swaps.)
         expect(minInv < inv0 || terminated).toBe(true);
       });
     });
