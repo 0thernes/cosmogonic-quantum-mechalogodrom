@@ -124,10 +124,16 @@ function parseAuditBody(body: unknown): StoredAuditEntry | null {
   const detail = rec['detail'];
   if (detail === undefined) return { ts, action: action.slice(0, MAX_ACTION_LEN) };
   if (typeof detail !== 'object' || detail === null || Array.isArray(detail)) return null;
+  // Truncate WITHOUT splitting a surrogate pair (audit fix): a hard .slice at a UTF-16
+  // code-unit boundary can cut an astral-plane character (emoji etc.) in half, leaving a lone
+  // high surrogate that renders as U+FFFD mojibake in the audit fragment forever after.
+  let detailJson = JSON.stringify(detail).slice(0, MAX_DETAIL_LEN);
+  const last = detailJson.charCodeAt(detailJson.length - 1);
+  if (last >= 0xd800 && last <= 0xdbff) detailJson = detailJson.slice(0, -1);
   return {
     ts,
     action: action.slice(0, MAX_ACTION_LEN),
-    detailJson: JSON.stringify(detail).slice(0, MAX_DETAIL_LEN),
+    detailJson,
   };
 }
 
