@@ -5,6 +5,41 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.2] - 2026-06-12
+
+A whole-repo audit pass (handle everything: errors, bugs, structure) plus the
+lab decree.
+
+### Added
+
+- **Quantum Wildbeyond lab — 12 3D visuals per page** (was 7; 36 total). Pages
+  2/3/4 each carry twelve honest rotating-WEBGL p5 sketches that reflow 2/3/4/6-up
+  at any screen shape; every tile is **clickable for sound** (a deterministic
+  per-tile blip on a shared AudioContext) and **reactive** — click/Enter fires a
+  `pulse()` (camera kick + energy surge decaying over ~1 s), hover speeds and
+  brightens it. The fifteen new forms: Thomas/Halvorsen/Chen-Lee attractors, a
+  3D Lissajous knot, a curl-noise cloud (page 2); a Bloch sphere, the oscillator
+  |ψ|² height-field, a spherical-harmonic shell, a 3D quantum walk, a torus knot
+  (page 3); a spiral galaxy, a 3D random walk, a seed-digit DNA helix, a Gielis
+  superformula shell, a Hopf fibration (page 4). Boards build **lazily** (only
+  the shown board's 12 WebGL contexts live — the other two are torn down) so the
+  browser's ~16-context cap is never exceeded. (`lab/quantum-wildbeyond.html`.)
+- **Same-seed golden determinism test** at the integrated population layer — two
+  independent worlds, 300 frames, a bit-identical trace (the repo's #1 law, until
+  now untested where it can actually break). (`tests/determinism.test.ts`.)
+
+### Fixed
+
+- A backlog of lower-severity audit findings, all verified-by-reading: GHOST's
+  pool `depthWrite` (cross-tier over-draw), the FM/LFO negative-frequency clamp
+  (silenced alien SFX tails), the **grey hole can finally retain matter** (its
+  "absorb" phase was secretly a white hole), the RUN ALL cursor bound, the
+  game-theory `window ≤ 30` bit-cap, the titan `setStrategy` NaN seal, `resetSim`
+  rebuilding the spatial grid immediately (no frame of corpse-queries), the
+  server audit-detail truncation never splitting a surrogate pair (emoji
+  mojibake), and the **rank-halo restore that was dead code on every instanced
+  tier** (the `parent === null` guard is true for all pooled entities).
+
 ## [0.7.1] - 2026-06-12
 
 **Beyond beyonds** — a swarm re-audit (8 agents) of the V7 build found it reading
@@ -639,6 +674,7 @@ to the legacy prototype:
 - The `mutations` counter is surfaced in telemetry (`#v8`) instead of being
   write-only.
 
+[0.7.2]: ./CHANGELOG.md
 [0.7.1]: ./CHANGELOG.md
 [0.7.0]: ./CHANGELOG.md
 [0.6.1]: ./CHANGELOG.md
