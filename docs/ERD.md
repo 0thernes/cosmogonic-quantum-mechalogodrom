@@ -89,10 +89,10 @@ erDiagram
   }
   WEATHER {
     string name "CLEAR RAIN STORM AURORA VOID FOG"
-    float fogDensity "0.003..0.012"
-    float exposure "0.5 (VOID) .. 1.6 (AURORA)"
-    float tempTarget "-40C (VOID) .. 20C"
-    float windFactor "STORM x5 .. CLEAR x0.5"
+    float fogDensity "0.003 .. 0.02 (FOG whiteout) xFOG_SCALE (V7.5)"
+    float exposure "0.35 (VOID) .. 2.0 (AURORA); +STORM lightning flashes"
+    float tempTarget "-60C (VOID) .. 22C (CLEAR)"
+    float windFactor "STORM x9 .. CLEAR x0.8 (V7.5 dramatic)"
   }
   SONG {
     string name "VOIDCROWN BLACK-MERIDIAN ELDER-ENGINE LAST-THEOREM QUANTUM STARKILLER-REQUIEM"

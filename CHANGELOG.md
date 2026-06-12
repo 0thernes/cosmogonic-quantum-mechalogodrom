@@ -52,6 +52,17 @@ gated waves (see [docs/MODULE-CONTRACTS.md](./docs/MODULE-CONTRACTS.md) §V7).
   lore-named audit. (`src/sim/singularities.ts`, `src/world.ts`, `src/types.ts`,
   `src/ui/input.ts`, `index.html`, `tests/singularities.test.ts`.)
 
+### Changed
+
+- **Dramatic weather** — the six states now reshape the world unmistakably: STORM
+  is a gale (×9 wind) under near-black cover with sharp deterministic LIGHTNING
+  flashes; VOID a −60 °C lightless deep freeze (cold thins the population faster);
+  AURORA luminous and saturated (exposure to 2×, vivid cycling fog); FOG a pale
+  bright whiteout; RAIN a moody blue-grey downpour drift. Faster onset so a
+  weather switch is felt immediately. Exposure stays weather-owned; no rng (the
+  lightning is a deterministic function of time). (`src/sim/weather.ts`,
+  `docs/ERD.md`, `tests/weather.test.ts`.)
+
 ### Fixed
 
 - The algorithm-picker progress bar never moved: the integrator set
