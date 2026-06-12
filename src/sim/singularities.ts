@@ -22,12 +22,14 @@
  *   that "infects" nearby organisms, recolouring them into a strange-matter palette — the
  *   strangelet chain reaction spreading as the population drifts through the zone.
  *
- * Determinism: every random draw is from the injected `ctx.rng` (ENTROPY kicks only); the
- * force fields are pure trigonometry/vector math. Same seed + same summon/update sequence ⇒
- * the same evolution. The constructor draws NO rng and builds NO scene objects, so the system
+ * Determinism: every random draw is from the injected `ctx.rng` — the per-particle orbital
+ * seeds at SUMMON (a user event) and the ENTROPY kicks; the force fields and the per-frame
+ * particle orbits are pure trigonometry/vector math. Same seed + same summon/update sequence ⇒
+ * the same evolution. The CONSTRUCTOR draws NO rng and builds NO scene objects, so the system
  * is boot-stream-neutral (the integrator can place its construction anywhere).
  */
 import * as THREE from 'three';
+import { TAU } from '../math/scalar';
 import { ARENA_MID } from './constants';
 import type { SimContext } from '../types';
 import type { EntityManager } from './entities';
@@ -61,6 +63,21 @@ const G = 2200;
 const ACCEL_MAX = 6;
 /** Max organisms a black hole consumes per frame (keeps mass die-off off the budget cliff). */
 const MAX_CONSUME = 25;
+/** Accretion/fountain particle count by tier (instanced = laptop+). Independent of population. */
+const PARTICLES_HI = 1400;
+const PARTICLES_LO = 350;
+/** Per-particle radial drift speed (infall for black holes, fountain for white). */
+const PARTICLE_DRIFT = 14 * ARENA_MID;
+/** Keplerian angular-rate gain (inner particles orbit faster: ω ∝ √(G/ρ³)). */
+const PARTICLE_OMEGA_K = 3;
+/** Additive particle tint per kind. */
+const PARTICLE_COLOR: Readonly<Record<SingularityKind, number>> = {
+  entropy: 0xb0b4b8,
+  blackhole: 0xffaa33,
+  whitehole: 0x9fdcff,
+  greyhole: 0xa0a8b8,
+  strangestar: 0x7cff5a,
+};
 
 /** Module scratch — update() and summon() never allocate per frame. */
 const V = new THREE.Vector3();
@@ -69,7 +86,8 @@ const GREY = new THREE.Color(0.5, 0.5, 0.5);
 
 /**
  * Internal rig handle — the meshes a summon builds, kept so update() can animate them and
- * dispose() can free them. `primary` is the focal body, `ring` the optional disk/halo.
+ * dispose() can free them. `primary` is the focal body, `ring` the optional disk/halo, and
+ * `points`/`pState` the Keplerian accretion-disk / matter-fountain particle cloud (V7-beyond).
  */
 interface Rig {
   group: THREE.Group;
@@ -77,6 +95,10 @@ interface Rig {
   primaryMat: THREE.MeshBasicMaterial | THREE.MeshStandardMaterial;
   ring: THREE.Mesh | null;
   ringMat: THREE.MeshBasicMaterial | null;
+  points: THREE.Points | null;
+  pointsMat: THREE.PointsMaterial | null;
+  /** Per-particle orbital state [rho, theta, y] × N (drawn from rng at summon, evolves). */
+  pState: Float32Array | null;
 }
 
 /**
@@ -119,8 +141,9 @@ export class SingularitySystem {
 
   /**
    * Summon a singularity of `kind` at world position `pos` (a new summon replaces any active
-   * one). Builds the visual rig and arms the force field for {@link DURATION} seconds. Draws
-   * no rng. Allocation happens here (a handful of meshes) — never in {@link update}. O(1).
+   * one). Builds the visual rig (incl. the seeded particle cloud — a fixed number of `ctx.rng`
+   * draws, like burst/split) and arms the force field for {@link DURATION} seconds. Allocation
+   * happens here (meshes + particle buffers) — never in {@link update}. O(particles).
    */
   summon(kind: SingularityKind, pos: THREE.Vector3): void {
     this.disposeRig();
@@ -172,7 +195,7 @@ export class SingularitySystem {
         this.applyStrange();
         break;
     }
-    this.animateRig(t, fade);
+    this.animateRig(dt, t, fade);
   }
 
   /** ENTROPY: thermalize velocities, grey the glow, raise the heat. Strided for budget. */
@@ -203,11 +226,18 @@ export class SingularitySystem {
   private applyHole(dt: number, sign: number, consume: boolean): void {
     const list = this.entities.list;
     const c = this.center;
+    // Ultra-tier half-rate stride (matches the entity theory-stagger contract): at >5,000
+    // entities the force visits each body every other frame with 2× accel, so a 9s hole stops
+    // adding a full 10k+sqrt pass per frame (audit perf fix). ≤5,000 is the unstrided legacy.
+    const ultra = this.ctx.quality.maxEntities > 5000;
+    const frame = this.ctx.state.frame;
+    const gain = ultra ? 2 : 1;
     let eaten = 0;
     // Iterate from the end so disposeAt()'s left-shift never skips an unvisited entity.
     for (let i = list.length - 1; i >= 0; i--) {
       const e = list[i];
       if (!e) continue;
+      if (ultra && (frame + i) & 1) continue; // half-rate at the ultra tier
       V.copy(c).sub(e.position); // points toward the centre
       const r2 = V.lengthSq();
       if (r2 > REACH2 || r2 < 1e-6) continue;
@@ -229,7 +259,7 @@ export class SingularitySystem {
           continue;
         }
       }
-      const accel = Math.min(G / r2, ACCEL_MAX) * sign;
+      const accel = Math.min(G / r2, ACCEL_MAX) * sign * gain;
       e.userData.vel.addScaledVector(V, (accel * dt) / r); // V/r = unit toward centre
     }
   }
@@ -238,9 +268,12 @@ export class SingularitySystem {
   private applyStrange(): void {
     const list = this.entities.list;
     const c = this.center;
+    const ultra = this.ctx.quality.maxEntities > 5000;
+    const frame = this.ctx.state.frame;
     for (let i = 0; i < list.length; i++) {
       const e = list[i];
       if (!e) continue;
+      if (ultra && (frame + i) & 1) continue; // half-rate at ultra (conversion is idempotent)
       if (V.copy(c).sub(e.position).lengthSq() > CONV_R2) continue;
       // Strange-matter stain: a sickly quark-green body with a violet glow. Colour persists
       // after the star expires (update() only re-targets emissiveIntensity, not the hues),
@@ -251,12 +284,13 @@ export class SingularitySystem {
     }
   }
 
-  /** Per-frame visual animation (spin/pulse + the lifetime fade). Allocation-free. */
-  private animateRig(t: number, fade: number): void {
+  /** Per-frame visual animation (spin/pulse + Keplerian particles + the lifetime fade). O(particles). */
+  private animateRig(dt: number, t: number, fade: number): void {
     const rig = this.rig;
     if (!rig) return;
     const pulse = 1 + Math.sin(t * 4) * 0.06;
     rig.group.scale.setScalar(fade);
+    this.animateParticles(dt, fade);
     if (this._kind === 'entropy') {
       // The heat-death shell grows and thins as it expires.
       const grow = 1 + (DURATION - this.life) * 0.5;
@@ -270,6 +304,47 @@ export class SingularitySystem {
       rig.ring.rotation.x = Math.PI * 0.42;
       if (rig.ringMat) rig.ringMat.opacity = 0.9 * fade;
     }
+  }
+
+  /**
+   * Advance the particle cloud: Keplerian differential rotation (ω ∝ √(G/ρ³), inner faster)
+   * plus per-kind radial drift — black holes SPIRAL IN (respawn at the outer disk), white holes
+   * FOUNTAIN OUT (respawn at the throat), entropy DISPERSES, grey/strange hold a rotating shell.
+   * Pure t/dt math (no rng); writes the pre-allocated position array in place. O(particles),
+   * independent of the population. Allocation-free.
+   */
+  private animateParticles(dt: number, fade: number): void {
+    const rig = this.rig;
+    if (!rig || !rig.points || !rig.pState) return;
+    const st = rig.pState;
+    const posAttr = rig.points.geometry.getAttribute('position') as THREE.BufferAttribute;
+    const pos = posAttr.array as Float32Array;
+    const n = st.length / 3;
+    const kind = this._kind;
+    for (let p = 0; p < n; p++) {
+      const b = p * 3;
+      let rho = st[b] ?? 1;
+      let theta = st[b + 1] ?? 0;
+      const y = st[b + 2] ?? 0;
+      theta += Math.sqrt(G / (rho * rho * rho + 1)) * PARTICLE_OMEGA_K * dt;
+      if (kind === 'blackhole') {
+        rho -= PARTICLE_DRIFT * dt;
+        if (rho < HORIZON) rho = DISK_R * 1.4; // crossed the horizon → respawn at the outer disk
+      } else if (kind === 'whitehole') {
+        rho += PARTICLE_DRIFT * dt;
+        if (rho > REACH) rho = HORIZON * 1.1; // ejected → respawn at the throat (the fountain)
+      } else if (kind === 'entropy') {
+        rho += PARTICLE_DRIFT * 0.5 * dt; // disorder spreads outward
+        if (rho > REACH * 0.7) rho = HORIZON;
+      }
+      st[b] = rho;
+      st[b + 1] = theta;
+      pos[b] = Math.cos(theta) * rho;
+      pos[b + 1] = y;
+      pos[b + 2] = Math.sin(theta) * rho;
+    }
+    posAttr.needsUpdate = true;
+    if (rig.pointsMat) rig.pointsMat.opacity = 0.85 * fade;
   }
 
   /** Build the visual rig for `kind`. Allocates (user event); freed by {@link disposeRig}. */
@@ -337,9 +412,69 @@ export class SingularitySystem {
       ring.rotation.x = Math.PI * 0.42;
       group.add(ring);
     }
+    // Keplerian accretion-disk / matter-fountain particle cloud (V7-beyond) — real orbital
+    // matter the holes pull in and the white hole throws out. Built from the seeded rng at
+    // SUMMON (deterministic); animated by pure t/dt math each frame (no per-frame rng).
+    const parts = this.buildParticles(kind);
+    if (parts) group.add(parts.points);
     // The group position is set by summon() from the caller's world point (which should sit
     // mid-field, ~16·ARENA_Y up, so the rig reads as an object in the volume, not on the floor).
-    return { group, primary, primaryMat, ring, ringMat };
+    return {
+      group,
+      primary,
+      primaryMat,
+      ring,
+      ringMat,
+      points: parts ? parts.points : null,
+      pointsMat: parts ? parts.pointsMat : null,
+      pState: parts ? parts.pState : null,
+    };
+  }
+
+  /**
+   * Build the particle cloud for `kind` from the seeded rng (CONTRACTS V7-beyond). Returns the
+   * additive Points plus the per-particle orbital state [rho, theta, y] × N. Tier-scaled count;
+   * draws a documented, fixed number of rng samples at SUMMON (a user event, like burst). The
+   * geometry's position array is recomputed each frame by {@link animateRig}.
+   */
+  private buildParticles(
+    kind: SingularityKind,
+  ): { points: THREE.Points; pointsMat: THREE.PointsMaterial; pState: Float32Array } | null {
+    const rng = this.ctx.rng;
+    const n = this.ctx.quality.instanced ? PARTICLES_HI : PARTICLES_LO;
+    const pos = new Float32Array(n * 3);
+    const st = new Float32Array(n * 3);
+    // Per-kind initial radial band + vertical spread (disk for holes, cloud for strange/entropy).
+    const rInner = kind === 'strangestar' ? 0 : HORIZON * 1.1;
+    const rOuter =
+      kind === 'strangestar' ? CONV_R * 0.55 : kind === 'entropy' ? REACH * 0.4 : DISK_R * 1.4;
+    const yspread = kind === 'strangestar' || kind === 'entropy' ? rOuter : HORIZON * 0.5;
+    for (let p = 0; p < n; p++) {
+      const b = p * 3;
+      const rho = rInner + (rOuter - rInner) * Math.sqrt(rng()); // area-uniform radial fill
+      const theta = rng() * TAU;
+      const y = (rng() - 0.5) * 2 * yspread;
+      st[b] = rho;
+      st[b + 1] = theta;
+      st[b + 2] = y;
+      pos[b] = Math.cos(theta) * rho;
+      pos[b + 1] = y;
+      pos[b + 2] = Math.sin(theta) * rho;
+    }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    const pointsMat = new THREE.PointsMaterial({
+      color: PARTICLE_COLOR[kind],
+      size: 1.6 * ARENA_MID,
+      transparent: true,
+      opacity: 0.85,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      sizeAttenuation: true,
+    });
+    const points = new THREE.Points(geo, pointsMat);
+    points.frustumCulled = false;
+    return { points, pointsMat, pState: st };
   }
 
   /** Remove + free the current rig's GPU resources (geometry + materials). O(1). */
@@ -351,6 +486,8 @@ export class SingularitySystem {
     rig.primaryMat.dispose();
     if (rig.ring) rig.ring.geometry.dispose();
     if (rig.ringMat) rig.ringMat.dispose();
+    if (rig.points) rig.points.geometry.dispose();
+    if (rig.pointsMat) rig.pointsMat.dispose();
     this.rig = null;
   }
 }
