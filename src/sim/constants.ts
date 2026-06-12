@@ -111,7 +111,15 @@ export type ViewMode = (typeof VIEW_MODES)[number];
  * (no geometry/object swap) so they apply allocation-free to both the per-mesh and the
  * instanced render paths.
  */
-export const RENDER_MODES = ['solid', 'wire', 'ghost', 'neon', 'chrome'] as const;
+export const RENDER_MODES = [
+  'solid',
+  'wire',
+  'ghost',
+  'neon',
+  'chrome',
+  'hologram',
+  'iridescent',
+] as const;
 
 /** One of the five entity render styles. */
 export type RenderMode = (typeof RENDER_MODES)[number];
@@ -179,6 +187,28 @@ export const RENDER_MODE_FX: Readonly<Record<RenderMode, RenderModeFx>> = {
     transparent: null,
     depthWrite: null,
     emissiveBoost: 1,
+  },
+  // HOLOGRAM + IRIDESCENT are GPU-shader modes (instanced pools only — see instanced-entities
+  // patchPoolMaterial). These FX flags are the per-mesh (phone) FALLBACK + the pool base the
+  // shader builds on: hologram = a translucent emissive phantom, iridescent = a flat emissive
+  // shell. Phone tier shows the fallback; the shader adds the fresnel/scanline/thin-film on top.
+  hologram: {
+    wireframe: false,
+    metalness: 0,
+    roughness: 1,
+    opacity: 0.6,
+    transparent: true,
+    depthWrite: false,
+    emissiveBoost: 1.6,
+  },
+  iridescent: {
+    wireframe: false,
+    metalness: 0.2,
+    roughness: 0.4,
+    opacity: null,
+    transparent: null,
+    depthWrite: null,
+    emissiveBoost: 1.2,
   },
 };
 

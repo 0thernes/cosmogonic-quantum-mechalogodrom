@@ -31,7 +31,7 @@
  * untouched.
  */
 import * as THREE from 'three';
-import { RENDER_MODE_FX } from './constants';
+import { RENDER_MODES, RENDER_MODE_FX } from './constants';
 import type { RenderMode } from './constants';
 import type { Entity, SimContext } from '../types';
 
@@ -91,6 +91,8 @@ interface ShaderUniforms {
   uNightmare: { value: number };
   uChaos: { value: number };
   uBass: { value: number };
+  /** Active render mode index (RENDER_MODES order) — drives the exotic fragment effects. */
+  uMode: { value: number };
 }
 
 /**
@@ -106,6 +108,7 @@ function patchPoolMaterial(mat: THREE.MeshStandardMaterial, uniforms: ShaderUnif
     shader.uniforms['uNightmare'] = uniforms.uNightmare;
     shader.uniforms['uChaos'] = uniforms.uChaos;
     shader.uniforms['uBass'] = uniforms.uBass;
+    shader.uniforms['uMode'] = uniforms.uMode;
     shader.vertexShader = shader.vertexShader
       .replace(
         '#include <common>',
@@ -122,14 +125,32 @@ function patchPoolMaterial(mat: THREE.MeshStandardMaterial, uniforms: ShaderUnif
           '}',
       );
     shader.fragmentShader = shader.fragmentShader
-      .replace('#include <common>', '#include <common>\nvarying vec4 vInstEmissive;')
+      .replace(
+        '#include <common>',
+        '#include <common>\nvarying vec4 vInstEmissive;\nuniform float uTime;\nuniform float uBass;\nuniform float uMode;',
+      )
       .replace(
         'vec4 diffuseColor = vec4( diffuse, opacity );',
         'vec4 diffuseColor = vec4( diffuse, opacity * vInstEmissive.a );',
       )
       .replace(
         '#include <emissivemap_fragment>',
-        '#include <emissivemap_fragment>\n\ttotalEmissiveRadiance = vInstEmissive.rgb;',
+        '#include <emissivemap_fragment>\n' +
+          '\ttotalEmissiveRadiance = vInstEmissive.rgb;\n' +
+          // Exotic shader render modes (V7-beyond): IRIDESCENT (6) = thin-film cosine-palette
+          // interference that crawls with view angle + time; HOLOGRAM (5) = fresnel rim + moving
+          // scanlines that pulse with the bass. Both real f(view, time) — no textures, no envMap.
+          '\tif (uMode > 5.5) {\n' +
+          '\t\tfloat ct = abs(dot(normalize(vNormal), normalize(vViewPosition)));\n' +
+          '\t\tvec3 irid = 0.5 + 0.5 * cos(6.28318 * (vec3(1.0,0.9,0.8) * ct + vec3(0.0,0.33,0.67) + uTime * 0.1));\n' +
+          '\t\ttotalEmissiveRadiance += irid * 0.4;\n' +
+          '\t\tdiffuseColor.rgb = mix(diffuseColor.rgb, irid, 0.6);\n' +
+          '\t} else if (uMode > 4.5) {\n' +
+          '\t\tfloat fres = pow(1.0 - clamp(abs(dot(normalize(vNormal), normalize(vViewPosition))), 0.0, 1.0), 3.0);\n' +
+          '\t\tfloat scan = 0.5 + 0.5 * sin(gl_FragCoord.y * 0.15 - uTime * 4.0);\n' +
+          '\t\ttotalEmissiveRadiance = (totalEmissiveRadiance + vec3(0.1, 0.45, 0.6)) * fres * scan * (1.0 + uBass);\n' +
+          '\t\tdiffuseColor.a *= clamp(fres + 0.2, 0.0, 1.0);\n' +
+          '\t}',
       );
   };
 }
@@ -159,6 +180,7 @@ export class InstancedEntityRenderer {
     uNightmare: { value: 0 },
     uChaos: { value: 0 },
     uBass: { value: 0 },
+    uMode: { value: 0 },
   };
 
   /** Stores references and builds the geometry-id lookup. No pools yet. O(geos). */
@@ -187,6 +209,7 @@ export class InstancedEntityRenderer {
     this.shaderUniforms.uNightmare.value = frame.nightmare;
     this.shaderUniforms.uChaos.value = frame.chaos;
     this.shaderUniforms.uBass.value = frame.bass;
+    this.shaderUniforms.uMode.value = RENDER_MODES.indexOf(mode);
     const counts = this.counts;
     const cursors = this.cursors;
     counts.fill(0);

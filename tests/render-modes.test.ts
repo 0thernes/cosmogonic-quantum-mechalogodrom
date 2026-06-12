@@ -13,20 +13,31 @@ const OPAQUE_BASE = { met: 0.4, rou: 0.6, op: 1.0, emI: 0.8 };
 const TRANSLUCENT_BASE = { met: 0.2, rou: 0.7, op: 0.4, emI: 0.5 };
 
 describe('RENDER_MODES table', () => {
-  test('is the five-mode cycle, all distinct, SOLID first', () => {
-    expect(RENDER_MODES.length).toBe(5);
-    expect(new Set(RENDER_MODES).size).toBe(5);
+  test('is the seven-mode cycle, all distinct, SOLID first', () => {
+    expect(RENDER_MODES.length).toBe(7);
+    expect(new Set(RENDER_MODES).size).toBe(7);
     expect(RENDER_MODES[0]).toBe('solid');
-    expect([...RENDER_MODES]).toEqual(['solid', 'wire', 'ghost', 'neon', 'chrome']);
+    expect([...RENDER_MODES]).toEqual([
+      'solid',
+      'wire',
+      'ghost',
+      'neon',
+      'chrome',
+      'hologram',
+      'iridescent',
+    ]);
   });
 
-  test('every mode has an FX entry; only NEON boosts emissive', () => {
+  test('every mode has a finite-emissiveBoost FX entry (NEON the brightest)', () => {
     for (const mode of RENDER_MODES) {
       const fx = RENDER_MODE_FX[mode];
       expect(fx).toBeDefined();
       expect(Number.isFinite(fx.emissiveBoost)).toBe(true);
-      expect(fx.emissiveBoost).toBe(mode === 'neon' ? 3 : 1);
+      expect(fx.emissiveBoost).toBeGreaterThan(0);
     }
+    // NEON remains the strongest emissive lift (the self-glow mode).
+    expect(RENDER_MODE_FX.neon.emissiveBoost).toBe(3);
+    expect(RENDER_MODE_FX.solid.emissiveBoost).toBe(1);
   });
 });
 
