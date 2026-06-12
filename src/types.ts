@@ -123,6 +123,11 @@ export interface SimState {
   timeScale: number;
   /** Entity render style (CONTRACTS V7.3; session-only, cycled by the toolbar). */
   renderMode: RenderMode;
+  /**
+   * Simulation variant (CONTRACTS V7.6): `1` = GENESIS (the cosmos as it ships), `2` = BREAK
+   * FREE (the nightmare — raised chaos floor, a lurid inverted sky). Persisted.
+   */
+  sim: 1 | 2;
   weatherIdx: number;
   temperature: number;
   wind: { x: number; z: number };
@@ -230,6 +235,11 @@ export interface PersistedStateV1 {
   weatherIdx: number;
   sfxOn: boolean;
   sessions: number;
+  /**
+   * Simulation variant (CONTRACTS V7.6; additive — a pre-V7.6 blob without this field loads
+   * with `sim = 1`, the GENESIS default). `1` = GENESIS, `2` = BREAK FREE (nightmare).
+   */
+  sim: 1 | 2;
 }
 export type PersistedState = PersistedStateV1;
 
@@ -308,6 +318,8 @@ export interface UiActions {
   cycleTimeScale(): number;
   /** Cycle the entity render style (CONTRACTS V7.3); returns the new mode. */
   cycleRenderMode(): RenderMode;
+  /** Toggle the simulation variant N(1)↔N(2) (CONTRACTS V7.6); returns the new variant. */
+  cycleSim(): 1 | 2;
   cycleView(): ViewMode;
   cycleAlgo(): string;
   cycleWeather(): Weather;

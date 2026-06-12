@@ -16,6 +16,7 @@ function makeState(chaos: number): SimState {
     mutations: 0,
     timeScale: 1,
     renderMode: 'solid',
+    sim: 1,
     weatherIdx: 0,
     temperature: 15,
     wind: { x: 0, z: 0 },

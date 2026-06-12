@@ -48,6 +48,7 @@ function makeState(): SimState {
     mutations: 0,
     timeScale: 1,
     renderMode: 'solid',
+    sim: 1,
     weatherIdx: 0,
     temperature: 20,
     wind: { x: 1, z: 1 },

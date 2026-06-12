@@ -104,6 +104,7 @@ const TOOLBAR_MAP: Readonly<Record<string, keyof UiActions>> = {
   algo: 'cycleAlgo',
   weather: 'cycleWeather',
   cosmo: 'summonSingularity',
+  sim: 'cycleSim',
   apoc: 'apocalypse',
 };
 

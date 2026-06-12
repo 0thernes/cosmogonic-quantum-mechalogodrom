@@ -274,6 +274,16 @@ export class AtmosphereSystem {
       default:
         break; // CLEAR / RAIN keep the base alien palette
     }
+    // SIMULATION N(2) — the world breaks free: a sickly, oversaturated, too-bright sky that
+    // overrides whatever the weather chose. Bile-green horizon, rotten-violet zenith, a
+    // blood-magenta underglow — wrong in every direction (CONTRACTS V7.6).
+    if (this.nightmare) {
+      hHorizon = 0.28; // bilious green
+      hZenith = 0.83; // rotten violet
+      hCounter = 0.97; // blood magenta
+      lScale *= 2.1; // unnaturally bright
+      sScale = 1.7; // oversaturated
+    }
     // Chaos lifts saturation and adds a hot tremor to the horizon.
     const chaosLift = 0.85 + chaosNorm * 0.4;
     const colors = this.domeColors;
@@ -307,6 +317,20 @@ export class AtmosphereSystem {
   private lastWeather: Weather | null = null;
   /** Last coarse chaos bucket the dome was baked for (0..10 integer). */
   private lastChaosBucket = -1;
+  /** SIMULATION N(2) nightmare flag (CONTRACTS V7.6): a lurid inverted sky when set. */
+  private nightmare = false;
+
+  /**
+   * Toggle the SIMULATION N(2) nightmare sky (CONTRACTS V7.6). When on, {@link bakeDome}
+   * overrides the alien palette with a sickly, oversaturated, too-bright wrongness. Forces a
+   * re-bake on the next `update()`. O(1).
+   */
+  setNightmare(on: boolean): void {
+    if (this.nightmare === on) return;
+    this.nightmare = on;
+    this.lastWeather = null; // invalidate the bake cache so update() re-bakes
+    this.lastChaosBucket = -1;
+  }
 
   /**
    * Per-frame atmosphere animation. Allocation-free; O(domeVerts + ribbons + dust).

@@ -84,6 +84,9 @@ const SFX_SUBBOOM = SFX_EXTRA_BANDS['subboom']?.start ?? 0;
 const SFX_FMCLANG = SFX_EXTRA_BANDS['fmclang']?.start ?? 0;
 const SFX_STRANGE = SFX_EXTRA_BANDS['strange']?.start ?? 0;
 
+/** SIMULATION N(2) chaos floor (V7.6): the nightmare never settles below this agitation. */
+const CHAOS_NIGHTMARE_FLOOR = 3.5;
+
 export interface WorldOptions {
   engine: Engine;
   quality: QualityProfile;
@@ -183,6 +186,7 @@ export class World {
       mutations: 0,
       timeScale: 1,
       renderMode: 'solid',
+      sim: this.persisted.sim === 2 ? 2 : 1,
       weatherIdx: this.persisted.weatherIdx % WEATHERS.length,
       temperature: 20,
       wind: { x: 0, z: 0 },
@@ -326,6 +330,10 @@ export class World {
       warMatrix: this.snap.warMatrix,
     };
 
+    // Apply the persisted simulation variant's ambient visuals (V7.6) — a restored N(2) world
+    // boots straight into the nightmare sky + branding (the chaos floor is enforced in step()).
+    this.applySimVisuals();
+
     this.log.info('world ready', {
       seed: this.persisted.seed,
       tier: this.quality.tier,
@@ -333,6 +341,7 @@ export class World {
       morphs: this.morphTotal,
       titans: this.titans.count,
       geometries: geos.length,
+      sim: this.state.sim,
     });
   }
 
@@ -369,7 +378,10 @@ export class World {
 
     this.updateCamera(dt, t);
     this.handleHotkeys(dt);
-    s.chaos = Math.max(CHAOS_MIN, s.chaos - dt * 0.005);
+    // Chaos decays toward its floor — raised in SIMULATION N(2) so the nightmare stays
+    // permanently agitated (higher cm ⇒ wilder behaviour excursions). V7.6.
+    const chaosFloor = s.sim === 2 ? CHAOS_NIGHTMARE_FLOOR : CHAOS_MIN;
+    s.chaos = Math.max(chaosFloor, s.chaos - dt * 0.005);
 
     // One bands poll per frame, shared by every consumer (reused object).
     const bands = this.audioAnalysis.update();
@@ -788,6 +800,41 @@ export class World {
     for (let i = 0; i < 3; i++) this.rd.perturb(this.rng(), this.rng(), 9);
   }
 
+  /**
+   * Apply the current simulation variant's ambient visuals (CONTRACTS V7.6): the nightmare sky
+   * recolor and the page-title branding. Called at boot and on every toggle. O(1).
+   */
+  private applySimVisuals(): void {
+    const night = this.state.sim === 2;
+    this.atmosphere.setNightmare(night);
+    document.title = night
+      ? 'COSMOGONIC QUANTUM MECHALOGODROM — SIMULATION N(2)'
+      : 'COSMOGONIC QUANTUM MECHALOGODROM';
+  }
+
+  /**
+   * Toggle the simulation variant N(1)↔N(2) (CONTRACTS V7.6). N(2) BREAK FREE raises the chaos
+   * floor (permanent agitation), lurid-inverts the sky, and rebrands; N(1) GENESIS restores the
+   * shipped cosmos. Persisted. Returns the new variant.
+   */
+  private setSim(): 1 | 2 {
+    const s = this.state;
+    s.sim = s.sim === 2 ? 1 : 2;
+    this.persisted.sim = s.sim;
+    this.save();
+    this.applySimVisuals();
+    if (s.sim === 2) {
+      s.chaos = Math.max(s.chaos, CHAOS_NIGHTMARE_FLOOR); // snap straight into the nightmare
+      this.audio.playId(SFX_STRANGE);
+      this.hud.showSector('SIMULATION N(2) — BREAK FREE');
+    } else {
+      this.audio.play('crystallize');
+      this.hud.showSector('SIMULATION N(1) — GENESIS');
+    }
+    this.audit.record('sim', { variant: s.sim });
+    return s.sim;
+  }
+
   /** Legacy rSim: genesis reset (entities + counters; prefs untouched). */
   private resetSim(): void {
     this.singularities.dispose(); // tear down any active cosmological effect
@@ -1064,6 +1111,10 @@ export class World {
       summonSingularity: () => {
         this.unlock();
         return this.summonSingularity();
+      },
+      cycleSim: () => {
+        this.unlock();
+        return this.setSim();
       },
       apocalypse: () => {
         this.unlock();

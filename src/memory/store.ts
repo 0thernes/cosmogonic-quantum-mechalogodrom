@@ -67,8 +67,24 @@ function validateV1(r: Record<string, unknown>): PersistedStateV1 | null {
   ) {
     return null;
   }
+  // `sim` (CONTRACTS V7.6) is ADDITIVE: a pre-V7.6 blob lacks it and loads as GENESIS (1);
+  // if present it must be exactly 1 or 2 (tamper policy — reject anything else).
+  const sim = r.sim === undefined ? 1 : r.sim;
+  if (sim !== 1 && sim !== 2) {
+    return null;
+  }
   // Rebuilt field by field: strips unknown keys and normalizes seed to uint32.
-  return { version: 1, seed: seed >>> 0, songIdx, algoIdx, viewIdx, weatherIdx, sfxOn, sessions };
+  return {
+    version: 1,
+    seed: seed >>> 0,
+    songIdx,
+    algoIdx,
+    viewIdx,
+    weatherIdx,
+    sfxOn,
+    sessions,
+    sim,
+  };
 }
 
 /**
@@ -152,6 +168,7 @@ export class MemoryStore {
       weatherIdx: 0,
       sfxOn: false,
       sessions: 0,
+      sim: 1,
     };
   }
 }

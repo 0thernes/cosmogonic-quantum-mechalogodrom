@@ -52,6 +52,15 @@ gated waves (see [docs/MODULE-CONTRACTS.md](./docs/MODULE-CONTRACTS.md) §V7).
   lore-named audit. (`src/sim/singularities.ts`, `src/world.ts`, `src/types.ts`,
   `src/ui/input.ts`, `index.html`, `tests/singularities.test.ts`.)
 
+- **SIMULATION N(1) / N(2) duality** — a new toolbar toggle between two variants
+  of the cosmos. **N(1) GENESIS** is the world as it ships; **N(2) BREAK FREE** is
+  the nightmare — the chaos floor snaps up to a permanent agitation (wilder
+  behaviour excursions), the alien sky lurid-inverts to a sickly oversaturated
+  wrongness, and the page rebrands to "SIMULATION N(2)". The variant is persisted
+  (an additive field — pre-V7.6 saves load as GENESIS) and applied at boot.
+  (`src/types.ts`, `src/memory/store.ts`, `src/sim/atmosphere.ts`, `src/world.ts`,
+  `src/ui/input.ts`, `index.html`, `tests/store.test.ts`.)
+
 ### Changed
 
 - **Dramatic weather** — the six states now reshape the world unmistakably: STORM

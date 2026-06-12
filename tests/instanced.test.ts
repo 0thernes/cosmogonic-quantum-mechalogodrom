@@ -65,6 +65,7 @@ function makeCtx(maxEntities: number, geos: THREE.BufferGeometry[]): SimContext 
       mutations: 0,
       timeScale: 1,
       renderMode: 'solid',
+      sim: 1,
       weatherIdx: 0,
       temperature: 20,
       wind: { x: 0, z: 0 },

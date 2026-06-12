@@ -39,6 +39,7 @@ const sample: PersistedState = {
   weatherIdx: 4,
   sfxOn: true,
   sessions: 7,
+  sim: 1,
 };
 
 describe('MemoryStore', () => {
@@ -73,6 +74,25 @@ describe('MemoryStore', () => {
 
   test('load() returns null when nothing was saved', () => {
     expect(new MemoryStore(KEY).load()).toBeNull();
+  });
+
+  test('additive sim (V7.6): a pre-V7.6 blob without `sim` loads as GENESIS (1)', () => {
+    // An old saved state has every V1 field BUT `sim`. The additive migration must accept it
+    // and default sim → 1, never discarding the user's other preferences.
+    const legacy: Record<string, unknown> = { ...sample };
+    delete legacy['sim'];
+    localStorage.setItem(KEY, JSON.stringify(legacy));
+    expect(new MemoryStore(KEY).load()).toEqual({ ...sample, sim: 1 });
+  });
+
+  test('sim = 2 round-trips; a tampered sim is rejected (whole payload discarded)', () => {
+    const store = new MemoryStore(KEY);
+    store.save({ ...sample, sim: 2 });
+    expect(store.load()).toEqual({ ...sample, sim: 2 });
+    for (const bad of [0, 3, 1.5, -1, 'two', null]) {
+      localStorage.setItem(KEY, JSON.stringify({ ...sample, sim: bad }));
+      expect(new MemoryStore(KEY).load()).toBeNull();
+    }
   });
 
   test('load() returns null on corrupt JSON without throwing', () => {
