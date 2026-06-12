@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased] — XENOCATACLYSM (CONTRACTS V7, in progress)
+
+The third user-feedback decree: make the world visibly come alive. Landing in
+gated waves (see [docs/MODULE-CONTRACTS.md](./docs/MODULE-CONTRACTS.md) §V7).
+
+### Added
+
+- **100 distinct sound effects** (was 8): `src/audio/songs.ts` gains a
+  procedurally generated, seeded 100-entry SFX palette (`createSfxPalette`)
+  spread across twelve timbral families (pluck, zap, bend, drone, sweep, bell,
+  fall, vibrato, fm-clang, sub-boom, glint, strange) plus a 25-slot cue band —
+  one engineered voice per sorting field. The engine voices any of them through
+  one data-driven `synth()` (oscillator + optional filter, FM, pitch-LFO, octave
+  shimmer, and filtered noise), and `play(type)` rotates a per-family cursor with
+  per-trigger pitch jitter so repeating the same action never sounds identical.
+  New `playId(n)` fires a palette entry directly. (`src/audio/songs.ts`,
+  `src/audio/engine.ts`, `tests/songs.test.ts`.)
+
 ## [0.6.1] - 2026-06-11
 
 ### Added

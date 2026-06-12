@@ -8,6 +8,7 @@
  * scale degrees into the audio engine's 10-step scale (legacy `fNotes`); `fBase` is the
  * chord lowpass-filter base cutoff in Hz; `bpm` drives the scheduler interval.
  */
+import type { Rng } from '../math/rng';
 import type { SfxType, Song } from '../types';
 
 /**
@@ -150,3 +151,341 @@ export const SFX_TYPES: readonly SfxType[] = [
   'decay',
   'resonance',
 ];
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CONTRACTS V7.1 — the 100-entry procedural SFX palette
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * A single synthesized sound effect, fully described by data so {@link AudioEngine}'s
+ * generic `synth()` can voice any of the 100 without a per-effect `switch`. Every numeric
+ * field is finite and the frequencies/duration are strictly positive (the engine uses
+ * exponential ramps, which cannot cross zero). Generated, never hand-authored, so the
+ * palette stays genuinely varied — see {@link createSfxPalette}.
+ */
+export interface SfxSpec {
+  /** Debug label `family#index` (never shown to users). */
+  label: string;
+  /** Primary oscillator waveform. */
+  wave: OscillatorType;
+  /** Start frequency (Hz, > 0). */
+  f0: number;
+  /** First pitch-ramp target (Hz, > 0); equals f0 for a steady pitch. */
+  f1: number;
+  /** Optional second pitch-ramp target (Hz); 0 = single-segment sweep. */
+  f2: number;
+  /** Pitch-ramp shape. */
+  ramp: 'exp' | 'lin';
+  /** Total lifetime (s, > 0); the gain decays to silence by t + dur. */
+  dur: number;
+  /** Peak gain after the attack ramp. */
+  peak: number;
+  /** Attack time (s). */
+  attack: number;
+  /** Biquad filter type, or '' for a dry voice. */
+  filterType: BiquadFilterType | '';
+  /** Filter cutoff/centre (Hz). */
+  filterFreq: number;
+  /** Filter Q. */
+  filterQ: number;
+  /** FM modulator ratio (× f0); 0 = no frequency-modulation voice. */
+  fmRatio: number;
+  /** FM depth (Hz of carrier-frequency deviation). */
+  fmDepth: number;
+  /** Pitch-LFO rate (Hz); 0 = no vibrato/wobble. */
+  lfoRate: number;
+  /** Pitch-LFO depth (Hz). */
+  lfoDepth: number;
+  /** Shimmer partial ratio (× f0); 0 = none (2 = an octave glint). */
+  partial: number;
+  /** Short filtered noise-burst mix 0..1; 0 = tonal only. */
+  noise: number;
+  /** Per-trigger pitch-jitter fraction 0..1 — the engine wobbles f0 by ±½·jitter each
+   *  fire so repeated triggers of the same effect never sound identical. */
+  jitter: number;
+}
+
+/** Total palette size (CONTRACTS V7.1). */
+export const SFX_PALETTE_SIZE = 100;
+
+/** A contiguous `[start, count)` slice of the palette. */
+export interface SfxBand {
+  start: number;
+  count: number;
+}
+
+/**
+ * The twelve event families (75 slots) followed by the 25-slot cue band — laid out in
+ * palette-index order. {@link createSfxPalette} fills the palette in exactly this order, so
+ * these offsets are the contract between the data and {@link SFX_FAMILY_BANDS}/
+ * {@link SFX_CUE_BAND}. Sums to {@link SFX_PALETTE_SIZE}.
+ */
+const FAMILY_LAYOUT = [
+  { fam: 'pluck', count: 8 },
+  { fam: 'zap', count: 8 },
+  { fam: 'bend', count: 7 },
+  { fam: 'drone', count: 6 },
+  { fam: 'sweep', count: 7 },
+  { fam: 'bell', count: 8 },
+  { fam: 'fall', count: 7 },
+  { fam: 'vibrato', count: 6 },
+  { fam: 'fmclang', count: 6 },
+  { fam: 'subboom', count: 5 },
+  { fam: 'glint', count: 4 },
+  { fam: 'strange', count: 3 },
+  { fam: 'cue', count: 25 },
+] as const;
+
+/** Resolve a family's `[start, count)` band from {@link FAMILY_LAYOUT}. */
+function bandOf(fam: string): SfxBand {
+  let start = 0;
+  for (const f of FAMILY_LAYOUT) {
+    if (f.fam === fam) return { start, count: f.count };
+    start += f.count;
+  }
+  return { start: 0, count: 1 }; // unreachable for the literal family names above
+}
+
+/**
+ * Maps each legacy semantic {@link SfxType} to the palette family that voices it. The engine
+ * rotates a per-band cursor across these so repeated triggers of the same action vary.
+ */
+export const SFX_FAMILY_BANDS: Readonly<Record<SfxType, SfxBand>> = {
+  split: bandOf('pluck'),
+  burst: bandOf('zap'),
+  mutate: bandOf('bend'),
+  ambient: bandOf('drone'),
+  warp: bandOf('sweep'),
+  crystallize: bandOf('bell'),
+  decay: bandOf('fall'),
+  resonance: bandOf('vibrato'),
+};
+
+/** The 25-slot cue band backing the per-sorting-field tones ({@link AudioEngine.cue}). */
+export const SFX_CUE_BAND: SfxBand = bandOf('cue');
+
+/** Extra non-semantic bands used directly by name via `playId` (cosmology, impacts, sparkle). */
+export const SFX_EXTRA_BANDS: Readonly<Record<string, SfxBand>> = {
+  fmclang: bandOf('fmclang'),
+  subboom: bandOf('subboom'),
+  glint: bandOf('glint'),
+  strange: bandOf('strange'),
+};
+
+const WAVES: readonly OscillatorType[] = ['sine', 'triangle', 'square', 'sawtooth'];
+
+/**
+ * Build the deterministic 100-entry SFX palette from a seeded `Rng`. Each timbral family
+ * (pluck, zap, bend, drone, sweep, bell, fall, vibrato, fm-clang, sub-boom, glint, strange)
+ * generates its slots with seeded parameter excursions, and a final ascending 25-slot CUE
+ * band gives every sorting field its own engineered voice. Pure and allocation-bounded
+ * (called ONCE at engine construction, never per frame). Same seed ⇒ same palette. O(100).
+ */
+export function createSfxPalette(rng: Rng): SfxSpec[] {
+  const R = (lo: number, hi: number): number => lo + rng() * (hi - lo);
+  const wave = (i: number): OscillatorType => WAVES[i % WAVES.length] ?? 'sine';
+  const out: SfxSpec[] = [];
+  const base = (
+    label: string,
+    wv: OscillatorType,
+    f0: number,
+    dur: number,
+    peak: number,
+  ): SfxSpec => ({
+    label,
+    wave: wv,
+    f0,
+    f1: f0,
+    f2: 0,
+    ramp: 'exp',
+    dur,
+    peak,
+    attack: 0.005,
+    filterType: '',
+    filterFreq: 0,
+    filterQ: 1,
+    fmRatio: 0,
+    fmDepth: 0,
+    lfoRate: 0,
+    lfoDepth: 0,
+    partial: 0,
+    noise: 0,
+    jitter: 0.12,
+  });
+
+  // PLUCK — bright descending mitosis blips (the 'split' family).
+  for (let i = 0; i < 8; i++) {
+    const s = base(
+      `pluck#${i}`,
+      i % 2 === 0 ? 'sawtooth' : i % 3 === 0 ? 'square' : 'triangle',
+      R(620, 1120),
+      R(0.5, 1.3),
+      R(0.08, 0.12),
+    );
+    s.f1 = R(40, 95);
+    s.filterType = 'lowpass';
+    s.filterFreq = R(1400, 3200);
+    s.filterQ = R(2, 6);
+    s.jitter = 0.16;
+    out.push(s);
+  }
+  // ZAP — noisy explosive spawns (the 'burst' family): up then crash down.
+  for (let i = 0; i < 8; i++) {
+    const s = base(
+      `zap#${i}`,
+      i % 2 === 0 ? 'square' : 'sawtooth',
+      R(150, 300),
+      R(0.4, 0.9),
+      R(0.07, 0.11),
+    );
+    s.f1 = R(1500, 2300);
+    s.f2 = R(28, 80);
+    s.ramp = 'lin';
+    s.noise = R(0.3, 0.6);
+    s.jitter = 0.2;
+    out.push(s);
+  }
+  // BEND — wobbling transmutations (the 'mutate' family).
+  for (let i = 0; i < 7; i++) {
+    const s = base(
+      `bend#${i}`,
+      i % 2 === 0 ? 'sine' : 'triangle',
+      R(110, 560),
+      R(0.7, 1.3),
+      R(0.06, 0.1),
+    );
+    s.lfoRate = R(4, 13);
+    s.lfoDepth = R(30, 130);
+    s.jitter = 0.26;
+    out.push(s);
+  }
+  // DRONE — low ambient pads (the 'ambient' family).
+  for (let i = 0; i < 6; i++) {
+    const s = base(
+      `drone#${i}`,
+      i % 2 === 0 ? 'sawtooth' : 'sine',
+      R(34, 120),
+      R(1.2, 2.3),
+      R(0.02, 0.05),
+    );
+    s.lfoRate = R(0.4, 2.2);
+    s.lfoDepth = R(2, 9);
+    s.attack = R(0.05, 0.3);
+    s.jitter = 0.18;
+    out.push(s);
+  }
+  // SWEEP — bandpass space-warps (the 'warp' family): rise then fall.
+  for (let i = 0; i < 7; i++) {
+    const s = base(`sweep#${i}`, 'sawtooth', R(45, 70), R(1.0, 1.8), R(0.07, 0.1));
+    s.f1 = R(2500, 3600);
+    s.f2 = R(80, 150);
+    s.filterType = 'bandpass';
+    s.filterFreq = R(500, 850);
+    s.filterQ = R(8, 15);
+    s.jitter = 0.14;
+    out.push(s);
+  }
+  // BELL — high crystalline glints (the 'crystallize' family).
+  for (let i = 0; i < 8; i++) {
+    const s = base(`bell#${i}`, 'sine', R(1500, 3500), R(0.6, 1.2), R(0.05, 0.085));
+    s.f1 = s.f0 * R(1.02, 1.12);
+    s.f2 = R(700, 1100);
+    s.ramp = 'lin';
+    s.partial = i % 2 === 0 ? 2 : 2.5;
+    s.filterType = 'highpass';
+    s.filterFreq = R(900, 1300);
+    s.attack = 0.01;
+    s.jitter = 0.1;
+    out.push(s);
+  }
+  // FALL — long sinking decays (the 'decay'/death family).
+  for (let i = 0; i < 7; i++) {
+    const s = base(`fall#${i}`, 'triangle', R(350, 520), R(1.2, 2.2), R(0.06, 0.09));
+    s.f1 = R(16, 32);
+    s.filterType = 'lowpass';
+    s.filterFreq = R(240, 420);
+    s.filterQ = R(6, 10);
+    s.jitter = 0.12;
+    out.push(s);
+  }
+  // VIBRATO — resonant sustains (the 'resonance' family).
+  for (let i = 0; i < 6; i++) {
+    const s = base(`vibrato#${i}`, 'sine', R(180, 320), R(1.2, 2.2), R(0.05, 0.08));
+    s.lfoRate = R(5, 15);
+    s.lfoDepth = R(80, 260);
+    s.jitter = 0.1;
+    out.push(s);
+  }
+  // FM-CLANG — inharmonic metallic strikes (cosmology / strange events).
+  for (let i = 0; i < 6; i++) {
+    const ratios = [1.41, 2.4, 3.1, 5.1, 1.73, 2.83];
+    const s = base(
+      `fmclang#${i}`,
+      i % 2 === 0 ? 'sine' : 'square',
+      R(120, 400),
+      R(0.5, 1.2),
+      R(0.05, 0.085),
+    );
+    s.fmRatio = ratios[i] ?? 2.4;
+    s.fmDepth = R(120, 600);
+    s.filterType = 'bandpass';
+    s.filterFreq = R(900, 2400);
+    s.filterQ = R(3, 8);
+    s.jitter = 0.18;
+    out.push(s);
+  }
+  // SUB-BOOM — subterranean impacts (black-hole / apocalypse weight).
+  for (let i = 0; i < 5; i++) {
+    const s = base(
+      `subboom#${i}`,
+      i % 2 === 0 ? 'sine' : 'triangle',
+      R(80, 140),
+      R(1.5, 2.6),
+      R(0.1, 0.14),
+    );
+    s.f1 = R(28, 50);
+    s.attack = R(0.01, 0.04);
+    s.noise = R(0.05, 0.2);
+    s.jitter = 0.1;
+    out.push(s);
+  }
+  // GLINT — tiny high sparkles.
+  for (let i = 0; i < 4; i++) {
+    const s = base(`glint#${i}`, 'sine', R(2600, 5200), R(0.15, 0.4), R(0.03, 0.055));
+    s.partial = 1.5;
+    s.jitter = 0.22;
+    out.push(s);
+  }
+  // STRANGE — exotic hybrids (FM + LFO + noise): the unexplained.
+  for (let i = 0; i < 3; i++) {
+    const s = base(
+      `strange#${i}`,
+      i % 2 === 0 ? 'sawtooth' : 'square',
+      R(200, 900),
+      R(0.8, 1.6),
+      R(0.05, 0.085),
+    );
+    s.lfoRate = R(6, 20);
+    s.lfoDepth = R(60, 240);
+    s.fmRatio = [1.61, 2.71, 3.33][i] ?? 1.61;
+    s.fmDepth = R(80, 300);
+    s.noise = R(0.1, 0.35);
+    s.jitter = 0.3;
+    out.push(s);
+  }
+  // CUE — 25 ascending engineered voices, one per sorting field (~3 octaves over the list).
+  for (let i = 0; i < 25; i++) {
+    const f0 = 196 * Math.pow(2, (i * (36 / 25)) / 12); // G3-rooted, climbing ~3 octaves
+    const s = base(`cue#${i}`, wave(i), f0, 0.6, R(0.07, 0.095));
+    s.f0 = f0 * 1.5; // a quick downward pluck chirp into the target
+    s.f1 = f0;
+    s.filterType = 'lowpass';
+    s.filterFreq = f0 * 6;
+    s.filterQ = 4;
+    s.partial = 2; // octave shimmer for sparkle
+    s.attack = 0.008;
+    s.jitter = 0.06;
+    out.push(s);
+  }
+  return out;
+}

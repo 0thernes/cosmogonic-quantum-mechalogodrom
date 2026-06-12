@@ -1,5 +1,6 @@
 /**
- * Web Audio engine: procedural music scheduler + 8-type SFX synthesizer.
+ * Web Audio engine: procedural music scheduler + a data-driven 100-voice SFX synthesizer
+ * (CONTRACTS V7.1 — a procedurally generated palette voiced by one generic `synth()`).
  *
  * Port of the legacy monolith's audio block (lines 541-572) and audio toggles/cycles
  * (lines 588-591), with three Known Bugs fixed:
@@ -30,7 +31,14 @@
  */
 import type { Rng } from '../math/rng';
 import type { SfxType, SimState } from '../types';
-import { SFX_TYPES, SONGS } from './songs';
+import {
+  SFX_CUE_BAND,
+  SFX_FAMILY_BANDS,
+  SFX_TYPES,
+  SONGS,
+  createSfxPalette,
+  type SfxSpec,
+} from './songs';
 
 /** Scale steps used by both chords and melody (legacy `fNotes`, line 550). */
 const F_NOTES: readonly number[] = [0, 2, 3, 5, 7, 8, 10, 12, 14, 15];
@@ -89,14 +97,23 @@ export class AudioEngine {
   private sfxIdx = 0;
   /** Shared analysis tap (V2); created lazily by {@link tapAnalyser}, once per engine. */
   private analyser: AnalyserNode | null = null;
+  /** The 100-entry procedural SFX palette (CONTRACTS V7.1), built once at construction. */
+  private readonly palette: readonly SfxSpec[];
+  /** Per-band round-robin cursor (keyed by band start) so repeat triggers don't repeat. */
+  private readonly bandCursor = new Map<number, number>();
+  /** Shared white-noise buffer for noisy specs (filled once, seeded by a local LCG). */
+  private noiseBuf: AudioBuffer | null = null;
 
   /**
    * @param state Shared sim state; the engine reads/advances `songIdx` only.
-   * @param rng Injected seeded Rng (contract rule 7) — detune, SFX jitter, ambient cadence.
+   * @param rng Injected seeded Rng (contract rule 7) — palette generation, detune, SFX
+   *   jitter, ambient cadence. This is the FORKED audio stream (seed ^ 0xa0d10), independent
+   *   of the sim stream, so audio draws never perturb sim determinism.
    */
   constructor(state: SimState, rng: Rng) {
     this.state = state;
     this.rng = rng;
+    this.palette = createSfxPalette(rng);
   }
 
   /** Music enabled? Read-only outside; flip via {@link toggleMusic}. */
@@ -228,107 +245,154 @@ export class AudioEngine {
   }
 
   /**
-   * Fire one synthesized SFX (legacy `pS`, lines 562-572). No-op until {@link init} has
-   * run and SFX are toggled on. O(1) — a handful of WebAudio nodes per trigger.
+   * Fire one synthesized SFX for a semantic action (legacy `pS`). Selects from the action's
+   * family band in the 100-entry palette via a per-band round-robin cursor PLUS a per-trigger
+   * pitch jitter, so repeated triggers of the same action never sound identical (CONTRACTS
+   * V7.1 — "nothing repetitive"). No-op until {@link init} has run and SFX are on. O(1).
    */
   play(type: SfxType): void {
+    if (!this.ctx || !this.sfxGain || !this._sfxOn) return;
+    const band = SFX_FAMILY_BANDS[type];
+    const cursor = this.bandCursor.get(band.start) ?? Math.floor(this.rng() * band.count);
+    this.bandCursor.set(band.start, cursor + 1);
+    const spec = this.palette[band.start + (cursor % band.count)];
+    if (spec) this.synth(spec, this.rng());
+  }
+
+  /**
+   * Fire palette entry `n` directly (CONTRACTS V7.1) — used by cosmology/impact systems and
+   * any caller that wants a specific engineered voice. Clamped into range; honors the SFX
+   * toggle. O(1).
+   */
+  playId(n: number): void {
+    if (!this.ctx || !this.sfxGain || !this._sfxOn) return;
+    const i = ((Math.floor(n) % this.palette.length) + this.palette.length) % this.palette.length;
+    const spec = this.palette[i];
+    if (spec) this.synth(spec, this.rng());
+  }
+
+  /**
+   * Lazily build the shared white-noise buffer for noisy specs. Filled ONCE with a local
+   * xorshift (not the injected rng — noise content needs no seed-reproducibility, and this
+   * avoids draining ~½s·sampleRate draws from the audio stream; not the banned global RNG
+   * either). 0.5 s mono. O(sampleRate) once.
+   */
+  private noiseBuffer(ctx: AudioContext): AudioBuffer {
+    if (this.noiseBuf) return this.noiseBuf;
+    const len = Math.floor(ctx.sampleRate * 0.5);
+    const buf = ctx.createBuffer(1, len, ctx.sampleRate);
+    const data = buf.getChannelData(0);
+    let x = 0x9e3779b9 >>> 0;
+    for (let i = 0; i < len; i++) {
+      x ^= x << 13;
+      x ^= x >>> 17;
+      x ^= x << 5;
+      x >>>= 0;
+      data[i] = (x / 0xffffffff) * 2 - 1;
+    }
+    this.noiseBuf = buf;
+    return buf;
+  }
+
+  /**
+   * Voice one {@link SfxSpec} on the SFX bus (CONTRACTS V7.1). Builds the primary oscillator
+   * (with a one- or two-segment pitch ramp), an optional biquad filter, optional FM and
+   * pitch-LFO modulators, an optional octave shimmer partial, and an optional filtered noise
+   * burst — exactly the parts the spec enables. Fire-and-forget; nodes are GC'd after `stop`.
+   * O(1): a small constant of WebAudio nodes per trigger (never per animation frame).
+   *
+   * @param spec The palette descriptor to voice.
+   * @param jitter A 0..1 sample (from the forked rng) wobbling f-values by ±½·spec.jitter.
+   */
+  private synth(spec: SfxSpec, jitter: number): void {
     const ctx = this.ctx;
     const out = this.sfxGain;
-    if (!ctx || !out || !this._sfxOn) return;
+    if (!ctx || !out) return;
     const t = ctx.currentTime;
+    const jf = 1 + (jitter - 0.5) * spec.jitter;
+    const f0 = Math.max(20, spec.f0 * jf);
+    const f1 = Math.max(20, spec.f1 * jf);
+    const peak = Math.max(0.0005, spec.peak);
     const o = ctx.createOscillator();
     const gn = ctx.createGain();
-    const f = ctx.createBiquadFilter();
-    switch (type) {
-      case 'split':
-        o.type = 'sawtooth';
-        o.frequency.setValueAtTime(800, t);
-        o.frequency.exponentialRampToValueAtTime(50, t + 1.2);
-        gn.gain.setValueAtTime(0.12, t);
-        gn.gain.exponentialRampToValueAtTime(0.001, t + 1.2);
-        o.connect(gn);
-        break;
-      case 'burst':
-        o.type = 'square';
-        o.frequency.setValueAtTime(200, t);
-        o.frequency.linearRampToValueAtTime(1800, t + 0.1);
-        o.frequency.exponentialRampToValueAtTime(30, t + 0.7);
-        gn.gain.setValueAtTime(0.1, t);
-        gn.gain.exponentialRampToValueAtTime(0.001, t + 0.7);
-        o.connect(gn);
-        break;
-      case 'mutate':
-        o.type = 'sine';
-        o.frequency.setValueAtTime(100 + this.rng() * 500, t);
-        gn.gain.setValueAtTime(0.08, t);
-        gn.gain.exponentialRampToValueAtTime(0.001, t + 1);
-        o.connect(gn);
-        break;
-      case 'warp':
-        o.type = 'sawtooth';
-        o.frequency.setValueAtTime(50, t);
-        o.frequency.exponentialRampToValueAtTime(3000, t + 0.3);
-        o.frequency.exponentialRampToValueAtTime(100, t + 1.5);
-        f.type = 'bandpass';
-        f.frequency.value = 600;
-        f.Q.value = 12;
-        gn.gain.setValueAtTime(0.1, t);
-        gn.gain.exponentialRampToValueAtTime(0.001, t + 1.5);
-        o.connect(f);
-        f.connect(gn);
-        break;
-      case 'crystallize':
-        o.type = 'sine';
-        o.frequency.setValueAtTime(2000, t);
-        o.frequency.linearRampToValueAtTime(4000, t + 0.05);
-        o.frequency.exponentialRampToValueAtTime(800, t + 1);
-        f.type = 'highpass';
-        f.frequency.value = 1000;
-        gn.gain.setValueAtTime(0.06, t);
-        gn.gain.linearRampToValueAtTime(0.12, t + 0.05);
-        gn.gain.exponentialRampToValueAtTime(0.001, t + 1);
-        o.connect(f);
-        f.connect(gn);
-        break;
-      case 'decay':
-        o.type = 'triangle';
-        o.frequency.setValueAtTime(400, t);
-        o.frequency.exponentialRampToValueAtTime(20, t + 2);
-        f.type = 'lowpass';
-        f.frequency.value = 300;
-        f.Q.value = 8;
-        gn.gain.setValueAtTime(0.08, t);
-        gn.gain.exponentialRampToValueAtTime(0.001, t + 2);
-        o.connect(f);
-        f.connect(gn);
-        break;
-      case 'resonance': {
-        o.type = 'sine';
-        o.frequency.setValueAtTime(220, t);
-        const lfo = ctx.createOscillator();
-        lfo.frequency.value = 5 + this.rng() * 10;
-        const lg = ctx.createGain();
-        lg.gain.value = 100 + this.rng() * 200;
-        lfo.connect(lg);
-        lg.connect(o.frequency);
-        lfo.start(t);
-        lfo.stop(t + 2);
-        gn.gain.setValueAtTime(0.07, t);
-        gn.gain.exponentialRampToValueAtTime(0.001, t + 2);
-        o.connect(gn);
-        break;
-      }
-      case 'ambient':
-        o.type = 'sawtooth';
-        o.frequency.value = 40 + this.rng() * 90;
-        gn.gain.setValueAtTime(0.02, t);
-        gn.gain.exponentialRampToValueAtTime(0.001, t + 1.5);
-        o.connect(gn);
-        break;
+    o.type = spec.wave;
+    o.frequency.setValueAtTime(f0, t);
+    const seg1 = spec.f2 > 0 ? t + spec.dur * 0.18 : t + spec.dur;
+    if (spec.ramp === 'lin') o.frequency.linearRampToValueAtTime(f1, seg1);
+    else o.frequency.exponentialRampToValueAtTime(f1, seg1);
+    if (spec.f2 > 0) {
+      o.frequency.exponentialRampToValueAtTime(Math.max(20, spec.f2 * jf), t + spec.dur);
     }
+    // Optional filter in series with the main oscillator.
+    let node: AudioNode = o;
+    if (spec.filterType !== '') {
+      const f = ctx.createBiquadFilter();
+      f.type = spec.filterType;
+      f.frequency.value = spec.filterFreq;
+      f.Q.value = spec.filterQ;
+      o.connect(f);
+      node = f;
+    }
+    gn.gain.setValueAtTime(0.0001, t);
+    gn.gain.exponentialRampToValueAtTime(peak, t + spec.attack + 0.001);
+    gn.gain.exponentialRampToValueAtTime(0.0008, t + spec.dur);
+    node.connect(gn);
     gn.connect(out);
     o.start(t);
-    o.stop(t + 3);
+    o.stop(t + spec.dur + 0.05);
+    // FM modulator → carrier frequency.
+    if (spec.fmRatio > 0 && spec.fmDepth > 0) {
+      const mod = ctx.createOscillator();
+      const mg = ctx.createGain();
+      mod.frequency.value = f0 * spec.fmRatio;
+      mg.gain.value = spec.fmDepth;
+      mod.connect(mg);
+      mg.connect(o.frequency);
+      mod.start(t);
+      mod.stop(t + spec.dur + 0.05);
+    }
+    // Pitch-LFO (vibrato/wobble) → carrier frequency.
+    if (spec.lfoRate > 0 && spec.lfoDepth > 0) {
+      const lfo = ctx.createOscillator();
+      const lg = ctx.createGain();
+      lfo.frequency.value = spec.lfoRate;
+      lg.gain.value = spec.lfoDepth;
+      lfo.connect(lg);
+      lg.connect(o.frequency);
+      lfo.start(t);
+      lfo.stop(t + spec.dur + 0.05);
+    }
+    // Octave shimmer partial.
+    if (spec.partial > 0) {
+      const op = ctx.createOscillator();
+      const pg = ctx.createGain();
+      op.type = 'sine';
+      op.frequency.value = f0 * spec.partial;
+      pg.gain.setValueAtTime(0.0001, t);
+      pg.gain.exponentialRampToValueAtTime(peak * 0.4, t + 0.012);
+      pg.gain.exponentialRampToValueAtTime(0.0008, t + spec.dur * 0.6);
+      op.connect(pg);
+      pg.connect(out);
+      op.start(t);
+      op.stop(t + spec.dur * 0.6 + 0.05);
+    }
+    // Filtered noise burst (zaps/booms/strange).
+    if (spec.noise > 0) {
+      const src = ctx.createBufferSource();
+      src.buffer = this.noiseBuffer(ctx);
+      const nf = ctx.createBiquadFilter();
+      const ng = ctx.createGain();
+      nf.type = 'bandpass';
+      nf.frequency.value = Math.min(8000, f0 * 4 + 400);
+      nf.Q.value = 1;
+      ng.gain.setValueAtTime(spec.noise * peak, t);
+      ng.gain.exponentialRampToValueAtTime(0.0005, t + Math.min(0.25, spec.dur));
+      src.connect(nf);
+      nf.connect(ng);
+      ng.connect(out);
+      src.start(t);
+      src.stop(t + Math.min(0.3, spec.dur) + 0.02);
+    }
   }
 
   /**
@@ -341,44 +405,17 @@ export class AudioEngine {
    * per call (a user gesture, never per frame).
    */
   cue(idx: number, total: number): void {
-    const ctx = this.ctx;
-    const out = this.sfxGain;
-    if (!ctx || !out || !this._sfxOn) return;
-    const t = ctx.currentTime;
+    if (!this.ctx || !this.sfxGain || !this._sfxOn) return;
     const n = Math.max(1, total);
-    const i = ((idx % n) + n) % n;
-    const base = 196 * Math.pow(2, (i * (36 / n)) / 12); // G3-rooted, ~3 octaves over the list
-    const waves: OscillatorType[] = ['sine', 'triangle', 'square', 'sawtooth'];
-    // Body voice: plucked, with a quick downward chirp and a lowpass for tone.
-    const o = ctx.createOscillator();
-    const gn = ctx.createGain();
-    const f = ctx.createBiquadFilter();
-    o.type = waves[i % 4] ?? 'sine';
-    o.frequency.setValueAtTime(base * 1.5, t);
-    o.frequency.exponentialRampToValueAtTime(base, t + 0.12);
-    f.type = 'lowpass';
-    f.frequency.value = base * 6;
-    f.Q.value = 4;
-    gn.gain.setValueAtTime(0.0001, t);
-    gn.gain.exponentialRampToValueAtTime(0.09, t + 0.01);
-    gn.gain.exponentialRampToValueAtTime(0.001, t + 0.6);
-    o.connect(f);
-    f.connect(gn);
-    gn.connect(out);
-    o.start(t);
-    o.stop(t + 0.7);
-    // Shimmer partial: a quieter octave sine for sparkle.
-    const o2 = ctx.createOscillator();
-    const gn2 = ctx.createGain();
-    o2.type = 'sine';
-    o2.frequency.setValueAtTime(base * 2, t);
-    gn2.gain.setValueAtTime(0.0001, t);
-    gn2.gain.exponentialRampToValueAtTime(0.04, t + 0.01);
-    gn2.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
-    o2.connect(gn2);
-    gn2.connect(out);
-    o2.start(t);
-    o2.stop(t + 0.4);
+    const i = ((Math.floor(idx) % n) + n) % n;
+    // Route through the 25-slot cue band (CONTRACTS V7.1): each field has its own engineered
+    // ascending voice with a built-in octave shimmer. Map an arbitrary field count onto the
+    // 25 cue voices proportionally so any ALGOS length stays in band.
+    const slot =
+      SFX_CUE_BAND.start +
+      Math.min(SFX_CUE_BAND.count - 1, Math.floor((i / n) * SFX_CUE_BAND.count));
+    const spec = this.palette[slot];
+    if (spec) this.synth(spec, this.rng());
   }
 
   /**

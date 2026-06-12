@@ -1,5 +1,13 @@
 import { describe, expect, test } from 'bun:test';
-import { SFX_TYPES, SONGS } from '../src/audio/songs';
+import {
+  SFX_CUE_BAND,
+  SFX_FAMILY_BANDS,
+  SFX_PALETTE_SIZE,
+  SFX_TYPES,
+  SONGS,
+  createSfxPalette,
+} from '../src/audio/songs';
+import { mulberry32 } from '../src/math/rng';
 import type { SfxType } from '../src/types';
 
 /**
@@ -143,5 +151,68 @@ describe('SFX_TYPES catalog', () => {
     for (const t of SFX_TYPES) {
       expect(allowed.has(t)).toBe(true);
     }
+  });
+});
+
+describe('SFX palette (CONTRACTS V7.1)', () => {
+  const VALID_WAVES: ReadonlySet<string> = new Set(['sine', 'square', 'sawtooth', 'triangle']);
+
+  test('createSfxPalette returns exactly SFX_PALETTE_SIZE (100) specs', () => {
+    const palette = createSfxPalette(mulberry32(7));
+    expect(SFX_PALETTE_SIZE).toBe(100);
+    expect(palette.length).toBe(100);
+  });
+
+  test('every spec is well-formed: finite, positive freq/dur, sane envelope', () => {
+    const palette = createSfxPalette(mulberry32(123));
+    for (const s of palette) {
+      expect(VALID_WAVES.has(s.wave)).toBe(true);
+      expect(Number.isFinite(s.f0)).toBe(true);
+      expect(s.f0).toBeGreaterThan(0);
+      expect(s.f1).toBeGreaterThan(0);
+      expect(s.f2).toBeGreaterThanOrEqual(0); // 0 = single-segment sweep
+      expect(s.dur).toBeGreaterThan(0);
+      expect(s.peak).toBeGreaterThan(0);
+      expect(s.attack).toBeGreaterThanOrEqual(0);
+      expect(s.jitter).toBeGreaterThanOrEqual(0);
+      expect(s.jitter).toBeLessThanOrEqual(1);
+      // No spec should specify a filter type the engine can't apply.
+      if (s.filterType !== '') {
+        expect(['lowpass', 'highpass', 'bandpass']).toContain(s.filterType);
+        expect(s.filterFreq).toBeGreaterThan(0);
+      }
+    }
+  });
+
+  test('same seed produces an identical palette (determinism)', () => {
+    const a = createSfxPalette(mulberry32(0xc0ffee));
+    const b = createSfxPalette(mulberry32(0xc0ffee));
+    expect(a).toEqual(b);
+  });
+
+  test('different seeds diverge (the palette is genuinely seeded, not constant)', () => {
+    const a = createSfxPalette(mulberry32(1));
+    const b = createSfxPalette(mulberry32(2));
+    expect(a).not.toEqual(b);
+  });
+
+  test('family bands and the cue band are in-range, disjoint, and tile the palette', () => {
+    const bands = [...Object.values(SFX_FAMILY_BANDS), SFX_CUE_BAND];
+    // Every band is in range.
+    for (const band of bands) {
+      expect(band.start).toBeGreaterThanOrEqual(0);
+      expect(band.count).toBeGreaterThan(0);
+      expect(band.start + band.count).toBeLessThanOrEqual(SFX_PALETTE_SIZE);
+    }
+    // The eight family bands + cue band cover disjoint index sets.
+    const covered = new Set<number>();
+    for (const band of bands) {
+      for (let i = band.start; i < band.start + band.count; i++) {
+        expect(covered.has(i)).toBe(false);
+        covered.add(i);
+      }
+    }
+    // The cue band is the 25 sorting-field voices.
+    expect(SFX_CUE_BAND.count).toBe(25);
   });
 });

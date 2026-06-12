@@ -1205,3 +1205,141 @@ User: "a report page explaining all this — the entire ERM/ERD/ERP, File/Folder
 
 - Populate #algo-list from ALGOS (25 `.algo-row` with name + `.algo-prog`), bind click → set state.algoIdx + showSector(name) + a distinct selection SFX/tone per algo; mark `.active`; update `#algo-active` + per-row progress from a sorted-fraction/inversion estimate each telemetry tick. Each algorithm already light-flashes via the batched sortStep; add a per-algo characteristic (e.g. swap-tone pitch derived from algoIdx) so each "sounds" different as it runs.
 - Wire any observatory snapshot fields the obs-draw writer needs (none expected). Gate + soak + commit 0.6.0.
+
+---
+
+# CONTRACTS V7 — XENOCATACLYSM (0.7.0) — third user-feedback decree
+
+Summoner decree: make the world VISIBLY come alive — a sound for everything (100
+distinct, never-repeating), sorting fields that are individually beautiful and
+that ignite the population, more ways to SEE the cosmos than a wireframe toggle,
+weather that violently reshapes reality, a chaos control that summons real
+cosmological singularities, and a second simulation that breaks free into
+nightmare. All V1–V6 ground rules bind (strict TS, seeded `Rng` only,
+allocation-free per-frame bodies, JSDoc + complexity, full `bun run check` gate,
+exclusive file ownership, determinism). The integrator owns world.ts / main.ts /
+types.ts.
+
+## V7.1 — 100 distinct SFX (writer: audio — src/audio/songs.ts + src/audio/engine.ts)
+
+- songs.ts (leaf, pure) gains a **procedurally generated 100-entry SFX palette**:
+  `interface SfxSpec` (waveform, start/end frequency + ramp shape, duration,
+  gain peak/attack, optional biquad filter, optional FM ratio/depth, optional
+  pitch-LFO rate/depth, optional noise mix, optional shimmer partial, per-trigger
+  jitter) and `createSfxPalette(rng: Rng): SfxSpec[]` returning EXACTLY 100 specs
+  spread across timbral FAMILIES (pluck, zap, bend, drone, sweep, bell, fall,
+  vibrato, fm-clang, sub-boom, glint, strange-noise) via seeded parameter
+  excursions, so no two are alike. The 8 legacy semantic names (`SfxType`) map to
+  family BANDS via an exported `SFX_FAMILY_BANDS` table; a 25-slot CUE BAND backs
+  the per-sorting-field tones.
+- engine.ts gains a single data-driven `synth(spec, jitter)` private method
+  (replacing the 8-case `switch` — the legacy 8 sounds survive as palette specs)
+  and builds the palette ONCE at construction from the forked audio `rng`.
+  `play(type)` selects from the type's family band with a per-family rotating
+  cursor + small rng jitter so REPEAT triggers of the same action never sound
+  identical ("nothing repetitive"). New `playId(n)` fires palette entry `n`
+  directly (used by the cue band + future systems). `cue(idx, total)` routes
+  through the 25-slot CUE band so each field has an engineered voice, not just a
+  pitch shift. All on the SFX bus, honoring the toggle; no per-frame work.
+- Tests (tests/songs.test.ts): palette length is exactly 100; every spec is
+  finite and has positive duration/frequency; same seed ⇒ same palette
+  (determinism); the family bands + cue band cover disjoint, in-range indices.
+
+## V7.2 — Algorithm aliveness (writer: integrator world.ts + ui-shell index.html/app.css)
+
+- Each `.algo-row` is VISUALLY UNIQUE: a deterministic per-index accent hue
+  (`algoIdx · 360/25` rotated), a leading **glyph** from a 25-entry glyph table
+  (exported `ALGO_GLYPHS` in src/sim/algorithms.ts — a distinct symbol per field,
+  e.g. ◆ ▲ ✶ ⌘ ∿ …), and a varied type treatment (the integrator sets per-row CSS
+  custom props `--algo-hue`/`--algo-glyph`; app.css styles `.algo-row` to consume
+  them). Rows have a clear `:hover`/`:active`/`.active` reactive treatment
+  (glow + scale ≤1.04, ≥44px touch targets, `:focus-visible` ring, reduced-motion
+  respected). Selecting a field still fires its cue tone + the population ignition
+  shimmer (sortPerformance) — amplified so ~500 organisms flash and ripple.
+- Two new controls in the picker panel: **RUN ALL** (`#algo-all`) and **AUTO**
+  (`#algo-auto`). RUN ALL sets `state.algoMode='all'`: each frame the sortStep
+  runs a blended batch drawing proposals from EVERY field (round-robin across
+  ALGOS), so the whole population organizes under all 25 signatures at once.
+  AUTO sets `state.algoMode='auto'`: the active field advances on a timed cadence
+  (every ~6 s of sim time) through all 25 in succession, announcing each. Picking
+  a single field returns `algoMode='single'`. The HUD `#alg` card shows the mode.
+  `SimState` gains `algoMode: 'single'|'all'|'auto'` and `algoTimer: number`
+  (integrator-owned; persistence unchanged — mode is session-only).
+
+## V7.3 — Render view modes (writer: integrator world.ts + entities.ts facade + ui-shell)
+
+- The binary wireframe toggle becomes a **5-mode render cycle** owned by
+  `EntityManager.setRenderMode(mode: RenderMode)` (exported union
+  `'solid'|'wire'|'ghost'|'neon'|'points'`), superseding `setWireframe`
+  (kept as a thin alias for any caller). Modes: SOLID (default PBR), WIRE
+  (wireframe), GHOST (low-opacity translucent x-ray), NEON (emissive-boosted,
+  flat), POINTS (geometry drawn as points). The manager applies the mode to live
+  - future materials allocation-free (flags only; no geometry rebuild). The
+    toolbar `wire` button cycles the modes (relabeled VIEW/RENDER); `SimState.wireframe`
+    becomes `renderMode: RenderMode` (integrator migrates persistence: the old
+    boolean maps `true→'wire'`, `false→'solid'`). Instanced renderer honors the
+    mode on its pooled materials. Phone/instanced POINTS may fall back to SOLID if
+    pooled points are impractical — document the fallback.
+
+## V7.4 — Cosmological chaos (writer: cosmo — NEW src/sim/singularities.ts; integrator wires)
+
+- A NEW `SingularitySystem` summons real-cosmology effects at a point in the
+  arena, each a deterministic force-field + visual built from the geometry cache
+  and seeded `ctx.rng`, allocation-free per frame, auto-expiring:
+  - **ENTROPY** — global disorder surge: randomizes velocities, decays order,
+    fades emissive toward heat-death grey.
+  - **BLACK HOLE** — a gravitational sink: r⁻² pull toward the singularity, an
+    accretion-disk ring, an event-horizon dark sphere; entities crossing the
+    horizon are consumed (disposed) and scar the RD ground.
+  - **WHITE HOLE** — time-reversed black hole: nothing may enter; a r⁻² REPULSION
+    that ejects matter outward, spawning bursts at the boundary (the impossible
+    cosmological-censorship object).
+  - **GREY HOLE** — the decaying intermediate: alternating absorb/emit pulses
+    (a black hole leaking its mass back as Hawking-like radiation), neither fully
+    consuming nor fully ejecting.
+  - **STRANGE STAR** — a quark/strange-matter star: a contact-conversion front
+    that "infects" nearby organisms, remorphing them into a strange-matter palette
+    (the strangelet chain reaction), with a dense degenerate-core glow.
+  - **STRANGE/EXOTIC extras allowed** (e.g. neutron-star pulsar sweep) if seeded
+    and cheap. Each effect: `summon(kind, pos)`, internally cadenced `update(dt,t)`,
+    `readonly active: boolean`. The chaos/apocalypse control gains a chooser
+    (toolbar/wheel) cycling the kinds; the integrator routes `summon` and audits
+    each with a lore epithet. Determinism: all draws on frame cadences via ctx.rng.
+  - Tests (tests/singularities.test.ts): headless build; each kind builds + a
+    forced update stays finite over 2k frames; consumption respects the horizon;
+    same-seed determinism of the spawned field.
+
+## V7.5 — Dramatic weather (writer: weather — src/sim/weather.ts + couplings)
+
+- The 6 weather states must reshape the world UNMISTAKABLY. Strengthen the
+  existing weather→{wind, fog, exposure, temperature} couplings (bigger ranges,
+  faster onset) AND fan weather into atmosphere + behavior bias within the
+  EXISTING contracted hooks (no new exposure owner — weather still owns exposure):
+  STORM = violent wind + low dark fog + lightning-bright light pulses; AURORA =
+  luminous, saturated, slow; VOID = near-black, frozen, sparse; FOG = dense
+  whiteout; RAIN = downpour drift; CLEAR = calm baseline. Keep determinism and the
+  ≤0.35 audio-coupling cap intact (weather is not audio-driven). Document the new
+  ranges; keep `tests/atmosphere.test.ts` green and add weather-range assertions.
+
+## V7.6 — SIMULATION N(1)/N(2) duality (writer: integrator world.ts/types.ts + ui-shell)
+
+- A top-level **simulation variant** toggle, `SimState.sim: 1|2`, persisted:
+  - **N(1) GENESIS** — the cosmos as it ships (no behavioral change at sim=1).
+  - **N(2) BREAK FREE** — the world tears loose into nightmare: inverted/oversatur-
+    ated palette, the sky dome recolored to an impossible negative, heightened
+    chaos floor, behavior unhinged (wider excursions), audio detuned/darker, the
+    HUD/title branding shifts to "SIMULATION N(2)". Implemented through EXISTING
+    contracted hooks where possible (chaos floor, atmosphere recolor flag, a
+    render tint) — a documented, bounded set of multipliers gated on `sim===2`, so
+    sim=1 stays byte-identical and every determinism test is untouched. A toolbar
+    control flips it; the integrator audits the transition.
+  - Determinism: sim variant is a fixed multiplier set, not a new rng stream;
+    same seed + same sim variant ⇒ same cosmos.
+
+## V7 acceptance
+
+Full `bun run check` green after EACH wave's commit; ultra 10k unbroken; phone
+tier ≥30fps share; zero console errors over a 3-min soak that exercises every new
+control (100-SFX spam, RUN ALL + AUTO, all 5 render modes, every singularity,
+every weather, and the N(1)→N(2) flip + back); same-seed determinism preserved at
+sim=1 and within each sim variant.
