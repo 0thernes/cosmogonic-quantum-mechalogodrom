@@ -63,6 +63,7 @@ import { ConstellationSystem } from './sim/constellations';
 import { AtmosphereSystem } from './sim/atmosphere';
 import { Viz3DSystem, type Viz3DSnapshot } from './sim/viz3d';
 import { SingularitySystem, SINGULARITY_KINDS } from './sim/singularities';
+import { LeviathanSystem } from './sim/leviathans';
 import { LoreEngine } from './sim/lore';
 import { AnalyticsSystem } from './sim/analytics';
 import { AudioEngine } from './audio/engine';
@@ -158,6 +159,7 @@ export class World {
   private readonly viz3d: Viz3DSystem;
   /** Cosmological chaos effects (CONTRACTS V7.4) — at most one active at a time. */
   private readonly singularities: SingularitySystem;
+  private readonly leviathans: LeviathanSystem;
   /** Cycle cursor for the chaos control's singularity chooser. */
   private singularityCursor = 0;
   /** Reused per-frame scalar block handed to the instanced renderer (alloc-free). */
@@ -306,6 +308,9 @@ export class World {
     // F-HOLES: let an active singularity tug the big roaming beings too, not just the organisms.
     this.shoggoths.attachSingularity(this.singularities);
     this.titans.attachSingularity(this.singularities);
+    // F-BEINGS: a fourth order of colossi (leviathans). Boot-stream-neutral — draws no rng here.
+    this.leviathans = new LeviathanSystem(ctx);
+    this.leviathans.attachSingularity(this.singularities);
 
     this.hud = new Hud();
     this.panel = new TelemetryPanel();
@@ -440,6 +445,8 @@ export class World {
     // Titans roam every frame; economy/diplomacy/strikes are internally cadenced
     // off s.frame (CONTRACTS V3.3) — after the grid so strikes can query it.
     this.titans.update(dt, t);
+    // F-BEINGS: the leviathans sail the mid-field (pure trig + the read-only hole force, no rng).
+    this.leviathans.update(dt, t);
     // Cosmological chaos (V7.4): apply the active singularity's force field to entity
     // velocities BEFORE entities.update integrates them this frame. No-op when none active.
     this.singularities.update(dt, t);
