@@ -9,15 +9,16 @@ a named limitation or accepted risk) · **❌ FAIL** (a defect — must be fixed
 
 | Verdict   | Count |
 | --------- | ----- |
-| ✅ PASS   | 485   |
-| 🟡 WARN   | 15    |
+| ✅ PASS   | 486   |
+| 🟡 WARN   | 14    |
 | ❌ FAIL   | 0     |
 | **Total** | 500   |
 
 Scope: every folder, every file, the public surface of every module. Last full sweep: release
-`0.8.0`; §2.40, §13.258, §17.339 + §21.420 promoted to ✅ in `0.9.0` (a cross-platform CI matrix, a
-`prefers-reduced-motion` accommodation, a CI coverage gate, and a CycloneDX SBOM shipped). The audit
-is re-run before each tagged release; deltas land in [CHANGELOG.md](../CHANGELOG.md).
+`0.8.0`; §2.40, §13.258, §13.260, §17.339 + §21.420 promoted to ✅ post-`0.9.0` (a cross-platform CI
+matrix, a `prefers-reduced-motion` accommodation, a measured WCAG-contrast gate, a CI coverage gate,
+and a CycloneDX SBOM shipped). The audit is re-run before each tagged release; deltas land in
+[CHANGELOG.md](../CHANGELOG.md).
 
 > Provenance: this list is the human-readable companion to the binding
 > [MODULE-CONTRACTS.md](./MODULE-CONTRACTS.md) and the [COMPLEXITY.md](./COMPLEXITY.md) budget.
@@ -323,7 +324,7 @@ is re-run before each tagged release; deltas land in [CHANGELOG.md](../CHANGELOG
 257. ✅ The `/docs` report is plain semantic HTML, screen-reader navigable.
 258. ✅ `prefers-reduced-motion` is honored — the UI chrome's animations/transitions collapse to near-instant (`app.css`); the WebGL canvas stays live by design, and the TIME control can pause the whole sim (timeScale 0).
 259. 🟡 No automated a11y audit (axe-core) in CI (manual review only).
-260. 🟡 WCAG contrast is not formally measured against AA for every secondary/disabled state.
+260. ✅ Text-token contrast is computed + asserted in CI (`tests/contrast.test.ts`): primary ink/white clear AAA (≥7:1) and accent/secondary/bar/warn clear AA (≥4.5:1) on the `--color-void` background — measured, not assumed.
 
 ## 14. Server & API
 
@@ -605,12 +606,12 @@ is re-run before each tagged release; deltas land in [CHANGELOG.md](../CHANGELOG
 
 ### How to use this inspection
 
-- **Before a release:** re-walk the 15 🟡 WARNs; promote any that have been resolved to ✅, and add new
+- **Before a release:** re-walk the 14 🟡 WARNs; promote any that have been resolved to ✅, and add new
   points as the surface grows. A WARN flipping to ❌ blocks the tag.
 - **During review:** cite point numbers in PR comments (e.g. "regresses §6.101 allocation discipline").
 - **For newcomers:** read this top-to-bottom for a guided tour of what "done" means here, then dive into
   [MODULE-CONTRACTS.md](./MODULE-CONTRACTS.md) for the binding detail.
 
-The 15 WARNs are deliberate, named limitations appropriate to a **local, single-author proof of
+The 14 WARNs are deliberate, named limitations appropriate to a **local, single-author proof of
 concept** — none is a correctness, determinism, or security defect. They are the honest edge of the
 envelope, recorded so they are decisions rather than blind spots.
