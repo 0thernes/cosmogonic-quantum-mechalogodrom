@@ -120,4 +120,4 @@ docs updated (CHANGELOG + any affected contract/diagram). Determinism preserved
 - **Data model (ERD/ERM)** — entities, relationships, cardinalities: [ERD.md](./ERD.md)
 - **Binding work specs** — per-era acceptance criteria: [MODULE-CONTRACTS.md](./MODULE-CONTRACTS.md)
 - **Release log** — what shipped per version: [../CHANGELOG.md](../CHANGELOG.md)
-- **Audit & review** — the 500-point inspection: [INSPECTION.md](./INSPECTION.md)
+- **Audit & review** — the 500-point inspection: [500-POINT-INSPECTION.md](./500-POINT-INSPECTION.md)
