@@ -5,6 +5,40 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+Post-`0.9.0` continuous-hardening — no behaviour changes to the sim, all shipped behind the full
+gate (now also a coverage gate, on Linux + Windows) with same-seed determinism preserved.
+
+### Added
+
+- **`docs/CONTROLS.md`** — a complete control reference (mouse, keyboard hotkeys incl. `G`/`N`/`H`,
+  touch, every bottom-panel button, and the 9 camera views).
+- **Bottom-panel buttons** for SPACE, ENTROPY, and LAUNCH NHI (the Wave 1-2 controls were previously
+  hotkey-only) — runtime-verified firing through the audit trail.
+- **Determinism-under-use tests** — prove the render-mode and entropy couplings reproduce byte-for-byte
+  from one seed when ENGAGED (not just at their identity defaults) and visibly diverge from baseline
+  (the couplings aren't accidental no-ops).
+- **Doc-link integrity test** — scans every Markdown file's relative links; it immediately caught and
+  fixed a stale `docs/KANBAN.md → ./INSPECTION.md` link left from the 0.8.0 consolidation.
+- **Game-theory benchmarks** (`bench/games.bench.ts`) — iterated-PD `playRound` + `replicatorStep`.
+- **`prefers-reduced-motion`** accommodation (`app.css`) — calms UI-chrome animation for
+  motion-sensitive users; the WebGL canvas is intentionally unaffected.
+- **CycloneDX 1.5 SBOM** (`scripts/sbom.ts`, `bun run sbom`) — deterministic, attached to each release.
+
+### Changed
+
+- **CI** now enforces a coverage threshold (measured **95.6% line / 90.5% function**) and runs a
+  **cross-platform matrix (ubuntu + windows)**, both verified green.
+- **500-Point Inspection** refreshed to **485 PASS / 15 WARN / 0 FAIL** — §2.40 (cross-platform CI),
+  §13.258 (reduced-motion), §17.339 (coverage gate), and §21.420 (SBOM) promoted, each backed by a
+  shipped, verified fix.
+
+### Verified
+
+- Adversarial review of the new in-world AI (`brains.ts` GOAP planner, `genome.ts` crossover/mutation,
+  `lineage.ts` kinship traversal): sound, deterministic, and covered by tests — no defects found.
+
 ## [0.9.0] - 2026-06-13
 
 "AGImAGNOSIS" — the world gains minds. Pre-transformer game/A-Life AI (finite-state
