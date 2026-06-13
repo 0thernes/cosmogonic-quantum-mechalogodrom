@@ -1,0 +1,92 @@
+# Controls
+
+Every way to drive the Cosmogonic Quantum Mechalogodrom — mouse, keyboard, touch, and the
+bottom-panel buttons. Bindings live in [`src/ui/input.ts`](../src/ui/input.ts) (DOM → `UiActions`)
+and the camera/hotkey logic in [`src/world.ts`](../src/world.ts).
+
+## Mouse (desktop)
+
+| Input                       | Effect                                  |
+| --------------------------- | --------------------------------------- |
+| Drag on the canvas          | Look around (free view) — yaw + pitch   |
+| Scroll wheel                | Dolly the camera forward / back (zoom)  |
+| Click a bottom-panel button | Fire that control (see the table below) |
+
+## Keyboard
+
+Movement keys steer the camera in the **free** view; the macro keys work in any view.
+
+| Key(s)             | Action                                                           |
+| ------------------ | ---------------------------------------------------------------- |
+| `W` `A` `S` `D`    | Move forward / left / back / right                               |
+| `Q` / `E`          | Rise / descend                                                   |
+| Arrow keys         | Move + turn                                                      |
+| `Z` `X`            | Roll the camera                                                  |
+| `R` `F`            | Pitch up / down                                                  |
+| `C` `V`            | Yaw left / right                                                 |
+| **`Space`** (hold) | Burst — spawn a wave of organisms                                |
+| **`Shift`** (hold) | Split — mature organisms bud children                            |
+| **`M`** (hold)     | Mutate                                                           |
+| **`Tab`** (hold)   | Pour in **chaos** (agitation)                                    |
+| **`G`** (hold)     | Pour in **entropy** (order / heat-death — the opposite of chaos) |
+| **`N`** (tap)      | **Launch an NHI being** (Matrix powers) in front of the camera   |
+| **`H`** (tap)      | Dilate **space** — cycle the camera field of view                |
+
+## Touch (phone / tablet)
+
+| Surface                   | Effect                                                                                                       |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| Left joystick (`#jP`)     | Steer the camera                                                                                             |
+| Look pad (`#lp`)          | Look around                                                                                                  |
+| Two-finger pinch          | Zoom in / out                                                                                                |
+| Radial action wheel       | Four `[data-a]` sim petals + a centre **long-press for apocalypse** (a destructive act is never a stray tap) |
+| Edge-docked sheet handles | Slide panels in/out (TEL / CTL / OBS / AUD); `Escape` closes                                                 |
+
+## Bottom-panel buttons
+
+Each toolbar button maps to a `UiActions` method via `TOOLBAR_MAP`; the chaos/split/burst/mutate
+pad buttons map via `SIM_MAP`.
+
+| Button        | Action                                                                              |
+| ------------- | ----------------------------------------------------------------------------------- |
+| Music / SFX   | Toggle the procedural music / sound effects                                         |
+| Song          | Cycle the 6 dramatic songs                                                          |
+| Algo          | Cycle the 25 sorting-field algorithms (each with its own light + cue tone)          |
+| Weather       | Cycle the 6 weather states (CLEAR · RAIN · STORM · AURORA · VOID · FOG)             |
+| Time          | Step the time scale `0 (pause) · 0.1 · 0.2 · 0.5 · 1 · 2 · 3 · 5`                   |
+| **Space**     | Dilate the camera FOV (fish-eye ↔ telephoto) — also `H`                             |
+| Render (wire) | Cycle the 7 entity render styles (each also nudges motion — see F-RENDER-DYN)       |
+| View          | Cycle the 9 camera views (below)                                                    |
+| Chaos         | Step chaos up through discrete LEVELS                                               |
+| **Entropy**   | Raise the entropy axis (order / heat-death) — also `G`                              |
+| **⟁ NHI**     | Launch an NHI being with Matrix powers — also `N`                                   |
+| Cosmo         | Summon a singularity (entropy → black hole → white hole → grey hole → strange star) |
+| Sim           | Toggle the simulation variant N(1) Genesis ↔ N(2) Break Free (nightmare)            |
+| Apocalypse    | Trigger a cataclysm (long-press on touch)                                           |
+| Reset         | Restart the world from the seed                                                     |
+
+## Camera views (cycle with View)
+
+The first four are the legacy set; the rest are the 0.9 cinematic / subject-tracking shots.
+
+| View        | Shot                                                  |
+| ----------- | ----------------------------------------------------- |
+| `free`      | Manual fly-cam (mouse + keyboard)                     |
+| `orbit`     | Slow orbit of the core                                |
+| `fly`       | Automatic weaving fly-through                         |
+| `top`       | Top-down survey of the 5× floor                       |
+| `follow`    | Lerps to an orbiting offset around a tracked organism |
+| `chase`     | Trails just behind a tracked organism's heading       |
+| `cinematic` | Slow grand drift across the whole arena               |
+| `vortex`    | Descending / rising spiral around the world axis      |
+| `titan`     | Wide tracking shot from far back and high up          |
+
+## The AI Copilot side-chat
+
+A read-only AI you can chat with about the repo and the world — it can READ files and RUN
+read-only commands, but never edits code. It needs an API token (set in the environment); without
+one it degrades to a clearly-disabled panel and the sim runs fully regardless. See
+[AI-SUBSYSTEM.md](./AI-SUBSYSTEM.md).
+
+> Determinism note: every control is either a pure presentation change (camera, render look) or a
+> seed-routed, audit-recorded sim input — so a recorded session replays identically from its seed.

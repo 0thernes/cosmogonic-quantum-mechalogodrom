@@ -297,6 +297,8 @@ telemetry + analytics push (every 8th frame) → analytics analyze (every
 
 ## Documentation
 
+- [docs/CONTROLS.md](./docs/CONTROLS.md) — every control: mouse, keyboard hotkeys,
+  touch, bottom-panel buttons, and the 9 camera views
 - [docs/MODULE-CONTRACTS.md](./docs/MODULE-CONTRACTS.md) — the binding
   per-module spec (V1 through V6: port, Wildbeyond, Pantheon, Xenogenesis,
   Resonance, Atelier), including the Known Bugs table fixed during the port
