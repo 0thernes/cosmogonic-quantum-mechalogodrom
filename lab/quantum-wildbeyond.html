@@ -3761,6 +3761,14 @@
       }
 
       function regenerateArt() {
+        // Roll a NEW master seed so every press yields a fresh, chaotically-different variation of
+        // every form — the page-1 collapse field AND all 12 board tiles re-derive from the new seed.
+        // (Previously it re-ran the SAME seed, so "Regenerate" produced identical output — the
+        // "nothing happens" / "empty" symptom.) Same seed-roll the ↻ Random button uses; the
+        // generative paths downstream stay fully seeded (mulberry32 / p5 randomSeed), so each
+        // variant is reproducible from its seed.
+        params.seed = Math.floor(Math.random() * 999999) + 1;
+        updateSeedDisplay();
         initializeSystem();
         rebuildBoards();
       }
