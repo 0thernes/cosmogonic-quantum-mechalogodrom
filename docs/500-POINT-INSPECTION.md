@@ -9,15 +9,15 @@ a named limitation or accepted risk) · **❌ FAIL** (a defect — must be fixed
 
 | Verdict   | Count |
 | --------- | ----- |
-| ✅ PASS   | 484   |
-| 🟡 WARN   | 16    |
+| ✅ PASS   | 485   |
+| 🟡 WARN   | 15    |
 | ❌ FAIL   | 0     |
 | **Total** | 500   |
 
 Scope: every folder, every file, the public surface of every module. Last full sweep: release
-`0.8.0`; §13.258, §17.339 + §21.420 promoted to ✅ in `0.9.0` (a `prefers-reduced-motion`
-accommodation, a CI coverage gate, and a CycloneDX SBOM shipped). The audit is re-run before each
-tagged release; deltas land in [CHANGELOG.md](../CHANGELOG.md).
+`0.8.0`; §2.40, §13.258, §17.339 + §21.420 promoted to ✅ in `0.9.0` (a cross-platform CI matrix, a
+`prefers-reduced-motion` accommodation, a CI coverage gate, and a CycloneDX SBOM shipped). The audit
+is re-run before each tagged release; deltas land in [CHANGELOG.md](../CHANGELOG.md).
 
 > Provenance: this list is the human-readable companion to the binding
 > [MODULE-CONTRACTS.md](./MODULE-CONTRACTS.md) and the [COMPLEXITY.md](./COMPLEXITY.md) budget.
@@ -70,7 +70,7 @@ tagged release; deltas land in [CHANGELOG.md](../CHANGELOG.md).
 37. ✅ The production bundle is fully static — deployable to any file host or object store.
 38. ✅ Source maps / minification handled by Bun's `minify: true`; no hand-rolled pipeline.
 39. ✅ Bench tooling (`mitata`) is a devDependency, never shipped.
-40. 🟡 No cross-platform CI matrix (Linux only); local dev is Windows, so a Linux-only gate could miss an OS-specific path bug — mitigated by `-LiteralPath` discipline and LF normalization.
+40. ✅ The CI gate runs a cross-platform matrix — **ubuntu-latest + windows-latest** (the dev platform), verified green on both — so OS-specific path/EOL bugs surface in CI, not just on the author's machine.
 
 ## 3. TypeScript Type Safety
 
@@ -605,12 +605,12 @@ tagged release; deltas land in [CHANGELOG.md](../CHANGELOG.md).
 
 ### How to use this inspection
 
-- **Before a release:** re-walk the 16 🟡 WARNs; promote any that have been resolved to ✅, and add new
+- **Before a release:** re-walk the 15 🟡 WARNs; promote any that have been resolved to ✅, and add new
   points as the surface grows. A WARN flipping to ❌ blocks the tag.
 - **During review:** cite point numbers in PR comments (e.g. "regresses §6.101 allocation discipline").
 - **For newcomers:** read this top-to-bottom for a guided tour of what "done" means here, then dive into
   [MODULE-CONTRACTS.md](./MODULE-CONTRACTS.md) for the binding detail.
 
-The 16 WARNs are deliberate, named limitations appropriate to a **local, single-author proof of
+The 15 WARNs are deliberate, named limitations appropriate to a **local, single-author proof of
 concept** — none is a correctness, determinism, or security defect. They are the honest edge of the
 envelope, recorded so they are decisions rather than blind spots.
