@@ -10,6 +10,7 @@ import './scalar.bench';
 import './heap.bench';
 import './spatial-hash.bench';
 import './algorithms.bench';
+import './games.bench';
 import './quantum.bench';
 import './reaction-diffusion.bench';
 import { run } from 'mitata';
