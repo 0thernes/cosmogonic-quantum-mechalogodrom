@@ -82,6 +82,34 @@ const PRESETS: readonly ProviderPreset[] = [
     model: 'mistral-small-latest',
     keyEnv: 'MISTRAL_API_KEY',
   },
+  {
+    id: 'gemini',
+    label: 'Google Gemini · 2.5 Flash',
+    endpoint: 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions',
+    model: 'gemini-2.5-flash',
+    keyEnv: 'GEMINI_API_KEY',
+  },
+  {
+    id: 'nvidia',
+    label: 'NVIDIA NIM · Llama-3.3-70B',
+    endpoint: 'https://integrate.api.nvidia.com/v1/chat/completions',
+    model: 'meta/llama-3.3-70b-instruct',
+    keyEnv: 'NVIDIA_API_KEY',
+  },
+  {
+    id: 'deepseek',
+    label: 'DeepSeek · chat',
+    endpoint: 'https://api.deepseek.com/v1/chat/completions',
+    model: 'deepseek-chat',
+    keyEnv: 'DEEPSEEK_API_KEY',
+  },
+  {
+    id: 'huggingface',
+    label: 'Hugging Face · Llama-3.3-70B',
+    endpoint: 'https://router.huggingface.co/v1/chat/completions',
+    model: 'meta-llama/Llama-3.3-70B-Instruct',
+    keyEnv: 'HF_TOKEN',
+  },
 ] as const;
 
 /** Resolved, ready-to-call provider (endpoint + model + bearer key). */
