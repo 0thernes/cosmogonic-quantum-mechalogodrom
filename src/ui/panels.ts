@@ -7,6 +7,7 @@
  * (graph-mind tribes), `#v10` (population trend per minute), and `#v11` (quantum entropy).
  */
 import type { TelemetrySnapshot } from '../types';
+import { sentienceTier } from '../math/scalar';
 import { Sparkline } from './graphs';
 
 /** Resolve a required element by id, failing loudly on integration mistakes. */
@@ -126,7 +127,8 @@ export class TelemetryPanel {
     this.es.textContent = String(s.shoggoths);
     this.ep.textContent = String(s.puppeteers);
     this.etn.textContent = String(s.titans); // V3: the ten colossi
-    this.snt.textContent = `${Math.round(s.sentience * 100)}%`; // V4: biome aliveness
+    // V4 aliveness as a %, plus its named tier (F-SENTIENCE-VAR: DORMANT…TRANSCENDENT).
+    this.snt.textContent = `${Math.round(s.sentience * 100)}% ${sentienceTier(s.sentience)}`;
     // Full-scale tracking: both graphs scale to the active tier's caps, which
     // the snapshot now carries directly (V3 — no more derived pairing table).
     this.gEntities.max = s.maxEntities;

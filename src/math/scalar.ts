@@ -40,3 +40,22 @@ export function dist2XZ(ax: number, az: number, bx: number, bz: number): number 
   const z = az - bz;
   return x * x + z * z;
 }
+
+/**
+ * Named sentience tiers (F-SENTIENCE-VAR) — the biome's self-awareness classified into kinds, low
+ * to high. The 0..1 sentience index is a continuum; these give it legible "levels and kinds".
+ */
+export const SENTIENCE_TIERS = ['DORMANT', 'STIRRING', 'AWARE', 'LUCID', 'TRANSCENDENT'] as const;
+
+/** One of the named sentience tiers. */
+export type SentienceTier = (typeof SENTIENCE_TIERS)[number];
+
+/**
+ * Classify a 0..1 sentience index into a named {@link SentienceTier} (input clamped). Pure, O(1):
+ * the band is `floor(v · tiers)` capped at the top tier, so 0 → DORMANT and 1 → TRANSCENDENT.
+ */
+export function sentienceTier(value: number): SentienceTier {
+  const v = value <= 0 ? 0 : value >= 1 ? 1 : value;
+  const i = Math.min(SENTIENCE_TIERS.length - 1, Math.floor(v * SENTIENCE_TIERS.length));
+  return SENTIENCE_TIERS[i] ?? 'DORMANT';
+}

@@ -1,5 +1,13 @@
 import { describe, expect, test } from 'bun:test';
-import { TAU, clamp, dist2, dist2XZ, lerp } from '../src/math/scalar';
+import {
+  SENTIENCE_TIERS,
+  TAU,
+  clamp,
+  dist2,
+  dist2XZ,
+  lerp,
+  sentienceTier,
+} from '../src/math/scalar';
 
 describe('TAU', () => {
   test('is a full turn in radians', () => {
@@ -64,6 +72,31 @@ describe('dist2', () => {
 
   test('is non-negative', () => {
     expect(dist2(-3, -4, -5, 3, 4, 5)).toBeGreaterThanOrEqual(0);
+  });
+});
+
+describe('sentienceTier (F-SENTIENCE-VAR)', () => {
+  test('maps the 0..1 index to ascending named tiers, ends inclusive', () => {
+    expect(sentienceTier(0)).toBe('DORMANT');
+    expect(sentienceTier(1)).toBe('TRANSCENDENT');
+    expect(sentienceTier(0.5)).toBe('AWARE'); // middle band (index 2 of 5)
+  });
+
+  test('clamps out-of-range inputs and never returns undefined', () => {
+    expect(sentienceTier(-5)).toBe('DORMANT');
+    expect(sentienceTier(99)).toBe('TRANSCENDENT');
+    for (let v = 0; v <= 1.0001; v += 0.05) {
+      expect(SENTIENCE_TIERS).toContain(sentienceTier(v));
+    }
+  });
+
+  test('is monotonic non-decreasing across the range (higher index ⇒ same-or-higher tier)', () => {
+    let last = -1;
+    for (let v = 0; v <= 1; v += 0.01) {
+      const idx = SENTIENCE_TIERS.indexOf(sentienceTier(v));
+      expect(idx).toBeGreaterThanOrEqual(last);
+      last = idx;
+    }
   });
 });
 
