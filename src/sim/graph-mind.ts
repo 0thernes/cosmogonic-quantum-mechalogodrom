@@ -19,6 +19,7 @@
 import { UndirectedGraph } from 'graphology';
 import louvain from 'graphology-communities-louvain';
 import pagerank from 'graphology-metrics/centrality/pagerank';
+import { selectTopK } from '../math/heap';
 import type { Entity, SimContext } from '../types';
 import type { EntityManager } from './entities';
 import type { Connectome } from './connectome';
@@ -132,8 +133,10 @@ export class GraphMind {
    * Rebuild the graph and run PageRank; the top-{@link RANK_TOP} entities get an
    * emissive-intensity floor of {@link RANK_EMISSIVE_FLOOR}, and entities that held the halo
    * but fell out of the top set are restored to their morph baseline. Ties rank by ascending
-   * entity index (stable sort over numerically ordered keys) — deterministic.
-   * Slow-cadence path (every 600 frames, offset 300): O((V + E)·i + V log V).
+   * entity index, which makes the order total, so the chosen set is deterministic and matches a
+   * stable descending sort exactly — while {@link selectTopK} finds it with a bounded min-heap in
+   * O(V log RANK_TOP) rather than an O(V log V) full sort of all nodes.
+   * Slow-cadence path (every 600 frames, offset 300): O((V + E)·i + V log RANK_TOP).
    */
   updateRank(): void {
     this.rebuildGraph();
@@ -144,10 +147,16 @@ export class GraphMind {
     if (g.order > 0) {
       const ranks = pagerank(g, { getEdgeWeight: null });
       const nodes = Object.keys(ranks);
-      nodes.sort((a, b) => (ranks[b] ?? 0) - (ranks[a] ?? 0));
-      const limit = Math.min(RANK_TOP, nodes.length);
-      for (let r = 0; r < limit; r++) {
-        const key = nodes[r];
+      // Top-RANK_TOP by PageRank descending, ties broken by ascending entity index. The index
+      // tie-break is a strict total order, so this bounded-heap selection returns exactly the set
+      // a stable full sort would — in O(V log RANK_TOP) instead of O(V log V).
+      const topKeys = selectTopK(nodes, RANK_TOP, (a, b) => {
+        const ra = ranks[a] ?? 0;
+        const rb = ranks[b] ?? 0;
+        return ra !== rb ? ra > rb : Number(a) < Number(b);
+      });
+      for (let r = 0; r < topKeys.length; r++) {
+        const key = topKeys[r];
         if (key === undefined) continue; // noUncheckedIndexedAccess: r < length
         const e = list[Number(key)];
         if (e) top.add(e);
