@@ -105,6 +105,37 @@ describe('SingularitySystem', () => {
     expect(new SingularitySystem(ctxA, entA).active).toBe(false);
   });
 
+  test('F-HOLES bodyForce: inactive→false; pulls into a black hole, pushes from a white hole; reach-gated', () => {
+    const ctx = makeCtx(7, 500);
+    const ent = new EntityManager(ctx);
+    const sys = new SingularitySystem(ctx, ent);
+    const out = new THREE.Vector3();
+
+    // Inactive: no force, out zeroed.
+    expect(sys.bodyForce(CENTER.x + 10, CENTER.y, CENTER.z, 0.016, out)).toBe(false);
+    expect(out.lengthSq()).toBe(0);
+
+    // Black hole pulls a body at +x back TOWARD the centre (−x delta), finite.
+    sys.summon('blackhole', CENTER.clone());
+    expect(sys.bodyForce(CENTER.x + 10, CENTER.y, CENTER.z, 0.016, out)).toBe(true);
+    expect(out.x).toBeLessThan(0);
+    expect(Number.isFinite(out.x) && Number.isFinite(out.y) && Number.isFinite(out.z)).toBe(true);
+
+    // White hole pushes the same body AWAY from the centre (+x delta).
+    sys.summon('whitehole', CENTER.clone());
+    sys.bodyForce(CENTER.x + 10, CENTER.y, CENTER.z, 0.016, out);
+    expect(out.x).toBeGreaterThan(0);
+
+    // Far outside the reach → no force.
+    sys.summon('blackhole', CENTER.clone());
+    expect(sys.bodyForce(CENTER.x + 1e6, CENTER.y, CENTER.z, 0.016, out)).toBe(false);
+    expect(out.lengthSq()).toBe(0);
+
+    // Disposed → field gone again.
+    sys.dispose();
+    expect(sys.bodyForce(CENTER.x + 10, CENTER.y, CENTER.z, 0.016, out)).toBe(false);
+  });
+
   test('summon activates the chosen kind; dispose clears it', () => {
     const ctx = makeCtx(3, 500);
     const sys = new SingularitySystem(ctx, new EntityManager(ctx));

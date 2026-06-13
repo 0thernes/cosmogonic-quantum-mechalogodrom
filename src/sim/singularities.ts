@@ -61,6 +61,8 @@ const CONV_R2 = CONV_R * CONV_R;
 /** Gravitational constant (tuned for a strong but bounded rush) and the per-frame accel cap. */
 const G = 2200;
 const ACCEL_MAX = 6;
+/** F-HOLES: the big roaming beings feel a gentler share of the field so colossi glide, not snap. */
+const BODY_GAIN = 0.4;
 /** Max organisms a black hole consumes per frame (keeps mass die-off off the budget cliff). */
 const MAX_CONSUME = 25;
 /** Accretion/fountain particle count by tier (instanced = laptop+). Independent of population. */
@@ -137,6 +139,41 @@ export class SingularitySystem {
   /** Organisms consumed by the current/last black hole (read after a summon for audits). */
   get consumed(): number {
     return this._consumed;
+  }
+
+  /**
+   * F-HOLES: the active singularity's radial velocity delta at an arbitrary world point, so the
+   * BIG roaming beings (shoggoths, titans) and other massive bodies feel the hole — not only the
+   * organisms. Writes the per-frame delta into `out` and returns true when active and in reach.
+   * Mirrors the organism field (r⁻² toward/away from the centre, capped at {@link ACCEL_MAX}) at a
+   * gentler {@link BODY_GAIN} so the colossi drift majestically instead of snapping. Pull for the
+   * absorbers, push for the emitters; the entropy heat-death gives a gentle outward swell. Draws no
+   * rng and allocation-free (writes the caller's `out`), so it never perturbs the seeded stream.
+   */
+  bodyForce(px: number, py: number, pz: number, dt: number, out: THREE.Vector3): boolean {
+    const kind = this._kind;
+    if (kind === null) {
+      out.set(0, 0, 0);
+      return false;
+    }
+    const c = this.center;
+    out.set(c.x - px, c.y - py, c.z - pz); // vector toward the centre
+    const r2 = out.lengthSq();
+    if (r2 > REACH2 || r2 < 1e-6) {
+      out.set(0, 0, 0);
+      return false;
+    }
+    let sign = 1; // blackhole / absorber pull is the default
+    if (kind === 'whitehole') sign = -1;
+    else if (kind === 'greyhole')
+      sign = 0.6; // averages toward absorb; organisms get the pulse
+    else if (kind === 'strangestar')
+      sign = 0.4; // a mild draw into the conversion zone
+    else if (kind === 'entropy') sign = -0.3; // heat-death swell — shove the colossi gently apart
+    const r = Math.sqrt(r2);
+    const accel = Math.min(G / r2, ACCEL_MAX) * sign * BODY_GAIN;
+    out.multiplyScalar((accel * dt) / r); // out (toward centre) → unit × accel × dt
+    return true;
   }
 
   /**

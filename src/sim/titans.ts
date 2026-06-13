@@ -44,6 +44,7 @@ import {
 import type { PairHistory } from '../math/games';
 import type { SimContext } from '../types';
 import type { EntityManager } from './entities';
+import type { SingularitySystem } from './singularities';
 
 /** Number of titans (fixed — the war matrix and pair tables are sized for exactly 10). */
 const TITAN_COUNT = 10;
@@ -136,6 +137,8 @@ const GEO_ORGANIC = 38;
 // Module-level scratch vectors — reused every frame/event, never retained.
 const VA = new THREE.Vector3();
 const VB = new THREE.Vector3();
+/** F-HOLES: scratch for the singularity body-force pull on a titan (never retained). */
+const HOLE_F = new THREE.Vector3();
 
 /** Pair index tables: pair p ⇔ (PAIR_A[p], PAIR_B[p]), i < j, row-major enumeration. */
 const PAIR_A = new Uint8Array(PAIR_COUNT);
@@ -247,6 +250,8 @@ export class TitanSystem {
 
   private readonly ctx: SimContext;
   private readonly entities: EntityManager;
+  /** F-HOLES: singularity system attached by the composition root; an active hole tugs the titans. */
+  private singularity: SingularitySystem | null = null;
   private readonly rd: TitanRd;
   private readonly titans: Titan[] = [];
   /** 45 pair histories, indexed by the PAIR_A/PAIR_B tables. */
@@ -285,6 +290,11 @@ export class TitanSystem {
   /** Number of titans (constant 10 — telemetry). */
   get count(): number {
     return this.titans.length;
+  }
+
+  /** F-HOLES: wire in the singularity system so an active hole tugs the titans (or null to detach). */
+  attachSingularity(singularity: SingularitySystem | null): void {
+    this.singularity = singularity;
   }
 
   /**
@@ -358,6 +368,12 @@ export class TitanSystem {
       const ti = this.titans[i];
       if (!ti) continue; // invariant: dense array
       this.roamAndAnimate(ti, dt, t);
+      // F-HOLES: an active singularity tugs the colossi too. No-op when unattached/inactive (so
+      // the determinism tests, which summon nothing, stay byte-identical); draws no rng.
+      if (this.singularity) {
+        const p = ti.group.position;
+        if (this.singularity.bodyForce(p.x, p.y, p.z, dt, HOLE_F)) ti.vel.add(HOLE_F);
+      }
     }
     const econPh = frame % ECON_PERIOD;
     if (econPh % ECON_STAGGER === 0) {

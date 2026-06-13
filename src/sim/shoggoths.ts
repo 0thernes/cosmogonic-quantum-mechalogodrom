@@ -9,6 +9,7 @@ import { ARENA_MID, MID_RADIUS2 } from './constants';
 import { POINT_LIGHT_GAIN } from './environment';
 import type { SimContext } from '../types';
 import type { EntityManager } from './entities';
+import type { SingularitySystem } from './singularities';
 
 /** Tendril line segments per shoggoth (legacy `tc`). */
 const TENDRIL_COUNT = 8;
@@ -25,6 +26,8 @@ const LORENZ_BOUND = 25;
 const V1 = new THREE.Vector3();
 const V2 = new THREE.Vector3();
 const V3 = new THREE.Vector3();
+/** F-HOLES: scratch for the singularity body-force pull (never retained). */
+const HOLE_F = new THREE.Vector3();
 
 /** Internal per-shoggoth record (the legacy stuffed this into `group.userData`). */
 interface Shoggoth {
@@ -57,6 +60,9 @@ export class ShoggothSystem {
   private readonly ctx: SimContext;
   private readonly entities: EntityManager;
   private readonly shogs: Shoggoth[] = [];
+  /** F-HOLES: the singularity system, attached by the composition root after construction; the
+   *  active hole tugs the shoggoths too. null ⇒ no coupling (the legacy/test behaviour). */
+  private singularity: SingularitySystem | null = null;
 
   /** Builds the three shoggoths at the legacy posts × ARENA_MID (V3.1 mid-field). */
   constructor(ctx: SimContext, entities: EntityManager) {
@@ -72,6 +78,11 @@ export class ShoggothSystem {
   /** Number of active shoggoths (constant 3 — feeds the telemetry `shoggoths` field). */
   get count(): number {
     return this.shogs.length;
+  }
+
+  /** F-HOLES: wire in the singularity system so an active hole tugs the shoggoths (or null to detach). */
+  attachSingularity(singularity: SingularitySystem | null): void {
+    this.singularity = singularity;
   }
 
   /** Constructor-time builder (allocations allowed here; legacy `mkShog`). */
@@ -198,6 +209,11 @@ export class ShoggothSystem {
       sg.vel.y += Math.cos(t * 0.5 + sg.ph) * (lx * (28 - lz) - ly) * dt * 0.0002;
       sg.vel.z += Math.sin(t * 0.3 + sg.ph) * (lx * ly - 2.667 * lz) * dt * 0.0003;
       sg.vel.multiplyScalar(0.99);
+      // F-HOLES: an active singularity drags the shoggoth toward/away from its centre. No-op when
+      // unattached or inactive (the legacy/test path), and it draws no rng, so the stream is intact.
+      if (this.singularity && this.singularity.bodyForce(p.x, p.y, p.z, dt, HOLE_F)) {
+        sg.vel.add(HOLE_F);
+      }
       V1.copy(sg.vel).multiplyScalar(dt * 60);
       p.add(V1);
       if (p.lengthSq() > MID_RADIUS2) {

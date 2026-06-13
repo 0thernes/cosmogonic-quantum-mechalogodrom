@@ -298,6 +298,9 @@ export class World {
     // Cosmological chaos (V7.4): draws no rng and builds nothing at construction (lazy on
     // summon), so it is boot-stream-neutral like viz3d.
     this.singularities = new SingularitySystem(ctx, this.entities);
+    // F-HOLES: let an active singularity tug the big roaming beings too, not just the organisms.
+    this.shoggoths.attachSingularity(this.singularities);
+    this.titans.attachSingularity(this.singularities);
 
     this.hud = new Hud();
     this.panel = new TelemetryPanel();
