@@ -7,6 +7,7 @@
  */
 import './rng.bench';
 import './scalar.bench';
+import './heap.bench';
 import './spatial-hash.bench';
 import './algorithms.bench';
 import './quantum.bench';
