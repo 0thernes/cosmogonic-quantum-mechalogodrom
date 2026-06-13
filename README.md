@@ -1,5 +1,13 @@
 # COSMOGONIC QUANTUM MECHALOGODROM
 
+[![CI](https://github.com/0thernes/cosmogonic-quantum-mechalogodrom/actions/workflows/ci.yml/badge.svg)](https://github.com/0thernes/cosmogonic-quantum-mechalogodrom/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/0thernes/cosmogonic-quantum-mechalogodrom/actions/workflows/codeql.yml/badge.svg)](https://github.com/0thernes/cosmogonic-quantum-mechalogodrom/actions/workflows/codeql.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
+[![Bun](https://img.shields.io/badge/Bun-1.3-black?logo=bun&logoColor=white)](https://bun.sh)
+[![TypeScript strict](https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript&logoColor=white)](./tsconfig.json)
+[![tests](https://img.shields.io/badge/tests-453%20passing-brightgreen)](./tests)
+[![audit](https://img.shields.io/badge/inspection-500%20points-success)](./docs/500-POINT-INSPECTION.md)
+
 A procedural WebGL cosmic ecosystem — morphogenic organisms, Shoggoths,
 puppet-master NPCs, atmospheric weather, a neural connectome, and quantum
 diffusion. Built with **Bun + TypeScript + three.js 0.184 + Tailwind CSS 4 +
@@ -296,8 +304,10 @@ telemetry + analytics push (every 8th frame) → analytics analyze (every
   aesthetic constitution (real math under every effect)
 - [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) — module graph, data flow,
   frame pipeline (V1 + V2 cadences)
-- [docs/ERD.md](./docs/ERD.md) — entity-relationship model + process models
-  (sequence and state diagrams)
+- Data model trilogy: [docs/ERD.md](./docs/ERD.md) (attribute-level structure)
+  · [docs/ERM.md](./docs/ERM.md) (conceptual relationship model + cardinality
+  rules + write-back matrix) · [docs/ERP.md](./docs/ERP.md) (process view —
+  boot, frame pipeline, cadence schedule, lifecycles)
 - [docs/WIREFRAMES.md](./docs/WIREFRAMES.md) — desktop/mobile wireframes,
   type scale, color tokens
 - [docs/DESIGN-SYSTEM.md](./docs/DESIGN-SYSTEM.md) — design-system audit,
@@ -313,6 +323,10 @@ telemetry + analytics push (every 8th frame) → analytics analyze (every
   [0003 HTMX + Tailwind UI](./docs/adr/0003-htmx-tailwind-ui.md) ·
   [0004 deterministic RNG](./docs/adr/0004-deterministic-rng.md) ·
   [0005 math-stack selection](./docs/adr/0005-math-stack-selection.md)
+- [docs/500-POINT-INSPECTION.md](./docs/500-POINT-INSPECTION.md) — the standing
+  quality audit: 25 sections × 20 checkpoints, each with a verdict and evidence
+- [docs/KANBAN.md](./docs/KANBAN.md) — the delivery board (cards across columns
+  by epic) · [ROADMAP.md](./ROADMAP.md) — shipped / now / next horizons
 - [CONTRIBUTING.md](./CONTRIBUTING.md) · [SECURITY.md](./SECURITY.md) ·
   [CHANGELOG.md](./CHANGELOG.md)
 

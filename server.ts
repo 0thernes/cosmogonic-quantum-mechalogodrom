@@ -22,8 +22,15 @@ import { createLogger } from './src/logging/logger';
 
 const log = createLogger('server');
 
-/** Reported by `GET /api/health`; mirrors package.json `version`. */
-const VERSION = '0.6.1';
+/**
+ * Reported by `GET /api/health`. Derived from package.json at startup rather than hand-synced, so
+ * the health version can never drift from the package (it previously had — the constant said 0.6.1
+ * while the package was already 0.7.2). server.ts is run directly by Bun (never bundled), so the
+ * top-level await + file read is evaluated exactly once at boot.
+ */
+const VERSION = (
+  (await Bun.file(new URL('./package.json', import.meta.url)).json()) as { version: string }
+).version;
 
 /** Maximum number of audit entries retained in memory (matches the client-side cap). */
 const AUDIT_CAP = 200;

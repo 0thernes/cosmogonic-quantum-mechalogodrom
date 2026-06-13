@@ -5,6 +5,52 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.0] - 2026-06-12
+
+"HARDENING" — a professional-grade pass: a new DSA primitive, full CI/CD plus
+security automation, the complete data-model + process documentation set, and a
+standing 500-point quality audit.
+
+### Added
+
+- **Binary heap + bounded top-K selector** (`src/math/heap.ts`) — a generic
+  array-backed `BinaryHeap<T>` (O(log n) push/pop/replaceRoot) and `selectTopK`,
+  which returns the K best by a strict-total-order comparator in O(n log k) time /
+  O(k) space. Exhaustive tests (heapsort parity over 1,000 arrays, top-K parity vs
+  a reference stable sort over 2,000 rank vectors, tie-break + degenerate cases)
+  and a benchmark (`bench/heap.bench.ts`: selectTopK vs sort+slice at V=10,000,
+  K=20).
+- **CodeQL security scanning** (`security-extended`, push/PR + weekly schedule)
+  and repo **governance**: a PR template (gate checklist), bug/feature issue
+  templates, and CODEOWNERS. (Complements the existing CI gate, tagged-release CD,
+  and grouped Dependabot.)
+- **Data-model documentation set**: `docs/ERM.md` (conceptual relationship model
+  with cardinality rules + a cross-system write-back matrix) and `docs/ERP.md`
+  (process view — boot sequence, per-frame pipeline, cadence schedule, entity
+  lifecycle, audit flow), complementing the existing `docs/ERD.md`.
+- **`docs/500-POINT-INSPECTION.md`** — a standing audit: 25 sections × 20
+  checkpoints (480 PASS / 20 WARN / 0 FAIL), each with a verdict and concrete
+  evidence (file, symbol, test, or measured fact).
+- **`ROADMAP.md`** — shipped / now / next horizons, with the "Next" horizon
+  sourced directly from the inspection's 20 open WARNs.
+- README status badges (CI, CodeQL, license, Bun, TypeScript-strict, tests,
+  audit) and an expanded documentation index.
+
+### Changed
+
+- **PageRank halo selection is now O(V log K), not O(V log V).**
+  `GraphMind.updateRank` selects the top-20 via the bounded min-heap instead of a
+  full sort over all V ≤ 10,000 node keys. The exact tie-break (rank descending,
+  ties by ascending entity index) is preserved, so the chosen set is byte-identical
+  and deterministic. (`docs/COMPLEXITY.md` updated.)
+
+### Fixed
+
+- **Health-endpoint version drift.** `GET /api/health` reported a hand-synced
+  constant (`0.6.1`) that had fallen behind the package (`0.7.2`). The version is
+  now derived from `package.json` at server startup, so it can never drift again.
+  (`server.ts`.)
+
 ## [0.7.2] - 2026-06-12
 
 A whole-repo audit pass (handle everything: errors, bugs, structure) plus the
