@@ -63,6 +63,7 @@ import { ConstellationSystem } from './sim/constellations';
 import { AtmosphereSystem } from './sim/atmosphere';
 import { Viz3DSystem, type Viz3DSnapshot } from './sim/viz3d';
 import { SingularitySystem, SINGULARITY_KINDS } from './sim/singularities';
+import { ArtifactField } from './sim/artifacts';
 import { LeviathanSystem } from './sim/leviathans';
 import { LoreEngine } from './sim/lore';
 import { AnalyticsSystem } from './sim/analytics';
@@ -159,6 +160,8 @@ export class World {
   private readonly viz3d: Viz3DSystem;
   /** Cosmological chaos effects (CONTRACTS V7.4) — at most one active at a time. */
   private readonly singularities: SingularitySystem;
+  /** Persistent visual relics from deaths/singularities (V9 F-ARTIFACTS). Visual-only: no rng/sim write. */
+  private readonly artifacts: ArtifactField;
   private readonly leviathans: LeviathanSystem;
   /** Cycle cursor for the chaos control's singularity chooser. */
   private singularityCursor = 0;
@@ -282,11 +285,16 @@ export class World {
     this.quantum.setQuantumBands(this.qc.bands());
     this.rd = new ReactionDiffusionSystem(ctx);
     this.environment.attachGroundEmissiveMap(this.rd.texture);
+    // F-ARTIFACTS (V9): the world accrues visible relics. A pooled InstancedMesh that draws no rng
+    // and writes no sim state, so it cannot perturb the seeded stream or the determinism golden.
+    this.artifacts = new ArtifactField(ctx.scene);
     // Death→ground feedback: every disposal (age-death AND shoggoth
     // consumption, single-fire inside disposeAt) scars the living ground at
-    // the corpse's UV — the mortality loop the contract headlines.
-    this.entities.onDeath = (x, z) =>
+    // the corpse's UV — the mortality loop the contract headlines — AND drops a scar relic.
+    this.entities.onDeath = (x, z) => {
       this.rd.perturb(0.5 + x / GROUND_EXTENT, 0.5 - z / GROUND_EXTENT, 2);
+      this.artifacts.placeGround(x, z, 'scar', this.state.elapsed); // visual-only, seeded-time stamp
+    };
     // Boot scars: the Gray-Scott fixed point is uniform — seed a few
     // disturbances so the ground skin starts breathing (rd writer note).
     for (let i = 0; i < 4; i++) this.rd.perturb(this.rng(), this.rng());
@@ -502,6 +510,7 @@ export class World {
     // (phylumCounts/titanLedger/warMatrix), always current; internally cadenced.
     this.viz3d.update(this.viz3dSnap);
     this.environment.update(dt, t);
+    this.artifacts.update(dt, t); // F-ARTIFACTS (V9): animate + fade the relic pool (visual-only)
 
     if (s.frame % 60 === 30) {
       // RD pattern energy: strided mean of the V field (offset 30 — never
@@ -1053,6 +1062,7 @@ export class World {
       (this.rng() - 0.5) * 50 * ARENA_MID,
     );
     this.singularities.summon(kind, this.sv1);
+    this.artifacts.place(this.sv1.x, this.sv1.y, this.sv1.z, 'relic', this.state.elapsed); // F-ARTIFACTS
     // Thematic voice from the new palette bands: deep impacts for holes, exotic for the rest.
     if (kind === 'blackhole' || kind === 'greyhole') this.audio.playId(SFX_SUBBOOM);
     else if (kind === 'whitehole') this.audio.playId(SFX_FMCLANG);
