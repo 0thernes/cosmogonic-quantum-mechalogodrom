@@ -19,6 +19,8 @@
 import index from './index.html';
 import docs from './docs.html';
 import { createLogger } from './src/logging/logger';
+import { runAgent, providerLabel, type ChatMessage } from './src/server/copilot';
+import { dispatchTool } from './src/server/ai-sandbox';
 
 const log = createLogger('server');
 
@@ -149,6 +151,54 @@ function logRequest(req: Request, status: number): void {
   log.info(`${req.method} ${new URL(req.url).pathname} -> ${status}`);
 }
 
+/** Longest accepted Copilot chat body — a conversation plus cited file snippets can be large. */
+const MAX_CHAT_BODY = 256 * 1024;
+
+/** Read, size-guard, and JSON-parse a POST body. Returns a tagged result (never throws). */
+async function readJsonBody(
+  req: Request,
+  cap: number,
+): Promise<{ ok: true; value: unknown } | { ok: false; status: number; error: string }> {
+  const declared = req.headers.get('content-length');
+  if (declared !== null && Number.isFinite(Number(declared)) && Number(declared) > cap) {
+    return { ok: false, status: 413, error: 'body too large' };
+  }
+  let text: string;
+  try {
+    text = await req.text();
+  } catch {
+    return { ok: false, status: 400, error: 'unreadable body' };
+  }
+  if (text.length > cap) return { ok: false, status: 413, error: 'body too large' };
+  try {
+    return { ok: true, value: JSON.parse(text) };
+  } catch {
+    return { ok: false, status: 400, error: 'invalid JSON' };
+  }
+}
+
+/** Narrow an unknown body to a bounded {@link ChatMessage}[]; null when malformed. */
+function parseChatMessages(body: unknown): ChatMessage[] | null {
+  if (typeof body !== 'object' || body === null) return null;
+  const arr = (body as Record<string, unknown>)['messages'];
+  if (!Array.isArray(arr) || arr.length === 0 || arr.length > 100) return null;
+  const out: ChatMessage[] = [];
+  for (const m of arr) {
+    if (typeof m !== 'object' || m === null) return null;
+    const rec = m as Record<string, unknown>;
+    const role = rec['role'];
+    const content = rec['content'];
+    if (
+      (role !== 'user' && role !== 'assistant' && role !== 'system') ||
+      typeof content !== 'string'
+    ) {
+      return null;
+    }
+    out.push({ role, content: content.slice(0, 32 * 1024) });
+  }
+  return out;
+}
+
 const server = Bun.serve({
   port: Number(process.env.PORT) || 3000,
   development: process.env.NODE_ENV !== 'production',
@@ -217,6 +267,58 @@ const server = Bun.serve({
         pushAudit(entry);
         logRequest(req, 201);
         return Response.json({ ok: true, retained: auditCount }, { status: 201 });
+      },
+    },
+    // ── Copilot (CONTRACTS V9): the free-LLM side-chat. Outside the deterministic sim. ──
+    '/api/copilot': {
+      // Report the active provider so the chat panel can show it (no secrets — label only).
+      GET(req) {
+        logRequest(req, 200);
+        return Response.json({ ok: true, provider: providerLabel() });
+      },
+    },
+    '/api/chat': {
+      // Run one Copilot turn: the model may call read-only tools (read/list/grep/run) via the
+      // ai-sandbox gate, then answers. Never writes to the repo or the sim.
+      async POST(req) {
+        const body = await readJsonBody(req, MAX_CHAT_BODY);
+        if (!body.ok) {
+          logRequest(req, body.status);
+          return Response.json({ ok: false, error: body.error }, { status: body.status });
+        }
+        const messages = parseChatMessages(body.value);
+        if (!messages) {
+          logRequest(req, 400);
+          return Response.json(
+            { ok: false, error: 'expected { messages: { role, content }[] }' },
+            { status: 400 },
+          );
+        }
+        const result = await runAgent(messages);
+        logRequest(req, 200);
+        return Response.json(result);
+      },
+    },
+    '/api/tool': {
+      // Direct read-only tool call for the chat panel's manual terminal (/read /ls /grep /run).
+      // Every call passes through the same default-deny ai-sandbox gate.
+      async POST(req) {
+        const body = await readJsonBody(req, MAX_BODY_LEN);
+        if (!body.ok) {
+          logRequest(req, body.status);
+          return Response.json({ ok: false, error: body.error }, { status: body.status });
+        }
+        const rec = (
+          typeof body.value === 'object' && body.value !== null ? body.value : {}
+        ) as Record<string, unknown>;
+        const tool = typeof rec['tool'] === 'string' ? rec['tool'] : '';
+        const args =
+          typeof rec['args'] === 'object' && rec['args'] !== null
+            ? (rec['args'] as Record<string, unknown>)
+            : {};
+        const result = await dispatchTool(tool, args);
+        logRequest(req, result.ok ? 200 : 400);
+        return Response.json(result, { status: result.ok ? 200 : 400 });
       },
     },
   },
