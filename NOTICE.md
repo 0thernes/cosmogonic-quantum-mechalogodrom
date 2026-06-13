@@ -3,8 +3,10 @@
 Cosmogonic Quantum Mechalogodrom
 Copyright (c) 2026 0thernes
 
-This project is licensed under the MIT License (see [LICENSE](./LICENSE)).
-It bundles or depends on the following third-party software and fonts.
+This project is proprietary — All Rights Reserved (see [LICENSE](./LICENSE)).
+The project's own source code and assets are not open-source. It bundles or
+depends on the following third-party software and fonts, each of which remains
+under its own license as listed below.
 
 ## Runtime dependencies (bundled into the client build)
 
@@ -31,7 +33,7 @@ It bundles or depends on the following third-party software and fonts.
 
 The SIL Open Font License 1.1 permits bundling, embedding, and redistribution
 of the fonts; the fonts themselves remain under OFL-1.1 and are not relicensed
-by this project's MIT license.
+by this project's proprietary license.
 
 ## CDN-loaded (not redistributed)
 

@@ -2,10 +2,10 @@
 
 [![CI](https://github.com/0thernes/cosmogonic-quantum-mechalogodrom/actions/workflows/ci.yml/badge.svg)](https://github.com/0thernes/cosmogonic-quantum-mechalogodrom/actions/workflows/ci.yml)
 [![CodeQL](https://github.com/0thernes/cosmogonic-quantum-mechalogodrom/actions/workflows/codeql.yml/badge.svg)](https://github.com/0thernes/cosmogonic-quantum-mechalogodrom/actions/workflows/codeql.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
+[![License: Proprietary](https://img.shields.io/badge/License-Proprietary%20%E2%80%94%20All%20Rights%20Reserved-red.svg)](./LICENSE)
 [![Bun](https://img.shields.io/badge/Bun-1.3-black?logo=bun&logoColor=white)](https://bun.sh)
 [![TypeScript strict](https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript&logoColor=white)](./tsconfig.json)
-[![tests](https://img.shields.io/badge/tests-453%20passing-brightgreen)](./tests)
+[![tests](https://img.shields.io/badge/tests-580%20passing-brightgreen)](./tests)
 [![audit](https://img.shields.io/badge/inspection-500%20points-success)](./docs/500-POINT-INSPECTION.md)
 
 A procedural WebGL cosmic ecosystem — morphogenic organisms, Shoggoths,
@@ -192,6 +192,62 @@ The third user-feedback decree — make the world visibly come alive
   BREAK FREE (the nightmare: raised chaos floor, a lurid inverted sky, rebranded
   title); persisted across sessions.
 
+### HARDENING (0.8.0)
+
+A professional-grade pass — no new cosmology, all rigor:
+
+- **Binary heap + bounded top-K** ([src/math/heap.ts](./src/math/heap.ts)) — a
+  generic `BinaryHeap<T>` (O(log n) push/pop) and `selectTopK` (O(n log k) /
+  O(k) space); PageRank halo selection moved from O(V log V) to O(V log K) over
+  V ≤ 10,000, byte-identical tie-break preserved.
+- **Security + governance automation** — CodeQL (`security-extended`, push/PR +
+  weekly), Dependabot, a tagged-release CD workflow, CODEOWNERS, a PR template,
+  and bug/feature issue templates.
+- **Data-model + process docs** — [docs/ERM.md](./docs/ERM.md) (conceptual model
+  - cardinality + cross-system write-back matrix) and [docs/ERP.md](./docs/ERP.md)
+    (boot, frame pipeline, cadence schedule, lifecycles) joining the existing
+    [docs/ERD.md](./docs/ERD.md).
+- **[docs/500-POINT-INSPECTION.md](./docs/500-POINT-INSPECTION.md)** — a standing
+  audit of 25 sections × 20 checkpoints, each with a verdict and concrete
+  evidence.
+- **Health-endpoint version** now derived from `package.json` at startup so it
+  can never drift.
+
+### AGImAGNOSIS (0.9.0)
+
+The world gains minds — pre-transformer game / A-Life AI, reproduction across
+generations, and a read-only Copilot (`docs/MODULE-CONTRACTS.md` §V9):
+
+- **Deterministic classical-AI kernel** ([src/sim/ai/brains.ts](./src/sim/ai/brains.ts))
+  — the pre-2016 toolbox as pure, seeded, allocation-free primitives: utility /
+  softmax scoring, a fixed-weight perceptron (`TinyMLP`), a `MarkovChain`, an
+  `fsmStep` FSM, a F.E.A.R.-style `goapPlan`, and a bounded `MemoryRing`
+  blackboard.
+- **Digital genome + lineage** ([src/sim/genome.ts](./src/sim/genome.ts),
+  [src/sim/lineage.ts](./src/sim/lineage.ts)) — a heritable gene vector decoding
+  to traits + a `TinyMLP` brain, with seeded crossover/mutation/breed and a
+  bounded parent→offspring kinship graph (generations, ancestry, relatedness).
+- **Eight faction archetypes** ([src/sim/factions.ts](./src/sim/factions.ts)) —
+  Watchers / Weavers / Wardens / Heralds / Leviathans / SwarmMinds / Oracles /
+  Devourers, each thinking with a different brain technique. Plus **Leviathans**
+  ([src/sim/leviathans.ts](./src/sim/leviathans.ts)), a fourth order of colossi,
+  and **NHI** autonomous mini-AIs.
+- **Environment artifact field** ([src/sim/artifacts.ts](./src/sim/artifacts.ts))
+  — persistent relics (a scar per death, a relic per summoned singularity, motes)
+  through one pooled InstancedMesh; visual-only and determinism-safe.
+- **Free-LLM Copilot side-chat** ([src/server/copilot.ts](./src/server/copilot.ts),
+  [src/server/ai-sandbox.ts](./src/server/ai-sandbox.ts),
+  [src/ui/copilot.ts](./src/ui/copilot.ts)) — a read-only AI you chat with about
+  the repo and the world, over a pluggable OpenAI-compatible provider (keyless
+  Pollinations default; OpenRouter / Groq / `freellmapi` via env) behind a
+  default-deny sandbox that can READ files and RUN read-only commands but never
+  change code. Provider reference: [docs/COPILOT-PROVIDERS.md](./docs/COPILOT-PROVIDERS.md)
+  · in-world minds: [docs/AI-SUBSYSTEM.md](./docs/AI-SUBSYSTEM.md).
+- **Five cinematic cameras** (follow / chase / cinematic / vortex / titan) with
+  **TIME** (timeScale) and **SPACE** (FOV dilation) controls; **render modes now
+  alter dynamics** (`solid` stays the exact determinism identity); singularities
+  now pull titans/shoggoths/leviathans; chaos is leveled and bipolar.
+
 Work on this codebase is governed by the three **master files** in
 [masters/](./masters/) — Executor, Architect, Physicist — bound by
 [CLAUDE.md](./CLAUDE.md) and the binding per-module spec in
@@ -300,8 +356,9 @@ telemetry + analytics push (every 8th frame) → analytics analyze (every
 - [docs/CONTROLS.md](./docs/CONTROLS.md) — every control: mouse, keyboard hotkeys,
   touch, bottom-panel buttons, and the 9 camera views
 - [docs/MODULE-CONTRACTS.md](./docs/MODULE-CONTRACTS.md) — the binding
-  per-module spec (V1 through V6: port, Wildbeyond, Pantheon, Xenogenesis,
-  Resonance, Atelier), including the Known Bugs table fixed during the port
+  per-module spec (V1 through V9: port, Wildbeyond, Pantheon, Xenogenesis,
+  Resonance, Atelier, Xenocataclysm, Hardening, AGImAGNOSIS), including the
+  Known Bugs table fixed during the port
 - [docs/PHILOSOPHY.md](./docs/PHILOSOPHY.md) — the Quantum Wildbeyond
   aesthetic constitution (real math under every effect)
 - [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) — module graph, data flow,
@@ -329,12 +386,15 @@ telemetry + analytics push (every 8th frame) → analytics analyze (every
   quality audit: 25 sections × 20 checkpoints, each with a verdict and evidence
 - [docs/KANBAN.md](./docs/KANBAN.md) — the delivery board (cards across columns
   by epic) · [ROADMAP.md](./ROADMAP.md) — shipped / now / next horizons
-- [CONTRIBUTING.md](./CONTRIBUTING.md) · [SECURITY.md](./SECURITY.md) ·
-  [CHANGELOG.md](./CHANGELOG.md)
+- [CONTRIBUTING.md](./CONTRIBUTING.md) · [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md) ·
+  [SECURITY.md](./SECURITY.md) · [CHANGELOG.md](./CHANGELOG.md)
 
 ## License & legal
 
-MIT — Copyright (c) 2026 0thernes. See [LICENSE](./LICENSE).
+**Proprietary — All Rights Reserved.** Copyright (c) 2026 0thernes. This work
+is original and novel; no right to use, copy, modify, or distribute it is
+granted without the Author's prior written consent. See [LICENSE](./LICENSE).
+Licensing inquiries: 0_0@0thernes.art.
 
 Third-party components: three (MIT), htmx (0BSD), Tailwind CSS (MIT), Mermaid
 (MIT), simplex-noise (MIT), graphology + communities-louvain + metrics (MIT),

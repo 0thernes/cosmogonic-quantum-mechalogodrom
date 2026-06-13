@@ -1,21 +1,48 @@
-MIT License
+Cosmogonic Quantum Mechalogodrom
+Copyright (c) 2026 0thernes. All Rights Reserved.
 
-Copyright (c) 2026 0thernes
+PROPRIETARY AND CONFIDENTIAL — ALL RIGHTS RESERVED
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+This software and its associated source code, documentation, designs,
+assets, manifestos, and all other materials in this repository
+(collectively, the "Work") are the original, proprietary, and confidential
+intellectual property of 0thernes (the "Author").
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+No license, right, or interest of any kind is granted, whether by
+implication, estoppel, or otherwise, except as expressly stated in a
+separate written agreement signed by the Author. In particular, NO PERSON
+OR ENTITY is permitted, without the Author's prior express written consent,
+to:
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+  (a) use, run, or execute the Work for any purpose;
+  (b) copy, reproduce, or store the Work, in whole or in part;
+  (c) modify, adapt, translate, or create derivative works of the Work;
+  (d) merge, publish, distribute, sublicense, lease, rent, lend, sell, or
+      otherwise transfer the Work or any copy or portion of it;
+  (e) reverse engineer, decompile, or disassemble the Work except to the
+      extent such restriction is expressly prohibited by applicable law;
+  (f) remove, alter, or obscure any copyright, trademark, or other
+      proprietary notice contained in the Work.
+
+Viewing this repository where it has been made source-available by the
+Author does not transfer any ownership interest and does not grant any of
+the rights enumerated above.
+
+THIRD-PARTY COMPONENTS. The Work depends on and may bundle third-party
+open-source software and fonts, each of which remains licensed under its
+own terms (MIT, ISC, 0BSD, SIL OFL 1.1, LGPL-2.1, and others). Those terms
+govern those components only, are not superseded by this license, and are
+enumerated with their attributions in NOTICE.md. Nothing in this license
+restricts any right you hold under those third-party licenses with respect
+to those third-party components.
+
+NO WARRANTY. THE WORK IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT.
+
+LIMITATION OF LIABILITY. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
+CLAIM, DAMAGES, OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT,
+OR OTHERWISE, ARISING FROM, OUT OF, OR IN CONNECTION WITH THE WORK OR THE
+USE OR OTHER DEALINGS IN THE WORK.
+
+For licensing inquiries, contact: 0_0@0thernes.art

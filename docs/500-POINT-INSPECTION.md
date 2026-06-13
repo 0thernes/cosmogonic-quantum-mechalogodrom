@@ -397,7 +397,7 @@ and a CycloneDX SBOM shipped). The audit is re-run before each tagged release; d
 
 ## 17. Testing & Coverage
 
-321. ✅ 29 test files, **453 tests**, ~925k `expect()` assertions — substantial coverage.
+321. ✅ 40 test files, **581 tests**, ~928k `expect()` assertions — substantial coverage.
 322. ✅ Every `src/math/` primitive has a dedicated test (rng, scalar, spatial-hash, quantum, heap).
 323. ✅ Every major sim system has a test (entities, phyla, titans/games, connectome/graph-mind, quantum, RD, singularities, weather, atmosphere).
 324. ✅ Determinism is golden-tested at the integrated population layer (`tests/determinism.test.ts`).
@@ -505,19 +505,19 @@ and a CycloneDX SBOM shipped). The audit is re-run before each tagged release; d
 414. ✅ Version ranges are lockfile-frozen; reproducible installs.
 415. ✅ The dependency list is small enough to audit by hand.
 416. ✅ No native/compiled addons — pure JS/TS, portable across platforms.
-417. ✅ License compatibility of dependencies is consistent with MIT distribution.
+417. ✅ Dependency licenses (MIT/ISC/0BSD/OFL) are permissive and impose no copyleft obligation on this project's proprietary code; each is bundled with its own notice retained.
 418. ✅ Tree-shaking via the bundler keeps only used code in `dist/`.
 419. 🟡 The lab pulls p5.js from a CDN at view time (offline/air-gapped use of the lab requires network) — accepted, documented.
 420. ✅ A CycloneDX 1.5 SBOM is generated (`scripts/sbom.ts`, `bun run sbom`) and published as a release asset — deterministic (no timestamp, sorted components), with purls + licenses for every dependency.
 
 ## 22. Legal, Licensing & Compliance
 
-421. ✅ A `LICENSE` file is present (MIT).
+421. ✅ A `LICENSE` file is present (Proprietary — All Rights Reserved).
 422. ✅ `NOTICE.md` records attributions and third-party notices.
 423. ✅ The project was renamed off any trademarked source and carries original branding.
 424. ✅ The verbatim legacy origin is preserved with provenance, not silently absorbed.
 425. ✅ No bundled third-party code is relicensed or stripped of its notices.
-426. ✅ Dependency licenses are MIT/BSD/Apache-class, compatible with MIT redistribution.
+426. ✅ Dependency licenses are MIT/BSD/ISC/0BSD/OFL-class — permissive, compatible with bundling inside a proprietary distribution (no copyleft contamination; LGPL p5.js is CDN-loaded, not redistributed).
 427. ✅ No proprietary assets are checked in without rights.
 428. ✅ `SECURITY.md` provides a responsible-disclosure path.
 429. ✅ No telemetry leaves the machine — no privacy/consent surface to manage.

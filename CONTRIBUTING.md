@@ -80,3 +80,14 @@ touching module boundaries.
   `docs/MODULE-CONTRACTS.md` and the diagrams in `docs/ARCHITECTURE.md` /
   `docs/ERD.md` in the same PR.
 - Add a `CHANGELOG.md` entry under `[Unreleased]` (Keep a Changelog format).
+
+## Contributions & ownership
+
+This project is **proprietary — All Rights Reserved** (see [LICENSE](./LICENSE)).
+It is source-available, not open-source. By submitting any contribution
+(code, docs, assets, or ideas) you assign all right, title, and interest in
+that contribution to the Author (0thernes) and confirm it is your original
+work, free of third-party claims. If you cannot assign those rights, do not
+submit the contribution. Contributions are accepted at the Author's sole
+discretion. For commercial-use, redistribution, or relicensing inquiries,
+contact **0_0@0thernes.art**.

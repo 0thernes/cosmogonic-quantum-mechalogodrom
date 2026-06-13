@@ -29,6 +29,8 @@ export class Engine {
   /** Main perspective camera; world.ts drives its position per view mode. */
   readonly camera: THREE.PerspectiveCamera;
   private readonly dprCap: number;
+  /** True while the WebGL context is lost; `render()` no-ops until it returns. */
+  private contextLost = false;
 
   /**
    * Build renderer/scene/camera against `canvas` using the resolved quality
@@ -58,6 +60,28 @@ export class Engine {
       CAMERA_FAR,
     );
     this.camera.position.set(0, 50, 140);
+
+    // WebGL context-loss resilience. Mobile GPUs, driver resets, and tab
+    // backgrounding can drop the GL context; calling render() on a lost context
+    // throws. Calling preventDefault() on the loss event is what permits the
+    // browser to later fire 'webglcontextrestored'. While lost we pause
+    // rendering; on restore we reapply the size-dependent renderer state and
+    // flag the shadow map for a rebuild (three re-uploads geometry/textures on
+    // its own). One-time setup; no per-frame cost.
+    canvas.addEventListener(
+      'webglcontextlost',
+      (e) => {
+        e.preventDefault();
+        this.contextLost = true;
+      },
+      false,
+    );
+    canvas.addEventListener('webglcontextrestored', () => {
+      this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, this.dprCap));
+      this.renderer.setSize(window.innerWidth, window.innerHeight);
+      if (this.renderer.shadowMap.enabled) this.renderer.shadowMap.needsUpdate = true;
+      this.contextLost = false;
+    });
   }
 
   /**
@@ -75,8 +99,17 @@ export class Engine {
     this.renderer.setSize(w, h);
   }
 
-  /** Render one frame (scene through camera). Allocation-free. */
+  /**
+   * Render one frame (scene through camera). Allocation-free. No-op while the
+   * WebGL context is lost — rendering on a dropped context throws.
+   */
   render(): void {
+    if (this.contextLost) return;
     this.renderer.render(this.scene, this.camera);
+  }
+
+  /** Whether the WebGL context is currently lost (for callers/telemetry). O(1). */
+  isContextLost(): boolean {
+    return this.contextLost;
   }
 }
