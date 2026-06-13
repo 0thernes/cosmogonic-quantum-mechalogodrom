@@ -23,6 +23,10 @@ permissions:
 jobs:
   analyze:
     name: Analyze (javascript-typescript)
+    # CodeQL is free on public repos; on private repos it needs GitHub Advanced Security. Skip
+    # cleanly (rather than fail) when neither applies, so a private mirror has a green board and the
+    # scan switches on automatically the moment the repo is made public.
+    if: github.event.repository.visibility == 'public'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
