@@ -268,11 +268,22 @@ function mount(): void {
         .then(
           (r) =>
             r.json() as Promise<{
+              enabled?: boolean;
               provider?: string;
               providers?: { id: string; label: string; def: boolean }[];
             }>,
         )
         .then((d) => {
+          // Copilot is opt-in and off by default in production (server gate) so a public deploy
+          // never exposes source. When disabled, present a clear notice and lock the input.
+          if (d.enabled === false) {
+            prov.textContent = 'disabled in this deployment';
+            sel.style.display = 'none';
+            input.disabled = true;
+            input.placeholder = 'Copilot is disabled in this deployment';
+            send.disabled = true;
+            return;
+          }
           prov.textContent = d.provider ?? '';
           const list = d.providers ?? [];
           sel.replaceChildren();

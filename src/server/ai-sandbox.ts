@@ -53,8 +53,15 @@ function confine(rel: string): { ok: true; abs: string } | { ok: false; error: s
   const abs = resolve(ROOT, rel);
   const rl = relative(ROOT, abs);
   if (rl.startsWith('..') || isAbsolute(rl)) return { ok: false, error: 'path escapes repo root' };
-  const top = rl.split(sep)[0] ?? '';
-  if (BLOCKED_PREFIXES.includes(top as (typeof BLOCKED_PREFIXES)[number])) {
+  // Case-insensitive + `.env*` / `.git*` prefix match: closes the `.env.local` / `.ENV`
+  // secret-leak bypass (audit CRITICAL) and blocks every gitignore/.git variant the user
+  // flagged as exposed. The exact-match BLOCKED_PREFIXES list still covers legacy/dist/etc.
+  const top = (rl.split(sep)[0] ?? '').toLowerCase();
+  const blocked =
+    top.startsWith('.env') ||
+    top.startsWith('.git') ||
+    BLOCKED_PREFIXES.includes(top as (typeof BLOCKED_PREFIXES)[number]);
+  if (blocked) {
     return { ok: false, error: `path "${top}" is blocked (private/build/vcs)` };
   }
   return { ok: true, abs };
@@ -199,6 +206,18 @@ const DENY_TOKENS = new Set([
   'powershell',
   'pwsh',
   'cmd',
+  // `find` action primitives — neutralize the `find . -delete` deletion bypass and the
+  // `-exec`/`-fprint*` write-and-execute bypass (audit HIGH) while keeping `find` usable
+  // for read-only traversal.
+  '-delete',
+  '-exec',
+  '-execdir',
+  '-ok',
+  '-okdir',
+  '-fprint',
+  '-fprintf',
+  '-fprint0',
+  '-fls',
 ]);
 
 /** Shell metacharacters that imply redirection / chaining / subshell — any one denies the command. */
@@ -243,13 +262,15 @@ function validateCommand(raw: string): { ok: true; argv: string[] } | { ok: fals
       /* allowed */
     } else if (sub === 'run') {
       const script = argv[2] ?? '';
-      const ALLOWED_SCRIPTS = ['typecheck', 'lint', 'format:check', 'check', 'bench'];
+      // `check`/`bench` removed (audit HIGH): they run the build (writes dist/) and execute
+      // arbitrary project code — not read-only. Only the non-mutating scripts remain.
+      const ALLOWED_SCRIPTS = ['typecheck', 'lint', 'format:check'];
       if (!ALLOWED_SCRIPTS.includes(script))
         return { ok: false, error: `bun run "${script}" is not allowed` };
     } else {
       return {
         ok: false,
-        error: `bun "${sub}" is not allowed (only test / run typecheck|lint|format:check|check|bench)`,
+        error: `bun "${sub}" is not allowed (only test / run typecheck|lint|format:check)`,
       };
     }
   }
@@ -269,6 +290,34 @@ function validateCommand(raw: string): { ok: true; argv: string[] } | { ok: fals
   return { ok: true, argv };
 }
 
+/**
+ * The minimal, secret-free environment handed to sandboxed subprocesses. Deliberately EXCLUDES
+ * `process.env` (which holds every LLM provider key) — only the system vars git/bun need to run.
+ * Closes the audit HIGH where the full env (all API keys) was injected into model-controlled procs.
+ */
+function minimalEnv(): Record<string, string> {
+  const out: Record<string, string> = { GIT_PAGER: 'cat', PAGER: 'cat' };
+  for (const k of [
+    'PATH',
+    'Path',
+    'SystemRoot',
+    'SYSTEMROOT',
+    'windir',
+    'ComSpec',
+    'COMSPEC',
+    'TEMP',
+    'TMP',
+    'HOME',
+    'USERPROFILE',
+    'LANG',
+    'LC_ALL',
+  ]) {
+    const v = process.env[k];
+    if (typeof v === 'string') out[k] = v;
+  }
+  return out;
+}
+
 /** Run a single read-only command, repo-confined, time-bounded, output-capped. Never writes. */
 export async function runReadOnly(raw: string): Promise<SandboxResult> {
   const v = validateCommand(raw);
@@ -278,7 +327,7 @@ export async function runReadOnly(raw: string): Promise<SandboxResult> {
       cwd: ROOT,
       stdout: 'pipe',
       stderr: 'pipe',
-      env: { ...process.env, GIT_PAGER: 'cat', PAGER: 'cat' },
+      env: minimalEnv(),
     });
     const timer = setTimeout(() => proc.kill(), RUN_TIMEOUT_MS);
     const [out, err] = await Promise.all([

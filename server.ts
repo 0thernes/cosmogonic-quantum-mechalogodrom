@@ -39,6 +39,15 @@ const VERSION = (
   (await Bun.file(new URL('./package.json', import.meta.url)).json()) as { version: string }
 ).version;
 
+/**
+ * The Copilot (LLM side-chat + read-only tool sandbox) can read repo source and run read-only
+ * commands. It is therefore OPT-IN and OFF by default in production, so a public/hosted deploy never
+ * exposes proprietary source (audit CRITICAL/HIGH). Enabled in development, or when COPILOT_ENABLED=1
+ * is set explicitly.
+ */
+const COPILOT_ENABLED =
+  process.env.NODE_ENV !== 'production' || process.env.COPILOT_ENABLED === '1';
+
 /** Maximum number of audit entries retained in memory (matches the client-side cap). */
 const AUDIT_CAP = 200;
 
@@ -281,8 +290,9 @@ const server = Bun.serve({
         logRequest(req, 200);
         return Response.json({
           ok: true,
-          provider: providerLabel(),
-          providers: availableProviders(),
+          enabled: COPILOT_ENABLED,
+          provider: COPILOT_ENABLED ? providerLabel() : '',
+          providers: COPILOT_ENABLED ? availableProviders() : [],
         });
       },
     },
@@ -290,6 +300,10 @@ const server = Bun.serve({
       // Run one Copilot turn: the model may call read-only tools (read/list/grep/run) via the
       // ai-sandbox gate, then answers. Never writes to the repo or the sim.
       async POST(req) {
+        if (!COPILOT_ENABLED) {
+          logRequest(req, 403);
+          return Response.json({ ok: false, error: 'copilot disabled' }, { status: 403 });
+        }
         const body = await readJsonBody(req, MAX_CHAT_BODY);
         if (!body.ok) {
           logRequest(req, body.status);
@@ -315,6 +329,10 @@ const server = Bun.serve({
       // Direct read-only tool call for the chat panel's manual terminal (/read /ls /grep /run).
       // Every call passes through the same default-deny ai-sandbox gate.
       async POST(req) {
+        if (!COPILOT_ENABLED) {
+          logRequest(req, 403);
+          return Response.json({ ok: false, error: 'copilot disabled' }, { status: 403 });
+        }
         const body = await readJsonBody(req, MAX_BODY_LEN);
         if (!body.ok) {
           logRequest(req, body.status);

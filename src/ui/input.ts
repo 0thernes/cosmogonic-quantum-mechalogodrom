@@ -178,7 +178,18 @@ export class InputSystem {
 
   /** Keyboard state + Tab/Space preventDefault (legacy 606-607); blur clear is Known Bug 11. */
   private bindKeyboard(): void {
+    // Don't hijack keys while the user is typing in a form field (e.g. the Copilot chat
+    // textarea). Without this guard the global preventDefault below eats Space and Tab inside
+    // inputs — the "can't type spaces in the AI chat" bug. keyup stays unguarded so a held key
+    // can never get stuck if focus moves mid-press.
+    const inField = (t: EventTarget | null): boolean => {
+      const el = t as HTMLElement | null;
+      if (!el || typeof el.tagName !== 'string') return false;
+      const tag = el.tagName;
+      return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || el.isContentEditable;
+    };
     window.addEventListener('keydown', (e) => {
+      if (inField(e.target)) return;
       this.keyState[e.key.toLowerCase()] = true;
       if (e.key === 'Tab' || e.key === ' ') e.preventDefault();
     });

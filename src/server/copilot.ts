@@ -36,16 +36,16 @@ interface ProviderPreset {
  */
 const PRESETS: readonly ProviderPreset[] = [
   {
-    id: 'pollinations',
-    label: 'Pollinations (no key)',
-    endpoint: 'https://text.pollinations.ai/openai',
-    model: 'openai',
-  },
-  {
     id: 'llm7',
     label: 'LLM7 (no key)',
     endpoint: 'https://api.llm7.io/v1/chat/completions',
     model: 'gpt-4o-mini',
+  },
+  {
+    id: 'pollinations',
+    label: 'Pollinations (no key)',
+    endpoint: 'https://text.pollinations.ai/openai',
+    model: 'openai',
   },
   {
     id: 'groq',
@@ -170,11 +170,11 @@ function presetAvailable(p: ProviderPreset): boolean {
   return p.keyEnv === undefined || envStr(p.keyEnv).length > 0;
 }
 
-/** The key-less default the box falls back to so it always tries to answer (Pollinations). */
+/** The key-less default the box falls back to so it always tries to answer (first key-less preset). */
 function fallbackProvider(): ResolvedProvider {
-  const poll = PRESETS.find((p) => p.id === 'pollinations');
-  return poll
-    ? presetToResolved(poll)
+  const keyless = PRESETS.find((p) => p.keyEnv === undefined);
+  return keyless
+    ? presetToResolved(keyless)
     : { id: 'none', label: 'none', endpoint: '', model: '', key: '' };
 }
 
@@ -354,38 +354,70 @@ async function runLoop(
 }
 
 /**
- * Run one user turn against the chosen provider (or the default). On provider failure, FAIL OVER
- * once to the key-less default so the box still answers. Every tool call passes the ai-sandbox gate.
- * Never throws to the route — failures resolve to a clear, actionable reply.
+ * Every callable provider in failover order (key-less first), deduped by endpoint. This is the
+ * chain `runAgent` walks so a single dead/rate-limited provider (e.g. Pollinations 429) no longer
+ * sinks the whole box — it falls through to the next live one.
+ */
+function providerChain(): ResolvedProvider[] {
+  const out: ResolvedProvider[] = [];
+  const seen = new Set<string>();
+  const add = (p: ResolvedProvider | null): void => {
+    if (p && p.endpoint && !seen.has(p.endpoint)) {
+      seen.add(p.endpoint);
+      out.push(p);
+    }
+  };
+  add(customProvider());
+  add(freellmapiProvider());
+  for (const p of PRESETS) if (presetAvailable(p)) add(presetToResolved(p));
+  return out;
+}
+
+/**
+ * Run one user turn. Tries the chosen provider first, then FAILS OVER through every other available
+ * provider (key-less first) until one answers — so one dead/rate-limited endpoint no longer kills the
+ * chat. Every tool call passes the ai-sandbox gate. Never throws to the route.
  */
 export async function runAgent(history: ChatMessage[], providerId?: string): Promise<AgentResult> {
   const steps: ToolStep[] = [];
   const chosen = resolveProvider(providerId);
-  try {
-    const reply = await runLoop(chosen, history, steps);
-    return { ok: true, reply, steps, provider: `${chosen.model} @ ${safeHost(chosen.endpoint)}` };
-  } catch (primaryErr) {
-    const fb = fallbackProvider();
-    if (fb.endpoint && fb.endpoint !== chosen.endpoint) {
-      try {
-        const reply = await runLoop(fb, history, steps);
-        return {
-          ok: true,
-          reply: `_(failed over to ${fb.label} — ${chosen.label} was unreachable)_\n\n${reply}`,
-          steps,
-          provider: `${fb.model} @ ${safeHost(fb.endpoint)} (fallback)`,
-        };
-      } catch {
-        /* fall through to the degraded error below */
-      }
-    }
-    return {
-      ok: false,
-      reply: `The AI provider could not be reached (${primaryErr instanceof Error ? primaryErr.message : String(primaryErr)}). You can still run read-only commands manually in the chat (e.g. \`/run git log --oneline -5\`, \`/read src/world.ts\`).`,
-      steps,
-      provider: `${chosen.model} @ ${safeHost(chosen.endpoint)}`,
-    };
+  const order: ResolvedProvider[] = [];
+  const seen = new Set<string>();
+  if (chosen.endpoint) {
+    order.push(chosen);
+    seen.add(chosen.endpoint);
   }
+  for (const p of providerChain()) {
+    if (!seen.has(p.endpoint)) {
+      seen.add(p.endpoint);
+      order.push(p);
+    }
+  }
+
+  let lastErr: unknown = null;
+  for (let i = 0; i < order.length; i++) {
+    const prov = order[i];
+    if (!prov) continue;
+    try {
+      const reply = await runLoop(prov, history, steps);
+      const note =
+        i === 0 ? '' : `_(failed over to ${prov.label} — earlier provider(s) unreachable)_\n\n`;
+      return {
+        ok: true,
+        reply: note + reply,
+        steps,
+        provider: `${prov.model} @ ${safeHost(prov.endpoint)}${i > 0 ? ' (fallback)' : ''}`,
+      };
+    } catch (e) {
+      lastErr = e;
+    }
+  }
+  return {
+    ok: false,
+    reply: `Every available AI provider was unreachable (${lastErr instanceof Error ? lastErr.message : String(lastErr)}). It may be rate-limited or disabled — try again shortly, or pick another provider in the header.`,
+    steps,
+    provider: order[0] ? `${order[0].model} @ ${safeHost(order[0].endpoint)}` : 'none',
+  };
 }
 
 /** The active default-provider label, for the UI to show on boot. */
