@@ -213,6 +213,70 @@
       pre.mermaid[data-processed='true'] {
         color: inherit;
       }
+      /* Interactive diagram viewport (pan / zoom / fullscreen) — wired in src/docs-page.ts */
+      .diagram-zoom {
+        position: relative;
+        overflow: hidden;
+        height: 440px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #030612;
+        cursor: grab;
+        touch-action: none;
+      }
+      .diagram-zoom.dragging {
+        cursor: grabbing;
+      }
+      .diagram-zoom:fullscreen {
+        height: 100vh;
+        width: 100vw;
+        border: none;
+        border-radius: 0;
+      }
+      .diagram-stage {
+        position: absolute;
+        top: 0;
+        left: 0;
+        transform-origin: 0 0;
+        will-change: transform;
+      }
+      .diagram-stage svg {
+        display: block;
+      }
+      .diagram-ctrls {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        display: flex;
+        gap: 4px;
+        z-index: 3;
+      }
+      .diagram-ctrls button {
+        width: 28px;
+        height: 28px;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        background: rgba(6, 12, 26, 0.85);
+        color: var(--accent);
+        font-size: 14px;
+        line-height: 1;
+        cursor: pointer;
+        backdrop-filter: blur(6px);
+      }
+      .diagram-ctrls button:hover {
+        background: rgba(14, 24, 48, 0.95);
+        color: #fff;
+      }
+      .diagram-hint {
+        position: absolute;
+        bottom: 6px;
+        left: 10px;
+        font-size: 9px;
+        letter-spacing: 0.5px;
+        color: var(--ink-faint);
+        opacity: 0.6;
+        pointer-events: none;
+      }
       /* File/folder tree */
       pre.tree {
         font-size: 12px;
@@ -403,7 +467,7 @@
         <span class="badge">titans <b>10</b></span>
         <span class="badge">algorithms <b>25</b></span>
         <span class="badge">songs <b>6</b></span>
-        <span class="badge">license <b>MIT</b></span>
+        <span class="badge">license <b>Proprietary — All Rights Reserved</b></span>
       </div>
 
       <nav class="toc" aria-label="Table of contents">
@@ -1253,7 +1317,7 @@ sequenceDiagram
       <p><a class="totop" href="#architecture">&uarr; top</a></p>
 
       <footer>
-        Cosmogonic Quantum Mechalogodrom &mdash; MIT &mdash;
+        Cosmogonic Quantum Mechalogodrom &mdash; Proprietary, All Rights Reserved &mdash;
         <a href="/">return to the dome (/)</a> &middot;
         <a href="/lab">open the lab (/lab)</a>
       </footer>
