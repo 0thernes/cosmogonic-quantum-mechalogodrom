@@ -15,6 +15,7 @@
     "format:check": "prettier --check .",
     "test": "bun test",
     "test:coverage": "bun test --coverage",
+    "sbom": "bun scripts/sbom.ts",
     "bench": "bun bench/index.ts",
     "check": "bun run format:check && bun run typecheck && bun run lint && bun test && bun run build"
   },

@@ -9,15 +9,15 @@ a named limitation or accepted risk) · **❌ FAIL** (a defect — must be fixed
 
 | Verdict   | Count |
 | --------- | ----- |
-| ✅ PASS   | 483   |
-| 🟡 WARN   | 17    |
+| ✅ PASS   | 484   |
+| 🟡 WARN   | 16    |
 | ❌ FAIL   | 0     |
 | **Total** | 500   |
 
 Scope: every folder, every file, the public surface of every module. Last full sweep: release
-`0.8.0`; §13.258 + §17.339 promoted to ✅ in `0.9.0` (a `prefers-reduced-motion` accommodation and a
-CI coverage gate shipped). The audit is re-run before each tagged release; deltas land in
-[CHANGELOG.md](../CHANGELOG.md).
+`0.8.0`; §13.258, §17.339 + §21.420 promoted to ✅ in `0.9.0` (a `prefers-reduced-motion`
+accommodation, a CI coverage gate, and a CycloneDX SBOM shipped). The audit is re-run before each
+tagged release; deltas land in [CHANGELOG.md](../CHANGELOG.md).
 
 > Provenance: this list is the human-readable companion to the binding
 > [MODULE-CONTRACTS.md](./MODULE-CONTRACTS.md) and the [COMPLEXITY.md](./COMPLEXITY.md) budget.
@@ -507,7 +507,7 @@ CI coverage gate shipped). The audit is re-run before each tagged release; delta
 417. ✅ License compatibility of dependencies is consistent with MIT distribution.
 418. ✅ Tree-shaking via the bundler keeps only used code in `dist/`.
 419. 🟡 The lab pulls p5.js from a CDN at view time (offline/air-gapped use of the lab requires network) — accepted, documented.
-420. 🟡 No SBOM (software bill of materials) is generated as a release artifact (candidate for the roadmap).
+420. ✅ A CycloneDX 1.5 SBOM is generated (`scripts/sbom.ts`, `bun run sbom`) and published as a release asset — deterministic (no timestamp, sorted components), with purls + licenses for every dependency.
 
 ## 22. Legal, Licensing & Compliance
 
@@ -605,12 +605,12 @@ CI coverage gate shipped). The audit is re-run before each tagged release; delta
 
 ### How to use this inspection
 
-- **Before a release:** re-walk the 17 🟡 WARNs; promote any that have been resolved to ✅, and add new
+- **Before a release:** re-walk the 16 🟡 WARNs; promote any that have been resolved to ✅, and add new
   points as the surface grows. A WARN flipping to ❌ blocks the tag.
 - **During review:** cite point numbers in PR comments (e.g. "regresses §6.101 allocation discipline").
 - **For newcomers:** read this top-to-bottom for a guided tour of what "done" means here, then dive into
   [MODULE-CONTRACTS.md](./MODULE-CONTRACTS.md) for the binding detail.
 
-The 17 WARNs are deliberate, named limitations appropriate to a **local, single-author proof of
+The 16 WARNs are deliberate, named limitations appropriate to a **local, single-author proof of
 concept** — none is a correctness, determinism, or security defect. They are the honest edge of the
 envelope, recorded so they are decisions rather than blind spots.
