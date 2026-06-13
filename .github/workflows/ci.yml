@@ -19,8 +19,15 @@ permissions:
 
 jobs:
   gate:
-    name: Full gate (format · types · lint · test · build)
-    runs-on: ubuntu-latest
+    name: Full gate (${{ matrix.os }})
+    # Cross-platform matrix (500-point §2.40): local dev is Windows, so run the gate on both Linux
+    # and Windows to catch OS-specific path/EOL bugs. fail-fast off so one OS's failure still lets
+    # the other report.
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
     timeout-minutes: 15
     steps:
       - name: Checkout
@@ -63,7 +70,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: dist-${{ github.sha }}
+          name: dist-${{ matrix.os }}-${{ github.sha }}
           path: dist/
           if-no-files-found: ignore
           retention-days: 14
