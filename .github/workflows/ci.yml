@@ -53,6 +53,9 @@ jobs:
       - name: Unit tests (bun test)
         run: bun test
 
+      - name: Coverage threshold (bunfig.toml — 500-point §17.339)
+        run: bun run test:coverage
+
       - name: Production build
         run: bun run build
 

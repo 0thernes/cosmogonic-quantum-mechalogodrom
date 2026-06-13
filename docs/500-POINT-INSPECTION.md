@@ -9,14 +9,15 @@ a named limitation or accepted risk) · **❌ FAIL** (a defect — must be fixed
 
 | Verdict   | Count |
 | --------- | ----- |
-| ✅ PASS   | 482   |
-| 🟡 WARN   | 18    |
+| ✅ PASS   | 483   |
+| 🟡 WARN   | 17    |
 | ❌ FAIL   | 0     |
 | **Total** | 500   |
 
 Scope: every folder, every file, the public surface of every module. Last full sweep: release
-`0.8.0`; §13.258 promoted to ✅ in `0.9.0` (a `prefers-reduced-motion` accommodation shipped). The
-audit is re-run before each tagged release; deltas land in [CHANGELOG.md](../CHANGELOG.md).
+`0.8.0`; §13.258 + §17.339 promoted to ✅ in `0.9.0` (a `prefers-reduced-motion` accommodation and a
+CI coverage gate shipped). The audit is re-run before each tagged release; deltas land in
+[CHANGELOG.md](../CHANGELOG.md).
 
 > Provenance: this list is the human-readable companion to the binding
 > [MODULE-CONTRACTS.md](./MODULE-CONTRACTS.md) and the [COMPLEXITY.md](./COMPLEXITY.md) budget.
@@ -413,7 +414,7 @@ audit is re-run before each tagged release; deltas land in [CHANGELOG.md](../CHA
 336. ✅ Tests are fast (~1–2 s full suite) — no slow integration drag discouraging runs.
 337. ✅ Tests assert behavior and invariants, not implementation trivia.
 338. ✅ Reference-implementation cross-checks are used where correctness is subtle (brute-force spatial, full-sort top-K).
-339. 🟡 No coverage percentage is enforced as a gate threshold (coverage is broad but not numerically gated).
+339. ✅ A coverage threshold is enforced in CI (`bun run test:coverage`, `bunfig.toml` line ≥ 90% / function ≥ 85%) — measured at ~95.6% line / ~90.5% function, guarded against regression.
 340. 🟡 No browser-level e2e (the DOM/WebGL integration is validated via unit-tested data + manual preview, not Playwright).
 
 ## 18. Benchmarks & Performance Budget
@@ -604,12 +605,12 @@ audit is re-run before each tagged release; deltas land in [CHANGELOG.md](../CHA
 
 ### How to use this inspection
 
-- **Before a release:** re-walk the 18 🟡 WARNs; promote any that have been resolved to ✅, and add new
+- **Before a release:** re-walk the 17 🟡 WARNs; promote any that have been resolved to ✅, and add new
   points as the surface grows. A WARN flipping to ❌ blocks the tag.
 - **During review:** cite point numbers in PR comments (e.g. "regresses §6.101 allocation discipline").
 - **For newcomers:** read this top-to-bottom for a guided tour of what "done" means here, then dive into
   [MODULE-CONTRACTS.md](./MODULE-CONTRACTS.md) for the binding detail.
 
-The 18 WARNs are deliberate, named limitations appropriate to a **local, single-author proof of
+The 17 WARNs are deliberate, named limitations appropriate to a **local, single-author proof of
 concept** — none is a correctness, determinism, or security defect. They are the honest edge of the
 envelope, recorded so they are decisions rather than blind spots.
