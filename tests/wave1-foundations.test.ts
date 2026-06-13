@@ -7,6 +7,7 @@ import {
   ENTROPY_STEP,
   RENDER_MODES,
   RENDER_MODE_DYN,
+  SPACE_FOVS,
   TIME_SCALES,
   TRACKING_VIEWS,
   VIEW_MODES,
@@ -96,5 +97,17 @@ describe('F-CHAOS-ENTROPY — chaos levels + entropy axis', () => {
     expect(ENTROPY_STEP).toBeGreaterThan(0);
     expect(ENTROPY_STEP).toBeLessThanOrEqual(ENTROPY_MAX);
     expect(Math.ceil(ENTROPY_MAX / ENTROPY_STEP)).toBeGreaterThanOrEqual(2);
+  });
+});
+
+describe('F-SPACE — camera FOV dilation levels', () => {
+  test('SPACE_FOVS are ascending, plausible FOV degrees, and include the 68 boot default', () => {
+    expect(SPACE_FOVS).toContain(68);
+    for (let i = 0; i < SPACE_FOVS.length; i++) {
+      const f = SPACE_FOVS[i]!;
+      expect(f).toBeGreaterThan(10);
+      expect(f).toBeLessThan(170);
+      if (i > 0) expect(f).toBeGreaterThan(SPACE_FOVS[i - 1]!);
+    }
   });
 });

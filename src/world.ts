@@ -32,6 +32,7 @@ import {
   GRID_CELL,
   GROUND_EXTENT,
   RENDER_MODES,
+  SPACE_FOVS,
   TIME_SCALES,
   TRACKING_VIEWS,
   ULTRA_GRID_CELL,
@@ -726,6 +727,8 @@ export class World {
     // F-NHI: tap N to launch an NHI being in front of the camera (throttled so a held key doesn't
     // flood the world). The action is also exposed for the bottom-panel button in the UI pass.
     if (k['n'] && s.frame % 30 === 0) this.launchNhiBeing();
+    // F-SPACE: tap H to dilate space (cycle the camera FOV). Throttled like the other taps.
+    if (k['h'] && s.frame % 30 === 0) this.dilateSpace();
   }
 
   /**
@@ -876,6 +879,25 @@ export class World {
     this.hud.showSector('NHI LAUNCHED · MATRIX BEING');
     this.audit.record('nhi-launch', { mi });
     return 1;
+  }
+
+  /**
+   * F-SPACE: dilate space by stepping the camera FOV through SPACE_FOVS (nearest level → next,
+   * wrapping). Camera-only — it changes how much space the lens gathers, never the sim — so it is
+   * fully determinism-neutral. Returns the new FOV in degrees.
+   */
+  private dilateSpace(): number {
+    const cam = this.engine.camera;
+    const fovs = SPACE_FOVS as readonly number[];
+    let idx = 0;
+    for (let i = 1; i < fovs.length; i++) {
+      if (Math.abs((fovs[i] ?? 0) - cam.fov) < Math.abs((fovs[idx] ?? 0) - cam.fov)) idx = i;
+    }
+    cam.fov = fovs[(idx + 1) % fovs.length] ?? 68;
+    cam.updateProjectionMatrix();
+    this.hud.showSector('SPACE · FOV ' + Math.round(cam.fov) + '°');
+    this.audit.record('space', { fov: cam.fov });
+    return cam.fov;
   }
 
   private save(): void {
@@ -1383,6 +1405,10 @@ export class World {
         s.timeScale = i < 0 ? 1 : (scales[(i + 1) % scales.length] ?? 1);
         this.audit.record('time-scale', { value: s.timeScale });
         return s.timeScale;
+      },
+      cycleSpace: () => {
+        this.unlock();
+        return this.dilateSpace();
       },
       cycleRenderMode: () => {
         this.unlock();

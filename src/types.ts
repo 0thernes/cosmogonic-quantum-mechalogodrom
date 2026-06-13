@@ -335,6 +335,8 @@ export interface UiActions {
   cycleSong(): string;
   cycleSfxPreview(): string;
   cycleTimeScale(): number;
+  /** Dilate SPACE: step the camera field-of-view through discrete levels (F-SPACE); returns the new FOV. */
+  cycleSpace(): number;
   /** Cycle the entity render style (CONTRACTS V7.3); returns the new mode. */
   cycleRenderMode(): RenderMode;
   /** Toggle the simulation variant N(1)↔N(2) (CONTRACTS V7.6); returns the new variant. */

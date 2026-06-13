@@ -134,6 +134,14 @@ export const TRACKING_VIEWS: ReadonlySet<ViewMode> = new Set(['follow', 'chase',
 export const TIME_SCALES = [0, 0.1, 0.2, 0.5, 1, 2, 3, 5] as const;
 
 /**
+ * Discrete camera field-of-view levels the SPACE control dilates through (F-SPACE — the spatial
+ * twin of TIME_SCALES) in degrees. `68` is the boot default; wider warps toward a fish-eye that
+ * pulls more space into view, narrower compresses toward a telephoto flatten. Camera-only, so
+ * dilating space never perturbs the deterministic sim. Append-only.
+ */
+export const SPACE_FOVS = [35, 50, 68, 85, 105] as const;
+
+/**
  * Entity render styles (CONTRACTS V7.3), cycled by the toolbar from SOLID through every
  * mode. SOLID is the default PBR look; the rest are pure MeshStandardMaterial flag changes
  * (no geometry/object swap) so they apply allocation-free to both the per-mesh and the
