@@ -12,7 +12,14 @@
  */
 import * as THREE from 'three';
 import { TAU, lerp } from '../math/scalar';
-import { ARENA, ARENA_Y, CONTAIN_RADIUS2, ARENA_RADIUS, RENDER_MODE_FX } from './constants';
+import {
+  ARENA,
+  ARENA_Y,
+  CONTAIN_RADIUS2,
+  ARENA_RADIUS,
+  RENDER_MODE_FX,
+  RENDER_MODE_DYN,
+} from './constants';
 import type { RenderMode } from './constants';
 import { PHYLUM_COUNT } from './phyla';
 import type { PhylumMorphType } from './phyla';
@@ -259,12 +266,18 @@ export class EntityManager {
     const windX = state.wind.x * cm * 0.0005; // legacy windScale folded in (line 700)
     const windZ = state.wind.z * cm * 0.0005;
     const tMod = state.temperature < 0 ? 0.7 : state.temperature > 30 ? 1.3 : 1.0;
+    // F-RENDER-DYN: the active render style nudges MOTION (speed + jitter), not just appearance.
+    // `solid` is the exact identity (speed 1, jitter 1), so the default world — and every test,
+    // which all run in 'solid' — stays byte-for-byte unchanged; the style is an audit-recorded
+    // user input, so replays reproduce a mode-change script exactly. Both multipliers below apply
+    // AFTER the rng() draws (never gating a conditional draw), keeping the seeded stream aligned.
+    const dyn = RENDER_MODE_DYN[state.renderMode];
     // SIMULATION N(2) "BREAK FREE" (CONTRACTS V7.6): the chaos-jitter velocity is amplified
     // beyond what the saturated cMul clamp (maxes at chaos=6) can reach, so the population
     // writhes far harder than any N(1) chaos-boost — the contracted "behaviour unhinged"
     // lever, decoupled from the clamp. The gain is applied AFTER each rng() draw (never gates a
     // conditional draw), so at N(1) (gain = 1, exact ×1.0) the seeded stream is byte-identical.
-    const jitterGain = state.sim === 2 ? 3 : 1;
+    const jitterGain = (state.sim === 2 ? 3 : 1) * dyn.jitter;
     const frame = state.frame;
     const env = this.env;
     env.dt = dt;
@@ -362,7 +375,9 @@ export class EntityManager {
       u.vel.y += (rng() - 0.5) * 0.0015 * cm * jitterGain;
       u.vel.z += (rng() - 0.5) * 0.003 * cm * jitterGain + windZ;
       u.vel.multiplyScalar(0.98);
-      MOVE.copy(u.vel).multiplyScalar(dt * 60);
+      // dt * 60 is the legacy frame-rate normalizer; dyn.speed (F-RENDER-DYN, 1 in 'solid') scales
+      // the per-frame displacement so the render style alters how fast the field travels.
+      MOVE.copy(u.vel).multiplyScalar(dt * 60 * dyn.speed);
       e.position.add(MOVE);
       e.rotation.x += sinWF * 0.012 * sp2 * 0.4;
       e.rotation.y += cosWF * 0.01 * sp2 * 0.35;

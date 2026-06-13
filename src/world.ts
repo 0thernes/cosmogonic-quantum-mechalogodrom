@@ -29,6 +29,8 @@ import {
   GRID_CELL,
   GROUND_EXTENT,
   RENDER_MODES,
+  TIME_SCALES,
+  TRACKING_VIEWS,
   ULTRA_GRID_CELL,
   VIEW_MODES,
   WEATHERS,
@@ -133,6 +135,14 @@ export class World {
   private readonly morphTotal: number;
   /** Strided mean of the RD V field, refreshed every 60 frames (V3.5). */
   private rdEnergy = 0;
+  // F-CAM5 subject cache: the tracked organism's position + XZ heading for the motion camera
+  // modes. Written by resolveSubject(), read by updateCamera(). Presentation-only scratch — the
+  // camera never writes sim state, so these never affect determinism.
+  private camSubX = 0;
+  private camSubY = 0;
+  private camSubZ = 0;
+  private camSubVX = 0;
+  private camSubVZ = 0;
 
   // ── Wildbeyond V2 systems (CONTRACTS V2) ──
   private readonly lore: LoreEngine;
@@ -602,8 +612,59 @@ export class World {
         (5 + Math.sin(ft * 0.5) * 12) * ARENA_Y,
         Math.cos(ft * 0.3) * 12 * ARENA_MID,
       );
+    } else if (TRACKING_VIEWS.has(mode)) {
+      // F-CAM5 subject-tracking shots: frame a live organism resolved by stable index.
+      const found = this.resolveSubject(t);
+      const sx = this.camSubX;
+      const sy = this.camSubY;
+      const sz = this.camSubZ;
+      if (!found) {
+        // Empty world — calm orbit so the camera never freezes staring at nothing.
+        const r = 60 * ARENA_MID;
+        cam.position.set(Math.cos(t * 0.1) * r, 26 * ARENA_Y, Math.sin(t * 0.1) * r);
+        cam.lookAt(0, 6 * ARENA_Y, 0);
+      } else if (mode === 'follow') {
+        const r = 16 * ARENA_MID; // close offset that slowly orbits the subject
+        const k = Math.min(1, dt * 2.5); // smooth glide toward the target offset
+        cam.position.x += (sx + Math.cos(t * 0.25) * r - cam.position.x) * k;
+        cam.position.y += (sy + 7 * ARENA_Y - cam.position.y) * k;
+        cam.position.z += (sz + Math.sin(t * 0.25) * r - cam.position.z) * k;
+        cam.lookAt(sx, sy, sz);
+      } else if (mode === 'chase') {
+        // Trail just behind the subject's XZ heading (unit heading × distance).
+        const vlen = Math.hypot(this.camSubVX, this.camSubVZ) || 1;
+        const back = 14 * ARENA_MID;
+        const k = Math.min(1, dt * 3);
+        cam.position.x += (sx - (this.camSubVX / vlen) * back - cam.position.x) * k;
+        cam.position.y += (sy + 5 * ARENA_Y - cam.position.y) * k;
+        cam.position.z += (sz - (this.camSubVZ / vlen) * back - cam.position.z) * k;
+        cam.lookAt(sx, sy, sz);
+      } else {
+        // titan: a grand wide tracking shot from far back and high up.
+        const r = 70 * ARENA_MID;
+        const k = Math.min(1, dt * 1.2);
+        cam.position.x += (sx + Math.cos(t * 0.08) * r - cam.position.x) * k;
+        cam.position.y += (sy + 40 * ARENA_Y - cam.position.y) * k;
+        cam.position.z += (sz + Math.sin(t * 0.08) * r - cam.position.z) * k;
+        cam.lookAt(sx, sy, sz);
+      }
+    } else if (mode === 'cinematic') {
+      // Slow grand drift across the whole arena (the wide, unhurried sibling of 'fly').
+      const ct = t * 0.025;
+      cam.position.set(
+        Math.sin(ct) * 80 * ARENA_MID,
+        (40 + Math.sin(ct * 0.5) * 28) * ARENA_Y,
+        Math.cos(ct * 0.8) * 80 * ARENA_MID,
+      );
+      cam.lookAt(Math.sin(ct * 0.4) * 10 * ARENA_MID, 6 * ARENA_Y, 0);
+    } else if (mode === 'vortex') {
+      // Descending/rising spiral around the world axis.
+      const vr = (30 + (Math.sin(t * 0.07) * 0.5 + 0.5) * 50) * ARENA_MID;
+      const vy = (10 + (Math.cos(t * 0.05) * 0.5 + 0.5) * 70) * ARENA_Y;
+      cam.position.set(Math.cos(t * 0.5) * vr, vy, Math.sin(t * 0.5) * vr);
+      cam.lookAt(0, 8 * ARENA_Y, 0);
     } else {
-      cam.position.set(0, 90 * ARENA_MID + 75, 0); // top-down survey of the 5× floor
+      cam.position.set(0, 90 * ARENA_MID + 75, 0); // top-down survey (top + fallback)
       cam.lookAt(0, 0, 0);
       cam.rotation.z = t * 0.015;
     }
@@ -612,6 +673,28 @@ export class World {
     this.input.look.dx = 0;
     this.input.look.dy = 0;
     this.input.zoom = 0;
+  }
+
+  /**
+   * F-CAM5: choose the organism the tracking cameras follow, by a STABLE index that advances every
+   * ~6 s of sim time — a deterministic guided tour of the population. Caches the subject's position
+   * and XZ heading into the camSub* scratch. Returns false on an empty world. Presentation-only: it
+   * reads sim state but writes none, so it can never perturb the deterministic hash.
+   */
+  private resolveSubject(t: number): boolean {
+    const list = this.entities.list;
+    const len = list.length;
+    if (len === 0) return false;
+    const idx = Math.floor(t / 6) % len;
+    const e = list[idx] ?? list[0];
+    if (!e) return false;
+    const p = e.position;
+    this.camSubX = p.x;
+    this.camSubY = p.y;
+    this.camSubZ = p.z;
+    this.camSubVX = e.userData.vel.x;
+    this.camSubVZ = e.userData.vel.z;
+    return true;
   }
 
   /** Held-key macros (legacy 665-666): Space/Shift/M repeat, Tab feeds chaos. */
@@ -1223,7 +1306,11 @@ export class World {
       },
       cycleTimeScale: () => {
         this.unlock();
-        s.timeScale = s.timeScale === 1 ? 0.2 : s.timeScale === 0.2 ? 3 : 1;
+        // Step through TIME_SCALES (F-TIME): 0 (pause) · 0.1 · 0.2 · 0.5 · 1 · 2 · 3 · 5.
+        const scales = TIME_SCALES as readonly number[];
+        const i = scales.indexOf(s.timeScale);
+        // A value not in the table (e.g. a legacy persisted scale) resumes at realtime.
+        s.timeScale = i < 0 ? 1 : (scales[(i + 1) % scales.length] ?? 1);
         this.audit.record('time-scale', { value: s.timeScale });
         return s.timeScale;
       },

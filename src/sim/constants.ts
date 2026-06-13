@@ -99,11 +99,39 @@ export const BEHAVIORS = [
 /** One of the 26 entity behaviors. */
 export type Behavior = (typeof BEHAVIORS)[number];
 
-/** Camera view modes, legacy line 174 (`vModes`). `viewIdx` indexes this. */
-export const VIEW_MODES = ['free', 'orbit', 'fly', 'top'] as const;
+/**
+ * Camera view modes. The first four are the legacy set (`vModes`, legacy line 174); the five
+ * trailing modes are the 0.9 motion/cinematic additions (F-CAM5) — all automatic, flying, or
+ * subject-tracking shots that ignore manual input. `viewIdx` indexes this (wraps mod length), so
+ * the order is append-only: never reorder or the persisted `viewIdx` would point at a new mode.
+ */
+export const VIEW_MODES = [
+  'free',
+  'orbit',
+  'fly',
+  'top',
+  'follow', // lerps to an orbiting offset around a tracked organism
+  'chase', // trails just behind a tracked organism's heading
+  'cinematic', // slow grand drift across the whole arena
+  'vortex', // descending spiral around the world axis
+  'titan', // wide tracking shot of a roaming titan/large being
+] as const;
 
-/** One of the four camera view modes. */
+/** One of the camera view modes (4 legacy + 5 motion). */
 export type ViewMode = (typeof VIEW_MODES)[number];
+
+/**
+ * The subject-tracking motion views (F-CAM5) — these pick a live subject to follow rather than
+ * running a fixed parametric path. Used by the camera to decide when to resolve a subject.
+ */
+export const TRACKING_VIEWS: ReadonlySet<ViewMode> = new Set(['follow', 'chase', 'titan']);
+
+/**
+ * Time-dilation steps cycled by the TIME control (F-TIME). `0` is a true pause (frames still tick
+ * but `dt` is 0, so nothing integrates); `1` is realtime. Includes the legacy `0.2`/`3` values so
+ * existing behaviour/tests at those scales are unchanged; append-only like {@link VIEW_MODES}.
+ */
+export const TIME_SCALES = [0, 0.1, 0.2, 0.5, 1, 2, 3, 5] as const;
 
 /**
  * Entity render styles (CONTRACTS V7.3), cycled by the toolbar from SOLID through every
@@ -210,6 +238,36 @@ export const RENDER_MODE_FX: Readonly<Record<RenderMode, RenderModeFx>> = {
     depthWrite: null,
     emissiveBoost: 1.2,
   },
+};
+
+/**
+ * SIM-DYNAMICS multipliers per {@link RenderMode} (F-RENDER-DYN): the render style nudges how
+ * organisms MOVE, not only how they look. Each field is a small bounded multiplier applied
+ * deterministically in the entity loop. `solid` is the exact identity (all 1) so the default
+ * world — and every determinism/parity test, which runs in `solid` — is byte-for-byte unchanged;
+ * the style is a user input recorded in the audit trail, so replays reproduce a mode-change
+ * script exactly. Pure leaf data (no THREE import).
+ */
+export interface RenderModeDyn {
+  /** Velocity / speed-cap scale (how fast the field moves). */
+  speed: number;
+  /** Neighbor query-radius scale (how far organisms perceive each other). */
+  vision: number;
+  /** Cohesion / social-pull scale (how tightly they flock). */
+  social: number;
+  /** Chaos-jitter scale (how restless the motion reads). */
+  jitter: number;
+}
+
+/** The {@link RenderMode} → {@link RenderModeDyn} table (F-RENDER-DYN). `solid` = identity. */
+export const RENDER_MODE_DYN: Readonly<Record<RenderMode, RenderModeDyn>> = {
+  solid: { speed: 1, vision: 1, social: 1, jitter: 1 },
+  wire: { speed: 0.85, vision: 1.1, social: 1.0, jitter: 0.9 }, // skeletal, deliberate
+  ghost: { speed: 1.15, vision: 1.0, social: 0.7, jitter: 1.1 }, // intangible, aloof
+  neon: { speed: 1.1, vision: 1.25, social: 1.2, jitter: 1.0 }, // hyperaware, gregarious
+  chrome: { speed: 1.0, vision: 1.0, social: 1.35, jitter: 0.85 }, // social beacon, orderly
+  hologram: { speed: 1.2, vision: 1.15, social: 0.85, jitter: 1.15 }, // flickery, quick
+  iridescent: { speed: 1.05, vision: 1.1, social: 1.1, jitter: 1.05 }, // shimmering, lively
 };
 
 /** Lower clamp for the chaos parameter, legacy line 168. */
