@@ -136,6 +136,28 @@ describe('SingularitySystem', () => {
     expect(sys.bodyForce(CENTER.x + 10, CENTER.y, CENTER.z, 0.016, out)).toBe(false);
   });
 
+  test('F-NHI: an isNhi being is immune to black-hole consumption; a normal twin at the same spot is eaten', () => {
+    const ctx = makeCtx(11, 500);
+    const ent = new EntityManager(ctx);
+    ent.reset(60);
+    // Park two organisms ON the singularity (inside the horizon): one NHI, one normal control.
+    const nhi = ent.list[0]!;
+    const control = ent.list[1]!;
+    nhi.userData.isNhi = true;
+    // Inside the horizon but OFF dead-centre (the field skips r≈0), so the hole actually acts.
+    nhi.position.set(CENTER.x + 5, CENTER.y, CENTER.z);
+    control.position.set(CENTER.x + 7, CENTER.y, CENTER.z);
+    const sys = new SingularitySystem(ctx, ent);
+    sys.summon('blackhole', CENTER.clone());
+    for (let f = 0; f < 40; f++) {
+      ctx.state.frame = f;
+      sys.update(0.016, f * 0.016);
+    }
+    expect(ent.list.includes(nhi)).toBe(true); // immune — ejected, never consumed
+    expect(ent.list.includes(control)).toBe(false); // normal twin was consumed
+    expect(sys.consumed).toBeGreaterThan(0);
+  });
+
   test('summon activates the chosen kind; dispose clears it', () => {
     const ctx = makeCtx(3, 500);
     const sys = new SingularitySystem(ctx, new EntityManager(ctx));

@@ -723,6 +723,9 @@ export class World {
     // F-CHAOS-ENTROPY: hold G to pour in ENTROPY (the order/heat-death axis), the bipolar twin of
     // Tab→chaos. Reachable now via keyboard; the bottom-panel button is wired in the UI pass.
     if (k['g']) s.entropy = Math.min((s.entropy ?? 0) + dt * 2, ENTROPY_MAX);
+    // F-NHI: tap N to launch an NHI being in front of the camera (throttled so a held key doesn't
+    // flood the world). The action is also exposed for the bottom-panel button in the UI pass.
+    if (k['n'] && s.frame % 30 === 0) this.launchNhiBeing();
   }
 
   /**
@@ -847,6 +850,32 @@ export class World {
     );
     this.hud.setLore(sn.lore); // O(1) no-op when unchanged
     return sn;
+  }
+
+  /**
+   * F-NHI: launch a user-controlled non-human-intelligence being ~45u in front of the camera — a
+   * buoyant, fast, age-immortal, consumption-immune entity that flies and floats through the world
+   * with "Matrix" powers. Returns 1 on success, 0 at the population cap. Draws rng (a user event,
+   * recorded in the audit so replays reproduce); a never-launched world draws none and is unchanged.
+   */
+  private launchNhiBeing(): number {
+    const cam = this.engine.camera;
+    cam.getWorldDirection(this.sv2);
+    this.sv1.copy(cam.position).addScaledVector(this.sv2, 45);
+    const mi = Math.floor(this.rng() * this.morphTotal);
+    const e = this.entities.spawn(this.sv1, mi, 2.2);
+    if (!e) return 0;
+    const u = e.userData;
+    u.isNhi = true;
+    u.beh = 'helix'; // ethereal, weaving float
+    u.spd *= 2.2; // quick
+    u.vel.set((this.rng() - 0.5) * 0.3, 0.4, (this.rng() - 0.5) * 0.3); // launched upward
+    e.material.emissive.setRGB(0.25, 0.95, 1.0); // unmistakable cyan NHI glow
+    e.material.emissiveIntensity = 3.2;
+    this.audio.play('warp');
+    this.hud.showSector('NHI LAUNCHED · MATRIX BEING');
+    this.audit.record('nhi-launch', { mi });
+    return 1;
   }
 
   private save(): void {
@@ -1292,6 +1321,10 @@ export class World {
         this.hud.showSector('ENTROPY ' + e.toFixed(1) + ' · ORDER RISING');
         this.audit.record('entropy', { entropy: e });
         return e;
+      },
+      launchNhi: () => {
+        this.unlock();
+        return this.launchNhiBeing();
       },
       summonSingularity: () => {
         this.unlock();

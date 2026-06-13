@@ -285,7 +285,10 @@ export class SingularitySystem {
       if (r2 > REACH2 || r2 < 1e-6) continue;
       const r = Math.sqrt(r2);
       if (r < HORIZON) {
-        if (consumeCap > 0 && eaten < consumeCap) {
+        // F-NHI: a launched being is immune to consumption (its "Matrix" power) — it is thrown back
+        // out like the white-hole case instead of being eaten. `isNhi` is undefined on every normal
+        // organism, so this is byte-identical until you launch one.
+        if (consumeCap > 0 && eaten < consumeCap && e.userData.isNhi !== true) {
           // Crossed the event horizon — consumed. disposeAt fires the world's onDeath hook,
           // which scars the RD ground at the corpse's UV (the mortality feedback loop).
           this.entities.disposeAt(i);
@@ -293,8 +296,8 @@ export class SingularitySystem {
           eaten++;
           continue;
         }
-        if (consumeCap === 0) {
-          // Non-consuming hole: nothing may enter — eject the crosser back out past the horizon.
+        if (consumeCap === 0 || e.userData.isNhi === true) {
+          // Non-consuming hole (or an immune NHI): nothing may enter — eject back past the horizon.
           V.multiplyScalar(1 / r); // unit toward centre
           e.position.copy(c).addScaledVector(V, -HORIZON * 1.05);
           e.userData.vel.addScaledVector(V, -0.6);

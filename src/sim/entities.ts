@@ -384,6 +384,10 @@ export class EntityManager {
       // the per-frame displacement so the render style alters how fast the field travels.
       MOVE.copy(u.vel).multiplyScalar(dt * 60 * dyn.speed);
       e.position.add(MOVE);
+      // F-NHI: launched beings get "Matrix" buoyancy — a gentle anti-gravity lift so they fly and
+      // float through the upper world (the y-ceiling further down still catches them). No rng, and
+      // the branch is never taken until you launch one, so the default world is byte-identical.
+      if (u.isNhi) u.vel.y += 0.006;
       e.rotation.x += sinWF * 0.012 * sp2 * 0.4;
       e.rotation.y += cosWF * 0.01 * sp2 * 0.35;
       e.rotation.z += Math.sin(wfph + 1) * 0.007 * sp2;
@@ -425,7 +429,9 @@ export class EntityManager {
 
       // Temperature-modified death + respawn-when-sparse (legacy lines 790-795).
       // onDeath fires inside disposeAt — exactly once per death, never doubled here.
-      if (u.age > u.life * tMod) {
+      if (!u.isNhi && u.age > u.life * tMod) {
+        // F-NHI: launched beings are age-immortal (the `!u.isNhi` guard) — undefined on every
+        // normal organism, so this is byte-identical until you launch one.
         const ex = e.position.x;
         const ez = e.position.z;
         this.disposeAt(i);

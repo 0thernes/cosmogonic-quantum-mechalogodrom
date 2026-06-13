@@ -91,6 +91,13 @@ export interface EntityData {
   phylum: number;
   /** OUTLIER second behavior, temporally blended with `beh`; null for members. */
   beh2: Behavior | null;
+  /**
+   * F-NHI: true for a user-LAUNCHED non-human-intelligence being (Neo/"Matrix" powers — buoyant,
+   * faster, age-immortal, and immune to singularity consumption). OPTIONAL/absent on every normal
+   * organism (⇒ falsy), so the spawn literal and all tests are unchanged; only a launched being
+   * sets it. Read as `userData.isNhi === true`.
+   */
+  isNhi?: boolean;
 }
 
 export interface Entity extends THREE.Mesh<THREE.BufferGeometry, THREE.MeshStandardMaterial> {
@@ -317,6 +324,8 @@ export interface UiActions {
   chaosBoost(): void;
   /** Raise ENTROPY one step (F-CHAOS-ENTROPY) — the bipolar opposite of chaos; returns the new value. */
   entropyBoost(): number;
+  /** Launch a user-controlled NHI being into the world (F-NHI); returns 1 on success, 0 if at the cap. */
+  launchNhi(): number;
   /** Summon the next cosmological singularity (CONTRACTS V7.4); returns its name. */
   summonSingularity(): string;
   apocalypse(): void;
