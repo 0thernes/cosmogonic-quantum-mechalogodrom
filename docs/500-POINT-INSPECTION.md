@@ -9,13 +9,14 @@ a named limitation or accepted risk) · **❌ FAIL** (a defect — must be fixed
 
 | Verdict   | Count |
 | --------- | ----- |
-| ✅ PASS   | 481   |
-| 🟡 WARN   | 19    |
+| ✅ PASS   | 482   |
+| 🟡 WARN   | 18    |
 | ❌ FAIL   | 0     |
 | **Total** | 500   |
 
 Scope: every folder, every file, the public surface of every module. Last full sweep: release
-`0.8.0`. The audit is re-run before each tagged release; deltas land in [CHANGELOG.md](../CHANGELOG.md).
+`0.8.0`; §13.258 promoted to ✅ in `0.9.0` (a `prefers-reduced-motion` accommodation shipped). The
+audit is re-run before each tagged release; deltas land in [CHANGELOG.md](../CHANGELOG.md).
 
 > Provenance: this list is the human-readable companion to the binding
 > [MODULE-CONTRACTS.md](./MODULE-CONTRACTS.md) and the [COMPLEXITY.md](./COMPLEXITY.md) budget.
@@ -319,7 +320,7 @@ Scope: every folder, every file, the public surface of every module. Last full s
 255. ✅ Motion-heavy visuals are confined to the canvas; UI chrome is stable.
 256. ✅ Text is real text (not baked into images) wherever it conveys data.
 257. ✅ The `/docs` report is plain semantic HTML, screen-reader navigable.
-258. 🟡 No `prefers-reduced-motion` opt-out for the animated cosmos (a named a11y enhancement for the roadmap).
+258. ✅ `prefers-reduced-motion` is honored — the UI chrome's animations/transitions collapse to near-instant (`app.css`); the WebGL canvas stays live by design, and the TIME control can pause the whole sim (timeScale 0).
 259. 🟡 No automated a11y audit (axe-core) in CI (manual review only).
 260. 🟡 WCAG contrast is not formally measured against AA for every secondary/disabled state.
 
@@ -603,12 +604,12 @@ Scope: every folder, every file, the public surface of every module. Last full s
 
 ### How to use this inspection
 
-- **Before a release:** re-walk the 19 🟡 WARNs; promote any that have been resolved to ✅, and add new
+- **Before a release:** re-walk the 18 🟡 WARNs; promote any that have been resolved to ✅, and add new
   points as the surface grows. A WARN flipping to ❌ blocks the tag.
 - **During review:** cite point numbers in PR comments (e.g. "regresses §6.101 allocation discipline").
 - **For newcomers:** read this top-to-bottom for a guided tour of what "done" means here, then dive into
   [MODULE-CONTRACTS.md](./MODULE-CONTRACTS.md) for the binding detail.
 
-The 19 WARNs are deliberate, named limitations appropriate to a **local, single-author proof of
+The 18 WARNs are deliberate, named limitations appropriate to a **local, single-author proof of
 concept** — none is a correctness, determinism, or security defect. They are the honest edge of the
 envelope, recorded so they are decisions rather than blind spots.
