@@ -50,7 +50,11 @@ const STYLE = `
 .cqm-cop-head{display:flex;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid rgba(120,160,220,.25);
   background:rgba(10,16,34,.7)}
 .cqm-cop-head b{font-size:12px;letter-spacing:.08em;color:#9fc0ff}
-.cqm-cop-prov{margin-left:auto;font-size:9px;opacity:.6}
+.cqm-cop-prov{font-size:9px;opacity:.6;margin-left:6px;white-space:nowrap}
+.cqm-cop-sel{margin-left:auto;max-width:46%;background:rgba(2,6,16,.9);color:#bcd2f5;
+  border:1px solid rgba(120,160,220,.35);border-radius:5px;font:10px var(--font-mono,ui-monospace,monospace);
+  padding:2px 4px;cursor:pointer}
+.cqm-cop-sel:focus-visible{outline:1px solid #6da8ff}
 .cqm-cop-x{background:none;border:none;color:#9fc0ff;font-size:16px;cursor:pointer;padding:0 4px}
 .cqm-cop-log{flex:1;overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:8px}
 .cqm-cop-msg{padding:6px 9px;border-radius:8px;white-space:pre-wrap;word-break:break-word}
@@ -97,12 +101,17 @@ function mount(): void {
   const prov = document.createElement('span');
   prov.className = 'cqm-cop-prov';
   prov.textContent = '…';
+  // The "free LLMs side box": pick which free provider answers (populated from /api/copilot).
+  const sel = document.createElement('select');
+  sel.className = 'cqm-cop-sel';
+  sel.setAttribute('aria-label', 'Choose the free AI provider');
+  sel.title = 'Free LLM provider';
   const close = document.createElement('button');
   close.className = 'cqm-cop-x';
   close.type = 'button';
   close.textContent = '×';
   close.setAttribute('aria-label', 'Close Copilot');
-  head.append(title, prov, close);
+  head.append(title, prov, sel, close);
 
   const logEl = document.createElement('div');
   logEl.className = 'cqm-cop-log';
@@ -129,6 +138,8 @@ function mount(): void {
   const history: Msg[] = [];
   let busy = false;
   let greeted = false;
+  /** The free-LLM provider id the user picked (empty = server default). */
+  let selectedProvider = '';
 
   const scroll = (): void => {
     logEl.scrollTop = logEl.scrollHeight;
@@ -213,7 +224,7 @@ function mount(): void {
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: history }),
+        body: JSON.stringify({ messages: history, provider: selectedProvider || undefined }),
       });
       const data = (await res.json()) as AgentResult;
       thinking.remove();
@@ -252,12 +263,32 @@ function mount(): void {
         'Copilot online. I can read this repo and run read-only commands to answer questions about the cosmos and its code — but I can never change anything. Note: messages are sent to a free external AI.',
       );
       fetch('/api/copilot')
-        .then((r) => r.json() as Promise<{ provider?: string }>)
+        .then(
+          (r) =>
+            r.json() as Promise<{
+              provider?: string;
+              providers?: { id: string; label: string; def: boolean }[];
+            }>,
+        )
         .then((d) => {
           prov.textContent = d.provider ?? '';
+          const list = d.providers ?? [];
+          sel.replaceChildren();
+          for (const p of list) {
+            const opt = document.createElement('option');
+            opt.value = p.id;
+            opt.textContent = p.label;
+            if (p.def) {
+              opt.selected = true;
+              selectedProvider = p.id;
+            }
+            sel.appendChild(opt);
+          }
+          if (list.length === 0) sel.style.display = 'none';
         })
         .catch(() => {
           prov.textContent = 'offline';
+          sel.style.display = 'none';
         });
     }
   };
@@ -267,6 +298,9 @@ function mount(): void {
     else openPanel();
   });
   close.addEventListener('click', () => panel.classList.remove('open'));
+  sel.addEventListener('change', () => {
+    selectedProvider = sel.value;
+  });
   send.addEventListener('click', submit);
   input.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {

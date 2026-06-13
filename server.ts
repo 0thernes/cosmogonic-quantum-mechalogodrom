@@ -19,7 +19,12 @@
 import index from './index.html';
 import docs from './docs.html';
 import { createLogger } from './src/logging/logger';
-import { runAgent, providerLabel, type ChatMessage } from './src/server/copilot';
+import {
+  runAgent,
+  providerLabel,
+  availableProviders,
+  type ChatMessage,
+} from './src/server/copilot';
 import { dispatchTool } from './src/server/ai-sandbox';
 
 const log = createLogger('server');
@@ -274,7 +279,11 @@ const server = Bun.serve({
       // Report the active provider so the chat panel can show it (no secrets — label only).
       GET(req) {
         logRequest(req, 200);
-        return Response.json({ ok: true, provider: providerLabel() });
+        return Response.json({
+          ok: true,
+          provider: providerLabel(),
+          providers: availableProviders(),
+        });
       },
     },
     '/api/chat': {
@@ -294,7 +303,10 @@ const server = Bun.serve({
             { status: 400 },
           );
         }
-        const result = await runAgent(messages);
+        // Optional free-LLM picker (server resolves the id → endpoint+key; default-deny on unknown).
+        const rec = (body.value ?? {}) as Record<string, unknown>;
+        const provider = typeof rec['provider'] === 'string' ? rec['provider'] : undefined;
+        const result = await runAgent(messages, provider);
         logRequest(req, 200);
         return Response.json(result);
       },
