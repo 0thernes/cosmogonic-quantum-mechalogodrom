@@ -1,5 +1,10 @@
 import { describe, expect, test } from 'bun:test';
 import {
+  CHAOS_LEVELS,
+  CHAOS_MAX,
+  CHAOS_MIN,
+  ENTROPY_MAX,
+  ENTROPY_STEP,
   RENDER_MODES,
   RENDER_MODE_DYN,
   TIME_SCALES,
@@ -67,5 +72,29 @@ describe('F-TIME — time-dilation steps', () => {
       expect(v).toBeGreaterThanOrEqual(0);
       if (i > 0) expect(v).toBeGreaterThan(TIME_SCALES[i - 1]!);
     }
+  });
+});
+
+describe('F-CHAOS-ENTROPY — chaos levels + entropy axis', () => {
+  test('CHAOS_LEVELS is strictly ascending and spans the chaos clamp', () => {
+    expect(CHAOS_LEVELS[0]).toBe(CHAOS_MIN);
+    expect(CHAOS_LEVELS[CHAOS_LEVELS.length - 1]).toBe(CHAOS_MAX);
+    for (let i = 1; i < CHAOS_LEVELS.length; i++) {
+      expect(CHAOS_LEVELS[i]!).toBeGreaterThan(CHAOS_LEVELS[i - 1]!);
+    }
+  });
+
+  test('every chaos level sits within the clamp', () => {
+    for (const lv of CHAOS_LEVELS) {
+      expect(lv).toBeGreaterThanOrEqual(CHAOS_MIN);
+      expect(lv).toBeLessThanOrEqual(CHAOS_MAX);
+    }
+  });
+
+  test('entropy axis: positive max, and the step takes several presses to fill (not a single jump)', () => {
+    expect(ENTROPY_MAX).toBeGreaterThan(0);
+    expect(ENTROPY_STEP).toBeGreaterThan(0);
+    expect(ENTROPY_STEP).toBeLessThanOrEqual(ENTROPY_MAX);
+    expect(Math.ceil(ENTROPY_MAX / ENTROPY_STEP)).toBeGreaterThanOrEqual(2);
   });
 });

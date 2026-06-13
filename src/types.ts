@@ -119,6 +119,14 @@ export interface MorphType {
 /** Mutable cross-system simulation state (single instance, owned by world.ts). */
 export interface SimState {
   chaos: number;
+  /**
+   * F-CHAOS-ENTROPY: the bipolar counterpart to {@link chaos}. Chaos AGITATES (wild excursions);
+   * entropy ORDERS toward heat-death/uniformity — it damps the jitter and bleeds chaos away.
+   * Session-only, in `[0, ENTROPY_MAX]`, decays toward 0. OPTIONAL on purpose: the many test
+   * SimState literals omit it (⇒ `0`, the exact identity), so they stay byte-identical. Always
+   * read as `entropy ?? 0`; the live world initializes it to 0.
+   */
+  entropy?: number;
   mutations: number;
   timeScale: number;
   /** Entity render style (CONTRACTS V7.3; session-only, cycled by the toolbar). */
@@ -307,6 +315,8 @@ export interface UiActions {
   burst(): void;
   mutate(): void;
   chaosBoost(): void;
+  /** Raise ENTROPY one step (F-CHAOS-ENTROPY) — the bipolar opposite of chaos; returns the new value. */
+  entropyBoost(): number;
   /** Summon the next cosmological singularity (CONTRACTS V7.4); returns its name. */
   summonSingularity(): string;
   apocalypse(): void;

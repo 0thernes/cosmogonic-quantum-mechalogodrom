@@ -276,6 +276,19 @@ export const CHAOS_MIN = 0.1;
 /** Upper clamp for the chaos parameter, legacy line 168. */
 export const CHAOS_MAX = 10.0;
 
+/**
+ * Discrete CHAOS levels the chaos control snaps through (F-CHAOS-ENTROPY) — "variations and
+ * levels" rather than a single boost. Ascending; the control steps to the next and wraps from the
+ * top back to the calmest. Spans CHAOS_MIN..CHAOS_MAX.
+ */
+export const CHAOS_LEVELS = [0.1, 0.5, 1, 2, 4, 7, 10] as const;
+
+/** Upper clamp for the bipolar ENTROPY axis (F-CHAOS-ENTROPY): order / heat-death / uniformity. */
+export const ENTROPY_MAX = 10.0;
+
+/** One press of the entropy control raises entropy by this much (a quarter of the range). */
+export const ENTROPY_STEP = ENTROPY_MAX / 4;
+
 /** Number of procedurally generated morphotypes, legacy `GM` (line 169). */
 export const MORPH_COUNT = 100;
 

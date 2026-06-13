@@ -17,6 +17,7 @@ import {
   ARENA_Y,
   CONTAIN_RADIUS2,
   ARENA_RADIUS,
+  ENTROPY_MAX,
   RENDER_MODE_FX,
   RENDER_MODE_DYN,
 } from './constants';
@@ -277,7 +278,11 @@ export class EntityManager {
     // writhes far harder than any N(1) chaos-boost — the contracted "behaviour unhinged"
     // lever, decoupled from the clamp. The gain is applied AFTER each rng() draw (never gates a
     // conditional draw), so at N(1) (gain = 1, exact ×1.0) the seeded stream is byte-identical.
-    const jitterGain = (state.sim === 2 ? 3 : 1) * dyn.jitter;
+    // F-CHAOS-ENTROPY: ENTROPY damps the jitter toward stillness (order / heat-death). At the
+    // default entropy 0 (and every test) entropyFrac is 0 ⇒ ×1, keeping the stream byte-identical;
+    // applied AFTER the rng draw like the other gains, so it never gates a conditional draw.
+    const entropyFrac = Math.min((state.entropy ?? 0) / ENTROPY_MAX, 1);
+    const jitterGain = (state.sim === 2 ? 3 : 1) * dyn.jitter * (1 - 0.85 * entropyFrac);
     const frame = state.frame;
     const env = this.env;
     env.dt = dt;

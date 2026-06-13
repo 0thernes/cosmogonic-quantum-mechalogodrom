@@ -24,8 +24,11 @@ import type { ViewMode, Weather } from './sim/constants';
 import {
   ARENA_MID,
   ARENA_Y,
+  CHAOS_LEVELS,
   CHAOS_MAX,
   CHAOS_MIN,
+  ENTROPY_MAX,
+  ENTROPY_STEP,
   GRID_CELL,
   GROUND_EXTENT,
   RENDER_MODES,
@@ -201,6 +204,7 @@ export class World {
 
     this.state = {
       chaos: 0.5,
+      entropy: 0,
       mutations: 0,
       timeScale: 1,
       renderMode: 'solid',
@@ -403,6 +407,14 @@ export class World {
     // permanently agitated (higher cm ⇒ wilder behaviour excursions). V7.6.
     const chaosFloor = s.sim === 2 ? CHAOS_NIGHTMARE_FLOOR : CHAOS_MIN;
     s.chaos = Math.max(chaosFloor, s.chaos - dt * 0.005);
+    // F-CHAOS-ENTROPY: entropy (order / heat-death) relaxes back toward 0, and while it holds it
+    // BLEEDS chaos away — the bipolar tug (order calms agitation). Pure deterministic float math,
+    // no rng; at the default entropy 0 this whole block is a no-op, so existing replays are intact.
+    const ent = s.entropy ?? 0;
+    if (ent > 0) {
+      s.entropy = Math.max(0, ent - dt * 0.05);
+      s.chaos = Math.max(chaosFloor, s.chaos - ent * dt * 0.03);
+    }
 
     // One bands poll per frame, shared by every consumer (reused object).
     const bands = this.audioAnalysis.update();
@@ -700,7 +712,7 @@ export class World {
     return true;
   }
 
-  /** Held-key macros (legacy 665-666): Space/Shift/M repeat, Tab feeds chaos. */
+  /** Held-key macros (legacy 665-666): Space/Shift/M repeat, Tab feeds chaos, G feeds entropy. */
   private handleHotkeys(dt: number): void {
     const s = this.state;
     const k = this.input.keys;
@@ -708,6 +720,9 @@ export class World {
     if (k['shift'] && s.frame % 20 === 0) this.doSplit();
     if (k['m'] && s.frame % 30 === 0) this.doMutate();
     if (k['tab']) s.chaos = clamp(s.chaos + dt * 2, CHAOS_MIN, CHAOS_MAX);
+    // F-CHAOS-ENTROPY: hold G to pour in ENTROPY (the order/heat-death axis), the bipolar twin of
+    // Tab→chaos. Reachable now via keyboard; the bottom-panel button is wired in the UI pass.
+    if (k['g']) s.entropy = Math.min((s.entropy ?? 0) + dt * 2, ENTROPY_MAX);
   }
 
   /**
@@ -1255,9 +1270,28 @@ export class World {
       },
       chaosBoost: () => {
         this.unlock();
-        s.chaos = clamp(s.chaos * 1.5, CHAOS_MIN, CHAOS_MAX);
+        // F-CHAOS-ENTROPY: step CHAOS up through discrete LEVELS, wrapping from the top back to the
+        // calmest — "variations and levels" rather than an unbounded ×1.5 ramp.
+        const levels = CHAOS_LEVELS as readonly number[];
+        let idx = 0;
+        for (let i = 0; i < levels.length; i++) {
+          if ((levels[i] ?? CHAOS_MIN) <= s.chaos + 1e-6) idx = i;
+        }
+        const next = (idx + 1) % levels.length;
+        s.chaos = clamp(levels[next] ?? CHAOS_MIN, CHAOS_MIN, CHAOS_MAX);
         this.audio.play('burst');
-        this.audit.record('chaos-boost', { chaos: s.chaos });
+        this.hud.showSector('CHAOS L' + next + ' · ' + s.chaos.toFixed(1));
+        this.audit.record('chaos-boost', { chaos: s.chaos, level: next });
+      },
+      entropyBoost: () => {
+        this.unlock();
+        // F-CHAOS-ENTROPY: raise ENTROPY one step (the bipolar opposite of chaos — order/heat-death).
+        const e = Math.min((s.entropy ?? 0) + ENTROPY_STEP, ENTROPY_MAX);
+        s.entropy = e;
+        this.audio.play('decay');
+        this.hud.showSector('ENTROPY ' + e.toFixed(1) + ' · ORDER RISING');
+        this.audit.record('entropy', { entropy: e });
+        return e;
       },
       summonSingularity: () => {
         this.unlock();
