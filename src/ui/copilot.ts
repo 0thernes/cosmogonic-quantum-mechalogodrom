@@ -231,6 +231,8 @@ function mount(): void {
       for (const step of data.steps ?? []) addTool(step);
       addMsg('cqm-cop-ai', data.reply || '(no answer)');
       history.push({ role: 'assistant', content: data.reply || '' });
+      // Reflect which free LLM actually served this turn (makes a failover visible).
+      if (data.provider) prov.textContent = data.provider;
     } catch (e) {
       thinking.remove();
       addMsg('cqm-cop-sys', `chat error: ${e instanceof Error ? e.message : String(e)}`);
@@ -284,6 +286,17 @@ function mount(): void {
             }
             sel.appendChild(opt);
           }
+          // Restore a previously-picked provider if it's still on offer.
+          let saved: string | null = null;
+          try {
+            saved = localStorage.getItem('cqm-cop-provider');
+          } catch {
+            saved = null;
+          }
+          if (saved && list.some((p) => p.id === saved)) {
+            sel.value = saved;
+            selectedProvider = saved;
+          }
           if (list.length === 0) sel.style.display = 'none';
         })
         .catch(() => {
@@ -300,6 +313,11 @@ function mount(): void {
   close.addEventListener('click', () => panel.classList.remove('open'));
   sel.addEventListener('change', () => {
     selectedProvider = sel.value;
+    try {
+      localStorage.setItem('cqm-cop-provider', sel.value);
+    } catch {
+      /* storage unavailable (private mode) — selection still works in-session */
+    }
   });
   send.addEventListener('click', submit);
   input.addEventListener('keydown', (e) => {
