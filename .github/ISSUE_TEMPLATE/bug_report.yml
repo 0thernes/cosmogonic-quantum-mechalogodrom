@@ -1,0 +1,50 @@
+name: 🐛 Bug report
+description: A correctness, determinism, rendering, or performance defect.
+labels: [bug]
+body:
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you observe, and what did you expect instead?
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: Exact steps. For sim defects, include the seed and tier if known.
+      placeholder: |
+        1. Open the app at the `ultra` tier
+        2. Select algorithm …
+        3. Observe …
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Simulation / determinism
+        - Rendering (three.js / WebGL)
+        - Audio
+        - UI / Observatory / controls
+        - Build / tooling / CI
+        - Docs
+    validations:
+      required: true
+  - type: input
+    id: env
+    attributes:
+      label: Environment
+      placeholder: 'OS, browser + version, GPU, display (e.g. Win11, Chrome 124, RTX 5070 Ti, 4K)'
+    validations:
+      required: false
+  - type: textarea
+    id: console
+    attributes:
+      label: Console / logs
+      description: Any console errors or audit-trail output. (HMR `[object Object]` noise is benign.)
+      render: shell
+    validations:
+      required: false

@@ -1,0 +1,42 @@
+name: CodeQL
+
+# Static security analysis (GitHub Advanced Security). Scans the TypeScript/JavaScript on every
+# push and PR to the default branch, plus a weekly scheduled sweep so newly-disclosed query
+# patterns are caught even when the code is quiet. Findings surface in the Security tab.
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  schedule:
+    - cron: '23 5 * * 1' # 05:23 UTC every Monday (off-the-hour to avoid the scheduler stampede)
+  workflow_dispatch:
+
+concurrency:
+  group: codeql-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  security-events: write # required to upload the SARIF results
+
+jobs:
+  analyze:
+    name: Analyze (javascript-typescript)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: javascript-typescript
+          # security-extended adds the higher-signal security queries beyond the default suite.
+          queries: security-extended
+
+      - name: Perform CodeQL analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: '/language:javascript-typescript'
