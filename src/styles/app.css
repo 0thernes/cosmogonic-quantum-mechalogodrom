@@ -1108,3 +1108,19 @@ a:focus-visible {
 #audit-list code {
   color: var(--color-ink-dim);
 }
+
+/* ── Accessibility: prefers-reduced-motion (500-point §13.258) ─
+   The WebGL cosmos is the app's purpose and keeps living, but a motion-sensitive visitor gets a
+   calmer INTERFACE: panel slides, button transitions, and any chrome animation collapse to
+   near-instant so the UI itself does not move. The canvas is JS-driven and unaffected by design;
+   the user can still pause the whole sim with the TIME control (timeScale 0). */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
