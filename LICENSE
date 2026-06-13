@@ -1,48 +1,43 @@
-Cosmogonic Quantum Mechalogodrom
-Copyright (c) 2026 0thernes. All Rights Reserved.
+PROPRIETARY SOFTWARE LICENSE — ALL RIGHTS RESERVED
 
-PROPRIETARY AND CONFIDENTIAL — ALL RIGHTS RESERVED
+Copyright (c) 2026 0thernes (0thernes LLC) <0_0@0thernes.art>.
+All Rights Reserved. Patent Pending. Trademarks asserted.
 
-This software and its associated source code, documentation, designs,
-assets, manifestos, and all other materials in this repository
-(collectively, the "Work") are the original, proprietary, and confidential
-intellectual property of 0thernes (the "Author").
+1. OWNERSHIP
+   This software together with its source code, object code, build
+   configuration, documentation, designs, schemas, generated assets, and every
+   other file in this repository (the "Work") is the exclusive proprietary
+   property and confidential intellectual property of 0thernes ("the Author"),
+   protected by copyright, trade-secret, patent, trademark, and other laws.
 
-No license, right, or interest of any kind is granted, whether by
-implication, estoppel, or otherwise, except as expressly stated in a
-separate written agreement signed by the Author. In particular, NO PERSON
-OR ENTITY is permitted, without the Author's prior express written consent,
-to:
+2. RESERVATION OF RIGHTS
+   ALL RIGHTS ARE RESERVED. No license, right, title, or interest in the Work —
+   by grant, implication, estoppel, or otherwise — is conveyed to any person or
+   entity. No permission is granted to use, copy, reproduce, modify, adapt,
+   translate, publish, distribute, sublicense, sell, lease, reverse engineer,
+   decompile, disassemble, or create derivative works of the Work, in whole or
+   in part, by any means, without the prior express written permission of the
+   Author. No patent license and no trademark license is granted.
 
-  (a) use, run, or execute the Work for any purpose;
-  (b) copy, reproduce, or store the Work, in whole or in part;
-  (c) modify, adapt, translate, or create derivative works of the Work;
-  (d) merge, publish, distribute, sublicense, lease, rent, lend, sell, or
-      otherwise transfer the Work or any copy or portion of it;
-  (e) reverse engineer, decompile, or disassemble the Work except to the
-      extent such restriction is expressly prohibited by applicable law;
-  (f) remove, alter, or obscure any copyright, trademark, or other
-      proprietary notice contained in the Work.
+3. PATENT PENDING / TRADEMARKS
+   One or more inventions embodied in the Work are the subject of pending patent
+   applications. All product names, logos, and brands are trademarks or trade
+   names of the Author and may not be used without prior written permission.
 
-Viewing this repository where it has been made source-available by the
-Author does not transfer any ownership interest and does not grant any of
-the rights enumerated above.
+4. PUBLIC DEMONSTRATION
+   The Author may make a public demonstration of the Work available (for example
+   via GitHub Pages) solely so that the public may evaluate and try it. Such
+   availability is a demonstration only and grants NO license to the source code
+   and NO right to reuse, redistribute, host, or incorporate the Work.
 
-THIRD-PARTY COMPONENTS. The Work depends on and may bundle third-party
-open-source software and fonts, each of which remains licensed under its
-own terms (MIT, ISC, 0BSD, SIL OFL 1.1, LGPL-2.1, and others). Those terms
-govern those components only, are not superseded by this license, and are
-enumerated with their attributions in NOTICE.md. Nothing in this license
-restricts any right you hold under those third-party licenses with respect
-to those third-party components.
+5. FUTURE OPEN-SOURCE RELEASES
+   The Author may, at its sole discretion and in the future, release specific
+   older versions of the Work under separate open-source terms (for example MIT
+   or Apache-2.0). No such release is granted by this license.
 
-NO WARRANTY. THE WORK IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT.
-
-LIMITATION OF LIABILITY. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
-CLAIM, DAMAGES, OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT,
-OR OTHERWISE, ARISING FROM, OUT OF, OR IN CONNECTION WITH THE WORK OR THE
-USE OR OTHER DEALINGS IN THE WORK.
-
-For licensing inquiries, contact: 0_0@0thernes.art
+6. NO WARRANTY
+   THE WORK IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+   IMPLIED, INCLUDING WITHOUT LIMITATION THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+   AUTHOR BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY ARISING FROM OR
+   IN CONNECTION WITH THE WORK OR ITS USE.
