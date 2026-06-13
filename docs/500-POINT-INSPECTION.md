@@ -323,7 +323,7 @@ and a CycloneDX SBOM shipped). The audit is re-run before each tagged release; d
 256. ✅ Text is real text (not baked into images) wherever it conveys data.
 257. ✅ The `/docs` report is plain semantic HTML, screen-reader navigable.
 258. ✅ `prefers-reduced-motion` is honored — the UI chrome's animations/transitions collapse to near-instant (`app.css`); the WebGL canvas stays live by design, and the TIME control can pause the whole sim (timeScale 0).
-259. 🟡 No automated a11y audit (axe-core) in CI (manual review only).
+259. 🟡 Markup-level a11y IS now automated in CI (`tests/a11y-static.test.ts` — accessible names on every button, `role="img"`/`role="tab"` labelling, lang/title/viewport) alongside measured contrast (§13.260); full _rendered_ axe-core checks (focus order, live regions, ARIA-in-context) remain manual — the residual gap.
 260. ✅ Text-token contrast is computed + asserted in CI (`tests/contrast.test.ts`): primary ink/white clear AAA (≥7:1) and accent/secondary/bar/warn clear AA (≥4.5:1) on the `--color-void` background — measured, not assumed.
 
 ## 14. Server & API
