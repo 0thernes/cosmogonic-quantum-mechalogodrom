@@ -1379,3 +1379,44 @@ tier ≥30fps share; zero console errors over a 3-min soak that exercises every 
 control (100-SFX spam, RUN ALL + AUTO, all 5 render modes, every singularity,
 every weather, and the N(1)→N(2) flip + back); same-seed determinism preserved at
 sim=1 and within each sim variant.
+
+## V9 — AGImAGNOSIS: minds, lineage, factions, artifacts, Copilot
+
+The era that gives the world intelligence, using pre-transformer techniques only (research:
+[research/PRE-TRANSFORMER-GAME-AI.md](research/PRE-TRANSFORMER-GAME-AI.md); reference:
+[AI-SUBSYSTEM.md](AI-SUBSYSTEM.md)). HARD LINE: in-world minds are DETERMINISTIC (seeded classical
+AI in `src/sim/**`); the live LLM Copilot is a NON-deterministic shell organ (`src/server/**`,
+`src/ui/copilot.ts`) fenced out of sim logic — it can never touch `SimState` or the RNG stream.
+
+### Modules (exclusive ownership)
+
+- **`src/sim/ai/brains.ts`** — pure seeded primitives: `utilityPick`/`softmaxPick`, `TinyMLP`,
+  `MarkovChain`, `fsmStep`, `goapPlan`, `MemoryRing`. No I/O, no clock; allocation-free.
+- **`src/sim/genome.ts`** — gene vector → traits + `TinyMLP` weights; seeded `crossover`/`mutate`/
+  `breed`; `decodeTraits`; `geneDistance`. Crossover/mutate allocate a child (reproduction event).
+- **`src/sim/lineage.ts`** — bounded parent→offspring graph: `birth`, `generationOf`, `isAncestor`,
+  `related`. Fixed-capacity typed arrays; O(1) birth, decaying window.
+- **`src/sim/factions.ts`** — 8 archetypes; `decideFaction(faction, percept, rng, fsmState)` is
+  pure; the Devourer MLP + Oracle Markov weights are built once from constant seeds.
+- **`src/sim/artifacts.ts`** — `ArtifactField`: a pooled InstancedMesh of relics. VISUAL-ONLY (no
+  rng, no sim write); placed off the existing death/summon events; `update`/`influenceAt`. Wired in
+  `world.ts` (scar on death, relic on summon, per-frame animate).
+- **`src/server/copilot.ts`** — pluggable OpenAI-compatible bridge (env `CQM_LLM_ENDPOINT`/`MODEL`/
+  `KEY`); a bounded agent loop over the read-only tools.
+- **`src/server/ai-sandbox.ts`** — default-deny tool gate: repo-confined `read_file`/`list_dir`/
+  `grep` + a single-command `run` (ALLOW-bin + DENY-token + no shell metacharacter + git/bun
+  subcommand gating). Writes nothing.
+- **`src/ui/copilot.ts`** — self-mounting chat panel + `/read /ls /grep /run` terminal;
+  `textContent`-only rendering (no HTML injection).
+
+### Determinism strategy
+
+The composition root assigns a faction + genome per organism from the seeded stream and maps decided
+intents to steering; reproduction calls `breed` + `lineage.birth`. The artifact field and the
+Copilot are constructed boot-stream-neutral and never write sim state, so the golden is unaffected.
+
+### V9 acceptance
+
+Full `bun run check` green: prettier → tsc strict → oxlint → 535 tests (0 fail, 300-frame golden
+included) → build. The Copilot sandbox verified live (allow: `git log`, file reads; deny:
+path-escape, `git push`, `legacy/`, shell redirection).

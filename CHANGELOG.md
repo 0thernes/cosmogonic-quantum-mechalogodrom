@@ -5,6 +5,66 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.0] - 2026-06-13
+
+"AGImAGNOSIS" — the world gains minds. Pre-transformer game/A-Life AI (finite-state
+machines, utility scoring, tiny neural nets, Markov chains, GOAP planning, genetics)
+drives the organisms and a new roster of factions; the cosmos reproduces, ages, and
+relates across generations; five cinematic cameras, TIME/SPACE controls, render-driven
+dynamics, an environment artifact field, and a read-only free-LLM Copilot round it out.
+Every wave shipped behind the full gate; same-seed determinism preserved.
+
+### Added
+
+- **Deterministic classical-AI kernel** (`src/sim/ai/brains.ts`) — the pre-2016 toolbox
+  as pure, seeded, allocation-free primitives: utility/needs scoring (`utilityPick`,
+  `softmaxPick`), a fixed-weight perceptron (`TinyMLP`), a `MarkovChain`, an `fsmStep`
+  finite-state machine, a `goapPlan` goal planner (F.E.A.R.-style), and a bounded
+  `MemoryRing` (Halo-2 blackboard). (`tests/brains.test.ts`.)
+- **Digital genome + lineage** (`src/sim/genome.ts`, `src/sim/lineage.ts`) — a heritable
+  gene vector decoding to traits + a `TinyMLP` brain, with seeded crossover/mutation/breed,
+  and a bounded parent→offspring kinship graph (generations, ancestry, relatedness). The
+  substrate for reproduction, offspring, relations, and sentience-tier propensity.
+- **Eight faction archetypes** (`src/sim/factions.ts`) — Watchers / Weavers / Wardens /
+  Heralds / Leviathans / SwarmMinds / Oracles / Devourers, each thinking with a DIFFERENT
+  brain technique so they behave recognizably unlike one another.
+- **Leviathans** (`src/sim/leviathans.ts`) — a fourth order of colossi (F-BEINGS).
+- **Sentience-variation tiers** — the biome sentience index classified into named tiers
+  (F-SENTIENCE-VAR).
+- **Five cinematic camera views** — follow / chase / cinematic / vortex / titan motion and
+  subject-tracking shots (F-CAM5), plus **TIME** (finer `timeScale` steps) and **SPACE**
+  (camera-FOV dilation) controls.
+- **NHI beings** (F-NHI) — launch autonomous mini-AIs with "Matrix powers" that fly and act
+  on the world.
+- **Environment artifact field** (`src/sim/artifacts.ts`) — persistent relics (a scar on each
+  death, a relic on each summoned singularity, motes) rendered through one pooled InstancedMesh;
+  visual-only and determinism-safe; wired into the world's death/summon events.
+- **Free-LLM Copilot side-chat** (`src/server/copilot.ts`, `src/server/ai-sandbox.ts`,
+  `src/ui/copilot.ts`) — a read-only AI you chat with about the repo and the world. Pluggable
+  OpenAI-compatible provider (Pollinations no-key default; `freellmapi` ~1.7B-token pool /
+  OpenRouter / Groq via env). A default-deny sandbox lets it READ files and RUN read-only
+  commands but never change code.
+- **Documentation** — `docs/research/PRE-TRANSFORMER-GAME-AI.md` (how AI worked before the
+  transformer) and `docs/AI-SUBSYSTEM.md` (in-world minds + Copilot reference), plus the
+  `PRE-2016-AI.md` dossier.
+
+### Changed
+
+- **Render modes now alter dynamics, not just appearance** (`RENDER_MODE_DYN`) — each style
+  nudges speed / vision / social / jitter; `solid` is the exact identity, so the determinism
+  golden is unchanged.
+- **Singularities ("holes") affect the big roaming beings** — titans, shoggoths, and leviathans,
+  not only the organisms (F-HOLES).
+- **Chaos is leveled and bipolar** — discrete chaos LEVELS plus an opposing ENTROPY axis
+  (F-CHAOS-ENTROPY).
+
+### Determinism
+
+- All in-world AI (brains, genome, factions, reproduction, sentience) draws only from the seeded
+  RNG; the artifact field and the Copilot are fenced out of sim logic (visual / shell only). The
+  300-frame determinism golden and the full gate (prettier → tsc strict → oxlint → 535 tests →
+  build) stay green.
+
 ## [0.8.0] - 2026-06-12
 
 "HARDENING" — a professional-grade pass: a new DSA primitive, full CI/CD plus
