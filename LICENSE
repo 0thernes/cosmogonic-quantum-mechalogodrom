@@ -1,21 +1,43 @@
-MIT License
+PROPRIETARY SOFTWARE LICENSE — ALL RIGHTS RESERVED
 
-Copyright (c) 2026 0thernes
+Copyright (c) 2026 0thernes (0thernes LLC) <0_0@0thernes.art>.
+All Rights Reserved. Patent Pending. Trademarks asserted.
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+1. OWNERSHIP
+   This software together with its source code, object code, build
+   configuration, documentation, designs, schemas, generated assets, and every
+   other file in this repository (the "Work") is the exclusive proprietary
+   property and confidential intellectual property of 0thernes ("the Author"),
+   protected by copyright, trade-secret, patent, trademark, and other laws.
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+2. RESERVATION OF RIGHTS
+   ALL RIGHTS ARE RESERVED. No license, right, title, or interest in the Work —
+   by grant, implication, estoppel, or otherwise — is conveyed to any person or
+   entity. No permission is granted to use, copy, reproduce, modify, adapt,
+   translate, publish, distribute, sublicense, sell, lease, reverse engineer,
+   decompile, disassemble, or create derivative works of the Work, in whole or
+   in part, by any means, without the prior express written permission of the
+   Author. No patent license and no trademark license is granted.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+3. PATENT PENDING / TRADEMARKS
+   One or more inventions embodied in the Work are the subject of pending patent
+   applications. All product names, logos, and brands are trademarks or trade
+   names of the Author and may not be used without prior written permission.
+
+4. PUBLIC DEMONSTRATION
+   The Author may make a public demonstration of the Work available (for example
+   via GitHub Pages) solely so that the public may evaluate and try it. Such
+   availability is a demonstration only and grants NO license to the source code
+   and NO right to reuse, redistribute, host, or incorporate the Work.
+
+5. FUTURE OPEN-SOURCE RELEASES
+   The Author may, at its sole discretion and in the future, release specific
+   older versions of the Work under separate open-source terms (for example MIT
+   or Apache-2.0). No such release is granted by this license.
+
+6. NO WARRANTY
+   THE WORK IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+   IMPLIED, INCLUDING WITHOUT LIMITATION THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+   AUTHOR BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY ARISING FROM OR
+   IN CONNECTION WITH THE WORK OR ITS USE.
