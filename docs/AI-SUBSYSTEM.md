@@ -112,10 +112,25 @@ A side panel to "ask, learn, and talk about this world" with a free AI — stric
   It writes nothing. Verified live: `git log`/`read` allowed; path-escape, `git push`, `legacy/`,
   and `echo > file` all denied.
 - **`server.ts`** routes — `GET /api/copilot` (provider label), `POST /api/chat` (agent turn),
-  `POST /api/tool` (manual read-only terminal).
+  `POST /api/tool` (manual read-only terminal), `GET /api/copilot/health` (V30 — live-probe the
+  failover chain for the diagnostics panel).
 - **`src/ui/copilot.ts`** — a self-mounting panel (the `✦` button) with a chat box plus a
   `/read /ls /grep /run` terminal. All model/tool output renders via `textContent` (no HTML
   injection). A privacy notice states that messages are sent to a free external AI.
+
+### Diagnostics & recovery (V30 — the "AI offline → diagnose + restart" requirement)
+
+When the free pool is rate-limited the chat goes quiet, so the panel's **🩺 DIAGNOSTICS** button
+calls `GET /api/copilot/health`, which probes every provider in the failover chain **in parallel** (a
+1-token ping, 6 s timeout each) and returns per-provider `{reachable, status, latencyMs, detail}` plus
+an overall verdict. The panel renders the **recovery pipeline** in failover order with green ● / red ○
+health lights, latency, and a human reason — `classifyHealth(status, err)` maps the ping to
+`ok` / `rate-limited (429)` / `auth (401/403)` / `http NNN` / `timeout` / the network error, and
+`healthVerdict(probes)` rolls them into `operational — k/n reachable` or an all-down recovery hint
+(both pure + unit-tested). A **↻ Re-probe / restart** control re-runs the probe and re-enables the
+input the moment a provider recovers; the disabled / offline / all-failed states all route the user
+here instead of a dead end. The probe still imports nothing from the sim and reads only the wall
+clock, so the golden is untouched.
 
 **Security posture:** any provider key lives server-side only; the chat is off by default and
 opt-in; if no provider answers, the manual read-only terminal still works locally. The sandbox is

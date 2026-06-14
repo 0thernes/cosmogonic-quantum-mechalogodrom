@@ -13,23 +13,36 @@ the full gate (now also a coverage gate, on Linux + Windows) with same-seed dete
 
 ### Added
 
+- **AI diagnostics + recovery pipeline — the offline-AI repair (V30)** — the Copilot panel gains a 🩺
+  DIAGNOSTICS view that answers "why is the AI silent?". A new server route **`/api/copilot/health`**
+  live-probes every provider in the failover chain **in parallel** (a 1-token ping, 6s timeout each)
+  and reports per-provider `{reachable, status, latency, reason}` + an overall verdict. The panel
+  renders it as the **recovery pipeline** — failover order, green ● / red ○ health lights, latency,
+  and a human reason (`ok` / `rate-limited (429)` / `auth (401)` / `timeout`) — surfaces the **failure
+  reason** prominently, and offers **restart controls** (↻ Re-probe, which also re-enables the input
+  the moment a provider recovers). The disabled / offline / all-providers-failed paths now point the
+  user at 🩺 instead of a dead end. Pure classifiers (`classifyHealth`, `healthVerdict`) are
+  unit-tested (+7, 731 total); the probe lives entirely outside the deterministic sim (no sim import,
+  no rng). **Verified live: the probe found both key-less providers UP (LLM7 200 / 766ms, Pollinations
+  200 / 1118ms) → "operational — 2/2 reachable", and the panel rendered the pipeline with green health
+  lights + the ↻ restart control on screen** — so the AI is, in fact, online; the diagnostics prove it.
 - **Creatures bargain, trade & ally — the cognition↔economy loop closes (V29)** — the Shoggoths gain
   the last social-economic verbs, and for the first time cognition **writes** the economy it already
   reads. The kernel adds two drives: **trade** (bargain with a nearby UNLIKE creature — different
   wealth ⇒ gains from exchange; bargaining power ∝ boldness, so worth flows to the wealthier and
   WIDENS the spread) and **ally** (coalition with a nearby PEER under THREAT — solidarity moves worth
   to the poorer, NARROWING it). Both gate on a sensed `partner` (default 0 ⇒ silent, so legacy callers
-  + determinism goldens stay byte-identical). The economy gains a conservation-exact
-  **`transferWorth(from, to, v)`** primitive (one debit == one credit in AURUM value ⇒ the pair's
-  aggregate net worth is invariant; clamped to the payer's liquidity so it never mints money).
-  Shoggoths sense their nearest neighbour, read its wealth-comparability (peer), and — staggered so
-  only ~1/24 of the horde deals per frame — ACT: a bargain or an alliance moves real money, and the
-  effect shows up next tick through the existing wealth→boldness→glow coupling (**no new visual state —
-  the loop _is_ the visual**). Decoupled through an `attachTrade` facade (the provider owns the
-  index→econ-id map + conservation, so the sim layer never imports `Economy`). +5 tests (724 total).
-  **Verified live on the 100-shoggoth horde:** over 600 frames **440 deals fired, moving 673 AURUM —
-  103 bargains (worth → the richer) + 337 alliances (worth → the poorer)**; with the crowded horde
-  under constant rival-threat, solidarity outweighs bargaining and the shoggoth Gini eased 0.138→0.125.
+  - determinism goldens stay byte-identical). The economy gains a conservation-exact
+    **`transferWorth(from, to, v)`** primitive (one debit == one credit in AURUM value ⇒ the pair's
+    aggregate net worth is invariant; clamped to the payer's liquidity so it never mints money).
+    Shoggoths sense their nearest neighbour, read its wealth-comparability (peer), and — staggered so
+    only ~1/24 of the horde deals per frame — ACT: a bargain or an alliance moves real money, and the
+    effect shows up next tick through the existing wealth→boldness→glow coupling (**no new visual state —
+    the loop _is_ the visual**). Decoupled through an `attachTrade` facade (the provider owns the
+    index→econ-id map + conservation, so the sim layer never imports `Economy`). +5 tests (724 total).
+    **Verified live on the 100-shoggoth horde:** over 600 frames **440 deals fired, moving 673 AURUM —
+    103 bargains (worth → the richer) + 337 alliances (worth → the poorer)**; with the crowded horde
+    under constant rival-threat, solidarity outweighs bargaining and the shoggoth Gini eased 0.138→0.125.
 - **Jolt fracture: native specimens shatter on hard impact (V28)** — the C++ engine's Jolt backend
   gains a real fracture pass. After each solve, the **hardest qualifying contact** that step cracks the
   **smaller** body of the pair into **3 volume-conserving shards** (radius × ∛⅓, so the shards' summed

@@ -56,13 +56,14 @@ behind the full gate (`bun run check`) and a commit.
 - 🟥 P0 `MATERIAL-CLASSES` — 6 per-silhouette material archetypes (pearl/crystal/glass/amber/metal/bone) baked as compile-time `#define RQ_MAT` in the Reliquary shader; each tunes relief/roughness/metalness/SSS/film. `materialClassFor(gi)`. Verified live (all 6 compile, distinct materials render)
 - 🟥 P0 `JOLT-FRACTURE` (V28) — native specimens shatter on hard impact: the hardest contact each step cracks the smaller body into **3 volume-conserving Jolt shards** (∛⅓ radius, own mass/inertia) bursting along the impact normal. **Pre-solve** approach-velocity gate @ 1.6 u/s (≈70% of the measured 2.24 u/s infall peak); shards <0.42u inert, growth capped at 48 (shader `MAX_BODIES` 24→48). Deterministic — verified 18→24 bodies, identical ×2
 - 🟥 P0 `CREATURE-TRADE` (V29) — Shoggoths **bargain, trade & ally**: kernel gains `trade` (deal with the UNLIKE → worth to the wealthier, widens spread) + `ally` (peer coalition under threat → worth to the poorer, narrows it). Economy gains conservation-exact `transferWorth`; `attachTrade` facade closes the cognition→wealth→boldness loop. +5 tests. **Verified live: 440 deals / 673 AURUM over 600 frames — 103 bargains + 337 alliances, Gini 0.138→0.125**
+- 🟥 P0 `AI-REPAIR` (V30) — Copilot **diagnostics + recovery pipeline**: `/api/copilot/health` live-probes the whole failover chain (parallel 1-token ping, 6s timeout); the 🩺 panel shows per-provider health lights (● up / ○ down + reason: ok/rate-limited/auth/timeout), the verdict, and a ↻ Re-probe/restart that re-enables the input on recovery. Pure `classifyHealth`/`healthVerdict` +7 tests. **Verified live: 2/2 key-less providers UP → operational**
 
 ### 🚧 Next — V13/V14 directive backlog (user, 2026-06-14)
 
 - 🟧 P1 `ECON-PROXY-WARS` — explicit patron→proxy funding + trade blocs (titan wealth now tilts PD diplomacy → war/alliance; explicit bloc mechanics next)
 - 🟦 P3 `ECON-TRIBE-WALLETS` — give graph-tribes collective wallets + coalition treasuries (the full market-mechanic list — cartel/arbitrage/sanctions/black-market/auctions — shipped V20–V22)
 - 🟩 P2 `CREATURES-SMART` — Shoggoths now perceive/remember/flee/hunt (V24) + deceive (V26) + **bargain/trade/ally (V29)**; Puppeteers scheme (V25). Remaining verbs: **mutate** (cognition-driven), and trade/ally for the Puppeteer cabal
-- 🟧 P1 `AI-REPAIR` — Copilot offline: diagnostics + failure reason + restart controls + recovery pipeline
+- 🟦 P3 `AI-AUTOKEY` — past V30 diagnostics (shipped): optional auto-provision of a keyed provider (Groq/Cerebras) to fail over to when the key-less pool is rate-limited, for higher chat reliability
 - 🟦 P3 `JOLT-SOFTBODY` — past V18 (Jolt ON) + V28 (rigid fracture): soft-body deformation + crowd-scale (100s of native bodies); bring the native target into CI; render true 4K (3840×2160) plates from the Jolt sim
 - 🟨 P2 `DOCS-SYNC` — keep README/Docs/Specs/ERD/Architecture/Kanban current every increment (standing card)
 

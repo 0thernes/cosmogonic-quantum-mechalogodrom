@@ -35,6 +35,24 @@ interface Msg {
   role: 'user' | 'assistant';
   content: string;
 }
+/** One provider's health from /api/copilot/health (the recovery-pipeline rows). */
+interface ProviderHealth {
+  id: string;
+  label: string;
+  keyed: boolean;
+  reachable: boolean;
+  status: number;
+  latencyMs: number;
+  detail: string;
+}
+interface HealthResult {
+  ok: boolean;
+  enabled: boolean;
+  operational?: boolean;
+  reason: string;
+  default?: string;
+  providers: ProviderHealth[];
+}
 
 const STYLE = `
 #cqm-cop-toggle{position:fixed;right:10px;bottom:10px;z-index:60;width:42px;height:42px;border-radius:50%;
@@ -72,6 +90,22 @@ const STYLE = `
   border-radius:6px;padding:0 12px;cursor:pointer;font:inherit}
 .cqm-cop-send:disabled{opacity:.4;cursor:default}
 .cqm-cop-hint{font-size:9px;opacity:.5;padding:0 10px 7px}
+.cqm-cop-diagbtn{background:none;border:none;color:#9fc0ff;font-size:13px;cursor:pointer;padding:0 3px;line-height:1}
+.cqm-cop-diagbtn:hover{filter:brightness(1.25)}
+.cqm-cop-diagbtn:focus-visible{outline:1px solid #6da8ff;outline-offset:1px}
+.cqm-cop-diag{align-self:stretch;border:1px solid rgba(120,160,220,.3);border-radius:8px;
+  background:rgba(8,14,30,.72);padding:8px 10px;font-size:10.5px}
+.cqm-cop-diag h4{margin:0 0 5px;font-size:10.5px;letter-spacing:.06em;color:#9fc0ff;font-weight:600}
+.cqm-cop-diag .verdict{margin:0 0 6px;opacity:.85;white-space:pre-wrap}
+.cqm-cop-diag .row{display:flex;align-items:center;gap:6px;padding:2px 0;white-space:nowrap;overflow:hidden}
+.cqm-cop-diag .row span:nth-child(2){overflow:hidden;text-overflow:ellipsis}
+.cqm-cop-diag .dot{flex:none;font-size:11px}
+.cqm-cop-diag .up{color:#7bd88f}
+.cqm-cop-diag .down{color:#e2766b}
+.cqm-cop-diag .lat{margin-left:auto;opacity:.55;font-size:9.5px;flex:none}
+.cqm-cop-diag .reprobe{margin-top:8px;background:rgba(50,90,170,.5);color:#dfeaff;
+  border:1px solid rgba(120,160,220,.45);border-radius:5px;padding:3px 10px;cursor:pointer;font:inherit}
+.cqm-cop-diag .reprobe:disabled{opacity:.4;cursor:default}
 `;
 
 /** Build, style, and attach the panel to the document. Returns the wired controls. */
@@ -106,12 +140,18 @@ function mount(): void {
   sel.className = 'cqm-cop-sel';
   sel.setAttribute('aria-label', 'Choose the free AI provider');
   sel.title = 'Free LLM provider';
+  const diag = document.createElement('button');
+  diag.className = 'cqm-cop-diagbtn';
+  diag.type = 'button';
+  diag.textContent = '🩺';
+  diag.title = 'AI diagnostics — probe provider health + recovery pipeline';
+  diag.setAttribute('aria-label', 'Run AI diagnostics');
   const close = document.createElement('button');
   close.className = 'cqm-cop-x';
   close.type = 'button';
   close.textContent = '×';
   close.setAttribute('aria-label', 'Close Copilot');
-  head.append(title, prov, sel, close);
+  head.append(title, prov, sel, diag, close);
 
   const logEl = document.createElement('div');
   logEl.className = 'cqm-cop-log';
@@ -233,13 +273,97 @@ function mount(): void {
       history.push({ role: 'assistant', content: data.reply || '' });
       // Reflect which free LLM actually served this turn (makes a failover visible).
       if (data.provider) prov.textContent = data.provider;
+      // Every provider failed → point the user at the diagnostics + recovery pipeline.
+      if (data.ok === false)
+        addMsg('cqm-cop-sys', 'All providers failed this turn — click 🩺 to diagnose + restart.');
     } catch (e) {
       thinking.remove();
-      addMsg('cqm-cop-sys', `chat error: ${e instanceof Error ? e.message : String(e)}`);
+      addMsg(
+        'cqm-cop-sys',
+        `chat error: ${e instanceof Error ? e.message : String(e)} — click 🩺 to run diagnostics.`,
+      );
     } finally {
       setBusy(false);
     }
   }
+
+  // AI DIAGNOSTICS + RECOVERY (the "AI offline → show diagnostics, failure reason, restart, recovery
+  // pipeline" requirement): probe every provider in the failover chain and render it as a live pipeline
+  // with health lights + a re-probe (restart) control. A recovered provider re-enables the input.
+  let diagBusy = false;
+  async function runDiagnostics(): Promise<void> {
+    if (diagBusy) return;
+    diagBusy = true;
+    diag.disabled = true;
+    if (!panel.classList.contains('open')) openPanel();
+    const card = document.createElement('div');
+    card.className = 'cqm-cop-diag';
+    const h = document.createElement('h4');
+    h.textContent = '🩺 AI DIAGNOSTICS — probing providers…';
+    card.appendChild(h);
+    logEl.appendChild(card);
+    scroll();
+    try {
+      const res = await fetch('/api/copilot/health');
+      const d = (await res.json()) as HealthResult;
+      card.replaceChildren();
+      const h2 = document.createElement('h4');
+      h2.textContent = d.enabled ? '🩺 AI DIAGNOSTICS' : '🩺 AI DIAGNOSTICS — disabled';
+      const verdict = document.createElement('div');
+      verdict.className = 'verdict';
+      verdict.textContent = d.reason + (d.default ? `\nDefault: ${d.default}` : '');
+      card.append(h2, verdict);
+      if (d.providers && d.providers.length > 0) {
+        const lbl = document.createElement('div');
+        lbl.className = 'verdict';
+        lbl.textContent = 'Recovery pipeline (failover order):';
+        card.appendChild(lbl);
+        for (const p of d.providers) {
+          const row = document.createElement('div');
+          row.className = 'row';
+          const dot = document.createElement('span');
+          dot.className = `dot ${p.reachable ? 'up' : 'down'}`;
+          dot.textContent = p.reachable ? '●' : '○';
+          const name = document.createElement('span');
+          name.textContent = `${p.label}${p.keyed ? ' 🔑' : ''} — ${p.detail}`;
+          const lat = document.createElement('span');
+          lat.className = 'lat';
+          lat.textContent = `${p.latencyMs}ms`;
+          row.append(dot, name, lat);
+          card.appendChild(row);
+        }
+      }
+      const btn = document.createElement('button');
+      btn.className = 'reprobe';
+      btn.type = 'button';
+      btn.textContent = '↻ Re-probe / restart';
+      btn.addEventListener('click', () => void runDiagnostics());
+      card.appendChild(btn);
+      // A recovered provider re-opens the chat (the restart path): unlock the input + clear the notice.
+      if (d.enabled && (d.operational ?? true)) {
+        input.disabled = false;
+        send.disabled = false;
+        if (/disabled|offline/i.test(input.placeholder))
+          input.placeholder = 'Ask about the cosmos… or /help';
+        prov.textContent = d.default ?? prov.textContent;
+      }
+    } catch (e) {
+      card.replaceChildren();
+      const h2 = document.createElement('h4');
+      h2.textContent = '🩺 AI DIAGNOSTICS — probe failed';
+      const msg = document.createElement('div');
+      msg.className = 'verdict';
+      msg.textContent = `Could not reach the diagnostics endpoint: ${
+        e instanceof Error ? e.message : String(e)
+      }. The dev server may be down — restart it and re-probe.`;
+      card.append(h2, msg);
+    } finally {
+      diagBusy = false;
+      diag.disabled = false;
+      scroll();
+    }
+  }
+  diag.addEventListener('click', () => void runDiagnostics());
 
   const submit = (): void => {
     if (busy) return;
@@ -282,6 +406,10 @@ function mount(): void {
             input.disabled = true;
             input.placeholder = 'Copilot is disabled in this deployment';
             send.disabled = true;
+            addMsg(
+              'cqm-cop-sys',
+              'Copilot is disabled in this deployment. Click 🩺 in the header for diagnostics + how to re-enable it.',
+            );
             return;
           }
           prov.textContent = d.provider ?? '';
@@ -313,6 +441,10 @@ function mount(): void {
         .catch(() => {
           prov.textContent = 'offline';
           sel.style.display = 'none';
+          addMsg(
+            'cqm-cop-sys',
+            'Could not reach the AI gate (offline). Click 🩺 in the header to run diagnostics + see the recovery pipeline.',
+          );
         });
     }
   };

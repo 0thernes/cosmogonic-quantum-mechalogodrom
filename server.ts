@@ -24,6 +24,8 @@ import {
   runAgent,
   providerLabel,
   availableProviders,
+  probeProviders,
+  healthVerdict,
   type ChatMessage,
 } from './src/server/copilot';
 import { dispatchTool } from './src/server/ai-sandbox';
@@ -295,6 +297,34 @@ const server = Bun.serve({
           enabled: COPILOT_ENABLED,
           provider: COPILOT_ENABLED ? providerLabel() : '',
           providers: COPILOT_ENABLED ? availableProviders() : [],
+        });
+      },
+    },
+    // Diagnostics + recovery pipeline: live-probe every provider in the failover chain so the panel
+    // can show WHY the AI is silent (rate-limited? auth? all down?) and offer a restart/re-probe.
+    '/api/copilot/health': {
+      async GET(req) {
+        if (!COPILOT_ENABLED) {
+          logRequest(req, 200);
+          return Response.json({
+            ok: true,
+            enabled: false,
+            reason:
+              'disabled in this deployment — production gate is on (set COPILOT_ENABLED=1 to allow)',
+            default: '',
+            providers: [],
+          });
+        }
+        const providers = await probeProviders();
+        const verdict = healthVerdict(providers);
+        logRequest(req, 200);
+        return Response.json({
+          ok: true,
+          enabled: true,
+          operational: verdict.operational,
+          reason: verdict.summary,
+          default: providerLabel(),
+          providers,
         });
       },
     },

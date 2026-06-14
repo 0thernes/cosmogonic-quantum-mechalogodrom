@@ -425,3 +425,107 @@ export function providerLabel(): string {
   const d = defaultProvider();
   return `${d.model} @ ${safeHost(d.endpoint)}${d.key ? ' (keyed)' : ' (no-key)'}`;
 }
+
+// ── Diagnostics / recovery (the "AI is offline → show diagnostics + recovery pipeline" requirement) ──
+
+/** Per-provider health, surfaced to the diagnostics panel so a dead/rate-limited endpoint is visible. */
+export interface ProviderHealth {
+  id: string;
+  label: string;
+  /** Does this provider have a key configured (keyed providers are more reliable than the free pool)? */
+  keyed: boolean;
+  /** Reachable = a 2xx ping. The failover chain answers as long as ≥1 is reachable. */
+  reachable: boolean;
+  /** HTTP status of the ping (0 ⇒ network error / timeout). */
+  status: number;
+  /** Round-trip of the ping in ms (wall clock — this organ lives outside the deterministic sim). */
+  latencyMs: number;
+  /** Short human reason: 'ok' | 'rate-limited (429)' | 'auth (401)' | 'http 5xx' | 'timeout' | error. */
+  detail: string;
+}
+
+/** Per-provider health-probe timeout — short, so the whole diagnostic returns fast even if all hang. */
+const HEALTH_TIMEOUT_MS = 6_000;
+
+/**
+ * Classify a ping outcome (HTTP status + any thrown message) into reachable + a short human reason.
+ * Pure — unit-tested without the network. 2xx ⇒ up; 429 ⇒ rate-limited (the usual free-tier story);
+ * 401/403 ⇒ a bad/missing key; other status ⇒ that code; no status ⇒ the network/timeout error text.
+ */
+export function classifyHealth(
+  status: number,
+  errMsg: string,
+): { reachable: boolean; detail: string } {
+  if (status >= 200 && status < 300) return { reachable: true, detail: 'ok' };
+  if (status === 429) return { reachable: false, detail: 'rate-limited (429)' };
+  if (status === 401 || status === 403) return { reachable: false, detail: `auth (${status})` };
+  if (status > 0) return { reachable: false, detail: `http ${status}` };
+  if (/abort/i.test(errMsg)) return { reachable: false, detail: 'timeout' };
+  return { reachable: false, detail: errMsg || 'unreachable' };
+}
+
+/** One-line overall verdict from the probed chain — the diagnostics headline + the recovery hint. Pure. */
+export function healthVerdict(probes: ProviderHealth[]): { operational: boolean; summary: string } {
+  const up = probes.filter((p) => p.reachable).length;
+  if (probes.length === 0)
+    return {
+      operational: false,
+      summary: 'no providers configured — add a key or run a free endpoint',
+    };
+  if (up > 0)
+    return {
+      operational: true,
+      summary: `operational — ${up}/${probes.length} providers reachable`,
+    };
+  return {
+    operational: false,
+    summary: `all ${probes.length} providers unreachable (likely rate-limited — retry shortly, or set a keyed provider env var)`,
+  };
+}
+
+/** Ping one provider with a minimal completion request; never throws (failure ⇒ a not-reachable result). */
+async function probeOne(prov: ResolvedProvider): Promise<ProviderHealth> {
+  const ctrl = new AbortController();
+  const t0 = performance.now();
+  const timer = setTimeout(() => ctrl.abort(), HEALTH_TIMEOUT_MS);
+  let status = 0;
+  let errMsg = '';
+  try {
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (prov.key) headers['Authorization'] = `Bearer ${prov.key}`;
+    const res = await fetch(prov.endpoint, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        model: prov.model,
+        messages: [{ role: 'user', content: 'ping' }],
+        max_tokens: 1,
+      }),
+      signal: ctrl.signal,
+    });
+    status = res.status;
+    await res.text().catch(() => ''); // drain the body so the socket frees
+  } catch (e) {
+    errMsg = e instanceof Error ? e.message : String(e);
+  } finally {
+    clearTimeout(timer);
+  }
+  const c = classifyHealth(status, errMsg);
+  return {
+    id: prov.id,
+    label: prov.label,
+    keyed: !!prov.key,
+    reachable: c.reachable,
+    status,
+    latencyMs: Math.round(performance.now() - t0),
+    detail: c.detail,
+  };
+}
+
+/**
+ * Probe every provider in the failover chain (key-less first) IN PARALLEL — the live "recovery
+ * pipeline" the diagnostics panel renders. Bounded by {@link HEALTH_TIMEOUT_MS} per provider.
+ */
+export async function probeProviders(): Promise<ProviderHealth[]> {
+  return Promise.all(providerChain().map(probeOne));
+}
