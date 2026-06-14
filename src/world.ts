@@ -65,6 +65,8 @@ import { Viz3DSystem, type Viz3DSnapshot } from './sim/viz3d';
 import { SingularitySystem, SINGULARITY_KINDS } from './sim/singularities';
 import { ArtifactField } from './sim/artifacts';
 import { LeviathanSystem } from './sim/leviathans';
+import { NhiSystem, type NhiWorld } from './sim/nhi-system';
+import { NhiAction, type NhiIntent, type NhiPercept } from './sim/nhi';
 import { LoreEngine } from './sim/lore';
 import { AnalyticsSystem } from './sim/analytics';
 import { AudioEngine } from './audio/engine';
@@ -163,6 +165,20 @@ export class World {
   /** Persistent visual relics from deaths/singularities (V9 F-ARTIFACTS). Visual-only: no rng/sim write. */
   private readonly artifacts: ArtifactField;
   private readonly leviathans: LeviathanSystem;
+
+  // ── F-NHI V10: apex super-minds (src/sim/nhi.ts) that READ the world and WRITE to it ─────────
+  /** Drives each launched NHI's deterministic mind → real effects (spawn swarms, dominate, broadcast). */
+  private readonly nhi = new NhiSystem();
+  /** Live NHI entities keyed by mind id; pruned when an NHI dies (leaves entities.list). */
+  private readonly nhiEntities = new Map<number, Entity>();
+  /** Monotonic NHI mind id — a stable key across the shifting entities.list. */
+  private nhiNextId = 0;
+  /** Thin facade the NhiSystem reaches the world through (delegates to the methods below). */
+  private readonly nhiWorld: NhiWorld = {
+    liveIds: () => this.nhiLiveIds(),
+    percept: (id) => this.nhiPercept(id),
+    apply: (id, intent, text) => this.nhiApply(id, intent, text),
+  };
   /** Cycle cursor for the chaos control's singularity chooser. */
   private singularityCursor = 0;
   /** Reused per-frame scalar block handed to the instanced renderer (alloc-free). */
@@ -471,6 +487,17 @@ export class World {
     const stats = this.entities.update(dt, t);
     this.energy = stats.energy; // stats object is reused — copy immediately
     this.morphCount = stats.morphCount;
+
+    // F-NHI V10: drive the launched super-minds on a slow beat (≈3/sec). GUARDED — a fault in an
+    // NHI decision can never freeze the world loop; it just skips that beat. No-op (draws no rng)
+    // until an NHI is launched, so the seeded golden is unchanged for a never-launched world.
+    if (this.nhi.count > 0 && s.frame % 18 === 0) {
+      try {
+        this.nhi.tick(this.rng, this.nhiWorld);
+      } catch {
+        /* an NHI beat misbehaved — skip it, keep the world running */
+      }
+    }
 
     const n = this.entities.list.length;
     // Connectome rebuild cadence by live population. Legacy ladder 1/2/3 at ≤400/≤700/>700
@@ -891,10 +918,84 @@ export class World {
     u.vel.set((this.rng() - 0.5) * 0.3, 0.4, (this.rng() - 0.5) * 0.3); // launched upward
     e.material.emissive.setRGB(0.25, 0.95, 1.0); // unmistakable cyan NHI glow
     e.material.emissiveIntensity = 3.2;
+    // V10: birth a deterministic super-mind for this NHI and register it so it ACTS on the world
+    // each beat (spawns swarms, dominates the local field, broadcasts hallucinated utterances) —
+    // ending the "NHI float and do nothing" complaint.
+    const nid = this.nhiNextId++;
+    this.nhiEntities.set(nid, e);
+    this.nhi.register(nid, this.rng);
     this.audio.play('warp');
     this.hud.showSector('NHI LAUNCHED · MATRIX BEING');
     this.audit.record('nhi-launch', { mi });
     return 1;
+  }
+
+  /** NHI ids whose entity is still alive (still in entities.list); prunes the dead. O(nhi·n). */
+  private nhiLiveIds(): number[] {
+    const out: number[] = [];
+    const list = this.entities.list;
+    for (const [id, e] of this.nhiEntities) {
+      if (list.includes(e)) out.push(id);
+      else this.nhiEntities.delete(id);
+    }
+    return out;
+  }
+
+  /** The percept NHI `id` senses this beat, from its entity vitality + world crowding/chaos. */
+  private nhiPercept(id: number): Omit<NhiPercept, 'beat'> {
+    const u = this.nhiEntities.get(id)?.userData;
+    const c01 = (v: number): number => (v < 0 ? 0 : v > 1 ? 1 : v);
+    const chaos = c01(this.state.chaos / 10); // CHAOS_MAX
+    return {
+      energy: u ? c01(u.energy / 100) : 0.5,
+      crowding: c01(this.entities.list.length / this.quality.maxEntities),
+      chaos,
+      threat: c01(chaos * 0.5),
+      rivalFaction: -1,
+      rivalLastMove: -1,
+    };
+  }
+
+  /** Execute one NHI decision as a real effect (spawn swarm / dominate / broadcast / steer). */
+  private nhiApply(id: number, intent: NhiIntent, text: string): void {
+    const e = this.nhiEntities.get(id);
+    if (!e) return;
+    const p = e.position;
+    if (intent.action === NhiAction.SPAWN_SWARM) {
+      const n = Math.min(intent.spawn, 6);
+      for (let i = 0; i < n; i++) {
+        this.sv1.set(
+          p.x + (this.rng() - 0.5) * 12,
+          p.y + (this.rng() - 0.5) * 12,
+          p.z + (this.rng() - 0.5) * 12,
+        );
+        const child = this.entities.spawn(this.sv1, Math.floor(this.rng() * this.morphTotal), 0.8);
+        if (child) child.material.emissive.setRGB(0.6, 0.2, 0.85); // swarmling glow
+      }
+      this.audio.play('warp');
+    } else if (intent.action === NhiAction.DOMINATE || intent.action === NhiAction.MANIPULATE) {
+      // Warp nearby organisms toward the NHI — belief manipulation made physical.
+      const gain = 0.06 * intent.magnitude;
+      const r2 = 36 * 36;
+      const list = this.entities.list;
+      for (let i = 0; i < list.length; i++) {
+        const o = list[i];
+        if (!o || o === e) continue;
+        const op = o.position;
+        const dx = p.x - op.x;
+        const dy = p.y - op.y;
+        const dz = p.z - op.z;
+        if (dx * dx + dy * dy + dz * dz < r2) {
+          this.sv2.set(dx, dy, dz).normalize();
+          o.userData.vel.addScaledVector(this.sv2, gain);
+        }
+      }
+    } else if (intent.action === NhiAction.BROADCAST) {
+      this.hud.showToast(text, 'NHI');
+      this.audio.play('warp');
+    } else if (intent.action === NhiAction.RETREAT) {
+      e.userData.vel.y += 0.05 * intent.magnitude;
+    }
   }
 
   /**
