@@ -67,6 +67,7 @@ import { ArtifactField } from './sim/artifacts';
 import { LeviathanSystem } from './sim/leviathans';
 import { NhiSystem, type NhiWorld } from './sim/nhi-system';
 import { NhiAction, type NhiIntent, type NhiPercept } from './sim/nhi';
+import { NhiBodySystem } from './sim/nhi-body';
 import { LoreEngine } from './sim/lore';
 import { AnalyticsSystem } from './sim/analytics';
 import { AudioEngine } from './audio/engine';
@@ -179,6 +180,8 @@ export class World {
     percept: (id) => this.nhiPercept(id),
     apply: (id, intent, text) => this.nhiApply(id, intent, text),
   };
+  /** Alien biomechanical bodies for launched NHIs (additive viz; assigned in the constructor). */
+  private readonly nhiBody: NhiBodySystem;
   /** Cycle cursor for the chaos control's singularity chooser. */
   private singularityCursor = 0;
   /** Reused per-frame scalar block handed to the instanced renderer (alloc-free). */
@@ -335,6 +338,8 @@ export class World {
     // F-BEINGS: a fourth order of colossi (leviathans). Boot-stream-neutral — draws no rng here.
     this.leviathans = new LeviathanSystem(ctx);
     this.leviathans.attachSingularity(this.singularities);
+    // F-NHI V10: alien biomechanical bodies for launched NHIs (additive; draws no rng).
+    this.nhiBody = new NhiBodySystem(ctx.scene);
 
     this.hud = new Hud();
     this.panel = new TelemetryPanel();
@@ -471,6 +476,14 @@ export class World {
     this.titans.update(dt, t);
     // F-BEINGS: the leviathans sail the mid-field (pure trig + the read-only hole force, no rng).
     this.leviathans.update(dt, t);
+    // F-NHI V10: alien bodies follow + morph their NHI every frame (guarded; additive viz only).
+    if (this.nhiBody.count > 0) {
+      try {
+        this.nhiBody.update(t, (id) => this.nhiEntities.get(id)?.position ?? null);
+      } catch {
+        /* an NHI body update misbehaved — skip it, keep the world running */
+      }
+    }
     // Cosmological chaos (V7.4): apply the active singularity's force field to entity
     // velocities BEFORE entities.update integrates them this frame. No-op when none active.
     this.singularities.update(dt, t);
@@ -924,6 +937,7 @@ export class World {
     const nid = this.nhiNextId++;
     this.nhiEntities.set(nid, e);
     this.nhi.register(nid, this.rng);
+    this.nhiBody.spawn(nid, e.position.x, e.position.y, e.position.z);
     this.audio.play('warp');
     this.hud.showSector('NHI LAUNCHED · MATRIX BEING');
     this.audit.record('nhi-launch', { mi });
