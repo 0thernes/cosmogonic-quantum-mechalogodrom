@@ -33,10 +33,93 @@ describe('creatureDrive', () => {
     expect(creatureDrive({ threat: 0, prey: 0.5, satiation: 0.5, boldness: 0.4 }).deceive).toBe(0);
   });
 
+  test('no partner sensed ⇒ trade and ally stay silent (legacy callers unchanged)', () => {
+    const d = creatureDrive({ threat: 0.5, prey: 0.5, satiation: 0.5, boldness: 1 });
+    expect(d.trade).toBe(0);
+    expect(d.ally).toBe(0);
+    // …and an explicit zero partner is identical to omitting it.
+    const z = creatureDrive({
+      threat: 0.5,
+      prey: 0.5,
+      satiation: 0.5,
+      boldness: 1,
+      partner: 0,
+      peer: 1,
+    });
+    expect(z.trade).toBe(0);
+    expect(z.ally).toBe(0);
+  });
+
+  test('you BARGAIN with the unlike in safety; boldness sharpens the deal', () => {
+    // Safe, partner present, very different wealth (peer≈0) ⇒ trade fires; danger kills it.
+    const safe = creatureDrive({
+      threat: 0,
+      prey: 0.2,
+      satiation: 0.5,
+      boldness: 1.4,
+      partner: 1,
+      peer: 0,
+    });
+    const inPeril = creatureDrive({
+      threat: 1,
+      prey: 0.2,
+      satiation: 0.5,
+      boldness: 1.4,
+      partner: 1,
+      peer: 0,
+    });
+    expect(safe.trade).toBeGreaterThan(0.4);
+    expect(inPeril.trade).toBeLessThan(safe.trade);
+    // A bolder bargainer drives a harder deal than a timid one, all else equal.
+    const bold = creatureDrive({
+      threat: 0,
+      prey: 0.2,
+      satiation: 0.5,
+      boldness: 2.6,
+      partner: 1,
+      peer: 0,
+    });
+    const timid = creatureDrive({
+      threat: 0,
+      prey: 0.2,
+      satiation: 0.5,
+      boldness: 0.4,
+      partner: 1,
+      peer: 0,
+    });
+    expect(bold.trade).toBeGreaterThan(timid.trade);
+  });
+
+  test('you ALLY with a PEER under threat, not with the unlike', () => {
+    const withPeer = creatureDrive({
+      threat: 0.9,
+      prey: 0.2,
+      satiation: 0.5,
+      boldness: 1,
+      partner: 1,
+      peer: 1,
+    });
+    const withStranger = creatureDrive({
+      threat: 0.9,
+      prey: 0.2,
+      satiation: 0.5,
+      boldness: 1,
+      partner: 1,
+      peer: 0,
+    });
+    expect(withPeer.ally).toBeGreaterThan(0.4);
+    expect(withStranger.ally).toBeLessThan(withPeer.ally); // strangers get traded with, not allied
+    // No threat ⇒ no coalition, even among peers.
+    expect(
+      creatureDrive({ threat: 0, prey: 0.2, satiation: 0.5, boldness: 1, partner: 1, peer: 1 })
+        .ally,
+    ).toBe(0);
+  });
+
   test('all drives stay in their bounds for extreme/garbage percepts', () => {
     for (const p of [
-      { threat: 9, prey: -5, satiation: 2, boldness: 99 },
-      { threat: -9, prey: 9, satiation: -9, boldness: -9 },
+      { threat: 9, prey: -5, satiation: 2, boldness: 99, partner: 9, peer: 9 },
+      { threat: -9, prey: 9, satiation: -9, boldness: -9, partner: -9, peer: -9 },
     ]) {
       const d = creatureDrive(p);
       expect(d.flee).toBeGreaterThanOrEqual(0);
@@ -47,6 +130,10 @@ describe('creatureDrive', () => {
       expect(d.agitation).toBeLessThanOrEqual(1);
       expect(d.deceive).toBeGreaterThanOrEqual(0);
       expect(d.deceive).toBeLessThanOrEqual(1);
+      expect(d.trade).toBeGreaterThanOrEqual(0);
+      expect(d.trade).toBeLessThanOrEqual(1);
+      expect(d.ally).toBeGreaterThanOrEqual(0);
+      expect(d.ally).toBeLessThanOrEqual(1);
     }
   });
 });

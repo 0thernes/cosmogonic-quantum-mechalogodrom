@@ -55,12 +55,13 @@ behind the full gate (`bun run check`) and a commit.
 - 🟧 P1 `CREATURE-DECEIVE` — kernel `deceive` drive: outmatched shoggoths feign weakness (dim glow + eyes, shrink, soften tendrils). Threat radius widened so social sense engages. Verified: 63/100 sense rivals
 - 🟥 P0 `MATERIAL-CLASSES` — 6 per-silhouette material archetypes (pearl/crystal/glass/amber/metal/bone) baked as compile-time `#define RQ_MAT` in the Reliquary shader; each tunes relief/roughness/metalness/SSS/film. `materialClassFor(gi)`. Verified live (all 6 compile, distinct materials render)
 - 🟥 P0 `JOLT-FRACTURE` (V28) — native specimens shatter on hard impact: the hardest contact each step cracks the smaller body into **3 volume-conserving Jolt shards** (∛⅓ radius, own mass/inertia) bursting along the impact normal. **Pre-solve** approach-velocity gate @ 1.6 u/s (≈70% of the measured 2.24 u/s infall peak); shards <0.42u inert, growth capped at 48 (shader `MAX_BODIES` 24→48). Deterministic — verified 18→24 bodies, identical ×2
+- 🟥 P0 `CREATURE-TRADE` (V29) — Shoggoths **bargain, trade & ally**: kernel gains `trade` (deal with the UNLIKE → worth to the wealthier, widens spread) + `ally` (peer coalition under threat → worth to the poorer, narrows it). Economy gains conservation-exact `transferWorth`; `attachTrade` facade closes the cognition→wealth→boldness loop. +5 tests. **Verified live: 440 deals / 673 AURUM over 600 frames — 103 bargains + 337 alliances, Gini 0.138→0.125**
 
 ### 🚧 Next — V13/V14 directive backlog (user, 2026-06-14)
 
 - 🟧 P1 `ECON-PROXY-WARS` — explicit patron→proxy funding + trade blocs (titan wealth now tilts PD diplomacy → war/alliance; explicit bloc mechanics next)
 - 🟦 P3 `ECON-TRIBE-WALLETS` — give graph-tribes collective wallets + coalition treasuries (the full market-mechanic list — cartel/arbitrage/sanctions/black-market/auctions — shipped V20–V22)
-- 🟧 P1 `CREATURES-SMART` — Shoggoths now perceive/remember/flee/hunt (V24); next: deception + the same cognition for Puppeteers, plus bargain/trade/ally
+- 🟩 P2 `CREATURES-SMART` — Shoggoths now perceive/remember/flee/hunt (V24) + deceive (V26) + **bargain/trade/ally (V29)**; Puppeteers scheme (V25). Remaining verbs: **mutate** (cognition-driven), and trade/ally for the Puppeteer cabal
 - 🟧 P1 `AI-REPAIR` — Copilot offline: diagnostics + failure reason + restart controls + recovery pipeline
 - 🟦 P3 `JOLT-SOFTBODY` — past V18 (Jolt ON) + V28 (rigid fracture): soft-body deformation + crowd-scale (100s of native bodies); bring the native target into CI; render true 4K (3840×2160) plates from the Jolt sim
 - 🟨 P2 `DOCS-SYNC` — keep README/Docs/Specs/ERD/Architecture/Kanban current every increment (standing card)

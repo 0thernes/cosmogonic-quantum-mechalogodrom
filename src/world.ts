@@ -331,6 +331,15 @@ export class World {
     this.shoggoths.attachEconomy(
       (idx) => this.economy.wealthOf(World.ECON_SHOGGOTH_BASE + idx)?.netWorth ?? 0,
     );
+    // F-CREATURE-TRADE V29: the economic WRITE path — cognition's bargain/ally drives move real worth
+    // between two shoggoths (conservation-exact), closing the wealth→boldness loop. Same index→id base.
+    this.shoggoths.attachTrade((fromIdx, toIdx, v) =>
+      this.economy.transferWorth(
+        World.ECON_SHOGGOTH_BASE + fromIdx,
+        World.ECON_SHOGGOTH_BASE + toIdx,
+        v,
+      ),
+    );
     // Callback fires from update(), well after `hud`/`qc`/`lore` are assigned
     // below; the PuppetEvent argument is a reused scratch object — read
     // synchronously (qc.onPuppetEvent reads e.name synchronously too).

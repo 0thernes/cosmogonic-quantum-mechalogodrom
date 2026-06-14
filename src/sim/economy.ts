@@ -548,6 +548,26 @@ export class Economy {
     };
   }
 
+  /**
+   * Move up to `aurumValue` of net worth from `fromId` to `toId` — the conservation-exact primitive
+   * behind creature BARGAINING (worth → the wealthier) and ALLIANCE solidarity (worth → the poorer).
+   * Clamped to what `from` can actually liquidate, so it never mints or burns money; the pair's
+   * aggregate net worth is unchanged (one debit == one credit in AURUM value). Returns the value moved.
+   * O(1). No-op (returns 0) for unknown ids, self-transfer, or a non-positive request.
+   */
+  transferWorth(fromId: number, toId: number, aurumValue: number): number {
+    if (!(aurumValue > 0)) return 0;
+    const from = this.byId.get(fromId);
+    const to = this.byId.get(toId);
+    if (!from || !to || from === to) return 0;
+    const liquid = from.aurum + from.umbra * this.fx; // commodities aren't spendable here
+    const moved = Math.min(aurumValue, liquid);
+    if (!(moved > 0)) return 0;
+    this.debit(from, moved);
+    this.credit(to, moved);
+    return moved;
+  }
+
   /** Aggregate market snapshot for telemetry/UI. O(n log n) for the Gini. */
   summary(): MarketSummary {
     const n = this.agents.length;

@@ -16,6 +16,12 @@ export interface CreaturePercept {
   satiation: number;
   /** Economic boldness (wealth / peer mean), ~0.3..3 — the rich are emboldened, the broke timid. */
   boldness: number;
+  /** Presence/closeness of a dealable neighbour 0 (alone) .. 1 (right alongside). Optional: when
+   *  omitted (0) the social-economic drives (trade/ally) stay silent, so legacy callers are unchanged. */
+  partner?: number;
+  /** How wealth-comparable that neighbour is, 0 (a different stratum) .. 1 (a peer of equal means).
+   *  Drives the trade-vs-ally split: you BARGAIN with the unlike, you ALLY with your equals. */
+  peer?: number;
 }
 
 /** The drives the kernel emits; the caller maps them onto motion, feeding cadence, and display. */
@@ -29,6 +35,15 @@ export interface CreatureDrive {
   /** Urge to DECEIVE 0..1 — feign weakness when outmatched (dim glow, shrink, lay low) so a dominant
    *  rival overlooks you. High when threatened AND weak (low boldness); the dominant never bother. */
   deceive: number;
+  /** Urge to BARGAIN/TRADE 0..1 — strike a deal with a nearby UNLIKE creature (different wealth →
+   *  gains from exchange). Bargaining power scales with boldness, so the rich extract surplus from the
+   *  poor: applying it transfers worth toward the wealthier party, WIDENING the spread. Safe-state only
+   *  (danger kills the deal). 0 when no partner is sensed. */
+  trade: number;
+  /** Urge to ALLY 0..1 — form a coalition with a nearby PEER (comparable wealth) under THREAT. Allies
+   *  pool risk: applying it transfers worth from the richer ally to the poorer, NARROWING the spread
+   *  (solidarity / mutual insurance). The weaker need it slightly more. 0 when no peer is sensed. */
+  ally: number;
 }
 
 /**
@@ -51,5 +66,13 @@ export function creatureDrive(p: CreaturePercept): CreatureDrive {
   const agitation = clamp(0.25 + 0.7 * t + 0.35 * (1 - sat), 0, 1);
   // Deceive: feign weakness when in danger AND outmatched — the dominant (bold/rich) never bother.
   const deceive = clamp(t * (1.25 - 0.55 * b) - 0.2, 0, 1);
-  return { flee, hunt, agitation, deceive };
+  // Social-economic drives — only fire when a partner is actually sensed (default 0 ⇒ silent).
+  const partner = clamp(p.partner ?? 0, 0, 1);
+  const peer = clamp(p.peer ?? 0, 0, 1);
+  // Trade: deal with the UNLIKE (low peer), in safety, with leverage from boldness. The bargainer's
+  // power ∝ wealth, so a bold creature drives a harder bargain (caller moves worth toward the richer).
+  const trade = clamp(partner * (1 - peer) * b * (1 - 0.7 * t), 0, 1);
+  // Ally: coalition with a PEER (high peer) under THREAT — the less bold lean on it a touch harder.
+  const ally = clamp(partner * peer * t * (1.1 - 0.3 * b), 0, 1);
+  return { flee, hunt, agitation, deceive, trade, ally };
 }

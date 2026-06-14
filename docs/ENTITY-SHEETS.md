@@ -45,7 +45,13 @@ nash, market, lorenz`). They split, age, die (weather-tuned lifespan), and feed 
   threat, REMEMBERS recent feeding (satiation EMA), then FLEES a dangerous crowd, HUNTS a prey-rich
   calm, and grows AGITATED (faster spin + eye-flicker) under threat — via the pure `creatureDrive`
   kernel. **DECEIVES (V26)** when outmatched: feigns weakness (dims glow + eyes, shrinks, softens
-  tendrils, lays low) so a dominant rival overlooks it. _Next: bargaining + trade._
+  tendrils, lays low) so a dominant rival overlooks it. **BARGAINS, TRADES & ALLIES (V29):** senses its
+  nearest neighbour, and — via the kernel's `trade`/`ally` drives — strikes a deal with the UNLIKE
+  (bargaining power ∝ wealth → worth flows to the wealthier, widening the spread) or forms a coalition
+  with a PEER under threat (solidarity → worth to the poorer). The deal moves real money
+  (`economy.transferWorth`, conservation-exact) and shows next tick through the wealth→boldness→glow
+  coupling — verified live: 440 deals / 673 AURUM over 600 frames (103 bargains + 337 alliances).
+  _Next: cognition-driven mutation._
 - **Silhouette:** lumpen, asymmetric, writhing — the antithesis of the jewel specimens.
 - **Material language:** dark, wet, glistening; emissive eyes; tendril line-segments.
 - **Animation grammar:** roiling drift + tendril whip + eye-blink flicker; consumption lunges.

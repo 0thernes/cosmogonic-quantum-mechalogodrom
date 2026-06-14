@@ -47,6 +47,13 @@ const SATIATION_DECAY = 0.04; // hunger creeps in per second
 const SATIATION_BUMP = 0.5; // satiation gained per successful consumption
 const FLEE_KICK = 0.02; // away-from-danger impulse strength
 
+/** F-CREATURE-TRADE V29: bargaining + alliance tuning (the social-economic write-back). */
+const TRADE_R2 = 30 * 30; // a deal needs a neighbour within this (squared) range — a partner, not the horde
+const TRADE_EVERY = 24; // each shoggoth attempts a deal ~once per this many frames (staggered → bounded churn)
+const PEER_SPAN = 2; // boldness gap (on the ~0.3..2.2 scale) at which two shoggoths read as different strata
+const TRADE_FRACTION = 0.03; // a hard bargain moves at most this share of the mean purse toward the bolder
+const ALLY_FRACTION = 0.025; // alliance solidarity transfer toward the poorer (a touch gentler than a bargain)
+
 // Module-level scratch — reused every frame, never retained (keeps update() allocation-free).
 const V1 = new THREE.Vector3();
 const V2 = new THREE.Vector3();
@@ -95,6 +102,12 @@ export class ShoggothSystem {
   private singularity: SingularitySystem | null = null;
   /** F-ECON-CREATURES V17: economic net-worth provider by shoggoth index (null ⇒ no coupling). */
   private econWealth: ((shoggothIndex: number) => number) | null = null;
+  /** F-CREATURE-TRADE V29: conservation-exact worth transfer between two shoggoths (by index); returns
+   *  the AURUM value actually moved. Null ⇒ no economic write-back, so the goldens stay byte-identical. */
+  private econTrade: ((fromIndex: number, toIndex: number, aurumValue: number) => number) | null =
+    null;
+  /** Frame tick — staggers trade attempts so only a slice of the horde deals each frame (bounded churn). */
+  private frame = 0;
 
   /**
    * Builds a swarm of shoggoths across the mid-field (CONTRACTS V14: 100 on desktop+, 16 on phone).
@@ -136,6 +149,19 @@ export class ShoggothSystem {
    */
   attachEconomy(wealthByIndex: ((shoggothIndex: number) => number) | null): void {
     this.econWealth = wealthByIndex;
+  }
+
+  /**
+   * F-CREATURE-TRADE V29: wire the economic WRITE path so cognition's trade/ally drives actually move
+   * money — closing the loop (the shoggoths already READ their wealth as boldness; now they CHANGE it).
+   * `transfer(from, to, v)` shifts up to `v` AURUM of net worth between two shoggoths by index and
+   * returns what moved; the provider owns the index→economy-id mapping + conservation, so this system
+   * never imports the Economy class. Null (default + tests) ⇒ no transfers, goldens untouched.
+   */
+  attachTrade(
+    transfer: ((fromIndex: number, toIndex: number, aurumValue: number) => number) | null,
+  ): void {
+    this.econTrade = transfer;
   }
 
   /** Constructor-time builder (allocations allowed here; legacy `mkShog`). */
@@ -251,6 +277,7 @@ export class ShoggothSystem {
     const list = this.entities.list;
     // F-ECON-CREATURES V17: centre boldness on the LIVE mean shoggoth wealth so rich-vs-poor is
     // RELATIVE (and inflation-proof) — above-average shoggoths turn bold, below-average timid.
+    this.frame++; // F-CREATURE-TRADE V29: advance the deal-stagger clock once per update
     let meanWorth = SHOG_ECON_REF;
     if (this.econWealth) {
       let sw = 0;
@@ -282,6 +309,8 @@ export class ShoggothSystem {
         if (ep0 && dist2(p.x, p.y, p.z, ep0.x, ep0.y, ep0.z) < TENDRIL_REACH2) preyCount++;
       }
       let crowd = 0;
+      let nearJ = -1; // F-CREATURE-TRADE V29: nearest dealable neighbour within TRADE_R2 (a partner)
+      let nearDD = TRADE_R2;
       TV.set(0, 0, 0);
       for (let sj = 0; sj < this.shogs.length; sj++) {
         if (sj === si) continue;
@@ -295,6 +324,10 @@ export class ShoggothSystem {
           TV.y += p.y - op.y;
           TV.z += p.z - op.z;
         }
+        if (dd < nearDD && dd > 1e-3) {
+          nearDD = dd; // the closest other shoggoth becomes the bargaining partner
+          nearJ = sj;
+        }
       }
       const singActive = this.singularity
         ? this.singularity.bodyForce(p.x, p.y, p.z, dt, HOLE_F)
@@ -302,7 +335,43 @@ export class ShoggothSystem {
       const threat = clamp(crowd / THREAT_CAP + (singActive ? 0.5 : 0), 0, 1);
       const prey = clamp(preyCount / PREY_CAP, 0, 1);
       sg.satiation = clamp(sg.satiation - SATIATION_DECAY * dt, 0, 1);
-      const drive = creatureDrive({ threat, prey, satiation: sg.satiation, boldness });
+      // F-CREATURE-TRADE V29: the nearest shoggoth is a potential PARTNER. How wealth-comparable it is
+      // (peer) decides whether we BARGAIN with it (the unlike) or ALLY with it (an equal). boldness is
+      // the wealth proxy already centred on the live mean, so |Δboldness| reads as the wealth gap.
+      let partner = 0;
+      let peer = 0;
+      let nearBold = 1;
+      if (nearJ >= 0) {
+        partner = clamp(1 - nearDD / TRADE_R2, 0, 1);
+        if (this.econWealth)
+          nearBold = clamp(this.econWealth(nearJ) / meanWorth, BOLD_MIN, BOLD_MAX);
+        peer = clamp(1 - Math.abs(boldness - nearBold) / PEER_SPAN, 0, 1);
+      }
+      const drive = creatureDrive({
+        threat,
+        prey,
+        satiation: sg.satiation,
+        boldness,
+        partner,
+        peer,
+      });
+      // ACT on the social-economic drives — staggered so only ~1/TRADE_EVERY of the horde deals each
+      // frame. BARGAIN moves worth toward the BOLDER party (power ∝ wealth → widens the spread); ALLY
+      // moves it toward the POORER peer (solidarity → narrows it). Conservation-exact via the provider;
+      // the change shows up next tick through the existing wealth→boldness→glow coupling (no new state).
+      if (this.econTrade && nearJ >= 0 && (this.frame + si) % TRADE_EVERY === 0) {
+        if (drive.trade >= drive.ally && drive.trade > 0.05) {
+          const amt = drive.trade * TRADE_FRACTION * meanWorth;
+          if (boldness >= nearBold)
+            this.econTrade(nearJ, si, amt); // we out-bargain the weaker → we gain
+          else this.econTrade(si, nearJ, amt); // a bolder neighbour out-bargains us → we pay
+        } else if (drive.ally > 0.05) {
+          const amt = drive.ally * ALLY_FRACTION * meanWorth;
+          if (boldness >= nearBold)
+            this.econTrade(si, nearJ, amt); // the richer ally supports the poorer
+          else this.econTrade(nearJ, si, amt); // our poorer self is supported by the richer ally
+        }
+      }
       // FLEE: an impulse away from the crowd centroid, scaled by the urge.
       if (drive.flee > 0.05 && TV.lengthSq() > 1e-6) {
         TV.normalize().multiplyScalar(drive.flee * FLEE_KICK);

@@ -71,6 +71,36 @@ describe('economy — Economy market', () => {
     expect(titan.netWorth).toBeGreaterThan(drone.netWorth * 5);
   });
 
+  test('transferWorth moves worth conservation-exactly (the bargain/ally primitive)', () => {
+    const e = seedEconomy(7);
+    const before1 = e.wealthOf(1)!.netWorth;
+    const before5 = e.wealthOf(5)!.netWorth;
+    const moved = e.transferWorth(1, 5, 50); // titan → drone
+    expect(moved).toBeGreaterThan(0);
+    const after1 = e.wealthOf(1)!.netWorth;
+    const after5 = e.wealthOf(5)!.netWorth;
+    expect(after1).toBeLessThan(before1); // payer poorer
+    expect(after5).toBeGreaterThan(before5); // payee richer
+    expect(before1 - after1).toBeCloseTo(moved, 6); // debit == request
+    expect(after5 - before5).toBeCloseTo(moved, 6); // credit == debit
+    expect(after1 + after5).toBeCloseTo(before1 + before5, 6); // aggregate net worth conserved
+  });
+
+  test('transferWorth clamps to liquidity (never mints) and no-ops on bad args', () => {
+    const e = seedEconomy(7);
+    const totalBefore = e.wealthOf(1)!.netWorth + e.wealthOf(5)!.netWorth;
+    const m1 = e.transferWorth(5, 1, 1e9); // drone liquidates ALL its money to the titan
+    expect(m1).toBeGreaterThan(0);
+    expect(e.transferWorth(5, 1, 1e9)).toBe(0); // nothing left to liquidate
+    // Conserved even at the limit (the drone keeps its commodities; only money moved).
+    expect(e.wealthOf(1)!.netWorth + e.wealthOf(5)!.netWorth).toBeCloseTo(totalBefore, 6);
+    expect(e.transferWorth(1, 1, 10)).toBe(0); // self-transfer
+    expect(e.transferWorth(1, 999, 10)).toBe(0); // unknown payee
+    expect(e.transferWorth(777, 1, 10)).toBe(0); // unknown payer
+    expect(e.transferWorth(1, 5, -5)).toBe(0); // non-positive
+    expect(e.transferWorth(1, 5, 0)).toBe(0);
+  });
+
   test('register is idempotent per id; count + has track enrolment', () => {
     const e = new Economy();
     const rng = mulberry32(1);
