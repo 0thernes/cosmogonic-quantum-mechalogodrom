@@ -975,16 +975,40 @@ export class World {
 
   /** The percept NHI `id` senses this beat, from its entity vitality + world crowding/chaos. */
   private nhiPercept(id: number): Omit<NhiPercept, 'beat'> {
-    const u = this.nhiEntities.get(id)?.userData;
+    const e = this.nhiEntities.get(id);
+    const u = e?.userData;
     const c01 = (v: number): number => (v < 0 ? 0 : v > 1 ? 1 : v);
     const chaos = c01(this.state.chaos / 10); // CHAOS_MAX
+    // The NHI senses the NEAREST organism's community (setGroup) as the rival faction it plays, and
+    // that organism's Nash strategy as the faction's last move toward it — wiring the game theory in.
+    let rivalFaction = -1;
+    let rivalLastMove = -1;
+    if (e) {
+      const p = e.position;
+      const list = this.entities.list;
+      let best = Infinity;
+      for (let i = 0; i < list.length; i++) {
+        const o = list[i];
+        if (!o || o === e || o.userData.isNhi) continue;
+        const op = o.position;
+        const dx = p.x - op.x;
+        const dy = p.y - op.y;
+        const dz = p.z - op.z;
+        const d2 = dx * dx + dy * dy + dz * dz;
+        if (d2 < best) {
+          best = d2;
+          rivalFaction = o.userData.setGroup;
+          rivalLastMove = o.userData.strategy;
+        }
+      }
+    }
     return {
       energy: u ? c01(u.energy / 100) : 0.5,
       crowding: c01(this.entities.list.length / this.quality.maxEntities),
       chaos,
       threat: c01(chaos * 0.5),
-      rivalFaction: -1,
-      rivalLastMove: -1,
+      rivalFaction,
+      rivalLastMove,
     };
   }
 
@@ -1006,8 +1030,12 @@ export class World {
       }
       this.audio.play('warp');
     } else if (intent.action === NhiAction.DOMINATE || intent.action === NhiAction.MANIPULATE) {
-      // Warp nearby organisms toward the NHI — belief manipulation made physical.
-      const gain = 0.06 * intent.magnitude;
+      // Game theory made physical: a DEFECTING NHI turns hostile (scatters organisms AWAY); a
+      // cooperating one gathers them IN. MANIPULATE also gaslights — it bends each nearby organism's
+      // Nash strategy to the NHI's own move (belief-state manipulation made real in the sim).
+      const hostile = intent.ownMove === 1;
+      const gain = (hostile ? -0.09 : 0.06) * intent.magnitude;
+      const flip: 0 | 1 = hostile ? 1 : 0;
       const r2 = 36 * 36;
       const list = this.entities.list;
       for (let i = 0; i < list.length; i++) {
@@ -1020,6 +1048,7 @@ export class World {
         if (dx * dx + dy * dy + dz * dz < r2) {
           this.sv2.set(dx, dy, dz).normalize();
           o.userData.vel.addScaledVector(this.sv2, gain);
+          if (intent.action === NhiAction.MANIPULATE) o.userData.strategy = flip;
         }
       }
     } else if (intent.action === NhiAction.BROADCAST) {
