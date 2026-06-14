@@ -79,6 +79,7 @@ import { AudioAnalysis, type AudioBands } from './audio/analysis';
 import { Hud } from './ui/hud';
 import { Observatory } from './ui/observatory';
 import { NhiObservatory } from './ui/nhi-observatory';
+import { MarketTicker } from './ui/market-ticker';
 import { TelemetryPanel, bindPanelToggles } from './ui/panels';
 import { InputSystem } from './ui/input';
 import type { AuditTrail } from './logging/audit';
@@ -145,6 +146,8 @@ export class World {
   private readonly observatory: Observatory;
   /** F-NHI V15: the self-building 3×3 neural-observatory panel for the focused NHI. */
   private readonly nhiObs: NhiObservatory;
+  /** F-ECON V23: the self-building market-ticker panel (live AURUM/UMBRA market state). */
+  private readonly marketTicker: MarketTicker;
   /** Pool renderer; null on the phone tier (V1 per-mesh path — V3.1). */
   private readonly instanced: InstancedEntityRenderer | null;
   /** Total morphotypes minted at boot (250 in phylum mode). */
@@ -414,6 +417,7 @@ export class World {
     this.panel = new TelemetryPanel();
     this.observatory = new Observatory();
     this.nhiObs = new NhiObservatory();
+    this.marketTicker = new MarketTicker();
     bindPanelToggles();
     this.bindObservatoryTabs();
     this.bindAlgoPicker();
@@ -668,6 +672,8 @@ export class World {
       const nids = this.nhi.ids();
       const fid = nids.length ? (nids[this.nhiObs.focusIndex % nids.length] ?? nids[0] ?? -1) : -1;
       this.nhiObs.update(fid >= 0 ? this.nhi.snapshot(fid) : null, { id: fid, count: nids.length });
+      // F-ECON V23: feed the market ticker the live AURUM/UMBRA summary (history kept even when closed).
+      this.marketTicker.update(this.economy.summary());
     }
 
     // Pool mirror runs LAST — after every system that mutates entity visuals

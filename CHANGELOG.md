@@ -13,6 +13,13 @@ the full gate (now also a coverage gate, on Linux + Windows) with same-seed dete
 
 ### Added
 
+- **Market Ticker panel (V23)** — the economy is now INSPECTABLE: a self-building ⊙ MARKET panel
+  (`src/ui/market-ticker.ts`) surfaces the live AURUM/UMBRA market state — reserve (dominant) currency
+  - share, FX, QUANTA/ICHOR prices + arbitrage spread, wealth Gini, total wealth, agent count, cartel
+    share, sanctioned count, black-market volume, and the auction tally + last clearing price — over a
+    three-line FX/price sparkline. UI shell (never touches sim state); the world pushes a `MarketSummary`
+    each Observatory cadence. Verified live: all 11 readouts populated (210 agents, cartel 9.3%, 10
+    sanctioned, black market 118, auction QUANTA @27.4) with the sparkline drawing real history.
 - **Windfall auctions (V22)** — every `AUCTION_PERIOD` ticks a lot of the SCARCER commodity (the
   higher-priced one) is sold by a **second-price / ascending-English auction**: bids = net worth ×
   appetite, the highest bidder wins but pays the runner-up's bid (the dominant-strategy-truthful

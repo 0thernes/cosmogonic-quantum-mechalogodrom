@@ -48,6 +48,7 @@ behind the full gate (`bun run check`) and a commit.
 - 🟧 P1 `ECON-MARKET-MECHANICS` — cartel (supply withholding), arbitrage (price-gap mean-reversion), sanctions (`economy.sanction`; titan wars → embargo). New telemetry cartelShare/arbSpread/sanctioned. +4 tests. Verified live
 - 🟧 P1 `ECON-BLACK-MARKET` — embargoed buy off-book at a 25% smuggler premium, everyone else smuggles; second clearing pass, `blackVolume` telemetry. Verified live ~115 units/tick under the titan war-sanctions
 - 🟧 P1 `ECON-AUCTIONS` — second-price (Vickrey/English) windfall auctions of the scarcer commodity; commons-dividend redistribution; `vickreyOutcome` helper + auctions/lastAuctionPrice telemetry. +2 tests, verified live (QUANTA lot @ ~27)
+- 🟧 P1 `ECON-MARKET-TICKER` — self-building ⊙ MARKET panel surfacing all 11 economy telemetry (reserve money, FX, prices, arb, Gini, wealth, agents, cartel, sanctioned, black market, auctions) + FX/price sparkline. Verified live, all populated
 
 ### 🚧 Next — V13/V14 directive backlog (user, 2026-06-14)
 
