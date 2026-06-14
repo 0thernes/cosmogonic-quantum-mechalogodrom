@@ -185,6 +185,8 @@ export class World {
   //    sub-stream (`econRng`), so registering agents + ticking the market never shift the main
   //    deterministic draw order — existing golden/parity tests stay byte-identical.
   private static readonly ECON_TITAN_BASE = 1000;
+  /** F-ECON-CREATURES V17: shoggoth econ ids occupy 2000..2099 (≤100 horde; clear of titans/NHIs). */
+  private static readonly ECON_SHOGGOTH_BASE = 2000;
   private static readonly ECON_NHI_BASE = 5000;
   private readonly economy = new Economy();
   private readonly econRng: Rng;
@@ -313,6 +315,17 @@ export class World {
     this.instanced = this.quality.instanced ? new InstancedEntityRenderer(ctx) : null;
     this.entities.reset(this.bootPopulation());
     this.shoggoths = new ShoggothSystem(ctx, this.entities);
+    // F-ECON-CREATURES V17: enrol the shoggoth horde as economic agents (modest purses) and let each
+    // one's wealth drive its boldness. Draws only from econRng, so the main stream is untouched.
+    for (let i = 0; i < this.shoggoths.count; i++) {
+      // Varied stature (golden-angle spread, no rng) so the horde starts with UNEQUAL purses — the
+      // economy then amplifies the spread, and boldness (wealth / live mean) diverges across the 100.
+      const w = 1.3 + 1.8 * ((i * 0.618033988749895) % 1);
+      this.economy.register(World.ECON_SHOGGOTH_BASE + i, 'Shoggoth', w, this.econRng);
+    }
+    this.shoggoths.attachEconomy(
+      (idx) => this.economy.wealthOf(World.ECON_SHOGGOTH_BASE + idx)?.netWorth ?? 0,
+    );
     // Callback fires from update(), well after `hud`/`qc`/`lore` are assigned
     // below; the PuppetEvent argument is a reused scratch object — read
     // synchronously (qc.onPuppetEvent reads e.name synchronously too).

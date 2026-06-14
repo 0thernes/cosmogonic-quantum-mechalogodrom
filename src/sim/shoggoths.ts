@@ -31,6 +31,13 @@ const SHOG_COUNT_MOBILE = 16;
  *  so 200 dynamic lights would explode the fragment shader. The rest read via emissive (+ bloom). */
 const LIT_SHOGGOTHS = 4;
 
+/** F-ECON-CREATURES V17: reference net worth (a fresh weight-2.2 purse at par) the wealth→boldness
+ *  curve is centred on — a shoggoth richer than this hunts harder + glows brighter, a broke one is
+ *  timid. Boldness is clamped to this band so the economy steers behaviour without breaking it. */
+const SHOG_ECON_REF = 200;
+const BOLD_MIN = 0.5;
+const BOLD_MAX = 2.2;
+
 // Module-level scratch — reused every frame, never retained (keeps update() allocation-free).
 const V1 = new THREE.Vector3();
 const V2 = new THREE.Vector3();
@@ -73,6 +80,8 @@ export class ShoggothSystem {
   /** F-HOLES: the singularity system, attached by the composition root after construction; the
    *  active hole tugs the shoggoths too. null ⇒ no coupling (the legacy/test behaviour). */
   private singularity: SingularitySystem | null = null;
+  /** F-ECON-CREATURES V17: economic net-worth provider by shoggoth index (null ⇒ no coupling). */
+  private econWealth: ((shoggothIndex: number) => number) | null = null;
 
   /**
    * Builds a swarm of shoggoths across the mid-field (CONTRACTS V14: 100 on desktop+, 16 on phone).
@@ -104,6 +113,16 @@ export class ShoggothSystem {
   /** F-HOLES: wire in the singularity system so an active hole tugs the shoggoths (or null to detach). */
   attachSingularity(singularity: SingularitySystem | null): void {
     this.singularity = singularity;
+  }
+
+  /**
+   * F-ECON-CREATURES V17: wire in the AURUM/UMBRA economy so each shoggoth's WEALTH drives its
+   * behaviour — a rich shoggoth hunts harder (feeds sooner, tendrils tug stronger) and glows brighter;
+   * a broke one scavenges timidly. `wealthByIndex(i)` returns shoggoth i's AURUM net worth. Null (the
+   * default + tests) leaves the legacy behaviour untouched, so the shoggoth goldens stay identical.
+   */
+  attachEconomy(wealthByIndex: ((shoggothIndex: number) => number) | null): void {
+    this.econWealth = wealthByIndex;
   }
 
   /** Constructor-time builder (allocations allowed here; legacy `mkShog`). */
@@ -216,11 +235,27 @@ export class ShoggothSystem {
     const chaos = ctx.state.chaos;
     const tugScale = 0.0008 * (chaos < 2 ? chaos / 2 : 1);
     const list = this.entities.list;
+    // F-ECON-CREATURES V17: centre boldness on the LIVE mean shoggoth wealth so rich-vs-poor is
+    // RELATIVE (and inflation-proof) — above-average shoggoths turn bold, below-average timid.
+    let meanWorth = SHOG_ECON_REF;
+    if (this.econWealth) {
+      let sw = 0;
+      const nn = this.shogs.length;
+      for (let i = 0; i < nn; i++) sw += this.econWealth(i);
+      meanWorth = Math.max(1, sw / Math.max(1, nn));
+    }
     for (let si = 0; si < this.shogs.length; si++) {
       const sg = this.shogs[si];
       if (!sg) continue; // noUncheckedIndexedAccess: si < length, never actually undefined
       const g = sg.group;
       const p = g.position;
+
+      // F-ECON-CREATURES V17: this shoggoth's WEALTH sets its boldness — rich = bolder (hunts harder,
+      // glows bigger + brighter), broke = timid. Reads the deterministic economy; boldness stays 1
+      // (legacy behaviour, byte-identical) when no economy is wired, as in tests.
+      let boldness = 1;
+      if (this.econWealth) boldness = clamp(this.econWealth(si) / meanWorth, BOLD_MIN, BOLD_MAX);
+      const tug = tugScale * (0.5 + 0.5 * boldness);
 
       // Lorenz-ish drift (legacy 522-526). Samples are clamped to ±LORENZ_BOUND (same seal as
       // the entity 'lorenz' behavior): an escapee's raw position feeds the quadratic cross
@@ -255,8 +290,9 @@ export class ShoggothSystem {
       g.rotation.z += Math.cos(t * 0.3 + sg.ph) * 0.006;
       const hue = (t * 0.05 + sg.ph) % 1;
       sg.coreMat.emissive.setHSL(hue, 0.6, 0.04 + Math.sin(t * 2 + sg.ph) * 0.02);
-      sg.coreMat.emissiveIntensity = 1 + Math.sin(t * 3 + sg.ph) * 0.8;
-      sg.core.scale.setScalar(1 + Math.sin(t * 1.5 + sg.ph) * 0.15);
+      // Wealth shows on the body: a rich shoggoth glows brighter + looms larger (the visible purse).
+      sg.coreMat.emissiveIntensity = (1 + Math.sin(t * 3 + sg.ph) * 0.8) * (0.7 + 0.35 * boldness);
+      sg.core.scale.setScalar((1 + Math.sin(t * 1.5 + sg.ph) * 0.15) * (0.85 + 0.18 * boldness));
       for (let ei = 0; ei < sg.eyeMats.length; ei++) {
         const eyeMat = sg.eyeMats[ei];
         if (!eyeMat) continue; // noUncheckedIndexedAccess: ei < length
@@ -285,7 +321,7 @@ export class ShoggothSystem {
           tp[o + 4] = ep.y - p.y;
           tp[o + 5] = ep.z - p.z;
           ti++;
-          V1.copy(p).sub(ep).normalize().multiplyScalar(tugScale);
+          V1.copy(p).sub(ep).normalize().multiplyScalar(tug);
           en.userData.vel.add(V1);
         }
       }
@@ -299,7 +335,9 @@ export class ShoggothSystem {
 
       // Consumption every feedInterval ticks → 2 corrupted children (legacy 535-537).
       sg.feedTimer += dt * 30;
-      if (sg.feedTimer >= sg.feedInterval && list.length > 50) {
+      // Wealth-driven hunger: a bold (rich) shoggoth's effective feed interval shrinks → it consumes
+      // sooner and more often; a broke one waits longer. Economy → behaviour, the V17 coupling.
+      if (sg.feedTimer >= sg.feedInterval / boldness && list.length > 50) {
         sg.feedTimer = 0;
         sg.consumed++;
         let bestD = 9999;

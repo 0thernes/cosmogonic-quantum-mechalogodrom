@@ -41,7 +41,10 @@ nash, market, lorenz`). They split, age, die (weather-tuned lifespan), and feed 
 - **Material language:** dark, wet, glistening; emissive eyes; tendril line-segments.
 - **Animation grammar:** roiling drift + tendril whip + eye-blink flicker; consumption lunges.
 - **World meaning:** entropy made flesh — the predator pressure that keeps the population honest.
-- **Economic role:** ☾ UMBRA (shadow money — they steal/hoard); medium purse (weight ≈ 3).
+- **Economic role:** ☾ UMBRA (shadow money — they steal/hoard); medium purse. **All 100 are enrolled
+  (V17)** with varied purses, and wealth drives boldness — rich = hunt harder + loom larger + glow
+  brighter, broke = timid scavenger (relative to the live mean; verified 210→500 spread, ~31/~32
+  bold/timid split).
 
 ## 3. PUPPET-MASTER (Puppeteer) — the unseen hands
 

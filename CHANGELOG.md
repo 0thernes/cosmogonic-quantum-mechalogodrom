@@ -13,6 +13,13 @@ the full gate (now also a coverage gate, on Linux + Windows) with same-seed dete
 
 ### Added
 
+- **Wealth-driven Shoggoth behavior (V17)** — the eldritch horde joins the economy: all 100 Shoggoths
+  enrol as agents with varied (golden-angle) starting purses, and each one's **wealth drives its
+  boldness** — a rich Shoggoth hunts harder (feeds sooner, tendrils tug stronger) and shows it on its
+  body (looms larger + glows brighter), a broke one scavenges timidly. Boldness is RELATIVE to the
+  live mean Shoggoth wealth (inflation-proof). Null-default `attachEconomy` keeps the goldens
+  byte-identical. Verified live: across the 100, net worth spreads 210→500 (2.38×), splitting into
+  ~31 bold-rich / ~32 timid-poor — "wallets affect behavior", not a uniform tag.
 - **Wealth-driven Titan diplomacy (V16)** — the AURUM/UMBRA economy now steers the colossi's
   game-theoretic diplomacy: in each PD round, a titan far richer than its rival is emboldened to
   raid (an extra logged defection, scaled by wealth disparity), tilting the pair toward WAR while a
