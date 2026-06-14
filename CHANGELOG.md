@@ -13,6 +13,12 @@ the full gate (now also a coverage gate, on Linux + Windows) with same-seed dete
 
 ### Added
 
+- **Entity ceiling retuned 50k → 25,000 (V44)** — the directive's "50,000 is too much and crashes my
+  machine". The `mega` tier's `maxEntities`/`targetEntities` drop from 50,000 to **25,000** (still the
+  auto-default for capable machines; `?tier=` overrides unchanged). Everything downstream already reads
+  the tier budget (buffers, the √N density scale, the mega 90% boot, the per-entity brain pool), so the
+  change is one constant — verified by the gate (777 tests; the quality pin updated to 25k). Stops the
+  out-of-memory / GPU crash on real mid/high desktops while keeping a dense tens-of-thousands biome.
 - **In-world AI web search under a safety constitution (V43)** — the directive's "the in-world AI should
   search the web for public information … aligned with a safety constitution/RAG inspired by Anthropic/
   OpenAI/Gemini/Grok". The ✦ Copilot gains a **`web_search` tool**: the model supplies a **query** (never

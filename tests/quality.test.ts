@@ -61,8 +61,8 @@ describe('QUALITY_LADDER', () => {
     }
   });
 
-  test('mega is the 50k ceiling AND the auto top tier for capable machines (V40)', () => {
-    expect(QUALITY_LADDER.mega.maxEntities).toBe(50000);
+  test('mega is the 25k ceiling AND the auto top tier for capable machines (V40, retuned V44)', () => {
+    expect(QUALITY_LADDER.mega.maxEntities).toBe(25000); // V44: 50k crashed real machines
     expect(QUALITY_LADDER.mega.targetEntities).toBe(QUALITY_LADDER.mega.maxEntities);
     expect(QUALITY_LADDER.mega.instanced).toBeTrue();
     expect(QUALITY_LADDER.mega.maxEntities).toBeGreaterThan(QUALITY_LADDER.ultra.maxEntities);

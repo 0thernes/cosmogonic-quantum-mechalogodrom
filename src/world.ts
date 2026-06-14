@@ -560,10 +560,10 @@ export class World {
 
   /**
    * Boot/reset population: 30% of the adaptive steady-state target (legacy 300 of 1000) so the world
-   * boots toward its idle equilibrium and organic auto-split fills the rest. The opt-in **mega** tier
-   * (V38) is the exception — it boots at 90% of its 50k ceiling so the directive's "up to 50,000
-   * active creatures" is instantiated, rendered, and stepped from the first frame (the √N density
-   * scale keeps it tractable; see `bun bench/scale.ts`), rather than waiting on slow organic growth.
+   * boots toward its idle equilibrium and organic auto-split fills the rest. The **mega** tier (V38,
+   * V44 retuned to a 25k ceiling) is the exception — it boots at 90% of that ceiling so the directive's
+   * "tens of thousands of active creatures" is instantiated, rendered, and stepped from the first frame
+   * (the √N density scale keeps it tractable; see `bun bench/scale.ts`), not waiting on organic growth.
    */
   private bootPopulation(): number {
     const frac = this.quality.tier === 'mega' ? 0.9 : 0.3;
