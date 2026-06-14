@@ -13,6 +13,18 @@ the full gate (now also a coverage gate, on Linux + Windows) with same-seed dete
 
 ### Added
 
+- **The SUPER MIND goes LIVE in the apex creature (V46)** — V45 built the ~10k-param composite
+  consciousness; V46 wires it into the running world. `World` now constructs a `SuperMind` on its own
+  seeded sub-stream (so it never perturbs the `superRng` the twins/wallets draw from — the population
+  golden stays byte-identical) and **thinks it every apex beat** on the same percept as the V31 mind. Its
+  output drives the creature: the **quantum-morphology aspect + dream/hallucination state feed the body's
+  writhe + eye-glow** (`super-body.setConsciousness` → the monster visibly writhes harder and blazes when
+  its mind is dreaming/morphing), and the **⬢ ARCHITECT panel** gains a live consciousness readout
+  (`10081p · 5st×5d×25v` + Dream / Hallucin / Reason / Self-aware / Novelty meters). Verified headlessly
+  (a new `super-body-control` case: high quantum-morphology + hallucination ⇒ a larger body morph factor
+  than calm) + the existing 5 SuperMind tests + the determinism golden (unchanged). Full gate green (783
+  tests). _Live panel render needs a GPU confirmation pass — the session's preview WebGL is exhausted._
+  _Next: the 100-robot wingman swarm, self-evolution + appearance change, the 24h daemon tick._
 - **THE SUPER MIND — a ~10,000-parameter composite consciousness (V45)** — the directive's leap from the
   V31 single-MLP mind (1,444 params) to a **polymorphic, biomimetic composite of 12 specialised
   sub-networks (~10,081 weights)** wired into a five-STAGE pipeline that recurses to five DEPTHS and

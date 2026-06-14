@@ -82,6 +82,7 @@ import { Observatory } from './ui/observatory';
 import { NhiObservatory } from './ui/nhi-observatory';
 import { MarketTicker } from './ui/market-ticker';
 import { SuperCreature, type SuperPercept } from './sim/super-creature';
+import { SuperMind, type SuperMindSnapshot } from './sim/super-mind';
 import { SuperBodySystem } from './sim/super-body';
 import { SuperPanel } from './ui/super-panel';
 import { SuperheroState, HERO_POWERS } from './ui/superhero-state';
@@ -158,6 +159,8 @@ export class World {
 
   // F-SUPER V31: the always-active apex mind + its self-mounting telemetry panel + sired twins.
   private readonly superCreature: SuperCreature;
+  private readonly superMind: SuperMind; // V46: the live ~10k-param composite consciousness
+  private superMindSnap: SuperMindSnapshot | null = null;
   private readonly superTwins: SuperCreature[] = [];
   private readonly superPanel: SuperPanel;
   private readonly superBody: SuperBodySystem;
@@ -461,6 +464,9 @@ export class World {
     // econRng's order is untouched too. The panel self-mounts; the ⬢ ARCHITECT toggle is always shown.
     this.superRng = mulberry32((this.persisted.seed ^ 0x5e1f9d3b) >>> 0 || 1);
     this.superCreature = new SuperCreature(this.superRng);
+    // V46: the ~10k-param SUPER MIND on its OWN seeded sub-stream (so it never perturbs the superRng
+    // order the twins/wallets draw from). It thinks live each beat; its consciousness drives the body.
+    this.superMind = new SuperMind(mulberry32((this.persisted.seed ^ 0x5e1f3d11) >>> 0 || 1));
     this.superPanel = new SuperPanel();
     this.economy.register(World.ECON_SUPER_BASE, this.superCreature.name, 20, this.superRng);
     // F-SUPER V32: the masterful many-eyed apex BODY (god-jewel shader) — additive, draws no rng.
@@ -767,6 +773,7 @@ export class World {
       this.superPanel.update(
         this.superCreature.snapshot(),
         this.economy.wealthOf(World.ECON_SUPER_BASE)?.netWorth ?? 0,
+        this.superMindSnap, // V46: the live 10k-param consciousness (dream/hallucinate/reason/self-aware)
       );
       // F-SUPER V35: feed the SUPERHERO HUD the player-creature's live vitals + mind + wallet.
       const hero = this.heroBodies[0];
@@ -834,6 +841,15 @@ export class World {
       };
       this.superCreature.think(percept); // updates the prime's emotion/memory/plan
       this.superBody.setMind(this.superCreature.snapshot()); // fold the mind into the body's look
+      // V46: the ~10k-param SUPER MIND thinks the same percept LIVE — its quantum-morphology + dream
+      // state drive the prime body's writhe + eye-glow, and its consciousness is surfaced in telemetry.
+      const mindOut = this.superMind.think(percept);
+      this.superBody.setConsciousness(
+        mindOut.quantum,
+        mindOut.consciousness.dreaming,
+        mindOut.consciousness.hallucinating,
+      );
+      this.superMindSnap = this.superMind.snapshot();
       // V35: the twin budget (cap 3) is now spent by the PLAYER — the puzzle reveal sires the 2nd
       // creature and the FORK power sires the rest — so the prime no longer auto-spawns (no contention).
       for (const tw of this.superTwins) tw.think(percept); // twins reason with their own minds

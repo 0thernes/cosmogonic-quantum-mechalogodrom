@@ -120,6 +120,10 @@ export class SuperBodySystem {
   private arousal = 0;
   private aggression = 0;
   private surprise = 0;
+  // V46: live SUPER-MIND couplings — quantum morphology drives the writhe, dreaming glows the eyes.
+  private morphBoost = 0;
+  private dreamGlow = 0;
+  private lastMorph = 0;
   private readonly move = new THREE.Vector3(); // the mind's movement output (its will)
   private readonly anchor = new THREE.Vector3(0, 12, 0); // birth locus / fallback
   // V39 FLIGHT: the apex roams the world instead of hovering — a wander-seek boid that banks toward
@@ -330,7 +334,8 @@ export class SuperBodySystem {
     const beat = 1 + Math.sin(t * (1.4 + 2.0 * this.arousal)) * (0.04 + 0.06 * this.arousal);
     // V39 MORPH: a non-uniform WRITHE so the body visibly mutates shape (stronger with surprise +
     // arousal) instead of staying a rigid pulsing ball.
-    const morph = 0.1 + 0.45 * this.surprise + 0.25 * this.arousal;
+    const morph = 0.1 + 0.45 * this.surprise + 0.25 * this.arousal + 0.6 * this.morphBoost;
+    this.lastMorph = morph;
     this.core.scale.set(
       beat * (1 + Math.sin(t * 1.3) * morph * 0.35),
       beat * (1 + Math.sin(t * 1.7 + 1.1) * morph * 0.35),
@@ -342,7 +347,8 @@ export class SuperBodySystem {
     this.cage.rotation.z = t * 0.05;
 
     // Eye-blink: a global emissive flicker, brighter with dominance (the many-eyed stare).
-    this.eyeMat.emissiveIntensity = 2.5 + this.dominance * 4.0 + Math.sin(t * 6.0) * 0.8;
+    this.eyeMat.emissiveIntensity =
+      2.5 + this.dominance * 4.0 + Math.sin(t * 6.0) * 0.8 + this.dreamGlow * 2.2;
 
     // Arm-writhe ∝ aggression: the spikes splay + tremble when the mind turns hostile.
     const splay = 1 + this.aggression * 0.4 + Math.sin(t * 3.0) * 0.05 * this.aggression;
@@ -373,6 +379,18 @@ export class SuperBodySystem {
     out.copy(this.vel);
     if (out.lengthSq() < 1e-4) out.set(0, 0, 1);
     return out.normalize();
+  }
+
+  /** V46: fold the live SUPER-MIND's quantum aspects + dream state into the body's look. */
+  setConsciousness(quantum: ArrayLike<number>, dreaming: number, hallucinating: number): void {
+    const morphology = quantum[5] ?? 0; // QUANTUM_ASPECTS index 5 = 'morphology'
+    this.morphBoost = clampf(morphology * 0.6 + hallucinating * 0.4, 0, 1);
+    this.dreamGlow = clampf(dreaming, 0, 1);
+  }
+
+  /** V46: the writhe magnitude applied this frame (for tests / inspection). */
+  morphFactor(): number {
+    return this.lastMorph;
   }
 
   /** Free GPU resources (world reset). */

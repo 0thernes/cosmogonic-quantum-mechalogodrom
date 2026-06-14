@@ -7,6 +7,7 @@
  * pushes a {@link SuperSnapshot} + net worth each Observatory cadence via {@link update}.
  */
 import type { SuperSnapshot, SuperPlan } from '../sim/super-creature';
+import type { SuperMindSnapshot } from '../sim/super-mind';
 import { mountToggle } from './panel-dock';
 
 /** Plan → accent colour, so the committed goal reads at a glance (hunt-red … rest-grey). */
@@ -130,6 +131,7 @@ export class SuperPanel {
     this.id.scale = idRow(id, 'Scale', doc);
     this.id.offspring = idRow(id, 'Twins', doc);
     this.id.wallet = idRow(id, 'Wallet', doc);
+    this.id.brain = idRow(id, 'Conscious', doc); // V46: the live ~10k-param composite mind
 
     const bars = panel.querySelector('[data-bars]') as HTMLElement;
     this.meter.valence = bar(bars, 'Valence', '#6bff9e', doc);
@@ -139,6 +141,12 @@ export class SuperPanel {
     this.meter.aggression = bar(bars, 'Aggress', '#ff5a6b', doc);
     this.meter.deception = bar(bars, 'Deceive', '#d8a8ff', doc);
     this.meter.curiosity = bar(bars, 'Curiosity', '#9fb6dd', doc);
+    // V46 — the SUPER MIND's consciousness meters (dream / hallucinate / reason / self-aware / novelty).
+    this.meter.dreaming = bar(bars, 'Dream', '#b98cff', doc);
+    this.meter.hallucinating = bar(bars, 'Hallucin', '#ff6ab0', doc);
+    this.meter.reasoning = bar(bars, 'Reason', '#6cdfff', doc);
+    this.meter.selfAware = bar(bars, 'Self-aware', '#ffd166', doc);
+    this.meter.novelty = bar(bars, 'Novelty', '#8dff9e', doc);
   }
 
   get isOpen(): boolean {
@@ -154,7 +162,7 @@ export class SuperPanel {
    * Push the latest mind snapshot + wallet. Always cheap; repaints only when open. Null-safe (the
    * creature is always-active, so `snap` should be present, but we tolerate a missing beat).
    */
-  update(snap: SuperSnapshot | null, netWorth: number): void {
+  update(snap: SuperSnapshot | null, netWorth: number, mind?: SuperMindSnapshot | null): void {
     if (!this.open || !snap) return;
     const c = PLAN_COLOR[snap.plan];
     this.planEl.textContent = snap.plan;
@@ -174,6 +182,17 @@ export class SuperPanel {
     this.setBar('aggression', snap.intent.aggression);
     this.setBar('deception', snap.intent.deception);
     this.setBar('curiosity', snap.intent.curiosity);
+
+    // V46 — the live ~10k-param composite consciousness (the SUPER MIND).
+    if (mind) {
+      this.id.brain!.textContent = `${mind.paramCount}p · ${mind.stages}st×${mind.depths}d×${mind.variants}v`;
+      const k = mind.consciousness;
+      this.setBar('dreaming', k.dreaming);
+      this.setBar('hallucinating', k.hallucinating);
+      this.setBar('reasoning', k.reasoning);
+      this.setBar('selfAware', k.selfAware);
+      this.setBar('novelty', k.novelty);
+    }
   }
 
   /** Set a meter's fill width (0..1) + numeric label (showing `signed` when bipolar). */

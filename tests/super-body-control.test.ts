@@ -56,4 +56,15 @@ describe('SuperBodySystem flight + control (V41)', () => {
       expect(Number.isFinite(h.x + h.y + h.z)).toBe(true);
     }
   });
+
+  test('V46: the live SUPER MIND drives the body morphology (quantum morphology + hallucination)', () => {
+    const calm = new SuperBodySystem(new THREE.Scene());
+    const wild = new SuperBodySystem(new THREE.Scene());
+    const q = (morphology: number): number[] => [0, 0, 0, 0, 0, morphology, 0, 0, 0, 0]; // idx 5 = morphology
+    calm.setConsciousness(q(0), 0, 0); // no morphology, no dream/hallucination
+    wild.setConsciousness(q(1), 1, 1); // full morphology + dreaming + hallucinating
+    calm.update(0, 1 / 60);
+    wild.update(0, 1 / 60);
+    expect(wild.morphFactor()).toBeGreaterThan(calm.morphFactor()); // the monster writhes harder when active
+  });
 });
