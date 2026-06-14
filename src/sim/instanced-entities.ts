@@ -137,6 +137,12 @@ function patchPoolMaterial(mat: THREE.MeshStandardMaterial, uniforms: ShaderUnif
         '#include <emissivemap_fragment>',
         '#include <emissivemap_fragment>\n' +
           '\ttotalEmissiveRadiance = vInstEmissive.rgb;\n' +
+          // Baseline glass-jewel sheen (ALWAYS on, every mode): a fresnel rim + crawling thin-film
+          // tint so every organism reads as a wet, translucent glass-amber jewel — the HD upgrade —
+          // layered UNDER the exotic modes below. Pure f(view, time); no texture, no sim coupling.
+          '\tfloat vfres = pow(1.0 - clamp(abs(dot(normalize(vNormal), normalize(vViewPosition))), 0.0, 1.0), 2.5);\n' +
+          '\tvec3 vfilm = 0.5 + 0.5 * cos(6.28318 * (vec3(1.0, 0.85, 0.7) * vfres + vec3(0.0, 0.18, 0.36) + uTime * 0.03));\n' +
+          '\ttotalEmissiveRadiance += vfilm * vfres * 0.22;\n' +
           // Exotic shader render modes (V7-beyond): IRIDESCENT (6) = thin-film cosine-palette
           // interference that crawls with view angle + time; HOLOGRAM (5) = fresnel rim + moving
           // scanlines that pulse with the bass. Both real f(view, time) — no textures, no envMap.
