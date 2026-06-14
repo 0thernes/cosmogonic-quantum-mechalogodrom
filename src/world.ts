@@ -68,6 +68,7 @@ import { LeviathanSystem } from './sim/leviathans';
 import { NhiSystem, type NhiWorld } from './sim/nhi-system';
 import { NhiAction, type NhiIntent, type NhiPercept } from './sim/nhi';
 import { NhiBodySystem } from './sim/nhi-body';
+import { CosmicWeb } from './sim/cosmic-web';
 import { LoreEngine } from './sim/lore';
 import { AnalyticsSystem } from './sim/analytics';
 import { AudioEngine } from './audio/engine';
@@ -182,6 +183,8 @@ export class World {
   };
   /** Alien biomechanical bodies for launched NHIs (additive viz; assigned in the constructor). */
   private readonly nhiBody: NhiBodySystem;
+  /** Far-field cosmic web — depth + context backdrop (additive; assigned in the constructor). */
+  private readonly cosmicWeb: CosmicWeb;
   /** Cycle cursor for the chaos control's singularity chooser. */
   private singularityCursor = 0;
   /** Reused per-frame scalar block handed to the instanced renderer (alloc-free). */
@@ -340,6 +343,8 @@ export class World {
     this.leviathans.attachSingularity(this.singularities);
     // F-NHI V10: alien biomechanical bodies for launched NHIs (additive; draws no rng).
     this.nhiBody = new NhiBodySystem(ctx.scene);
+    // V11: far-field cosmic-web backdrop for depth + context (additive; draws no rng).
+    this.cosmicWeb = new CosmicWeb(ctx.scene);
 
     this.hud = new Hud();
     this.panel = new TelemetryPanel();
@@ -476,6 +481,7 @@ export class World {
     this.titans.update(dt, t);
     // F-BEINGS: the leviathans sail the mid-field (pure trig + the read-only hole force, no rng).
     this.leviathans.update(dt, t);
+    this.cosmicWeb.update(t); // V11: far-field cosmic-web shimmer (additive backdrop, no rng)
     // F-NHI V10: alien bodies follow + morph their NHI every frame (guarded; additive viz only).
     if (this.nhiBody.count > 0) {
       try {
