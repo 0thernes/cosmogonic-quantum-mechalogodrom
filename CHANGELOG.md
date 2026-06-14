@@ -13,6 +13,19 @@ the full gate (now also a coverage gate, on Linux + Windows) with same-seed dete
 
 ### Added
 
+- **Per-entity neural controller — 50k brains, alive (V42)** — the directive's "50–150 parameter neural
+  network so it's alive and can do shit" at chaos-biome scale. Every organism now carries the genome's
+  compact **70-param brain** (the `TinyMLP` 6→6→4 already in `genome.ts`): each beat it PERCEIVES its own
+  state + the world (energy, mortality, speed, world-chaos, a stable personality bias, a phase clock) and
+  STEERS itself — a small, bounded velocity nudge layered on the morphotype's behavior field, so the
+  50,000 entities each move with individual, reactive character instead of one shared rule. New
+  `sim/entity-brain.ts` (`EntityBrainField`): a flat genome pool (no per-entity objects), an
+  allocation-free inline forward, and **round-robin cohorts** (1/8 of the population per frame) so the
+  cost stays bounded at the 50k ceiling. **Determinism-safe**: genomes are rolled once from a DEDICATED
+  rng sub-stream (never the world's main rng), and the field is driven by `World` — not the bare
+  `EntityManager` the golden test exercises — so the pinned same-seed population trace is **byte-identical**
+  (the determinism golden still passes). Verified headlessly (7 tests: deterministic, per-entity diversity,
+  bounded authority, full round-robin coverage, NHI exemption, NaN-freedom). Full gate green (769 tests).
 - **SUPERHERO player controls — pilot the avatar, 1st/3rd-person (V41)** — the directive's game-controls
   ask. After ACCESS GRANTED the player can now actually FLY the 2nd super creature. **Three pilot modes**
   (`superhero-state.ts`, the "3 options"): **AUTOPILOT** (the creature's deep mind flies it — the fun

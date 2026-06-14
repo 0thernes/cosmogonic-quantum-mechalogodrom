@@ -21,6 +21,11 @@ UMBRA ☾ speculators), and a relative purse weight (stature).
   × 25 + ~1% wildcard outliers. Each carries geometry, PBR palette, behavior, motion params.
 - **Behavior:** one of 26 fields (`drift, orbit, pulse, swarm, flee, hunt, split, coil, spiral, …,
 nash, market, lorenz`). They split, age, die (weather-tuned lifespan), and feed the connectome.
+  **Neural controller (V42):** each organism also carries the genome's compact **70-param brain**
+  (`TinyMLP` 6→6→4, `sim/entity-brain.ts`) — it perceives its own energy, mortality and speed, the
+  world-chaos, a personality bias and a phase clock, then STEERS itself with a small bounded velocity
+  nudge on a round-robin cohort cadence, so all 50,000 move with individual reactive character rather
+  than one shared rule.
 - **Silhouette:** the geometry cache — spheres, icosahedra, octahedra, tori, torus-knots, cones,
   boxes, and 3 vertex-deformed organics. In **SPECIMEN** view each is framed macro as a jewel.
 - **Material language:** the **Reliquary Surface** (V12) — carved-mineral fBm relief engraved into

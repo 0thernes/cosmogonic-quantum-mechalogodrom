@@ -48,6 +48,7 @@ import { createGeometryCache } from './sim/geometry-cache';
 import { createMorphotypes } from './sim/morphotypes';
 import { createPhyla } from './sim/phyla';
 import { EntityManager } from './sim/entities';
+import { EntityBrainField } from './sim/entity-brain';
 import { InstancedEntityRenderer, type InstanceFrame } from './sim/instanced-entities';
 import { ShoggothSystem } from './sim/shoggoths';
 import { PuppetMasterSystem } from './sim/puppet-masters';
@@ -136,6 +137,7 @@ export class World {
   private readonly grid: SpatialHash<Entity>;
   private readonly audio: AudioEngine;
   private readonly entities: EntityManager;
+  private readonly entityBrains: EntityBrainField; // V42: per-organism 70-param neural controller
   private readonly shoggoths: ShoggothSystem;
   private readonly puppets: PuppetMasterSystem;
   private readonly weather: WeatherSystem;
@@ -462,6 +464,12 @@ export class World {
     this.superPanel = new SuperPanel();
     this.economy.register(World.ECON_SUPER_BASE, this.superCreature.name, 20, this.superRng);
     // F-SUPER V32: the masterful many-eyed apex BODY (god-jewel shader) — additive, draws no rng.
+    // F-BRAIN V42: every organism's compact 70-param genome brain, on its OWN seeded sub-stream (so the
+    // main rng order + the population golden are byte-identical). Sized to the hard entity ceiling.
+    this.entityBrains = new EntityBrainField(
+      this.quality.maxEntities,
+      mulberry32((this.persisted.seed ^ 0xb7a19e3d) >>> 0 || 1),
+    );
     this.superBody = new SuperBodySystem(ctx.scene);
     this.superScene = ctx.scene;
     this.superheroHud = new SuperheroHud(); // V35: self-mounting player HUD, hidden until unlock
@@ -653,6 +661,9 @@ export class World {
     this.tickAlgoAuto(dt);
     this.sortStep(bands);
 
+    // F-BRAIN V42: one cohort of organism brains perceives + steers itself BEFORE the integrator folds
+    // velocity into position. Round-robin → bounded cost at 50k; own rng → the golden is unchanged.
+    this.entityBrains.think(this.entities.list, this.state.chaos, t);
     const stats = this.entities.update(dt, t);
     this.energy = stats.energy; // stats object is reused — copy immediately
     this.morphCount = stats.morphCount;
