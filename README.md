@@ -17,6 +17,10 @@ deterministic, allocation-disciplined module graph.
 Every run is reproducible from a seed. Every hot path is allocation-free.
 Every magic number survived the port.
 
+> 📖 **New here? Read [THE BOOK](./docs/BOOK.md)** — the master index over every doc, an
+> auto-generated [file map](./docs/FILE-MAP.md) of all 77 modules, and the build/run, data-flow,
+> troubleshooting, and roadmap in one place. Or open **❓ HELP ME NOW** in-app for grounded answers.
+
 > **V12–V13 (2026-06):** a procedural **Reliquary Surface** jewel BRDF + a macro **SPECIMEN** camera
 > view; a living **two-currency / two-commodity economy** (AURUM ☉ / UMBRA ☾ · QUANTA ◇ / ICHOR ❖)
 > with a game-theoretic clearing market and stature-scaled wallets; a bottom-right View/Speed/Render

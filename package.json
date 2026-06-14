@@ -18,6 +18,7 @@
     "test:coverage": "bun test --coverage",
     "sbom": "bun scripts/sbom.ts",
     "bench": "bun bench/index.ts",
+    "filemap": "bun scripts/gen-filemap.ts",
     "check": "bun run format:check && bun run typecheck && bun run lint && bun test && bun run build"
   },
   "dependencies": {

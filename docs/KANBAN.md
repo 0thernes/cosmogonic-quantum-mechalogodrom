@@ -71,7 +71,7 @@ behind the full gate (`bun run check`) and a commit.
 - 🟦 P3 `SUPERHERO-DEEPEN` — past V35 (the HUD + progression + powers shipped): deepen it — damage/combat (life is currently regen-only), the camera actually following the hero, functional inventory, and richer DOMINION/RECALL world-effects.
 - 🟦 P3 `CHAOS-BIOME-50K` — scale toward 50,000 entities · 100 archetypes (edge-geometry silhouettes, mutating morphology), each a 50–150-param neural controller; LOD/instancing/batching/spatial-partition budget work.
 - 🟦 P3 `AI-WEB-DEEPEN` — past V36 (HELP ME NOW repo-grounded RAG shipped): augment the ✦ Copilot's freeform path with live web search + RAG-grounding from the same knowledge base; grow the help corpus as systems land.
-- 🟦 P3 `RAG-BOOK` — the massively-organized human/AI repo book (file maps, module/data-flow, AI/RAG notes, build/run, troubleshooting, roadmap).
+- ✅ `RAG-BOOK` (V37) — shipped: `docs/BOOK.md` is the master index over all 38 docs + code + build/run/data-flow/troubleshooting/roadmap; `scripts/gen-filemap.ts` (`bun run filemap`) self-generates `docs/FILE-MAP.md` from module headers (77 modules, deterministic). Verified: 43/43 BOOK links resolve, 0 broken. _Grows with the world (standing)._
 - 🟦 P3 `UI-ERGONOMICS` — past V33 (the dock consolidated NEURAL/MARKET/ARCHITECT/AI/Docs/Spec): still TODO — relocate the Sorting Count/Step meter clock (`#alg`) off the Sorting Fields panel (`#algoP`) into a clean zone, keep Sorting Fields draggable; typography/spacing pass.
 
 ### 🚧 Next — V13/V14 directive backlog (user, 2026-06-14)

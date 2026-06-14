@@ -13,6 +13,17 @@ the full gate (now also a coverage gate, on Linux + Windows) with same-seed dete
 
 ### Added
 
+- **THE BOOK — the navigable RAG repo book (V37)** — the directive's documentation mandate: one master
+  index over the whole repository. New [`docs/BOOK.md`](docs/BOOK.md) ties all **38 docs** + the code +
+  the build/run, data-flow, troubleshooting and roadmap into a single human- and AI-readable table of
+  contents, organised by the spec's categories (orientation · architecture · world · systems · math ·
+  AI/RAG · UI · data model · decisions · history · roadmap). The codebase half is **self-maintaining**:
+  a new generator [`scripts/gen-filemap.ts`](scripts/gen-filemap.ts) (`bun run filemap`) emits
+  [`docs/FILE-MAP.md`](docs/FILE-MAP.md) — a row per module summarised from each file's **own
+  doc-header**, so it never rots (deterministic; re-run = byte-identical; prettier-ignored). The README
+  now opens with a 📖 pointer to the book. **Verified**: the generator is deterministic across runs, all
+  **43 internal BOOK links resolve** (0 broken), 77 modules mapped across 10 dirs, full gate green (755
+  tests). _Remaining headline item: the 50k-entity / 100-archetype chaos-biome scale-up._
 - **HELP ME NOW — a repo-grounded in-world help system (V36)** — the directive's AI/help ask: a help
   entry point beside DOCS / SPECS / ✦ AI. A self-mounting **❓ HELP** panel (`ui/help-system.ts`) that
   answers "Explain this / What is that? / I'm confused" and any typed question **instantly and offline**
