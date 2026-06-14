@@ -262,6 +262,11 @@ export class World {
   /** Scratch vectors — step() and actions never allocate. */
   private readonly sv1 = new THREE.Vector3();
   private readonly sv2 = new THREE.Vector3();
+  // V41 superhero piloting scratch + the on-screen D-pad steer (held vector from the HUD / touch).
+  private readonly heroPad = { x: 0, y: 0, z: 0 };
+  private readonly heroIntent = new THREE.Vector3();
+  private readonly heroF = new THREE.Vector3();
+  private readonly heroR = new THREE.Vector3();
   /** Reused telemetry snapshot (panel reads synchronously). */
   private readonly snap: TelemetrySnapshot;
 
@@ -470,7 +475,14 @@ export class World {
         this.heroPower(((e as CustomEvent).detail?.id as string) ?? ''),
       );
       window.addEventListener('cqm:hero-vision', () => this.heroCycleRender());
-      window.addEventListener('cqm:hero-cam', () => this.heroCycleView());
+      window.addEventListener('cqm:hero-cam', () => this.heroCycleCam()); // V41: orbit/3rd/1st
+      window.addEventListener('cqm:hero-mode', () => this.heroCycleControl()); // V41: autopilot/assist/manual
+      window.addEventListener('cqm:hero-move', (e) => {
+        const d = (e as CustomEvent).detail ?? {};
+        this.heroPad.x = Number(d.x) || 0; // on-screen D-pad / touch steer (held vector)
+        this.heroPad.y = Number(d.y) || 0;
+        this.heroPad.z = Number(d.z) || 0;
+      });
     }
     bindPanelToggles();
     this.bindObservatoryTabs();
@@ -572,7 +584,9 @@ export class World {
     s.frame++;
     const t = s.elapsed;
 
+    this.updateHeroControl(); // V41: route player nav input to the avatar (assist / manual)
     this.updateCamera(dt, t);
+    this.updateHeroCamera(); // V41: chase / first-person follow overrides the cam when engaged
     this.handleHotkeys(dt);
     // Chaos decays toward its floor — raised in SIMULATION N(2) so the nightmare stays
     // permanently agitated (higher cm ⇒ wilder behaviour excursions). V7.6.
@@ -885,10 +899,85 @@ export class World {
     this.hud.showSector('VISION · ' + mode.toUpperCase());
   }
 
-  /** V35: CAMERA — cycle the view mode. */
-  private heroCycleView(): void {
-    this.state.viewIdx = (this.state.viewIdx + 1) % VIEW_MODES.length;
-    this.hud.showSector('CAM · ' + cyc(VIEW_MODES, this.state.viewIdx).toUpperCase());
+  /** V41: CAMERA — cycle orbit → 3rd-person → 1st-person (the follow rigs in {@link updateHeroCamera}). */
+  private heroCycleCam(): void {
+    const m = this.superheroState.cycleCam();
+    const label = m === 'orbit' ? 'ORBIT (free)' : m === 'third' ? '3RD-PERSON' : '1ST-PERSON';
+    this.hud.showSector('CAM · ' + label);
+  }
+
+  /** V41: PILOT — cycle autopilot → assist → manual control of the avatar. */
+  private heroCycleControl(): void {
+    const m = this.superheroState.cycleControl();
+    this.hud.showSector('PILOT · ' + m.toUpperCase());
+  }
+
+  /**
+   * V41: route the player's navigation — keyboard (WASD/QE + arrows) and the on-screen D-pad / touch —
+   * into the avatar's flight as a CAMERA-RELATIVE steer. AUTOPILOT ignores it (the mind flies itself);
+   * ASSIST nudges the autonomous heading; MANUAL flies it outright. No-op until the avatar is active.
+   */
+  private updateHeroControl(): void {
+    const hero = this.heroBodies[0];
+    if (!this.superheroState.active || !hero) return;
+    const mode = this.superheroState.controlMode;
+    if (mode === 'autopilot') {
+      hero.body.setControl(0, 0, 0, 0, false);
+      return;
+    }
+    const k = this.input.keys;
+    let fwd = 0;
+    let strafe = 0;
+    let lift = 0;
+    if (k['w'] || k['arrowup']) fwd += 1;
+    if (k['s'] || k['arrowdown']) fwd -= 1;
+    if (k['d'] || k['arrowright']) strafe += 1;
+    if (k['a'] || k['arrowleft']) strafe -= 1;
+    if (k['q']) lift += 1;
+    if (k['e']) lift -= 1;
+    fwd += this.heroPad.z;
+    strafe += this.heroPad.x;
+    lift += this.heroPad.y;
+    const active = fwd !== 0 || strafe !== 0 || lift !== 0;
+    // camera-relative horizontal basis: forward = where you look, right = forward × up.
+    const f = this.engine.camera.getWorldDirection(this.heroF);
+    f.y = 0;
+    if (f.lengthSq() < 1e-4) f.set(0, 0, -1);
+    f.normalize();
+    const r = this.heroR.set(-f.z, 0, f.x);
+    this.heroIntent.set(0, 0, 0).addScaledVector(f, fwd).addScaledVector(r, strafe);
+    this.heroIntent.y += lift;
+    hero.body.setControl(
+      mode === 'manual' ? 2 : 1,
+      this.heroIntent.x,
+      this.heroIntent.y,
+      this.heroIntent.z,
+      active,
+    );
+  }
+
+  /**
+   * V41: the chase / first-person camera. `third` trails behind + above the avatar looking at it;
+   * `first` sits at the creature's leading face looking along its heading; `orbit` leaves the normal
+   * camera untouched. Runs AFTER updateCamera so it overrides the free-cam each frame while engaged.
+   */
+  private updateHeroCamera(): void {
+    const hero = this.heroBodies[0];
+    if (!this.superheroState.active || !hero) return;
+    const cm = this.superheroState.camMode;
+    if (cm === 'orbit') return;
+    const cam = this.engine.camera;
+    const p = hero.body.worldPosition(this.sv1);
+    const h = hero.body.heading(this.sv2);
+    if (cm === 'first') {
+      cam.position.copy(p).addScaledVector(h, 6.5); // at the leading face of the core
+      cam.position.y += 2;
+      cam.lookAt(this.heroIntent.copy(p).addScaledVector(h, 30));
+    } else {
+      cam.position.copy(p).addScaledVector(h, -28); // trail behind
+      cam.position.y += 13;
+      cam.lookAt(p);
+    }
   }
 
   /**

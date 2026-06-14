@@ -131,6 +131,10 @@ export class SuperBodySystem {
   private wanderClock = 0; // countdown to repick the wander target
   private teleClock = 9; // countdown to the next quantum blink
   private seed = 1; // deterministic counter driving wander + teleport variation
+  // V41 player control: 0 autopilot · 1 assist · 2 manual; ctrl = world-space steer vector.
+  private ctrlMode = 0;
+  private ctrlActive = false;
+  private readonly ctrl = new THREE.Vector3();
 
   constructor(scene: THREE.Scene, anchor?: { x: number; y: number; z: number }) {
     if (anchor) this.anchor.set(anchor.x, anchor.y, anchor.z); // 2nd creature starts apart (V34)
@@ -280,12 +284,23 @@ export class SuperBodySystem {
     if (Math.hypot(this.pos.x, this.pos.z) > ARENA_R * 0.82)
       this.aim.addScaledVector(this.pos, -0.006);
     if (this.aim.lengthSq() > 1e-6) this.aim.normalize();
-    const speed = 7 + 16 * this.arousal; // frantic when aroused
-    this.vel.lerp(this.aim.multiplyScalar(speed), Math.min(1, dt * 1.4)); // smooth turn toward heading
+    // ── V41 PLAYER CONTROL: MANUAL → the player's input IS the heading (no autonomous wander or
+    //    teleport); ASSIST → it nudges the autonomous heading; AUTOPILOT (default) → the V39 roam. ──
+    const manual = this.ctrlMode === 2;
+    if (manual) {
+      if (this.ctrlActive) this.aim.copy(this.ctrl);
+      else this.aim.set(0, 0, 0); // coast to a hover when no input is held
+    } else if (this.ctrlMode === 1 && this.ctrlActive) {
+      this.aim.addScaledVector(this.ctrl, 1.6); // ASSIST nudge toward the player's will
+    }
+    if (this.aim.lengthSq() > 1e-6) this.aim.normalize();
+    const speed = manual ? (this.ctrlActive ? 26 : 0) : 7 + 16 * this.arousal; // frantic when aroused
+    this.vel.lerp(this.aim.multiplyScalar(speed), Math.min(1, dt * (manual ? 3 : 1.4)));
 
     // QUANTUM TELEPORT: phase to a new locus on a timer (faster under surprise) — the "weird shit".
+    // Disabled under MANUAL (the player would hate random blinks while flying it).
     this.teleClock -= dt * (1 + 1.5 * this.surprise);
-    if (this.teleClock <= 0) {
+    if (!manual && this.teleClock <= 0) {
       this.seed++;
       const a = this.seed * 1.99977;
       const rr = (0.3 + 0.6 * frac(this.seed * 0.409)) * ARENA_R;
@@ -339,6 +354,25 @@ export class SuperBodySystem {
       const ring = this.rings[i];
       if (ring) ring.rotation.z = t * (0.3 + i * 0.15) * (1 + this.arousal);
     }
+  }
+
+  /** V41: feed the player's steer. mode 0 autopilot · 1 assist · 2 manual; (x,y,z) world dir; active = key/stick held. */
+  setControl(mode: number, x: number, y: number, z: number, active: boolean): void {
+    this.ctrlMode = mode;
+    this.ctrlActive = active;
+    this.ctrl.set(x, y, z);
+  }
+
+  /** V41: the avatar's world position (for the chase / first-person camera). Writes + returns `out`. */
+  worldPosition(out: THREE.Vector3): THREE.Vector3 {
+    return out.copy(this.root.position);
+  }
+
+  /** V41: the avatar's unit heading (velocity direction; falls back to +Z when still). Writes `out`. */
+  heading(out: THREE.Vector3): THREE.Vector3 {
+    out.copy(this.vel);
+    if (out.lengthSq() < 1e-4) out.set(0, 0, 1);
+    return out.normalize();
   }
 
   /** Free GPU resources (world reset). */

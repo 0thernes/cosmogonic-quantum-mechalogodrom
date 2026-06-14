@@ -3,7 +3,12 @@
  * passive-XP tick, level-up roll-over, and the energy economy of powers.
  */
 import { describe, expect, test } from 'bun:test';
-import { SuperheroState, HERO_POWERS } from '../src/ui/superhero-state';
+import {
+  SuperheroState,
+  HERO_POWERS,
+  HERO_CONTROL_MODES,
+  HERO_CAM_MODES,
+} from '../src/ui/superhero-state';
 
 describe('SuperheroState', () => {
   test('inactive until activated; tick is a no-op while dormant', () => {
@@ -68,5 +73,26 @@ describe('SuperheroState', () => {
     const phase = HERO_POWERS.find((p) => p.id === 'phase')!; // cost 0.22
     expect(s.use(phase.cost)).toBe(true);
     expect(s.energy).toBeCloseTo(0.28, 5);
+  });
+
+  test('V41: control mode cycles autopilot → assist → manual → autopilot', () => {
+    const s = new SuperheroState();
+    expect(s.controlMode).toBe('autopilot'); // starts on autopilot — "go for the fun ride"
+    expect(s.cycleControl()).toBe('assist');
+    expect(s.cycleControl()).toBe('manual');
+    expect(s.cycleControl()).toBe('autopilot'); // wraps
+    expect(HERO_CONTROL_MODES).toEqual(['autopilot', 'assist', 'manual']);
+  });
+
+  test('V41: camera mode cycles orbit → third → first → orbit, and is in the view', () => {
+    const s = new SuperheroState();
+    expect(s.camMode).toBe('orbit');
+    expect(s.cycleCam()).toBe('third');
+    expect(s.cycleCam()).toBe('first');
+    expect(s.cycleCam()).toBe('orbit'); // wraps
+    expect(HERO_CAM_MODES).toEqual(['orbit', 'third', 'first']);
+    const v = s.view();
+    expect(v.controlMode).toBe('autopilot');
+    expect(v.camMode).toBe('orbit');
   });
 });

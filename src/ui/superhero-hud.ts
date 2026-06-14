@@ -60,6 +60,11 @@ const STYLE = `
 .cqm-hero-btn .c{color:#8fe0ff;margin-left:4px}
 .cqm-hero-btn.flash{background:rgba(150,110,255,.85);color:#fff}
 .cqm-hero-btn.alt{border-color:rgba(110,200,255,.45);color:#cdecff}
+.cqm-hero-dpad{display:grid;grid-template-columns:repeat(3,22px);gap:2px}
+.cqm-hero-pad{pointer-events:auto;width:22px;height:22px;display:grid;place-items:center;border:1px solid rgba(110,200,255,.4);
+  border-radius:5px;background:rgba(30,40,70,.55);color:#cdecff;font-size:11px;cursor:pointer;user-select:none;touch-action:none}
+.cqm-hero-pad:hover{background:rgba(50,70,120,.8)}
+.cqm-hero-pad:active{background:rgba(120,110,255,.85);color:#fff}
 `;
 
 function bar(
@@ -109,6 +114,8 @@ export class SuperheroHud {
   private readonly dots: Record<string, HTMLElement> = {};
   private readonly nameEl: HTMLElement;
   private readonly lvlEl: HTMLElement;
+  private pilotBtn!: HTMLElement; // V41: shows + cycles the control mode (autopilot/assist/manual)
+  private camBtn!: HTMLElement; // V41: shows + cycles the camera rig (orbit/3rd/1st)
   private active = false;
 
   constructor(doc: Document = document) {
@@ -199,17 +206,12 @@ export class SuperheroHud {
       pw.appendChild(b);
     }
     rowC.appendChild(pw);
-    for (const [label, ev] of [
-      ['VISION ▣', 'cqm:hero-vision'],
-      ['CAMERA ◉', 'cqm:hero-cam'],
-    ] as const) {
-      const b = doc.createElement('button');
-      b.type = 'button';
-      b.className = 'cqm-hero-btn alt';
-      b.textContent = label;
-      b.addEventListener('click', () => window.dispatchEvent(new CustomEvent(ev)));
-      rowC.appendChild(b);
-    }
+    // V41 — PILOT mode + VISION + CAMERA controls (the PILOT/CAM labels refresh each beat in update()).
+    this.pilotBtn = actionBtn(rowC, 'PILOT · AUTO', 'cqm:hero-mode', doc);
+    actionBtn(rowC, 'VISION ▣', 'cqm:hero-vision', doc);
+    this.camBtn = actionBtn(rowC, 'CAM · ORBIT', 'cqm:hero-cam', doc);
+    // V41 — on-screen D-pad for touch / click navigation (keyboard WASD/QE + arrows also fly the avatar).
+    buildDpad(rowC, doc);
     this.stats.world = stat(rowC, 'WORLD', doc);
     box.appendChild(rowC);
 
@@ -242,6 +244,9 @@ export class SuperheroHud {
     this.stats.plan!.textContent = v.plan;
     this.stats.wallet!.textContent = `${fmt(v.wallet.aurum)}·${fmt(v.wallet.umbra)}·${fmt(v.wallet.quanta)}·${fmt(v.wallet.ichor)}`;
     this.stats.world!.textContent = `${v.world.entities} ent · f${v.world.frame}`;
+    this.pilotBtn.textContent = 'PILOT · ' + v.controlMode.toUpperCase();
+    this.camBtn.textContent =
+      'CAM · ' + (v.camMode === 'orbit' ? 'ORBIT' : v.camMode === 'third' ? '3RD' : '1ST');
     this.dots.valence!.style.width = `${((v.emotion.valence + 1) / 2) * 100}%`;
     this.dots.arousal!.style.width = `${v.emotion.arousal * 100}%`;
     this.dots.dominance!.style.width = `${v.emotion.dominance * 100}%`;
@@ -254,6 +259,49 @@ export class SuperheroHud {
     b.fil.style.width = `${(f * 100).toFixed(0)}%`;
     b.num.textContent = label;
   }
+}
+
+/** A pill button that dispatches a window CustomEvent on click; returns it so labels can refresh. */
+function actionBtn(parent: HTMLElement, label: string, event: string, doc: Document): HTMLElement {
+  const b = doc.createElement('button');
+  b.type = 'button';
+  b.className = 'cqm-hero-btn alt';
+  b.textContent = label;
+  b.addEventListener('click', () => window.dispatchEvent(new CustomEvent(event)));
+  parent.appendChild(b);
+  return b;
+}
+
+/** V41 — a 6-way on-screen D-pad; press dispatches a held `cqm:hero-move` steer, release zeroes it. */
+function buildDpad(parent: HTMLElement, doc: Document): void {
+  const pad = doc.createElement('div');
+  pad.className = 'cqm-hero-dpad';
+  // row 1: strafe-left · forward · strafe-right   row 2: descend · back · ascend
+  const dirs: readonly [string, number, number, number, string][] = [
+    ['◀', -1, 0, 0, 'Strafe left'],
+    ['▲', 0, 0, 1, 'Forward'],
+    ['▶', 1, 0, 0, 'Strafe right'],
+    ['⤓', 0, -1, 0, 'Descend'],
+    ['▼', 0, 0, -1, 'Back'],
+    ['⤒', 0, 1, 0, 'Ascend'],
+  ];
+  const move = (x: number, y: number, z: number): void =>
+    void window.dispatchEvent(new CustomEvent('cqm:hero-move', { detail: { x, y, z } }));
+  for (const [glyph, x, y, z, title] of dirs) {
+    const b = doc.createElement('button');
+    b.type = 'button';
+    b.className = 'cqm-hero-pad';
+    b.textContent = glyph;
+    b.title = title;
+    b.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      move(x, y, z);
+    });
+    b.addEventListener('pointerup', () => move(0, 0, 0));
+    b.addEventListener('pointerleave', () => move(0, 0, 0));
+    pad.appendChild(b);
+  }
+  parent.appendChild(pad);
 }
 
 /** Compact human number for the wallet readout. */

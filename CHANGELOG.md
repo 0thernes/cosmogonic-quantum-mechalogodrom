@@ -13,6 +13,21 @@ the full gate (now also a coverage gate, on Linux + Windows) with same-seed dete
 
 ### Added
 
+- **SUPERHERO player controls — pilot the avatar, 1st/3rd-person (V41)** — the directive's game-controls
+  ask. After ACCESS GRANTED the player can now actually FLY the 2nd super creature. **Three pilot modes**
+  (`superhero-state.ts`, the "3 options"): **AUTOPILOT** (the creature's deep mind flies it — the fun
+  ride), **ASSIST** (it roams but your input nudges its heading), **MANUAL** (you fly it outright). A
+  **PILOT** button on the HUD cycles them. **Navigation**: keyboard (WASD/QE + arrow keys) and a new
+  **on-screen D-pad** (touch-friendly, 6-way) drive the avatar with **camera-relative** steering;
+  `super-body.ts` gains `setControl` (manual = your input is the heading + no quantum-teleport; assist =
+  blended nudge) plus `worldPosition`/`heading` accessors. **Camera**: the CAMERA button now cycles
+  **ORBIT → 3RD-PERSON (chase) → 1ST-PERSON (the creature's eyes)** — `world.updateHeroCamera` slaves the
+  cam to the avatar each frame while engaged. The HELP entry gained the control reference (the post-
+  unlock "secret" controls). **Verified headlessly** (the new `super-body-control` test, 4 cases:
+  manual flies the body along the steer, autopilot roams unaided, release coasts to a hover, no NaN in
+  any mode) — live frame-verification of the follow-cam was blocked this session by the preview
+  browser's WebGL-context exhaustion (a fresh canvas returns no GL context after many 50k loads; not a
+  code defect — to confirm on the GPU machine). +2 state tests. Full gate green (762 tests).
 - **50,000 entities by DEFAULT — the mega opt-in is dead (V40)** — the directive's "Fuck the Mega Tier
   Opt-in" mandate. `resolveTier` (`core/quality.ts`) now **auto-returns `mega` (50,000 entities)** for
   any capable machine (≥16 cores AND ≥8 GB reported memory — which implies a GPU that can carry it),
