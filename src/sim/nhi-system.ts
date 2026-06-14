@@ -11,7 +11,7 @@
  * single injected seeded {@link Rng} drives every mind, in a fixed id order.
  */
 import type { Rng } from '../math/rng';
-import { NhiMind, type NhiIntent, type NhiPercept } from './nhi';
+import { NhiMind, type NhiIntent, type NhiPercept, type NhiSnapshot } from './nhi';
 
 /** Alien voice alphabet (one syllable per Markov glyph state, 0..11) — the "unknown bizarre noises". */
 const VOICE = [
@@ -62,6 +62,16 @@ export class NhiSystem {
   /** Number of NHIs currently driven (telemetry). */
   get count(): number {
     return this.minds.size;
+  }
+
+  /** Ascending ids of the minds currently driven — the Observatory cycles focus through these. */
+  ids(): number[] {
+    return [...this.minds.keys()].sort((a, b) => a - b);
+  }
+
+  /** Live cognitive snapshot for NHI `id` (the 3×3 grid's data), or null if it isn't driven. */
+  snapshot(id: number): NhiSnapshot | null {
+    return this.minds.get(id)?.snapshot() ?? null;
   }
 
   /**

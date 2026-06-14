@@ -105,6 +105,60 @@ export interface NhiIntent {
   ownMove: number;
 }
 
+/**
+ * A read-only snapshot of an NHI's live cognitive state — the data the 3×3 Observatory grid draws.
+ * Every field is a real internal variable of {@link NhiMind.think}; nothing is decorative.
+ */
+export interface NhiSnapshot {
+  /** Fixed-at-birth personality, all 0..1. */
+  traits: {
+    narcissism: number;
+    aggression: number;
+    deceit: number;
+    hallucination: number;
+    volatility: number;
+  };
+  /** Running affect −1 (brooding) .. +1 (manic). */
+  mood: number;
+  /** Gene INPUT layer (5): energy, threat, crowding, chaos, mood. */
+  sensory: number[];
+  /** Gene HIDDEN layer firing (6). */
+  hidden: number[];
+  /** Gene OUTPUT layer firing (7 = one per action). */
+  output: number[];
+  /** Action utilities this beat (7) — the intention vector. */
+  scores: number[];
+  /** Cumulative regret per action (7) — the reward-gradient signal. */
+  regret: number[];
+  /** Episodic memory valence, oldest→newest. */
+  memory: number[];
+  /** Flattened gene weights (the topology edges). */
+  weights: number[];
+  /** Network dims for the topology view. */
+  dims: { in: number; hid: number; out: number };
+  /** GOAP world-model bits (F_SWARMED | F_DECEIVED | F_DOMINANT | F_FED). */
+  facts: number;
+  /** The action the current GOAP plan wants next, or −1. */
+  plannedAction: number;
+  /** The action actually chosen this beat. */
+  lastAction: number;
+  /** Distinct rival factions modeled. */
+  rivalCount: number;
+}
+
+/** GOAP fact-bit labels (index = bit) for the prediction view. */
+export const NHI_FACT_LABELS = ['SWARM', 'DECEIVE', 'DOMINATE', 'FED'] as const;
+/** Action labels (index = {@link NhiActionId}) for the intention + decision views. */
+export const NHI_ACTION_LABELS = [
+  'MANIP',
+  'DOMIN',
+  'SWARM',
+  'CAST',
+  'MIMIC',
+  'HUNT',
+  'BROOD',
+] as const;
+
 /** Per-rival bookkeeping for the iterated game (one persona per faction the NHI has met). */
 interface Rival {
   strategy: number;
@@ -151,6 +205,9 @@ export class NhiMind {
   private readonly geneHid = new Float32Array(GENE_HID);
   private readonly geneOut = new Float32Array(GENE_OUT);
   private mood = 0; // -1 brooding .. +1 manic
+  /** Telemetry/observatory only: the action chosen + GOAP-planned next on the latest think(). */
+  private lastAction = 0;
+  private lastPlanned = -1;
 
   /** Birth an NHI: roll personality, weave a unique alien voice + intuition gene. Consumes `rng`. */
   constructor(rng: Rng) {
@@ -236,10 +293,9 @@ export class NhiMind {
     // 3b. GOAP: plan the cheapest path to dominion and nudge the planned NEXT step's utility up, so
     //     the NHI runs a coherent multi-step scheme across beats rather than only reacting.
     const steps = goapPlan(this.facts, NHI_GOAL, NHI_GOAP, this.plan);
-    if (steps > 0) {
-      const planned = NHI_PLAN_ACTION[this.plan[0] ?? 0];
-      if (planned !== undefined) s[planned] = (s[planned] ?? 0) + 1.0;
-    }
+    const planned = steps > 0 ? (NHI_PLAN_ACTION[this.plan[0] ?? 0] ?? -1) : -1;
+    this.lastPlanned = planned;
+    if (planned >= 0) s[planned] = (s[planned] ?? 0) + 1.0;
 
     // 4. Choose: volatility + chaos raise the softmax temperature → wild, unpredictable picks; a calm,
     //    confident NHI is near-greedy. Occasionally regret-matching overrides for adaptivity.
@@ -255,6 +311,7 @@ export class NhiMind {
     else if (action === NhiAction.DOMINATE) this.facts |= F_DOMINANT;
     else if (action === NhiAction.HUNT) this.facts |= F_FED;
     if ((this.facts & NHI_GOAL) === NHI_GOAL) this.facts = 0;
+    this.lastAction = action;
     // Online regret update toward the greedy action (cheap, decaying).
     const greedy = utilityPick(s);
     const sg = s[greedy] ?? 0;
@@ -284,6 +341,38 @@ export class NhiMind {
       spawn,
       utterance,
       ownMove,
+    };
+  }
+
+  /**
+   * Read-only snapshot of the live cognitive state for the Observatory's 3×3 grid. Allocates a few
+   * small arrays per call — fine, as it runs on a slow cadence for one focused NHI, never in the hot
+   * decision path. Memory is returned oldest→newest so the timeline reads left-to-right.
+   */
+  snapshot(): NhiSnapshot {
+    const mem: number[] = [];
+    for (let k = this.memory.size - 1; k >= 0; k--) mem.push(this.memory.recent(k) ?? 0);
+    return {
+      traits: {
+        narcissism: this.narcissism,
+        aggression: this.aggression,
+        deceit: this.deceit,
+        hallucination: this.hallucination,
+        volatility: this.volatility,
+      },
+      mood: this.mood,
+      sensory: Array.from(this.geneIn),
+      hidden: Array.from(this.geneHid),
+      output: Array.from(this.geneOut),
+      scores: Array.from(this.scores),
+      regret: Array.from(this.cumRegret),
+      memory: mem,
+      weights: Array.from(this.gene.weights),
+      dims: { in: GENE_IN, hid: GENE_HID, out: GENE_OUT },
+      facts: this.facts,
+      plannedAction: this.lastPlanned,
+      lastAction: this.lastAction,
+      rivalCount: this.rivals.size,
     };
   }
 

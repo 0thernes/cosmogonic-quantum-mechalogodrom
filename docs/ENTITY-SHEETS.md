@@ -76,8 +76,9 @@ nash, market, lorenz`). They split, age, die (weather-tuned lifespan), and feed 
 - **Biology:** launched apex intelligences (`sim/nhi.ts`) — game theory, regret-matching, GOAP,
   memory grudges, a per-NHI alien Markov **voice**, and an inherited neural gene (`TinyMLP`).
 - **Behavior:** spawn mutated swarms, **play the nearest faction** (gather/pacify when cooperating,
-  scatter + Nash-gaslight when defecting), broadcast hallucinated utterances. _Goal: expose internal
-  neural/connectome activity in the Observatory (9-view 3×3 grid — queued)._
+  scatter + Nash-gaslight when defecting), broadcast hallucinated utterances. **Mind is now
+  inspectable (V15):** the ⊞ NEURAL Observatory shows a live 9-view 3×3 grid of its firing, topology,
+  memory, reward, sensory, intention, affect, prediction, and decision state.
 - **Silhouette:** an alien biomechanical red-eyed morphing body (`nhi-body.ts`).
 - **Material language:** unmistakable cyan NHI glow + subsurface menace.
 - **Animation grammar:** ethereal helix-weave float; morphing body; swarm summons.

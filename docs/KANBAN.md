@@ -40,10 +40,10 @@ behind the full gate (`bun run check`) and a commit.
 - 🟧 P1 `CREATURES-100` — 100 Shoggoths + 100 Puppeteers (desktop+; lights capped → shader-safe; lesser puppeteers deterministic, no rng). Verified 100/100 at `?tier=ultra`, glErr 0
 - 🟨 P2 `TIER-OVERRIDE` — `?tier=` boot override for QA across the quality ladder
 - 🟨 P2 `NATIVE-4K` — true 3840×2160 reliquary plate rendered (native, live physics, RTX 5070 Ti)
+- 🟧 P1 `NHI-OBSERVATORY` — per-NHI 9-view 3×3 connectome grid (firing · topology · memory · reward · sensory · intention · affect · prediction · decision), live + scientific, each bound to real `NhiMind` state. Verified: 3 NHIs, all 9 views painting
 
 ### 🚧 Next — V13/V14 directive backlog (user, 2026-06-14)
 
-- 🟧 P1 `NHI-OBSERVATORY` — per-NHI 9-view 3×3 connectome grid (firing · topology · memory · reward · sensory · intention · affect · prediction · decision), animated + scientific
 - 🟧 P1 `TITAN-DIPLOMACY` — alliances/pacts/rivalries/proxy-wars/trade-blocs/patron-client nets, coupled to economic wealth
 - 🟧 P1 `ECON-DEEPEN` — wallets for shoggoths/puppeteers/all entities; wealth drives behavior, war, migration, mutation, trust; black markets, cartels, auctions, sanctions, arbitrage
 - 🟧 P1 `CREATURES-SMART` — make the 100+100 smart/social/dangerous: perceive, remember, bargain, flee, hunt, deceive, trade, ally, mutate (counts shipped; behavior depth next)

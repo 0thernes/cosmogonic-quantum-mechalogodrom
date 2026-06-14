@@ -78,6 +78,7 @@ import { AudioEngine } from './audio/engine';
 import { AudioAnalysis, type AudioBands } from './audio/analysis';
 import { Hud } from './ui/hud';
 import { Observatory } from './ui/observatory';
+import { NhiObservatory } from './ui/nhi-observatory';
 import { TelemetryPanel, bindPanelToggles } from './ui/panels';
 import { InputSystem } from './ui/input';
 import type { AuditTrail } from './logging/audit';
@@ -142,6 +143,8 @@ export class World {
   // ── PANTHEON V3 systems (CONTRACTS V3) ──
   private readonly titans: TitanSystem;
   private readonly observatory: Observatory;
+  /** F-NHI V15: the self-building 3×3 neural-observatory panel for the focused NHI. */
+  private readonly nhiObs: NhiObservatory;
   /** Pool renderer; null on the phone tier (V1 per-mesh path — V3.1). */
   private readonly instanced: InstancedEntityRenderer | null;
   /** Total morphotypes minted at boot (250 in phylum mode). */
@@ -381,6 +384,7 @@ export class World {
     this.hud = new Hud();
     this.panel = new TelemetryPanel();
     this.observatory = new Observatory();
+    this.nhiObs = new NhiObservatory();
     bindPanelToggles();
     this.bindObservatoryTabs();
     this.bindAlgoPicker();
@@ -622,6 +626,10 @@ export class World {
     if (s.frame % obsCadence === 0) {
       this.observatory.push(this.snapshot());
       this.observatory.draw();
+      // F-NHI V15: feed the neural observatory the focused NHI's live cognitive snapshot.
+      const nids = this.nhi.ids();
+      const fid = nids.length ? (nids[this.nhiObs.focusIndex % nids.length] ?? nids[0] ?? -1) : -1;
+      this.nhiObs.update(fid >= 0 ? this.nhi.snapshot(fid) : null, { id: fid, count: nids.length });
     }
 
     // Pool mirror runs LAST — after every system that mutates entity visuals

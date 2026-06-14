@@ -13,6 +13,15 @@ the full gate (now also a coverage gate, on Linux + Windows) with same-seed dete
 
 ### Added
 
+- **NHI Neural Observatory (V15)** — a self-building inspection panel (`src/ui/nhi-observatory.ts`,
+  ⊞ NEURAL toggle) that opens a **3×3 grid of nine scientific diagrams** of a launched NHI's live
+  mind, ◀ ▶ to cycle through them: FIRING (the gene MLP's hidden+output activations), TOPOLOGY (the
+  actual 5→6→7 weight matrix as a node-link graph), MEMORY (the episodic ring), REWARD (cumulative
+  regret), SENSORY (the percept radar), INTENTION (the action-utility star), AFFECT (mood gauge +
+  traits), PREDICTION (the GOAP world-model + planned next step), DECISION (the softmax policy,
+  chosen vs greedy). Each view is bound to a REAL internal variable of `NhiMind.think` — nothing
+  decorative. New `NhiMind.snapshot()` + `NhiSystem.snapshot(id)`/`ids()` expose the cognitive state
+  (deterministic; +3 tests). Runtime-verified: 3 NHIs launched, all 9 views painting live data.
 - **100 Shoggoths + 100 Puppeteers (V14)** — the eldritch horde and the puppeteer cabal scale from 3
   to **100 each** on desktop+ (16 / 14 on phone for fill-rate). Point lights are capped at the first
   few of each (WebGL compiles the lighting loop per light, so the dynamic-light count stays bounded
