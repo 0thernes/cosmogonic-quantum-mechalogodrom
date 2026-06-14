@@ -40,6 +40,20 @@ the full gate (now also a coverage gate, on Linux + Windows) with same-seed dete
 - **Glass-jewel organism shading** + **flag-gated cinematic post-FX** (`?fx=1`: UnrealBloom + a
   procedural PMREM env-map, `core/postfx.ts`) — OFF by default and guarded, so the verified default
   render is never regressed by an unverified effect graph.
+- **Reliquary Surface (V12)** — a procedural carved-mineral jewel BRDF baked into the instanced-pool
+  shader (`sim/instanced-entities.ts`): a 3-octave object-space fBm engraves the _shading_ normal so
+  the six real point-lights rake honest relief across every organism, plus ornamental radiolaria-rib
+  striation, a worn-jewel roughness (polished crests / matte recesses), a dielectric-glass pull, amber
+  subsurface translucency that breathes with the audio bass, and thin-film iridescence riding the rim
+  + ridge crests (phase drifting with time + chaos). All real `f(objPos, normal, view, time, audio)` —
+  zero textures, deterministic, GPU-only, no per-entity CPU cost. Runtime-verified in the live preview.
+- **SPECIMEN camera view (V12, F-RELIQUARY)** — a 10th camera mode (`'specimen'`, append-only to
+  `VIEW_MODES`): a macro "specimen plate" tour that frames the live tracked organism huge on the
+  fog-void, slow-turntabling and auto-advancing every ~6 s, cutting (not gliding) between specimens so
+  the view reads as discrete studio plates — the direct in-engine answer to the NHI specimen reference.
+- **Dev-only inspection hook** (`window.__CQM__`, localhost-only) — exposes the live world/engine and a
+  manual `step()` so the preview/automation harness can drive frames + capture a backgrounded tab
+  (where `requestAnimationFrame` is throttled to ~0). Never attached on the deployed static site.
 - **ADR 0006** — the ASI graphics stack + the honest language verdict (GLSL now; Rust→WASM/WebGPU
   later; Python/C++ can't run client-side in a browser app).
 - **GitHub Pages CD** (`.github/workflows/pages.yml` + `scripts/build-pages.ts`) — builds and publishes

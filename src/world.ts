@@ -155,6 +155,8 @@ export class World {
   private camSubZ = 0;
   private camSubVX = 0;
   private camSubVZ = 0;
+  /** Tracked organism's mean scale (bounding radius proxy) — drives the macro SPECIMEN framing. */
+  private camSubR = 1;
 
   // ── Wildbeyond V2 systems (CONTRACTS V2) ──
   private readonly lore: LoreEngine;
@@ -738,6 +740,45 @@ export class World {
         cam.position.z += (sz + Math.sin(t * 0.08) * r - cam.position.z) * k;
         cam.lookAt(sx, sy, sz);
       }
+    } else if (mode === 'specimen') {
+      // F-RELIQUARY: a macro "specimen plate" tour — frame the live tracked organism huge and
+      // close on the dark fog-void, slow-turntabling, auto-advancing to a fresh specimen every
+      // ~6 s. Reuses resolveSubject (reads sim state, writes none → determinism-safe). The FogExp2
+      // already swallows the distant ecosystem at this range, so each jeweled organism reads alone
+      // like a studio plate — the direct answer to the NHI specimen reference.
+      const found = this.resolveSubject(t);
+      const sx = this.camSubX;
+      const sy = this.camSubY;
+      const sz = this.camSubZ;
+      if (!found) {
+        const r = 60 * ARENA_MID;
+        cam.position.set(Math.cos(t * 0.1) * r, 26 * ARENA_Y, Math.sin(t * 0.1) * r);
+        cam.lookAt(0, 6 * ARENA_Y, 0);
+      } else {
+        // Distance ≈ 2× the specimen radius so it subtends ~60° and fills the frame at the
+        // default FOV; a tight chase keeps the roaming organism locked + centered.
+        const r = Math.max(2.0, this.camSubR * 2.0);
+        const ang = t * 0.35; // slow turntable around the subject
+        const tx = sx + Math.cos(ang) * r;
+        const ty = sy + r * 0.22;
+        const tz = sz + Math.sin(ang) * r;
+        // When the subject advances to a new specimen (every ~6 s) it can be arena-distances away;
+        // gliding there would smear a wide transit shot across the plate. Instead CUT — snap to the
+        // new specimen's macro frame — so the view reads as discrete studio plates. Within a
+        // specimen, a tight lerp keeps the roaming organism centred.
+        const far =
+          Math.hypot(cam.position.x - tx, cam.position.y - ty, cam.position.z - tz) > r * 6;
+        if (far) {
+          cam.position.set(tx, ty, tz);
+        } else {
+          const k = Math.min(1, dt * 5);
+          cam.position.x += (tx - cam.position.x) * k;
+          cam.position.y += (ty - cam.position.y) * k;
+          cam.position.z += (tz - cam.position.z) * k;
+        }
+        cam.up.set(0, 1, 0);
+        cam.lookAt(sx, sy, sz);
+      }
     } else if (mode === 'cinematic') {
       // Slow grand drift across the whole arena (the wide, unhurried sibling of 'fly').
       const ct = t * 0.025;
@@ -784,6 +825,7 @@ export class World {
     this.camSubZ = p.z;
     this.camSubVX = e.userData.vel.x;
     this.camSubVZ = e.userData.vel.z;
+    this.camSubR = (e.scale.x + e.scale.y + e.scale.z) / 3;
     return true;
   }
 

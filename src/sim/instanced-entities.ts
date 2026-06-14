@@ -96,11 +96,27 @@ interface ShaderUniforms {
 }
 
 /**
- * Patch a pool material with the per-instance emissive+alpha attribute (V3.1) AND the V7-beyond
- * shader block: shared uniforms + a SIMULATION N(2) vertex-melt that displaces each instance
- * along its surface normal by a time+position+instance warp, gated on `uNightmare` (0 at N1 →
- * the branch is skipped → vertices untouched → byte-identical). Per-instance phase comes from
- * `gl_InstanceID` (WebGL2 built-in — no extra attribute). Pure GPU; zero per-entity CPU cost.
+ * Patch a pool material with the per-instance emissive+alpha attribute (V3.1), the V7-beyond
+ * shared-uniform block, the SIMULATION N(2) vertex-melt, AND the RELIQUARY SURFACE (V12) — a
+ * procedural carved-mineral jewel BRDF that gives every organism the ornate, 4K-detailed look of
+ * the NHI specimen plate without a single texture byte.
+ *
+ * The melt: displaces each instance along its surface normal by a time+position+instance warp,
+ * gated on `uNightmare` (0 at N1 → branch skipped → vertices untouched → byte-identical). Phase
+ * comes from `gl_InstanceID` (WebGL2 built-in — no extra attribute).
+ *
+ * The reliquary surface (fragment, ALWAYS on, every render mode):
+ * - A 3-octave value-noise fBm over OBJECT space (`vObjPos`) is a static engraving — its
+ *   tangent-plane gradient perturbs the *shading* normal BEFORE `<lights_fragment_begin>`, so the
+ *   six real point-lights carve the filigree honestly (this is relief, not a flat decal).
+ * - Groove self-shadowing (AO) darkens the diffuse in the engraved valleys for depth.
+ * - Amber SUBSURFACE translucency glows from the thin shell of the grooves, pulsing with `uBass`
+ *   (the cosmos hears itself sing and glows back — the philosophy's feedback law).
+ * - Thin-film IRIDESCENCE rides the fresnel rim + ridge crests, its phase drifting with `uTime`
+ *   and `uChaos`, so a turbulent cosmos shimmers hotter.
+ * - A crisp wet-glass rim glint seals the jewel read.
+ * All terms are real f(objPos, normal, view, time, audio) — deterministic, GPU-only, zero
+ * per-entity CPU cost. The exotic HOLOGRAM/IRIDESCENT modes still layer on top, unchanged.
  */
 function patchPoolMaterial(mat: THREE.MeshStandardMaterial, uniforms: ShaderUniforms): void {
   mat.onBeforeCompile = (shader) => {
@@ -112,12 +128,13 @@ function patchPoolMaterial(mat: THREE.MeshStandardMaterial, uniforms: ShaderUnif
     shader.vertexShader = shader.vertexShader
       .replace(
         '#include <common>',
-        '#include <common>\nattribute vec4 instEmissive;\nvarying vec4 vInstEmissive;\nuniform float uTime;\nuniform float uNightmare;',
+        '#include <common>\nattribute vec4 instEmissive;\nvarying vec4 vInstEmissive;\nvarying vec3 vObjPos;\nuniform float uTime;\nuniform float uNightmare;',
       )
       .replace(
         '#include <begin_vertex>',
         '#include <begin_vertex>\n' +
           'vInstEmissive = instEmissive;\n' +
+          'vObjPos = position;\n' +
           'if (uNightmare > 0.0) {\n' +
           '  float ph = float(gl_InstanceID) * 0.6180339887;\n' +
           '  float warp = sin(position.y * 8.0 + uTime * 3.0 + ph) * 0.5 + sin(position.x * 6.0 - uTime * 2.0 + ph) * 0.5;\n' +
@@ -125,41 +142,109 @@ function patchPoolMaterial(mat: THREE.MeshStandardMaterial, uniforms: ShaderUnif
           '}',
       );
     shader.fragmentShader = shader.fragmentShader
-      .replace(
-        '#include <common>',
-        '#include <common>\nvarying vec4 vInstEmissive;\nuniform float uTime;\nuniform float uBass;\nuniform float uMode;',
-      )
+      .replace('#include <common>', `#include <common>\n${RELIQUARY_FRAG_HEADER}`)
       .replace(
         'vec4 diffuseColor = vec4( diffuse, opacity );',
         'vec4 diffuseColor = vec4( diffuse, opacity * vInstEmissive.a );',
       )
-      .replace(
-        '#include <emissivemap_fragment>',
-        '#include <emissivemap_fragment>\n' +
-          '\ttotalEmissiveRadiance = vInstEmissive.rgb;\n' +
-          // Baseline glass-jewel sheen (ALWAYS on, every mode): a fresnel rim + crawling thin-film
-          // tint so every organism reads as a wet, translucent glass-amber jewel — the HD upgrade —
-          // layered UNDER the exotic modes below. Pure f(view, time); no texture, no sim coupling.
-          '\tfloat vfres = pow(1.0 - clamp(abs(dot(normalize(vNormal), normalize(vViewPosition))), 0.0, 1.0), 2.5);\n' +
-          '\tvec3 vfilm = 0.5 + 0.5 * cos(6.28318 * (vec3(1.0, 0.85, 0.7) * vfres + vec3(0.0, 0.18, 0.36) + uTime * 0.03));\n' +
-          '\ttotalEmissiveRadiance += vfilm * vfres * 0.22;\n' +
-          // Exotic shader render modes (V7-beyond): IRIDESCENT (6) = thin-film cosine-palette
-          // interference that crawls with view angle + time; HOLOGRAM (5) = fresnel rim + moving
-          // scanlines that pulse with the bass. Both real f(view, time) — no textures, no envMap.
-          '\tif (uMode > 5.5) {\n' +
-          '\t\tfloat ct = abs(dot(normalize(vNormal), normalize(vViewPosition)));\n' +
-          '\t\tvec3 irid = 0.5 + 0.5 * cos(6.28318 * (vec3(1.0,0.9,0.8) * ct + vec3(0.0,0.33,0.67) + uTime * 0.1));\n' +
-          '\t\ttotalEmissiveRadiance += irid * 0.4;\n' +
-          '\t\tdiffuseColor.rgb = mix(diffuseColor.rgb, irid, 0.6);\n' +
-          '\t} else if (uMode > 4.5) {\n' +
-          '\t\tfloat fres = pow(1.0 - clamp(abs(dot(normalize(vNormal), normalize(vViewPosition))), 0.0, 1.0), 3.0);\n' +
-          '\t\tfloat scan = 0.5 + 0.5 * sin(gl_FragCoord.y * 0.15 - uTime * 4.0);\n' +
-          '\t\ttotalEmissiveRadiance = (totalEmissiveRadiance + vec3(0.1, 0.45, 0.6)) * fres * scan * (1.0 + uBass);\n' +
-          '\t\tdiffuseColor.a *= clamp(fres + 0.2, 0.0, 1.0);\n' +
-          '\t}',
-      );
+      .replace('#include <roughnessmap_fragment>', RELIQUARY_FRAG_ROUGH)
+      .replace('#include <emissivemap_fragment>', RELIQUARY_FRAG_BODY);
   };
 }
+
+/**
+ * GLSL injected after the fragment `<common>` chunk: the per-instance/shared varyings+uniforms and
+ * a cheap value-noise fBm. `rqHash`→`rqNoise`→`rqFbm` is the standard hash-lattice gradient-free
+ * noise; 3 octaves is the measured cost/detail sweet spot for the small on-screen footprint of a
+ * pooled organism. Defined at file scope so prettier/oxlint format it once, not per-build.
+ */
+const RELIQUARY_FRAG_HEADER = /* glsl */ `
+varying vec4 vInstEmissive;
+varying vec3 vObjPos;
+uniform float uTime;
+uniform float uBass;
+uniform float uChaos;
+uniform float uMode;
+#define RQ_OCTAVES 3
+float rqHash(vec3 p){ p = fract(p * 0.3183099 + 0.1); p *= 17.0; return fract(p.x * p.y * p.z * (p.x + p.y + p.z)); }
+float rqNoise(vec3 x){
+  vec3 i = floor(x); vec3 f = fract(x); f = f * f * (3.0 - 2.0 * f);
+  return mix(mix(mix(rqHash(i + vec3(0,0,0)), rqHash(i + vec3(1,0,0)), f.x),
+                 mix(rqHash(i + vec3(0,1,0)), rqHash(i + vec3(1,1,0)), f.x), f.y),
+             mix(mix(rqHash(i + vec3(0,0,1)), rqHash(i + vec3(1,0,1)), f.x),
+                 mix(rqHash(i + vec3(0,1,1)), rqHash(i + vec3(1,1,1)), f.x), f.y), f.z);
+}
+float rqFbm(vec3 p){ float a = 0.5, s = 0.0; for (int i = 0; i < RQ_OCTAVES; i++){ s += a * rqNoise(p); p *= 2.02; a *= 0.5; } return s; }
+`;
+
+/**
+ * GLSL replacing the fragment `<roughnessmap_fragment>` chunk: evaluate the carved-mineral relief
+ * field ONCE here (it needs only `vObjPos`, not the normal) and reuse it downstream. The fBm is
+ * sharpened into ornamental radiolaria-style ribs (`rqDetail`), then drives a worn-jewel roughness
+ * BRDF — polished crests (low roughness → sharp glints), matte recesses (high roughness). `rqN0`,
+ * `rqGrad`, `rqDetail` survive in `main()` scope for {@link RELIQUARY_FRAG_BODY}.
+ */
+const RELIQUARY_FRAG_ROUGH = /* glsl */ `#include <roughnessmap_fragment>
+	vec3 rqQ = vObjPos * 6.0;
+	float rqE = 0.085;
+	float rqN0 = rqFbm(rqQ);
+	float rqNx = rqFbm(rqQ + vec3(rqE, 0.0, 0.0));
+	float rqNy = rqFbm(rqQ + vec3(0.0, rqE, 0.0));
+	float rqNz = rqFbm(rqQ + vec3(0.0, 0.0, rqE));
+	vec3 rqGrad = vec3(rqNx - rqN0, rqNy - rqN0, rqNz - rqN0) / rqE;
+	// Ornamental ribbing: concentric striation (radiolaria ribs) blended into the fBm so detail
+	// concentrates into vein-like ridges instead of pure mottle.
+	float rqRib = 0.5 + 0.5 * sin(length(vObjPos) * 18.0 + rqN0 * 6.2831853);
+	float rqDetail = mix(rqN0, rqRib, 0.28);
+	// Worn-jewel roughness: crests polish to a wet glint, recesses stay matte.
+	roughnessFactor = clamp(mix(0.55, 0.12, smoothstep(0.45, 0.95, rqDetail)), 0.05, 1.0);`;
+
+/**
+ * GLSL replacing the fragment `<emissivemap_fragment>` chunk: the reliquary surface proper, reusing
+ * the relief field from {@link RELIQUARY_FRAG_ROUGH}. Engraves `normal` (→ carved by the real
+ * lights), pulls `metalnessFactor` toward dielectric glass, sinks an amber translucency into the
+ * grooves, and rides thin-film interference along the crests/rim — then the exotic
+ * HOLOGRAM/IRIDESCENT mode layer (unchanged). All mutate state before `<lights_fragment_begin>`.
+ */
+const RELIQUARY_FRAG_BODY = /* glsl */ `#include <emissivemap_fragment>
+	totalEmissiveRadiance = vInstEmissive.rgb;
+	vec3 rqV = normalize(vViewPosition);
+	// Engrave the relief into the shading normal so the six point-lights carve it honestly.
+	vec3 rqTang = rqGrad - dot(rqGrad, normal) * normal;
+	vec3 rqN = normalize(normal - rqTang * 0.5);
+	normal = rqN;
+	// Pull toward a dielectric glass-jewel (away from the pool's 0.5 metalness compromise).
+	metalnessFactor = mix(metalnessFactor, 0.08, 0.55);
+	// Groove self-shadow + warm amber settling into the recesses.
+	float rqAO = mix(0.45, 1.05, smoothstep(0.12, 0.85, rqDetail));
+	diffuseColor.rgb *= rqAO;
+	float rqValley = 1.0 - smoothstep(0.3, 0.7, rqN0);
+	diffuseColor.rgb = mix(diffuseColor.rgb, diffuseColor.rgb * vec3(1.25, 0.85, 0.5), rqValley * 0.35);
+	float rqRidge = smoothstep(0.6, 0.97, rqDetail);
+	float rqFres = pow(1.0 - clamp(abs(dot(rqN, rqV)), 0.0, 1.0), 3.0);
+	// Amber subsurface translucency from the thin grooves, breathing with the bass.
+	vec3 rqSSS = diffuseColor.rgb * vec3(1.7, 1.0, 0.55);
+	float rqThin = 1.0 - rqN0;
+	float rqBack = pow(1.0 - clamp(dot(rqN, rqV), 0.0, 1.0), 1.5) * rqThin;
+	totalEmissiveRadiance += rqSSS * rqBack * (0.28 + 0.32 * uBass);
+	// Thin-film interference riding the rim + ridge crests, phase drifting with time + chaos.
+	vec3 rqFilm = 0.5 + 0.5 * cos(6.2831853 * (vec3(1.0, 0.85, 0.7) * rqFres * 2.2
+		+ vec3(0.0, 0.18, 0.36) + rqDetail * 1.5 + uTime * 0.04 + uChaos * 0.015));
+	totalEmissiveRadiance += rqFilm * (rqFres * 0.38 + rqRidge * 0.26);
+	// Wet-glass rim glint.
+	totalEmissiveRadiance += vec3(0.95, 0.98, 1.0) * pow(rqFres, 1.4) * 0.14;
+	// Exotic render modes layer on top (V7-beyond, unchanged).
+	if (uMode > 5.5) {
+		float ct = abs(dot(normalize(vNormal), rqV));
+		vec3 irid = 0.5 + 0.5 * cos(6.28318 * (vec3(1.0,0.9,0.8) * ct + vec3(0.0,0.33,0.67) + uTime * 0.1));
+		totalEmissiveRadiance += irid * 0.4;
+		diffuseColor.rgb = mix(diffuseColor.rgb, irid, 0.6);
+	} else if (uMode > 4.5) {
+		float fres = pow(1.0 - clamp(abs(dot(normalize(vNormal), rqV)), 0.0, 1.0), 3.0);
+		float scan = 0.5 + 0.5 * sin(gl_FragCoord.y * 0.15 - uTime * 4.0);
+		totalEmissiveRadiance = (totalEmissiveRadiance + vec3(0.1, 0.45, 0.6)) * fres * scan * (1.0 + uBass);
+		diffuseColor.a *= clamp(fres + 0.2, 0.0, 1.0);
+	}`;
 
 /**
  * Owns the InstancedMesh pools and the per-frame mirror pass. Construct once in

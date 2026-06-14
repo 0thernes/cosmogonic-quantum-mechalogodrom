@@ -50,6 +50,24 @@ log.info('boot', {
   maxEntities: quality.maxEntities,
 });
 
+// Dev-only inspection hook (localhost / 127.0.0.1 ONLY — never on the deployed
+// static site, so production carries no global). Exposes the live world/engine so
+// the preview + automation harness can DRIVE frames and introspect a backgrounded
+// tab, where the browser throttles requestAnimationFrame to ~0 Hz and the sim would
+// otherwise sit frozen at frame 0. `step()` advances + renders exactly one frame on
+// demand; the rest are read handles. In-spirit with the engine's observability ethos.
+if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
+  (window as unknown as { __CQM__: unknown }).__CQM__ = {
+    world,
+    engine,
+    renderer: engine.renderer,
+    scene: engine.scene,
+    camera: engine.camera,
+    THREE,
+    step: (dt = 1 / 60): void => world.step(dt),
+  };
+}
+
 // rAF-timestamp delta; world.step clamps to 50ms so tab-switch gaps are safe.
 // The first callback's timestamp can precede a performance.now() taken at
 // module eval, so dt is floored at 0 to keep the very first frame sane.

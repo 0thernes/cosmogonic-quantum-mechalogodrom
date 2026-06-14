@@ -38,12 +38,15 @@ describe('F-RENDER-DYN — render-mode dynamics table', () => {
 });
 
 describe('F-CAM5 — motion camera views', () => {
-  test('keeps the four legacy views first, then appends five motion views', () => {
+  test('keeps the four legacy views first, then appends the motion + reliquary views', () => {
     expect([...VIEW_MODES].slice(0, 4)).toEqual(['free', 'orbit', 'fly', 'top']);
-    expect(VIEW_MODES.length).toBe(9);
-    expect(new Set(VIEW_MODES).size).toBe(9);
+    expect(VIEW_MODES.length).toBe(10);
+    expect(new Set(VIEW_MODES).size).toBe(10);
+    // F-RELIQUARY appends the macro specimen-plate view at the end (append-only: persisted viewIdx
+    // must keep pointing at the same mode it always did).
+    expect(VIEW_MODES[VIEW_MODES.length - 1]).toBe('specimen');
     const views: readonly string[] = VIEW_MODES;
-    for (const m of ['follow', 'chase', 'cinematic', 'vortex', 'titan']) {
+    for (const m of ['follow', 'chase', 'cinematic', 'vortex', 'titan', 'specimen']) {
       expect(views).toContain(m);
     }
   });

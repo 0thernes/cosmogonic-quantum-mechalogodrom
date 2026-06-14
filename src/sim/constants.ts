@@ -115,6 +115,7 @@ export const VIEW_MODES = [
   'cinematic', // slow grand drift across the whole arena
   'vortex', // descending spiral around the world axis
   'titan', // wide tracking shot of a roaming titan/large being
+  'specimen', // F-RELIQUARY: macro "specimen plate" tour of live organisms on the fog-void
 ] as const;
 
 /** One of the camera view modes (4 legacy + 5 motion). */
