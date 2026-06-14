@@ -36,17 +36,19 @@ behind the full gate (`bun run check`) and a commit.
 - 🟧 P1 `V13-HUD` — bottom-right View/Speed/Render box (non-overlapping) + NHI telemetry tally — _1cfe189_
 - 🟧 P1 `NATIVE-ENGINE` — C++20/OpenGL SDF ray-marcher, GLFW+GLM, MinGW GCC 16.1, rendered on RTX 5070 Ti; unified amber jewel plate — _17fa52f, 1178c0f_
 - 🟥 P0 `NATIVE-PHYSICS` — **LIVE** impulse rigid-body solver (gravity well, sphere collisions + restitution + friction-spin, quaternion tumbling), active by default, drives the render — _6f5daa9_
-- 🟨 P2 `DOCS-V13` — ADR-0007, ENTITY-SHEETS, ERD economy/physics, this board — _(in this commit)_
+- 🟨 P2 `DOCS-V13` — ADR-0007, ENTITY-SHEETS, ERD economy/physics, this board
+- 🟧 P1 `CREATURES-100` — 100 Shoggoths + 100 Puppeteers (desktop+; lights capped → shader-safe; lesser puppeteers deterministic, no rng). Verified 100/100 at `?tier=ultra`, glErr 0
+- 🟨 P2 `TIER-OVERRIDE` — `?tier=` boot override for QA across the quality ladder
+- 🟨 P2 `NATIVE-4K` — true 3840×2160 reliquary plate rendered (native, live physics, RTX 5070 Ti)
 
-### 🚧 Next — V13 directive backlog (user, 2026-06-14)
+### 🚧 Next — V13/V14 directive backlog (user, 2026-06-14)
 
 - 🟧 P1 `NHI-OBSERVATORY` — per-NHI 9-view 3×3 connectome grid (firing · topology · memory · reward · sensory · intention · affect · prediction · decision), animated + scientific
 - 🟧 P1 `TITAN-DIPLOMACY` — alliances/pacts/rivalries/proxy-wars/trade-blocs/patron-client nets, coupled to economic wealth
 - 🟧 P1 `ECON-DEEPEN` — wallets for shoggoths/puppeteers/all entities; wealth drives behavior, war, migration, mutation, trust; black markets, cartels, auctions, sanctions, arbitrage
-- 🟧 P1 `CREATURES-100` — 100 Shoggoths + 100 Puppeteers (instanced for the light cap; smarter/social/reactive/dangerous)
+- 🟧 P1 `CREATURES-SMART` — make the 100+100 smart/social/dangerous: perceive, remember, bargain, flee, hunt, deceive, trade, ally, mutate (counts shipped; behavior depth next)
 - 🟧 P1 `AI-REPAIR` — Copilot offline: diagnostics + failure reason + restart controls + recovery pipeline
 - 🟨 P2 `JOLT-ON` — flip Jolt Physics ON as the default native backend (fracture, mass, inertia, crowd)
-- 🟨 P2 `NATIVE-4K` — render true 3840×2160 plates (native)
 - 🟨 P2 `DOCS-SYNC` — keep README/Docs/Specs/ERD/Architecture/Kanban current every increment (standing card)
 
 ### 📥 Backlog (unscheduled)

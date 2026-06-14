@@ -34,8 +34,9 @@ nash, market, lorenz`). They split, age, die (weather-tuned lifespan), and feed 
 
 - **Biology:** deformed icosahedron cores studded with 7–11 blinking ocular points, trailing tendrils.
 - **Behavior:** drift on lorenz-flavored currents; grid-query neighbors (r≈15) and **consume** them,
-  respawning corrupted offspring. Tugged by active singularities. \_Goal: 100 of them, smart + social
-  - dangerous — perceive, remember, bargain, flee, hunt, deceive (queued: instanced, lighter per-unit).\_
+  respawning corrupted offspring. Tugged by active singularities. **Count: 100 (V14)** on desktop+
+  (16 on phone) — lights capped to the first 4, the bulk glow emissive. _Next: smart/social/dangerous
+  — perceive, remember, bargain, flee, hunt, deceive._
 - **Silhouette:** lumpen, asymmetric, writhing — the antithesis of the jewel specimens.
 - **Material language:** dark, wet, glistening; emissive eyes; tendril line-segments.
 - **Animation grammar:** roiling drift + tendril whip + eye-blink flicker; consumption lunges.
@@ -47,7 +48,9 @@ nash, market, lorenz`). They split, age, die (weather-tuned lifespan), and feed 
 - **Biology:** named NPC powers (KRONOS, SELENE, …) that never appear as bodies; they act _through_
   the world. Each thinks with a **different** brain technique (FSM / utility / Markov / GOAP).
 - **Behavior:** KRONOS **remorphs** ≤30 entities per trigger; SELENE selects weather; others tune
-  fields. They emit audit events + lore-named toasts. _Goal: 100, reactive/adaptive/deceptive._
+  fields. They emit audit events + lore-named toasts. **Count: 100 (V14)** — the 3 named heroes keep
+  their roles + lights; the 97 lesser WRAITH-_n_ hands reshape on long staggered intervals (a
+  deterministic golden-angle layout, no rng). _Next: reactive/adaptive/deceptive bargaining._
 - **Silhouette:** none (disembodied) — felt as toasts, weather shifts, mass remorphs.
 - **Material language:** their signature is in the world's _changes_, not a mesh.
 - **Animation grammar:** punctuated interventions, not continuous motion.

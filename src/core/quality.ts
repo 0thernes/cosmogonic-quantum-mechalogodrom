@@ -95,6 +95,13 @@ export function resolveTier(isMobile: boolean, cores: number, memGB: number): Qu
  * cores they report.
  */
 export function detectQuality(): QualityProfile {
+  // Dev/QA override: `?tier=phone|laptop|desktop|ultra` forces a tier at boot (decided once, like
+  // the auto path). Lets a desktop browser preview the phone path — and a touch-emulating preview
+  // (which auto-detects 'phone') exercise the full desktop/ultra population. Absent → auto-detect.
+  const forced = new URLSearchParams(window.location.search).get('tier');
+  if (forced === 'phone' || forced === 'laptop' || forced === 'desktop' || forced === 'ultra') {
+    return { tier: forced, isMobile: forced === 'phone', ...QUALITY_LADDER[forced] };
+  }
   const isTouch = window.matchMedia('(hover:none),(pointer:coarse)').matches;
   const isSmall = window.innerWidth < 600 || window.innerHeight < 600;
   const isMobile = isTouch || isSmall;

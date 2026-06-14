@@ -13,6 +13,17 @@ the full gate (now also a coverage gate, on Linux + Windows) with same-seed dete
 
 ### Added
 
+- **100 Shoggoths + 100 Puppeteers (V14)** — the eldritch horde and the puppeteer cabal scale from 3
+  to **100 each** on desktop+ (16 / 14 on phone for fill-rate). Point lights are capped at the first
+  few of each (WebGL compiles the lighting loop per light, so the dynamic-light count stays bounded
+  and the fragment shader is byte-identical at any population); the bulk glow by emissive + bloom.
+  The 97 lesser puppeteers use a deterministic golden-angle layout (no rng → the seeded stream is
+  untouched). Runtime-verified at `?tier=ultra`: 100/100, no shader error (glErr 0), 10k-entity world.
+- **`?tier=phone|laptop|desktop|ultra` quality override** (`core/quality.ts`) — a boot-time dev/QA
+  hook so a desktop browser can preview the phone path, and a touch-emulating preview can exercise
+  the full desktop/ultra population. Absent → the auto-detect ladder is unchanged.
+- **True 4K plate (native)** — the C++ engine renders a 3840×2160 reliquary plate
+  (`cqm_native.exe --shot --w3840x2160`) with live rigid-body physics on the RTX 5070 Ti.
 - **`docs/CONTROLS.md`** — a complete control reference (mouse, keyboard hotkeys incl. `G`/`N`/`H`,
   touch, every bottom-panel button, and the 9 camera views).
 - **Bottom-panel buttons** for SPACE, ENTROPY, and LAUNCH NHI (the Wave 1-2 controls were previously

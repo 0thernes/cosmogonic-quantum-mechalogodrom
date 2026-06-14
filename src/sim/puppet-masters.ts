@@ -117,41 +117,56 @@ export class PuppetMasterSystem {
   private readonly onEvent: (e: PuppetEvent) => void;
   private readonly pms: Puppet[] = [];
 
-  /** Builds AETHON/SELENE/KRONOS meshes (tetra core + torus ring + point light). */
+  /**
+   * Builds the puppeteer cabal (CONTRACTS V14: 100 on desktop+, 14 on phone). The 3 named heroes
+   * (AETHON/SELENE/KRONOS) keep their original roles + point lights; the rest are lesser hands laid
+   * out by a deterministic golden-angle pattern (no rng), each reshaping the world on a long stagger.
+   */
   constructor(ctx: SimContext, entities: EntityManager, onEvent: (e: PuppetEvent) => void) {
     this.ctx = ctx;
     this.entities = entities;
     this.onEvent = onEvent;
-    for (const cfg of CONFIGS) {
-      const mat = new THREE.MeshStandardMaterial({
-        color: new THREE.Color().setHSL(cfg.hue, 0.8, 0.3),
-        emissive: new THREE.Color().setHSL(cfg.hue, 0.9, 0.15),
-        emissiveIntensity: 2,
+    const count = ctx.quality.isMobile ? PUPPET_COUNT_MOBILE : PUPPET_COUNT_DESKTOP;
+    for (let i = 0; i < count; i++) {
+      const cfg = i < CONFIGS.length ? CONFIGS[i]! : lesserConfig(i - CONFIGS.length);
+      this.addPuppet(cfg, i < LIT_PUPPETS);
+    }
+  }
+
+  /** Build one puppeteer (tetra core + torus ring; a point light only on the first LIT_PUPPETS). */
+  private addPuppet(cfg: PuppetConfig, lit: boolean): void {
+    const ctx = this.ctx;
+    const mat = new THREE.MeshStandardMaterial({
+      color: new THREE.Color().setHSL(cfg.hue, 0.8, 0.3),
+      emissive: new THREE.Color().setHSL(cfg.hue, 0.9, 0.15),
+      emissiveIntensity: 2,
+      transparent: true,
+      opacity: 0.6,
+      side: THREE.DoubleSide,
+    });
+    const mesh = new THREE.Mesh(new THREE.TetrahedronGeometry(1.5, 1), mat);
+    const ring = new THREE.Mesh(
+      new THREE.TorusGeometry(2.5, 0.08, 6, 32),
+      new THREE.MeshBasicMaterial({
+        color: new THREE.Color().setHSL(cfg.hue, 0.9, 0.5),
         transparent: true,
-        opacity: 0.6,
-        side: THREE.DoubleSide,
-      });
-      const mesh = new THREE.Mesh(new THREE.TetrahedronGeometry(1.5, 1), mat);
-      const ring = new THREE.Mesh(
-        new THREE.TorusGeometry(2.5, 0.08, 6, 32),
-        new THREE.MeshBasicMaterial({
-          color: new THREE.Color().setHSL(cfg.hue, 0.9, 0.5),
-          transparent: true,
-          opacity: 0.3,
-        }),
-      );
-      ring.rotation.x = Math.PI / 2;
-      mesh.add(ring);
-      const light = new THREE.PointLight(
+        opacity: 0.3,
+      }),
+    );
+    ring.rotation.x = Math.PI / 2;
+    mesh.add(ring);
+    let light: THREE.PointLight | undefined;
+    if (lit) {
+      light = new THREE.PointLight(
         new THREE.Color().setHSL(cfg.hue, 0.9, 0.5),
         3 * POINT_LIGHT_GAIN,
         25,
         0, // legacy r128 falloff model — see LEGACY_LIGHT_GAIN in environment.ts
       );
       mesh.add(light);
-      ctx.scene.add(mesh);
-      this.pms.push({ cfg, mesh, mat, ring, light, ti: 0 });
     }
+    ctx.scene.add(mesh);
+    this.pms.push({ cfg, mesh, mat, ring, light, ti: 0 });
   }
 
   /** Number of puppet masters (constant 3 — feeds the telemetry `puppeteers` field). */
@@ -178,7 +193,8 @@ export class PuppetMasterSystem {
       pm.mesh.rotation.x += dt * 0.5;
       pm.mesh.rotation.y += dt * 0.7;
       pm.ring.rotation.z = t * 2;
-      pm.light.intensity = (2 + Math.sin(t * 3 + cfg.hue * 20) * 1.5) * POINT_LIGHT_GAIN;
+      if (pm.light)
+        pm.light.intensity = (2 + Math.sin(t * 3 + cfg.hue * 20) * 1.5) * POINT_LIGHT_GAIN;
       pm.mat.emissiveIntensity = 1.5 + Math.sin(t * 2 + cfg.hue * 15) * 0.8;
       pm.ti += dt * 30;
       if (pm.ti >= cfg.iv) {
