@@ -12,6 +12,8 @@ import { createLogger } from './logging/logger';
 import { World } from './world';
 // Copilot side-chat (CONTRACTS V9): self-mounting read-only AI panel. UI shell — never touches sim.
 import './ui/copilot';
+// Access terminal (V34): self-mounting cryptographic puzzle that gates the 2nd super creature.
+import './ui/access-puzzle';
 
 // Legacy r128 color fidelity: the original rendered without color management;
 // disable it BEFORE any THREE.Color is constructed (audit finding, 0.2.1).

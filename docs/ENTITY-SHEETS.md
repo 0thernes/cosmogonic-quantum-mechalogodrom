@@ -123,8 +123,11 @@ Oracle / Architect — half a Titan in size but ~100× its power._
   ACTS on 8 drives. It carries an **emotion-like state** (valence / arousal / dominance EMA), an
   **episodic memory**, a **prediction loop** (forecast → SURPRISE → arousal), **GOAP-style planning**
   (commits to HUNT / FLEE / DOMINATE / DECEIVE / SPAWN / EXPLORE / REST), and **self-replicates** up to
-  3 mutated twins when sated + dominant. _Next: vision/sound from real world queries; manipulation of
-  lesser entities; the access-puzzle-gated 2nd super creature + SUPERHERO player mode._
+  3 mutated twins when sated + dominant. The **2nd super creature is unlocked (V34)** by solving the
+  ⛓ ACCESS cryptographic puzzle ("only the Romans know" — the seed `3455456754` read as Roman
+  line-counts); ACCESS GRANTED releases a mutated twin (`ARCHITECT-Ω·twin1`) with its own deep mind +
+  apex purse + a god-jewel body standing apart from the prime. _Next: full SUPERHERO player mode;
+  vision/sound from real world queries; manipulation of lesser entities._
 - **Silhouette (V32, `sim/super-body.ts`):** a freakish many-eyed colossus — a faceted crystalline
   CORE (R≈6, ½-Titan class) wrapped in a wireframe ARCHITECTURE cage, ringed by a corona of **16
   glowing EYES** (iris + void pupil), stabbed through by **11 radial SPIKE-ARMS**, and orbited by **3

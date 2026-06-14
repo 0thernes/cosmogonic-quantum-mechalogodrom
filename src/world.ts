@@ -158,6 +158,11 @@ export class World {
   private readonly superPanel: SuperPanel;
   private readonly superBody: SuperBodySystem;
   private readonly superRng: Rng;
+  private readonly superScene: THREE.Scene;
+  // F-SUPER V34: the 2nd super creature (puzzle-gated twin) + its body — null until ACCESS GRANTED.
+  private superHero: SuperCreature | null = null;
+  private superBody2: SuperBodySystem | null = null;
+  private superheroUnlocked = false;
   /** Pool renderer; null on the phone tier (V1 per-mesh path — V3.1). */
   private readonly instanced: InstancedEntityRenderer | null;
   /** Total morphotypes minted at boot (250 in phylum mode). */
@@ -449,6 +454,13 @@ export class World {
     this.economy.register(World.ECON_SUPER_BASE, this.superCreature.name, 20, this.superRng);
     // F-SUPER V32: the masterful many-eyed apex BODY (god-jewel shader) — additive, draws no rng.
     this.superBody = new SuperBodySystem(ctx.scene);
+    this.superScene = ctx.scene;
+    // F-SUPER V34: the access puzzle (ui/access-puzzle.ts) fires this once when solved → reveal #2.
+    if (typeof window !== 'undefined') {
+      window.addEventListener('cqm:superhero-unlock', () => this.revealSecondSuper(), {
+        once: true,
+      });
+    }
     bindPanelToggles();
     this.bindObservatoryTabs();
     this.bindAlgoPicker();
@@ -588,6 +600,7 @@ export class World {
     this.leviathans.update(dt, t);
     // F-SUPER V32: animate the apex body every frame from the sim clock + last-folded mind state.
     this.superBody.update(t, dt);
+    this.superBody2?.update(t, dt); // F-SUPER V34: the puzzle-gated 2nd creature, once revealed
     this.cosmicWeb.update(t); // V11: far-field cosmic-web shimmer (additive backdrop, no rng)
     this.goldLattice.update(t); // V11: floating gold architecture tumble (additive, no rng)
     this.quantumLattice.update(t); // V11: neon sacred-geometry shells (additive, no rng)
@@ -776,9 +789,33 @@ export class World {
         }
       }
       for (const tw of this.superTwins) tw.think(percept); // twins reason with their own minds
+      if (this.superHero && this.superBody2) this.superBody2.setMind(this.superHero.snapshot());
     } catch {
       /* an apex beat misbehaved — skip it, keep the world running */
     }
+  }
+
+  /**
+   * F-SUPER V34: ACCESS GRANTED — the cryptographic puzzle was solved, so release the SECOND super
+   * creature: sire a mutated twin (its own deep mind), enrol its apex purse, and give it a masterful
+   * body that stands apart from the prime. Idempotent. Draws from the SUPER sub-stream, so the main
+   * determinism golden is untouched. Guarded indirectly (the caller is a one-shot window listener).
+   */
+  private revealSecondSuper(): void {
+    if (this.superheroUnlocked) return;
+    this.superheroUnlocked = true;
+    const twin = this.superCreature.maybeSpawn(this.superRng);
+    if (!twin) return; // prime already at the twin cap (rare) — flag set, nothing to reveal
+    this.superTwins.push(twin);
+    this.superHero = twin;
+    this.economy.register(
+      World.ECON_SUPER_BASE + this.superTwins.length,
+      twin.name,
+      20,
+      this.superRng,
+    );
+    this.superBody2 = new SuperBodySystem(this.superScene, { x: -20, y: 13, z: -6 });
+    this.hud.showSector(`⛓ ACCESS GRANTED · ${twin.name} RELEASED`);
   }
 
   /**

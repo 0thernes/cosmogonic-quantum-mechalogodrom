@@ -118,7 +118,8 @@ export class SuperBodySystem {
   private readonly move = new THREE.Vector3();
   private readonly anchor = new THREE.Vector3(0, 12, 0);
 
-  constructor(scene: THREE.Scene) {
+  constructor(scene: THREE.Scene, anchor?: { x: number; y: number; z: number }) {
+    if (anchor) this.anchor.set(anchor.x, anchor.y, anchor.z); // 2nd creature stands apart (V34)
     scene.add(this.root);
     this.root.position.copy(this.anchor);
 

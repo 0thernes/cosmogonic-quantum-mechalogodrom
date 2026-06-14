@@ -13,6 +13,22 @@ the full gate (now also a coverage gate, on Linux + Windows) with same-seed dete
 
 ### Added
 
+- **The ACCESS PUZZLE — a cryptographic gate to the 2nd super creature (V34)** — the directive's
+  flagship interactive feature. A self-mounting **⛓ ACCESS** terminal (`ui/access-puzzle.ts`) opens a
+  CIA/NSA/alien CRT modal: **ten shimmering cipher lines whose tally-mark counts ARE the seed
+  `3455456754`**, a flashing **ACCESS DENIED** banner that rotates through **100 languages**, and an
+  alien glyph field that **re-scrambles every 5 seconds**. "Only the Romans know": the solver counts
+  each line and speaks it in Roman numerals (I–X) → `III IV V V IV V VI VII V IV`. The check is the
+  DOM-free, **unit-tested** `ui/access-code.ts` (`checkAccessCode` accepts the Roman reading in any
+  spacing/case, or the raw digits as a kinder fallback; +5 tests). On the correct answer it shows
+  **ACCESS GRANTED** and dispatches `cqm:superhero-unlock`; the world's one-shot listener **releases the
+  SECOND super creature** — a mutated twin with its own 1444-param deep mind + apex purse + a masterful
+  god-jewel body that stands apart from the prime (own SUPER rng sub-stream → the determinism golden is
+  untouched). **Verified live**: the cipher renders the exact tallies `[3,4,5,5,4,5,6,7,5,4]`, the
+  Roman answer → ACCESS GRANTED → `ARCHITECT-Ω·twin1` released with a rendered body (both creatures
+  captured side by side), no console errors, full gate green (742 tests). _Next: the full SUPERHERO
+  player mode (controls, vision modes, life/energy, inventory, progression) — currently the unlock
+  arms the protocol + reveals the 2nd creature._
 - **UI: the panel dock — one bottom menu bar (V33)** — the directive's UI/UX fix ("move ARCHITECT,
   NEURAL, MARKET, DOCS, and SPECS into the bottom menu bar … readable, touchable, responsive,
   intentional"). The four self-mounting inspector toggles used to float at four different `right:`
