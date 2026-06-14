@@ -13,6 +13,13 @@ the full gate (now also a coverage gate, on Linux + Windows) with same-seed dete
 
 ### Added
 
+- **Puppeteer cognition: the schemer's mind (V25)** — the cabal joins the cognition layer, reusing the
+  shared `creatureDrive` kernel with a distinct interpretation (no predator flee): a puppeteer
+  PERCEIVES the disorder in its sector (entity density below its orbit, via one grid query), REMEMBERS
+  recent meddling (a satiation EMA), and grows OPPORTUNISTIC — its HUNT drive shortens the meddle
+  cadence over a target-rich, freshly-disordered sector (folded with V19 wealth-boldness), while
+  AGITATION drives a restless glow + spin. Deterministic; goldens unaffected. Verified live: satiation
+  diverges (peak 0.60 on a meddle → 0 decayed, ~4 actively meddling), 90 mutations fired, perf steady.
 - **Shoggoth cognition: perceive · remember · flee · hunt (V24)** — the horde stops acting on a blind
   timer and gains a mind. A pure, unit-tested kernel (`src/sim/cognition.ts`, `creatureDrive`) maps a
   PERCEPT (local threat = rival crowding + an active singularity; prey density; satiation memory;

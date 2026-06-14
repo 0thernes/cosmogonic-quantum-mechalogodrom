@@ -5,6 +5,7 @@
  */
 import * as THREE from 'three';
 import { clamp } from '../math/scalar';
+import { creatureDrive } from './cognition';
 import { ARENA_MID, ARENA_Y, CHAOS_MAX, CHAOS_MIN, WEATHERS } from './constants';
 import { POINT_LIGHT_GAIN } from './environment';
 import type { PuppetEvent, SimContext } from '../types';
@@ -87,6 +88,14 @@ const PUP_ECON_REF = 180;
 const PUP_BOLD_MIN = 0.45;
 const PUP_BOLD_MAX = 2.4;
 
+/** F-COGNITION V25: a puppeteer is a SCHEMER — it perceives the disorder in its sector (entity
+ *  density below its orbit) and meddles MORE where there's chaos to exploit, remembering when it last
+ *  acted. Reuses the {@link creatureDrive} kernel with threat=0 (disembodied — it never flees). */
+const PUP_OPP_R = 42; // opportunity sense radius (XZ) — the meddling sector
+const PUP_OPP_CAP = 28; // this many entities below ⇒ max opportunity
+const PUP_SAT_DECAY = 0.05; // meddle-satiation creep per second
+const PUP_SAT_BUMP = 0.6; // satiation gained each time it meddles
+
 /** Deterministic config for lesser puppeteer `i` (0-based, beyond the 3 heroes). No rng. */
 function lesserConfig(i: number): PuppetConfig {
   return {
@@ -111,6 +120,8 @@ interface Puppet {
   readonly light?: THREE.PointLight;
   /** Action tick accumulator (legacy `ti`). */
   ti: number;
+  /** F-COGNITION V25: memory of recent meddling 0 (itching to act) .. 1 (spent). */
+  satiation: number;
 }
 
 /**
@@ -185,7 +196,7 @@ export class PuppetMasterSystem {
       mesh.add(light);
     }
     ctx.scene.add(mesh);
-    this.pms.push({ cfg, mesh, mat, ring, light, ti: 0 });
+    this.pms.push({ cfg, mesh, mat, ring, light, ti: 0, satiation: 0.5 });
   }
 
   /** Number of puppet masters (constant 3 — feeds the telemetry `puppeteers` field). */
@@ -221,8 +232,24 @@ export class PuppetMasterSystem {
         cfg.y + Math.sin(t * 0.3 + cfg.hue * 10) * 5,
         Math.sin(ang) * cfg.orb,
       );
+      // F-COGNITION V25: PERCEIVE the disorder in this hand's sector (entity density below) + REMEMBER
+      // recent meddling → a scheming opportunism. threat=0 (disembodied; never flees); the HUNT drive
+      // is the meddle urge, AGITATION the restless glow/spin. Reuses the shared creatureDrive kernel.
+      const here = pm.mesh.position;
+      const opportunity = clamp(
+        this.ctx.grid.query(here.x, here.z, PUP_OPP_R).length / PUP_OPP_CAP,
+        0,
+        1,
+      );
+      pm.satiation = clamp(pm.satiation - PUP_SAT_DECAY * dt, 0, 1);
+      const drive = creatureDrive({
+        threat: 0,
+        prey: opportunity,
+        satiation: pm.satiation,
+        boldness,
+      });
       pm.mesh.rotation.x += dt * 0.5;
-      pm.mesh.rotation.y += dt * 0.7;
+      pm.mesh.rotation.y += dt * (0.7 + drive.agitation * 0.5); // restless when there's chaos to exploit
       // Wealth shows on the body: a rich hand looms larger (the visible purse).
       pm.mesh.scale.setScalar(0.8 + 0.25 * boldness);
       pm.ring.rotation.z = t * 2;
@@ -230,12 +257,15 @@ export class PuppetMasterSystem {
         pm.light.intensity =
           (2 + Math.sin(t * 3 + cfg.hue * 20) * 1.5) * POINT_LIGHT_GAIN * (0.7 + 0.35 * boldness);
       pm.mat.emissiveIntensity =
-        (1.5 + Math.sin(t * 2 + cfg.hue * 15) * 0.8) * (0.65 + 0.4 * boldness);
+        (1.5 + Math.sin(t * 2 + cfg.hue * 15) * 0.8) *
+        (0.65 + 0.4 * boldness) *
+        (0.8 + 0.4 * drive.agitation);
       pm.ti += dt * 30;
-      // Wealth-driven meddling: a bold (rich) puppeteer's effective interval shrinks → it reshapes/
-      // stokes the world more often; a broke one waits far longer. Economy → behaviour (V19).
-      if (pm.ti >= cfg.iv / boldness) {
+      // Meddle cadence: WEALTH (V19 boldness) × the V25 opportunism HUNT drive — a rich hand over a
+      // disordered, target-rich sector that hasn't acted lately strikes soonest; a spent one waits.
+      if (pm.ti >= cfg.iv / (boldness * (0.6 + 0.5 * drive.hunt))) {
         pm.ti = 0;
+        pm.satiation = clamp(pm.satiation + PUP_SAT_BUMP, 0, 1); // remember the meddle
         this.act(cfg);
       }
     }

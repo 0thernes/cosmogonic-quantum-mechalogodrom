@@ -55,7 +55,9 @@ nash, market, lorenz`). They split, age, die (weather-tuned lifespan), and feed 
 - **Behavior:** KRONOS **remorphs** ≤30 entities per trigger; SELENE selects weather; others tune
   fields. They emit audit events + lore-named toasts. **Count: 100 (V14)** — the 3 named heroes keep
   their roles + lights; the 97 lesser WRAITH-_n_ hands reshape on long staggered intervals (a
-  deterministic golden-angle layout, no rng). _Next: reactive/adaptive/deceptive bargaining._
+  deterministic golden-angle layout, no rng). **Cognition (V25):** a SCHEMER's mind (shared
+  `creatureDrive` kernel, no flee) — PERCEIVES the disorder in its sector, REMEMBERS recent meddling,
+  and meddles MORE opportunistically over target-rich chaos (restless glow + spin). _Next: deception._
 - **Silhouette:** none (disembodied) — felt as toasts, weather shifts, mass remorphs.
 - **Material language:** their signature is in the world's _changes_, not a mesh.
 - **Animation grammar:** punctuated interventions, not continuous motion.
