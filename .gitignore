@@ -8,3 +8,5 @@ coverage/
 .DS_Store
 Thumbs.db
 verify/
+native/build/
+*.bmp

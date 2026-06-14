@@ -45,8 +45,8 @@ the full gate (now also a coverage gate, on Linux + Windows) with same-seed dete
   the six real point-lights rake honest relief across every organism, plus ornamental radiolaria-rib
   striation, a worn-jewel roughness (polished crests / matte recesses), a dielectric-glass pull, amber
   subsurface translucency that breathes with the audio bass, and thin-film iridescence riding the rim
-  + ridge crests (phase drifting with time + chaos). All real `f(objPos, normal, view, time, audio)` —
-  zero textures, deterministic, GPU-only, no per-entity CPU cost. Runtime-verified in the live preview.
+  - ridge crests (phase drifting with time + chaos). All real `f(objPos, normal, view, time, audio)` —
+    zero textures, deterministic, GPU-only, no per-entity CPU cost. Runtime-verified in the live preview.
 - **SPECIMEN camera view (V12, F-RELIQUARY)** — a 10th camera mode (`'specimen'`, append-only to
   `VIEW_MODES`): a macro "specimen plate" tour that frames the live tracked organism huge on the
   fog-void, slow-turntabling and auto-advancing every ~6 s, cutting (not gliding) between specimens so
@@ -54,6 +54,14 @@ the full gate (now also a coverage gate, on Linux + Windows) with same-seed dete
 - **Dev-only inspection hook** (`window.__CQM__`, localhost-only) — exposes the live world/engine and a
   manual `step()` so the preview/automation harness can drive frames + capture a backgrounded tab
   (where `requestAnimationFrame` is throttled to ~0). Never attached on the deployed static site.
+- **NATIVE C++ engine (`native/`)** — a real C++20 + OpenGL 3.3 ray-marcher answering the "C++ + best
+  frameworks" mandate directly. The whole specimen gallery is signed-distance-field math in one
+  fragment shader (urchin, Ω-ring, ribbed disc, spindle, star, diatom-lattice, pearl — each carved
+  with fBm filigree, soft shadows, AO, amber subsurface, thin-film iridescence). GLFW + GLM via
+  FetchContent; a codegen-free GL loader (`gl_core.*`); Jolt Physics + Dear ImGui wired as documented
+  `-D` options. Self-contained `cqm_native.exe` (static MinGW runtimes); an offscreen `--shot` mode
+  renders one frame to BMP and exits (4K via the `P` key). **Built with GCC 16.1 + CMake and rendered
+  live on an NVIDIA RTX 5070 Ti** — `plate`/`hero` captures verify the pipeline end-to-end.
 - **ADR 0006** — the ASI graphics stack + the honest language verdict (GLSL now; Rust→WASM/WebGPU
   later; Python/C++ can't run client-side in a browser app).
 - **GitHub Pages CD** (`.github/workflows/pages.yml` + `scripts/build-pages.ts`) — builds and publishes
