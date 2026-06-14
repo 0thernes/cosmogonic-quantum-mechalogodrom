@@ -181,8 +181,8 @@ export const HELP_KB: readonly HelpEntry[] = [
     id: 'ai-copilot',
     title: 'How do I ask the AI freeform questions?',
     keywords: ['ai', 'copilot', 'chat', 'web', 'search', 'ask', 'help me now', 'question'],
-    body: 'This HELP panel answers common questions instantly from a built-in, repo-grounded knowledge base (no network needed). For freeform questions, code reading, or public web info, open the ✦ AI (Copilot) — a read-only assistant with /read /ls /grep tools that sends to a free external model. If the AI is offline, its 🩺 diagnostics show why and how to recover.',
-    see: ['src/ui/copilot.ts'],
+    body: 'This HELP panel answers common questions instantly from a built-in, repo-grounded knowledge base (no network needed). For freeform questions, code reading, or public web info, open the ✦ AI (Copilot) — a read-only assistant that grounds answers in the actual repo (read_file/grep/run) AND can now SEARCH THE PUBLIC WEB (V43) for outside knowledge (science, math, history) via a screened, key-less endpoint, citing its source. A safety constitution (inspired by Anthropic/OpenAI/Gemini/Grok) keeps it to public/educational info only — never secrets, private data, or harmful requests. If the AI is offline, its 🩺 diagnostics show why and how to recover.',
+    see: ['src/ui/copilot.ts', 'src/server/web-search.ts'],
   },
   {
     id: 'determinism',

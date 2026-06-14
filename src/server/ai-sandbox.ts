@@ -21,6 +21,7 @@
  */
 import { resolve, relative, isAbsolute, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { webSearch } from './web-search';
 
 /**
  * Repo root (this file lives at `<root>/src/server/`, so root is two levels up). `fileURLToPath`
@@ -416,6 +417,21 @@ export const SANDBOX_TOOLS = [
       },
     },
   },
+  {
+    type: 'function',
+    function: {
+      name: 'web_search',
+      description:
+        'Search the PUBLIC web for OUTSIDE knowledge (science, math, history, general facts) via a ' +
+        'key-less public endpoint. Provide a QUERY string (never a URL). Public/educational use only — ' +
+        'refuses secrets, private data, and harmful requests; cite the returned source URL.',
+      parameters: {
+        type: 'object',
+        properties: { query: { type: 'string', description: 'a public-knowledge search query' } },
+        required: ['query'],
+      },
+    },
+  },
 ] as const;
 
 /** Dispatch a tool call by name to its sandbox function. Unknown tools are denied. */
@@ -432,6 +448,8 @@ export async function dispatchTool(
       return grepRepo(typeof args['pattern'] === 'string' ? args['pattern'] : '');
     case 'run':
       return runReadOnly(typeof args['command'] === 'string' ? args['command'] : '');
+    case 'web_search':
+      return webSearch(typeof args['query'] === 'string' ? args['query'] : '');
     default:
       return { ok: false, error: `unknown tool "${name}"` };
   }

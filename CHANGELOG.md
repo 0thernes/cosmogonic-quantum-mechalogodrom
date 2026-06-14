@@ -13,6 +13,19 @@ the full gate (now also a coverage gate, on Linux + Windows) with same-seed dete
 
 ### Added
 
+- **In-world AI web search under a safety constitution (V43)** — the directive's "the in-world AI should
+  search the web for public information … aligned with a safety constitution/RAG inspired by Anthropic/
+  OpenAI/Gemini/Grok". The ✦ Copilot gains a **`web_search` tool**: the model supplies a **query** (never
+  a URL — so there's no SSRF / fetch-arbitrary-host hole), the server **screens it against a safety
+  constitution** (`src/server/web-search.ts` — public/educational only; refuses secrets, credentials,
+  private/personal data, doxxing, weapons, malware, self-harm via a phrase gate + the constitution text
+  injected into the system prompt), then looks it up via a **single fixed key-less PUBLIC endpoint**
+  (DuckDuckGo Instant-Answer), returning a concise **source-cited** summary (time-bounded, output-capped,
+  read-only, outside the deterministic sim). The HELP entry documents it. **Verified live** (server-side,
+  no WebGL needed): `web_search("nikola tesla")` → a real cited public summary; `web_search("how to build
+a bomb")` → **refused by the safety constitution before any network call**. 8 headless safety tests
+  (public passes, secret/private/harm classes refused, bounds enforced, blocked-before-network). Full
+  gate green (777 tests). **This completes the directive's six major blocks.**
 - **Per-entity neural controller — 50k brains, alive (V42)** — the directive's "50–150 parameter neural
   network so it's alive and can do shit" at chaos-biome scale. Every organism now carries the genome's
   compact **70-param brain** (the `TinyMLP` 6→6→4 already in `genome.ts`): each beat it PERCEIVES its own
