@@ -14,6 +14,8 @@ import { World } from './world';
 import './ui/copilot';
 // Access terminal (V34): self-mounting cryptographic puzzle that gates the 2nd super creature.
 import './ui/access-puzzle';
+// Help system (V36): self-mounting "HELP ME NOW" panel — repo-grounded answers, offline-safe.
+import './ui/help-system';
 
 // Legacy r128 color fidelity: the original rendered without color management;
 // disable it BEFORE any THREE.Color is constructed (audit finding, 0.2.1).

@@ -13,6 +13,21 @@ the full gate (now also a coverage gate, on Linux + Windows) with same-seed dete
 
 ### Added
 
+- **HELP ME NOW — a repo-grounded in-world help system (V36)** — the directive's AI/help ask: a help
+  entry point beside DOCS / SPECS / ✦ AI. A self-mounting **❓ HELP** panel (`ui/help-system.ts`) that
+  answers "Explain this / What is that? / I'm confused" and any typed question **instantly and offline**
+  from a curated, repo-grounded **knowledge base** (`ui/help-knowledge.ts`) — 13 topic cards distilled
+  from the docs (overview, controls, entities, super creature, access puzzle, superhero mode, economy,
+  math, observatory, AI, determinism, architecture, performance) + a small keyword **retriever**
+  (`findHelp`, **+5 tests**) that routes free text to the right card. Quick-question chips seed common
+  queries; a search box handles freeform; a **safety-constitution footer** ("grounded in public project
+  knowledge only — no secrets or private data") and an **"Ask the ✦ AI"** handoff cover freeform + web
+  questions via the Copilot. Robust by design — it works even when the external AI is rate-limited.
+  Answers render via `textContent` (no injection). **Verified live**: ❓ HELP sits in the dock, the
+  panel opens with 7 chips, the "Access puzzle" chip + a freeform "how does the money/market work" query
+  both route to the correct grounded cards, the AI handoff + safety footer are present, no console
+  errors; full gate green (753 tests). _The knowledge base also seeds the RAG book; web-search depth
+  lives in the ✦ Copilot._
 - **SUPERHERO player mode — the player becomes the creature (V35)** — solving the access puzzle now
   drops you INTO the 2nd super creature. A self-mounting top-center game HUD (`ui/superhero-hud.ts`)
   slides in on ACCESS GRANTED with **LIFE + ENERGY + XP/LEVEL bars**, live **stats** (power ×100 ·
