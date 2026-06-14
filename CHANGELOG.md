@@ -13,6 +13,21 @@ the full gate (now also a coverage gate, on Linux + Windows) with same-seed dete
 
 ### Added
 
+- **SUPERHERO player mode — the player becomes the creature (V35)** — solving the access puzzle now
+  drops you INTO the 2nd super creature. A self-mounting top-center game HUD (`ui/superhero-hud.ts`)
+  slides in on ACCESS GRANTED with **LIFE + ENERGY + XP/LEVEL bars**, live **stats** (power ×100 ·
+  plan · wallet), the **NEURAL** state (the mind's emotion meters), an **INVENTORY**, four quantum
+  **POWERS**, and **VISION / CAMERA** controls — every field a real read of the hero creature's deep
+  mind + a **progression model** (`ui/superhero-state.ts`, DOM-free + **6 tests**): a geometric XP
+  curve, energy/life regen, passive XP for existing as a dominant apex, life pressure from world
+  threat, and an energy economy for the powers. The powers act on the world via window events the
+  world applies: **PHASE/VISION** cycle the render-state, **CAMERA** the view, **QUANTUM FORK** sires
+  another twin (energy-gated, up to the cap of 3), **DOMINION/RECALL** pulse. The prime no longer
+  auto-spawns — **the twin budget is now the player's** (reveal + FORK). **Verified live**: unlock →
+  the HUD shows `ARCHITECT-Ω·twin1`, LV climbing 4→5 from passive XP, wallet ☉664 ☾890 ◇133 ❖122;
+  FORK spawns a real 2nd hero body (1→2) and charges 0.6 energy, a too-poor FORK is correctly blocked;
+  VISION flips solid→wire. No console errors; full gate green (748 tests). _Next: damage/combat, the
+  camera actually following the hero, deeper power effects._
 - **The ACCESS PUZZLE — a cryptographic gate to the 2nd super creature (V34)** — the directive's
   flagship interactive feature. A self-mounting **⛓ ACCESS** terminal (`ui/access-puzzle.ts`) opens a
   CIA/NSA/alien CRT modal: **ten shimmering cipher lines whose tally-mark counts ARE the seed

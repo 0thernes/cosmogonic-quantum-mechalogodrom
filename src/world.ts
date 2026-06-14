@@ -83,6 +83,8 @@ import { MarketTicker } from './ui/market-ticker';
 import { SuperCreature, type SuperPercept } from './sim/super-creature';
 import { SuperBodySystem } from './sim/super-body';
 import { SuperPanel } from './ui/super-panel';
+import { SuperheroState, HERO_POWERS } from './ui/superhero-state';
+import { SuperheroHud } from './ui/superhero-hud';
 import { TelemetryPanel, bindPanelToggles } from './ui/panels';
 import { InputSystem } from './ui/input';
 import type { AuditTrail } from './logging/audit';
@@ -159,10 +161,12 @@ export class World {
   private readonly superBody: SuperBodySystem;
   private readonly superRng: Rng;
   private readonly superScene: THREE.Scene;
-  // F-SUPER V34: the 2nd super creature (puzzle-gated twin) + its body — null until ACCESS GRANTED.
-  private superHero: SuperCreature | null = null;
-  private superBody2: SuperBodySystem | null = null;
+  // F-SUPER V34/35: puzzle-gated extra creatures (≤3 twins) + the SUPERHERO player layer (state + HUD).
+  private readonly heroBodies: { body: SuperBodySystem; mind: SuperCreature; econId: number }[] =
+    [];
   private superheroUnlocked = false;
+  private readonly superheroState = new SuperheroState();
+  private readonly superheroHud: SuperheroHud;
   /** Pool renderer; null on the phone tier (V1 per-mesh path — V3.1). */
   private readonly instanced: InstancedEntityRenderer | null;
   /** Total morphotypes minted at boot (250 in phylum mode). */
@@ -455,11 +459,18 @@ export class World {
     // F-SUPER V32: the masterful many-eyed apex BODY (god-jewel shader) — additive, draws no rng.
     this.superBody = new SuperBodySystem(ctx.scene);
     this.superScene = ctx.scene;
-    // F-SUPER V34: the access puzzle (ui/access-puzzle.ts) fires this once when solved → reveal #2.
+    this.superheroHud = new SuperheroHud(); // V35: self-mounting player HUD, hidden until unlock
+    // F-SUPER V34/35: the access puzzle fires `superhero-unlock` once when solved → reveal #2 + the
+    // player HUD; the HUD's buttons fire `hero-power`/`hero-vision`/`hero-cam` for the world to apply.
     if (typeof window !== 'undefined') {
       window.addEventListener('cqm:superhero-unlock', () => this.revealSecondSuper(), {
         once: true,
       });
+      window.addEventListener('cqm:hero-power', (e) =>
+        this.heroPower(((e as CustomEvent).detail?.id as string) ?? ''),
+      );
+      window.addEventListener('cqm:hero-vision', () => this.heroCycleRender());
+      window.addEventListener('cqm:hero-cam', () => this.heroCycleView());
     }
     bindPanelToggles();
     this.bindObservatoryTabs();
@@ -600,7 +611,7 @@ export class World {
     this.leviathans.update(dt, t);
     // F-SUPER V32: animate the apex body every frame from the sim clock + last-folded mind state.
     this.superBody.update(t, dt);
-    this.superBody2?.update(t, dt); // F-SUPER V34: the puzzle-gated 2nd creature, once revealed
+    for (const hb of this.heroBodies) hb.body.update(t, dt); // V34/35: revealed hero/twin bodies
     this.cosmicWeb.update(t); // V11: far-field cosmic-web shimmer (additive backdrop, no rng)
     this.goldLattice.update(t); // V11: floating gold architecture tumble (additive, no rng)
     this.quantumLattice.update(t); // V11: neon sacred-geometry shells (additive, no rng)
@@ -729,6 +740,26 @@ export class World {
         this.superCreature.snapshot(),
         this.economy.wealthOf(World.ECON_SUPER_BASE)?.netWorth ?? 0,
       );
+      // F-SUPER V35: feed the SUPERHERO HUD the player-creature's live vitals + mind + wallet.
+      const hero = this.heroBodies[0];
+      if (this.superheroState.active && hero) {
+        const hs = hero.mind.snapshot();
+        const w = this.economy.wealthOf(hero.econId);
+        this.superheroHud.update({
+          ...this.superheroState.view(),
+          name: hs.name,
+          power: hs.power,
+          plan: hs.plan,
+          emotion: hs.emotion,
+          wallet: {
+            aurum: w?.aurum ?? 0,
+            umbra: w?.umbra ?? 0,
+            quanta: w?.quanta ?? 0,
+            ichor: w?.ichor ?? 0,
+          },
+          world: { entities: n, frame: s.frame },
+        });
+      }
     }
 
     // Pool mirror runs LAST — after every system that mutates entity visuals
@@ -773,49 +804,88 @@ export class World {
         sound: clamp(bass, 0, 1),
         phase: (t / 60) % 1,
       };
-      const intent = this.superCreature.think(percept);
+      this.superCreature.think(percept); // updates the prime's emotion/memory/plan
       this.superBody.setMind(this.superCreature.snapshot()); // fold the mind into the body's look
-      // Twins emerge slowly when willed (cap 3). Wallet enrolled on the SUPER sub-stream too.
-      if (intent.wantsSpawn && s.frame % 600 === 0) {
-        const twin = this.superCreature.maybeSpawn(this.superRng);
-        if (twin) {
-          this.superTwins.push(twin);
-          this.economy.register(
-            World.ECON_SUPER_BASE + this.superTwins.length,
-            twin.name,
-            20,
-            this.superRng,
-          );
-        }
-      }
+      // V35: the twin budget (cap 3) is now spent by the PLAYER — the puzzle reveal sires the 2nd
+      // creature and the FORK power sires the rest — so the prime no longer auto-spawns (no contention).
       for (const tw of this.superTwins) tw.think(percept); // twins reason with their own minds
-      if (this.superHero && this.superBody2) this.superBody2.setMind(this.superHero.snapshot());
+      // V34/35: fold each revealed hero/twin mind into its body; tick the player progression layer.
+      for (const hb of this.heroBodies) hb.body.setMind(hb.mind.snapshot());
+      const hero0 = this.heroBodies[0];
+      if (this.superheroState.active && hero0) {
+        this.superheroState.tick(4 / 60, hero0.mind.snapshot().emotion.dominance, percept.threat);
+      }
     } catch {
       /* an apex beat misbehaved — skip it, keep the world running */
     }
   }
 
   /**
-   * F-SUPER V34: ACCESS GRANTED — the cryptographic puzzle was solved, so release the SECOND super
-   * creature: sire a mutated twin (its own deep mind), enrol its apex purse, and give it a masterful
-   * body that stands apart from the prime. Idempotent. Draws from the SUPER sub-stream, so the main
-   * determinism golden is untouched. Guarded indirectly (the caller is a one-shot window listener).
+   * F-SUPER V34/35: ACCESS GRANTED — the cryptographic puzzle was solved, so release the SECOND super
+   * creature AND enter SUPERHERO mode: the player BECOMES that creature. Sire a mutated twin (its own
+   * deep mind + apex purse + masterful body apart from the prime), activate the progression state + the
+   * player HUD. Idempotent. Draws from the SUPER sub-stream, so the main determinism golden is untouched.
    */
   private revealSecondSuper(): void {
     if (this.superheroUnlocked) return;
     this.superheroUnlocked = true;
+    if (!this.spawnHeroAvatar({ x: -20, y: 13, z: -6 })) return; // prime at the twin cap (rare)
+    this.superheroState.activate();
+    this.superheroHud.activate();
+    this.hud.showSector('⛓ ACCESS GRANTED · SUPERHERO MODE');
+  }
+
+  /**
+   * Sire a hero/twin avatar at `anchor`: a mutated twin mind (≤3, the cap is in {@link SuperCreature}),
+   * its enrolled apex purse, and a masterful body the per-frame loop animates. Returns false at the cap.
+   */
+  private spawnHeroAvatar(anchor: { x: number; y: number; z: number }): boolean {
     const twin = this.superCreature.maybeSpawn(this.superRng);
-    if (!twin) return; // prime already at the twin cap (rare) — flag set, nothing to reveal
+    if (!twin) return false;
     this.superTwins.push(twin);
-    this.superHero = twin;
-    this.economy.register(
-      World.ECON_SUPER_BASE + this.superTwins.length,
-      twin.name,
-      20,
-      this.superRng,
-    );
-    this.superBody2 = new SuperBodySystem(this.superScene, { x: -20, y: 13, z: -6 });
-    this.hud.showSector(`⛓ ACCESS GRANTED · ${twin.name} RELEASED`);
+    const econId = World.ECON_SUPER_BASE + this.superTwins.length;
+    this.economy.register(econId, twin.name, 20, this.superRng);
+    this.heroBodies.push({
+      body: new SuperBodySystem(this.superScene, anchor),
+      mind: twin,
+      econId,
+    });
+    return true;
+  }
+
+  /** V35: apply a hero POWER (the HUD spends the energy; here we apply the world-effect). */
+  private heroPower(id: string): void {
+    const p = HERO_POWERS.find((x) => x.id === id);
+    if (!p || this.superheroState.energy < p.cost) return; // unknown power or not enough energy
+    if (id === 'fork') {
+      // only charge if a twin was actually sired (the cap of 3 may already be reached)
+      if (this.spawnHeroAvatar({ x: -8 - this.heroBodies.length * 9, y: 14, z: -15 })) {
+        this.superheroState.use(p.cost);
+      } else {
+        this.hud.showSector('QUANTUM FORK · TWIN CAP REACHED');
+      }
+      return;
+    }
+    this.superheroState.use(p.cost);
+    if (id === 'phase')
+      this.heroCycleRender(); // slip between render-states
+    else if (id === 'recall') this.hud.showSector('RECALL · LOCUS SUMMONED');
+    else this.hud.showSector('DOMINION PULSE · THE FIELD COWERS');
+  }
+
+  /** V35: VISION — cycle the world render-state (reuses the same path as the toolbar action). */
+  private heroCycleRender(): void {
+    const i = RENDER_MODES.indexOf(this.state.renderMode);
+    const mode = cyc(RENDER_MODES, i + 1);
+    this.state.renderMode = mode;
+    this.entities.setRenderMode(mode);
+    this.hud.showSector('VISION · ' + mode.toUpperCase());
+  }
+
+  /** V35: CAMERA — cycle the view mode. */
+  private heroCycleView(): void {
+    this.state.viewIdx = (this.state.viewIdx + 1) % VIEW_MODES.length;
+    this.hud.showSector('CAM · ' + cyc(VIEW_MODES, this.state.viewIdx).toUpperCase());
   }
 
   /**
