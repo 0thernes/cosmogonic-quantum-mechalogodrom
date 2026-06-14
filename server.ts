@@ -18,6 +18,7 @@
  */
 import index from './index.html';
 import docs from './docs.html';
+import spec from './specs.html';
 import { createLogger } from './src/logging/logger';
 import {
   runAgent,
@@ -219,6 +220,7 @@ const server = Bun.serve({
   routes: {
     '/': index,
     '/docs': docs,
+    '/spec': spec,
     '/lab': {
       GET(req) {
         logRequest(req, 200);

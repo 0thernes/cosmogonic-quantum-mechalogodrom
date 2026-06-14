@@ -42,12 +42,19 @@ await cp(new URL('lab/quantum-wildbeyond.html', ROOT), new URL('lab/index.html',
 // 3. Rewrite absolute nav links → subpath-relative; neutralize the server-only audit poll.
 await rewrite('index.html', [
   ['href="/docs"', 'href="docs.html"'],
+  ['href="/spec"', 'href="specs.html"'],
   ['href="/lab"', 'href="lab/"'],
   ['hx-get="/api/audit"', ''], // no server on Pages — stop the 5 s 404 poll; panel stays empty
 ]);
 await rewrite('docs.html', [
+  ['href="/spec"', 'href="specs.html"'],
+  ['href="/lab"', 'href="lab/"'],
+  ['href="/"', 'href="index.html"'],
+]);
+await rewrite('specs.html', [
+  ['href="/docs"', 'href="docs.html"'],
   ['href="/lab"', 'href="lab/"'],
   ['href="/"', 'href="index.html"'],
 ]);
 
-console.log('assembled Pages site -> site/ (index.html, docs.html, lab/index.html, chunks)');
+console.log('assembled Pages site -> site/ (index.html, docs.html, specs.html, lab/index.html)');
