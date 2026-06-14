@@ -398,6 +398,10 @@ export class World {
       warMatrix: this.titans.warMatrix,
       rdEnergy: 0,
       sentience: 0,
+      nhi: 0,
+      viewName: cyc(VIEW_MODES, this.state.viewIdx),
+      timeScale: this.state.timeScale,
+      renderName: this.state.renderMode,
     };
     // The three V3.5 arrays are stable LIVE views (contents mutate in place),
     // so this adapter is built once and never repopulated — just a field rename.
@@ -952,6 +956,10 @@ export class World {
     sn.temperature = s.temperature;
     sn.shoggoths = this.shoggoths.count;
     sn.puppeteers = this.puppets.count;
+    sn.nhi = this.nhi.count;
+    sn.viewName = cyc(VIEW_MODES, s.viewIdx);
+    sn.timeScale = s.timeScale;
+    sn.renderName = s.renderMode;
     sn.tribes = this.graphMind.tribes;
     sn.trend = this.analytics.trendPerMin;
     sn.qEntropy = this.qc.entropy;

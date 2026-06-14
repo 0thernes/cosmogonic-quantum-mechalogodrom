@@ -232,6 +232,15 @@
               >0</span
             >
           </div>
+          <!-- V13: live count of launched NHI super-minds -->
+          <div class="block border-t border-white/5 py-0.5 font-ui text-4xs text-fuchsia-300">
+            NHI
+            <span
+              id="nhic"
+              class="float-right font-mono font-semibold text-fuchsia-100 tabular-nums"
+              >0</span
+            >
+          </div>
           <!-- V4: the alien biome's measure of its own aliveness (0..100%) -->
           <div class="block border-t border-white/5 py-0.5 font-ui text-4xs text-fuchsia-300">
             Sentience
@@ -1050,6 +1059,28 @@
       title="Open the technical specification"
       >Spec</a
     >
+
+    <!-- V13: View / Speed / Render readout box. Bottom-right, sits ABOVE the Docs/Spec links and
+         clear of the AI (✦) toggle + the centered toolbar. pointer-events-none so it never blocks
+         clicks. Written every telemetry tick by ui/panels.ts. -->
+    <div
+      id="hud-vsr"
+      class="pointer-events-none fixed right-2 bottom-16 z-20 rounded-panel border border-cyan-300/15 bg-void/90 px-2.5 py-1.5 font-ui text-4xs tracking-widest text-cyan-300/80 uppercase backdrop-blur-md"
+      aria-label="View, speed and render mode"
+    >
+      <div class="flex items-baseline justify-between gap-3">
+        <span class="text-slate-400">View</span>
+        <span id="hud-view" class="font-mono text-cyan-100 normal-case tabular-nums">free</span>
+      </div>
+      <div class="flex items-baseline justify-between gap-3">
+        <span class="text-slate-400">Speed</span>
+        <span id="hud-speed" class="font-mono text-cyan-100 normal-case tabular-nums">1×</span>
+      </div>
+      <div class="flex items-baseline justify-between gap-3">
+        <span class="text-slate-400">Render</span>
+        <span id="hud-render" class="font-mono text-cyan-100 normal-case tabular-nums">solid</span>
+      </div>
+    </div>
 
     <!-- V5.5 edge-docked sheet toggler (CLASS-ONLY; no module imports, no sim/state access).
          Each [data-sheet-handle="<panelId>"] tab toggles `.open` on its panel. CSS owns ALL

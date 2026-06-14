@@ -61,6 +61,12 @@ export class TelemetryPanel {
   private readonly etn: HTMLElement;
   /** V4: biome sentience index row (rendered as a percentage). */
   private readonly snt: HTMLElement;
+  /** V13: NHI super-mind tally row. */
+  private readonly nhic: HTMLElement;
+  /** V13: bottom-right View / Speed / Render readout box. */
+  private readonly hudView: HTMLElement;
+  private readonly hudSpeed: HTMLElement;
+  private readonly hudRender: HTMLElement;
   private readonly gEntities: Sparkline;
   private readonly gChaos: Sparkline;
   private readonly gEnergy: Sparkline;
@@ -90,6 +96,10 @@ export class TelemetryPanel {
     this.ep = mustGet('ep');
     this.etn = mustGet('etn');
     this.snt = mustGet('snt');
+    this.nhic = mustGet('nhic');
+    this.hudView = mustGet('hud-view');
+    this.hudSpeed = mustGet('hud-speed');
+    this.hudRender = mustGet('hud-render');
     // Colors and fixed maxes mirror the legacy drawGraph calls (lines 872-873). The
     // quality-dependent maxes (MAX_E, MNN) are not known at construction time; they are kept
     // current from each snapshot in update().
@@ -127,8 +137,13 @@ export class TelemetryPanel {
     this.es.textContent = String(s.shoggoths);
     this.ep.textContent = String(s.puppeteers);
     this.etn.textContent = String(s.titans); // V3: the ten colossi
+    this.nhic.textContent = String(s.nhi); // V13: launched NHI super-minds
     // V4 aliveness as a %, plus its named tier (F-SENTIENCE-VAR: DORMANT…TRANSCENDENT).
     this.snt.textContent = `${Math.round(s.sentience * 100)}% ${sentienceTier(s.sentience)}`;
+    // V13: bottom-right View / Speed / Render box (uppercased name + ×-suffixed speed).
+    this.hudView.textContent = s.viewName;
+    this.hudSpeed.textContent = s.timeScale === 0 ? 'PAUSE' : `${s.timeScale}×`;
+    this.hudRender.textContent = s.renderName;
     // Full-scale tracking: both graphs scale to the active tier's caps, which
     // the snapshot now carries directly (V3 — no more derived pairing table).
     this.gEntities.max = s.maxEntities;

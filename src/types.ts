@@ -304,6 +304,14 @@ export interface TelemetrySnapshot {
    * observatory conflict page and the telemetry sentience readout.
    */
   sentience: number;
+  /** Live count of registered NHI super-minds (telemetry tally). */
+  nhi: number;
+  /** Current camera view-mode name (HUD View/Speed/Render box). */
+  viewName: string;
+  /** Current time-dilation multiplier (HUD box; 0 = paused, 1 = realtime). */
+  timeScale: number;
+  /** Current entity render-mode name (HUD box). */
+  renderName: string;
 }
 
 /** One titan's public economy row (structural twin of sim/titans TitanLedgerEntry). */
