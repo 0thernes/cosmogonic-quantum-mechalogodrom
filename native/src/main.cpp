@@ -16,10 +16,12 @@
 
 #include "gl_core.h"
 #include "shaders.h"
+#include "physics.h"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/constants.hpp>
 
+#include <algorithm>
 #include <cmath>
 #include <cstdio>
 #include <cstdint>
@@ -43,6 +45,8 @@ struct OrbitCam {
 };
 
 OrbitCam gCam;
+ReliquaryPhysics gPhys;       // live rigid-body solver — drives the specimen transforms every frame
+constexpr int kMaxBodies = 24; // must match MAX_BODIES in shaders.h
 bool gDragging = false;
 double gLastX = 0.0, gLastY = 0.0;
 bool gHero = false;
@@ -163,6 +167,28 @@ void setCommonUniforms(GLuint prog, int fbw, int fbh, float t) {
   glUniform1f(glGetUniformLocation(prog, "uFov"), glm::radians(48.0f));
   glUniform1f(glGetUniformLocation(prog, "uBass"), 0.0f);
   glUniform1f(glGetUniformLocation(prog, "uHero"), gHero ? 1.0f : 0.0f);
+
+  // Upload the LIVE rigid-body transforms — this is what makes the specimens move: each frame's
+  // solver state (position+radius, orientation quaternion, type+hue) goes straight to the marcher.
+  const std::vector<Body>& bs = gPhys.bodies();
+  const int n = std::min(static_cast<int>(bs.size()), kMaxBodies);
+  float posScale[kMaxBodies * 4] = {0};
+  float quat[kMaxBodies * 4] = {0};
+  float meta[kMaxBodies * 4] = {0};
+  for (int i = 0; i < n; ++i) {
+    const Body& b = bs[static_cast<size_t>(i)];
+    posScale[i * 4 + 0] = b.pos.x; posScale[i * 4 + 1] = b.pos.y;
+    posScale[i * 4 + 2] = b.pos.z; posScale[i * 4 + 3] = b.radius;
+    quat[i * 4 + 0] = b.orient.x; quat[i * 4 + 1] = b.orient.y;
+    quat[i * 4 + 2] = b.orient.z; quat[i * 4 + 3] = b.orient.w;
+    meta[i * 4 + 0] = static_cast<float>(b.type); meta[i * 4 + 1] = b.hue;
+  }
+  glUniform1i(glGetUniformLocation(prog, "uNumBodies"), n);
+  if (n > 0) {
+    glUniform4fv(glGetUniformLocation(prog, "uBodyPosScale"), n, posScale);
+    glUniform4fv(glGetUniformLocation(prog, "uBodyQuat"), n, quat);
+    glUniform4fv(glGetUniformLocation(prog, "uBodyMeta"), n, meta);
+  }
 }
 
 // Render the scene at W×H into an offscreen FBO and save it as BMP. Returns true on success.
@@ -210,9 +236,12 @@ int main(int argc, char** argv) {
   bool shotMode = false;
   std::string shotPath = "reliquary_shot.bmp";
   int shotW = 1600, shotH = 900;
+  int settleFrames = 200; // physics frames to advance before an offscreen shot (--frames=K)
   for (int i = 1; i < argc; ++i) {
     std::string a = argv[i];
-    if (a.rfind("--shot", 0) == 0) {
+    if (a.rfind("--frames=", 0) == 0) {
+      settleFrames = std::max(0, std::atoi(a.c_str() + 9));
+    } else if (a.rfind("--shot", 0) == 0) {
       shotMode = true;
       auto eq = a.find('=');
       if (eq != std::string::npos) shotPath = a.substr(eq + 1);
@@ -251,11 +280,18 @@ int main(int argc, char** argv) {
   GLuint vao = 0;
   glGenVertexArrays(1, &vao);
 
+  // Seed the rigid-body solver — the specimens start on a shell and fall inward.
+  gPhys.init(18);
+
   if (shotMode) {
     // Frame the gallery nicely and render a single settled frame to disk, then exit.
     gCam.azimuth = 0.7f;
     gCam.elevation = 0.40f;
-    gCam.radius = gHero ? 3.4f : 6.5f;
+    gCam.radius = gHero ? 3.4f : 7.5f;
+    // Run the solver forward so the specimens have fallen, collided and begun to settle into a
+    // churning cluster — the captured frame shows LIVE dynamics, not the seeded shell.
+    for (int f = 0; f < settleFrames; ++f)
+      for (int k = 0; k < 2; ++k) gPhys.step(1.0f / 120.0f);
     bool ok = renderToBMP(prog, vao, shotW, shotH, 2.6f, shotPath.c_str());
     glDeleteVertexArrays(1, &vao);
     glDeleteProgram(prog);
@@ -274,7 +310,11 @@ int main(int argc, char** argv) {
     double now = glfwGetTime();
     float dt = static_cast<float>(now - gPrevTime);
     gPrevTime = now;
-    if (!gPaused) gSpinClock += dt;
+    if (!gPaused) {
+      gSpinClock += dt;
+      // Two fixed substeps/frame keeps the rigid-body solver stable independent of frame rate.
+      for (int k = 0; k < 2; ++k) gPhys.step(1.0f / 120.0f);
+    }
 
     int fbw, fbh;
     glfwGetFramebufferSize(win, &fbw, &fbh);

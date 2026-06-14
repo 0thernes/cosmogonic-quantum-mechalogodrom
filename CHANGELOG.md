@@ -74,6 +74,15 @@ the full gate (now also a coverage gate, on Linux + Windows) with same-seed dete
   `-D` options. Self-contained `cqm_native.exe` (static MinGW runtimes); an offscreen `--shot` mode
   renders one frame to BMP and exits (4K via the `P` key). **Built with GCC 16.1 + CMake and rendered
   live on an NVIDIA RTX 5070 Ti** — `plate`/`hero` captures verify the pipeline end-to-end.
+- **LIVE rigid-body physics (`native/src/physics.h`)** — the specimens are no longer static: a real
+  impulse-based solver runs EVERY frame (active by default, no flag) and its transforms ARE what the
+  ray-marcher draws. Each specimen is a rigid body in a harmonic gravity well inside a spherical
+  reliquary case; they fall inward, **collide** (impulse resolution with restitution + positional
+  correction + friction-induced spin), **tumble** (quaternion angular integration), scuff the wall,
+  and settle into a churning cluster — deterministic from an integer-hash seed. The shader's `map()`
+  now unions the live bodies (`uBodyPosScale/uBodyQuat/uBodyMeta`) instead of a static plate; an
+  offscreen `--frames=K` advances the sim before capture. Verified on the RTX 5070 Ti: a 30-step
+  frame and a 420-step frame show completely different (collided, clustered) arrangements.
 - **ADR 0006** — the ASI graphics stack + the honest language verdict (GLSL now; Rust→WASM/WebGPU
   later; Python/C++ can't run client-side in a browser app).
 - **GitHub Pages CD** (`.github/workflows/pages.yml` + `scripts/build-pages.ts`) — builds and publishes

@@ -100,6 +100,7 @@ typedef std::ptrdiff_t GLintptr;
   X(void, glUniform1f, (GLint loc, GLfloat v))                                                  \
   X(void, glUniform2f, (GLint loc, GLfloat a, GLfloat b))                                       \
   X(void, glUniform3f, (GLint loc, GLfloat a, GLfloat b, GLfloat c))                            \
+  X(void, glUniform4fv, (GLint loc, GLsizei count, const GLfloat* value))                       \
   X(void, glGenVertexArrays, (GLsizei n, GLuint* arrays))                                       \
   X(void, glBindVertexArray, (GLuint array))                                                    \
   X(void, glDeleteVertexArrays, (GLsizei n, const GLuint* arrays))                              \

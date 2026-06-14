@@ -27,7 +27,14 @@ uniform vec3  uCamPos;
 uniform vec3  uCamTarget;
 uniform float uFov;       // vertical fov, radians
 uniform float uBass;      // 0..1 audio-reactive pulse (host-driven; 0 if silent)
-uniform float uHero;      // >0.5 = single hero specimen, else the full plate
+uniform float uHero;      // >0.5 = single hero specimen, else the physics-driven plate
+
+// Physics-driven specimen bodies (transforms come from the C++ rigid-body solver each frame).
+const int MAX_BODIES = 24;
+uniform int  uNumBodies;
+uniform vec4 uBodyPosScale[MAX_BODIES]; // xyz = world position, w = scale (radius)
+uniform vec4 uBodyQuat[MAX_BODIES];     // orientation quaternion (x, y, z, w)
+uniform vec4 uBodyMeta[MAX_BODIES];     // x = specimen id (0..6), y = hue, z/w spare
 
 const float PI  = 3.14159265359;
 const float TAU = 6.28318530718;
@@ -139,8 +146,13 @@ Cell cellInfo(vec2 c){
   return o;
 }
 
-// Globals carrying the shaded specimen's material to the lighting stage.
+// Quaternion rotate: qrot rotates v by q (xyz,w); qrotInv by its conjugate (world → body-local).
+vec3 qrot(vec4 q, vec3 v){ return v + 2.0 * cross(q.xyz, cross(q.xyz, v) + q.w * v); }
+vec3 qrotInv(vec4 q, vec3 v){ return qrot(vec4(-q.xyz, q.w), v); }
+
+// Globals carrying the NEAREST body's material identity to the shading stage (set in map()).
 vec3  gAlbedo; float gRough; float gTrans;
+int   gType = 5; float gHue = 0.0;
 
 float map(vec3 p){
   if(uHero > 0.5){
@@ -148,27 +160,30 @@ float map(vec3 p){
     vec3 q = p;
     q.xz = rot(uTime*0.3) * q.xz;
     int id = int(mod(floor(uTime/6.0), 7.0));
+    gType = id; gHue = fract(uTime*0.03);
     return specimen(q/1.6, id, uTime)*1.6;
   }
-  // PLATE: domain-repeat on the XZ plane, one specimen per cell, floating at y≈0.
-  const float CELL = 2.4;
-  vec2 cid = round(p.xz / CELL);
-  vec2 cc  = cid * CELL;
-  Cell info = cellInfo(cid);
-  vec3 q = p - vec3(cc.x, sin(uTime*0.6 + info.phase)*0.12, cc.y);
-  q.xz = rot(info.rotY + uTime*0.15) * q.xz;
-  q.xy = rot(sin(uTime*0.2 + info.phase)*0.25) * q.xy;
-  float s = info.scl * (1.0 + 0.05*uBass);
-  return specimen(q/s, info.id, uTime) * s;
+  // PHYSICS PLATE: every specimen is a rigid body posed by the C++ solver (position, orientation
+  // quaternion, scale) — the SDFs are UNIONED and the nearest body wins the surface. The transforms
+  // arrive live each frame in the uBody* uniforms, so collisions/tumbling/settling are what we draw.
+  float best = 1e9;
+  for(int i = 0; i < MAX_BODIES; i++){
+    if(i >= uNumBodies) break;
+    vec4 ps = uBodyPosScale[i];
+    float s = max(ps.w, 0.05);
+    vec3 local = qrotInv(uBodyQuat[i], p - ps.xyz) / s;
+    int id = int(uBodyMeta[i].x + 0.5);
+    float d = specimen(local, id, uTime) * s;
+    if(d < best){ best = d; gType = id; gHue = uBodyMeta[i].y; }
+  }
+  return best;
 }
 
 // Material for the point p (re-derives the cell so colours match the plate).
 // Deep jewel tones — amber/bronze, obsidian-violet, oxblood, teal — NOT pastels,
 // so the lighting + subsurface carve contrast instead of washing out.
-void materialAt(vec3 p){
-  float hue; int id;
-  if(uHero > 0.5){ id = int(mod(floor(uTime/6.0),7.0)); hue = fract(uTime*0.03); }
-  else { const float CELL=2.4; vec2 cid=round(p.xz/CELL); Cell info=cellInfo(cid); hue=info.hue; id=info.id; }
+void materialAt(){
+  float hue = gHue; int id = gType; // set by the nearest body in map()
   // A unified warm reliquary palette — amber/bronze/sepia dominant, obsidian as the
   // dark accent, one cool pearl note — echoing the reference plate's mood on near-black.
   float sel = fract(hue*1.7 + 0.1);
@@ -272,7 +287,8 @@ void main(){
 
   if(hit){
     vec3 n = calcNormal(p);
-    materialAt(p);
+    map(p); // re-evaluate at the exact hit so gType/gHue name the body actually struck
+    materialAt();
     vec3 v = -rd;
 
     // Carved micro-relief perturbs the normal (filigree the lights rake).
