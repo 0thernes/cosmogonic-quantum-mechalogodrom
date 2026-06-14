@@ -22,6 +22,15 @@ const CONSUME_REACH2 = 144;
 /** Attractor-unit clamp for Lorenz drift samples (mirrors the entity 'lorenz' NaN seal). */
 const LORENZ_BOUND = 25;
 
+/** Population targets (CONTRACTS V14 — "100 Shoggoths"). Desktop+ gets the full century; the phone
+ *  tier stays light for fill rate. Determinism is unaffected — no test constructs this system, and
+ *  the world stays one-seed-one-cosmos (the same seed always builds the same 100). */
+const SHOG_COUNT_DESKTOP = 100;
+const SHOG_COUNT_MOBILE = 16;
+/** Only the first few shoggoths carry aura PointLights — WebGL compiles the lighting loop per light,
+ *  so 200 dynamic lights would explode the fragment shader. The rest read via emissive (+ bloom). */
+const LIT_SHOGGOTHS = 4;
+
 // Module-level scratch — reused every frame, never retained (keeps update() allocation-free).
 const V1 = new THREE.Vector3();
 const V2 = new THREE.Vector3();
@@ -40,8 +49,9 @@ interface Shoggoth {
   tendrilGeo: THREE.BufferGeometry;
   tendrilAttr: THREE.BufferAttribute;
   tendrilPositions: Float32Array;
-  aura: THREE.PointLight;
-  aura2: THREE.PointLight;
+  /** Aura lights — present only on the first {@link LIT_SHOGGOTHS} (the rest glow emissive). */
+  aura?: THREE.PointLight;
+  aura2?: THREE.PointLight;
   vel: THREE.Vector3;
   ph: number;
   /** Consumption tick accumulator (legacy `aT`). */
@@ -64,15 +74,26 @@ export class ShoggothSystem {
    *  active hole tugs the shoggoths too. null ⇒ no coupling (the legacy/test behaviour). */
   private singularity: SingularitySystem | null = null;
 
-  /** Builds the three shoggoths at the legacy posts × ARENA_MID (V3.1 mid-field). */
+  /**
+   * Builds a swarm of shoggoths across the mid-field (CONTRACTS V14: 100 on desktop+, 16 on phone).
+   * Placement is seeded from `ctx.rng` so the same seed always raises the same horde; only the first
+   * {@link LIT_SHOGGOTHS} carry point lights (the rest glow emissive under bloom).
+   */
   constructor(ctx: SimContext, entities: EntityManager) {
     this.ctx = ctx;
     this.entities = entities;
     const root = new THREE.Group();
     ctx.scene.add(root);
-    this.spawnShoggoth(root, -30 * ARENA_MID, 8, -40 * ARENA_MID);
-    this.spawnShoggoth(root, 35 * ARENA_MID, 12, 30 * ARENA_MID);
-    this.spawnShoggoth(root, 0, 6, -70 * ARENA_MID);
+    const rng = ctx.rng;
+    const count = ctx.quality.isMobile ? SHOG_COUNT_MOBILE : SHOG_COUNT_DESKTOP;
+    for (let i = 0; i < count; i++) {
+      const a = rng() * TAU;
+      const r = (16 + rng() * 54) * ARENA_MID;
+      const x = Math.cos(a) * r;
+      const z = Math.sin(a) * r;
+      const y = 4 + rng() * 22;
+      this.spawnShoggoth(root, x, y, z, i < LIT_SHOGGOTHS);
+    }
   }
 
   /** Number of active shoggoths (constant 3 — feeds the telemetry `shoggoths` field). */
@@ -86,12 +107,12 @@ export class ShoggothSystem {
   }
 
   /** Constructor-time builder (allocations allowed here; legacy `mkShog`). */
-  private spawnShoggoth(root: THREE.Group, x: number, y: number, z: number): void {
+  private spawnShoggoth(root: THREE.Group, x: number, y: number, z: number, lit: boolean): void {
     const rng = this.ctx.rng;
     const group = new THREE.Group();
 
-    // Deformed icosahedron core (legacy 509-511).
-    const coreGeo = new THREE.IcosahedronGeometry(3, 2);
+    // Deformed icosahedron core (legacy 509-511). Bulk horde uses a cheaper subdivision.
+    const coreGeo = new THREE.IcosahedronGeometry(3, lit ? 2 : 1);
     // IcosahedronGeometry always carries a non-interleaved position BufferAttribute.
     const cv = coreGeo.getAttribute('position') as THREE.BufferAttribute;
     for (let i = 0; i < cv.count; i++) {
@@ -115,8 +136,8 @@ export class ShoggothSystem {
     const core = new THREE.Mesh(coreGeo, coreMat);
     group.add(core);
 
-    // 7-11 blinking eyes on the core surface (legacy 512).
-    const eyeCount = 7 + Math.floor(rng() * 5);
+    // 7-11 blinking eyes on lit shoggoths; 3-5 on the bulk horde (fill-rate budget).
+    const eyeCount = lit ? 7 + Math.floor(rng() * 5) : 3 + Math.floor(rng() * 3);
     const eyeMats: THREE.MeshBasicMaterial[] = [];
     const eyePhases = new Float32Array(eyeCount);
     for (let ei = 0; ei < eyeCount; ei++) {
@@ -150,12 +171,17 @@ export class ShoggothSystem {
     );
     group.add(tendrils);
 
-    // Aura lights (legacy 514) — intensity × POINT_LIGHT_GAIN, decay 0 (r128 falloff model).
-    const aura = new THREE.PointLight(0x220044, 4 * POINT_LIGHT_GAIN, 30, 0);
-    group.add(aura);
-    const aura2 = new THREE.PointLight(0x440000, 2 * POINT_LIGHT_GAIN, 15, 0);
-    aura2.position.y = 2;
-    group.add(aura2);
+    // Aura lights (legacy 514) — only on the first LIT_SHOGGOTHS so the dynamic-light count stays
+    // bounded (WebGL compiles the lighting loop per light). The bulk horde glows by emissive + bloom.
+    let aura: THREE.PointLight | undefined;
+    let aura2: THREE.PointLight | undefined;
+    if (lit) {
+      aura = new THREE.PointLight(0x220044, 4 * POINT_LIGHT_GAIN, 30, 0);
+      group.add(aura);
+      aura2 = new THREE.PointLight(0x440000, 2 * POINT_LIGHT_GAIN, 15, 0);
+      aura2.position.y = 2;
+      group.add(aura2);
+    }
 
     group.position.set(x, y, z);
     root.add(group);
@@ -236,9 +262,11 @@ export class ShoggothSystem {
         if (!eyeMat) continue; // noUncheckedIndexedAccess: ei < length
         eyeMat.opacity = 0.3 + Math.abs(Math.sin(t * 2 + (sg.eyePhases[ei] ?? 0))) * 0.7;
       }
-      sg.aura.intensity = (3 + Math.sin(t * 2 + sg.ph) * 2) * POINT_LIGHT_GAIN;
-      sg.aura.color.setHSL(hue, 0.7, 0.3);
-      sg.aura2.intensity = (1.5 + Math.cos(t * 3 + sg.ph) * 1) * POINT_LIGHT_GAIN;
+      if (sg.aura) {
+        sg.aura.intensity = (3 + Math.sin(t * 2 + sg.ph) * 2) * POINT_LIGHT_GAIN;
+        sg.aura.color.setHSL(hue, 0.7, 0.3);
+      }
+      if (sg.aura2) sg.aura2.intensity = (1.5 + Math.cos(t * 3 + sg.ph) * 1) * POINT_LIGHT_GAIN;
 
       // Tendrils — O(k) via grid query, squared-distance threshold (legacy 531-534).
       const nearby = ctx.grid.query(p.x, p.z, TENDRIL_RADIUS);
