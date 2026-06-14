@@ -72,6 +72,20 @@ export const QUALITY_LADDER: Readonly<
     starCount: 6000,
     instanced: true,
   },
+  mega: {
+    // V38 — the directive's 50,000-entity ceiling. OPT-IN ONLY (`?tier=mega`); `resolveTier` never
+    // returns it, so weaker machines are never auto-dropped into it. The EntityManager's √N density
+    // scale (entities.ts) spreads the spawn volume + containment so neighbour-query cost stays bounded
+    // — the headless `bun bench/scale.ts` profile (docs/BENCHMARKS.md) measures the sim at this size.
+    dprCap: 2,
+    maxEntities: 50000,
+    targetEntities: 50000,
+    quantumCount: 10000,
+    maxLinks: 8000,
+    shadows: true,
+    starCount: 8000,
+    instanced: true,
+  },
 };
 
 /**
@@ -99,7 +113,13 @@ export function detectQuality(): QualityProfile {
   // the auto path). Lets a desktop browser preview the phone path — and a touch-emulating preview
   // (which auto-detects 'phone') exercise the full desktop/ultra population. Absent → auto-detect.
   const forced = new URLSearchParams(window.location.search).get('tier');
-  if (forced === 'phone' || forced === 'laptop' || forced === 'desktop' || forced === 'ultra') {
+  if (
+    forced === 'phone' ||
+    forced === 'laptop' ||
+    forced === 'desktop' ||
+    forced === 'ultra' ||
+    forced === 'mega'
+  ) {
     return { tier: forced, isMobile: forced === 'phone', ...QUALITY_LADDER[forced] };
   }
   const isTouch = window.matchMedia('(hover:none),(pointer:coarse)').matches;

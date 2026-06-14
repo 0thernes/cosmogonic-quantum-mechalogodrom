@@ -14,8 +14,9 @@ import type { AuditTrail } from './logging/audit';
 import type { Behavior, RenderMode, ViewMode, Weather } from './sim/constants';
 import type { MarketSummary } from './sim/economy';
 
-/** Quality tier ladder (CONTRACTS V3.1): decided once at boot, never switched. */
-export type QualityTier = 'phone' | 'laptop' | 'desktop' | 'ultra';
+/** Quality tier ladder (CONTRACTS V3.1): decided once at boot, never switched. `mega` is opt-in only
+ * (`?tier=mega`) — the 50k ceiling for beefy GPUs, never auto-selected (V38). */
+export type QualityTier = 'phone' | 'laptop' | 'desktop' | 'ultra' | 'mega';
 
 /** Device-adaptive quality profile, resolved once at boot. */
 export interface QualityProfile {

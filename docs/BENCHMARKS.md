@@ -152,6 +152,36 @@ reachable on CPU optimization alone on this class of machine**, which is exactly
 tier's idle target is the adaptive 6,500 (sim-CPU 9.5 ms + a proportionally smaller GPU draw),
 with 10,000 left as the hard ceiling reachable on demand via bursts/apocalypse.
 
+## Population scale to 50,000 (V38)
+
+The directive asks for **up to 50,000 entities**. Profiled with `bun bench/scale.ts` — a headless
+harness (the determinism-test fixture) that drives the real `world.ts` per-frame entity pipeline
+(`entities.update` + the spatial-hash rebuild) at a ladder of sizes and times ms/frame. Seed
+`0xc0541c`, 120 measured frames after a 40-frame warm-up.
+
+**Finding (the density trap):** at a FIXED arena the cost is super-linear — neighbours-per-query
+`k ∝ density ∝ N`, so the `O(n·k)` loop is effectively `O(n²)`. Raw: 10k = 6.0 ms, 25k = 36 ms, 50k =
+**167 ms** (6 fps).
+
+**Fix (`entities.ts`, V38):** the spawn radius + containment radius scale by **√(maxEntities / 10000)**.
+The arena is a wide thin DISK, so areal density `∝ N / radius²`; scaling the radius by √N holds density
+(and thus `k`, and the query cost) roughly constant. Clamped to ≥ 1, so it is **exactly 1.0 at ≤ 10k** —
+every existing tier and the determinism golden stay byte-identical; only the opt-in `mega` tier spreads.
+
+| N (entities) | ms/frame raw | ms/frame √N-scaled | budget                       |
+| ------------ | ------------ | ------------------ | ---------------------------- |
+| 2,000        | 0.9          | 1.0                | ✅ 60 fps                    |
+| 5,000        | 2.2          | 2.1                | ✅ 60 fps                    |
+| 10,000       | 6.0          | 6.7                | ✅ 60 fps (ceiling)          |
+| 25,000       | 36.2         | **25.0**           | 🟨 30 fps                    |
+| 50,000       | 167.5        | **60.1**           | 🟥 sim ~16 fps (2.8× faster) |
+
+The residual super-linearity past 25k is the flock/swarm behaviours actively **re-concentrating**
+entities the spawn spread out — a deeper neighbour-list LOD is the next lever. The opt-in `mega` tier
+(`?tier=mega`, `core/quality.ts`) raises the ceiling to 50,000, boots at 90% of it, and was verified
+live: **44,977 entities instantiated, rendered, and stepped with zero console errors** (the throttled
+preview tab's full-frame cost is render-bound; a discrete GPU absorbs the 50k instanced draw).
+
 ## Interpretation
 
 The entire deterministic core (grid rebuild + a frame's worth of neighbor

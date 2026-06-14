@@ -60,4 +60,15 @@ describe('QUALITY_LADDER', () => {
       expect(hi.starCount).toBeGreaterThan(lo.starCount);
     }
   });
+
+  test('mega is the opt-in 50k ceiling — never auto-resolved (V38)', () => {
+    expect(QUALITY_LADDER.mega.maxEntities).toBe(50000);
+    expect(QUALITY_LADDER.mega.targetEntities).toBe(QUALITY_LADDER.mega.maxEntities);
+    expect(QUALITY_LADDER.mega.instanced).toBeTrue();
+    expect(QUALITY_LADDER.mega.maxEntities).toBeGreaterThan(QUALITY_LADDER.ultra.maxEntities);
+    // resolveTier tops out at ultra — mega is reachable only via the `?tier=mega` boot override.
+    expect(resolveTier(false, 64, 64)).not.toBe('mega');
+    expect(resolveTier(false, 128, 256)).not.toBe('mega');
+    expect(resolveTier(true, 64, 64)).not.toBe('mega');
+  });
 });

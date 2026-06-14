@@ -98,9 +98,21 @@ export class EntityManager {
   private readonly ctx: SimContext;
   /** Single long-lived behavior env; per-entity fields are rewritten in `update()` (no alloc). */
   private readonly env: BehaviorEnv;
+  /**
+   * V38 density scale: the spawn radius + containment radius grow as √(maxEntities / 10000), clamped
+   * to ≥ 1. The arena is a wide, thin DISK, so AREAL density ∝ N / radius²; scaling the radius by √N
+   * holds that density (and thus the per-entity neighbour count, and the O(n·k) grid-query cost)
+   * constant as the population climbs toward 50k. Exactly 1.0 at ≤ 10k, so every existing tier (and
+   * the determinism golden) is byte-identical; only the new mega tier spreads the field out.
+   */
+  private readonly densityScale: number;
+  /** Containment radius², pre-scaled by densityScale² (the squared spawn-volume growth). */
+  private readonly containR2: number;
 
   constructor(ctx: SimContext) {
     this.ctx = ctx;
+    this.densityScale = Math.max(1, Math.sqrt(ctx.quality.maxEntities / 10000));
+    this.containR2 = CONTAIN_RADIUS2 * this.densityScale * this.densityScale;
     this.env = {
       ctx,
       spawn: (pos, mi, scale) => this.spawn(pos, mi, scale),
@@ -155,11 +167,12 @@ export class EntityManager {
       // V3.2 home-sector bias: phylum p spawns in its angular wedge of the
       // arena (matching titan p's patrol angle), radius 12%..67% of the rim.
       const ang = (phylum / PHYLUM_COUNT) * TAU + (rng() - 0.5) * 0.9;
-      const rad = (0.12 + rng() * 0.55) * ARENA_RADIUS;
+      const rad = (0.12 + rng() * 0.55) * ARENA_RADIUS * this.densityScale;
       mesh.position.set(Math.cos(ang) * rad, rng() * 30 - 8, Math.sin(ang) * rad);
     } else {
-      // Legacy random volume × ARENA (V3.1 spawn-volume scale).
-      mesh.position.set((rng() - 0.5) * 70 * ARENA, rng() * 30 - 8, (rng() - 0.5) * 70 * ARENA);
+      // Legacy random volume × ARENA (V3.1 spawn-volume scale), spread by the V38 density scale.
+      const xz = 70 * ARENA * this.densityScale;
+      mesh.position.set((rng() - 0.5) * xz, rng() * 30 - 8, (rng() - 0.5) * xz);
     }
     if (ctx.quality.instanced) {
       // V3.1: pooled rendering — the data mesh NEVER joins the scene graph; the
@@ -402,8 +415,8 @@ export class EntityManager {
         if (u.belly <= 0) e.scale.setScalar(u.sc);
       }
 
-      // Containment — squared distance, no sqrt (legacy 4225 × ARENA²; V3.1).
-      if (e.position.lengthSq() > CONTAIN_RADIUS2) {
+      // Containment — squared distance, no sqrt (legacy 4225 × ARENA²; V3.1, V38 density-scaled).
+      if (e.position.lengthSq() > this.containR2) {
         MOVE.copy(e.position).normalize().multiplyScalar(-0.005);
         u.vel.add(MOVE);
       }

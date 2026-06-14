@@ -13,6 +13,21 @@ the full gate (now also a coverage gate, on Linux + Windows) with same-seed dete
 
 ### Added
 
+- **Scale to 50,000 entities — the chaos-biome ceiling, optimized (V38)** — the directive's
+  population mandate. A headless profiler [`bench/scale.ts`](bench/scale.ts) drives the real per-frame
+  entity pipeline (`entities.update` + grid) at 2k→50k and times ms/frame — and exposed the **density
+  trap**: at a fixed arena, neighbours-per-query `k ∝ N`, so the `O(n·k)` loop is effectively `O(n²)`
+  (50k = 167 ms, ~6 fps). The fix in [`src/sim/entities.ts`](src/sim/entities.ts): the spawn radius +
+  containment scale by **√(maxEntities / 10000)** — the arena is a thin disk, so √N radius growth holds
+  AREAL density (and thus `k`) constant. Clamped to ≥ 1, so it's **exactly 1.0 at ≤ 10k** — every
+  existing tier and the **determinism golden stay byte-identical**; only the new ceiling spreads out.
+  Result: **50k 167 → 60 ms (2.8× faster)**, 25k now holds 30 fps. A new opt-in **`mega`** quality tier
+  (`?tier=mega`, never auto-selected) raises the ceiling to **50,000**, boots at 90% of it, and adds
+  connectome/graph cadence rungs above 20k. _Note: archetypes were already met — `MORPH_COUNT` 100
+  (legacy) / 250 (phylum mode); the latent 70-weight per-entity genome brain (`sim/genome.ts`, in the
+  50–150 band) remains to be wired into the live loop._ **Verified**: the profiler numbers (recorded in
+  [BENCHMARKS.md](docs/BENCHMARKS.md)), and live `?tier=mega` — **44,977 entities instantiated,
+  rendered, and stepped, zero console errors**; full gate green (756 tests, +1 for the mega tier).
 - **THE BOOK — the navigable RAG repo book (V37)** — the directive's documentation mandate: one master
   index over the whole repository. New [`docs/BOOK.md`](docs/BOOK.md) ties all **38 docs** + the code +
   the build/run, data-flow, troubleshooting and roadmap into a single human- and AI-readable table of

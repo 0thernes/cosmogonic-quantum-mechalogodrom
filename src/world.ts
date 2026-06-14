@@ -539,12 +539,15 @@ export class World {
   }
 
   /**
-   * Boot/reset population: 30% of the adaptive steady-state target (legacy 300 of 1000).
-   * Uses `targetEntities` (= maxEntities on every tier except ultra) so the world boots toward
-   * its idle equilibrium, not the 10k ceiling — organic auto-split then fills to the target.
+   * Boot/reset population: 30% of the adaptive steady-state target (legacy 300 of 1000) so the world
+   * boots toward its idle equilibrium and organic auto-split fills the rest. The opt-in **mega** tier
+   * (V38) is the exception — it boots at 90% of its 50k ceiling so the directive's "up to 50,000
+   * active creatures" is instantiated, rendered, and stepped from the first frame (the √N density
+   * scale keeps it tractable; see `bun bench/scale.ts`), rather than waiting on slow organic growth.
    */
   private bootPopulation(): number {
-    return Math.max(300, Math.round(this.quality.targetEntities * 0.3));
+    const frac = this.quality.tier === 'mega' ? 0.9 : 0.3;
+    return Math.max(300, Math.round(this.quality.targetEntities * frac));
   }
 
   /**
@@ -657,7 +660,7 @@ export class World {
     // /6 above 5,000) keep the O(n·k) link rebuild + GPU upload off the 10k cost wall. The
     // connectome draws no rng, so cadence changes are determinism-neutral (GraphMind, which
     // does draw rng, runs on its own 240/600f cadence over whatever pairs exist). V3.6.
-    const cadence = n > 5000 ? 6 : n > 2000 ? 4 : n > 700 ? 3 : n > 400 ? 2 : 1;
+    const cadence = n > 20000 ? 12 : n > 5000 ? 6 : n > 2000 ? 4 : n > 700 ? 3 : n > 400 ? 2 : 1; // V38 mega rung
     if (s.frame % cadence === 0) this.connectome.update(dt, t);
 
     // F-SUPER V31: the apex mind thinks ~15×/sec from live world signals. Guarded; own rng → the
@@ -693,7 +696,7 @@ export class World {
     this.titans.drainPerturb(); // route any pending waste scar AFTER the RD step
     // Graph passes double their period above 2,500 entities — louvain over a
     // 10k-node mirror would spike the budget at the V2 cadence (V3.6 note).
-    const gmScale = n > 2500 ? 2 : 1;
+    const gmScale = n > 20000 ? 4 : n > 2500 ? 2 : 1; // V38 mega rung
     if (s.frame % (240 * gmScale) === 0) this.graphMind.updateCommunities();
     // Offset 300 provably never collides with the communities cadence above.
     if (s.frame % (600 * gmScale) === 300) this.graphMind.updateRank();
