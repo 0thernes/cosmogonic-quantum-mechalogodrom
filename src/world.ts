@@ -70,6 +70,7 @@ import { NhiAction, type NhiIntent, type NhiPercept } from './sim/nhi';
 import { NhiBodySystem } from './sim/nhi-body';
 import { CosmicWeb } from './sim/cosmic-web';
 import { GoldLattice } from './sim/gold-lattice';
+import { QuantumLattice } from './sim/quantum-lattice';
 import { LoreEngine } from './sim/lore';
 import { AnalyticsSystem } from './sim/analytics';
 import { AudioEngine } from './audio/engine';
@@ -188,6 +189,8 @@ export class World {
   private readonly cosmicWeb: CosmicWeb;
   /** Floating gold wireframe forms — architectural depth (additive; assigned in the constructor). */
   private readonly goldLattice: GoldLattice;
+  /** Floating neon sacred-geometry shells — the quantum heart (additive; assigned in the constructor). */
+  private readonly quantumLattice: QuantumLattice;
   /** Cycle cursor for the chaos control's singularity chooser. */
   private singularityCursor = 0;
   /** Reused per-frame scalar block handed to the instanced renderer (alloc-free). */
@@ -350,6 +353,8 @@ export class World {
     this.cosmicWeb = new CosmicWeb(ctx.scene);
     // V11: floating gold wireframe architecture for designed-space depth (additive; draws no rng).
     this.goldLattice = new GoldLattice(ctx.scene);
+    // V11: floating neon sacred-geometry quantum lattice (additive; draws no rng).
+    this.quantumLattice = new QuantumLattice(ctx.scene);
 
     this.hud = new Hud();
     this.panel = new TelemetryPanel();
@@ -488,6 +493,7 @@ export class World {
     this.leviathans.update(dt, t);
     this.cosmicWeb.update(t); // V11: far-field cosmic-web shimmer (additive backdrop, no rng)
     this.goldLattice.update(t); // V11: floating gold architecture tumble (additive, no rng)
+    this.quantumLattice.update(t); // V11: neon sacred-geometry shells (additive, no rng)
     // F-NHI V10: alien bodies follow + morph their NHI every frame (guarded; additive viz only).
     if (this.nhiBody.count > 0) {
       try {
