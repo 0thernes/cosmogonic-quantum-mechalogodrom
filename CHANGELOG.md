@@ -7,8 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-Post-`0.9.0` continuous-hardening — no behaviour changes to the sim, all shipped behind the full
-gate (now also a coverage gate, on Linux + Windows) with same-seed determinism preserved.
+Post-`0.9.0` continuous-hardening plus the **V10 NHI super-mind** and **V11 environment + look**
+work — all additive (a no-op until a launched NHI, or behind the opt-in `?fx` flag), shipped behind
+the full gate (now also a coverage gate, on Linux + Windows) with same-seed determinism preserved.
 
 ### Added
 
@@ -25,6 +26,24 @@ gate (now also a coverage gate, on Linux + Windows) with same-seed determinism p
 - **`prefers-reduced-motion`** accommodation (`app.css`) — calms UI-chrome animation for
   motion-sensitive users; the WebGL canvas is intentionally unaffected.
 - **CycloneDX 1.5 SBOM** (`scripts/sbom.ts`, `bun run sbom`) — deterministic, attached to each release.
+- **NHI super-mind (V10)** — `src/sim/nhi.ts` + `nhi-system.ts` + a game-theory kernel in
+  `ai/brains.ts` (best-response, Axelrod iterated strategies, regret-matching): a deterministic apex
+  intelligence (game theory + memory grudges + a per-NHI alien Markov voice + an inherited neural
+  gene) wired into the world. A launched NHI now spawns mutated swarms, plays the nearest faction
+  (gather/pacify when it cooperates, scatter + Nash-strategy gaslight when it defects), broadcasts
+  hallucinated utterances, and wears an alien biomechanical red-eyed morphing body (`nhi-body.ts`).
+  +40 tests, bit-reproducible; a no-op (draws no rng) until launched.
+- **Environment depth (V11)** — additive, boot-stream-neutral backdrops for "no more 1980s feel":
+  a **cosmic web** of glowing nodes + filaments (`cosmic-web.ts`), floating **gold-line architecture**
+  (`gold-lattice.ts`), and a neon **sacred-geometry quantum lattice** (`quantum-lattice.ts`).
+  Headless-tested (`viz-systems.test.ts`).
+- **Glass-jewel organism shading** + **flag-gated cinematic post-FX** (`?fx=1`: UnrealBloom + a
+  procedural PMREM env-map, `core/postfx.ts`) — OFF by default and guarded, so the verified default
+  render is never regressed by an unverified effect graph.
+- **ADR 0006** — the ASI graphics stack + the honest language verdict (GLSL now; Rust→WASM/WebGPU
+  later; Python/C++ can't run client-side in a browser app).
+- **GitHub Pages CD** (`.github/workflows/pages.yml` + `scripts/build-pages.ts`) — builds and publishes
+  the REAL app on every push to `master`, replacing the stale hand-pushed legacy demo.
 
 ### Changed
 
