@@ -125,13 +125,18 @@ Oracle / Architect — half a Titan in size but ~100× its power._
   (commits to HUNT / FLEE / DOMINATE / DECEIVE / SPAWN / EXPLORE / REST), and **self-replicates** up to
   3 mutated twins when sated + dominant. _Next: vision/sound from real world queries; manipulation of
   lesser entities; the access-puzzle-gated 2nd super creature + SUPERHERO player mode._
-- **Silhouette:** _queued (next loop)_ — a freakish morphing anatomy from the 5 visual-DNA plates: many
-  eyes, radial arms, a crystalline-architecture core, quantum-iridescent shell. Must read as half a
-  Titan yet unmistakably apex.
-- **Material language:** _queued_ — a masterful 4K shader (the brief's graphics emphasis): iridescent
-  thin-film + subsurface god-glow + crystalline filigree, distinct from every jewel archetype.
-- **Animation grammar:** _queued_ — slow, dominant, deliberate; morphing organs; quantum blink/teleport
-  flourishes keyed to its plan + arousal.
+- **Silhouette (V32, `sim/super-body.ts`):** a freakish many-eyed colossus — a faceted crystalline
+  CORE (R≈6, ½-Titan class) wrapped in a wireframe ARCHITECTURE cage, ringed by a corona of **16
+  glowing EYES** (iris + void pupil), stabbed through by **11 radial SPIKE-ARMS**, and orbited by **3
+  chrome RINGS** (the halo-mechanism). Reads instantly as the apex authority — verified on screen.
+- **Material language (V32):** a hand-written **god-jewel shader** (patched `MeshStandardMaterial`, real
+  scene lighting): object-space **fBm crystalline relief** + worn-jewel roughness + **thin-film
+  iridescence** (Fresnel-cycled hue) + a **subsurface GOD-GLOW in the live plan colour scaled by
+  dominance**. Distinct from every Reliquary jewel archetype; the eyes blaze, the rings are mirror-chrome.
+- **Animation grammar (V32):** wholly cognition-driven — spin + heartbeat ∝ arousal, glow + eye-blaze ∝
+  dominance, core colour + eye colour = the committed plan, arm-splay ∝ aggression, vertex morph-wobble
+  ∝ surprise, the cage counter-rotates, the rings never rest, and the whole body drifts on the mind's
+  own movement output. Verified live: plan DOMINATE → the whole colossus glows violet.
 - **World meaning:** the dominant being — God/Oracle/Architect energy. The smartest, most powerful thing
   in the cosmos; the player's eventual avatar (SUPERHERO mode) and the world's apex authority.
 - **Economic role:** **apex purse** (weight 20 — fatter than an NHI's 14), enrolled on launch; its

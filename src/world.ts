@@ -81,6 +81,7 @@ import { Observatory } from './ui/observatory';
 import { NhiObservatory } from './ui/nhi-observatory';
 import { MarketTicker } from './ui/market-ticker';
 import { SuperCreature, type SuperPercept } from './sim/super-creature';
+import { SuperBodySystem } from './sim/super-body';
 import { SuperPanel } from './ui/super-panel';
 import { TelemetryPanel, bindPanelToggles } from './ui/panels';
 import { InputSystem } from './ui/input';
@@ -155,6 +156,7 @@ export class World {
   private readonly superCreature: SuperCreature;
   private readonly superTwins: SuperCreature[] = [];
   private readonly superPanel: SuperPanel;
+  private readonly superBody: SuperBodySystem;
   private readonly superRng: Rng;
   /** Pool renderer; null on the phone tier (V1 per-mesh path — V3.1). */
   private readonly instanced: InstancedEntityRenderer | null;
@@ -445,6 +447,8 @@ export class World {
     this.superCreature = new SuperCreature(this.superRng);
     this.superPanel = new SuperPanel();
     this.economy.register(World.ECON_SUPER_BASE, this.superCreature.name, 20, this.superRng);
+    // F-SUPER V32: the masterful many-eyed apex BODY (god-jewel shader) — additive, draws no rng.
+    this.superBody = new SuperBodySystem(ctx.scene);
     bindPanelToggles();
     this.bindObservatoryTabs();
     this.bindAlgoPicker();
@@ -582,6 +586,8 @@ export class World {
     this.titans.update(dt, t);
     // F-BEINGS: the leviathans sail the mid-field (pure trig + the read-only hole force, no rng).
     this.leviathans.update(dt, t);
+    // F-SUPER V32: animate the apex body every frame from the sim clock + last-folded mind state.
+    this.superBody.update(t, dt);
     this.cosmicWeb.update(t); // V11: far-field cosmic-web shimmer (additive backdrop, no rng)
     this.goldLattice.update(t); // V11: floating gold architecture tumble (additive, no rng)
     this.quantumLattice.update(t); // V11: neon sacred-geometry shells (additive, no rng)
@@ -755,6 +761,7 @@ export class World {
         phase: (t / 60) % 1,
       };
       const intent = this.superCreature.think(percept);
+      this.superBody.setMind(this.superCreature.snapshot()); // fold the mind into the body's look
       // Twins emerge slowly when willed (cap 3). Wallet enrolled on the SUPER sub-stream too.
       if (intent.wantsSpawn && s.frame % 600 === 0) {
         const twin = this.superCreature.maybeSpawn(this.superRng);

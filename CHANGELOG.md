@@ -13,6 +13,23 @@ the full gate (now also a coverage gate, on Linux + Windows) with same-seed dete
 
 ### Added
 
+- **THE SUPER CREATURE — the masterful body (V32)** — the directive's graphics emphasis: the apex mind
+  (V31) now has a **masterful, morphing, many-eyed BODY** (`sim/super-body.ts`), rendered outside the
+  instanced pool so it can carry unique geometry + a hand-written shader. The form is drawn from the
+  five visual-DNA plates: a faceted crystalline **CORE** (R≈6, ½-Titan class), a wireframe
+  **ARCHITECTURE cage**, a corona of **16 glowing EYES** (iris + void pupil), **11 radial SPIKE-ARMS**,
+  and **3 orbiting CHROME RINGS** (the halo-mechanism). The surface is a **god-jewel shader** — a
+  patched `MeshStandardMaterial` (real scene lighting) injected with object-space **fBm crystalline
+  relief**, worn-jewel roughness, **thin-film iridescence** (Fresnel-cycled hue), and a **subsurface
+  GOD-GLOW in the creature's live plan colour scaled by its dominance**. The animation grammar is
+  wholly **cognition-driven**: spin + heartbeat ∝ arousal, glow + eye-blaze ∝ dominance, core/eye
+  colour = the committed plan, arm-splay ∝ aggression, a vertex morph-wobble ∝ surprise, the cage
+  counter-rotates, the rings never rest, and the whole colossus drifts on the mind's own movement
+  output. Additive + allocation-free per frame (reused uniforms; `setMind` on the mind cadence,
+  `update` animates from the clock); draws no rng. **Verified live** via the `__CQM__` capture: the
+  body renders as a violet many-eyed spiked orb haloed by chrome rings (plan **DOMINATE** → violet
+  glow), god-jewel shader compiled clean (no console errors), full gate green (737 tests). _Next loop:
+  bloom/iridescence polish, real world-query senses, then the access puzzle + 2nd super creature._
 - **THE SUPER CREATURE — the apex deep mind (V31)** — the new directive's always-active super being:
   **half a Titan, ~100× the power**, driven by a genuine **1444-parameter deep neural mind** — a
   stacked CORTEX→ACTOR network (18→32→16→12→8, a true 4-layer net, an order of magnitude past an NHI's
