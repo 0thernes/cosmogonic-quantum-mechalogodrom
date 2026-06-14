@@ -13,6 +13,26 @@ the full gate (now also a coverage gate, on Linux + Windows) with same-seed dete
 
 ### Added
 
+- **THE SUPER CREATURE — the apex deep mind (V31)** — the new directive's always-active super being:
+  **half a Titan, ~100× the power**, driven by a genuine **1444-parameter deep neural mind** — a
+  stacked CORTEX→ACTOR network (18→32→16→12→8, a true 4-layer net, an order of magnitude past an NHI's
+  tiny gene, inside the briefed 1000–1500 band). On top of the net sit the faculties the brief names,
+  every one a real internal variable: an **emotion-like state** (valence / arousal / dominance, each an
+  EMA of live signals), an **episodic-memory** ring, a **prediction loop** (the cortex forecasts
+  next-beat salience; the gap is felt as SURPRISE and feeds arousal back), **GOAP-style planning** (a
+  goal — HUNT / FLEE / DOMINATE / DECEIVE / SPAWN / EXPLORE / REST — is argmaxed from the drive scores
+  each beat), **dominance**, and **self-replication** (it sires up to **3 mutated twins**, each one
+  generation deeper). Enrolled in the economy with an **apex purse (weight 20)** and it **appears in
+  telemetry** via a self-mounting **⬢ ARCHITECT** panel (identity · `1444p deep` · ½ Titan ×100 ·
+  committed plan · seven emotion/intent meters · twins · wallet), placed bottom-right with a 32px gap
+  from the market toggle (no overlap). Wired into the world on its **own seeded rng sub-stream** so the
+  main determinism golden stays byte-identical, thinking ~15×/sec from live world signals
+  (chaos→threat, population→crowding/prey, economy→wealth, audio bass/level→hearing+sight, a slow
+  clock→circadian phase). Deterministic + tested (param budget, same-seed psychological arc, bounded
+  I/O, the emotion temperament, the twin cap — 5 tests). **Verified live** in the running world:
+  `ARCHITECT-Ω`, plan **DOMINATE**, dominance 0.998, wallet 2.1k, panel populated, no console errors;
+  full gate green (736 tests). The masterful morphing many-eyed BODY + 4K shader that renders it hangs
+  off `SuperCreature.snapshot` next loop (the brief's graphics emphasis).
 - **AI diagnostics + recovery pipeline — the offline-AI repair (V30)** — the Copilot panel gains a 🩺
   DIAGNOSTICS view that answers "why is the AI silent?". A new server route **`/api/copilot/health`**
   live-probes every provider in the failover chain **in parallel** (a 1-token ping, 6s timeout each)

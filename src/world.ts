@@ -80,6 +80,8 @@ import { Hud } from './ui/hud';
 import { Observatory } from './ui/observatory';
 import { NhiObservatory } from './ui/nhi-observatory';
 import { MarketTicker } from './ui/market-ticker';
+import { SuperCreature, type SuperPercept } from './sim/super-creature';
+import { SuperPanel } from './ui/super-panel';
 import { TelemetryPanel, bindPanelToggles } from './ui/panels';
 import { InputSystem } from './ui/input';
 import type { AuditTrail } from './logging/audit';
@@ -148,6 +150,12 @@ export class World {
   private readonly nhiObs: NhiObservatory;
   /** F-ECON V23: the self-building market-ticker panel (live AURUM/UMBRA market state). */
   private readonly marketTicker: MarketTicker;
+
+  // F-SUPER V31: the always-active apex mind + its self-mounting telemetry panel + sired twins.
+  private readonly superCreature: SuperCreature;
+  private readonly superTwins: SuperCreature[] = [];
+  private readonly superPanel: SuperPanel;
+  private readonly superRng: Rng;
   /** Pool renderer; null on the phone tier (V1 per-mesh path — V3.1). */
   private readonly instanced: InstancedEntityRenderer | null;
   /** Total morphotypes minted at boot (250 in phylum mode). */
@@ -193,6 +201,8 @@ export class World {
   /** F-ECON-CREATURES V19: puppeteer econ ids occupy 3000..3099 (≤100 cabal; clear of others). */
   private static readonly ECON_PUPPET_BASE = 3000;
   private static readonly ECON_NHI_BASE = 5000;
+  /** F-SUPER V31: the apex purse (+1..3 for its twins). 9000 leaves headroom below it. */
+  private static readonly ECON_SUPER_BASE = 9000;
   private readonly economy = new Economy();
   private readonly econRng: Rng;
   /** Live NHI entities keyed by mind id; pruned when an NHI dies (leaves entities.list). */
@@ -427,6 +437,14 @@ export class World {
     this.observatory = new Observatory();
     this.nhiObs = new NhiObservatory();
     this.marketTicker = new MarketTicker();
+    // F-SUPER V31: the apex mind on its OWN seeded sub-stream (golden-ratio mix off the world seed,
+    // like econRng) so `think()`/twins never perturb the main rng order — the determinism golden stays
+    // byte-identical. Its wallet (apex stature, weight 20) is enrolled on the SAME sub-stream, so
+    // econRng's order is untouched too. The panel self-mounts; the ⬢ ARCHITECT toggle is always shown.
+    this.superRng = mulberry32((this.persisted.seed ^ 0x5e1f9d3b) >>> 0 || 1);
+    this.superCreature = new SuperCreature(this.superRng);
+    this.superPanel = new SuperPanel();
+    this.economy.register(World.ECON_SUPER_BASE, this.superCreature.name, 20, this.superRng);
     bindPanelToggles();
     this.bindObservatoryTabs();
     this.bindAlgoPicker();
@@ -612,6 +630,10 @@ export class World {
     const cadence = n > 5000 ? 6 : n > 2000 ? 4 : n > 700 ? 3 : n > 400 ? 2 : 1;
     if (s.frame % cadence === 0) this.connectome.update(dt, t);
 
+    // F-SUPER V31: the apex mind thinks ~15×/sec from live world signals. Guarded; own rng → the
+    // main golden is untouched. The masterful body that renders it hangs off this in a later loop.
+    if (s.frame % 4 === 0) this.driveSuper(bands.bass, bands.level, t, n);
+
     // ── V2 cadences (ARCHITECTURE.md frame pipeline) ──
     if (s.frame % 30 === 0) {
       this.qc.update();
@@ -683,6 +705,11 @@ export class World {
       this.nhiObs.update(fid >= 0 ? this.nhi.snapshot(fid) : null, { id: fid, count: nids.length });
       // F-ECON V23: feed the market ticker the live AURUM/UMBRA summary (history kept even when closed).
       this.marketTicker.update(this.economy.summary());
+      // F-SUPER V31: feed the ⬢ ARCHITECT panel the apex mind's latest snapshot + its live wallet.
+      this.superPanel.update(
+        this.superCreature.snapshot(),
+        this.economy.wealthOf(World.ECON_SUPER_BASE)?.netWorth ?? 0,
+      );
     }
 
     // Pool mirror runs LAST — after every system that mutates entity visuals
@@ -698,6 +725,53 @@ export class World {
     }
 
     this.engine.render();
+  }
+
+  /**
+   * F-SUPER V31: one apex beat. Builds a {@link SuperPercept} from live world signals (chaos as
+   * threat, population as crowding/prey, the economy as wealth, audio bass/level as its hearing +
+   * sight, a slow clock as circadian phase), thinks (deterministic — `think()` draws no rng), and on
+   * a slow cadence sires a mutated twin when the mind wills it (capped at 3, on the SUPER sub-stream
+   * so the main golden is untouched). Guarded so a faulty beat can never freeze the world loop.
+   */
+  private driveSuper(bass: number, level: number, t: number, n: number): void {
+    try {
+      const s = this.state;
+      const econ = this.economy.summary();
+      const mean = econ.agents > 0 ? econ.totalWealth / econ.agents : 1;
+      const net = this.economy.wealthOf(World.ECON_SUPER_BASE)?.netWorth ?? 0;
+      const target = Math.max(1, this.quality.targetEntities);
+      const percept: SuperPercept = {
+        energy: clamp(0.5 + 0.5 * (1 - s.chaos / 10), 0, 1),
+        threat: clamp(s.chaos / 8, 0, 1),
+        crowding: clamp(n / target, 0, 1),
+        chaos: clamp(s.chaos / 10, 0, 1),
+        wealthRel: clamp(net / (2 * (mean || 1)), 0, 1),
+        preyClose: clamp(n / target, 0, 1),
+        rivalClose: clamp(this.nhi.count / 8 + (this.titans.count > 0 ? 0.2 : 0), 0, 1),
+        pull: clamp(s.chaos / 12, 0, 1),
+        light: clamp(level, 0, 1),
+        sound: clamp(bass, 0, 1),
+        phase: (t / 60) % 1,
+      };
+      const intent = this.superCreature.think(percept);
+      // Twins emerge slowly when willed (cap 3). Wallet enrolled on the SUPER sub-stream too.
+      if (intent.wantsSpawn && s.frame % 600 === 0) {
+        const twin = this.superCreature.maybeSpawn(this.superRng);
+        if (twin) {
+          this.superTwins.push(twin);
+          this.economy.register(
+            World.ECON_SUPER_BASE + this.superTwins.length,
+            twin.name,
+            20,
+            this.superRng,
+          );
+        }
+      }
+      for (const tw of this.superTwins) tw.think(percept); // twins reason with their own minds
+    } catch {
+      /* an apex beat misbehaved — skip it, keep the world running */
+    }
   }
 
   /**

@@ -109,6 +109,36 @@ nash, market, lorenz`). They split, age, die (weather-tuned lifespan), and feed 
 - **World meaning:** the smartest things in the cosmos — the player's avatar of dominion.
 - **Economic role:** **fattest purse** (weight 14) — super-mind speculators, enrolled on launch.
 
+## 5★ SUPER CREATURE — the apex mind (V31)
+
+_Always exactly one active (the prime `ARCHITECT-Ω`), plus up to 3 sired twins. The God / Simulator /
+Oracle / Architect — half a Titan in size but ~100× its power._
+
+- **Biology:** a singular apex intelligence (`sim/super-creature.ts`) carrying a **1444-parameter deep
+  neural mind** — a stacked CORTEX (18→32→16, the world model) → ACTOR (16→12→8, the drives), a true
+  4-layer net an order of magnitude past an NHI's gene. Born from a seeded sub-stream; twins inherit
+  mutated weights, one generation deeper.
+- **Behavior:** each beat it PERCEIVES 18 signals (threat / crowding / chaos / wealth / prey / rivals /
+  pull / vision / hearing / interoception / circadian), compresses them to a world-model latent, and
+  ACTS on 8 drives. It carries an **emotion-like state** (valence / arousal / dominance EMA), an
+  **episodic memory**, a **prediction loop** (forecast → SURPRISE → arousal), **GOAP-style planning**
+  (commits to HUNT / FLEE / DOMINATE / DECEIVE / SPAWN / EXPLORE / REST), and **self-replicates** up to
+  3 mutated twins when sated + dominant. _Next: vision/sound from real world queries; manipulation of
+  lesser entities; the access-puzzle-gated 2nd super creature + SUPERHERO player mode._
+- **Silhouette:** _queued (next loop)_ — a freakish morphing anatomy from the 5 visual-DNA plates: many
+  eyes, radial arms, a crystalline-architecture core, quantum-iridescent shell. Must read as half a
+  Titan yet unmistakably apex.
+- **Material language:** _queued_ — a masterful 4K shader (the brief's graphics emphasis): iridescent
+  thin-film + subsurface god-glow + crystalline filigree, distinct from every jewel archetype.
+- **Animation grammar:** _queued_ — slow, dominant, deliberate; morphing organs; quantum blink/teleport
+  flourishes keyed to its plan + arousal.
+- **World meaning:** the dominant being — God/Oracle/Architect energy. The smartest, most powerful thing
+  in the cosmos; the player's eventual avatar (SUPERHERO mode) and the world's apex authority.
+- **Economic role:** **apex purse** (weight 20 — fatter than an NHI's 14), enrolled on launch; its
+  wealth will steer its dominance + twin cadence (queued coupling). **Appears in telemetry** via the
+  self-mounting **⬢ ARCHITECT** panel (identity · 1444p deep mind · ½ Titan ×100 · plan · 7
+  emotion/intent meters · twins · wallet).
+
 ## 6. LEVIATHAN — the fourth order
 
 - **Biology:** a fourth class of colossi (`sim/leviathans.ts`), distinct from titans.
