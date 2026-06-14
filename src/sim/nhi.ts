@@ -24,6 +24,8 @@ import {
   GameStrategy,
   iteratedMove,
   regretMatch,
+  goapPlan,
+  type GoapAction,
 } from './ai/brains';
 
 /** What an NHI decides to do this beat. The integrator turns each into an actual world effect. */
@@ -45,6 +47,30 @@ export const NhiAction = {
 } as const;
 export type NhiActionId = (typeof NhiAction)[keyof typeof NhiAction];
 const ACTION_COUNT = 7;
+
+// ── GOAP strategic layer ─────────────────────────────────────────────────────
+// The NHI doesn't just react beat-to-beat — it PLANS a multi-step scheme toward DOMINION (become
+// dominant AND have deceived the faction) and biases each beat toward the plan's next step. Facts
+// are a 4-bit world model the NHI accumulates as it executes; reaching the goal resets it to scheme
+// anew. goapPlan finds the cheapest path (e.g. swarm → dominate, plus deceive).
+const F_SWARMED = 1;
+const F_DECEIVED = 2;
+const F_DOMINANT = 4;
+const F_FED = 8;
+const NHI_GOAL = F_DOMINANT | F_DECEIVED;
+const NHI_GOAP: readonly GoapAction[] = [
+  { pre: 0, preClear: F_SWARMED, set: F_SWARMED, clear: 0, cost: 2 }, // raise a swarm
+  { pre: 0, preClear: F_DECEIVED, set: F_DECEIVED, clear: 0, cost: 1 }, // deceive the faction
+  { pre: F_SWARMED, preClear: F_DOMINANT, set: F_DOMINANT, clear: 0, cost: 1 }, // dominate (needs a swarm)
+  { pre: 0, preClear: F_FED, set: F_FED, clear: 0, cost: 2 }, // hunt / feed
+];
+/** GOAP action index → the {@link NhiAction} whose utility it nudges up. */
+const NHI_PLAN_ACTION = [
+  NhiAction.SPAWN_SWARM,
+  NhiAction.MANIPULATE,
+  NhiAction.DOMINATE,
+  NhiAction.HUNT,
+] as const;
 
 /** Read-only snapshot of the world the NHI perceives this beat (the integrator fills it). */
 export interface NhiPercept {
@@ -117,6 +143,10 @@ export class NhiMind {
   private readonly rivals = new Map<number, Rival>();
   private readonly cumRegret = new Float32Array(ACTION_COUNT);
   private readonly scores = new Float32Array(ACTION_COUNT);
+  /** GOAP world-model facts (4 bits) the NHI accumulates toward {@link NHI_GOAL}. */
+  private facts = 0;
+  /** Scratch plan buffer for {@link goapPlan} (reused — no per-decision allocation). */
+  private readonly plan = new Int32Array(8);
   private readonly geneIn = new Float32Array(GENE_IN);
   private readonly geneHid = new Float32Array(GENE_HID);
   private readonly geneOut = new Float32Array(GENE_OUT);
@@ -203,6 +233,14 @@ export class NhiMind {
       (1 - p.energy) * 1.1 + this.aggression * 0.5 + (g[NhiAction.HUNT] ?? 0) * 0.5;
     s[NhiAction.RETREAT] = p.threat * 1.4 - p.energy * 0.6 + (g[NhiAction.RETREAT] ?? 0) * 0.5;
 
+    // 3b. GOAP: plan the cheapest path to dominion and nudge the planned NEXT step's utility up, so
+    //     the NHI runs a coherent multi-step scheme across beats rather than only reacting.
+    const steps = goapPlan(this.facts, NHI_GOAL, NHI_GOAP, this.plan);
+    if (steps > 0) {
+      const planned = NHI_PLAN_ACTION[this.plan[0] ?? 0];
+      if (planned !== undefined) s[planned] = (s[planned] ?? 0) + 1.0;
+    }
+
     // 4. Choose: volatility + chaos raise the softmax temperature → wild, unpredictable picks; a calm,
     //    confident NHI is near-greedy. Occasionally regret-matching overrides for adaptivity.
     const temp = 0.2 + (this.volatility * 0.8 + p.chaos * 0.6) * 1.5;
@@ -211,6 +249,12 @@ export class NhiMind {
         ? regretMatch(this.cumRegret, ACTION_COUNT, rng)
         : softmaxPick(s, rng, temp);
     if (action < 0) action = utilityPick(s);
+    // Advance the GOAP world model with what was actually chosen; reaching dominion resets the scheme.
+    if (action === NhiAction.SPAWN_SWARM) this.facts |= F_SWARMED;
+    else if (action === NhiAction.MANIPULATE) this.facts |= F_DECEIVED;
+    else if (action === NhiAction.DOMINATE) this.facts |= F_DOMINANT;
+    else if (action === NhiAction.HUNT) this.facts |= F_FED;
+    if ((this.facts & NHI_GOAL) === NHI_GOAL) this.facts = 0;
     // Online regret update toward the greedy action (cheap, decaying).
     const greedy = utilityPick(s);
     const sg = s[greedy] ?? 0;
