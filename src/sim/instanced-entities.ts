@@ -118,7 +118,11 @@ interface ShaderUniforms {
  * All terms are real f(objPos, normal, view, time, audio) — deterministic, GPU-only, zero
  * per-entity CPU cost. The exotic HOLOGRAM/IRIDESCENT modes still layer on top, unchanged.
  */
-function patchPoolMaterial(mat: THREE.MeshStandardMaterial, uniforms: ShaderUniforms): void {
+function patchPoolMaterial(
+  mat: THREE.MeshStandardMaterial,
+  uniforms: ShaderUniforms,
+  matClass: number,
+): void {
   mat.onBeforeCompile = (shader) => {
     shader.uniforms['uTime'] = uniforms.uTime;
     shader.uniforms['uNightmare'] = uniforms.uNightmare;
@@ -142,7 +146,10 @@ function patchPoolMaterial(mat: THREE.MeshStandardMaterial, uniforms: ShaderUnif
           '}',
       );
     shader.fragmentShader = shader.fragmentShader
-      .replace('#include <common>', `#include <common>\n${RELIQUARY_FRAG_HEADER}`)
+      .replace(
+        '#include <common>',
+        `#include <common>\n#define RQ_MAT ${matClass}\n${RELIQUARY_FRAG_HEADER}`,
+      )
       .replace(
         'vec4 diffuseColor = vec4( diffuse, opacity );',
         'vec4 diffuseColor = vec4( diffuse, opacity * vInstEmissive.a );',
@@ -150,6 +157,25 @@ function patchPoolMaterial(mat: THREE.MeshStandardMaterial, uniforms: ShaderUnif
       .replace('#include <roughnessmap_fragment>', RELIQUARY_FRAG_ROUGH)
       .replace('#include <emissivemap_fragment>', RELIQUARY_FRAG_BODY);
   };
+}
+
+/**
+ * Map a geometry-cache index to a material archetype (V27), pairing each SILHOUETTE family with a
+ * distinct material LANGUAGE so a sphere-creature reads as pearl, a knot-creature as faceted crystal,
+ * a box-creature as machined metal, a torus as warm amber, a deformed organic as chalky bone. The
+ * geometry order is fixed in `geometry-cache.ts` (3 spheres, 3 ico, 3 octa, 3 tetra, 2 dodeca, 3 tori,
+ * 6 knots, 5 cylinders, 4 cones, 5 boxes, 3 organics). 0 pearl · 1 crystal · 2 glass · 3 amber · 4
+ * metal · 5 bone.
+ */
+function materialClassFor(gi: number): number {
+  if (gi <= 2) return 0; // spheres → pearl
+  if (gi <= 5) return 1; // icosahedra → crystal
+  if (gi <= 11) return 2; // octahedra + tetrahedra → glass
+  if (gi <= 13) return 1; // dodecahedra → crystal
+  if (gi <= 16) return 3; // tori → amber
+  if (gi <= 22) return 1; // torus knots → crystal
+  if (gi <= 36) return 4; // cylinders + cones + boxes → metal
+  return 5; // deformed organics → bone
 }
 
 /**
@@ -175,6 +201,63 @@ float rqNoise(vec3 x){
                  mix(rqHash(i + vec3(0,1,1)), rqHash(i + vec3(1,1,1)), f.x), f.y), f.z);
 }
 float rqFbm(vec3 p){ float a = 0.5, s = 0.0; for (int i = 0; i < RQ_OCTAVES; i++){ s += a * rqNoise(p); p *= 2.02; a *= 0.5; } return s; }
+
+// Per-MATERIAL-CLASS surface profile (V27), a compile-time constant per pool so each of the six
+// archetypes compiles its own specialised shader — distinct material LANGUAGE per silhouette family.
+// RQ_FREQ relief frequency · RQ_RELIEF normal-engrave strength · RQ_ROUGH recess roughness ·
+// RQ_METAL metalness · RQ_SSS subsurface tint · RQ_SSSAMT subsurface strength · RQ_FILM thin-film gain.
+#ifndef RQ_MAT
+#define RQ_MAT 3
+#endif
+#if RQ_MAT == 0 // PEARL — smooth, soft cool subsurface, low relief
+  #define RQ_FREQ 4.0
+  #define RQ_RELIEF 0.30
+  #define RQ_ROUGH 0.42
+  #define RQ_METAL 0.10
+  #define RQ_SSS vec3(1.5, 1.4, 1.5)
+  #define RQ_SSSAMT 0.45
+  #define RQ_FILM 0.55
+#elif RQ_MAT == 1 // CRYSTAL — sharp faceted ribs, prismatic, glossy
+  #define RQ_FREQ 9.0
+  #define RQ_RELIEF 0.62
+  #define RQ_ROUGH 0.14
+  #define RQ_METAL 0.12
+  #define RQ_SSS vec3(1.3, 1.4, 1.7)
+  #define RQ_SSSAMT 0.22
+  #define RQ_FILM 0.95
+#elif RQ_MAT == 2 // GLASS — transmissive, cool, razor rim
+  #define RQ_FREQ 6.0
+  #define RQ_RELIEF 0.35
+  #define RQ_ROUGH 0.07
+  #define RQ_METAL 0.0
+  #define RQ_SSS vec3(1.2, 1.5, 1.75)
+  #define RQ_SSSAMT 0.32
+  #define RQ_FILM 0.75
+#elif RQ_MAT == 4 // METAL — machined, sharp specular, ridged
+  #define RQ_FREQ 7.0
+  #define RQ_RELIEF 0.50
+  #define RQ_ROUGH 0.26
+  #define RQ_METAL 0.92
+  #define RQ_SSS vec3(0.6, 0.6, 0.7)
+  #define RQ_SSSAMT 0.05
+  #define RQ_FILM 0.35
+#elif RQ_MAT == 5 // BONE — matte, chalky, deep relief
+  #define RQ_FREQ 8.0
+  #define RQ_RELIEF 0.65
+  #define RQ_ROUGH 0.70
+  #define RQ_METAL 0.15
+  #define RQ_SSS vec3(1.25, 1.15, 0.95)
+  #define RQ_SSSAMT 0.15
+  #define RQ_FILM 0.06
+#else // RQ_MAT == 3 — AMBER, the warm default jewel
+  #define RQ_FREQ 6.0
+  #define RQ_RELIEF 0.50
+  #define RQ_ROUGH 0.55
+  #define RQ_METAL 0.06
+  #define RQ_SSS vec3(1.7, 1.0, 0.5)
+  #define RQ_SSSAMT 0.50
+  #define RQ_FILM 0.40
+#endif
 `;
 
 /**
@@ -185,7 +268,7 @@ float rqFbm(vec3 p){ float a = 0.5, s = 0.0; for (int i = 0; i < RQ_OCTAVES; i++
  * `rqGrad`, `rqDetail` survive in `main()` scope for {@link RELIQUARY_FRAG_BODY}.
  */
 const RELIQUARY_FRAG_ROUGH = /* glsl */ `#include <roughnessmap_fragment>
-	vec3 rqQ = vObjPos * 6.0;
+	vec3 rqQ = vObjPos * RQ_FREQ;
 	float rqE = 0.085;
 	float rqN0 = rqFbm(rqQ);
 	float rqNx = rqFbm(rqQ + vec3(rqE, 0.0, 0.0));
@@ -196,8 +279,8 @@ const RELIQUARY_FRAG_ROUGH = /* glsl */ `#include <roughnessmap_fragment>
 	// concentrates into vein-like ridges instead of pure mottle.
 	float rqRib = 0.5 + 0.5 * sin(length(vObjPos) * 18.0 + rqN0 * 6.2831853);
 	float rqDetail = mix(rqN0, rqRib, 0.28);
-	// Worn-jewel roughness: crests polish to a wet glint, recesses stay matte.
-	roughnessFactor = clamp(mix(0.55, 0.12, smoothstep(0.45, 0.95, rqDetail)), 0.05, 1.0);`;
+	// Worn-jewel roughness per material class: crests polish, recesses stay at the class's base.
+	roughnessFactor = clamp(mix(RQ_ROUGH, RQ_ROUGH * 0.25, smoothstep(0.45, 0.95, rqDetail)), 0.03, 1.0);`;
 
 /**
  * GLSL replacing the fragment `<emissivemap_fragment>` chunk: the reliquary surface proper, reusing
@@ -211,26 +294,26 @@ const RELIQUARY_FRAG_BODY = /* glsl */ `#include <emissivemap_fragment>
 	vec3 rqV = normalize(vViewPosition);
 	// Engrave the relief into the shading normal so the six point-lights carve it honestly.
 	vec3 rqTang = rqGrad - dot(rqGrad, normal) * normal;
-	vec3 rqN = normalize(normal - rqTang * 0.5);
+	vec3 rqN = normalize(normal - rqTang * RQ_RELIEF);
 	normal = rqN;
-	// Pull toward a dielectric glass-jewel (away from the pool's 0.5 metalness compromise).
-	metalnessFactor = mix(metalnessFactor, 0.08, 0.55);
-	// Groove self-shadow + warm amber settling into the recesses.
+	// Pull metalness toward this material class (glass→dielectric, metal→conductor).
+	metalnessFactor = mix(metalnessFactor, RQ_METAL, 0.8);
+	// Groove self-shadow + the class subsurface tint settling into the recesses.
 	float rqAO = mix(0.45, 1.05, smoothstep(0.12, 0.85, rqDetail));
 	diffuseColor.rgb *= rqAO;
 	float rqValley = 1.0 - smoothstep(0.3, 0.7, rqN0);
-	diffuseColor.rgb = mix(diffuseColor.rgb, diffuseColor.rgb * vec3(1.25, 0.85, 0.5), rqValley * 0.35);
+	diffuseColor.rgb = mix(diffuseColor.rgb, diffuseColor.rgb * RQ_SSS, rqValley * 0.3);
 	float rqRidge = smoothstep(0.6, 0.97, rqDetail);
 	float rqFres = pow(1.0 - clamp(abs(dot(rqN, rqV)), 0.0, 1.0), 3.0);
-	// Amber subsurface translucency from the thin grooves, breathing with the bass.
-	vec3 rqSSS = diffuseColor.rgb * vec3(1.7, 1.0, 0.55);
+	// Subsurface translucency from the thin grooves (class-tinted), breathing with the bass.
+	vec3 rqSSS = diffuseColor.rgb * RQ_SSS;
 	float rqThin = 1.0 - rqN0;
 	float rqBack = pow(1.0 - clamp(dot(rqN, rqV), 0.0, 1.0), 1.5) * rqThin;
-	totalEmissiveRadiance += rqSSS * rqBack * (0.28 + 0.32 * uBass);
+	totalEmissiveRadiance += rqSSS * rqBack * RQ_SSSAMT * (0.7 + 0.6 * uBass);
 	// Thin-film interference riding the rim + ridge crests, phase drifting with time + chaos.
 	vec3 rqFilm = 0.5 + 0.5 * cos(6.2831853 * (vec3(1.0, 0.85, 0.7) * rqFres * 2.2
 		+ vec3(0.0, 0.18, 0.36) + rqDetail * 1.5 + uTime * 0.04 + uChaos * 0.015));
-	totalEmissiveRadiance += rqFilm * (rqFres * 0.38 + rqRidge * 0.26);
+	totalEmissiveRadiance += rqFilm * (rqFres * 0.38 + rqRidge * 0.26) * RQ_FILM;
 	// Wet-glass rim glint.
 	totalEmissiveRadiance += vec3(0.95, 0.98, 1.0) * pow(rqFres, 1.4) * 0.14;
 	// Exotic render modes layer on top (V7-beyond, unchanged).
@@ -447,7 +530,9 @@ export class InstancedEntityRenderer {
       side: transparent ? THREE.DoubleSide : THREE.FrontSide,
     });
     this.applyModeToPool(mat); // carry the current render mode onto a freshly built pool (V7.3)
-    patchPoolMaterial(mat, this.shaderUniforms);
+    // V27: each geometry family wears a distinct material LANGUAGE (glass/amber/pearl/metal/crystal/
+    // bone), baked as a compile-time class so the silhouette and its surface read as one biology.
+    patchPoolMaterial(mat, this.shaderUniforms, materialClassFor(gi));
     const mesh = new THREE.InstancedMesh(geo, mat, capacity);
     mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
     // Instances roam the whole arena — per-pool sphere culling is meaningless.

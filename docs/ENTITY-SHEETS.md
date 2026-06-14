@@ -24,8 +24,11 @@ nash, market, lorenz`). They split, age, die (weather-tuned lifespan), and feed 
 - **Silhouette:** the geometry cache — spheres, icosahedra, octahedra, tori, torus-knots, cones,
   boxes, and 3 vertex-deformed organics. In **SPECIMEN** view each is framed macro as a jewel.
 - **Material language:** the **Reliquary Surface** (V12) — carved-mineral fBm relief engraved into
-  the shading normal, worn-jewel roughness (polished crests / matte recesses), dielectric-glass pull,
-  amber subsurface that **breathes with the audio bass**, thin-film iridescence on rim + ridge crests.
+  the shading normal, worn-jewel roughness (polished crests / matte recesses), subsurface that
+  **breathes with the audio bass**, thin-film iridescence on rim + ridge crests. **Six archetypes by
+  silhouette (V27):** spheres = PEARL, ico/dodeca/knots = CRYSTAL, octa/tetra = GLASS, tori = AMBER,
+  cylinders/cones/boxes = METAL, organics = BONE — each with its own relief, roughness, metalness,
+  subsurface tint, and film, so silhouette and material read as one biology, not a recolour.
 - **Animation grammar:** behavior-driven drift + the N(2) GPU vertex-melt under nightmare.
 - **World meaning:** the biomass — the substrate every other power feeds on, herds, or converts.
 - **Economic role:** ☉/☾ neutral; tiny purse (drones, weight ≈ 0.5). _Queued: per-entity wallets._

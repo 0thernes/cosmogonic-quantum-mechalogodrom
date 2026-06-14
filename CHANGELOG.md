@@ -13,6 +13,18 @@ the full gate (now also a coverage gate, on Linux + Windows) with same-seed dete
 
 ### Added
 
+- **Per-silhouette material language: 6 jewel archetypes (V27)** — the single biggest "obvious entity
+  differentiation" lever. The Reliquary pool shader gains **six material classes** baked as a
+  compile-time `#define RQ_MAT` per pool (so each compiles its own specialised variant, zero hot-path
+  cost): **PEARL** (smooth, soft cool subsurface — spheres), **CRYSTAL** (sharp faceted ribs,
+  prismatic thin-film — icosahedra/dodecahedra/torus-knots), **GLASS** (transmissive, razor rim,
+  dielectric — octahedra/tetrahedra), **AMBER** (warm deep subsurface, glossy — tori), **METAL**
+  (conductor, machined ridges, sharp specular — cylinders/cones/boxes), **BONE** (matte, chalky, deep
+  relief — the organics). Each class tunes relief frequency + strength, the worn-jewel roughness,
+  metalness, subsurface tint + amount, and thin-film gain (`materialClassFor(gi)` pairs each geometry
+  family with its surface). So a sphere-creature reads as pearl, a knot as faceted crystal, a box as
+  machined metal — distinct biology, silhouette, AND material in one. Verified live: all 6 variants
+  compile (glErr 0), the field renders faceted darks, glossy metals, and pearly forms side by side.
 - **Deception + active social sense (V26)** — the cognition kernel gains a fifth drive, `deceive`: a
   threatened, OUTMATCHED creature (high threat × low boldness) feigns weakness so a dominant rival
   overlooks it. In the Shoggoths this dims the core glow + eyes, shrinks the body, and softens the
