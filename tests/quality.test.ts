@@ -12,10 +12,10 @@ describe('resolveTier', () => {
     expect(resolveTier(true, 4, 4)).toBe('phone');
   });
 
-  test('ultra requires ≥16 cores AND ≥8 GB', () => {
-    expect(resolveTier(false, 16, 8)).toBe('ultra');
-    expect(resolveTier(false, 24, 32)).toBe('ultra');
-    expect(resolveTier(false, 16, 4)).toBe('desktop'); // memory-starved: drops one rung
+  test('mega (50k) is the AUTO top tier — ≥16 cores AND ≥8 GB (V40, no opt-in)', () => {
+    expect(resolveTier(false, 16, 8)).toBe('mega');
+    expect(resolveTier(false, 24, 32)).toBe('mega');
+    expect(resolveTier(false, 16, 4)).toBe('desktop'); // memory-starved: drops to desktop
   });
 
   test('desktop at ≥10 cores, laptop below', () => {
@@ -61,14 +61,16 @@ describe('QUALITY_LADDER', () => {
     }
   });
 
-  test('mega is the opt-in 50k ceiling — never auto-resolved (V38)', () => {
+  test('mega is the 50k ceiling AND the auto top tier for capable machines (V40)', () => {
     expect(QUALITY_LADDER.mega.maxEntities).toBe(50000);
     expect(QUALITY_LADDER.mega.targetEntities).toBe(QUALITY_LADDER.mega.maxEntities);
     expect(QUALITY_LADDER.mega.instanced).toBeTrue();
     expect(QUALITY_LADDER.mega.maxEntities).toBeGreaterThan(QUALITY_LADDER.ultra.maxEntities);
-    // resolveTier tops out at ultra — mega is reachable only via the `?tier=mega` boot override.
-    expect(resolveTier(false, 64, 64)).not.toBe('mega');
-    expect(resolveTier(false, 128, 256)).not.toBe('mega');
-    expect(resolveTier(true, 64, 64)).not.toBe('mega');
+    // V40: high-end desktops now auto-fill 50k — no `?tier=mega` opt-in required.
+    expect(resolveTier(false, 64, 64)).toBe('mega');
+    expect(resolveTier(false, 128, 256)).toBe('mega');
+    // …but mobile never gets it (it physically can't carry 50k), and memory-starved drops a rung.
+    expect(resolveTier(true, 64, 64)).toBe('phone');
+    expect(resolveTier(false, 16, 4)).not.toBe('mega');
   });
 });

@@ -13,6 +13,16 @@ the full gate (now also a coverage gate, on Linux + Windows) with same-seed dete
 
 ### Added
 
+- **50,000 entities by DEFAULT — the mega opt-in is dead (V40)** — the directive's "Fuck the Mega Tier
+  Opt-in" mandate. `resolveTier` (`core/quality.ts`) now **auto-returns `mega` (50,000 entities)** for
+  any capable machine (≥16 cores AND ≥8 GB reported memory — which implies a GPU that can carry it),
+  instead of topping out at the 10k `ultra` rung and hiding 50k behind `?tier=mega`. Weaker / mobile
+  devices still get a battery-honest rung (phone 650 · laptop 2k · desktop 5k), and `?tier=` still
+  overrides both ways at boot for QA or a deliberate downgrade. The 50k path itself was already built +
+  benched in V38 (√N density scaling bounds neighbour-query cost). **Verified live**: the preview box
+  (24 cores / 32 GB) auto-resolved to **mega**, booted **49,975 live entities**, stepped 40 frames with
+  **glError 0** and no console errors. Tests updated (mega is now the auto top tier; mobile + memory-
+  starved still never get it). Full gate green (756 tests).
 - **The SUPER CREATURE flies + UI overlap fixes (V39)** — two directive complaints, fixed and verified
   live. **(1) Flight** (`sim/super-body.ts`): the apex no longer hovers at the center — it now ROAMS
   the whole world as a wander-seek boid steered by its own MIND (the move output), banking toward its

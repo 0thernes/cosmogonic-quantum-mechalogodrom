@@ -11,9 +11,11 @@ import type { QualityProfile, QualityTier } from '../types';
  *   legacy per-mesh render path (`instanced: false`), capped DPR, no shadows.
  * - **laptop** — fine pointer, < 10 cores. 2,000 entities, instanced.
  * - **desktop** — ≥ 10 cores. 5,000 entities, instanced.
- * - **ultra** — ≥ 16 cores AND ≥ 8 GB reported memory. 10,000-entity hard ceiling,
- *   instanced; since 0.5.0 the tier FILLS that ceiling (`targetEntities === maxEntities`),
- *   the per-frame neighbor-query throttles in docs/BENCHMARKS.md keeping sim-CPU smooth.
+ * - **ultra** — 10,000-entity hard ceiling, instanced; FILLS that ceiling
+ *   (`targetEntities === maxEntities`). V40: reachable via `?tier=ultra` (the ≥16-core auto path now
+ *   goes to `mega`); the per-frame neighbor-query throttles in docs/BENCHMARKS.md keep sim-CPU smooth.
+ * - **mega** — ≥ 16 cores AND ≥ 8 GB reported memory. The directive's 50,000-entity ceiling and the
+ *   **V40 AUTO default** for capable machines (no opt-in); √N density scaling bounds neighbour cost.
  *
  * `targetEntities` is the steady-state population organic growth settles at;
  * `maxEntities` is the HARD ceiling all buffers are sized from. They are equal on every
@@ -73,10 +75,11 @@ export const QUALITY_LADDER: Readonly<
     instanced: true,
   },
   mega: {
-    // V38 — the directive's 50,000-entity ceiling. OPT-IN ONLY (`?tier=mega`); `resolveTier` never
-    // returns it, so weaker machines are never auto-dropped into it. The EntityManager's √N density
-    // scale (entities.ts) spreads the spawn volume + containment so neighbour-query cost stays bounded
-    // — the headless `bun bench/scale.ts` profile (docs/BENCHMARKS.md) measures the sim at this size.
+    // V38 ceiling, V40 DEFAULT — the directive's 50,000-entity world. `resolveTier` now AUTO-returns
+    // this for capable machines (≥16 cores + ≥8 GB); weaker boxes still get a lower rung and `?tier=`
+    // overrides both ways. The EntityManager's √N density scale (entities.ts) spreads the spawn volume +
+    // containment so neighbour-query cost stays bounded — `bun bench/scale.ts` (docs/BENCHMARKS.md)
+    // measures the sim at this size.
     dprCap: 2,
     maxEntities: 50000,
     targetEntities: 50000,
@@ -94,7 +97,10 @@ export const QUALITY_LADDER: Readonly<
  */
 export function resolveTier(isMobile: boolean, cores: number, memGB: number): QualityTier {
   if (isMobile) return 'phone';
-  if (cores >= 16 && memGB >= 8) return 'ultra';
+  // V40 — the directive's 50,000-entity ceiling is now the DEFAULT for capable machines (no opt-in):
+  // a high-end box (≥16 cores AND ≥8 GB, which implies a GPU that can carry it) auto-fills `mega`.
+  // Weaker/mobile devices still get a battery-honest rung, and `?tier=` overrides both ways at boot.
+  if (cores >= 16 && memGB >= 8) return 'mega';
   if (cores >= 10) return 'desktop';
   return 'laptop';
 }
