@@ -9,4 +9,5 @@ coverage/
 Thumbs.db
 verify/
 native/build/
+native/build*/
 *.bmp

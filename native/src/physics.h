@@ -26,6 +26,37 @@ struct Body {
   float hue = 0.0f;
 };
 
+// Deterministic integer hash → float in [0, 1). Shared by both backends so the SPECIMEN LAYOUT (shell
+// positions, radii, types, hues) is identical whether the built-in or the Jolt solver drives it.
+inline float rqHash(int x) {
+  unsigned int h = static_cast<unsigned int>(x);
+  h = (h << 13) ^ h;
+  h = h * (h * h * 15731u + 789221u) + 1376312589u;
+  return static_cast<float>(h & 0x7fffffffu) / 2147483648.0f;
+}
+inline glm::vec3 rqVrand(int base) {
+  return glm::vec3(rqHash(base + 1), rqHash(base + 2), rqHash(base + 3));
+}
+/** Seed `b` at its deterministic shell position/spin (shared by both physics backends). */
+inline void rqSeedBody(Body& b, int i) {
+  const float h1 = rqHash(i * 3 + 1), h2 = rqHash(i * 3 + 2), h3 = rqHash(i * 3 + 7);
+  const float theta = h1 * 6.2831853f;
+  const float phi = std::acos(2.0f * h2 - 1.0f);
+  const float rad = 3.0f + 2.5f * h3;
+  b.pos = glm::vec3(rad * std::sin(phi) * std::cos(theta), rad * std::cos(phi),
+                    rad * std::sin(phi) * std::sin(theta));
+  b.radius = 0.55f + 0.55f * rqHash(i * 7 + 5);
+  b.mass = b.radius * b.radius * b.radius;
+  b.type = static_cast<int>(rqHash(i * 11 + 2) * 7.0f) % 7;
+  b.hue = rqHash(i * 13 + 4);
+  b.vel = (rqVrand(i * 5) - 0.5f) * 2.0f;
+  b.angVel = (rqVrand(i * 9) - 0.5f) * 2.5f;
+}
+
+#if defined(CQM_WITH_JOLT)
+#include "physics_jolt.h"  // defines ReliquaryPhysics (Jolt-backed) using the Body above
+#else
+
 class ReliquaryPhysics {
  public:
   /** Spherical case radius the bodies are confined to. */
@@ -140,3 +171,5 @@ class ReliquaryPhysics {
     return glm::vec3(hash(base + 1), hash(base + 2), hash(base + 3));
   }
 };
+
+#endif  // CQM_WITH_JOLT

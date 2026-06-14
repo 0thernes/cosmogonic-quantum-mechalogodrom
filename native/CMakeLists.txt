@@ -30,7 +30,9 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   set(CMAKE_BUILD_TYPE Release CACHE STRING "" FORCE)
 endif()
 
-option(CQM_WITH_JOLT  "Link Jolt Physics for rigid-body specimen dynamics" OFF)
+# Jolt is ON by default (V18): the shipping-AAA rigid-body engine drives the specimens. Set
+# -DCQM_WITH_JOLT=OFF to fall back to the self-contained built-in impulse solver (no network fetch).
+option(CQM_WITH_JOLT  "Link Jolt Physics for rigid-body specimen dynamics" ON)
 option(CQM_WITH_IMGUI "Link Dear ImGui for an in-window debug HUD"          OFF)
 
 include(FetchContent)

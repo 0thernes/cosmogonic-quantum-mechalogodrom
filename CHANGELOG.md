@@ -13,6 +13,16 @@ the full gate (now also a coverage gate, on Linux + Windows) with same-seed dete
 
 ### Added
 
+- **Jolt Physics ON by default in the native engine (V18)** — the shipping-AAA **Jolt Physics 5.2**
+  (jrouwe/JoltPhysics — Horizon Forbidden West) now drives the native specimens. A new
+  `native/src/physics_jolt.h` is a drop-in backend behind `CQM_WITH_JOLT` (now default ON): each
+  specimen is a real Jolt rigid body (sphere shape, true mass/inertia, restitution, damping); each
+  step applies a central harmonic well + a soft spherical-case spring (Jolt has no radial gravity),
+  runs Jolt's broad/narrow-phase collision + constraint solve, then reads the transforms back for the
+  ray-marcher. Same deterministic shell seeding (`rqSeedBody`) as the built-in solver, so the LAYOUT
+  matches while the DYNAMICS are Jolt's. Built with MinGW GCC 16.1 (Jolt compiled clean) and
+  **verified on the NVIDIA RTX 5070 Ti** (`cqm_native.exe --shot`, 320 Jolt-driven frames). The
+  self-contained built-in impulse solver remains the `-DCQM_WITH_JOLT=OFF` fallback (no network fetch).
 - **Wealth-driven Shoggoth behavior (V17)** — the eldritch horde joins the economy: all 100 Shoggoths
   enrol as agents with varied (golden-angle) starting purses, and each one's **wealth drives its
   boldness** — a rich Shoggoth hunts harder (feeds sooner, tendrils tug stronger) and shows it on its

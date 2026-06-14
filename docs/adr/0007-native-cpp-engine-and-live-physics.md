@@ -66,7 +66,19 @@ the opt-in heavyweight backend for fracture/mass/inertia/crowd scale.
 `cmake --build` → 100% link; `cqm_native.exe --shot=out.bmp --frames=K` renders offscreen to BMP
 (`scripts/bmp2png.ts` → PNG for review). Determinism: same integer-hash seed → same dance.
 
+## Update (V18, 2026-06-14) — Jolt is ON by default
+
+Jolt Physics 5.2 now compiles with MinGW GCC 16.1 and **drives the native specimens by default**
+(`CQM_WITH_JOLT=ON`). `native/src/physics_jolt.h` is a drop-in backend matching the built-in solver's
+interface: each specimen is a real Jolt rigid body (sphere shape, mass/inertia, restitution, damping),
+a central harmonic well + soft case spring substitute for Jolt's (absent) radial gravity, and the
+broad/narrow-phase solve produces the transforms the ray-marcher draws. Same deterministic shell
+seeding as the built-in path; verified on the RTX 5070 Ti (320-frame offscreen shot). The built-in
+impulse solver remains the `-DCQM_WITH_JOLT=OFF` fallback (no network fetch). Setup gotchas recorded
+for posterity: Jolt needs `Trace`/`AssertFailed` callbacks set (else segfault) and the
+allocator registered before any Jolt member allocates (run `globalInit()` as the first member-init).
+
 ## Follow-ups (tracked in KANBAN)
 
-Flip Jolt ON as the default once its FetchContent build is verified with MinGW; add fracture + crowd
-motion; bring the native target into CI; render true 4K (3840×2160) plates.
+Jolt fracture (convex decomposition) + soft-body + crowd-scale; bring the native target into CI;
+render true 4K (3840×2160) plates from the Jolt sim.

@@ -43,6 +43,7 @@ behind the full gate (`bun run check`) and a commit.
 - 🟧 P1 `NHI-OBSERVATORY` — per-NHI 9-view 3×3 connectome grid (firing · topology · memory · reward · sensory · intention · affect · prediction · decision), live + scientific, each bound to real `NhiMind` state. Verified: 3 NHIs, all 9 views painting
 - 🟧 P1 `TITAN-DIPLO-ECON` — AURUM/UMBRA wealth steers titan PD diplomacy (richer → raid → war, poorer → appease); null-safe `attachEconomy`, goldens byte-identical. Verified live: 21 ally / 24 war / 0 truce under a live Gini
 - 🟧 P1 `SHOG-ECON-BEHAVIOR` — 100 Shoggoths enrolled (varied purses); wealth drives boldness (hunt cadence, tendril tug, body size+glow), relative to live mean. Verified: 210→500 spread, ~31 bold / ~32 timid
+- 🟥 P0 `JOLT-ON` — Jolt Physics 5.2 wired ON by default in the native engine (`physics_jolt.h`): specimens are real rigid bodies (mass/inertia/restitution), central well + case spring, broad/narrow-phase solve. Built w/ MinGW, verified on RTX 5070 Ti
 
 ### 🚧 Next — V13/V14 directive backlog (user, 2026-06-14)
 
@@ -50,7 +51,7 @@ behind the full gate (`bun run check`) and a commit.
 - 🟧 P1 `ECON-DEEPEN` — extend creature wallets to PUPPETEERS + tribes (shoggoths shipped); wealth → migration/mutation/trust; black markets, cartels, auctions, sanctions, arbitrage
 - 🟧 P1 `CREATURES-SMART` — make the 100+100 smart/social/dangerous: perceive, remember, bargain, flee, hunt, deceive, trade, ally, mutate (counts shipped; behavior depth next)
 - 🟧 P1 `AI-REPAIR` — Copilot offline: diagnostics + failure reason + restart controls + recovery pipeline
-- 🟨 P2 `JOLT-ON` — flip Jolt Physics ON as the default native backend (fracture, mass, inertia, crowd)
+- 🟨 P2 `JOLT-FRACTURE` — Jolt is ON + driving the native specimens (V18); next: convex-decomp fracture, soft-body, crowd-scale
 - 🟨 P2 `DOCS-SYNC` — keep README/Docs/Specs/ERD/Architecture/Kanban current every increment (standing card)
 
 ### 📥 Backlog (unscheduled)
