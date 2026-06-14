@@ -1,0 +1,50 @@
+/**
+ * CREATURE COGNITION (CONTRACTS V24) — the pure decision kernel that turns a creature's PERCEPTION +
+ * MEMORY into drives, so the 100 Shoggoths (and beyond) genuinely perceive, remember, flee, and hunt
+ * rather than acting on a blind timer. Kept pure + DOM-free so it is unit-tested in isolation and the
+ * sim layer (shoggoths.ts) just feeds it a percept and applies the drives. Real bounded math; no rng.
+ */
+import { clamp } from '../math/scalar';
+
+/** What a creature senses + remembers this beat (all normalized to roughly 0..1, except boldness). */
+export interface CreaturePercept {
+  /** Local danger 0..1 — crowding by rivals + an active singularity's pull. */
+  threat: number;
+  /** Local prey/food density 0..1 — exploitable neighbors within reach. */
+  prey: number;
+  /** Memory of recent feeding success 0 (starving) .. 1 (gorged) — an EMA the caller maintains. */
+  satiation: number;
+  /** Economic boldness (wealth / peer mean), ~0.3..3 — the rich are emboldened, the broke timid. */
+  boldness: number;
+}
+
+/** The drives the kernel emits; the caller maps them onto motion, feeding cadence, and display. */
+export interface CreatureDrive {
+  /** Urge to flee the threat 0..1 — scales an away-from-danger impulse + suppresses feeding. */
+  flee: number;
+  /** Urge to hunt 0..2 — scales feeding readiness (shorter effective interval, stronger tendrils). */
+  hunt: number;
+  /** Agitation 0..1 — restless eye-flicker + spin; rises with threat and hunger. */
+  agitation: number;
+}
+
+/**
+ * Map a {@link CreaturePercept} to {@link CreatureDrive}. The creature FLEES when threatened and
+ * neither emboldened (wealth) nor sated; HUNTS when prey-rich, safe, hungry, and bold; and grows
+ * AGITATED with danger + hunger. Monotone + bounded by construction — unit-tested at the corners.
+ * O(1), allocation-free (returns a fresh small record; callers on a hot path may reuse via the
+ * in-place variant below).
+ */
+export function creatureDrive(p: CreaturePercept): CreatureDrive {
+  const t = clamp(p.threat, 0, 1);
+  const pr = clamp(p.prey, 0, 1);
+  const sat = clamp(p.satiation, 0, 1);
+  const b = clamp(p.boldness, 0.3, 3);
+  // Flee: danger, discounted by the courage wealth + a full belly buy.
+  const flee = clamp(t * (1.3 - 0.45 * b) - 0.35 * sat, 0, 1);
+  // Hunt: prey × boldness, killed off by danger and satiation.
+  const hunt = clamp(pr * b * (1 - 0.6 * t) * (1.25 - sat), 0, 2);
+  // Agitation: restless when in danger or starving.
+  const agitation = clamp(0.25 + 0.7 * t + 0.35 * (1 - sat), 0, 1);
+  return { flee, hunt, agitation };
+}

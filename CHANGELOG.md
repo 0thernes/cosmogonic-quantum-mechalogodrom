@@ -13,6 +13,15 @@ the full gate (now also a coverage gate, on Linux + Windows) with same-seed dete
 
 ### Added
 
+- **Shoggoth cognition: perceive · remember · flee · hunt (V24)** — the horde stops acting on a blind
+  timer and gains a mind. A pure, unit-tested kernel (`src/sim/cognition.ts`, `creatureDrive`) maps a
+  PERCEPT (local threat = rival crowding + an active singularity; prey density; satiation memory;
+  wealth boldness) → DRIVES (flee, hunt, agitation). In `shoggoths.ts` each shoggoth now perceives its
+  neighbourhood (reusing one grid query), REMEMBERS recent feeding (a satiation EMA that decays with
+  hunger and spikes on a kill), then FLEES a dangerous crowd (an away-from-rivals impulse), HUNTS a
+  prey-rich calm (shorter feed interval), and grows AGITATED under threat (faster spin + eye-flicker).
+  All deterministic (no rng); goldens unaffected. +4 tests. Verified live: 100 shoggoths, satiation
+  diverges (most at the hunger equilibrium, ~9 freshly gorged), perf steady.
 - **Market Ticker panel (V23)** — the economy is now INSPECTABLE: a self-building ⊙ MARKET panel
   (`src/ui/market-ticker.ts`) surfaces the live AURUM/UMBRA market state — reserve (dominant) currency
   - share, FX, QUANTA/ICHOR prices + arbitrage spread, wealth Gini, total wealth, agent count, cartel

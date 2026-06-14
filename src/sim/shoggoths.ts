@@ -5,6 +5,7 @@
  */
 import * as THREE from 'three';
 import { TAU, clamp, dist2 } from '../math/scalar';
+import { creatureDrive } from './cognition';
 import { ARENA_MID, MID_RADIUS2 } from './constants';
 import { POINT_LIGHT_GAIN } from './environment';
 import type { SimContext } from '../types';
@@ -38,12 +39,22 @@ const SHOG_ECON_REF = 200;
 const BOLD_MIN = 0.5;
 const BOLD_MAX = 2.2;
 
+/** F-COGNITION V24: perception + memory tuning for the Shoggoth mind. */
+const THREAT_R2 = 18 * 18; // rival-crowding sense radius (squared)
+const THREAT_CAP = 5; // this many rivals nearby ⇒ max danger signal
+const PREY_CAP = 8; // this many exploitable neighbours ⇒ max prey signal
+const SATIATION_DECAY = 0.04; // hunger creeps in per second
+const SATIATION_BUMP = 0.5; // satiation gained per successful consumption
+const FLEE_KICK = 0.02; // away-from-danger impulse strength
+
 // Module-level scratch — reused every frame, never retained (keeps update() allocation-free).
 const V1 = new THREE.Vector3();
 const V2 = new THREE.Vector3();
 const V3 = new THREE.Vector3();
 /** F-HOLES: scratch for the singularity body-force pull (never retained). */
 const HOLE_F = new THREE.Vector3();
+/** F-COGNITION V24: scratch for the away-from-rivals flee direction (never retained). */
+const TV = new THREE.Vector3();
 
 /** Internal per-shoggoth record (the legacy stuffed this into `group.userData`). */
 interface Shoggoth {
@@ -66,6 +77,8 @@ interface Shoggoth {
   /** Ticks between consumptions, 200..500 (legacy `aI`). */
   feedInterval: number;
   consumed: number;
+  /** F-COGNITION V24: memory of recent feeding 0 (starving) .. 1 (gorged) — an EMA. */
+  satiation: number;
 }
 
 /**
@@ -220,6 +233,7 @@ export class ShoggothSystem {
       feedTimer: 0,
       feedInterval: 200 + rng() * 300,
       consumed: 0,
+      satiation: 0.5,
     });
   }
 
@@ -257,6 +271,44 @@ export class ShoggothSystem {
       if (this.econWealth) boldness = clamp(this.econWealth(si) / meanWorth, BOLD_MIN, BOLD_MAX);
       const tug = tugScale * (0.5 + 0.5 * boldness);
 
+      // F-COGNITION V24: PERCEIVE the neighbourhood + REMEMBER recent feeding, then DECIDE — flee a
+      // dangerous crowd, hunt a prey-rich calm. The grid query is reused for the tendrils below (one
+      // query). All deterministic (no rng); `singActive`/HOLE_F are reused by the drift pull below.
+      const nearby = ctx.grid.query(p.x, p.z, TENDRIL_RADIUS);
+      let preyCount = 0;
+      for (let ni = 0; ni < nearby.length; ni++) {
+        const en = nearby[ni];
+        const ep0 = en?.position;
+        if (ep0 && dist2(p.x, p.y, p.z, ep0.x, ep0.y, ep0.z) < TENDRIL_REACH2) preyCount++;
+      }
+      let crowd = 0;
+      TV.set(0, 0, 0);
+      for (let sj = 0; sj < this.shogs.length; sj++) {
+        if (sj === si) continue;
+        const og = this.shogs[sj];
+        if (!og) continue;
+        const op = og.group.position;
+        const dd = dist2(p.x, p.y, p.z, op.x, op.y, op.z);
+        if (dd < THREAT_R2 && dd > 1e-3) {
+          crowd++;
+          TV.x += p.x - op.x;
+          TV.y += p.y - op.y;
+          TV.z += p.z - op.z;
+        }
+      }
+      const singActive = this.singularity
+        ? this.singularity.bodyForce(p.x, p.y, p.z, dt, HOLE_F)
+        : false;
+      const threat = clamp(crowd / THREAT_CAP + (singActive ? 0.5 : 0), 0, 1);
+      const prey = clamp(preyCount / PREY_CAP, 0, 1);
+      sg.satiation = clamp(sg.satiation - SATIATION_DECAY * dt, 0, 1);
+      const drive = creatureDrive({ threat, prey, satiation: sg.satiation, boldness });
+      // FLEE: an impulse away from the crowd centroid, scaled by the urge.
+      if (drive.flee > 0.05 && TV.lengthSq() > 1e-6) {
+        TV.normalize().multiplyScalar(drive.flee * FLEE_KICK);
+        sg.vel.add(TV);
+      }
+
       // Lorenz-ish drift (legacy 522-526). Samples are clamped to ±LORENZ_BOUND (same seal as
       // the entity 'lorenz' behavior): an escapee's raw position feeds the quadratic cross
       // terms (lx·(28−lz), lx·ly), whose superexponential growth could outrun the 0.99 damp
@@ -270,11 +322,9 @@ export class ShoggothSystem {
       sg.vel.y += Math.cos(t * 0.5 + sg.ph) * (lx * (28 - lz) - ly) * dt * 0.0002;
       sg.vel.z += Math.sin(t * 0.3 + sg.ph) * (lx * ly - 2.667 * lz) * dt * 0.0003;
       sg.vel.multiplyScalar(0.99);
-      // F-HOLES: an active singularity drags the shoggoth toward/away from its centre. No-op when
-      // unattached or inactive (the legacy/test path), and it draws no rng, so the stream is intact.
-      if (this.singularity && this.singularity.bodyForce(p.x, p.y, p.z, dt, HOLE_F)) {
-        sg.vel.add(HOLE_F);
-      }
+      // F-HOLES: an active singularity drags the shoggoth toward/away from its centre (force already
+      // computed once in the perception step above; reused here so we never query the hole twice).
+      if (singActive) sg.vel.add(HOLE_F);
       V1.copy(sg.vel).multiplyScalar(dt * 60);
       p.add(V1);
       if (p.lengthSq() > MID_RADIUS2) {
@@ -286,7 +336,7 @@ export class ShoggothSystem {
 
       // Roiling rotation + pulsing core glow (legacy 527-530).
       g.rotation.x += Math.sin(t * 0.4 + sg.ph) * 0.008;
-      g.rotation.y += dt * 0.15;
+      g.rotation.y += dt * (0.15 + drive.agitation * 0.35); // agitated → spins faster
       g.rotation.z += Math.cos(t * 0.3 + sg.ph) * 0.006;
       const hue = (t * 0.05 + sg.ph) % 1;
       sg.coreMat.emissive.setHSL(hue, 0.6, 0.04 + Math.sin(t * 2 + sg.ph) * 0.02);
@@ -296,7 +346,8 @@ export class ShoggothSystem {
       for (let ei = 0; ei < sg.eyeMats.length; ei++) {
         const eyeMat = sg.eyeMats[ei];
         if (!eyeMat) continue; // noUncheckedIndexedAccess: ei < length
-        eyeMat.opacity = 0.3 + Math.abs(Math.sin(t * 2 + (sg.eyePhases[ei] ?? 0))) * 0.7;
+        eyeMat.opacity =
+          0.3 + Math.abs(Math.sin(t * (2 + drive.agitation * 4) + (sg.eyePhases[ei] ?? 0))) * 0.7;
       }
       if (sg.aura) {
         sg.aura.intensity = (3 + Math.sin(t * 2 + sg.ph) * 2) * POINT_LIGHT_GAIN;
@@ -304,8 +355,7 @@ export class ShoggothSystem {
       }
       if (sg.aura2) sg.aura2.intensity = (1.5 + Math.cos(t * 3 + sg.ph) * 1) * POINT_LIGHT_GAIN;
 
-      // Tendrils — O(k) via grid query, squared-distance threshold (legacy 531-534).
-      const nearby = ctx.grid.query(p.x, p.z, TENDRIL_RADIUS);
+      // Tendrils — reuse the perception grid query above; squared-distance threshold (legacy 531-534).
       const tp = sg.tendrilPositions;
       let ti = 0;
       for (let ni = 0; ni < nearby.length && ti < TENDRIL_COUNT; ni++) {
@@ -335,9 +385,12 @@ export class ShoggothSystem {
 
       // Consumption every feedInterval ticks → 2 corrupted children (legacy 535-537).
       sg.feedTimer += dt * 30;
-      // Wealth-driven hunger: a bold (rich) shoggoth's effective feed interval shrinks → it consumes
-      // sooner and more often; a broke one waits longer. Economy → behaviour, the V17 coupling.
-      if (sg.feedTimer >= sg.feedInterval / boldness && list.length > 50) {
+      // Effective hunger combines WEALTH (V17 boldness) with the V24 HUNT drive: a rich, prey-rich,
+      // unthreatened, hungry shoggoth feeds sooner; a fleeing/threatened/sated one waits far longer.
+      if (
+        sg.feedTimer >= sg.feedInterval / (boldness * (0.6 + 0.5 * drive.hunt)) &&
+        list.length > 50
+      ) {
         sg.feedTimer = 0;
         sg.consumed++;
         let bestD = 9999;
@@ -354,6 +407,7 @@ export class ShoggothSystem {
         }
         if (bestI >= 0) {
           this.entities.disposeAt(bestI);
+          sg.satiation = clamp(sg.satiation + SATIATION_BUMP, 0, 1); // remember the kill (gorged)
           for (let sj = 0; sj < 2; sj++) {
             V3.set((rng() - 0.5) * 4, rng() * 2 - 1, (rng() - 0.5) * 4);
             V2.copy(p).add(V3);

@@ -35,8 +35,10 @@ nash, market, lorenz`). They split, age, die (weather-tuned lifespan), and feed 
 - **Biology:** deformed icosahedron cores studded with 7–11 blinking ocular points, trailing tendrils.
 - **Behavior:** drift on lorenz-flavored currents; grid-query neighbors (r≈15) and **consume** them,
   respawning corrupted offspring. Tugged by active singularities. **Count: 100 (V14)** on desktop+
-  (16 on phone) — lights capped to the first 4, the bulk glow emissive. _Next: smart/social/dangerous
-  — perceive, remember, bargain, flee, hunt, deceive._
+  (16 on phone). **Cognition (V24):** each one PERCEIVES prey density + rival crowding + singularity
+  threat, REMEMBERS recent feeding (satiation EMA), then FLEES a dangerous crowd, HUNTS a prey-rich
+  calm, and grows AGITATED (faster spin + eye-flicker) under threat — via the pure `creatureDrive`
+  kernel. _Next: deception + bargaining._
 - **Silhouette:** lumpen, asymmetric, writhing — the antithesis of the jewel specimens.
 - **Material language:** dark, wet, glistening; emissive eyes; tendril line-segments.
 - **Animation grammar:** roiling drift + tendril whip + eye-blink flicker; consumption lunges.

@@ -50,11 +50,13 @@ behind the full gate (`bun run check`) and a commit.
 - 🟧 P1 `ECON-AUCTIONS` — second-price (Vickrey/English) windfall auctions of the scarcer commodity; commons-dividend redistribution; `vickreyOutcome` helper + auctions/lastAuctionPrice telemetry. +2 tests, verified live (QUANTA lot @ ~27)
 - 🟧 P1 `ECON-MARKET-TICKER` — self-building ⊙ MARKET panel surfacing all 11 economy telemetry (reserve money, FX, prices, arb, Gini, wealth, agents, cartel, sanctioned, black market, auctions) + FX/price sparkline. Verified live, all populated
 
+- 🟧 P1 `SHOG-COGNITION` — Shoggoths perceive (prey + rival crowding + singularity), remember (satiation EMA), flee the crowd, hunt the calm, agitate under threat. Pure `creatureDrive` kernel + 4 tests. Verified live (satiation diverges, perf steady)
+
 ### 🚧 Next — V13/V14 directive backlog (user, 2026-06-14)
 
 - 🟧 P1 `ECON-PROXY-WARS` — explicit patron→proxy funding + trade blocs (titan wealth now tilts PD diplomacy → war/alliance; explicit bloc mechanics next)
 - 🟦 P3 `ECON-TRIBE-WALLETS` — give graph-tribes collective wallets + coalition treasuries (the full market-mechanic list — cartel/arbitrage/sanctions/black-market/auctions — shipped V20–V22)
-- 🟧 P1 `CREATURES-SMART` — make the 100+100 smart/social/dangerous: perceive, remember, bargain, flee, hunt, deceive, trade, ally, mutate (counts shipped; behavior depth next)
+- 🟧 P1 `CREATURES-SMART` — Shoggoths now perceive/remember/flee/hunt (V24); next: deception + the same cognition for Puppeteers, plus bargain/trade/ally
 - 🟧 P1 `AI-REPAIR` — Copilot offline: diagnostics + failure reason + restart controls + recovery pipeline
 - 🟨 P2 `JOLT-FRACTURE` — Jolt is ON + driving the native specimens (V18); next: convex-decomp fracture, soft-body, crowd-scale
 - 🟨 P2 `DOCS-SYNC` — keep README/Docs/Specs/ERD/Architecture/Kanban current every increment (standing card)
