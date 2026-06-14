@@ -163,17 +163,28 @@ float map(vec3 p){
 }
 
 // Material for the point p (re-derives the cell so colours match the plate).
+// Deep jewel tones — amber/bronze, obsidian-violet, oxblood, teal — NOT pastels,
+// so the lighting + subsurface carve contrast instead of washing out.
 void materialAt(vec3 p){
   float hue; int id;
   if(uHero > 0.5){ id = int(mod(floor(uTime/6.0),7.0)); hue = fract(uTime*0.03); }
   else { const float CELL=2.4; vec2 cid=round(p.xz/CELL); Cell info=cellInfo(cid); hue=info.hue; id=info.id; }
-  // Palette: amber / pearl / violet / cyan jewels keyed off the cell hue.
-  vec3 a = 0.5 + 0.5*cos(TAU*(hue + vec3(0.0,0.12,0.30)) + vec3(0.0,0.6,1.1));
-  a = mix(a, vec3(0.95,0.78,0.5), 0.25);            // bias warm/amber
-  if(id==5) a = mix(vec3(0.92,0.9,0.95), a, 0.25);  // pearl reads pale
-  gAlbedo = a;
-  gRough  = (id==5) ? 0.18 : 0.32;                  // pearls glossier
-  gTrans  = (id==0||id==5||id==6) ? 0.9 : 0.55;     // urchin/pearl/lattice translucent
+  // A unified warm reliquary palette — amber/bronze/sepia dominant, obsidian as the
+  // dark accent, one cool pearl note — echoing the reference plate's mood on near-black.
+  float sel = fract(hue*1.7 + 0.1);
+  vec3 base;
+  if(sel < 0.30)      base = vec3(0.42, 0.24, 0.08);   // amber
+  else if(sel < 0.50) base = vec3(0.30, 0.17, 0.06);   // bronze
+  else if(sel < 0.66) base = vec3(0.52, 0.40, 0.22);   // honey / sepia
+  else if(sel < 0.80) base = vec3(0.08, 0.06, 0.10);   // obsidian
+  else if(sel < 0.90) base = vec3(0.22, 0.06, 0.07);   // deep garnet (desaturated)
+  else                base = vec3(0.26, 0.30, 0.40);   // cool pearl-blue accent
+  // A whisper of within-tone variety so neighbours differ without breaking the mood.
+  base *= 0.8 + 0.4 * hash11(hue * 91.7);
+  if(id==5) base = vec3(0.55, 0.50, 0.58) * 0.8;       // pearl: pale grey, not blown
+  gAlbedo = base;
+  gRough  = (id==5) ? 0.10 : 0.20;                     // glassier overall
+  gTrans  = (id==0||id==5||id==6) ? 0.95 : 0.60;       // urchin/pearl/lattice translucent
 }
 
 vec3 calcNormal(vec3 p){
@@ -270,9 +281,9 @@ void main(){
     n = normalize(n - (grad - dot(grad,n)*n)*0.12);
 
     // Three coloured key lights echoing the plate palette.
-    vec3 L1 = normalize(vec3( 0.7, 0.8, 0.5)); vec3 C1 = vec3(1.0,0.86,0.62)*1.5; // amber key
-    vec3 L2 = normalize(vec3(-0.6, 0.3,-0.7)); vec3 C2 = vec3(0.35,0.7,0.95)*0.9;  // cyan fill
-    vec3 L3 = normalize(vec3( 0.1,-0.6, 0.8)); vec3 C3 = vec3(0.9,0.35,0.75)*0.7;  // magenta rim
+    vec3 L1 = normalize(vec3( 0.7, 0.8, 0.5)); vec3 C1 = vec3(1.0,0.82,0.55)*1.7; // amber key
+    vec3 L2 = normalize(vec3(-0.6, 0.3,-0.7)); vec3 C2 = vec3(0.28,0.6,0.9)*0.6;   // cyan fill
+    vec3 L3 = normalize(vec3( 0.1,-0.6, 0.8)); vec3 C3 = vec3(0.9,0.3,0.65)*0.35;  // magenta rim
 
     float ao = calcAO(p,n);
     vec3 lit = vec3(0.0);
@@ -287,20 +298,20 @@ void main(){
     // Amber subsurface translucency from the thin shell + grooves.
     float th = thickness(p,n);
     float back = pow(clamp(dot(v,-L1)*0.5+0.5,0.0,1.0), 2.0);
-    lit += gAlbedo*vec3(1.7,1.0,0.55) * (1.0-th) * back * gTrans * (0.35 + 0.4*uBass);
+    lit += gAlbedo*vec3(1.7,1.0,0.55) * (1.0-th) * back * gTrans * (0.22 + 0.3*uBass);
 
-    // Fresnel rim + thin-film interference riding it.
+    // Fresnel rim + thin-film interference riding it — restrained so deep albedos stay deep.
     float fres = pow(1.0 - max(dot(n,v),0.0), 4.0);
     vec3 film = 0.5 + 0.5*cos(TAU*(vec3(1.0,0.85,0.7)*fres*2.0 + vec3(0.0,0.18,0.36) + rel*1.4 + uTime*0.05));
-    lit += film * fres * 0.6;
-    lit += vec3(0.9,0.95,1.0) * pow(fres,1.5) * 0.25;
+    lit += film * fres * 0.30;
+    lit += vec3(0.9,0.95,1.0) * pow(fres,1.5) * 0.12;
 
     // Distance fade into the void.
     col = mix(col, lit, exp(-t*0.012));
   }
 
   // Grade: ACES tonemap, gentle vignette, fine grain.
-  col = aces(col*1.15);
+  col = aces(col*0.95);
   float vig = smoothstep(1.25, 0.3, length(uv));
   col *= mix(0.65, 1.0, vig);
   col += (hash13(vec3(gl_FragCoord.xy, uTime))-0.5)*0.02;
