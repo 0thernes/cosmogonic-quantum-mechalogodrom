@@ -13,6 +13,13 @@ the full gate (now also a coverage gate, on Linux + Windows) with same-seed dete
 
 ### Added
 
+- **Wealth-driven Puppeteer behavior (V19)** — the 100-strong puppeteer cabal joins the economy
+  (varied golden-angle purses, econ ids 3000..3099): each puppeteer's **wealth drives how often it
+  meddles** — a rich hand reshapes/stokes the world more frequently and shows it (looms larger, glows
+  brighter), a broke one falls quiet. Boldness is RELATIVE to the live mean puppeteer wealth. With
+  titans + shoggoths + puppeteers all enrolled, the market now spans **210 agents**, and "economy
+  affects EVERYTHING" reaches every active class. Null-default `attachEconomy` keeps the goldens
+  byte-identical. Verified live: puppeteer net worth spreads 181→435 (2.4×), ~32 bold / ~32 timid.
 - **Jolt Physics ON by default in the native engine (V18)** — the shipping-AAA **Jolt Physics 5.2**
   (jrouwe/JoltPhysics — Horizon Forbidden West) now drives the native specimens. A new
   `native/src/physics_jolt.h` is a drop-in backend behind `CQM_WITH_JOLT` (now default ON): each

@@ -44,11 +44,12 @@ behind the full gate (`bun run check`) and a commit.
 - 🟧 P1 `TITAN-DIPLO-ECON` — AURUM/UMBRA wealth steers titan PD diplomacy (richer → raid → war, poorer → appease); null-safe `attachEconomy`, goldens byte-identical. Verified live: 21 ally / 24 war / 0 truce under a live Gini
 - 🟧 P1 `SHOG-ECON-BEHAVIOR` — 100 Shoggoths enrolled (varied purses); wealth drives boldness (hunt cadence, tendril tug, body size+glow), relative to live mean. Verified: 210→500 spread, ~31 bold / ~32 timid
 - 🟥 P0 `JOLT-ON` — Jolt Physics 5.2 wired ON by default in the native engine (`physics_jolt.h`): specimens are real rigid bodies (mass/inertia/restitution), central well + case spring, broad/narrow-phase solve. Built w/ MinGW, verified on RTX 5070 Ti
+- 🟧 P1 `PUP-ECON-BEHAVIOR` — 100 Puppeteers enrolled (varied purses); wealth drives meddle cadence + body size/glow, relative to live mean. Market now 210 agents. Verified: 181→435 spread, ~32 bold / ~32 timid
 
 ### 🚧 Next — V13/V14 directive backlog (user, 2026-06-14)
 
 - 🟧 P1 `ECON-PROXY-WARS` — explicit patron→proxy funding + trade blocs (titan wealth now tilts PD diplomacy → war/alliance; explicit bloc mechanics next)
-- 🟧 P1 `ECON-DEEPEN` — extend creature wallets to PUPPETEERS + tribes (shoggoths shipped); wealth → migration/mutation/trust; black markets, cartels, auctions, sanctions, arbitrage
+- 🟧 P1 `ECON-MARKETS` — black markets, cartels, auctions, sanctions, arbitrage (creature wallets now drive titan/shoggoth/puppeteer behaviour — 210 agents; next: the market-mechanic depth + tribe wallets)
 - 🟧 P1 `CREATURES-SMART` — make the 100+100 smart/social/dangerous: perceive, remember, bargain, flee, hunt, deceive, trade, ally, mutate (counts shipped; behavior depth next)
 - 🟧 P1 `AI-REPAIR` — Copilot offline: diagnostics + failure reason + restart controls + recovery pipeline
 - 🟨 P2 `JOLT-FRACTURE` — Jolt is ON + driving the native specimens (V18); next: convex-decomp fracture, soft-body, crowd-scale

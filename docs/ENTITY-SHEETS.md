@@ -58,7 +58,9 @@ nash, market, lorenz`). They split, age, die (weather-tuned lifespan), and feed 
 - **Material language:** their signature is in the world's _changes_, not a mesh.
 - **Animation grammar:** punctuated interventions, not continuous motion.
 - **World meaning:** fate/agency — the world has authors, and they disagree.
-- **Economic role:** ☉ AURUM (patrons — they tax/gift); large purse (weight ≈ 2.5–5 by title).
+- **Economic role:** ☉ AURUM (patrons — they tax/gift). **All 100 enrolled (V19)** with varied
+  purses; wealth drives how OFTEN each meddles — rich = reshape/stoke more often + loom larger + glow
+  brighter, broke = fall quiet (relative to the live mean; verified 181→435 spread, ~32/~32 split).
 
 ## 4. TITAN — the ten colossi
 

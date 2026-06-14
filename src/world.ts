@@ -187,6 +187,8 @@ export class World {
   private static readonly ECON_TITAN_BASE = 1000;
   /** F-ECON-CREATURES V17: shoggoth econ ids occupy 2000..2099 (≤100 horde; clear of titans/NHIs). */
   private static readonly ECON_SHOGGOTH_BASE = 2000;
+  /** F-ECON-CREATURES V19: puppeteer econ ids occupy 3000..3099 (≤100 cabal; clear of others). */
+  private static readonly ECON_PUPPET_BASE = 3000;
   private static readonly ECON_NHI_BASE = 5000;
   private readonly economy = new Economy();
   private readonly econRng: Rng;
@@ -333,6 +335,15 @@ export class World {
       this.qc.onPuppetEvent(e);
       this.hud.showToast(`${e.name} ${this.lore.epithet('puppet', e.name)}`, e.action);
     });
+    // F-ECON-CREATURES V19: enrol the puppeteer cabal as economic agents (varied golden-angle purses,
+    // no rng) and let wealth drive how often each meddles. econRng only → main stream untouched.
+    for (let i = 0; i < this.puppets.count; i++) {
+      const w = 1.2 + 1.7 * ((i * 0.618033988749895) % 1);
+      this.economy.register(World.ECON_PUPPET_BASE + i, 'Puppeteer', w, this.econRng);
+    }
+    this.puppets.attachEconomy(
+      (idx) => this.economy.wealthOf(World.ECON_PUPPET_BASE + idx)?.netWorth ?? 0,
+    );
     this.weather = new WeatherSystem(ctx, this.engine);
     this.quantum = new QuantumCloud(ctx);
     this.connectome = new Connectome(ctx, this.entities);

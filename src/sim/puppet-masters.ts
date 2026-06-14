@@ -80,6 +80,13 @@ const LIT_PUPPETS = 4;
 /** Golden ratio − 1 (golden-angle fraction) for an even, non-repeating lesser-puppet layout. */
 const PHI = 0.618033988749895;
 
+/** F-ECON-CREATURES V19: reference purse + boldness band — a rich puppeteer MEDDLES more often
+ *  (shorter effective interval) and shows it (brighter + larger), a broke one falls quiet. Boldness
+ *  is RELATIVE to the live mean puppeteer wealth so it's inflation-proof. */
+const PUP_ECON_REF = 180;
+const PUP_BOLD_MIN = 0.45;
+const PUP_BOLD_MAX = 2.4;
+
 /** Deterministic config for lesser puppeteer `i` (0-based, beyond the 3 heroes). No rng. */
 function lesserConfig(i: number): PuppetConfig {
   return {
@@ -116,6 +123,8 @@ export class PuppetMasterSystem {
   private readonly entities: EntityManager;
   private readonly onEvent: (e: PuppetEvent) => void;
   private readonly pms: Puppet[] = [];
+  /** F-ECON-CREATURES V19: economic net-worth provider by puppeteer index (null ⇒ no coupling). */
+  private econWealth: ((puppetIndex: number) => number) | null = null;
 
   /**
    * Builds the puppeteer cabal (CONTRACTS V14: 100 on desktop+, 14 on phone). The 3 named heroes
@@ -131,6 +140,16 @@ export class PuppetMasterSystem {
       const cfg = i < CONFIGS.length ? CONFIGS[i]! : lesserConfig(i - CONFIGS.length);
       this.addPuppet(cfg, i < LIT_PUPPETS);
     }
+  }
+
+  /**
+   * F-ECON-CREATURES V19: wire in the AURUM/UMBRA economy so each puppeteer's WEALTH drives how often
+   * it meddles — a rich hand reshapes/stokes the world more frequently (and glows brighter + larger),
+   * a broke one falls quiet. `wealthByIndex(i)` returns puppeteer i's AURUM net worth. Null (default +
+   * tests) leaves the legacy cadence untouched, so the puppet-master goldens stay byte-identical.
+   */
+  attachEconomy(wealthByIndex: ((puppetIndex: number) => number) | null): void {
+    this.econWealth = wealthByIndex;
   }
 
   /** Build one puppeteer (tetra core + torus ring; a point light only on the first LIT_PUPPETS). */
@@ -180,10 +199,22 @@ export class PuppetMasterSystem {
    * Allocation-free: precomputed messages + module scratch event object.
    */
   update(dt: number, t: number): void {
+    // F-ECON-CREATURES V19: centre boldness on the LIVE mean puppeteer wealth (relative,
+    // inflation-proof) so the rich meddle more + glow brighter, the broke fall quiet.
+    let meanWorth = PUP_ECON_REF;
+    if (this.econWealth) {
+      let sw = 0;
+      const nn = this.pms.length;
+      for (let k = 0; k < nn; k++) sw += this.econWealth(k);
+      meanWorth = Math.max(1, sw / Math.max(1, nn));
+    }
     for (let i = 0; i < this.pms.length; i++) {
       const pm = this.pms[i];
       if (!pm) continue; // noUncheckedIndexedAccess: i < length
       const cfg = pm.cfg;
+      let boldness = 1;
+      if (this.econWealth)
+        boldness = clamp(this.econWealth(i) / meanWorth, PUP_BOLD_MIN, PUP_BOLD_MAX);
       const ang = t * cfg.spd;
       pm.mesh.position.set(
         Math.cos(ang) * cfg.orb,
@@ -192,12 +223,18 @@ export class PuppetMasterSystem {
       );
       pm.mesh.rotation.x += dt * 0.5;
       pm.mesh.rotation.y += dt * 0.7;
+      // Wealth shows on the body: a rich hand looms larger (the visible purse).
+      pm.mesh.scale.setScalar(0.8 + 0.25 * boldness);
       pm.ring.rotation.z = t * 2;
       if (pm.light)
-        pm.light.intensity = (2 + Math.sin(t * 3 + cfg.hue * 20) * 1.5) * POINT_LIGHT_GAIN;
-      pm.mat.emissiveIntensity = 1.5 + Math.sin(t * 2 + cfg.hue * 15) * 0.8;
+        pm.light.intensity =
+          (2 + Math.sin(t * 3 + cfg.hue * 20) * 1.5) * POINT_LIGHT_GAIN * (0.7 + 0.35 * boldness);
+      pm.mat.emissiveIntensity =
+        (1.5 + Math.sin(t * 2 + cfg.hue * 15) * 0.8) * (0.65 + 0.4 * boldness);
       pm.ti += dt * 30;
-      if (pm.ti >= cfg.iv) {
+      // Wealth-driven meddling: a bold (rich) puppeteer's effective interval shrinks → it reshapes/
+      // stokes the world more often; a broke one waits far longer. Economy → behaviour (V19).
+      if (pm.ti >= cfg.iv / boldness) {
         pm.ti = 0;
         this.act(cfg);
       }
