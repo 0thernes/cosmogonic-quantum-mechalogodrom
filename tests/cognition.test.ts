@@ -25,6 +25,14 @@ describe('creatureDrive', () => {
     expect(brave.flee).toBeLessThan(timid.flee);
   });
 
+  test('the weak DECEIVE under threat (feign weakness); the dominant do not bother', () => {
+    const weak = creatureDrive({ threat: 1, prey: 0.2, satiation: 0.3, boldness: 0.4 });
+    const dominant = creatureDrive({ threat: 1, prey: 0.2, satiation: 0.3, boldness: 2.6 });
+    expect(weak.deceive).toBeGreaterThan(0.4);
+    expect(dominant.deceive).toBeLessThan(weak.deceive);
+    expect(creatureDrive({ threat: 0, prey: 0.5, satiation: 0.5, boldness: 0.4 }).deceive).toBe(0);
+  });
+
   test('all drives stay in their bounds for extreme/garbage percepts', () => {
     for (const p of [
       { threat: 9, prey: -5, satiation: 2, boldness: 99 },
@@ -37,6 +45,8 @@ describe('creatureDrive', () => {
       expect(d.hunt).toBeLessThanOrEqual(2);
       expect(d.agitation).toBeGreaterThanOrEqual(0);
       expect(d.agitation).toBeLessThanOrEqual(1);
+      expect(d.deceive).toBeGreaterThanOrEqual(0);
+      expect(d.deceive).toBeLessThanOrEqual(1);
     }
   });
 });

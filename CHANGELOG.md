@@ -13,6 +13,13 @@ the full gate (now also a coverage gate, on Linux + Windows) with same-seed dete
 
 ### Added
 
+- **Deception + active social sense (V26)** — the cognition kernel gains a fifth drive, `deceive`: a
+  threatened, OUTMATCHED creature (high threat × low boldness) feigns weakness so a dominant rival
+  overlooks it. In the Shoggoths this dims the core glow + eyes, shrinks the body, and softens the
+  tendrils (laying low) — layered under the V17 wealth-glow so the broke-and-cornered visibly cower
+  while the rich blaze on. The rival-crowding sense radius was widened (18→38u, cap 5→3) so the social
+  dynamics actually engage in the spread-out horde — verified live: **63 of 100 shoggoths now sense
+  rivals** (up to 3 nearby = max threat), so flee + deceive fire for the crowded majority. +1 test.
 - **Puppeteer cognition: the schemer's mind (V25)** — the cabal joins the cognition layer, reusing the
   shared `creatureDrive` kernel with a distinct interpretation (no predator flee): a puppeteer
   PERCEIVES the disorder in its sector (entity density below its orbit, via one grid query), REMEMBERS

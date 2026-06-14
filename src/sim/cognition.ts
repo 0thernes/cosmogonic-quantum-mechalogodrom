@@ -26,6 +26,9 @@ export interface CreatureDrive {
   hunt: number;
   /** Agitation 0..1 — restless eye-flicker + spin; rises with threat and hunger. */
   agitation: number;
+  /** Urge to DECEIVE 0..1 — feign weakness when outmatched (dim glow, shrink, lay low) so a dominant
+   *  rival overlooks you. High when threatened AND weak (low boldness); the dominant never bother. */
+  deceive: number;
 }
 
 /**
@@ -46,5 +49,7 @@ export function creatureDrive(p: CreaturePercept): CreatureDrive {
   const hunt = clamp(pr * b * (1 - 0.6 * t) * (1.25 - sat), 0, 2);
   // Agitation: restless when in danger or starving.
   const agitation = clamp(0.25 + 0.7 * t + 0.35 * (1 - sat), 0, 1);
-  return { flee, hunt, agitation };
+  // Deceive: feign weakness when in danger AND outmatched — the dominant (bold/rich) never bother.
+  const deceive = clamp(t * (1.25 - 0.55 * b) - 0.2, 0, 1);
+  return { flee, hunt, agitation, deceive };
 }

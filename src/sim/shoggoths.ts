@@ -40,8 +40,8 @@ const BOLD_MIN = 0.5;
 const BOLD_MAX = 2.2;
 
 /** F-COGNITION V24: perception + memory tuning for the Shoggoth mind. */
-const THREAT_R2 = 18 * 18; // rival-crowding sense radius (squared)
-const THREAT_CAP = 5; // this many rivals nearby ⇒ max danger signal
+const THREAT_R2 = 38 * 38; // rival-crowding sense radius (squared) — wide enough to sense the horde
+const THREAT_CAP = 3; // this many rivals nearby ⇒ max danger signal
 const PREY_CAP = 8; // this many exploitable neighbours ⇒ max prey signal
 const SATIATION_DECAY = 0.04; // hunger creeps in per second
 const SATIATION_BUMP = 0.5; // satiation gained per successful consumption
@@ -341,13 +341,24 @@ export class ShoggothSystem {
       const hue = (t * 0.05 + sg.ph) % 1;
       sg.coreMat.emissive.setHSL(hue, 0.6, 0.04 + Math.sin(t * 2 + sg.ph) * 0.02);
       // Wealth shows on the body: a rich shoggoth glows brighter + looms larger (the visible purse).
-      sg.coreMat.emissiveIntensity = (1 + Math.sin(t * 3 + sg.ph) * 0.8) * (0.7 + 0.35 * boldness);
-      sg.core.scale.setScalar((1 + Math.sin(t * 1.5 + sg.ph) * 0.15) * (0.85 + 0.18 * boldness));
+      // DECEIVE (V26): a threatened, outmatched shoggoth FEIGNS WEAKNESS — dims its glow + shrinks so
+      // a dominant rival overlooks it. Layered under the V17 wealth glow, so the broke-and-cornered
+      // visibly cower while the rich blaze on.
+      const meek = 1 - 0.6 * drive.deceive;
+      sg.coreMat.emissiveIntensity =
+        (1 + Math.sin(t * 3 + sg.ph) * 0.8) * (0.7 + 0.35 * boldness) * meek;
+      sg.core.scale.setScalar(
+        (1 + Math.sin(t * 1.5 + sg.ph) * 0.15) *
+          (0.85 + 0.18 * boldness) *
+          (1 - 0.25 * drive.deceive),
+      );
       for (let ei = 0; ei < sg.eyeMats.length; ei++) {
         const eyeMat = sg.eyeMats[ei];
         if (!eyeMat) continue; // noUncheckedIndexedAccess: ei < length
         eyeMat.opacity =
-          0.3 + Math.abs(Math.sin(t * (2 + drive.agitation * 4) + (sg.eyePhases[ei] ?? 0))) * 0.7;
+          (0.3 +
+            Math.abs(Math.sin(t * (2 + drive.agitation * 4) + (sg.eyePhases[ei] ?? 0))) * 0.7) *
+          meek; // hide the eyes too when feigning weakness
       }
       if (sg.aura) {
         sg.aura.intensity = (3 + Math.sin(t * 2 + sg.ph) * 2) * POINT_LIGHT_GAIN;
@@ -371,7 +382,10 @@ export class ShoggothSystem {
           tp[o + 4] = ep.y - p.y;
           tp[o + 5] = ep.z - p.z;
           ti++;
-          V1.copy(p).sub(ep).normalize().multiplyScalar(tug);
+          V1.copy(p)
+            .sub(ep)
+            .normalize()
+            .multiplyScalar(tug * (1 - 0.5 * drive.deceive)); // lay low: softer tendrils when feigning
           en.userData.vel.add(V1);
         }
       }

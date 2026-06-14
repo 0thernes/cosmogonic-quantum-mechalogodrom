@@ -52,6 +52,7 @@ behind the full gate (`bun run check`) and a commit.
 
 - 🟧 P1 `SHOG-COGNITION` — Shoggoths perceive (prey + rival crowding + singularity), remember (satiation EMA), flee the crowd, hunt the calm, agitate under threat. Pure `creatureDrive` kernel + 4 tests. Verified live (satiation diverges, perf steady)
 - 🟧 P1 `PUP-COGNITION` — Puppeteers reuse the kernel as SCHEMERS (no flee): perceive sector disorder, remember meddling, meddle MORE opportunistically over target-rich chaos. Verified live (satiation diverges, 90 mutations fired)
+- 🟧 P1 `CREATURE-DECEIVE` — kernel `deceive` drive: outmatched shoggoths feign weakness (dim glow + eyes, shrink, soften tendrils). Threat radius widened so social sense engages. Verified: 63/100 sense rivals
 
 ### 🚧 Next — V13/V14 directive backlog (user, 2026-06-14)
 
