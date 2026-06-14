@@ -37,6 +37,19 @@ erDiagram
   ANALYTICS_WINDOW ||--o{ AUDIT_EVENT : "omens when |z| > 2.5"
   ANALYTICS_WINDOW }o--o{ LORE_NAME : "omens named (kind = omen)"
 
+  TITAN ||--|| ECON_AGENT : "enrolled at boot (purse ~ stature, weight 8+)"
+  NHI ||--|| ECON_AGENT : "enrolled on launch (fattest purse, weight 14)"
+  ECON_AGENT ||--|| WALLET : "holds AURUM + UMBRA + QUANTA + ICHOR"
+  ECON_AGENT }o--|| MARKET : "trades via buy-vs-sell clearing book"
+  MARKET ||--o{ CURRENCY : "AURUM/UMBRA fx via currency-adoption game"
+  MARKET ||--o{ COMMODITY : "QUANTA/ICHOR tatonnement pricing"
+  PERSISTED_STATE }o--|| MARKET : "chaos feeds market stress (econRng sub-stream)"
+  MARKET ||--o{ TELEMETRY_SNAPSHOT : "dominant money, fx, prices, wealth Gini"
+
+  PHYSICS_BODY }o--|| RELIQUARY_CASE : "confined (native engine)"
+  PHYSICS_BODY }o--o{ PHYSICS_BODY : "sphere-sphere impulse collisions + friction spin"
+  PHYSICS_BODY ||--|| SPECIMEN_SDF : "transform posed each frame (native ray-marcher)"
+
   ENTITY {
     int mi "morphotype index 0..morphTotal-1 (250 in phylum mode)"
     string beh "one of 26 behaviors (overridable)"

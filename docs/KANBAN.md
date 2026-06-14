@@ -28,6 +28,27 @@ behind the full gate (`bun run check`) and a commit.
 
 ## Board
 
+### ✅ Done — V12 RELIQUARY + V13 ECONOMY/PHYSICS (2026-06-14)
+
+- 🟧 P1 `V12-SURFACE` — Reliquary Surface jewel BRDF: carved fBm relief engraves the PBR normal, worn-jewel roughness, dielectric pull, amber bass-reactive SSS, thin-film iridescence — _037f0d4_
+- 🟧 P1 `V12-SPECIMEN` — macro SPECIMEN camera view (10th mode, snap-on-jump studio-plate tour of live organisms) — _037f0d4_
+- 🟧 P1 `V13-ECONOMY` — 2 competing currencies (AURUM ☉/UMBRA ☾) + 2 commodities (QUANTA ◇/ICHOR ❖): clearing market + currency-adoption game, titan/NHI wallets, own `econRng` sub-stream (determinism intact) — _237710c, +9 tests_
+- 🟧 P1 `V13-HUD` — bottom-right View/Speed/Render box (non-overlapping) + NHI telemetry tally — _1cfe189_
+- 🟧 P1 `NATIVE-ENGINE` — C++20/OpenGL SDF ray-marcher, GLFW+GLM, MinGW GCC 16.1, rendered on RTX 5070 Ti; unified amber jewel plate — _17fa52f, 1178c0f_
+- 🟥 P0 `NATIVE-PHYSICS` — **LIVE** impulse rigid-body solver (gravity well, sphere collisions + restitution + friction-spin, quaternion tumbling), active by default, drives the render — _6f5daa9_
+- 🟨 P2 `DOCS-V13` — ADR-0007, ENTITY-SHEETS, ERD economy/physics, this board — _(in this commit)_
+
+### 🚧 Next — V13 directive backlog (user, 2026-06-14)
+
+- 🟧 P1 `NHI-OBSERVATORY` — per-NHI 9-view 3×3 connectome grid (firing · topology · memory · reward · sensory · intention · affect · prediction · decision), animated + scientific
+- 🟧 P1 `TITAN-DIPLOMACY` — alliances/pacts/rivalries/proxy-wars/trade-blocs/patron-client nets, coupled to economic wealth
+- 🟧 P1 `ECON-DEEPEN` — wallets for shoggoths/puppeteers/all entities; wealth drives behavior, war, migration, mutation, trust; black markets, cartels, auctions, sanctions, arbitrage
+- 🟧 P1 `CREATURES-100` — 100 Shoggoths + 100 Puppeteers (instanced for the light cap; smarter/social/reactive/dangerous)
+- 🟧 P1 `AI-REPAIR` — Copilot offline: diagnostics + failure reason + restart controls + recovery pipeline
+- 🟨 P2 `JOLT-ON` — flip Jolt Physics ON as the default native backend (fracture, mass, inertia, crowd)
+- 🟨 P2 `NATIVE-4K` — render true 3840×2160 plates (native)
+- 🟨 P2 `DOCS-SYNC` — keep README/Docs/Specs/ERD/Architecture/Kanban current every increment (standing card)
+
 ### 📥 Backlog (unscheduled)
 
 - 🟦 P3 `LAB-ART` — wire user-supplied AI artwork as N(2)/lab textures & palettes (⏳ awaiting image files on disk)

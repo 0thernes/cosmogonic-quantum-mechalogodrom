@@ -17,6 +17,14 @@ deterministic, allocation-disciplined module graph.
 Every run is reproducible from a seed. Every hot path is allocation-free.
 Every magic number survived the port.
 
+> **V12–V13 (2026-06):** a procedural **Reliquary Surface** jewel BRDF + a macro **SPECIMEN** camera
+> view; a living **two-currency / two-commodity economy** (AURUM ☉ / UMBRA ☾ · QUANTA ◇ / ICHOR ❖)
+> with a game-theoretic clearing market and stature-scaled wallets; a bottom-right View/Speed/Render
+> HUD + NHI tally; and a **native C++20 / OpenGL engine** ([`native/`](./native)) — an SDF ray-marcher
+> with **live rigid-body physics**, built with MinGW GCC 16.1 and rendered on an NVIDIA RTX 5070 Ti.
+> See the [CHANGELOG](./CHANGELOG.md), [ADR-0007](./docs/adr/0007-native-cpp-engine-and-live-physics.md),
+> and the [Entity Sheets](./docs/ENTITY-SHEETS.md).
+
 ## Features
 
 - **26 behavioral fields** driving up to 10,000 organisms: classic motion
