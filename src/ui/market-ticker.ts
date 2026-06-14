@@ -8,6 +8,7 @@
  */
 import type { MarketSummary } from '../sim/economy';
 import { CURRENCY_GLYPH, COMMODITY_GLYPH } from '../sim/economy';
+import { mountToggle } from './panel-dock';
 
 const HISTORY = 120; // sparkline ring length
 
@@ -83,7 +84,7 @@ export class MarketTicker {
     toggle.textContent = '⊙ MARKET';
     toggle.setAttribute('aria-label', 'Open the market ticker');
     toggle.addEventListener('click', () => this.setOpen(!this.open));
-    doc.body.appendChild(toggle);
+    mountToggle(toggle, doc); // V33: live in the shared bottom dock bar, not a floating fixed button
 
     const panel = doc.createElement('section');
     panel.id = 'cqm-mkt-panel';

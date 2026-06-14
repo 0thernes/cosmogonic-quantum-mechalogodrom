@@ -13,6 +13,19 @@ the full gate (now also a coverage gate, on Linux + Windows) with same-seed dete
 
 ### Added
 
+- **UI: the panel dock — one bottom menu bar (V33)** — the directive's UI/UX fix ("move ARCHITECT,
+  NEURAL, MARKET, DOCS, and SPECS into the bottom menu bar … readable, touchable, responsive,
+  intentional"). The four self-mounting inspector toggles used to float at four different `right:`
+  offsets (ARCHITECT 330 · MARKET 204 · NEURAL 108 · ✦ AI 10), crowding the corner and **overlapping
+  the Docs/Spec links**. A new self-mounting **`ui/panel-dock.ts`** builds a single glass **menu bar**
+  (bottom-right, flex-wrap row); each panel now calls `mountToggle(...)` instead of fixing its own
+  button, and the standalone Docs + Spec nav links are **adopted into the same bar** (the dock CSS
+  neutralises each child's fixed positioning, keeping its styling). The View/Speed/Render readout was
+  raised (`bottom-16` → `bottom-[76px]`) to clear the bar. **Verified live**: one 477px bar holds all 6
+  items (`✦ · ⊞ NEURAL · ⊙ MARKET · ⬢ ARCHITECT · Docs · Spec`) in a tidy non-overlapping row, **zero
+  stray toggles**, panels still open on click (ARCHITECT → DOMINATE), the V/S/R box clears the bar (gap
+  13px), no console errors; full gate green (737 tests). _Remaining UI items: relocate the Sorting
+  step/meter clock off the Sorting Fields panel; bottom-center bar polish._
 - **THE SUPER CREATURE — the masterful body (V32)** — the directive's graphics emphasis: the apex mind
   (V31) now has a **masterful, morphing, many-eyed BODY** (`sim/super-body.ts`), rendered outside the
   instanced pool so it can carry unique geometry + a hand-written shader. The form is drawn from the

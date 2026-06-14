@@ -18,6 +18,8 @@
  * `textContent`, never `innerHTML`, so untrusted text can't inject markup.
  */
 
+import { mountToggle } from './panel-dock';
+
 interface ToolStep {
   tool: string;
   args: Record<string, unknown>;
@@ -173,7 +175,8 @@ function mount(): void {
     'Read-only AI · /read <path> /ls <dir> /grep <token> /run <cmd> · sends to a free external AI';
 
   panel.append(head, logEl, foot, hint);
-  document.body.append(toggle, panel);
+  mountToggle(toggle); // V33: live in the shared bottom dock bar (the ✦ AI button)
+  document.body.appendChild(panel);
 
   const history: Msg[] = [];
   let busy = false;

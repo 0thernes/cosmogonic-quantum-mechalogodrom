@@ -19,6 +19,7 @@
  */
 import type { NhiSnapshot } from '../sim/nhi';
 import { NHI_ACTION_LABELS, NHI_FACT_LABELS } from '../sim/nhi';
+import { mountToggle } from './panel-dock';
 
 const PAL = {
   bg: '#060a16',
@@ -448,7 +449,7 @@ export class NhiObservatory {
     toggle.textContent = '⊞ NEURAL';
     toggle.setAttribute('aria-label', 'Open the NHI neural observatory');
     toggle.addEventListener('click', () => this.setOpen(!this.open));
-    doc.body.appendChild(toggle);
+    mountToggle(toggle, doc); // V33: live in the shared bottom dock bar, not a floating fixed button
 
     const panel = doc.createElement('section');
     panel.id = 'cqm-nhi-panel';

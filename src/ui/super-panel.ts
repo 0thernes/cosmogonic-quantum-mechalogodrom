@@ -7,6 +7,7 @@
  * pushes a {@link SuperSnapshot} + net worth each Observatory cadence via {@link update}.
  */
 import type { SuperSnapshot, SuperPlan } from '../sim/super-creature';
+import { mountToggle } from './panel-dock';
 
 /** Plan → accent colour, so the committed goal reads at a glance (hunt-red … rest-grey). */
 const PLAN_COLOR: Record<SuperPlan, string> = {
@@ -107,7 +108,7 @@ export class SuperPanel {
     toggle.textContent = '⬢ ARCHITECT';
     toggle.setAttribute('aria-label', 'Open the Super Creature telemetry');
     toggle.addEventListener('click', () => this.setOpen(!this.open));
-    doc.body.appendChild(toggle);
+    mountToggle(toggle, doc); // V33: live in the shared bottom dock bar, not a floating fixed button
 
     const panel = doc.createElement('section');
     panel.id = 'cqm-sup-panel';
