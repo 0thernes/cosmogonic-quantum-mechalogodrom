@@ -66,6 +66,7 @@ import { SingularitySystem, SINGULARITY_KINDS } from './sim/singularities';
 import { ArtifactField } from './sim/artifacts';
 import { LeviathanSystem } from './sim/leviathans';
 import { NhiSystem, type NhiWorld } from './sim/nhi-system';
+import { Economy } from './sim/economy';
 import { NhiAction, type NhiIntent, type NhiPercept } from './sim/nhi';
 import { NhiBodySystem } from './sim/nhi-body';
 import { CosmicWeb } from './sim/cosmic-web';
@@ -175,6 +176,15 @@ export class World {
   // ── F-NHI V10: apex super-minds (src/sim/nhi.ts) that READ the world and WRITE to it ─────────
   /** Drives each launched NHI's deterministic mind → real effects (spawn swarms, dominate, broadcast). */
   private readonly nhi = new NhiSystem();
+
+  // ── F-ECONOMY V13: two competing currencies (AURUM/UMBRA) + two commodities (QUANTA/ICHOR), a
+  //    game-theoretic clearing market every intelligence plugs into. It runs on its OWN seeded rng
+  //    sub-stream (`econRng`), so registering agents + ticking the market never shift the main
+  //    deterministic draw order — existing golden/parity tests stay byte-identical.
+  private static readonly ECON_TITAN_BASE = 1000;
+  private static readonly ECON_NHI_BASE = 5000;
+  private readonly economy = new Economy();
+  private readonly econRng: Rng;
   /** Live NHI entities keyed by mind id; pruned when an NHI dies (leaves entities.list). */
   private readonly nhiEntities = new Map<number, Entity>();
   /** Monotonic NHI mind id — a stable key across the shifting entities.list. */
@@ -237,6 +247,9 @@ export class World {
     this.audit = opts.audit;
 
     this.rng = mulberry32(this.persisted.seed);
+    // Economy rng: a deterministic sub-stream derived from the world seed (golden-ratio mix), kept
+    // separate from `this.rng` so the market never perturbs the main simulation's draw order.
+    this.econRng = mulberry32((this.persisted.seed ^ 0x9e3779b1) >>> 0 || 1);
 
     this.state = {
       chaos: 0.5,
@@ -330,6 +343,13 @@ export class World {
     for (let i = 0; i < 4; i++) this.rd.perturb(this.rng(), this.rng());
     // ── PANTHEON V3.3: the ten colossi and their economy/war layer ──
     this.titans = new TitanSystem(ctx, this.entities, this.lore, this.rd);
+    // F-ECONOMY V13: enrol the ten colossi as economic agents with titan-sized purses (their
+    // stature = a base weight + a per-titan bump). Draws only from `econRng`, so this never shifts
+    // the main rng order — the world after this point is byte-identical to before the economy.
+    for (let i = 0; i < this.titans.count; i++) {
+      const name = this.titans.ledger[i]?.name ?? `Titan ${i}`;
+      this.economy.register(World.ECON_TITAN_BASE + i, name, 8 + (i % 5) * 0.7, this.econRng);
+    }
     this.graphMind = new GraphMind(ctx, this.entities, this.connectome);
     this.constellations = new ConstellationSystem(ctx, this.lore);
     this.audioAnalysis = new AudioAnalysis(this.audio);
@@ -402,6 +422,7 @@ export class World {
       viewName: cyc(VIEW_MODES, this.state.viewIdx),
       timeScale: this.state.timeScale,
       renderName: this.state.renderMode,
+      econ: this.economy.summary(),
     };
     // The three V3.5 arrays are stable LIVE views (contents mutate in place),
     // so this adapter is built once and never repopulated — just a field rename.
@@ -554,6 +575,10 @@ export class World {
       }
     }
     if (s.frame % 6 === 0) this.qc.bands(); // refresh the live buffer the cloud reads
+    // F-ECONOMY V13: clear the market on a slow cadence (heavy substrate runs slow — physicist's
+    // law). World chaos feeds in as market stress, widening demand swings. Reads/writes its own
+    // sub-stream, so the cadence never touches the main deterministic order.
+    if (s.frame % 30 === 15) this.economy.tick(this.econRng, clamp(s.chaos / 10, 0, 1));
 
     this.quantum.update(dt, t);
 
@@ -960,6 +985,7 @@ export class World {
     sn.viewName = cyc(VIEW_MODES, s.viewIdx);
     sn.timeScale = s.timeScale;
     sn.renderName = s.renderMode;
+    sn.econ = this.economy.summary(); // V13: AURUM/UMBRA, prices, dominant currency, wealth Gini
     sn.tribes = this.graphMind.tribes;
     sn.trend = this.analytics.trendPerMin;
     sn.qEntropy = this.qc.entropy;
@@ -1005,6 +1031,9 @@ export class World {
     const nid = this.nhiNextId++;
     this.nhiEntities.set(nid, e);
     this.nhi.register(nid, this.rng);
+    // F-ECONOMY: an NHI super-mind enters the market with the cosmos's fattest purse (weight 14 vs a
+    // titan's ~8). Uses econRng so the launch's main-stream draws above stay reproducible.
+    this.economy.register(World.ECON_NHI_BASE + nid, 'NHI super-mind', 14, this.econRng);
     this.nhiBody.spawn(nid, e.position.x, e.position.y, e.position.z);
     this.audio.play('warp');
     this.hud.showSector('NHI LAUNCHED · MATRIX BEING');

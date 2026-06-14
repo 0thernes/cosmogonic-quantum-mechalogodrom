@@ -12,6 +12,7 @@ import type { Rng } from './math/rng';
 import type { SpatialHash } from './math/spatial-hash';
 import type { AuditTrail } from './logging/audit';
 import type { Behavior, RenderMode, ViewMode, Weather } from './sim/constants';
+import type { MarketSummary } from './sim/economy';
 
 /** Quality tier ladder (CONTRACTS V3.1): decided once at boot, never switched. */
 export type QualityTier = 'phone' | 'laptop' | 'desktop' | 'ultra';
@@ -312,6 +313,8 @@ export interface TelemetrySnapshot {
   timeScale: number;
   /** Current entity render-mode name (HUD box). */
   renderName: string;
+  /** V13 economy: AURUM/UMBRA money + commodity prices + dominant currency + wealth Gini. */
+  econ: MarketSummary;
 }
 
 /** One titan's public economy row (structural twin of sim/titans TitanLedgerEntry). */

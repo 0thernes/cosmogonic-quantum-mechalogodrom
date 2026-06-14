@@ -67,6 +67,11 @@ export class TelemetryPanel {
   private readonly hudView: HTMLElement;
   private readonly hudSpeed: HTMLElement;
   private readonly hudRender: HTMLElement;
+  /** V13 economy rows: dominant money, FX, commodity prices, wealth Gini. */
+  private readonly ecd: HTMLElement;
+  private readonly ecf: HTMLElement;
+  private readonly ecp: HTMLElement;
+  private readonly ecg: HTMLElement;
   private readonly gEntities: Sparkline;
   private readonly gChaos: Sparkline;
   private readonly gEnergy: Sparkline;
@@ -100,6 +105,10 @@ export class TelemetryPanel {
     this.hudView = mustGet('hud-view');
     this.hudSpeed = mustGet('hud-speed');
     this.hudRender = mustGet('hud-render');
+    this.ecd = mustGet('ecd');
+    this.ecf = mustGet('ecf');
+    this.ecp = mustGet('ecp');
+    this.ecg = mustGet('ecg');
     // Colors and fixed maxes mirror the legacy drawGraph calls (lines 872-873). The
     // quality-dependent maxes (MAX_E, MNN) are not known at construction time; they are kept
     // current from each snapshot in update().
@@ -144,6 +153,14 @@ export class TelemetryPanel {
     this.hudView.textContent = s.viewName;
     this.hudSpeed.textContent = s.timeScale === 0 ? 'PAUSE' : `${s.timeScale}×`;
     this.hudRender.textContent = s.renderName;
+    // V13 economy: dominant money + its share, FX, commodity prices, wealth Gini.
+    const ec = s.econ;
+    const domGlyph = ec.dominant === 'AURUM' ? '☉' : '☾';
+    const domShare = ec.dominant === 'AURUM' ? ec.aurumShare : 1 - ec.aurumShare;
+    this.ecd.textContent = `${domGlyph} ${Math.round(domShare * 100)}%`;
+    this.ecf.textContent = ec.fx.toFixed(2);
+    this.ecp.textContent = `${ec.pQuanta.toFixed(1)}/${ec.pIchor.toFixed(1)}`;
+    this.ecg.textContent = ec.gini.toFixed(2);
     // Full-scale tracking: both graphs scale to the active tier's caps, which
     // the snapshot now carries directly (V3 — no more derived pairing table).
     this.gEntities.max = s.maxEntities;

@@ -54,6 +54,18 @@ the full gate (now also a coverage gate, on Linux + Windows) with same-seed dete
 - **Dev-only inspection hook** (`window.__CQM__`, localhost-only) — exposes the live world/engine and a
   manual `step()` so the preview/automation harness can drive frames + capture a backgrounded tab
   (where `requestAnimationFrame` is throttled to ~0). Never attached on the deployed static site.
+- **ECONOMY (V13)** — `src/sim/economy.ts`: **two competing currencies** (AURUM ☉ / UMBRA ☾) and **two
+  commodities** (QUANTA ◇ / ICHOR ❖) under a real game-theoretic clearing market. Commodity prices move
+  by **tâtonnement** (excess demand → price); the AURUM/UMBRA `fx` floats via a **currency-adoption
+  game** (each agent softmax-best-responds toward the appreciating money, so dominance shifts
+  emergently); trades **clear buy-against-sell** so currency is conserved. Every intelligence gets a
+  **purse sized to its stature** — the ten titans (and NHI super-minds on launch) are enrolled as
+  agents. Runs on its own seeded sub-stream (`econRng`) so it never perturbs the main deterministic
+  order (every existing golden/parity test stays byte-identical). Telemetry surfaces dominant money +
+  share, FX, commodity prices, and the wealth **Gini**. +9 tests (determinism, conservation-clearing,
+  price/fx bounds, Gini, stature-scaled purses). Runtime-verified live in the preview.
+- **HUD (V13)** — a bottom-right **View / Speed / Render** readout box (clear of Docs/Spec, the AI
+  toggle, and the toolbar) and an **NHI super-mind tally** row in Telemetry.
 - **NATIVE C++ engine (`native/`)** — a real C++20 + OpenGL 3.3 ray-marcher answering the "C++ + best
   frameworks" mandate directly. The whole specimen gallery is signed-distance-field math in one
   fragment shader (urchin, Ω-ring, ribbed disc, spindle, star, diatom-lattice, pearl — each carved
