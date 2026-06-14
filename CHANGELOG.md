@@ -13,6 +13,22 @@ the full gate (now also a coverage gate, on Linux + Windows) with same-seed dete
 
 ### Added
 
+- **THE SUPER MIND — a ~10,000-parameter composite consciousness (V45)** — the directive's leap from the
+  V31 single-MLP mind (1,444 params) to a **polymorphic, biomimetic composite of 12 specialised
+  sub-networks (~10,081 weights)** wired into a five-STAGE pipeline that recurses to five DEPTHS and
+  explores 25 thought VARIANTS (`sim/super-mind.ts`). It is a Stephen-Thaler-style **Creativity Machine**:
+  an IMAGITRON generates imagined latents from (latent ⊕ deterministic noise) and a PERCEPTOR critic
+  scores their novelty — so the mind literally **DREAMS** (it always imagines), **HALLUCINATES** (when
+  novelty crosses the recognition threshold), **REASONS** (a Tree-of-Thought over the 25 branches +
+  a 5-deep recursive PREDICTOR world model feeding SURPRISE), and **FEELS** (an AFFECT net drives the
+  emotion EMAs; a SELF-MODEL emits a self-awareness signal). 30 **organ-nets** each process an atom of
+  the latent (**Atom of Thought**, one net per spike/eye/loop), and a QUANTUM net emits **10 reactive
+  quantum-aspect** intensities (superposition, entanglement, FTL, absolute-zero, qudit-compute,
+  morphology, mutation, reactive, responsive, adaptive). A META-CONTROLLER integrates all of it into the
+  drives. Fully deterministic (a seeded, reproducible noise stream — no rng/clock) and allocation-free in
+  steady state; **5 headless tests** pin the ~10k budget, the 5×5×25 architecture, determinism, bounded
+  drives/consciousness/quantum, and NaN-freedom across 300 beats. Full gate green (782 tests). _Next: wire
+  it into the live apex creature, the 100-robot wingman swarm, and the appearance/evolution layer._
 - **Entity ceiling retuned 50k → 25,000 (V44)** — the directive's "50,000 is too much and crashes my
   machine". The `mega` tier's `maxEntities`/`targetEntities` drop from 50,000 to **25,000** (still the
   auto-default for capable machines; `?tier=` overrides unchanged). Everything downstream already reads
