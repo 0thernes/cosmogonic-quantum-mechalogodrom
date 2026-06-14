@@ -46,11 +46,12 @@ behind the full gate (`bun run check`) and a commit.
 - 🟥 P0 `JOLT-ON` — Jolt Physics 5.2 wired ON by default in the native engine (`physics_jolt.h`): specimens are real rigid bodies (mass/inertia/restitution), central well + case spring, broad/narrow-phase solve. Built w/ MinGW, verified on RTX 5070 Ti
 - 🟧 P1 `PUP-ECON-BEHAVIOR` — 100 Puppeteers enrolled (varied purses); wealth drives meddle cadence + body size/glow, relative to live mean. Market now 210 agents. Verified: 181→435 spread, ~32 bold / ~32 timid
 - 🟧 P1 `ECON-MARKET-MECHANICS` — cartel (supply withholding), arbitrage (price-gap mean-reversion), sanctions (`economy.sanction`; titan wars → embargo). New telemetry cartelShare/arbSpread/sanctioned. +4 tests. Verified live
+- 🟧 P1 `ECON-BLACK-MARKET` — embargoed buy off-book at a 25% smuggler premium, everyone else smuggles; second clearing pass, `blackVolume` telemetry. Verified live ~115 units/tick under the titan war-sanctions
 
 ### 🚧 Next — V13/V14 directive backlog (user, 2026-06-14)
 
 - 🟧 P1 `ECON-PROXY-WARS` — explicit patron→proxy funding + trade blocs (titan wealth now tilts PD diplomacy → war/alliance; explicit bloc mechanics next)
-- 🟧 P1 `ECON-MARKETS-2` — black markets + auctions (cartel/arbitrage/sanctions shipped V20; verified cartelShare 0.09, arbSpread→0.01, 10 titans sanctioned by war); next: off-book black market + ascending auctions + tribe wallets
+- 🟧 P1 `ECON-AUCTIONS` — ascending auctions for scarce lots + tribe wallets (cartel/arbitrage/sanctions/black-market shipped V20–V21; black market verified ~115 units/tick off-book)
 - 🟧 P1 `CREATURES-SMART` — make the 100+100 smart/social/dangerous: perceive, remember, bargain, flee, hunt, deceive, trade, ally, mutate (counts shipped; behavior depth next)
 - 🟧 P1 `AI-REPAIR` — Copilot offline: diagnostics + failure reason + restart controls + recovery pipeline
 - 🟨 P2 `JOLT-FRACTURE` — Jolt is ON + driving the native specimens (V18); next: convex-decomp fracture, soft-body, crowd-scale

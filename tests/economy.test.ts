@@ -121,6 +121,7 @@ describe('economy — Economy market', () => {
     expect(s.totalWealth).toBe(0);
     expect(s.cartelShare).toBe(0);
     expect(s.sanctioned).toBe(0);
+    expect(s.blackVolume).toBe(0);
   });
 });
 
@@ -166,6 +167,22 @@ describe('economy — market mechanics (V20)', () => {
         e.wealthOf(7)!.netWorth) /
       5;
     expect(meanSanctioned).toBeLessThan(meanFree); // the embargo starves them of gains-from-trade
+  });
+
+  test('a black market clears off-book ONLY for the sanctioned (zero otherwise)', () => {
+    const e = new Economy();
+    const rng = mulberry32(31);
+    // Varied stature → heterogeneous holdings → two-sided off-book demand among the embargoed.
+    for (let i = 0; i < 16; i++) e.register(i, `A${i}`, 0.5 + 7.5 * (i / 15), rng);
+    for (let i = 0; i < 30; i++) e.tick(rng, 0.4);
+    expect(e.summary().blackVolume).toBe(0); // no sanctions → no off-book market
+    for (let i = 0; i < 16; i += 2) e.sanction(i, true); // sanction a varied half
+    let sawBlack = false;
+    for (let i = 0; i < 120; i++) {
+      e.tick(rng, 0.4);
+      if (e.summary().blackVolume > 0) sawBlack = true;
+    }
+    expect(sawBlack).toBe(true); // the embargoed evade via smugglers (two-sided off-book demand)
   });
 
   test('the cartel + arbitrage path stays deterministic and well-formed', () => {

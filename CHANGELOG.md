@@ -13,6 +13,13 @@ the full gate (now also a coverage gate, on Linux + Windows) with same-seed dete
 
 ### Added
 
+- **Black market (V21)** — the embargo has a leak: SANCTIONED agents BUY commodities off-book at a
+  smuggler's premium (`BLACK_PREMIUM` 25%) while everyone else SMUGGLES (supplies a slice at that
+  premium, profiting from the embargo). A second clearing pass over the off-book book (currency
+  conserved), surfaced as `MarketSummary.blackVolume`. Verified live: with the 10 warring titans
+  embargoed, the off-book market runs ~115–149 units/tick — sanctions bite, but the embargoed evade
+  at a cost that enriches the 200 smugglers. +1 test (off-book only for the sanctioned; zero
+  otherwise). Determinism + invariants preserved.
 - **Market mechanics: cartel · arbitrage · sanctions (V20)** — explicit game theory layered on the
   clearing market (`src/sim/economy.ts`): (1) **Cartel** — the richest {@link CARTEL_SIZE} agents
   collude to **withhold supply** (oligopoly scarcity → price support; `topKThreshold` finds the

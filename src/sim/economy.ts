@@ -61,6 +61,8 @@ const ARB_GAIN = 0.05;
 const SANCTION_BUDGET = 0.35;
 /** …and is cut off from resources, producing only this fraction (the embargo's real bite). */
 const SANCTION_PRODUCTION = 0.4;
+/** Black-market premium: sanctioned agents can still trade off-book, but at the smuggler's markup. */
+const BLACK_PREMIUM = 0.25;
 
 /** A registered economic agent's public summary (read-only view for telemetry/UI). */
 export interface AgentWealth {
@@ -104,6 +106,8 @@ export interface MarketSummary {
   arbSpread: number;
   /** Number of agents currently under sanction (embargoed budget). */
   sanctioned: number;
+  /** Off-book commodity volume the sanctioned moved on the black market this tick (evasion). */
+  blackVolume: number;
 }
 
 /**
@@ -201,6 +205,8 @@ export class Economy {
   /** Last-tick cartel wealth share + arbitrage spread, surfaced via {@link summary}. */
   private cartelShare = 0;
   private arbSpread = 0;
+  /** Last-tick off-book (black-market) commodity volume traded by sanctioned agents. */
+  private blackVolume = 0;
 
   /**
    * Enrol an agent with a purse sized to `weight` (its stature). Idempotent per id: re-registering
@@ -331,6 +337,35 @@ export class Economy {
     // currency conserved across the book to floating-point tolerance).
     this.clear(this.dQ, this.pQuanta, 'quanta');
     this.clear(this.dI, this.pIchor, 'ichor');
+
+    // (4b) BLACK MARKET — SANCTIONED agents evade the embargo via smugglers: a second clearing over
+    // ONLY the sanctioned set, at a premium (the smuggler's cut). Non-sanctioned get a zero delta so
+    // they're untouched; currency is conserved within the off-book book (buys matched to sells). The
+    // markup is the real cost of evasion. O(n), reuses the dQ/dI scratch.
+    const pBlackQ = this.pQuanta * (1 + BLACK_PREMIUM);
+    const pBlackI = this.pIchor * (1 + BLACK_PREMIUM);
+    let anyBlack = false;
+    for (let i = 0; i < n; i++) {
+      const a = this.agents[i]!;
+      if (a.sanctioned) {
+        // The embargoed BUY off-book at the smuggler's premium — a partial escape from the sanction.
+        anyBlack = true;
+        const liquid = a.aurum + a.umbra * this.fx;
+        const budget = liquid * 0.1; // a smaller, riskier off-book slice
+        this.dQ[i] = (budget * a.prefQuanta) / pBlackQ;
+        this.dI[i] = (budget * (1 - a.prefQuanta)) / pBlackI;
+      } else {
+        // Everyone else SMUGGLES — supplies a small slice at the premium, profiting from the embargo.
+        this.dQ[i] = -a.quanta * 0.04;
+        this.dI[i] = -a.ichor * 0.04;
+      }
+    }
+    this.blackVolume = 0;
+    if (anyBlack) {
+      this.blackVolume = clearVolume(this.dQ).vol + clearVolume(this.dI).vol;
+      this.clear(this.dQ, pBlackQ, 'quanta');
+      this.clear(this.dI, pBlackI, 'ichor');
+    }
 
     // (5) Currency-adoption game — each agent best-responds (softmax) toward the money with the
     // better recent carry. AURUM's "return" is its purchasing power vs the commodity book; UMBRA's
@@ -479,6 +514,7 @@ export class Economy {
       cartelShare: this.cartelShare,
       arbSpread: this.arbSpread,
       sanctioned,
+      blackVolume: this.blackVolume,
     };
   }
 }
