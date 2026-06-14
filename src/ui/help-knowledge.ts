@@ -37,7 +37,7 @@ export const HELP_KB: readonly HelpEntry[] = [
       'game',
       'about',
     ],
-    body: 'The Cosmogonic Quantum Mechalogodrom is a living chaos-biome simulation: thousands of procedural creatures drift, feed, mutate and trade inside a reactive cosmos, watched over by apex minds. Every visual effect sits on real math, and every system both reads and writes another — cognition feeds the economy, the economy steers war, war triggers sanctions. Open the panels (bottom-right dock) to inspect any layer live.',
+    body: 'The Cosmogonic Quantum Mechalogodrom is a living chaos-biome simulation: thousands of procedural creatures drift, feed, mutate and trade inside a reactive cosmos, watched over by apex minds. Every visual effect sits on real math, and every system both reads and writes another — cognition feeds the economy, the economy steers war, war triggers sanctions. Open the panels from the menu bar (centered, just above the bottom toolbar) to inspect any layer live.',
     see: ['docs/PHILOSOPHY.md', 'README.md'],
   },
   {
@@ -54,7 +54,7 @@ export const HELP_KB: readonly HelpEntry[] = [
       'confused',
       'lost',
     ],
-    body: 'Drag to orbit the camera, scroll to zoom. The bottom toolbar cycles music, time-scale, render mode (wire/solid), view, weather, and cosmic events. The bottom-right dock opens the inspector panels: ⊞ NEURAL (an NHI mind), ⊙ MARKET (the economy), ⬢ ARCHITECT (the super creature), ✦ AI (chat), and ⛓ ACCESS (the puzzle). Solve the puzzle to enter SUPERHERO mode.',
+    body: 'Drag to orbit the camera, scroll to zoom. The bottom toolbar cycles music, time-scale, render mode (wire/solid), view, weather, and cosmic events. The menu bar (centered, just above the bottom toolbar) opens the inspector panels: ⊞ NEURAL (an NHI mind), ⊙ MARKET (the economy), ⬢ ARCHITECT (the super creature), ✦ AI (chat), ❓ HELP, and ⛓ ACCESS (the puzzle). Solve the puzzle to enter SUPERHERO mode.',
     see: ['index.html'],
   },
   {
@@ -86,7 +86,7 @@ export const HELP_KB: readonly HelpEntry[] = [
       'simulator',
       'twin',
     ],
-    body: 'The always-active apex being (ARCHITECT-Ω) — half a Titan but ~100× the power, driven by a genuine 1444-parameter deep neural mind (cortex→actor) with an emotion-like state, episodic memory, a prediction loop, GOAP planning, and self-replication (up to 3 mutated twins). It wears a masterful many-eyed god-jewel body. Open the ⬢ ARCHITECT panel to watch its mind live.',
+    body: 'The always-active apex being (ARCHITECT-Ω) — half a Titan but ~100× the power, driven by a genuine 1444-parameter deep neural mind (cortex→actor) with an emotion-like state, episodic memory, a prediction loop, GOAP planning, and self-replication (up to 3 mutated twins). It wears a masterful many-eyed god-jewel body and FLIES the whole world — roaming, banking, quantum-teleporting and morphing as it thinks (no longer a static centerpiece). Open the ⬢ ARCHITECT panel to watch its mind live.',
     see: ['docs/adr/0008-super-creature-deep-mind.md', 'docs/ENTITY-SHEETS.md'],
   },
   {

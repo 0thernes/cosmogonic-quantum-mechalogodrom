@@ -139,10 +139,12 @@ Oracle / Architect — half a Titan in size but ~100× its power._
   scene lighting): object-space **fBm crystalline relief** + worn-jewel roughness + **thin-film
   iridescence** (Fresnel-cycled hue) + a **subsurface GOD-GLOW in the live plan colour scaled by
   dominance**. Distinct from every Reliquary jewel archetype; the eyes blaze, the rings are mirror-chrome.
-- **Animation grammar (V32):** wholly cognition-driven — spin + heartbeat ∝ arousal, glow + eye-blaze ∝
-  dominance, core colour + eye colour = the committed plan, arm-splay ∝ aggression, vertex morph-wobble
-  ∝ surprise, the cage counter-rotates, the rings never rest, and the whole body drifts on the mind's
-  own movement output. Verified live: plan DOMINATE → the whole colossus glows violet.
+- **Animation grammar (V32 + V39 flight):** wholly cognition-driven — spin + heartbeat ∝ arousal, glow
+  - eye-blaze ∝ dominance, core colour + eye colour = the committed plan, arm-splay ∝ aggression. **V39:
+    it now FLIES the whole world** — a wander-seek boid steered by its own MIND (move output), **banking**
+    toward its heading, **quantum-teleporting** to a new locus on a surprise-scaled timer, and **morphing**
+    via a non-uniform writhe (∝ surprise + arousal). The cage counter-rotates, the rings never rest. No
+    longer a static centerpiece. Verified live: flew center→radius 156, quantum-blinked, 257u in ~8s.
 - **World meaning:** the dominant being — God/Oracle/Architect energy. The smartest, most powerful thing
   in the cosmos; the player's eventual avatar (SUPERHERO mode) and the world's apex authority.
 - **Economic role:** **apex purse** (weight 20 — fatter than an NHI's 14), enrolled on launch; its

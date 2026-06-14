@@ -53,8 +53,10 @@ const STYLE = `
   letter-spacing:.12em;cursor:pointer;backdrop-filter:blur(6px);box-shadow:0 2px 14px rgba(0,0,0,.5);transition:transform .15s,background .15s}
 #cqm-nhi-toggle:hover{transform:scale(1.06);background:rgba(12,24,48,.94)}
 #cqm-nhi-toggle:focus-visible{outline:2px solid #34e0ff;outline-offset:2px}
-#cqm-nhi-panel{position:fixed;left:50%;bottom:62px;transform:translateX(-50%);z-index:59;width:min(96vw,740px);
-  max-height:min(82vh,660px);display:none;flex-direction:column;border:1px solid rgba(80,220,255,.32);border-radius:12px;
+/* V39: raised well clear of the centered dock (which now sits above #bar) so the 3×3 grid never clashes
+   with the menu bars when it pops up — the user's explicit fix. Height bounded so it can't run off-screen. */
+#cqm-nhi-panel{position:fixed;left:50%;bottom:118px;transform:translateX(-50%);z-index:59;width:min(96vw,740px);
+  max-height:min(78vh,640px);display:none;flex-direction:column;border:1px solid rgba(80,220,255,.32);border-radius:12px;
   background:rgba(4,8,18,.95);backdrop-filter:blur(12px);box-shadow:0 10px 46px rgba(0,0,0,.65);
   font:11px/1.5 var(--font-mono,ui-monospace,monospace);color:#cfe0fb;overflow:hidden}
 #cqm-nhi-panel.open{display:flex}

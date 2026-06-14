@@ -62,7 +62,7 @@ const STYLE = `
   backdrop-filter:blur(6px);box-shadow:0 2px 14px rgba(0,0,0,.5);transition:transform .15s,background .15s}
 #cqm-cop-toggle:hover{transform:scale(1.08);background:rgba(14,22,44,.92)}
 #cqm-cop-toggle:focus-visible{outline:2px solid #6da8ff;outline-offset:2px}
-#cqm-cop-panel{position:fixed;right:10px;bottom:62px;z-index:60;width:min(92vw,380px);height:min(72vh,560px);
+#cqm-cop-panel{position:fixed;right:10px;bottom:112px;z-index:60;width:min(92vw,380px);height:min(68vh,560px);
   display:none;flex-direction:column;border:1px solid rgba(120,160,220,.4);border-radius:12px;
   background:rgba(4,8,18,.94);backdrop-filter:blur(10px);box-shadow:0 8px 40px rgba(0,0,0,.6);
   font:12px/1.5 var(--font-mono,ui-monospace,monospace);color:#cfe0fb;overflow:hidden}

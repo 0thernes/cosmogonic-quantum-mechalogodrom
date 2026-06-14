@@ -26,7 +26,7 @@ const STYLE = `
   transition:transform .15s,background .15s}
 #cqm-help-toggle:hover{transform:scale(1.06);background:rgba(12,34,22,.95)}
 #cqm-help-toggle:focus-visible{outline:2px solid #66e0a0;outline-offset:2px}
-#cqm-help-panel{position:fixed;right:10px;bottom:62px;z-index:59;width:min(94vw,380px);max-height:78vh;display:none;
+#cqm-help-panel{position:fixed;right:10px;bottom:112px;z-index:59;width:min(94vw,380px);max-height:74vh;display:none;
   flex-direction:column;border:1px solid rgba(120,220,160,.32);border-radius:12px;background:rgba(6,12,10,.96);
   backdrop-filter:blur(12px);box-shadow:0 10px 46px rgba(0,0,0,.66);font:12px/1.55 var(--font-ui,system-ui,sans-serif);
   color:#e6f6ec;overflow:hidden}

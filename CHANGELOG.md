@@ -13,6 +13,21 @@ the full gate (now also a coverage gate, on Linux + Windows) with same-seed dete
 
 ### Added
 
+- **The SUPER CREATURE flies + UI overlap fixes (V39)** — two directive complaints, fixed and verified
+  live. **(1) Flight** (`sim/super-body.ts`): the apex no longer hovers at the center — it now ROAMS
+  the whole world as a wander-seek boid steered by its own MIND (the move output), banking toward its
+  heading, **quantum-teleporting** to a fresh locus on a surprise-scaled timer, and **morphing** via a
+  non-uniform writhe (∝ surprise + arousal). Deterministic (a monotonic per-anchor seed + the sim
+  clock, no rng); the two creatures seed off their anchors so they roam different paths. _Verified
+  live: the prime flew center→radius 156, quantum-blinked (z 153→−102), 257 units travelled in ~8s._
+  **(2) UI** — the menu dock is moved from the bottom-right corner (where it overlapped the toolbar +
+  Docs/Spec) to **centered, directly above the `#bar` toolbar** (`ui/panel-dock.ts`); every dock-opened
+  panel is raised to `bottom:112px` (NEURAL to `118px`, the user's explicit "higher" ask) so the 3×3
+  grid + the inspectors clear the bar; the View/Speed/Render box was returned to the now-free
+  bottom-right corner (`bottom:12px`). _Verified live: dock centered + above the bar, and with all 5
+  panels open simultaneously **zero overlaps** with the toolbar, Audit, or V/S/R box._ Also repaired an
+  accidental **truncation-to-empty** of `help-knowledge.ts` / `superhero-state.ts` / `superhero-hud.ts`
+  (restored from HEAD). Full gate green (756 tests).
 - **Scale to 50,000 entities — the chaos-biome ceiling, optimized (V38)** — the directive's
   population mandate. A headless profiler [`bench/scale.ts`](bench/scale.ts) drives the real per-frame
   entity pipeline (`entities.update` + grid) at 2k→50k and times ms/frame — and exposed the **density

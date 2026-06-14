@@ -20,6 +20,11 @@
 import * as THREE from 'three';
 import type { SuperSnapshot, SuperPlan } from './super-creature';
 
+/** Fractional part — a cheap deterministic pseudo-random in [0,1) when fed `seed * irrational`. */
+const frac = (x: number): number => x - Math.floor(x);
+/** Scalar clamp. */
+const clampf = (v: number, lo: number, hi: number): number => (v < lo ? lo : v > hi ? hi : v);
+
 /** Plan → core glow colour (matches the ⬢ ARCHITECT panel accents). */
 const PLAN_RGB: Record<SuperPlan, [number, number, number]> = {
   HUNT: [1.0, 0.35, 0.42],
@@ -114,12 +119,24 @@ export class SuperBodySystem {
   private dominance = 0.5;
   private arousal = 0;
   private aggression = 0;
-  private readonly drift = new THREE.Vector3();
-  private readonly move = new THREE.Vector3();
-  private readonly anchor = new THREE.Vector3(0, 12, 0);
+  private surprise = 0;
+  private readonly move = new THREE.Vector3(); // the mind's movement output (its will)
+  private readonly anchor = new THREE.Vector3(0, 12, 0); // birth locus / fallback
+  // V39 FLIGHT: the apex roams the world instead of hovering — a wander-seek boid that banks toward
+  // its heading and quantum-teleports. All deterministic (a monotonic seed, the sim clock; no rng).
+  private readonly pos = new THREE.Vector3(0, 12, 0); // live world position
+  private readonly vel = new THREE.Vector3(); // flight velocity
+  private readonly wander = new THREE.Vector3(0, 16, 0); // current place it's flying toward
+  private readonly aim = new THREE.Vector3(); // scratch (desired heading / lookAt target)
+  private wanderClock = 0; // countdown to repick the wander target
+  private teleClock = 9; // countdown to the next quantum blink
+  private seed = 1; // deterministic counter driving wander + teleport variation
 
   constructor(scene: THREE.Scene, anchor?: { x: number; y: number; z: number }) {
-    if (anchor) this.anchor.set(anchor.x, anchor.y, anchor.z); // 2nd creature stands apart (V34)
+    if (anchor) this.anchor.set(anchor.x, anchor.y, anchor.z); // 2nd creature starts apart (V34)
+    this.pos.copy(this.anchor); // V39: flight starts at the birth locus, then roams
+    // Seed the wander stream off the anchor so the prime + the 2nd creature roam DIFFERENT paths.
+    this.seed = 1 + (Math.abs(Math.round(this.anchor.x * 3 + this.anchor.z * 7)) % 997);
     scene.add(this.root);
     this.root.position.copy(this.anchor);
 
@@ -225,6 +242,7 @@ export class SuperBodySystem {
     this.u.uDominance.value = snap.emotion.dominance;
     this.u.uArousal.value = snap.emotion.arousal;
     this.u.uSurprise.value = snap.surprise;
+    this.surprise = snap.surprise; // V39: drives the morph writhe + speeds the quantum teleport
     this.eyeMat.color.setRGB(c[0] * 0.16, c[1] * 0.16, c[2] * 0.16);
     (this.eyeMat.emissive as THREE.Color).setRGB(c[0], c[1], c[2]);
     this.cageMat.color.setRGB(0.4 + c[0] * 0.5, 0.4 + c[1] * 0.5, 0.5 + c[2] * 0.4);
@@ -236,19 +254,73 @@ export class SuperBodySystem {
   update(t: number, dt: number): void {
     this.u.uTime.value = t;
 
-    // Drift: integrate the mind's movement, bounded to a region around the looming anchor.
-    this.drift.addScaledVector(this.move, dt * 1.2);
-    this.drift.multiplyScalar(0.985); // spring back so it never wanders off
-    this.drift.clampLength(0, 9);
-    this.root.position.copy(this.anchor).add(this.drift);
-    this.root.position.y += Math.sin(t * 0.6) * 0.8; // slow apex bob
+    // ── V39 FLIGHT: the apex ROAMS the whole world instead of hovering at the center. A wander-seek
+    //    boid steered by its own MIND (the move output), banking toward its heading and QUANTUM-BLINKING
+    //    to a fresh locus on a timer (sooner when surprised). Deterministic — a monotonic seed + the sim
+    //    clock, no rng. ARENA_R keeps it inside the dome; FLOOR/CEIL keep it aloft. ──
+    const ARENA_R = 190;
+    const FLOOR = 7;
+    const CEIL = 62;
+    this.wanderClock -= dt;
+    if (this.wanderClock <= 0) {
+      this.seed++;
+      const a = this.seed * 2.399963; // golden-angle walk → visits every sector over time
+      const rr = (0.35 + 0.6 * frac(this.seed * 0.61803)) * ARENA_R;
+      this.wander.set(
+        Math.cos(a) * rr,
+        FLOOR + (CEIL - FLOOR) * frac(this.seed * 0.317),
+        Math.sin(a) * rr,
+      );
+      this.wanderClock = 5 + 5 * frac(this.seed * 0.123);
+    }
+    // Desired heading = seek the wander locus + the mind's own will; veer inward near the rim.
+    this.aim.copy(this.wander).sub(this.pos);
+    if (this.aim.lengthSq() > 1e-4) this.aim.normalize();
+    this.aim.addScaledVector(this.move, 0.7); // the SUPER BRAIN steers itself too
+    if (Math.hypot(this.pos.x, this.pos.z) > ARENA_R * 0.82)
+      this.aim.addScaledVector(this.pos, -0.006);
+    if (this.aim.lengthSq() > 1e-6) this.aim.normalize();
+    const speed = 7 + 16 * this.arousal; // frantic when aroused
+    this.vel.lerp(this.aim.multiplyScalar(speed), Math.min(1, dt * 1.4)); // smooth turn toward heading
+
+    // QUANTUM TELEPORT: phase to a new locus on a timer (faster under surprise) — the "weird shit".
+    this.teleClock -= dt * (1 + 1.5 * this.surprise);
+    if (this.teleClock <= 0) {
+      this.seed++;
+      const a = this.seed * 1.99977;
+      const rr = (0.3 + 0.6 * frac(this.seed * 0.409)) * ARENA_R;
+      this.pos.set(
+        Math.cos(a) * rr,
+        FLOOR + (CEIL - FLOOR) * frac(this.seed * 0.733),
+        Math.sin(a) * rr,
+      );
+      this.teleClock = 11 + 7 * frac(this.seed * 0.271);
+    } else {
+      this.pos.addScaledVector(this.vel, dt);
+    }
+    this.pos.y = clampf(this.pos.y, FLOOR, CEIL);
+    this.root.position.copy(this.pos);
+    this.root.position.y += Math.sin(t * 0.8) * 0.6; // flight bob
+
+    // BANK: orient the whole rig toward its velocity so it reads as FLYING, not sliding.
+    if (this.vel.lengthSq() > 0.4) {
+      this.aim.copy(this.pos).addScaledVector(this.vel, 1);
+      this.root.lookAt(this.aim);
+    }
 
     // Spin ∝ arousal; heartbeat scale ∝ arousal; the cage counter-rotates (architecture in motion).
     const spin = 0.06 + 0.5 * this.arousal;
     this.core.rotation.y = t * spin;
     this.core.rotation.x = Math.sin(t * 0.4) * 0.25;
     const beat = 1 + Math.sin(t * (1.4 + 2.0 * this.arousal)) * (0.04 + 0.06 * this.arousal);
-    this.core.scale.setScalar(beat);
+    // V39 MORPH: a non-uniform WRITHE so the body visibly mutates shape (stronger with surprise +
+    // arousal) instead of staying a rigid pulsing ball.
+    const morph = 0.1 + 0.45 * this.surprise + 0.25 * this.arousal;
+    this.core.scale.set(
+      beat * (1 + Math.sin(t * 1.3) * morph * 0.35),
+      beat * (1 + Math.sin(t * 1.7 + 1.1) * morph * 0.35),
+      beat * (1 + Math.sin(t * 1.1 + 2.3) * morph * 0.35),
+    );
     this.eyes.rotation.copy(this.core.rotation); // eyes ride the core
     this.eyes.scale.setScalar(beat);
     this.cage.rotation.y = -t * (spin * 0.6);

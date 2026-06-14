@@ -12,10 +12,12 @@
 const DOCK_ID = 'cqm-dock';
 
 const STYLE = `
-#${DOCK_ID}{position:fixed;right:10px;bottom:10px;z-index:60;display:flex;align-items:center;gap:6px;
-  flex-wrap:wrap;justify-content:flex-end;max-width:calc(100vw - 20px);padding:5px 7px;border-radius:24px;
-  border:1px solid rgba(120,150,210,.24);background:rgba(8,11,20,.62);backdrop-filter:blur(10px);
-  box-shadow:0 4px 22px rgba(0,0,0,.5)}
+/* V39: centered and stacked DIRECTLY ABOVE the bottom toolbar (#bar, ~46px tall) — no overlap with it
+   or the corner readouts. bottom:50 clears #bar's top; the panels it opens sit above the dock again. */
+#${DOCK_ID}{position:fixed;left:50%;transform:translateX(-50%);bottom:50px;z-index:60;display:flex;
+  align-items:center;gap:6px;flex-wrap:wrap;justify-content:center;max-width:calc(100vw - 20px);
+  padding:5px 9px;border-radius:24px;border:1px solid rgba(120,150,210,.24);background:rgba(8,11,20,.7);
+  backdrop-filter:blur(10px);box-shadow:0 4px 22px rgba(0,0,0,.55)}
 /* Neutralise each child's own fixed positioning so the flex bar lays them out (styling is preserved). */
 #${DOCK_ID} > button,#${DOCK_ID} > a{position:static!important;inset:auto!important;margin:0!important}
 #${DOCK_ID} > a{order:10} /* push the Docs/Spec nav links to the end of the bar */

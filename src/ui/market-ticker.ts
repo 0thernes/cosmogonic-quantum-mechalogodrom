@@ -18,7 +18,7 @@ const STYLE = `
   letter-spacing:.12em;cursor:pointer;backdrop-filter:blur(6px);box-shadow:0 2px 14px rgba(0,0,0,.5);transition:transform .15s,background .15s}
 #cqm-mkt-toggle:hover{transform:scale(1.06);background:rgba(40,28,8,.94)}
 #cqm-mkt-toggle:focus-visible{outline:2px solid #ffb648;outline-offset:2px}
-#cqm-mkt-panel{position:fixed;right:10px;bottom:62px;z-index:59;width:min(94vw,320px);display:none;flex-direction:column;
+#cqm-mkt-panel{position:fixed;right:10px;bottom:112px;z-index:59;width:min(94vw,320px);display:none;flex-direction:column;
   border:1px solid rgba(255,196,90,.32);border-radius:12px;background:rgba(10,8,4,.95);backdrop-filter:blur(12px);
   box-shadow:0 10px 46px rgba(0,0,0,.65);font:11px/1.5 var(--font-mono,ui-monospace,monospace);color:#f0e2c8;overflow:hidden}
 #cqm-mkt-panel.open{display:flex}
