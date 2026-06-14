@@ -101,6 +101,10 @@ const WITNESS_ENERGY = 2.5;
 /** Diplomacy payoff→energy coupling: stake grows with the poorer party's wealth. */
 const PAYOFF_STAKE_BASE = 0.4;
 const PAYOFF_STAKE_SCALE = 0.004;
+/** F-DIPLO-ECON V16: how strongly AURUM/UMBRA wealth disparity emboldens the richer titan to defect
+ *  (raid), coupling the economy into PD diplomacy. 0 ⇒ no coupling; the bias only fires when the
+ *  composition root has wired an economy (tests leave it null → byte-identical PD behaviour). */
+const WEALTH_AGGRESSION = 0.38;
 /** EMA decay for per-strategy fitness fed into the bankruptcy replicator. */
 const FITNESS_DECAY = 0.95;
 const REPLICATOR_DT = 0.5;
@@ -252,6 +256,8 @@ export class TitanSystem {
   private readonly entities: EntityManager;
   /** F-HOLES: singularity system attached by the composition root; an active hole tugs the titans. */
   private singularity: SingularitySystem | null = null;
+  /** F-DIPLO-ECON V16: economic net-worth provider by titan index (null ⇒ no economy coupling). */
+  private econWealth: ((titanIndex: number) => number) | null = null;
   private readonly rd: TitanRd;
   private readonly titans: Titan[] = [];
   /** 45 pair histories, indexed by the PAIR_A/PAIR_B tables. */
@@ -295,6 +301,17 @@ export class TitanSystem {
   /** F-HOLES: wire in the singularity system so an active hole tugs the titans (or null to detach). */
   attachSingularity(singularity: SingularitySystem | null): void {
     this.singularity = singularity;
+  }
+
+  /**
+   * F-DIPLO-ECON V16: wire in the AURUM/UMBRA economy so wealth disparity drives diplomacy — a titan
+   * economically far richer than its rival is emboldened to defect (a wealth-funded raid), tilting the
+   * pair toward WAR, while a poorer titan appeases. `wealthByIndex(i)` returns titan i's AURUM net
+   * worth. Null (the default + every test) leaves PD diplomacy untouched, so the titan golden tests
+   * stay byte-identical — only the wired live world feels the economy steer its wars.
+   */
+  attachEconomy(wealthByIndex: ((titanIndex: number) => number) | null): void {
+    this.econWealth = wealthByIndex;
   }
 
   /**
@@ -716,6 +733,24 @@ export class TitanSystem {
     const rng = this.ctx.rng;
     const round = playRound(PRISONERS_DILEMMA, sa.move, sb.move, h, rng(), rng());
     pushHistory(h, round.a, round.b);
+
+    // F-DIPLO-ECON V16: the AURUM/UMBRA economy steers diplomacy. When one titan is far richer than
+    // its rival, its wealth emboldens a raid (an extra logged defection by the richer side) while the
+    // poorer appeases — so economic dominance, not just the PD strategy, decides who marches to war.
+    // Reads the deterministic economy + one ctx.rng draw, ONLY when an economy is wired (tests skip).
+    if (this.econWealth) {
+      const wi = this.econWealth(i);
+      const wj = this.econWealth(j);
+      const tot = wi + wj;
+      if (tot > 0) {
+        const dom = (wi - wj) / tot; // −1..+1; positive ⇒ titan i is the richer power
+        if (Math.abs(dom) > 0.2 && rng() < Math.abs(dom) * WEALTH_AGGRESSION) {
+          if (dom > 0)
+            pushHistory(h, 1, 0); // i defects on j — a wealth-funded raid
+          else pushHistory(h, 0, 1); // j defects on i
+        }
+      }
+    }
 
     const stake = PAYOFF_STAKE_BASE + PAYOFF_STAKE_SCALE * Math.min(a.energy, b.energy);
     a.energy = clamp(a.energy + (round.payoffA - PD_MEAN) * stake, 0, RESOURCE_CAP);

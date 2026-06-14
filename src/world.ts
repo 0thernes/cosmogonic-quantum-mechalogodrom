@@ -353,6 +353,11 @@ export class World {
       const name = this.titans.ledger[i]?.name ?? `Titan ${i}`;
       this.economy.register(World.ECON_TITAN_BASE + i, name, 8 + (i % 5) * 0.7, this.econRng);
     }
+    // F-DIPLO-ECON V16: let the AURUM/UMBRA economy steer titan diplomacy — a titan far richer than a
+    // rival is emboldened to raid (→ WAR), a poorer one appeases. Reads economy net worth by index.
+    this.titans.attachEconomy(
+      (idx) => this.economy.wealthOf(World.ECON_TITAN_BASE + idx)?.netWorth ?? 0,
+    );
     this.graphMind = new GraphMind(ctx, this.entities, this.connectome);
     this.constellations = new ConstellationSystem(ctx, this.lore);
     this.audioAnalysis = new AudioAnalysis(this.audio);

@@ -13,6 +13,13 @@ the full gate (now also a coverage gate, on Linux + Windows) with same-seed dete
 
 ### Added
 
+- **Wealth-driven Titan diplomacy (V16)** — the AURUM/UMBRA economy now steers the colossi's
+  game-theoretic diplomacy: in each PD round, a titan far richer than its rival is emboldened to
+  raid (an extra logged defection, scaled by wealth disparity), tilting the pair toward WAR while a
+  poorer titan appeases — so economic dominance, not just the PD strategy, decides who marches to
+  war (`TitanSystem.attachEconomy`, wired in `world.ts`). Determinism-safe via the null-default
+  `attach` pattern (every titan golden test stays byte-identical). Verified live: 21 alliances /
+  24 wars across the 45 pairs under a live wealth Gini — pacts and proxy wars, not stalemate.
 - **NHI Neural Observatory (V15)** — a self-building inspection panel (`src/ui/nhi-observatory.ts`,
   ⊞ NEURAL toggle) that opens a **3×3 grid of nine scientific diagrams** of a launched NHI's live
   mind, ◀ ▶ to cycle through them: FIRING (the gene MLP's hidden+output activations), TOPOLOGY (the

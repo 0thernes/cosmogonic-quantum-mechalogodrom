@@ -41,10 +41,11 @@ behind the full gate (`bun run check`) and a commit.
 - 🟨 P2 `TIER-OVERRIDE` — `?tier=` boot override for QA across the quality ladder
 - 🟨 P2 `NATIVE-4K` — true 3840×2160 reliquary plate rendered (native, live physics, RTX 5070 Ti)
 - 🟧 P1 `NHI-OBSERVATORY` — per-NHI 9-view 3×3 connectome grid (firing · topology · memory · reward · sensory · intention · affect · prediction · decision), live + scientific, each bound to real `NhiMind` state. Verified: 3 NHIs, all 9 views painting
+- 🟧 P1 `TITAN-DIPLO-ECON` — AURUM/UMBRA wealth steers titan PD diplomacy (richer → raid → war, poorer → appease); null-safe `attachEconomy`, goldens byte-identical. Verified live: 21 ally / 24 war / 0 truce under a live Gini
 
 ### 🚧 Next — V13/V14 directive backlog (user, 2026-06-14)
 
-- 🟧 P1 `TITAN-DIPLOMACY` — alliances/pacts/rivalries/proxy-wars/trade-blocs/patron-client nets, coupled to economic wealth
+- 🟧 P1 `ECON-PROXY-WARS` — explicit patron→proxy funding + trade blocs (titan wealth now tilts PD diplomacy → war/alliance; explicit bloc mechanics next)
 - 🟧 P1 `ECON-DEEPEN` — wallets for shoggoths/puppeteers/all entities; wealth drives behavior, war, migration, mutation, trust; black markets, cartels, auctions, sanctions, arbitrage
 - 🟧 P1 `CREATURES-SMART` — make the 100+100 smart/social/dangerous: perceive, remember, bargain, flee, hunt, deceive, trade, ally, mutate (counts shipped; behavior depth next)
 - 🟧 P1 `AI-REPAIR` — Copilot offline: diagnostics + failure reason + restart controls + recovery pipeline

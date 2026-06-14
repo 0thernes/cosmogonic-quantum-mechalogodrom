@@ -61,8 +61,10 @@ nash, market, lorenz`). They split, age, die (weather-tuned lifespan), and feed 
 
 - **Biology:** 10 fixed colossal intelligences with an **economy/war layer**: each has matter, energy,
   entropy ledgers and a 10×10 relation matrix (truce / alliance / war).
-- **Behavior:** roam the mid-field; accrue resources; shift relations. _Goal: allegiances, **pacts**,
-  rivalries, **proxy wars**, trade blocs, patron-client nets, long-term agendas (queued: deepen)._
+- **Behavior:** roam the mid-field; accrue resources; play an iterated PD over all 45 pairs →
+  alliances/wars. **Wealth now steers diplomacy (V16):** a titan far richer in AURUM/UMBRA is
+  emboldened to raid (→ war), a poorer one appeases — so the economy decides who marches. _Next:
+  explicit patron→proxy funding + trade blocs._
 - **Silhouette:** the obelisk ring in the VIZ3D instrument panel encodes them as towers; in-world they
   are the largest roaming bodies.
 - **Material language:** identity-hued, translucent, emissive; drift toward war-red as wars mount.
