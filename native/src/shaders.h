@@ -30,7 +30,7 @@ uniform float uBass;      // 0..1 audio-reactive pulse (host-driven; 0 if silent
 uniform float uHero;      // >0.5 = single hero specimen, else the physics-driven plate
 
 // Physics-driven specimen bodies (transforms come from the C++ rigid-body solver each frame).
-const int MAX_BODIES = 24;
+const int MAX_BODIES = 48; // V28: headroom so fracture shards still render (was 24)
 uniform int  uNumBodies;
 uniform vec4 uBodyPosScale[MAX_BODIES]; // xyz = world position, w = scale (radius)
 uniform vec4 uBodyQuat[MAX_BODIES];     // orientation quaternion (x, y, z, w)

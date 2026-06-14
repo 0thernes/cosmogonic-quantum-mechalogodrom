@@ -80,5 +80,12 @@ allocator registered before any Jolt member allocates (run `globalInit()` as the
 
 ## Follow-ups (tracked in KANBAN)
 
-Jolt fracture (convex decomposition) + soft-body + crowd-scale; bring the native target into CI;
-render true 4K (3840×2160) plates from the Jolt sim.
+**Jolt fracture — SHIPPED (V28).** A hard enough contact shatters the smaller body of the pair into 3
+volume-conserving shards (∛⅓ radius → mass conserved at unit density) that burst along the impact
+normal with their own Jolt mass/inertia. Closing speed is sampled from **pre-solve** approach
+velocities (the post-`Update` readback has the collision already resolved away); the 1.6 u/s gate is
+~70% of the measured 2.24 u/s infall peak. Shards <0.42u are inert and growth is capped at 48 (shader
+`MAX_BODIES` 24→48). Deterministic (`rqHash`-seeded scatter): 18→24 bodies, identical across runs.
+
+Remaining: soft-body + crowd-scale; bring the native target into CI; render true 4K (3840×2160)
+plates from the Jolt sim.

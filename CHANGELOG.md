@@ -13,6 +13,19 @@ the full gate (now also a coverage gate, on Linux + Windows) with same-seed dete
 
 ### Added
 
+- **Jolt fracture: native specimens shatter on hard impact (V28)** — the C++ engine's Jolt backend
+  gains a real fracture pass. After each solve, the **hardest qualifying contact** that step cracks the
+  **smaller** body of the pair into **3 volume-conserving shards** (radius × ∛⅓, so the shards' summed
+  volume equals the parent's → mass conserved at unit density); each shard inherits the parent's
+  type/hue and bursts along the impact normal with its **own Jolt mass + inertia**, then re-settles in
+  the same harmonic well. The closing speed is read from **pre-solve approach velocities** — by the
+  post-`Update` readback Jolt has already resolved the collision away, so sampling there always looks
+  gentle (this was the first-cut bug: 0 fractures). The threshold (**1.6 u/s**) sits at ~70% of the
+  **measured** 2.24 u/s infall peak, so only the hard tail shatters and resting contacts never do.
+  Shards below 0.42u are inert (no infinite cascade) and growth stops at the **48-body shader cap**
+  (`MAX_BODIES` / `kMaxBodies` 24→48, so every shard still fits the uniform array and renders).
+  Deterministic — the shard scatter is `rqHash`-seeded off a monotonic counter, no rng/clock — verified
+  **18→24 bodies (3 shatters), byte-identical across two runs**; full gate green (719 tests).
 - **Per-silhouette material language: 6 jewel archetypes (V27)** — the single biggest "obvious entity
   differentiation" lever. The Reliquary pool shader gains **six material classes** baked as a
   compile-time `#define RQ_MAT` per pool (so each compiles its own specialised variant, zero hot-path

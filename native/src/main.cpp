@@ -46,7 +46,7 @@ struct OrbitCam {
 
 OrbitCam gCam;
 ReliquaryPhysics gPhys;       // live rigid-body solver — drives the specimen transforms every frame
-constexpr int kMaxBodies = 24; // must match MAX_BODIES in shaders.h
+constexpr int kMaxBodies = 48; // must match MAX_BODIES in shaders.h (V28: fracture headroom)
 bool gDragging = false;
 double gLastX = 0.0, gLastY = 0.0;
 bool gHero = false;
@@ -292,6 +292,10 @@ int main(int argc, char** argv) {
     // churning cluster — the captured frame shows LIVE dynamics, not the seeded shell.
     for (int f = 0; f < settleFrames; ++f)
       for (int k = 0; k < 2; ++k) gPhys.step(1.0f / 120.0f);
+    std::fprintf(stderr,
+                 "[CQM] specimens after settle: %d (seeded 18 — extras are fracture shards); "
+                 "peak contact closing speed = %.2f u/s\n",
+                 gPhys.count(), gPhys.maxClosing());
     bool ok = renderToBMP(prog, vao, shotW, shotH, 2.6f, shotPath.c_str());
     glDeleteVertexArrays(1, &vao);
     glDeleteProgram(prog);

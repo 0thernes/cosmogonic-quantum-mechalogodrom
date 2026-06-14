@@ -54,6 +54,7 @@ behind the full gate (`bun run check`) and a commit.
 - 🟧 P1 `PUP-COGNITION` — Puppeteers reuse the kernel as SCHEMERS (no flee): perceive sector disorder, remember meddling, meddle MORE opportunistically over target-rich chaos. Verified live (satiation diverges, 90 mutations fired)
 - 🟧 P1 `CREATURE-DECEIVE` — kernel `deceive` drive: outmatched shoggoths feign weakness (dim glow + eyes, shrink, soften tendrils). Threat radius widened so social sense engages. Verified: 63/100 sense rivals
 - 🟥 P0 `MATERIAL-CLASSES` — 6 per-silhouette material archetypes (pearl/crystal/glass/amber/metal/bone) baked as compile-time `#define RQ_MAT` in the Reliquary shader; each tunes relief/roughness/metalness/SSS/film. `materialClassFor(gi)`. Verified live (all 6 compile, distinct materials render)
+- 🟥 P0 `JOLT-FRACTURE` (V28) — native specimens shatter on hard impact: the hardest contact each step cracks the smaller body into **3 volume-conserving Jolt shards** (∛⅓ radius, own mass/inertia) bursting along the impact normal. **Pre-solve** approach-velocity gate @ 1.6 u/s (≈70% of the measured 2.24 u/s infall peak); shards <0.42u inert, growth capped at 48 (shader `MAX_BODIES` 24→48). Deterministic — verified 18→24 bodies, identical ×2
 
 ### 🚧 Next — V13/V14 directive backlog (user, 2026-06-14)
 
@@ -61,7 +62,7 @@ behind the full gate (`bun run check`) and a commit.
 - 🟦 P3 `ECON-TRIBE-WALLETS` — give graph-tribes collective wallets + coalition treasuries (the full market-mechanic list — cartel/arbitrage/sanctions/black-market/auctions — shipped V20–V22)
 - 🟧 P1 `CREATURES-SMART` — Shoggoths now perceive/remember/flee/hunt (V24); next: deception + the same cognition for Puppeteers, plus bargain/trade/ally
 - 🟧 P1 `AI-REPAIR` — Copilot offline: diagnostics + failure reason + restart controls + recovery pipeline
-- 🟨 P2 `JOLT-FRACTURE` — Jolt is ON + driving the native specimens (V18); next: convex-decomp fracture, soft-body, crowd-scale
+- 🟦 P3 `JOLT-SOFTBODY` — past V18 (Jolt ON) + V28 (rigid fracture): soft-body deformation + crowd-scale (100s of native bodies); bring the native target into CI; render true 4K (3840×2160) plates from the Jolt sim
 - 🟨 P2 `DOCS-SYNC` — keep README/Docs/Specs/ERD/Architecture/Kanban current every increment (standing card)
 
 ### 📥 Backlog (unscheduled)

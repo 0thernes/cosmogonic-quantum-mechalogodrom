@@ -29,7 +29,10 @@ nash, market, lorenz`). They split, age, die (weather-tuned lifespan), and feed 
   silhouette (V27):** spheres = PEARL, ico/dodeca/knots = CRYSTAL, octa/tetra = GLASS, tori = AMBER,
   cylinders/cones/boxes = METAL, organics = BONE — each with its own relief, roughness, metalness,
   subsurface tint, and film, so silhouette and material read as one biology, not a recolour.
-- **Animation grammar:** behavior-driven drift + the N(2) GPU vertex-melt under nightmare.
+- **Animation grammar:** behavior-driven drift + the N(2) GPU vertex-melt under nightmare. In the
+  **native Jolt engine** the specimens are real rigid bodies that drift, collide and settle — and
+  **fracture on hard impact (V28):** the hardest contact each step shatters the smaller body into
+  volume-conserving shards that burst apart along the impact normal with their own mass/inertia.
 - **World meaning:** the biomass — the substrate every other power feeds on, herds, or converts.
 - **Economic role:** ☉/☾ neutral; tiny purse (drones, weight ≈ 0.5). _Queued: per-entity wallets._
 
