@@ -305,3 +305,94 @@ export class MemoryRing {
     this.len = 0;
   }
 }
+
+// ── Game theory (von Neumann 1928; iterated games — Axelrod 1984) ─────────────
+
+/**
+ * Best response to an opponent's mixed strategy: pick the row action `i` maximizing expected payoff
+ * `E[i] = Σ_j payoff[i*nCols + j] · oppMix[j]`. `payoff` is row-major `nRows×nCols` (the row player's
+ * payoff). Ties resolve to the LOWEST index (deterministic). O(nRows·nCols), allocation-free; -1 when
+ * `nRows < 1`. This is how an NHI picks the move that best exploits what it believes a rival will do.
+ */
+export function bestResponse(
+  payoff: ArrayLike<number>,
+  nRows: number,
+  nCols: number,
+  oppMix: ArrayLike<number>,
+): number {
+  let best = -1;
+  let bestVal = -Infinity;
+  for (let i = 0; i < nRows; i++) {
+    let ev = 0;
+    for (let j = 0; j < nCols; j++) ev += (payoff[i * nCols + j] ?? 0) * (oppMix[j] ?? 0);
+    if (ev > bestVal) {
+      bestVal = ev;
+      best = i;
+    }
+  }
+  return best;
+}
+
+/** Repeated-game strategies (Axelrod's tournament). The NHI assigns one per rival faction. */
+export const GameStrategy = {
+  /** Cooperate first, then mirror the opponent's last move. */
+  TIT_FOR_TAT: 0,
+  /** Cooperate until the FIRST betrayal, then defect forever (the grudge holder). */
+  GRUDGER: 1,
+  /** Never cooperate. */
+  ALWAYS_DEFECT: 2,
+  /** Tit-for-tat that forgives a defection with probability `forgiveP`. */
+  GENEROUS_TFT: 3,
+  /** Probe (defect, then cooperate twice); if the rival tolerates it, exploit them. */
+  PROBER: 4,
+} as const;
+
+/**
+ * One move of an iterated 2-action game — `0` = cooperate, `1` = defect — under `strategy`, given the
+ * opponent's last move (`oppLast`, `-1` on the first round), whether they have EVER betrayed
+ * (`everBetrayed`), the `round` index, and a seeded {@link Rng} (consumed only by GENEROUS_TFT).
+ * Deterministic. O(1), allocation-free.
+ */
+export function iteratedMove(
+  strategy: number,
+  oppLast: number,
+  everBetrayed: boolean,
+  round: number,
+  rng: Rng,
+  forgiveP = 0.3,
+): number {
+  switch (strategy) {
+    case GameStrategy.ALWAYS_DEFECT:
+      return 1;
+    case GameStrategy.GRUDGER:
+      return everBetrayed ? 1 : 0;
+    case GameStrategy.GENEROUS_TFT:
+      return oppLast === 1 ? (rng() < forgiveP ? 0 : 1) : 0;
+    case GameStrategy.PROBER:
+      if (round === 0) return 1;
+      if (round <= 2) return 0;
+      return oppLast === 0 ? 1 : 0; // exploit a steady cooperator, else mirror
+    case GameStrategy.TIT_FOR_TAT:
+    default:
+      return oppLast === 1 ? 1 : 0; // cooperate first (oppLast -1), then mirror
+  }
+}
+
+/**
+ * Regret-matching action choice (Hart & Mas-Colell, 2000): sample an action proportional to its
+ * POSITIVE cumulative regret, falling back to uniform when no regret is positive. In self-play the
+ * empirical distribution converges to a correlated equilibrium — the NHI's adaptive, hard-to-predict
+ * policy. Deterministic given `rng`. O(n), allocation-free; -1 when `n < 1`.
+ */
+export function regretMatch(cumRegret: ArrayLike<number>, n: number, rng: Rng): number {
+  if (n < 1) return -1;
+  let sum = 0;
+  for (let i = 0; i < n; i++) sum += Math.max(0, cumRegret[i] ?? 0);
+  if (sum <= 0) return Math.min(n - 1, Math.floor(rng() * n)); // no regret yet → explore uniformly
+  let r = rng() * sum;
+  for (let i = 0; i < n; i++) {
+    r -= Math.max(0, cumRegret[i] ?? 0);
+    if (r <= 0) return i;
+  }
+  return n - 1;
+}
