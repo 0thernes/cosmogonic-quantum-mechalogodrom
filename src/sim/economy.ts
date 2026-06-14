@@ -63,6 +63,12 @@ const SANCTION_BUDGET = 0.35;
 const SANCTION_PRODUCTION = 0.4;
 /** Black-market premium: sanctioned agents can still trade off-book, but at the smuggler's markup. */
 const BLACK_PREMIUM = 0.25;
+/** Ticks between windfall auctions of the scarcer commodity (ascending / second-price). */
+const AUCTION_PERIOD = 20;
+/** Units of the scarce commodity in an auctioned lot (a windfall, like production). */
+const AUCTION_LOT = 8;
+/** An agent's bid = this fraction of its net worth × its appetite for the auctioned commodity. */
+const BID_FRACTION = 0.04;
 
 /** A registered economic agent's public summary (read-only view for telemetry/UI). */
 export interface AgentWealth {
@@ -108,6 +114,12 @@ export interface MarketSummary {
   sanctioned: number;
   /** Off-book commodity volume the sanctioned moved on the black market this tick (evasion). */
   blackVolume: number;
+  /** Total windfall auctions held since boot. */
+  auctions: number;
+  /** Clearing (second) price of the most recent auction (AURUM-valued), 0 before the first. */
+  lastAuctionPrice: number;
+  /** Commodity sold in the most recent auction, or null before the first. */
+  lastAuctionCommodity: Commodity | null;
 }
 
 /**
@@ -168,6 +180,30 @@ export function topKThreshold(values: ArrayLike<number>, k: number): number {
   return a[k - 1] ?? -Infinity;
 }
 
+/**
+ * Second-price (Vickrey / ascending-English) auction outcome over bid `values`: the HIGHEST bidder
+ * wins but pays the SECOND-highest bid — the dominant-strategy-truthful price an English auction
+ * settles at when the runner-up drops out. Returns `{ winner: -1, price: 0 }` for an empty book; with
+ * a lone bidder the winner pays its own bid. Pure, unit-tested. O(n), single pass.
+ */
+export function vickreyOutcome(values: ArrayLike<number>): { winner: number; price: number } {
+  const n = values.length;
+  if (n === 0) return { winner: -1, price: 0 };
+  let w1 = 0;
+  let w2 = -1;
+  for (let i = 1; i < n; i++) {
+    const v = values[i] ?? -Infinity;
+    if (v > (values[w1] ?? -Infinity)) {
+      w2 = w1;
+      w1 = i;
+    } else if (w2 < 0 || v > (values[w2] ?? -Infinity)) {
+      w2 = i;
+    }
+  }
+  const price = w2 >= 0 ? (values[w2] ?? 0) : (values[w1] ?? 0);
+  return { winner: w1, price: Math.max(0, price) };
+}
+
 /** Internal mutable per-agent record (struct-of-fields kept in parallel arrays would be faster but
  *  agent counts are small — ≤ ~256 — so a record array stays readable without measurable cost). */
 interface Agent {
@@ -207,6 +243,11 @@ export class Economy {
   private arbSpread = 0;
   /** Last-tick off-book (black-market) commodity volume traded by sanctioned agents. */
   private blackVolume = 0;
+  /** Auction bookkeeping: tick counter, total auctions held, and the last clearing price/commodity. */
+  private auctionTick = 0;
+  private auctions = 0;
+  private lastAuctionPrice = 0;
+  private lastAuctionCom: Commodity | null = null;
 
   /**
    * Enrol an agent with a purse sized to `weight` (its stature). Idempotent per id: re-registering
@@ -402,6 +443,33 @@ export class Economy {
     }
     // fx tracks net UMBRA demand (more buyers → UMBRA appreciates → fx up).
     this.fx = clamp(this.fx * Math.exp(FX_GAIN * Math.tanh(netUmbra / (n * 20))), FX_MIN, FX_MAX);
+
+    // (6) AUCTION — every AUCTION_PERIOD ticks a windfall LOT of the SCARCER commodity (higher price)
+    // is sold by second-price (ascending-English) auction: bids = net worth × appetite, the highest
+    // bidder WINS but pays the runner-up's bid (the truthful equilibrium). Proceeds are a COMMONS
+    // DIVIDEND split among the others (currency conserved); the lot is a windfall (minting goods like
+    // production). Real auction theory + winner's-curse-free pricing. O(n); `dQ` reused as bid scratch.
+    this.auctionTick++;
+    if (this.auctionTick % AUCTION_PERIOD === 0 && n >= 2) {
+      const com: Commodity = this.pQuanta >= this.pIchor ? 'QUANTA' : 'ICHOR';
+      const field = com === 'QUANTA' ? 'quanta' : 'ichor';
+      for (let i = 0; i < n; i++) {
+        const a = this.agents[i]!;
+        const appetite = com === 'QUANTA' ? a.prefQuanta : 1 - a.prefQuanta;
+        this.dQ[i] = (this.nw[i] ?? 0) * BID_FRACTION * appetite;
+      }
+      const { winner, price } = vickreyOutcome(this.dQ);
+      if (winner >= 0 && price > 0) {
+        const w = this.agents[winner]!;
+        this.debit(w, price); // winner pays the SECOND price
+        w[field] += AUCTION_LOT; // and takes the windfall lot
+        const share = price / (n - 1);
+        for (let i = 0; i < n; i++) if (i !== winner) this.credit(this.agents[i]!, share);
+        this.auctions++;
+        this.lastAuctionPrice = price;
+        this.lastAuctionCom = com;
+      }
+    }
   }
 
   /** Clear one commodity's desired-delta book at `price`, settling currency per purse. */
@@ -515,6 +583,9 @@ export class Economy {
       arbSpread: this.arbSpread,
       sanctioned,
       blackVolume: this.blackVolume,
+      auctions: this.auctions,
+      lastAuctionPrice: this.lastAuctionPrice,
+      lastAuctionCommodity: this.lastAuctionCom,
     };
   }
 }

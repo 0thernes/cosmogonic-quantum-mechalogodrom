@@ -13,6 +13,15 @@ the full gate (now also a coverage gate, on Linux + Windows) with same-seed dete
 
 ### Added
 
+- **Windfall auctions (V22)** — every `AUCTION_PERIOD` ticks a lot of the SCARCER commodity (the
+  higher-priced one) is sold by a **second-price / ascending-English auction**: bids = net worth ×
+  appetite, the highest bidder wins but pays the runner-up's bid (the dominant-strategy-truthful
+  price; new pure `vickreyOutcome` helper). Proceeds are a **commons dividend** split among the
+  others (currency conserved); the lot is a windfall (minting goods, like production). New telemetry:
+  `auctions`, `lastAuctionPrice`, `lastAuctionCommodity`. +2 tests. Verified live: auctions fire on
+  cadence, the scarce QUANTA lot clears at a real second price (~27 AURUM). This completes the
+  economy's named market-mechanic list (scarcity · arbitrage · sanctions · black markets · cartels ·
+  **auctions**).
 - **Black market (V21)** — the embargo has a leak: SANCTIONED agents BUY commodities off-book at a
   smuggler's premium (`BLACK_PREMIUM` 25%) while everyone else SMUGGLES (supplies a slice at that
   premium, profiting from the embargo). A second clearing pass over the off-book book (currency

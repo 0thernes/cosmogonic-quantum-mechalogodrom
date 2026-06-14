@@ -6,6 +6,7 @@ import {
   clearVolume,
   gini,
   topKThreshold,
+  vickreyOutcome,
   CURRENCIES,
   COMMODITIES,
 } from '../src/sim/economy';
@@ -122,6 +123,8 @@ describe('economy — Economy market', () => {
     expect(s.cartelShare).toBe(0);
     expect(s.sanctioned).toBe(0);
     expect(s.blackVolume).toBe(0);
+    expect(s.auctions).toBe(0);
+    expect(s.lastAuctionCommodity).toBe(null);
   });
 });
 
@@ -183,6 +186,24 @@ describe('economy — market mechanics (V20)', () => {
       if (e.summary().blackVolume > 0) sawBlack = true;
     }
     expect(sawBlack).toBe(true); // the embargoed evade via smugglers (two-sided off-book demand)
+  });
+
+  test('vickreyOutcome picks the highest bidder at the second price', () => {
+    expect(vickreyOutcome([3, 9, 5, 7])).toEqual({ winner: 1, price: 7 }); // top=9@1, runner-up=7
+    expect(vickreyOutcome([7, 5, 9, 3]).winner).toBe(2);
+    expect(vickreyOutcome([5]).winner).toBe(0); // lone bidder pays its own bid
+    expect(vickreyOutcome([]).winner).toBe(-1);
+  });
+
+  test('windfall auctions fire on cadence and settle a second-price clearing', () => {
+    const e = new Economy();
+    const rng = mulberry32(44);
+    for (let i = 0; i < 6; i++) e.register(i, `A${i}`, 1 + i, rng);
+    for (let i = 0; i < 100; i++) e.tick(rng, 0.4); // > AUCTION_PERIOD ⇒ several auctions
+    const s = e.summary();
+    expect(s.auctions).toBeGreaterThan(0);
+    expect(s.lastAuctionPrice).toBeGreaterThan(0);
+    expect(s.lastAuctionCommodity === 'QUANTA' || s.lastAuctionCommodity === 'ICHOR').toBe(true);
   });
 
   test('the cartel + arbitrage path stays deterministic and well-formed', () => {
