@@ -124,9 +124,13 @@ generic "black hole."**
 - **Biology:** any registered intelligence (titans, NHIs; queued: shoggoths/puppeteers/tribes) with a
   **wallet** {AURUM ☉, UMBRA ☾, QUANTA ◇, ICHOR ❖} sized to stature.
 - **Behavior:** tâtonnement commodity pricing; a **currency-adoption game** (softmax best-response →
-  dominance shifts emerge); buy-against-sell clearing (currency conserved).
-- **World meaning:** scarcity, arbitrage, inflation, debt — the math layer the user demands run
-  everything. _Queued: wallets driving behavior/war/migration/mutation; black markets, cartels._
+  dominance shifts emerge); buy-against-sell clearing (currency conserved). **Market mechanics (V20):**
+  a **cartel** of the richest few withholds supply (oligopoly); **arbitrage** mean-reverts the
+  commodity price gap; **sanctions** (`economy.sanction`) embargo an agent's production + trade —
+  **titan wars now trigger sanctions** (war with ≥3 rivals → embargo).
+- **World meaning:** scarcity, arbitrage, inflation, sanctions, cartels — the math layer that now runs
+  titan war, shoggoth hunting, and puppeteer meddling (210 agents). _Next: off-book black market +
+  auctions + tribe wallets._
 
 ---
 

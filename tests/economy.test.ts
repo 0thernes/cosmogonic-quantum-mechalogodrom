@@ -1,6 +1,14 @@
 import { describe, test, expect } from 'bun:test';
 import { mulberry32 } from '../src/math/rng';
-import { Economy, priceStep, clearVolume, gini, CURRENCIES, COMMODITIES } from '../src/sim/economy';
+import {
+  Economy,
+  priceStep,
+  clearVolume,
+  gini,
+  topKThreshold,
+  CURRENCIES,
+  COMMODITIES,
+} from '../src/sim/economy';
 
 describe('economy — pure helpers', () => {
   test('priceStep stays bounded and tracks the sign of excess demand', () => {
@@ -111,5 +119,64 @@ describe('economy — Economy market', () => {
     expect(s.agents).toBe(0);
     expect(s.gini).toBe(0);
     expect(s.totalWealth).toBe(0);
+    expect(s.cartelShare).toBe(0);
+    expect(s.sanctioned).toBe(0);
+  });
+});
+
+describe('economy — market mechanics (V20)', () => {
+  test('topKThreshold returns the k-th largest, with sane edges', () => {
+    expect(topKThreshold([5, 1, 9, 3, 7], 1)).toBe(9);
+    expect(topKThreshold([5, 1, 9, 3, 7], 2)).toBe(7);
+    expect(topKThreshold([5, 1, 9, 3, 7], 5)).toBe(-Infinity); // k >= n → everyone qualifies
+    expect(topKThreshold([5, 1, 9], 0)).toBe(Infinity); // k <= 0 → no one
+  });
+
+  test('a cartel of the richest forms and holds a super-proportional wealth share', () => {
+    const e = new Economy();
+    const rng = mulberry32(11);
+    // 12 agents of widely varied stature → the richest 5 are a clear oligopoly.
+    for (let i = 0; i < 12; i++) e.register(i, `A${i}`, 0.5 + 9 * (i / 11), rng);
+    for (let i = 0; i < 80; i++) e.tick(rng, 0.4);
+    const s = e.summary();
+    expect(s.cartelShare).toBeGreaterThanOrEqual(5 / 12); // ≥ their proportional share (they're richest)
+    expect(s.cartelShare).toBeLessThan(1); // but not the whole market (n > CARTEL_SIZE)
+    expect(s.arbSpread).toBeGreaterThanOrEqual(0);
+    expect(s.arbSpread).toBeLessThanOrEqual(1);
+  });
+
+  test('sanctions are tracked and throttle the embargoed agent below an un-sanctioned peer', () => {
+    const e = new Economy();
+    const rng = mulberry32(21);
+    for (let i = 0; i < 8; i++) e.register(i, `A${i}`, 3, rng); // identical stature
+    e.sanction(0, true);
+    e.sanction(1, true);
+    e.sanction(2, true);
+    expect(e.isSanctioned(0)).toBe(true);
+    expect(e.isSanctioned(3)).toBe(false);
+    for (let i = 0; i < 400; i++) e.tick(rng, 0.5);
+    expect(e.summary().sanctioned).toBe(3);
+    const meanSanctioned =
+      (e.wealthOf(0)!.netWorth + e.wealthOf(1)!.netWorth + e.wealthOf(2)!.netWorth) / 3;
+    const meanFree =
+      (e.wealthOf(3)!.netWorth +
+        e.wealthOf(4)!.netWorth +
+        e.wealthOf(5)!.netWorth +
+        e.wealthOf(6)!.netWorth +
+        e.wealthOf(7)!.netWorth) /
+      5;
+    expect(meanSanctioned).toBeLessThan(meanFree); // the embargo starves them of gains-from-trade
+  });
+
+  test('the cartel + arbitrage path stays deterministic and well-formed', () => {
+    const mk = (): Economy => {
+      const e = new Economy();
+      const rng = mulberry32(321);
+      for (let i = 0; i < 10; i++) e.register(i, `A${i}`, 0.5 + 8 * (i / 9), rng);
+      const tr = mulberry32(654);
+      for (let i = 0; i < 300; i++) e.tick(tr, (i % 40) / 40);
+      return e;
+    };
+    expect(mk().summary()).toEqual(mk().summary()); // same seed → identical, mechanics included
   });
 });

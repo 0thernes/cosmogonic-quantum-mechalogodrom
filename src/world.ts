@@ -611,7 +611,16 @@ export class World {
     // F-ECONOMY V13: clear the market on a slow cadence (heavy substrate runs slow — physicist's
     // law). World chaos feeds in as market stress, widening demand swings. Reads/writes its own
     // sub-stream, so the cadence never touches the main deterministic order.
-    if (s.frame % 30 === 15) this.economy.tick(this.econRng, clamp(s.chaos / 10, 0, 1));
+    if (s.frame % 30 === 15) {
+      // F-ECON-SANCTIONS V20: economic warfare follows military — a titan at war with ≥3 rivals is
+      // embargoed (its production + trade are throttled), so losing the war also bankrupts you. Reads
+      // the titan ledger (deterministic), writes only sanction flags. Cheap O(titans).
+      const led = this.titans.ledger;
+      for (let i = 0; i < led.length; i++) {
+        this.economy.sanction(World.ECON_TITAN_BASE + i, (led[i]?.war ?? 0) >= 3);
+      }
+      this.economy.tick(this.econRng, clamp(s.chaos / 10, 0, 1));
+    }
 
     this.quantum.update(dt, t);
 

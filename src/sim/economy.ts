@@ -50,6 +50,18 @@ const FX_GAIN = 0.04;
 /** Softmax temperature for the currency-adoption best-response (higher = more herd-following). */
 const ADOPT_BETA = 6;
 
+// ── Market-mechanic layer (CONTRACTS V20) — explicit game theory on top of the clearing market ──
+/** The richest few agents form a CARTEL that colludes to restrict supply (oligopoly). */
+const CARTEL_SIZE = 5;
+/** Fraction of its commodity production a cartel member withholds to prop up scarcity/price. */
+const CARTEL_WITHHOLD = 0.45;
+/** Arbitrage gain: how fast preferences mean-revert toward the under-priced commodity (gap → 0). */
+const ARB_GAIN = 0.05;
+/** A sanctioned agent trades at this fraction of its budget (capital controls / embargo). */
+const SANCTION_BUDGET = 0.35;
+/** …and is cut off from resources, producing only this fraction (the embargo's real bite). */
+const SANCTION_PRODUCTION = 0.4;
+
 /** A registered economic agent's public summary (read-only view for telemetry/UI). */
 export interface AgentWealth {
   id: number;
@@ -86,6 +98,12 @@ export interface MarketSummary {
   agents: number;
   /** Total net worth across all agents (AURUM-valued). */
   totalWealth: number;
+  /** Share of total wealth held by the {@link CARTEL_SIZE}-strong cartel (0..1) — market power. */
+  cartelShare: number;
+  /** Commodity price dispersion |pQuanta − pIchor| / (pQuanta + pIchor), 0..1 — the arbitrage gap. */
+  arbSpread: number;
+  /** Number of agents currently under sanction (embargoed budget). */
+  sanctioned: number;
 }
 
 /**
@@ -133,6 +151,19 @@ export function gini(values: ArrayLike<number>): number {
   return clamp((2 * cum) / (n * sum) - (n + 1) / n, 0, 1);
 }
 
+/**
+ * The value of the `k`-th largest entry (1-based) — the cartel-membership threshold: agents whose
+ * net worth is ≥ this are the colluding oligopoly. Returns −Infinity when `k ≥ n` (everyone is in)
+ * and +Infinity when `k ≤ 0` (no one). Pure, unit-tested. O(n log n) on a small copy.
+ */
+export function topKThreshold(values: ArrayLike<number>, k: number): number {
+  const n = values.length;
+  if (k <= 0) return Infinity;
+  if (k >= n) return -Infinity;
+  const a = Array.from(values).sort((x, y) => y - x); // descending
+  return a[k - 1] ?? -Infinity;
+}
+
 /** Internal mutable per-agent record (struct-of-fields kept in parallel arrays would be faster but
  *  agent counts are small — ≤ ~256 — so a record array stays readable without measurable cost). */
 interface Agent {
@@ -147,6 +178,8 @@ interface Agent {
   prefQuanta: number;
   /** Currency loyalty −1..+1 it is steering toward (updated by the adoption game). */
   loyalty: number;
+  /** Under sanction → trades at {@link SANCTION_BUDGET} of its budget (set via {@link Economy.sanction}). */
+  sanctioned: boolean;
 }
 
 /**
@@ -163,6 +196,11 @@ export class Economy {
   /** Scratch reused by tick() — grown on register, never per-tick. */
   private dQ: number[] = [];
   private dI: number[] = [];
+  /** Net-worth scratch (grown on register) for cartel detection + the wealth Gini. */
+  private nw: number[] = [];
+  /** Last-tick cartel wealth share + arbitrage spread, surfaced via {@link summary}. */
+  private cartelShare = 0;
+  private arbSpread = 0;
 
   /**
    * Enrol an agent with a purse sized to `weight` (its stature). Idempotent per id: re-registering
@@ -183,11 +221,28 @@ export class Economy {
       ichor: 6 * w,
       prefQuanta: 0.3 + 0.4 * rng(),
       loyalty: (rng() - 0.5) * 0.4,
+      sanctioned: false,
     };
     this.agents.push(a);
     this.byId.set(id, a);
     this.dQ.push(0);
     this.dI.push(0);
+    this.nw.push(0);
+  }
+
+  /**
+   * Sanction (or lift the embargo on) an agent — a weaponised economy: a sanctioned agent trades at
+   * {@link SANCTION_BUDGET} of its budget, so its rivals can starve it of commodities. No-op for an
+   * unknown id. The titan/NHI layers wield this against economic enemies. O(1).
+   */
+  sanction(id: number, on: boolean): void {
+    const a = this.byId.get(id);
+    if (a) a.sanctioned = on;
+  }
+
+  /** Whether `id` is currently sanctioned. O(1). */
+  isSanctioned(id: number): boolean {
+    return this.byId.get(id)?.sanctioned ?? false;
   }
 
   /** Whether an agent id is enrolled. O(1). */
@@ -214,14 +269,31 @@ export class Economy {
     if (n === 0) return;
     const stress = clamp(worldStress, 0, 1);
 
-    // (1) Production — each agent mints a little of both commodities, scaled by stature and a
-    // world-vigour term, with seeded jitter so the book breathes.
+    // (0) Cartel detection — the richest CARTEL_SIZE agents collude. Net worths into `nw` (reused by
+    // summary's Gini); membership threshold = the K-th largest net worth.
+    let totalNW = 0;
     for (let i = 0; i < n; i++) {
       const a = this.agents[i]!;
-      const vigour = 0.4 + 0.8 * stress + 0.4 * rng();
-      a.quanta += a.weight * 0.05 * vigour;
-      a.ichor += a.weight * 0.05 * vigour;
+      this.nw[i] = a.aurum + a.umbra * this.fx + a.quanta * this.pQuanta + a.ichor * this.pIchor;
+      totalNW += this.nw[i]!;
     }
+    const cartelCut = topKThreshold(this.nw, Math.min(CARTEL_SIZE, n));
+    let cartelWealth = 0;
+
+    // (1) Production — each agent mints both commodities, scaled by stature × world vigour. CARTEL
+    // members WITHHOLD a fraction (oligopoly supply restriction → scarcity → price support).
+    for (let i = 0; i < n; i++) {
+      const a = this.agents[i]!;
+      const inCartel = (this.nw[i] ?? 0) >= cartelCut;
+      if (inCartel) cartelWealth += this.nw[i]!;
+      const vigour = 0.4 + 0.8 * stress + 0.4 * rng();
+      // Cartel members withhold supply; SANCTIONED agents are cut off from resources (embargo bite).
+      const restrict =
+        (inCartel ? 1 - CARTEL_WITHHOLD : 1) * (a.sanctioned ? SANCTION_PRODUCTION : 1);
+      a.quanta += a.weight * 0.05 * vigour * restrict;
+      a.ichor += a.weight * 0.05 * vigour * restrict;
+    }
+    this.cartelShare = totalNW > 0 ? clamp(cartelWealth / totalNW, 0, 1) : 0;
 
     // (2) Desired commodity holdings: spend a slice of liquid wealth split by preference, valued at
     // the current prices. dQ/dI hold each agent's intended change (buy > 0, sell < 0).
@@ -230,7 +302,8 @@ export class Economy {
     for (let i = 0; i < n; i++) {
       const a = this.agents[i]!;
       const liquid = a.aurum + a.umbra * this.fx; // AURUM-valued spending power
-      const budget = liquid * 0.15; // a measured fraction trades each tick
+      // A measured fraction trades each tick; a SANCTIONED agent is throttled to a starvation budget.
+      const budget = liquid * 0.15 * (a.sanctioned ? SANCTION_BUDGET : 1);
       const wantQ = (budget * a.prefQuanta) / this.pQuanta;
       const wantI = (budget * (1 - a.prefQuanta)) / this.pIchor;
       this.dQ[i] = wantQ - a.quanta * 0.15; // toward target, shedding 15% of current
@@ -242,6 +315,16 @@ export class Economy {
     // (3) Tâtonnement: normalize aggregate excess demand by agent count and nudge prices.
     this.pQuanta = priceStep(this.pQuanta, edQ / n, PRICE_GAIN);
     this.pIchor = priceStep(this.pIchor, edI / n, PRICE_GAIN);
+
+    // (3b) Arbitrage — preferences mean-revert toward the UNDER-priced commodity, so the price gap
+    // closes over time (law of one price). `gap > 0` ⇒ QUANTA is cheaper ⇒ shift demand to QUANTA.
+    const denom = this.pQuanta + this.pIchor;
+    const gap = denom > 1e-9 ? (this.pIchor - this.pQuanta) / denom : 0;
+    this.arbSpread = Math.abs(gap);
+    for (let i = 0; i < n; i++) {
+      const a = this.agents[i]!;
+      a.prefQuanta = clamp(a.prefQuanta + ARB_GAIN * gap, 0.05, 0.95);
+    }
 
     // (4) Clearing — match buys against sells so the same volume trades on both sides; scale each
     // side to the cleared volume and settle in AURUM-valued currency (paid from/into each purse,
@@ -380,6 +463,8 @@ export class Economy {
     const umbraValue = umbra * this.fx;
     const totalMoney = aurum + umbraValue;
     const aurumShare = totalMoney > 0 ? aurum / totalMoney : 0.5;
+    let sanctioned = 0;
+    for (let i = 0; i < n; i++) if (this.agents[i]!.sanctioned) sanctioned++;
     return {
       aurum,
       umbra,
@@ -391,6 +476,9 @@ export class Economy {
       gini: gini(worths),
       agents: n,
       totalWealth,
+      cartelShare: this.cartelShare,
+      arbSpread: this.arbSpread,
+      sanctioned,
     };
   }
 }

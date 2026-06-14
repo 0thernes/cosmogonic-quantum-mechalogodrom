@@ -13,6 +13,15 @@ the full gate (now also a coverage gate, on Linux + Windows) with same-seed dete
 
 ### Added
 
+- **Market mechanics: cartel · arbitrage · sanctions (V20)** — explicit game theory layered on the
+  clearing market (`src/sim/economy.ts`): (1) **Cartel** — the richest {@link CARTEL_SIZE} agents
+  collude to **withhold supply** (oligopoly scarcity → price support; `topKThreshold` finds the
+  membership cut); (2) **Arbitrage** — preferences mean-revert toward the under-priced commodity so
+  the QUANTA/ICHOR gap closes (law of one price); (3) **Sanctions** — `economy.sanction(id, on)` cuts
+  an agent's production + trade budget, and **titan wars now trigger sanctions** (a titan at war with
+  ≥3 rivals is embargoed → losing the war bankrupts it). New telemetry: `cartelShare`, `arbSpread`,
+  `sanctioned`. +4 tests; determinism + bounded invariants preserved. Verified live (210 agents):
+  cartelShare 0.09, arbSpread → 0.01 (gap closed), all 10 warring titans sanctioned.
 - **Wealth-driven Puppeteer behavior (V19)** — the 100-strong puppeteer cabal joins the economy
   (varied golden-angle purses, econ ids 3000..3099): each puppeteer's **wealth drives how often it
   meddles** — a rich hand reshapes/stokes the world more frequently and shows it (looms larger, glows
