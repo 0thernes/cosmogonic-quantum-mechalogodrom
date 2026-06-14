@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { CAMERA_FAR, FOG_SCALE } from '../sim/constants';
 import type { QualityProfile } from '../types';
+import { PostFx, postFxRequested } from './postfx';
 
 /**
  * Owns the WebGL renderer, root scene and perspective camera
@@ -31,6 +32,8 @@ export class Engine {
   private readonly dprCap: number;
   /** True while the WebGL context is lost; `render()` no-ops until it returns. */
   private contextLost = false;
+  /** Optional cinematic post-FX chain (`?fx=1`); null in the default pipeline. */
+  private fx: PostFx | null = null;
 
   /**
    * Build renderer/scene/camera against `canvas` using the resolved quality
@@ -82,6 +85,18 @@ export class Engine {
       if (this.renderer.shadowMap.enabled) this.renderer.shadowMap.needsUpdate = true;
       this.contextLost = false;
     });
+
+    // Optional cinematic post-FX (`?fx=1`): a procedural env-map for glass reflections + a bloom
+    // pass for a modern glow. Built once, GUARDED — anything throwing here leaves the plain pipeline
+    // intact. Opt-in so the verified default look is never regressed by an unverified effect graph.
+    if (postFxRequested()) {
+      try {
+        this.scene.environment = buildCosmicEnvironment(this.renderer);
+        this.fx = new PostFx(this.renderer, this.scene, this.camera);
+      } catch {
+        this.fx = null;
+      }
+    }
   }
 
   /**
@@ -97,6 +112,7 @@ export class Engine {
     this.camera.updateProjectionMatrix();
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, this.dprCap));
     this.renderer.setSize(w, h);
+    this.fx?.setSize(w, h);
   }
 
   /**
@@ -105,6 +121,14 @@ export class Engine {
    */
   render(): void {
     if (this.contextLost) return;
+    if (this.fx) {
+      try {
+        this.fx.render();
+        return;
+      } catch {
+        this.fx = null; // effect graph failed at runtime — fall back to the plain pipeline for good
+      }
+    }
     this.renderer.render(this.scene, this.camera);
   }
 
@@ -112,4 +136,48 @@ export class Engine {
   isContextLost(): boolean {
     return this.contextLost;
   }
+}
+
+/**
+ * Build a procedural cosmic environment map (PMREM-filtered) for image-based reflections — used only
+ * on the `?fx=1` path so glass/metal organisms read as wet jewels. A back-side gradient sphere (deep
+ * void → cyan horizon → amber crown + an off-axis fuchsia lobe) is captured once and discarded.
+ * Determinism-safe: a one-time GPU bake, no rng/clock, no sim-state coupling.
+ */
+function buildCosmicEnvironment(renderer: THREE.WebGLRenderer): THREE.Texture {
+  const pmrem = new THREE.PMREMGenerator(renderer);
+  const envScene = new THREE.Scene();
+  const geo = new THREE.SphereGeometry(60, 32, 24);
+  const mat = new THREE.ShaderMaterial({
+    side: THREE.BackSide,
+    depthWrite: false,
+    vertexShader: `
+      varying vec3 vDir;
+      void main() {
+        vDir = normalize(position);
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `,
+    fragmentShader: `
+      varying vec3 vDir;
+      void main() {
+        float h = vDir.y * 0.5 + 0.5;
+        vec3 voidc = vec3(0.012, 0.020, 0.050);
+        vec3 horizon = vec3(0.040, 0.320, 0.420);
+        vec3 crown = vec3(0.560, 0.330, 0.110);
+        vec3 col = mix(voidc, horizon, smoothstep(0.12, 0.55, h));
+        col = mix(col, crown, smoothstep(0.62, 1.0, h));
+        float lobe = pow(max(0.0, dot(vDir, normalize(vec3(0.6, 0.3, -0.5)))), 6.0);
+        col += vec3(0.40, 0.08, 0.50) * lobe * 0.6;
+        gl_FragColor = vec4(col, 1.0);
+      }
+    `,
+  });
+  const sphere = new THREE.Mesh(geo, mat);
+  envScene.add(sphere);
+  const tex = pmrem.fromScene(envScene, 0).texture;
+  geo.dispose();
+  mat.dispose();
+  pmrem.dispose();
+  return tex;
 }
