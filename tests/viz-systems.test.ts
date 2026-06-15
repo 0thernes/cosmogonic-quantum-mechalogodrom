@@ -1,6 +1,7 @@
 /**
  * Headless smoke + lifecycle tests for the V10/V11 viz systems (alien NHI body, cosmic web, gold
- * lattice, quantum lattice). These construct real three.js Scene/geometry/material objects — which
+ * lattice, quantum lattice) + the V63 ascension MonolithTemple. These construct real three.js
+ * Scene/geometry/material objects — which
  * need NO WebGL context — and run their per-frame update, so they catch the one class of bug the
  * wedged-GPU preview could not: a constructor or update that THROWS. (Visual correctness still needs
  * a real GPU; these lock in "does not crash + lifecycle is sound".)
@@ -11,6 +12,7 @@ import { CosmicWeb } from '../src/sim/cosmic-web';
 import { GoldLattice } from '../src/sim/gold-lattice';
 import { QuantumLattice } from '../src/sim/quantum-lattice';
 import { NhiBodySystem } from '../src/sim/nhi-body';
+import { MonolithTemple } from '../src/sim/monolith-temple';
 
 describe('environment viz systems construct + update without throwing', () => {
   test('CosmicWeb adds to the scene and shimmers', () => {
@@ -76,5 +78,27 @@ describe('NhiBodySystem lifecycle', () => {
       }
     }).not.toThrow();
     expect(bodies.count).toBe(1);
+  });
+});
+
+describe('MonolithTemple — the V63 ascension Stage-2 portal', () => {
+  test('builds hidden, then reveals + rises without throwing (determinism-neutral, no rng)', () => {
+    const scene = new THREE.Scene();
+    const temple = new MonolithTemple(scene);
+    expect(temple.revealed).toBe(false);
+    expect(scene.children.length).toBeGreaterThan(0); // meshes are built up-front (hidden until reveal)
+    temple.reveal(0, 0, 0);
+    expect(temple.revealed).toBe(true);
+    expect(() => {
+      for (let i = 0; i < 90; i++) temple.update(1 / 60, i / 60); // through the rise animation
+    }).not.toThrow();
+  });
+
+  test('a silent reveal (restoring an already-ascended creature) settles without throwing', () => {
+    const scene = new THREE.Scene();
+    const temple = new MonolithTemple(scene);
+    temple.reveal(10, 0, -5, true); // silent = no rise animation, just THERE
+    expect(temple.revealed).toBe(true);
+    expect(() => temple.update(1 / 60, 5)).not.toThrow();
   });
 });
