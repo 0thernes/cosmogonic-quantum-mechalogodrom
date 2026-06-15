@@ -20,7 +20,7 @@ deliberate limitation, and promoting one to ✅ is a roadmap item.
 
 ## Now (in progress)
 
-- Keep the full gate green at every commit (`bun run check`): 581 tests, ~928k assertions.
+- Keep the full gate green at every commit (`bun run check`): 913 tests, ~965k assertions.
 - Maintain the 500-point inspection as the pre-release bar; re-walk WARNs each tag.
 - Documentation completeness sweep — README, architecture, ERD/ERM/ERP, Kanban, roadmap all cross-linked.
 
