@@ -13,6 +13,20 @@ the full gate (now also a coverage gate, on Linux + Windows) with same-seed dete
 
 ### Added
 
+- **HUD becomes a bottom-third strip above one slimmer bar; mobile cycles instead of scrolls (V67)** —
+  the directive's "HUD 1/3 on the bottom, above the menu bars (not overlapping, so the ecosystem shows);
+  consolidate the two bars to save space; on a small screen a button that CYCLES instead of a scrolling
+  slide-bar." The CENTER HUD no longer floats dead-centre — each inspector panel now docks as a **wide
+  bottom strip** (`bottom:92px`, `width min(98vw,1100px)`, `height clamp(220px,32vh,440px)`), so the top
+  ~⅔ keeps showing the simulation and HELP/AI/NEURAL get far more room for text + data visuals. The
+  redundant **second dock bar is gone**: the HUD's tab strip (`#cqm-hud-nav`) is now the **always-on
+  launcher**, docked tight just above the single toolbar — the Docs/Spec/Lab links are re-homed into it,
+  and the bottom-corner readouts (`#hud-vsr`, `#alg`) auto-hide while a panel is open so nothing fights
+  the wide HUD. On phones/tablets the six tabs **collapse to a single ‹ CURRENT › cycler** — tap the
+  arrows to switch panels (the "click to cycle, not a scrunched scrolling dock" fix), and the strip goes
+  full-width. **Verified live**: desktop shows all six tabs (› cycles AI→HELP→AUDIT→NEURAL, exactly one
+  open); at 375 px the tabs hide, the cycler label shows + switches, and the panel spans 100 vw; the dock
+  is hidden, the links adopted, the readouts hidden while open. Full gate green (811 tests).
 - **The world boots at ~500 and grows into the 50k cosmos — dynamic population ramp (V66)** — the
   directive's "always start at 500 and scale to 50,000 eventually + fluctuate dynamically so it loads
   faster initially." Every tier now BOOTS at **~500** organisms (the mega tier used to instantiate 45,000

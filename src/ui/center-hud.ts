@@ -31,51 +31,86 @@ const SLOTS: readonly Slot[] = [
 const PANEL_SEL = SLOTS.map((s) => '#' + s.panel).join(',');
 
 const STYLE = `
-/* Centered, fit-to-window slot — every inspector panel snaps here when shown (same size, any aspect
-   ratio). !important wins over each panel's own right/bottom/width regardless of selector specificity. */
+/* V67: the HUD is a BOTTOM ~1/3 strip docked ABOVE the menu bars — the top 2/3 shows the ecosystem.
+   Wide, so HELP / AI / NEURAL get real room for text + data visuals. !important wins over each panel's
+   own right/bottom/width regardless of selector specificity. */
 ${PANEL_SEL} {
   position: fixed !important;
   inset: auto !important;
   left: 50% !important;
-  top: 50% !important;
-  transform: translate(-50%, -50%) !important;
-  width: min(94vw, 760px) !important;
+  transform: translateX(-50%) !important;
+  bottom: 92px !important; /* clears the nav strip (~36px @46) + the toolbar (~40px) below it */
+  top: auto !important;
+  width: min(98vw, 1100px) !important;
   max-width: none !important;
-  /* Centered, but bounded so it never touches the top nav strip (~58px) or the bottom dock (can wrap to
-     2 rows ≈151px from the bottom) + toolbar: max-height leaves 310px total so it clears both even on
-     short screens, capped at 780 on tall ones. */
-  height: min(80vh, 780px) !important;
-  max-height: calc(100vh - 310px) !important;
+  height: clamp(220px, 32vh, 440px) !important; /* ~1/3 of the viewport */
+  max-height: calc(100vh - 150px) !important;
   z-index: 71 !important;
 }
 /* Transparent mode — peek at the simulation behind the HUD. */
 body.cqm-hud-ghost ${PANEL_SEL.split(',')
   .map((s) => s + '.cqm-hud-vis')
   .join(',')} {
-  opacity: 0.45;
+  opacity: 0.5;
 }
-/* The HUD chrome: a centered tab + cycle strip, just above the slot. */
+/* When a panel is open, hide the bottom-corner readouts so nothing fights the wide HUD. */
+body.cqm-hud-open #hud-vsr,
+body.cqm-hud-open #ui > #alg {
+  display: none !important;
+}
+/* The old 2nd dock bar is now REDUNDANT — the always-on nav tab strip below IS the launcher. Hide it. */
+#cqm-dock {
+  display: none !important;
+}
+/* The nav: ALWAYS visible (the panel launcher + switcher), docked tight just above the toolbar. */
 #cqm-hud-nav {
   position: fixed;
   left: 50%;
-  top: max(8px, 2vh);
+  bottom: 46px;
   transform: translateX(-50%);
   z-index: 73;
-  display: none;
+  display: flex;
   align-items: center;
   gap: 4px;
-  max-width: calc(100vw - 16px);
+  max-width: calc(100vw - 10px);
   overflow-x: auto;
   scrollbar-width: thin;
-  padding: 5px 8px;
-  border-radius: 18px;
+  padding: 4px 7px;
+  border-radius: 16px;
   border: 1px solid rgba(150, 180, 230, 0.3);
-  background: rgba(8, 11, 22, 0.82);
+  background: rgba(8, 11, 22, 0.86);
   backdrop-filter: blur(10px);
-  box-shadow: 0 6px 26px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 4px 22px rgba(0, 0, 0, 0.6);
 }
-#cqm-hud-nav.on {
-  display: flex;
+/* The mobile cycler label — hidden on desktop (the 6 tabs show); shown on mobile (tabs hide). */
+.cqm-hud-label {
+  display: none;
+  font: 700 12px/1 var(--font-mono, ui-monospace, monospace);
+  color: #cfe0fb;
+  padding: 0 6px;
+  min-width: 104px;
+  text-align: center;
+  white-space: nowrap;
+  letter-spacing: 0.06em;
+}
+/* On phones/tablets the six tabs collapse to a single ‹ CURRENT › cycler — tap the arrows to switch
+   (the user's "click to cycle, not a scrolling slide-bar" fix for the scrunched dock). */
+@media (max-width: 820px), (orientation: portrait), (pointer: coarse) {
+  .cqm-hud-tab {
+    display: none;
+  }
+  .cqm-hud-label {
+    display: inline-block;
+  }
+  #cqm-hud-nav {
+    bottom: 54px;
+  }
+  ${PANEL_SEL} {
+    width: 100vw !important;
+    bottom: 98px !important;
+    height: clamp(200px, 40vh, 540px) !important;
+    border-radius: 14px 14px 0 0 !important;
+  }
 }
 .cqm-hud-btn {
   flex: 0 0 auto;
@@ -120,6 +155,7 @@ let active = -1; // index of the visible panel, or -1 when the HUD is closed
 let busy = false; // re-entrancy guard while we drive sibling toggles
 let nav: HTMLElement | null = null;
 let tabs: HTMLButtonElement[] = [];
+let label: HTMLElement | null = null; // V67: the mobile ‹ CURRENT › cycler label
 
 function panelEl(s: Slot): HTMLElement | null {
   return document.getElementById(s.panel);
@@ -155,8 +191,14 @@ function cycle(dir: number): void {
 }
 
 function render(): void {
-  if (nav) nav.classList.toggle('on', active >= 0);
+  // V67: the nav strip is ALWAYS visible (it's the launcher). Highlight the active tab, flag the
+  // open state for the readout-hide rule, and update the mobile cycler label.
   tabs.forEach((t, i) => t.classList.toggle('active', i === active));
+  document.body.classList.toggle('cqm-hud-open', active >= 0);
+  if (label) {
+    const s = active >= 0 ? SLOTS[active] : undefined;
+    label.textContent = s ? `${s.icon} ${s.name}` : '⊕ PANELS';
+  }
 }
 
 /** Build the chrome: ‹ prev · [tabs] · next › · ◐ transparency · ✕ close. */
@@ -182,6 +224,11 @@ function buildNav(doc: Document): void {
     mk(s.icon + ' ' + s.name, s.name, 'cqm-hud-tab', () => showOnly(active === i ? -1 : i)),
   );
   tabs.forEach((t) => nav!.appendChild(t));
+  // V67: the mobile cycler label (sits between the tabs and the › arrow; shown only on small screens).
+  label = doc.createElement('span');
+  label.className = 'cqm-hud-label';
+  label.textContent = '⊕ PANELS';
+  nav.appendChild(label);
   nav.appendChild(mk('›', 'Next panel', 'cqm-hud-next', () => cycle(1)));
   const sep = doc.createElement('span');
   sep.className = 'cqm-hud-sep';
@@ -193,6 +240,23 @@ function buildNav(doc: Document): void {
   );
   nav.appendChild(mk('✕', 'Close', 'cqm-hud-close', () => showOnly(-1)));
   doc.body.appendChild(nav);
+  adoptNavLinks(doc);
+}
+
+/**
+ * V67: re-home the Docs / Spec / Lab links into the always-on nav strip. The old `#cqm-dock` they
+ * used to live in is now hidden (the nav replaced it), so without this they'd vanish. Moves them
+ * wherever they currently are; idempotent (appendChild relocates).
+ */
+function adoptNavLinks(doc: Document): void {
+  if (!nav) return;
+  for (const href of ['/docs', '/spec', '/lab']) {
+    const a = doc.querySelector<HTMLElement>(`a[href="${href}"]`);
+    if (a) {
+      a.classList.add('cqm-hud-btn');
+      nav.appendChild(a);
+    }
+  }
 }
 
 /** Each dock toggle still opens "its" panel — but centered, and closing the others (single-open). */
