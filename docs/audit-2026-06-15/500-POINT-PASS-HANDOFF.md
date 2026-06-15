@@ -125,11 +125,20 @@ The loop continued past the initial handoff and closed more of the queue:
   now carries a "RESERVED — see ADR-0009" note so it isn't mistaken for accidental dead code.
 - ◻︎ **`dependabot.yml rebase-strategy`** — non-action: `auto` is dependabot's default, so adding it
   would be redundant cosmetic churn. The LOW finding is a no-op.
+- ✅ **Test-coverage pass — 6 previously-untested core modules now pinned** (822 → **852 tests**, full
+  suite green): `behaviors` (all 26 handlers stay finite + bounded under the hostile
+  far-escapee/max-chaos Lorenz regime), `puppet-masters` + `shoggoths` (creature determinism +
+  population finiteness — the puppet test also fixed a stale "constant 3" count doc), `connectome`
+  (bounded link graph + finite activation + deterministic rebuild), `qcircuit` (normalized entropy +
+  valid collapse + deterministic measurement), and `server` (parser boundaries). Commits `36324cf`,
+  `51a851d`, `7052aea`, `8a9ff29`, `d81d5be`, `05f1427`. Durable regression guards on the determinism +
+  NaN-safety invariants — exactly what protects the repo while the parallel editor ships features fast.
 
-**Net at end of session:** every safe, non-colliding, non-product-decision item in the queue is
-**done**. What remains genuinely needs external input or for the parallel editor to settle: the
-**genome wire/prune product decision** (now teed up in ADR-0009), the **UI `AbortController` cleanup**
-(the editor is mid-editing those exact files — V70), the **ARCHITECTURE/ERD doc regen** (architecture
-is moving every few minutes), and the **known-open server-security hardening** (maintainer buy-in /
-deploy-gating). Per both rubrics' anti-over-build guidance, the loop is paused here at a verified,
-improved, fully-recorded state rather than manufacturing churn.
+**Net at session checkpoint:** every safe, non-colliding, non-product-decision item is **done**, and
+the highest-risk previously-untested logic now has determinism/finiteness guards (full suite **852,
+0 fail**). What genuinely remains needs external input or for the parallel editor to settle: the
+**genome wire/prune product decision** (teed up in ADR-0009), the **UI `AbortController` cleanup** (the
+editor is mid-editing those files — V70), the **ARCHITECTURE/ERD doc regen** (architecture moves every
+few minutes), and the **known-open server-security hardening** (maintainer buy-in). The remaining
+untested modules are visual/WebGL (constellations, cosmic-web, gold-lattice, monolith-temple,
+super-body, environment) — they need a GL/scene harness rather than the headless fake-ctx pattern.
