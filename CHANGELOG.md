@@ -23,6 +23,18 @@ the full gate (now also a coverage gate, on Linux + Windows) with same-seed dete
   exec/write-option denylist + per-binary forbidden-flag maps, and every positional now routes through
   the same `confine()` block as the file tools. +9 regression tests. Full report:
   [`docs/audit-2026-06-15/`](./docs/audit-2026-06-15/ULTRACODE-INSPECTION-2026-06-15.md).
+- **`POST /api/audit` rate-limited against ring-eviction flood (2026-06-15, RISK-04/05)** — the
+  unauthenticated audit endpoint had no rate limit, so a tight POST loop could evict all 200 real
+  entries from the in-memory ring (and burn parse CPU). Added a pure token-bucket limiter (60-burst /
+  30-per-second) that sheds floods with `429 + Retry-After` before any work, while never throttling a
+  human's user-action-driven audit cadence. Verified live (200 concurrent POSTs → exactly 60× `201` +
+  140× `429`) + 4 unit tests. Per-IP keying / auth remain the multi-tenant-deploy step (see
+  [`SECURITY.md`](./SECURITY.md)).
+- **Determinism + layer-boundary invariants now mechanically guarded** — the #1 law (no unseeded
+  PRNG / wall-clock in the deterministic core) is pinned by a test scanning `src/sim/**` _and_ the
+  `src/math/**` primitives it draws randomness from; a companion guard pins the import direction
+  (the sim/math leaves never import the UI or server layers). Both fail the build loudly the moment a
+  future edit reintroduces a violation, instead of silently breaking "one seed, one cosmos".
 
 ### Added
 
