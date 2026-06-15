@@ -131,6 +131,15 @@ the full gate (now also a coverage gate, on Linux + Windows) with same-seed dete
 
 ### Fixed
 
+- **Two review findings from the V59–V63 audit (V64)** — an adversarial pass over the new code surfaced
+  two real (non-crashing) defects, both fixed: (1) **CHAOS MODE entanglement rebinding** — `ChaosField`
+  stored entangled pairs as raw indices into the live entity list, so a death (which left-shifts every
+  higher index) silently re-pointed a pair at a _different_ organism between the 3–7 s re-picks; pairs
+  are now stored by **object reference**, so a dead partner just goes inert (the pair dissolves cleanly)
+  instead of coupling two strangers. (2) **Post-FX bloom render-target leak** — `EffectComposer.dispose()`
+  frees only its own targets, not the passes it holds, so the cinematic (`?fx=1`) `UnrealBloom` pass
+  leaked a stack of render targets + materials on every `Engine.dispose`/hot-reload; `PostFx.dispose()`
+  now disposes **every pass** before the composer. Full gate green (810 tests).
 - **HMR hook hotfix — `import.meta.hot` used directly (V50)** — V49's teardown aliased it
   (`const hot = import.meta.hot`), which Bun's HMR runtime rejects at module eval with "import.meta.hot
   .dispose cannot be used indirectly" — a NEW hard crash on every dev load (the production build never

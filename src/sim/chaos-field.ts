@@ -60,8 +60,12 @@ export class ChaosField {
   private _shake = 0;
   private _tunnels = 0;
   private _entangled = 0;
-  /** Entangled index pairs into the live entity list; re-picked on a timer + validated each use. */
-  private readonly pairs: [number, number][] = [];
+  /**
+   * Entangled entity PAIRS. Stored as object references (not list indices) so a death never rebinds
+   * a pair to a different live organism — a dead partner just goes inert (it is no longer rendered),
+   * which dissolves the pair cleanly instead of silently coupling two strangers. Re-picked on a timer.
+   */
+  private readonly pairs: [Entity, Entity][] = [];
   private pairTimer = 0;
   private kickTimer = 0;
   private weatherKick = false;
@@ -203,9 +207,8 @@ export class ChaosField {
     this._entangled = 0;
     const g = 0.06 + I * 0.1;
     for (const pr of this.pairs) {
-      const ea = list[pr[0]];
-      const eb = list[pr[1]];
-      if (!ea || !eb) continue;
+      const ea = pr[0];
+      const eb = pr[1];
       const ua = ea.userData.vel;
       const ub = eb.userData.vel;
       // Shared (mean) momentum — both partners are drawn toward it, so their dances mirror.
@@ -225,7 +228,7 @@ export class ChaosField {
     }
   }
 
-  /** Choose up to ~2% of the population (capped) as random entangled pairs. Validated on use. */
+  /** Choose up to ~2% of the population (capped) as random entangled pairs, stored by reference. */
   private repickPairs(list: readonly Entity[]): void {
     this.pairs.length = 0;
     const n = list.length;
@@ -234,7 +237,10 @@ export class ChaosField {
     for (let k = 0; k < want; k++) {
       const a = Math.floor(this.rng() * n);
       const b = Math.floor(this.rng() * n);
-      if (a !== b) this.pairs.push([a, b]);
+      if (a === b) continue;
+      const ea = list[a];
+      const eb = list[b];
+      if (ea && eb) this.pairs.push([ea, eb]);
     }
   }
 }

@@ -180,9 +180,16 @@ export class PostFx {
     this.composer.render();
   }
 
-  /** Free the composer's render targets + the lens material. Called by {@link Engine.dispose}. */
+  /** Free the composer's render targets, every PASS's resources, and the lens material. */
   dispose(): void {
     try {
+      // EffectComposer.dispose() frees only its OWN read/write targets — NOT the passes it holds. The
+      // UnrealBloom pass (cinematic `?fx=1`) allocates a stack of render targets + materials that would
+      // otherwise leak on every Engine.dispose / hot-reload. Dispose each pass first (a no-op where a
+      // pass has none), then the composer.
+      for (const pass of this.composer.passes) {
+        (pass as { dispose?: () => void }).dispose?.();
+      }
       this.composer.dispose();
     } catch {
       /* best-effort */
