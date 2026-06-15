@@ -11,6 +11,19 @@ Post-`0.9.0` continuous-hardening plus the **V10 NHI super-mind** and **V11 envi
 work — all additive (a no-op until a launched NHI, or behind the opt-in `?fx` flag), shipped behind
 the full gate (now also a coverage gate, on Linux + Windows) with same-seed determinism preserved.
 
+### Security
+
+- **Read-only Copilot sandbox hardened (2026-06-15 Ultracode inspection)** — closed three verified
+  escapes in `src/server/ai-sandbox.ts`, all reachable only when `COPILOT_ENABLED` is set (off in
+  production): (1) a `git grep --open-files-in-pager=<cmd>` / `-O<cmd>` **option-injection** that
+  spawned an arbitrary pager process — a dash-led token skipped the positional path-confine loop and
+  `--fixed-strings` does not stop git's option parsing; (2) `run cat .env` / `cat legacy/x` reading
+  files that `read_file` blocks — the `run` tool only checked for a `..` escape, not the
+  `.env`/`.git`/`legacy` prefix-block; (3) `run sort -o <file>` **writing** a file. Fix: a universal
+  exec/write-option denylist + per-binary forbidden-flag maps, and every positional now routes through
+  the same `confine()` block as the file tools. +9 regression tests. Full report:
+  [`docs/audit-2026-06-15/`](./docs/audit-2026-06-15/ULTRACODE-INSPECTION-2026-06-15.md).
+
 ### Added
 
 - **The Titans become ominous 4-D freak-geometry that MATTERS to the world (V68)** — the directive's

@@ -228,6 +228,26 @@ const META = /[<>|&;$`()\n\r{}]|\.\./;
 const isFlag = (a: string): boolean => a.startsWith('-');
 
 /**
+ * Option flags that turn an otherwise read-only tool into one that EXECUTES a process or WRITES a
+ * file. A dash-led token is a flag, so the positional path-confine loop skips it — which means these
+ * have to be denied by name (audit: `git grep -O<pager>` / `--open-files-in-pager=<cmd>` spawns an
+ * arbitrary pager process, escaping the read-only sandbox, and `--output=` writes a file). `-O` and
+ * these long options are not needed by ANY allowed read-only tool, so they are denied universally.
+ */
+const EXEC_OR_WRITE_FLAG = /^-O|^--open-files-in-pager(=|$)|^--output(=|$)/;
+
+/**
+ * Per-binary forbidden flags whose danger is tool-specific. `sort -o<file>` / `--output` WRITES a
+ * file (but `grep -o` is read-only "only-matching", so `-o` is NOT denied globally); `git grep`
+ * `-f<file>` reads a pattern file and `-O` spawns a pager. Matched as prefixes to also catch the
+ * attached-value short forms (`-Oid`, `-ofoo`, `-fpat`).
+ */
+const BIN_FORBIDDEN_FLAG: Record<string, RegExp> = {
+  git: /^-[oOf]|^--(file|output|open-files-in-pager)(=|$)/,
+  sort: /^-o|^--output(=|$)/,
+};
+
+/**
  * Validate (default-deny) a raw command string. Returns the parsed argv on success. The check is:
  * no metacharacters; first token on ALLOW; no token on DENY; `git`/`bun` subcommand-gated; every
  * positional path-like arg confined to the repo root.
@@ -242,8 +262,16 @@ function validateCommand(raw: string): { ok: true; argv: string[] } | { ok: fals
   const bin = argv[0] ?? '';
   if (!ALLOWED_BINS.has(bin))
     return { ok: false, error: `command "${bin}" is not allowed (read-only sandbox)` };
+  const binForbidden = BIN_FORBIDDEN_FLAG[bin];
   for (const tok of argv) {
     if (DENY_TOKENS.has(tok)) return { ok: false, error: `token "${tok}" is forbidden` };
+    if (EXEC_OR_WRITE_FLAG.test(tok))
+      return {
+        ok: false,
+        error: `option "${tok}" is forbidden (can execute a process or write a file)`,
+      };
+    if (binForbidden && binForbidden.test(tok))
+      return { ok: false, error: `option "${tok}" is forbidden for ${bin} (write/exec)` };
   }
   if (bin === 'git') {
     const sub = argv[1] ?? '';
@@ -275,17 +303,18 @@ function validateCommand(raw: string): { ok: true; argv: string[] } | { ok: fals
       };
     }
   }
-  // Confine every positional path-like argument (block reading host files outside the repo).
+  // Confine every positional path-like argument to the repo root AND apply the same private-area
+  // block as the file tools. Previously this only checked for a `..` escape, so `run cat .env` /
+  // `run cat legacy/x` read exactly the files read_file forbids (audit MEDIUM: the `run` tool
+  // bypassed the .env/.git/legacy block); routing through confine() closes that. git accepts
+  // `<rev>:<path>` (e.g. `HEAD:.env`), so the path portion after the colon is confined too.
   for (let i = 1; i < argv.length; i++) {
     const a = argv[i] ?? '';
-    if (isFlag(a)) continue;
-    // git/bun subcommands and their non-path words are fine; only check tokens that look like paths.
-    if (a.includes('/') || a.includes('.')) {
-      // Allow bare option-values that aren't paths (heuristic): only confine if it resolves oddly.
-      if (isAbsolute(a) || a.startsWith('~'))
-        return { ok: false, error: `absolute path "${a}" denied` };
-      const rl = relative(ROOT, resolve(ROOT, a));
-      if (rl.startsWith('..')) return { ok: false, error: `path "${a}" escapes the repo root` };
+    if (isFlag(a)) continue; // write/exec flags are denied above; remaining flags are read-only
+    const pathPart = bin === 'git' && a.includes(':') ? (a.split(':').pop() ?? a) : a;
+    if (pathPart.includes('/') || pathPart.includes('.')) {
+      const c = confine(pathPart);
+      if (!c.ok) return { ok: false, error: `argument "${a}" denied: ${c.error}` };
     }
   }
   return { ok: true, argv };
@@ -355,9 +384,14 @@ export async function grepRepo(pattern: string): Promise<SandboxResult> {
     /\s/.test(pattern) ||
     pattern.includes('"') ||
     pattern.includes("'") ||
+    pattern.startsWith('-') ||
     pattern.length > 200
   ) {
-    return { ok: false, error: 'invalid pattern (single literal token, no spaces/metacharacters)' };
+    return {
+      ok: false,
+      error:
+        'invalid pattern (one literal token; no spaces, metacharacters, quotes, or leading dash)',
+    };
   }
   // -n line numbers, -I skip binary, --fixed-strings = literal (no injection via regex), capped.
   return runReadOnly(`git grep -n -I --fixed-strings ${pattern}`);

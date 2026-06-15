@@ -71,6 +71,14 @@ describe('ai-sandbox: command gate is default-deny and write-free', () => {
     'curl http://example.com', // network
     'node -e doStuff', // arbitrary exec
     'sh -c whoami', // shell
+    // audit 2026-06-15 — sandbox-escape options a dash-led token slipped past the old guards:
+    'git grep --open-files-in-pager=id world', // git pager → arbitrary process exec (HIGH)
+    'git grep -Oid world', // attached short form of the same pager option
+    'git diff --output=leak.txt', // git writes a file (read-only violation)
+    'sort -o out.txt package.json', // sort writes a file (read-only violation)
+    'cat .env', // `run` read of a blocked secret file (read_file blocks it; run did not — MEDIUM)
+    'cat legacy/anything', // `run` read of a blocked legacy file
+    'git show HEAD:.env', // read a blocked file via git <rev>:<path>
   ];
   for (const cmd of denied) {
     test(`denies: ${cmd}`, async () => {
@@ -85,5 +93,10 @@ describe('ai-sandbox: command gate is default-deny and write-free', () => {
   test('grep rejects multi-token / empty patterns', async () => {
     expect((await grepRepo('a b')).ok).toBe(false);
     expect((await grepRepo('')).ok).toBe(false);
+  });
+
+  test('grep rejects a dash-led pattern — git option-injection (audit 2026-06-15, HIGH)', async () => {
+    expect((await grepRepo('-O')).ok).toBe(false);
+    expect((await grepRepo('--open-files-in-pager=id')).ok).toBe(false);
   });
 });
