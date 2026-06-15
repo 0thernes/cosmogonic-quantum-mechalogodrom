@@ -582,22 +582,12 @@ a:focus-visible {
   z-index: 21;
   text-align: center;
 }
-/* V76: lock the two bottom-right readout boxes (#hud-vsr Sim-Settings + #alg sorting field) to a
-   FIXED px font. The panels otherwise size type with a container-query/viewport unit, so on a wider
-   monitor these boxes grew and the corner stack started to overlap (alg×hud-vsr, cP×hud-vsr at QHD).
-   A constant box size means the corner gaps (#alg bottom, #cP right) hold at EVERY desktop width, not
-   only at 1440 — the explicit "adjusts as the window changes, no overlapping" requirement. */
-#hud-vsr,
-#hud-vsr .text-3xs {
-  font-size: 11px;
-  line-height: 1.4;
-}
-#alg .text-3xs {
-  font-size: 11px;
-}
-#alg .text-4xs {
-  font-size: 9.5px;
-}
+/* V79: the bottom-right readout boxes (#hud-vsr Sim-Settings + #alg sorting field) now use the SAME
+   shared `--text-*` tokens as every other panel, so their type stays CONSISTENT across viewports —
+   small at the default scale, and scaling up with the 10-foot/4K TV block like the telemetry +
+   observatory panels (the V76 fixed-px lock made them render ~11px next to ~22px telemetry on a wide
+   monitor — "fonts off comparing"). The overlap the lock used to prevent only happens in the TV block
+   (scaled fonts → bigger boxes); it is handled there with scaled corner gaps (see the ≥1900px block). */
 /* Algorithm picker fills the tall free-left row (row 3) so its 25-row scroll list gets real
    height; the algo readout sits in row 4 below it, both clear of the center 3D view. */
 #algoP {
@@ -935,14 +925,19 @@ a:focus-visible {
   }
 }
 
-/* ── TV / 10-foot (≥1900px LANDSCAPE): token-scale bump ≈ ×1.6 via clamp() (continues to
-     scale toward 4K instead of stepping once), fat focus rings, reachable-from-the-couch hit
-     targets. The observatory canvases grow through the container query above — no fixed
-     height override is needed here. LANDSCAPE-scoped so a 4K panel rotated to PORTRAIT falls
-     through to the V5.5 sheets (matching the user's portrait-QHD ergonomics) instead of an
-     unreachable far-edge column. A coarse-pointer smart TV would otherwise match the sheet-
-     mode query above, so this block explicitly RESTORES the grid + neutralizes sheet docking. */
-@media (min-width: 1900px) and (orientation: landscape) {
+/* ── TV / 10-foot (≥1900px LANDSCAPE, COARSE pointer): token-scale bump ≈ ×1.6 via clamp(), fat
+     focus rings, reachable-from-the-couch hit targets. The observatory canvases grow through the
+     container query above. A coarse-pointer smart TV would otherwise match the sheet-mode query
+     above, so this block RESTORES the grid + neutralizes sheet docking.
+     V79 — GATED to `(pointer: coarse)`. The bare `≥1900px landscape` trigger ALSO hit FINE-pointer
+     DESKTOP monitors (the user's 1920/2560): it bumped EVERY token by ~0.85vw, so the type compounded
+     with width — 16px at 1920, ~22px at 2560 — and the enlarged toolbar started overlapping the nav.
+     That is the "it does the stupid shit WHEN IT GROWS". A desktop is viewed up close and the OS owns
+     its scaling; the 10-foot bump belongs ONLY to a couch-distance TV (a coarse remote pointer). So a
+     fine-pointer desktop now keeps the consistent NORMAL type scale + the default grid at EVERY width;
+     a coarse ≥1900 landscape smart TV still gets the 10-foot treatment. Pairs with the V79 token-share
+     that keeps the bottom-right readout boxes consistent with the panels at whichever scale applies. */
+@media (min-width: 1900px) and (orientation: landscape) and (pointer: coarse) {
   :root {
     /* clamp() makes the 10-foot scale fluid from 1900px up to a 2560px reference,
        so a 43" 4K panel reads larger than a 1900px display, not identical. */
@@ -973,6 +968,21 @@ a:focus-visible {
   }
   #ui > * {
     pointer-events: auto;
+  }
+  /* V79: scale the fixed bottom-right corner cluster WITH the 10-foot/4K type bump. The unlocked
+     readout boxes now grow with the scaled font (consistent with telemetry/observatory), so the
+     Control pad widens to not read as tiny, and the corner gaps grow to clear the larger Sim-Settings
+     box + the taller bottom bar. Gaps are sized for the font-capped MAX box, so they hold from 1900px
+     to 4K (they merely over-clear at the low end). */
+  #cP {
+    right: 244px;
+    bottom: 94px;
+    width: clamp(196px, 8.5vw, 250px);
+    max-height: 46vh;
+  }
+  #ui > #alg {
+    bottom: 292px;
+    max-width: clamp(170px, 9vw, 240px);
   }
   /* Sheets become ordinary grid panels again; handles disappear. */
   .sheet {
