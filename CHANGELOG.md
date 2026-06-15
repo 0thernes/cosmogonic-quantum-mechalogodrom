@@ -13,6 +13,23 @@ the full gate (now also a coverage gate, on Linux + Windows) with same-seed dete
 
 ### Added
 
+- **The Titans become ominous 4-D freak-geometry that MATTERS to the world (V68)** — the directive's
+  "the titans look like giant toys, organisms pass through them like nothing, and they merge through
+  each other without changing — make them special: Mandelbrot/tesseract/Hilbert freak geometries with
+  ominous light shows that change the creatures + world physics." Each colossus is rebuilt as a
+  **writhing fractal core** (a high-detail icosahedron driven by a 4-D-rotor + Mandelbulb-fBm vertex
+  shader, with thin-film iridescence, a Fresnel rim and a HOT void-glow), wrapped in a **real 4-D
+  TESSERACT cage** (a `pos4` hypercube whose 16 corners rotate in 4-space and perspective-project to 3-D
+  each frame — a genuine hypercube shadow, not a faked wireframe) and a **Fresnel aura shell**, all
+  driven by a shared `uMenace` uniform so warring + colliding titans **writhe and blaze** hardest. They
+  now **matter to the world**: an **AURA force** drags any organism within reach into the colossus's
+  spacetime well (a capped r⁻² pull + a tangential wake) and **hue-stains** it toward the titan's colour
+  — so creatures no longer pass through "like nothing"; and titans **soft-collide** with each other
+  (`titanClash`) — no more silent overlap: they repel apart and the contact spikes both titans' entropy
+  (→ `uMenace` → the writhe/blaze light show). All the new motion is pure vector/colour/`t` math with
+  **no rng** (determinism preserved). **Verified live**: an organism placed in a titan's aura is dragged
+  (vel 0 → 0.022) + hue-stained, overlapping titans repel apart + gain clash-heat, and the menace shader
+  drives at 0.73. Full gate green (811 tests).
 - **HUD becomes a bottom-third strip above one slimmer bar; mobile cycles instead of scrolls (V67)** —
   the directive's "HUD 1/3 on the bottom, above the menu bars (not overlapping, so the ecosystem shows);
   consolidate the two bars to save space; on a small screen a button that CYCLES instead of a scrolling

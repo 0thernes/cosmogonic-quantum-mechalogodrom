@@ -144,6 +144,197 @@ const VB = new THREE.Vector3();
 /** F-HOLES: scratch for the singularity body-force pull on a titan (never retained). */
 const HOLE_F = new THREE.Vector3();
 
+// ── V67 OMINOUS REDESIGN (freak-geometry titans) ───────────────────────────────
+/** Subdivisions of the writhing fractal CORE icosahedron (enough verts for smooth 4D writhe). */
+const CORE_DETAIL = 4;
+/** Aura field: organisms within this reach are dragged + hue-stained (titan↔organism interaction). */
+const AURA_R = 48;
+const AURA_R2 = AURA_R * AURA_R;
+const AURA_G = 1100; // r⁻² pull gain (capped) — a spacetime drag, not a hard collision
+const AURA_CAP = 6;
+/** Titan↔titan soft collision: they REPEL (no more silent pass-through) + flare on contact. */
+const TITAN_TOUCH_K = 3.0; // touch distance = TITAN_TOUCH_K · (sizeA + sizeB)
+const TITAN_CLASH_HEAT = 0.6; // entropy bump on contact → blazes the emissive + writhe
+
+/** Shared, never-disposed geometry for the writhing core (unit radius; per-titan mesh.scale). */
+const TITAN_CORE_GEO = new THREE.IcosahedronGeometry(1, CORE_DETAIL);
+
+/** Per-titan shader uniforms — ONE object reused by the body patch + cage + aura (drive once/frame). */
+interface TitanUniforms {
+  uTime: THREE.IUniform<number>;
+  uMenace: THREE.IUniform<number>;
+  uColor: THREE.IUniform<THREE.Color>;
+}
+function makeTitanUniforms(): TitanUniforms {
+  return { uTime: { value: 0 }, uMenace: { value: 0 }, uColor: { value: new THREE.Color() } };
+}
+
+/**
+ * Build the 4D unit-tesseract edge geometry: a `pos4` (vec4) attribute carrying each corner's 4D
+ * coordinate, plus a rest `position` (xyz) for sane bounds. 16 corners (±1)⁴, 32 edges (corners that
+ * differ in exactly one axis). The cage material rotates pos4 in 4D each frame and projects to 3D —
+ * a genuine hypercube shadow, not a faked wireframe. Built once at module load (CPU only, headless-safe).
+ */
+function buildTesseractGeo(): THREE.BufferGeometry {
+  const corner = (m: number, c: number): number => ((m >> c) & 1 ? 1 : -1);
+  const pos4: number[] = [];
+  const pos3: number[] = [];
+  for (let a = 0; a < 16; a++) {
+    for (let b = a + 1; b < 16; b++) {
+      let diff = 0;
+      for (let c = 0; c < 4; c++) if (corner(a, c) !== corner(b, c)) diff++;
+      if (diff !== 1) continue; // an edge connects corners one flip apart
+      for (let e = 0; e < 2; e++) {
+        const m = e === 0 ? a : b;
+        const x = corner(m, 0);
+        const y = corner(m, 1);
+        const z = corner(m, 2);
+        const w = corner(m, 3);
+        pos4.push(x, y, z, w);
+        pos3.push(x, y, z);
+      }
+    }
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos3, 3));
+  g.setAttribute('pos4', new THREE.Float32BufferAttribute(pos4, 4));
+  return g;
+}
+const TITAN_TESSERACT_GEO = buildTesseractGeo();
+
+/**
+ * Patch a titan body/accent {@link THREE.MeshStandardMaterial} into ominous freak-geometry — mirrors
+ * the super-body `patchGodJewel` idiom (onBeforeCompile + #include replacement) so real scene lights
+ * still carve the surface. VERTEX: a 4D rotor writhe (treat the surface as a 3-slice of a rotating 4D
+ * solid) + Mandelbulb-flavoured fBm relief, amplitude scaling with `uMenace`. FRAGMENT: thin-film
+ * iridescence + Fresnel rim + a HOT inner void-glow (values >1 — ACES rolls them off, so it blazes
+ * without bloom). All titan materials share ONE program (constant cache key) since the GLSL is identical.
+ */
+function patchTitanBody(mat: THREE.MeshStandardMaterial, u: TitanUniforms): void {
+  mat.onBeforeCompile = (shader) => {
+    shader.uniforms['uTime'] = u.uTime;
+    shader.uniforms['uMenace'] = u.uMenace;
+    shader.uniforms['uColor'] = u.uColor;
+    shader.vertexShader = shader.vertexShader
+      .replace(
+        '#include <common>',
+        `#include <common>
+        varying vec3 vObjP; uniform float uTime; uniform float uMenace;
+        vec3 hyperWrithe(vec3 p){
+          float w = sin(length(p) * 1.3 - uTime * 0.7);     // synthesize a 4th coordinate
+          float a = uTime * 0.5, b = uTime * 0.37;
+          float x = p.x * cos(a) + w * sin(a);
+          float ww = -p.x * sin(a) + w * cos(a);
+          float z = p.z * cos(b) + ww * sin(b);
+          float proj = 1.7 / (1.7 - ww * 0.45);              // 4D -> 3D perspective project
+          return vec3(x, p.y, z) * proj;
+        }`,
+      )
+      .replace(
+        '#include <begin_vertex>',
+        `#include <begin_vertex>
+        vObjP = position;
+        float amp = 0.10 + 0.50 * uMenace;                   // warring titans writhe harder
+        vec3 hp = hyperWrithe(normalize(position)) * length(position);
+        transformed = mix(position, hp, amp);
+        transformed += normal * amp * 0.5 * sin(position.x * 2.7 + uTime) * sin(position.z * 2.3 - uTime);`,
+      );
+    shader.fragmentShader = shader.fragmentShader
+      .replace(
+        '#include <common>',
+        `#include <common>
+        varying vec3 vObjP; uniform float uTime; uniform float uMenace; uniform vec3 uColor;
+        float h31(vec3 p){return fract(sin(dot(p, vec3(27.17, 61.31, 11.71))) * 43758.5453);}
+        float n31(vec3 p){vec3 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);
+          return mix(mix(mix(h31(i),h31(i+vec3(1,0,0)),f.x),mix(h31(i+vec3(0,1,0)),h31(i+vec3(1,1,0)),f.x),f.y),
+                     mix(mix(h31(i+vec3(0,0,1)),h31(i+vec3(1,0,1)),f.x),mix(h31(i+vec3(0,1,1)),h31(i+vec3(1,1,1)),f.x),f.y),f.z);}
+        float fbm3(vec3 p){float a=.5,s=0.;for(int k=0;k<5;k++){s+=a*n31(p);p=p*2.03+7.1;a*=.5;}return s;}`,
+      )
+      .replace(
+        '#include <roughnessmap_fragment>',
+        `#include <roughnessmap_fragment>
+        float rq = fbm3(vObjP * 2.6 + uTime * 0.05);
+        roughnessFactor = clamp(mix(0.45, 0.05, smoothstep(0.4, 0.9, rq)), 0.04, 1.0);`,
+      )
+      .replace(
+        '#include <emissivemap_fragment>',
+        `#include <emissivemap_fragment>
+        float relief = fbm3(vObjP * 6.5);
+        float fres = pow(1.0 - max(dot(normalize(vViewPosition), normalize(normal)), 0.0), 3.0);
+        float band = relief * 6.2831 + fres * 9.0 + uTime * 0.5;
+        vec3 iris = 0.5 + 0.5 * cos(vec3(0.0, 2.094, 4.188) + band);  // thin-film hue cycle
+        vec3 voidGlow = uColor * (0.4 + 3.0 * uMenace);               // HOT (>1) — ACES rolls it off
+        totalEmissiveRadiance += voidGlow * pow(1.0 - fres, 3.0) * (0.3 + 0.7 * relief)
+                               + iris * fres * (0.6 + 1.2 * uMenace);`,
+      );
+  };
+  mat.customProgramCacheKey = () => 'titanBodyV67';
+}
+
+/** The 4D tesseract cage — additive {@link THREE.LineSegments} that rotates pos4 in 4D + projects. */
+function buildCageMaterial(u: TitanUniforms): THREE.ShaderMaterial {
+  return new THREE.ShaderMaterial({
+    uniforms: u as unknown as Record<string, THREE.IUniform>,
+    transparent: true,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+    vertexShader: `
+      attribute vec4 pos4;
+      uniform float uTime;
+      varying float vW;
+      void main() {
+        float a = uTime * 0.4, b = uTime * 0.27;
+        vec4 q = pos4;
+        float x = q.x * cos(a) - q.w * sin(a);
+        float w1 = q.x * sin(a) + q.w * cos(a);
+        float z = q.z * cos(b) - w1 * sin(b);
+        float w2 = q.z * sin(b) + w1 * cos(b);
+        float proj = 1.9 / (2.4 - w2);          // 4D -> 3D perspective
+        vW = w2;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(vec3(x, q.y, z) * proj, 1.0);
+      }
+    `,
+    fragmentShader: `
+      uniform vec3 uColor;
+      uniform float uMenace;
+      varying float vW;
+      void main() {
+        float glow = 0.45 + 0.55 * (vW * 0.5 + 0.5);
+        gl_FragColor = vec4(uColor * (0.5 + 1.5 * uMenace) * glow, 0.8);
+      }
+    `,
+  });
+}
+
+/** The ominous Fresnel aura shell — back-side additive halo that reads as light without postfx. */
+function buildAuraMaterial(u: TitanUniforms): THREE.ShaderMaterial {
+  return new THREE.ShaderMaterial({
+    uniforms: u as unknown as Record<string, THREE.IUniform>,
+    transparent: true,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+    side: THREE.BackSide,
+    vertexShader: `
+      varying vec3 vN; varying vec3 vV;
+      void main() {
+        vN = normalize(normalMatrix * normal);
+        vec4 mv = modelViewMatrix * vec4(position, 1.0);
+        vV = -mv.xyz;
+        gl_Position = projectionMatrix * mv;
+      }
+    `,
+    fragmentShader: `
+      uniform vec3 uColor; uniform float uMenace; uniform float uTime;
+      varying vec3 vN; varying vec3 vV;
+      void main() {
+        float rim = pow(1.0 - max(dot(normalize(vV), normalize(vN)), 0.0), 2.2);
+        float pulse = 0.7 + 0.3 * sin(uTime * 1.7);
+        gl_FragColor = vec4(uColor * (0.5 + 1.6 * uMenace) * rim * pulse, rim * (0.35 + 0.5 * uMenace));
+      }
+    `,
+  });
+}
+
 /** Pair index tables: pair p ⇔ (PAIR_A[p], PAIR_B[p]), i < j, row-major enumeration. */
 const PAIR_A = new Uint8Array(PAIR_COUNT);
 const PAIR_B = new Uint8Array(PAIR_COUNT);
@@ -219,6 +410,8 @@ interface Titan {
   /** Index into {@link STRATEGIES}. */
   strategy: number;
   warCount: number;
+  /** V67: shader uniforms shared by the body patch + cage + aura (driven once per frame). */
+  tu: TitanUniforms;
 }
 
 /** Derive a pair relation from the recent-window defection counts. O(1). */
@@ -392,6 +585,11 @@ export class TitanSystem {
         if (this.singularity.bodyForce(p.x, p.y, p.z, dt, HOLE_F)) ti.vel.add(HOLE_F);
       }
     }
+    // V67: the colossi now MATTER to the world — they soft-collide with each other (no more silent
+    // pass-through; contact clashes + blazes) and drag/stain the organisms drifting through their aura
+    // (no more passing through "like nothing"). Both are pure vector/colour math, no rng.
+    this.titanClash();
+    this.applyAura(dt);
     const econPh = frame % ECON_PERIOD;
     if (econPh % ECON_STAGGER === 0) {
       const k = econPh / ECON_STAGGER;
@@ -434,9 +632,34 @@ export class TitanSystem {
       metalness: 0.4,
       roughness: 0.4,
     });
+    // V67: per-titan shader uniforms + the freak-geometry patch on BOTH materials, so the silhouette
+    // parts writhe + blaze ominously (driven by uMenace) instead of reading as dull toys.
+    const tu = makeTitanUniforms();
+    tu.uColor.value.setHSL(hue, 0.85, 0.5);
+    patchTitanBody(bodyMat, tu);
+    patchTitanBody(accentMat, tu);
     this.buildSilhouette(i, size, rig, limbSpin, bodyMat, accentMat);
     limbSpin.position.y = 7 * size;
     rig.add(limbSpin);
+
+    // V67: the WRITHING FRACTAL CORE — a high-detail icosahedron driven by the 4D-writhe shader; the
+    // ominous centrepiece that de-toys the silhouette. A 4D TESSERACT CAGE (additive, rotates in 4D
+    // and projects to 3D — a real hypercube shadow) envelops it, and a Fresnel AURA shell halos it.
+    const core = new THREE.Mesh(TITAN_CORE_GEO, bodyMat);
+    core.scale.setScalar(3.4 * size);
+    core.position.y = 7 * size;
+    core.frustumCulled = false;
+    rig.add(core);
+    const cage = new THREE.LineSegments(TITAN_TESSERACT_GEO, buildCageMaterial(tu));
+    cage.scale.setScalar(6.4 * size);
+    cage.position.y = 7 * size;
+    cage.frustumCulled = false;
+    rig.add(cage);
+    const aura = new THREE.Mesh(TITAN_CORE_GEO, buildAuraMaterial(tu));
+    aura.scale.setScalar(5.2 * size);
+    aura.position.y = 7 * size;
+    aura.frustumCulled = false;
+    rig.add(aura);
     group.add(rig);
 
     // One PointLight per titan, decay 0 per the V3.3 contract (see TITAN_LIGHT_GAIN note).
@@ -480,6 +703,7 @@ export class TitanSystem {
       entropy: rng() * 10,
       strategy: Math.floor(rng() * STRATEGIES.length),
       warCount: 0,
+      tu,
     };
   }
 
@@ -621,6 +845,80 @@ export class TitanSystem {
     ti.bodyMat.emissive.setHSL(warHot ? 0.015 : ti.hue, 0.75, 0.09 + 0.04 * flick);
     const entropyN = ti.entropy / ENTROPY_WASTE_THRESHOLD;
     ti.bodyMat.emissiveIntensity = 0.7 + 1.1 * (entropyN > 1 ? 1 : entropyN);
+    // V67: drive the freak-geometry shaders — uTime advances the 4D writhe / tesseract cage / aura,
+    // and uMenace (war + clash-heat entropy) makes warring + colliding titans writhe + blaze hardest.
+    ti.tu.uTime.value = t;
+    ti.tu.uColor.value.setHSL(warHot ? 0.015 : ti.hue, 0.85, 0.5);
+    ti.tu.uMenace.value = Math.min(1, 0.18 * ti.warCount + 0.7 * (entropyN > 1 ? 1 : entropyN));
+  }
+
+  /**
+   * V67 AURA: organisms drifting within {@link AURA_R} of a colossus are DRAGGED into its spacetime
+   * well (an r⁻² pull, capped at {@link AURA_CAP}) + caught in a tangential wake, and HUE-STAINED
+   * toward the titan's freak-geometry colour — so they no longer pass through it "like nothing". The
+   * scan is strided (each organism visited every 3rd frame) to bound the O(n·titans) cost at the mega
+   * tier. Pure vector + colour math, NO rng (determinism-neutral). O(n/3 · titans) with an early-out.
+   */
+  private applyAura(dt: number): void {
+    const list = this.entities.list;
+    const n = list.length;
+    if (n === 0) return;
+    const titans = this.titans;
+    for (let idx = this.ctx.state.frame % 3; idx < n; idx += 3) {
+      const e = list[idx];
+      if (!e) continue;
+      const ep = e.position;
+      const v = e.userData.vel;
+      for (let k = 0; k < titans.length; k++) {
+        const tk = titans[k];
+        if (!tk) continue;
+        const tp = tk.group.position;
+        const dx = tp.x - ep.x;
+        const dy = tp.y - ep.y;
+        const dz = tp.z - ep.z;
+        const r2 = dx * dx + dy * dy + dz * dz;
+        if (r2 > AURA_R2 || r2 < 1e-3) continue;
+        const r = Math.sqrt(r2);
+        const inv = (Math.min(AURA_G / r2, AURA_CAP) * dt) / r; // capped r⁻² pull → unit·accel·dt
+        v.x += dx * inv - dz * inv * 0.4; // radial drag + a tangential swirl (the colossus's wake)
+        v.y += dy * inv * 0.5;
+        v.z += dz * inv + dx * inv * 0.4;
+        e.material.color.lerp(tk.tu.uColor.value, 0.02 * (1 - r / AURA_R)); // ontological hue-stain
+      }
+    }
+  }
+
+  /**
+   * V67 CLASH: titans no longer silently overlap. Every frame the 45 pairs are distance-checked
+   * (cheap); when two come within {@link TITAN_TOUCH_K}·(sizeA+sizeB) they SOFT-REPEL apart and the
+   * contact spikes both titans' entropy by {@link TITAN_CLASH_HEAT}·overlap — which drives uMenace, so
+   * the colliding colossi visibly WRITHE + BLAZE (the freak-geometry light show). No rng; O(45).
+   */
+  private titanClash(): void {
+    const titans = this.titans;
+    for (let pi = 0; pi < PAIR_COUNT; pi++) {
+      const a = titans[PAIR_A[pi] ?? 0];
+      const b = titans[PAIR_B[pi] ?? 0];
+      if (!a || !b) continue;
+      const ap = a.group.position;
+      const bp = b.group.position;
+      const dx = ap.x - bp.x;
+      const dy = ap.y - bp.y;
+      const dz = ap.z - bp.z;
+      const r2 = dx * dx + dy * dy + dz * dz;
+      const touch = TITAN_TOUCH_K * (a.size + b.size);
+      if (r2 >= touch * touch || r2 < 1e-3) continue;
+      const r = Math.sqrt(r2);
+      const overlap = (touch - r) / touch; // 0..1
+      const inv = (overlap * 0.06) / r;
+      a.vel.x += dx * inv;
+      a.vel.z += dz * inv;
+      b.vel.x -= dx * inv;
+      b.vel.z -= dz * inv;
+      const heat = TITAN_CLASH_HEAT * overlap;
+      a.entropy = Math.min(RESOURCE_CAP, a.entropy + heat);
+      b.entropy = Math.min(RESOURCE_CAP, b.entropy + heat);
+    }
   }
 
   /**
