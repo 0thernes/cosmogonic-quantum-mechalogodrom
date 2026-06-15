@@ -28,6 +28,25 @@ behind the full gate (`bun run check`) and a commit.
 
 ## Board
 
+### 🚧 V69–V75 NEURAL-BOX + QUANTUM MIND + HUD POLISH (current — 2026-06-15)
+
+**Done**
+
+- 🟧 P1 `V70-TITANS-4D` — titans reborn as ominous 4D freak-geometry (tesseract cage + aura field that warps world physics) — _fb512a2_
+- 🟧 P1 `V72–V74-LAUNCHER` — nav launcher wears its named tabs in one centred dock row; the V73 dock float reverted; Sorting Fields clears the bottom dock band — _4de3b66 · ba5137c · cefbdf2_
+- 🟧 P1 `V75-SONG-MUSIC` — the song readout moves from the telemetry listing into the bottom-right Music/SFX box; the Sorting-Fields box gains a live swap-variance sparkline — _27da6de_
+- 🟧 P1 `V75-NEURAL-BOX` — the Super Neural observatory folds into the Super Creature box (no 2nd window): 4 tabs (WORLD · COGNITION · QUANTUM · BRAIN) × 27 live 3D/temporal readouts + a rotating organ connectome; quantum tab seeded by ported Eshkol/QGTL primitives (amplitude-encode · Grover diffusion · QFT spectrum); verified live, all tabs paint — _10fea9b_
+
+**In Progress**
+
+- 🟧 P1 `V75-QUBIT-MIND` — the Super Creature's real simulated-qubit mind (`sim/super-qubits.ts`) ported from the Eshkol + Tsotchke quantum repos, wired into the composite mind (`quantum.ts` / `super-mind.ts`)
+- 🟧 P1 `HUD-LAYOUT` — Simulation-Settings box bigger/clearer; centred Controls in the bottom-right corner; reactive / responsive / no-overlap wireframing
+
+**Next**
+
+- 🟨 P2 `DOCS-SWEEP` — bring README (✓) · CHANGELOG (✓) · this KANBAN (✓) · ARCHITECTURE · ERM/ERD/ERP · audits/memory current to V75
+- 🟨 P2 `PUBLISH` — full gate green, then push the complete update to GitHub (live + public)
+
 ### ✅ Done — V62–V68 CHAOS · LEVELING · TITANS + Ultracode inspection (2026-06-15)
 
 - 🟥 P0 `V62-CHAOS-MODE` — CHAOS MODE: a toggled Lorenz quantum storm (tunnelling/entanglement/superposition) that disturbs weather, the economy + the sorting fields; own rng sub-stream, off ⇒ byte-identical. Independently validated PASS — _bdb9ddd · [validation](./audit-2026-06-15/CHAOS-MODE-V62-VALIDATION.md)_
