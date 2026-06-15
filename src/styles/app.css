@@ -585,10 +585,12 @@ a:focus-visible {
 #ui > #alg {
   position: fixed;
   right: 2px;
-  bottom: 88px; /* bottom-RIGHT, stacked clear above the ~79px View/Speed/Render box — grouped with it
-                   beside the right end of the menu bars. Persistent layout has zero overlaps. */
+  /* V75: the Simulation-Settings box (#hud-vsr) grew taller when Song moved into it + the text was
+     enlarged for readability (~132px now), so the sorting-field readout stacks clear ABOVE it with a
+     gap — zero overlap, the two boxes read as one tidy bottom-right column that reflows on resize. */
+  bottom: 160px;
   z-index: 20;
-  max-width: clamp(115px, 26vw, 185px);
+  max-width: clamp(125px, 26vw, 195px);
   pointer-events: none;
 }
 /* Panels are flex shells so a viewport clamp squeezes the scrolling body. Each is

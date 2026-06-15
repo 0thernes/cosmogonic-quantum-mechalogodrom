@@ -1120,9 +1120,13 @@
          blocks clicks. Written every telemetry tick by ui/panels.ts. -->
     <div
       id="hud-vsr"
-      class="pointer-events-none fixed right-2 bottom-1.5 z-20 rounded-panel border border-cyan-300/15 bg-void/90 px-2.5 py-1.5 font-ui text-4xs tracking-widest text-cyan-300/80 uppercase backdrop-blur-md"
-      aria-label="View, speed and render mode"
+      class="pointer-events-none fixed right-2 bottom-1.5 z-20 rounded-panel border border-cyan-300/15 bg-void/90 px-3 py-2 font-ui text-3xs tracking-widest text-cyan-300/80 uppercase backdrop-blur-md"
+      aria-label="Simulation settings — view, speed, render, audio"
     >
+      <!-- V75: a small header so the readout reads as an organized 'Simulation Settings' card. -->
+      <div class="mb-1 border-b border-cyan-300/15 pb-0.5 text-3xs font-semibold text-cyan-200/70">
+        SIM · SETTINGS
+      </div>
       <div class="flex items-baseline justify-between gap-3">
         <span class="text-slate-400">View</span>
         <span id="hud-view" class="font-mono text-cyan-100 normal-case tabular-nums">free</span>
