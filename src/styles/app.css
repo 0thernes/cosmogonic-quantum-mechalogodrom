@@ -485,6 +485,15 @@ a:focus-visible {
   padding-bottom: calc(5px + env(safe-area-inset-bottom, 0px));
 }
 
+/* V74: the old #cqm-dock (panel-dock.ts) is SUPERSEDED by the always-on #cqm-hud-nav launcher — its
+   panel toggles are still mounted there as hidden click-targets the nav drives, but the bar itself must
+   never show. center-hud.ts also hides it, but that style is injected late (end of boot); hiding it HERE
+   in app.css (loaded before any JS) kills the boot/HMR flash where #cqm-dock briefly rendered the
+   Docs/Spec/Lab links above the launcher before center-hud re-homed them ("floating above the bubbles"). */
+#cqm-dock {
+  display: none !important;
+}
+
 /* ════════════════════════════════════════════════════════════════
    RESPONSIVE PANEL SYSTEM (CONTRACTS V3.4)
    One overlay grid, four device grammars:
