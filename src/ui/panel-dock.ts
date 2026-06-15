@@ -12,15 +12,19 @@
 const DOCK_ID = 'cqm-dock';
 
 const STYLE = `
-/* V39: centered and stacked DIRECTLY ABOVE the bottom toolbar (#bar, ~46px tall) — no overlap with it
-   or the corner readouts. bottom:50 clears #bar's top; the panels it opens sit above the dock again. */
-#${DOCK_ID}{position:fixed;left:50%;transform:translateX(-50%);bottom:68px;z-index:60;display:flex;
-  align-items:center;gap:6px;flex-wrap:wrap;justify-content:center;max-width:calc(100vw - 20px);
-  padding:5px 9px;border-radius:24px;border:1px solid rgba(120,150,210,.24);background:rgba(8,11,20,.7);
+/* V71: ONE long, centered, SINGLE-ROW menu bar above the toolbar (#bar) — no more 2-row wrap that
+   made it lopsided + ate vertical space. nowrap keeps it a tidy single line (it fits ~10 named
+   controls on any normal width); if a narrow window can't hold it, it scrolls horizontally instead of
+   wrapping. justify-content:center keeps the whole row — toggles AND the Docs/Spec/Lab links —
+   centered as one balanced group (fixes "DOCS SPEC LAB not centered"). */
+#${DOCK_ID}{position:fixed;left:50%;transform:translateX(-50%);bottom:62px;z-index:60;display:flex;
+  align-items:center;gap:5px;flex-wrap:nowrap;justify-content:center;max-width:calc(100vw - 16px);
+  overflow-x:auto;overflow-y:hidden;scrollbar-width:thin;
+  padding:4px 9px;border-radius:24px;border:1px solid rgba(120,150,210,.24);background:rgba(8,11,20,.7);
   backdrop-filter:blur(10px);box-shadow:0 4px 22px rgba(0,0,0,.55)}
 /* Neutralise each child's own fixed positioning so the flex bar lays them out (styling is preserved). */
-#${DOCK_ID} > button,#${DOCK_ID} > a{position:static!important;inset:auto!important;margin:0!important}
-#${DOCK_ID} > a{order:10} /* push the Docs/Spec nav links to the end of the bar */
+#${DOCK_ID} > button,#${DOCK_ID} > a{position:static!important;inset:auto!important;margin:0!important;flex:0 0 auto}
+#${DOCK_ID} > a{order:10} /* keep the Docs/Spec/Lab nav links grouped after the panel toggles (one row) */
 /* V53 mobile: on small/portrait/touch viewports the 10 toggles wrapped to ~6 rows (~323px tall) and
    ate ~40% of the screen — and the pop-up panels opened INSIDE that band. Make the dock a single
    COMPACT horizontally-scrollable row (a standard mobile tab-bar), so it stays ~52px and the panels

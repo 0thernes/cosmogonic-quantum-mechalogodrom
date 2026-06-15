@@ -313,6 +313,17 @@ export interface TelemetrySnapshot {
    * observatory conflict page and the telemetry sentience readout.
    */
   sentience: number;
+  /**
+   * V71: the three MEASURABLE dimensions that the composite {@link sentience} blends, each 0..1 —
+   * surfaced as their own observatory dials so the biome's "aliveness" is readable, not a single
+   * black-box number. Grounded in the science of collective/integrated cognition:
+   * - {@link bioIntegration}: community structure (tribes) → integrated information (IIT proxy).
+   * - {@link bioCoherence}: quantum-register entropy → global coherence / criticality.
+   * - {@link bioMomentum}: demographic slope magnitude (|trend|) → autopoietic self-maintenance.
+   */
+  bioIntegration: number;
+  bioCoherence: number;
+  bioMomentum: number;
   /** Live count of registered NHI super-minds (telemetry tally). */
   nhi: number;
   /** Current camera view-mode name (HUD View/Speed/Render box). */

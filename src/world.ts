@@ -588,6 +588,9 @@ export class World {
       warMatrix: this.titans.warMatrix,
       rdEnergy: 0,
       sentience: 0,
+      bioIntegration: 0,
+      bioCoherence: 0,
+      bioMomentum: 0,
       nhi: 0,
       viewName: cyc(VIEW_MODES, this.state.viewIdx),
       timeScale: this.state.timeScale,
@@ -1588,14 +1591,17 @@ export class World {
     // V3: phylumCounts/titanLedger/warMatrix are LIVE reused views installed at
     // boot — only the scalar needs refreshing here.
     sn.rdEnergy = this.rdEnergy;
-    // Biome sentience index (V4.5): community structure × quantum coherence ×
-    // demographic momentum, normalized 0..1. The cosmos rating its own aliveness.
-    sn.sentience = clamp(
-      ((sn.tribes / 256) * (0.5 + sn.qEntropy) * (0.5 + Math.min(Math.abs(sn.trend) / 50, 1))) /
-        1.5,
-      0,
-      1,
-    );
+    // Biome sentience index (V4.5; V71 decomposed): the cosmos rating its own aliveness as a blend
+    // of three MEASURABLE dimensions, now each exposed for its own observatory dial. The composite
+    // formula is byte-identical to before (integration = tribes/256, coherence = qEntropy, momentum =
+    // min(|trend|/50,1)), so the golden sentience value is unchanged — we just surface the factors.
+    const bioIntegration = clamp(sn.tribes / 256, 0, 1); // community structure → integrated information
+    const bioCoherence = clamp(sn.qEntropy, 0, 1); // quantum-register entropy → global coherence
+    const bioMomentum = clamp(Math.abs(sn.trend) / 50, 0, 1); // demographic slope → self-maintenance
+    sn.bioIntegration = bioIntegration;
+    sn.bioCoherence = bioCoherence;
+    sn.bioMomentum = bioMomentum;
+    sn.sentience = clamp((bioIntegration * (0.5 + bioCoherence) * (0.5 + bioMomentum)) / 1.5, 0, 1);
     this.hud.setLore(sn.lore); // O(1) no-op when unchanged
     return sn;
   }

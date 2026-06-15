@@ -113,6 +113,10 @@ export interface ObservatorySnapshot {
   links?: number;
   /** Biome sentience index 0..1 for the page-3 gauge (V4.3). Missing → 0. */
   sentience?: number;
+  /** V71: the three measurable dimensions of {@link sentience} (0..1), drawn as sub-bars. */
+  bioIntegration?: number;
+  bioCoherence?: number;
+  bioMomentum?: number;
 }
 
 /**
@@ -600,6 +604,10 @@ export class Observatory {
   private readonly warCountsScratch = new Float32Array(3);
   /** Latest biome sentience index 0..1 (page-3 gauge). */
   private sentienceLatest = 0;
+  /** V71: the three measurable sentience dimensions (0..1) shown as sub-dials under the gauge. */
+  private bioIntLatest = 0;
+  private bioCohLatest = 0;
+  private bioMomLatest = 0;
 
   /** Backing-store size of the canvas most recently prepped (avoids a return-object alloc). */
   private pw = 0;
@@ -768,9 +776,13 @@ export class Observatory {
     this.fluxRing.pushColumn(this.fluxScratch);
     this.lastPopulation = population;
 
-    // Page 3: sentience gauge scalar (clamped to 0..1).
-    const sen = snapshot.sentience ?? 0;
-    this.sentienceLatest = Number.isFinite(sen) ? (sen < 0 ? 0 : sen > 1 ? 1 : sen) : 0;
+    // Page 3: sentience gauge scalar + its three measurable dimensions (each clamped to 0..1).
+    const cl01 = (n: number | undefined): number =>
+      typeof n === 'number' && Number.isFinite(n) ? (n < 0 ? 0 : n > 1 ? 1 : n) : 0;
+    this.sentienceLatest = cl01(snapshot.sentience);
+    this.bioIntLatest = cl01(snapshot.bioIntegration);
+    this.bioCohLatest = cl01(snapshot.bioCoherence);
+    this.bioMomLatest = cl01(snapshot.bioMomentum);
 
     // V5.1 seed: replay the FIRST real sample once so every ≥2-column chart is non-blank from
     // boot. The replay re-enters with `primed` set, so it appends a second identical column and
@@ -2173,8 +2185,9 @@ export class Observatory {
     const h = this.ph;
     const top = TITLE_BAND;
     const cx = w * 0.5;
-    const cy = top + (h - top) * 0.56;
-    const radius = Math.min(w, h - top) * 0.38;
+    // V71: dial raised + shrunk to free the lower ~40% for the three dimension bars.
+    const cy = top + (h - top) * 0.36;
+    const radius = Math.min(w, h - top) * 0.27;
     const start = Math.PI * 0.75;
     const sweep = Math.PI * 1.5; // 270° dial
     const v = this.sentienceLatest;
@@ -2228,6 +2241,41 @@ export class Observatory {
     x.textBaseline = 'middle';
     x.fillText(`${Math.round(v * 100)}%`, cx, cy);
     x.textBaseline = 'alphabetic';
+    x.textAlign = 'start';
+    // V71: the three MEASURABLE dimensions the composite blends (label · bar · %), so the biome's
+    // aliveness is readable, not one black-box number — INTEGRATION (community structure → integrated
+    // information), COHERENCE (quantum entropy → criticality), MOMENTUM (demographic slope → autopoiesis).
+    const dims: ReadonlyArray<readonly [string, number]> = [
+      ['INTEGRATION', this.bioIntLatest],
+      ['COHERENCE', this.bioCohLatest],
+      ['MOMENTUM', this.bioMomLatest],
+    ];
+    const bx = w * 0.1;
+    const bw = w * 0.8;
+    const barH = Math.max(4, (h - top) * 0.04);
+    const zoneTop = cy + radius + lw * 1.2;
+    const rowGap = (h - 6 - zoneTop) / dims.length;
+    x.font = '600 13px "JetBrains Mono", ui-monospace, monospace';
+    for (let i = 0; i < dims.length; i++) {
+      const d = dims[i];
+      if (!d || rowGap <= 0) continue;
+      const ry = zoneTop + rowGap * i + Math.max(12, rowGap * 0.45);
+      const col = d[1] >= 0.5 ? this.accent : this.warnColor;
+      x.globalAlpha = 0.9;
+      x.fillStyle = INK;
+      x.textAlign = 'left';
+      x.fillText(d[0], bx, ry - 3);
+      x.textAlign = 'right';
+      x.fillStyle = col;
+      x.fillText(`${Math.round(d[1] * 100)}%`, bx + bw, ry - 3);
+      x.globalAlpha = 0.3;
+      x.fillStyle = DIM;
+      x.fillRect(bx, ry, bw, barH);
+      x.globalAlpha = 1;
+      x.fillStyle = col;
+      x.fillRect(bx, ry, bw * d[1], barH);
+    }
+    x.globalAlpha = 1;
     x.textAlign = 'start';
     this.title(x, 'biome sentience', w);
   }
