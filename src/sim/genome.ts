@@ -106,7 +106,15 @@ export function mutate(g: Float32Array, rng: Rng, rate = 0.12, scale = 0.2): voi
   }
 }
 
-/** Breed two parents: crossover then mutate the child. Returns the child genome. */
+/**
+ * Breed two parents: crossover then mutate the child. Returns the child genome.
+ *
+ * RESERVED — not yet wired. `breed`/`crossover` are correct and unit-tested but currently imported
+ * nowhere in the live sim: organisms re-roll fresh genomes at spawn instead of inheriting. Wiring
+ * heredity into the spawn path is a deliberate, determinism-sensitive feature (it adds rng draws to
+ * the golden-pinned path), so it was not auto-applied. See ADR-0009 for the wire-vs-prune decision —
+ * do NOT delete these as "dead code" without reading it.
+ */
 export function breed(a: Float32Array, b: Float32Array, rng: Rng, rate?: number): Float32Array {
   const child = crossover(a, b, rng);
   mutate(child, rng, rate);
