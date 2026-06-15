@@ -1,10 +1,17 @@
 /**
- * Market Ticker (CONTRACTS V23) — a self-building panel that makes the economy INSPECTABLE: the live
- * AURUM/UMBRA market state in a scientific readout + a price/FX sparkline. UI shell only — it never
- * imports or mutates sim state; the world pushes a {@link MarketSummary} each Observatory cadence via
- * {@link update}. Surfaces every telemetry the UI section asks of the economy: dominant currency +
- * share, FX, commodity prices + arbitrage spread, wealth Gini, total wealth, agent count, cartel
- * share, sanctioned count, black-market volume, and the windfall-auction tally + last clearing price.
+ * Market Ticker (CONTRACTS V23; V71 three-section pass) — a self-building panel that makes the economy
+ * INSPECTABLE. The directive's note that "Market has a lot of room" is honoured: instead of one strip
+ * the panel now carries **three distinct, named data visuals, each with its own section + readout**:
+ *
+ *   1 PRICE FLOW    — a multi-series sparkline of AURUM/UMBRA FX + the QUANTA/ICHOR commodity prices
+ *                     over a rolling history, plus the dominant reserve money, FX, prices, arb spread.
+ *   2 WEALTH & POWER — labelled gauges for reserve dominance (AURUM vs UMBRA), cartel grip, and the
+ *                     wealth-Gini inequality, plus total wealth + agent count.
+ *   3 MARKET STRESS  — stress gauges for arbitrage, sanctions, black-market volume and live auctions.
+ *
+ * UI shell only — it never imports or mutates sim state; the world pushes a {@link MarketSummary} each
+ * Observatory cadence via {@link update}. The sparkline keeps a continuous history ring; the two gauge
+ * panels read the latest summary each beat. Every real telemetry the economy exposes is surfaced.
  */
 import type { MarketSummary } from '../sim/economy';
 import { CURRENCY_GLYPH, COMMODITY_GLYPH } from '../sim/economy';
@@ -18,20 +25,23 @@ const STYLE = `
   letter-spacing:.12em;cursor:pointer;backdrop-filter:blur(6px);box-shadow:0 2px 14px rgba(0,0,0,.5);transition:transform .15s,background .15s}
 #cqm-mkt-toggle:hover{transform:scale(1.06);background:rgba(40,28,8,.94)}
 #cqm-mkt-toggle:focus-visible{outline:2px solid #ffb648;outline-offset:2px}
-#cqm-mkt-panel{position:fixed;right:10px;bottom:128px;z-index:59;width:min(94vw,320px);display:none;flex-direction:column;
+/* V71: taller + a touch wider so the three sections each get room; the body scrolls. */
+#cqm-mkt-panel{position:fixed;right:10px;bottom:128px;z-index:59;width:min(94vw,360px);max-height:min(78vh,640px);display:none;flex-direction:column;
   border:1px solid rgba(255,196,90,.32);border-radius:12px;background:rgba(10,8,4,.95);backdrop-filter:blur(12px);
   box-shadow:0 10px 46px rgba(0,0,0,.65);font:11px/1.5 var(--font-mono,ui-monospace,monospace);color:#f0e2c8;overflow:hidden}
 #cqm-mkt-panel.open{display:flex}
-.cqm-mkt-head{display:flex;align-items:center;gap:8px;padding:7px 10px;border-bottom:1px solid rgba(255,196,90,.22);background:rgba(26,18,6,.75)}
+.cqm-mkt-head{display:flex;align-items:center;gap:8px;padding:7px 10px;border-bottom:1px solid rgba(255,196,90,.22);background:rgba(26,18,6,.75);flex:0 0 auto}
 .cqm-mkt-head b{font-size:11px;letter-spacing:.14em;color:#ffcf7a;white-space:nowrap}
 .cqm-mkt-x{margin-left:auto;background:rgba(8,6,2,.9);color:#ffd98a;border:1px solid rgba(255,196,90,.3);border-radius:5px;
   font:11px var(--font-mono,ui-monospace,monospace);padding:2px 7px;cursor:pointer}
 .cqm-mkt-x:focus-visible{outline:1px solid #ffb648}
-.cqm-mkt-spark{display:block;width:100%;height:auto;border-bottom:1px solid rgba(255,196,90,.14);flex:0 0 auto}
-/* V70: the rows SCROLL within the short HUD strip (nothing cut off) + lay out in TWO column-pairs so
-   the wide panel is used fully. */
-.cqm-mkt-rows{padding:7px 10px;display:grid;grid-template-columns:auto 1fr auto 1fr;gap:3px 14px;
-  flex:1 1 auto;min-height:0;overflow-y:auto;align-content:start}
+.cqm-mkt-body{flex:1 1 auto;min-height:0;overflow-y:auto}
+.cqm-mkt-sec{border-bottom:1px solid rgba(255,196,90,.14)}
+.cqm-mkt-secname{display:flex;align-items:center;gap:6px;padding:6px 10px 2px;font:600 9px var(--font-mono,ui-monospace,monospace);
+  letter-spacing:.16em;color:#ffc24a;text-transform:uppercase}
+.cqm-mkt-secname .sub{margin-left:auto;font-weight:400;letter-spacing:.04em;color:#b9a87f;text-transform:none;font-size:9px}
+.cqm-mkt-canvas{display:block;width:100%;height:auto;padding:2px 6px 4px}
+.cqm-mkt-rows{padding:2px 10px 8px;display:grid;grid-template-columns:auto 1fr auto 1fr;gap:3px 14px;align-content:start}
 .cqm-mkt-rows .k{color:#b9a87f;font-size:10px;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap}
 .cqm-mkt-rows .v{color:#fff2da;text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cqm-mkt-rows .hi{color:#ffd98a;font-weight:600}
@@ -45,7 +55,23 @@ const PAL = {
   umbra: '#9fb6dd',
   quanta: '#6bff9e',
   ichor: '#ff5cc8',
+  track: 'rgba(255,196,90,.12)',
+  warn: '#ff8a6b',
+  text: '#f0e2c8',
+  dim: '#b9a87f',
 };
+
+/** One labelled gauge bar spec for the WEALTH/STRESS sections. */
+interface Gauge {
+  label: string;
+  frac: number; // 0..1 fill
+  color: string;
+  text: string; // the exact value shown at the right
+}
+
+function clamp01(v: number): number {
+  return v < 0 ? 0 : v > 1 ? 1 : v;
+}
 
 /** One labelled readout row; returns the value `<span>` so {@link MarketTicker.update} can set it. */
 function row(grid: HTMLElement, key: string, doc: Document): HTMLElement {
@@ -63,15 +89,21 @@ function row(grid: HTMLElement, key: string, doc: Document): HTMLElement {
 /** Owns the self-mounted panel. Construct ONCE (world.ts); call {@link update} each cadence. */
 export class MarketTicker {
   private readonly panel: HTMLElement;
-  private readonly ctx: CanvasRenderingContext2D | null;
-  private readonly cv: HTMLCanvasElement;
   private readonly r: Record<string, HTMLElement> = {};
   private open = false;
+  // Section 1 — the rolling history ring for the sparkline.
   private readonly fxH = new Float32Array(HISTORY);
   private readonly pqH = new Float32Array(HISTORY);
   private readonly piH = new Float32Array(HISTORY);
   private head = 0;
   private len = 0;
+  // The three section canvases.
+  private readonly sparkCtx: CanvasRenderingContext2D | null;
+  private readonly sparkCv: HTMLCanvasElement;
+  private readonly wealthCtx: CanvasRenderingContext2D | null;
+  private readonly wealthCv: HTMLCanvasElement;
+  private readonly stressCtx: CanvasRenderingContext2D | null;
+  private readonly stressCv: HTMLCanvasElement;
   private dpr = Math.min(2, typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1);
 
   constructor(doc: Document = document) {
@@ -94,27 +126,45 @@ export class MarketTicker {
     panel.setAttribute('aria-label', 'Economy market ticker');
     panel.innerHTML =
       `<div class="cqm-mkt-head"><b>MARKET</b><button class="cqm-mkt-x" data-close aria-label="Close">✕</button></div>` +
-      `<canvas class="cqm-mkt-spark" data-spark></canvas><div class="cqm-mkt-rows" data-rows></div>`;
+      `<div class="cqm-mkt-body">` +
+      // Section 1 — PRICE FLOW
+      `<div class="cqm-mkt-sec"><div class="cqm-mkt-secname">① Price Flow<span class="sub">FX · commodities</span></div>` +
+      `<canvas class="cqm-mkt-canvas" data-spark></canvas><div class="cqm-mkt-rows" data-rows-flow></div></div>` +
+      // Section 2 — WEALTH & POWER
+      `<div class="cqm-mkt-sec"><div class="cqm-mkt-secname">② Wealth &amp; Power<span class="sub">dominance · inequality</span></div>` +
+      `<canvas class="cqm-mkt-canvas" data-wealth></canvas><div class="cqm-mkt-rows" data-rows-wealth></div></div>` +
+      // Section 3 — MARKET STRESS
+      `<div class="cqm-mkt-sec"><div class="cqm-mkt-secname">③ Market Stress<span class="sub">arbitrage · sanctions</span></div>` +
+      `<canvas class="cqm-mkt-canvas" data-stress></canvas><div class="cqm-mkt-rows" data-rows-stress></div></div>` +
+      `</div>`;
     doc.body.appendChild(panel);
     this.panel = panel;
-    this.cv = panel.querySelector('[data-spark]') as HTMLCanvasElement;
-    this.ctx = this.cv.getContext('2d');
+    this.sparkCv = panel.querySelector('[data-spark]') as HTMLCanvasElement;
+    this.sparkCtx = this.sparkCv.getContext('2d');
+    this.wealthCv = panel.querySelector('[data-wealth]') as HTMLCanvasElement;
+    this.wealthCtx = this.wealthCv.getContext('2d');
+    this.stressCv = panel.querySelector('[data-stress]') as HTMLCanvasElement;
+    this.stressCtx = this.stressCv.getContext('2d');
     (panel.querySelector('[data-close]') as HTMLElement).addEventListener('click', () =>
       this.setOpen(false),
     );
 
-    const grid = panel.querySelector('[data-rows]') as HTMLElement;
-    this.r.dominant = row(grid, 'Reserve money', doc);
-    this.r.fx = row(grid, '☉/☾ FX', doc);
-    this.r.prices = row(grid, '◇ / ❖ price', doc);
-    this.r.arb = row(grid, 'Arb spread', doc);
-    this.r.gini = row(grid, 'Wealth Gini', doc);
-    this.r.wealth = row(grid, 'Total wealth', doc);
-    this.r.agents = row(grid, 'Agents', doc);
-    this.r.cartel = row(grid, 'Cartel share', doc);
-    this.r.sanctioned = row(grid, 'Sanctioned', doc);
-    this.r.black = row(grid, 'Black market', doc);
-    this.r.auctions = row(grid, 'Auctions', doc);
+    const flow = panel.querySelector('[data-rows-flow]') as HTMLElement;
+    this.r.dominant = row(flow, 'Reserve money', doc);
+    this.r.fx = row(flow, '☉/☾ FX', doc);
+    this.r.prices = row(flow, '◇ / ❖ price', doc);
+    this.r.arb = row(flow, 'Arb spread', doc);
+
+    const wealth = panel.querySelector('[data-rows-wealth]') as HTMLElement;
+    this.r.wealth = row(wealth, 'Total wealth', doc);
+    this.r.agents = row(wealth, 'Agents', doc);
+    this.r.gini = row(wealth, 'Wealth Gini', doc);
+    this.r.cartel = row(wealth, 'Cartel share', doc);
+
+    const stress = panel.querySelector('[data-rows-stress]') as HTMLElement;
+    this.r.sanctioned = row(stress, 'Sanctioned', doc);
+    this.r.black = row(stress, 'Black market', doc);
+    this.r.auctions = row(stress, 'Auctions', doc);
   }
 
   /** Whether the panel is open (the world can skip pushing summaries when closed). */
@@ -129,7 +179,7 @@ export class MarketTicker {
 
   /**
    * Record the latest market state into the sparkline ring (always, so history is continuous) and,
-   * when open, repaint the readout + sparkline. Pure presentation; O(HISTORY) draw. Null-safe text.
+   * when open, repaint the three sections + readouts. Pure presentation; O(HISTORY) draw. Null-safe.
    */
   update(s: MarketSummary): void {
     this.fxH[this.head] = s.fx;
@@ -139,6 +189,7 @@ export class MarketTicker {
     if (this.len < HISTORY) this.len++;
     if (!this.open) return;
 
+    // ── Section 1 readouts ──
     const dom = s.dominant;
     const domGlyph = CURRENCY_GLYPH[dom];
     this.r.dominant!.textContent = `${dom} ${domGlyph} ${(s.aurumShare * 100).toFixed(0)}%/${((1 - s.aurumShare) * 100).toFixed(0)}%`;
@@ -146,10 +197,12 @@ export class MarketTicker {
     this.r.fx!.textContent = s.fx.toFixed(3);
     this.r.prices!.textContent = `${COMMODITY_GLYPH.QUANTA}${s.pQuanta.toFixed(2)} / ${COMMODITY_GLYPH.ICHOR}${s.pIchor.toFixed(2)}`;
     this.r.arb!.textContent = `${(s.arbSpread * 100).toFixed(1)}%`;
-    this.r.gini!.textContent = s.gini.toFixed(3);
+    // ── Section 2 readouts ──
     this.r.wealth!.textContent = fmt(s.totalWealth);
     this.r.agents!.textContent = String(s.agents);
+    this.r.gini!.textContent = s.gini.toFixed(3);
     this.r.cartel!.textContent = `${(s.cartelShare * 100).toFixed(1)}%`;
+    // ── Section 3 readouts ──
     this.r.sanctioned!.textContent = String(s.sanctioned);
     this.r.sanctioned!.className = s.sanctioned > 0 ? 'v warn' : 'v';
     this.r.black!.textContent = s.blackVolume > 0 ? fmt(s.blackVolume) : '—';
@@ -158,21 +211,18 @@ export class MarketTicker {
       s.auctions > 0
         ? `${s.auctions} · ${s.lastAuctionCommodity ?? ''}${COMMODITY_GLYPH[s.lastAuctionCommodity ?? 'QUANTA']} @${s.lastAuctionPrice.toFixed(1)}`
         : '0';
+
     this.drawSpark();
+    this.drawWealth(s);
+    this.drawStress(s);
   }
 
-  /** Sparkline of FX (amber) + QUANTA (green) + ICHOR (magenta) over the history ring. */
+  /** Section 1: sparkline of FX (amber) + QUANTA (green) + ICHOR (magenta) over the history ring. */
   private drawSpark(): void {
-    const ctx = this.ctx;
+    const ctx = this.sparkCtx;
     if (!ctx) return;
-    const cssW = this.panel.clientWidth || 300;
+    const cssW = this.fit(ctx, this.sparkCv, 64);
     const cssH = 64;
-    if (this.cv.width !== cssW * this.dpr || this.cv.height !== cssH * this.dpr) {
-      this.cv.width = cssW * this.dpr;
-      this.cv.height = cssH * this.dpr;
-      this.cv.style.height = cssH + 'px';
-    }
-    ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
     ctx.fillStyle = PAL.bg;
     ctx.fillRect(0, 0, cssW, cssH);
     const series: [Float32Array, string][] = [
@@ -204,6 +254,116 @@ export class MarketTicker {
       ctx.lineWidth = 1.3;
       ctx.stroke();
     }
+  }
+
+  /** Section 2: reserve dominance, cartel grip, and Gini inequality as labelled gauges. */
+  private drawWealth(s: MarketSummary): void {
+    const ctx = this.wealthCtx;
+    if (!ctx) return;
+    const gauges: Gauge[] = [
+      {
+        label: `${s.dominant === 'AURUM' ? '☉' : '☾'} RESERVE`,
+        frac: Math.max(s.aurumShare, 1 - s.aurumShare),
+        color: s.dominant === 'AURUM' ? PAL.aurum : PAL.umbra,
+        text: `${(Math.max(s.aurumShare, 1 - s.aurumShare) * 100).toFixed(0)}%`,
+      },
+      {
+        label: 'CARTEL',
+        frac: clamp01(s.cartelShare),
+        color: s.cartelShare > 0.4 ? PAL.warn : PAL.aurum,
+        text: `${(s.cartelShare * 100).toFixed(0)}%`,
+      },
+      {
+        label: 'GINI',
+        frac: clamp01(s.gini),
+        color: s.gini > 0.6 ? PAL.warn : PAL.quanta,
+        text: s.gini.toFixed(2),
+      },
+    ];
+    this.drawGauges(ctx, this.wealthCv, gauges);
+  }
+
+  /** Section 3: arbitrage, sanctions, black-market and auction pressure as stress gauges. */
+  private drawStress(s: MarketSummary): void {
+    const ctx = this.stressCtx;
+    if (!ctx) return;
+    const blackFrac = s.blackVolume > 0 ? clamp01(s.blackVolume / (s.totalWealth * 0.08 + 1)) : 0;
+    const gauges: Gauge[] = [
+      {
+        label: 'ARB',
+        frac: clamp01(s.arbSpread / 0.15),
+        color: s.arbSpread > 0.08 ? PAL.warn : PAL.aurum,
+        text: `${(s.arbSpread * 100).toFixed(1)}%`,
+      },
+      {
+        label: 'SANCTION',
+        frac: clamp01(s.sanctioned / 12),
+        color: s.sanctioned > 0 ? PAL.warn : PAL.dim,
+        text: String(s.sanctioned),
+      },
+      {
+        label: 'BLACK MKT',
+        frac: blackFrac,
+        color: s.blackVolume > 0 ? PAL.ichor : PAL.dim,
+        text: s.blackVolume > 0 ? fmt(s.blackVolume) : '—',
+      },
+      {
+        label: 'AUCTIONS',
+        frac: clamp01(s.auctions / 8),
+        color: s.auctions > 0 ? PAL.quanta : PAL.dim,
+        text: String(s.auctions),
+      },
+    ];
+    this.drawGauges(ctx, this.stressCv, gauges);
+  }
+
+  /** Shared horizontal-gauge renderer: label · track+fill · exact value. Height scales to bar count. */
+  private drawGauges(
+    ctx: CanvasRenderingContext2D,
+    cv: HTMLCanvasElement,
+    gauges: readonly Gauge[],
+  ): void {
+    const rowH = 17;
+    const cssH = gauges.length * rowH + 6;
+    const cssW = this.fit(ctx, cv, cssH);
+    ctx.fillStyle = PAL.bg;
+    ctx.fillRect(0, 0, cssW, cssH);
+    ctx.textBaseline = 'middle';
+    ctx.font = '8.5px ui-monospace,monospace';
+    const labW = 58;
+    const valW = 40;
+    const barX = labW + 4;
+    const barW = cssW - barX - valW - 4;
+    gauges.forEach((g, i) => {
+      const y = 3 + i * rowH + rowH / 2;
+      ctx.fillStyle = PAL.dim;
+      ctx.textAlign = 'left';
+      ctx.fillText(g.label, 4, y);
+      // track
+      ctx.fillStyle = PAL.track;
+      ctx.fillRect(barX, y - 4, barW, 8);
+      // fill
+      ctx.fillStyle = g.color;
+      ctx.fillRect(barX, y - 4, Math.max(1, barW * clamp01(g.frac)), 8);
+      // value
+      ctx.fillStyle = PAL.text;
+      ctx.textAlign = 'right';
+      ctx.fillText(g.text, cssW - 3, y);
+    });
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'alphabetic';
+  }
+
+  /** Size a canvas to the panel width × `cssH` (DPR-backed) and return the CSS width. */
+  private fit(ctx: CanvasRenderingContext2D, cv: HTMLCanvasElement, cssH: number): number {
+    const cssW = Math.max(120, (this.panel.clientWidth || 320) - 12);
+    if (cv.width !== cssW * this.dpr || cv.height !== cssH * this.dpr) {
+      cv.width = cssW * this.dpr;
+      cv.height = cssH * this.dpr;
+      cv.style.height = cssH + 'px';
+    }
+    ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
+    return cssW;
   }
 }
 

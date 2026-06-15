@@ -62,21 +62,37 @@ const STYLE = `
   backdrop-filter:blur(6px);box-shadow:0 2px 14px rgba(0,0,0,.5);transition:transform .15s,background .15s}
 #cqm-cop-toggle:hover{transform:scale(1.08);background:rgba(14,22,44,.92)}
 #cqm-cop-toggle:focus-visible{outline:2px solid #6da8ff;outline-offset:2px}
-#cqm-cop-panel{position:fixed;right:10px;bottom:128px;z-index:60;width:min(92vw,380px);height:min(66vh,560px);
+/* V71: the "down the middle 50/50 split" the directive asks for — answers on the left half, the
+   textbox + options on the right half. Wider so both halves breathe; stacks on narrow screens. */
+#cqm-cop-panel{position:fixed;right:10px;bottom:128px;z-index:60;width:min(94vw,760px);height:min(74vh,600px);
   display:none;flex-direction:column;border:1px solid rgba(120,160,220,.4);border-radius:12px;
   background:rgba(4,8,18,.94);backdrop-filter:blur(10px);box-shadow:0 8px 40px rgba(0,0,0,.6);
   font:12px/1.5 var(--font-mono,ui-monospace,monospace);color:#cfe0fb;overflow:hidden}
 #cqm-cop-panel.open{display:flex}
 .cqm-cop-head{display:flex;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid rgba(120,160,220,.25);
-  background:rgba(10,16,34,.7)}
+  background:rgba(10,16,34,.7);flex:0 0 auto}
 .cqm-cop-head b{font-size:12px;letter-spacing:.08em;color:#9fc0ff}
 .cqm-cop-prov{font-size:9px;opacity:.6;margin-left:6px;white-space:nowrap}
-.cqm-cop-sel{margin-left:auto;max-width:46%;background:rgba(2,6,16,.9);color:#bcd2f5;
+.cqm-cop-x{margin-left:auto;background:none;border:none;color:#9fc0ff;font-size:16px;cursor:pointer;padding:0 4px}
+/* The 50/50 body: answer column | controls column. */
+.cqm-cop-body{flex:1 1 auto;min-height:0;display:flex}
+.cqm-cop-left{flex:1 1 50%;min-width:0;display:flex;flex-direction:column}
+.cqm-cop-right{flex:1 1 50%;min-width:0;display:flex;flex-direction:column;border-left:1px solid rgba(120,160,220,.22);background:rgba(6,11,24,.5)}
+.cqm-cop-colhead{font:600 9px var(--font-mono,ui-monospace,monospace);letter-spacing:.14em;color:#7fa0d8;
+  text-transform:uppercase;padding:6px 10px 3px;opacity:.8}
+.cqm-cop-opts{padding:2px 10px 8px;border-bottom:1px solid rgba(120,160,220,.16);display:flex;flex-direction:column;gap:6px}
+.cqm-cop-optrow{display:flex;align-items:center;gap:6px}
+.cqm-cop-sel{flex:1;min-width:0;background:rgba(2,6,16,.9);color:#bcd2f5;
   border:1px solid rgba(120,160,220,.35);border-radius:5px;font:10px var(--font-mono,ui-monospace,monospace);
-  padding:2px 4px;cursor:pointer}
+  padding:3px 5px;cursor:pointer}
 .cqm-cop-sel:focus-visible{outline:1px solid #6da8ff}
-.cqm-cop-x{background:none;border:none;color:#9fc0ff;font-size:16px;cursor:pointer;padding:0 4px}
-.cqm-cop-log{flex:1;overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:8px}
+.cqm-cop-chips{display:flex;flex-wrap:wrap;gap:4px}
+.cqm-cop-chip{border:1px solid rgba(120,160,220,.3);background:rgba(20,30,56,.5);color:#bcd2f5;border-radius:12px;
+  font:10px var(--font-mono,ui-monospace,monospace);padding:2px 8px;cursor:pointer;transition:background .12s}
+.cqm-cop-chip:hover{background:rgba(34,48,86,.85)}
+.cqm-cop-chip:focus-visible{outline:1px solid #6da8ff}
+.cqm-cop-log{flex:1 1 auto;min-height:0;overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:8px}
+@media (max-width:560px){.cqm-cop-body{flex-direction:column}.cqm-cop-right{border-left:none;border-top:1px solid rgba(120,160,220,.22)}}
 .cqm-cop-msg{padding:6px 9px;border-radius:8px;white-space:pre-wrap;word-break:break-word}
 .cqm-cop-user{align-self:flex-end;background:rgba(50,80,150,.4);max-width:88%}
 .cqm-cop-ai{align-self:flex-start;background:rgba(20,30,56,.7);max-width:94%}
@@ -84,14 +100,14 @@ const STYLE = `
 .cqm-cop-tool{align-self:flex-start;max-width:96%;border-left:2px solid rgba(120,160,220,.5);
   background:rgba(8,14,30,.7);padding:5px 8px;border-radius:4px;font-size:10.5px;opacity:.92}
 .cqm-cop-tool pre{margin:3px 0 0;max-height:170px;overflow:auto;white-space:pre-wrap;color:#a9c4ea}
-.cqm-cop-foot{border-top:1px solid rgba(120,160,220,.25);padding:7px;display:flex;gap:6px}
-.cqm-cop-foot textarea{flex:1;resize:none;height:38px;background:rgba(2,6,16,.9);color:#dceaff;
+.cqm-cop-foot{flex:1 1 auto;min-height:0;padding:7px 10px;display:flex;flex-direction:column;gap:6px}
+.cqm-cop-foot textarea{flex:1 1 auto;min-height:48px;resize:none;background:rgba(2,6,16,.9);color:#dceaff;
   border:1px solid rgba(120,160,220,.35);border-radius:6px;padding:6px 8px;font:inherit}
 .cqm-cop-foot textarea:focus-visible{outline:1px solid #6da8ff}
-.cqm-cop-send{background:rgba(50,90,170,.55);color:#dfeaff;border:1px solid rgba(120,160,220,.5);
-  border-radius:6px;padding:0 12px;cursor:pointer;font:inherit}
+.cqm-cop-send{flex:0 0 auto;background:rgba(50,90,170,.55);color:#dfeaff;border:1px solid rgba(120,160,220,.5);
+  border-radius:6px;padding:7px 12px;cursor:pointer;font:inherit}
 .cqm-cop-send:disabled{opacity:.4;cursor:default}
-.cqm-cop-hint{font-size:9px;opacity:.5;padding:0 10px 7px}
+.cqm-cop-hint{font-size:9px;opacity:.5;padding:0 10px 8px;flex:0 0 auto}
 .cqm-cop-diagbtn{background:none;border:none;color:#9fc0ff;font-size:13px;cursor:pointer;padding:0 3px;line-height:1}
 .cqm-cop-diagbtn:hover{filter:brightness(1.25)}
 .cqm-cop-diagbtn:focus-visible{outline:1px solid #6da8ff;outline-offset:1px}
@@ -153,10 +169,34 @@ function mount(): void {
   close.type = 'button';
   close.textContent = '×';
   close.setAttribute('aria-label', 'Close Copilot');
-  head.append(title, prov, sel, diag, close);
+  head.append(title, prov, close);
 
+  // 50/50 body: the generative answer/conversation on the LEFT, the compose box + options on the RIGHT.
+  const body = document.createElement('div');
+  body.className = 'cqm-cop-body';
+
+  const leftCol = document.createElement('div');
+  leftCol.className = 'cqm-cop-left';
+  const logHead = document.createElement('div');
+  logHead.className = 'cqm-cop-colhead';
+  logHead.textContent = 'Answer';
   const logEl = document.createElement('div');
   logEl.className = 'cqm-cop-log';
+  leftCol.append(logHead, logEl);
+
+  const rightCol = document.createElement('div');
+  rightCol.className = 'cqm-cop-right';
+  const askHead = document.createElement('div');
+  askHead.className = 'cqm-cop-colhead';
+  askHead.textContent = 'Ask · options';
+  // Options block: free-LLM provider picker, diagnostics, and quick read-only command chips.
+  const opts = document.createElement('div');
+  opts.className = 'cqm-cop-opts';
+  const optRow = document.createElement('div');
+  optRow.className = 'cqm-cop-optrow';
+  optRow.append(sel, diag);
+  const chips = document.createElement('div');
+  chips.className = 'cqm-cop-chips';
 
   const foot = document.createElement('div');
   foot.className = 'cqm-cop-foot';
@@ -174,7 +214,36 @@ function mount(): void {
   hint.textContent =
     'Read-only AI · /read <path> /ls <dir> /grep <token> /run <cmd> · sends to a free external AI';
 
-  panel.append(head, logEl, foot, hint);
+  // Quick read-only command options — clicking seeds the compose box so the user can fill the rest.
+  const CHIP_CMDS: [string, string][] = [
+    ['/read', '/read '],
+    ['/ls', '/ls '],
+    ['/grep', '/grep '],
+    ['/run', '/run '],
+    ['/help', '/help'],
+  ];
+  for (const [label, seed] of CHIP_CMDS) {
+    const c = document.createElement('button');
+    c.type = 'button';
+    c.className = 'cqm-cop-chip';
+    c.textContent = label;
+    c.addEventListener('click', () => {
+      input.value = seed;
+      input.focus();
+      const end = seed.length;
+      try {
+        input.setSelectionRange(end, end);
+      } catch {
+        /* setSelectionRange unsupported on some hosts — focus alone is fine */
+      }
+    });
+    chips.appendChild(c);
+  }
+  opts.append(optRow, chips);
+  rightCol.append(askHead, opts, foot, hint);
+
+  body.append(leftCol, rightCol);
+  panel.append(head, body);
   mountToggle(toggle); // V33: live in the shared bottom dock bar (the ✦ AI button)
   document.body.appendChild(panel);
 

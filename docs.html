@@ -48,10 +48,17 @@
         font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', monospace;
         line-height: 1.6;
         padding: 32px 16px 80px;
+        /* Centre the content in the dead-middle of the viewport (both axes), not just
+           horizontally-centred-and-top-anchored. `margin:auto` on the flex child centres it
+           when the page fits, and gracefully yields to a normal top-down scroll when it doesn't. */
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
       }
       main {
         max-width: 980px;
-        margin: 0 auto;
+        width: 100%;
+        margin: auto;
       }
       header {
         display: flex;

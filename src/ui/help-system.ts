@@ -26,37 +26,44 @@ const STYLE = `
   transition:transform .15s,background .15s}
 #cqm-help-toggle:hover{transform:scale(1.06);background:rgba(12,34,22,.95)}
 #cqm-help-toggle:focus-visible{outline:2px solid #66e0a0;outline-offset:2px}
-#cqm-help-panel{position:fixed;right:10px;bottom:128px;z-index:59;width:min(94vw,380px);max-height:72vh;display:none;
+/* V71: "down the middle 50/50" — the answer fills the LEFT half, the topic chips + search box + AI
+   hand-off live on the RIGHT half. Wider so both halves breathe; stacks on narrow screens. */
+#cqm-help-panel{position:fixed;right:10px;bottom:128px;z-index:59;width:min(94vw,720px);height:min(74vh,560px);display:none;
   flex-direction:column;border:1px solid rgba(120,220,160,.32);border-radius:12px;background:rgba(6,12,10,.96);
   backdrop-filter:blur(12px);box-shadow:0 10px 46px rgba(0,0,0,.66);font:12px/1.55 var(--font-ui,system-ui,sans-serif);
   color:#e6f6ec;overflow:hidden}
 #cqm-help-panel.open{display:flex}
-.cqm-help-head{display:flex;align-items:center;gap:8px;padding:8px 11px;border-bottom:1px solid rgba(120,220,160,.22);background:rgba(10,26,18,.8)}
+.cqm-help-head{display:flex;align-items:center;gap:8px;padding:8px 11px;border-bottom:1px solid rgba(120,220,160,.22);background:rgba(10,26,18,.8);flex:0 0 auto}
 .cqm-help-head b{font-size:11px;letter-spacing:.14em;color:#aaffd2;font-family:var(--font-mono,monospace)}
 .cqm-help-x{margin-left:auto;background:rgba(4,10,8,.9);color:#9bffce;border:1px solid rgba(120,220,160,.3);border-radius:5px;
   font:11px var(--font-mono,monospace);padding:2px 7px;cursor:pointer}
-.cqm-help-chips{display:flex;flex-wrap:wrap;gap:5px;padding:9px 11px;border-bottom:1px solid rgba(120,220,160,.14)}
+.cqm-help-body{flex:1 1 auto;min-height:0;display:flex}
+.cqm-help-left{flex:1 1 50%;min-width:0;display:flex;flex-direction:column}
+.cqm-help-right{flex:1 1 50%;min-width:0;display:flex;flex-direction:column;border-left:1px solid rgba(120,220,160,.2);background:rgba(8,18,13,.45)}
+.cqm-help-colhead{font:600 9px var(--font-mono,monospace);letter-spacing:.14em;color:#7fcea6;text-transform:uppercase;padding:7px 11px 3px;opacity:.85}
+.cqm-help-chips{display:flex;flex-wrap:wrap;gap:5px;padding:3px 11px 9px}
 .cqm-help-chip{border:1px solid rgba(120,220,160,.35);background:rgba(16,40,28,.5);color:#cdfce0;border-radius:14px;
   font:11px var(--font-ui,system-ui,sans-serif);padding:4px 10px;cursor:pointer;transition:background .12s}
 .cqm-help-chip:hover{background:rgba(30,70,48,.75)}
-.cqm-help-search{display:flex;gap:6px;padding:9px 11px 4px}
-.cqm-help-in{flex:1;background:rgba(0,0,0,.4);border:1px solid rgba(120,220,160,.3);border-radius:7px;color:#e6f6ec;
+.cqm-help-search{display:flex;gap:6px;padding:4px 11px 9px}
+.cqm-help-in{flex:1;min-width:0;background:rgba(0,0,0,.4);border:1px solid rgba(120,220,160,.3);border-radius:7px;color:#e6f6ec;
   font:12px var(--font-ui,system-ui,sans-serif);padding:7px 9px;outline:none}
 .cqm-help-in:focus{border-color:#66e0a0;box-shadow:0 0 9px rgba(80,220,150,.3)}
 .cqm-help-go{background:rgba(40,200,130,.16);border:1px solid rgba(120,220,160,.5);border-radius:7px;color:#cdfce0;
   font:600 11px var(--font-mono,monospace);padding:7px 11px;cursor:pointer}
 .cqm-help-go:hover{background:rgba(40,200,130,.3)}
-.cqm-help-ans{padding:4px 11px 10px;overflow-y:auto}
+.cqm-help-ans{flex:1 1 auto;min-height:0;padding:4px 11px 10px;overflow-y:auto}
 .cqm-help-card{border:1px solid rgba(120,220,160,.18);border-radius:9px;background:rgba(10,22,16,.6);padding:9px 11px;margin-top:8px}
 .cqm-help-card h4{margin:0 0 4px;font:600 12px var(--font-mono,monospace);letter-spacing:.04em;color:#aaffd2}
 .cqm-help-card p{margin:0;color:#d6ecdd}
 .cqm-help-card .see{margin-top:6px;font-size:10px;color:#6fbf92;font-family:var(--font-mono,monospace)}
-.cqm-help-foot{padding:8px 11px;border-top:1px solid rgba(120,220,160,.18);background:rgba(8,18,13,.7);
+.cqm-help-foot{margin-top:auto;padding:8px 11px;border-top:1px solid rgba(120,220,160,.18);background:rgba(8,18,13,.7);
   font-size:10px;color:#7fcea6;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .cqm-help-foot .note{color:#8fcfa8;flex:1;min-width:160px}
 .cqm-help-ai{border:1px solid rgba(120,160,220,.5);background:rgba(20,28,52,.6);color:#cfe0ff;border-radius:7px;
   font:600 10px var(--font-mono,monospace);padding:5px 9px;cursor:pointer}
 .cqm-help-ai:hover{background:rgba(34,46,86,.8)}
+@media (max-width:560px){.cqm-help-body{flex-direction:column}.cqm-help-right{border-left:none;border-top:1px solid rgba(120,220,160,.2)}}
 `;
 
 export class HelpSystem {
@@ -86,10 +93,14 @@ export class HelpSystem {
     this.panel.setAttribute('aria-label', 'Help me now');
     this.panel.innerHTML =
       `<div class="cqm-help-head"><b>❓ HELP ME NOW</b><button class="cqm-help-x" data-x aria-label="Close">✕</button></div>` +
-      `<div class="cqm-help-chips" data-chips></div>` +
-      `<div class="cqm-help-search"><input class="cqm-help-in" data-in placeholder="Ask anything… e.g. how does the economy work?" autocomplete="off" /><button class="cqm-help-go" data-go>ASK</button></div>` +
-      `<div class="cqm-help-ans" data-ans></div>` +
-      `<div class="cqm-help-foot"><span class="note">Grounded in public project knowledge only — no secrets or private data. For freeform / web questions:</span><button class="cqm-help-ai" data-ai>Ask the ✦ AI</button></div>`;
+      `<div class="cqm-help-body">` +
+      `<div class="cqm-help-left"><div class="cqm-help-colhead">Answer</div><div class="cqm-help-ans" data-ans></div></div>` +
+      `<div class="cqm-help-right">` +
+      `<div class="cqm-help-colhead">Topics</div><div class="cqm-help-chips" data-chips></div>` +
+      `<div class="cqm-help-colhead">Ask anything</div>` +
+      `<div class="cqm-help-search"><input class="cqm-help-in" data-in placeholder="e.g. how does the economy work?" autocomplete="off" /><button class="cqm-help-go" data-go>ASK</button></div>` +
+      `<div class="cqm-help-foot"><span class="note">Grounded in public project knowledge only — no secrets or private data. For freeform / web questions:</span><button class="cqm-help-ai" data-ai>Ask the ✦ AI</button></div>` +
+      `</div></div>`;
     doc.body.appendChild(this.panel);
 
     this.ansEl = this.panel.querySelector('[data-ans]') as HTMLElement;

@@ -15,6 +15,16 @@ const STYLE = `
 #cqm-aud-toggle:hover{transform:scale(1.06);background:rgba(16,30,38,.94)}
 #cqm-aud-toggle:focus-visible{outline:2px solid #5cc6e0;outline-offset:2px}
 #cqm-aud-toggle.on{background:rgba(20,40,50,.95);border-color:rgba(120,200,230,.8);color:#e6f7ff}
+/* V71: the directive's "Audit 50/50 — just organizes it better". When open, widen the overlay and
+   flow the server-rendered <li> trail into TWO equal columns (it scrolls vertically as before). The
+   #ui+#aP+#audit-list id chain outranks app.css's single-id "#audit-list ol{display:flex}" rule. */
+#ui > #aP.audit-on{width:min(94vw,560px);max-height:60vh}
+#ui > #aP.audit-on #audit-list ol{display:grid;grid-template-columns:1fr 1fr;gap:2px 14px;align-content:start}
+#ui > #aP.audit-on #audit-list li{break-inside:avoid}
+@media (max-width:600px){
+  #ui > #aP.audit-on{width:min(94vw,360px)}
+  #ui > #aP.audit-on #audit-list ol{grid-template-columns:1fr}
+}
 `;
 
 /** Build the 🗒 AUDIT toggle into the dock and wire it to the existing `#aP` overlay. Idempotent (HMR). */

@@ -51,6 +51,11 @@
           monospace;
         -webkit-font-smoothing: antialiased;
         padding: 0 0 80px;
+        /* Centre the spec in the dead-middle of the viewport (both axes), not just
+           horizontally-centred-and-top-anchored — falls back to a normal top scroll when long. */
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
       }
       a {
         color: var(--accent);
@@ -61,7 +66,8 @@
       }
       .wrap {
         max-width: 1040px;
-        margin: 0 auto;
+        width: 100%;
+        margin: auto;
         padding: 0 20px;
       }
       header.hero {
