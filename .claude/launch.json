@@ -5,7 +5,7 @@
       "name": "cqm",
       "runtimeExecutable": "bun",
       "runtimeArgs": ["server.ts"],
-      "port": 3000
+      "autoPort": true
     }
   ]
 }

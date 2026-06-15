@@ -70,7 +70,7 @@ export const HELP_KB: readonly HelpEntry[] = [
       'population',
       'phyla',
     ],
-    body: 'The biomass is instantiated from hundreds of deterministic morphotypes (10 phyla). Above them sit named powers: SHOGGOTHS (eldritch devourers), PUPPET-MASTERS (unseen hands that reshape the world), TITANS (ten colossi that ally and war), NHIs (apex super-minds), LEVIATHANS, and the SUPER CREATURE. Each has its own biology, silhouette, material, motion and economic role — see the bestiary. Up to 25,000 are active at once (V44 — retuned down from 50k so it does not crash mid-range machines), and each carries its own compact 70-parameter neural brain (V42) that perceives its state + the world and steers it — so every one moves with individual, reactive character.',
+    body: 'The biomass is instantiated from hundreds of deterministic morphotypes (10 phyla). Above them sit named powers: SHOGGOTHS (eldritch devourers), PUPPET-MASTERS (unseen hands that reshape the world), TITANS (ten colossi that ally and war), NHIs (apex super-minds), LEVIATHANS, and the SUPER CREATURE. Each has its own biology, silhouette, material, motion and economic role — see the bestiary. Up to 50,000 are active at once on a capable machine (auto-selected for ≥16 cores + ≥8 GB; `?tier=mega` forces it), and each carries its own compact 70-parameter neural brain (V42) that perceives its state + the world and steers it — so every one moves with individual, reactive character.',
     see: ['docs/ENTITY-SHEETS.md'],
   },
   {

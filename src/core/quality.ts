@@ -75,14 +75,15 @@ export const QUALITY_LADDER: Readonly<
     instanced: true,
   },
   mega: {
-    // V38 ceiling, V40 DEFAULT, V44 retuned to **25,000** — 50k crashed real mid/high desktops, so the
-    // ceiling is now 25k (the directive: "50,000 is too much and crashes my machine"). `resolveTier`
-    // still AUTO-returns mega for capable machines (≥16 cores + ≥8 GB); `?tier=` overrides both ways.
-    // The EntityManager's √N density scale (entities.ts) keeps neighbour-query cost bounded; `bun
-    // bench/scale.ts` (docs/BENCHMARKS.md) profiles the sim at scale.
+    // V38 ceiling, V40 DEFAULT, V44 dropped to 25k, **V55 RESTORED to 50,000** — the earlier "50k
+    // crashes my machine" was actually the WebGL CONTEXT LEAK (the renderer failed at `new
+    // WebGLRenderer`, before a single creature spawned), fixed in V49/V50. The user's setup is beefy and
+    // wants the huge world, so the ceiling is the full 50,000 again. `resolveTier` AUTO-returns mega for
+    // capable machines (≥16 cores + ≥8 GB); `?tier=mega` forces it anywhere. The EntityManager's √N
+    // density scale (entities.ts) keeps neighbour-query cost bounded; `bun bench/scale.ts` profiles it.
     dprCap: 2,
-    maxEntities: 25000,
-    targetEntities: 25000,
+    maxEntities: 50000,
+    targetEntities: 50000,
     quantumCount: 10000,
     maxLinks: 8000,
     shadows: true,

@@ -61,8 +61,8 @@ describe('QUALITY_LADDER', () => {
     }
   });
 
-  test('mega is the 25k ceiling AND the auto top tier for capable machines (V40, retuned V44)', () => {
-    expect(QUALITY_LADDER.mega.maxEntities).toBe(25000); // V44: 50k crashed real machines
+  test('mega is the 50k ceiling AND the auto top tier for capable machines (V40, V55 restored)', () => {
+    expect(QUALITY_LADDER.mega.maxEntities).toBe(50000); // V55: restored — the crash was the context leak
     expect(QUALITY_LADDER.mega.targetEntities).toBe(QUALITY_LADDER.mega.maxEntities);
     expect(QUALITY_LADDER.mega.instanced).toBeTrue();
     expect(QUALITY_LADDER.mega.maxEntities).toBeGreaterThan(QUALITY_LADDER.ultra.maxEntities);
