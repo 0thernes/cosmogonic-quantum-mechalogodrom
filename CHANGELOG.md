@@ -13,6 +13,21 @@ the full gate (now also a coverage gate, on Linux + Windows) with same-seed dete
 
 ### Added
 
+- **The NEURAL observatory comes alive (V61)** — the directive's "NEURAL is a static image and boring,
+  data visually stupid and basic → make it interactive/adaptive/alive". The 3×3 grid of nine mind-views
+  used to repaint only at the slow Observatory cadence (≈ every 18 frames) and collapse to a dead "no
+  NHI" message — so it read as frozen. It now runs its **own 60 fps rAF loop** decoupled from the sim
+  cadence: the world just pushes the latest snapshot; the panel **renders every frame** so the views
+  FLOW. The **TOPOLOGY** graph fires travelling **signal pulses** forward along its lit edges
+  (input→hidden→output) and the neurons glow with breathing halos sized by live firing — you watch it
+  think; the **DECISION** chosen-action bar throbs, the **MEMORY** timeline trails a breathing comet.
+  When no NHI is launched the empty state is now a **living "dormant brain"** animation (a ring of
+  neurons a wandering pacemaker lights up, pulses racing the chords) instead of a static image. And it's
+  **interactive**: click any view to **expand** it to the whole panel (click again to return to the
+  grid). UI presentation only — no sim coupling, no rng (the rAF clock isn't sim state); the loop
+  self-heals (stops when the panel closes or is hot-replaced). **Verified live**: the idle brain
+  animates frame-to-frame, the grid populates from a launched NHI (`NHI #0 · 1/1`), the topology +
+  memory views change across animation phases, and expand/collapse works. Full gate green (798 tests).
 - **The screen bends around a singularity — gravitational lens post-FX (V60)** — the directive's
   "distortions in view + light + lensing" ask, the part V59's per-entity warp couldn't reach. Post-FX is
   now a guarded `EffectComposer` chain whose DEFAULT tier (`postFxMode() → 'lens'`) inserts a single
