@@ -377,19 +377,20 @@ previously independent subsystems, all fanned out by `world.ts`:
 
 `detectQuality()` resolves once at boot — `matchMedia` + viewport heuristics
 decide phone, then `hardwareConcurrency` + `deviceMemory` (assumed 8 GB when
-hidden) climb the four-rung ladder (CONTRACTS V3.1; the legacy binary split
-lives on as the phone rung). The tier never switches at runtime — the
-instanced/per-mesh render paths must not swap mid-session.
+hidden) climb the five-rung ladder (CONTRACTS V3.1; the legacy binary split
+lives on as the phone rung). `mega` AUTO-selects on a high-end box (≥ 16 cores
+AND ≥ 8 GB; `?tier=` forces any rung; V38/V40). The tier never switches at
+runtime — the instanced/per-mesh render paths must not swap mid-session.
 
-| Knob           | Phone | Laptop | Desktop | Ultra  |
-| -------------- | ----- | ------ | ------- | ------ |
-| `dprCap`       | 1.25  | 2      | 2       | 2      |
-| `maxEntities`  | 650   | 2,000  | 5,000   | 10,000 |
-| `quantumCount` | 3,500 | 4,500  | 6,000   | 8,000  |
-| `maxLinks`     | 2,200 | 3,000  | 4,000   | 6,000  |
-| `shadows`      | off   | on     | on      | on     |
-| `starCount`    | 2,000 | 3,000  | 4,500   | 6,000  |
-| `instanced`    | off   | on     | on      | on     |
+| Knob           | Phone | Laptop | Desktop | Ultra  | Mega   |
+| -------------- | ----- | ------ | ------- | ------ | ------ |
+| `dprCap`       | 1.25  | 2      | 2       | 2      | 2      |
+| `maxEntities`  | 650   | 2,000  | 5,000   | 10,000 | 50,000 |
+| `quantumCount` | 3,500 | 4,500  | 6,000   | 8,000  | 10,000 |
+| `maxLinks`     | 2,200 | 3,000  | 4,000   | 6,000  | 8,000  |
+| `shadows`      | off   | on     | on      | on     | on     |
+| `starCount`    | 2,000 | 3,000  | 4,500   | 6,000  | 8,000  |
+| `instanced`    | off   | on     | on      | on     | on     |
 
 `targetEntities === maxEntities` on every tier (the ultra 6,500 adaptive
 throttle was retired in 0.5.0; the per-frame neighbor-query throttles in
@@ -403,9 +404,11 @@ when the window moved between monitors).
 
 `server.ts` is a Bun fullstack server: it imports `index.html` and
 `docs.html` directly (Bun bundles their TypeScript and Tailwind on the fly)
-and routes `/`, `/docs`, `/lab` (the self-contained p5.js artifact, served
-static and unbundled by design), `GET /api/health`, `GET|POST /api/audit`,
-with a 404 fallback. Hardening (0.2.1): `POST /api/audit` bodies are capped
+and routes `/`, `/docs`, `/spec`, `/lab` (the self-contained p5.js artifact,
+served static and unbundled by design), `GET /api/health`, `GET|POST /api/audit`,
+plus the V9 Copilot surface — `GET /api/copilot`, `GET /api/copilot/health`,
+`POST /api/chat`, `POST /api/tool` — all gated behind `COPILOT_ENABLED` (OFF in
+production), with a 404 fallback. Hardening (0.2.1): `POST /api/audit` bodies are capped
 at 8 KB (413 beyond), and the HTMX audit fragment HTML-escapes every
 user-controlled string with details truncated at storage time. Port
 `Number(process.env.PORT) || 3000`. Requests are logged via
