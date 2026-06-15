@@ -8,10 +8,19 @@
  * render loop.
  */
 
+import { Sparkline } from './graphs';
+
 /** Resolve a required element by id, failing loudly on integration mistakes. */
 function mustGet(id: string): HTMLElement {
   const el = document.getElementById(id);
   if (!el) throw new Error(`Hud: missing required element #${id}`);
+  return el;
+}
+
+/** Resolve a required `<canvas>` by id. */
+function mustGetCanvas(id: string): HTMLCanvasElement {
+  const el = mustGet(id);
+  if (!(el instanceof HTMLCanvasElement)) throw new Error(`Hud: #${id} is not a <canvas>`);
   return el;
 }
 
@@ -30,6 +39,9 @@ export class Hud {
   private readonly aName: HTMLElement;
   private readonly aStep: HTMLElement;
   private readonly lore: HTMLElement;
+  /** V75: live swap-activity sparkline in the sorting-field box (#g-alg). */
+  private readonly gAlg: Sparkline;
+  private algTick = 0;
   private secTimer = 0;
   private nmTimer = 0;
   /** Last lore name written to `#lore` — setLore skips the DOM write when unchanged. */
@@ -45,6 +57,8 @@ export class Hud {
     this.aName = mustGet('a-name');
     this.aStep = mustGet('a-step');
     this.lore = mustGet('lore');
+    // Auto-scaling purple sparkline (matches the #alg box accent) of per-frame swap activity.
+    this.gAlg = new Sparkline(mustGetCanvas('g-alg'), 'rgba(196,160,255,1)', 0);
   }
 
   /**
@@ -78,6 +92,10 @@ export class Hud {
   setAlgo(name: string, step: number, swaps: number): void {
     this.aName.textContent = name;
     this.aStep.textContent = swaps > 0 ? `step ${step} · ${swaps} ⇄` : `step ${step}`;
+    // V75: feed the swap count into the sparkline so the box shows the field's VARIANCE over time
+    // (a real data-visual), not just a number. Redraw every 4th frame to stay cheap.
+    this.gAlg.push(swaps);
+    if (++this.algTick % 4 === 0) this.gAlg.draw();
   }
 
   /**

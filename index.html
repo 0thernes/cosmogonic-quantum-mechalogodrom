@@ -153,14 +153,9 @@
               >0</span
             >
           </div>
-          <div class="flex items-baseline justify-between py-0.5">
-            <span class="font-ui text-4xs font-light tracking-[0.1em] text-warn/70 uppercase"
-              >Song</span
-            >
-            <span id="v7" class="font-mono text-2xs font-semibold text-slate-100 tabular-nums"
-              >---</span
-            >
-          </div>
+          <!-- V75: Song moved out of the telemetry listing → into the bottom-right Music/SFX box
+               (#hud-vsr) where the now-playing name belongs. The #v7 span lives there now. -->
+
           <!-- Known Bug 14: surfaced write-only mutations counter -->
           <div class="flex items-baseline justify-between py-0.5">
             <span class="font-ui text-4xs font-light tracking-[0.1em] text-warn/70 uppercase"
@@ -862,6 +857,9 @@
         >
           ---
         </div>
+        <!-- V75: live swap-activity sparkline — the sorting field's variance over time, so the box
+             shows MORE than a counter (a real data-visual of how hard the algorithm is working). -->
+        <canvas id="g-alg" class="mt-0.5 block h-3.5 w-full opacity-80"></canvas>
         <!-- V2: lore name of the camera's Voronoi sub-sector (ui/hud.ts setLore) -->
         <div
           id="lore"
@@ -1145,6 +1143,15 @@
       <div class="flex items-baseline justify-between gap-3">
         <span class="text-slate-400">SFX</span>
         <span id="hud-sfx" class="font-mono text-cyan-100 normal-case tabular-nums">OFF</span>
+      </div>
+      <!-- V75: now-playing song name, relocated here from the telemetry listing (keeps id #v7). -->
+      <div class="flex items-baseline justify-between gap-3">
+        <span class="text-slate-400">Song</span>
+        <span
+          id="v7"
+          class="max-w-[120px] overflow-hidden font-mono text-ellipsis whitespace-nowrap text-cyan-100 normal-case tabular-nums"
+          >—</span
+        >
       </div>
       <div class="flex items-baseline justify-between gap-3">
         <span class="text-slate-400">Resets</span>
