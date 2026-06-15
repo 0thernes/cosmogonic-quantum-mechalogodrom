@@ -109,7 +109,11 @@ function popcount32(x: number): number {
  * O(1), allocation-free — safe on diplomacy cadences.
  */
 export function defections(moves: number, rounds: number, window = HISTORY_WINDOW): number {
-  const depth = rounds < window ? rounds : window;
+  // Mirror pushHistory's "window ≤ 30" bit-encoding cap so a stray window ≥ 32 can't make
+  // `1 << depth` wrap (shift counts are mod 32) into mask = 0 and silently report ZERO
+  // defections. No effect on the live path — every caller uses the default HISTORY_WINDOW.
+  const w = window < 30 ? window : 30;
+  const depth = rounds < w ? rounds : w;
   return popcount32(moves & ((1 << depth) - 1));
 }
 

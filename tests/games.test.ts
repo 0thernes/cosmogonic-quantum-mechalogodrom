@@ -67,6 +67,23 @@ describe('history ring', () => {
     for (let i = 0; i < HISTORY_WINDOW; i++) pushHistory(h, COOPERATE, COOPERATE);
     expect(defections(h.movesA, h.rounds)).toBe(0);
   });
+
+  test('window ≥ 32 is clamped, not wrapped: bits survive and defections stay countable', () => {
+    // JS shift counts are taken mod 32, so an unclamped window = 32 would make `1 << 32` = 1,
+    // mask = 0, and silently ERASE both rings on every push (and report ZERO defections) while
+    // `rounds` kept saturating. Both pushHistory and defections clamp window to ≤ 30 to prevent
+    // this. No caller passes a non-default window — this pins the defensive seal against regress.
+    const h = createHistory();
+    for (let i = 0; i < 40; i++) pushHistory(h, DEFECT, DEFECT, 32);
+    // Clamped to a 30-bit ring, all visible rounds are defections — never a wrapped-to-0 mask.
+    expect(h.movesA).toBeGreaterThan(0);
+    expect(h.rounds).toBe(30);
+    expect(defections(h.movesA, h.rounds, 32)).toBe(30);
+    // The clamp is invisible on the live path: the default window matches an explicit small one.
+    const g = createHistory();
+    for (let i = 0; i < HISTORY_WINDOW + 3; i++) pushHistory(g, DEFECT, COOPERATE, HISTORY_WINDOW);
+    expect(defections(g.movesA, g.rounds)).toBe(defections(g.movesA, g.rounds, HISTORY_WINDOW));
+  });
 });
 
 describe('strategy equilibria', () => {
