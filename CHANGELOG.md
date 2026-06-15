@@ -7,9 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-Post-`0.9.0` continuous-hardening plus the **V10 NHI super-mind** and **V11 environment + look**
-work — all additive (a no-op until a launched NHI, or behind the opt-in `?fx` flag), shipped behind
-the full gate (now also a coverage gate, on Linux + Windows) with same-seed determinism preserved.
+_Nothing yet — the V10–V78 "Living Era" work below shipped in 0.10.0._
+
+## [0.10.0] - 2026-06-15
+
+The **"Living Era"**: ~70 additive increments (V10–V78) since 0.9.0 — the NHI super-mind, a
+two-currency game-theoretic economy, per-entity neural controllers scaling to 50k organisms, the
+native C++/Jolt engine, the always-active **Super Creature** (deep composite mind + a real 6-qubit
+quantum-computing mind ported from the Eshkol/Tsotchke research repos), singularities that warp
+space-time behind a gravitational-lens post-FX, CHAOS MODE, leveling-to-100 + an ascension temple,
+4D freak-geometry titans, a unified 4-tab / 27-visual + BRAIN neural observatory, and a fully
+re-wireframed HUD. All additive (a no-op until a launched NHI, or behind the opt-in `?fx` flag),
+shipped behind the full gate (now also a coverage gate, on Linux + Windows) with same-seed
+determinism preserved.
 
 ### Security
 
