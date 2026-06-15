@@ -526,9 +526,12 @@ a:focus-visible {
   grid-template-rows: auto auto 1fr auto;
   /* V51: AUDIT + the algo readout left the left column (they crowded SORTING FIELDS) — `agp` now owns
      the whole lower-left, telemetry the top-left, observatory + control the right. */
+  /* V76: 'ctl' (the Control pad) left the grid — it's now a fixed, centered cluster pinned in the
+     little bottom-right empty corner (see #cP below). The right column's lower rows stay free so the
+     fixed pad + the #alg/#hud-vsr readout column sit there without colliding with the observatory. */
   grid-template-areas:
     'tel . obs'
-    'agp . ctl'
+    'agp . .  '
     'agp . .  '
     'agp . .  ';
 }
@@ -566,8 +569,34 @@ a:focus-visible {
 #oP {
   grid-area: obs;
 }
+/* V76: the Control pad is a CENTERED, compact cluster anchored in the little bottom-right empty
+   corner — right of the #bar toolbar, left of the #alg/#hud-vsr readout column, below the
+   observatory. Pinned to the corner so it reflows on resize; on touch the @media block far below
+   sets #cP display:none (the joystick/look-pad/wheel replace it), so this is a desktop-only place. */
 #cP {
-  grid-area: ctl;
+  position: fixed;
+  right: 164px;
+  bottom: 56px;
+  width: clamp(150px, 13vw, 178px);
+  max-height: 42vh;
+  z-index: 21;
+  text-align: center;
+}
+/* V76: lock the two bottom-right readout boxes (#hud-vsr Sim-Settings + #alg sorting field) to a
+   FIXED px font. The panels otherwise size type with a container-query/viewport unit, so on a wider
+   monitor these boxes grew and the corner stack started to overlap (alg×hud-vsr, cP×hud-vsr at QHD).
+   A constant box size means the corner gaps (#alg bottom, #cP right) hold at EVERY desktop width, not
+   only at 1440 — the explicit "adjusts as the window changes, no overlapping" requirement. */
+#hud-vsr,
+#hud-vsr .text-3xs {
+  font-size: 11px;
+  line-height: 1.4;
+}
+#alg .text-3xs {
+  font-size: 11px;
+}
+#alg .text-4xs {
+  font-size: 9.5px;
 }
 /* Algorithm picker fills the tall free-left row (row 3) so its 25-row scroll list gets real
    height; the algo readout sits in row 4 below it, both clear of the center 3D view. */
@@ -588,7 +617,7 @@ a:focus-visible {
   /* V75: the Simulation-Settings box (#hud-vsr) grew taller when Song moved into it + the text was
      enlarged for readability (~132px now), so the sorting-field readout stacks clear ABOVE it with a
      gap — zero overlap, the two boxes read as one tidy bottom-right column that reflows on resize. */
-  bottom: 160px;
+  bottom: 180px;
   z-index: 20;
   max-width: clamp(125px, 26vw, 195px);
   pointer-events: none;

@@ -260,7 +260,7 @@ generations, and a read-only Copilot (`docs/MODULE-CONTRACTS.md` §V9):
   alter dynamics** (`solid` stays the exact determinism identity); singularities
   now pull titans/shoggoths/leviathans; chaos is leveled and bipolar.
 
-### The Living Era (post-0.9.0 · V10–V75)
+### The Living Era (post-0.9.0 · V10–V77)
 
 Since 0.9.0 the cosmos has grown continuously — fifty-plus increments logged in
 the [CHANGELOG](./CHANGELOG.md) `[Unreleased]` section, each shipped behind the
@@ -297,16 +297,20 @@ full gate with same-seed determinism preserved. The major arcs:
   tunnelling / entanglement / superposition that disturbs weather, economy and
   the sorting fields), **leveling to 100** with a godlike power every ten levels
   and an **ASCENSION monolith temple**, and singularities that stir world chaos.
-- **Ominous titans + a unified neural box (V68–V75)** — the titans reborn as
+- **Ominous titans + a unified neural box (V68–V77)** — the titans reborn as
   **4D freak-geometry** (tesseract cage + aura field that warps world physics);
   the launcher wears its named tabs in one centred dock row; the song readout
   moves into the bottom-right **Music/SFX box** and the Sorting-Fields box gains a
-  live **swap-variance sparkline**; and the Super Creature's **NEURAL observatory
-  folds into its own box** — one panel, **four tabs** (WORLD · COGNITION · QUANTUM ·
-  BRAIN) of **27 live 3D/temporal readouts** plus a rotating organ **connectome**,
-  its quantum tab seeded by a **simulated-qubit mind** (amplitude encoding, Grover
-  diffusion, a QFT spectrum) ported from the Eshkol + Quantum-Geometric-Tensor
-  research repos.
+  live **swap-variance sparkline**; the bottom-right corner is **re-wireframed** —
+  a titled **SIM · SETTINGS** card, the **Control pad** centred as a fixed cluster
+  in the empty corner, the readout boxes locked to a constant size so the corner
+  is **overlap-free at every desktop width** (1280 → 1920); and the Super
+  Creature's **NEURAL observatory folds into its own box** — one panel, **four tabs**
+  (WORLD · COGNITION · QUANTUM · BRAIN) of **27 live 3D/temporal readouts** plus a
+  rotating organ **connectome**, its QUANTUM tab now bound to a real **6-qubit
+  statevector mind** (parameterised RY/RZ + controlled-RY circuit, Bloch vectors,
+  Born-sampled collapse) ported from the Eshkol + Quantum-Geometric-Tensor research
+  repos.
 
 Work on this codebase is governed by the three **master files** in
 [masters/](./masters/) — Executor, Architect, Physicist — bound by
