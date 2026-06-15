@@ -17,7 +17,7 @@ and no money movement. The security-relevant surface is therefore narrow and wel
 | Copilot LLM ↔ tool sandbox   | **fully untrusted model** | `COPILOT_ENABLED` off in prod; default-deny read-only sandbox                                          |
 | Tool sandbox ↔ host          | hostile-input assumed     | `Bun.spawn` array-form (no shell), allow/deny lists, repo-confine, `minimalEnv()` (no keys)            |
 | Web search ↔ public internet | untrusted output          | query-only (no model URL), fixed key-less endpoint, output-capped (no SSRF)                            |
-| Sim RNG ↔ reproducibility    | determinism law           | seeded `mulberry32`, isolated sub-streams, golden test (enforcement: convention — see RISK-07)         |
+| Sim RNG ↔ reproducibility    | determinism law           | seeded `mulberry32`, isolated sub-streams, golden test + source-scan ratchet (sim+math) — see RISK-07  |
 
 **Primary asset to protect:** the proprietary source itself (All-Rights-Reserved). The dominant
 control is `COPILOT_ENABLED=false` in production — the LLM organ that can read source is simply off
@@ -42,18 +42,18 @@ on any hosted/public deploy.
 Policy: **High → 14-day SLA, Medium → 30-day, Low → best-effort.** No public-internet production
 deploy may run with `COPILOT_ENABLED=true` until RISK-05/06 are closed.
 
-| ID      | Sev    | Title                                                                       | Status / SLA                                                                                                      |
-| ------- | ------ | --------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| RISK-01 | HIGH   | `git grep -O` option-injection → process exec (sandbox escape)              | ✅ **REMEDIATED 2026-06-15** (`ai-sandbox.ts` + tests)                                                            |
-| RISK-02 | MEDIUM | `run cat .env` read of blocked files                                        | ✅ **REMEDIATED 2026-06-15**                                                                                      |
-| RISK-03 | MEDIUM | `run sort -o` writes a file (read-only violation)                           | ✅ **REMEDIATED 2026-06-15**                                                                                      |
-| RISK-04 | MEDIUM | `POST /api/audit` unauthenticated + feed-poisoning                          | ◑ **flood/eviction SEALED 2026-06-15** (token bucket, `763381a`); auth deferred to public-deploy                  |
-| RISK-05 | MEDIUM | ~~No rate-limit~~; ~~no security headers~~; binds `0.0.0.0`; no CSP         | ◑ rate-limit + `nosniff`/`no-referrer` ADDED (`763381a`, `8d65dbe`); only `0.0.0.0` bind + CSP gate before deploy |
-| RISK-06 | MEDIUM | Copilot tool/web output not fenced as untrusted data; tool-steps not logged | OPEN — gate before deploy                                                                                         |
-| RISK-07 | MEDIUM | Determinism law enforced by convention, no `.oxlintrc` ratchet              | OPEN — fix specified (inspection §6.2)                                                                            |
-| RISK-08 | LOW    | `super-evolution.fromJSON` accepts `+Infinity` xp                           | ✅ **REMEDIATED 2026-06-15** (`df49dd7`, `Number.isFinite` guards + test)                                         |
-| RISK-09 | LOW    | CI `uses:` pinned to mutable tags, not commit SHAs                          | OPEN — pin + Dependabot actions ecosystem                                                                         |
-| RISK-10 | LOW    | Provider error body reflected (≤300 chars; not XSS)                         | OPEN — generic category                                                                                           |
+| ID      | Sev    | Title                                                                       | Status / SLA                                                                                                                                                                                     |
+| ------- | ------ | --------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| RISK-01 | HIGH   | `git grep -O` option-injection → process exec (sandbox escape)              | ✅ **REMEDIATED 2026-06-15** (`ai-sandbox.ts` + tests)                                                                                                                                           |
+| RISK-02 | MEDIUM | `run cat .env` read of blocked files                                        | ✅ **REMEDIATED 2026-06-15**                                                                                                                                                                     |
+| RISK-03 | MEDIUM | `run sort -o` writes a file (read-only violation)                           | ✅ **REMEDIATED 2026-06-15**                                                                                                                                                                     |
+| RISK-04 | MEDIUM | `POST /api/audit` unauthenticated + feed-poisoning                          | ◑ **flood/eviction SEALED 2026-06-15** (token bucket, `763381a`); auth deferred to public-deploy                                                                                                 |
+| RISK-05 | MEDIUM | ~~No rate-limit~~; ~~no security headers~~; binds `0.0.0.0`; no CSP         | ◑ rate-limit + `nosniff`/`no-referrer` ADDED (`763381a`, `8d65dbe`); only `0.0.0.0` bind + CSP gate before deploy                                                                                |
+| RISK-06 | MEDIUM | Copilot tool/web output not fenced as untrusted data; tool-steps not logged | OPEN — gate before deploy                                                                                                                                                                        |
+| RISK-07 | MEDIUM | Determinism law enforced by convention, no `.oxlintrc` ratchet              | ◑ **mechanical ratchet ADDED** — `tests/determinism-law.test.ts` scans `src/sim/**` + `src/math/**` for unseeded-PRNG/wall-clock CALLS; the `.oxlintrc` rule is now optional belt-and-suspenders |
+| RISK-08 | LOW    | `super-evolution.fromJSON` accepts `+Infinity` xp                           | ✅ **REMEDIATED 2026-06-15** (`df49dd7`, `Number.isFinite` guards + test)                                                                                                                        |
+| RISK-09 | LOW    | CI `uses:` pinned to mutable tags, not commit SHAs                          | OPEN — pin + Dependabot actions ecosystem                                                                                                                                                        |
+| RISK-10 | LOW    | Provider error body reflected (≤300 chars; not XSS)                         | OPEN — generic category                                                                                                                                                                          |
 
 ## 4. Verified-strong controls (do not regress)
 
