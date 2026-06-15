@@ -28,6 +28,7 @@ import { createGeometryCache } from '../src/sim/geometry-cache';
 import { createMorphotypes } from '../src/sim/morphotypes';
 import { createPhyla } from '../src/sim/phyla';
 import { EntityManager } from '../src/sim/entities';
+import { InstancedEntityRenderer } from '../src/sim/instanced-entities';
 import { LoreEngine } from '../src/sim/lore';
 import type { AuditTrail } from '../src/logging/audit';
 import type { Entity, SimContext, SimState } from '../src/types';
@@ -41,6 +42,16 @@ const POP = 8000;
  * ample slack to 120 ms, yet a 5×-class regression of the dominant loop (≈ 65 ms+) trips it.
  */
 const FRAME_BUDGET_MS = 120;
+
+/**
+ * Generous ceiling (ms) for one {@link InstancedEntityRenderer.sync} pass at {@link POP} entities —
+ * the 2nd-largest sim stage (~4.7 ms/10k reference; ~3.8 ms at this POP). The headless harness
+ * can't measure GPU upload size, but it DOES catch the structural regressions that matter on the
+ * CPU side: pool-rebuild thrash (recreating InstancedMeshes every frame instead of event-driven)
+ * or an O(n²) census — both several-fold blowups that clear this 80 ms bound with room to spare,
+ * while steady-state noise on a slow CI runner never approaches it.
+ */
+const SYNC_BUDGET_MS = 80;
 
 function makeState(): SimState {
   return {
@@ -140,5 +151,38 @@ describe('per-frame sim-CPU budget at the ultra tier', () => {
     // actually measured the heavy regime, not a collapsed world.
     expect(entities.list.length).toBeGreaterThan(POP * 0.7);
     expect(med).toBeLessThan(FRAME_BUDGET_MS);
+  }, 30000);
+});
+
+describe('per-frame instanced-render sync budget at the ultra tier', () => {
+  test(`InstancedEntityRenderer.sync at ${POP} entities stays under ${SYNC_BUDGET_MS}ms/frame (median)`, () => {
+    const ctx = makeCtx(0x115ce5, POP);
+    const entities = new EntityManager(ctx);
+    entities.reset(POP);
+    const renderer = new InstancedEntityRenderer(ctx);
+    expect(entities.list.length).toBe(POP);
+
+    // One sync per frame against the live population — exactly world.ts's `this.instanced.sync`
+    // call. The default zero-frame measures the common N(1) steady-state path (nightmare = 0).
+    const stepSync = (): number => {
+      const t0 = performance.now();
+      renderer.sync(entities.list, 'solid');
+      return performance.now() - t0;
+    };
+
+    // Warm past the one-time pool BUILD (first sync allocates every InstancedMesh) + JIT.
+    for (let f = 0; f < 20; f++) stepSync();
+    // After warm-up the pools exist and fit, so steady-state sync must be a pure rewrite — if a
+    // regression rebuilt pools here, these samples would balloon past the budget.
+    const pools = ctx.scene.children.filter((o) => o instanceof THREE.InstancedMesh);
+    expect(pools.length).toBeGreaterThan(0);
+
+    const samples: number[] = [];
+    for (let f = 0; f < 60; f++) samples.push(stepSync());
+
+    // Confirm the pools actually carried the population (guard measured the heavy regime).
+    const live = pools.reduce((sum, p) => sum + (p as THREE.InstancedMesh).count, 0);
+    expect(live).toBeGreaterThan(POP * 0.7);
+    expect(median(samples)).toBeLessThan(SYNC_BUDGET_MS);
   }, 30000);
 });
