@@ -83,6 +83,8 @@ import { NhiObservatory } from './ui/nhi-observatory';
 import { MarketTicker } from './ui/market-ticker';
 import { SuperCreature, type SuperPercept } from './sim/super-creature';
 import { SuperMind, type SuperMindSnapshot } from './sim/super-mind';
+import { WingmanSwarm, WINGMAN_COUNT } from './sim/super-wingmen';
+import { WingmanRenderer } from './sim/super-wingmen-render';
 import { SuperBodySystem } from './sim/super-body';
 import { SuperPanel } from './ui/super-panel';
 import { SuperheroState, HERO_POWERS } from './ui/superhero-state';
@@ -161,6 +163,9 @@ export class World {
   private readonly superCreature: SuperCreature;
   private readonly superMind: SuperMind; // V46: the live ~10k-param composite consciousness
   private superMindSnap: SuperMindSnapshot | null = null;
+  private readonly wingSwarm: WingmanSwarm; // V47: 100-robot escort, ~250-param brain each
+  private readonly wingRender: WingmanRenderer;
+  private readonly emptyQ = new Float32Array(10); // quantum fallback before the first mind beat
   private readonly superTwins: SuperCreature[] = [];
   private readonly superPanel: SuperPanel;
   private readonly superBody: SuperBodySystem;
@@ -467,6 +472,12 @@ export class World {
     // V46: the ~10k-param SUPER MIND on its OWN seeded sub-stream (so it never perturbs the superRng
     // order the twins/wallets draw from). It thinks live each beat; its consciousness drives the body.
     this.superMind = new SuperMind(mulberry32((this.persisted.seed ^ 0x5e1f3d11) >>> 0 || 1));
+    // V47: the wingman swarm (logic on its own rng sub-stream) + its single-draw-call instanced render.
+    this.wingSwarm = new WingmanSwarm(
+      WINGMAN_COUNT,
+      mulberry32((this.persisted.seed ^ 0x77149abc) >>> 0 || 1),
+    );
+    this.wingRender = new WingmanRenderer(ctx.scene, WINGMAN_COUNT);
     this.superPanel = new SuperPanel();
     this.economy.register(World.ECON_SUPER_BASE, this.superCreature.name, 20, this.superRng);
     // F-SUPER V32: the masterful many-eyed apex BODY (god-jewel shader) — additive, draws no rng.
@@ -642,6 +653,18 @@ export class World {
     this.leviathans.update(dt, t);
     // F-SUPER V32: animate the apex body every frame from the sim clock + last-folded mind state.
     this.superBody.update(t, dt);
+    // V47: the wingman swarm orbits + assists the prime each frame; one InstancedMesh draws all 100.
+    this.superBody.worldPosition(this.sv1);
+    this.wingSwarm.update(
+      this.sv1.x,
+      this.sv1.y,
+      this.sv1.z,
+      this.superMindSnap?.emotion.dominance ?? 0.5,
+      this.superMindSnap?.quantum ?? this.emptyQ,
+      t,
+      dt,
+    );
+    this.wingRender.sync(this.wingSwarm.positions, t, 0.4 + 0.6 * this.wingSwarm.assist);
     for (const hb of this.heroBodies) hb.body.update(t, dt); // V34/35: revealed hero/twin bodies
     this.cosmicWeb.update(t); // V11: far-field cosmic-web shimmer (additive backdrop, no rng)
     this.goldLattice.update(t); // V11: floating gold architecture tumble (additive, no rng)

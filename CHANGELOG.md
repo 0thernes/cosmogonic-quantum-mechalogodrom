@@ -13,6 +13,19 @@ the full gate (now also a coverage gate, on Linux + Windows) with same-seed dete
 
 ### Added
 
+- **The WINGMAN SWARM — 100 robots, a ~250-param brain each (V47)** — the directive's "wingman mini tiny
+  swarms of 100 robots around them that have 250 parameter intelligence each … and it helps the Super
+  Creatures." `sim/super-wingmen.ts` (`WingmanSwarm`): 100 drones orbit the apex creature, each carrying
+  its own **~257-weight brain** (a `TinyMLP` 8→18→5) that perceives its place in the formation + the
+  creature's dominance + two quantum aspects + a phase clock, then steers its own orbit and emits an
+  **ASSIST** signal (the swarm's mean assist is the lift the escort lends the monster). One FLAT weight
+  pool, an allocation-free inline forward, a golden-angle formation, and brains rolled from a dedicated
+  rng sub-stream — so it's cheap (100×257 muls/beat) and the population golden is **byte-identical**. The
+  positions buffer feeds **one InstancedMesh** (`sim/super-wingmen-render.ts`, single draw call) of
+  spinning, pulsing emissive octahedral drones whose glow tracks the assist. Wired live: the swarm orbits
+  the prime body every frame, re-centring as it flies. Verified headlessly (6 tests: 100 robots, ~250-
+  param budget, determinism, bounded orbit, bounded assist, tracks the creature, NaN-free ×400). Full
+  gate green (789 tests). _Live drone render pending a GPU pass (preview WebGL exhausted)._
 - **The SUPER MIND goes LIVE in the apex creature (V46)** — V45 built the ~10k-param composite
   consciousness; V46 wires it into the running world. `World` now constructs a `SuperMind` on its own
   seeded sub-stream (so it never perturbs the `superRng` the twins/wallets draw from — the population
