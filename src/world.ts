@@ -623,16 +623,38 @@ export class World {
     });
   }
 
+  /** V66: the world BOOTS at ~500 organisms so the first frame loads instantly, then ramps. */
+  private static readonly BOOT_POP = 500;
+  /** V66: seconds for the live target to ease from {@link BOOT_POP} up to the tier ceiling. */
+  private static readonly GROWTH_RAMP_SECS = 210;
+
   /**
-   * Boot/reset population: 30% of the adaptive steady-state target (legacy 300 of 1000) so the world
-   * boots toward its idle equilibrium and organic auto-split fills the rest. The **mega** tier (V38,
-   * V55 restored to the 50k ceiling) is the exception — it boots at 90% of that ceiling so the directive's
-   * "tens of thousands of active creatures" is instantiated, rendered, and stepped from the first frame
-   * (the √N density scale keeps it tractable; see `bun bench/scale.ts`), not waiting on organic growth.
+   * Boot/reset population (V66): a fast-loading **~500** on every tier (the directive's "always start
+   * at 500 and scale to 50,000 eventually"). The HARD ceiling stays the tier's full `maxEntities` (the
+   * beefy 50k mega world is untouched) — only the START is small, and {@link updateGrowthTarget} ramps
+   * the live target up so organic auto-split + sparse-respawn grow the world into it. Loads faster,
+   * then fills out + fluctuates.
    */
   private bootPopulation(): number {
-    const frac = this.quality.tier === 'mega' ? 0.9 : 0.3;
-    return Math.max(300, Math.round(this.quality.targetEntities * frac));
+    return Math.max(120, Math.min(World.BOOT_POP, this.quality.targetEntities));
+  }
+
+  /**
+   * V66: drive the live population target — ease from {@link BOOT_POP} up to the tier ceiling over
+   * {@link GROWTH_RAMP_SECS}, then BREATHE (a slow ±8 % sine) so the population fluctuates dynamically
+   * instead of pinning flat at the cap. Pure function of `state.elapsed` (no rng) ⇒ deterministic: the
+   * EntityManager grows toward this each frame. The ceiling is the tier's real target, so the huge world
+   * is still reached — just not all at once on the first frame.
+   */
+  private updateGrowthTarget(): void {
+    const s = this.state;
+    const ceiling = Math.min(this.quality.targetEntities, this.quality.maxEntities);
+    const boot = Math.min(World.BOOT_POP, ceiling);
+    const el = s.elapsed;
+    const g = el >= World.GROWTH_RAMP_SECS ? 1 : el / World.GROWTH_RAMP_SECS;
+    const ease = g * g * (3 - 2 * g); // smoothstep ramp
+    const breathe = 1 - 0.08 * ease * (0.5 - 0.5 * Math.cos(el * 0.04)); // gentle ±8% once grown
+    s.growthTarget = Math.round((boot + (ceiling - boot) * ease) * breathe);
   }
 
   /**
@@ -656,6 +678,7 @@ export class World {
     s.elapsed += dt;
     s.frame++;
     const t = s.elapsed;
+    this.updateGrowthTarget(); // V66: ramp the live population target 500 → ceiling, then breathe
 
     this.updateHeroControl(); // V41: route player nav input to the avatar (assist / manual)
     this.updateCamera(dt, t);

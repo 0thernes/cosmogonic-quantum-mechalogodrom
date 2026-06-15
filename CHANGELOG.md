@@ -13,6 +13,18 @@ the full gate (now also a coverage gate, on Linux + Windows) with same-seed dete
 
 ### Added
 
+- **The world boots at ~500 and grows into the 50k cosmos — dynamic population ramp (V66)** — the
+  directive's "always start at 500 and scale to 50,000 eventually + fluctuate dynamically so it loads
+  faster initially." Every tier now BOOTS at **~500** organisms (the mega tier used to instantiate 45,000
+  on the first frame), so the first frame is instant. A new deterministic `updateGrowthTarget()` then
+  eases a LIVE population target from 500 up to the tier's full ceiling over ~3.5 min (smoothstep), then
+  **breathes** it with a slow ±8 % sine so the population fluctuates instead of pinning flat. The
+  EntityManager's existing auto-split + sparse-respawn grow the world toward that live target. The HARD
+  ceiling is **unchanged** (mega is still the full 50,000 — the beefy world is reached, just not all at
+  once), and the ramp is gated behind an optional `state.growthTarget` so headless tests (which leave it
+  unset) keep the exact legacy fixed-target behaviour. Pure function of `elapsed` ⇒ determinism
+  preserved. **Verified live**: mega boots at 456 (was 45,000) with the target ramping toward 50,000.
+  Full gate green (811 tests).
 - **Super-creature leveling to 100 + godlike powers + the ASCENSION temple (V63)** — the directive's
   "hard XP curve, max level 100; +1 godlike power every 10 levels; the apex morphs/mutates at 10→100;
   end-state SS3/Neo ascension where a MEGALITHIC MONOLITH TEMPLE appears = Game Stage 2 / portal to the

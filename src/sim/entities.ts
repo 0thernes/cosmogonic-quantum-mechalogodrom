@@ -319,7 +319,14 @@ export class EntityManager {
     // (target===max ⇒ byte-identical to legacy). The hard spawn cap inside spawn() still uses
     // maxEntities, so user bursts/apocalypse can transiently exceed the target up to 10k, after
     // which the lack of auto-split lets the population relax back toward `target` (CONTRACTS V4.5).
-    const target = Math.min(ctx.quality.targetEntities, maxEntities);
+    // V66: the world ramps a LIVE target (state.growthTarget) from ~500 up to the ceiling so the sim
+    // loads fast then grows into the huge world; when it's unset (headless tests) fall back to the
+    // static tier target (byte-identical legacy behaviour).
+    const liveTarget = ctx.state.growthTarget;
+    const target = Math.min(
+      liveTarget && liveTarget > 0 ? liveTarget : ctx.quality.targetEntities,
+      maxEntities,
+    );
     MORPHS_SEEN.clear();
     this.phylumCounts.fill(0);
     const phylumCounts = this.phylumCounts;

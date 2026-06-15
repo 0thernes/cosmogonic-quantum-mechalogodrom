@@ -162,6 +162,13 @@ export interface SimState {
   algoTimer: number;
   frame: number;
   elapsed: number;
+  /**
+   * V66: the LIVE population target the world ramps from a fast-loading ~500 up to the tier ceiling
+   * (then breathes). When set (> 0) it overrides the static `quality.targetEntities` that
+   * `EntityManager.update` grows toward; left undefined (e.g. in headless tests) the legacy
+   * fixed-target behaviour is preserved. Deterministic — derived purely from {@link elapsed}.
+   */
+  growthTarget?: number;
 }
 
 export type SfxType =
