@@ -10,6 +10,12 @@ The Mechalogodrom has **no database**. Its "entities" live in scene graphs, type
 them each frame. The relational structure is real all the same, and modeling it makes the data flow
 auditable.
 
+> **Scope (V1–V13 core vs V14–V70):** this models the V1–V13 core relational structure. The later
+> intelligence + cosmology systems hold mostly **transient per-session state** (not new persistent
+> entities); they are documented per-module and in [ENTITY-SHEETS.md](./ENTITY-SHEETS.md) + the
+> Living-Era graph in [ARCHITECTURE.md](./ARCHITECTURE.md). The exception, persisted `SuperEvolution`
+> (localStorage), lives in its module.
+
 ## Conceptual schema
 
 ```mermaid

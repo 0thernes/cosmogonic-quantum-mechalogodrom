@@ -6,6 +6,15 @@ nonetheless, and the composition root (`world.ts`) is effectively its join
 engine. Diagrams below follow ERD (structure), ERM (relationship narrative),
 and ERP (process models).
 
+> **Scope (V1–V13 core vs V14–V70):** the diagrams below model the **V1–V13 core data layer** — the
+> entities carrying persistent/structural state (organisms, morphotypes, titans, NHI, the economy, the
+> audit ring, persisted preferences). The later intelligence + cosmology systems (super-creature,
+> genome/lineage, factions, leviathans, singularities, chaos-field, the monolith) hold mostly
+> **transient per-session simulation state** rather than new persistent entities, so they are documented
+> per-module and in [ENTITY-SHEETS.md](./ENTITY-SHEETS.md) + the Living-Era graph in
+> [ARCHITECTURE.md](./ARCHITECTURE.md) rather than expanded here. The one genuinely persisted addition,
+> `SuperEvolution` (localStorage), lives in its module + [ADR-0009](./adr/0009-genome-reproduction.md).
+
 ## ERD
 
 ```mermaid
