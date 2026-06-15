@@ -506,7 +506,10 @@ a:focus-visible {
   gap: 6px;
   padding: 6px;
   padding-top: calc(6px + env(safe-area-inset-top, 0px));
-  padding-bottom: calc(50px + env(safe-area-inset-bottom, 0px)); /* clear #bar */
+  /* V72: clear BOTH bottom dock rows — the #bar toolbar (~46px) AND the nav launcher above it (its top
+     sits ~90px off the bottom). 96px ends SORTING FIELDS (the tall lower-left #algoP) a touch higher so
+     it no longer runs flush into the bottom-dock band — "a little shorter… everything fits nicer". */
+  padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px));
   /* Right column widened (CONTRACTS V6.2a) so the observatory has more room to breathe on
      desktop/QHD; the TV block below grows it further. Left column hosts telemetry, audit and
      the new algorithm picker (#algoP), stacked top→bottom. */

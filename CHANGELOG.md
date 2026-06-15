@@ -26,6 +26,12 @@ the full gate (now also a coverage gate, on Linux + Windows) with same-seed dete
 
 ### Added
 
+- **SORTING FIELDS ends clear of the bottom dock band (V72)** — the directive's "the Sorting Fields box
+  can be a little shorter at the bottom where the 2 dock rows are, so everything fits nicer". The `#ui`
+  grid only reserved `50 px` at the bottom — enough to clear the `#bar` toolbar but NOT the nav launcher
+  row above it — so the tall lower-left `#algoP` (Sorting Fields) ran flush into the dock band. Bumped to
+  `96 px` so every column panel ends a touch higher, leaving a clean ~6 px gutter above the launcher
+  (verified: `#algoP` bottom 854 → launcher top 861). CSS only, no sim coupling.
 - **The nav launcher wears its NAMES again, centred in the open play-area (V72)** — the directive's
   "add the buttons back the names again so everything fits nicer and more organized" + "DOCS SPEC LAB
   not centered properly". The launcher now **hugs its content and centres in the live gap between the
