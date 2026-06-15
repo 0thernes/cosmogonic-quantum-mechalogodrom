@@ -164,10 +164,28 @@ body.cqm-hud-open #ui > #alg {
 #cqm-hud-nav.cqm-hud-tabs .cqm-hud-label {
   display: none;
 }
-/* Tight widths: drop the secondary Docs/Spec/Lab links so the cycler never crowds. */
+/* The secondary Docs/Spec/Lab links drop the moment the launcher would otherwise overflow its centre-
+   column band — chooseNavMode() adds .cqm-hud-nolinks after MEASURING (covers the narrow-desktop band
+   ~769-840px the fixed breakpoint missed), with a ≤520px fallback for the pre-JS frame. */
+#cqm-hud-nav.cqm-hud-nolinks .cqm-hud-link {
+  display: none;
+}
 @media (max-width: 520px) {
   #cqm-hud-nav .cqm-hud-link {
     display: none;
+  }
+}
+/* TOUCH: the launcher controls meet the ≥44px tap target the project's V3.4 contract mandates (the nav
+   has no fixed height + centres its items, so it just grows; fitHud reads its live top for the inset). */
+@media (pointer: coarse) {
+  .cqm-hud-btn {
+    min-height: 44px;
+  }
+  .cqm-hud-label {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
   }
 }
 /* SMALL / portrait / touch — the app.css grid collapses to edge sheets, so the side columns are gone:
@@ -256,15 +274,19 @@ function fitHud(): void {
  */
 function chooseNavMode(): void {
   if (!nav) return;
+  nav.classList.remove('cqm-hud-nolinks'); // start optimistic (Docs/Spec/Lab shown)
   const fineLandscape =
     typeof matchMedia === 'function' &&
     matchMedia('(pointer: fine) and (orientation: landscape)').matches;
-  if (!fineLandscape) {
-    nav.classList.remove('cqm-hud-tabs');
-    return;
+  if (fineLandscape) {
+    nav.classList.add('cqm-hud-tabs'); // try the six labelled tabs…
+    if (nav.scrollWidth > nav.clientWidth + 1) nav.classList.remove('cqm-hud-tabs'); // …don't fit → cycler
+  } else {
+    nav.classList.remove('cqm-hud-tabs'); // touch / portrait → always the big-tap cycler
   }
-  nav.classList.add('cqm-hud-tabs'); // try tabs…
-  if (nav.scrollWidth > nav.clientWidth + 1) nav.classList.remove('cqm-hud-tabs'); // …don't fit → cycler
+  // Still overflowing (a narrow centre column)? Drop the secondary links so the core ‹ CURRENT › ◐ ✕
+  // controls never clip — measured, so it self-corrects at any inset.
+  if (nav.scrollWidth > nav.clientWidth + 1) nav.classList.add('cqm-hud-nolinks');
 }
 
 let fitScheduled = false;

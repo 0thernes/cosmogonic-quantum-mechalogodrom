@@ -45,8 +45,12 @@ the full gate (now also a coverage gate, on Linux + Windows) with same-seed dete
   collapses to edge sheets (≤768 px / portrait / touch) the HUD spans full-width clear of the bars, and
   Docs/Spec/Lab drop ≤520 px so the cycler never crowds. **Verified live** at 1600/1440/1367/1294/1000/
   700/375: zero overlap with the side panels or bars at every width, the nav never clips/scrolls, and
-  the ◐ toggle flips every panel 1 → 0.4 → 1. UI shell only — no sim coupling, no rng. Full gate green
-  (822 tests).
+  the ◐ toggle flips every panel 1 → 0.4 → 1. UI shell only — no sim coupling, no rng. An adversarial
+  multi-agent review then hardened two edges (both verified live): the launcher now **drops the
+  Docs/Spec/Lab links by measurement** the instant they'd overflow a narrow centre column (the ~769–840
+  px landscape band a fixed breakpoint missed) so the core ‹ CURRENT › ◐ ✕ controls never clip, and the
+  launcher buttons meet the **≥44 px touch target** the V3.4 contract mandates on coarse pointers. Full
+  gate green (822 tests).
 - **The Titans become ominous 4-D freak-geometry that MATTERS to the world (V68)** — the directive's
   "the titans look like giant toys, organisms pass through them like nothing, and they merge through
   each other without changing — make them special: Mandelbrot/tesseract/Hilbert freak geometries with
