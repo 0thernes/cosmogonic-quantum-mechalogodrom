@@ -3632,6 +3632,7 @@
         if (page < 2 || page > 4) return;
         const grid = document.getElementById('board-' + page);
         if (!grid) return;
+        grid.innerHTML = ''; // HARD GUARD: a board is exactly its 12 tiles, never accumulates ghosts
         const specs = BOARDS[page];
         for (let k = 0; k < specs.length; k++) {
           const spec = specs[k];
@@ -3698,7 +3699,12 @@
       function rebuildBoards() {
         if (activeBoardPage >= 2) {
           const page = activeBoardPage;
-          activeBoardPage = -1; // force buildBoard to rebuild the same page
+          // BUGFIX: destroy FIRST — while activeBoardPage is still the real page, so destroyActiveBoard()
+          // clears the right grid's DOM — THEN rebuild. The old code set `activeBoardPage = -1` to force a
+          // rebuild, which made destroyActiveBoard skip its `activeBoardPage >= 2` DOM-clear: the old 12
+          // tiles stayed (their p5 canvases removed → BLACK boxes) while 12 fresh tiles appended on top,
+          // so every Regenerate/Random/Jump/Reset click grew +12 ghost boxes, unbounded.
+          destroyActiveBoard();
           buildBoard(page);
         }
       }
