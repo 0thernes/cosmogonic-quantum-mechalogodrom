@@ -1,8 +1,9 @@
 /**
  * The #1 law, mechanically enforced (closes the GOV-DET governance gap: determinism was enforced only
- * by convention + the golden, with no lint/test guard). Every source file under `src/sim/**` must be
- * free of the unseeded global PRNG and wall-clock reads — all sim randomness flows through the injected
- * seeded `Rng` (ADR-0004 / contract rule 7). This guard fails loudly the moment any edit (this agent's,
+ * by convention + the golden, with no lint/test guard). Every source file under `src/sim/**` — and the
+ * `src/math/**` primitives the sim draws its randomness from — must be free of the unseeded global PRNG
+ * and wall-clock reads; all sim randomness flows through the injected seeded `Rng` (ADR-0004 / contract
+ * rule 7). This guard fails loudly the moment any edit (this agent's,
  * the parallel editor's, or a future contributor's) reintroduces a non-deterministic call into the sim
  * layer, long before it could silently break "one seed, one cosmos".
  *
@@ -38,5 +39,24 @@ describe('determinism law — the sim layer never reads unseeded randomness or t
     }
     expect(scanned).toBeGreaterThan(30); // sanity: the glob actually found the sim files
     expect(offenders).toEqual([]); // any entry here is a determinism-law violation
+  });
+
+  // The sim draws ALL its randomness through primitives in src/math (`rng.ts`, `games.ts`, …); an
+  // unseeded PRNG or wall-clock read slipped into a math leaf would silently break the same "one
+  // seed, one cosmos" law from underneath. leaf-dom-freedom.test.ts already treats src/math as part
+  // of the deterministic trust boundary; this extends the wall-clock/PRNG guard to match.
+  test('src/math/** contains no Math.random / Date.now / performance.now CALLS', async () => {
+    const glob = new Bun.Glob('src/math/**/*.ts');
+    const offenders: string[] = [];
+    let scanned = 0;
+    for await (const path of glob.scan('.')) {
+      scanned++;
+      const code = stripComments(await Bun.file(path).text());
+      for (const { name, re } of BANNED) {
+        if (re.test(code)) offenders.push(`${path} → ${name}`);
+      }
+    }
+    expect(scanned).toBeGreaterThan(3); // sanity: the glob actually found the math leaves
+    expect(offenders).toEqual([]);
   });
 });
