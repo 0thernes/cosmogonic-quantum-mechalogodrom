@@ -182,6 +182,22 @@ entities the spawn spread out — a deeper neighbour-list LOD is the next lever.
 live: **44,977 entities instantiated, rendered, and stepped with zero console errors** (the throttled
 preview tab's full-frame cost is render-bound; a discrete GPU absorbs the 50k instanced draw).
 
+### Regression guards added 2026-06-15 (Bun 1.3.11 x64-win32, same CPU)
+
+Two more sim stages now carry dedicated median-of-many-frames guards alongside the
+`entities.update` budget, closing the "unmeasured" findings for each:
+
+- **`instanced.sync`** — `tests/perf-budget.test.ts` now drives the real
+  `InstancedEntityRenderer.sync(entities.list, …)` at 8,000 entities (≈ 3.8 ms here, consistent
+  with the 4.7 ms/10k per-stage breakdown above) under a generous 80 ms ceiling. The headless CPU
+  guard cannot see GPU upload size, but it catches the structural regressions that matter
+  CPU-side — pool-rebuild thrash (recreating InstancedMeshes every frame) or an O(n²) census.
+- **`ChaosField.update` (engaged) at the mega tier** — the Lorenz storm couples to every organism
+  each frame; over 50,000 entities it measures **≈ 0.25 ms/frame median** (max 0.50), i.e.
+  **negligible** beside the ≈ 60 ms entity pipeline that dominates the mega tier. Guarded in
+  `tests/chaos-field.test.ts` under a 15 ms ceiling (~60× slack). Engaging chaos mode at mega scale
+  is effectively free relative to the population loop.
+
 ## Interpretation
 
 The entire deterministic core (grid rebuild + a frame's worth of neighbor
