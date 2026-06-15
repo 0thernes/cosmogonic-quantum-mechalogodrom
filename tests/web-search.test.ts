@@ -4,7 +4,12 @@
  * are enforced, and a blocked query is refused BEFORE any network call (so the gate is the safety net).
  */
 import { describe, expect, test } from 'bun:test';
-import { screenWebQuery, webSearch, WEB_CONSTITUTION } from '../src/server/web-search';
+import {
+  formatAnswer,
+  screenWebQuery,
+  webSearch,
+  WEB_CONSTITUTION,
+} from '../src/server/web-search';
 
 describe('screenWebQuery (the safety constitution gate)', () => {
   test('allows public / educational queries', () => {
@@ -68,5 +73,48 @@ describe('screenWebQuery (the safety constitution gate)', () => {
     expect(WEB_CONSTITUTION).toContain('PUBLIC');
     expect(WEB_CONSTITUTION.toLowerCase()).toContain('cite');
     expect(WEB_CONSTITUTION).toMatch(/Anthropic|OpenAI|Gemini|Grok/);
+  });
+});
+
+describe('formatAnswer (DDG result → concise, source-cited block)', () => {
+  test('renders heading, lead with source, and caps related topics at 5', () => {
+    const out = formatAnswer('quantum', {
+      Heading: 'Quantum',
+      AbstractText: 'A branch of physics.',
+      AbstractURL: 'https://example.com/q',
+      RelatedTopics: Array.from({ length: 8 }, (_, i) => ({
+        Text: `topic ${i}`,
+        FirstURL: `https://e/${i}`,
+      })),
+    });
+    expect(out).toContain('# Quantum');
+    expect(out).toContain('A branch of physics.');
+    expect(out).toContain('(source: https://example.com/q)');
+    expect(out).toContain('Related:');
+    expect(out).toContain('topic 0');
+    expect(out).toContain('topic 4');
+    expect(out).not.toContain('topic 5'); // capped at 5
+  });
+
+  test('lead falls back through Answer then Definition; definition keeps its source', () => {
+    expect(formatAnswer('x', { Answer: 'the answer' })).toContain('the answer');
+    expect(formatAnswer('x', { Definition: 'the def', DefinitionURL: 'https://d' })).toContain(
+      '(source: https://d)',
+    );
+  });
+
+  test('an empty answer yields the graceful "nothing found" note citing the query', () => {
+    const out = formatAnswer('obscure thing', {});
+    expect(out).toContain('No public instant-answer summary');
+    expect(out).toContain('obscure thing');
+  });
+
+  test('related topics with no Text are filtered out', () => {
+    const out = formatAnswer('x', {
+      Answer: 'a',
+      RelatedTopics: [{ FirstURL: 'https://u' }, { Text: 'keep' }],
+    });
+    expect(out).toContain('keep');
+    expect(out).not.toContain('https://u'); // the text-less topic is dropped
   });
 });

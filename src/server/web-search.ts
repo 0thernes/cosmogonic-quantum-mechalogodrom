@@ -111,7 +111,7 @@ interface DdgAnswer {
 }
 
 /** Format the DDG answer into a concise, source-cited block (or a graceful "nothing found"). */
-function formatAnswer(q: string, d: DdgAnswer): string {
+export function formatAnswer(q: string, d: DdgAnswer): string {
   const parts: string[] = [];
   if (d.Heading) parts.push(`# ${d.Heading}`);
   const lead = d.AbstractText || d.Answer || d.Definition || '';
