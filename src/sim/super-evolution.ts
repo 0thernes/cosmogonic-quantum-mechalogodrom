@@ -265,13 +265,16 @@ export class SuperEvolution {
       const o = JSON.parse(s) as Partial<
         Record<'level' | 'xp' | 'stage' | 'mutations' | 'day', number>
       >;
-      if (typeof o.level === 'number' && o.level >= 1) evo.level = Math.floor(o.level);
-      if (typeof o.xp === 'number' && o.xp >= 0) evo.xp = o.xp;
-      if (typeof o.stage === 'number')
-        evo.stage = Math.max(0, Math.min(EVO_STAGES.length - 1, Math.floor(o.stage)));
-      if (typeof o.mutations === 'number' && o.mutations >= 0)
-        evo.mutations = Math.floor(o.mutations);
-      if (typeof o.day === 'number' && o.day >= 0) evo.day = Math.floor(o.day);
+      // Number.isFinite guards reject NaN AND ±Infinity: `Infinity >= 0` is true, so a tampered/
+      // corrupt localStorage blob with `xp: Infinity` would otherwise slip past `>= 0` and poison the
+      // catch-up loop / progress readout (audit 2026-06-15). `level` is additionally clamped below.
+      if (Number.isFinite(o.level) && (o.level as number) >= 1) evo.level = Math.floor(o.level as number);
+      if (Number.isFinite(o.xp) && (o.xp as number) >= 0) evo.xp = o.xp as number;
+      if (Number.isFinite(o.stage))
+        evo.stage = Math.max(0, Math.min(EVO_STAGES.length - 1, Math.floor(o.stage as number)));
+      if (Number.isFinite(o.mutations) && (o.mutations as number) >= 0)
+        evo.mutations = Math.floor(o.mutations as number);
+      if (Number.isFinite(o.day) && (o.day as number) >= 0) evo.day = Math.floor(o.day as number);
       if (evo.level > MAX_LEVEL) evo.level = MAX_LEVEL; // honour the V63 cap on restore
     } catch {
       /* malformed — keep the fresh BASE creature */

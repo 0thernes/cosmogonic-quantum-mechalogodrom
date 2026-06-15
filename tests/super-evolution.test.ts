@@ -83,6 +83,16 @@ describe('SuperEvolution (V48)', () => {
     expect(fresh.level).toBe(1);
   });
 
+  test('fromJSON rejects non-finite numbers — +Infinity cannot poison the meta state (audit 2026-06-15)', () => {
+    // JSON has no Infinity literal, but `1e999` parses to Infinity — a corrupt/tampered localStorage
+    // blob. Pre-fix, `Infinity >= 0` slipped past the guard and poisoned xp/day; the Number.isFinite
+    // guard now rejects it while still restoring the finite fields.
+    const evil = SuperEvolution.fromJSON('{"level":5,"xp":1e999,"day":1e999}');
+    expect(Number.isFinite(evil.xp)).toBe(true);
+    expect(Number.isFinite(evil.day)).toBe(true);
+    expect(evil.level).toBe(5); // finite fields still restore normally
+  });
+
   test('tick accrues XP for a dominant, dreaming apex', () => {
     const e = new SuperEvolution();
     e.tick(2, 1); // 2s at full vitality
