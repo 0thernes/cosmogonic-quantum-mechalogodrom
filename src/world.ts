@@ -732,6 +732,10 @@ export class World {
         /* an NHI beat misbehaved — skip it, keep the world running */
       }
     }
+    // V57: keep NHIs roaming OMNIDIRECTIONALLY + inside the dome (was a one-way climb to the sky) — a
+    // 1/10-scale echo of the super creature's flight. Deterministic (sin of the clock + the NHI id, no
+    // rng) and a no-op until an NHI is launched, so the seeded golden is untouched.
+    if (this.nhiEntities.size > 0) this.steerNhiBeings(t);
 
     const n = this.entities.list.length;
     // Connectome rebuild cadence by live population. Legacy ladder 1/2/3 at ≤400/≤700/>700
@@ -1496,9 +1500,10 @@ export class World {
     if (!e) return 0;
     const u = e.userData;
     u.isNhi = true;
-    u.beh = 'helix'; // ethereal, weaving float
+    u.beh = 'helix'; // ethereal, weaving motion (now OMNIDIRECTIONAL + contained — see steerNhiBeings)
     u.spd *= 2.2; // quick
-    u.vel.set((this.rng() - 0.5) * 0.3, 0.4, (this.rng() - 0.5) * 0.3); // launched upward
+    // V57: launch in a RANDOM direction (was a fixed +y, which made every NHI climb to the sky).
+    u.vel.set((this.rng() - 0.5) * 0.4, (this.rng() - 0.5) * 0.4, (this.rng() - 0.5) * 0.4);
     e.material.emissive.setRGB(0.25, 0.95, 1.0); // unmistakable cyan NHI glow
     e.material.emissiveIntensity = 3.2;
     // V10: birth a deterministic super-mind for this NHI and register it so it ACTS on the world
@@ -1610,7 +1615,39 @@ export class World {
       this.hud.showToast(text, 'NHI');
       this.audio.play('warp');
     } else if (intent.action === NhiAction.RETREAT) {
-      e.userData.vel.y += 0.05 * intent.magnitude;
+      // V57: retreat = pull back toward the home field (any direction), NOT ascend forever.
+      e.userData.vel.addScaledVector(this.sv1.copy(p).normalize(), -0.06 * intent.magnitude);
+    }
+  }
+
+  /**
+   * V57: omnidirectional roam + dome containment for the launched NHIs — a 1/10-scale echo of the
+   * super creature's flight. Each NHI gets a deterministic per-id wander (sin of the clock + its id,
+   * no rng) and is steered back inside the arena radius + between the floor and the ceiling, so it
+   * never climbs out of sight (the "NHIs float to the sky" bug). Cheap (a handful) and determinism-
+   * safe — no rng, no-op until an NHI is launched.
+   */
+  private steerNhiBeings(t: number): void {
+    const ARENA2 = 200 * 200;
+    const CEIL = 80;
+    const FLOOR = 4;
+    for (const [id, e] of this.nhiEntities) {
+      const v = e.userData.vel;
+      const p = e.position;
+      // Omnidirectional wander on all three axes (gentle).
+      v.x += Math.sin(t * 0.7 + id * 1.3) * 0.05;
+      v.y += Math.sin(t * 0.53 + id * 2.1) * 0.04;
+      v.z += Math.cos(t * 0.61 + id * 0.7) * 0.05;
+      // Containment (the float fix): steer back inside the dome + below the ceiling, above the floor.
+      const r2 = p.x * p.x + p.z * p.z;
+      if (r2 > ARENA2) {
+        const inv = 0.1 / Math.sqrt(r2);
+        v.x -= p.x * inv;
+        v.z -= p.z * inv;
+      }
+      if (p.y > CEIL) v.y -= 0.14;
+      else if (p.y < FLOOR) v.y += 0.14;
+      v.multiplyScalar(0.985); // damp so a roamer never accelerates away
     }
   }
 
