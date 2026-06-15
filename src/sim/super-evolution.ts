@@ -20,19 +20,46 @@ import type { Rng } from '../math/rng';
 /** The five transformation stages (Dragon-Ball-style ascensions). */
 export const EVO_STAGES = ['BASE', 'ASCENDED', 'SUPER', 'ULTRA', 'LEGENDARY'] as const;
 export type EvoStage = (typeof EVO_STAGES)[number];
-/** Level at which each stage unlocks. */
-const STAGE_LEVELS = [1, 12, 30, 60, 120];
+/**
+ * Hard level cap (V63). The arc tops out at **100** — LEGENDARY at the summit, where the apex hits
+ * the SS3/Neo end-state and the MONOLITH TEMPLE (Stage-2 portal) rises.
+ */
+export const MAX_LEVEL = 100;
+/** Level at which each stage unlocks — re-tiered (V63) so LEGENDARY is the level-100 summit. */
+const STAGE_LEVELS = [1, 10, 25, 50, 100];
 /** Power multiplier per stage — each transformation is a leap, not a step. */
 const STAGE_MULT = [1, 2, 4, 10, 50];
+/**
+ * The TEN godlike powers (V63) — one is granted **automatically every 10 levels** (L10…L100), so
+ * the apex wears `floor(level/10)` of them. The last, GODHEAD HALO, lands at the level-100 ascension.
+ */
+export const GODLIKE_POWERS = [
+  'KAIO AURA',
+  'PHASE STEP',
+  'GRAVITY WELL',
+  'TIME DILATION',
+  'MIND DOMINION',
+  'MATTER FORGE',
+  'STARFIRE BURST',
+  'VOID ANCHOR',
+  'COSMIC RECALL',
+  'GODHEAD HALO',
+] as const;
 
 const clamp01 = (v: number): number => (v < 0 ? 0 : v > 1 ? 1 : v);
 
 /** Appearance deltas the body reads — the creature visibly grows + shifts as it evolves. */
 export interface EvoAppearance {
-  sizeMul: number; // overall scale (grows with level + stage)
-  hueShift: number; // 0..1 colour rotation (shifts each ascension)
+  sizeMul: number; // overall scale (grows with level + stage + milestone tier)
+  hueShift: number; // 0..1 colour rotation (shifts each ascension + milestone)
   glowMul: number; // emissive multiplier
-  spikeBoost: number; // extra spike intensity (= stage)
+  spikeBoost: number; // extra spike intensity (= stage, +2 at the apex)
+  /** V63: 0..1 ascension aura — ramps over the milestones, hits 1 at LV100 (the SS3/Neo blaze). */
+  aura: number;
+  /** V63: milestone tier crossed = floor(level/10), 0..10. */
+  tier: number;
+  /** V63: true at the level-100 summit (the body should fully blaze + shimmer). */
+  ascended: boolean;
 }
 
 /** One entry in the evolutionary tale. */
@@ -55,6 +82,12 @@ export interface EvoView {
   day: number;
   appearance: EvoAppearance;
   lastEvent: string;
+  /** V63: the godlike powers unlocked so far (one per 10 levels). */
+  powers: readonly string[];
+  /** V63: the hard cap (100). */
+  maxLevel: number;
+  /** V63: true once the LV100 ascension end-state is reached. */
+  ascended: boolean;
 }
 
 export class SuperEvolution {
@@ -65,6 +98,10 @@ export class SuperEvolution {
   day = 0;
   private readonly hist: EvoEvent[] = [];
   private lastEvent = 'a new monster stirs';
+  /** V63: highest 10-level milestone already announced (derived from level; never re-fires). */
+  private lastMilestone = 0;
+  /** V63: the milestone level the world has yet to react to (sound/light), 0 when none pending. */
+  private pendingMilestone = 0;
 
   constructor() {
     this.log('born — BASE form, power 100');
@@ -81,17 +118,54 @@ export class SuperEvolution {
   stageName(): EvoStage {
     return EVO_STAGES[this.stage] ?? 'BASE';
   }
+  /** V63: true at the LV100 summit — the SS3/Neo ascension end-state (the world raises the temple). */
+  get ascended(): boolean {
+    return this.level >= MAX_LEVEL;
+  }
+  /** V63: the godlike powers unlocked so far — one automatically every 10 levels (LV10…LV100). */
+  powers(): readonly string[] {
+    const n = Math.min(GODLIKE_POWERS.length, Math.floor(this.level / 10));
+    return GODLIKE_POWERS.slice(0, n);
+  }
+  /**
+   * V63: drain the pending milestone (the 10-level threshold just crossed: 10…100, or 0 when none).
+   * The world reacts ONCE per crossing — a sound + a light flash, and at 100 the ascension end-state.
+   */
+  takeMilestone(): number {
+    const m = this.pendingMilestone;
+    this.pendingMilestone = 0;
+    return m;
+  }
 
-  /** Accumulate XP, rolling over level-ups (each may trigger an ascension). */
+  /** Accumulate XP, rolling over level-ups (each may trigger an ascension). Capped at {@link MAX_LEVEL}. */
   gainXp(amount: number): void {
-    if (amount <= 0) return;
+    if (amount <= 0 || this.level >= MAX_LEVEL) {
+      if (this.level >= MAX_LEVEL) this.xp = 0; // pinned at the apex — no more to gain
+      return;
+    }
     this.xp += amount;
     let guard = 0;
-    while (this.xp >= this.xpForNext() && guard++ < 100000) {
+    while (this.level < MAX_LEVEL && this.xp >= this.xpForNext() && guard++ < 100000) {
       this.xp -= this.xpForNext();
       this.level++;
       this.checkAscension();
     }
+    if (this.level >= MAX_LEVEL) this.xp = 0; // hold the cap
+    this.detectMilestone();
+  }
+
+  /** V63: arm the world's reaction when the level crosses a new 10-level milestone (incl. the LV100 apex). */
+  private detectMilestone(): void {
+    const m = Math.min(MAX_LEVEL, Math.floor(this.level / 10) * 10);
+    if (m < 10 || m <= this.lastMilestone) return;
+    this.lastMilestone = m;
+    this.pendingMilestone = m;
+    const last = this.powers()[this.powers().length - 1] ?? 'a godlike power';
+    this.log(
+      m >= MAX_LEVEL
+        ? '⚡ ASCENSION — LEGENDARY apex; the MONOLITH TEMPLE rises (Stage 2 portal opens)'
+        : `evolved to LV ${m} — granted ${last}`,
+    );
   }
 
   /** Advance through any stage thresholds the new level crossed (logs + mutates appearance). */
@@ -125,13 +199,22 @@ export class SuperEvolution {
     }
   }
 
-  /** The appearance the body should render at this evolution. */
+  /**
+   * The appearance the body should render at this evolution (V63: morphs harder at every 10-level
+   * milestone — bigger, more spikes, a shifting hue, and an `aura` that ramps to 1 at the LV100
+   * ascension where the apex fully blazes).
+   */
   appearance(): EvoAppearance {
+    const tier = Math.floor(this.level / 10); // 0..10 milestones crossed
+    const asc = this.level >= MAX_LEVEL;
     return {
-      sizeMul: 1 + 0.03 * (this.level - 1) + 0.15 * this.stage,
-      hueShift: (this.stage * 0.13 + (this.level - 1) * 0.004) % 1,
-      glowMul: 1 + 0.3 * this.stage,
-      spikeBoost: this.stage,
+      sizeMul: 1 + 0.04 * (this.level - 1) + 0.2 * this.stage + 0.1 * tier,
+      hueShift: (this.stage * 0.13 + tier * 0.07 + (this.level - 1) * 0.004) % 1,
+      glowMul: 1 + 0.3 * this.stage + 0.12 * tier,
+      spikeBoost: this.stage + (asc ? 2 : 0),
+      aura: clamp01(tier / 10),
+      tier,
+      ascended: asc,
     };
   }
 
@@ -158,6 +241,9 @@ export class SuperEvolution {
       day: this.day,
       appearance: this.appearance(),
       lastEvent: this.lastEvent,
+      powers: this.powers(),
+      maxLevel: MAX_LEVEL,
+      ascended: this.ascended,
     };
   }
 
@@ -186,9 +272,12 @@ export class SuperEvolution {
       if (typeof o.mutations === 'number' && o.mutations >= 0)
         evo.mutations = Math.floor(o.mutations);
       if (typeof o.day === 'number' && o.day >= 0) evo.day = Math.floor(o.day);
+      if (evo.level > MAX_LEVEL) evo.level = MAX_LEVEL; // honour the V63 cap on restore
     } catch {
       /* malformed — keep the fresh BASE creature */
     }
+    // V63: seed the milestone tracker from the restored level so it never re-announces past tiers.
+    evo.lastMilestone = Math.floor(evo.level / 10) * 10;
     return evo;
   }
 }

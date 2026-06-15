@@ -87,6 +87,7 @@ import { SuperMind, type SuperMindSnapshot } from './sim/super-mind';
 import { WingmanSwarm, WINGMAN_COUNT } from './sim/super-wingmen';
 import { WingmanRenderer } from './sim/super-wingmen-render';
 import { SuperEvolution } from './sim/super-evolution';
+import { MonolithTemple } from './sim/monolith-temple';
 import { SuperBodySystem } from './sim/super-body';
 import { SuperPanel } from './ui/super-panel';
 import { SuperheroState, HERO_POWERS } from './ui/superhero-state';
@@ -178,6 +179,10 @@ export class World {
   private readonly wingRender: WingmanRenderer;
   private readonly emptyQ = new Float32Array(10); // quantum fallback before the first mind beat
   private readonly superEvo: SuperEvolution; // V48: the self-evolving power/appearance arc
+  /** V63: the LV100 ascension end-state monument + Stage-2 portal (built once, revealed on ascension). */
+  private readonly monolithTemple: MonolithTemple;
+  /** V63: guards the once-only ascension fanfare + temple reveal. */
+  private superAscended = false;
   private readonly evoRng: Rng;
   /** Frames per evolution "day" — a sim-day cron passes every ~6 min of play (60fps). */
   private static readonly EVO_DAY_FRAMES = 21600;
@@ -508,6 +513,13 @@ export class World {
     // elapsed (the "daemon cron / updates every 24h"). A META-organ OUTSIDE the deterministic sim.
     this.evoRng = mulberry32((this.persisted.seed ^ 0x00e701ce) >>> 0 || 1);
     this.superEvo = this.loadEvolution();
+    // V63: the LV100 ascension monument. If the persisted creature is ALREADY at the summit, raise
+    // the temple silently on boot (it's just THERE); a fresh live ascension plays the full fanfare.
+    this.monolithTemple = new MonolithTemple(ctx.scene);
+    if (this.superEvo.ascended) {
+      this.monolithTemple.reveal(0, 0, -40 * ARENA_MID, true);
+      this.superAscended = true;
+    }
     this.superPanel = new SuperPanel();
     this.economy.register(World.ECON_SUPER_BASE, this.superCreature.name, 20, this.superRng);
     // F-SUPER V32: the masterful many-eyed apex BODY (god-jewel shader) — additive, draws no rng.
@@ -814,6 +826,7 @@ export class World {
     this.viz3d.update(this.viz3dSnap);
     this.environment.update(dt, t);
     this.artifacts.update(dt, t); // F-ARTIFACTS (V9): animate + fade the relic pool (visual-only)
+    this.monolithTemple.update(dt, t); // V63: rise + shimmer the ascension portal (no-op until revealed)
 
     if (s.frame % 60 === 30) {
       // RD pattern energy: strided mean of the V field (offset 30 — never
@@ -995,6 +1008,19 @@ export class World {
       );
       this.superEvo.tick(4 / 60, vitality);
       this.superBody.setEvolution(this.superEvo.appearance());
+      // V63: react to a 10-level milestone — a voice + a HUD toast announcing the new godlike power,
+      // and at the LV100 apex the full ASCENSION end-state (the MONOLITH TEMPLE rises). Once each.
+      const ms = this.superEvo.takeMilestone();
+      if (ms > 0) {
+        if (ms >= 100) {
+          this.ascend();
+        } else {
+          this.audio.play('burst');
+          const last = this.superEvo.view().powers.at(-1) ?? 'a godlike power';
+          this.hud.showSector(`EVOLVED · LV ${ms} · +1 GODLIKE POWER: ${last}`);
+          this.audit.record('evo-milestone', { level: ms, power: last });
+        }
+      }
       if (s.frame > 0 && s.frame % World.EVO_DAY_FRAMES === 0) {
         this.superEvo.applyDays(1, this.evoRng); // a sim-day of training
         this.saveEvolution();
@@ -1019,6 +1045,25 @@ export class World {
    * deep mind + apex purse + masterful body apart from the prime), activate the progression state + the
    * player HUD. Idempotent. Draws from the SUPER sub-stream, so the main determinism golden is untouched.
    */
+  /**
+   * V63: THE ASCENSION — the apex hit LEVEL 100 (the SS3/Neo end-state). Raise the MEGALITHIC
+   * MONOLITH TEMPLE (the GAME STAGE 2 portal to the "Eshkol Tsotchke" second world, built later),
+   * sound the deep voice, toast the HUD, audit it, and fire a `cqm:ascension` event for any Stage-2
+   * listener. Idempotent (guarded by {@link superAscended}); the temple itself is visual-only, so this
+   * never perturbs the deterministic population golden. The 2nd-world build is a future stage.
+   */
+  private ascend(): void {
+    if (this.superAscended) return;
+    this.superAscended = true;
+    this.monolithTemple.reveal(0, 0, -40 * ARENA_MID);
+    this.audio.playId(SFX_SUBBOOM);
+    this.hud.showSector('⚡ ASCENSION — STAGE 2 · THE MONOLITH TEMPLE RISES');
+    this.audit.record('ascension', { level: 100, stage: 2 });
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('cqm:ascension', { detail: { stage: 2 } }));
+    }
+  }
+
   private revealSecondSuper(): void {
     if (this.superheroUnlocked) return;
     this.superheroUnlocked = true;
@@ -1675,26 +1720,65 @@ export class World {
    * safe — no rng, no-op until an NHI is launched.
    */
   private steerNhiBeings(t: number): void {
-    const ARENA2 = 200 * 200;
-    const CEIL = 80;
-    const FLOOR = 4;
+    // V60: drive every launched NHI like a SUPER CREATURE at ~1/10 scale — purposeful, fully
+    // omnidirectional motion that stays contained. Each seeks a slowly-orbiting 3D waypoint around a
+    // mid-height home (a per-id Lissajous path, so it weaves the whole volume on every axis), is held
+    // by a continuous pull toward home height + a radial leash, and is HARD-clamped to the dome so it
+    // can NEVER drift off to the sky again. The old fix only nudged velocity once past y>80, so a
+    // climber simply hung at the ceiling (the "floating to the sky" the user still saw). The NHI's
+    // intelligence (cognition + game theory + the world actions it takes each beat) lives in its mind;
+    // this is just its body, now agile and leashed. Pure t/id trig — deterministic, allocation-free.
+    const HOME_Y = 24; // comfortable mid-height (ground ≈ 0, camera ≈ 50)
+    const LEASH = 130; // soft radial pull begins here (XZ)
+    const RMAX2 = 150 * 150; // hard radial cap
+    const Y_LO = 6;
+    const Y_HI = 56; // hard ceiling — well below the old runaway height
     for (const [id, e] of this.nhiEntities) {
       const v = e.userData.vel;
       const p = e.position;
-      // Omnidirectional wander on all three axes (gentle).
-      v.x += Math.sin(t * 0.7 + id * 1.3) * 0.05;
-      v.y += Math.sin(t * 0.53 + id * 2.1) * 0.04;
-      v.z += Math.cos(t * 0.61 + id * 0.7) * 0.05;
-      // Containment (the float fix): steer back inside the dome + below the ceiling, above the floor.
+      // Personal orbiting waypoint — a Lissajous path on all three axes (true omnidirectional roam,
+      // each NHI on its own phase/radius so a swarm spreads through the volume instead of clumping).
+      const ph = id * 1.7;
+      const rad = 45 + (id % 5) * 10;
+      const tx = Math.cos(t * 0.19 + ph) * rad;
+      const tz = Math.sin(t * 0.23 + ph * 1.3) * rad;
+      const ty = HOME_Y + Math.sin(t * 0.31 + ph) * 14;
+      // Seek the waypoint with a capped, distance-independent accel (smooth intent-like pursuit).
+      const dx = tx - p.x;
+      const dy = ty - p.y;
+      const dz = tz - p.z;
+      const d = Math.sqrt(dx * dx + dy * dy + dz * dz) + 1e-6;
+      v.x += (dx / d) * 0.05;
+      v.y += (dy / d) * 0.05;
+      v.z += (dz / d) * 0.05;
+      // Gentle weave on top so the motion never reads as a straight line.
+      v.x += Math.sin(t * 0.7 + id * 1.3) * 0.04;
+      v.y += Math.sin(t * 0.53 + id * 2.1) * 0.03;
+      v.z += Math.cos(t * 0.61 + id * 0.7) * 0.04;
+      // Continuous height restoring force — THIS is the real sky-float fix: an NHI is always pulled
+      // back toward home height, so upward drift can never accumulate into a climb to the ceiling.
+      v.y += (HOME_Y - p.y) * 0.004;
+      // Radial leash (XZ) toward the home column.
       const r2 = p.x * p.x + p.z * p.z;
-      if (r2 > ARENA2) {
-        const inv = 0.1 / Math.sqrt(r2);
+      if (r2 > LEASH * LEASH) {
+        const inv = 0.12 / Math.sqrt(r2);
         v.x -= p.x * inv;
         v.z -= p.z * inv;
       }
-      if (p.y > CEIL) v.y -= 0.14;
-      else if (p.y < FLOOR) v.y += 0.14;
       v.multiplyScalar(0.985); // damp so a roamer never accelerates away
+      // Hard containment guarantee — even if a behavior pushes a body out, snap it back this frame.
+      if (p.y > Y_HI) {
+        p.y = Y_HI;
+        if (v.y > 0) v.y = 0;
+      } else if (p.y < Y_LO) {
+        p.y = Y_LO;
+        if (v.y < 0) v.y = 0;
+      }
+      if (r2 > RMAX2) {
+        const s = 150 / Math.sqrt(r2);
+        p.x *= s;
+        p.z *= s;
+      }
     }
   }
 

@@ -13,6 +13,27 @@ the full gate (now also a coverage gate, on Linux + Windows) with same-seed dete
 
 ### Added
 
+- **Super-creature leveling to 100 + godlike powers + the ASCENSION temple (V63)** — the directive's
+  "hard XP curve, max level 100; +1 godlike power every 10 levels; the apex morphs/mutates at 10→100;
+  end-state SS3/Neo ascension where a MEGALITHIC MONOLITH TEMPLE appears = Game Stage 2 / portal to the
+  2nd world." `SuperEvolution` now **hard-caps at level 100** (re-tiered the 5 ascensions to
+  1/10/25/50/**100** so LEGENDARY is the summit, not the old unreachable L120). A **godlike power is
+  granted automatically every 10 levels** — the ten-strong pantheon (KAIO AURA … GODHEAD HALO),
+  `floor(level/10)` worn at any time, shown in the ⬢ ARCHITECT panel as `LV n/100 · k/10⚡`. The
+  appearance **morphs harder at each milestone** (size/spikes/hue scale with the 0..10 tier) and an
+  `aura` ramps to **1.0 at the apex** (the SS3/Neo blaze). At **level 100 the ASCENSION fires once**: a
+  deep voice, a HUD proclamation, a `cqm:ascension` event, and — the headline — a new `MonolithTemple`
+  (`src/sim/monolith-temple.ts`) **rises from the field**: a stepped plinth, two colossal tapered
+  pillars, a great lintel and, framed between them, a shimmering colour-cycling **portal** ringed by
+  counter-spinning glyph-rings — the gateway to **GAME STAGE 2** (the "Eshkol Tsotchke" second world,
+  built later). The temple eases up over ~2.4 s then breathes forever; an already-ascended creature
+  restored from storage finds it **already standing** (silent reveal). Each level milestone, the
+  ascension, and the temple are all wired through the existing impure evolution META-layer, so the
+  population determinism golden is untouched (the temple is visual-only, pure `t`/`dt`, no rng). New
+  V63 test coverage (hard cap, one-power-per-10, milestone fires once + survives restore, summit aura).
+  **Verified live**: an evolution capped at 100 with 10 powers + aura 1.0, and the temple builds its 11
+  megaliths into the scene with a portal that shimmers across animation phases. Full gate green (810
+  tests).
 - **CHAOS MODE — a Lorenz quantum storm you can engage (V62)** — the directive's "real chaos
   math/theory + random quantum mechanics on the creatures (tunnelling, entanglement, superposition)
   that shakes the world and disturbs weather/economy/algorithms." A new toggled `ChaosField`

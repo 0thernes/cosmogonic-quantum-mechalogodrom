@@ -32,9 +32,9 @@ describe('SuperEvolution (V48)', () => {
     const e = new SuperEvolution();
     expect(e.stageName()).toBe('BASE');
     const basePower = e.power();
-    e.gainXp(1e20); // pour in XP → climbs past level 120 → fully ascends (the curve is steep by design)
-    expect(e.level).toBeGreaterThan(120);
-    expect(e.stage).toBe(EVO_STAGES.length - 1); // LEGENDARY
+    e.gainXp(1e20); // pour in XP → climbs to the LV100 cap → fully ascends (the curve is steep by design)
+    expect(e.level).toBe(100); // V63: hard cap
+    expect(e.stage).toBe(EVO_STAGES.length - 1); // LEGENDARY (now the LV100 summit)
     expect(e.stageName()).toBe('LEGENDARY');
     expect(e.power()).toBeGreaterThan(basePower * 1000);
     expect(e.mutations).toBeGreaterThanOrEqual(4); // one mutation per ascension
@@ -87,5 +87,63 @@ describe('SuperEvolution (V48)', () => {
     const e = new SuperEvolution();
     e.tick(2, 1); // 2s at full vitality
     expect(e.xp + (e.level - 1) * 60).toBeGreaterThan(0);
+  });
+
+  // ── V63: the 1–100 leveling spec ──────────────────────────────────────────────
+  test('the level is hard-capped at 100 (no overflow past the summit)', () => {
+    const e = new SuperEvolution();
+    expect(e.ascended).toBe(false);
+    e.gainXp(1e30);
+    expect(e.level).toBe(100);
+    expect(e.ascended).toBe(true);
+    e.gainXp(1e30); // already at the cap → no-op, no runaway
+    expect(e.level).toBe(100);
+    expect(e.view().maxLevel).toBe(100);
+  });
+
+  test('one godlike power is granted every 10 levels (10 at the summit)', () => {
+    const e = new SuperEvolution();
+    expect(e.powers().length).toBe(0); // L1
+    e.level = 30;
+    expect(e.powers().length).toBe(3); // L30 → 3 powers
+    e.level = 100;
+    expect(e.powers().length).toBe(10); // the full pantheon
+    expect(new Set(e.powers()).size).toBe(10); // all distinct
+  });
+
+  test('crossing a 10-level milestone arms exactly one pending reaction, drained once', () => {
+    const e = new SuperEvolution();
+    e.gainXp(1e20); // straight to the cap in one shot
+    expect(e.takeMilestone()).toBe(100); // the apex milestone is pending
+    expect(e.takeMilestone()).toBe(0); // drained — fires only once
+  });
+
+  test('a fresh 10-level crossing fires its own milestone (LV10 → 10)', () => {
+    const e = new SuperEvolution();
+    // climb to ~L10 via a few hefty grants; the top milestone crossed should surface.
+    while (e.level < 10) e.gainXp(e.xpForNext());
+    expect(e.level).toBe(10);
+    expect(e.takeMilestone()).toBe(10);
+  });
+
+  test('restoring an already-capped creature never re-fires the ascension milestone', () => {
+    const a = new SuperEvolution();
+    a.gainXp(1e20);
+    a.takeMilestone(); // drain the live ascension
+    const restored = SuperEvolution.fromJSON(a.serialize());
+    expect(restored.level).toBe(100);
+    expect(restored.ascended).toBe(true);
+    expect(restored.takeMilestone()).toBe(0); // restore is silent — temple just IS
+  });
+
+  test('appearance hits the full ascension aura at the summit', () => {
+    const e = new SuperEvolution();
+    e.level = 100;
+    e.stage = 4;
+    const a = e.appearance();
+    expect(a.ascended).toBe(true);
+    expect(a.aura).toBe(1);
+    expect(a.tier).toBe(10);
+    expect(a.sizeMul).toBeGreaterThan(new SuperEvolution().appearance().sizeMul);
   });
 });
