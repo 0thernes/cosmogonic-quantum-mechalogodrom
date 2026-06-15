@@ -26,6 +26,17 @@ the full gate (now also a coverage gate, on Linux + Windows) with same-seed dete
 
 ### Added
 
+- **DOCS / SPEC / LAB sit DEAD-CENTRE of the launcher (V73)** — the directive's "DOCS and SPEC and LAB
+  should be CENTERED CENTRAL MIDDLE, not just centered and on top". They used to be appended at the far
+  RIGHT end of the row (cx ≈ 891–976 while the bar centred at 649). The nav is now a **three-zone bar that
+  fills the gap between the side panels**: the six named tabs **split 3 / 3** across two flanks that GROW
+  to exactly equal width (`flex: 1 1 0`), with the `◐` / `✕` controls as symmetric end-brackets — so the
+  DOCS · SPEC · LAB cluster (its own framed pill) is pinned to the true centre (verified `offCentre = 0 px`
+  at 1350) and the heavier panel tabs can never overflow their half and collide with it. `chooseNavMode()`
+  now measures each flank's real content width (a `justify-end` flank overspills LEFTWARD, which
+  `scrollWidth` can't see) and keeps the widest fitting tier: tabs + central links → tabs alone → the
+  ‹ CURRENT › cycler. Verified live: **1350** centred links, **1180** links drop (names stay), **980**
+  cycler — no overlap at any width. center-hud.ts only, UI shell, no sim coupling, no rng.
 - **SORTING FIELDS ends clear of the bottom dock band (V72)** — the directive's "the Sorting Fields box
   can be a little shorter at the bottom where the 2 dock rows are, so everything fits nicer". The `#ui`
   grid only reserved `50 px` at the bottom — enough to clear the `#bar` toolbar but NOT the nav launcher
