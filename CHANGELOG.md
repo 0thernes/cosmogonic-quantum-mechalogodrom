@@ -43,6 +43,11 @@ the full gate (now also a coverage gate, on Linux + Windows) with same-seed dete
   keys) for a forensic trail; and `redactSecrets()` strips any echoed `Bearer`/`sk-…` token from a
   surfaced provider error. The default-deny read-only sandbox remains the hard boundary — this is
   defense-in-depth. All in `src/server/copilot.ts` (gated off in production). +6 unit tests.
+- **All GitHub Actions SHA-pinned (2026-06-15, RISK-09)** — the 9 actions across the CI / CodeQL /
+  Pages / Release workflows were on mutable major tags (`@v4` …); each is now pinned to the exact
+  commit SHA its tag currently resolves to, with a `# vN` comment. Resolved via the authoritative
+  GitHub API and re-verified against the files — execution-identical to the tags, just immutable
+  against tag-hijack/force-move. Dependabot's `github-actions` ecosystem keeps them current.
 - **Determinism + layer-boundary invariants now mechanically guarded** — the #1 law (no unseeded
   PRNG / wall-clock in the deterministic core) is pinned by a test scanning `src/sim/**` _and_ the
   `src/math/**` primitives it draws randomness from; a companion guard pins the import direction

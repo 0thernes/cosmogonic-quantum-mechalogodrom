@@ -32,7 +32,7 @@ on any hosted/public deploy.
 | Secrets           | ✅     | `minimalEnv()` strips provider keys from subprocesses; `.env*` blocked from reads; no hardcoded keys (grep-verified)        |
 | License / SBOM    | ✅     | CycloneDX via `scripts/sbom.ts`; all-permissive, no copyleft conflict                                                       |
 | Container / IaC   | n/a    | no Dockerfile / Terraform / k8s in repo (documented as N/A)                                                                 |
-| Pipeline security | ◑      | least-privilege `contents: read`; **CI actions on mutable tags** (RISK-09)                                                  |
+| Pipeline security | ✅     | least-privilege `contents: read`; all actions SHA-pinned (`# vN` + Dependabot); frozen lockfile                             |
 | API security      | ◑      | per-route gating + body caps + rate-limit + `nosniff`/`no-referrer` on every response; **`0.0.0.0` bind, no CSP** (RISK-05) |
 | AI/LLM safety     | ✅     | sandboxed + key-stripped + untrusted-data fencing + tool-step logging + error-credential redaction                          |
 | DAST              | ◑      | manual; no automated dynamic scan (low priority — tiny surface)                                                             |
@@ -54,7 +54,7 @@ bind / reverse proxy, and request auth on the write endpoints.
 | RISK-06 | MEDIUM | Copilot tool/web output not fenced as untrusted data; tool-steps not logged | ✅ **MITIGATED 2026-06-15** (`369a691`) — `fenceUntrusted()` markers + system-prompt rule + per-step server log; the default-deny sandbox remains the hard boundary                              |
 | RISK-07 | MEDIUM | Determinism law enforced by convention, no `.oxlintrc` ratchet              | ◑ **mechanical ratchet ADDED** — `tests/determinism-law.test.ts` scans `src/sim/**` + `src/math/**` for unseeded-PRNG/wall-clock CALLS; the `.oxlintrc` rule is now optional belt-and-suspenders |
 | RISK-08 | LOW    | `super-evolution.fromJSON` accepts `+Infinity` xp                           | ✅ **REMEDIATED 2026-06-15** (`df49dd7`, `Number.isFinite` guards + test)                                                                                                                        |
-| RISK-09 | LOW    | CI `uses:` pinned to mutable tags, not commit SHAs                          | OPEN — pin + Dependabot actions ecosystem                                                                                                                                                        |
+| RISK-09 | LOW    | CI `uses:` pinned to mutable tags, not commit SHAs                          | ✅ **REMEDIATED 2026-06-15** (`a1045ef`) — all 9 actions SHA-pinned (authoritative-resolved + re-verified) with `# vN` comments; Dependabot github-actions keeps them current                    |
 | RISK-10 | LOW    | Provider error body reflected (≤300 chars; not XSS)                         | ✅ **REMEDIATED 2026-06-15** (`059eebf`) — `redactSecrets()` strips echoed Bearer/`sk-` tokens before the bounded slice is surfaced                                                              |
 
 ## 4. Verified-strong controls (do not regress)
