@@ -27,12 +27,19 @@
  * A DREAM/replay CONSOLIDATOR folds the imagined latent back into episodic memory between beats.
  *
  * Determinism + budget are unit-tested. Allocation-free in steady state (all scratch is preallocated).
- * The masterful many-eyed body ([super-body.ts]) and the wingman swarm hang off {@link snapshot} in
- * following increments. (The "Eshkol/Tsotchke" references in the brief don't map to known public tools;
- * the substance — Creativity Machine, ToT/AoT, recursive depth — is implemented directly.)
+ * The masterful many-eyed body ([super-body.ts]) and the wingman swarm hang off {@link snapshot}.
+ *
+ * V75 — the **Quantum Computing Mind** ([super-qubits.ts]): each beat the composite mind also drives a
+ * genuine 6-qubit statevector register, encoding its latent + the 10 quantum aspects into real unitary
+ * rotations and tunable entanglement (the directive's "Quantum Computing Mind · Simulated Qubits",
+ * informed by a study of the Eshkol qubit-RNG and the Quantum-Geometric-Tensor library — see
+ * super-qubits.ts). Its {@link QubitSnapshot} rides on {@link snapshot} for the BRAIN view. The
+ * classical substance here — Creativity Machine, ToT/AoT, recursive depth — is implemented directly.
  */
 import type { Rng } from '../math/rng';
+import { mulberry32 } from '../math/rng';
 import { TinyMLP, MemoryRing } from './ai/brains';
+import { QuantumMind, type QubitSnapshot } from './super-qubits';
 import type { SuperPercept, SuperPlan } from './super-creature';
 import { SUPER_PLANS } from './super-creature';
 
@@ -126,6 +133,8 @@ export interface SuperMindSnapshot {
   quantum: number[];
   latent: number[];
   imagined: number[];
+  /** V75: the live simulated-qubit register (the Quantum Computing Mind). */
+  qubits: QubitSnapshot;
 }
 
 const EMOTION_TAU = 0.12;
@@ -147,6 +156,8 @@ export class SuperMind {
   private readonly affect: Subnet; // 12 → 16 → 3    feeling
   private readonly quantum: Subnet; // 16 → 20 → 10   quantum aspects
   private readonly meta: Subnet; // 69 → 26 → 12   integrate → drives
+  /** V75: the genuine statevector quantum register the composite mind drives each beat. */
+  private readonly qmind: QuantumMind;
   readonly paramCount: number;
 
   // ── Reusable scratch (no per-beat allocation) ──
@@ -205,6 +216,11 @@ export class SuperMind {
       this.affect.params +
       this.quantum.params +
       this.meta.params;
+    // The quantum mind draws its seed LAST (after every weight is initialised) so it never perturbs
+    // the weight stream — a dedicated child stream, so its per-beat Born sample stays independent.
+    this.qmind = new QuantumMind(
+      mulberry32((Math.floor(rng() * 0xffffffff) ^ 0x9e3779b9) >>> 0 || 1),
+    );
   }
 
   get offspringCount(): number {
@@ -331,6 +347,10 @@ export class SuperMind {
     const dreamVec = this.consolidator.forward(this.imagined);
     this.memory.push(unit(dreamVec[0] ?? 0));
 
+    // ── QUANTUM COMPUTING MIND ── drive the simulated-qubit register with this beat's aspects +
+    // latent: the circuit encodes cognition into real unitary evolution + tunable entanglement.
+    this.qmind.evolve(this.quantumOut, this.latent);
+
     // consciousness state
     const novelty = peakNovelty;
     this.cons = {
@@ -403,6 +423,7 @@ export class SuperMind {
       quantum: this.quantumOut.slice(),
       latent: Array.from(this.latent),
       imagined: Array.from(this.imagined),
+      qubits: this.qmind.snapshot(),
     };
   }
 }

@@ -251,6 +251,81 @@ export class QuantumRegister {
     this.re[0] = 1;
   }
 
+  /** Statevector dimension 2^qubits (number of basis amplitudes). O(1). */
+  get dimension(): number {
+    return this.dim;
+  }
+
+  /**
+   * Born-rule sampling WITHOUT collapse: draws once from `rng` and returns the basis-state index
+   * by cumulative probability, leaving the statevector untouched so the superposition keeps
+   * evolving (used by the inspection layer to draw a measurement marker over a live state). Same
+   * rng stream position ⇒ same index; mirrors {@link measure}'s most-probable fallback for the
+   * Σp = 1 − ε floating-point shortfall. O(2^n); allocation-free.
+   */
+  sample(rng: Rng): number {
+    const { re, im, dim } = this;
+    const r = rng();
+    let chosen = 0;
+    let bestP = -1;
+    let acc = 0;
+    let picked = -1;
+    for (let i = 0; i < dim; i++) {
+      const rr = re[i] ?? 0;
+      const ii = im[i] ?? 0;
+      const p = rr * rr + ii * ii;
+      if (p > bestP) {
+        bestP = p;
+        chosen = i;
+      }
+      acc += p;
+      if (picked < 0 && r < acc) picked = i;
+    }
+    return picked >= 0 ? picked : chosen;
+  }
+
+  /**
+   * Copies the 2^n complex amplitudes into the caller's buffers (re/im) — a read-only view for
+   * visualisation. Both buffers must have length ≥ {@link dimension}. O(2^n).
+   * @throws RangeError (from TypedArray.set) when a buffer is shorter than the statevector.
+   */
+  amplitudesInto(outRe: Float64Array, outIm: Float64Array): void {
+    outRe.set(this.re);
+    outIm.set(this.im);
+  }
+
+  /**
+   * Writes qubit `q`'s Bloch vector ⟨X⟩,⟨Y⟩,⟨Z⟩ into `out[0..2]` from the single-qubit reduced
+   * density matrix (ρ = ½(I + x·X + y·Y + z·Z), so x = 2·Re ρ₀₁, y = −2·Im ρ₀₁, z = P₀ − P₁).
+   * The vector length |r| ∈ [0,1] measures purity: 1 = separable pure state, <1 = entangled with
+   * the rest of the register. O(2^n); allocation-free (no buffer beyond `out`).
+   * @throws RangeError when `q` is outside [0, qubits).
+   */
+  blochInto(q: number, out: Float64Array): void {
+    this.checkQubit(q, 'qubit');
+    const { re, im, dim } = this;
+    const mask = 1 << q;
+    let p0 = 0;
+    let p1 = 0;
+    let reR = 0; // Re(ρ₀₁)
+    let imR = 0; // Im(ρ₀₁)
+    for (let i = 0; i < dim; i++) {
+      if ((i & mask) !== 0) continue; // visit each |…0…⟩ once, paired with |…1…⟩
+      const j = i | mask;
+      const a0r = re[i] ?? 0;
+      const a0i = im[i] ?? 0;
+      const a1r = re[j] ?? 0;
+      const a1i = im[j] ?? 0;
+      p0 += a0r * a0r + a0i * a0i;
+      p1 += a1r * a1r + a1i * a1i;
+      reR += a0r * a1r + a0i * a1i; // Re(amp₀·conj amp₁)
+      imR += a0i * a1r - a0r * a1i; // Im(amp₀·conj amp₁)
+    }
+    out[0] = 2 * reR;
+    out[1] = -2 * imR;
+    out[2] = p0 - p1;
+  }
+
   /**
    * Applies the 2×2 complex matrix [[a, b], [c, d]] (split into re/im scalars) to the `target`
    * qubit across all 2^(n-1) amplitude pairs. O(2^n); allocation-free.
