@@ -16,6 +16,9 @@ import './ui/copilot';
 import './ui/access-puzzle';
 // Help system (V36): self-mounting "HELP ME NOW" panel — repo-grounded answers, offline-safe.
 import './ui/help-system';
+// Audit dock (V51): self-mounting 🗒 AUDIT toggle that moves the audit trail off the left column into
+// the bottom dock (frees SORTING FIELDS); toggles the existing #aP overlay, HTMX polling untouched.
+import './ui/audit-dock';
 
 // Legacy r128 color fidelity: the original rendered without color management;
 // disable it BEFORE any THREE.Color is constructed (audit finding, 0.2.1).

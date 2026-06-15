@@ -30,7 +30,7 @@ const STYLE = `
 @keyframes cqm-sup-breathe{0%,100%{box-shadow:0 2px 14px rgba(140,60,220,.35)}50%{box-shadow:0 2px 22px rgba(196,120,255,.7)}}
 #cqm-sup-toggle:hover{transform:scale(1.06);background:rgba(34,16,54,.95)}
 #cqm-sup-toggle:focus-visible{outline:2px solid #c478ff;outline-offset:2px}
-#cqm-sup-panel{position:fixed;right:10px;bottom:112px;z-index:59;width:min(94vw,326px);display:none;flex-direction:column;
+#cqm-sup-panel{position:fixed;right:10px;bottom:128px;z-index:59;width:min(94vw,326px);display:none;flex-direction:column;
   border:1px solid rgba(196,120,255,.34);border-radius:12px;background:rgba(8,5,16,.96);backdrop-filter:blur(12px);
   box-shadow:0 10px 46px rgba(0,0,0,.7);font:11px/1.5 var(--font-mono,ui-monospace,monospace);color:#ece2ff;overflow:hidden}
 #cqm-sup-panel.open{display:flex}

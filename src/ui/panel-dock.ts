@@ -14,7 +14,7 @@ const DOCK_ID = 'cqm-dock';
 const STYLE = `
 /* V39: centered and stacked DIRECTLY ABOVE the bottom toolbar (#bar, ~46px tall) — no overlap with it
    or the corner readouts. bottom:50 clears #bar's top; the panels it opens sit above the dock again. */
-#${DOCK_ID}{position:fixed;left:50%;transform:translateX(-50%);bottom:50px;z-index:60;display:flex;
+#${DOCK_ID}{position:fixed;left:50%;transform:translateX(-50%);bottom:68px;z-index:60;display:flex;
   align-items:center;gap:6px;flex-wrap:wrap;justify-content:center;max-width:calc(100vw - 20px);
   padding:5px 9px;border-radius:24px;border:1px solid rgba(120,150,210,.24);background:rgba(8,11,20,.7);
   backdrop-filter:blur(10px);box-shadow:0 4px 22px rgba(0,0,0,.55)}
@@ -35,12 +35,17 @@ export function getDock(doc: Document = document): HTMLElement {
   dock.id = DOCK_ID;
   dock.setAttribute('aria-label', 'Panel and navigation dock');
   doc.body.appendChild(dock);
-  // Adopt the standalone (fixed-positioned) Docs + Spec links — the `.fixed` class distinguishes them
-  // from the in-toolbar Spec link (which is `.flex`), so the #bar nav is left untouched.
-  doc.querySelectorAll<HTMLElement>('a.fixed[href="/docs"], a.fixed[href="/spec"]').forEach((a) => {
-    a.classList.remove('fixed');
-    dock.appendChild(a);
-  });
+  // Adopt the standalone (fixed-positioned) Docs + Spec + Lab nav links into the bar (V51 consolidates
+  // all three nav links here; they were duplicated in the #bar toolbar). The `.fixed` class distinguishes
+  // them from any in-toolbar link, so the #bar controls are left untouched.
+  doc
+    .querySelectorAll<HTMLElement>(
+      'a.fixed[href="/docs"], a.fixed[href="/spec"], a.fixed[href="/lab"]',
+    )
+    .forEach((a) => {
+      a.classList.remove('fixed');
+      dock.appendChild(a);
+    });
   return dock;
 }
 

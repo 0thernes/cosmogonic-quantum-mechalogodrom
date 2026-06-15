@@ -857,7 +857,7 @@
       id="bar"
       role="toolbar"
       aria-label="Simulation toolbar"
-      class="fixed bottom-1.5 left-1/2 z-20 flex max-w-[calc(100vw-12px)] -translate-x-1/2 flex-wrap items-center justify-center gap-1 rounded-panel border border-bar-line/15 bg-void/90 px-2 py-1.25 backdrop-blur-xl"
+      class="fixed bottom-1.5 left-1/2 z-20 flex max-w-[calc(100vw-12px)] -translate-x-1/2 [scrollbar-width:thin] flex-nowrap items-center justify-start gap-1 overflow-x-auto rounded-panel border border-bar-line/15 bg-void/90 px-2 py-1.25 backdrop-blur-xl"
     >
       <button
         type="button"
@@ -1003,22 +1003,9 @@
       >
         &#9760;
       </button>
-      <!-- V2: nav link to the collapse-field lab artifact (accent variant = navigation, not action) -->
-      <a
-        href="/lab"
-        aria-label="Open the Quantum Wildbeyond lab artifact"
-        title="Open the Quantum Wildbeyond lab artifact"
-        class="flex min-h-7 items-center gap-1 rounded-btn border border-accent/15 bg-accent/5 px-2.5 py-1 font-ui text-3xs tracking-widest whitespace-nowrap text-accent/80 uppercase transition-all duration-100 select-none hover:border-accent/40 hover:bg-accent/10 hover:text-accent active:bg-accent/20 active:text-white"
-        >Lab</a
-      >
-      <!-- Technical specification page (/spec) — prominent toolbar nav, fuchsia variant. -->
-      <a
-        href="/spec"
-        aria-label="Open the technical specification"
-        title="Technical specification — full spec sheet"
-        class="flex min-h-7 items-center gap-1 rounded-btn border border-fuchsia-300/25 bg-fuchsia-500/8 px-2.5 py-1 font-ui text-3xs tracking-widest whitespace-nowrap text-fuchsia-200/90 uppercase transition-all duration-100 select-none hover:border-fuchsia-300/55 hover:bg-fuchsia-400/15 hover:text-white active:bg-fuchsia-400/25 active:text-white"
-        >Spec</a
-      >
+      <!-- V51: Lab + Spec nav links removed from the toolbar — they were duplicated in the bottom dock
+           (DOCS · SPEC · LAB now live there). The toolbar is purely world CONTROLS; the dock is panels
+           + nav. -->
     </div>
 
     <!-- Touch joystick — MOVE (left thumb; shown on coarse pointers via app.css;
@@ -1091,12 +1078,22 @@
       >Spec</a
     >
 
-    <!-- V13: View / Speed / Render readout box. Bottom-right, sits ABOVE the Docs/Spec links and
-         clear of the AI (✦) toggle + the centered toolbar. pointer-events-none so it never blocks
-         clicks. Written every telemetry tick by ui/panels.ts. -->
+    <!-- V51: Lab nav consolidated into the bottom dock beside Docs + Spec (it was a duplicate of the
+         #bar toolbar link). `fixed` so ui/panel-dock.ts adopts it into the bar. -->
+    <a
+      href="/lab"
+      class="fixed right-40 bottom-2 z-20 rounded-btn border border-accent/15 bg-void/90 px-2 py-1 font-ui text-3xs tracking-widest text-accent/80 uppercase backdrop-blur-md transition-all duration-100 hover:border-accent/40 hover:bg-accent/10 hover:text-accent"
+      aria-label="Open the Quantum Wildbeyond lab artifact"
+      title="Open the Quantum Wildbeyond lab artifact"
+      >Lab</a
+    >
+
+    <!-- V13: View / Speed / Render readout box. V51: moved to the bottom edge, flanking the centered
+         menu bars on the RIGHT (the algo readout flanks the left). pointer-events-none so it never
+         blocks clicks. Written every telemetry tick by ui/panels.ts. -->
     <div
       id="hud-vsr"
-      class="pointer-events-none fixed right-2 bottom-[12px] z-20 rounded-panel border border-cyan-300/15 bg-void/90 px-2.5 py-1.5 font-ui text-4xs tracking-widest text-cyan-300/80 uppercase backdrop-blur-md"
+      class="pointer-events-none fixed right-2 bottom-1.5 z-20 rounded-panel border border-cyan-300/15 bg-void/90 px-2.5 py-1.5 font-ui text-4xs tracking-widest text-cyan-300/80 uppercase backdrop-blur-md"
       aria-label="View, speed and render mode"
     >
       <div class="flex items-baseline justify-between gap-3">

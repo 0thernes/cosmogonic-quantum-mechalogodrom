@@ -143,10 +143,21 @@ function customProvider(): ResolvedProvider | null {
   };
 }
 
-/** A `freellmapi` aggregator provider, offered only when `FREELLMAPI_BASE` is set (user ran it). */
-function freellmapiProvider(): ResolvedProvider | null {
-  const base = envStr('FREELLMAPI_BASE');
-  if (!base) return null;
+/** Whether the user explicitly pointed at a FreeLLMAPI proxy (vs the implicit localhost:3001 default). */
+function freellmapiConfigured(): boolean {
+  return envStr('FREELLMAPI_BASE').length > 0;
+}
+
+/**
+ * The FreeLLMAPI aggregator — the **PRIMARY** provider (V51, the user's pick: "FreeLLMAPI is the
+ * original; the two key-less ones are the 2nd/3rd-string backups"). Its base defaults to the proxy's
+ * `http://localhost:3001/v1`, so it is tried FIRST out of the box; when the proxy isn't running the
+ * chain fails over to the key-less LLM7 (2nd) then Pollinations (3rd) with no scary note. Run the
+ * `freellmapi` proxy (docs/research/free-LLM guide) — or set `FREELLMAPI_BASE` — to light it up.
+ * Always returns a provider now (the localhost default), so it is always the chain head.
+ */
+function freellmapiProvider(): ResolvedProvider {
+  const base = envStr('FREELLMAPI_BASE') || 'http://localhost:3001/v1';
   return {
     id: 'freellmapi',
     label: 'FreeLLMAPI · auto (16-provider pool)',
@@ -171,17 +182,9 @@ function presetAvailable(p: ProviderPreset): boolean {
   return p.keyEnv === undefined || envStr(p.keyEnv).length > 0;
 }
 
-/** The key-less default the box falls back to so it always tries to answer (first key-less preset). */
-function fallbackProvider(): ResolvedProvider {
-  const keyless = PRESETS.find((p) => p.keyEnv === undefined);
-  return keyless
-    ? presetToResolved(keyless)
-    : { id: 'none', label: 'none', endpoint: '', model: '', key: '' };
-}
-
-/** The default provider: `custom` env override if set, else the first key-less preset. */
+/** The default provider: an explicit `custom` env override wins, else **FreeLLMAPI** (the primary). */
 function defaultProvider(): ResolvedProvider {
-  return customProvider() ?? fallbackProvider();
+  return customProvider() ?? freellmapiProvider();
 }
 
 /**
@@ -194,8 +197,8 @@ export function availableProviders(): { id: string; label: string; def: boolean 
   const out: { id: string; label: string; def: boolean }[] = [];
   const custom = customProvider();
   if (custom) out.push({ id: custom.id, label: custom.label, def: def.id === custom.id });
-  const fre = freellmapiProvider();
-  if (fre) out.push({ id: fre.id, label: fre.label, def: def.id === fre.id });
+  const fre = freellmapiProvider(); // always present now — the primary chain head
+  out.push({ id: fre.id, label: fre.label, def: def.id === fre.id });
   for (const p of PRESETS) {
     if (presetAvailable(p)) out.push({ id: p.id, label: p.label, def: def.id === p.id });
   }
@@ -208,7 +211,7 @@ export function availableProviders(): { id: string; label: string; def: boolean 
 function resolveProvider(id: string | undefined): ResolvedProvider {
   if (!id) return defaultProvider();
   if (id === 'custom') return customProvider() ?? defaultProvider();
-  if (id === 'freellmapi') return freellmapiProvider() ?? defaultProvider();
+  if (id === 'freellmapi') return freellmapiProvider();
   const p = PRESETS.find((x) => x.id === id);
   if (!p || !presetAvailable(p)) return defaultProvider();
   return presetToResolved(p);
@@ -403,8 +406,14 @@ export async function runAgent(history: ChatMessage[], providerId?: string): Pro
     if (!prov) continue;
     try {
       const reply = await runLoop(prov, history, steps);
+      // Suppress the failover note when the only thing skipped was the IMPLICIT FreeLLMAPI proxy (not
+      // running) → the key-less backup answering is the expected default out of the box, not an error.
+      const skippedImplicitProxy =
+        order[0]?.id === 'freellmapi' && !freellmapiConfigured() && i === 1;
       const note =
-        i === 0 ? '' : `_(failed over to ${prov.label} — earlier provider(s) unreachable)_\n\n`;
+        i === 0 || skippedImplicitProxy
+          ? ''
+          : `_(failed over to ${prov.label} — earlier provider(s) unreachable)_\n\n`;
       return {
         ok: true,
         reply: note + reply,

@@ -512,11 +512,13 @@ a:focus-visible {
      the new algorithm picker (#algoP), stacked top→bottom. */
   grid-template-columns: clamp(180px, 19vw, 260px) 1fr clamp(220px, 23vw, 340px);
   grid-template-rows: auto auto 1fr auto;
+  /* V51: AUDIT + the algo readout left the left column (they crowded SORTING FIELDS) — `agp` now owns
+     the whole lower-left, telemetry the top-left, observatory + control the right. */
   grid-template-areas:
     'tel . obs'
-    'aud . ctl'
+    'agp . ctl'
     'agp . .  '
-    'alg . .  ';
+    'agp . .  ';
 }
 #ui > * {
   pointer-events: auto;
@@ -526,8 +528,25 @@ a:focus-visible {
 #sP {
   grid-area: tel;
 }
-#aP {
-  grid-area: aud;
+/* V51: AUDIT is no longer a left-column grid panel — it's a dock-toggled fixed overlay (ui/audit-dock.ts
+   adds the 🗒 AUDIT button to the bottom dock; click toggles `.audit-on`), so it stops crowding SORTING
+   FIELDS. Scoped to fine-pointer WIDE screens (the grid range) so the mobile `.sheet` slide-out is
+   untouched; `#aP` id-specificity beats `#ui > section { display: flex }` to keep it hidden by default. */
+@media (pointer: fine) and (min-width: 769px) {
+  /* `#ui > #aP` (2,0,0) is needed to beat `#ui > section { display: flex }` (1,0,1) — a plain `#aP`
+     (1,0,0) loses, so the panel would never hide. */
+  #ui > #aP {
+    position: fixed;
+    right: 10px;
+    bottom: 112px;
+    z-index: 59;
+    width: min(94vw, 340px);
+    max-height: 52vh;
+    display: none;
+  }
+  #ui > #aP.audit-on {
+    display: flex;
+  }
 }
 #oP {
   grid-area: obs;
@@ -539,12 +558,21 @@ a:focus-visible {
    height; the algo readout sits in row 4 below it, both clear of the center 3D view. */
 #algoP {
   grid-area: agp;
-  align-self: start;
+  /* V51: stretch to fill its (now AUDIT-free) cell instead of overflowing past the padding into the
+     bottom strip — the inner #algo-list scrolls. This keeps the bottom-left strip free for the readout. */
+  align-self: stretch;
+  min-height: 0;
 }
+/* V51: the algo readout is grouped with the View/Speed/Render box at the bottom-RIGHT (stacked just
+   above it), beside the right end of the menu bars — clear of SORTING FIELDS which now fills the whole
+   lower-LEFT. (A bottom-left strip would collide with the now-tall #algoP.) Mobile @media rules below
+   still reposition it on phones. */
 #ui > #alg {
-  grid-area: alg;
-  align-self: end;
-  justify-self: start;
+  position: fixed;
+  right: 2px;
+  bottom: 88px; /* bottom-RIGHT, stacked clear above the ~79px View/Speed/Render box — grouped with it
+                   beside the right end of the menu bars. Persistent layout has zero overlaps. */
+  z-index: 20;
   max-width: clamp(115px, 26vw, 185px);
   pointer-events: none;
 }
@@ -797,10 +825,7 @@ a:focus-visible {
       'tel . obs'
       'tel . ctl'
       'agp . .  '
-      'alg . .  ';
-  }
-  #aP {
-    display: none;
+      'agp . .  '; /* V51: readout is a fixed bottom-strip card now, not the `alg` grid row */
   }
   #ui > section {
     max-height: calc(100vh - 64px);
@@ -863,11 +888,13 @@ a:focus-visible {
     display: grid;
     pointer-events: none;
     grid-template-rows: auto auto 1fr auto;
+    /* V51: same as the default grid — AUDIT + readout are out of the left column (now a dock overlay +
+       a bottom-strip card), so SORTING FIELDS (`agp`) owns the whole lower-left on the 10-foot/4K view. */
     grid-template-areas:
       'tel . obs'
-      'aud . ctl'
+      'agp . ctl'
       'agp . .  '
-      'alg . .  ';
+      'agp . .  ';
     gap: clamp(12px, 0.8vw, 22px);
     padding: clamp(14px, 0.9vw, 26px);
     padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px));
@@ -887,11 +914,17 @@ a:focus-visible {
   .sheet-handle {
     display: none;
   }
-  #aP {
-    display: flex; /* audit returns to the grid on a wide TV */
+  /* V51: AUDIT stays a dock-toggled overlay on the wide TV too — `#ui > #aP` (2,0,0) beats both
+     `.sheet { position: static }` and `#ui > section { display: flex }`; the readout stays fixed. */
+  #ui > #aP {
+    position: fixed;
+    display: none;
+  }
+  #ui > #aP.audit-on {
+    display: flex;
   }
   #ui > #alg {
-    position: static;
+    position: fixed;
   }
   #ui > section {
     max-height: clamp(300px, 48vh, 60vh);
