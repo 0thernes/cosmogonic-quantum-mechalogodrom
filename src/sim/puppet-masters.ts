@@ -199,7 +199,7 @@ export class PuppetMasterSystem {
     this.pms.push({ cfg, mesh, mat, ring, light, ti: 0, satiation: 0.5 });
   }
 
-  /** Number of puppet masters (constant 3 — feeds the telemetry `puppeteers` field). */
+  /** Total puppet masters: the 3 named hands + tier-scaled lesser puppeteers (V14). Feeds the telemetry `puppeteers` field. */
   get count(): number {
     return this.pms.length;
   }
