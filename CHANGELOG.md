@@ -13,6 +13,22 @@ the full gate (now also a coverage gate, on Linux + Windows) with same-seed dete
 
 ### Added
 
+- **Self-evolution — the monster grows like Vegeta/Goku + a 24h daemon-cron (V48)** — the directive's
+  "they grow like VEGETA and GOKU in POWER and ABILITY … self-evolving evolutionary tale and history …
+  updates every 24 hours runs as Daemon Cron … they also change in appearance and evolve." `sim/super-
+evolution.ts` (`SuperEvolution`): a pure progression model — the apex earns XP from living as a
+  dominant, dreaming apex (+ the wingman ASSIST), LEVELS up on a **geometric curve** (power =
+  `100 · 1.18^level · stageMult`, so it gets _over 9000_), and **ASCENDS through 5 transformation
+  stages** (BASE → ASCENDED → SUPER → ULTRA → LEGENDARY), each a power leap + a mutation written into an
+  **evolutionary history** (the tale). `applyDays` is the **daemon-cron** effect: the world trains it one
+  sim-day every ~6 min of play AND — in its impure shell — restores the evolution from `localStorage` and
+  **applies the real wall-clock days elapsed since the last save**, so the monster grows even while
+  you're away (capped at a decade; a META-organ outside the deterministic sim — the population golden is
+  untouched). The body **visibly evolves**: `super-body.setEvolution` scales the whole colossus, brightens
+  its eyes, and splays more spikes with each stage; the ⬢ ARCHITECT panel shows `LV{n} {STAGE} · {power} ·
+d{day}`. Verified headlessly (8 evolution tests: exponential curve, leveling, the 5 ascensions, appearance
+  growth, deterministic `applyDays`, capped catch-up, persistence round-trip; +1 body-grow test) +
+  determinism golden intact. Full gate green (798 tests). _Live visual evolution needs a GPU pass._
 - **The WINGMAN SWARM — 100 robots, a ~250-param brain each (V47)** — the directive's "wingman mini tiny
   swarms of 100 robots around them that have 250 parameter intelligence each … and it helps the Super
   Creatures." `sim/super-wingmen.ts` (`WingmanSwarm`): 100 drones orbit the apex creature, each carrying

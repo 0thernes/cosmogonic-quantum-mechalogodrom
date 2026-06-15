@@ -19,6 +19,7 @@
  */
 import * as THREE from 'three';
 import type { SuperSnapshot, SuperPlan } from './super-creature';
+import type { EvoAppearance } from './super-evolution';
 
 /** Fractional part — a cheap deterministic pseudo-random in [0,1) when fed `seed * irrational`. */
 const frac = (x: number): number => x - Math.floor(x);
@@ -124,6 +125,10 @@ export class SuperBodySystem {
   private morphBoost = 0;
   private dreamGlow = 0;
   private lastMorph = 0;
+  // V48: evolution-driven appearance (the monster GROWS + brightens + grows spikes as it levels).
+  private evoSize = 1;
+  private evoGlow = 1;
+  private evoSpike = 0;
   private readonly move = new THREE.Vector3(); // the mind's movement output (its will)
   private readonly anchor = new THREE.Vector3(0, 12, 0); // birth locus / fallback
   // V39 FLIGHT: the apex roams the world instead of hovering — a wander-seek boid that banks toward
@@ -348,12 +353,18 @@ export class SuperBodySystem {
 
     // Eye-blink: a global emissive flicker, brighter with dominance (the many-eyed stare).
     this.eyeMat.emissiveIntensity =
-      2.5 + this.dominance * 4.0 + Math.sin(t * 6.0) * 0.8 + this.dreamGlow * 2.2;
+      2.5 +
+      this.dominance * 4.0 +
+      Math.sin(t * 6.0) * 0.8 +
+      this.dreamGlow * 2.2 +
+      (this.evoGlow - 1) * 2.0;
 
     // Arm-writhe ∝ aggression: the spikes splay + tremble when the mind turns hostile.
-    const splay = 1 + this.aggression * 0.4 + Math.sin(t * 3.0) * 0.05 * this.aggression;
+    const splay =
+      1 + this.aggression * 0.4 + Math.sin(t * 3.0) * 0.05 * this.aggression + this.evoSpike * 0.18;
     this.arms.scale.setScalar(splay);
     this.arms.rotation.y = -t * spin * 0.5;
+    this.root.scale.setScalar(this.evoSize); // V48: evolution scales the whole colossus
 
     // Rings orbit on their own axes — the chrome mechanism never rests.
     for (let i = 0; i < this.rings.length; i++) {
@@ -391,6 +402,18 @@ export class SuperBodySystem {
   /** V46: the writhe magnitude applied this frame (for tests / inspection). */
   morphFactor(): number {
     return this.lastMorph;
+  }
+
+  /** V48: fold the creature's EVOLUTION into its look — it grows, brightens, and grows spikes. */
+  setEvolution(a: EvoAppearance): void {
+    this.evoSize = clampf(a.sizeMul, 1, 6);
+    this.evoGlow = clampf(a.glowMul, 1, 4);
+    this.evoSpike = a.spikeBoost < 0 ? 0 : a.spikeBoost;
+  }
+
+  /** V48: the evolution scale applied to the whole body (for tests / inspection). */
+  evolutionScale(): number {
+    return this.evoSize;
   }
 
   /** Free GPU resources (world reset). */

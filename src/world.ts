@@ -85,6 +85,7 @@ import { SuperCreature, type SuperPercept } from './sim/super-creature';
 import { SuperMind, type SuperMindSnapshot } from './sim/super-mind';
 import { WingmanSwarm, WINGMAN_COUNT } from './sim/super-wingmen';
 import { WingmanRenderer } from './sim/super-wingmen-render';
+import { SuperEvolution } from './sim/super-evolution';
 import { SuperBodySystem } from './sim/super-body';
 import { SuperPanel } from './ui/super-panel';
 import { SuperheroState, HERO_POWERS } from './ui/superhero-state';
@@ -166,6 +167,10 @@ export class World {
   private readonly wingSwarm: WingmanSwarm; // V47: 100-robot escort, ~250-param brain each
   private readonly wingRender: WingmanRenderer;
   private readonly emptyQ = new Float32Array(10); // quantum fallback before the first mind beat
+  private readonly superEvo: SuperEvolution; // V48: the self-evolving power/appearance arc
+  private readonly evoRng: Rng;
+  /** Frames per evolution "day" — a sim-day cron passes every ~6 min of play (60fps). */
+  private static readonly EVO_DAY_FRAMES = 21600;
   private readonly superTwins: SuperCreature[] = [];
   private readonly superPanel: SuperPanel;
   private readonly superBody: SuperBodySystem;
@@ -478,6 +483,10 @@ export class World {
       mulberry32((this.persisted.seed ^ 0x77149abc) >>> 0 || 1),
     );
     this.wingRender = new WingmanRenderer(ctx.scene, WINGMAN_COUNT);
+    // V48: the prime's evolution — restored from localStorage + caught up by real wall-clock days
+    // elapsed (the "daemon cron / updates every 24h"). A META-organ OUTSIDE the deterministic sim.
+    this.evoRng = mulberry32((this.persisted.seed ^ 0x00e701ce) >>> 0 || 1);
+    this.superEvo = this.loadEvolution();
     this.superPanel = new SuperPanel();
     this.economy.register(World.ECON_SUPER_BASE, this.superCreature.name, 20, this.superRng);
     // F-SUPER V32: the masterful many-eyed apex BODY (god-jewel shader) — additive, draws no rng.
@@ -797,6 +806,7 @@ export class World {
         this.superCreature.snapshot(),
         this.economy.wealthOf(World.ECON_SUPER_BASE)?.netWorth ?? 0,
         this.superMindSnap, // V46: the live 10k-param consciousness (dream/hallucinate/reason/self-aware)
+        this.superEvo.view(), // V48: the evolution — level / stage / power / day
       );
       // F-SUPER V35: feed the SUPERHERO HUD the player-creature's live vitals + mind + wallet.
       const hero = this.heroBodies[0];
@@ -833,6 +843,42 @@ export class World {
     }
 
     this.engine.render();
+  }
+
+  /**
+   * V48: restore the prime's EVOLUTION from localStorage + apply the real wall-clock days elapsed since
+   * the last save — the "daemon-cron / updates every 24h", so the monster grows even while you are away.
+   * Browser-only + fully guarded; this META-organ lives OUTSIDE the deterministic sim (it touches only
+   * the super creature's power/look, never the population golden), so the `Date.now` use is contained.
+   */
+  private loadEvolution(): SuperEvolution {
+    try {
+      if (typeof localStorage === 'undefined') return new SuperEvolution();
+      const raw = localStorage.getItem('cqm:superevo:v1');
+      if (!raw) return new SuperEvolution();
+      const parsed = JSON.parse(raw) as { ts?: number; state?: string };
+      const evo = SuperEvolution.fromJSON(parsed.state ?? '');
+      if (typeof parsed.ts === 'number') {
+        const days = (Date.now() - parsed.ts) / 86_400_000;
+        if (days > 0) evo.applyDays(days, this.evoRng);
+      }
+      return evo;
+    } catch {
+      return new SuperEvolution();
+    }
+  }
+
+  /** V48: persist the evolution state + a wall-clock stamp (so the next session catches up the days). */
+  private saveEvolution(): void {
+    try {
+      if (typeof localStorage === 'undefined') return;
+      localStorage.setItem(
+        'cqm:superevo:v1',
+        JSON.stringify({ ts: Date.now(), state: this.superEvo.serialize() }),
+      );
+    } catch {
+      /* storage unavailable / quota — fine, the in-memory evolution still runs */
+    }
   }
 
   /**
@@ -873,6 +919,22 @@ export class World {
         mindOut.consciousness.hallucinating,
       );
       this.superMindSnap = this.superMind.snapshot();
+      // V48: the apex SELF-EVOLVES — XP from living as a dominant, dreaming apex + the wingman assist;
+      // its growing power reshapes the body (it visibly GROWS). A sim-day cron trains it every
+      // EVO_DAY_FRAMES, and the cross-session wall-clock catch-up covers real days away.
+      const vitality = clamp(
+        0.5 * this.superMindSnap.emotion.dominance +
+          0.3 * mindOut.consciousness.novelty +
+          0.2 * this.wingSwarm.assist,
+        0,
+        1,
+      );
+      this.superEvo.tick(4 / 60, vitality);
+      this.superBody.setEvolution(this.superEvo.appearance());
+      if (s.frame > 0 && s.frame % World.EVO_DAY_FRAMES === 0) {
+        this.superEvo.applyDays(1, this.evoRng); // a sim-day of training
+        this.saveEvolution();
+      }
       // V35: the twin budget (cap 3) is now spent by the PLAYER — the puzzle reveal sires the 2nd
       // creature and the FORK power sires the rest — so the prime no longer auto-spawns (no contention).
       for (const tw of this.superTwins) tw.think(percept); // twins reason with their own minds

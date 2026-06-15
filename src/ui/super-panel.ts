@@ -8,6 +8,7 @@
  */
 import type { SuperSnapshot, SuperPlan } from '../sim/super-creature';
 import type { SuperMindSnapshot } from '../sim/super-mind';
+import type { EvoView } from '../sim/super-evolution';
 import { mountToggle } from './panel-dock';
 
 /** Plan → accent colour, so the committed goal reads at a glance (hunt-red … rest-grey). */
@@ -132,6 +133,7 @@ export class SuperPanel {
     this.id.offspring = idRow(id, 'Twins', doc);
     this.id.wallet = idRow(id, 'Wallet', doc);
     this.id.brain = idRow(id, 'Conscious', doc); // V46: the live ~10k-param composite mind
+    this.id.power = idRow(id, 'Power', doc); // V48: the evolution — level / stage / power / day
 
     const bars = panel.querySelector('[data-bars]') as HTMLElement;
     this.meter.valence = bar(bars, 'Valence', '#6bff9e', doc);
@@ -162,7 +164,12 @@ export class SuperPanel {
    * Push the latest mind snapshot + wallet. Always cheap; repaints only when open. Null-safe (the
    * creature is always-active, so `snap` should be present, but we tolerate a missing beat).
    */
-  update(snap: SuperSnapshot | null, netWorth: number, mind?: SuperMindSnapshot | null): void {
+  update(
+    snap: SuperSnapshot | null,
+    netWorth: number,
+    mind?: SuperMindSnapshot | null,
+    evo?: EvoView | null,
+  ): void {
     if (!this.open || !snap) return;
     const c = PLAN_COLOR[snap.plan];
     this.planEl.textContent = snap.plan;
@@ -192,6 +199,11 @@ export class SuperPanel {
       this.setBar('reasoning', k.reasoning);
       this.setBar('selfAware', k.selfAware);
       this.setBar('novelty', k.novelty);
+    }
+
+    // V48 — the self-evolution: level · stage · power · day (it grows like Vegeta/Goku).
+    if (evo) {
+      this.id.power!.textContent = `LV${evo.level} ${evo.stageName} · ${fmt(evo.power)} · d${evo.day}`;
     }
   }
 

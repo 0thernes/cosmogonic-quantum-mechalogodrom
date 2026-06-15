@@ -67,4 +67,14 @@ describe('SuperBodySystem flight + control (V41)', () => {
     wild.update(0, 1 / 60);
     expect(wild.morphFactor()).toBeGreaterThan(calm.morphFactor()); // the monster writhes harder when active
   });
+
+  test('V48: evolution GROWS the body (setEvolution → a larger scale)', () => {
+    const body = new SuperBodySystem(new THREE.Scene());
+    body.update(0, 1 / 60);
+    const base = body.evolutionScale(); // 1 at BASE
+    body.setEvolution({ sizeMul: 3.5, hueShift: 0.5, glowMul: 2, spikeBoost: 3 });
+    body.update(0, 1 / 60);
+    expect(body.evolutionScale()).toBeGreaterThan(base); // it grew
+    expect(body.evolutionScale()).toBeCloseTo(3.5, 5);
+  });
 });
