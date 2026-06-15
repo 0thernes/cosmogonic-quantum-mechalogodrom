@@ -340,6 +340,19 @@ the full gate (now also a coverage gate, on Linux + Windows) with same-seed dete
 
 ### Fixed
 
+- **Sim-Settings readout restored on portrait DESKTOP monitors (V78)** — user regression: "Where is the
+  Simulation Statistical List Names Box with the Live Data? Song Music SFX Speed Render Resets Counter
+  and View? It vanished!" The mobile/sheet `@media` block keyed on a bare `(orientation: portrait)`,
+  which also matches a **wide fine-pointer portrait desktop** (the user's portrait QHD, 1440×2560).
+  Phones/tablets are already caught by `(max-width: 768px)` + `(pointer: coarse)`, so the standalone
+  portrait term _only_ mis-applied phone sheet-mode to portrait desktops — hiding `#hud-vsr` (the
+  Sim-Settings readout: View · Speed · Render · Music · SFX · Song · Resets) and shoving the control pad
+  `#cP` off-screen (`left:-182`). Fix: scope the trigger to `(orientation: portrait) and (max-width:
+1024px)`, so a wide portrait desktop keeps the full desktop layout — the bottom-right readout column
+  on the right and the centred control pad in the corner. Verified live: **1440×2560** portrait →
+  `#hud-vsr` block on the right, `#cP` on-screen + centred, zero overlaps; **390×844** phone & **900×1400**
+  small-portrait → still mobile (sheet mode, readout hidden); **1280×800** landscape → unchanged. CSS
+  only, `src/styles/app.css`. Full gate green (942 tests).
 - **Two review findings from the V59–V63 audit (V64)** — an adversarial pass over the new code surfaced
   two real (non-crashing) defects, both fixed: (1) **CHAOS MODE entanglement rebinding** — `ChaosField`
   stored entangled pairs as raw indices into the live entity list, so a death (which left-shifts every
