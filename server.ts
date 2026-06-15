@@ -11,7 +11,8 @@
  *                       polled by the HTMX audit panel every 5s
  * - `POST /api/audit` → append `{ action, detail?, ts }` into a 200-entry in-memory ring
  *                       (detail serialized + truncated at storage time; bodies over
- *                       `MAX_BODY_LEN` are rejected with 413)
+ *                       `MAX_BODY_LEN` are rejected with 413; flooding callers get 429 —
+ *                       a token bucket shields the ring from eviction-spam)
  * - anything else     → 404
  *
  * Tailwind is applied to the HTML bundles via `bun-plugin-tailwind` (see bunfig.toml).
@@ -90,6 +91,45 @@ function pushAudit(entry: StoredAuditEntry): void {
   auditHead = (auditHead + 1) % AUDIT_CAP;
   if (auditCount < AUDIT_CAP) auditCount++;
 }
+
+/**
+ * Pure token-bucket rate limiter (the caller supplies the clock, so it is deterministic and
+ * unit-testable without timers). `tryRemove(now)` refills continuously at `refillPerSec` up to
+ * `capacity`, then consumes one token if any remain — returning false (deny) when the bucket is
+ * empty. The first call seeds the clock, so a fresh bucket starts full. O(1).
+ */
+export function makeRateLimiter(
+  capacity: number,
+  refillPerSec: number,
+): { tryRemove(now: number): boolean } {
+  let tokens = capacity;
+  let last = Number.NaN;
+  return {
+    tryRemove(now: number): boolean {
+      if (Number.isNaN(last)) last = now;
+      const dt = (now - last) / 1000;
+      if (dt > 0) {
+        tokens = Math.min(capacity, tokens + dt * refillPerSec);
+        last = now;
+      }
+      if (tokens >= 1) {
+        tokens -= 1;
+        return true;
+      }
+      return false;
+    },
+  };
+}
+
+/**
+ * Token bucket guarding POST /api/audit: a 60-request burst, refilling 30/s. That is far above any
+ * legitimate audit cadence (entries are user-action-driven — a human never posts dozens per
+ * second), so the operator is never throttled, yet it caps the ring-eviction flood: an
+ * unauthenticated client can no longer evict all 200 real entries (and burn parse CPU) with a tight
+ * POST loop. A public/multi-tenant deploy should ALSO key this per client IP (`server.requestIP`)
+ * and/or require auth — see SECURITY.md; this global bucket is the single-tenant DoS seal.
+ */
+const auditPostLimiter = makeRateLimiter(60, 30);
 
 const HTML_ESCAPES: Record<string, string> = {
   '&': '&amp;',
@@ -249,6 +289,16 @@ if (import.meta.main) {
           });
         },
         async POST(req) {
+          // Shed floods BEFORE any work: a tight unauthenticated POST loop would otherwise evict
+          // the whole 200-entry ring and burn parse CPU. The bucket is generous enough that real
+          // user-action audit posts never reach it — see auditPostLimiter.
+          if (!auditPostLimiter.tryRemove(Date.now())) {
+            logRequest(req, 429);
+            return Response.json(
+              { ok: false, error: 'rate limited' },
+              { status: 429, headers: { 'Retry-After': '1' } },
+            );
+          }
           // Reject oversized bodies before parsing: declared length first, then the
           // actual read (covers chunked/undeclared bodies and lying headers).
           const declared = req.headers.get('content-length');

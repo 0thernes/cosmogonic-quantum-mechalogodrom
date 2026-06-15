@@ -5,7 +5,7 @@
  * `import.meta.main`, so importing it here opens no socket and the suite stays hermetic.
  */
 import { describe, expect, test } from 'bun:test';
-import { parseAuditBody, parseChatMessages } from '../server';
+import { makeRateLimiter, parseAuditBody, parseChatMessages } from '../server';
 
 describe('parseAuditBody — audit POST body narrowing', () => {
   test('accepts a minimal valid body and stamps a finite ts', () => {
@@ -95,5 +95,40 @@ describe('parseChatMessages — chat POST body narrowing', () => {
     const ms = parseChatMessages({ messages: [{ role: 'user', content: 'z'.repeat(40000) }] });
     expect(ms).not.toBeNull();
     expect(ms![0]!.content.length).toBeLessThanOrEqual(32 * 1024);
+  });
+});
+
+describe('makeRateLimiter — POST /api/audit flood seal (SERVER-RL)', () => {
+  test('a fresh bucket allows exactly its burst capacity, then denies', () => {
+    const rl = makeRateLimiter(5, 1);
+    // Same instant (no refill): the first 5 succeed, the 6th is shed.
+    for (let i = 0; i < 5; i++) expect(rl.tryRemove(1000)).toBe(true);
+    expect(rl.tryRemove(1000)).toBe(false);
+  });
+
+  test('tokens refill continuously at the configured rate', () => {
+    const rl = makeRateLimiter(2, 10); // 10 tokens/sec
+    expect(rl.tryRemove(0)).toBe(true);
+    expect(rl.tryRemove(0)).toBe(true);
+    expect(rl.tryRemove(0)).toBe(false); // bucket drained at t=0
+    // 100 ms later → +1 token (10/s × 0.1s); one more call succeeds, the next is denied again.
+    expect(rl.tryRemove(100)).toBe(true);
+    expect(rl.tryRemove(100)).toBe(false);
+  });
+
+  test('refill is capped at capacity — idle time cannot bank unlimited burst', () => {
+    const rl = makeRateLimiter(3, 100);
+    // Idle for an hour: tokens saturate at capacity, not hours × rate.
+    expect(rl.tryRemove(3_600_000)).toBe(true);
+    expect(rl.tryRemove(3_600_000)).toBe(true);
+    expect(rl.tryRemove(3_600_000)).toBe(true);
+    expect(rl.tryRemove(3_600_000)).toBe(false);
+  });
+
+  test('the operator cadence (one post every few seconds) is never throttled', () => {
+    // Production bucket shape: 60 burst, 30/s. A human posting an audit action every 2 s for a
+    // long session must always be admitted — the seal only sheds machine-speed floods.
+    const rl = makeRateLimiter(60, 30);
+    for (let i = 0; i < 50; i++) expect(rl.tryRemove(i * 2000)).toBe(true);
   });
 });
