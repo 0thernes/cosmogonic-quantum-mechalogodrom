@@ -195,8 +195,11 @@ ${VIS_SEL} {
   }
 }
 /* SMALL / portrait / touch — the app.css grid collapses to edge sheets, so the side columns are gone:
-   the HUD spans (almost) full width + sits clear of the bars, still with the cycler. */
-@media (max-width: 768px), (orientation: portrait), (pointer: coarse) {
+   the HUD spans (almost) full width + sits clear of the bars, still with the cycler. V78: the portrait
+   term also requires (max-width: 1024px) to MATCH app.css — a WIDE fine-pointer portrait desktop
+   (the user's 1440×2560 QHD) keeps the desktop grid + side panels, so the HUD must stay in the centre
+   column there, NOT span full width (which would overlap the restored side panels). */
+@media (max-width: 768px), (orientation: portrait) and (max-width: 1024px), (pointer: coarse) {
   ${PANEL_SEL} {
     left: 8px !important;
     right: 8px !important;
@@ -254,7 +257,9 @@ function fitHud(): void {
   const ui = document.getElementById('ui');
   const sheetMode =
     typeof matchMedia === 'function' &&
-    matchMedia('(max-width: 768px), (orientation: portrait), (pointer: coarse)').matches;
+    matchMedia(
+      '(max-width: 768px), (orientation: portrait) and (max-width: 1024px), (pointer: coarse)',
+    ).matches;
   if (sheetMode || !ui || getComputedStyle(ui).display !== 'grid') {
     root.style.removeProperty('--cqm-hud-left');
     root.style.removeProperty('--cqm-hud-right');
