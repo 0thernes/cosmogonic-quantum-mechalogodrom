@@ -65,21 +65,28 @@ ${VIS_SEL} {
 #cqm-dock {
   display: none !important;
 }
-/* The nav LAUNCHER: fits the SAME centre column, centred, just above the toolbar. It never scrolls —
-   it collapses to a single ‹ CURRENT › cycler when there isn't room for the six tabs. */
+/* The nav LAUNCHER: anchored to the SAME gap fitHud measures between the side panels
+   (--cqm-hud-left / --cqm-hud-right), then it HUGS its content (width:max-content) and CENTRES in that
+   gap via auto inline-margins — so the six tabs + Docs/Spec/Lab read dead-centre of the open play-area,
+   the glass pill never spans empty space, and it can't reach the side panels or the corner readouts.
+   chooseNavMode() measures the content against the live gap width and shows the named tabs only when
+   they fit, else the clean ‹ CURRENT › cycler — so it never clips. */
 #cqm-hud-nav {
   position: fixed;
-  left: var(--cqm-hud-left, calc(clamp(180px, 19vw, 260px) + 16px));
-  right: var(--cqm-hud-right, calc(clamp(220px, 23vw, 340px) + 16px));
+  left: var(--cqm-hud-left, 8px);
+  right: var(--cqm-hud-right, 8px);
+  width: max-content;
+  max-width: calc(100vw - 16px);
+  margin-inline: auto;
   bottom: var(--cqm-nav-bottom, 50px);
   z-index: 73;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-wrap: nowrap;
-  gap: 4px;
+  gap: 3px;
   overflow: hidden;
-  padding: 4px 8px;
+  padding: 4px 7px;
   border-radius: 18px;
   border: 1px solid rgba(150, 180, 230, 0.32);
   background: rgba(8, 11, 22, 0.9);
@@ -149,6 +156,16 @@ ${VIS_SEL} {
 #cqm-hud-nav.cqm-hud-tabs .cqm-hud-tab {
   display: inline-flex;
   align-items: center;
+}
+/* Tabs mode packs up to nine controls into the centre band, so the buttons run a touch tighter than the
+   roomy cycler — still comfortably clickable on the fine pointer this mode is gated to. Buys ~70px so
+   the six NAMED tabs + Docs/Spec/Lab fit the gap at common desktop widths before any tier is dropped. */
+#cqm-hud-nav.cqm-hud-tabs .cqm-hud-btn {
+  padding: 0 6px;
+  letter-spacing: 0.02em;
+}
+#cqm-hud-nav.cqm-hud-tabs .cqm-hud-sep {
+  margin: 0 1px;
 }
 #cqm-hud-nav.cqm-hud-tabs .cqm-hud-label {
   display: none;
@@ -275,25 +292,44 @@ function fitHud(): void {
 }
 
 /**
- * V69: show the six labelled tabs ONLY when they actually fit the (now-sized) nav — measured live, so
- * they can never clip or scroll. On touch (coarse pointer) or portrait we keep the big-tap cycler.
- * Reading scrollWidth forces a synchronous layout, so the measurement reflects the current insets.
+ * V70: the GAP the nav may occupy — the centre band between the side panels, read from the very vars
+ * fitHud just measured (defaults to near-full width before they're set / on mobile). The nav hugs its
+ * content (width:max-content), so we compare its natural content width to THIS, not to its own box.
+ */
+function navGapWidth(): number {
+  const cs = getComputedStyle(document.documentElement);
+  const L = parseFloat(cs.getPropertyValue('--cqm-hud-left')) || 8;
+  const R = parseFloat(cs.getPropertyValue('--cqm-hud-right')) || 8;
+  return Math.max(120, window.innerWidth - L - R);
+}
+
+/**
+ * V69/V70: pick the WIDEST launcher layout that still fits the live gap between the side panels —
+ * measured live (the nav is content-hugging, so scrollWidth === its natural width), so it can never
+ * clip or scroll. Three graceful tiers on fine-pointer landscape, narrowest-loses:
+ *   1. six NAMED tabs + the Docs/Spec/Lab links,
+ *   2. six NAMED tabs alone (drop the secondary links first — names matter more),
+ *   3. the clean ‹ CURRENT › cycler (touch / portrait / a very narrow centre column always land here).
+ * Even the cycler drops its links if the column is impossibly tight, so the core controls never clip.
  */
 function chooseNavMode(): void {
   if (!nav) return;
-  nav.classList.remove('cqm-hud-nolinks'); // start optimistic (Docs/Spec/Lab shown)
+  const gap = navGapWidth();
   const fineLandscape =
     typeof matchMedia === 'function' &&
     matchMedia('(pointer: fine) and (orientation: landscape)').matches;
   if (fineLandscape) {
-    nav.classList.add('cqm-hud-tabs'); // try the six labelled tabs…
-    if (nav.scrollWidth > nav.clientWidth + 1) nav.classList.remove('cqm-hud-tabs'); // …don't fit → cycler
+    nav.classList.add('cqm-hud-tabs');
+    nav.classList.remove('cqm-hud-nolinks'); // tier 1: tabs + links
+    if (nav.scrollWidth <= gap) return;
+    nav.classList.add('cqm-hud-nolinks'); // tier 2: tabs, no links
+    if (nav.scrollWidth <= gap) return;
+    nav.classList.remove('cqm-hud-tabs'); // tier 3: cycler
   } else {
-    nav.classList.remove('cqm-hud-tabs'); // touch / portrait → always the big-tap cycler
+    nav.classList.remove('cqm-hud-tabs');
   }
-  // Still overflowing (a narrow centre column)? Drop the secondary links so the core ‹ CURRENT › ◐ ✕
-  // controls never clip — measured, so it self-corrects at any inset.
-  if (nav.scrollWidth > nav.clientWidth + 1) nav.classList.add('cqm-hud-nolinks');
+  nav.classList.remove('cqm-hud-nolinks'); // cycler with links…
+  if (nav.scrollWidth > gap) nav.classList.add('cqm-hud-nolinks'); // …unless even that won't fit
 }
 
 let fitScheduled = false;

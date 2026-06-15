@@ -26,6 +26,19 @@ the full gate (now also a coverage gate, on Linux + Windows) with same-seed dete
 
 ### Added
 
+- **The nav launcher wears its NAMES again, centred in the open play-area (V72)** — the directive's
+  "add the buttons back the names again so everything fits nicer and more organized" + "DOCS SPEC LAB
+  not centered properly". The launcher now **hugs its content and centres in the live gap between the
+  side panels** (anchored to the very `--cqm-hud-left/right` insets `fitHud()` measures, with auto
+  inline-margins), so the six **named** tabs — `✦ AI · ❓ HELP · 🗒 AUDIT · ⊞ NEURAL · ⊙ MARKET ·
+⬢ ARCHITECT` — plus the Docs/Spec/Lab links read dead-centre of the open cosmos, never offset and
+  never spanning empty glass. `chooseNavMode()` now picks the **widest of three graceful tiers** that
+  fits the measured gap (names + links → names alone → `‹ CURRENT ›` cycler), dropping the secondary
+  links _before_ the names, so the labels survive far narrower columns than the old binary
+  tabs-or-cycler did; tabs-mode buttons run ~70 px tighter so the full named set + links fits common
+  desktop widths before any tier is shed. Verified live: **1350 px** → names + links centred (clears
+  both panels + the corner readouts, no clip); **1150 px** → names, links dropped; **980 px** → cycler.
+  UI shell only — no sim coupling, no rng. Full gate green (840 tests).
 - **Canvas fills the whole window + inspector panels scroll their full data (V70)** — a batch of the
   user's "UI/UX/topography" fixes: (1) the simulation was **letterboxed** ("encased in an aspect ratio")
   because `renderer.setSize` wrote inline `width/height` onto the canvas that could go stale and a
