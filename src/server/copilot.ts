@@ -212,7 +212,7 @@ export function availableProviders(): { id: string; label: string; def: boolean 
 }
 
 /** Resolve a provider id to a callable provider. Default-deny: unknown/keyless → the default. */
-function resolveProvider(id: string | undefined): ResolvedProvider {
+export function resolveProvider(id: string | undefined): ResolvedProvider {
   if (!id) return defaultProvider();
   if (id === 'custom') return customProvider() ?? defaultProvider();
   if (id === 'freellmapi') return freellmapiProvider();
