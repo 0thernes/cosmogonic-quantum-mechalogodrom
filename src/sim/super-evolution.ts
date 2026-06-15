@@ -268,7 +268,8 @@ export class SuperEvolution {
       // Number.isFinite guards reject NaN AND ±Infinity: `Infinity >= 0` is true, so a tampered/
       // corrupt localStorage blob with `xp: Infinity` would otherwise slip past `>= 0` and poison the
       // catch-up loop / progress readout (audit 2026-06-15). `level` is additionally clamped below.
-      if (Number.isFinite(o.level) && (o.level as number) >= 1) evo.level = Math.floor(o.level as number);
+      if (Number.isFinite(o.level) && (o.level as number) >= 1)
+        evo.level = Math.floor(o.level as number);
       if (Number.isFinite(o.xp) && (o.xp as number) >= 0) evo.xp = o.xp as number;
       if (Number.isFinite(o.stage))
         evo.stage = Math.max(0, Math.min(EVO_STAGES.length - 1, Math.floor(o.stage as number)));
