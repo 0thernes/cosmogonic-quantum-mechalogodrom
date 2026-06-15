@@ -514,7 +514,12 @@ export function initCenterHud(doc: Document = document): void {
     window.addEventListener('orientationchange', scheduleFit);
   }
   render();
-  scheduleFit();
+  // V74: fit SYNCHRONOUSLY here (not only via the rAF-debounced scheduleFit) so the centre-column vars
+  // are set + the named tabs chosen on this very frame. The panels are already mounted + laid out by the
+  // time main.ts calls this, so getBoundingClientRect measures correctly. Without it, the launcher stays
+  // on the ‹ CURRENT › cycler until the next animation frame — and under heavy HMR churn (a co-editor
+  // saving repeatedly) that frame can be starved by back-to-back reboots, leaving it stuck on the cycler.
+  fitHud();
 }
 
 // HMR — hot-replace the HUD IN PLACE (re-inject the new CSS + rebuild the nav) without a full page
