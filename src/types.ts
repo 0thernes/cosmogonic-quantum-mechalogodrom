@@ -316,6 +316,16 @@ export interface TelemetrySnapshot {
   renderName: string;
   /** V13 economy: AURUM/UMBRA money + commodity prices + dominant currency + wealth Gini. */
   econ: MarketSummary;
+  /** V57: audio music on/off (HUD View/Speed/Render box). */
+  musicOn: boolean;
+  /** V57: audio SFX on/off (HUD box). */
+  sfxOn: boolean;
+  /** V57: total RESET/REGENERATE actions this session — kept count (HUD box). */
+  resetCount: number;
+  /** Simulation variant: 1 = GENESIS N(1), 2 = BREAK FREE N(2) (telemetry box). */
+  sim: 1 | 2;
+  /** Active cosmological singularity display name, or '' when none is summoned (telemetry box). */
+  singularity: string;
 }
 
 /** One titan's public economy row (structural twin of sim/titans TitanLedgerEntry). */

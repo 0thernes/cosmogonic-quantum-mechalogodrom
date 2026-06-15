@@ -67,6 +67,11 @@ export class TelemetryPanel {
   private readonly hudView: HTMLElement;
   private readonly hudSpeed: HTMLElement;
   private readonly hudRender: HTMLElement;
+  private readonly hudMusic: HTMLElement;
+  private readonly hudSfx: HTMLElement;
+  private readonly hudResets: HTMLElement;
+  private readonly telSim: HTMLElement;
+  private readonly telSing: HTMLElement;
   /** V13 economy rows: dominant money, FX, commodity prices, wealth Gini. */
   private readonly ecd: HTMLElement;
   private readonly ecf: HTMLElement;
@@ -105,6 +110,11 @@ export class TelemetryPanel {
     this.hudView = mustGet('hud-view');
     this.hudSpeed = mustGet('hud-speed');
     this.hudRender = mustGet('hud-render');
+    this.hudMusic = mustGet('hud-music');
+    this.hudSfx = mustGet('hud-sfx');
+    this.hudResets = mustGet('hud-resets');
+    this.telSim = mustGet('tel-sim');
+    this.telSing = mustGet('tel-sing');
     this.ecd = mustGet('ecd');
     this.ecf = mustGet('ecf');
     this.ecp = mustGet('ecp');
@@ -153,6 +163,12 @@ export class TelemetryPanel {
     this.hudView.textContent = s.viewName;
     this.hudSpeed.textContent = s.timeScale === 0 ? 'PAUSE' : `${s.timeScale}×`;
     this.hudRender.textContent = s.renderName;
+    // V57: audio on/off + reset count (HUD box); sim variant + active singularity (telemetry box).
+    this.hudMusic.textContent = s.musicOn ? 'ON' : 'OFF';
+    this.hudSfx.textContent = s.sfxOn ? 'ON' : 'OFF';
+    this.hudResets.textContent = String(s.resetCount);
+    this.telSim.textContent = `N(${s.sim})`;
+    this.telSing.textContent = s.singularity || '—';
     // V13 economy: dominant money + its share, FX, commodity prices, wealth Gini.
     const ec = s.econ;
     const domGlyph = ec.dominant === 'AURUM' ? '☉' : '☾';

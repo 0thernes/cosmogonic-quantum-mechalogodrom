@@ -248,6 +248,24 @@
               >0%</span
             >
           </div>
+          <!-- V57: simulation variant N(1) GENESIS / N(2) BREAK FREE -->
+          <div class="block border-t border-white/5 py-0.5 font-ui text-4xs text-cyan-300">
+            Simulation
+            <span
+              id="tel-sim"
+              class="float-right font-mono font-semibold text-cyan-100 tabular-nums"
+              >N(1)</span
+            >
+          </div>
+          <!-- V57: the currently-summoned cosmological singularity (— when none) -->
+          <div class="block border-t border-white/5 py-0.5 font-ui text-4xs text-cyan-300">
+            Singularity
+            <span
+              id="tel-sing"
+              class="float-right font-mono font-semibold text-cyan-100 tabular-nums"
+              >—</span
+            >
+          </div>
           <!-- V13 ECONOMY: two competing currencies (AURUM ☉ / UMBRA ☾) + two commodities
                (QUANTA ◇ / ICHOR ❖). Dominant currency + share, FX, commodity prices, wealth Gini. -->
           <div
@@ -1107,6 +1125,19 @@
       <div class="flex items-baseline justify-between gap-3">
         <span class="text-slate-400">Render</span>
         <span id="hud-render" class="font-mono text-cyan-100 normal-case tabular-nums">solid</span>
+      </div>
+      <!-- V57: audio toggles (on/off) + a running reset counter. -->
+      <div class="flex items-baseline justify-between gap-3">
+        <span class="text-slate-400">Music</span>
+        <span id="hud-music" class="font-mono text-cyan-100 normal-case tabular-nums">OFF</span>
+      </div>
+      <div class="flex items-baseline justify-between gap-3">
+        <span class="text-slate-400">SFX</span>
+        <span id="hud-sfx" class="font-mono text-cyan-100 normal-case tabular-nums">OFF</span>
+      </div>
+      <div class="flex items-baseline justify-between gap-3">
+        <span class="text-slate-400">Resets</span>
+        <span id="hud-resets" class="font-mono text-cyan-100 normal-case tabular-nums">0</span>
       </div>
     </div>
 

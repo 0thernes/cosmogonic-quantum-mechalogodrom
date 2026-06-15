@@ -120,6 +120,15 @@ const SFX_STRANGE = SFX_EXTRA_BANDS['strange']?.start ?? 0;
  */
 const CHAOS_NIGHTMARE_FLOOR = 6;
 
+/** V57: singularity kind → telemetry display name (the chaos chooser cycles SINGULARITY_KINDS). */
+const SINGULARITY_LABEL: Record<string, string> = {
+  blackhole: 'BLACK HOLE',
+  whitehole: 'WHITE HOLE',
+  greyhole: 'GREY HOLE',
+  strangestar: 'STRANGE STAR',
+  entropy: 'ENTROPY FIELD',
+};
+
 export interface WorldOptions {
   engine: Engine;
   quality: QualityProfile;
@@ -251,6 +260,8 @@ export class World {
   private readonly quantumLattice: QuantumLattice;
   /** Cycle cursor for the chaos control's singularity chooser. */
   private singularityCursor = 0;
+  /** V57: total resets this session — surfaced in the HUD View/Speed/Render box. */
+  private resetCount = 0;
   /** Reused per-frame scalar block handed to the instanced renderer (alloc-free). */
   private readonly instFrame: InstanceFrame = { t: 0, chaos: 0, bass: 0, nightmare: 0 };
   private readonly audioAnalysis: AudioAnalysis;
@@ -560,6 +571,11 @@ export class World {
       timeScale: this.state.timeScale,
       renderName: this.state.renderMode,
       econ: this.economy.summary(),
+      musicOn: false,
+      sfxOn: false,
+      resetCount: 0,
+      sim: this.state.sim,
+      singularity: '',
     };
     // The three V3.5 arrays are stable LIVE views (contents mutate in place),
     // so this adapter is built once and never repopulated — just a field rename.
@@ -1439,6 +1455,13 @@ export class World {
     sn.timeScale = s.timeScale;
     sn.renderName = s.renderMode;
     sn.econ = this.economy.summary(); // V13: AURUM/UMBRA, prices, dominant currency, wealth Gini
+    // V57: audio on/off + reset count (HUD box), sim variant + active singularity (telemetry box).
+    sn.musicOn = this.audio.musicOn;
+    sn.sfxOn = this.audio.sfxOn;
+    sn.resetCount = this.resetCount;
+    sn.sim = s.sim;
+    const sk = this.singularities.kind;
+    sn.singularity = sk ? (SINGULARITY_LABEL[sk] ?? sk.toUpperCase()) : '';
     sn.tribes = this.graphMind.tribes;
     sn.trend = this.analytics.trendPerMin;
     sn.qEntropy = this.qc.entropy;
@@ -1724,6 +1747,7 @@ export class World {
 
   /** Legacy rSim: genesis reset (entities + counters; prefs untouched). */
   private resetSim(): void {
+    this.resetCount++; // V57: keep count for the HUD readout
     this.singularities.dispose(); // tear down any active cosmological effect
     this.entities.reset(this.bootPopulation());
     // Rebuild the spatial grid NOW (audit fix): the frame loop only rebuilds on even frames,
