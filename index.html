@@ -25,9 +25,11 @@
   </head>
   <body class="touch-none overflow-hidden bg-black font-mono text-slate-300">
     <!-- Drag = mouse-look, wheel = zoom (ui/input.ts pointer capture; world consumes) -->
+    <!-- V70: explicit w/h-screen so the canvas ALWAYS fills the whole window (a replaced element with
+         only inset-0 would fall back to its intrinsic buffer size — the "encased in an aspect ratio" bug). -->
     <canvas
       id="c"
-      class="fixed inset-0 z-0 block cursor-grab touch-none active:cursor-grabbing"
+      class="fixed inset-0 z-0 block h-screen w-screen cursor-grab touch-none active:cursor-grabbing"
     ></canvas>
 
     <!-- Sector banner (ui/hud.ts toggles .show) -->

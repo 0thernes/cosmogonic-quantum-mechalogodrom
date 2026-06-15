@@ -68,15 +68,15 @@ const STYLE = `
   font:11px var(--font-mono,ui-monospace,monospace);padding:2px 7px;cursor:pointer}
 .cqm-nhi-btn:hover{background:rgba(16,32,60,.95)}
 .cqm-nhi-btn:focus-visible{outline:1px solid #34e0ff}
-.cqm-nhi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:8px;overflow-y:auto}
+.cqm-nhi-grid{display:grid;grid-template-columns:repeat(3,1fr);grid-auto-rows:minmax(118px,max-content);gap:6px;padding:8px;overflow-y:auto;flex:1 1 auto;min-height:0}
 .cqm-nhi-cell{position:relative;border:1px solid rgba(80,220,255,.14);border-radius:6px;background:rgba(3,7,16,.7);overflow:hidden;cursor:zoom-in;transition:border-color .15s}
 .cqm-nhi-cell:hover{border-color:rgba(80,220,255,.5)}
 .cqm-nhi-cell canvas{display:block;width:100%;height:auto}
 /* V61: click any view to expand it to the whole panel (zoom-out to return). */
-.cqm-nhi-grid.expanded{grid-template-columns:1fr}
+.cqm-nhi-grid.expanded{grid-template-columns:1fr;grid-auto-rows:1fr}
 .cqm-nhi-grid.expanded .cqm-nhi-cell{display:none}
 .cqm-nhi-grid.expanded .cqm-nhi-cell.exp{display:block;cursor:zoom-out}
-.cqm-nhi-empty{position:relative;padding:0;text-align:center;color:#7f94c0;font-size:12px;line-height:1.7}
+.cqm-nhi-empty{position:relative;padding:0;text-align:center;color:#7f94c0;font-size:12px;line-height:1.7;flex:1 1 auto;min-height:0;overflow-y:auto}
 .cqm-nhi-empty canvas{display:block;width:100%;height:auto;border-radius:8px}
 .cqm-nhi-hint{position:absolute;left:0;right:0;bottom:14px;padding:0 16px;pointer-events:none;text-shadow:0 1px 6px #000}
 @media (max-width:560px){.cqm-nhi-grid{grid-template-columns:repeat(2,1fr)}#cqm-nhi-toggle{right:96px}}

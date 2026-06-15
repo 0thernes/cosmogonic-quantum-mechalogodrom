@@ -61,11 +61,6 @@ ${PANEL_SEL} {
 ${VIS_SEL} {
   opacity: 1 !important;
 }
-/* When a panel is open, hide the bottom-corner readouts so nothing fights the HUD. */
-body.cqm-hud-open #hud-vsr,
-body.cqm-hud-open #ui > #alg {
-  display: none !important;
-}
 /* The old 2nd dock bar is REDUNDANT — the always-on nav launcher below replaces it. Hide it. */
 #cqm-dock {
   display: none !important;

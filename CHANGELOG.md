@@ -26,6 +26,20 @@ the full gate (now also a coverage gate, on Linux + Windows) with same-seed dete
 
 ### Added
 
+- **Canvas fills the whole window + inspector panels scroll their full data (V70)** — a batch of the
+  user's "UI/UX/topography" fixes: (1) the simulation was **letterboxed** ("encased in an aspect ratio")
+  because `renderer.setSize` wrote inline `width/height` onto the canvas that could go stale and a
+  replaced `<canvas>` falls back to its intrinsic buffer size — now `setSize(w,h,false)` writes NO inline
+  style and the canvas carries explicit `h-screen w-screen` (+ `inset-0`), so it **always fills 100% of
+  the window**, no limits. (2) The **View/Speed/Render + algo readouts no longer vanish** when a panel
+  opens (the wide-HUD hide rule is gone — the HUD now fits the centre column, so they coexist). (3) The
+  **NEURAL** 3×3 grid was cut off + unreachable in the short HUD strip — it now has `flex:1; min-height:0`
+  - a `grid-auto-rows` floor so the nine views **scroll** (verified `scrollHeight 382 > clientHeight 139`),
+    and the click-to-expand fills the panel. (4) **Super Creature** + **Market** looked like their data
+    "disappeared" — it was all there but cut off below the fold with no scroll; both now lay their rows out
+    in **two columns** inside a **scrollable** body, so every meter / market readout is visible (Super's 18
+    identity+emotion+consciousness rows, Market's sparkline + 10 readouts). Verified live at 1440/1280/560.
+    UI shell only — no sim coupling, no rng. Full gate green (824 tests).
 - **HUD fits the CENTRE column live, never overlaps, and the ◐ transparency toggle works (V69)** — the
   directive's "the HUD must fit between the side panels (Telemetry/Sorting on the left, Observatory/
   Control on the right) and above the two bottom bars — nothing touching or overlapping — resizing +

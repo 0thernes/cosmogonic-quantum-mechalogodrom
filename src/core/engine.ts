@@ -49,7 +49,10 @@ export class Engine {
       powerPreference: 'high-performance',
     });
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, this.dprCap));
-    this.renderer.setSize(window.innerWidth, window.innerHeight);
+    // V70: updateStyle=false — NEVER write inline width/height on the canvas, so the CSS `fixed inset-0`
+    // always stretches it to fill the WHOLE window (no letterbox / aspect-ratio "encasing" if a resize
+    // is ever missed). The drawing buffer is still sized to the viewport for a pixel-perfect render.
+    this.renderer.setSize(window.innerWidth, window.innerHeight, false);
     this.renderer.shadowMap.enabled = quality.shadows;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 1.15;
@@ -85,7 +88,10 @@ export class Engine {
       'webglcontextrestored',
       () => {
         this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, this.dprCap));
-        this.renderer.setSize(window.innerWidth, window.innerHeight);
+        // V70: updateStyle=false — NEVER write inline width/height on the canvas, so the CSS `fixed inset-0`
+        // always stretches it to fill the WHOLE window (no letterbox / aspect-ratio "encasing" if a resize
+        // is ever missed). The drawing buffer is still sized to the viewport for a pixel-perfect render.
+        this.renderer.setSize(window.innerWidth, window.innerHeight, false);
         if (this.renderer.shadowMap.enabled) this.renderer.shadowMap.needsUpdate = true;
         this.contextLost = false;
       },
@@ -120,7 +126,7 @@ export class Engine {
     this.camera.aspect = w / h;
     this.camera.updateProjectionMatrix();
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, this.dprCap));
-    this.renderer.setSize(w, h);
+    this.renderer.setSize(w, h, false); // updateStyle=false → CSS inset-0 fills the window (no letterbox)
     this.fx?.setSize(w, h);
   }
 

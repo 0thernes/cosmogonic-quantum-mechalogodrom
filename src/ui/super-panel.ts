@@ -40,11 +40,15 @@ const STYLE = `
 .cqm-sup-x{background:rgba(6,4,12,.9);color:#e9c8ff;border:1px solid rgba(196,120,255,.3);border-radius:5px;
   font:11px var(--font-mono,ui-monospace,monospace);padding:2px 7px;cursor:pointer}
 .cqm-sup-x:focus-visible{outline:1px solid #c478ff}
-.cqm-sup-id{padding:6px 10px;border-bottom:1px solid rgba(196,120,255,.14);display:grid;grid-template-columns:auto 1fr;gap:1px 10px}
+/* V70: the data area SCROLLS within the short HUD strip (nothing is cut off / "lost") + lays the rows
+   out in TWO columns so the wide-but-short panel is used fully. */
+.cqm-sup-body{flex:1 1 auto;min-height:0;overflow-y:auto}
+.cqm-sup-id{padding:6px 10px;border-bottom:1px solid rgba(196,120,255,.14);display:grid;
+  grid-template-columns:auto 1fr;gap:2px 10px;align-items:baseline}
 .cqm-sup-id .k{color:#a98fce;font-size:10px;letter-spacing:.05em;text-transform:uppercase}
 .cqm-sup-id .v{color:#f3ecff;text-align:right;font-variant-numeric:tabular-nums}
-.cqm-sup-bars{padding:7px 10px;display:flex;flex-direction:column;gap:5px}
-.cqm-sup-bar{display:grid;grid-template-columns:62px 1fr 40px;align-items:center;gap:8px}
+.cqm-sup-bars{padding:7px 10px;display:grid;grid-template-columns:1fr 1fr;gap:6px 16px}
+.cqm-sup-bar{display:grid;grid-template-columns:58px 1fr 34px;align-items:center;gap:7px;min-width:0}
 .cqm-sup-bar .lab{color:#a98fce;font-size:10px;letter-spacing:.04em;text-transform:uppercase}
 .cqm-sup-bar .track{height:7px;border-radius:4px;background:rgba(196,120,255,.12);overflow:hidden}
 .cqm-sup-bar .fill{height:100%;width:0;border-radius:4px;transition:width .25s ease}
@@ -118,7 +122,8 @@ export class SuperPanel {
     panel.innerHTML =
       `<div class="cqm-sup-head"><b>⬢ SUPER CREATURE</b><span class="plan" data-plan>—</span>` +
       `<button class="cqm-sup-x" data-close aria-label="Close">✕</button></div>` +
-      `<div class="cqm-sup-id" data-id></div><div class="cqm-sup-bars" data-bars></div>`;
+      `<div class="cqm-sup-body"><div class="cqm-sup-id" data-id></div>` +
+      `<div class="cqm-sup-bars" data-bars></div></div>`;
     doc.body.appendChild(panel);
     this.panel = panel;
     this.planEl = panel.querySelector('[data-plan]') as HTMLElement;

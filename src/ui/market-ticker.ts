@@ -27,10 +27,13 @@ const STYLE = `
 .cqm-mkt-x{margin-left:auto;background:rgba(8,6,2,.9);color:#ffd98a;border:1px solid rgba(255,196,90,.3);border-radius:5px;
   font:11px var(--font-mono,ui-monospace,monospace);padding:2px 7px;cursor:pointer}
 .cqm-mkt-x:focus-visible{outline:1px solid #ffb648}
-.cqm-mkt-spark{display:block;width:100%;height:auto;border-bottom:1px solid rgba(255,196,90,.14)}
-.cqm-mkt-rows{padding:7px 10px;display:grid;grid-template-columns:auto 1fr;gap:2px 10px}
-.cqm-mkt-rows .k{color:#b9a87f;font-size:10px;letter-spacing:.05em;text-transform:uppercase;white-space:nowrap}
-.cqm-mkt-rows .v{color:#fff2da;text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.cqm-mkt-spark{display:block;width:100%;height:auto;border-bottom:1px solid rgba(255,196,90,.14);flex:0 0 auto}
+/* V70: the rows SCROLL within the short HUD strip (nothing cut off) + lay out in TWO column-pairs so
+   the wide panel is used fully. */
+.cqm-mkt-rows{padding:7px 10px;display:grid;grid-template-columns:auto 1fr auto 1fr;gap:3px 14px;
+  flex:1 1 auto;min-height:0;overflow-y:auto;align-content:start}
+.cqm-mkt-rows .k{color:#b9a87f;font-size:10px;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap}
+.cqm-mkt-rows .v{color:#fff2da;text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cqm-mkt-rows .hi{color:#ffd98a;font-weight:600}
 .cqm-mkt-rows .warn{color:#ff8a6b}
 `;
