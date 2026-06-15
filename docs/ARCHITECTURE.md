@@ -177,6 +177,64 @@ graph TD
 
   audit -. "fire-and-forget POST /api/audit" .-> server
   indexhtml -. "HTMX GET /api/audit every 5s" .-> server
+
+  %% ── V10–V70 Living Era (post-0.9.0; per-version detail in CHANGELOG) ──
+  subgraph living["src/sim — Living Era V10–V70"]
+    economy["economy.ts<br/>Economy (2 currencies · 2 commodities · clearing market)"]
+    factions["factions.ts<br/>8 faction archetypes"]
+    genome["genome.ts<br/>heritable gene vector + TinyMLP"]
+    lineage["lineage.ts<br/>kinship graph"]
+    entitybrain["entity-brain.ts<br/>EntityBrainField (70-param NN per entity)"]
+    brains["ai/brains.ts<br/>pre-2016 AI kernel (MLP·Markov·FSM·GOAP)"]
+    artifacts["artifacts.ts<br/>ArtifactField (relics, visual-only)"]
+    cognition["cognition.ts<br/>creatureDrive kernel"]
+    leviathans["leviathans.ts<br/>LeviathanSystem"]
+    nhi["nhi · nhi-system · nhi-body<br/>NHI autonomous minds + bodies"]
+    singularities["singularities.ts<br/>SingularitySystem (5 holes · warp · lens)"]
+    chaosfield["chaos-field.ts<br/>ChaosField (Lorenz quantum storm, V62)"]
+    supercreature["super-creature · super-body · super-mind<br/>super-evolution · super-wingmen<br/>apex being (~10k-param mind · leveling)"]
+    monolith["monolith-temple.ts<br/>MonolithTemple (LV100 ascension portal)"]
+    lattices["cosmic-web · gold-lattice · quantum-lattice<br/>(far-field visuals)"]
+  end
+
+  subgraph ail["src/server — AI organ (V9, opt-in)"]
+    copilot["copilot.ts<br/>free-LLM bridge + bounded agent loop"]
+    sandbox["ai-sandbox.ts<br/>default-deny read-only tools"]
+    websearch["web-search.ts<br/>query-only · safety constitution"]
+  end
+
+  postfx["core/postfx.ts<br/>gravitational-lens pass (V60)"]
+
+  world --> economy
+  world --> factions
+  world --> entitybrain
+  world --> artifacts
+  world --> leviathans
+  world --> nhi
+  world --> singularities
+  world --> chaosfield
+  world --> supercreature
+  world --> monolith
+  world --> lattices
+  world --> postfx
+  entitybrain --> genome
+  genome --> brains
+  nhi --> brains
+  factions --> brains
+  shoggoths --> cognition
+  puppets --> cognition
+  server --> copilot
+  copilot --> sandbox
+  sandbox --> websearch
+
+  %% feedback couplings (PHILOSOPHY: every system reads AND writes another)
+  economy -. "wealth → diplomacy/boldness; trades → wealth" .-> titans
+  economy -. "market stress ← state.chaos" .-> chaosfield
+  shoggoths -. "attachTrade → transferWorth" .-> economy
+  singularities -. "r⁻² force + time-dilation; raises state.chaos (V64)" .-> entities
+  chaosfield -. "tunnel/entangle/superpose · storm-band chaos · weather/algo kicks" .-> entities
+  supercreature -. "consciousness/quantum drive body + powers; LV100 → reveal" .-> monolith
+  postfx -. "lens centre ← active singularity (screen-projected)" .-> singularities
 ```
 
 Notes:
