@@ -61,7 +61,10 @@ const STYLE = `
 /* V75: the NEURAL observatory lives in the SAME box — toggling it grows this panel and swaps the
    telemetry body for the 4-tab / 27-visual + BRAIN observatory (no second window). */
 .cqm-sup-neural-host{display:none;flex:1 1 auto;min-height:0;flex-direction:column}
-#cqm-sup-panel.neural{width:min(96vw,720px);height:min(76vh,600px)}
+/* center-hud clamps every HUD panel to ~30vh via an !important rule on the bare id; the .neural
+   class lifts specificity (0,1,1,0 > 0,1,0,0) so the observatory gets the room its 27 readouts need
+   without touching center-hud. Capped so it never runs off the viewport. */
+#cqm-sup-panel.neural{height:min(80vh,640px)!important;max-height:calc(100vh - 116px)!important}
 #cqm-sup-panel.neural .cqm-sup-body{display:none}
 #cqm-sup-panel.neural .cqm-sup-neural-host{display:flex}
 #cqm-sup-panel.neural .cqm-sup-neu{background:rgba(52,20,82,.95);color:#f3ecff}
