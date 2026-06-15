@@ -188,3 +188,31 @@ describe('TitanSystem — structural invariants', () => {
     }
   });
 });
+
+describe('TitanSystem.setStrategy — NaN seal + bounds (audit fix)', () => {
+  test('non-finite / out-of-range strategy never crashes or poisons the ledger with NaN', () => {
+    const ctx = makeCtx(0x57a7);
+    const entities = new EntityManager(ctx);
+    entities.reset(POP);
+    const titans = new TitanSystem(ctx, entities, LORE, { perturb: () => undefined });
+    // Exercise every branch of setStrategy:
+    expect(() => titans.setStrategy(999, 2)).not.toThrow(); // out-of-range index → no-op
+    titans.setStrategy(0, 3); // valid in-range
+    titans.setStrategy(1, NaN); // the NaN seal → strategy 0 (NaN would mute diplomacy forever)
+    titans.setStrategy(2, Infinity); // non-finite → strategy 0
+    titans.setStrategy(3, 99); // clamps high → STRATEGIES.length - 1
+    titans.setStrategy(4, -5); // clamps low → 0
+    // Drive diplomacy/economy: if the seal failed, a NaN strategy would propagate into the ledger.
+    const dt = 1 / 60;
+    for (let f = 1; f <= 700; f++) {
+      ctx.state.frame = f;
+      titans.feedEntropy(0.5);
+      titans.update(dt, f * dt);
+    }
+    for (const e of titans.ledger) {
+      expect(Number.isFinite(e.energy)).toBe(true);
+      expect(Number.isFinite(e.matter)).toBe(true);
+      expect(Number.isFinite(e.entropy)).toBe(true);
+    }
+  });
+});
