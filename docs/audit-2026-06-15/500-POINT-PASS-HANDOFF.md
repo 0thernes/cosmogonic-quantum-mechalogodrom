@@ -125,20 +125,27 @@ The loop continued past the initial handoff and closed more of the queue:
   now carries a "RESERVED — see ADR-0009" note so it isn't mistaken for accidental dead code.
 - ◻︎ **`dependabot.yml rebase-strategy`** — non-action: `auto` is dependabot's default, so adding it
   would be redundant cosmetic churn. The LOW finding is a no-op.
-- ✅ **Test-coverage pass — 6 previously-untested core modules now pinned** (822 → **852 tests**, full
-  suite green): `behaviors` (all 26 handlers stay finite + bounded under the hostile
-  far-escapee/max-chaos Lorenz regime), `puppet-masters` + `shoggoths` (creature determinism +
-  population finiteness — the puppet test also fixed a stale "constant 3" count doc), `connectome`
-  (bounded link graph + finite activation + deterministic rebuild), `qcircuit` (normalized entropy +
-  valid collapse + deterministic measurement), and `server` (parser boundaries). Commits `36324cf`,
-  `51a851d`, `7052aea`, `8a9ff29`, `d81d5be`, `05f1427`. Durable regression guards on the determinism +
-  NaN-safety invariants — exactly what protects the repo while the parallel editor ships features fast.
+- ✅ **Test-coverage pass — 822 → 856 tests, full suite green.** Pinned the previously-untested
+  modules + added two mechanical invariant guards:
+  - **Module tests:** `behaviors` (all 26 handlers finite + bounded under the hostile
+    far-escapee/max-chaos Lorenz regime), `puppet-masters` + `shoggoths` (creature determinism +
+    population finiteness — the puppet test also fixed a stale "constant 3" count doc), `connectome`
+    (bounded link graph + finite activation + deterministic rebuild), `qcircuit` (normalized entropy +
+    valid collapse + deterministic Born-rule measurement), `server` (parser boundaries), and the V63
+    `MonolithTemple` ascension portal (construct → reveal → rise smoke). Commits `36324cf` `51a851d`
+    `7052aea` `8a9ff29` `d81d5be` `05f1427` `b9c27d5`.
+  - **Invariant guards (close GOV-DET / pin ARCH-07):** `determinism-law` — scans `src/sim/**` and
+    fails on any `Math.random`/`Date.now`/`performance.now` CALL (the #1 law was convention-only; now
+    mechanically enforced in CI); `leaf-dom-freedom` — `src/sim/**`+`src/math/**` must never touch the
+    DOM (the headless-testability invariant). Commits `d78f7df` `2af63cd`. Both currently clean; any
+    future edit (this agent's or the parallel editor's) that breaks them fails loudly.
 
-**Net at session checkpoint:** every safe, non-colliding, non-product-decision item is **done**, and
-the highest-risk previously-untested logic now has determinism/finiteness guards (full suite **852,
-0 fail**). What genuinely remains needs external input or for the parallel editor to settle: the
-**genome wire/prune product decision** (teed up in ADR-0009), the **UI `AbortController` cleanup** (the
-editor is mid-editing those files — V70), the **ARCHITECTURE/ERD doc regen** (architecture moves every
-few minutes), and the **known-open server-security hardening** (maintainer buy-in). The remaining
-untested modules are visual/WebGL (constellations, cosmic-web, gold-lattice, monolith-temple,
-super-body, environment) — they need a GL/scene harness rather than the headless fake-ctx pattern.
+**Net at session checkpoint:** every safe, non-colliding, non-product-decision item is **done**; the
+highest-risk previously-untested logic now has determinism/finiteness guards and the two hardest
+invariants are mechanically enforced (full suite **856, 0 fail**). What genuinely remains needs
+external input or for the parallel editor to settle: the **genome wire/prune product decision** (teed
+up in ADR-0009), the **UI `AbortController` cleanup** (the editor is mid-editing those files — V70),
+the **ARCHITECTURE/ERD doc regen** (architecture moves every few minutes), and the **known-open
+server-security hardening** (maintainer buy-in). The only still-untested modules are
+heavier-to-harness visuals (`constellations` needs a LoreEngine + AudioBands; `super-body`/
+`environment` are GL-coupled) — low marginal value vs. the GL/scene setup they'd require.
