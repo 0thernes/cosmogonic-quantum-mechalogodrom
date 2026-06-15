@@ -29,14 +29,8 @@ const SLOTS: readonly Slot[] = [
 ];
 
 const PANEL_SEL = SLOTS.map((s) => '#' + s.panel).join(',');
-/** The open+visible panel selectors — used by the transparency rule (opacity is per-panel). */
+/** The open+visible panel selectors — the base (solid) opacity rule. */
 const VIS_SEL = SLOTS.map((s) => '#' + s.panel + '.cqm-hud-vis').join(',');
-/**
- * The GHOST (see-through) selectors. The `body.cqm-hud-ghost` prefix MUST be repeated on EVERY
- * member of the comma list — `body.cqm-hud-ghost A, B, C` binds the prefix to `A` only, leaving `B`
- * and `C` unconditional (the trap that left five panels permanently translucent, so ◐ did nothing).
- */
-const GHOST_VIS_SEL = SLOTS.map((s) => `body.cqm-hud-ghost #${s.panel}.cqm-hud-vis`).join(',');
 
 const STYLE = `
 /* V69: the HUD fits the grid's CENTRE column — between the side panels (Telemetry/Sorting on the left,
@@ -58,14 +52,14 @@ ${PANEL_SEL} {
   max-height: calc(100vh - 210px) !important;
   z-index: 71 !important;
 }
-/* TRANSPARENCY (◐): both states are explicit + !important, so the toggle ALWAYS shows a clear
-   difference and "normal" is genuinely solid (fixes the panel being stuck translucent). */
+/* TRANSPARENCY (◐): the open panel is SOLID by default. The see-through state is applied as an INLINE
+   opacity !important on the active panel (see applyGhost) — inline !important beats ANY panel's own
+   stylesheet opacity rule, so the toggle works uniformly for every panel (a stylesheet rule lost the
+   specificity war against some panels' own CSS). NO opacity transition here — a couple of panels carry
+   their own opacity transition that fought the toggle (it lagged / never settled), so the snap is
+   instant + reliable. */
 ${VIS_SEL} {
   opacity: 1 !important;
-  transition: opacity 0.18s ease !important;
-}
-${GHOST_VIS_SEL} {
-  opacity: 0.4 !important;
 }
 /* When a panel is open, hide the bottom-corner readouts so nothing fights the HUD. */
 body.cqm-hud-open #hud-vsr,
@@ -91,11 +85,11 @@ body.cqm-hud-open #ui > #alg {
   gap: 4px;
   overflow: hidden;
   padding: 4px 8px;
-  border-radius: 16px;
-  border: 1px solid rgba(150, 180, 230, 0.3);
-  background: rgba(8, 11, 22, 0.88);
-  backdrop-filter: blur(10px);
-  box-shadow: 0 4px 22px rgba(0, 0, 0, 0.6);
+  border-radius: 18px;
+  border: 1px solid rgba(150, 180, 230, 0.32);
+  background: rgba(8, 11, 22, 0.9);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 6px 28px rgba(0, 0, 0, 0.66);
 }
 .cqm-hud-btn {
   flex: 0 0 auto;
@@ -211,6 +205,24 @@ let busy = false; // re-entrancy guard while we drive sibling toggles
 let nav: HTMLElement | null = null;
 let tabs: HTMLButtonElement[] = [];
 let label: HTMLElement | null = null; // V67: the mobile ‹ CURRENT › cycler label
+let ghostOn = false; // V69: see-through (◐) state — applied inline to the active panel
+
+/**
+ * Apply the transparency state to the panels. The active+visible panel gets an INLINE `opacity:0.4
+ * !important` when ghost is on (inline !important beats every panel's own stylesheet opacity, so it is
+ * uniform); all others have the inline opacity cleared (falling back to the solid stylesheet rule).
+ */
+function applyGhost(): void {
+  for (const s of SLOTS) {
+    const el = panelEl(s);
+    if (!el) continue;
+    if (ghostOn && el.classList.contains('cqm-hud-vis')) {
+      el.style.setProperty('opacity', '0.4', 'important');
+    } else {
+      el.style.removeProperty('opacity');
+    }
+  }
+}
 
 /** The six HUD panel ids — excluded from the side-column measurement so they never skew the fit. */
 const HUD_IDS = new Set(SLOTS.map((s) => s.panel));
@@ -342,7 +354,8 @@ function render(): void {
     const s = active >= 0 ? SLOTS[active] : undefined;
     label.textContent = s ? `${s.icon} ${s.name}` : '⊕ PANELS';
   }
-  scheduleFit(); // V69: re-fit the centre-column slot whenever the HUD state changes
+  applyGhost(); // V69: carry the see-through state onto the newly-active panel (clear it off the rest)
+  scheduleFit(); // re-fit the centre-column slot whenever the HUD state changes
 }
 
 /** Build the chrome: ‹ prev · [tabs] · next › · ◐ transparency · ✕ close. */
@@ -383,12 +396,15 @@ function buildNav(doc: Document): void {
     'Toggle see-through (peek at the simulation behind the HUD)',
     'cqm-hud-ghost-btn',
     () => {
-      const on = doc.body.classList.toggle('cqm-hud-ghost');
-      ghostBtn.classList.toggle('active', on);
-      ghostBtn.setAttribute('aria-pressed', String(on));
+      ghostOn = !ghostOn;
+      doc.body.classList.toggle('cqm-hud-ghost', ghostOn);
+      ghostBtn.classList.toggle('active', ghostOn);
+      ghostBtn.setAttribute('aria-pressed', String(ghostOn));
+      applyGhost();
     },
   );
-  ghostBtn.setAttribute('aria-pressed', 'false');
+  ghostBtn.classList.toggle('active', ghostOn); // reflect state across HMR rebuilds
+  ghostBtn.setAttribute('aria-pressed', String(ghostOn));
   nav.appendChild(ghostBtn);
   nav.appendChild(mk('✕', 'Close', 'cqm-hud-close', () => showOnly(-1)));
   doc.body.appendChild(nav);
@@ -436,28 +452,53 @@ function wireDockToggles(): void {
   });
 }
 
-let started = false;
-/** Idempotent init — call once after the six panels have mounted (end of main.ts boot). */
+/** Escape closes the HUD. Named so HMR can cleanly remove the OLD module's binding on hot-replace. */
+function onKeydown(e: KeyboardEvent): void {
+  if (e.key === 'Escape' && active >= 0) showOnly(-1);
+}
+
+/**
+ * Build (or REBUILD) the HUD chrome. Idempotent + hot-reload-safe: it ALWAYS replaces its stylesheet
+ * and rebuilds the nav, and re-binds its listeners cleanly (remove-then-add) — so edits to this module
+ * apply in the dev browser without a full page reload. (The old guard skipped re-injecting the style
+ * when one already existed, which left hot-reloads showing the STALE layout — the bug the user hit.)
+ * Call after the six panels have mounted (end of main.ts boot).
+ */
 export function initCenterHud(doc: Document = document): void {
-  if (started && doc.getElementById('cqm-hud-nav')) return;
-  started = true;
-  if (!doc.getElementById('cqm-hud-style')) {
-    const style = doc.createElement('style');
-    style.id = 'cqm-hud-style';
-    style.textContent = STYLE;
-    doc.head.appendChild(style);
-  }
-  buildNav(doc);
-  wireDockToggles();
-  // Close the HUD on Escape.
-  doc.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && active >= 0) showOnly(-1);
-  });
-  // V69: keep the centre-column fit live — re-measure on resize / orientation change.
+  doc.getElementById('cqm-hud-style')?.remove();
+  const style = doc.createElement('style');
+  style.id = 'cqm-hud-style';
+  style.textContent = STYLE;
+  doc.head.appendChild(style);
+  buildNav(doc); // removes the old nav + rebuilds with the current code
+  wireDockToggles(); // dataset-guarded: binds each toggle once
+  doc.removeEventListener('keydown', onKeydown);
+  doc.addEventListener('keydown', onKeydown);
+  // V69: keep the centre-column fit live — re-measure on resize / orientation change (re-bound cleanly
+  // so a hot-reload never stacks duplicate listeners).
   if (typeof window !== 'undefined') {
+    window.removeEventListener('resize', scheduleFit);
+    window.removeEventListener('orientationchange', scheduleFit);
     window.addEventListener('resize', scheduleFit);
     window.addEventListener('orientationchange', scheduleFit);
   }
   render();
   scheduleFit();
+}
+
+// HMR — hot-replace the HUD IN PLACE (re-inject the new CSS + rebuild the nav) without a full page
+// reload or a costly main.ts re-boot, so center-HUD edits actually reach the running browser. Bun makes
+// `import.meta.hot` a getter that throws if aliased, so it is touched INLINE here.
+if (import.meta.hot) {
+  import.meta.hot.dispose(() => {
+    if (typeof window !== 'undefined') {
+      window.removeEventListener('resize', scheduleFit);
+      window.removeEventListener('orientationchange', scheduleFit);
+    }
+    if (typeof document !== 'undefined') document.removeEventListener('keydown', onKeydown);
+  });
+  import.meta.hot.accept();
+  // On a hot UPDATE the nav already exists → re-init with the new code now; on the FIRST import it does
+  // not (main.ts calls initCenterHud after the panels mount), so we don't double-build at startup.
+  if (typeof document !== 'undefined' && document.getElementById('cqm-hud-nav')) initCenterHud();
 }

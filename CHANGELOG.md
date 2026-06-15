@@ -38,10 +38,18 @@ the full gate (now also a coverage gate, on Linux + Windows) with same-seed dete
   uses the same insets and **`chooseNavMode()` shows the six labelled tabs only when they genuinely fit
   the centre column** (measured `scrollWidth` vs `clientWidth`), otherwise the clean `‹ CURRENT ›`
   cycler — so the launcher can **never clip or horizontally scroll** (it was clipping six tabs around
-  1367 px); touch always gets the big-tap cycler. The **◐ toggle is fixed**: it was the CSS comma-list
-  trap — `body.cqm-hud-ghost A, B, C` binds the prefix to `A` only, so five panels were stuck
-  translucent and ◐ did nothing; the ghost rule now prefixes **every** selector, the panels are solid by
-  default and `0.4` see-through on toggle, and the button reflects its pressed state. When the grid
+  1367 px); touch always gets the big-tap cycler. The **◐ toggle is fixed** (it had THREE compounding
+  faults): a CSS comma-list trap (`body.cqm-hud-ghost A, B, C` binds the prefix to `A` only) left five
+  panels stuck translucent; some panels' own opacity rules then beat a stylesheet `!important`; and an
+  opacity transition lagged the snap. The see-through state is now driven by an **inline
+  `opacity:0.4 !important` on the active panel** (`applyGhost`) — inline `!important` beats every panel's
+  CSS uniformly — with no transition, so it snaps reliably; the panels are solid by default and the
+  button reflects its pressed state. Verified `1 ↔ 0.4` on **all six** panels. Critically, the running
+  dev browser kept showing the STALE layout because `initCenterHud` skipped re-injecting its stylesheet
+  when one already existed and the module didn't accept hot updates — so **center-hud now ALWAYS replaces
+  its `<style>` + nav and self-accepts HMR** (`import.meta.hot`), hot-applying edits in place without a
+  full page reload or a costly world re-boot, with clean listener teardown (no duplicate styles/navs/
+  listeners). When the grid
   collapses to edge sheets (≤768 px / portrait / touch) the HUD spans full-width clear of the bars, and
   Docs/Spec/Lab drop ≤520 px so the cycler never crowds. **Verified live** at 1600/1440/1367/1294/1000/
   700/375: zero overlap with the side panels or bars at every width, the nav never clips/scrolls, and
