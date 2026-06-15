@@ -54,7 +54,7 @@ export const HELP_KB: readonly HelpEntry[] = [
       'confused',
       'lost',
     ],
-    body: 'Drag to orbit the camera, scroll to zoom. The bottom toolbar cycles music, time-scale, render mode (wire/solid), view, weather, and cosmic events. The menu bar (centered, just above the bottom toolbar) opens the inspector panels: ⊞ NEURAL (an NHI mind), ⊙ MARKET (the economy), ⬢ ARCHITECT (the super creature), ✦ AI (chat), ❓ HELP, and ⛓ ACCESS (the puzzle). Solve the puzzle to enter SUPERHERO mode.',
+    body: 'Drag to orbit the camera, scroll to zoom. The bottom toolbar cycles music, time-scale, render mode (wire/solid), view, weather, and cosmic events. The menu bar (centered, just above the bottom toolbar) opens the inspector panels: ⊞ NEURAL (an NHI mind), ⊙ MARKET (the economy), ⬢ ARCHITECT (the super creature), ✦ AI (chat), ❓ HELP, 🗒 AUDIT (the event log), and ⛓ ACCESS (the puzzle). Solve the puzzle to enter SUPERHERO mode.',
     see: ['index.html'],
   },
   {
@@ -181,7 +181,7 @@ export const HELP_KB: readonly HelpEntry[] = [
     id: 'ai-copilot',
     title: 'How do I ask the AI freeform questions?',
     keywords: ['ai', 'copilot', 'chat', 'web', 'search', 'ask', 'help me now', 'question'],
-    body: 'This HELP panel answers common questions instantly from a built-in, repo-grounded knowledge base (no network needed). For freeform questions, code reading, or public web info, open the ✦ AI (Copilot) — a read-only assistant that grounds answers in the actual repo (read_file/grep/run) AND can now SEARCH THE PUBLIC WEB (V43) for outside knowledge (science, math, history) via a screened, key-less endpoint, citing its source. A safety constitution (inspired by Anthropic/OpenAI/Gemini/Grok) keeps it to public/educational info only — never secrets, private data, or harmful requests. If the AI is offline, its 🩺 diagnostics show why and how to recover.',
+    body: 'This HELP panel answers common questions instantly from a built-in, repo-grounded knowledge base (no network needed). For freeform questions, code reading, or public web info, open the ✦ AI (Copilot) — a read-only assistant that grounds answers in the actual repo (read_file/grep/run) AND can now SEARCH THE PUBLIC WEB (V43) for outside knowledge (science, math, history) via a screened, key-less endpoint, citing its source. A safety constitution (inspired by Anthropic/OpenAI/Gemini/Grok) keeps it to public/educational info only — never secrets, private data, or harmful requests. It runs free providers in a failover chain — FreeLLMAPI (a self-hosted 16-provider pool) is the primary if you run it (localhost:3001), with the key-less LLM7 and Pollinations as automatic 2nd/3rd backups, so the box answers even with zero setup. If the AI is offline, its 🩺 diagnostics show why and how to recover.',
     see: ['src/ui/copilot.ts', 'src/server/web-search.ts'],
   },
   {

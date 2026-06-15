@@ -11,6 +11,25 @@ Post-`0.9.0` continuous-hardening plus the **V10 NHI super-mind** and **V11 envi
 work — all additive (a no-op until a launched NHI, or behind the opt-in `?fx` flag), shipped behind
 the full gate (now also a coverage gate, on Linux + Windows) with same-seed determinism preserved.
 
+### Added
+
+- **HUD declutter + FreeLLMAPI primary (V51)** — the annotated UI overlaps, fixed (verified live at
+  1920×1080: **zero persistent overlaps**), plus the AI provider rework. **UI:** (1) AUDIT leaves the
+  crowded left column — `#aP` is now a **dock-toggled fixed overlay** (new `ui/audit-dock.ts` adds a 🗒
+  AUDIT button; HTMX polling untouched), so **SORTING FIELDS owns the whole lower-left**
+  (`align-self:stretch`, no overflow into the bottom strip). The hide rule needs `#ui > #aP` (2,0,0) to
+  beat `#ui > section { display:flex }` (1,0,1); scoped to the desktop/TV grid so the **mobile `.sheet`
+  slide-out still works**. (2) The algo readout + View/Speed/Render box move to the bottom-right, grouped
+  beside the bars and clear of SORTING FIELDS. (3) The two menu bars no longer overlap: the toolbar
+  `#bar` is a **single row** (`flex-nowrap`/`overflow-x-auto` — all 15 buttons fit at 56px), the dock is
+  raised to clear it, and the panels raised to clear the dock. (4) **De-dup:** DOCS / SPEC / LAB are
+  consolidated into the dock (adopted there); the duplicate Lab + Spec links removed from the toolbar.
+  **AI:** **FreeLLMAPI is now the PRIMARY provider** (the user's pick — "the original"; LLM7 + Pollinations
+  become the 2nd/3rd-string key-less backups). `freellmapiProvider()` defaults its base to the proxy's
+  `localhost:3001` so it is the chain head out of the box; when the proxy isn't running the chat fails
+  over to LLM7 with **no scary "failed over" note** (suppressed for the implicit-proxy case). Full gate
+  green (798 tests).
+
 ### Fixed
 
 - **HMR hook hotfix — `import.meta.hot` used directly (V50)** — V49's teardown aliased it
