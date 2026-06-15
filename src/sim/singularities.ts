@@ -90,6 +90,18 @@ const REDSHIFT = new THREE.Color(1.0, 0.18, 0.05);
 const BLUESHIFT = new THREE.Color(0.35, 0.66, 1.0);
 /** V59 time-dilation reach (multiples of the horizon) — matter crawls + light shifts within this. */
 const WARP_R_MULT = 4;
+/**
+ * V60 screen-lens strength per kind (signed): + PINCHES light inward (absorbers), − BULGES it out
+ * (emitters). Fed to the post-FX gravitational-lens pass, scaled by the lifetime fade. Tuned so the
+ * black hole reads as a strong well and the white hole as a bright bulge without nausea.
+ */
+const LENS_BASE: Readonly<Record<SingularityKind, number>> = {
+  entropy: -0.1,
+  blackhole: 0.34,
+  whitehole: -0.3,
+  greyhole: 0.24,
+  strangestar: 0.16,
+};
 
 /**
  * Internal rig handle — the meshes a summon builds, kept so update() can animate them and
@@ -127,6 +139,8 @@ export class SingularitySystem {
   private readonly center = new THREE.Vector3();
   /** Organisms this singularity has consumed (black hole) — surfaced for audits. */
   private _consumed = 0;
+  /** V60 signed screen-lens strength for the active kind × lifetime fade (0 when none). */
+  private _lens = 0;
 
   constructor(ctx: SimContext, entities: EntityManager) {
     this.ctx = ctx;
@@ -147,6 +161,25 @@ export class SingularitySystem {
   /** Organisms consumed by the current/last black hole (read after a summon for audits). */
   get consumed(): number {
     return this._consumed;
+  }
+
+  /**
+   * V60: signed strength for the post-FX gravitational lens (+pinch absorbers / −bulge emitters),
+   * already scaled by the lifetime fade; 0 when nothing is summoned. The integrator feeds it to the
+   * {@link Engine.setLens} pass together with {@link lensCenter}. O(1).
+   */
+  get lensStrength(): number {
+    return this._lens;
+  }
+
+  /**
+   * V60: copy the active singularity's world centre into `out` for screen-projection by the lens
+   * pass. Returns false (and leaves `out` untouched) when nothing is summoned. Allocation-free. O(1).
+   */
+  lensCenter(out: THREE.Vector3): boolean {
+    if (this._kind === null) return false;
+    out.copy(this.center);
+    return true;
   }
 
   /**
@@ -206,6 +239,7 @@ export class SingularitySystem {
     this.disposeRig();
     this._kind = null;
     this.life = 0;
+    this._lens = 0;
   }
 
   /**
@@ -219,9 +253,12 @@ export class SingularitySystem {
     if (this.life <= 0) {
       this.disposeRig();
       this._kind = null;
+      this._lens = 0;
       return;
     }
     const fade = this.life < 1 ? this.life : 1; // ramp out over the last second
+    // V60: drive the screen-lens strength (signed per kind × fade) for the post-FX pass.
+    this._lens = LENS_BASE[this._kind] * fade;
     switch (this._kind) {
       case 'entropy':
         this.applyEntropy(dt);

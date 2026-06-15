@@ -13,6 +13,21 @@ the full gate (now also a coverage gate, on Linux + Windows) with same-seed dete
 
 ### Added
 
+- **The screen bends around a singularity — gravitational lens post-FX (V60)** — the directive's
+  "distortions in view + light + lensing" ask, the part V59's per-entity warp couldn't reach. Post-FX is
+  now a guarded `EffectComposer` chain whose DEFAULT tier (`postFxMode() → 'lens'`) inserts a single
+  full-screen **gravitational-lens** pass: while no hole is summoned it is a **pixel-exact passthrough**
+  (`strength === 0`), so the carefully-pinned idle look is untouched; when the chaos control summons a
+  hole the integrator projects its world centre to screen-UV and feeds the pass a **signed strength** —
+  the screen then bends light around that point with a radial deflection that peaks just outside the
+  shadow, a tangential **frame-drag swirl**, per-channel **chromatic dispersion** (blue bends more than
+  red), and a darkened core. Absorbers **pinch** light inward (`+`, black/grey/strange), emitters
+  **bulge** it outward (`−`, white hole / entropy swell). All pure projection + shader math — **no rng,
+  no sim mutation** (determinism preserved), and the whole path stays GUARDED (any throw drops the
+  `Engine` back to a plain `renderer.render()`). `?fx=1` still adds the bloom + env-map cinematic tier;
+  `?fx=0` keeps it plain. **Verified live**: idle `lensStrength === 0` (identity), a summoned black hole
+  arms `+0.34` at a valid screen centre, a white hole `−0.30`, the `Engine.setLens` forward + the lens
+  composer both build. Full gate green (798 tests).
 - **Singularities warp space-time, not just gravity (V59)** — the directive's "warp time AND space" ask.
   Every absorbing/emitting hole now imposes **gravitational time dilation** and **redshift** on the
   matter in its reach, on top of the existing r⁻² pull: inside `4·HORIZON` an organism's velocity is
@@ -20,7 +35,7 @@ the full gate (now also a coverage gate, on Linux + Windows) with same-seed dete
   and its colour is lerped toward a deep **red** for a sink (infalling light reddens) or a cold **blue**
   for a source (ejecta blueshifts) — a smooth `k = 1 → 0` falloff from horizon to edge, pure
   vector/colour math with **no rng** (determinism preserved; same seed ⇒ same evolution). The rigs are
-  rebuilt to look the part: the accretion disk is now **additive** (hot infalling plasma that *glows*
+  rebuilt to look the part: the accretion disk is now **additive** (hot infalling plasma that _glows_
   instead of painting flat), wrapped by a thin bright **photon ring** that hugs the event horizon (the
   iconic lensed "ring of fire", shimmering on its own spin) and a soft **glow halo** bleeding past the
   horizon (both additive + depth-write-off so they read as light); the strange star gains a violet

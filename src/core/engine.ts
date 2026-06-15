@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { CAMERA_FAR, FOG_SCALE } from '../sim/constants';
 import type { QualityProfile } from '../types';
-import { PostFx, postFxRequested } from './postfx';
+import { PostFx, postFxMode } from './postfx';
 
 /**
  * Owns the WebGL renderer, root scene and perspective camera
@@ -92,13 +92,16 @@ export class Engine {
       { signal: this.ac.signal },
     );
 
-    // Optional cinematic post-FX (`?fx=1`): a procedural env-map for glass reflections + a bloom
-    // pass for a modern glow. Built once, GUARDED — anything throwing here leaves the plain pipeline
-    // intact. Opt-in so the verified default look is never regressed by an unverified effect graph.
-    if (postFxRequested()) {
+    // Post-FX (CONTRACTS V60). DEFAULT 'lens': a gravitational-lens composer that is a pixel-exact
+    // passthrough while no singularity is summoned, so the pinned look is preserved when idle but the
+    // chaos control's holes can bend the screen. 'cinematic' (`?fx=1`) additionally bakes a procedural
+    // env-map for glass/metal reflections + an UnrealBloom glow. 'off' (`?fx=0`) keeps the plain
+    // pipeline. Built once, GUARDED — anything throwing here leaves the plain pipeline intact.
+    const mode = postFxMode();
+    if (mode !== 'off') {
       try {
-        this.scene.environment = buildCosmicEnvironment(this.renderer);
-        this.fx = new PostFx(this.renderer, this.scene, this.camera);
+        if (mode === 'cinematic') this.scene.environment = buildCosmicEnvironment(this.renderer);
+        this.fx = new PostFx(this.renderer, this.scene, this.camera, mode === 'cinematic');
       } catch {
         this.fx = null;
       }
@@ -136,6 +139,15 @@ export class Engine {
       }
     }
     this.renderer.render(this.scene, this.camera);
+  }
+
+  /**
+   * Aim the gravitational-lens post-FX pass at the active singularity (CONTRACTS V60). `(cx, cy)`
+   * is its screen position in UV (0..1); `strength` is signed (+pinch absorbers / −bulge emitters,
+   * 0 = identity); `radius` the UV influence radius. No-op when post-FX is off/failed. O(1).
+   */
+  setLens(cx: number, cy: number, strength: number, radius: number): void {
+    this.fx?.setLens(cx, cy, strength, radius);
   }
 
   /** Whether the WebGL context is currently lost (for callers/telemetry). O(1). */

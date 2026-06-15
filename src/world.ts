@@ -288,6 +288,9 @@ export class World {
   /** Scratch vectors — step() and actions never allocate. */
   private readonly sv1 = new THREE.Vector3();
   private readonly sv2 = new THREE.Vector3();
+  // V60 gravitational-lens scratch: the singularity world centre + its projected NDC.
+  private readonly lensWorld = new THREE.Vector3();
+  private readonly lensNdc = new THREE.Vector3();
   // V41 superhero piloting scratch + the on-screen D-pad steer (held vector from the HUD / touch).
   private readonly heroPad = { x: 0, y: 0, z: 0 };
   private readonly heroIntent = new THREE.Vector3();
@@ -862,7 +865,30 @@ export class World {
       this.instanced.sync(this.entities.list, s.renderMode, fr);
     }
 
+    // V60: aim the gravitational-lens post-FX at the active singularity (identity when none).
+    this.updateLens();
     this.engine.render();
+  }
+
+  /**
+   * V60: project the active singularity's world centre to screen UV and feed the post-FX lens pass
+   * its position + signed strength (0 ⇒ identity passthrough). Allocation-free — two module-owned
+   * scratch vectors, one camera projection. No-op cost when post-FX is off (Engine.setLens is a
+   * guarded forward). O(1).
+   */
+  private updateLens(): void {
+    const strength = this.singularities.lensStrength;
+    if (strength === 0 || !this.singularities.lensCenter(this.lensWorld)) {
+      this.engine.setLens(0.5, 0.5, 0, 0.5);
+      return;
+    }
+    this.lensNdc.copy(this.lensWorld).project(this.engine.camera);
+    // Behind the camera (z > 1 in NDC) ⇒ no lens this frame.
+    if (this.lensNdc.z > 1) {
+      this.engine.setLens(0.5, 0.5, 0, 0.5);
+      return;
+    }
+    this.engine.setLens(this.lensNdc.x * 0.5 + 0.5, this.lensNdc.y * 0.5 + 0.5, strength, 0.5);
   }
 
   /**
