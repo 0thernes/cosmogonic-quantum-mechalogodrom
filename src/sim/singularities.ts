@@ -362,6 +362,11 @@ export class SingularitySystem {
         e.material.color.lerp(sign > 0 ? REDSHIFT : BLUESHIFT, 0.05 * k);
       }
     }
+    // V60: a summoned hole STIRS reality — the warped spacetime raises the world's disorder while it
+    // lives, so weather, economy, quantum cadence and entity jitter (all chaos-coupled) visibly react
+    // to it, not just the bodies it pulls. Deterministic (no rng); the integrator clamps the ceiling.
+    const s = this.ctx.state;
+    s.chaos = Math.min(s.chaos + dt * 0.35, 10);
   }
 
   /** STRANGE STAR: organisms inside the conversion radius are recoloured to strange matter. */
