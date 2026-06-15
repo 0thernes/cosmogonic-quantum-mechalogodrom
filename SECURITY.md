@@ -43,9 +43,13 @@ The dev server is meant for `localhost`. If you expose it:
    require auth — the ring is otherwise world-writable by design.
 3. **Serve over HTTPS** behind a reverse proxy; the Web Audio and pointer APIs
    the app uses behave better in secure contexts anyway.
-4. **Add a CSP.** The app needs `script-src 'self'`, `style-src 'self'`, and
-   `connect-src 'self'`; it loads no third-party origins at runtime (fonts are
-   self-hosted via Fontsource).
+4. **`nosniff` + `Referrer-Policy: no-referrer` are now built in** on every
+   response the server constructs (the JSON API + the `GET /api/audit` HTML
+   fragment). Still **add a CSP** for a public deploy — the app needs
+   `script-src 'self'`, `style-src 'self'`, and `connect-src 'self'`; it loads
+   no third-party origins at runtime (fonts are self-hosted via Fontsource).
+   CSP + `X-Frame-Options` are left to the deploy layer because they can break
+   the bundled shell / an embedding iframe and need testing against your host.
 5. **Pin dependencies** with the committed `bun.lock` and run `bun run check`
    before deploying.
 

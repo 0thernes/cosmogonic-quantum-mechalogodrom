@@ -30,6 +30,12 @@ the full gate (now also a coverage gate, on Linux + Windows) with same-seed dete
   human's user-action-driven audit cadence. Verified live (200 concurrent POSTs → exactly 60× `201` +
   140× `429`) + 4 unit tests. Per-IP keying / auth remain the multi-tenant-deploy step (see
   [`SECURITY.md`](./SECURITY.md)).
+- **Defense-in-depth response headers (2026-06-15, RISK-05)** — every response the server constructs
+  now carries `X-Content-Type-Options: nosniff` + `Referrer-Policy: no-referrer`, applied via a
+  `secured()` wrapper over each route handler-map (so every status code is covered with no per-return
+  edits). `nosniff` hardens the one HTML sink that matters — the `GET /api/audit` fragment rendered
+  from user data — against MIME-confusion. CSP + `X-Frame-Options` are deliberately left to the deploy
+  layer (they can break the bundled shell / an embedding iframe). Verified live + 2 unit tests.
 - **Determinism + layer-boundary invariants now mechanically guarded** — the #1 law (no unseeded
   PRNG / wall-clock in the deterministic core) is pinned by a test scanning `src/sim/**` _and_ the
   `src/math/**` primitives it draws randomness from; a companion guard pins the import direction

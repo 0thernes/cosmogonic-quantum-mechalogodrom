@@ -25,35 +25,35 @@ on any hosted/public deploy.
 
 ## 2. Security capability coverage (Ultracode mandate)
 
-| Capability        | Status | Evidence                                                                                                             |
-| ----------------- | ------ | -------------------------------------------------------------------------------------------------------------------- |
-| SAST              | ✅     | CodeQL `security-extended` (push/PR + weekly) `codeql.yml`; oxlint                                                   |
-| SCA / deps        | ✅     | `bun audit` (0 vulns 2026-06-15); Dependabot                                                                         |
-| Secrets           | ✅     | `minimalEnv()` strips provider keys from subprocesses; `.env*` blocked from reads; no hardcoded keys (grep-verified) |
-| License / SBOM    | ✅     | CycloneDX via `scripts/sbom.ts`; all-permissive, no copyleft conflict                                                |
-| Container / IaC   | n/a    | no Dockerfile / Terraform / k8s in repo (documented as N/A)                                                          |
-| Pipeline security | ◑      | least-privilege `contents: read`; **CI actions on mutable tags** (RISK-09)                                           |
-| API security      | ◑      | per-route gating + body caps + token-bucket rate-limit on `POST /api/audit`; **`0.0.0.0` bind, no CSP** (RISK-05)    |
-| AI/LLM safety     | ◑      | sandboxed + key-stripped; **no untrusted-data fencing / tool-step logging** (RISK-06)                                |
-| DAST              | ◑      | manual; no automated dynamic scan (low priority — tiny surface)                                                      |
+| Capability        | Status | Evidence                                                                                                                    |
+| ----------------- | ------ | --------------------------------------------------------------------------------------------------------------------------- |
+| SAST              | ✅     | CodeQL `security-extended` (push/PR + weekly) `codeql.yml`; oxlint                                                          |
+| SCA / deps        | ✅     | `bun audit` (0 vulns 2026-06-15); Dependabot                                                                                |
+| Secrets           | ✅     | `minimalEnv()` strips provider keys from subprocesses; `.env*` blocked from reads; no hardcoded keys (grep-verified)        |
+| License / SBOM    | ✅     | CycloneDX via `scripts/sbom.ts`; all-permissive, no copyleft conflict                                                       |
+| Container / IaC   | n/a    | no Dockerfile / Terraform / k8s in repo (documented as N/A)                                                                 |
+| Pipeline security | ◑      | least-privilege `contents: read`; **CI actions on mutable tags** (RISK-09)                                                  |
+| API security      | ◑      | per-route gating + body caps + rate-limit + `nosniff`/`no-referrer` on every response; **`0.0.0.0` bind, no CSP** (RISK-05) |
+| AI/LLM safety     | ◑      | sandboxed + key-stripped; **no untrusted-data fencing / tool-step logging** (RISK-06)                                       |
+| DAST              | ◑      | manual; no automated dynamic scan (low priority — tiny surface)                                                             |
 
 ## 3. Risk register & SLA
 
 Policy: **High → 14-day SLA, Medium → 30-day, Low → best-effort.** No public-internet production
 deploy may run with `COPILOT_ENABLED=true` until RISK-05/06 are closed.
 
-| ID      | Sev    | Title                                                                       | Status / SLA                                                                                     |
-| ------- | ------ | --------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
-| RISK-01 | HIGH   | `git grep -O` option-injection → process exec (sandbox escape)              | ✅ **REMEDIATED 2026-06-15** (`ai-sandbox.ts` + tests)                                           |
-| RISK-02 | MEDIUM | `run cat .env` read of blocked files                                        | ✅ **REMEDIATED 2026-06-15**                                                                     |
-| RISK-03 | MEDIUM | `run sort -o` writes a file (read-only violation)                           | ✅ **REMEDIATED 2026-06-15**                                                                     |
-| RISK-04 | MEDIUM | `POST /api/audit` unauthenticated + feed-poisoning                          | ◑ **flood/eviction SEALED 2026-06-15** (token bucket, `763381a`); auth deferred to public-deploy |
-| RISK-05 | MEDIUM | ~~No rate-limit primitive~~; server binds `0.0.0.0`; no CSP                 | ◑ rate-limit ADDED (`POST /api/audit`, `763381a`); `0.0.0.0` + CSP gate before deploy            |
-| RISK-06 | MEDIUM | Copilot tool/web output not fenced as untrusted data; tool-steps not logged | OPEN — gate before deploy                                                                        |
-| RISK-07 | MEDIUM | Determinism law enforced by convention, no `.oxlintrc` ratchet              | OPEN — fix specified (inspection §6.2)                                                           |
-| RISK-08 | LOW    | `super-evolution.fromJSON` accepts `+Infinity` xp                           | ✅ **REMEDIATED 2026-06-15** (`df49dd7`, `Number.isFinite` guards + test)                        |
-| RISK-09 | LOW    | CI `uses:` pinned to mutable tags, not commit SHAs                          | OPEN — pin + Dependabot actions ecosystem                                                        |
-| RISK-10 | LOW    | Provider error body reflected (≤300 chars; not XSS)                         | OPEN — generic category                                                                          |
+| ID      | Sev    | Title                                                                       | Status / SLA                                                                                                      |
+| ------- | ------ | --------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| RISK-01 | HIGH   | `git grep -O` option-injection → process exec (sandbox escape)              | ✅ **REMEDIATED 2026-06-15** (`ai-sandbox.ts` + tests)                                                            |
+| RISK-02 | MEDIUM | `run cat .env` read of blocked files                                        | ✅ **REMEDIATED 2026-06-15**                                                                                      |
+| RISK-03 | MEDIUM | `run sort -o` writes a file (read-only violation)                           | ✅ **REMEDIATED 2026-06-15**                                                                                      |
+| RISK-04 | MEDIUM | `POST /api/audit` unauthenticated + feed-poisoning                          | ◑ **flood/eviction SEALED 2026-06-15** (token bucket, `763381a`); auth deferred to public-deploy                  |
+| RISK-05 | MEDIUM | ~~No rate-limit~~; ~~no security headers~~; binds `0.0.0.0`; no CSP         | ◑ rate-limit + `nosniff`/`no-referrer` ADDED (`763381a`, `8d65dbe`); only `0.0.0.0` bind + CSP gate before deploy |
+| RISK-06 | MEDIUM | Copilot tool/web output not fenced as untrusted data; tool-steps not logged | OPEN — gate before deploy                                                                                         |
+| RISK-07 | MEDIUM | Determinism law enforced by convention, no `.oxlintrc` ratchet              | OPEN — fix specified (inspection §6.2)                                                                            |
+| RISK-08 | LOW    | `super-evolution.fromJSON` accepts `+Infinity` xp                           | ✅ **REMEDIATED 2026-06-15** (`df49dd7`, `Number.isFinite` guards + test)                                         |
+| RISK-09 | LOW    | CI `uses:` pinned to mutable tags, not commit SHAs                          | OPEN — pin + Dependabot actions ecosystem                                                                         |
+| RISK-10 | LOW    | Provider error body reflected (≤300 chars; not XSS)                         | OPEN — generic category                                                                                           |
 
 ## 4. Verified-strong controls (do not regress)
 
