@@ -178,8 +178,8 @@ graph TD
   audit -. "fire-and-forget POST /api/audit" .-> server
   indexhtml -. "HTMX GET /api/audit every 5s" .-> server
 
-  %% ── V10–V70 Living Era (post-0.9.0; per-version detail in CHANGELOG) ──
-  subgraph living["src/sim — Living Era V10–V70"]
+  %% ── V10–V75 Living Era (post-0.9.0; per-version detail in CHANGELOG) ──
+  subgraph living["src/sim — Living Era V10–V75"]
     economy["economy.ts<br/>Economy (2 currencies · 2 commodities · clearing market)"]
     factions["factions.ts<br/>8 faction archetypes"]
     genome["genome.ts<br/>heritable gene vector + TinyMLP"]
@@ -292,7 +292,7 @@ flowchart LR
   ab -. "level → setBreath" .-> q
 ```
 
-The flowchart above is the **V1/V2 core**. The V10–V70 systems interleave on their own cadences
+The flowchart above is the **V1/V2 core**. The V10–V75 systems interleave on their own cadences
 (verified against `world.ts`); the full as-built per-stage frame order is in
 [BOOK.md §A](./BOOK.md). Cadences — V1 rows from the legacy loop, V2 rows from MODULE-CONTRACTS.md
 §Frame pipeline V2, V10+ rows verified against `world.ts`:
