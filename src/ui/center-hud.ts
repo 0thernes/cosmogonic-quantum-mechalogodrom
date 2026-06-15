@@ -29,88 +29,73 @@ const SLOTS: readonly Slot[] = [
 ];
 
 const PANEL_SEL = SLOTS.map((s) => '#' + s.panel).join(',');
+/** The open+visible panel selectors — used by the transparency rule (opacity is per-panel). */
+const VIS_SEL = SLOTS.map((s) => '#' + s.panel + '.cqm-hud-vis').join(',');
+/**
+ * The GHOST (see-through) selectors. The `body.cqm-hud-ghost` prefix MUST be repeated on EVERY
+ * member of the comma list — `body.cqm-hud-ghost A, B, C` binds the prefix to `A` only, leaving `B`
+ * and `C` unconditional (the trap that left five panels permanently translucent, so ◐ did nothing).
+ */
+const GHOST_VIS_SEL = SLOTS.map((s) => `body.cqm-hud-ghost #${s.panel}.cqm-hud-vis`).join(',');
 
 const STYLE = `
-/* V67: the HUD is a BOTTOM ~1/3 strip docked ABOVE the menu bars — the top 2/3 shows the ecosystem.
-   Wide, so HELP / AI / NEURAL get real room for text + data visuals. !important wins over each panel's
-   own right/bottom/width regardless of selector specificity. */
+/* V69: the HUD fits the grid's CENTRE column — between the side panels (Telemetry/Sorting on the left,
+   Observatory/Control on the right) and ABOVE both bottom bars, so NOTHING overlaps and the ecosystem
+   shows around it. The --cqm-hud-* vars are measured live from the real side-panel edges (see fitHud),
+   with clamp() fallbacks that track the app.css grid columns when JS hasn't measured yet. Resizes +
+   re-centres on every viewport change. !important wins over each panel's own right/bottom/width. */
 ${PANEL_SEL} {
   position: fixed !important;
   inset: auto !important;
-  left: 50% !important;
-  transform: translateX(-50%) !important;
-  bottom: 92px !important; /* clears the nav strip (~36px @46) + the toolbar (~40px) below it */
-  top: auto !important;
-  width: min(98vw, 1100px) !important;
+  left: var(--cqm-hud-left, calc(clamp(180px, 19vw, 260px) + 16px)) !important;
+  right: var(--cqm-hud-right, calc(clamp(220px, 23vw, 340px) + 16px)) !important;
+  width: auto !important;
   max-width: none !important;
-  height: clamp(220px, 32vh, 440px) !important; /* ~1/3 of the viewport */
-  max-height: calc(100vh - 150px) !important;
+  transform: none !important;
+  bottom: var(--cqm-hud-bottom, 96px) !important;
+  top: auto !important;
+  height: var(--cqm-hud-height, clamp(176px, 30vh, 380px)) !important;
+  max-height: calc(100vh - 210px) !important;
   z-index: 71 !important;
 }
-/* Transparent mode — peek at the simulation behind the HUD. */
-body.cqm-hud-ghost ${PANEL_SEL.split(',')
-  .map((s) => s + '.cqm-hud-vis')
-  .join(',')} {
-  opacity: 0.5;
+/* TRANSPARENCY (◐): both states are explicit + !important, so the toggle ALWAYS shows a clear
+   difference and "normal" is genuinely solid (fixes the panel being stuck translucent). */
+${VIS_SEL} {
+  opacity: 1 !important;
+  transition: opacity 0.18s ease !important;
 }
-/* When a panel is open, hide the bottom-corner readouts so nothing fights the wide HUD. */
+${GHOST_VIS_SEL} {
+  opacity: 0.4 !important;
+}
+/* When a panel is open, hide the bottom-corner readouts so nothing fights the HUD. */
 body.cqm-hud-open #hud-vsr,
 body.cqm-hud-open #ui > #alg {
   display: none !important;
 }
-/* The old 2nd dock bar is now REDUNDANT — the always-on nav tab strip below IS the launcher. Hide it. */
+/* The old 2nd dock bar is REDUNDANT — the always-on nav launcher below replaces it. Hide it. */
 #cqm-dock {
   display: none !important;
 }
-/* The nav: ALWAYS visible (the panel launcher + switcher), docked tight just above the toolbar. */
+/* The nav LAUNCHER: fits the SAME centre column, centred, just above the toolbar. It never scrolls —
+   it collapses to a single ‹ CURRENT › cycler when there isn't room for the six tabs. */
 #cqm-hud-nav {
   position: fixed;
-  left: 50%;
-  bottom: 46px;
-  transform: translateX(-50%);
+  left: var(--cqm-hud-left, calc(clamp(180px, 19vw, 260px) + 16px));
+  right: var(--cqm-hud-right, calc(clamp(220px, 23vw, 340px) + 16px));
+  bottom: var(--cqm-nav-bottom, 50px);
   z-index: 73;
   display: flex;
   align-items: center;
+  justify-content: center;
+  flex-wrap: nowrap;
   gap: 4px;
-  max-width: calc(100vw - 10px);
-  overflow-x: auto;
-  scrollbar-width: thin;
-  padding: 4px 7px;
+  overflow: hidden;
+  padding: 4px 8px;
   border-radius: 16px;
   border: 1px solid rgba(150, 180, 230, 0.3);
-  background: rgba(8, 11, 22, 0.86);
+  background: rgba(8, 11, 22, 0.88);
   backdrop-filter: blur(10px);
   box-shadow: 0 4px 22px rgba(0, 0, 0, 0.6);
-}
-/* The mobile cycler label — hidden on desktop (the 6 tabs show); shown on mobile (tabs hide). */
-.cqm-hud-label {
-  display: none;
-  font: 700 12px/1 var(--font-mono, ui-monospace, monospace);
-  color: #cfe0fb;
-  padding: 0 6px;
-  min-width: 104px;
-  text-align: center;
-  white-space: nowrap;
-  letter-spacing: 0.06em;
-}
-/* On phones/tablets the six tabs collapse to a single ‹ CURRENT › cycler — tap the arrows to switch
-   (the user's "click to cycle, not a scrolling slide-bar" fix for the scrunched dock). */
-@media (max-width: 820px), (orientation: portrait), (pointer: coarse) {
-  .cqm-hud-tab {
-    display: none;
-  }
-  .cqm-hud-label {
-    display: inline-block;
-  }
-  #cqm-hud-nav {
-    bottom: 54px;
-  }
-  ${PANEL_SEL} {
-    width: 100vw !important;
-    bottom: 98px !important;
-    height: clamp(200px, 40vh, 540px) !important;
-    border-radius: 14px 14px 0 0 !important;
-  }
 }
 .cqm-hud-btn {
   flex: 0 0 auto;
@@ -122,12 +107,13 @@ body.cqm-hud-open #ui > #alg {
   background: rgba(16, 22, 38, 0.7);
   color: #cfe0fb;
   font: 600 11px/1 var(--font-mono, ui-monospace, monospace);
-  letter-spacing: 0.06em;
+  letter-spacing: 0.05em;
   cursor: pointer;
   white-space: nowrap;
   transition:
     transform 0.12s,
-    background 0.12s;
+    background 0.12s,
+    border-color 0.12s;
 }
 .cqm-hud-btn:hover {
   transform: scale(1.06);
@@ -142,12 +128,63 @@ body.cqm-hud-open #ui > #alg {
   border-color: rgba(150, 190, 255, 0.85);
   color: #fff;
 }
+.cqm-hud-ghost-btn.active {
+  background: rgba(116, 86, 178, 0.92);
+  border-color: rgba(190, 160, 255, 0.9);
+  color: #fff;
+}
 .cqm-hud-sep {
   width: 1px;
   height: 20px;
   background: rgba(150, 180, 230, 0.25);
-  margin: 0 2px;
+  margin: 0 3px;
   flex: 0 0 auto;
+}
+/* The cycler label — the DEFAULT launcher control (clean ‹ CURRENT › on most widths). */
+.cqm-hud-label {
+  display: inline-block;
+  font: 700 12px/1 var(--font-mono, ui-monospace, monospace);
+  color: #cfe0fb;
+  padding: 0 8px;
+  min-width: 116px;
+  text-align: center;
+  white-space: nowrap;
+  letter-spacing: 0.08em;
+}
+/* The six labelled tabs are an ENHANCEMENT shown ONLY when they genuinely fit the centre column —
+   chooseNavMode() measures the real fit live and toggles .cqm-hud-tabs, so they can NEVER clip or
+   scroll; otherwise the clean ‹ CURRENT › cycler shows (also the default before JS runs / on touch). */
+.cqm-hud-tab {
+  display: none;
+}
+#cqm-hud-nav.cqm-hud-tabs .cqm-hud-tab {
+  display: inline-flex;
+  align-items: center;
+}
+#cqm-hud-nav.cqm-hud-tabs .cqm-hud-label {
+  display: none;
+}
+/* Tight widths: drop the secondary Docs/Spec/Lab links so the cycler never crowds. */
+@media (max-width: 520px) {
+  #cqm-hud-nav .cqm-hud-link {
+    display: none;
+  }
+}
+/* SMALL / portrait / touch — the app.css grid collapses to edge sheets, so the side columns are gone:
+   the HUD spans (almost) full width + sits clear of the bars, still with the cycler. */
+@media (max-width: 768px), (orientation: portrait), (pointer: coarse) {
+  ${PANEL_SEL} {
+    left: 8px !important;
+    right: 8px !important;
+    bottom: var(--cqm-hud-bottom, 104px) !important;
+    height: var(--cqm-hud-height, clamp(190px, 40vh, 540px)) !important;
+    border-radius: 14px 14px 0 0 !important;
+  }
+  #cqm-hud-nav {
+    left: 6px;
+    right: 6px;
+    bottom: var(--cqm-nav-bottom, 56px);
+  }
 }
 `;
 
@@ -156,6 +193,90 @@ let busy = false; // re-entrancy guard while we drive sibling toggles
 let nav: HTMLElement | null = null;
 let tabs: HTMLButtonElement[] = [];
 let label: HTMLElement | null = null; // V67: the mobile ‹ CURRENT › cycler label
+
+/** The six HUD panel ids — excluded from the side-column measurement so they never skew the fit. */
+const HUD_IDS = new Set(SLOTS.map((s) => s.panel));
+/** Breathing room (px) between the HUD and the side panels / bars. */
+const GUTTER = 16;
+
+/**
+ * V69: measure the LIVE layout and pin the HUD + nav to fit EXACTLY inside the grid's centre column
+ * (between the real side panels) and just above the bars — re-run on every resize so it adapts in
+ * real time. When the grid has collapsed to edge-sheets (mobile/portrait/touch) the side columns are
+ * gone, so we clear the horizontal vars and let the CSS media query own the (near full-width) layout.
+ * Pure DOM measurement, no rng, no sim coupling.
+ */
+function fitHud(): void {
+  if (typeof document === 'undefined') return;
+  const root = document.documentElement;
+  const ui = document.getElementById('ui');
+  const sheetMode =
+    typeof matchMedia === 'function' &&
+    matchMedia('(max-width: 768px), (orientation: portrait), (pointer: coarse)').matches;
+  if (sheetMode || !ui || getComputedStyle(ui).display !== 'grid') {
+    root.style.removeProperty('--cqm-hud-left');
+    root.style.removeProperty('--cqm-hud-right');
+  } else {
+    const vw = window.innerWidth;
+    const mid = vw / 2;
+    let leftR = 0; // right edge of the left column (Telemetry / Sorting Fields)
+    let rightL = vw; // left edge of the right column (Observatory / Control)
+    for (const el of Array.from(ui.children)) {
+      if (!(el instanceof HTMLElement) || HUD_IDS.has(el.id)) continue;
+      const r = el.getBoundingClientRect();
+      if (r.width < 8 || r.height < 8) continue; // hidden / zero-box
+      if (r.right <= mid) leftR = Math.max(leftR, r.right);
+      else if (r.left >= mid) rightL = Math.min(rightL, r.left);
+    }
+    root.style.setProperty('--cqm-hud-left', `${Math.round((leftR > 0 ? leftR : 0) + GUTTER)}px`);
+    root.style.setProperty(
+      '--cqm-hud-right',
+      `${Math.round((rightL < vw ? vw - rightL : 0) + GUTTER)}px`,
+    );
+  }
+  // Vertical: sit the HUD just above the HIGHEST bar (nav launcher / toolbar) — adapts if a bar grows.
+  const vh = window.innerHeight;
+  let barsTop = vh;
+  for (const id of ['cqm-hud-nav', 'bar']) {
+    const el = document.getElementById(id);
+    if (!el) continue;
+    const r = el.getBoundingClientRect();
+    if (r.height > 4) barsTop = Math.min(barsTop, r.top);
+  }
+  if (barsTop < vh)
+    root.style.setProperty('--cqm-hud-bottom', `${Math.round(vh - barsTop + 10)}px`);
+  else root.style.removeProperty('--cqm-hud-bottom');
+  chooseNavMode();
+}
+
+/**
+ * V69: show the six labelled tabs ONLY when they actually fit the (now-sized) nav — measured live, so
+ * they can never clip or scroll. On touch (coarse pointer) or portrait we keep the big-tap cycler.
+ * Reading scrollWidth forces a synchronous layout, so the measurement reflects the current insets.
+ */
+function chooseNavMode(): void {
+  if (!nav) return;
+  const fineLandscape =
+    typeof matchMedia === 'function' &&
+    matchMedia('(pointer: fine) and (orientation: landscape)').matches;
+  if (!fineLandscape) {
+    nav.classList.remove('cqm-hud-tabs');
+    return;
+  }
+  nav.classList.add('cqm-hud-tabs'); // try tabs…
+  if (nav.scrollWidth > nav.clientWidth + 1) nav.classList.remove('cqm-hud-tabs'); // …don't fit → cycler
+}
+
+let fitScheduled = false;
+/** rAF-debounced {@link fitHud} — cheap to call from resize / open / orientation events. */
+function scheduleFit(): void {
+  if (fitScheduled || typeof requestAnimationFrame !== 'function') return;
+  fitScheduled = true;
+  requestAnimationFrame(() => {
+    fitScheduled = false;
+    fitHud();
+  });
+}
 
 function panelEl(s: Slot): HTMLElement | null {
   return document.getElementById(s.panel);
@@ -199,6 +320,7 @@ function render(): void {
     const s = active >= 0 ? SLOTS[active] : undefined;
     label.textContent = s ? `${s.icon} ${s.name}` : '⊕ PANELS';
   }
+  scheduleFit(); // V69: re-fit the centre-column slot whenever the HUD state changes
 }
 
 /** Build the chrome: ‹ prev · [tabs] · next › · ◐ transparency · ✕ close. */
@@ -233,11 +355,19 @@ function buildNav(doc: Document): void {
   const sep = doc.createElement('span');
   sep.className = 'cqm-hud-sep';
   nav.appendChild(sep);
-  nav.appendChild(
-    mk('◐', 'Toggle see-through (peek at the simulation)', 'cqm-hud-ghost-btn', () => {
-      doc.body.classList.toggle('cqm-hud-ghost');
-    }),
+  // ◐ transparency — toggles see-through AND reflects its own pressed state (the V69 toggle fix).
+  const ghostBtn = mk(
+    '◐',
+    'Toggle see-through (peek at the simulation behind the HUD)',
+    'cqm-hud-ghost-btn',
+    () => {
+      const on = doc.body.classList.toggle('cqm-hud-ghost');
+      ghostBtn.classList.toggle('active', on);
+      ghostBtn.setAttribute('aria-pressed', String(on));
+    },
   );
+  ghostBtn.setAttribute('aria-pressed', 'false');
+  nav.appendChild(ghostBtn);
   nav.appendChild(mk('✕', 'Close', 'cqm-hud-close', () => showOnly(-1)));
   doc.body.appendChild(nav);
   adoptNavLinks(doc);
@@ -253,7 +383,7 @@ function adoptNavLinks(doc: Document): void {
   for (const href of ['/docs', '/spec', '/lab']) {
     const a = doc.querySelector<HTMLElement>(`a[href="${href}"]`);
     if (a) {
-      a.classList.add('cqm-hud-btn');
+      a.classList.add('cqm-hud-btn', 'cqm-hud-link');
       nav.appendChild(a);
     }
   }
@@ -301,5 +431,11 @@ export function initCenterHud(doc: Document = document): void {
   doc.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && active >= 0) showOnly(-1);
   });
+  // V69: keep the centre-column fit live — re-measure on resize / orientation change.
+  if (typeof window !== 'undefined') {
+    window.addEventListener('resize', scheduleFit);
+    window.addEventListener('orientationchange', scheduleFit);
+  }
   render();
+  scheduleFit();
 }

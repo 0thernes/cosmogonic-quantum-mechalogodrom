@@ -26,6 +26,27 @@ the full gate (now also a coverage gate, on Linux + Windows) with same-seed dete
 
 ### Added
 
+- **HUD fits the CENTRE column live, never overlaps, and the ◐ transparency toggle works (V69)** — the
+  directive's "the HUD must fit between the side panels (Telemetry/Sorting on the left, Observatory/
+  Control on the right) and above the two bottom bars — nothing touching or overlapping — resizing +
+  adapting just right; the transparent/normal button is broken." The V67 strip was a fixed `98vw` and
+  overran the side panels; now the six inspector panels dock to the grid's **centre column**, anchored
+  by `--cqm-hud-left/right/bottom` CSS vars that **`fitHud()` measures live from the real side-panel
+  edges** (classifying each `#ui` child into the left/right column, skipping the HUD panels themselves)
+  and re-runs on every resize / orientation change — so it tracks the columns exactly and re-centres in
+  real time, with `clamp()` fallbacks matching the app.css grid for the pre-JS frame. The nav launcher
+  uses the same insets and **`chooseNavMode()` shows the six labelled tabs only when they genuinely fit
+  the centre column** (measured `scrollWidth` vs `clientWidth`), otherwise the clean `‹ CURRENT ›`
+  cycler — so the launcher can **never clip or horizontally scroll** (it was clipping six tabs around
+  1367 px); touch always gets the big-tap cycler. The **◐ toggle is fixed**: it was the CSS comma-list
+  trap — `body.cqm-hud-ghost A, B, C` binds the prefix to `A` only, so five panels were stuck
+  translucent and ◐ did nothing; the ghost rule now prefixes **every** selector, the panels are solid by
+  default and `0.4` see-through on toggle, and the button reflects its pressed state. When the grid
+  collapses to edge sheets (≤768 px / portrait / touch) the HUD spans full-width clear of the bars, and
+  Docs/Spec/Lab drop ≤520 px so the cycler never crowds. **Verified live** at 1600/1440/1367/1294/1000/
+  700/375: zero overlap with the side panels or bars at every width, the nav never clips/scrolls, and
+  the ◐ toggle flips every panel 1 → 0.4 → 1. UI shell only — no sim coupling, no rng. Full gate green
+  (822 tests).
 - **The Titans become ominous 4-D freak-geometry that MATTERS to the world (V68)** — the directive's
   "the titans look like giant toys, organisms pass through them like nothing, and they merge through
   each other without changing — make them special: Mandelbrot/tesseract/Hilbert freak geometries with
