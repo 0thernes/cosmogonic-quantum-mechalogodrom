@@ -9,6 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 _Nothing yet._
 
+## [0.10.2] - 2026-06-15
+
+Post-`0.10.1` patch — center-HUD launcher ergonomics. No simulation/behaviour change; same-seed
+determinism intact.
+
+### Changed
+
+- **DOCS / SPEC / LAB lifted into a row directly ABOVE their panel tab.** Each page link now shares its
+  tab's flex column in the center-HUD launcher — **LAB over AUDIT, SPEC over NEURAL, DOCS over MARKET** —
+  so the pairing stays pixel-aligned at every width with no measuring (verified `alignedX = 0` at 1440 /
+  1920 / 2560, the link locked 4px above its tab). The links degrade cleanly: hidden in the no-links
+  tier, and the column dissolves (no stray nodes) in the ‹ CURRENT › cycler.
+
 ## [0.10.1] - 2026-06-15
 
 Post-`0.10.0` patch — CI/CD unblock + the wide/4K HUD typography & framing pass (the user's "why does

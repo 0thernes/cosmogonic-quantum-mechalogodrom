@@ -179,6 +179,33 @@ ${VIS_SEL} {
 #cqm-hud-nav.cqm-hud-nolinks .cqm-hud-link {
   display: none;
 }
+/* V80: LAB / SPEC / DOCS lock into a row directly ABOVE their counterpart tab. Each link shares its
+   tab's vertical column (LAB↑AUDIT, SPEC↑NEURAL, DOCS↑MARKET), so the pairing stays aligned at EVERY
+   width with no measuring. In tabs mode the nav bottom-aligns so the tab row stays level and the link
+   row floats above ONLY over those three; outside tabs mode the column dissolves to just its tab. */
+.cqm-hud-col {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+  flex: 0 0 auto;
+}
+#cqm-hud-nav.cqm-hud-tabs {
+  align-items: flex-end;
+}
+.cqm-hud-link {
+  display: none;
+}
+#cqm-hud-nav.cqm-hud-tabs:not(.cqm-hud-nolinks) .cqm-hud-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: static;
+  width: 100%;
+}
+#cqm-hud-nav:not(.cqm-hud-tabs) .cqm-hud-col {
+  display: contents;
+}
 @media (max-width: 520px) {
   #cqm-hud-nav .cqm-hud-link {
     display: none;
@@ -419,7 +446,24 @@ function buildNav(doc: Document): void {
   tabs = SLOTS.map((s, i) =>
     mk(s.icon + ' ' + s.name, s.name, 'cqm-hud-tab', () => showOnly(active === i ? -1 : i)),
   );
-  tabs.forEach((t) => nav!.appendChild(t));
+  // V80: lock LAB / SPEC / DOCS into a row directly ABOVE their counterpart tab — each link shares the
+  // tab's flex column (LAB↑AUDIT, SPEC↑NEURAL, DOCS↑MARKET), so the pairing stays aligned at EVERY width
+  // (no measuring needed — they're the same column). adoptNavLinks is folded in here.
+  const LINK_OVER: Record<number, string> = { 2: '/lab', 3: '/spec', 4: '/docs' };
+  tabs.forEach((t, i) => {
+    const href = LINK_OVER[i];
+    const link = href ? doc.querySelector<HTMLAnchorElement>(`a[href="${href}"]`) : null;
+    if (link) {
+      link.classList.add('cqm-hud-btn', 'cqm-hud-link');
+      const col = doc.createElement('div');
+      col.className = 'cqm-hud-col';
+      col.appendChild(link); // top row: the page link
+      col.appendChild(t); // bottom row: its panel tab
+      nav!.appendChild(col);
+    } else {
+      nav!.appendChild(t);
+    }
+  });
   // V67: the mobile cycler label (sits between the tabs and the › arrow; shown only on small screens).
   label = doc.createElement('span');
   label.className = 'cqm-hud-label';
@@ -447,23 +491,6 @@ function buildNav(doc: Document): void {
   nav.appendChild(ghostBtn);
   nav.appendChild(mk('✕', 'Close', 'cqm-hud-close', () => showOnly(-1)));
   doc.body.appendChild(nav);
-  adoptNavLinks(doc);
-}
-
-/**
- * V67: re-home the Docs / Spec / Lab links into the always-on nav strip. The old `#cqm-dock` they
- * used to live in is now hidden (the nav replaced it), so without this they'd vanish. Moves them
- * wherever they currently are; idempotent (appendChild relocates).
- */
-function adoptNavLinks(doc: Document): void {
-  if (!nav) return;
-  for (const href of ['/docs', '/spec', '/lab']) {
-    const a = doc.querySelector<HTMLElement>(`a[href="${href}"]`);
-    if (a) {
-      a.classList.add('cqm-hud-btn', 'cqm-hud-link');
-      nav.appendChild(a);
-    }
-  }
 }
 
 /** Each dock toggle still opens "its" panel — but centered, and closing the others (single-open). */
