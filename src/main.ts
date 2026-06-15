@@ -19,6 +19,8 @@ import './ui/help-system';
 // Audit dock (V51): self-mounting 🗒 AUDIT toggle that moves the audit trail off the left column into
 // the bottom dock (frees SORTING FIELDS); toggles the existing #aP overlay, HTMX polling untouched.
 import './ui/audit-dock';
+// Center HUD (V56): unifies the six inspector panels into one centered, cyclable, fit-to-window pop-up.
+import { initCenterHud } from './ui/center-hud';
 
 // Legacy r128 color fidelity: the original rendered without color management;
 // disable it BEFORE any THREE.Color is constructed (audit finding, 0.2.1).
@@ -98,6 +100,10 @@ function boot(): void {
     mobile: quality.isMobile,
     maxEntities: quality.maxEntities,
   });
+
+  // V56: now that all six inspector panels have mounted (copilot/help/audit on import; nhi/market/super
+  // during World construction), unify them into the centered, cyclable CENTER HUD.
+  initCenterHud();
 
   // Dev-only inspection hook (localhost / 127.0.0.1 ONLY — never on the deployed static site). Exposes
   // the live world/engine so the preview + automation harness can DRIVE frames and introspect a

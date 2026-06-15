@@ -13,6 +13,18 @@ the full gate (now also a coverage gate, on Linux + Windows) with same-seed dete
 
 ### Added
 
+- **The CENTER HUD — six panels become one cyclable pop-up (V56)** — the directive's lead ask. AI · HELP
+  · AUDIT · NEURAL · MARKET · ARCHITECT no longer open as six scattered edge panels (NEURAL kept
+  overlapping the bottom bars); they now snap to **one same-size, fit-to-window slot centered on
+  screen** (`min(94vw,760px)` wide, height bounded to clear the top nav strip + the 2-row dock/toolbar
+  on any aspect ratio), and you **cycle** through them with ‹ › arrows or a tab strip instead of
+  tap-close-tap-open. A **◐** button fades the panel see-through to watch the simulation behind it; **✕**
+  / Escape closes. `ui/center-hud.ts` is a thin controller — it drives each panel's EXISTING dock
+  toggle (so their own open/close + repaint logic is untouched), re-homes them via an `!important`
+  centered slot, and enforces one-open-at-a-time. **Verified live** at 1440×900 AND 375×812 (touch):
+  every panel opens centered + see-through, the ‹ › / tabs cycle, exactly one is open at a time, the
+  nav strip scrolls on a phone, and there are **zero clashes** with the nav / dock / toolbar. Full gate
+  green (798 tests).
 - **HUD declutter + FreeLLMAPI primary (V51)** — the annotated UI overlaps, fixed (verified live at
   1920×1080: **zero persistent overlaps**), plus the AI provider rework. **UI:** (1) AUDIT leaves the
   crowded left column — `#aP` is now a **dock-toggled fixed overlay** (new `ui/audit-dock.ts` adds a 🗒

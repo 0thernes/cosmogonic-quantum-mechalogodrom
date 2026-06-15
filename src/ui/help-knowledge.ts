@@ -54,7 +54,7 @@ export const HELP_KB: readonly HelpEntry[] = [
       'confused',
       'lost',
     ],
-    body: 'Drag to orbit the camera, scroll to zoom. The bottom toolbar cycles music, time-scale, render mode (wire/solid), view, weather, and cosmic events. The menu bar (centered, just above the bottom toolbar) opens the inspector panels: ⊞ NEURAL (an NHI mind), ⊙ MARKET (the economy), ⬢ ARCHITECT (the super creature), ✦ AI (chat), ❓ HELP, 🗒 AUDIT (the event log), and ⛓ ACCESS (the puzzle). Solve the puzzle to enter SUPERHERO mode.',
+    body: 'Drag to orbit the camera, scroll to zoom. The bottom toolbar cycles music, time-scale, render mode (wire/solid), view, weather, and cosmic events. The menu bar (centered, just above the bottom toolbar) opens the inspector panels: ⊞ NEURAL (an NHI mind), ⊙ MARKET (the economy), ⬢ ARCHITECT (the super creature), ✦ AI (chat), ❓ HELP, 🗒 AUDIT (the event log), and ⛓ ACCESS (the puzzle). Those six open in the CENTER HUD — one same-size pop-up in the middle of the screen; use the ‹ › arrows or the tab strip to cycle between them, ◐ to make it see-through, and ✕ (or Escape) to close. Solve the puzzle to enter SUPERHERO mode.',
     see: ['index.html'],
   },
   {
