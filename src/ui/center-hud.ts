@@ -65,16 +65,19 @@ ${VIS_SEL} {
 #cqm-dock {
   display: none !important;
 }
-/* The nav LAUNCHER: spans the SAME gap fitHud measures between the side panels (--cqm-hud-left /
-   --cqm-hud-right) and lays out as THREE balanced zones — the panel tabs (left, grows), the DOCS · SPEC ·
-   LAB page-links (centre, content-width), the ◐/✕ controls (right, grows). The two growing flanks are
-   equal, so the links sit DEAD-CENTRE of the open play-area ("central middle", not tucked at one end)
-   no matter how the tab widths differ. chooseNavMode() measures the row against the gap and shows the
-   named tabs only when they fit, else the clean ‹ CURRENT › cycler — so it never clips or overlaps. */
+/* The nav LAUNCHER: anchored to the SAME gap fitHud measures between the side panels
+   (--cqm-hud-left / --cqm-hud-right), then it HUGS its content (width:max-content) and CENTRES in that
+   gap via auto inline-margins — so the six tabs + Docs/Spec/Lab read dead-centre of the open play-area,
+   the glass pill never spans empty space, and it can't reach the side panels or the corner readouts.
+   chooseNavMode() measures the content against the live gap width and shows the named tabs only when
+   they fit, else the clean ‹ CURRENT › cycler — so it never clips. */
 #cqm-hud-nav {
   position: fixed;
   left: var(--cqm-hud-left, 8px);
   right: var(--cqm-hud-right, 8px);
+  width: max-content;
+  max-width: calc(100vw - 16px);
+  margin-inline: auto;
   bottom: var(--cqm-nav-bottom, 50px);
   z-index: 73;
   display: flex;
@@ -83,48 +86,12 @@ ${VIS_SEL} {
   flex-wrap: nowrap;
   gap: 3px;
   overflow: hidden;
-  padding: 4px 8px;
+  padding: 4px 7px;
   border-radius: 18px;
   border: 1px solid rgba(150, 180, 230, 0.32);
   background: rgba(8, 11, 22, 0.9);
   backdrop-filter: blur(12px);
   box-shadow: 0 6px 28px rgba(0, 0, 0, 0.66);
-}
-/* Three zones. The two flanks GROW equally (flex:1) so the centre links land dead-centre; each flank
-   lays its own buttons out (tabs hug the left, controls hug the right). */
-.cqm-hud-zone {
-  display: flex;
-  align-items: center;
-  gap: 3px;
-  flex: 1 1 0; /* basis 0 → the two flanks are EXACTLY equal, so the centre links sit dead-centre */
-  min-width: 0;
-}
-.cqm-hud-zone.cqm-hud-left {
-  justify-content: flex-start;
-}
-.cqm-hud-zone.cqm-hud-right {
-  justify-content: flex-end;
-}
-/* The CENTRAL MIDDLE cluster — DOCS · SPEC · LAB. Content-width, never grows, so the equal flanks keep
-   it pinned to the middle. A hairline frame sets it apart as the deliberate centrepiece. */
-.cqm-hud-links {
-  display: flex;
-  align-items: center;
-  gap: 3px;
-  flex: 0 0 auto;
-  padding: 0 5px;
-  border-radius: 13px;
-  border: 1px solid rgba(150, 180, 230, 0.16);
-  background: rgba(20, 28, 50, 0.4);
-}
-.cqm-hud-nolinks .cqm-hud-links {
-  display: none;
-}
-/* In TABS mode the six tabs ARE the navigation, so the ‹ › cycler arrows are redundant — hide them
-   (they return with the ‹ CURRENT › cycler when the column is too narrow for the named tabs). */
-#cqm-hud-nav.cqm-hud-tabs .cqm-hud-prev,
-#cqm-hud-nav.cqm-hud-tabs .cqm-hud-next {
-  display: none;
 }
 .cqm-hud-btn {
   flex: 0 0 auto;
@@ -325,51 +292,44 @@ function fitHud(): void {
 }
 
 /**
- * V69/V72: pick the WIDEST launcher layout that still fits the gap between the side panels — the nav
- * fills that gap (left/right insets), so a row that overflows shows up as scrollWidth > clientWidth.
- * Measured live, so it can never clip or scroll. Three graceful tiers on fine-pointer landscape,
- * narrowest-loses:
- *   1. six NAMED tabs + the central DOCS/SPEC/LAB links,
- *   2. six NAMED tabs alone (drop the central links first — names matter more),
+ * V70: the GAP the nav may occupy — the centre band between the side panels, read from the very vars
+ * fitHud just measured (defaults to near-full width before they're set / on mobile). The nav hugs its
+ * content (width:max-content), so we compare its natural content width to THIS, not to its own box.
+ */
+function navGapWidth(): number {
+  const cs = getComputedStyle(document.documentElement);
+  const L = parseFloat(cs.getPropertyValue('--cqm-hud-left')) || 8;
+  const R = parseFloat(cs.getPropertyValue('--cqm-hud-right')) || 8;
+  return Math.max(120, window.innerWidth - L - R);
+}
+
+/**
+ * V69/V70: pick the WIDEST launcher layout that still fits the live gap between the side panels —
+ * measured live (the nav is content-hugging, so scrollWidth === its natural width), so it can never
+ * clip or scroll. Three graceful tiers on fine-pointer landscape, narrowest-loses:
+ *   1. six NAMED tabs + the Docs/Spec/Lab links,
+ *   2. six NAMED tabs alone (drop the secondary links first — names matter more),
  *   3. the clean ‹ CURRENT › cycler (touch / portrait / a very narrow centre column always land here).
  * Even the cycler drops its links if the column is impossibly tight, so the core controls never clip.
  */
 function chooseNavMode(): void {
   if (!nav) return;
-  // The flanks GROW to fill, so the nav box never reports overflow on its own — and a `justify-end`
-  // flank that overspills does so LEFTWARD, which scrollWidth can't see. So measure each flank's true
-  // content (sum of its visible children + gaps) against the room it has; if a flank can't hold its
-  // buttons it would collide with the centre links, so that tier doesn't fit.
-  const sumKids = (el: Element): number => {
-    let total = 0;
-    let n = 0;
-    for (const c of el.children) {
-      if (!(c instanceof HTMLElement) || getComputedStyle(c).display === 'none') continue;
-      total += c.offsetWidth;
-      n++;
-    }
-    return n > 0 ? total + (n - 1) * 3 : 0; // + the 3px flex gap between siblings
-  };
-  const fits = (): boolean => {
-    for (const z of nav!.querySelectorAll('.cqm-hud-zone'))
-      if (sumKids(z) > z.clientWidth + 1) return false;
-    return true;
-  };
+  const gap = navGapWidth();
   const fineLandscape =
     typeof matchMedia === 'function' &&
     matchMedia('(pointer: fine) and (orientation: landscape)').matches;
   if (fineLandscape) {
     nav.classList.add('cqm-hud-tabs');
     nav.classList.remove('cqm-hud-nolinks'); // tier 1: tabs + links
-    if (fits()) return;
+    if (nav.scrollWidth <= gap) return;
     nav.classList.add('cqm-hud-nolinks'); // tier 2: tabs, no links
-    if (fits()) return;
+    if (nav.scrollWidth <= gap) return;
     nav.classList.remove('cqm-hud-tabs'); // tier 3: cycler
   } else {
     nav.classList.remove('cqm-hud-tabs');
   }
   nav.classList.remove('cqm-hud-nolinks'); // cycler with links…
-  if (!fits()) nav.classList.add('cqm-hud-nolinks'); // …unless even that won't fit
+  if (nav.scrollWidth > gap) nav.classList.add('cqm-hud-nolinks'); // …unless even that won't fit
 }
 
 let fitScheduled = false;
@@ -447,21 +407,21 @@ function buildNav(doc: Document): void {
     return b;
   };
 
-  const zone = (side: 'left' | 'right'): HTMLElement => {
-    const z = doc.createElement('div');
-    z.className = `cqm-hud-zone cqm-hud-${side}`;
-    return z;
-  };
-
-  // The six named panel tabs — SPLIT 3 / 3 across the two flanks so each flank is light enough to fit
-  // its half of the gap. Cramming all six on one side would overflow it and overlap the centre links;
-  // a balanced split keeps the DOCS/SPEC/LAB cluster pinned dead-centre with no collision.
+  nav.appendChild(mk('‹', 'Previous panel', 'cqm-hud-prev', () => cycle(-1)));
   tabs = SLOTS.map((s, i) =>
     mk(s.icon + ' ' + s.name, s.name, 'cqm-hud-tab', () => showOnly(active === i ? -1 : i)),
   );
-
-  // ◐ transparency — lives on the LEFT flank as a bracket that balances the ✕ on the right, so the two
-  // light controls flank the row symmetrically and the heavier tabs split evenly around the centre.
+  tabs.forEach((t) => nav!.appendChild(t));
+  // V67: the mobile cycler label (sits between the tabs and the › arrow; shown only on small screens).
+  label = doc.createElement('span');
+  label.className = 'cqm-hud-label';
+  label.textContent = '⊕ PANELS';
+  nav.appendChild(label);
+  nav.appendChild(mk('›', 'Next panel', 'cqm-hud-next', () => cycle(1)));
+  const sep = doc.createElement('span');
+  sep.className = 'cqm-hud-sep';
+  nav.appendChild(sep);
+  // ◐ transparency — toggles see-through AND reflects its own pressed state (the V69 toggle fix).
   const ghostBtn = mk(
     '◐',
     'Toggle see-through (peek at the simulation behind the HUD)',
@@ -476,30 +436,8 @@ function buildNav(doc: Document): void {
   );
   ghostBtn.classList.toggle('active', ghostOn); // reflect state across HMR rebuilds
   ghostBtn.setAttribute('aria-pressed', String(ghostOn));
-
-  // LEFT zone (grows): ◐ bracket · tabs 1-3 · the ‹ CURRENT › cycler shown only when the tabs don't fit.
-  const leftZone = zone('left');
-  leftZone.appendChild(ghostBtn);
-  tabs.slice(0, 3).forEach((t) => leftZone.appendChild(t));
-  leftZone.appendChild(mk('‹', 'Previous panel', 'cqm-hud-prev', () => cycle(-1)));
-  label = doc.createElement('span');
-  label.className = 'cqm-hud-label';
-  label.textContent = '⊕ PANELS';
-  leftZone.appendChild(label);
-  leftZone.appendChild(mk('›', 'Next panel', 'cqm-hud-next', () => cycle(1)));
-  nav.appendChild(leftZone);
-
-  // CENTRE (content-width): the DOCS · SPEC · LAB page-links — pinned dead-centre by the equal flanks.
-  const links = doc.createElement('div');
-  links.className = 'cqm-hud-links';
-  nav.appendChild(links);
-
-  // RIGHT zone (grows): tabs 4-6 · ✕ close bracket, hugged to the right edge.
-  const rightZone = zone('right');
-  tabs.slice(3).forEach((t) => rightZone.appendChild(t));
-  rightZone.appendChild(mk('✕', 'Close', 'cqm-hud-close', () => showOnly(-1)));
-  nav.appendChild(rightZone);
-
+  nav.appendChild(ghostBtn);
+  nav.appendChild(mk('✕', 'Close', 'cqm-hud-close', () => showOnly(-1)));
   doc.body.appendChild(nav);
   adoptNavLinks(doc);
 }
@@ -511,12 +449,11 @@ function buildNav(doc: Document): void {
  */
 function adoptNavLinks(doc: Document): void {
   if (!nav) return;
-  const host = nav.querySelector<HTMLElement>('.cqm-hud-links') ?? nav;
   for (const href of ['/docs', '/spec', '/lab']) {
     const a = doc.querySelector<HTMLElement>(`a[href="${href}"]`);
     if (a) {
       a.classList.add('cqm-hud-btn', 'cqm-hud-link');
-      host.appendChild(a);
+      nav.appendChild(a);
     }
   }
 }
