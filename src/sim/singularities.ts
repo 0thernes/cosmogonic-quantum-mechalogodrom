@@ -85,6 +85,11 @@ const PARTICLE_COLOR: Readonly<Record<SingularityKind, number>> = {
 const V = new THREE.Vector3();
 /** Heat-death grey target for the ENTROPY colour fade. */
 const GREY = new THREE.Color(0.5, 0.5, 0.5);
+/** V59 gravitational redshift/blueshift targets — infalling light reddens, ejected light blueshifts. */
+const REDSHIFT = new THREE.Color(1.0, 0.18, 0.05);
+const BLUESHIFT = new THREE.Color(0.35, 0.66, 1.0);
+/** V59 time-dilation reach (multiples of the horizon) — matter crawls + light shifts within this. */
+const WARP_R_MULT = 4;
 
 /**
  * Internal rig handle — the meshes a summon builds, kept so update() can animate them and
@@ -101,6 +106,9 @@ interface Rig {
   pointsMat: THREE.PointsMaterial | null;
   /** Per-particle orbital state [rho, theta, y] × N (drawn from rng at summon, evolves). */
   pState: Float32Array | null;
+  /** V59: extra additive glow meshes (photon ring + halo shell) — animated + disposed together. */
+  extras: THREE.Mesh[];
+  extraMats: THREE.Material[];
 }
 
 /**
@@ -306,6 +314,16 @@ export class SingularitySystem {
       }
       const accel = Math.min(G / r2, ACCEL_MAX) * sign * gain;
       e.userData.vel.addScaledVector(V, (accel * dt) / r); // V/r = unit toward centre
+      // V59: SPACE-TIME WARP — not just gravity. TIME DILATES toward the horizon (velocities are
+      // scaled down, so matter visibly CRAWLS as it nears the hole) and infalling light REDSHIFTS
+      // (a black hole reddens it; a white hole blueshifts the ejecta). Both fade to nothing by
+      // WARP_R_MULT·HORIZON. Pure math, no rng — determinism-neutral.
+      if (r < HORIZON * WARP_R_MULT) {
+        let k = 1 - (r - HORIZON) / (HORIZON * (WARP_R_MULT - 1)); // 1 at horizon → 0 at the edge
+        k = k < 0 ? 0 : k > 1 ? 1 : k;
+        e.userData.vel.multiplyScalar(1 - 0.42 * k); // dilation: down to ~0.58× near the horizon
+        e.material.color.lerp(sign > 0 ? REDSHIFT : BLUESHIFT, 0.05 * k);
+      }
     }
   }
 
@@ -348,6 +366,20 @@ export class SingularitySystem {
       rig.ring.rotation.z += 0.04;
       rig.ring.rotation.x = Math.PI * 0.42;
       if (rig.ringMat) rig.ringMat.opacity = 0.9 * fade;
+    }
+    // V59: shimmer the photon ring + breathe the glow halo. The ring (index 0 for holes) spins on
+    // its own axis for a lensed shimmer; every extra pulses its base opacity and rides the fade.
+    if (rig.extras.length) {
+      const shimmer = 0.85 + Math.sin(t * 6) * 0.15;
+      const breathe = 0.8 + Math.sin(t * 2.3) * 0.2;
+      const ph = rig.extras[0];
+      if (ph) ph.rotation.z += 0.03;
+      for (let i = 0; i < rig.extraMats.length; i++) {
+        const m = rig.extraMats[i];
+        if (!(m instanceof THREE.MeshBasicMaterial)) continue;
+        const base = (m.userData.baseOpacity as number | undefined) ?? m.opacity;
+        m.opacity = base * fade * (i === 0 ? shimmer : breathe);
+      }
     }
   }
 
@@ -399,37 +431,52 @@ export class SingularitySystem {
     let primaryMat: THREE.MeshBasicMaterial | THREE.MeshStandardMaterial;
     let ring: THREE.Mesh | null = null;
     let ringMat: THREE.MeshBasicMaterial | null = null;
+    // V59: extra glow meshes (photon ring + halo aura) — built per kind, animated + freed together.
+    const extras: THREE.Mesh[] = [];
+    const extraMats: THREE.Material[] = [];
 
     if (kind === 'blackhole') {
+      // The shadow: a pure-black sphere. Everything bright sits OUTSIDE it (additive), so the
+      // horizon reads as the dark disc real images show — the EHT "ring of fire" silhouette.
       primaryMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
-      primary = new THREE.Mesh(new THREE.SphereGeometry(HORIZON, 24, 24), primaryMat);
+      primary = new THREE.Mesh(new THREE.SphereGeometry(HORIZON, 32, 32), primaryMat);
+      // Hot accretion disk — additive so the infalling plasma GLOWS rather than paints flat.
       ringMat = new THREE.MeshBasicMaterial({
-        color: 0xffaa33,
+        color: 0xffb24a,
         transparent: true,
         opacity: 0.9,
         side: THREE.DoubleSide,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
       });
-      ring = new THREE.Mesh(new THREE.TorusGeometry(DISK_R, HORIZON * 0.45, 16, 48), ringMat);
+      ring = new THREE.Mesh(new THREE.TorusGeometry(DISK_R, HORIZON * 0.5, 20, 64), ringMat);
+      this.addHoleHalo(0xffe1a0, 0xff6a1e, extras, extraMats);
     } else if (kind === 'whitehole') {
       primaryMat = new THREE.MeshBasicMaterial({ color: 0xeaf4ff });
-      primary = new THREE.Mesh(new THREE.SphereGeometry(HORIZON, 24, 24), primaryMat);
+      primary = new THREE.Mesh(new THREE.SphereGeometry(HORIZON, 32, 32), primaryMat);
       ringMat = new THREE.MeshBasicMaterial({
-        color: 0x66ccff,
+        color: 0x8fd6ff,
         transparent: true,
         opacity: 0.85,
         side: THREE.DoubleSide,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
       });
-      ring = new THREE.Mesh(new THREE.TorusGeometry(DISK_R, HORIZON * 0.3, 16, 48), ringMat);
+      ring = new THREE.Mesh(new THREE.TorusGeometry(DISK_R, HORIZON * 0.32, 20, 64), ringMat);
+      this.addHoleHalo(0xdff0ff, 0x4aa8ff, extras, extraMats);
     } else if (kind === 'greyhole') {
-      primaryMat = new THREE.MeshBasicMaterial({ color: 0x555a66 });
-      primary = new THREE.Mesh(new THREE.SphereGeometry(HORIZON, 24, 24), primaryMat);
+      primaryMat = new THREE.MeshBasicMaterial({ color: 0x3a3f4a });
+      primary = new THREE.Mesh(new THREE.SphereGeometry(HORIZON, 32, 32), primaryMat);
       ringMat = new THREE.MeshBasicMaterial({
-        color: 0x99a0b0,
+        color: 0xb6bccc,
         transparent: true,
         opacity: 0.7,
         side: THREE.DoubleSide,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
       });
-      ring = new THREE.Mesh(new THREE.TorusGeometry(DISK_R, HORIZON * 0.35, 16, 48), ringMat);
+      ring = new THREE.Mesh(new THREE.TorusGeometry(DISK_R, HORIZON * 0.38, 20, 64), ringMat);
+      this.addHoleHalo(0xc8cedb, 0x8088a0, extras, extraMats);
     } else if (kind === 'strangestar') {
       primaryMat = new THREE.MeshStandardMaterial({
         color: 0x2a5418,
@@ -439,6 +486,20 @@ export class SingularitySystem {
         roughness: 0.4,
       });
       primary = new THREE.Mesh(new THREE.IcosahedronGeometry(HORIZON * 0.9, 1), primaryMat);
+      // A violet strangelet aura — the conversion front made visible.
+      const auraMat = new THREE.MeshBasicMaterial({
+        color: 0x9a2cff,
+        transparent: true,
+        opacity: 0.22,
+        side: THREE.BackSide,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+      });
+      auraMat.userData.baseOpacity = 0.22;
+      const aura = new THREE.Mesh(new THREE.SphereGeometry(HORIZON * 1.5, 20, 20), auraMat);
+      aura.frustumCulled = false;
+      extras.push(aura);
+      extraMats.push(auraMat);
     } else {
       // entropy — an inverted translucent shell that expands as disorder spreads.
       primaryMat = new THREE.MeshBasicMaterial({
@@ -457,6 +518,7 @@ export class SingularitySystem {
       ring.rotation.x = Math.PI * 0.42;
       group.add(ring);
     }
+    for (const ex of extras) group.add(ex);
     // Keplerian accretion-disk / matter-fountain particle cloud (V7-beyond) — real orbital
     // matter the holes pull in and the white hole throws out. Built from the seeded rng at
     // SUMMON (deterministic); animated by pure t/dt math each frame (no per-frame rng).
@@ -473,7 +535,52 @@ export class SingularitySystem {
       points: parts ? parts.points : null,
       pointsMat: parts ? parts.pointsMat : null,
       pState: parts ? parts.pState : null,
+      extras,
+      extraMats,
     };
+  }
+
+  /**
+   * V59: build a hole's bright trim — the lensed PHOTON RING that hugs the event horizon (a thin
+   * additive torus, the iconic "ring of fire") plus a soft GLOW HALO bleeding past the horizon
+   * (gravitational glow). Both are additive + depth-write-off so they read as light, not surface,
+   * and carry a `baseOpacity` so {@link animateRig} can pulse + fade them. Pushed into the caller's
+   * arrays (added to the group + freed with the rig). Allocates only on summon (a user event).
+   */
+  private addHoleHalo(
+    ringHex: number,
+    glowHex: number,
+    extras: THREE.Mesh[],
+    extraMats: THREE.Material[],
+  ): void {
+    const photonMat = new THREE.MeshBasicMaterial({
+      color: ringHex,
+      transparent: true,
+      opacity: 0.95,
+      side: THREE.DoubleSide,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+    photonMat.userData.baseOpacity = 0.95;
+    const photon = new THREE.Mesh(
+      new THREE.TorusGeometry(HORIZON * 1.18, HORIZON * 0.06, 12, 80),
+      photonMat,
+    );
+    photon.frustumCulled = false;
+    photon.rotation.x = Math.PI * 0.5;
+    const glowMat = new THREE.MeshBasicMaterial({
+      color: glowHex,
+      transparent: true,
+      opacity: 0.28,
+      side: THREE.BackSide,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+    glowMat.userData.baseOpacity = 0.28;
+    const glow = new THREE.Mesh(new THREE.SphereGeometry(HORIZON * 1.75, 24, 24), glowMat);
+    glow.frustumCulled = false;
+    extras.push(photon, glow);
+    extraMats.push(photonMat, glowMat);
   }
 
   /**
@@ -533,6 +640,9 @@ export class SingularitySystem {
     if (rig.ringMat) rig.ringMat.dispose();
     if (rig.points) rig.points.geometry.dispose();
     if (rig.pointsMat) rig.pointsMat.dispose();
+    // V59: free the photon ring / glow halo geometries + materials.
+    for (const ex of rig.extras) ex.geometry.dispose();
+    for (const m of rig.extraMats) m.dispose();
     this.rig = null;
   }
 }

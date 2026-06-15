@@ -13,6 +13,21 @@ the full gate (now also a coverage gate, on Linux + Windows) with same-seed dete
 
 ### Added
 
+- **Singularities warp space-time, not just gravity (V59)** — the directive's "warp time AND space" ask.
+  Every absorbing/emitting hole now imposes **gravitational time dilation** and **redshift** on the
+  matter in its reach, on top of the existing r⁻² pull: inside `4·HORIZON` an organism's velocity is
+  scaled down toward `~0.58×` as it nears the horizon (matter visibly **crawls**, the "slowed time"),
+  and its colour is lerped toward a deep **red** for a sink (infalling light reddens) or a cold **blue**
+  for a source (ejecta blueshifts) — a smooth `k = 1 → 0` falloff from horizon to edge, pure
+  vector/colour math with **no rng** (determinism preserved; same seed ⇒ same evolution). The rigs are
+  rebuilt to look the part: the accretion disk is now **additive** (hot infalling plasma that *glows*
+  instead of painting flat), wrapped by a thin bright **photon ring** that hugs the event horizon (the
+  iconic lensed "ring of fire", shimmering on its own spin) and a soft **glow halo** bleeding past the
+  horizon (both additive + depth-write-off so they read as light); the strange star gains a violet
+  strangelet **aura**. **Verified live** on a summoned black hole: an entity pinned in the warp band had
+  its speed damped `3.0 → 1.83` and its colour driven `grey → red-orange` over the dwell, the photon
+  ring spins + the halo breathes, the disk blends additively, and the Telemetry **SINGULARITY** row reads
+  `BLACK HOLE` / `WHITE HOLE` / `STRANGE STAR` while active. Full gate green (798 tests).
 - **The CENTER HUD — six panels become one cyclable pop-up (V56)** — the directive's lead ask. AI · HELP
   · AUDIT · NEURAL · MARKET · ARCHITECT no longer open as six scattered edge panels (NEURAL kept
   overlapping the bottom bars); they now snap to **one same-size, fit-to-window slot centered on
