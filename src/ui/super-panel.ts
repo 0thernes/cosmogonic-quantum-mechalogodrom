@@ -10,6 +10,7 @@ import type { SuperSnapshot, SuperPlan } from '../sim/super-creature';
 import type { SuperMindSnapshot } from '../sim/super-mind';
 import type { EvoView } from '../sim/super-evolution';
 import { mountToggle } from './panel-dock';
+import { SuperNeural } from './super-neural';
 
 /** Plan → accent colour, so the committed goal reads at a glance (hunt-red … rest-grey). */
 const PLAN_COLOR: Record<SuperPlan, string> = {
@@ -37,6 +38,10 @@ const STYLE = `
 .cqm-sup-head{display:flex;align-items:center;gap:8px;padding:7px 10px;border-bottom:1px solid rgba(196,120,255,.24);background:rgba(28,14,46,.8)}
 .cqm-sup-head b{font-size:11px;letter-spacing:.14em;color:#d8a8ff;white-space:nowrap}
 .cqm-sup-head .plan{margin-left:auto;font-weight:700;letter-spacing:.1em;padding:1px 8px;border-radius:9px;background:rgba(0,0,0,.35)}
+.cqm-sup-neu{background:rgba(20,8,36,.9);color:#d8b8ff;border:1px solid rgba(180,120,255,.45);border-radius:5px;
+  font:600 10px/1 var(--font-mono,ui-monospace,monospace);letter-spacing:.08em;padding:3px 7px;cursor:pointer;white-space:nowrap}
+.cqm-sup-neu:hover{background:rgba(40,16,64,.95)}
+.cqm-sup-neu:focus-visible{outline:1px solid #b98cff}
 .cqm-sup-x{background:rgba(6,4,12,.9);color:#e9c8ff;border:1px solid rgba(196,120,255,.3);border-radius:5px;
   font:11px var(--font-mono,ui-monospace,monospace);padding:2px 7px;cursor:pointer}
 .cqm-sup-x:focus-visible{outline:1px solid #c478ff}
@@ -53,6 +58,13 @@ const STYLE = `
 .cqm-sup-bar .track{height:7px;border-radius:4px;background:rgba(196,120,255,.12);overflow:hidden}
 .cqm-sup-bar .fill{height:100%;width:0;border-radius:4px;transition:width .25s ease}
 .cqm-sup-bar .num{color:#f3ecff;text-align:right;font-size:10px;font-variant-numeric:tabular-nums}
+/* V75: the NEURAL observatory lives in the SAME box — toggling it grows this panel and swaps the
+   telemetry body for the 4-tab / 27-visual + BRAIN observatory (no second window). */
+.cqm-sup-neural-host{display:none;flex:1 1 auto;min-height:0;flex-direction:column}
+#cqm-sup-panel.neural{width:min(96vw,720px);height:min(76vh,600px)}
+#cqm-sup-panel.neural .cqm-sup-body{display:none}
+#cqm-sup-panel.neural .cqm-sup-neural-host{display:flex}
+#cqm-sup-panel.neural .cqm-sup-neu{background:rgba(52,20,82,.95);color:#f3ecff}
 `;
 
 /** One labelled meter; returns the fill + number nodes so {@link SuperPanel.update} can set them. */
@@ -99,7 +111,10 @@ export class SuperPanel {
   private readonly planEl: HTMLElement;
   private readonly id: Record<string, HTMLElement> = {};
   private readonly meter: Record<string, { fill: HTMLElement; num: HTMLElement }> = {};
+  /** V75: the apex creature's NEURAL observatory — now mounted INSIDE this same box (not a window). */
+  private readonly neural: SuperNeural;
   private open = false;
+  private neuralOn = false;
 
   constructor(doc: Document = document) {
     doc.getElementById('cqm-sup-toggle')?.remove();
@@ -121,14 +136,21 @@ export class SuperPanel {
     panel.setAttribute('aria-label', 'Super Creature telemetry');
     panel.innerHTML =
       `<div class="cqm-sup-head"><b>⬢ SUPER CREATURE</b><span class="plan" data-plan>—</span>` +
+      `<button class="cqm-sup-neu" data-neu aria-label="Toggle the Super Creature neural observatory" title="Toggle the 4-tab composite-mind observatory in this box">⊞ NEURAL</button>` +
       `<button class="cqm-sup-x" data-close aria-label="Close">✕</button></div>` +
       `<div class="cqm-sup-body"><div class="cqm-sup-id" data-id></div>` +
-      `<div class="cqm-sup-bars" data-bars></div></div>`;
+      `<div class="cqm-sup-bars" data-bars></div></div>` +
+      `<div class="cqm-sup-neural-host" data-neural></div>`;
     doc.body.appendChild(panel);
     this.panel = panel;
     this.planEl = panel.querySelector('[data-plan]') as HTMLElement;
+    // V75: the neural observatory mounts INSIDE this box's host — one box, not a second window.
+    this.neural = new SuperNeural(panel.querySelector('[data-neural]') as HTMLElement, doc);
     (panel.querySelector('[data-close]') as HTMLElement).addEventListener('click', () =>
       this.setOpen(false),
+    );
+    (panel.querySelector('[data-neu]') as HTMLElement).addEventListener('click', () =>
+      this.toggleNeural(),
     );
 
     const id = panel.querySelector('[data-id]') as HTMLElement;
@@ -163,6 +185,17 @@ export class SuperPanel {
   private setOpen(v: boolean): void {
     this.open = v;
     this.panel.classList.toggle('open', v);
+    if (!v) this.setNeural(false); // closing the box also stops the observatory's rAF loop
+  }
+
+  /** V75: flip the box between the telemetry readout and the in-box neural observatory. */
+  private toggleNeural(): void {
+    this.setNeural(!this.neuralOn);
+  }
+  private setNeural(v: boolean): void {
+    this.neuralOn = v;
+    this.panel.classList.toggle('neural', v);
+    this.neural.setActive(v);
   }
 
   /**
@@ -175,6 +208,8 @@ export class SuperPanel {
     mind?: SuperMindSnapshot | null,
     evo?: EvoView | null,
   ): void {
+    // Feed the deeper neural box FIRST — it animates independently of whether this readout is open.
+    this.neural.update(mind ?? null);
     if (!this.open || !snap) return;
     const c = PLAN_COLOR[snap.plan];
     this.planEl.textContent = snap.plan;

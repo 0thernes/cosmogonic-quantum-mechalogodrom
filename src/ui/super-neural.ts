@@ -1,0 +1,1283 @@
+/**
+ * SUPER NEURAL OBSERVATORY (V75) — the apex creature's composite-mind observatory, now folded into
+ * the SAME Super Creature box (no second window). It mounts its DOM into a HOST element the
+ * {@link SuperPanel} provides, so "⊞ NEURAL" grows the one box instead of spawning an overlay.
+ *
+ * FOUR tabs, all live + 3D + temporal (directive: "9 windows, not 6 … tabs 1/2/3 for 27 data
+ * visuals, tab 4 a BRAIN … 3D is cool and temporal is nice … reactive responsive adaptive, no
+ * overflow"):
+ *   I   · WORLD     — 9 readouts of the CORTEX world-model / perception / imagination.
+ *   II  · COGNITION — 9 readouts of the five-stage pipeline, consciousness, emotion, drives.
+ *   III · QUANTUM   — 9 readouts of the quantum mind (aspects + ported Eshkol/QGTL primitives:
+ *                     amplitude-encoded register, Grover diffusion, QFT spectrum, walk, entropy).
+ *   IV  · BRAIN     — one large rotating 3D connectome of the mind's organs + signal flow.
+ *
+ * Every readout is bound to a REAL variable of the {@link SuperMindSnapshot}; nothing decorative.
+ * Temporal views keep small ring-buffers so the data has MOTION between the slow Observatory pushes.
+ * UI shell only — it never imports or mutates sim state (the determinism ban is on sim logic, not
+ * the rAF clock). The quantum primitives mirror the deterministic math in `src/math/quantum.ts`.
+ */
+import type { SuperMindSnapshot } from '../sim/super-mind';
+
+const PAL = {
+  bg: '#08040f',
+  grid: '#2a1a44',
+  axis: '#4a3470',
+  text: '#cdb6ff',
+  dim: '#7a63a8',
+  violet: '#b98cff',
+  cyan: '#6cdfff',
+  mag: '#ff6ab0',
+  gold: '#ffd166',
+  green: '#8dff9e',
+  red: '#ff5a6b',
+};
+
+const Q_LABELS = ['SUP', 'ENT', 'FTL', '0K', 'QDT', 'MRP', 'MUT', 'RCT', 'RSP', 'ADP'] as const;
+const CONS_LABELS = ['DREAM', 'HALLU', 'REASON', 'FEEL', 'SELF', 'NOVEL', 'SURP'] as const;
+const STAGE_LABELS = ['PERCEIVE', 'IMAGINE', 'REASON', 'FEEL', 'ACT'] as const;
+const TAB_LABELS = ['I · WORLD', 'II · COGNITION', 'III · QUANTUM', 'IV · BRAIN'] as const;
+
+const STYLE = `
+.cqm-sneu{display:flex;flex-direction:column;min-height:0;flex:1 1 auto}
+.cqm-sneu-tabs{display:flex;gap:4px;padding:6px 8px 0;flex:0 0 auto}
+.cqm-sneu-tab{flex:1 1 0;min-width:0;background:rgba(14,8,28,.7);color:#a48fce;border:1px solid rgba(180,120,255,.2);
+  border-bottom:none;border-radius:6px 6px 0 0;font:600 9.5px/1 var(--font-mono,ui-monospace,monospace);
+  letter-spacing:.06em;padding:6px 4px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:color .15s,background .15s}
+.cqm-sneu-tab:hover{color:#d8b8ff;background:rgba(28,14,46,.8)}
+.cqm-sneu-tab.on{color:#f3ecff;background:rgba(36,16,60,.95);border-color:rgba(180,120,255,.5)}
+.cqm-sneu-tab:focus-visible{outline:1px solid #b98cff}
+.cqm-sneu-grid{display:grid;grid-template-columns:repeat(3,1fr);grid-auto-rows:1fr;gap:5px;padding:7px;overflow:hidden;
+  flex:1 1 auto;min-height:0;border-top:1px solid rgba(180,120,255,.28)}
+.cqm-sneu-grid.brain{grid-template-columns:1fr;grid-template-rows:1fr}
+.cqm-sneu-cell{position:relative;border:1px solid rgba(180,120,255,.14);border-radius:6px;background:rgba(5,3,12,.66);
+  overflow:hidden;display:flex;min-height:0}
+.cqm-sneu-cell canvas{display:block;width:100%;height:100%}
+.cqm-sneu-foot{flex:0 0 auto;display:flex;gap:8px;align-items:center;padding:5px 10px;border-top:1px solid rgba(180,120,255,.2);
+  background:rgba(22,10,40,.7);font:9px/1.4 var(--font-mono,ui-monospace,monospace);color:#b9a3e0;min-height:0}
+.cqm-sneu-foot b{color:#d8b8ff}
+`;
+
+type Snap = SuperMindSnapshot;
+type Drawer = (
+  ctx: CanvasRenderingContext2D,
+  w: number,
+  h: number,
+  s: Snap,
+  t: number,
+  H: Hist,
+) => void;
+
+// ── temporal history (ring buffers give the views motion between slow pushes) ──────────────
+const HCAP = 96;
+interface Hist {
+  /** Newest sample index; the caller advances it once per frame before drawers push. */
+  head: number;
+  push(key: string, v: number): void;
+  series(key: string): Float32Array;
+}
+function makeHist(): Hist {
+  const rings = new Map<string, Float32Array>();
+  const ring = (key: string): Float32Array => {
+    let r = rings.get(key);
+    if (!r) {
+      r = new Float32Array(HCAP);
+      rings.set(key, r);
+    }
+    return r;
+  };
+  return {
+    head: 0,
+    push(key, v) {
+      ring(key)[this.head % HCAP] = Number.isFinite(v) ? v : 0;
+    },
+    series(key) {
+      return ring(key);
+    },
+  };
+}
+
+// ── primitive helpers ──────────────────────────────────────────────────────────────────────
+function lab(ctx: CanvasRenderingContext2D, w: number, base: number, weight = ''): void {
+  const k = Math.max(0.85, Math.min(2.2, w / 230));
+  ctx.font = `${weight}${(base * k).toFixed(1)}px ui-monospace,monospace`;
+}
+function frame(ctx: CanvasRenderingContext2D, w: number, h: number, title: string): void {
+  ctx.fillStyle = PAL.bg;
+  ctx.fillRect(0, 0, w, h);
+  ctx.fillStyle = PAL.violet;
+  lab(ctx, w, 7.5, '600 ');
+  ctx.textBaseline = 'top';
+  ctx.textAlign = 'left';
+  ctx.fillText(title, 5, 4);
+}
+function spark(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  r: number,
+  rgb: string,
+  a: number,
+): void {
+  if (r <= 0) return;
+  const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+  g.addColorStop(0, `rgba(${rgb},${a.toFixed(3)})`);
+  g.addColorStop(1, `rgba(${rgb},0)`);
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, Math.PI * 2);
+  ctx.fill();
+}
+function frac(x: number): number {
+  return x - Math.floor(x);
+}
+const clamp01 = (v: number): number => (v < 0 ? 0 : v > 1 ? 1 : v);
+const clampS = (v: number): number => (v < -1 ? -1 : v > 1 ? 1 : v);
+
+interface P3 {
+  x: number;
+  y: number;
+  d: number;
+}
+/** Rotate about Y, tilt about X, project with mild perspective. */
+function project(
+  x: number,
+  y: number,
+  z: number,
+  angle: number,
+  cx: number,
+  cy: number,
+  scale: number,
+): P3 {
+  const c = Math.cos(angle);
+  const sn = Math.sin(angle);
+  const rx = x * c + z * sn;
+  const rz = -x * sn + z * c;
+  const ct = Math.cos(0.46);
+  const st = Math.sin(0.46);
+  const ry = y * ct - rz * st;
+  const rz2 = y * st + rz * ct;
+  const k = 1 / (1 - rz2 * 0.16);
+  return { x: cx + rx * scale * k, y: cy - ry * scale * k, d: rz2 };
+}
+/** Draw a temporal series (ring buffer) as a flowing line filling [x0,x1]×[y0,y1] (v in [lo,hi]). */
+function trail(
+  ctx: CanvasRenderingContext2D,
+  s: Float32Array,
+  head: number,
+  x0: number,
+  y0: number,
+  x1: number,
+  y1: number,
+  lo: number,
+  hi: number,
+  rgb: string,
+): void {
+  const n = s.length;
+  const span = Math.max(1e-6, hi - lo);
+  ctx.beginPath();
+  for (let i = 0; i < n; i++) {
+    const idx = (head + 1 + i) % n; // oldest → newest
+    const v = s[idx] ?? 0;
+    const x = x0 + (i / (n - 1)) * (x1 - x0);
+    const y = y1 - clamp01((v - lo) / span) * (y1 - y0);
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  ctx.strokeStyle = `rgba(${rgb},.9)`;
+  ctx.lineWidth = 1.3;
+  ctx.stroke();
+}
+function avg(a: ArrayLike<number>): number {
+  let s = 0;
+  for (let i = 0; i < a.length; i++) s += a[i] ?? 0;
+  return a.length ? s / a.length : 0;
+}
+
+// ── deterministic quantum primitives (mirror src/math/quantum.ts; from the Eshkol/QGTL study) ──
+/**
+ * Amplitude-encode the 10 quantum-aspect intensities into a normalized "register" (padded to 16),
+ * then expose Grover-diffusion (reflect-about-mean) and a small DFT magnitude spectrum (QFT proxy).
+ * Pure, allocation-light, NO rng/wall-clock — a presentation-side echo of the sim's real register.
+ */
+function ampEncode(q: ArrayLike<number>): Float64Array {
+  const dim = 16;
+  const a = new Float64Array(dim);
+  let norm = 0;
+  for (let i = 0; i < dim; i++) {
+    const v = Math.max(0, q[i % q.length] ?? 0) + 1e-4;
+    a[i] = v;
+    norm += v * v;
+  }
+  const inv = norm > 0 ? 1 / Math.sqrt(norm) : 0;
+  for (let i = 0; i < dim; i++) a[i] = (a[i] ?? 0) * inv;
+  return a;
+}
+/** Grover diffusion: reflect every amplitude about the mean (amplitude amplification). */
+function groverDiffuse(a: Float64Array): Float64Array {
+  const m = avg(a);
+  const out = new Float64Array(a.length);
+  for (let i = 0; i < a.length; i++) out[i] = 2 * m - (a[i] ?? 0);
+  return out;
+}
+/** DFT magnitude spectrum (QFT proxy) of the amplitude vector — the mind's "frequencies". */
+function dftMag(a: Float64Array): Float64Array {
+  const n = a.length;
+  const out = new Float64Array(n);
+  for (let k = 0; k < n; k++) {
+    let re = 0;
+    let im = 0;
+    for (let j = 0; j < n; j++) {
+      const ph = (-2 * Math.PI * k * j) / n;
+      const v = a[j] ?? 0;
+      re += v * Math.cos(ph);
+      im += v * Math.sin(ph);
+    }
+    out[k] = Math.sqrt(re * re + im * im) / n;
+  }
+  return out;
+}
+
+// ════════════════════ TAB I — WORLD MODEL (9 views) ════════════════════
+const drawLatentRing: Drawer = (ctx, w, h, s, t) => {
+  frame(ctx, w, h, 'WORLD · LATENT RING');
+  const lat = s.latent;
+  const n = lat.length || 16;
+  const cx = w / 2;
+  const cy = h / 2 + 5;
+  const scale = Math.min(w, h) * 0.4;
+  const ang = t * 0.4;
+  const pts: P3[] = [];
+  for (let i = 0; i < n; i++) {
+    const a = (i / n) * Math.PI * 2;
+    pts.push(
+      project(
+        Math.cos(a) * 0.82,
+        clampS(lat[i] ?? 0) * 0.9,
+        Math.sin(a) * 0.82,
+        ang,
+        cx,
+        cy,
+        scale,
+      ),
+    );
+  }
+  for (let i = 0; i < n; i++) {
+    const p0 = pts[i]!;
+    const p1 = pts[(i + 1) % n]!;
+    const da = 0.4 + 0.5 * (1 - (p0.d + 1) / 2);
+    ctx.strokeStyle = `rgba(108,223,255,${da.toFixed(2)})`;
+    ctx.lineWidth = 1 + (1 - (p0.d + 1) / 2) * 1.4;
+    ctx.beginPath();
+    ctx.moveTo(p0.x, p0.y);
+    ctx.lineTo(p1.x, p1.y);
+    ctx.stroke();
+  }
+  for (const p of pts) {
+    const near = (p.d + 1) / 2;
+    spark(ctx, p.x, p.y, 2 + near * 4, '108,223,255', 0.25 + near * 0.4);
+  }
+};
+const drawLatentSpectrum: Drawer = (ctx, w, h, s, t) => {
+  frame(ctx, w, h, 'WORLD · SPECTRUM');
+  const lat = s.latent;
+  const n = lat.length || 16;
+  const x0 = 6;
+  const x1 = w - 6;
+  const mid = h / 2 + 6;
+  const bw = (x1 - x0) / n;
+  for (let i = 0; i < n; i++) {
+    const v = clampS(lat[i] ?? 0);
+    const x = x0 + i * bw;
+    const shimmer = 0.9 + Math.sin(t * 3 + i) * 0.1;
+    const bh = v * (h * 0.32) * shimmer;
+    ctx.fillStyle = v >= 0 ? 'rgba(108,223,255,.8)' : 'rgba(255,106,176,.8)';
+    ctx.fillRect(x + 1, mid - Math.max(0, bh), bw - 2, Math.abs(bh));
+  }
+  ctx.strokeStyle = PAL.grid;
+  ctx.beginPath();
+  ctx.moveTo(x0, mid);
+  ctx.lineTo(x1, mid);
+  ctx.stroke();
+};
+const drawLatentHeat: Drawer = (ctx, w, h, s, _t, H) => {
+  frame(ctx, w, h, 'WORLD · TEMPORAL');
+  const lat = s.latent;
+  const n = Math.min(lat.length || 16, 16);
+  for (let i = 0; i < n; i++) H.push('lh' + i, clampS(lat[i] ?? 0));
+  const top = 16;
+  const rh = (h - top - 4) / n;
+  const cols = HCAP;
+  const cw = (w - 8) / cols;
+  for (let i = 0; i < n; i++) {
+    const ser = H.series('lh' + i);
+    for (let c = 0; c < cols; c++) {
+      const idx = (H.head + 1 + c) % cols;
+      const v = ((ser[idx] ?? 0) + 1) / 2;
+      const r = Math.round(80 + v * 175);
+      const b = Math.round(140 + (1 - v) * 80);
+      ctx.fillStyle = `rgb(${r},${Math.round(60 + v * 60)},${b})`;
+      ctx.fillRect(4 + c * cw, top + i * rh, cw + 0.6, rh + 0.6);
+    }
+  }
+};
+const drawImagination: Drawer = (ctx, w, h, s, t) => {
+  frame(ctx, w, h, 'WORLD · IMAGINE');
+  const lat = s.latent;
+  const img = s.imagined;
+  const n = Math.max(lat.length, img.length) || 16;
+  const padX = 7;
+  const mid = h / 2 + 4;
+  const plotH = h - 32;
+  const xOf = (i: number): number => padX + (i / Math.max(1, n - 1)) * (w - padX * 2);
+  const yOf = (v: number): number => mid - clampS(v) * (plotH / 2);
+  ctx.beginPath();
+  for (let i = 0; i < n; i++) ctx.lineTo(xOf(i), yOf(lat[i] ?? 0));
+  for (let i = n - 1; i >= 0; i--) ctx.lineTo(xOf(i), yOf(img[i] ?? 0));
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(255,106,176,.14)';
+  ctx.fill();
+  for (const [arr, col] of [
+    [lat, PAL.cyan],
+    [img, PAL.mag],
+  ] as const) {
+    ctx.beginPath();
+    for (let i = 0; i < n; i++) {
+      const x = xOf(i);
+      const y = yOf(arr[i] ?? 0);
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.strokeStyle = col;
+    ctx.lineWidth = 1.3;
+    ctx.stroke();
+  }
+  const si = Math.round(frac(t * 0.25) * (n - 1));
+  spark(ctx, xOf(si), yOf(img[si] ?? 0), 3 + Math.abs(Math.sin(t * 3)) * 2, '255,106,176', 0.6);
+};
+const drawNoveltyField: Drawer = (ctx, w, h, s, t) => {
+  frame(ctx, w, h, 'WORLD · NOVELTY');
+  const nov = clamp01(s.consciousness.novelty ?? 0);
+  const cx = w / 2;
+  const cy = h / 2 + 4;
+  const R = Math.min(w, h) * 0.42;
+  for (let r = 1; r <= 5; r++) {
+    const rr = ((R * r) / 5) * (0.95 + Math.sin(t * 2 + r) * 0.05);
+    ctx.strokeStyle = `rgba(141,255,158,${(0.1 + nov * 0.4 * (1 - r / 6)).toFixed(2)})`;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.arc(cx, cy, rr, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+  spark(ctx, cx, cy, R * (0.3 + nov * 0.7), '141,255,158', 0.15 + nov * 0.5);
+  ctx.fillStyle = PAL.green;
+  lab(ctx, w, 8, '600 ');
+  ctx.textAlign = 'center';
+  ctx.fillText(nov.toFixed(2), cx, cy - 5);
+  ctx.textAlign = 'left';
+};
+const drawWorldSphere: Drawer = (ctx, w, h, s, t) => {
+  frame(ctx, w, h, 'WORLD · SPHERE');
+  const lat = s.latent;
+  const n = lat.length || 16;
+  const cx = w / 2;
+  const cy = h / 2 + 4;
+  const scale = Math.min(w, h) * 0.4;
+  const ang = t * 0.35;
+  for (let i = 0; i < n; i++) {
+    const phi = Math.acos(1 - (2 * (i + 0.5)) / n);
+    const theta = Math.PI * (1 + Math.sqrt(5)) * i; // golden spiral
+    const rr = 0.6 + clamp01(((lat[i] ?? 0) + 1) / 2) * 0.5;
+    const p = project(
+      Math.sin(phi) * Math.cos(theta) * rr,
+      Math.cos(phi) * rr,
+      Math.sin(phi) * Math.sin(theta) * rr,
+      ang,
+      cx,
+      cy,
+      scale,
+    );
+    const near = (p.d + 1) / 2;
+    spark(ctx, p.x, p.y, 1.6 + near * 3.4, '185,140,255', 0.2 + near * 0.5);
+  }
+};
+const drawLatentNorm: Drawer = (ctx, w, h, s, _t, H) => {
+  frame(ctx, w, h, 'WORLD · ENERGY');
+  let e = 0;
+  for (let i = 0; i < s.latent.length; i++) e += (s.latent[i] ?? 0) ** 2;
+  e = Math.sqrt(e / Math.max(1, s.latent.length));
+  H.push('lnorm', e);
+  trail(ctx, H.series('lnorm'), H.head, 6, 16, w - 6, h - 8, 0, 1, '108,223,255');
+  ctx.fillStyle = PAL.cyan;
+  lab(ctx, w, 7);
+  ctx.textAlign = 'right';
+  ctx.fillText('‖latent‖ ' + e.toFixed(2), w - 5, 5);
+  ctx.textAlign = 'left';
+};
+const drawPerceptRadar: Drawer = (ctx, w, h, s, t) => {
+  frame(ctx, w, h, 'WORLD · PERCEPT');
+  const k = s.consciousness;
+  const vals = [
+    clamp01(k.reasoning ?? 0),
+    clamp01(k.novelty ?? 0),
+    clamp01((k.feeling ?? 0) * 0.5 + 0.5),
+    clamp01(k.selfAware ?? 0),
+    clamp01(s.emotion.arousal ?? 0),
+    clamp01(k.surprise ?? 0),
+  ];
+  const n = vals.length;
+  const cx = w / 2;
+  const cy = h / 2 + 4;
+  const R = Math.min(w, h) * 0.38;
+  ctx.strokeStyle = PAL.grid;
+  for (let g = 1; g <= 2; g++) {
+    ctx.beginPath();
+    for (let i = 0; i <= n; i++) {
+      const a = (i / n) * Math.PI * 2 - Math.PI / 2;
+      const rr = (R * g) / 2;
+      const x = cx + Math.cos(a) * rr;
+      const y = cy + Math.sin(a) * rr;
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+  }
+  ctx.beginPath();
+  for (let i = 0; i <= n; i++) {
+    const a = (i / n) * Math.PI * 2 - Math.PI / 2;
+    const rr = R * (0.1 + (vals[i % n] ?? 0) * 0.9) * (0.96 + Math.sin(t * 2 + i) * 0.04);
+    const x = cx + Math.cos(a) * rr;
+    const y = cy + Math.sin(a) * rr;
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(108,223,255,.2)';
+  ctx.strokeStyle = PAL.cyan;
+  ctx.lineWidth = 1.3;
+  ctx.fill();
+  ctx.stroke();
+};
+const drawSensoryWheel: Drawer = (ctx, w, h, s, t) => {
+  frame(ctx, w, h, 'WORLD · SENSORIA');
+  const lat = s.latent;
+  const n = lat.length || 16;
+  const cx = w / 2;
+  const cy = h / 2 + 4;
+  const R = Math.min(w, h) * 0.42;
+  const spin = t * 0.5;
+  for (let i = 0; i < n; i++) {
+    const a = (i / n) * Math.PI * 2 + spin;
+    const v = clamp01(((lat[i] ?? 0) + 1) / 2);
+    const rr = R * (0.3 + v * 0.7);
+    const x = cx + Math.cos(a) * rr;
+    const y = cy + Math.sin(a) * rr;
+    ctx.strokeStyle = `rgba(185,140,255,${(0.2 + v * 0.6).toFixed(2)})`;
+    ctx.lineWidth = 1 + v * 1.5;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(x, y);
+    ctx.stroke();
+    spark(ctx, x, y, 1.5 + v * 3, '185,140,255', 0.3 + v * 0.4);
+  }
+};
+
+// ════════════════════ TAB II — COGNITION (9 views) ════════════════════
+const drawPipeline: Drawer = (ctx, w, h, s, t) => {
+  frame(ctx, w, h, 'COG · PIPELINE');
+  const k = s.consciousness;
+  const drive = [
+    0.85,
+    k.dreaming ?? 0,
+    k.reasoning ?? 0,
+    Math.abs(k.feeling ?? 0),
+    s.emotion.dominance ?? 0.5,
+  ];
+  const n = 5;
+  const y = h / 2 + 2;
+  const x0 = 22;
+  const x1 = w - 18;
+  const xOf = (i: number): number => x0 + (i / (n - 1)) * (x1 - x0);
+  ctx.strokeStyle = 'rgba(185,140,255,.4)';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(xOf(0), y);
+  ctx.lineTo(xOf(n - 1), y);
+  ctx.stroke();
+  spark(ctx, xOf(frac(t * 0.3) * (n - 1)), y, 5, '141,255,158', 0.6);
+  for (let i = 0; i < n; i++) {
+    const x = xOf(i);
+    const v = clamp01(drive[i] ?? 0);
+    spark(ctx, x, y, 6 + v * 7, '185,140,255', 0.15 + v * 0.4);
+    ctx.fillStyle = `rgba(216,184,255,${(0.5 + v * 0.5).toFixed(2)})`;
+    ctx.beginPath();
+    ctx.arc(x, y, 4, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = PAL.text;
+    lab(ctx, w, 6);
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'bottom';
+    ctx.fillText(STAGE_LABELS[i] ?? '', x, y - 12);
+    ctx.textBaseline = 'top';
+  }
+  ctx.textAlign = 'left';
+};
+const drawConsciousness: Drawer = (ctx, w, h, s, t) => {
+  frame(ctx, w, h, 'COG · CONSCIOUS');
+  const k = s.consciousness;
+  const vals = [
+    k.dreaming ?? 0,
+    k.hallucinating ?? 0,
+    k.reasoning ?? 0,
+    (k.feeling ?? 0) * 0.5 + 0.5,
+    k.selfAware ?? 0,
+    k.novelty ?? 0,
+    k.surprise ?? 0,
+  ];
+  const n = vals.length;
+  const cx = w / 2;
+  const cy = h / 2 + 4;
+  const R = Math.min(w, h - 14) * 0.4;
+  for (let i = 0; i < n; i++) {
+    const a = (i / n) * Math.PI * 2 - Math.PI / 2;
+    const v = clamp01(vals[i] ?? 0);
+    const rr = R * (0.12 + v * 0.88) * (0.94 + Math.sin(t * 2.4 + i) * 0.06);
+    const tipX = cx + Math.cos(a) * rr;
+    const tipY = cy + Math.sin(a) * rr;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(cx + Math.cos(a - 0.18) * rr * 0.4, cy + Math.sin(a - 0.18) * rr * 0.4);
+    ctx.lineTo(tipX, tipY);
+    ctx.lineTo(cx + Math.cos(a + 0.18) * rr * 0.4, cy + Math.sin(a + 0.18) * rr * 0.4);
+    ctx.closePath();
+    ctx.fillStyle = `rgba(185,140,255,${(0.18 + v * 0.5).toFixed(2)})`;
+    ctx.strokeStyle = `rgba(216,184,255,${(0.4 + v * 0.5).toFixed(2)})`;
+    ctx.lineWidth = 1;
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = PAL.dim;
+    lab(ctx, w, 5.8);
+    ctx.textAlign = Math.cos(a) > 0.3 ? 'left' : Math.cos(a) < -0.3 ? 'right' : 'center';
+    ctx.textBaseline = Math.sin(a) > 0.3 ? 'top' : 'bottom';
+    ctx.fillText(CONS_LABELS[i] ?? '', cx + Math.cos(a) * (R + 7), cy + Math.sin(a) * (R + 7));
+  }
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'top';
+};
+const drawEmotionCube: Drawer = (ctx, w, h, s, t) => {
+  frame(ctx, w, h, 'COG · EMOTION');
+  const cx = w / 2;
+  const cy = h / 2 + 4;
+  const scale = Math.min(w, h) * 0.32;
+  const ang = t * 0.35;
+  const corners: P3[] = [];
+  for (let i = 0; i < 8; i++)
+    corners.push(project(i & 1 ? 1 : -1, i & 2 ? 1 : -1, i & 4 ? 1 : -1, ang, cx, cy, scale));
+  const edges: [number, number][] = [
+    [0, 1],
+    [0, 2],
+    [0, 4],
+    [1, 3],
+    [1, 5],
+    [2, 3],
+    [2, 6],
+    [3, 7],
+    [4, 5],
+    [4, 6],
+    [5, 7],
+    [6, 7],
+  ];
+  ctx.strokeStyle = 'rgba(74,52,112,.85)';
+  ctx.lineWidth = 1;
+  for (const [a, b] of edges) {
+    ctx.beginPath();
+    ctx.moveTo(corners[a]!.x, corners[a]!.y);
+    ctx.lineTo(corners[b]!.x, corners[b]!.y);
+    ctx.stroke();
+  }
+  const pt = project(
+    clampS(s.emotion.valence ?? 0),
+    (s.emotion.arousal ?? 0) * 2 - 1,
+    (s.emotion.dominance ?? 0.5) * 2 - 1,
+    ang,
+    cx,
+    cy,
+    scale,
+  );
+  const ctr = project(0, 0, 0, ang, cx, cy, scale);
+  ctx.strokeStyle = 'rgba(255,209,102,.7)';
+  ctx.lineWidth = 1.3;
+  ctx.beginPath();
+  ctx.moveTo(ctr.x, ctr.y);
+  ctx.lineTo(pt.x, pt.y);
+  ctx.stroke();
+  spark(ctx, pt.x, pt.y, 6 + Math.abs(Math.sin(t * 2.5)) * 3, '255,209,102', 0.8);
+};
+const drawTreeOfThought: Drawer = (ctx, w, h, s, t) => {
+  frame(ctx, w, h, 'COG · TREE-OF-THOUGHT');
+  const depth = Math.max(1, Math.min(5, s.depths || 3));
+  const variants = Math.max(1, Math.min(4, s.variants || 3));
+  const rootX = w / 2;
+  const rootY = h - 12;
+  const levelH = (h - 24) / depth;
+  const draw = (x: number, y: number, d: number, spread: number): void => {
+    if (d >= depth) return;
+    for (let v = 0; v < variants; v++) {
+      const nx = x + (v - (variants - 1) / 2) * spread;
+      const ny = y - levelH;
+      const lit = 0.3 + 0.5 * Math.abs(Math.sin(t * 1.5 + d * 1.3 + v));
+      ctx.strokeStyle = `rgba(185,140,255,${lit.toFixed(2)})`;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.lineTo(nx, ny);
+      ctx.stroke();
+      spark(ctx, nx, ny, 2 + lit * 3, '185,140,255', 0.3 + lit * 0.3);
+      draw(nx, ny, d + 1, spread * 0.52);
+    }
+  };
+  draw(rootX, rootY, 0, w * 0.3);
+  spark(ctx, rootX, rootY, 4, '141,255,158', 0.7);
+  ctx.fillStyle = PAL.gold;
+  lab(ctx, w, 6.5);
+  ctx.textAlign = 'right';
+  ctx.fillText(`${depth}d × ${variants}v`, w - 5, 5);
+  ctx.textAlign = 'left';
+};
+const drawReasonFlow: Drawer = (ctx, w, h, s, t) => {
+  frame(ctx, w, h, 'COG · REASON FLOW');
+  const k = s.consciousness;
+  const streams: [number, string][] = [
+    [clamp01(k.reasoning ?? 0), '108,223,255'],
+    [clamp01(k.dreaming ?? 0), '185,140,255'],
+    [clamp01(k.hallucinating ?? 0), '255,106,176'],
+  ];
+  for (let si = 0; si < streams.length; si++) {
+    const [v, rgb] = streams[si]!;
+    const y0 = 18 + ((h - 26) * (si + 0.5)) / streams.length;
+    ctx.beginPath();
+    for (let x = 6; x <= w - 6; x += 3) {
+      const ph = (x / w) * Math.PI * 4 - t * 2 - si;
+      const y = y0 + Math.sin(ph) * v * 10;
+      if (x === 6) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.strokeStyle = `rgba(${rgb},${(0.3 + v * 0.6).toFixed(2)})`;
+    ctx.lineWidth = 1 + v * 2;
+    ctx.stroke();
+  }
+};
+const drawSurpriseTL: Drawer = (ctx, w, h, s, _t, H) => {
+  frame(ctx, w, h, 'COG · SURPRISE');
+  H.push('surp', clamp01(s.consciousness.surprise ?? 0));
+  trail(ctx, H.series('surp'), H.head, 6, 16, w - 6, h - 8, 0, 1, '255,106,176');
+  ctx.fillStyle = PAL.mag;
+  lab(ctx, w, 7);
+  ctx.textAlign = 'right';
+  ctx.fillText((s.consciousness.surprise ?? 0).toFixed(2), w - 5, 5);
+  ctx.textAlign = 'left';
+};
+const drawDriveVectors: Drawer = (ctx, w, h, s, t) => {
+  frame(ctx, w, h, 'COG · DRIVES');
+  const k = s.consciousness;
+  const drives: [string, number, string][] = [
+    ['DREAM', k.dreaming ?? 0, '185,140,255'],
+    ['REASON', k.reasoning ?? 0, '108,223,255'],
+    ['NOVEL', k.novelty ?? 0, '141,255,158'],
+    ['SELF', k.selfAware ?? 0, '255,209,102'],
+  ];
+  const cx = w / 2;
+  const cy = h / 2 + 4;
+  const R = Math.min(w, h) * 0.4;
+  for (let i = 0; i < drives.length; i++) {
+    const [name, v, rgb] = drives[i]!;
+    const a = (i / drives.length) * Math.PI * 2 - Math.PI / 2 + Math.sin(t * 0.6) * 0.05;
+    const rr = R * clamp01(v);
+    const x = cx + Math.cos(a) * rr;
+    const y = cy + Math.sin(a) * rr;
+    ctx.strokeStyle = `rgba(${rgb},.8)`;
+    ctx.lineWidth = 1.6;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(x, y);
+    ctx.stroke();
+    spark(ctx, x, y, 2 + clamp01(v) * 4, rgb, 0.5);
+    ctx.fillStyle = `rgba(${rgb},.9)`;
+    lab(ctx, w, 5.6);
+    ctx.textAlign = 'center';
+    ctx.fillText(name, cx + Math.cos(a) * (R + 6), cy + Math.sin(a) * (R + 6));
+  }
+  ctx.textAlign = 'left';
+};
+const drawSelfGauge: Drawer = (ctx, w, h, s, t) => {
+  frame(ctx, w, h, 'COG · SELF-AWARE');
+  const v = clamp01(s.consciousness.selfAware ?? 0);
+  const cx = w / 2;
+  const cy = h / 2 + 10;
+  const R = Math.min(w, h) * 0.4;
+  ctx.strokeStyle = PAL.grid;
+  ctx.lineWidth = 5;
+  ctx.beginPath();
+  ctx.arc(cx, cy, R, Math.PI * 0.8, Math.PI * 2.2);
+  ctx.stroke();
+  ctx.strokeStyle = `rgba(255,209,102,${(0.5 + v * 0.5).toFixed(2)})`;
+  ctx.lineWidth = 5;
+  ctx.beginPath();
+  ctx.arc(cx, cy, R, Math.PI * 0.8, Math.PI * 0.8 + Math.PI * 1.4 * v);
+  ctx.stroke();
+  spark(
+    ctx,
+    cx,
+    cy,
+    R * (0.4 + v * 0.5) * (0.95 + Math.sin(t * 2) * 0.05),
+    '255,209,102',
+    0.1 + v * 0.3,
+  );
+  ctx.fillStyle = PAL.gold;
+  lab(ctx, w, 9, '600 ');
+  ctx.textAlign = 'center';
+  ctx.fillText(v.toFixed(2), cx, cy - 4);
+  ctx.textAlign = 'left';
+};
+const drawEmotionTrail: Drawer = (ctx, w, h, s, _t, H) => {
+  frame(ctx, w, h, 'COG · MOOD TRAIL');
+  H.push('val', (clampS(s.emotion.valence ?? 0) + 1) / 2);
+  H.push('aro', clamp01(s.emotion.arousal ?? 0));
+  trail(ctx, H.series('val'), H.head, 6, 16, w - 6, h - 8, 0, 1, '141,255,158');
+  trail(ctx, H.series('aro'), H.head, 6, 16, w - 6, h - 8, 0, 1, '255,159,67');
+  ctx.fillStyle = PAL.green;
+  lab(ctx, w, 6.5);
+  ctx.fillText('val', 6, 5);
+  ctx.fillStyle = '#ff9f43';
+  ctx.fillText('aro', 34, 5);
+};
+
+// ════════════════════ TAB III — QUANTUM (9 views) ════════════════════
+const drawQuantumCrown: Drawer = (ctx, w, h, s, t) => {
+  frame(ctx, w, h, 'Q · CROWN');
+  const q = s.quantum;
+  const n = q.length || 10;
+  const cx = w / 2;
+  const cy = h / 2 + 6;
+  const scale = Math.min(w, h) * 0.38;
+  const ang = t * 0.45;
+  type Spike = { base: P3; tip: P3; v: number; i: number };
+  const spikes: Spike[] = [];
+  for (let i = 0; i < n; i++) {
+    const a = (i / n) * Math.PI * 2;
+    const v = clamp01(q[i] ?? 0);
+    spikes.push({
+      base: project(Math.cos(a) * 0.85, -0.2, Math.sin(a) * 0.85, ang, cx, cy, scale),
+      tip: project(Math.cos(a) * 0.85, -0.2 + v * 1.3, Math.sin(a) * 0.85, ang, cx, cy, scale),
+      v,
+      i,
+    });
+  }
+  for (const sp of spikes.slice().sort((a, b) => a.base.d - b.base.d)) {
+    ctx.strokeStyle = `rgba(185,140,255,${(0.3 + sp.v * 0.6).toFixed(2)})`;
+    ctx.lineWidth = 1 + sp.v * 2;
+    ctx.beginPath();
+    ctx.moveTo(sp.base.x, sp.base.y);
+    ctx.lineTo(sp.tip.x, sp.tip.y);
+    ctx.stroke();
+    spark(ctx, sp.tip.x, sp.tip.y, 1.6 + sp.v * 5, '185,140,255', 0.2 + sp.v * 0.6);
+    if ((sp.base.d + 1) / 2 > 0.34) {
+      ctx.fillStyle = PAL.dim;
+      lab(ctx, w, 5.6);
+      ctx.textAlign = 'center';
+      ctx.fillText(Q_LABELS[sp.i] ?? '', sp.tip.x, sp.tip.y - 6);
+    }
+  }
+  ctx.textAlign = 'left';
+};
+const drawAmplitudes: Drawer = (ctx, w, h, s) => {
+  frame(ctx, w, h, 'Q · AMPLITUDES');
+  const a = ampEncode(s.quantum);
+  const n = a.length;
+  const x0 = 6;
+  const bw = (w - 12) / n;
+  const base = h - 10;
+  let mx = 1e-6;
+  for (let i = 0; i < n; i++) mx = Math.max(mx, a[i] ?? 0);
+  for (let i = 0; i < n; i++) {
+    const v = (a[i] ?? 0) / mx;
+    ctx.fillStyle = `rgba(108,223,255,${(0.4 + v * 0.5).toFixed(2)})`;
+    ctx.fillRect(x0 + i * bw + 1, base - v * (h - 26), bw - 2, v * (h - 26));
+  }
+  ctx.fillStyle = PAL.dim;
+  lab(ctx, w, 6);
+  ctx.textAlign = 'right';
+  ctx.fillText('|ψ| · 16 amp', w - 5, 5);
+  ctx.textAlign = 'left';
+};
+const drawGrover: Drawer = (ctx, w, h, s, t) => {
+  frame(ctx, w, h, 'Q · GROVER');
+  const a = ampEncode(s.quantum);
+  // animate the diffusion: blend between encoded and diffused over time
+  const d = groverDiffuse(a);
+  const mix = (Math.sin(t * 1.2) + 1) / 2;
+  const n = a.length;
+  const x0 = 6;
+  const bw = (w - 12) / n;
+  const mid = h / 2 + 6;
+  let mx = 1e-6;
+  for (let i = 0; i < n; i++) mx = Math.max(mx, Math.abs(a[i] ?? 0), Math.abs(d[i] ?? 0));
+  for (let i = 0; i < n; i++) {
+    const v = ((a[i] ?? 0) * (1 - mix) + (d[i] ?? 0) * mix) / mx;
+    const bh = v * (h * 0.3);
+    ctx.fillStyle = v >= 0 ? 'rgba(141,255,158,.8)' : 'rgba(255,90,107,.8)';
+    ctx.fillRect(x0 + i * bw + 1, mid - Math.max(0, bh), bw - 2, Math.abs(bh));
+  }
+  ctx.strokeStyle = PAL.grid;
+  ctx.beginPath();
+  ctx.moveTo(x0, mid);
+  ctx.lineTo(w - 6, mid);
+  ctx.stroke();
+  ctx.fillStyle = PAL.dim;
+  lab(ctx, w, 6);
+  ctx.textAlign = 'right';
+  ctx.fillText('reflect-about-mean', w - 5, 5);
+  ctx.textAlign = 'left';
+};
+const drawQFT: Drawer = (ctx, w, h, s, t) => {
+  frame(ctx, w, h, 'Q · QFT SPECTRUM');
+  const mag = dftMag(ampEncode(s.quantum));
+  const n = mag.length;
+  const x0 = 6;
+  const bw = (w - 12) / n;
+  const base = h - 10;
+  let mx = 1e-6;
+  for (let i = 1; i < n; i++) mx = Math.max(mx, mag[i] ?? 0); // skip DC for scale
+  for (let i = 0; i < n; i++) {
+    const v = clamp01((mag[i] ?? 0) / mx) * (0.9 + Math.sin(t * 3 + i) * 0.1);
+    ctx.fillStyle = `rgba(255,209,102,${(0.35 + v * 0.55).toFixed(2)})`;
+    ctx.fillRect(x0 + i * bw + 1, base - v * (h - 26), bw - 2, v * (h - 26));
+  }
+  ctx.fillStyle = PAL.dim;
+  lab(ctx, w, 6);
+  ctx.textAlign = 'right';
+  ctx.fillText('freq domain', w - 5, 5);
+  ctx.textAlign = 'left';
+};
+const drawEntangleWeb: Drawer = (ctx, w, h, s, t) => {
+  frame(ctx, w, h, 'Q · ENTANGLE');
+  const q = s.quantum;
+  const n = q.length || 10;
+  const cx = w / 2;
+  const cy = h / 2 + 4;
+  const R = Math.min(w, h) * 0.4;
+  const ent = clamp01(q[1] ?? 0); // ENT aspect strength gates the web density
+  const pts: { x: number; y: number; v: number }[] = [];
+  for (let i = 0; i < n; i++) {
+    const a = (i / n) * Math.PI * 2 + t * 0.3;
+    const v = clamp01(q[i] ?? 0);
+    pts.push({ x: cx + Math.cos(a) * R, y: cy + Math.sin(a) * R, v });
+  }
+  for (let i = 0; i < n; i++)
+    for (let j = i + 1; j < n; j++) {
+      const strength = (pts[i]!.v + pts[j]!.v) * 0.5 * ent;
+      if (strength < 0.18) continue;
+      ctx.strokeStyle = `rgba(185,140,255,${(strength * 0.6).toFixed(2)})`;
+      ctx.lineWidth = strength * 1.5;
+      ctx.beginPath();
+      ctx.moveTo(pts[i]!.x, pts[i]!.y);
+      ctx.lineTo(pts[j]!.x, pts[j]!.y);
+      ctx.stroke();
+    }
+  for (const p of pts) spark(ctx, p.x, p.y, 1.6 + p.v * 4, '108,223,255', 0.3 + p.v * 0.4);
+};
+const drawSuperposWheel: Drawer = (ctx, w, h, s, t) => {
+  frame(ctx, w, h, 'Q · SUPERPOSITION');
+  const q = s.quantum;
+  const n = q.length || 10;
+  const cx = w / 2;
+  const cy = h / 2 + 4;
+  const R = Math.min(w, h) * 0.42;
+  const spin = t * 0.7;
+  ctx.strokeStyle = PAL.grid;
+  ctx.beginPath();
+  ctx.arc(cx, cy, R, 0, Math.PI * 2);
+  ctx.stroke();
+  for (let i = 0; i < n; i++) {
+    const a = (i / n) * Math.PI * 2 + spin;
+    const v = clamp01(q[i] ?? 0);
+    const rr = R * (0.2 + v * 0.8);
+    spark(
+      ctx,
+      cx + Math.cos(a) * rr,
+      cy + Math.sin(a) * rr,
+      1.5 + v * 4,
+      '185,140,255',
+      0.3 + v * 0.5,
+    );
+  }
+};
+const drawQEntropy: Drawer = (ctx, w, h, s, _t, H) => {
+  frame(ctx, w, h, 'Q · ENTROPY');
+  const a = ampEncode(s.quantum);
+  let ent = 0;
+  for (let i = 0; i < a.length; i++) {
+    const p = (a[i] ?? 0) ** 2;
+    if (p > 1e-9) ent -= p * Math.log2(p);
+  }
+  ent /= Math.log2(a.length); // normalize 0..1
+  H.push('qent', clamp01(ent));
+  trail(ctx, H.series('qent'), H.head, 6, 16, w - 6, h - 8, 0, 1, '185,140,255');
+  ctx.fillStyle = PAL.violet;
+  lab(ctx, w, 7);
+  ctx.textAlign = 'right';
+  ctx.fillText('S ' + ent.toFixed(2), w - 5, 5);
+  ctx.textAlign = 'left';
+};
+const drawCollapse: Drawer = (ctx, w, h, s, _t, H) => {
+  frame(ctx, w, h, 'Q · COLLAPSE');
+  // peak aspect = the "measured" basis this beat; show a temporal raster of which collapsed
+  const q = s.quantum;
+  let peak = 0;
+  let pv = -1;
+  for (let i = 0; i < q.length; i++)
+    if ((q[i] ?? 0) > pv) {
+      pv = q[i] ?? 0;
+      peak = i;
+    }
+  H.push('coll', peak);
+  const n = q.length || 10;
+  const cols = HCAP;
+  const cw = (w - 8) / cols;
+  const rh = (h - 18) / n;
+  const ser = H.series('coll');
+  for (let c = 0; c < cols; c++) {
+    const idx = (H.head + 1 + c) % cols;
+    const row = Math.round(ser[idx] ?? 0);
+    const fade = c / cols;
+    ctx.fillStyle = `rgba(108,223,255,${(0.15 + fade * 0.6).toFixed(2)})`;
+    ctx.fillRect(4 + c * cw, 16 + row * rh, cw + 0.6, rh - 1);
+  }
+  ctx.fillStyle = PAL.dim;
+  lab(ctx, w, 6);
+  ctx.textAlign = 'right';
+  ctx.fillText(Q_LABELS[peak] ?? '', w - 5, 5);
+  ctx.textAlign = 'left';
+};
+const drawBloch: Drawer = (ctx, w, h, s, t) => {
+  frame(ctx, w, h, 'Q · STATE SPHERE');
+  const cx = w / 2;
+  const cy = h / 2 + 4;
+  const scale = Math.min(w, h) * 0.36;
+  const ang = t * 0.4;
+  // three rings of the sphere
+  for (let r = 0; r < 3; r++) {
+    ctx.strokeStyle = `rgba(74,52,112,.7)`;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    for (let i = 0; i <= 40; i++) {
+      const a = (i / 40) * Math.PI * 2;
+      const p =
+        r === 0
+          ? project(Math.cos(a), Math.sin(a), 0, ang, cx, cy, scale)
+          : r === 1
+            ? project(Math.cos(a), 0, Math.sin(a), ang, cx, cy, scale)
+            : project(0, Math.cos(a), Math.sin(a), ang, cx, cy, scale);
+      if (i === 0) ctx.moveTo(p.x, p.y);
+      else ctx.lineTo(p.x, p.y);
+    }
+    ctx.stroke();
+  }
+  // state vector from superposition(theta) + entanglement(phi)
+  const theta = clamp01(s.quantum[0] ?? 0) * Math.PI;
+  const phi = clamp01(s.quantum[1] ?? 0) * Math.PI * 2 + t;
+  const p = project(
+    Math.sin(theta) * Math.cos(phi),
+    Math.cos(theta),
+    Math.sin(theta) * Math.sin(phi),
+    ang,
+    cx,
+    cy,
+    scale,
+  );
+  const ctr = project(0, 0, 0, ang, cx, cy, scale);
+  ctx.strokeStyle = 'rgba(141,255,158,.85)';
+  ctx.lineWidth = 1.6;
+  ctx.beginPath();
+  ctx.moveTo(ctr.x, ctr.y);
+  ctx.lineTo(p.x, p.y);
+  ctx.stroke();
+  spark(ctx, p.x, p.y, 5, '141,255,158', 0.8);
+};
+
+// ════════════════════ TAB IV — BRAIN (1 large connectome) ════════════════════
+const BRAIN_NODES = [
+  'CORTEX',
+  'IMAGITRON',
+  'PERCEPTOR',
+  'REASONER',
+  'AFFECT',
+  'QUANTUM',
+  'MEMORY',
+  'DRIVE',
+  'SELF',
+] as const;
+const drawBrain: Drawer = (ctx, w, h, s, t) => {
+  ctx.fillStyle = PAL.bg;
+  ctx.fillRect(0, 0, w, h);
+  ctx.fillStyle = PAL.violet;
+  lab(ctx, w, 9, '600 ');
+  ctx.textBaseline = 'top';
+  ctx.textAlign = 'left';
+  ctx.fillText('IV · BRAIN — composite-mind connectome', 8, 6);
+  const cx = w / 2;
+  const cy = h / 2 + 8;
+  const scale = Math.min(w, h) * 0.34;
+  const ang = t * 0.25;
+  const k = s.consciousness;
+  // node activity (bound to real signals)
+  const act = [
+    avg(s.latent.length ? Array.from(s.latent, (v) => Math.abs(v)) : [0.5]),
+    clamp01(k.dreaming ?? 0),
+    clamp01(k.novelty ?? 0),
+    clamp01(k.reasoning ?? 0),
+    clamp01((k.feeling ?? 0) * 0.5 + 0.5),
+    avg(s.quantum.length ? s.quantum : [0.5]),
+    clamp01(k.hallucinating ?? 0),
+    clamp01(s.emotion.dominance ?? 0.5),
+    clamp01(k.selfAware ?? 0),
+  ];
+  const n = BRAIN_NODES.length;
+  const pts: P3[] = [];
+  for (let i = 0; i < n; i++) {
+    const phi = Math.acos(1 - (2 * (i + 0.5)) / n);
+    const theta = Math.PI * (1 + Math.sqrt(5)) * i;
+    pts.push(
+      project(
+        Math.sin(phi) * Math.cos(theta),
+        Math.cos(phi),
+        Math.sin(phi) * Math.sin(theta),
+        ang,
+        cx,
+        cy,
+        scale,
+      ),
+    );
+  }
+  // edges — every pair, brightness = product of activities + a travelling signal pulse
+  const pulse = frac(t * 0.4);
+  for (let i = 0; i < n; i++)
+    for (let j = i + 1; j < n; j++) {
+      const strength = (act[i]! + act[j]!) * 0.5;
+      if (strength < 0.12) continue;
+      const near = ((pts[i]!.d + pts[j]!.d) / 2 + 1) / 2;
+      ctx.strokeStyle = `rgba(185,140,255,${(strength * 0.5 * near).toFixed(2)})`;
+      ctx.lineWidth = 0.6 + strength * 1.6 * near;
+      ctx.beginPath();
+      ctx.moveTo(pts[i]!.x, pts[i]!.y);
+      ctx.lineTo(pts[j]!.x, pts[j]!.y);
+      ctx.stroke();
+      // travelling pulse along this edge
+      const pp = (pulse + (i + j) * 0.11) % 1;
+      const px = pts[i]!.x + (pts[j]!.x - pts[i]!.x) * pp;
+      const py = pts[i]!.y + (pts[j]!.y - pts[i]!.y) * pp;
+      spark(ctx, px, py, 1 + strength * 2.5, '141,255,158', strength * 0.5 * near);
+    }
+  // nodes
+  for (let i = 0; i < n; i++) {
+    const p = pts[i]!;
+    const v = clamp01(act[i] ?? 0);
+    const near = (p.d + 1) / 2;
+    spark(ctx, p.x, p.y, 4 + v * 10 * near, '185,140,255', 0.2 + v * 0.5);
+    ctx.fillStyle = `rgba(216,184,255,${(0.5 + v * 0.5).toFixed(2)})`;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, 2.4 + v * 2, 0, Math.PI * 2);
+    ctx.fill();
+    if (near > 0.36) {
+      ctx.fillStyle = PAL.text;
+      lab(ctx, w, 7);
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'bottom';
+      ctx.fillText(BRAIN_NODES[i] ?? '', p.x, p.y - 6);
+      ctx.textBaseline = 'top';
+    }
+  }
+  ctx.textAlign = 'left';
+};
+
+// ── tab → drawer assignment ──────────────────────────────────────────────────────────────────
+const TABS: readonly Drawer[][] = [
+  [
+    drawLatentRing,
+    drawLatentSpectrum,
+    drawLatentHeat,
+    drawImagination,
+    drawNoveltyField,
+    drawWorldSphere,
+    drawLatentNorm,
+    drawPerceptRadar,
+    drawSensoryWheel,
+  ],
+  [
+    drawPipeline,
+    drawConsciousness,
+    drawEmotionCube,
+    drawTreeOfThought,
+    drawReasonFlow,
+    drawSurpriseTL,
+    drawDriveVectors,
+    drawSelfGauge,
+    drawEmotionTrail,
+  ],
+  [
+    drawQuantumCrown,
+    drawAmplitudes,
+    drawGrover,
+    drawQFT,
+    drawEntangleWeb,
+    drawSuperposWheel,
+    drawQEntropy,
+    drawCollapse,
+    drawBloch,
+  ],
+  [drawBrain],
+];
+
+/**
+ * The Super Creature's neural observatory, rendered INTO a host element owned by {@link SuperPanel}
+ * (so it is the SAME box). Owns a self-driven rAF loop while {@link setActive}(true).
+ */
+export class SuperNeural {
+  private readonly host: HTMLElement;
+  private readonly tabsEl: HTMLElement;
+  private readonly gridEl: HTMLElement;
+  private readonly footEl: HTMLElement;
+  private readonly tabBtns: HTMLElement[] = [];
+  private cells: HTMLElement[] = [];
+  private ctxs: CanvasRenderingContext2D[] = [];
+  private tab = 0;
+  private active = false;
+  private snap: Snap | null = null;
+  private readonly hist = makeHist();
+  private dpr = Math.min(2, typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1);
+  private raf = 0;
+  private frameN = 0;
+
+  constructor(host: HTMLElement, doc: Document = document) {
+    this.host = host;
+    if (!doc.getElementById('cqm-sneu-style')) {
+      const style = doc.createElement('style');
+      style.id = 'cqm-sneu-style';
+      style.textContent = STYLE;
+      doc.head.appendChild(style);
+    }
+    const root = doc.createElement('div');
+    root.className = 'cqm-sneu';
+    root.innerHTML =
+      `<div class="cqm-sneu-tabs" data-tabs></div><div class="cqm-sneu-grid" data-grid></div>` +
+      `<div class="cqm-sneu-foot" data-foot></div>`;
+    host.appendChild(root);
+    this.tabsEl = root.querySelector('[data-tabs]') as HTMLElement;
+    this.gridEl = root.querySelector('[data-grid]') as HTMLElement;
+    this.footEl = root.querySelector('[data-foot]') as HTMLElement;
+
+    for (let i = 0; i < TAB_LABELS.length; i++) {
+      const b = doc.createElement('button');
+      b.className = 'cqm-sneu-tab';
+      b.type = 'button';
+      b.textContent = TAB_LABELS[i] ?? '';
+      b.addEventListener('click', () => this.setTab(i));
+      this.tabsEl.appendChild(b);
+      this.tabBtns.push(b);
+    }
+    this.buildGrid(doc);
+    this.setTab(0);
+  }
+
+  private buildGrid(doc: Document): void {
+    this.gridEl.innerHTML = '';
+    this.cells = [];
+    this.ctxs = [];
+    const drawers = TABS[this.tab] ?? [];
+    this.gridEl.classList.toggle('brain', this.tab === 3);
+    for (let i = 0; i < drawers.length; i++) {
+      const cell = doc.createElement('div');
+      cell.className = 'cqm-sneu-cell';
+      const cv = doc.createElement('canvas');
+      cell.appendChild(cv);
+      this.gridEl.appendChild(cell);
+      this.cells.push(cell);
+      const c = cv.getContext('2d');
+      if (c) this.ctxs.push(c);
+    }
+  }
+
+  setTab(i: number): void {
+    this.tab = Math.max(0, Math.min(TABS.length - 1, i));
+    this.tabBtns.forEach((b, k) => b.classList.toggle('on', k === this.tab));
+    this.buildGrid(this.host.ownerDocument ?? document);
+  }
+
+  setActive(v: boolean): void {
+    this.active = v;
+    if (v) this.startLoop();
+    else this.stopLoop();
+  }
+
+  /**
+   * Push the latest composite-mind snapshot. The rAF loop animates BETWEEN pushes on a live screen;
+   * we ALSO paint once on arrival so the views still render when rAF is throttled (a backgrounded /
+   * hidden tab pauses rAF). Cheap — only when the box is in neural mode.
+   */
+  update(snap: Snap | null): void {
+    this.snap = snap;
+    if (!snap) return;
+    this.footEl.innerHTML = `<b>${snap.plan}</b> · ${snap.paramCount}p · ${snap.stages}st × ${snap.depths}d × ${snap.variants}v · ${snap.organs} organs`;
+    if (this.active) {
+      const now = typeof performance !== 'undefined' ? performance.now() : 0;
+      this.paint(now / 1000);
+    }
+  }
+
+  private startLoop(): void {
+    if (!this.raf) this.raf = requestAnimationFrame(this.tick);
+  }
+  private stopLoop(): void {
+    if (this.raf) cancelAnimationFrame(this.raf);
+    this.raf = 0;
+  }
+  private lastPaint = 0;
+  private readonly tick = (ts: number): void => {
+    this.raf = 0;
+    if (!this.active || !this.host.isConnected) return;
+    this.raf = requestAnimationFrame(this.tick);
+    // ~30 fps cap: repaint at most every 33 ms so 9 live canvases never fight the WebGL render loop.
+    if (ts - this.lastPaint < 33) return;
+    this.lastPaint = ts;
+    this.paint(ts / 1000);
+  };
+
+  private paint(t: number): void {
+    const snap = this.snap;
+    if (!snap) return;
+    // history advances once per rendered frame so temporal views flow; set head BEFORE drawers push
+    this.frameN++;
+    this.hist.head = this.frameN;
+    const drawers = TABS[this.tab] ?? [];
+    for (let i = 0; i < this.ctxs.length; i++) {
+      const ctx = this.ctxs[i];
+      const drawer = drawers[i];
+      const cell = this.cells[i];
+      if (!ctx || !drawer || !cell) continue;
+      const cw = Math.floor(cell.clientWidth);
+      const chh = Math.floor(cell.clientHeight);
+      if (cw < 8 || chh < 8) continue;
+      this.size(ctx, cw, chh);
+      drawer(ctx, cw, chh, snap, t, this.hist);
+    }
+  }
+
+  private size(ctx: CanvasRenderingContext2D, w: number, h: number): void {
+    const cv = ctx.canvas;
+    if (cv.width !== w * this.dpr || cv.height !== h * this.dpr) {
+      cv.width = w * this.dpr;
+      cv.height = h * this.dpr;
+    }
+    ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
+  }
+}
