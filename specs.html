@@ -14,7 +14,7 @@
     />
     <meta
       property="og:description"
-      content="10,000 agents at 60 fps on integrated graphics. 634 tests, 95.6% coverage. ~700K total AI parameters — engineered intelligence, not parameter count."
+      content="10,000 agents at 60 fps on integrated graphics. 942 tests, 95.6% coverage. ~700K total AI parameters — engineered intelligence, not parameter count."
     />
     <meta name="theme-color" content="#030612" />
     <style>
@@ -298,7 +298,7 @@
   <body>
     <header class="hero">
       <div class="wrap">
-        <div class="eyebrow">Technical Specification · v0.9.0 · measured 2026-06-13</div>
+        <div class="eyebrow">Technical Specification · v0.10.0 · measured 2026-06-15</div>
         <h1>Cosmogonic Quantum Mechalogodrom</h1>
         <p class="lede">
           A single-page, single-language (TypeScript) simulation that renders up to
@@ -332,7 +332,7 @@
             <div class="l">files · 26 folders</div>
           </div>
           <div class="stat">
-            <div class="n gd">634</div>
+            <div class="n gd">942</div>
             <div class="l">tests · 95.6% cov</div>
           </div>
           <div class="stat">
@@ -512,7 +512,17 @@ server.ts ──serves──▶  /  (app)   /docs   /spec   /lab</pre
             <td class="r">144 weights</td>
           </tr>
           <tr>
-            <td>Quantum register</td>
+            <td>Super Creature mind (V45)</td>
+            <td>composite · 12 sub-nets · 5 stages × 25 variants</td>
+            <td class="r">~10,081 weights</td>
+          </tr>
+          <tr>
+            <td>Super Creature quantum mind (V75)</td>
+            <td>6-qubit statevector · RY/RZ + controlled-RY</td>
+            <td class="r">64 amplitudes</td>
+          </tr>
+          <tr>
+            <td>Quantum register (puppet-master)</td>
             <td>5-qubit statevector</td>
             <td class="r">32 amplitudes</td>
           </tr>
@@ -522,7 +532,12 @@ server.ts ──serves──▶  /  (app)   /docs   /spec   /lab</pre
           chains · episodic memory · game theory (best-response, Axelrod strategies,
           regret-matching). The NHI super-mind composes all of it and <b>writes to the world</b> —
           spawns mutated swarms, manipulates factions, plans a multi-step GOAP scheme toward
-          dominion, hallucinates an alien dialect.
+          dominion, hallucinates an alien dialect. The always-active <b>Super Creature</b> goes
+          deeper still: a ~10,081-parameter composite consciousness (a Thaler creativity machine
+          over 12 sub-nets, 5 stages × 25 thought variants) plus a real
+          <b>6-qubit quantum-computing mind</b>
+          (<code>src/sim/super-qubits.ts</code>) whose Born-sampled "thought collapse" feeds the
+          unified 4-tab neural observatory — all deterministic on dedicated seeded streams.
         </p>
 
         <h2 style="margin-top: 28px"><span class="tag">06</span> Contrast — this world vs. LLMs</h2>
@@ -647,7 +662,7 @@ server.ts ──serves──▶  /  (app)   /docs   /spec   /lab</pre
         <h2><span class="tag">09</span> Build, CI/CD &amp; quality</h2>
         <p>
           <b>Gate (every commit):</b>
-          <code>prettier → tsc strict → oxlint → 634 tests → bun build</code>. Coverage ≥ 90% line /
+          <code>prettier → tsc strict → oxlint → 942 tests → bun build</code>. Coverage ≥ 90% line /
           85% function (measured 95.6 / 90.5). <b>Build:</b> Bun bundles 3 HTML entrypoints
           (<code>index.html</code>, <code>docs.html</code>, <code>specs.html</code>) →
           <code>dist/</code>. <b>CI/CD:</b> GitHub Actions runs the gate + builds and deploys the
