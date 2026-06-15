@@ -7,7 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-_Nothing yet — the V10–V78 "Living Era" work below shipped in 0.10.0._
+_Nothing yet._
+
+## [0.10.1] - 2026-06-15
+
+Post-`0.10.0` patch — CI/CD unblock + the wide/4K HUD typography & framing pass (the user's "why does
+it look like THIS on GitHub Pages" report). No simulation/behaviour change; same-seed determinism intact.
+
+### Fixed
+
+- **The WebUI deploy was silently failing (CI/CD).** The `github-pages` environment's deployment-branch
+  policy allowed only `gh-pages` + `master`, not the default branch `main`, so every Pages run BUILT
+  fine and was then REJECTED at the deploy step — CI + CodeQL stayed green, masking it, while the live
+  docs/specs/app went stale. Added `main` to the policy; the live site now publishes on every push.
+- **Typography inconsistent at ≥1900px ("the fonts are off on sizes comparing").** The bottom-right
+  readout boxes (`#hud-vsr` Sim-Settings, `#alg` sorting field) were locked at a fixed 11px while the
+  10-foot TV block scaled every other panel to ~16–22px. They now use the shared `--text-*` tokens,
+  and the 10-foot block is **gated to `(pointer: coarse)`** — so fine-pointer DESKTOP monitors
+  (1920/2560/4K-at-OS-scaling) keep the consistent normal type scale instead of compounding the bump
+  with width ("it does the stupid shit when it grows").
+- **Bottom-right corner overlaps on short/wide landscape.** The center-HUD nav launcher sank ~12px into
+  the `#bar` toolbar and the control pad clipped it; lifted the launcher to clear the toolbar and
+  re-gapped the corner. Overlaps verified NONE at 1920×1080, 2560×1080, and 1440×2560 portrait.
+
+### Changed
+
+- **GitHub Actions upgraded to Node-24 releases** across all four workflows, ahead of the 2026-06-16
+  Node-20 runner deprecation.
+- **`/docs` + `/spec` WebUI pages brought current** to the v0.10.0 "Living Era" state.
 
 ## [0.10.0] - 2026-06-15
 
