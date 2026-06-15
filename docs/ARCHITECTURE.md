@@ -292,8 +292,10 @@ flowchart LR
   ab -. "level → setBreath" .-> q
 ```
 
-Cadences — V1 rows straight from the legacy loop, V2 rows from
-MODULE-CONTRACTS.md §Frame pipeline V2:
+The flowchart above is the **V1/V2 core**. The V10–V70 systems interleave on their own cadences
+(verified against `world.ts`); the full as-built per-stage frame order is in
+[BOOK.md §A](./BOOK.md). Cadences — V1 rows from the legacy loop, V2 rows from MODULE-CONTRACTS.md
+§Frame pipeline V2, V10+ rows verified against `world.ts`:
 
 | Step                        | Cadence                                                                                                                              |
 | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
@@ -310,6 +312,12 @@ MODULE-CONTRACTS.md §Frame pipeline V2:
 | Analytics (V2)              | `push()` every 8th frame (with telemetry); `analyze()` every 60th frame                                                              |
 | Constellations (V2)         | Every frame — O(1) opacity/pulse only (Voronoi built once at construction)                                                           |
 | Audio band poll (V2)        | Every frame — O(128) analyser read, zeros until audio is initialized                                                                 |
+| Economy tick (V13)          | Every 30th frame, offset 15 — sanctions + clearing market on its own `econRng` sub-stream                                            |
+| Chaos-field (V62)           | Every frame when engaged (Lorenz + tunnel/entangle/superpose on a stride-3 slice); inert + rng-silent when off                       |
+| Singularity force (V7.4)    | Every frame while a hole is summoned — r⁻² force + time-dilation; raises `state.chaos` (V64)                                         |
+| NHI beat (V10)              | Each launched NHI mind thinks every 18th frame; bodies steer every frame                                                             |
+| Super-creature mind (V46)   | Every 4th frame — `driveSuper`: percept → ~10k-param think → body + powers                                                           |
+| Gravitational lens (V60)    | Every frame — full-screen post-FX pass; pixel-exact passthrough when no hole is active                                               |
 
 ## Data flow
 
