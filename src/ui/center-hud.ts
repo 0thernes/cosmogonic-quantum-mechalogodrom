@@ -203,6 +203,14 @@ ${VIS_SEL} {
   position: static;
   width: 100%;
 }
+/* V80b: in CYCLER mode (portrait / narrow / touch — there is NO tab row to sit above) the columns
+   dissolve via display:contents below, so without this LAB/SPEC/DOCS would VANISH entirely. Keep
+   them ACCESSIBLE inline in the launcher — their pre-V80 home — so a portrait-monitor user never loses
+   Docs/Spec/Lab; only the genuinely-narrow nolinks / ≤520px tiers still drop them (same as before). */
+#cqm-hud-nav:not(.cqm-hud-tabs):not(.cqm-hud-nolinks) .cqm-hud-link {
+  display: inline-flex;
+  align-items: center;
+}
 #cqm-hud-nav:not(.cqm-hud-tabs) .cqm-hud-col {
   display: contents;
 }

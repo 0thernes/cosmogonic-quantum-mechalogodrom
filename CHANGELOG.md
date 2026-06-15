@@ -9,6 +9,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 _Nothing yet._
 
+## [0.10.3] - 2026-06-15
+
+Post-`0.10.2` patch — center-HUD cycler-mode link fallback. No simulation/behaviour change; same-seed
+determinism intact.
+
+### Fixed
+
+- **DOCS / SPEC / LAB kept accessible in the ‹ CURRENT › cycler (portrait / narrow / touch).** `0.10.2`
+  lifted the three page links into a column ABOVE their tab, but in cycler mode there is no tab row to
+  sit above — the column dissolves to `display: contents` and the links were left at their `display:
+none` default, so on a **portrait monitor** (the 1440×2560 QHD case) Docs/Spec/Lab disappeared
+  entirely. They now fall back to inline buttons in the launcher — their pre-`0.10.2` home — whenever the
+  cycler isn't in its genuinely-narrow no-links tier, so the measured drop-when-it-won't-fit cascade is
+  unchanged.
+
 ## [0.10.2] - 2026-06-15
 
 Post-`0.10.1` patch — center-HUD launcher ergonomics. No simulation/behaviour change; same-seed
