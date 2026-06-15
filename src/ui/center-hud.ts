@@ -78,7 +78,10 @@ ${VIS_SEL} {
   width: max-content;
   max-width: calc(100vw - 16px);
   margin-inline: auto;
-  bottom: var(--cqm-nav-bottom, 50px);
+  /* V79: 66px clears the #bar toolbar (bottom:6 + ~56px tall ⇒ its top sits ~62px off the bottom);
+     the old 50px let the launcher pill sink ~12px INTO the toolbar on a short landscape window (the
+     1920×1080 deploy) — the two glass bars overlapped. They now stack with a 4px gap. */
+  bottom: var(--cqm-nav-bottom, 66px);
   z-index: 73;
   display: flex;
   align-items: center;
