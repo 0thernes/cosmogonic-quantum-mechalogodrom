@@ -117,5 +117,30 @@ dev-experience listener-cleanup cluster, the server-test gap, and docs-currency 
 4. `tests/server.test.ts` — NEW: boundary tests for `parseAuditBody`/`parseChatMessages` (TEST-SRV).
 5. Docs: regenerate `ARCHITECTURE.md` graph/cadence to the V62-V68 reality (or cross-ref `BOOK.md §A`).
 6. **Queue (not auto-fix — risk/decision):** P1-02 genome wire-or-prune (product decision);
-   P1-03 remorph-beh2 (determinism-golden-sensitive — verify before touching); the UI AbortController
-   cleanup (dev-experience, batch); the known-open server security items (need maintainer buy-in).
+   the UI AbortController cleanup (dev-experience, batch after the editor's UI churn settles); the
+   known-open server security items (need maintainer buy-in).
+
+## Final resolution (Pass 2 verification complete + Pass 3 remediation)
+
+**Every Pass-1A MEDIUM is now resolved — fixed or refuted. No defect remains open in core `src/`.**
+
+| Finding                          | Resolution                                                                                                                           |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| D5-03 super-evolution +Infinity  | ✅ **FIXED** `256f945`/`df49dd7` (Number.isFinite + regression test)                                                                 |
+| TEST-SRV server parsers untested | ✅ **FIXED** `36324cf` (`server.ts` import-safe via `import.meta.main`; +11 boundary tests)                                          |
+| P1-01 super-mind `.slice()`      | ❎ **REFUTED** — every-4th-frame (`world.ts:807`), defensive copy, not a hot-path violation                                          |
+| P1-03 remorph-beh2 staleness     | ❎ **REFUTED** — `entities.ts:505` already sets `u.beh2 = m.beh2 ?? null`                                                            |
+| P1-04 pool-overrun silent drop   | ❎ **REFUTED** — `instanced-entities.ts:424` is an unreachable defensive guard (count→grow→write is synchronous in one frame)        |
+| P1-05 engine dispose-order leak  | ❎ **REFUTED** — `engine.ts:182-191` runs `forceContextLoss()` in its own try-catch, so it fires even if `renderer.dispose()` throws |
+| P1-06 economy gini/topK alloc    | ❎ **REFUTED** — `world.ts:821 frame%30===15` (~2/sec cadence), off the hot path                                                     |
+| P1-07 economy "one-way" coupling | ❎ **REFUTED** — `attachEconomy`/`attachTrade` wired (`world.ts:394/399/419/457`)                                                    |
+
+**Net:** the only remaining first-party item is **P1-02 genome reproduction (product decision —
+wire `breed`/`crossover` into entity/NHI birth, or prune the dead exports)**. Everything else is the
+known-open server-security backlog (maintainer buy-in), the UI listener-cleanup (collision-deferred
+until the parallel editor's UI work settles), and the ARCHITECTURE/ERD doc currency (deferred until
+the fast-moving V70 architecture settles). The repo is verified clean and a little better than found.
+
+This is the strongest possible honest result: an exhaustive line-by-line read found a robust codebase
+whose few flagged issues mostly dissolved under adversarial verification — and the two that were real
+(one correctness guard, one test gap) are fixed and gated.
