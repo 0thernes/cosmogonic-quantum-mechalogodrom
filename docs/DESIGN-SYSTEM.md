@@ -280,11 +280,11 @@ Container is `role="toolbar"` + `aria-label="Simulation toolbar"` with a
 
 ### NavLink (Docs · `/lab`)
 
-Anchor styled as a toolbar button but in the **accent (cyan) family** —
-navigation is visually distinct from simulation actions. `/lab` sits in
-`#bar` (aria-label "Open the Quantum Wildbeyond lab artifact"); Docs floats
-bottom-right. States: default → hover (`accent/10` fill, `accent/40`
-border, full-accent text) → `active:` fill.
+Anchor styled in the **accent (cyan) family** — navigation is visually
+distinct from simulation actions. As of V51 the `/lab`, `/docs`, and `/spec`
+nav links all live in the **bottom dock** (`ui/panel-dock.ts` adopts them
+there); the toolbar `#bar` is purely world controls. States: default → hover
+(`accent/10` fill, `accent/40` border, full-accent text) → `active:` fill.
 
 ### ControlPad key (`#cP [data-a]`)
 

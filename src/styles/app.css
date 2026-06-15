@@ -528,25 +528,28 @@ a:focus-visible {
 #sP {
   grid-area: tel;
 }
-/* V51: AUDIT is no longer a left-column grid panel — it's a dock-toggled fixed overlay (ui/audit-dock.ts
-   adds the 🗒 AUDIT button to the bottom dock; click toggles `.audit-on`), so it stops crowding SORTING
-   FIELDS. Scoped to fine-pointer WIDE screens (the grid range) so the mobile `.sheet` slide-out is
-   untouched; `#aP` id-specificity beats `#ui > section { display: flex }` to keep it hidden by default. */
-@media (pointer: fine) and (min-width: 769px) {
-  /* `#ui > #aP` (2,0,0) is needed to beat `#ui > section { display: flex }` (1,0,1) — a plain `#aP`
-     (1,0,0) loses, so the panel would never hide. */
-  #ui > #aP {
-    position: fixed;
-    right: 10px;
-    bottom: 112px;
-    z-index: 59;
-    width: min(94vw, 340px);
-    max-height: 52vh;
-    display: none;
-  }
-  #ui > #aP.audit-on {
-    display: flex;
-  }
+/* V51/V53: AUDIT is a dock-toggled fixed overlay on EVERY viewport — like the other dock panels
+   (NEURAL/MARKET/ARCHITECT/…), NOT a left-column grid panel and NOT an edge sheet. So it never crowds
+   SORTING FIELDS, and the 🗒 AUDIT dock button works on mobile + PORTRAIT too (V52 review: the old
+   fine-pointer-only scope co-applied with sheet mode on a fine-pointer portrait monitor and left audit
+   off-screen/inaccessible). `#ui > #aP` (2,0,0) beats `#ui > section { display:flex }` (1,0,1) AND
+   `.sheet`/`.sheet-r` (≤0,2,0); `transform:none` undoes the off-screen `.sheet-r` translate; the panel's
+   own AUD slide-out handle is hidden since the dock button is now the single control. */
+#ui > #aP {
+  position: fixed;
+  right: 10px;
+  bottom: 128px;
+  z-index: 59;
+  width: min(94vw, 340px);
+  max-height: 52vh;
+  transform: none;
+  display: none;
+}
+#ui > #aP.audit-on {
+  display: flex;
+}
+#aP > .sheet-handle {
+  display: none;
 }
 #oP {
   grid-area: obs;
@@ -914,18 +917,8 @@ a:focus-visible {
   .sheet-handle {
     display: none;
   }
-  /* V51: AUDIT stays a dock-toggled overlay on the wide TV too — `#ui > #aP` (2,0,0) beats both
-     `.sheet { position: static }` and `#ui > section { display: flex }`; the readout stays fixed. */
-  #ui > #aP {
-    position: fixed;
-    display: none;
-  }
-  #ui > #aP.audit-on {
-    display: flex;
-  }
-  #ui > #alg {
-    position: fixed;
-  }
+  /* V53: AUDIT (#aP overlay) + the #alg readout are now positioned UNCONDITIONALLY above (works on
+     every viewport incl. this TV block), so no per-breakpoint override is needed here. */
   #ui > section {
     max-height: clamp(300px, 48vh, 60vh);
   }

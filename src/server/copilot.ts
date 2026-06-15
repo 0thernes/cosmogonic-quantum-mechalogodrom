@@ -188,9 +188,10 @@ function defaultProvider(): ResolvedProvider {
 }
 
 /**
- * Every provider the box may offer right now: the env `custom` (if set, first/default), a running
- * `freellmapi` (if `FREELLMAPI_BASE` set), then each curated preset that is callable (key-less or
- * keyed-with-key-present). Labels + ids only — no endpoints or keys leak to the client beyond the host.
+ * Every provider the box may offer right now: the env `custom` (if set, first/default), **FreeLLMAPI**
+ * (always present now — the primary; defaults to the localhost:3001 proxy), then each curated preset
+ * that is callable (key-less or keyed-with-key-present). Labels + ids only — no endpoints or keys leak
+ * to the client beyond the host.
  */
 export function availableProviders(): { id: string; label: string; def: boolean }[] {
   const def = defaultProvider();
@@ -408,8 +409,10 @@ export async function runAgent(history: ChatMessage[], providerId?: string): Pro
       const reply = await runLoop(prov, history, steps);
       // Suppress the failover note when the only thing skipped was the IMPLICIT FreeLLMAPI proxy (not
       // running) → the key-less backup answering is the expected default out of the box, not an error.
+      // But if the user EXPLICITLY picked a provider (providerId set), always show the note so they know
+      // their choice failed over.
       const skippedImplicitProxy =
-        order[0]?.id === 'freellmapi' && !freellmapiConfigured() && i === 1;
+        !providerId && order[0]?.id === 'freellmapi' && !freellmapiConfigured() && i === 1;
       const note =
         i === 0 || skippedImplicitProxy
           ? ''
