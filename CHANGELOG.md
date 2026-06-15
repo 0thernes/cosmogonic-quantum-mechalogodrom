@@ -56,6 +56,39 @@ the full gate (now also a coverage gate, on Linux + Windows) with same-seed dete
 
 ### Added
 
+- **The NEURAL · QUANTUM tab binds the real simulated-qubit mind (V76–V77)** — the directive's "Super
+  Creature has a Quantum Computing Mind · Simulated Qubits (study the Eshkol + Tsotchke repos)". The
+  Super Creature now owns a genuine **6-qubit statevector register** (`src/sim/super-qubits.ts`,
+  `QuantumMind` → 64 complex amplitudes) the composite mind drives each beat: a parameterised circuit
+  encodes its 16-d world-model latent + 10 reactive aspects into RY/RZ rotations and tunable
+  controlled-RY entanglers, the state evolves under real unitary gates, and a non-destructive Born
+  sample reads a "thought collapse" — all deterministic from a dedicated seeded `Rng` (no
+  `Math.random`/`Date.now`), so the whole quantum psyche replays from a seed. The honest math: Bloch
+  vectors from the true single-qubit reduced density matrices, entanglement = mean reduced-state purity
+  deficit (1 − |r|²), entropy = normalized Shannon entropy of the Born distribution. The Observatory's
+  **III · QUANTUM** tab was rewired off the 10 aspect scalars onto this real register
+  (`SuperMindSnapshot.qubits`): a phase-hued |ψ|² **STATEVECTOR** over all 64 basis states, every
+  qubit's **BLOCH** vector in 3D (own hue, length = purity), live **ENTROPY** + equatorial-coherence
+  trails, the Born-sampled basis state per beat as a temporal **COLLAPSE** raster (`|bits⟩`), an
+  **ENTANGLE** web whose density tracks the live purity-deficit metric, and a **SUPERPOSITION** wheel of
+  per-qubit P(|1⟩). The aspect-side CROWN/GROVER/QFT echoes keep mirroring the deterministic
+  `src/math/quantum.ts` primitives. Null-safe throughout (`s.qubits?.x ?? default`). Verified live: 9/9
+  QUANTUM canvases paint real per-canvas variance, clean boot, zero duplicate ids. Full gate green
+  (tsc 0, oxlint 0, 942 tests, 7 artifacts). `src/sim/super-qubits.ts`, `src/sim/super-mind.ts`,
+  `src/ui/super-neural.ts`.
+- **Bottom-right corner re-wireframed — Sim-Settings enlarged, controls centred, zero overlap at
+  every width (V76)** — directive: "move Song to the Music/SFX box · the Sorting-Algo box needs
+  variance + data-visuals not just a counter · the Simulation-Settings box bigger to read · centre the
+  controls in the little bottom-right empty corner · takes space, no touching, no overlapping, adjusts
+  as the window changes." The View/Speed/Render/Music/SFX/**Song**/Resets readout is now a titled
+  **SIM · SETTINGS** card with larger type; the sorting field carries a live swap-variance
+  **sparkline** (`#g-alg`, a real data-visual, not just a step count); and the **Control pad** left the
+  `#ui` grid for a centred fixed cluster pinned in the empty corner — right of the `#bar` toolbar, left
+  of the `#alg`/`#hud-vsr` readout column, below the observatory. The two readout boxes are locked to a
+  fixed-px font so they no longer scale with the panels' container-query type unit; a constant box size
+  keeps the corner gaps overlap-free at EVERY desktop width, not just 1440. Verified live: zero pairwise
+  overlaps among `#cP`/`#alg`/`#hud-vsr`/`#oP`/`#bar` at 1280, 1440 and 1920, control pad visible and
+  centred at each. `index.html`, `src/styles/app.css`, `src/ui/hud.ts`.
 - **Super Neural folds into the Super Creature box — 4 tabs, 27 visuals + a BRAIN (V75)** — user
   feedback: "Super Creature / Super Neural should be in the SAME box, not a 2nd window … 9 windows not
   6 … tabs 1/2/3 for 27 data visuals, tab 4 a BRAIN … 3D is cool and temporal is nice … no overflow."

@@ -1,4 +1,4 @@
-# The AI Subsystem (V9) — pre-transformer minds + the read-only Copilot
+# The AI Subsystem (V76) — pre-transformer minds, a quantum register, + the read-only Copilot
 
 > How "intelligence" works in the Cosmogonic Quantum Mechalogodrom, and why it is split in two.
 > Companion to [research/PRE-TRANSFORMER-GAME-AI.md](research/PRE-TRANSFORMER-GAME-AI.md) (the
@@ -93,6 +93,42 @@ The composition root assigns a faction + genome per organism and maps the return
 steering force; reproduction calls `breed` + `lineage.birth`. The leaves stay free of three.js and
 sim state so they remain acyclic and unit-testable.
 
+### `src/sim/super-mind.ts` + `src/sim/super-qubits.ts` — the apex creature's deep mind
+
+Where the population runs on tiny per-organism MLPs, the single **Super Creature** carries a far
+larger composite mind (`SuperMind`): a world-model latent, a five-stage cognition pipeline,
+consciousness / emotion / drive readouts, and a 10-element bank of reactive "quantum aspects"
+(superposition, entanglement, ftl, … mutation). It exposes a read-only `SuperMindSnapshot` at the
+Observatory cadence — never per beat — which the in-box NEURAL observatory (`src/ui/super-neural.ts`,
+4 tabs × 9 readouts) paints. See [ADR-0008](adr/0008-super-creature-deep-mind.md).
+
+Bolted onto that composite mind is a genuine **quantum-computing layer** (`QuantumMind`, V76): a
+**6-qubit statevector register** (`src/math/quantum.ts` `QuantumRegister` → 2⁶ = 64 complex
+amplitudes). Each cognitive beat it rebuilds the state from |0…0⟩ and applies `QMIND_LAYERS` layers of
+single-qubit RY/RZ rotations (angles read from the mind's world-model latent), Hadamards gated by the
+superposition aspect, and a tunable controlled-RY entangler ring (strength from the entanglement
+aspect), then takes one non-destructive Born sample — the "collapsed thought". It is **fully
+deterministic**: a dedicated seeded `Rng` stream (so quantum sampling never perturbs sim determinism),
+no `Math.random` / `Date.now`, ~90 gates × 64 amplitudes ≈ 5.8k complex mults per beat, allocation-free
+in the hot path. The honest-math telemetry (`QubitSnapshot`, built only at UI cadence):
+
+```
+probs[64]      |αᵢ|²  Born-rule probabilities over the basis states
+phase[64]      arg(αᵢ) for phase colouring
+bloch[6]       per-qubit (x,y,z,r) from the TRUE single-qubit reduced density matrices
+p1[6]          P(|1⟩) = (1 − ⟨Z⟩)/2 per qubit
+entropy        normalized Shannon entropy of the Born distribution (1 = uniform superposition)
+entanglement   mean reduced-state purity deficit 1 − |r|²  (linear entanglement entropy)
+coherence      mean equatorial Bloch magnitude √(x²+y²)   (live superposition strength)
+sampled        index of the last Born sample · sampledBits its qubit bitstring
+```
+
+The study of the **Eshkol** qubit-RNG (phase array + noise) and the **Quantum-Geometric-Tensor**
+library (statevector + RY/RZ/CNOT gate set + amplitude amplification) informed the design; nothing is
+reimplemented from them — we own the 64-amplitude statevector outright. The Observatory's III · QUANTUM
+tab binds this register directly (statevector / Bloch / entropy / collapse / entangle / superposition),
+with aspect-side Grover-diffusion + QFT-spectrum echoes that mirror the same `src/math/quantum.ts` math.
+
 ## The Copilot (non-deterministic shell)
 
 A side panel to "ask, learn, and talk about this world" with a free AI — strictly read-only.
@@ -149,6 +185,7 @@ enforced in the server process, so a fully-compromised model still cannot escape
 ## Provenance
 
 Research → design: [research/PRE-TRANSFORMER-GAME-AI.md](research/PRE-TRANSFORMER-GAME-AI.md).
-Modules + tests: `src/sim/ai/brains.ts`, `src/sim/genome.ts`, `src/sim/lineage.ts`,
-`src/sim/factions.ts`, `src/server/{copilot,ai-sandbox}.ts`, `src/ui/copilot.ts`, and their
-`tests/*.test.ts`.
+Apex mind: [ADR-0008](adr/0008-super-creature-deep-mind.md). Modules + tests: `src/sim/ai/brains.ts`,
+`src/sim/genome.ts`, `src/sim/lineage.ts`, `src/sim/factions.ts`, `src/sim/super-mind.ts`,
+`src/sim/super-qubits.ts`, `src/math/quantum.ts`, `src/server/{copilot,ai-sandbox}.ts`,
+`src/ui/{copilot,super-neural,super-panel}.ts`, and their `tests/*.test.ts`.

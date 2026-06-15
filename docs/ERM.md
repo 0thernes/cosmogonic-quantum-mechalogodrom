@@ -10,11 +10,13 @@ The Mechalogodrom has **no database**. Its "entities" live in scene graphs, type
 them each frame. The relational structure is real all the same, and modeling it makes the data flow
 auditable.
 
-> **Scope (V1–V13 core vs V14–V70):** this models the V1–V13 core relational structure. The later
+> **Scope (V1–V13 core vs V14–V77):** this models the V1–V13 core relational structure. The later
 > intelligence + cosmology systems hold mostly **transient per-session state** (not new persistent
-> entities); they are documented per-module and in [ENTITY-SHEETS.md](./ENTITY-SHEETS.md) + the
-> Living-Era graph in [ARCHITECTURE.md](./ARCHITECTURE.md). The exception, persisted `SuperEvolution`
-> (localStorage), lives in its module.
+> entities) — including the V76 apex-creature quantum-computing mind (`super-qubits.ts`, catalogued
+> below as `QUANTUM_MIND`); they are documented per-module, in [AI-SUBSYSTEM.md](./AI-SUBSYSTEM.md), and
+> in [ENTITY-SHEETS.md](./ENTITY-SHEETS.md) + the Living-Era graph in
+> [ARCHITECTURE.md](./ARCHITECTURE.md). The exception, persisted `SuperEvolution` (localStorage), lives
+> in its module.
 
 ## Conceptual schema
 
@@ -82,6 +84,7 @@ erDiagram
 | `SHOGGOTH`             | `sim/shoggoths.ts`                                 | shoggoth id 0…2               | 3                                |
 | `PUPPET_MASTER`        | `sim/puppet-masters.ts`                            | named (AETHON/SELENE/KRONOS…) | fixed small set                  |
 | `QUANTUM_SUBSTRATE`    | `sim/quantum.ts`, `qcircuit.ts`, `math/quantum.ts` | register (n=5 → 32 amps)      | 1 cloud + 1 register + 1 circuit |
+| `QUANTUM_MIND` (V76)   | `sim/super-qubits.ts` + `math/quantum.ts`          | register (n=6 → 64 amps)      | 1 (the apex creature only)       |
 | `RD_FIELD`             | `sim/reaction-diffusion.ts`                        | grid cell (SIZE²)             | 16,384 cells (128²)              |
 | `ATMOSPHERE`/`WEATHER` | `sim/atmosphere.ts`, `sim/weather.ts`              | weather regime id             | 1 sky, N regimes                 |
 | `CONSTELLATION_CELL`   | `sim/constellations.ts` (d3-delaunay)              | Voronoi cell index            | 24 sites                         |

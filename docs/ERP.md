@@ -79,17 +79,18 @@ flowchart TD
 The heavy passes are deliberately interleaved so no two land on the same frame. This is the core of
 the frame-budget "resource plan".
 
-| Stage                  | Cadence                           | Offset | Why staggered                                   |
-| ---------------------- | --------------------------------- | ------ | ----------------------------------------------- |
-| Grid rebuild           | every 2nd frame                   | 0      | halves O(n) rebuild cost                        |
-| Reaction-diffusion     | every 2nd frame                   | 1      | never shares a frame with the grid rebuild      |
-| Connectome             | 1f (≤400) / 2f (≤700) / 3f (>700) | —      | bounds the only per-frame O(n·k) consumer       |
-| Quantum register drift | every 30th frame                  | —      | gate math is bursty, not continuous             |
-| Telemetry + analytics  | every 8th frame                   | —      | text writes are O(1) but DOM-touching           |
-| Observatory draw       | every 18th frame                  | —      | 16 canvases — expensive, low-urgency            |
-| Louvain (tribes)       | every 240th frame                 | 60/180 | rebuilds graphology graph — heavy               |
-| PageRank (halo)        | every 600th frame                 | 300    | offset 300 never collides with the 240f Louvain |
-| Analytics regression   | every 60th frame                  | —      | O(W=120) mean/stddev/slope                      |
+| Stage                   | Cadence                           | Offset | Why staggered                                   |
+| ----------------------- | --------------------------------- | ------ | ----------------------------------------------- |
+| Grid rebuild            | every 2nd frame                   | 0      | halves O(n) rebuild cost                        |
+| Reaction-diffusion      | every 2nd frame                   | 1      | never shares a frame with the grid rebuild      |
+| Connectome              | 1f (≤400) / 2f (≤700) / 3f (>700) | —      | bounds the only per-frame O(n·k) consumer       |
+| Quantum register drift  | every 30th frame                  | —      | gate math is bursty, not continuous             |
+| Quantum-mind beat (V76) | Observatory cadence (apex only)   | —      | ~90 gates × 64 amps, allocation-free `evolve`   |
+| Telemetry + analytics   | every 8th frame                   | —      | text writes are O(1) but DOM-touching           |
+| Observatory draw        | every 18th frame                  | —      | 16 panels + the 36-readout NEURAL box           |
+| Louvain (tribes)        | every 240th frame                 | 60/180 | rebuilds graphology graph — heavy               |
+| PageRank (halo)         | every 600th frame                 | 300    | offset 300 never collides with the 240f Louvain |
+| Analytics regression    | every 60th frame                  | —      | O(W=120) mean/stddev/slope                      |
 
 ```mermaid
 gantt
