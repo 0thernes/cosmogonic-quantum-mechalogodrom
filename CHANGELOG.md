@@ -11,6 +11,23 @@ Post-`0.9.0` continuous-hardening plus the **V10 NHI super-mind** and **V11 envi
 work — all additive (a no-op until a launched NHI, or behind the opt-in `?fx` flag), shipped behind
 the full gate (now also a coverage gate, on Linux + Windows) with same-seed determinism preserved.
 
+### Fixed
+
+- **"Error creating WebGL context" crash on boot — the dev hot-reload context leak (V49)** — the app was
+  hard-crashing at `new WebGLRenderer` for some users (blank screen + an uncaught console throw). Root
+  cause: `Engine` never freed its WebGL context and `main.ts` had no hot-reload teardown, so **every dev
+  hot-reload leaked a context**; a browser caps live WebGL contexts per process (~16), and once exhausted
+  **every** `new WebGLRenderer` fails — even on a fresh load — until the GPU process restarts. Two fixes:
+  (1) **`Engine.dispose()`** now `renderer.dispose()` + **`forceContextLoss()`** (actively releasing the
+  context slot) and drops its canvas listeners via an `AbortController`; **`main.ts` registers an HMR
+  `dispose` hook** that stops the rAF loop and disposes the engine **before** the hot-replaced module
+  re-boots — so reloads no longer pile up contexts. (2) Boot is now **wrapped in try/catch**: on a context
+  failure it shows a **friendly recovery card** (what happened + "restart the browser once" + a Reload
+  button) instead of a blank screen. Note: the crash is independent of entity count — the renderer is
+  created before any creature spawns, so it was never the 25k/50k swarm. Verified live: the build now
+  degrades gracefully (recovery card shown, no uncaught throw) while the contexts are exhausted, and frees
+  its context on every reload going forward. Full gate green (798 tests).
+
 ### Added
 
 - **Self-evolution — the monster grows like Vegeta/Goku + a 24h daemon-cron (V48)** — the directive's

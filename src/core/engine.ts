@@ -34,6 +34,8 @@ export class Engine {
   private contextLost = false;
   /** Optional cinematic post-FX chain (`?fx=1`); null in the default pipeline. */
   private fx: PostFx | null = null;
+  /** Drops the canvas context-loss listeners on {@link dispose} (so old Engines don't pile up on HMR). */
+  private readonly ac = new AbortController();
 
   /**
    * Build renderer/scene/camera against `canvas` using the resolved quality
@@ -77,14 +79,18 @@ export class Engine {
         e.preventDefault();
         this.contextLost = true;
       },
-      false,
+      { signal: this.ac.signal },
     );
-    canvas.addEventListener('webglcontextrestored', () => {
-      this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, this.dprCap));
-      this.renderer.setSize(window.innerWidth, window.innerHeight);
-      if (this.renderer.shadowMap.enabled) this.renderer.shadowMap.needsUpdate = true;
-      this.contextLost = false;
-    });
+    canvas.addEventListener(
+      'webglcontextrestored',
+      () => {
+        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, this.dprCap));
+        this.renderer.setSize(window.innerWidth, window.innerHeight);
+        if (this.renderer.shadowMap.enabled) this.renderer.shadowMap.needsUpdate = true;
+        this.contextLost = false;
+      },
+      { signal: this.ac.signal },
+    );
 
     // Optional cinematic post-FX (`?fx=1`): a procedural env-map for glass reflections + a bloom
     // pass for a modern glow. Built once, GUARDED — anything throwing here leaves the plain pipeline
@@ -135,6 +141,42 @@ export class Engine {
   /** Whether the WebGL context is currently lost (for callers/telemetry). O(1). */
   isContextLost(): boolean {
     return this.contextLost;
+  }
+
+  /**
+   * Free the WebGL context + GPU resources. Call on teardown / hot-reload. CRITICAL for dev: a renderer
+   * that is dropped without this LEAKS its WebGL context, which counts against the browser's hard cap
+   * (~16 live contexts). After enough hot-reloads every `new WebGLRenderer` then fails with
+   * "Error creating WebGL context" — even on a fresh load — until the GPU process restarts.
+   * `forceContextLoss()` actively releases the context slot; `dispose()` frees programs/buffers.
+   */
+  dispose(): void {
+    this.ac.abort(); // remove the canvas context-loss/restore listeners
+    try {
+      (this.fx as { dispose?: () => void } | null)?.dispose?.();
+    } catch {
+      /* fx teardown is best-effort */
+    }
+    this.fx = null;
+    const env = this.scene.environment as { dispose?: () => void } | null;
+    if (env) {
+      try {
+        env.dispose?.();
+      } catch {
+        /* ignore */
+      }
+      this.scene.environment = null;
+    }
+    try {
+      this.renderer.dispose();
+    } catch {
+      /* ignore */
+    }
+    try {
+      this.renderer.forceContextLoss();
+    } catch {
+      /* ignore */
+    }
   }
 }
 
