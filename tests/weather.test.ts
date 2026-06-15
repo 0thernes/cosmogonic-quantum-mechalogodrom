@@ -106,3 +106,21 @@ describe('WeatherSystem drama (V7.5)', () => {
     expect(a.maxExposure).toBe(b.maxExposure);
   });
 });
+
+describe('WeatherSystem.cycle — manual weather advance', () => {
+  test('advances weatherIdx, plays the sting, returns the new weather, and wraps the ring', () => {
+    const sfx: string[] = [];
+    const state = makeState(0);
+    const ctx = { state, sfx: (n: string) => sfx.push(n) } as unknown as SimContext;
+    const sys = new WeatherSystem(ctx, makeEngine());
+
+    const first = sys.cycle();
+    expect(state.weatherIdx).toBe(1);
+    expect(first).toBe(WEATHERS[1]); // returns the NEW weather (post-increment)
+    expect(sfx).toContain('crystallize'); // the advance plays its sting
+
+    // One more full ring of cycles brings the index back to its start (modulo wrap).
+    for (let i = 1; i < WEATHERS.length; i++) sys.cycle();
+    expect(state.weatherIdx).toBe(0);
+  });
+});
