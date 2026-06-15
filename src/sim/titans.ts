@@ -155,6 +155,14 @@ const AURA_CAP = 6;
 /** Titan↔titan soft collision: they REPEL (no more silent pass-through) + flare on contact. */
 const TITAN_TOUCH_K = 3.0; // touch distance = TITAN_TOUCH_K · (sizeA + sizeB)
 const TITAN_CLASH_HEAT = 0.6; // entropy bump on contact → blazes the emissive + writhe
+/** V69 world-physics warp: titans BEND reality — a clash fractures it, sustained wars destabilise it. */
+const CLASH_CHAOS = 0.12; // chaos added per unit clash-overlap per frame (transient; the integrator decays it)
+const WAR_CHAOS = 0.0016; // chaos added per active war (summed warCount) per frame (a persistent disturbance)
+/** Titans destabilise the world strongly but never PEG it — they raise chaos only up to this ceiling,
+ *  leaving headroom for the dedicated storm controls (Chaos Mode, singularities) to push higher. */
+const TITAN_CHAOS_CEIL = 6.5;
+const AURA_SHOCK_R2_FRAC = 0.16; // inner-well fraction of AURA_R² where organisms RECOIL (a stun)
+const AURA_SHOCK_DAMP = 0.9; // velocity retained per visit inside the shock zone
 
 /** Shared, never-disposed geometry for the writhing core (unit radius; per-titan mesh.scale). */
 const TITAN_CORE_GEO = new THREE.IcosahedronGeometry(1, CORE_DETAIL);
@@ -884,6 +892,14 @@ export class TitanSystem {
         v.y += dy * inv * 0.5;
         v.z += dz * inv + dx * inv * 0.4;
         e.material.color.lerp(tk.tu.uColor.value, 0.02 * (1 - r / AURA_R)); // ontological hue-stain
+        // V69 SHOCK: an organism that strays into the inner well RECOILS — a brief speed-sap (stun), so
+        // it no longer drifts through "like nothing"; the colossus's freak-geometry physically rebukes
+        // it. The inner zone overlaps the harvest reach, so the captured are soon consumed (economyTick).
+        if (r2 < AURA_R2 * AURA_SHOCK_R2_FRAC) {
+          v.x *= AURA_SHOCK_DAMP;
+          v.y *= AURA_SHOCK_DAMP;
+          v.z *= AURA_SHOCK_DAMP;
+        }
       }
     }
   }
@@ -896,6 +912,7 @@ export class TitanSystem {
    */
   private titanClash(): void {
     const titans = this.titans;
+    let fracture = 0; // accumulated clash overlap this frame — the reality-fracture energy
     for (let pi = 0; pi < PAIR_COUNT; pi++) {
       const a = titans[PAIR_A[pi] ?? 0];
       const b = titans[PAIR_B[pi] ?? 0];
@@ -918,6 +935,27 @@ export class TitanSystem {
       const heat = TITAN_CLASH_HEAT * overlap;
       a.entropy = Math.min(RESOURCE_CAP, a.entropy + heat);
       b.entropy = Math.min(RESOURCE_CAP, b.entropy + heat);
+      fracture += overlap;
+      // A deep clash is logged — frame-gated so a sustained overlap can never spam the audit trail.
+      if (overlap > 0.6 && this.ctx.state.frame % 45 === 0) {
+        this.ctx.audit.record('titan-clash', {
+          a: a.name,
+          b: b.name,
+          overlap: Math.round(overlap * 100) / 100,
+        });
+      }
+    }
+    // V69 WORLD-PHYSICS WARP: the ominous colossi don't just sit in the cosmos — they BEND it. Each
+    // clash fractures reality and titans locked in WAR keep it destabilised, raising the world's chaos
+    // scalar — which ripples through weather, the economy and entity jitter (all chaos-coupled). Pure
+    // math (no rng); bounded + clamped, and the integrator decays chaos, so calm titans leave it be.
+    let wars = 0;
+    for (let i = 0; i < titans.length; i++) wars += titans[i]?.warCount ?? 0;
+    const warp = fracture * CLASH_CHAOS + wars * WAR_CHAOS;
+    const s = this.ctx.state;
+    if (warp > 0 && s.chaos < TITAN_CHAOS_CEIL) {
+      const next = s.chaos + warp;
+      s.chaos = next < TITAN_CHAOS_CEIL ? next : TITAN_CHAOS_CEIL;
     }
   }
 
