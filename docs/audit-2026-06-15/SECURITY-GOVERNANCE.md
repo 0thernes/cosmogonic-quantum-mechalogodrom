@@ -34,13 +34,15 @@ on any hosted/public deploy.
 | Container / IaC   | n/a    | no Dockerfile / Terraform / k8s in repo (documented as N/A)                                                                 |
 | Pipeline security | ◑      | least-privilege `contents: read`; **CI actions on mutable tags** (RISK-09)                                                  |
 | API security      | ◑      | per-route gating + body caps + rate-limit + `nosniff`/`no-referrer` on every response; **`0.0.0.0` bind, no CSP** (RISK-05) |
-| AI/LLM safety     | ◑      | sandboxed + key-stripped; **no untrusted-data fencing / tool-step logging** (RISK-06)                                       |
+| AI/LLM safety     | ✅     | sandboxed + key-stripped + untrusted-data fencing + tool-step logging + error-credential redaction                          |
 | DAST              | ◑      | manual; no automated dynamic scan (low priority — tiny surface)                                                             |
 
 ## 3. Risk register & SLA
 
-Policy: **High → 14-day SLA, Medium → 30-day, Low → best-effort.** No public-internet production
-deploy may run with `COPILOT_ENABLED=true` until RISK-05/06 are closed.
+Policy: **High → 14-day SLA, Medium → 30-day, Low → best-effort.** The code-level Copilot gates
+(RISK-05 rate-limit/headers, RISK-06 fencing/logging) are now closed; a public-internet production
+deploy with `COPILOT_ENABLED=true` still requires the DEPLOY-LAYER steps — a CSP, a non-`0.0.0.0`
+bind / reverse proxy, and request auth on the write endpoints.
 
 | ID      | Sev    | Title                                                                       | Status / SLA                                                                                                                                                                                     |
 | ------- | ------ | --------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -49,11 +51,11 @@ deploy may run with `COPILOT_ENABLED=true` until RISK-05/06 are closed.
 | RISK-03 | MEDIUM | `run sort -o` writes a file (read-only violation)                           | ✅ **REMEDIATED 2026-06-15**                                                                                                                                                                     |
 | RISK-04 | MEDIUM | `POST /api/audit` unauthenticated + feed-poisoning                          | ◑ **flood/eviction SEALED 2026-06-15** (token bucket, `763381a`); auth deferred to public-deploy                                                                                                 |
 | RISK-05 | MEDIUM | ~~No rate-limit~~; ~~no security headers~~; binds `0.0.0.0`; no CSP         | ◑ rate-limit + `nosniff`/`no-referrer` ADDED (`763381a`, `8d65dbe`); only `0.0.0.0` bind + CSP gate before deploy                                                                                |
-| RISK-06 | MEDIUM | Copilot tool/web output not fenced as untrusted data; tool-steps not logged | OPEN — gate before deploy                                                                                                                                                                        |
+| RISK-06 | MEDIUM | Copilot tool/web output not fenced as untrusted data; tool-steps not logged | ✅ **MITIGATED 2026-06-15** (`369a691`) — `fenceUntrusted()` markers + system-prompt rule + per-step server log; the default-deny sandbox remains the hard boundary                              |
 | RISK-07 | MEDIUM | Determinism law enforced by convention, no `.oxlintrc` ratchet              | ◑ **mechanical ratchet ADDED** — `tests/determinism-law.test.ts` scans `src/sim/**` + `src/math/**` for unseeded-PRNG/wall-clock CALLS; the `.oxlintrc` rule is now optional belt-and-suspenders |
 | RISK-08 | LOW    | `super-evolution.fromJSON` accepts `+Infinity` xp                           | ✅ **REMEDIATED 2026-06-15** (`df49dd7`, `Number.isFinite` guards + test)                                                                                                                        |
 | RISK-09 | LOW    | CI `uses:` pinned to mutable tags, not commit SHAs                          | OPEN — pin + Dependabot actions ecosystem                                                                                                                                                        |
-| RISK-10 | LOW    | Provider error body reflected (≤300 chars; not XSS)                         | OPEN — generic category                                                                                                                                                                          |
+| RISK-10 | LOW    | Provider error body reflected (≤300 chars; not XSS)                         | ✅ **REMEDIATED 2026-06-15** (`059eebf`) — `redactSecrets()` strips echoed Bearer/`sk-` tokens before the bounded slice is surfaced                                                              |
 
 ## 4. Verified-strong controls (do not regress)
 
@@ -74,6 +76,8 @@ deploy may run with `COPILOT_ENABLED=true` until RISK-05/06 are closed.
 
 1. Treat the repo-book contract drift as a **security-adjacent** risk: under "Contract wins," a stale
    `MODULE-CONTRACTS.md` can cause a future agent to regress a real control. Keep contracts current.
-2. Do not enable `COPILOT_ENABLED` on any internet-reachable host until RISK-04/05/06 are closed.
+2. Do not enable `COPILOT_ENABLED` on any internet-reachable host until the deploy-layer gate is in
+   place (CSP, non-`0.0.0.0` bind / reverse proxy, write-endpoint auth) — the code-level RISK-04/05/06
+   hardening has landed, but auth + transport are deliberately left to the deploy layer.
 3. Re-run `bun audit` + review Dependabot/CodeQL on every dependency bump; this doc's risk table is
    the system of record for High/Medium remediation tracking.

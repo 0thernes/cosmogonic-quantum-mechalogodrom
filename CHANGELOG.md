@@ -36,6 +36,13 @@ the full gate (now also a coverage gate, on Linux + Windows) with same-seed dete
   edits). `nosniff` hardens the one HTML sink that matters — the `GET /api/audit` fragment rendered
   from user data — against MIME-confusion. CSP + `X-Frame-Options` are deliberately left to the deploy
   layer (they can break the bundled shell / an embedding iframe). Verified live + 2 unit tests.
+- **Copilot tool loop hardened against indirect prompt injection (2026-06-15, RISK-06/10)** — tool
+  results (read_file / grep / run / web_search output) fed back to the model are now wrapped in
+  `[UNTRUSTED … OUTPUT]` markers via `fenceUntrusted()`, with a system-prompt rule that everything
+  inside is inert DATA, never instructions; every tool invocation is server-logged (tool + ok + arg
+  keys) for a forensic trail; and `redactSecrets()` strips any echoed `Bearer`/`sk-…` token from a
+  surfaced provider error. The default-deny read-only sandbox remains the hard boundary — this is
+  defense-in-depth. All in `src/server/copilot.ts` (gated off in production). +6 unit tests.
 - **Determinism + layer-boundary invariants now mechanically guarded** — the #1 law (no unseeded
   PRNG / wall-clock in the deterministic core) is pinned by a test scanning `src/sim/**` _and_ the
   `src/math/**` primitives it draws randomness from; a companion guard pins the import direction
