@@ -216,14 +216,12 @@ export class ReactionDiffusionSystem {
         const nu = uCC + (du * lapU - reaction + feed * (1 - uCC)) * DT;
         const nv = vCC + (dv * lapV + reaction - decay * vCC) * DT;
         const i = row + x;
-        // Hard boundedness invariant: both species clamped to [0, 1]. The `!(> 0)` lower-bound form
-        // also SEALS NaN → 0 (a non-finite cell can never persist or spread), matching the codebase
-        // convention — connectome's `!(act < ACT_MAX)` act-clamp, environment's `nn`, games'
-        // replicatorStep. So the header's "finite after any number of steps" proof holds even against
-        // a hypothetical non-finite input. Byte-identical for every finite value ⇒ the golden is
-        // unaffected (the un-sealed form only ever differed on NaN, which the live scheme never produces).
-        un[i] = !(nu > 0) ? 0 : nu > 1 ? 1 : nu;
-        vn[i] = !(nv > 0) ? 0 : nv > 1 ? 1 : nv;
+        // Hard boundedness invariant: both species clamped to [0, 1]. Matches the canonical
+        // `scalar.clamp` form (the codebase's majority pattern for finite-input clamps); NaN is
+        // unreachable here — the field stays in [0, 1] and the arithmetic is finite — so the
+        // header's "finite after any number of steps" proof holds on its no-non-finite-input premise.
+        un[i] = nu < 0 ? 0 : nu > 1 ? 1 : nu;
+        vn[i] = nv < 0 ? 0 : nv > 1 ? 1 : nv;
         // Slide the window one column right.
         uUL = uUC;
         uUC = uUR;
