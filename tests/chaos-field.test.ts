@@ -110,6 +110,25 @@ describe('ChaosField (V62 CHAOS MODE)', () => {
     }
     expect(signature(list)).toBe(sig); // inactive again ⇒ frozen
   });
+
+  test('telemetry getters read + the weather/algo kicks drain once then reset', () => {
+    const f = new ChaosField(0xc1c1);
+    f.toggle();
+    const list = mkList(60);
+    const state = mkState();
+    for (let i = 0; i < 200; i++) {
+      f.update(1 / 60, list, state);
+      state.frame++;
+    }
+    // Telemetry getters expose non-negative values while engaged.
+    expect(f.shake).toBeGreaterThanOrEqual(0);
+    expect(f.entangledCount).toBeGreaterThanOrEqual(0);
+    // Drain-once contract: whatever the current intent, a SECOND consecutive drain is always false.
+    f.takeWeatherKick();
+    expect(f.takeWeatherKick()).toBe(false);
+    f.takeAlgoKick();
+    expect(f.takeAlgoKick()).toBe(false);
+  });
 });
 
 /** Median of a numeric array (does not mutate the input). */
