@@ -10,14 +10,14 @@ This is a **single-author, proprietary, client-heavy WebGL art instrument** serv
 fullstack server. It is **not** a multi-tenant SaaS; it has no user accounts, no database, no PII,
 and no money movement. The security-relevant surface is therefore narrow and well-understood:
 
-| Boundary                     | Trust                     | Control                                                                                        |
-| ---------------------------- | ------------------------- | ---------------------------------------------------------------------------------------------- |
-| Browser ↔ `server.ts`        | untrusted client          | input narrowing, body caps (8–256 KB), HTML-escaping, bounded rings                            |
-| `POST /api/audit`            | **unauthenticated**       | size cap + 200-entry ring + per-entry HTML-escape (no auth — see RISK-04)                      |
-| Copilot LLM ↔ tool sandbox   | **fully untrusted model** | `COPILOT_ENABLED` off in prod; default-deny read-only sandbox                                  |
-| Tool sandbox ↔ host          | hostile-input assumed     | `Bun.spawn` array-form (no shell), allow/deny lists, repo-confine, `minimalEnv()` (no keys)    |
-| Web search ↔ public internet | untrusted output          | query-only (no model URL), fixed key-less endpoint, output-capped (no SSRF)                    |
-| Sim RNG ↔ reproducibility    | determinism law           | seeded `mulberry32`, isolated sub-streams, golden test (enforcement: convention — see RISK-07) |
+| Boundary                     | Trust                     | Control                                                                                                |
+| ---------------------------- | ------------------------- | ------------------------------------------------------------------------------------------------------ |
+| Browser ↔ `server.ts`        | untrusted client          | input narrowing, body caps (8–256 KB), HTML-escaping, bounded rings                                    |
+| `POST /api/audit`            | **unauthenticated**       | size cap + 200-entry ring + per-entry HTML-escape + token-bucket rate-limit 60/30s (no auth — RISK-04) |
+| Copilot LLM ↔ tool sandbox   | **fully untrusted model** | `COPILOT_ENABLED` off in prod; default-deny read-only sandbox                                          |
+| Tool sandbox ↔ host          | hostile-input assumed     | `Bun.spawn` array-form (no shell), allow/deny lists, repo-confine, `minimalEnv()` (no keys)            |
+| Web search ↔ public internet | untrusted output          | query-only (no model URL), fixed key-less endpoint, output-capped (no SSRF)                            |
+| Sim RNG ↔ reproducibility    | determinism law           | seeded `mulberry32`, isolated sub-streams, golden test (enforcement: convention — see RISK-07)         |
 
 **Primary asset to protect:** the proprietary source itself (All-Rights-Reserved). The dominant
 control is `COPILOT_ENABLED=false` in production — the LLM organ that can read source is simply off
@@ -33,7 +33,7 @@ on any hosted/public deploy.
 | License / SBOM    | ✅     | CycloneDX via `scripts/sbom.ts`; all-permissive, no copyleft conflict                                                |
 | Container / IaC   | n/a    | no Dockerfile / Terraform / k8s in repo (documented as N/A)                                                          |
 | Pipeline security | ◑      | least-privilege `contents: read`; **CI actions on mutable tags** (RISK-09)                                           |
-| API security      | ◑      | per-route gating + body caps; **no rate-limiting primitive** (RISK-05)                                               |
+| API security      | ◑      | per-route gating + body caps + token-bucket rate-limit on `POST /api/audit`; **`0.0.0.0` bind, no CSP** (RISK-05)    |
 | AI/LLM safety     | ◑      | sandboxed + key-stripped; **no untrusted-data fencing / tool-step logging** (RISK-06)                                |
 | DAST              | ◑      | manual; no automated dynamic scan (low priority — tiny surface)                                                      |
 
@@ -42,18 +42,18 @@ on any hosted/public deploy.
 Policy: **High → 14-day SLA, Medium → 30-day, Low → best-effort.** No public-internet production
 deploy may run with `COPILOT_ENABLED=true` until RISK-05/06 are closed.
 
-| ID      | Sev    | Title                                                                       | Status / SLA                                           |
-| ------- | ------ | --------------------------------------------------------------------------- | ------------------------------------------------------ |
-| RISK-01 | HIGH   | `git grep -O` option-injection → process exec (sandbox escape)              | ✅ **REMEDIATED 2026-06-15** (`ai-sandbox.ts` + tests) |
-| RISK-02 | MEDIUM | `run cat .env` read of blocked files                                        | ✅ **REMEDIATED 2026-06-15**                           |
-| RISK-03 | MEDIUM | `run sort -o` writes a file (read-only violation)                           | ✅ **REMEDIATED 2026-06-15**                           |
-| RISK-04 | MEDIUM | `POST /api/audit` unauthenticated + feed-poisoning                          | OPEN — backlog `SERVER-RL`; SLA 30d                    |
-| RISK-05 | MEDIUM | No per-route rate-limit; server binds `0.0.0.0`; no CSP                     | OPEN — gate before any `COPILOT_ENABLED` deploy        |
-| RISK-06 | MEDIUM | Copilot tool/web output not fenced as untrusted data; tool-steps not logged | OPEN — gate before deploy                              |
-| RISK-07 | MEDIUM | Determinism law enforced by convention, no `.oxlintrc` ratchet              | OPEN — fix specified (inspection §6.2)                 |
-| RISK-08 | LOW    | `super-evolution.fromJSON` accepts `+Infinity` xp                           | OPEN — 1-line finite-clamp                             |
-| RISK-09 | LOW    | CI `uses:` pinned to mutable tags, not commit SHAs                          | OPEN — pin + Dependabot actions ecosystem              |
-| RISK-10 | LOW    | Provider error body reflected (≤300 chars; not XSS)                         | OPEN — generic category                                |
+| ID      | Sev    | Title                                                                       | Status / SLA                                                                                     |
+| ------- | ------ | --------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| RISK-01 | HIGH   | `git grep -O` option-injection → process exec (sandbox escape)              | ✅ **REMEDIATED 2026-06-15** (`ai-sandbox.ts` + tests)                                           |
+| RISK-02 | MEDIUM | `run cat .env` read of blocked files                                        | ✅ **REMEDIATED 2026-06-15**                                                                     |
+| RISK-03 | MEDIUM | `run sort -o` writes a file (read-only violation)                           | ✅ **REMEDIATED 2026-06-15**                                                                     |
+| RISK-04 | MEDIUM | `POST /api/audit` unauthenticated + feed-poisoning                          | ◑ **flood/eviction SEALED 2026-06-15** (token bucket, `763381a`); auth deferred to public-deploy |
+| RISK-05 | MEDIUM | ~~No rate-limit primitive~~; server binds `0.0.0.0`; no CSP                 | ◑ rate-limit ADDED (`POST /api/audit`, `763381a`); `0.0.0.0` + CSP gate before deploy            |
+| RISK-06 | MEDIUM | Copilot tool/web output not fenced as untrusted data; tool-steps not logged | OPEN — gate before deploy                                                                        |
+| RISK-07 | MEDIUM | Determinism law enforced by convention, no `.oxlintrc` ratchet              | OPEN — fix specified (inspection §6.2)                                                           |
+| RISK-08 | LOW    | `super-evolution.fromJSON` accepts `+Infinity` xp                           | ✅ **REMEDIATED 2026-06-15** (`df49dd7`, `Number.isFinite` guards + test)                        |
+| RISK-09 | LOW    | CI `uses:` pinned to mutable tags, not commit SHAs                          | OPEN — pin + Dependabot actions ecosystem                                                        |
+| RISK-10 | LOW    | Provider error body reflected (≤300 chars; not XSS)                         | OPEN — generic category                                                                          |
 
 ## 4. Verified-strong controls (do not regress)
 
