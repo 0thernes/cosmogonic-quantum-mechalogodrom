@@ -136,7 +136,8 @@ export class TelemetryPanel {
   update(s: TelemetrySnapshot): void {
     const r = this.rows;
     r[0].textContent = `${s.entities}/${s.maxEntities}`;
-    r[1].textContent = s.chaos.toFixed(1);
+    // V62: flag CHAOS MODE (the Lorenz quantum storm) right on the chaos row.
+    r[1].textContent = s.chaosMode ? `${s.chaos.toFixed(1)} ⚡STORM` : s.chaos.toFixed(1);
     r[2].textContent = s.energy.toFixed(0);
     r[3].textContent = String(s.links);
     r[4].textContent = `${s.morphs}/${s.morphTotal}`; // V3: 250 in phylum mode

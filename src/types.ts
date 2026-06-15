@@ -326,6 +326,8 @@ export interface TelemetrySnapshot {
   sim: 1 | 2;
   /** Active cosmological singularity display name, or '' when none is summoned (telemetry box). */
   singularity: string;
+  /** V62: whether CHAOS MODE (the Lorenz quantum storm) is engaged — flagged on the chaos row. */
+  chaosMode: boolean;
 }
 
 /** One titan's public economy row (structural twin of sim/titans TitanLedgerEntry). */
@@ -344,6 +346,8 @@ export interface UiActions {
   burst(): void;
   mutate(): void;
   chaosBoost(): void;
+  /** Engage/disengage CHAOS MODE — the Lorenz-driven quantum storm (V62); returns the new state. */
+  toggleChaosMode(): boolean;
   /** Raise ENTROPY one step (F-CHAOS-ENTROPY) — the bipolar opposite of chaos; returns the new value. */
   entropyBoost(): number;
   /** Launch a user-controlled NHI being into the world (F-NHI); returns 1 on success, 0 if at the cap. */

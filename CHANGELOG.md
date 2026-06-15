@@ -13,6 +13,27 @@ the full gate (now also a coverage gate, on Linux + Windows) with same-seed dete
 
 ### Added
 
+- **CHAOS MODE — a Lorenz quantum storm you can engage (V62)** — the directive's "real chaos
+  math/theory + random quantum mechanics on the creatures (tunnelling, entanglement, superposition)
+  that shakes the world and disturbs weather/economy/algorithms." A new toggled `ChaosField`
+  (`src/sim/chaos-field.ts`, the `⚡ CHAOS MODE` toolbar button or the **K** key) integrates a real
+  **Lorenz attractor** (σ=10, ρ=28, β=8/3 — the textbook chaotic regime, sensitive dependence,
+  bounded-but-never-repeating); its magnitude becomes a chaotic 0..1 **intensity** that drives the
+  rest. While engaged it imposes three quantum signatures on the organisms: **TUNNELLING** (a creature
+  makes a rare discrete spatial jump, as if through a barrier), **SUPERPOSITION** (every visited
+  creature advances its quantum phase `qP` and smears along an uncertain, wobbling path), and
+  **ENTANGLEMENT** (a small set of creature pairs is linked — their momenta pulled to a shared mean,
+  their colours exchanged, so perturbing one mirrors in its partner). It also **disturbs the other
+  systems**: it elevates `state.chaos` into a 5–10 storm band (which the economy already reads as
+  market stress and the entities as jitter gain) and arms timed **weather flips** + **sorting-algorithm
+  switches** the integrator drains each frame. Determinism preserved: the storm runs on its OWN seeded
+  sub-stream (golden-ratio mix, like `econRng`) and `update()` returns **before drawing a single rng
+  number while off**, so the base sim is byte-identical when chaos mode is disengaged — proven by a new
+  5-test suite (off ⇒ no-op + no mutation; same seed ⇒ identical storm; different seed diverges;
+  engaged ⇒ intensity rises + storm band + tunnelling fires). **Verified live** on the 50k world:
+  engaging armed intensity 0.42, chaos → 10, 1898 tunnelling jumps + 80 organisms entangled over 30
+  frames, the chaos telemetry row flags `⚡STORM`, and disengaging returns it cleanly to a no-op. Full
+  gate green (803 tests).
 - **The NEURAL observatory comes alive (V61)** — the directive's "NEURAL is a static image and boring,
   data visually stupid and basic → make it interactive/adaptive/alive". The 3×3 grid of nine mind-views
   used to repaint only at the slow Observatory cadence (≈ every 18 frames) and collapse to a dead "no

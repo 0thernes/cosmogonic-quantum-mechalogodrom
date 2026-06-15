@@ -64,6 +64,7 @@ import { ConstellationSystem } from './sim/constellations';
 import { AtmosphereSystem } from './sim/atmosphere';
 import { Viz3DSystem, type Viz3DSnapshot } from './sim/viz3d';
 import { SingularitySystem, SINGULARITY_KINDS } from './sim/singularities';
+import { ChaosField } from './sim/chaos-field';
 import { ArtifactField } from './sim/artifacts';
 import { LeviathanSystem } from './sim/leviathans';
 import { NhiSystem, type NhiWorld } from './sim/nhi-system';
@@ -218,6 +219,8 @@ export class World {
   private readonly viz3d: Viz3DSystem;
   /** Cosmological chaos effects (CONTRACTS V7.4) — at most one active at a time. */
   private readonly singularities: SingularitySystem;
+  /** CHAOS MODE (V62) — a toggled Lorenz-driven quantum storm; inert + rng-silent until engaged. */
+  private readonly chaosField: ChaosField;
   /** Persistent visual relics from deaths/singularities (V9 F-ARTIFACTS). Visual-only: no rng/sim write. */
   private readonly artifacts: ArtifactField;
   private readonly leviathans: LeviathanSystem;
@@ -462,6 +465,10 @@ export class World {
     // Cosmological chaos (V7.4): draws no rng and builds nothing at construction (lazy on
     // summon), so it is boot-stream-neutral like viz3d.
     this.singularities = new SingularitySystem(ctx, this.entities);
+    // V62: CHAOS MODE on its OWN seeded sub-stream (the golden-ratio mix is applied inside, like
+    // econRng/superRng) so the storm's quantum dice never perturb the main entity draw order — off ⇒
+    // the sim is byte-identical.
+    this.chaosField = new ChaosField(this.persisted.seed);
     // F-HOLES: let an active singularity tug the big roaming beings too, not just the organisms.
     this.shoggoths.attachSingularity(this.singularities);
     this.titans.attachSingularity(this.singularities);
@@ -579,6 +586,7 @@ export class World {
       resetCount: 0,
       sim: this.state.sim,
       singularity: '',
+      chaosMode: false,
     };
     // The three V3.5 arrays are stable LIVE views (contents mutate in place),
     // so this adapter is built once and never repopulated — just a field rename.
@@ -653,6 +661,16 @@ export class World {
       s.entropy = Math.max(0, ent - dt * 0.05);
       s.chaos = Math.max(chaosFloor, s.chaos - ent * dt * 0.03);
     }
+    // V62 CHAOS MODE: a toggled Lorenz-driven quantum storm. Inert + rng-silent while off (so the
+    // base sim is byte-identical); while on it elevates `s.chaos` into the storm band, tunnels /
+    // entangles / superposes the organisms, and arms timed weather + algorithm disturbances we drain
+    // here. Runs BEFORE the systems integrate so the velocity/position kicks carry this frame.
+    this.chaosField.update(dt, this.entities.list, s);
+    if (this.chaosField.takeWeatherKick()) {
+      this.weather.cycle();
+      this.persisted.weatherIdx = s.weatherIdx;
+    }
+    if (this.chaosField.takeAlgoKick()) this.selectAlgo(s.algoIdx + 1, false);
 
     // One bands poll per frame, shared by every consumer (reused object).
     const bands = this.audioAnalysis.update();
@@ -1373,6 +1391,8 @@ export class World {
     if (k['n'] && s.frame % 30 === 0) this.launchNhiBeing();
     // F-SPACE: tap H to dilate space (cycle the camera FOV). Throttled like the other taps.
     if (k['h'] && s.frame % 30 === 0) this.dilateSpace();
+    // V62 CHAOS MODE: tap K to engage/disengage the Lorenz quantum storm. Throttled like the taps.
+    if (k['k'] && s.frame % 30 === 0) this.toggleChaosMode();
   }
 
   /**
@@ -1492,6 +1512,7 @@ export class World {
     sn.sim = s.sim;
     const sk = this.singularities.kind;
     sn.singularity = sk ? (SINGULARITY_LABEL[sk] ?? sk.toUpperCase()) : '';
+    sn.chaosMode = this.chaosField.active; // V62: storm flag for the chaos row
     sn.tribes = this.graphMind.tribes;
     sn.trend = this.analytics.trendPerMin;
     sn.qEntropy = this.qc.entropy;
@@ -2099,6 +2120,20 @@ export class World {
     if (prog) prog.style.setProperty('--algo-prog', frac);
   }
 
+  /**
+   * V62: engage/disengage CHAOS MODE — the Lorenz-driven quantum storm. Shared by the toolbar
+   * button + the `K` hotkey. Plays a voice, toasts the HUD, and records the toggle so replays
+   * reproduce the same storm sequence from the seed. Returns the new state.
+   */
+  private toggleChaosMode(): boolean {
+    this.unlock();
+    const on = this.chaosField.toggle();
+    this.audio.play(on ? 'burst' : 'decay');
+    this.hud.showSector(on ? 'CHAOS MODE ⚡ ENGAGED' : 'CHAOS MODE · OFF');
+    this.audit.record('chaos-mode', { on });
+    return on;
+  }
+
   private buildActions(): UiActions {
     const s = this.state;
     return {
@@ -2132,6 +2167,7 @@ export class World {
         this.hud.showSector('CHAOS L' + next + ' · ' + s.chaos.toFixed(1));
         this.audit.record('chaos-boost', { chaos: s.chaos, level: next });
       },
+      toggleChaosMode: () => this.toggleChaosMode(), // V62: the Lorenz quantum storm
       entropyBoost: () => {
         this.unlock();
         // F-CHAOS-ENTROPY: raise ENTROPY one step (the bipolar opposite of chaos — order/heat-death).
