@@ -51,7 +51,7 @@ export interface QualityProfile {
 
 /** Per-entity simulation state stored on the mesh (`userData`). */
 export interface EntityData {
-  /** Morphotype index 0..99. */
+  /** Morphotype index `0..morphTotal-1` (100 legacy / 250 in phylum mode); spawn/respawn use `mi % morphs.length`. */
   mi: number;
   vel: THREE.Vector3;
   age: number;

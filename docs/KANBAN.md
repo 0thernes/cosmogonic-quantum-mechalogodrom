@@ -28,6 +28,15 @@ behind the full gate (`bun run check`) and a commit.
 
 ## Board
 
+### ✅ Done — V62–V68 CHAOS · LEVELING · TITANS + Ultracode inspection (2026-06-15)
+
+- 🟥 P0 `V62-CHAOS-MODE` — CHAOS MODE: a toggled Lorenz quantum storm (tunnelling/entanglement/superposition) that disturbs weather, the economy + the sorting fields; own rng sub-stream, off ⇒ byte-identical. Independently validated PASS — _bdb9ddd · [validation](./audit-2026-06-15/CHAOS-MODE-V62-VALIDATION.md)_
+- 🟥 P0 `V63-LEVELING` — super-creature leveling to 100 + a godlike power every 10 levels + the ASCENSION monolith temple (directive #7) — _3b95efa_
+- 🟧 P1 `V64-SINGULARITY-STIR` — a summoned hole raises world chaos while it lives, so weather/economy/quantum/jitter react, not just the bodies it pulls — _55b50d6_
+- 🟧 P1 `V65–V68` — lens + chaos-field polish; Titans become ominous 4D freak-geometry that affects the world — _…618dc98_
+- 🟥 P0 `SEC-SANDBOX-HARDEN` — closed 3 verified Copilot read-only-sandbox escapes (git `--open-files-in-pager` option-injection → process exec; `run cat .env` read of blocked files; `sort -o` write) + 9 regression tests — _[inspection](./audit-2026-06-15/ULTRACODE-INSPECTION-2026-06-15.md)_
+- 🟨 P2 `ULTRACODE-INSPECTION` — full 250-point inspection (10 dimensions, adversarial verify, grade B+); README/FILE-MAP/types synced; SECURITY-GOVERNANCE added — _docs/audit-2026-06-15/_
+
 ### ✅ Done — V12 RELIQUARY + V13 ECONOMY/PHYSICS (2026-06-14)
 
 - 🟧 P1 `V12-SURFACE` — Reliquary Surface jewel BRDF: carved fBm relief engraves the PBR normal, worn-jewel roughness, dielectric pull, amber bass-reactive SSS, thin-film iridescence — _037f0d4_

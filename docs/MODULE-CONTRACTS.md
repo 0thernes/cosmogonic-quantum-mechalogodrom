@@ -1420,3 +1420,30 @@ Copilot are constructed boot-stream-neutral and never write sim state, so the go
 Full `bun run check` green: prettier → tsc strict → oxlint → 535 tests (0 fail, 300-frame golden
 included) → build. The Copilot sandbox verified live (allow: `git log`, file reads; deny:
 path-escape, `git push`, `legacy/`, shell redirection).
+
+---
+
+# CONTRACTS V10+ — POST-0.9.0 LIVING ERA (binding addenda)
+
+The V10–V68 increments shipped into `CHANGELOG.md` `[Unreleased]` as additive systems; their
+per-module behaviour is documented there and in the auto-generated `docs/FILE-MAP.md`. The clauses
+below are the ones a 2026-06-15 inspection found load-bearing and previously unwritten (the rest of
+the V10–V68 contract is a TODO follow-up — see `docs/audit-2026-06-15/ULTRACODE-INSPECTION-2026-06-15.md`).
+
+## F-CHAOS-MODE (V62) — `src/sim/chaos-field.ts` (writer: chaos)
+
+- **Exclusive ownership.** `ChaosField` owns the chaos storm. Constructed once on its OWN seeded
+  sub-stream (`mulberry32(seed ^ 0x3c6ef372)`), independent of `rng`/`econRng`/`superRng`/etc.
+- **Off ⇒ inert.** `update()` MUST return before drawing a single random number while inactive, so
+  the base sim is byte-identical when chaos mode is off — the population golden is unperturbed.
+- **Real math (philosophy law).** A Lorenz attractor (σ=10, ρ=28, β=8/3) integrated with a bounded
+  Euler step (`min(dt,0.05)/4`) drives `intensity ∈ [0,1]`; NaN-guarded (no Inf at this step).
+- **Read AND write.** READS the entity list; WRITES velocities/positions/colours
+  (tunnelling/superposition/entanglement) and elevates `state.chaos` into `[5,10]` (the economy reads
+  it as stress, entities as jitter); arms one-shot weather/algorithm kicks drained by the integrator.
+- **Allocation discipline.** Per-frame loops allocate nothing; pair tuples re-allocate only on the
+  3–7 s timer; stride-3 bounds per-frame cost at the 50k ceiling.
+- **Telemetry + control.** Exposes `active`/`intensity`/`shake`/`tunnels`/`entangledCount`;
+  `world.snapshot` surfaces `chaosMode`. Toggled by hotkey `k` / the ⚡ button / `UiActions.toggleChaosMode`.
+
+_Validated 2026-06-15 (PASS): `docs/audit-2026-06-15/CHAOS-MODE-V62-VALIDATION.md`._

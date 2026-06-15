@@ -5,7 +5,7 @@
 [![License: Proprietary](https://img.shields.io/badge/License-Proprietary%20%E2%80%94%20All%20Rights%20Reserved-red.svg)](./LICENSE)
 [![Bun](https://img.shields.io/badge/Bun-1.3-black?logo=bun&logoColor=white)](https://bun.sh)
 [![TypeScript strict](https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript&logoColor=white)](./tsconfig.json)
-[![tests](https://img.shields.io/badge/tests-580%20passing-brightgreen)](./tests)
+[![tests](https://img.shields.io/badge/tests-810%20passing-brightgreen)](./tests)
 [![audit](https://img.shields.io/badge/inspection-500%20points-success)](./docs/500-POINT-INSPECTION.md)
 
 A procedural WebGL cosmic ecosystem — morphogenic organisms, Shoggoths,
@@ -18,7 +18,7 @@ Every run is reproducible from a seed. Every hot path is allocation-free.
 Every magic number survived the port.
 
 > 📖 **New here? Read [THE BOOK](./docs/BOOK.md)** — the master index over every doc, an
-> auto-generated [file map](./docs/FILE-MAP.md) of all 77 modules, and the build/run, data-flow,
+> auto-generated [file map](./docs/FILE-MAP.md) of all 87 modules, and the build/run, data-flow,
 > troubleshooting, and roadmap in one place. Or open **❓ HELP ME NOW** in-app for grounded answers.
 
 > **V12–V13 (2026-06):** a procedural **Reliquary Surface** jewel BRDF + a macro **SPECIMEN** camera
@@ -259,6 +259,44 @@ generations, and a read-only Copilot (`docs/MODULE-CONTRACTS.md` §V9):
   **TIME** (timeScale) and **SPACE** (FOV dilation) controls; **render modes now
   alter dynamics** (`solid` stays the exact determinism identity); singularities
   now pull titans/shoggoths/leviathans; chaos is leveled and bipolar.
+
+### The Living Era (post-0.9.0 · V10–V64)
+
+Since 0.9.0 the cosmos has grown continuously — fifty-plus increments logged in
+the [CHANGELOG](./CHANGELOG.md) `[Unreleased]` section, each shipped behind the
+full gate with same-seed determinism preserved. The major arcs:
+
+- **A deeper economy & society (V13–V23)** — two currencies (AURUM ☉ / UMBRA ☾)
+  and two commodities over a game-theoretic clearing market, with cartels,
+  arbitrage, sanctions, a black market, and Vickrey windfall auctions; titan
+  diplomacy, Shoggoth boldness and Puppeteer meddling all driven by live wealth,
+  surfaced in a self-building ⊙ MARKET panel.
+- **Creature cognition (V24–V29)** — Shoggoths perceive · remember · flee · hunt,
+  Puppeteers scheme, the outmatched deceive, and peers bargain, trade & ally — a
+  pure `creatureDrive` kernel closing the cognition↔economy loop.
+- **The native engine (V18, V28)** — a C++20 / OpenGL SDF ray-marcher with **Jolt
+  Physics** rigid bodies and on-impact volume-conserving **fracture**, rendered on
+  an RTX 5070 Ti ([`native/`](./native),
+  [ADR-0007](./docs/adr/0007-native-cpp-engine-and-live-physics.md)).
+- **The SUPER CREATURE (V31–V48)** — an always-active apex being: a ~1,444-param
+  deep mind grown into a ~10,000-param composite consciousness (Thaler creativity
+  machine, Tree/Atom-of-Thought, GOAP), a many-eyed god-jewel **body**, a 100-drone
+  **wingman swarm**, **self-evolution** (XP → five ascension stages + a wall-clock
+  daemon-cron), an **ACCESS PUZZLE** gate, **SUPERHERO** player mode (pilot it in
+  1st/3rd person), and an offline-AI **diagnostics + recovery** pipeline.
+- **Scale & per-entity minds (V38–V42)** — the `mega` tier lifts the ceiling to
+  **50,000 organisms** (√N density scaling) with a 70-param neural controller
+  running on every entity.
+- **In-world AI (V36–V43)** — **HELP ME NOW** (a repo-grounded answer panel),
+  **THE BOOK** (the navigable RAG repo index), and an in-world **web search**
+  under a refuse-by-default safety constitution.
+- **The HUD + cosmos directive (V56–V64)** — the **CENTER HUD** (six panels → one
+  cyclable pop-up), singularities that **warp space-time** (time dilation +
+  redshift) behind a full-screen **gravitational-lens** post-FX, a self-animating
+  **NEURAL observatory**, **CHAOS MODE** (a toggled Lorenz quantum storm —
+  tunnelling / entanglement / superposition that disturbs weather, economy and
+  the sorting fields), **leveling to 100** with a godlike power every ten levels
+  and an **ASCENSION monolith temple**, and singularities that stir world chaos.
 
 Work on this codebase is governed by the three **master files** in
 [masters/](./masters/) — Executor, Architect, Physicist — bound by

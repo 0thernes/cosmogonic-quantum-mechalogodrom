@@ -128,7 +128,7 @@ export class EntityManager {
   }
 
   /**
-   * Create one organism of morphotype `mi % 100` (legacy `mkE`, lines 328-355). Returns null
+   * Create one organism of morphotype `mi % morphs.length` (legacy `mkE`, lines 328-355). Returns null
    * when the population is at `quality.maxEntities`. A null `pos` means the legacy random spawn
    * volume (x/z ∈ ±35, y ∈ [-8, 22)); `pos` is copied, so passing a scratch vector is safe.
    * O(1).
