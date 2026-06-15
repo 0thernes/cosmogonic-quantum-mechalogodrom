@@ -13,6 +13,14 @@ the full gate (now also a coverage gate, on Linux + Windows) with same-seed dete
 
 ### Fixed
 
+- **HMR hook hotfix — `import.meta.hot` used directly (V50)** — V49's teardown aliased it
+  (`const hot = import.meta.hot`), which Bun's HMR runtime rejects at module eval with "import.meta.hot
+  .dispose cannot be used indirectly" — a NEW hard crash on every dev load (the production build never
+  exercises Bun's HMR runtime, so the gate's `bun run build` didn't catch it). Fixed by referencing
+  `import.meta.hot` **inline** in the guard + the `.dispose(...)` call, never via a local (bun-types
+  types the member, so tsc stays green). Verified live on the Bun dev server: `main.ts` now evaluates
+  fully (no "indirectly" error, no Bun error overlay; the WebGL recovery card still shows while this
+  sandbox's GL is disabled). Full gate green (798 tests).
 - **"Error creating WebGL context" crash on boot — the dev hot-reload context leak (V49)** — the app was
   hard-crashing at `new WebGLRenderer` for some users (blank screen + an uncaught console throw). Root
   cause: `Engine` never freed its WebGL context and `main.ts` had no hot-reload teardown, so **every dev

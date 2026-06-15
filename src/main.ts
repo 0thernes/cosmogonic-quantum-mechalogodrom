@@ -128,14 +128,19 @@ boot();
 // rAF loop, drop listeners, and FREE the renderer/context (Engine.dispose → forceContextLoss). Without
 // this, every reload leaks a context until `new WebGLRenderer` fails for good. No-op in production
 // (import.meta.hot is undefined) and on a full page reload (the unload frees the context anyway).
-const hot = (import.meta as unknown as { hot?: { dispose(cb: () => void): void } }).hot;
-hot?.dispose(() => {
-  cancelAnimationFrame(rafId);
-  if (resizeHandler) window.removeEventListener('resize', resizeHandler);
-  try {
-    (world as unknown as { dispose?: () => void } | null)?.dispose?.();
-  } catch {
-    /* world teardown is best-effort */
-  }
-  engine?.dispose();
-});
+//
+// `import.meta.hot` MUST be referenced DIRECTLY — Bun's HMR runtime makes it a getter that throws
+// "import.meta.hot.dispose cannot be used indirectly" if you alias it to a variable first. So we touch
+// it inline in the guard and the call, never via a local. bun-types declares the member, so tsc is happy.
+if (import.meta.hot) {
+  import.meta.hot.dispose(() => {
+    cancelAnimationFrame(rafId);
+    if (resizeHandler) window.removeEventListener('resize', resizeHandler);
+    try {
+      (world as unknown as { dispose?: () => void } | null)?.dispose?.();
+    } catch {
+      /* world teardown is best-effort */
+    }
+    engine?.dispose();
+  });
+}
