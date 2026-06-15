@@ -56,6 +56,19 @@ the full gate (now also a coverage gate, on Linux + Windows) with same-seed dete
 
 ### Added
 
+- **Super Neural folds into the Super Creature box — 4 tabs, 27 visuals + a BRAIN (V75)** — user
+  feedback: "Super Creature / Super Neural should be in the SAME box, not a 2nd window … 9 windows not
+  6 … tabs 1/2/3 for 27 data visuals, tab 4 a BRAIN … 3D is cool and temporal is nice … no overflow."
+  The observatory no longer spawns a separate fixed overlay; it mounts INSIDE `#cqm-sup-panel`, and
+  the `⊞ NEURAL` button grows the one box (swapping telemetry for the observatory). FOUR tabs — I·WORLD,
+  II·COGNITION, III·QUANTUM (each a 3×3 grid of 9 live readouts) and IV·BRAIN (a rotating 3D connectome
+  of the 9 mind-organs with travelling signal pulses). The quantum tab ports primitives from the
+  **Eshkol + Quantum-Geometric-Tensor** repos — deterministic amplitude-encoding of the 10 quantum
+  aspects, Grover diffusion (reflect-about-mean), and a DFT/QFT magnitude spectrum. Every readout binds
+  a real `SuperMindSnapshot` variable; per-frame ring-buffer history gives the trail/heatmap/collapse
+  views motion between the slow Observatory pushes; the rAF is capped at ~30 fps with a paint-on-snapshot
+  fallback so it renders even when a hidden tab pauses rAF. Verified live (all 4 tabs paint, no console
+  errors). `src/ui/super-neural.ts` (rewritten) + `src/ui/super-panel.ts` (consolidation).
 - **Launcher reverted to its prior layout + the dock float killed at the source (V74)** — user feedback on
   V73: "Where did the buttons to cycle go? Why are DOCS SPEC LAB central to the dock row? It was OK before
   where it was" + screenshots of the links floating above the bar. Three fixes: (1) **reverted** the V73
