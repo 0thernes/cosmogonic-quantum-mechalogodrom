@@ -807,14 +807,21 @@ a:focus-visible {
     container-type: inline-size;
   }
 
-  /* Algo readout: a compact always-visible strip pinned bottom-left, clear of
-     the toolbar and the touch joystick. Never a sheet — it is glanceable lore. */
+  /* Algo readout: a compact always-visible strip pinned bottom-left, ABOVE the two scrollable bottom
+     bars (V53: dock top ≈ 122px). Never a sheet — it is glanceable lore. (A touch device lifts it
+     further over the joystick in the coarse block below.) */
   #ui > #alg {
     position: fixed;
     left: 6px;
-    bottom: calc(48px + env(safe-area-inset-bottom, 0px));
+    bottom: calc(128px + env(safe-area-inset-bottom, 0px));
     max-width: min(60vw, 240px);
     z-index: 19;
+  }
+  /* V53: the View/Speed/Render readout is hidden on mobile/portrait — it would collide with the
+     full-width bottom bars, and its data (view + render mode, speed) is reachable via the #bar
+     buttons and the telemetry sheet. Keeps the small screen uncluttered. */
+  #hud-vsr {
+    display: none;
   }
 }
 

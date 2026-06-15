@@ -21,6 +21,15 @@ const STYLE = `
 /* Neutralise each child's own fixed positioning so the flex bar lays them out (styling is preserved). */
 #${DOCK_ID} > button,#${DOCK_ID} > a{position:static!important;inset:auto!important;margin:0!important}
 #${DOCK_ID} > a{order:10} /* push the Docs/Spec nav links to the end of the bar */
+/* V53 mobile: on small/portrait/touch viewports the 10 toggles wrapped to ~6 rows (~323px tall) and
+   ate ~40% of the screen — and the pop-up panels opened INSIDE that band. Make the dock a single
+   COMPACT horizontally-scrollable row (a standard mobile tab-bar), so it stays ~52px and the panels
+   above it (bottom:128) clear it. Swipe to reach every control. */
+@media (max-width: 768px), (orientation: portrait), (pointer: coarse) {
+  #${DOCK_ID}{flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;justify-content:flex-start;
+    max-width:calc(100vw - 12px);scrollbar-width:thin;-webkit-overflow-scrolling:touch}
+  #${DOCK_ID} > *{flex:0 0 auto}
+}
 `;
 
 /** Lazily build (or fetch) the dock bar, adopting the standalone Docs + Spec nav links the first time. */
