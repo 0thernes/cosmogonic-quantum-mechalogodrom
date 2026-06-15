@@ -743,8 +743,17 @@ a:focus-visible {
    The #ui container itself goes pointer-events:none so the bare 3D
    world is fully interactive; only the handles + an open sheet capture
    input. The algo readout stays pinned as a small bottom strip.
+
+   V78 — the portrait trigger is SCOPED to `(max-width: 1024px)`. A bare
+   `(orientation: portrait)` also caught WIDE fine-pointer portrait DESKTOP
+   monitors (e.g. the user's portrait QHD, 1440×2560) — phones are already
+   covered by `(max-width: 768px)` + `(pointer: coarse)`, so the standalone
+   portrait term ONLY mis-applied phone sheet-mode to portrait desktops,
+   which hid the Sim-Settings box (#hud-vsr) and shoved the control pad
+   off-screen. A wide portrait desktop now keeps the full desktop layout
+   (the bottom-right readout column + centred control pad).
    ════════════════════════════════════════════════════════════════ */
-@media (max-width: 768px), (orientation: portrait), (pointer: coarse) {
+@media (max-width: 768px), (orientation: portrait) and (max-width: 1024px), (pointer: coarse) {
   /* Drop the grid: #ui becomes a passthrough layer; sheets self-position. */
   #ui {
     display: block;
