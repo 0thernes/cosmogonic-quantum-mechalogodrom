@@ -575,7 +575,7 @@ a:focus-visible {
    sets #cP display:none (the joystick/look-pad/wheel replace it), so this is a desktop-only place. */
 #cP {
   position: fixed;
-  right: 164px;
+  right: 172px;
   bottom: 56px;
   width: clamp(150px, 13vw, 178px);
   max-height: 42vh;
@@ -619,7 +619,10 @@ a:focus-visible {
      gap — zero overlap, the two boxes read as one tidy bottom-right column that reflows on resize. */
   bottom: 180px;
   z-index: 20;
-  max-width: clamp(125px, 26vw, 195px);
+  /* V78: capped narrower (was 195) so this far-right readout column never reaches into the centred
+     control pad's space when a long field/lore name widens it — the intermittent #cP×#alg overlap.
+     Sparkline + field name still fit; an over-long lore line ellipsis-truncates (it is secondary). */
+  max-width: clamp(120px, 18vw, 150px);
   pointer-events: none;
 }
 /* Panels are flex shells so a viewport clamp squeezes the scrolling body. Each is
@@ -869,11 +872,17 @@ a:focus-visible {
     max-width: min(60vw, 240px);
     z-index: 19;
   }
-  /* V53: the View/Speed/Render readout is hidden on mobile/portrait — it would collide with the
-     full-width bottom bars, and its data (view + render mode, speed) is reachable via the #bar
-     buttons and the telemetry sheet. Keeps the small screen uncluttered. */
+  /* V78: the live Simulation-Settings box (View/Speed/Render/Music/SFX/Song/Resets) USED to hide here
+     ("it vanished!"). The user wants it visible on the RIGHT in sheet mode too — mirroring the #alg
+     readout on the left. Pin it bottom-RIGHT, lifted ABOVE the #alg band (which sits at bottom:128) so
+     the two little data cards flank the bottom bars without ever touching, on every portrait/narrow
+     viewport. Data stays glanceable; never collides with the full-width bottom bars. */
   #hud-vsr {
-    display: none;
+    right: max(6px, env(safe-area-inset-right, 0px));
+    left: auto;
+    bottom: calc(210px + env(safe-area-inset-bottom, 0px));
+    max-width: min(52vw, 220px);
+    z-index: 19;
   }
 }
 

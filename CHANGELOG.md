@@ -56,6 +56,17 @@ the full gate (now also a coverage gate, on Linux + Windows) with same-seed dete
 
 ### Added
 
+- **The live Simulation-Settings box is restored on the right in portrait/narrow views — and the
+  corner is overlap-proof regardless of label length (V78)** — user: "Where is the Simulation
+  Statistical box with the live data (Song/Music/SFX/Speed/Render/Resets/View)? It vanished! Put it
+  back on the right." It was `display:none` inside the sheet-mode media query (portrait / ≤768px /
+  coarse), so on a narrow or portrait window the box disappeared while the `#alg` sorting card stayed
+  bottom-left. Now `#hud-vsr` is pinned bottom-RIGHT in sheet mode too — lifted above the `#alg` band
+  so the two data cards flank the bottom bars without touching (verified visible, on-screen and
+  overlap-free at 700×1000 and 390×844). Separately, the desktop corner had an INTERMITTENT
+  `#cP`×`#alg` overlap: `#alg`'s width is content-driven up to its max, so a long field/lore name
+  widened it into the centred control pad; `#alg` is now capped (195→150px) and `#cP` clears it (right
+  164→172px) — verified ZERO overlaps at 1440 even with a forced max-width label. `src/styles/app.css`.
 - **The NEURAL · QUANTUM tab binds the real simulated-qubit mind (V76–V77)** — the directive's "Super
   Creature has a Quantum Computing Mind · Simulated Qubits (study the Eshkol + Tsotchke repos)". The
   Super Creature now owns a genuine **6-qubit statevector register** (`src/sim/super-qubits.ts`,
