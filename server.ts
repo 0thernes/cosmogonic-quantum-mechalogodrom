@@ -256,6 +256,41 @@ export function parseChatMessages(body: unknown): ChatMessage[] | null {
   return out;
 }
 
+/**
+ * Defense-in-depth headers added to every response THIS server constructs (RISK-05). `nosniff` stops
+ * a browser MIME-confusing the user-data HTML audit fragment or the JSON API into something
+ * executable; `no-referrer` keeps the local URL out of any outbound request. CSP + `X-Frame-Options`
+ * are deliberately OMITTED — they are the public-deploy step (SECURITY.md) and would risk the bundled
+ * app shell / the dev-preview iframe, whereas these two never change how any client renders the page.
+ */
+const SECURITY_HEADERS: Record<string, string> = {
+  'X-Content-Type-Options': 'nosniff',
+  'Referrer-Policy': 'no-referrer',
+};
+
+/** Stamp {@link SECURITY_HEADERS} onto a response in place and return it. O(1). */
+export function withSecurityHeaders(res: Response): Response {
+  for (const k in SECURITY_HEADERS) res.headers.set(k, SECURITY_HEADERS[k]!);
+  return res;
+}
+
+/**
+ * Wrap a Bun route handler-map so EVERY response it returns passes through {@link withSecurityHeaders}
+ * exactly once — sync or async, every status code, with no per-return edits. Static HTML-bundle routes
+ * (`/`, `/docs`, `/spec`) are served by Bun's bundler and keep their own headers; their CSP is the
+ * documented deploy step.
+ */
+function secured<T extends Record<string, (req: Request) => Response | Promise<Response>>>(
+  handlers: T,
+): T {
+  const out: Record<string, (req: Request) => Promise<Response>> = {};
+  for (const method in handlers) {
+    const fn = handlers[method]!;
+    out[method] = (req: Request) => Promise.resolve(fn(req)).then(withSecurityHeaders);
+  }
+  return out as T;
+}
+
 // Start the HTTP server only when this file is run directly (`bun server.ts` / `bun --hot server.ts`).
 // When imported — e.g. by unit tests of the pure body-parsers above — `import.meta.main` is false, so
 // no socket is opened and the test process exits cleanly.
@@ -267,21 +302,21 @@ if (import.meta.main) {
       '/': index,
       '/docs': docs,
       '/spec': spec,
-      '/lab': {
+      '/lab': secured({
         GET(req) {
           logRequest(req, 200);
           return new Response(Bun.file(new URL('./lab/quantum-wildbeyond.html', import.meta.url)), {
             headers: { 'Content-Type': 'text/html; charset=utf-8' },
           });
         },
-      },
-      '/api/health': {
+      }),
+      '/api/health': secured({
         GET(req) {
           logRequest(req, 200);
           return Response.json({ ok: true, uptime: process.uptime(), version: VERSION });
         },
-      },
-      '/api/audit': {
+      }),
+      '/api/audit': secured({
         GET(req) {
           logRequest(req, 200);
           return new Response(renderAuditFragment(), {
@@ -340,9 +375,9 @@ if (import.meta.main) {
           logRequest(req, 201);
           return Response.json({ ok: true, retained: auditCount }, { status: 201 });
         },
-      },
+      }),
       // ── Copilot (CONTRACTS V9): the free-LLM side-chat. Outside the deterministic sim. ──
-      '/api/copilot': {
+      '/api/copilot': secured({
         // Report the active provider so the chat panel can show it (no secrets — label only).
         GET(req) {
           logRequest(req, 200);
@@ -353,10 +388,10 @@ if (import.meta.main) {
             providers: COPILOT_ENABLED ? availableProviders() : [],
           });
         },
-      },
+      }),
       // Diagnostics + recovery pipeline: live-probe every provider in the failover chain so the panel
       // can show WHY the AI is silent (rate-limited? auth? all down?) and offer a restart/re-probe.
-      '/api/copilot/health': {
+      '/api/copilot/health': secured({
         async GET(req) {
           if (!COPILOT_ENABLED) {
             logRequest(req, 200);
@@ -381,8 +416,8 @@ if (import.meta.main) {
             providers,
           });
         },
-      },
-      '/api/chat': {
+      }),
+      '/api/chat': secured({
         // Run one Copilot turn: the model may call read-only tools (read/list/grep/run) via the
         // ai-sandbox gate, then answers. Never writes to the repo or the sim.
         async POST(req) {
@@ -410,8 +445,8 @@ if (import.meta.main) {
           logRequest(req, 200);
           return Response.json(result);
         },
-      },
-      '/api/tool': {
+      }),
+      '/api/tool': secured({
         // Direct read-only tool call for the chat panel's manual terminal (/read /ls /grep /run).
         // Every call passes through the same default-deny ai-sandbox gate.
         async POST(req) {
@@ -436,11 +471,11 @@ if (import.meta.main) {
           logRequest(req, result.ok ? 200 : 400);
           return Response.json(result, { status: result.ok ? 200 : 400 });
         },
-      },
+      }),
     },
     fetch(req) {
       logRequest(req, 404);
-      return new Response('Not Found', { status: 404 });
+      return withSecurityHeaders(new Response('Not Found', { status: 404 }));
     },
   });
 

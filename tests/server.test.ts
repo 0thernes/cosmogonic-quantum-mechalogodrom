@@ -5,7 +5,7 @@
  * `import.meta.main`, so importing it here opens no socket and the suite stays hermetic.
  */
 import { describe, expect, test } from 'bun:test';
-import { makeRateLimiter, parseAuditBody, parseChatMessages } from '../server';
+import { makeRateLimiter, parseAuditBody, parseChatMessages, withSecurityHeaders } from '../server';
 
 describe('parseAuditBody — audit POST body narrowing', () => {
   test('accepts a minimal valid body and stamps a finite ts', () => {
@@ -130,5 +130,23 @@ describe('makeRateLimiter — POST /api/audit flood seal (SERVER-RL)', () => {
     // long session must always be admitted — the seal only sheds machine-speed floods.
     const rl = makeRateLimiter(60, 30);
     for (let i = 0; i < 50; i++) expect(rl.tryRemove(i * 2000)).toBe(true);
+  });
+});
+
+describe('withSecurityHeaders — defense-in-depth response headers (RISK-05)', () => {
+  test('adds nosniff + no-referrer while preserving status and existing headers', () => {
+    const res = withSecurityHeaders(
+      Response.json({ ok: true }, { status: 201, headers: { 'Retry-After': '1' } }),
+    );
+    expect(res.headers.get('X-Content-Type-Options')).toBe('nosniff');
+    expect(res.headers.get('Referrer-Policy')).toBe('no-referrer');
+    expect(res.headers.get('Retry-After')).toBe('1'); // pre-existing header untouched
+    expect(res.status).toBe(201);
+  });
+
+  test('mutates and returns the same response instance (so wrapped handlers stay zero-copy)', () => {
+    const res = new Response('not found', { status: 404 });
+    expect(withSecurityHeaders(res)).toBe(res);
+    expect(res.headers.get('X-Content-Type-Options')).toBe('nosniff');
   });
 });
