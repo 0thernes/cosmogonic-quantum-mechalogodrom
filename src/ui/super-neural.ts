@@ -8,14 +8,17 @@
  * overflow"):
  *   I   · WORLD     — 9 readouts of the CORTEX world-model / perception / imagination.
  *   II  · COGNITION — 9 readouts of the five-stage pipeline, consciousness, emotion, drives.
- *   III · QUANTUM   — 9 readouts of the quantum mind (aspects + ported Eshkol/QGTL primitives:
- *                     amplitude-encoded register, Grover diffusion, QFT spectrum, walk, entropy).
+ *   III · QUANTUM   — 9 readouts of the REAL simulated-qubit mind (`SuperMindSnapshot.qubits`, the V75
+ *                     `super-qubits.ts` 6-qubit statevector register): the |ψ|² statevector phase-
+ *                     coloured, per-qubit Bloch vectors, live entropy/coherence, the Born-sampled
+ *                     "collapsed thought", the entanglement web — plus aspect-side Grover/QFT echoes.
  *   IV  · BRAIN     — one large rotating 3D connectome of the mind's organs + signal flow.
  *
  * Every readout is bound to a REAL variable of the {@link SuperMindSnapshot}; nothing decorative.
  * Temporal views keep small ring-buffers so the data has MOTION between the slow Observatory pushes.
- * UI shell only — it never imports or mutates sim state (the determinism ban is on sim logic, not
- * the rAF clock). The quantum primitives mirror the deterministic math in `src/math/quantum.ts`.
+ * UI shell only — it never imports or mutates sim state (the determinism ban is on sim logic, not the
+ * rAF clock). The QUANTUM tab reads the editor's real register; the Grover/QFT echoes mirror the
+ * deterministic math in `src/math/quantum.ts`.
  */
 import type { SuperMindSnapshot } from '../sim/super-mind';
 
@@ -791,23 +794,26 @@ const drawQuantumCrown: Drawer = (ctx, w, h, s, t) => {
   ctx.textAlign = 'left';
 };
 const drawAmplitudes: Drawer = (ctx, w, h, s) => {
-  frame(ctx, w, h, 'Q · AMPLITUDES');
-  const a = ampEncode(s.quantum);
-  const n = a.length;
-  const x0 = 6;
-  const bw = (w - 12) / n;
-  const base = h - 10;
+  frame(ctx, w, h, 'Q · STATEVECTOR');
+  // REAL register: the 2ⁿ Born probabilities, each bar HUE-coded by its amplitude phase.
+  const probs = s.qubits?.probs ?? [];
+  const phase = s.qubits?.phase ?? [];
+  const n = probs.length || 1;
+  const x0 = 5;
+  const bw = (w - 10) / n;
+  const base = h - 9;
   let mx = 1e-6;
-  for (let i = 0; i < n; i++) mx = Math.max(mx, a[i] ?? 0);
+  for (let i = 0; i < n; i++) mx = Math.max(mx, probs[i] ?? 0);
   for (let i = 0; i < n; i++) {
-    const v = (a[i] ?? 0) / mx;
-    ctx.fillStyle = `rgba(108,223,255,${(0.4 + v * 0.5).toFixed(2)})`;
-    ctx.fillRect(x0 + i * bw + 1, base - v * (h - 26), bw - 2, v * (h - 26));
+    const v = (probs[i] ?? 0) / mx;
+    const hue = (((phase[i] ?? 0) + Math.PI) / (2 * Math.PI)) * 360; // phase → hue
+    ctx.fillStyle = `hsl(${hue.toFixed(0)},85%,${(40 + v * 25).toFixed(0)}%)`;
+    ctx.fillRect(x0 + i * bw, base - v * (h - 24), Math.max(0.6, bw - 0.5), v * (h - 24));
   }
   ctx.fillStyle = PAL.dim;
   lab(ctx, w, 6);
   ctx.textAlign = 'right';
-  ctx.fillText('|ψ| · 16 amp', w - 5, 5);
+  ctx.fillText(`|ψ|² · ${n} basis · ${s.qubits?.qubits ?? 0}q`, w - 5, 5);
   ctx.textAlign = 'left';
 };
 const drawGrover: Drawer = (ctx, w, h, s, t) => {
@@ -861,102 +867,110 @@ const drawQFT: Drawer = (ctx, w, h, s, t) => {
 };
 const drawEntangleWeb: Drawer = (ctx, w, h, s, t) => {
   frame(ctx, w, h, 'Q · ENTANGLE');
-  const q = s.quantum;
-  const n = q.length || 10;
+  // REAL register: the n qubits as nodes (size = P(|1⟩)); web density scales with the live
+  // entanglement metric (mean reduced-state purity deficit).
+  const p1 = s.qubits?.p1 ?? [];
+  const ent = clamp01(s.qubits?.entanglement ?? 0);
+  const n = p1.length || 6;
   const cx = w / 2;
   const cy = h / 2 + 4;
   const R = Math.min(w, h) * 0.4;
-  const ent = clamp01(q[1] ?? 0); // ENT aspect strength gates the web density
   const pts: { x: number; y: number; v: number }[] = [];
   for (let i = 0; i < n; i++) {
     const a = (i / n) * Math.PI * 2 + t * 0.3;
-    const v = clamp01(q[i] ?? 0);
+    const v = clamp01(p1[i] ?? 0);
     pts.push({ x: cx + Math.cos(a) * R, y: cy + Math.sin(a) * R, v });
   }
   for (let i = 0; i < n; i++)
     for (let j = i + 1; j < n; j++) {
-      const strength = (pts[i]!.v + pts[j]!.v) * 0.5 * ent;
-      if (strength < 0.18) continue;
-      ctx.strokeStyle = `rgba(185,140,255,${(strength * 0.6).toFixed(2)})`;
-      ctx.lineWidth = strength * 1.5;
+      const strength = (0.4 + (pts[i]!.v + pts[j]!.v) * 0.3) * ent;
+      if (strength < 0.12) continue;
+      ctx.strokeStyle = `rgba(185,140,255,${(strength * 0.7).toFixed(2)})`;
+      ctx.lineWidth = 0.5 + strength * 1.8;
       ctx.beginPath();
       ctx.moveTo(pts[i]!.x, pts[i]!.y);
       ctx.lineTo(pts[j]!.x, pts[j]!.y);
       ctx.stroke();
     }
+  ctx.fillStyle = PAL.dim;
+  lab(ctx, w, 6);
+  ctx.textAlign = 'right';
+  ctx.fillText('E ' + ent.toFixed(2), w - 5, 5);
+  ctx.textAlign = 'left';
   for (const p of pts) spark(ctx, p.x, p.y, 1.6 + p.v * 4, '108,223,255', 0.3 + p.v * 0.4);
 };
 const drawSuperposWheel: Drawer = (ctx, w, h, s, t) => {
   frame(ctx, w, h, 'Q · SUPERPOSITION');
-  const q = s.quantum;
-  const n = q.length || 10;
+  // REAL register: each qubit's P(|1⟩) as radius (centre = |0⟩, rim = |1⟩); the ring brightness is
+  // the live coherence (mean equatorial Bloch magnitude).
+  const p1 = s.qubits?.p1 ?? [];
+  const coh = clamp01(s.qubits?.coherence ?? 0);
+  const n = p1.length || 6;
   const cx = w / 2;
   const cy = h / 2 + 4;
   const R = Math.min(w, h) * 0.42;
   const spin = t * 0.7;
-  ctx.strokeStyle = PAL.grid;
+  ctx.strokeStyle = `rgba(108,223,255,${(0.12 + coh * 0.6).toFixed(2)})`;
+  ctx.lineWidth = 1 + coh * 2.5;
   ctx.beginPath();
   ctx.arc(cx, cy, R, 0, Math.PI * 2);
   ctx.stroke();
   for (let i = 0; i < n; i++) {
     const a = (i / n) * Math.PI * 2 + spin;
-    const v = clamp01(q[i] ?? 0);
-    const rr = R * (0.2 + v * 0.8);
-    spark(
-      ctx,
-      cx + Math.cos(a) * rr,
-      cy + Math.sin(a) * rr,
-      1.5 + v * 4,
-      '185,140,255',
-      0.3 + v * 0.5,
-    );
+    const v = clamp01(p1[i] ?? 0);
+    const rr = R * (0.15 + v * 0.85);
+    const x = cx + Math.cos(a) * rr;
+    const y = cy + Math.sin(a) * rr;
+    ctx.strokeStyle = `rgba(185,140,255,${(0.2 + v * 0.4).toFixed(2)})`;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(x, y);
+    ctx.stroke();
+    spark(ctx, x, y, 2 + v * 4, '185,140,255', 0.3 + v * 0.5);
   }
 };
 const drawQEntropy: Drawer = (ctx, w, h, s, _t, H) => {
   frame(ctx, w, h, 'Q · ENTROPY');
-  const a = ampEncode(s.quantum);
-  let ent = 0;
-  for (let i = 0; i < a.length; i++) {
-    const p = (a[i] ?? 0) ** 2;
-    if (p > 1e-9) ent -= p * Math.log2(p);
-  }
-  ent /= Math.log2(a.length); // normalize 0..1
-  H.push('qent', clamp01(ent));
+  // REAL register: normalized Shannon entropy of the Born distribution (1 = uniform superposition).
+  const ent = clamp01(s.qubits?.entropy ?? 0);
+  const coh = clamp01(s.qubits?.coherence ?? 0);
+  H.push('qent', ent);
+  H.push('qcoh', coh);
   trail(ctx, H.series('qent'), H.head, 6, 16, w - 6, h - 8, 0, 1, '185,140,255');
+  trail(ctx, H.series('qcoh'), H.head, 6, 16, w - 6, h - 8, 0, 1, '108,223,255');
   ctx.fillStyle = PAL.violet;
-  lab(ctx, w, 7);
+  lab(ctx, w, 6.5);
+  ctx.fillText('S ' + ent.toFixed(2), 6, 5);
+  ctx.fillStyle = PAL.cyan;
   ctx.textAlign = 'right';
-  ctx.fillText('S ' + ent.toFixed(2), w - 5, 5);
+  ctx.fillText('coh ' + coh.toFixed(2), w - 5, 5);
   ctx.textAlign = 'left';
 };
 const drawCollapse: Drawer = (ctx, w, h, s, _t, H) => {
   frame(ctx, w, h, 'Q · COLLAPSE');
-  // peak aspect = the "measured" basis this beat; show a temporal raster of which collapsed
-  const q = s.quantum;
-  let peak = 0;
-  let pv = -1;
-  for (let i = 0; i < q.length; i++)
-    if ((q[i] ?? 0) > pv) {
-      pv = q[i] ?? 0;
-      peak = i;
-    }
-  H.push('coll', peak);
-  const n = q.length || 10;
+  // REAL register: the Born-sampled basis state this beat (the "collapsed thought"), as a temporal
+  // raster — each column a past beat, the lit row the basis index it sampled.
+  const qb = s.qubits;
+  const sampled = qb?.sampled ?? 0;
+  const dim = Math.max(1, qb?.dim ?? 64);
+  H.push('coll', sampled);
   const cols = HCAP;
   const cw = (w - 8) / cols;
-  const rh = (h - 18) / n;
+  const rows = Math.min(dim, 32);
+  const rh = (h - 18) / rows;
   const ser = H.series('coll');
   for (let c = 0; c < cols; c++) {
     const idx = (H.head + 1 + c) % cols;
-    const row = Math.round(ser[idx] ?? 0);
+    const row = Math.round(((ser[idx] ?? 0) / Math.max(1, dim - 1)) * (rows - 1));
     const fade = c / cols;
-    ctx.fillStyle = `rgba(108,223,255,${(0.15 + fade * 0.6).toFixed(2)})`;
-    ctx.fillRect(4 + c * cw, 16 + row * rh, cw + 0.6, rh - 1);
+    ctx.fillStyle = `rgba(141,255,158,${(0.12 + fade * 0.65).toFixed(2)})`;
+    ctx.fillRect(4 + c * cw, 16 + row * rh, cw + 0.6, Math.max(1, rh - 0.5));
   }
-  ctx.fillStyle = PAL.dim;
-  lab(ctx, w, 6);
+  ctx.fillStyle = PAL.green;
+  lab(ctx, w, 6.5);
   ctx.textAlign = 'right';
-  ctx.fillText(Q_LABELS[peak] ?? '', w - 5, 5);
+  ctx.fillText('|' + (qb?.sampledBits ?? '') + '⟩', w - 5, 5);
   ctx.textAlign = 'left';
 };
 const drawBloch: Drawer = (ctx, w, h, s, t) => {
@@ -983,26 +997,36 @@ const drawBloch: Drawer = (ctx, w, h, s, t) => {
     }
     ctx.stroke();
   }
-  // state vector from superposition(theta) + entanglement(phi)
-  const theta = clamp01(s.quantum[0] ?? 0) * Math.PI;
-  const phi = clamp01(s.quantum[1] ?? 0) * Math.PI * 2 + t;
-  const p = project(
-    Math.sin(theta) * Math.cos(phi),
-    Math.cos(theta),
-    Math.sin(theta) * Math.sin(phi),
-    ang,
-    cx,
-    cy,
-    scale,
-  );
+  // REAL register: every qubit's Bloch vector from its reduced density matrix (z = computational
+  // axis → screen up). A short vector = mixed/entangled; a long one near the equator = live
+  // superposition. Each qubit gets its own hue.
+  const bloch = s.qubits?.bloch ?? [];
   const ctr = project(0, 0, 0, ang, cx, cy, scale);
-  ctx.strokeStyle = 'rgba(141,255,158,.85)';
-  ctx.lineWidth = 1.6;
-  ctx.beginPath();
-  ctx.moveTo(ctr.x, ctr.y);
-  ctx.lineTo(p.x, p.y);
-  ctx.stroke();
-  spark(ctx, p.x, p.y, 5, '141,255,158', 0.8);
+  const cols = [
+    '141,255,158',
+    '108,223,255',
+    '185,140,255',
+    '255,209,102',
+    '255,106,176',
+    '255,90,107',
+  ];
+  for (let i = 0; i < bloch.length; i++) {
+    const b = bloch[i]!;
+    const p = project(b.x, b.z, b.y, ang, cx, cy, scale);
+    const rgb = cols[i % cols.length]!;
+    ctx.strokeStyle = `rgba(${rgb},.85)`;
+    ctx.lineWidth = 1.4;
+    ctx.beginPath();
+    ctx.moveTo(ctr.x, ctr.y);
+    ctx.lineTo(p.x, p.y);
+    ctx.stroke();
+    spark(ctx, p.x, p.y, 2 + clamp01(b.r ?? 0) * 4, rgb, 0.7);
+  }
+  ctx.fillStyle = PAL.dim;
+  lab(ctx, w, 6);
+  ctx.textAlign = 'right';
+  ctx.fillText(`${bloch.length} qubits`, w - 5, 5);
+  ctx.textAlign = 'left';
 };
 
 // ════════════════════ TAB IV — BRAIN (1 large connectome) ════════════════════
