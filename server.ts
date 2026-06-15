@@ -137,7 +137,7 @@ function renderAuditFragment(): string {
  * the same default applied when `ts` is missing. `detail` is serialized and
  * truncated HERE so the stored entry is constant-bounded.
  */
-function parseAuditBody(body: unknown): StoredAuditEntry | null {
+export function parseAuditBody(body: unknown): StoredAuditEntry | null {
   if (typeof body !== 'object' || body === null || Array.isArray(body)) return null;
   const rec = body as Record<string, unknown>;
   const action = rec['action'];
@@ -195,7 +195,7 @@ async function readJsonBody(
 }
 
 /** Narrow an unknown body to a bounded {@link ChatMessage}[]; null when malformed. */
-function parseChatMessages(body: unknown): ChatMessage[] | null {
+export function parseChatMessages(body: unknown): ChatMessage[] | null {
   if (typeof body !== 'object' || body === null) return null;
   const arr = (body as Record<string, unknown>)['messages'];
   if (!Array.isArray(arr) || arr.length === 0 || arr.length > 100) return null;
@@ -216,178 +216,183 @@ function parseChatMessages(body: unknown): ChatMessage[] | null {
   return out;
 }
 
-const server = Bun.serve({
-  port: Number(process.env.PORT) || 3000,
-  development: process.env.NODE_ENV !== 'production',
-  routes: {
-    '/': index,
-    '/docs': docs,
-    '/spec': spec,
-    '/lab': {
-      GET(req) {
-        logRequest(req, 200);
-        return new Response(Bun.file(new URL('./lab/quantum-wildbeyond.html', import.meta.url)), {
-          headers: { 'Content-Type': 'text/html; charset=utf-8' },
-        });
+// Start the HTTP server only when this file is run directly (`bun server.ts` / `bun --hot server.ts`).
+// When imported — e.g. by unit tests of the pure body-parsers above — `import.meta.main` is false, so
+// no socket is opened and the test process exits cleanly.
+if (import.meta.main) {
+  const server = Bun.serve({
+    port: Number(process.env.PORT) || 3000,
+    development: process.env.NODE_ENV !== 'production',
+    routes: {
+      '/': index,
+      '/docs': docs,
+      '/spec': spec,
+      '/lab': {
+        GET(req) {
+          logRequest(req, 200);
+          return new Response(Bun.file(new URL('./lab/quantum-wildbeyond.html', import.meta.url)), {
+            headers: { 'Content-Type': 'text/html; charset=utf-8' },
+          });
+        },
       },
-    },
-    '/api/health': {
-      GET(req) {
-        logRequest(req, 200);
-        return Response.json({ ok: true, uptime: process.uptime(), version: VERSION });
+      '/api/health': {
+        GET(req) {
+          logRequest(req, 200);
+          return Response.json({ ok: true, uptime: process.uptime(), version: VERSION });
+        },
       },
-    },
-    '/api/audit': {
-      GET(req) {
-        logRequest(req, 200);
-        return new Response(renderAuditFragment(), {
-          headers: { 'Content-Type': 'text/html; charset=utf-8' },
-        });
+      '/api/audit': {
+        GET(req) {
+          logRequest(req, 200);
+          return new Response(renderAuditFragment(), {
+            headers: { 'Content-Type': 'text/html; charset=utf-8' },
+          });
+        },
+        async POST(req) {
+          // Reject oversized bodies before parsing: declared length first, then the
+          // actual read (covers chunked/undeclared bodies and lying headers).
+          const declared = req.headers.get('content-length');
+          if (
+            declared !== null &&
+            Number.isFinite(Number(declared)) &&
+            Number(declared) > MAX_BODY_LEN
+          ) {
+            logRequest(req, 413);
+            return Response.json({ ok: false, error: 'body too large' }, { status: 413 });
+          }
+          let text: string;
+          try {
+            text = await req.text();
+          } catch {
+            logRequest(req, 400);
+            return Response.json({ ok: false, error: 'unreadable body' }, { status: 400 });
+          }
+          if (text.length > MAX_BODY_LEN) {
+            logRequest(req, 413);
+            return Response.json({ ok: false, error: 'body too large' }, { status: 413 });
+          }
+          let body: unknown;
+          try {
+            body = JSON.parse(text);
+          } catch {
+            logRequest(req, 400);
+            return Response.json({ ok: false, error: 'invalid JSON' }, { status: 400 });
+          }
+          const entry = parseAuditBody(body);
+          if (!entry) {
+            logRequest(req, 400);
+            return Response.json(
+              { ok: false, error: 'expected { action: string, detail?: object, ts?: number }' },
+              { status: 400 },
+            );
+          }
+          pushAudit(entry);
+          logRequest(req, 201);
+          return Response.json({ ok: true, retained: auditCount }, { status: 201 });
+        },
       },
-      async POST(req) {
-        // Reject oversized bodies before parsing: declared length first, then the
-        // actual read (covers chunked/undeclared bodies and lying headers).
-        const declared = req.headers.get('content-length');
-        if (
-          declared !== null &&
-          Number.isFinite(Number(declared)) &&
-          Number(declared) > MAX_BODY_LEN
-        ) {
-          logRequest(req, 413);
-          return Response.json({ ok: false, error: 'body too large' }, { status: 413 });
-        }
-        let text: string;
-        try {
-          text = await req.text();
-        } catch {
-          logRequest(req, 400);
-          return Response.json({ ok: false, error: 'unreadable body' }, { status: 400 });
-        }
-        if (text.length > MAX_BODY_LEN) {
-          logRequest(req, 413);
-          return Response.json({ ok: false, error: 'body too large' }, { status: 413 });
-        }
-        let body: unknown;
-        try {
-          body = JSON.parse(text);
-        } catch {
-          logRequest(req, 400);
-          return Response.json({ ok: false, error: 'invalid JSON' }, { status: 400 });
-        }
-        const entry = parseAuditBody(body);
-        if (!entry) {
-          logRequest(req, 400);
-          return Response.json(
-            { ok: false, error: 'expected { action: string, detail?: object, ts?: number }' },
-            { status: 400 },
-          );
-        }
-        pushAudit(entry);
-        logRequest(req, 201);
-        return Response.json({ ok: true, retained: auditCount }, { status: 201 });
-      },
-    },
-    // ── Copilot (CONTRACTS V9): the free-LLM side-chat. Outside the deterministic sim. ──
-    '/api/copilot': {
-      // Report the active provider so the chat panel can show it (no secrets — label only).
-      GET(req) {
-        logRequest(req, 200);
-        return Response.json({
-          ok: true,
-          enabled: COPILOT_ENABLED,
-          provider: COPILOT_ENABLED ? providerLabel() : '',
-          providers: COPILOT_ENABLED ? availableProviders() : [],
-        });
-      },
-    },
-    // Diagnostics + recovery pipeline: live-probe every provider in the failover chain so the panel
-    // can show WHY the AI is silent (rate-limited? auth? all down?) and offer a restart/re-probe.
-    '/api/copilot/health': {
-      async GET(req) {
-        if (!COPILOT_ENABLED) {
+      // ── Copilot (CONTRACTS V9): the free-LLM side-chat. Outside the deterministic sim. ──
+      '/api/copilot': {
+        // Report the active provider so the chat panel can show it (no secrets — label only).
+        GET(req) {
           logRequest(req, 200);
           return Response.json({
             ok: true,
-            enabled: false,
-            reason:
-              'disabled in this deployment — production gate is on (set COPILOT_ENABLED=1 to allow)',
-            default: '',
-            providers: [],
+            enabled: COPILOT_ENABLED,
+            provider: COPILOT_ENABLED ? providerLabel() : '',
+            providers: COPILOT_ENABLED ? availableProviders() : [],
           });
-        }
-        const providers = await probeProviders();
-        const verdict = healthVerdict(providers);
-        logRequest(req, 200);
-        return Response.json({
-          ok: true,
-          enabled: true,
-          operational: verdict.operational,
-          reason: verdict.summary,
-          default: providerLabel(),
-          providers,
-        });
+        },
+      },
+      // Diagnostics + recovery pipeline: live-probe every provider in the failover chain so the panel
+      // can show WHY the AI is silent (rate-limited? auth? all down?) and offer a restart/re-probe.
+      '/api/copilot/health': {
+        async GET(req) {
+          if (!COPILOT_ENABLED) {
+            logRequest(req, 200);
+            return Response.json({
+              ok: true,
+              enabled: false,
+              reason:
+                'disabled in this deployment — production gate is on (set COPILOT_ENABLED=1 to allow)',
+              default: '',
+              providers: [],
+            });
+          }
+          const providers = await probeProviders();
+          const verdict = healthVerdict(providers);
+          logRequest(req, 200);
+          return Response.json({
+            ok: true,
+            enabled: true,
+            operational: verdict.operational,
+            reason: verdict.summary,
+            default: providerLabel(),
+            providers,
+          });
+        },
+      },
+      '/api/chat': {
+        // Run one Copilot turn: the model may call read-only tools (read/list/grep/run) via the
+        // ai-sandbox gate, then answers. Never writes to the repo or the sim.
+        async POST(req) {
+          if (!COPILOT_ENABLED) {
+            logRequest(req, 403);
+            return Response.json({ ok: false, error: 'copilot disabled' }, { status: 403 });
+          }
+          const body = await readJsonBody(req, MAX_CHAT_BODY);
+          if (!body.ok) {
+            logRequest(req, body.status);
+            return Response.json({ ok: false, error: body.error }, { status: body.status });
+          }
+          const messages = parseChatMessages(body.value);
+          if (!messages) {
+            logRequest(req, 400);
+            return Response.json(
+              { ok: false, error: 'expected { messages: { role, content }[] }' },
+              { status: 400 },
+            );
+          }
+          // Optional free-LLM picker (server resolves the id → endpoint+key; default-deny on unknown).
+          const rec = (body.value ?? {}) as Record<string, unknown>;
+          const provider = typeof rec['provider'] === 'string' ? rec['provider'] : undefined;
+          const result = await runAgent(messages, provider);
+          logRequest(req, 200);
+          return Response.json(result);
+        },
+      },
+      '/api/tool': {
+        // Direct read-only tool call for the chat panel's manual terminal (/read /ls /grep /run).
+        // Every call passes through the same default-deny ai-sandbox gate.
+        async POST(req) {
+          if (!COPILOT_ENABLED) {
+            logRequest(req, 403);
+            return Response.json({ ok: false, error: 'copilot disabled' }, { status: 403 });
+          }
+          const body = await readJsonBody(req, MAX_BODY_LEN);
+          if (!body.ok) {
+            logRequest(req, body.status);
+            return Response.json({ ok: false, error: body.error }, { status: body.status });
+          }
+          const rec = (
+            typeof body.value === 'object' && body.value !== null ? body.value : {}
+          ) as Record<string, unknown>;
+          const tool = typeof rec['tool'] === 'string' ? rec['tool'] : '';
+          const args =
+            typeof rec['args'] === 'object' && rec['args'] !== null
+              ? (rec['args'] as Record<string, unknown>)
+              : {};
+          const result = await dispatchTool(tool, args);
+          logRequest(req, result.ok ? 200 : 400);
+          return Response.json(result, { status: result.ok ? 200 : 400 });
+        },
       },
     },
-    '/api/chat': {
-      // Run one Copilot turn: the model may call read-only tools (read/list/grep/run) via the
-      // ai-sandbox gate, then answers. Never writes to the repo or the sim.
-      async POST(req) {
-        if (!COPILOT_ENABLED) {
-          logRequest(req, 403);
-          return Response.json({ ok: false, error: 'copilot disabled' }, { status: 403 });
-        }
-        const body = await readJsonBody(req, MAX_CHAT_BODY);
-        if (!body.ok) {
-          logRequest(req, body.status);
-          return Response.json({ ok: false, error: body.error }, { status: body.status });
-        }
-        const messages = parseChatMessages(body.value);
-        if (!messages) {
-          logRequest(req, 400);
-          return Response.json(
-            { ok: false, error: 'expected { messages: { role, content }[] }' },
-            { status: 400 },
-          );
-        }
-        // Optional free-LLM picker (server resolves the id → endpoint+key; default-deny on unknown).
-        const rec = (body.value ?? {}) as Record<string, unknown>;
-        const provider = typeof rec['provider'] === 'string' ? rec['provider'] : undefined;
-        const result = await runAgent(messages, provider);
-        logRequest(req, 200);
-        return Response.json(result);
-      },
+    fetch(req) {
+      logRequest(req, 404);
+      return new Response('Not Found', { status: 404 });
     },
-    '/api/tool': {
-      // Direct read-only tool call for the chat panel's manual terminal (/read /ls /grep /run).
-      // Every call passes through the same default-deny ai-sandbox gate.
-      async POST(req) {
-        if (!COPILOT_ENABLED) {
-          logRequest(req, 403);
-          return Response.json({ ok: false, error: 'copilot disabled' }, { status: 403 });
-        }
-        const body = await readJsonBody(req, MAX_BODY_LEN);
-        if (!body.ok) {
-          logRequest(req, body.status);
-          return Response.json({ ok: false, error: body.error }, { status: body.status });
-        }
-        const rec = (
-          typeof body.value === 'object' && body.value !== null ? body.value : {}
-        ) as Record<string, unknown>;
-        const tool = typeof rec['tool'] === 'string' ? rec['tool'] : '';
-        const args =
-          typeof rec['args'] === 'object' && rec['args'] !== null
-            ? (rec['args'] as Record<string, unknown>)
-            : {};
-        const result = await dispatchTool(tool, args);
-        logRequest(req, result.ok ? 200 : 400);
-        return Response.json(result, { status: result.ok ? 200 : 400 });
-      },
-    },
-  },
-  fetch(req) {
-    logRequest(req, 404);
-    return new Response('Not Found', { status: 404 });
-  },
-});
+  });
 
-log.info(`mechalogodrom listening on ${server.url.href}`);
+  log.info(`mechalogodrom listening on ${server.url.href}`);
+}
