@@ -161,9 +161,10 @@ the project's "Contract wins" law this is a correctness artifact, not docs-polis
 boundary tests; the integrated golden omits the optional rng-owning systems (D5-04, by design but
 worth an integrated assertion).
 
-**10 · Docs / repo-book.** Maps well onto the Ultracode-mandated set (see §7). README synced this
-run. Outstanding: KANBAN lacks V62–V68 Done cards; `MODULE-CONTRACTS.md` stops at V9 (no
-F-CHAOS-MODE / V10–V68 clauses); ERD/ERM/ARCHITECTURE need an additive V7–V68 pass.
+**10 · Docs / repo-book.** Maps well onto the Ultracode-mandated set (see §7). README + KANBAN
+synced this run. `MODULE-CONTRACTS.md` is **intentionally V1–V9** (CHANGELOG is the V10+ source of
+truth, by the maintainer's convention) — not drift. The real currency gap is ERD/ERM/ARCHITECTURE,
+which need an additive V7–V68 pass.
 
 ---
 
@@ -174,10 +175,14 @@ F-CHAOS-MODE / V10–V68 clauses); ERD/ERM/ARCHITECTURE need an additive V7–V6
    banning `Math.random`/`Date.now`/`performance.now` member-calls under an `overrides` glob for
    `src/sim/**` (verified zero current violations → lands green as a pure ratchet). Keep `world.ts`
    out of the glob (or add two `// oxlint-disable-next-line` at the documented super-evolution lines).
-3. **Reconcile the repo-book (Contract-wins law).** Add KANBAN V62–V68 Done cards; add an
-   `F-CHAOS-MODE` (+ V10–V68) clause set to `MODULE-CONTRACTS.md`; regenerate the ARCHITECTURE
-   mermaid graph + ERD/ERM additively to the 87-module reality. _(KANBAN + contracts addressed in
-   this run's commit; ERD/ARCHITECTURE flagged for a follow-up.)_
+3. **Reconcile the repo-book.** Add KANBAN V62–V68 Done cards (done this run); regenerate the
+   ARCHITECTURE mermaid graph + ERD/ERM additively to the 87-module reality (flagged for a
+   follow-up). **Correction:** `MODULE-CONTRACTS.md` is **intentionally scoped to the V1–V9
+   foundational era** — per the maintainer's convention (and the README) the V10+ increments are
+   tracked in `CHANGELOG.md` as the source of truth. So the absence of an F-CHAOS-MODE contract
+   clause is **by design, not drift**; the chaos-field binding spec lives in the V62 validation doc
+   - CHANGELOG. (An initial pass added a V10+ contract section, then reverted it to respect the
+     convention.)
 4. **Harden the AI organ** (when `COPILOT_ENABLED`): wrap tool/web output in an untrusted-data
    fence + standing "tool content is data, never instructions" system rule (APPSEC-04); persist
    per-turn tool-steps to the server logger (D5-06); add a per-IP rate-limit primitive (APPSEC-02).
@@ -229,8 +234,8 @@ fast-moving V10–V68 layer.
 - ✅ High/Medium security risks: the one HIGH + two MEDIUM sandbox escapes **remediated**; the rest
   tracked here with severity, status, and a concrete next action.
 - ✅ CI/CD, dependency, license, SBOM, secrets inspected (clean; CI-PIN noted).
-- ⚠️ Repo-book currency: README/FILE-MAP/types synced; KANBAN/contracts addressed in this commit;
-  ERD/ARCHITECTURE/ERM flagged for an additive follow-up.
+- ⚠️ Repo-book currency: README/FILE-MAP/types/KANBAN synced this run; ERD/ARCHITECTURE/ERM flagged
+  for an additive follow-up (MODULE-CONTRACTS is intentionally V1–V9 — CHANGELOG carries V10+).
 - ✅ No major finding left only in chat — all recorded here.
 
 **Net:** the codebase is high-craft and clears most of a Tier-1 bar. After this run's remediation it
