@@ -111,3 +111,39 @@ describe('ChaosField (V62 CHAOS MODE)', () => {
     expect(signature(list)).toBe(sig); // inactive again ⇒ frozen
   });
 });
+
+/** Median of a numeric array (does not mutate the input). */
+function median(xs: readonly number[]): number {
+  const s = [...xs].sort((a, b) => a - b);
+  const mid = s.length >> 1;
+  if (s.length === 0) return 0;
+  return s.length % 2 === 1 ? s[mid]! : (s[mid - 1]! + s[mid]!) / 2;
+}
+
+describe('ChaosField — mega-tier perf guard', () => {
+  // The engaged storm couples to EVERY organism each frame (Master File III, law 2: "if it is not
+  // measured, it is not real"). At the mega tier (50,000 entities) that O(n) sweep was unmeasured.
+  // The reference machine runs one update in ≈ 0.25 ms; this generous 15 ms ceiling (~60× slack)
+  // never flakes on a loaded CI runner, yet a structural regression — per-entity allocation or an
+  // accidental O(n²) coupling — would balloon it far past the bound.
+  const MEGA_POP = 50_000;
+  const CHAOS_MEGA_BUDGET_MS = 15;
+
+  test(`engaged update over ${MEGA_POP} entities stays under ${CHAOS_MEGA_BUDGET_MS}ms/frame (median)`, () => {
+    const f = new ChaosField(0xc4051);
+    f.toggle(); // engage the storm — the inert path is already a documented no-op above
+    const list = mkList(MEGA_POP);
+    const state = mkState();
+    const step = (): number => {
+      const t0 = performance.now();
+      f.update(1 / 60, list, state);
+      state.frame++;
+      return performance.now() - t0;
+    };
+    for (let i = 0; i < 20; i++) step(); // warm the JIT + storm spin-up
+    expect(f.intensity).toBeGreaterThan(0); // confirm the heavy (engaged) path was measured
+    const samples: number[] = [];
+    for (let i = 0; i < 40; i++) samples.push(step());
+    expect(median(samples)).toBeLessThan(CHAOS_MEGA_BUDGET_MS);
+  }, 30000);
+});
