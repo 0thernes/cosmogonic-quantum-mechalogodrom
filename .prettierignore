@@ -8,3 +8,7 @@ docs/FILE-MAP.md
 # breaks the LOCAL gate (CI is unaffected — it runs on a clean checkout). See the multi-context note.
 .claude
 coverage
+# Throwaway scratch/verify scripts a session leaves in the root (e.g. __verify_*.ts). They are not in
+# tsc's `include` nor oxlint's scope, but `prettier --check .` scans them and a stray one breaks the
+# LOCAL gate. Ignore the `__`-prefixed scratch convention so the daily gate stays robust to cruft.
+__*

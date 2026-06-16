@@ -8,6 +8,9 @@ coverage/
 .DS_Store
 Thumbs.db
 verify/
+# Throwaway scratch/verify scripts dropped in the repo root by a session (never meant to be committed).
+/__*.ts
+/__*.js
 native/build/
 native/build*/
 *.bmp
