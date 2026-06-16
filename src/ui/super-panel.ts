@@ -264,10 +264,14 @@ export class SuperPanel {
         `Spin→${instinct} ${(sp.bestOverlap * 100).toFixed(0)}%`;
       // V1.1 — the new cognition substrates: reservoir echo/novelty · active-inference free-energy +
       // belief entropy · the metacognitive executive's second-order confidence.
+      // V96 — empowerment: the channel-capacity AGENCY the mind feels + the plan it judges most steering.
+      const emp = mind.empowerment;
+      const empPlan = emp.bestAction >= 0 ? (SUPER_PLANS[emp.bestAction] ?? '—') : '—';
       this.id.cognition!.textContent =
         `Echo ${(mind.reservoir.echo * 100).toFixed(0)}% nov ${mind.reservoir.novelty.toFixed(2)} · ` +
         `FE ${mind.aif.freeEnergy.toFixed(2)} H${mind.aif.beliefEntropy.toFixed(2)} · ` +
-        `Conf ${(mind.metacog.confidence * 100).toFixed(0)}%`;
+        `Conf ${(mind.metacog.confidence * 100).toFixed(0)}% · ` +
+        `EMP ${(emp.empowerment * 100).toFixed(0)}%→${empPlan}`;
     }
 
     // V48 — the self-evolution: level · stage · power · day (it grows like Vegeta/Goku).
