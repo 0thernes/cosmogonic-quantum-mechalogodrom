@@ -18,8 +18,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   it; while coherent (undecided) it lifts EXPLORE, and a `SuperMindSnapshot.deliberation` field + a "QDEC %"
   board readout surface it — the OPEN-system complement to the closed-state register and the static
   coherence-resource measure. 7 closed-form tests (valid ρ / purity ∈ [0.5,1]; pure dephasing kills coherence
-  + preserves population; closed system conserves purity; damping → ground; monotone dephasing response;
-  determinism). Grounded in [docs/SUPER-CREATURE-RESEARCH.md](./docs/SUPER-CREATURE-RESEARCH.md) §10.
+  - preserves population; closed system conserves purity; damping → ground; monotone dephasing response;
+    determinism). Grounded in [docs/SUPER-CREATURE-RESEARCH.md](./docs/SUPER-CREATURE-RESEARCH.md) §10.
 - **SUPER CREATURE 1.1 — Quantum Natural Gradient self-optimization.** The apex 6-qubit mind no longer only
   FEELS the curvature of its thought-space (its Quantum Geometric Tensor) — each beat it now DESCENDS it: a new
   `src/math/quantum-natural-gradient.ts` primitive preconditions the gradient of P(intended thought) by the
