@@ -52,6 +52,19 @@ describe('ai-sandbox: path confinement (read-only, repo-confined)', () => {
     expect((await readFileSafe('/etc/passwd')).ok).toBe(false);
     expect((await readFileSafe('~/secret')).ok).toBe(false);
   });
+
+  test('list_dir does not leak .git* / .env* filenames (audit: listDir block-list mismatch)', async () => {
+    // confine() refuses to READ anything under a `.git*`/`.env*` top segment; the directory LISTING must
+    // hide the same names, or the model (and an attacker steering it) can confirm which secret-ish files
+    // exist. The repo root has .gitignore + .github + .gitattributes — none may surface.
+    const r = await listDir('.');
+    expect(r.ok).toBe(true);
+    if (r.ok) {
+      expect(r.output).not.toContain('.gitignore');
+      expect(r.output).not.toContain('.github');
+      expect(r.output).not.toContain('.gitattributes');
+    }
+  });
 });
 
 describe('ai-sandbox: command gate is default-deny and write-free', () => {
@@ -98,6 +111,20 @@ describe('ai-sandbox: command gate is default-deny and write-free', () => {
   test('grep rejects a dash-led pattern — git option-injection (audit 2026-06-15, HIGH)', async () => {
     expect((await grepRepo('-O')).ok).toBe(false);
     expect((await grepRepo('--open-files-in-pager=id')).ok).toBe(false);
+  });
+
+  test('Windows absolute backslash paths cannot escape the repo via run (audit BLOCKER)', async () => {
+    // The old confine gate fired only on `/` or `.`, so a Windows absolute path with backslashes and no
+    // dot (`C:\Windows`) skipped confinement and `run` enumerated/read the host filesystem OUTSIDE the
+    // repo root (demonstrated live). On Windows confine() now rejects these at validation; on POSIX they
+    // are treated as non-existent in-repo relative filenames — either way the call must fail, every OS.
+    for (const cmd of [
+      'ls C:\\Windows',
+      'find C:\\Users -maxdepth 1',
+      'cat C:\\Windows\\System32',
+    ]) {
+      expect((await runReadOnly(cmd)).ok).toBe(false);
+    }
   });
 });
 

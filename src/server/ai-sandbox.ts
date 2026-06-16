@@ -39,6 +39,22 @@ const RUN_TIMEOUT_MS = 15_000;
 /** Path prefixes that are never readable, even via an otherwise-valid relative path. */
 const BLOCKED_PREFIXES = ['legacy', '.git', 'node_modules', '.env', 'dist'] as const;
 
+/**
+ * Is `name` a blocked top-level segment? Case-insensitive `.env*` / `.git*` prefix match (closes the
+ * `.env.local` / `.ENV` secret-leak and every `.git*` variant) plus the exact {@link BLOCKED_PREFIXES}.
+ * The SINGLE source of truth shared by {@link confine} and {@link listDir}, so the read tools and the
+ * directory listing can never disagree about what is private (audit: `list_dir` leaked `.gitignore`,
+ * `.github/`, `.env.local` filenames that `confine()` refuses to read).
+ */
+function isBlockedTop(name: string): boolean {
+  const t = name.toLowerCase();
+  return (
+    t.startsWith('.env') ||
+    t.startsWith('.git') ||
+    BLOCKED_PREFIXES.includes(t as (typeof BLOCKED_PREFIXES)[number])
+  );
+}
+
 /** Result of any sandbox tool call — a tagged union the route serializes to JSON. */
 export type SandboxResult =
   | { ok: true; output: string; truncated: boolean }
@@ -57,12 +73,8 @@ function confine(rel: string): { ok: true; abs: string } | { ok: false; error: s
   // Case-insensitive + `.env*` / `.git*` prefix match: closes the `.env.local` / `.ENV`
   // secret-leak bypass (audit CRITICAL) and blocks every gitignore/.git variant the user
   // flagged as exposed. The exact-match BLOCKED_PREFIXES list still covers legacy/dist/etc.
-  const top = (rl.split(sep)[0] ?? '').toLowerCase();
-  const blocked =
-    top.startsWith('.env') ||
-    top.startsWith('.git') ||
-    BLOCKED_PREFIXES.includes(top as (typeof BLOCKED_PREFIXES)[number]);
-  if (blocked) {
+  const top = rl.split(sep)[0] ?? '';
+  if (isBlockedTop(top)) {
     return { ok: false, error: `path "${top}" is blocked (private/build/vcs)` };
   }
   return { ok: true, abs };
@@ -87,7 +99,7 @@ export async function listDir(rel: string): Promise<SandboxResult> {
   try {
     const entries = await readdir(c.abs, { withFileTypes: true });
     const lines = entries
-      .filter((e) => !BLOCKED_PREFIXES.includes(e.name as (typeof BLOCKED_PREFIXES)[number]))
+      .filter((e) => !isBlockedTop(e.name)) // same private-area test as confine() — no .git*/.env* leak
       .map((e) => (e.isDirectory() ? `${e.name}/` : e.name))
       .sort();
     const output = lines.join('\n');
@@ -312,7 +324,17 @@ function validateCommand(raw: string): { ok: true; argv: string[] } | { ok: fals
     const a = argv[i] ?? '';
     if (isFlag(a)) continue; // write/exec flags are denied above; remaining flags are read-only
     const pathPart = bin === 'git' && a.includes(':') ? (a.split(':').pop() ?? a) : a;
-    if (pathPart.includes('/') || pathPart.includes('.')) {
+    // Confine anything path-shaped. The old gate (`/` or `.` only) missed Windows ABSOLUTE paths with
+    // BACKSLASHES and no dot — `C:\Windows`, `C:\Users` contain neither `/` nor `.`, so confine() was
+    // skipped and `run` enumerated/read the host filesystem OUTSIDE the repo root (audit BLOCKER, demoed
+    // live). Add `\` and a platform-aware isAbsolute() so every separator-bearing or absolute token is
+    // sealed in, while a bare search pattern (no separators) is still passed through to grep/find.
+    if (
+      pathPart.includes('/') ||
+      pathPart.includes('\\') ||
+      pathPart.includes('.') ||
+      isAbsolute(pathPart)
+    ) {
       const c = confine(pathPart);
       if (!c.ok) return { ok: false, error: `argument "${a}" denied: ${c.error}` };
     }
