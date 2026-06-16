@@ -144,6 +144,22 @@ Compiled 2026-06-16 (research scout pass).
   context — a real holographic associative memory, not a claim of human-level compositional reasoning. It
   recalls "the plan I bound to contexts like this," not arbitrary symbolic inference.
 
+## 9. Quantum reservoir computing — the register as a cognitive reservoir
+
+- **Reservoir computing** harnesses a fixed high-dimensional nonlinear dynamical system as a temporal
+  kernel and trains only a linear readout. **Quantum** reservoir computing (Fujii & Nakajima, 2017,
+  _Phys. Rev. Applied_; Mujal et al., 2021, _Adv. Quantum Technol._) makes that reservoir a quantum
+  system: the exponentially large Hilbert space of a few qubits is itself the rich nonlinear feature
+  space, and only a linear readout of its measured observables over time is used/trained.
+- **What Super Creature 1.2 computes:** `src/sim/quantum-reservoir.ts` — the apex mind's existing 6-qubit
+  statevector register IS the reservoir; the module is the readout, a fixed seeded linear projection of the
+  register's per-qubit Bloch observables (⟨X⟩,⟨Y⟩,⟨Z⟩ × 6) over a leaky temporal trace, plus a
+  quantum-state-velocity (`qFlux`) signal that feeds the curiosity drive (a churning wavefunction ⇒ a
+  restless, exploratory mind). Deterministic, allocation-free, bounded, unit-tested.
+- **Honesty caveat:** a deterministic 6-qubit _simulation_ used as a reservoir — a faithful implementation
+  of the QRC _algorithm_ on a perfect noiseless register, not a physical quantum processor. The value here
+  is exactness and reproducibility, not a quantum speed-up.
+
 ## Honest framing (cite without overclaiming)
 
 1. **Established / peer-reviewed empirical results:** the Cogitate 2025 _Nature_ adversarial test,
@@ -172,6 +188,7 @@ Compiled 2026-06-16 (research scout pass).
 - Farisco, M., & Changeux, J.-P. (2023). About the compatibility between the perturbational complexity index and the global neuronal workspace theory. _Neuroscience of Consciousness, 2023_(1). https://doi.org/10.1093/nc/niad016
 - Ferrante, O., Górska, U., Henin, S., et al. (Cogitate Consortium). (2025). Adversarial testing of global neuronal workspace and integrated information theories of consciousness. _Nature, 642_(8066), 133–142. https://doi.org/10.1038/s41586-025-08888-1
 - Friston, K. (2010). The free-energy principle: a unified brain theory? _Nature Reviews Neuroscience, 11_, 127–138. https://doi.org/10.1038/nrn2787
+- Fujii, K., & Nakajima, K. (2017). Harnessing disordered-ensemble quantum dynamics for machine learning. _Physical Review Applied, 8_(2), 024030. https://doi.org/10.1103/PhysRevApplied.8.024030
 - Gayler, R. W. (2003). Vector symbolic architectures answer Jackendoff's challenges for cognitive neuroscience. In _Proceedings of the ICCS/ASCS Joint International Conference on Cognitive Science_, 133–138. https://arxiv.org/abs/cs/0412059
 - Hanson, J. R., & Walker, S. I. (2023). On the non-uniqueness problem in integrated information theory. _Neuroscience of Consciousness, 2023_(1). https://doi.org/10.1093/nc/niad014
 - Huang, J.-Q., Epping, G. P., & Trueblood, J. S. (2025). An overview of the quantum cognition research program. _Psychonomic Bulletin & Review, 32_(6), 2507–2556. https://doi.org/10.3758/s13423-025-02675-9
@@ -185,6 +202,7 @@ Compiled 2026-06-16 (research scout pass).
 - Lidayan, A., Du, Y., Kosoy, E., Rufova, M., Abbeel, P., & Gopnik, A. (2025). Intrinsically-motivated humans and agents in open-world exploration. _arXiv:2503.23631._ https://arxiv.org/abs/2503.23631
 - Melloni, L., Mudrik, L., Pitts, M., et al. (2023). An adversarial collaboration protocol for testing contrasting predictions of GNW and IIT. _PLOS ONE, 18_. https://doi.org/10.1371/journal.pone.0268577
 - Momennejad, I., Russek, E. M., Cheong, J. H., Botvinick, M. M., Daw, N. D., & Gershman, S. J. (2017). The successor representation in human reinforcement learning. _Nature Human Behaviour, 1_(9), 680–692. https://doi.org/10.1038/s41562-017-0180-8
+- Mujal, P., Martínez-Peña, R., Nokkala, J., García-Beni, J., Giorgi, G. L., Soriano, M. C., & Zueco, D. (2021). Opportunities in quantum reservoir computing and extreme learning machines. _Advanced Quantum Technologies, 4_(8), 2100027. https://doi.org/10.1002/qute.202100027
 - Naccache, L., Sergent, C., & Dehaene, S. (2025). GNW theoretical framework and the adversarial testing of GNW and IIT. _Neuroscience of Consciousness, 2025_. https://doi.org/10.1093/nc/niaf037
 - Nilsen, A. S., Arena, A., & Storm, J. F. (2024). Exploring effects of anesthesia on complexity, differentiation, and integrated information in rat EEG. _Neuroscience of Consciousness, 2024_(1). https://doi.org/10.1093/nc/niae021
 - Piekarski, M. (2023). Incorporating (variational) free energy models into mechanisms. _Synthese, 202_(2). https://doi.org/10.1007/s11229-023-04292-2
