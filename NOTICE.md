@@ -42,6 +42,23 @@ The standalone lab artifact `lab/quantum-wildbeyond.html` loads
 bundled, vendored, or redistributed by this project; it remains under its own
 license.
 
+## Ported / adapted algorithms (source-level)
+
+The quantum-mind layer adapts specific algorithms — at the source level, re-implemented in TypeScript —
+from the **Tsotchke** quantum research repositories. The original works are MIT-licensed, © 2024–2026
+tsotchke; the MIT permission notice is retained here as required, and our derivative implementations
+remain governed by this project's proprietary license while honoring the upstream MIT terms.
+
+| Adapted algorithm                              | Ported into               | Upstream source                                                               | License                |
+| ---------------------------------------------- | ------------------------- | ----------------------------------------------------------------------------- | ---------------------- |
+| Quantum Geometric Tensor / Fubini–Study metric | `src/sim/super-qubits.ts` | Tsotchke `quantum_geometric_tensor` (QGTL) + Moonlab `quantum_geometry/qgt.c` | MIT © 2024–26 tsotchke |
+| Seeded quantum phase-noise qubit-RNG           | `src/math/eshkol-qrng.ts` | Tsotchke `Eshkol/eshkol_repo/lib/quantum/quantum_rng.{c,h}`                   | MIT © 2024–26 tsotchke |
+
+Academic references for the geometric tensor: Provost & Vallée, _Riemannian structure on manifolds of
+quantum states_ (1980); Berry, _Quantal phase factors_ (1984); Fukui–Hatsugai–Suzuki (2005). The
+statevector simulator (`src/math/quantum.ts`) is this project's own implementation, designed from a
+study of the above repos but not copied from them.
+
 ## Runtime note
 
 This project is built, tested, and served with [Bun](https://bun.sh)

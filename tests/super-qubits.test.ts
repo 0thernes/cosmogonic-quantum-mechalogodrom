@@ -158,4 +158,45 @@ describe('QuantumMind (V75) — the simulated-qubit cognition layer', () => {
       expect(Number.isFinite(acc)).toBe(true);
     }
   });
+
+  // ── V84: the Quantum Geometric Tensor / Fubini–Study metric (ported from the QGTL/Moonlab study) ──
+  test('QGT: the Fubini–Study metric is symmetric, PSD-diagonal, and finite', () => {
+    const m = new QuantumMind(mulberry32(11));
+    m.evolve(aspects(0.5, 0.5), LATENT);
+    const g = m.snapshot().geometry;
+    expect(g.metric).toHaveLength(4);
+    expect(Math.abs((g.metric[1] ?? 0) - (g.metric[2] ?? 0))).toBeLessThan(EPS); // g01 == g10
+    expect(g.metric[0]).toBeGreaterThanOrEqual(-1e-9); // ‖∂₀ψ‖² − |⟨∂₀ψ|ψ⟩|² ≥ 0 (Cauchy–Schwarz)
+    expect(g.metric[3]).toBeGreaterThanOrEqual(-1e-9);
+    expect(g.scalar).toBeGreaterThanOrEqual(-1e-9); // trace = g00 + g11 ≥ 0
+    expect(Number.isFinite(g.curvature + g.scalar + g.berry)).toBe(true);
+  });
+
+  test('QGT is deterministic AND never corrupts the seeded beat stream', () => {
+    // One mind takes a snapshot (running the QGT, which perturbs the register) mid-run; a control
+    // does not. Their NEXT Born sample must still match bit-for-bit — the readout is side-effect-free.
+    const withQgt = new QuantumMind(mulberry32(77));
+    const control = new QuantumMind(mulberry32(77));
+    withQgt.evolve(aspects(0.6, 0.4), LATENT);
+    withQgt.snapshot(); // runs geometricMetric() → leaves the register perturbed
+    control.evolve(aspects(0.6, 0.4), LATENT); // no snapshot
+    withQgt.evolve(aspects(0.7, 0.5), LATENT);
+    control.evolve(aspects(0.7, 0.5), LATENT);
+    expect(withQgt.lastSample).toBe(control.lastSample); // beat stream untouched by the readout
+    expect(JSON.stringify(withQgt.snapshot().geometry)).toBe(
+      JSON.stringify(control.snapshot().geometry),
+    ); // same drivers ⇒ identical geometry
+  });
+
+  test('QGT RESPONDS to cognition: different drives curve the thought-space differently', () => {
+    const a = new QuantumMind(mulberry32(3));
+    a.evolve(aspects(0.2, 0.2), LATENT);
+    const b = new QuantumMind(mulberry32(3));
+    b.evolve(aspects(0.9, 0.9), LATENT);
+    const ga = a.snapshot().geometry;
+    const gb = b.snapshot().geometry;
+    expect(Math.abs(ga.scalar - gb.scalar) + Math.abs(ga.curvature - gb.curvature)).toBeGreaterThan(
+      1e-4,
+    );
+  });
 });

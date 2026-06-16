@@ -11,15 +11,31 @@
  * Honest math (docs/PHILOSOPHY.md): every amplitude obeys the Schrödinger evolution of the applied
  * gates; the per-qubit Bloch vectors come from the true single-qubit reduced density matrices; the
  * entanglement reading is the reduced-state purity deficit (1 − |r|²); the entropy is the normalized
- * Shannon entropy of the Born distribution. The study of the Eshkol qubit RNG (phase array + noise) and
- * the Quantum-Geometric-Tensor library (statevector + RY/RZ/CNOT gate set + amplitude amplification)
- * informed the design; nothing is reimplemented from them — we own a 64-amplitude statevector outright.
+ * Shannon entropy of the Born distribution. The statevector register + RY/RZ/CNOT gate set are our own
+ * (`src/math/quantum.ts`); the per-beat thought-collapse is sampled through the Eshkol quantum RNG (a
+ * faithful Tsotchke port wired in by {@link SuperMind}), and the geometry readout delegates to the
+ * ported QGTL primitive ({@link quantumGeometricTensor}).
+ *
+ * V84 — moved from research to development: {@link QuantumMind.geometricMetric} reads the **Quantum
+ * Geometric Tensor / Fubini–Study metric** of the mind's own circuit by delegating to the canonical
+ * ported primitive `src/math/quantum-geometry.ts` (the QGTL port), restricted to the two cognition
+ * knobs (superposition, entanglement). The mind feels the curvature of its own thought-space —
+ * `g_μν = Re⟨∂_μψ|(1−|ψ⟩⟨ψ|)|∂_νψ⟩` — a real, deterministic quantum-geometry quantity.
+ *
+ * ─── ATTRIBUTION (Quantum Geometric Tensor / Fubini–Study metric) ──────────────────────────────────
+ *   The geometry engine is {@link quantumGeometricTensor} (`src/math/quantum-geometry.ts`), adapted
+ *   from the Tsotchke `quantum_geometric_tensor` (QGTL) + Moonlab `quantum_geometry/qgt.c`. Original
+ *   work © 2024–2026 tsotchke, MIT License (https://opensource.org/licenses/MIT). References: Provost &
+ *   Vallee (1980); Berry (1984); Fukui–Hatsugai–Suzuki (2005). Full attribution: THIRD-PARTY-NOTICES.md.
+ * ────────────────────────────────────────────────────────────────────────────────────────────────────
  *
  * Cost: ~90 gates × 64 amplitudes ≈ 5.8k complex mults per beat — sub-microsecond, allocation-free in
  * {@link evolve} (the hot path). {@link snapshot} allocates the read-only arrays the BRAIN view paints
- * from; it runs only at the Observatory UI cadence, never per simulation beat.
+ * from + computes the QGT (a 2-knob finite difference = 5 circuit builds); it runs only at the
+ * Observatory UI cadence, never per simulation beat, so the per-beat hot path stays untouched.
  */
 import { QuantumRegister } from '../math/quantum';
+import { quantumGeometricTensor } from '../math/quantum-geometry';
 import type { Rng } from '../math/rng';
 
 /** Register width — 6 qubits → 64 basis amplitudes: a rich BRAIN view that stays trivially in budget. */
@@ -35,6 +51,24 @@ export interface BlochVec {
   y: number;
   z: number;
   r: number;
+}
+
+/**
+ * The quantum-geometric readout of the mind's parameterised circuit — a genuine port of the
+ * **Quantum Geometric Tensor / Fubini–Study metric** from the Tsotchke `quantum_geometric_tensor`
+ * (QGTL) + Moonlab `qgt.c` study (see header attribution). The 2×2 metric is taken over the two
+ * cognition knobs that most shape the quantum state — superposition and entanglement — so the mind
+ * can *feel the curvature of its own thought-space*: how fast |ψ⟩ moves as those drives vary.
+ */
+export interface QGeometry {
+  /** Row-major 2×2 Fubini–Study metric g_μν over (superposition, entanglement), 0..~. */
+  metric: [number, number, number, number];
+  /** det(g) — the geometric "volume": how much the 2-knob state-space curves (0 = flat/degenerate). */
+  curvature: number;
+  /** tr(g) — the geometric "speed": total sensitivity of |ψ⟩ to the two drives. */
+  scalar: number;
+  /** Berry curvature Ω₀₁ = Im Q₀₁ — the geometric phase twisting between the two knobs. */
+  berry: number;
 }
 
 /** Read-only telemetry of the quantum mind for the BRAIN view (built at UI cadence). */
@@ -61,6 +95,8 @@ export interface QubitSnapshot {
   sampled: number;
   /** {@link sampled} as a qubit bitstring (qubit n−1 … qubit 0). */
   sampledBits: string;
+  /** Quantum-geometric readout (Fubini–Study metric + curvature) — ported from the QGTL study. */
+  geometry: QGeometry;
 }
 
 const clamp01 = (v: number): number => (v < 0 ? 0 : v > 1 ? 1 : v);
@@ -77,6 +113,22 @@ export class QuantumMind {
   private readonly bufRe = new Float64Array(DIM);
   private readonly bufIm = new Float64Array(DIM);
   private readonly bloch3 = new Float64Array(3);
+  // QGT scratch — the Fubini–Study metric reads 64-amplitude derivatives at UI cadence only.
+  private readonly psiRe = new Float64Array(DIM);
+  private readonly psiIm = new Float64Array(DIM);
+  private readonly d0Re = new Float64Array(DIM);
+  private readonly d0Im = new Float64Array(DIM);
+  private readonly d1Re = new Float64Array(DIM);
+  private readonly d1Im = new Float64Array(DIM);
+  private readonly tmpRe = new Float64Array(DIM);
+  private readonly tmpIm = new Float64Array(DIM);
+  // Last evolve's drive params, so the UI-cadence QGT replays the SAME circuit deterministically.
+  private dSup = 0;
+  private dEnt = 0;
+  private dFtl = 0;
+  private dMut = 0;
+  private dLatent: ArrayLike<number> = [0];
+  private dL = 1;
   private gateCount = 0;
   private sampled = 0;
 
@@ -93,14 +145,39 @@ export class QuantumMind {
    * quantum-aspect vector (0..1); `latent` is the world-model latent (any length ≥ 1, values ~−1..1).
    */
   evolve(aspects: ArrayLike<number>, latent: ArrayLike<number>): void {
-    const reg = this.reg;
-    reg.reset();
-    let gates = 0;
     const sup = clamp01(aspects[0] ?? 0); // superposition
     const ent = clamp01(aspects[1] ?? 0); // entanglement
     const ftl = clamp01(aspects[2] ?? 0); // ftl → phase drive
     const mut = clamp01(aspects[6] ?? 0); // mutation → rotation jitter
     const L = latent.length || 1;
+    // Remember the drive params so snapshot()'s UI-cadence QGT replays the SAME circuit and takes its
+    // parameter derivatives deterministically (no extra RNG draw — only evolve() ever samples).
+    this.dSup = sup;
+    this.dEnt = ent;
+    this.dFtl = ftl;
+    this.dMut = mut;
+    this.dLatent = latent;
+    this.dL = L;
+    this.gateCount = this.applyCircuit(sup, ent, ftl, mut, latent, L);
+    this.sampled = this.reg.sample(this.rng);
+  }
+
+  /**
+   * Build the parameterised circuit from |0…0⟩ — NO measurement, so it draws no RNG. {@link evolve}
+   * runs it once per beat; {@link geometricMetric} re-runs it on perturbed drives to finite-difference
+   * the derivatives of |ψ⟩. Allocation-free; O(layers · gates · 2ⁿ). Returns the gate count.
+   */
+  private applyCircuit(
+    sup: number,
+    ent: number,
+    ftl: number,
+    mut: number,
+    latent: ArrayLike<number>,
+    L: number,
+  ): number {
+    const reg = this.reg;
+    reg.reset();
+    let gates = 0;
     for (let layer = 0; layer < QMIND_LAYERS; layer++) {
       // ── single-qubit rotations: each qubit's Y/Z angles read a slice of the world-model latent ──
       for (let k = 0; k < QMIND_QUBITS; k++) {
@@ -130,8 +207,89 @@ export class QuantumMind {
         }
       }
     }
-    this.gateCount = gates;
-    this.sampled = reg.sample(this.rng);
+    return gates;
+  }
+
+  /**
+   * **Quantum Geometric Tensor — the mind feeling the curvature of its own thought-space.** Computes
+   * the 2×2 Fubini–Study metric of |ψ(θ)⟩ over the two cognition drives θ = (superposition,
+   * entanglement) by central finite differences over the parameterised circuit. DETERMINISTIC (pure
+   * 64-amplitude statevector algebra — no RNG); runs at UI cadence, re-applying the circuit 4× (±dk
+   * per knob). It LEAVES the register perturbed — the next {@link evolve} resets it from |0…0⟩, so the
+   * seeded beat stream is never corrupted. Ported from the Tsotchke QGTL / Moonlab `qgt.c` study (MIT —
+   * see the file header) — `g_μν = Re⟨∂_μψ|(1−|ψ⟩⟨ψ|)|∂_νψ⟩`, the imaginary part is the Berry curvature.
+   */
+  geometricMetric(): QGeometry {
+    const dk = 0.01;
+    this.reg.amplitudesInto(this.psiRe, this.psiIm); // |ψ⟩ at the centre (current post-evolve state)
+    this.deriv(0, dk, this.d0Re, this.d0Im); // |∂₀ψ⟩ over superposition
+    this.deriv(1, dk, this.d1Re, this.d1Im); // |∂₁ψ⟩ over entanglement
+    const i00 = this.cdotRe(this.d0Re, this.d0Im, this.d0Re, this.d0Im); // ⟨∂₀|∂₀⟩ (real)
+    const i11 = this.cdotRe(this.d1Re, this.d1Im, this.d1Re, this.d1Im);
+    const i01 = this.cdot(this.d0Re, this.d0Im, this.d1Re, this.d1Im); // ⟨∂₀|∂₁⟩ (complex)
+    const c0 = this.cdot(this.d0Re, this.d0Im, this.psiRe, this.psiIm); // ⟨∂₀|ψ⟩
+    const c1 = this.cdot(this.d1Re, this.d1Im, this.psiRe, this.psiIm); // ⟨∂₁|ψ⟩
+    const g00 = i00 - (c0.re * c0.re + c0.im * c0.im); // Re G₀₀ = ⟨∂₀|∂₀⟩ − |⟨∂₀|ψ⟩|²
+    const g11 = i11 - (c1.re * c1.re + c1.im * c1.im);
+    const pRe = c0.re * c1.re + c0.im * c1.im; // Re(c₀·conj c₁)
+    const pIm = c0.im * c1.re - c0.re * c1.im; // Im(c₀·conj c₁)
+    const g01 = i01.re - pRe; // Re G₀₁
+    const berry = -2 * (i01.im - pIm); // Berry curvature F₀₁ = −2 Im G₀₁
+    const curvature = g00 * g11 - g01 * g01; // det of the symmetric metric
+    return { metric: [g00, g01, g01, g11], curvature, scalar: g00 + g11, berry };
+  }
+
+  /** |∂_μ ψ⟩ via central difference: re-evolve the circuit at the knob ±dk, then (plus−minus)/(2dk). */
+  private deriv(mu: number, dk: number, outRe: Float64Array, outIm: Float64Array): void {
+    this.applyPerturbed(mu, dk);
+    this.reg.amplitudesInto(outRe, outIm);
+    this.applyPerturbed(mu, -dk);
+    this.reg.amplitudesInto(this.tmpRe, this.tmpIm);
+    const inv = 1 / (2 * dk);
+    for (let i = 0; i < DIM; i++) {
+      outRe[i] = ((outRe[i] ?? 0) - (this.tmpRe[i] ?? 0)) * inv;
+      outIm[i] = ((outIm[i] ?? 0) - (this.tmpIm[i] ?? 0)) * inv;
+    }
+  }
+
+  /** Re-apply the circuit with one knob (0 = superposition, 1 = entanglement) shifted by `d`. */
+  private applyPerturbed(mu: number, d: number): void {
+    const sup = mu === 0 ? this.dSup + d : this.dSup;
+    const ent = mu === 1 ? this.dEnt + d : this.dEnt;
+    this.applyCircuit(sup, ent, this.dFtl, this.dMut, this.dLatent, this.dL);
+  }
+
+  /** Re⟨a|b⟩ = Σ(aᵣbᵣ + aᵢbᵢ) — for a=b this is the (real) squared norm. */
+  private cdotRe(
+    aRe: Float64Array,
+    aIm: Float64Array,
+    bRe: Float64Array,
+    bIm: Float64Array,
+  ): number {
+    let s = 0;
+    for (let i = 0; i < DIM; i++)
+      s += (aRe[i] ?? 0) * (bRe[i] ?? 0) + (aIm[i] ?? 0) * (bIm[i] ?? 0);
+    return s;
+  }
+
+  /** Full complex ⟨a|b⟩ = Σ conj(a)·b. */
+  private cdot(
+    aRe: Float64Array,
+    aIm: Float64Array,
+    bRe: Float64Array,
+    bIm: Float64Array,
+  ): { re: number; im: number } {
+    let re = 0;
+    let im = 0;
+    for (let i = 0; i < DIM; i++) {
+      const ar = aRe[i] ?? 0;
+      const ai = aIm[i] ?? 0;
+      const br = bRe[i] ?? 0;
+      const bi = bIm[i] ?? 0;
+      re += ar * br + ai * bi;
+      im += ar * bi - ai * br;
+    }
+    return { re, im };
   }
 
   /** Index of the most recent non-destructive Born sample (the collapsed thought). */
@@ -171,6 +329,9 @@ export class QuantumMind {
       entSum += clamp01(1 - r * r); // purity deficit (linear entanglement entropy)
       cohSum += clamp01(Math.sqrt(x * x + y * y)); // equatorial (off-diagonal) magnitude
     }
+    // Read entropy from the post-evolve state BEFORE the QGT re-applies (and perturbs) the circuit.
+    const entropy = reg.entropy();
+    const geometry = this.geometricMetric();
     return {
       qubits: QMIND_QUBITS,
       dim: DIM,
@@ -180,11 +341,12 @@ export class QuantumMind {
       phase,
       bloch,
       p1,
-      entropy: reg.entropy(),
+      entropy,
       entanglement: entSum / QMIND_QUBITS,
       coherence: cohSum / QMIND_QUBITS,
       sampled: this.sampled,
       sampledBits: this.sampled.toString(2).padStart(QMIND_QUBITS, '0'),
+      geometry,
     };
   }
 }

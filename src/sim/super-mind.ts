@@ -40,6 +40,7 @@ import type { Rng } from '../math/rng';
 import { mulberry32 } from '../math/rng';
 import { TinyMLP, MemoryRing } from './ai/brains';
 import { QuantumMind, type QubitSnapshot } from './super-qubits';
+import { EshkolQrng, type EshkolQrngSnapshot } from '../math/eshkol-qrng';
 import type { SuperPercept, SuperPlan } from './super-creature';
 import { SUPER_PLANS } from './super-creature';
 
@@ -135,6 +136,8 @@ export interface SuperMindSnapshot {
   imagined: number[];
   /** V75: the live simulated-qubit register (the Quantum Computing Mind). */
   qubits: QubitSnapshot;
+  /** V84: the Eshkol qubit-RNG the mind collapses its thoughts through (ported tsotchke/quantum_rng). */
+  eshkol: EshkolQrngSnapshot;
 }
 
 const EMOTION_TAU = 0.12;
@@ -158,6 +161,9 @@ export class SuperMind {
   private readonly meta: Subnet; // 69 → 26 → 12   integrate → drives
   /** V75: the genuine statevector quantum register the composite mind drives each beat. */
   private readonly qmind: QuantumMind;
+  /** V84: the Eshkol qubit-RNG (ported gate-for-gate from tsotchke/quantum_rng) that the mind's
+   *  thought-collapse samples through — so the apex psyche literally measures through Eshkol. */
+  private readonly eshkol: EshkolQrng;
   readonly paramCount: number;
 
   // ── Reusable scratch (no per-beat allocation) ──
@@ -218,9 +224,13 @@ export class SuperMind {
       this.meta.params;
     // The quantum mind draws its seed LAST (after every weight is initialised) so it never perturbs
     // the weight stream — a dedicated child stream, so its per-beat Born sample stays independent.
-    this.qmind = new QuantumMind(
+    // V84: that child stream is now the Eshkol qubit-RNG itself (ported gate-for-gate from
+    // tsotchke/quantum_rng), so the apex psyche's "thought collapse" is literally measured through the
+    // Eshkol generator — still fully reproducible from the world seed (Eshkol is seeded, deterministic).
+    this.eshkol = new EshkolQrng(
       mulberry32((Math.floor(rng() * 0xffffffff) ^ 0x9e3779b9) >>> 0 || 1),
     );
+    this.qmind = new QuantumMind(this.eshkol.stream());
   }
 
   get offspringCount(): number {
@@ -424,6 +434,7 @@ export class SuperMind {
       latent: Array.from(this.latent),
       imagined: Array.from(this.imagined),
       qubits: this.qmind.snapshot(),
+      eshkol: this.eshkol.snapshot(),
     };
   }
 }
