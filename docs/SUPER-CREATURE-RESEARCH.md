@@ -160,6 +160,25 @@ Compiled 2026-06-16 (research scout pass).
   of the QRC _algorithm_ on a perfect noiseless register, not a physical quantum processor. The value here
   is exactness and reproducibility, not a quantum speed-up.
 
+## 10. Open quantum systems — the Lindblad decoherence of deliberation
+
+- A real qubit is never closed: coupled to an environment it undergoes **decoherence** (loss of phase
+  coherence, T₂) and **relaxation** (energy decay, T₁). The mathematically complete description is the
+  **Gorini–Kossakowski–Sudarshan–Lindblad** (GKSL) master equation — the most general generator of a
+  completely-positive, trace-preserving quantum dynamical semigroup (Lindblad, 1976; Gorini, Kossakowski &
+  Sudarshan, 1976; Breuer & Petruccione, 2002). For a single qubit it reduces exactly to the optical-Bloch
+  equations on the Bloch vector.
+- **What Super Creature 1.1 computes:** `src/sim/quantum-deliberation.ts` — a deliberation qubit whose
+  coherent superposition of candidate actions DECOHERES into a committed classical decision. A Rabi drive Ω
+  (from curiosity) sustains the superposition, a detuning Δ (from dominance) leans the preference, and a
+  pure-dephasing channel γ_φ (from arousal — the environmental noise) collapses the off-diagonal coherence;
+  amplitude damping Γ₁ relaxes toward a ground "rest" decision. Coherence √(x²+y²) reads as "still
+  deliberating", decisiveness 1−√ as "decohered into a commitment", and the mind lifts EXPLORE while it stays
+  undecided. Deterministic midpoint integration; the Bloch vector stays inside the unit ball (a valid ρ).
+- **Honesty caveat:** a faithful implementation of the qubit Lindblad/GKSL _master equation_ as a model of
+  deliberation→commitment — open-system physics, not a claim that decisions ARE quantum-mechanical. A
+  dynamical metaphor with real, conserved (trace-preserving, completely-positive) mathematics underneath.
+
 ## Honest framing (cite without overclaiming)
 
 1. **Established / peer-reviewed empirical results:** the Cogitate 2025 _Nature_ adversarial test,
@@ -181,6 +200,7 @@ Compiled 2026-06-16 (research scout pass).
 
 - Arimoto, S. (1972). An algorithm for computing the capacity of arbitrary discrete memoryless channels. _IEEE Transactions on Information Theory, 18_(1), 14–20. https://doi.org/10.1109/TIT.1972.1054753
 - Blahut, R. E. (1972). Computation of channel capacity and rate-distortion functions. _IEEE Transactions on Information Theory, 18_(4), 460–473. https://doi.org/10.1109/TIT.1972.1054855
+- Breuer, H.-P., & Petruccione, F. (2002). _The Theory of Open Quantum Systems_. Oxford University Press.
 - Busemeyer, J. R., & Bruza, P. D. (2024). _Quantum Models of Cognition and Decision_ (2nd ed.). Cambridge University Press.
 - Cai, H., Ao, Z., Tian, C., et al. (2023). Brain organoid reservoir computing for artificial intelligence. _Nature Electronics, 6_, 1032–1039. https://doi.org/10.1038/s41928-023-01069-w
 - Dayan, P. (1993). Improving generalization for temporal difference learning: The successor representation. _Neural Computation, 5_(4), 613–624. https://doi.org/10.1162/neco.1993.5.4.613
@@ -190,6 +210,7 @@ Compiled 2026-06-16 (research scout pass).
 - Friston, K. (2010). The free-energy principle: a unified brain theory? _Nature Reviews Neuroscience, 11_, 127–138. https://doi.org/10.1038/nrn2787
 - Fujii, K., & Nakajima, K. (2017). Harnessing disordered-ensemble quantum dynamics for machine learning. _Physical Review Applied, 8_(2), 024030. https://doi.org/10.1103/PhysRevApplied.8.024030
 - Gayler, R. W. (2003). Vector symbolic architectures answer Jackendoff's challenges for cognitive neuroscience. In _Proceedings of the ICCS/ASCS Joint International Conference on Cognitive Science_, 133–138. https://arxiv.org/abs/cs/0412059
+- Gorini, V., Kossakowski, A., & Sudarshan, E. C. G. (1976). Completely positive dynamical semigroups of N-level systems. _Journal of Mathematical Physics, 17_(5), 821–825. https://doi.org/10.1063/1.522979
 - Hanson, J. R., & Walker, S. I. (2023). On the non-uniqueness problem in integrated information theory. _Neuroscience of Consciousness, 2023_(1). https://doi.org/10.1093/nc/niad014
 - Huang, J.-Q., Epping, G. P., & Trueblood, J. S. (2025). An overview of the quantum cognition research program. _Psychonomic Bulletin & Review, 32_(6), 2507–2556. https://doi.org/10.3758/s13423-025-02675-9
 - Jang, H., Mashour, G. A., & Hudetz, A. G. (2024). Measuring the dynamic balance of integration and segregation underlying consciousness, anesthesia, and sleep. _Nature Communications, 15_(1). https://doi.org/10.1038/s41467-024-53299-x
@@ -200,6 +221,7 @@ Compiled 2026-06-16 (research scout pass).
 - Klyubin, A. S., Polani, D., & Nehaniv, C. L. (2005). All else being equal be empowered. In _Advances in Artificial Life (ECAL 2005)_, LNCS 3630, 744–753. https://doi.org/10.1007/11553090_75
 - Levy, A., Allievi, A., & Konidaris, G. (2024). Latent-predictive empowerment: Measuring empowerment without a simulator. _arXiv:2410.11155._ https://arxiv.org/abs/2410.11155
 - Lidayan, A., Du, Y., Kosoy, E., Rufova, M., Abbeel, P., & Gopnik, A. (2025). Intrinsically-motivated humans and agents in open-world exploration. _arXiv:2503.23631._ https://arxiv.org/abs/2503.23631
+- Lindblad, G. (1976). On the generators of quantum dynamical semigroups. _Communications in Mathematical Physics, 48_(2), 119–130. https://doi.org/10.1007/BF01608499
 - Melloni, L., Mudrik, L., Pitts, M., et al. (2023). An adversarial collaboration protocol for testing contrasting predictions of GNW and IIT. _PLOS ONE, 18_. https://doi.org/10.1371/journal.pone.0268577
 - Momennejad, I., Russek, E. M., Cheong, J. H., Botvinick, M. M., Daw, N. D., & Gershman, S. J. (2017). The successor representation in human reinforcement learning. _Nature Human Behaviour, 1_(9), 680–692. https://doi.org/10.1038/s41562-017-0180-8
 - Mujal, P., Martínez-Peña, R., Nokkala, J., García-Beni, J., Giorgi, G. L., Soriano, M. C., & Zueco, D. (2021). Opportunities in quantum reservoir computing and extreme learning machines. _Advanced Quantum Technologies, 4_(8), 2100027. https://doi.org/10.1002/qute.202100027
