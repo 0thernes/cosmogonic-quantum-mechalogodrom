@@ -14,9 +14,16 @@ permissions:
   id-token: write # OIDC token for the Sigstore signing of the provenance attestation
   attestations: write # record the SLSA build-provenance attestation
 
+# One release per tag at a time; never cancel — a half-uploaded asset is worse than a queued run.
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   release:
     name: Gate, build, package, publish
+    # Tag refs only: a manual workflow_dispatch on a branch must NOT mint a branch-named GitHub Release.
+    if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -39,7 +46,7 @@ jobs:
       - name: Package site (dist + lab)
         run: |
           mkdir -p site/lab
-          cp -r dist/* site/ 2>/dev/null || true
+          cp -r dist/* site/
           cp lab/quantum-wildbeyond.html site/lab/index.html
           tar -czf cqm-${{ github.ref_name }}.tar.gz -C site .
 

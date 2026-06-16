@@ -6,7 +6,7 @@ name: Deploy to GitHub Pages
 # by scripts/build-pages.ts (dist/ + /lab + subpath-relative nav rewrites).
 on:
   push:
-    branches: [master, main]
+    branches: [main, master] # `main` is the live default branch; `master` kept only as a mirror alias
   workflow_dispatch:
 
 # Least privilege + the tokens the Pages deployment needs.
