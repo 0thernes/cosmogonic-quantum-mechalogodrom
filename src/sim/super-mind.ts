@@ -55,6 +55,7 @@ import { Reservoir, type ReservoirSnapshot } from './reservoir';
 import { ActiveInference, AIF_OBS, type ActiveInferenceSnapshot } from './active-inference';
 import { Metacognition, type MetacognitionSnapshot } from './metacognition';
 import { Criticality, type CriticalitySnapshot } from './criticality';
+import { TheoryOfMind } from './theory-of-mind';
 import type { SuperPercept, SuperPlan } from './super-creature';
 import { SUPER_PLANS } from './super-creature';
 
@@ -266,6 +267,8 @@ export class SuperMind {
   private readonly metacog = new Metacognition();
   /** V1.1 (V93): the self-organised-criticality homeostat — keeps cognition poised at the edge of chaos. */
   private readonly criticality = new Criticality();
+  /** V94: theory of mind — models the NEAREST RIVAL's intent from its observable cues (social cognition). */
+  private readonly tom: TheoryOfMind;
   readonly paramCount: number;
 
   // ── Reusable scratch (no per-beat allocation) ──
@@ -351,6 +354,8 @@ export class SuperMind {
     // preference C (want energy/prey/wealth, avoid threat/rivals) is the creature's standing "goal".
     this.aif = new ActiveInference(mulberry32((childSeed ^ 0xa3c59ac3) >>> 0 || 1));
     this.aif.setPreference([1, -1, 0.6, -0.4, 0.3, 0.5]);
+    // V94: theory of mind — its own XOR-derived child stream (no extra rng draw ⇒ determinism intact).
+    this.tom = new TheoryOfMind(mulberry32((childSeed ^ 0xc2b2ae35) >>> 0 || 1));
   }
 
   get offspringCount(): number {
@@ -589,6 +594,17 @@ export class SuperMind {
       const plan = SUPER_PLANS[i];
       if (plan) drives[plan] += AIF_GAIN * ((gMax - (this.aifG[i] ?? 0)) / gSpan);
     }
+
+    // ── V94 · THEORY OF MIND ── infer the nearest rival's intent from its observable cues, then bias the
+    // creature's SOCIAL plans: meet predicted aggression with flight + deception (or, if dominant, press
+    // DOMINATE); exploit a rival predicted weak/passive with HUNT/DOMINATE. A bounded social vote, like the
+    // instinct and free-energy votes above.
+    const tomGain = 0.14;
+    const menace = this.tom.observe(s[6], s[1], this.dominance, aggression, s[2], s[3]);
+    drives.FLEE += tomGain * menace * (1 - this.dominance);
+    drives.DECEIVE += tomGain * menace * 0.5;
+    drives.DOMINATE += tomGain * (1 - menace) * this.dominance;
+    drives.HUNT += tomGain * (1 - menace) * s[5];
 
     // ── V92 · METACOGNITIVE EXECUTIVE ── before committing, the mind estimates its CONFIDENCE in the
     // decision from four reliability cues — the provisional decision margin, integration (Φ, last beat),
