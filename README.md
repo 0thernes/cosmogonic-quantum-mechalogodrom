@@ -5,7 +5,7 @@
 [![License: Proprietary](https://img.shields.io/badge/License-Proprietary%20%E2%80%94%20All%20Rights%20Reserved-red.svg)](./LICENSE)
 [![Bun](https://img.shields.io/badge/Bun-1.3-black?logo=bun&logoColor=white)](https://bun.sh)
 [![TypeScript strict](https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript&logoColor=white)](./tsconfig.json)
-[![tests](https://img.shields.io/badge/tests-965%20passing-brightgreen)](./tests)
+[![tests](https://img.shields.io/badge/tests-1123%20passing-brightgreen)](./tests)
 [![audit](https://img.shields.io/badge/inspection-500%20points-success)](./docs/500-POINT-INSPECTION.md)
 
 A procedural WebGL cosmic ecosystem — morphogenic organisms, Shoggoths,
@@ -260,7 +260,7 @@ generations, and a read-only Copilot (`docs/MODULE-CONTRACTS.md` §V9):
   alter dynamics** (`solid` stays the exact determinism identity); singularities
   now pull titans/shoggoths/leviathans; chaos is leveled and bipolar.
 
-### The Living Era (post-0.9.0 · V10–V89)
+### The Living Era (post-0.9.0 · V10–V97)
 
 Since 0.9.0 the cosmos has grown continuously — seventy-plus increments logged in
 the [CHANGELOG](./CHANGELOG.md) `[Unreleased]` section, each shipped behind the
@@ -357,6 +357,28 @@ full gate with same-seed determinism preserved. The major arcs:
     apex creature now spans **Global Workspace · Integrated Information · the Free Energy Principle · reservoir
     dynamics · Higher-Order metacognition** — five distinct scientific theories of mind, each grounded in
     [docs/SUPER-CREATURE-RESEARCH.md](./docs/SUPER-CREATURE-RESEARCH.md).
+- **SUPER CREATURE 1.1 — the multi-pillar super-intelligence (v0.11.0, V90–V97)** — the mind grew from five
+  theories of mind to a dozen-plus real, deterministic, unit-tested faculties, each a cited mechanism that
+  reads from AND writes to the others: a **Theory-of-Mind** opponent model
+  ([src/sim/theory-of-mind.ts](./src/sim/theory-of-mind.ts)) that anticipates the rival; **Neural
+  Criticality** ([src/sim/criticality.ts](./src/sim/criticality.ts)) — an edge-of-chaos homeostat driving the
+  branching ratio σ̂ → 1 (where cortex computes best); an **Empowerment Drive**
+  ([src/sim/empowerment.ts](./src/sim/empowerment.ts)) — Blahut–Arimoto channel-capacity I(A;S′) agency
+  hunger; a **Holographic Memory** ([src/sim/holographic-memory.ts](./src/sim/holographic-memory.ts)) — a
+  MAP-VSA/HRR compositional binding store over bipolar hypervectors (bind · bundle · cleanup); and a
+  **Successor Representation** ([src/sim/successor-representation.ts](./src/sim/successor-representation.ts)) —
+  the hippocampal/RL predictive map. The **Quantum Computing Mind** deepened in lockstep: a genuine
+  statevector **Integrated-Information Φ**
+  ([src/sim/integrated-information.ts](./src/sim/integrated-information.ts)) — the min-cut entanglement at the
+  minimum-information partition (real IIT irreducibility, not a proxy); **quantum-coherence resources**
+  ([src/math/quantum-coherence.ts](./src/math/quantum-coherence.ts)) — the Baumgratz–Cramer–Plenio l1-norm +
+  relative-entropy monotones; **goal-directed amplitude amplification** (Grover) biasing the thought-collapse
+  toward intent; and **Quantum Natural Gradient self-optimization**
+  ([src/math/quantum-natural-gradient.ts](./src/math/quantum-natural-gradient.ts)) — the apex circuit now
+  _descends_ its own Fubini–Study geometry ([Stokes et al., 2020](https://doi.org/10.22331/q-2020-05-25-269))
+  to make its intended thought more probable, reading its own quantum geometry and writing its own quantum
+  drives. Every faculty is grounded with citations in
+  [docs/SUPER-CREATURE-RESEARCH.md](./docs/SUPER-CREATURE-RESEARCH.md), released as **v0.11.0**.
 
 Work on this codebase is governed by the three **master files** in
 [masters/](./masters/) — Executor, Architect, Physicist — bound by

@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **SUPER CREATURE 1.1 — Quantum Natural Gradient self-optimization.** The apex 6-qubit mind no longer only
+  FEELS the curvature of its thought-space (its Quantum Geometric Tensor) — each beat it now DESCENDS it: a new
+  `src/math/quantum-natural-gradient.ts` primitive preconditions the gradient of P(intended thought) by the
+  Tikhonov-regularised inverse Fubini–Study metric — the Quantum Natural Gradient (Stokes, Izaac, Killoran &
+  Carleo, _Quantum_ 4, 269, 2020, https://doi.org/10.22331/q-2020-05-25-269) — and `QuantumMind.selfOptimizeStep`
+  nudges a bounded, persisted (superposition, entanglement) bias up that natural gradient so the intended
+  thought grows more probable over beats. Reads its own quantum geometry, writes its own quantum drives.
+  Allocation-free; deterministic (NO new RNG draws — the seeded Born stream + the world golden test stay
+  byte-identical); the step restores the evolved+amplified register before the Born sample so a single evolve
+  is unchanged. New `SelfOptReadout` on the qubit snapshot; +14 closed-form/property tests.
 - **SUPER CREATURE 1.1 — the Holographic Memory: a Vector Symbolic Architecture (VSA/HRR).** A new
   deterministic faculty (`src/sim/holographic-memory.ts`) gives the apex mind genuine **compositional,
   analogical** memory — the neuro-symbolic bridge (Plate 1995; Kanerva 2009; Gayler 2003; Kleyko et al.
