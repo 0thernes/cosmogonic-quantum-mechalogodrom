@@ -562,6 +562,10 @@ export class SuperMind {
     // becomes a curiosity drive below (Fujii & Nakajima 2017).
     this.qmind.readObservables(this.qObs);
     this.qreservoir.step(this.qObs);
+    // V99 — READ the GENUINE quantum register Φ (real IIT min-cut entanglement) so the previously-INERT
+    // quantum integration now WRITES into cognition (PHILOSOPHY: every system reads AND writes another).
+    // Fed into the metacognition "integration" cue below, blended with the classical module proxy.
+    const qPhi = this.qmind.integratedInformationNow();
 
     // consciousness state
     const novelty = peakNovelty;
@@ -752,9 +756,11 @@ export class SuperMind {
       }
     }
     const decisionMargin = m1 > 1e-6 ? clamp01((m1 - m2) / m1) : 0;
+    // V99 — the metacog "integration" reliability cue now blends the classical module participation-ratio
+    // (`this.phi`) with the GENUINE quantum register Φ (`qPhi`) — a richer, real-IIT integration signal.
     const confidence = this.metacog.update(
       decisionMargin,
-      this.phi,
+      clamp01(0.5 * this.phi + 0.5 * qPhi),
       aifPerc.beliefEntropy,
       surprise,
     );

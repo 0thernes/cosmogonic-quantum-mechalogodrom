@@ -101,6 +101,13 @@ describe('SuperMind composite consciousness (V45)', () => {
       }
       expect(c.feeling).toBeGreaterThanOrEqual(-1);
       expect(c.feeling).toBeLessThanOrEqual(1);
+      // V99 — the metacog confidence now reads the GENUINE register Φ each beat (blended into its
+      // integration cue); it must stay finite + bounded [0,1] (a regression guard: a non-number Φ would
+      // silently NaN it, which the typed surface catches but the runtime bounds should too).
+      const conf = m.snapshot().metacog.confidence;
+      expect(Number.isFinite(conf)).toBe(true);
+      expect(conf).toBeGreaterThanOrEqual(0);
+      expect(conf).toBeLessThanOrEqual(1);
     }
   });
 

@@ -475,6 +475,19 @@ export class QuantumMind {
   }
 
   /**
+   * V99 — the GENUINE register integrated-information Φ of the CURRENT evolved state, computed PER BEAT so
+   * cognition can READ the quantum Φ (not only the classical module proxy). The real IIT min-cut bipartite
+   * measure ({@link ../sim/integrated-information}) over the live amplitudes — call AFTER {@link evolve}
+   * (the Born sample is non-destructive, so the amplitudes are the evolved + amplified thought state).
+   * Cheap (~10 balanced-bipartition purities over the 2ⁿ amplitudes); deterministic; reuses the snapshot
+   * buffer (snapshot() re-reads it, so there is no cross-call state hazard).
+   */
+  integratedInformationNow(): number {
+    this.reg.amplitudesInto(this.bufRe, this.bufIm);
+    return integratedInformation(this.bufRe, this.bufIm, QMIND_QUBITS).phi;
+  }
+
+  /**
    * Build the read-only BRAIN snapshot from the live statevector: Born probabilities + phases, the
    * per-qubit Bloch vectors and P(|1⟩), the normalized entropy, the mean entanglement (purity
    * deficit) and equatorial coherence, and the last sampled basis state. Allocates the public arrays
