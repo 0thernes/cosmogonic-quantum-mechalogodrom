@@ -179,40 +179,15 @@ ${VIS_SEL} {
 #cqm-hud-nav.cqm-hud-nolinks .cqm-hud-link {
   display: none;
 }
-/* V80: LAB / SPEC / DOCS lock into a row directly ABOVE their counterpart tab. Each link shares its
-   tab's vertical column (LAB↑AUDIT, SPEC↑NEURAL, DOCS↑MARKET), so the pairing stays aligned at EVERY
-   width with no measuring. In tabs mode the nav bottom-aligns so the tab row stays level and the link
-   row floats above ONLY over those three; outside tabs mode the column dissolves to just its tab. */
-.cqm-hud-col {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 4px;
-  flex: 0 0 auto;
-}
-#cqm-hud-nav.cqm-hud-tabs {
-  align-items: flex-end;
-}
-.cqm-hud-link {
-  display: none;
-}
-#cqm-hud-nav.cqm-hud-tabs:not(.cqm-hud-nolinks) .cqm-hud-link {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+/* V80c: DOCS / SPEC / LAB are flat in-flow buttons at the end of the centred launcher (the user's "just
+   stick them in the dock, in the centre, like before" — reverts the V80 above-tabs stacking). The
+   id-scoped position:static OVERRIDES their source 'fixed' utility so they can NEVER float back to the
+   bottom-right corner; they stay visible in BOTH tabs + cycler mode and drop only on the genuinely-narrow
+   tiers (the .cqm-hud-nolinks rule above + the ≤520px media below). */
+#cqm-hud-nav .cqm-hud-link {
   position: static;
-  width: 100%;
-}
-/* V80b: in CYCLER mode (portrait / narrow / touch — there is NO tab row to sit above) the columns
-   dissolve via display:contents below, so without this LAB/SPEC/DOCS would VANISH entirely. Keep
-   them ACCESSIBLE inline in the launcher — their pre-V80 home — so a portrait-monitor user never loses
-   Docs/Spec/Lab; only the genuinely-narrow nolinks / ≤520px tiers still drop them (same as before). */
-#cqm-hud-nav:not(.cqm-hud-tabs):not(.cqm-hud-nolinks) .cqm-hud-link {
   display: inline-flex;
   align-items: center;
-}
-#cqm-hud-nav:not(.cqm-hud-tabs) .cqm-hud-col {
-  display: contents;
 }
 @media (max-width: 520px) {
   #cqm-hud-nav .cqm-hud-link {
@@ -454,24 +429,7 @@ function buildNav(doc: Document): void {
   tabs = SLOTS.map((s, i) =>
     mk(s.icon + ' ' + s.name, s.name, 'cqm-hud-tab', () => showOnly(active === i ? -1 : i)),
   );
-  // V80: lock LAB / SPEC / DOCS into a row directly ABOVE their counterpart tab — each link shares the
-  // tab's flex column (LAB↑AUDIT, SPEC↑NEURAL, DOCS↑MARKET), so the pairing stays aligned at EVERY width
-  // (no measuring needed — they're the same column). adoptNavLinks is folded in here.
-  const LINK_OVER: Record<number, string> = { 2: '/lab', 3: '/spec', 4: '/docs' };
-  tabs.forEach((t, i) => {
-    const href = LINK_OVER[i];
-    const link = href ? doc.querySelector<HTMLAnchorElement>(`a[href="${href}"]`) : null;
-    if (link) {
-      link.classList.add('cqm-hud-btn', 'cqm-hud-link');
-      const col = doc.createElement('div');
-      col.className = 'cqm-hud-col';
-      col.appendChild(link); // top row: the page link
-      col.appendChild(t); // bottom row: its panel tab
-      nav!.appendChild(col);
-    } else {
-      nav!.appendChild(t);
-    }
-  });
+  tabs.forEach((t) => nav!.appendChild(t));
   // V67: the mobile cycler label (sits between the tabs and the › arrow; shown only on small screens).
   label = doc.createElement('span');
   label.className = 'cqm-hud-label';
@@ -498,6 +456,24 @@ function buildNav(doc: Document): void {
   ghostBtn.setAttribute('aria-pressed', String(ghostOn));
   nav.appendChild(ghostBtn);
   nav.appendChild(mk('✕', 'Close', 'cqm-hud-close', () => showOnly(-1)));
+  // V80c: DOCS / SPEC / LAB as flat in-flow buttons at the end of the centred launcher — the user's
+  // "just stick them in the dock, in the centre, like before". CSS forces them position:static so they
+  // can NEVER float back to their source bottom-right corner (their `fixed` utility otherwise wins).
+  const lsep = doc.createElement('span');
+  lsep.className = 'cqm-hud-sep';
+  nav.appendChild(lsep);
+  // Adopt by `data-nav` (NOT href): build-pages.ts rewrites the absolute /docs /spec /lab hrefs to
+  // subpath-relative for the GitHub Pages deploy, so the old href query matched NOTHING there — the links
+  // were never pulled into the launcher and stayed stranded in their source bottom-right corner (the bug
+  // the user kept reporting). The data-nav attribute survives the rewrite, so the dock gets them on Pages
+  // too. center-hud is now their single owner (panel-dock.ts no longer competes for these nodes).
+  for (const key of ['docs', 'spec', 'lab']) {
+    const a = doc.querySelector<HTMLAnchorElement>(`a[data-nav="${key}"]`);
+    if (a) {
+      a.classList.add('cqm-hud-btn', 'cqm-hud-link');
+      nav.appendChild(a);
+    }
+  }
   doc.body.appendChild(nav);
 }
 

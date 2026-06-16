@@ -9,6 +9,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 _Nothing yet._
 
+## [0.10.4] - 2026-06-15
+
+Post-`0.10.3` patch — DOCS/SPEC/LAB launcher placement, fixed for the deployed Pages site.
+
+### Fixed
+
+- **DOCS / SPEC / LAB were stranded in the bottom-right corner on GitHub Pages.** The center-HUD
+  launcher adopted the three page links by `a[href="/docs"]`, but `build-pages.ts` rewrites those
+  absolute hrefs to subpath-relative for the deploy — so the selector matched NOTHING on Pages and the
+  links fell back to their source `fixed` corner (it worked locally, where hrefs aren't rewritten, which
+  is why it looked fine in dev). They now carry a rewrite-proof `data-nav` attribute the launcher adopts
+  instead, and CSS forces `position:static` so they can never float back to the corner.
+
+### Changed
+
+- **DOCS / SPEC / LAB are now flat buttons in the center launcher dock** (reverted the V80 above-tabs
+  stacking) — the user's "just stick them in the dock, in the centre, like before." Verified in the nav
+  (not the corner) in both tabs and cycler modes. `panel-dock.ts` no longer competes to adopt them;
+  center-hud is their single owner.
+
 ## [0.10.3] - 2026-06-15
 
 Post-`0.10.2` patch — center-HUD cycler-mode link fallback. No simulation/behaviour change; same-seed

@@ -3,8 +3,9 @@
  * lives in, instead of four buttons scattered at different `right:` offsets (which crowded the corner
  * and overlapped the Docs/Spec links + the ✦ AI toggle). Each panel calls {@link mountToggle} with its
  * toggle button; the dock lazily builds one glass bar, neutralises the button's own fixed positioning
- * (a CSS override that keeps its styling), and lays them out in a tidy wrapping row. The two static
- * Docs/Spec nav links are adopted into the same bar. UI shell only — no sim coupling, no rng.
+ * (a CSS override that keeps its styling), and lays them out in a tidy wrapping row. (The DOCS/SPEC/LAB
+ * nav links USED to be adopted here too, but center-hud.ts is now their single owner.) UI shell only —
+ * no sim coupling, no rng.
  *
  * Why a shared bar: the directive's UI/UX fix — "move ARCHITECT, NEURAL, MARKET, DOCS, and SPECS into
  * the bottom menu bar … keep panels readable, touchable, responsive, and intentional."
@@ -23,8 +24,7 @@ const STYLE = `
   padding:4px 9px;border-radius:24px;border:1px solid rgba(120,150,210,.24);background:rgba(8,11,20,.7);
   backdrop-filter:blur(10px);box-shadow:0 4px 22px rgba(0,0,0,.55)}
 /* Neutralise each child's own fixed positioning so the flex bar lays them out (styling is preserved). */
-#${DOCK_ID} > button,#${DOCK_ID} > a{position:static!important;inset:auto!important;margin:0!important;flex:0 0 auto}
-#${DOCK_ID} > a{order:10} /* keep the Docs/Spec/Lab nav links grouped after the panel toggles (one row) */
+#${DOCK_ID} > button{position:static!important;inset:auto!important;margin:0!important;flex:0 0 auto}
 /* V53 mobile: on small/portrait/touch viewports the 10 toggles wrapped to ~6 rows (~323px tall) and
    ate ~40% of the screen — and the pop-up panels opened INSIDE that band. Make the dock a single
    COMPACT horizontally-scrollable row (a standard mobile tab-bar), so it stays ~52px and the panels
@@ -48,17 +48,12 @@ export function getDock(doc: Document = document): HTMLElement {
   dock.id = DOCK_ID;
   dock.setAttribute('aria-label', 'Panel and navigation dock');
   doc.body.appendChild(dock);
-  // Adopt the standalone (fixed-positioned) Docs + Spec + Lab nav links into the bar (V51 consolidates
-  // all three nav links here; they were duplicated in the #bar toolbar). The `.fixed` class distinguishes
-  // them from any in-toolbar link, so the #bar controls are left untouched.
-  doc
-    .querySelectorAll<HTMLElement>(
-      'a.fixed[href="/docs"], a.fixed[href="/spec"], a.fixed[href="/lab"]',
-    )
-    .forEach((a) => {
-      a.classList.remove('fixed');
-      dock.appendChild(a);
-    });
+  // NOTE: the DOCS / SPEC / LAB nav links are NOT adopted here anymore — the center-HUD launcher
+  // (center-hud.ts) is their SINGLE owner. It adopts them by the rewrite-proof `data-nav` attribute
+  // (the old `a.fixed[href="/docs"]` selector silently failed on the deployed Pages site, where
+  // build-pages.ts rewrites the absolute hrefs to subpath-relative — stranding the links in the
+  // bottom-right corner). A second owner here would just race for the same nodes; this dock now holds
+  // ONLY the panel toggles (which center-hud drives, hidden behind the launcher).
   return dock;
 }
 
