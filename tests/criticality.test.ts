@@ -26,7 +26,7 @@ describe('Criticality (V93) — the self-organised-criticality homeostat', () =>
 
   test('a SILENT mind self-excites: a quiescent input drives the gain up (homeostatic excitation)', () => {
     const c = new Criticality();
-    const quiet = new Array(N).fill(0);
+    const quiet = Array.from({ length: N }, () => 0);
     for (let i = 0; i < 40; i++) c.step(quiet);
     expect(c.snapshot().gain).toBeGreaterThan(1); // the controller raises gain to wake a silent network
     expect(c.branching).toBeLessThan(1); // and reads itself as subcritical
@@ -48,7 +48,7 @@ describe('Criticality (V93) — the self-organised-criticality homeostat', () =>
     const rn = mulberry32(3);
     for (let i = 0; i < 200; i++) near.step(variedDrive(rn)); // converges to σ̂ ≈ 1
     const far = new Criticality();
-    for (let i = 0; i < 40; i++) far.step(new Array(N).fill(0)); // pushed subcritical (σ̂ → 0)
+    for (let i = 0; i < 40; i++) far.step(Array.from({ length: N }, () => 0)); // pushed subcritical (σ̂ → 0)
     expect(near.snapshot().susceptibility).toBeGreaterThan(far.snapshot().susceptibility);
   });
 
