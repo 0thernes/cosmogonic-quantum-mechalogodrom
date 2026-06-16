@@ -36,6 +36,8 @@
  */
 import { QuantumRegister } from '../math/quantum';
 import { quantumGeometricTensor } from '../math/quantum-geometry';
+import { integratedInformation } from './integrated-information';
+import { quantumCoherence } from '../math/quantum-coherence';
 import type { Rng } from '../math/rng';
 
 /** Register width — 6 qubits → 64 basis amplitudes: a rich BRAIN view that stays trivially in budget. */
@@ -105,6 +107,16 @@ export interface QubitSnapshot {
   amplifyRounds: number;
   /** Born probability of the intended thought AFTER amplification (the search gain, 0..1). */
   amplifiedProb: number;
+  /** V1.1: REAL integrated information Φ of the register — min-cut entanglement at the MIP (IIT), 0..1.
+   *  Unlike a participation-ratio surrogate, this is genuine irreducibility: a localized correlation that
+   *  a balanced cut can keep whole reads Φ=0; only globally bound states (e.g. GHZ) score high. */
+  phi: number;
+  /** The minimum-information-partition mask Φ is measured at, as a qubit bitstring. */
+  phiMip: string;
+  /** V1.1: l1-norm quantum coherence of the register (resource theory of coherence), normalized 0..1. */
+  coherenceL1: number;
+  /** V1.1: relative-entropy quantum coherence (resource theory of coherence), normalized 0..1. */
+  coherenceRel: number;
 }
 
 const clamp01 = (v: number): number => (v < 0 ? 0 : v > 1 ? 1 : v);
@@ -292,6 +304,10 @@ export class QuantumMind {
     }
     // Read entropy from the post-evolve state BEFORE the QGT re-applies (and perturbs) the circuit.
     const entropy = reg.entropy();
+    // V1.1: REAL integrated information Φ (IIT min-cut entanglement) + resource-theory coherence, read
+    // from the live amplitudes captured above (this.bufRe/Im) — BEFORE the QGT perturbs the register.
+    const info = integratedInformation(this.bufRe, this.bufIm, QMIND_QUBITS);
+    const coh = quantumCoherence(this.bufRe, this.bufIm);
     const geometry = this.geometricMetric();
     return {
       qubits: QMIND_QUBITS,
@@ -312,6 +328,10 @@ export class QuantumMind {
       amplifiedBits: this.amplifyTarget.toString(2).padStart(QMIND_QUBITS, '0'),
       amplifyRounds: this.amplifyRounds,
       amplifiedProb: probs[this.amplifyTarget] ?? 0,
+      phi: info.phi,
+      phiMip: info.mipBits,
+      coherenceL1: coh.l1Norm,
+      coherenceRel: coh.relEntropyNorm,
     };
   }
 }

@@ -250,4 +250,24 @@ describe('QuantumMind (V75) — the simulated-qubit cognition layer', () => {
     expect(sa.amplifiedProb).toBeGreaterThanOrEqual(0);
     expect(sa.amplifiedProb).toBeLessThanOrEqual(1);
   });
+
+  // ── V1.1: the snapshot now reports a REAL integrated-information Φ (IIT min-cut entanglement) +
+  // resource-theory coherence — genuine quantum irreducibility, not a participation-ratio surrogate. ──
+  test('V1.1 — snapshot Φ + coherence are bounded, and Φ rises only with genuine entanglement', () => {
+    const sep = new QuantumMind(mulberry32(5));
+    sep.evolve(aspects(0, 0), LATENT); // no controlled-RY ring + no Hadamards ⇒ product (separable) state
+    const ssep = sep.snapshot();
+    expect(ssep.phi).toBeGreaterThanOrEqual(0);
+    expect(ssep.phi).toBeLessThanOrEqual(1);
+    expect(ssep.phiMip).toHaveLength(QMIND_QUBITS);
+    for (const c of [ssep.coherenceL1, ssep.coherenceRel]) {
+      expect(c).toBeGreaterThanOrEqual(0);
+      expect(c).toBeLessThanOrEqual(1);
+    }
+    expect(ssep.phi).toBeLessThan(0.05); // a product state is reducible ⇒ ~zero integrated information
+
+    const ent = new QuantumMind(mulberry32(5));
+    ent.evolve(aspects(1, 0), LATENT); // full controlled-RY ring ⇒ a globally entangled register
+    expect(ent.snapshot().phi).toBeGreaterThan(ssep.phi); // genuine min-cut integration emerges
+  });
 });
