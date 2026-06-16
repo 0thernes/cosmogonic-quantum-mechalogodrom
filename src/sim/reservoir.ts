@@ -8,11 +8,15 @@
  * echo of its recent world-model latents that gives downstream cognition real history — beyond the scalar
  * {@link MemoryRing} — plus a cheap, principled NOVELTY signal that can drive curiosity.
  *
- * Echo-state property: the spectral radius of the recurrent matrix is rescaled (by power iteration at
- * construction) to {@link SPECTRAL} < 1, so the state's dependence on initial conditions washes out and the
- * dynamics are a stable function of the input history. Leaky integration ({@link LEAK}) sets the memory
- * timescale. Everything is deterministic (weights + update from a seeded {@link Rng}) and allocation-free in
- * steady state (the power iteration's scratch is construction-time only). Pure leaf: no DOM, no THREE.
+ * Echo-state property: the recurrent matrix is rescaled (by power iteration at construction) TOWARD a
+ * spectral radius {@link SPECTRAL} < 1, so the state's dependence on initial conditions washes out and the
+ * dynamics are a stable function of the input history. (Power iteration converges to the true ρ only for a
+ * matrix with a unique real-dominant eigenvalue; the random W here is NON-NORMAL, so the estimate is an
+ * APPROXIMATION — this TARGETS, rather than strictly guarantees, ρ < 1. Across the sampled seeds the
+ * achieved radius stays below 1 and the contractive washout is unit-tested.) Leaky integration
+ * ({@link LEAK}) sets the memory timescale. Everything is deterministic (weights + update from a seeded
+ * {@link Rng}) and allocation-free in steady state (the power iteration's scratch is construction-time
+ * only). Pure leaf: no DOM, no THREE.
  */
 import type { Rng } from '../math/rng';
 
@@ -22,7 +26,10 @@ export const RESERVOIR_SIZE = 64;
 export const RESERVOIR_IN = 16;
 /** Leaky-integrator rate: x <- (1-LEAK)·x + LEAK·tanh(...). Lower = longer memory. */
 const LEAK = 0.3;
-/** Target spectral radius of the recurrent matrix — < 1 guarantees the echo-state property (edge of chaos). */
+/** Target spectral radius the recurrent matrix is rescaled TOWARD — kept below 1 to keep the dynamics
+ *  contractive (the echo-state regime, edge of chaos). NOTE: for the non-normal random W here power
+ *  iteration only APPROXIMATES ρ, so this targets — does not strictly guarantee — ρ < 1; the achieved
+ *  radius stays below 1 across the sampled seeds and washout is unit-tested (tests/reservoir.test.ts). */
 const SPECTRAL = 0.95;
 /** Input gain into the reservoir. */
 const IN_SCALE = 0.6;
@@ -66,7 +73,8 @@ export class Reservoir {
     for (let i = 0; i < this.win.length; i++) this.win[i] = (rng() * 2 - 1) * IN_SCALE;
     const w = new Float32Array(N * N);
     for (let i = 0; i < w.length; i++) w[i] = rng() * 2 - 1;
-    // Rescale to the target spectral radius so the echo-state property holds (washout of initial state).
+    // Rescale toward the target spectral radius (an APPROXIMATION for non-normal W — see the header) so
+    // the dynamics stay contractive (washout of the initial state; the property itself is unit-tested).
     const radius = spectralRadius(w, N);
     const scale = radius > 1e-9 ? SPECTRAL / radius : SPECTRAL;
     for (let i = 0; i < w.length; i++) w[i] = (w[i] ?? 0) * scale;
@@ -151,6 +159,10 @@ export class Reservoir {
 /**
  * Estimate the spectral radius (largest |eigenvalue|) of a row-major N×N matrix by power iteration from a
  * deterministic uniform start vector. Used ONCE at construction to normalise the reservoir. O(iters·N²).
+ * NOTE: power iteration converges to |λ_max| only when the dominant eigenvalue is unique and real; for a
+ * NON-NORMAL matrix (as here) the dominant eigenvalue can be complex, so the iterate can rotate rather
+ * than settle and this returns an APPROXIMATION. It is used only to scale W toward a contractive radius
+ * (ρ < 1), a property the washout test verifies empirically — not to report an exact eigenvalue.
  */
 function spectralRadius(w: Float32Array, n: number): number {
   const v = new Float32Array(n).fill(1 / Math.sqrt(n));

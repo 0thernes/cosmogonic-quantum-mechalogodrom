@@ -66,7 +66,24 @@ describe('ActiveInference (V90) — the Free-Energy Principle core', () => {
     m.expectedFreeEnergy([informative, bland], g);
     const s = m.snapshot();
     expect(g[0]).toBeLessThanOrEqual(g[1] ?? 0); // curiosity prefers the information-rich policy
-    expect(s.epistemic).toBeGreaterThanOrEqual(0); // the chosen policy yields non-negative info gain
+    // the discriminating obs genuinely SHARPENS the belief, so HERE the one-sample info-gain surrogate
+    // is ≥ 0 — but it is NOT ≥ 0 in general (a belief-blurring ô can make it negative; see the module
+    // docstring + the F == surprise closed-form pin below), which is why this is a scenario assertion.
+    expect(s.epistemic).toBeGreaterThanOrEqual(0);
+  });
+
+  test('closed form: at the exact Bayesian posterior, F = the Bayesian surprise (−log evidence)', () => {
+    // The single strongest exact identity the core satisfies: with q the exact softmax posterior,
+    // the variational free energy F = E_q[−logLik] + KL(q‖prior) collapses to the negative log-evidence
+    // (the Bayesian surprise) to machine precision. This pins the accuracy+complexity decomposition
+    // against the independent log-sum-exp marginal-likelihood path — a regression that desynced them
+    // (wrong KL sign, prototype/precision mismatch) would break it.
+    const m = new ActiveInference(mulberry32(11));
+    for (let i = 0; i < 8; i++) {
+      const o = OBS.map((v, k) => v * Math.sin(i * 0.4 + k));
+      const r = m.perceive(o);
+      expect(Math.abs(r.freeEnergy - r.surprise)).toBeLessThan(1e-9);
+    }
   });
 
   test('no NaN; the posterior stays normalised and the entropy bounded across a long varied run', () => {

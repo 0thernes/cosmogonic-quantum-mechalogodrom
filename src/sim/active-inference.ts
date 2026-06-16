@@ -19,7 +19,12 @@
  *     The epistemic term rewards policies that RESOLVE uncertainty (information gain → principled
  *     curiosity); the pragmatic term rewards reaching preferred observations C (goal-seeking). A low-G
  *     policy is simultaneously curious AND goal-directed — exactly the exploration/exploitation balance
- *     that falls out of the maths rather than being hand-tuned.
+ *     that falls out of the maths rather than being hand-tuned. (Honesty note: the epistemic term is
+ *     evaluated at a SINGLE point-estimate predicted observation ô_a, not as an expectation over the
+ *     predictive distribution P(o|a). The canonical expected info gain is the expectation, which is the
+ *     one that is provably ≥ 0; this one-sample surrogate CAN go negative for a belief-blurring ô. It
+ *     still correctly penalises blurring policies, and plan selection min-max-normalises G downstream,
+ *     so the surrogate suffices — but it is a surrogate, not the ≥ 0 mutual information.)
  *
  * Deterministic: the generative model is built once from a seeded {@link Rng}; the belief update and the
  * expected-free-energy evaluation are pure arithmetic (no unseeded randomness, no wall-clock), so the
@@ -46,7 +51,10 @@ export interface ActiveInferenceSnapshot {
   surprise: number;
   /** Shannon entropy of the belief q, 0..1 normalised (1 = maximally uncertain which situation it is in). */
   beliefEntropy: number;
-  /** Epistemic value of the chosen policy (expected information gain ≥ 0 — the curiosity drive). */
+  /** Epistemic value of the chosen policy: the one-sample info-gain surrogate H[q] − H[q|ô]. The
+   *  curiosity drive — but evaluated at a single predicted ô (not an expectation over the predictive
+   *  distribution), so it CAN be negative for a belief-blurring ô; the canonical expected info gain is
+   *  the ≥ 0 one. Plan selection min-max-normalises G, so the surrogate is sufficient. */
   epistemic: number;
   /** Pragmatic value of the chosen policy (alignment of its expected observation with preferences C). */
   pragmatic: number;
@@ -204,7 +212,7 @@ export class ActiveInference {
       const inv = z > 0 ? 1 / z : 0;
       for (let k = 0; k < K; k++) this.qNext[k] = (this.qNext[k] ?? 0) * inv;
       const hNext = this.entropyOf(this.qNext, K);
-      const epistemic = hNow - hNext; // info gain ≥ 0 (uncertainty resolved) → curiosity
+      const epistemic = hNow - hNext; // one-sample info-gain surrogate (CAN be negative for a blurring ô)
       let pragmatic = 0; // alignment of the expected observation with preferences C
       for (let m = 0; m < this.obsDim; m++) pragmatic += (this.pref[m] ?? 0) * (o[m] ?? 0);
       const g = -epistemic - pragmatic; // minimise G ⇒ maximise info gain + preference
