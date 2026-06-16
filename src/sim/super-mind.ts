@@ -56,6 +56,7 @@ import { ActiveInference, AIF_OBS, type ActiveInferenceSnapshot } from './active
 import { Metacognition, type MetacognitionSnapshot } from './metacognition';
 import { Criticality, type CriticalitySnapshot } from './criticality';
 import { TheoryOfMind } from './theory-of-mind';
+import { SuccessorRepresentation, type SuccessorSnapshot } from './successor-representation';
 import type { SuperPercept, SuperPlan } from './super-creature';
 import { SUPER_PLANS } from './super-creature';
 
@@ -171,6 +172,8 @@ export interface SuperMindSnapshot {
   metacog: MetacognitionSnapshot;
   /** V1.1 (V93): the criticality homeostat — branching ratio σ̂ + edge-of-chaos self-tuning. */
   criticality: CriticalitySnapshot;
+  /** V1.1: the successor-representation predictive map — model-based look-ahead over the plan dynamics. */
+  successor: SuccessorSnapshot;
 }
 
 const EMOTION_TAU = 0.12;
@@ -232,6 +235,10 @@ const PLAN_OBS_ARR: number[][] = SUPER_PLANS.map((p) => PLAN_OBS[p]);
 /** Low metacognitive confidence opens an exploration drive (bounded) — uncertainty ⇒ seek information. */
 const METACOG_EXPLORE_GAIN = 0.18;
 
+// ── V1.1 · SUCCESSOR REPRESENTATION (the predictive map — Dayan 1993; Stachenfeld et al. 2017) ──────
+/** How strongly the model-based look-ahead value biases plan selection (bounded, on par with the others). */
+const SR_GAIN = 0.12;
+
 /**
  * The composite apex mind. Construct with a seeded {@link Rng}; `think` each beat. ~10k parameters
  * across the named sub-networks (see {@link paramCount}). Pure + allocation-free in steady state.
@@ -269,6 +276,9 @@ export class SuperMind {
   private readonly criticality = new Criticality();
   /** V94: theory of mind — models the NEAREST RIVAL's intent from its observable cues (social cognition). */
   private readonly tom: TheoryOfMind;
+  /** V1.1: the successor-representation predictive map — model-based look-ahead over its own plan dynamics
+   *  (no random weights ⇒ it draws nothing from the seed stream; identity-initialised). */
+  private readonly successor = new SuccessorRepresentation();
   readonly paramCount: number;
 
   // ── Reusable scratch (no per-beat allocation) ──
@@ -288,6 +298,8 @@ export class SuperMind {
   private readonly phiMods = new Float32Array(8); // V89: the 8 named module-summary scalars for the Φ proxy
   private readonly aifObs = new Float32Array(AIF_OBS); // V1.1: observation vector fed to the free-energy core
   private readonly aifG: number[] = Array.from({ length: SUPER_PLANS.length }, () => 0); // per-plan EFE
+  private readonly srReward = new Float32Array(SUPER_PLANS.length); // V1.1: per-plan drive → SR look-ahead
+  private readonly srValue: number[] = Array.from({ length: SUPER_PLANS.length }, () => 0); // SR plan values
 
   private readonly memory = new MemoryRing(48);
   private valence = 0;
@@ -606,6 +618,28 @@ export class SuperMind {
     drives.DOMINATE += tomGain * (1 - menace) * this.dominance;
     drives.HUNT += tomGain * (1 - menace) * s[5];
 
+    // ── V1.1 · SUCCESSOR REPRESENTATION ── model-based look-ahead: bias each plan by the discounted FUTURE
+    // drive its learned predictive map expects it to open onto (Dayan 1993; Stachenfeld et al. 2017, Nat.
+    // Neuro.). A plan leading to high-value successor states is boosted beyond its immediate drive — the
+    // creature now plans over its OWN behavioural dynamics, not just this beat. Bounded, like the votes above.
+    for (let i = 0; i < SUPER_PLANS.length; i++) {
+      const plan = SUPER_PLANS[i];
+      this.srReward[i] = plan ? drives[plan] : 0;
+    }
+    this.successor.lookahead(this.srReward, this.srValue);
+    let vMin = Infinity;
+    let vMax = -Infinity;
+    for (let i = 0; i < SUPER_PLANS.length; i++) {
+      const v = this.srValue[i] ?? 0;
+      if (v < vMin) vMin = v;
+      if (v > vMax) vMax = v;
+    }
+    const vSpan = vMax - vMin > 1e-9 ? vMax - vMin : 1;
+    for (let i = 0; i < SUPER_PLANS.length; i++) {
+      const plan = SUPER_PLANS[i];
+      if (plan) drives[plan] += SR_GAIN * (((this.srValue[i] ?? 0) - vMin) / vSpan);
+    }
+
     // ── V92 · METACOGNITIVE EXECUTIVE ── before committing, the mind estimates its CONFIDENCE in the
     // decision from four reliability cues — the provisional decision margin, integration (Φ, last beat),
     // belief certainty (1 − active-inference belief entropy), and calm (1 − surprise) — then spends it as
@@ -645,6 +679,8 @@ export class SuperMind {
       }
     }
     this.plan = best;
+    // V1.1: fold the realised plan transition into the predictive map so next beat's look-ahead is informed.
+    this.successor.observe(SUPER_PLANS.indexOf(best));
 
     // ── V89 · GWT IGNITION ── the winning plan-coalition is "broadcast" when it crosses the access
     // threshold AND dominates the runner-up (a near-all-or-none event). Persisted so it gates the NEXT
@@ -719,6 +755,7 @@ export class SuperMind {
       aif: this.aif.snapshot(),
       metacog: this.metacog.snapshot(),
       criticality: this.criticality.snapshot(),
+      successor: this.successor.snapshot(),
     };
   }
 }
