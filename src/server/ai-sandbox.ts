@@ -67,6 +67,12 @@ export type SandboxResult =
 function confine(rel: string): { ok: true; abs: string } | { ok: false; error: string } {
   if (typeof rel !== 'string' || rel.length === 0) return { ok: false, error: 'empty path' };
   if (isAbsolute(rel) || rel.startsWith('~')) return { ok: false, error: 'absolute paths denied' };
+  // Cross-platform: reject Windows-style drive-letter / backslash paths. POSIX `isAbsolute('C:\\…')`
+  // returns FALSE, so without this an attacker's `C:\Windows` is treated as an in-repo relative filename
+  // and ALLOWED — a sandbox-escape that passed on Windows (caught by isAbsolute there) but slipped through
+  // on POSIX CI (audit 2026-06). Backslash is never a legitimate in-repo separator here (POSIX uses `/`).
+  if (/^[A-Za-z]:/.test(rel) || rel.includes('\\'))
+    return { ok: false, error: 'windows-style paths denied' };
   const abs = resolve(ROOT, rel);
   const rl = relative(ROOT, abs);
   if (rl.startsWith('..') || isAbsolute(rl)) return { ok: false, error: 'path escapes repo root' };
