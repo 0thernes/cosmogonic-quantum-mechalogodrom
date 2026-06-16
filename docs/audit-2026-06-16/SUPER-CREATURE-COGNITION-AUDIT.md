@@ -108,6 +108,16 @@ QGT re-applies the circuit on perturbed drives but `evolve` resets from \|0…0�
 stream is never corrupted (`super-qubits.test.ts:184`). The determinism guard is itself unit-tested and was
 hardened this cycle with additional non-determinism vectors.
 
+**The mechanical guard is GLOB-based, so it auto-seals new faculties.** `tests/determinism-law.test.ts`
+scans `Bun.Glob('src/sim/**/*.ts')` + `Bun.Glob('src/math/**/*.ts')` (comments stripped first, so doc-comment
+mentions of the banned APIs are ignored) for any unseeded-PRNG / wall-clock CALL — there is NO hand-maintained
+file list to fall stale, so every one of the 12-plus 1.1 faculties (metacognition, theory-of-mind,
+neuromodulation, integrated-information, quantum-magic, criticality, successor-representation, empowerment,
+holographic-memory, …) is covered the moment it lands, with a `scanned > 30` (sim) / `> 3` (math) sanity floor
+proving the glob actually matched. Verdict: the #1 invariant is enforced by construction across the whole
+faculty stack, not by convention. (Companion: `tests/layer-boundaries.test.ts` pins that sim/math leaves never
+import the UI/server layers; `tests/perf-budget.test.ts` now pins the per-beat frame budget — see §7b.)
+
 ---
 
 ## 6. Cleanups this cycle (DRY / no dead code)
