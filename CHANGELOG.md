@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **SUPER CREATURE 1.1 — Moonlab's Clifford stabilizer tableau: large-scale quantum.** A genuine port of the
+  **Moonlab** simulator's Clifford backend (MIT © tsotchke; credited in `THIRD-PARTY-NOTICES.md`): the
+  Aaronson–Gottesman stabilizer tableau (`src/math/clifford-tableau.ts`), the polynomial-time Gottesman–Knill
+  simulator that scales to **32/64+ qubits**, far past the dense 6-qubit statevector's 2ⁿ ceiling. Binary
+  destabiliser/stabiliser tableau; O(n) Clifford gates (H/S/X/Y/Z/CNOT/CZ/SWAP); O(n²) seeded measurement
+  (drawn through the project `Rng`, never `Math.random`); and bipartite entanglement entropy in ebits via a
+  GF(2) rank (intractable for the dense register). 9 closed-form tests — Bell/GHZ = 1 ebit across every cut,
+  GHZ measurements perfectly correlated, product = 0, H²=I, X|0⟩=|1⟩, determinism, and an exact + fast
+  40-qubit GHZ. Grounded in [docs/SUPER-CREATURE-RESEARCH.md](./docs/SUPER-CREATURE-RESEARCH.md) §11.
 - **SUPER CREATURE 1.1 — Quantum Deliberation: a Lindblad open-quantum-system decider.** A new deterministic
   faculty (`src/sim/quantum-deliberation.ts`) models how the mind's COHERENT superposition of candidate
   actions DECOHERES into a committed classical decision — the Gorini–Kossakowski–Sudarshan–Lindblad master

@@ -179,6 +179,24 @@ Compiled 2026-06-16 (research scout pass).
   deliberation→commitment — open-system physics, not a claim that decisions ARE quantum-mechanical. A
   dynamical metaphor with real, conserved (trace-preserving, completely-positive) mathematics underneath.
 
+## 11. Stabilizer formalism — large-scale Clifford simulation (Gottesman–Knill)
+
+- The **Gottesman–Knill theorem** says a circuit of only Clifford gates (H, S, CNOT, Pauli) on |0⟩ inputs
+  with computational-basis measurement is **classically simulable in polynomial time** — not by tracking 2ⁿ
+  amplitudes, but the n Pauli operators that STABILISE the state. The **Aaronson–Gottesman tableau**
+  (Aaronson & Gottesman, 2004) makes each gate an O(n) binary row update and measurement O(n²), so
+  GHZ/Bell/graph/stabiliser-code states on dozens-to-hundreds of qubits are exact and cheap — precisely the
+  regime the dense statevector (capped near 8 qubits) can never reach.
+- **What Super Creature 1.1 computes:** `src/math/clifford-tableau.ts` — the Aaronson–Gottesman tableau
+  reimplemented deterministically (a port of the **Moonlab** simulator's Clifford backend; see
+  THIRD-PARTY-NOTICES.md → Ported primitives), a LARGE-scale stabiliser substrate complementary to the small
+  dense register: O(n) Clifford gates, a seeded O(n²) measurement, and the bipartite **entanglement entropy**
+  read in ebits straight off the stabiliser matrix as a GF(2) rank (Fattal et al., 2004) — intractable to
+  compute on the dense register, cheap here.
+- **Honesty caveat:** a faithful implementation of an EXACTLY-simulable subclass of quantum mechanics (the
+  Clifford group), not a universal quantum computer — by Gottesman–Knill no quantum speed-up is implied. Its
+  value is exact, reproducible, large-n stabiliser dynamics + entanglement structure.
+
 ## Honest framing (cite without overclaiming)
 
 1. **Established / peer-reviewed empirical results:** the Cogitate 2025 _Nature_ adversarial test,
@@ -198,6 +216,7 @@ Compiled 2026-06-16 (research scout pass).
 
 ## References
 
+- Aaronson, S., & Gottesman, D. (2004). Improved simulation of stabilizer circuits. _Physical Review A, 70_(5), 052328. https://doi.org/10.1103/PhysRevA.70.052328
 - Arimoto, S. (1972). An algorithm for computing the capacity of arbitrary discrete memoryless channels. _IEEE Transactions on Information Theory, 18_(1), 14–20. https://doi.org/10.1109/TIT.1972.1054753
 - Blahut, R. E. (1972). Computation of channel capacity and rate-distortion functions. _IEEE Transactions on Information Theory, 18_(4), 460–473. https://doi.org/10.1109/TIT.1972.1054855
 - Breuer, H.-P., & Petruccione, F. (2002). _The Theory of Open Quantum Systems_. Oxford University Press.
@@ -206,6 +225,7 @@ Compiled 2026-06-16 (research scout pass).
 - Dayan, P. (1993). Improving generalization for temporal difference learning: The successor representation. _Neural Computation, 5_(4), 613–624. https://doi.org/10.1162/neco.1993.5.4.613
 - Durand, E. D., Joffily, M., & Khamassi, M. (2024). A diffusion model-based approach to active inference. _IEEE FMLDS_, 75–80. https://doi.org/10.1109/fmlds63805.2024.00024
 - Farisco, M., & Changeux, J.-P. (2023). About the compatibility between the perturbational complexity index and the global neuronal workspace theory. _Neuroscience of Consciousness, 2023_(1). https://doi.org/10.1093/nc/niad016
+- Fattal, D., Cubitt, T. S., Yamamoto, Y., Bravyi, S., & Chuang, I. L. (2004). Entanglement in the stabilizer formalism. _arXiv:quant-ph/0406168._ https://arxiv.org/abs/quant-ph/0406168
 - Ferrante, O., Górska, U., Henin, S., et al. (Cogitate Consortium). (2025). Adversarial testing of global neuronal workspace and integrated information theories of consciousness. _Nature, 642_(8066), 133–142. https://doi.org/10.1038/s41586-025-08888-1
 - Friston, K. (2010). The free-energy principle: a unified brain theory? _Nature Reviews Neuroscience, 11_, 127–138. https://doi.org/10.1038/nrn2787
 - Fujii, K., & Nakajima, K. (2017). Harnessing disordered-ensemble quantum dynamics for machine learning. _Physical Review Applied, 8_(2), 024030. https://doi.org/10.1103/PhysRevApplied.8.024030

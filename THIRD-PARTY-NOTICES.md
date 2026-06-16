@@ -5,7 +5,7 @@ This file is the **source-level** attribution for algorithms that were ported / 
 project's own TypeScript from third-party research code. It complements [NOTICE.md](./NOTICE.md), which
 lists the bundled runtime dependencies and fonts.
 
-The quantum- and spin-mind layer of the apex **Super Creature** adapts three primitives — reimplemented
+The quantum- and spin-mind layer of the apex **Super Creature** adapts four primitives — reimplemented
 at the source level, gate-for-gate / equation-for-equation — from the **Tsotchke** quantum research
 repositories (some of which also ship inside the **Eshkol** language and the **Moonlab** simulator). The
 original works are **MIT-licensed, © 2024–2026 tsotchke**. As required by the MIT License, the permission
