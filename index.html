@@ -1107,8 +1107,10 @@
       >Spec</a
     >
 
-    <!-- V51: Lab nav consolidated into the bottom dock beside Docs + Spec (it was a duplicate of the
-         #bar toolbar link). `fixed` so ui/panel-dock.ts adopts it into the bar. -->
+    <!-- Lab nav, beside Docs + Spec. V80c: center-hud.ts adopts all three into the launcher dock by
+         their data-nav attribute (rewrite-proof on GitHub Pages, where build-pages.ts retargets the
+         hrefs); CSS forces position:static so the source `fixed` utility can never re-strand it in the
+         corner. (panel-dock.ts no longer competes for these nodes.) -->
     <a
       href="/lab"
       data-nav="lab"
