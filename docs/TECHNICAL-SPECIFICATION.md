@@ -33,7 +33,7 @@ seed**.
 | App source (TypeScript)                | 30,871 lines · 89 files                           |
 | Tests                                  | 11,692 lines · 79 files                           |
 | Test : source ratio                    | 0.38 → **95.6 % line / 90.5 % function** coverage |
-| Passing tests                          | **964**                                           |
+| Passing tests                          | **965**                                           |
 
 ### 1.1 Languages
 
@@ -216,6 +216,18 @@ beat. All three are seeded + deterministic, unit-tested, and MIT-attributed to �
 statevector simulator itself (`src/math/quantum.ts`) remains the project's own Moonlab-style
 implementation. See [AI-SUBSYSTEM.md](AI-SUBSYSTEM.md) for the full quantum-mind design.
 
+**Super Creature 1.1 (V89) — the consciousness-metrics layer.** Atop those substrates, the apex mind now
+measures itself against the two leading _scientific_ theories of consciousness each beat, both deterministic
+and unit-tested: a **Global-Workspace ignition** (GNW — a winner-take-all over the 7 plan-coalitions that,
+on crossing an access threshold and dominating the runner-up, is "broadcast" and gates memory
+consolidation) and an **Integrated-Information Φ proxy** (IIT — the participation/coherence ratio of 8 named
+module activations; a _tractable surrogate_, since true Φ is intractable + non-unique). Both ride on the
+`Consciousness` snapshot and render as the **Ignition / Φ** meters on the SuperCreature board. The real
+2023–2026 research grounding (the Cogitate IIT-vs-GNW adversarial test, organoid "wet computing", active
+inference, quantum cognition) is catalogued with citations in
+[SUPER-CREATURE-RESEARCH.md](SUPER-CREATURE-RESEARCH.md) — framed as _"models / inspired by"_, never
+_"is conscious."_
+
 ### 7.2 Contrast: this world vs. large language models
 
 | Model                              | Parameters  | × larger than this world |
@@ -278,7 +290,7 @@ Complexity classes are catalogued in [COMPLEXITY.md](COMPLEXITY.md); hot-path be
 
 The single gate — `bun run check` — must pass before every commit:
 
-`prettier --check` → `tsc --noEmit` (strict) → `oxlint` → `bun test` (**964 tests, 0 fail**) →
+`prettier --check` → `tsc --noEmit` (strict) → `oxlint` → `bun test` (**965 tests, 0 fail**) →
 `bun scripts/build.ts`. Coverage gate: line ≥ 0.90, function ≥ 0.85 (measured 95.6 % / 90.5 %).
 Three governing "master" personas (`masters/*.xml`) encode the discipline: **the Executor** (finish
 everything, full gates), **the Architect** (contracts before code, exclusive ownership), **the
@@ -344,7 +356,7 @@ contrast 62 · doc-links 57 · a11y-static 45`.
 
 This is a ~69k-line TypeScript (+ optional C++/Jolt native engine) browser-native simulation that
 renders **up to 50,000 agents** (10,000 at 60 fps on a laptop iGPU with zero AI accelerator), is
-**bit-reproducible from one seed**, ships through a **full CI/CD gate** (964 tests, 95.6 % coverage),
+**bit-reproducible from one seed**, ships through a **full CI/CD gate** (965 tests, 95.6 % coverage),
 and whose entire emergent intelligence weighs **≈ 14 MB — 1/50,000th of GPT-3** at the mega ceiling. It
 demonstrates that depth comes from **architecture,
 determinism, and engineering discipline**, not parameter count or hardware.

@@ -181,6 +181,9 @@ export class SuperPanel {
     this.meter.reasoning = bar(bars, 'Reason', '#6cdfff', doc);
     this.meter.selfAware = bar(bars, 'Self-aware', '#ffd166', doc);
     this.meter.novelty = bar(bars, 'Novelty', '#8dff9e', doc);
+    // V89 — Super Creature 1.1: the two leading SCIENTIFIC theories of consciousness, measured live.
+    this.meter.ignition = bar(bars, 'Ignition', '#ff7a45', doc); // Global Workspace broadcast (GNW)
+    this.meter.phi = bar(bars, 'Φ integ', '#5ad1c4', doc); // Integrated-Information proxy (IIT)
   }
 
   get isOpen(): boolean {
@@ -244,6 +247,8 @@ export class SuperPanel {
       this.setBar('reasoning', k.reasoning);
       this.setBar('selfAware', k.selfAware);
       this.setBar('novelty', k.novelty);
+      this.setBar('ignition', k.ignition ?? 0); // V89 · GWT broadcast
+      this.setBar('phi', k.phi ?? 0); // V89 · IIT Φ proxy
       // V84 — the three ported Tsotchke substrates the apex psyche RUNS on: the Eshkol qubit-RNG it
       // collapses thoughts through, the QGTL geometry (curvature of its thought-space), and the
       // spin-glass instinct (the behavioural archetype its Hopfield/Ising lattice recalled this beat).

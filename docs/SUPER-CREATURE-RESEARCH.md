@@ -1,0 +1,125 @@
+# Super Creature 1.1 — Scientific Grounding
+
+The apex creature's "consciousness" is a set of **explicit, measurable, deterministic mechanisms**, not a
+claim of sentience. This document is the honest citation trail behind the V89 _consciousness-metrics
+layer_ (and the V84–V88 quantum-substrate ports it sits on). Every reference below was retrieved from a
+live source and verified for title, venue, year, and identifier; preprints, vendor language, and contested
+claims are flagged. **The rule for this project: the docs say _"inspired by / models"_, never _"implements
+consciousness"_ or _"is conscious."_**
+
+Compiled 2026-06-16 (research scout pass).
+
+---
+
+## What the code actually implements vs. what the science says
+
+| Real research thread                                     | What Super Creature 1.1 actually computes                                                                                                                                                                          | Honesty caveat                                                                                                                                       |
+| -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Global Workspace / GNW** (Baars, Dehaene) — "ignition" | `Consciousness.ignition` — a winner-take-all over the 7 plan-coalitions; when the winner crosses an access threshold _and_ dominates the runner-up it "broadcasts", gating memory consolidation (`super-mind.ts`). | A toy model of the _signature_ (ignition + broadcast), not the cortical phenomenon. The 2025 Cogitate test pressured the offset-ignition prediction. |
+| **Integrated Information Theory** (Tononi) — Φ           | `Consciousness.phi` — the participation/coherence ratio of 8 named module activations (1 ⇒ parts act as one, 1/M ⇒ independent).                                                                                   | Explicitly a **tractable surrogate**. True Φ is super-exponential _and_ non-unique; we never claim to compute Φ.                                     |
+| **Predictive processing / active inference** (Friston)   | The pre-existing predictor recursion → `surprise`; the affect EMAs; the self-model scalar.                                                                                                                         | Models prediction-error salience. The Free Energy Principle is a unifying _theory_, not a settled fact.                                              |
+| **Quantum cognition** (Busemeyer, Trueblood)             | The 6-qubit register + Eshkol Born-sampled "thought collapse" + the QGT/Fubini–Study readout (V75–V88).                                                                                                            | "Quantum" here is an **algebra on amplitudes/probabilities** in a deterministic sim — nothing about quantum neurons.                                 |
+| **Organoid intelligence / "wet computing"**              | _Not implemented_ — referenced as conceptual lineage only (a biological substrate doing computation).                                                                                                              | Aspirational/early field; we make **no** biocomputing claim. Listed for honest context, not capability.                                              |
+
+---
+
+## 1. Scientific theories of consciousness — the IIT vs GNWT adversarial collaboration (Cogitate)
+
+- The flagship result is published and is a genuine **double-bind, not a win for either side**: the
+  preregistered adversarial test (n = 256; fMRI + MEG + iEEG) aligned with _some_ predictions of both IIT
+  and GNWT while **challenging key tenets of both** — IIT contradicted by a lack of sustained posterior
+  synchronization, GNWT by a lack of prefrontal "ignition" at stimulus offset (Ferrante et al., 2025,
+  _Nature_).
+- The collaboration was **designed up front to falsify**, with both camps co-signing predictions before
+  data collection (Melloni et al., 2023, _PLOS ONE_).
+- **Adversarial note:** the GNWT proponents dispute the framing, arguing the offset-ignition prediction
+  tested was not core to the theory (Naccache, Sergent & Dehaene, 2025, _Neuroscience of Consciousness_).
+  Cite the _outcome_, not a verdict.
+
+## 2. Integrated Information (Φ) — tractable proxies and intractability
+
+- True Φ is not just expensive, it is **under-determined**: Hanson & Walker (2023) show Φ in IIT 3.0 is
+  _non-unique_ — systems exist for which Φ = 0 and Φ > 0 are simultaneously valid.
+- The proxies used in practice (decoder-based Φ\*, geometric Φ_G, stochastic interaction) are openly
+  acknowledged approximations to a "computationally intractable" measure (Nilsen, Arena & Storm, 2024).
+- A 2024 peer-reviewed alternative sidesteps Φ with a tractable **integration–segregation difference**
+  (ISD), classifying conscious states at ~93% accuracy — a _correlate_, not an identity claim (Jang,
+  Mashour & Hudetz, 2024, _Nature Communications_). **This is the family our `phi` proxy belongs to.**
+- **Caveat:** integrated-information measures sometimes _increase_ under anesthesia, contrary to IIT — they
+  are state-discriminators, not validated "amount of consciousness" meters (Nilsen et al., 2024).
+
+## 3. Global Workspace / "ignition"
+
+- Ignition remains the named neural signature of conscious access in the Dehaene line, but the strongest
+  2025 test (Cogitate) **failed to find the predicted offset ignition** (Ferrante et al., 2025).
+- The GNWT camp's rebuttal reasserts the framework and defends ignition as still viable (Naccache et al.,
+  2025).
+- Convergence work argues GNWT is compatible with the complexity-based PCI historically tied to the _rival_
+  theory (Farisco & Changeux, 2023).
+
+## 4. Organoid intelligence / "wet computing" / biocomputing
+
+- **Brainoware** — a human brain organoid as a physical reservoir for speech-recognition / nonlinear tasks;
+  a real, peer-reviewed proof-of-concept with modest accuracy (Cai, Ao, Tian et al., 2023, _Nature
+  Electronics_).
+- **DishBrain** — in-vitro neurons "learn Pong"; the word _sentience_ is the authors' **operational
+  redefinition** (responsiveness), not evidence of consciousness (Kagan et al., 2022, _Neuron_). Underpins
+  Cortical Labs' 2025 commercial CL1.
+- **FinalSpark Neuroplatform** — 16 organoids / ~160k neurons accessible over the cloud; the "1,000,000×
+  less energy" figure is a **vendor projection**, not a measured benchmark (Jordan et al., 2024).
+- The **Organoid Intelligence** roadmap is an aspirational position paper, not a result (Smirnova et al.,
+  2023, _Frontiers in Science_).
+
+## 5. Active inference / predictive processing & quantum cognition
+
+- The **Free Energy Principle** is mature and widely applied but is a unifying _theory_; whether it adds
+  mechanistic content beyond Bayesian inference is debated (Friston, 2010; Piekarski, 2023).
+- A 2024 bridge approximates the otherwise-intractable exact free-energy computation with diffusion models —
+  an engineering demo, not neuroscience evidence (Durand, Joffily & Khamassi, 2024).
+- **Quantum cognition** is a legitimate mathematical-modeling program, **not** a claim the brain is quantum;
+  order effects fall out of non-commuting projection operators (Huang, Epping & Trueblood, 2025; Busemeyer &
+  Bruza, 2024).
+
+---
+
+## Honest framing (cite without overclaiming)
+
+1. **Established / peer-reviewed empirical results:** the Cogitate 2025 _Nature_ adversarial test,
+   Brainoware, DishBrain, the FinalSpark Neuroplatform — these happened and are published; describe what was
+   _measured_, not what it "proves."
+2. **Established theoretical frameworks (not facts):** IIT, GNWT, the Free Energy Principle, quantum-
+   probability cognition are coherent, productive _theories_ — none is confirmed as "the" account of mind.
+3. **Genuinely contested:** IIT faces a "pseudoscience" open letter (2023, PsyArXiv — itself controversial)
+   and a non-uniqueness proof of Φ; treat Φ as mathematically problematic, not a working meter.
+4. **Hype-prone terms handled with care:** "sentience" (operational redefinition), "biocomputer" (narrow +
+   early), the "1,000,000×" energy figure (vendor projection).
+5. **Aspirational, not delivered:** the Organoid Intelligence roadmap and any "conscious organoid" framing.
+6. **For this art project this is ideal source material** — real and genuinely unsettled — _provided the
+   docs say "inspired by / models" rather than "implements" or "is conscious."_
+
+---
+
+## References
+
+- Busemeyer, J. R., & Bruza, P. D. (2024). _Quantum Models of Cognition and Decision_ (2nd ed.). Cambridge University Press.
+- Cai, H., Ao, Z., Tian, C., et al. (2023). Brain organoid reservoir computing for artificial intelligence. _Nature Electronics, 6_, 1032–1039. https://doi.org/10.1038/s41928-023-01069-w
+- Durand, E. D., Joffily, M., & Khamassi, M. (2024). A diffusion model-based approach to active inference. _IEEE FMLDS_, 75–80. https://doi.org/10.1109/fmlds63805.2024.00024
+- Farisco, M., & Changeux, J.-P. (2023). About the compatibility between the perturbational complexity index and the global neuronal workspace theory. _Neuroscience of Consciousness, 2023_(1). https://doi.org/10.1093/nc/niad016
+- Ferrante, O., Górska, U., Henin, S., et al. (Cogitate Consortium). (2025). Adversarial testing of global neuronal workspace and integrated information theories of consciousness. _Nature, 642_(8066), 133–142. https://doi.org/10.1038/s41586-025-08888-1
+- Friston, K. (2010). The free-energy principle: a unified brain theory? _Nature Reviews Neuroscience, 11_, 127–138. https://doi.org/10.1038/nrn2787
+- Hanson, J. R., & Walker, S. I. (2023). On the non-uniqueness problem in integrated information theory. _Neuroscience of Consciousness, 2023_(1). https://doi.org/10.1093/nc/niad014
+- Huang, J.-Q., Epping, G. P., & Trueblood, J. S. (2025). An overview of the quantum cognition research program. _Psychonomic Bulletin & Review, 32_(6), 2507–2556. https://doi.org/10.3758/s13423-025-02675-9
+- Jang, H., Mashour, G. A., & Hudetz, A. G. (2024). Measuring the dynamic balance of integration and segregation underlying consciousness, anesthesia, and sleep. _Nature Communications, 15_(1). https://doi.org/10.1038/s41467-024-53299-x
+- Jordan, F. D., et al. (2024). Open and remotely accessible Neuroplatform for research in wetware computing. _Frontiers in Artificial Intelligence, 7_, 1376042. https://doi.org/10.3389/frai.2024.1376042
+- Kagan, B. J., et al. (2022). In vitro neurons learn and exhibit sentience when embodied in a simulated game-world. _Neuron, 110_(23). https://doi.org/10.1016/j.neuron.2022.09.001
+- Melloni, L., Mudrik, L., Pitts, M., et al. (2023). An adversarial collaboration protocol for testing contrasting predictions of GNW and IIT. _PLOS ONE, 18_. https://doi.org/10.1371/journal.pone.0268577
+- Naccache, L., Sergent, C., & Dehaene, S. (2025). GNW theoretical framework and the adversarial testing of GNW and IIT. _Neuroscience of Consciousness, 2025_. https://doi.org/10.1093/nc/niaf037
+- Nilsen, A. S., Arena, A., & Storm, J. F. (2024). Exploring effects of anesthesia on complexity, differentiation, and integrated information in rat EEG. _Neuroscience of Consciousness, 2024_(1). https://doi.org/10.1093/nc/niae021
+- Piekarski, M. (2023). Incorporating (variational) free energy models into mechanisms. _Synthese, 202_(2). https://doi.org/10.1007/s11229-023-04292-2
+- Smirnova, L., Caffo, B., Gracias, D. H., et al. (2023). Organoid intelligence (OI): the new frontier in biocomputing and intelligence-in-a-dish. _Frontiers in Science, 1_, 1017235. https://doi.org/10.3389/fsci.2023.1017235
+
+_Supporting / lower-confidence (verified to exist; secondary): the IIT "pseudoscience" open letter (124
+signatories, Sept 2023, PsyArXiv — a contested preprint); the Ferrante et al. (2023) Cogitate bioRxiv
+preprint (10.1101/2023.06.23.546249); Cortical Labs CL1 (2025) — a product announcement, not a paper. The
+Busemeyer & Bruza 2nd-edition and the FinalSpark DOI were confirmed via publisher/NCBI listings rather than
+a direct index hit._

@@ -52,6 +52,7 @@ import { QuantumMind, type QubitSnapshot } from './super-qubits';
 import { EshkolQrng, type EshkolQrngSnapshot } from '../math/eshkol-qrng';
 import { SpinGlass, type SpinSnapshot } from './spin-glass';
 import { Reservoir, type ReservoirSnapshot } from './reservoir';
+import { ActiveInference, AIF_OBS, type ActiveInferenceSnapshot } from './active-inference';
 import type { SuperPercept, SuperPlan } from './super-creature';
 import { SUPER_PLANS } from './super-creature';
 
@@ -161,6 +162,8 @@ export interface SuperMindSnapshot {
   spin: SpinSnapshot;
   /** V1.1: the echo-state reservoir — temporal dynamical memory + the novelty that drives curiosity. */
   reservoir: ReservoirSnapshot;
+  /** V1.1: the active-inference free-energy core (Friston FEP) — belief, free energy, expected free energy. */
+  aif: ActiveInferenceSnapshot;
 }
 
 const EMOTION_TAU = 0.12;
@@ -201,6 +204,23 @@ const SPIN_ARCHETYPES: number[][] = ((): number[][] => {
   return SUPER_PLANS.map(() => Array.from({ length: SPIN_SIZE }, () => (r() < 0.5 ? -1 : 1)));
 })();
 
+// ── V1.1 · ACTIVE INFERENCE (Friston's Free Energy Principle) ─────────────────────────────────────
+/** How strongly the expected-free-energy vote biases plan selection (bounded, on par with the instinct). */
+const AIF_GAIN = 0.12;
+/** The generative model of what each plan tends to bring about, in observation space
+ *  [energy, threat, prey, rival, novelty, wealth] — used to score each plan's EXPECTED free energy. */
+const PLAN_OBS: Record<SuperPlan, number[]> = {
+  HUNT: [0.6, 0.6, 0.9, 0.2, 0.0, 0.3],
+  FLEE: [-0.3, -0.9, -0.5, -0.2, -0.2, 0.0],
+  DOMINATE: [0.4, 0.2, 0.0, 0.6, 0.0, 0.8],
+  DECEIVE: [0.0, 0.3, 0.2, 0.7, 0.0, 0.3],
+  SPAWN: [0.5, -0.3, 0.0, -0.2, 0.0, 0.2],
+  EXPLORE: [0.2, -0.2, 0.3, 0.0, 0.9, 0.2],
+  REST: [0.3, -0.6, -0.3, -0.3, -0.5, 0.0],
+};
+/** The plan observations in {@link SUPER_PLANS} order, so the EFE index i ↔ SUPER_PLANS[i]. */
+const PLAN_OBS_ARR: number[][] = SUPER_PLANS.map((p) => PLAN_OBS[p]);
+
 /**
  * The composite apex mind. Construct with a seeded {@link Rng}; `think` each beat. ~10k parameters
  * across the named sub-networks (see {@link paramCount}). Pure + allocation-free in steady state.
@@ -229,6 +249,8 @@ export class SuperMind {
   private readonly spinDrive: Rng;
   /** V1.1: the echo-state reservoir the mind steps with its latent each beat (short-term temporal memory). */
   private readonly reservoir: Reservoir;
+  /** V1.1: the active-inference free-energy core — Bayesian world-belief + expected-free-energy planning. */
+  private readonly aif: ActiveInference;
   readonly paramCount: number;
 
   // ── Reusable scratch (no per-beat allocation) ──
@@ -246,6 +268,8 @@ export class SuperMind {
   private readonly imagined = new Float32Array(LATENT);
   private readonly spinField = new Float32Array(SPIN_SIZE); // situational drive into the instinct lattice
   private readonly phiMods = new Float32Array(8); // V89: the 8 named module-summary scalars for the Φ proxy
+  private readonly aifObs = new Float32Array(AIF_OBS); // V1.1: observation vector fed to the free-energy core
+  private readonly aifG: number[] = Array.from({ length: SUPER_PLANS.length }, () => 0); // per-plan EFE
 
   private readonly memory = new MemoryRing(48);
   private valence = 0;
@@ -308,6 +332,10 @@ export class SuperMind {
     this.spin.imprint(SPIN_ARCHETYPES);
     this.spinDrive = mulberry32((childSeed ^ 0x2545f491) >>> 0 || 1);
     this.reservoir = new Reservoir(mulberry32((childSeed ^ 0x119de1f3) >>> 0 || 1));
+    // V1.1: the active-inference free-energy core, on its own XOR-derived seed (no extra rng draw). Its
+    // preference C (want energy/prey/wealth, avoid threat/rivals) is the creature's standing "goal".
+    this.aif = new ActiveInference(mulberry32((childSeed ^ 0xa3c59ac3) >>> 0 || 1));
+    this.aif.setPreference([1, -1, 0.6, -0.4, 0.3, 0.5]);
   }
 
   get offspringCount(): number {
@@ -492,6 +520,19 @@ export class SuperMind {
     }
     const instinctPlan = instinctPattern >= 0 ? SUPER_PLANS[instinctPattern] : undefined;
 
+    // ── ACTIVE INFERENCE · the free-energy core ── PERCEIVE the world into a belief over latent
+    // situations (minimising variational free energy F), then score every plan by its EXPECTED free
+    // energy G — trading information gain (epistemic curiosity) against preference (pragmatic value).
+    const obs = this.aifObs;
+    obs[0] = s[0] * 2 - 1; // energy
+    obs[1] = s[1] * 2 - 1; // threat
+    obs[2] = s[5] * 2 - 1; // prey near
+    obs[3] = s[6] * 2 - 1; // rival near
+    obs[4] = novelty * 2 - 1; // novelty
+    obs[5] = s[4] * 2 - 1; // wealth (relative)
+    this.aif.perceive(obs);
+    this.aif.expectedFreeEnergy(PLAN_OBS_ARR, this.aifG);
+
     // ── decode drives ──
     const aggression = unit(act[3] ?? 0);
     const deception = unit(act[4] ?? 0);
@@ -511,6 +552,20 @@ export class SuperMind {
     };
     // the instinct's recalled archetype nudges its plan (bounded) — subsymbolic vote on the decision
     if (instinctPlan) drives[instinctPlan] += INSTINCT_GAIN * instinctStrength;
+    // the free-energy core votes too: lower expected free energy ⇒ a stronger (bounded) bias, so the
+    // creature is at once goal-seeking (pragmatic) AND curious (epistemic) under one principle (Friston).
+    let gMin = Infinity;
+    let gMax = -Infinity;
+    for (let i = 0; i < SUPER_PLANS.length; i++) {
+      const g = this.aifG[i] ?? 0;
+      if (g < gMin) gMin = g;
+      if (g > gMax) gMax = g;
+    }
+    const gSpan = gMax - gMin > 1e-9 ? gMax - gMin : 1;
+    for (let i = 0; i < SUPER_PLANS.length; i++) {
+      const plan = SUPER_PLANS[i];
+      if (plan) drives[plan] += AIF_GAIN * ((gMax - (this.aifG[i] ?? 0)) / gSpan);
+    }
     let best: SuperPlan = 'REST';
     let bestScore = -Infinity;
     let runnerUp = -Infinity;
@@ -595,6 +650,7 @@ export class SuperMind {
       eshkol: this.eshkol.snapshot(),
       spin: this.spin.snapshot(),
       reservoir: this.reservoir.snapshot(),
+      aif: this.aif.snapshot(),
     };
   }
 }

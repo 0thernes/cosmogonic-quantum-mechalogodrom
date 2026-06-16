@@ -5,7 +5,7 @@
 [![License: Proprietary](https://img.shields.io/badge/License-Proprietary%20%E2%80%94%20All%20Rights%20Reserved-red.svg)](./LICENSE)
 [![Bun](https://img.shields.io/badge/Bun-1.3-black?logo=bun&logoColor=white)](https://bun.sh)
 [![TypeScript strict](https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript&logoColor=white)](./tsconfig.json)
-[![tests](https://img.shields.io/badge/tests-964%20passing-brightgreen)](./tests)
+[![tests](https://img.shields.io/badge/tests-965%20passing-brightgreen)](./tests)
 [![audit](https://img.shields.io/badge/inspection-500%20points-success)](./docs/500-POINT-INSPECTION.md)
 
 A procedural WebGL cosmic ecosystem — morphogenic organisms, Shoggoths,
@@ -260,7 +260,7 @@ generations, and a read-only Copilot (`docs/MODULE-CONTRACTS.md` §V9):
   alter dynamics** (`solid` stays the exact determinism identity); singularities
   now pull titans/shoggoths/leviathans; chaos is leveled and bipolar.
 
-### The Living Era (post-0.9.0 · V10–V88)
+### The Living Era (post-0.9.0 · V10–V89)
 
 Since 0.9.0 the cosmos has grown continuously — seventy-plus increments logged in
 the [CHANGELOG](./CHANGELOG.md) `[Unreleased]` section, each shipped behind the
@@ -328,6 +328,20 @@ full gate with same-seed determinism preserved. The major arcs:
   that biases plan selection. Surfaced live on the SuperCreature board's
   **Substrate** row (Eshkol H · QGT vol/κ · Spin→PLAN %) and covered by closed-form
   unit tests — **964 tests green**.
+- **SUPER CREATURE 1.1 — the consciousness-metrics layer (V89)** — the apex mind now
+  measures itself against the two leading _scientific_ theories of consciousness every
+  beat, each a live deterministic scalar computed from its own activations: a
+  **Global-Workspace ignition** (GNW — Baars/Dehaene: a winner-take-all plan-coalition
+  that, on crossing an access threshold and dominating the runner-up, is "broadcast" and
+  gates which imagined content consolidates into memory) and an **Integrated-Information
+  Φ proxy** (IIT — Tononi: the participation/coherence ratio of the named module
+  activations; honestly labelled a _proxy_, since true Φ is intractable + non-unique).
+  Both are unit-tested and shown live as the **Ignition / Φ** meters on the SuperCreature
+  board. The real 2023–2026 research grounding — the Cogitate IIT-vs-GNW adversarial test
+  ([Ferrante et al., 2025, _Nature_](https://doi.org/10.1038/s41586-025-08888-1)),
+  organoid "wet computing", active inference and the quantum-cognition program — is
+  catalogued with citations in
+  [docs/SUPER-CREATURE-RESEARCH.md](./docs/SUPER-CREATURE-RESEARCH.md). **965 tests green.**
 
 Work on this codebase is governed by the three **master files** in
 [masters/](./masters/) — Executor, Architect, Physicist — bound by

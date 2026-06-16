@@ -9,6 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **SUPER CREATURE 1.1 — the consciousness-metrics layer (V89).** The apex mind now measures itself against
+  the two leading _scientific_ theories of consciousness each beat, both deterministic and unit-tested,
+  each a live scalar computed from its own activations:
+  - **Global-Workspace ignition** (GNW — Baars/Dehaene): a winner-take-all over the 7 plan-coalitions; when
+    the winner crosses an access threshold _and_ dominates the runner-up it is "broadcast", and that
+    broadcast gates which imagined content consolidates into episodic memory (a real downstream effect, not
+    a readout).
+  - **Integrated-Information Φ proxy** (IIT — Tononi): the participation/coherence ratio of 8 named module
+    activations (1 ⇒ the parts act as one; 1/M ⇒ independent) — explicitly a _tractable surrogate_, since
+    true Φ is intractable + non-unique (Hanson & Walker 2023).
+  - Surfaced live as the **Ignition / Φ** meters on the SuperCreature board; grounded with real 2023–2026
+    citations (the Cogitate IIT-vs-GNW adversarial test, organoid "wet computing", active inference, quantum
+    cognition) in [docs/SUPER-CREATURE-RESEARCH.md](./docs/SUPER-CREATURE-RESEARCH.md). **965 tests green.**
 - **The Tsotchke quantum lineage — three research primitives ported and wired into the apex Super Creature
   mind (V84–V88).** Reimplemented at the source level (gate-for-gate / equation-for-equation) from the
   **Tsotchke** quantum-research repositories — credited under MIT in
