@@ -18,6 +18,11 @@ const BANNED: { name: string; re: RegExp }[] = [
   { name: 'Math.random()', re: /\bMath\s*\.\s*random\s*\(/ },
   { name: 'Date.now()', re: /\bDate\s*\.\s*now\s*\(/ },
   { name: 'performance.now()', re: /\bperformance\s*\.\s*now\s*\(/ },
+  // Defense-in-depth (audit): the adjacent non-determinism vectors a future edit could reach for —
+  // none exist in src/sim or src/math today, so this guard keeps the boundary sealed as the tree grows.
+  { name: 'crypto.getRandomValues()', re: /\bcrypto\s*\.\s*getRandomValues\s*\(/ },
+  { name: 'new Date()', re: /\bnew\s+Date\s*\(/ }, // any `new Date(` — a wall-clock read (or a date the sim must not need)
+  { name: 'process.hrtime()', re: /\bprocess\s*\.\s*hrtime\b/ },
 ];
 
 /** Strip block + line comments so doc-comment mentions of the banned APIs are ignored (keep `://`). */
@@ -26,7 +31,7 @@ function stripComments(src: string): string {
 }
 
 describe('determinism law — the sim layer never reads unseeded randomness or the wall clock', () => {
-  test('src/sim/** contains no Math.random / Date.now / performance.now CALLS', async () => {
+  test('src/sim/** contains no unseeded-randomness or wall-clock CALLS', async () => {
     const glob = new Bun.Glob('src/sim/**/*.ts');
     const offenders: string[] = [];
     let scanned = 0;
@@ -45,7 +50,7 @@ describe('determinism law — the sim layer never reads unseeded randomness or t
   // unseeded PRNG or wall-clock read slipped into a math leaf would silently break the same "one
   // seed, one cosmos" law from underneath. leaf-dom-freedom.test.ts already treats src/math as part
   // of the deterministic trust boundary; this extends the wall-clock/PRNG guard to match.
-  test('src/math/** contains no Math.random / Date.now / performance.now CALLS', async () => {
+  test('src/math/** contains no unseeded-randomness or wall-clock CALLS', async () => {
     const glob = new Bun.Glob('src/math/**/*.ts');
     const offenders: string[] = [];
     let scanned = 0;
