@@ -60,7 +60,8 @@ const SMX_B = 0x94d049bb133111ebn;
 const FINE_STRUCTURE_D = Number(FINE_STRUCTURE);
 const PLANCK_D = Number(PLANCK);
 
-/** UINT64 → [0,1) the way the C casts it: `(double)x / UINT64_MAX`. */
+/** UINT64 → [0,1) the way the C casts it: `(double)x / UINT64_MAX` (intentionally lossy — f64 keeps the
+ *  top ~53 bits, faithfully mirroring the upstream double cast). */
 const u64ToUnit = (x: bigint): number => Number(x) / U64_MAX_D;
 /** Double in [0,~] → uint64 the way the C casts it: `(uint64_t)(d * UINT64_MAX)`. */
 const unitToU64 = (d: number): bigint => m64(BigInt(Math.floor(d * U64_MAX_D)));

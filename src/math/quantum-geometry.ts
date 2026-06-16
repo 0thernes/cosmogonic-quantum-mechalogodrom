@@ -81,6 +81,7 @@ export function quantumGeometricTensor(
   epsilon = 1e-4,
 ): QuantumGeometry {
   const P = params.length;
+  const eps = epsilon > 0 ? epsilon : 1e-4; // guard a degenerate step (else 1/2ε → ∞ poisons the tensor)
   const baseRe = new Float64Array(dim);
   const baseIm = new Float64Array(dim);
   buildState(params, baseRe, baseIm);
@@ -95,14 +96,14 @@ export function quantumGeometricTensor(
   const shifted = params.slice();
   for (let i = 0; i < P; i++) {
     const base = params[i] ?? 0;
-    shifted[i] = base + epsilon;
+    shifted[i] = base + eps;
     buildState(shifted, plusRe, plusIm);
-    shifted[i] = base - epsilon;
+    shifted[i] = base - eps;
     buildState(shifted, minusRe, minusIm);
     shifted[i] = base;
     const gr = new Float64Array(dim);
     const gi = new Float64Array(dim);
-    const inv = 1 / (2 * epsilon);
+    const inv = 1 / (2 * eps);
     for (let k = 0; k < dim; k++) {
       gr[k] = ((plusRe[k] ?? 0) - (minusRe[k] ?? 0)) * inv;
       gi[k] = ((plusIm[k] ?? 0) - (minusIm[k] ?? 0)) * inv;

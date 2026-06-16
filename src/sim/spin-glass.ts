@@ -20,7 +20,7 @@
  *
  * Deterministic: every stochastic decision draws from a caller-supplied seeded {@link Rng} (no
  * `Math.random`/`Date.now`), so the whole instinct replays from a seed. O(N²) per sweep; the lone apex
- * creature runs a handful of sweeps over N≈24 spins per beat — negligible against the frame budget.
+ * creature runs a handful of sweeps over a small lattice (N=56) per beat — negligible vs. the frame budget.
  */
 import type { Rng } from '../math/rng';
 
