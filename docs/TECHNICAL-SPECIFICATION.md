@@ -33,7 +33,7 @@ seed**.
 | App source (TypeScript)                | 30,871 lines · 89 files                           |
 | Tests                                  | 11,692 lines · 79 files                           |
 | Test : source ratio                    | 0.38 → **95.6 % line / 90.5 % function** coverage |
-| Passing tests                          | **945**                                           |
+| Passing tests                          | **964**                                           |
 
 ### 1.1 Languages
 
@@ -205,11 +205,16 @@ brains, plus the ~10,081-weight Super Creature composite, the 8 faction brains, 
 stored as Float32 = **≈ 14 MB of weights**, executed on **one CPU thread**. (The default ultra tier caps
 at 10,000 organisms ≈ 700 K params ≈ 2.8 MB.)
 
-The quantum minds (the Super Creature 6-qubit register and the 100 puppet-master 5-qubit registers) draw
-on primitives **studied** from three external quantum-research languages — the **Eshkol** qubit-RNG, the
-**Moonlab** quantum simulator, and its **Quantum-Geometric-Tensor (QGTL)** module (statevector + RY/RZ/CNOT
-gate set + amplitude amplification). Nothing is reimplemented or vendored from them: the project owns its
-statevectors outright. See [AI-SUBSYSTEM.md](AI-SUBSYSTEM.md) for the full quantum-mind design.
+The quantum minds no longer merely _study_ the Tsotchke quantum stack — **V84 ports three of its
+primitives into development** and wires them into the live apex creature: the **Eshkol** qubit-RNG
+(`src/math/eshkol-qrng.ts`) drives the Super Creature's thought-collapse Born sample; the **Quantum-
+Geometric-Tensor / Fubini–Study metric** (QGTL + **Moonlab** `qgt.c`, via `src/math/quantum-geometry.ts`)
+reads the curvature of the mind's own thought-space; and a **spin-glass instinct**
+(`src/sim/spin-glass.ts`, from `spin_based_neural_network`) settles into a behavioural archetype each
+beat. All three are seeded + deterministic, unit-tested, and MIT-attributed to © 2024–2026 tsotchke (see
+[NOTICE.md](../NOTICE.md) + [THIRD-PARTY-NOTICES.md](../THIRD-PARTY-NOTICES.md)); the 64-amplitude
+statevector simulator itself (`src/math/quantum.ts`) remains the project's own Moonlab-style
+implementation. See [AI-SUBSYSTEM.md](AI-SUBSYSTEM.md) for the full quantum-mind design.
 
 ### 7.2 Contrast: this world vs. large language models
 
@@ -273,7 +278,7 @@ Complexity classes are catalogued in [COMPLEXITY.md](COMPLEXITY.md); hot-path be
 
 The single gate — `bun run check` — must pass before every commit:
 
-`prettier --check` → `tsc --noEmit` (strict) → `oxlint` → `bun test` (**945 tests, 0 fail**) →
+`prettier --check` → `tsc --noEmit` (strict) → `oxlint` → `bun test` (**964 tests, 0 fail**) →
 `bun scripts/build.ts`. Coverage gate: line ≥ 0.90, function ≥ 0.85 (measured 95.6 % / 90.5 %).
 Three governing "master" personas (`masters/*.xml`) encode the discipline: **the Executor** (finish
 everything, full gates), **the Architect** (contracts before code, exclusive ownership), **the
@@ -339,7 +344,7 @@ contrast 62 · doc-links 57 · a11y-static 45`.
 
 This is a ~69k-line TypeScript (+ optional C++/Jolt native engine) browser-native simulation that
 renders **up to 50,000 agents** (10,000 at 60 fps on a laptop iGPU with zero AI accelerator), is
-**bit-reproducible from one seed**, ships through a **full CI/CD gate** (945 tests, 95.6 % coverage),
+**bit-reproducible from one seed**, ships through a **full CI/CD gate** (964 tests, 95.6 % coverage),
 and whose entire emergent intelligence weighs **≈ 14 MB — 1/50,000th of GPT-3** at the mega ceiling. It
 demonstrates that depth comes from **architecture,
 determinism, and engineering discipline**, not parameter count or hardware.
