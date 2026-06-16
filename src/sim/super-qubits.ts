@@ -459,6 +459,22 @@ export class QuantumMind {
   }
 
   /**
+   * V1.2 — write the register's per-qubit Bloch observables ⟨X⟩,⟨Y⟩,⟨Z⟩ (3 × {@link QMIND_QUBITS} = 18
+   * values) into `out` (length ≥ 18). These are the live "measurements" of the quantum reservoir that the
+   * quantum-reservoir-computing readout ({@link ../sim/quantum-reservoir}) reads each beat. Call AFTER
+   * {@link evolve} (which leaves the register in the evolved + amplified state; the Born sample is
+   * non-destructive, so the amplitudes are unchanged). Cheap (O(qubits · 2ⁿ)); allocation-free; no RNG.
+   */
+  readObservables(out: Float64Array): void {
+    for (let k = 0; k < QMIND_QUBITS; k++) {
+      this.reg.blochInto(k, this.bloch3);
+      out[3 * k] = this.bloch3[0] ?? 0;
+      out[3 * k + 1] = this.bloch3[1] ?? 0;
+      out[3 * k + 2] = this.bloch3[2] ?? 0;
+    }
+  }
+
+  /**
    * Build the read-only BRAIN snapshot from the live statevector: Born probabilities + phases, the
    * per-qubit Bloch vectors and P(|1⟩), the normalized entropy, the mean entanglement (purity
    * deficit) and equatorial coherence, and the last sampled basis state. Allocates the public arrays
