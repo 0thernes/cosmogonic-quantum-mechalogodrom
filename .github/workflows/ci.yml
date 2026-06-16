@@ -1,6 +1,6 @@
 name: CI
 
-# The full gate (docs/CONTRIBUTING.md): prettier → tsc strict → oxlint → bun test → build.
+# The full gate (CONTRIBUTING.md): prettier → tsc strict → oxlint → bun test → build.
 # Runs on every push to the default branch and every PR. `workflow_dispatch` allows a manual
 # run from the Actions tab. Concurrency cancels superseded runs on the same ref.
 on:
@@ -59,10 +59,9 @@ jobs:
       - name: Lint (oxlint)
         run: bun run lint
 
-      - name: Unit tests (bun test)
-        run: bun test
-
-      - name: Coverage threshold (bunfig.toml — 500-point §17.339)
+      - name: Unit tests + coverage threshold (bunfig.toml — 500-point §17.339)
+        # Single run: `bun test --coverage` is a strict superset of the bare suite AND enforces the
+        # coverage gate — running plain `bun test` first only doubled the suite's wall-clock per OS leg.
         run: bun run test:coverage
 
       - name: Production build
@@ -126,3 +125,35 @@ jobs:
         with:
           fail-on-severity: high
           comment-summary-in-pr: on-failure
+
+  audit:
+    name: Supply-chain audit (full tree)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # Complements dependency-review (which only diffs a PR's NEW deps): bun audit scans the FULL
+    # installed tree on every push/PR, so a CVE newly disclosed against an ALREADY-present dependency
+    # is surfaced too — the class of advisory a PR-diff review structurally cannot see. Non-blocking
+    # (like bench): a transitive LOW/MODERATE advisory is logged, not gate-failing; the second step
+    # isolates the serious tier (drop continue-on-error to hard-gate on HIGH/CRITICAL).
+    continue-on-error: true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          persist-credentials: false
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: '1.3.14'
+      - name: Cache Bun install
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        with:
+          path: ~/.bun/install/cache
+          key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+          restore-keys: bun-${{ runner.os }}-
+      - name: Install (frozen lockfile)
+        run: bun install --frozen-lockfile
+      - name: Audit dependencies (all advisories — informational)
+        run: bun audit
+      - name: Flag HIGH/CRITICAL advisories
+        run: bun audit --audit-level=high
