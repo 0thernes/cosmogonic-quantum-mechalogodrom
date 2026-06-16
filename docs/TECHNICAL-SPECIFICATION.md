@@ -32,7 +32,7 @@ seed**.
 | App source (TypeScript)                | 30,871 lines · 89 files                           |
 | Tests                                  | 11,692 lines · 79 files                           |
 | Test : source ratio                    | 0.38 → **95.6 % line / 90.5 % function** coverage |
-| Passing tests                          | **942**                                           |
+| Passing tests                          | **945**                                           |
 
 ### 1.1 Languages
 
@@ -262,7 +262,7 @@ Complexity classes are catalogued in [COMPLEXITY.md](COMPLEXITY.md); hot-path be
 
 The single gate — `bun run check` — must pass before every commit:
 
-`prettier --check` → `tsc --noEmit` (strict) → `oxlint` → `bun test` (**942 tests, 0 fail**) →
+`prettier --check` → `tsc --noEmit` (strict) → `oxlint` → `bun test` (**945 tests, 0 fail**) →
 `bun scripts/build.ts`. Coverage gate: line ≥ 0.90, function ≥ 0.85 (measured 95.6 % / 90.5 %).
 Three governing "master" personas (`masters/*.xml`) encode the discipline: **the Executor** (finish
 everything, full gates), **the Architect** (contracts before code, exclusive ownership), **the
@@ -328,6 +328,6 @@ contrast 62 · doc-links 57 · a11y-static 45`.
 
 This is a ~50k-line, single-language, browser-native simulation that renders **10,000 agents at
 60 fps on a laptop iGPU with zero AI accelerator**, is **bit-reproducible from one seed**, ships
-through a **full CI/CD gate** (942 tests, 95.6 % coverage), and whose entire emergent intelligence
+through a **full CI/CD gate** (945 tests, 95.6 % coverage), and whose entire emergent intelligence
 weighs **2.8 MB — 1/250,000th of GPT-3**. It demonstrates that depth comes from **architecture,
 determinism, and engineering discipline**, not parameter count or hardware.
