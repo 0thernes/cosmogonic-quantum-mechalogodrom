@@ -9,7 +9,7 @@
     <title>Technical Specification — Cosmogonic Quantum Mechalogodrom</title>
     <meta
       name="description"
-      content="Measured technical specification: a 50k-line, single-language, browser-native, deterministic 10,000-agent WebGL simulation whose entire emergent intelligence weighs 2.8 MB — 1/250,000th of GPT-3, on zero AI accelerator."
+      content="Measured technical specification: a 69k-line TypeScript + C++ browser-native deterministic 50,000-agent WebGL simulation whose entire emergent intelligence weighs ~14 MB — 1/50,000th of GPT-3, on zero AI accelerator."
     />
     <meta
       property="og:title"
@@ -17,7 +17,7 @@
     />
     <meta
       property="og:description"
-      content="10,000 agents at 60 fps on integrated graphics. 945 tests, 95.6% coverage. ~700K total AI parameters — engineered intelligence, not parameter count."
+      content="Up to 50,000 agents (10,000 at 60 fps on integrated graphics). 945 tests, 95.6% coverage. ~3.5M total AI parameters — engineered intelligence, not parameter count."
     />
     <meta name="theme-color" content="#030612" />
     <style>
@@ -304,8 +304,9 @@
         <div class="eyebrow">Technical Specification · v0.10.4 · measured 2026-06-16</div>
         <h1>Cosmogonic Quantum Mechalogodrom</h1>
         <p class="lede">
-          A single-page, single-language (TypeScript) simulation that renders up to
-          <b>10,000 morphogenic organisms at 60 fps on integrated graphics</b>, governed by
+          A single-page TypeScript simulation — with an optional native <b>C++/Jolt</b> physics
+          engine — that renders up to <b>50,000 morphogenic organisms</b> (10,000 at 60 fps on
+          integrated graphics; the 50,000 mega-tier ceiling on ≥16-core machines), governed by
           deterministic seeded physics and a pre-2016 classical-AI cognition stack. Bit-reproducible
           from one 32-bit seed. The intelligence is <b>architectural, not parametric</b> — every
           figure below was measured from the repository.
@@ -339,15 +340,15 @@
             <div class="l">tests · 95.6% cov</div>
           </div>
           <div class="stat">
-            <div class="n am">10,000</div>
-            <div class="l">agents @ 60 fps</div>
+            <div class="n am">50,000</div>
+            <div class="l">peak entities</div>
           </div>
           <div class="stat">
-            <div class="n fu">~700K</div>
+            <div class="n fu">~3.5M</div>
             <div class="l">total AI params</div>
           </div>
           <div class="stat">
-            <div class="n">2.8 MB</div>
+            <div class="n">~14 MB</div>
             <div class="l">of neural weights</div>
           </div>
           <div class="stat">
@@ -355,41 +356,48 @@
             <div class="l">NPU / AI-TOPS needed</div>
           </div>
           <div class="stat">
-            <div class="n">1</div>
-            <div class="l">language · TypeScript</div>
+            <div class="n">2</div>
+            <div class="l">languages · TS + C++</div>
           </div>
         </div>
       </section>
 
       <section>
-        <h2><span class="tag">02</span> Languages — 69,365 lines</h2>
+        <h2><span class="tag">02</span> Languages — 70,661 lines</h2>
         <div class="barrow">
           <span class="lab">TypeScript</span>
           <span class="track"
-            ><span class="fill" style="width: 63.3%; background: var(--accent)"></span
+            ><span class="fill" style="width: 62.1%; background: var(--accent)"></span
           ></span>
-          <span class="val">43,898 · 63.3%</span>
+          <span class="val">43,898 · 62.1%</span>
         </div>
         <div class="barrow">
           <span class="lab">Markdown (docs)</span>
           <span class="track"
-            ><span class="fill" style="width: 21.5%; background: var(--accent2)"></span
+            ><span class="fill" style="width: 21.1%; background: var(--accent2)"></span
           ></span>
-          <span class="val">14,904 · 21.5%</span>
+          <span class="val">14,904 · 21.1%</span>
         </div>
         <div class="barrow">
           <span class="lab">HTML</span>
           <span class="track"
-            ><span class="fill" style="width: 11.6%; background: var(--amber)"></span
+            ><span class="fill" style="width: 11.3%; background: var(--amber)"></span
           ></span>
-          <span class="val">8,015 · 11.6%</span>
+          <span class="val">8,015 · 11.3%</span>
+        </div>
+        <div class="barrow">
+          <span class="lab">C++ (native engine · gl-core · Jolt physics)</span>
+          <span class="track"
+            ><span class="fill" style="width: 1.8%; background: var(--good)"></span
+          ></span>
+          <span class="val">1,296 · 1.8%</span>
         </div>
         <div class="barrow">
           <span class="lab">CSS (Tailwind src)</span>
           <span class="track"
-            ><span class="fill" style="width: 1.8%; background: var(--fuchsia)"></span
+            ><span class="fill" style="width: 1.7%; background: var(--fuchsia)"></span
           ></span>
-          <span class="val">1,230 · 1.8%</span>
+          <span class="val">1,230 · 1.7%</span>
         </div>
         <div class="barrow">
           <span class="lab">JSON / lock / YAML / other</span>
@@ -399,8 +407,9 @@
           <span class="val">1,318 · 1.9%</span>
         </div>
         <p class="muted" style="margin-top: 12px">
-          Code (TS + HTML + CSS) = <b>53,143 lines · 76.6%</b>. App source 30,871 (89 files), tests
-          11,692 (79 files), docs 14,904 (58 files).
+          Code (TS + C++ + HTML + CSS) = <b>54,439 lines · 77.0%</b>. Web-app source 30,871 (89
+          files), native C++/Jolt engine 1,296 (6 files), tests 11,692 (79 files), docs 14,904 (58
+          files).
         </p>
       </section>
 
@@ -495,12 +504,12 @@ server.ts ──serves──▶  /  (app)   /docs   /spec   /lab</pre
             <th class="r">parameters</th>
           </tr>
           <tr>
-            <td>Organism brain (× up to 10,000)</td>
-            <td>TinyMLP 6→6→4</td>
+            <td>Organism brain (× up to 50,000)</td>
+            <td>TinyMLP 6→6→4 · heritable genome</td>
             <td class="r">70 weights</td>
           </tr>
           <tr>
-            <td>Faction brain</td>
+            <td>Faction brain (× 8)</td>
             <td>TinyMLP 6→6→4</td>
             <td class="r">70 weights</td>
           </tr>
@@ -513,6 +522,11 @@ server.ts ──serves──▶  /  (app)   /docs   /spec   /lab</pre
             <td>NHI alien voice</td>
             <td>Markov 12×12</td>
             <td class="r">144 weights</td>
+          </tr>
+          <tr>
+            <td>Wingman swarm (× 100)</td>
+            <td>TinyMLP escort controllers</td>
+            <td class="r">~250 weights ea</td>
           </tr>
           <tr>
             <td>Super Creature mind (V45)</td>
@@ -529,6 +543,11 @@ server.ts ──serves──▶  /  (app)   /docs   /spec   /lab</pre
             <td>5-qubit statevector</td>
             <td class="r">32 amplitudes</td>
           </tr>
+          <tr>
+            <td><b>Population total</b> (at the 50k mega tier)</td>
+            <td>the 50,000 organism brains dominate</td>
+            <td class="r"><b>~3.5 M weights</b></td>
+          </tr>
         </table>
         <p class="muted" style="margin-top: 10px">
           Built from pre-2016 AI: FSM · GOAP planning · utility AI · tiny perceptrons · Markov
@@ -539,31 +558,41 @@ server.ts ──serves──▶  /  (app)   /docs   /spec   /lab</pre
           deeper still: a ~10,081-parameter composite consciousness (a Thaler creativity machine
           over 12 sub-nets, 5 stages × 25 thought variants) plus a real
           <b>6-qubit quantum-computing mind</b>
-          (<code>src/sim/super-qubits.ts</code>) whose Born-sampled "thought collapse" feeds the
-          unified 4-tab neural observatory — all deterministic on dedicated seeded streams.
+          (<code>src/sim/super-qubits.ts</code> — its statevector + RY/RZ + controlled-RY gate set
+          ported from a study of the <b>Eshkol</b> qubit-RNG and the <b>Quantum-Geometric-Tensor</b>
+          quantum research languages) whose Born-sampled "thought collapse" feeds the unified 4-tab
+          neural observatory — all deterministic on dedicated seeded streams.
+        </p>
+        <p class="muted" style="margin-top: 10px">
+          <b>The cast (measured counts).</b> Up to 50,000 organisms across 100 morphotypes (250 in
+          phylum mode), each carrying a 70-weight brain + a 10-gene genome · 100 Shoggoths · 100
+          Puppet-masters (a 5-qubit quantum register each) · 10 Titans (4D freak-geometry) · 8 faction
+          archetypes · Leviathans, singularities + weather (the environment) · one always-active Super
+          Creature trailed by a 100-drone wingman swarm · and the apex NHI super-mind that perceives,
+          plans (GOAP), and manipulates them all.
         </p>
 
         <h2 style="margin-top: 28px"><span class="tag">06</span> Contrast — this world vs. LLMs</h2>
         <div class="barrow">
-          <span class="lab" style="color: var(--good)">This entire 10k world</span>
+          <span class="lab" style="color: var(--good)">This entire 50k world</span>
           <span class="track"
             ><span class="fill" style="width: 0.4%; background: var(--good); min-width: 4px"></span
           ></span>
-          <span class="val">~700 K · 1×</span>
+          <span class="val">~3.5M · 1×</span>
         </div>
         <div class="barrow">
           <span class="lab">BERT-base</span>
           <span class="track"
             ><span class="fill" style="width: 6%; background: var(--accent2)"></span
           ></span>
-          <span class="val">110 M · 157×</span>
+          <span class="val">110 M · 31×</span>
         </div>
         <div class="barrow">
           <span class="lab">Llama-7B</span>
           <span class="track"
             ><span class="fill" style="width: 38%; background: var(--amber)"></span
           ></span>
-          <span class="val">7 B · 10,000×</span>
+          <span class="val">7 B · 2,000×</span>
         </div>
         <div class="barrow">
           <span class="lab">GPT-3</span>
@@ -573,17 +602,17 @@ server.ts ──serves──▶  /  (app)   /docs   /spec   /lab</pre
               style="width: 100%; background: linear-gradient(90deg, var(--fuchsia), #ff6b6b)"
             ></span
           ></span>
-          <span class="val">175 B · 250,000×</span>
+          <span class="val">175 B · 50,000×</span>
         </div>
         <div class="callout">
           <div class="big">
-            <b>2.8 MB</b> of neural weights · <b>1/250,000th</b> of GPT-3 · <b>0</b> TOPS · runs on
-            one CPU thread.
+            <b>~14 MB</b> of neural weights · <b>1/50,000th</b> of GPT-3 · <b>0</b> TOPS · runs on a
+            single CPU thread.
           </div>
           <p>
-            The simulation's entire emergent intelligence is smaller than a single mid-size web
-            image. Depth here is engineered — architecture, determinism, discipline — not
-            downloaded.
+            The entire emergent intelligence of a 50,000-agent cosmos is <b>~14 MB</b> — about one
+            high-resolution photo's worth of weights, for fifty thousand thinking minds. Depth here
+            is engineered — architecture, determinism, discipline — not downloaded.
           </p>
         </div>
       </section>
@@ -599,7 +628,7 @@ server.ts ──serves──▶  /  (app)   /docs   /spec   /lab</pre
             <td>Renderer</td>
             <td>
               Three.js WebGL2 · ACES tone-mapping · InstancedMesh pools (≤80 pools, 1 draw call per
-              geometry×transparency — not 10k draws)
+              geometry×transparency — not 50k draws)
             </td>
           </tr>
           <tr>
@@ -645,7 +674,7 @@ server.ts ──serves──▶  /  (app)   /docs   /spec   /lab</pre
           </tr>
           <tr>
             <td>CPU</td>
-            <td>Any modern CPU; the single-thread sim is the bottleneck at 10k, not the GPU.</td>
+            <td>Any modern CPU; the single-thread sim is the bottleneck at 50k, not the GPU.</td>
           </tr>
           <tr>
             <td>RAM</td>
@@ -672,6 +701,100 @@ server.ts ──serves──▶  /  (app)   /docs   /spec   /lab</pre
           real app to GitHub Pages on every push to <code>main</code>; tagged releases ship a
           tarball + CycloneDX SBOM. Three governing "master" personas encode the discipline: the
           Executor, the Architect, the Physicist.
+        </p>
+      </section>
+
+      <section>
+        <h2><span class="tag">10</span> The inhabitants — measured roster</h2>
+        <table>
+          <tr>
+            <th>Inhabitant</th>
+            <th class="r">Count (mega tier)</th>
+            <th>What it is</th>
+          </tr>
+          <tr>
+            <td>Morphogenic organisms</td>
+            <td class="r">up to 50,000</td>
+            <td>
+              100 morphotypes · 10 phyla · 26 behaviour fields · 7 render modes; each carries a
+              70-weight TinyMLP brain as a heritable genome
+            </td>
+          </tr>
+          <tr>
+            <td>Factions</td>
+            <td class="r">8</td>
+            <td>
+              Watchers · Weavers · Wardens · Heralds · Leviathans · SwarmMinds · Oracles · Devourers
+              — each a DIFFERENT pre-2016 technique (FSM · behaviour-tree · utility · GOAP · rule ·
+              boids · Markov · MLP)
+            </td>
+          </tr>
+          <tr>
+            <td>Titans</td>
+            <td class="r">10</td>
+            <td>colossal 4D-tesseract beings; proxy-war pairs; a drag/hue aura warps the field</td>
+          </tr>
+          <tr>
+            <td>Puppet-masters</td>
+            <td class="r">100 (14 mobile)</td>
+            <td>
+              NPC schemers driven by a 5-qubit quantum register + GOAP/utility; their plots toast
+            </td>
+          </tr>
+          <tr>
+            <td>Shoggoths</td>
+            <td class="r">100 (16 mobile)</td>
+            <td>amorphous 8-tendril horrors; utility / threat-prey AI</td>
+          </tr>
+          <tr>
+            <td>Leviathans</td>
+            <td class="r">4</td>
+            <td>apex roaming megafauna</td>
+          </tr>
+          <tr>
+            <td>NHI beings</td>
+            <td class="r">user-summoned</td>
+            <td>
+              non-human intelligences: 85-weight intuition gene + 144-weight alien-voice Markov +
+              7-action GOAP; a 9-view neural observatory
+            </td>
+          </tr>
+          <tr>
+            <td>Super Creature (+ twins)</td>
+            <td class="r">1 (+ up to 3)</td>
+            <td>
+              the apex mind: 1,444-weight spine + ~10,081-weight composite consciousness + a real
+              6-qubit quantum-computing mind
+            </td>
+          </tr>
+          <tr>
+            <td>Wingman swarm — the "minis"</td>
+            <td class="r">100 / creature</td>
+            <td>escort mini-robots ringing the Super Creature; ~250-weight TinyMLP brain each</td>
+          </tr>
+          <tr>
+            <td>Singularities</td>
+            <td class="r">event-driven</td>
+            <td>black-hole / gravitational-lens wells that dilate time and bend space</td>
+          </tr>
+          <tr>
+            <td>Monoliths · dioramas · gold-lattice</td>
+            <td class="r">16 · 8 · 7</td>
+            <td>scene megastructures + the Catmull-Rom data-pipeline web</td>
+          </tr>
+          <tr>
+            <td>Environment &amp; fields</td>
+            <td class="r">26 + 6</td>
+            <td>
+              26 behaviour fields + 6 weathers, plus connectome · reaction-diffusion · chaos
+              (Lorenz) · quantum + gold lattices · cosmic web · atmosphere · constellations
+            </td>
+          </tr>
+        </table>
+        <p class="muted" style="margin-top: 10px">
+          Counts are the desktop / mega-tier ceilings — phone and laptop tiers scale down (e.g. 14
+          puppet-masters, 16 shoggoths on touch). Every figure measured from
+          <code>src/sim/*</code> + <code>src/core/quality.ts</code>.
         </p>
       </section>
 
