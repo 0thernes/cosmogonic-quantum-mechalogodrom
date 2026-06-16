@@ -54,6 +54,7 @@ import { SpinGlass, type SpinSnapshot } from './spin-glass';
 import { Reservoir, type ReservoirSnapshot } from './reservoir';
 import { ActiveInference, AIF_OBS, type ActiveInferenceSnapshot } from './active-inference';
 import { Metacognition, type MetacognitionSnapshot } from './metacognition';
+import { Criticality, type CriticalitySnapshot } from './criticality';
 import type { SuperPercept, SuperPlan } from './super-creature';
 import { SUPER_PLANS } from './super-creature';
 
@@ -167,6 +168,8 @@ export interface SuperMindSnapshot {
   aif: ActiveInferenceSnapshot;
   /** V1.1 (V92): the metacognitive executive — a Higher-Order confidence in the decision + cognitive control. */
   metacog: MetacognitionSnapshot;
+  /** V1.1 (V93): the criticality homeostat — branching ratio σ̂ + edge-of-chaos self-tuning. */
+  criticality: CriticalitySnapshot;
 }
 
 const EMOTION_TAU = 0.12;
@@ -261,6 +264,8 @@ export class SuperMind {
   /** V92: the metacognitive executive — reads the substrates' reliability into a second-order confidence
    *  (no random weights ⇒ it draws nothing from the seed stream; constructed inline). */
   private readonly metacog = new Metacognition();
+  /** V1.1 (V93): the self-organised-criticality homeostat — keeps cognition poised at the edge of chaos. */
+  private readonly criticality = new Criticality();
   readonly paramCount: number;
 
   // ── Reusable scratch (no per-beat allocation) ──
@@ -387,6 +392,9 @@ export class SuperMind {
     // V1.1: step the echo-state reservoir on the fresh latent — a fading nonlinear echo of the mind's
     // recent world-models that gives it temporal memory; its novelty (below) sharpens curiosity.
     this.reservoir.step(this.latent);
+    // V1.1 (V93): measure the mind's own activation cascades and self-tune toward the critical point
+    // (branching ratio σ̂ → 1) — the edge of chaos, where dynamic range + exploration are maximised.
+    this.criticality.step(this.latent);
 
     // ── ATOM OF THOUGHT · organ-nets each process a 4-atom slice of the latent ──────────────────
     let oa = 0;
@@ -548,7 +556,12 @@ export class SuperMind {
     const deception = unit(act[4] ?? 0);
     const domProject = unit(act[5] ?? 0);
     const spawnDesire = unit(act[6] ?? 0);
-    const curiosity = clamp01(unit(act[7] ?? 0) + 0.3 * novelty + 0.15 * this.reservoir.novelty);
+    const curiosity = clamp01(
+      unit(act[7] ?? 0) +
+        0.3 * novelty +
+        0.15 * this.reservoir.novelty +
+        0.12 * (1 - this.criticality.proximity), // off-criticality ⇒ explore to recover the edge of chaos
+    );
 
     // plan (argmax over drive scores; same vocabulary as the V31 mind)
     const drives: Record<SuperPlan, number> = {
@@ -689,6 +702,7 @@ export class SuperMind {
       reservoir: this.reservoir.snapshot(),
       aif: this.aif.snapshot(),
       metacog: this.metacog.snapshot(),
+      criticality: this.criticality.snapshot(),
     };
   }
 }
