@@ -205,6 +205,12 @@ brains, plus the ~10,081-weight Super Creature composite, the 8 faction brains, 
 stored as Float32 = **≈ 14 MB of weights**, executed on **one CPU thread**. (The default ultra tier caps
 at 10,000 organisms ≈ 700 K params ≈ 2.8 MB.)
 
+The quantum minds (the Super Creature 6-qubit register and the 100 puppet-master 5-qubit registers) draw
+on primitives **studied** from three external quantum-research languages — the **Eshkol** qubit-RNG, the
+**Moonlab** quantum simulator, and its **Quantum-Geometric-Tensor (QGTL)** module (statevector + RY/RZ/CNOT
+gate set + amplitude amplification). Nothing is reimplemented or vendored from them: the project owns its
+statevectors outright. See [AI-SUBSYSTEM.md](AI-SUBSYSTEM.md) for the full quantum-mind design.
+
 ### 7.2 Contrast: this world vs. large language models
 
 | Model                              | Parameters  | × larger than this world |

@@ -123,9 +123,9 @@ coherence      mean equatorial Bloch magnitude √(x²+y²)   (live superpositio
 sampled        index of the last Born sample · sampledBits its qubit bitstring
 ```
 
-The study of the **Eshkol** qubit-RNG (phase array + noise) and the **Quantum-Geometric-Tensor**
-library (statevector + RY/RZ/CNOT gate set + amplitude amplification) informed the design; nothing is
-reimplemented from them — we own the 64-amplitude statevector outright. The Observatory's III · QUANTUM
+The study of the **Eshkol** qubit-RNG (phase array + noise), the **Moonlab** quantum simulator, and its
+**Quantum-Geometric-Tensor (QGTL)** module (statevector + RY/RZ/CNOT gate set + amplitude amplification)
+informed the design; nothing is reimplemented from them — we own the 64-amplitude statevector outright. The Observatory's III · QUANTUM
 tab binds this register directly (statevector / Bloch / entropy / collapse / entangle / superposition),
 with aspect-side Grover-diffusion + QFT-spectrum echoes that mirror the same `src/math/quantum.ts` math.
 
