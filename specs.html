@@ -3,6 +3,9 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+    <!-- V81: revalidate the document so a returning visitor never reads a stale cached spec (the live
+         file updates on every deploy; this + the build-pages ?v= cache-buster keep the page current). -->
+    <meta http-equiv="Cache-Control" content="no-cache, must-revalidate" />
     <title>Technical Specification — Cosmogonic Quantum Mechalogodrom</title>
     <meta
       name="description"

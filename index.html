@@ -6,6 +6,9 @@
       name="viewport"
       content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"
     />
+    <!-- V81: revalidate the app shell each load so returning visitors pick up new deploys (and the new
+         ?v=-cache-busted Docs/Spec/Lab nav links) instead of a stale cached index. -->
+    <meta http-equiv="Cache-Control" content="no-cache, must-revalidate" />
     <title>COSMOGONIC QUANTUM MECHALOGODROM</title>
     <meta
       name="description"

@@ -7,7 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-_Nothing yet._
+### Fixed
+
+- **Returning visitors saw a STALE cached `/spec` (and `/docs`) page after a deploy.** GitHub Pages keys
+  the browser HTTP cache by URL, so the unchanged `specs.html` URL kept serving the pre-update copy even
+  though the live origin file was already refreshed (the figures were correct at the origin — only the
+  cached copy was old, which read as "the spec is never updated"). `build-pages.ts` now appends a
+  per-deploy `?v=<commit-sha>` cache-buster to every cross-page nav link, and
+  `index.html`/`docs.html`/`specs.html` carry a `no-cache, must-revalidate` meta — so each deploy is
+  picked up on the next visit instead of being masked by the cache.
 
 ## [0.10.4] - 2026-06-15
 

@@ -3,6 +3,9 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <!-- V81: revalidate the document so a returning visitor never reads a stale cached page (paired with
+         the build-pages ?v= cache-buster on nav links). -->
+    <meta http-equiv="Cache-Control" content="no-cache, must-revalidate" />
     <title>Docs — Cosmogonic Quantum Mechalogodrom</title>
     <meta
       name="description"

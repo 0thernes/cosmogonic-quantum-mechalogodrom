@@ -40,21 +40,30 @@ await mkdir(new URL('lab/', SITE), { recursive: true });
 await cp(new URL('lab/quantum-wildbeyond.html', ROOT), new URL('lab/index.html', SITE));
 
 // 3. Rewrite absolute nav links → subpath-relative; neutralize the server-only audit poll.
+// V81: append a per-deploy `?v=` cache-buster to every cross-page nav link so a returning visitor never
+// sees a STALE cached docs/spec page. The browser keys its HTTP cache by URL — an unchanged `specs.html`
+// URL kept serving the pre-update copy after a deploy; `specs.html?v=<sha>` is a fresh URL each deploy,
+// so navigation always fetches the current page. GITHUB_SHA is set in the CI deploy (the copy that
+// matters); it falls back to a local marker for local builds.
+const V = (process.env.GITHUB_SHA || '').slice(0, 8) || 'local';
+const q = `?v=${V}`;
 await rewrite('index.html', [
-  ['href="/docs"', 'href="docs.html"'],
-  ['href="/spec"', 'href="specs.html"'],
-  ['href="/lab"', 'href="lab/"'],
+  ['href="/docs"', `href="docs.html${q}"`],
+  ['href="/spec"', `href="specs.html${q}"`],
+  ['href="/lab"', `href="lab/${q}"`],
   ['hx-get="/api/audit"', ''], // no server on Pages — stop the 5 s 404 poll; panel stays empty
 ]);
 await rewrite('docs.html', [
-  ['href="/spec"', 'href="specs.html"'],
-  ['href="/lab"', 'href="lab/"'],
-  ['href="/"', 'href="index.html"'],
+  ['href="/spec"', `href="specs.html${q}"`],
+  ['href="/lab"', `href="lab/${q}"`],
+  ['href="/"', `href="index.html${q}"`],
 ]);
 await rewrite('specs.html', [
-  ['href="/docs"', 'href="docs.html"'],
-  ['href="/lab"', 'href="lab/"'],
-  ['href="/"', 'href="index.html"'],
+  ['href="/docs"', `href="docs.html${q}"`],
+  ['href="/lab"', `href="lab/${q}"`],
+  ['href="/"', `href="index.html${q}"`],
 ]);
 
-console.log('assembled Pages site -> site/ (index.html, docs.html, specs.html, lab/index.html)');
+console.log(
+  `assembled Pages site -> site/ (index.html, docs.html, specs.html, lab/index.html) · cache-bust v=${V}`,
+);
