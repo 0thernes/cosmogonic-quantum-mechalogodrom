@@ -606,37 +606,68 @@ const drawTreeOfThought: Drawer = (ctx, w, h, s, t) => {
   ctx.fillText(`${depth}d × ${variants}v`, w - 5, 5);
   ctx.textAlign = 'left';
 };
-const drawReasonFlow: Drawer = (ctx, w, h, s, t) => {
-  frame(ctx, w, h, 'COG · REASON FLOW');
-  const k = s.consciousness;
-  const streams: [number, string][] = [
-    [clamp01(k.reasoning ?? 0), '108,223,255'],
-    [clamp01(k.dreaming ?? 0), '185,140,255'],
-    [clamp01(k.hallucinating ?? 0), '255,106,176'],
-  ];
-  for (let si = 0; si < streams.length; si++) {
-    const [v, rgb] = streams[si]!;
-    const y0 = 18 + ((h - 26) * (si + 0.5)) / streams.length;
-    ctx.beginPath();
-    for (let x = 6; x <= w - 6; x += 3) {
-      const ph = (x / w) * Math.PI * 4 - t * 2 - si;
-      const y = y0 + Math.sin(ph) * v * 10;
-      if (x === 6) ctx.moveTo(x, y);
-      else ctx.lineTo(x, y);
-    }
-    ctx.strokeStyle = `rgba(${rgb},${(0.3 + v * 0.6).toFixed(2)})`;
-    ctx.lineWidth = 1 + v * 2;
-    ctx.stroke();
+const drawFreeEnergy: Drawer = (ctx, w, h, s, _t, H) => {
+  frame(ctx, w, h, 'COG · FREE ENERGY');
+  // REAL faculty: the Active-Inference free-energy core (Friston FEP). The belief over the 8 latent
+  // situations (lit = the one it thinks it's in), plus the variational free energy F it minimises and
+  // the Bayesian surprise, as temporal trails.
+  const a = s.aif;
+  const post = a?.posterior ?? [];
+  const n = post.length || 8;
+  const bw = (w - 10) / n;
+  const top = 17;
+  const bandH = (h - top - 16) * 0.5;
+  let mx = 1e-6;
+  for (let i = 0; i < n; i++) mx = Math.max(mx, post[i] ?? 0);
+  for (let i = 0; i < n; i++) {
+    const v = (post[i] ?? 0) / mx;
+    const lit = i === (a?.belief ?? -1);
+    ctx.fillStyle = lit
+      ? 'rgba(141,255,158,.9)'
+      : `rgba(108,223,255,${(0.3 + v * 0.5).toFixed(2)})`;
+    ctx.fillRect(5 + i * bw + 0.5, top + bandH - v * bandH, Math.max(0.8, bw - 1), v * bandH);
   }
-};
-const drawSurpriseTL: Drawer = (ctx, w, h, s, _t, H) => {
-  frame(ctx, w, h, 'COG · SURPRISE');
-  H.push('surp', clamp01(s.consciousness.surprise ?? 0));
-  trail(ctx, H.series('surp'), H.head, 6, 16, w - 6, h - 8, 0, 1, '255,106,176');
-  ctx.fillStyle = PAL.mag;
-  lab(ctx, w, 7);
+  H.push('aifF', clamp01((a?.freeEnergy ?? 0) / 6));
+  H.push('aifS', clamp01((a?.surprise ?? 0) / 6));
+  const ty0 = top + bandH + 4;
+  trail(ctx, H.series('aifF'), H.head, 6, ty0, w - 6, h - 4, 0, 1, '185,140,255');
+  trail(ctx, H.series('aifS'), H.head, 6, ty0, w - 6, h - 4, 0, 1, '255,106,176');
+  ctx.fillStyle = PAL.violet;
+  lab(ctx, w, 6.5);
+  ctx.fillText('F ' + (a?.freeEnergy ?? 0).toFixed(2), 6, 5);
+  ctx.fillStyle = PAL.green;
   ctx.textAlign = 'right';
-  ctx.fillText((s.consciousness.surprise ?? 0).toFixed(2), w - 5, 5);
+  ctx.fillText('epi ' + (a?.epistemic ?? 0).toFixed(2), w - 5, 5);
+  ctx.textAlign = 'left';
+};
+const drawCriticality: Drawer = (ctx, w, h, s, _t, H) => {
+  frame(ctx, w, h, 'COG · CRITICALITY');
+  // REAL faculty: the self-organised-criticality homeostat. The branching ratio σ̂ tracked against the
+  // critical line σ=1 (the edge of chaos), coloured by proximity; the susceptibility bar peaks there.
+  const c = s.criticality;
+  const sigma = c?.branching ?? 1;
+  const prox = clamp01(c?.proximity ?? 0);
+  const rgb = prox > 0.6 ? '141,255,158' : prox > 0.3 ? '255,209,102' : '255,90,107';
+  const y1 = h - 14;
+  H.push('crit', clamp01(sigma / 2)); // σ∈[0,2] → 0..1, so the critical σ=1 sits at 0.5
+  // the critical line σ=1 (a faint guide the trail should hug)
+  const yc = y1 - 0.5 * (y1 - 16);
+  ctx.strokeStyle = 'rgba(205,182,255,.3)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(6, yc);
+  ctx.lineTo(w - 6, yc);
+  ctx.stroke();
+  trail(ctx, H.series('crit'), H.head, 6, 16, w - 6, y1, 0, 1, rgb);
+  const susc = clamp01(c?.susceptibility ?? 0);
+  ctx.fillStyle = `rgba(${rgb},.8)`;
+  ctx.fillRect(6, h - 9, (w - 12) * susc, 4);
+  ctx.fillStyle = `rgba(${rgb},1)`;
+  lab(ctx, w, 6.5);
+  ctx.fillText('σ ' + sigma.toFixed(2), 6, 5);
+  ctx.fillStyle = PAL.dim;
+  ctx.textAlign = 'right';
+  ctx.fillText('g ' + (c?.gain ?? 1).toFixed(2), w - 5, 5);
   ctx.textAlign = 'left';
 };
 const drawDriveVectors: Drawer = (ctx, w, h, s, t) => {
@@ -1167,8 +1198,8 @@ const TABS: readonly Drawer[][] = [
     drawConsciousness,
     drawEmotionCube,
     drawTreeOfThought,
-    drawReasonFlow,
-    drawSurpriseTL,
+    drawFreeEnergy,
+    drawCriticality,
     drawDriveVectors,
     drawSelfGauge,
     drawInstinct,
