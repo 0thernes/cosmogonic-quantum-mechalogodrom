@@ -198,6 +198,28 @@ Two more sim stages now carry dedicated median-of-many-frames guards alongside t
   `tests/chaos-field.test.ts` under a 15 ms ceiling (~60× slack). Engaging chaos mode at mega scale
   is effectively free relative to the population loop.
 
+## Apex mind (Super Creature) — per-beat cognitive budget (2026-06-16)
+
+Bun 1.3.11 x64-win32, Intel Core Ultra 9 275HX (~4.14 GHz). The apex mind grew from one stacked MLP (V31)
+to a 20-plus-faculty stack (the SC 1.1 cognition layer + the Eshkol/Moonlab/QGTL quantum substrate), so its
+per-frame budget was, until now, **unmeasured**. `bench/super-mind.bench.ts` measures its two cadences:
+
+- **`SuperMind.think()` — one full cognitive beat, PER SIMULATION FRAME: ≈ 208 µs/iter** (median 195 µs;
+  168 µs … 1.30 ms). That single call runs the entire 5-stage / 5-depth / 25-variant Tree of Thought, the
+  30 organ-nets, the 6-qubit `evolve()` + the per-beat quantum-natural-gradient + Grover amplification, the
+  spin-glass settle, active inference, theory-of-mind, neuromodulation, the successor-representation
+  look-ahead, empowerment, and holographic recall — for the LONE apex creature. At ≈ 0.21 ms it is **~1.25%
+  of a 60 fps (16.67 ms) frame**: the whole apex psyche is effectively free beside the population render,
+  with healthy headroom for further faculties.
+- **`SuperMind.snapshot()` — UI-cadence telemetry: ≈ 1.07 ms/iter** (978 µs … 1.81 ms). The heavy readouts
+  — the full Quantum Geometric Tensor (re-applies the circuit ~5×), the quantum "magic" (4⁶ = 4096 Pauli
+  expectations), integrated information + coherence — run ONLY when the BRAIN observatory is open, NEVER per
+  simulation beat, so the ~1 ms is paid at the observatory cadence (a few times a second), not at 60 fps.
+
+**Finding:** the per-beat apex cost is negligible against the frame budget, and the expensive quantum
+geometry/magic is correctly gated to UI cadence. The 20-plus-faculty stack is **operationally sound** — the
+growth that drove the 1.1 expansion has not threatened the frame budget.
+
 ## Interpretation
 
 The entire deterministic core (grid rebuild + a frame's worth of neighbor

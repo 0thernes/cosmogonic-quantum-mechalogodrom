@@ -13,6 +13,7 @@ import './algorithms.bench';
 import './games.bench';
 import './quantum.bench';
 import './reaction-diffusion.bench';
+import './super-mind.bench';
 import { run } from 'mitata';
 
 await run();
