@@ -275,7 +275,9 @@ export class SuperPanel {
         `FE ${mind.aif.freeEnergy.toFixed(2)} H${mind.aif.beliefEntropy.toFixed(2)} · ` +
         `Conf ${(mind.metacog.confidence * 100).toFixed(0)}% · ` +
         `EMP ${(emp.empowerment * 100).toFixed(0)}%→${empPlan} · ` +
-        `HOLO ${(holo.confidence * 100).toFixed(0)}%→${holoPlan}`;
+        `HOLO ${(holo.confidence * 100).toFixed(0)}%→${holoPlan} · ` +
+        // V98 — quantum deliberation: how decohered (decisive) the open-system decider is this beat.
+        `QDEC ${(mind.deliberation.decisiveness * 100).toFixed(0)}%${mind.deliberation.committed ? '✦' : ''}`;
     }
 
     // V48 — the self-evolution: level · stage · power · day (it grows like Vegeta/Goku).

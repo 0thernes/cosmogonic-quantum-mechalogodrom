@@ -48,7 +48,7 @@
 import type { Rng } from '../math/rng';
 import { mulberry32 } from '../math/rng';
 import { TinyMLP, MemoryRing } from './ai/brains';
-import { QuantumMind, type QubitSnapshot } from './super-qubits';
+import { QuantumMind, QMIND_QUBITS, type QubitSnapshot } from './super-qubits';
 import { EshkolQrng, type EshkolQrngSnapshot } from '../math/eshkol-qrng';
 import { SpinGlass, type SpinSnapshot } from './spin-glass';
 import { Reservoir, type ReservoirSnapshot } from './reservoir';
@@ -59,7 +59,9 @@ import { TheoryOfMind } from './theory-of-mind';
 import { SuccessorRepresentation, type SuccessorSnapshot } from './successor-representation';
 import { Neuromodulation } from './neuromodulation';
 import { EmpowermentDrive, type EmpowermentSnapshot } from './empowerment';
+import { QuantumReservoir, type QuantumReservoirSnapshot } from './quantum-reservoir';
 import { HolographicMemory, type HolographicSnapshot } from './holographic-memory';
+import { QuantumDeliberation, type DeliberationSnapshot } from './quantum-deliberation';
 import type { SuperPercept, SuperPlan } from './super-creature';
 import { SUPER_PLANS } from './super-creature';
 
@@ -182,6 +184,11 @@ export interface SuperMindSnapshot {
   empowerment: EmpowermentSnapshot;
   /** V97: the holographic (VSA/HRR) memory — the plan it analogically recalls for the current context. */
   holographic: HolographicSnapshot;
+  /** V1.2: the quantum-reservoir-computing readout of the 6-qubit register's observable trajectory. */
+  quantumReservoir: QuantumReservoirSnapshot;
+  /** V98: the open-system Lindblad deliberation qubit — coherent superposition of options decohering into
+   *  a committed decision (T₂ dephasing + T₁ relaxation). */
+  deliberation: DeliberationSnapshot;
 }
 
 const EMOTION_TAU = 0.12;
@@ -257,6 +264,14 @@ const EMP_CURIOSITY_GAIN = 0.12;
 /** Vote for the plan the holographic trace analogically recalls for this context (bounded, on par). */
 const HRR_GAIN = 0.12;
 
+// ── V98 · QUANTUM DELIBERATION (Lindblad open-system decider — GKSL master equation) ─────────────────
+/** While the deliberation qubit stays COHERENT (undecided), lift exploration to keep deliberating. */
+const DELIB_GAIN = 0.1;
+
+// ── V1.2 · QUANTUM RESERVOIR COMPUTING (Fujii & Nakajima 2017 — the qubit register IS the reservoir) ──
+/** How strongly the quantum-state velocity (qFlux) drives curiosity (bounded, on par with the others). */
+const QRC_CURIOSITY_GAIN = 0.1;
+
 /**
  * The composite apex mind. Construct with a seeded {@link Rng}; `think` each beat. ~10k parameters
  * across the named sub-networks (see {@link paramCount}). Pure + allocation-free in steady state.
@@ -303,6 +318,10 @@ export class SuperMind {
   private readonly empowerment: EmpowermentDrive;
   /** V97: the holographic (VSA/HRR) compositional memory — binds (context ⊙ plan), recalls by unbinding. */
   private readonly holographic: HolographicMemory;
+  /** V1.2: the quantum-reservoir-computing readout — reads the register's observable trajectory each beat. */
+  private readonly qreservoir: QuantumReservoir;
+  /** V98: the open-system Lindblad deliberation qubit (no seed — a deterministic master equation). */
+  private readonly deliberation = new QuantumDeliberation();
   readonly paramCount: number;
 
   // ── Reusable scratch (no per-beat allocation) ──
@@ -324,6 +343,7 @@ export class SuperMind {
   private readonly aifG: number[] = Array.from({ length: SUPER_PLANS.length }, () => 0); // per-plan EFE
   private readonly srReward = new Float32Array(SUPER_PLANS.length); // V1.1: per-plan drive → SR look-ahead
   private readonly srValue: number[] = Array.from({ length: SUPER_PLANS.length }, () => 0); // SR plan values
+  private readonly qObs = new Float64Array(3 * QMIND_QUBITS); // V1.2: register Bloch observables → QRC
 
   private readonly memory = new MemoryRing(48);
   private valence = 0;
@@ -398,6 +418,8 @@ export class SuperMind {
     // V97: the holographic memory — its own XOR-derived child stream for the frozen codebook atoms (no draw
     // on the weight stream ⇒ determinism intact).
     this.holographic = new HolographicMemory(mulberry32((childSeed ^ 0x85ebca6b) >>> 0 || 1));
+    // V1.2: the quantum-reservoir-computing readout, on its own XOR-derived child stream (no extra draw).
+    this.qreservoir = new QuantumReservoir(mulberry32((childSeed ^ 0x7feb352d) >>> 0 || 1));
   }
 
   get offspringCount(): number {
@@ -535,6 +557,11 @@ export class SuperMind {
     // ── QUANTUM COMPUTING MIND ── drive the simulated-qubit register with this beat's aspects +
     // latent: the circuit encodes cognition into real unitary evolution + tunable entanglement.
     this.qmind.evolve(this.quantumOut, this.latent);
+    // V1.2 · QUANTUM RESERVOIR COMPUTING — read the register's evolved Bloch observables and step the QRC
+    // readout: the 6-qubit register is the high-dimensional reservoir; its quantum-state velocity (qFlux)
+    // becomes a curiosity drive below (Fujii & Nakajima 2017).
+    this.qmind.readObservables(this.qObs);
+    this.qreservoir.step(this.qObs);
 
     // consciousness state
     const novelty = peakNovelty;
@@ -608,7 +635,8 @@ export class SuperMind {
         0.3 * novelty +
         0.15 * this.reservoir.novelty +
         0.12 * (1 - this.criticality.proximity) + // off-criticality ⇒ explore to recover the edge of chaos
-        EMP_CURIOSITY_GAIN * this.empowerment.empowerment, // agency hunger ⇒ seek regions it can steer
+        EMP_CURIOSITY_GAIN * this.empowerment.empowerment + // agency hunger ⇒ seek regions it can steer
+        QRC_CURIOSITY_GAIN * this.qreservoir.quantumFlux, // a churning quantum state ⇒ restless exploration
     );
 
     // plan (argmax over drive scores; same vocabulary as the V31 mind)
@@ -700,6 +728,12 @@ export class SuperMind {
       const hp = SUPER_PLANS[hrrPlan];
       if (hp) drives[hp] += HRR_GAIN * this.holographic.confidence;
     }
+
+    // ── V98 · QUANTUM DELIBERATION ── evolve the open-system decider: curiosity sustains the coherent
+    // superposition of options (Rabi drive), dominance leans the preference (detuning), arousal is the
+    // environmental noise that decoheres it. While it stays COHERENT (undecided), keep exploring.
+    this.deliberation.step(curiosity, clamp(2 * this.dominance - 1, -1, 1), this.arousal);
+    drives.EXPLORE += DELIB_GAIN * this.deliberation.coherence;
 
     // ── V92 · METACOGNITIVE EXECUTIVE ── before committing, the mind estimates its CONFIDENCE in the
     // decision from four reliability cues — the provisional decision margin, integration (Φ, last beat),
@@ -824,6 +858,8 @@ export class SuperMind {
       successor: this.successor.snapshot(),
       empowerment: this.empowerment.snapshot(),
       holographic: this.holographic.snapshot(),
+      quantumReservoir: this.qreservoir.snapshot(),
+      deliberation: this.deliberation.snapshot(),
     };
   }
 }
