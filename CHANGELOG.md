@@ -9,6 +9,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **SUPER CREATURE 1.1 — the Empowerment Drive: information-theoretic agency hunger.** A new deterministic
+  faculty (`src/sim/empowerment.ts`) gives the apex mind a third intrinsic motivation, distinct from
+  novelty/surprise and the active-inference epistemic term: each beat it estimates **empowerment** — the
+  Blahut–Arimoto channel capacity I(A; S′) between its committed-plan actions and the resulting world-model
+  latent cell — a reward-free measure of how much it can _steer its own future_ (Klyubin/Polani/Nehaniv 2005;
+  Tiomkin et al. 2023; Levy et al. 2024; Lidayan et al. 2025). A random-hyperplane LSH bins the 16-D latent
+  into 64 cells; an online, surprise-gated channel estimate feeds 12 fixed Blahut–Arimoto iterations
+  (capacity ∈ [0, ln K]; normalised to [0,1]). Wired into `think()` as a curiosity lift toward controllable
+  regions + a bounded vote for the most-empowering plan; surfaced as the **EMP %→plan** board readout and a
+  `SuperMindSnapshot.empowerment` field. 7 closed-form tests (BA monotone convergence; full-control ⇒ 1;
+  no-control ⇒ 0; bounded + NaN-free; determinism; surprise-gating; argmax steering). Grounded in
+  [docs/SUPER-CREATURE-RESEARCH.md](./docs/SUPER-CREATURE-RESEARCH.md) §7.
+- **Quantum mind — goal-directed amplitude amplification (Grover).** `QuantumRegister` gains a `phaseFlip`
+  oracle + `diffuse` (inversion-about-mean); each beat the 6-qubit mind marks its _intended_ thought (the
+  basis state whose bits are the signs of the world-model latent) and runs 0–2 oracle+diffuse rounds gated by
+  the qudit-compute aspect — biasing the Born collapse toward intent (quantum _search_, not just rotate-and-
+  collapse). Deterministic + unitary; new `amplified*` snapshot fields; +7 tests.
 - **SUPER CREATURE 1.1 — the cognitive-architecture expansion: five real theories of mind, wired in.** On
   top of the consciousness-metrics layer, three more substrates now run inside the apex mind each beat,
   every one deterministic, allocation-disciplined, and unit-tested:
