@@ -7,6 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **The Tsotchke quantum lineage — three research primitives ported and wired into the apex Super Creature
+  mind (V84–V88).** Reimplemented at the source level (gate-for-gate / equation-for-equation) from the
+  **Tsotchke** quantum-research repositories — credited under MIT in
+  [THIRD-PARTY-NOTICES.md](./THIRD-PARTY-NOTICES.md):
+  - **Eshkol qubit-RNG** (`src/math/eshkol-qrng.ts`) — an 8-qubit phase-array + noise generator with a
+    16-slot entropy pool and physical-constant mixing cascades; the Super Creature's Born-rule "thought
+    collapse" is now drawn _through_ it.
+  - **Quantum Geometric Tensor / Fubini–Study metric** (`src/math/quantum-geometry.ts`) — the mind reads
+    the metric (volume), curvature (κ) and Berry curvature of its own 6-qubit circuit over its dominant
+    cognition knobs (`QuantumMind.geometricMetric`).
+  - **Spin-glass instinct** (`src/sim/spin-glass.ts`) — a 56-spin Hopfield/Ising lattice storing seven
+    behavioural archetypes; a Metropolis settle each beat biases the committed plan.
+  - Surfaced live on the SuperCreature board's **Substrate** row (Eshkol H · QGT vol/κ · Spin→PLAN %),
+    with closed-form unit tests (an RY rotation's Fubini–Study metric is exactly ¼; the lattice recalls
+    imprinted archetypes; the QRNG passes mean/spread/Shannon-entropy checks). **964 tests green.**
+
+### Changed
+
+- **Simulation stats re-audited to the real 50,000-scale numbers (V82) and the quantum-lineage credit
+  corrected (V83, V86–V87).** `/spec` and the technical specification now reflect the measured creature
+  roster (~3.5M params / ~14 MB across the world; the apex ~10,081-param composite + 6-qubit register),
+  and the docs no longer call the Eshkol / QGT / spin-glass work "studied" — they are reimplemented and
+  wired in, not vendored as binaries.
+- **2nd-pass adversarial review of the ports (V88)** — a QGT ε-guard, a spin-glass doc correction, and an
+  Eshkol lossy-cast note landed; no blocking or major findings.
+
 ### Fixed
 
 - **Returning visitors saw a STALE cached `/spec` (and `/docs`) page after a deploy.** GitHub Pages keys

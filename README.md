@@ -5,7 +5,7 @@
 [![License: Proprietary](https://img.shields.io/badge/License-Proprietary%20%E2%80%94%20All%20Rights%20Reserved-red.svg)](./LICENSE)
 [![Bun](https://img.shields.io/badge/Bun-1.3-black?logo=bun&logoColor=white)](https://bun.sh)
 [![TypeScript strict](https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript&logoColor=white)](./tsconfig.json)
-[![tests](https://img.shields.io/badge/tests-913%20passing-brightgreen)](./tests)
+[![tests](https://img.shields.io/badge/tests-964%20passing-brightgreen)](./tests)
 [![audit](https://img.shields.io/badge/inspection-500%20points-success)](./docs/500-POINT-INSPECTION.md)
 
 A procedural WebGL cosmic ecosystem — morphogenic organisms, Shoggoths,
@@ -18,7 +18,7 @@ Every run is reproducible from a seed. Every hot path is allocation-free.
 Every magic number survived the port.
 
 > 📖 **New here? Read [THE BOOK](./docs/BOOK.md)** — the master index over every doc, an
-> auto-generated [file map](./docs/FILE-MAP.md) of all 87 modules, and the build/run, data-flow,
+> auto-generated [file map](./docs/FILE-MAP.md) of all 89 modules, and the build/run, data-flow,
 > troubleshooting, and roadmap in one place. Or open **❓ HELP ME NOW** in-app for grounded answers.
 
 > **V12–V13 (2026-06):** a procedural **Reliquary Surface** jewel BRDF + a macro **SPECIMEN** camera
@@ -260,9 +260,9 @@ generations, and a read-only Copilot (`docs/MODULE-CONTRACTS.md` §V9):
   alter dynamics** (`solid` stays the exact determinism identity); singularities
   now pull titans/shoggoths/leviathans; chaos is leveled and bipolar.
 
-### The Living Era (post-0.9.0 · V10–V77)
+### The Living Era (post-0.9.0 · V10–V88)
 
-Since 0.9.0 the cosmos has grown continuously — fifty-plus increments logged in
+Since 0.9.0 the cosmos has grown continuously — seventy-plus increments logged in
 the [CHANGELOG](./CHANGELOG.md) `[Unreleased]` section, each shipped behind the
 full gate with same-seed determinism preserved. The major arcs:
 
@@ -311,6 +311,23 @@ full gate with same-seed determinism preserved. The major arcs:
   statevector mind** (parameterised RY/RZ + controlled-RY circuit, Bloch vectors,
   Born-sampled collapse) ported from the Eshkol + Quantum-Geometric-Tensor research
   repos.
+- **The Tsotchke quantum lineage — ported & wired (V82–V88)** — the simulation
+  stats were re-audited to the real 50,000-scale numbers, and three primitives from
+  the **Tsotchke / Eshkol / Moonlab** quantum-research repositories were
+  reimplemented at the source level (gate-for-gate, MIT-credited in
+  [THIRD-PARTY-NOTICES.md](./THIRD-PARTY-NOTICES.md)) and **genuinely wired into the
+  apex mind**, not vendored as binaries: an **Eshkol qubit-RNG**
+  ([src/math/eshkol-qrng.ts](./src/math/eshkol-qrng.ts)) — an 8-qubit phase-array +
+  noise generator with a 16-slot entropy pool and physical-constant mixing cascades
+  — now draws the mind's Born-rule "thought collapse"; the **Quantum Geometric
+  Tensor / Fubini–Study metric**
+  ([src/math/quantum-geometry.ts](./src/math/quantum-geometry.ts)) lets the creature
+  read the curvature of its own thought-space (metric volume · κ · Berry curvature);
+  and a 56-spin **Hopfield/Ising spin-glass**
+  ([src/sim/spin-glass.ts](./src/sim/spin-glass.ts)) supplies associative instinct
+  that biases plan selection. Surfaced live on the SuperCreature board's
+  **Substrate** row (Eshkol H · QGT vol/κ · Spin→PLAN %) and covered by closed-form
+  unit tests — **964 tests green**.
 
 Work on this codebase is governed by the three **master files** in
 [masters/](./masters/) — Executor, Architect, Physicist — bound by
@@ -467,3 +484,10 @@ JetBrains Mono fonts (SIL OFL 1.1). Full attribution in
 [NOTICE.md](./NOTICE.md). Built and served with the Bun runtime (MIT, not
 redistributed); the `/lab` artifact loads p5.js (LGPL-2.1) from a CDN, not
 redistributed.
+
+Source-level ported algorithms — the **Eshkol** qubit-RNG, the **Moonlab/QGTL**
+Quantum-Geometric-Tensor, and the **Tsotchke** spin-glass instinct wired into the
+Super Creature's quantum mind — are reimplemented in this project's own TypeScript
+(not vendored as binaries) from MIT-licensed quantum-research code; the upstream
+copyright and permission notice are retained in
+[THIRD-PARTY-NOTICES.md](./THIRD-PARTY-NOTICES.md).
