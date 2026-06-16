@@ -57,6 +57,7 @@ import { Metacognition, type MetacognitionSnapshot } from './metacognition';
 import { Criticality, type CriticalitySnapshot } from './criticality';
 import { TheoryOfMind } from './theory-of-mind';
 import { SuccessorRepresentation, type SuccessorSnapshot } from './successor-representation';
+import { Neuromodulation } from './neuromodulation';
 import type { SuperPercept, SuperPlan } from './super-creature';
 import { SUPER_PLANS } from './super-creature';
 
@@ -274,6 +275,8 @@ export class SuperMind {
   private readonly metacog = new Metacognition();
   /** V1.1 (V93): the self-organised-criticality homeostat — keeps cognition poised at the edge of chaos. */
   private readonly criticality = new Criticality();
+  /** V95: neuromodulation — Doya's four-modulator metalearning chemistry (DA/5-HT/NE/ACh) over cognition. */
+  private readonly neuro = new Neuromodulation();
   /** V94: theory of mind — models the NEAREST RIVAL's intent from its observable cues (social cognition). */
   private readonly tom: TheoryOfMind;
   /** V1.1: the successor-representation predictive map — model-based look-ahead over its own plan dynamics
@@ -617,6 +620,19 @@ export class SuperMind {
     drives.DECEIVE += tomGain * menace * 0.5;
     drives.DOMINATE += tomGain * (1 - menace) * this.dominance;
     drives.HUNT += tomGain * (1 - menace) * s[5];
+
+    // ── V95 · NEUROMODULATION ── Doya's metalearning chemistry: a reward-prediction error (dopamine) plus
+    // serotonin (patience), noradrenaline (alarm gain) and acetylcholine (attention), computed from the
+    // creature's own state, spent as a bounded modulation of the drives — DA → reward pursuit, 5-HT → REST,
+    // NE → threat reactivity, ACh → attend to novelty.
+    const nmGain = 0.12;
+    const reward = clamp01(0.4 * s[0] + 0.3 * s[4] + 0.3 * unit(this.valence));
+    this.neuro.update(reward, this.valence, this.arousal, surprise, s[1], novelty);
+    drives.HUNT += nmGain * this.neuro.dopamine * s[5];
+    drives.DOMINATE += nmGain * this.neuro.dopamine * this.dominance;
+    drives.REST += nmGain * this.neuro.serotonin;
+    drives.EXPLORE += nmGain * this.neuro.acetylcholine * novelty;
+    drives.FLEE += nmGain * this.neuro.noradrenaline * s[1];
 
     // ── V1.1 · SUCCESSOR REPRESENTATION ── model-based look-ahead: bias each plan by the discounted FUTURE
     // drive its learned predictive map expects it to open onto (Dayan 1993; Stachenfeld et al. 2017, Nat.
