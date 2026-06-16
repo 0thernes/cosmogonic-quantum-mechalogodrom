@@ -29,12 +29,16 @@
  * Determinism + budget are unit-tested. Allocation-free in steady state (all scratch is preallocated).
  * The masterful many-eyed body ([super-body.ts]) and the wingman swarm hang off {@link snapshot}.
  *
- * V75 — the **Quantum Computing Mind** ([super-qubits.ts]): each beat the composite mind also drives a
- * genuine 6-qubit statevector register, encoding its latent + the 10 quantum aspects into real unitary
- * rotations and tunable entanglement (the directive's "Quantum Computing Mind · Simulated Qubits",
- * informed by a study of the Eshkol qubit-RNG and the Quantum-Geometric-Tensor library — see
- * super-qubits.ts). Its {@link QubitSnapshot} rides on {@link snapshot} for the BRAIN view. The
- * classical substance here — Creativity Machine, ToT/AoT, recursive depth — is implemented directly.
+ * V75 → V84 — the **Quantum Computing Mind** ([super-qubits.ts]): each beat the composite mind also
+ * drives a genuine 6-qubit statevector register, encoding its latent + the 10 quantum aspects into real
+ * unitary rotations and tunable entanglement (the directive's "Quantum Computing Mind · Simulated
+ * Qubits"). V84 moved three Tsotchke primitives from research INTO development and wired them in: the
+ * thought-collapse Born sample is drawn through the ported **Eshkol** qubit-RNG ([eshkol-qrng.ts]); the
+ * mind reads the ported **QGT / Fubini–Study** geometry of its own circuit; and a ported **spin-glass**
+ * Hopfield/Ising lattice ([spin-glass.ts]) settles each beat into a behavioural archetype that biases
+ * the plan — a subsymbolic "gut" instinct (MIT © tsotchke; see THIRD-PARTY-NOTICES.md). Their snapshots
+ * ride on {@link snapshot} for the BRAIN view. The classical substance here — Creativity Machine,
+ * ToT/AoT, recursive depth — is implemented directly.
  */
 import type { Rng } from '../math/rng';
 import { mulberry32 } from '../math/rng';
