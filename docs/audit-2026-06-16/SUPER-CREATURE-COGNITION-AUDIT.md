@@ -139,6 +139,24 @@ The faculty groundings were spot-checked against live indices, not asserted from
 **Finding: no hallucinated or mis-attributed citations.** Every grounding is a real source; the one
 ML-indexable claim verified exact.
 
+### 7a. Constants port fidelity (Eshkol qubit-RNG)
+
+The Eshkol qubit-RNG's "physical constants" are **64-bit nothing-up-my-sleeve mixing words** (splitmix64-
+style avalanche), NOT decimal measurements — a point worth recording so a future reader does not "fix" them
+to CODATA values and break the gate-for-gate port:
+
+- `FINE_STRUCTURE = 0x7297352743776a1b` literally encodes the fine-structure constant's digits
+  (α ≈ 0.00**7297352**5…) as a hex word — a legitimate nothing-up-my-sleeve constant.
+- `RYDBERG = 0x9e3779b97f4a7c15` is the **golden-ratio** splitmix constant (2⁶⁴/φ); the module comment
+  already flags `== GOLDEN_RATIO upstream`. Its "Rydberg" name is the upstream Eshkol C source's, ported
+  verbatim — it is **not** the decimal Rydberg constant and must not be "corrected" to one.
+- `PLANCK` / `HEISENBERG` are the same: hex mixing words ported constant-for-constant from `quantum_rng.c`
+  (MIT © tsotchke — see `THIRD-PARTY-NOTICES.md`).
+
+**Finding: the constants are faithful, correct ports** — verified by the α-digit encoding and the
+golden-ratio identity. No defect; the determinism + entropy unit suites (`tests/eshkol-qrng.test.ts`) pin
+the resulting stream.
+
 ---
 
 ## 8. Honest framing
