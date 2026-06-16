@@ -394,3 +394,69 @@ describe('QuantumCircuitSystem', () => {
     expect(Array.from(touched.bands())).toEqual(Array.from(pristine.bands()));
   });
 });
+
+describe('QuantumRegister — amplitude amplification (phaseFlip + diffuse / Grover)', () => {
+  test('one oracle+diffuse round amplifies a marked state from the uniform superposition', () => {
+    const n = 4; // N = 16, each |aᵢ|² = 1/16
+    const reg = new QuantumRegister(n);
+    for (let q = 0; q < n; q++) reg.apply('h', q);
+    const target = 11;
+    const before = reg.probabilities()[target] ?? 0;
+    expect(before).toBeCloseTo(1 / 16, 9);
+    reg.phaseFlip(target);
+    reg.diffuse();
+    const after = reg.probabilities()[target] ?? 0;
+    // standard 1-step Grover on N=16: P(target) = sin²(3·asin(1/4)) ≈ 0.473
+    expect(after).toBeGreaterThan(before);
+    expect(after).toBeGreaterThan(0.4);
+    expect(after).toBeLessThan(0.5);
+  });
+
+  test('phaseFlip alone leaves every Born probability unchanged (it only marks a phase)', () => {
+    const reg = new QuantumRegister(3);
+    for (let q = 0; q < 3; q++) reg.apply('h', q);
+    const before = Array.from(reg.probabilities());
+    reg.phaseFlip(5);
+    const after = Array.from(reg.probabilities());
+    for (let i = 0; i < before.length; i++) expect(after[i]).toBeCloseTo(before[i] ?? 0, 12);
+  });
+
+  test('amplitude amplification is unitary — norm preserved across iterations', () => {
+    const reg = new QuantumRegister(3);
+    const rng = mulberry32(99);
+    for (let q = 0; q < 3; q++) {
+      reg.apply('ry', q, undefined, rng() * Math.PI);
+      reg.apply('rz', q, undefined, rng() * Math.PI);
+    }
+    for (let it = 0; it < 3; it++) {
+      reg.phaseFlip(5);
+      reg.diffuse();
+    }
+    const probs = reg.probabilities();
+    let sum = 0;
+    for (let i = 0; i < reg.dimension; i++) sum += probs[i] ?? 0;
+    expect(Math.abs(sum - 1)).toBeLessThan(EPS_NORM);
+  });
+
+  test('deterministic: identical amplify rounds give bit-identical Born distributions', () => {
+    const a = new QuantumRegister(4);
+    const b = new QuantumRegister(4);
+    for (let q = 0; q < 4; q++) {
+      a.apply('h', q);
+      b.apply('h', q);
+    }
+    for (let it = 0; it < 2; it++) {
+      a.phaseFlip(9);
+      a.diffuse();
+      b.phaseFlip(9);
+      b.diffuse();
+    }
+    expect(Array.from(a.probabilities())).toEqual(Array.from(b.probabilities()));
+  });
+
+  test('phaseFlip rejects an out-of-range basis index', () => {
+    const reg = new QuantumRegister(2);
+    expect(() => reg.phaseFlip(4)).toThrow(RangeError);
+    expect(() => reg.phaseFlip(-1)).toThrow(RangeError);
+  });
+});

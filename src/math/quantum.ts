@@ -327,6 +327,45 @@ export class QuantumRegister {
   }
 
   /**
+   * Oracle phase-flip (Grover marking): negates the amplitude of the single basis state `index`. Its
+   * Born probability is unchanged, but the sign flip marks it so the following {@link diffuse} amplifies
+   * it. `phaseFlip(target)` → {@link diffuse}, iterated, is one amplitude-amplification round — the
+   * Grover primitive (Grover 1996). Unitary (a reflection). O(1); allocation-free.
+   * @throws RangeError when `index` is outside [0, 2ⁿ).
+   */
+  phaseFlip(index: number): void {
+    if (!Number.isInteger(index) || index < 0 || index >= this.dim) {
+      throw new RangeError(
+        `QuantumRegister: phaseFlip index must be an integer in [0, ${this.dim}), got ${index}`,
+      );
+    }
+    this.re[index] = -(this.re[index] ?? 0);
+    this.im[index] = -(this.im[index] ?? 0);
+  }
+
+  /**
+   * Grover diffusion — inversion about the mean: every amplitude aᵢ → 2μ − aᵢ, where μ = (1/N)·Σaⱼ is the
+   * complex mean amplitude (the reflection 2|s⟩⟨s| − I about the uniform superposition). Applied right
+   * after an oracle {@link phaseFlip} it raises the marked state's Born probability — amplitude
+   * amplification (Brassard, Høyer, Mosca & Tapp 2000). Unitary, norm-preserving. O(2^n); allocation-free.
+   */
+  diffuse(): void {
+    const { re, im, dim } = this;
+    let mr = 0;
+    let mi = 0;
+    for (let i = 0; i < dim; i++) {
+      mr += re[i] ?? 0;
+      mi += im[i] ?? 0;
+    }
+    mr /= dim;
+    mi /= dim;
+    for (let i = 0; i < dim; i++) {
+      re[i] = 2 * mr - (re[i] ?? 0);
+      im[i] = 2 * mi - (im[i] ?? 0);
+    }
+  }
+
+  /**
    * Applies the 2×2 complex matrix [[a, b], [c, d]] (split into re/im scalars) to the `target`
    * qubit across all 2^(n-1) amplitude pairs. O(2^n); allocation-free.
    */

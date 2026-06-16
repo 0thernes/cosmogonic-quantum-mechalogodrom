@@ -136,13 +136,20 @@ describe('QuantumMind (V75) — the simulated-qubit cognition layer', () => {
   });
 
   test('the entanglement aspect REALLY entangles: zero ⇒ separable, one ⇒ correlated', () => {
+    // Isolate the entanglement AXIS: also pin the V1.1 goal-directed amplification (aspects[4]) to zero —
+    // a Grover oracle+diffuse round is itself an entangling operation, so "separable" needs BOTH no
+    // controlled-RY ring AND no amplification for the state to stay a pure product.
+    const sepDrive = aspects(0, 0);
+    sepDrive[4] = 0;
     const sep = new QuantumMind(mulberry32(5));
-    sep.evolve(aspects(0, 0), LATENT); // no controlled-RY ring → product state
+    sep.evolve(sepDrive, LATENT); // no controlled-RY ring, no amplification → product state
     const sepS = sep.snapshot();
     expect(sepS.entanglement).toBeLessThan(1e-6); // every qubit stays pure
 
+    const entDrive = aspects(1, 0);
+    entDrive[4] = 0;
     const ent = new QuantumMind(mulberry32(5));
-    ent.evolve(aspects(1, 0), LATENT); // full controlled-RY ring
+    ent.evolve(entDrive, LATENT); // full controlled-RY ring
     expect(ent.snapshot().entanglement).toBeGreaterThan(0.05);
   });
 
@@ -198,5 +205,49 @@ describe('QuantumMind (V75) — the simulated-qubit cognition layer', () => {
     expect(Math.abs(ga.scalar - gb.scalar) + Math.abs(ga.curvature - gb.curvature)).toBeGreaterThan(
       1e-4,
     );
+  });
+
+  // ── V1.1: goal-directed amplitude amplification (Grover) — the mind SEARCHES toward its intent ──
+  test('focus (aspects[4]) gates the Grover rounds; the intended thought = the latent-sign basis', () => {
+    // The intent is the basis state whose bits are the signs of latent[0..QMIND_QUBITS): LATENT is
+    // positive at indices 0, 2, 4 → bits {0,2,4} → 0b010101 = 21. Focus 0 ⇒ 0 rounds (open
+    // superposition); focus 1 ⇒ 2 rounds (collapse pulled toward intent). Intent is set by the latent,
+    // never by the focus — so both minds mark the SAME state, only the amplification differs.
+    const lo = aspects(0.5, 0.5);
+    lo[4] = 0;
+    const hi = aspects(0.5, 0.5);
+    hi[4] = 1;
+    const mLo = new QuantumMind(mulberry32(7));
+    const mHi = new QuantumMind(mulberry32(7));
+    mLo.evolve(lo, LATENT);
+    mHi.evolve(hi, LATENT);
+    const sLo = mLo.snapshot();
+    const sHi = mHi.snapshot();
+    expect(sLo.amplifyRounds).toBe(0);
+    expect(sHi.amplifyRounds).toBe(2);
+    expect(sHi.amplified).toBe(21);
+    expect(sHi.amplifiedBits).toBe('010101');
+    expect(sHi.amplified).toBe(sLo.amplified); // intent from the latent, not the focus
+    // amplification measurably moves the marked state's Born probability
+    expect(Math.abs(sHi.amplifiedProb - sLo.amplifiedProb)).toBeGreaterThan(1e-6);
+  });
+
+  test('amplification stays deterministic and preserves a valid Born distribution (unitary)', () => {
+    const drive = aspects(0.7, 0.6);
+    drive[4] = 1; // 2 Grover rounds
+    const a = new QuantumMind(mulberry32(13));
+    const b = new QuantumMind(mulberry32(13));
+    a.evolve(drive, LATENT);
+    b.evolve(drive, LATENT);
+    const sa = a.snapshot();
+    expect(JSON.stringify(sa)).toBe(JSON.stringify(b.snapshot())); // same seed + drivers ⇒ identical
+    let sum = 0;
+    for (const p of sa.probs) {
+      expect(p).toBeGreaterThanOrEqual(0);
+      sum += p;
+    }
+    expect(Math.abs(sum - 1)).toBeLessThan(1e-9); // Grover oracle+diffuse preserves the norm
+    expect(sa.amplifiedProb).toBeGreaterThanOrEqual(0);
+    expect(sa.amplifiedProb).toBeLessThanOrEqual(1);
   });
 });

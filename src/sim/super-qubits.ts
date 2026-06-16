@@ -97,6 +97,14 @@ export interface QubitSnapshot {
   sampledBits: string;
   /** Quantum-geometric readout (Fubini–Study metric + curvature) — ported from the QGTL study. */
   geometry: QGeometry;
+  /** V1.1: the INTENDED-thought basis index that goal-directed amplitude amplification (Grover) marks. */
+  amplified: number;
+  /** {@link amplified} as a qubit bitstring. */
+  amplifiedBits: string;
+  /** Grover oracle+diffuse rounds run this beat (0..2) — the mind's quantum-search focus. */
+  amplifyRounds: number;
+  /** Born probability of the intended thought AFTER amplification (the search gain, 0..1). */
+  amplifiedProb: number;
 }
 
 const clamp01 = (v: number): number => (v < 0 ? 0 : v > 1 ? 1 : v);
@@ -122,6 +130,10 @@ export class QuantumMind {
   private dL = 1;
   private gateCount = 0;
   private sampled = 0;
+  /** V1.1: the basis index the goal-directed amplitude amplification marks + amplifies before collapse. */
+  private amplifyTarget = 0;
+  /** V1.1: how many Grover oracle+diffuse rounds ran this beat (0..2, gated by focus). */
+  private amplifyRounds = 0;
 
   constructor(rng: Rng) {
     this.rng = rng;
@@ -150,6 +162,21 @@ export class QuantumMind {
     this.dLatent = latent;
     this.dL = L;
     this.gateCount = this.applyCircuit(sup, ent, ftl, mut, latent, L);
+    // V1.1 — GOAL-DIRECTED AMPLITUDE AMPLIFICATION (Grover): bias the thought-collapse toward the mind's
+    // INTENDED thought — the basis state whose bits are the signs of the world-model latent (the pattern
+    // the mind is reaching for). The 'qudit-compute' aspect sets the focus: 0 rounds leaves the open
+    // superposition, more rounds pull the collapse toward intent — quantum SEARCH, not just rotate-collapse.
+    // Bounded to 2 rounds so the amplitude never over-rotates past the target. Deterministic + unitary.
+    let target = 0;
+    for (let k = 0; k < QMIND_QUBITS; k++) if ((latent[k % L] ?? 0) > 0) target |= 1 << k;
+    const rounds = Math.round(clamp01(aspects[4] ?? 0) * 2);
+    for (let it = 0; it < rounds; it++) {
+      this.reg.phaseFlip(target);
+      this.reg.diffuse();
+      this.gateCount += 2;
+    }
+    this.amplifyTarget = target;
+    this.amplifyRounds = rounds;
     this.sampled = this.reg.sample(this.rng);
   }
 
@@ -281,6 +308,10 @@ export class QuantumMind {
       sampled: this.sampled,
       sampledBits: this.sampled.toString(2).padStart(QMIND_QUBITS, '0'),
       geometry,
+      amplified: this.amplifyTarget,
+      amplifiedBits: this.amplifyTarget.toString(2).padStart(QMIND_QUBITS, '0'),
+      amplifyRounds: this.amplifyRounds,
+      amplifiedProb: probs[this.amplifyTarget] ?? 0,
     };
   }
 }
