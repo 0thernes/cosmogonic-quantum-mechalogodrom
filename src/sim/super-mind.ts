@@ -39,6 +39,11 @@
  * the plan — a subsymbolic "gut" instinct (MIT © tsotchke; see THIRD-PARTY-NOTICES.md). Their snapshots
  * ride on {@link snapshot} for the BRAIN view. The classical substance here — Creativity Machine,
  * ToT/AoT, recursive depth — is implemented directly.
+ *
+ * V89 — SUPER CREATURE 1.1 · the consciousness-metrics layer: the mind now measures itself against the
+ * two leading SCIENTIFIC theories of consciousness, each a live scalar computed from its own activations
+ * — `ignition` (Global Workspace / GNW: a winner-take-all broadcast that gates memory consolidation) and
+ * `phi` (Integrated Information / IIT: a tractable surrogate for Φ). Both deterministic, both unit-tested.
  */
 import type { Rng } from '../math/rng';
 import { mulberry32 } from '../math/rng';
@@ -46,6 +51,7 @@ import { TinyMLP, MemoryRing } from './ai/brains';
 import { QuantumMind, type QubitSnapshot } from './super-qubits';
 import { EshkolQrng, type EshkolQrngSnapshot } from '../math/eshkol-qrng';
 import { SpinGlass, type SpinSnapshot } from './spin-glass';
+import { Reservoir, type ReservoirSnapshot } from './reservoir';
 import type { SuperPercept, SuperPlan } from './super-creature';
 import { SUPER_PLANS } from './super-creature';
 
@@ -78,6 +84,12 @@ function clamp(v: number, lo: number, hi: number): number {
 }
 const clamp01 = (v: number): number => (v < 0 ? 0 : v > 1 ? 1 : v);
 const unit = (v: number): number => v * 0.5 + 0.5; // tanh(−1..1) → 0..1
+/** Mean of the first `n` elements — a module-summary scalar (module-level ⇒ no per-beat allocation). */
+function mean(a: ArrayLike<number>, n: number): number {
+  let s = 0;
+  for (let i = 0; i < n; i++) s += a[i] ?? 0;
+  return n > 0 ? s / n : 0;
+}
 
 /** A self-contained sub-network: a TinyMLP plus its own reusable scratch (allocation-free forward). */
 class Subnet {
@@ -109,6 +121,8 @@ export interface Consciousness {
   selfAware: number; // 0..1 — the self-model's reflexive signal
   novelty: number; // 0..1 — peak perceptor novelty over the 25 variants
   surprise: number; // 0..1 — predictor error (world-model)
+  ignition: number; // 0..1 — V89: Global-Workspace broadcast (GNW) — winning coalition crossing access
+  phi: number; // 0..1 — V89: Integrated-Information proxy (IIT) — module participation/coherence (Φ*)
 }
 
 /** The apex decision this beat (drives + consciousness + quantum aspects). */
@@ -145,9 +159,30 @@ export interface SuperMindSnapshot {
   eshkol: EshkolQrngSnapshot;
   /** V84: the spin-glass instinct lattice (ported tsotchke/spin_based_neural_network). */
   spin: SpinSnapshot;
+  /** V1.1: the echo-state reservoir — temporal dynamical memory + the novelty that drives curiosity. */
+  reservoir: ReservoirSnapshot;
 }
 
 const EMOTION_TAU = 0.12;
+
+// ── V89 · SUPER CREATURE 1.1 — the consciousness-metrics layer ─────────────────────────────────────
+// Two live scalars grounded in the two leading SCIENTIFIC theories of consciousness, computed from the
+// mind's own activations each beat (deterministic, bounded [0,1], allocation-free):
+//   • ignition (Global Workspace / GNW — Baars · Dehaene): a winner-take-all "ignition" — when one
+//     plan-coalition crosses an access threshold AND dominates the runner-up, it is broadcast globally.
+//     Here the broadcast has a real downstream effect: it gates which imagined content consolidates into
+//     episodic memory (broadcast ⇒ reportable). The 2025 Cogitate adversarial test (Ferrante et al.,
+//     Nature) pressured the *offset-ignition* prediction; we model ignition as a signature, not a verdict.
+//   • phi (Integrated Information / IIT — Tononi): a TRACTABLE surrogate for Φ. True Φ is super-
+//     exponential AND non-unique (Hanson & Walker 2023), so this is explicitly a proxy — the
+//     participation/coherence ratio of the named module activations: 1 when the parts act as one
+//     integrated whole, ≈0 when they act as independent specialists. See docs/SUPER-CREATURE-RESEARCH.md.
+/** Access threshold the winning coalition must cross to "ignite" (GWT). */
+const IGNITION_THRESHOLD = 0.25;
+/** Ignition EMA rate — punchy, so broadcast reads as a near-all-or-none event. */
+const IGNITION_TAU = 0.4;
+/** Φ-proxy EMA rate — smoother; integration is a slower-moving property of the whole. */
+const PHI_TAU = 0.25;
 
 // ── V84: the spin-glass instinct (ported tsotchke/spin_based_neural_network) ──────────────────────
 /** Spins in the Hopfield/Ising instinct lattice (capacity 0.138·N ≈ 7.7 > the 7 plan archetypes). */
@@ -192,6 +227,8 @@ export class SuperMind {
   private readonly spin: SpinGlass;
   /** Dedicated seeded stream for the instinct's Metropolis dynamics (independent of the beat stream). */
   private readonly spinDrive: Rng;
+  /** V1.1: the echo-state reservoir the mind steps with its latent each beat (short-term temporal memory). */
+  private readonly reservoir: Reservoir;
   readonly paramCount: number;
 
   // ── Reusable scratch (no per-beat allocation) ──
@@ -208,11 +245,14 @@ export class SuperMind {
   private readonly latent = new Float32Array(LATENT);
   private readonly imagined = new Float32Array(LATENT);
   private readonly spinField = new Float32Array(SPIN_SIZE); // situational drive into the instinct lattice
+  private readonly phiMods = new Float32Array(8); // V89: the 8 named module-summary scalars for the Φ proxy
 
   private readonly memory = new MemoryRing(48);
   private valence = 0;
   private arousal = 0;
   private dominance = 0.5;
+  private ignition = 0; // V89: persisted Global-Workspace broadcast (EMA) — gates next-beat consolidation
+  private phi = 0; // V89: persisted Integrated-Information proxy (EMA)
   private predictedSalience = 0;
   private offspring = 0;
   private noiseSeed = 1; // deterministic perturbation counter (Creativity-Machine "randomness")
@@ -224,6 +264,8 @@ export class SuperMind {
     selfAware: 0,
     novelty: 0,
     surprise: 0,
+    ignition: 0,
+    phi: 0,
   };
   private plan: SuperPlan = 'REST';
 
@@ -265,6 +307,7 @@ export class SuperMind {
     this.spin = new SpinGlass(SPIN_SIZE, mulberry32((childSeed ^ 0x5bd1e995) >>> 0 || 1));
     this.spin.imprint(SPIN_ARCHETYPES);
     this.spinDrive = mulberry32((childSeed ^ 0x2545f491) >>> 0 || 1);
+    this.reservoir = new Reservoir(mulberry32((childSeed ^ 0x119de1f3) >>> 0 || 1));
   }
 
   get offspringCount(): number {
@@ -303,6 +346,9 @@ export class SuperMind {
     s[17] = Math.cos(p.phase * Math.PI * 2);
     const latent = this.cortex.forward(s);
     this.latent.set(latent);
+    // V1.1: step the echo-state reservoir on the fresh latent — a fading nonlinear echo of the mind's
+    // recent world-models that gives it temporal memory; its novelty (below) sharpens curiosity.
+    this.reservoir.step(this.latent);
 
     // ── ATOM OF THOUGHT · organ-nets each process a 4-atom slice of the latent ──────────────────
     let oa = 0;
@@ -387,9 +433,11 @@ export class SuperMind {
     for (let i = 0; i < 4; i++) this.metaIn[mi++] = self[i] ?? 0;
     const act = this.meta.forward(this.metaIn);
 
-    // dream replay folds the imagined latent into memory (consolidation between beats)
+    // dream replay folds the imagined latent into memory (consolidation between beats). V89 · GWT: the
+    // PREVIOUS beat's global-workspace broadcast gates how strongly imagined content consolidates —
+    // ignited (broadcast) content is what becomes reportable/stored.
     const dreamVec = this.consolidator.forward(this.imagined);
-    this.memory.push(unit(dreamVec[0] ?? 0));
+    this.memory.push(unit(dreamVec[0] ?? 0) * (0.5 + 0.5 * this.ignition));
 
     // ── QUANTUM COMPUTING MIND ── drive the simulated-qubit register with this beat's aspects +
     // latent: the circuit encodes cognition into real unitary evolution + tunable entanglement.
@@ -405,6 +453,8 @@ export class SuperMind {
       selfAware,
       novelty,
       surprise,
+      ignition: this.ignition, // carried; finalised after the plan argmax below
+      phi: this.phi, // carried; finalised after the plan argmax below
     };
 
     // ── SPIN-GLASS INSTINCT ── settle the Hopfield/Ising lattice under a situational field so it
@@ -447,7 +497,7 @@ export class SuperMind {
     const deception = unit(act[4] ?? 0);
     const domProject = unit(act[5] ?? 0);
     const spawnDesire = unit(act[6] ?? 0);
-    const curiosity = clamp01(unit(act[7] ?? 0) + 0.3 * novelty);
+    const curiosity = clamp01(unit(act[7] ?? 0) + 0.3 * novelty + 0.15 * this.reservoir.novelty);
 
     // plan (argmax over drive scores; same vocabulary as the V31 mind)
     const drives: Record<SuperPlan, number> = {
@@ -463,13 +513,50 @@ export class SuperMind {
     if (instinctPlan) drives[instinctPlan] += INSTINCT_GAIN * instinctStrength;
     let best: SuperPlan = 'REST';
     let bestScore = -Infinity;
+    let runnerUp = -Infinity;
     for (const k of SUPER_PLANS) {
-      if (drives[k] > bestScore) {
-        bestScore = drives[k];
+      const d = drives[k];
+      if (d > bestScore) {
+        runnerUp = bestScore;
+        bestScore = d;
         best = k;
+      } else if (d > runnerUp) {
+        runnerUp = d;
       }
     }
     this.plan = best;
+
+    // ── V89 · GWT IGNITION ── the winning plan-coalition is "broadcast" when it crosses the access
+    // threshold AND dominates the runner-up (a near-all-or-none event). Persisted so it gates the NEXT
+    // beat's memory consolidation above; surfaced live on the SuperCreature board.
+    const access = clamp01((bestScore - IGNITION_THRESHOLD) / (1 - IGNITION_THRESHOLD));
+    const margin = bestScore > 1e-6 ? clamp01((bestScore - runnerUp) / bestScore) : 0;
+    this.ignition += IGNITION_TAU * (access * margin - this.ignition);
+    this.cons.ignition = this.ignition;
+
+    // ── V89 · IIT Φ-PROXY ── the participation/coherence ratio of the named module activations: 1 when
+    // the parts move as one (integrated), 1/M when they act independently (segregated). A TRACTABLE
+    // surrogate — true Φ is intractable + non-unique (see docs/SUPER-CREATURE-RESEARCH.md).
+    const mods = this.phiMods;
+    mods[0] = mean(this.latent, LATENT);
+    mods[1] = mean(this.imagined, LATENT);
+    mods[2] = mean(reason, LATENT);
+    mods[3] = mean(this.pred, LATENT);
+    mods[4] = this.organSum[0] ?? 0;
+    mods[5] = mean(q, SUPER_QUANTUM);
+    mods[6] = mean(aff, 3);
+    mods[7] = mean(self, 4);
+    let phiEnergy = 0;
+    let phiSum = 0;
+    for (let i = 0; i < mods.length; i++) {
+      const x = mods[i] ?? 0;
+      phiEnergy += x * x;
+      phiSum += x;
+    }
+    const M = mods.length;
+    const pr = phiEnergy > 1e-9 ? (phiSum * phiSum) / (M * phiEnergy) : 1 / M;
+    this.phi += PHI_TAU * (clamp01((pr - 1 / M) / (1 - 1 / M)) - this.phi);
+    this.cons.phi = this.phi;
 
     return {
       move: { x: act[0] ?? 0, y: act[1] ?? 0, z: act[2] ?? 0 },
@@ -507,6 +594,7 @@ export class SuperMind {
       qubits: this.qmind.snapshot(),
       eshkol: this.eshkol.snapshot(),
       spin: this.spin.snapshot(),
+      reservoir: this.reservoir.snapshot(),
     };
   }
 }

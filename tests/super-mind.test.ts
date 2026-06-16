@@ -93,6 +93,8 @@ describe('SuperMind composite consciousness (V45)', () => {
         c.selfAware,
         c.novelty,
         c.surprise,
+        c.ignition, // V89 · GWT broadcast
+        c.phi, // V89 · IIT Φ proxy
       ]) {
         expect(v).toBeGreaterThanOrEqual(0);
         expect(v).toBeLessThanOrEqual(1);
@@ -109,6 +111,34 @@ describe('SuperMind composite consciousness (V45)', () => {
       dreams.push(m.think(percept({ chaos: i / 30 })).consciousness.dreaming);
     expect(Math.min(...dreams)).toBeGreaterThan(0); // it is always imagining
     expect(new Set(dreams.map((d) => Math.round(d * 1e3))).size).toBeGreaterThan(1); // it varies (alive)
+  });
+
+  test('V89 (SC 1.1) — ignition (GWT) + Φ (IIT) are live, bounded [0,1], finite metrics', () => {
+    const m = new SuperMind(mulberry32(11));
+    const igs: number[] = [];
+    const phis: number[] = [];
+    for (let i = 0; i < 60; i++) {
+      const c = m.think(
+        percept({
+          threat: (i % 12) / 12,
+          preyClose: ((i + 3) % 9) / 9,
+          wealthRel: (i % 5) / 5,
+          phase: i / 60,
+        }),
+      ).consciousness;
+      for (const v of [c.ignition, c.phi]) {
+        expect(Number.isFinite(v)).toBe(true);
+        expect(v).toBeGreaterThanOrEqual(0);
+        expect(v).toBeLessThanOrEqual(1);
+      }
+      igs.push(c.ignition);
+      phis.push(c.phi);
+      // the snapshot carries the same metrics for the boards/telemetry
+      expect(m.snapshot().consciousness.phi).toBe(c.phi);
+    }
+    // both are alive — they vary across the run, not pinned constants
+    expect(new Set(igs.map((x) => Math.round(x * 1e3))).size).toBeGreaterThan(1);
+    expect(new Set(phis.map((x) => Math.round(x * 1e3))).size).toBeGreaterThan(1);
   });
 
   test('no NaN across a long run of dreaming/reasoning/feeling', () => {
