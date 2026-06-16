@@ -1,6 +1,6 @@
 # Cosmogonic Quantum Mechalogodrom — Technical Specification
 
-> A complete, measured technical specification of a browser-native, deterministic, 10,000-agent
+> A complete, measured technical specification of a browser-native, deterministic, 50,000-agent
 > WebGL cosmic-ecosystem simulation. Every figure here was measured from the repository, not
 > estimated. **Live:** <https://0thernes.github.io/cosmogonic-quantum-mechalogodrom/> · **Spec page:**
 > `/spec` · **Architecture docs:** `/docs`
@@ -11,8 +11,9 @@
 
 ## 0 · Identity
 
-A single-page, single-language (TypeScript) simulation that renders up to **10,000 morphogenic
-organisms at 60 fps on integrated graphics**, governed by **deterministic, seeded** physics and a
+A single-page **TypeScript** simulation — with an optional native **C++/Jolt** physics engine
+(ADR-0007) — that renders up to **50,000 morphogenic organisms** (10,000 at 60 fps on integrated
+graphics; the 50k mega tier is opt-in for beefy GPUs), governed by **deterministic, seeded** physics and a
 **pre-2016 classical-AI** cognition stack — finite-state machines, GOAP planning, utility AI, tiny
 perceptrons, Markov chains, game theory. There is **no neural-network accelerator in the loop**: the
 intelligence is architectural, not parametric. The whole world is **bit-reproducible from one 32-bit
@@ -123,7 +124,7 @@ Each frame (`dt` clamped to ≤ 50 ms, then × time-scale):
 1. camera + hotkeys + chaos/entropy decay
 2. audio analysis → 4-band reactivity
 3. macro-agents: puppet-masters, shoggoths, titans, leviathans, singularities
-4. **entities.update** — 10k organisms: behaviour fields, physics, spatial-hash neighbours,
+4. **entities.update** — up to 50k organisms: behaviour fields, physics, spatial-hash neighbours,
    auto-split, temperature-modified death + sparse respawn
 5. **NHI beat** (every 18 frames, guarded): percept → GOAP-biased apex decision → spawn swarms /
    dominate / broadcast
@@ -152,8 +153,8 @@ Allocation-free in steady state (pre-allocated typed-array scratch); event-drive
 
 - **WebGL2** via Three.js, ACES filmic tone-mapping, `LinearSRGBColorSpace` output with
   `ColorManagement` disabled (reproduces the authored legacy palette exactly).
-- **Instancing:** up to 10,000 organisms collapse into **InstancedMesh pools** (≤ 80 pools, one draw
-  call per geometry × transparency pair — not 10,000 draws). Per-instance channels: transform matrix,
+- **Instancing:** up to 50,000 organisms collapse into **InstancedMesh pools** (≤ 80 pools, one draw
+  call per geometry × transparency pair — not 50,000 draws). Per-instance channels: transform matrix,
   `instanceColor`, and a custom `vec4 instEmissive` (rgb = emissive·intensity, a = opacity) patched
   into the standard shader via `onBeforeCompile`.
 - **Owned shader effects (GPU, no textures):** a baseline glass-jewel fresnel + thin-film sheen on
@@ -189,27 +190,31 @@ broadcasts hallucinated utterances) — wired into `world.ts`, guarded, determin
 
 ### 7.1 Model parameter sizes (measured)
 
-| Mind                            | Network             | Parameters                    |
-| ------------------------------- | ------------------- | ----------------------------- |
-| Organism brain (× up to 10,000) | TinyMLP 6→6→4       | **70 weights**                |
-| Faction brain                   | TinyMLP 6→6→4       | 70 weights                    |
-| NHI intuition gene              | TinyMLP 5→6→7       | 85 weights                    |
-| NHI alien voice                 | Markov 12×12        | 144 weights                   |
-| Quantum register                | 5-qubit statevector | 32 complex amplitudes (256 B) |
+| Mind                                    | Network                                 | Parameters                    |
+| --------------------------------------- | --------------------------------------- | ----------------------------- |
+| Organism brain (× up to 50,000)         | TinyMLP 6→6→4                           | **70 weights**                |
+| Faction brain (× 8 archetypes)          | TinyMLP 6→6→4                           | 70 weights                    |
+| NHI intuition gene                      | TinyMLP 5→6→7                           | 85 weights                    |
+| NHI alien voice                         | Markov 12×12                            | 144 weights                   |
+| Super Creature mind (V45)               | composite · 12 sub-nets · 5 stages × 25 | ~10,081 weights               |
+| Super Creature quantum mind (V75)       | 6-qubit statevector                     | 64 complex amplitudes         |
+| Quantum register (puppet-master, × 100) | 5-qubit statevector                     | 32 complex amplitudes (256 B) |
 
-**Whole-world neural mass at full population ≈ 700,000 parameters** (≈ 10,000 × 70), stored as
-Float32 = **≈ 2.8 MB of weights**, executed on **one CPU thread**.
+**Whole-world neural mass at the 50k mega ceiling ≈ 3.5 million parameters** (≈ 50,000 × 70 organism
+brains, plus the ~10,081-weight Super Creature composite, the 8 faction brains, and the apex NHI mind),
+stored as Float32 = **≈ 14 MB of weights**, executed on **one CPU thread**. (The default ultra tier caps
+at 10,000 organisms ≈ 700 K params ≈ 2.8 MB.)
 
 ### 7.2 Contrast: this world vs. large language models
 
 | Model                              | Parameters  | × larger than this world |
 | ---------------------------------- | ----------- | ------------------------ |
-| **This entire 10k-organism world** | **≈ 700 K** | 1×                       |
-| BERT-base                          | 110 M       | 157×                     |
-| Llama-7B                           | 7 B         | 10,000×                  |
-| GPT-3                              | 175 B       | 250,000×                 |
+| **This entire 50k-organism world** | **≈ 3.5 M** | 1×                       |
+| BERT-base                          | 110 M       | 31×                      |
+| Llama-7B                           | 7 B         | 2,000×                   |
+| GPT-3                              | 175 B       | 50,000×                  |
 
-The simulation's _entire_ population mind is **1/250,000th of GPT-3**. A single organism's "brain"
+The simulation's _entire_ population mind is **1/50,000th of GPT-3**. A single organism's "brain"
 (70 weights) is smaller than a textbook perceptron demo. The point of this project is that **emergent
 intelligence is engineered, not downloaded.**
 
@@ -326,8 +331,9 @@ contrast 62 · doc-links 57 · a11y-static 45`.
 
 ## 13 · Positioning
 
-This is a ~50k-line, single-language, browser-native simulation that renders **10,000 agents at
-60 fps on a laptop iGPU with zero AI accelerator**, is **bit-reproducible from one seed**, ships
-through a **full CI/CD gate** (945 tests, 95.6 % coverage), and whose entire emergent intelligence
-weighs **2.8 MB — 1/250,000th of GPT-3**. It demonstrates that depth comes from **architecture,
+This is a ~69k-line TypeScript (+ optional C++/Jolt native engine) browser-native simulation that
+renders **up to 50,000 agents** (10,000 at 60 fps on a laptop iGPU with zero AI accelerator), is
+**bit-reproducible from one seed**, ships through a **full CI/CD gate** (945 tests, 95.6 % coverage),
+and whose entire emergent intelligence weighs **≈ 14 MB — 1/50,000th of GPT-3** at the mega ceiling. It
+demonstrates that depth comes from **architecture,
 determinism, and engineering discipline**, not parameter count or hardware.

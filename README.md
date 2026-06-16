@@ -31,7 +31,7 @@ Every magic number survived the port.
 
 ## Features
 
-- **26 behavioral fields** driving up to 10,000 organisms: classic motion
+- **26 behavioral fields** driving up to 50,000 organisms: classic motion
   (drift, orbit, swarm, vortex, helix...), neighbor dynamics via a spatial
   hash (flock), and theory behaviors — Nash equilibria (`nash`), wealth
   exchange (`market`), subtyping attraction (`typemorph`), set membership
