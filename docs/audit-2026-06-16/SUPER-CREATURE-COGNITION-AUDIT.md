@@ -157,6 +157,24 @@ to CODATA values and break the gate-for-gate port:
 golden-ratio identity. No defect; the determinism + entropy unit suites (`tests/eshkol-qrng.test.ts`) pin
 the resulting stream.
 
+### 7b. Post-audit remediation (items closed AFTER this audit was first written)
+
+Two substantive landings post-date the tables above and are folded back in for accuracy:
+
+- **The genuine quantum Φ now WRITES into cognition (backlog item #1 closed, commit `7f463c1`).** The audit
+  flagged `Consciousness.phi` (classical module participation-ratio) and the register `qubits.phi` (min-cut
+  IIT) as distinct systems — and the register Φ was inert w.r.t. the decision. It no longer is:
+  `QuantumMind.integratedInformationNow()` computes the genuine register Φ each beat (deterministic,
+  ~5k ops, buffer-reusing), and `SuperMind.think()` blends it 50/50 with the classical module Φ into the
+  metacognition "integration" cue → confidence → the EXPLORE control → the plan. The quantum register's
+  integration now causally shapes the decision (PHILOSOPHY: every system reads AND writes another). `tsc`
+  caught a real bug en route (`integratedInformation()` returns a `PhiSnapshot`, not a `number`); fixed +
+  a `metacog.confidence` finite/[0,1] bounds guard added (the coverage gap that hid it).
+- **The apex per-beat budget is now a CI LAW (commit `299e15e`).** `tests/perf-budget.test.ts` enforces
+  `SuperMind.think()` < 5 ms/beat (median-of-200) — measured ≈ 0.21 ms (≈ 0.21–0.23 ms after the Φ read),
+  so a gross structural regression (a per-beat `snapshot()` or an O(n²) faculty) trips it. The frame budget
+  now joins the unitarity / Born / PSD laws as a mechanically-pinned invariant.
+
 ---
 
 ## 8. Honest framing
