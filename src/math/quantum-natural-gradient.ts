@@ -98,6 +98,36 @@ export function naturalGradient(
   return solveSymmetric(metric, grad, ridge);
 }
 
+/**
+ * ALLOCATION-FREE 2×2 natural gradient for the per-beat HOT path (the mind's two cognition knobs,
+ * superposition + entanglement). Solves the Tikhonov-regularised symmetric system (g + λI)·x = grad for
+ * the 2×2 Fubini–Study metric g = [[g00, g01], [g01, g11]] in closed form and writes [x0, x1] into the
+ * caller's `out` (length ≥ 2). If the regularised metric is singular it falls back to the diagonal
+ * preconditioner (and to the raw gradient if even that degenerates) — finite, never NaN/∞. No allocation,
+ * so it is safe to call every cognitive beat. Equivalent to {@link naturalGradient} restricted to N=2.
+ */
+export function naturalGradient2x2(
+  g00: number,
+  g01: number,
+  g11: number,
+  grad0: number,
+  grad1: number,
+  ridge: number,
+  out: number[] | Float64Array,
+): void {
+  const a = g00 + ridge;
+  const c = g11 + ridge;
+  const b = g01;
+  const det = a * c - b * b;
+  if (Math.abs(det) < 1e-12) {
+    out[0] = a > 1e-12 ? grad0 / a : grad0;
+    out[1] = c > 1e-12 ? grad1 / c : grad1;
+    return;
+  }
+  out[0] = (c * grad0 - b * grad1) / det;
+  out[1] = (a * grad1 - b * grad0) / det;
+}
+
 /** Euclidean L2 norm of a vector — a small shared helper for natural-gradient telemetry. */
 export function vecNorm(v: ReadonlyArray<number>): number {
   let s = 0;

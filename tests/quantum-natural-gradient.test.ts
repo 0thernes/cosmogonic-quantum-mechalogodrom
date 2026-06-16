@@ -8,6 +8,7 @@
 import { describe, expect, test } from 'bun:test';
 import {
   naturalGradient,
+  naturalGradient2x2,
   solveSymmetric,
   vecDot,
   vecNorm,
@@ -131,5 +132,53 @@ describe('naturalGradient (V93)', () => {
   test('vecNorm / vecDot basics', () => {
     expect(Math.abs(vecNorm([3, 4]) - 5)).toBeLessThan(1e-12);
     expect(Math.abs(vecDot([1, 2, 3], [4, 5, 6]) - 32)).toBeLessThan(1e-12);
+  });
+});
+
+describe('naturalGradient2x2 (V93) — the allocation-free hot-path solver', () => {
+  const out: [number, number] = [0, 0];
+
+  test('identity metric ⇒ out = grad', () => {
+    naturalGradient2x2(1, 0, 1, 0.7, -0.2, 0, out);
+    expect(Math.abs(out[0] - 0.7)).toBeLessThan(1e-12);
+    expect(Math.abs(out[1] + 0.2)).toBeLessThan(1e-12);
+  });
+
+  test('diagonal metric ⇒ 1/g_ii rescale', () => {
+    naturalGradient2x2(2, 0, 4, 1, 1, 0, out);
+    expect(Math.abs(out[0] - 0.5)).toBeLessThan(1e-12);
+    expect(Math.abs(out[1] - 0.25)).toBeLessThan(1e-12);
+  });
+
+  test('SPD metric [[2,1],[1,2]], grad [1,0] ⇒ [2/3, -1/3]', () => {
+    naturalGradient2x2(2, 1, 2, 1, 0, 0, out);
+    expect(Math.abs(out[0] - 2 / 3)).toBeLessThan(1e-9);
+    expect(Math.abs(out[1] + 1 / 3)).toBeLessThan(1e-9);
+  });
+
+  test('a singular metric + ridge stays finite ((0+λ)x = grad ⇒ grad/λ)', () => {
+    naturalGradient2x2(0, 0, 0, 3, 5, 1, out);
+    expect(Math.abs(out[0] - 3)).toBeLessThan(1e-9);
+    expect(Math.abs(out[1] - 5)).toBeLessThan(1e-9);
+    expect(Number.isFinite(out[0])).toBe(true);
+    expect(Number.isFinite(out[1])).toBe(true);
+  });
+
+  test('agrees with the general N×N solver on a random SPD 2×2', () => {
+    const g00 = 1.7;
+    const g01 = 0.4;
+    const g11 = 0.9;
+    const grad: [number, number] = [0.3, -0.8];
+    naturalGradient2x2(g00, g01, g11, grad[0], grad[1], 1e-6, out);
+    const ref = naturalGradient(
+      [
+        [g00, g01],
+        [g01, g11],
+      ],
+      grad,
+      1e-6,
+    );
+    expect(Math.abs(out[0] - (ref[0] ?? 0))).toBeLessThan(1e-9);
+    expect(Math.abs(out[1] - (ref[1] ?? 0))).toBeLessThan(1e-9);
   });
 });
