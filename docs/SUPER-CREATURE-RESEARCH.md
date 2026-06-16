@@ -83,6 +83,22 @@ Compiled 2026-06-16 (research scout pass).
 
 ---
 
+## 6. World models & predictive maps — the successor representation
+
+- The **successor representation** (SR) reformulates value as expected discounted future state-occupancy,
+  M = Σ γᵗ P(sₜ | s₀) (Dayan, 1993): a predictive cache that supports fast, flexible re-planning when
+  rewards shift. The landmark neuroscience claim is that the **hippocampus encodes exactly this predictive
+  map** — place/grid fields as discounted future occupancy, not mere present location (Stachenfeld,
+  Botvinick & Gershman, 2017, _Nature Neuroscience_); human reinforcement learning shows SR-consistent
+  behavioural and neural signatures (Momennejad et al., 2017, _Nature Human Behaviour_).
+- **What Super Creature 1.1 computes:** `src/sim/successor-representation.ts` — a deterministic SR matrix
+  over the 7 plan-archetypes, learned online by the TD rule M(s,·) ← M(s,·) + α[φ(s) + γM(s′,·) − M(s,·)]
+  toward the closed form (I − γT)⁻¹, used each beat as a model-based **look-ahead** that biases plan
+  selection toward behaviour whose learned successor-states carry high value.
+- **Honesty caveat:** a tabular SR over 7 discrete plan-states — a faithful implementation of the SR
+  _algorithm_, not a claim about biological place cells. It is "model-based planning over the creature's own
+  behavioural dynamics," not a world model of the external scene.
+
 ## Honest framing (cite without overclaiming)
 
 1. **Established / peer-reviewed empirical results:** the Cogitate 2025 _Nature_ adversarial test,
@@ -104,6 +120,7 @@ Compiled 2026-06-16 (research scout pass).
 
 - Busemeyer, J. R., & Bruza, P. D. (2024). _Quantum Models of Cognition and Decision_ (2nd ed.). Cambridge University Press.
 - Cai, H., Ao, Z., Tian, C., et al. (2023). Brain organoid reservoir computing for artificial intelligence. _Nature Electronics, 6_, 1032–1039. https://doi.org/10.1038/s41928-023-01069-w
+- Dayan, P. (1993). Improving generalization for temporal difference learning: The successor representation. _Neural Computation, 5_(4), 613–624. https://doi.org/10.1162/neco.1993.5.4.613
 - Durand, E. D., Joffily, M., & Khamassi, M. (2024). A diffusion model-based approach to active inference. _IEEE FMLDS_, 75–80. https://doi.org/10.1109/fmlds63805.2024.00024
 - Farisco, M., & Changeux, J.-P. (2023). About the compatibility between the perturbational complexity index and the global neuronal workspace theory. _Neuroscience of Consciousness, 2023_(1). https://doi.org/10.1093/nc/niad016
 - Ferrante, O., Górska, U., Henin, S., et al. (Cogitate Consortium). (2025). Adversarial testing of global neuronal workspace and integrated information theories of consciousness. _Nature, 642_(8066), 133–142. https://doi.org/10.1038/s41586-025-08888-1
@@ -114,10 +131,12 @@ Compiled 2026-06-16 (research scout pass).
 - Jordan, F. D., et al. (2024). Open and remotely accessible Neuroplatform for research in wetware computing. _Frontiers in Artificial Intelligence, 7_, 1376042. https://doi.org/10.3389/frai.2024.1376042
 - Kagan, B. J., et al. (2022). In vitro neurons learn and exhibit sentience when embodied in a simulated game-world. _Neuron, 110_(23). https://doi.org/10.1016/j.neuron.2022.09.001
 - Melloni, L., Mudrik, L., Pitts, M., et al. (2023). An adversarial collaboration protocol for testing contrasting predictions of GNW and IIT. _PLOS ONE, 18_. https://doi.org/10.1371/journal.pone.0268577
+- Momennejad, I., Russek, E. M., Cheong, J. H., Botvinick, M. M., Daw, N. D., & Gershman, S. J. (2017). The successor representation in human reinforcement learning. _Nature Human Behaviour, 1_(9), 680–692. https://doi.org/10.1038/s41562-017-0180-8
 - Naccache, L., Sergent, C., & Dehaene, S. (2025). GNW theoretical framework and the adversarial testing of GNW and IIT. _Neuroscience of Consciousness, 2025_. https://doi.org/10.1093/nc/niaf037
 - Nilsen, A. S., Arena, A., & Storm, J. F. (2024). Exploring effects of anesthesia on complexity, differentiation, and integrated information in rat EEG. _Neuroscience of Consciousness, 2024_(1). https://doi.org/10.1093/nc/niae021
 - Piekarski, M. (2023). Incorporating (variational) free energy models into mechanisms. _Synthese, 202_(2). https://doi.org/10.1007/s11229-023-04292-2
 - Smirnova, L., Caffo, B., Gracias, D. H., et al. (2023). Organoid intelligence (OI): the new frontier in biocomputing and intelligence-in-a-dish. _Frontiers in Science, 1_, 1017235. https://doi.org/10.3389/fsci.2023.1017235
+- Stachenfeld, K. L., Botvinick, M. M., & Gershman, S. J. (2017). The hippocampus as a predictive map. _Nature Neuroscience, 20_(11), 1643–1653. https://doi.org/10.1038/nn.4650
 
 _Supporting / lower-confidence (verified to exist; secondary): the IIT "pseudoscience" open letter (124
 signatories, Sept 2023, PsyArXiv — a contested preprint); the Ferrante et al. (2023) Cogitate bioRxiv
