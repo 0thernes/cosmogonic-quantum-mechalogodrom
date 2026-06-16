@@ -265,13 +265,17 @@ export class SuperPanel {
       // V1.1 — the new cognition substrates: reservoir echo/novelty · active-inference free-energy +
       // belief entropy · the metacognitive executive's second-order confidence.
       // V96 — empowerment: the channel-capacity AGENCY the mind feels + the plan it judges most steering.
+      // V97 — holographic memory: the plan the VSA trace analogically recalls for the current context.
       const emp = mind.empowerment;
       const empPlan = emp.bestAction >= 0 ? (SUPER_PLANS[emp.bestAction] ?? '—') : '—';
+      const holo = mind.holographic;
+      const holoPlan = holo.recalledPlan >= 0 ? (SUPER_PLANS[holo.recalledPlan] ?? '—') : '—';
       this.id.cognition!.textContent =
         `Echo ${(mind.reservoir.echo * 100).toFixed(0)}% nov ${mind.reservoir.novelty.toFixed(2)} · ` +
         `FE ${mind.aif.freeEnergy.toFixed(2)} H${mind.aif.beliefEntropy.toFixed(2)} · ` +
         `Conf ${(mind.metacog.confidence * 100).toFixed(0)}% · ` +
-        `EMP ${(emp.empowerment * 100).toFixed(0)}%→${empPlan}`;
+        `EMP ${(emp.empowerment * 100).toFixed(0)}%→${empPlan} · ` +
+        `HOLO ${(holo.confidence * 100).toFixed(0)}%→${holoPlan}`;
     }
 
     // V48 — the self-evolution: level · stage · power · day (it grows like Vegeta/Goku).

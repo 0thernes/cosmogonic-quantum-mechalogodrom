@@ -59,6 +59,7 @@ import { TheoryOfMind } from './theory-of-mind';
 import { SuccessorRepresentation, type SuccessorSnapshot } from './successor-representation';
 import { Neuromodulation } from './neuromodulation';
 import { EmpowermentDrive, type EmpowermentSnapshot } from './empowerment';
+import { HolographicMemory, type HolographicSnapshot } from './holographic-memory';
 import type { SuperPercept, SuperPlan } from './super-creature';
 import { SUPER_PLANS } from './super-creature';
 
@@ -179,6 +180,8 @@ export interface SuperMindSnapshot {
   /** V95: the empowerment drive — Blahut–Arimoto channel capacity I(A;S′) = how much the mind can STEER its
    *  own future (a reward-free agency hunger, distinct from novelty + the active-inference epistemic term). */
   empowerment: EmpowermentSnapshot;
+  /** V97: the holographic (VSA/HRR) memory — the plan it analogically recalls for the current context. */
+  holographic: HolographicSnapshot;
 }
 
 const EMOTION_TAU = 0.12;
@@ -250,6 +253,10 @@ const EMP_VOTE_GAIN = 0.12;
 /** How strongly agency-hunger lifts curiosity toward regions the mind can actually steer. */
 const EMP_CURIOSITY_GAIN = 0.12;
 
+// ── V97 · HOLOGRAPHIC MEMORY (VSA / HRR analogical recall — Plate 1995; Kanerva 2009) ────────────────
+/** Vote for the plan the holographic trace analogically recalls for this context (bounded, on par). */
+const HRR_GAIN = 0.12;
+
 /**
  * The composite apex mind. Construct with a seeded {@link Rng}; `think` each beat. ~10k parameters
  * across the named sub-networks (see {@link paramCount}). Pure + allocation-free in steady state.
@@ -294,6 +301,8 @@ export class SuperMind {
   private readonly successor = new SuccessorRepresentation();
   /** V95: the empowerment drive — channel capacity of the mind's action→future-cell map (agency hunger). */
   private readonly empowerment: EmpowermentDrive;
+  /** V97: the holographic (VSA/HRR) compositional memory — binds (context ⊙ plan), recalls by unbinding. */
+  private readonly holographic: HolographicMemory;
   readonly paramCount: number;
 
   // ── Reusable scratch (no per-beat allocation) ──
@@ -386,6 +395,9 @@ export class SuperMind {
     // V95: the empowerment drive — its own XOR-derived child stream for the frozen LSH hyperplanes (no draw
     // on the weight stream ⇒ every sub-network keeps bit-identical weights, determinism intact).
     this.empowerment = new EmpowermentDrive(mulberry32((childSeed ^ 0x27d4eb2f) >>> 0 || 1));
+    // V97: the holographic memory — its own XOR-derived child stream for the frozen codebook atoms (no draw
+    // on the weight stream ⇒ determinism intact).
+    this.holographic = new HolographicMemory(mulberry32((childSeed ^ 0x85ebca6b) >>> 0 || 1));
   }
 
   get offspringCount(): number {
@@ -681,6 +693,14 @@ export class SuperMind {
       if (empPlan) drives[empPlan] += EMP_VOTE_GAIN * this.empowerment.empowerment;
     }
 
+    // ── V97 · HOLOGRAPHIC MEMORY ── recall the plan the VSA trace bound to contexts like this one (an
+    // analogical prior: "in situations like this, I chose …") and give it a bounded vote by recall confidence.
+    const hrrPlan = this.holographic.recall(s);
+    if (hrrPlan >= 0) {
+      const hp = SUPER_PLANS[hrrPlan];
+      if (hp) drives[hp] += HRR_GAIN * this.holographic.confidence;
+    }
+
     // ── V92 · METACOGNITIVE EXECUTIVE ── before committing, the mind estimates its CONFIDENCE in the
     // decision from four reliability cues — the provisional decision margin, integration (Φ, last beat),
     // belief certainty (1 − active-inference belief entropy), and calm (1 − surprise) — then spends it as
@@ -725,6 +745,8 @@ export class SuperMind {
     // V95: credit LAST beat's action → THIS beat's latent cell and refresh the empowerment estimate the next
     // beat's curiosity + plan vote will read. Drives no rng ⇒ the beat stream stays bit-reproducible.
     this.empowerment.update(this.latent, SUPER_PLANS.indexOf(best), surprise);
+    // V97: bind the committed (context ⊙ plan) into the holographic trace so next time a like context recalls it.
+    this.holographic.observe(SUPER_PLANS.indexOf(best), s);
 
     // ── V89 · GWT IGNITION ── the winning plan-coalition is "broadcast" when it crosses the access
     // threshold AND dominates the runner-up (a near-all-or-none event). Persisted so it gates the NEXT
@@ -801,6 +823,7 @@ export class SuperMind {
       criticality: this.criticality.snapshot(),
       successor: this.successor.snapshot(),
       empowerment: this.empowerment.snapshot(),
+      holographic: this.holographic.snapshot(),
     };
   }
 }
