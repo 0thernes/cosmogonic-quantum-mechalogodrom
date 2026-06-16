@@ -9,6 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **SUPER CREATURE 1.1 — the Holographic Memory: a Vector Symbolic Architecture (VSA/HRR).** A new
+  deterministic faculty (`src/sim/holographic-memory.ts`) gives the apex mind genuine **compositional,
+  analogical** memory — the neuro-symbolic bridge (Plate 1995; Kanerva 2009; Gayler 2003; Kleyko et al.
+  2022). On bipolar {−1,+1}⁵¹² hypervectors it BINDs (element-wise product, exactly self-inverse), BUNDLEs
+  (majority sign), and CLEANs UP (nearest-atom cosine). Each beat it encodes the situation into a context
+  hypervector, binds it with the committed plan, and folds (context ⊙ plan) into a decaying holographic
+  trace; to recall it unbinds the trace by the current context and cleans up against the 7 plan atoms — an
+  analogical prior ("in situations like this, I chose …") that casts a bounded plan vote. Surfaced as the
+  **HOLO %→plan** board readout + a `SuperMindSnapshot.holographic` field. 7 closed-form tests (binding
+  self-inverse; near-orthogonality; bundling similarity; cleanup; associative recall; determinism;
+  bounded+NaN-free). Grounded in [docs/SUPER-CREATURE-RESEARCH.md](./docs/SUPER-CREATURE-RESEARCH.md) §8.
 - **SUPER CREATURE 1.1 — the Empowerment Drive: information-theoretic agency hunger.** A new deterministic
   faculty (`src/sim/empowerment.ts`) gives the apex mind a third intrinsic motivation, distinct from
   novelty/surprise and the active-inference epistemic term: each beat it estimates **empowerment** — the

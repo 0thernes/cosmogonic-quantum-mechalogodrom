@@ -124,6 +124,26 @@ Compiled 2026-06-16 (research scout pass).
   claim of true n-step empowerment over a learned world model. It measures "how much this beat's plan-choice
   shapes the creature's own next coarse state," not control over the external scene.
 
+## 8. Vector Symbolic Architectures / holographic memory — compositional binding
+
+- **Vector Symbolic Architectures** (VSA) / **Holographic Reduced Representations** (HRR) encode symbolic
+  structure in distributed high-dimensional vectors via three algebraic operations — BIND (tie a role to a
+  filler), BUNDLE (superpose a set), PERMUTE (order) — plus a cleanup memory that snaps noisy vectors back to
+  clean atoms (Plate, 1995; Kanerva, 2009; Gayler, 2003). Because random high-D vectors are near-orthogonal,
+  many bindings superpose in ONE vector and are recovered by unbinding — a candidate bridge between
+  connectionist substrate and symbolic structure, and an active neuromorphic-computing frontier (Kleyko,
+  Rachkovskij, Osipov & Rahimi, 2022, _ACM Computing Surveys_).
+- **What Super Creature 1.1 computes:** `src/sim/holographic-memory.ts` — the MAP-VSA model on bipolar
+  {−1,+1}⁵¹² hypervectors: binding is the element-wise product (exactly self-inverse, a⊙a = 1⃗), bundling is
+  the majority sign, cleanup is nearest-atom cosine. Each beat the mind encodes its situation into a context
+  hypervector (a sign-bundle of feature atoms), binds it with the committed plan, and folds (context ⊙ plan)
+  into a decaying holographic trace; to recall it unbinds the trace by the current context and cleans up
+  against the 7 plan atoms — an analogical prior ("in situations like this, I chose …") that biases the next
+  plan.
+- **Honesty caveat:** a faithful implementation of the VSA/HRR _algebra_ over 7 plan-atoms and an 8-feature
+  context — a real holographic associative memory, not a claim of human-level compositional reasoning. It
+  recalls "the plan I bound to contexts like this," not arbitrary symbolic inference.
+
 ## Honest framing (cite without overclaiming)
 
 1. **Established / peer-reviewed empirical results:** the Cogitate 2025 _Nature_ adversarial test,
@@ -152,11 +172,14 @@ Compiled 2026-06-16 (research scout pass).
 - Farisco, M., & Changeux, J.-P. (2023). About the compatibility between the perturbational complexity index and the global neuronal workspace theory. _Neuroscience of Consciousness, 2023_(1). https://doi.org/10.1093/nc/niad016
 - Ferrante, O., Górska, U., Henin, S., et al. (Cogitate Consortium). (2025). Adversarial testing of global neuronal workspace and integrated information theories of consciousness. _Nature, 642_(8066), 133–142. https://doi.org/10.1038/s41586-025-08888-1
 - Friston, K. (2010). The free-energy principle: a unified brain theory? _Nature Reviews Neuroscience, 11_, 127–138. https://doi.org/10.1038/nrn2787
+- Gayler, R. W. (2003). Vector symbolic architectures answer Jackendoff's challenges for cognitive neuroscience. In _Proceedings of the ICCS/ASCS Joint International Conference on Cognitive Science_, 133–138. https://arxiv.org/abs/cs/0412059
 - Hanson, J. R., & Walker, S. I. (2023). On the non-uniqueness problem in integrated information theory. _Neuroscience of Consciousness, 2023_(1). https://doi.org/10.1093/nc/niad014
 - Huang, J.-Q., Epping, G. P., & Trueblood, J. S. (2025). An overview of the quantum cognition research program. _Psychonomic Bulletin & Review, 32_(6), 2507–2556. https://doi.org/10.3758/s13423-025-02675-9
 - Jang, H., Mashour, G. A., & Hudetz, A. G. (2024). Measuring the dynamic balance of integration and segregation underlying consciousness, anesthesia, and sleep. _Nature Communications, 15_(1). https://doi.org/10.1038/s41467-024-53299-x
 - Jordan, F. D., et al. (2024). Open and remotely accessible Neuroplatform for research in wetware computing. _Frontiers in Artificial Intelligence, 7_, 1376042. https://doi.org/10.3389/frai.2024.1376042
 - Kagan, B. J., et al. (2022). In vitro neurons learn and exhibit sentience when embodied in a simulated game-world. _Neuron, 110_(23). https://doi.org/10.1016/j.neuron.2022.09.001
+- Kanerva, P. (2009). Hyperdimensional computing: An introduction to computing in distributed representation with high-dimensional random vectors. _Cognitive Computation, 1_(2), 139–159. https://doi.org/10.1007/s12559-009-9009-8
+- Kleyko, D., Rachkovskij, D. A., Osipov, E., & Rahimi, A. (2022). A survey on hyperdimensional computing aka vector symbolic architectures, Part I: Models and data transformations. _ACM Computing Surveys, 55_(6), 1–40. https://doi.org/10.1145/3538531
 - Klyubin, A. S., Polani, D., & Nehaniv, C. L. (2005). All else being equal be empowered. In _Advances in Artificial Life (ECAL 2005)_, LNCS 3630, 744–753. https://doi.org/10.1007/11553090_75
 - Levy, A., Allievi, A., & Konidaris, G. (2024). Latent-predictive empowerment: Measuring empowerment without a simulator. _arXiv:2410.11155._ https://arxiv.org/abs/2410.11155
 - Lidayan, A., Du, Y., Kosoy, E., Rufova, M., Abbeel, P., & Gopnik, A. (2025). Intrinsically-motivated humans and agents in open-world exploration. _arXiv:2503.23631._ https://arxiv.org/abs/2503.23631
@@ -165,6 +188,7 @@ Compiled 2026-06-16 (research scout pass).
 - Naccache, L., Sergent, C., & Dehaene, S. (2025). GNW theoretical framework and the adversarial testing of GNW and IIT. _Neuroscience of Consciousness, 2025_. https://doi.org/10.1093/nc/niaf037
 - Nilsen, A. S., Arena, A., & Storm, J. F. (2024). Exploring effects of anesthesia on complexity, differentiation, and integrated information in rat EEG. _Neuroscience of Consciousness, 2024_(1). https://doi.org/10.1093/nc/niae021
 - Piekarski, M. (2023). Incorporating (variational) free energy models into mechanisms. _Synthese, 202_(2). https://doi.org/10.1007/s11229-023-04292-2
+- Plate, T. A. (1995). Holographic reduced representations. _IEEE Transactions on Neural Networks, 6_(3), 623–641. https://doi.org/10.1109/72.377968
 - Salge, C., Glackin, C., & Polani, D. (2014). Empowerment — An introduction. In M. Prokopenko (Ed.), _Guided Self-Organization: Inception_ (pp. 67–114). Springer. https://doi.org/10.1007/978-3-642-53734-9_4
 - Smirnova, L., Caffo, B., Gracias, D. H., et al. (2023). Organoid intelligence (OI): the new frontier in biocomputing and intelligence-in-a-dish. _Frontiers in Science, 1_, 1017235. https://doi.org/10.3389/fsci.2023.1017235
 - Stachenfeld, K. L., Botvinick, M. M., & Gershman, S. J. (2017). The hippocampus as a predictive map. _Nature Neuroscience, 20_(11), 1643–1653. https://doi.org/10.1038/nn.4650
