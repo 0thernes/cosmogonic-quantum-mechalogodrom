@@ -53,6 +53,7 @@ import { EshkolQrng, type EshkolQrngSnapshot } from '../math/eshkol-qrng';
 import { SpinGlass, type SpinSnapshot } from './spin-glass';
 import { Reservoir, type ReservoirSnapshot } from './reservoir';
 import { ActiveInference, AIF_OBS, type ActiveInferenceSnapshot } from './active-inference';
+import { Metacognition, type MetacognitionSnapshot } from './metacognition';
 import type { SuperPercept, SuperPlan } from './super-creature';
 import { SUPER_PLANS } from './super-creature';
 
@@ -164,6 +165,8 @@ export interface SuperMindSnapshot {
   reservoir: ReservoirSnapshot;
   /** V1.1: the active-inference free-energy core (Friston FEP) — belief, free energy, expected free energy. */
   aif: ActiveInferenceSnapshot;
+  /** V1.1 (V92): the metacognitive executive — a Higher-Order confidence in the decision + cognitive control. */
+  metacog: MetacognitionSnapshot;
 }
 
 const EMOTION_TAU = 0.12;
@@ -221,6 +224,10 @@ const PLAN_OBS: Record<SuperPlan, number[]> = {
 /** The plan observations in {@link SUPER_PLANS} order, so the EFE index i ↔ SUPER_PLANS[i]. */
 const PLAN_OBS_ARR: number[][] = SUPER_PLANS.map((p) => PLAN_OBS[p]);
 
+// ── V92 · METACOGNITIVE EXECUTIVE (Higher-Order Theory of consciousness) ──────────────────────────
+/** Low metacognitive confidence opens an exploration drive (bounded) — uncertainty ⇒ seek information. */
+const METACOG_EXPLORE_GAIN = 0.18;
+
 /**
  * The composite apex mind. Construct with a seeded {@link Rng}; `think` each beat. ~10k parameters
  * across the named sub-networks (see {@link paramCount}). Pure + allocation-free in steady state.
@@ -251,6 +258,9 @@ export class SuperMind {
   private readonly reservoir: Reservoir;
   /** V1.1: the active-inference free-energy core — Bayesian world-belief + expected-free-energy planning. */
   private readonly aif: ActiveInference;
+  /** V92: the metacognitive executive — reads the substrates' reliability into a second-order confidence
+   *  (no random weights ⇒ it draws nothing from the seed stream; constructed inline). */
+  private readonly metacog = new Metacognition();
   readonly paramCount: number;
 
   // ── Reusable scratch (no per-beat allocation) ──
@@ -530,7 +540,7 @@ export class SuperMind {
     obs[3] = s[6] * 2 - 1; // rival near
     obs[4] = novelty * 2 - 1; // novelty
     obs[5] = s[4] * 2 - 1; // wealth (relative)
-    this.aif.perceive(obs);
+    const aifPerc = this.aif.perceive(obs);
     this.aif.expectedFreeEnergy(PLAN_OBS_ARR, this.aifG);
 
     // ── decode drives ──
@@ -566,6 +576,32 @@ export class SuperMind {
       const plan = SUPER_PLANS[i];
       if (plan) drives[plan] += AIF_GAIN * ((gMax - (this.aifG[i] ?? 0)) / gSpan);
     }
+
+    // ── V92 · METACOGNITIVE EXECUTIVE ── before committing, the mind estimates its CONFIDENCE in the
+    // decision from four reliability cues — the provisional decision margin, integration (Φ, last beat),
+    // belief certainty (1 − active-inference belief entropy), and calm (1 − surprise) — then spends it as
+    // control: low confidence opens an exploration drive (resolve the uncertainty) BEFORE the final
+    // argmax; high confidence simply lets the leading plan stand (commit / exploit).
+    let m1 = -Infinity;
+    let m2 = -Infinity;
+    for (const k of SUPER_PLANS) {
+      const d = drives[k];
+      if (d > m1) {
+        m2 = m1;
+        m1 = d;
+      } else if (d > m2) {
+        m2 = d;
+      }
+    }
+    const decisionMargin = m1 > 1e-6 ? clamp01((m1 - m2) / m1) : 0;
+    const confidence = this.metacog.update(
+      decisionMargin,
+      this.phi,
+      aifPerc.beliefEntropy,
+      surprise,
+    );
+    drives.EXPLORE += METACOG_EXPLORE_GAIN * (1 - confidence) * (1 - s[1]);
+
     let best: SuperPlan = 'REST';
     let bestScore = -Infinity;
     let runnerUp = -Infinity;
@@ -589,9 +625,10 @@ export class SuperMind {
     this.ignition += IGNITION_TAU * (access * margin - this.ignition);
     this.cons.ignition = this.ignition;
 
-    // ── V89 · IIT Φ-PROXY ── the participation/coherence ratio of the named module activations: 1 when
-    // the parts move as one (integrated), 1/M when they act independently (segregated). A TRACTABLE
-    // surrogate — true Φ is intractable + non-unique (see docs/SUPER-CREATURE-RESEARCH.md).
+    // ── V89 · IIT Φ-PROXY ── the participation/coherence ratio pr = (Σxᵢ)²/(M·Σxᵢ²) ∈ [0,1] of the named
+    // module activations: 1 when the parts move as one (integrated), ≈1/M when one dominates, → 0 when they
+    // cancel (anti-correlated). Rescaled so the ~1/M "independent" baseline maps to 0; sub-baseline values
+    // clamp to 0. A TRACTABLE surrogate — true Φ is intractable + non-unique (see SUPER-CREATURE-RESEARCH.md).
     const mods = this.phiMods;
     mods[0] = mean(this.latent, LATENT);
     mods[1] = mean(this.imagined, LATENT);
@@ -651,6 +688,7 @@ export class SuperMind {
       spin: this.spin.snapshot(),
       reservoir: this.reservoir.snapshot(),
       aif: this.aif.snapshot(),
+      metacog: this.metacog.snapshot(),
     };
   }
 }

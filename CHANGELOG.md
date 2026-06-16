@@ -9,6 +9,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **SUPER CREATURE 1.1 — the cognitive-architecture expansion: five real theories of mind, wired in.** On
+  top of the consciousness-metrics layer, three more substrates now run inside the apex mind each beat,
+  every one deterministic, allocation-disciplined, and unit-tested:
+  - **Echo-state Reservoir** (`src/sim/reservoir.ts`) — a 64-node fixed recurrent network rescaled below the
+    spectral radius (the echo-state property), giving the mind genuine temporal/dynamical memory beyond the
+    scalar ring, plus a principled novelty signal that sharpens curiosity. The reservoir-computing
+    _algorithm_ behind physical/organoid "wet computing" (not wetware — see SUPER-CREATURE-RESEARCH.md).
+  - **Active Inference / Free-Energy core** (`src/sim/active-inference.ts`) — discrete active inference
+    (Friston's FEP): a Bayesian belief over 8 latent situations that minimises variational free energy F,
+    then scores every plan by its **expected** free energy G — epistemic curiosity (information gain) traded
+    against pragmatic value (preference) under one principle.
+  - **Metacognitive Executive** (`src/sim/metacognition.ts`) — a Higher-Order layer that reads the other
+    substrates' reliability into one second-order **confidence** in the decision, then spends it as
+    cognitive control: low confidence opens an exploration drive (resolve the uncertainty), high confidence
+    lets the leading plan commit. Surfaced as the **Confidence** meter + a **Cognition** row (reservoir echo
+    · free energy · confidence) on the SuperCreature board.
+  - Together with the GWT **ignition** and the IIT **Φ** proxy below, the apex creature now spans five
+    distinct scientific theories of mind — Global Workspace · Integrated Information · the Free Energy
+    Principle · reservoir/temporal dynamics · Higher-Order metacognition — grounded with real 2023–2026
+    citations in [docs/SUPER-CREATURE-RESEARCH.md](./docs/SUPER-CREATURE-RESEARCH.md).
 - **SUPER CREATURE 1.1 — the consciousness-metrics layer (V89).** The apex mind now measures itself against
   the two leading _scientific_ theories of consciousness each beat, both deterministic and unit-tested,
   each a live scalar computed from its own activations:

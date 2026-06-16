@@ -165,6 +165,7 @@ export class SuperPanel {
     this.id.wallet = idRow(id, 'Wallet', doc);
     this.id.brain = idRow(id, 'Conscious', doc); // V46: the live ~10k-param composite mind
     this.id.substrate = idRow(id, 'Substrate', doc); // V84: the ported Tsotchke subsymbolic substrates
+    this.id.cognition = idRow(id, 'Cognition', doc); // V1.1: reservoir · active-inference · metacognition
     this.id.power = idRow(id, 'Power', doc); // V48: the evolution — level / stage / power / day
 
     const bars = panel.querySelector('[data-bars]') as HTMLElement;
@@ -184,6 +185,7 @@ export class SuperPanel {
     // V89 — Super Creature 1.1: the two leading SCIENTIFIC theories of consciousness, measured live.
     this.meter.ignition = bar(bars, 'Ignition', '#ff7a45', doc); // Global Workspace broadcast (GNW)
     this.meter.phi = bar(bars, 'Φ integ', '#5ad1c4', doc); // Integrated-Information proxy (IIT)
+    this.meter.confidence = bar(bars, 'Confidence', '#ffa3d1', doc); // V92 · metacognitive executive (HOT)
   }
 
   get isOpen(): boolean {
@@ -249,6 +251,7 @@ export class SuperPanel {
       this.setBar('novelty', k.novelty);
       this.setBar('ignition', k.ignition ?? 0); // V89 · GWT broadcast
       this.setBar('phi', k.phi ?? 0); // V89 · IIT Φ proxy
+      this.setBar('confidence', mind.metacog?.confidence ?? 0); // V92 · metacognitive confidence (HOT)
       // V84 — the three ported Tsotchke substrates the apex psyche RUNS on: the Eshkol qubit-RNG it
       // collapses thoughts through, the QGTL geometry (curvature of its thought-space), and the
       // spin-glass instinct (the behavioural archetype its Hopfield/Ising lattice recalled this beat).
@@ -259,6 +262,12 @@ export class SuperPanel {
         `Eshkol H${mind.eshkol.entropyEstimate.toFixed(2)} · ` +
         `QGT vol ${geo.scalar.toFixed(2)} κ${geo.curvature.toFixed(3)} · ` +
         `Spin→${instinct} ${(sp.bestOverlap * 100).toFixed(0)}%`;
+      // V1.1 — the new cognition substrates: reservoir echo/novelty · active-inference free-energy +
+      // belief entropy · the metacognitive executive's second-order confidence.
+      this.id.cognition!.textContent =
+        `Echo ${(mind.reservoir.echo * 100).toFixed(0)}% nov ${mind.reservoir.novelty.toFixed(2)} · ` +
+        `FE ${mind.aif.freeEnergy.toFixed(2)} H${mind.aif.beliefEntropy.toFixed(2)} · ` +
+        `Conf ${(mind.metacog.confidence * 100).toFixed(0)}%`;
     }
 
     // V48 — the self-evolution: level · stage · power · day (it grows like Vegeta/Goku).

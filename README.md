@@ -341,7 +341,22 @@ full gate with same-seed determinism preserved. The major arcs:
   ([Ferrante et al., 2025, _Nature_](https://doi.org/10.1038/s41586-025-08888-1)),
   organoid "wet computing", active inference and the quantum-cognition program — is
   catalogued with citations in
-  [docs/SUPER-CREATURE-RESEARCH.md](./docs/SUPER-CREATURE-RESEARCH.md). **965 tests green.**
+  [docs/SUPER-CREATURE-RESEARCH.md](./docs/SUPER-CREATURE-RESEARCH.md).
+- **SUPER CREATURE 1.1 — the cognitive-architecture expansion (five theories of mind)** — three more real,
+  deterministic, unit-tested substrates now run inside the apex mind each beat, alongside the GWT ignition
+  and IIT Φ above: an **echo-state Reservoir** ([src/sim/reservoir.ts](./src/sim/reservoir.ts)) — a 64-node
+  recurrent network rescaled below its spectral radius (the echo-state property) for genuine temporal memory
+  - a novelty signal that sharpens curiosity (the reservoir-computing _algorithm_ behind "wet computing",
+    not wetware); an **Active-Inference free-energy core**
+    ([src/sim/active-inference.ts](./src/sim/active-inference.ts)) — discrete active inference (Friston's FEP):
+    a Bayesian belief over 8 latent situations minimising variational free energy F, then plan choice by
+    **expected** free energy G (epistemic curiosity + pragmatic goal-seeking); and a **Metacognitive
+    Executive** ([src/sim/metacognition.ts](./src/sim/metacognition.ts)) — a Higher-Order layer that folds the
+    substrates' reliability into one second-order **confidence** and spends it as cognitive control (low
+    confidence ⇒ explore, high ⇒ commit), shown as the **Confidence** meter + a **Cognition** board row. The
+    apex creature now spans **Global Workspace · Integrated Information · the Free Energy Principle · reservoir
+    dynamics · Higher-Order metacognition** — five distinct scientific theories of mind, each grounded in
+    [docs/SUPER-CREATURE-RESEARCH.md](./docs/SUPER-CREATURE-RESEARCH.md).
 
 Work on this codebase is governed by the three **master files** in
 [masters/](./masters/) — Executor, Architect, Physicist — bound by
