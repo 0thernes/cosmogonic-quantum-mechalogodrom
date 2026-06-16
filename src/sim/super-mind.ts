@@ -266,6 +266,10 @@ export class SuperMind {
   private readonly spin: SpinGlass;
   /** Dedicated seeded stream for the instinct's Metropolis dynamics (independent of the beat stream). */
   private readonly spinDrive: Rng;
+  /** Dedicated seeded stream for the Creativity-Machine perturbation -- a true PRNG so the noise
+   *  quality stays constant over arbitrarily long runs (a sin-hash on a growing counter decorrelates
+   *  as the float argument loses precision). Seeded, so it still replays bit-for-bit from the seed. */
+  private readonly noiseRng: Rng;
   /** V1.1: the echo-state reservoir the mind steps with its latent each beat (short-term temporal memory). */
   private readonly reservoir: Reservoir;
   /** V1.1: the active-inference free-energy core — Bayesian world-belief + expected-free-energy planning. */
@@ -312,7 +316,6 @@ export class SuperMind {
   private phi = 0; // V89: persisted Integrated-Information proxy (EMA)
   private predictedSalience = 0;
   private offspring = 0;
-  private noiseSeed = 1; // deterministic perturbation counter (Creativity-Machine "randomness")
   private cons: Consciousness = {
     dreaming: 0,
     hallucinating: 0,
@@ -355,15 +358,16 @@ export class SuperMind {
     // V84: that child stream is now the Eshkol qubit-RNG itself (ported gate-for-gate from
     // tsotchke/quantum_rng), so the apex psyche's "thought collapse" is literally measured through the
     // Eshkol generator — still fully reproducible from the world seed (Eshkol is seeded, deterministic).
-    // One child seed (a SINGLE rng draw — zero stream shift vs. the prior code) fans out to the three
-    // subsymbolic substrates: the Eshkol qubit-RNG, the quantum register it samples through, and the
-    // spin-glass instinct. All seeded ⇒ the whole apex psyche still replays bit-for-bit from the seed.
+    // One child seed (a SINGLE rng draw — zero stream shift vs. the prior code) fans out to the four
+    // subsymbolic substrates: the Eshkol qubit-RNG, the quantum register it samples through, the
+    // spin-glass instinct, and the Creativity-Machine perturbation stream. All seeded ⇒ the whole apex psyche still replays bit-for-bit from the seed.
     const childSeed = (Math.floor(rng() * 0xffffffff) ^ 0x9e3779b9) >>> 0 || 1;
     this.eshkol = new EshkolQrng(mulberry32(childSeed));
     this.qmind = new QuantumMind(this.eshkol.stream());
     this.spin = new SpinGlass(SPIN_SIZE, mulberry32((childSeed ^ 0x5bd1e995) >>> 0 || 1));
     this.spin.imprint(SPIN_ARCHETYPES);
     this.spinDrive = mulberry32((childSeed ^ 0x2545f491) >>> 0 || 1);
+    this.noiseRng = mulberry32((childSeed ^ 0x1f123bb5) >>> 0 || 1);
     this.reservoir = new Reservoir(mulberry32((childSeed ^ 0x119de1f3) >>> 0 || 1));
     // V1.1: the active-inference free-energy core, on its own XOR-derived seed (no extra rng draw). Its
     // preference C (want energy/prey/wealth, avoid threat/rivals) is the creature's standing "goal".
@@ -377,12 +381,10 @@ export class SuperMind {
     return this.offspring;
   }
 
-  /** Deterministic, reproducible noise into `this.noise` (the Creativity-Machine perturbation). */
+  /** Deterministic, reproducible noise into `this.noise` (the Creativity-Machine perturbation). A
+   *  dedicated seeded PRNG stream -- perturbation quality stays constant no matter how long the run. */
   private fillNoise(): void {
-    for (let i = 0; i < NOISE; i++) {
-      const x = Math.sin((this.noiseSeed++ + i * 7.13) * 12.9898) * 43758.5453;
-      this.noise[i] = (x - Math.floor(x)) * 2 - 1;
-    }
+    for (let i = 0; i < NOISE; i++) this.noise[i] = this.noiseRng() * 2 - 1;
   }
 
   /** One full cognitive beat. Pure; returns the apex intent (drives + consciousness + quantum). */
