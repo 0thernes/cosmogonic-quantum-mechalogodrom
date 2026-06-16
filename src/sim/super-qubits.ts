@@ -39,6 +39,7 @@ import { quantumGeometricTensor } from '../math/quantum-geometry';
 import { integratedInformation } from './integrated-information';
 import { quantumCoherence } from '../math/quantum-coherence';
 import { naturalGradient2x2 } from '../math/quantum-natural-gradient';
+import { quantumMagic } from '../math/quantum-magic';
 import type { Rng } from '../math/rng';
 
 /** Register width — 6 qubits → 64 basis amplitudes: a rich BRAIN view that stays trivially in budget. */
@@ -157,6 +158,13 @@ export interface QubitSnapshot {
   coherenceRel: number;
   /** V93: quantum-natural-gradient self-optimization — the mind descending its own thought-geometry. */
   selfOpt: SelfOptReadout;
+  /** SC 1.1: quantum "magic" — stabilizer 2-Rényi entropy M₂ ≥ 0 (non-stabilizerness); 0 = a stabilizer
+   *  (Clifford-reachable) state. The resource that makes the thought genuinely hard to simulate classically. */
+  magic: number;
+  /** {@link magic} normalized by log₂(d) ∈ [0,1) — how deep into the non-(classically-)simulable it sits. */
+  magicNorm: number;
+  /** Whether the register is (numerically) a stabilizer state — zero magic. */
+  stabilizer: boolean;
 }
 
 const clamp01 = (v: number): number => (v < 0 ? 0 : v > 1 ? 1 : v);
@@ -488,6 +496,9 @@ export class QuantumMind {
     // from the live amplitudes captured above (this.bufRe/Im) — BEFORE the QGT perturbs the register.
     const info = integratedInformation(this.bufRe, this.bufIm, QMIND_QUBITS);
     const coh = quantumCoherence(this.bufRe, this.bufIm);
+    // SC 1.1: quantum "magic" (stabilizer Rényi entropy) — non-stabilizerness of the live register,
+    // read from the captured amplitudes BEFORE the QGT perturbs the circuit.
+    const mag = quantumMagic(this.bufRe, this.bufIm, QMIND_QUBITS);
     const geometry = this.geometricMetric();
     return {
       qubits: QMIND_QUBITS,
@@ -512,6 +523,9 @@ export class QuantumMind {
       phiMip: info.mipBits,
       coherenceL1: coh.l1Norm,
       coherenceRel: coh.relEntropyNorm,
+      magic: mag.magic,
+      magicNorm: mag.magicNorm,
+      stabilizer: mag.stabilizer,
       selfOpt: { ...this.so },
     };
   }

@@ -270,4 +270,20 @@ describe('QuantumMind (V75) — the simulated-qubit cognition layer', () => {
     ent.evolve(aspects(1, 0), LATENT); // full controlled-RY ring ⇒ a globally entangled register
     expect(ent.snapshot().phi).toBeGreaterThan(ssep.phi); // genuine min-cut integration emerges
   });
+
+  // ── SC 1.1: the snapshot reports quantum "magic" (stabilizer Rényi entropy) — non-stabilizerness,
+  // the resource that makes a thought hard to simulate classically (closed forms in quantum-magic.test). ──
+  test('SC 1.1 — snapshot magic is bounded, finite, and deterministic', () => {
+    const a = new QuantumMind(mulberry32(31));
+    const b = new QuantumMind(mulberry32(31));
+    a.evolve(aspects(0.6, 0.5), LATENT);
+    b.evolve(aspects(0.6, 0.5), LATENT);
+    const sa = a.snapshot();
+    expect(sa.magic).toBeGreaterThanOrEqual(0);
+    expect(Number.isFinite(sa.magic)).toBe(true);
+    expect(sa.magicNorm).toBeGreaterThanOrEqual(0);
+    expect(sa.magicNorm).toBeLessThanOrEqual(1);
+    expect(typeof sa.stabilizer).toBe('boolean');
+    expect(sa.magic).toBe(b.snapshot().magic); // pure function of the amplitudes ⇒ deterministic
+  });
 });
