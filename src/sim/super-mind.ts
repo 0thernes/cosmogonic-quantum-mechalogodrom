@@ -58,6 +58,7 @@ import { Criticality, type CriticalitySnapshot } from './criticality';
 import { TheoryOfMind } from './theory-of-mind';
 import { SuccessorRepresentation, type SuccessorSnapshot } from './successor-representation';
 import { Neuromodulation } from './neuromodulation';
+import { EmpowermentDrive, type EmpowermentSnapshot } from './empowerment';
 import type { SuperPercept, SuperPlan } from './super-creature';
 import { SUPER_PLANS } from './super-creature';
 
@@ -175,6 +176,9 @@ export interface SuperMindSnapshot {
   criticality: CriticalitySnapshot;
   /** V1.1: the successor-representation predictive map — model-based look-ahead over the plan dynamics. */
   successor: SuccessorSnapshot;
+  /** V95: the empowerment drive — Blahut–Arimoto channel capacity I(A;S′) = how much the mind can STEER its
+   *  own future (a reward-free agency hunger, distinct from novelty + the active-inference epistemic term). */
+  empowerment: EmpowermentSnapshot;
 }
 
 const EMOTION_TAU = 0.12;
@@ -240,6 +244,12 @@ const METACOG_EXPLORE_GAIN = 0.18;
 /** How strongly the model-based look-ahead value biases plan selection (bounded, on par with the others). */
 const SR_GAIN = 0.12;
 
+// ── V95 · EMPOWERMENT DRIVE (channel-capacity intrinsic motivation — Klyubin/Polani/Nehaniv 2005) ──────
+/** Vote for the most-empowering plan (the highest channel-capacity contribution; bounded, on par). */
+const EMP_VOTE_GAIN = 0.12;
+/** How strongly agency-hunger lifts curiosity toward regions the mind can actually steer. */
+const EMP_CURIOSITY_GAIN = 0.12;
+
 /**
  * The composite apex mind. Construct with a seeded {@link Rng}; `think` each beat. ~10k parameters
  * across the named sub-networks (see {@link paramCount}). Pure + allocation-free in steady state.
@@ -282,6 +292,8 @@ export class SuperMind {
   /** V1.1: the successor-representation predictive map — model-based look-ahead over its own plan dynamics
    *  (no random weights ⇒ it draws nothing from the seed stream; identity-initialised). */
   private readonly successor = new SuccessorRepresentation();
+  /** V95: the empowerment drive — channel capacity of the mind's action→future-cell map (agency hunger). */
+  private readonly empowerment: EmpowermentDrive;
   readonly paramCount: number;
 
   // ── Reusable scratch (no per-beat allocation) ──
@@ -371,6 +383,9 @@ export class SuperMind {
     this.aif.setPreference([1, -1, 0.6, -0.4, 0.3, 0.5]);
     // V94: theory of mind — its own XOR-derived child stream (no extra rng draw ⇒ determinism intact).
     this.tom = new TheoryOfMind(mulberry32((childSeed ^ 0xc2b2ae35) >>> 0 || 1));
+    // V95: the empowerment drive — its own XOR-derived child stream for the frozen LSH hyperplanes (no draw
+    // on the weight stream ⇒ every sub-network keeps bit-identical weights, determinism intact).
+    this.empowerment = new EmpowermentDrive(mulberry32((childSeed ^ 0x27d4eb2f) >>> 0 || 1));
   }
 
   get offspringCount(): number {
@@ -580,7 +595,8 @@ export class SuperMind {
       unit(act[7] ?? 0) +
         0.3 * novelty +
         0.15 * this.reservoir.novelty +
-        0.12 * (1 - this.criticality.proximity), // off-criticality ⇒ explore to recover the edge of chaos
+        0.12 * (1 - this.criticality.proximity) + // off-criticality ⇒ explore to recover the edge of chaos
+        EMP_CURIOSITY_GAIN * this.empowerment.empowerment, // agency hunger ⇒ seek regions it can steer
     );
 
     // plan (argmax over drive scores; same vocabulary as the V31 mind)
@@ -656,6 +672,15 @@ export class SuperMind {
       if (plan) drives[plan] += SR_GAIN * (((this.srValue[i] ?? 0) - vMin) / vSpan);
     }
 
+    // ── V95 · EMPOWERMENT ── vote for the plan whose action-row currently steers the future the MOST
+    // (highest channel-capacity contribution), scaled by how empowered the mind feels — a bounded
+    // agency-hunger vote (last beat's estimate; the drive is refreshed at the end of this beat).
+    const empBest = this.empowerment.bestAction();
+    if (empBest >= 0) {
+      const empPlan = SUPER_PLANS[empBest];
+      if (empPlan) drives[empPlan] += EMP_VOTE_GAIN * this.empowerment.empowerment;
+    }
+
     // ── V92 · METACOGNITIVE EXECUTIVE ── before committing, the mind estimates its CONFIDENCE in the
     // decision from four reliability cues — the provisional decision margin, integration (Φ, last beat),
     // belief certainty (1 − active-inference belief entropy), and calm (1 − surprise) — then spends it as
@@ -697,6 +722,9 @@ export class SuperMind {
     this.plan = best;
     // V1.1: fold the realised plan transition into the predictive map so next beat's look-ahead is informed.
     this.successor.observe(SUPER_PLANS.indexOf(best));
+    // V95: credit LAST beat's action → THIS beat's latent cell and refresh the empowerment estimate the next
+    // beat's curiosity + plan vote will read. Drives no rng ⇒ the beat stream stays bit-reproducible.
+    this.empowerment.update(this.latent, SUPER_PLANS.indexOf(best), surprise);
 
     // ── V89 · GWT IGNITION ── the winning plan-coalition is "broadcast" when it crosses the access
     // threshold AND dominates the runner-up (a near-all-or-none event). Persisted so it gates the NEXT
@@ -772,6 +800,7 @@ export class SuperMind {
       metacog: this.metacog.snapshot(),
       criticality: this.criticality.snapshot(),
       successor: this.successor.snapshot(),
+      empowerment: this.empowerment.snapshot(),
     };
   }
 }
