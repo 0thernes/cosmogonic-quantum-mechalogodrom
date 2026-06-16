@@ -3,3 +3,8 @@ dist
 bun.lock
 legacy
 docs/FILE-MAP.md
+# Harness tooling state + co-editor git worktrees (nested repo copies under .claude/worktrees/*).
+# Without this, `prettier --check .` recurses into every worktree and a stray style issue there
+# breaks the LOCAL gate (CI is unaffected — it runs on a clean checkout). See the multi-context note.
+.claude
+coverage
