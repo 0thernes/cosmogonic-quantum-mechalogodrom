@@ -7,6 +7,7 @@
  * pushes a {@link SuperSnapshot} + net worth each Observatory cadence via {@link update}.
  */
 import type { SuperSnapshot, SuperPlan } from '../sim/super-creature';
+import { SUPER_PLANS } from '../sim/super-creature';
 import type { SuperMindSnapshot } from '../sim/super-mind';
 import type { EvoView } from '../sim/super-evolution';
 import { mountToggle } from './panel-dock';
@@ -163,6 +164,7 @@ export class SuperPanel {
     this.id.offspring = idRow(id, 'Twins', doc);
     this.id.wallet = idRow(id, 'Wallet', doc);
     this.id.brain = idRow(id, 'Conscious', doc); // V46: the live ~10k-param composite mind
+    this.id.substrate = idRow(id, 'Substrate', doc); // V84: the ported Tsotchke subsymbolic substrates
     this.id.power = idRow(id, 'Power', doc); // V48: the evolution — level / stage / power / day
 
     const bars = panel.querySelector('[data-bars]') as HTMLElement;
@@ -242,6 +244,16 @@ export class SuperPanel {
       this.setBar('reasoning', k.reasoning);
       this.setBar('selfAware', k.selfAware);
       this.setBar('novelty', k.novelty);
+      // V84 — the three ported Tsotchke substrates the apex psyche RUNS on: the Eshkol qubit-RNG it
+      // collapses thoughts through, the QGTL geometry (curvature of its thought-space), and the
+      // spin-glass instinct (the behavioural archetype its Hopfield/Ising lattice recalled this beat).
+      const geo = mind.qubits.geometry;
+      const sp = mind.spin;
+      const instinct = sp.bestPattern >= 0 ? (SUPER_PLANS[sp.bestPattern] ?? '—') : '—';
+      this.id.substrate!.textContent =
+        `Eshkol H${mind.eshkol.entropyEstimate.toFixed(2)} · ` +
+        `QGT vol ${geo.scalar.toFixed(2)} κ${geo.curvature.toFixed(3)} · ` +
+        `Spin→${instinct} ${(sp.bestOverlap * 100).toFixed(0)}%`;
     }
 
     // V48 — the self-evolution: level · stage · power · day (it grows like Vegeta/Goku).

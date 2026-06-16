@@ -1,5 +1,5 @@
 /**
- * SUPER NEURAL OBSERVATORY (V75) — the apex creature's composite-mind observatory, now folded into
+ * SUPER NEURAL OBSERVATORY (V84) — the apex creature's composite-mind observatory, now folded into
  * the SAME Super Creature box (no second window). It mounts its DOM into a HOST element the
  * {@link SuperPanel} provides, so "⊞ NEURAL" grows the one box instead of spawning an overlay.
  *
@@ -7,18 +7,21 @@
  * visuals, tab 4 a BRAIN … 3D is cool and temporal is nice … reactive responsive adaptive, no
  * overflow"):
  *   I   · WORLD     — 9 readouts of the CORTEX world-model / perception / imagination.
- *   II  · COGNITION — 9 readouts of the five-stage pipeline, consciousness, emotion, drives.
- *   III · QUANTUM   — 9 readouts of the REAL simulated-qubit mind (`SuperMindSnapshot.qubits`, the V75
+ *   II  · COGNITION — 9 readouts of the five-stage pipeline, consciousness, emotion, drives, and the
+ *                     spin-glass INSTINCT (`SuperMindSnapshot.spin`, the ported Hopfield/Ising lattice).
+ *   III · QUANTUM   — 9 readouts of the REAL simulated-qubit mind (`SuperMindSnapshot.qubits`, the
  *                     `super-qubits.ts` 6-qubit statevector register): the |ψ|² statevector phase-
  *                     coloured, per-qubit Bloch vectors, live entropy/coherence, the Born-sampled
- *                     "collapsed thought", the entanglement web — plus aspect-side Grover/QFT echoes.
+ *                     "collapsed thought", the entanglement web — plus the ported QGT GEOMETRY (the
+ *                     metric eigen-ellipse of the mind's own circuit) and the ESHKOL qubit-RNG the
+ *                     mind collapses its thoughts through (`SuperMindSnapshot.eshkol`).
  *   IV  · BRAIN     — one large rotating 3D connectome of the mind's organs + signal flow.
  *
  * Every readout is bound to a REAL variable of the {@link SuperMindSnapshot}; nothing decorative.
  * Temporal views keep small ring-buffers so the data has MOTION between the slow Observatory pushes.
  * UI shell only — it never imports or mutates sim state (the determinism ban is on sim logic, not the
- * rAF clock). The QUANTUM tab reads the editor's real register; the Grover/QFT echoes mirror the
- * deterministic math in `src/math/quantum.ts`.
+ * rAF clock). The GEOMETRY / ESHKOL / INSTINCT readouts bind the genuine Tsotchke ports wired into the
+ * apex mind (see THIRD-PARTY-NOTICES.md), not presentation echoes.
  */
 import type { SuperMindSnapshot } from '../sim/super-mind';
 
@@ -195,50 +198,6 @@ function avg(a: ArrayLike<number>): number {
   let s = 0;
   for (let i = 0; i < a.length; i++) s += a[i] ?? 0;
   return a.length ? s / a.length : 0;
-}
-
-// ── deterministic quantum primitives (mirror src/math/quantum.ts; from the Eshkol/QGTL study) ──
-/**
- * Amplitude-encode the 10 quantum-aspect intensities into a normalized "register" (padded to 16),
- * then expose Grover-diffusion (reflect-about-mean) and a small DFT magnitude spectrum (QFT proxy).
- * Pure, allocation-light, NO rng/wall-clock — a presentation-side echo of the sim's real register.
- */
-function ampEncode(q: ArrayLike<number>): Float64Array {
-  const dim = 16;
-  const a = new Float64Array(dim);
-  let norm = 0;
-  for (let i = 0; i < dim; i++) {
-    const v = Math.max(0, q[i % q.length] ?? 0) + 1e-4;
-    a[i] = v;
-    norm += v * v;
-  }
-  const inv = norm > 0 ? 1 / Math.sqrt(norm) : 0;
-  for (let i = 0; i < dim; i++) a[i] = (a[i] ?? 0) * inv;
-  return a;
-}
-/** Grover diffusion: reflect every amplitude about the mean (amplitude amplification). */
-function groverDiffuse(a: Float64Array): Float64Array {
-  const m = avg(a);
-  const out = new Float64Array(a.length);
-  for (let i = 0; i < a.length; i++) out[i] = 2 * m - (a[i] ?? 0);
-  return out;
-}
-/** DFT magnitude spectrum (QFT proxy) of the amplitude vector — the mind's "frequencies". */
-function dftMag(a: Float64Array): Float64Array {
-  const n = a.length;
-  const out = new Float64Array(n);
-  for (let k = 0; k < n; k++) {
-    let re = 0;
-    let im = 0;
-    for (let j = 0; j < n; j++) {
-      const ph = (-2 * Math.PI * k * j) / n;
-      const v = a[j] ?? 0;
-      re += v * Math.cos(ph);
-      im += v * Math.sin(ph);
-    }
-    out[k] = Math.sqrt(re * re + im * im) / n;
-  }
-  return out;
 }
 
 // ════════════════════ TAB I — WORLD MODEL (9 views) ════════════════════
@@ -742,17 +701,37 @@ const drawSelfGauge: Drawer = (ctx, w, h, s, t) => {
   ctx.fillText(v.toFixed(2), cx, cy - 4);
   ctx.textAlign = 'left';
 };
-const drawEmotionTrail: Drawer = (ctx, w, h, s, _t, H) => {
-  frame(ctx, w, h, 'COG · MOOD TRAIL');
-  H.push('val', (clampS(s.emotion.valence ?? 0) + 1) / 2);
-  H.push('aro', clamp01(s.emotion.arousal ?? 0));
-  trail(ctx, H.series('val'), H.head, 6, 16, w - 6, h - 8, 0, 1, '141,255,158');
-  trail(ctx, H.series('aro'), H.head, 6, 16, w - 6, h - 8, 0, 1, '255,159,67');
+const drawInstinct: Drawer = (ctx, w, h, s, _t, H) => {
+  frame(ctx, w, h, 'COG · INSTINCT');
+  // REAL port: the Hopfield/Ising spin-glass instinct (ported tsotchke/spin_based_neural_network).
+  // The ±1 lattice (up = lit), the archetype it RECALLED + its overlap (confidence), the energy
+  // descent into the attractor, and the net magnetization — physics doing associative memory.
+  const sp = s.spin;
+  const spins = sp?.spins ?? [];
+  const n = spins.length || 1;
+  const cols = Math.ceil(Math.sqrt(n));
+  const rows = Math.ceil(n / cols);
+  const gx = 6;
+  const gy = 16;
+  const cw = (w - 12) / cols;
+  const chh = (h * 0.5) / rows;
+  for (let i = 0; i < n; i++) {
+    const up = (spins[i] ?? 0) >= 0;
+    const xx = gx + (i % cols) * cw;
+    const yy = gy + Math.floor(i / cols) * chh;
+    ctx.fillStyle = up ? 'rgba(141,255,158,.85)' : 'rgba(40,24,60,.85)';
+    ctx.fillRect(xx + 0.5, yy + 0.5, Math.max(1, cw - 1), Math.max(1, chh - 1));
+  }
+  const ov = clamp01(sp?.bestOverlap ?? 0);
+  H.push('spinE', clamp01(((sp?.energy ?? 0) + 2) / 4)); // energy descent trail (re-centred)
+  trail(ctx, H.series('spinE'), H.head, 6, h - 14, w - 6, h - 4, 0, 1, '255,106,176');
   ctx.fillStyle = PAL.green;
   lab(ctx, w, 6.5);
-  ctx.fillText('val', 6, 5);
-  ctx.fillStyle = '#ff9f43';
-  ctx.fillText('aro', 34, 5);
+  ctx.fillText('#' + (sp?.bestPattern ?? -1) + ' ' + (ov * 100).toFixed(0) + '%', 6, 5);
+  ctx.fillStyle = PAL.dim;
+  ctx.textAlign = 'right';
+  ctx.fillText('m ' + (sp?.magnetization ?? 0).toFixed(2), w - 5, 5);
+  ctx.textAlign = 'left';
 };
 
 // ════════════════════ TAB III — QUANTUM (9 views) ════════════════════
@@ -816,53 +795,99 @@ const drawAmplitudes: Drawer = (ctx, w, h, s) => {
   ctx.fillText(`|ψ|² · ${n} basis · ${s.qubits?.qubits ?? 0}q`, w - 5, 5);
   ctx.textAlign = 'left';
 };
-const drawGrover: Drawer = (ctx, w, h, s, t) => {
-  frame(ctx, w, h, 'Q · GROVER');
-  const a = ampEncode(s.quantum);
-  // animate the diffusion: blend between encoded and diffused over time
-  const d = groverDiffuse(a);
-  const mix = (Math.sin(t * 1.2) + 1) / 2;
-  const n = a.length;
-  const x0 = 6;
-  const bw = (w - 12) / n;
-  const mid = h / 2 + 6;
-  let mx = 1e-6;
-  for (let i = 0; i < n; i++) mx = Math.max(mx, Math.abs(a[i] ?? 0), Math.abs(d[i] ?? 0));
-  for (let i = 0; i < n; i++) {
-    const v = ((a[i] ?? 0) * (1 - mix) + (d[i] ?? 0) * mix) / mx;
-    const bh = v * (h * 0.3);
-    ctx.fillStyle = v >= 0 ? 'rgba(141,255,158,.8)' : 'rgba(255,90,107,.8)';
-    ctx.fillRect(x0 + i * bw + 1, mid - Math.max(0, bh), bw - 2, Math.abs(bh));
-  }
+const drawGeometry: Drawer = (ctx, w, h, s, t, H) => {
+  frame(ctx, w, h, 'Q · GEOMETRY');
+  // REAL port: the Quantum Geometric Tensor of the mind's OWN circuit (ported QGTL / Moonlab qgt.c) —
+  // the 2×2 Fubini–Study metric over the (superposition, entanglement) drives. Its eigen-ellipse shows
+  // how the thought-space stretches; det = curvature, trace = scalar "speed", Ω = Berry phase.
+  const g = s.qubits?.geometry;
+  const m00 = g?.metric[0] ?? 0;
+  const m01 = g?.metric[1] ?? 0;
+  const m11 = g?.metric[3] ?? 0;
+  const tr = m00 + m11;
+  const det = m00 * m11 - m01 * m01;
+  const disc = Math.sqrt(Math.max(0, (tr / 2) * (tr / 2) - det));
+  const l1 = tr / 2 + disc; // major eigenvalue of the metric
+  const l2 = Math.max(0, tr / 2 - disc); // minor (clamp tiny negatives from FD noise)
+  const ang = 0.5 * Math.atan2(2 * m01, m00 - m11);
+  const cx = w / 2;
+  const cy = h / 2 + 4;
+  const rad = Math.min(w, h) * 0.34;
+  const a1 = Math.sqrt(Math.max(1e-9, l1));
+  const a2 = Math.sqrt(Math.max(1e-9, l2));
+  const mxA = Math.max(a1, a2) || 1;
   ctx.strokeStyle = PAL.grid;
+  ctx.lineWidth = 1;
   ctx.beginPath();
-  ctx.moveTo(x0, mid);
-  ctx.lineTo(w - 6, mid);
+  ctx.moveTo(cx - rad, cy);
+  ctx.lineTo(cx + rad, cy);
+  ctx.moveTo(cx, cy - rad);
+  ctx.lineTo(cx, cy + rad);
   ctx.stroke();
-  ctx.fillStyle = PAL.dim;
-  lab(ctx, w, 6);
+  const hue = (g?.berry ?? 0) >= 0 ? '185,140,255' : '255,106,176'; // Berry sign → hue
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.rotate(ang + t * 0.25); // slow precession so the curvature is alive
+  ctx.beginPath();
+  ctx.ellipse(
+    0,
+    0,
+    Math.max(1, (a1 / mxA) * rad),
+    Math.max(1, (a2 / mxA) * rad),
+    0,
+    0,
+    Math.PI * 2,
+  );
+  ctx.fillStyle = `rgba(${hue},.16)`;
+  ctx.fill();
+  ctx.strokeStyle = `rgba(${hue},.85)`;
+  ctx.lineWidth = 1.4;
+  ctx.stroke();
+  ctx.restore();
+  H.push('qgeoS', clamp01(tr / 4)); // trace ("speed") temporal trail along the bottom
+  trail(ctx, H.series('qgeoS'), H.head, 6, h - 14, w - 6, h - 4, 0, 1, '108,223,255');
+  ctx.fillStyle = PAL.violet;
+  lab(ctx, w, 6.5);
+  ctx.fillText('S ' + tr.toFixed(2), 6, 5);
+  ctx.fillStyle = PAL.gold;
   ctx.textAlign = 'right';
-  ctx.fillText('reflect-about-mean', w - 5, 5);
+  ctx.fillText('κ ' + det.toFixed(3), w - 5, 5);
   ctx.textAlign = 'left';
+  ctx.fillStyle = PAL.mag;
+  ctx.fillText('Ω ' + (g?.berry ?? 0).toFixed(3), 6, h - 22);
 };
-const drawQFT: Drawer = (ctx, w, h, s, t) => {
-  frame(ctx, w, h, 'Q · QFT SPECTRUM');
-  const mag = dftMag(ampEncode(s.quantum));
-  const n = mag.length;
-  const x0 = 6;
+const drawEshkol: Drawer = (ctx, w, h, s, _t, H) => {
+  frame(ctx, w, h, 'Q · ESHKOL RNG');
+  // REAL port: the Eshkol qubit-RNG the mind COLLAPSES its thoughts through (ported tsotchke/quantum_rng).
+  // The 8 qubit amplitudes (phase array), the live 64-bit output word, and the buffer's entropy estimate.
+  const e = s.eshkol;
+  const amps = e?.amplitudes ?? [];
+  const bits = e?.lastBits ?? '';
+  const hh = clamp01(e?.entropyEstimate ?? 0);
+  const n = amps.length || 8;
   const bw = (w - 12) / n;
-  const base = h - 10;
-  let mx = 1e-6;
-  for (let i = 1; i < n; i++) mx = Math.max(mx, mag[i] ?? 0); // skip DC for scale
+  const base = h * 0.6;
   for (let i = 0; i < n; i++) {
-    const v = clamp01((mag[i] ?? 0) / mx) * (0.9 + Math.sin(t * 3 + i) * 0.1);
-    ctx.fillStyle = `rgba(255,209,102,${(0.35 + v * 0.55).toFixed(2)})`;
-    ctx.fillRect(x0 + i * bw + 1, base - v * (h - 26), bw - 2, v * (h - 26));
+    const v = clamp01((amps[i] ?? 0) * 2); // each amplitude ∈ [0, 0.5]
+    ctx.fillStyle = `rgba(108,223,255,${(0.35 + v * 0.5).toFixed(2)})`;
+    ctx.fillRect(6 + i * bw + 0.5, base - v * (h * 0.36), Math.max(0.8, bw - 1), v * (h * 0.36));
   }
+  const m = bits.length || 64;
+  const tw = (w - 12) / m;
+  for (let i = 0; i < m; i++) {
+    if (bits[i] === '1') {
+      ctx.fillStyle = 'rgba(141,255,158,.85)';
+      ctx.fillRect(6 + i * tw, base + 4, Math.max(0.6, tw - 0.3), 5);
+    }
+  }
+  H.push('eshH', hh);
+  trail(ctx, H.series('eshH'), H.head, 6, h - 14, w - 6, h - 4, 0, 1, '255,209,102');
+  ctx.fillStyle = PAL.gold;
+  lab(ctx, w, 6.5);
+  ctx.fillText('H ' + hh.toFixed(3), 6, 5);
   ctx.fillStyle = PAL.dim;
-  lab(ctx, w, 6);
   ctx.textAlign = 'right';
-  ctx.fillText('freq domain', w - 5, 5);
+  ctx.fillText((e?.draws ?? 0) + ' draws', w - 5, 5);
   ctx.textAlign = 'left';
 };
 const drawEntangleWeb: Drawer = (ctx, w, h, s, t) => {
@@ -1146,13 +1171,13 @@ const TABS: readonly Drawer[][] = [
     drawSurpriseTL,
     drawDriveVectors,
     drawSelfGauge,
-    drawEmotionTrail,
+    drawInstinct,
   ],
   [
     drawQuantumCrown,
     drawAmplitudes,
-    drawGrover,
-    drawQFT,
+    drawGeometry,
+    drawEshkol,
     drawEntangleWeb,
     drawSuperposWheel,
     drawQEntropy,

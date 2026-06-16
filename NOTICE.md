@@ -53,6 +53,7 @@ remain governed by this project's proprietary license while honoring the upstrea
 | ---------------------------------------------- | ------------------------- | ----------------------------------------------------------------------------- | ---------------------- |
 | Quantum Geometric Tensor / Fubini–Study metric | `src/sim/super-qubits.ts` | Tsotchke `quantum_geometric_tensor` (QGTL) + Moonlab `quantum_geometry/qgt.c` | MIT © 2024–26 tsotchke |
 | Seeded quantum phase-noise qubit-RNG           | `src/math/eshkol-qrng.ts` | Tsotchke `Eshkol/eshkol_repo/lib/quantum/quantum_rng.{c,h}`                   | MIT © 2024–26 tsotchke |
+| Hopfield/Ising spin-glass associative instinct | `src/sim/spin-glass.ts`   | Tsotchke `spin_based_neural_network` (`ising_model.c`, `nqs_gradient.c`)      | MIT © 2024–26 tsotchke |
 
 Academic references for the geometric tensor: Provost & Vallée, _Riemannian structure on manifolds of
 quantum states_ (1980); Berry, _Quantal phase factors_ (1984); Fukui–Hatsugai–Suzuki (2005). The

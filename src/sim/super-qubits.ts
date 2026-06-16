@@ -113,15 +113,6 @@ export class QuantumMind {
   private readonly bufRe = new Float64Array(DIM);
   private readonly bufIm = new Float64Array(DIM);
   private readonly bloch3 = new Float64Array(3);
-  // QGT scratch — the Fubini–Study metric reads 64-amplitude derivatives at UI cadence only.
-  private readonly psiRe = new Float64Array(DIM);
-  private readonly psiIm = new Float64Array(DIM);
-  private readonly d0Re = new Float64Array(DIM);
-  private readonly d0Im = new Float64Array(DIM);
-  private readonly d1Re = new Float64Array(DIM);
-  private readonly d1Im = new Float64Array(DIM);
-  private readonly tmpRe = new Float64Array(DIM);
-  private readonly tmpIm = new Float64Array(DIM);
   // Last evolve's drive params, so the UI-cadence QGT replays the SAME circuit deterministically.
   private dSup = 0;
   private dEnt = 0;
@@ -211,85 +202,28 @@ export class QuantumMind {
   }
 
   /**
-   * **Quantum Geometric Tensor — the mind feeling the curvature of its own thought-space.** Computes
-   * the 2×2 Fubini–Study metric of |ψ(θ)⟩ over the two cognition drives θ = (superposition,
-   * entanglement) by central finite differences over the parameterised circuit. DETERMINISTIC (pure
-   * 64-amplitude statevector algebra — no RNG); runs at UI cadence, re-applying the circuit 4× (±dk
-   * per knob). It LEAVES the register perturbed — the next {@link evolve} resets it from |0…0⟩, so the
-   * seeded beat stream is never corrupted. Ported from the Tsotchke QGTL / Moonlab `qgt.c` study (MIT —
-   * see the file header) — `g_μν = Re⟨∂_μψ|(1−|ψ⟩⟨ψ|)|∂_νψ⟩`, the imaginary part is the Berry curvature.
+   * **Quantum Geometric Tensor — the mind feeling the curvature of its own thought-space.** Delegates to
+   * the canonical ported QGTL primitive {@link quantumGeometricTensor} (`src/math/quantum-geometry.ts`),
+   * restricted to the two cognition drives θ = (superposition, entanglement): it central-differences
+   * |ψ(θ)⟩ over the parameterised circuit (DETERMINISTIC — pure 64-amplitude statevector algebra, no
+   * RNG) and yields the 2×2 Fubini–Study metric g_μν = Re Q_μν, its det (curvature), its trace (scalar),
+   * and the Berry curvature F₀₁ = −2·Im Q₀₁. Runs at UI cadence; it re-applies the circuit a handful of
+   * times, LEAVING the register perturbed — the next {@link evolve} resets it from |0…0⟩, so the seeded
+   * beat stream is never corrupted. Ported from the Tsotchke QGTL / Moonlab `qgt.c` study (MIT — see the
+   * file header + NOTICE.md).
    */
   geometricMetric(): QGeometry {
-    const dk = 0.01;
-    this.reg.amplitudesInto(this.psiRe, this.psiIm); // |ψ⟩ at the centre (current post-evolve state)
-    this.deriv(0, dk, this.d0Re, this.d0Im); // |∂₀ψ⟩ over superposition
-    this.deriv(1, dk, this.d1Re, this.d1Im); // |∂₁ψ⟩ over entanglement
-    const i00 = this.cdotRe(this.d0Re, this.d0Im, this.d0Re, this.d0Im); // ⟨∂₀|∂₀⟩ (real)
-    const i11 = this.cdotRe(this.d1Re, this.d1Im, this.d1Re, this.d1Im);
-    const i01 = this.cdot(this.d0Re, this.d0Im, this.d1Re, this.d1Im); // ⟨∂₀|∂₁⟩ (complex)
-    const c0 = this.cdot(this.d0Re, this.d0Im, this.psiRe, this.psiIm); // ⟨∂₀|ψ⟩
-    const c1 = this.cdot(this.d1Re, this.d1Im, this.psiRe, this.psiIm); // ⟨∂₁|ψ⟩
-    const g00 = i00 - (c0.re * c0.re + c0.im * c0.im); // Re G₀₀ = ⟨∂₀|∂₀⟩ − |⟨∂₀|ψ⟩|²
-    const g11 = i11 - (c1.re * c1.re + c1.im * c1.im);
-    const pRe = c0.re * c1.re + c0.im * c1.im; // Re(c₀·conj c₁)
-    const pIm = c0.im * c1.re - c0.re * c1.im; // Im(c₀·conj c₁)
-    const g01 = i01.re - pRe; // Re G₀₁
-    const berry = -2 * (i01.im - pIm); // Berry curvature F₀₁ = −2 Im G₀₁
-    const curvature = g00 * g11 - g01 * g01; // det of the symmetric metric
-    return { metric: [g00, g01, g01, g11], curvature, scalar: g00 + g11, berry };
-  }
-
-  /** |∂_μ ψ⟩ via central difference: re-evolve the circuit at the knob ±dk, then (plus−minus)/(2dk). */
-  private deriv(mu: number, dk: number, outRe: Float64Array, outIm: Float64Array): void {
-    this.applyPerturbed(mu, dk);
-    this.reg.amplitudesInto(outRe, outIm);
-    this.applyPerturbed(mu, -dk);
-    this.reg.amplitudesInto(this.tmpRe, this.tmpIm);
-    const inv = 1 / (2 * dk);
-    for (let i = 0; i < DIM; i++) {
-      outRe[i] = ((outRe[i] ?? 0) - (this.tmpRe[i] ?? 0)) * inv;
-      outIm[i] = ((outIm[i] ?? 0) - (this.tmpIm[i] ?? 0)) * inv;
-    }
-  }
-
-  /** Re-apply the circuit with one knob (0 = superposition, 1 = entanglement) shifted by `d`. */
-  private applyPerturbed(mu: number, d: number): void {
-    const sup = mu === 0 ? this.dSup + d : this.dSup;
-    const ent = mu === 1 ? this.dEnt + d : this.dEnt;
-    this.applyCircuit(sup, ent, this.dFtl, this.dMut, this.dLatent, this.dL);
-  }
-
-  /** Re⟨a|b⟩ = Σ(aᵣbᵣ + aᵢbᵢ) — for a=b this is the (real) squared norm. */
-  private cdotRe(
-    aRe: Float64Array,
-    aIm: Float64Array,
-    bRe: Float64Array,
-    bIm: Float64Array,
-  ): number {
-    let s = 0;
-    for (let i = 0; i < DIM; i++)
-      s += (aRe[i] ?? 0) * (bRe[i] ?? 0) + (aIm[i] ?? 0) * (bIm[i] ?? 0);
-    return s;
-  }
-
-  /** Full complex ⟨a|b⟩ = Σ conj(a)·b. */
-  private cdot(
-    aRe: Float64Array,
-    aIm: Float64Array,
-    bRe: Float64Array,
-    bIm: Float64Array,
-  ): { re: number; im: number } {
-    let re = 0;
-    let im = 0;
-    for (let i = 0; i < DIM; i++) {
-      const ar = aRe[i] ?? 0;
-      const ai = aIm[i] ?? 0;
-      const br = bRe[i] ?? 0;
-      const bi = bIm[i] ?? 0;
-      re += ar * br + ai * bi;
-      im += ar * bi - ai * br;
-    }
-    return { re, im };
+    const build = (p: readonly number[], outRe: Float64Array, outIm: Float64Array): void => {
+      this.applyCircuit(p[0] ?? 0, p[1] ?? 0, this.dFtl, this.dMut, this.dLatent, this.dL);
+      this.reg.amplitudesInto(outRe, outIm);
+    };
+    const g = quantumGeometricTensor([this.dSup, this.dEnt], build, DIM, 0.01);
+    const g00 = g.metric[0]?.[0] ?? 0;
+    const g11 = g.metric[1]?.[1] ?? 0;
+    const g01 = g.metric[0]?.[1] ?? 0;
+    const berry = -2 * (g.berry[0]?.[1] ?? 0); // F₀₁ = −2·Im Q₀₁ (the project's Berry sign convention)
+    const curvature = g00 * g11 - g01 * g01; // det of the symmetric 2×2 metric
+    return { metric: [g00, g01, g01, g11], curvature, scalar: g.volume, berry };
   }
 
   /** Index of the most recent non-destructive Born sample (the collapsed thought). */

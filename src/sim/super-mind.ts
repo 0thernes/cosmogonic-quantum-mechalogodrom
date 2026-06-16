@@ -41,6 +41,7 @@ import { mulberry32 } from '../math/rng';
 import { TinyMLP, MemoryRing } from './ai/brains';
 import { QuantumMind, type QubitSnapshot } from './super-qubits';
 import { EshkolQrng, type EshkolQrngSnapshot } from '../math/eshkol-qrng';
+import { SpinGlass, type SpinSnapshot } from './spin-glass';
 import type { SuperPercept, SuperPlan } from './super-creature';
 import { SUPER_PLANS } from './super-creature';
 
@@ -138,9 +139,28 @@ export interface SuperMindSnapshot {
   qubits: QubitSnapshot;
   /** V84: the Eshkol qubit-RNG the mind collapses its thoughts through (ported tsotchke/quantum_rng). */
   eshkol: EshkolQrngSnapshot;
+  /** V84: the spin-glass instinct lattice (ported tsotchke/spin_based_neural_network). */
+  spin: SpinSnapshot;
 }
 
 const EMOTION_TAU = 0.12;
+
+// ── V84: the spin-glass instinct (ported tsotchke/spin_based_neural_network) ──────────────────────
+/** Spins in the Hopfield/Ising instinct lattice (capacity 0.138·N ≈ 7.7 > the 7 plan archetypes). */
+const SPIN_SIZE = 56;
+/** Metropolis sweeps per beat. */
+const SPIN_SWEEPS = 6;
+/** Settle temperature — low enough that the archetype attractors dominate the recall. */
+const SPIN_TEMP = 0.35;
+/** Local-field gain from the situational-salience projection. */
+const SPIN_FIELD_GAIN = 0.85;
+/** How strongly the recalled instinct biases its matching plan's drive (bounded, small). */
+const INSTINCT_GAIN = 0.12;
+/** One ±1 archetype per {@link SUPER_PLANS} entry — the instinct's behavioural vocabulary (constants). */
+const SPIN_ARCHETYPES: number[][] = ((): number[][] => {
+  const r = mulberry32(0x5150ed); // fixed "SPIN" seed → a shared instinct vocabulary across creatures
+  return SUPER_PLANS.map(() => Array.from({ length: SPIN_SIZE }, () => (r() < 0.5 ? -1 : 1)));
+})();
 
 /**
  * The composite apex mind. Construct with a seeded {@link Rng}; `think` each beat. ~10k parameters
@@ -164,6 +184,10 @@ export class SuperMind {
   /** V84: the Eshkol qubit-RNG (ported gate-for-gate from tsotchke/quantum_rng) that the mind's
    *  thought-collapse samples through — so the apex psyche literally measures through Eshkol. */
   private readonly eshkol: EshkolQrng;
+  /** V84: the spin-glass instinct — a Hopfield/Ising lattice the mind settles to recall an archetype. */
+  private readonly spin: SpinGlass;
+  /** Dedicated seeded stream for the instinct's Metropolis dynamics (independent of the beat stream). */
+  private readonly spinDrive: Rng;
   readonly paramCount: number;
 
   // ── Reusable scratch (no per-beat allocation) ──
@@ -179,6 +203,7 @@ export class SuperMind {
   private readonly quantumOut: number[] = Array.from({ length: SUPER_QUANTUM }, () => 0);
   private readonly latent = new Float32Array(LATENT);
   private readonly imagined = new Float32Array(LATENT);
+  private readonly spinField = new Float32Array(SPIN_SIZE); // situational drive into the instinct lattice
 
   private readonly memory = new MemoryRing(48);
   private valence = 0;
@@ -227,10 +252,15 @@ export class SuperMind {
     // V84: that child stream is now the Eshkol qubit-RNG itself (ported gate-for-gate from
     // tsotchke/quantum_rng), so the apex psyche's "thought collapse" is literally measured through the
     // Eshkol generator — still fully reproducible from the world seed (Eshkol is seeded, deterministic).
-    this.eshkol = new EshkolQrng(
-      mulberry32((Math.floor(rng() * 0xffffffff) ^ 0x9e3779b9) >>> 0 || 1),
-    );
+    // One child seed (a SINGLE rng draw — zero stream shift vs. the prior code) fans out to the three
+    // subsymbolic substrates: the Eshkol qubit-RNG, the quantum register it samples through, and the
+    // spin-glass instinct. All seeded ⇒ the whole apex psyche still replays bit-for-bit from the seed.
+    const childSeed = (Math.floor(rng() * 0xffffffff) ^ 0x9e3779b9) >>> 0 || 1;
+    this.eshkol = new EshkolQrng(mulberry32(childSeed));
     this.qmind = new QuantumMind(this.eshkol.stream());
+    this.spin = new SpinGlass(SPIN_SIZE, mulberry32((childSeed ^ 0x5bd1e995) >>> 0 || 1));
+    this.spin.imprint(SPIN_ARCHETYPES);
+    this.spinDrive = mulberry32((childSeed ^ 0x2545f491) >>> 0 || 1);
   }
 
   get offspringCount(): number {
@@ -373,6 +403,41 @@ export class SuperMind {
       surprise,
     };
 
+    // ── SPIN-GLASS INSTINCT ── settle the Hopfield/Ising lattice under a situational field so it
+    // recalls the behavioural archetype the moment evokes; its dominant attractor biases the matching
+    // plan below — a genuine subsymbolic "gut feeling" arbitrating with the MLP's deliberation.
+    const sal: Record<SuperPlan, number> = {
+      HUNT: clamp01(s[5] * 0.6 + s[0] * 0.4),
+      FLEE: clamp01(s[1]),
+      DOMINATE: clamp01(s[4]),
+      DECEIVE: clamp01(s[1] * 0.5 + s[2] * 0.5),
+      SPAWN: clamp01(s[0] * 0.6),
+      EXPLORE: clamp01(s[3] * 0.5 + novelty * 0.5),
+      REST: clamp01(1 - this.arousal),
+    };
+    for (let i = 0; i < SPIN_SIZE; i++) {
+      let f = 0;
+      for (let pIdx = 0; pIdx < SUPER_PLANS.length; pIdx++) {
+        const plan = SUPER_PLANS[pIdx];
+        if (!plan) continue;
+        f += sal[plan] * (SPIN_ARCHETYPES[pIdx]?.[i] ?? 0);
+      }
+      this.spinField[i] = f;
+    }
+    this.spin.setField(this.spinField, SPIN_FIELD_GAIN);
+    this.spin.settle(SPIN_SWEEPS, SPIN_TEMP, this.spinDrive);
+    let instinctPattern = -1;
+    let instinctStrength = 0;
+    for (let pIdx = 0; pIdx < SUPER_PLANS.length; pIdx++) {
+      const o = this.spin.overlapWith(pIdx);
+      const a = o < 0 ? -o : o;
+      if (a > instinctStrength) {
+        instinctStrength = a;
+        instinctPattern = pIdx;
+      }
+    }
+    const instinctPlan = instinctPattern >= 0 ? SUPER_PLANS[instinctPattern] : undefined;
+
     // ── decode drives ──
     const aggression = unit(act[3] ?? 0);
     const deception = unit(act[4] ?? 0);
@@ -390,6 +455,8 @@ export class SuperMind {
       EXPLORE: curiosity * (1 - s[1]) * (0.5 + 0.5 * novelty),
       REST: (1 - this.arousal) * (1 - s[1]) * s[0],
     };
+    // the instinct's recalled archetype nudges its plan (bounded) — subsymbolic vote on the decision
+    if (instinctPlan) drives[instinctPlan] += INSTINCT_GAIN * instinctStrength;
     let best: SuperPlan = 'REST';
     let bestScore = -Infinity;
     for (const k of SUPER_PLANS) {
@@ -435,6 +502,7 @@ export class SuperMind {
       imagined: Array.from(this.imagined),
       qubits: this.qmind.snapshot(),
       eshkol: this.eshkol.snapshot(),
+      spin: this.spin.snapshot(),
     };
   }
 }

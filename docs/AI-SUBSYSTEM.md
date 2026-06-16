@@ -1,4 +1,4 @@
-# The AI Subsystem (V76) — pre-transformer minds, a quantum register, + the read-only Copilot
+# The AI Subsystem (V84) — pre-transformer minds, a quantum register, ported Tsotchke primitives, + the read-only Copilot
 
 > How "intelligence" works in the Cosmogonic Quantum Mechalogodrom, and why it is split in two.
 > Companion to [research/PRE-TRANSFORMER-GAME-AI.md](research/PRE-TRANSFORMER-GAME-AI.md) (the
@@ -121,13 +121,34 @@ entropy        normalized Shannon entropy of the Born distribution (1 = uniform 
 entanglement   mean reduced-state purity deficit 1 − |r|²  (linear entanglement entropy)
 coherence      mean equatorial Bloch magnitude √(x²+y²)   (live superposition strength)
 sampled        index of the last Born sample · sampledBits its qubit bitstring
+geometry       the Quantum Geometric Tensor readout (below): 2×2 Fubini–Study metric over the
+               (superposition, entanglement) drives + det (curvature), trace (scalar), Berry curvature
 ```
 
-The study of the **Eshkol** qubit-RNG (phase array + noise), the **Moonlab** quantum simulator, and its
-**Quantum-Geometric-Tensor (QGTL)** module (statevector + RY/RZ/CNOT gate set + amplitude amplification)
-informed the design; nothing is reimplemented from them — we own the 64-amplitude statevector outright. The Observatory's III · QUANTUM
-tab binds this register directly (statevector / Bloch / entropy / collapse / entangle / superposition),
-with aspect-side Grover-diffusion + QFT-spectrum echoes that mirror the same `src/math/quantum.ts` math.
+### Ported Tsotchke primitives — research → development (V84)
+
+Earlier versions only _studied_ the Tsotchke quantum repositories. V84 moves three of their primitives
+**from research into development**: each is reimplemented at the source level in seeded, deterministic,
+allocation-disciplined TypeScript, unit-tested, and **wired into the live apex creature** — so the Super
+Creature genuinely _uses_ Eshkol / Moonlab / QGTL machinery, not a lookalike. The derivative
+implementations are MIT-attributed to © 2024–2026 tsotchke (see
+[THIRD-PARTY-NOTICES.md](../THIRD-PARTY-NOTICES.md) and [NOTICE.md](../NOTICE.md)); the project's own
+proprietary licence still governs our code.
+
+| Ported primitive                                                                                                                                                                                                            | Module                                                  | Upstream                                                                            | How the apex creature uses it                                                                                                                                                                                                                                                                                                    |
+| --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- | ----------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Eshkol qubit-RNG** — an 8-qubit "phase array + noise" generator: physical-constant mixing cascades, a 16-slot entropy pool, the `quantum_noise` Heisenberg transcendental, `hadamard`/`phase` gates, Born `measure_state` | `src/math/eshkol-qrng.ts` (`tests/eshkol-qrng.test.ts`) | tsotchke/`quantum_rng` (`quantum_rng.c`), shipped in **Eshkol** as `quantum-random` | The `QuantumMind`'s per-beat **thought-collapse Born sample is drawn through it** — the apex psyche literally measures its thoughts through the Eshkol generator. Host-entropy reads (`gettimeofday`/`rdtsc`/PID) are replaced by a seeded `Rng` + golden-ratio surrogate, so the quantum bitstream replays from the world seed. |
+| **Quantum Geometric Tensor / Fubini–Study metric** — `Q_ij = ⟨∂_iψ                                                                                                                                                          | ∂_jψ⟩ − ⟨∂_iψ                                           | ψ⟩⟨ψ                                                                                | ∂_jψ⟩`; Re = metric, Im = Berry curvature                                                                                                                                                                                                                                                                                        | `src/sim/super-qubits.ts` (`QuantumMind.geometricMetric`; `tests/super-qubits.test.ts`) | tsotchke/`quantum_geometric_tensor` (QGTL) + **Moonlab** `quantum_geometry/qgt.c` | At Observatory cadence the mind takes the **2×2 QGT of its own circuit** over the (superposition, entanglement) drives by central finite difference — it _feels the curvature of its own thought-space_. Pure statevector algebra, no RNG, never on the per-beat path. |
+| **Spin-glass instinct** — a Hopfield/Ising associative-memory lattice: Hebbian imprint `J_ij = (1/N)Σ ξᵖ_i ξᵖ_j`, Metropolis/Glauber settle, pattern-overlap recall                                                         | `src/sim/spin-glass.ts` (`tests/spin-glass.test.ts`)    | tsotchke/`spin_based_neural_network` (`ising_model.c`, `nqs_gradient.c`)            | The **instinct floor** of the Biomimetic Polymorphic Neural Intelligence: each beat the lattice is driven by fields from the mind's world-model latent and **settles into the nearest behavioural archetype** — physics doing associative recall (the creature's "gut feeling"), under a dedicated seeded stream.                |
+
+The honest line still holds where it should: the **64-amplitude statevector simulator itself**
+(`src/math/quantum.ts`, the `QuantumRegister` + RY/RZ/CNOT gate set) is the project's own Moonlab-style
+implementation, not copied. What V84 adds are genuine ports of the _algorithms layered on top of_ a
+statevector — the QGT readout, the Eshkol measurement source, and the spin-glass instinct.
+
+The Observatory's **QUANTUM** tab binds the register directly (statevector / Bloch / entropy / collapse /
+entangle / superposition / **geometry**), and the **NEURAL** board surfaces the Eshkol entropy + the
+instinct's settled archetype, so the ported machinery is visible live.
 
 ## The Copilot (non-deterministic shell)
 
