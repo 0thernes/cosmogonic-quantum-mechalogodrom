@@ -32,6 +32,8 @@ import { InstancedEntityRenderer } from '../src/sim/instanced-entities';
 import { LoreEngine } from '../src/sim/lore';
 import type { AuditTrail } from '../src/logging/audit';
 import type { Entity, SimContext, SimState } from '../src/types';
+import { SuperMind } from '../src/sim/super-mind';
+import type { SuperPercept } from '../src/sim/super-creature';
 
 /** High population for the stress frame — the ultra-class regime where the cliff lived. */
 const POP = 8000;
@@ -52,6 +54,17 @@ const FRAME_BUDGET_MS = 120;
  * while steady-state noise on a slow CI runner never approaches it.
  */
 const SYNC_BUDGET_MS = 80;
+
+/**
+ * Generous per-beat ceiling (ms) for the apex {@link SuperMind.think} — ONE creature's full cognitive beat
+ * (the 20-plus-faculty SC 1.1 stack: the 5-stage/25-variant Tree of Thought, the 6-qubit evolve + QNG +
+ * Grover, spin-glass, active inference, ToM, neuromodulation, successor-representation, empowerment,
+ * holographic recall, and now the genuine quantum-Φ read). The reference machine runs it in ≈ 0.21 ms; a
+ * loaded CI runner has vast slack to this bound, yet a GROSS structural regression (e.g. accidentally
+ * calling the UI-cadence `snapshot()` — full QGT + 4ⁿ-Pauli magic — every beat, or an O(n²) faculty) trips
+ * it. Median-of-many so a single GC pause can't fail it. See docs/BENCHMARKS.md "Apex mind … per-beat".
+ */
+const THINK_BUDGET_MS = 5;
 
 function makeState(): SimState {
   return {
@@ -184,5 +197,33 @@ describe('per-frame instanced-render sync budget at the ultra tier', () => {
     const live = pools.reduce((sum, p) => sum + (p as THREE.InstancedMesh).count, 0);
     expect(live).toBeGreaterThan(POP * 0.7);
     expect(median(samples)).toBeLessThan(SYNC_BUDGET_MS);
+  }, 30000);
+});
+
+describe('per-beat apex-mind cognitive budget', () => {
+  test(`SuperMind.think() stays under ${THINK_BUDGET_MS}ms/beat (median) — the 20+ faculty stack must not blow the frame`, () => {
+    const mind = new SuperMind(mulberry32(0x5c11fe));
+    const p: SuperPercept = {
+      energy: 0.55,
+      threat: 0.3,
+      crowding: 0.4,
+      chaos: 0.5,
+      wealthRel: 0.5,
+      preyClose: 0.45,
+      rivalClose: 0.3,
+      pull: 0.2,
+      light: 0.5,
+      sound: 0.4,
+      phase: 0.25,
+    };
+    // Warm the JIT (the megamorphic faculty dispatch compiles) + settle the EMAs / reservoir / belief.
+    for (let i = 0; i < 40; i++) mind.think(p);
+    const samples: number[] = [];
+    for (let i = 0; i < 200; i++) {
+      const t0 = performance.now();
+      mind.think(p);
+      samples.push(performance.now() - t0);
+    }
+    expect(median(samples)).toBeLessThan(THINK_BUDGET_MS);
   }, 30000);
 });
