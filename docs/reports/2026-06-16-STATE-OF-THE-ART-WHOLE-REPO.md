@@ -31,7 +31,7 @@ demonstration of an unfashionable thesis: that **the functional skeleton of mind
 architecture and feedback topology, not parameter count** — and that you can build it as a
 _falsifiable physical specimen_ (one 32-bit seed reproduces the entire psyche, bit for bit) rather
 than an unrepeatable black box. No comparable artifact in the open-source world fuses **A-Life at
-50k scale + honest statevector quantum computing + a 21-faculty computational-neuroscience mind +
+50k scale + honest statevector quantum computing + a 21-faculty apex mind (11 computational-neuroscience + 10 quantum-computing) +
 two live scientific consciousness metrics**, all under one determinism law, in one tab.
 
 **Sentience verdict, stated plainly up front:** this is **not sentient and makes no such claim.** On a
@@ -84,8 +84,8 @@ find **no equivalent of** in the open-source world or the literature.
 The A-Life canon (Conway's Life, Lenia, Avida/Tierra, Boids, Framsticks, bibites, The Bibites,
 Sebastian Lague-style sims) gives you _one_ idea executed beautifully: cellular automata, OR
 continuous CA, OR digital evolution, OR flocking, OR neural critters. **None couples a 50k-agent
-evolving ecosystem to (a) honest quantum-statevector computing, (b) a 21-faculty
-computational-neuroscience apex mind, (c) live scientific consciousness metrics, and (d) a
+evolving ecosystem to (a) honest quantum-statevector computing, (b) a 21-faculty apex mind (11
+computational-neuroscience + 10 quantum-computing), (c) live scientific consciousness metrics, and (d) a
 hard determinism law — in a single zero-install browser tab.** The closest "everything sims"
 (Dwarf-Fortress-class) are neither deterministic-by-seed nor quantum nor neuroscience-grounded.
 **Distinctive claim: the read/write-everything causal web at 50k scale under one seed is, to our

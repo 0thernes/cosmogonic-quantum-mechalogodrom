@@ -46,17 +46,18 @@ Every magic number survived the port.
   FIELD, HEAP SIFT, BITONIC MESH, STOOGE DRIFT, TIM RUN MERGE, PATIENCE
   BUCKET...) that organize organisms through space in batched swap proposals
   per frame — each selectable from a picker panel with its own cue tone.
-- **3 Shoggoths** — Lorenz-ish drifters with grid-queried tendrils that
-  consume organisms and respawn corrupted ones.
-- **3 puppet masters** — AETHON stokes chaos, SELENE shifts weather, KRONOS
-  reshapes organisms — on their own timers, announced via toast.
+- **100 Shoggoths** (16 on phone) — Lorenz-ish drifters with grid-queried
+  tendrils that consume organisms and respawn corrupted ones.
+- **100 puppet masters** (14 on phone) — the 3 named heroes AETHON (chaos),
+  SELENE (weather) and KRONOS (mutation) plus lesser WRAITH hands, on their own
+  timers, announced via toast.
 - **6 weather states** (CLEAR, RAIN, STORM, AURORA, VOID, FOG) modulating
   wind, temperature (and thus lifespan), fog density, and exposure.
-- **Quantum cloud** of 3,500–8,000 particles with wavefunction wobble,
-  collapse, and respawn; **neural connectome** of up to 2,200–6,000 links with
+- **Quantum cloud** of 3,500–10,000 particles with wavefunction wobble,
+  collapse, and respawn; **neural connectome** of up to 2,200–8,000 links with
   partial GPU uploads.
-- **6 procedural Web Audio songs** + 8 synthesized SFX — no audio assets, just
-  oscillators.
+- **6 procedural Web Audio songs** + a 100-voice synthesized SFX palette — no
+  audio assets, just oscillators.
 - **Deterministic seeded RNG** (`mulberry32`) injected everywhere; the global
   random number generator is banned in sim logic.
 - **HTMX-polled audit trail**, versioned `localStorage` persistence,
@@ -504,7 +505,7 @@ telemetry + analytics push (every 8th frame) → analytics analyze (every
 ## Documentation
 
 - [docs/CONTROLS.md](./docs/CONTROLS.md) — every control: mouse, keyboard hotkeys,
-  touch, bottom-panel buttons, and the 9 camera views
+  touch, bottom-panel buttons, and the 10 camera views
 - [docs/MODULE-CONTRACTS.md](./docs/MODULE-CONTRACTS.md) — the binding
   per-module spec (V1 through V9: port, Wildbeyond, Pantheon, Xenogenesis,
   Resonance, Atelier, Xenocataclysm, Hardening, AGImAGNOSIS), including the

@@ -114,8 +114,9 @@ server.ts (Bun.serve) ──serves──▶ index.html (/) · docs.html (/docs) 
   reaction-diffusion → ground emissive map; analytics → audit; NHI → entity behaviour + factions).
 - **Boundary fence:** the non-deterministic LLM copilot (`server/`, `ui/copilot.ts`) imports nothing
   from `sim`/`world`/`types`, so it provably cannot reach the seeded RNG or simulation state.
-- **6 ADRs** record binding decisions (Bun runtime, Three.js, HTMX+Tailwind, deterministic RNG, math
-  stack, [ASI graphics stack](adr/0006-asi-graphics-and-language-stack.md)).
+- **9 ADRs** record binding decisions (Bun runtime, Three.js, HTMX+Tailwind, deterministic RNG, math
+  stack, [ASI graphics stack](adr/0006-asi-graphics-and-language-stack.md), the native C++ engine,
+  the Super-Creature deep mind, and genome reproduction).
 
 ---
 

@@ -526,7 +526,7 @@
 │   │   └─ <span class="file">quality.ts</span>     <span class="note">detectQuality — device tier ladder (phone..ultra), entity caps, throttles</span>
 │   ├─ <span class="dir">sim/</span>              <span class="note">the simulation systems (V1 core + V2 wildbeyond + V3 pantheon + V4 atmosphere)</span>
 │   │   ├─ <span class="file">constants.ts</span>   <span class="note">leaf — arena scale, behavior names, morph count, tuning tuples</span>
-│   │   ├─ <span class="file">geometry-cache.ts</span> <span class="note">41 shared geometries reused across all meshes</span>
+│   │   ├─ <span class="file">geometry-cache.ts</span> <span class="note">40 shared geometries reused across all meshes</span>
 │   │   ├─ <span class="file">morphotypes.ts</span> <span class="note">deterministic creature templates (100 legacy / 250 phylum-mode)</span>
 │   │   ├─ <span class="file">phyla.ts</span>       <span class="note">10 phyla — hue bands, geometry families, behavior pools, home sectors</span>
 │   │   ├─ <span class="file">behaviors.ts</span>   <span class="note">26 behavioral fields driving per-entity motion</span>
@@ -534,7 +534,7 @@
 │   │   ├─ <span class="file">entities.ts</span>    <span class="note">EntityManager — births, deaths, behavior dispatch, RD scars on death</span>
 │   │   ├─ <span class="file">instanced-entities.ts</span> <span class="note">instanced PBR pools (per-instance color + emissive vec4)</span>
 │   │   ├─ <span class="file">shoggoths.ts</span>   <span class="note">drifting Lorenz-ish predators with tendrils</span>
-│   │   ├─ <span class="file">puppet-masters.ts</span> <span class="note">3 NPC intelligences gating quantum circuit sequences</span>
+│   │   ├─ <span class="file">puppet-masters.ts</span> <span class="note">100 NPC intelligences (14 mobile) — 3 named heroes + WRAITH hands</span>
 │   │   ├─ <span class="file">titans.ts</span>      <span class="note">10 colossal economies waging an iterated prisoner's dilemma</span>
 │   │   ├─ <span class="file">weather.ts</span>     <span class="note">weather state machine (CLEAR..FOG..STORM..VOID..AURORA)</span>
 │   │   ├─ <span class="file">quantum.ts</span>     <span class="note">QuantumCloud — point cloud that implodes on register collapse</span>
@@ -628,7 +628,7 @@ graph TD
   end
   subgraph SIML["src/sim (V1)"]
     CONST["constants.ts (leaf)"]
-    GEO["geometry-cache.ts (41 shared geometries)"]
+    GEO["geometry-cache.ts (40 shared geometries)"]
     MORPH["morphotypes.ts (100 morphotypes)"]
     ALG["algorithms.ts (25 sort fields)"]
     BEH["behaviors.ts (26 fields)"]
@@ -1080,7 +1080,7 @@ sequenceDiagram
         <h3>V1 &mdash; Sim core <span class="ver">(genesis)</span></h3>
         <p>
           The deterministic foundation: an <code>EntityManager</code> of three.js meshes stamped
-          from 100 morphotypes exhibiting 26 behavioral fields, a shared 41-geometry cache, shoggoth
+          from 100 morphotypes exhibiting 26 behavioral fields, a shared 40-geometry cache, shoggoth
           predators, three puppet-master NPCs, a weather state machine, a quantum point-cloud, a
           neighbor connectome, and a spatial hash. All randomness already flows through the seeded
           <code>mulberry32</code> Rng; the world is reproducible from frame one.
@@ -1359,19 +1359,20 @@ sequenceDiagram
             <tr>
               <td>ultra</td>
               <td>10,000</td>
-              <td>adaptive (6,500 idle)</td>
+              <td>= ceiling</td>
               <td>
                 ultra-only throttles (theory stride 2&rarr;3, half-rate flock, grid cell 10,
-                connectome /4 and /6); 10k reachable as bounded worst case
+                connectome /4 and /6); fills the 10,000 ceiling deterministically (the 6,500
+                adaptive throttle was retired in 0.5.0)
               </td>
             </tr>
           </tbody>
         </table>
       </div>
       <p>
-        Acceptance across eras: ultra 10k &ge;55fps at the idle target with GPU headroom, phone tier
-        &ge;30fps, zero console errors over a 3-minute soak including a forced war + apocalypse, and
-        same-seed determinism preserved throughout.
+        Acceptance across eras: ultra 10k &ge;55fps at the 10,000-entity ceiling with GPU headroom,
+        phone tier &ge;30fps, zero console errors over a 3-minute soak including a forced war +
+        apocalypse, and same-seed determinism preserved throughout.
       </p>
       <p><a class="totop" href="#architecture">&uarr; top</a></p>
 
