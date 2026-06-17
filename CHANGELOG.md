@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Truth-sync (2026-06-17, second pass).** Re-verified gate on Bun 1.3.11; updated commit baseline to `9932bd3`, apex `think()` bench to **≈ 289 µs/beat** (288.72 µs measured), and aligned `/docs` frontier-report footer with live receipts.
+
 ### Added
 
 - **State-of-the-art frontier reports (2026-06-17).** Re-verified gate and re-measured benchmarks; two

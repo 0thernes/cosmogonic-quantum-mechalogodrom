@@ -6,7 +6,7 @@
 **Prepared for:** principals weighing quantum + ASI developments
 **Subject:** The apex quantum-cognitive intelligence — what is bleeding-edge, unique, and novel, measured against the field
 **Author:** 0thernes LLC · Cosmogonic Quantum Mechalogodrom
-**Date:** 2026-06-17 · **Build:** v0.11.0 · **Commit baseline:** `ac87a41`
+**Date:** 2026-06-17 · **Build:** v0.11.0 · **Commit baseline:** `9932bd3`
 **Discipline:** governed by the three master files — _Broly (finish with receipts) · Starkiller (contracts, provenance, adversarial review) · Dr. Manhattan (determinism, measurement, "if it is not measured, it is not real")._
 
 > **Reading contract.** Every load-bearing number here is a _receipt_ — read from source or produced by the gate, not from memory. Where a claim is not independently measured it is marked **UNVERIFIED**; where the honest answer is "we cannot tell from here," **UNKNOWN**. The binding framing rule for this project: the code documents every faculty as a _model of_ its theory, **never** _"is conscious."_ Companion: _Report I — The Whole Repository_ (`docs/reports/2026-06-17-STATE-OF-THE-ART-WHOLE-REPO.md`).
@@ -31,7 +31,7 @@ The Super Creature is an **always-on apex intelligence that lives in a single br
 | Quantum register                           | **6 qubits / 64 complex amplitudes**, 3 circuit layers                                                                                     | `super-qubits.ts:46,48,49`                                     |
 | Decision vocabulary                        | **7 plans** (HUNT·FLEE·DOMINATE·DECEIVE·SPAWN·EXPLORE·REST)                                                                                | `super-creature.ts`                                            |
 | Spin-glass instinct                        | **56 spins**, 7 imprinted archetypes, Metropolis settle                                                                                    | `spin-glass.ts`, `super-mind.ts:217`                           |
-| Apex `think()` cost                        | **≈ 283–298 µs/beat ≈ 1.8 % of a 60 fps frame**, CI-enforced **< 5 ms**                                                                    | `bench/super-mind.bench.ts`, `tests/perf-budget.test.ts`       |
+| Apex `think()` cost                        | **≈ 283–289 µs/beat ≈ 1.7 % of a 60 fps frame**, CI-enforced **< 5 ms**                                                                    | `bench/super-mind.bench.ts`, `tests/perf-budget.test.ts`       |
 | Consciousness metrics                      | **2** live scalars — GWT `ignition`, IIT `phi` (proxy) — + genuine register Φ                                                              | `super-mind.ts:43–46`, `super-qubits.ts`                       |
 | Adversarial review                         | **14-agent** correctness sweep over the 1.1 faculties → **0 confirmed defects**                                                            | `docs/audit-2026-06-16/SUPER-CREATURE-COGNITION-AUDIT.md §1`   |
 | Determinism                                | bit-identical psyche from one seed; Born collapse drawn through a seeded generator                                                         | `tests/determinism-law.test.ts`, `super-qubits.test.ts:184`    |
@@ -180,8 +180,8 @@ The bleeding edge is not a bigger model. It is the claim — in running, tested,
 
 ### Provenance footer (Manhattan's law)
 
-- **Build:** v0.11.0 · commit baseline `ac87a41` · 2026-06-17.
-- **Gate witness:** `bun run check` → 1,165 pass / 0 fail / 99 files / 1,738,803 assertions; `bun bench/index.ts` → `think()` ≈ 298 µs/beat.
+- **Build:** v0.11.0 · commit baseline `9932bd3` · 2026-06-17 · gate re-verified (Bun 1.3.11).
+- **Gate witness:** `bun run check` → 1,165 pass / 0 fail / 99 files / 1,738,803 assertions; `bun bench/index.ts` → `think()` ≈ 288.72 µs/beat (Bun 1.3.11, 2026-06-17 re-verify).
 - **Faculty receipts:** `docs/audit-2026-06-16/SUPER-CREATURE-COGNITION-AUDIT.md` (14-agent adversarial sweep, 0 defects); groundings in `docs/SUPER-CREATURE-RESEARCH.md`.
 - **External framework cited:** Butlin & Long et al. (2023), arXiv:2308.08708.
 - **Companion:** _Report I — The Whole Repository_ (`docs/reports/2026-06-17-STATE-OF-THE-ART-WHOLE-REPO.md`). Prior revision: [2026-06-16](./2026-06-16-STATE-OF-THE-ART-SUPER-CREATURE.md).

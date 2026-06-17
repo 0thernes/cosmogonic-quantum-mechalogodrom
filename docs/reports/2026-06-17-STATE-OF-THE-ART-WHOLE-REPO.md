@@ -2,7 +2,7 @@
 
 ### Cosmogonic Quantum Mechalogodrom · A State-of-the-Art Assessment
 
-**0thernes LLC** · prepared 2026-06-17 · against `v0.11.0` (`main` @ `ac87a41`)
+**0thernes LLC** · prepared 2026-06-17 · against `v0.11.0` (`main` @ `9932bd3`)
 **Verified gate at time of writing:** `prettier --check` · `tsc --strict` · `oxlint` ·
 **1,165 tests / 0 failures across 99 files (1,738,803 assertions)** · `bun build` → 7 artifacts.
 **Governed by** the three master files — Broly (the Executor: finish everything, full gates,
@@ -193,7 +193,7 @@ one variable, study it like a specimen.
 | ------------------------------ | ------------------------------------------------------------- |
 | Tests / failures               | **1,165 / 0** (1.74 M assertions, 99 files)                   |
 | Line / function coverage       | **97.38 % / 93.35 %** (`bun test --coverage`)                 |
-| Apex mind per-beat cost        | **≈ 0.30 ms** (CI-enforced < 5 ms) — ~1.8 % of a 60 fps frame |
+| Apex mind per-beat cost        | **≈ 0.29 ms** (288.72 µs measured; CI-enforced < 5 ms) — ~1.7 % of a 60 fps frame |
 | Population at 60 fps / ceiling | 10,000 / **50,000**                                           |
 | World parameters / footprint   | ≈ 3.5 M / ≈ 14 MB                                             |
 | Quantum laws proven            | unitarity 1e-12, Born 1e-9, PSD QGT, GHZ=1 ebit               |
