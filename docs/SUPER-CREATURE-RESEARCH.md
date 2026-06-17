@@ -26,7 +26,7 @@ Compiled 2026-06-16 (research scout pass).
 
 ## 1. Scientific theories of consciousness — the IIT vs GNWT adversarial collaboration (Cogitate)
 
-- The flagship result is published and is a genuine **double-bind, not a win for either side**: the
+- The flagship result is published and **challenges key tenets of both theories — asymmetrically, not a win for either side** ("double-bind" is our shorthand, not the paper's term; GNWT's central prefrontal-ignition prediction was challenged more severely): the
   preregistered adversarial test (n = 256; fMRI + MEG + iEEG) aligned with _some_ predictions of both IIT
   and GNWT while **challenging key tenets of both** — IIT contradicted by a lack of sustained posterior
   synchronization, GNWT by a lack of prefrontal "ignition" at stimulus offset (Ferrante et al., 2025,
@@ -109,7 +109,7 @@ Compiled 2026-06-16 (research scout pass).
   uncertainty-reducing ones. It remains a live frontier — Tiomkin, Nemenman, Polani & Tishby (2023) give the
   dynamical-systems treatment; Levy, Allievi & Konidaris (2024) estimate empowerment from a _latent_
   predictive model with no simulator (exactly this setting); Lidayan et al. (2025) find entropy/empowerment
-  align with human open-world exploration **better than curiosity**.
+  both **positively track** human open-world exploration (information-gain does _not_), playing complementary roles — not a blanket "empowerment beats curiosity" result.
 - **What Super Creature 1.1 computes:** `src/sim/empowerment.ts` — each beat it bins the 16-D world-model
   latent into M = 64 coarse cells by the signs of a frozen random-hyperplane LSH, maintains an online
   exponential-forgetting estimate of the K × M channel q(cell | plan) from its committed-plan → next-cell
