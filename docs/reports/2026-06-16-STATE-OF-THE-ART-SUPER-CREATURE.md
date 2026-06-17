@@ -21,20 +21,20 @@ The Super Creature is an **always-on apex intelligence that lives in a single br
 
 ## 1. Receipts dashboard (the numbers, with provenance)
 
-| Metric | Value | Provenance / receipt |
-| --- | --- | --- |
-| Build / gate | **v0.11.0**, **1,159 pass / 0 fail**, 99 files, 1,738,797 assertions | `package.json`, `bun test` (this session, Bun 1.3.11) |
-| Apex composite mind | **~10,081 weights** across ~12 sub-networks | `super-mind.ts:2,382–393` |
-| Apex total parameters | **≈ 37,225** = 10,081 mind + 1,444 legacy spine + 100 × 257 wingmen | `super-mind.ts`, `super-creature.ts:36`, `super-wingmen.ts:24` |
-| Faculties wired into the per-beat decision | **14** (Report I receipts); cataloged as **11 cognitive + 10 quantum** named modules; **~30** distinct mechanisms incl. composite sub-nets | `docs/audit-2026-06-16/SUPER-CREATURE-COGNITION-AUDIT.md §3` |
-| Cognitive pipeline | **5 stages** (PERCEIVE·IMAGINE·REASON·FEEL·ACT) × **5 depths** × **5 variants** = 25 thought branches | `super-mind.ts:71–73` |
-| Quantum register | **6 qubits / 64 complex amplitudes**, 3 circuit layers | `super-qubits.ts:46,48,49` |
-| Decision vocabulary | **7 plans** (HUNT·FLEE·DOMINATE·DECEIVE·SPAWN·EXPLORE·REST) | `super-creature.ts` |
-| Spin-glass instinct | **56 spins**, 7 imprinted archetypes, Metropolis settle | `spin-glass.ts`, `super-mind.ts:217` |
-| Apex `think()` cost | **≈ 208–214 µs/beat ≈ 1.25 % of a 60 fps frame**, CI-enforced **< 5 ms** | `bench/super-mind.bench.ts`, `tests/perf-budget.test.ts` |
-| Consciousness metrics | **2** live scalars — GWT `ignition`, IIT `phi` (proxy) — + genuine register Φ | `super-mind.ts:43–46`, `super-qubits.ts` |
-| Adversarial review | **14-agent** correctness sweep over the 1.1 faculties → **0 confirmed defects** | `docs/audit-2026-06-16/SUPER-CREATURE-COGNITION-AUDIT.md §1` |
-| Determinism | bit-identical psyche from one seed; Born collapse drawn through a seeded generator | `tests/determinism-law.test.ts`, `super-qubits.test.ts:184` |
+| Metric                                     | Value                                                                                                                                      | Provenance / receipt                                           |
+| ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------- |
+| Build / gate                               | **v0.11.0**, **1,159 pass / 0 fail**, 99 files, 1,738,797 assertions                                                                       | `package.json`, `bun test` (this session, Bun 1.3.11)          |
+| Apex composite mind                        | **~10,081 weights** across ~12 sub-networks                                                                                                | `super-mind.ts:2,382–393`                                      |
+| Apex total parameters                      | **≈ 37,225** = 10,081 mind + 1,444 legacy spine + 100 × 257 wingmen                                                                        | `super-mind.ts`, `super-creature.ts:36`, `super-wingmen.ts:24` |
+| Faculties wired into the per-beat decision | **14** (Report I receipts); cataloged as **11 cognitive + 10 quantum** named modules; **~30** distinct mechanisms incl. composite sub-nets | `docs/audit-2026-06-16/SUPER-CREATURE-COGNITION-AUDIT.md §3`   |
+| Cognitive pipeline                         | **5 stages** (PERCEIVE·IMAGINE·REASON·FEEL·ACT) × **5 depths** × **5 variants** = 25 thought branches                                      | `super-mind.ts:71–73`                                          |
+| Quantum register                           | **6 qubits / 64 complex amplitudes**, 3 circuit layers                                                                                     | `super-qubits.ts:46,48,49`                                     |
+| Decision vocabulary                        | **7 plans** (HUNT·FLEE·DOMINATE·DECEIVE·SPAWN·EXPLORE·REST)                                                                                | `super-creature.ts`                                            |
+| Spin-glass instinct                        | **56 spins**, 7 imprinted archetypes, Metropolis settle                                                                                    | `spin-glass.ts`, `super-mind.ts:217`                           |
+| Apex `think()` cost                        | **≈ 208–214 µs/beat ≈ 1.25 % of a 60 fps frame**, CI-enforced **< 5 ms**                                                                   | `bench/super-mind.bench.ts`, `tests/perf-budget.test.ts`       |
+| Consciousness metrics                      | **2** live scalars — GWT `ignition`, IIT `phi` (proxy) — + genuine register Φ                                                              | `super-mind.ts:43–46`, `super-qubits.ts`                       |
+| Adversarial review                         | **14-agent** correctness sweep over the 1.1 faculties → **0 confirmed defects**                                                            | `docs/audit-2026-06-16/SUPER-CREATURE-COGNITION-AUDIT.md §1`   |
+| Determinism                                | bit-identical psyche from one seed; Born collapse drawn through a seeded generator                                                         | `tests/determinism-law.test.ts`, `super-qubits.test.ts:184`    |
 
 **On the faculty count (stated precisely, not rounded).** "14 wired" counts the faculties that vote in the per-beat decision; the cognition audit catalogs **11 cognitive + 10 quantum** named modules (some at UI cadence, two measuring Φ of _different_ systems); counting the composite's ~12 sub-networks and the spin-glass instinct gives **~30 distinct, individually unit-tested mechanisms.** All three numbers are true under their stated definition — we give all three rather than pick a flattering one.
 
@@ -60,19 +60,19 @@ Every faculty is a pure leaf or inline module: deterministic, bounded, allocatio
 
 **Cognitive (11):**
 
-| #   | Faculty · file                                          | Theory (grounding)                                              | What it writes into the decision                            |
-| --- | ------------------------------------------------------- | -------------------------------------------------------------- | ----------------------------------------------------------- |
-| 1   | Global-Workspace ignition · `super-mind.ts`             | GNW — Baars; Dehaene; Cogitate/Ferrante 2025 _Nature_           | broadcasts the winning plan; **gates memory consolidation** |
-| 2   | Integrated-Information Φ (proxy) · `super-mind.ts`      | IIT — Tononi                                                    | participation/coherence integration cue → metacognition     |
-| 3   | Active Inference / FEP · `active-inference.ts`          | Friston; variational + expected free energy                    | belief over 8 situations; epistemic + pragmatic plan vote   |
-| 4   | Echo-state Reservoir · `reservoir.ts`                   | Jaeger ESN / Maass LSM ("wet-computing" algorithm)             | temporal memory + novelty → curiosity                       |
-| 5   | Metacognitive Executive · `metacognition.ts`           | Higher-Order — Rosenthal; Fleming & Daw                         | second-order **confidence** spent as explore/commit control |
-| 6   | Theory of Mind · `theory-of-mind.ts`                   | Machine ToM — Rabinowitz et al. 2018 (verified arXiv:1802.07740) | rival-intent menace → social drives                         |
-| 7   | Neural Criticality · `criticality.ts`                  | self-organised criticality, edge-of-chaos σ̂→1                  | gain homeostat; off-critical ⇒ explore                      |
-| 8   | Successor Representation · `successor-representation.ts` | Dayan 1993; Stachenfeld et al. 2017 _Nat. Neuro._              | model-based value look-ahead over plans                     |
-| 9   | Empowerment Drive · `empowerment.ts`                   | Klyubin/Polani 2005; Blahut–Arimoto capacity I(A;S′)           | agency hunger → vote for the most-steering plan             |
-| 10  | Neuromodulation · `neuromodulation.ts`                 | Doya 2002 — DA/5-HT/NE/ACh ↔ RL metaparameters                 | modulates aggression / patience / alarm / learning          |
-| 11  | Holographic Memory · `holographic-memory.ts`           | VSA/HRR — Plate 1995; Kanerva 2009                              | analogical recall ("in contexts like this I chose…")        |
+| #   | Faculty · file                                           | Theory (grounding)                                               | What it writes into the decision                            |
+| --- | -------------------------------------------------------- | ---------------------------------------------------------------- | ----------------------------------------------------------- |
+| 1   | Global-Workspace ignition · `super-mind.ts`              | GNW — Baars; Dehaene; Cogitate/Ferrante 2025 _Nature_            | broadcasts the winning plan; **gates memory consolidation** |
+| 2   | Integrated-Information Φ (proxy) · `super-mind.ts`       | IIT — Tononi                                                     | participation/coherence integration cue → metacognition     |
+| 3   | Active Inference / FEP · `active-inference.ts`           | Friston; variational + expected free energy                      | belief over 8 situations; epistemic + pragmatic plan vote   |
+| 4   | Echo-state Reservoir · `reservoir.ts`                    | Jaeger ESN / Maass LSM ("wet-computing" algorithm)               | temporal memory + novelty → curiosity                       |
+| 5   | Metacognitive Executive · `metacognition.ts`             | Higher-Order — Rosenthal; Fleming & Daw                          | second-order **confidence** spent as explore/commit control |
+| 6   | Theory of Mind · `theory-of-mind.ts`                     | Machine ToM — Rabinowitz et al. 2018 (verified arXiv:1802.07740) | rival-intent menace → social drives                         |
+| 7   | Neural Criticality · `criticality.ts`                    | self-organised criticality, edge-of-chaos σ̂→1                    | gain homeostat; off-critical ⇒ explore                      |
+| 8   | Successor Representation · `successor-representation.ts` | Dayan 1993; Stachenfeld et al. 2017 _Nat. Neuro._                | model-based value look-ahead over plans                     |
+| 9   | Empowerment Drive · `empowerment.ts`                     | Klyubin/Polani 2005; Blahut–Arimoto capacity I(A;S′)             | agency hunger → vote for the most-steering plan             |
+| 10  | Neuromodulation · `neuromodulation.ts`                   | Doya 2002 — DA/5-HT/NE/ACh ↔ RL metaparameters                   | modulates aggression / patience / alarm / learning          |
+| 11  | Holographic Memory · `holographic-memory.ts`             | VSA/HRR — Plate 1995; Kanerva 2009                               | analogical recall ("in contexts like this I chose…")        |
 
 **Quantum-computing (10):** statevector register (`quantum.ts`) · Eshkol qubit-RNG (`eshkol-qrng.ts`) · QGT / Fubini–Study (`quantum-geometry.ts`) · Quantum Natural Gradient (`quantum-natural-gradient.ts`) · Grover amplification (`super-qubits.ts`) · quantum coherence (`quantum-coherence.ts`) · quantum magic / Stabilizer 2-Rényi (`quantum-magic.ts`) · register Φ / IIT min-cut (`super-qubits.ts`) · quantum deliberation / Lindblad-GKSL (`quantum-deliberation.ts`) · quantum reservoir (`quantum-reservoir.ts`). Plus the **spin-glass instinct** (`spin-glass.ts`) and the large-scale **Clifford tableau** (`clifford-tableau.ts`, present + tested but **not yet wired** — see §10).
 
@@ -117,21 +117,21 @@ Most "AI-consciousness" demos are unfalsifiable black boxes. This one inverts th
 
 We score against the most rigorous available framework, the same one Report I uses: **Butlin, Long, Elmoznino, Bengio, Birch, Fleming, et al. (2023), "Consciousness in Artificial Intelligence," arXiv:2308.08708**, which derives _indicator properties_ from leading neuroscientific theories under computational functionalism. Their own finding: _no current AI system is conscious, and there is no obvious technical barrier to building one that satisfies the indicators._ The Super Creature is where most of those indicators are actually implemented in this repository:
 
-| Theory → indicator                                       | Present?     | Mechanism (receipt)                                                |
-| -------------------------------------------------------- | ------------ | ------------------------------------------------------------------ |
-| **GWT-1** parallel specialized modules                   | ✅           | 30 organ-nets + 11 cognitive faculties                             |
-| **GWT-2** limited-capacity workspace + bottleneck        | ✅ (partial) | meta-network integrates a 69-vector → 12 drives; argmax bottleneck |
-| **GWT-3** global broadcast                               | ✅           | **ignition** gates next-beat memory consolidation (`super-mind.ts`) |
-| **GWT-4** state-dependent attention                      | ◑            | neuromodulation biases drive selection; no explicit attention controller |
-| **PP-1** predictive coding                               | ✅           | predictor recurses 5 deep; error → surprise                        |
-| **HOT-2** metacognitive monitoring                       | ✅           | metacognition reads decision margin + Φ + belief-entropy → confidence |
-| **HOT-3** agency from belief→action                      | ✅ (partial) | empowerment + successor representation + active inference vote on plans |
-| **AE-1** agency (goal pursuit from feedback)             | ✅           | GOAP plans toward dominion; closed sense→act→world loop (§4)        |
-| **AE-2** embodiment (output↔input contingency)           | ✅ (partial) | body morphology/locomotion read back into perception               |
+| Theory → indicator                                       | Present?     | Mechanism (receipt)                                                       |
+| -------------------------------------------------------- | ------------ | ------------------------------------------------------------------------- |
+| **GWT-1** parallel specialized modules                   | ✅           | 30 organ-nets + 11 cognitive faculties                                    |
+| **GWT-2** limited-capacity workspace + bottleneck        | ✅ (partial) | meta-network integrates a 69-vector → 12 drives; argmax bottleneck        |
+| **GWT-3** global broadcast                               | ✅           | **ignition** gates next-beat memory consolidation (`super-mind.ts`)       |
+| **GWT-4** state-dependent attention                      | ◑            | neuromodulation biases drive selection; no explicit attention controller  |
+| **PP-1** predictive coding                               | ✅           | predictor recurses 5 deep; error → surprise                               |
+| **HOT-2** metacognitive monitoring                       | ✅           | metacognition reads decision margin + Φ + belief-entropy → confidence     |
+| **HOT-3** agency from belief→action                      | ✅ (partial) | empowerment + successor representation + active inference vote on plans   |
+| **AE-1** agency (goal pursuit from feedback)             | ✅           | GOAP plans toward dominion; closed sense→act→world loop (§4)              |
+| **AE-2** embodiment (output↔input contingency)           | ✅ (partial) | body morphology/locomotion read back into perception                      |
 | **RPT-1/2** algorithmic recurrence + integrated percepts | ◑            | recurrence present (predictor/reservoir) but **architected, not learned** |
-| **HOT-1** generative top-down perception                 | ◑            | imagitron generates; not a full top-down generative model          |
-| **HOT-4** sparse-smooth quality space                    | ❌           | not implemented                                                    |
-| **AST-1** attention schema (model of own attention)      | ❌           | self-model is a self-awareness scalar, not an attention model      |
+| **HOT-1** generative top-down perception                 | ◑            | imagitron generates; not a full top-down generative model                 |
+| **HOT-4** sparse-smooth quality space                    | ❌           | not implemented                                                           |
+| **AST-1** attention schema (model of own attention)      | ❌           | self-model is a self-awareness scalar, not an attention model             |
 
 **Score: ~9 of ~14 indicators structurally present (several partial); 2 absent** — unusually high structural coverage for a non-learning, 10⁴-parameter browser agent, and notable because **GWT-3 ignition and HOT-2 monitoring** (which large learned models routinely miss) are explicitly implemented and wired here.
 
