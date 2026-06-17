@@ -23,17 +23,17 @@ seed**.
 
 ## 1 · Codebase metrics (measured)
 
-| Metric                                     | Value                                               |
-| ------------------------------------------ | --------------------------------------------------- |
-| Total authored lines (incl. native engine) | **79,319**                                          |
-| Native C++ engine (separate, ADR-0007)     | 1,296 lines · 6 files                               |
-| Files                                      | **331**                                             |
-| Folders                                    | **32** (+ root)                                     |
-| Distinct file types                        | 21                                                  |
-| App source (TypeScript)                    | 35,226 lines · 108 files                            |
-| Tests                                      | 14,117 lines · 99 files                             |
-| Test : source ratio                        | 0.40 → **97.38 % line / 93.35 % function** coverage |
-| Passing tests                              | **1,159** (0 failing)                               |
+| Metric                                     | Value                                                    |
+| ------------------------------------------ | -------------------------------------------------------- |
+| Total authored lines (incl. native engine) | **79,319**                                               |
+| Native C++ engine (separate, ADR-0007)     | 1,296 lines · 6 files                                    |
+| Files                                      | **331**                                                  |
+| Folders                                    | **32** (+ root)                                          |
+| Distinct file types                        | 21                                                       |
+| App source (TypeScript)                    | 35,226 lines · 108 files                                 |
+| Tests                                      | 14,117 lines · 99 files                                  |
+| Test : source ratio                        | 0.40 → **91.2 % line / 92.5 % function** coverage (lcov) |
+| Passing tests                              | **1,159** (0 failing)                                    |
 
 ### 1.1 Languages
 
@@ -309,7 +309,7 @@ Complexity classes are catalogued in [COMPLEXITY.md](COMPLEXITY.md); hot-path be
 The single gate — `bun run check` — must pass before every commit:
 
 `prettier --check` → `tsc --noEmit` (strict) → `oxlint` → `bun test` (**1,159 tests, 0 fail**) →
-`bun scripts/build.ts`. Coverage gate: line ≥ 0.90, function ≥ 0.85 (measured 97.38 % / 93.35 %).
+`bun scripts/build.ts`. Coverage gate: line ≥ 0.90, function ≥ 0.85 (measured 91.2 % / 92.5 %, lcov).
 Three governing "master" personas (`masters/*.xml`) encode the discipline: **the Executor** (finish
 everything, full gates), **the Architect** (contracts before code, exclusive ownership), **the
 Physicist** (determinism, measurement, frame budgets, provenance).
