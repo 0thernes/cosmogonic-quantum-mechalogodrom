@@ -65,7 +65,7 @@ Nothing in it is set dressing.
 | Quantum (apex mind)     | a genuine **6-qubit statevector** circuit + a **stabilizer tableau to 64+ qubits** (§3.2)                                                                                                                         | `math/quantum.ts`, `clifford-tableau.ts`       |
 | Native engine           | **C++20 SDF ray-marcher**, GLFW/GLM, **Jolt rigid-body physics + volume-conserving fracture**, RTX-class GPU, 4K offscreen                                                                                        | `native/`                                      |
 | Determinism             | one `mulberry32(seed)`; `Math.random`/`Date.now` **banned and GLOB-enforced** by a test that auto-seals every new file                                                                                            | `math/rng.ts`, `tests/determinism-law.test.ts` |
-| Quality                 | **1,159 tests / 0 fail**, 95.6 % line coverage, full CI/CD gate on every push                                                                                                                                     | `bun run check`                                |
+| Quality                 | **1,159 tests / 0 fail**, 91.2 % line coverage (lcov), full CI/CD gate on every push                                                                                                                              | `bun run check`                                |
 
 **The defining engineering property:** _every system reads AND writes another._ A quantum collapse
 witnessed by a Titan becomes energy in its ledger, which tips a prisoner's-dilemma payoff, which
@@ -192,7 +192,7 @@ one variable, study it like a specimen.
 | Metric                         | Value                                                         |
 | ------------------------------ | ------------------------------------------------------------- |
 | Tests / failures               | **1,159 / 0** (1.74 M assertions, 99 files)                   |
-| Line / function coverage       | 95.6 % / 90.5 %                                               |
+| Line / function coverage       | 91.2 % / 92.5 % (lcov)                                        |
 | Apex mind per-beat cost        | **≈ 0.21 ms** (CI-enforced < 5 ms) — ~1.3 % of a 60 fps frame |
 | Population at 60 fps / ceiling | 10,000 / **50,000**                                           |
 | World parameters / footprint   | ≈ 3.5 M / ≈ 14 MB                                             |
