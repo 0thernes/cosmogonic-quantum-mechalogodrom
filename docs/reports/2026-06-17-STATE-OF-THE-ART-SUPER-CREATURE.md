@@ -219,7 +219,7 @@ It is not a conscious being, not a large language model, and cannot speak Englis
 | Scientific honesty            | 10    | "models, not is"; verified citations; proxies flagged                             |
 | Determinism / reproducibility | 10    | enforced by construction, not convention                                          |
 | Quantum integration depth     | 9     | self-optimizing circuit inside an agent; 64-qubit stabilizer reflex still unwired |
-| Test / CI rigor               | 9     | 1,165 tests, SHA-pinned CI, SBOM, SLSA provenance                                 |
+| Test / CI rigor               | 9     | 1,166 tests, SHA-pinned CI, SBOM, SLSA provenance                                 |
 | Performance discipline        | 9     | allocation-free hot paths, frame-budget CI law                                    |
 | Open-domain generality        | 3     | narrow + embodied by design; cannot reason over arbitrary text                    |
 | Phenomenal consciousness      | 1     | not claimed; see §III.2                                                           |
