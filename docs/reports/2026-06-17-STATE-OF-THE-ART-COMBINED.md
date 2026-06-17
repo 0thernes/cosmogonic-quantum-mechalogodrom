@@ -2,7 +2,9 @@
 
 ### A unified State-of-the-Art Assessment combining Report I (The Whole Repository) + Report II (The Super Creature)
 
-**0thernes LLC** · prepared 2026-06-17 · against `v0.11.0` (`main` @ `5426b49`)
+> **Canonical §III.2–III.5 (sentience scorecard + LFG metrics).** If you see **1,159 tests**, **91.2 % coverage**, or **≈ 208 µs/beat**, you are reading a **superseded 2026-06-16** edition. This document is authoritative as of 2026-06-17.
+
+**0thernes LLC** · prepared 2026-06-17 · against `v0.11.0` (`main` @ `481b52c`)
 **Classification:** Technical / strategic briefing — _MIT-PhD caliber, presidential-briefing grade._
 **Prepared for:** principals weighing quantum + ASI developments.
 **Verified gate at time of writing:** `prettier --check` · `tsc --strict` · `oxlint` ·
@@ -273,7 +275,7 @@ measured against the field. (Originally "Report II of II — The Super Creature.
 | Quantum register                           | **6 qubits / 64 complex amplitudes**, 3 circuit layers                                                                 | `super-qubits.ts:46,48,49`                                     |
 | Decision vocabulary                        | **7 plans** (HUNT·FLEE·DOMINATE·DECEIVE·SPAWN·EXPLORE·REST)                                                            | `super-creature.ts`                                            |
 | Spin-glass instinct                        | **56 spins**, 7 imprinted archetypes, Metropolis settle                                                                | `spin-glass.ts`, `super-mind.ts:217`                           |
-| Apex `think()` cost                        | **≈ 285 µs/beat** mean (≈ 273 µs median) ≈ 1.7 % of a 60 fps frame**, CI-enforced **< 5 ms\*\*                         | `bench/super-mind.bench.ts`, `tests/perf-budget.test.ts`       |
+| Apex `think()` cost                        | **≈ 285–304 µs/beat** mean (≈ 273–300 µs median) ≈ 1.7–1.8 % of a 60 fps frame, CI-enforced **< 5 ms**                 | `bench/super-mind.bench.ts`, `tests/perf-budget.test.ts`       |
 | Consciousness metrics                      | **2** live scalars — GWT `ignition`, IIT `phi` (proxy) — + genuine register Φ                                          | `super-mind.ts:43–46`, `super-qubits.ts`                       |
 | Adversarial review                         | **14-agent** correctness sweep over the 1.1 faculties → **0 confirmed defects**                                        | `../audit-2026-06-16/SUPER-CREATURE-COGNITION-AUDIT.md §1`     |
 | Determinism                                | bit-identical psyche from one seed; Born collapse drawn through a seeded generator                                     | `tests/determinism-law.test.ts`, `super-qubits.test.ts:184`    |
@@ -584,16 +586,16 @@ ignition gate, two Φ measures — **not a subjective inner life.**
 
 **Quantitative (measured):**
 
-| Metric                         | Value                                                                                   |
-| ------------------------------ | --------------------------------------------------------------------------------------- |
-| Tests / failures               | **1,166 / 0** (1.74 M assertions, 99 files)                                             |
-| Line / function coverage       | **97.38 % / 93.35 %** (`bun test --coverage`)                                           |
-| Apex mind per-beat cost        | **≈ 285 µs/beat** mean (≈ 273 µs median; CI-enforced < 5 ms) — ~1.7 % of a 60 fps frame |
-| Population at 60 fps / ceiling | 10,000 / **50,000**                                                                     |
-| World parameters / footprint   | ≈ 3.5 M / ≈ 14 MB                                                                       |
-| Apex total parameters          | ≈ 37,225 (≈ 10,081-weight composite + 1,444 spine + 100 × 257)                          |
-| Quantum laws proven            | unitarity 1e-12, Born 1e-9, PSD QGT, GHZ=1 ebit                                         |
-| Determinism                    | bit-identical from one 32-bit seed, GLOB-guarded                                        |
+| Metric                         | Value                                                                                               |
+| ------------------------------ | --------------------------------------------------------------------------------------------------- |
+| Tests / failures               | **1,166 / 0** (1.74 M assertions, 99 files)                                                         |
+| Line / function coverage       | **97.38 % / 93.35 %** (`bun test --coverage`)                                                       |
+| Apex mind per-beat cost        | **≈ 285–304 µs/beat** mean (≈ 273–300 µs median; CI-enforced < 5 ms) — ~1.7–1.8 % of a 60 fps frame |
+| Population at 60 fps / ceiling | 10,000 / **50,000**                                                                                 |
+| World parameters / footprint   | ≈ 3.5 M / ≈ 14 MB                                                                                   |
+| Apex total parameters          | ≈ 37,225 (≈ 10,081-weight composite + 1,444 spine + 100 × 257)                                      |
+| Quantum laws proven            | unitarity 1e-12, Born 1e-9, PSD QGT, GHZ=1 ebit                                                     |
+| Determinism                    | bit-identical from one 32-bit seed, GLOB-guarded                                                    |
 
 **Qualitative (engineering judgment, 1–10):**
 

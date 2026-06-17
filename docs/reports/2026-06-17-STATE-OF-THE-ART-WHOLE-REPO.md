@@ -90,7 +90,7 @@ impossible?_ — answered as a ledger, each row a receipt rather than a boast:
 | “You cannot make a _quantum_-cognitive agent bit-reproducible.”                                                                                                 | Quantum sampling + wall-clock RNG = irreproducible by definition.                                                     | The Born-rule “thought collapse” is drawn through a **seeded Eshkol qubit-RNG**; `Math.random`/`Date.now` are **banned and GLOB-enforced** (`tests/determinism-law.test.ts`). Same seed → same psyche, bit for bit.                     |
 | “Consciousness metrics in a sim are hand-waving — Φ is intractable, ignition is a slide.”                                                                       | True Φ is super-exponential _and_ non-unique (Hanson–Walker 2023); ignition is a contested signature (Cogitate 2025). | Both are **live deterministic scalars wired into behaviour**: GWT **ignition gates memory consolidation**; a **genuine register Φ (min-cut entanglement) feeds the decision** — each unit-tested, each honestly labelled a model/proxy. |
 | “A self-optimizing quantum circuit _inside_ a running agent is a paper, not a browser tab.”                                                                     | Quantum Natural Gradient over a circuit’s Fubini–Study metric is frontier QML (Stokes et al. 2020).                   | The apex circuit **reads its own Quantum Geometric Tensor and descends it** by QNG each beat to make its intended thought more probable (`math/quantum-natural-gradient.ts`); PSD-metric + closed-form tested.                          |
-| “Nobody fuses A-Life-at-scale + honest statevector quantum + a 20-faculty mind + 2 consciousness metrics under one determinism law — it would drift and break.” | Each subsystem is a project on its own; coupling them is assumed unmaintainable.                                      | One causal web, **1,165 tests / 0 fail**, full cold-shell gate, **every system reads AND writes another** (PHILOSOPHY law 1).                                                                                                           |
+| “Nobody fuses A-Life-at-scale + honest statevector quantum + a 20-faculty mind + 2 consciousness metrics under one determinism law — it would drift and break.” | Each subsystem is a project on its own; coupling them is assumed unmaintainable.                                      | One causal web, **1,166 tests / 0 fail**, full cold-shell gate, **every system reads AND writes another** (PHILOSOPHY law 1).                                                                                                           |
 | “‘Architecture beats parameter count’ is unprovable folklore.”                                                                                                  | The scale-maximalist orthodoxy equates capability with parameters (GPT-3 ≈ 175 B).                                    | A **≈ 37,225-param** apex (independently re-summed, §3.3) plans (GOAP), models opponents (ToM), seeks empowerment, runs active inference, and self-replicates — a **falsifiable specimen**, not a manifesto.                            |
 
 None of these is a sentience claim (§6). Each is a _capability_ the field treats as hard, expensive, or
@@ -302,16 +302,16 @@ It is not a conscious being, not a large language model, and cannot speak Englis
 
 **Quantitative (measured):**
 
-| Metric                         | Value                                                          |
-| ------------------------------ | -------------------------------------------------------------- |
-| Tests / failures               | 1,166 / 0 (1.74 M assertions, 99 files)                        |
-| Line / function coverage       | 97.38 % / 93.35 % (bun test --coverage, "All files")           |
+| Metric                         | Value                                                                        |
+| ------------------------------ | ---------------------------------------------------------------------------- |
+| Tests / failures               | 1,166 / 0 (1.74 M assertions, 99 files)                                      |
+| Line / function coverage       | 97.38 % / 93.35 % (bun test --coverage, "All files")                         |
 | Apex mind per-beat cost        | ≈ 285 µs/beat (273 µs median, CI-enforced < 5 ms) — ~1.7 % of a 60 fps frame |
-| Population at 60 fps / ceiling | 10,000 / 50,000                                                |
-| World parameters / footprint   | ≈ 3.5 M / ≈ 14 MB                                              |
-| Apex total parameters          | ≈ 37,225 (≈ 10,081-weight composite + 1,444 spine + 100 × 257) |
-| Quantum laws proven            | unitarity 1e-12, Born 1e-9, PSD QGT, GHZ=1 ebit                |
-| Determinism                    | bit-identical from one 32-bit seed, GLOB-guarded               |
+| Population at 60 fps / ceiling | 10,000 / 50,000                                                              |
+| World parameters / footprint   | ≈ 3.5 M / ≈ 14 MB                                                            |
+| Apex total parameters          | ≈ 37,225 (≈ 10,081-weight composite + 1,444 spine + 100 × 257)               |
+| Quantum laws proven            | unitarity 1e-12, Born 1e-9, PSD QGT, GHZ=1 ebit                              |
+| Determinism                    | bit-identical from one 32-bit seed, GLOB-guarded                             |
 
 **Qualitative (engineering judgment, 1–10):**
 
