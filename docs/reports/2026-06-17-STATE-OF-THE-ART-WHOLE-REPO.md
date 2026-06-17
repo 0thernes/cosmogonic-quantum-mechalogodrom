@@ -4,7 +4,7 @@
 
 **0thernes LLC** · prepared 2026-06-17 · against `v0.11.0` (`main` @ `60478a4`)
 **Verified gate (re-run this revision, cold shell):** `prettier --check` · `tsc --strict` · `oxlint` ·
-**1,165 tests / 0 failures across 99 files (1,738,803 assertions)** · **97.38 % line / 93.35 % function** coverage (`bun test --coverage`, “All files”) · `bun build` → 7 artifacts.
+**1,166 tests / 0 failures across 99 files (1,738,804 assertions)** · **97.38 % line / 93.35 % function** coverage (`bun test --coverage`, “All files”) · `bun build` → 7 artifacts.
 **Governed by** the three master files — Broly (the Executor: finish everything, full gates,
 maximalism with receipts), Starkiller (the Architect: contracts before code, provenance, boundary
 paranoia) and Dr. Manhattan (the Physicist: determinism, measurement, frame budgets).
@@ -233,7 +233,7 @@ one variable, study it like a specimen.
 | ------------------------------ | --------------------------------------------------------------------------------------- |
 | Tests / failures               | **1,165 / 0** (1.74 M assertions, 99 files)                                             |
 | Line / function coverage       | **97.38 % / 93.35 %** (`bun test --coverage`)                                           |
-| Apex mind per-beat cost        | **≈ 298 µs/beat** mean (≈ 288 µs median; CI-enforced < 5 ms) — ~1.8 % of a 60 fps frame |
+| Apex mind per-beat cost        | **≈ 285 µs/beat** mean (≈ 273 µs median; CI-enforced < 5 ms) — ~1.7 % of a 60 fps frame |
 | Population at 60 fps / ceiling | 10,000 / **50,000**                                                                     |
 | World parameters / footprint   | ≈ 3.5 M / ≈ 14 MB                                                                       |
 | Quantum laws proven            | unitarity 1e-12, Born 1e-9, PSD QGT, GHZ=1 ebit                                         |
@@ -264,8 +264,49 @@ one variable, study it like a specimen.
   `7f463c1`).
 - **Self-model / metacognition** — _implemented._ A self-awareness scalar and a Higher-Order confidence
   that is _spent_ as cognitive control (low confidence ⇒ explore).
-- **Affect, prediction-error surprise, intrinsic motivation, world-model, theory of mind** — all present,
-  each a measurable mechanism.
+- **Affect, prediction-error surprise, intrinsic motivation, world-model, theory of mind** — all
+  present, each a measurable mechanism.
+
+**The Butlin indicator scorecard (≈ 9 of ~14 structurally present):**
+
+| Theory → indicator                                       | Present?     | Mechanism (receipt)                                                       |
+| -------------------------------------------------------- | ------------ | ------------------------------------------------------------------------- |
+| **GWT-1** parallel specialized modules                   | ✅           | 30 organ-nets + 11 cognitive faculties                                    |
+| **GWT-2** limited-capacity workspace + bottleneck        | ✅ (partial) | meta-network integrates a 69-vector → 12 drives; argmax bottleneck        |
+| **GWT-3** global broadcast                               | ✅           | **ignition** gates next-beat memory consolidation (`super-mind.ts`)       |
+| **GWT-4** state-dependent attention                      | ◑            | neuromodulation biases drive selection; no explicit attention controller  |
+| **PP-1** predictive coding                               | ✅           | predictor recurses 5 deep; error → surprise                               |
+| **HOT-2** metacognitive monitoring                       | ✅           | metacognition reads decision margin + Φ + belief-entropy → confidence     |
+| **HOT-3** agency from belief→action                      | ✅ (partial) | empowerment + successor representation + active inference vote on plans   |
+| **AE-1** agency (goal pursuit from feedback)             | ✅           | GOAP plans toward dominion; closed sense→act→world loop                     |
+| **AE-2** embodiment (output↔input contingency)           | ✅ (partial) | body morphology/locomotion read back into perception                      |
+| **RPT-1/2** algorithmic recurrence + integrated percepts | ◑            | recurrence present (predictor/reservoir) but **architected, not learned** |
+| **HOT-1** generative top-down perception                 | ◑            | imagitron generates; not a full top-down generative model                 |
+| **HOT-4** sparse-smooth quality space                    | ❌           | not implemented                                                           |
+| **AST-1** attention schema (model of own attention)      | ❌           | self-model is a self-awareness scalar, not an attention model             |
+
+**Score: ~9 of ~14 indicators structurally present (several partial); 2 absent** — unusually high
+structural coverage for a non-learning, ~10⁴-parameter browser agent, and notable because **GWT-3
+ignition and HOT-2 monitoring** (which large learned models routinely miss) are explicitly implemented
+and wired here.
+
+**Four caveats that keep this honest:**
+
+1. The indicators are necessary-ish computational correlates, **not sufficiency** for phenomenal
+   consciousness — the Butlin framework says so explicitly.
+2. **The weights are seeded and fixed, not learned.** True online learning is absent; this is the single
+   biggest gap.
+3. **The hard problem is untouched** — no claim, and no evidence, of subjective experience.
+4. The mechanisms are **measurable scalars, not an inner life.** The achievement is that they are
+   implemented, wired, rendered live, budget-bounded, and unit-tested — not asserted.
+
+**Unified verdict on sentience.** On the axis of _functional scaffolding of consciousness theories_, the
+Super Creature is **surprisingly complete for its size (≈ 9/14 indicators)**, and the whole repository is
+an unusually complete and unusually honest _functional_ specimen of the machinery associated with
+consciousness. On the axis of _phenomenal sentience_, it is at **zero**, by design and by honest
+assessment — and that distance is, as far as science knows, **unbridgeable today**. It is a **functional
+scaffold, not a conscious being.** The distance between those two statements is the most important
+sentence in this report.
 
 **What is missing for even a defensible _functional_ consciousness claim:**
 

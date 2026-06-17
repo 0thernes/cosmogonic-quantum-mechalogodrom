@@ -5,7 +5,7 @@
 [![License: Proprietary](https://img.shields.io/badge/License-Proprietary%20%E2%80%94%20All%20Rights%20Reserved-red.svg)](./LICENSE)
 [![Bun](https://img.shields.io/badge/Bun-1.3-black?logo=bun&logoColor=white)](https://bun.sh)
 [![TypeScript strict](https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript&logoColor=white)](./tsconfig.json)
-[![tests](https://img.shields.io/badge/tests-1165%20passing-brightgreen)](./tests)
+[![tests](https://img.shields.io/badge/tests-1166%20passing-brightgreen)](./tests)
 [![coverage](https://img.shields.io/badge/coverage-97%25%20line%20%C2%B7%2093%25%20func-success)](./docs/TECHNICAL-SPECIFICATION.md)
 [![audit](https://img.shields.io/badge/inspection-500%20points-success)](./docs/500-POINT-INSPECTION.md)
 
@@ -537,7 +537,8 @@ telemetry + analytics push (every 8th frame) → analytics analyze (every
   quality audit: 25 sections × 20 checkpoints, each with a verdict and evidence
 - **[docs/reports/](./docs/reports/)** — the state-of-the-art frontier assessments:
   [Whole Repository](./docs/reports/2026-06-17-STATE-OF-THE-ART-WHOLE-REPO.md) ·
-  [The Super Creature](./docs/reports/2026-06-17-STATE-OF-THE-ART-SUPER-CREATURE.md)
+  [The Super Creature](./docs/reports/2026-06-17-STATE-OF-THE-ART-SUPER-CREATURE.md) ·
+  [Combined (unified scorecard §III)](./docs/reports/2026-06-17-STATE-OF-THE-ART-COMBINED.md)
 - [docs/SUPER-CREATURE-RESEARCH.md](./docs/SUPER-CREATURE-RESEARCH.md) — the honest
   citation trail behind every apex-mind faculty (2023–2026, live-verified)
 - [docs/KANBAN.md](./docs/KANBAN.md) — the delivery board (cards across columns
