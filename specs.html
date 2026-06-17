@@ -9,7 +9,7 @@
     <title>Technical Specification — Cosmogonic Quantum Mechalogodrom</title>
     <meta
       name="description"
-      content="Measured technical specification: a ~79k-line TypeScript + C++ browser-native deterministic 50,000-agent WebGL simulation whose entire emergent intelligence weighs ~14 MB — 1/50,000th of GPT-3, on zero AI accelerator."
+      content="Measured technical specification: a ~74k-line TypeScript + C++ browser-native deterministic 50,000-agent WebGL simulation whose entire emergent intelligence weighs ~14 MB — 1/50,000th of GPT-3, on zero AI accelerator."
     />
     <meta
       property="og:title"
@@ -17,7 +17,7 @@
     />
     <meta
       property="og:description"
-      content="Up to 50,000 agents (10,000 at 60 fps on integrated graphics). 1,159 tests, 91% line coverage. ~3.5M total AI parameters — engineered intelligence, not parameter count."
+      content="Up to 50,000 agents (10,000 at 60 fps on integrated graphics). 1,049 tests, 97.38% line coverage. ~3.5M total AI parameters — engineered intelligence, not parameter count."
     />
     <meta name="theme-color" content="#030612" />
     <style>
@@ -301,7 +301,7 @@
   <body>
     <header class="hero">
       <div class="wrap">
-        <div class="eyebrow">Technical Specification · v0.11.0 · measured 2026-06-16</div>
+        <div class="eyebrow">Technical Specification · v0.11.0 · measured 2026-06-17</div>
         <h1>Cosmogonic Quantum Mechalogodrom</h1>
         <p class="lede">
           A single-page TypeScript simulation — with an optional native <b>C++/Jolt</b> physics
@@ -328,16 +328,16 @@
         <h2><span class="tag">01</span> At a glance</h2>
         <div class="stats">
           <div class="stat">
-            <div class="n cy">79,319</div>
+            <div class="n cy">74,000</div>
             <div class="l">lines of code</div>
           </div>
           <div class="stat">
-            <div class="n">331</div>
+            <div class="n">337</div>
             <div class="l">files · 32 folders</div>
           </div>
           <div class="stat">
-            <div class="n gd">1,159</div>
-            <div class="l">tests · 91% line cov</div>
+            <div class="n gd">1,049</div>
+            <div class="l">tests · 97% line cov</div>
           </div>
           <div class="stat">
             <div class="n am">50,000</div>
@@ -363,53 +363,53 @@
       </section>
 
       <section>
-        <h2><span class="tag">02</span> Languages — 79,319 lines</h2>
+        <h2><span class="tag">02</span> Languages — 74,000 lines</h2>
         <div class="barrow">
           <span class="lab">TypeScript</span>
           <span class="track"
             ><span class="fill" style="width: 64%; background: var(--accent)"></span
           ></span>
-          <span class="val">50,751 · 64.0%</span>
+          <span class="val">47,691 · 64.5%</span>
         </div>
         <div class="barrow">
           <span class="lab">Markdown (docs)</span>
           <span class="track"
-            ><span class="fill" style="width: 20.1%; background: var(--accent2)"></span
+            ><span class="fill" style="width: 19.4%; background: var(--accent2)"></span
           ></span>
-          <span class="val">15,965 · 20.1%</span>
+          <span class="val">14,361 · 19.4%</span>
         </div>
         <div class="barrow">
           <span class="lab">HTML</span>
           <span class="track"
-            ><span class="fill" style="width: 10.3%; background: var(--amber)"></span
+            ><span class="fill" style="width: 10.7%; background: var(--amber)"></span
           ></span>
-          <span class="val">8,190 · 10.3%</span>
+          <span class="val">7,877 · 10.7%</span>
         </div>
         <div class="barrow">
-          <span class="lab">C++ (native engine · gl-core · Jolt physics)</span>
+          <span class="lab">C++ / headers (native engine · gl-core)</span>
           <span class="track"
             ><span class="fill" style="width: 1.6%; background: var(--good)"></span
           ></span>
-          <span class="val">1,296 · 1.6%</span>
+          <span class="val">1,192 · 1.6%</span>
         </div>
         <div class="barrow">
           <span class="lab">CSS (Tailwind src)</span>
           <span class="track"
             ><span class="fill" style="width: 1.6%; background: var(--fuchsia)"></span
           ></span>
-          <span class="val">1,230 · 1.6%</span>
+          <span class="val">1,180 · 1.6%</span>
         </div>
         <div class="barrow">
           <span class="lab">XML (masters) / lock / config / other</span>
           <span class="track"
-            ><span class="fill" style="width: 2.4%; background: var(--ink-faint)"></span
+            ><span class="fill" style="width: 2.3%; background: var(--ink-faint)"></span
           ></span>
-          <span class="val">1,887 · 2.4%</span>
+          <span class="val">1,699 · 2.3%</span>
         </div>
         <p class="muted" style="margin-top: 12px">
-          Code (TS + C++ + HTML + CSS) = <b>61,467 lines · 77.5%</b>. Web-app source 35,226 (108
-          files), native C++/Jolt engine 1,296 (6 files), tests 14,117 (99 files), docs 15,965 (64
-          files). The quantum mind <b>ports</b> four primitives from external
+          Code (TS + C++/headers + HTML + CSS) = <b>57,940 lines · 78.3%</b>. Web-app source 34,571
+          (109 files), native engine area 1,382 (9 files), tests 12,997 (99 files), markdown corpus
+          14,361 (70 files). The quantum mind <b>ports</b> four primitives from external
           <b>quantum-research repos</b> — the <b>Eshkol</b> qubit-RNG, the <b>Moonlab</b>/<b
             >QGTL</b
           >
@@ -561,8 +561,8 @@ server.ts ──serves──▶  /  (app)   /docs   /spec   /lab</pre
           regret-matching). The NHI super-mind composes all of it and <b>writes to the world</b> —
           spawns mutated swarms, manipulates factions, plans a multi-step GOAP scheme toward
           dominion, hallucinates an alien dialect. The always-active <b>Super Creature</b> goes
-          deeper still: a ~10,081-parameter composite consciousness (a Thaler creativity machine
-          over 12 sub-nets, 5 stages × 25 thought variants) plus a real
+          deeper still: a ~10,081-parameter composite consciousness-model (a Thaler creativity
+          machine over 12 sub-nets, 5 stages × 25 thought variants) plus a real
           <b>6-qubit quantum-computing mind</b>
           (<code>src/sim/super-qubits.ts</code> — its OWN statevector + RY/RZ + controlled-RY gate
           set, layered with four ported primitives: the <b>Eshkol</b> qubit-RNG (the Born sample),
@@ -586,9 +586,9 @@ server.ts ──serves──▶  /  (app)   /docs   /spec   /lab</pre
           <b>Quantum Reservoir Computing</b>, a <b>Lindblad/GKSL deliberation qubit</b>,
           <b>Grover</b> amplitude amplification, and <b>Quantum Natural Gradient</b> descent on its
           own Fubini–Study geometry. The whole apex beat measures
-          <b>≈ 208 µs (~1.25% of a 60 fps frame)</b> and is CI-gated. All grounded with real
-          2023–2026 citations in <code>docs/SUPER-CREATURE-RESEARCH.md</code> and assessed in
-          <code>docs/reports/</code> — <b>modelled, never "conscious".</b>
+          <b>≈ 224 µs avg / ≈ 663 µs p99 (~1.34% avg of a 60 fps frame)</b> and is CI-gated. All
+          grounded with real 2023–2026 citations in <code>docs/SUPER-CREATURE-RESEARCH.md</code> and
+          assessed in <code>docs/reports/</code> — <b>modelled, never "conscious".</b>
         </p>
         <p class="muted" style="margin-top: 10px">
           <b>The cast (measured counts).</b> Up to 50,000 organisms across 100 morphotypes (250 in
@@ -721,9 +721,9 @@ server.ts ──serves──▶  /  (app)   /docs   /spec   /lab</pre
         <h2><span class="tag">09</span> Build, CI/CD &amp; quality</h2>
         <p>
           <b>Gate (every commit):</b>
-          <code>prettier → tsc strict → oxlint → 1,159 tests → bun build</code>. Coverage ≥ 90% line
-          / 85% function (measured 91.2 / 92.5, lcov). <b>Build:</b> Bun bundles 3 HTML entrypoints
-          (<code>index.html</code>, <code>docs.html</code>, <code>specs.html</code>) →
+          <code>prettier → tsc strict → oxlint → 1,049 tests → bun build</code>. Coverage ≥ 90% line
+          / 85% function (measured 97.38 / 93.35, lcov). <b>Build:</b> Bun bundles 3 HTML
+          entrypoints (<code>index.html</code>, <code>docs.html</code>, <code>specs.html</code>) →
           <code>dist/</code>. <b>CI/CD:</b> GitHub Actions runs the gate + builds and deploys the
           real app to GitHub Pages on every push to <code>main</code>; tagged releases ship a
           tarball + CycloneDX SBOM. Three governing "master" personas encode the discipline: the
@@ -790,8 +790,8 @@ server.ts ──serves──▶  /  (app)   /docs   /spec   /lab</pre
             <td>Super Creature (+ twins)</td>
             <td class="r">1 (+ up to 3)</td>
             <td>
-              the apex mind: 1,444-weight spine + ~10,081-weight composite consciousness + a real
-              6-qubit quantum-computing mind
+              the apex mind: 1,444-weight spine + ~10,081-weight composite consciousness-model + a
+              real 6-qubit quantum-computing mind
             </td>
           </tr>
           <tr>

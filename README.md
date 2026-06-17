@@ -5,8 +5,8 @@
 [![License: Proprietary](https://img.shields.io/badge/License-Proprietary%20%E2%80%94%20All%20Rights%20Reserved-red.svg)](./LICENSE)
 [![Bun](https://img.shields.io/badge/Bun-1.3-black?logo=bun&logoColor=white)](https://bun.sh)
 [![TypeScript strict](https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript&logoColor=white)](./tsconfig.json)
-[![tests](https://img.shields.io/badge/tests-1159%20passing-brightgreen)](./tests)
-[![coverage](https://img.shields.io/badge/coverage-91%25%20line%20%C2%B7%2093%25%20func-success)](./docs/TECHNICAL-SPECIFICATION.md)
+[![tests](https://img.shields.io/badge/tests-1049%20passing-brightgreen)](./tests)
+[![coverage](https://img.shields.io/badge/coverage-97%25%20line%20%C2%B7%2093%25%20func-success)](./docs/TECHNICAL-SPECIFICATION.md)
 [![audit](https://img.shields.io/badge/inspection-500%20points-success)](./docs/500-POINT-INSPECTION.md)
 
 A procedural WebGL cosmic ecosystem — morphogenic organisms, Shoggoths,
@@ -138,7 +138,7 @@ zoom**, and the server, persistence store, and `/lab` CDN script are hardened
 
 ### XENOGENESIS (0.4.0)
 
-The cosmos becomes an alien, immortal, sentient biome (CONTRACTS V4):
+The cosmos becomes an alien, immortal, sentience-indexed biome (CONTRACTS V4):
 
 - **Alien atmosphere** — an inverted sky dome with a non-Earth baked gradient
   (oxblood horizon → violet zenith → teal counter-glow) recoloring with weather
@@ -281,7 +281,7 @@ full gate with same-seed determinism preserved. The major arcs:
   an RTX 5070 Ti ([`native/`](./native),
   [ADR-0007](./docs/adr/0007-native-cpp-engine-and-live-physics.md)).
 - **The SUPER CREATURE (V31–V48)** — an always-active apex being: a ~1,444-param
-  deep mind grown into a ~10,000-param composite consciousness (Thaler creativity
+  deep mind grown into a ~10,000-param composite consciousness-model (Thaler creativity
   machine, Tree/Atom-of-Thought, GOAP), a many-eyed god-jewel **body**, a 100-drone
   **wingman swarm**, **self-evolution** (XP → five ascension stages + a wall-clock
   daemon-cron), an **ACCESS PUZZLE** gate, **SUPERHERO** player mode (pilot it in
@@ -390,14 +390,16 @@ full gate with same-seed determinism preserved. The major arcs:
   (real IIT min-cut entanglement) now writing back into cognition — closed the inert-Φ gap. The
   Aaronson–Gottesman **Clifford stabilizer tableau** ([src/math/clifford-tableau.ts](./src/math/clifford-tableau.ts),
   ported from **Moonlab**, scales to 32+ qubits past the dense ceiling) landed as the fourth MIT-credited
-  ported primitive. The whole apex beat — all ~20 faculties — is benchmarked at **≈ 208 µs (~1.25 % of a
-  60 fps frame)** and CI-gated. **1,159 tests green · 0 fail · 91.2 % line / 92.5 % function coverage (lcov, measured 2026-06-16; CI gate ≥ 90 % line / ≥ 85 % function).**
-- **State-of-the-art reports (2026-06-16)** — two MIT-PhD-grade, measured, frontier-benchmarked assessments:
-  **[Report I — The Whole Repository](./docs/reports/2026-06-16-STATE-OF-THE-ART-WHOLE-REPO.md)** and
-  **[Report II — The Super Creature](./docs/reports/2026-06-16-STATE-OF-THE-ART-SUPER-CREATURE.md)** —
+  ported primitive. The whole apex beat — all ~20 faculties — is benchmarked at **≈ 224 µs avg / ≈ 663 µs
+  p99 (~1.34 % avg of a 60 fps frame)** and CI-gated. **1,049 tests green · 0 fail · 97.38 % line / 93.35 %
+  function coverage (lcov, measured 2026-06-17; CI gate ≥ 90 % line / ≥ 85 % function).**
+- **State-of-the-art reports (2026-06-17)** — two MIT-PhD-grade, measured, frontier-benchmarked assessments:
+  **[Report I — The Whole Repository](./docs/reports/2026-06-17-STATE-OF-THE-ART-WHOLE-REPO.md)** and
+  **[Report II — The Super Creature](./docs/reports/2026-06-17-STATE-OF-THE-ART-SUPER-CREATURE.md)** —
   what is genuinely novel vs. quantum computing, AGI/ASI labs, organoid "wet computing", and classic
-  A-Life; a consciousness-marker scorecard (~9–10/12 functional markers modeled; phenomenal consciousness
-  out of scope, never claimed); ratings, metrics, and an honest "what it would take to go further."
+  A-Life; a consciousness-marker scorecard (~9/14 functional indicator families strong or partial;
+  phenomenal consciousness unknown and never claimed); ratings, metrics, and an honest "what it would take
+  to go further."
 
 Work on this codebase is governed by the three **master files** in
 [masters/](./masters/) — Executor, Architect, Physicist — bound by
@@ -536,8 +538,8 @@ telemetry + analytics push (every 8th frame) → analytics analyze (every
 - [docs/500-POINT-INSPECTION.md](./docs/500-POINT-INSPECTION.md) — the standing
   quality audit: 25 sections × 20 checkpoints, each with a verdict and evidence
 - **[docs/reports/](./docs/reports/)** — the state-of-the-art frontier assessments:
-  [Whole Repository](./docs/reports/2026-06-16-STATE-OF-THE-ART-WHOLE-REPO.md) ·
-  [The Super Creature](./docs/reports/2026-06-16-STATE-OF-THE-ART-SUPER-CREATURE.md)
+  [Whole Repository](./docs/reports/2026-06-17-STATE-OF-THE-ART-WHOLE-REPO.md) ·
+  [The Super Creature](./docs/reports/2026-06-17-STATE-OF-THE-ART-SUPER-CREATURE.md)
 - [docs/SUPER-CREATURE-RESEARCH.md](./docs/SUPER-CREATURE-RESEARCH.md) — the honest
   citation trail behind every apex-mind faculty (2023–2026, live-verified)
 - [docs/KANBAN.md](./docs/KANBAN.md) — the delivery board (cards across columns

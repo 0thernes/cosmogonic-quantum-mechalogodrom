@@ -7,20 +7,20 @@ Measured results for the hot-path primitives. Reproduce with `bun run bench`
 
 |         |                                                               |
 | ------- | ------------------------------------------------------------- |
-| Date    | 2026-06-09                                                    |
-| CPU     | Intel Core Ultra 9 275HX (~3.46 GHz observed)                 |
-| Runtime | Bun 1.3.x (x64-win32), mitata 1.0.34                          |
+| Date    | 2026-06-17                                                    |
+| CPU     | Intel Core Ultra 9 275HX (~3.28 GHz observed)                 |
+| Runtime | Bun 1.3.14 via `bun run bench` (x64-win32), mitata 1.0.34     |
 | Inputs  | Deterministic via `mulberry32(42)` — identical data every run |
 
 ## Results
 
 ### RNG (`src/math/rng.ts`)
 
-| Benchmark                                        | avg/iter | Notes                             |
-| ------------------------------------------------ | -------- | --------------------------------- |
-| `Math.random()` (baseline — banned in sim logic) | 737 ps   | engine intrinsic                  |
-| `mulberry32(42)()`                               | 1.03 ns  | +0.3 ns buys full reproducibility |
-| `hashSeed('cosmogonic-quantum-mechalogodrom')`   | 35.2 ns  | one-shot, boot only               |
+| Benchmark                                        | avg/iter  | Notes                             |
+| ------------------------------------------------ | --------- | --------------------------------- |
+| `Math.random()` (baseline — banned in sim logic) | 793.85 ps | engine intrinsic                  |
+| `mulberry32(42)()`                               | 1.18 ns   | sub-ns-class reproducibility cost |
+| `hashSeed('cosmogonic-quantum-mechalogodrom')`   | 34.90 ns  | one-shot, boot only               |
 
 Determinism costs ~40% over the native RNG in relative terms but is sub-nanosecond
 in absolute terms — invisible against any frame budget.
@@ -36,10 +36,10 @@ in absolute terms — invisible against any frame budget.
 
 ### Spatial hash (`src/math/spatial-hash.ts`, 1000 items, cell size 8)
 
-| Benchmark                                    | avg/iter | Per-frame budget share\*     |
-| -------------------------------------------- | -------- | ---------------------------- |
-| `clear()` + `insert()` ×1000 (rebuild cycle) | 16.7 µs  | 0.10% (runs every 2nd frame) |
-| `query(0, 0, 8)` (shared-buffer lookup)      | 347 ns   | ~0.4% at 200 queries/frame   |
+| Benchmark                                    | avg/iter  | Per-frame budget share\*     |
+| -------------------------------------------- | --------- | ---------------------------- |
+| `clear()` + `insert()` ×1000 (rebuild cycle) | 17.67 µs  | 0.11% (runs every 2nd frame) |
+| `query(0, 0, 8)` (shared-buffer lookup)      | 344.74 ns | ~0.4% at 200 queries/frame   |
 
 \* of a 16.67 ms frame at 60 fps, at the desktop entity cap (1000).
 
@@ -67,15 +67,24 @@ step by construction; the rest are O(1)–O(small constant). Exactly one `step`
 runs per frame, so even the slowest costs <0.002% of the frame budget. See
 [COMPLEXITY.md](./COMPLEXITY.md) for the formal table.
 
+### Selection utility (`src/math/top-k.ts`, added receipt 2026-06-17)
+
+| Benchmark                                     | avg/iter  | Notes                               |
+| --------------------------------------------- | --------- | ----------------------------------- |
+| `selectTopK` bounded min-heap, V=10,000, K=20 | 412.09 µs | O(V log K), allocation-disciplined  |
+| full `Array.sort().slice(0, 20)` baseline     | 6.03 ms   | O(V log V), kept as comparison only |
+
+Measured speedup: **about 14.6x** for the sampled top-20 selection path.
+
 ### Wildbeyond V2 hot paths (added 2026-06-10, Bun 1.3.11 x64-win32, same CPU)
 
-| Benchmark                               | avg/iter | Frame-budget share at cadence                   |
-| --------------------------------------- | -------- | ----------------------------------------------- |
-| `QuantumRegister.apply('h')` (n=5)      | 31.4 ns  | negligible (event-driven)                       |
-| `QuantumRegister.apply('cx')` (n=5)     | 18.7 ns  | negligible (per sort swap)                      |
-| `QuantumRegister.probabilities()` (n=5) | 12.9 ns  | negligible (every 6th frame)                    |
-| `QuantumRegister.entropy()` (n=5)       | 138 ns   | negligible (every 30th frame)                   |
-| `ReactionDiffusionSystem.step()` (128²) | 76.2 µs  | 0.46%/call → ~0.23% amortized (every 2nd frame) |
+| Benchmark                               | avg/iter  | Frame-budget share at cadence                   |
+| --------------------------------------- | --------- | ----------------------------------------------- |
+| `QuantumRegister.apply('h')` (n=5)      | 32.96 ns  | negligible (event-driven)                       |
+| `QuantumRegister.apply('cx')` (n=5)     | 24.32 ns  | negligible (per sort swap)                      |
+| `QuantumRegister.probabilities()` (n=5) | 15.80 ns  | negligible (every 6th frame)                    |
+| `QuantumRegister.entropy()` (n=5)       | 144.89 ns | negligible (every 30th frame)                   |
+| `ReactionDiffusionSystem.step()` (128²) | 75.18 µs  | 0.45%/call → ~0.23% amortized (every 2nd frame) |
 
 The RD kernel's first naive stencil measured 601 µs; a sliding 3×3 window
 rewrite (3 loads per species per cell, bit-identical results) brought it to
@@ -198,20 +207,20 @@ Two more sim stages now carry dedicated median-of-many-frames guards alongside t
   `tests/chaos-field.test.ts` under a 15 ms ceiling (~60× slack). Engaging chaos mode at mega scale
   is effectively free relative to the population loop.
 
-## Apex mind (Super Creature) — per-beat cognitive budget (2026-06-16)
+## Apex mind (Super Creature) — per-beat cognitive budget (2026-06-17)
 
-Bun 1.3.11 x64-win32, Intel Core Ultra 9 275HX (~4.14 GHz). The apex mind grew from one stacked MLP (V31)
+Bun 1.3.14 x64-win32, Intel Core Ultra 9 275HX (~3.28 GHz observed in the bench run). The apex mind grew from one stacked MLP (V31)
 to a 20-plus-faculty stack (the SC 1.1 cognition layer + the Eshkol/Moonlab/QGTL quantum substrate), so its
 per-frame budget was, until now, **unmeasured**. `bench/super-mind.bench.ts` measures its two cadences:
 
-- **`SuperMind.think()` — one full cognitive beat, PER SIMULATION FRAME: ≈ 208 µs/iter** (median 195 µs;
-  168 µs … 1.30 ms). That single call runs the entire 5-stage / 5-depth / 25-variant Tree of Thought, the
+- **`SuperMind.think()` — one full cognitive beat, PER SIMULATION FRAME: ≈ 224 µs/iter** (p75 210.60 µs;
+  172.50 µs … 1.46 ms; p99 663.40 µs). That single call runs the entire 5-stage / 5-depth / 25-variant Tree of Thought, the
   30 organ-nets, the 6-qubit `evolve()` + the per-beat quantum-natural-gradient + Grover amplification, the
   spin-glass settle, active inference, theory-of-mind, neuromodulation, the successor-representation
-  look-ahead, empowerment, and holographic recall — for the LONE apex creature. At ≈ 0.21 ms it is **~1.25%
+  look-ahead, empowerment, and holographic recall — for the LONE apex creature. At ≈ 0.224 ms it is **~1.34%
   of a 60 fps (16.67 ms) frame**: the whole apex psyche is effectively free beside the population render,
   with healthy headroom for further faculties.
-- **`SuperMind.snapshot()` — UI-cadence telemetry: ≈ 1.07 ms/iter** (978 µs … 1.81 ms). The heavy readouts
+- **`SuperMind.snapshot()` — UI-cadence telemetry: ≈ 1.08 ms/iter**. The heavy readouts
   — the full Quantum Geometric Tensor (re-applies the circuit ~5×), the quantum "magic" (4⁶ = 4096 Pauli
   expectations), integrated information + coherence — run ONLY when the BRAIN observatory is open, NEVER per
   simulation beat, so the ~1 ms is paid at the observatory cadence (a few times a second), not at 60 fps.

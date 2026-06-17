@@ -9,23 +9,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **State-of-the-art frontier reports (2026-06-16).** Two MIT-PhD-grade, measured, frontier-benchmarked
+- **State-of-the-art frontier reports (2026-06-17).** Two MIT-PhD-grade, measured, frontier-benchmarked
   assessments under `docs/reports/`: **Report I — The Whole Repository** and **Report II — The Super
   Creature**. Each compares the work against the real frontier (quantum computing, AGI/ASI labs, organoid
-  "wet computing", classic A-Life), scores a consciousness-marker rubric (~9–10/12 _functional_ markers
-  modeled; phenomenal consciousness out of scope, never claimed), and gives ratings, metrics, and an honest
-  "what it would take to go further." Linked from the README and the technical specification.
+  "wet computing", classic A-Life), scores a consciousness-marker rubric (~9/14 _functional_ indicator
+  families strong or partial; phenomenal consciousness unknown and never claimed), and gives ratings,
+  metrics, and an honest "what it would take to go further." Linked from the README, `/docs`, and the
+  technical specification.
 
 ### Changed
 
 - **Documentation truth-sync — every published surface now matches the measured ground truth.** Re-measured
-  the repository on 2026-06-16 and reconciled the README, the `/spec` page (`specs.html`), the `/docs` page
+  the repository on 2026-06-17 and reconciled the README, the `/spec` page (`specs.html`), the `/docs` page
   (`docs.html`), and `docs/TECHNICAL-SPECIFICATION.md` so the public numbers are accurate and identical
-  across surfaces: **1,159 tests passing (0 fail)** · **97.38 % line / 93.35 % function coverage** ·
-  **v0.11.0** · **79,319 authored lines** (TypeScript 50,751 · 225 files) · **331 files / 32 folders** ·
-  the apex mind documented at its true **~20 coupled, cited, unit-tested faculties** (was "five theories of
-  mind") with the **≈ 208 µs/beat (~1.25 % of a 60 fps frame)** benchmark receipt. Prior badges read 964 /
-  1123 tests and the spec read v0.10.4 — both stale; now corrected.
+  across surfaces: **1,049 tests passing (0 fail)** · **97.38 % line / 93.35 % function coverage** ·
+  **v0.11.0** · **74,000 authored lines** (TypeScript 47,691 · 225 files) · **337 files / 32 folders** ·
+  the apex mind documented at its true **~20 coupled, cited, unit-tested faculties** (not a sentience claim)
+  with the **≈ 224 µs avg / ≈ 663 µs p99 cognitive beat** benchmark receipt. Prior badges and reports used
+  stale 2026-06-16 numbers; now corrected.
 
 - **SUPER CREATURE 1.1 — Moonlab's Clifford stabilizer tableau: large-scale quantum.** A genuine port of the
   **Moonlab** simulator's Clifford backend (MIT © tsotchke; credited in `THIRD-PARTY-NOTICES.md`): the

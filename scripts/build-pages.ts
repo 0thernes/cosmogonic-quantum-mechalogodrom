@@ -8,7 +8,8 @@
  * This script (run AFTER `bun run build`):
  *   1. copies `dist/` (bundled index.html + docs.html + chunks) into `site/`,
  *   2. drops the self-contained `/lab` artifact at `site/lab/index.html`,
- *   3. rewrites the absolute nav links to be subpath-relative, and neutralizes the server-only
+ *   3. copies public report markdown under `site/docs/reports/`,
+ *   4. rewrites the absolute nav links to be subpath-relative, and neutralizes the server-only
  *      `/api/audit` poll (no server on Pages — leaving it would 404 every 5 s).
  *
  * The dev server (server.ts) is untouched: it keeps its absolute `/docs` `/lab` routes for local
@@ -39,7 +40,12 @@ await cp(DIST, SITE, { recursive: true });
 await mkdir(new URL('lab/', SITE), { recursive: true });
 await cp(new URL('lab/quantum-wildbeyond.html', ROOT), new URL('lab/index.html', SITE));
 
-// 3. Rewrite absolute nav links → subpath-relative; neutralize the server-only audit poll.
+// 3. Public report markdown linked from docs.html. Keep it inside the Pages artifact so `/docs` links
+// resolve on GitHub Pages, not only inside the repository browser.
+await mkdir(new URL('docs/', SITE), { recursive: true });
+await cp(new URL('docs/reports/', ROOT), new URL('docs/reports/', SITE), { recursive: true });
+
+// 4. Rewrite absolute nav links → subpath-relative; neutralize the server-only audit poll.
 // V81: append a per-deploy `?v=` cache-buster to every cross-page nav link so a returning visitor never
 // sees a STALE cached docs/spec page. The browser keys its HTTP cache by URL — an unchanged `specs.html`
 // URL kept serving the pre-update copy after a deploy; `specs.html?v=<sha>` is a fresh URL each deploy,
@@ -65,5 +71,5 @@ await rewrite('specs.html', [
 ]);
 
 console.log(
-  `assembled Pages site -> site/ (index.html, docs.html, specs.html, lab/index.html) · cache-bust v=${V}`,
+  `assembled Pages site -> site/ (index.html, docs.html, specs.html, lab/index.html, docs/reports/) · cache-bust v=${V}`,
 );

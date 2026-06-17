@@ -2,8 +2,8 @@
 
 _The master index for the whole repository: a human- **and** AI-readable map of every document, every
 module, and how it all fits. If you read one file to understand this project, read this one — then
-follow the links. This is the **RAG book** (V37): a navigable table of contents over the 38 docs, the
-auto-generated [file map](./FILE-MAP.md) of all 77 source modules, plus the build/run, data-flow,
+follow the links. This is the **RAG book** (V37): a navigable table of contents over the current docs, the
+auto-generated [file map](./FILE-MAP.md) of all 108 TypeScript modules, plus the build/run, data-flow,
 troubleshooting and roadmap sections inline below._
 
 > The same knowledge, in-world: open **❓ HELP ME NOW** (bottom-right dock) for grounded answers, or the
@@ -40,13 +40,13 @@ every commit, contracts over vibes. See [CLAUDE.md](../CLAUDE.md) and the three 
 
 ## 2. Architecture & code
 
-| Doc                                          | What you'll learn                                                            |
-| -------------------------------------------- | ---------------------------------------------------------------------------- |
-| [ARCHITECTURE.md](./ARCHITECTURE.md)         | The layered system architecture + frame pipeline.                            |
-| [MODULE-CONTRACTS.md](./MODULE-CONTRACTS.md) | The binding per-module spec (V1 + V2) — contract wins over any writer.       |
-| [**FILE-MAP.md**](./FILE-MAP.md)             | **Auto-generated** map of all 77 modules, summarised from their own headers. |
-| [COMPLEXITY.md](./COMPLEXITY.md)             | Big-O of the hot paths.                                                      |
-| §A below                                     | The frame data-flow, inline.                                                 |
+| Doc                                          | What you'll learn                                                             |
+| -------------------------------------------- | ----------------------------------------------------------------------------- |
+| [ARCHITECTURE.md](./ARCHITECTURE.md)         | The layered system architecture + frame pipeline.                             |
+| [MODULE-CONTRACTS.md](./MODULE-CONTRACTS.md) | The binding per-module spec (V1-V9+) — contract wins over any writer.         |
+| [**FILE-MAP.md**](./FILE-MAP.md)             | **Auto-generated** map of all 108 modules, summarised from their own headers. |
+| [COMPLEXITY.md](./COMPLEXITY.md)             | Big-O of the hot paths.                                                       |
+| §A below                                     | The frame data-flow, inline.                                                  |
 
 ## 3. The world & its inhabitants
 
@@ -108,7 +108,8 @@ every commit, contracts over vibes. See [CLAUDE.md](../CLAUDE.md) and the three 
 [0005 math stack](./adr/0005-math-stack-selection.md) ·
 [0006 ASI graphics + language](./adr/0006-asi-graphics-and-language-stack.md) ·
 [0007 native C++ engine + physics](./adr/0007-native-cpp-engine-and-live-physics.md) ·
-[0008 super-creature deep mind](./adr/0008-super-creature-deep-mind.md)
+[0008 super-creature deep mind](./adr/0008-super-creature-deep-mind.md) ·
+[0009 genome reproduction](./adr/0009-genome-reproduction.md)
 
 ## 10. Project management & history
 
