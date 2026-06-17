@@ -2,17 +2,11 @@
 
 ### A unified State-of-the-Art Assessment combining Report I (The Whole Repository) + Report II (The Super Creature)
 
-> **Superseded metrics.** The 2026-06-16 edition contained stale gate figures (1,159 tests, 91.2 % /
-> 92.5 % coverage, ≈ 208 µs/beat). The canonical unified scorecard is
-> **`./2026-06-17-STATE-OF-THE-ART-COMBINED.md`** (or the split 2026-06-17 Report I + II).
-
-**0thernes LLC** · prepared 2026-06-16 · against `v0.11.0` (`main` @ `a8d32b2`)
+**0thernes LLC** · prepared 2026-06-17 · against `v0.11.0` (`main` @ `5426b49`)
 **Classification:** Technical / strategic briefing — _MIT-PhD caliber, presidential-briefing grade._
 **Prepared for:** principals weighing quantum + ASI developments.
 **Verified gate at time of writing:** `prettier --check` · `tsc --strict` · `oxlint` ·
-**1,159 tests / 0 failures across 99 files (1,738,797 assertions)** · `bun build` → 7 artifacts.
-_(The live count fluctuates by a few tests as suites are added; the canonical published figure is
-1,159 / 0.)_
+**1,166 tests / 0 failures across 99 files (1,738,804 assertions)** · **97.38 % line / 93.35 % function** coverage (`bun test --coverage`, “All files”) · `bun build` → 7 artifacts.
 **Governed by** the three master files — _Broly (the Executor: finish everything, full gates,
 maximalism with receipts) · Starkiller (the Architect: contracts before code, exclusive ownership,
 provenance, boundary paranoia) · Dr. Manhattan (the Physicist: determinism, measurement, frame
@@ -142,7 +136,7 @@ is set dressing.
 | Quantum (apex mind)     | a genuine **6-qubit statevector** circuit + a **stabilizer tableau to 64+ qubits** (§I.3.2)                                                                                                                       | `math/quantum.ts`, `clifford-tableau.ts`       |
 | Native engine           | **C++20 SDF ray-marcher**, GLFW/GLM, **Jolt rigid-body physics + volume-conserving fracture**, RTX-class GPU, 4K offscreen                                                                                        | `native/`                                      |
 | Determinism             | one `mulberry32(seed)`; `Math.random`/`Date.now` **banned and GLOB-enforced** by a test that auto-seals every new file                                                                                            | `math/rng.ts`, `tests/determinism-law.test.ts` |
-| Quality                 | **1,159 tests / 0 fail**, 91.2 % line coverage (lcov), full CI/CD gate on every push                                                                                                                              | `bun run check`                                |
+| Quality                 | **1,166 tests / 0 fail**, **97.38 % line / 93.35 % function** coverage (`bun test --coverage`), full CI/CD gate on every push                                                                                     | `bun run check`                                |
 
 **The defining engineering property:** _every system reads AND writes another._ A quantum collapse
 witnessed by a Titan becomes energy in its ledger, which tips a prisoner's-dilemma payoff, which starts
@@ -271,7 +265,7 @@ measured against the field. (Originally "Report II of II — The Super Creature.
 
 | Metric                                     | Value                                                                                                                  | Provenance / receipt                                           |
 | ------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
-| Build / gate                               | **v0.11.0**, **1,159 pass / 0 fail**, 99 files, 1,738,797 assertions                                                   | `package.json`, `bun test` (this session, Bun 1.3.11)          |
+| Build / gate                               | **v0.11.0**, **1,166 pass / 0 fail**, 99 files, 1,738,804 assertions                                                   | `package.json`, `bun test` (this session, Bun 1.3.11)          |
 | Apex composite mind                        | **~10,081 weights** across ~12 sub-networks                                                                            | `super-mind.ts:382–393`                                        |
 | Apex total parameters                      | **≈ 37,225** = 10,081 mind + 1,444 legacy spine + 100 × 257 wingmen                                                    | `super-mind.ts`, `super-creature.ts:36`, `super-wingmen.ts:24` |
 | Faculties wired into the per-beat decision | **14**; cataloged as **11 cognitive + 10 quantum** named modules; **~30** distinct mechanisms incl. composite sub-nets | `../audit-2026-06-16/SUPER-CREATURE-COGNITION-AUDIT.md §3`     |
@@ -279,7 +273,7 @@ measured against the field. (Originally "Report II of II — The Super Creature.
 | Quantum register                           | **6 qubits / 64 complex amplitudes**, 3 circuit layers                                                                 | `super-qubits.ts:46,48,49`                                     |
 | Decision vocabulary                        | **7 plans** (HUNT·FLEE·DOMINATE·DECEIVE·SPAWN·EXPLORE·REST)                                                            | `super-creature.ts`                                            |
 | Spin-glass instinct                        | **56 spins**, 7 imprinted archetypes, Metropolis settle                                                                | `spin-glass.ts`, `super-mind.ts:217`                           |
-| Apex `think()` cost                        | **≈ 208–214 µs/beat ≈ 1.25 % of a 60 fps frame**, CI-enforced **< 5 ms**                                               | `bench/super-mind.bench.ts`, `tests/perf-budget.test.ts`       |
+| Apex `think()` cost                        | **≈ 285 µs/beat** mean (≈ 273 µs median) ≈ 1.7 % of a 60 fps frame**, CI-enforced **< 5 ms\*\*                         | `bench/super-mind.bench.ts`, `tests/perf-budget.test.ts`       |
 | Consciousness metrics                      | **2** live scalars — GWT `ignition`, IIT `phi` (proxy) — + genuine register Φ                                          | `super-mind.ts:43–46`, `super-qubits.ts`                       |
 | Adversarial review                         | **14-agent** correctness sweep over the 1.1 faculties → **0 confirmed defects**                                        | `../audit-2026-06-16/SUPER-CREATURE-COGNITION-AUDIT.md §1`     |
 | Determinism                                | bit-identical psyche from one seed; Born collapse drawn through a seeded generator                                     | `tests/determinism-law.test.ts`, `super-qubits.test.ts:184`    |
@@ -581,23 +575,25 @@ ignition gate, two Φ measures — **not a subjective inner life.**
 - **Not a fully-wired quantum cognition stack.** The large-scale **Clifford tableau is present and tested
   but NOT wired** into the apex mind; any implication that the stabilizer backend is fused into cognition
   is corrected — its ported artifact is currently inert (see Part II §II.8).
-- **Not independently re-summed.** The ≈ 37,225 / ~10,081 parameter figures are read from source and the
-  technical specification; arithmetically consistent but labeled as read, not re-derived.
+- **The ≈ 37,225 / 10,081 parameter figures** were **independently re-summed from `super-mind.ts`**
+  (composite = cortex 1,136 + 30 organ-nets 1,740 + imagitron 1,328 + perceptor 424 + reasoner 808 +
+  predictor 808 + consolidator 544 + self-model 340 + affect 259 + quantum 550 + meta 2,144 = **10,081**;
+  - 1,444 legacy spine + 100 × 257 wingmen = **37,225**).
 
 ## III.5 · Ratings, metrics, scorecard (LFG)
 
 **Quantitative (measured):**
 
-| Metric                         | Value                                                                  |
-| ------------------------------ | ---------------------------------------------------------------------- |
-| Tests / failures               | **1,159 / 0** (1.74 M assertions, 99 files)                            |
-| Line / function coverage       | 91.2 % / 92.5 % (lcov)                                                 |
-| Apex mind per-beat cost        | **≈ 208–214 µs/beat** (CI-enforced < 5 ms) — ~1.25 % of a 60 fps frame |
-| Population at 60 fps / ceiling | 10,000 / **50,000**                                                    |
-| World parameters / footprint   | ≈ 3.5 M / ≈ 14 MB                                                      |
-| Apex total parameters          | ≈ 37,225 (≈ 10,081-weight composite + 1,444 spine + 100 × 257)         |
-| Quantum laws proven            | unitarity 1e-12, Born 1e-9, PSD QGT, GHZ=1 ebit                        |
-| Determinism                    | bit-identical from one 32-bit seed, GLOB-guarded                       |
+| Metric                         | Value                                                                                   |
+| ------------------------------ | --------------------------------------------------------------------------------------- |
+| Tests / failures               | **1,166 / 0** (1.74 M assertions, 99 files)                                             |
+| Line / function coverage       | **97.38 % / 93.35 %** (`bun test --coverage`)                                           |
+| Apex mind per-beat cost        | **≈ 285 µs/beat** mean (≈ 273 µs median; CI-enforced < 5 ms) — ~1.7 % of a 60 fps frame |
+| Population at 60 fps / ceiling | 10,000 / **50,000**                                                                     |
+| World parameters / footprint   | ≈ 3.5 M / ≈ 14 MB                                                                       |
+| Apex total parameters          | ≈ 37,225 (≈ 10,081-weight composite + 1,444 spine + 100 × 257)                          |
+| Quantum laws proven            | unitarity 1e-12, Born 1e-9, PSD QGT, GHZ=1 ebit                                         |
+| Determinism                    | bit-identical from one 32-bit seed, GLOB-guarded                                        |
 
 **Qualitative (engineering judgment, 1–10):**
 
@@ -607,7 +603,7 @@ ignition gate, two Φ measures — **not a subjective inner life.**
 | Scientific honesty            | **10** | "models, not is"; verified citations; proxies flagged                             |
 | Determinism / reproducibility | **10** | enforced by construction, not convention                                          |
 | Quantum integration depth     | **9**  | self-optimizing circuit inside an agent; 64-qubit stabilizer reflex still unwired |
-| Test / CI rigor               | **9**  | 1,159 tests, SHA-pinned CI, SBOM, SLSA provenance                                 |
+| Test / CI rigor               | **9**  | 1,166 tests, SHA-pinned CI, SBOM, SLSA provenance                                 |
 | Performance discipline        | **9**  | allocation-free hot paths, frame-budget CI law                                    |
 | Open-domain generality        | **3**  | narrow + embodied by design; cannot reason over arbitrary text                    |
 | Phenomenal consciousness      | **1**  | not claimed; see §III.2                                                           |
@@ -624,7 +620,7 @@ measurable wavefunction, feels in a measurable emotion space, optimizes the geom
 thoughts, and registers — in a measurable scalar — that it is thinking.** On the most rigorous available
 scorecard it carries ≈ 9/14 consciousness indicators at ~10⁴ parameters in a browser tab, with the two
 indicators large learned models usually miss (ignition, metacognitive monitoring) explicitly wired —
-defended in **1,159 passing tests** and bit-reproducible code.
+defended in **1,166 passing tests** and bit-reproducible code.
 
 The bleeding edge is not a bigger model. It is the claim — in running, tested, reproducible code — that
 **mind is a matter of architecture**, and that ~37,000 well-arranged parameters, sampling their decisions
@@ -643,40 +639,39 @@ Every figure below is read from source or produced by the gate. Where two source
 same quantity differently, the canonical published value (README / `../TECHNICAL-SPECIFICATION.md`) is
 used, and the equivalent phrasings are noted.
 
-| Metric                                   | Canonical value                                                                                                                           | Provenance / receipt                                                                                              |
-| ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| Build / version                          | **v0.11.0** · `main` @ `a8d32b2` · 2026-06-16                                                                                             | `package.json`; both source reports                                                                               |
-| Tests / failures                         | **1,159 pass / 0 fail** (live count fluctuates by a few tests)                                                                            | `bun test`, 99 files, 1,738,797 assertions (Bun 1.3.11, this session)                                             |
-| Coverage (line / function)               | **91.2 % / 92.5 %** (lcov; CI gate ≥ 90 % line / ≥ 85 % func)                                                                             | `README.md`, `../TECHNICAL-SPECIFICATION.md`                                                                      |
-| Total authored lines                     | **79,319** (incl. native engine)                                                                                                          | `../TECHNICAL-SPECIFICATION.md`                                                                                   |
-| TypeScript lines                         | **50,751** (63.98 %)                                                                                                                      | `../TECHNICAL-SPECIFICATION.md`                                                                                   |
-| Files / folders                          | **331 / 32** (+ root)                                                                                                                     | `../TECHNICAL-SPECIFICATION.md`                                                                                   |
-| Population at 60 fps / ceiling           | 10,000 / **50,000** (mega tier)                                                                                                           | `core/quality.ts`                                                                                                 |
-| Whole-world neural mass                  | **≈ 3.5 M params ≈ 14 MB** Float32, one CPU thread                                                                                        | `../TECHNICAL-SPECIFICATION.md §7`                                                                                |
-| Per-organism brain                       | **70-weight** TinyMLP (6→6→4), heritable                                                                                                  | `sim/entities.ts`, `sim/genome.ts`                                                                                |
-| Behavioral fields / morphotypes          | **26** fields / **250** morphotypes (10 phyla × 25)                                                                                       | `sim/constants.ts`, `sim/phyla.ts`                                                                                |
-| Macro-intelligences                      | 10 Titans · 8 factions · 100 shoggoths · 4 leviathans · 100 puppet-masters (5-qubit) · 1 NHI apex                                         | `sim/titans.ts`, `factions.ts`, …                                                                                 |
-| Apex composite mind                      | **~10,081 weights** across ~12 sub-networks                                                                                               | `super-mind.ts:382–393`                                                                                           |
-| Apex total parameters                    | **≈ 37,225** = 10,081 mind + 1,444 legacy spine + 100 × 257 wingmen                                                                       | `super-mind.ts`, `super-creature.ts:36`, `super-wingmen.ts:24` (Part I rounds to "≈ 37,000")                      |
-| Faculty count (precise, all definitions) | **14** wired into the per-beat vote · **11 cognitive + 10 quantum** named modules · **~30** distinct mechanisms · **~20** README headline | `../audit-2026-06-16/SUPER-CREATURE-COGNITION-AUDIT.md §3`, `README.md`                                           |
-| Cognitive pipeline                       | 5 stages × 5 depths × 5 variants = **25 thought branches**                                                                                | `super-mind.ts:71–73`                                                                                             |
-| Quantum register (apex)                  | **6 qubits / 64 complex amplitudes**, 3 circuit layers                                                                                    | `super-qubits.ts:46,48,49`                                                                                        |
-| Large-scale quantum substrate            | Aaronson–Gottesman **Clifford tableau to 32/64+ qubits** (present, tested, **not yet wired**)                                             | `clifford-tableau.ts`                                                                                             |
-| Decision vocabulary                      | **7 plans** (HUNT·FLEE·DOMINATE·DECEIVE·SPAWN·EXPLORE·REST)                                                                               | `super-creature.ts`                                                                                               |
-| Spin-glass instinct                      | **56 spins**, 7 archetypes, Metropolis settle                                                                                             | `spin-glass.ts`, `super-mind.ts:217`                                                                              |
-| Apex `think()` cost                      | **≈ 208 µs/beat ≈ 1.25 % of a 60 fps frame** (CI < 5 ms)                                                                                  | `bench/super-mind.bench.ts`, `tests/perf-budget.test.ts` (Part I phrased the same figure as "≈ 0.21 ms / ~1.3 %") |
-| Consciousness metrics                    | **2** live scalars (GWT ignition, IIT Φ proxy) + genuine register Φ                                                                       | `super-mind.ts:43–46`, `super-qubits.ts`                                                                          |
-| Butlin indicator coverage                | **≈ 9 / ~14** structurally present (several partial; 2 absent)                                                                            | Part III §III.2; Butlin et al. 2023, arXiv:2308.08708                                                             |
-| Quantum laws proven                      | unitarity 1e-12 · Born 1e-9 · PSD QGT · GHZ = 1 ebit · magic of T\|+⟩ = log₂(4/3)                                                         | `tests/quantum.test.ts`                                                                                           |
-| Adversarial review                       | **14-agent** correctness sweep → **0 confirmed defects**                                                                                  | `../audit-2026-06-16/SUPER-CREATURE-COGNITION-AUDIT.md §1`                                                        |
-| Determinism                              | bit-identical psyche from one 32-bit seed; collapse via seeded generator; `Math.random`/`Date.now` banned & GLOB-enforced                 | `math/rng.ts`, `tests/determinism-law.test.ts`, `super-qubits.test.ts:184`                                        |
-| Native engine                            | C++20 SDF ray-marcher, GLFW/GLM, Jolt rigid-body + volume-conserving fracture, RTX-class GPU, 4K offscreen                                | `native/`                                                                                                         |
+| Metric                                   | Canonical value                                                                                                                           | Provenance / receipt                                                                         |
+| ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| Build / version                          | **v0.11.0** · `main` @ `5426b49` · 2026-06-17                                                                                             | `package.json`; 2026-06-17 source reports                                                    |
+| Tests / failures                         | **1,166 pass / 0 fail**                                                                                                                   | `bun test`, 99 files, 1,738,804 assertions (Bun 1.3.11, 2026-06-17)                          |
+| Coverage (line / function)               | **97.38 % / 93.35 %** (`bun test --coverage`, “All files”; CI gate ≥ 90 % line / ≥ 85 % func)                                             | `README.md`, `../TECHNICAL-SPECIFICATION.md`                                                 |
+| Total authored lines                     | **79,319** (incl. native engine)                                                                                                          | `../TECHNICAL-SPECIFICATION.md`                                                              |
+| TypeScript lines                         | **50,751** (63.98 %)                                                                                                                      | `../TECHNICAL-SPECIFICATION.md`                                                              |
+| Files / folders                          | **331 / 32** (+ root)                                                                                                                     | `../TECHNICAL-SPECIFICATION.md`                                                              |
+| Population at 60 fps / ceiling           | 10,000 / **50,000** (mega tier)                                                                                                           | `core/quality.ts`                                                                            |
+| Whole-world neural mass                  | **≈ 3.5 M params ≈ 14 MB** Float32, one CPU thread                                                                                        | `../TECHNICAL-SPECIFICATION.md §7`                                                           |
+| Per-organism brain                       | **70-weight** TinyMLP (6→6→4), heritable                                                                                                  | `sim/entities.ts`, `sim/genome.ts`                                                           |
+| Behavioral fields / morphotypes          | **26** fields / **250** morphotypes (10 phyla × 25)                                                                                       | `sim/constants.ts`, `sim/phyla.ts`                                                           |
+| Macro-intelligences                      | 10 Titans · 8 factions · 100 shoggoths · 4 leviathans · 100 puppet-masters (5-qubit) · 1 NHI apex                                         | `sim/titans.ts`, `factions.ts`, …                                                            |
+| Apex composite mind                      | **~10,081 weights** across ~12 sub-networks                                                                                               | `super-mind.ts:382–393`                                                                      |
+| Apex total parameters                    | **≈ 37,225** = 10,081 mind + 1,444 legacy spine + 100 × 257 wingmen                                                                       | `super-mind.ts`, `super-creature.ts:36`, `super-wingmen.ts:24` (Part I rounds to "≈ 37,000") |
+| Faculty count (precise, all definitions) | **14** wired into the per-beat vote · **11 cognitive + 10 quantum** named modules · **~30** distinct mechanisms · **~20** README headline | `../audit-2026-06-16/SUPER-CREATURE-COGNITION-AUDIT.md §3`, `README.md`                      |
+| Cognitive pipeline                       | 5 stages × 5 depths × 5 variants = **25 thought branches**                                                                                | `super-mind.ts:71–73`                                                                        |
+| Quantum register (apex)                  | **6 qubits / 64 complex amplitudes**, 3 circuit layers                                                                                    | `super-qubits.ts:46,48,49`                                                                   |
+| Large-scale quantum substrate            | Aaronson–Gottesman **Clifford tableau to 32/64+ qubits** (present, tested, **not yet wired**)                                             | `clifford-tableau.ts`                                                                        |
+| Decision vocabulary                      | **7 plans** (HUNT·FLEE·DOMINATE·DECEIVE·SPAWN·EXPLORE·REST)                                                                               | `super-creature.ts`                                                                          |
+| Spin-glass instinct                      | **56 spins**, 7 archetypes, Metropolis settle                                                                                             | `spin-glass.ts`, `super-mind.ts:217`                                                         |
+| Apex `think()` cost                      | **≈ 285 µs/beat mean (≈ 273 µs median) ≈ 1.7 % of a 60 fps frame** (CI < 5 ms)                                                            | `bench/super-mind.bench.ts`, `tests/perf-budget.test.ts`                                     |
+| Consciousness metrics                    | **2** live scalars (GWT ignition, IIT Φ proxy) + genuine register Φ                                                                       | `super-mind.ts:43–46`, `super-qubits.ts`                                                     |
+| Butlin indicator coverage                | **≈ 9 / ~14** structurally present (several partial; 2 absent)                                                                            | Part III §III.2; Butlin et al. 2023, arXiv:2308.08708                                        |
+| Quantum laws proven                      | unitarity 1e-12 · Born 1e-9 · PSD QGT · GHZ = 1 ebit · magic of T\|+⟩ = log₂(4/3)                                                         | `tests/quantum.test.ts`                                                                      |
+| Adversarial review                       | **14-agent** correctness sweep → **0 confirmed defects**                                                                                  | `../audit-2026-06-16/SUPER-CREATURE-COGNITION-AUDIT.md §1`                                   |
+| Determinism                              | bit-identical psyche from one 32-bit seed; collapse via seeded generator; `Math.random`/`Date.now` banned & GLOB-enforced                 | `math/rng.ts`, `tests/determinism-law.test.ts`, `super-qubits.test.ts:184`                   |
+| Native engine                            | C++20 SDF ray-marcher, GLFW/GLM, Jolt rigid-body + volume-conserving fracture, RTX-class GPU, 4K offscreen                                | `native/`                                                                                    |
 
 **Number-conflict resolutions (for the record).**
 
-1. **Apex `think()` cost** — Part I (Report I) phrased it as "≈ 0.21 ms (~1.3 %)"; Part II (Report II),
-   the README, and `../TECHNICAL-SPECIFICATION.md` say "≈ 208 µs (~1.25 %)." These are the same figure
-   (0.21 ms = 208 µs); unified everywhere to the canonical **≈ 208 µs / ~1.25 %**.
+1. **Apex `think()` cost** — canonical measured value (mitata, Bun 1.3.11, 2026-06-17): **≈ 285 µs/beat
+   mean (≈ 273 µs median) ≈ 1.7 % of a 60 fps frame**, CI-enforced < 5 ms.
 2. **Apex total parameters** — Part I rounded to "≈ 37,000"; Part II and the spec give the precise
    **≈ 37,225** (= 10,081 + 1,444 + 100 × 257). Unified to **≈ 37,225**, retaining "≈ 37,000" only where a
    headline deliberately rounds.
@@ -694,8 +689,9 @@ used, and the equivalent phrasings are noted.
 Full per-faculty groundings, with verified citations, live in **`../SUPER-CREATURE-RESEARCH.md`**.
 Ported-primitive provenance and licenses are in **`../../THIRD-PARTY-NOTICES.md`**. The two source
 reports this document unifies are
-`./2026-06-16-STATE-OF-THE-ART-WHOLE-REPO.md` (Part I) and
-`./2026-06-16-STATE-OF-THE-ART-SUPER-CREATURE.md` (Part II).
+`./2026-06-17-STATE-OF-THE-ART-WHOLE-REPO.md` (Part I) and
+`./2026-06-17-STATE-OF-THE-ART-SUPER-CREATURE.md` (Part II). Prior combined edition:
+`./2026-06-16-STATE-OF-THE-ART-COMBINED.md` (metrics superseded).
 
 **Consciousness / theory-of-mind frameworks**
 
@@ -744,16 +740,16 @@ binaries)**
 
 ### Provenance footer (Manhattan's law)
 
-- **Build:** v0.11.0 · commit baseline `a8d32b2` · 2026-06-16.
-- **Gate witness:** `bun test` → **1,159 pass / 0 fail / 99 files / 1,738,797 assertions** (Bun 1.3.11,
-  this session); live count fluctuates by a few tests as suites are added.
-- **Coverage:** 91.2 % line / 92.5 % function (lcov, measured 2026-06-16; CI gate ≥ 90 % line / ≥ 85 %
-  function).
+- **Build:** v0.11.0 · commit baseline `5426b49` · 2026-06-17.
+- **Gate witness:** `bun run check` → **1,166 pass / 0 fail / 99 files / 1,738,804 assertions** (Bun
+  1.3.11, cold shell).
+- **Coverage:** **97.38 % line / 93.35 % function** (`bun test --coverage`, “All files”; CI gate ≥ 90 %
+  line / ≥ 85 % function).
 - **Faculty receipts:** `../audit-2026-06-16/SUPER-CREATURE-COGNITION-AUDIT.md` (14-agent adversarial
   sweep, 0 defects); groundings in `../SUPER-CREATURE-RESEARCH.md`.
 - **External framework cited:** Butlin & Long et al. (2023), arXiv:2308.08708.
-- **Source reports unified:** Report I (`./2026-06-16-STATE-OF-THE-ART-WHOLE-REPO.md`) +
-  Report II (`./2026-06-16-STATE-OF-THE-ART-SUPER-CREATURE.md`).
+- **Source reports unified:** Report I (`./2026-06-17-STATE-OF-THE-ART-WHOLE-REPO.md`) +
+  Report II (`./2026-06-17-STATE-OF-THE-ART-SUPER-CREATURE.md`).
 - **License:** Proprietary · All Rights Reserved · © 2026 0thernes LLC.
 
-_0thernes LLC — measured, deterministic, reproducible — 2026-06-16._
+_0thernes LLC — measured, deterministic, reproducible — 2026-06-17._
