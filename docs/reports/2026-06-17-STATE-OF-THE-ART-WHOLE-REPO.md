@@ -2,7 +2,7 @@
 
 ### Cosmogonic Quantum Mechalogodrom · A State-of-the-Art Assessment
 
-**0thernes LLC** · prepared 2026-06-17 · against `v0.11.0` (`main` @ `9932bd3`)
+**0thernes LLC** · prepared 2026-06-17 · against `v0.11.0` (`main` @ `60478a4`)
 **Verified gate (re-run this revision, cold shell):** `prettier --check` · `tsc --strict` · `oxlint` ·
 **1,165 tests / 0 failures across 99 files (1,738,803 assertions)** · **97.38 % line / 93.35 % function** coverage (`bun test --coverage`, “All files”) · `bun build` → 7 artifacts.
 **Governed by** the three master files — Broly (the Executor: finish everything, full gates,
@@ -309,4 +309,4 @@ rendered live. That synthesis, as far as our 360° sweep of GitHub, the quantum 
 labs, the wet-computing field, and the consciousness literature can determine, **has not been
 assembled anywhere else.**
 
-_0thernes LLC — measured, deterministic, reproducible — 2026-06-17 (re-verified against `main` @ `9932bd3`: cold-shell gate re-run, coverage and apex benchmark re-measured, apex parameters independently re-summed). Companion: [Report II — The Super Creature](./2026-06-17-STATE-OF-THE-ART-SUPER-CREATURE.md). Prior revision: [2026-06-16](./2026-06-16-STATE-OF-THE-ART-WHOLE-REPO.md)._
+_0thernes LLC — measured, deterministic, reproducible — 2026-06-17 (re-verified against `main` @ `60478a4`: cold-shell gate re-run, coverage and apex benchmark re-measured, apex parameters independently re-summed). Companion: [Report II — The Super Creature](./2026-06-17-STATE-OF-THE-ART-SUPER-CREATURE.md). Prior revision: [2026-06-16](./2026-06-16-STATE-OF-THE-ART-WHOLE-REPO.md)._

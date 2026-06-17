@@ -6,7 +6,7 @@
 **Prepared for:** principals weighing quantum + ASI developments
 **Subject:** The apex quantum-cognitive intelligence — what is bleeding-edge, unique, and novel, measured against the field
 **Author:** 0thernes LLC · Cosmogonic Quantum Mechalogodrom
-**Date:** 2026-06-17 · **Build:** v0.11.0 · **Commit baseline:** `9932bd3`
+**Date:** 2026-06-17 · **Build:** v0.11.0 · **Commit baseline:** `60478a4`
 **Discipline:** governed by the three master files — _Broly (finish with receipts) · Starkiller (contracts, provenance, adversarial review) · Dr. Manhattan (determinism, measurement, "if it is not measured, it is not real")._
 
 > **Reading contract.** Every load-bearing number here is a _receipt_ — read from source or produced by the gate, not from memory. Where a claim is not independently measured it is marked **UNVERIFIED**; where the honest answer is "we cannot tell from here," **UNKNOWN**. The binding framing rule for this project: the code documents every faculty as a _model of_ its theory, **never** _"is conscious."_ Companion: _Report I — The Whole Repository_ (`docs/reports/2026-06-17-STATE-OF-THE-ART-WHOLE-REPO.md`).
@@ -21,20 +21,20 @@ The Super Creature is an **always-on apex intelligence that lives in a single br
 
 ## 1. Receipts dashboard (the numbers, with provenance)
 
-| Metric                                     | Value                                                                                                                                      | Provenance / receipt                                           |
-| ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------- |
-| Build / gate                               | **v0.11.0**, **1,165 pass / 0 fail**, 99 files, 1,738,803 assertions                                                                       | `package.json`, `bun test` (2026-06-17, Bun 1.3.14)            |
-| Apex composite mind                        | **~10,081 weights** across ~12 sub-networks (re-summed this revision: 1,136 + 1,740 + 1,328 + 424 + 808 + 808 + 544 + 340 + 259 + 550 + 2,144) | `super-mind.ts:382–393`                                      |
-| Apex total parameters                      | **≈ 37,225** = 10,081 mind + 1,444 legacy spine + 100 × 257 wingmen                                                                        | `super-mind.ts`, `super-creature.ts:36`, `super-wingmen.ts:24` |
-| Faculties wired into the per-beat decision | **14** (Report I receipts); cataloged as **11 cognitive + 10 quantum** named modules; **~30** distinct mechanisms incl. composite sub-nets | `docs/audit-2026-06-16/SUPER-CREATURE-COGNITION-AUDIT.md §3`   |
-| Cognitive pipeline                         | **5 stages** (PERCEIVE·IMAGINE·REASON·FEEL·ACT) × **5 depths** × **5 variants** = 25 thought branches                                      | `super-mind.ts:71–73`                                          |
-| Quantum register                           | **6 qubits / 64 complex amplitudes**, 3 circuit layers                                                                                     | `super-qubits.ts:46,48,49`                                     |
-| Decision vocabulary                        | **7 plans** (HUNT·FLEE·DOMINATE·DECEIVE·SPAWN·EXPLORE·REST)                                                                                | `super-creature.ts`                                            |
-| Spin-glass instinct                        | **56 spins**, 7 imprinted archetypes, Metropolis settle                                                                                    | `spin-glass.ts`, `super-mind.ts:217`                           |
-| Apex `think()` cost                        | **≈ 298 µs/beat mean (≈ 288 µs median) ≈ 1.8 % of a 60 fps frame**, CI-enforced **< 5 ms**                                                                    | `bench/super-mind.bench.ts`, `tests/perf-budget.test.ts`       |
-| Consciousness metrics                      | **2** live scalars — GWT `ignition`, IIT `phi` (proxy) — + genuine register Φ                                                              | `super-mind.ts:43–46`, `super-qubits.ts`                       |
-| Adversarial review                         | **14-agent** correctness sweep over the 1.1 faculties → **0 confirmed defects**                                                            | `docs/audit-2026-06-16/SUPER-CREATURE-COGNITION-AUDIT.md §1`   |
-| Determinism                                | bit-identical psyche from one seed; Born collapse drawn through a seeded generator                                                         | `tests/determinism-law.test.ts`, `super-qubits.test.ts:184`    |
+| Metric                                     | Value                                                                                                                                          | Provenance / receipt                                           |
+| ------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| Build / gate                               | **v0.11.0**, **1,165 pass / 0 fail**, 99 files, 1,738,803 assertions                                                                           | `package.json`, `bun test` (2026-06-17, Bun 1.3.14)            |
+| Apex composite mind                        | **~10,081 weights** across ~12 sub-networks (re-summed this revision: 1,136 + 1,740 + 1,328 + 424 + 808 + 808 + 544 + 340 + 259 + 550 + 2,144) | `super-mind.ts:382–393`                                        |
+| Apex total parameters                      | **≈ 37,225** = 10,081 mind + 1,444 legacy spine + 100 × 257 wingmen                                                                            | `super-mind.ts`, `super-creature.ts:36`, `super-wingmen.ts:24` |
+| Faculties wired into the per-beat decision | **14** (Report I receipts); cataloged as **11 cognitive + 10 quantum** named modules; **~30** distinct mechanisms incl. composite sub-nets     | `docs/audit-2026-06-16/SUPER-CREATURE-COGNITION-AUDIT.md §3`   |
+| Cognitive pipeline                         | **5 stages** (PERCEIVE·IMAGINE·REASON·FEEL·ACT) × **5 depths** × **5 variants** = 25 thought branches                                          | `super-mind.ts:71–73`                                          |
+| Quantum register                           | **6 qubits / 64 complex amplitudes**, 3 circuit layers                                                                                         | `super-qubits.ts:46,48,49`                                     |
+| Decision vocabulary                        | **7 plans** (HUNT·FLEE·DOMINATE·DECEIVE·SPAWN·EXPLORE·REST)                                                                                    | `super-creature.ts`                                            |
+| Spin-glass instinct                        | **56 spins**, 7 imprinted archetypes, Metropolis settle                                                                                        | `spin-glass.ts`, `super-mind.ts:217`                           |
+| Apex `think()` cost                        | **≈ 298 µs/beat mean (≈ 288 µs median) ≈ 1.8 % of a 60 fps frame**, CI-enforced **< 5 ms**                                                     | `bench/super-mind.bench.ts`, `tests/perf-budget.test.ts`       |
+| Consciousness metrics                      | **2** live scalars — GWT `ignition`, IIT `phi` (proxy) — + genuine register Φ                                                                  | `super-mind.ts:43–46`, `super-qubits.ts`                       |
+| Adversarial review                         | **14-agent** correctness sweep over the 1.1 faculties → **0 confirmed defects**                                                                | `docs/audit-2026-06-16/SUPER-CREATURE-COGNITION-AUDIT.md §1`   |
+| Determinism                                | bit-identical psyche from one seed; Born collapse drawn through a seeded generator                                                             | `tests/determinism-law.test.ts`, `super-qubits.test.ts:184`    |
 
 **On the faculty count (stated precisely, not rounded).** "14 wired" counts the faculties that vote in the per-beat decision; the cognition audit catalogs **11 cognitive + 10 quantum** named modules (some at UI cadence, two measuring Φ of _different_ systems); counting the composite's ~12 sub-networks and the spin-glass instinct gives **~30 distinct, individually unit-tested mechanisms.** All three numbers are true under their stated definition — we give all three rather than pick a flattering one.
 
@@ -190,7 +190,7 @@ The bleeding edge is not a bigger model. It is the claim — in running, tested,
 
 ### Provenance footer (Manhattan's law)
 
-- **Build:** v0.11.0 · commit baseline `9932bd3` · 2026-06-17 · gate re-verified (Bun 1.3.11).
+- **Build:** v0.11.0 · commit baseline `60478a4` · 2026-06-17 · gate re-verified (Bun 1.3.11; `think()` ≈ 285 µs mean / 273 µs median).
 - **Gate witness:** `bun run check` → 1,165 pass / 0 fail / 99 files / 1,738,803 assertions; `bun bench/index.ts` → `think()` ≈ 288.72 µs/beat (Bun 1.3.11, 2026-06-17 re-verify).
 - **Faculty receipts:** `docs/audit-2026-06-16/SUPER-CREATURE-COGNITION-AUDIT.md` (14-agent adversarial sweep, 0 defects); groundings in `docs/SUPER-CREATURE-RESEARCH.md`.
 - **External framework cited:** Butlin & Long et al. (2023), arXiv:2308.08708.
