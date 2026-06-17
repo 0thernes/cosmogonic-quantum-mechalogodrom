@@ -3,8 +3,8 @@
 ### Cosmogonic Quantum Mechalogodrom · A State-of-the-Art Assessment
 
 **0thernes LLC** · prepared 2026-06-17 · against `v0.11.0` (`main` @ `9932bd3`)
-**Verified gate at time of writing:** `prettier --check` · `tsc --strict` · `oxlint` ·
-**1,165 tests / 0 failures across 99 files (1,738,803 assertions)** · `bun build` → 7 artifacts.
+**Verified gate (re-run this revision, cold shell):** `prettier --check` · `tsc --strict` · `oxlint` ·
+**1,165 tests / 0 failures across 99 files (1,738,803 assertions)** · **97.38 % line / 93.35 % function** coverage (`bun test --coverage`, “All files”) · `bun build` → 7 artifacts.
 **Governed by** the three master files — Broly (the Executor: finish everything, full gates,
 maximalism with receipts), Starkiller (the Architect: contracts before code, provenance, boundary
 paranoia) and Dr. Manhattan (the Physicist: determinism, measurement, frame budgets).
@@ -79,6 +79,23 @@ We assess novelty honestly: most _individual_ ingredients are individually known
 the **synthesis, the scale, the wiring discipline, and the falsifiability** — a combination we can
 find **no equivalent of** in the open-source world or the literature.
 
+### 3.0 · The “they’d call it impossible, insane, or pointless” ledger
+
+The single most-asked question — _what have we done that nobody else has, or that the field would call
+impossible?_ — answered as a ledger, each row a receipt rather than a boast:
+
+| The claim a skeptic would make                                                                                                                                  | Why the field treats it as impossible / insane / pointless                                                            | What is actually shipped here (receipt)                                                                                                                                                                                                 |
+| --------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| “A 50,000-agent _evolving_ ecosystem can’t live in one browser tab on integrated graphics.”                                                                     | Naïve neighbour cost is O(N²); 50k autonomous agents is a discrete-GPU / multi-thread / cluster job.                  | `mega` tier ceiling **50,000** (`core/quality.ts:85`); **√N density scaling** holds neighbour cost ~constant; **10,000 @ 60 fps** and **44,977 live-instantiated, stepped, zero console errors** measured (`docs/BENCHMARKS.md`).       |
+| “You cannot make a _quantum_-cognitive agent bit-reproducible.”                                                                                                 | Quantum sampling + wall-clock RNG = irreproducible by definition.                                                     | The Born-rule “thought collapse” is drawn through a **seeded Eshkol qubit-RNG**; `Math.random`/`Date.now` are **banned and GLOB-enforced** (`tests/determinism-law.test.ts`). Same seed → same psyche, bit for bit.                     |
+| “Consciousness metrics in a sim are hand-waving — Φ is intractable, ignition is a slide.”                                                                       | True Φ is super-exponential _and_ non-unique (Hanson–Walker 2023); ignition is a contested signature (Cogitate 2025). | Both are **live deterministic scalars wired into behaviour**: GWT **ignition gates memory consolidation**; a **genuine register Φ (min-cut entanglement) feeds the decision** — each unit-tested, each honestly labelled a model/proxy. |
+| “A self-optimizing quantum circuit _inside_ a running agent is a paper, not a browser tab.”                                                                     | Quantum Natural Gradient over a circuit’s Fubini–Study metric is frontier QML (Stokes et al. 2020).                   | The apex circuit **reads its own Quantum Geometric Tensor and descends it** by QNG each beat to make its intended thought more probable (`math/quantum-natural-gradient.ts`); PSD-metric + closed-form tested.                          |
+| “Nobody fuses A-Life-at-scale + honest statevector quantum + a 20-faculty mind + 2 consciousness metrics under one determinism law — it would drift and break.” | Each subsystem is a project on its own; coupling them is assumed unmaintainable.                                      | One causal web, **1,165 tests / 0 fail**, full cold-shell gate, **every system reads AND writes another** (PHILOSOPHY law 1).                                                                                                           |
+| “‘Architecture beats parameter count’ is unprovable folklore.”                                                                                                  | The scale-maximalist orthodoxy equates capability with parameters (GPT-3 ≈ 175 B).                                    | A **≈ 37,225-param** apex (independently re-summed, §3.3) plans (GOAP), models opponents (ToM), seeks empowerment, runs active inference, and self-replicates — a **falsifiable specimen**, not a manifesto.                            |
+
+None of these is a sentience claim (§6). Each is a _capability_ the field treats as hard, expensive, or
+non-reproducible — delivered here in tested, seed-replayable code.
+
 ### 3.1 · Versus other GitHub repositories / open-source A-Life
 
 The A-Life canon (Conway's Life, Lenia, Avida/Tierra, Boids, Framsticks, bibites, The Bibites,
@@ -90,6 +107,26 @@ hard determinism law — in a single zero-install browser tab.** The closest "ev
 (Dwarf-Fortress-class) are neither deterministic-by-seed nor quantum nor neuroscience-grounded.
 **Distinctive claim: the read/write-everything causal web at 50k scale under one seed is, to our
 search, without open-source peer.**
+
+**Hall of firsts — the synthesis we could find nowhere else (the "nobody has done this" list).** Each
+bullet is individually checkable in the cited source; the _claim of no peer_ is scoped to our 360°
+sweep of GitHub, the quantum stacks, the frontier-lab literature, the wet-computing field, and the
+consciousness science, and is offered as falsifiable (one counter-example retires the line):
+
+- **A deterministic agent whose decision is a Born-rule collapse it samples _through_ a ported
+  quantum-inspired RNG, on a circuit it then _self-optimizes_ by Quantum Natural Gradient down its own
+  Fubini–Study geometry.** A closed read-your-own-quantum-geometry → write-your-own-quantum-drive loop
+  inside a living agent. (§3.2)
+- **Two _different_ systems' Integrated-Information Φ measured live in one organism** — a classical
+  participation-ratio Φ over cognitive modules _and_ a genuine min-cut entanglement Φ over the quantum
+  register — with the quantum one wired back into the decision.
+- **A 50,000-agent evolving A-Life ecosystem that is bit-reproducible from a single 32-bit seed,**
+  `Math.random`/`Date.now` banned and _mechanically self-sealing_ (a test auto-guards every new sim file).
+- **~21 cited, unit-tested theory-of-mind faculties fused into one ~10⁴-parameter apex agent** that
+  also negotiates a two-currency economy, wages game-theoretic war, and self-replicates — in one
+  zero-install browser tab, on zero AI accelerators.
+- **Resource-theoretic quantum "magic" (Stabilizer 2-Rényi) carried as live agent telemetry,** verified
+  exact against the closed form (magic of T|+⟩ = log₂(4/3)).
 
 ### 3.2 · Versus quantum computing / quantum projects
 
@@ -124,8 +161,11 @@ self-optimizing quantum circuit it can measure the geometry and magic of."**
 
 The reigning paradigm — OpenAI, Anthropic, DeepMind, Meta — holds that capability scales with
 parameters (GPT-3 ≈ 175 B). This artifact is a **deliberate, running counter-example at the
-functional level**: an apex mind of **≈ 37,000 parameters** (1,444-weight legacy spine + ~10,081-weight
-composite + 100 × 257-weight wingmen) — _five orders of magnitude smaller_ — that nonetheless plans
+functional level**: an apex mind of **≈ 37,000 parameters** (1,444-weight legacy spine + 10,081-weight
+composite + 100 × 257-weight wingmen) — _five orders of magnitude smaller_ — (the composite’s **10,081**
+was independently re-summed from `super-mind.ts` this revision: cortex 1,136 + 30 organ-nets 1,740 +
+imagitron 1,328 + perceptor 424 + reasoner 808 + predictor 808 + consolidator 544 + self-model 340 +
+affect 259 + quantum 550 + meta 2,144 = **10,081**) — that nonetheless plans
 multi-step GOAP schemes, models opponents (Theory of Mind), seeks empowerment, maintains a
 holographic associative memory, runs active inference, and self-replicates. It does **not** claim to
 out-reason GPT on language; it claims that **agency, planning, affect, self-reference, novelty-seeking
@@ -189,15 +229,15 @@ one variable, study it like a specimen.
 
 **Quantitative (measured 2026-06-17):**
 
-| Metric                         | Value                                                         |
-| ------------------------------ | ------------------------------------------------------------- |
-| Tests / failures               | **1,165 / 0** (1.74 M assertions, 99 files)                   |
-| Line / function coverage       | **97.38 % / 93.35 %** (`bun test --coverage`)                 |
-| Apex mind per-beat cost        | **≈ 0.29 ms** (288.72 µs measured; CI-enforced < 5 ms) — ~1.7 % of a 60 fps frame |
-| Population at 60 fps / ceiling | 10,000 / **50,000**                                           |
-| World parameters / footprint   | ≈ 3.5 M / ≈ 14 MB                                             |
-| Quantum laws proven            | unitarity 1e-12, Born 1e-9, PSD QGT, GHZ=1 ebit               |
-| Determinism                    | bit-identical from one 32-bit seed, GLOB-guarded              |
+| Metric                         | Value                                                                                   |
+| ------------------------------ | --------------------------------------------------------------------------------------- |
+| Tests / failures               | **1,165 / 0** (1.74 M assertions, 99 files)                                             |
+| Line / function coverage       | **97.38 % / 93.35 %** (`bun test --coverage`)                                           |
+| Apex mind per-beat cost        | **≈ 298 µs/beat** mean (≈ 288 µs median; CI-enforced < 5 ms) — ~1.8 % of a 60 fps frame |
+| Population at 60 fps / ceiling | 10,000 / **50,000**                                                                     |
+| World parameters / footprint   | ≈ 3.5 M / ≈ 14 MB                                                                       |
+| Quantum laws proven            | unitarity 1e-12, Born 1e-9, PSD QGT, GHZ=1 ebit                                         |
+| Determinism                    | bit-identical from one 32-bit seed, GLOB-guarded                                        |
 
 **Qualitative (engineering judgment, 1–10):**
 
@@ -269,4 +309,4 @@ rendered live. That synthesis, as far as our 360° sweep of GitHub, the quantum 
 labs, the wet-computing field, and the consciousness literature can determine, **has not been
 assembled anywhere else.**
 
-_0thernes LLC — measured, deterministic, reproducible — 2026-06-17. Companion: [Report II — The Super Creature](./2026-06-17-STATE-OF-THE-ART-SUPER-CREATURE.md). Prior revision: [2026-06-16](./2026-06-16-STATE-OF-THE-ART-WHOLE-REPO.md)._
+_0thernes LLC — measured, deterministic, reproducible — 2026-06-17 (re-verified against `main` @ `9932bd3`: cold-shell gate re-run, coverage and apex benchmark re-measured, apex parameters independently re-summed). Companion: [Report II — The Super Creature](./2026-06-17-STATE-OF-THE-ART-SUPER-CREATURE.md). Prior revision: [2026-06-16](./2026-06-16-STATE-OF-THE-ART-WHOLE-REPO.md)._

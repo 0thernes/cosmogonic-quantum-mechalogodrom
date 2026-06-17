@@ -12,3 +12,6 @@ coverage
 # tsc's `include` nor oxlint's scope, but `prettier --check .` scans them and a stray one breaks the
 # LOCAL gate. Ignore the `__`-prefixed scratch convention so the daily gate stays robust to cruft.
 __*
+# Diagnostic gate/coverage logs a session tees into the root (already in .gitignore). Mirror them here
+# so a captured run log never trips `prettier --check .` on the local gate.
+*.log

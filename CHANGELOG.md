@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - **Truth-sync (2026-06-17, second pass).** Re-verified gate on Bun 1.3.11; updated commit baseline to `9932bd3`, apex `think()` bench to **≈ 289 µs/beat** (288.72 µs measured), and aligned `/docs` frontier-report footer with live receipts.
+- **Truth-sync (2026-06-17, third pass) + report depth.** Reconciled the remaining stale public surfaces the prior passes missed — the `/spec` social-share description and the `/docs` test-count note (1,159 → **1,165 tests**, 91 % → **97 % line** coverage), the `ROADMAP` gate line, and a double-`≈` typo on `/docs` — and re-confirmed the canonical `bun test --coverage` figure (**97.38 % line / 93.35 % function**, “All files”). **Independently re-summed** the apex parameters from `super-mind.ts` (composite **10,081** = cortex 1,136 + 30 organ-nets 1,740 + imagitron 1,328 + perceptor 424 + reasoner 808 + predictor 808 + consolidator 544 + self-model 340 + affect 259 + quantum 550 + meta 2,144; total **37,225**), and deepened both frontier reports (Whole-Repo + Super-Creature) with a _“what the field would call impossible / insane / pointless”_ ledger that directly answers “what have we done nobody else has.”
 
 ### Added
 
