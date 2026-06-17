@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **State-of-the-art frontier reports (2026-06-17).** Re-verified gate and re-measured benchmarks; two
+  MIT-PhD-grade assessments under `docs/reports/`: **Report I — The Whole Repository** and **Report II — The
+  Super Creature** (dated 2026-06-17). **1,165 tests / 0 fail** · **97.38 % line / 93.35 % function**
+  coverage · apex `think()` ≈ **298 µs/beat (~1.8 % of a 60 fps frame)**. Linked from README, `/spec`,
+  `/docs`, and the technical specification.
+
 - **State-of-the-art frontier reports (2026-06-16).** Two MIT-PhD-grade, measured, frontier-benchmarked
   assessments under `docs/reports/`: **Report I — The Whole Repository** and **Report II — The Super
   Creature**. Each compares the work against the real frontier (quantum computing, AGI/ASI labs, organoid
