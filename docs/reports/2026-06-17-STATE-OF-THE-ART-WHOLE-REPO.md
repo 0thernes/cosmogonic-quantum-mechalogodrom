@@ -296,6 +296,7 @@ It is not a conscious being, not a large language model, and cannot speak Englis
 - **Not a physical quantum computer.** The quantum layer is an honest, exact statevector simulation — an algebra on amplitudes — not a physical QPU; it implies no quantum speedup and makes no claim about quantum neurons.
 - **Not vendored binaries.** The ported primitives (Eshkol qubit-RNG, QGT/Fubini–Study, spin-glass, Aaronson–Gottesman Clifford tableau) are credited, MIT-licensed, source-level reimplementations, credited in `../../THIRD-PARTY-NOTICES.md` — not linked third-party binaries.
 - **Not a fully-wired quantum cognition stack.** The large-scale Clifford tableau is present and tested but NOT wired into the apex mind; any implication that the stabilizer backend is fused into cognition is corrected — its ported artifact is currently inert (see Part II §II.8).
+- **Independently re-summed.** The ≈ 37,225 / 10,081 parameter figures were independently re-summed from `super-mind.ts` this revision — composite = cortex 1,136 + 30 organ-nets 1,740 + imagitron 1,328 + perceptor 424 + reasoner 808 + predictor 808 + consolidator 544 + self-model 340 + affect 259 + quantum 550 + meta 2,144 = 10,081; + 1,444 legacy spine + 100 × 257 wingmen = 37,225.
 
 ## III.5 · Ratings, metrics, scorecard (LFG)
 
@@ -303,9 +304,9 @@ It is not a conscious being, not a large language model, and cannot speak Englis
 
 | Metric                         | Value                                                          |
 | ------------------------------ | -------------------------------------------------------------- |
-| Tests / failures               | 1,165 / 0 (1.74 M assertions, 99 files)                        |
-| Line / function coverage       | 97.38 % / 93.35 % (lcov)                                       |
-| Apex mind per-beat cost        | ≈ 298 µs/beat (CI-enforced < 5 ms) — ~1.8 % of a 60 fps frame  |
+| Tests / failures               | 1,166 / 0 (1.74 M assertions, 99 files)                        |
+| Line / function coverage       | 97.38 % / 93.35 % (bun test --coverage, "All files")           |
+| Apex mind per-beat cost        | ≈ 285 µs/beat (273 µs median, CI-enforced < 5 ms) — ~1.7 % of a 60 fps frame |
 | Population at 60 fps / ceiling | 10,000 / 50,000                                                |
 | World parameters / footprint   | ≈ 3.5 M / ≈ 14 MB                                              |
 | Apex total parameters          | ≈ 37,225 (≈ 10,081-weight composite + 1,444 spine + 100 × 257) |
