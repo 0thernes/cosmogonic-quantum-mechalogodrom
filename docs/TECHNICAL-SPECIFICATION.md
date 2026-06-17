@@ -5,7 +5,7 @@
 > estimated. **Live:** <https://0thernes.github.io/cosmogonic-quantum-mechalogodrom/> · **Spec page:**
 > `/spec` · **Architecture docs:** `/docs`
 
-**Version:** 0.10.4 · **Generated:** 2026-06-16 · **License:** Proprietary — All Rights Reserved.
+**Version:** 0.11.0 · **Generated:** 2026-06-16 · **License:** Proprietary — All Rights Reserved.
 
 ---
 
@@ -23,49 +23,51 @@ seed**.
 
 ## 1 · Codebase metrics (measured)
 
-| Metric                                 | Value                                             |
-| -------------------------------------- | ------------------------------------------------- |
-| Total lines (TS app, docs + config)    | **69,365**                                        |
-| Native C++ engine (separate, ADR-0007) | 1,426 lines · 6 files                             |
-| Files                                  | **285**                                           |
-| Folders                                | **29** (+ root)                                   |
-| Distinct file types                    | 21                                                |
-| App source (TypeScript)                | 30,871 lines · 89 files                           |
-| Tests                                  | 11,692 lines · 79 files                           |
-| Test : source ratio                    | 0.38 → **95.6 % line / 90.5 % function** coverage |
-| Passing tests                          | **965**                                           |
+| Metric                                     | Value                                               |
+| ------------------------------------------ | --------------------------------------------------- |
+| Total authored lines (incl. native engine) | **79,319**                                          |
+| Native C++ engine (separate, ADR-0007)     | 1,296 lines · 6 files                               |
+| Files                                      | **331**                                             |
+| Folders                                    | **32** (+ root)                                     |
+| Distinct file types                        | 21                                                  |
+| App source (TypeScript)                    | 35,226 lines · 108 files                            |
+| Tests                                      | 14,117 lines · 99 files                             |
+| Test : source ratio                        | 0.40 → **97.38 % line / 93.35 % function** coverage |
+| Passing tests                              | **1,159** (0 failing)                               |
 
 ### 1.1 Languages
 
 | Language                       | Lines  | Share   | Fraction |
 | ------------------------------ | ------ | ------- | -------- |
-| TypeScript                     | 43,898 | 63.29 % | ≈ 2/3    |
-| Markdown                       | 14,904 | 21.49 % | ≈ 1/5    |
-| HTML                           | 8,015  | 11.56 % | ≈ 1/9    |
-| CSS (Tailwind source)          | 1,230  | 1.77 %  | ≈ 1/56   |
-| XML (master files)             | 428    | 0.62 %  | —        |
-| bun.lock / YAML / JSON / other | 890    | 1.28 %  | —        |
+| TypeScript                     | 50,751 | 63.98 % | ≈ 2/3    |
+| Markdown                       | 15,965 | 20.13 % | ≈ 1/5    |
+| HTML                           | 8,190  | 10.32 % | ≈ 1/10   |
+| C++ (native engine, ADR-0007)  | 1,296  | 1.63 %  | —        |
+| CSS (Tailwind source)          | 1,230  | 1.55 %  | ≈ 1/64   |
+| XML (master files)             | 428    | 0.54 %  | —        |
+| bun.lock / YAML / JSON / other | 1,459  | 1.84 %  | —        |
 
-**Code (TS + HTML + CSS) = 53,143 lines = 76.6 %**; documentation + config = 23.4 %. (Excludes the
-separate `native/` C++ engine — 1,426 lines, ADR-0007 — which is not part of the single-language web app.)
+**Code (TS + C++ + HTML + CSS) = 61,467 lines = 77.5 %**; documentation + config = 22.5 %. (Totals are
+measured over all tracked authored files, excluding the vendored `node_modules/` and the generated
+`native/build/` artifacts.)
 
 ### 1.2 Lines by area
 
 | Area                                            | Files | Lines  |
 | ----------------------------------------------- | ----- | ------ |
-| `src/` (application)                            | 90    | 32,101 |
-| `docs/`                                         | 46    | 11,263 |
-| `tests/`                                        | 79    | 11,692 |
+| `src/` (application)                            | 109   | 36,456 |
+| `tests/`                                        | 99    | 14,117 |
+| `docs/`                                         | 50    | 11,971 |
 | repo root (README, LICENSE, configs)            | 24    | 7,000  |
 | `lab/` (self-contained artifact)                | 1     | 3,861  |
 | `legacy/` (preserved origin)                    | 7     | 2,035  |
-| `native/` (C++ engine, ADR-0007)                | 9     | 1,518  |
+| `native/` (C++ engine, ADR-0007)                | 6     | 1,296  |
 | `masters/` (3 governing XML personas)           | 3     | 428    |
 | `.github/` · `bench/` · `scripts/` · `.claude/` | 27    | 1,297  |
 
-`src/` subsystems: `sim/` 14,342 (48 files) · `ui/` 8,915 (19 files) · `world.ts` 2,395 (composition
-root) · `audio/` 1,274 · `server/` 1,232 · `styles/` 1,230 · `math/` 1,022 · `core/` 582 ·
-`types.ts`+`main.ts` 546 · `logging/` 219.
+`src/` subsystems: `sim/` 17,353 (61 files) · `ui/` 9,007 (19 files) · `world.ts` 2,395 (composition
+root) · `math/` 2,246 (12 files) · `audio/` 1,274 · `server/` 1,260 · `styles/` 1,230 · `core/` 582 ·
+plus `types.ts` · `main.ts` · `docs-page.ts` · `logging/`.
 
 ---
 
@@ -228,6 +230,21 @@ inference, quantum cognition) is catalogued with citations in
 [SUPER-CREATURE-RESEARCH.md](SUPER-CREATURE-RESEARCH.md) — framed as _"models / inspired by"_, never
 _"is conscious."_
 
+**Super Creature 1.1 (V90–V100) — the multi-pillar expansion to ~20 coupled faculties (v0.11.0).** Beyond
+ignition + Φ, the apex mind now runs roughly twenty deterministic, unit-tested faculties each beat, each
+reading from AND writing to the others (a negotiated plan-vote, not parallel gadgets): **Active Inference**
+(Friston FEP — variational + expected free energy), a **Metacognitive Executive** (Higher-Order confidence
+→ control), a **Successor Representation** predictive map (Dayan/Stachenfeld), **Doya neuromodulation**
+(DA/5-HT/NE/ACh), an **Empowerment** drive (Blahut–Arimoto channel capacity), **Theory of Mind**, an
+**echo-state Reservoir**, **Neural Criticality** (edge-of-chaos σ̂→1), a **spin-glass instinct**, a
+**VSA/HRR holographic memory**, and a quantum core wired into the decision loop — the genuine statevector
+**min-cut Φ**, **Quantum Reservoir Computing** (Fujii–Nakajima), a **Lindblad/GKSL deliberation qubit**,
+**Grover** amplitude amplification, and **Quantum Natural Gradient** descent on its own Fubini–Study
+geometry. The Aaronson–Gottesman **Clifford stabilizer tableau** (ported from Moonlab; 32+ qubits) is a
+fourth MIT-credited primitive. **Measured cost:** the whole apex beat (`SuperMind.think()`) is **≈ 208 µs
+(median 195 µs) — ~1.25 % of a 60 fps frame** (`bench/super-mind.bench.ts`), enforced as a CI law
+(< 5 ms/beat). Full frontier assessment in [docs/reports/](reports/).
+
 ### 7.2 Contrast: this world vs. large language models
 
 | Model                              | Parameters  | × larger than this world |
@@ -290,8 +307,8 @@ Complexity classes are catalogued in [COMPLEXITY.md](COMPLEXITY.md); hot-path be
 
 The single gate — `bun run check` — must pass before every commit:
 
-`prettier --check` → `tsc --noEmit` (strict) → `oxlint` → `bun test` (**965 tests, 0 fail**) →
-`bun scripts/build.ts`. Coverage gate: line ≥ 0.90, function ≥ 0.85 (measured 95.6 % / 90.5 %).
+`prettier --check` → `tsc --noEmit` (strict) → `oxlint` → `bun test` (**1,159 tests, 0 fail**) →
+`bun scripts/build.ts`. Coverage gate: line ≥ 0.90, function ≥ 0.85 (measured 97.38 % / 93.35 %).
 Three governing "master" personas (`masters/*.xml`) encode the discipline: **the Executor** (finish
 everything, full gates), **the Architect** (contracts before code, exclusive ownership), **the
 Physicist** (determinism, measurement, frame budgets, provenance).
@@ -339,7 +356,7 @@ Physicist** (determinism, measurement, frame budgets, provenance).
 |     — | —                         |    40 | math/rng.ts                    |
 |     — | —                         |    20 | sim/morphotypes.ts             |
 
-### `tests/` (79 files · 11,692 lines)
+### `tests/` (99 files · 14,117 lines)
 
 `observatory 658 · quantum 396 · graph-mind 389 · viz3d 309 · singularities 286 · atmosphere 276 ·
 reaction-diffusion 273 · phyla 264 · analytics 252 · songs 218 · store 214 · brains 205 ·
@@ -356,7 +373,7 @@ contrast 62 · doc-links 57 · a11y-static 45`.
 
 This is a ~69k-line TypeScript (+ optional C++/Jolt native engine) browser-native simulation that
 renders **up to 50,000 agents** (10,000 at 60 fps on a laptop iGPU with zero AI accelerator), is
-**bit-reproducible from one seed**, ships through a **full CI/CD gate** (965 tests, 95.6 % coverage),
+**bit-reproducible from one seed**, ships through a **full CI/CD gate** (1,159 tests, 97.4 % coverage),
 and whose entire emergent intelligence weighs **≈ 14 MB — 1/50,000th of GPT-3** at the mega ceiling. It
 demonstrates that depth comes from **architecture,
 determinism, and engineering discipline**, not parameter count or hardware.

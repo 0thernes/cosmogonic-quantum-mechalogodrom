@@ -5,7 +5,8 @@
 [![License: Proprietary](https://img.shields.io/badge/License-Proprietary%20%E2%80%94%20All%20Rights%20Reserved-red.svg)](./LICENSE)
 [![Bun](https://img.shields.io/badge/Bun-1.3-black?logo=bun&logoColor=white)](https://bun.sh)
 [![TypeScript strict](https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript&logoColor=white)](./tsconfig.json)
-[![tests](https://img.shields.io/badge/tests-1123%20passing-brightgreen)](./tests)
+[![tests](https://img.shields.io/badge/tests-1159%20passing-brightgreen)](./tests)
+[![coverage](https://img.shields.io/badge/coverage-97.4%25%20line%20%C2%B7%2093.4%25%20func-success)](./docs/TECHNICAL-SPECIFICATION.md)
 [![audit](https://img.shields.io/badge/inspection-500%20points-success)](./docs/500-POINT-INSPECTION.md)
 
 A procedural WebGL cosmic ecosystem — morphogenic organisms, Shoggoths,
@@ -18,7 +19,7 @@ Every run is reproducible from a seed. Every hot path is allocation-free.
 Every magic number survived the port.
 
 > 📖 **New here? Read [THE BOOK](./docs/BOOK.md)** — the master index over every doc, an
-> auto-generated [file map](./docs/FILE-MAP.md) of all 89 modules, and the build/run, data-flow,
+> auto-generated [file map](./docs/FILE-MAP.md) of all 108 modules, and the build/run, data-flow,
 > troubleshooting, and roadmap in one place. Or open **❓ HELP ME NOW** in-app for grounded answers.
 
 > **V12–V13 (2026-06):** a procedural **Reliquary Surface** jewel BRDF + a macro **SPECIMEN** camera
@@ -260,9 +261,9 @@ generations, and a read-only Copilot (`docs/MODULE-CONTRACTS.md` §V9):
   alter dynamics** (`solid` stays the exact determinism identity); singularities
   now pull titans/shoggoths/leviathans; chaos is leveled and bipolar.
 
-### The Living Era (post-0.9.0 · V10–V97)
+### The Living Era (post-0.9.0 · V10–V100)
 
-Since 0.9.0 the cosmos has grown continuously — seventy-plus increments logged in
+Since 0.9.0 the cosmos has grown continuously — ninety-plus increments logged in
 the [CHANGELOG](./CHANGELOG.md) `[Unreleased]` section, each shipped behind the
 full gate with same-seed determinism preserved. The major arcs:
 
@@ -327,7 +328,7 @@ full gate with same-seed determinism preserved. The major arcs:
   ([src/sim/spin-glass.ts](./src/sim/spin-glass.ts)) supplies associative instinct
   that biases plan selection. Surfaced live on the SuperCreature board's
   **Substrate** row (Eshkol H · QGT vol/κ · Spin→PLAN %) and covered by closed-form
-  unit tests — **964 tests green**.
+  unit tests.
 - **SUPER CREATURE 1.1 — the consciousness-metrics layer (V89)** — the apex mind now
   measures itself against the two leading _scientific_ theories of consciousness every
   beat, each a live deterministic scalar computed from its own activations: a
@@ -379,6 +380,23 @@ full gate with same-seed determinism preserved. The major arcs:
   to make its intended thought more probable, reading its own quantum geometry and writing its own quantum
   drives. Every faculty is grounded with citations in
   [docs/SUPER-CREATURE-RESEARCH.md](./docs/SUPER-CREATURE-RESEARCH.md), released as **v0.11.0**.
+- **The apex mind closes out at ~20 coupled faculties (V98–V100)** — a **Lindblad/GKSL open-system
+  deliberation qubit** ([src/sim/quantum-deliberation.ts](./src/sim/quantum-deliberation.ts), a coherent
+  superposition of options decohering into a commitment), **Quantum Reservoir Computing**
+  ([src/sim/quantum-reservoir.ts](./src/sim/quantum-reservoir.ts), the register's state-velocity as a
+  curiosity drive — Fujii & Nakajima 2017), **Doya neuromodulation**
+  ([src/sim/neuromodulation.ts](./src/sim/neuromodulation.ts)), and the genuine quantum-register **Φ**
+  (real IIT min-cut entanglement) now writing back into cognition — closed the inert-Φ gap. The
+  Aaronson–Gottesman **Clifford stabilizer tableau** ([src/math/clifford-tableau.ts](./src/math/clifford-tableau.ts),
+  ported from **Moonlab**, scales to 32+ qubits past the dense ceiling) landed as the fourth MIT-credited
+  ported primitive. The whole apex beat — all ~20 faculties — is benchmarked at **≈ 208 µs (~1.25 % of a
+  60 fps frame)** and CI-gated. **1,159 tests green · 0 fail · 97.4 % line / 93.4 % function coverage.**
+- **State-of-the-art reports (2026-06-16)** — two MIT-PhD-grade, measured, frontier-benchmarked assessments:
+  **[Report I — The Whole Repository](./docs/reports/2026-06-16-STATE-OF-THE-ART-WHOLE-REPO.md)** and
+  **[Report II — The Super Creature](./docs/reports/2026-06-16-STATE-OF-THE-ART-SUPER-CREATURE.md)** —
+  what is genuinely novel vs. quantum computing, AGI/ASI labs, organoid "wet computing", and classic
+  A-Life; a consciousness-marker scorecard (~9–10/12 functional markers modeled; phenomenal consciousness
+  out of scope, never claimed); ratings, metrics, and an honest "what it would take to go further."
 
 Work on this codebase is governed by the three **master files** in
 [masters/](./masters/) — Executor, Architect, Physicist — bound by
@@ -516,6 +534,11 @@ telemetry + analytics push (every 8th frame) → analytics analyze (every
   [0005 math-stack selection](./docs/adr/0005-math-stack-selection.md)
 - [docs/500-POINT-INSPECTION.md](./docs/500-POINT-INSPECTION.md) — the standing
   quality audit: 25 sections × 20 checkpoints, each with a verdict and evidence
+- **[docs/reports/](./docs/reports/)** — the state-of-the-art frontier assessments:
+  [Whole Repository](./docs/reports/2026-06-16-STATE-OF-THE-ART-WHOLE-REPO.md) ·
+  [The Super Creature](./docs/reports/2026-06-16-STATE-OF-THE-ART-SUPER-CREATURE.md)
+- [docs/SUPER-CREATURE-RESEARCH.md](./docs/SUPER-CREATURE-RESEARCH.md) — the honest
+  citation trail behind every apex-mind faculty (2023–2026, live-verified)
 - [docs/KANBAN.md](./docs/KANBAN.md) — the delivery board (cards across columns
   by epic) · [ROADMAP.md](./ROADMAP.md) — shipped / now / next horizons
 - [CONTRIBUTING.md](./CONTRIBUTING.md) · [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md) ·
