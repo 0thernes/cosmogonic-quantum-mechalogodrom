@@ -226,10 +226,42 @@ It is not a conscious being, not a large language model, and cannot speak Englis
 
 ---
 
+## Appendix · The distance to each missing indicator (calibrated, not hand-waved)
+
+The ≈9/14 score (§8) is honest only if the remaining gap is named precisely. For each indicator the
+Super Creature does **not** yet satisfy, here is the concrete mechanism that would close it, its cost,
+and the determinism-preserving experiment that would test it — the roadmap a reviewer can hold us to.
+
+| Missing / partial indicator              | What it would take                                                                                               | Cost                           | Determinism-safe?                  |
+| ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------- | ------------------------------ | ---------------------------------- |
+| **AST-1** attention schema               | a small model that predicts the agent's _own_ attention state (a model of the spotlight, not just the spotlight) | low — the cheapest gap         | ✓ (a deterministic sub-net)        |
+| **HOT-1** top-down generative perception | close the imagitron loop so prediction _generates_ the next percept top-down, not just scores it                 | medium                         | ✓                                  |
+| **HOT-4** sparse-smooth quality space    | a learned, smooth latent for qualities (color/shape) rather than fixed channels                                  | medium                         | needs online learning              |
+| **RPT-1/2** recurrent processing (full)  | genuine learned recurrence rather than a fixed-weight reservoir                                                  | high                           | needs seeded online plasticity     |
+| **AE-1** learned agency                  | weights that update from experience under the seed, so agency is _earned_ not architected                        | high — the single biggest leap | ✓ if plasticity is seed-replayable |
+
+**The honest headline:** the two indicators large _learned_ models routinely miss — **GWT-3 ignition** and
+**HOT-2 metacognitive monitoring** — are already wired here; the indicators this artifact misses are the
+ones that **require learning**, which is exactly the scoped "not a learned model" limitation (§10). The
+gap is therefore not a mystery; it is a named, ranked, falsifiable research program.
+
+## Appendix · Verified math (re-derived this pass, not cited)
+
+| Quantity                          | Independent re-derivation                                                            | Asserted in suite                                      |
+| --------------------------------- | ------------------------------------------------------------------------------------ | ------------------------------------------------------ |
+| Stabilizer 2-Rényi magic of T\|+⟩ | log₂(4/3) = **0.415037**                                                             | `\|magic − log₂(4/3)\| < 1e-9`, `stabilizer === false` |
+| Composite mind parameter sum      | 1,136 + 1,740 + 1,328 + 424 + 808 + 808 + 544 + 340 + 259 + 550 + 2,144 = **10,081** | instantiated `SuperMind.paramCount`                    |
+| Apex total                        | 10,081 + 1,444 + 25,700 = **37,225**                                                 | re-summed from running constructor                     |
+| QFI / Fubini–Study identity       | QFI = 4·g                                                                            | `quantum-geometry.test.ts` (= 1 to 1e-4)               |
+
+Full deep-claims results: [`docs/audit-2026-06-17-DEEP-CLAIMS-VERIFICATION.md`](../audit-2026-06-17-DEEP-CLAIMS-VERIFICATION.md).
+
+---
+
 ### Provenance footer (Manhattan's law)
 
-- **Build:** v0.11.0 · commit baseline `481b52c` · 2026-06-17 · gate re-verified (Bun 1.3.11).
-- **Gate witness:** `bun run check` → **1,053 pass / 0 fail** / 99 files / 1,738,804 assertions; `bun bench/index.ts` → `think()` **≈ 304 µs mean / 300 µs median** (Bun 1.3.11, 2026-06-17 re-verify; typically **285–304 µs** machine-dependent).
+- **Build:** v0.11.0 · commit baseline `main` · 2026-06-17 · gate re-verified from a cold shell (Bun 1.3.14).
+- **Gate witness:** `bun test` → **1,053 pass / 0 fail / 100 files / ≈1.74 M assertions**; `bun test --coverage` → **94.67 % line / 91.29 % function**; `bun bench/index.ts` → `think()` ≈ **289 µs/beat on author Core Ultra 9 HW, ≈ 443 µs on an Intel Xeon @ 2.90 GHz / 2 cores** (Bun 1.3.14). Benchmark figures are hardware-dependent and quoted with machine context per Manhattan's law; the published count/coverage are CI-enforced by the receipts law (`scripts/verify-receipts.ts`).
 - **Faculty receipts:** `docs/audit-2026-06-16/SUPER-CREATURE-COGNITION-AUDIT.md` (14-agent adversarial sweep, 0 defects); groundings in `docs/SUPER-CREATURE-RESEARCH.md`.
 - **External framework cited:** Butlin & Long et al. (2023), arXiv:2308.08708.
 - **Companion:** _Report I — The Whole Repository_ (`docs/reports/2026-06-17-STATE-OF-THE-ART-WHOLE-REPO.md`). Prior revision: [2026-06-16](./2026-06-16-STATE-OF-THE-ART-SUPER-CREATURE.md).

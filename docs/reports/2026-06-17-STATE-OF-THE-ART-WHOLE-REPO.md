@@ -304,9 +304,9 @@ It is not a conscious being, not a large language model, and cannot speak Englis
 
 | Metric                         | Value                                                                        |
 | ------------------------------ | ---------------------------------------------------------------------------- |
-| Tests / failures               | 1,053 / 0 (1.74 M assertions, 99 files)                                      |
+| Tests / failures               | 1,053 / 0 (1.74 M assertions, 100 files)                                     |
 | Line / function coverage       | 94.67 % / 91.29 % (bun test --coverage, "All files")                         |
-| Apex mind per-beat cost        | ≈ 285 µs/beat (273 µs median, CI-enforced < 5 ms) — ~1.7 % of a 60 fps frame |
+| Apex mind per-beat cost        | machine-dependent: ≈ 289 µs author HW / ≈ 443 µs on a 2-core Xeon; CI < 5 ms |
 | Population at 60 fps / ceiling | 10,000 / 50,000                                                              |
 | World parameters / footprint   | ≈ 3.5 M / ≈ 14 MB                                                            |
 | Apex total parameters          | ≈ 37,225 (≈ 10,081-weight composite + 1,444 spine + 100 × 257)               |
@@ -328,4 +328,48 @@ It is not a conscious being, not a large language model, and cannot speak Englis
 
 ---
 
-_0thernes LLC — measured, deterministic, reproducible — 2026-06-17. Companion: [Report II — The Super Creature](./2026-06-17-STATE-OF-THE-ART-SUPER-CREATURE.md). Prior revision: [2026-06-16](./2026-06-16-STATE-OF-THE-ART-WHOLE-REPO.md)._
+## Appendix A · Falsification protocol (how a skeptic in the room would try to break this)
+
+A claim that cannot be falsified is theater. Each headline claim below is paired with the **single
+command** that would expose it as false if it were — every one of which currently returns green.
+
+| Claim                                               | Falsifier (run this to break it)                                                                                            | Current result                   |
+| --------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- | -------------------------------- |
+| "Bit-reproducible from one seed"                    | `bun test tests/super-qubits.test.ts` — asserts `JSON.stringify(a) === JSON.stringify(b.snapshot())` for equal seed+drivers | ✅ holds, incl. quantum collapse |
+| "Honest quantum algebra (unitary, Born-normalized)" | `bun test tests/quantum.test.ts` — H·H=I to 1e-12; Σp=1 to 1e-9 after a 300-gate scrambled circuit                          | ✅                               |
+| "Genuine non-stabilizerness, not a buzzword"        | `bun test tests/quantum-magic.test.ts` — T\|+⟩ magic = log₂(4/3)=0.415037 to 1e-9; all Clifford states = 0                  | ✅ exact                         |
+| "Self-optimizing thought geometry (QNG)"            | `bun test tests/quantum-natural-gradient.test.ts` — QGT symmetric, PSD, finite; QFI = 4·g                                   | ✅                               |
+| "Determinism enforced, not promised"                | `bun test tests/determinism-law.test.ts` — GLOB-scans `src/sim/**` for any unseeded RNG / wall-clock call                   | ✅ 0 offenders                   |
+| "Every published number is measured"                | `bun run verify:receipts` — re-runs the gate, fails if any surface ≠ measured count/coverage                                | ✅ canon == reality              |
+| "Frame budget never blown"                          | `bun test tests/perf-budget.test.ts` — apex `think()` < 5 ms on the CI machine                                              | ✅                               |
+
+**Interpretation for the room:** this is not a model whose behavior is argued in prose; it is a specimen
+whose every load-bearing assertion is a command that returns a boolean. Falsifiability is the dividing
+line between engineering and demo, and this artifact sits firmly on the engineering side.
+
+## Appendix B · Competitive landscape matrix (the 360° sweep, condensed)
+
+The novelty is not any single component — each has prior art somewhere — but the **synthesis under one
+determinism law in one browser tab**. No surveyed peer occupies the same cell.
+
+| Capability                                            | Frontier LLM labs         | Quantum SDKs (Qiskit/Cirq/PennyLane) | A-Life (Lenia/Avida/Tierra/Bibites) | Organoid / wet-compute      | **This repo**                 |
+| ----------------------------------------------------- | ------------------------- | ------------------------------------ | ----------------------------------- | --------------------------- | ----------------------------- |
+| Scale-free emergent ecology                           | ✗                         | ✗                                    | ✓                                   | partial (biological)        | ✓ (50k agents)                |
+| Honest quantum statevector substrate                  | ✗                         | ✓ (the point)                        | ✗                                   | ✗                           | ✓ (6-qubit + tableau)         |
+| Quantum cognition inside an agent                     | ✗                         | ✗ (circuits, not agents)             | ✗                                   | ✗                           | ✓ (QNG/Grover/Φ in the loop)  |
+| ~20 cited neuroscience faculties wired to behavior    | partial (learned, opaque) | ✗                                    | ✗                                   | ✗ (biological, not legible) | ✓ (legible + tested)          |
+| Bit-exact determinism incl. stochastic choice         | ✗                         | partial (seeded sim)                 | partial                             | ✗                           | ✓ (one 32-bit seed)           |
+| Two contested consciousness metrics, behavior-coupled | ✗                         | ✗                                    | ✗                                   | ✗                           | ✓ (GWT ignition + register Φ) |
+| Runs on a laptop iGPU, zero AI accelerator            | ✗ (datacenter)            | partial                              | ✓                                   | ✗ (lab)                     | ✓                             |
+| Every public number CI-enforced to be measured        | rare                      | rare                                 | ✗                                   | ✗                           | ✓ (receipts law)              |
+
+The filled diagonal in the last column, against empty cells elsewhere, **is** the contribution.
+
+## Appendix C · Deep claims verification
+
+The scientific claims in §3 were not merely cited — they were executed and, where mathematical,
+independently re-derived this pass. Full results: [`docs/audit-2026-06-17-DEEP-CLAIMS-VERIFICATION.md`](../audit-2026-06-17-DEEP-CLAIMS-VERIFICATION.md).
+
+---
+
+_0thernes LLC — measured, deterministic, reproducible — 2026-06-17. Receipts CI-enforced via the receipts law (`scripts/verify-receipts.ts`). Companion: [Report II — The Super Creature](./2026-06-17-STATE-OF-THE-ART-SUPER-CREATURE.md). Prior revision: [2026-06-16](./2026-06-16-STATE-OF-THE-ART-WHOLE-REPO.md)._
