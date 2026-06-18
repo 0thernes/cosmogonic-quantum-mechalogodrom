@@ -19,7 +19,8 @@
     "sbom": "bun scripts/sbom.ts",
     "bench": "bun bench/index.ts",
     "filemap": "bun scripts/gen-filemap.ts",
-    "check": "bun run format:check && bun run typecheck && bun run lint && bun test && bun run build"
+    "check": "bun run format:check && bun run typecheck && bun run lint && bun test && bun run verify:receipts && bun run build",
+    "verify:receipts": "bun scripts/verify-receipts.ts"
   },
   "dependencies": {
     "@fontsource-variable/inter": "^5.2.8",
