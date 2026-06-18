@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Unified scorecard truth-sync (2026-06-17).** Fixed stale §III.5 metrics in the combined report (was 1,159 tests / 91.2 % coverage / ≈ 208 µs); added **`2026-06-17-STATE-OF-THE-ART-COMBINED.md`** with canonical receipts (**1,165 tests**, **97.38 % / 93.35 %**, **≈ 285 µs mean / 273 µs median**); expanded Report I §6 with the full Butlin indicator table; linked from README, `/docs`, `/spec`, and the technical specification.
 
-### Changed Re-verified gate on Bun 1.3.11; aligned commit baseline to `60478a4` and apex bench to **≈ 285 µs mean / 273 µs median** across `/docs` and both frontier reports.
+### Changed Re-verified gate on Bun 1.3.11; aligned commit baseline to `481b52c` and apex bench to **≈ 285–304 µs mean / 273–300 µs median** (machine-dependent range) across `/docs` and both frontier reports.
 
 - **Truth-sync (2026-06-17, fifth pass).** Gate now reports 1,166 tests (co-editor added test); sync all surfaces to new canonical count.
 
