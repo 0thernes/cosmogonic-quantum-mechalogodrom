@@ -1,6 +1,6 @@
 # Cosmogonic Quantum Mechalogodrom — State-of-the-Art Report
 
-> **⚠ SUPERSEDED — historical snapshot (2026-06-16).** A cold-shell audit (Bun 1.3.14, commit `a9bb4dc`) re-measured the gate at **1,050 tests / 0 fail / 1,738,688 assertions** and **94.61 % line / 91.19 % function** coverage; the apex mind (37,225 params) is **~6.7 orders / ~4.7 million× smaller** than GPT-3 (the "five orders" phrasing belongs only to the whole-world 3.5 M-param mass, ~1/50,000th). Citation fixes: Butlin 2023 = **exactly 14** indicators; **Nehaniv** added to Klyubin–Polani 2005; Kanerva 2009 is _Cognitive Computation_; "double-bind" is shorthand for Ferrante 2025's **asymmetric** "challenges key tenets of both"; Lidayan 2025 shows empowerment/entropy **complementary** to curiosity. Current reports: [Whole Repo](./2026-06-17-STATE-OF-THE-ART-WHOLE-REPO.md) · [Super Creature](./2026-06-17-STATE-OF-THE-ART-SUPER-CREATURE.md). Body below preserved verbatim as the historical worldline.
+> **⚠ SUPERSEDED — historical snapshot (2026-06-16).** Metrics in this edition are stale (1,159 tests, 91.2 % coverage, ≈208 µs/beat). **Canonical §III.2–III.5:** [Whole Repo](./2026-06-17-STATE-OF-THE-ART-WHOLE-REPO.md) · [Super Creature](./2026-06-17-STATE-OF-THE-ART-SUPER-CREATURE.md) · [Combined](./2026-06-17-STATE-OF-THE-ART-COMBINED.md). Body below preserved verbatim as the historical worldline.
 
 ### Report II of II · The Super Creature
 

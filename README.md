@@ -391,7 +391,7 @@ full gate with same-seed determinism preserved. The major arcs:
   Aaronson–Gottesman **Clifford stabilizer tableau** ([src/math/clifford-tableau.ts](./src/math/clifford-tableau.ts),
   ported from **Moonlab**, scales to 32+ qubits past the dense ceiling) landed as the fourth MIT-credited
   ported primitive. The whole apex beat — all ~20 faculties — is benchmarked at **≈ 298 µs (~1.8 % of a
-  60 fps frame)** and CI-gated. **1,050 tests green · 0 fail · 94.61 % line / 91.19 % function coverage (measured 2026-06-17; CI gate ≥ 90 % line / ≥ 85 % function).**
+  60 fps frame)** and CI-gated. **1,166 tests green · 0 fail · 97.38 % line / 93.35 % function coverage (measured 2026-06-17; CI gate ≥ 90 % line / ≥ 85 % function).**
 - **State-of-the-art reports (2026-06-17)** — two MIT-PhD-grade, measured, frontier-benchmarked assessments:
   **[Report I — The Whole Repository](./docs/reports/2026-06-17-STATE-OF-THE-ART-WHOLE-REPO.md)** and
   **[Report II — The Super Creature](./docs/reports/2026-06-17-STATE-OF-THE-ART-SUPER-CREATURE.md)** —
