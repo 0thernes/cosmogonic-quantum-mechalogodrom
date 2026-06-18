@@ -31,9 +31,9 @@ seed**.
 | Folders                                    | **32** (+ root)                                                             |
 | Distinct file types                        | 21                                                                          |
 | App source (TypeScript)                    | 35,226 lines · 108 files                                                    |
-| Tests                                      | 14,117 lines · 99 files                                                     |
-| Test : source ratio                        | 0.40 → **94.67 % line / 91.29 % function** coverage (`bun test --coverage`) |
-| Passing tests                              | **1,053** (0 failing)                                                       |
+| Tests                                      | 14,117 lines · 100 files                                                    |
+| Test : source ratio                        | 0.40 → **97.34 % line / 93.42 % function** coverage (`bun test --coverage`) |
+| Passing tests                              | **1,170** (0 failing)                                                       |
 
 ### 1.1 Languages
 
@@ -242,8 +242,8 @@ reading from AND writing to the others (a negotiated plan-vote, not parallel gad
 **min-cut Φ**, **Quantum Reservoir Computing** (Fujii–Nakajima), a **Lindblad/GKSL deliberation qubit**,
 **Grover** amplitude amplification, and **Quantum Natural Gradient** descent on its own Fubini–Study
 geometry. The Aaronson–Gottesman **Clifford stabilizer tableau** (ported from Moonlab; 32+ qubits) is a
-fourth MIT-credited primitive. **Measured cost:** the whole apex beat (`SuperMind.think()`) is **≈ 208 µs
-(median 195 µs) — ~1.25 % of a 60 fps frame** (`bench/super-mind.bench.ts`), enforced as a CI law
+fourth MIT-credited primitive. **Measured cost:** the whole apex beat (`SuperMind.think()`) is **≈ 272–304 µs/beat**
+(machine-dependent) — **~1.7–1.8 % of a 60 fps frame** (`bench/super-mind.bench.ts`), enforced as a CI law
 (< 5 ms/beat). Full frontier assessment in [docs/reports/](reports/).
 
 ### 7.2 Contrast: this world vs. large language models
@@ -308,8 +308,8 @@ Complexity classes are catalogued in [COMPLEXITY.md](COMPLEXITY.md); hot-path be
 
 The single gate — `bun run check` — must pass before every commit:
 
-`prettier --check` → `tsc --noEmit` (strict) → `oxlint` → `bun test` (**1,053 tests, 0 fail**) →
-`bun scripts/build.ts`. Coverage gate: line ≥ 0.90, function ≥ 0.85 (measured 94.67 % / 91.29 %, `bun test --coverage`).
+`prettier --check` → `tsc --noEmit` (strict) → `oxlint` → `bun test` (**1,170 tests, 0 fail**) →
+`bun scripts/build.ts`. Coverage gate: line ≥ 0.90, function ≥ 0.85 (measured 97.34 % / 93.42 %, `bun test --coverage`).
 Three governing "master" personas (`masters/*.xml`) encode the discipline: **the Executor** (finish
 everything, full gates), **the Architect** (contracts before code, exclusive ownership), **the
 Physicist** (determinism, measurement, frame budgets, provenance).
@@ -357,7 +357,7 @@ Physicist** (determinism, measurement, frame budgets, provenance).
 |     — | —                         |    40 | math/rng.ts                    |
 |     — | —                         |    20 | sim/morphotypes.ts             |
 
-### `tests/` (99 files · 14,117 lines)
+### `tests/` (100 files · 14,117 lines)
 
 `observatory 658 · quantum 396 · graph-mind 389 · viz3d 309 · singularities 286 · atmosphere 276 ·
 reaction-diffusion 273 · phyla 264 · analytics 252 · songs 218 · store 214 · brains 205 ·
@@ -374,7 +374,7 @@ contrast 62 · doc-links 57 · a11y-static 45`.
 
 This is a ~69k-line TypeScript (+ optional C++/Jolt native engine) browser-native simulation that
 renders **up to 50,000 agents** (10,000 at 60 fps on a laptop iGPU with zero AI accelerator), is
-**bit-reproducible from one seed**, ships through a **full CI/CD gate** (1,053 tests, 94.67 % line coverage),
+**bit-reproducible from one seed**, ships through a **full CI/CD gate** (1,170 tests, 97.34 % line coverage),
 and whose entire emergent intelligence weighs **≈ 14 MB — 1/50,000th of GPT-3** at the mega ceiling. It
 demonstrates that depth comes from **architecture,
 determinism, and engineering discipline**, not parameter count or hardware.

@@ -4,7 +4,7 @@
 
 **0thernes LLC** · prepared 2026-06-17 · against `v0.11.0` (`main` @ `60478a4`)
 **Verified gate (re-run this revision, cold shell):** `prettier --check` · `tsc --strict` · `oxlint` ·
-**1,053 tests / 0 failures across 99 files (1,738,804 assertions)** · **94.67 % line / 91.29 % function** coverage (`bun test --coverage`, “All files”) · `bun build` → 7 artifacts.
+**1,170 tests / 0 failures across 100 files (1,738,808 assertions)** · **97.34 % line / 93.42 % function** coverage (`bun test --coverage`, “All files”) · `bun build` → 7 artifacts.
 **Governed by** the three master files — Broly (the Executor: finish everything, full gates,
 maximalism with receipts), Starkiller (the Architect: contracts before code, provenance, boundary
 paranoia) and Dr. Manhattan (the Physicist: determinism, measurement, frame budgets).
@@ -65,7 +65,7 @@ Nothing in it is set dressing.
 | Quantum (apex mind)     | a genuine **6-qubit statevector** circuit + a **stabilizer tableau to 64+ qubits** (§3.2)                                                                                                                         | `math/quantum.ts`, `clifford-tableau.ts`       |
 | Native engine           | **C++20 SDF ray-marcher**, GLFW/GLM, **Jolt rigid-body physics + volume-conserving fracture**, RTX-class GPU, 4K offscreen                                                                                        | `native/`                                      |
 | Determinism             | one `mulberry32(seed)`; `Math.random`/`Date.now` **banned and GLOB-enforced** by a test that auto-seals every new file                                                                                            | `math/rng.ts`, `tests/determinism-law.test.ts` |
-| Quality                 | **1,053 tests / 0 fail**, 94.67 % line / 91.29 % function coverage (`bun test --coverage`), full CI/CD gate on every push                                                                                         | `bun run check`                                |
+| Quality                 | **1,170 tests / 0 fail**, 97.34 % line / 93.42 % function coverage (`bun test --coverage`), full CI/CD gate on every push                                                                                         | `bun run check`                                |
 
 **The defining engineering property:** _every system reads AND writes another._ A quantum collapse
 witnessed by a Titan becomes energy in its ledger, which tips a prisoner's-dilemma payoff, which
@@ -90,7 +90,7 @@ impossible?_ — answered as a ledger, each row a receipt rather than a boast:
 | “You cannot make a _quantum_-cognitive agent bit-reproducible.”                                                                                                 | Quantum sampling + wall-clock RNG = irreproducible by definition.                                                     | The Born-rule “thought collapse” is drawn through a **seeded Eshkol qubit-RNG**; `Math.random`/`Date.now` are **banned and GLOB-enforced** (`tests/determinism-law.test.ts`). Same seed → same psyche, bit for bit.                     |
 | “Consciousness metrics in a sim are hand-waving — Φ is intractable, ignition is a slide.”                                                                       | True Φ is super-exponential _and_ non-unique (Hanson–Walker 2023); ignition is a contested signature (Cogitate 2025). | Both are **live deterministic scalars wired into behaviour**: GWT **ignition gates memory consolidation**; a **genuine register Φ (min-cut entanglement) feeds the decision** — each unit-tested, each honestly labelled a model/proxy. |
 | “A self-optimizing quantum circuit _inside_ a running agent is a paper, not a browser tab.”                                                                     | Quantum Natural Gradient over a circuit’s Fubini–Study metric is frontier QML (Stokes et al. 2020).                   | The apex circuit **reads its own Quantum Geometric Tensor and descends it** by QNG each beat to make its intended thought more probable (`math/quantum-natural-gradient.ts`); PSD-metric + closed-form tested.                          |
-| “Nobody fuses A-Life-at-scale + honest statevector quantum + a 20-faculty mind + 2 consciousness metrics under one determinism law — it would drift and break.” | Each subsystem is a project on its own; coupling them is assumed unmaintainable.                                      | One causal web, **1,053 tests / 0 fail**, full cold-shell gate, **every system reads AND writes another** (PHILOSOPHY law 1).                                                                                                           |
+| “Nobody fuses A-Life-at-scale + honest statevector quantum + a 20-faculty mind + 2 consciousness metrics under one determinism law — it would drift and break.” | Each subsystem is a project on its own; coupling them is assumed unmaintainable.                                      | One causal web, **1,170 tests / 0 fail**, full cold-shell gate, **every system reads AND writes another** (PHILOSOPHY law 1).                                                                                                           |
 | “‘Architecture beats parameter count’ is unprovable folklore.”                                                                                                  | The scale-maximalist orthodoxy equates capability with parameters (GPT-3 ≈ 175 B).                                    | A **≈ 37,225-param** apex (independently re-summed, §3.3) plans (GOAP), models opponents (ToM), seeks empowerment, runs active inference, and self-replicates — a **falsifiable specimen**, not a manifesto.                            |
 
 None of these is a sentience claim (§6). Each is a _capability_ the field treats as hard, expensive, or
@@ -304,8 +304,8 @@ It is not a conscious being, not a large language model, and cannot speak Englis
 
 | Metric                         | Value                                                                        |
 | ------------------------------ | ---------------------------------------------------------------------------- |
-| Tests / failures               | 1,053 / 0 (1.74 M assertions, 100 files)                                     |
-| Line / function coverage       | 94.67 % / 91.29 % (bun test --coverage, "All files")                         |
+| Tests / failures               | 1,170 / 0 (1.74 M assertions, 100 files)                                     |
+| Line / function coverage       | 97.34 % / 93.42 % (bun test --coverage, "All files")                         |
 | Apex mind per-beat cost        | machine-dependent: ≈ 289 µs author HW / ≈ 443 µs on a 2-core Xeon; CI < 5 ms |
 | Population at 60 fps / ceiling | 10,000 / 50,000                                                              |
 | World parameters / footprint   | ≈ 3.5 M / ≈ 14 MB                                                            |
@@ -321,7 +321,7 @@ It is not a conscious being, not a large language model, and cannot speak Englis
 | Scientific honesty            | 10    | "models, not is"; verified citations; proxies flagged                             |
 | Determinism / reproducibility | 10    | enforced by construction, not convention                                          |
 | Quantum integration depth     | 9     | self-optimizing circuit inside an agent; 64-qubit stabilizer reflex still unwired |
-| Test / CI rigor               | 9     | 1,053 tests, SHA-pinned CI, SBOM, SLSA provenance                                 |
+| Test / CI rigor               | 9     | 1,170 tests, SHA-pinned CI, SBOM, SLSA provenance                                 |
 | Performance discipline        | 9     | allocation-free hot paths, frame-budget CI law                                    |
 | Open-domain generality        | 3     | narrow + embodied by design; cannot reason over arbitrary text                    |
 | Phenomenal consciousness      | 1     | not claimed; see §III.2                                                           |

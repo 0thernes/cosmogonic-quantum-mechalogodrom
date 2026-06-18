@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Receipts-law truth-sync (2026-06-17, eighth pass).** Updated `scripts/canonical-receipts.ts` and all policed surfaces after the receipts-law guard landed: **1,170 tests / 0 fail** (100 files, 1,738,808 assertions) · **97.34 % line / 93.42 % function** (`bun test --coverage`). `bun run verify:receipts` + `tests/docs-receipts-law.test.ts` now mechanically block drift.
+
 - **Scorecard restore (2026-06-17, seventh pass).** Restored all three `2026-06-17` frontier reports after a corrupted overwrite injected stale §III.5 figures (1,159 / 91.2 % / ≈208 µs) and a bogus interim count (1,050 / 94.61 %). **Canonical receipts re-verified cold shell:** **1,166 tests / 0 fail** · **97.38 % line / 93.35 % function** (`bun test --coverage`) · apex `think()` **≈ 272–304 µs/beat** (machine-dependent, CI < 5 ms). §III.2–III.4 narrative unchanged; §III.4 parameter bullet = **Independently re-summed** (37,225).
 
 - **Unified scorecard truth-sync (2026-06-17).** Fixed stale §III.5 metrics in the combined report (was 1,159 tests / 91.2 % coverage / ≈ 208 µs); added **`2026-06-17-STATE-OF-THE-ART-COMBINED.md`** with canonical receipts (**1,165 tests**, **97.38 % / 93.35 %**, **≈ 285 µs mean / 273 µs median**); expanded Report I §6 with the full Butlin indicator table; linked from README, `/docs`, `/spec`, and the technical specification.

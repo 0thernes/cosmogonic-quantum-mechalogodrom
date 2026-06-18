@@ -17,7 +17,7 @@
     />
     <meta
       property="og:description"
-      content="Up to 50,000 agents (10,000 at 60 fps on integrated graphics). 1,053 tests, 94.7 % line coverage. ~3.5M total AI parameters — engineered intelligence, not parameter count."
+      content="Up to 50,000 agents (10,000 at 60 fps on integrated graphics). 1,170 tests, 97.3 % line coverage. ~3.5M total AI parameters — engineered intelligence, not parameter count."
     />
     <meta name="theme-color" content="#030612" />
     <style>
@@ -336,7 +336,7 @@
             <div class="l">files · 32 folders</div>
           </div>
           <div class="stat">
-            <div class="n gd">1,053</div>
+            <div class="n gd">1,170</div>
             <div class="l">tests · 94.7 % line cov</div>
           </div>
           <div class="stat">
@@ -739,8 +739,8 @@ server.ts ──serves──▶  /  (app)   /docs   /spec   /lab</pre
         <h2><span class="tag">09</span> Build, CI/CD &amp; quality</h2>
         <p>
           <b>Gate (every commit):</b>
-          <code>prettier → tsc strict → oxlint → 1,053 tests → bun build</code>. Coverage ≥ 90% line
-          / 85% function (measured 94.67 / 91.29, `bun test --coverage`). <b>Build:</b> Bun bundles
+          <code>prettier → tsc strict → oxlint → 1,170 tests → bun build</code>. Coverage ≥ 90% line
+          / 85% function (measured 97.34 / 93.42, `bun test --coverage`). <b>Build:</b> Bun bundles
           3 HTML entrypoints (<code>index.html</code>, <code>docs.html</code>,
           <code>specs.html</code>) → <code>dist/</code>. <b>CI/CD:</b> GitHub Actions runs the gate
           + builds and deploys the real app to GitHub Pages on every push to <code>main</code>;

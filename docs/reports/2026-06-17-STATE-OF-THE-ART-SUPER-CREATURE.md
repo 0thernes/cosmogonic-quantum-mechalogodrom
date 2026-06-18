@@ -23,7 +23,7 @@ The Super Creature is an **always-on apex intelligence that lives in a single br
 
 | Metric                                     | Value                                                                                                                                          | Provenance / receipt                                           |
 | ------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
-| Build / gate                               | **v0.11.0**, **1,053 pass / 0 fail**, 99 files, 1,738,804 assertions                                                                           | `package.json`, `bun test` (2026-06-17, Bun 1.3.11)            |
+| Build / gate                               | **v0.11.0**, **1,170 pass / 0 fail**, 100 files, 1,738,808 assertions                                                                          | `package.json`, `bun test` (2026-06-17, Bun 1.3.11)            |
 | Apex composite mind                        | **~10,081 weights** across ~12 sub-networks (re-summed this revision: 1,136 + 1,740 + 1,328 + 424 + 808 + 808 + 544 + 340 + 259 + 550 + 2,144) | `super-mind.ts:382–393`                                        |
 | Apex total parameters                      | **≈ 37,225** = 10,081 mind + 1,444 legacy spine + 100 × 257 wingmen                                                                            | `super-mind.ts`, `super-creature.ts:36`, `super-wingmen.ts:24` |
 | Faculties wired into the per-beat decision | **14** (Report I receipts); cataloged as **11 cognitive + 10 quantum** named modules; **~30** distinct mechanisms incl. composite sub-nets     | `docs/audit-2026-06-16/SUPER-CREATURE-COGNITION-AUDIT.md §3`   |
@@ -202,8 +202,8 @@ It is not a conscious being, not a large language model, and cannot speak Englis
 
 | Metric                         | Value                                                                                         |
 | ------------------------------ | --------------------------------------------------------------------------------------------- |
-| Tests / failures               | 1,053 / 0 (1.74 M assertions, 99 files)                                                       |
-| Line / function coverage       | 94.67 % / 91.29 % (bun test --coverage, "All files")                                          |
+| Tests / failures               | 1,170 / 0 (1.74 M assertions, 100 files)                                                      |
+| Line / function coverage       | 97.34 % / 93.42 % (bun test --coverage, "All files")                                          |
 | Apex mind per-beat cost        | ≈ 285–304 µs/beat mean (273–300 µs median, CI-enforced < 5 ms) — ~1.7–1.8 % of a 60 fps frame |
 | Population at 60 fps / ceiling | 10,000 / 50,000                                                                               |
 | World parameters / footprint   | ≈ 3.5 M / ≈ 14 MB                                                                             |
@@ -219,7 +219,7 @@ It is not a conscious being, not a large language model, and cannot speak Englis
 | Scientific honesty            | 10    | "models, not is"; verified citations; proxies flagged                             |
 | Determinism / reproducibility | 10    | enforced by construction, not convention                                          |
 | Quantum integration depth     | 9     | self-optimizing circuit inside an agent; 64-qubit stabilizer reflex still unwired |
-| Test / CI rigor               | 9     | 1,053 tests, SHA-pinned CI, SBOM, SLSA provenance                                 |
+| Test / CI rigor               | 9     | 1,170 tests, SHA-pinned CI, SBOM, SLSA provenance                                 |
 | Performance discipline        | 9     | allocation-free hot paths, frame-budget CI law                                    |
 | Open-domain generality        | 3     | narrow + embodied by design; cannot reason over arbitrary text                    |
 | Phenomenal consciousness      | 1     | not claimed; see §III.2                                                           |
@@ -261,7 +261,7 @@ Full deep-claims results: [`docs/audit-2026-06-17-DEEP-CLAIMS-VERIFICATION.md`](
 ### Provenance footer (Manhattan's law)
 
 - **Build:** v0.11.0 · commit baseline `main` · 2026-06-17 · gate re-verified from a cold shell (Bun 1.3.14).
-- **Gate witness:** `bun test` → **1,053 pass / 0 fail / 100 files / ≈1.74 M assertions**; `bun test --coverage` → **94.67 % line / 91.29 % function**; `bun bench/index.ts` → `think()` ≈ **289 µs/beat on author Core Ultra 9 HW, ≈ 443 µs on an Intel Xeon @ 2.90 GHz / 2 cores** (Bun 1.3.14). Benchmark figures are hardware-dependent and quoted with machine context per Manhattan's law; the published count/coverage are CI-enforced by the receipts law (`scripts/verify-receipts.ts`).
+- **Gate witness:** `bun test` → **1,170 pass / 0 fail / 100 files / ≈1.74 M assertions**; `bun test --coverage` → **97.34 % line / 93.42 % function**; `bun bench/index.ts` → `think()` ≈ **289 µs/beat on author Core Ultra 9 HW, ≈ 443 µs on an Intel Xeon @ 2.90 GHz / 2 cores** (Bun 1.3.14). Benchmark figures are hardware-dependent and quoted with machine context per Manhattan's law; the published count/coverage are CI-enforced by the receipts law (`scripts/verify-receipts.ts`).
 - **Faculty receipts:** `docs/audit-2026-06-16/SUPER-CREATURE-COGNITION-AUDIT.md` (14-agent adversarial sweep, 0 defects); groundings in `docs/SUPER-CREATURE-RESEARCH.md`.
 - **External framework cited:** Butlin & Long et al. (2023), arXiv:2308.08708.
 - **Companion:** _Report I — The Whole Repository_ (`docs/reports/2026-06-17-STATE-OF-THE-ART-WHOLE-REPO.md`). Prior revision: [2026-06-16](./2026-06-16-STATE-OF-THE-ART-SUPER-CREATURE.md).
