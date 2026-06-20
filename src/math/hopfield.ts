@@ -43,7 +43,8 @@ function bsign(x: number, keep: number): number {
  */
 export function storeHebbian(patterns: readonly (readonly number[])[]): HopfieldNet {
   const n = patterns.length > 0 ? patterns[0]!.length : 0;
-  if (n > HOPFIELD_MAX_N) throw new Error(`hopfield: n=${n} exceeds HOPFIELD_MAX_N=${HOPFIELD_MAX_N}`);
+  if (n > HOPFIELD_MAX_N)
+    throw new Error(`hopfield: n=${n} exceeds HOPFIELD_MAX_N=${HOPFIELD_MAX_N}`);
   const W = new Float64Array(n * n);
   for (const p of patterns) {
     for (let i = 0; i < n; i++) {
