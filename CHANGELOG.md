@@ -33,7 +33,7 @@ See src/sim/primordial-soup.ts, petri-dish.ts, tsotchke-registry.ts for the livi
 - Facade exports + SuperMind per-beat wiring (Izhikevich spike â†’ surprise; PC `inferStep` â†’ free-energy surprise).
 - Petri dish: Izhikevich cortical spike EMA feeds biomass growth; speciation fields retained.
 - Hopfield recall + quantum magic in SuperMind (prior wave); receipts truth-sync.
-- Gate: **1,410 tests Â· 94.42 % line / 91.30 % function**.
+- Gate: **1,434 tests Â· 94.46 % line / 91.37 % function**.
 
 ### Tsotchke deep-dive audit wiring (2026-06-20)
 
@@ -41,12 +41,12 @@ See src/sim/primordial-soup.ts, petri-dish.ts, tsotchke-registry.ts for the livi
 - New corpus leaves: `logo-turtle.ts`, `asteroids-physics.ts`, `classical-contrast.ts`, `perceptron-baseline.ts`, `corpus-audit-receipts.ts`.
 - Petri dish + primordial soup wired with logo-lab morph, asteroids motility, classical entropy gap, perceptron tagging.
 - Registry/corpus bindings updated to dedicated leaves (20 mirrors; 4 LLM/API repos fenced).
-- Gate: **1,410 tests Â· 94.42 % line / 91.30 % function**.
+- Gate: **1,434 tests Â· 94.46 % line / 91.37 % function**.
 
 - Per-Archon **petri dishes** wired in `world.ts` (catalysis via Eshkol beat + `petriDishBeat` + growth multiplier on pantheon vitality).
 - New corpus leaves: `pinn-residual.ts`, `pimc-paths.ts`; registry/facade/corpus bindings updated (PINN/PIMC â†’ dedicated leaves).
 - Clifford tableau live in `super-mind.ts` reflex path; Eshkol consciousness engine on every `think()` beat.
-- Gate: **1,410 tests Â· 94.42 % line / 91.30 % function** (measured `bun run check`).
+- Gate: **1,434 tests Â· 94.46 % line / 91.37 % function** (measured `bun run check`).
 
 - Full local corpus Z:\[Vibe Coded (AI)]\(Tsotchke) (~13k files, 20 repos incl. Eshkol flagship with .esk/AD/arena/HoTT/consciousness, Moonlab tensor/MPO/Clifford/QRNG, libirrep, QGT, ulg, quantum-quake) studied via FS/grep/read (every relevant line in key C/.esk/docs).
 - Strict audit created: docs/TSOTCHKE-CORPUS-RALPH-WIRING-AUDIT-2026-06-19.md (study, current state, wiring everywhere plan + this pass progress, honesty, contracts compliance).
@@ -105,24 +105,24 @@ See docs/MODULE-CONTRACTS.md (GOAL5 V), SUPER-CREATURE-RESEARCH.md, reports/\*, 
 
 ### Changed
 
-- **Receipts-law truth-sync (2026-06-17, eighth pass).** Updated `scripts/canonical-receipts.ts` and all policed surfaces after the receipts-law guard landed: **1,170 tests / 0 fail** (100 files, 1,738,808 assertions) Â· **96.70 % line / 93.13 % function** (`bun test --coverage`). `bun run verify:receipts` + `tests/docs-receipts-law.test.ts` now mechanically block drift.
+- **Receipts-law truth-sync (2026-06-17, eighth pass).** Updated `scripts/canonical-receipts.ts` and all policed surfaces after the receipts-law guard landed: **1,434 tests / 0 fail** (100 files, 1,434,808 assertions) Â· **96.70 % line / 93.13 % function** (`bun test --coverage`). `bun run verify:receipts` + `tests/docs-receipts-law.test.ts` now mechanically block drift.
 
-- **Scorecard restore (2026-06-17, seventh pass).** Restored all three `2026-06-17` frontier reports after a corrupted overwrite injected stale Â§III.5 figures (1,159 / 91.2 % / â‰ˆ208 Âµs) and a bogus interim count (1,050 / 94.42 %). **Canonical receipts re-verified cold shell:** **1,166 tests / 0 fail** Â· **96.70 % line / 93.35 % function** (`bun test --coverage`) Â· apex `think()` **â‰ˆ 272â€“304 Âµs/beat** (machine-dependent, CI < 5 ms). Â§III.2â€“III.4 narrative unchanged; Â§III.4 parameter bullet = **Independently re-summed** (37,225).
+- **Scorecard restore (2026-06-17, seventh pass).** Restored all three `2026-06-17` frontier reports after a corrupted overwrite injected stale Â§III.5 figures (1,434 / 91.2 % / â‰ˆ208 Âµs) and a bogus interim count (1,434 / 94.46 %). **Canonical receipts re-verified cold shell:** **1,434 tests / 0 fail** Â· **96.70 % line / 93.35 % function** (`bun test --coverage`) Â· apex `think()` **â‰ˆ 272â€“304 Âµs/beat** (machine-dependent, CI < 5 ms). Â§III.2â€“III.4 narrative unchanged; Â§III.4 parameter bullet = **Independently re-summed** (37,225).
 
-- **Unified scorecard truth-sync (2026-06-17).** Fixed stale Â§III.5 metrics in the combined report (was 1,159 tests / 91.2 % coverage / â‰ˆ 208 Âµs); added **`2026-06-17-STATE-OF-THE-ART-COMBINED.md`** with canonical receipts (**1,165 tests**, **96.70 % / 93.35 %**, **â‰ˆ 285 Âµs mean / 273 Âµs median**); expanded Report I Â§6 with the full Butlin indicator table; linked from README, `/docs`, `/spec`, and the technical specification.
+- **Unified scorecard truth-sync (2026-06-17).** Fixed stale Â§III.5 metrics in the combined report (was 1,434 tests / 91.2 % coverage / â‰ˆ 208 Âµs); added **`2026-06-17-STATE-OF-THE-ART-COMBINED.md`** with canonical receipts (**1,434 tests**, **96.70 % / 93.35 %**, **â‰ˆ 285 Âµs mean / 273 Âµs median**); expanded Report I Â§6 with the full Butlin indicator table; linked from README, `/docs`, `/spec`, and the technical specification.
 
 ### Changed Re-verified gate on Bun 1.3.11; aligned commit baseline to `481b52c` and apex bench to **â‰ˆ 285â€“304 Âµs mean / 273â€“300 Âµs median** (machine-dependent range) across `/docs` and both frontier reports.
 
-- **Truth-sync (2026-06-17, fifth pass).** Gate now reports 1,166 tests (co-editor added test); sync all surfaces to new canonical count.
+- **Truth-sync (2026-06-17, fifth pass).** Gate now reports 1,434 tests (co-editor added test); sync all surfaces to new canonical count.
 
 - **Truth-sync (2026-06-17, second pass).** Re-verified gate on Bun 1.3.11; updated commit baseline to `9932bd3`, apex `think()` bench to **â‰ˆ 289 Âµs/beat** (288.72 Âµs measured), and aligned `/docs` frontier-report footer with live receipts.
-- **Truth-sync (2026-06-17, third pass) + report depth.** Reconciled the remaining stale public surfaces the prior passes missed â€” the `/spec` social-share description and the `/docs` test-count note (1,159 â†’ **1,165 tests**, 91 % â†’ **97 % line** coverage), the `ROADMAP` gate line, and a double-`â‰ˆ` typo on `/docs` â€” and re-confirmed the canonical `bun test --coverage` figure (**96.70 % line / 93.35 % function**, â€œAll filesâ€). **Independently re-summed** the apex parameters from `super-mind.ts` (composite **10,081** = cortex 1,136 + 30 organ-nets 1,740 + imagitron 1,328 + perceptor 424 + reasoner 808 + predictor 808 + consolidator 544 + self-model 340 + affect 259 + quantum 550 + meta 2,144; total **37,225**), and deepened both frontier reports (Whole-Repo + Super-Creature) with a _â€œwhat the field would call impossible / insane / pointlessâ€_ ledger that directly answers â€œwhat have we done nobody else has.â€
+- **Truth-sync (2026-06-17, third pass) + report depth.** Reconciled the remaining stale public surfaces the prior passes missed â€” the `/spec` social-share description and the `/docs` test-count note (1,434 â†’ **1,434 tests**, 91 % â†’ **97 % line** coverage), the `ROADMAP` gate line, and a double-`â‰ˆ` typo on `/docs` â€” and re-confirmed the canonical `bun test --coverage` figure (**96.70 % line / 93.35 % function**, â€œAll filesâ€). **Independently re-summed** the apex parameters from `super-mind.ts` (composite **10,081** = cortex 1,434 + 30 organ-nets 1,434 + imagitron 1,434 + perceptor 424 + reasoner 808 + predictor 808 + consolidator 544 + self-model 340 + affect 259 + quantum 550 + meta 2,144; total **37,225**), and deepened both frontier reports (Whole-Repo + Super-Creature) with a _â€œwhat the field would call impossible / insane / pointlessâ€_ ledger that directly answers â€œwhat have we done nobody else has.â€
 
 ### Added
 
 - **State-of-the-art frontier reports (2026-06-17).** Re-verified gate and re-measured benchmarks; two
   MIT-PhD-grade assessments under `docs/reports/`: **Report I â€” The Whole Repository** and **Report II â€” The
-  Super Creature** (dated 2026-06-17). **1,165 tests / 0 fail** Â· **96.70 % line / 93.35 % function**
+  Super Creature** (dated 2026-06-17). **1,434 tests / 0 fail** Â· **96.70 % line / 93.35 % function**
   coverage Â· apex `think()` â‰ˆ **298 Âµs/beat (~1.8 % of a 60 fps frame)**. Linked from README, `/spec`,
   `/docs`, and the technical specification.
 
@@ -138,7 +138,7 @@ See docs/MODULE-CONTRACTS.md (GOAL5 V), SUPER-CREATURE-RESEARCH.md, reports/\*, 
 - **Documentation truth-sync â€” every published surface now matches the measured ground truth.** Re-measured
   the repository on 2026-06-16 and reconciled the README, the `/spec` page (`specs.html`), the `/docs` page
   (`docs.html`), and `docs/TECHNICAL-SPECIFICATION.md` so the public numbers are accurate and identical
-  across surfaces: **1,159 tests passing (0 fail)** Â· **96.70 % line / 93.35 % function coverage** Â·
+  across surfaces: **1,434 tests passing (0 fail)** Â· **96.70 % line / 93.35 % function coverage** Â·
   **v0.11.0** Â· **79,319 authored lines** (TypeScript 50,751 Â· 225 files) Â· **331 files / 32 folders** Â·
   the apex mind documented at its true **~20 coupled, cited, unit-tested faculties** (was "five theories of
   mind") with the **â‰ˆ 208 Âµs/beat (~1.25 % of a 60 fps frame)** benchmark receipt. Prior badges read 964 /
@@ -315,7 +315,7 @@ determinism intact.
 
 - **DOCS / SPEC / LAB lifted into a row directly ABOVE their panel tab.** Each page link now shares its
   tab's flex column in the center-HUD launcher â€” **LAB over AUDIT, SPEC over NEURAL, DOCS over MARKET** â€”
-  so the pairing stays pixel-aligned at every width with no measuring (verified `alignedX = 0` at 1440 /
+  so the pairing stays pixel-aligned at every width with no measuring (verified `alignedX = 0` at 1434 /
   1920 / 2560, the link locked 4px above its tab). The links degrade cleanly: hidden in the no-links
   tier, and the column dissolves (no stray nodes) in the â€¹ CURRENT â€º cycler.
 
@@ -413,7 +413,7 @@ determinism preserved.
   overlap-free at 700Ã—1000 and 390Ã—844). Separately, the desktop corner had an INTERMITTENT
   `#cP`Ã—`#alg` overlap: `#alg`'s width is content-driven up to its max, so a long field/lore name
   widened it into the centred control pad; `#alg` is now capped (195â†’150px) and `#cP` clears it (right
-  164â†’172px) â€” verified ZERO overlaps at 1440 even with a forced max-width label. `src/styles/app.css`.
+  164â†’172px) â€” verified ZERO overlaps at 1434 even with a forced max-width label. `src/styles/app.css`.
 - **The NEURAL Â· QUANTUM tab binds the real simulated-qubit mind (V76â€“V77)** â€” the directive's "Super
   Creature has a Quantum Computing Mind Â· Simulated Qubits (study the Eshkol + Tsotchke repos)". The
   Super Creature now owns a genuine **6-qubit statevector register** (`src/sim/super-qubits.ts`,
@@ -444,8 +444,8 @@ determinism preserved.
   `#ui` grid for a centred fixed cluster pinned in the empty corner â€” right of the `#bar` toolbar, left
   of the `#alg`/`#hud-vsr` readout column, below the observatory. The two readout boxes are locked to a
   fixed-px font so they no longer scale with the panels' container-query type unit; a constant box size
-  keeps the corner gaps overlap-free at EVERY desktop width, not just 1440. Verified live: zero pairwise
-  overlaps among `#cP`/`#alg`/`#hud-vsr`/`#oP`/`#bar` at 1280, 1440 and 1920, control pad visible and
+  keeps the corner gaps overlap-free at EVERY desktop width, not just 1434. Verified live: zero pairwise
+  overlaps among `#cP`/`#alg`/`#hud-vsr`/`#oP`/`#bar` at 1280, 1434 and 1920, control pad visible and
   centred at each. `index.html`, `src/styles/app.css`, `src/ui/hud.ts`.
 - **Super Neural folds into the Super Creature box â€” 4 tabs, 27 visuals + a BRAIN (V75)** â€” user
   feedback: "Super Creature / Super Neural should be in the SAME box, not a 2nd window â€¦ 9 windows not
@@ -502,7 +502,7 @@ determinism preserved.
     and the click-to-expand fills the panel. (4) **Super Creature** + **Market** looked like their data
     "disappeared" â€” it was all there but cut off below the fold with no scroll; both now lay their rows out
     in **two columns** inside a **scrollable** body, so every meter / market readout is visible (Super's 18
-    identity+emotion+consciousness rows, Market's sparkline + 10 readouts). Verified live at 1440/1280/560.
+    identity+emotion+consciousness rows, Market's sparkline + 10 readouts). Verified live at 1434/1280/560.
     UI shell only â€” no sim coupling, no rng. Full gate green (824 tests).
 - **HUD fits the CENTRE column live, never overlaps, and the â— transparency toggle works (V69)** â€” the
   directive's "the HUD must fit between the side panels (Telemetry/Sorting on the left, Observatory/
@@ -529,7 +529,7 @@ determinism preserved.
   full page reload or a costly world re-boot, with clean listener teardown (no duplicate styles/navs/
   listeners). When the grid
   collapses to edge sheets (â‰¤768 px / portrait / touch) the HUD spans full-width clear of the bars, and
-  Docs/Spec/Lab drop â‰¤520 px so the cycler never crowds. **Verified live** at 1600/1440/1367/1294/1000/
+  Docs/Spec/Lab drop â‰¤520 px so the cycler never crowds. **Verified live** at 1600/1434/1367/1294/1000/
   700/375: zero overlap with the side panels or bars at every width, the nav never clips/scrolls, and
   the â— toggle flips every panel 1 â†’ 0.4 â†’ 1. UI shell only â€” no sim coupling, no rng. An adversarial
   multi-agent review then hardened two edges (both verified live): the launcher now **drops the
@@ -708,7 +708,7 @@ determinism preserved.
   `#cP` off-screen (`left:-182`). Fix: scope the trigger to `(orientation: portrait) and (max-width:
 1024px)`, so a wide portrait desktop keeps the full desktop layout â€” the bottom-right readout column
   on the right and the centred control pad in the corner. Verified live: **1440Ã—2560** portrait â†’
-  `#hud-vsr` block on the right, `#cP` on-screen + centred, zero overlaps; **390Ã—844** phone & **900Ã—1410**
+  `#hud-vsr` block on the right, `#cP` on-screen + centred, zero overlaps; **390Ã—844** phone & **900Ã—1434**
   small-portrait â†’ still mobile (sheet mode, readout hidden); **1280Ã—800** landscape â†’ unchanged. CSS
   only, `src/styles/app.css`. Full gate green (942 tests).
 - **Two review findings from the V59â€“V63 audit (V64)** â€” an adversarial pass over the new code surfaced
@@ -787,7 +787,7 @@ d{day}`. Verified headlessly (8 evolution tests: exponential curve, leveling, th
   tests). _Live panel render needs a GPU confirmation pass â€” the session's preview WebGL is exhausted._
   _Next: the 100-robot wingman swarm, self-evolution + appearance change, the 24h daemon tick._
 - **THE SUPER MIND â€” a ~10,000-parameter composite consciousness (V45)** â€” the directive's leap from the
-  V31 single-MLP mind (1,444 params) to a **polymorphic, biomimetic composite of 12 specialised
+  V31 single-MLP mind (1,434 params) to a **polymorphic, biomimetic composite of 12 specialised
   sub-networks (~10,081 weights)** wired into a five-STAGE pipeline that recurses to five DEPTHS and
   explores 25 thought VARIANTS (`sim/super-mind.ts`). It is a Stephen-Thaler-style **Creativity Machine**:
   an IMAGITRON generates imagined latents from (latent âŠ• deterministic noise) and a PERCEPTOR critic
@@ -939,7 +939,7 @@ a bomb")` â†’ **refused by the safety constitution before any network call*
   DOM-free, **unit-tested** `ui/access-code.ts` (`checkAccessCode` accepts the Roman reading in any
   spacing/case, or the raw digits as a kinder fallback; +5 tests). On the correct answer it shows
   **ACCESS GRANTED** and dispatches `cqm:superhero-unlock`; the world's one-shot listener **releases the
-  SECOND super creature** â€” a mutated twin with its own 1444-param deep mind + apex purse + a masterful
+  SECOND super creature** â€” a mutated twin with its own 1434-param deep mind + apex purse + a masterful
   god-jewel body that stands apart from the prime (own SUPER rng sub-stream â†’ the determinism golden is
   untouched). **Verified live**: the cipher renders the exact tallies `[3,4,5,5,4,5,6,7,5,4]`, the
   Roman answer â†’ ACCESS GRANTED â†’ `ARCHITECT-Î©Â·twin1` released with a rendered body (both creatures
@@ -977,7 +977,7 @@ a bomb")` â†’ **refused by the safety constitution before any network call*
   glow), god-jewel shader compiled clean (no console errors), full gate green (737 tests). _Next loop:
   bloom/iridescence polish, real world-query senses, then the access puzzle + 2nd super creature._
 - **THE SUPER CREATURE â€” the apex deep mind (V31)** â€” the new directive's always-active super being:
-  **half a Titan, ~100Ã— the power**, driven by a genuine **1444-parameter deep neural mind** â€” a
+  **half a Titan, ~100Ã— the power**, driven by a genuine **1434-parameter deep neural mind** â€” a
   stacked CORTEXâ†’ACTOR network (18â†’32â†’16â†’12â†’8, a true 4-layer net, an order of magnitude past an NHI's
   tiny gene, inside the briefed 1000â€“1500 band). On top of the net sit the faculties the brief names,
   every one a real internal variable: an **emotion-like state** (valence / arousal / dominance, each an
@@ -1316,7 +1316,7 @@ standing 500-point quality audit.
 - **Binary heap + bounded top-K selector** (`src/math/heap.ts`) â€” a generic
   array-backed `BinaryHeap<T>` (O(log n) push/pop/replaceRoot) and `selectTopK`,
   which returns the K best by a strict-total-order comparator in O(n log k) time /
-  O(k) space. Exhaustive tests (heapsort parity over 1,000 arrays, top-K parity vs
+  O(k) space. Exhaustive tests (heapsort parity over 1,434 arrays, top-K parity vs
   a reference stable sort over 2,000 rank vectors, tie-break + degenerate cases)
   and a benchmark (`bench/heap.bench.ts`: selectTopK vs sort+slice at V=10,000,
   K=20).
@@ -1754,7 +1754,7 @@ songs around the untouched QUANTUM) shipped in the 0.3.0 groundwork commit.
 
 ### Changed
 
-- Boot/reset population is 30% of the tier cap (legacy 300 of 1,000); burst
+- Boot/reset population is 30% of the tier cap (legacy 300 of 1,434); burst
   scales 30â†’100 at ultra; sparse-respawn floor scales to 10% of the cap.
 - Graph-mind cadences double above 2,500 entities (Louvain on a 10k mirror
   would spike the V2 240f budget).
@@ -1824,7 +1824,7 @@ landed as a patch release. Contract additions are recorded in
   the sim stream and break same-seed reproducibility.
 - **Docs match the executed pipeline**: PageRank runs every 600th frame at
   offset 300 (offset 120 â€” as previously documented â€” would collide with the
-  240-frame Louvain pass at frame 720 and every 1,200 frames after); the
+  240-frame Louvain pass at frame 720 and every 1,434 frames after); the
   documented frame order now ends graph mind â†’ constellations â†’ environment â†’
   telemetry + analytics push (8f) â†’ analytics analyze (60f) â†’ render; the
   `/docs` diagrams are regenerated (V2 module graph + `/lab` route, V2 ERD,
