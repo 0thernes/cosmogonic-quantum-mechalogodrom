@@ -43,7 +43,7 @@ import {
   ulgHandoff,
   gwtBroadcast,
 } from './tsotchke-facade'; // Ralph continue 10x: + gwtBroadcast for more Eshkol GWT in body
-import { qgeAlivenessProxy, type QGEState } from './quantum-quake-physics';
+import { qgeAlivenessProxy } from './quantum-quake-physics';
 import { moonlabTensorContract } from './moonlab-tensor';
 import { qecDecodingProxy } from './libirrep-qec';
 void libirrepSymmetry; // ensure for 10x wiring
@@ -587,17 +587,26 @@ export class SuperBodySystem {
     const maskLeg = clampf(3 + (v % 3) + qm * 2 + qe * 1.2 + this.surprise * 1.2, 2, 6);
     // Ralph continue 10x more: ulgHandoff (Tsotchke) for hybrid aliveness mix in body pulse
     const ulgMix = ulgHandoff(this.quakeFactor, 0.5);
+    // Wire QGE aliveness proxy for enhanced aliveness metric
+    const qgeAlive = qgeAlivenessProxy(this.quakeFactor, this.arousal, 1);
+    // Wire Moonlab tensor contract for morph feature coupling
+    const tensorPulse = moonlabTensorContract([maskEye, maskMouth, maskLeg], [this.surprise, this.arousal, this.dominance], 3);
+    // Wire QEC decoding proxy for stability metric
+    const qecStability = qecDecodingProxy(Math.floor(this.surprise * 10), 5);
+    // Apply new math to morph masks
+    const qgeMod = (qgeAlive * 0.2 + tensorPulse * 0.1 + qecStability * 0.1);
     // Ralph continue 10x: gwtBroadcast for more GWT in morph masks
     const gwtM = gwtBroadcast([maskEye, maskMouth, maskLeg], [0.5, 0.6, 0.4]);
     // Ralph re-audit 10x continue: use libirrepSymmetry + quakeQgeFactor (Tsotchke libirrep + quake) + wigner for more morph distinctness in body
     const effMaskArm = Math.floor(
-      maskLeg * (1 + libirrepSymmetry(sym, 1) * 0.03) + (gwtM[1] || 0) * 0.5,
+      maskLeg * (1 + libirrepSymmetry(sym, 1) * 0.03 + qgeMod) + (gwtM[1] || 0) * 0.5,
     );
     const effMaskWing = Math.floor(
-      maskWing * (0.9 + ((sym + 1) % 3) * 0.05) + (gwtM[2] || 0) * 0.5,
+      maskWing * (0.9 + ((sym + 1) % 3) * 0.05 + qgeMod * 0.5) + (gwtM[2] || 0) * 0.5,
     );
     const qge = quakeQgeFactor(this.quakeFactor, 0.25);
-    const qkMod = 1 + this.quakeFactor * 0.3 + qge * 0.1 + (ulgMix - 0.5) * 0.2; // more ulg for 10x
+    const qkMod =
+      1 + this.quakeFactor * 0.3 + qge * 0.1 + (ulgMix - 0.5) * 0.2 + qgeMod; // QGE/tensor/QEC corpus mix
     const finalEffArm = Math.floor(effMaskArm * qkMod);
     const finalEffLeg = Math.floor(maskLeg * (0.85 + (sym % 4) * 0.05) * qkMod);
     const qp = quakePerturb(this.quakeFactor, this.seed || 1); // actual call, Ralph 10x live wire from quantum-quake corpus
