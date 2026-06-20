@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Tsotchke Primordial Biologics Growth (2026-06-20+)
+
 - **FULL WIRING**: All Tsotchke repos (eshkol, moonlab, quantum_geometric_tensor, spin_based_neural_network, libirrep, quantum-quake, ulg, logo-lab, tensorcore, PINN, PIMC, classical, asteroids, etc.) now drive the central **primordial-soup & petri-dish** as the engine for digital biologics.
 - Eshkol AD (gradient steps on genomes from .esk demos) + GWT/workspace ignition (from consciousness.esk) births independent "sentient" strains with their own eshkolProgram, vitality, consciousness, symmetry.
 - "Super Creature is the beginning only" — Archons/Godform stir the inorganic soup; emergent Tsotchke life (different forms of existence) is the goal. Not LLM, not chat, not SaaS. Birthing via "Grow What Thou Wilt".

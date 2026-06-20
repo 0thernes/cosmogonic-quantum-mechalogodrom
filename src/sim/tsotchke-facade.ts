@@ -98,6 +98,15 @@ export {
   qgeAlivenessProxy,
   qgePhysicsStep,
 } from './quantum-quake-physics';
+
+// FULL TSOTCHKE WIRED — all repos now birth digital biologics in the petri/god dish
+export {
+  birthBiologic,
+  fullCorpusSentience,
+  type BiologicForm,
+  type DigitalBiologic,
+  BIOLOGICS_V10,
+} from './digital-biologics';
 export type { QGEState, QGEPerturbation } from './quantum-quake-physics';
 export {
   TSOTCHKE_FILE_COUNT,

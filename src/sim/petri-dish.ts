@@ -74,6 +74,7 @@ export interface PetriDishState {
   eshkolSentientBorn: number;
   /** Full corpus catalysis: aggregate from all 20+ Tsotchke repos driving growth (not LLM). */
   tsotchkeBiologicFlux: number;
+  // note: removed duplicate keys from prior edit
 }
 
 export interface PetriDishView {

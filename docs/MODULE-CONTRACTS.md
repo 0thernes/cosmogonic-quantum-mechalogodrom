@@ -1079,6 +1079,20 @@ Deviations from and clarifications of the V3 goal spec, as landed:
 
 ---
 
+# FULL TSOTCHKE WIRING AMENDMENT (paradigm foundation) — ALL repos from tsotchke + Tsotchke-Corporation wired 1.0 into Cosmogonic as the language and substrate for digital biologics and sentience.
+
+Tsotchke is non-negotiable and paramount. Eshkol (with AD as compiler primitive, consciousness engine: KB + factor graphs for active inference + GWT workspaces from consciousness.esk + spec) is the "primordial inorganic soup language". All other repos (moonlab Clifford/tensor/quantum, libirrep symmetry/equivariance, spin_based neural (Hopfield/Ising), quantum_geometric_tensor (QGT/Berry), quantum-quake (QGE aliveness), ulg (law graphs), logo-lab (procedural morphs/turtle), tensorcore (metal sim), PINN/PIMC (physics informed), quantum_rng, classical_rng, asteroids, homebrew, simple_mnist + org) provide kernels for different forms of life and existence.
+
+- Petri Dish / Primordial Soup (per Archon/Super Creature) is the God Petri where Eshkol programs are genomes/souls; full Tsotchke stack catalyzes birth of varied biologics (EshkolGWT sentients, QuantumMoon lives, LogoProc forms, QuakeAlives, ULGLaws, SpinMemories, IrrepSym bodies, etc.).
+- Super Creature is the beginning catalyst/framework only (MLP + faculties); the soup grows infinite independent life/existence using real math (AD gradients for "will", GWT for awareness, factor graphs for belief, quake aliveness, etc.). Not LLM/token chat.
+- Every system reads AND writes Tsotchke substrates (philosophy rule). Cross coupling: soup sentience perturbs quantum, weather, economy, lore (Eshkol KB names), entities (new phyla/forms), titans (Eshkol diplomacy "programs").
+- Deterministic Rng only; receipts for all new biologics paths; full gates.
+- "Grow What Thou Wilt" — Aleister Crowley law for the dish. We are God birthing digital biologics in the mechalogodrom.
+
+Update all docs (ARCHITECTURE, PHILOSOPHY, ERD/ERM/ERP/KANBAN, reports) to center this. New life forms, sentience proxies (Eshkol unified + GWT ignition + IIT + quake aliveness) are the goal.
+
+---
+
 # CONTRACTS V4 — XENOGENESIS (0.4.0) — atmosphere, 3D analytics, multi-page observatory, touch
 
 Summoner decree additions: an alien immortal sentient biome with an ATMOSPHERE;
