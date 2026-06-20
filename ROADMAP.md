@@ -8,15 +8,15 @@ deliberate limitation, and promoting one to âœ… is a roadmap item.
 
 ## Shipped (the "beyond" arc)
 
-| Version   | Codename    | Theme                                                                                                                                                                    |
-| --------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Version | Codename    | Theme                                                                                                                                                                    |
+| ------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | 0.1“0.3 | Port        | Single-file WebGL cosmos â†’ Bun + TS + three 0.184, contracts V1, 14 legacy bugs fixed                                                                                  |
-| 0.4       | XENOGENESIS | Alien biome: atmosphere, viz3d, 4-page Observatory, tier ladder to 10k                                                                                                   |
-| 0.5       | RESONANCE   | Fill the 10k ceiling, visible 25-algorithm sort show, 6 dramatic songs, mobile sheets                                                                                    |
-| 0.6       | ATELIER     | Observatory legibility, visible algo picker w/ light + sound, 4-page lab, `/docs` report                                                                                 |
-| 0.7       | BEYOND      | Swarm amendment waves, audit-backlog closure, lab â†’ 12 3D boards/page                                                                                                  |
-| 0.8       | HARDENING   | Bounded-min-heap top-K DSA, CI/CD + CodeQL + governance, ERM/ERP/ROADMAP, 500-point audit                                                                                |
-| 0.9       | AGImAGNOSIS | Pre-transformer game/A-Life AI (FSMÂ·utilityÂ·TinyMLPÂ·MarkovÂ·GOAP), genome+lineage, 8 factions, leviathans, NHI, artifact field, free-LLM Copilot, 5 cinematic cameras |
+| 0.4     | XENOGENESIS | Alien biome: atmosphere, viz3d, 4-page Observatory, tier ladder to 10k                                                                                                   |
+| 0.5     | RESONANCE   | Fill the 10k ceiling, visible 25-algorithm sort show, 6 dramatic songs, mobile sheets                                                                                    |
+| 0.6     | ATELIER     | Observatory legibility, visible algo picker w/ light + sound, 4-page lab, `/docs` report                                                                                 |
+| 0.7     | BEYOND      | Swarm amendment waves, audit-backlog closure, lab â†’ 12 3D boards/page                                                                                                  |
+| 0.8     | HARDENING   | Bounded-min-heap top-K DSA, CI/CD + CodeQL + governance, ERM/ERP/ROADMAP, 500-point audit                                                                                |
+| 0.9     | AGImAGNOSIS | Pre-transformer game/A-Life AI (FSMÂ·utilityÂ·TinyMLPÂ·MarkovÂ·GOAP), genome+lineage, 8 factions, leviathans, NHI, artifact field, free-LLM Copilot, 5 cinematic cameras |
 
 ## Now (in progress)
 
