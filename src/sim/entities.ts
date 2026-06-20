@@ -67,6 +67,16 @@ export function applyRenderModeTo(
 const MOVE = new THREE.Vector3();
 /** Scratch vector for spawn positions — `spawn()` copies it, so reuse is safe. */
 const SPAWN_AT = new THREE.Vector3();
+
+/**
+ * Max NEW organisms an auto-split surge may create per frame at the ultra tier (>5,000). A
+ * synchronized cascade — apocalypse maxes `chaos`, draining every split timer 3× so the whole
+ * population turns split-ready at once — is AMORTIZED across frames instead of allocating
+ * thousands of entities in one frame (the "brain-fart" GC/allocation cliff). The deferred splits
+ * keep their ready timer and retry next frame, so the world still ramps to the ceiling — over a
+ * few seconds, not a single locked frame. Deterministic (a frame-local COUNTER, not wall-clock).
+ */
+export const SPAWN_BUDGET_ULTRA = 64;
 /** Distinct-morphotype scratch set — cleared at the top of every `update()` call. */
 const MORPHS_SEEN = new Set<number>();
 /** Reused stats instance returned by `update()` — copy the fields if you need to retain them. */
@@ -108,6 +118,8 @@ export class EntityManager {
   private readonly densityScale: number;
   /** Containment radius², pre-scaled by densityScale² (the squared spawn-volume growth). */
   private readonly containR2: number;
+  /** New organisms created so far THIS frame (auto-split), reset each {@link update}. See {@link SPAWN_BUDGET_ULTRA}. */
+  private spawnsThisFrame = 0;
 
   constructor(ctx: SimContext) {
     this.ctx = ctx;
@@ -314,6 +326,13 @@ export class EntityManager {
     const ultra = maxEntities > 5000;
     const theoryStride = ultra ? 3 : 2;
     const flockEvery = ultra ? 2 : 1;
+    // F-SPAWN-BUDGET: cap NEW organisms per frame at the ultra tier so a synchronized auto-split
+    // surge (apocalypse maxes chaos → every split timer drains 3× → the whole population turns
+    // split-ready at once) RAMPS over ~seconds instead of allocating thousands of entities in one
+    // frame (the "brain-fart" freeze + GC cliff). Infinity at ≤5,000 ⇒ the budget is never
+    // consulted below ultra, so every golden + determinism property stays byte-identical.
+    const spawnBudget = ultra ? SPAWN_BUDGET_ULTRA : Infinity;
+    this.spawnsThisFrame = 0;
     // Adaptive steady-state target: ORGANIC growth (auto-split, sparse respawn) stops here so
     // an idle ultra world settles below the 10k ceiling. Equals maxEntities on every other tier
     // (target===max ⇒ byte-identical to legacy). The hard spawn cap inside spawn() still uses
@@ -437,7 +456,8 @@ export class EntityManager {
       // At target === maxEntities (≤5,000) the short-circuited `rng()` is drawn on exactly the
       // legacy frames, so the seeded stream is byte-identical.
       u.sT -= dt * 30 * cm;
-      if (u.sT <= 0 && list.length < target && rng() < 0.06) {
+      if (u.sT <= 0 && list.length < target && this.spawnsThisFrame < spawnBudget && rng() < 0.06) {
+        this.spawnsThisFrame++;
         u.sT = 300 + rng() * 500;
         SPAWN_AT.set(
           e.position.x + (rng() - 0.5) * 2,
