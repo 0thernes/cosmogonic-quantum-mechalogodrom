@@ -88,6 +88,7 @@ const ENTRIES: TsotchkeRepoEntry[] = [
     wiring: 1.0,
     hue: 0.72,
   },
+  // Local corpus Z:\[Vibe Coded (AI)]\(Tsotchke)\Eshkol\eshkol_repo used as build source for .esk programs as heritable digital biologic DNA.
   {
     slug: 'moonlab',
     origin: 'user',

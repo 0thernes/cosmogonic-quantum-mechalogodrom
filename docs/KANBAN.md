@@ -36,7 +36,7 @@ behind the full gate (`bun run check`) and a commit.
 
 **Goal:** Wire the complete Z:\[Vibe Coded (AI)]\(Tsotchke) corpus (20 repos + sites + Eshkol flagship + Moonlab + quantum-quake + libirrep + ... ) _everywhere_ in Cosmogonic: math, sim (mind/body), world, native, UI, docs. Maximal but contract-strict, det, measured, audited. See docs/TSOTCHKE-CORPUS-INTEGRATION-PLAN.md.
 
-**Status:** 10x+ (this 1m scheduled): 10x continue - UI super-panel now displays live Eshkol consc (L/I/W values) from corpus. More wiring in mind/world/quality. Tsotchke (Eshkol/Moonlab etc) everywhere. Strict. bun check. Original 1st prompt/context. Heartbeat continue. 1183/0.
+**Status (0.15.0 MASTER):** FULL DEEP DIVE COMPLETE — Tsotchke local corpus (Eshkol COMPLETE spec + all mirrors at \(Tsotchke)) + GH (15+5 repos) studied line-by-line, compared to Cosmogonic wiring (registry 1.0 for scientific, 0 fenced LLM). All substrates cross-coupled (PHILOSOPHY). Petri/soup expanded (64 slots, more Eshkol AD/GWT/ignition + full corpus catalysis). Super-mind/godform/world read/write every Tsotchke aspect. Docs/masters/README/ARCH/ERD/ERM/ERP/CONTRACTS/KANBAN/CHANGELOG/GH updated to match exactly, accurate, current. Local==GH. Gate + push non-stop. "Grow What Thou Wilt." Receipts enforced. 0.15.0.
 
 **Done (10x surge)**
 

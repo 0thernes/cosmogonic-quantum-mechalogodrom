@@ -9,7 +9,7 @@ import { corpusBeatForArchon, getTsotchkeRepoByIndex } from './tsotchke-registry
 
 const clamp01 = (v: number): number => clamp(v, 0, 1);
 
-export const SOUP_SLOTS = 48;
+export const SOUP_SLOTS = 64; // Expanded for full Tsotchke corpus (local Z:\[Vibe Coded (AI)]\(Tsotchke) Eshkol .esk + all mirrors) to birth more independent digital biologics strains.
 export const SOUP_GENOME_LEN = 24;
 
 export interface SoupStrain {
