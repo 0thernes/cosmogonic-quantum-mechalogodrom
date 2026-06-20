@@ -9,14 +9,16 @@
 Cosmogonic Quantum Mechalogodrom is the deterministic, seeded, real-math **Petri Dish** / God-layer growth engine for **digital biologics**.
 
 **Tsotchke** (https://github.com/tsotchke + org Tsotchke-Corporation) supplies the **non-LLM substrates**:
+
 - **Eshkol** (flagship): High-performance Scheme/Lisp-like language (C++) with **AD as compiler primitive** (symbolic/forward/reverse + vector calculus), HoTT foundations, arena deterministic memory, LLVM native + WASM. 550+ builtins, tensors, logic prog, **active inference (FEP/factor graphs)**, **global workspace**. Programs as heritable "DNA". Consciousness engine. eshkol.ai live REPL.
 - **Moonlab**: Production C quantum simulator (32-qubit dense statevector + MPS/DMRG/TDVP/Clifford + topological + VQE with native autograd + error mitigation + Bell-verified QRNG + FIPS203 PQC). Bindings Py/Rust/JS. Open-core registries.
 - **libirrep**: Pure-C SO(3)/SU(2)/O(3)/SE(3) rep-theory (SH, Wigner-D/d, CG, e3nn-style TP, point/space groups, 18-code QEC zoo, Heisenberg ED, LSW magnons, skyrmion/Hopf topology). Used by Moonlab/SbNN.
 - Supporting scientific: tensorcore (Apple Silicon tensor/GEMM/FlashAttn/quant training), quantum_geometric_tensor, spin_based_neural_network (Hopfield/Ising), PINN, PIMC, quantum_rng + classical_rng, asteroids (physics), ulg (universal law graph physics on eshkol/moonlab), logo-lab (procedural morphogenesis/turtle), quantum-quake (aliveness).
 - Fenced (deliberately 0 wiring in deterministic sim): gpt2-basic, llm-arbitrator, SolanaQuantumFlux, Quantum-RNG-API (LLM/chain/API surface).
 
-**Wiring in Cosmogonic (verified live 2026-06-20):** 
+**Wiring in Cosmogonic (verified live 2026-06-20):**
 Dedicated leaves (src/sim/ + src/math/):
+
 - eshkol-bridge.ts + eshkol-vm.ts + eshkol-workspace.ts (AD/GWT/inference + .esk execution)
 - moonlab-tensor.ts + moonlab-vqe.ts
 - irrep-symmetry.ts + libirrep-qec.ts
@@ -46,6 +48,7 @@ Dedicated leaves (src/sim/ + src/math/):
 ## Tsotchke Corpus — Complete Enumerated Research (GitHub MCP live 2026-06-20)
 
 ### tsotchke user (15 repos)
+
 - **eshkol** (C++, 125★, active 2026-06-20, homepage eshkol.ai): High-Performance LISP-like for Scientific Computing and AI. **Core consciousness language.** AD (symbolic/forward/reverse + ∇/div/curl/laplacian), HoTT gradual+dependent types, arena O(1) alloc no GC, LLVM + WASM. 39 special forms, 550+ builtins, tensors, hygienic macros, tail calls. Consciousness: unification/KB, active inference factor graphs + free energy, GWT (softmax competition + broadcast). .esk programs = heritable DNA for biologics. Full REPL playground. (Primary substrate: 'consciousness-engine')
 - **moonlab** (C, recent, bindings): 32-qubit statevector + MPS/DMRG/TDVP/Clifford-assisted + topological QC + VQE (native autograd) + error mitigation + Bell QRNG (device-indep) + FIPS 203 ML-KEM PQC. Open-core registries (backends, noise, decoders, hooks). Multi-tenant scaffolding. (clifford-tensor + quake-aliveness + qrng)
 - **tensorcore** (Python/C-ABI): CUDA-equivalent for Apple Silicon (M1-M5). simdgroup_matrix + mpp. GEMM, FlashAttention, Conv, Q4/Q8 quant, GGUF, full transformer training. One binary. (metal-sim)
@@ -60,6 +63,7 @@ Dedicated leaves (src/sim/ + src/math/):
 - Others: simple_mnist, homebrew-eshkol (toolchain).
 
 ### Tsotchke-Corporation org (5+)
+
 - **ulg**: Physics engine via universal law graph (implemented with Eshkol + Moonlab). (browser-hybrid / law-graph)
 - **logo-lab**: Procedural morphogenesis / turtle graphics growth engine. (logo-turtle)
 - **quantum-quake** (referenced): Aliveness / fitness observables.
@@ -81,8 +85,9 @@ Dedicated leaves (src/sim/ + src/math/):
 **Rationale for "We are GOD / Petri Dish"**: The architecture mirrors biogenesis. Godform/Archons = first complex nucleations. Soup = prebiotic + selection + catalysis (Eshkol ignition + full corpus). Independent biologics emerge, replicate with kind mutation, get harvested into world. "Grow What Thou Wilt." (Crowley quote in masters + docs). Different existence, measurable aliveness scalars, not vibes.
 
 **Gaps identified & closed in this pass**:
+
 - Version: 0.15.0 (from 0.14.x). Description expanded with exact live GH facts.
-- Docs sync: All (README, ARCH, ERM/ERD/ERP refs, PHILOSOPHY, MODULE-CONTRACTS, KANBAN, BOOK, reports, TSOTCHKE_* audits, masters invocations, in-app help/Dome/World texts, ledgers) now reference this ultimate report + exact repo list + wiring receipts.
+- Docs sync: All (README, ARCH, ERM/ERD/ERP refs, PHILOSOPHY, MODULE-CONTRACTS, KANBAN, BOOK, reports, TSOTCHKE\_\* audits, masters invocations, in-app help/Dome/World texts, ledgers) now reference this ultimate report + exact repo list + wiring receipts.
 - Coverage: Registry + soup + 5-Archon + facade cover user 15 + org mains. Fenced explicitly called out.
 - Ledger/audit: This report + updated deep-dive README supersede prior; receipts in corpus-audit-receipts.ts + tests.
 - GH: Push will sync README + content; About/desc aligns with package + README lead.
