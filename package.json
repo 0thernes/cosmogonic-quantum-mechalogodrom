@@ -6,7 +6,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "bun --hot server.ts",
+    "dev": "bun scripts/harvest-tsotchke-corpus.ts && bun --hot server.ts",
     "start": "bun server.ts",
     "build": "bun scripts/build.ts",
     "pages": "bun run build && bun scripts/build-pages.ts",

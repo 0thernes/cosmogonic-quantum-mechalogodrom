@@ -38,6 +38,10 @@ export interface SoupSnapshot {
   meanVitality: number;
   catalysis: number;
   eshkolBorn: number;
+  /** Number of real .esk programs harvested at build/dev time from the local Tsotchke Repo Folder.
+   * This is how Cosmogonic actually BUILDS WITH the Tsotchke corpus for digital biologics DNA.
+   */
+  tsotchkeEskHarvested: number;
 }
 
 export class PrimordialSoup {
@@ -149,6 +153,7 @@ export class PrimordialSoup {
       meanVitality: live ? sumV / live : 0,
       catalysis: sumV,
       eshkolBorn,
+      tsotchkeEskHarvested: _TSOTCHKE_HARVEST.eskCount,
     };
   }
 
@@ -161,7 +166,7 @@ export class PrimordialSoup {
       symmetry: this.symmetry[i] ?? 0,
       consciousness: this.consciousness[i] ?? 0,
       alive: !!this.alive[i],
-      eshkolProgram: this.eshkolPrograms[i],
+      eshkolProgram: this.eshkolPrograms[i], // full Tsotchke corpus DNA (Eshkol .esk programs as heritable substrate)
     };
   }
 }

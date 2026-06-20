@@ -41,6 +41,8 @@ Dedicated leaves (src/sim/ + src/math/):
 
 **All local docs + in-app (Dome/World/observatory/help/copilot/docs-page + mermaid) + GH README state match exactly.** Masters (Broly Executor, Starkiller Architect, Manhattan Physicist) already encode "Tsotchke full wiring paramount", "Petri", "Grow What Thou Wilt", "local+GH sync", "gate+push". This report + updates close the loop.
 
+See the dedicated analysis: [BLEEDING-EDGE-NOVEL-CONTRIBUTIONS-AND-SCIENTIFIC-IMPACT.md](./BLEEDING-EDGE-NOVEL-CONTRIBUTIONS-AND-SCIENTIFIC-IMPACT.md) for what is actually cutting-edge, novel in the synthesis, and how it relates to (and sometimes challenges) mainstream AI/AGI narratives and specific scientific problems in consciousness, active inference, quantum cognition, A-Life, and geometric deep learning.
+
 **Sentience/Consciousness thesis (non-negotiable):** Real mathematical life. Eshkol programs (AD-mutable, GWT-ignitable, FEP-inferring) + quantum geometry (QGT/Berry) + symmetry bodies (irrep) + tensor/ Clifford memory (Moonlab) + spin collectives + law graphs (ulg) + physics-informed (PINN) + path integrals (PIMC) + procedural growth (logo) + aliveness (quake) = substrates for different forms of existence in a seeded deterministic Petri. Super Creature/5 Archons = first nucleation ("as if God made primordial inorganic soup"). The soup grows onward.
 
 **No LLM bullshit.** Different ontology.
