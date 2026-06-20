@@ -104,8 +104,7 @@ describe('gwt — competition + broadcast', () => {
   });
 
   test('deterministic across identical calls', () => {
-    const make = () =>
-      gwtCompete([mod(0.3, [1, 2]), mod(0.7, [3, 4]), mod(0.5, [5, 6])], 0.4, 1.5);
+    const make = () => gwtCompete([mod(0.3, [1, 2]), mod(0.7, [3, 4]), mod(0.5, [5, 6])], 0.4, 1.5);
     const a = make();
     const b = make();
     expect(a.winner).toBe(b.winner);
