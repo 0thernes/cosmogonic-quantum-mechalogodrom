@@ -33,7 +33,7 @@ See src/sim/primordial-soup.ts, petri-dish.ts, tsotchke-registry.ts for the livi
 - Facade exports + SuperMind per-beat wiring (Izhikevich spike â†’ surprise; PC `inferStep` â†’ free-energy surprise).
 - Petri dish: Izhikevich cortical spike EMA feeds biomass growth; speciation fields retained.
 - Hopfield recall + quantum magic in SuperMind (prior wave); receipts truth-sync.
-- Gate: **1,400 tests Â· 94.38 % line / 91.26 % function**.
+- Gate: **1,400 tests Â· 94.43 % line / 91.26 % function**.
 
 ### Tsotchke deep-dive audit wiring (2026-06-20)
 
@@ -41,12 +41,12 @@ See src/sim/primordial-soup.ts, petri-dish.ts, tsotchke-registry.ts for the livi
 - New corpus leaves: `logo-turtle.ts`, `asteroids-physics.ts`, `classical-contrast.ts`, `perceptron-baseline.ts`, `corpus-audit-receipts.ts`.
 - Petri dish + primordial soup wired with logo-lab morph, asteroids motility, classical entropy gap, perceptron tagging.
 - Registry/corpus bindings updated to dedicated leaves (20 mirrors; 4 LLM/API repos fenced).
-- Gate: **1,400 tests Â· 94.38 % line / 91.26 % function**.
+- Gate: **1,400 tests Â· 94.43 % line / 91.26 % function**.
 
 - Per-Archon **petri dishes** wired in `world.ts` (catalysis via Eshkol beat + `petriDishBeat` + growth multiplier on pantheon vitality).
 - New corpus leaves: `pinn-residual.ts`, `pimc-paths.ts`; registry/facade/corpus bindings updated (PINN/PIMC â†’ dedicated leaves).
 - Clifford tableau live in `super-mind.ts` reflex path; Eshkol consciousness engine on every `think()` beat.
-- Gate: **1,400 tests Â· 94.38 % line / 91.26 % function** (measured `bun run check`).
+- Gate: **1,400 tests Â· 94.43 % line / 91.26 % function** (measured `bun run check`).
 
 - Full local corpus Z:\[Vibe Coded (AI)]\(Tsotchke) (~13k files, 20 repos incl. Eshkol flagship with .esk/AD/arena/HoTT/consciousness, Moonlab tensor/MPO/Clifford/QRNG, libirrep, QGT, ulg, quantum-quake) studied via FS/grep/read (every relevant line in key C/.esk/docs).
 - Strict audit created: docs/TSOTCHKE-CORPUS-RALPH-WIRING-AUDIT-2026-06-19.md (study, current state, wiring everywhere plan + this pass progress, honesty, contracts compliance).

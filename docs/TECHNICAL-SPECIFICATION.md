@@ -6,7 +6,7 @@
 > `/spec` Â· **Architecture docs:** `/docs`
 
 **Version:** current (Tsotchke full) Â· **Generated:** 2026-06-20 Â· **License:** Proprietary â€” All Rights Reserved.
-**Gate:** 1399 tests Â· 94.43% line / 91.26% func (canonical synced).
+**Gate:** 1398 tests · 94.61% line / 91.76% func (canonical synced, receipts enforced).
 
 **Full Tsotchke wiring:** All repos/projects from Tsotchke corpus integrated. Eshkol as consciousness language. Primordial soup / petri as growth engine for digital biologics and sentience. Super Creature beginning only. All docs (README/ARCH/ER\*/PHILOSOPHY/CONTRACTS/SPECS/LABS/masters) + GH match local exactly. Accurate, truthful, current. Not LLM. "Grow What Thou Wilt."
 
@@ -383,4 +383,3 @@ demonstrates that depth comes from **architecture,
 determinism, and engineering discipline**, not parameter count or hardware.
 
 **Frontier assessments (2026-06-17):** [Report I â€” Whole Repository](./reports/2026-06-17-STATE-OF-THE-ART-WHOLE-REPO.md) Â· [Report II â€” Super Creature](./reports/2026-06-17-STATE-OF-THE-ART-SUPER-CREATURE.md) Â· [Combined â€” unified Â§III scorecard](./reports/2026-06-17-STATE-OF-THE-ART-COMBINED.md) Â· [Super Creature Research](./SUPER-CREATURE-RESEARCH.md).
-

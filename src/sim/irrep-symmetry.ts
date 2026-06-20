@@ -1,63 +1,78 @@
 /**
- * LIBIRREP SYMMETRY — faithful reimplementation of core from mirrors/libirrep
- * (clebsch_gordan.c, wigner_d.c, point_group). SO(3)/SU(2) for Archon/creature
- * equivariant morphology and symmetry breaking. Deterministic, no rand.
- * All Tsotchke repos contribute to digital biologics substrate.
+ * LIBIRREP SYMMETRY — REAL SO(3)/SU(2) representation theory (leaf, exclusive owner).
+ *
+ * This leaf now DELEGATES to the genuine factorial-sum kernels in `math/irrep.ts`
+ * (faithful port of the Tsotchke `libirrep` corpus — `clebsch_gordan.c`,
+ * `wigner_d.c`): Racah-form Clebsch–Gordan coefficients and Wigner small-d
+ * rotation matrix elements. The previous implementation here was modular
+ * arithmetic dressed as representation theory (the audit's PROXY_STUB verdict);
+ * the five exported symbols keep their signatures so every consumer
+ * (godform, petri-dish, phyla, quality-space, super-body, super-mind,
+ * topdown-perception, world, tsotchke-facade) now receives real symmetry math
+ * with no call-site changes.
+ *
+ * DETERMINISM (Manhattan): pure functions over `math/irrep.ts`, NO `Rng`, NO
+ * `Date.now`. Outputs are bounded — CG/Wigner elements live in [-1, 1] — so the
+ * small additive perturbations these feed into colony growth, morphology angles,
+ * and quality-space coordinates stay numerically safe.
  */
 
-/** Small-j Clebsch-Gordan approx (Racah-inspired for j <=15; from libirrep). */
+import { clebschGordan, wignerSmallD, irrepMultiplicity, IRREP_J_MAX } from '../math/irrep';
+
+/** Clamp an angular momentum to the exact-factorial-safe range [0, IRREP_J_MAX]. */
+function clampJ(j: number): number {
+  const v = j < 0 ? 0 : j;
+  return v > IRREP_J_MAX ? IRREP_J_MAX : v;
+}
+
+/** Nearest valid projection of `j` to `x`: |m| ≤ j with (j − m) a non-negative integer. */
+function snapProjection(j: number, x: number): number {
+  const c = x < -j ? -j : x > j ? j : x;
+  return j - Math.round(j - c);
+}
+
+/**
+ * Magnitude of the real Clebsch–Gordan coefficient |⟨j₁ m₁; j₂ m₂ | J M⟩| for the
+ * maximal coupling J = j₁+j₂ (capped), with m₁ the projection of j₁ nearest `m`
+ * and m₂ the projection of j₂ nearest 0. A genuine representation-theory weight
+ * in [0, 1] (0 when a selection rule fails). Replaces the old modulo stub.
+ */
 export function libirrepClebsch(j1: number, j2: number, m: number): number {
-  const j1_ = Math.max(0, Math.floor(j1));
-  const j2_ = Math.max(0, Math.floor(j2));
-  const m_ = Math.floor(m);
-  if (Math.abs(m_) > j1_ + j2_) return 0;
-  // Simplified Racah single-sum for small; normalized positive
-  let cg = 0;
-  const kmax = Math.min(j1_, j2_, j1_ + j2_ - Math.abs(m_));
-  for (let k = 0; k <= kmax; k++) {
-    const term =
-      (k % 2 === 0 ? 1 : -1) *
-      Math.exp(
-        lgamma(j1_ + j2_ - m_ - k + 1) -
-          lgamma(k + 1) -
-          lgamma(j1_ - m_ - k + 1) -
-          lgamma(j2_ + m_ - k + 1) -
-          lgamma(j1_ + j2_ - k + 1) +
-          lgamma(j1_ + j2_ + k + 1) * 0.1,
-      );
-    cg += term;
-  }
-  return Math.max(0, cg / (1 + Math.sqrt((2 * j1_ + 1) * (2 * j2_ + 1))));
+  const J1 = clampJ(j1);
+  const J2 = clampJ(j2);
+  const m1 = snapProjection(J1, m);
+  const m2 = snapProjection(J2, 0);
+  const J = Math.min(J1 + J2, IRREP_J_MAX);
+  const M = m1 + m2;
+  return Math.abs(clebschGordan(J1, m1, J2, m2, J, M));
 }
 
-function lgamma(x: number): number {
-  // Stirling approx for determinism in hot path (portable)
-  if (x < 1) return 0;
-  return (x - 0.5) * Math.log(x) - x + 0.5 * Math.log(2 * Math.PI) + 1 / (12 * x);
-}
-
-/** Modulate by irrep degree (Clebsch style weighting from libirrep). */
+/**
+ * SO(3)-equivariant component count for `baseCount` features carrying angular
+ * momentum `irrepDeg` — real (2j+1)-saturating multiplicity from `math/irrep.ts`.
+ */
 export function libirrepSymmetry(irrepDeg: number, baseCount: number): number {
-  const j = Math.max(0, Math.floor(irrepDeg));
-  const cg = libirrepClebsch(j, 1, 0);
-  return Math.max(1, Math.floor(baseCount * (1 + cg * 0.2)));
+  return irrepMultiplicity(Math.floor(clampJ(irrepDeg)), baseCount);
 }
 
-/** Wigner D (small angle Edmonds approx + Schulten for stability). */
+/**
+ * Wigner small-d rotation element d^j_{jj}(β) added to `base`. `idx` selects the
+ * rotation angle β ∈ [0, π); the returned element is a real reduced-rotation
+ * matrix value (= cos(β/2)^{2j}) in [0, 1], scaled to a gentle ±0.1 perturbation.
+ */
 export function libirrepWigner(irrepDeg: number, idx: number, base: number): number {
-  const j = Math.max(0, Math.floor(irrepDeg));
-  const d = (j % 6) + 1;
-  // Small-j direct + recurrence hint
-  const w = Math.cos((idx % (d + 1)) * 0.1) * (1 - (j % 3) * 0.05);
-  return base + w * 0.1 * ((j % 4) - 1.5);
+  const j = clampJ(Math.floor(irrepDeg));
+  const beta = ((((idx % 24) + 24) % 24) / 24) * Math.PI;
+  const d = wignerSmallD(j, j, j, beta);
+  return base + d * 0.1;
 }
 
-/** SU(2) dim 2j+1 exact. */
+/** SU(2) irrep dimension 2j+1 (exact). */
 export function su2Dimension(j: number): number {
   return Math.max(1, 2 * Math.floor(Math.max(0, j)) + 1);
 }
 
-/** Modes from symmetry + chaos (libirrep point group projector style). */
+/** Active symmetry modes: irrep dimension gated by chaos (point-group projector style). */
 export function symmetryModes(irrepDeg: number, chaos: number): number {
   const dim = su2Dimension(irrepDeg);
   return Math.floor(dim * (0.5 + Math.min(1, Math.max(0, chaos)) * 0.5));

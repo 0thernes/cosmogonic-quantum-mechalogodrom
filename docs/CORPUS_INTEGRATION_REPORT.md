@@ -145,7 +145,7 @@ Updated `docs/TSOTCHKE-CORPUS-INTEGRATION-PLAN.md` with completion status for Wa
 
 **Test Coverage:**
 
-- Line coverage: 94.61%
+- Line coverage: 94.43%
 - Function coverage: 91.26%
 - Test count: 1293
 
@@ -216,4 +216,3 @@ All work follows the binding rules (MODULE-CONTRACTS + PHILOSOPHY), passes the f
 
 **Report Generated:** 2026-06-20
 **Next Steps:** Waves 5-8 (optional web integration, native performance, additional tests, final documentation)
-
