@@ -5,7 +5,8 @@
 > estimated. **Live:** <https://0thernes.github.io/cosmogonic-quantum-mechalogodrom/> · **Spec page:**
 > `/spec` · **Architecture docs:** `/docs`
 
-**Version:** 0.12.0-tsotchke-genesis · **Generated:** 2026-06-20 · **License:** Proprietary — All Rights Reserved.
+**Version:** current (Tsotchke full) · **Generated:** 2026-06-20 · **License:** Proprietary — All Rights Reserved.
+**Gate:** 1399 tests · 94.38% line / 91.26% func (canonical synced).
 
 **Full Tsotchke wiring:** All repos/projects from Tsotchke corpus integrated. Eshkol as consciousness language. Primordial soup / petri as growth engine for digital biologics and sentience. Super Creature beginning only. All docs (README/ARCH/ER\*/PHILOSOPHY/CONTRACTS/SPECS/LABS/masters) + GH match local exactly. Accurate, truthful, current. Not LLM. "Grow What Thou Wilt."
 
