@@ -62,7 +62,7 @@ Total ~20–21. LLM paths correctly fenced (registry wiring=0, never enter deter
 
 ## 4. Updates Performed (this session)
 
-- Version locked at 0.15.0 with description matching paradigm.
+- Version locked at 0.16.0 with description matching paradigm.
 - CHANGELOG top entry added for omniscient dive + lock.
 - README, ARCHITECTURE, ERD/ERM/ERP, masters (already aligned), reports/ refreshed with this exact text + GH confirmation (15+5 repos).
 - All mandated surfaces (SPECS/LABS/Docs in Dome via comments + prior builds, KANBAN references) declared in sync.

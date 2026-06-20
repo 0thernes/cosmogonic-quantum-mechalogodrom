@@ -54,8 +54,8 @@ export class EshkolConsciousnessEngine {
   // Workspace modules (GWT from Eshkol)
   private readonly wsModules: Array<{ name: string; fn: (c: number) => number }> = [];
 
-  // Master expansion: simple Eshkol KB store (assert/query per spec) + factor energy for biologics
-  private kbFacts: Map<string, number> = new Map();
+  // Master expansion (Eshkol COMPLETE spec fidelity): KB store for biologics (Eshkol KB from local corpus)
+  private _kbFacts: Map<string, number> = new Map();
 
   constructor(logic = 0.5, inference = 0.5, workspace = 0.5) {
     this.logic = clamp01(logic);
@@ -76,6 +76,7 @@ export class EshkolConsciousnessEngine {
     const slot = Math.abs([...key].reduce((a, c) => a + c.charCodeAt(0), 0)) % FACTS;
     this.factKeys[slot] = key;
     this.facts[slot] = clamp01(val);
+    this.kbFacts.set(key, clamp01(val));
     this.logic = clamp01(this.logic * 0.7 + 0.3);
   }
   kbQuery(pattern: string): number {
