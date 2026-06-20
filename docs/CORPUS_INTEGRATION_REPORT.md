@@ -145,7 +145,7 @@ Updated `docs/TSOTCHKE-CORPUS-INTEGRATION-PLAN.md` with completion status for Wa
 
 **Test Coverage:**
 
-- Line coverage: 94.50%
+- Line coverage: 94.45%
 - Function coverage: 91.47%
 - Test count: 1259
 
