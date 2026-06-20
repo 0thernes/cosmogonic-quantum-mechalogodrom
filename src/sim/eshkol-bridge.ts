@@ -55,7 +55,7 @@ export class EshkolConsciousnessEngine {
   private readonly wsModules: Array<{ name: string; fn: (c: number) => number }> = [];
 
   // Master expansion (Eshkol COMPLETE spec fidelity): KB store for biologics (Eshkol KB from local corpus)
-  private _kbFacts: Map<string, number> = new Map();
+  private readonly kbFacts: Map<string, number> = new Map();
 
   constructor(logic = 0.5, inference = 0.5, workspace = 0.5) {
     this.logic = clamp01(logic);
