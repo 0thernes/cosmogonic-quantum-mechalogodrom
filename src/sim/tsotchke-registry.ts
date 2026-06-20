@@ -353,7 +353,7 @@ export function corpusBeatForArchon(archonIdx: number, frame: number): number {
   return Math.max(0, Math.min(1, mix / 3));
 }
 
-/** New: digital biologic program fingerprint from multiple substrates (Eshkol program seed). */
+/** Digital biologic program fingerprint (full Tsotchke Eshkol seed). */
 export function biologicProgramFingerprint(archonIdx: number, seed: number): number {
   const e0 = getTsotchkeRepoByIndex(archonIdx);
   const e1 = getTsotchkeRepoByIndex(archonIdx + 3);
@@ -361,4 +361,3 @@ export function biologicProgramFingerprint(archonIdx: number, seed: number): num
   return ((e0.wiring * 1000 + e1.hue * 100 + e2.wiring) ^ seed) % 0xffffff;
 }
 
-// Full Tsotchke biologics functions defined above for soup/petri growth and sentience.
