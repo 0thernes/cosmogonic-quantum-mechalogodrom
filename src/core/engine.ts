@@ -30,6 +30,9 @@ export class Engine {
   /** Main perspective camera; world.ts drives its position per view mode. */
   readonly camera: THREE.PerspectiveCamera;
   private readonly dprCap: number;
+  private dprScale = 1;
+  private fxSuspended = false;
+  private readonly bootShadows: boolean;
   /** True while the WebGL context is lost; `render()` no-ops until it returns. */
   private contextLost = false;
   /** Optional cinematic post-FX chain (`?fx=1`); null in the default pipeline. */
@@ -43,12 +46,15 @@ export class Engine {
    */
   constructor(canvas: HTMLCanvasElement, quality: QualityProfile) {
     this.dprCap = quality.dprCap;
+    this.bootShadows = quality.shadows;
     this.renderer = new THREE.WebGLRenderer({
       canvas,
       antialias: true,
       powerPreference: 'high-performance',
     });
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, this.dprCap));
+    this.renderer.setPixelRatio(
+      Math.min(window.devicePixelRatio || 1, this.dprCap) * this.dprScale,
+    );
     // V70: updateStyle=false — NEVER write inline width/height on the canvas, so the CSS `fixed inset-0`
     // always stretches it to fill the WHOLE window (no letterbox / aspect-ratio "encasing" if a resize
     // is ever missed). The drawing buffer is still sized to the viewport for a pixel-perfect render.
@@ -87,7 +93,9 @@ export class Engine {
     canvas.addEventListener(
       'webglcontextrestored',
       () => {
-        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, this.dprCap));
+        this.renderer.setPixelRatio(
+          Math.min(window.devicePixelRatio || 1, this.dprCap) * this.dprScale,
+        );
         // V70: updateStyle=false — NEVER write inline width/height on the canvas, so the CSS `fixed inset-0`
         // always stretches it to fill the WHOLE window (no letterbox / aspect-ratio "encasing" if a resize
         // is ever missed). The drawing buffer is still sized to the viewport for a pixel-perfect render.
@@ -125,7 +133,9 @@ export class Engine {
     const h = window.innerHeight;
     this.camera.aspect = w / h;
     this.camera.updateProjectionMatrix();
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, this.dprCap));
+    this.renderer.setPixelRatio(
+      Math.min(window.devicePixelRatio || 1, this.dprCap) * this.dprScale,
+    );
     this.renderer.setSize(w, h, false); // updateStyle=false → CSS inset-0 fills the window (no letterbox)
     this.fx?.setSize(w, h);
   }
@@ -136,7 +146,7 @@ export class Engine {
    */
   render(): void {
     if (this.contextLost) return;
-    if (this.fx) {
+    if (this.fx && !this.fxSuspended) {
       try {
         this.fx.render();
         return;
@@ -154,6 +164,34 @@ export class Engine {
    */
   setLens(cx: number, cy: number, strength: number, radius: number): void {
     this.fx?.setLens(cx, cy, strength, radius);
+  }
+
+  /**
+   * Render-side governor knobs (driven by {@link RenderGovernor} in main.ts). DETERMINISM-SAFE: these
+   * touch ONLY renderer settings, never sim state/RNG — so a degraded frame is byte-identical in the
+   * sim, just cheaper to draw. They exist so the governor can shed GPU load before a frame gets heavy
+   * enough to trip the driver watchdog (TDR / black-screen freeze). All O(1).
+   */
+
+  /** Scale the effective device-pixel-ratio (1 = full, &lt;1 = a cheaper backbuffer). O(1). */
+  setPixelRatioScale(scale: number): void {
+    this.dprScale = scale;
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, this.dprCap) * scale);
+    // Keep the post-FX composer's render targets in sync with the new pixel ratio (no stretch).
+    this.fx?.setSize(window.innerWidth, window.innerHeight);
+  }
+
+  /** Suspend/restore the post-FX pass (honored in {@link render}). O(1). */
+  setPostFxSuspended(suspended: boolean): void {
+    this.fxSuspended = suspended;
+  }
+
+  /** Enable/disable shadows at runtime — only re-enables if the boot tier had shadows at all. O(1). */
+  setShadowsEnabled(on: boolean): void {
+    const want = on && this.bootShadows;
+    if (this.renderer.shadowMap.enabled === want) return;
+    this.renderer.shadowMap.enabled = want;
+    if (want) this.renderer.shadowMap.needsUpdate = true;
   }
 
   /** Whether the WebGL context is currently lost (for callers/telemetry). O(1). */

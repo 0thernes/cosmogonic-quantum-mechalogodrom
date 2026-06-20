@@ -6,6 +6,7 @@ import 'htmx.org';
 import * as THREE from 'three';
 import { detectQuality } from './core/quality';
 import { Engine } from './core/engine';
+import { RenderGovernor } from './core/frame-governor';
 import { MemoryStore } from './memory/store';
 import { AuditTrail } from './logging/audit';
 import { createLogger } from './logging/logger';
@@ -120,12 +121,19 @@ function boot(): void {
     };
   }
 
+  // V-GOV: render-side frame-time governor — sheds DPR → post-FX → shadows under sustained slow frames
+  // so the GPU never gets a frame heavy enough to trip the driver watchdog (the TDR black-screen freeze
+  // under apocalypse / CHAOS spam at 50k), then restores quality when it recovers. RENDER-ONLY, so the
+  // seeded sim stays bit-deterministic; the boot tier's shadow capability bounds how far it may shed.
+  const governor = new RenderGovernor(quality.shadows);
   // rAF-timestamp delta; world.step clamps to 50ms so tab-switch gaps are safe. dt floored at 0.
   let last = performance.now();
   function frame(now: number): void {
     rafId = requestAnimationFrame(frame);
     const dt = Math.max(0, now - last) / 1000;
     last = now;
+    governor.observe(dt);
+    if (engine) governor.apply(engine);
     world?.step(dt);
   }
   rafId = requestAnimationFrame(frame);
