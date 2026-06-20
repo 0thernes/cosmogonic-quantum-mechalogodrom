@@ -13,9 +13,9 @@ import {
   TSOTCHKE_REPO_BINDINGS,
 } from '../src/sim/tsotchke-facade';
 import { consciousnessTriple } from '../src/sim/eshkol-bridge';
-import { TSOTCHKE_REPO_COUNT, tsotchkeWiringCoverage } from '../src/sim/tsotchke-registry';
-import { PrimordialSoup } from '../src/sim/primordial-soup';
 import { mulberry32 } from '../src/math/rng';
+import { PrimordialSoup } from '../src/sim/primordial-soup';
+import { TSOTCHKE_REPO_COUNT, tsotchkeWiringCoverage } from '../src/sim/tsotchke-registry';
 
 describe('Tsotchke facade (corpus primitives)', () => {
   test('8 archetypes cover full corpus families', () => {
@@ -93,11 +93,12 @@ describe('Tsotchke corpus registry (all repos wired)', () => {
 
 describe('Primordial soup (Petri dish growth)', () => {
   test('same seed produces identical soup telemetry', () => {
-    const a = new PrimordialSoup(mulberry32(777));
-    const b = new PrimordialSoup(mulberry32(777));
+    const a = new PrimordialSoup(777);
+    const b = new PrimordialSoup(777);
+    const rng = mulberry32(777);
     for (let i = 0; i < 20; i++) {
-      a.incubate();
-      b.incubate();
+      a.update(0, i, rng);
+      b.update(0, i, rng);
     }
     expect(a.snapshot().tick).toBe(b.snapshot().tick);
     expect(a.snapshot().meanVitality).toBe(b.snapshot().meanVitality);

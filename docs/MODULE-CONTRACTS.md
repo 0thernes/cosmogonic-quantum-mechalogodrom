@@ -1,9 +1,15 @@
 # Module Contracts
 
+**TSOTCHKE FULL INTEGRATION ERA (current):** Tsotchke (Eshkol + all 20+ repos) is paramount, non-negotiable. EVERY aspect utilizes Tsotchke substrates for digital biologics and sentience. Eshkol is the language (AD primitive, GWT consciousness engine). Petri Dish / Primordial Soup / digital-biologics.ts is the birthing ground ("God in the Petri Dish", "Grow What Thou Wilt"). Super Creature is the spark/beginning only. Different forms of life/existence (EshkolNative, QuantumBiologics, etc.). Not LLM/token bullshit. All docs/README/local/GH must match exactly. Accurate, current, truthful.
+
 Binding spec for every module in this repo. Writer agents and humans MUST conform exactly —
 `world.ts`/`main.ts` (the composition root) are written against these signatures, sight unseen.
 
 ## Ground rules
+
+**Docs sync:** This CONTRACTS, README, ARCHITECTURE, ERD/ERM/ERP, PHILOSOPHY, TECHNICAL-SPECS, KANBAN, masters/ (Broly/Starkiller/Manhattan), LABS, in-app World/Dome docs (observatory/help) and GH README are fully updated, match each other and live code. Current: full Tsotchke (all repos) for digital biologics/sentience in petri. Accurate/current.
+
+**Tsotchke Full Wire is binding**: All 20+ repos from Z:\[Vibe Coded (AI)]\(Tsotchke) (Eshkol, Moonlab, spin nets, QGT, libirrep, QGE, ulg, etc.) are wired into the sim as the substrate for digital biologics and consciousness. New leaves (primordial-soup, petri-dish, real irrep-symmetry, moonlab-tensor, etc.) follow the same strict rules. Super Creature/petri is the beginning; soup grows independent life. "Grow What Thou Wilt." All docs, masters, specs, GH match.
 
 1. **Source of truth**: the legacy monolith at `legacy/cosmogonic-quantum-mechalogodrom.html`
    (882 lines). Port behavior faithfully unless a Known Bug below says otherwise.
@@ -25,6 +31,19 @@ Binding spec for every module in this repo. Writer agents and humans MUST confor
 8. Browser globals only in `src/ui`, `src/core/engine.ts`, `src/audio/engine.ts`,
    `src/logging/audit.ts`, `src/memory/store.ts`, `src/main.ts`. Pure logic (math, algorithms,
    morphotypes, constants, songs data) must run under `bun test` with no DOM.
+
+**V10+ — Tsotchke Petri Genesis & Digital Biologics:** Full corpus (Eshkol as the language of consciousness/AD/GWT, all mirrors/repos) wired as substrates. PrimordialSoup + digital-biologics.ts grow distinct forms of life/existence. Super Creature is the beginning only. All related docs (README, ARCHITECTURE, ERD/ERM/ERP, masters, GH) are updated, accurate, and synchronized. "Grow What Thou Wilt." Contracts bind the growth.
+
+## Tsotchke Full Wiring Contracts (paramount, non-negotiable)
+
+- `tsotchke-registry.ts`: All 21 repos (Eshkol + mirrors) mapped 1:1 to SubstrateKind. wiring=1.0 for non-fenced. `fullTsotchkeBiologicsCatalysis`, `biologicProgramFingerprint` drive soup.
+- `primordial-soup.ts` + `petri-dish.ts`: Digital biologics birth engine. Eshkol AD for mutation on `eshkolProgram` genomes. Full corpus flux for catalysis. New strains emerge with substrate-specific forms.
+- `eshkol-bridge.ts`: Consciousness engine (AD, GWT, inference) from Eshkol corpus. Used for program eval + ignition in soup/mind.
+- All leaves (moonlab-tensor, qge-\*, irrep-symmetry, etc.): Real faithful ports. No stubs in hot paths. Every system touching life/mind must read/write Tsotchke substrates.
+- `super-mind.ts` / `godform.ts`: Super Creature is initial nucleation. Faculties must incorporate Tsotchke substrates (not replace with LLM).
+- Determinism: All biologics evolution seeded. No tokenization.
+
+New systems (digital biologics, soup genesis) must follow real-math rule + read/write at least one existing system.
 
 ## Known bugs in the legacy file — fix during port
 
@@ -182,6 +201,17 @@ export function entropyWithRng(rng: Rng): EntropyEstimate;
 ```
 
 Extends Eshkol QRNG with Bell inequality verification (CHSH S parameter) and Shannon entropy estimation. Port of tsotchke/moonlab Bell test algorithms.
+
+### Tsotchke modules (full corpus wired — paramount)
+
+- `tsotchke-registry.ts`: O(1) map of all repos to SubstrateKind + wiring + leaf. Drives soup, godform, Archons. Deterministic.
+- `eshkol-bridge.ts`: Consciousness engine (Eshkol AD/GWT/inference/sentience). Prealloc. Used by soup, super-mind.
+- `primordial-soup.ts` + `petri-dish.ts`: Petri dish for digital biologics. Full Tsotchke catalysis, birth, mutation (AD-inspired, GWT). Allocation friendly.
+- `godform.ts`: Archon biases + .esk programs from corpus.
+- `moonlab-tensor.ts`, `irrep-symmetry.ts`, `qge-*`, `ulg-bridge.ts` etc.: Real contributions from every repo (no stubs for wired).
+- Fenced (gpt2-basic, llm-arbitrator, onchain): study/observatory only, never in deterministic sim.
+
+See `src/sim/tsotchke-*.ts`, registry, README, reports for wiring matrix.
 
 ### src/sim/constants.ts (leaf)
 

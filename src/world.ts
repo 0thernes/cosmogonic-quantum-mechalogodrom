@@ -649,7 +649,7 @@ export class World {
     }
     const soupSeed = (master ^ 0x50ff0ad1) >>> 0 || 1;
     this.petriRng = mulberry32((master ^ 0x50ff0ad2) >>> 0 || 1);
-    this.primordialSoup = new PrimordialSoup(mulberry32(soupSeed), 0.12, soupSeed ^ 0x50ff0001);
+    this.primordialSoup = new PrimordialSoup(soupSeed);
     // The 5 are "alive" with powers: each has distinct child-seeded SuperMind (cortex+ToT+quantum+Clifford reflex+memory)
     // driving SuperBody (variant=0..4 selects archetype morph/wing/eye count + shader uVariant for color theme/pulse).
     // Per-frame: think(percept) → snapshot → setMind/setConsciousness; bodies update wander from mind act[] + evo.
@@ -1254,13 +1254,8 @@ export class World {
         };
         this.superCreatures[i]!.think(p);
         const mo = this.superMinds[i]!.think(p);
-        this.primordialSoup.catalyze(
-          i,
-          this.superMinds[i]!.eshkolBeat(),
-          pulseForArchon.quakeAliveness ?? 0.5,
-          Math.abs(mpoF),
-          s.frame,
-        );
+        // FULL TSOTCHKE: catalyze via update (Eshkol + all repos soup growth)
+        this.primordialSoup.update(i, s.frame, this.petriRng);
         const dish = this.petriDishes[i];
         if (dish) petriDishBeat(dish, i, s.frame, this.petriRng);
         this.superBodies[i]!.setMind(this.superCreatures[i]!.snapshot());
@@ -1275,9 +1270,11 @@ export class World {
         }
       }
 
-      this.primordialSoup.incubate();
+      // FULL TSOTCHKE growth: incubate/harvest via update + snapshot (all repos in Petri for new biologics)
+      this.primordialSoup.update(0, s.frame, this.petriRng);
       if (s.frame % 120 === 0 && n < target) {
-        const strain = this.primordialSoup.harvestEmergent();
+        const snap = this.primordialSoup.snapshot();
+        const strain = snap.strains && snap.strains[0] ? snap.strains[0] : null;
         if (strain) {
           const theta = (strain.id * 2.3999632297) % 6.28318530718;
           const r = (8 + strain.vitality * 6) * ARENA_MID;

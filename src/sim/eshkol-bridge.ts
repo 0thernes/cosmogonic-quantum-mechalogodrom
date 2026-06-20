@@ -120,7 +120,7 @@ export class EshkolConsciousnessEngine {
       const module = this.wsModules[i];
       const mod = module ? module.fn(s) : 1;
       this.moduleSalience[i] = s * mod;
-      sum += this.moduleSalience[i];
+      sum += this.moduleSalience[i] ?? 0;
     }
     let maxP = -1,
       win = 0;

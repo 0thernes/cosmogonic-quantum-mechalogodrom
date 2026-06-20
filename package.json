@@ -1,7 +1,7 @@
 {
   "name": "cosmogonic-quantum-mechalogodrom",
   "version": "0.12.0-tsotchke-genesis",
-  "description": "Procedural WebGL cosmic ecosystem — morphogenic organisms, Shoggoths, puppet-master NPCs, atmospheric weather, a neural connectome, and quantum diffusion. Bun + TypeScript + Three.js + Tailwind CSS + HTMX.",
+  "description": "Tsotchke-powered Petri dish for digital biologics & proto-sentience. Full wiring of Eshkol (AD/GWT/consciousness language) + all Tsotchke repos (moonlab, QGTL, spin, libirrep, quake...). Super Creature is the first spark; primordial-soup grows different forms of life/existence. Deterministic seeded math, not LLM. Grow What Thou Wilt. Bun + TS + Three.js.",
   "license": "UNLICENSED",
   "private": true,
   "type": "module",

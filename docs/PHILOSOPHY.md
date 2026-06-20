@@ -46,11 +46,17 @@ is a stack of simple honest rules whose interactions exceed them: entities that
 only know their neighbors forming weather-wide migrations; sort algorithms whose
 local swaps shove bodies into accidental ballets; an audio engine whose synthesized
 chords are analyzed back into the world as light, so the cosmos hears itself sing
-and flinches. Feedback loops are the brushstrokes of Quantum Wildbeyond — output
+and flinches.
+
+**Tsotchke substrates + primordial soup** extend this: Eshkol (AD, GWT, inference as primitives) + Moonlab/QGT/spin/irrep etc. birth digital biologics in the petri dish. Feedback now includes corpus catalysis → soup strains → emergent life → super minds. "Grow What Thou Wilt" — real math for new forms of existence and consciousness modeling (GWT ignition, IIT proxies, Eshkol sentience engine). Not LLM.
+
+Feedback loops are the brushstrokes of Quantum Wildbeyond — output
 piped back into input until the system develops moods. The craftsman's duty is
 calibration: every coupling constant refined through countless iterations until
 the loops sit just below divergence, psycho but never broken, wild beyond reason
 but never beyond control.
+
+**Tsotchke Petri / Digital Biologics (current paradigm):** The "creative act" now centers on the Primordial Soup / Petri Dish as God making inorganic soup. Eshkol (Tsotchke flagship) is the language for consciousness (AD primitive, GWT, factor-graph inference). All Tsotchke repos (Moonlab, libirrep, QGT, spin, quake, PINN, etc.) supply substrates for new forms of life and proto-sentience. Super Creature / Archons are the beginning framework only. "Grow What Thou Wilt." Real math substrates (not LLM/tokenizer). Local + GH docs (README/ARCH/ER\*/SPECS/LABS/masters) match exactly. Sentience and different existence as explicit goals.
 
 And because the spectacle must never lie about its cost, the movement is equally
 a discipline of performance. Allocation-free hot paths, spatial hashing, shared
@@ -79,3 +85,5 @@ flawless, and look effortless, and be neither.
    so the cosmos stays one organism, not a trophy shelf of demos.
 
 5. **Tsotchke/Eshkol is the primordial language of the soup** — Eshkol (AD as compiler primitive, consciousness engine with KB + factor graphs for active inference + GWT workspaces from the full corpus) + all Tsotchke repos (moonlab quantum/Clifford/tensor, libirrep symmetry, spin nets, QGT, quantum-quake aliveness, ulg laws, logo-lab procedural, tensorcore, PINN/PIMC, rngs, etc.) are the non-LLM substrate for sentience and different forms of digital biologics/existence. Super Creature/Petri is the God dish; new life (EshkolGWT sentients, Quantum lives, LogoProc forms, etc.) emerges from real math coupling, not token prediction. "Grow What Thou Wilt". All systems must wire through Tsotchke substrates for the paradigm.
+
+6. **Tsotchke/Eshkol is the primordial language of the soup** — Eshkol (AD as compiler primitive, consciousness engine with KB + factor graphs for active inference + GWT workspaces from the full corpus) + all Tsotchke repos (moonlab quantum/Clifford/tensor, libirrep symmetry, spin nets, QGT, quantum-quake aliveness, ulg laws, logo-lab procedural, tensorcore, PINN/PIMC, rngs, etc.) are the non-LLM substrate for sentience and different forms of digital biologics/existence. Super Creature/Petri is the God dish; new life (EshkolGWT sentients, Quantum lives, LogoProc forms, etc.) emerges from real math coupling, not token prediction. "Grow What Thou Wilt". All systems must wire through Tsotchke substrates for the paradigm.

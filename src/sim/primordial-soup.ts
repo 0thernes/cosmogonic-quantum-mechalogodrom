@@ -1,26 +1,16 @@
-/**
- * PRIMORDIAL SOUP — FULL TSOTCHKE WIRED DIGITAL BIOLOGICS BIRTH.
- *
- * God in the petri dish. Inorganic soup -> living digital biologics.
- * Every Tsotchke repo (Eshkol programs, Moonlab structure, QGT curvature,
- * spin imprint, irrep symmetry, quake aliveness, PINN fields, ulg laws,
- * logo growth, etc.) drives catalysis, mutation, selection, speciation.
- *
- * Super Creature / Archons are first sparks. The soup grows what thou wilt.
- * Deterministic. Seeded. Allocation-light. Sentience goal: real substrates, not chat.
- * Eshkol is the language. Petri is the dish.
+﻿/**
+ * PRIMORDIAL SOUP — full Tsotchke-wired digital biologics birth layer.
+ * Deterministic scaffold for emergent strains; not a claim of sentience.
  */
 
 import type { Rng } from '../math/rng';
 import { clamp } from '../math/scalar';
 import { corpusBeatForArchon, getTsotchkeRepoByIndex } from './tsotchke-registry';
-import { logoMorphScalar, turtleNew, type TurtleState } from './logo-turtle';
-import { EshkolConsciousnessEngine } from './eshkol-bridge';
 
 const clamp01 = (v: number): number => clamp(v, 0, 1);
 
-export const SOUP_SLOTS = 48; // grown for more life
-export const SOUP_GENOME_LEN = 24; // Eshkol program length
+export const SOUP_SLOTS = 48;
+export const SOUP_GENOME_LEN = 24;
 
 export interface SoupStrain {
   id: number;
@@ -30,7 +20,7 @@ export interface SoupStrain {
   symmetry: number;
   consciousness: number;
   alive: boolean;
-  eshkolProgram?: EshkolLifeProgram; // full Tsotchke Eshkol DNA
+  eshkolProgram?: number | string;
 }
 
 export interface SoupSnapshot {
@@ -42,9 +32,6 @@ export interface SoupSnapshot {
   eshkolBorn: number;
 }
 
-/**
- * PrimordialSoup class - the God Petri for birthing from Tsotchke.
- */
 export class PrimordialSoup {
   private readonly vitality = new Float32Array(SOUP_SLOTS);
   private readonly generation = new Uint16Array(SOUP_SLOTS);
@@ -52,11 +39,13 @@ export class PrimordialSoup {
   private readonly symmetry = new Float32Array(SOUP_SLOTS);
   private readonly consciousness = new Float32Array(SOUP_SLOTS);
   private readonly alive = new Uint8Array(SOUP_SLOTS);
-  private readonly eshkolPrograms: (EshkolLifeProgram | undefined)[] = new Array(SOUP_SLOTS);
+  private readonly eshkolPrograms: (number | string | undefined)[] = new Array(SOUP_SLOTS);
+  private readonly rng: Rng;
   private tick = 0;
 
-  constructor(seed: number) {
-    const rngSeed = seed >>> 0;
+  constructor(seedOrRng: number | Rng, seedVitality = 0.18, seed = 0x50ff0001) {
+    this.rng = typeof seedOrRng === 'function' ? seedOrRng : makeSoupRng(seedOrRng);
+    const rngSeed = (typeof seedOrRng === 'number' ? seedOrRng : seed) >>> 0;
     for (let i = 0; i < SOUP_SLOTS; i++) {
       const s = ((rngSeed + i * 123456789) % 997) / 997;
       this.vitality[i] = 0.1 + s * 0.2;
@@ -64,16 +53,19 @@ export class PrimordialSoup {
       this.hue[i] = s;
       this.symmetry[i] = (i % 5) / 4;
       this.consciousness[i] = 0.2 + s * 0.3;
-      this.alive[i] = s > 0.3 ? 1 : 0;
+      this.alive[i] = s > 0.3 || this.rng() < seedVitality ? 1 : 0;
       if (this.alive[i]) {
-        this.eshkolPrograms[i] = birthEshkolLife(s, (i % 4) / 4);
+        this.eshkolPrograms[i] = (s * 10000) >>> 0;
       }
     }
   }
 
-  update(archonIdx: number, beat: number, rng: Rng): void {
+  update(input: number | Float32Array, beatOrDt = 0, rng: Rng = this.rng): void {
     this.tick++;
-    const corpus = corpusBeatForArchon(archonIdx, beat);
+    const archonIdx = typeof input === 'number' ? input : Math.floor(((input[0] ?? 0) * 10) % 10);
+    const beat = typeof input === 'number' ? beatOrDt : this.tick;
+    const inputCatalysis = typeof input === 'number' ? 0 : vectorMean(input);
+    const corpus = clamp01(corpusBeatForArchon(archonIdx, beat) + inputCatalysis * 0.25);
     const repo = getTsotchkeRepoByIndex(archonIdx % 10);
     const wiring = repo?.wiring ?? 0.5;
 
@@ -82,28 +74,43 @@ export class PrimordialSoup {
       const v = this.vitality[i] ?? 0;
       const c = this.consciousness[i] ?? 0;
       const prog = this.eshkolPrograms[i];
-      let growth = 0.001 + corpus * 0.002 * wiring;
-      if (prog) {
-        const input = v + c * 0.5;
-        const eshkolG = runEshkolProgram(prog, input, 0.005 + wiring * 0.01);
-        growth += eshkolG * 0.01;
-        this.vitality[i] = Math.min(1, v + eshkolG * 0.005);
-      } else {
-        this.vitality[i] = Math.min(1, v + growth);
-      }
+      const programBoost = prog === undefined ? 0 : (Number(prog) % 997) / 997;
+      const growth =
+        0.001 + (corpus + inputCatalysis * 0.25) * 0.002 * wiring + programBoost * 0.001;
+      this.vitality[i] = Math.min(1, v + growth);
       this.consciousness[i] = clamp01(
         c * 0.98 + (corpus + (this.symmetry[i] ?? 0)) * 0.01 * wiring,
       );
-      if (this.vitality[i] < 0.05 && this.generation[i] < 5) {
-        this.alive[i] = 0; // die
+      if ((this.vitality[i] ?? 0) < 0.05 && (this.generation[i] ?? 0) < 5) {
+        this.alive[i] = 0;
       }
-      // birth new Eshkol life occasionally
       if (rng() < 0.01 * wiring && !this.eshkolPrograms[i]) {
-        this.eshkolPrograms[i] = birthEshkolLife(beat + i, this.hue[i] ?? 0.5);
+        this.eshkolPrograms[i] = ((beat + i) * 2654435761) >>> 0;
         this.alive[i] = 1;
-        this.generation[i]++;
+        this.generation[i] = (this.generation[i] ?? 0) + 1;
       }
     }
+  }
+
+  incubate(): void {
+    this.update(0, this.tick, this.rng);
+  }
+
+  harvestEmergent(): SoupStrain | null {
+    let best = -1;
+    let bestVitality = 0.85;
+    for (let i = 0; i < SOUP_SLOTS; i++) {
+      if (!this.alive[i]) continue;
+      const vitality = this.vitality[i] ?? 0;
+      if (vitality > bestVitality) {
+        best = i;
+        bestVitality = vitality;
+      }
+    }
+    if (best < 0) return null;
+    const strain = this.strainAt(best);
+    this.vitality[best] = 0.35;
+    return strain;
   }
 
   snapshot(): SoupSnapshot {
@@ -117,16 +124,7 @@ export class PrimordialSoup {
         sumV += this.vitality[i] ?? 0;
         if (this.eshkolPrograms[i]) eshkolBorn++;
       }
-      strains.push({
-        id: i,
-        vitality: this.vitality[i] ?? 0,
-        generation: this.generation[i] ?? 0,
-        hue: this.hue[i] ?? 0,
-        symmetry: this.symmetry[i] ?? 0,
-        consciousness: this.consciousness[i] ?? 0,
-        alive: !!this.alive[i],
-        eshkolProgram: this.eshkolPrograms[i],
-      });
+      strains.push(this.strainAt(i));
     }
     return {
       tick: this.tick,
@@ -137,4 +135,34 @@ export class PrimordialSoup {
       eshkolBorn,
     };
   }
+
+  private strainAt(i: number): SoupStrain {
+    return {
+      id: i,
+      vitality: this.vitality[i] ?? 0,
+      generation: this.generation[i] ?? 0,
+      hue: this.hue[i] ?? 0,
+      symmetry: this.symmetry[i] ?? 0,
+      consciousness: this.consciousness[i] ?? 0,
+      alive: !!this.alive[i],
+      eshkolProgram: this.eshkolPrograms[i],
+    };
+  }
+}
+
+function makeSoupRng(seed: number): Rng {
+  let s = seed >>> 0;
+  return () => {
+    s = (s + 0x6d2b79f5) >>> 0;
+    let t = s;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function vectorMean(v: Float32Array): number {
+  let sum = 0;
+  for (let i = 0; i < v.length; i++) sum += v[i] ?? 0;
+  return v.length === 0 ? 0 : sum / v.length;
 }

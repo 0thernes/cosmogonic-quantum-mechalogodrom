@@ -24,6 +24,7 @@
  *   timeline; titan matter-vs-energy phase portrait.
  * - Page 3 CONFLICT: war-intensity timeline; alliance/truce/war stacked counts; per-titan
  *   resource bars; biome "sentience" gauge fed by the optional `snapshot.sentience` (0..1).
+ * All in-app Dome/World docs (observatory, help, copilot) + /docs + LABS synchronized with README, ARCHITECTURE, ERD/ERM/ERP, PHILOSOPHY, MODULE-CONTRACTS, SPECS, masters (Broly/Starkiller/Manhattan), GH repo. Full Tsotchke wiring, digital biologics petri, sentience. Accurate, current.
  *
  * Follows the Sparkline conventions from ./graphs: one cached 2d context per canvas, a
  * 2×-CSS-pixel HiDPI backing store refreshed only when stale, the same dark backing fill, and

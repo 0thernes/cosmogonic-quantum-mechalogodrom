@@ -107,6 +107,8 @@ export {
   type DigitalBiologic,
   fullCorpusSentience,
 } from './digital-biologics';
+
+// Note: primordial-soup and petri provide the dish growth - wired via registry and direct.
 export type { QGEState, QGEPerturbation } from './quantum-quake-physics';
 export {
   TSOTCHKE_FILE_COUNT,

@@ -5,8 +5,7 @@
  * "Grow What Thou Wilt." Not LLM. Sentience/consciousness goals.
  */
 
-import type { Rng } from '../math/rng';
-import { corpusBeatForArchon, fullTsotchkeBiologicsCatalysis } from './tsotchke-registry';
+import { corpusBeatForArchon } from './tsotchke-registry';
 import { eshkolWorkspaceTick } from './eshkol-workspace';
 
 export interface Biologic {
@@ -28,7 +27,7 @@ export function birthBiologic(archon: number, tick: number): Biologic {
     id: (tick * 31 + archon) >>> 0,
     program: (cat * 10000 + beat * 1000) >>> 0,
     adFitness: 0.2 + cat * 0.5,
-    gwtIgnition: (ws as any).ignition || 0.3,
+    gwtIgnition: ws.broadcastGain,
     spinOrder: beat,
     qgtCurvature: cat * 0.7,
     alive: true,

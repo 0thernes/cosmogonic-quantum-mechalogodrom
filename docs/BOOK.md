@@ -31,12 +31,13 @@ every commit, contracts over vibes. See [CLAUDE.md](../CLAUDE.md) and the three 
 
 ## 1. Orientation — what is this?
 
-| Doc                                                        | What you'll learn                                                                                |
-| ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
-| [README.md](../README.md)                                  | The pitch + top-level overview.                                                                  |
-| [PHILOSOPHY.md](./PHILOSOPHY.md)                           | The aesthetic constitution: real math under every effect; every system reads AND writes another. |
-| [CONTROLS.md](./CONTROLS.md)                               | Every key, button, and gesture.                                                                  |
-| [TECHNICAL-SPECIFICATION.md](./TECHNICAL-SPECIFICATION.md) | The full technical spec sheet (also at `/spec`).                                                 |
+| Doc                                                         | What you'll learn                                                                                                                                        |
+| ----------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [README.md](../README.md)                                   | The pitch + top-level overview. **Tsotchke fully wired for digital biologics (Eshkol consciousness language, petri soup growth, sentience substrates).** |
+| [PHILOSOPHY.md](./PHILOSOPHY.md)                            | The aesthetic constitution: real math under every effect; every system reads AND writes another. **+ Tsotchke biologics paradigm.**                      |
+| [CONTROLS.md](./CONTROLS.md)                                | Every key, button, and gesture.                                                                                                                          |
+| [TECHNICAL-SPECIFICATION.md](./TECHNICAL-SPECIFICATION.md)  | The full technical spec sheet (also at `/spec`). **Updated with Tsotchke corpus, soup, sentience metrics.**                                              |
+| [reports/2026-06-20-\*.md](./reports/) + TSOTCHKE-\* audits | Full Tsotchke integration receipts, blueprint, paradigm audit.                                                                                           |
 
 ## 2. Architecture & code
 
