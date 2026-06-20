@@ -590,11 +590,15 @@ export class SuperBodySystem {
     // Wire QGE aliveness proxy for enhanced aliveness metric
     const qgeAlive = qgeAlivenessProxy(this.quakeFactor, this.arousal, 1);
     // Wire Moonlab tensor contract for morph feature coupling
-    const tensorPulse = moonlabTensorContract([maskEye, maskMouth, maskLeg], [this.surprise, this.arousal, this.dominance], 3);
+    const tensorPulse = moonlabTensorContract(
+      [maskEye, maskMouth, maskLeg],
+      [this.surprise, this.arousal, this.dominance],
+      3,
+    );
     // Wire QEC decoding proxy for stability metric
     const qecStability = qecDecodingProxy(Math.floor(this.surprise * 10), 5);
     // Apply new math to morph masks
-    const qgeMod = (qgeAlive * 0.2 + tensorPulse * 0.1 + qecStability * 0.1);
+    const qgeMod = qgeAlive * 0.2 + tensorPulse * 0.1 + qecStability * 0.1;
     // Ralph continue 10x: gwtBroadcast for more GWT in morph masks
     const gwtM = gwtBroadcast([maskEye, maskMouth, maskLeg], [0.5, 0.6, 0.4]);
     // Ralph re-audit 10x continue: use libirrepSymmetry + quakeQgeFactor (Tsotchke libirrep + quake) + wigner for more morph distinctness in body
@@ -605,8 +609,7 @@ export class SuperBodySystem {
       maskWing * (0.9 + ((sym + 1) % 3) * 0.05 + qgeMod * 0.5) + (gwtM[2] || 0) * 0.5,
     );
     const qge = quakeQgeFactor(this.quakeFactor, 0.25);
-    const qkMod =
-      1 + this.quakeFactor * 0.3 + qge * 0.1 + (ulgMix - 0.5) * 0.2 + qgeMod; // QGE/tensor/QEC corpus mix
+    const qkMod = 1 + this.quakeFactor * 0.3 + qge * 0.1 + (ulgMix - 0.5) * 0.2 + qgeMod; // QGE/tensor/QEC corpus mix
     const finalEffArm = Math.floor(effMaskArm * qkMod);
     const finalEffLeg = Math.floor(maskLeg * (0.85 + (sym % 4) * 0.05) * qkMod);
     const qp = quakePerturb(this.quakeFactor, this.seed || 1); // actual call, Ralph 10x live wire from quantum-quake corpus

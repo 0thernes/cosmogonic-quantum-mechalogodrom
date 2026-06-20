@@ -14,7 +14,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Clifford tableau live in `super-mind.ts` reflex path; Eshkol consciousness engine on every `think()` beat.
 - Gate: **1,293 tests · 94.90 % line / 91.42 % function** (measured `bun run check`).
 
-
 - Full local corpus Z:\[Vibe Coded (AI)]\(Tsotchke) (~13k files, 20 repos incl. Eshkol flagship with .esk/AD/arena/HoTT/consciousness, Moonlab tensor/MPO/Clifford/QRNG, libirrep, QGT, ulg, quantum-quake) studied via FS/grep/read (every relevant line in key C/.esk/docs).
 - Strict audit created: docs/TSOTCHKE-CORPUS-RALPH-WIRING-AUDIT-2026-06-19.md (study, current state, wiring everywhere plan + this pass progress, honesty, contracts compliance).
 - Receipts/KANBAN updated with full corpus.
