@@ -50,6 +50,7 @@ Every magic number survived the port. All local and GitHub docs/readme match. Ac
 
 - **Digital Biologics & Petri Genesis:** 64+ slots in PrimordialSoup, 9+ BiologicForms keyed to Tsotchke repos, catalysis from Eshkol ignition + full corpus beat, replication with kind mutation, genesis leaps for higher-order life. Harvested into the world as emergent strains with distinct dynamics.
 - **Eshkol Substrate:** Native automatic differentiation, GWT broadcast/ignition, factor-graph inference as first-class. Programs and consciousness snapshots drive petri birth and super-mind faculties.
+- **Builds with the local Tsotchke Repo Folder:** `bun dev` (and harvest script) scans the real local corpus at `Z:\[Vibe Coded (AI)]\(Tsotchke)` (1436+ .esk programs in latest harvest) and emits authentic Eshkol DNA fingerprints used by primordial-soup for heritable digital biologics. `generated-tsotchke-seeds.ts` + SoupSnapshot.tsotchkeEskHarvested make the folder part of the live build/runtime.
 - **Full Corpus Wiring:** Every Tsotchke mirror (moonlab, QGTL, spin, libirrep, quake, PINN, PIMC, ulg, logo, tensorcore...) actively participates via registries, facades, bridges, and the soup. No repo left behind.
 - **26 behavioral fields** driving up to 50,000 organisms: classic motion
   (drift, orbit, swarm, vortex, helix...), neighbor dynamics via a spatial
