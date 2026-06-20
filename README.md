@@ -6,7 +6,7 @@
 [![Bun](https://img.shields.io/badge/Bun-1.3-black?logo=bun&logoColor=white)](https://bun.sh)
 [![TypeScript strict](https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript&logoColor=white)](./tsconfig.json)
 [![tests](https://img.shields.io/badge/tests-1544%20passing-brightgreen)](./tests)
-[![coverage](https://img.shields.io/badge/coverage-94.76%25%20line%20%C2%B7%2091.67%25%20func-success)](./docs/TECHNICAL-SPECIFICATION.md)
+[![coverage](https://img.shields.io/badge/coverage-94.64%25%20line%20%C2%B7%2091.50%25%20func-success)](./docs/TECHNICAL-SPECIFICATION.md)
 [![audit](https://img.shields.io/badge/inspection-500%20points-success)](./docs/500-POINT-INSPECTION.md)
 [![Tsotchke](https://img.shields.io/badge/Tsotchke-FULLY_WIRED-purple)](https://github.com/tsotchke)
 
@@ -408,7 +408,7 @@ full gate with same-seed determinism preserved. The major arcs:
   Aaronsonâ€“Gottesman **Clifford stabilizer tableau** ([src/math/clifford-tableau.ts](./src/math/clifford-tableau.ts),
   ported from **Moonlab**, scales to 32+ qubits past the dense ceiling) landed as the fourth MIT-credited
   ported primitive. The whole apex beat â€” all ~20 faculties â€” is benchmarked at **â‰ˆ 298 Âµs (~1.8 % of a
-  60 fps frame)** and CI-gated. **1544 tests green · 0 fail (receipts enforced) · 94.76 % line / 91.67 % function coverage (measured; CI gate ≥ 90 % line / ≥ 85 % function).**
+  60 fps frame)** and CI-gated. **1544 tests green · 0 fail (receipts enforced) · 94.64 % line / 91.50 % function coverage (measured; CI gate ≥ 90 % line / ≥ 85 % function).**
 - **State-of-the-art reports (2026-06-17)** â€” two MIT-PhD-grade, measured, frontier-benchmarked assessments:
   **[Report I â€” The Whole Repository](./docs/reports/2026-06-17-STATE-OF-THE-ART-WHOLE-REPO.md)** and
   **[Report II â€” The Super Creature](./docs/reports/2026-06-17-STATE-OF-THE-ART-SUPER-CREATURE.md)** â€”
