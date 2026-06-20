@@ -35,7 +35,7 @@ export type BiologicFormKind = (typeof BIOLOGIC_FORMS)[number];
 export interface Biologic {
   id: number;
   form: BiologicFormKind; // Substrate-determined form
-  program: number; // .esk-like fingerprint
+  program: number | string; // .esk program name (from real local Tsotchke harvest) or fingerprint
   adFitness: number; // from Eshkol gradient
   gwtIgnition: number; // workspace broadcast
   spinOrder: number;
@@ -69,17 +69,19 @@ export function birthBiologic(archon: number, tick: number): Biologic {
   const substrateBias = formIdx / BIOLOGIC_FORMS.length;
 
   // Use real harvested .esk from local Tsotchke folder when Eshkol native
-  const realProgram =
-    form === 'ESHKOL_NATIVE'
-      ? ESK_SAMPLE_PROGRAMS.length > 0
-        ? ESK_SAMPLE_PROGRAMS[formIdx % ESK_SAMPLE_PROGRAMS.length]
-        : getEshkolProgramFingerprint(formIdx)
+  const realProgram: number | string =
+    form === 'ESHKOL_NATIVE' && ESK_SAMPLE_PROGRAMS.length > 0
+      ? (ESK_SAMPLE_PROGRAMS[formIdx % ESK_SAMPLE_PROGRAMS.length] ??
+        getEshkolProgramFingerprint(formIdx))
       : (cat * 10000 + beat * 1000) >>> 0;
 
   return {
     id: (tick * 31 + archon) >>> 0,
     form,
-    program: realProgram,
+    program:
+      typeof realProgram === 'number'
+        ? realProgram
+        : Number(realProgram) || (cat * 10000 + beat * 1000) >>> 0,
     adFitness: 0.2 + cat * 0.5 * (form === 'ESHKOL_NATIVE' ? 1.2 : 0.8),
     gwtIgnition:
       ws.broadcastGain * (form === 'ESHKOL_NATIVE' || form === 'HYPER_SENTIENT' ? 1.1 : 0.9),
