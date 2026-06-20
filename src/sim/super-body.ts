@@ -43,8 +43,8 @@ import {
   ulgHandoff,
   gwtBroadcast,
 } from './tsotchke-facade'; // Ralph continue 10x: + gwtBroadcast for more Eshkol GWT in body
-import { qgeAlivenessProxy, qgePerturb, type QGEState } from './quantum-quake-physics';
-import { tensorContract } from './moonlab-tensor';
+import { qgeAlivenessProxy, type QGEState } from './quantum-quake-physics';
+import { moonlabTensorContract } from './moonlab-tensor';
 import { qecDecodingProxy } from './libirrep-qec';
 void libirrepSymmetry; // ensure for 10x wiring
 
