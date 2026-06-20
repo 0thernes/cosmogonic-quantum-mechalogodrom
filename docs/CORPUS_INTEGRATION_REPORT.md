@@ -145,8 +145,8 @@ Updated `docs/TSOTCHKE-CORPUS-INTEGRATION-PLAN.md` with completion status for Wa
 
 **Test Coverage:**
 
-- Line coverage: 94.46% (synced to canonical with Tsotchke full wire)
-- Function coverage: 91.37%
+- Line coverage: 94.89% (synced to canonical with Tsotchke full wire)
+- Function coverage: 91.77%
 - Test count: 1293
 
 ## Determinism & Allocation Compliance
@@ -216,3 +216,4 @@ All work follows the binding rules (MODULE-CONTRACTS + PHILOSOPHY), passes the f
 
 **Report Generated:** 2026-06-20
 **Next Steps:** Waves 5-8 (optional web integration, native performance, additional tests, final documentation)
+

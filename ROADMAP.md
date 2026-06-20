@@ -20,7 +20,7 @@ deliberate limitation, and promoting one to âœ… is a roadmap item.
 
 ## Now (in progress)
 
-- Keep the full gate green at every commit (`bun run check`): 1442 tests, ~1.74M assertions, 94.59% line / 91.47% func coverage. Tsotchke fully wired, digital biologics growing in the soup.
+- Keep the full gate green at every commit (`bun run check`): 1447 tests, ~1.74M assertions, 94.89% line / 91.77% func coverage. Tsotchke fully wired, digital biologics growing in the soup.
 - Maintain the 500-point inspection as the pre-release bar; re-walk WARNs each tag.
 - Documentation completeness sweep â€” README, architecture, ERD/ERM/ERP, Kanban, roadmap all cross-linked.
 
@@ -61,3 +61,4 @@ matrix Â§2.40, and a release SBOM Â§21.420.)
 
 Anything here can be filed as a [feature request](./.github/ISSUE_TEMPLATE/feature_request.yml); the
 Kanban board is where accepted items get scoped and pulled into flight.
+
