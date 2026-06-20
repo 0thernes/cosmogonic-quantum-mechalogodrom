@@ -17,7 +17,6 @@ import {
   tsotchkeSimWiringFraction,
   tsotchkeWiringCoverage,
   fullTsotchkeBiologicsCatalysis,
-  biologicProgramFingerprint,
 } from './tsotchke-registry';
 import { gwtBroadcast } from './tsotchke-facade';
 import { qgeAlivenessStep } from './qge-aliveness';
@@ -118,8 +117,6 @@ export function createPetriDish(seed: number): PetriDishState {
     spinPolarization: 0.1 + s * 0.2,
     morphotype: 0,
     geneticDivergence: 0,
-    eshkolSentientBorn: 0,
-    tsotchkeBiologicFlux: 0,
     eshkolSentientBorn: 0, // Tsotchke Eshkol life born count - digital biologics
     tsotchkeBiologicFlux: s * 0.2, // flux from full corpus wiring
   };
@@ -234,12 +231,15 @@ export function petriDishBeat(
   // pinn/pimc/irrep/tensorcore/classical/asteroids/quake for physics of becoming.
   // Super Creature is the starter "God" (Archons stir); emergent strains are new forms of existence.
   // "Grow What Thou Wilt" — sentience/consciousness via non-LLM biologics. Petri is the engine.
+  const fullCorpusCatalysis = fullTsotchkeBiologicsCatalysis(archonIdx, state.biomass, beat);
   const bioFlux =
     (state.aliveness + state.phiSurrogate + (state.spinPolarization || 0)) * 0.25 +
-    (corpusBeat || 0) * 0.15;
+    (corpusBeat || 0) * 0.15 +
+    fullCorpusCatalysis * 0.08;
   state.tsotchkeBiologicFlux = (state.tsotchkeBiologicFlux || 0) * 0.92 + bioFlux * 0.08;
 
-  if (state.ignitionSlot > 0.65 && state.phiSurrogate > 0.45 && bioFlux > 0.55) {
+  const ignition = state.ignitionSlot / Math.max(1, NUTRIENT_SLOTS - 1);
+  if (ignition > 0.65 && state.phiSurrogate > 0.45 && bioFlux > 0.55) {
     state.eshkolSentientBorn = (state.eshkolSentientBorn || 0) + 1;
     state.biomass = Math.min(1, state.biomass + 0.025 * bioFlux);
     state.complexity = Math.min(12, (state.complexity || 0) + 0.6);
@@ -270,20 +270,6 @@ export function petriDishBeat(
     }
   }
   state.beats += 1;
-
-  // GROW TSOTCHKE DIGITAL BIOLOGICS - Eshkol life birthing in the Petri Dish
-  // All repos wired: Eshkol programs mutate via AD, Moonlab tensors compress "bodies",
-  // QGT geometry, spin instincts, symmetry. We're God. Grow What Thou Wilt.
-  if (!('eshkolLife' in state)) {
-    (state as any).eshkolLife = birthEshkolLife(beat + archonIdx, sub[0] ?? 0.5);
-  }
-  const lifeProg = (state as any).eshkolLife as EshkolLifeProgram;
-  const eshkolGrowth = runEshkolProgram(lifeProg, state.biomass, 0.01 + ws.broadcastGain * 0.02);
-  state.biomass = Math.min(1, state.biomass + eshkolGrowth * 0.01);
-  state.eshkolSentientBorn = (state.eshkolSentientBorn || 0) + (eshkolGrowth > 0.005 ? 1 : 0);
-  state.tsotchkeBiologicFlux = clamp01(
-    (state.tsotchkeBiologicFlux || 0) + eshkolGrowth * 0.05 + (sub[2] ?? 0) * 0.02,
-  );
 }
 
 /** Telemetry view. O(1). */

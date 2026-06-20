@@ -216,7 +216,7 @@ export class World {
   private readonly superBodies: SuperBodySystem[] = [];
   // GOAL5: per-archon small creature snapshots (for body.setMind) + the 5 deep minds/bodies.
   private readonly superCreatures: SuperCreature[] = [];
-  /** Primordial petri dishes — one per Archon; digital biologic soup (Tsotchke corpus). */
+  /** Primordial petri dishes — one per Archon; digital biologic soup (FULL Tsotchke wired: ALL repos eshkol(EshkolGWT souls with real AD/KB/fg/GWT programs as genomes), moonlab(quantum lives), libirrep(sym bodies), spin(mem), QGT(geo), quake(aliveness), ulg(laws), logo(proc morphs), tensorcore, PINN/PIMC(physics), rngs, asteroids, classical/homebrew baselines + org). Super Creature/5 Archons the God catalysts in the Petri Dish. Different forms of life/existence born here (EshkolNative sentients, QuantumBiologics, LogoProc, QuakeForms etc). Not LLM. Grow What Thou Wilt. Tsotchke is the language. */
   private readonly petriDishes: PetriDishState[] = [];
   private petriRng!: Rng;
   private readonly superPanel: SuperPanel;
