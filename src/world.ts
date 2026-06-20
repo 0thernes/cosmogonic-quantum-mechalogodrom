@@ -106,6 +106,9 @@ import {
   PrimordialSoup,
 } from './sim/tsotchke-facade'; // Ralph continue 10x: + libirrepSymmetry for more irrep in world
 import { qgeWorldPerturb } from './sim/qge-aliveness';
+import { qgeAlivenessProxy } from './sim/quantum-quake-physics';
+import { moonlabTensorContract } from './sim/moonlab-tensor';
+import { qecDecodingProxy } from './sim/libirrep-qec';
 import { WingmanSwarm, WINGMAN_COUNT } from './sim/super-wingmen';
 import { WingmanRenderer } from './sim/super-wingmen-render';
 import { SuperEvolution } from './sim/super-evolution';
@@ -1172,10 +1175,22 @@ export class World {
         const mpoF = moonlabMpoStep(new Float32Array([pulseForArchon.quakeAliveness, localD]), 2);
         // Ralph continue 10x: quakeQgeFactor for more quantum-quake aliveness in world step percepts
         const qgeF = quakeQgeFactor(pulseForArchon.quakeAliveness, 0.15);
+        // Wire QGE aliveness proxy for enhanced chaos modulation
+        const qgeAlive = qgeAlivenessProxy(pulseForArchon.quakeAliveness ?? 0.5, localD, 1);
+        // Wire Moonlab tensor contract for percept coupling
+        const tensorPulse = moonlabTensorContract(
+          [basePercept.chaos, basePercept.crowding, basePercept.threat ?? 0],
+          [localD, this.state.chaos ?? 0, this.state.entropy ?? 0],
+          3,
+        );
+        // Wire QEC decoding proxy for stability in interactions
+        const qecStability = qecDecodingProxy(Math.floor(basePercept.chaos * 10), 5);
+        // Apply new math to chaos
+        const qgeMod = qgeAlive * 0.15 + tensorPulse * 0.1 + qecStability * 0.05;
         const p: SuperPercept = {
           ...basePercept,
           chaos: c01(
-            (basePercept.chaos + (bias.chaos - 0.5) * 0.12) *
+            (basePercept.chaos + (bias.chaos - 0.5) * 0.12 + qgeMod) *
               quakePerturb(pulseForArchon.quakeAliveness ?? 0.5, i + 9, 0.1) *
               qgeWorldPerturb(pulseForArchon.quakeAliveness ?? 0.5, i + 9),
           ), // godform bias + quake + QGE aliveness (Tsotchke quantum-quake / PINN / PIMC)
