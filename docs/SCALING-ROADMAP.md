@@ -43,14 +43,14 @@ shippable, gate-green, pushed increment that builds on the last.
 - Deterministic work partitioning (seeded, stable chunking) so the one-seed property holds.
 - **Payoff:** 50k goes from crash-proof-but-sluggish → smooth; headroom toward 100k. The first true scaling lever.
 
-## Stage 4 — Simulation LOD / tiered AI (effort: L) ⚠️ DECISION REQUIRED
+## Stage 4 — Simulation LOD / tiered AI (effort: L) ✅ DECIDED: Hybrid (Option C)
 
 - Near-camera creatures get full brains; mid-distance get cheap updates; far away gets **aggregate/herd simulation** ("don't simulate what you can't see in detail").
-- **THE DETERMINISM FORK** (decide before building): sim-LOD tied to a free camera breaks one-seed reproducibility.
+- **THE DETERMINISM FORK — DECIDED 2026-06-20 by the owner: Option C (Hybrid).**
   - **Option A — Full determinism:** simulate everything, cap depth. Keeps bit-exact replay; scales less.
   - **Option B — Deterministic core + best-effort periphery:** the studied region is deterministic; the far world is decorative. Scales massively; loses pure replay.
-  - **Option C — Hybrid:** a deterministic "preserve" zone + a streamed wilderness.
-- **Payoff:** "100× creatures as a living spectacle."
+  - **Option C — Hybrid (CHOSEN):** a deterministic "preserve" core zone — bit-exact, replayable, the receipts/science superpower stays intact — surrounded by a streamed best-effort "wilderness" that scales to 100×. Determinism is the project's identity, so it is kept where it matters; raw scale lives in the periphery. Stages 4–5 are built to this contract: the core sim is seed-reproducible; the wilderness is camera-streamed LOD and explicitly NOT part of the determinism golden.
+- **Payoff:** "100× creatures as a living spectacle" without surrendering the deterministic, receipted core.
 
 ## Stage 5 — WebGPU compute (effort: XL — the ceiling-raiser)
 
