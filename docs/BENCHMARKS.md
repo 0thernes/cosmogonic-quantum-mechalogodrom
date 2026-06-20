@@ -219,6 +219,49 @@ to a 20-plus-faculty stack (the SC 1.1 cognition layer + the Eshkol/Moonlab/QGTL
 geometry/magic is correctly gated to UI cadence. The 20-plus-faculty stack is **operationally sound** — the
 growth that drove the 1.1 expansion has not threatened the frame budget.
 
+## GOAL5: 5 Super Minds (Archons / Godforms) frame budget (2026-06-19, Dr Manhattan measurement)
+
+Bun 1.3.11 x64-win32, Intel Core Ultra 9 275HX. Per GOAL5 contract + DrM law: combined new per-frame work for exactly 5 minds <2% of 60 fps frame; determinism (distinct child seeds derived master ^ (i \* 0x9e3779b1) like world.ts) produces identical minds; provenance via Eshkol/Moonlab/QGT ports measured for fidelity.
+
+`bench/super-mind.bench.ts` now includes GOAL5 batch (new path exercised by driveSuper every 4 frames):
+
+- Single `SuperMind.think()`: 266 µs/iter (178–1220 µs) — 1.6% lone.
+- GOAL5 5× think() batch (5 distinct seeded minds, one think each): 1.25 ms/iter.
+- Amortized (5 batch / 4 frames): 312.5 µs/frame → **1.875% of 16.67 ms frame** ✅ <2% contract gate.
+- Snapshot (UI only): 1.29 ms — still gated, not per-sim-frame.
+
+Bodies: per-frame O(1) updates (prebuilt geo, uniform drives) add negligible (<0.1% measured indirect).
+
+**Determinism receipt:** same master seed → bit-identical outputs for corresponding minds (verified via super-mind.test + eshkol identical stream + clifford tableau same-seed circuits; full world golden 300f unchanged for non-super paths; 5 use sub-streams only).
+
+**Eshkol/Moonlab/QGT fidelity (research receipts + live):** EshkolQrng uses seeded Rng surrogate for host entropy (upstream exact otherwise; tests confirm identical bitstream from seed, NaN-free); Clifford 32q+ (Moonlab port) passes GHZ correlation + 40q scale + same-seed bit-identical; QGT exactly matches upstream formula (⟨∂ψ|∂ψ⟩ − ...), Fubini-Study volume/Berry in snapshot, finite, used at UI cadence. See THIRD-PARTY, AI-SUBSYSTEM, GOAL5-RESEARCH-RECEIPTS.
+
+No NaN in 5-mind runs (nan-stability + super-mind long run asserts).
+
+**Coverage receipts (focused):** super-mind.ts 90.9% lines / 99% funcs; eshkol 100%; clifford 100%; super-creature 100%; sub-faculties exercised (quantum-delib 90%, spin 91% etc.). Full `bun test --coverage` gates in CI.
+
+Reproduce: `bun run bench/super-mind.bench.ts`; `bun test tests/determinism*.test.ts tests/nan-stability.test.ts tests/super-*.test.ts tests/*qrng* tests/clifford*`.
+
+Frame provenance: every mind draw from its own mulberry32 child (master ^ offset); no shared mutation; all math via Rng.
+
+## Eshkol AD (Wengert tape) — automatic differentiation (2026-06-20)
+
+Bun 1.3.11 x64-win32, Intel Core Ultra 9 275HX (~3.45 GHz). Port of tsotchke/Eshkol `lib/backend/vm_autodiff.c` — reverse-mode automatic differentiation with nested gradients.
+
+| Benchmark                                     | avg/iter | Notes                               |
+| --------------------------------------------- | -------- | ----------------------------------- |
+| `adTapeNew(100)`                              | 1.79 µs  | tape allocation (100-node capacity) |
+| `adConst + adVar creation`                    | 220 ns   | two node pushes                     |
+| `adAdd` (tape node creation)                  | 254 ns   | binary addition node                |
+| `adMul` (tape node creation)                  | 235 ns   | binary multiplication node          |
+| `adSin` (tape node creation)                  | 227 ns   | unary sine node                     |
+| `adBackward` (gradient propagation, 10 nodes) | 308 ns   | reverse-mode gradient accumulation  |
+| Complex expression `sin(x*y) + x` (gradient)  | 604 ns   | 5-node tape + backward pass         |
+
+**Finding:** Eshkol AD operations are sub-microsecond per node; even complex expressions with gradient backpropagation stay under 1 µs. The Wengert tape is allocation-friendly (pre-allocated node pool) and deterministic — no stochastic elements. At the GOAL5 cadence (5 minds every 4 frames), the per-mind AD cost is negligible against the 1.875% frame budget.
+
+Reproduce: `bun bench/eshkol-ad.bench.ts`.
+
 ## Interpretation
 
 The entire deterministic core (grid rebuild + a frame's worth of neighbor

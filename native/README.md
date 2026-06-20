@@ -63,3 +63,12 @@ linked).
 | `F`           | maximise · `ESC` quit                         |
 
 BMP output converts to PNG with `bun ../scripts/bmp2png.ts in.bmp out.png`.
+
+## C++ / TS Boundary (adversarial audit note)
+
+Native C++ (CMake + GLFW/GLM + optional Jolt + handrolled GL) is a **sibling reliquary only**:
+
+- Ray-marched SDF gallery for the 5+ specimen archetypes (no shared runtime state with browser sim).
+- Offscreen `--shot` 4K capture + interactive orbit beyond browser caps.
+- Optional physics (Jolt) for plate settling demo.
+  The authoritative 5-Archon simulation (godform biases, SuperMind think, SuperBody update, quantum/Clifford/HOT/narrative, world drive loop, determinism via Rng) lives exclusively in `src/`. All hot paths enforce preallocated scratch, shared buffers, typed arrays, documented cadences — no per-frame `new`/`push`/`slice` in steady sim (snapshots for UI telemetry are the documented exception on slower cadence). C++ boundary is one-way viz export; no native engine drives creature minds or GOAL5 pantheon. See docs/adr/0007, MODULE-CONTRACTS, PHILOSOPHY (allocation-free hot, provenance).

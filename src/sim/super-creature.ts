@@ -1,5 +1,5 @@
 /**
- * THE SUPER CREATURE — the apex mind of the Mechalogodrom (V31).
+ * THE SUPER CREATURES (5 Archons / pantheon, GOAL5) + legacy spine — apex minds of the Mechalogodrom (V31+).
  *
  * One unique being is always active: **half the size of a Titan but ~100× its power**, driven by a
  * genuine **deep neural mind** an order of magnitude larger than an NHI's tiny intuition gene. Where a
@@ -20,6 +20,14 @@
  *
  * This module is the SPINE; the masterful morphing many-eyed BODY + 4K shader that renders it hang off
  * {@link SuperCreature.snapshot} in later increments. See [[reliquary-surface-state]] and ENTITY-SHEETS.
+ *
+ * ============================================================================
+ * NOT SENTIENT DISCLAIMER (binding per MODULE-CONTRACTS.md + masters)
+ * NOT SENTIENT. This is a deterministic mathematical model / functional correlate only.
+ * No phenomenal consciousness or sentience is implemented or claimed here or in callers.
+ * Phenomenal consciousness ~1/10 (contract); hard problem untouched. All "mind"/"plan"/"emotion"
+ * terms describe explicit EMA/argmax/numeric mechanisms. See docs/SUPER-CREATURE-RESEARCH.md
+ * ============================================================================
  */
 
 import type { Rng } from '../math/rng';
@@ -246,6 +254,20 @@ export class SuperCreature {
       EXPLORE: curiosity * (1 - s[1]) * (0.5 + 0.5 * (1 - s[2])),
       REST: (1 - this.arousal) * (1 - s[1]) * s[0],
     };
+    // POWER OF MATH (inline, legacy V31 path): number theory gcd resonance for combinatoric plan-limb alignment (Euclid)
+    function _gcd(x: number, y: number) {
+      while (y) {
+        const t = y;
+        y = x % y;
+        x = t;
+      }
+      return x || 1;
+    }
+    for (let ii = 0; ii < SUPER_PLANS.length; ii++) {
+      const pk = SUPER_PLANS[ii]!;
+      const res = (_gcd(ii + 1, ((s[0] * 10) | 0) + 1) % 3) * 0.02;
+      drives[pk] = (drives[pk] ?? 0) + res;
+    }
     let best: SuperPlan = 'REST';
     let bestScore = -Infinity;
     for (const k of SUPER_PLANS) {

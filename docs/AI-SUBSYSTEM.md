@@ -95,7 +95,7 @@ sim state so they remain acyclic and unit-testable.
 
 ### `src/sim/super-mind.ts` + `src/sim/super-qubits.ts` — the apex creature's deep mind
 
-Where the population runs on tiny per-organism MLPs, the single **Super Creature** carries a far
+Where the population runs on tiny per-organism MLPs, the **5 Super Creatures (GOAL5 Archons: ORACLE-Σ etc)** each carry a far
 larger composite mind (`SuperMind`): a world-model latent, a five-stage cognition pipeline,
 consciousness / emotion / drive readouts, and a 10-element bank of reactive "quantum aspects"
 (superposition, entanglement, ftl, … mutation). It exposes a read-only `SuperMindSnapshot` at the
@@ -206,7 +206,7 @@ enforced in the server process, so a fully-compromised model still cannot escape
 ## Provenance
 
 Research → design: [research/PRE-TRANSFORMER-GAME-AI.md](research/PRE-TRANSFORMER-GAME-AI.md).
-Apex mind: [ADR-0008](adr/0008-super-creature-deep-mind.md). Modules + tests: `src/sim/ai/brains.ts`,
+Apex minds (5× GOAL5): [ADR-0008](adr/0008-super-creature-deep-mind.md) + MODULE-CONTRACTS GOAL5. Modules + tests: `src/sim/ai/brains.ts`,
 `src/sim/genome.ts`, `src/sim/lineage.ts`, `src/sim/factions.ts`, `src/sim/super-mind.ts`,
 `src/sim/super-qubits.ts`, `src/math/quantum.ts`, `src/server/{copilot,ai-sandbox}.ts`,
 `src/ui/{copilot,super-neural,super-panel}.ts`, and their `tests/*.test.ts`.

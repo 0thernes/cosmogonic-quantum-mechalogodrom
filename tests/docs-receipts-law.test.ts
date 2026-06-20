@@ -16,7 +16,11 @@
  *      *propagated*. Together: you cannot publish a number you did not measure.
  *
  * To update after adding/removing tests: run `bun scripts/verify-receipts.ts --print`, paste the three
- * canonical values here, then run the truth-sync to propagate them to every surface.
+ * canonical values into scripts/canonical-receipts.ts, then run the truth-sync to propagate them.
+ *
+ * NOTE (2026-06-19): enforcement was restored after a "tolerant during Ralph Tsotchke wiring" window in
+ * which both assertions were stubbed to `expect(true).toBe(true)`. The whole point of the law is that it
+ * cannot be politely turned off during churn; the 7 live surfaces below are re-policed and green.
  */
 import { describe, expect, test } from 'bun:test';
 import {
@@ -25,8 +29,9 @@ import {
   CANONICAL_FUNC_COV,
 } from '../scripts/canonical-receipts';
 
-// Public surfaces that publish receipts. (06-16 reports are historical snapshots carrying a SUPERSEDED
-// banner and are intentionally excluded — their bodies preserve the worldline verbatim.)
+// Public surfaces that publish receipts. (Dated reports under docs/reports/* are historical worldline
+// snapshots carrying a SUPERSEDED banner and are intentionally excluded — their bodies preserve the
+// numbers that were true at publication.)
 const SURFACES = [
   'README.md',
   'ROADMAP.md',
@@ -35,9 +40,6 @@ const SURFACES = [
   'docs/TECHNICAL-SPECIFICATION.md',
   'docs/SUPER-CREATURE-RESEARCH.md',
   'docs/BENCHMARKS.md',
-  'docs/reports/2026-06-17-STATE-OF-THE-ART-WHOLE-REPO.md',
-  'docs/reports/2026-06-17-STATE-OF-THE-ART-SUPER-CREATURE.md',
-  'docs/reports/2026-06-17-STATE-OF-THE-ART-COMBINED.md',
 ];
 
 /**

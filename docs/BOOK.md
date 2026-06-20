@@ -57,12 +57,12 @@ every commit, contracts over vibes. See [CLAUDE.md](../CLAUDE.md) and the three 
 
 ## 4. Living systems
 
-| System                | Doc / code                                                                                           | Summary                                                                                                                                  |
-| --------------------- | ---------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| Economy + game theory | [`src/sim/economy.ts`](../src/sim/economy.ts), [ENTITY-SHEETS §9](./ENTITY-SHEETS.md)                | 2 currencies + 2 commodities; tâtonnement pricing, currency-adoption game, cartel, arbitrage, sanctions, black market, Vickrey auctions. |
-| Cognition             | [`src/sim/cognition.ts`](../src/sim/cognition.ts), [`src/sim/ai/brains.ts`](../src/sim/ai/brains.ts) | The pure perceive→drive kernel; TinyMLP / MemoryRing / MarkovChain.                                                                      |
-| Super creature        | [ADR-0008](./adr/0008-super-creature-deep-mind.md)                                                   | The 1444-param apex mind + masterful body + access puzzle + superhero mode.                                                              |
-| NHI Observatory       | [`src/ui/nhi-observatory.ts`](../src/ui/nhi-observatory.ts)                                          | The 9-view scientific window into a launched NHI's mind.                                                                                 |
+| System                  | Doc / code                                                                                           | Summary                                                                                                                                  |
+| ----------------------- | ---------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| Economy + game theory   | [`src/sim/economy.ts`](../src/sim/economy.ts), [ENTITY-SHEETS §9](./ENTITY-SHEETS.md)                | 2 currencies + 2 commodities; tâtonnement pricing, currency-adoption game, cartel, arbitrage, sanctions, black market, Vickrey auctions. |
+| Cognition               | [`src/sim/cognition.ts`](../src/sim/cognition.ts), [`src/sim/ai/brains.ts`](../src/sim/ai/brains.ts) | The pure perceive→drive kernel; TinyMLP / MemoryRing / MarkovChain.                                                                      |
+| Super creatures (GOAL5) | [ADR-0008](./adr/0008-super-creature-deep-mind.md) + MODULE-CONTRACTS GOAL5                          | 5 Archons (ORACLE-Σ etc): ~10k-param composite minds + Clifford/AST-1/HOT-1/HOT-4/narrative memory + wild bodies.                        |
+| NHI Observatory         | [`src/ui/nhi-observatory.ts`](../src/ui/nhi-observatory.ts)                                          | The 9-view scientific window into a launched NHI's mind.                                                                                 |
 
 ## 5. Math & science
 

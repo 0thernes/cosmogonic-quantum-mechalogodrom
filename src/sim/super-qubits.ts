@@ -15,6 +15,7 @@
  * (`src/math/quantum.ts`); the per-beat thought-collapse is sampled through the Eshkol quantum RNG (a
  * faithful Tsotchke port wired in by {@link SuperMind}), and the geometry readout delegates to the
  * ported QGTL primitive ({@link quantumGeometricTensor}).
+ * Heartbeat wiring: Moonlab tensor contract (Tsotchke corpus) for 5 Archons quantum scaling in super-mind.
  *
  * V84 — moved from research to development: {@link QuantumMind.geometricMetric} reads the **Quantum
  * Geometric Tensor / Fubini–Study metric** of the mind's own circuit by delegating to the canonical
@@ -41,6 +42,7 @@ import { quantumCoherence } from '../math/quantum-coherence';
 import { naturalGradient2x2 } from '../math/quantum-natural-gradient';
 import { quantumMagic } from '../math/quantum-magic';
 import type { Rng } from '../math/rng';
+import { gwtBroadcast, makeEshkolDual } from './tsotchke-facade'; // Ralph 10x continue: Eshkol GWT/dual from Tsotchke corpus (workspace.cpp, AUTODIFF) wired into qubit mind for modulation
 
 /** Register width — 6 qubits → 64 basis amplitudes: a rich BRAIN view that stays trivially in budget. */
 export const QMIND_QUBITS = 6;
@@ -254,6 +256,10 @@ export class QuantumMind {
     this.dMut = mut;
     this.dLatent = latent;
     this.dL = L;
+    // Ralph 10x: use gwtBroadcast (Eshkol GWT from Tsotchke) + dual for corpus modulation of qubit drives
+    const gwt = gwtBroadcast([sup, ent, ftl, mut], [0.7, 0.8, 0.5, 0.6]);
+    const dSup = makeEshkolDual(this.dSup, gwt[0] || 0);
+    this.dSup = clamp01(dSup.value + (gwt[1] || 0) * 0.01);
     this.gateCount = this.applyCircuit(sup, ent, ftl, mut, latent, L);
     // V1.1 — GOAL-DIRECTED AMPLITUDE AMPLIFICATION (Grover): bias the thought-collapse toward the mind's
     // INTENDED thought — the basis state whose bits are the signs of the world-model latent (the pattern

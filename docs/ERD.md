@@ -6,12 +6,11 @@ nonetheless, and the composition root (`world.ts`) is effectively its join
 engine. Diagrams below follow ERD (structure), ERM (relationship narrative),
 and ERP (process models).
 
-> **Scope (V1–V13 core vs V14–V77):** the diagrams below model the **V1–V13 core data layer** — the
+> **Scope (V1–V13 core vs V14–V77 + GOAL5):** the diagrams below model the **V1–V13 core data layer** — the
 > entities carrying persistent/structural state (organisms, morphotypes, titans, NHI, the economy, the
-> audit ring, persisted preferences). The later intelligence + cosmology systems (super-creature, its
-> V76 quantum-computing mind — `super-qubits.ts`, see [AI-SUBSYSTEM.md](./AI-SUBSYSTEM.md) — genome/
+> audit ring, persisted preferences). The later intelligence + cosmology systems (5× GOAL5 super-creatures/Archons/Godforms: ORACLE-Σ, STARKILLER-Ω, MANHATTAN-Φ, BROLY-Ψ, VOID-Λ with composite minds + Clifford/AST-1/HOT-1/HOT-4 + full concrete narrative-memory.ts (10 orchestrations) + super-body, see [AI-SUBSYSTEM.md](./AI-SUBSYSTEM.md) — genome/
 > lineage, factions, leviathans, singularities, chaos-field, the monolith) hold mostly
-> **transient per-session simulation state** rather than new persistent entities, so they are documented
+> **transient per-session simulation state** (exclusive godform.ts leaf owns names+biases; super-mind wires faculties; world.ts integrator spawns exactly 5) rather than new persistent entities, so they are documented
 > per-module and in [ENTITY-SHEETS.md](./ENTITY-SHEETS.md) + the Living-Era graph in
 > [ARCHITECTURE.md](./ARCHITECTURE.md) rather than expanded here. The one genuinely persisted addition,
 > `SuperEvolution` (localStorage), lives in its module + [ADR-0009](./adr/0009-genome-reproduction.md).
@@ -183,6 +182,35 @@ erDiagram
     float trendPerMin "regression slope -> telemetry #v10"
     float zThreshold "2.5; omen at most once per 30 s"
   }
+
+  GODFORM ||--|| SUPER_MIND : "1:1 archetype bias (clifford/generative/chaos/narrative)"
+  GODFORM ||--|| SUPER_BODY : "1:1 visual rig per (5 distinct)"
+  GODFORM }o--o{ ECON_AGENT : "purse (weight 20, 5 registered)"
+  SUPER_MIND ||--|| NARRATIVE_MEMORY : "per-Archon (10 orchestrations: typed event, graph, consolidate...)"
+  SUPER_MIND ||--|| ATTENTION_SCHEMA : "AST-1 self-model"
+  SUPER_MIND ||--|| TOPDOWN_PERCEPTION : "HOT-1 generative loop"
+  SUPER_MIND ||--|| QUALITY_SPACE : "HOT-4 qualia tone"
+  SUPER_MIND }o--|| GRID : "local percepts (query at body pos)"
+  GODFORM }o--|| LORE_NAME : "archetype epithets via lore"
+
+  GODFORM {
+    string name "ORACLE-Σ | STARKILLER-Ω | MANHATTAN-Φ | BROLY-Ψ | VOID-Λ (exclusive godform.ts)"
+    float cliffordWeight "bias for stabilizer reflex"
+    float generative "topdown/HOT bias"
+    float chaos "regime shift bias"
+    float narrative "memory/manip bias"
+    float colorHue "body palette seed"
+  }
+  SUPER_MIND {
+    int paramCount "~10081 (composite 12 nets)"
+    SuperSnapshot snapshot "emotion/plan/consciousness/quantum"
+    NarrativeMemory mem "per creature instance"
+  }
+  SUPER_BODY {
+    vec3 pos "live"
+    float dominance "drives glow/arms"
+    int variant "0-4 godform index"
+  }
 ```
 
 ## ERM — relationship narrative
@@ -266,6 +294,14 @@ erDiagram
   `#v10`); a population z-score beyond ±2.5 emits a lore-named omen (the
   world-injected `nameOmen` hook digests the name out of the seed) into the
   same audit pipeline as user actions, at most once per 30 s.
+
+### GOAL5 — 5 Archons / Godforms (exclusive ownership)
+
+- **GODFORM (leaf, godform.ts) 1:1 → SUPER_MIND + SUPER_BODY.** Exactly 5 at boot (world integrator). Names+biases single source in godform.ts (ORACLE-Σ etc). Per-creature SuperMind wires AST-1 (attention-schema), HOT-1 (topdown-perception), HOT-4 (quality-space), NarrativeMemory + MemoryOrchestra. Each has own child-seeded rng, local grid percepts (read), econ purse (write), body rig.
+- **SUPER_MIND / GODFORM → shared systems (read/write).** Grid for local crowding/threat, economy for wealthRel, audio bands, quantum for aspects (Clifford reflex), RD/entities via perturb/bursts on dominate. No shared mutation without owner.
+- **NARRATIVE_MEMORY (per Archon) + graph provenance.** 10 orchestrations as decision system (surprise gate, consolidate to skill, strategic reputation). Transient; drives plans + body.
+- **GODFORM → LORE_NAME.** Archetype epithets derived.
+- Transient: no new persisted except SuperEvolution per creature.
 
 ## ERP — process models
 

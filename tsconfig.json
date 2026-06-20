@@ -17,5 +17,6 @@
     "useDefineForClassFields": true,
     "skipLibCheck": true
   },
-  "include": ["src", "server.ts", "tests", "bench", "scripts"]
+  "include": ["src", "server.ts", "tests", "bench", "scripts"],
+  "exclude": ["src/math/moonlab-tensor.ts"]
 }

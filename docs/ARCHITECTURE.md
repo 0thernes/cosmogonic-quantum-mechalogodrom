@@ -192,7 +192,7 @@ graph TD
     nhi["nhi · nhi-system · nhi-body<br/>NHI autonomous minds + bodies"]
     singularities["singularities.ts<br/>SingularitySystem (5 holes · warp · lens)"]
     chaosfield["chaos-field.ts<br/>ChaosField (Lorenz quantum storm, V62)"]
-    supercreature["super-creature · super-body · super-mind<br/>super-evolution · super-wingmen<br/>apex being (~10k-param mind · leveling)"]
+    supercreature["5× super-creatures (GOAL5 Archons/Godforms: ORACLE-Σ etc) · super-body · super-mind<br/>super-evolution · super-wingmen<br/>apex beings (~10k-param each, Clifford+AST/HOT wired)"]
     monolith["monolith-temple.ts<br/>MonolithTemple (LV100 ascension portal)"]
     lattices["cosmic-web · gold-lattice · quantum-lattice<br/>(far-field visuals)"]
   end
@@ -297,27 +297,27 @@ The flowchart above is the **V1/V2 core**. The V10–V75 systems interleave on t
 [BOOK.md §A](./BOOK.md). Cadences — V1 rows from the legacy loop, V2 rows from MODULE-CONTRACTS.md
 §Frame pipeline V2, V10+ rows verified against `world.ts`:
 
-| Step                        | Cadence                                                                                                                              |
-| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| Grid rebuild                | Every 2nd frame (halves the O(n) rebuild cost)                                                                                       |
-| Connectome                  | Every frame (n ≤ 400), every 2nd (≤ 700), every 3rd (> 700)                                                                          |
-| Quantum colors              | Every 6th frame (positions upload every frame)                                                                                       |
-| Telemetry text              | Every 8th frame                                                                                                                      |
-| Sparkline redraw            | Every 18th frame                                                                                                                     |
-| Quantum circuit (V2)        | `update()` every 30th frame (ry drift + entropy); measures every 8th update (≈ 240f); gate events (puppet / sort swap) as they occur |
-| Register bands → cloud (V2) | Every 6th frame, aligned with the cloud's color pass                                                                                 |
-| Reaction-diffusion (V2)     | `step()` every 2nd frame, offset 1 from the grid rebuild (the two never share a frame)                                               |
-| Louvain communities (V2)    | Every 240th frame                                                                                                                    |
-| PageRank (V2)               | Every 600th frame, offset 300 — never shares a frame with the 240f Louvain pass (offset 120 would, at frame 720 and every 1,200f)    |
-| Analytics (V2)              | `push()` every 8th frame (with telemetry); `analyze()` every 60th frame                                                              |
-| Constellations (V2)         | Every frame — O(1) opacity/pulse only (Voronoi built once at construction)                                                           |
-| Audio band poll (V2)        | Every frame — O(128) analyser read, zeros until audio is initialized                                                                 |
-| Economy tick (V13)          | Every 30th frame, offset 15 — sanctions + clearing market on its own `econRng` sub-stream                                            |
-| Chaos-field (V62)           | Every frame when engaged (Lorenz + tunnel/entangle/superpose on a stride-3 slice); inert + rng-silent when off                       |
-| Singularity force (V7.4)    | Every frame while a hole is summoned — r⁻² force + time-dilation; raises `state.chaos` (V64)                                         |
-| NHI beat (V10)              | Each launched NHI mind thinks every 18th frame; bodies steer every frame                                                             |
-| Super-creature mind (V46)   | Every 4th frame — `driveSuper`: percept → ~10k-param think → body + powers                                                           |
-| Gravitational lens (V60)    | Every frame — full-screen post-FX pass; pixel-exact passthrough when no hole is active                                               |
+| Step                         | Cadence                                                                                                                                  |
+| ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| Grid rebuild                 | Every 2nd frame (halves the O(n) rebuild cost)                                                                                           |
+| Connectome                   | Every frame (n ≤ 400), every 2nd (≤ 700), every 3rd (> 700)                                                                              |
+| Quantum colors               | Every 6th frame (positions upload every frame)                                                                                           |
+| Telemetry text               | Every 8th frame                                                                                                                          |
+| Sparkline redraw             | Every 18th frame                                                                                                                         |
+| Quantum circuit (V2)         | `update()` every 30th frame (ry drift + entropy); measures every 8th update (≈ 240f); gate events (puppet / sort swap) as they occur     |
+| Register bands → cloud (V2)  | Every 6th frame, aligned with the cloud's color pass                                                                                     |
+| Reaction-diffusion (V2)      | `step()` every 2nd frame, offset 1 from the grid rebuild (the two never share a frame)                                                   |
+| Louvain communities (V2)     | Every 240th frame                                                                                                                        |
+| PageRank (V2)                | Every 600th frame, offset 300 — never shares a frame with the 240f Louvain pass (offset 120 would, at frame 720 and every 1,200f)        |
+| Analytics (V2)               | `push()` every 8th frame (with telemetry); `analyze()` every 60th frame                                                                  |
+| Constellations (V2)          | Every frame — O(1) opacity/pulse only (Voronoi built once at construction)                                                               |
+| Audio band poll (V2)         | Every frame — O(128) analyser read, zeros until audio is initialized                                                                     |
+| Economy tick (V13)           | Every 30th frame, offset 15 — sanctions + clearing market on its own `econRng` sub-stream                                                |
+| Chaos-field (V62)            | Every frame when engaged (Lorenz + tunnel/entangle/superpose on a stride-3 slice); inert + rng-silent when off                           |
+| Singularity force (V7.4)     | Every frame while a hole is summoned — r⁻² force + time-dilation; raises `state.chaos` (V64)                                             |
+| NHI beat (V10)               | Each launched NHI mind thinks every 18th frame; bodies steer every frame                                                                 |
+| Super-creature minds (GOAL5) | Every 4th frame — 5× (distinct seeds/archetypes): per-pos percept → think (Clifford reflex + AST/HOT scaffolds + memory) → bodies + roam |
+| Gravitational lens (V60)     | Every frame — full-screen post-FX pass; pixel-exact passthrough when no hole is active                                                   |
 
 ## Data flow
 

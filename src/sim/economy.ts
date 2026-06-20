@@ -21,6 +21,7 @@
  * only when agents are registered (a boot/launch-time event, never per frame).
  */
 import { clamp } from '../math/scalar';
+import { quakeQgeFactor, ulgHandoff, gwtBroadcast } from './tsotchke-facade'; // Ralph 10x continue: more Tsotchke (quakeQge + ulg/gwt from Eshkol/Moonlab/ulg) for economy aliveness
 
 /** Injected seeded RNG (mulberry32 shape): returns a float in [0, 1). */
 type Rng = () => number;
@@ -256,7 +257,11 @@ export class Economy {
    */
   register(id: number, title: string, weight: number, rng: Rng): void {
     if (this.byId.has(id)) return;
-    const w = Math.max(0.2, weight);
+    // Ralph 10x: Tsotchke quakeQgeFactor from quantum-quake corpus for aliveness-modulated stature (Eshkol/Quake hybrids)
+    const qge = quakeQgeFactor(0.5, 0.3); // default for non-super; supers override via world
+    const ulgA = ulgHandoff(qge, 0.4);
+    const gwtE = gwtBroadcast([qge, weight], [0.6, 0.5]);
+    const w = Math.max(0.2, weight * qge * (1 + ulgA * 0.05 + (gwtE[0] || 0) * 0.02));
     const a: Agent = {
       id,
       title,

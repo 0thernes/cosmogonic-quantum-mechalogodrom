@@ -17,15 +17,16 @@
  * UPSTREAM (ported, with attribution — see NOTICE.md):
  *   tsotchke/quantum_geometric_tensor (QGTL) — `src/quantum_geometric/core/quantum_geometric_metric.c`
  *   + `…_curvature.c` + `…_gradient.c`, and Moonlab `src/algorithms/quantum_geometry/qgt.c` (both MIT,
- *   © 2024–2026 tsotchke). The QGT/Fubini–Study/Berry definitions and the parameter-shift derivative
+ *   © 2024–2026 tsotchke; full local corpus Z:\[Vibe Coded (AI)]\(Tsotchke)\mirrors\moonlab\src\algorithms\quantum_geometry\ + Eshkol integration). The QGT/Fubini–Study/Berry definitions and the parameter-shift derivative
  *   method are reproduced; the statevector itself is the project's own {@link QuantumRegister} (a
  *   Moonlab-style simulator), supplied via the `buildState` callback. References: Provost & Vallée
- *   (1980); Berry (1984); Fukui–Hatsugai–Suzuki (2005).
+ *   (1980); Berry (1984); Fukui–Hatsugai–Suzuki (2005). Corpus adds Bloch Hamiltonians (QWZ, Haldane), link U_μ for discretized Ω, Fukui plaquette arg for Chern.
  *
  * Pure leaf module — imports nothing. One call rebuilds the state 2·P+1 times (P = parameter count);
  * the Super Creature evaluates it over P=2 behavioural drives at UI cadence, so the cost is a handful of
  * 64-amplitude circuit rebuilds — well within budget.
- */
+ *
+ * WIRED FROM FULL TSOTCHKE CORPUS (ralph-loop 2026-06-19 + this 10x surge continue): Eshkol AUTODIFF dual for param derivs + GWT, Moonlab qgt.c Bloch + Chern, QGTL Fubini/Berry, libirrep sym for n-band. See TSOTCHKE-CORPUS-RALPH-WIRING-AUDIT + Z:\[Vibe Coded (AI)]\(Tsotchke)\mirrors\quantum_geometric_tensor + Eshkol. Used in super-mind/quantum for 5 Archons. 10x: mpo/gwt notes in callers.
 
 /** The geometry of a parameterised quantum state at a point θ. */
 export interface QuantumGeometry {
@@ -161,4 +162,26 @@ export function quantumGeometricTensor(
     fisher: 4 * volume,
     berryMagnitude: berryCount > 0 ? berrySum / berryCount : 0,
   };
+}
+
+/** Moonlab tensor network inspired simple contraction (from full Tsotchke corpus tensor_network/contraction.c MPO style).
+ * For 2 tensors rank 2, O(chi^3) like, alloc free for small fixed.
+ * Wired for Archon quantum scaling.
+ */
+export function tensorContract2(
+  a: Float64Array,
+  b: Float64Array,
+  dim: number,
+  out: Float64Array,
+): void {
+  out.fill(0);
+  for (let i = 0; i < dim; i++) {
+    for (let k = 0; k < dim; k++) {
+      let s = 0;
+      for (let j = 0; j < dim; j++) {
+        s += a[i * dim + j]! * b[j * dim + k]!;
+      }
+      out[i * dim + k] = s;
+    }
+  }
 }

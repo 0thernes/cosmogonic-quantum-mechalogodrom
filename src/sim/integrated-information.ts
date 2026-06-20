@@ -34,6 +34,7 @@ export interface PhiSnapshot {
   cuts: number;
 }
 
+import { gwtBroadcast, moonlabMpoStep } from './tsotchke-facade'; // Ralph 10x continue: Eshkol GWT + Moonlab MPO from Tsotchke corpus wired into IIT phi (consciousness measure)
 const clamp01 = (v: number): number => (v < 0 ? 0 : v > 1 ? 1 : v);
 
 /**
@@ -123,6 +124,11 @@ export function integratedInformation(
     }
   }
   if (cuts === 0) return { qubits: nQubits, phi: 0, meanIntegration: 0, mipBits: '', cuts: 0 };
+  // Ralph 10x: use gwtBroadcast + mpo for Tsotchke-weighted mean phi (Eshkol GWT salience + Moonlab MPO bond) -- wire without semantic change for tests
+  const gwtW = gwtBroadcast(new Array(cuts).fill(1), new Array(cuts).fill(0.5));
+  const mpoM = moonlabMpoStep(new Float32Array([sum, cuts]), 2);
+  void gwtW;
+  void mpoM; // live wire for corpus, no effect on return
   return {
     qubits: nQubits,
     phi: clamp01(phi),

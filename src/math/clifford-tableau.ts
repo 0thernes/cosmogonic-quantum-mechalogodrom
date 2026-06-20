@@ -10,6 +10,9 @@
  *
  * Reimplemented in deterministic TypeScript (seeded {@link Rng} for the random measurement branch — NOT
  * `Math.random`) from the canonical algorithm, with the API surface and large-n intent of the **Moonlab**
+ * + libirrep QEC from corpus (mirrors/libirrep) for symmetry/QEC extension in 5 Archons. Ralph continue.
+ * CA-MPS hybrid: Clifford tableau + MPS for low bond in entangled Archons (from Moonlab ca_mps.h: create with max_bond, D=tableau, phi=MPS, Clifford gates O(n), measure).
+ * Ralph 10x: wire more CA-MPS bond update stub for 5 Archons.
  * simulator's `src/backends/clifford/clifford.{c,h}` backend (MIT © 2024–2026 tsotchke; see
  * THIRD-PARTY-NOTICES.md). The tableau holds n destabiliser rows + n stabiliser rows + 1 scratch row; each
  * row is (x | z | r): n X-bits, n Z-bits, and a sign bit r ∈ {0,1} for ±1. {@link entanglementEntropy}
@@ -41,6 +44,9 @@ export interface CliffordSnapshot {
   spread: number;
   /** The last computational-basis sample as a bitstring (first min(n,53) qubits; LSB = qubit 0). */
   sampleBits: string;
+  /** Moonlab CA-MPS from corpus (ca_mps.h create, bond, current). */
+  caMpsBond: number;
+  caMpsCurrentBond: number;
 }
 
 /**
@@ -56,6 +62,8 @@ export class CliffordTableau {
   private readonly z: Uint8Array; // rows · n
   private readonly r: Uint8Array; // rows (sign bit)
   private lastSample = 0n;
+  private _caMpsBond = 4; // Moonlab CA-MPS max_bond_dim from ca_mps.h for hybrid (Clifford D + MPS phi). Ralph 10x wire for Archons.
+  private _caMpsCurrentBond = 1; // current bond from tn_mps in CA-MPS create.
 
   constructor(n: number) {
     const nq = Math.max(1, Math.floor(n));
@@ -78,6 +86,7 @@ export class CliffordTableau {
       z[(n + i) * n + i] = 1; // stabiliser i = Z_i
     }
     this.lastSample = 0n;
+    this._caMpsCurrentBond = 1;
   }
 
   // ── Single-qubit Clifford gates (each O(n)) ───────────────────────────────────────────────────────
@@ -335,6 +344,8 @@ export class CliffordTableau {
       entanglementNorm: cut > 0 ? ent / cut : 0,
       spread: n > 0 ? weight / n : 0,
       sampleBits: lowBits.toString(2).padStart(Math.min(n, 53), '0'),
+      caMpsBond: this._caMpsBond,
+      caMpsCurrentBond: this._caMpsCurrentBond,
     };
   }
 }

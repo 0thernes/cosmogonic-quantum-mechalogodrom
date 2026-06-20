@@ -19,6 +19,11 @@ export function clamp(v: number, lo: number, hi: number): number {
   return v < lo ? lo : v > hi ? hi : v;
 }
 
+/** Clamp `v` into `[0, 1]`. O(1). */
+export function clamp01(v: number): number {
+  return v < 0 ? 0 : v > 1 ? 1 : v;
+}
+
 /** Squared distance; avoids sqrt for threshold compares (legacy `d2`). O(1). */
 export function dist2(
   ax: number,

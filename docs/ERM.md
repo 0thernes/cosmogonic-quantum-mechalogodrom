@@ -10,9 +10,9 @@ The Mechalogodrom has **no database**. Its "entities" live in scene graphs, type
 them each frame. The relational structure is real all the same, and modeling it makes the data flow
 auditable.
 
-> **Scope (V1–V13 core vs V14–V77):** this models the V1–V13 core relational structure. The later
+> **Scope (V1–V13 core vs V14–V77 + GOAL5):** this models the V1–V13 core relational structure. The later
 > intelligence + cosmology systems hold mostly **transient per-session state** (not new persistent
-> entities) — including the V76 apex-creature quantum-computing mind (`super-qubits.ts`, catalogued
+> entities) — including the GOAL5 5× apex Archon quantum-cognitive minds (`super-qubits.ts` + Clifford reflex + AST/HOT scaffolds + narrative memory, catalogued
 > below as `QUANTUM_MIND`); they are documented per-module, in [AI-SUBSYSTEM.md](./AI-SUBSYSTEM.md), and
 > in [ENTITY-SHEETS.md](./ENTITY-SHEETS.md) + the Living-Era graph in
 > [ARCHITECTURE.md](./ARCHITECTURE.md). The exception, persisted `SuperEvolution` (localStorage), lives

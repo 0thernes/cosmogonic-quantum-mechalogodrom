@@ -13,4 +13,6 @@ verify/
 /__*.js
 native/build/
 native/build*/
+# Local MCP tool descriptors (Cursor harness; not part of the app).
+mcps/
 *.bmp

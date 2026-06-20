@@ -32,8 +32,8 @@ seed**.
 | Distinct file types                        | 21                                                                          |
 | App source (TypeScript)                    | 35,226 lines · 108 files                                                    |
 | Tests                                      | 14,117 lines · 100 files                                                    |
-| Test : source ratio                        | 0.40 → **97.34 % line / 93.42 % function** coverage (`bun test --coverage`) |
-| Passing tests                              | **1,170** (0 failing)                                                       |
+| Test : source ratio                        | 0.40 → **94.90 % line / 91.42 % function** coverage (`bun test --coverage`) |
+| Passing tests                              | **1,293** (0 failing)                                                       |
 
 ### 1.1 Languages
 
@@ -193,18 +193,18 @@ broadcasts hallucinated utterances) — wired into `world.ts`, guarded, determin
 
 ### 7.1 Model parameter sizes (measured)
 
-| Mind                                    | Network                                 | Parameters                    |
-| --------------------------------------- | --------------------------------------- | ----------------------------- |
-| Organism brain (× up to 50,000)         | TinyMLP 6→6→4                           | **70 weights**                |
-| Faction brain (× 8 archetypes)          | TinyMLP 6→6→4                           | 70 weights                    |
-| NHI intuition gene                      | TinyMLP 5→6→7                           | 85 weights                    |
-| NHI alien voice                         | Markov 12×12                            | 144 weights                   |
-| Super Creature mind (V45)               | composite · 12 sub-nets · 5 stages × 25 | ~10,081 weights               |
-| Super Creature quantum mind (V75)       | 6-qubit statevector                     | 64 complex amplitudes         |
-| Quantum register (puppet-master, × 100) | 5-qubit statevector                     | 32 complex amplitudes (256 B) |
+| Mind                                    | Network                                    | Parameters                          |
+| --------------------------------------- | ------------------------------------------ | ----------------------------------- |
+| Organism brain (× up to 50,000)         | TinyMLP 6→6→4                              | **70 weights**                      |
+| Faction brain (× 8 archetypes)          | TinyMLP 6→6→4                              | 70 weights                          |
+| NHI intuition gene                      | TinyMLP 5→6→7                              | 85 weights                          |
+| NHI alien voice                         | Markov 12×12                               | 144 weights                         |
+| Super Creature minds (GOAL5: 5 Archons) | 5× composite · 12 sub-nets · 5 stages × 25 | ~10,081 weights each (~50.4k total) |
+| Super Creature quantum minds            | 5× 6-qubit statevector + Clifford reflex   | 64 complex + 32q stabilizer each    |
+| Quantum register (puppet-master, × 100) | 5-qubit statevector                        | 32 complex amplitudes (256 B)       |
 
 **Whole-world neural mass at the 50k mega ceiling ≈ 3.5 million parameters** (≈ 50,000 × 70 organism
-brains, plus the ~10,081-weight Super Creature composite, the 8 faction brains, and the apex NHI mind),
+brains, plus the 5×~10,081-weight Super Creature / Archon composites (GOAL5), the 8 faction brains, and the apex NHI mind),
 stored as Float32 = **≈ 14 MB of weights**, executed on **one CPU thread**. (The default ultra tier caps
 at 10,000 organisms ≈ 700 K params ≈ 2.8 MB.)
 
@@ -308,8 +308,8 @@ Complexity classes are catalogued in [COMPLEXITY.md](COMPLEXITY.md); hot-path be
 
 The single gate — `bun run check` — must pass before every commit:
 
-`prettier --check` → `tsc --noEmit` (strict) → `oxlint` → `bun test` (**1,170 tests, 0 fail**) →
-`bun scripts/build.ts`. Coverage gate: line ≥ 0.90, function ≥ 0.85 (measured 97.34 % / 93.42 %, `bun test --coverage`).
+`prettier --check` → `tsc --noEmit` (strict) → `oxlint` → `bun test` (**1,293 tests, 0 fail**) →
+`bun scripts/build.ts`. Coverage gate: line ≥ 0.90, function ≥ 0.85 (measured 94.90 / 91.42, `bun test --coverage`).
 Three governing "master" personas (`masters/*.xml`) encode the discipline: **the Executor** (finish
 everything, full gates), **the Architect** (contracts before code, exclusive ownership), **the
 Physicist** (determinism, measurement, frame budgets, provenance).
@@ -374,7 +374,7 @@ contrast 62 · doc-links 57 · a11y-static 45`.
 
 This is a ~69k-line TypeScript (+ optional C++/Jolt native engine) browser-native simulation that
 renders **up to 50,000 agents** (10,000 at 60 fps on a laptop iGPU with zero AI accelerator), is
-**bit-reproducible from one seed**, ships through a **full CI/CD gate** (1,170 tests, 97.34 % line coverage),
+**bit-reproducible from one seed**, ships through a **full CI/CD gate** (1,293 tests, 94.90 % line / 91.42 % function coverage),
 and whose entire emergent intelligence weighs **≈ 14 MB — 1/50,000th of GPT-3** at the mega ceiling. It
 demonstrates that depth comes from **architecture,
 determinism, and engineering discipline**, not parameter count or hardware.

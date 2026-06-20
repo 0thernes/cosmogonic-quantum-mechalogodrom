@@ -3,7 +3,7 @@
  * "quantum-inspired" random number generator (the Eshkol qubit-RNG: an 8-qubit "phase array + noise"
  * simulator with a 16-slot entropy pool and physical-constant mixing cascades). This is no longer a
  * *study* of the algorithm — it is the algorithm, reimplemented gate-for-gate and constant-for-constant
- * from the upstream C source, then wired into the Super Creature's Quantum Computing Mind so the apex
+ * from the upstream C source (full local corpus at Z:\[Vibe Coded (AI)]\(Tsotchke)\Eshkol\eshkol_repo\lib\quantum\quantum_rng.c + .h + docs/breakdown/QUANTUM_RNG.md), then wired into the Super Creature's Quantum Computing Mind so the apex
  * psyche literally collapses its "thoughts" through the Eshkol generator.
  *
  * UPSTREAM (ported, with attribution — see THIRD-PARTY-NOTICES.md):
@@ -12,7 +12,7 @@
  *   Ported verbatim here: `quantum_noise` (the Heisenberg-uncertainty transcendental), `splitmix64`,
  *   `hadamard_mix`, `hadamard_gate`, `phase_gate`, `measure_state`, `quantum_step`, the buffer/double
  *   conversion, and every physical-constant mixing word (fine-structure, Planck, Rydberg, Heisenberg,
- *   Schrödinger, the three Pauli words, …).
+ *   Schrödinger, the three Pauli words, …). Full corpus adds QRNG_SQRT2, enhanced wrappers, ctx, get_system/runtime_entropy (host in upstream; det surrogate here).
  *
  * THE ONE DELIBERATE DEVIATION — determinism (CLAUDE.md operational law; docs/PHILOSOPHY.md): the
  * upstream draws unpredictability from the host (`gettimeofday`/`rdtsc`/PID/stack ASLR via
@@ -26,7 +26,10 @@
  * 16-word buffer, so the amortised cost of one {@link next01} draw is ~1/16 of a step. The integer
  * pipeline uses {@link bigint} (exact 64-bit wraparound); only the apex creature draws from it, at its
  * cognitive cadence — well within the frame budget (see bench/eshkol-qrng.bench.ts).
+ *
+ * WIRED FROM FULL TSOTCHKE CORPUS (ralph-loop 2026-06-19): See docs/TSOTCHKE_FULL_CORPUS_INTEGRATION_AUDIT.md for deep dive (13k files, Eshkol AD + this QRNG, Moonlab qgt/Bloch etc.). Used for all 5 Archons collapse/entropy.
  */
+
 import type { Rng } from './rng';
 
 /** Qubits in the simulated register (upstream QRNG_NUM_QUBITS). */

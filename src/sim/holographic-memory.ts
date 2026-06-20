@@ -53,6 +53,14 @@ export interface HolographicSnapshot {
   traceEnergy: number;
   /** Distinctness of the recall = (top − 2nd) cleanup cosine, 0..1 (high ⇒ an unambiguous analogy). */
   margin: number;
+  /** Extension: typed event-sourced count of high-value narrative episodes written. */
+  narrativeEventCount: number;
+  /** Regime sentinel: avg prediction-error trend (0..1, >0.5 signals shift). */
+  regimeShift: number;
+  /** Grounded belief state means for the 12 fixed symbols (energy-trust ... power-margin). */
+  belief: number[];
+  /** Router last retrieval relevance (drives + conf + recency score). */
+  routerRelevance: number;
 }
 
 /**
@@ -75,6 +83,9 @@ export class HolographicMemory {
   private recalled = -1;
   private conf = 0;
   private marg = 0;
+  // Persistent lifelong narrative + grounded symbol (extension inside this module). Preallocated; hot updates alloc-free.
+  private readonly narrative = new PersistentNarrative();
+  private lastNarrRel = 0;
 
   constructor(rng: Rng, plans = 7, dim = HRR_DIM, features = HRR_FEATURES) {
     const K = Math.max(2, Math.floor(plans));
@@ -172,6 +183,35 @@ export class HolographicMemory {
     }
   }
 
+  /**
+   * Record typed narrative event (0=OBSERVE ... 5=REGIME) after plan / on percept. Surprise/entropy gate
+   * inside. Also updates provenance links, belief state, regime, and consolidates if high salience.
+   * O(1) or O(D) on consolidate. Allocation-free hot.
+   */
+  recordEvent(
+    type: NarrativeEvent,
+    planIndex: number,
+    salience: number,
+    surprise: number,
+    senses?: ArrayLike<number>,
+  ): void {
+    this.narrative.record(type, planIndex, salience, surprise, senses);
+  }
+
+  /**
+   * Router retrieval using relevance to current drives (or drive proxy) + belief conf + recency.
+   * Returns best-matching past plan index (−1 none) for vote. O(EPISODE_CAP). Allocation-free.
+   */
+  routeRecall(drives: ArrayLike<number>): number {
+    const r = this.narrative.routeRecall(drives);
+    this.lastNarrRel = r.relevance; // hot internal for vote (snapshot pulls from narr)
+    return r.plan;
+  }
+  /** Last router relevance (for bounded vote scaling; 0..1). */
+  get lastRouterRelevance(): number {
+    return this.lastNarrRel;
+  }
+
   /** The plan the trace last recalled (−1 before the first {@link recall}). */
   get recalledPlan(): number {
     return this.recalled;
@@ -192,6 +232,7 @@ export class HolographicMemory {
     }
     // The steady-state trace amplitude is bounded by the geometric sum 1/(1−decay); normalise against it.
     const norm = 1 / (1 - HRR_DECAY);
+    const narrSnap = this.narrative.snapshot();
     return {
       dim,
       plans,
@@ -200,6 +241,242 @@ export class HolographicMemory {
       similarity: Array.from({ length: plans }, (_, k) => sims[k] ?? 0),
       traceEnergy: clamp01(energy / dim / norm),
       margin: this.marg,
+      // extension: persistent lifelong narrative + grounded symbol layer (10 orchestrations)
+      narrativeEventCount: narrSnap.eventCount,
+      regimeShift: narrSnap.regimeShift,
+      belief: narrSnap.beliefMeans,
+      routerRelevance: narrSnap.routerRelevance,
+    };
+  }
+}
+
+// ── Persistent lifelong narrative + grounded symbol layer (user 10 orchestrations) ────────────────
+// Extension inside holographic module per mandate. Typed event-sourced ring (fixed), graph provenance
+// (fixed-size link vectors), belief-state (bayes-like on 12 grounded symbols), surprise/entropy gate,
+// regime sentinel (error-trend), consolidation (high-salience via decay bundle on HRR-dim semantic),
+// router retrieval (drives/conf/recency). Multi-store orchestra facade over the VSA substrate.
+// Alloc-free hot paths (prealloc rings/scratch; O(cap) = O(1) bounded for router). Deterministic (no
+// clocks, no unseeded rng in ops). Seeded only at root ctor if needed (here pure). JSDoc + complexity.
+// No sentience claim: this is a decision-biasing store + symbol grounder, part of closed control loop.
+
+const EPISODE_CAP = 64;
+const SYMBOL_COUNT = 12;
+
+/** Typed event records for event-sourced narrative (enum as numeric for tight arrays). */
+export const NARRATIVE_EVENT = {
+  OBSERVE: 0 as const,
+  PLAN: 1 as const,
+  OUTCOME: 2 as const,
+  COMMIT: 3 as const,
+  INSIGHT: 4 as const,
+  REGIME: 5 as const,
+};
+export type NarrativeEvent = (typeof NARRATIVE_EVENT)[keyof typeof NARRATIVE_EVENT];
+
+/** Snapshot of the narrative + symbol layer (alloc only at UI cadence). */
+export interface NarrativeSnapshot {
+  eventCount: number;
+  regimeShift: number; // 0..1 detector from avg pred-err trend
+  beliefMeans: number[]; // 12 grounded symbols
+  routerRelevance: number; // last retrieval score
+}
+
+/**
+ * Dedicated narrative layer (multi-store orchestra core). Lives inside the holographic module as
+ * extension. Fixed rings/vectors keep everything allocation-free in the hot path. O(1) writes;
+ * router recall O(EPISODE_CAP) bounded. All math deterministic. Uses existing HRR_DIM for semantic
+ * consolidation bundling (mean/decay superposition).
+ */
+class PersistentNarrative {
+  private readonly cap = EPISODE_CAP;
+  // typed event-sourced ring (fixed capacity, circular)
+  private readonly types = new Uint8Array(EPISODE_CAP);
+  private readonly plans = new Int8Array(EPISODE_CAP); // −1 or plan index 0..K−1
+  private readonly saliences = new Float32Array(EPISODE_CAP);
+  private head = 0;
+  private count = 0;
+  // provenance graph: simple fixed-size vectors (caused/contradict links to prior episode indices)
+  private readonly causedBy = new Int16Array(EPISODE_CAP); // −1 = none
+  private readonly contradicts = new Int16Array(EPISODE_CAP);
+  // belief state: fixed 12-symbol vector with mean/conf/uncert (bayes-like precision weighting)
+  private readonly bMean = new Float32Array(SYMBOL_COUNT);
+  private readonly bConf = new Float32Array(SYMBOL_COUNT);
+  private readonly bUncert = new Float32Array(SYMBOL_COUNT);
+  // regime sentinel: avg prediction error trend over short window
+  private readonly errRing = new Float32Array(8);
+  private errHead = 0;
+  private avgErr = 0.5;
+  private prevAvgErr = 0.5;
+  private regime = 0;
+  // consolidation: high-salience episodes bundled (decay + add) into semantic trace (multi-res)
+  private readonly semTrace = new Float32Array(HRR_DIM);
+  // router scratch (alloc-free scoring)
+  private readonly scores = new Float32Array(EPISODE_CAP);
+  private lastRouterRel = 0;
+
+  constructor() {
+    for (let i = 0; i < SYMBOL_COUNT; i++) {
+      this.bMean[i] = 0.5;
+      this.bUncert[i] = 0.85; // start uncertain
+    }
+    // caused/contradict default −1 (no link)
+    for (let i = 0; i < EPISODE_CAP; i++) {
+      this.causedBy[i] = -1;
+      this.contradicts[i] = -1;
+    }
+  }
+
+  /** Surprise/entropy gate — only high-value writes enter the lifelong store. O(1). */
+  private gate(surprise: number, entropyApprox: number): boolean {
+    const val = Math.max(surprise, entropyApprox);
+    return val > 0.12; // high value threshold (tunable in bounds)
+  }
+
+  /** Bayes-like update for one grounded symbol. */
+  private bayes(sym: number, obs: number, strength: number): void {
+    const si = sym | 0;
+    let m = this.bMean[si] ?? 0.5;
+    let c = this.bConf[si] ?? 0;
+    let u = this.bUncert[si] ?? 0.5;
+    const w = clamp01(strength * (1 - u));
+    m = m + w * (obs - m);
+    c = clamp01(c + 0.65 * w);
+    u = clamp01(u * (1 - 0.55 * w));
+    this.bMean[si] = m;
+    this.bConf[si] = c;
+    this.bUncert[si] = u;
+  }
+
+  /** Map senses + salience/surprise into ~12 grounded symbols (deterministic projection). */
+  private updateBeliefs(senses: ArrayLike<number>, sal: number, surp: number): void {
+    const str = clamp01(sal * (1 - 0.3 * surp));
+    // 0 energy-trust
+    this.bayes(0, clamp01(senses[0] ?? 0.5), str);
+    // 1 rival-dominance (inverse rivalClose)
+    this.bayes(1, clamp01(1 - (senses[6] ?? 0.2)), str * 0.9);
+    // 2 sector-wealth
+    this.bayes(2, clamp01(senses[4] ?? 0.5), str);
+    // 3 prey-abundance
+    this.bayes(3, clamp01(senses[5] ?? 0.3), str * 0.7);
+    // 4 threat-level
+    this.bayes(4, clamp01(senses[1] ?? 0), str * 1.1);
+    // 5 novelty-rate
+    this.bayes(5, clamp01(senses[13] ?? 0.4), str); // memory proxy + later novelty
+    // 6 arousal-valence (use internal if passed via senses[10/11])
+    this.bayes(6, clamp01(0.5 + 0.5 * ((senses[10] ?? 0) - (senses[1] ?? 0))), str * 0.6);
+    // 7 social-trust
+    this.bayes(7, clamp01(1 - (senses[6] ?? 0.2) * 0.7), str * 0.8);
+    // 8 explore-bias
+    this.bayes(8, clamp01(senses[3] ?? 0.4), str);
+    // 9 spawn-urge
+    this.bayes(9, clamp01(senses[0] ?? 0.5) * 0.8, str * 0.5);
+    // 10 chaos-sens
+    this.bayes(10, clamp01(senses[3] ?? 0.4), str * 0.9);
+    // 11 power-margin (wealth + low threat)
+    this.bayes(11, clamp01(0.5 * (senses[4] ?? 0.5) + 0.5 * (1 - (senses[1] ?? 0))), str);
+  }
+
+  /** Regime shift detector: trend in avg prediction error. O(1) per write. */
+  private updateRegime(surp: number): void {
+    const ei = this.errHead % 8;
+    this.errRing[ei] = surp;
+    this.errHead++;
+    let sum = 0;
+    const n = Math.min(8, this.errHead);
+    for (let i = 0; i < n; i++) sum += this.errRing[i] ?? 0;
+    this.prevAvgErr = this.avgErr;
+    this.avgErr = n > 0 ? sum / n : 0.5;
+    const trend = this.avgErr - this.prevAvgErr;
+    this.regime = clamp01(0.5 + trend * 3.5);
+  }
+
+  /** Consolidation: high-salience episode bundled into semantic trace (via decay + superposition, reuses HRR spirit). O(D). */
+  private consolidate(sal: number, planIdx: number): void {
+    if (sal < 0.65) return;
+    const contrib = (planIdx >= 0 ? (((planIdx % 7) - 3) | 0) * 0.11 : 0.02) * sal;
+    for (let i = 0; i < HRR_DIM; i++) {
+      this.semTrace[i] = 0.94 * (this.semTrace[i] ?? 0) + contrib; // multi-res semantic accumulation
+    }
+  }
+
+  /**
+   * Record a typed episode (event-sourced). Gated. Links provenance. Updates belief/regime/consol.
+   * O(D + 1) when consolidating. Allocation-free.
+   */
+  record(
+    type: NarrativeEvent,
+    planIndex: number,
+    salience: number,
+    surprise: number,
+    senses?: ArrayLike<number>,
+  ): void {
+    const entropyApprox = clamp01(surprise * 0.8 + (1 - (salience ?? 0.5)) * 0.3);
+    if (!this.gate(surprise, entropyApprox)) return;
+
+    const idx = this.head % this.cap;
+    this.types[idx] = type;
+    this.plans[idx] = planIndex < 0 ? -1 : planIndex | 0;
+    this.saliences[idx] = clamp01(salience);
+    this.causedBy[idx] = this.count > 0 ? (this.head - 1) % this.cap : -1;
+    this.contradicts[idx] = -1;
+    if (type === NARRATIVE_EVENT.OUTCOME && surprise > 0.38) {
+      this.contradicts[idx] = this.causedBy[idx] ?? -1; // outcome contradicts prior causal link
+    }
+    if (senses) this.updateBeliefs(senses, salience, surprise);
+    this.updateRegime(surprise);
+    this.consolidate(salience, planIndex);
+
+    this.head++;
+    this.count = Math.min(this.count + 1, this.cap);
+  }
+
+  /**
+   * Retrieval router: scores episodes by relevance (to drives) + belief-conf + recency.
+   * Returns best plan index (−1 none) to bias vote. O(EPISODE_CAP) bounded, allocation-free.
+   * Strategic: high-conf symbols amplify scores; multi-res uses semTrace energy lightly.
+   */
+  routeRecall(drives: ArrayLike<number>): {
+    plan: number;
+    relevance: number;
+    eventType: NarrativeEvent;
+  } {
+    let best = -1;
+    let bestSc = -Infinity;
+    const n = Math.min(this.count, this.cap);
+    let semE = 0;
+    for (let i = 0; i < HRR_DIM; i++) semE += Math.abs(this.semTrace[i] ?? 0);
+    const semBoost = clamp01(semE / (HRR_DIM * 0.8));
+
+    for (let k = 0; k < n; k++) {
+      const i = (this.head - 1 - k + this.cap * 100) % this.cap; // recent-first walk
+      const rec = Math.pow(0.93, k); // recency
+      let rel = (this.saliences[i] ?? 0) * 0.55;
+      const p = this.plans[i] ?? -1;
+      if (p >= 0 && p < drives.length) rel += (drives[p] ?? 0) * 0.65;
+      // belief conf boost (strategic/grounded)
+      const sym = (p >= 0 ? p % SYMBOL_COUNT : 6) | 0;
+      rel += (this.bConf[sym] ?? 0) * 0.35 * (1 - (this.bUncert[sym] ?? 0.5));
+      rel += semBoost * 0.12; // multi-res semantic contribution
+      const sc = rel * rec;
+      this.scores[k] = sc;
+      if (sc > bestSc) {
+        bestSc = sc;
+        best = p;
+      }
+    }
+    this.lastRouterRel = bestSc > -Infinity ? clamp01(bestSc) : 0;
+    const etIdx = (this.head - 1 + this.cap) % this.cap;
+    const et = best >= 0 ? ((this.types[etIdx] ?? 0) as NarrativeEvent) : 0;
+    return { plan: best, relevance: this.lastRouterRel, eventType: et };
+  }
+
+  /** Snapshot (UI only — allocates). */
+  snapshot(): NarrativeSnapshot {
+    return {
+      eventCount: this.count,
+      regimeShift: this.regime,
+      beliefMeans: Array.from(this.bMean),
+      routerRelevance: this.lastRouterRel,
     };
   }
 }

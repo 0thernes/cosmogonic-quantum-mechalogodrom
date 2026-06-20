@@ -735,7 +735,7 @@ Five sub-gates: **prettier** (format), **tsc --strict** (no `any` leaks, exact-o
 ### F-CHAOS-ENTROPY · Chaos levels + entropy (bipolar axis)
 
 - **Approach:** Two designs — (a) keep `chaos ∈ [0.1,10]` and add a separate `entropy` scalar with its own decay and effects (freeze/uniformity/greyscale), or (b) unify into `chaosEntropy ∈ [-10,+10]` (positive=chaos/agitation, negative=entropy/heat-death, 0=equilibrium). Recommend (a) first (additive, lower churn): add `s.entropy` to `SimState`, decay toward 0, drive it up via the entropy singularity and idle uniformity, and apply effects (reduced jitter, desaturated atmosphere) bidirectionally. Add a second control/slider in `index.html`.
-- **Files:** `src/types.ts` (SimState), `src/sim/constants.ts` (bounds), `src/world.ts` (decay/floor/coupling ~382–392, action ~1170), `src/sim/singularities.ts` (entropy coupling ~219), `src/sim/atmosphere.ts` (visual coupling), `index.html` + `src/ui/input.ts` (control).
+- **Files:** `src/types.ts` (SimState), `src/sim/constants.ts` (bounds), `src/world.ts` (decay/floor/coupling ~382–392, action ~1171), `src/sim/singularities.ts` (entropy coupling ~219), `src/sim/atmosphere.ts` (visual coupling), `index.html` + `src/ui/input.ts` (control).
 - **Risk:** D-MED — decay/floor are deterministic, but any entropy-driven _stochastic_ effect (e.g. random freeze) must use the seeded stream. Chaos already affects behavior jitter (`chaosMul()` ~542) and sort push (~666); mirror carefully. P-LOW.
 - **Gate:** parity test over a fixed chaos/entropy script; ensure new SimState field is serialized in any save/replay.
 

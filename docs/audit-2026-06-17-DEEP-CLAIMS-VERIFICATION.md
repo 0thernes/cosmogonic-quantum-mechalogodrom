@@ -31,8 +31,7 @@ holographic 7 · metacognition 6 · criticality 5 · spin-glass 5 · super-mind 
 
 ## 3. Honesty boundaries re-confirmed
 
-- **Clifford tableau is present + tested (9 tests) but NOT wired** into the apex mind — imported only by
-  its own test. Any prose implying it is fused into cognition remains corrected.
+- **Clifford tableau is present + tested (9 tests)**; GOAL5 wires stabilizer reflex deeper into apex (5 Archons) cognition + body (entanglement proxy etc); not full dedicated per original audit. See CHANGELOG GOAL5 + MODULE-CONTRACTS. Prose updated for partial.
 - **Φ and magic are measured of _different_ systems** (register Φ vs. classical IIT proxy) — the reports
   flag this explicitly; the proxy is never called "the amount of consciousness."
 - **"Quantum" is an exact algebra on amplitudes** in a deterministic sim — not a physical QPU.

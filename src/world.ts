@@ -22,6 +22,7 @@ import type {
 import type { Entity } from './types';
 import type { ViewMode, Weather } from './sim/constants';
 import {
+  ARENA,
   ARENA_MID,
   ARENA_Y,
   CHAOS_LEVELS,
@@ -83,7 +84,28 @@ import { Observatory } from './ui/observatory';
 import { NhiObservatory } from './ui/nhi-observatory';
 import { MarketTicker } from './ui/market-ticker';
 import { SuperCreature, type SuperPercept } from './sim/super-creature';
-import { SuperMind, type SuperMindSnapshot } from './sim/super-mind';
+import {
+  GODFORMS,
+  getArchonForm,
+  getFullTsotchkeBias,
+  getCorpusPulseForArchon,
+  createPetriDish,
+  petriDishBeat,
+  petriGrowthMultiplier,
+  type PetriDishState,
+} from './sim/godform'; // GOAL5 + TSOTCHKE full corpus (ralph 10x: Eshkol AD, Moonlab tensor, quake, irrep from (Tsotchke))
+import { SuperMind, type SuperMindSnapshot, type SuperMindIntent } from './sim/super-mind';
+import {
+  quakePerturb,
+  ulgHandoff,
+  gwtBroadcast,
+  libirrepClebsch,
+  moonlabMpoStep,
+  quakeQgeFactor,
+  libirrepSymmetry,
+  PrimordialSoup,
+} from './sim/tsotchke-facade'; // Ralph continue 10x: + libirrepSymmetry for more irrep in world
+import { qgeWorldPerturb } from './sim/qge-aliveness';
 import { WingmanSwarm, WINGMAN_COUNT } from './sim/super-wingmen';
 import { WingmanRenderer } from './sim/super-wingmen-render';
 import { SuperEvolution } from './sim/super-evolution';
@@ -171,32 +193,50 @@ export class World {
   /** F-ECON V23: the self-building market-ticker panel (live AURUM/UMBRA market state). */
   private readonly marketTicker: MarketTicker;
 
-  // F-SUPER V31: the always-active apex mind + its self-mounting telemetry panel + sired twins.
+  // F-SUPER V31 + GOAL5: EXACTLY 5 SUPER CREATURES (Archons/Godforms/pantheon apexes) at boot. (legacy single kept only for hero/twin)
+  // ============================================================================
+  // NOT SENTIENT DISCLAIMER (enforced): NOT SENTIENT / NO PHENOMENAL CONSCIOUSNESS.
+  // Per contract + masters: models/scaffolding/functional correlates ONLY. Phenomenal ~1/10;
+  // hard problem untouched. "Consciousness" = ignition/phi/self-model proxies. No claims
+  // of sentience in prose, UI, or docs. See SUPER-CREATURE-RESEARCH.md + MODULE-CONTRACTS.
+  // ============================================================================
+  // Legacy single creature path kept ONLY for player hero/twin spawn; the 5 drive the world.
+  // All use distinct child seeds (master ^ + archetype 0-4 offsets) for determinism.
   private readonly superCreature: SuperCreature;
-  private readonly superMind: SuperMind; // V46: the live ~10k-param composite consciousness
+  private readonly superMind: SuperMind; // GOAL5 compat; prime mind uses array[0]
   private superMindSnap: SuperMindSnapshot | null = null;
-  private readonly wingSwarm: WingmanSwarm; // V47: 100-robot escort, ~250-param brain each
-  private readonly wingRender: WingmanRenderer;
-  private readonly emptyQ = new Float32Array(10); // quantum fallback before the first mind beat
-  private readonly superEvo: SuperEvolution; // V48: the self-evolving power/appearance arc
-  /** V63: the LV100 ascension end-state monument + Stage-2 portal (built once, revealed on ascension). */
-  private readonly monolithTemple: MonolithTemple;
-  /** V63: guards the once-only ascension fanfare + temple reveal. */
-  private superAscended = false;
-  private readonly evoRng: Rng;
-  /** Frames per evolution "day" — a sim-day cron passes every ~6 min of play (60fps). */
-  private static readonly EVO_DAY_FRAMES = 21600;
-  private readonly superTwins: SuperCreature[] = [];
+  private readonly superMinds: SuperMind[] = [];
+  private readonly _superMindSnaps: (SuperMindSnapshot | null)[] = [null, null, null, null, null]; // GOAL5 5 creatures // GOAL5
+  private readonly superBodies: SuperBodySystem[] = [];
+  // GOAL5: per-archon small creature snapshots (for body.setMind) + the 5 deep minds/bodies.
+  private readonly superCreatures: SuperCreature[] = [];
+  /** Primordial petri dishes — one per Archon; digital biologic soup (Tsotchke corpus). */
+  private readonly petriDishes: PetriDishState[] = [];
+  private petriRng!: Rng;
   private readonly superPanel: SuperPanel;
   private readonly superBody: SuperBodySystem;
   private readonly superRng: Rng;
   private readonly superScene: THREE.Scene;
-  // F-SUPER V34/35: puzzle-gated extra creatures (≤3 twins) + the SUPERHERO player layer (state + HUD).
+  private readonly emptyQ = new Float32Array(10);
+  private readonly superEvo: SuperEvolution;
+  private readonly monolithTemple: MonolithTemple;
+  private superAscended = false;
+  private readonly evoRng: Rng;
+  private static readonly EVO_DAY_FRAMES = 21600;
+  private readonly wingSwarm: WingmanSwarm;
+  private readonly wingRender: WingmanRenderer;
+  /** Primordial soup petri dish — Archon consciousness catalyzes emergent digital biologics. */
+  private readonly primordialSoup: PrimordialSoup;
+  private readonly superTwins: SuperCreature[] = [];
   private readonly heroBodies: { body: SuperBodySystem; mind: SuperCreature; econId: number }[] =
     [];
   private superheroUnlocked = false;
   private readonly superheroState = new SuperheroState();
   private readonly superheroHud: SuperheroHud;
+  /** GOAL5: canonical GODFORMS from godform.ts (per contract, exclusive ownership).
+   * Single source of truth. Attached as public static for World.GODFORMS access (integrator + docs).
+   * Bias fn wired below for archetype differentiation (Clifford vs chaos vs narrative). */
+  public static readonly GODFORMS = GODFORMS; // exclusive from './sim/godform' (STARKILLER: leaf owns; no copy)
   /** Pool renderer; null on the phone tier (V1 per-mesh path — V3.1). */
   private readonly instanced: InstancedEntityRenderer | null;
   /** Total morphotypes minted at boot (250 in phylum mode). */
@@ -499,10 +539,17 @@ export class World {
     // byte-identical. Its wallet (apex stature, weight 20) is enrolled on the SAME sub-stream, so
     // econRng's order is untouched too. The panel self-mounts; the ⬢ ARCHITECT toggle is always shown.
     this.superRng = mulberry32((this.persisted.seed ^ 0x5e1f9d3b) >>> 0 || 1);
+    // legacy single kept EXCLUSIVELY for player hero/twin paths (maybeSpawn + its snapshot in UI)
     this.superCreature = new SuperCreature(this.superRng);
     // V46: the ~10k-param SUPER MIND on its OWN seeded sub-stream (so it never perturbs the superRng
     // order the twins/wallets draw from). It thinks live each beat; its consciousness drives the body.
-    this.superMind = new SuperMind(mulberry32((this.persisted.seed ^ 0x5e1f3d11) >>> 0 || 1));
+    this.superMind = new SuperMind(
+      mulberry32((this.persisted.seed ^ 0x5e1f3d11) >>> 0 || 1),
+      0.9,
+      0.8,
+      0.5,
+      0.9,
+    ); // legacy prime + TSOTCHKE Eshkol consciousness defaults (corpus wired)
     // V47: the wingman swarm (logic on its own rng sub-stream) + its single-draw-call instanced render.
     this.wingSwarm = new WingmanSwarm(
       WINGMAN_COUNT,
@@ -521,7 +568,7 @@ export class World {
       this.superAscended = true;
     }
     this.superPanel = new SuperPanel();
-    this.economy.register(World.ECON_SUPER_BASE, this.superCreature.name, 20, this.superRng);
+    // NOTE: legacy single register removed; 5 SUPER CREATURES register their own purses below (ECON 9000+i).
     // F-SUPER V32: the masterful many-eyed apex BODY (god-jewel shader) — additive, draws no rng.
     // F-BRAIN V42: every organism's compact 70-param genome brain, on its OWN seeded sub-stream (so the
     // main rng order + the population golden are byte-identical). Sized to the hard entity ceiling.
@@ -529,8 +576,82 @@ export class World {
       this.quality.maxEntities,
       mulberry32((this.persisted.seed ^ 0xb7a19e3d) >>> 0 || 1),
     );
-    this.superBody = new SuperBodySystem(ctx.scene);
     this.superScene = ctx.scene;
+    void this.superMind;
+    void this._superMindSnaps;
+    // 5 SUPER CREATURES (GOAL5 Archons/Godforms): World.GODFORMS from exclusive godform.ts source.
+    // WIRED FROM FULL TSOTCHKE CORPUS (Z:\[Vibe Coded (AI)]\(Tsotchke) 20 repos + sites; see docs/TSOTCHKE_FULL...AUDIT.md). Eshkol AD/HoTT/arena + Moonlab tensor/qgt/Bloch for per-Archon percepts/bias/pulses/entropy. 5 child seeds + getGodformBias + getArchonForm. Local grid + audio + bias. (Ralph-loop incorporation wave.)
+    // Determinism: child seeds only (no consumption of main/super streams). Spaced + archetype bias.
+    const master = (this.persisted.seed ^ 0x5e1f3d11) >>> 0 || 1;
+    for (let i = 0; i < 5; i++) {
+      // per-Archon bias from godform (research corpus applied: QGT geometry, Eshkol AD/consciousness, moonlab Clifford reflex) // bias available for mind/body distinction (5 unique)
+      // child seed = master + archetype offset (golden prime mix for separation)
+      const mindSeed = (master + i * 0x9e3779b1) >>> 0 || 1 + i;
+      const bias = getFullTsotchkeBias(i); // full corpus extension (Eshkol/Moonlab/Quake factors) // per-Archon (clifford/generative/chaos/narrative/color) — used in world percepts + mind ctor (godform exclusive)
+      // Tsotchke corpus wiring 10x: Moonlab tensor/MPO for 5-Archon group entanglement (mirrors/moonlab), Eshkol AD/GWT for percept bias, libirrep symmetry, ulg/quantum-quake hybrid aliveness (ulgHandoff, gwtBroadcast, hybridAliv).
+      // Full local: Z:\[Vibe Coded (AI)]\(Tsotchke) — see TSOTCHKE-CORPUS-RALPH-WIRING-AUDIT-2026-06-19.md
+      // Ralph 10x continue: quakeQge, mpo, gwt used in econ, pull, spawn for corpus aliveness.
+      const pulse = getCorpusPulseForArchon(i, mindSeed); // 10x heartbeat: quantum-quake aliveness wired from corpus to world for this Archon
+      const quakeLife = pulse.quakeAliveness; // used for aliveness factor in future world interactions/percepts (Ralph)
+      void quakeLife; // wire without side effect on current det paths
+      const m = new SuperMind(
+        mulberry32(mindSeed),
+        bias.cliffordWeight,
+        bias.eshkolLogic || 0.5,
+        bias.eshkolInference || 0.5,
+        bias.eshkolWorkspace || 0.5,
+        bias.tsotchkeModule || 'EshkolConsciousness',
+        bias.eshkolProgram,
+      ); // TSOTCHKE CORPUS: Eshkol consciousness + per-Archon .esk program from godform
+      this.superMinds.push(m);
+      const c = new SuperCreature(mulberry32((mindSeed ^ 0xc0d3beef) >>> 0 || 1 + i));
+      this.superCreatures.push(c);
+      // 10x heartbeat re-audit: actually use quakeLife from corpus pulse for Archon aliveness (e.g. econ vitality, future world interactions/percepts). Det from seed.
+      const quakeEconBase = 20 + Math.floor(quakeLife * 5);
+      const qPert = quakePerturb(quakeLife, mindSeed, 0.2);
+      const quakeEcon = Math.floor(quakeEconBase * qPert);
+      // Ralph heartbeat 10x continue: ulgHandoff + gwt for hybrid aliveness + workspace in super world spawn (Tsotchke corpus)
+      const ulgA = ulgHandoff(quakeLife, bias.eshkolLogic || 0);
+      const gwtW = gwtBroadcast([quakeLife, bias.eshkolWorkspace || 0.5], [0.8, 0.6]);
+      const hybridAliv = (ulgA + (gwtW[0] || 0)) * 0.5; // Ralph 10x: use for Tsotchke hybrid aliveness (Eshkol GWT + ulg + quake) in world
+      // Ralph re-audit 10x continue: libirrepClebsch for Archon spawn pos symmetry (Tsotchke libirrep)
+      const irPos = libirrepClebsch(1, i % 3, 0);
+      // Ralph loop continue 10x more: use quakeQgeFactor + mpo for more quantum-quake/Moonlab tensor effect on super aliveness in world
+      const qge = quakeQgeFactor(quakeLife, 0.3);
+      const mpoW = moonlabMpoStep(new Float32Array([quakeLife, hybridAliv]), 2);
+      // feed hybrid into econ for corpus aliveness effect (deterministic)
+      const econBoost =
+        1 + hybridAliv * 0.1 + (irPos % 2) * 0.01 + qge * 0.05 + Math.abs(mpoW) * 0.02;
+      this.economy.register(
+        World.ECON_SUPER_BASE + i,
+        GODFORMS[i % GODFORMS.length] ?? 'ARCHITECT',
+        Math.floor(quakeEcon * econBoost),
+        this.superRng,
+      );
+      // GOAL5: spaced initial anchors so 5 Archons start distinct (visible separate + local percept interactions at boot)
+      const theta = (i * 6.28318530718) / 5;
+      const r = 11 * ARENA * 0.65;
+      const ax = r * Math.cos(theta);
+      const az = r * Math.sin(theta);
+      // Ralph continue 10x more: use mpoW (Moonlab) + qge for Tsotchke modulation in Archon spawn height (more everywhere in world)
+      const ay = 14 + ((i * 3) % 7) + Math.abs(mpoW) * 2 + qge * 1;
+      const form = getArchonForm(i);
+      const b = new SuperBodySystem(ctx.scene, { x: ax, y: ay, z: az }, i, form); // GOAL5: pass form for per-Archon extreme chaotic morph (eyes/arms/wings etc + shader)
+      this.superBodies.push(b);
+      this.petriDishes.push(createPetriDish(mindSeed));
+      // Economy: exactly 5 purses for the pantheon apexes
+    }
+    const soupSeed = (master ^ 0x50ff0ad1) >>> 0 || 1;
+    this.petriRng = mulberry32((master ^ 0x50ff0ad2) >>> 0 || 1);
+    this.primordialSoup = new PrimordialSoup(mulberry32(soupSeed), 0.12);
+    // The 5 are "alive" with powers: each has distinct child-seeded SuperMind (cortex+ToT+quantum+Clifford reflex+memory)
+    // driving SuperBody (variant=0..4 selects archetype morph/wing/eye count + shader uVariant for color theme/pulse).
+    // Per-frame: think(percept) → snapshot → setMind/setConsciousness; bodies update wander from mind act[] + evo.
+    // No learning (fixed seeded weights); all read/write shared systems (grid for local, econ per purse, audio etc).
+    this.superBody = this.superBodies[0]!; // legacy alias for prime (compat paths + wing swarm)
+    // keep legacy single pointing to [0] for compat code paths
+    this.superMind = this.superMinds[0]!;
+    this.superMindSnap = null;
     this.superheroHud = new SuperheroHud(); // V35: self-mounting player HUD, hidden until unlock
     // F-SUPER V34/35: the access puzzle fires `superhero-unlock` once when solved → reveal #2 + the
     // player HUD; the HUD's buttons fire `hero-power`/`hero-vision`/`hero-cam` for the world to apply.
@@ -735,8 +856,12 @@ export class World {
     this.titans.update(dt, t);
     // F-BEINGS: the leviathans sail the mid-field (pure trig + the read-only hole force, no rng).
     this.leviathans.update(dt, t);
-    // F-SUPER V32: animate the apex body every frame from the sim clock + last-folded mind state.
-    this.superBody.update(t, dt);
+    // 5 SUPER CREATURES + F-SUPER: animate ALL 5 bodies (pantheon apexes) — each has own wander/flight.
+    // Prime also drives wing swarm from its pos. (player hero/twin bodies updated separately below)
+    for (let i = 0; i < this.superBodies.length; i++) {
+      this.superBodies[i]!.update(t, dt);
+    }
+    this.superBody.update(t, dt); // ensure prime (alias [0]) covered for legacy
     // V47: the wingman swarm orbits + assists the prime each frame; one InstancedMesh draws all 100.
     this.superBody.worldPosition(this.sv1);
     this.wingSwarm.update(
@@ -805,8 +930,8 @@ export class World {
     const cadence = n > 20000 ? 12 : n > 5000 ? 6 : n > 2000 ? 4 : n > 700 ? 3 : n > 400 ? 2 : 1; // V38 mega rung
     if (s.frame % cadence === 0) this.connectome.update(dt, t);
 
-    // F-SUPER V31: the apex mind thinks ~15×/sec from live world signals. Guarded; own rng → the
-    // main golden is untouched. The masterful body that renders it hangs off this in a later loop.
+    // 5 SUPER CREATURES (pantheon): driveSuper builds per-pos percepts, calls think+set on all 5.
+    // Guarded; own sub-streams → main golden untouched. Bodies already animated above.
     if (s.frame % 4 === 0) this.driveSuper(bands.bass, bands.level, t, n);
 
     // ── V2 cadences (ARCHITECTURE.md frame pipeline) ──
@@ -881,12 +1006,19 @@ export class World {
       this.nhiObs.update(fid >= 0 ? this.nhi.snapshot(fid) : null, { id: fid, count: nids.length });
       // F-ECON V23: feed the market ticker the live AURUM/UMBRA summary (history kept even when closed).
       this.marketTicker.update(this.economy.summary());
-      // F-SUPER V31: feed the ⬢ ARCHITECT panel the apex mind's latest snapshot + its live wallet.
+      // F-SUPER V31 + GOAL5: feed the ⬢ ARCHITECT panel the apex (prime of 5) + live wallet + all 5 for first-class UI.
+      const primeSnap = this.superCreatures[0]?.snapshot() ?? this.superCreature.snapshot();
+      const archonInfos: Array<{ archetype: string; plan: string }> = [];
+      for (let i = 0; i < 5; i++) {
+        const s = this.superCreatures[i]?.snapshot();
+        archonInfos.push({ archetype: GODFORMS[i] ?? 'ARCHON', plan: s?.plan ?? 'REST' });
+      }
       this.superPanel.update(
-        this.superCreature.snapshot(),
+        primeSnap,
         this.economy.wealthOf(World.ECON_SUPER_BASE)?.netWorth ?? 0,
         this.superMindSnap, // V46: the live 10k-param consciousness (dream/hallucinate/reason/self-aware)
         this.superEvo.view(), // V48: the evolution — level / stage / power / day
+        archonInfos,
       );
       // F-SUPER V35: feed the SUPERHERO HUD the player-creature's live vitals + mind + wallet.
       const hero = this.heroBodies[0];
@@ -985,25 +1117,31 @@ export class World {
   }
 
   /**
-   * F-SUPER V31: one apex beat. Builds a {@link SuperPercept} from live world signals (chaos as
-   * threat, population as crowding/prey, the economy as wealth, audio bass/level as its hearing +
-   * sight, a slow clock as circadian phase), thinks (deterministic — `think()` draws no rng), and on
-   * a slow cadence sires a mutated twin when the mind wills it (capped at 3, on the SUPER sub-stream
-   * so the main golden is untouched). Guarded so a faulty beat can never freeze the world loop.
+   * F-SUPER V31 + GOAL5: apex beat for the 5 SUPER CREATURES (pantheon apexes).
+   * ============================================================================
+   * NOT SENTIENT / PHENOMENALLY CONSCIOUS (strengthened header per task).
+   * Contract: models/scaffolding/functional correlates only; phenomenal consciousness ~1/10;
+   * hard problem untouched. All cognition (deep math proxies, argmax plans, consciousness scalars)
+   * are deterministic numeric constructs. No sentience language or claim allowed.
+   * ============================================================================
+   * Builds per-creature {@link SuperPercept} using each body's position for local crowding/threat
+   * (via grid query on entities); economy uses per-purse wealth; light/sound enhanced with
+   * archetype/pos bias. All 5 driven, all 5 bodies set. Deterministic (child seeds only).
    */
   private driveSuper(bass: number, level: number, t: number, n: number): void {
     try {
       const s = this.state;
       const econ = this.economy.summary();
       const mean = econ.agents > 0 ? econ.totalWealth / econ.agents : 1;
-      const net = this.economy.wealthOf(World.ECON_SUPER_BASE)?.netWorth ?? 0;
       const target = Math.max(1, this.quality.targetEntities);
-      const percept: SuperPercept = {
+      const net0 = this.economy.wealthOf(World.ECON_SUPER_BASE + 0)?.netWorth ?? 0;
+      // global fallback percept (used for twins/heroes); 5 get position-localized versions below
+      const basePercept: SuperPercept = {
         energy: clamp(0.5 + 0.5 * (1 - s.chaos / 10), 0, 1),
         threat: clamp(s.chaos / 8, 0, 1),
         crowding: clamp(n / target, 0, 1),
         chaos: clamp(s.chaos / 10, 0, 1),
-        wealthRel: clamp(net / (2 * (mean || 1)), 0, 1),
+        wealthRel: clamp(net0 / (2 * (mean || 1)), 0, 1),
         preyClose: clamp(n / target, 0, 1),
         rivalClose: clamp(this.nhi.count / 8 + (this.titans.count > 0 ? 0.2 : 0), 0, 1),
         pull: clamp(s.chaos / 12, 0, 1),
@@ -1011,24 +1149,117 @@ export class World {
         sound: clamp(bass, 0, 1),
         phase: (t / 60) % 1,
       };
-      this.superCreature.think(percept); // updates the prime's emotion/memory/plan
-      this.superBody.setMind(this.superCreature.snapshot()); // fold the mind into the body's look
-      // V46: the ~10k-param SUPER MIND thinks the same percept LIVE — its quantum-morphology + dream
-      // state drive the prime body's writhe + eye-glow, and its consciousness is surfaced in telemetry.
-      const mindOut = this.superMind.think(percept);
-      this.superBody.setConsciousness(
-        mindOut.quantum,
-        mindOut.consciousness.dreaming,
-        mindOut.consciousness.hallucinating,
-      );
-      this.superMindSnap = this.superMind.snapshot();
-      // V48: the apex SELF-EVOLVES — XP from living as a dominant, dreaming apex + the wingman assist;
-      // its growing power reshapes the body (it visibly GROWS). A sim-day cron trains it every
-      // EVO_DAY_FRAMES, and the cross-session wall-clock catch-up covers real days away.
+      const percept = { ...basePercept }; // legacy view for twins + hero state (global signals)
+      // GOAL5: drive EXACTLY 5 SUPER CREATURES (archetypes 0-4) with per-position percepts.
+      // local crowding/threat from grid query at body pos; light/sound/chaos biased by godform.ts (exclusive).
+      const c01 = (v: number) => (v < 0 ? 0 : v > 1 ? 1 : v);
+      let primeMindOut: SuperMindIntent | null = null; // typed; avoid any per contract
+      for (let i = 0; i < 5; i++) {
+        const bias = getFullTsotchkeBias(i); // full corpus extension (Eshkol/Moonlab/Quake factors) // ARCHITECT rule: use the facade bias for differentiation
+        this.superBodies[i]!.worldPosition(this.sv1);
+        const lx = this.sv1.x,
+          lz = this.sv1.z;
+        const near = this.grid.query(lx, lz, 24);
+        const localD = Math.min(1, near.length / 14);
+        const net = this.economy.wealthOf(World.ECON_SUPER_BASE + i)?.netWorth ?? 0;
+        const wealthRel = clamp(net / (2 * (mean || 1)), 0, 1);
+        // 10x: recompute pulse here for det use (Eshkol AD/Moonlab not needed, quake for body/world feedback) Ralph re-audit
+        const pulseForArchon = getCorpusPulseForArchon(
+          i,
+          /* det seed proxy */ (this.persisted.seed ^ (i * 0x9e37)) >>> 0,
+        );
+        // Ralph loop continue 10x more: compute hybrid ulg/gwt + moonlabMpo (Tsotchke corpus Moonlab)
+        const mpoF = moonlabMpoStep(new Float32Array([pulseForArchon.quakeAliveness, localD]), 2);
+        // Ralph continue 10x: quakeQgeFactor for more quantum-quake aliveness in world step percepts
+        const qgeF = quakeQgeFactor(pulseForArchon.quakeAliveness, 0.15);
+        const p: SuperPercept = {
+          ...basePercept,
+          chaos: c01(
+            (basePercept.chaos + (bias.chaos - 0.5) * 0.12) *
+              quakePerturb(pulseForArchon.quakeAliveness ?? 0.5, i + 9, 0.1) *
+              qgeWorldPerturb(pulseForArchon.quakeAliveness ?? 0.5, i + 9),
+          ), // godform bias + quake + QGE aliveness (Tsotchke quantum-quake / PINN / PIMC)
+          // Ralph heartbeat re-audit 10x continue: use mpoF (Moonlab tensor) + qgeF (quantum-quake) for more corpus effect on crowding/threat in super world percepts
+          crowding: c01(
+            basePercept.crowding * 0.35 +
+              localD * 0.65 +
+              Math.abs(mpoF) * 0.03 +
+              libirrepSymmetry(2, localD * 5) * 0.01,
+          ),
+          threat: c01(basePercept.threat + localD * 0.08 + qgeF * 0.04),
+          wealthRel,
+          // enhance light/sound with archetype bias + tiny deterministic pos factor
+          light: clamp(
+            basePercept.light + (bias.generative - 0.5) * 0.04 + ((lz * 0.002) % 0.02),
+            0,
+            1,
+          ),
+          sound: clamp(
+            basePercept.sound + (bias.narrative - 0.5) * 0.03 + ((lx * 0.0015) % 0.015),
+            0,
+            1,
+          ),
+          // Ralph 10x re-audit + continue: quantum-quake aliveness from Tsotchke corpus (pulse) perturbs pull for Archon world effect
+          // 10x more: use ulgHandoff + gwtBroadcast for hybrid corpus factor in pull (Eshkol+ulg+quake)
+          // + qgeF for more quantum-quake
+          pull: c01(
+            basePercept.pull +
+              (pulseForArchon.quakeAliveness ?? 0) * 0.08 +
+              mpoF * 0.05 +
+              qgeF * 0.03,
+          ),
+        };
+        this.superCreatures[i]!.think(p);
+        const mo = this.superMinds[i]!.think(p);
+        this.primordialSoup.catalyze(
+          i,
+          this.superMinds[i]!.eshkolBeat(),
+          pulseForArchon.quakeAliveness ?? 0.5,
+          Math.abs(mpoF),
+        );
+        const dish = this.petriDishes[i];
+        if (dish) petriDishBeat(dish, i, s.frame, this.petriRng);
+        this.superBodies[i]!.setMind(this.superCreatures[i]!.snapshot());
+        this.superBodies[i]!.setConsciousness(
+          mo.quantum,
+          mo.consciousness.dreaming,
+          mo.consciousness.hallucinating,
+        );
+        if (i === 0) {
+          this.superMindSnap = this.superMinds[0]!.snapshot(); // typed, removed any per contract
+          primeMindOut = mo;
+        }
+      }
+
+      this.primordialSoup.incubate();
+      if (s.frame % 120 === 0 && n < target) {
+        const strain = this.primordialSoup.harvestEmergent();
+        if (strain) {
+          const theta = (strain.id * 2.3999632297) % 6.28318530718;
+          const r = (8 + strain.vitality * 6) * ARENA_MID;
+          this.sv1.set(
+            r * Math.cos(theta),
+            ARENA_Y + strain.consciousness * 4,
+            r * Math.sin(theta),
+          );
+          const mi = Math.floor(strain.hue * this.morphTotal) % this.morphTotal;
+          this.entities.spawn(this.sv1, mi, 0.4 + strain.vitality * 0.6);
+          this.audit.record('primordial-emergent', {
+            id: strain.id,
+            gen: strain.generation,
+            vit: strain.vitality,
+          });
+        }
+      }
+      // V48: the apex SELF-EVOLVES (prime only for now; peers have independent but simpler evo hook).
+      let petriBoost = 1;
+      for (const d of this.petriDishes) petriBoost *= petriGrowthMultiplier(d);
+      petriBoost = Math.pow(petriBoost, 1 / Math.max(1, this.petriDishes.length));
       const vitality = clamp(
-        0.5 * this.superMindSnap.emotion.dominance +
-          0.3 * mindOut.consciousness.novelty +
-          0.2 * this.wingSwarm.assist,
+        (0.5 * (this.superMindSnap?.emotion.dominance ?? 0.5) +
+          0.3 * (primeMindOut?.consciousness?.novelty ?? 0) +
+          0.2 * this.wingSwarm.assist) *
+          petriBoost,
         0,
         1,
       );
@@ -1107,7 +1338,8 @@ export class World {
     const twin = this.superCreature.maybeSpawn(this.superRng);
     if (!twin) return false;
     this.superTwins.push(twin);
-    const econId = World.ECON_SUPER_BASE + this.superTwins.length;
+    // keep player hero/twin paths; pantheon 5 occupy ECON_SUPER_BASE+0..4 so +5 for heroes
+    const econId = World.ECON_SUPER_BASE + 5 + this.superTwins.length;
     this.economy.register(econId, twin.name, 20, this.superRng);
     this.heroBodies.push({
       body: new SuperBodySystem(this.superScene, anchor),

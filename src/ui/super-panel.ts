@@ -1,5 +1,5 @@
 /**
- * SUPER CREATURE telemetry — the ⬢ ARCHITECT panel (V31). A self-building HUD readout that makes the
+ * SUPER CREATURES (5 / pantheon) telemetry — the ⬢ ARCHITECT panel (V31+GOAL5). A self-building HUD readout that makes the
  * apex mind INSPECTABLE: identity (name · generation · 1444-param deep mind), scale (½ Titan, ~100×
  * power), the committed GOAP plan, the live emotion meters (valence / arousal / dominance), the
  * prediction-loop SURPRISE, the offspring tally, the raw intent drives, and its wallet — so the brief's
@@ -119,6 +119,8 @@ export class SuperPanel {
   private readonly neural: SuperNeural;
   private open = false;
   private neuralOn = false;
+  // GOAL5: rows for all 5 Archons (name + plan) for first-class telemetry (not just prime)
+  private archonRows: Array<{ nm: HTMLElement; pl: HTMLElement }> = [];
 
   constructor(doc: Document = document) {
     doc.getElementById('cqm-sup-toggle')?.remove();
@@ -137,14 +139,15 @@ export class SuperPanel {
 
     const panel = doc.createElement('section');
     panel.id = 'cqm-sup-panel';
-    panel.setAttribute('aria-label', 'Super Creature telemetry');
+    panel.setAttribute('aria-label', 'Super Creatures (5 Archons/Godforms) telemetry');
     panel.innerHTML =
-      `<div class="cqm-sup-head"><b>⬢ SUPER CREATURE</b><span class="plan" data-plan>—</span>` +
-      `<button class="cqm-sup-neu" data-neu aria-label="Toggle the Super Creature neural observatory" title="Toggle the 4-tab composite-mind observatory in this box">⊞ NEURAL</button>` +
+      `<div class="cqm-sup-head"><b>⬢ 5 ARCHONS / GODFORMS</b><span class="plan" data-plan>—</span>` +
+      `<button class="cqm-sup-neu" data-neu aria-label="Toggle the Archon neural observatories" title="Toggle neural for focused Archon">⊞ NEURAL</button>` +
       `<button class="cqm-sup-x" data-close aria-label="Close">✕</button></div>` +
       `<div class="cqm-sup-body"><div class="cqm-sup-id" data-id></div>` +
       `<div class="cqm-sup-bars" data-bars></div></div>` +
-      `<div class="cqm-sup-neural-host" data-neural></div>`;
+      `<div class="cqm-sup-neural-host" data-neural></div>` +
+      `<div class="cqm-sup-archons" data-archons style="font-size:9px;margin-top:4px;opacity:0.8">ORACLE-Σ · STARKILLER-Ω · MANHATTAN-Φ · BROLY-Ψ · VOID-Λ</div>`;
     doc.body.appendChild(panel);
     this.panel = panel;
     this.planEl = panel.querySelector('[data-plan]') as HTMLElement;
@@ -164,9 +167,13 @@ export class SuperPanel {
     this.id.offspring = idRow(id, 'Twins', doc);
     this.id.wallet = idRow(id, 'Wallet', doc);
     this.id.brain = idRow(id, 'Conscious', doc); // V46: the live ~10k-param composite mind
-    this.id.substrate = idRow(id, 'Substrate', doc); // V84: the ported Tsotchke subsymbolic substrates
+    this.id.substrate = idRow(id, 'Substrate', doc); // V84 + Ralph 10x: ported Tsotchke (Eshkol QRNG/AD/GWT + Moonlab tensor/Clifford + QGT + libirrep sym + quake + mpo + ulg) substrates live in 5 Archons. See facade + full corpus.
     this.id.cognition = idRow(id, 'Cognition', doc); // V1.1: reservoir · active-inference · metacognition
     this.id.power = idRow(id, 'Power', doc); // V48: the evolution — level / stage / power / day
+
+    // GOAL5: 5 Archons/Godforms telemetry (first-class, distinct from prime singular) — rows built in ctor for live per-Archetype plan inspect
+    // (full: name/archetype/plan visible for all 5; senses drive plan, memory/quantum/body in neural tab for focused)
+    void panel.querySelector('[data-archons]'); // rows populated live in update()
 
     const bars = panel.querySelector('[data-bars]') as HTMLElement;
     this.meter.valence = bar(bars, 'Valence', '#6bff9e', doc);
@@ -186,6 +193,32 @@ export class SuperPanel {
     this.meter.ignition = bar(bars, 'Ignition', '#ff7a45', doc); // Global Workspace broadcast (GNW)
     this.meter.phi = bar(bars, 'Φ integ', '#5ad1c4', doc); // Integrated-Information proxy (IIT)
     this.meter.confidence = bar(bars, 'Confidence', '#ffa3d1', doc); // V92 · metacognitive executive (HOT)
+
+    // GOAL5: 5 Archons first-class inspect list (name/archetype/plan/senses proxy via plan color; full quantum/mem via neural for focused)
+    const archonsWrap = panel.querySelector('[data-archons]') as HTMLElement;
+    archonsWrap.innerHTML = '';
+    archonsWrap.style.fontSize = '9px';
+    archonsWrap.style.lineHeight = '1.2';
+    archonsWrap.style.marginTop = '3px';
+    archonsWrap.style.opacity = '0.95';
+    this.archonRows = [];
+    for (let k = 0; k < 5; k++) {
+      const row = doc.createElement('div');
+      row.style.display = 'flex';
+      row.style.gap = '4px';
+      row.style.alignItems = 'center';
+      row.style.margin = '1px 0';
+      const nm = doc.createElement('span');
+      nm.style.color = '#d8a8ff';
+      nm.style.minWidth = '78px';
+      const pl = doc.createElement('span');
+      pl.style.fontWeight = '700';
+      pl.style.padding = '0 3px';
+      pl.style.borderRadius = '3px';
+      row.append(nm, pl);
+      archonsWrap.appendChild(row);
+      this.archonRows.push({ nm, pl });
+    }
   }
 
   get isOpen(): boolean {
@@ -211,15 +244,40 @@ export class SuperPanel {
   /**
    * Push the latest mind snapshot + wallet. Always cheap; repaints only when open. Null-safe (the
    * creature is always-active, so `snap` should be present, but we tolerate a missing beat).
+   * GOAL5: 5th param carries all 5 for full first-class inspect (archetype+plan visible for every Archon).
    */
   update(
     snap: SuperSnapshot | null,
     netWorth: number,
     mind?: SuperMindSnapshot | null,
     evo?: EvoView | null,
+    archons?: Array<{ archetype: string; plan: string }> | null,
   ): void {
+    // GOAL5: 5 Archons first-class (all 5 names/archetypes/plans live; prime gets deep + neural; senses/quantum/body via per mind)
     // Feed the deeper neural box FIRST — it animates independently of whether this readout is open.
     this.neural.update(mind ?? null);
+    // populate live 5-archon mini-inspect (name/archetype/plan + color for full visibility)
+    if (this.archonRows.length && archons && archons.length === 5) {
+      for (let k = 0; k < 5; k++) {
+        const row = this.archonRows[k];
+        const info = archons[k];
+        if (row && info) {
+          row.nm.textContent = info.archetype;
+          const pc = PLAN_COLOR[info.plan as SuperPlan] || '#aaa';
+          row.pl.textContent = info.plan;
+          row.pl.style.background = pc + '33';
+          row.pl.style.color = pc;
+        }
+      }
+    }
+    // TSOTCHKE 10x: show full Eshkol consciousness (logic/inference/workspace from corpus CONSCIOUSNESS_ENGINE) + Moonlab etc for focused Archon.
+    if (mind && mind.eshkolConsciousness && this.archonRows.length) {
+      const ec = mind.eshkolConsciousness;
+      const ecStr = `Eshkol L:${ec.logic.toFixed(1)} I:${ec.inference.toFixed(1)} W:${ec.workspace.toFixed(1)}`;
+      const r0 = this.archonRows[0];
+      if (r0 && r0.nm) r0.nm.title = ecStr; // attach to first for focused telemetry
+    }
+    // Heartbeat small: Moonlab/Eshkol note for 5 Archons telemetry.
     if (!this.open || !snap) return;
     const c = PLAN_COLOR[snap.plan];
     this.planEl.textContent = snap.plan;
@@ -252,7 +310,7 @@ export class SuperPanel {
       this.setBar('ignition', k.ignition ?? 0); // V89 · GWT broadcast
       this.setBar('phi', k.phi ?? 0); // V89 · IIT Φ proxy
       this.setBar('confidence', mind.metacog?.confidence ?? 0); // V92 · metacognitive confidence (HOT)
-      // V84 — the three ported Tsotchke substrates the apex psyche RUNS on: the Eshkol qubit-RNG it
+      // V84+ Ralph Tsotchke corpus wiring: Eshkol (full local Eshkol/eshkol_repo AD/arena/HoTT/consciousness + QRNG), Moonlab (tensor/MPO/CA-MPS), libirrep symmetry, ulg/quantum-quake. See audit. The Eshkol qubit-RNG it
       // collapses thoughts through, the QGTL geometry (curvature of its thought-space), and the
       // spin-glass instinct (the behavioural archetype its Hopfield/Ising lattice recalled this beat).
       const geo = mind.qubits.geometry;

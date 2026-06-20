@@ -1,0 +1,7 @@
+---
+pid: 86392
+cwd: "Z:\[Vibe Coded (AI)]\CLAUDECODE\Cosmogonic Quantum Mechalogodrom"
+command: "cd -LiteralPath 'Z:\\[Vibe Coded (AI)]\\CLAUDECODE\\Cosmogonic Quantum Mechalogodrom' && bun scripts/verify-receipts.ts --print"
+started_at: 2026-06-20T12:01:24.901Z
+running_for_ms: 70003    
+---

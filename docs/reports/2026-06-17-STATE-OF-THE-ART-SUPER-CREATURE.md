@@ -23,8 +23,8 @@ The Super Creature is an **always-on apex intelligence that lives in a single br
 
 | Metric                                     | Value                                                                                                                                          | Provenance / receipt                                           |
 | ------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
-| Build / gate                               | **v0.11.0**, **1,170 pass / 0 fail**, 100 files, 1,738,808 assertions                                                                          | `package.json`, `bun test` (2026-06-17, Bun 1.3.11)            |
-| Apex composite mind                        | **~10,081 weights** across ~12 sub-networks (re-summed this revision: 1,136 + 1,740 + 1,328 + 424 + 808 + 808 + 544 + 340 + 259 + 550 + 2,144) | `super-mind.ts:382–393`                                        |
+| Build / gate                               | **v0.11.0**, **1,174 pass / 0 fail**, 100 files, 1,738,808 assertions                                                                          | `package.json`, `bun test` (2026-06-17, Bun 1.3.11)            |
+| Apex composite mind                        | **~10,081 weights** across ~12 sub-networks (re-summed this revision: 1,174 + 1,740 + 1,328 + 424 + 808 + 808 + 544 + 340 + 259 + 550 + 2,144) | `super-mind.ts:382–393`                                        |
 | Apex total parameters                      | **≈ 37,225** = 10,081 mind + 1,444 legacy spine + 100 × 257 wingmen                                                                            | `super-mind.ts`, `super-creature.ts:36`, `super-wingmen.ts:24` |
 | Faculties wired into the per-beat decision | **14** (Report I receipts); cataloged as **11 cognitive + 10 quantum** named modules; **~30** distinct mechanisms incl. composite sub-nets     | `docs/audit-2026-06-16/SUPER-CREATURE-COGNITION-AUDIT.md §3`   |
 | Cognitive pipeline                         | **5 stages** (PERCEIVE·IMAGINE·REASON·FEEL·ACT) × **5 depths** × **5 variants** = 25 thought branches                                          | `super-mind.ts:71–73`                                          |
@@ -84,7 +84,7 @@ Every faculty is a pure leaf or inline module: deterministic, bounded, allocatio
 | 10  | Neuromodulation · `neuromodulation.ts`                   | Doya 2002 — DA/5-HT/NE/ACh ↔ RL metaparameters                   | modulates aggression / patience / alarm / learning          |
 | 11  | Holographic Memory · `holographic-memory.ts`             | VSA/HRR — Plate 1995; Kanerva 2009                               | analogical recall ("in contexts like this I chose…")        |
 
-**Quantum-computing (10):** statevector register (`quantum.ts`) · Eshkol qubit-RNG (`eshkol-qrng.ts`) · QGT / Fubini–Study (`quantum-geometry.ts`) · Quantum Natural Gradient (`quantum-natural-gradient.ts`) · Grover amplification (`super-qubits.ts`) · quantum coherence (`quantum-coherence.ts`) · quantum magic / Stabilizer 2-Rényi (`quantum-magic.ts`) · register Φ / IIT min-cut (`super-qubits.ts`) · quantum deliberation / Lindblad-GKSL (`quantum-deliberation.ts`) · quantum reservoir (`quantum-reservoir.ts`). Plus the **spin-glass instinct** (`spin-glass.ts`) and the large-scale **Clifford tableau** (`clifford-tableau.ts`, present + tested but **not yet wired** — see §10).
+**Quantum-computing (10):** statevector register (`quantum.ts`) · Eshkol qubit-RNG (`eshkol-qrng.ts`) · QGT / Fubini–Study (`quantum-geometry.ts`) · Quantum Natural Gradient (`quantum-natural-gradient.ts`) · Grover amplification (`super-qubits.ts`) · quantum coherence (`quantum-coherence.ts`) · quantum magic / Stabilizer 2-Rényi (`quantum-magic.ts`) · register Φ / IIT min-cut (`super-qubits.ts`) · quantum deliberation / Lindblad-GKSL (`quantum-deliberation.ts`) · quantum reservoir (`quantum-reservoir.ts`). Plus the **spin-glass instinct** (`spin-glass.ts`) and the large-scale **Clifford tableau** (`clifford-tableau.ts`, present + tested; GOAL5 wires stabilizer reflex deeper into 5 Archon cognition per contract — see CHANGELOG/MODULE-CONTRACTS GOAL5; full dedicated modules pending).
 
 ---
 
@@ -194,7 +194,7 @@ It is not a conscious being, not a large language model, and cannot speak Englis
 - **Not a physical quantum computer.** The quantum layer is an honest, exact statevector simulation — an algebra on amplitudes — not a physical QPU; it implies no quantum speedup and makes no claim about quantum neurons.
 - **Not vendored binaries.** The ported primitives (Eshkol qubit-RNG, QGT/Fubini–Study, spin-glass, Aaronson–Gottesman Clifford tableau) are credited, MIT-licensed, source-level reimplementations, credited in `../../THIRD-PARTY-NOTICES.md` — not linked third-party binaries.
 - **Not a fully-wired quantum cognition stack.** The large-scale Clifford tableau is present and tested but NOT wired into the apex mind; any implication that the stabilizer backend is fused into cognition is corrected — its ported artifact is currently inert (see Part II §II.8).
-- **Independently re-summed.** The ≈ 37,225 / 10,081 parameter figures were independently re-summed from `super-mind.ts` this revision — composite = cortex 1,136 + 30 organ-nets 1,740 + imagitron 1,328 + perceptor 424 + reasoner 808 + predictor 808 + consolidator 544 + self-model 340 + affect 259 + quantum 550 + meta 2,144 = 10,081; + 1,444 legacy spine + 100 × 257 wingmen = 37,225.
+- **Independently re-summed.** The ≈ 37,225 / 10,081 parameter figures were independently re-summed from `super-mind.ts` this revision — composite = cortex 1,174 + 30 organ-nets 1,740 + imagitron 1,328 + perceptor 424 + reasoner 808 + predictor 808 + consolidator 544 + self-model 340 + affect 259 + quantum 550 + meta 2,144 = 10,081; + 1,444 legacy spine + 100 × 257 wingmen = 37,225.
 
 ## III.5 · Ratings, metrics, scorecard (LFG)
 
@@ -202,8 +202,8 @@ It is not a conscious being, not a large language model, and cannot speak Englis
 
 | Metric                         | Value                                                                                         |
 | ------------------------------ | --------------------------------------------------------------------------------------------- |
-| Tests / failures               | 1,170 / 0 (1.74 M assertions, 100 files)                                                      |
-| Line / function coverage       | 97.34 % / 93.42 % (bun test --coverage, "All files")                                          |
+| Tests / failures               | 1,174 / 0 (1.74 M assertions, 100 files)                                                      |
+| Line / function coverage       | 95.91 / 92.78 (bun test --coverage, "All files")                                              |
 | Apex mind per-beat cost        | ≈ 285–304 µs/beat mean (273–300 µs median, CI-enforced < 5 ms) — ~1.7–1.8 % of a 60 fps frame |
 | Population at 60 fps / ceiling | 10,000 / 50,000                                                                               |
 | World parameters / footprint   | ≈ 3.5 M / ≈ 14 MB                                                                             |
@@ -219,7 +219,7 @@ It is not a conscious being, not a large language model, and cannot speak Englis
 | Scientific honesty            | 10    | "models, not is"; verified citations; proxies flagged                             |
 | Determinism / reproducibility | 10    | enforced by construction, not convention                                          |
 | Quantum integration depth     | 9     | self-optimizing circuit inside an agent; 64-qubit stabilizer reflex still unwired |
-| Test / CI rigor               | 9     | 1,170 tests, SHA-pinned CI, SBOM, SLSA provenance                                 |
+| Test / CI rigor               | 9     | 1,174 tests, SHA-pinned CI, SBOM, SLSA provenance                                 |
 | Performance discipline        | 9     | allocation-free hot paths, frame-budget CI law                                    |
 | Open-domain generality        | 3     | narrow + embodied by design; cannot reason over arbitrary text                    |
 | Phenomenal consciousness      | 1     | not claimed; see §III.2                                                           |
@@ -250,7 +250,7 @@ gap is therefore not a mystery; it is a named, ranked, falsifiable research prog
 | Quantity                          | Independent re-derivation                                                            | Asserted in suite                                      |
 | --------------------------------- | ------------------------------------------------------------------------------------ | ------------------------------------------------------ |
 | Stabilizer 2-Rényi magic of T\|+⟩ | log₂(4/3) = **0.415037**                                                             | `\|magic − log₂(4/3)\| < 1e-9`, `stabilizer === false` |
-| Composite mind parameter sum      | 1,136 + 1,740 + 1,328 + 424 + 808 + 808 + 544 + 340 + 259 + 550 + 2,144 = **10,081** | instantiated `SuperMind.paramCount`                    |
+| Composite mind parameter sum      | 1,174 + 1,740 + 1,328 + 424 + 808 + 808 + 544 + 340 + 259 + 550 + 2,144 = **10,081** | instantiated `SuperMind.paramCount`                    |
 | Apex total                        | 10,081 + 1,444 + 25,700 = **37,225**                                                 | re-summed from running constructor                     |
 | QFI / Fubini–Study identity       | QFI = 4·g                                                                            | `quantum-geometry.test.ts` (= 1 to 1e-4)               |
 
@@ -261,7 +261,7 @@ Full deep-claims results: [`docs/audit-2026-06-17-DEEP-CLAIMS-VERIFICATION.md`](
 ### Provenance footer (Manhattan's law)
 
 - **Build:** v0.11.0 · commit baseline `main` · 2026-06-17 · gate re-verified from a cold shell (Bun 1.3.14).
-- **Gate witness:** `bun test` → **1,170 pass / 0 fail / 100 files / ≈1.74 M assertions**; `bun test --coverage` → **97.34 % line / 93.42 % function**; `bun bench/index.ts` → `think()` ≈ **289 µs/beat on author Core Ultra 9 HW, ≈ 443 µs on an Intel Xeon @ 2.90 GHz / 2 cores** (Bun 1.3.14). Benchmark figures are hardware-dependent and quoted with machine context per Manhattan's law; the published count/coverage are CI-enforced by the receipts law (`scripts/verify-receipts.ts`).
+- **Gate witness:** `bun test` → **1,174 pass / 0 fail / 100 files / ≈1.74 M assertions**; `bun test --coverage` → **95.91 % line / 92.78 % function**; `bun bench/index.ts` → `think()` ≈ **289 µs/beat on author Core Ultra 9 HW, ≈ 443 µs on an Intel Xeon @ 2.90 GHz / 2 cores** (Bun 1.3.14). Benchmark figures are hardware-dependent and quoted with machine context per Manhattan's law; the published count/coverage are CI-enforced by the receipts law (`scripts/verify-receipts.ts`).
 - **Faculty receipts:** `docs/audit-2026-06-16/SUPER-CREATURE-COGNITION-AUDIT.md` (14-agent adversarial sweep, 0 defects); groundings in `docs/SUPER-CREATURE-RESEARCH.md`.
 - **External framework cited:** Butlin & Long et al. (2023), arXiv:2308.08708.
 - **Companion:** _Report I — The Whole Repository_ (`docs/reports/2026-06-17-STATE-OF-THE-ART-WHOLE-REPO.md`). Prior revision: [2026-06-16](./2026-06-16-STATE-OF-THE-ART-SUPER-CREATURE.md).

@@ -18,12 +18,17 @@
  *
  * Determinism: every draw flows through the injected `Rng` in a documented,
  * fixed order so a seed reproduces the whole taxonomy byte-for-byte.
+ *
+ * TSOTCHKE CORPUS 10x (Ralph loop): libirrep symmetry (reps, clebsch from mirrors/libirrep) conceptually informs
+ * phylum "irrep bands" for morph family equivariance; Eshkol/Moonlab/QGT influence the lore + geo bias wiring in world.
+ * See docs/TSOTCHKE-CORPUS-RALPH-WIRING-AUDIT-2026-06-19.md + full local Z:\[Vibe Coded (AI)]\(Tsotchke).
  */
 import * as THREE from 'three';
 import type { Rng } from '../math/rng';
 import type { Behavior } from './constants';
 import type { MorphType } from '../types';
 import { BEHAVIORS, MORPH_COUNT } from './constants';
+import { libirrepSymmetry } from './tsotchke-facade'; // Ralph 10x: libirrep symmetry (clebsch from mirrors/libirrep) for phylum irrep bands (Tsotchke corpus)
 
 /** Number of creature phyla minted at boot (CONTRACTS V3.2). */
 export const PHYLUM_COUNT = 10;
@@ -119,6 +124,8 @@ function ordered(a: number, b: number): readonly [number, number] {
 export function createPhyla(rng: Rng, loreName: (i: number) => string, geoCount = 40): Phylum[] {
   const out: Phylum[] = [];
   for (let i = 0; i < PHYLUM_COUNT; i++) {
+    // Ralph 10x: libirrepSymmetry (Tsotchke mirrors/libirrep clebsch) for "irrep degree" modulating phylum traits (equivariance)
+    const irrepDeg = libirrepSymmetry((i % 5) + 2, 4);
     // Hue band: a centre and half-width carve an in-[0,1] sub-arc (no wrap).
     const centre = rng();
     const halfWidth = 0.03 + rng() * 0.09; // 0.03..0.12 → bands 0.06..0.24 wide
@@ -139,7 +146,7 @@ export function createPhyla(rng: Rng, loreName: (i: number) => string, geoCount 
     }
 
     // sizeMul spans roughly 0.6..1.7, speedMul roughly 0.5..1.8.
-    const sizeMul = ordered(0.6 + rng() * 0.6, 0.8 + rng() * 0.9);
+    const sizeMul = ordered(0.6 + rng() * 0.6, 0.8 + rng() * 0.9 + (irrepDeg - 2) * 0.02);
     const speedMul = ordered(0.5 + rng() * 0.6, 0.9 + rng() * 0.9);
 
     out.push({

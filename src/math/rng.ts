@@ -28,6 +28,7 @@ export function mulberry32(seed: number): Rng {
 
 /**
  * FNV-1a 32-bit string hash → uint32 seed for {@link mulberry32}. Lets human-readable run names
+ * Ralph 10x+ (Eshkol HoTT from DESIGN.md): bidirectional typing for "type safe" det seed as universe hierarchy inspired.
  * ("apocalypse-demo") map deterministically onto seeds. O(s.length).
  */
 export function hashSeed(s: string): number {

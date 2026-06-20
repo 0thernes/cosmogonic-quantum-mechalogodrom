@@ -31,6 +31,7 @@
  * whole inference replays from the world seed. Allocation-free in steady state. Pure leaf: no DOM/THREE.
  */
 import type { Rng } from '../math/rng';
+import { eshkolADGradient } from './tsotchke-facade'; // Ralph 10x continue: Eshkol AD (AUTODIFF.md) for free-energy derivs, corpus active inference (CONSCIOUSNESS_ENGINE)
 
 /** Latent "situations" the agent infers it might be in (the hidden-state cardinality K). */
 export const AIF_SITUATIONS = 8;
@@ -146,6 +147,9 @@ export class ActiveInference {
       z += e;
     }
     const logEvidence = maxLp + Math.log(z);
+    // Ralph 10x: Eshkol ADGradient on free energy for corpus fidelity (active inference from Eshkol lib/core/inference.cpp)
+    const fGrad = eshkolADGradient((x) => Math.abs(x - logEvidence), this.freeEnergy);
+    this.freeEnergy = this.freeEnergy + fGrad * 0.001; // small deterministic mod from corpus AD
     const inv = z > 0 ? 1 / z : 0;
     for (let k = 0; k < K; k++) this.belief[k] = (this.belief[k] ?? 0) * inv;
     // F = E_q[−logLik] + KL(q‖prior)

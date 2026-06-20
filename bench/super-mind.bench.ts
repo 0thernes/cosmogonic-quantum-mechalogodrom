@@ -12,6 +12,9 @@
  *                     "magic" (4ⁿ Pauli strings), integrated information + coherence — the heavier readouts
  *                     that run only when the BRAIN observatory is open, NEVER per simulation beat.
  *
+ * GOAL5: also measures the 5 parallel godform minds (distinct child seeds, per world.ts driveSuper cadence).
+ * Amortized cost (5 think calls every 4 sim frames) must stay <2% of 16.67 ms frame per contract.
+ *
  * The fixture is seeded (`mulberry32(42)`) and warmed so the EMAs / reservoir / belief states settle to a
  * representative steady state; every benched call is deterministic and allocation-disciplined in `think()`.
  */
@@ -49,6 +52,28 @@ group('super-mind: the apex composite mind', () => {
       do_not_optimize(mind.snapshot());
     },
   );
+});
+
+// GOAL5 5-minds measurement (Dr Manhattan): replicate world.ts child-seed construction + drive cadence.
+// Each godform uses distinct seed = master ^ (i * golden); full think batch simulates the 5-archon drive.
+const FIVE_SEEDS = Array.from(
+  { length: 5 },
+  (_, i) => (0x5e1f3d11 ^ (i * 0x9e3779b1)) >>> 0 || 1 + i,
+);
+const fiveMinds: SuperMind[] = FIVE_SEEDS.map((s) => new SuperMind(mulberry32(s)));
+const fivePercepts: SuperPercept[] = Array.from({ length: 5 }, (_, i) => ({
+  ...percept,
+  chaos: Math.min(1, percept.chaos + (i - 2) * 0.03), // godform bias proxy
+  crowding: Math.min(1, percept.crowding + i * 0.02),
+}));
+for (let m of fiveMinds) for (let i = 0; i < 32; i++) m.think(fivePercepts[0]!); // settle each
+
+group('GOAL5: 5 super minds (pantheon / godforms)', () => {
+  bench('5x think() batch (simulates driveSuper every-4f cadence; amortized frame cost)', () => {
+    for (let i = 0; i < 5; i++) {
+      do_not_optimize(fiveMinds[i]!.think(fivePercepts[i]!));
+    }
+  });
 });
 
 if (import.meta.main) {

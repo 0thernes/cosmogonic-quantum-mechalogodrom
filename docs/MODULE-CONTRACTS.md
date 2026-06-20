@@ -93,6 +93,96 @@ export class SpatialHash<T extends { position: { x: number; z: number } }> {
 
 Port of legacy `SG` (lines 358-367) with cell pooling kept and Known Bug 5 fixed.
 
+### src/math/eshkol-ad.ts (leaf, Tsotchke)
+
+```ts
+/** Reverse-mode automatic differentiation via Wengert tape. O(n) backward pass. */
+export enum AdOpType {
+  AD_ADD,
+  AD_SUB,
+  AD_MUL,
+  AD_DIV,
+  AD_SIN,
+  AD_COS,
+  AD_EXP,
+  AD_LOG,
+  AD_SQRT,
+  AD_POW,
+  AD_NEG,
+  AD_ABS,
+  AD_RELU,
+  AD_SIGMOID,
+  AD_TANH,
+  AD_CONST,
+  AD_VAR,
+}
+export interface AdTape {
+  nodes: AdNode[];
+  len: number;
+  cap: number;
+}
+export interface AdNode {
+  op: AdOpType;
+  value: number;
+  gradient: number;
+  left: number;
+  right: number;
+  saved: number;
+}
+export function adTapeNew(initialCapacity?: number): AdTape;
+export function adConst(tape: AdTape, value: number): number;
+export function adVar(tape: AdTape, value: number): number;
+export function adAdd(tape: AdTape, left: number, right: number): number;
+export function adSub(tape: AdTape, left: number, right: number): number;
+export function adMul(tape: AdTape, left: number, right: number): number;
+export function adDiv(tape: AdTape, left: number, right: number): number;
+export function adPow(tape: AdTape, base: number, exponent: number): number;
+export function adSin(tape: AdTape, input: number): number;
+export function adCos(tape: AdTape, input: number): number;
+export function adExp(tape: AdTape, input: number): number;
+export function adLog(tape: AdTape, input: number): number;
+export function adSqrt(tape: AdTape, input: number): number;
+export function adNeg(tape: AdTape, input: number): number;
+export function adAbs(tape: AdTape, input: number): number;
+export function adRelu(tape: AdTape, input: number): number;
+export function adSigmoid(tape: AdTape, input: number): number;
+export function adTanh(tape: AdTape, input: number): number;
+export function adBackward(tape: AdTape, output: number): void;
+export function adGradient(tape: AdTape, node: number): number;
+export function adValue(tape: AdTape, node: number): number;
+export function adTapeReset(tape: AdTape): void;
+export function adTapeLen(tape: AdTape): number;
+```
+
+Port of tsotchke/Eshkol AD primitive (lib/backend/vm_autodiff.c, lib/core/runtime_autodiff.cpp). Deterministic, allocation-free hot paths, nested gradients via tape.
+
+### src/math/quantum-qrng-full.ts (leaf, Tsotchke)
+
+```ts
+import type { Rng } from './rng';
+import { EshkolQrng, type EshkolQrngSnapshot } from './eshkol-qrng';
+
+export interface BellTestResult {
+  S: number;
+  violation: boolean;
+  correlations: number[];
+}
+export interface EntropyEstimate {
+  entropy: number;
+  uniformity: number;
+}
+export class QuantumRngFull extends EshkolQrng {
+  constructor(seed: Rng);
+  bellTest(): BellTestResult;
+  entropy(): EntropyEstimate;
+  snapshotFull(): EshkolQrngSnapshot & { bell: BellTestResult; entropy: EntropyEstimate };
+}
+export function bellTestWithRng(rng: Rng): BellTestResult;
+export function entropyWithRng(rng: Rng): EntropyEstimate;
+```
+
+Extends Eshkol QRNG with Bell inequality verification (CHSH S parameter) and Shannon entropy estimation. Port of tsotchke/moonlab Bell test algorithms.
+
 ### src/sim/constants.ts (leaf)
 
 ```ts
@@ -1420,3 +1510,118 @@ Copilot are constructed boot-stream-neutral and never write sim state, so the go
 Full `bun run check` green: prettier → tsc strict → oxlint → 535 tests (0 fail, 300-frame golden
 included) → build. The Copilot sandbox verified live (allow: `git log`, file reads; deny:
 path-escape, `git push`, `legacy/`, shell redirection).
+
+---
+
+# CONTRACT AMENDMENT — GOAL 5: FIVE SUPER CREATURES (ARCHONS / GODFORMS)
+
+**MANDATE**: Realize **exactly 5** (no more, no less at steady) wildly super-intelligent apex beings in the world ("Super Creatures", "Archons", "Godforms"). They are the dominant, manipulative, freak-morphing ORACLES/SIMULATORS/ARCHITECTS of this cosmos — each a full composite mind + extreme-chaos body.
+
+**HONESTY BOUNDARIES (BINDING — never violated in prose, comments, UI, or docs)**:
+
+- Not sentient / phenomenally conscious. Phenomenal consciousness ~1/10; hard problem untouched.
+- Weights **seeded and fixed at construction**; NO online learning of weights (single biggest gap).
+- Quantum layer = exact statevector + Clifford **simulation** (algebra on amplitudes); NO physical QPU, NO quantum speedup claim, NO "quantum neurons".
+- Clifford tableau (ported Aaronson–Gottesman) present+tested but was inert; now wired as "stabilizer reflex" only — explicit.
+- All superlatives scoped to "models of / scaffolding for / functional correlates of" the listed theories.
+- Memory is decision system (typed, gated, graph+matrix, feedback-controlled), NOT a conscious archive.
+
+**Architectural additions required (close the Butlin gaps for this specimen)**:
+
+1. **AST-1** — explicit attention schema (model of own attention allocation, focus history, salience map).
+2. **HOT-1** — genuine top-down generative perception loop (full predict→generate expected percepts→correct bottom-up).
+3. **HOT-4** — sparse-smooth quality space (low-D smooth manifold over integrated states; sparse activation as "qualia" proxy).
+4. **Wire Clifford "stabilizer reflex"** (past 6q, up to 64 via already-ported tableau) into apex cognition for error-correction / fast intuition on beliefs/plans.
+5. **Persistent lifelong narrative memory + grounded symbol layer** — the largest leap. Multi-store orchestra (typed events, graph provenance edges, surprise/entropy gate, regime sentinel, strategic reputation, reflection→skill, consensus, meta-controller). Grounded symbols via extended VSA + typed atoms bound to percepts/actions/plans. Memory IS part of closed-loop decision (not passive log). Consolidation turns episodes → durable narrative + skills. Use `src/memory/` + new orchestra.
+
+**Visual / Morphology (extreme edge + alive)**:
+
+- Wild chaotic geometric shapes from extreme-edge combinatronics (supershapes, attractor skeletons, high-genus polys, voronoi-shatter, recursive subdivision, Lorenz/curl fields on vertices).
+- Mutating morphology on every level (topology hints via dynamic sub-parts, not full re-mesh every frame; allocation-free).
+- 5 distinct archetypes (Oracle, Simulator, Architect, Trickster, Dominus) — each unique base silhouette family + palette + pulse signature + quantum-aspect bias.
+- Multi-part rigs: ≥8–16 eyes (vision sampling), ≥6–12 arms/legs (reach/manipulate), ears (sound pattern), wings, mouths. Eyes "see" (local spatial query + light + quantum bands), ears "understand" (audio bands → symbolic features).
+- Unique textures/colors/lighting/variance per creature + global.
+- Alive: unique heartbeats (freq = arousal + quantum flux), surface waves/pulses propagating (vertex displacement + emissive), breath, morph wobble, trick/gaslight visual tells (phase flips on deception).
+- All driven by mind snapshot + quantum state. Hot path allocation-free. Masterful shader(s) like god-jewel but combinatorially wilder per archetype.
+
+**Intelligence / Behavior**:
+
+- Full SuperMind stack per creature (cortex, 30 organ-nets, imagitron+ToT, predictor, quantum deliberation, all 1.1 faculties + the 5 new above).
+- Vision + sound fully wired into percepts + internal models.
+- Dominant, master-smart, manipulative, deceptive, gaslighting: high DECEIVE/DOMINATE bias; actions that perturb other systems (entities, quantum cloud, RD, audio, weather) to advantage.
+- Reactive / responsive / adaptive / inductive-deductive via full stack (AIF + SR + empowerment + memory orchestra + quantum).
+- Each creature has persistent narrative + symbol graph that survives its "life" (consolidation + store).
+- 5 interact: alliances, betrayals, territory, oracle "prophecies" (measurement collapse used for public signals).
+
+**Integration & Ownership**:
+
+- New leaf modules (exclusive): `src/sim/attention-schema.ts`, `src/sim/topdown-perception.ts`, `src/sim/quality-space.ts`, `src/sim/memory-orchestra.ts` (or augment), `src/sim/godform.ts` (archetype + 5-instantiation facade).
+- `src/sim/super-mind.ts` owns wiring of new faculties + Clifford reflex into its pipeline; exposes via snapshot.
+- `src/sim/super-body.ts` + new extreme-geom (or `src/sim/super-geometry.ts`) owns wild morph + multi-organ rigs + alive FX. One body instance per godform.
+- `src/world.ts` (integrator) owns spawn of exactly 5 (distinct child seeds from superRng, placed in different sectors), local-percept construction for each, per-frame think+body update for all 5, interactions (they may read/write shared systems honestly), telemetry for multi (counts, plans, dominant one highlighted).
+- No change to determinism law, frame budgets (cadence heavy work), allocation discipline, seeded Rng only.
+- Update: types (new snapshots), telemetry/observatory/UI panels to surface 5, ERD/ERM/ERP, KANBAN, reports, ARCHITECTURE, SUPER-CREATURE-RESEARCH (honest updates only), BENCHMARKS (new hot paths), CHANGELOG.
+- Tests: new unit tests in same PR as modules. Golden runs remain bit-identical for non-super paths.
+
+**Acceptance (cold shell)**:
+
+- `bun run check` 100% (prettier, tsc strict, oxlint, all tests 0 fail, build).
+- 5 distinct live Super Creatures visible, wildly different chaotic-alive forms, pulsing/ morphing/ reacting, using vision/sound, full new faculties + wired Clifford + upgraded memory.
+- Each shows unique quantum super-powers (fringe curiosities modeled honestly as sim algebra — e.g. stabilizer-protected "prophecy", entanglement "manipulation" of local fields).
+- Memory orchestra demonstrably used (narrative trace + symbol recall in snapshot/telemetry).
+- No claims of sentience anywhere; all disclaimers preserved.
+- Frame budget share of new per-frame work <2% combined on desktop ultra (measured).
+- Any human can read the changed modules + contracts + research doc and understand the math.
+
+All prior contracts bind. File ownership exclusive. World wires. No black-box slop — POWER OF MATH.
+
+(End of GOAL 5 contract.)
+
+## GOAL5 File Ownership Table (EXCLUSIVE — binding per ORACLE-ARCHITECT law #2)
+
+Every file below has **exactly one owner**. The named owner is the only writer permitted. Integrator (world.ts) composes only. Deviations are contract violations.
+
+| File(s)                                                           | Exclusive Owner                                            | Scope / Boundary Notes                                                                                                                                                   |
+| ----------------------------------------------------------------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| src/sim/godform.ts                                                | STARKILLER-Ω                                               | Sole GODFORMS const + getGodformBias(i). Facade + bias provider. MUST export ArchonForm + getArchonForm if body wiring depends. No other file owns archetype names/bias. |
+| src/sim/super-mind.ts                                             | MANHATTAN-Φ                                                | Owns 5-stage pipeline + leaf wiring (AST-1/HOT-1/HOT-4/orchestra/narrative + clifford reflex scale from bias). Exports snapshot/intent.                                  |
+| src/sim/super-body.ts                                             | BROLY-Ψ                                                    | Wild multi-organ morph (EYES/ARMS etc), god-jewel patch, per-variant + live quantum/reflex/qualia pulses/waves. Receives form from godform.                              |
+| src/sim/attention-schema.ts                                       | ORACLE-Σ                                                   | AST-1 leaf only.                                                                                                                                                         |
+| src/sim/topdown-perception.ts                                     | ORACLE-Σ                                                   | HOT-1 leaf only.                                                                                                                                                         |
+| src/sim/quality-space.ts                                          | MANHATTAN-Φ                                                | HOT-4 leaf only.                                                                                                                                                         |
+| src/sim/memory-orchestra.ts                                       | VOID-Λ                                                     | Multi-store ring + graph; prealloc only; write/recall alloc-free contract.                                                                                               |
+| src/sim/narrative-memory.ts                                       | VOID-Λ                                                     | 10 orchestrations concrete; per-Archon instance.                                                                                                                         |
+| src/world.ts (GOAL5 sections only)                                | Integrator (BROLY-Ψ oversight + STARKILLER contract guard) | Exactly 5 ctor (child seeds + bias + spaced + form + purse); driveSuper 5-loop (local percept + dual think + set); archons[] snapshot. Touches no leaf internals.        |
+| src/sim/super-qubits.ts + math/clifford-tableau.ts (GOAL5 reflex) | MANHATTAN-Φ                                                | Quantum substrate + stabilizer reflex for minds.                                                                                                                         |
+| src/sim/super-creature.ts                                         | BROLY-Ψ                                                    | Base types shared (SuperPercept/Plan/Snapshot).                                                                                                                          |
+| src/types.ts (archons/telemetry)                                  | Integrator                                                 | TelemetrySnapshot shape for 5.                                                                                                                                           |
+| src/ui/super-\*.ts (panel/neural) + app.css                       | VOID-Λ + ORACLE-Σ                                          | 5-Archon live table + pulse UI only.                                                                                                                                     |
+| docs/GOAL5-\*.md , ERD/ERM updates for pantheon, BENCHMARKS GOAL5 | STARKILLER-Ω                                               | Receipts, handoff, architecture prose.                                                                                                                                   |
+| tests/_super_ + bench/super-mind.bench.ts                         | Respective owners + verifier                               | Unit per module; 5-drive golden in batch.                                                                                                                                |
+
+**Integration rule (enforced at cold gate)**: godform is the ONLY source for names/bias/form. world and body import from it exclusively. Leaves are NEVER directly instantiated outside super-mind. All per-Archon state uses child Rng only.
+
+If a symbol (getArchonForm, ArchonForm) is referenced, it MUST be present in the declared owner file or the contract section is updated first.
+
+## GOAL5 Failure Modes (adversarial, measured)
+
+| Category               | Failure Mode                                            | Locations / Receipts                                                                                | Mitigation / Honest Status                                                                                                                                  |
+| ---------------------- | ------------------------------------------------------- | --------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Determinism            | Snapshot copies or non-Rng ops can desync replays       | quality-space.ts (new Float32 + project), topdown snapshot, world drive cadence                     | All init/mind use seeded child Rng; snapshots are presentation (copy ok if not fed back to sim state). Golden tests pin. Math.\* banned in update paths.    |
+| Quantum claims         | "Reflex", "aspects", "qualia" read as more than algebra | super-mind, super-body, super-panel, GODFORMS comments, docs                                        | Contract honesty section + code disclaimers ("NOT sentient", "classical sim", "models of"). All statevec/Clifford. No QPU/speedup.                          |
+| UI                     | 5-archon table incomplete or broken on compile fail     | super-panel, types.archons, handoff claims                                                          | Must render all 5 names + live fields. Compile gate catches.                                                                                                |
+| Alloc                  | new in per-Archon hot paths (cadence 4f ×5)             | quality.project returns new, topdown.snapshot Array.from, super-body geoms at scale reset           | Receipts claim prealloc in orchestra. Enforce: all hot returns reuse buffers or readonly views. Boot geoms (5×) documented ok.                              |
+| C++ / Native           | Supply (no SHA), wall time, non-det                     | native/ (CMake Fetch, glfwGetTime, atoi per prior audit)                                            | Archons currently pure TS. If native wired for body sim, pin SHA + seed time + audit det. Out-of-gate for now.                                              |
+| Integration / Contract | godform facade incomplete vs calls + compile broken     | world:87 import getArchonForm, super-body:35 type ArchonForm + form usage, tsc errors in super-body | Exclusive ownership rule broken in current tree. "5 wired" claim must be measured (tsc + cold gate), not stated. Update facade or contract before claiming. |
+
+**Architecture delta (5 Archons)**
+
+- Before: 1 Super\* (hero path only).
+- After: godform facade (exclusive) → world spawns exactly 5 (bias + childSeed + form + spaced) → super-mind per (bias scales clifford; wires 5 leaves per beat) → super-body per (distinct chaotic morph + alive FX from snapshot + quantum).
+- Read/write loops closed (percept from shared systems → mind → memory decision + body mutate shared via actions).
+- 5 independent but interacting via world/econ/grid.
+- All under determinism / no-hot-alloc / honesty boundaries.
+
+Receipts + ownership supersede handoff prose where drift. Full gate required to re-green.
+
+End of GOAL5 amendments.

@@ -114,13 +114,12 @@ nash, market, lorenz`). They split, age, die (weather-tuned lifespan), and feed 
 - **World meaning:** the smartest things in the cosmos — the player's avatar of dominion.
 - **Economic role:** **fattest purse** (weight 14) — super-mind speculators, enrolled on launch.
 
-## 5★ SUPER CREATURE — the apex mind (V31)
+## 5★ SUPER CREATURES (GOAL5: 5 ARCHONS / GODFORMS) — the pantheon
 
-_Always exactly one active (the prime `ARCHITECT-Ω`), plus up to 3 sired twins. The God / Simulator /
-Oracle / Architect — half a Titan in size but ~100× its power._
+_Always exactly 5 (ORACLE-Σ, STARKILLER-Ω, MANHATTAN-Φ, BROLY-Ψ, VOID-Λ) with distinct archetypes, seeds, morphologies, quantum biases + full composite minds (~10k-param each). Prime is dominant player-focusable; others roam/interact (alliances, manipulation). Hero unlock + SUPERHERO mode preserved for one. (See MODULE-CONTRACTS GOAL5 + world.ts GODFORMS.)_
 
-- **Biology:** a singular apex intelligence (`sim/super-creature.ts`) carrying a **1444-parameter deep
-  neural mind** — a stacked CORTEX (18→32→16, the world model) → ACTOR (16→12→8, the drives), a true
+- **Biology:** 5 apex intelligences (prime + peers via `world.ts`) each carrying composite deep mind (cortex+organ-nets+imagitron+ToT+predictor+quantum+Clifford reflex+AST-1/HOT-1/HOT-4/memory scaffolding) + extreme chaotic alive body. Seeded sub-streams; persistent narrative/symbol memory.
+  neural mind\*\* — a stacked CORTEX (18→32→16, the world model) → ACTOR (16→12→8, the drives), a true
   4-layer net an order of magnitude past an NHI's gene. Born from a seeded sub-stream; twins inherit
   mutated weights, one generation deeper.
 - **Behavior:** each beat it PERCEIVES 18 signals (threat / crowding / chaos / wealth / prey / rivals /
