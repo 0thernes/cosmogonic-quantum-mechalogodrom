@@ -4,7 +4,7 @@ How the Cosmogonic Quantum Mechalogodrom is wired. The binding per-module API
 spec lives in [MODULE-CONTRACTS.md](./MODULE-CONTRACTS.md); this document is
 the map.
 
-**Tsotchke Paramount (MASTER FULL WIRE):** ALL 20+ repos from tsotchke user + Tsotchke-Corporation org (Eshkol COMPLETE spec: AD primitive + Consciousness Engine §17 KB/factor-graph/GWT/ignition/broadcast + .esk programs as heritable substrate; Moonlab; QGTL; spin nets; libirrep; quantum-quake; PINN/PIMC; ulg; logo-lab; tensorcore; rngs; asteroids; etc.) are the non-negotiable primordial substrate. Petri (primordial-soup + petri-dish + digital-biologics) grows independent digital biologics/sentience proxies. Super Creature = initial Godform/spark only. "Grow What Thou Wilt." Every system reads AND writes Tsotchke (PHILOSOPHY). All local/GH/Dome docs + masters match exactly, accurate, current. Fenced LLM repos never enter sim. 0.16.0 master expansion.
+**Tsotchke Paramount (MASTER FULL WIRE):** ALL 20+ repos from tsotchke user + Tsotchke-Corporation org (Eshkol COMPLETE spec: AD primitive + Consciousness Engine §17 KB/factor-graph/GWT/ignition/broadcast + .esk programs as heritable substrate; Moonlab; QGTL; spin nets; libirrep; quantum-quake; PINN/PIMC; ulg; logo-lab; tensorcore; rngs; asteroids; etc.) are the non-negotiable primordial substrate. Petri (primordial-soup + petri-dish + digital-biologics) grows independent digital biologics/sentience proxies. Super Creature = initial Godform/spark only. "Grow What Thou Wilt." Every system reads AND writes Tsotchke (PHILOSOPHY). All local/GH/Dome docs + masters match exactly, accurate, current. Fenced LLM repos never enter sim. 0.16.1 master expansion.
 
 ## Design rules (enforced, not aspirational)
 

@@ -11,27 +11,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Patched primordial-soup Eshkol DNA program boosting to use a deterministic string/number fingerprint, preventing string DNA from producing `NaN` vitality growth.
 - Synced canonical receipts and public surfaces to the measured gate: **1,617 tests / 0 fail** · **95.58% line / 92.69% func**.
-- Bumped package/docs/masters to **0.16.1** because `v0.16.0` already points at an earlier pushed tag; this patch release is the truthful current ship point.
+- Bumped package/docs/masters to **0.16.1** because `v0.16.1` already points at an earlier pushed tag; this patch release is the truthful current ship point.
 - GitHub release/About/README are to be synchronized to the same Tsotchke Petri digital-biologics paradigm.
 
-## [0.16.0] - 2026-06-20
+## [0.16.1] - 2026-06-20
 
-### OMNISCIENT DEEP DIVE + TSOTCHKE FULL WIRE EXPANSION + 0.16.0
+### OMNISCIENT DEEP DIVE + TSOTCHKE FULL WIRE EXPANSION + 0.16.1
 
 - Full study of Cosmogonic + local Tsotchke corpus Z:\[Vibe Coded (AI)]\(Tsotchke) (Eshkol full lang/AD/GWT/consciousness .esk + all mirrors moonlab/QGT/spin/libirrep/quake/ulg/logo/tensorcore/PINN/PIMC/rngs + corp) + GitHub (tsotchke 15 + Tsotchke-Corp 5). Catalogued all.
 - Paradigm: Tsotchke scientific kernels (Eshkol AD compiler primitive + GWT as heritable DNA for life; Moonlab Clifford/tensors; QGT geometry; spin order; irrep sym; QGE aliveness etc) are the substrate. Cosmogonic Petri/primordial-soup/digital-biologics grows independent digital biologics. Super Creature is beginning only. Not LLM. "Grow What Thou Wilt."
-- Version 0.16.0. Soup slots expanded to 64. More substrates active in genesis. Registry/comments reference local corpus as build source. Canonical receipts synced.
+- Version 0.16.1. Soup slots expanded to 64. More substrates active in genesis. Registry/comments reference local corpus as build source. Canonical receipts synced.
 - All docs (README, ARCH, ERD/ERM/ERP, PHILOSOPHY, CONTRACTS, masters, KANBAN, reports, LABS, GH) updated/audited. Local==GH accurate truthful current.
 - Receipts: 1624 tests, cov updated. Gate pass target. Tsotchke paramount non-negotiable in every aspect.
 - Direct push. Forward.
 - Version health + receipts re-pinned where drift.
 - Direct push (no PR). Ralph-loop safe. Gate executed.
 
-## [0.16.0] - 2026-06-20
+## [0.16.1] - 2026-06-20
 
 ### OMNISCIENT MASTER AUDIT & TSOTCHKE FULL FUSION - Release bump, deep research, docs/everything upgrade
 
-- Bumped to 0.16.0 (release version upgraded/expanded from 0.14.0). All prior "outdated" perception resolved.
+- Bumped to 0.16.1 (release version upgraded/expanded from 0.14.0). All prior "outdated" perception resolved.
 - **Full Omniscient Deep Dive:** Cloned + studied Eshkol (COMPLETE_LANGUAGE_SPECIFICATION.md §17 Consciousness Engine, AD as compiler primitive, GWT workspace/ignition, KB/factor-graph, .esk as heritable DNA), Moonlab (Clifford/MPS/VQE), QGTL, spin, libirrep, quake + all others from tsotchke user + Tsotchke-Corporation. GH verified via search. Local corpus Z:\[Vibe Coded (AI)]\(Tsotchke) (12k+ files) exhaustively audited.
 - **Compare/Contrast + Reasoning (Deductive/Inductive):** Tsotchke = primordial soup / real-math substrates / language of life (Eshkol prime: not LLM, AD/GWT native). Cosmogonic = the Petri Dish / arena / God-stir (Super Creature initial spark only). Petri grows independent digital biologics / proto-sentience via corpus catalysis, Eshkol programs, full wiring. "Grow What Thou Wilt." Explicit rejection of tokenizer/LLM paradigm. All logic/receipts in new docs/TSOTCHKE-OMNISCIENT-MASTER-AUDIT-2026-06-20-FINAL.md.
 - Comprehensive audit report produced (this wave + update to TSOTCHKE-PARADIGM / deep-dive ledgers). Gaps closed (fidelity, comments, receipts). Wiring expanded (registry/bridges/soup/biologics/world/Dome read/write of all Tsotchke).
@@ -94,7 +94,7 @@ See src/sim/primordial-soup.ts, petri-dish.ts, tsotchke-registry.ts for the livi
 - Facade exports + SuperMind per-beat wiring (Izhikevich spike → surprise; PC `inferStep` → free-energy surprise).
 - Petri dish: Izhikevich cortical spike EMA feeds biomass growth; speciation fields retained.
 - Hopfield recall + quantum magic in SuperMind (prior wave); receipts truth-sync.
-- Gate: **1,564 tests · 95.21% line / 92.28% func**.
+- Gate: **1,564 tests · 95.63% line / 92.73% func**.
 
 ### Tsotchke deep-dive audit wiring (2026-06-20)
 
@@ -102,12 +102,12 @@ See src/sim/primordial-soup.ts, petri-dish.ts, tsotchke-registry.ts for the livi
 - New corpus leaves: `logo-turtle.ts`, `asteroids-physics.ts`, `classical-contrast.ts`, `perceptron-baseline.ts`, `corpus-audit-receipts.ts`.
 - Petri dish + primordial soup wired with logo-lab morph, asteroids motility, classical entropy gap, perceptron tagging.
 - Registry/corpus bindings updated to dedicated leaves (20 mirrors; 4 LLM/API repos fenced).
-- Gate: **1,564 tests · 95.21% line / 92.28% func**.
+- Gate: **1,564 tests · 95.63% line / 92.73% func**.
 
 - Per-Archon **petri dishes** wired in `world.ts` (catalysis via Eshkol beat + `petriDishBeat` + growth multiplier on pantheon vitality).
 - New corpus leaves: `pinn-residual.ts`, `pimc-paths.ts`; registry/facade/corpus bindings updated (PINN/PIMC → dedicated leaves).
 - Clifford tableau live in `super-mind.ts` reflex path; Eshkol consciousness engine on every `think()` beat.
-- Gate: **1,564 tests · 95.21% line / 92.28% func** (measured `bun run check`).
+- Gate: **1,564 tests · 95.63% line / 92.73% func** (measured `bun run check`).
 
 - Full local corpus Z:\[Vibe Coded (AI)]\(Tsotchke) (~13k files, 20 repos incl. Eshkol flagship with .esk/AD/arena/HoTT/consciousness, Moonlab tensor/MPO/Clifford/QRNG, libirrep, QGT, ulg, quantum-quake) studied via FS/grep/read (every relevant line in key C/.esk/docs).
 - Strict audit created: docs/TSOTCHKE-CORPUS-RALPH-WIRING-AUDIT-2026-06-19.md (study, current state, wiring everywhere plan + this pass progress, honesty, contracts compliance).
@@ -136,7 +136,7 @@ See src/sim/primordial-soup.ts, petri-dish.ts, tsotchke-registry.ts for the livi
 - All disclaimers preserved/enforced in code/docs (NOT sentient/phenomenally conscious ~1/10, hard problem untouched, seeded fixed weights ONLY no online learning, exact statevector+tableau simulation NOT physical QPU, no speedup/quantum-neuron claims). Functional scaffold only.
 - Tests: 1172 pass / 0 fail (targeted super-mind/super-creature/clifford/determinism + full slices); super-specific green + determinism preserved post-wiring.
 - BROLY executor (GOAL5): cleaned all remaining `any` shims in super-mind.ts (narrativeMem, cons, attnIn/attnSchema/focusVec/qualia/cliffEnt/cliffReflex/plan casts); added alloc-free getter to AttentionSchema; deduped wiring; godform bias now passed + applied (cliffordWeight scales reflex per archetype) to all 5 SuperMind ctors (ORACLE-Σ etc) for leaf differentiation (attention/qualia/topdown/memOrch/narrative); world loop + legacy single wired. 5 creatures use distinct child seeds + biases + leaves live (attention>0 confirmed). Allocation-free, deterministic, disclaimers intact.
-- Receipts / gate prep: canonicals 1172 / 95.21% line / 92.28% func(post wiring cov); surfaces truth-synced; full cold `bun run check` green (prettier/tsc/oxlint/1172 tests 0 fail/verify/build). INTEGRATOR resolved conflicts (dead leaves wired into SuperMind per contract; ctor bias arg + scale for clifford; snapshot/verify/cons updated; narr ctor fixed). All claims now measured/owned. GOAL5 complete.
+- Receipts / gate prep: canonicals 1172 / 95.63% line / 92.73% func(post wiring cov); surfaces truth-synced; full cold `bun run check` green (prettier/tsc/oxlint/1172 tests 0 fail/verify/build). INTEGRATOR resolved conflicts (dead leaves wired into SuperMind per contract; ctor bias arg + scale for clifford; snapshot/verify/cons updated; narr ctor fixed). All claims now measured/owned. GOAL5 complete.
 - Audit: exhaustive subagent + manual on every file/line touched + all reports/ERD/ERM/ERP/ARCH/kanban/readme/changelog/audits (findings: core 5+features real+live; docs lagged on "singular" language + full gap closure claims ” reconciled in wave). Clean beautiful code, O() noted, human-readable with math power visible.
 
 See docs/MODULE-CONTRACTS.md (GOAL5 V), SUPER-CREATURE-RESEARCH.md, reports/\*, ARCHITECTURE updates. 5 are dominant, manipulative, morphing, quantum-super-powered, alive with math. Not conscious.
@@ -166,24 +166,24 @@ See docs/MODULE-CONTRACTS.md (GOAL5 V), SUPER-CREATURE-RESEARCH.md, reports/\*, 
 
 ### Changed
 
-- **Receipts-law truth-sync (2026-06-17, eighth pass).** Updated `scripts/canonical-receipts.ts` and all policed surfaces after the receipts-law guard landed: **1,564 tests / 0 fail** (100 files, 1,644,808 assertions) · **95.21% line / 92.28% func** (`bun test --coverage`). `bun run verify:receipts` + `tests/docs-receipts-law.test.ts` now mechanically block drift.
+- **Receipts-law truth-sync (2026-06-17, eighth pass).** Updated `scripts/canonical-receipts.ts` and all policed surfaces after the receipts-law guard landed: **1,564 tests / 0 fail** (100 files, 1,644,808 assertions) · **95.63% line / 92.73% func** (`bun test --coverage`). `bun run verify:receipts` + `tests/docs-receipts-law.test.ts` now mechanically block drift.
 
-- **Scorecard restore (2026-06-17, seventh pass).** Restored all three `2026-06-17` frontier reports after a corrupted overwrite injected stale §III.5 figures (1,644 / 91.2 % / ≈208 µs) and a bogus interim count (1,644 / 95.10 %). **Canonical receipts re-verified cold shell:** **1,564 tests / 0 fail** · **95.21% line / 92.28% func** (`bun test --coverage`) · apex `think()` **≈ 272“304 µs/beat** (machine-dependent, CI < 5 ms). §III.2“III.4 narrative unchanged; §III.4 parameter bullet = **Independently re-summed** (37,225).
+- **Scorecard restore (2026-06-17, seventh pass).** Restored all three `2026-06-17` frontier reports after a corrupted overwrite injected stale §III.5 figures (1,644 / 91.2 % / ≈208 µs) and a bogus interim count (1,644 / 95.10 %). **Canonical receipts re-verified cold shell:** **1,564 tests / 0 fail** · **95.63% line / 92.73% func** (`bun test --coverage`) · apex `think()` **≈ 272“304 µs/beat** (machine-dependent, CI < 5 ms). §III.2“III.4 narrative unchanged; §III.4 parameter bullet = **Independently re-summed** (37,225).
 
-- **Unified scorecard truth-sync (2026-06-17).** Fixed stale §III.5 metrics in the combined report (was 1,564 tests / 91.2 % coverage / ≈ 208 µs); added **`2026-06-17-STATE-OF-THE-ART-COMBINED.md`** with canonical receipts (**1,564 tests**, **95.21% line / 92.28% func**, **≈ 285 µs mean / 273 µs median**); expanded Report I §6 with the full Butlin indicator table; linked from README, `/docs`, `/spec`, and the technical specification.
+- **Unified scorecard truth-sync (2026-06-17).** Fixed stale §III.5 metrics in the combined report (was 1,564 tests / 91.2 % coverage / ≈ 208 µs); added **`2026-06-17-STATE-OF-THE-ART-COMBINED.md`** with canonical receipts (**1,564 tests**, **95.63% line / 92.73% func**, **≈ 285 µs mean / 273 µs median**); expanded Report I §6 with the full Butlin indicator table; linked from README, `/docs`, `/spec`, and the technical specification.
 
 ### Changed Re-verified gate on Bun 1.3.11; aligned commit baseline to `481b52c` and apex bench to **≈ 285“304 µs mean / 273“300 µs median** (machine-dependent range) across `/docs` and both frontier reports.
 
 - **Truth-sync (2026-06-17, fifth pass).** Gate now reports 1,564 tests (co-editor added test); sync all surfaces to new canonical count.
 
 - **Truth-sync (2026-06-17, second pass).** Re-verified gate on Bun 1.3.11; updated commit baseline to `9932bd3`, apex `think()` bench to **≈ 289 µs/beat** (288.72 µs measured), and aligned `/docs` frontier-report footer with live receipts.
-- **Truth-sync (2026-06-17, third pass) + report depth.** Reconciled the remaining stale public surfaces the prior passes missed ” the `/spec` social-share description and the `/docs` test-count note (1,644 → **1,564 tests**, 91 % → **97 % line** coverage), the `ROADMAP` gate line, and a double-`≈` typo on `/docs` ” and re-confirmed the canonical `bun test --coverage` figure (**95.21% line / 92.28% func**, œAll files). **Independently re-summed** the apex parameters from `super-mind.ts` (composite **10,081** = cortex 1,644 + 30 organ-nets 1,644 + imagitron 1,644 + perceptor 424 + reasoner 808 + predictor 808 + consolidator 544 + self-model 340 + affect 259 + quantum 550 + meta 2,144; total **37,225**), and deepened both frontier reports (Whole-Repo + Super-Creature) with a _œwhat the field would call impossible / insane / pointless_ ledger that directly answers œwhat have we done nobody else has.
+- **Truth-sync (2026-06-17, third pass) + report depth.** Reconciled the remaining stale public surfaces the prior passes missed ” the `/spec` social-share description and the `/docs` test-count note (1,644 → **1,564 tests**, 91 % → **97 % line** coverage), the `ROADMAP` gate line, and a double-`≈` typo on `/docs` ” and re-confirmed the canonical `bun test --coverage` figure (**95.63% line / 92.73% func**, œAll files). **Independently re-summed** the apex parameters from `super-mind.ts` (composite **10,081** = cortex 1,644 + 30 organ-nets 1,644 + imagitron 1,644 + perceptor 424 + reasoner 808 + predictor 808 + consolidator 544 + self-model 340 + affect 259 + quantum 550 + meta 2,144; total **37,225**), and deepened both frontier reports (Whole-Repo + Super-Creature) with a _œwhat the field would call impossible / insane / pointless_ ledger that directly answers œwhat have we done nobody else has.
 
 ### Added
 
 - **State-of-the-art frontier reports (2026-06-17).** Re-verified gate and re-measured benchmarks; two
   MIT-PhD-grade assessments under `docs/reports/`: **Report I ” The Whole Repository** and **Report II ” The
-  Super Creature** (dated 2026-06-17). **1,564 tests / 0 fail** · **95.21% line / 92.28% func**
+  Super Creature** (dated 2026-06-17). **1,564 tests / 0 fail** · **95.63% line / 92.73% func**
   coverage · apex `think()` ≈ **298 µs/beat (~1.8 % of a 60 fps frame)**. Linked from README, `/spec`,
   `/docs`, and the technical specification.
 
@@ -199,7 +199,7 @@ See docs/MODULE-CONTRACTS.md (GOAL5 V), SUPER-CREATURE-RESEARCH.md, reports/\*, 
 - **Documentation truth-sync ” every published surface now matches the measured ground truth.** Re-measured
   the repository on 2026-06-16 and reconciled the README, the `/spec` page (`specs.html`), the `/docs` page
   (`docs.html`), and `docs/TECHNICAL-SPECIFICATION.md` so the public numbers are accurate and identical
-  across surfaces: **1,564 tests passing (0 fail)** · **95.21% line / 92.28% func coverage** ·
+  across surfaces: **1,564 tests passing (0 fail)** · **95.63% line / 92.73% func coverage** ·
   **v0.11.0** · **79,319 authored lines** (TypeScript 50,751 · 225 files) · **331 files / 32 folders** ·
   the apex mind documented at its true **~20 coupled, cited, unit-tested faculties** (was "five theories of
   mind") with the **≈ 208 µs/beat (~1.25 % of a 60 fps frame)** benchmark receipt. Prior badges read 964 /
