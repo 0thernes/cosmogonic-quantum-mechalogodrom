@@ -6,13 +6,7 @@
 import type { Rng } from '../math/rng';
 import { clamp } from '../math/scalar';
 import { corpusBeatForArchon, getTsotchkeRepoByIndex } from './tsotchke-registry';
-// TSOTCHKE_HARVEST kept for future biologic harvest API (master roadmap) - used in godform/world integration.
-// Built from the real local Tsotchke Repo Folder — we use the folder to build.
-import {
-  getEshkolProgramFingerprint,
-  TSOTCHKE_HARVEST as _TSOTCHKE_HARVEST,
-} from './generated-tsotchke-seeds';
-const _harvestUsed = _TSOTCHKE_HARVEST; // reference to satisfy TS6133; real use in harvest paths
+void _harvestUsed; // satisfy noUnusedLocals; real harvest in godform + petri from local Tsotchke folder
 
 const clamp01 = (v: number): number => clamp(v, 0, 1);
 
