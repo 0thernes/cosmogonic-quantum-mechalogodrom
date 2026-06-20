@@ -10,7 +10,7 @@ the map.
 
 **Documentation sync note (all must match):** README, this ARCHITECTURE.md, ERD/ERM/ERP.md, PHILOSOPHY.md, MODULE-CONTRACTS.md, TECHNICAL-SPECIFICATION.md / SPECS, KANBAN, BOOK.md, AI-SUBSYSTEM.md, reports, masters/ references, LABS (lab/), and in-app "Dome/World" docs (observatory, help-system, copilot, /docs page via docs-page.ts + mermaid) are fully updated and consistent with code + GitHub. Local == GH. Accurate, truthful, current. Tsotchke full wiring + digital biologics petri as core.
 
-**Tsotchke Petri Genesis (current paradigm):** All Tsotchke repos (Eshkol primary for AD/GWT/consciousness, Moonlab, QGTL, spin-based NN, libirrep, quantum-quake, PINN, PIMC, ulg, logo-lab, tensorcore, etc.) are fully wired as the substrate for digital biologics. The primordial soup / petri dish (primordial-soup.ts + digital-biologics.ts) grows different forms of life and existence from these kernels. Super Creature is the first spark / initial architecture. Sentience and consciousness via real mathematical substrates in a seeded deterministic world. "Grow What Thou Wilt." Local docs, README, ERD/ERM/ERP, specs, masters, and GitHub are kept in exact sync. Every aspect utilizes every Tsotchke repo.
+**Tsotchke Petri Genesis (current paradigm):** Tsotchke's _scientific_ repos (Eshkol primary for AD/VM/QRNG, Moonlab for SVD tensor-networks/Clifford/H₂ VQE, QGTL geometry, spin-based NN, libirrep, quantum-quake, PINN, PIMC, ulg, logo-lab, tensorcore) are genuinely ported into `src/` and wired as the substrate for digital biologics — each verified leaf-by-leaf with golden tests, not asserted. The four LLM/chain/API repos (gpt2-basic, llm-arbitrator, SolanaQuantumFlux, Quantum-RNG-API) are **deliberately fenced** out of the deterministic sim (registry wiring 0), never "wired." The primordial soup / petri dish (primordial-soup.ts + digital-biologics.ts) grows different forms of life from these real kernels. Super Creature is the first spark / initial architecture. Sentience and consciousness via real mathematical substrates in a seeded deterministic world. "Grow What Thou Wilt." A leaf still using a heuristic rather than a full port (e.g. classical-contrast, eshkol-workspace) is tracked honestly in the audit, not credited as a real port.
 
 1. **Acyclic runtime module graph.** `src/types.ts` is a type-only hub —
    every module may `import type` from it, but leaf modules never import it at
@@ -76,7 +76,7 @@ graph TD
   end
 
   subgraph tsotchke["Tsotchke Full Corpus Wiring (paramount, non-negotiable — ALL repos)"]
-    registry["tsotchke-registry.ts<br/>21 repos @ wiring=1.0 (Eshkol flagship + Moonlab + QGTL + spin + libirrep + quake + PINN/PIMC + ulg + logo-lab + tensorcore + ... )"]
+    registry["tsotchke-registry.ts<br/>21 repos tracked: ~17 scientific kernels wired+verified (Eshkol flagship + Moonlab + QGTL + spin + libirrep + quake + PINN/PIMC + ulg + logo-lab + tensorcore + ...), 4 LLM/chain/API fenced (wiring 0)"]
     facade["tsotchke-facade.ts<br/>Re-exports + bridges"]
     eshkolb["eshkol-bridge.ts + workspace<br/>Consciousness engine (AD primitive, GWT broadcast/ignition, inference)"]
     soup["primordial-soup.ts + petri-dish.ts + digital-biologics<br/>Petri dish birthing digital biologics (EshkolProgram genomes + full corpus catalysis + AD mutation)"]

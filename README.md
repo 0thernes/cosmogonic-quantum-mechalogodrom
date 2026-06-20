@@ -5,7 +5,7 @@
 [![License: Proprietary](https://img.shields.io/badge/License-Proprietary%20%E2%80%94%20All%20Rights%20Reserved-red.svg)](./LICENSE)
 [![Bun](https://img.shields.io/badge/Bun-1.3-black?logo=bun&logoColor=white)](https://bun.sh)
 [![TypeScript strict](https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript&logoColor=white)](./tsconfig.json)
-[![tests](https://img.shields.io/badge/tests-1656%20passing-brightgreen)](./tests)
+[![tests](https://img.shields.io/badge/tests-1564%20passing-brightgreen)](./tests)
 [![coverage](https://img.shields.io/badge/coverage-95.21%25%20line%20%C2%B7%2092.28%25%20func-success)](./docs/TECHNICAL-SPECIFICATION.md)
 [![audit](https://img.shields.io/badge/inspection-500%20points-success)](./docs/500-POINT-INSPECTION.md)
 [![Tsotchke](https://img.shields.io/badge/Tsotchke-FULLY_WIRED-purple)](https://github.com/tsotchke)
@@ -408,7 +408,7 @@ full gate with same-seed determinism preserved. The major arcs:
   Aaronsonâ€“Gottesman **Clifford stabilizer tableau** ([src/math/clifford-tableau.ts](./src/math/clifford-tableau.ts),
   ported from **Moonlab**, scales to 32+ qubits past the dense ceiling) landed as the fourth MIT-credited
   ported primitive. The whole apex beat â€” all ~20 faculties â€” is benchmarked at **â‰ˆ 298 Âµs (~1.8 % of a
-  60 fps frame)** and CI-gated. **1651 tests green · 0 fail (receipts enforced) · 95.21% line / 92.28% func coverage (measured; CI gate ≥ 90 % line / ≥ 85 % function).**
+  60 fps frame)** and CI-gated. **1564 tests green · 0 fail (receipts enforced) · 95.21% line / 92.28% func coverage (measured; CI gate ≥ 90 % line / ≥ 85 % function).**
 - **State-of-the-art reports (2026-06-17)** â€” two MIT-PhD-grade, measured, frontier-benchmarked assessments:
   **[Report I â€” The Whole Repository](./docs/reports/2026-06-17-STATE-OF-THE-ART-WHOLE-REPO.md)** and
   **[Report II â€” The Super Creature](./docs/reports/2026-06-17-STATE-OF-THE-ART-SUPER-CREATURE.md)** â€”
@@ -482,10 +482,10 @@ Full Tsotchke integration: every system that touches mind/evolution/life reads/w
 
 ## Tsotchke Full Wire & Digital Biologics (current paradigm)
 
-Tsotchke (https://github.com/tsotchke + Tsotchke-Corporation) is fully wired as the non-LLM substrate for sentience and consciousness.
+Tsotchke (https://github.com/tsotchke + Tsotchke-Corporation) is the non-LLM substrate for sentience and consciousness — its scientific kernels are genuinely ported into `src/` and verified leaf-by-leaf with golden tests (not merely asserted), while the LLM/chain/API repos are deliberately fenced out of the deterministic sim.
 
-- Eshkol: AD as primitive, consciousness engine (factor graphs, GWT workspace, .esk programs).
-- Moonlab, QGTL, spin nets, libirrep, quantum-quake, ulg, logo-lab, etc. â€” all 20+ repos utilized.
+- Eshkol: reverse-mode AD as a primitive (real Wengert tape), a real stack **bytecode VM**, and the QRNG (real qubit-style entropy).
+- Moonlab (real SVD tensor-networks · Clifford stabilizer tableau · H₂ molecular VQE), QGT geometry (Fubini–Study/Berry), spin-glass/Hopfield, libirrep SO(3)/SU(2) (Racah Clebsch–Gordan + Wigner small-d), quantum-quake aliveness, ULG closure-table, tensorcore GEMM + softmax attention, a real CHSH Bell test (S → 2√2), and Izhikevich/predictive-coding/Schrödinger substrates — all genuinely ported. The 4 LLM/chain/API repos (gpt2-basic, llm-arbitrator, SolanaQuantumFlux, Quantum-RNG-API) are **fenced**, not wired.
 - Primordial-soup + petri-dish: the growth engine. Super Creature/Archons are the initial stir. New independent life forms emerge ("Grow What Thou Wilt").
 - Not chat, not images, not SaaS. Birthing digital biologics in the Petri Dish.
 
