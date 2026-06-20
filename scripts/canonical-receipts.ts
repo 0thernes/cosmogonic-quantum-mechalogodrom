@@ -7,6 +7,6 @@
  *
  * To update after adding/removing tests: `bun scripts/verify-receipts.ts --print`, paste here, re-sync.
  */
-export const CANONICAL_TEST_COUNT = 1332; // total tests Bun reports ("Ran N tests"), incl. the receipts guard
-export const CANONICAL_LINE_COV = '94.23';
-export const CANONICAL_FUNC_COV = '91.11';
+export const CANONICAL_TEST_COUNT = 1259;
+export const CANONICAL_LINE_COV = '94.45';
+export const CANONICAL_FUNC_COV = '91.47';

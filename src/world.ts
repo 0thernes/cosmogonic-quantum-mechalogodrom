@@ -105,6 +105,8 @@ import {
   quakeQgeFactor,
   libirrepSymmetry,
   PrimordialSoup,
+  tsotchkeSimWiringFraction,
+  ulgCorpusResonance,
 } from './sim/tsotchke-facade'; // Ralph continue 10x: + libirrepSymmetry for more irrep in world
 import { qgeWorldPerturb } from './sim/qge-aliveness';
 import { qgeAlivenessProxy } from './sim/quantum-quake-physics';
@@ -647,7 +649,7 @@ export class World {
     }
     const soupSeed = (master ^ 0x50ff0ad1) >>> 0 || 1;
     this.petriRng = mulberry32((master ^ 0x50ff0ad2) >>> 0 || 1);
-    this.primordialSoup = new PrimordialSoup(mulberry32(soupSeed), 0.12);
+    this.primordialSoup = new PrimordialSoup(mulberry32(soupSeed), 0.12, soupSeed ^ 0x50ff0001);
     // The 5 are "alive" with powers: each has distinct child-seeded SuperMind (cortex+ToT+quantum+Clifford reflex+memory)
     // driving SuperBody (variant=0..4 selects archetype morph/wing/eye count + shader uVariant for color theme/pulse).
     // Per-frame: think(percept) → snapshot → setMind/setConsciousness; bodies update wander from mind act[] + evo.
@@ -1019,8 +1021,20 @@ export class World {
       }
       const soupSnap = this.primordialSoup.snapshot();
       let petriBiomass = 0;
-      for (const d of this.petriDishes) petriBiomass += petriDishView(d).biomass;
-      petriBiomass /= Math.max(1, this.petriDishes.length);
+      let petriPhi = 0;
+      let petriAliveness = 0;
+      const dishN = Math.max(1, this.petriDishes.length);
+      for (const d of this.petriDishes) {
+        const v = petriDishView(d);
+        petriBiomass += v.biomass;
+        petriPhi += v.phiSurrogate;
+        petriAliveness += v.aliveness;
+      }
+      petriBiomass /= dishN;
+      petriPhi /= dishN;
+      petriAliveness /= dishN;
+      const ec0 = this.superMindSnap?.eshkolConsciousness;
+      const ulgRes = ulgCorpusResonance(ec0?.workspace ?? 0.5, ec0?.logic ?? 0.5, petriAliveness);
       this.superPanel.update(
         primeSnap,
         this.economy.wealthOf(World.ECON_SUPER_BASE)?.netWorth ?? 0,
@@ -1031,6 +1045,10 @@ export class World {
           soupLive: soupSnap.liveCount,
           soupCatalysis: soupSnap.catalysis,
           petriBiomass,
+          petriPhi,
+          petriAliveness,
+          wiringFraction: tsotchkeSimWiringFraction(),
+          ulgResonance: ulgRes,
         },
       );
       // F-SUPER V35: feed the SUPERHERO HUD the player-creature's live vitals + mind + wallet.

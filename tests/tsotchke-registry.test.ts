@@ -11,6 +11,11 @@ import {
   tsotchkeWiringCoverage,
   substrateVectorForArchon,
   corpusBeatForArchon,
+  FENCED_REPO_SLUGS,
+  ARCHON_PRIMARY_REPOS,
+  primaryRepoForArchon,
+  tsotchkeSimWiringFraction,
+  wiredSimRepoCount,
 } from '../src/sim/tsotchke-registry';
 import {
   createPetriDish,
@@ -33,6 +38,8 @@ describe('Tsotchke registry — all 21 repos mapped', () => {
     expect(getTsotchkeRepo('llm-arbitrator')?.wiring).toBe(0);
     expect(getTsotchkeRepo('Quantum-RNG-API')?.wiring).toBe(0);
     expect(getTsotchkeRepo('SolanaQuantumFlux')?.wiring).toBe(0);
+    expect(FENCED_REPO_SLUGS.length).toBe(4);
+    expect(wiredSimRepoCount()).toBe(21 - FENCED_REPO_SLUGS.length);
   });
 
   test('consciousness substrates are wired', () => {
@@ -63,6 +70,19 @@ describe('Tsotchke registry — all 21 repos mapped', () => {
     expect(a.length).toBe(5);
     expect([...a]).toEqual([...b]);
   });
+
+  test('primary repos map one-to-one to GOAL5 archons', () => {
+    expect(ARCHON_PRIMARY_REPOS.length).toBe(5);
+    expect(primaryRepoForArchon(0).slug).toBe('eshkol');
+    expect(primaryRepoForArchon(4).slug).toBe('quantum-quake');
+    expect(FENCED_REPO_SLUGS).toContain('gpt2-basic');
+  });
+
+  test('sim wiring fraction counts fully wired substrates', () => {
+    const f = tsotchkeSimWiringFraction(0.7);
+    expect(f).toBeGreaterThan(0.7);
+    expect(f).toBeLessThanOrEqual(1);
+  });
 });
 
 describe('Petri dish — primordial digital biologics', () => {
@@ -75,6 +95,9 @@ describe('Petri dish — primordial digital biologics', () => {
     const v = petriDishView(dish);
     expect(v.wiringCoverage).toBeGreaterThan(0);
     expect(v.beats).toBe(20);
+    expect(v.sentienceProxy).toBeGreaterThan(0);
+    expect(v.spinPolarization).toBeGreaterThanOrEqual(0);
+    expect(v.simWiringFraction).toBeGreaterThan(0.5);
   });
 
   test('same seed yields identical petri trajectory', () => {

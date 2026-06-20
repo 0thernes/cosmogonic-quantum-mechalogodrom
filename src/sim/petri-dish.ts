@@ -31,8 +31,10 @@ import {
   asteroidThrust,
   type AsteroidBody,
 } from './asteroids-physics';
-import { classicalEntropyGap } from './classical-contrast';
+import { classicalEntropyGap, classicalSample } from './classical-contrast';
 import { logoMorphScalar, turtleNew, type TurtleState } from './logo-turtle';
+import { libirrepSymmetry, symmetryModes } from './irrep-symmetry';
+import { moonlabTensorQualia } from './moonlab-tensor';
 
 const NUTRIENT_SLOTS = 8;
 const SCRATCH_NUTRIENTS = new Float32Array(NUTRIENT_SLOTS);
@@ -59,6 +61,8 @@ export interface PetriDishState {
   morphPhase: number;
   turtle: TurtleState;
   motility: AsteroidBody;
+  /** Hopfield/Ising instinct polarization (spin_based_neural_network proxy). */
+  spinPolarization: number;
 }
 
 export interface PetriDishView {
@@ -71,6 +75,9 @@ export interface PetriDishView {
   corpusBeat: number;
   complexity: number;
   beats: number;
+  /** IIT φ + QGE aliveness + corpus beat — sentience proxy, not phenomenal consciousness. */
+  sentienceProxy: number;
+  spinPolarization: number;
 }
 
 /** O(n) init, n=8. */
@@ -92,6 +99,7 @@ export function createPetriDish(seed: number): PetriDishState {
     morphPhase: 0,
     turtle: turtleNew(seed ^ 0x50ff0ad),
     motility: asteroidSpawn(seed ^ 0xa57001d),
+    spinPolarization: 0.1 + s * 0.2,
   };
 }
 
@@ -162,6 +170,19 @@ export function petriDishBeat(
   asteroidStep(state.motility, 0.16);
   const motility = asteroidEnergy(state.motility);
   const logoMorph = logoMorphScalar(state.turtle, beat, 5 + archonIdx);
+  const irrep = libirrepSymmetry(symmetryModes(archonIdx + 1, state.aliveness), 4);
+  const qualia = moonlabTensorQualia(
+    [sub[0] ?? 0.5, sub[1] ?? 0.5, sub[2] ?? 0.5],
+    primary.wiring * 16,
+  );
+  const classical = classicalSample(beat + archonIdx * 17).value;
+  let spinM = 0;
+  for (let i = 0; i < NUTRIENT_SLOTS; i++) {
+    const sal = SCRATCH_SAL[i] ?? 0;
+    const nut = state.nutrients[i] ?? 0;
+    spinM += sal * (nut > 0.5 ? 1 : -1);
+  }
+  state.spinPolarization = Math.min(1, Math.abs(spinM / NUTRIENT_SLOTS));
 
   const growth =
     (ws.broadcastGain + state.aliveness) *
@@ -174,7 +195,11 @@ export function petriDishBeat(
     pimc * 0.004 +
     motility * 0.003 +
     logoMorph * 0.002 +
-    classicalGap * 0.001;
+    classicalGap * 0.001 +
+    irrep * 0.002 +
+    qualia * 0.003 +
+    classical * 0.001 +
+    state.spinPolarization * 0.002;
 
   const noise = (rng() - 0.5) * 0.002;
   state.biomass = Math.min(1, state.biomass + growth + noise);
@@ -198,6 +223,13 @@ export function petriDishView(state: PetriDishState): PetriDishView {
     corpusBeat: corpusBeatForArchon(0, state.beats),
     complexity: state.complexity,
     beats: state.beats,
+    sentienceProxy: Math.min(
+      1,
+      state.phiSurrogate * 0.4 +
+        state.aliveness * 0.35 +
+        corpusBeatForArchon(0, state.beats) * 0.25,
+    ),
+    spinPolarization: state.spinPolarization,
   };
 }
 

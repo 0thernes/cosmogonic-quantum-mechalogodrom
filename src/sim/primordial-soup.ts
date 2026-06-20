@@ -19,11 +19,12 @@ import { moonlabMpoStep } from './moonlab-tensor';
 import { symmetryModes } from './irrep-symmetry';
 import { pathWeight } from './pimc-paths';
 import { corpusBeatForArchon } from './tsotchke-registry';
-import { logoMorphScalar, logoSymmetryOrder, turtleNew } from './logo-turtle';
+import { logoMorphScalar, logoSymmetryOrder, turtleNew, type TurtleState } from './logo-turtle';
 import { perceptronTag } from './perceptron-baseline';
 
 const INCUBATE_PATH = new Float32Array(4);
 const SOUP_TAG_WEIGHTS = new Float32Array(4);
+const SOUP_SCRATCH = new Float32Array(4);
 
 export const SOUP_SLOTS = 32;
 export const SOUP_GENOME_LEN = 16;
@@ -62,11 +63,14 @@ export class PrimordialSoup {
   private tick = 0;
   private nextId = 1;
   private catalysis = 0;
+  private readonly turtle: TurtleState;
 
   constructor(
     private readonly rng: Rng,
     seedVitality = 0.15,
+    seed = 0x50ff0001,
   ) {
+    this.turtle = turtleNew(seed);
     for (let i = 0; i < SOUP_SLOTS; i++) {
       if (rng() < seedVitality) {
         this.alive[i] = 1;
@@ -93,7 +97,7 @@ export class PrimordialSoup {
   ): void {
     const corpusBeat = corpusBeatForArchon(archonIdx, frame);
     const energy = qgeHybridEnergy(quake * corpusBeat, tensorFlux * corpusBeat, consc.unified);
-    const logoM = logoMorphScalar(turtleNew(0x50ff0001 + archonIdx + frame), frame, 6 + archonIdx);
+    const logoM = logoMorphScalar(this.turtle, frame, 6 + archonIdx);
     this.catalysis = clamp01(this.catalysis * 0.9 + energy * 0.1 + logoM * 0.02);
     const slot = archonIdx % SOUP_SLOTS;
     if (!this.alive[slot]) {
@@ -102,10 +106,7 @@ export class PrimordialSoup {
         this.vitality[slot] = energy * 0.5;
         this.generation[slot] = 0;
         this.hue[slot] = (archonIdx * 0.17 + logoM * 0.1) % 1;
-        this.symmetry[slot] = logoSymmetryOrder(
-          turtleNew(0x50ff0001 + archonIdx + frame),
-          symmetryModes(archonIdx + 1, quake),
-        );
+        this.symmetry[slot] = logoSymmetryOrder(this.turtle, symmetryModes(archonIdx + 1, quake));
         this.consciousness[slot] = consc.unified;
       }
       return;
@@ -121,23 +122,22 @@ export class PrimordialSoup {
   /** Incubate all strains one tick (MPO mixing + mortality). */
   incubate(): void {
     this.tick++;
-    const scratch = new Float32Array(4);
     for (let i = 0; i < SOUP_SLOTS; i++) {
       if (!this.alive[i]) continue;
-      scratch[0] = this.vitality[i] ?? 0;
-      scratch[1] = this.consciousness[i] ?? 0;
-      scratch[2] = this.catalysis;
-      scratch[3] = (this.symmetry[i] ?? 1) / 8;
-      SOUP_TAG_WEIGHTS[0] = scratch[0] ?? 0;
-      SOUP_TAG_WEIGHTS[1] = scratch[1] ?? 0;
-      SOUP_TAG_WEIGHTS[2] = scratch[2] ?? 0;
-      SOUP_TAG_WEIGHTS[3] = scratch[3] ?? 0;
-      const tag = perceptronTag(SOUP_TAG_WEIGHTS, scratch, 4);
-      const flux = moonlabMpoStep(scratch, 2, 4);
-      INCUBATE_PATH[0] = scratch[0] ?? 0;
-      INCUBATE_PATH[1] = scratch[1] ?? 0;
-      INCUBATE_PATH[2] = scratch[2] ?? 0;
-      INCUBATE_PATH[3] = scratch[3] ?? 0;
+      SOUP_SCRATCH[0] = this.vitality[i] ?? 0;
+      SOUP_SCRATCH[1] = this.consciousness[i] ?? 0;
+      SOUP_SCRATCH[2] = this.catalysis;
+      SOUP_SCRATCH[3] = (this.symmetry[i] ?? 1) / 8;
+      SOUP_TAG_WEIGHTS[0] = SOUP_SCRATCH[0] ?? 0;
+      SOUP_TAG_WEIGHTS[1] = SOUP_SCRATCH[1] ?? 0;
+      SOUP_TAG_WEIGHTS[2] = SOUP_SCRATCH[2] ?? 0;
+      SOUP_TAG_WEIGHTS[3] = SOUP_SCRATCH[3] ?? 0;
+      const tag = perceptronTag(SOUP_TAG_WEIGHTS, SOUP_SCRATCH, 4);
+      const flux = moonlabMpoStep(SOUP_SCRATCH, 2, 4);
+      INCUBATE_PATH[0] = SOUP_SCRATCH[0] ?? 0;
+      INCUBATE_PATH[1] = SOUP_SCRATCH[1] ?? 0;
+      INCUBATE_PATH[2] = SOUP_SCRATCH[2] ?? 0;
+      INCUBATE_PATH[3] = SOUP_SCRATCH[3] ?? 0;
       const pimc = pathWeight(
         INCUBATE_PATH,
         2 + (this.symmetry[i] ?? 1) * 0.05,

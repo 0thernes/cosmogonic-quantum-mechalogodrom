@@ -19,3 +19,9 @@ export function ulgFieldSample(x: number, y: number, z: number, tick: number): n
 export function ulgWorkerDepth(tick: number, workers: number): number {
   return ((tick % Math.max(1, workers)) + 1) / Math.max(1, workers);
 }
+
+/** Corpus resonance scalar for observatory / petri telemetry. O(1). */
+export function ulgCorpusResonance(eshkol: number, moonlab: number, aliveness: number): number {
+  const v = aliveness * 0.5 + eshkol * 0.3 + moonlab * 0.2;
+  return v < 0 ? 0 : v > 1 ? 1 : v;
+}

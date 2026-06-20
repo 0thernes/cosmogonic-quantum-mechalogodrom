@@ -147,7 +147,7 @@ const ENTRIES: TsotchkeRepoEntry[] = [
     origin: 'user',
     substrate: 'toolchain',
     cosmogonicLeaf: 'tsotchke-registry',
-    wiring: 0.45,
+    wiring: 0.58,
     hue: 0.33,
   },
   {
@@ -243,7 +243,7 @@ const ENTRIES: TsotchkeRepoEntry[] = [
     origin: 'org',
     substrate: 'meta',
     cosmogonicLeaf: 'tsotchke-registry',
-    wiring: 0.1,
+    wiring: 0.22,
     hue: 0.15,
   },
 ];
@@ -322,6 +322,13 @@ export function tsotchkeSimWiringFraction(threshold = 0.7): number {
     }
   }
   return sim === 0 ? 0 : full / sim;
+}
+
+/** Count of sim-wired repos (wiring > 0, fenced LLM/API excluded). O(n), n=21. */
+export function wiredSimRepoCount(): number {
+  let n = 0;
+  for (const e of ENTRIES) if (e.wiring > 0) n += 1;
+  return n;
 }
 
 /** O(1). Rotates all 21 corpus repos into one catalysis scalar per Archon beat. */

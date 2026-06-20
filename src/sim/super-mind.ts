@@ -95,8 +95,6 @@ import {
   ulgHandoff,
   naturalGradient2x2,
   vecNorm,
-  quantumCoherence,
-  quantumMagic,
 } from './tsotchke-facade'; // Ralph loop continue 10x: + ulgHandoff from Tsotchke for more corpus aliveness in super-mind
 import { SpinGlass, type SpinSnapshot } from './spin-glass';
 import { Reservoir, type ReservoirSnapshot } from './reservoir';
@@ -731,17 +729,16 @@ export class SuperMind {
     const cut = Math.max(1, Math.floor(cq / 2));
     this.cliffordEntNorm = this.clifford.entanglementEntropy(cut) / cut;
 
-    // Quantum coherence and magic: measure quantum resource theory metrics
-    const qmState = this.quantumMind.getState();
-    const coherence = quantumCoherence(qmState.re, qmState.im);
-    const magic = quantumMagic(qmState.re, qmState.im, Math.min(6, Math.log2(cq))); // Limit to 6 qubits for performance
-    this.cliffordEntNorm = clamp01(this.cliffordEntNorm + coherence.l1Norm * 0.2); // Coherence enhances entanglement metric
+    // Quantum coherence: measure quantum resource theory metrics
+    // Use the QuantumMind's internal buffers to get amplitudes without allocation
+    const snap = this.qmind.snapshot();
+    this.cliffordEntNorm = clamp01(this.cliffordEntNorm + snap.coherenceL1 * 0.2);
 
     const reflex = clamp01(
       ((this.quantumOut[1] ?? 0) + (this.quantumOut[0] ?? 0)) * 0.5 * this.cliffordScale +
         this.cliffordEntNorm * 0.35 +
-        magic.magicNorm * 0.15, // Magic (non-stabilizerness) adds to reflex
-    ); // GOAL5: Clifford tableau + godform cliffordWeight scales stabilizer reflex
+        snap.magicNorm * 0.15,
+    );
     this.attnSchema.update(s, surprise, this.ignition, reflex);
     this.topdown.generate(this.imagined, peakNovelty);
     this.topdown.setError(surprise);

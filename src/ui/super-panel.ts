@@ -18,6 +18,10 @@ export interface PetriTelemetry {
   soupLive: number;
   soupCatalysis: number;
   petriBiomass: number;
+  petriPhi: number;
+  petriAliveness: number;
+  wiringFraction: number;
+  ulgResonance: number;
 }
 
 /** Plan → accent colour, so the committed goal reads at a glance (hunt-red … rest-grey). */
@@ -325,7 +329,10 @@ export class SuperPanel {
       const sp = mind.spin;
       const instinct = sp.bestPattern >= 0 ? (SUPER_PLANS[sp.bestPattern] ?? '—') : '—';
       const petriStr = petri
-        ? ` · Petri ${petri.soupLive} strains cat${(petri.soupCatalysis * 100).toFixed(0)}% bio${(petri.petriBiomass * 100).toFixed(0)}%`
+        ? ` · Petri ${petri.soupLive} strains cat${(petri.soupCatalysis * 100).toFixed(0)}% ` +
+          `bio${(petri.petriBiomass * 100).toFixed(0)}% φ${(petri.petriPhi * 100).toFixed(0)}% ` +
+          `alive${(petri.petriAliveness * 100).toFixed(0)}% wire${(petri.wiringFraction * 100).toFixed(0)}% ` +
+          `ulg${(petri.ulgResonance * 100).toFixed(0)}%`
         : '';
       this.id.substrate!.textContent =
         `Eshkol H${mind.eshkol.entropyEstimate.toFixed(2)} · ` +

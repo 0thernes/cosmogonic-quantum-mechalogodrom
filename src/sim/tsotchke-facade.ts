@@ -65,8 +65,16 @@ export {
   vecDot,
 } from '../math/quantum-natural-gradient';
 export { quantumCoherence, type CoherenceSnapshot } from '../math/quantum-coherence';
-export { quantumMagic, type MagicSnapshot } from '../math/quantum-magic';
-export { ulgFieldSample, ulgTriadHandoff } from './ulg-bridge';
+export { ulgFieldSample, ulgTriadHandoff, ulgCorpusResonance, ulgWorkerDepth } from './ulg-bridge';
+export {
+  computeQGE,
+  qgePerturb,
+  berryCurvature,
+  fubiniStudyDistance,
+  qgeAlivenessProxy,
+  qgePhysicsStep,
+} from './quantum-quake-physics';
+export type { QGEState, QGEPerturbation } from './quantum-quake-physics';
 export {
   TSOTCHKE_FILE_COUNT,
   TSOTCHKE_ESK_COUNT,
@@ -74,19 +82,26 @@ export {
   auditWiringReceipt,
 } from './corpus-audit-receipts';
 
-export { createPetriDish, petriDishBeat, petriGrowthMultiplier } from './petri-dish';
-export type { PetriDishState } from './petri-dish';
+export { createPetriDish, petriDishBeat, petriDishView, petriGrowthMultiplier } from './petri-dish';
+export type { PetriDishState, PetriDishView } from './petri-dish';
 
 export { PrimordialSoup, SOUP_SLOTS, SOUP_GENOME_LEN } from './primordial-soup';
 export type { SoupStrain, SoupSnapshot } from './primordial-soup';
 
 export {
   TSOTCHKE_REPO_COUNT,
+  TSOTCHKE_USER_REPOS,
+  TSOTCHKE_ORG_REPOS,
+  FENCED_REPO_SLUGS,
+  ARCHON_PRIMARY_REPOS,
   getTsotchkeRepo,
   getTsotchkeRepoByIndex,
   tsotchkeWiringCoverage,
+  tsotchkeSimWiringFraction,
   substrateVectorForArchon,
   corpusBeatForArchon,
+  primaryRepoForArchon,
+  wiredSimRepoCount,
 } from './tsotchke-registry';
 export type { TsotchkeRepoSlug, TsotchkeRepoEntry, SubstrateKind } from './tsotchke-registry';
 
