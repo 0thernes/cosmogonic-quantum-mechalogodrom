@@ -301,7 +301,10 @@ export const ARCHON_PRIMARY_REPOS: readonly TsotchkeRepoSlug[] = [
   'quantum-quake',
 ];
 
-/** FULL CORPUS BIOLOGICS CATALYSIS — every repo contributes to new life birth. */
+/** FULL CORPUS BIOLOGICS CATALYSIS — ALL Tsotchke repos (eshkol, moonlab, tensorcore, libirrep, spin_based_neural_network, quantum_geometric_tensor, quantum_rng, asteroids, classical_rng, PINN, PIMC, ulg, logo-lab, quantum-quake, homebrew-eshkol, simple_mnist + org) + fenced boundaries.
+ * Eshkol is the language of digital biologics and sentience (AD primitive, GWT, factor graphs, KB).
+ * Wired 1.0 for live; Super Creature / Petri is the God primordial soup. Grow What Thou Wilt.
+ */
 export function fullTsotchkeBiologicsCatalysis(
   archonIdx: number,
   baseVitality: number,
