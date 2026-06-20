@@ -33,7 +33,7 @@ See src/sim/primordial-soup.ts, petri-dish.ts, tsotchke-registry.ts for the livi
 - Facade exports + SuperMind per-beat wiring (Izhikevich spike â†’ surprise; PC `inferStep` â†’ free-energy surprise).
 - Petri dish: Izhikevich cortical spike EMA feeds biomass growth; speciation fields retained.
 - Hopfield recall + quantum magic in SuperMind (prior wave); receipts truth-sync.
-- Gate: **1,400 tests Â· 94.43 % line / 91.26 % function**.
+- Gate: **1,410 tests Â· 94.42 % line / 91.30 % function**.
 
 ### Tsotchke deep-dive audit wiring (2026-06-20)
 
@@ -41,12 +41,12 @@ See src/sim/primordial-soup.ts, petri-dish.ts, tsotchke-registry.ts for the livi
 - New corpus leaves: `logo-turtle.ts`, `asteroids-physics.ts`, `classical-contrast.ts`, `perceptron-baseline.ts`, `corpus-audit-receipts.ts`.
 - Petri dish + primordial soup wired with logo-lab morph, asteroids motility, classical entropy gap, perceptron tagging.
 - Registry/corpus bindings updated to dedicated leaves (20 mirrors; 4 LLM/API repos fenced).
-- Gate: **1,400 tests Â· 94.43 % line / 91.26 % function**.
+- Gate: **1,410 tests Â· 94.42 % line / 91.30 % function**.
 
 - Per-Archon **petri dishes** wired in `world.ts` (catalysis via Eshkol beat + `petriDishBeat` + growth multiplier on pantheon vitality).
 - New corpus leaves: `pinn-residual.ts`, `pimc-paths.ts`; registry/facade/corpus bindings updated (PINN/PIMC â†’ dedicated leaves).
 - Clifford tableau live in `super-mind.ts` reflex path; Eshkol consciousness engine on every `think()` beat.
-- Gate: **1,400 tests Â· 94.43 % line / 91.26 % function** (measured `bun run check`).
+- Gate: **1,410 tests Â· 94.42 % line / 91.30 % function** (measured `bun run check`).
 
 - Full local corpus Z:\[Vibe Coded (AI)]\(Tsotchke) (~13k files, 20 repos incl. Eshkol flagship with .esk/AD/arena/HoTT/consciousness, Moonlab tensor/MPO/Clifford/QRNG, libirrep, QGT, ulg, quantum-quake) studied via FS/grep/read (every relevant line in key C/.esk/docs).
 - Strict audit created: docs/TSOTCHKE-CORPUS-RALPH-WIRING-AUDIT-2026-06-19.md (study, current state, wiring everywhere plan + this pass progress, honesty, contracts compliance).
@@ -107,7 +107,7 @@ See docs/MODULE-CONTRACTS.md (GOAL5 V), SUPER-CREATURE-RESEARCH.md, reports/\*, 
 
 - **Receipts-law truth-sync (2026-06-17, eighth pass).** Updated `scripts/canonical-receipts.ts` and all policed surfaces after the receipts-law guard landed: **1,170 tests / 0 fail** (100 files, 1,738,808 assertions) Â· **96.70 % line / 93.13 % function** (`bun test --coverage`). `bun run verify:receipts` + `tests/docs-receipts-law.test.ts` now mechanically block drift.
 
-- **Scorecard restore (2026-06-17, seventh pass).** Restored all three `2026-06-17` frontier reports after a corrupted overwrite injected stale Â§III.5 figures (1,159 / 91.2 % / â‰ˆ208 Âµs) and a bogus interim count (1,050 / 94.61 %). **Canonical receipts re-verified cold shell:** **1,166 tests / 0 fail** Â· **96.70 % line / 93.35 % function** (`bun test --coverage`) Â· apex `think()` **â‰ˆ 272â€“304 Âµs/beat** (machine-dependent, CI < 5 ms). Â§III.2â€“III.4 narrative unchanged; Â§III.4 parameter bullet = **Independently re-summed** (37,225).
+- **Scorecard restore (2026-06-17, seventh pass).** Restored all three `2026-06-17` frontier reports after a corrupted overwrite injected stale Â§III.5 figures (1,159 / 91.2 % / â‰ˆ208 Âµs) and a bogus interim count (1,050 / 94.42 %). **Canonical receipts re-verified cold shell:** **1,166 tests / 0 fail** Â· **96.70 % line / 93.35 % function** (`bun test --coverage`) Â· apex `think()` **â‰ˆ 272â€“304 Âµs/beat** (machine-dependent, CI < 5 ms). Â§III.2â€“III.4 narrative unchanged; Â§III.4 parameter bullet = **Independently re-summed** (37,225).
 
 - **Unified scorecard truth-sync (2026-06-17).** Fixed stale Â§III.5 metrics in the combined report (was 1,159 tests / 91.2 % coverage / â‰ˆ 208 Âµs); added **`2026-06-17-STATE-OF-THE-ART-COMBINED.md`** with canonical receipts (**1,165 tests**, **96.70 % / 93.35 %**, **â‰ˆ 285 Âµs mean / 273 Âµs median**); expanded Report I Â§6 with the full Butlin indicator table; linked from README, `/docs`, `/spec`, and the technical specification.
 
@@ -708,7 +708,7 @@ determinism preserved.
   `#cP` off-screen (`left:-182`). Fix: scope the trigger to `(orientation: portrait) and (max-width:
 1024px)`, so a wide portrait desktop keeps the full desktop layout â€” the bottom-right readout column
   on the right and the centred control pad in the corner. Verified live: **1440Ã—2560** portrait â†’
-  `#hud-vsr` block on the right, `#cP` on-screen + centred, zero overlaps; **390Ã—844** phone & **900Ã—1400**
+  `#hud-vsr` block on the right, `#cP` on-screen + centred, zero overlaps; **390Ã—844** phone & **900Ã—1410**
   small-portrait â†’ still mobile (sheet mode, readout hidden); **1280Ã—800** landscape â†’ unchanged. CSS
   only, `src/styles/app.css`. Full gate green (942 tests).
 - **Two review findings from the V59â€“V63 audit (V64)** â€” an adversarial pass over the new code surfaced
