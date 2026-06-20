@@ -383,4 +383,3 @@ demonstrates that depth comes from **architecture,
 determinism, and engineering discipline**, not parameter count or hardware.
 
 **Frontier assessments (2026-06-17):** [Report I â€” Whole Repository](./reports/2026-06-17-STATE-OF-THE-ART-WHOLE-REPO.md) Â· [Report II â€” Super Creature](./reports/2026-06-17-STATE-OF-THE-ART-SUPER-CREATURE.md) Â· [Combined â€” unified Â§III scorecard](./reports/2026-06-17-STATE-OF-THE-ART-COMBINED.md) Â· [Super Creature Research](./SUPER-CREATURE-RESEARCH.md).
-

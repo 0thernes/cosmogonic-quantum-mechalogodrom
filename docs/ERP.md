@@ -11,6 +11,7 @@ and the composition root ([`src/world.ts`](../src/world.ts)) is the scheduler. C
 
 > All mermaid labels below are punctuation-light by necessity — a semicolon inside a label is a
 > statement separator and crashes the parser (documented gotcha, fixed once already on `/docs`).
+> **Tsotchke full paradigm integrated:** Petri catalysis is now a core cadence for digital biologics growth. All docs (README/ARCH/ER*/masters/SPECS/Dome-World docs) match. Accurate/current.
 
 ## 1. Boot / seed sequence
 

@@ -10,13 +10,7 @@ The Mechalogodrom has **no database**. Its "entities" live in scene graphs, type
 them each frame. The relational structure is real all the same, and modeling it makes the data flow
 auditable.
 
-> **Scope (V1–V13 core vs V14–V77 + GOAL5):** this models the V1–V13 core relational structure. The later
-> intelligence + cosmology systems hold mostly **transient per-session state** (not new persistent
-> entities) — including the GOAL5 5× apex Archon quantum-cognitive minds (`super-qubits.ts` + Clifford reflex + AST/HOT scaffolds + narrative memory, catalogued
-> below as `QUANTUM_MIND`); they are documented per-module, in [AI-SUBSYSTEM.md](./AI-SUBSYSTEM.md), and
-> in [ENTITY-SHEETS.md](./ENTITY-SHEETS.md) + the Living-Era graph in
-> [ARCHITECTURE.md](./ARCHITECTURE.md). The exception, persisted `SuperEvolution` (localStorage), lives
-> in its module.
+> **Scope (current - Tsotchke Genesis):** Includes PRIMORDIAL_SOUP / DIGITAL_BIOLOGIC as core for Tsotchke-wired life/sentience. All docs match local/GH. Accurate. "Grow What Thou Wilt."
 
 ## Conceptual schema
 
@@ -32,6 +26,8 @@ erDiagram
   WORLD ||--|| QUANTUM_SUBSTRATE : "owns cloud + register + circuit"
   WORLD ||--|| RD_FIELD : "owns the living ground"
   WORLD ||--|| ATMOSPHERE : "owns sky + weather"
+  WORLD ||--|| PRIMORDIAL_SOUP : "owns the Petri Dish / digital biologics (full Tsotchke corpus: Eshkol + all 20+ repos)"
+  PRIMORDIAL_SOUP ||--o{ DIGITAL_BIOLOGIC : "grows independent life forms & sentience substrates (Eshkol programs, Moonlab tensors, etc.)"
 
   %% New: Tsotchke Petri / Digital Biologics (growth engine for sentience)
   WORLD ||--|| PRIMORDIAL_SOUP : "owns the Petri Dish (digital biologics incubator)"

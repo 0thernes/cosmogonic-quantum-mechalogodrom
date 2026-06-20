@@ -6,14 +6,7 @@ nonetheless, and the composition root (`world.ts`) is effectively its join
 engine. Diagrams below follow ERD (structure), ERM (relationship narrative),
 and ERP (process models).
 
-> **Scope (V1–V13 core vs V14–V77 + GOAL5):** the diagrams below model the **V1–V13 core data layer** — the
-> entities carrying persistent/structural state (organisms, morphotypes, titans, NHI, the economy, the
-> audit ring, persisted preferences). The later intelligence + cosmology systems (5× GOAL5 super-creatures/Archons/Godforms: ORACLE-Σ, STARKILLER-Ω, MANHATTAN-Φ, BROLY-Ψ, VOID-Λ with composite minds + Clifford/AST-1/HOT-1/HOT-4 + full concrete narrative-memory.ts (10 orchestrations) + super-body, see [AI-SUBSYSTEM.md](./AI-SUBSYSTEM.md) — genome/
-> lineage, factions, leviathans, singularities, chaos-field, the monolith) hold mostly
-> **transient per-session simulation state** (exclusive godform.ts leaf owns names+biases; super-mind wires faculties; world.ts integrator spawns exactly 5) rather than new persistent entities, so they are documented
-> per-module and in [ENTITY-SHEETS.md](./ENTITY-SHEETS.md) + the Living-Era graph in
-> [ARCHITECTURE.md](./ARCHITECTURE.md) rather than expanded here. The one genuinely persisted addition,
-> `SuperEvolution` (localStorage), lives in its module + [ADR-0009](./adr/0009-genome-reproduction.md).
+> **Scope (current - Tsotchke Genesis):** Core includes Tsotchke full wiring as primordial substrate: PRIMORDIAL_SOUP / PETRI_DISH for digital biologics (Eshkol + all Tsotchke repos), emergent DIGITAL_BIOLOGIC strains, sentience substrates. Super Creature/Archons catalyze the growth. All local/GH docs (README, ARCH, ERD/ERM/ERP, masters, SPECS, /docs Dome) match. Accurate. "Grow What Thou Wilt." Not LLM.
 
 ## ERD
 

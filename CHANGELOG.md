@@ -5,7 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.12.0] - 2026-06-20
+
+### Tsotchke Full Integration: Petri Dish for Digital Biologics & Sentience
+
+- Package version bumped to 0.12.0 (from tagged 0.12.0-tsotchke-genesis).
+- All docs (README, ARCHITECTURE, ERD/ERM/ERP, masters/BROLY/STARKILLER/MANHATTAN, SPECS, KANBAN, LABS, in-app /docs and Dome/World content) fully audited, updated, and synchronized.
+- GitHub README, description, and about section updated to match local exactly.
+- Current state: Tsotchke (all repos) paramount and fully wired as substrate. Primordial-soup + petri-dish + digital-biologics is the growth engine. Super Creature is the beginning only. "Grow What Thou Wilt." Not LLM/tokenizer. Different forms of life/existence. All information accurate, truthful, current. Local == GH.
 
 ### Tsotchke Primordial Biologics Growth (2026-06-20+)
 
@@ -2037,4 +2044,3 @@ to the legacy prototype:
 ### Ralph 10x (this): gwt/dual in super-qubits, ulg/gwt in economy. Gate 1183 clean. Heartbeat continue.
 
 ### Ralph 10x (fresh): gwt+mpo in integrated-info. Gate clean. Heartbeat continue.
-

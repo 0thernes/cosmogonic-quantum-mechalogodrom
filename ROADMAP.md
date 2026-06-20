@@ -61,4 +61,3 @@ matrix Â§2.40, and a release SBOM Â§21.420.)
 
 Anything here can be filed as a [feature request](./.github/ISSUE_TEMPLATE/feature_request.yml); the
 Kanban board is where accepted items get scoped and pulled into flight.
-
