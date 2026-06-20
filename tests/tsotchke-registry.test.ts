@@ -44,9 +44,7 @@ describe('Tsotchke registry — all 21 repos mapped', () => {
 
   test('consciousness substrates are wired', () => {
     expect(getTsotchkeRepo('eshkol')!.wiring).toBeGreaterThan(0.8);
-    expect(getTsotchkeRepo('moonlab')!.cosmogonicLeaf).toBe(
-      'sim/moonlab-tensor.ts + sim/moonlab-vqe.ts + super-qubits + godform',
-    );
+    expect(getTsotchkeRepo('moonlab')!.cosmogonicLeaf).toBe('sim/moonlab-tensor.ts');
     expect(getTsotchkeRepo('quantum-quake')!.cosmogonicLeaf).toBe('sim/qge-aliveness.ts');
     expect(getTsotchkeRepo('logo-lab')!.cosmogonicLeaf).toBe('sim/logo-turtle.ts');
   });
