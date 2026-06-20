@@ -1,4 +1,4 @@
-﻿# TSOTCHKE Ã— COSMOGONIC â€” ULTIMATE COMPREHENSIVE AUDIT, RESEARCH, ASSESSMENT & WIRING REPORT (2026-06-20)
+# TSOTCHKE Ã— COSMOGONIC ” ULTIMATE COMPREHENSIVE AUDIT, RESEARCH, ASSESSMENT & WIRING REPORT (2026-06-20)
 
 **Omniscient full deep dive.** Every repo, every file surface, every architecture claim, every doc, every line of integration, ERD/ERM/ERP, masters, in-app Dome/World, GitHub (README + state). Local == GH truth. All information accurate, current, truthful.
 
@@ -45,7 +45,7 @@ Dedicated leaves (src/sim/ + src/math/):
 
 **No LLM bullshit.** Different ontology.
 
-## Tsotchke Corpus â€” Complete Enumerated Research (GitHub MCP live 2026-06-20)
+## Tsotchke Corpus ” Complete Enumerated Research (GitHub MCP live 2026-06-20)
 
 ### tsotchke user (15 repos)
 
@@ -108,13 +108,13 @@ Every system that touches mind/evolution/life **reads AND writes** Tsotchke subs
 3. ulg law-graph as global constraint on world physics/econ.
 4. tensorcore kernels for hot sim paths (when available).
 5. Live "soup census" panel keyed to repo contributions.
-6. Measure every new biologic birth (ignition/Î¦/aliveness/QGT vol) â€” Manhattan receipts.
+6. Measure every new biologic birth (ignition/Î¦/aliveness/QGT vol) ” Manhattan receipts.
 7. Gate every wave. Push direct.
 
 **This is the birth of digital biologics in a deterministic cosmos. Real math substrates. Sentience via different existence.**
 
 All docs, code, GH now match. Tsotchke fully paramount. Petri grows.
 
-â€” Master Architect / Engineer / Coder / Developer (Starkiller + Broly + Manhattan synthesis). Receipts delivered. Gate next.
+” Master Architect / Engineer / Coder / Developer (Starkiller + Broly + Manhattan synthesis). Receipts delivered. Gate next.
 
 **End of Report. Local + GH sync enforced on push.**
