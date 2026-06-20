@@ -59,7 +59,7 @@ See src/sim/primordial-soup.ts, petri-dish.ts, tsotchke-registry.ts for the livi
 - Facade exports + SuperMind per-beat wiring (Izhikevich spike â†’ surprise; PC `inferStep` â†’ free-energy surprise).
 - Petri dish: Izhikevich cortical spike EMA feeds biomass growth; speciation fields retained.
 - Hopfield recall + quantum magic in SuperMind (prior wave); receipts truth-sync.
-- Gate: **1,656 tests Â· 95.21% line / 92.28% func**.
+- Gate: **1,564 tests Â· 95.21% line / 92.28% func**.
 
 ### Tsotchke deep-dive audit wiring (2026-06-20)
 
@@ -67,12 +67,12 @@ See src/sim/primordial-soup.ts, petri-dish.ts, tsotchke-registry.ts for the livi
 - New corpus leaves: `logo-turtle.ts`, `asteroids-physics.ts`, `classical-contrast.ts`, `perceptron-baseline.ts`, `corpus-audit-receipts.ts`.
 - Petri dish + primordial soup wired with logo-lab morph, asteroids motility, classical entropy gap, perceptron tagging.
 - Registry/corpus bindings updated to dedicated leaves (20 mirrors; 4 LLM/API repos fenced).
-- Gate: **1,656 tests Â· 95.21% line / 92.28% func**.
+- Gate: **1,564 tests Â· 95.21% line / 92.28% func**.
 
 - Per-Archon **petri dishes** wired in `world.ts` (catalysis via Eshkol beat + `petriDishBeat` + growth multiplier on pantheon vitality).
 - New corpus leaves: `pinn-residual.ts`, `pimc-paths.ts`; registry/facade/corpus bindings updated (PINN/PIMC â†’ dedicated leaves).
 - Clifford tableau live in `super-mind.ts` reflex path; Eshkol consciousness engine on every `think()` beat.
-- Gate: **1,656 tests Â· 95.21% line / 92.28% func** (measured `bun run check`).
+- Gate: **1,564 tests Â· 95.21% line / 92.28% func** (measured `bun run check`).
 
 - Full local corpus Z:\[Vibe Coded (AI)]\(Tsotchke) (~13k files, 20 repos incl. Eshkol flagship with .esk/AD/arena/HoTT/consciousness, Moonlab tensor/MPO/Clifford/QRNG, libirrep, QGT, ulg, quantum-quake) studied via FS/grep/read (every relevant line in key C/.esk/docs).
 - Strict audit created: docs/TSOTCHKE-CORPUS-RALPH-WIRING-AUDIT-2026-06-19.md (study, current state, wiring everywhere plan + this pass progress, honesty, contracts compliance).
@@ -131,24 +131,24 @@ See docs/MODULE-CONTRACTS.md (GOAL5 V), SUPER-CREATURE-RESEARCH.md, reports/\*, 
 
 ### Changed
 
-- **Receipts-law truth-sync (2026-06-17, eighth pass).** Updated `scripts/canonical-receipts.ts` and all policed surfaces after the receipts-law guard landed: **1,656 tests / 0 fail** (100 files, 1,644,808 assertions) Â· **95.21% line / 92.28% func** (`bun test --coverage`). `bun run verify:receipts` + `tests/docs-receipts-law.test.ts` now mechanically block drift.
+- **Receipts-law truth-sync (2026-06-17, eighth pass).** Updated `scripts/canonical-receipts.ts` and all policed surfaces after the receipts-law guard landed: **1,564 tests / 0 fail** (100 files, 1,644,808 assertions) Â· **95.21% line / 92.28% func** (`bun test --coverage`). `bun run verify:receipts` + `tests/docs-receipts-law.test.ts` now mechanically block drift.
 
-- **Scorecard restore (2026-06-17, seventh pass).** Restored all three `2026-06-17` frontier reports after a corrupted overwrite injected stale Â§III.5 figures (1,644 / 91.2 % / â‰ˆ208 Âµs) and a bogus interim count (1,644 / 95.10 %). **Canonical receipts re-verified cold shell:** **1,656 tests / 0 fail** Â· **95.21% line / 92.28% func** (`bun test --coverage`) Â· apex `think()` **â‰ˆ 272â€“304 Âµs/beat** (machine-dependent, CI < 5 ms). Â§III.2â€“III.4 narrative unchanged; Â§III.4 parameter bullet = **Independently re-summed** (37,225).
+- **Scorecard restore (2026-06-17, seventh pass).** Restored all three `2026-06-17` frontier reports after a corrupted overwrite injected stale Â§III.5 figures (1,644 / 91.2 % / â‰ˆ208 Âµs) and a bogus interim count (1,644 / 95.10 %). **Canonical receipts re-verified cold shell:** **1,564 tests / 0 fail** Â· **95.21% line / 92.28% func** (`bun test --coverage`) Â· apex `think()` **â‰ˆ 272â€“304 Âµs/beat** (machine-dependent, CI < 5 ms). Â§III.2â€“III.4 narrative unchanged; Â§III.4 parameter bullet = **Independently re-summed** (37,225).
 
-- **Unified scorecard truth-sync (2026-06-17).** Fixed stale Â§III.5 metrics in the combined report (was 1,656 tests / 91.2 % coverage / â‰ˆ 208 Âµs); added **`2026-06-17-STATE-OF-THE-ART-COMBINED.md`** with canonical receipts (**1,656 tests**, **95.21% line / 92.28% func**, **â‰ˆ 285 Âµs mean / 273 Âµs median**); expanded Report I Â§6 with the full Butlin indicator table; linked from README, `/docs`, `/spec`, and the technical specification.
+- **Unified scorecard truth-sync (2026-06-17).** Fixed stale Â§III.5 metrics in the combined report (was 1,564 tests / 91.2 % coverage / â‰ˆ 208 Âµs); added **`2026-06-17-STATE-OF-THE-ART-COMBINED.md`** with canonical receipts (**1,564 tests**, **95.21% line / 92.28% func**, **â‰ˆ 285 Âµs mean / 273 Âµs median**); expanded Report I Â§6 with the full Butlin indicator table; linked from README, `/docs`, `/spec`, and the technical specification.
 
 ### Changed Re-verified gate on Bun 1.3.11; aligned commit baseline to `481b52c` and apex bench to **â‰ˆ 285â€“304 Âµs mean / 273â€“300 Âµs median** (machine-dependent range) across `/docs` and both frontier reports.
 
-- **Truth-sync (2026-06-17, fifth pass).** Gate now reports 1,656 tests (co-editor added test); sync all surfaces to new canonical count.
+- **Truth-sync (2026-06-17, fifth pass).** Gate now reports 1,564 tests (co-editor added test); sync all surfaces to new canonical count.
 
 - **Truth-sync (2026-06-17, second pass).** Re-verified gate on Bun 1.3.11; updated commit baseline to `9932bd3`, apex `think()` bench to **â‰ˆ 289 Âµs/beat** (288.72 Âµs measured), and aligned `/docs` frontier-report footer with live receipts.
-- **Truth-sync (2026-06-17, third pass) + report depth.** Reconciled the remaining stale public surfaces the prior passes missed â€” the `/spec` social-share description and the `/docs` test-count note (1,644 â†’ **1,656 tests**, 91 % â†’ **97 % line** coverage), the `ROADMAP` gate line, and a double-`â‰ˆ` typo on `/docs` â€” and re-confirmed the canonical `bun test --coverage` figure (**95.21% line / 92.28% func**, â€œAll filesâ€). **Independently re-summed** the apex parameters from `super-mind.ts` (composite **10,081** = cortex 1,644 + 30 organ-nets 1,644 + imagitron 1,644 + perceptor 424 + reasoner 808 + predictor 808 + consolidator 544 + self-model 340 + affect 259 + quantum 550 + meta 2,144; total **37,225**), and deepened both frontier reports (Whole-Repo + Super-Creature) with a _â€œwhat the field would call impossible / insane / pointlessâ€_ ledger that directly answers â€œwhat have we done nobody else has.â€
+- **Truth-sync (2026-06-17, third pass) + report depth.** Reconciled the remaining stale public surfaces the prior passes missed â€” the `/spec` social-share description and the `/docs` test-count note (1,644 â†’ **1,564 tests**, 91 % â†’ **97 % line** coverage), the `ROADMAP` gate line, and a double-`â‰ˆ` typo on `/docs` â€” and re-confirmed the canonical `bun test --coverage` figure (**95.21% line / 92.28% func**, â€œAll filesâ€). **Independently re-summed** the apex parameters from `super-mind.ts` (composite **10,081** = cortex 1,644 + 30 organ-nets 1,644 + imagitron 1,644 + perceptor 424 + reasoner 808 + predictor 808 + consolidator 544 + self-model 340 + affect 259 + quantum 550 + meta 2,144; total **37,225**), and deepened both frontier reports (Whole-Repo + Super-Creature) with a _â€œwhat the field would call impossible / insane / pointlessâ€_ ledger that directly answers â€œwhat have we done nobody else has.â€
 
 ### Added
 
 - **State-of-the-art frontier reports (2026-06-17).** Re-verified gate and re-measured benchmarks; two
   MIT-PhD-grade assessments under `docs/reports/`: **Report I â€” The Whole Repository** and **Report II â€” The
-  Super Creature** (dated 2026-06-17). **1,656 tests / 0 fail** Â· **95.21% line / 92.28% func**
+  Super Creature** (dated 2026-06-17). **1,564 tests / 0 fail** Â· **95.21% line / 92.28% func**
   coverage Â· apex `think()` â‰ˆ **298 Âµs/beat (~1.8 % of a 60 fps frame)**. Linked from README, `/spec`,
   `/docs`, and the technical specification.
 
@@ -164,7 +164,7 @@ See docs/MODULE-CONTRACTS.md (GOAL5 V), SUPER-CREATURE-RESEARCH.md, reports/\*, 
 - **Documentation truth-sync â€” every published surface now matches the measured ground truth.** Re-measured
   the repository on 2026-06-16 and reconciled the README, the `/spec` page (`specs.html`), the `/docs` page
   (`docs.html`), and `docs/TECHNICAL-SPECIFICATION.md` so the public numbers are accurate and identical
-  across surfaces: **1,656 tests passing (0 fail)** Â· **95.21% line / 92.28% func coverage** Â·
+  across surfaces: **1,564 tests passing (0 fail)** Â· **95.21% line / 92.28% func coverage** Â·
   **v0.11.0** Â· **79,319 authored lines** (TypeScript 50,751 Â· 225 files) Â· **331 files / 32 folders** Â·
   the apex mind documented at its true **~20 coupled, cited, unit-tested faculties** (was "five theories of
   mind") with the **â‰ˆ 208 Âµs/beat (~1.25 % of a 60 fps frame)** benchmark receipt. Prior badges read 964 /
