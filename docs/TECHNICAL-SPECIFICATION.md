@@ -6,7 +6,7 @@
 > `/spec` Â· **Architecture docs:** `/docs`
 
 **Version:** current (Tsotchke full) Â· **Generated:** 2026-06-20 Â· **License:** Proprietary â€” All Rights Reserved.
-**Gate:** 1651 tests · 95.10% line / 92.02% func (canonical synced, receipts enforced).
+**Gate:** 1650 tests · 95.10% line / 92.02% func (canonical synced, receipts enforced).
 
 **Full Tsotchke wiring:** All repos/projects from Tsotchke corpus integrated. Eshkol as consciousness language. Primordial soup / petri as growth engine for digital biologics and sentience. Super Creature beginning only. All docs (README/ARCH/ER\*/PHILOSOPHY/CONTRACTS/SPECS/LABS/masters) + GH match local exactly. Accurate, truthful, current. Not LLM. "Grow What Thou Wilt."
 
@@ -35,7 +35,7 @@ seed**.
 | Distinct file types                        | 21                                                                            |
 | App source (TypeScript)                    | 35,226 lines Â· 108 files                                                     |
 | Tests                                      | 14,117 lines Â· 100 files                                                     |
-| Test : source ratio                        | 0.40 â†’ **95.21 % line / 92.08 % function** coverage (`bun test --coverage`) |
+| Test : source ratio                        | 0.40 â†’ **95.26 % line / 92.25 % function** coverage (`bun test --coverage`) |
 | Passing tests                              | **1,644** (0 failing)                                                         |
 
 ### 1.1 Languages
@@ -377,7 +377,7 @@ contrast 62 Â· doc-links 57 Â· a11y-static 45`.
 
 This is a ~69k-line TypeScript (+ optional C++/Jolt native engine) browser-native simulation that
 renders **up to 50,000 agents** (10,000 at 60 fps on a laptop iGPU with zero AI accelerator), is
-**bit-reproducible from one seed**, ships through a **full CI/CD gate** (1644 tests, 95.21 % line / 92.08 % function coverage),
+**bit-reproducible from one seed**, ships through a **full CI/CD gate** (1650 tests, 95.26 % line / 92.25 % function coverage),
 and whose entire emergent intelligence weighs **â‰ˆ 14 MB â€” 1/50,000th of GPT-3** at the mega ceiling. It
 demonstrates that depth comes from **architecture,
 determinism, and engineering discipline**, not parameter count or hardware.
