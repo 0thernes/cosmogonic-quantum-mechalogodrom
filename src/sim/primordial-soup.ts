@@ -5,7 +5,10 @@
 
 import type { Rng } from '../math/rng';
 import { clamp } from '../math/scalar';
-import { getEshkolProgramFingerprint } from './generated-tsotchke-seeds';
+import {
+  getEshkolProgramFingerprint,
+  TSOTCHKE_HARVEST as _TSOTCHKE_HARVEST,
+} from './generated-tsotchke-seeds'; // From real local Tsotchke Repo Folder harvest (builds with the folder)
 import { corpusBeatForArchon, getTsotchkeRepoByIndex } from './tsotchke-registry';
 
 const clamp01 = (v: number): number => clamp(v, 0, 1);
