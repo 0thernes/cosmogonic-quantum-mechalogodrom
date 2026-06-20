@@ -7,10 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### License clarified — proprietary, but source-available (view / run / try)
+### License relaxed — non-commercial research & play (attribution required)
 
-- Reworded [LICENSE](./LICENSE): it stays **proprietary, All Rights Reserved, © 0thernes** (patent-pending, trademarks asserted; no commercial use, no redistribution, no derivatives) — but now **explicitly grants permission to view, clone, and run the project for personal, non-commercial evaluation** ("look, run, and try"). The prior §2 read "no permission... to use" and called the source "confidential", which wrongly implied people could not even look at or try it.
-- Propagated the clarified stance to README, ARCHITECTURE, TECHNICAL-SPECIFICATION, NOTICE, THIRD-PARTY-NOTICES, CONTRIBUTING, the DOCS/SPECS pages, and the latest report; cleaned stale UTF-8 mojibake in the touched license lines.
+- Replaced [LICENSE](./LICENSE) with a **non-commercial research & play** license. The work stays **owned by 0thernes (© 2026, patent-pending), with all commercial rights reserved**, but anyone may now **study, research, run, modify, and share it for any non-commercial purpose** — the only two rules are **keep the attribution (don't claim it as your own)** and **no for-profit / commercial use** without written permission. (The prior wording — first "no permission to use", then "view/run/try only" — was still too strict: it forbade modifying and sharing. This opens those up for non-commercial use.)
+- `package.json` license set to `SEE LICENSE IN LICENSE`. Propagated to README (badge + prose), ARCHITECTURE, TECHNICAL-SPECIFICATION, NOTICE, THIRD-PARTY-NOTICES, CONTRIBUTING, the DOCS/SPECS pages, and the latest report; cleaned stale UTF-8 mojibake in the touched license lines.
 
 ## [0.16.1] - 2026-06-20
 

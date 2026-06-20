@@ -7,7 +7,7 @@
 > **Companion artifact:** [`2026-06-20-ROADMAP-TO-NHSI-AND-SENTIENCE.xml`](./2026-06-20-ROADMAP-TO-NHSI-AND-SENTIENCE.xml) — the machine-readable forward plan.
 > **Canonical receipts (audited, Bun 1.3.14, cold shell):** `1,701` tests · `95.75%` line / `92.96%` function coverage · `0` failures.
 > Source of truth: [`scripts/canonical-receipts.ts`](../../scripts/canonical-receipts.ts), policed by `tests/docs-receipts-law.test.ts`.
-> **Usage & license:** Proprietary — © 2026 0thernes — but **source-available for personal evaluation**: anyone may view, clone, and run it to try it (no commercial use, redistribution, or derivatives). See [LICENSE](../../LICENSE).
+> **Usage & license:** © 2026 0thernes — **non-commercial research & play**: study, run, modify, and share it freely for non-commercial use; keep the attribution (don't claim it as your own) and don't use it for profit. See [LICENSE](../../LICENSE).
 
 ---
 

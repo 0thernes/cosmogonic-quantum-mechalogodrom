@@ -5,7 +5,7 @@
 > estimated. **Live:** <https://0thernes.github.io/cosmogonic-quantum-mechalogodrom/> · **Spec page:**
 > `/spec` · **Architecture docs:** `/docs`
 
-**Version:** current (Tsotchke full) · **Generated:** 2026-06-20 · **License:** Proprietary — All Rights Reserved (source-available for personal, non-commercial evaluation: view, clone, run to try it).
+**Version:** current (Tsotchke full) · **Generated:** 2026-06-20 · **License:** Non-commercial research & play (© 0thernes; study / run / modify / share non-commercially, keep attribution, no for-profit use).
 **Gate:** 1701 tests · 95.75% line / 92.96% func (canonical synced, receipts enforced).
 
 **Full Tsotchke wiring:** All repos/projects from Tsotchke corpus integrated. Eshkol as consciousness language. Primordial soup / petri as growth engine for digital biologics and sentience. Super Creature beginning only. All docs (README/ARCH/ER\*/PHILOSOPHY/CONTRACTS/SPECS/LABS/masters) + GH match local exactly. Accurate, truthful, current. Not LLM. "Grow What Thou Wilt."
@@ -288,8 +288,8 @@ Complexity classes are catalogued in [COMPLEXITY.md](COMPLEXITY.md); hot-path be
 - **Server:** HTML-escaped HTMX swaps (no stored XSS), body size limits, a fixed server-side LLM
   provider allow-list (no client-controlled SSRF), a 200-entry in-memory audit ring.
 - **Supply chain:** `UNLICENSED` / `private`, Dependabot grouping, CodeQL `security-extended`,
-  cross-platform CI gate, SBOM (`bun run sbom`, CycloneDX). License: **Proprietary — All Rights
-  Reserved, Patent Pending; source-available for personal, non-commercial evaluation (view, clone, run to try it)**.
+  cross-platform CI gate, SBOM (`bun run sbom`, CycloneDX). License: **Non-commercial research & play
+  (© 0thernes, patent-pending, commercial rights reserved); study / run / modify / share non-commercially with attribution, no for-profit use**.
 
 ---
 

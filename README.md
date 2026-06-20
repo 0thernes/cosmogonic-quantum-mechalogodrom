@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/0thernes/cosmogonic-quantum-mechalogodrom/actions/workflows/ci.yml/badge.svg)](https://github.com/0thernes/cosmogonic-quantum-mechalogodrom/actions/workflows/ci.yml)
 [![CodeQL](https://github.com/0thernes/cosmogonic-quantum-mechalogodrom/actions/workflows/codeql.yml/badge.svg)](https://github.com/0thernes/cosmogonic-quantum-mechalogodrom/actions/workflows/codeql.yml)
-[![License: Proprietary — source-available](https://img.shields.io/badge/License-Proprietary%20(source--available)-7c4dff.svg)](./LICENSE)
+[![License: Non-Commercial Research & Play](https://img.shields.io/badge/License-Non--Commercial%20Research%20%26%20Play-2ea043.svg)](./LICENSE)
 [![Bun](https://img.shields.io/badge/Bun-1.3-black?logo=bun&logoColor=white)](https://bun.sh)
 [![TypeScript strict](https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript&logoColor=white)](./tsconfig.json)
 [![tests](https://img.shields.io/badge/tests-1701%20passing-brightgreen)](./tests)
@@ -575,13 +575,13 @@ Full detail in docs/.
 
 ## License & legal
 
-**Proprietary — All Rights Reserved. Copyright (c) 2026 0thernes.** This work is
-original and novel. It is **source-available for personal evaluation**: you are
-welcome to view the source, clone it, and run it (locally or via the hosted demo)
-to try it out, for personal, non-commercial use. What is *not* granted without the
-Author's prior written consent: commercial use, redistribution / re-hosting, or
-shipping modified or derivative versions. See [LICENSE](./LICENSE). Licensing
-inquiries: 0_0@0thernes.art.
+**Owned by 0thernes — © 2026 0thernes. Non-commercial research & play license.**
+This work is original and novel. **Study it, research it, play with it, build on
+it** — you may view, run, clone, modify, and share it for any **non-commercial**
+purpose. Just two rules: (1) **don't claim it as your own** — keep the © 0thernes
+notices and credit the author; and (2) **no profit / commercial use** without the
+Author's prior written permission. See [LICENSE](./LICENSE). Commercial licensing:
+0_0@0thernes.art.
 
 Third-party components: three (MIT), htmx (0BSD), Tailwind CSS (MIT), Mermaid
 (MIT), simplex-noise (MIT), graphology + communities-louvain + metrics (MIT),

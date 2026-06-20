@@ -3,9 +3,10 @@
 Cosmogonic Quantum Mechalogodrom
 Copyright (c) 2026 0thernes
 
-This project is proprietary — All Rights Reserved (see [LICENSE](./LICENSE)). It is
-source-available for personal, non-commercial evaluation — you may view, clone, and
-run it to try it — but it is not open-source. It bundles or
+This project is owned by 0thernes — © 2026 (see [LICENSE](./LICENSE)). It is released
+under a **non-commercial research & play** license: study, research, run, modify, and
+share it for any non-commercial purpose, keeping the © 0thernes notices; no for-profit
+use without permission. It is not open-source. It bundles or
 depends on the following third-party software and fonts, each of which remains
 under its own license as listed below.
 

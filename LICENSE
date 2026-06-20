@@ -1,61 +1,60 @@
-PROPRIETARY LICENSE — SOURCE-AVAILABLE FOR PERSONAL EVALUATION
+COSMOGONIC LICENSE — NON-COMMERCIAL RESEARCH & PLAY
 
 Copyright (c) 2026 0thernes (0thernes LLC) <0_0@0thernes.art>.
-All Rights Reserved. Patent Pending. Trademarks asserted.
+Owned by 0thernes. Commercial rights reserved. Patent pending. Trademarks asserted.
 
-This is proprietary software owned by 0thernes. It is NOT open source. It is made
-"source-available" on purpose: anyone is welcome to look at it, learn from it,
-clone it, and run it to try it out — while ownership and all commercial rights
-stay with the Author. In plain terms: look, run, and try — just don't sell it,
-redistribute it, or ship modified versions of it.
+The whole thing in one line: study it, research it, play with it, build on it —
+just don't sell it or make money from it, and don't claim it as your own. Credit
+stays with 0thernes.
 
-1. OWNERSHIP
-   This software and every file in this repository (the "Work") — source code,
-   build configuration, documentation, designs, schemas, and generated assets —
-   is the exclusive proprietary property and intellectual property of 0thernes
-   ("the Author"), protected by copyright, patent, trademark, and other laws.
+This is a proprietary, source-available, NON-COMMERCIAL license. It is not an
+open-source license (the non-commercial limit keeps it out of that category), and
+the Author keeps all commercial rights.
 
-2. WHAT YOU MAY DO (permission granted)
-   The Author grants you a personal, non-exclusive, non-transferable,
-   royalty-free, revocable permission, for your own personal, non-commercial
-   evaluation, learning, and enjoyment, to:
-     (a) VIEW and read the source code of the Work;
-     (b) CLONE or download a copy of the Work; and
-     (c) RUN the Work — both locally and via any public demonstration the Author
-         hosts (for example via GitHub Pages) — to try it and evaluate it.
-   That is the whole grant: look at it, run it, try it.
+1. WHAT YOU MAY DO (broad permission, for any non-commercial purpose)
+   The Author grants you a worldwide, royalty-free, non-exclusive permission, for
+   any NON-COMMERCIAL purpose — personal use, learning, teaching, academic or
+   independent research, experimentation, and plain fun — to:
+     (a) VIEW, read, and STUDY the source code of the Work;
+     (b) CLONE, download, and RUN the Work (locally or via any demo the Author hosts);
+     (c) MODIFY the Work and make modified versions; and
+     (d) SHARE the Work, and share your non-commercial modifications, with others,
+         provided you keep to the two conditions in Section 2.
+   "The Work" is this software and every file in this repository.
 
-3. WHAT YOU MAY NOT DO (rights reserved)
-   Except as expressly permitted in Section 2, ALL RIGHTS ARE RESERVED. Without
-   the Author's prior written permission you may NOT:
-     (a) use the Work, in whole or in part, for any COMMERCIAL purpose;
-     (b) REDISTRIBUTE, publish, re-host, mirror, sublicense, sell, or lease the
-         Work or any copy of it;
-     (c) MODIFY the Work or create DERIVATIVE WORKS from it (in whole or in part),
-         nor distribute any such modification or derivative;
-     (d) remove or alter any copyright, license, patent, or trademark notice; or
-     (e) use the Author's names, logos, brands, or trademarks.
-   No patent license and no trademark license is granted. Studying the source to
-   understand or evaluate it is permitted (Section 2); using that understanding to
-   reproduce, re-host, or commercialize the Work is not.
+2. THE TWO CONDITIONS (the only real rules)
+   (a) ATTRIBUTION — do NOT claim the Work as your own. Keep the copyright notice,
+       this license, and the authorship intact in every copy or modified version
+       you share, and clearly credit "0thernes" as the original author. Do not
+       misrepresent the Work's origin or imply that 0thernes endorses you or your
+       project.
+   (b) NON-COMMERCIAL — do NOT use the Work, in whole or in part, for commercial
+       advantage or monetary compensation. Commercial use includes (without limit):
+       selling or licensing it, charging for access, hosting it as a paid or
+       ad-supported service, or folding it into a for-profit product or service.
+       Any commercial use requires the Author's prior written permission —
+       contact 0_0@0thernes.art.
 
-4. PATENT PENDING / TRADEMARKS
-   One or more inventions embodied in the Work are the subject of pending patent
-   applications. All product names, logos, and brands are trademarks or trade
-   names of the Author and may not be used without prior written permission.
+3. RESERVED
+   All rights not expressly granted in Section 1 are reserved by the Author,
+   including ALL commercial rights. No trademark license is granted — the names,
+   logos, and brands remain the Author's. One or more inventions embodied in the
+   Work may be the subject of pending patent applications; no patent rights are
+   granted beyond those necessary for the non-commercial uses permitted in
+   Section 1.
 
-5. FUTURE RELEASES
-   The Author may, at its sole discretion and in the future, release specific
-   versions of the Work under separate terms. No such release is granted here.
+4. TERMINATION
+   This permission ends automatically if you breach it (for example, by selling the
+   Work or by stripping the attribution); you must then stop using and delete your
+   copies. A good-faith breach that you fix promptly after becoming aware of it is
+   reinstated.
 
-6. TERMINATION
-   The permission in Section 2 ends automatically if you breach this license, at
-   which point you must stop using and delete your copies. The Author may also
-   revoke or change this permission at any time.
-
-7. NO WARRANTY
+5. NO WARRANTY
    THE WORK IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
    INCLUDING WITHOUT LIMITATION THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
    PARTICULAR PURPOSE, AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHOR BE LIABLE
    FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY ARISING FROM OR IN CONNECTION WITH
    THE WORK OR ITS USE.
+
+(If you want a recognized, lawyer-drafted equivalent, this license is intended to
+match the spirit of PolyForm Noncommercial 1.0.0 — https://polyformproject.org/.)

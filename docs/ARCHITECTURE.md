@@ -4,11 +4,11 @@ How the Cosmogonic Quantum Mechalogodrom is wired. The binding per-module API
 spec lives in [MODULE-CONTRACTS.md](./MODULE-CONTRACTS.md); this document is
 the map.
 
-**License:** Proprietary — All Rights Reserved (© 2026 0thernes); patent-pending.
-It is **source-available for personal, non-commercial evaluation**: you may view,
-clone, and run it (locally or via the hosted demo) to try it out. No commercial use,
-redistribution, or modified/derivative versions without written permission. See
-[LICENSE](../LICENSE).
+**License:** Owned by 0thernes (© 2026); patent-pending; commercial rights reserved.
+Released under a **non-commercial research & play** license: study, research, run,
+modify, and share it freely for any non-commercial purpose, provided you keep the
+© 0thernes notices (don't claim it as your own). Commercial / for-profit use needs
+written permission. See [LICENSE](../LICENSE).
 
 **Tsotchke Paramount (MASTER FULL WIRE):** ALL 20+ repos from tsotchke user + Tsotchke-Corporation org (Eshkol COMPLETE spec: AD primitive + Consciousness Engine §17 KB/factor-graph/GWT/ignition/broadcast + .esk programs as heritable substrate; Moonlab; QGTL; spin nets; libirrep; quantum-quake; PINN/PIMC; ulg; logo-lab; tensorcore; rngs; asteroids; etc.) are the non-negotiable primordial substrate. Petri (primordial-soup + petri-dish + digital-biologics) grows independent digital biologics/sentience proxies. Super Creature = initial Godform/spark only. "Grow What Thou Wilt."
 
