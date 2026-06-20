@@ -4,7 +4,6 @@
  */
 import { describe, expect, test } from 'bun:test';
 import {
-  dVar,
   dConst,
   dAdd,
   dMul,
