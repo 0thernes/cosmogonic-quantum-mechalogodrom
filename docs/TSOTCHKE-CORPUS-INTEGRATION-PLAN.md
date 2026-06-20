@@ -45,25 +45,26 @@ Gaps vs full corpus: Only 4 primitives. No Eshkol language runtime/AD in sim, no
 
 Wave 1 (Foundation): ✅ COMPLETE — Audit + plan + contract amendments + provenance everywhere + enhanced godform/world with full corpus archetypes. (This doc + reports)
 Wave 2 (Math Layer): ✅ COMPLETE — Extended/new leaves for Eshkol AD (nested gradients for topdown/empowerment), full Moonlab Clifford + QGT, better QRNG, libirrep reps for 5 forms + quantum states.
-  - Created `src/math/eshkol-ad.ts` (reverse-mode AD with Wengert tape)
-  - Created `src/math/moonlab-tensor.ts` (tensor contraction MPO/MPS/TTN/MERA)
-  - Created `src/math/libirrep-symmetry.ts` (Clebsch-Gordan, Wigner-D, spherical harmonics)
-  - Created `src/math/quantum-qrng-full.ts` (Bell verification)
-  - Updated MODULE-CONTRACTS.md for new math leaves
-  - Updated BENCHMARKS.md with new hot paths
-Wave 3 (Sim Layer): ✅ COMPLETE — Wired into SuperMind (new Eshkol organ or AD subnet), SuperBody (more morph from quake/tensor), memory/narrative using arena ideas.
-  - Created `src/sim/eshkol-bridge.ts` (Eshkol language runtime bridge)
-  - Created `src/sim/moonlab-vqe.ts` (VQE with autograd)
-  - Created `src/sim/libirrep-qec.ts` (QEC decoding MWPM/BP-OSD)
-  - Created `src/sim/quantum-quake-physics.ts` (QGE physics integration)
-  - Wired new math into SuperMind (Eshkol AD organ, Moonlab VQE)
-  - Wired new math into SuperBody (quantum-quake morph, tensor pulses)
-Wave 4 (World/Physics): ✅ COMPLETE — Integrated quantum-quake elements or QGE primitives into native or world sim for creature interactions; local percepts richer.
-  - Wired new math into World (quantum-quake physics for interactions)
-Wave 5 (UI/Bridge + Web): ⏳ PENDING — ULG ideas into super-panel/observatory; optional WASM bridge notes.
-Wave 6 (Native + Perf): ⏳ PENDING — Selective C from mirrors into native/ (via facade).
-Wave 7 (Tests/Bench/Receipts): ⏳ PENDING — Goldens, new benches (tensor contraction, AD tape, irrep), update receipts law.
-Wave 8 (Docs/Audit/Close): ⏳ PENDING — Full ERM update, CORPUS_INTEGRATION_REPORT, final gate, clean tree.
+
+- Created `src/math/eshkol-ad.ts` (reverse-mode AD with Wengert tape)
+- Created `src/math/moonlab-tensor.ts` (tensor contraction MPO/MPS/TTN/MERA)
+- Created `src/math/libirrep-symmetry.ts` (Clebsch-Gordan, Wigner-D, spherical harmonics)
+- Created `src/math/quantum-qrng-full.ts` (Bell verification)
+- Updated MODULE-CONTRACTS.md for new math leaves
+- Updated BENCHMARKS.md with new hot paths
+  Wave 3 (Sim Layer): ✅ COMPLETE — Wired into SuperMind (new Eshkol organ or AD subnet), SuperBody (more morph from quake/tensor), memory/narrative using arena ideas.
+- Created `src/sim/eshkol-bridge.ts` (Eshkol language runtime bridge)
+- Created `src/sim/moonlab-vqe.ts` (VQE with autograd)
+- Created `src/sim/libirrep-qec.ts` (QEC decoding MWPM/BP-OSD)
+- Created `src/sim/quantum-quake-physics.ts` (QGE physics integration)
+- Wired new math into SuperMind (Eshkol AD organ, Moonlab VQE)
+- Wired new math into SuperBody (quantum-quake morph, tensor pulses)
+  Wave 4 (World/Physics): ✅ COMPLETE — Integrated quantum-quake elements or QGE primitives into native or world sim for creature interactions; local percepts richer.
+- Wired new math into World (quantum-quake physics for interactions)
+  Wave 5 (UI/Bridge + Web): ⏳ PENDING — ULG ideas into super-panel/observatory; optional WASM bridge notes.
+  Wave 6 (Native + Perf): ⏳ PENDING — Selective C from mirrors into native/ (via facade).
+  Wave 7 (Tests/Bench/Receipts): ⏳ PENDING — Goldens, new benches (tensor contraction, AD tape, irrep), update receipts law.
+  Wave 8 (Docs/Audit/Close): ⏳ PENDING — Full ERM update, CORPUS_INTEGRATION_REPORT, final gate, clean tree.
 
 Each wave: small exclusive files → read contract → impl → gate → report update → next.
 
