@@ -9,8 +9,15 @@ import { corpusBeatForArchon, getTsotchkeRepoByIndex } from './tsotchke-registry
 
 const clamp01 = (v: number): number => clamp(v, 0, 1);
 
-export const SOUP_SLOTS = 64; // Expanded for full Tsotchke corpus (local Z:\[Vibe Coded (AI)]\(Tsotchke) Eshkol .esk + all mirrors) to birth more independent digital biologics strains.
+export const SOUP_SLOTS = 128; // Expanded 0.16: full Tsotchke corpus (local Z:\[Vibe Coded (AI)]\(Tsotchke) + GH) — Eshkol .esk programs as native heritable DNA for digital biologics.
 export const SOUP_GENOME_LEN = 24;
+
+/** Real Eshkol program DNA from corpus (gradient_descent_demo.esk core, AD-as-primitive). Used as heritable genome for soup strains. */
+export const ESHKOL_NATIVE_DNA_EXAMPLE = `;; Eshkol AD/GWT DNA from Z:\\[Vibe Coded (AI)]\\(Tsotchke)\\Eshkol\\eshkol_repo\\examples\\gradient_descent_demo.esk
+(define (model params x) (+ (* (vector-ref params 0) x x) (* (vector-ref params 1) x) (vector-ref params 2)))
+(define (squared-error params) (/ (fold-left (lambda (acc pair) (let ((x (car pair)) (y (cadr pair))) (+ acc (* (- (model params x) y) (- (model params x) y))))) 0.0 '((-2.0 15.0) (-1.0 6.0) (0.0 1.0) (1.0 0.0) (2.0 3.0) (3.0 10.0))) 6))
+;; gradient primitive is compiler-native in Eshkol (AD)
+(define (train-step p lr) (let ((g (gradient squared-error p))) (vector (- (vector-ref p 0) (* lr (vector-ref g 0))) (- (vector-ref p 1) (* lr (vector-ref g 1))) (- (vector-ref p 2) (* lr (vector-ref g 2))))))`;
 
 export interface SoupStrain {
   id: number;
@@ -55,7 +62,8 @@ export class PrimordialSoup {
       this.consciousness[i] = 0.2 + s * 0.3;
       this.alive[i] = s > 0.3 || this.rng() < seedVitality ? 1 : 0;
       if (this.alive[i]) {
-        this.eshkolPrograms[i] = (s * 10000) >>> 0;
+        // 0.16 NATIVE: seed a subset with real Eshkol .esk DNA string (from local Tsotchke corpus) for heritable programs.
+        this.eshkolPrograms[i] = i % 7 === 0 ? ESHKOL_NATIVE_DNA_EXAMPLE : (s * 10000) >>> 0;
       }
     }
   }
@@ -159,6 +167,17 @@ function makeSoupRng(seed: number): Rng {
     t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   };
+}
+
+function programFingerprint(program: number | string | undefined): number {
+  if (program === undefined) return 0;
+  if (typeof program === 'number') return ((program >>> 0) % 997) / 997;
+  let hash = 2166136261;
+  for (let i = 0; i < program.length; i++) {
+    hash ^= program.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return ((hash >>> 0) % 997) / 997;
 }
 
 function vectorMean(v: Float32Array): number {
