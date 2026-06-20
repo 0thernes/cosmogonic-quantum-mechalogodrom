@@ -2,7 +2,8 @@
  * DIGITAL BIOLOGICS — new forms of Tsotchke-powered life.
  * Primordial soup + petri is the dish. Eshkol .esk programs, AD, GWT, spin, QGT etc.
  * are the "DNA". Super Creature the initial God; emergent biologics the will to grow.
- * "Grow What Thou Wilt." Not LLM. Sentience/consciousness goals.
+ * Eshkol tape.esk (Wengert ad-tape-new / ad-backward / ad-gradient) + all Tsotchke substrates drive real mutation.
+ * "Grow What Thou Wilt." Not LLM. Sentience/consciousness goals. MASTER level: every repo utilized.
  */
 
 import { corpusBeatForArchon } from './tsotchke-registry';

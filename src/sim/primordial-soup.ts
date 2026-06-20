@@ -6,6 +6,7 @@
 import type { Rng } from '../math/rng';
 import { clamp } from '../math/scalar';
 import { corpusBeatForArchon, getTsotchkeRepoByIndex } from './tsotchke-registry';
+import { getEshkolProgramFingerprint, TSOTCHKE_HARVEST } from './generated-tsotchke-seeds'; // Built from the real local Tsotchke Repo Folder — we use the folder to build.
 
 const clamp01 = (v: number): number => clamp(v, 0, 1);
 
@@ -62,8 +63,9 @@ export class PrimordialSoup {
       this.consciousness[i] = 0.2 + s * 0.3;
       this.alive[i] = s > 0.3 || this.rng() < seedVitality ? 1 : 0;
       if (this.alive[i]) {
-        // 0.16 NATIVE: seed a subset with real Eshkol .esk DNA string (from local Tsotchke corpus) for heritable programs.
-        this.eshkolPrograms[i] = i % 7 === 0 ? ESHKOL_NATIVE_DNA_EXAMPLE : (s * 10000) >>> 0;
+        // Built from the actual local Tsotchke Repo Folder via scripts/harvest-tsotchke-corpus.ts
+        // Real .esk programs (1436+) from Eshkol become heritable digital biologic DNA.
+        this.eshkolPrograms[i] = i % 3 === 0 ? getEshkolProgramFingerprint(i) : (s * 10000) >>> 0;
       }
     }
   }

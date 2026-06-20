@@ -20,7 +20,8 @@
     "bench": "bun bench/index.ts",
     "filemap": "bun scripts/gen-filemap.ts",
     "check": "bun run format:check && bun run typecheck && bun run lint && bun test && bun run verify:receipts && bun run build",
-    "verify:receipts": "bun scripts/verify-receipts.ts"
+    "verify:receipts": "bun scripts/verify-receipts.ts",
+    "harvest:tsotchke": "bun scripts/harvest-tsotchke-corpus.ts"
   },
   "dependencies": {
     "@fontsource-variable/inter": "^5.2.8",
