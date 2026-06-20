@@ -7,6 +7,7 @@ import * as THREE from 'three';
 import { detectQuality } from './core/quality';
 import { Engine } from './core/engine';
 import { RenderGovernor } from './core/frame-governor';
+import { mountPerfHud } from './ui/perf-hud';
 import { MemoryStore } from './memory/store';
 import { AuditTrail } from './logging/audit';
 import { createLogger } from './logging/logger';
@@ -126,6 +127,11 @@ function boot(): void {
   // under apocalypse / CHAOS spam at 50k), then restores quality when it recovers. RENDER-ONLY, so the
   // seeded sim stays bit-deterministic; the boot tier's shadow capability bounds how far it may shed.
   const governor = new RenderGovernor(quality.shadows);
+  // Stage 1: a tiny render-layer perf chip — live FPS + the governor's quality level + tier switch.
+  // Render-only ⇒ determinism-safe; headless-safe (no-op without a DOM).
+  const perfHud = mountPerfHud(quality.tier);
+  let fpsEma = 60;
+  let perfFrame = 0;
   // rAF-timestamp delta; world.step clamps to 50ms so tab-switch gaps are safe. dt floored at 0.
   let last = performance.now();
   function frame(now: number): void {
@@ -135,6 +141,10 @@ function boot(): void {
     governor.observe(dt);
     if (engine) governor.apply(engine);
     world?.step(dt);
+    // Render-layer FPS EMA (capped) → throttled HUD update (every 12 frames, no per-frame DOM thrash).
+    const fps = dt > 0 ? Math.min(1 / dt, 240) : fpsEma;
+    fpsEma += (fps - fpsEma) * 0.1;
+    if (++perfFrame % 12 === 0) perfHud.update(fpsEma, governor.level);
   }
   rafId = requestAnimationFrame(frame);
 }
