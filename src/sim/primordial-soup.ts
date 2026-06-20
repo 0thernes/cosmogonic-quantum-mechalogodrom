@@ -123,13 +123,12 @@ export class PrimordialSoup {
       );
       this.consciousness[i] = clamp01(this.consciousness[i] * 0.94 + this.aliveness[i] * 0.07);
 
-      // AD-driven mutation on genome using Eshkol AD (real gradient step)
+      // AD-driven mutation on genome using Eshkol AD (real gradient step from corpus)
       const varIdx = adVar(this.adTape, this.vitality[i]);
       const mul = adMul(this.adTape, varIdx, 1.03 + (this.rng() - 0.5) * 0.04);
       adBackward(this.adTape, mul);
-      const grad = adGradient(this.adTape, varIdx);
+      const grad = adGradient(this.adTape, varIdx) || 0.01;
       if (grad > 0.001 && this.rng() < 0.28) {
-        // mutate Eshkol program + genome slice
         this.eshkolProgram[i] = (this.eshkolProgram[i] ^ Math.floor(grad * 1000)) >>> 0;
         for (let g = 0; g < 4; g++) {
           const gi = i * SOUP_GENOME_LEN + ((this.tick + g) % SOUP_GENOME_LEN);
