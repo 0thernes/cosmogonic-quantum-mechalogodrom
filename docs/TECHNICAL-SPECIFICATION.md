@@ -6,7 +6,7 @@
 > `/spec` Â· **Architecture docs:** `/docs`
 
 **Version:** current (Tsotchke full) Â· **Generated:** 2026-06-20 Â· **License:** Proprietary â€” All Rights Reserved.
-**Gate:** 1613 tests · 95.57% line / 92.67% func (canonical synced, receipts enforced).
+**Gate:** 1617 tests · 95.58% line / 92.69% func (canonical synced, receipts enforced).
 
 **Full Tsotchke wiring:** All repos/projects from Tsotchke corpus integrated. Eshkol as consciousness language. Primordial soup / petri as growth engine for digital biologics and sentience. Super Creature beginning only. All docs (README/ARCH/ER\*/PHILOSOPHY/CONTRACTS/SPECS/LABS/masters) + GH match local exactly. Accurate, truthful, current. Not LLM. "Grow What Thou Wilt."
 
@@ -35,7 +35,7 @@ seed**.
 | Distinct file types                        | 21                                                                      |
 | App source (TypeScript)                    | 35,226 lines Â· 108 files                                               |
 | Tests                                      | 14,117 lines Â· 100 files                                               |
-| Test : source ratio                        | 0.40 â†’ **95.57% line / 92.67% func** coverage (`bun test --coverage`) |
+| Test : source ratio                        | 0.40 â†’ **95.58% line / 92.69% func** coverage (`bun test --coverage`) |
 | Passing tests                              | **1,613** (0 failing)                                                   |
 
 ### 1.1 Languages
@@ -311,8 +311,8 @@ Complexity classes are catalogued in [COMPLEXITY.md](COMPLEXITY.md); hot-path be
 
 The single gate â€” `bun run check` â€” must pass before every commit:
 
-`prettier --check` â†’ `tsc --noEmit` (strict) â†’ `oxlint` â†’ `bun test` (**1,613 tests, 0 fail**) â†’
-`bun scripts/build.ts`. Coverage gate: line â‰¥ 0.90, function â‰¥ 0.85 (measured 95.57% line / 92.67% func, `bun test --coverage`).
+`prettier --check` â†’ `tsc --noEmit` (strict) â†’ `oxlint` â†’ `bun test` (**1,1617 tests, 0 fail**) â†’
+`bun scripts/build.ts`. Coverage gate: line â‰¥ 0.90, function â‰¥ 0.85 (measured 95.58% line / 92.69% func, `bun test --coverage`).
 Three governing "master" personas (`masters/*.xml`) encode the discipline: **the Executor** (finish
 everything, full gates), **the Architect** (contracts before code, exclusive ownership), **the
 Physicist** (determinism, measurement, frame budgets, provenance).
@@ -377,7 +377,7 @@ contrast 62 Â· doc-links 57 Â· a11y-static 45`.
 
 This is a ~69k-line TypeScript (+ optional C++/Jolt native engine) browser-native simulation that
 renders **up to 50,000 agents** (10,000 at 60 fps on a laptop iGPU with zero AI accelerator), is
-**bit-reproducible from one seed**, ships through a **full CI/CD gate** (1613 tests, 95.57% line / 92.67% func coverage),
+**bit-reproducible from one seed**, ships through a **full CI/CD gate** (1617 tests, 95.58% line / 92.69% func coverage),
 and whose entire emergent intelligence weighs **â‰ˆ 14 MB â€” 1/50,000th of GPT-3** at the mega ceiling. It
 demonstrates that depth comes from **architecture,
 determinism, and engineering discipline**, not parameter count or hardware.

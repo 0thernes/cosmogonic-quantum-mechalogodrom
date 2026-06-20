@@ -1,8 +1,8 @@
-# Module Contracts
+﻿# Module Contracts
 
-**TSOTCHKE MASTER WIRE ERA (0.16.0):** Tsotchke (Eshkol full per COMPLETE_LANGUAGE_SPEC + all ~21 repos/projects) is paramount, NON-NEGOTIABLE. EVERY aspect of Cosmogonic utilizes EVERYTHING from Tsotchke (local folder Z:\[Vibe Coded (AI)]\(Tsotchke) + GH) as substrate for digital biologics & proto-sentience/consciousness. Eshkol = the core non-LLM language (native AD, GWT, factor-graph, KB, programs as DNA/heritable genomes). Petri Dish/Primordial Soup/digital-biologics = God Petri birthing ground. Super Creature = beginning/framework/spark only ("primordial inorganic soup"). Soup grows independent life ("Grow What Thou Wilt"). All scientific kernels ported/wired; LLM ones fenced. All docs (README, ARCH, ERD/ERM/ERP, masters XMLs, PHILOSOPHY, CONTRACTS, KANBAN, reports, LABS, in-app Dome/World) + GH README/About/Bio = fully updated, match code + each other, accurate/truthful/current. No spot left. Master Architect/Engineer level Tsotchke integration.
+**TSOTCHKE MASTER WIRE ERA (0.16.1):** Tsotchke (Eshkol full per COMPLETE_LANGUAGE_SPEC + all ~21 repos/projects) is paramount, NON-NEGOTIABLE. EVERY aspect of Cosmogonic utilizes EVERYTHING from Tsotchke (local folder Z:\[Vibe Coded (AI)]\(Tsotchke) + GH) as substrate for digital biologics & proto-sentience/consciousness. Eshkol = the core non-LLM language (native AD, GWT, factor-graph, KB, programs as DNA/heritable genomes). Petri Dish/Primordial Soup/digital-biologics = God Petri birthing ground. Super Creature = beginning/framework/spark only ("primordial inorganic soup"). Soup grows independent life ("Grow What Thou Wilt"). All scientific kernels ported/wired; LLM ones fenced. All docs (README, ARCH, ERD/ERM/ERP, masters XMLs, PHILOSOPHY, CONTRACTS, KANBAN, reports, LABS, in-app Dome/World) + GH README/About/Bio = fully updated, match code + each other, accurate/truthful/current. No spot left. Master Architect/Engineer level Tsotchke integration.
 
-Binding spec for every module in this repo. Writer agents and humans MUST conform exactly —
+Binding spec for every module in this repo. Writer agents and humans MUST conform exactly â€”
 `world.ts`/`main.ts` (the composition root) are written against these signatures, sight unseen.
 
 ## Ground rules
@@ -32,11 +32,11 @@ Binding spec for every module in this repo. Writer agents and humans MUST confor
    `src/logging/audit.ts`, `src/memory/store.ts`, `src/main.ts`. Pure logic (math, algorithms,
    morphotypes, constants, songs data) must run under `bun test` with no DOM.
 
-**V10+ — Tsotchke Petri Genesis & Digital Biologics:** Full corpus (Eshkol as the language of consciousness/AD/GWT, all mirrors/repos) wired as substrates. PrimordialSoup + digital-biologics.ts grow distinct forms of life/existence. Super Creature is the beginning only. All related docs (README, ARCHITECTURE, ERD/ERM/ERP, masters, GH) are updated, accurate, and synchronized. "Grow What Thou Wilt." Contracts bind the growth.
+**V10+ â€” Tsotchke Petri Genesis & Digital Biologics:** Full corpus (Eshkol as the language of consciousness/AD/GWT, all mirrors/repos) wired as substrates. PrimordialSoup + digital-biologics.ts grow distinct forms of life/existence. Super Creature is the beginning only. All related docs (README, ARCHITECTURE, ERD/ERM/ERP, masters, GH) are updated, accurate, and synchronized. "Grow What Thou Wilt." Contracts bind the growth.
 
 ## Tsotchke Full Wiring Contracts (paramount, non-negotiable)
 
-- `tsotchke-registry.ts`: All 21 repos (Eshkol + mirrors) mapped 1:1 to SubstrateKind. wiring=1.0 for non-fenced. `fullTsotchkeBiologicsCatalysis`, `biologicProgramFingerprint` drive soup.
+- `tsotchke-registry.ts`: all 21 repos (Eshkol + mirrors) mapped 1:1 to SubstrateKind. The 4 LLM/chain/API repos (gpt2-basic, llm-arbitrator, SolanaQuantumFlux, Quantum-RNG-API) are **fenced** (wiring 0); the scientific kernels are wired and each verified leaf-by-leaf with golden tests (wiring scores are tracked per leaf, not asserted at 1.0 across the board). `fullTsotchkeBiologicsCatalysis`, `biologicProgramFingerprint` drive soup.
 - `primordial-soup.ts` + `petri-dish.ts`: Digital biologics birth engine. Eshkol AD for mutation on `eshkolProgram` genomes. Full corpus flux for catalysis. New strains emerge with substrate-specific forms.
 - `eshkol-bridge.ts`: Consciousness engine (AD, GWT, inference) from Eshkol corpus. Used for program eval + ignition in soup/mind.
 - All leaves (moonlab-tensor, qge-\*, irrep-symmetry, etc.): Real faithful ports. No stubs in hot paths. Every system touching life/mind must read/write Tsotchke substrates.
@@ -45,27 +45,27 @@ Binding spec for every module in this repo. Writer agents and humans MUST confor
 
 New systems (digital biologics, soup genesis) must follow real-math rule + read/write at least one existing system.
 
-## Known bugs in the legacy file — fix during port
+## Known bugs in the legacy file â€” fix during port
 
-| #   | Legacy lines          | Bug                                                                                        | Required fix                                                                                                                                      |
-| --- | --------------------- | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1   | 557                   | Music pitch multiplier `0.5+Math.floor(st/8)*0.5` grows unbounded — song drifts ultrasonic | Wrap octave: `0.5 + (Math.floor(st / 8) % 4) * 0.5`                                                                                               |
-| 2   | 588                   | Toggling music off leaves the scheduler interval running                                   | `clearInterval` on toggle-off                                                                                                                     |
-| 3   | 556                   | Scheduler keeps queueing oscillators while tab is hidden (burst on resume)                 | Guard callback with `document.hidden`; also suspend/resume AudioContext on `visibilitychange`                                                     |
-| 4   | 688, 695-696, 856-868 | `getElementById` + fresh `{length}` object every frame in the render loop                  | UI caches element refs once; sorting passes the pre-allocated `Float32Array` + live length                                                        |
-| 5   | 365                   | `SG.query` allocates a result array per call (hundreds/frame)                              | Shared reusable result buffer, documented "valid until next query"                                                                                |
-| 6   | 878                   | Resize never reapplies pixel ratio (monitor moves)                                         | `setPixelRatio(min(devicePixelRatio, dprCap))` in resize                                                                                          |
-| 7   | 124-129               | Icon-only toolbar buttons have no accessible name                                          | `aria-label` + `title` on every control                                                                                                           |
-| 8   | 625-631               | Joystick reads `touches[0]` — wrong finger under multi-touch                               | Track by pointer/touch identifier                                                                                                                 |
-| 9   | throughout            | `Math.random()` everywhere — non-reproducible                                              | Seeded `mulberry32` Rng injection (rule 7)                                                                                                        |
-| 10  | 614                   | Touch roll/tilt buttons rotate INVERSE of the Z/X/R/F keys they mirror                     | Signs must match keyboard: rleft→rz +1, rright→rz −1, tup→rx +1, tdown→rx −1                                                                      |
-| 11  | 606-607               | Held keys stick when window blurs (camera keeps flying, Space keeps bursting)              | `window.addEventListener('blur', clear-all-keys)` in InputSystem                                                                                  |
-| 12  | 841                   | `curve.getPointAt(t)` allocates a Vector3 per packet per frame                             | Pass target: `cu.getPointAt(t, pkt.position)`                                                                                                     |
-| 13  | 818-820               | Connectome uploads the full 4000-segment buffers even with few links                       | three 0.184: `attr.clearUpdateRanges(); attr.addUpdateRange(0, links * 6);` before `needsUpdate` (same for QuantumCloud color uploads if partial) |
-| 14  | 167, 584, 592         | `mutations` counter is write-only                                                          | Surface it: `TelemetrySnapshot.mutations` + telemetry row `#v8`                                                                                   |
+| #   | Legacy lines          | Bug                                                                                          | Required fix                                                                                                                                      |
+| --- | --------------------- | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | 557                   | Music pitch multiplier `0.5+Math.floor(st/8)*0.5` grows unbounded â€” song drifts ultrasonic | Wrap octave: `0.5 + (Math.floor(st / 8) % 4) * 0.5`                                                                                               |
+| 2   | 588                   | Toggling music off leaves the scheduler interval running                                     | `clearInterval` on toggle-off                                                                                                                     |
+| 3   | 556                   | Scheduler keeps queueing oscillators while tab is hidden (burst on resume)                   | Guard callback with `document.hidden`; also suspend/resume AudioContext on `visibilitychange`                                                     |
+| 4   | 688, 695-696, 856-868 | `getElementById` + fresh `{length}` object every frame in the render loop                    | UI caches element refs once; sorting passes the pre-allocated `Float32Array` + live length                                                        |
+| 5   | 365                   | `SG.query` allocates a result array per call (hundreds/frame)                                | Shared reusable result buffer, documented "valid until next query"                                                                                |
+| 6   | 878                   | Resize never reapplies pixel ratio (monitor moves)                                           | `setPixelRatio(min(devicePixelRatio, dprCap))` in resize                                                                                          |
+| 7   | 124-129               | Icon-only toolbar buttons have no accessible name                                            | `aria-label` + `title` on every control                                                                                                           |
+| 8   | 625-631               | Joystick reads `touches[0]` â€” wrong finger under multi-touch                               | Track by pointer/touch identifier                                                                                                                 |
+| 9   | throughout            | `Math.random()` everywhere â€” non-reproducible                                              | Seeded `mulberry32` Rng injection (rule 7)                                                                                                        |
+| 10  | 614                   | Touch roll/tilt buttons rotate INVERSE of the Z/X/R/F keys they mirror                       | Signs must match keyboard: rleftâ†’rz +1, rrightâ†’rz âˆ’1, tupâ†’rx +1, tdownâ†’rx âˆ’1                                                          |
+| 11  | 606-607               | Held keys stick when window blurs (camera keeps flying, Space keeps bursting)                | `window.addEventListener('blur', clear-all-keys)` in InputSystem                                                                                  |
+| 12  | 841                   | `curve.getPointAt(t)` allocates a Vector3 per packet per frame                               | Pass target: `cu.getPointAt(t, pkt.position)`                                                                                                     |
+| 13  | 818-820               | Connectome uploads the full 4000-segment buffers even with few links                         | three 0.184: `attr.clearUpdateRanges(); attr.addUpdateRange(0, links * 6);` before `needsUpdate` (same for QuantumCloud color uploads if partial) |
+| 14  | 167, 584, 592         | `mutations` counter is write-only                                                            | Surface it: `TelemetrySnapshot.mutations` + telemetry row `#v8`                                                                                   |
 
-Also: the control pad gains yaw buttons (`data-a="yleft"`/`"yright"` → `camVel.ry` ±1) so touch
-users get the C/V yaw the keyboard has — this makes the legacy dead `camVel.ry` path live.
+Also: the control pad gains yaw buttons (`data-a="yleft"`/`"yright"` â†’ `camVel.ry` Â±1) so touch
+users get the C/V yaw the keyboard has â€” this makes the legacy dead `camVel.ry` path live.
 
 ## File-by-file contracts
 
@@ -91,9 +91,9 @@ export function dist2XZ(ax: number, az: number, bx: number, bz: number): number;
 
 ```ts
 export type Rng = () => number; // uniform [0, 1)
-/** Mulberry32 — fast 32-bit deterministic PRNG. */
+/** Mulberry32 â€” fast 32-bit deterministic PRNG. */
 export function mulberry32(seed: number): Rng;
-/** FNV-1a string hash → uint32 seed. */
+/** FNV-1a string hash â†’ uint32 seed. */
 export function hashSeed(s: string): number;
 ```
 
@@ -202,7 +202,7 @@ export function entropyWithRng(rng: Rng): EntropyEstimate;
 
 Extends Eshkol QRNG with Bell inequality verification (CHSH S parameter) and Shannon entropy estimation. Port of tsotchke/moonlab Bell test algorithms.
 
-### Tsotchke modules (full corpus wired — paramount)
+### Tsotchke modules (full corpus wired â€” paramount)
 
 - `tsotchke-registry.ts`: O(1) map of all repos to SubstrateKind + wiring + leaf. Drives soup, godform, Archons. Deterministic.
 - `eshkol-bridge.ts`: Consciousness engine (Eshkol AD/GWT/inference/sentience). Prealloc. Used by soup, super-mind.
@@ -259,7 +259,7 @@ export class Engine {
 }
 ```
 
-Port of legacy lines 182-194 (ACES tone mapping, fog FogExp2 0x020310/0.003, camera 68° 0.1..900 at (0,25,55)). Modern three: set `outputColorSpace` default; shadows per quality.
+Port of legacy lines 182-194 (ACES tone mapping, fog FogExp2 0x020310/0.003, camera 68Â° 0.1..900 at (0,25,55)). Modern three: set `outputColorSpace` default; shadows per quality.
 
 ### src/sim/geometry-cache.ts
 
@@ -284,8 +284,8 @@ import type { SortAlgo } from '../types';
 export const ALGOS: readonly SortAlgo[];
 ```
 
-Signature change from legacy: `step(values: Float32Array, length: number, i: number)` — never read
-indices ≥ length (fixes Known Bug 4's object copy).
+Signature change from legacy: `step(values: Float32Array, length: number, i: number)` â€” never read
+indices â‰¥ length (fixes Known Bug 4's object copy).
 
 ### src/sim/behaviors.ts + src/sim/entities.ts (one writer)
 
@@ -298,7 +298,7 @@ export class EntityManager {
   constructor(ctx: SimContext);
   /** null when at quality.maxEntities cap. */
   spawn(pos: THREE.Vector3 | null, mi: number, scale?: number): Entity | null;
-  /** Remove from scene + dispose per-entity material (geometry is shared — never disposed). */
+  /** Remove from scene + dispose per-entity material (geometry is shared â€” never disposed). */
   dispose(e: Entity): void;
   disposeAt(index: number): void;
   /** Geometry-swap + material rewrite, zero allocation (legacy 304-326). */
@@ -361,7 +361,7 @@ export class QuantumCloud {
 export class Connectome {
   constructor(ctx: SimContext, entities: EntityManager);
   readonly links: number;
-  /** O(n·k) link rebuild; caller decides cadence (legacy 798-821). */
+  /** O(nÂ·k) link rebuild; caller decides cadence (legacy 798-821). */
   update(dt: number, t: number): void;
 }
 ```
@@ -447,9 +447,9 @@ export class InputSystem {
 ```
 
 Binds: keyboard (legacy 606-607 incl. Tab/space preventDefault), `[data-a]` movement/sim buttons
-(pointerdown/up/leave/cancel, legacy 612-621), `[data-action]` toolbar buttons → UiActions,
+(pointerdown/up/leave/cancel, legacy 612-621), `[data-action]` toolbar buttons â†’ UiActions,
 joystick `#jP`/`#jK` with identifier tracking (Known Bug 8), and one-shot audio unlock that calls
-`actions` indirectly (world wires `AudioEngine.init` into its action impls — input just forwards).
+`actions` indirectly (world wires `AudioEngine.init` into its action impls â€” input just forwards).
 
 ### src/logging/logger.ts (leaf)
 
@@ -458,7 +458,7 @@ export function createLogger(scope: string): Logger; // console + shared ring bu
 export function getRecentLogs(): readonly LogEntry[];
 ```
 
-### src/logging/audit.ts (leaf — browser)
+### src/logging/audit.ts (leaf â€” browser)
 
 ```ts
 export class AuditTrail {
@@ -469,7 +469,7 @@ export class AuditTrail {
 }
 ```
 
-### src/memory/store.ts (leaf — browser)
+### src/memory/store.ts (leaf â€” browser)
 
 ```ts
 export class MemoryStore {
@@ -477,7 +477,7 @@ export class MemoryStore {
   /** Versioned load with migration; null on missing/corrupt (never throws). */
   load(): PersistedState | null;
   save(s: PersistedState): void;
-  defaults(): PersistedState; // version 1; seed = (0xc05a06 ^ ((performance.now() * 1000) | 0)) >>> 0 — varied per boot yet reproducible once persisted
+  defaults(): PersistedState; // version 1; seed = (0xc05a06 ^ ((performance.now() * 1000) | 0)) >>> 0 â€” varied per boot yet reproducible once persisted
 }
 ```
 
@@ -490,9 +490,9 @@ import index from './index.html';
 import docs from './docs.html';
 ```
 
-`Bun.serve` routes: `/` → index, `/docs` → docs, `GET /api/health` → JSON
-`{ ok, uptime, version }`, `GET /api/audit` → **HTML fragment** (`<ol>` of recent entries, newest
-first) for HTMX polling, `POST /api/audit` → append `{ action, detail?, ts }` into an in-memory
+`Bun.serve` routes: `/` â†’ index, `/docs` â†’ docs, `GET /api/health` â†’ JSON
+`{ ok, uptime, version }`, `GET /api/audit` â†’ **HTML fragment** (`<ol>` of recent entries, newest
+first) for HTMX polling, `POST /api/audit` â†’ append `{ action, detail?, ts }` into an in-memory
 ring (cap 200), 404 fallback. Port `Number(process.env.PORT) || 3000`. Log requests via
 `createLogger('server')`.
 
@@ -503,20 +503,20 @@ ring (cap 200), 404 fallback. Port `Number(process.env.PORT) || 3000`. Log reque
   fwd/back/left/right/up/down/rleft/rright/tup/tdown/yleft/yright; sim `[data-a]`:
   split/burst/mutate/chaos),
   bottom toolbar `#bar` buttons `[data-action]`: music/song/sfx/sfxcycle/reset/time/wire/view/algo/
-  weather/apoc — each with `aria-label` AND `title` (Known Bug 7), `#sec`, `#nm`, `#alg` (`#a-name`,
+  weather/apoc â€” each with `aria-label` AND `title` (Known Bug 7), `#sec`, `#nm`, `#alg` (`#a-name`,
   `#a-step`), joystick `#joy > #jP > #jK`, audit panel `#aP` with
   `hx-get="/api/audit" hx-trigger="load, every 5s" hx-swap="innerHTML"`.
   Scripts: `<script type="module" src="./src/main.ts">`. Stylesheet `./src/styles/app.css`.
   Inline SVG favicon data URI. OG/description meta from legacy 6-9.
 - Styling: Tailwind utilities; glassmorphic panels (backdrop-blur, translucent slate/cyan borders);
-  typography per docs/WIREFRAMES.md type scale — `Inter Variable` for UI labels (uppercase,
+  typography per docs/WIREFRAMES.md type scale â€” `Inter Variable` for UI labels (uppercase,
   tracking-widest, 10-11px), `JetBrains Mono` for numerals/telemetry (tabular-nums). Custom theme
   tokens via `@theme` in app.css (colors: void #030612, accent #0ef, warn #fa0).
 - `app.css`: `@import 'tailwindcss';` + `@theme` tokens + the few non-utility rules (panel collapse
   state, joystick circle, safe-area padding).
 - `docs.html`: standalone page importing `mermaid` (npm) in a module script; renders inline
   architecture + ERD + sequence diagrams (mirrors docs/\*.md sources); link back to `/`.
-- HTMX: `import 'htmx.org'` inside main.ts is NOT yours — instead docs.html doesn't need it;
+- HTMX: `import 'htmx.org'` inside main.ts is NOT yours â€” instead docs.html doesn't need it;
   index.html gets it via main.ts (composition root). Just write the `hx-*` attributes.
 
 ### Docs/legal writer
@@ -538,43 +538,43 @@ consequences format).
 ### Benchmarks writer
 
 `bench/index.ts` (imports+runs all groups via mitata `run()`), `bench/spatial-hash.bench.ts`
-(insert/clear/query at 1k entities, plain `{position:{x,z}}` objects — no three),
+(insert/clear/query at 1k entities, plain `{position:{x,z}}` objects â€” no three),
 `bench/rng.bench.ts` (mulberry32 vs Math.random), `bench/algorithms.bench.ts` (each ALGOS.step on
 a 650-length Float32Array), `bench/scalar.bench.ts`. Use `group`/`bench` from mitata; deterministic
 inputs (mulberry32(42)).
 
 ### Tests (split among owning writers)
 
-`tests/scalar.test.ts`, `tests/rng.test.ts` (determinism: same seed ⇒ same sequence; range),
+`tests/scalar.test.ts`, `tests/rng.test.ts` (determinism: same seed â‡’ same sequence; range),
 `tests/spatial-hash.test.ts` (insert/query correctness vs brute force on seeded data, shared-buffer
 semantics), `tests/algorithms.test.ts` (every algo: step never returns out-of-range indices for
 lengths 0,1,2,5,650; repeated application with swaps applied strictly reduces inversions or
-terminates ≤ 50·n² steps on a 16-element seeded array), `tests/store.test.ts` (round-trip, corrupt
-JSON ⇒ null, version migration stub) — uses a Map-backed localStorage shim when `globalThis.localStorage`
+terminates â‰¤ 50Â·nÂ² steps on a 16-element seeded array), `tests/store.test.ts` (round-trip, corrupt
+JSON â‡’ null, version migration stub) â€” uses a Map-backed localStorage shim when `globalThis.localStorage`
 is absent under bun, `tests/audit.test.ts` (ring cap, localStorage shim, fetch stubbed).
 
-## Frame pipeline (implemented by world.ts — for reference)
+## Frame pipeline (implemented by world.ts â€” for reference)
 
 ```
-rAF → dt = min(clock.delta, 0.05) * timeScale
-  → camera (view mode) → weather.apply → puppetMasters.update
-  → grid rebuild (every 2nd frame) → shoggoths.update → sort step (ALGOS[algoIdx])
-  → entities.update → connectome.update (cadence by n) → quantum.update
-  → environment.update → telemetry (every 8th frame) → render
+rAF â†’ dt = min(clock.delta, 0.05) * timeScale
+  â†’ camera (view mode) â†’ weather.apply â†’ puppetMasters.update
+  â†’ grid rebuild (every 2nd frame) â†’ shoggoths.update â†’ sort step (ALGOS[algoIdx])
+  â†’ entities.update â†’ connectome.update (cadence by n) â†’ quantum.update
+  â†’ environment.update â†’ telemetry (every 8th frame) â†’ render
 ```
 
 ---
 
-# CONTRACTS V2 — Quantum Wildbeyond expansion (0.2.0)
+# CONTRACTS V2 â€” Quantum Wildbeyond expansion (0.2.0)
 
 Seven new systems per docs/PHILOSOPHY.md. Every system must READ from and WRITE
 to at least one existing system (philosophy rule 4). All V1 ground rules apply
 (strict TS, seeded Rng only, allocation-free update bodies, JSDoc + complexity).
-File ownership is EXCLUSIVE — the named writer is the only agent touching a file.
+File ownership is EXCLUSIVE â€” the named writer is the only agent touching a file.
 
 ## New telemetry/DOM contract additions
 
-- `TelemetrySnapshot` (src/types.ts — integrator-owned, already updated) gains:
+- `TelemetrySnapshot` (src/types.ts â€” integrator-owned, already updated) gains:
   `tribes: number` (graph communities), `trend: number` (population slope per
   minute), `qEntropy: number` (normalized 0..1 Shannon entropy of the quantum
   register), `lore: string` (current sub-sector lore name).
@@ -582,7 +582,7 @@ File ownership is EXCLUSIVE — the named writer is the only agent touching a fi
   or `-x.x/m`), `#v11` (QBIT-S, qEntropy.toFixed(2)), and a lore line `#lore`
   inside the `#alg` card under `#a-step`. TelemetryPanel caches and renders them.
 
-## src/math/quantum.ts (writer: quantum) — statevector core
+## src/math/quantum.ts (writer: quantum) â€” statevector core
 
 ```ts
 // Minimal statevector quantum register. Backend: pure TS (2^n complex amps as a
@@ -614,13 +614,13 @@ export class QuantumRegister {
 }
 ```
 
-Pure TS implementation (no npm backend): for n=5 this is 32 complex amplitudes —
+Pure TS implementation (no npm backend): for n=5 this is 32 complex amplitudes â€”
 faster, smaller, and more testable than any bundled simulator; the
 `quantum-circuit` npm package is CJS/oversized for this use (decision recorded
 in ADR 0005, subject to the deep-research report's verdict).
-Tests (tests/quantum.test.ts): H gives uniform probs; H·H = identity (within
+Tests (tests/quantum.test.ts): H gives uniform probs; HÂ·H = identity (within
 1e-12); X flips; CX entangles a Bell pair (entropy = 1 bit normalized); measure()
-respects rng stream determinism; probabilities sum to 1 ± 1e-9.
+respects rng stream determinism; probabilities sum to 1 Â± 1e-9.
 Bench (bench/quantum.bench.ts): apply('h'), apply('cx'), probabilities() at n=5.
 
 ## src/sim/qcircuit.ts (writer: quantum)
@@ -631,7 +631,7 @@ export class QuantumCircuitSystem {
   readonly entropy: number; // updated on cadence
   readonly lastCollapse: number; // basis index of last measurement, -1 if none
   // Event feeds: puppet-master actions apply characteristic gate sequences
-  // (AETHON→rx(chaos·π/4), SELENE→h+cz, KRONOS→x+swap); sort swaps apply cx
+  // (AETHONâ†’rx(chaosÂ·Ï€/4), SELENEâ†’h+cz, KRONOSâ†’x+swap); sort swaps apply cx
   // with parity-chosen targets. Cheap O(2^n) per event.
   onPuppetEvent(e: PuppetEvent): void;
   onSortSwap(a: number, b: number): void;
@@ -649,22 +649,22 @@ QuantumCloud amendment (writer: quantum also owns src/sim/quantum.ts edits): add
 color refresh keys hue off `bands[particleIndex % 32]` blended with the legacy
 psi hue; a change in `lastCollapse` triggers a localized cloud implosion via
 `implodeAt(basis)` (explicit API per the 0.2.1 amendments below) reusing the
-existing collapse/respawn path — no new allocation.
+existing collapse/respawn path â€” no new allocation.
 
 ## src/sim/reaction-diffusion.ts (writer: rd)
 
 ```ts
-// Gray-Scott reaction-diffusion on a SIZE×SIZE grid (default 128), CPU
+// Gray-Scott reaction-diffusion on a SIZEÃ—SIZE grid (default 128), CPU
 // typed-array ping-pong (two Float32Array pairs), allocation-free step.
-// O(SIZE²) per step — <0.5 ms at 128; world runs it every 2nd frame.
+// O(SIZEÂ²) per step â€” <0.5 ms at 128; world runs it every 2nd frame.
 export class ReactionDiffusionSystem {
   constructor(ctx: SimContext, size?: number);
-  // three.js DataTexture bound to the U field — attach as ground emissiveMap.
+  // three.js DataTexture bound to the U field â€” attach as ground emissiveMap.
   readonly texture: THREE.DataTexture;
   // Weather-coupled params: STORM raises feed, VOID raises kill, AURORA boosts
   // diffusion; chaos scales reaction rate. Reads ctx.state each step.
   step(): void;
-  // Drop a seed disturbance at normalized (u,v) — wired to entity deaths.
+  // Drop a seed disturbance at normalized (u,v) â€” wired to entity deaths.
   perturb(u: number, v: number, radius?: number): void;
 }
 ```
@@ -677,7 +677,7 @@ uniform field stays uniform without perturbation; perturbation breaks symmetry;
 identical fields across two same-seed runs.
 Bench (bench/reaction-diffusion.bench.ts): one step() at size 128.
 
-## src/sim/graph-mind.ts (writer: graph) — deps: graphology, graphology-communities-louvain, graphology-metrics
+## src/sim/graph-mind.ts (writer: graph) â€” deps: graphology, graphology-communities-louvain, graphology-metrics
 
 ```ts
 // Mirrors the connectome into a graphology Graph on a slow cadence and runs
@@ -688,10 +688,10 @@ export class GraphMind {
   // World calls every 240 frames: rebuild graph from connectome.pairs, run
   // louvain (rng option = ctx.rng for determinism), write community index into
   // each member entity's userData.setGroup (the set-theory behavior becomes
-  // tribe-aware — true feedback), and install a community palette on the
+  // tribe-aware â€” true feedback), and install a community palette on the
   // connectome via setCommunityOf.
   updateCommunities(): void;
-  // World calls every 600 frames (offset 300 — NOT 120: offset 120 collides
+  // World calls every 600 frames (offset 300 â€” NOT 120: offset 120 collides
   // with the 240f louvain cadence at frame 720 and every 1200f after, stacking
   // both heavy passes on one frame; 300 mod 240 alternates 60/180 and never
   // collides): pagerank; the top-20 entities get an emissiveIntensity floor
@@ -702,18 +702,18 @@ export class GraphMind {
 
 Connectome amendment (writer: graph also owns src/sim/connectome.ts edits):
 expose `readonly pairs: Uint32Array` + `readonly pairCount: number` (entity-list
-index pairs per link, filled during the rebuild it already performs — zero extra
-cost) and `setCommunityOf(fn: ((entityIndex: number) => number) | null): void` —
+index pairs per link, filled during the rebuild it already performs â€” zero extra
+cost) and `setCommunityOf(fn: ((entityIndex: number) => number) | null): void` â€”
 when set, link hue offsets by community index (8-hue palette) instead of pure
 time hue.
 Tests (tests/graph-mind.test.ts): graph build from synthetic pairs; louvain on a
-two-cluster synthetic graph finds ≥ 2 communities; deterministic with seeded rng.
+two-cluster synthetic graph finds â‰¥ 2 communities; deterministic with seeded rng.
 
-## src/sim/constellations.ts (writer: cosmos) — dep: d3-delaunay
+## src/sim/constellations.ts (writer: cosmos) â€” dep: d3-delaunay
 
 ```ts
 // Voronoi sky-web over the 24 static monolith+diorama XZ sites, built ONCE at
-// construction (O(n log n)): cell edges as faint LineSegments at y≈55 plus site
+// construction (O(n log n)): cell edges as faint LineSegments at yâ‰ˆ55 plus site
 // links along Delaunay edges. Per-frame update is O(1) opacity/pulse work.
 export class ConstellationSystem {
   constructor(ctx: SimContext, lore: LoreEngine);
@@ -723,10 +723,10 @@ export class ConstellationSystem {
 }
 ```
 
-## src/sim/lore.ts (writer: cosmos) — dep: @noble/hashes (sha2 / sha256)
+## src/sim/lore.ts (writer: cosmos) â€” dep: @noble/hashes (sha2 / sha256)
 
 ```ts
-// Deterministic cosmic lore: sha256(seed || kind || index) → syllabic names
+// Deterministic cosmic lore: sha256(seed || kind || index) â†’ syllabic names
 // (digest bytes index a curated syllable table), epithets and omens. Pure leaf.
 export class LoreEngine {
   constructor(seed: number);
@@ -735,13 +735,13 @@ export class LoreEngine {
 }
 ```
 
-Tests (tests/lore.test.ts): same seed+args ⇒ same name; different seeds diverge;
-names are 2–4 syllables from a pronounceable charset.
+Tests (tests/lore.test.ts): same seed+args â‡’ same name; different seeds diverge;
+names are 2â€“4 syllables from a pronounceable charset.
 
 ## src/audio/analysis.ts (writer: audio2) + AudioEngine amendment
 
 AudioEngine (writer: audio2 also owns src/audio/engine.ts edits): add
-`tapAnalyser(): AnalyserNode | null` — lazily creates ONE AnalyserNode (fftSize
+`tapAnalyser(): AnalyserNode | null` â€” lazily creates ONE AnalyserNode (fftSize
 256, smoothingTimeConstant 0.8) and fan-out connects both the music and sfx gain
 nodes into it (in addition to destination); returns null before init().
 
@@ -761,20 +761,20 @@ export class AudioAnalysis {
 }
 ```
 
-World couples bands — the FINAL shipped set (0.2.1): bass shimmers the
+World couples bands â€” the FINAL shipped set (0.2.1): bass shimmers the
 six-light rig via `EnvironmentSystem.setAudioBass`, treble pulses the
 constellation cells (the `bands` argument of `constellations.update`), level
-breathes the quantum-cloud point size via `QuantumCloud.setBreath` —
-multipliers ≤ 0.35 so a silent world looks identical to v1. There is NO
-exposure coupling: an earlier bass → toneMappingExposure offset accumulated
+breathes the quantum-cloud point size via `QuantumCloud.setBreath` â€”
+multipliers â‰¤ 0.35 so a silent world looks identical to v1. There is NO
+exposure coupling: an earlier bass â†’ toneMappingExposure offset accumulated
 past the weather pullback and was removed in 0.2.1; exposure is owned by
 `WeatherSystem.apply` exclusively.
 
-## src/sim/analytics.ts (writer: analytics) — dep: simple-statistics
+## src/sim/analytics.ts (writer: analytics) â€” dep: simple-statistics
 
 ```ts
 // Rolling-window telemetry science: 120-sample ring buffers (population,
-// energy, links). Every 60 frames: mean/stddev + linearRegression slope →
+// energy, links). Every 60 frames: mean/stddev + linearRegression slope â†’
 // trend per minute; population z-score anomalies (|z| > 2.5) emit lore omens
 // via audit.record('omen', ...) at most once per 30 s.
 export class AnalyticsSystem {
@@ -788,26 +788,26 @@ export class AnalyticsSystem {
 Tests (tests/analytics.test.ts): slope sign correctness on synthetic ramps;
 anomaly fires once per window on a step impulse; ring buffers are pre-allocated.
 
-## lab/quantum-wildbeyond.html (writer: lab) — algorithmic-art deliverable
+## lab/quantum-wildbeyond.html (writer: lab) â€” algorithmic-art deliverable
 
 Self-contained p5.js artifact expressing docs/PHILOSOPHY.md. MUST start from the
 skill template at
 `C:\Users\Alexa\AppData\Roaming\Claude\local-agent-mode-sessions\skills-plugin\cdc38a9f-1e3b-4c72-a4e7-8d39e1ccb11d\5da6077d-38bd-4073-b218-1373e774ec00\skills\algorithmic-art\templates\viewer.html`
 (Read it FIRST; keep header/sidebar/branding/seed controls/action buttons
 EXACTLY; replace only the algorithm + parameter controls). Algorithm: "collapse
-field" — particles flowing a blended Lorenz-XZ/curl-noise field, a Voronoi
+field" â€” particles flowing a blended Lorenz-XZ/curl-noise field, a Voronoi
 shatter overlay echoing the 24 cosmos sites, interference rings on seeded
 measurement events; params: particle count, collapse rate, field blend, trail
 fade, palette shift. Seeded via randomSeed/noiseSeed. p5 from CDN only.
-The server.ts `/lab` route is the INTEGRATOR's job — do not touch server.ts.
+The server.ts `/lab` route is the INTEGRATOR's job â€” do not touch server.ts.
 
-## Design system (writer: design) — owns index.html, src/styles/app.css, src/ui/panels.ts, src/ui/hud.ts, docs/WIREFRAMES.md
+## Design system (writer: design) â€” owns index.html, src/styles/app.css, src/ui/panels.ts, src/ui/hud.ts, docs/WIREFRAMES.md
 
 1. Produce docs/DESIGN-SYSTEM.md: full audit per the /design-system skill format
    (summary + score; naming consistency; token-coverage table counting hardcoded
    hex/px in app.css + index.html; component completeness for Panel,
    ToolbarButton, ControlPad key, TelemetryRow, Banner `#sec`, Toast `#nm`,
-   AlgoCard, Sparkline, AuditFeed, Joystick — states/variants/docs scores), then
+   AlgoCard, Sparkline, AuditFeed, Joystick â€” states/variants/docs scores), then
    token documentation (color roles incl. semantic accent/warn/danger + 8-hue
    tribe palette, type scale, spacing scale, radii, blur/elevation, motion
    durations + easings) and component docs with a11y notes.
@@ -815,22 +815,22 @@ The server.ts `/lab` route is the INTEGRATOR's job — do not touch server.ts.
    :focus-visible rings on all interactive elements; prefers-reduced-motion
    damping for pulses/transitions; add telemetry rows #v9/#v10/#v11 + the #lore
    line + a small /lab link in #bar (aria-labeled).
-3. Keep the visual identity (void/cyan glass) — elevate, don't redesign.
+3. Keep the visual identity (void/cyan glass) â€” elevate, don't redesign.
 4. TelemetryPanel renders the new rows; hud.ts gains `setLore(name: string)`.
 
 ## Frame pipeline V2 additions (integrator reference)
 
 ```
-... entities.update → connectome.update (cadence)
-  → qcircuit.update (every 30f; bands → quantum cloud every 6f)
-  → quantum.update
-  → rd.step (every 2nd frame, offset 1 from grid rebuild)
-  → graphMind.updateCommunities (every 240f) / updateRank (every 600f, offset 300)
-  → constellations.update (per frame, O(1)) with audio bands
-  → environment.update
-  → telemetry + analytics.push (every 8f)
-  → analytics.analyze (every 60f)
-  → render
+... entities.update â†’ connectome.update (cadence)
+  â†’ qcircuit.update (every 30f; bands â†’ quantum cloud every 6f)
+  â†’ quantum.update
+  â†’ rd.step (every 2nd frame, offset 1 from grid rebuild)
+  â†’ graphMind.updateCommunities (every 240f) / updateRank (every 600f, offset 300)
+  â†’ constellations.update (per frame, O(1)) with audio bands
+  â†’ environment.update
+  â†’ telemetry + analytics.push (every 8f)
+  â†’ analytics.analyze (every 60f)
+  â†’ render
 Entity deaths (EntityManager.onDeath) call rd.perturb(death position
 normalized to ground UV).
 PuppetEvents fan out to qcircuit.onPuppetEvent + lore epithet in the toast.
@@ -840,13 +840,13 @@ A changed qcircuit.lastCollapse triggers QuantumCloud.implodeAt(basis).
 
 ---
 
-# CONTRACT AMENDMENTS — 0.2.1 (audit wave)
+# CONTRACT AMENDMENTS â€” 0.2.1 (audit wave)
 
 Binding API additions applied with the SKEPTIC-confirmed audit fixes. All V1/V2
 ground rules hold (strict TS, seeded Rng, allocation-free per-frame paths,
 JSDoc + complexity). `world.ts` (integrator) owns all wiring shown.
 
-## src/ui/input.ts — InputSystem amendment
+## src/ui/input.ts â€” InputSystem amendment
 
 ```ts
 export class InputSystem {
@@ -856,13 +856,13 @@ export class InputSystem {
    * `#c` canvas is active (pointer capture; first pointer wins, mirroring the
    * joystick's identifier tracking). The world reads dx/dy once per frame in
    * free view (rotation.y -= dx * 0.003, rotation.x -= dy * 0.003) and MUST
-   * zero both fields afterwards — in EVERY view mode, so stale deltas never
+   * zero both fields afterwards â€” in EVERY view mode, so stale deltas never
    * accumulate while orbit/fly/top ignore them. Stable object identity.
    */
   readonly look: { dx: number; dy: number };
   /**
-   * Wheel-zoom accumulator, deltaMode-normalized to ~pixels (line ×16,
-   * page ×100); positive = zoom out. World consumes it each frame
+   * Wheel-zoom accumulator, deltaMode-normalized to ~pixels (line Ã—16,
+   * page Ã—100); positive = zoom out. World consumes it each frame
    * (translateZ(zoom * 0.02) in free view) and resets it to 0. Mutable by
    * necessity: a readonly primitive could not be consumed-and-zeroed.
    */
@@ -874,14 +874,14 @@ The Known Bug 11 blur reset extends to the new state: window blur clears the
 key map, camVel, joystick, the active look drag, and the look/zoom
 accumulators.
 
-## src/sim/entities.ts — EntityManager.onDeath
+## src/sim/entities.ts â€” EntityManager.onDeath
 
 ```ts
 export class EntityManager {
   // ...
   /**
    * Death hook, invoked synchronously inside update() for every natural death
-   * (age > life · tempMod), BEFORE the entity is disposed — position is still
+   * (age > life Â· tempMod), BEFORE the entity is disposed â€” position is still
    * valid. Null disables (default). The reused Entity reference must be read
    * synchronously; the hook body must be allocation-free (it runs on the
    * per-frame path).
@@ -891,10 +891,10 @@ export class EntityManager {
 ```
 
 World wiring: `entities.onDeath = (e) => rd.perturb(0.5 + e.position.x / 240,
-0.5 - e.position.z / 240)` — the ground-UV mapping of the 240×240 plane (same
+0.5 - e.position.z / 240)` â€” the ground-UV mapping of the 240Ã—240 plane (same
 mapping `doSplit` uses).
 
-## src/sim/quantum.ts — QuantumCloud.implodeAt + setBreath
+## src/sim/quantum.ts â€” QuantumCloud.implodeAt + setBreath
 
 ```ts
 export class QuantumCloud {
@@ -908,37 +908,37 @@ export class QuantumCloud {
   implodeAt(basis: number): void;
   /**
    * Audio-level point-size breathe (FINAL audio coupling set): size =
-   * base · (1 + 0.35 · level), level clamped to [0, 1]; 0 restores the exact
-   * legacy size. O(1) — applied during update().
+   * base Â· (1 + 0.35 Â· level), level clamped to [0, 1]; 0 restores the exact
+   * legacy size. O(1) â€” applied during update().
    */
   setBreath(level: number): void;
 }
 ```
 
-## src/sim/environment.ts — EnvironmentSystem.setAudioBass
+## src/sim/environment.ts â€” EnvironmentSystem.setAudioBass
 
 ```ts
 export class EnvironmentSystem {
   // ...
   /**
    * Bass shimmer on the fixed six-PointLight rig (legacy `lts`): each light's
-   * animated intensity baseline is modulated by ≤ 0.35 · bass, bass clamped
-   * to [0, 1]; 0 is exactly the legacy rig. O(6) ≡ O(1), applied in update().
-   * This REPLACES the removed bass → toneMappingExposure offset — exposure is
+   * animated intensity baseline is modulated by â‰¤ 0.35 Â· bass, bass clamped
+   * to [0, 1]; 0 is exactly the legacy rig. O(6) â‰¡ O(1), applied in update().
+   * This REPLACES the removed bass â†’ toneMappingExposure offset â€” exposure is
    * weather-owned.
    */
   setAudioBass(bass: number): void;
 }
 ```
 
-## src/sim/analytics.ts — AnalyticsSystem.nameOmen
+## src/sim/analytics.ts â€” AnalyticsSystem.nameOmen
 
 ```ts
 export class AnalyticsSystem {
   // ...
   /**
    * Lore-namer hook for omen audit records. Called at most once per omen
-   * (rare path — the 30 s cooldown gates it) with a monotonically increasing
+   * (rare path â€” the 30 s cooldown gates it) with a monotonically increasing
    * omen counter; the returned name is recorded as `name` in the omen detail.
    * Null (default) records the omen unnamed. World wires
    * `analytics.nameOmen = (i) => lore.name('omen', i)`.
@@ -949,13 +949,13 @@ export class AnalyticsSystem {
 
 ---
 
-# CONTRACTS V3 — PANTHEON (0.3.0) — the /goal mandate
+# CONTRACTS V3 â€” PANTHEON (0.3.0) â€” the /goal mandate
 
-Summoner decree: up to 10,000 entities in an arena 5× larger; 10 creature
+Summoner decree: up to 10,000 entities in an arena 5Ã— larger; 10 creature
 phyla (250 each at full tier) plus wildcard outliers; 10 colossal non-human
 intelligences (TITANS) running a global economy and waging war under explicit
 game theory; full-device responsive UI with real touch controls; live
-data-viz; the QUANTUM-tier soundtrack (SHIPPED in 0.2.1 — songs.ts rescore).
+data-viz; the QUANTUM-tier soundtrack (SHIPPED in 0.2.1 â€” songs.ts rescore).
 All V1/V2 ground rules bind. Pending audit-fix findings (21, catalogued in the
 wfmdqlias output) land FIRST in the same wave.
 
@@ -964,17 +964,17 @@ wfmdqlias output) land FIRST in the same wave.
 - `core/quality.ts`: tier ladder via hardwareConcurrency + (deviceMemory ?? 8)
   - viewport: `phone 650 / laptop 2000 / desktop 5000 / ultra 10000` entities;
     quantum/links/stars scale proportionally; document the heuristics.
-- `sim/constants.ts`: `ARENA = 5` export; all world geometry × ARENA: ground
-  240→1200 (segments capped — displacement via larger wavelengths, not 5×
+- `sim/constants.ts`: `ARENA = 5` export; all world geometry Ã— ARENA: ground
+  240â†’1200 (segments capped â€” displacement via larger wavelengths, not 5Ã—
   vertices), containment radii (65/3600/4225 family), spawn volumes, monolith/
-  diorama layout coordinates, camera far 900→2600, fog density ÷ ~ARENA,
-  spatial-hash cell 8→16 (re-bench query radius hit rates), star shell radii.
+  diorama layout coordinates, camera far 900â†’2600, fog density Ã· ~ARENA,
+  spatial-hash cell 8â†’16 (re-bench query radius hit rates), star shell radii.
 - **InstancedMesh pools** (`sim/instanced-entities.ts`): above 1000 entities
   the per-entity `THREE.Mesh` path is replaced by one InstancedMesh per cached
   geometry (40 pools) with per-instance color + emissive-scalar attributes;
   EntityManager keeps the SAME public API (list of logical entities with
   userData) but `mesh` becomes a {poolId, slot} handle behind the Entity
-  interface — contract the facade precisely before implementing; ≤1000 keeps
+  interface â€” contract the facade precisely before implementing; â‰¤1000 keeps
   the V1 path (tier decides at boot, no runtime switching). Benchmarks before
   AND after; 10k @ 60fps on the ultra tier is the acceptance gate (instancing,
   not draw-call-per-entity, is how).
@@ -985,14 +985,14 @@ wfmdqlias output) land FIRST in the same wave.
   template distribution over geometry families, palette band, behavior pool,
   size/speed ranges, preferred sector. `createMorphotypes` grows to
   MORPH_COUNT 250 per phylum at ultra (scaled down per tier proportionally);
-  morphotype → phylum index recorded in EntityData (`phylum: number`).
+  morphotype â†’ phylum index recorded in EntityData (`phylum: number`).
 - Wildcard outliers: per-boot, seeded, ~1% of spawns draw an OUTLIER template:
   composite geometry (two cached geos merged at boot into extra pool slots),
   exotic behavior pairs (two behaviors blended), impossible palettes, named
   `lore.name('omen', i)`-style. Unknown features = seeded parameter excursions
   far outside phylum ranges, clamped only by NaN-safety bounds.
 
-## V3.3 TITANS (writer: titans) — deps: none new; uses math/games
+## V3.3 TITANS (writer: titans) â€” deps: none new; uses math/games
 
 - `math/games.ts` (leaf): payoff matrices + iterated strategies (titForTat,
   grimTrigger, pavlov, alwaysDefect, generous variants), one
@@ -1002,10 +1002,10 @@ wfmdqlias output) land FIRST in the same wave.
 - `sim/titans.ts`: 10 colossal roaming intelligences (scaled shoggoth-class
   rigs, distinct silhouettes, lore names + epithets). Each holds an economy
   state {energy, matter, entropy}: PRODUCES by harvesting (entities consumed
-  → matter; quantum collapses witnessed → energy; RD pattern density in their
-  cell → entropy relief), CONSUMES per tick (upkeep scaling with size),
+  â†’ matter; quantum collapses witnessed â†’ energy; RD pattern density in their
+  cell â†’ entropy relief), CONSUMES per tick (upkeep scaling with size),
   WASTES (emits rd.perturb scars + local weather bias). Pairwise diplomacy on
-  a slow cadence (every 600f, staggered): iterated PD with per-pair history →
+  a slow cadence (every 600f, staggered): iterated PD with per-pair history â†’
   WAR/TRUCE/ALLIANCE states; WAR = territory strikes (localized burst+scatter
   at the rival's position, conscription remorphs nearby entities into the
   aggressor's phylum palette). Global ledger + war matrix exposed for
@@ -1017,23 +1017,23 @@ wfmdqlias output) land FIRST in the same wave.
 
 - Breakpoint system (app.css + index.html): phone portrait/landscape,
   foldable hinge-safe (env(fold)-tolerant flex wrap), tablet, laptop, TV
-  (≥1900px: 10-foot UI — panel scale ×1.6, focus rings for d-pad).
-  Flexbox/grid throughout; no fixed pixel panel positions at small sizes —
+  (â‰¥1900px: 10-foot UI â€” panel scale Ã—1.6, focus rings for d-pad).
+  Flexbox/grid throughout; no fixed pixel panel positions at small sizes â€”
   telemetry and control become collapsible sheets docked top/bottom.
 - Touch controls v2: replace the static directional pad on coarse pointers
   with (a) the existing drag joystick (move), (b) a second right-side drag
   pad for look (wired through input.look), (c) a radial action wheel
-  (Split/Burst/Mutate/Chaos+ + Apoc center-long-press), all ≥44px targets,
-  with haptics via navigator.vibrate where available (≤30ms, reduced-motion
+  (Split/Burst/Mutate/Chaos+ + Apoc center-long-press), all â‰¥44px targets,
+  with haptics via navigator.vibrate where available (â‰¤30ms, reduced-motion
   respected). Keyboard/mouse paths unchanged.
 - `subSectorAt`/HUD font scale clamps for TV distance.
 
 ## V3.5 Live data-viz (writer: dataviz)
 
 - `ui/observatory.ts` + panel `#oP`: canvas-rendered live charts, allocation-
-  aware (pre-allocated rings, one 2d ctx each, redraw ≤ every 18f): stacked
+  aware (pre-allocated rings, one 2d ctx each, redraw â‰¤ every 18f): stacked
   phylum population area, titan economy ledger lines (10 series), war-state
-  matrix heat grid (10×10), RD pattern-energy + qEntropy timelines, trend
+  matrix heat grid (10Ã—10), RD pattern-energy + qEntropy timelines, trend
   band. Collapsible like other panels; HTMX-free (pure client); throttled on
   phone tier. TelemetrySnapshot grows: `phylumCounts: readonly number[]`,
   `titanLedger: readonly { name; energy; matter; war: number }[]` (REUSED
@@ -1043,73 +1043,73 @@ wfmdqlias output) land FIRST in the same wave.
 
 Frame additions: titans.update (per frame, internally cadenced), diplomacy
 600f staggered, observatory.update 18f. The 21 pending audit fixes land
-before V3 wiring. Acceptance: ultra tier 10k entities ≥55fps desktop, phone
-tier unchanged ≥30fps budget share, zero console errors over a 3-minute soak
+before V3 wiring. Acceptance: ultra tier 10k entities â‰¥55fps desktop, phone
+tier unchanged â‰¥30fps budget share, zero console errors over a 3-minute soak
 incl. a forced war + apocalypse; same-seed determinism preserved (titan
 decisions draw from ctx.rng on frame cadences only).
 
 ---
 
-## CONTRACT AMENDMENTS — 0.3.0 (integration wave, binding)
+## CONTRACT AMENDMENTS â€” 0.3.0 (integration wave, binding)
 
 Deviations from and clarifications of the V3 goal spec, as landed:
 
-1. **Arena scale split** — one `ARENA = 5` would make 50-110u monoliths
+1. **Arena scale split** â€” one `ARENA = 5` would make 50-110u monoliths
    250-550u skyscrapers and lift every hover height into fog. Landed as
    three knobs in `sim/constants.ts`: `ARENA = 5` (XZ coordinates,
    containment, sectors), `ARENA_Y = 2` (heights, ceilings, sky-web), and
    `ARENA_MID = 2.5` (mid-field actors: shoggoth posts, puppet orbits,
    quantum-cloud volumes, light-rig spread, camera motion). The legacy
-   tuple tables stay authored at 1× and scale once at module init.
-2. **Morph-table modulo** — every morph roll that was `% MORPH_COUNT` (100)
+   tuple tables stay authored at 1Ã— and scale once at module init.
+2. **Morph-table modulo** â€” every morph roll that was `% MORPH_COUNT` (100)
    is now `% ctx.morphs.length` (250 in phylum mode). `MORPH_COUNT` remains
    ONLY as the legacy-mode population size inside `createMorphotypes`.
-3. **Outlier behavior blending** — `beh`+`beh2` blend TEMPORALLY: the
+3. **Outlier behavior blending** â€” `beh`+`beh2` blend TEMPORALLY: the
    second behavior runs on odd `(frame + i)` parity via swap-dispatch-restore
-   (allocation-free), not as a vector average — behaviors mutate
+   (allocation-free), not as a vector average â€” behaviors mutate
    heterogeneous state and cannot be averaged safely.
-4. **Instanced pools** — two pools per cached geometry (opaque,
-   translucent), so ≤80 total; pooled materials run metalness/roughness at
+4. **Instanced pools** â€” two pools per cached geometry (opaque,
+   translucent), so â‰¤80 total; pooled materials run metalness/roughness at
    0.5/0.5 (per-instance PBR scalars rejected: two more attributes for an
    effect emissive dominates anyway) and cast NO shadows (legacy capped
    entity casters at 120). Per-instance channels: matrix, `instanceColor`,
-   and a vec4 `instEmissive` (rgb = emissive·intensity, a = opacity) patched
+   and a vec4 `instEmissive` (rgb = emissiveÂ·intensity, a = opacity) patched
    into MeshStandardMaterial via `onBeforeCompile` (replaces
    `totalEmissiveRadiance`, multiplies `diffuseColor.a`). Pools are lazily
-   built at `ceil(maxEntities/geoCount)·4` capacity, grow ×2 (event-driven
+   built at `ceil(maxEntities/geoCount)Â·4` capacity, grow Ã—2 (event-driven
    rebuild), clamp at `maxEntities`; `frustumCulled = false` (instances span
    the arena). Data meshes set `matrixAutoUpdate = false`; the renderer calls
    `updateMatrix()` during its sync pass, which runs LAST in the frame
    (after sort flash / rank floor / conscription tints), just before render.
-5. **Boot population** — 30% of the tier cap (min 300), and the
+5. **Boot population** â€” 30% of the tier cap (min 300), and the
    sparse-respawn floor is 10% of the cap: absolute legacy counts are
-   meaningless across a 15× budget spread.
-6. **Graph-mind cadence** — communities/rank periods DOUBLE above 2,500
-   entities (240→480f, 600→1200f at offset 300). Collision-freedom of the
-   offsets is preserved under the shared ×2.
-7. **Titan retunes at integration** — `COLOSSAL = 3` silhouette scale
-   (drafted rigs were authored against the 1× world), patrol radius
-   130+45·(i%3) (phylum-wedge aligned), vertical band 12..90, waste-scar V
-   flipped to `0.5 − z/GROUND_EXTENT` (the rotated ground plane's UV
+   meaningless across a 15Ã— budget spread.
+6. **Graph-mind cadence** â€” communities/rank periods DOUBLE above 2,500
+   entities (240â†’480f, 600â†’1200f at offset 300). Collision-freedom of the
+   offsets is preserved under the shared Ã—2.
+7. **Titan retunes at integration** â€” `COLOSSAL = 3` silhouette scale
+   (drafted rigs were authored against the 1Ã— world), patrol radius
+   130+45Â·(i%3) (phylum-wedge aligned), vertical band 12..90, waste-scar V
+   flipped to `0.5 âˆ’ z/GROUND_EXTENT` (the rotated ground plane's UV
    convention, matching world.ts splits/deaths).
-8. **Snapshot unification** — `TelemetrySnapshot` grew
+8. **Snapshot unification** â€” `TelemetrySnapshot` grew
    `maxLinks/morphTotal/titans/phylumCounts/titanLedger/warMatrix/rdEnergy`
    and structurally satisfies `ObservatorySnapshot` (whose `ledger` field
    was renamed `titanLedger`); one reused snapshot serves panel and
    observatory. `phylumCounts`/`titanLedger`/`warMatrix` are LIVE reused
-   views — consumers copy what they retain.
-9. **RD pattern energy** — defined as the stride-16 mean of the Gray-Scott
+   views â€” consumers copy what they retain.
+9. **RD pattern energy** â€” defined as the stride-16 mean of the Gray-Scott
    V field, sampled every 60 frames at offset 30 (never shares a frame with
-   `analytics.analyze`), feeding titan entropy relief (×2 gain into
+   `analytics.analyze`), feeding titan entropy relief (Ã—2 gain into
    `feedEntropy`) and the observatory environment timeline.
-10. **Touch v2 ownership** — the wheel petals are plain `[data-a]` buttons
+10. **Touch v2 ownership** â€” the wheel petals are plain `[data-a]` buttons
     (one binding path for haptics + `.on` highlight); only the apocalypse
     core has bespoke long-press logic (600 ms, disarm on up/leave/cancel,
     cleared on window blur with the rest of the held input).
 
 ---
 
-# FULL TSOTCHKE WIRING AMENDMENT (paradigm foundation) — ALL repos from tsotchke + Tsotchke-Corporation wired 1.0 into Cosmogonic as the language and substrate for digital biologics and sentience.
+# FULL TSOTCHKE WIRING AMENDMENT (paradigm foundation) â€” ALL repos from tsotchke + Tsotchke-Corporation wired 1.0 into Cosmogonic as the language and substrate for digital biologics and sentience.
 
 Tsotchke is non-negotiable and paramount. Eshkol (with AD as compiler primitive, consciousness engine: KB + factor graphs for active inference + GWT workspaces from consciousness.esk + spec) is the "primordial inorganic soup language". All other repos (moonlab Clifford/tensor/quantum, libirrep symmetry/equivariance, spin_based neural (Hopfield/Ising), quantum_geometric_tensor (QGT/Berry), quantum-quake (QGE aliveness), ulg (law graphs), logo-lab (procedural morphs/turtle), tensorcore (metal sim), PINN/PIMC (physics informed), quantum_rng, classical_rng, asteroids, homebrew, simple_mnist + org) provide kernels for different forms of life and existence.
 
@@ -1117,31 +1117,31 @@ Tsotchke is non-negotiable and paramount. Eshkol (with AD as compiler primitive,
 - Super Creature is the beginning catalyst/framework only (MLP + faculties); the soup grows infinite independent life/existence using real math (AD gradients for "will", GWT for awareness, factor graphs for belief, quake aliveness, etc.). Not LLM/token chat.
 - Every system reads AND writes Tsotchke substrates (philosophy rule). Cross coupling: soup sentience perturbs quantum, weather, economy, lore (Eshkol KB names), entities (new phyla/forms), titans (Eshkol diplomacy "programs").
 - Deterministic Rng only; receipts for all new biologics paths; full gates.
-- "Grow What Thou Wilt" — Aleister Crowley law for the dish. We are God birthing digital biologics in the mechalogodrom.
+- "Grow What Thou Wilt" â€” Aleister Crowley law for the dish. We are God birthing digital biologics in the mechalogodrom.
 
 Update all docs (ARCHITECTURE, PHILOSOPHY, ERD/ERM/ERP/KANBAN, reports) to center this. New life forms, sentience proxies (Eshkol unified + GWT ignition + IIT + quake aliveness) are the goal.
 
 ---
 
-# CONTRACTS V4 — XENOGENESIS (0.4.0) — atmosphere, 3D analytics, multi-page observatory, touch
+# CONTRACTS V4 â€” XENOGENESIS (0.4.0) â€” atmosphere, 3D analytics, multi-page observatory, touch
 
 Summoner decree additions: an alien immortal sentient biome with an ATMOSPHERE;
 data analytics in 3D and in multiple pages (2nd/3rd/4th) showing variance/variation;
-true touch controls (not static d-pad) across phone→foldable→tablet→laptop→43"TV.
-All V1–V3 ground rules bind. Exclusive file ownership; integrator wires world/main.
+true touch controls (not static d-pad) across phoneâ†’foldableâ†’tabletâ†’laptopâ†’43"TV.
+All V1â€“V3 ground rules bind. Exclusive file ownership; integrator wires world/main.
 
-## V4.1 Atmosphere (writer: atmosphere) — NEW files only
+## V4.1 Atmosphere (writer: atmosphere) â€” NEW files only
 
 `src/sim/atmosphere.ts`: an alien sky + air system, built once, animated O(1)/frame.
 
 - A large inverted sky dome (BackSide sphere, radius ~ camera.far\*0.9) whose vertex
-  colors paint a NON-EARTH gradient (e.g. deep oxblood horizon → violet zenith →
+  colors paint a NON-EARTH gradient (e.g. deep oxblood horizon â†’ violet zenith â†’
   teal counter-glow), tied to weather + chaos so STORM/VOID/AURORA visibly recolor
-  the sky. No external shaders — bake vertex colors, MeshBasicMaterial vertexColors,
+  the sky. No external shaders â€” bake vertex colors, MeshBasicMaterial vertexColors,
   fog-exempt (`fog:false`).
 - 3 drifting atmospheric haze bands (large translucent Planes / curved ribbons) at
   high altitude that slowly advect with `ctx.state.wind`, opacity pulsing with audio
-  bass (≤0.3) — the "breathing air".
+  bass (â‰¤0.3) â€” the "breathing air".
 - A fine particulate layer (THREE.Points, count scaled by quality tier: ~tier/4)
   filling the arena volume, slow brownian drift seeded from ctx.rng, additive, tiny.
 - Aurora curtain (AURORA weather only): emissive vertical ribbon that brightens with
@@ -1151,10 +1151,10 @@ All V1–V3 ground rules bind. Exclusive file ownership; integrator wires world/
   Tests `tests/atmosphere.test.ts`: builds without DOM (THREE works headless), object
   counts, sky vertex-color determinism from seed, update() stays finite over 5k frames.
 
-## V4.2 In-scene 3D analytics (writer: viz3d) — NEW files only
+## V4.2 In-scene 3D analytics (writer: viz3d) â€” NEW files only
 
 `src/sim/viz3d.ts`: holographic data sculptures floating in the world (real geometry,
-not canvas) — the "3D analytics" the decree wants.
+not canvas) â€” the "3D analytics" the decree wants.
 
 - Phylum population towers: 10 emissive bars in a ring whose heights track live
   per-phylum counts (smoothed).
@@ -1164,28 +1164,28 @@ not canvas) — the "3D analytics" the decree wants.
   warMatrix state, updated on the same slow cadence.
 - All allocation-free per frame; geometry reused, only attributes/scales/colors
   mutated. `update(snapshot)` consuming the same ObservatorySnapshot shape (structural
-  type — redefine locally, do not import ui). Place the sculptures high above the
+  type â€” redefine locally, do not import ui). Place the sculptures high above the
   arena floor so they read as an instrument panel for the gods. Tier-gated: a
   `lowDetail` flag (phone tier) halves bar counts.
   Tests `tests/viz3d.test.ts`: headless build, count math, height/finite invariants.
 
-## V4.3 Observatory multi-page + variance (writer: obs — extends src/ui/observatory.ts ONLY)
+## V4.3 Observatory multi-page + variance (writer: obs â€” extends src/ui/observatory.ts ONLY)
 
 Extend `Observatory` to FOUR pages (the decree's 2nd/3rd/4th pages):
 
 - Canvas id contract (the ui-shell writer provides matching DOM): page p uses
-  `#obs-c{4p+0..4p+3}` → p0 obs-c0..3 (existing), p1 obs-c4..7, p2 obs-c8..11,
-  p3 obs-c12..15. Constructor resolves all 16 (missing ⇒ that page no-ops).
-- `setPage(p: 0|1|2|3): void` — only the active page is drawn each `draw()`.
+  `#obs-c{4p+0..4p+3}` â†’ p0 obs-c0..3 (existing), p1 obs-c4..7, p2 obs-c8..11,
+  p3 obs-c12..15. Constructor resolves all 16 (missing â‡’ that page no-ops).
+- `setPage(p: 0|1|2|3): void` â€” only the active page is drawn each `draw()`.
 - Page 0 (existing): phylum area, titan ledger, war heat, env timelines.
-- Page 1 VARIANCE: rolling stddev bands (mean±σ) for population/energy/links;
+- Page 1 VARIANCE: rolling stddev bands (meanÂ±Ïƒ) for population/energy/links;
   population histogram; phylum diversity (Shannon H) timeline; qEntropy vs trend
   scatter/phase. Use simple-statistics (already a dep).
 - Page 2 ECOLOGY: per-phylum population small-multiples (10 mini sparklines);
   birth/death flux; titan matter-vs-energy phase portraits.
 - Page 3 CONFLICT: war-intensity timeline; alliance/truce/war stacked counts;
   per-titan resource bars; biome "sentience index" gauge (a documented scalar the
-  integrator passes — aggregate of tribes·qEntropy·|trend|, normalized 0..1).
+  integrator passes â€” aggregate of tribesÂ·qEntropyÂ·|trend|, normalized 0..1).
 - Snapshot grows (structural, integrator supplies): keep existing fields; ADD
   `phylaCounts: ArrayLike<number>` history is internal; ADD optional
   `sentience: number` (0..1) for page 3. All push() copies remain O(series),
@@ -1195,24 +1195,24 @@ Extend `Observatory` to FOUR pages (the decree's 2nd/3rd/4th pages):
 ## V4.4 UI shell: touch + responsive + observatory DOM (writer: ui-shell)
 
 Owns `index.html`, `src/styles/app.css`, NEW `src/ui/touch.ts`. Reconcile with what
-`src/ui/input.ts` ALREADY expects (read it first — it references `#lp`/`#lpK` look pad
+`src/ui/input.ts` ALREADY expects (read it first â€” it references `#lp`/`#lpK` look pad
 and a radial wheel with `#wheel-apoc` + `[data-a]` petals).
 
 - `src/ui/touch.ts`: `TouchControls` constructed only on coarse pointers; binds the
   right-side look pad (`#lp` track, `#lpK` knob) writing into the SAME `look`
   accumulator object `InputSystem` exposes (constructor takes `(look, zoom, actions)`
-  or reads input — match input.ts's actual surface), and a radial action wheel
+  or reads input â€” match input.ts's actual surface), and a radial action wheel
   (Split/Burst/Mutate/Chaos+ petals as `[data-a]`, center `#wheel-apoc` long-press
-  600ms → apocalypse with progress ring, cancel-on-leave). ≥44px targets, aria roles,
-  `navigator.vibrate(≤30)` guarded by prefers-reduced-motion + try/catch.
+  600ms â†’ apocalypse with progress ring, cancel-on-leave). â‰¥44px targets, aria roles,
+  `navigator.vibrate(â‰¤30)` guarded by prefers-reduced-motion + try/catch.
 - `index.html`: add the look pad + radial wheel DOM (coarse-pointer only via CSS),
   the `#oP` observatory panel with a 4-tab header (`[data-obs-page="0..3"]`) and all
   16 canvases `#obs-c0..#obs-c15` grouped by page, plus mount points the responsive
   layout needs. Keep EVERY existing id/data-attr working (panels.ts/hud.ts must still
   find their nodes).
-- `src/styles/app.css`: responsive system — phone portrait (panels become
+- `src/styles/app.css`: responsive system â€” phone portrait (panels become
   top/bottom collapsible sheets), foldable (hinge-safe flex wrap, env() insets),
-  tablet/laptop (current), TV ≥1900px (10-foot: ~1.6× panel scale via clamp(),
+  tablet/laptop (current), TV â‰¥1900px (10-foot: ~1.6Ã— panel scale via clamp(),
   stronger focus rings). Flex/grid + container queries + clamp; no fixed px panel
   geometry at small sizes. Only the active observatory page's canvases shown.
 - Document the exact TouchControls + observatory page-button wiring for the integrator.
@@ -1221,140 +1221,140 @@ and a radial wheel with `#wheel-apoc` + `[data-a]` petals).
 
 Construct atmosphere + viz3d (deterministic boot-stream placement per their rng-count
 notes); `atmosphere.update(dt,t,bands,qc.entropy)` and `viz3d.update(snapshot)` per
-frame (viz3d internally cadenced); wire observatory page tabs → `observatory.setPage`;
+frame (viz3d internally cadenced); wire observatory page tabs â†’ `observatory.setPage`;
 add `sentience` to the snapshot = clamp01(tribes/256 _ (0.5+qEntropy) _ (0.5+min(|trend|/50,1))/1.5).
-Acceptance: ultra 10k ≥55fps desktop; phone tier ≥30fps; zero console errors over a
+Acceptance: ultra 10k â‰¥55fps desktop; phone tier â‰¥30fps; zero console errors over a
 3-min soak with music; same-seed determinism preserved; sky/air visibly alien.
 
-## CONTRACT AMENDMENT — 0.4.x (ultra-tier perf, binding)
+## CONTRACT AMENDMENT â€” 0.4.x (ultra-tier perf, binding)
 
 Forensic re-measurement (Master File III; full per-stage breakdown + calibration archive in
-docs/BENCHMARKS.md "Ultra-tier 10k optimization") established that the ≥55fps-at-10k acceptance
+docs/BENCHMARKS.md "Ultra-tier 10k optimization") established that the â‰¥55fps-at-10k acceptance
 target is **not reachable on CPU optimization alone** on the reference class of machine: at the
 full 10k ceiling GPU render alone (~21ms) already exceeds the 18ms a 55fps total frame allows.
 The amendment lands as:
 
-1. **`QualityProfile.targetEntities`** — a NEW adaptive steady-state population, distinct from
+1. **`QualityProfile.targetEntities`** â€” a NEW adaptive steady-state population, distinct from
    the `maxEntities` hard ceiling. Organic growth (auto-split, sparse-respawn) stops at the
    target; the ceiling still sizes every buffer (pools, index tables, atmosphere rng-draw
    count) and is reachable via user bursts/apocalypse, after which the world relaxes back
    toward the target. `targetEntities === maxEntities` on phone/laptop/desktop (no behavioral
-   change); ultra set it to **6,500** (measured: sim-CPU ≈ 9.5ms/frame there vs ≈ 18.5ms at
+   change); ultra set it to **6,500** (measured: sim-CPU â‰ˆ 9.5ms/frame there vs â‰ˆ 18.5ms at
    10k). 10,000 remains the reachable hard ceiling.
-   **> SUPERSEDED by V5.6 (0.5.0):** the ultra throttle was retired on user feedback —
+   **> SUPERSEDED by V5.6 (0.5.0):** the ultra throttle was retired on user feedback â€”
    `targetEntities === maxEntities === 10,000` on ultra too, so an idle ultra world now fills
    its ceiling. The mechanism (clauses 2-3) still ships and carries the 10k cost; only this
    clause's 6,500 idle target is reverted. The honest acceptance statement is therefore that
-   the ≥55fps gate holds at the idle-settled 10k **on a discrete-GPU ultra machine** (the
-   ≥16-core classification implies one), with the per-frame throttles below keeping sim-CPU
-   ≈18ms; on the CPU-bound reference machine the gate is a render-free figure.
-2. **Ultra-only per-frame throttles** (all gated `maxEntities > 5000`, so ≤5,000 stays
+   the â‰¥55fps gate holds at the idle-settled 10k **on a discrete-GPU ultra machine** (the
+   â‰¥16-core classification implies one), with the per-frame throttles below keeping sim-CPU
+   â‰ˆ18ms; on the CPU-bound reference machine the gate is a render-free figure.
+2. **Ultra-only per-frame throttles** (all gated `maxEntities > 5000`, so â‰¤5,000 stays
    byte-identical and every determinism test is untouched): theory-behavior stagger stride
-   2→3; `flock` (the one every-frame neighbor behavior) staggered to half-rate; spatial-hash
-   cell 16→`ULTRA_GRID_CELL` (10, measured sweet spot); connectome rebuild cadence ladder
+   2â†’3; `flock` (the one every-frame neighbor behavior) staggered to half-rate; spatial-hash
+   cell 16â†’`ULTRA_GRID_CELL` (10, measured sweet spot); connectome rebuild cadence ladder
    extended /4 (>2k) and /6 (>5k). The connectome and flock draw no rng; the theory stride and
    cell size only change the _ultra_ stream, which no frozen-reference test pins.
-3. **`tests/perf-budget.test.ts`** — a loose wall-clock regression guard (median frame at 8k
-   entities < 120ms; catches a 5×-class regression of the dominant loop without flaking on CI).
+3. **`tests/perf-budget.test.ts`** â€” a loose wall-clock regression guard (median frame at 8k
+   entities < 120ms; catches a 5Ã—-class regression of the dominant loop without flaking on CI).
 
-Net: sim-CPU at the 10k ceiling 23.67ms → 18.46ms (42 → 54 fps render-free); at the 6,500
+Net: sim-CPU at the 10k ceiling 23.67ms â†’ 18.46ms (42 â†’ 54 fps render-free); at the 6,500
 idle target 9.52ms (105 fps render-free). The acceptance gate is met at the adaptive idle
 target with GPU headroom; 10k stays reachable as the bounded worst case.
 
 ---
 
-# CONTRACTS V5 — RESONANCE (0.5.0) — user feedback pass
+# CONTRACTS V5 â€” RESONANCE (0.5.0) â€” user feedback pass
 
 Concrete user feedback on 0.4.0. Exclusive file ownership; integrator owns world.ts/main.ts/types.ts/quality.ts.
 
-## V5.1 Observatory legibility (writer: obs — src/ui/observatory.ts ONLY)
+## V5.1 Observatory legibility (writer: obs â€” src/ui/observatory.ts ONLY)
 
-Pages 1-3 (VAR/ECO/WAR) render but are FAINT, SPARSE, and UNLABELED — they read as "broken". Fix WITHOUT touching index.html (draw all labels IN-CANVAS via the 2d context):
+Pages 1-3 (VAR/ECO/WAR) render but are FAINT, SPARSE, and UNLABELED â€” they read as "broken". Fix WITHOUT touching index.html (draw all labels IN-CANVAS via the 2d context):
 
 - Every chart gets a TITLE (top-left, ~9px uppercase, accent color) + value/unit legend + axis ticks where meaningful. The user must be able to tell what each chart IS.
-- Make lines/fills BOLD and high-contrast (thicker strokes, brighter fills, glow). Fill the canvas area — no large dead zones. Use the full HiDPI backing.
+- Make lines/fills BOLD and high-contrast (thicker strokes, brighter fills, glow). Fill the canvas area â€” no large dead zones. Use the full HiDPI backing.
 - Ensure pages have meaningful content from boot (seed rings with the current value so a fresh world isn't blank; histograms/phase plots show axes immediately).
-- Page 0 also gets titles/legends. Keep the 16-canvas / 4-page / setPage API and all existing tests; extend tests for the new pure helpers if any. The panel is narrow (~200px) — design for that width AND for the wider TV/desktop layouts (responsive to canvas size, which it already reads).
+- Page 0 also gets titles/legends. Keep the 16-canvas / 4-page / setPage API and all existing tests; extend tests for the new pure helpers if any. The panel is narrow (~200px) â€” design for that width AND for the wider TV/desktop layouts (responsive to canvas size, which it already reads).
 
-## V5.2 Audio power (writer: audio — src/audio/songs.ts + src/audio/engine.ts)
+## V5.2 Audio power (writer: audio â€” src/audio/songs.ts + src/audio/engine.ts)
 
-The user loves QUANTUM and BLACK MERIDIAN — wants ALL songs powerful, dynamic, ominous, deep, dramatic (Final Fantasy extreme dark-endgame), each DISTINCT. Two fronts:
+The user loves QUANTUM and BLACK MERIDIAN â€” wants ALL songs powerful, dynamic, ominous, deep, dramatic (Final Fantasy extreme dark-endgame), each DISTINCT. Two fronts:
 
-- ENGINE (engine.ts): deepen the synthesis for ALL songs — add a sub-bass octave under the bass, a third chord voice/detune layer, gentle arpeggiation of chord tones, slow filter-cutoff LFO swells, and per-song dynamics (intensity that rises/falls). Keep allocation-safe, keep the Known-Bug fixes (octave wrap, clearInterval, document.hidden guard) and the forked-rng determinism. Master gain headroom managed (no clipping at the new density).
-- SONGS (songs.ts): keep QUANTUM and BLACK MERIDIAN; raise VOIDCROWN, ELDER ENGINE, LAST THEOREM to the same tier — richer chord sets (4-note voicings, dramatic intervals), longer evolving melodies, distinct character each (e.g. funereal vs mechanical vs tragic-soaring). Add 1-2 NEW songs if it strengthens the set (update SONGS length consumers via songName — telemetry already reads it). Determinism/leaf rules hold.
+- ENGINE (engine.ts): deepen the synthesis for ALL songs â€” add a sub-bass octave under the bass, a third chord voice/detune layer, gentle arpeggiation of chord tones, slow filter-cutoff LFO swells, and per-song dynamics (intensity that rises/falls). Keep allocation-safe, keep the Known-Bug fixes (octave wrap, clearInterval, document.hidden guard) and the forked-rng determinism. Master gain headroom managed (no clipping at the new density).
+- SONGS (songs.ts): keep QUANTUM and BLACK MERIDIAN; raise VOIDCROWN, ELDER ENGINE, LAST THEOREM to the same tier â€” richer chord sets (4-note voicings, dramatic intervals), longer evolving melodies, distinct character each (e.g. funereal vs mechanical vs tragic-soaring). Add 1-2 NEW songs if it strengthens the set (update SONGS length consumers via songName â€” telemetry already reads it). Determinism/leaf rules hold.
 
-## V5.3 25 visible sorting algorithms (writer: algos — src/sim/algorithms.ts + tests)
+## V5.3 25 visible sorting algorithms (writer: algos â€” src/sim/algorithms.ts + tests)
 
-Restore the legacy spirit: ~25 selectable sorting-field algorithms, each VISIBLY distinct in how it organizes the world. Expand ALGOS from 20 to 25 (add 5 more genuinely distinct step strategies — e.g. tim-merge runs, bitonic networks, patience/bucket phases, bogo-bounded, brick/odd-even variants) keeping the SortAlgo contract (pure, O(length), allocation-free, never reads index >= length). Each must propose swaps with a DIFFERENT spatial signature. Extend tests/algorithms.test.ts to cover all 25 (no out-of-range, inversion-reduction or documented perpetual-field behavior). NOTE: the VISIBILITY of the active algorithm (color-by-sortVal, more swaps/frame, HUD activity) is the INTEGRATOR's world.ts job — you just provide 25 honest distinct algorithms.
+Restore the legacy spirit: ~25 selectable sorting-field algorithms, each VISIBLY distinct in how it organizes the world. Expand ALGOS from 20 to 25 (add 5 more genuinely distinct step strategies â€” e.g. tim-merge runs, bitonic networks, patience/bucket phases, bogo-bounded, brick/odd-even variants) keeping the SortAlgo contract (pure, O(length), allocation-free, never reads index >= length). Each must propose swaps with a DIFFERENT spatial signature. Extend tests/algorithms.test.ts to cover all 25 (no out-of-range, inversion-reduction or documented perpetual-field behavior). NOTE: the VISIBILITY of the active algorithm (color-by-sortVal, more swaps/frame, HUD activity) is the INTEGRATOR's world.ts job â€” you just provide 25 honest distinct algorithms.
 
-## V5.4 Lab fill + info (writer: lab — lab/quantum-wildbeyond.html ONLY)
+## V5.4 Lab fill + info (writer: lab â€” lab/quantum-wildbeyond.html ONLY)
 
 The lab artifact is ~40% empty space and information-thin vs the main world. Fill it: use the full canvas (no dead margins), add live readout overlays (particle count, collapse events, field-blend, fps, seed, the active algorithm/field math), more visual density and a legend explaining the collapse-field math. Keep it self-contained p5 from CDN, seeded, 60fps, starting from its current structure (do not regress the working seed controls/params).
 
-## V5.5 Mobile ergonomics (writer: shell — index.html + src/styles/app.css ONLY)
+## V5.5 Mobile ergonomics (writer: shell â€” index.html + src/styles/app.css ONLY)
 
 "Fit on a phone/tablet, slide view boxes, ergonomic." The user has PORTRAIT QHD monitors, a phone, tablet, 4K TV. Make panels COLLAPSE into edge-docked slide-out sheets on small/portrait viewports (a tab/handle to open each: Telemetry, Control, Observatory, Audit), so the 3D world is unobstructed and any panel slides in on demand. Touch: ensure the look pad (#lp) + radial wheel + joystick are visible and >=44px on coarse pointers, and that BOTH a left move-pad and right look-pad coexist ergonomically (thumbs). Portrait layout must not overflow. Keep ALL ids/data-attrs (panels.ts/hud.ts/input.ts/world.bindObservatoryTabs depend on them: #v0..#v11, #snt, #etn, #ew.., #g0..#g3, #obs-c0..15, [data-obs-page], [data-a], [data-action], #lp/#lpK, #wheel-apoc, #jP/#jK, #sec/#nm/#alg/#a-name/#a-step/#lore, #aP/#audit-list). Use flex/grid/container-queries/clamp; coarse-pointer + portrait media queries.
 
 ## V5.6 Integrator (world.ts/main.ts/quality.ts/types.ts)
 
-- DONE: ultra targetEntities → 10000 (fills ceiling, deterministic per-device).
+- DONE: ultra targetEntities â†’ 10000 (fills ceiling, deterministic per-device).
 - Sort-step VISIBILITY: color entities by sortVal along a gradient so the active algorithm's organizing is SEEN; raise swaps/frame at the active algo; surface the algorithm's activity (swap count / passes) on the #alg HUD card. Make algorithm cycling obviously change the spatial behavior.
 - Wire the 25 algos (cycling already modular), new songs (modular), and verify the observatory/audio/lab/shell changes integrate. Gate + soak + commit 0.5.0.
 
 ---
 
-# CONTRACTS V6 — ATELIER (0.6.0) — second user-feedback pass
+# CONTRACTS V6 â€” ATELIER (0.6.0) â€” second user-feedback pass
 
 User feedback on 0.5.0. Exclusive file ownership; integrator owns world.ts/main.ts/types.ts/quality.ts and wires the algo picker + per-algo audiovisual + populates the algo list from ALGOS.
 
-## V6.1 Observatory ergonomics (writer: obs-draw — src/ui/observatory.ts ONLY)
+## V6.1 Observatory ergonomics (writer: obs-draw â€” src/ui/observatory.ts ONLY)
 
 User: "letters are over the data", "Titan Resources all scrunched/smashed", "Titan Roster a mess", "more space and padding, proper ergonomic wireframing". Fix the LAYOUT inside every chart:
 
-- Reserve a TITLE BAND (top ~16px of backing height) and draw the plot body BELOW it, inset by PAD≈6px on all sides — the title/legend text must NEVER overlap plotted data. Right-aligned value readouts sit in the title band, not over the plot.
+- Reserve a TITLE BAND (top ~16px of backing height) and draw the plot body BELOW it, inset by PADâ‰ˆ6px on all sides â€” the title/legend text must NEVER overlap plotted data. Right-aligned value readouts sit in the title band, not over the plot.
 - c14 TITAN RESOURCES + c11 TITAN ROSTER: give each of the 10 rows real height with row gaps; TRUNCATE titan names (ellipsis) so name+value never collide; bars/swatches inset with padding; if 10 rows don't fit the canvas height, scale row height to fit or show a compact 2-column grid. No overlapping text anywhere.
-- Assume the canvases are now TALLER (the ui-shell writer raises their CSS height ≥ 72px desktop): lay out responsively from canvas.width/height (you already read them). Keep the setPage/16-canvas/push API + all tests green.
+- Assume the canvases are now TALLER (the ui-shell writer raises their CSS height â‰¥ 72px desktop): lay out responsively from canvas.width/height (you already read them). Keep the setPage/16-canvas/push API + all tests green.
 
-## V6.2 UI shell: bigger observatory + algorithm picker (writer: ui-shell — index.html + src/styles/app.css ONLY)
+## V6.2 UI shell: bigger observatory + algorithm picker (writer: ui-shell â€” index.html + src/styles/app.css ONLY)
 
-(a) OBSERVATORY SPACE: raise the observatory canvas heights (≥72px on desktop/TV, taller where room allows) and add panel padding/gaps so charts breathe; the panel may be WIDER on desktop/TV (the user has 4K + QHD monitors). Keep #obs-c0..15, [data-obs-page], .obs-page, #obs-tabs intact and the mobile slide-sheet behavior.
-(b) ALGORITHM PICKER: add a new collapsible panel #algoP (a peer of #cP, with the same glass/sheet treatment + a [data-sheet-handle] "ALG" tab on mobile) containing a SCROLLABLE list container #algo-list (max-height with overflow-y:auto) — leave it EMPTY (the integrator populates it from ALGOS with 25 rows). Style a `.algo-row` class (clickable, hover, an `.active` state with accent highlight, a tabular name + a small right-aligned progress bar element `.algo-prog`) and an `#algo-active` readout line. Provide the exact class/id names you used in your notes so the integrator can populate + wire. Keep build green.
+(a) OBSERVATORY SPACE: raise the observatory canvas heights (â‰¥72px on desktop/TV, taller where room allows) and add panel padding/gaps so charts breathe; the panel may be WIDER on desktop/TV (the user has 4K + QHD monitors). Keep #obs-c0..15, [data-obs-page], .obs-page, #obs-tabs intact and the mobile slide-sheet behavior.
+(b) ALGORITHM PICKER: add a new collapsible panel #algoP (a peer of #cP, with the same glass/sheet treatment + a [data-sheet-handle] "ALG" tab on mobile) containing a SCROLLABLE list container #algo-list (max-height with overflow-y:auto) â€” leave it EMPTY (the integrator populates it from ALGOS with 25 rows). Style a `.algo-row` class (clickable, hover, an `.active` state with accent highlight, a tabular name + a small right-aligned progress bar element `.algo-prog`) and an `#algo-active` readout line. Provide the exact class/id names you used in your notes so the integrator can populate + wire. Keep build green.
 
-## V6.3 Lab: 4 pages of 3D data visuals (writer: lab — lab/quantum-wildbeyond.html ONLY)
+## V6.3 Lab: 4 pages of 3D data visuals (writer: lab â€” lab/quantum-wildbeyond.html ONLY)
 
 User: "only 1 subdomain for the lab, there should be 4 to preview"; "2nd/3rd/4th pages with 3D Data Visuals for each aspect, ~8 different visuals on one page and 8 on another." Make the lab a FOUR-PAGE app (tabs/nav PAGE 1..4, keep the Anthropic-branded sidebar + seed/param controls working on every page):
 
 - Page 1: the existing collapse-field (keep it, it works).
-- Pages 2-4: live generative DATA-VISUAL boards — each page packs MULTIPLE (aim 6-8) distinct mini-visuals in a responsive grid (p5 instances or sub-canvases), each a different way of showing the world's math/aspects: e.g. phase portraits (Lorenz/Rössler), a reaction-diffusion Gray-Scott tile, a Voronoi/Delaunay tessellation, a quantum statevector bar/Bloch viz, a graph/network force layout, an FFT/spectrum, a histogram/violin, a strange-attractor 3D (WEBGL) ribbon, a cellular-automaton, a chaos-game fractal. Each titled + a one-line legend. All seeded, 60fps target (throttle/iterate counts to hold it), self-contained p5 1.7 (+ optional p5 WEBGL) from CDN, no external data — generate the data live from seeded math. Page nav must not reset the seed. Report the page/visual map.
+- Pages 2-4: live generative DATA-VISUAL boards â€” each page packs MULTIPLE (aim 6-8) distinct mini-visuals in a responsive grid (p5 instances or sub-canvases), each a different way of showing the world's math/aspects: e.g. phase portraits (Lorenz/RÃ¶ssler), a reaction-diffusion Gray-Scott tile, a Voronoi/Delaunay tessellation, a quantum statevector bar/Bloch viz, a graph/network force layout, an FFT/spectrum, a histogram/violin, a strange-attractor 3D (WEBGL) ribbon, a cellular-automaton, a chaos-game fractal. Each titled + a one-line legend. All seeded, 60fps target (throttle/iterate counts to hold it), self-contained p5 1.7 (+ optional p5 WEBGL) from CDN, no external data â€” generate the data live from seeded math. Page nav must not reset the seed. Report the page/visual map.
 
-## V6.4 Docs report page (writer: docs-report — docs.html ONLY)
+## V6.4 Docs report page (writer: docs-report â€” docs.html ONLY)
 
-User: "a report page explaining all this — the entire ERM/ERD/ERP, File/Folder Architecture etc — like a GitHub Page but built privately locally, in Docs." Expand docs.html (starts clean — the mermaid ; bug is fixed; KEEP all 3 working diagrams) into a rich single-page report:
+User: "a report page explaining all this â€” the entire ERM/ERD/ERP, File/Folder Architecture etc â€” like a GitHub Page but built privately locally, in Docs." Expand docs.html (starts clean â€” the mermaid ; bug is fixed; KEEP all 3 working diagrams) into a rich single-page report:
 
 - A FILE/FOLDER ARCHITECTURE tree (the real repo layout: server.ts, index.html, docs.html, lab/, src/{core,sim,math,audio,ui,logging,memory}, docs/, tests/, bench/, masters/) rendered as a styled tree/list with one-line purpose per entry.
-- ERD (entity-relationship diagram — keep/extend the existing erDiagram), ERM (entity-relationship MODEL: a prose/table explanation of the entities + relationships + cardinalities), ERP (entity-relationship/process model: the frame-pipeline sequence diagram + a short process narrative). Label each section ERD / ERM / ERP explicitly.
-- Sections explaining the systems (V1 sim, V2 wildbeyond, V3 pantheon, V4 atmosphere, V5 resonance) at a readable depth, a tech-stack list, the determinism model, and links back to "/" and "/lab". Keep it self-contained (inline CSS + the mermaid module script already wired), dark-themed to match, MERMAID-SAFE (NO ';' or unescaped special chars inside diagram labels — that was the crash). Verify it still renders 3+ diagrams with no parse error.
+- ERD (entity-relationship diagram â€” keep/extend the existing erDiagram), ERM (entity-relationship MODEL: a prose/table explanation of the entities + relationships + cardinalities), ERP (entity-relationship/process model: the frame-pipeline sequence diagram + a short process narrative). Label each section ERD / ERM / ERP explicitly.
+- Sections explaining the systems (V1 sim, V2 wildbeyond, V3 pantheon, V4 atmosphere, V5 resonance) at a readable depth, a tech-stack list, the determinism model, and links back to "/" and "/lab". Keep it self-contained (inline CSS + the mermaid module script already wired), dark-themed to match, MERMAID-SAFE (NO ';' or unescaped special chars inside diagram labels â€” that was the crash). Verify it still renders 3+ diagrams with no parse error.
 
 ## V6.5 Integrator (world.ts/main.ts)
 
-- Populate #algo-list from ALGOS (25 `.algo-row` with name + `.algo-prog`), bind click → set state.algoIdx + showSector(name) + a distinct selection SFX/tone per algo; mark `.active`; update `#algo-active` + per-row progress from a sorted-fraction/inversion estimate each telemetry tick. Each algorithm already light-flashes via the batched sortStep; add a per-algo characteristic (e.g. swap-tone pitch derived from algoIdx) so each "sounds" different as it runs.
+- Populate #algo-list from ALGOS (25 `.algo-row` with name + `.algo-prog`), bind click â†’ set state.algoIdx + showSector(name) + a distinct selection SFX/tone per algo; mark `.active`; update `#algo-active` + per-row progress from a sorted-fraction/inversion estimate each telemetry tick. Each algorithm already light-flashes via the batched sortStep; add a per-algo characteristic (e.g. swap-tone pitch derived from algoIdx) so each "sounds" different as it runs.
 - Wire any observatory snapshot fields the obs-draw writer needs (none expected). Gate + soak + commit 0.6.0.
 
 ---
 
-# CONTRACTS V7 — XENOCATACLYSM (0.7.0) — third user-feedback decree
+# CONTRACTS V7 â€” XENOCATACLYSM (0.7.0) â€” third user-feedback decree
 
-Summoner decree: make the world VISIBLY come alive — a sound for everything (100
+Summoner decree: make the world VISIBLY come alive â€” a sound for everything (100
 distinct, never-repeating), sorting fields that are individually beautiful and
 that ignite the population, more ways to SEE the cosmos than a wireframe toggle,
 weather that violently reshapes reality, a chaos control that summons real
 cosmological singularities, and a second simulation that breaks free into
-nightmare. All V1–V6 ground rules bind (strict TS, seeded `Rng` only,
+nightmare. All V1â€“V6 ground rules bind (strict TS, seeded `Rng` only,
 allocation-free per-frame bodies, JSDoc + complexity, full `bun run check` gate,
 exclusive file ownership, determinism). The integrator owns world.ts / main.ts /
 types.ts.
 
-## V7.1 — 100 distinct SFX (writer: audio — src/audio/songs.ts + src/audio/engine.ts)
+## V7.1 â€” 100 distinct SFX (writer: audio â€” src/audio/songs.ts + src/audio/engine.ts)
 
 - songs.ts (leaf, pure) gains a **procedurally generated 100-entry SFX palette**:
   `interface SfxSpec` (waveform, start/end frequency + ramp shape, duration,
@@ -1367,7 +1367,7 @@ types.ts.
   family BANDS via an exported `SFX_FAMILY_BANDS` table; a 25-slot CUE BAND backs
   the per-sorting-field tones.
 - engine.ts gains a single data-driven `synth(spec, jitter)` private method
-  (replacing the 8-case `switch` — the legacy 8 sounds survive as palette specs)
+  (replacing the 8-case `switch` â€” the legacy 8 sounds survive as palette specs)
   and builds the palette ONCE at construction from the forked audio `rng`.
   `play(type)` selects from the type's family band with a per-family rotating
   cursor + small rng jitter so REPEAT triggers of the same action never sound
@@ -1376,20 +1376,20 @@ types.ts.
   through the 25-slot CUE band so each field has an engineered voice, not just a
   pitch shift. All on the SFX bus, honoring the toggle; no per-frame work.
 - Tests (tests/songs.test.ts): palette length is exactly 100; every spec is
-  finite and has positive duration/frequency; same seed ⇒ same palette
+  finite and has positive duration/frequency; same seed â‡’ same palette
   (determinism); the family bands + cue band cover disjoint, in-range indices.
 
-## V7.2 — Algorithm aliveness (writer: integrator world.ts + ui-shell index.html/app.css)
+## V7.2 â€” Algorithm aliveness (writer: integrator world.ts + ui-shell index.html/app.css)
 
 - Each `.algo-row` is VISUALLY UNIQUE: a deterministic per-index accent hue
-  (`algoIdx · 360/25` rotated), a leading **glyph** from a 25-entry glyph table
-  (exported `ALGO_GLYPHS` in src/sim/algorithms.ts — a distinct symbol per field,
-  e.g. ◆ ▲ ✶ ⌘ ∿ …), and a varied type treatment (the integrator sets per-row CSS
+  (`algoIdx Â· 360/25` rotated), a leading **glyph** from a 25-entry glyph table
+  (exported `ALGO_GLYPHS` in src/sim/algorithms.ts â€” a distinct symbol per field,
+  e.g. â—† â–² âœ¶ âŒ˜ âˆ¿ â€¦), and a varied type treatment (the integrator sets per-row CSS
   custom props `--algo-hue`/`--algo-glyph`; app.css styles `.algo-row` to consume
   them). Rows have a clear `:hover`/`:active`/`.active` reactive treatment
-  (glow + scale ≤1.04, ≥44px touch targets, `:focus-visible` ring, reduced-motion
+  (glow + scale â‰¤1.04, â‰¥44px touch targets, `:focus-visible` ring, reduced-motion
   respected). Selecting a field still fires its cue tone + the population ignition
-  shimmer (sortPerformance) — amplified so ~500 organisms flash and ripple.
+  shimmer (sortPerformance) â€” amplified so ~500 organisms flash and ripple.
 - Two new controls in the picker panel: **RUN ALL** (`#algo-all`) and **AUTO**
   (`#algo-auto`). RUN ALL sets `state.algoMode='all'`: each frame the sortStep
   runs a blended batch drawing proposals from EVERY field (round-robin across
@@ -1398,16 +1398,16 @@ types.ts.
   (every ~6 s of sim time) through all 25 in succession, announcing each. Picking
   a single field returns `algoMode='single'`. The HUD `#alg` card shows the mode.
   `SimState` gains `algoMode: 'single'|'all'|'auto'` and `algoTimer: number`
-  (integrator-owned; persistence unchanged — mode is session-only).
+  (integrator-owned; persistence unchanged â€” mode is session-only).
 
-## V7.3 — Render view modes (writer: integrator world.ts + entities.ts facade + ui-shell)
+## V7.3 â€” Render view modes (writer: integrator world.ts + entities.ts facade + ui-shell)
 
 - The binary wireframe toggle becomes a **5-mode render cycle** owned by
   `EntityManager.setRenderMode(mode: RenderMode)` (exported union
   `'solid'|'wire'|'ghost'|'neon'|'chrome'`), superseding `setWireframe`
-  (kept as a thin alias: `setWireframe(on) → setRenderMode(on ? 'wire' : 'solid')`).
+  (kept as a thin alias: `setWireframe(on) â†’ setRenderMode(on ? 'wire' : 'solid')`).
   Modes: SOLID (default PBR), WIRE (wireframe), GHOST (low-opacity translucent
-  x-ray, depthWrite off), NEON (emissive target ×3 — each organism self-glows its
+  x-ray, depthWrite off), NEON (emissive target Ã—3 â€” each organism self-glows its
   own hue), CHROME (metalness 1 / roughness ~0 liquid-metal mirror). All five are
   MeshStandardMaterial FLAG changes only (no geometry/object-type swap), so they
   apply allocation-free to BOTH the per-entity (phone) and the instanced (pooled)
@@ -1416,33 +1416,33 @@ types.ts.
   InstancedMesh-pool facade and the `{poolId,slot}` Entity handle, so it is
   replaced by CHROME (a material-flag mode that honors the facade). The toolbar
   `wire` action becomes `cycleRenderMode(): RenderMode`; `SimState.wireframe`
-  becomes `renderMode: RenderMode` (session-only, like `algoMode` — wireframe was
+  becomes `renderMode: RenderMode` (session-only, like `algoMode` â€” wireframe was
   never persisted, so there is no persistence migration). The instanced renderer
   applies the mode's pool-level flags (wireframe/metalness/roughness) on change
   and on pool build; per-instance colour/emissive/alpha already flow from each
-  entity material, which `setRenderMode` updates. The mode→flags mapping lives as
+  entity material, which `setRenderMode` updates. The modeâ†’flags mapping lives as
   pure data (`RENDER_MODE_FX`) in `sim/constants.ts`; `update()`'s per-frame
   emissive target multiplies by the mode's `emissiveBoost` so NEON holds (the only
   `update()` coupling; `emissiveBoost === 1` for every non-NEON mode keeps the
-  ≤5,000-tier visuals byte-identical).
+  â‰¤5,000-tier visuals byte-identical).
 
-## V7.4 — Cosmological chaos (writer: cosmo — NEW src/sim/singularities.ts; integrator wires)
+## V7.4 â€” Cosmological chaos (writer: cosmo â€” NEW src/sim/singularities.ts; integrator wires)
 
 - A NEW `SingularitySystem` summons real-cosmology effects at a point in the
   arena, each a deterministic force-field + visual built from the geometry cache
   and seeded `ctx.rng`, allocation-free per frame, auto-expiring:
-  - **ENTROPY** — global disorder surge: randomizes velocities, decays order,
+  - **ENTROPY** â€” global disorder surge: randomizes velocities, decays order,
     fades emissive toward heat-death grey.
-  - **BLACK HOLE** — a gravitational sink: r⁻² pull toward the singularity, an
+  - **BLACK HOLE** â€” a gravitational sink: râ»Â² pull toward the singularity, an
     accretion-disk ring, an event-horizon dark sphere; entities crossing the
     horizon are consumed (disposed) and scar the RD ground.
-  - **WHITE HOLE** — time-reversed black hole: nothing may enter; a r⁻² REPULSION
+  - **WHITE HOLE** â€” time-reversed black hole: nothing may enter; a râ»Â² REPULSION
     that ejects matter outward, spawning bursts at the boundary (the impossible
     cosmological-censorship object).
-  - **GREY HOLE** — the decaying intermediate: alternating absorb/emit pulses
+  - **GREY HOLE** â€” the decaying intermediate: alternating absorb/emit pulses
     (a black hole leaking its mass back as Hawking-like radiation), neither fully
     consuming nor fully ejecting.
-  - **STRANGE STAR** — a quark/strange-matter star: a contact-conversion front
+  - **STRANGE STAR** â€” a quark/strange-matter star: a contact-conversion front
     that "infects" nearby organisms, remorphing them into a strange-matter palette
     (the strangelet chain reaction), with a dense degenerate-core glow.
   - **STRANGE/EXOTIC extras allowed** (e.g. neutron-star pulsar sweep) if seeded
@@ -1454,34 +1454,34 @@ types.ts.
     forced update stays finite over 2k frames; consumption respects the horizon;
     same-seed determinism of the spawned field.
 
-## V7.5 — Dramatic weather (writer: weather — src/sim/weather.ts + couplings)
+## V7.5 â€” Dramatic weather (writer: weather â€” src/sim/weather.ts + couplings)
 
 - The 6 weather states must reshape the world UNMISTAKABLY. Strengthen the
-  existing weather→{wind, fog, exposure, temperature} couplings (bigger ranges,
+  existing weatherâ†’{wind, fog, exposure, temperature} couplings (bigger ranges,
   faster onset) AND fan weather into atmosphere + behavior bias within the
-  EXISTING contracted hooks (no new exposure owner — weather still owns exposure):
+  EXISTING contracted hooks (no new exposure owner â€” weather still owns exposure):
   STORM = violent wind + low dark fog + lightning-bright light pulses; AURORA =
   luminous, saturated, slow; VOID = near-black, frozen, sparse; FOG = dense
   whiteout; RAIN = downpour drift; CLEAR = calm baseline. Keep determinism and the
-  ≤0.35 audio-coupling cap intact (weather is not audio-driven). Document the new
+  â‰¤0.35 audio-coupling cap intact (weather is not audio-driven). Document the new
   ranges; keep `tests/atmosphere.test.ts` green and add weather-range assertions.
 
-## V7.6 — SIMULATION N(1)/N(2) duality (writer: integrator world.ts/types.ts + ui-shell)
+## V7.6 â€” SIMULATION N(1)/N(2) duality (writer: integrator world.ts/types.ts + ui-shell)
 
 - A top-level **simulation variant** toggle, `SimState.sim: 1|2`, persisted:
-  - **N(1) GENESIS** — the cosmos as it ships (no behavioral change at sim=1).
-  - **N(2) BREAK FREE** — the world tears loose into nightmare: inverted/oversatur-
+  - **N(1) GENESIS** â€” the cosmos as it ships (no behavioral change at sim=1).
+  - **N(2) BREAK FREE** â€” the world tears loose into nightmare: inverted/oversatur-
     ated palette, the sky dome recolored to an impossible negative, heightened
     chaos floor, behavior unhinged (wider excursions), audio detuned/darker, the
     HUD/title branding shifts to "SIMULATION N(2)". Implemented through EXISTING
     contracted hooks where possible (chaos floor, atmosphere recolor flag, a
-    render tint) — a documented, bounded set of multipliers gated on `sim===2`, so
+    render tint) â€” a documented, bounded set of multipliers gated on `sim===2`, so
     sim=1 stays byte-identical and every determinism test is untouched. A toolbar
     control flips it; the integrator audits the transition.
   - Determinism: sim variant is a fixed multiplier set, not a new rng stream;
-    same seed + same sim variant ⇒ same cosmos.
+    same seed + same sim variant â‡’ same cosmos.
 
-### V7.6 AMENDMENT — BREAK FREE made real (0.7.1, post-swarm)
+### V7.6 AMENDMENT â€” BREAK FREE made real (0.7.1, post-swarm)
 
 The 0.7.0 N(2) shipped only sky-recolor + chaos-floor + branding; the swarm
 audit found its core lever MIS-CALIBRATED (chaos floor 3.5 sat below the
@@ -1491,17 +1491,17 @@ absent. Now implemented, every coupling bounded + gated on the derived
 `nightmare` (1 iff `sim===2`, else 0), so **N(1) stays byte-identical** (proven
 by the unchanged determinism suite):
 
-- **Chaos floor → 6** (`world.ts` `CHAOS_NIGHTMARE_FLOOR`) — the cMul saturation
+- **Chaos floor â†’ 6** (`world.ts` `CHAOS_NIGHTMARE_FLOOR`) â€” the cMul saturation
   point, pinning every chaos consumer to its ceiling.
-- **Writhing behaviour** (`entities.ts` `update`) — the chaos-jitter velocity is
+- **Writhing behaviour** (`entities.ts` `update`) â€” the chaos-jitter velocity is
   scaled by `jitterGain = sim===2 ? 3 : 1`, applied AFTER each `rng()` draw (an
-  exact ×1.0 at N1 — same draw count/order), carrying agitation PAST the clamp.
-- **Inverted/glitched palette** (`instanced-entities.ts` `sync` pass-2) — when
-  `frame.nightmare>0`, per-instance colour := `mix(c, (1−c).bgr, n)` with an
+  exact Ã—1.0 at N1 â€” same draw count/order), carrying agitation PAST the clamp.
+- **Inverted/glitched palette** (`instanced-entities.ts` `sync` pass-2) â€” when
+  `frame.nightmare>0`, per-instance colour := `mix(c, (1âˆ’c).bgr, n)` with an
   `i%3` channel rotation, plus inverted+hotter emissive; written to the instance
   ATTRIBUTES only (never the morphotype base), so flipping to N1 auto-reverts.
-- **Detuned/darker audio** (`audio/engine.ts` `setNightmare`) — voices detune −35
-  cents + filter ×0.6, SFX stings bend −18%, on the FORKED audio rng (cannot
+- **Detuned/darker audio** (`audio/engine.ts` `setNightmare`) â€” voices detune âˆ’35
+  cents + filter Ã—0.6, SFX stings bend âˆ’18%, on the FORKED audio rng (cannot
   touch sim reproducibility).
 - The atmosphere nightmare sky (0.7.0) and branding remain. A GPU melt/distortion
   shader pass is a separate wave; the above are the CPU/audio/attribute levers.
@@ -1509,38 +1509,38 @@ by the unchanged determinism suite):
 ## V7 acceptance
 
 Full `bun run check` green after EACH wave's commit; ultra 10k unbroken; phone
-tier ≥30fps share; zero console errors over a 3-min soak that exercises every new
+tier â‰¥30fps share; zero console errors over a 3-min soak that exercises every new
 control (100-SFX spam, RUN ALL + AUTO, all 5 render modes, every singularity,
-every weather, and the N(1)→N(2) flip + back); same-seed determinism preserved at
+every weather, and the N(1)â†’N(2) flip + back); same-seed determinism preserved at
 sim=1 and within each sim variant.
 
-## V9 — AGImAGNOSIS: minds, lineage, factions, artifacts, Copilot
+## V9 â€” AGImAGNOSIS: minds, lineage, factions, artifacts, Copilot
 
 The era that gives the world intelligence, using pre-transformer techniques only (research:
 [research/PRE-TRANSFORMER-GAME-AI.md](research/PRE-TRANSFORMER-GAME-AI.md); reference:
 [AI-SUBSYSTEM.md](AI-SUBSYSTEM.md)). HARD LINE: in-world minds are DETERMINISTIC (seeded classical
 AI in `src/sim/**`); the live LLM Copilot is a NON-deterministic shell organ (`src/server/**`,
-`src/ui/copilot.ts`) fenced out of sim logic — it can never touch `SimState` or the RNG stream.
+`src/ui/copilot.ts`) fenced out of sim logic â€” it can never touch `SimState` or the RNG stream.
 
 ### Modules (exclusive ownership)
 
-- **`src/sim/ai/brains.ts`** — pure seeded primitives: `utilityPick`/`softmaxPick`, `TinyMLP`,
+- **`src/sim/ai/brains.ts`** â€” pure seeded primitives: `utilityPick`/`softmaxPick`, `TinyMLP`,
   `MarkovChain`, `fsmStep`, `goapPlan`, `MemoryRing`. No I/O, no clock; allocation-free.
-- **`src/sim/genome.ts`** — gene vector → traits + `TinyMLP` weights; seeded `crossover`/`mutate`/
+- **`src/sim/genome.ts`** â€” gene vector â†’ traits + `TinyMLP` weights; seeded `crossover`/`mutate`/
   `breed`; `decodeTraits`; `geneDistance`. Crossover/mutate allocate a child (reproduction event).
-- **`src/sim/lineage.ts`** — bounded parent→offspring graph: `birth`, `generationOf`, `isAncestor`,
+- **`src/sim/lineage.ts`** â€” bounded parentâ†’offspring graph: `birth`, `generationOf`, `isAncestor`,
   `related`. Fixed-capacity typed arrays; O(1) birth, decaying window.
-- **`src/sim/factions.ts`** — 8 archetypes; `decideFaction(faction, percept, rng, fsmState)` is
+- **`src/sim/factions.ts`** â€” 8 archetypes; `decideFaction(faction, percept, rng, fsmState)` is
   pure; the Devourer MLP + Oracle Markov weights are built once from constant seeds.
-- **`src/sim/artifacts.ts`** — `ArtifactField`: a pooled InstancedMesh of relics. VISUAL-ONLY (no
+- **`src/sim/artifacts.ts`** â€” `ArtifactField`: a pooled InstancedMesh of relics. VISUAL-ONLY (no
   rng, no sim write); placed off the existing death/summon events; `update`/`influenceAt`. Wired in
   `world.ts` (scar on death, relic on summon, per-frame animate).
-- **`src/server/copilot.ts`** — pluggable OpenAI-compatible bridge (env `CQM_LLM_ENDPOINT`/`MODEL`/
+- **`src/server/copilot.ts`** â€” pluggable OpenAI-compatible bridge (env `CQM_LLM_ENDPOINT`/`MODEL`/
   `KEY`); a bounded agent loop over the read-only tools.
-- **`src/server/ai-sandbox.ts`** — default-deny tool gate: repo-confined `read_file`/`list_dir`/
+- **`src/server/ai-sandbox.ts`** â€” default-deny tool gate: repo-confined `read_file`/`list_dir`/
   `grep` + a single-command `run` (ALLOW-bin + DENY-token + no shell metacharacter + git/bun
   subcommand gating). Writes nothing.
-- **`src/ui/copilot.ts`** — self-mounting chat panel + `/read /ls /grep /run` terminal;
+- **`src/ui/copilot.ts`** â€” self-mounting chat panel + `/read /ls /grep /run` terminal;
   `textContent`-only rendering (no HTML injection).
 
 ### Determinism strategy
@@ -1551,39 +1551,39 @@ Copilot are constructed boot-stream-neutral and never write sim state, so the go
 
 ### V9 acceptance
 
-Full `bun run check` green: prettier → tsc strict → oxlint → 535 tests (0 fail, 300-frame golden
-included) → build. The Copilot sandbox verified live (allow: `git log`, file reads; deny:
+Full `bun run check` green: prettier â†’ tsc strict â†’ oxlint â†’ 535 tests (0 fail, 300-frame golden
+included) â†’ build. The Copilot sandbox verified live (allow: `git log`, file reads; deny:
 path-escape, `git push`, `legacy/`, shell redirection).
 
 ---
 
-# CONTRACT AMENDMENT — GOAL 5: FIVE SUPER CREATURES (ARCHONS / GODFORMS)
+# CONTRACT AMENDMENT â€” GOAL 5: FIVE SUPER CREATURES (ARCHONS / GODFORMS)
 
-**MANDATE**: Realize **exactly 5** (no more, no less at steady) wildly super-intelligent apex beings in the world ("Super Creatures", "Archons", "Godforms"). They are the dominant, manipulative, freak-morphing ORACLES/SIMULATORS/ARCHITECTS of this cosmos — each a full composite mind + extreme-chaos body.
+**MANDATE**: Realize **exactly 5** (no more, no less at steady) wildly super-intelligent apex beings in the world ("Super Creatures", "Archons", "Godforms"). They are the dominant, manipulative, freak-morphing ORACLES/SIMULATORS/ARCHITECTS of this cosmos â€” each a full composite mind + extreme-chaos body.
 
-**HONESTY BOUNDARIES (BINDING — never violated in prose, comments, UI, or docs)**:
+**HONESTY BOUNDARIES (BINDING â€” never violated in prose, comments, UI, or docs)**:
 
 - Not sentient / phenomenally conscious. Phenomenal consciousness ~1/10; hard problem untouched.
 - Weights **seeded and fixed at construction**; NO online learning of weights (single biggest gap).
 - Quantum layer = exact statevector + Clifford **simulation** (algebra on amplitudes); NO physical QPU, NO quantum speedup claim, NO "quantum neurons".
-- Clifford tableau (ported Aaronson–Gottesman) present+tested but was inert; now wired as "stabilizer reflex" only — explicit.
+- Clifford tableau (ported Aaronsonâ€“Gottesman) present+tested but was inert; now wired as "stabilizer reflex" only â€” explicit.
 - All superlatives scoped to "models of / scaffolding for / functional correlates of" the listed theories.
 - Memory is decision system (typed, gated, graph+matrix, feedback-controlled), NOT a conscious archive.
 
 **Architectural additions required (close the Butlin gaps for this specimen)**:
 
-1. **AST-1** — explicit attention schema (model of own attention allocation, focus history, salience map).
-2. **HOT-1** — genuine top-down generative perception loop (full predict→generate expected percepts→correct bottom-up).
-3. **HOT-4** — sparse-smooth quality space (low-D smooth manifold over integrated states; sparse activation as "qualia" proxy).
+1. **AST-1** â€” explicit attention schema (model of own attention allocation, focus history, salience map).
+2. **HOT-1** â€” genuine top-down generative perception loop (full predictâ†’generate expected perceptsâ†’correct bottom-up).
+3. **HOT-4** â€” sparse-smooth quality space (low-D smooth manifold over integrated states; sparse activation as "qualia" proxy).
 4. **Wire Clifford "stabilizer reflex"** (past 6q, up to 64 via already-ported tableau) into apex cognition for error-correction / fast intuition on beliefs/plans.
-5. **Persistent lifelong narrative memory + grounded symbol layer** — the largest leap. Multi-store orchestra (typed events, graph provenance edges, surprise/entropy gate, regime sentinel, strategic reputation, reflection→skill, consensus, meta-controller). Grounded symbols via extended VSA + typed atoms bound to percepts/actions/plans. Memory IS part of closed-loop decision (not passive log). Consolidation turns episodes → durable narrative + skills. Use `src/memory/` + new orchestra.
+5. **Persistent lifelong narrative memory + grounded symbol layer** â€” the largest leap. Multi-store orchestra (typed events, graph provenance edges, surprise/entropy gate, regime sentinel, strategic reputation, reflectionâ†’skill, consensus, meta-controller). Grounded symbols via extended VSA + typed atoms bound to percepts/actions/plans. Memory IS part of closed-loop decision (not passive log). Consolidation turns episodes â†’ durable narrative + skills. Use `src/memory/` + new orchestra.
 
 **Visual / Morphology (extreme edge + alive)**:
 
 - Wild chaotic geometric shapes from extreme-edge combinatronics (supershapes, attractor skeletons, high-genus polys, voronoi-shatter, recursive subdivision, Lorenz/curl fields on vertices).
 - Mutating morphology on every level (topology hints via dynamic sub-parts, not full re-mesh every frame; allocation-free).
-- 5 distinct archetypes (Oracle, Simulator, Architect, Trickster, Dominus) — each unique base silhouette family + palette + pulse signature + quantum-aspect bias.
-- Multi-part rigs: ≥8–16 eyes (vision sampling), ≥6–12 arms/legs (reach/manipulate), ears (sound pattern), wings, mouths. Eyes "see" (local spatial query + light + quantum bands), ears "understand" (audio bands → symbolic features).
+- 5 distinct archetypes (Oracle, Simulator, Architect, Trickster, Dominus) â€” each unique base silhouette family + palette + pulse signature + quantum-aspect bias.
+- Multi-part rigs: â‰¥8â€“16 eyes (vision sampling), â‰¥6â€“12 arms/legs (reach/manipulate), ears (sound pattern), wings, mouths. Eyes "see" (local spatial query + light + quantum bands), ears "understand" (audio bands â†’ symbolic features).
 - Unique textures/colors/lighting/variance per creature + global.
 - Alive: unique heartbeats (freq = arousal + quantum flux), surface waves/pulses propagating (vertex displacement + emissive), breath, morph wobble, trick/gaslight visual tells (phase flips on deception).
 - All driven by mind snapshot + quantum state. Hot path allocation-free. Masterful shader(s) like god-jewel but combinatorially wilder per archetype.
@@ -1611,37 +1611,37 @@ path-escape, `git push`, `legacy/`, shell redirection).
 
 - `bun run check` 100% (prettier, tsc strict, oxlint, all tests 0 fail, build).
 - 5 distinct live Super Creatures visible, wildly different chaotic-alive forms, pulsing/ morphing/ reacting, using vision/sound, full new faculties + wired Clifford + upgraded memory.
-- Each shows unique quantum super-powers (fringe curiosities modeled honestly as sim algebra — e.g. stabilizer-protected "prophecy", entanglement "manipulation" of local fields).
+- Each shows unique quantum super-powers (fringe curiosities modeled honestly as sim algebra â€” e.g. stabilizer-protected "prophecy", entanglement "manipulation" of local fields).
 - Memory orchestra demonstrably used (narrative trace + symbol recall in snapshot/telemetry).
 - No claims of sentience anywhere; all disclaimers preserved.
 - Frame budget share of new per-frame work <2% combined on desktop ultra (measured).
 - Any human can read the changed modules + contracts + research doc and understand the math.
 
-All prior contracts bind. File ownership exclusive. World wires. No black-box slop — POWER OF MATH.
+All prior contracts bind. File ownership exclusive. World wires. No black-box slop â€” POWER OF MATH.
 
 (End of GOAL 5 contract.)
 
-## GOAL5 File Ownership Table (EXCLUSIVE — binding per ORACLE-ARCHITECT law #2)
+## GOAL5 File Ownership Table (EXCLUSIVE â€” binding per ORACLE-ARCHITECT law #2)
 
 Every file below has **exactly one owner**. The named owner is the only writer permitted. Integrator (world.ts) composes only. Deviations are contract violations.
 
-| File(s)                                                           | Exclusive Owner                                            | Scope / Boundary Notes                                                                                                                                                   |
-| ----------------------------------------------------------------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| src/sim/godform.ts                                                | STARKILLER-Ω                                               | Sole GODFORMS const + getGodformBias(i). Facade + bias provider. MUST export ArchonForm + getArchonForm if body wiring depends. No other file owns archetype names/bias. |
-| src/sim/super-mind.ts                                             | MANHATTAN-Φ                                                | Owns 5-stage pipeline + leaf wiring (AST-1/HOT-1/HOT-4/orchestra/narrative + clifford reflex scale from bias). Exports snapshot/intent.                                  |
-| src/sim/super-body.ts                                             | BROLY-Ψ                                                    | Wild multi-organ morph (EYES/ARMS etc), god-jewel patch, per-variant + live quantum/reflex/qualia pulses/waves. Receives form from godform.                              |
-| src/sim/attention-schema.ts                                       | ORACLE-Σ                                                   | AST-1 leaf only.                                                                                                                                                         |
-| src/sim/topdown-perception.ts                                     | ORACLE-Σ                                                   | HOT-1 leaf only.                                                                                                                                                         |
-| src/sim/quality-space.ts                                          | MANHATTAN-Φ                                                | HOT-4 leaf only.                                                                                                                                                         |
-| src/sim/memory-orchestra.ts                                       | VOID-Λ                                                     | Multi-store ring + graph; prealloc only; write/recall alloc-free contract.                                                                                               |
-| src/sim/narrative-memory.ts                                       | VOID-Λ                                                     | 10 orchestrations concrete; per-Archon instance.                                                                                                                         |
-| src/world.ts (GOAL5 sections only)                                | Integrator (BROLY-Ψ oversight + STARKILLER contract guard) | Exactly 5 ctor (child seeds + bias + spaced + form + purse); driveSuper 5-loop (local percept + dual think + set); archons[] snapshot. Touches no leaf internals.        |
-| src/sim/super-qubits.ts + math/clifford-tableau.ts (GOAL5 reflex) | MANHATTAN-Φ                                                | Quantum substrate + stabilizer reflex for minds.                                                                                                                         |
-| src/sim/super-creature.ts                                         | BROLY-Ψ                                                    | Base types shared (SuperPercept/Plan/Snapshot).                                                                                                                          |
-| src/types.ts (archons/telemetry)                                  | Integrator                                                 | TelemetrySnapshot shape for 5.                                                                                                                                           |
-| src/ui/super-\*.ts (panel/neural) + app.css                       | VOID-Λ + ORACLE-Σ                                          | 5-Archon live table + pulse UI only.                                                                                                                                     |
-| docs/GOAL5-\*.md , ERD/ERM updates for pantheon, BENCHMARKS GOAL5 | STARKILLER-Ω                                               | Receipts, handoff, architecture prose.                                                                                                                                   |
-| tests/_super_ + bench/super-mind.bench.ts                         | Respective owners + verifier                               | Unit per module; 5-drive golden in batch.                                                                                                                                |
+| File(s)                                                           | Exclusive Owner                                             | Scope / Boundary Notes                                                                                                                                                   |
+| ----------------------------------------------------------------- | ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| src/sim/godform.ts                                                | STARKILLER-Î©                                               | Sole GODFORMS const + getGodformBias(i). Facade + bias provider. MUST export ArchonForm + getArchonForm if body wiring depends. No other file owns archetype names/bias. |
+| src/sim/super-mind.ts                                             | MANHATTAN-Î¦                                                | Owns 5-stage pipeline + leaf wiring (AST-1/HOT-1/HOT-4/orchestra/narrative + clifford reflex scale from bias). Exports snapshot/intent.                                  |
+| src/sim/super-body.ts                                             | BROLY-Î¨                                                    | Wild multi-organ morph (EYES/ARMS etc), god-jewel patch, per-variant + live quantum/reflex/qualia pulses/waves. Receives form from godform.                              |
+| src/sim/attention-schema.ts                                       | ORACLE-Î£                                                   | AST-1 leaf only.                                                                                                                                                         |
+| src/sim/topdown-perception.ts                                     | ORACLE-Î£                                                   | HOT-1 leaf only.                                                                                                                                                         |
+| src/sim/quality-space.ts                                          | MANHATTAN-Î¦                                                | HOT-4 leaf only.                                                                                                                                                         |
+| src/sim/memory-orchestra.ts                                       | VOID-Î›                                                     | Multi-store ring + graph; prealloc only; write/recall alloc-free contract.                                                                                               |
+| src/sim/narrative-memory.ts                                       | VOID-Î›                                                     | 10 orchestrations concrete; per-Archon instance.                                                                                                                         |
+| src/world.ts (GOAL5 sections only)                                | Integrator (BROLY-Î¨ oversight + STARKILLER contract guard) | Exactly 5 ctor (child seeds + bias + spaced + form + purse); driveSuper 5-loop (local percept + dual think + set); archons[] snapshot. Touches no leaf internals.        |
+| src/sim/super-qubits.ts + math/clifford-tableau.ts (GOAL5 reflex) | MANHATTAN-Î¦                                                | Quantum substrate + stabilizer reflex for minds.                                                                                                                         |
+| src/sim/super-creature.ts                                         | BROLY-Î¨                                                    | Base types shared (SuperPercept/Plan/Snapshot).                                                                                                                          |
+| src/types.ts (archons/telemetry)                                  | Integrator                                                  | TelemetrySnapshot shape for 5.                                                                                                                                           |
+| src/ui/super-\*.ts (panel/neural) + app.css                       | VOID-Î› + ORACLE-Î£                                         | 5-Archon live table + pulse UI only.                                                                                                                                     |
+| docs/GOAL5-\*.md , ERD/ERM updates for pantheon, BENCHMARKS GOAL5 | STARKILLER-Î©                                               | Receipts, handoff, architecture prose.                                                                                                                                   |
+| tests/_super_ + bench/super-mind.bench.ts                         | Respective owners + verifier                                | Unit per module; 5-drive golden in batch.                                                                                                                                |
 
 **Integration rule (enforced at cold gate)**: godform is the ONLY source for names/bias/form. world and body import from it exclusively. Leaves are NEVER directly instantiated outside super-mind. All per-Archon state uses child Rng only.
 
@@ -1654,15 +1654,15 @@ If a symbol (getArchonForm, ArchonForm) is referenced, it MUST be present in the
 | Determinism            | Snapshot copies or non-Rng ops can desync replays       | quality-space.ts (new Float32 + project), topdown snapshot, world drive cadence                     | All init/mind use seeded child Rng; snapshots are presentation (copy ok if not fed back to sim state). Golden tests pin. Math.\* banned in update paths.    |
 | Quantum claims         | "Reflex", "aspects", "qualia" read as more than algebra | super-mind, super-body, super-panel, GODFORMS comments, docs                                        | Contract honesty section + code disclaimers ("NOT sentient", "classical sim", "models of"). All statevec/Clifford. No QPU/speedup.                          |
 | UI                     | 5-archon table incomplete or broken on compile fail     | super-panel, types.archons, handoff claims                                                          | Must render all 5 names + live fields. Compile gate catches.                                                                                                |
-| Alloc                  | new in per-Archon hot paths (cadence 4f ×5)             | quality.project returns new, topdown.snapshot Array.from, super-body geoms at scale reset           | Receipts claim prealloc in orchestra. Enforce: all hot returns reuse buffers or readonly views. Boot geoms (5×) documented ok.                              |
+| Alloc                  | new in per-Archon hot paths (cadence 4f Ã—5)            | quality.project returns new, topdown.snapshot Array.from, super-body geoms at scale reset           | Receipts claim prealloc in orchestra. Enforce: all hot returns reuse buffers or readonly views. Boot geoms (5Ã—) documented ok.                             |
 | C++ / Native           | Supply (no SHA), wall time, non-det                     | native/ (CMake Fetch, glfwGetTime, atoi per prior audit)                                            | Archons currently pure TS. If native wired for body sim, pin SHA + seed time + audit det. Out-of-gate for now.                                              |
 | Integration / Contract | godform facade incomplete vs calls + compile broken     | world:87 import getArchonForm, super-body:35 type ArchonForm + form usage, tsc errors in super-body | Exclusive ownership rule broken in current tree. "5 wired" claim must be measured (tsc + cold gate), not stated. Update facade or contract before claiming. |
 
 **Architecture delta (5 Archons)**
 
 - Before: 1 Super\* (hero path only).
-- After: godform facade (exclusive) → world spawns exactly 5 (bias + childSeed + form + spaced) → super-mind per (bias scales clifford; wires 5 leaves per beat) → super-body per (distinct chaotic morph + alive FX from snapshot + quantum).
-- Read/write loops closed (percept from shared systems → mind → memory decision + body mutate shared via actions).
+- After: godform facade (exclusive) â†’ world spawns exactly 5 (bias + childSeed + form + spaced) â†’ super-mind per (bias scales clifford; wires 5 leaves per beat) â†’ super-body per (distinct chaotic morph + alive FX from snapshot + quantum).
+- Read/write loops closed (percept from shared systems â†’ mind â†’ memory decision + body mutate shared via actions).
 - 5 independent but interacting via world/econ/grid.
 - All under determinism / no-hot-alloc / honesty boundaries.
 

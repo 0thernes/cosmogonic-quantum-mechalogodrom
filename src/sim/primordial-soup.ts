@@ -83,7 +83,12 @@ export class PrimordialSoup {
       const c = this.consciousness[i] ?? 0;
       const prog = this.eshkolPrograms[i];
       // Safe fingerprint for native .esk string DNA or number (prevents NaN on string %).
-      const programBoost = prog === undefined ? 0 : (typeof prog === 'string' ? (prog.length % 997) / 997 : (Number(prog) % 997) / 997);
+      const programBoost =
+        prog === undefined
+          ? 0
+          : typeof prog === 'string'
+            ? (prog.length % 997) / 997
+            : (Number(prog) % 997) / 997;
       const growth =
         0.001 + (corpus + inputCatalysis * 0.25) * 0.002 * wiring + programBoost * 0.001;
       this.vitality[i] = Math.min(1, v + growth);
