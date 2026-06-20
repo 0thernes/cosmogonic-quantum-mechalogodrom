@@ -98,3 +98,5 @@ NOT semver.
   are **banned** in `src/sim/**` (enforced by `tests/determinism-law.test.ts`).
 - License is **proprietary / UNLICENSED** by design — never relicense to MIT/open-source.
 - `legacy/` is preserved verbatim — never edit it.
+
+**Ralph Wiggum Loop (MANDATORY per mandate):** If any tool, push, MCP, check, or external call hangs or errors, sleep 15s then retry the exact command. Continue non-stop. Bank green, persist plan, forward progress. Used for all Tsotchke wiring + this session.

@@ -5,22 +5,22 @@ Measured results for the hot-path primitives. Reproduce with `bun run bench`
 
 ## Environment
 
-|         |                                                                 |
-| ------- | --------------------------------------------------------------- |
-| Date    | 2026-06-09                                                      |
-| CPU     | Intel Core Ultra 9 275HX (~3.46 GHz observed)                   |
-| Runtime | Bun 1.3.x (x64-win32), mitata 1.0.34                            |
+|         |                                                               |
+| ------- | ------------------------------------------------------------- |
+| Date    | 2026-06-09                                                    |
+| CPU     | Intel Core Ultra 9 275HX (~3.46 GHz observed)                 |
+| Runtime | Bun 1.3.x (x64-win32), mitata 1.0.34                          |
 | Inputs  | Deterministic via `mulberry32(42)` ” identical data every run |
 
 ## Results
 
 ### RNG (`src/math/rng.ts`)
 
-| Benchmark                                          | avg/iter | Notes                             |
-| -------------------------------------------------- | -------- | --------------------------------- |
+| Benchmark                                        | avg/iter | Notes                             |
+| ------------------------------------------------ | -------- | --------------------------------- |
 | `Math.random()` (baseline ” banned in sim logic) | 737 ps   | engine intrinsic                  |
-| `mulberry32(42)()`                                 | 1.03 ns  | +0.3 ns buys full reproducibility |
-| `hashSeed('cosmogonic-quantum-mechalogodrom')`     | 35.2 ns  | one-shot, boot only               |
+| `mulberry32(42)()`                               | 1.03 ns  | +0.3 ns buys full reproducibility |
+| `hashSeed('cosmogonic-quantum-mechalogodrom')`   | 35.2 ns  | one-shot, boot only               |
 
 Determinism costs ~40% over the native RNG in relative terms but is sub-nanosecond
 in absolute terms ” invisible against any frame budget.
@@ -103,11 +103,11 @@ method with the regression guard `tests/perf-budget.test.ts`.
 
 | Stage             | Baseline  | Optimized | Note                                        |
 | ----------------- | --------- | --------- | ------------------------------------------- |
-| `entities.update` | 15.65     | 11.63     | O(nÂ·k) behavior loop ” the dominant cost |
+| `entities.update` | 15.65     | 11.63     | O(nÂ·k) behavior loop ” the dominant cost   |
 | `instanced.sync`  | 4.64      | 4.67      | 10k matrices/frame (left as-is, see below)  |
 | `connectome`      | 1.98      | 0.60      | cadence /3 â†’ /6 at 10k                    |
 | grid rebuild      | 0.43      | 0.56      | cell 16 â†’ 10 (more cells, fewer per cell) |
-| everything else   | ~1.0      | ~1.0      | sort/quantum/rd/qc/titans/graphMind/¦     |
+| everything else   | ~1.0      | ~1.0      | sort/quantum/rd/qc/titans/graphMind/¦       |
 | **TOTAL sim-CPU** | **23.67** | **18.46** | **42 â†’ 54 fps render-free**               |
 
 At the **adaptive 6,500 steady-state target** (the ultra default an idle world settles at)
@@ -128,13 +128,13 @@ All four levers are gated to apply **only above 5,000 entities** (ultra) so the 
 desktop tiers stay byte-identical ” `nash`/`market` draw rng conditional on neighbor payoffs,
 so the spatial-hash cell size and behavior cadence are part of the seeded stream at â‰¤ 5,000.
 
-| Lever                          | Chosen   | Rejected (and why)                                                                                                                                                                                                          |
-| ------------------------------ | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Theory-behavior stride (ultra) | **3**    | 2 = baseline (no gain); 4+ thins the social behaviors visibly without a proportional win past 3                                                                                                                             |
-| Flock cadence (ultra)          | **1/2**  | every-frame = baseline; flock draws no rng so the stagger is stream-neutral                                                                                                                                                 |
+| Lever                          | Chosen   | Rejected (and why)                                                                                                                                                                                                        |
+| ------------------------------ | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Theory-behavior stride (ultra) | **3**    | 2 = baseline (no gain); 4+ thins the social behaviors visibly without a proportional win past 3                                                                                                                           |
+| Flock cadence (ultra)          | **1/2**  | every-frame = baseline; flock draws no rng so the stagger is stream-neutral                                                                                                                                               |
 | `ULTRA_GRID_CELL`              | **10**   | 16 = 13.5â†’ no (214 nb/q); 8 = 15.8 ms, 6 = 16.3, 4 = 16.0 ” all WORSE: shrinking the cell multiplies the (2Â·âŒˆr/csâŒ‰+1)Â² visited cells faster than it thins each cell. 10 = measured minimum at 13.5 ms (136 nb/q). |
-| Connectome cadence (>5k)       | **/6**   | extends the legacy 1/2/3 ladder; +/4 rung added at >2k. Connectome draws no rng â†’ cadence is determinism-neutral.                                                                                                         |
-| Adaptive ultra target          | **6500** | 10000 settles â‰ˆ 18.5 ms (54 fps render-free, no GPU headroom); 7000 â‰ˆ 11.3 ms; 6500 â‰ˆ 9.5 ms leaves clear room toward 55 fps WITH render. 10000 stays the reachable ceiling via bursts.                               |
+| Connectome cadence (>5k)       | **/6**   | extends the legacy 1/2/3 ladder; +/4 rung added at >2k. Connectome draws no rng â†’ cadence is determinism-neutral.                                                                                                       |
+| Adaptive ultra target          | **6500** | 10000 settles â‰ˆ 18.5 ms (54 fps render-free, no GPU headroom); 7000 â‰ˆ 11.3 ms; 6500 â‰ˆ 9.5 ms leaves clear room toward 55 fps WITH render. 10000 stays the reachable ceiling via bursts.                             |
 
 `instanced.sync` (â‰ˆ 4.7 ms, two O(n) passes writing 10k matrices) was profiled and left
 intact: `setMatrixAt`/`setColorAt`/Map lookups are each < 0.5 ms across 10k ” the cost is
@@ -168,11 +168,11 @@ The arena is a wide thin DISK, so areal density `âˆ N / radiusÂ²`; scaling
 (and thus `k`, and the query cost) roughly constant. Clamped to â‰¥ 1, so it is **exactly 1.0 at â‰¤ 10k** ”
 every existing tier and the determinism golden stay byte-identical; only the opt-in `mega` tier spreads.
 
-| N (entities) | ms/frame raw | ms/frame âˆšN-scaled | budget                          |
-| ------------ | ------------ | -------------------- | ------------------------------- |
-| 2,000        | 0.9          | 1.0                  | âœ… 60 fps                      |
-| 5,000        | 2.2          | 2.1                  | âœ… 60 fps                      |
-| 10,000       | 6.0          | 6.7                  | âœ… 60 fps (ceiling)            |
+| N (entities) | ms/frame raw | ms/frame âˆšN-scaled | budget                        |
+| ------------ | ------------ | -------------------- | ----------------------------- |
+| 2,000        | 0.9          | 1.0                  | âœ… 60 fps                    |
+| 5,000        | 2.2          | 2.1                  | âœ… 60 fps                    |
+| 10,000       | 6.0          | 6.7                  | âœ… 60 fps (ceiling)          |
 | 25,000       | 36.2         | **25.0**             | Ÿ¨ 30 fps                     |
 | 50,000       | 167.5        | **60.1**             | Ÿ¥ sim ~16 fps (2.8Ã— faster) |
 

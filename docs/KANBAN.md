@@ -18,13 +18,13 @@ behind the full gate (`bun run check`) and a commit.
 
 ## Legend (continued)
 
-| Symbol  | Meaning                                                          |
-| ------- | ---------------------------------------------------------------- |
-| Ÿ¥ P0 | Correctness / determinism / security ” blocks a release        |
-| Ÿ§ P1 | User-visible behaviour or contract conformance                   |
-| Ÿ¨ P2 | Quality, perf headroom, docs, cleanup                            |
-| Ÿ¦ P3 | Nice-to-have / exploratory                                       |
-| â³      | Cadenced / deferred (waiting on an external input or a decision) |
+| Symbol | Meaning                                                          |
+| ------ | ---------------------------------------------------------------- |
+| Ÿ¥ P0  | Correctness / determinism / security ” blocks a release          |
+| Ÿ§ P1  | User-visible behaviour or contract conformance                   |
+| Ÿ¨ P2  | Quality, perf headroom, docs, cleanup                            |
+| Ÿ¦ P3  | Nice-to-have / exploratory                                       |
+| â³     | Cadenced / deferred (waiting on an external input or a decision) |
 
 **WIP limits:** Next â‰¤ 6 Â· In Progress â‰¤ 3 Â· Review â‰¤ 2.
 

@@ -45,10 +45,10 @@ seed**.
 | TypeScript                     | 50,751 | 63.98 % | â‰ˆ 2/3  |
 | Markdown                       | 15,965 | 20.13 % | â‰ˆ 1/5  |
 | HTML                           | 8,190  | 10.32 % | â‰ˆ 1/10 |
-| C++ (native engine, ADR-0007)  | 1,644  | 1.63 %  | ”      |
+| C++ (native engine, ADR-0007)  | 1,644  | 1.63 %  | ”        |
 | CSS (Tailwind source)          | 1,644  | 1.55 %  | â‰ˆ 1/64 |
-| XML (master files)             | 428    | 0.54 %  | ”      |
-| bun.lock / YAML / JSON / other | 1,644  | 1.84 %  | ”      |
+| XML (master files)             | 428    | 0.54 %  | ”        |
+| bun.lock / YAML / JSON / other | 1,644  | 1.84 %  | ”        |
 
 **Code (TS + C++ + HTML + CSS) = 61,644 lines = 77.5 %**; documentation + config = 22.5 %. (Totals are
 measured over all tracked authored files, excluding the vendored `node_modules/` and the generated
@@ -181,8 +181,8 @@ A deterministic, allocation-free kernel of pre-transformer techniques (`sim/ai/b
 | Primitive                                       | Technique (origin)                                                 |
 | ----------------------------------------------- | ------------------------------------------------------------------ |
 | `utilityPick` / `softmaxPick`                   | utility / needs AI (The Sims, 2000)                                |
-| `TinyMLP`                                       | single-hidden-layer perceptron ” an inheritable gene             |
-| `MarkovChain`                                   | first-order Markov (Shannon 1948) ” agent "speech"               |
+| `TinyMLP`                                       | single-hidden-layer perceptron ” an inheritable gene               |
+| `MarkovChain`                                   | first-order Markov (Shannon 1948) ” agent "speech"                 |
 | `fsmStep`                                       | finite-state machine (Pac-Man 1980)                                |
 | `goapPlan`                                      | goal-oriented action planning (F.E.A.R., 2005)                     |
 | `MemoryRing`                                    | bounded episodic memory (Halo 2 blackboard, 2004)                  |
@@ -266,12 +266,12 @@ intelligence is engineered, not downloaded.**
 
 ## 8 Â· Memory, performance & hardware footprint
 
-| Resource                        | Requirement                                                                                                                                                                                                                                                                                                                             |
-| ------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **GPU**                         | Any **WebGL2** device ” integrated Intel / Apple / Android included. Quality tiers auto-scale (DPR cap, shadows, entity cap, instancing) down to phones. No discrete/RTX GPU required.                                                                                                                                                |
-| **NPU / AI-accelerator / TOPS** | **Zero.** No transformer inference. All organism-brain forward passes â‰ˆ 10,000 Ã— ~140 FLOP Ã— 60 fps â‰ˆ **~0.08 GFLOP/s** ” negligible on one CPU core. (The optional copilot chat calls a **remote** free LLM; that model never runs on-device.)                                                                                 |
-| **CPU**                         | Any modern CPU. The single-threaded sim loop is the bottleneck at 10k, not the GPU. A `perf-budget.test.ts` enforces the per-frame budget.                                                                                                                                                                                              |
-| **RAM**                         | â‰ˆ **300“600 MB** resident at full population (Three.js scene + typed-array entity state + instanced buffers + audit ring).                                                                                                                                                                                                          |
+| Resource                        | Requirement                                                                                                                                                                                                                                                                                                                       |
+| ------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **GPU**                         | Any **WebGL2** device ” integrated Intel / Apple / Android included. Quality tiers auto-scale (DPR cap, shadows, entity cap, instancing) down to phones. No discrete/RTX GPU required.                                                                                                                                            |
+| **NPU / AI-accelerator / TOPS** | **Zero.** No transformer inference. All organism-brain forward passes â‰ˆ 10,000 Ã— ~140 FLOP Ã— 60 fps â‰ˆ **~0.08 GFLOP/s** ” negligible on one CPU core. (The optional copilot chat calls a **remote** free LLM; that model never runs on-device.)                                                                             |
+| **CPU**                         | Any modern CPU. The single-threaded sim loop is the bottleneck at 10k, not the GPU. A `perf-budget.test.ts` enforces the per-frame budget.                                                                                                                                                                                        |
+| **RAM**                         | â‰ˆ **300“600 MB** resident at full population (Three.js scene + typed-array entity state + instanced buffers + audit ring).                                                                                                                                                                                                      |
 | **Storage / download**          | `dist/` is 109 MB on disk (the full multi-page build), but the **app's initial payload is the ~960 KB entry chunk + Three.js** (single-digit MB; ~1“1.5 MB gzipped). The bulk ” **ten 3.2 MB chunks (~32 MB) of Mermaid** ” loads only on `/docs`, plus ~12 MB of self-hosted-font CSS. Routes load only what they need, gzipped. |
 
 Complexity classes are catalogued in [COMPLEXITY.md](COMPLEXITY.md); hot-path benchmarks in
@@ -353,12 +353,12 @@ Physicist** (determinism, measurement, frame budgets, provenance).
 |   293 | sim/factions.ts           |    92 | sim/cosmic-web.ts               |
 |   287 | sim/reaction-diffusion.ts |    87 | sim/nhi-system.ts               |
 |   249 | math/games.ts             |    64 | logging/logger.ts               |
-|   ” | ”                       |    63 | sim/gold-lattice.ts Â· main.ts  |
-|   ” | ”                       |    61 | math/scalar.ts                  |
-|   ” | ”                       |    59 | sim/quantum-lattice.ts          |
-|   ” | ”                       |    52 | core/postfx.ts                  |
-|   ” | ”                       |    40 | math/rng.ts                     |
-|   ” | ”                       |    20 | sim/morphotypes.ts              |
+|     ” | ”                         |    63 | sim/gold-lattice.ts Â· main.ts  |
+|     ” | ”                         |    61 | math/scalar.ts                  |
+|     ” | ”                         |    59 | sim/quantum-lattice.ts          |
+|     ” | ”                         |    52 | core/postfx.ts                  |
+|     ” | ”                         |    40 | math/rng.ts                     |
+|     ” | ”                         |    20 | sim/morphotypes.ts              |
 
 ### `tests/` (100 files Â· 14,117 lines)
 
