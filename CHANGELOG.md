@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.13.0] - 2026-06-20
+
+### Release version bump + full docs sync
+
+- Bumped release version to 0.13.0 (was stale at 0.12.0).
+- All docs (README, ARCHITECTURE, ERD/ERM/ERP, masters, SPECS, LABS, in-app Dome/World help/observatory, built HTML) re-audited and ensured 100% match on current paradigm: Tsotchke fully wired (all repos), digital biologics in Petri/primordial-soup, Super Creature as start only, "Grow What Thou Wilt", accurate/truthful/current. Local + GH README/About synced.
+- GH repo description updated to match.
+
 ## [0.12.0] - 2026-06-20
 
 ### Tsotchke Full Integration: Petri Dish for Digital Biologics & Sentience
