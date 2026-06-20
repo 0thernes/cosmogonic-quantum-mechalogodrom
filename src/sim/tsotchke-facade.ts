@@ -64,6 +64,8 @@ export {
   vecNorm,
   vecDot,
 } from '../math/quantum-natural-gradient';
+export { quantumCoherence, type CoherenceSnapshot } from '../math/quantum-coherence';
+export { quantumMagic, type MagicSnapshot } from '../math/quantum-magic';
 export { ulgFieldSample, ulgTriadHandoff } from './ulg-bridge';
 export {
   TSOTCHKE_FILE_COUNT,
