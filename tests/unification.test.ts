@@ -85,7 +85,9 @@ describe('knowledge base — query / holds', () => {
   test('query returns one substitution per matching fact', () => {
     const sols = query(compound('parent', atom('zeus'), lvar('C')), kb);
     expect(sols.length).toBe(2);
-    const children = sols.map((s) => walk(lvar('C'), s)).map((t) => (t.tag === 'atom' ? t.value : '?'));
+    const children = sols
+      .map((s) => walk(lvar('C'), s))
+      .map((t) => (t.tag === 'atom' ? t.value : '?'));
     expect(children.sort()).toEqual(['ares', 'hebe']);
   });
 

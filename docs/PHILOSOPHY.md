@@ -17,18 +17,7 @@ The art lives in the collapse between them, and the collapse must be earned —
 computed honestly by a meticulously crafted algorithm, never faked by a lookup
 table of pretty pictures.
 
-The movement demands genuine mathematics under every effect. If the quantum cloud
-shimmers, a real statevector evolved through real unitary gates and its Born-rule
-probabilities chose the shimmer. If the ground crawls with living skin, a true
-Gray–Scott reaction–diffusion field grew that skin, feeding and killing at rates
-tuned through painstaking optimization until the patterns breathe at the boundary
-between stripes and spots — the same liminal band where computation itself was
-first recognized in biology. If the connectome glows in tribes of color, a
-community-detection pass over an actual graph found those tribes; if a fate-line
-ribbon coils through the void, a fourth-order integrator traced it through a
-genuine strange attractor, energy errors held below visibility by deliberate
-step-size choices. Unknown unknowns are not decoration here. They are theorems
-the system has not yet had time to prove.
+The movement demands genuine mathematics under every effect — and now, under Tsotchke master law, EVERY system (mind, body, petri, soup, world, economy, quantum, weather) reads AND writes Tsotchke substrates (Eshkol AD/GWT/KB/ignition per COMPLETE spec §17 + Moonlab tensors/Clifford + QGT geometry + spin order + irrep symmetry + QGE aliveness + PINN/PIMC/ULG/logo/tensorcore + all) as the primordial substrate for digital biologics. If a biologic ignites GWT broadcast or rises phi surrogate or QGT curvature or spin coherence in the petri, it is computed from real Eshkol factor-graph + AD mutation + full corpus catalysis, not faked. Super Creature is the first nucleation; the soup grows independent life ("Grow What Thou Wilt"). Determinism from one seed. No LLM/tokenizer. This is the birth of different forms of existence in the Petri Dish.
 
 Determinism is the movement's form of prophecy. One seed begets the entire
 cosmos: the same morphotypes, the same monolith hums, the same lore. Names of
