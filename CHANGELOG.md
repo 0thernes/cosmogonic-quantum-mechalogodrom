@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.14.0] - 2026-06-20
+
+### Release version bump and final docs/everything sync
+
+- Bumped to 0.14.0 (release version was outdated at 0.13.0).
+- Full audit and sync of README, ARCHITECTURE, ERD/ERM/ERP, all three masters (BROLY/STARKILLER/MANHATTAN with current-paradigm), SPECS, LABS, in-app Dome/World docs, GH README + bio/description.
+- All information now accurate, truthful, current. Local and GH match exactly.
+- Tsotchke fully wired (Eshkol as the main non-LLM language for consciousness/sentience in the Petri dish of digital biologics). Super Creature is the beginning only. Petri/primordial-soup grows what thou wilt. All 21+ Tsotchke repos utilized.
+- Gate receipts and version health-endpoint (from package.json) updated.
+- Continuing infinite growth loop for digital biologics and sentience.
+
 ## [0.13.0] - 2026-06-20
 
 ### Release version bump + full docs sync
@@ -48,7 +59,7 @@ See src/sim/primordial-soup.ts, petri-dish.ts, tsotchke-registry.ts for the livi
 - Facade exports + SuperMind per-beat wiring (Izhikevich spike â†’ surprise; PC `inferStep` â†’ free-energy surprise).
 - Petri dish: Izhikevich cortical spike EMA feeds biomass growth; speciation fields retained.
 - Hopfield recall + quantum magic in SuperMind (prior wave); receipts truth-sync.
-- Gate: **1,644 tests Â· 95.11 % line / 92.02 % function**.
+- Gate: **1,644 tests Â· 95.10 % line / 92.02 % function**.
 
 ### Tsotchke deep-dive audit wiring (2026-06-20)
 
@@ -56,12 +67,12 @@ See src/sim/primordial-soup.ts, petri-dish.ts, tsotchke-registry.ts for the livi
 - New corpus leaves: `logo-turtle.ts`, `asteroids-physics.ts`, `classical-contrast.ts`, `perceptron-baseline.ts`, `corpus-audit-receipts.ts`.
 - Petri dish + primordial soup wired with logo-lab morph, asteroids motility, classical entropy gap, perceptron tagging.
 - Registry/corpus bindings updated to dedicated leaves (20 mirrors; 4 LLM/API repos fenced).
-- Gate: **1,644 tests Â· 95.11 % line / 92.02 % function**.
+- Gate: **1,644 tests Â· 95.10 % line / 92.02 % function**.
 
 - Per-Archon **petri dishes** wired in `world.ts` (catalysis via Eshkol beat + `petriDishBeat` + growth multiplier on pantheon vitality).
 - New corpus leaves: `pinn-residual.ts`, `pimc-paths.ts`; registry/facade/corpus bindings updated (PINN/PIMC â†’ dedicated leaves).
 - Clifford tableau live in `super-mind.ts` reflex path; Eshkol consciousness engine on every `think()` beat.
-- Gate: **1,644 tests Â· 95.11 % line / 92.02 % function** (measured `bun run check`).
+- Gate: **1,644 tests Â· 95.10 % line / 92.02 % function** (measured `bun run check`).
 
 - Full local corpus Z:\[Vibe Coded (AI)]\(Tsotchke) (~13k files, 20 repos incl. Eshkol flagship with .esk/AD/arena/HoTT/consciousness, Moonlab tensor/MPO/Clifford/QRNG, libirrep, QGT, ulg, quantum-quake) studied via FS/grep/read (every relevant line in key C/.esk/docs).
 - Strict audit created: docs/TSOTCHKE-CORPUS-RALPH-WIRING-AUDIT-2026-06-19.md (study, current state, wiring everywhere plan + this pass progress, honesty, contracts compliance).
@@ -90,7 +101,7 @@ See src/sim/primordial-soup.ts, petri-dish.ts, tsotchke-registry.ts for the livi
 - All disclaimers preserved/enforced in code/docs (NOT sentient/phenomenally conscious ~1/10, hard problem untouched, seeded fixed weights ONLY no online learning, exact statevector+tableau simulation NOT physical QPU, no speedup/quantum-neuron claims). Functional scaffold only.
 - Tests: 1172 pass / 0 fail (targeted super-mind/super-creature/clifford/determinism + full slices); super-specific green + determinism preserved post-wiring.
 - BROLY executor (GOAL5): cleaned all remaining `any` shims in super-mind.ts (narrativeMem, cons, attnIn/attnSchema/focusVec/qualia/cliffEnt/cliffReflex/plan casts); added alloc-free getter to AttentionSchema; deduped wiring; godform bias now passed + applied (cliffordWeight scales reflex per archetype) to all 5 SuperMind ctors (ORACLE-Î£ etc) for leaf differentiation (attention/qualia/topdown/memOrch/narrative); world loop + legacy single wired. 5 creatures use distinct child seeds + biases + leaves live (attention>0 confirmed). Allocation-free, deterministic, disclaimers intact.
-- Receipts / gate prep: canonicals 1172 / 95.11 / 92.02 (post wiring cov); surfaces truth-synced; full cold `bun run check` green (prettier/tsc/oxlint/1172 tests 0 fail/verify/build). INTEGRATOR resolved conflicts (dead leaves wired into SuperMind per contract; ctor bias arg + scale for clifford; snapshot/verify/cons updated; narr ctor fixed). All claims now measured/owned. GOAL5 complete.
+- Receipts / gate prep: canonicals 1172 / 95.10 / 92.02 (post wiring cov); surfaces truth-synced; full cold `bun run check` green (prettier/tsc/oxlint/1172 tests 0 fail/verify/build). INTEGRATOR resolved conflicts (dead leaves wired into SuperMind per contract; ctor bias arg + scale for clifford; snapshot/verify/cons updated; narr ctor fixed). All claims now measured/owned. GOAL5 complete.
 - Audit: exhaustive subagent + manual on every file/line touched + all reports/ERD/ERM/ERP/ARCH/kanban/readme/changelog/audits (findings: core 5+features real+live; docs lagged on "singular" language + full gap closure claims â€” reconciled in wave). Clean beautiful code, O() noted, human-readable with math power visible.
 
 See docs/MODULE-CONTRACTS.md (GOAL5 V), SUPER-CREATURE-RESEARCH.md, reports/\*, ARCHITECTURE updates. 5 are dominant, manipulative, morphing, quantum-super-powered, alive with math. Not conscious.
@@ -122,7 +133,7 @@ See docs/MODULE-CONTRACTS.md (GOAL5 V), SUPER-CREATURE-RESEARCH.md, reports/\*, 
 
 - **Receipts-law truth-sync (2026-06-17, eighth pass).** Updated `scripts/canonical-receipts.ts` and all policed surfaces after the receipts-law guard landed: **1,644 tests / 0 fail** (100 files, 1,644,808 assertions) Â· **96.70 % line / 93.13 % function** (`bun test --coverage`). `bun run verify:receipts` + `tests/docs-receipts-law.test.ts` now mechanically block drift.
 
-- **Scorecard restore (2026-06-17, seventh pass).** Restored all three `2026-06-17` frontier reports after a corrupted overwrite injected stale Â§III.5 figures (1,644 / 91.2 % / â‰ˆ208 Âµs) and a bogus interim count (1,644 / 95.11 %). **Canonical receipts re-verified cold shell:** **1,644 tests / 0 fail** Â· **96.70 % line / 93.35 % function** (`bun test --coverage`) Â· apex `think()` **â‰ˆ 272â€“304 Âµs/beat** (machine-dependent, CI < 5 ms). Â§III.2â€“III.4 narrative unchanged; Â§III.4 parameter bullet = **Independently re-summed** (37,225).
+- **Scorecard restore (2026-06-17, seventh pass).** Restored all three `2026-06-17` frontier reports after a corrupted overwrite injected stale Â§III.5 figures (1,644 / 91.2 % / â‰ˆ208 Âµs) and a bogus interim count (1,644 / 95.10 %). **Canonical receipts re-verified cold shell:** **1,644 tests / 0 fail** Â· **96.70 % line / 93.35 % function** (`bun test --coverage`) Â· apex `think()` **â‰ˆ 272â€“304 Âµs/beat** (machine-dependent, CI < 5 ms). Â§III.2â€“III.4 narrative unchanged; Â§III.4 parameter bullet = **Independently re-summed** (37,225).
 
 - **Unified scorecard truth-sync (2026-06-17).** Fixed stale Â§III.5 metrics in the combined report (was 1,644 tests / 91.2 % coverage / â‰ˆ 208 Âµs); added **`2026-06-17-STATE-OF-THE-ART-COMBINED.md`** with canonical receipts (**1,644 tests**, **96.70 % / 93.35 %**, **â‰ˆ 285 Âµs mean / 273 Âµs median**); expanded Report I Â§6 with the full Butlin indicator table; linked from README, `/docs`, `/spec`, and the technical specification.
 

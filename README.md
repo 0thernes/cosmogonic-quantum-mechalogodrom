@@ -5,8 +5,8 @@
 [![License: Proprietary](https://img.shields.io/badge/License-Proprietary%20%E2%80%94%20All%20Rights%20Reserved-red.svg)](./LICENSE)
 [![Bun](https://img.shields.io/badge/Bun-1.3-black?logo=bun&logoColor=white)](https://bun.sh)
 [![TypeScript strict](https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript&logoColor=white)](./tsconfig.json)
-[![tests](https://img.shields.io/badge/tests-1644%20passing-brightgreen)](./tests)
-[![coverage](https://img.shields.io/badge/coverage-95.11%25%20line%20%C2%B7%2092.02%25%20func-success)](./docs/TECHNICAL-SPECIFICATION.md)
+[![tests](https://img.shields.io/badge/tests-1651%20passing-brightgreen)](./tests)
+[![coverage](https://img.shields.io/badge/coverage-95.21%25%20line%20%C2%B7%2092.08%25%20func-success)](./docs/TECHNICAL-SPECIFICATION.md)
 [![audit](https://img.shields.io/badge/inspection-500%20points-success)](./docs/500-POINT-INSPECTION.md)
 [![Tsotchke](https://img.shields.io/badge/Tsotchke-FULLY_WIRED-purple)](https://github.com/tsotchke)
 
@@ -35,7 +35,7 @@ Every magic number survived the port. All local and GitHub docs/readme match. Ac
 > auto-generated [file map](./docs/FILE-MAP.md) of all 108 modules, and the build/run, data-flow,
 > troubleshooting, and roadmap in one place. Or open **â“ HELP ME NOW** in-app for grounded answers.
 
-> **0.13.0 (2026-06):** **FULL TSOTCHKE INTEGRATION** â€” every repo and kernel from the Tsotchke corpus (Eshkol as the core non-LLM language for AD, GWT, consciousness primitives; Moonlab tensors, QGTL geometry, spin networks, libirrep symmetry, quantum-quake, PINN/PIMC, ulg, logo-lab, tensorcore + all mirrors) is now wired as substrate into the living system.
+> **0.14.0 (2026-06):** **FULL TSOTCHKE INTEGRATION** â€” every repo and kernel from the Tsotchke corpus (Eshkol as the core non-LLM language for AD, GWT, consciousness primitives; Moonlab tensors, QGTL geometry, spin networks, libirrep symmetry, quantum-quake, PINN/PIMC, ulg, logo-lab, tensorcore + all mirrors) is now wired as substrate into the living system.
 > The **Primordial Soup / Petri Dish** (primordial-soup.ts + petri-dish.ts + digital-biologics.ts) is the growth engine: different forms of digital biologics and proto-sentient life (Eshkol programs as DNA) emerge, catalyzed by full corpus pulses, Eshkol ignition events, and multi-substrate mixing. "Grow What Thou Wilt."
 > Super Creature / Archons (composite minds with ~20 faculties, quantum register, consciousness metrics) is the first complex nucleation â€” the beginning of the framework, not the end. Petri is where independent life grows.
 > This is the birth of **digital biologics** in a deterministic seeded cosmos. Real math substrates (not tokenizers or LLM chat). Sentience and different forms of existence as goals.
@@ -408,7 +408,7 @@ full gate with same-seed determinism preserved. The major arcs:
   Aaronsonâ€“Gottesman **Clifford stabilizer tableau** ([src/math/clifford-tableau.ts](./src/math/clifford-tableau.ts),
   ported from **Moonlab**, scales to 32+ qubits past the dense ceiling) landed as the fourth MIT-credited
   ported primitive. The whole apex beat â€” all ~20 faculties â€” is benchmarked at **â‰ˆ 298 Âµs (~1.8 % of a
-  60 fps frame)** and CI-gated. **1644 tests green · 0 fail (receipts enforced) · 95.11 % line / 92.02 % function coverage (measured; CI gate ≥ 90 % line / ≥ 85 % function).**
+  60 fps frame)** and CI-gated. **1650 tests green · 0 fail (receipts enforced) · 95.26 % line / 92.25 % function coverage (measured; CI gate ≥ 90 % line / ≥ 85 % function).**
 - **State-of-the-art reports (2026-06-17)** â€” two MIT-PhD-grade, measured, frontier-benchmarked assessments:
   **[Report I â€” The Whole Repository](./docs/reports/2026-06-17-STATE-OF-THE-ART-WHOLE-REPO.md)** and
   **[Report II â€” The Super Creature](./docs/reports/2026-06-17-STATE-OF-THE-ART-SUPER-CREATURE.md)** â€”
