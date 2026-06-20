@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -6,7 +6,7 @@
     <!-- V81: revalidate the document so a returning visitor never reads a stale cached page (paired with
          the build-pages ?v= cache-buster on nav links). -->
     <meta http-equiv="Cache-Control" content="no-cache, must-revalidate" />
-    <title>Docs — Cosmogonic Quantum Mechalogodrom</title>
+    <title>Docs â€” Cosmogonic Quantum Mechalogodrom</title>
     <meta
       name="description"
       content="Report page: file/folder architecture, ERD/ERM/ERP data model, frame pipeline, and the V1-V100 evolution of the Cosmogonic Quantum Mechalogodrom."
@@ -202,7 +202,7 @@
         color: var(--accent);
       }
       .toc a::before {
-        content: '› ';
+        content: 'â€º ';
         color: var(--warn);
       }
       .card {
@@ -223,7 +223,7 @@
       pre.mermaid[data-processed='true'] {
         color: inherit;
       }
-      /* Interactive diagram viewport (pan / zoom / fullscreen) — wired in src/docs-page.ts */
+      /* Interactive diagram viewport (pan / zoom / fullscreen) â€” wired in src/docs-page.ts */
       .diagram-zoom {
         position: relative;
         overflow: hidden;
@@ -401,7 +401,7 @@
         max-width: 78ch;
       }
       ul.spec li::before {
-        content: '◆';
+        content: 'â—†';
         position: absolute;
         left: 0;
         color: var(--warn);
@@ -484,7 +484,7 @@
         <span class="badge">titans <b>10</b></span>
         <span class="badge">algorithms <b>25</b></span>
         <span class="badge">songs <b>6</b></span>
-        <span class="badge">license <b>Proprietary — All Rights Reserved</b></span>
+        <span class="badge">license <b>Proprietary â€” All Rights Reserved</b></span>
       </div>
 
       <nav class="toc" aria-label="Table of contents">
@@ -511,92 +511,92 @@
           class="tree"
           aria-label="Repository file tree"
         ><span class="root">cosmogonic-quantum-mechalogodrom/</span>
-├─ <span class="file">server.ts</span>            <span class="note">Bun.serve fullstack host: bundles /, /docs, serves /lab + /api/{health,audit}</span>
-├─ <span class="file">index.html</span>           <span class="note">the dome (/) — app shell, panels, observatory DOM, touch controls</span>
-├─ <span class="file">docs.html</span>            <span class="note">this report (/docs) — architecture, ERD/ERM/ERP, eras (mermaid inline)</span>
-├─ <span class="dir">lab/</span>
-│   └─ <span class="file">quantum-wildbeyond.html</span>  <span class="note">self-contained p5.js lab, 4 pages of 3D data-visuals (CDN-only, not bundled)</span>
-├─ <span class="dir">src/</span>
-│   ├─ <span class="file">main.ts</span>           <span class="note">browser entry: boots the World from index.html</span>
-│   ├─ <span class="file">world.ts</span>          <span class="note">composition root: owns SimState, builds SimContext, ticks every system per frame</span>
-│   ├─ <span class="file">types.ts</span>          <span class="note">the type hub — SimState, SimContext, TelemetrySnapshot, MorphType</span>
-│   ├─ <span class="file">docs-page.ts</span>      <span class="note">this page's entry: initializes mermaid (dark theme) and renders the diagrams</span>
-│   ├─ <span class="dir">core/</span>
-│   │   ├─ <span class="file">engine.ts</span>      <span class="note">three.js renderer, scene, camera, lighting rig</span>
-│   │   └─ <span class="file">quality.ts</span>     <span class="note">detectQuality — device tier ladder (phone..ultra), entity caps, throttles</span>
-│   ├─ <span class="dir">sim/</span>              <span class="note">the simulation systems (V1 core + V2 wildbeyond + V3 pantheon + V4 atmosphere)</span>
-│   │   ├─ <span class="file">constants.ts</span>   <span class="note">leaf — arena scale, behavior names, morph count, tuning tuples</span>
-│   │   ├─ <span class="file">geometry-cache.ts</span> <span class="note">40 shared geometries reused across all meshes</span>
-│   │   ├─ <span class="file">morphotypes.ts</span> <span class="note">deterministic creature templates (100 legacy / 250 phylum-mode)</span>
-│   │   ├─ <span class="file">phyla.ts</span>       <span class="note">10 phyla — hue bands, geometry families, behavior pools, home sectors</span>
-│   │   ├─ <span class="file">behaviors.ts</span>   <span class="note">26 behavioral fields driving per-entity motion</span>
-│   │   ├─ <span class="file">algorithms.ts</span>  <span class="note">25 visible sorting-field algorithms, each a distinct spatial signature</span>
-│   │   ├─ <span class="file">entities.ts</span>    <span class="note">EntityManager — births, deaths, behavior dispatch, RD scars on death</span>
-│   │   ├─ <span class="file">instanced-entities.ts</span> <span class="note">instanced PBR pools (per-instance color + emissive vec4)</span>
-│   │   ├─ <span class="file">shoggoths.ts</span>   <span class="note">drifting Lorenz-ish predators with tendrils</span>
-│   │   ├─ <span class="file">puppet-masters.ts</span> <span class="note">100 NPC intelligences (14 mobile) — 3 named heroes + WRAITH hands</span>
-│   │   ├─ <span class="file">titans.ts</span>      <span class="note">10 colossal economies waging an iterated prisoner's dilemma</span>
-│   │   ├─ <span class="file">weather.ts</span>     <span class="note">weather state machine (CLEAR..FOG..STORM..VOID..AURORA)</span>
-│   │   ├─ <span class="file">quantum.ts</span>     <span class="note">QuantumCloud — point cloud that implodes on register collapse</span>
-│   │   ├─ <span class="file">qcircuit.ts</span>    <span class="note">QuantumCircuitSystem — gate sequences, bands to the cloud</span>
-│   │   ├─ <span class="file">reaction-diffusion.ts</span> <span class="note">Gray-Scott 128x128 field, ground emissiveMap</span>
-│   │   ├─ <span class="file">graph-mind.ts</span>  <span class="note">graphology Louvain communities + PageRank over the connectome</span>
-│   │   ├─ <span class="file">connectome.ts</span>  <span class="note">neural link graph between nearby entities</span>
-│   │   ├─ <span class="file">constellations.ts</span> <span class="note">d3-delaunay Voronoi sectors over fixed monolith sites</span>
-│   │   ├─ <span class="file">lore.ts</span>        <span class="note">sha256-seeded name generator (sectors, tribes, stars, omens)</span>
-│   │   ├─ <span class="file">analytics.ts</span>   <span class="note">simple-statistics windows — trend, z-omens</span>
-│   │   ├─ <span class="file">atmosphere.ts</span>  <span class="note">alien sky dome, haze bands, particulate layer, aurora curtain</span>
-│   │   ├─ <span class="file">viz3d.ts</span>       <span class="note">in-scene holographic data sculptures (phylum towers, titan obelisks)</span>
-│   │   └─ <span class="file">environment.ts</span> <span class="note">ground, light rig, audio-reactive shimmer</span>
-│   ├─ <span class="dir">math/</span>            <span class="note">pure deterministic leaves (no three.js, fully bun-testable)</span>
-│   │   ├─ <span class="file">rng.ts</span>        <span class="note">mulberry32 seeded Rng — the single source of all sim randomness</span>
-│   │   ├─ <span class="file">scalar.ts</span>     <span class="note">clamp, lerp, TAU, dist2XZ and friends</span>
-│   │   ├─ <span class="file">spatial-hash.ts</span> <span class="note">uniform grid for neighbor queries</span>
-│   │   ├─ <span class="file">quantum.ts</span>    <span class="note">QuantumRegister — 2^n complex amplitudes, gates, measurement</span>
-│   │   └─ <span class="file">games.ts</span>      <span class="note">prisoner's-dilemma payoff + replicator-dynamics helpers</span>
-│   ├─ <span class="dir">audio/</span>
-│   │   ├─ <span class="file">songs.ts</span>      <span class="note">leaf — 6 dramatic songs (chords, melodies, character)</span>
-│   │   ├─ <span class="file">engine.ts</span>     <span class="note">AudioEngine — WebAudio synthesis, sub-bass, arpeggios, LFO swells</span>
-│   │   └─ <span class="file">analysis.ts</span>   <span class="note">AudioBands — AnalyserNode tap to bass/mid/treble/level</span>
-│   ├─ <span class="dir">ui/</span>
-│   │   ├─ <span class="file">input.ts</span>      <span class="note">keys, mouse look, zoom, touch joystick + radial wheel accumulators</span>
-│   │   ├─ <span class="file">hud.ts</span>        <span class="note">heads-up readouts (sector, weather, algorithm, lore)</span>
-│   │   ├─ <span class="file">panels.ts</span>    <span class="note">collapsible glass panels (telemetry, control, audit)</span>
-│   │   ├─ <span class="file">graphs.ts</span>     <span class="note">Sparkline — small canvas time-series</span>
-│   │   └─ <span class="file">observatory.ts</span> <span class="note">4-page, 16-canvas live data observatory</span>
-│   ├─ <span class="dir">logging/</span>
-│   │   ├─ <span class="file">logger.ts</span>     <span class="note">leaf ring logger (client + server)</span>
-│   │   └─ <span class="file">audit.ts</span>      <span class="note">AuditTrail — fire-and-forget POST /api/audit</span>
-│   ├─ <span class="dir">memory/</span>
-│   │   └─ <span class="file">store.ts</span>      <span class="note">MemoryStore — persisted seed/song/sessions across reloads</span>
-│   └─ <span class="dir">styles/</span>
-│       └─ <span class="file">app.css</span>      <span class="note">responsive system — phone sheets, foldable, tablet, TV 10-foot</span>
-├─ <span class="dir">docs/</span>
-│   ├─ <span class="file">ARCHITECTURE.md</span>  <span class="note">module graph + composition narrative (mirrors this page)</span>
-│   ├─ <span class="file">ERD.md</span>           <span class="note">entity-relationship source for the diagram below</span>
-│   ├─ <span class="file">MODULE-CONTRACTS.md</span> <span class="note">binding per-module spec (V1..V6) — contract wins over vibes</span>
-│   ├─ <span class="file">PHILOSOPHY.md</span>     <span class="note">aesthetic constitution — real math under every effect</span>
-│   ├─ <span class="file">DESIGN-SYSTEM.md</span>  <span class="note">color, type, panel + wireframe conventions</span>
-│   ├─ <span class="file">WIREFRAMES.md</span>     <span class="note">layout sketches for the dome + observatory</span>
-│   ├─ <span class="file">COMPLEXITY.md</span>     <span class="note">per-system complexity budgets</span>
-│   ├─ <span class="file">BENCHMARKS.md</span>     <span class="note">recorded hot-path measurements + ultra-tier calibration</span>
-│   ├─ <span class="dir">adr/</span>             <span class="note">architecture decision records (Bun, three.js, HTMX, seeded rng, math stack)</span>
-│   ├─ <span class="dir">reference/</span>       <span class="note">domain library catalog + math-libs survey</span>
-│   └─ <span class="dir">diagrams/</span>        <span class="note">exported diagram assets</span>
-├─ <span class="dir">tests/</span>             <span class="note">113 bun test suites · 1,292 tests — determinism, NaN-stability, per-system invariants</span>
-├─ <span class="dir">bench/</span>             <span class="note">mitata micro-benchmarks for the hot paths (incl. the apex-mind per-beat budget)</span>
-├─ <span class="dir">masters/</span>           <span class="note">3 master persona XML files — Executor, Architect, Physicist (the discipline)</span>
-├─ <span class="dir">legacy/</span>            <span class="note">the original single-file artifact, preserved verbatim — never edited</span>
-├─ <span class="dir">scripts/</span>
-│   └─ <span class="file">build.ts</span>        <span class="note">Bun build pipeline (HTML bundling + Tailwind)</span>
-├─ <span class="dir">public/</span>            <span class="note">static assets served as-is</span>
-├─ <span class="dir">.github/workflows/</span>  <span class="note">CI — the full check gate on push</span>
-├─ <span class="file">package.json</span>         <span class="note">deps + scripts (dev, check, bench)</span>
-├─ <span class="file">tsconfig.json</span>        <span class="note">strict TypeScript configuration</span>
-├─ <span class="file">bunfig.toml</span>          <span class="note">Bun config — Tailwind plugin wiring</span>
-├─ <span class="file">.prettierrc</span>          <span class="note">prettier — 100 cols, single quotes, semicolons</span>
-├─ <span class="file">CHANGELOG.md</span>         <span class="note">version history → 0.11.0 / V100</span>
-└─ <span class="file">README.md</span>            <span class="note">project overview + quickstart</span></pre>
+â”œâ”€ <span class="file">server.ts</span>            <span class="note">Bun.serve fullstack host: bundles /, /docs, serves /lab + /api/{health,audit}</span>
+â”œâ”€ <span class="file">index.html</span>           <span class="note">the dome (/) â€” app shell, panels, observatory DOM, touch controls</span>
+â”œâ”€ <span class="file">docs.html</span>            <span class="note">this report (/docs) â€” architecture, ERD/ERM/ERP, eras (mermaid inline)</span>
+â”œâ”€ <span class="dir">lab/</span>
+â”‚   â””â”€ <span class="file">quantum-wildbeyond.html</span>  <span class="note">self-contained p5.js lab, 4 pages of 3D data-visuals (CDN-only, not bundled)</span>
+â”œâ”€ <span class="dir">src/</span>
+â”‚   â”œâ”€ <span class="file">main.ts</span>           <span class="note">browser entry: boots the World from index.html</span>
+â”‚   â”œâ”€ <span class="file">world.ts</span>          <span class="note">composition root: owns SimState, builds SimContext, ticks every system per frame</span>
+â”‚   â”œâ”€ <span class="file">types.ts</span>          <span class="note">the type hub â€” SimState, SimContext, TelemetrySnapshot, MorphType</span>
+â”‚   â”œâ”€ <span class="file">docs-page.ts</span>      <span class="note">this page's entry: initializes mermaid (dark theme) and renders the diagrams</span>
+â”‚   â”œâ”€ <span class="dir">core/</span>
+â”‚   â”‚   â”œâ”€ <span class="file">engine.ts</span>      <span class="note">three.js renderer, scene, camera, lighting rig</span>
+â”‚   â”‚   â””â”€ <span class="file">quality.ts</span>     <span class="note">detectQuality â€” device tier ladder (phone..ultra), entity caps, throttles</span>
+â”‚   â”œâ”€ <span class="dir">sim/</span>              <span class="note">the simulation systems (V1 core + V2 wildbeyond + V3 pantheon + V4 atmosphere)</span>
+â”‚   â”‚   â”œâ”€ <span class="file">constants.ts</span>   <span class="note">leaf â€” arena scale, behavior names, morph count, tuning tuples</span>
+â”‚   â”‚   â”œâ”€ <span class="file">geometry-cache.ts</span> <span class="note">40 shared geometries reused across all meshes</span>
+â”‚   â”‚   â”œâ”€ <span class="file">morphotypes.ts</span> <span class="note">deterministic creature templates (100 legacy / 250 phylum-mode)</span>
+â”‚   â”‚   â”œâ”€ <span class="file">phyla.ts</span>       <span class="note">10 phyla â€” hue bands, geometry families, behavior pools, home sectors</span>
+â”‚   â”‚   â”œâ”€ <span class="file">behaviors.ts</span>   <span class="note">26 behavioral fields driving per-entity motion</span>
+â”‚   â”‚   â”œâ”€ <span class="file">algorithms.ts</span>  <span class="note">25 visible sorting-field algorithms, each a distinct spatial signature</span>
+â”‚   â”‚   â”œâ”€ <span class="file">entities.ts</span>    <span class="note">EntityManager â€” births, deaths, behavior dispatch, RD scars on death</span>
+â”‚   â”‚   â”œâ”€ <span class="file">instanced-entities.ts</span> <span class="note">instanced PBR pools (per-instance color + emissive vec4)</span>
+â”‚   â”‚   â”œâ”€ <span class="file">shoggoths.ts</span>   <span class="note">drifting Lorenz-ish predators with tendrils</span>
+â”‚   â”‚   â”œâ”€ <span class="file">puppet-masters.ts</span> <span class="note">100 NPC intelligences (14 mobile) â€” 3 named heroes + WRAITH hands</span>
+â”‚   â”‚   â”œâ”€ <span class="file">titans.ts</span>      <span class="note">10 colossal economies waging an iterated prisoner's dilemma</span>
+â”‚   â”‚   â”œâ”€ <span class="file">weather.ts</span>     <span class="note">weather state machine (CLEAR..FOG..STORM..VOID..AURORA)</span>
+â”‚   â”‚   â”œâ”€ <span class="file">quantum.ts</span>     <span class="note">QuantumCloud â€” point cloud that implodes on register collapse</span>
+â”‚   â”‚   â”œâ”€ <span class="file">qcircuit.ts</span>    <span class="note">QuantumCircuitSystem â€” gate sequences, bands to the cloud</span>
+â”‚   â”‚   â”œâ”€ <span class="file">reaction-diffusion.ts</span> <span class="note">Gray-Scott 128x128 field, ground emissiveMap</span>
+â”‚   â”‚   â”œâ”€ <span class="file">graph-mind.ts</span>  <span class="note">graphology Louvain communities + PageRank over the connectome</span>
+â”‚   â”‚   â”œâ”€ <span class="file">connectome.ts</span>  <span class="note">neural link graph between nearby entities</span>
+â”‚   â”‚   â”œâ”€ <span class="file">constellations.ts</span> <span class="note">d3-delaunay Voronoi sectors over fixed monolith sites</span>
+â”‚   â”‚   â”œâ”€ <span class="file">lore.ts</span>        <span class="note">sha256-seeded name generator (sectors, tribes, stars, omens)</span>
+â”‚   â”‚   â”œâ”€ <span class="file">analytics.ts</span>   <span class="note">simple-statistics windows â€” trend, z-omens</span>
+â”‚   â”‚   â”œâ”€ <span class="file">atmosphere.ts</span>  <span class="note">alien sky dome, haze bands, particulate layer, aurora curtain</span>
+â”‚   â”‚   â”œâ”€ <span class="file">viz3d.ts</span>       <span class="note">in-scene holographic data sculptures (phylum towers, titan obelisks)</span>
+â”‚   â”‚   â””â”€ <span class="file">environment.ts</span> <span class="note">ground, light rig, audio-reactive shimmer</span>
+â”‚   â”œâ”€ <span class="dir">math/</span>            <span class="note">pure deterministic leaves (no three.js, fully bun-testable)</span>
+â”‚   â”‚   â”œâ”€ <span class="file">rng.ts</span>        <span class="note">mulberry32 seeded Rng â€” the single source of all sim randomness</span>
+â”‚   â”‚   â”œâ”€ <span class="file">scalar.ts</span>     <span class="note">clamp, lerp, TAU, dist2XZ and friends</span>
+â”‚   â”‚   â”œâ”€ <span class="file">spatial-hash.ts</span> <span class="note">uniform grid for neighbor queries</span>
+â”‚   â”‚   â”œâ”€ <span class="file">quantum.ts</span>    <span class="note">QuantumRegister â€” 2^n complex amplitudes, gates, measurement</span>
+â”‚   â”‚   â””â”€ <span class="file">games.ts</span>      <span class="note">prisoner's-dilemma payoff + replicator-dynamics helpers</span>
+â”‚   â”œâ”€ <span class="dir">audio/</span>
+â”‚   â”‚   â”œâ”€ <span class="file">songs.ts</span>      <span class="note">leaf â€” 6 dramatic songs (chords, melodies, character)</span>
+â”‚   â”‚   â”œâ”€ <span class="file">engine.ts</span>     <span class="note">AudioEngine â€” WebAudio synthesis, sub-bass, arpeggios, LFO swells</span>
+â”‚   â”‚   â””â”€ <span class="file">analysis.ts</span>   <span class="note">AudioBands â€” AnalyserNode tap to bass/mid/treble/level</span>
+â”‚   â”œâ”€ <span class="dir">ui/</span>
+â”‚   â”‚   â”œâ”€ <span class="file">input.ts</span>      <span class="note">keys, mouse look, zoom, touch joystick + radial wheel accumulators</span>
+â”‚   â”‚   â”œâ”€ <span class="file">hud.ts</span>        <span class="note">heads-up readouts (sector, weather, algorithm, lore)</span>
+â”‚   â”‚   â”œâ”€ <span class="file">panels.ts</span>    <span class="note">collapsible glass panels (telemetry, control, audit)</span>
+â”‚   â”‚   â”œâ”€ <span class="file">graphs.ts</span>     <span class="note">Sparkline â€” small canvas time-series</span>
+â”‚   â”‚   â””â”€ <span class="file">observatory.ts</span> <span class="note">4-page, 16-canvas live data observatory</span>
+â”‚   â”œâ”€ <span class="dir">logging/</span>
+â”‚   â”‚   â”œâ”€ <span class="file">logger.ts</span>     <span class="note">leaf ring logger (client + server)</span>
+â”‚   â”‚   â””â”€ <span class="file">audit.ts</span>      <span class="note">AuditTrail â€” fire-and-forget POST /api/audit</span>
+â”‚   â”œâ”€ <span class="dir">memory/</span>
+â”‚   â”‚   â””â”€ <span class="file">store.ts</span>      <span class="note">MemoryStore â€” persisted seed/song/sessions across reloads</span>
+â”‚   â””â”€ <span class="dir">styles/</span>
+â”‚       â””â”€ <span class="file">app.css</span>      <span class="note">responsive system â€” phone sheets, foldable, tablet, TV 10-foot</span>
+â”œâ”€ <span class="dir">docs/</span>
+â”‚   â”œâ”€ <span class="file">ARCHITECTURE.md</span>  <span class="note">module graph + composition narrative (mirrors this page)</span>
+â”‚   â”œâ”€ <span class="file">ERD.md</span>           <span class="note">entity-relationship source for the diagram below</span>
+â”‚   â”œâ”€ <span class="file">MODULE-CONTRACTS.md</span> <span class="note">binding per-module spec (V1..V6) â€” contract wins over vibes</span>
+â”‚   â”œâ”€ <span class="file">PHILOSOPHY.md</span>     <span class="note">aesthetic constitution â€” real math under every effect</span>
+â”‚   â”œâ”€ <span class="file">DESIGN-SYSTEM.md</span>  <span class="note">color, type, panel + wireframe conventions</span>
+â”‚   â”œâ”€ <span class="file">WIREFRAMES.md</span>     <span class="note">layout sketches for the dome + observatory</span>
+â”‚   â”œâ”€ <span class="file">COMPLEXITY.md</span>     <span class="note">per-system complexity budgets</span>
+â”‚   â”œâ”€ <span class="file">BENCHMARKS.md</span>     <span class="note">recorded hot-path measurements + ultra-tier calibration</span>
+â”‚   â”œâ”€ <span class="dir">adr/</span>             <span class="note">architecture decision records (Bun, three.js, HTMX, seeded rng, math stack)</span>
+â”‚   â”œâ”€ <span class="dir">reference/</span>       <span class="note">domain library catalog + math-libs survey</span>
+â”‚   â””â”€ <span class="dir">diagrams/</span>        <span class="note">exported diagram assets</span>
+â”œâ”€ <span class="dir">tests/</span>             <span class="note">114 bun test suites Â· 1,400 tests â€” determinism, NaN-stability, per-system invariants</span>
+â”œâ”€ <span class="dir">bench/</span>             <span class="note">mitata micro-benchmarks for the hot paths (incl. the apex-mind per-beat budget)</span>
+â”œâ”€ <span class="dir">masters/</span>           <span class="note">3 master persona XML files â€” Executor, Architect, Physicist (the discipline)</span>
+â”œâ”€ <span class="dir">legacy/</span>            <span class="note">the original single-file artifact, preserved verbatim â€” never edited</span>
+â”œâ”€ <span class="dir">scripts/</span>
+â”‚   â””â”€ <span class="file">build.ts</span>        <span class="note">Bun build pipeline (HTML bundling + Tailwind)</span>
+â”œâ”€ <span class="dir">public/</span>            <span class="note">static assets served as-is</span>
+â”œâ”€ <span class="dir">.github/workflows/</span>  <span class="note">CI â€” the full check gate on push</span>
+â”œâ”€ <span class="file">package.json</span>         <span class="note">deps + scripts (dev, check, bench)</span>
+â”œâ”€ <span class="file">tsconfig.json</span>        <span class="note">strict TypeScript configuration</span>
+â”œâ”€ <span class="file">bunfig.toml</span>          <span class="note">Bun config â€” Tailwind plugin wiring</span>
+â”œâ”€ <span class="file">.prettierrc</span>          <span class="note">prettier â€” 100 cols, single quotes, semicolons</span>
+â”œâ”€ <span class="file">CHANGELOG.md</span>         <span class="note">version history â†’ 0.11.0 / V100</span>
+â””â”€ <span class="file">README.md</span>            <span class="note">project overview + quickstart</span></pre>
       </div>
       <p><a class="totop" href="#architecture">&uarr; top</a></p>
 
@@ -916,7 +916,7 @@ erDiagram
             <tr>
               <td>PHYLUM</td>
               <td>index 0..9, hueBand, geometry family, behavior pool, homeSector</td>
-              <td>templates N MORPHOTYPE (1:N) — 25 morphotypes per phylum in phylum-mode</td>
+              <td>templates N MORPHOTYPE (1:N) â€” 25 morphotypes per phylum in phylum-mode</td>
             </tr>
             <tr>
               <td>BEHAVIOR</td>
@@ -1035,8 +1035,8 @@ sequenceDiagram
   W->>G: clear + insert all entities (every 2nd frame)
   W->>SYS: shoggoths.update
   W->>SYS: sort step ALGOS[algoIdx], swaps feed qcircuit.onSortSwap
-  W->>SYS: entities.update — 26 behaviors, deaths scar the RD field
-  W->>SYS: titans.update — economy ticks, diplomacy slot, war strikes
+  W->>SYS: entities.update â€” 26 behaviors, deaths scar the RD field
+  W->>SYS: titans.update â€” economy ticks, diplomacy slot, war strikes
   W->>SYS: connectome.update (every 1/2/3 frames by n)
   W->>V2: qcircuit.update (every 30th, bands to cloud every 6th)
   W->>SYS: quantum.update (cloud, implodeAt on collapse)
@@ -1240,7 +1240,7 @@ sequenceDiagram
             <tr>
               <td>Statistics</td>
               <td>simple-statistics</td>
-              <td>analytics windows — regression trend, z-score omens, stddev (ADR 0005)</td>
+              <td>analytics windows â€” regression trend, z-score omens, stddev (ADR 0005)</td>
             </tr>
             <tr>
               <td>Hashing</td>
@@ -1327,7 +1327,7 @@ sequenceDiagram
       <div class="card flush">
         <table>
           <caption>
-            Quality tiers (illustrative — exact caps in core/quality.ts)
+            Quality tiers (illustrative â€” exact caps in core/quality.ts)
           </caption>
           <thead>
             <tr>
@@ -1388,33 +1388,34 @@ sequenceDiagram
           <li>
             <a
               href="https://github.com/0thernes/cosmogonic-quantum-mechalogodrom/blob/main/docs/reports/2026-06-17-STATE-OF-THE-ART-COMBINED.md"
-              >Combined Report — unified §III scorecard &amp; verdict</a
+              >Combined Report â€” unified Â§III scorecard &amp; verdict</a
             >
-            — Butlin indicators, sentience verdict, LFG metrics (single file)
+            â€” Butlin indicators, sentience verdict, LFG metrics (single file)
           </li>
           <li>
             <a
               href="https://github.com/0thernes/cosmogonic-quantum-mechalogodrom/blob/main/docs/reports/2026-06-17-STATE-OF-THE-ART-WHOLE-REPO.md"
-              >Report I — The Whole Repository</a
+              >Report I â€” The Whole Repository</a
             >
-            — 50k-agent deterministic cosmos, synthesis novelty, sentience scorecard
+            â€” 50k-agent deterministic cosmos, synthesis novelty, sentience scorecard
           </li>
           <li>
             <a
               href="https://github.com/0thernes/cosmogonic-quantum-mechalogodrom/blob/main/docs/reports/2026-06-17-STATE-OF-THE-ART-SUPER-CREATURE.md"
-              >Report II — The Super Creature</a
+              >Report II â€” The Super Creature</a
             >
-            — ~37k-parameter apex quantum-cognitive mind, ~9/14 Butlin indicators, gap analysis
+            â€” ~37k-parameter apex quantum-cognitive mind, ~9/14 Butlin indicators, gap analysis
           </li>
           <li>
-            <a href="./docs/SUPER-CREATURE-RESEARCH.md">Super Creature Research</a> — citation trail
-            for every faculty (2023–2026)
+            <a href="./docs/SUPER-CREATURE-RESEARCH.md">Super Creature Research</a> â€” citation
+            trail for every faculty (2023â€“2026)
           </li>
         </ul>
         <p class="muted" style="margin-top: 8px">
-          Gate at time of writing: <b>1,292 tests / 0 fail</b> ·
-          <b>94.66 % line / 91.76 % function</b> coverage · apex <code>think()</code>
-          <b>≈ 285 µs/beat</b> (273 µs median) · v0.11.0 @ <code>60478a4</code>
+          Gate at time of writing: <b>1400 tests / 0 fail</b> Â·
+          <b>94.38 % line / 91.26 % function</b> coverage Â· apex <code>think()</code> + Tsotchke
+          biologics <b>â‰ˆ 285 Âµs/beat</b> (273 Âµs median) Â· v0.12.0-tsotchke-genesis @ current ·
+          all docs + GH match.
         </p>
       </div>
       <p><a class="totop" href="#architecture">&uarr; top</a></p>
