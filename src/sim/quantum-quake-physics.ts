@@ -132,7 +132,14 @@ function buildWavePacket(
 
 /** Build the wave packet for a whole {@link QGEState} into the given buffers. O(DIM). */
 function buildStateAmplitudes(state: QGEState, outRe: Float64Array, outIm: Float64Array): void {
-  buildWavePacket(state.position, state.momentum, state.geometricPhase, state.curvature, outRe, outIm);
+  buildWavePacket(
+    state.position,
+    state.momentum,
+    state.geometricPhase,
+    state.curvature,
+    outRe,
+    outIm,
+  );
 }
 
 /** Hermitian overlap ⟨a|b⟩ = Σ conj(aᵢ)·bᵢ → magnitude |⟨a|b⟩|. O(DIM); allocation-free. */
