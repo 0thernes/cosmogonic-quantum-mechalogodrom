@@ -39,6 +39,9 @@ sequenceDiagram
   W->>W: unlock() audio graph
   loop every animation frame
     M->>W: update(dt clamped >= 0)
+    W->>Soup: catalyze (Eshkol ignition + full Tsotchke corpus beat from all repos)
+    Soup->>Soup: incubate / replicate / genesisBoost (different BiologicForms)
+    Soup->>W: harvestEmergent (new digital biologics enter the world)
   end
 ```
 
@@ -46,6 +49,8 @@ sequenceDiagram
 
 The order of a single `World.update(dt)`. Read-only projections (render, audio, UI) come last and
 never mutate sim state.
+
+**Tsotchke Petri / Digital Biologics cadence (full wiring):** After Archon/super-mind beats, petriDishBeat + primordial-soup update for Eshkol program execution, AD mutation, GWT ignition, flux. Biologics emerge/grow from all Tsotchke substrates (Eshkol language primary). Super Creature catalyzes only.
 
 ```mermaid
 flowchart TD
@@ -58,6 +63,9 @@ flowchart TD
   F --> G[Connectome.update<br/>cadence by population]
   G --> H[Titans + Shoggoths + PuppetMasters]
   H --> I[Quantum cloud + register drift]
+  I --> J[Tsotchke full corpus catalysis (registry beat + soup update)]
+  J --> K[PrimordialSoup / PetriDish step (Eshkol AD mutation, biologic birth, aliveness selection)]
+  K --> L[Emergent DIGITAL_BIOLOGIC strains injected as new life forms]
   I --> J{RD step frame?<br/>every 2nd offset 1}
   J -- yes --> K[ReactionDiffusion.step]
   J -- no --> L[skip]
@@ -71,7 +79,8 @@ flowchart TD
   Q --> R[viz3d + observatory on cadence]
   R --> S[telemetry + analytics every 8th]
   S --> T[audio analyser poll O of 128]
-  T --> A
+  T --> U[petri-dish/primordial-soup catalysis (full Tsotchke growth of new biologics)]
+  U --> A
 ```
 
 ## 3. Cadence schedule
@@ -79,18 +88,19 @@ flowchart TD
 The heavy passes are deliberately interleaved so no two land on the same frame. This is the core of
 the frame-budget "resource plan".
 
-| Stage                   | Cadence                           | Offset | Why staggered                                   |
-| ----------------------- | --------------------------------- | ------ | ----------------------------------------------- |
-| Grid rebuild            | every 2nd frame                   | 0      | halves O(n) rebuild cost                        |
-| Reaction-diffusion      | every 2nd frame                   | 1      | never shares a frame with the grid rebuild      |
-| Connectome              | 1f (≤400) / 2f (≤700) / 3f (>700) | —      | bounds the only per-frame O(n·k) consumer       |
-| Quantum register drift  | every 30th frame                  | —      | gate math is bursty, not continuous             |
-| Quantum-mind beat (V76) | Observatory cadence (apex only)   | —      | ~90 gates × 64 amps, allocation-free `evolve`   |
-| Telemetry + analytics   | every 8th frame                   | —      | text writes are O(1) but DOM-touching           |
-| Observatory draw        | every 18th frame                  | —      | 16 panels + the 36-readout NEURAL box           |
-| Louvain (tribes)        | every 240th frame                 | 60/180 | rebuilds graphology graph — heavy               |
-| PageRank (halo)         | every 600th frame                 | 300    | offset 300 never collides with the 240f Louvain |
-| Analytics regression    | every 60th frame                  | —      | O(W=120) mean/stddev/slope                      |
+| Stage                     | Cadence                                     | Offset | Why staggered                                                |
+| ------------------------- | ------------------------------------------- | ------ | ------------------------------------------------------------ |
+| Grid rebuild              | every 2nd frame                             | 0      | halves O(n) rebuild cost                                     |
+| Reaction-diffusion        | every 2nd frame                             | 1      | never shares a frame with the grid rebuild                   |
+| Connectome                | 1f (≤400) / 2f (≤700) / 3f (>700)           | —      | bounds the only per-frame O(n·k) consumer                    |
+| Quantum register drift    | every 30th frame                            | —      | gate math is bursty, not continuous                          |
+| Quantum-mind beat (V76)   | Observatory cadence (apex only)             | —      | ~90 gates × 64 amps, allocation-free `evolve`                |
+| Telemetry + analytics     | every 8th frame                             | —      | text writes are O(1) but DOM-touching                        |
+| Observatory draw          | every 18th frame                            | —      | 16 panels + the 36-readout NEURAL box                        |
+| Louvain (tribes)          | every 240th frame                           | 60/180 | rebuilds graphology graph — heavy                            |
+| PageRank (halo)           | every 600th frame                           | 300    | offset 300 never collides with the 240f Louvain              |
+| Analytics regression      | every 60th frame                            | —      | O(W=120) mean/stddev/slope                                   |
+| Petri / Digital Biologics | every frame (light) + Archon beat catalysis | —      | Primordial soup growth; Eshkol ignition births new biologics |
 
 ```mermaid
 gantt

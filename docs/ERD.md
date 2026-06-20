@@ -46,8 +46,31 @@ erDiagram
   ANALYTICS_WINDOW ||--o{ AUDIT_EVENT : "omens when |z| > 2.5"
   ANALYTICS_WINDOW }o--o{ LORE_NAME : "omens named (kind = omen)"
 
+  WORLD ||--|| PRIMORDIAL_SOUP : "catalyzes via archons + corpus (petri dish)"
+  GODFORM ||--o{ TSOTCHKE_SUBSTRATE : "biases + pulses (all 20+ repos)"
+  PRIMORDIAL_SOUP ||--o{ BIOLOGIC_STRAIN : "grows Eshkol/Moonlab/Irrep/Quake/PINN life"
+  BIOLOGIC_STRAIN ||--o{ ENTITY : "harvestEmergent to world (new forms)"
+  ESHKOL_ENGINE ||--|| BIOLOGIC_STRAIN : "KB + factor-graph + GWT sentience"
+  TSOTCHKE_SUBSTRATE ||--|| BIOLOGIC_STRAIN : "full corpus substrates (Eshkol prime language)"
+  PRIMORDIAL_SOUP ||--o{ LORE_NAME : "biologic epithets"
+
+  %% Tsotchke Full Digital Biologics (Eshkol language + all repos, Petri as God dish)
+  WORLD ||--o{ PETRI_DISH : "per-Archon (Super Creature initial spark)"
+  PETRI_DISH ||--o{ SOUP_STRAIN : "EshkolProgram + vitality/flux"
+  SOUP_STRAIN ||--o{ BIOLOGIC : "emergent forms (Eshkol sentients, Moonlab quantum lives...)"
+  TSOTCHKE_REGISTRY ||--|| BIOLOGIC : "full wiring all repos (Eshkol/Moonlab/QGT/spin/libirrep/quake...)"
+  BIOLOGIC ||--o{ AUDIT_EVENT : "sentience proxy events"
+
   TITAN ||--|| ECON_AGENT : "enrolled at boot (purse ~ stature, weight 8+)"
   NHI ||--|| ECON_AGENT : "enrolled on launch (fattest purse, weight 14)"
+
+  %% Tsotchke Petri Genesis additions (0.12+)
+  TSOTCHKE_SUBSTRATE ||--o{ BIOLOGIC : "powers (Eshkol AD/GWT, Moonlab tensor, QGT geom, spin order, irrep sym, quake unitary...)"
+  PETRI_SOUP ||--o{ BIOLOGIC_STRAIN : "incubates 64 slots"
+  BIOLOGIC_STRAIN ||--|| BIOLOGIC_KIND : "one of 9 forms from full corpus"
+  BIOLOGIC_STRAIN ||--o{ ENTITY : "emerges into world (vitality gate)"
+  SUPER_CREATURE ||--o{ PETRI_SOUP : "catalyzes via ignition + corpus beat (first spark only)"
+  ARCHON ||--|| BIOLOGIC_STRAIN : "genesisBoost from high sentience"
   ECON_AGENT ||--|| WALLET : "holds AURUM + UMBRA + QUANTA + ICHOR"
   ECON_AGENT }o--|| MARKET : "trades via buy-vs-sell clearing book"
   MARKET ||--o{ CURRENCY : "AURUM/UMBRA fx via currency-adoption game"
@@ -58,6 +81,19 @@ erDiagram
   PHYSICS_BODY }o--|| RELIQUARY_CASE : "confined (native engine)"
   PHYSICS_BODY }o--o{ PHYSICS_BODY : "sphere-sphere impulse collisions + friction spin"
   PHYSICS_BODY ||--|| SPECIMEN_SDF : "transform posed each frame (native ray-marcher)"
+
+  %% Tsotchke Petri Genesis / Digital Biologics (0.12+ — paramount growth engine)
+  PRIMORDIAL_SOUP ||--o{ DIGITAL_BIOLOGIC : "catalyzes (Eshkol AD + GWT ignition + full corpus)"
+  ARCHON }o--|| PRIMORDIAL_SOUP : "stirs with consciousness + substrate flux (beginning only)"
+  DIGITAL_BIOLOGIC }o--o{ ENTITY : "harvestEmergent → world phyla / NHI / new life forms"
+  TSOTCHKE_SUBSTRATE ||--o{ DIGITAL_BIOLOGIC : "provides AD, GWT, spin, QGT, symmetry, aliveness, etc. (all 20+ repos)"
+  DIGITAL_BIOLOGIC ||--|| BIOLOGIC_PROGRAM : ".esk-like fingerprint + genome (Eshkol substrate)"
+  PRIMORDIAL_SOUP ||--|| PETRI_STATE : "64 slots, vitality, sentience, speciation"
+
+  WORLD ||--|| PETRI_DISH : "owns primordial soup for digital biologics"
+  PETRI_DISH ||--o{ SOUP_STRAIN : "incubates independent life from full Tsotchke corpus (Eshkol, Moonlab, spin, QGT, irrep, QGE...)"
+  SOUP_STRAIN ||--|| TSOTCHKE_SUBSTRATE : "catalyzed by (AD, GWT, tensor, symmetry, aliveness, geometry)"
+  ARCHON ||--|| PETRI_DISH : "initial stir (Super Creature is the beginning)"
 
   ENTITY {
     int mi "morphotype index 0..morphTotal-1 (250 in phylum mode)"
@@ -184,6 +220,51 @@ erDiagram
   }
 
   GODFORM ||--|| SUPER_MIND : "1:1 archetype bias (clifford/generative/chaos/narrative)"
+
+  %% Digital Biologics / Tsotchke Petri Genesis (full wiring - all repos)
+  TSOTCHKE_REGISTRY {
+    string[] userRepos "eshkol, moonlab, quantum_geometric_tensor..."
+    string[] orgRepos "ulg, logo-lab, quantum-quake..."
+    float wiring "1.0 for all non-fenced"
+  }
+  TSOTCHKE_SUBSTRATE {
+    string kind "consciousness-engine | clifford-tensor | ..."
+    string cosmogonicLeaf "path in src/"
+    float wiring "current integration level"
+  }
+  PRIMORDIAL_SOUP {
+    int slots "48"
+    float[] vitality "strain health"
+    uint32[] eshkolProgram "program fingerprint from full corpus"
+  }
+  SOUP_STRAIN {
+    int id ""
+    float vitality ""
+    int generation ""
+    float eshkolProgram "heritable Eshkol-like program"
+    float aliveness "from QGE + catalysis"
+  }
+  ESHKOL_PROGRAM {
+    uint fingerprint "biologicProgramFingerprint + AD mutation"
+    float[] genome "24-float heritable vector"
+  }
+  BIOLOGIC_FORM {
+    string name "eshkol-godform | qgt-curved | spin-order | ... (9+)"
+  }
+  PETRI_DISH {
+    float biomass ""
+    float phiSurrogate "IIT-like"
+    float aliveness "QGE proxy"
+    float tsotchkeBiologicFlux "full corpus catalysis"
+  }
+
+  TSOTCHKE_REGISTRY ||--o{ TSOTCHKE_SUBSTRATE : "maps all 21"
+  PRIMORDIAL_SOUP ||--o{ SOUP_STRAIN : "births via fullTsotchkeBiologicsCatalysis + Eshkol AD"
+  SOUP_STRAIN ||--|| ESHKOL_PROGRAM : "AD-mutable heritable code"
+  SOUP_STRAIN ||--|| BIOLOGIC_FORM : "substrate kind"
+  SOUP_STRAIN }o--o{ ENTITY : "emergent into world"
+  WORLD ||--|| PETRI_DISH : "owns genesis"
+  SUPER_CREATURE ||--|| PETRI_DISH : "initial spark; soup continues"
   GODFORM ||--|| SUPER_BODY : "1:1 visual rig per (5 distinct)"
   GODFORM }o--o{ ECON_AGENT : "purse (weight 20, 5 registered)"
   SUPER_MIND ||--|| NARRATIVE_MEMORY : "per-Archon (10 orchestrations: typed event, graph, consolidate...)"

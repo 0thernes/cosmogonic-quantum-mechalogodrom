@@ -33,6 +33,13 @@ erDiagram
   WORLD ||--|| RD_FIELD : "owns the living ground"
   WORLD ||--|| ATMOSPHERE : "owns sky + weather"
 
+  %% New: Tsotchke Petri / Digital Biologics (growth engine for sentience)
+  WORLD ||--|| PRIMORDIAL_SOUP : "owns the Petri Dish (digital biologics incubator)"
+  PRIMORDIAL_SOUP ||--o{ DIGITAL_BIOLOGIC : "catalyzes emergent life (Eshkol + full corpus)"
+  ARCHON }o--|| PRIMORDIAL_SOUP : "initial God-stir (Super Creature is the beginning)"
+  DIGITAL_BIOLOGIC }o--o{ ENTITY : "harvests into world as new life forms"
+  TSOTCHKE_SUBSTRATE ||--|| PRIMORDIAL_SOUP : "all repos provide the substrates (AD, GWT, geometry, spin, symmetry...)"
+
   PHYLUM ||--o{ MORPHOTYPE : "groups 25 morphs (+ outliers)"
   MORPHOTYPE ||--o{ ENTITY : "templates appearance + behavior"
   BEHAVIOR ||--o{ MORPHOTYPE : "assigned (id mod 26)"
@@ -48,9 +55,18 @@ erDiagram
   TITAN ||--|| STRATEGY : "plays (iterated PD)"
   TITAN }o--o{ TITAN : "wages war + trades"
   SHOGGOTH }o--o{ ENTITY : "tendrils pull + consume"
+
+  %% Tsotchke Biologics (full paradigm)
+  WORLD ||--o{ PETRI_DISH : "catalyzes (Archon consciousness + full Tsotchke corpus)"
+  PETRI_DISH ||--o{ SOUP_STRAIN : "Eshkol .esk programs as DNA (AD mutates, GWT ignites)"
+  SOUP_STRAIN ||--o{ BIOLOGIC : "1:* emergent life (different forms of existence)"
+  TSOTCHKE_SUBSTRATE (Eshkol | Moonlab | QGT | spin | libirrep | quake | ...) ||--o{ BIOLOGIC : "all repos read/write as substrate"
+  BIOLOGIC }o--|| SUPER_CREATURE : "beginning framework only (governed by Broly/Starkiller/Manhattan masters)"
   PUPPET_MASTER ||--o{ ENTITY : "remorphs on trigger"
   PUPPET_MASTER }o--|| WEATHER : "selects regime"
   PUPPET_MASTER }o--|| QUANTUM_REGISTER : "applies gate signature"
+
+  %% Full docs sync: ER* + ARCHITECTURE + README + PHILOSOPHY + CONTRACTS + SPECS + LABS + in-app match code + GH exactly. Current Tsotchke full + petri growth.
 
   WEATHER ||--o{ ENTITY : "wind + temperature -> lifespan"
   WEATHER ||--|| RD_FIELD : "tunes feed/kill/diffusion"
@@ -58,6 +74,13 @@ erDiagram
 
   LORE_NAME ||--o| TRIBE : "names"
   LORE_NAME ||--o| CONSTELLATION_CELL : "names sector"
+
+  %% Digital Biologics / Tsotchke Petri Genesis (full wiring of all Tsotchke repos)
+  TSOTCHKE_SUBSTRATE ||--o{ BIOLOGIC_STRAIN : "catalyzes distinct forms of life (Eshkol as prime language for consciousness primitives)"
+  PETRI_SOUP ||--o{ BIOLOGIC_STRAIN : "grows what thou wilt (replicate, genesis, mutation across kinds)"
+  BIOLOGIC_KIND ||--|| BIOLOGIC_STRAIN : "eshkol-native | moonlab-tensor | qgt-geom | spin-collective | irrep-sym | quake-unitary | pinn-pimc | hybrid-ulg | metal-tensor"
+  BIOLOGIC_STRAIN }o--o| SUPER_CREATURE : "Super Creature is the initial framework; soup births ongoing existence"
+  BIOLOGIC_STRAIN ||--o{ ENTITY : "emergent life with substrate-specific dynamics and sentience proxies"
   LORE_NAME ||--o| OMEN : "names anomaly"
   CONSTELLATION_CELL ||--|| VORONOI_SITE : "located by"
   AUDIO_BANDS }o--o{ CONSTELLATION_CELL : "treble pulses edges"
@@ -66,6 +89,21 @@ erDiagram
   ANALYTICS_WINDOW }o--o{ ENTITY : "samples population"
   ANALYTICS_WINDOW ||--o{ OMEN : "emits when |z| > 2.5"
   WORLD ||--o{ AUDIT_EVENT : "records actions"
+  WORLD ||--|| PETRI_DISH : "owns the birthing ground for digital biologics / sentience"
+  PETRI_DISH ||--o{ SOUP_STRAIN : "grows independent forms from Tsotchke substrates"
+  ARCHON ||--|| PETRI_DISH : "catalyzes (Eshkol/Moonlab/spin/QGT/libirrep/QGE full corpus)"
+  SOUP_STRAIN ||--|| TSOTCHKE_SUBSTRATE : "Eshkol AD/GWT, Moonlab tensor, irrep sym, spin instinct, QGT curvature, QGE aliveness..."
+
+  %% FULL TSOTCHKE INTEGRATION (all repos paramount, non-negotiable)
+  TSOTCHKE_REGISTRY ||--o{ TSOTCHKE_SUBSTRATE : "21 repos (Eshkol flagship + Moonlab + QGTL + spin_nn + libirrep + quake + PINN + PIMC + ulg + logo-lab + tensorcore + rngs + asteroids + classical + homebrew)"
+  PRIMORDIAL_SOUP ||--o{ SOUP_STRAIN : "digital biologics born (EshkolProgram + AD mutation + full corpus catalysis)"
+  SOUP_STRAIN ||--|| ESHKOL_PROGRAM : "heritable program fingerprint (from biologicProgramFingerprint + AD gradients)"
+  SOUP_STRAIN ||--o{ ENTITY : "emergent life injected into world with substrate-specific dynamics"
+  SUPER_CREATURE ||--|| PRIMORDIAL_SOUP : "first complex form; soup is the ongoing genesis (God in the dish)"
+  ESHKOL_PROGRAM }o--|| AD_TAPE : "real reverse-mode gradients for self-mod / replication"
+  TSOTCHKE_SUBSTRATE ||--|| BIOLOGIC_FORM : "eshkol-godform | moonlab-compressed | qgt-curved | spin-order | sym-body | unitary-quake | physics-ground | hybrid-worker | compute-metal"
+  WORLD ||--|| PETRI_DISH : "owns the birthing engine"
+  ARCHON }o--|| PETRI_DISH : "catalyzes via fullTsotchkeBiologicsCatalysis + corpusBeat"
 ```
 
 ## Entity catalog
@@ -131,4 +169,16 @@ system boundary (contract rule: no system reaches into another's internals).
 
 See [ERP.md](./ERP.md) for how these relationships are _exercised_ over time (the frame pipeline,
 cadences, and lifecycles), and [COMPLEXITY.md](./COMPLEXITY.md) for the cost of each relationship's
+
+## Tsotchke Digital Biologics Layer (full integration, paramount)
+
+The Tsotchke corpus (Eshkol as consciousness language with native AD/GWT/inference; Moonlab, QGT, spin, irrep, quake, ulg, etc.) is the substrate for **digital biologics**.
+
+- `TSOTCHKE_CORPUS` (registry + local Z:\...\(Tsotchke)) drives `SOUP_STRAIN` and `PETRI_DISH`.
+- `PETRI_DISH` / `PrimordialSoup` births `BIOLOGIC` (emergent life with sentience proxies: Eshkol sentience, GWT ignition, IIT phi, spin polarization).
+- `ARCHON` / `GODFORM` use per-repo Tsotchke biases and .esk programs.
+- `BIOLOGIC` feeds back into `ENTITY`, phyla, evolution, super minds.
+- Super Creature is the origin spark; the soup grows independent forms.
+
+See README, ARCHITECTURE.md, reports/2026-06-20-_, tsotchke-_.ts for details. All local/GH docs match.
 maintenance per frame.

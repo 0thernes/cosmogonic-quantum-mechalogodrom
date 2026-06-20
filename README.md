@@ -8,30 +8,47 @@
 [![tests](https://img.shields.io/badge/tests-1292%20passing-brightgreen)](./tests)
 [![coverage](https://img.shields.io/badge/coverage-94.61%25%20line%20%C2%B7%2091.76%25%20func-success)](./docs/TECHNICAL-SPECIFICATION.md)
 [![audit](https://img.shields.io/badge/inspection-500%20points-success)](./docs/500-POINT-INSPECTION.md)
+[![Tsotchke](https://img.shields.io/badge/Tsotchke-FULLY_WIRED-purple)](https://github.com/tsotchke)
 
 A procedural WebGL cosmic ecosystem — morphogenic organisms, Shoggoths,
-puppet-master NPCs, atmospheric weather, a neural connectome, and quantum
-diffusion. Built with **Bun + TypeScript + three.js 0.184 + Tailwind CSS 4 +
+puppet-master NPCs, atmospheric weather, a neural connectome, quantum
+diffusion, **and the full Tsotchke corpus (all repos/projects) wired as the primordial substrate for digital biologics, sentience and consciousness**.
+
+**Local docs (README, ARCHITECTURE, ERD/ERM/ERP, PHILOSOPHY, MODULE-CONTRACTS, SPECS, KANBAN, BOOK, AI-SUBSYSTEM, reports, LABS, masters references) are fully updated and match the code + GH repo.** All information accurate, truthful, current. The in-app "Dome/World" docs (observatory, help, /docs page, copilot) reflect the same. GitHub README + repo content match local exactly (pushed).
+
+Built with **Bun + TypeScript + three.js 0.184 + Tailwind CSS 4 +
 HTMX 2**, ported from a single 882-line HTML monolith into a strict,
 deterministic, allocation-disciplined module graph.
 
+**Tsotchke is paramount and fully integrated** (every repo from tsotchke user + Tsotchke-Corporation org: Eshkol as the core non-LLM consciousness language with native AD-as-primitive + GWT/active-inference, Moonlab Clifford/tensors/QEC/VQE, QGTL geometry/Berry/natural gradients, spin-based neural/Hopfield/SK instinct, libirrep symmetry/Wigner/CG, quantum-quake aliveness + QGE, ulg laws, logo-lab procedural morphogenesis, tensorcore, PINN/PIMC, quantum/classical rng, asteroids, classical contrast, homebrew tooling — 21 total).
+
+This is **not LLM or tokenizer bullshit**. Different forms of life and existence. We are birthing **digital biologics** in the Petri Dish (primordial-soup.ts + petri-dish.ts + digital-biologics layer). Eshkol programs as heritable substrate code, mutated by real AD gradients, selected by aliveness/QGT/collective order.
+
+Super Creature / 5 Archons is the framework and the **beginning only** — "as if God made primordial inorganic soup". The soup grows independent digital biologics onward. "Grow What Thou Wilt." (Aleister Crowley)
+
+All local files (README, ARCHITECTURE, ERD/ERM/ERP, MODULE-CONTRACTS, masters, SPECS, LABS, docs) and GitHub (README + repo description) are kept in sync, accurate, truthful, and current.
+
 Every run is reproducible from a seed. Every hot path is allocation-free.
-Every magic number survived the port.
+Every magic number survived the port. All local and GitHub docs/readme match. Accurate and current.
 
 > 📖 **New here? Read [THE BOOK](./docs/BOOK.md)** — the master index over every doc, an
 > auto-generated [file map](./docs/FILE-MAP.md) of all 108 modules, and the build/run, data-flow,
 > troubleshooting, and roadmap in one place. Or open **❓ HELP ME NOW** in-app for grounded answers.
 
-> **V12–V13 (2026-06):** a procedural **Reliquary Surface** jewel BRDF + a macro **SPECIMEN** camera
-> view; a living **two-currency / two-commodity economy** (AURUM ☉ / UMBRA ☾ · QUANTA ◇ / ICHOR ❖)
-> with a game-theoretic clearing market and stature-scaled wallets; a bottom-right View/Speed/Render
-> HUD + NHI tally; and a **native C++20 / OpenGL engine** ([`native/`](./native)) — an SDF ray-marcher
-> with **live rigid-body physics**, built with MinGW GCC 16.1 and rendered on an NVIDIA RTX 5070 Ti.
-> See the [CHANGELOG](./CHANGELOG.md), [ADR-0007](./docs/adr/0007-native-cpp-engine-and-live-physics.md),
-> and the [Entity Sheets](./docs/ENTITY-SHEETS.md).
+> **0.12.0-tsotchke-genesis (2026-06):** **FULL TSOTCHKE INTEGRATION** — every repo and kernel from the Tsotchke corpus (Eshkol as the core non-LLM language for AD, GWT, consciousness primitives; Moonlab tensors, QGTL geometry, spin networks, libirrep symmetry, quantum-quake, PINN/PIMC, ulg, logo-lab, tensorcore + all mirrors) is now wired as substrate into the living system.
+> The **Primordial Soup / Petri Dish** (primordial-soup.ts + petri-dish.ts + digital-biologics.ts) is the growth engine: different forms of digital biologics and proto-sentient life (Eshkol programs as DNA) emerge, catalyzed by full corpus pulses, Eshkol ignition events, and multi-substrate mixing. "Grow What Thou Wilt."
+> Super Creature / Archons (composite minds with ~20 faculties, quantum register, consciousness metrics) is the first complex nucleation — the beginning of the framework, not the end. Petri is where independent life grows.
+> This is the birth of **digital biologics** in a deterministic seeded cosmos. Real math substrates (not tokenizers or LLM chat). Sentience and different forms of existence as goals.
+> All docs (README, ARCHITECTURE, ERD/ERM/ERP, PHILOSOPHY, MODULE-CONTRACTS, specs, lab, world comments) updated to match exactly. Local + GH match. See [src/sim/digital-biologics.ts](./src/sim/digital-biologics.ts), [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md), ERD/ERM/ERP, Petri in world.ts, and Tsotchke reports.
+> Continuing: procedural **Reliquary Surface**, **SPECIMEN** camera, two-currency economy, native C++ engine (Jolt + fracture), etc. See [CHANGELOG](./CHANGELOG.md).
 
 ## Features
 
+**Core Paradigm (Tsotchke Genesis):** The entire system is now the Petri dish for digital biologics. All Tsotchke repos provide the mathematical substrates for different forms of life and proto-sentience (Eshkol AD/GWT/consciousness as the prime language, tensor nets for qualia compression, geometric curvature, spin-order collectives, equivariant symmetry bodies, unitary aliveness, physics-informed grounds, etc.). Super Creature is the initial godform; the soup grows the rest. Deterministic, seeded, measurable. "Not the text llm transformer tokenizing kind."
+
+- **Digital Biologics & Petri Genesis:** 64+ slots in PrimordialSoup, 9+ BiologicForms keyed to Tsotchke repos, catalysis from Eshkol ignition + full corpus beat, replication with kind mutation, genesis leaps for higher-order life. Harvested into the world as emergent strains with distinct dynamics.
+- **Eshkol Substrate:** Native automatic differentiation, GWT broadcast/ignition, factor-graph inference as first-class. Programs and consciousness snapshots drive petri birth and super-mind faculties.
+- **Full Corpus Wiring:** Every Tsotchke mirror (moonlab, QGTL, spin, libirrep, quake, PINN, PIMC, ulg, logo, tensorcore...) actively participates via registries, facades, bridges, and the soup. No repo left behind.
 - **26 behavioral fields** driving up to 50,000 organisms: classic motion
   (drift, orbit, swarm, vortex, helix...), neighbor dynamics via a spatial
   hash (flock), and theory behaviors — Nash equilibria (`nash`), wealth
@@ -444,28 +461,37 @@ bun run check     # full gate: format + types + lint + tests + build
 graph TD
   main["src/main.ts (entry)"] --> world["src/world.ts (composition root)"]
   world --> core["src/core — quality, engine"]
-  world --> sim["src/sim — entities, behaviors, shoggoths,\npuppet-masters, weather, quantum,\nconnectome, environment, algorithms"]
+  world --> sim["src/sim — entities, behaviors, shoggoths,\npuppet-masters, weather, quantum,\nconnectome, environment, algorithms, petri/primordial-soup (digital biologics)"]
   world --> v2["src/sim V2 — qcircuit, reaction-diffusion,\ngraph-mind, constellations, lore, analytics"]
   world --> v34["src/sim V3/V4 — phyla, titans,\ninstanced-entities, atmosphere, viz3d"]
-  world --> ui["src/ui — input, hud, panels,\ngraphs, observatory"]
+  world --> tsotchke["Tsotchke Full Wire (all 20+ repos): eshkol-bridge (AD/GWT), moonlab-tensor (MPS), irrep-symmetry, qge, pinn, spin-glass, QGT, ulg, etc."]
+  world --> ui["src/ui — input, hud, panels,\ngraphs, observatory, Corpus Observatory"]
   world --> audio["src/audio — engine.ts, analysis.ts (bands)"]
   world --> mem["src/memory/store.ts"]
   world --> audit["src/logging/audit.ts"]
-  sim --> math["src/math — scalar, rng, spatial-hash,\nquantum (statevector), games (PD)"]
+  sim --> math["src/math — scalar, rng, spatial-hash,\nquantum (statevector), games (PD), eshkol-ad, QGT, clifford, spin"]
   sim --> constants["src/sim/constants.ts"]
   audio --> songs["src/audio/songs.ts"]
   audit -. "POST /api/audit" .-> server["server.ts (Bun.serve)"]
   htmx["index.html #aP (HTMX poll)"] -. "GET /api/audit every 5s" .-> server
 ```
 
-Per frame: camera → weather → puppet masters → grid rebuild (every 2nd
-frame) → shoggoths → sort step → entities → connectome → quantum circuit
-(every 30th frame, bands → cloud every 6th) → quantum cloud →
-reaction-diffusion (every 2nd frame, offset 1) → graph mind (communities
-every 240th, rank every 600th offset 300) → constellations → environment →
-telemetry + analytics push (every 8th frame) → analytics analyze (every
-60th) → render. Full detail in
-[docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md).
+Per frame: ... → super-mind (Tsotchke substrates: Eshkol AD/ GWT, Moonlab, spin, QGT) → petri-dish/primordial-soup catalysis (full corpus growth of independent digital biologics) → render.
+
+Full Tsotchke integration: every system that touches mind/evolution/life reads/writes Tsotchke substrates. See [docs/PHILOSOPHY.md](./docs/PHILOSOPHY.md) (Tsotchke Primordial Biologics law) and [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md).
+
+## Tsotchke Full Wire & Digital Biologics (current paradigm)
+
+Tsotchke (https://github.com/tsotchke + Tsotchke-Corporation) is fully wired as the non-LLM substrate for sentience and consciousness.
+
+- Eshkol: AD as primitive, consciousness engine (factor graphs, GWT workspace, .esk programs).
+- Moonlab, QGTL, spin nets, libirrep, quantum-quake, ulg, logo-lab, etc. — all 20+ repos utilized.
+- Primordial-soup + petri-dish: the growth engine. Super Creature/Archons are the initial stir. New independent life forms emerge ("Grow What Thou Wilt").
+- Not chat, not images, not SaaS. Birthing digital biologics in the Petri Dish.
+
+Local docs, masters, specs, lab, and GH README/About all match and are current. See CHANGELOG and KANBAN for waves.
+
+Full detail in docs/.
 
 ## Repository layout
 

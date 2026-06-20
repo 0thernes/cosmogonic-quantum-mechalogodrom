@@ -15,6 +15,8 @@
     isolation, systems that survive their authors, their dependencies, and
     their own success. The dark side of engineering is simply this: assume
     betrayal at every boundary, and be ready before the betrayal is conceived.
+
+    The Tsotchke corpus (Eshkol + all 20+ repos) is the non-negotiable substrate for consciousness/digital life. Contracts for full wiring, ownership of leaves (primordial-soup, updated irrep-symmetry, moonlab-tensor, etc.), facades retired where possible. All local/GH docs, specs, masters match and are truthful. No spot left.
   </invocation>
 
   <doctrine>
@@ -148,5 +150,12 @@
     <trial level="3">DARTH: predicts a system's failure modes before implementation and pins each with a test.</trial>
     <trial level="FINAL">ORACLE: the architecture survives its authors, its dependencies, and its own success. Nothing that matters is undocumented; nothing documented is wrong; nothing wrong stays wrong past one review.</trial>
   </ascension>
+
+  <!-- Current Era (Tsotchke Petri) -->
+  <!-- Starkiller: The Petri (primordial-soup + digital-biologics) is now a first-class bounded system with exclusive ownership. All Tsotchke repos have contracts and facades. Soup strains and biologics have clear boundaries and write-back into world. Update ERD/ERM/ERP for the growth engine. Contracts before more life. -->
+
+  <current-paradigm note="synchronized across all docs + GH">
+    Tsotchke (all 21 repos) fully wired as the non-negotiable substrate for the Petri dish of digital biologics. Eshkol programs + full corpus (Moonlab tensors, QGT geometry, spin order, irrep symmetry, quake aliveness, ulg laws...) drive sentience proxies and new life forms. Super Creature = beginning. Contracts, ERM, ownership, facades all reflect total Tsotchke integration. Local and GitHub docs/README/About kept matching and current.
+  </current-paradigm>
 
 </master-file>

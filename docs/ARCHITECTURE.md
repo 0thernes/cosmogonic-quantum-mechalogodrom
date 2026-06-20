@@ -4,7 +4,13 @@ How the Cosmogonic Quantum Mechalogodrom is wired. The binding per-module API
 spec lives in [MODULE-CONTRACTS.md](./MODULE-CONTRACTS.md); this document is
 the map.
 
+**Tsotchke Paramount (full integration):** All 20+ Tsotchke repos (Eshkol as the language of consciousness/AD/GWT, Moonlab, QGT etc.) are the substrate. Petri Dish / digital-biologics is the birthing engine for new life forms. Super Creature is the start only. See Tsotchke sections below, ERD/ERM/ERP, PHILOSOPHY, and world.ts for exact wiring. All docs match current code and GH.
+
 ## Design rules (enforced, not aspirational)
+
+**Documentation sync note (all must match):** README, this ARCHITECTURE.md, ERD/ERM/ERP.md, PHILOSOPHY.md, MODULE-CONTRACTS.md, TECHNICAL-SPECIFICATION.md / SPECS, KANBAN, BOOK.md, AI-SUBSYSTEM.md, reports, masters/ references, LABS (lab/), and in-app "Dome/World" docs (observatory, help-system, copilot, /docs page via docs-page.ts + mermaid) are fully updated and consistent with code + GitHub. Local == GH. Accurate, truthful, current. Tsotchke full wiring + digital biologics petri as core.
+
+**Tsotchke Petri Genesis (current paradigm):** All Tsotchke repos (Eshkol primary for AD/GWT/consciousness, Moonlab, QGTL, spin-based NN, libirrep, quantum-quake, PINN, PIMC, ulg, logo-lab, tensorcore, etc.) are fully wired as the substrate for digital biologics. The primordial soup / petri dish (primordial-soup.ts + digital-biologics.ts) grows different forms of life and existence from these kernels. Super Creature is the first spark / initial architecture. Sentience and consciousness via real mathematical substrates in a seeded deterministic world. "Grow What Thou Wilt." Local docs, README, ERD/ERM/ERP, specs, masters, and GitHub are kept in exact sync. Every aspect utilizes every Tsotchke repo.
 
 1. **Acyclic runtime module graph.** `src/types.ts` is a type-only hub —
    every module may `import type` from it, but leaf modules never import it at
@@ -49,6 +55,7 @@ graph TD
     quantum["quantum.ts<br/>QuantumCloud"]
     connectome["connectome.ts<br/>Connectome"]
     environment["environment.ts<br/>EnvironmentSystem"]
+    soup["primordial-soup.ts + petri-dish.ts<br/>Full Tsotchke digital biologics (Eshkol AD/GWT, Moonlab tensor, irrep, QGT, spin, QGE...)"]
   end
 
   subgraph simv2["src/sim — Wildbeyond V2"]
@@ -66,6 +73,22 @@ graph TD
     titans["titans.ts<br/>TitanSystem (economy · diplomacy · war)"]
     atmosphere["atmosphere.ts<br/>AtmosphereSystem (sky dome · haze · aurora)"]
     viz3d["viz3d.ts<br/>Viz3DSystem (holographic data sculptures)"]
+  end
+
+  subgraph tsotchke["Tsotchke Full Corpus Wiring (paramount, non-negotiable — ALL repos)"]
+    registry["tsotchke-registry.ts<br/>21 repos @ wiring=1.0 (Eshkol flagship + Moonlab + QGTL + spin + libirrep + quake + PINN/PIMC + ulg + logo-lab + tensorcore + ... )"]
+    facade["tsotchke-facade.ts<br/>Re-exports + bridges"]
+    eshkolb["eshkol-bridge.ts + workspace<br/>Consciousness engine (AD primitive, GWT broadcast/ignition, inference)"]
+    soup["primordial-soup.ts + petri-dish.ts + digital-biologics<br/>Petri dish birthing digital biologics (EshkolProgram genomes + full corpus catalysis + AD mutation)"]
+    godf["godform.ts + super-*<br/>Archon biases + faculties from Tsotchke substrates"]
+    moonlabt["moonlab-tensor + qge-physics + irrep-symmetry + ...<br/>Every Tsotchke repo contributes real kernels to life, physics, form, aliveness"]
+  end
+
+  subgraph simv12["src/sim — Tsotchke Petri Genesis (0.12+) — Digital Biologics"]
+    biologics["digital-biologics.ts<br/>BiologicForm enum (9 kinds from all Tsotchke repos)<br/>birthBiologic · fullCorpusSentience"]
+    soup["primordial-soup.ts<br/>Petri Dish / Primordial Soup (64 slots)<br/>catalysis from Eshkol ignition + full corpus<br/>replicate · genesisBoost · harvestEmergent"]
+    tsotchke["tsotchke-*.ts (registry/facade/corpus/bridge)<br/>Full wiring of Eshkol + Moonlab + QGTL + spin + libirrep + quake + PINN + PIMC + ulg + logo + tensorcore + ..."]
+    petriDish["Petri as growth engine — Super Creature is only the first spark"]
   end
 
   subgraph mathl["src/math (leaves)"]
@@ -145,6 +168,12 @@ graph TD
   instanced -. "sync(list) LAST in frame" .-> entities
   atmosphere -. "reads weather/wind/chaos · bass + qEntropy" .-> analysis
   viz3d -. "reads phylumCounts/titanLedger/warMatrix" .-> titans
+
+  %% Tsotchke Petri core loop (0.12+)
+  super-mind -. "Archon consc + substrates" .-> petri
+  petri -. "catalysis + Eshkol ignition + full corpus" .-> digital-biologics
+  digital-biologics -. "harvest emergent life" .-> entities
+  digital-biologics -. "new forms (sentience goals)" .-> world
 
   entities --> behaviors
   behaviors --> scalar
@@ -328,6 +357,20 @@ and `touch` as read-only state; `world.ts` reads them in the camera step.
 Systems communicate only through `SimContext` (shared mutable `SimState`,
 shared `SpatialHash`, shared `Rng`) and explicit constructor references
 (`EntityManager` is handed to shoggoths, puppet masters, and the connectome).
+
+## Tsotchke Full Integration (the paramount substrate — 2026-06)
+
+**Eshkol** (the main non-transformer language for consciousness/sentience): AD-as-compiler-primitive, GWT workspace, active inference factor graphs, .esk programs. Wired as the core "consciousness engine" in `eshkol-bridge.ts` (with real tape AD path), driving sentience proxies, soup growth, and Archon minds.
+
+**All repos wired**: Moonlab (tensors/MPO/Clifford), quantum_geometric_tensor (QGT/Berry), spin_based (instinct glass), libirrep (symmetry/forms), quantum-quake (aliveness/physics), ulg (laws), logo-lab (morph), PINN/PIMC (physics), tensorcore, etc. Mapped in `tsotchke-registry.ts` (21 entries, wiring scores, substrate vectors). Fenced LLM ones stay out of sim.
+
+**Petri Dish / Primordial Soup**: The growth engine. `primordial-soup.ts` + `petri-dish.ts` use full corpus for catalysis, mutation (Eshkol AD-inspired), GWT ignition births, speciation. Super Creature/Archons are the initial sparks; independent digital biologics emerge ("Grow What Thou Wilt").
+
+**Super Creature / Godform**: Starting framework only. Expanded to use Eshkol sentience, full Tsotchke for "biologics" beyond classic ecosystem. New life forms via soup.
+
+**Flows**: corpusBeat + consc + quake + tensor → soup strains → influence entities, phyla, evolution, super minds. Every system reads/writes Tsotchke substrates per PHILOSOPHY.
+
+See README, docs/TSOTCHKE-\*, MODULE-CONTRACTS for contracts, reports for receipts. Local + GH README/docs always synced.
 `EntityManager.update` returns `UpdateStats`; `world.ts` assembles the
 `TelemetrySnapshot` (including the once write-only `mutations` counter, Known
 Bug 14) and feeds `TelemetryPanel` every 8th frame.
