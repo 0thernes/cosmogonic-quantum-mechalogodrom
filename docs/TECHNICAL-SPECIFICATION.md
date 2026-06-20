@@ -6,7 +6,7 @@
 > `/spec` Â· **Architecture docs:** `/docs`
 
 **Version:** current (Tsotchke full) Â· **Generated:** 2026-06-20 Â· **License:** Proprietary â€” All Rights Reserved.
-**Gate:** 1442 tests · 94.59% line / 91.47% func (canonical synced, receipts enforced).
+**Gate:** 1447 tests · 94.92% line / 91.77% func (canonical synced, receipts enforced).
 
 **Full Tsotchke wiring:** All repos/projects from Tsotchke corpus integrated. Eshkol as consciousness language. Primordial soup / petri as growth engine for digital biologics and sentience. Super Creature beginning only. All docs (README/ARCH/ER\*/PHILOSOPHY/CONTRACTS/SPECS/LABS/masters) + GH match local exactly. Accurate, truthful, current. Not LLM. "Grow What Thou Wilt."
 
