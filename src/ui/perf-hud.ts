@@ -90,8 +90,15 @@ export function mountPerfHud(currentTier: string): PerfHud {
     tierRow.appendChild(b);
   }
 
+  // Stage 2: surface the (already-built) free-fly camera — it works in the default 'free' view but
+  // was undiscoverable. drag = look, scroll = zoom, WASD/arrows = fly.
+  const hint = document.createElement('div');
+  hint.textContent = 'fly: drag · scroll · WASD';
+  hint.style.cssText = 'margin-top:3px;opacity:.5;font-size:10px';
+
   el.appendChild(line1);
   el.appendChild(tierRow);
+  el.appendChild(hint);
   document.body.appendChild(el);
 
   return {

@@ -30,18 +30,18 @@ shippable, gate-green, pushed increment that builds on the last.
 - Hunt remaining per-frame allocations; tune governor thresholds on real devices.
 - **Payoff:** the crash-proofing becomes _visible and controllable_; you can see the governor react.
 
-## Stage 2 — Bigger world + free camera + culling/LOD (effort: M)
+## Stage 2 — Free camera (surface it) + adaptive quality (effort: S) ✅ MOSTLY SHIPPED
 
-- Expand the arena volume and ease the centre-pull so it reads as a place, not a crowded disk.
-- A free-flying camera to roam.
-- **Frustum culling + distance LOD** (far creatures: no shadow, no brain, simpler mesh) — also buys perf headroom for everything after.
-- **Payoff:** the biggest "it feels real now" jump; fixes "it's small to move around."
+- **Free-fly camera — already in the engine.** It works in the default `free` view (drag = look, scroll = zoom, WASD/arrows = fly); it was just undiscoverable. Surfaced in-app via the perf-HUD hint (`src/ui/perf-hud.ts`). This is the real "it's small to move around" fix.
+- **Adaptive quality / render-LOD — already shipped** as the Stage-0 frame governor (sheds DPR → post-FX → shadows under load).
+- **Deferred to Stage 3 (correctly):** the determinism-affecting **arena resize** and **per-instance distance-culling**. Both belong with streaming under the Hybrid decision (Stage 4) — that's where "near/simulated vs far/streamed/culled" is designed and visually tuned (a blind hard-cull distance pops against the fog), and the arena resize touches the sim, so it re-baselines goldens as part of the deterministic-core/streamed-wilderness split, not in isolation.
+- **Payoff:** you can roam now; the heavy world-growth lands with the streaming substrate where it's safe.
 
-## Stage 3 — Sim off the main thread: Web Workers (effort: L)
+## Stage 3 — Sim off the main thread + streamed world (effort: L)
 
-- Move neighbour queries + per-creature brain eval into worker threads — finally use the other ~23 cores.
-- Deterministic work partitioning (seeded, stable chunking) so the one-seed property holds.
-- **Payoff:** 50k goes from crash-proof-but-sluggish → smooth; headroom toward 100k. The first true scaling lever.
+- Move neighbour queries + per-creature brain eval into **Web Workers** — finally use the other ~23 cores. Deterministic work partitioning (seeded, stable chunking) so the core one-seed property holds.
+- Absorbs Stage 2's deferred parts under the **Hybrid** contract: a deterministic **preserve core** (bit-exact) + a streamed best-effort **wilderness** (camera-chunked load/unload + per-instance distance-culling/LOD), which is also where the **arena grows** (the wilderness is the new space to roam).
+- **Payoff:** 50k goes from crash-proof-but-sluggish → smooth; the world gets big via the wilderness; headroom toward 100k. The first true scaling lever.
 
 ## Stage 4 — Simulation LOD / tiered AI (effort: L) ✅ DECIDED: Hybrid (Option C)
 
