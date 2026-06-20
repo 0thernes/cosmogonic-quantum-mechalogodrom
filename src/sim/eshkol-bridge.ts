@@ -89,7 +89,7 @@ export class EshkolConsciousnessEngine {
   }
 
   /** Eshkol KB logic pressure from narrative predicates and surprise. */
-  private stepLogic(narrative: number, surprise: number): void {
+  stepLogic(narrative: number, surprise: number): void {
     const life = this.kbQuery('is:alive');
     const growth = this.kbQuery('seeks:growth');
     const evidence = clamp01(life * 0.45 + growth * 0.35 + narrative * 0.2);
@@ -97,7 +97,7 @@ export class EshkolConsciousnessEngine {
   }
 
   /** Eshkol Factor Graph inference + free energy (fg-infer!, free-energy). */
-  private stepInference(surprise: number, freeEnergy: number): void {
+  stepInference(surprise: number, freeEnergy: number): void {
     for (let i = 0; i < BELIEFS; i++) {
       const b = this.beliefs[i] ?? 0.5;
       const msg = surprise * (0.5 + 0.5 * Math.sin(i)) * (1 - freeEnergy * 0.5);
@@ -112,7 +112,7 @@ export class EshkolConsciousnessEngine {
   registerModule(name: string, fn: (content: number) => number) {
     if (this.wsModules.length < MODULES) this.wsModules.push({ name, fn });
   }
-  private stepWorkspace(salience: ArrayLike<number>, ignition: number): void {
+  stepWorkspace(salience: ArrayLike<number>, ignition: number): void {
     const n = Math.min(salience.length, MODULES, Math.max(1, this.wsModules.length));
     let sum = 0;
     for (let i = 0; i < n; i++) {

@@ -13,12 +13,9 @@
 
 import type { Rng } from '../math/rng';
 import { clamp } from '../math/scalar';
-import { qgeHybridEnergy } from './qge-physics';
 import { corpusBeatForArchon, getTsotchkeRepoByIndex } from './tsotchke-registry';
-import { logoMorphScalar, logoSymmetryOrder, turtleNew, type TurtleState } from './logo-turtle';
-import { perceptronTag } from './perceptron-baseline';
-import { ulgFieldSample } from './ulg-bridge';
-import { birthEshkolLife, runEshkolProgram, type EshkolLifeProgram } from './petri-dish';
+import { logoMorphScalar, turtleNew, type TurtleState } from './logo-turtle';
+import { EshkolConsciousnessEngine } from './eshkol-bridge';
 
 const clamp01 = (v: number): number => clamp(v, 0, 1);
 
