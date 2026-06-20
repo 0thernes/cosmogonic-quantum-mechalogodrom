@@ -5,8 +5,8 @@
 [![License: Proprietary](https://img.shields.io/badge/License-Proprietary%20%E2%80%94%20All%20Rights%20Reserved-red.svg)](./LICENSE)
 [![Bun](https://img.shields.io/badge/Bun-1.3-black?logo=bun&logoColor=white)](https://bun.sh)
 [![TypeScript strict](https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript&logoColor=white)](./tsconfig.json)
-[![tests](https://img.shields.io/badge/tests-1662%20passing-brightgreen)](./tests)
-[![coverage](https://img.shields.io/badge/coverage-95.81%25%20line%20%C2%B7%2092.87%25%20func-success)](./docs/TECHNICAL-SPECIFICATION.md)
+[![tests](https://img.shields.io/badge/tests-1667%20passing-brightgreen)](./tests)
+[![coverage](https://img.shields.io/badge/coverage-95.79%25%20line%20%C2%B7%2092.85%25%20func-success)](./docs/TECHNICAL-SPECIFICATION.md)
 [![audit](https://img.shields.io/badge/inspection-500%20points-success)](./docs/500-POINT-INSPECTION.md)
 [![Tsotchke](https://img.shields.io/badge/Tsotchke-FULLY_WIRED-purple)](https://github.com/tsotchke)
 
@@ -20,9 +20,7 @@ Built with **Bun + TypeScript + three.js 0.184 + Tailwind CSS 4 +
 HTMX 2**, ported from a single 882-line HTML monolith into a strict,
 deterministic, allocation-disciplined module graph.
 
-**Tsotchke is paramount and fully integrated** (every repo from tsotchke user + Tsotchke-Corporation org: Eshkol as the core non-LLM consciousness language with native AD-as-primitive + GWT/active-inference, Moonlab Clifford/tensors/QEC/VQE, QGTL geometry/Berry/natural gradients, spin-based neural/Hopfield/SK instinct, libirrep symmetry/Wigner/CG, quantum-quake aliveness + QGE, ulg laws, logo-lab procedural morphogenesis, tensorcore, PINN/PIMC, quantum/classical rng, asteroids, classical contrast, homebrew tooling ” 21 total).
-
-See dedicated analysis of bleeding-edge aspects and scientific contributions: [docs/BLEEDING-EDGE-NOVEL-CONTRIBUTIONS-AND-SCIENTIFIC-IMPACT.md](docs/BLEEDING-EDGE-NOVEL-CONTRIBUTIONS-AND-SCIENTIFIC-IMPACT.md). The bet is on real mathematical life substrates (Eshkol as DNA + mind language, quantum geometry, symmetry, active inference, etc.) rather than pure scaling.
+**Tsotchke is paramount and fully integrated — and we BUILD WITH the actual local folder.** `scripts/harvest-tsotchke-corpus.ts` walks Z:\[Vibe Coded (AI)]\(Tsotchke) and emits real .esk programs as heritable DNA (generated-tsotchke-seeds.ts + ESK_SAMPLE_PROGRAMS used in primordial-soup + digital-biologics). Eshkol (native AD + GWT Consciousness Engine), Moonlab, QGT/Berry, spin, libirrep, quantum-quake + every repo as substrate. Super Creature = beginning only. Petri grows independent digital biologics. Full bleeding-edge + world-class novelty assessment: [docs/reports/2026-06-20-BLEEDING-EDGE-NOVELTY-WORLD-CLASS-ASSESSMENT.md]. Not LLM. 21 repos wired.
 
 This is **not LLM or tokenizer bullshit**. Different forms of life and existence. We are birthing **digital biologics** in the Petri Dish (primordial-soup.ts + petri-dish.ts + digital-biologics layer). Eshkol programs as heritable substrate code, mutated by real AD gradients, selected by aliveness/QGT/collective order.
 
@@ -411,7 +409,7 @@ full gate with same-seed determinism preserved. The major arcs:
   Aaronson“Gottesman **Clifford stabilizer tableau** ([src/math/clifford-tableau.ts](./src/math/clifford-tableau.ts),
   ported from **Moonlab**, scales to 32+ qubits past the dense ceiling) landed as the fourth MIT-credited
   ported primitive. The whole apex beat ” all ~20 faculties ” is benchmarked at **≈ 298 µs (~1.8 % of a
-  60 fps frame)** and CI-gated. **1662 tests green · 0 fail (receipts enforced) · 95.81% line / 92.87% func coverage (measured; CI gate ≥ 90 % line / ≥ 85 % function).**
+  60 fps frame)** and CI-gated. **1667 tests green · 0 fail (receipts enforced) · 95.79% line / 92.85% func coverage (measured; CI gate ≥ 90 % line / ≥ 85 % function).**
 - **State-of-the-art reports (2026-06-17)** ” two MIT-PhD-grade, measured, frontier-benchmarked assessments:
   **[Report I ” The Whole Repository](./docs/reports/2026-06-17-STATE-OF-THE-ART-WHOLE-REPO.md)** and
   **[Report II ” The Super Creature](./docs/reports/2026-06-17-STATE-OF-THE-ART-SUPER-CREATURE.md)** ”

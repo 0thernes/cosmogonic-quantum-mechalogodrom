@@ -11,6 +11,7 @@ import {
   dSin,
   dExp,
   derivative,
+  dVar,
   type Dual,
 } from '../src/math/dual';
 import { hdExp, hdSin, derivatives2 } from '../src/math/hyperdual';
@@ -22,6 +23,12 @@ describe('dual — derivatives', () => {
     const r = derivative((d) => dMul(dMul(d, d), d), 2);
     expect(near(r.value, 8)).toBe(true);
     expect(near(r.d1, 12)).toBe(true);
+  });
+
+  test('dVar smoke (used to satisfy strict noUnused)', () => {
+    const v = dVar(42);
+    expect(near(v.x, 42)).toBe(true);
+    expect(near(v.d, 1)).toBe(true);
   });
 
   test('x²+3x at 5 ⇒ 40, 13', () => {

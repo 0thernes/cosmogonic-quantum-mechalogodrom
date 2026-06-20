@@ -8,6 +8,7 @@
 
 import { corpusBeatForArchon } from './tsotchke-registry';
 import { eshkolWorkspaceTick } from './eshkol-workspace';
+import { ESK_SAMPLE_PROGRAMS, getEshkolProgramFingerprint } from './generated-tsotchke-seeds'; // Direct from Tsotchke local folder harvest — real .esk DNA
 
 /** Digital biologic forms from full Tsotchke corpus - different substrates yield different life. */
 export const BIOLOGIC_FORMS = [
@@ -67,10 +68,18 @@ export function birthBiologic(archon: number, tick: number): Biologic {
   // Substrate-specific initialization based on form
   const substrateBias = formIdx / BIOLOGIC_FORMS.length;
 
+  // Use real harvested .esk from local Tsotchke folder when Eshkol native
+  const realProgram =
+    form === 'ESHKOL_NATIVE'
+      ? ESK_SAMPLE_PROGRAMS.length > 0
+        ? ESK_SAMPLE_PROGRAMS[formIdx % ESK_SAMPLE_PROGRAMS.length]
+        : getEshkolProgramFingerprint(formIdx)
+      : (cat * 10000 + beat * 1000) >>> 0;
+
   return {
     id: (tick * 31 + archon) >>> 0,
     form,
-    program: (cat * 10000 + beat * 1000) >>> 0,
+    program: realProgram,
     adFitness: 0.2 + cat * 0.5 * (form === 'ESHKOL_NATIVE' ? 1.2 : 0.8),
     gwtIgnition:
       ws.broadcastGain * (form === 'ESHKOL_NATIVE' || form === 'HYPER_SENTIENT' ? 1.1 : 0.9),
