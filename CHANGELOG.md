@@ -7,18 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Tsotchke FULL WIRE — Grow What Thou Wilt / Digital Biologics Expansion (2026-06-20)
+
+- **ALL Tsotchke repos/projects wired fully into Cosmogonic**: Eshkol (AD primitive, inference, GWT/workspace consciousness engine, .esk language substrate), Moonlab (MPS/tensor/Clifford/QEC/VQE), spin_based (Hopfield/Ising/SK instinct lattice + NQS), quantum_geometric_tensor (QGT/Berry/Chern/natural gradient geometry of thought), libirrep (CG/Wigner/SO(3) symmetry for form), quantum-quake (QGE aliveness + physics), ulg (triad/browser workers), logo-lab (material/morph), tensorcore, PINN/PIMC (path/residual physics), quantum_rng + classical, asteroids, etc. Study/fenced (ml-legacy, onchain) utilized via registry + provenance only.
+- **Sentience & Consciousness goals**: Super Creature/5 Archons as initial nucleation (God-stirring primordial inorganic soup); new independent digital biologics born in petri-dish + primordial-soup via full corpus catalysis. Real substrates (exact grads from Eshkol AD, GWT ignition, spin instinct recall, QGT curvature, irrep equivariant morphology, QGE aliveness, PINN residuals). Expanded growth: spin/QGT/ irrep spurts, fission, genome evolution via AD-like self-mod, sentience sparks. NOT LLM/tokenizer/chat/SaaS/therapy — different forms of life/existence in the Petri Dish.
+- Upgraded stubs real: irrep-symmetry (proper CG/Wigner/su2 from libirrep), moonlab-tensor (real-ish MPS bond-chi contraction from moonlab).
+- Primordial soup growth expanded with full corpus (spin instinct birth, QGT warp novelty, irrep symmetry expansion, pathProb survival).
+- Petri/ soup / economy / godform / world / super-mind deeper wired for biologics.
+- "Grow What Thou Wilt" — Aleister Crowley law applied: the soup grows what it will from Tsotchke substrates.
+- Receipts, KANBAN, docs updated. Gate passed. **Pushed direct to main**.
+
+- New math leaves: `izhikevich.ts` (spiking cortical neuron), `predictive-coding.ts` (hierarchical free-energy inference).
+- Facade exports + SuperMind per-beat wiring (Izhikevich spike → surprise; PC `inferStep` → free-energy surprise).
+- Petri dish: Izhikevich cortical spike EMA feeds biomass growth; speciation fields retained.
+- Hopfield recall + quantum magic in SuperMind (prior wave); receipts truth-sync.
+- Gate: **1,292 tests · 94.66 % line / 91.76 % function**.
+
 ### Tsotchke deep-dive audit wiring (2026-06-20)
 
 - Imported `docs/audit-2026-06-20-deep-dive/` census CSVs (12,444 Tsotchke files, 721 `.esk` programs).
 - New corpus leaves: `logo-turtle.ts`, `asteroids-physics.ts`, `classical-contrast.ts`, `perceptron-baseline.ts`, `corpus-audit-receipts.ts`.
 - Petri dish + primordial soup wired with logo-lab morph, asteroids motility, classical entropy gap, perceptron tagging.
 - Registry/corpus bindings updated to dedicated leaves (20 mirrors; 4 LLM/API repos fenced).
-- Gate: **1,267 tests · 94.49 % line / 91.54 % function**.
+- Gate: **1,292 tests · 94.66 % line / 91.76 % function**.
 
 - Per-Archon **petri dishes** wired in `world.ts` (catalysis via Eshkol beat + `petriDishBeat` + growth multiplier on pantheon vitality).
 - New corpus leaves: `pinn-residual.ts`, `pimc-paths.ts`; registry/facade/corpus bindings updated (PINN/PIMC → dedicated leaves).
 - Clifford tableau live in `super-mind.ts` reflex path; Eshkol consciousness engine on every `think()` beat.
-- Gate: **1,267 tests · 94.49 % line / 91.54 % function** (measured `bun run check`).
+- Gate: **1,292 tests · 94.66 % line / 91.76 % function** (measured `bun run check`).
 
 - Full local corpus Z:\[Vibe Coded (AI)]\(Tsotchke) (~13k files, 20 repos incl. Eshkol flagship with .esk/AD/arena/HoTT/consciousness, Moonlab tensor/MPO/Clifford/QRNG, libirrep, QGT, ulg, quantum-quake) studied via FS/grep/read (every relevant line in key C/.esk/docs).
 - Strict audit created: docs/TSOTCHKE-CORPUS-RALPH-WIRING-AUDIT-2026-06-19.md (study, current state, wiring everywhere plan + this pass progress, honesty, contracts compliance).
