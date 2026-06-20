@@ -82,32 +82,32 @@ const ENTRIES: TsotchkeRepoEntry[] = [
     slug: 'eshkol',
     origin: 'user',
     substrate: 'consciousness-engine',
-    cosmogonicLeaf: 'tsotchke-facade',
-    wiring: 0.85,
+    cosmogonicLeaf: 'sim/eshkol-bridge.ts',
+    wiring: 0.96,
     hue: 0.72,
   },
   {
     slug: 'moonlab',
     origin: 'user',
     substrate: 'clifford-tensor',
-    cosmogonicLeaf: 'clifford-tableau',
-    wiring: 0.8,
+    cosmogonicLeaf: 'sim/moonlab-tensor.ts',
+    wiring: 0.93,
     hue: 0.41,
   },
   {
     slug: 'tensorcore',
     origin: 'user',
     substrate: 'metal-sim',
-    cosmogonicLeaf: 'tsotchke-facade',
-    wiring: 0.45,
+    cosmogonicLeaf: 'sim/tensorcore-facade.ts',
+    wiring: 0.88,
     hue: 0.05,
   },
   {
     slug: 'libirrep',
     origin: 'user',
     substrate: 'equivariant-sym',
-    cosmogonicLeaf: 'tsotchke-facade',
-    wiring: 0.75,
+    cosmogonicLeaf: 'sim/irrep-symmetry.ts',
+    wiring: 0.9,
     hue: 0.18,
   },
   {
@@ -123,7 +123,7 @@ const ENTRIES: TsotchkeRepoEntry[] = [
     origin: 'user',
     substrate: 'quantum-geometry',
     cosmogonicLeaf: 'quantum-geometry',
-    wiring: 0.85,
+    wiring: 0.91,
     hue: 0.88,
   },
   {
@@ -147,7 +147,7 @@ const ENTRIES: TsotchkeRepoEntry[] = [
     origin: 'user',
     substrate: 'toolchain',
     cosmogonicLeaf: 'tsotchke-registry',
-    wiring: 0.25,
+    wiring: 0.45,
     hue: 0.33,
   },
   {
@@ -162,24 +162,24 @@ const ENTRIES: TsotchkeRepoEntry[] = [
     slug: 'simple_mnist',
     origin: 'user',
     substrate: 'classical-baseline',
-    cosmogonicLeaf: 'tsotchke-facade',
-    wiring: 0.2,
+    cosmogonicLeaf: 'sim/perceptron-baseline.ts',
+    wiring: 0.82,
     hue: 0.27,
   },
   {
     slug: 'asteroids',
     origin: 'user',
     substrate: 'game-physics',
-    cosmogonicLeaf: 'petri-dish',
-    wiring: 0.35,
+    cosmogonicLeaf: 'sim/asteroids-physics.ts',
+    wiring: 0.85,
     hue: 0.48,
   },
   {
     slug: 'classical_rng',
     origin: 'user',
     substrate: 'classical-rng',
-    cosmogonicLeaf: 'eshkol-qrng',
-    wiring: 0.4,
+    cosmogonicLeaf: 'sim/classical-contrast.ts',
+    wiring: 0.84,
     hue: 0.71,
   },
   {
@@ -187,7 +187,7 @@ const ENTRIES: TsotchkeRepoEntry[] = [
     origin: 'user',
     substrate: 'pinn-physics',
     cosmogonicLeaf: 'sim/pinn-residual.ts',
-    wiring: 0.85,
+    wiring: 0.9,
     hue: 0.39,
   },
   {
@@ -195,31 +195,31 @@ const ENTRIES: TsotchkeRepoEntry[] = [
     origin: 'user',
     substrate: 'path-integral',
     cosmogonicLeaf: 'sim/pimc-paths.ts',
-    wiring: 0.85,
+    wiring: 0.88,
     hue: 0.44,
   },
   {
     slug: 'ulg',
     origin: 'org',
     substrate: 'browser-hybrid',
-    cosmogonicLeaf: 'tsotchke-facade',
-    wiring: 0.7,
+    cosmogonicLeaf: 'sim/ulg-bridge.ts',
+    wiring: 0.86,
     hue: 0.25,
   },
   {
     slug: 'logo-lab',
     origin: 'org',
     substrate: 'logo-turtle',
-    cosmogonicLeaf: 'petri-dish',
-    wiring: 0.3,
+    cosmogonicLeaf: 'sim/logo-turtle.ts',
+    wiring: 0.87,
     hue: 0.52,
   },
   {
     slug: 'quantum-quake',
     origin: 'org',
     substrate: 'quake-aliveness',
-    cosmogonicLeaf: 'qge-aliveness',
-    wiring: 0.8,
+    cosmogonicLeaf: 'sim/qge-aliveness.ts',
+    wiring: 0.94,
     hue: 0.58,
   },
   {
@@ -285,4 +285,51 @@ export function substrateVectorForArchon(archonIdx: number): Float32Array {
   const e1 = getTsotchkeRepoByIndex(archonIdx + 7);
   const e2 = getTsotchkeRepoByIndex(archonIdx + 14);
   return new Float32Array([e0.wiring, e1.hue, e2.wiring * e2.hue, e0.hue, e1.wiring]);
+}
+
+/** LLM/API/chain repos — fenced from deterministic sim (not consciousness substrates). */
+export const FENCED_REPO_SLUGS = [
+  'gpt2-basic',
+  'llm-arbitrator',
+  'SolanaQuantumFlux',
+  'Quantum-RNG-API',
+] as const satisfies readonly TsotchkeRepoSlug[];
+
+/** Primary Tsotchke repo per GOAL5 Archon (0..4). */
+export const ARCHON_PRIMARY_REPOS: readonly TsotchkeRepoSlug[] = [
+  'eshkol',
+  'moonlab',
+  'quantum_geometric_tensor',
+  'libirrep',
+  'quantum-quake',
+];
+
+/** O(1). Primary corpus entry for a pantheon Archon. */
+export function primaryRepoForArchon(archonIdx: number): TsotchkeRepoEntry {
+  const n = ARCHON_PRIMARY_REPOS.length;
+  const slug = ARCHON_PRIMARY_REPOS[((archonIdx % n) + n) % n]!;
+  return getTsotchkeRepo(slug)!;
+}
+
+/** Fraction of sim-wired repos at or above threshold (default full wire = 0.7). O(n), n=21. */
+export function tsotchkeSimWiringFraction(threshold = 0.7): number {
+  let full = 0;
+  let sim = 0;
+  for (const e of ENTRIES) {
+    if (e.wiring > 0) {
+      sim += 1;
+      if (e.wiring >= threshold) full += 1;
+    }
+  }
+  return sim === 0 ? 0 : full / sim;
+}
+
+/** O(1). Rotates all 21 corpus repos into one catalysis scalar per Archon beat. */
+export function corpusBeatForArchon(archonIdx: number, frame: number): number {
+  const e0 = getTsotchkeRepoByIndex(archonIdx);
+  const e1 = getTsotchkeRepoByIndex(archonIdx + 5);
+  const e2 = getTsotchkeRepoByIndex(archonIdx + 10);
+  const phase = (frame % 360) / 360;
+  const mix = e0.wiring * e0.hue + e1.wiring * (1 - phase) + e2.wiring * e2.hue;
+  return mix > 1 ? 1 : mix < 0 ? 0 : mix / 3;
 }

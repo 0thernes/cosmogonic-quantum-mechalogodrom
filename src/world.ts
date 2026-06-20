@@ -91,6 +91,7 @@ import {
   getCorpusPulseForArchon,
   createPetriDish,
   petriDishBeat,
+  petriDishView,
   petriGrowthMultiplier,
   type PetriDishState,
 } from './sim/godform'; // GOAL5 + TSOTCHKE full corpus (ralph 10x: Eshkol AD, Moonlab tensor, quake, irrep from (Tsotchke))
@@ -1016,12 +1017,21 @@ export class World {
         const s = this.superCreatures[i]?.snapshot();
         archonInfos.push({ archetype: GODFORMS[i] ?? 'ARCHON', plan: s?.plan ?? 'REST' });
       }
+      const soupSnap = this.primordialSoup.snapshot();
+      let petriBiomass = 0;
+      for (const d of this.petriDishes) petriBiomass += petriDishView(d).biomass;
+      petriBiomass /= Math.max(1, this.petriDishes.length);
       this.superPanel.update(
         primeSnap,
         this.economy.wealthOf(World.ECON_SUPER_BASE)?.netWorth ?? 0,
         this.superMindSnap, // V46: the live 10k-param consciousness (dream/hallucinate/reason/self-aware)
         this.superEvo.view(), // V48: the evolution — level / stage / power / day
         archonInfos,
+        {
+          soupLive: soupSnap.liveCount,
+          soupCatalysis: soupSnap.catalysis,
+          petriBiomass,
+        },
       );
       // F-SUPER V35: feed the SUPERHERO HUD the player-creature's live vitals + mind + wallet.
       const hero = this.heroBodies[0];
@@ -1231,6 +1241,7 @@ export class World {
           this.superMinds[i]!.eshkolBeat(),
           pulseForArchon.quakeAliveness ?? 0.5,
           Math.abs(mpoF),
+          s.frame,
         );
         const dish = this.petriDishes[i];
         if (dish) petriDishBeat(dish, i, s.frame, this.petriRng);

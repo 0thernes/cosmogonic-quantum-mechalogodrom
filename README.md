@@ -5,8 +5,8 @@
 [![License: Proprietary](https://img.shields.io/badge/License-Proprietary%20%E2%80%94%20All%20Rights%20Reserved-red.svg)](./LICENSE)
 [![Bun](https://img.shields.io/badge/Bun-1.3-black?logo=bun&logoColor=white)](https://bun.sh)
 [![TypeScript strict](https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript&logoColor=white)](./tsconfig.json)
-[![tests](https://img.shields.io/badge/tests-1294%20passing-brightgreen)](./tests)
-[![coverage](https://img.shields.io/badge/coverage-94.12%25%20line%20%C2%B7%2090.75%25%20func-success)](./docs/TECHNICAL-SPECIFICATION.md)
+[![tests](https://img.shields.io/badge/tests-1314%20passing-brightgreen)](./tests)
+[![coverage](https://img.shields.io/badge/coverage-94.24%25%20line%20%C2%B7%2091.11%25%20func-success)](./docs/TECHNICAL-SPECIFICATION.md)
 [![audit](https://img.shields.io/badge/inspection-500%20points-success)](./docs/500-POINT-INSPECTION.md)
 
 A procedural WebGL cosmic ecosystem — morphogenic organisms, Shoggoths,
@@ -391,7 +391,7 @@ full gate with same-seed determinism preserved. The major arcs:
   Aaronson–Gottesman **Clifford stabilizer tableau** ([src/math/clifford-tableau.ts](./src/math/clifford-tableau.ts),
   ported from **Moonlab**, scales to 32+ qubits past the dense ceiling) landed as the fourth MIT-credited
   ported primitive. The whole apex beat — all ~20 faculties — is benchmarked at **≈ 298 µs (~1.8 % of a
-  60 fps frame)** and CI-gated. **1,294 tests green · 0 fail · 94.12 % line / 90.75 % function coverage (measured; CI gate ≥ 90 % line / ≥ 85 % function).**
+  60 fps frame)** and CI-gated. **1,314 tests green · 0 fail · 94.24 % line / 91.11 % function coverage (measured; CI gate ≥ 90 % line / ≥ 85 % function).**
 - **State-of-the-art reports (2026-06-17)** — two MIT-PhD-grade, measured, frontier-benchmarked assessments:
   **[Report I — The Whole Repository](./docs/reports/2026-06-17-STATE-OF-THE-ART-WHOLE-REPO.md)** and
   **[Report II — The Super Creature](./docs/reports/2026-06-17-STATE-OF-THE-ART-SUPER-CREATURE.md)** —

@@ -17,6 +17,13 @@ import type { EshkolConsciousnessSnapshot } from './eshkol-bridge';
 import { qgeHybridEnergy } from './qge-physics';
 import { moonlabMpoStep } from './moonlab-tensor';
 import { symmetryModes } from './irrep-symmetry';
+import { pathWeight } from './pimc-paths';
+import { corpusBeatForArchon } from './tsotchke-registry';
+import { logoMorphScalar, logoSymmetryOrder, turtleNew } from './logo-turtle';
+import { perceptronTag } from './perceptron-baseline';
+
+const INCUBATE_PATH = new Float32Array(4);
+const SOUP_TAG_WEIGHTS = new Float32Array(4);
 
 export const SOUP_SLOTS = 32;
 export const SOUP_GENOME_LEN = 16;
@@ -82,17 +89,23 @@ export class PrimordialSoup {
     consc: EshkolConsciousnessSnapshot,
     quake: number,
     tensorFlux: number,
+    frame = 0,
   ): void {
-    const energy = qgeHybridEnergy(quake, tensorFlux, consc.unified);
-    this.catalysis = clamp01(this.catalysis * 0.9 + energy * 0.1);
+    const corpusBeat = corpusBeatForArchon(archonIdx, frame);
+    const energy = qgeHybridEnergy(quake * corpusBeat, tensorFlux * corpusBeat, consc.unified);
+    const logoM = logoMorphScalar(turtleNew(0x50ff0001 + archonIdx + frame), frame, 6 + archonIdx);
+    this.catalysis = clamp01(this.catalysis * 0.9 + energy * 0.1 + logoM * 0.02);
     const slot = archonIdx % SOUP_SLOTS;
     if (!this.alive[slot]) {
       if (this.rng() < energy * 0.08) {
         this.alive[slot] = 1;
         this.vitality[slot] = energy * 0.5;
         this.generation[slot] = 0;
-        this.hue[slot] = (archonIdx * 0.17) % 1;
-        this.symmetry[slot] = symmetryModes(archonIdx + 1, quake);
+        this.hue[slot] = (archonIdx * 0.17 + logoM * 0.1) % 1;
+        this.symmetry[slot] = logoSymmetryOrder(
+          turtleNew(0x50ff0001 + archonIdx + frame),
+          symmetryModes(archonIdx + 1, quake),
+        );
         this.consciousness[slot] = consc.unified;
       }
       return;
@@ -115,8 +128,24 @@ export class PrimordialSoup {
       scratch[1] = this.consciousness[i] ?? 0;
       scratch[2] = this.catalysis;
       scratch[3] = (this.symmetry[i] ?? 1) / 8;
+      SOUP_TAG_WEIGHTS[0] = scratch[0] ?? 0;
+      SOUP_TAG_WEIGHTS[1] = scratch[1] ?? 0;
+      SOUP_TAG_WEIGHTS[2] = scratch[2] ?? 0;
+      SOUP_TAG_WEIGHTS[3] = scratch[3] ?? 0;
+      const tag = perceptronTag(SOUP_TAG_WEIGHTS, scratch, 4);
       const flux = moonlabMpoStep(scratch, 2, 4);
-      this.vitality[i] = clamp01((this.vitality[i] ?? 0) * 0.98 + flux * 0.02);
+      INCUBATE_PATH[0] = scratch[0] ?? 0;
+      INCUBATE_PATH[1] = scratch[1] ?? 0;
+      INCUBATE_PATH[2] = scratch[2] ?? 0;
+      INCUBATE_PATH[3] = scratch[3] ?? 0;
+      const pimc = pathWeight(
+        INCUBATE_PATH,
+        2 + (this.symmetry[i] ?? 1) * 0.05,
+        (x) => x * x * 0.5,
+      );
+      this.vitality[i] = clamp01(
+        (this.vitality[i] ?? 0) * 0.98 + flux * 0.02 + pimc * 0.012 + tag * 0.008,
+      );
       if (this.rng() < 0.002 && (this.vitality[i] ?? 0) > 0.6) this.replicate(i);
       if ((this.vitality[i] ?? 0) < 0.03) this.alive[i] = 0;
     }

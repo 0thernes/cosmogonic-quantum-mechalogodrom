@@ -36,6 +36,14 @@ describe('Tsotchke facade (corpus primitives)', () => {
     expect(Number.isFinite(p.cliffordEnt)).toBe(true);
     expect(Number.isFinite(p.quakeAliveness)).toBe(true);
     expect(Number.isFinite(p.adGradient)).toBe(true);
+    expect(p.cliffordEnt).toBeGreaterThanOrEqual(0);
+    expect(p.cliffordEnt).toBeLessThanOrEqual(1);
+  });
+
+  test('corpusPulse scales with registry wiring weight', () => {
+    const wired = corpusPulse(1, 0);
+    const fenced = corpusPulse(1, 7);
+    expect(wired.adGradient).toBeGreaterThan(fenced.adGradient);
   });
 
   test('moonlabTensorContract is deterministic', () => {

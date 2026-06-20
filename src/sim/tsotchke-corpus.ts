@@ -62,19 +62,19 @@ export const TSOTCHKE_REPO_BINDINGS: readonly TsotchkeRepoBinding[] = [
   {
     id: 'ulg',
     mirrorPath: 'mirrors/ulg',
-    cosmogonicLeaf: 'sim/tsotchke-facade.ts',
+    cosmogonicLeaf: 'sim/ulg-bridge.ts',
     paradigm: 'browser triad · PeerCompute · staged workers',
   },
   {
     id: 'tensorcore',
     mirrorPath: 'mirrors/tensorcore',
-    cosmogonicLeaf: 'sim/moonlab-tensor.ts',
+    cosmogonicLeaf: 'sim/tensorcore-facade.ts',
     paradigm: 'tensor core kernels · metal paths',
   },
   {
     id: 'logo-lab',
     mirrorPath: 'mirrors/logo-lab',
-    cosmogonicLeaf: 'sim/super-body.ts',
+    cosmogonicLeaf: 'sim/logo-turtle.ts',
     paradigm: 'material lab · ascii renderer · mobius baseline',
   },
   {
@@ -110,19 +110,19 @@ export const TSOTCHKE_REPO_BINDINGS: readonly TsotchkeRepoBinding[] = [
   {
     id: 'simple_mnist',
     mirrorPath: 'mirrors/simple_mnist',
-    cosmogonicLeaf: 'sim/ai/brains.ts',
+    cosmogonicLeaf: 'sim/perceptron-baseline.ts',
     paradigm: 'classical perceptron demos',
   },
   {
     id: 'asteroids',
     mirrorPath: 'mirrors/asteroids',
-    cosmogonicLeaf: 'sim/qge-physics.ts',
+    cosmogonicLeaf: 'sim/asteroids-physics.ts',
     paradigm: 'arcade physics seed patterns',
   },
   {
     id: 'classical_rng',
     mirrorPath: 'mirrors/classical_rng',
-    cosmogonicLeaf: 'math/rng.ts',
+    cosmogonicLeaf: 'sim/classical-contrast.ts',
     paradigm: 'classical PRNG contrast to Eshkol QRNG',
   },
   {

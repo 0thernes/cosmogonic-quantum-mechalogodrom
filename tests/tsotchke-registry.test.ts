@@ -10,6 +10,7 @@ import {
   getTsotchkeRepo,
   tsotchkeWiringCoverage,
   substrateVectorForArchon,
+  corpusBeatForArchon,
 } from '../src/sim/tsotchke-registry';
 import {
   createPetriDish,
@@ -36,14 +37,24 @@ describe('Tsotchke registry — all 21 repos mapped', () => {
 
   test('consciousness substrates are wired', () => {
     expect(getTsotchkeRepo('eshkol')!.wiring).toBeGreaterThan(0.8);
-    expect(getTsotchkeRepo('moonlab')!.cosmogonicLeaf).toBe('clifford-tableau');
-    expect(getTsotchkeRepo('quantum-quake')!.cosmogonicLeaf).toBe('qge-aliveness');
+    expect(getTsotchkeRepo('moonlab')!.cosmogonicLeaf).toBe('sim/moonlab-tensor.ts');
+    expect(getTsotchkeRepo('quantum-quake')!.cosmogonicLeaf).toBe('sim/qge-aliveness.ts');
+    expect(getTsotchkeRepo('logo-lab')!.cosmogonicLeaf).toBe('sim/logo-turtle.ts');
   });
 
   test('wiring coverage is between 0 and 1', () => {
     const c = tsotchkeWiringCoverage();
-    expect(c).toBeGreaterThan(0.4);
+    expect(c).toBeGreaterThan(0.55);
     expect(c).toBeLessThanOrEqual(1);
+  });
+
+  test('corpus beat rotates all 21 repos deterministically', () => {
+    const a = corpusBeatForArchon(2, 100);
+    const b = corpusBeatForArchon(2, 100);
+    expect(a).toBe(b);
+    expect(a).toBeGreaterThan(0);
+    expect(a).toBeLessThanOrEqual(1);
+    expect(corpusBeatForArchon(2, 100)).not.toBe(corpusBeatForArchon(3, 100));
   });
 
   test('substrate vector is deterministic per archon', () => {

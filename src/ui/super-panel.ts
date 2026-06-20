@@ -13,6 +13,13 @@ import type { EvoView } from '../sim/super-evolution';
 import { mountToggle } from './panel-dock';
 import { SuperNeural } from './super-neural';
 
+/** Primordial petri dish telemetry — digital biologics soup, not chat. */
+export interface PetriTelemetry {
+  soupLive: number;
+  soupCatalysis: number;
+  petriBiomass: number;
+}
+
 /** Plan → accent colour, so the committed goal reads at a glance (hunt-red … rest-grey). */
 const PLAN_COLOR: Record<SuperPlan, string> = {
   HUNT: '#ff5a6b',
@@ -252,6 +259,7 @@ export class SuperPanel {
     mind?: SuperMindSnapshot | null,
     evo?: EvoView | null,
     archons?: Array<{ archetype: string; plan: string }> | null,
+    petri?: PetriTelemetry | null,
   ): void {
     // GOAL5: 5 Archons first-class (all 5 names/archetypes/plans live; prime gets deep + neural; senses/quantum/body via per mind)
     // Feed the deeper neural box FIRST — it animates independently of whether this readout is open.
@@ -316,10 +324,14 @@ export class SuperPanel {
       const geo = mind.qubits.geometry;
       const sp = mind.spin;
       const instinct = sp.bestPattern >= 0 ? (SUPER_PLANS[sp.bestPattern] ?? '—') : '—';
+      const petriStr = petri
+        ? ` · Petri ${petri.soupLive} strains cat${(petri.soupCatalysis * 100).toFixed(0)}% bio${(petri.petriBiomass * 100).toFixed(0)}%`
+        : '';
       this.id.substrate!.textContent =
         `Eshkol H${mind.eshkol.entropyEstimate.toFixed(2)} · ` +
         `QGT vol ${geo.scalar.toFixed(2)} κ${geo.curvature.toFixed(3)} · ` +
-        `Spin→${instinct} ${(sp.bestOverlap * 100).toFixed(0)}%`;
+        `Spin→${instinct} ${(sp.bestOverlap * 100).toFixed(0)}%` +
+        petriStr;
       // V1.1 — the new cognition substrates: reservoir echo/novelty · active-inference free-energy +
       // belief entropy · the metacognitive executive's second-order confidence.
       // V96 — empowerment: the channel-capacity AGENCY the mind feels + the plan it judges most steering.

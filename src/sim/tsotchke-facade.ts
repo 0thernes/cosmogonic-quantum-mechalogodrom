@@ -4,6 +4,8 @@
  * Petri dish: primordial-soup.ts
  */
 
+import { getTsotchkeRepoByIndex } from './tsotchke-registry';
+
 export {
   TSOTCHKE_CORPUS_ROOT,
   TSOTCHKE_REPO_BINDINGS,
@@ -51,12 +53,34 @@ export { quakeQgeFactor, quakePerturb, qgeHybridEnergy, qgePullMod } from './qge
 
 export { grayScottResidual, pinnLoss } from './pinn-residual';
 export { pathAction, pathMetropolisStep, pathWeight } from './pimc-paths';
+export { logoMorphScalar, logoSymmetryOrder, turtleNew } from './logo-turtle';
+export { asteroidEnergy, asteroidSpawn, asteroidStep, asteroidThrust } from './asteroids-physics';
+export { classicalEntropyGap, classicalSample } from './classical-contrast';
+export { perceptronScore, perceptronTag } from './perceptron-baseline';
+export { metalGemmBias, tensorcoreMorphBias } from './tensorcore-facade';
+export { ulgFieldSample, ulgTriadHandoff } from './ulg-bridge';
+export {
+  TSOTCHKE_FILE_COUNT,
+  TSOTCHKE_ESK_COUNT,
+  TSOTCHKE_MIRROR_REPO_COUNT,
+  auditWiringReceipt,
+} from './corpus-audit-receipts';
 
 export { createPetriDish, petriDishBeat, petriGrowthMultiplier } from './petri-dish';
 export type { PetriDishState } from './petri-dish';
 
 export { PrimordialSoup, SOUP_SLOTS, SOUP_GENOME_LEN } from './primordial-soup';
 export type { SoupStrain, SoupSnapshot } from './primordial-soup';
+
+export {
+  TSOTCHKE_REPO_COUNT,
+  getTsotchkeRepo,
+  getTsotchkeRepoByIndex,
+  tsotchkeWiringCoverage,
+  substrateVectorForArchon,
+  corpusBeatForArchon,
+} from './tsotchke-registry';
+export type { TsotchkeRepoSlug, TsotchkeRepoEntry, SubstrateKind } from './tsotchke-registry';
 
 export const TSOTCHKE_ARCHETYPES = [
   'ESHKOL-AD',
@@ -124,12 +148,15 @@ export interface TsotchkeQuantumPulse {
 
 export function corpusPulse(seed: number, formIdx: number): TsotchkeQuantumPulse {
   const b = getTsotchkeBias(formIdx);
+  const repo = getTsotchkeRepoByIndex(formIdx);
   const s = (seed % 10000) / 10000;
+  const scale = repo.wiring > 0 ? 0.5 + repo.wiring * 0.5 : 0.05;
+  const c01 = (v: number) => (v < 0 ? 0 : v > 1 ? 1 : v);
   return {
-    cliffordEnt: (b.cliffordWeight + s * 0.1) % 1,
-    qgtVolume: (b.generative + b.chaos * 0.5) % 1,
-    rngEntropy: (b.narrative * 0.7 + s) % 1,
-    quakeAliveness: b.quakeFactor,
-    adGradient: (b.adDepth / 8) * (0.5 + s * 0.5),
+    cliffordEnt: c01((b.cliffordWeight + s * 0.1) * scale),
+    qgtVolume: c01((b.generative + b.chaos * 0.5) * scale),
+    rngEntropy: c01((b.narrative * 0.7 + s) * scale),
+    quakeAliveness: c01(b.quakeFactor * (0.6 + repo.hue * 0.4)),
+    adGradient: c01((b.adDepth / 8) * (0.5 + s * 0.5) * scale),
   };
 }
