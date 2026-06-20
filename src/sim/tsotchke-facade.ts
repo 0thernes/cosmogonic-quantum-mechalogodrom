@@ -57,7 +57,13 @@ export { logoMorphScalar, logoSymmetryOrder, turtleNew } from './logo-turtle';
 export { asteroidEnergy, asteroidSpawn, asteroidStep, asteroidThrust } from './asteroids-physics';
 export { classicalEntropyGap, classicalSample } from './classical-contrast';
 export { perceptronScore, perceptronTag } from './perceptron-baseline';
-export { metalGemmBias, tensorcoreMorphBias } from './tensorcore-facade';
+export { metalGemmBias, tensorcoreMorphBias, attentionScore } from './tensorcore-facade';
+export {
+  naturalGradient,
+  naturalGradient2x2,
+  vecNorm,
+  vecDot,
+} from '../math/quantum-natural-gradient';
 export { ulgFieldSample, ulgTriadHandoff } from './ulg-bridge';
 export {
   TSOTCHKE_FILE_COUNT,

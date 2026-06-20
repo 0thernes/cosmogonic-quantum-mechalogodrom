@@ -8,6 +8,12 @@ export interface WorkspaceTick {
   phiCoupling: number;
   logicWeight: number;
   inferenceWeight: number;
+  /** Global ignition threshold (0..1, when crossed triggers broadcast). */
+  ignitionThreshold: number;
+  /** Workspace entropy (0..1, measures diversity of active representations). */
+  entropy: number;
+  /** Attentional spotlight index (0..k-1, which slot wins broadcast). */
+  spotlight: number;
 }
 
 const clamp01 = (v: number): number => (v < 0 ? 0 : v > 1 ? 1 : v);
@@ -25,7 +31,18 @@ export function eshkolWorkspaceTick(substrate: Float32Array, beat: number): Work
   const phiCoupling = clamp01(w1 * 0.6 + w2 * 0.2);
   const logicWeight = clamp01(w0 * 0.7 + w2 * 0.2);
   const inferenceWeight = clamp01(w1 * 0.8 + (1 - w0) * 0.1);
-  return { broadcastGain, phiCoupling, logicWeight, inferenceWeight };
+  const ignitionThreshold = clamp01(0.3 + w2 * 0.4);
+  const entropy = clamp01(w0 * 0.3 + w1 * 0.4 + w2 * 0.3);
+  const spotlight = Math.floor(phase * 8) % 8;
+  return {
+    broadcastGain,
+    phiCoupling,
+    logicWeight,
+    inferenceWeight,
+    ignitionThreshold,
+    entropy,
+    spotlight,
+  };
 }
 
 /** Salience vector for GWT broadcast from workspace tick. O(k), k≤8. */

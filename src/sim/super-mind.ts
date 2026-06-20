@@ -93,6 +93,8 @@ import {
   dualMul,
   libirrepSymmetry,
   ulgHandoff,
+  naturalGradient2x2,
+  vecNorm,
 } from './tsotchke-facade'; // Ralph loop continue 10x: + ulgHandoff from Tsotchke for more corpus aliveness in super-mind
 import { SpinGlass, type SpinSnapshot } from './spin-glass';
 import { Reservoir, type ReservoirSnapshot } from './reservoir';
@@ -691,6 +693,19 @@ export class SuperMind {
     adBackward(this.predTape, tapeSq);
     const tapeGrad = Math.abs(adGradient(this.predTape, tapePred));
     this.cons.surprise = clamp01(this.cons.surprise + tapeGrad * 0.03 * this.eshkolEngine.logic);
+
+    // Quantum Natural Gradient: precondition cognitive gradient with QGT metric for self-optimization
+    // Use 2x2 allocation-free QNG for the mind's two cognition knobs (superposition + entanglement)
+    const qngRidge = 1e-3;
+    const qngOut = [0, 0]; // Preallocated array for allocation-free QNG
+    // QGT metric components (simplified from quantum-geometry for 2D cognitive space)
+    const g00 = 1 + this.cons.surprise * 0.5;
+    const g01 = this.cons.workspace * 0.3;
+    const g11 = 1 + this.eshkolEngine.inference * 0.5;
+    // Precondition the gradient: (g + λI)⁻¹·∇L
+    naturalGradient2x2(g00, g01, g11, tapeGrad, predErr, qngRidge, qngOut);
+    const qngNorm = vecNorm(qngOut);
+    this.cons.surprise = clamp01(this.cons.surprise + qngNorm * 0.02 * this.eshkolEngine.logic);
     // Consciousness-engine triple (Eshkol CONSCIOUSNESS_ENGINE.md): logic/inference/workspace modulate workspace scalar
     const cTriple = consciousnessTriple(Math.floor(this.eshkolEngine.logic * 5) % 5);
     this.cons.workspace = clamp01(

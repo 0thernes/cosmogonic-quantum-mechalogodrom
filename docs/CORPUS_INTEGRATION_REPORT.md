@@ -16,12 +16,14 @@ The Tsotchke Full Corpus Integration (Ralph Loop) has successfully completed Wav
 ## Completed Waves
 
 ### Wave 1 (Foundation) — ✅ Complete
+
 - Audit + plan + contract amendments
 - Provenance tracking everywhere
 - Enhanced godform/world with full corpus archetypes
 - Documentation infrastructure established
 
 ### Wave 2 (Math Layer) — ✅ Complete
+
 **New Math Leaves Created:**
 
 1. **`src/math/eshkol-ad.ts`** — Reverse-mode automatic differentiation
@@ -49,10 +51,12 @@ The Tsotchke Full Corpus Integration (Ralph Loop) has successfully completed Wav
    - Born measurement sampling
 
 **Contract Updates:**
+
 - Updated `docs/MODULE-CONTRACTS.md` for new math leaves
 - Updated `docs/BENCHMARKS.md` with new hot paths
 
 ### Wave 3 (Sim Layer) — ✅ Complete
+
 **New Simulation Substrates Created:**
 
 1. **`src/sim/eshkol-bridge.ts`** — Eshkol consciousness engine
@@ -83,11 +87,13 @@ The Tsotchke Full Corpus Integration (Ralph Loop) has successfully completed Wav
    - QGE physics step for world perturbations
 
 **Wiring Integration:**
+
 - **SuperMind:** Eshkol AD organ, Moonlab VQE for predictor error and surprise
 - **SuperBody:** Quantum-quake morph, tensor pulses for body dynamics
 - **World:** Quantum-quake physics for interaction perturbations
 
 ### Wave 4 (World/Physics) — ✅ Complete
+
 **World System Integration:**
 
 - **Chaos modulation:** QGE aliveness proxy, Moonlab tensor contract, QEC decoding proxy
@@ -96,11 +102,13 @@ The Tsotchke Full Corpus Integration (Ralph Loop) has successfully completed Wav
 - **5 Archons:** Full corpus archetypes wired into world percepts
 
 **Code Changes:**
+
 - `src/world.ts`: Integrated QGE aliveness, tensor contraction, QEC decoding into SuperPercept calculations
 - `src/sim/super-body.ts`: Wired QGE aliveness, tensor pulses, QEC stability into morph calculations
 - `src/sim/super-mind.ts`: Eshkol AD tape, Moonlab tensor for predictor error
 
 ### Wave 5 (UI/Bridge + Web) — ✅ Complete
+
 **ULG Web Integration:**
 
 - **`src/ui/ulg-bridge.ts`** — Universal Language Gateway bridge
@@ -127,27 +135,31 @@ Updated `docs/TSOTCHKE-CORPUS-INTEGRATION-PLAN.md` with completion status for Wa
 ## Gate Verification
 
 **`bun run check` — ✅ PASS**
+
 - Format: ✅ Prettier
 - Typecheck: ✅ TypeScript strict
 - Lint: ✅ oxlint
-- Test: ✅ 1314 tests pass, 0 fail
+- Test: ✅ 1332 tests pass, 0 fail
 - Receipts: ✅ Verified
 - Build: ✅ Successful
 
 **Test Coverage:**
-- Line coverage: 94.24%
+
+- Line coverage: 94.23%
 - Function coverage: 91.11%
-- Test count: 1314
+- Test count: 1332
 
 ## Determinism & Allocation Compliance
 
 **Manhattan Law Compliance:**
+
 - ✅ All sim logic uses seeded `Rng` (no `Math.random`/`Date.now`)
 - ✅ Allocation-free hot paths (preallocated tapes, scratch arrays)
 - ✅ Deterministic behavior verified via tests
 - ✅ Frame budgets respected (benchmarks updated)
 
 **Starkiller Law Compliance:**
+
 - ✅ Exclusive ownership (new leaves only)
 - ✅ Contract amendments before code
 - ✅ Boundary paranoia (facades, ADRs)
@@ -156,20 +168,24 @@ Updated `docs/TSOTCHKE-CORPUS-INTEGRATION-PLAN.md` with completion status for Wa
 ## Remaining Work (Future Waves)
 
 ### Wave 5 (UI/Bridge + Web) — Partial Complete
+
 - ✅ ULG bridge created
 - ⏳ Optional WASM bridge notes
 - ⏳ Web integration into super-panel/observatory
 
 ### Wave 6 (Native + Perf) — Pending
+
 - Selective C from mirrors into `native/` (via facade)
 - Performance optimization for hot paths
 
 ### Wave 7 (Tests/Bench/Receipts) — Pending
+
 - Goldens for new modules
 - New benchmarks (tensor contraction, AD tape, irrep)
 - Receipts law updates (already done for test count)
 
 ### Wave 8 (Docs/Audit/Close) — Pending
+
 - Full ERM update
 - Final CORPUS_INTEGRATION_REPORT (this document)
 - Clean tree
@@ -177,11 +193,13 @@ Updated `docs/TSOTCHKE-CORPUS-INTEGRATION-PLAN.md` with completion status for Wa
 ## Architecture Impact
 
 **Super Creature Enhancement:**
+
 - **SuperMind:** Now includes Eshkol AD organ for gradient-based learning, Moonlab VQE for quantum optimization
 - **SuperBody:** Quantum-quake morph and tensor pulses for dynamic body geometry
 - **World:** QGE physics for richer creature interactions and environmental perturbations
 
 **Digital Biologics:**
+
 - Petri dish now integrates QGE aliveness, ULG triad handoff, Eshkol workspace
 - Primordial soup catalysis enhanced with quantum geometric tensor energy
 - Deterministic growth trajectories verified
