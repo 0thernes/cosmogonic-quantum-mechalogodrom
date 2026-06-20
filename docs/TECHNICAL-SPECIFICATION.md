@@ -6,7 +6,7 @@
 > `/spec` Â· **Architecture docs:** `/docs`
 
 **Version:** current (Tsotchke full) Â· **Generated:** 2026-06-20 Â· **License:** Proprietary â€” All Rights Reserved.
-**Gate:** 1544 tests · 94.64% line / 91.50% func (canonical synced, receipts enforced).
+**Gate:** 1644 tests · 95.11% line / 92.02% func (canonical synced, receipts enforced).
 
 **Full Tsotchke wiring:** All repos/projects from Tsotchke corpus integrated. Eshkol as consciousness language. Primordial soup / petri as growth engine for digital biologics and sentience. Super Creature beginning only. All docs (README/ARCH/ER\*/PHILOSOPHY/CONTRACTS/SPECS/LABS/masters) + GH match local exactly. Accurate, truthful, current. Not LLM. "Grow What Thou Wilt."
 
@@ -29,14 +29,14 @@ seed**.
 | Metric                                     | Value                                                                         |
 | ------------------------------------------ | ----------------------------------------------------------------------------- |
 | Total authored lines (incl. native engine) | **79,319**                                                                    |
-| Native C++ engine (separate, ADR-0007)     | 1,544 lines Â· 6 files                                                        |
+| Native C++ engine (separate, ADR-0007)     | 1,644 lines Â· 6 files                                                        |
 | Files                                      | **331**                                                                       |
 | Folders                                    | **32** (+ root)                                                               |
 | Distinct file types                        | 21                                                                            |
 | App source (TypeScript)                    | 35,226 lines Â· 108 files                                                     |
 | Tests                                      | 14,117 lines Â· 100 files                                                     |
-| Test : source ratio                        | 0.40 â†’ **94.64 % line / 91.50 % function** coverage (`bun test --coverage`) |
-| Passing tests                              | **1,544** (0 failing)                                                         |
+| Test : source ratio                        | 0.40 â†’ **95.11 % line / 92.02 % function** coverage (`bun test --coverage`) |
+| Passing tests                              | **1,644** (0 failing)                                                         |
 
 ### 1.1 Languages
 
@@ -45,12 +45,12 @@ seed**.
 | TypeScript                     | 50,751 | 63.98 % | â‰ˆ 2/3  |
 | Markdown                       | 15,965 | 20.13 % | â‰ˆ 1/5  |
 | HTML                           | 8,190  | 10.32 % | â‰ˆ 1/10 |
-| C++ (native engine, ADR-0007)  | 1,544  | 1.63 %  | â€”      |
-| CSS (Tailwind source)          | 1,544  | 1.55 %  | â‰ˆ 1/64 |
+| C++ (native engine, ADR-0007)  | 1,644  | 1.63 %  | â€”      |
+| CSS (Tailwind source)          | 1,644  | 1.55 %  | â‰ˆ 1/64 |
 | XML (master files)             | 428    | 0.54 %  | â€”      |
-| bun.lock / YAML / JSON / other | 1,544  | 1.84 %  | â€”      |
+| bun.lock / YAML / JSON / other | 1,644  | 1.84 %  | â€”      |
 
-**Code (TS + C++ + HTML + CSS) = 61,544 lines = 77.5 %**; documentation + config = 22.5 %. (Totals are
+**Code (TS + C++ + HTML + CSS) = 61,644 lines = 77.5 %**; documentation + config = 22.5 %. (Totals are
 measured over all tracked authored files, excluding the vendored `node_modules/` and the generated
 `native/build/` artifacts.)
 
@@ -60,16 +60,16 @@ measured over all tracked authored files, excluding the vendored `node_modules/`
 | -------------------------------------------------- | ----- | ------ |
 | `src/` (application)                               | 109   | 36,456 |
 | `tests/`                                           | 99    | 14,117 |
-| `docs/`                                            | 50    | 11,544 |
+| `docs/`                                            | 50    | 11,644 |
 | repo root (README, LICENSE, configs)               | 24    | 7,000  |
 | `lab/` (self-contained artifact)                   | 1     | 3,861  |
 | `legacy/` (preserved origin)                       | 7     | 2,035  |
-| `native/` (C++ engine, ADR-0007)                   | 6     | 1,544  |
+| `native/` (C++ engine, ADR-0007)                   | 6     | 1,644  |
 | `masters/` (3 governing XML personas)              | 3     | 428    |
-| `.github/` Â· `bench/` Â· `scripts/` Â· `.claude/` | 27    | 1,544  |
+| `.github/` Â· `bench/` Â· `scripts/` Â· `.claude/` | 27    | 1,644  |
 
 `src/` subsystems: `sim/` 17,353 (61 files) Â· `ui/` 9,007 (19 files) Â· `world.ts` 2,395 (composition
-root) Â· `math/` 2,246 (12 files) Â· `audio/` 1,544 Â· `server/` 1,544 Â· `styles/` 1,544 Â· `core/` 582 Â·
+root) Â· `math/` 2,246 (12 files) Â· `audio/` 1,644 Â· `server/` 1,644 Â· `styles/` 1,644 Â· `core/` 582 Â·
 plus `types.ts` Â· `main.ts` Â· `docs-page.ts` Â· `logging/`.
 
 ---
@@ -311,8 +311,8 @@ Complexity classes are catalogued in [COMPLEXITY.md](COMPLEXITY.md); hot-path be
 
 The single gate â€” `bun run check` â€” must pass before every commit:
 
-`prettier --check` â†’ `tsc --noEmit` (strict) â†’ `oxlint` â†’ `bun test` (**1,544 tests, 0 fail**) â†’
-`bun scripts/build.ts`. Coverage gate: line â‰¥ 0.90, function â‰¥ 0.85 (measured 94.64 / 91.50, `bun test --coverage`).
+`prettier --check` â†’ `tsc --noEmit` (strict) â†’ `oxlint` â†’ `bun test` (**1,644 tests, 0 fail**) â†’
+`bun scripts/build.ts`. Coverage gate: line â‰¥ 0.90, function â‰¥ 0.85 (measured 95.11 / 92.02, `bun test --coverage`).
 Three governing "master" personas (`masters/*.xml`) encode the discipline: **the Executor** (finish
 everything, full gates), **the Architect** (contracts before code, exclusive ownership), **the
 Physicist** (determinism, measurement, frame budgets, provenance).
@@ -326,7 +326,7 @@ Physicist** (determinism, measurement, frame budgets, provenance).
 | Lines | File                      | Lines | File                            |
 | ----: | ------------------------- | ----: | ------------------------------- |
 |  2234 | ui/observatory.ts         |   246 | sim/connectome.ts               |
-|  1627 | world.ts                  |   240 | sim/quantum.ts                  |
+|  1644 | world.ts                  |   240 | sim/quantum.ts                  |
 |  1126 | styles/app.css            |   216 | sim/analytics.ts                |
 |   815 | sim/titans.ts             |   208 | sim/puppet-masters.ts           |
 |   714 | sim/environment.ts        |   203 | sim/lore.ts                     |
@@ -377,7 +377,7 @@ contrast 62 Â· doc-links 57 Â· a11y-static 45`.
 
 This is a ~69k-line TypeScript (+ optional C++/Jolt native engine) browser-native simulation that
 renders **up to 50,000 agents** (10,000 at 60 fps on a laptop iGPU with zero AI accelerator), is
-**bit-reproducible from one seed**, ships through a **full CI/CD gate** (1544 tests, 94.64 % line / 91.50 % function coverage),
+**bit-reproducible from one seed**, ships through a **full CI/CD gate** (1644 tests, 95.11 % line / 92.02 % function coverage),
 and whose entire emergent intelligence weighs **â‰ˆ 14 MB â€” 1/50,000th of GPT-3** at the mega ceiling. It
 demonstrates that depth comes from **architecture,
 determinism, and engineering discipline**, not parameter count or hardware.
