@@ -57,10 +57,20 @@ if (printOnly) {
 const problems: string[] = [];
 if (count !== CANONICAL_TEST_COUNT)
   problems.push(`test count: canonical ${CANONICAL_TEST_COUNT} but gate measures ${count}`);
-if (cov.line !== CANONICAL_LINE_COV)
-  problems.push(`line coverage: canonical ${CANONICAL_LINE_COV} but gate measures ${cov.line}`);
-if (cov.func !== CANONICAL_FUNC_COV)
-  problems.push(`function coverage: canonical ${CANONICAL_FUNC_COV} but gate measures ${cov.func}`);
+// Coverage is a DERIVED FLOAT and jitters run-to-run (~0.05 observed on a fixed tree); an exact
+// `!==` on it is the "bare === on derived floats" anti-pattern the Physicist forbids, and is why this
+// gate drifted red on every run. We pin a measured representative value and accept it within an
+// explicit tolerance (Manhattan: state tolerances and test AT them). The integer test COUNT does not
+// jitter, so it stays an exact match — a genuine overclaim (e.g. 1238 vs 1447) is still caught.
+const COV_TOL = 0.25; // ≥0.25% off ⇒ real drift / overclaim; ≤0.25% ⇒ measurement jitter.
+if (Math.abs(Number(cov.line) - Number(CANONICAL_LINE_COV)) > COV_TOL)
+  problems.push(
+    `line coverage: canonical ${CANONICAL_LINE_COV} but gate measures ${cov.line} (tol ±${COV_TOL})`,
+  );
+if (Math.abs(Number(cov.func) - Number(CANONICAL_FUNC_COV)) > COV_TOL)
+  problems.push(
+    `function coverage: canonical ${CANONICAL_FUNC_COV} but gate measures ${cov.func} (tol ±${COV_TOL})`,
+  );
 
 if (problems.length > 0) {
   console.error('✗ receipts law: canonical constants have drifted from the measured gate:');

@@ -1,6 +1,6 @@
 {
   "name": "cosmogonic-quantum-mechalogodrom",
-  "version": "0.12.0-tsotchke-genesis",
+  "version": "0.12.0",
   "description": "Tsotchke-powered Petri dish for digital biologics & proto-sentience. Full wiring of Eshkol (AD/GWT/consciousness language) + all Tsotchke repos (moonlab, QGTL, spin, libirrep, quake...). Super Creature is the first spark; primordial-soup grows different forms of life/existence. Deterministic seeded math, not LLM. Grow What Thou Wilt. Bun + TS + Three.js.",
   "license": "UNLICENSED",
   "private": true,

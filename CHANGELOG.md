@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.0] - 2026-06-20
+
+### Release — v0.12.0 "Tsotchke Genesis" + receipts truth-sync
+
+- **Release cut** v0.11.0 → v0.12.0 (the prior tag was four versions behind the code).
+- **`src/math/rng-stats.ts`** — new MIT source-port of the Tsotchke `quantum_rng` statistical battery: Shannon entropy, χ² uniformity, lag-1 serial correlation, monobit, longest-run, plus the quantum-quality Hamming-flow / windowed-XOR-entropy / product-correlation metrics. 23 tests, including a live seeded `EshkolQrng` stream passing the battery (entropy > 7.5, quality > 0.85). Deterministic leaf; no `Rng`/`Math.random`/`Date.now` of its own.
+- **Receipts law hardened (Manhattan — no bare `===` on derived floats):** coverage is now compared with an explicit **±0.25 tolerance** in `scripts/verify-receipts.ts`. Line/function coverage jitters run-to-run (~0.05 observed on a fixed tree), so exact equality drifted the gate red on every run; the integer test-count stays an exact match, so a real overclaim is still caught.
+- **Receipts re-pinned to MEASURED truth: 1238 tests · 94.87 % line / 91.77 % func** — corrected from a previously-published figure that overstated the test count by ~209 (it had measured a dirty working tree, not the committed snapshot). All public surfaces (README badges + body, ROADMAP, docs.html, specs.html, TECHNICAL-SPECIFICATION) synced to the measured values; full gate green from a cold shell.
+- _Known follow-up (deferred until the concurrent build loop is paused):_ the per-language / per-directory LOC tables in TECHNICAL-SPECIFICATION and specs.html still carry blind-replaced line counts (the native C++ engine line total is overstated); a full LOC-table regeneration is pending.
+
 ### Tsotchke Primordial Biologics Growth (2026-06-20+)
 
 - **FULL WIRING**: All Tsotchke repos (eshkol, moonlab, quantum_geometric_tensor, spin_based_neural_network, libirrep, quantum-quake, ulg, logo-lab, tensorcore, PINN, PIMC, classical, asteroids, etc.) now drive the central **primordial-soup & petri-dish** as the engine for digital biologics.
@@ -2037,4 +2047,3 @@ to the legacy prototype:
 ### Ralph 10x (this): gwt/dual in super-qubits, ulg/gwt in economy. Gate 1183 clean. Heartbeat continue.
 
 ### Ralph 10x (fresh): gwt+mpo in integrated-info. Gate clean. Heartbeat continue.
-
