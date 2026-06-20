@@ -360,4 +360,3 @@ export function biologicProgramFingerprint(archonIdx: number, seed: number): num
   const e2 = getTsotchkeRepoByIndex(archonIdx + 9);
   return ((e0.wiring * 1000 + e1.hue * 100 + e2.wiring) ^ seed) % 0xffffff;
 }
-

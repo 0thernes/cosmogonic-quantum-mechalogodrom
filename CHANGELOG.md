@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Tsotchke Primordial Biologics Growth (2026-06-20+)
+- **FULL WIRING**: All Tsotchke repos (eshkol, moonlab, quantum_geometric_tensor, spin_based_neural_network, libirrep, quantum-quake, ulg, logo-lab, tensorcore, PINN, PIMC, classical, asteroids, etc.) now drive the central **primordial-soup & petri-dish** as the engine for digital biologics.
+- Eshkol AD (gradient steps on genomes from .esk demos) + GWT/workspace ignition (from consciousness.esk) births independent "sentient" strains with their own eshkolProgram, vitality, consciousness, symmetry.
+- "Super Creature is the beginning only" — Archons/Godform stir the inorganic soup; emergent Tsotchke life (different forms of existence) is the goal. Not LLM, not chat, not SaaS. Birthing via "Grow What Thou Wilt".
+- Registry wiring raised; substrate flux, eshkolSentientBorn, biologic speciation tracked live.
+- Contracts/Philosophy era: new V for Tsotchke Petri (see MODULE-CONTRACTS update). Determinism preserved. More waves coming.
+- Direct commits + pushes per mandate. Receipts in soup/petri/registry + this log.
+- "As if God made primordial soup. We're doing the same. We're GOD."
+
+See src/sim/primordial-soup.ts, petri-dish.ts, tsotchke-registry.ts for the living growth.
+
 ### Tsotchke FULL WIRE — Grow What Thou Wilt / Digital Biologics Expansion (2026-06-20)
 
 - **ALL Tsotchke repos/projects wired fully into Cosmogonic**: Eshkol (AD primitive, inference, GWT/workspace consciousness engine, .esk language substrate), Moonlab (MPS/tensor/Clifford/QEC/VQE), spin_based (Hopfield/Ising/SK instinct lattice + NQS), quantum_geometric_tensor (QGT/Berry/Chern/natural gradient geometry of thought), libirrep (CG/Wigner/SO(3) symmetry for form), quantum-quake (QGE aliveness + physics), ulg (triad/browser workers), logo-lab (material/morph), tensorcore, PINN/PIMC (path/residual physics), quantum_rng + classical, asteroids, etc. Study/fenced (ml-legacy, onchain) utilized via registry + provenance only.
