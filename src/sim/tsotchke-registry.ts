@@ -360,3 +360,11 @@ export function biologicProgramFingerprint(archonIdx: number, seed: number): num
   const e2 = getTsotchkeRepoByIndex(archonIdx + 9);
   return ((e0.wiring * 1000 + e1.hue * 100 + e2.wiring) ^ seed) % 0xffffff;
 }
+
+/** Stubs expanded for full Tsotchke digital biologics (soup/petri growth). */
+export function fullTsotchkeBiologicsCatalysis(archon: number, base: number, tick: number): number {
+  return (corpusBeatForArchon(archon, tick) * 0.6 + base) * (tsotchkeWiringCoverage() * 0.8 + 0.2);
+}
+export function biologicProgramFingerprint(i: number, tick: number): number {
+  return ((i * 0x9e3779b1) ^ (tick * 0x85ebca6b)) >>> 0;
+}
