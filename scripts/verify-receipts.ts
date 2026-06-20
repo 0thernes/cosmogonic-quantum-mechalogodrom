@@ -57,10 +57,19 @@ if (printOnly) {
 const problems: string[] = [];
 if (count !== CANONICAL_TEST_COUNT)
   problems.push(`test count: canonical ${CANONICAL_TEST_COUNT} but gate measures ${count}`);
-if (cov.line !== CANONICAL_LINE_COV)
-  problems.push(`line coverage: canonical ${CANONICAL_LINE_COV} but gate measures ${cov.line}`);
-if (cov.func !== CANONICAL_FUNC_COV)
-  problems.push(`function coverage: canonical ${CANONICAL_FUNC_COV} but gate measures ${cov.func}`);
+// Coverage is a PORTABLE FLOOR, not an exact pin: it is a derived float that jitters run-to-run and
+// differs ~4-5 points between local (Windows) and CI (Linux), so exact `!==` drifted the gate red on
+// every run and silently failed every release. The gate must only guarantee the measured coverage is
+// AT OR ABOVE the canonical floor (the documented CI threshold). The integer test COUNT stays exact,
+// so a genuine overclaim is still caught. (Manhattan: no bare === on derived floats.)
+if (Number(cov.line) < Number(CANONICAL_LINE_COV))
+  problems.push(
+    `line coverage: gate measures ${cov.line} but is below the canonical floor ${CANONICAL_LINE_COV}`,
+  );
+if (Number(cov.func) < Number(CANONICAL_FUNC_COV))
+  problems.push(
+    `function coverage: gate measures ${cov.func} but is below the canonical floor ${CANONICAL_FUNC_COV}`,
+  );
 
 if (problems.length > 0) {
   console.error('✗ receipts law: canonical constants have drifted from the measured gate:');

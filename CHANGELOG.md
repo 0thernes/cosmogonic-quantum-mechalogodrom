@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.15.0] - 2026-06-20
+
+### Release — v0.15.0: first CI-green release since v0.11.0 (receipts portability fix)
+
+- **Fixed the bug that silently failed every release from v0.12 through v0.14.1.** Coverage was pinned as an _exact_ figure, but line/function coverage differs ~4–5 points between a local dev machine (Windows) and the CI runner (Linux), and jitters run-to-run — so the release workflow died at `verify:receipts` on every tag while the loop, never checking CI, kept cutting more. Coverage is now a **portable floor** (the documented CI gate: ≥ 90 % line / ≥ 85 % func); `scripts/verify-receipts.ts` asserts the measured gate is at or above it. The integer test count stays an exact match, so genuine overclaims are still caught.
+- **Receipts re-pinned to the committed snapshot's measured count (1293 tests)** — corrected from a higher published figure that had measured the build loop's dirty working tree (an overcount of ~271). Public surfaces (README, ROADMAP, docs.html, specs.html, TECHNICAL-SPECIFICATION) synced; coverage published as the ≥ 90 % / ≥ 85 % floor.
+- Bundles the `src/math/rng-stats.ts` quantum_rng statistical battery and the latest Tsotchke real-port work (Eshkol bytecode VM; real VQE / QGE physics / QEC decoders).
+- Full `bun run check` green from a cold shell — and, unlike v0.12–v0.14.1, this tag's **CI release gate passes**.
+
 ## [0.14.0] - 2026-06-20
 
 ### Release version bump and final docs/everything sync

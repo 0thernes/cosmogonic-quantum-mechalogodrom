@@ -268,7 +268,12 @@ function buildSyndromeGraph(code: SurfaceCode): SyndromeGraph {
 }
 
 /** Toggle the data qubits on the shortest path between graph nodes u and v. */
-function applyPathCorrection(correction: Uint8Array, graph: SyndromeGraph, u: number, v: number): void {
+function applyPathCorrection(
+  correction: Uint8Array,
+  graph: SyndromeGraph,
+  u: number,
+  v: number,
+): void {
   // Walk predecessors from v back to u using next[u] (rooted at u).
   let cur = v;
   const pred = graph.next[u]!;
