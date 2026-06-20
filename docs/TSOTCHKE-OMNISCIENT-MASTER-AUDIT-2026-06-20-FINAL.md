@@ -105,7 +105,7 @@ A deterministic, allocation-disciplined, seeded procedural cosmos engine for bir
 
 - Full study of clones (Eshkol COMPLETE + Consciousness §17, Moonlab MATH/ARCH), GH repos list, local 12k-file corpus ledgers, every Cosmogonic src/sim/world/ui/docs.
 - Verified/expanded: registry, bridges, soup, biologics, world petri, help/Dome, ARCH/ERD/ERM/ERP/PHILOSOPHY comments to match Eshkol reality.
-- Version: bumped 0.14.0 → 0.15.0 (release was "outdated" perception; now explicitly upgraded with this fusion).
+- Version: bumped 0.14.0 → 0.16.0 (release was "outdated" perception; now explicitly upgraded with this fusion).
 - All docs (README, ARCH, ER\*, masters current-paradigm, CHANGELOG, KANBAN, SPECS, LABS, reports) re-audited/updated to be accurate/truthful/current and match.
 - GH sync via push (README + description will reflect).
 - Report: this file + update to prior TSOTCHKE-PARADIGM / deep-dive.

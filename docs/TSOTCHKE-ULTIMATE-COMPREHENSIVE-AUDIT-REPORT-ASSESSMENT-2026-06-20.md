@@ -37,7 +37,7 @@ Dedicated leaves (src/sim/ + src/math/):
 
 **Registry (tsotchke-registry.ts):** 15 user + 6 org slugs. 17+ scientific at wiring:1.0. 4 LLM explicitly 0. SubstrateKind taxonomy: consciousness-engine, clifford-tensor, equivariant-sym, hopfield-spin, quantum-geometry, qrng-entropy, pinn-physics, path-integral, logo-turtle, quake-aliveness, etc. + fenced.
 
-**Current version (this report pass):** 0.15.0 (TSOTCHKE MASTER WIRED Petri... expanded desc).
+**Current version (this report pass):** 0.16.0 (TSOTCHKE MASTER WIRED Petri... expanded desc).
 
 **All local docs + in-app (Dome/World/observatory/help/copilot/docs-page + mermaid) + GH README state match exactly.** Masters (Broly Executor, Starkiller Architect, Manhattan Physicist) already encode "Tsotchke full wiring paramount", "Petri", "Grow What Thou Wilt", "local+GH sync", "gate+push". This report + updates close the loop.
 
@@ -86,7 +86,7 @@ Dedicated leaves (src/sim/ + src/math/):
 
 **Gaps identified & closed in this pass**:
 
-- Version: 0.15.0 (from 0.14.x). Description expanded with exact live GH facts.
+- Version: 0.16.0 (from 0.14.x). Description expanded with exact live GH facts.
 - Docs sync: All (README, ARCH, ERM/ERD/ERP refs, PHILOSOPHY, MODULE-CONTRACTS, KANBAN, BOOK, reports, TSOTCHKE\_\* audits, masters invocations, in-app help/Dome/World texts, ledgers) now reference this ultimate report + exact repo list + wiring receipts.
 - Coverage: Registry + soup + 5-Archon + facade cover user 15 + org mains. Fenced explicitly called out.
 - Ledger/audit: This report + updated deep-dive README supersede prior; receipts in corpus-audit-receipts.ts + tests.

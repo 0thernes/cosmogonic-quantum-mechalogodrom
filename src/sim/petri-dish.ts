@@ -41,8 +41,8 @@ import { moonlabTensorQualia } from './moonlab-tensor';
 const NUTRIENT_SLOTS = 12; // Expanded Petri for more digital biologics growth from full Tsotchke soup
 const SCRATCH_NUTRIENTS = new Float32Array(NUTRIENT_SLOTS);
 const SCRATCH_SALIENCE = new Float32Array(NUTRIENT_SLOTS);
-const SCRATCH_CONTENT = new Array<number>(NUTRIENT_SLOTS);
-const SCRATCH_SAL = new Array<number>(NUTRIENT_SLOTS);
+const SCRATCH_CONTENT = Array.from({ length: NUTRIENT_SLOTS }, () => 0);
+const SCRATCH_SAL = Array.from({ length: NUTRIENT_SLOTS }, () => 0);
 const SCRATCH_QGE: QGEState = {
   position: [0, 0, 0],
   momentum: [0, 0, 0],
