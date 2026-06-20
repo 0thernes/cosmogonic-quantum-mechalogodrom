@@ -5,8 +5,8 @@
 
 import type { Rng } from '../math/rng';
 import { clamp } from '../math/scalar';
+import { getEshkolProgramFingerprint } from './generated-tsotchke-seeds';
 import { corpusBeatForArchon, getTsotchkeRepoByIndex } from './tsotchke-registry';
-void _harvestUsed; // satisfy noUnusedLocals; real harvest in godform + petri from local Tsotchke folder
 
 const clamp01 = (v: number): number => clamp(v, 0, 1);
 
