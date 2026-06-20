@@ -95,6 +95,10 @@ import {
   ulgHandoff,
   naturalGradient2x2,
   vecNorm,
+  storeHebbian,
+  recall,
+  overlap,
+  type HopfieldNet,
 } from './tsotchke-facade'; // Ralph loop continue 10x: + ulgHandoff from Tsotchke for more corpus aliveness in super-mind
 import { SpinGlass, type SpinSnapshot } from './spin-glass';
 import { Reservoir, type ReservoirSnapshot } from './reservoir';
@@ -298,6 +302,8 @@ const SPIN_TEMP = 0.35;
 const SPIN_FIELD_GAIN = 0.85;
 /** How strongly the recalled instinct biases its matching plan's drive (bounded, small). */
 const INSTINCT_GAIN = 0.12;
+/** Clean Hopfield attractor recall (tsotchke/spin_based_neural_network → math/hopfield.ts). */
+const HOPFIELD_GAIN = 0.08;
 /** One ±1 archetype per {@link SUPER_PLANS} entry — the instinct's behavioural vocabulary (constants). */
 const SPIN_ARCHETYPES: number[][] = ((): number[][] => {
   const r = mulberry32(0x5150ed); // fixed "SPIN" seed → a shared instinct vocabulary across creatures
@@ -372,6 +378,8 @@ export class SuperMind {
   private readonly eshkol: EshkolQrng;
   /** V84: the spin-glass instinct — a Hopfield/Ising lattice the mind settles to recall an archetype. */
   private readonly spin: SpinGlass;
+  /** V102: Hopfield associative memory — stores patterns as energy minima for content-addressable recall. */
+  private hopfield: HopfieldNet | null = null;
   /** Dedicated seeded stream for the instinct's Metropolis dynamics (independent of the beat stream). */
   private readonly spinDrive: Rng;
   /** V1.1: the echo-state reservoir the mind steps with its latent each beat (short-term temporal memory). */
@@ -439,6 +447,8 @@ export class SuperMind {
   private readonly latent = new Float32Array(LATENT);
   private readonly imagined = new Float32Array(LATENT);
   private readonly spinField = new Float32Array(SPIN_SIZE); // situational drive into the instinct lattice
+  /** Bipolar probe buffer for Hopfield recall (no per-beat allocation). */
+  private readonly hopProbe = Array.from({ length: SPIN_SIZE }, () => 0);
   private readonly phiMods = new Float32Array(8); // V89: the 8 named module-summary scalars for the Φ proxy
   private readonly aifObs = new Float32Array(AIF_OBS); // V1.1: observation vector fed to the free-energy core
   private readonly aifG: number[] = Array.from({ length: SUPER_PLANS.length }, () => 0); // per-plan EFE
@@ -524,6 +534,7 @@ export class SuperMind {
     this.qmind = new QuantumMind(this.eshkol.stream());
     this.spin = new SpinGlass(SPIN_SIZE, mulberry32((childSeed ^ 0x5bd1e995) >>> 0 || 1));
     this.spin.imprint(SPIN_ARCHETYPES);
+    this.hopfield = storeHebbian(SPIN_ARCHETYPES);
     this.spinDrive = mulberry32((childSeed ^ 0x2545f491) >>> 0 || 1);
     this.reservoir = new Reservoir(mulberry32((childSeed ^ 0x119de1f3) >>> 0 || 1));
     // V1.1: the active-inference free-energy core, on its own XOR-derived seed (no extra rng draw). Its
@@ -719,6 +730,26 @@ export class SuperMind {
     // (Previous deep GWT block removed for type/contract clean; symbols centralized in facade. 5 Archons still benefit.)
     this.memory.push(salience);
 
+    // Hopfield associative memory: store recent patterns and recall similar ones
+    // Initialize hopfield network on first beat with memory ring as patterns
+    if (this.hopfield === null && this.memory.size >= 8) {
+      const patterns: number[][] = [];
+      for (let i = 0; i < 8; i++) {
+        const val = this.memory.recent(i) ?? 0;
+        patterns.push(val > 0.5 ? [1, 1, 1, 1] : [-1, -1, -1, -1]);
+      }
+      this.hopfield = storeHebbian(patterns);
+    }
+    // Recall pattern from current latent if hopfield is initialized (content-addressable, no RNG).
+    if (this.hopfield !== null) {
+      for (let i = 0; i < 4; i++) this.hopProbe[i] = (this.latent[i] ?? 0) >= 0 ? 1 : -1;
+      const { state: recalled, converged } = recall(this.hopfield, this.hopProbe, 10);
+      if (converged) {
+        const overlapVal = overlap(this.hopProbe, recalled);
+        this.cons.surprise = clamp01(this.cons.surprise + (1 - overlapVal) * HOPFIELD_GAIN);
+      }
+    }
+
     // GOAL5: call leaves per-beat (AST-1 attention schema, HOT-1 topdown generative, HOT-4 quality, memory as decision)
     // uses internal signals; deterministic; pre-allocated. bias from world percept already differentiates via godform.
     const cq = this.clifford.n;
@@ -729,8 +760,7 @@ export class SuperMind {
     const cut = Math.max(1, Math.floor(cq / 2));
     this.cliffordEntNorm = this.clifford.entanglementEntropy(cut) / cut;
 
-    // Quantum coherence: measure quantum resource theory metrics
-    // Use the QuantumMind's internal buffers to get amplitudes without allocation
+    // Quantum coherence: register snapshot readout (Tsotchke quantum-coherence leaf).
     const snap = this.qmind.snapshot();
     this.cliffordEntNorm = clamp01(this.cliffordEntNorm + snap.coherenceL1 * 0.2);
 
@@ -900,6 +930,26 @@ export class SuperMind {
     }
     const instinctPlan = instinctPattern >= 0 ? SUPER_PLANS[instinctPattern] : undefined;
 
+    // V102 · CLEAN HOPFIELD RECALL — deterministic energy descent on the Hebbian attractor net
+    // (math/hopfield.ts, MIT spin_based_neural_network corpus) cleans the spin-glass probe into
+    // the nearest stored plan archetype; a second subsymbolic vote alongside the SK instinct.
+    let hopPlan: SuperPlan | undefined;
+    let hopStrength = 0;
+    if (this.hopfield) {
+      this.spin.spinsInto(this.hopProbe);
+      const { state } = recall(this.hopfield, this.hopProbe);
+      let hopPattern = -1;
+      for (let pIdx = 0; pIdx < SUPER_PLANS.length; pIdx++) {
+        const o = overlap(state, SPIN_ARCHETYPES[pIdx] ?? []);
+        const a = o < 0 ? -o : o;
+        if (a > hopStrength) {
+          hopStrength = a;
+          hopPattern = pIdx;
+        }
+      }
+      hopPlan = hopPattern >= 0 ? SUPER_PLANS[hopPattern] : undefined;
+    }
+
     // ── ACTIVE INFERENCE · the free-energy core ── PERCEIVE the world into a belief over latent
     // situations (minimising variational free energy F), then score every plan by its EXPECTED free
     // energy G — trading information gain (epistemic curiosity) against preference (pragmatic value).
@@ -939,6 +989,7 @@ export class SuperMind {
     };
     // the instinct's recalled archetype nudges its plan (bounded) — subsymbolic vote on the decision
     if (instinctPlan) drives[instinctPlan] += INSTINCT_GAIN * instinctStrength;
+    if (hopPlan) drives[hopPlan] += HOPFIELD_GAIN * hopStrength;
     // the free-energy core votes too: lower expected free energy ⇒ a stronger (bounded) bias, so the
     // creature is at once goal-seeking (pragmatic) AND curious (epistemic) under one principle (Friston).
     let gMin = Infinity;

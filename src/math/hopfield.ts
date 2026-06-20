@@ -51,7 +51,8 @@ export function storeHebbian(patterns: readonly (readonly number[])[]): Hopfield
       const pi = p[i]!;
       for (let j = 0; j < n; j++) {
         if (i === j) continue;
-        W[i * n + j] += (pi * p[j]!) / n;
+        const wij = i * n + j;
+        W[wij] = W[wij]! + (pi * p[j]!) / n;
       }
     }
   }
@@ -79,9 +80,7 @@ export function energy(net: HopfieldNet, s: readonly number[]): number {
 
 /** One synchronous update: every neuron set to sign of its field at once. */
 export function stepSync(net: HopfieldNet, s: readonly number[]): number[] {
-  const out = new Array<number>(net.n);
-  for (let i = 0; i < net.n; i++) out[i] = bsign(localField(net, s, i), s[i]!);
-  return out;
+  return Array.from({ length: net.n }, (_unused, i) => bsign(localField(net, s, i), s[i]!));
 }
 
 /**

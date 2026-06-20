@@ -57,6 +57,15 @@ export { logoMorphScalar, logoSymmetryOrder, turtleNew } from './logo-turtle';
 export { asteroidEnergy, asteroidSpawn, asteroidStep, asteroidThrust } from './asteroids-physics';
 export { classicalEntropyGap, classicalSample } from './classical-contrast';
 export { perceptronScore, perceptronTag } from './perceptron-baseline';
+export {
+  storeHebbian,
+  localField,
+  energy,
+  stepSync,
+  recall,
+  overlap,
+  type HopfieldNet,
+} from '../math/hopfield';
 export { metalGemmBias, tensorcoreMorphBias, attentionScore } from './tensorcore-facade';
 export {
   naturalGradient,

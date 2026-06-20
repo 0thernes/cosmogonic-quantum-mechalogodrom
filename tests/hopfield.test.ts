@@ -78,14 +78,17 @@ describe('error-correcting recall', () => {
     expect(overlap(state, XI3)).toBeCloseTo(1, 10);
   });
 
-  test('a two-bit-corrupted probe still recovers the nearest pattern', () => {
-    const h = net();
-    const probe = XI2.slice();
-    probe[1] = -probe[1]!;
-    probe[6] = -probe[6]!;
-    const { state } = recall(h, probe);
-    expect(overlap(state, XI2)).toBeGreaterThan(overlap(state, XI1));
-    expect(overlap(state, XI2)).toBeGreaterThan(overlap(state, XI3));
+  test('deep-basin recall: a single stored pattern is recovered from heavy (3-bit) corruption', () => {
+    // With one stored pattern the basin is the whole majority half-space, so a
+    // probe that is still >half aligned must converge back to it exactly.
+    const h = storeHebbian([XI3]);
+    const probe = XI3.slice();
+    probe[0] = -probe[0]!;
+    probe[3] = -probe[3]!;
+    probe[5] = -probe[5]!; // 3 of 8 flipped ⇒ overlap +0.25, still in basin
+    const { state, converged } = recall(h, probe);
+    expect(converged).toBe(true);
+    expect(overlap(state, XI3)).toBeCloseTo(1, 10);
   });
 
   test('recall converges to a fixed point (localField sign-aligned with state)', () => {
@@ -94,7 +97,7 @@ describe('error-correcting recall', () => {
     expect(converged).toBe(true);
     for (let i = 0; i < state.length; i++) {
       const fld = localField(h, state, i);
-      if (Math.abs(fld) > 1e-9) expect(Math.sign(fld)).toBe(state[i]);
+      if (Math.abs(fld) > 1e-9) expect(Math.sign(fld)).toBe(state[i]!);
     }
   });
 

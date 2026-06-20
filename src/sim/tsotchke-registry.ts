@@ -114,8 +114,8 @@ const ENTRIES: TsotchkeRepoEntry[] = [
     slug: 'spin_based_neural_network',
     origin: 'user',
     substrate: 'hopfield-spin',
-    cosmogonicLeaf: 'spin-glass',
-    wiring: 0.9,
+    cosmogonicLeaf: 'math/hopfield + spin-glass',
+    wiring: 0.94,
     hue: 0.55,
   },
   {

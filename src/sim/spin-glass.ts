@@ -163,6 +163,11 @@ export class SpinGlass {
     return m / this.size;
   }
 
+  /** Copy current spins into caller buffer (length ≥ size). Allocation-free. O(N). */
+  spinsInto(out: number[]): void {
+    for (let i = 0; i < this.size; i++) out[i] = this.spins[i] ?? 0;
+  }
+
   /** Force the configuration to a stored pattern (used to prime recall). */
   setStateToPattern(p: number): void {
     const pat = this.stored[p];
