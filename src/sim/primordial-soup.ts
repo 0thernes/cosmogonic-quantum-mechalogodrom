@@ -94,7 +94,9 @@ export class PrimordialSoup {
       } else {
         this.vitality[i] = Math.min(1, v + growth);
       }
-      this.consciousness[i] = clamp01(c * 0.98 + (corpus + (this.symmetry[i] ?? 0)) * 0.01 * wiring);
+      this.consciousness[i] = clamp01(
+        c * 0.98 + (corpus + (this.symmetry[i] ?? 0)) * 0.01 * wiring,
+      );
       if (this.vitality[i] < 0.05 && this.generation[i] < 5) {
         this.alive[i] = 0; // die
       }
