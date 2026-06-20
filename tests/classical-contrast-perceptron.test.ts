@@ -14,9 +14,9 @@ import { mlpNew, mlpForward, mlpTrainStep, perceptronTag } from '../src/sim/perc
 
 describe('classical-contrast: real mixer + entropy', () => {
   test('Murmur3 avalanche is deterministic and diffuses', () => {
-    expect(mixFast(0)).toBe(mixFast(0));
-    expect(mixFast(1)).not.toBe(mixFast(2));
-    expect(mixFast(0)).not.toBe(0);
+    expect(mixFast(123)).toBe(mixFast(123)); // deterministic
+    expect(mixFast(1)).not.toBe(mixFast(2)); // distinct inputs diverge
+    expect(mixFast(123)).not.toBe(123); // a nonzero input is diffused (fmix32(0)=0 by design)
   });
 
   test('Shannon entropy is high for the mixed LCG and in [0,1]', () => {
