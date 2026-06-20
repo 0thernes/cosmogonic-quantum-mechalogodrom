@@ -1,0 +1,58 @@
+name: Auto-tag on version bump
+
+# Fires on every push to main. Reads the version from package.json;
+# if the corresponding semver tag (e.g. v0.13.0) does not yet exist
+# it creates + pushes the tag, which in turn triggers the Release workflow.
+#
+# This catches version bumps committed directly to main without a
+# separate `git tag && git push` step.
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write # push the new tag
+
+concurrency:
+  group: auto-tag-${{ github.sha }}
+  cancel-in-progress: true
+
+jobs:
+  auto-tag:
+    name: Tag if version bumped
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          fetch-depth: 0
+
+      - name: Read version from package.json
+        id: pkg
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          echo "version=v$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Detected version: v$VERSION"
+
+      - name: Check if tag already exists
+        id: check
+        run: |
+          TAG="${{ steps.pkg.outputs.version }}"
+          if git ls-remote --tags origin "$TAG" | grep -q .; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "Tag $TAG already exists — skipping."
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+            echo "Tag $TAG does NOT exist — will create."
+          fi
+
+      - name: Create and push tag
+        if: steps.check.outputs.exists == 'false'
+        run: |
+          TAG="${{ steps.pkg.outputs.version }}"
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag "$TAG" HEAD
+          git push origin "$TAG"
+          echo "Created and pushed tag: $TAG"
