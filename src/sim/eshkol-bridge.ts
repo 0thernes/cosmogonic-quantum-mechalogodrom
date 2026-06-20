@@ -44,15 +44,18 @@ export class EshkolConsciousnessEngine {
   inference: number;
   workspace: number;
 
-  // FULL Eshkol KB (logic programming substrate from .esk examples)
+  // FULL Eshkol KB (logic programming substrate from .esk examples + COMPLETE spec)
   private readonly facts = new Float32Array(FACTS);
   private readonly factKeys = new Array<string>(FACTS).fill('');
-  // Factor graph beliefs (active inference from Eshkol)
+  // Factor graph beliefs (active inference from Eshkol §17)
   private readonly beliefs = new Float32Array(BELIEFS);
   private readonly moduleSalience = new Float32Array(MODULES);
   private broadcastWinner = 0;
   // Workspace modules (GWT from Eshkol)
   private readonly wsModules: Array<{ name: string; fn: (c: number) => number }> = [];
+
+  // Master expansion: simple Eshkol KB store (assert/query per spec) + factor energy for biologics
+  private kbFacts: Map<string, number> = new Map();
 
   constructor(logic = 0.5, inference = 0.5, workspace = 0.5) {
     this.logic = clamp01(logic);
