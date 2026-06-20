@@ -1,5 +1,7 @@
 # Tsotchke ↔ Cosmogonic Deep-Dive Audit (2026-06-20)
 
+**See also the ULTIMATE report: [TSOTCHKE-ULTIMATE-COMPREHENSIVE-AUDIT-REPORT-ASSESSMENT-2026-06-20.md](../TSOTCHKE-ULTIMATE-COMPREHENSIVE-AUDIT-REPORT-ASSESSMENT-2026-06-20.md)** — live GH MCP research on all 20+ repos (Eshkol flagship, Moonlab, libirrep, tensorcore, ulg, logo-lab + exact wiring), full deductive/inductive analysis, compare/contrast, Petri thesis, and master plan. Local == GH. All docs synced.
+
 Measured census of the local Tsotchke corpus `Z:\[Vibe Coded (AI)]\(Tsotchke)` and Cosmogonic
 repo, captured for wiring receipts. **Not LLM territory** — digital biologic substrates only.
 

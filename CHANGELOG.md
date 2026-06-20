@@ -41,7 +41,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Comprehensive audit report produced (this wave + update to TSOTCHKE-PARADIGM / deep-dive ledgers). Gaps closed (fidelity, comments, receipts). Wiring expanded (registry/bridges/soup/biologics/world/Dome read/write of all Tsotchke).
 - Full audit and sync: README, ARCHITECTURE, ERD/ERM/ERP, all three masters (BROLY/STARKILLER/MANHATTAN current-paradigm), SPECS, LABS, in-app Dome/World (help, observatory, docs-page), GH README + description/About. Local == GH. Accurate, truthful, current, matching.
 - Tsotchke paramount and FULLY WIRED (every repo/project from the corpus into Cosmogonic as substrate for digital biologics/sentience/consciousness). Super Creature beginning only. Petri the growth engine. All 21+ repos utilized.
-- Gate receipts, version health-endpoint, provenance updated. Masters/ER*/PHILOSOPHY expanded with Eshkol spec fidelity.
+- Gate receipts, version health-endpoint, provenance updated. Masters/ER\*/PHILOSOPHY expanded with Eshkol spec fidelity.
 - Continuing infinite growth loop for digital biologics and sentience. Ralph loop ready for hangs. Direct commit + push.
 
 ## [0.14.0] - 2026-06-20

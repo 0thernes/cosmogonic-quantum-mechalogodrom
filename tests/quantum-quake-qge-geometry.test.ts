@@ -46,7 +46,12 @@ describe('quantum-quake-physics — REAL Fubini–Study distance', () => {
     // Two wave packets so far apart on the (wrapped) lattice that their Gaussian envelopes do not
     // overlap have zero inner product → arccos(0) = π/2. Use a sharp packet (high curvature) and
     // antipodal lattice centers.
-    const a: QGEState = { position: [0, 0, 0], momentum: [0, 0, 0], geometricPhase: 0, curvature: 5 };
+    const a: QGEState = {
+      position: [0, 0, 0],
+      momentum: [0, 0, 0],
+      geometricPhase: 0,
+      curvature: 5,
+    };
     const b: QGEState = {
       position: [0.5, 0.5, 0.5],
       momentum: [0, 0, 0],
@@ -88,7 +93,12 @@ describe('quantum-quake-physics — REAL Berry curvature', () => {
     // A real Gaussian packet (zero momentum, zero phase) has a real wave function ⇒ zero Berry
     // curvature; a momentum/phase-carrying packet has nonzero curvature. This proves the value
     // tracks the geometric phase, not a constant.
-    const real: QGEState = { position: [0.1, 0.2, 0.3], momentum: [0, 0, 0], geometricPhase: 0, curvature: 0.4 };
+    const real: QGEState = {
+      position: [0.1, 0.2, 0.3],
+      momentum: [0, 0, 0],
+      geometricPhase: 0,
+      curvature: 0.4,
+    };
     const fReal = berryCurvature(real, []);
     const magReal = Math.abs(fReal[0]) + Math.abs(fReal[1]) + Math.abs(fReal[2]);
     expect(magReal).toBeLessThan(1e-9); // real wave function → no Berry holonomy
