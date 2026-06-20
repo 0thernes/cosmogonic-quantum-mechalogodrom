@@ -13,14 +13,14 @@ Compiled 2026-06-16 (research scout pass).
 
 ## What the code actually implements vs. what the science says
 
-| Real research thread                                                                | What Super Creature 1.1 actually computes                                                                                                                                                                                                                                                       | Honesty caveat                                                                                                                                               |
-| ----------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Global Workspace / GNW** (Baars, Dehaene) ” "ignition"                            | `Consciousness.ignition` ” a winner-take-all over the 7 plan-coalitions; when the winner crosses an access threshold _and_ dominates the runner-up it "broadcasts", gating memory consolidation (`super-mind.ts`).                                                                              | A toy model of the _signature_ (ignition + broadcast), not the cortical phenomenon. The 2025 Cogitate test pressured the offset-ignition prediction.         |
-| **Integrated Information Theory** (Tononi) ” Î¦                                     | `Consciousness.phi` ” the participation/coherence ratio of 8 named module activations (1 â‡’ parts act as one, 1/M â‡’ independent).                                                                                                                                                            | Explicitly a **tractable surrogate**. True Î¦ is super-exponential _and_ non-unique; we never claim to compute Î¦.                                           |
-| **Predictive processing / active inference** (Friston)                              | `ActiveInference` (active-inference.ts) ” a discrete free-energy core: a Bayesian belief over 8 latent situations minimising variational free energy F, then plan selection by **expected** free energy G (epistemic curiosity + pragmatic goal-seeking). Plus the predictorâ†’`surprise` loop. | A faithful discrete-AIF implementation; the Free Energy Principle is a unifying _theory_, not a settled empirical fact.                                      |
-| **Quantum cognition** (Busemeyer, Trueblood)                                        | The 6-qubit register + Eshkol Born-sampled "thought collapse" + the QGT/Fubini“Study readout (V75“V88).                                                                                                                                                                                         | "Quantum" here is an **algebra on amplitudes/probabilities** in a deterministic sim ” nothing about quantum neurons.                                         |
-| **Higher-Order Theory / metacognition** (Rosenthal; Lau & Rosenthal; Fleming & Daw) | `Metacognition` (metacognition.ts) ” a second-order **confidence** in the decision (decision margin + Î¦ + belief certainty + calm), spent as cognitive control: low confidence â‡’ EXPLORE to resolve uncertainty, high â‡’ commit/exploit.                                                    | A computational confidence/control model ” NOT a claim of subjective higher-order awareness.                                                                 |
-| **Organoid intelligence / "wet computing"**                                         | `Reservoir` (reservoir.ts) ” a 64-node **echo-state network** (the algorithm physical/organoid reservoirs use): a fading nonlinear echo of recent latents giving temporal memory + a novelty signal that sharpens curiosity.                                                                    | We implement the reservoir-computing **algorithm**, NOT wetware ” there is no biological substrate. Organoid reservoirs are the real-world inspiration only. |
+| Real research thread                                                                | What Super Creature 1.1 actually computes                                                                                                                                                                                                                                                     | Honesty caveat                                                                                                                                               |
+| ----------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Global Workspace / GNW** (Baars, Dehaene) ” "ignition"                            | `Consciousness.ignition` ” a winner-take-all over the 7 plan-coalitions; when the winner crosses an access threshold _and_ dominates the runner-up it "broadcasts", gating memory consolidation (`super-mind.ts`).                                                                            | A toy model of the _signature_ (ignition + broadcast), not the cortical phenomenon. The 2025 Cogitate test pressured the offset-ignition prediction.         |
+| **Integrated Information Theory** (Tononi) ” Φ                                      | `Consciousness.phi` ” the participation/coherence ratio of 8 named module activations (1 ⇒ parts act as one, 1/M ⇒ independent).                                                                                                                                                              | Explicitly a **tractable surrogate**. True Φ is super-exponential _and_ non-unique; we never claim to compute Φ.                                             |
+| **Predictive processing / active inference** (Friston)                              | `ActiveInference` (active-inference.ts) ” a discrete free-energy core: a Bayesian belief over 8 latent situations minimising variational free energy F, then plan selection by **expected** free energy G (epistemic curiosity + pragmatic goal-seeking). Plus the predictor→`surprise` loop. | A faithful discrete-AIF implementation; the Free Energy Principle is a unifying _theory_, not a settled empirical fact.                                      |
+| **Quantum cognition** (Busemeyer, Trueblood)                                        | The 6-qubit register + Eshkol Born-sampled "thought collapse" + the QGT/Fubini“Study readout (V75“V88).                                                                                                                                                                                       | "Quantum" here is an **algebra on amplitudes/probabilities** in a deterministic sim ” nothing about quantum neurons.                                         |
+| **Higher-Order Theory / metacognition** (Rosenthal; Lau & Rosenthal; Fleming & Daw) | `Metacognition` (metacognition.ts) ” a second-order **confidence** in the decision (decision margin + Φ + belief certainty + calm), spent as cognitive control: low confidence ⇒ EXPLORE to resolve uncertainty, high ⇒ commit/exploit.                                                       | A computational confidence/control model ” NOT a claim of subjective higher-order awareness.                                                                 |
+| **Organoid intelligence / "wet computing"**                                         | `Reservoir` (reservoir.ts) ” a 64-node **echo-state network** (the algorithm physical/organoid reservoirs use): a fading nonlinear echo of recent latents giving temporal memory + a novelty signal that sharpens curiosity.                                                                  | We implement the reservoir-computing **algorithm**, NOT wetware ” there is no biological substrate. Organoid reservoirs are the real-world inspiration only. |
 
 ---
 
@@ -37,13 +37,13 @@ Compiled 2026-06-16 (research scout pass).
   tested was not core to the theory (Naccache, Sergent & Dehaene, 2025, _Neuroscience of Consciousness_).
   Cite the _outcome_, not a verdict.
 
-## 2. Integrated Information (Î¦) ” tractable proxies and intractability
+## 2. Integrated Information (Φ) ” tractable proxies and intractability
 
-- True Î¦ is not just expensive, it is **under-determined**: Hanson & Walker (2023) show Î¦ in IIT 3.0 is
-  _non-unique_ ” systems exist for which Î¦ = 0 and Î¦ > 0 are simultaneously valid.
-- The proxies used in practice (decoder-based Î¦\*, geometric Î¦_G, stochastic interaction) are openly
+- True Φ is not just expensive, it is **under-determined**: Hanson & Walker (2023) show Φ in IIT 3.0 is
+  _non-unique_ ” systems exist for which Φ = 0 and Φ > 0 are simultaneously valid.
+- The proxies used in practice (decoder-based Φ\*, geometric Φ_G, stochastic interaction) are openly
   acknowledged approximations to a "computationally intractable" measure (Nilsen, Arena & Storm, 2024).
-- A 2024 peer-reviewed alternative sidesteps Î¦ with a tractable **integration“segregation difference**
+- A 2024 peer-reviewed alternative sidesteps Φ with a tractable **integration“segregation difference**
   (ISD), classifying conscious states at ~93% accuracy ” a _correlate_, not an identity claim (Jang,
   Mashour & Hudetz, 2024, _Nature Communications_). **This is the family our `phi` proxy belongs to.**
 - **Caveat:** integrated-information measures sometimes _increase_ under anesthesia, contrary to IIT ” they
@@ -66,7 +66,7 @@ Compiled 2026-06-16 (research scout pass).
 - **DishBrain** ” in-vitro neurons "learn Pong"; the word _sentience_ is the authors' **operational
   redefinition** (responsiveness), not evidence of consciousness (Kagan et al., 2022, _Neuron_). Underpins
   Cortical Labs' 2025 commercial CL1.
-- **FinalSpark Neuroplatform** ” 16 organoids / ~160k neurons accessible over the cloud; the "1,000,000Ã—
+- **FinalSpark Neuroplatform** ” 16 organoids / ~160k neurons accessible over the cloud; the "1,000,000×
   less energy" figure is a **vendor projection**, not a measured benchmark (Jordan et al., 2024).
 - The **Organoid Intelligence** roadmap is an aspirational position paper, not a result (Smirnova et al.,
   2023, _Frontiers in Science_).
@@ -86,14 +86,14 @@ Compiled 2026-06-16 (research scout pass).
 ## 6. World models & predictive maps ” the successor representation
 
 - The **successor representation** (SR) reformulates value as expected discounted future state-occupancy,
-  M = Î£ Î³áµ— P(sâ‚œ | sâ‚€) (Dayan, 1993): a predictive cache that supports fast, flexible re-planning when
+  M = Σ γᵗ P(sₜ | s₀) (Dayan, 1993): a predictive cache that supports fast, flexible re-planning when
   rewards shift. The landmark neuroscience claim is that the **hippocampus encodes exactly this predictive
   map** ” place/grid fields as discounted future occupancy, not mere present location (Stachenfeld,
   Botvinick & Gershman, 2017, _Nature Neuroscience_); human reinforcement learning shows SR-consistent
   behavioural and neural signatures (Momennejad et al., 2017, _Nature Human Behaviour_).
 - **What Super Creature 1.1 computes:** `src/sim/successor-representation.ts` ” a deterministic SR matrix
-  over the 7 plan-archetypes, learned online by the TD rule M(s,Â·) â† M(s,Â·) + Î±[Ï†(s) + Î³M(s²,Â·) âˆ’ M(s,Â·)]
-  toward the closed form (I âˆ’ Î³T)â»Â¹, used each beat as a model-based **look-ahead** that biases plan
+  over the 7 plan-archetypes, learned online by the TD rule M(s,·) ← M(s,·) + α[φ(s) + γM(s²,·) − M(s,·)]
+  toward the closed form (I − γT)⁻¹, used each beat as a model-based **look-ahead** that biases plan
   selection toward behaviour whose learned successor-states carry high value.
 - **Honesty caveat:** a tabular SR over 7 discrete plan-states ” a faithful implementation of the SR
   _algorithm_, not a claim about biological place cells. It is "model-based planning over the creature's own
@@ -101,7 +101,7 @@ Compiled 2026-06-16 (research scout pass).
 
 ## 7. Empowerment ” information-theoretic agency / intrinsic motivation
 
-- **Empowerment** is a reward-free, agent-centric measure of control: the channel capacity I(Aâ¿; S² | s)
+- **Empowerment** is a reward-free, agent-centric measure of control: the channel capacity I(Aⁿ; S² | s)
   between an agent's action sequence and its resulting future state ” the maximum information the agent can
   inject into its own future (Klyubin, Polani & Nehaniv, 2005; Salge, Glackin & Polani, 2014). It is a
   distinct intrinsic motivation from novelty/surprise and from the active-inference _epistemic_ term: an
@@ -112,13 +112,13 @@ Compiled 2026-06-16 (research scout pass).
   both **positively track** human open-world exploration (information-gain does _not_), playing complementary roles ” not a blanket "empowerment beats curiosity" result.
 - **What Super Creature 1.1 computes:** `src/sim/empowerment.ts` ” each beat it bins the 16-D world-model
   latent into M = 64 coarse cells by the signs of a frozen random-hyperplane LSH, maintains an online
-  exponential-forgetting estimate of the K Ã— M channel q(cell | plan) from its committed-plan â†’ next-cell
+  exponential-forgetting estimate of the K × M channel q(cell | plan) from its committed-plan → next-cell
   transitions, and runs the **Blahut“Arimoto** algorithm (Blahut, 1972; Arimoto, 1972) for a fixed 12
-  iterations to read the channel capacity C in nats; empowerment = C / ln K âˆˆ [0, 1]. The result feeds a
+  iterations to read the channel capacity C in nats; empowerment = C / ln K ∈ [0, 1]. The result feeds a
   curiosity lift toward controllable regions and a bounded vote for the plan whose action-row most steers the
   future. Blahut“Arimoto's iterate provably raises the capacity lower bound monotonically toward the true
   capacity ” a closed-form property the module unit-tests, alongside the two known limits (a deterministic,
-  fully-controllable channel â‡’ empowerment 1; a degenerate channel â‡’ 0).
+  fully-controllable channel ⇒ empowerment 1; a degenerate channel ⇒ 0).
 - **Honesty caveat:** a discrete, online empowerment estimate over 7 plan-archetypes and 64 LSH cells ” a
   faithful implementation of the empowerment _objective_ and the Blahut“Arimoto capacity _algorithm_, not a
   claim of true n-step empowerment over a learned world model. It measures "how much this beat's plan-choice
@@ -134,9 +134,9 @@ Compiled 2026-06-16 (research scout pass).
   connectionist substrate and symbolic structure, and an active neuromorphic-computing frontier (Kleyko,
   Rachkovskij, Osipov & Rahimi, 2022, _ACM Computing Surveys_).
 - **What Super Creature 1.1 computes:** `src/sim/holographic-memory.ts` ” the MAP-VSA model on bipolar
-  {âˆ’1,+1}âµÂ¹Â² hypervectors: binding is the element-wise product (exactly self-inverse, aâŠ™a = 1âƒ—), bundling is
+  {−1,+1}⁵¹² hypervectors: binding is the element-wise product (exactly self-inverse, a⊙a = 1⃗), bundling is
   the majority sign, cleanup is nearest-atom cosine. Each beat the mind encodes its situation into a context
-  hypervector (a sign-bundle of feature atoms), binds it with the committed plan, and folds (context âŠ™ plan)
+  hypervector (a sign-bundle of feature atoms), binds it with the committed plan, and folds (context ⊙ plan)
   into a decaying holographic trace; to recall it unbinds the trace by the current context and cleans up
   against the 7 plan atoms ” an analogical prior ("in situations like this, I chose ¦") that biases the next
   plan.
@@ -153,8 +153,8 @@ Compiled 2026-06-16 (research scout pass).
   space, and only a linear readout of its measured observables over time is used/trained.
 - **What Super Creature 1.2 computes:** `src/sim/quantum-reservoir.ts` ” the apex mind's existing 6-qubit
   statevector register IS the reservoir; the module is the readout, a fixed seeded linear projection of the
-  register's per-qubit Bloch observables (âŸ¨XâŸ©,âŸ¨YâŸ©,âŸ¨ZâŸ© Ã— 6) over a leaky temporal trace, plus a
-  quantum-state-velocity (`qFlux`) signal that feeds the curiosity drive (a churning wavefunction â‡’ a
+  register's per-qubit Bloch observables (⟨X⟩,⟨Y⟩,⟨Z⟩ × 6) over a leaky temporal trace, plus a
+  quantum-state-velocity (`qFlux`) signal that feeds the curiosity drive (a churning wavefunction ⇒ a
   restless, exploratory mind). Deterministic, allocation-free, bounded, unit-tested.
 - **Honesty caveat:** a deterministic 6-qubit _simulation_ used as a reservoir ” a faithful implementation
   of the QRC _algorithm_ on a perfect noiseless register, not a physical quantum processor. The value here
@@ -163,34 +163,34 @@ Compiled 2026-06-16 (research scout pass).
 ## 10. Open quantum systems ” the Lindblad decoherence of deliberation
 
 - A real qubit is never closed: coupled to an environment it undergoes **decoherence** (loss of phase
-  coherence, Tâ‚‚) and **relaxation** (energy decay, Tâ‚). The mathematically complete description is the
+  coherence, T₂) and **relaxation** (energy decay, T₁). The mathematically complete description is the
   **Gorini“Kossakowski“Sudarshan“Lindblad** (GKSL) master equation ” the most general generator of a
   completely-positive, trace-preserving quantum dynamical semigroup (Lindblad, 1976; Gorini, Kossakowski &
   Sudarshan, 1976; Breuer & Petruccione, 2002). For a single qubit it reduces exactly to the optical-Bloch
   equations on the Bloch vector.
 - **What Super Creature 1.1 computes:** `src/sim/quantum-deliberation.ts` ” a deliberation qubit whose
-  coherent superposition of candidate actions DECOHERES into a committed classical decision. A Rabi drive Î©
-  (from curiosity) sustains the superposition, a detuning Î” (from dominance) leans the preference, and a
-  pure-dephasing channel Î³_Ï† (from arousal ” the environmental noise) collapses the off-diagonal coherence;
-  amplitude damping Î“â‚ relaxes toward a ground "rest" decision. Coherence âˆš(xÂ²+yÂ²) reads as "still
-  deliberating", decisiveness 1âˆ’âˆš as "decohered into a commitment", and the mind lifts EXPLORE while it stays
-  undecided. Deterministic midpoint integration; the Bloch vector stays inside the unit ball (a valid Ï).
+  coherent superposition of candidate actions DECOHERES into a committed classical decision. A Rabi drive Ω
+  (from curiosity) sustains the superposition, a detuning Δ (from dominance) leans the preference, and a
+  pure-dephasing channel γ_φ (from arousal ” the environmental noise) collapses the off-diagonal coherence;
+  amplitude damping Γ₁ relaxes toward a ground "rest" decision. Coherence √(x²+y²) reads as "still
+  deliberating", decisiveness 1−√ as "decohered into a commitment", and the mind lifts EXPLORE while it stays
+  undecided. Deterministic midpoint integration; the Bloch vector stays inside the unit ball (a valid ρ).
 - **Honesty caveat:** a faithful implementation of the qubit Lindblad/GKSL _master equation_ as a model of
-  deliberationâ†’commitment ” open-system physics, not a claim that decisions ARE quantum-mechanical. A
+  deliberation→commitment ” open-system physics, not a claim that decisions ARE quantum-mechanical. A
   dynamical metaphor with real, conserved (trace-preserving, completely-positive) mathematics underneath.
 
 ## 11. Stabilizer formalism ” large-scale Clifford simulation (Gottesman“Knill)
 
-- The **Gottesman“Knill theorem** says a circuit of only Clifford gates (H, S, CNOT, Pauli) on |0âŸ© inputs
-  with computational-basis measurement is **classically simulable in polynomial time** ” not by tracking 2â¿
+- The **Gottesman“Knill theorem** says a circuit of only Clifford gates (H, S, CNOT, Pauli) on |0⟩ inputs
+  with computational-basis measurement is **classically simulable in polynomial time** ” not by tracking 2ⁿ
   amplitudes, but the n Pauli operators that STABILISE the state. The **Aaronson“Gottesman tableau**
-  (Aaronson & Gottesman, 2004) makes each gate an O(n) binary row update and measurement O(nÂ²), so
+  (Aaronson & Gottesman, 2004) makes each gate an O(n) binary row update and measurement O(n²), so
   GHZ/Bell/graph/stabiliser-code states on dozens-to-hundreds of qubits are exact and cheap ” precisely the
   regime the dense statevector (capped near 8 qubits) can never reach.
 - **What Super Creature 1.1 computes:** `src/math/clifford-tableau.ts` ” the Aaronson“Gottesman tableau
   reimplemented deterministically (a port of the **Moonlab** simulator's Clifford backend; see
-  THIRD-PARTY-NOTICES.md â†’ Ported primitives), a LARGE-scale stabiliser substrate complementary to the small
-  dense register: O(n) Clifford gates, a seeded O(nÂ²) measurement, and the bipartite **entanglement entropy**
+  THIRD-PARTY-NOTICES.md → Ported primitives), a LARGE-scale stabiliser substrate complementary to the small
+  dense register: O(n) Clifford gates, a seeded O(n²) measurement, and the bipartite **entanglement entropy**
   read in ebits straight off the stabiliser matrix as a GF(2) rank (Fattal et al., 2004) ” intractable to
   compute on the dense register, cheap here.
 - **Honesty caveat:** a faithful implementation of an EXACTLY-simulable subclass of quantum mechanics (the
@@ -205,9 +205,9 @@ Compiled 2026-06-16 (research scout pass).
 2. **Established theoretical frameworks (not facts):** IIT, GNWT, the Free Energy Principle, quantum-
    probability cognition are coherent, productive _theories_ ” none is confirmed as "the" account of mind.
 3. **Genuinely contested:** IIT faces a "pseudoscience" open letter (2023, PsyArXiv ” itself controversial)
-   and a non-uniqueness proof of Î¦; treat Î¦ as mathematically problematic, not a working meter.
+   and a non-uniqueness proof of Φ; treat Φ as mathematically problematic, not a working meter.
 4. **Hype-prone terms handled with care:** "sentience" (operational redefinition), "biocomputer" (narrow +
-   early), the "1,000,000Ã—" energy figure (vendor projection).
+   early), the "1,000,000×" energy figure (vendor projection).
 5. **Aspirational, not delivered:** the Organoid Intelligence roadmap and any "conscious organoid" framing.
 6. **For this art project this is ideal source material** ” real and genuinely unsettled ” _provided the
    docs say "inspired by / models" rather than "implements" or "is conscious."_
@@ -226,7 +226,7 @@ Compiled 2026-06-16 (research scout pass).
 - Durand, E. D., Joffily, M., & Khamassi, M. (2024). A diffusion model-based approach to active inference. _IEEE FMLDS_, 75“80. https://doi.org/10.1109/fmlds63805.2024.00024
 - Farisco, M., & Changeux, J.-P. (2023). About the compatibility between the perturbational complexity index and the global neuronal workspace theory. _Neuroscience of Consciousness, 2023_(1). https://doi.org/10.1093/nc/niad016
 - Fattal, D., Cubitt, T. S., Yamamoto, Y., Bravyi, S., & Chuang, I. L. (2004). Entanglement in the stabilizer formalism. _arXiv:quant-ph/0406168._ https://arxiv.org/abs/quant-ph/0406168
-- Ferrante, O., GÃ³rska, U., Henin, S., et al. (Cogitate Consortium). (2025). Adversarial testing of global neuronal workspace and integrated information theories of consciousness. _Nature, 642_(8066), 133“142. https://doi.org/10.1038/s41586-025-08888-1
+- Ferrante, O., Górska, U., Henin, S., et al. (Cogitate Consortium). (2025). Adversarial testing of global neuronal workspace and integrated information theories of consciousness. _Nature, 642_(8066), 133“142. https://doi.org/10.1038/s41586-025-08888-1
 - Friston, K. (2010). The free-energy principle: a unified brain theory? _Nature Reviews Neuroscience, 11_, 127“138. https://doi.org/10.1038/nrn2787
 - Fujii, K., & Nakajima, K. (2017). Harnessing disordered-ensemble quantum dynamics for machine learning. _Physical Review Applied, 8_(2), 024030. https://doi.org/10.1103/PhysRevApplied.8.024030
 - Gayler, R. W. (2003). Vector symbolic architectures answer Jackendoff's challenges for cognitive neuroscience. In _Proceedings of the ICCS/ASCS Joint International Conference on Cognitive Science_, 133“138. https://arxiv.org/abs/cs/0412059
@@ -244,7 +244,7 @@ Compiled 2026-06-16 (research scout pass).
 - Lindblad, G. (1976). On the generators of quantum dynamical semigroups. _Communications in Mathematical Physics, 48_(2), 119“130. https://doi.org/10.1007/BF01608499
 - Melloni, L., Mudrik, L., Pitts, M., et al. (2023). An adversarial collaboration protocol for testing contrasting predictions of GNW and IIT. _PLOS ONE, 18_. https://doi.org/10.1371/journal.pone.0268577
 - Momennejad, I., Russek, E. M., Cheong, J. H., Botvinick, M. M., Daw, N. D., & Gershman, S. J. (2017). The successor representation in human reinforcement learning. _Nature Human Behaviour, 1_(9), 680“692. https://doi.org/10.1038/s41562-017-0180-8
-- Mujal, P., MartÃ­nez-PeÃ±a, R., Nokkala, J., GarcÃ­a-Beni, J., Giorgi, G. L., Soriano, M. C., & Zueco, D. (2021). Opportunities in quantum reservoir computing and extreme learning machines. _Advanced Quantum Technologies, 4_(8), 2100027. https://doi.org/10.1002/qute.202100027
+- Mujal, P., Martínez-Peña, R., Nokkala, J., García-Beni, J., Giorgi, G. L., Soriano, M. C., & Zueco, D. (2021). Opportunities in quantum reservoir computing and extreme learning machines. _Advanced Quantum Technologies, 4_(8), 2100027. https://doi.org/10.1002/qute.202100027
 - Naccache, L., Sergent, C., & Dehaene, S. (2025). GNW theoretical framework and the adversarial testing of GNW and IIT. _Neuroscience of Consciousness, 2025_. https://doi.org/10.1093/nc/niaf037
 - Nilsen, A. S., Arena, A., & Storm, J. F. (2024). Exploring effects of anesthesia on complexity, differentiation, and integrated information in rat EEG. _Neuroscience of Consciousness, 2024_(1). https://doi.org/10.1093/nc/niae021
 - Piekarski, M. (2023). Incorporating (variational) free energy models into mechanisms. _Synthese, 202_(2). https://doi.org/10.1007/s11229-023-04292-2

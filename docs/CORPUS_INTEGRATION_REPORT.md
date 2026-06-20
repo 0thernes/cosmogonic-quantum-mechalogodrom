@@ -2,7 +2,7 @@
 
 **Date:** 2026-06-20
 **Mandate:** Full integration of Tsotchke quantum research corpus into Cosmogonic Quantum Mechalogodrom.
-**Status:** âœ… Waves 2-4 Complete ” Math Layer, Sim Layer, World/Physics integration finished.
+**Status:** ✅ Waves 2-4 Complete ” Math Layer, Sim Layer, World/Physics integration finished.
 
 ## Executive Summary
 
@@ -15,14 +15,14 @@ The Tsotchke Full Corpus Integration (Ralph Loop) has successfully completed Wav
 
 ## Completed Waves
 
-### Wave 1 (Foundation) ” âœ… Complete
+### Wave 1 (Foundation) ” ✅ Complete
 
 - Audit + plan + contract amendments
 - Provenance tracking everywhere
 - Enhanced godform/world with full corpus archetypes
 - Documentation infrastructure established
 
-### Wave 2 (Math Layer) ” âœ… Complete
+### Wave 2 (Math Layer) ” ✅ Complete
 
 **New Math Leaves Created:**
 
@@ -41,7 +41,7 @@ The Tsotchke Full Corpus Integration (Ralph Loop) has successfully completed Wav
 3. **`src/math/libirrep-symmetry.ts`** ” Irreducible representation symmetry
    - Clebsch-Gordan coefficients for angular momentum coupling
    - Wigner-D matrix elements for rotations
-   - Spherical harmonics Y_l^m(Î¸, Ï†)
+   - Spherical harmonics Y_l^m(θ, φ)
    - Libirrep symmetry factors for quantum state analysis
 
 4. **`src/math/quantum-qrng-full.ts`** ” Enhanced quantum-inspired RNG
@@ -55,7 +55,7 @@ The Tsotchke Full Corpus Integration (Ralph Loop) has successfully completed Wav
 - Updated `docs/MODULE-CONTRACTS.md` for new math leaves
 - Updated `docs/BENCHMARKS.md` with new hot paths
 
-### Wave 3 (Sim Layer) ” âœ… Complete
+### Wave 3 (Sim Layer) ” ✅ Complete
 
 **New Simulation Substrates Created:**
 
@@ -68,7 +68,7 @@ The Tsotchke Full Corpus Integration (Ralph Loop) has successfully completed Wav
 
 2. **`src/sim/moonlab-vqe.ts`** ” Variational Quantum Eigensolver
    - Eshkol AD integration for parameter optimization
-   - VQE ansatz with rotation angles (Î¸, Ï†)
+   - VQE ansatz with rotation angles (θ, φ)
    - Gradient descent optimization
    - Energy proxy for Hamiltonian ground state
 
@@ -92,7 +92,7 @@ The Tsotchke Full Corpus Integration (Ralph Loop) has successfully completed Wav
 - **SuperBody:** Quantum-quake morph, tensor pulses for body dynamics
 - **World:** Quantum-quake physics for interaction perturbations
 
-### Wave 4 (World/Physics) ” âœ… Complete
+### Wave 4 (World/Physics) ” ✅ Complete
 
 **World System Integration:**
 
@@ -107,7 +107,7 @@ The Tsotchke Full Corpus Integration (Ralph Loop) has successfully completed Wav
 - `src/sim/super-body.ts`: Wired QGE aliveness, tensor pulses, QEC stability into morph calculations
 - `src/sim/super-mind.ts`: Eshkol AD tape, Moonlab tensor for predictor error
 
-### Wave 5 (UI/Bridge + Web) ” âœ… Complete
+### Wave 5 (UI/Bridge + Web) ” ✅ Complete
 
 **ULG Web Integration:**
 
@@ -126,7 +126,7 @@ Updated `THIRD-PARTY-NOTICES.md` with 4 new ported primitives:
 3. **Libirrep QEC** ” MWPM/BP-OSD decoding for surface/toric codes
 4. **Quantum Quake Physics** ” QGE integration for quantum simulation
 
-All ports properly attributed to Tsotchke (MIT, Â© 2024“2026 tsotchke).
+All ports properly attributed to Tsotchke (MIT, © 2024“2026 tsotchke).
 
 ## Integration Plan Updated
 
@@ -134,14 +134,14 @@ Updated `docs/TSOTCHKE-CORPUS-INTEGRATION-PLAN.md` with completion status for Wa
 
 ## Gate Verification
 
-**`bun run check` ” âœ… PASS**
+**`bun run check` ” ✅ PASS**
 
-- Format: âœ… Prettier
-- Typecheck: âœ… TypeScript strict
-- Lint: âœ… oxlint
+- Format: ✅ Prettier
+- Typecheck: ✅ TypeScript strict
+- Lint: ✅ oxlint
 - Test: ✅ 1617 tests pass, 0 fail
-- Receipts: âœ… Verified
-- Build: âœ… Successful
+- Receipts: ✅ Verified
+- Build: ✅ Successful
 
 **Test Coverage:**
 
@@ -153,25 +153,25 @@ Updated `docs/TSOTCHKE-CORPUS-INTEGRATION-PLAN.md` with completion status for Wa
 
 **Manhattan Law Compliance:**
 
-- âœ… All sim logic uses seeded `Rng` (no `Math.random`/`Date.now`)
-- âœ… Allocation-free hot paths (preallocated tapes, scratch arrays)
-- âœ… Deterministic behavior verified via tests
-- âœ… Frame budgets respected (benchmarks updated)
+- ✅ All sim logic uses seeded `Rng` (no `Math.random`/`Date.now`)
+- ✅ Allocation-free hot paths (preallocated tapes, scratch arrays)
+- ✅ Deterministic behavior verified via tests
+- ✅ Frame budgets respected (benchmarks updated)
 
 **Starkiller Law Compliance:**
 
-- âœ… Exclusive ownership (new leaves only)
-- âœ… Contract amendments before code
-- âœ… Boundary paranoia (facades, ADRs)
-- âœ… No sight-unseen imports
+- ✅ Exclusive ownership (new leaves only)
+- ✅ Contract amendments before code
+- ✅ Boundary paranoia (facades, ADRs)
+- ✅ No sight-unseen imports
 
 ## Remaining Work (Future Waves)
 
 ### Wave 5 (UI/Bridge + Web) ” Partial Complete
 
-- âœ… ULG bridge created
-- â³ Optional WASM bridge notes
-- â³ Web integration into super-panel/observatory
+- ✅ ULG bridge created
+- ⏳ Optional WASM bridge notes
+- ⏳ Web integration into super-panel/observatory
 
 ### Wave 6 (Native + Perf) ” Pending
 

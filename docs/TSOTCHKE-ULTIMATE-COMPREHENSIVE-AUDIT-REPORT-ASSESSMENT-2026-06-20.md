@@ -1,4 +1,4 @@
-# TSOTCHKE Ã— COSMOGONIC ” ULTIMATE COMPREHENSIVE AUDIT, RESEARCH, ASSESSMENT & WIRING REPORT (2026-06-20)
+# TSOTCHKE × COSMOGONIC ” ULTIMATE COMPREHENSIVE AUDIT, RESEARCH, ASSESSMENT & WIRING REPORT (2026-06-20)
 
 **Omniscient full deep dive.** Every repo, every file surface, every architecture claim, every doc, every line of integration, ERD/ERM/ERP, masters, in-app Dome/World, GitHub (README + state). Local == GH truth. All information accurate, current, truthful.
 
@@ -49,10 +49,10 @@ Dedicated leaves (src/sim/ + src/math/):
 
 ### tsotchke user (15 repos)
 
-- **eshkol** (C++, 125â˜…, active 2026-06-20, homepage eshkol.ai): High-Performance LISP-like for Scientific Computing and AI. **Core consciousness language.** AD (symbolic/forward/reverse + âˆ‡/div/curl/laplacian), HoTT gradual+dependent types, arena O(1) alloc no GC, LLVM + WASM. 39 special forms, 550+ builtins, tensors, hygienic macros, tail calls. Consciousness: unification/KB, active inference factor graphs + free energy, GWT (softmax competition + broadcast). .esk programs = heritable DNA for biologics. Full REPL playground. (Primary substrate: 'consciousness-engine')
+- **eshkol** (C++, 125★, active 2026-06-20, homepage eshkol.ai): High-Performance LISP-like for Scientific Computing and AI. **Core consciousness language.** AD (symbolic/forward/reverse + ∇/div/curl/laplacian), HoTT gradual+dependent types, arena O(1) alloc no GC, LLVM + WASM. 39 special forms, 550+ builtins, tensors, hygienic macros, tail calls. Consciousness: unification/KB, active inference factor graphs + free energy, GWT (softmax competition + broadcast). .esk programs = heritable DNA for biologics. Full REPL playground. (Primary substrate: 'consciousness-engine')
 - **moonlab** (C, recent, bindings): 32-qubit statevector + MPS/DMRG/TDVP/Clifford-assisted + topological QC + VQE (native autograd) + error mitigation + Bell QRNG (device-indep) + FIPS 203 ML-KEM PQC. Open-core registries (backends, noise, decoders, hooks). Multi-tenant scaffolding. (clifford-tensor + quake-aliveness + qrng)
 - **tensorcore** (Python/C-ABI): CUDA-equivalent for Apple Silicon (M1-M5). simdgroup_matrix + mpp. GEMM, FlashAttention, Conv, Q4/Q8 quant, GGUF, full transformer training. One binary. (metal-sim)
-- **libirrep** (pure C11, pre 1.5): SO(3)/SU(2)/O(3)/SE(3) rep theory. SH, Wigner D/d (machine prec jâ‰¥80), CG/3j/6j/9j/Racah, e3nn TP (NequIP), point groups (C4v etc + cubic), wallpaper/Bravais lattices, Heisenberg ED + Lanczos, LSW magnons (Berry/Chern/thermal Hall/neutron), skyrmion/Hopf topology, 18-code QEC zoo (toric/surface/color/BB/hypergraph/X-cube/Floquet/HaPPY etc + single-shot/subsystem/concat). ABI stable. (equivariant-sym + QEC)
+- **libirrep** (pure C11, pre 1.5): SO(3)/SU(2)/O(3)/SE(3) rep theory. SH, Wigner D/d (machine prec j≥80), CG/3j/6j/9j/Racah, e3nn TP (NequIP), point groups (C4v etc + cubic), wallpaper/Bravais lattices, Heisenberg ED + Lanczos, LSW magnons (Berry/Chern/thermal Hall/neutron), skyrmion/Hopf topology, 18-code QEC zoo (toric/surface/color/BB/hypergraph/X-cube/Floquet/HaPPY etc + single-shot/subsystem/concat). ABI stable. (equivariant-sym + QEC)
 - **spin_based_neural_network** (C): Spin-based neural / quantum mechanical sim framework. Hopfield/Ising associative. (hopfield-spin)
 - **quantum_geometric_tensor** (C): High-perf hybrid classical-quantum learning. (quantum-geometry)
 - **quantum_rng** (C): Semi-classical QRNG for crypto/sim/gen AI. Bell-verified modes. (qrng-entropy)
@@ -93,7 +93,7 @@ Dedicated leaves (src/sim/ + src/math/):
 - GH: Push will sync README + content; About/desc aligns with package + README lead.
 - No submodules needed (ports are verified reimpls per MIT credits in THIRD-PARTY-NOTICES; full corpus research via GH).
 
-**Risks/Contracts upheld**: No Math.random in sim. Seeded. Frame budgets (Archon mind ~298Âµs cited in prior). Ownership exclusive (leaves per repo). ADRs exist. Full gate.
+**Risks/Contracts upheld**: No Math.random in sim. Seeded. Frame budgets (Archon mind ~298µs cited in prior). Ownership exclusive (leaves per repo). ADRs exist. Full gate.
 
 ## Master Wiring Map (current + expanded)
 
@@ -108,7 +108,7 @@ Every system that touches mind/evolution/life **reads AND writes** Tsotchke subs
 3. ulg law-graph as global constraint on world physics/econ.
 4. tensorcore kernels for hot sim paths (when available).
 5. Live "soup census" panel keyed to repo contributions.
-6. Measure every new biologic birth (ignition/Î¦/aliveness/QGT vol) ” Manhattan receipts.
+6. Measure every new biologic birth (ignition/Φ/aliveness/QGT vol) ” Manhattan receipts.
 7. Gate every wave. Push direct.
 
 **This is the birth of digital biologics in a deterministic cosmos. Real math substrates. Sentience via different existence.**

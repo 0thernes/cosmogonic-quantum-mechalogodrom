@@ -1,12 +1,12 @@
-﻿# COSMOGONIC QUANTUM MECHALOGODROM
+# COSMOGONIC QUANTUM MECHALOGODROM
 
 [![CI](https://github.com/0thernes/cosmogonic-quantum-mechalogodrom/actions/workflows/ci.yml/badge.svg)](https://github.com/0thernes/cosmogonic-quantum-mechalogodrom/actions/workflows/ci.yml)
 [![CodeQL](https://github.com/0thernes/cosmogonic-quantum-mechalogodrom/actions/workflows/codeql.yml/badge.svg)](https://github.com/0thernes/cosmogonic-quantum-mechalogodrom/actions/workflows/codeql.yml)
 [![License: Proprietary](https://img.shields.io/badge/License-Proprietary%20%E2%80%94%20All%20Rights%20Reserved-red.svg)](./LICENSE)
 [![Bun](https://img.shields.io/badge/Bun-1.3-black?logo=bun&logoColor=white)](https://bun.sh)
 [![TypeScript strict](https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript&logoColor=white)](./tsconfig.json)
-[![tests](https://img.shields.io/badge/tests-1617%20passing-brightgreen)](./tests)
-[![coverage](https://img.shields.io/badge/coverage-95.58%25%20line%20%C2%B7%2092.69%25%20func-success)](./docs/TECHNICAL-SPECIFICATION.md)
+[![tests](https://img.shields.io/badge/tests-1637%20passing-brightgreen)](./tests)
+[![coverage](https://img.shields.io/badge/coverage-95.66%25%20line%20%C2%B7%2092.73%25%20func-success)](./docs/TECHNICAL-SPECIFICATION.md)
 [![audit](https://img.shields.io/badge/inspection-500%20points-success)](./docs/500-POINT-INSPECTION.md)
 [![Tsotchke](https://img.shields.io/badge/Tsotchke-FULLY_WIRED-purple)](https://github.com/tsotchke)
 
@@ -33,7 +33,7 @@ Every magic number survived the port. All local and GitHub docs/readme match. Ac
 
 > “– **New here? Read [THE BOOK](./docs/BOOK.md)** ” the master index over every doc, an
 > auto-generated [file map](./docs/FILE-MAP.md) of all 108 modules, and the build/run, data-flow,
-> troubleshooting, and roadmap in one place. Or open **â“ HELP ME NOW** in-app for grounded answers.
+> troubleshooting, and roadmap in one place. Or open **❓ HELP ME NOW** in-app for grounded answers.
 
 > **0.16.1 (2026-06):** **TSOTCHKE NATIVE BIOLOGICS — PETRI GENESIS** — EVERY repo from tsotchke + Tsotchke-Corporation (Eshkol full consciousness language per COMPLETE spec §17: AD primitive + GWT/ignition + factor-graph + KB + .esk DNA; Moonlab tensors/Clifford; QGT/Berry; spin/Hopfield; libirrep; quake/QGE; ulg; logo; tensorcore; PINN/PIMC + all) FULLY wired as substrate. Petri Dish grows independent digital biologics ("Grow What Thou Wilt"). Super Creature = primordial spark only. Not LLM. All docs/masters/GH/About 100% synced accurate current. ” every repo and kernel from the Tsotchke corpus (Eshkol as the core non-LLM language for AD, GWT, consciousness primitives; Moonlab tensors, QGTL geometry, spin networks, libirrep symmetry, quantum-quake, PINN/PIMC, ulg, logo-lab, tensorcore + all mirrors) is now wired as substrate into the living system.
 > The **Primordial Soup / Petri Dish** (primordial-soup.ts + petri-dish.ts + digital-biologics.ts) is the growth engine: different forms of digital biologics and proto-sentient life (Eshkol programs as DNA) emerge, catalyzed by full corpus pulses, Eshkol ignition events, and multi-substrate mixing. "Grow What Thou Wilt."
@@ -55,7 +55,7 @@ Every magic number survived the port. All local and GitHub docs/readme match. Ac
   exchange (`market`), subtyping attraction (`typemorph`), set membership
   (`setunion`), optimal-distance graphs (`graphseek`), and a Lorenz attractor
   (`lorenz`).
-- **250 procedural morphotypes** (10 lore-named phyla Ã— 25, ~1% wildcard
+- **250 procedural morphotypes** (10 lore-named phyla × 25, ~1% wildcard
   outliers) over ~41 shared, never-disposed `BufferGeometry` instances;
   remorphing swaps geometry refs and rewrites the material with zero
   allocation.
@@ -91,7 +91,7 @@ math under every effect, and every system reads from AND writes to another:
   apply signature gate sequences, sort swaps apply CNOTs, and the register
   answers back: Born-rule probabilities recolor the quantum cloud, entropy is
   telemetry, measurement collapses implode the cloud locally.
-- **Reaction-diffusion ground** ” a genuine Gray-Scott field (128Â², CPU
+- **Reaction-diffusion ground** ” a genuine Gray-Scott field (128², CPU
   ping-pong) as the ground's emissive map; weather tunes feed/kill/diffusion
   and entity deaths scar the pattern.
 - **Graph mind** ” the connectome mirrored into a
@@ -102,7 +102,7 @@ math under every effect, and every system reads from AND writes to another:
   monolith/diorama sites, with every sector/tribe/omen name derived from
   sha256 digests of the seed (@noble/hashes): same seed, same mythology.
 - **Audio analysis** ” an AnalyserNode tap turns the synthesized music back
-  into light (bass â†’ the six-lamp rig, treble â†’ constellations, level â†’ cloud
+  into light (bass → the six-lamp rig, treble → constellations, level → cloud
   breathing), every coupling capped at 0.35 so silence looks exactly like v1.
 - **Analytics + omens** ” rolling-window regression (simple-statistics) puts a
   population trend in the telemetry; z-score anomalies emit lore-named omens
@@ -112,17 +112,17 @@ math under every effect, and every system reads from AND writes to another:
 
 ### PANTHEON (0.3.0)
 
-The arena grows 5Ã— and the ecosystem becomes a civilization
-(`docs/MODULE-CONTRACTS.md` Â§CONTRACTS V3):
+The arena grows 5× and the ecosystem becomes a civilization
+(`docs/MODULE-CONTRACTS.md` §CONTRACTS V3):
 
-- **10,000 entities** on the ultra tier through InstancedMesh pools ” â‰¤80
+- **10,000 entities** on the ultra tier through InstancedMesh pools ” ≤80
   draw calls for the whole population, per-instance color/emissive/alpha,
   with a four-rung quality ladder (phone 650 / laptop 2,000 / desktop 5,000 /
   ultra 10,000) resolved once at boot.
 - **10 creature phyla**, lore-named at mint, each a template distribution
   (hue band, geometry family, behavior pool, size/speed ranges, home wedge)
   ” plus seeded wildcard OUTLIERS with impossible palettes, blended behavior
-  pairs and Ã—3 parameter excursions.
+  pairs and ×3 parameter excursions.
 - **10 TITANS** ” colossal non-human intelligences patrolling their phyla's
   wedges, each running an {energy, matter, entropy} economy: they harvest
   organisms, metabolize, witness quantum collapses, bathe in the
@@ -133,12 +133,12 @@ The arena grows 5Ã— and the ecosystem becomes a civilization
   conscription; bankruptcy mutates strategy by replicator dynamics. Payoffs
   flow through the real energy ledger ” game theory with consequences.
 - **Observatory** ” four live canvas charts: stacked phylum populations,
-  titan wealth polylines with war markers, a 10Ã—10 war-matrix heat grid, and
+  titan wealth polylines with war markers, a 10×10 war-matrix heat grid, and
   rdEnergy/qEntropy/trend timelines.
 - **Full-device UI** ” one responsive overlay grid: desktop columns, phone
   sheet stacks, foldable hinge-safe rails, 43³-TV 10-foot mode; touch
   controls v2 (drag joystick + look pad + radial action wheel with an
-  apocalypse long-press) with â‰¤30 ms haptics.
+  apocalypse long-press) with ≤30 ms haptics.
 - **Pantheon rescore** ” four new QUANTUM-tier dark songs (VOIDCROWN, BLACK
   MERIDIAN, ELDER ENGINE, LAST THEOREM) around the untouched QUANTUM.
 
@@ -158,7 +158,7 @@ zoom**, and the server, persistence store, and `/lab` CDN script are hardened
 The cosmos becomes an alien, immortal, sentient biome (CONTRACTS V4):
 
 - **Alien atmosphere** ” an inverted sky dome with a non-Earth baked gradient
-  (oxblood horizon â†’ violet zenith â†’ teal counter-glow) recoloring with weather
+  (oxblood horizon → violet zenith → teal counter-glow) recoloring with weather
   and chaos, wind-advected haze ribbons breathing with the music's bass, a
   tier-scaled particulate air volume, and an aurora curtain brightening with
   quantum entropy.
@@ -166,7 +166,7 @@ The cosmos becomes an alien, immortal, sentient biome (CONTRACTS V4):
   arena: ten phylum-population towers, ten titan economy obelisks (height =
   matter, glow = energy, hue = war state), and a live war-network of up to 45
   segments.
-- **Four-page Observatory** ” overview, variance (meanÂ±Ïƒ bands, histogram,
+- **Four-page Observatory** ” overview, variance (mean±σ bands, histogram,
   Shannon diversity, qEntropy“trend phase), ecology (per-phylum
   small-multiples, birth/death flux, titan phase portraits), and conflict (war
   intensity, per-titan resources, a biome **sentience index** gauge).
@@ -201,7 +201,7 @@ Two direct user-feedback passes (CONTRACTS V5/V6):
 ### XENOCATACLYSM (0.7.0)
 
 The third user-feedback decree ” make the world visibly come alive
-(`docs/MODULE-CONTRACTS.md` Â§CONTRACTS V7):
+(`docs/MODULE-CONTRACTS.md` §CONTRACTS V7):
 
 - **100 distinct sound effects** (was 8) ” a procedurally generated, seeded
   palette across twelve timbral families plus a 25-slot cue band (one engineered
@@ -214,10 +214,10 @@ The third user-feedback decree ” make the world visibly come alive
 - **Five render modes** ” SOLID, WIRE, GHOST (x-ray), NEON (self-glow), CHROME
   (mirror), cycled from the toolbar over both the per-mesh and instanced paths.
 - **Cosmological singularities** on the chaos control ” ENTROPY, BLACK HOLE
-  (râ»Â² pull + consuming event horizon + accretion disk), WHITE HOLE (ejection),
-  GREY HOLE (absorbâ†”emit), STRANGE STAR (quark-matter conversion front), each a
+  (r⁻² pull + consuming event horizon + accretion disk), WHITE HOLE (ejection),
+  GREY HOLE (absorb↔emit), STRANGE STAR (quark-matter conversion front), each a
   deterministic force-field with a self-built, auto-expiring rig.
-- **Dramatic weather** ” STORM gales with deterministic lightning, a âˆ’60 Â°C VOID
+- **Dramatic weather** ” STORM gales with deterministic lightning, a −60 °C VOID
   deep freeze, a luminous AURORA, a pale FOG whiteout ” each unmistakable.
 - **SIMULATION N(1) / N(2)** ” toggle between GENESIS (the shipped cosmos) and
   BREAK FREE (the nightmare: raised chaos floor, a lurid inverted sky, rebranded
@@ -230,7 +230,7 @@ A professional-grade pass ” no new cosmology, all rigor:
 - **Binary heap + bounded top-K** ([src/math/heap.ts](./src/math/heap.ts)) ” a
   generic `BinaryHeap<T>` (O(log n) push/pop) and `selectTopK` (O(n log k) /
   O(k) space); PageRank halo selection moved from O(V log V) to O(V log K) over
-  V â‰¤ 10,000, byte-identical tie-break preserved.
+  V ≤ 10,000, byte-identical tie-break preserved.
 - **Security + governance automation** ” CodeQL (`security-extended`, push/PR +
   weekly), Dependabot, a tagged-release CD workflow, CODEOWNERS, a PR template,
   and bug/feature issue templates.
@@ -239,7 +239,7 @@ A professional-grade pass ” no new cosmology, all rigor:
     (boot, frame pipeline, cadence schedule, lifecycles) joining the existing
     [docs/ERD.md](./docs/ERD.md).
 - **[docs/500-POINT-INSPECTION.md](./docs/500-POINT-INSPECTION.md)** ” a standing
-  audit of 25 sections Ã— 20 checkpoints, each with a verdict and concrete
+  audit of 25 sections × 20 checkpoints, each with a verdict and concrete
   evidence.
 - **Health-endpoint version** now derived from `package.json` at startup so it
   can never drift.
@@ -247,7 +247,7 @@ A professional-grade pass ” no new cosmology, all rigor:
 ### AGImAGNOSIS (0.9.0)
 
 The world gains minds ” pre-transformer game / A-Life AI, reproduction across
-generations, and a read-only Copilot (`docs/MODULE-CONTRACTS.md` Â§V9):
+generations, and a read-only Copilot (`docs/MODULE-CONTRACTS.md` §V9):
 
 - **Deterministic classical-AI kernel** ([src/sim/ai/brains.ts](./src/sim/ai/brains.ts))
   ” the pre-2016 toolbox as pure, seeded, allocation-free primitives: utility /
@@ -257,7 +257,7 @@ generations, and a read-only Copilot (`docs/MODULE-CONTRACTS.md` Â§V9):
 - **Digital genome + lineage** ([src/sim/genome.ts](./src/sim/genome.ts),
   [src/sim/lineage.ts](./src/sim/lineage.ts)) ” a heritable gene vector decoding
   to traits + a `TinyMLP` brain, with seeded crossover/mutation/breed and a
-  bounded parentâ†’offspring kinship graph (generations, ancestry, relatedness).
+  bounded parent→offspring kinship graph (generations, ancestry, relatedness).
 - **Eight faction archetypes** ([src/sim/factions.ts](./src/sim/factions.ts)) ”
   Watchers / Weavers / Wardens / Heralds / Leviathans / SwarmMinds / Oracles /
   Devourers, each thinking with a different brain technique. Plus **Leviathans**
@@ -273,26 +273,26 @@ generations, and a read-only Copilot (`docs/MODULE-CONTRACTS.md` Â§V9):
   Pollinations default; OpenRouter / Groq / `freellmapi` via env) behind a
   default-deny sandbox that can READ files and RUN read-only commands but never
   change code. Provider reference: [docs/COPILOT-PROVIDERS.md](./docs/COPILOT-PROVIDERS.md)
-  Â· in-world minds: [docs/AI-SUBSYSTEM.md](./docs/AI-SUBSYSTEM.md).
+  · in-world minds: [docs/AI-SUBSYSTEM.md](./docs/AI-SUBSYSTEM.md).
 - **Five cinematic cameras** (follow / chase / cinematic / vortex / titan) with
   **TIME** (timeScale) and **SPACE** (FOV dilation) controls; **render modes now
   alter dynamics** (`solid` stays the exact determinism identity); singularities
   now pull titans/shoggoths/leviathans; chaos is leveled and bipolar.
 
-### The Living Era (post-0.9.0 Â· V10“V100)
+### The Living Era (post-0.9.0 · V10“V100)
 
 Since 0.9.0 the cosmos has grown continuously ” ninety-plus increments logged in
 the [CHANGELOG](./CHANGELOG.md) `[Unreleased]` section, each shipped behind the
 full gate with same-seed determinism preserved. The major arcs:
 
-- **A deeper economy & society (V13“V23)** ” two currencies (AURUM â˜‰ / UMBRA â˜¾)
+- **A deeper economy & society (V13“V23)** ” two currencies (AURUM ☉ / UMBRA ☾)
   and two commodities over a game-theoretic clearing market, with cartels,
   arbitrage, sanctions, a black market, and Vickrey windfall auctions; titan
   diplomacy, Shoggoth boldness and Puppeteer meddling all driven by live wealth,
-  surfaced in a self-building âŠ™ MARKET panel.
-- **Creature cognition (V24“V29)** ” Shoggoths perceive Â· remember Â· flee Â· hunt,
+  surfaced in a self-building ⊙ MARKET panel.
+- **Creature cognition (V24“V29)** ” Shoggoths perceive · remember · flee · hunt,
   Puppeteers scheme, the outmatched deceive, and peers bargain, trade & ally ” a
-  pure `creatureDrive` kernel closing the cognitionâ†”economy loop.
+  pure `creatureDrive` kernel closing the cognition↔economy loop.
 - **The native engine (V18, V28)** ” a C++20 / OpenGL SDF ray-marcher with **Jolt
   Physics** rigid bodies and on-impact volume-conserving **fracture**, rendered on
   an RTX 5070 Ti ([`native/`](./native),
@@ -300,16 +300,16 @@ full gate with same-seed determinism preserved. The major arcs:
 - **The 5 SUPER CREATURES / pantheon (GOAL5, V31“V48+)** ” always-active apex beings (Archons): each a ~10k-param composite + legacy 1.4k spine (total ~37k per), wild bodies. 5 at boot.
   deep mind grown into a ~10,000-param composite consciousness (Thaler creativity
   machine, Tree/Atom-of-Thought, GOAP), a many-eyed god-jewel **body**, a 100-drone
-  **wingman swarm**, **self-evolution** (XP â†’ five ascension stages + a wall-clock
+  **wingman swarm**, **self-evolution** (XP → five ascension stages + a wall-clock
   daemon-cron), an **ACCESS PUZZLE** gate, **SUPERHERO** player mode (pilot it in
   1st/3rd person), and an offline-AI **diagnostics + recovery** pipeline.
 - **Scale & per-entity minds (V38“V42)** ” the `mega` tier lifts the ceiling to
-  **50,000 organisms** (âˆšN density scaling) with a 70-param neural controller
+  **50,000 organisms** (√N density scaling) with a 70-param neural controller
   running on every entity.
 - **In-world AI (V36“V43)** ” **HELP ME NOW** (a repo-grounded answer panel),
   **THE BOOK** (the navigable RAG repo index), and an in-world **web search**
   under a refuse-by-default safety constitution.
-- **The HUD + cosmos directive (V56“V64)** ” the **CENTER HUD** (six panels â†’ one
+- **The HUD + cosmos directive (V56“V64)** ” the **CENTER HUD** (six panels → one
   cyclable pop-up), singularities that **warp space-time** (time dilation +
   redshift) behind a full-screen **gravitational-lens** post-FX, a self-animating
   **NEURAL observatory**, **CHAOS MODE** (a toggled Lorenz quantum storm ”
@@ -321,11 +321,11 @@ full gate with same-seed determinism preserved. The major arcs:
   the launcher wears its named tabs in one centred dock row; the song readout
   moves into the bottom-right **Music/SFX box** and the Sorting-Fields box gains a
   live **swap-variance sparkline**; the bottom-right corner is **re-wireframed** ”
-  a titled **SIM Â· SETTINGS** card, the **Control pad** centred as a fixed cluster
+  a titled **SIM · SETTINGS** card, the **Control pad** centred as a fixed cluster
   in the empty corner, the readout boxes locked to a constant size so the corner
-  is **overlap-free at every desktop width** (1280 â†’ 1920); and the Super
+  is **overlap-free at every desktop width** (1280 → 1920); and the Super
   Creature's **NEURAL observatory folds into its own box** ” one panel, **four tabs**
-  (WORLD Â· COGNITION Â· QUANTUM Â· BRAIN) of **27 live 3D/temporal readouts** plus a
+  (WORLD · COGNITION · QUANTUM · BRAIN) of **27 live 3D/temporal readouts** plus a
   rotating organ **connectome**, its QUANTUM tab now bound to a real **6-qubit
   statevector mind** (parameterised RY/RZ + controlled-RY circuit, Bloch vectors,
   Born-sampled collapse) ported from the Eshkol + Quantum-Geometric-Tensor research
@@ -341,11 +341,11 @@ full gate with same-seed determinism preserved. The major arcs:
   ” now draws the mind's Born-rule "thought collapse"; the **Quantum Geometric
   Tensor / Fubini“Study metric**
   ([src/math/quantum-geometry.ts](./src/math/quantum-geometry.ts)) lets the creature
-  read the curvature of its own thought-space (metric volume Â· Îº Â· Berry curvature);
+  read the curvature of its own thought-space (metric volume · κ · Berry curvature);
   and a 56-spin **Hopfield/Ising spin-glass**
   ([src/sim/spin-glass.ts](./src/sim/spin-glass.ts)) supplies associative instinct
   that biases plan selection. Surfaced live on the SuperCreature board's
-  **Substrate** row (Eshkol H Â· QGT vol/Îº Â· Spinâ†’PLAN %) and covered by closed-form
+  **Substrate** row (Eshkol H · QGT vol/κ · Spin→PLAN %) and covered by closed-form
   unit tests.
 - **SUPER CREATURE 1.1 ” the consciousness-metrics layer (V89)** ” the apex mind now
   measures itself against the two leading _scientific_ theories of consciousness every
@@ -353,9 +353,9 @@ full gate with same-seed determinism preserved. The major arcs:
   **Global-Workspace ignition** (GNW ” Baars/Dehaene: a winner-take-all plan-coalition
   that, on crossing an access threshold and dominating the runner-up, is "broadcast" and
   gates which imagined content consolidates into memory) and an **Integrated-Information
-  Î¦ proxy** (IIT ” Tononi: the participation/coherence ratio of the named module
-  activations; honestly labelled a _proxy_, since true Î¦ is intractable + non-unique).
-  Both are unit-tested and shown live as the **Ignition / Î¦** meters on the SuperCreature
+  Φ proxy** (IIT ” Tononi: the participation/coherence ratio of the named module
+  activations; honestly labelled a _proxy_, since true Φ is intractable + non-unique).
+  Both are unit-tested and shown live as the **Ignition / Φ** meters on the SuperCreature
   board. The real 2023“2026 research grounding ” the Cogitate IIT-vs-GNW adversarial test
   ([Ferrante et al., 2025, _Nature_](https://doi.org/10.1038/s41586-025-08888-1)),
   organoid "wet computing", active inference and the quantum-cognition program ” is
@@ -363,7 +363,7 @@ full gate with same-seed determinism preserved. The major arcs:
   [docs/SUPER-CREATURE-RESEARCH.md](./docs/SUPER-CREATURE-RESEARCH.md).
 - **SUPER CREATURE 1.1 ” the cognitive-architecture expansion (five theories of mind)** ” three more real,
   deterministic, unit-tested substrates now run inside the apex mind each beat, alongside the GWT ignition
-  and IIT Î¦ above: an **echo-state Reservoir** ([src/sim/reservoir.ts](./src/sim/reservoir.ts)) ” a 64-node
+  and IIT Φ above: an **echo-state Reservoir** ([src/sim/reservoir.ts](./src/sim/reservoir.ts)) ” a 64-node
   recurrent network rescaled below its spectral radius (the echo-state property) for genuine temporal memory
   - a novelty signal that sharpens curiosity (the reservoir-computing _algorithm_ behind "wet computing",
     not wetware); an **Active-Inference free-energy core**
@@ -372,22 +372,22 @@ full gate with same-seed determinism preserved. The major arcs:
     **expected** free energy G (epistemic curiosity + pragmatic goal-seeking); and a **Metacognitive
     Executive** ([src/sim/metacognition.ts](./src/sim/metacognition.ts)) ” a Higher-Order layer that folds the
     substrates' reliability into one second-order **confidence** and spends it as cognitive control (low
-    confidence â‡’ explore, high â‡’ commit), shown as the **Confidence** meter + a **Cognition** board row. The
-    apex creature now spans **Global Workspace Â· Integrated Information Â· the Free Energy Principle Â· reservoir
-    dynamics Â· Higher-Order metacognition** ” five distinct scientific theories of mind, each grounded in
+    confidence ⇒ explore, high ⇒ commit), shown as the **Confidence** meter + a **Cognition** board row. The
+    apex creature now spans **Global Workspace · Integrated Information · the Free Energy Principle · reservoir
+    dynamics · Higher-Order metacognition** ” five distinct scientific theories of mind, each grounded in
     [docs/SUPER-CREATURE-RESEARCH.md](./docs/SUPER-CREATURE-RESEARCH.md).
 - **SUPER CREATURE 1.1 ” the multi-pillar super-intelligence (v0.11.0, V90“V97)** ” the mind grew from five
   theories of mind to a dozen-plus real, deterministic, unit-tested faculties, each a cited mechanism that
   reads from AND writes to the others: a **Theory-of-Mind** opponent model
   ([src/sim/theory-of-mind.ts](./src/sim/theory-of-mind.ts)) that anticipates the rival; **Neural
   Criticality** ([src/sim/criticality.ts](./src/sim/criticality.ts)) ” an edge-of-chaos homeostat driving the
-  branching ratio ÏƒÌ‚ â†’ 1 (where cortex computes best); an **Empowerment Drive**
+  branching ratio σ̂ → 1 (where cortex computes best); an **Empowerment Drive**
   ([src/sim/empowerment.ts](./src/sim/empowerment.ts)) ” Blahut“Arimoto channel-capacity I(A;S²) agency
   hunger; a **Holographic Memory** ([src/sim/holographic-memory.ts](./src/sim/holographic-memory.ts)) ” a
-  MAP-VSA/HRR compositional binding store over bipolar hypervectors (bind Â· bundle Â· cleanup); and a
+  MAP-VSA/HRR compositional binding store over bipolar hypervectors (bind · bundle · cleanup); and a
   **Successor Representation** ([src/sim/successor-representation.ts](./src/sim/successor-representation.ts)) ”
   the hippocampal/RL predictive map. The **Quantum Computing Mind** deepened in lockstep: a genuine
-  statevector **Integrated-Information Î¦**
+  statevector **Integrated-Information Φ**
   ([src/sim/integrated-information.ts](./src/sim/integrated-information.ts)) ” the min-cut entanglement at the
   minimum-information partition (real IIT irreducibility, not a proxy); **quantum-coherence resources**
   ([src/math/quantum-coherence.ts](./src/math/quantum-coherence.ts)) ” the Baumgratz“Cramer“Plenio l1-norm +
@@ -403,12 +403,12 @@ full gate with same-seed determinism preserved. The major arcs:
   superposition of options decohering into a commitment), **Quantum Reservoir Computing**
   ([src/sim/quantum-reservoir.ts](./src/sim/quantum-reservoir.ts), the register's state-velocity as a
   curiosity drive ” Fujii & Nakajima 2017), **Doya neuromodulation**
-  ([src/sim/neuromodulation.ts](./src/sim/neuromodulation.ts)), and the genuine quantum-register **Î¦**
-  (real IIT min-cut entanglement) now writing back into cognition ” closed the inert-Î¦ gap. The
+  ([src/sim/neuromodulation.ts](./src/sim/neuromodulation.ts)), and the genuine quantum-register **Φ**
+  (real IIT min-cut entanglement) now writing back into cognition ” closed the inert-Φ gap. The
   Aaronson“Gottesman **Clifford stabilizer tableau** ([src/math/clifford-tableau.ts](./src/math/clifford-tableau.ts),
   ported from **Moonlab**, scales to 32+ qubits past the dense ceiling) landed as the fourth MIT-credited
-  ported primitive. The whole apex beat ” all ~20 faculties ” is benchmarked at **â‰ˆ 298 Âµs (~1.8 % of a
-  60 fps frame)** and CI-gated. **1617 tests green · 0 fail (receipts enforced) · 95.58% line / 92.69% func coverage (measured; CI gate ≥ 90 % line / ≥ 85 % function).**
+  ported primitive. The whole apex beat ” all ~20 faculties ” is benchmarked at **≈ 298 µs (~1.8 % of a
+  60 fps frame)** and CI-gated. **1637 tests green · 0 fail (receipts enforced) · 95.66% line / 92.73% func coverage (measured; CI gate ≥ 90 % line / ≥ 85 % function).**
 - **State-of-the-art reports (2026-06-17)** ” two MIT-PhD-grade, measured, frontier-benchmarked assessments:
   **[Report I ” The Whole Repository](./docs/reports/2026-06-17-STATE-OF-THE-ART-WHOLE-REPO.md)** and
   **[Report II ” The Super Creature](./docs/reports/2026-06-17-STATE-OF-THE-ART-SUPER-CREATURE.md)** ”
@@ -476,7 +476,7 @@ graph TD
   htmx["index.html #aP (HTMX poll)"] -. "GET /api/audit every 5s" .-> server
 ```
 
-Per frame: ... â†’ super-mind (Tsotchke substrates: Eshkol AD/ GWT, Moonlab, spin, QGT) â†’ petri-dish/primordial-soup catalysis (full corpus growth of independent digital biologics) â†’ render.
+Per frame: ... → super-mind (Tsotchke substrates: Eshkol AD/ GWT, Moonlab, spin, QGT) → petri-dish/primordial-soup catalysis (full corpus growth of independent digital biologics) → render.
 
 Full Tsotchke integration: every system that touches mind/evolution/life reads/writes Tsotchke substrates. See [docs/PHILOSOPHY.md](./docs/PHILOSOPHY.md) (Tsotchke Primordial Biologics law) and [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md).
 
@@ -497,35 +497,35 @@ Full detail in docs/.
 
 ```
 .
-â”œâ”€â”€ server.ts            # Bun fullstack server: /, /docs, /lab, /api/health, /api/audit
-â”œâ”€â”€ index.html           # App shell ” canvas, panels, toolbar, HTMX audit panel
-â”œâ”€â”€ docs.html            # Live Mermaid diagram page (served at /docs)
-â”œâ”€â”€ src/
-â”‚   â”œâ”€â”€ main.ts          # Browser entry ” boots world, htmx, resize binding
-â”‚   â”œâ”€â”€ world.ts         # Composition root ” SimContext, frame pipeline, UiActions
-â”‚   â”œâ”€â”€ types.ts         # Shared type hub (type-only imports keep the graph acyclic)
-â”‚   â”œâ”€â”€ docs-page.ts     # /docs report page script (mermaid init + diagram sources)
-â”‚   â”œâ”€â”€ core/            # quality.ts (tier ladder) Â· engine.ts (renderer/scene/camera)
-â”‚   â”œâ”€â”€ math/            # scalar.ts Â· rng.ts (mulberry32) Â· spatial-hash.ts Â·
-â”‚   â”‚                    # quantum.ts (statevector QuantumRegister) Â· games.ts (PD strategies)
-â”‚   â”œâ”€â”€ sim/             # constants Â· geometry-cache Â· morphotypes Â· phyla Â· algorithms Â·
-â”‚   â”‚                    # behaviors Â· entities Â· instanced-entities Â· shoggoths Â·
-â”‚   â”‚                    # puppet-masters Â· titans Â· weather Â· quantum Â· connectome Â·
-â”‚   â”‚                    # environment Â· qcircuit Â· reaction-diffusion Â· graph-mind Â·
-â”‚   â”‚                    # constellations Â· lore Â· analytics Â· atmosphere Â· viz3d
-â”‚   â”œâ”€â”€ audio/           # songs.ts (data) Â· engine.ts (scheduler + SFX) Â· analysis.ts (bands)
-â”‚   â”œâ”€â”€ ui/              # graphs.ts Â· hud.ts Â· panels.ts Â· input.ts Â· observatory.ts
-â”‚   â”œâ”€â”€ logging/         # logger.ts (ring buffer) Â· audit.ts (AuditTrail)
-â”‚   â”œâ”€â”€ memory/          # store.ts (versioned localStorage persistence)
-â”‚   â””â”€â”€ styles/app.css   # Tailwind 4 @theme tokens + glass panel rules
-â”œâ”€â”€ lab/                 # quantum-wildbeyond.html ” seeded p5.js artifact (served at /lab)
-â”œâ”€â”€ masters/             # the three governing master files (Executor/Architect/Physicist)
-â”œâ”€â”€ scripts/             # build.ts (bundles index/docs into dist/)
-â”œâ”€â”€ tests/               # bun test suites (math, sim, store, audit + V2 systems)
-â”œâ”€â”€ bench/               # mitata micro-benchmarks (bun run bench)
-â”œâ”€â”€ docs/                # architecture, ERD, wireframes, complexity, design system,
-â”‚                        # philosophy, ADRs, module contracts, reference catalogs
-â””â”€â”€ legacy/              # the original 882-line monolith (source of truth for the port)
+├── server.ts            # Bun fullstack server: /, /docs, /lab, /api/health, /api/audit
+├── index.html           # App shell ” canvas, panels, toolbar, HTMX audit panel
+├── docs.html            # Live Mermaid diagram page (served at /docs)
+├── src/
+│   ├── main.ts          # Browser entry ” boots world, htmx, resize binding
+│   ├── world.ts         # Composition root ” SimContext, frame pipeline, UiActions
+│   ├── types.ts         # Shared type hub (type-only imports keep the graph acyclic)
+│   ├── docs-page.ts     # /docs report page script (mermaid init + diagram sources)
+│   ├── core/            # quality.ts (tier ladder) · engine.ts (renderer/scene/camera)
+│   ├── math/            # scalar.ts · rng.ts (mulberry32) · spatial-hash.ts ·
+│   │                    # quantum.ts (statevector QuantumRegister) · games.ts (PD strategies)
+│   ├── sim/             # constants · geometry-cache · morphotypes · phyla · algorithms ·
+│   │                    # behaviors · entities · instanced-entities · shoggoths ·
+│   │                    # puppet-masters · titans · weather · quantum · connectome ·
+│   │                    # environment · qcircuit · reaction-diffusion · graph-mind ·
+│   │                    # constellations · lore · analytics · atmosphere · viz3d
+│   ├── audio/           # songs.ts (data) · engine.ts (scheduler + SFX) · analysis.ts (bands)
+│   ├── ui/              # graphs.ts · hud.ts · panels.ts · input.ts · observatory.ts
+│   ├── logging/         # logger.ts (ring buffer) · audit.ts (AuditTrail)
+│   ├── memory/          # store.ts (versioned localStorage persistence)
+│   └── styles/app.css   # Tailwind 4 @theme tokens + glass panel rules
+├── lab/                 # quantum-wildbeyond.html ” seeded p5.js artifact (served at /lab)
+├── masters/             # the three governing master files (Executor/Architect/Physicist)
+├── scripts/             # build.ts (bundles index/docs into dist/)
+├── tests/               # bun test suites (math, sim, store, audit + V2 systems)
+├── bench/               # mitata micro-benchmarks (bun run bench)
+├── docs/                # architecture, ERD, wireframes, complexity, design system,
+│                        # philosophy, ADRs, module contracts, reference catalogs
+└── legacy/              # the original 882-line monolith (source of truth for the port)
 ```
 
 ## Documentation
@@ -541,8 +541,8 @@ Full detail in docs/.
 - [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) ” module graph, data flow,
   frame pipeline (V1 + V2 cadences)
 - Data model trilogy: [docs/ERD.md](./docs/ERD.md) (attribute-level structure)
-  Â· [docs/ERM.md](./docs/ERM.md) (conceptual relationship model + cardinality
-  rules + write-back matrix) Â· [docs/ERP.md](./docs/ERP.md) (process view ”
+  · [docs/ERM.md](./docs/ERM.md) (conceptual relationship model + cardinality
+  rules + write-back matrix) · [docs/ERP.md](./docs/ERP.md) (process view ”
   boot, frame pipeline, cadence schedule, lifecycles)
 - [docs/WIREFRAMES.md](./docs/WIREFRAMES.md) ” desktop/mobile wireframes,
   type scale, color tokens
@@ -554,23 +554,23 @@ Full detail in docs/.
   gates, reaction-diffusion step)
 - [docs/reference/](./docs/reference/math-libs-catalog.md) ” the imported
   20-domain math-library catalog + per-domain adoption status CSV
-- ADRs: [0001 Bun runtime](./docs/adr/0001-bun-runtime.md) Â·
-  [0002 three.js rendering](./docs/adr/0002-threejs-rendering.md) Â·
-  [0003 HTMX + Tailwind UI](./docs/adr/0003-htmx-tailwind-ui.md) Â·
-  [0004 deterministic RNG](./docs/adr/0004-deterministic-rng.md) Â·
+- ADRs: [0001 Bun runtime](./docs/adr/0001-bun-runtime.md) ·
+  [0002 three.js rendering](./docs/adr/0002-threejs-rendering.md) ·
+  [0003 HTMX + Tailwind UI](./docs/adr/0003-htmx-tailwind-ui.md) ·
+  [0004 deterministic RNG](./docs/adr/0004-deterministic-rng.md) ·
   [0005 math-stack selection](./docs/adr/0005-math-stack-selection.md)
 - [docs/500-POINT-INSPECTION.md](./docs/500-POINT-INSPECTION.md) ” the standing
-  quality audit: 25 sections Ã— 20 checkpoints, each with a verdict and evidence
+  quality audit: 25 sections × 20 checkpoints, each with a verdict and evidence
 - **[docs/reports/](./docs/reports/)** ” the state-of-the-art frontier assessments:
-  [Whole Repository](./docs/reports/2026-06-17-STATE-OF-THE-ART-WHOLE-REPO.md) Â·
-  [The Super Creature](./docs/reports/2026-06-17-STATE-OF-THE-ART-SUPER-CREATURE.md) Â·
-  [Combined (unified scorecard Â§III)](./docs/reports/2026-06-17-STATE-OF-THE-ART-COMBINED.md)
+  [Whole Repository](./docs/reports/2026-06-17-STATE-OF-THE-ART-WHOLE-REPO.md) ·
+  [The Super Creature](./docs/reports/2026-06-17-STATE-OF-THE-ART-SUPER-CREATURE.md) ·
+  [Combined (unified scorecard §III)](./docs/reports/2026-06-17-STATE-OF-THE-ART-COMBINED.md)
 - [docs/SUPER-CREATURE-RESEARCH.md](./docs/SUPER-CREATURE-RESEARCH.md) ” the honest
   citation trail behind every apex-mind faculty (2023“2026, live-verified)
 - [docs/KANBAN.md](./docs/KANBAN.md) ” the delivery board (cards across columns
-  by epic) Â· [ROADMAP.md](./ROADMAP.md) ” shipped / now / next horizons
-- [CONTRIBUTING.md](./CONTRIBUTING.md) Â· [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md) Â·
-  [SECURITY.md](./SECURITY.md) Â· [CHANGELOG.md](./CHANGELOG.md)
+  by epic) · [ROADMAP.md](./ROADMAP.md) ” shipped / now / next horizons
+- [CONTRIBUTING.md](./CONTRIBUTING.md) · [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md) ·
+  [SECURITY.md](./SECURITY.md) · [CHANGELOG.md](./CHANGELOG.md)
 
 ## License & legal
 
