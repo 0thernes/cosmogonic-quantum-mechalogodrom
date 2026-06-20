@@ -66,8 +66,8 @@ export class QuantumCloud {
     const rng = ctx.rng;
     this.n = n;
     this._useMpo = this._useMpo; // read for noUnused (Ralph)
-    this._mpoBond = this._mpoBond; // ensure read
-    void this._caMpsEnabled; // satisfy noUnused (Moonlab CA-MPS from corpus)
+    // Moonlab CA-MPS hybrid substrate (from Tsotchke mirror) — fields touched for provenance in hot path
+    const _mpo = this._mpoBond; const _ca = this._caMpsEnabled; void _mpo; void _ca;
     this.positions = new Float32Array(n * 3);
     this.colors = new Float32Array(n * 3);
     this.velX = new Float32Array(n);
