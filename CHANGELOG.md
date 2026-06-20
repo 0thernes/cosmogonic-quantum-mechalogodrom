@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### License clarified — proprietary, but source-available (view / run / try)
+
+- Reworded [LICENSE](./LICENSE): it stays **proprietary, All Rights Reserved, © 0thernes** (patent-pending, trademarks asserted; no commercial use, no redistribution, no derivatives) — but now **explicitly grants permission to view, clone, and run the project for personal, non-commercial evaluation** ("look, run, and try"). The prior §2 read "no permission... to use" and called the source "confidential", which wrongly implied people could not even look at or try it.
+- Propagated the clarified stance to README, ARCHITECTURE, TECHNICAL-SPECIFICATION, NOTICE, THIRD-PARTY-NOTICES, CONTRIBUTING, the DOCS/SPECS pages, and the latest report; cleaned stale UTF-8 mojibake in the touched license lines.
+
 ## [0.16.1] - 2026-06-20
 
 ### Receipts, Eshkol DNA safety, and release sync

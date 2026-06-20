@@ -1,6 +1,6 @@
 # THIRD-PARTY NOTICES — source-level ported algorithms
 
-Cosmogonic Quantum Mechalogodrom is proprietary — All Rights Reserved (see [LICENSE](./LICENSE)).
+Cosmogonic Quantum Mechalogodrom is proprietary — All Rights Reserved (see [LICENSE](./LICENSE)); it is source-available for personal, non-commercial evaluation (view, clone, run to try it).
 This file is the **source-level** attribution for algorithms that were ported / adapted into this
 project's own TypeScript from third-party research code. It complements [NOTICE.md](./NOTICE.md), which
 lists the bundled runtime dependencies and fonts.

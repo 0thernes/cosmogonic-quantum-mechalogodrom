@@ -84,7 +84,8 @@ touching module boundaries.
 ## Contributions & ownership
 
 This project is **proprietary — All Rights Reserved** (see [LICENSE](./LICENSE)).
-It is source-available, not open-source. By submitting any contribution
+It is **source-available** — anyone may view, clone, and run it for personal,
+non-commercial evaluation — but it is not open-source. By submitting any contribution
 (code, docs, assets, or ideas) you assign all right, title, and interest in
 that contribution to the Author (0thernes) and confirm it is your original
 work, free of third-party claims. If you cannot assign those rights, do not

@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/0thernes/cosmogonic-quantum-mechalogodrom/actions/workflows/ci.yml/badge.svg)](https://github.com/0thernes/cosmogonic-quantum-mechalogodrom/actions/workflows/ci.yml)
 [![CodeQL](https://github.com/0thernes/cosmogonic-quantum-mechalogodrom/actions/workflows/codeql.yml/badge.svg)](https://github.com/0thernes/cosmogonic-quantum-mechalogodrom/actions/workflows/codeql.yml)
-[![License: Proprietary](https://img.shields.io/badge/License-Proprietary%20%E2%80%94%20All%20Rights%20Reserved-red.svg)](./LICENSE)
+[![License: Proprietary — source-available](https://img.shields.io/badge/License-Proprietary%20(source--available)-7c4dff.svg)](./LICENSE)
 [![Bun](https://img.shields.io/badge/Bun-1.3-black?logo=bun&logoColor=white)](https://bun.sh)
 [![TypeScript strict](https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript&logoColor=white)](./tsconfig.json)
 [![tests](https://img.shields.io/badge/tests-1701%20passing-brightgreen)](./tests)
@@ -575,10 +575,13 @@ Full detail in docs/.
 
 ## License & legal
 
-**Proprietary ” All Rights Reserved.** Copyright (c) 2026 0thernes. This work
-is original and novel; no right to use, copy, modify, or distribute it is
-granted without the Author's prior written consent. See [LICENSE](./LICENSE).
-Licensing inquiries: 0_0@0thernes.art.
+**Proprietary — All Rights Reserved. Copyright (c) 2026 0thernes.** This work is
+original and novel. It is **source-available for personal evaluation**: you are
+welcome to view the source, clone it, and run it (locally or via the hosted demo)
+to try it out, for personal, non-commercial use. What is *not* granted without the
+Author's prior written consent: commercial use, redistribution / re-hosting, or
+shipping modified or derivative versions. See [LICENSE](./LICENSE). Licensing
+inquiries: 0_0@0thernes.art.
 
 Third-party components: three (MIT), htmx (0BSD), Tailwind CSS (MIT), Mermaid
 (MIT), simplex-noise (MIT), graphology + communities-louvain + metrics (MIT),
@@ -588,9 +591,9 @@ JetBrains Mono fonts (SIL OFL 1.1). Full attribution in
 redistributed); the `/lab` artifact loads p5.js (LGPL-2.1) from a CDN, not
 redistributed.
 
-Source-level ported algorithms ” the **Eshkol** qubit-RNG, the **Moonlab/QGTL**
+Source-level ported algorithms — the **Eshkol** qubit-RNG, the **Moonlab/QGTL**
 Quantum-Geometric-Tensor, and the **Tsotchke** spin-glass instinct wired into the
-Super Creature's quantum mind ” are reimplemented in this project's own TypeScript
+Super Creature's quantum mind — are reimplemented in this project's own TypeScript
 (not vendored as binaries) from MIT-licensed quantum-research code; the upstream
 copyright and permission notice are retained in
 [THIRD-PARTY-NOTICES.md](./THIRD-PARTY-NOTICES.md).
