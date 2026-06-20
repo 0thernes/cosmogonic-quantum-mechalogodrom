@@ -71,7 +71,10 @@ const SHIFT = Math.PI / 2;
  * @param coefficient - real weight c (default 1)
  * @returns a 1-qubit {@link PauliHamiltonian}
  */
-export function singlePauliHamiltonian(p: Exclude<Pauli, 'I'> = 'Z', coefficient = 1): PauliHamiltonian {
+export function singlePauliHamiltonian(
+  p: Exclude<Pauli, 'I'> = 'Z',
+  coefficient = 1,
+): PauliHamiltonian {
   return { qubits: 1, terms: [{ coefficient, paulis: [p] }] };
 }
 
