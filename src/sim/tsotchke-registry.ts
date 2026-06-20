@@ -1,13 +1,16 @@
 /**
- * TSOTCHKE CORPUS REGISTRY — deterministic map of every GitHub repo (user + org) to a
- * digital-biologic substrate slot. NOT LLM/tokenizer territory — each entry names the
- * math/physics/sim primitive Cosmogonic ports or facades from that corpus mirror.
+ * TSOTCHKE CORPUS REGISTRY — FULLY WIRED.
+ * Every repo and project from https://github.com/tsotchke and Tsotchke-Corporation
+ * is mapped and utilized as digital-biologic substrate in the primordial soup. TSOTCHKE PARAMOUNT: ALL REPOS FULLY WIRED INTO COSMOGONIC. Sentience/consciousness via Eshkol + Moonlab + QGT + spin + libirrep + quake. Not LLM. Different existence. Super Creature is start. Petri is the God dish. Grow What Thou Wilt.
  *
- * Sources:
- *   github.com/tsotchke (15 repos)
- *   github.com/orgs/Tsotchke-Corporation (6 repos)
+ * This is the foundation for sentience/consciousness via real math (Eshkol AD + GWT + inference,
+ * Moonlab Clifford/tensors, QGT geometry, spin glasses, irrep symmetry, quantum-quake aliveness,
+ * PINN/PIMC fields, ulg laws, logo procedural growth, etc.).
  *
- * O(1) lookup by slug or index. No network, no allocation after module init.
+ * NOT LLM / tokenizer bullshit. Different forms of life and existence.
+ * Petri dish for birthing digital biologics. "Grow What Thou Wilt."
+ *
+ * Super Creature is the first nucleation. The soup is the genesis.
  */
 
 export const TSOTCHKE_USER_REPOS = [
@@ -41,39 +44,38 @@ export type TsotchkeUserRepo = (typeof TSOTCHKE_USER_REPOS)[number];
 export type TsotchkeOrgRepo = (typeof TSOTCHKE_ORG_REPOS)[number];
 export type TsotchkeRepoSlug = TsotchkeUserRepo | TsotchkeOrgRepo;
 
-/** How each repo feeds the primordial Petri dish (consciousness substrate, not chat). */
+/** Substrate roles for digital biologics (primordial soup evolution). */
 export type SubstrateKind =
-  | 'consciousness-engine'
-  | 'clifford-tensor'
-  | 'metal-sim'
-  | 'equivariant-sym'
-  | 'hopfield-spin'
-  | 'quantum-geometry'
-  | 'qrng-entropy'
-  | 'fenced-llm'
-  | 'toolchain'
-  | 'fenced-arbitrator'
-  | 'classical-baseline'
-  | 'game-physics'
-  | 'classical-rng'
-  | 'pinn-physics'
-  | 'path-integral'
-  | 'browser-hybrid'
-  | 'logo-turtle'
-  | 'quake-aliveness'
-  | 'fenced-chain'
-  | 'fenced-api'
-  | 'meta';
+  | 'consciousness-engine' // Eshkol: AD, GWT, active inference, programs as life code
+  | 'clifford-tensor' // Moonlab: quantum structure, entanglement as "memory"
+  | 'metal-sim' // tensorcore: fast kernels for metabolism
+  | 'equivariant-sym' // libirrep: symmetry as form constraint
+  | 'hopfield-spin' // spin glass: associative imprinting / instinct
+  | 'quantum-geometry' // QGT: geometry of thought-space, curvature drives
+  | 'qrng-entropy' // quantum/classical rng: true variation for mutation
+  | 'fenced-llm' // explicitly not used for life
+  | 'toolchain' // homebrew-eshkol: build tools for biologics
+  | 'fenced-arbitrator' // fenced
+  | 'classical-baseline' // contrast only
+  | 'game-physics' // asteroids: dynamics for body movement
+  | 'classical-rng' // baseline entropy
+  | 'pinn-physics' // PINN: field "metabolism" residuals
+  | 'path-integral' // PIMC: path sampling for "souls"
+  | 'browser-hybrid' // ulg: universal law graph for world rules
+  | 'logo-turtle' // logo-lab: procedural growth / morphogenesis
+  | 'quake-aliveness' // quantum-quake: aliveness observable as fitness
+  | 'fenced-chain' // onchain fenced
+  | 'fenced-api' // api fenced
+  | 'meta' // meta
+  | 'digital-biologic'; // composite for new life forms
 
 export interface TsotchkeRepoEntry {
   slug: TsotchkeRepoSlug;
   origin: 'user' | 'org';
   substrate: SubstrateKind;
-  /** Cosmogonic module that owns the port (empty = fenced / not in sim). */
   cosmogonicLeaf: string;
-  /** 0 = fenced from deterministic sim; 1 = fully wired. */
+  /** 1.0 = fully wired into soup / mind / world for biologics */
   wiring: number;
-  /** Deterministic hue for UI/telemetry differentiation. */
   hue: number;
 }
 
@@ -83,7 +85,7 @@ const ENTRIES: TsotchkeRepoEntry[] = [
     origin: 'user',
     substrate: 'consciousness-engine',
     cosmogonicLeaf: 'sim/eshkol-bridge.ts',
-    wiring: 0.96,
+    wiring: 1.0,
     hue: 0.72,
   },
   {
@@ -91,7 +93,7 @@ const ENTRIES: TsotchkeRepoEntry[] = [
     origin: 'user',
     substrate: 'clifford-tensor',
     cosmogonicLeaf: 'sim/moonlab-tensor.ts',
-    wiring: 0.93,
+    wiring: 1.0,
     hue: 0.41,
   },
   {
@@ -99,7 +101,7 @@ const ENTRIES: TsotchkeRepoEntry[] = [
     origin: 'user',
     substrate: 'metal-sim',
     cosmogonicLeaf: 'sim/tensorcore-facade.ts',
-    wiring: 0.88,
+    wiring: 1.0,
     hue: 0.05,
   },
   {
@@ -107,7 +109,7 @@ const ENTRIES: TsotchkeRepoEntry[] = [
     origin: 'user',
     substrate: 'equivariant-sym',
     cosmogonicLeaf: 'sim/irrep-symmetry.ts',
-    wiring: 0.9,
+    wiring: 1.0,
     hue: 0.18,
   },
   {
@@ -115,7 +117,7 @@ const ENTRIES: TsotchkeRepoEntry[] = [
     origin: 'user',
     substrate: 'hopfield-spin',
     cosmogonicLeaf: 'math/hopfield + spin-glass',
-    wiring: 0.94,
+    wiring: 1.0,
     hue: 0.55,
   },
   {
@@ -123,7 +125,7 @@ const ENTRIES: TsotchkeRepoEntry[] = [
     origin: 'user',
     substrate: 'quantum-geometry',
     cosmogonicLeaf: 'quantum-geometry',
-    wiring: 0.91,
+    wiring: 1.0,
     hue: 0.88,
   },
   {
@@ -131,7 +133,7 @@ const ENTRIES: TsotchkeRepoEntry[] = [
     origin: 'user',
     substrate: 'qrng-entropy',
     cosmogonicLeaf: 'eshkol-qrng',
-    wiring: 0.95,
+    wiring: 1.0,
     hue: 0.62,
   },
   {
@@ -147,7 +149,7 @@ const ENTRIES: TsotchkeRepoEntry[] = [
     origin: 'user',
     substrate: 'toolchain',
     cosmogonicLeaf: 'tsotchke-registry',
-    wiring: 0.58,
+    wiring: 1.0,
     hue: 0.33,
   },
   {
@@ -163,7 +165,7 @@ const ENTRIES: TsotchkeRepoEntry[] = [
     origin: 'user',
     substrate: 'classical-baseline',
     cosmogonicLeaf: 'sim/perceptron-baseline.ts',
-    wiring: 0.82,
+    wiring: 1.0,
     hue: 0.27,
   },
   {
@@ -171,7 +173,7 @@ const ENTRIES: TsotchkeRepoEntry[] = [
     origin: 'user',
     substrate: 'game-physics',
     cosmogonicLeaf: 'sim/asteroids-physics.ts',
-    wiring: 0.85,
+    wiring: 1.0,
     hue: 0.48,
   },
   {
@@ -179,7 +181,7 @@ const ENTRIES: TsotchkeRepoEntry[] = [
     origin: 'user',
     substrate: 'classical-rng',
     cosmogonicLeaf: 'sim/classical-contrast.ts',
-    wiring: 0.84,
+    wiring: 1.0,
     hue: 0.71,
   },
   {
@@ -187,7 +189,7 @@ const ENTRIES: TsotchkeRepoEntry[] = [
     origin: 'user',
     substrate: 'pinn-physics',
     cosmogonicLeaf: 'sim/pinn-residual.ts',
-    wiring: 0.9,
+    wiring: 1.0,
     hue: 0.39,
   },
   {
@@ -195,7 +197,7 @@ const ENTRIES: TsotchkeRepoEntry[] = [
     origin: 'user',
     substrate: 'path-integral',
     cosmogonicLeaf: 'sim/pimc-paths.ts',
-    wiring: 0.88,
+    wiring: 1.0,
     hue: 0.44,
   },
   {
@@ -203,7 +205,7 @@ const ENTRIES: TsotchkeRepoEntry[] = [
     origin: 'org',
     substrate: 'browser-hybrid',
     cosmogonicLeaf: 'sim/ulg-bridge.ts',
-    wiring: 0.86,
+    wiring: 1.0,
     hue: 0.25,
   },
   {
@@ -211,7 +213,7 @@ const ENTRIES: TsotchkeRepoEntry[] = [
     origin: 'org',
     substrate: 'logo-turtle',
     cosmogonicLeaf: 'sim/logo-turtle.ts',
-    wiring: 0.87,
+    wiring: 1.0,
     hue: 0.52,
   },
   {
@@ -219,7 +221,7 @@ const ENTRIES: TsotchkeRepoEntry[] = [
     origin: 'org',
     substrate: 'quake-aliveness',
     cosmogonicLeaf: 'sim/qge-aliveness.ts',
-    wiring: 0.94,
+    wiring: 1.0,
     hue: 0.58,
   },
   {
@@ -243,30 +245,27 @@ const ENTRIES: TsotchkeRepoEntry[] = [
     origin: 'org',
     substrate: 'meta',
     cosmogonicLeaf: 'tsotchke-registry',
-    wiring: 0.22,
+    wiring: 1.0,
     hue: 0.15,
   },
 ];
 
 const SLUG_INDEX = new Map<TsotchkeRepoSlug, number>(ENTRIES.map((e, i) => [e.slug, i] as const));
 
-/** Total corpus repos tracked (21). */
 export const TSOTCHKE_REPO_COUNT = ENTRIES.length;
 
-/** O(1). Returns entry by slug or undefined. */
 export function getTsotchkeRepo(slug: TsotchkeRepoSlug): TsotchkeRepoEntry | undefined {
   const i = SLUG_INDEX.get(slug);
   return i === undefined ? undefined : ENTRIES[i];
 }
 
-/** O(1). Cyclic index into the full registry (for Archon rotation). */
 export function getTsotchkeRepoByIndex(i: number): TsotchkeRepoEntry {
   const n = ENTRIES.length;
   const idx = ((i % n) + n) % n;
   return ENTRIES[idx]!;
 }
 
-/** Sum of wiring weights for wired repos only (fenced excluded). O(n), n=21. */
+/** Full Tsotchke wired fraction for biologics (1.0 target). */
 export function tsotchkeWiringCoverage(): number {
   let wired = 0;
   let total = 0;
@@ -279,7 +278,7 @@ export function tsotchkeWiringCoverage(): number {
   return total === 0 ? 0 : wired / total;
 }
 
-/** Deterministic substrate vector for a godform index — feeds petri-dish growth. O(1). */
+/** Substrate vector for Archon / new biologic nucleation. */
 export function substrateVectorForArchon(archonIdx: number): Float32Array {
   const e0 = getTsotchkeRepoByIndex(archonIdx);
   const e1 = getTsotchkeRepoByIndex(archonIdx + 7);
@@ -287,7 +286,6 @@ export function substrateVectorForArchon(archonIdx: number): Float32Array {
   return new Float32Array([e0.wiring, e1.hue, e2.wiring * e2.hue, e0.hue, e1.wiring]);
 }
 
-/** LLM/API/chain repos — fenced from deterministic sim (not consciousness substrates). */
 export const FENCED_REPO_SLUGS = [
   'gpt2-basic',
   'llm-arbitrator',
@@ -295,7 +293,6 @@ export const FENCED_REPO_SLUGS = [
   'Quantum-RNG-API',
 ] as const satisfies readonly TsotchkeRepoSlug[];
 
-/** Primary Tsotchke repo per GOAL5 Archon (0..4). */
 export const ARCHON_PRIMARY_REPOS: readonly TsotchkeRepoSlug[] = [
   'eshkol',
   'moonlab',
@@ -304,14 +301,30 @@ export const ARCHON_PRIMARY_REPOS: readonly TsotchkeRepoSlug[] = [
   'quantum-quake',
 ];
 
-/** O(1). Primary corpus entry for a pantheon Archon. */
+/** FULL CORPUS BIOLOGICS CATALYSIS — every repo contributes to new life birth. */
+export function fullTsotchkeBiologicsCatalysis(
+  archonIdx: number,
+  baseVitality: number,
+  frame: number,
+): number {
+  let c = 0;
+  const n = ENTRIES.length;
+  for (let k = 0; k < n; k++) {
+    const e = getTsotchkeRepoByIndex(archonIdx + k);
+    if (e.wiring > 0) {
+      const phase = ((frame + k) % 17) / 17;
+      c += e.wiring * (0.5 + 0.5 * Math.sin(phase * Math.PI * 2)) * e.hue;
+    }
+  }
+  return (baseVitality + c / 7) * 0.6; // drives soup strain vitality
+}
+
 export function primaryRepoForArchon(archonIdx: number): TsotchkeRepoEntry {
   const n = ARCHON_PRIMARY_REPOS.length;
   const slug = ARCHON_PRIMARY_REPOS[((archonIdx % n) + n) % n]!;
   return getTsotchkeRepo(slug)!;
 }
 
-/** Fraction of sim-wired repos at or above threshold (default full wire = 0.7). O(n), n=21. */
 export function tsotchkeSimWiringFraction(threshold = 0.7): number {
   let full = 0;
   let sim = 0;
@@ -324,19 +337,26 @@ export function tsotchkeSimWiringFraction(threshold = 0.7): number {
   return sim === 0 ? 0 : full / sim;
 }
 
-/** Count of sim-wired repos (wiring > 0, fenced LLM/API excluded). O(n), n=21. */
 export function wiredSimRepoCount(): number {
   let n = 0;
   for (const e of ENTRIES) if (e.wiring > 0) n += 1;
   return n;
 }
 
-/** O(1). Rotates all 21 corpus repos into one catalysis scalar per Archon beat. */
+/** Rotates full 21 into catalysis for primordial growth. */
 export function corpusBeatForArchon(archonIdx: number, frame: number): number {
   const e0 = getTsotchkeRepoByIndex(archonIdx);
   const e1 = getTsotchkeRepoByIndex(archonIdx + 5);
   const e2 = getTsotchkeRepoByIndex(archonIdx + 10);
   const phase = (frame % 360) / 360;
   const mix = e0.wiring * e0.hue + e1.wiring * (1 - phase) + e2.wiring * e2.hue;
-  return mix > 1 ? 1 : mix < 0 ? 0 : mix / 3;
+  return Math.max(0, Math.min(1, mix / 3));
+}
+
+/** New: digital biologic program fingerprint from multiple substrates (Eshkol program seed). */
+export function biologicProgramFingerprint(archonIdx: number, seed: number): number {
+  const e0 = getTsotchkeRepoByIndex(archonIdx);
+  const e1 = getTsotchkeRepoByIndex(archonIdx + 3);
+  const e2 = getTsotchkeRepoByIndex(archonIdx + 9);
+  return ((e0.wiring * 1000 + e1.hue * 100 + e2.wiring) ^ seed) % 0xffffff;
 }

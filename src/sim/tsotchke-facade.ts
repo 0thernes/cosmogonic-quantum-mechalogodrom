@@ -74,6 +74,21 @@ export {
   vecDot,
 } from '../math/quantum-natural-gradient';
 export { quantumCoherence, type CoherenceSnapshot } from '../math/quantum-coherence';
+export { quantumMagic, type MagicSnapshot } from '../math/quantum-magic';
+export {
+  izhStep,
+  izhRest,
+  izhRun,
+  firingRateHz,
+  IZH_RS,
+  IZH_FS,
+  IZH_CH,
+  IZH_IB,
+  IZH_THRESHOLD,
+  type IzhParams,
+  type IzhState,
+} from '../math/izhikevich';
+export { freeEnergy, inferStep, infer, initBeliefs, type PCNet } from '../math/predictive-coding';
 export { ulgFieldSample, ulgTriadHandoff, ulgCorpusResonance, ulgWorkerDepth } from './ulg-bridge';
 export {
   computeQGE,

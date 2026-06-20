@@ -383,17 +383,21 @@ export async function runReadOnly(raw: string): Promise<SandboxResult> {
   try {
     const proc = Bun.spawn(v.argv, {
       cwd: ROOT,
+      stdin: 'ignore',
       stdout: 'pipe',
       stderr: 'pipe',
       env: minimalEnv(),
     });
     const timer = setTimeout(() => proc.kill(), RUN_TIMEOUT_MS);
+    const code = await proc.exited;
+    clearTimeout(timer);
     const [out, err] = await Promise.all([
       new Response(proc.stdout).text(),
       new Response(proc.stderr).text(),
     ]);
-    await proc.exited;
-    clearTimeout(timer);
+    if (code !== 0 && out.length === 0 && err.length > 0) {
+      return { ok: false, error: err.trim().slice(0, 500) };
+    }
     const combined = out + (err ? `\n[stderr]\n${err}` : '');
     const truncated = combined.length > MAX_OUTPUT;
     return { ok: true, output: truncated ? combined.slice(0, MAX_OUTPUT) : combined, truncated };

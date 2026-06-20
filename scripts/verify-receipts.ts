@@ -25,29 +25,26 @@ function run(args: string[]): string {
   return `${r.stdout ?? ''}\n${r.stderr ?? ''}`;
 }
 
-function measureTestCount(): number {
-  const out = run(['test']);
-  const ran = out.match(/Ran\s+([0-9]+)\s+tests?\b/);
-  if (ran) return Number(ran[1]);
-  const pass = out.match(/^\s*([0-9]+)\s+pass\s*$/m);
-  if (pass) return Number(pass[1]);
-  throw new Error('verify-receipts: could not parse a test count from `bun test`');
-}
-
-function measureCoverage(): { line: string; func: string } {
+/** One cold `bun test --coverage` run — count and coverage must share the same measurement. */
+function measureGate(): { count: number; line: string; func: string } {
   const out = run(['test', '--coverage']);
+  const ran = out.match(/Ran\s+([0-9]+)\s+tests?\b/);
+  const pass = out.match(/^\s*([0-9]+)\s+pass\s*$/m);
+  const count = ran ? Number(ran[1]) : pass ? Number(pass[1]) : NaN;
+  if (!Number.isFinite(count))
+    throw new Error('verify-receipts: could not parse test count from `bun test --coverage`');
   // Bun prints: "All files                | % Funcs | % Lines | ..." then a row "All files | NN.NN | NN.NN |"
   const row = out.match(/All files[^\n|]*\|\s*([0-9]+\.[0-9]+)\s*\|\s*([0-9]+\.[0-9]+)\s*\|/);
   if (!row || row[1] === undefined || row[2] === undefined)
     throw new Error('verify-receipts: could not parse coverage from `bun test --coverage`');
   // Column order in Bun: % Funcs then % Lines.
-  return { func: row[1], line: row[2] };
+  return { count, func: row[1], line: row[2] };
 }
 
 const printOnly = process.argv.includes('--print');
 
-const count = measureTestCount();
-const cov = measureCoverage();
+const { count, line: lineCov, func: funcCov } = measureGate();
+const cov = { line: lineCov, func: funcCov };
 
 if (printOnly) {
   console.log('Canonical receipts (paste into tests/docs-receipts-law.test.ts):');

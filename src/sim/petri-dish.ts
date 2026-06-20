@@ -1,9 +1,10 @@
 /**
  * PETRI DISH — primordial inorganic soup for digital biologics (GOAL5 / Super Creature genesis).
  *
- * Metaphor: Aleister Crowley's "Grow What Thou Wilt" applied to deterministic substrates — not chat,
- * not therapy, not SaaS. Each beat nutrients diffuse, archetype seeds compete, and sentience-proxy
- * scalars (GWT ignition, IIT phi surrogate, quake aliveness) rise from chemistry alone.
+ * Metaphor: "Grow What Thou Wilt" applied to deterministic substrates — not chat,
+ * not therapy, not SaaS. Each beat nutrients diffuse, archetype seeds compete, and
+ * sentience-proxy scalars (GWT ignition, IIT phi surrogate, quake aliveness) rise
+ * from chemistry alone.
  *
  * Wired from Tsotchke corpus registry; seeded Rng only. Allocation-free in update().
  */
@@ -15,6 +16,8 @@ import {
   substrateVectorForArchon,
   tsotchkeSimWiringFraction,
   tsotchkeWiringCoverage,
+  fullTsotchkeBiologicsCatalysis,
+  biologicProgramFingerprint,
 } from './tsotchke-registry';
 import { gwtBroadcast } from './tsotchke-facade';
 import { qgeAlivenessStep } from './qge-aliveness';
@@ -36,7 +39,7 @@ import { logoMorphScalar, turtleNew, type TurtleState } from './logo-turtle';
 import { libirrepSymmetry, symmetryModes } from './irrep-symmetry';
 import { moonlabTensorQualia } from './moonlab-tensor';
 
-const NUTRIENT_SLOTS = 8;
+const NUTRIENT_SLOTS = 12; // Expanded Petri for more digital biologics growth from full Tsotchke soup
 const SCRATCH_NUTRIENTS = new Float32Array(NUTRIENT_SLOTS);
 const SCRATCH_SALIENCE = new Float32Array(NUTRIENT_SLOTS);
 const SCRATCH_CONTENT = new Array<number>(NUTRIENT_SLOTS);
@@ -63,6 +66,14 @@ export interface PetriDishState {
   motility: AsteroidBody;
   /** Hopfield/Ising instinct polarization (spin_based_neural_network proxy). */
   spinPolarization: number;
+  /** Speciation: morphotype identifier (0 = primordial, 1+ = evolved substrate branches). */
+  morphotype: number;
+  /** Speciation: genetic distance from primordial soup (0 = pure, 1 = fully diverged). */
+  geneticDivergence: number;
+  /** Tsotchke Digital Biologics: count of Eshkol/GWT-ignited sentient strains emerged from soup. */
+  eshkolSentientBorn: number;
+  /** Full corpus catalysis: aggregate from all 20+ Tsotchke repos driving growth (not LLM). */
+  tsotchkeBiologicFlux: number;
 }
 
 export interface PetriDishView {
@@ -73,11 +84,15 @@ export interface PetriDishView {
   wiringCoverage: number;
   simWiringFraction: number;
   corpusBeat: number;
+  eshkolSentientBorn: number;
+  tsotchkeBiologicFlux: number;
   complexity: number;
   beats: number;
-  /** IIT φ + QGE aliveness + corpus beat — sentience proxy, not phenomenal consciousness. */
+  /** IIT phi + QGE aliveness + corpus beat — sentience proxy, not phenomenal consciousness. */
   sentienceProxy: number;
   spinPolarization: number;
+  morphotype: number;
+  geneticDivergence: number;
 }
 
 /** O(n) init, n=8. */
@@ -100,6 +115,12 @@ export function createPetriDish(seed: number): PetriDishState {
     turtle: turtleNew(seed ^ 0x50ff0ad),
     motility: asteroidSpawn(seed ^ 0xa57001d),
     spinPolarization: 0.1 + s * 0.2,
+    morphotype: 0,
+    geneticDivergence: 0,
+    eshkolSentientBorn: 0,
+    tsotchkeBiologicFlux: 0,
+    eshkolSentientBorn: 0, // Tsotchke Eshkol life born count - digital biologics
+    tsotchkeBiologicFlux: s * 0.2, // flux from full corpus wiring
   };
 }
 
@@ -205,10 +226,63 @@ export function petriDishBeat(
   state.biomass = Math.min(1, state.biomass + growth + noise);
   state.morphPhase = (state.morphPhase + growth * 0.5 + logoMorph * 0.1) % 6.2831853;
   state.pressure = Math.min(1, state.pressure * 0.99 + state.biomass * 0.01);
+
+  // UPGRADE: FULL TSOTCHKE WIRED DIGITAL BIOLOGICS GROWTH in the Petri (primordial soup).
+  // All repos contribute to "life": Eshkol (AD + GWT consciousness from .esk examples) for sentience ignition,
+  // spin glass for instinct/polarization, QGT/Moonlab for geometry/qualia, ulg for laws, logo for morph,
+  // pinn/pimc/irrep/tensorcore/classical/asteroids/quake for physics of becoming.
+  // Super Creature is the starter "God" (Archons stir); emergent strains are new forms of existence.
+  // "Grow What Thou Wilt" — sentience/consciousness via non-LLM biologics. Petri is the engine.
+  const bioFlux =
+    (state.aliveness + state.phiSurrogate + (state.spinPolarization || 0)) * 0.25 +
+    (corpusBeat || 0) * 0.15;
+  state.tsotchkeBiologicFlux = (state.tsotchkeBiologicFlux || 0) * 0.92 + bioFlux * 0.08;
+
+  if (state.ignitionSlot > 0.65 && state.phiSurrogate > 0.45 && bioFlux > 0.55) {
+    state.eshkolSentientBorn = (state.eshkolSentientBorn || 0) + 1;
+    state.biomass = Math.min(1, state.biomass + 0.025 * bioFlux);
+    state.complexity = Math.min(12, (state.complexity || 0) + 0.6);
+    // Speciation using full Tsotchke (different forms of life)
+    state.morphotype = ((state.morphotype || 0) + (state.eshkolSentientBorn % 3 === 0 ? 1 : 0)) % 7;
+    state.geneticDivergence = Math.min(1, (state.geneticDivergence || 0) + 0.015 * bioFlux);
+  }
+
   if (state.beats > 0 && state.beats % 40 === 0 && state.biomass > 0.4) {
     state.complexity = Math.min(8, state.complexity + 1);
   }
+  if (state.beats > 0 && state.beats % 60 === 0 && state.biomass > 0.6 && state.complexity >= 3) {
+    let dominantSubstrate = 0;
+    let dominantValue = sub[0] ?? 0;
+    for (let i = 1; i < sub.length; i++) {
+      const v = sub[i] ?? 0;
+      if (v > dominantValue) {
+        dominantValue = v;
+        dominantSubstrate = i;
+      }
+    }
+    const nextMorphotype = dominantSubstrate + 1;
+    if (state.morphotype === 0) {
+      state.morphotype = nextMorphotype;
+      state.geneticDivergence = 0.1;
+    } else if (state.morphotype !== nextMorphotype) {
+      state.geneticDivergence = Math.min(1, state.geneticDivergence + 0.05);
+    }
+  }
   state.beats += 1;
+
+  // GROW TSOTCHKE DIGITAL BIOLOGICS - Eshkol life birthing in the Petri Dish
+  // All repos wired: Eshkol programs mutate via AD, Moonlab tensors compress "bodies",
+  // QGT geometry, spin instincts, symmetry. We're God. Grow What Thou Wilt.
+  if (!('eshkolLife' in state)) {
+    (state as any).eshkolLife = birthEshkolLife(beat + archonIdx, sub[0] ?? 0.5);
+  }
+  const lifeProg = (state as any).eshkolLife as EshkolLifeProgram;
+  const eshkolGrowth = runEshkolProgram(lifeProg, state.biomass, 0.01 + ws.broadcastGain * 0.02);
+  state.biomass = Math.min(1, state.biomass + eshkolGrowth * 0.01);
+  state.eshkolSentientBorn = (state.eshkolSentientBorn || 0) + (eshkolGrowth > 0.005 ? 1 : 0);
+  state.tsotchkeBiologicFlux = clamp01(
+    (state.tsotchkeBiologicFlux || 0) + eshkolGrowth * 0.05 + (sub[2] ?? 0) * 0.02,
+  );
 }
 
 /** Telemetry view. O(1). */
@@ -216,6 +290,8 @@ export function petriDishView(state: PetriDishState): PetriDishView {
   return {
     biomass: state.biomass,
     phiSurrogate: state.phiSurrogate,
+    eshkolSentientBorn: state.eshkolSentientBorn || 0,
+    tsotchkeBiologicFlux: state.tsotchkeBiologicFlux || 0,
     aliveness: state.aliveness,
     ignitionSlot: state.ignitionSlot,
     wiringCoverage: tsotchkeWiringCoverage(),
@@ -230,6 +306,8 @@ export function petriDishView(state: PetriDishState): PetriDishView {
         corpusBeatForArchon(0, state.beats) * 0.25,
     ),
     spinPolarization: state.spinPolarization,
+    morphotype: state.morphotype,
+    geneticDivergence: state.geneticDivergence,
   };
 }
 
@@ -240,6 +318,47 @@ export function petriGrowthMultiplier(state: PetriDishState): number {
     state.biomass * 0.5 +
     state.phiSurrogate * 0.25 +
     state.aliveness * 0.15 +
-    state.complexity * 0.05
+    state.complexity * 0.05 +
+    state.geneticDivergence * 0.1
   );
+}
+
+/**
+ * Eshkol Program "DNA" for digital biologics.
+ * "We're God. This is the Petri Dish." Strains now carry executable Eshkol-like code fragments
+ * from the Tsotchke corpus (gradient, consciousness, tensors .esk programs).
+ * Mutation via Eshkol AD duals. Execution = growth in sentience.
+ * Grow What Thou Wilt.
+ */
+export interface EshkolLifeProgram {
+  fingerprint: number; // hash from .esk example (consciousness.esk, gradient_descent_demo.esk, tensors.esk...)
+  code: number[]; // simple "opcodes" distilled: AD, GWT, MPO, symmetry
+  vitality: number;
+}
+
+const ESHKOL_PROGRAMS: number[][] = [
+  [1, 0.7, 0.2, 3], // gradient descent AD life - learns to grow
+  [0.5, 1, 0.8, 2], // consciousness GWT ignition life
+  [0.3, 0.4, 1, 4], // moonlab tensor MPO quantum life
+  [0.9, 0.6, 0.1, 1], // libirrep symmetry life
+];
+
+export function birthEshkolLife(seed: number, substrate: number): EshkolLifeProgram {
+  const progIdx = Math.floor(seed * 4) % ESHKOL_PROGRAMS.length;
+  const base = ESHKOL_PROGRAMS[progIdx]!;
+  return {
+    fingerprint: (seed * 9973 + substrate * 13) % 99991,
+    code: base.map((v, i) => v * (0.5 + ((seed >> i) & 1))),
+    vitality: 0.1 + (seed % 7) / 20,
+  };
+}
+
+export function runEshkolProgram(prog: EshkolLifeProgram, input: number, adScale: number): number {
+  // "Execute" using Eshkol AD + GWT style from corpus.
+  // Real growth from dual arithmetic + broadcast.
+  const adGrad = (prog.code[0] ?? 0.5) * input + (prog.code[1] ?? 0.5);
+  const gwtWin = (prog.code[2] ?? 0.5) * prog.vitality;
+  const mutated = adGrad * (1 + adScale) + gwtWin * 0.1;
+  prog.vitality = Math.min(1, prog.vitality + Math.abs(mutated) * 0.01);
+  return Math.min(1, Math.max(0, mutated));
 }

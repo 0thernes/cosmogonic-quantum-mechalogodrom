@@ -98,7 +98,16 @@ import {
   storeHebbian,
   recall,
   overlap,
+  quantumMagic,
   type HopfieldNet,
+  izhStep,
+  izhRest,
+  IZH_RS,
+  type IzhState,
+  inferStep,
+  freeEnergy,
+  initBeliefs,
+  type PCNet,
 } from './tsotchke-facade'; // Ralph loop continue 10x: + ulgHandoff from Tsotchke for more corpus aliveness in super-mind
 import { SpinGlass, type SpinSnapshot } from './spin-glass';
 import { Reservoir, type ReservoirSnapshot } from './reservoir';
@@ -304,6 +313,22 @@ const SPIN_FIELD_GAIN = 0.85;
 const INSTINCT_GAIN = 0.12;
 /** Clean Hopfield attractor recall (tsotchke/spin_based_neural_network → math/hopfield.ts). */
 const HOPFIELD_GAIN = 0.08;
+/** Hierarchical predictive-coding net (Rao–Ballard): 4 senses → 2 hidden causes. */
+const MIND_PC_NET: PCNet = {
+  sizes: [4, 2],
+  weights: [
+    [
+      [1, 0],
+      [0, 1],
+      [1, 0],
+      [0, 1],
+    ],
+  ],
+  precisions: [1, 0.2],
+  prior: [0, 0],
+};
+const PC_SURPRISE_GAIN = 0.025;
+const IZH_SPIKE_GAIN = 0.03;
 /** One ±1 archetype per {@link SUPER_PLANS} entry — the instinct's behavioural vocabulary (constants). */
 const SPIN_ARCHETYPES: number[][] = ((): number[][] => {
   const r = mulberry32(0x5150ed); // fixed "SPIN" seed → a shared instinct vocabulary across creatures
@@ -378,8 +403,12 @@ export class SuperMind {
   private readonly eshkol: EshkolQrng;
   /** V84: the spin-glass instinct — a Hopfield/Ising lattice the mind settles to recall an archetype. */
   private readonly spin: SpinGlass;
-  /** V102: Hopfield associative memory — stores patterns as energy minima for content-addressable recall. */
-  private hopfield: HopfieldNet | null = null;
+  /** V102: Hopfield associative memory — plan archetypes as energy minima (math/hopfield.ts). */
+  private readonly hopfield: HopfieldNet;
+  /** V103: Izhikevich spiking neuron — cortical tick, not an attention head. */
+  private izhMembrane: IzhState;
+  /** V103: hierarchical predictive-coding beliefs (variational free-energy inference). */
+  private pcBeliefs: number[][];
   /** Dedicated seeded stream for the instinct's Metropolis dynamics (independent of the beat stream). */
   private readonly spinDrive: Rng;
   /** V1.1: the echo-state reservoir the mind steps with its latent each beat (short-term temporal memory). */
@@ -450,6 +479,7 @@ export class SuperMind {
   /** Bipolar probe buffer for Hopfield recall (no per-beat allocation). */
   private readonly hopProbe = Array.from({ length: SPIN_SIZE }, () => 0);
   private readonly phiMods = new Float32Array(8); // V89: the 8 named module-summary scalars for the Φ proxy
+  private readonly pcObs = new Float32Array(4); // V103: clamped sensory layer for hierarchical PC
   private readonly aifObs = new Float32Array(AIF_OBS); // V1.1: observation vector fed to the free-energy core
   private readonly aifG: number[] = Array.from({ length: SUPER_PLANS.length }, () => 0); // per-plan EFE
   private readonly srReward = new Float32Array(SUPER_PLANS.length); // V1.1: per-plan drive → SR look-ahead
@@ -535,6 +565,8 @@ export class SuperMind {
     this.spin = new SpinGlass(SPIN_SIZE, mulberry32((childSeed ^ 0x5bd1e995) >>> 0 || 1));
     this.spin.imprint(SPIN_ARCHETYPES);
     this.hopfield = storeHebbian(SPIN_ARCHETYPES);
+    this.izhMembrane = izhRest(IZH_RS);
+    this.pcBeliefs = initBeliefs(MIND_PC_NET);
     this.spinDrive = mulberry32((childSeed ^ 0x2545f491) >>> 0 || 1);
     this.reservoir = new Reservoir(mulberry32((childSeed ^ 0x119de1f3) >>> 0 || 1));
     // V1.1: the active-inference free-energy core, on its own XOR-derived seed (no extra rng draw). Its
@@ -730,25 +762,18 @@ export class SuperMind {
     // (Previous deep GWT block removed for type/contract clean; symbols centralized in facade. 5 Archons still benefit.)
     this.memory.push(salience);
 
-    // Hopfield associative memory: store recent patterns and recall similar ones
-    // Initialize hopfield network on first beat with memory ring as patterns
-    if (this.hopfield === null && this.memory.size >= 8) {
-      const patterns: number[][] = [];
-      for (let i = 0; i < 8; i++) {
-        const val = this.memory.recent(i) ?? 0;
-        patterns.push(val > 0.5 ? [1, 1, 1, 1] : [-1, -1, -1, -1]);
-      }
-      this.hopfield = storeHebbian(patterns);
-    }
-    // Recall pattern from current latent if hopfield is initialized (content-addressable, no RNG).
-    if (this.hopfield !== null) {
-      for (let i = 0; i < 4; i++) this.hopProbe[i] = (this.latent[i] ?? 0) >= 0 ? 1 : -1;
-      const { state: recalled, converged } = recall(this.hopfield, this.hopProbe, 10);
-      if (converged) {
-        const overlapVal = overlap(this.hopProbe, recalled);
-        this.cons.surprise = clamp01(this.cons.surprise + (1 - overlapVal) * HOPFIELD_GAIN);
-      }
-    }
+    // Izhikevich cortical spike + hierarchical predictive-coding free energy (digital biology, not LLM).
+    const izhR = izhStep(IZH_RS, this.izhMembrane, 8 + surprise * 35 + peakNovelty * 20);
+    this.izhMembrane = izhR.state;
+    if (izhR.spiked) this.cons.surprise = clamp01(this.cons.surprise + IZH_SPIKE_GAIN);
+    this.pcObs[0] = s[0] ?? 0;
+    this.pcObs[1] = s[1] ?? 0;
+    this.pcObs[2] = surprise;
+    this.pcObs[3] = peakNovelty;
+    const pcObsArr = [this.pcObs[0]!, this.pcObs[1]!, this.pcObs[2]!, this.pcObs[3]!];
+    this.pcBeliefs = inferStep(MIND_PC_NET, this.pcBeliefs, pcObsArr, 0.08);
+    const pcF = freeEnergy(MIND_PC_NET, this.pcBeliefs, pcObsArr);
+    this.cons.surprise = clamp01(this.cons.surprise + Math.min(1, pcF * 0.008) * PC_SURPRISE_GAIN);
 
     // GOAL5: call leaves per-beat (AST-1 attention schema, HOT-1 topdown generative, HOT-4 quality, memory as decision)
     // uses internal signals; deterministic; pre-allocated. bias from world percept already differentiates via godform.
@@ -764,10 +789,19 @@ export class SuperMind {
     const snap = this.qmind.snapshot();
     this.cliffordEntNorm = clamp01(this.cliffordEntNorm + snap.coherenceL1 * 0.2);
 
+    // Quantum magic: beyond-classical non-stabilizerness (Tsotchke quantum-magic leaf)
+    // Compute stabilizer 2-Rényi entropy to measure how far beyond Clifford the state is
+    const magic = quantumMagic(
+      snap.probs.map((p) => Math.sqrt(p)),
+      snap.phase.map((_, i) => Math.sin(snap.phase[i] || 0)),
+      Math.min(6, Math.log2(cq)),
+    );
+    const magicNorm = magic.magicNorm;
+
     const reflex = clamp01(
       ((this.quantumOut[1] ?? 0) + (this.quantumOut[0] ?? 0)) * 0.5 * this.cliffordScale +
         this.cliffordEntNorm * 0.35 +
-        snap.magicNorm * 0.15,
+        magicNorm * 0.15,
     );
     this.attnSchema.update(s, surprise, this.ignition, reflex);
     this.topdown.generate(this.imagined, peakNovelty);
@@ -935,20 +969,18 @@ export class SuperMind {
     // the nearest stored plan archetype; a second subsymbolic vote alongside the SK instinct.
     let hopPlan: SuperPlan | undefined;
     let hopStrength = 0;
-    if (this.hopfield) {
-      this.spin.spinsInto(this.hopProbe);
-      const { state } = recall(this.hopfield, this.hopProbe);
-      let hopPattern = -1;
-      for (let pIdx = 0; pIdx < SUPER_PLANS.length; pIdx++) {
-        const o = overlap(state, SPIN_ARCHETYPES[pIdx] ?? []);
-        const a = o < 0 ? -o : o;
-        if (a > hopStrength) {
-          hopStrength = a;
-          hopPattern = pIdx;
-        }
+    this.spin.spinsInto(this.hopProbe);
+    const { state: hopState } = recall(this.hopfield, this.hopProbe);
+    let hopPattern = -1;
+    for (let pIdx = 0; pIdx < SUPER_PLANS.length; pIdx++) {
+      const o = overlap(hopState, SPIN_ARCHETYPES[pIdx] ?? []);
+      const a = o < 0 ? -o : o;
+      if (a > hopStrength) {
+        hopStrength = a;
+        hopPattern = pIdx;
       }
-      hopPlan = hopPattern >= 0 ? SUPER_PLANS[hopPattern] : undefined;
     }
+    hopPlan = hopPattern >= 0 ? SUPER_PLANS[hopPattern] : undefined;
 
     // ── ACTIVE INFERENCE · the free-energy core ── PERCEIVE the world into a belief over latent
     // situations (minimising variational free energy F), then score every plan by its EXPECTED free

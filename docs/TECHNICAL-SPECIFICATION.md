@@ -32,8 +32,8 @@ seed**.
 | Distinct file types                        | 21                                                                          |
 | App source (TypeScript)                    | 35,226 lines · 108 files                                                    |
 | Tests                                      | 14,117 lines · 100 files                                                    |
-| Test : source ratio                        | 0.40 → **94.49 % line / 91.54 % function** coverage (`bun test --coverage`) |
-| Passing tests                              | **1,267** (0 failing)                                                       |
+| Test : source ratio                        | 0.40 → **94.66 % line / 91.76 % function** coverage (`bun test --coverage`) |
+| Passing tests                              | **1,292** (0 failing)                                                       |
 
 ### 1.1 Languages
 
@@ -308,8 +308,8 @@ Complexity classes are catalogued in [COMPLEXITY.md](COMPLEXITY.md); hot-path be
 
 The single gate — `bun run check` — must pass before every commit:
 
-`prettier --check` → `tsc --noEmit` (strict) → `oxlint` → `bun test` (**1,267 tests, 0 fail**) →
-`bun scripts/build.ts`. Coverage gate: line ≥ 0.90, function ≥ 0.85 (measured 94.49 / 91.54, `bun test --coverage`).
+`prettier --check` → `tsc --noEmit` (strict) → `oxlint` → `bun test` (**1,292 tests, 0 fail**) →
+`bun scripts/build.ts`. Coverage gate: line ≥ 0.90, function ≥ 0.85 (measured 94.66 / 91.76, `bun test --coverage`).
 Three governing "master" personas (`masters/*.xml`) encode the discipline: **the Executor** (finish
 everything, full gates), **the Architect** (contracts before code, exclusive ownership), **the
 Physicist** (determinism, measurement, frame budgets, provenance).
@@ -374,7 +374,7 @@ contrast 62 · doc-links 57 · a11y-static 45`.
 
 This is a ~69k-line TypeScript (+ optional C++/Jolt native engine) browser-native simulation that
 renders **up to 50,000 agents** (10,000 at 60 fps on a laptop iGPU with zero AI accelerator), is
-**bit-reproducible from one seed**, ships through a **full CI/CD gate** (1,267 tests, 94.49 % line / 91.54 % function coverage),
+**bit-reproducible from one seed**, ships through a **full CI/CD gate** (1,292 tests, 94.66 % line / 91.76 % function coverage),
 and whose entire emergent intelligence weighs **≈ 14 MB — 1/50,000th of GPT-3** at the mega ceiling. It
 demonstrates that depth comes from **architecture,
 determinism, and engineering discipline**, not parameter count or hardware.

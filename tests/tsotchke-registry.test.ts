@@ -44,7 +44,9 @@ describe('Tsotchke registry — all 21 repos mapped', () => {
 
   test('consciousness substrates are wired', () => {
     expect(getTsotchkeRepo('eshkol')!.wiring).toBeGreaterThan(0.8);
-    expect(getTsotchkeRepo('moonlab')!.cosmogonicLeaf).toBe('sim/moonlab-tensor.ts');
+    expect(getTsotchkeRepo('moonlab')!.cosmogonicLeaf).toBe(
+      'sim/moonlab-tensor.ts + sim/moonlab-vqe.ts + super-qubits + godform',
+    );
     expect(getTsotchkeRepo('quantum-quake')!.cosmogonicLeaf).toBe('sim/qge-aliveness.ts');
     expect(getTsotchkeRepo('logo-lab')!.cosmogonicLeaf).toBe('sim/logo-turtle.ts');
   });
@@ -118,6 +120,18 @@ describe('Petri dish — primordial digital biologics', () => {
     dish.phiSurrogate = 0.6;
     const high = petriGrowthMultiplier(dish);
     expect(high).toBeGreaterThan(low);
+  });
+
+  test('colony speciates deterministically under biomass and complexity pressure', () => {
+    const dish = createPetriDish(19);
+    dish.biomass = 0.75;
+    dish.complexity = 3;
+    dish.beats = 60;
+    petriDishBeat(dish, 2, 60, mulberry32(23));
+    const view = petriDishView(dish);
+    expect(view.morphotype).toBeGreaterThan(0);
+    expect(view.geneticDivergence).toBeCloseTo(0.1, 10);
+    expect(petriGrowthMultiplier(dish)).toBeGreaterThan(1);
   });
 });
 

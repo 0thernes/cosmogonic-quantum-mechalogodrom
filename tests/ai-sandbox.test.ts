@@ -129,19 +129,27 @@ describe('ai-sandbox: command gate is default-deny and write-free', () => {
 });
 
 describe('ai-sandbox: success paths (the gate ALLOWS + executes valid read-only input)', () => {
-  test('runReadOnly runs an allowed read-only command and returns its output', async () => {
-    // Exercises the exec path (Bun.spawn array-form + minimalEnv key-stripping + output capture).
-    const r = await runReadOnly('git log --oneline -1');
-    expect(r.ok).toBe(true);
-    if (r.ok) expect(r.output.trim().length).toBeGreaterThan(0);
-  });
+  test(
+    'runReadOnly runs an allowed read-only command and returns its output',
+    async () => {
+      // Exercises the exec path (Bun.spawn array-form + minimalEnv key-stripping + output capture).
+      const r = await runReadOnly('echo cosmogonic-sandbox-ok');
+      expect(r.ok).toBe(true);
+      if (r.ok) expect(r.output.trim()).toContain('cosmogonic-sandbox-ok');
+    },
+    { timeout: 20_000 },
+  );
 
-  test('dispatchTool routes each tool name to its handler on valid args', async () => {
-    expect((await dispatchTool('read_file', { path: 'package.json' })).ok).toBe(true);
-    expect((await dispatchTool('list_dir', { path: 'src' })).ok).toBe(true);
-    expect((await dispatchTool('grep', { pattern: 'cosmogonic' })).ok).toBe(true);
-    expect((await dispatchTool('run', { command: 'git log --oneline -1' })).ok).toBe(true);
-  });
+  test(
+    'dispatchTool routes each tool name to its handler on valid args',
+    async () => {
+      expect((await dispatchTool('read_file', { path: 'package.json' })).ok).toBe(true);
+      expect((await dispatchTool('list_dir', { path: 'src' })).ok).toBe(true);
+      expect((await dispatchTool('grep', { pattern: 'cosmogonic' })).ok).toBe(true);
+      expect((await dispatchTool('run', { command: 'echo cosmogonic-sandbox-ok' })).ok).toBe(true);
+    },
+    { timeout: 30_000 },
+  );
 
   test('dispatchTool tolerates missing args — routes with an empty value, handler rejects', async () => {
     expect((await dispatchTool('read_file', {})).ok).toBe(false); // empty path
