@@ -102,7 +102,8 @@ function patchGodJewel(
         `#include <common>
          varying vec3 vObjPos; varying vec3 vObjN;
          uniform float uTime; uniform float uArousal; uniform float uSurprise; uniform float uVariant; uniform float uWave;
-         uniform float uQWave; uniform float uPhi; uniform float uReflex; uniform float uQualia; uniform float uCliff;`,
+         uniform float uQWave; uniform float uPhi; uniform float uReflex; uniform float uQualia; uniform float uCliff;
+         uniform float uBrutalism; // BRUTALISM: chisel the morph into hard monolithic slabs`,
       )
       .replace(
         '#include <begin_vertex>',
@@ -131,6 +132,7 @@ function patchGodJewel(
          // TSOTCHKE QGTL corpus: Fubini-Study like geo term for extreme edge (Berry curv proxy in displace).
          float qgtGeo = sin(px*41.3 + t*1.3)*cos(py*37.9 - t*0.9) * 0.007 * (0.5 + 0.5 * (uQWave + uCliff));
          float ext = (beat*0.11 + morph*(0.17 + 0.14*uSurprise) + curv*uArousal + fhb*(0.04 + 0.05*uSurprise) + curvD*(0.6 + 0.4*qfac) + nm*0.09*uSurprise*(0.5+0.5*uQualia) + qgtGeo) * ${R.toFixed(1)} * 0.065;
+         ext = mix(ext, floor(ext * 7.0) / 7.0, uBrutalism * 0.8); // BRUTALISM: quantize the morph into hard monolithic slabs
          transformed += normal * ext + vec3(chaos*0.025*uSurprise, sin(t*3.1 + v)*0.018 + nm*0.011*uSurprise, fhb*0.009*qfac);`,
       );
     shader.fragmentShader = shader.fragmentShader
@@ -140,11 +142,21 @@ function patchGodJewel(
          varying vec3 vObjPos; varying vec3 vObjN;
          uniform float uTime; uniform vec3 uPlan; uniform float uDominance; uniform float uVariant; uniform float uSurprise; uniform float uWave; uniform float uArousal; uniform float uQWave; uniform float uPhi; uniform float uReflex; uniform float uQualia; uniform float uCliff;
          uniform float uEvoAura; uniform float uEvoTier; uniform float uEvoHue; uniform float uAscended; // V64 evolution-driven living skin
+         uniform float uBrutalism; // BRUTALISM: crossfade the god-jewel skin to raw poured concrete
          float h31(vec3 p){ return fract(sin(dot(p, vec3(27.17,61.31,11.71))) * 43758.5453); }
          float n3(vec3 p){ vec3 i=floor(p), f=fract(p); f=f*f*(3.0-2.0*f);
            return mix(mix(mix(h31(i),h31(i+vec3(1,0,0)),f.x),mix(h31(i+vec3(0,1,0)),h31(i+vec3(1,1,0)),f.x),f.y),
                       mix(mix(h31(i+vec3(0,0,1)),h31(i+vec3(1,0,1)),f.x),mix(h31(i+vec3(0,1,1)),h31(i+vec3(1,1,1)),f.x),f.y), f.z); }
          float fbm3(vec3 p){ float a=0.5,s=0.0; for(int i=0;i<9;i++){ s+=a*n3(p); p=p*2.03+7.1; a*=0.5; } return s; }`,
+      )
+      .replace(
+        '#include <color_fragment>',
+        `#include <color_fragment>
+         // BRUTALISM: collapse the jewel's base colour into raw board-formed, exposed-aggregate concrete.
+         float bForm = smoothstep(0.46, 0.5, abs(fract(vObjPos.y * 3.5) - 0.5)); // board-form seams
+         float bAgg = fbm3(vObjPos * 22.0);                                       // exposed aggregate speckle
+         float concreteTex = clamp(0.72 + 0.32 * bAgg - 0.22 * bForm, 0.0, 1.0);
+         diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.34, 0.335, 0.32) * concreteTex, uBrutalism);`,
       )
       .replace(
         '#include <roughnessmap_fragment>',
@@ -156,6 +168,7 @@ function patchGodJewel(
          float morphR = (uSurprise * 0.4 + uQWave * 0.25 + uQualia * 0.2 + uReflex * 0.15);
          roughnessFactor = clamp(mix(0.65, 0.03, smoothstep(0.32 + uVariant*0.05, 0.95, rqD + morphR*0.3)), 0.02, 1.0);
          roughnessFactor = clamp(roughnessFactor - uEvoTier * 0.012 - uEvoAura * 0.04, 0.02, 1.0); // V64: evolution polishes the jewel over time
+         roughnessFactor = mix(roughnessFactor, 0.93, uBrutalism); // BRUTALISM: matte poured concrete
          // metalness micro-variance (computed here; applied after <metalnessmap_fragment> declares metalnessFactor)
          float metalVar = 0.85 + 0.12 * sin(rqD*9.1 + uTime*0.7 + uVariant) * (0.5 + 0.5*morphR) + uEvoAura * 0.08;`,
       )
@@ -163,7 +176,7 @@ function patchGodJewel(
         '#include <metalnessmap_fragment>',
         `#include <metalnessmap_fragment>
          // apply the precomputed metalness micro-variance now that metalnessFactor exists (declared by the chunk above)
-         metalnessFactor = clamp(metalVar, 0.4, 1.0);`,
+         metalnessFactor = mix(clamp(metalVar, 0.4, 1.0), 0.02, uBrutalism); // BRUTALISM: concrete is non-metallic`,
       )
       .replace(
         '#include <emissivemap_fragment>',
@@ -192,7 +205,10 @@ function patchGodJewel(
          vec3 evoEmissive = evoIris * fres * uEvoAura * (0.6 + 0.9 * uEvoTier * 0.1)
                           + glow * uEvoAura * (0.25 + 0.5 * relief)
                           + evoIris * evoShimmer * (0.4 + 0.6 * fres);
-         totalEmissiveRadiance += glow * (0.22 + 0.6 * relief) + iris * fres * (0.45 + 0.8 * uDominance) + wv * 0.12 * uDominance + ch * 0.07 * uSurprise * uPlan + igFlash * uPlan * (0.3 + 0.4 * uDominance) + varPal * relief * 0.25 * uPlan + evoEmissive;`,
+         vec3 jewelEmissive = glow * (0.22 + 0.6 * relief) + iris * fres * (0.45 + 0.8 * uDominance) + wv * 0.12 * uDominance + ch * 0.07 * uSurprise * uPlan + igFlash * uPlan * (0.3 + 0.4 * uDominance) + varPal * relief * 0.25 * uPlan + evoEmissive;
+         // BRUTALISM: kill the glow — raw concrete only self-lights enough to read its monolithic form.
+         vec3 concreteEmissive = vec3(0.05, 0.05, 0.06) * (0.4 + 0.6 * relief);
+         totalEmissiveRadiance += mix(jewelEmissive, concreteEmissive, uBrutalism);`,
       );
   };
 }
@@ -232,6 +248,7 @@ export class SuperBodySystem {
     uEvoTier: { value: 0 }, // 0..10 milestones crossed — higher = finer crystalline relief + polish
     uEvoHue: { value: 0 }, // 0..1 evolution hue rotation — a unique palette that shifts over time
     uAscended: { value: 0 }, // 1 at the LV100 summit — the skin fully blazes + shimmers
+    uBrutalism: { value: 0 }, // BRUTALISM: 0 = god-jewel, 1 = raw poured-concrete monolith
   };
   private dominance = 0.5;
   private arousal = 0;
@@ -250,6 +267,8 @@ export class SuperBodySystem {
   private evoTier = 0;
   private evoHue = 0;
   private evoAscended = false;
+  // BRUTALISM: 0 = god-jewel iridescence, 1 = raw poured-concrete monolith (set via setBrutalism).
+  private brutalism = 0;
   private readonly move = new THREE.Vector3(); // the mind's movement output (its will)
   private readonly anchor = new THREE.Vector3(0, 12, 0); // birth locus / fallback
   // V39 FLIGHT: the apex roams the world instead of hovering — a wander-seek boid that banks toward
@@ -832,6 +851,22 @@ export class SuperBodySystem {
   /** V64: the evolution-driven skin parameters folded into the god-jewel surface (for tests / inspection). */
   evolutionSkin(): { aura: number; tier: number; hue: number; ascended: boolean } {
     return { aura: this.evoAura, tier: this.evoTier, hue: this.evoHue, ascended: this.evoAscended };
+  }
+
+  /**
+   * BRUTALISM: crossfade the entire god-jewel skin toward a raw poured-concrete monolith — matte
+   * (roughness→0.93), non-metallic, a board-formed + exposed-aggregate base colour, the iridescent glow
+   * killed to a stark form-light, and the vertex morph quantized into hard slabs. `level` 0 = full jewel
+   * (default, byte-identical to before), 1 = full brutalist. Folds into the shared shader uniform. O(1).
+   */
+  setBrutalism(level: number): void {
+    this.brutalism = clampf(level, 0, 1);
+    this.u.uBrutalism.value = this.brutalism;
+  }
+
+  /** BRUTALISM: the current concrete crossfade applied to the skin (for tests / inspection). */
+  brutalismFactor(): number {
+    return this.brutalism;
   }
 
   /** Free GPU resources (world reset). */

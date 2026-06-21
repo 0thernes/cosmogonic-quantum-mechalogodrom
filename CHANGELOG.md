@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### BRUTALISM — the concrete-monolith skin mode
+
+- Added a **BRUTALISM** crossfade to the Super Creature god-jewel material (`uBrutalism` 0..1, driven by
+  `SuperBodySystem.setBrutalism()`). At 1 the flamboyant jewel collapses into a raw poured-concrete
+  monolith: matte (roughness→0.93), non-metallic, a **board-formed + exposed-aggregate** base colour, the
+  iridescent glow killed to a stark cold form-light, and the vertex morph **quantized into hard slabs**.
+  Every term is a `mix(jewel, concrete, uBrutalism)`, so `0` is byte-identical to the jewel and the mode
+  composes cleanly with the V64 evolution skin and the flight math. Deterministic, O(1), no alloc. Tests +
+  `brutalismFactor()` accessor added; docs/contract synced.
+
 ### Super Creature god-jewel skin — compile fix + V64 LIVING, EVOLVING SKIN
 
 - **Fixed** the god-jewel `MeshStandardMaterial` patch in `src/sim/super-body.ts`: the metalness

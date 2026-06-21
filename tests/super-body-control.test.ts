@@ -131,4 +131,37 @@ describe('SuperBodySystem flight + control (V41)', () => {
     expect(s.hue).toBeLessThan(1);
     expect(s.ascended).toBe(false);
   });
+
+  test('BRUTALISM: setBrutalism crossfades the skin and clamps to [0,1]', () => {
+    const body = new SuperBodySystem(new THREE.Scene());
+    expect(body.brutalismFactor()).toBe(0); // default: full god-jewel, unchanged
+    body.setBrutalism(0.5);
+    expect(body.brutalismFactor()).toBeCloseTo(0.5, 5); // half-way to concrete
+    body.setBrutalism(1);
+    expect(body.brutalismFactor()).toBe(1); // full poured-concrete monolith
+    body.setBrutalism(5); // over the top
+    expect(body.brutalismFactor()).toBe(1); // clamped
+    body.setBrutalism(-3); // below floor
+    expect(body.brutalismFactor()).toBe(0); // clamped — back to the jewel
+  });
+
+  test('BRUTALISM coexists with evolution + flight (no NaN, both factors independent)', () => {
+    const body = new SuperBodySystem(new THREE.Scene());
+    body.setBrutalism(1);
+    body.setEvolution({
+      sizeMul: 4,
+      hueShift: 0.3,
+      glowMul: 2,
+      spikeBoost: 4,
+      aura: 0.8,
+      tier: 8,
+      ascended: false,
+    });
+    body.setControl(2, 1, 0.2, -0.5, true);
+    for (let i = 0; i < 120; i++) body.update(i / 60, 1 / 60);
+    const p = body.worldPosition(new THREE.Vector3());
+    expect(Number.isFinite(p.x + p.y + p.z)).toBe(true); // brutalism doesn't disturb the flight math
+    expect(body.brutalismFactor()).toBe(1); // still concrete
+    expect(body.evolutionSkin().tier).toBeCloseTo(8, 5); // evolution still applied alongside
+  });
 });
