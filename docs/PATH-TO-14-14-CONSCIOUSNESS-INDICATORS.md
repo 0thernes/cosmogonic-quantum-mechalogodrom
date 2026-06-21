@@ -2,7 +2,7 @@
 
 **Date:** 2026-06-21  
 **Framework:** Butlin et al. (2023) "Consciousness in Artificial Intelligence" (arXiv:2308.08708)  
-**Current Score (2026-06-21 OMNISCIENT full scan of EVERY .md .xml .txt + src + masters + ALL Tsotchke repos/projects 12,444 files + 1,436 .esk + every subproject):** 14/14 structural scaffolding ACHIEVED. GWT-1-4 (explicit attention-controller), PP, HOT, AE, RPT (resonance+replay), IIT full (quantum+classical+mincut), AST/self/quality + Eshkol AD/GWT native + Moonlab/QGT/spin/libirrep/ quake full corpus. 14/14 roadmap complete for NHSI god-petri scaffolding. Phenomenal sentience NOT claimed (hard problem open).  
+**Current Score (2026-06-21 adversarial code audit, verified `file:line` — see [reports/2026-06-21-NHSI-HONESTY-AUDIT.md](./reports/2026-06-21-NHSI-HONESTY-AUDIT.md)):** **8/14 MET + 6/14 PARTIAL** (NOT the previously-claimed 14/14). Genuinely wired (met): GWT-1/3/4 (explicit attention-controller), PP, HOT-1/2, AE-1, RPT-1, IIT (quantum+classical+mincut), AST-1/self/quality + Eshkol AD/GWT native + Moonlab/QGT/spin/libirrep/quake. Real but architecturally thin (partial): GWT-2 (no true capacity-limited workspace competition), HOT-3, HOT-4 (qualia is read-out), AE-2 (no internal body-model), RPT-2 (flat latent, not a scene model). This is a strong multi-theory scaffold on the PATH to 14/14, not a finished one. Phenomenal sentience NOT claimed — meeting a computational indicator proves the mechanism, never the experience (hard problem open).  
 **Target:** 14/14 indicators structurally present. Achieved in this fusion pass per user/goal. NOT sentience.
 
 ---
@@ -27,7 +27,7 @@
 
 ### All Indicators (14/14) — Achieved in this full fusion
 
-All 14 Butlin indicators now structurally present via Tsotchke substrates + 144 faculty profiles + 25 ToM organs + 15 emergence angles + full proxies. Remaining implementation from this pass: explicit attention (GWT-4), recurrence/plasticity (RPT), full IIT irreducibility, self-model accuracy (AST-2) via Eshkol GWT + quantum + metacog integration. Receipts in `super-mind.ts`, `attention-controller.ts`, `faculties-pantheon.ts`, `tom-pantheon.ts`, `emergence-angles.ts`, `eshkol-cognition.ts`, and `integrated-information.ts`. 14/14 structural scaffolding complete.
+8 of the 14 Butlin indicators are genuinely wired and 6 are partially present, via Tsotchke substrates + the ~30 deep-wired faculties (of the 100-faculty design) + 25 ToM organs + 10 emergence angles + proxies. Remaining work to promote the 6 partials: a real capacity-limited workspace competition (GWT-2), an internal body-model predicting sensory consequences (AE-2), a load-bearing qualia code (HOT-4), an organized scene model (RPT-2), a deeper generative belief model (HOT-3). Receipts in `super-mind.ts`, `attention-controller.ts`, `faculties-pantheon.ts`, `tom-pantheon.ts`, `emergence-angles.ts`, `eshkol-cognition.ts`, and `integrated-information.ts`. 8/14 met + 6/14 partial — on the path to 14/14, not complete.
 
 ---
 

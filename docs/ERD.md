@@ -6,7 +6,7 @@ nonetheless, and the composition root (`world.ts`) is effectively its join
 engine. Diagrams below follow ERD (structure), ERM (relationship narrative),
 and ERP (process models).
 
-> **Scope (v0.17.1 TSOTCHKE + NHSI):** Per binding [TSOTCHKE-INTEGRATION-MAP.md](./TSOTCHKE-INTEGRATION-MAP.md): 9 deep apex + 2 world + 3 telemetry + 2 license-gated + 3 fenced + meta. Full corpus harvested; 19/22 wired. **144 faculties**, **5 apex + 20 light Archons**, **25 ToM**, **15 emergence angles**, **14/14 structural** Butlin scaffold (not sentience). Gate: 2185 tests · 95.23% / 92.22%. Real MIT startup math. Not LLM. 0thernes NHSI.
+> **Scope (v0.17.1 TSOTCHKE + NHSI):** Per binding [TSOTCHKE-INTEGRATION-MAP.md](./TSOTCHKE-INTEGRATION-MAP.md): 9 deep apex + 2 world + 3 telemetry + 2 license-gated + 3 fenced + meta. Full corpus enumerated; ~16 of 20 wired with real downstream effect. **100-faculty design (~30 deep-wired)**, **5 individuated apex + 20 light-echo Archons**, **25 ToM wired**, **10 emergence angles** (+5 god-scale events), **Butlin 8/14 met + 6/14 partial** (computational indicators, not sentience). Gate: 2185 tests · 95.23% / 92.22%. Real MIT startup math. Not LLM. 0thernes NHSI.
 
 ## ERD
 

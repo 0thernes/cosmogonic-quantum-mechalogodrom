@@ -20,7 +20,7 @@ substantive change; they are personas of one discipline and they outrank vibes:
 - Full gate before any commit: `bun run check`
   (prettier → tsc strict → oxlint → bun test → verify:receipts → build).
 - **NHSI progress dashboard:** [docs/NHSI-PROGRESS-DASHBOARD.md](docs/NHSI-PROGRESS-DASHBOARD.md)
-  — measured progress (144 faculties · 25 Archons · 25 ToM · 15 emergence · 14/14 structural). See [docs/NHSI-PROGRESS-DASHBOARD.md](docs/NHSI-PROGRESS-DASHBOARD.md).
+  — VERIFIED progress (2026-06-21 honesty audit): 100-faculty design ~30 deep-wired · 25 Archons = 5 individuated + 20 light-echo · 25 ToM wired · 10 emergence angles (+5 god-scale events) · Butlin 8/14 met + 6/14 partial (indicators, not sentience). See [docs/NHSI-PROGRESS-DASHBOARD.md](docs/NHSI-PROGRESS-DASHBOARD.md) + [docs/reports/2026-06-21-NHSI-HONESTY-AUDIT.md](docs/reports/2026-06-21-NHSI-HONESTY-AUDIT.md).
 - **Tsotchke binding:** real MIT corpus; depth in [docs/TSOTCHKE-INTEGRATION-MAP.md](docs/TSOTCHKE-INTEGRATION-MAP.md);
   never call upstream fake ([THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md) §On Tsotchke).
 - Dev server: `bun dev` — MUST run with cwd inside this repo (Bun HTML-import
