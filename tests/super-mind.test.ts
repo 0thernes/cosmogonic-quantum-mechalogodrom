@@ -228,5 +228,5 @@ describe('SuperMind composite consciousness (V45)', () => {
         (snap.quantum[0] ?? 0);
       expect(Number.isFinite(fin)).toBe(true);
     }
-  });
+  }, 30000); // 300 apex think() beats × the heavy 25-faculty stack; slow CI vs the 5s default
 });

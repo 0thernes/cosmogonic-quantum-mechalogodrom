@@ -209,7 +209,7 @@ describe('coupling audit applied to the live SuperMind (the "coupling > count" r
     // The effect can be positive or negative depending on the nonlinear dynamics.
     expect(on.density).toBeLessThan(0.6); // still moderate — not an overclaimed "fully coupled" mind
     expect(off.density).toBeLessThan(0.6); // baseline also moderate
-  });
+  }, 30000); // 100+ apex think() beats × 2 minds × the heavy 25-faculty stack; slow CI vs the 5s default
 
   test('the workspace broadcast is bounded [0,1] and deterministic', () => {
     const m1 = new SuperMind(mulberry32(5));
@@ -223,5 +223,5 @@ describe('coupling audit applied to the live SuperMind (the "coupling > count" r
       expect(b).toBeLessThanOrEqual(1);
       expect(b).toBe(m2.snapshot().broadcast); // bit-reproducible
     }
-  });
+  }, 30000); // 120 beats × 2 minds × the heavy apex stack; slow CI vs the 5s default
 });
