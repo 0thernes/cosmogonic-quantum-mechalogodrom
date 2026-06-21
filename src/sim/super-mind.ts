@@ -530,8 +530,9 @@ export class SuperMind {
   private readonly srValue: number[] = Array.from({ length: SUPER_PLANS.length }, () => 0); // SR plan values
   private readonly qObs = new Float64Array(3 * QMIND_QUBITS); // V1.2: register Bloch observables → QRC
   // V96 · ONLINE LEARNING — the Stratum-X adaptation channel: a seeded, bounded, reward-reinforced
-  // per-plan bias. Default-OFF (planBias all-zero ⇒ byte-identical to the frozen-weight mind). O(plans).
-  private learnEnabled = false;
+  // per-plan bias. ON by default (the apex mind LEARNS at runtime); setLearning(false) freezes it back to
+  // the byte-identical frozen-weight mind. Deterministic (no rng) + bounded (|bias| ≤ 0.5). O(plans).
+  private learnEnabled = true;
   private learnRate = 0.02;
   private readonly planBias: number[] = Array.from({ length: SUPER_PLANS.length }, () => 0);
   private readonly planOneHot: number[] = Array.from({ length: SUPER_PLANS.length }, () => 0);
@@ -657,10 +658,10 @@ export class SuperMind {
   }
 
   /**
-   * V96 · ONLINE LEARNING: enable/disable the per-plan reward-bias adaptation channel. OFF by default ⇒
-   * the mind keeps its frozen-weight behaviour (byte-identical). `rate` (optional, clamped ≤ 0.2) sets the
-   * bounded step size. Disabling resets the learned bias + eligibility trace to zero. Determinism-safe
-   * (no rng — replays bit-for-bit from one seed). O(1).
+   * V96 · ONLINE LEARNING: enable/disable the per-plan reward-bias adaptation channel. ON by default ⇒
+   * the apex mind learns at runtime; setLearning(false) freezes it back to byte-identical frozen-weight
+   * behaviour (and resets the learned bias + eligibility trace to zero). `rate` (optional, clamped ≤ 0.2)
+   * sets the bounded step size. Determinism-safe (no rng — replays bit-for-bit from one seed). O(1).
    */
   setLearning(enabled: boolean, rate?: number): void {
     this.learnEnabled = enabled;
@@ -1306,9 +1307,9 @@ export class SuperMind {
     // when unbound. This is the write half of the read+write loop the coupling audit exists to enforce.
     this.broadcast += BROADCAST_TAU * ((resonance.ignited ? resonance.order : 0) - this.broadcast);
 
-    // ── V96 · ONLINE LEARNING ── add the reward-reinforced per-plan bias before the argmax. Default-off
-    //    ⇒ planBias is all-zero ⇒ this is `+= 0` ⇒ byte-identical to the frozen mind. When enabled, plans
-    //    that recently led to reward are nudged up (the eligibility trace below gives delayed credit).
+    // ── V96 · ONLINE LEARNING ── add the reward-reinforced per-plan bias before the argmax. ON by default
+    //    ⇒ plans that recently led to reward are nudged up (the eligibility trace below gives delayed
+    //    credit); setLearning(false) zeroes planBias ⇒ this is `+= 0` ⇒ byte-identical to the frozen mind.
     for (let i = 0; i < SUPER_PLANS.length; i++) {
       const plan = SUPER_PLANS[i];
       if (plan) drives[plan] += this.planBias[i] ?? 0;

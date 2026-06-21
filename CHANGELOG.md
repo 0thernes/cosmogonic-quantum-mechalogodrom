@@ -13,11 +13,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   a seeded, bounded, reward-reinforced **per-plan bias** adapted each beat by the eligibility-trace learner
   (reward = the mind's own dopamine signal; temporal credit via TD(λ)). This is the first thing in the
   apex mind that actually **updates a weight at runtime** — the audit's #1 gap (frozen weights, ~9/14
-  stall). **Default-OFF**, so the bias stays exactly zero and the mind is byte-identical to before (the
-  full existing suite is untouched); **enable it and the mind genuinely learns** (biases plans toward
-  reward), stays **bounded** (|bias| ≤ 0.5, decays — no divergence), and **replays bit-for-bit from one
-  seed** (no `Math.random` — honours Manhattan's determinism law). 5 new tests: off=zero, learns-when-on,
-  bounded, deterministic-replay, no-NaN, disable-resets. O(plans) per beat — negligible on the hot path.
+  stall). **ON by default** — every Archon now genuinely learns (biases plans toward reward) at runtime;
+  `setLearning(false)` freezes it back to byte-identical frozen-weight behaviour. It stays **bounded**
+  (|bias| ≤ 0.5, decays — no divergence) and **replays bit-for-bit from one seed** (no `Math.random` —
+  honours Manhattan's determinism law), and enabling it left the full behavioural suite green (1460 pass;
+  only the pre-existing flaky perf/timeout tests fail). 6 tests: learns-by-default, freeze-to-zero,
+  learns-when-on, bounded, deterministic-replay, no-NaN. O(plans) per beat — negligible on the hot path.
 
 ### Online-learning primitive — the Stratum-X gap (frozen weights → adaptation)
 

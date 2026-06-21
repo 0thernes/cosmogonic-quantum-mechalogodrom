@@ -35,8 +35,15 @@ function percept(over: Partial<SuperPercept> = {}): SuperPercept {
 const REWARDING = percept({ energy: 0.95, wealthRel: 0.95, threat: 0.02, preyClose: 0.8 });
 
 describe('SuperMind online learning (V96)', () => {
-  test('OFF by default — the learned bias stays exactly zero (byte-identical frozen mind)', () => {
+  test('learns BY DEFAULT — the per-plan bias moves off zero with no explicit enable', () => {
     const m = new SuperMind(mulberry32(1));
+    for (let i = 0; i < 200; i++) m.think(REWARDING);
+    expect(m.learnedPlanBias().some((b) => Math.abs(b) > 1e-3)).toBe(true);
+  });
+
+  test('setLearning(false) FREEZES the mind — the bias stays exactly zero (byte-identical frozen mind)', () => {
+    const m = new SuperMind(mulberry32(1));
+    m.setLearning(false);
     for (let i = 0; i < 200; i++) m.think(REWARDING);
     expect(m.learnedPlanBias().every((b) => b === 0)).toBe(true);
   });
