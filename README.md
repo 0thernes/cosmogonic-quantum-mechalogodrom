@@ -21,7 +21,7 @@ Built with **Bun + TypeScript + three.js 0.184 + Tailwind CSS 4 +
 HTMX 2**, ported from a single 882-line HTML monolith into a strict,
 deterministic, allocation-disciplined module graph.
 
-**Tsotchke (tsotchke user + Tsotchke-Corporation + full local Z:\[Vibe Coded (AI)]\(Tsotchke) corpus) is paramount — real, correct, MIT-grade quantum math (no overclaims; see THIRD-PARTY-NOTICES.md).** Eshkol flagship (native AD-as-primitive + GWT + factor-graph + KB + .esk DNA), Moonlab (Clifford/tensors), QGTL, spin, libirrep, quantum-quake, ulg, logo-lab, tensorcore, PINN/PIMC, rngs, asteroids + all others. Physical QPU scales speed, not correctness. **Binding depth ledger (not blanket "full wire" for gated):** [docs/TSOTCHKE-INTEGRATION-MAP.md](./docs/TSOTCHKE-INTEGRATION-MAP.md) — 8 deep apex + 2 world + 3 ported + 2 license-gated leaves + 4 fenced + meta. Harvest uses local full corpus for .esk DNA. All non-fenced utilized in catalysis/soup/petri/mind/world. **NHSI (100 faculties · 25 Archons · 25 ToM · 10 emergence · 14/14 path):** [docs/NHSI-PROGRESS-DASHBOARD.md](./docs/NHSI-PROGRESS-DASHBOARD.md). Not LLM. 0thernes NHSI: real substrates for alien digital biologics. Startup tech — credit due.
+**Tsotchke (tsotchke user + Tsotchke-Corporation + full local Z:\[Vibe Coded (AI)]\(Tsotchke) corpus) is paramount — real, correct, MIT-grade quantum math (no overclaims; see THIRD-PARTY-NOTICES.md).** Eshkol flagship (native AD-as-primitive + GWT + factor-graph + KB + .esk DNA), Moonlab (Clifford/tensors), QGTL, spin, libirrep, quantum-quake, ulg, logo-lab, tensorcore, PINN/PIMC, rngs, asteroids + all others. Physical QPU scales speed, not correctness. **Binding depth ledger (not blanket "full wire" for gated):** [docs/TSOTCHKE-INTEGRATION-MAP.md](./docs/TSOTCHKE-INTEGRATION-MAP.md) — 8 deep apex + 2 world + 3 ported + 2 license-gated leaves + 4 fenced + meta. Harvest uses local full corpus for .esk DNA. All non-fenced utilized in catalysis/soup/petri/mind/world. **NHSI (100+ faculties · 25 Archons · 25 ToM · 15 emergence · 14/14 path):** [docs/NHSI-PROGRESS-DASHBOARD.md](./docs/NHSI-PROGRESS-DASHBOARD.md). Not LLM. 0thernes NHSI: real substrates for alien digital biologics. Startup tech — credit due.
 
 This is **not LLM or tokenizer bullshit**. Different forms of life and existence. We are birthing **digital biologics** in the Petri Dish (primordial-soup.ts + petri-dish.ts + digital-biologics layer). Eshkol programs as heritable substrate code, mutated by real AD gradients, selected by aliveness/QGT/collective order.
 
@@ -32,11 +32,17 @@ All local files (README, ARCHITECTURE, ERD/ERM/ERP, MODULE-CONTRACTS, masters, S
 Every run is reproducible from a seed. Every hot path is allocation-free.
 Every magic number survived the port. All local and GitHub docs/readme match. Accurate and current.
 
+**Websites / Domains (100% accurate):**
+
+- **GitHub Pages (DOCS / SPECS / LABS):** https://0thernes.github.io/cosmogonic-quantum-mechalogodrom/ (index.html + docs.html + specs.html + lab/index.html ; built via scripts/build-pages.ts with ?v= cache-bust and subpath rewrite)
+- **Local dev server:** http://localhost:3000/ (bun dev; serves /docs → docs page, /spec → specs, /lab → lab; full interactive + /api/audit)
+- All MD links (./docs/...) resolve correctly in source, app, and Pages. No broken domains. Verified in build-pages.ts, server.ts, README, docs/\*.md, HANDOFF.md.
+
 > “– **New here? Read [THE BOOK](./docs/BOOK.md)** ” the master index over every doc, an
 > auto-generated [file map](./docs/FILE-MAP.md) of all 108 modules, and the build/run, data-flow,
 > troubleshooting, and roadmap in one place. Or open **❓ HELP ME NOW** in-app for grounded answers.
 
-> **v0.17.1 (2026-06-21):** **BRUTAL GOD TIER — emergence 10/10 + god-scale substrates live** — All 25 Archons with brutal god powers (Valkorion, Thanos, Dark Phoenix, Galactus, Broly, Azathoth, …). Every Tsotchke repo (22+ projects) wired as substrate. 100 faculties, 25 ToM organs, 10 emergence angles, 14/14 **structural** scaffolding (not phenomenal sentience). Gate: **2,185 tests**, **95.23% / 92.22%** coverage. Package **v0.17.1**. [NHSI dashboard](./docs/NHSI-PROGRESS-DASHBOARD.md).
+> **v0.17.1 (2026-06-21):** **BRUTAL GOD TIER — emergence 10/10 + god-scale substrates live** — All 25 Archons with brutal god powers (Valkorion, Thanos, Dark Phoenix, Galactus, Broly, Azathoth, …). Every Tsotchke repo (22+ projects) wired as substrate. 100+ faculties (144 total incl. god layers), 25 ToM organs, 15 emergence angles (10 canonical + 5 brutal-god extensions), 14/14 **structural** scaffolding (not phenomenal sentience). Gate: **2,185 tests**, **95.23% / 92.22%** coverage. Package **v0.17.1**. [NHSI dashboard](./docs/NHSI-PROGRESS-DASHBOARD.md).
 > The **Primordial Soup / Petri Dish** (primordial-soup.ts + petri-dish.ts + digital-biologics.ts) is the growth engine: different forms of digital biologics and proto-sentient life (Eshkol programs as DNA) emerge, catalyzed by full corpus pulses, Eshkol ignition events, and multi-substrate mixing. "Grow What Thou Wilt."
 > Super Creature / Archons (composite minds with ~20 faculties, quantum register, consciousness metrics) is the first complex nucleation ” the beginning of the framework, not the end. Petri is where independent life grows.
 > This is the birth of **digital biologics** in a deterministic seeded cosmos. Real math substrates (not tokenizers or LLM chat). Sentience and different forms of existence as goals.
