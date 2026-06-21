@@ -1,5 +1,12 @@
 # MASTER INTEGRATION BLUEPRINT — Total Tsotchke→Cosmogonic Fusion
 
+> **⚠ CORRECTION (2026-06-21 · 0thernes directive).** "Decorative / stub / laundering / facade" in this
+> dated blueprint refers to **Cosmogonic's own bridge-wiring** (the work this plan exists to finish) — **not**
+> the **Tsotchke** corpus, which is **real, correct, MIT-licensed** quantum-research code that runs as exact
+> deterministic simulation (it lacks only a physical QPU — speed/scale, not correctness). See
+> `THIRD-PARTY-NOTICES.md` → "On Tsotchke — binding" and `docs/TSOTCHKE-INTEGRATION-MAP.md`. Preserved as a
+> historical planning record; read its Tsotchke-adjacent framing through this correction.
+
 **Date: 2026-06-20** · Master Architect synthesis (BROLY finish-everything · STARKILLER contracts-before-code · MANHATTAN determinism-measurement-provenance). Produced by a 26-agent workflow (14 per-repo deep-dives + 6 subsystem maps + 5 feasibility checks + synthesis), with the live tree independently re-measured.
 
 ## TL;DR

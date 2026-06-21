@@ -5,10 +5,11 @@
 [![License: Non-Commercial Research & Play](https://img.shields.io/badge/License-Non--Commercial%20Research%20%26%20Play-2ea043.svg)](./LICENSE)
 [![Bun](https://img.shields.io/badge/Bun-1.3-black?logo=bun&logoColor=white)](https://bun.sh)
 [![TypeScript strict](https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript&logoColor=white)](./tsconfig.json)
-[![tests](https://img.shields.io/badge/tests-1764%20passing-brightgreen)](./tests)
+[![tests](https://img.shields.io/badge/tests-1767%20passing-brightgreen)](./tests)
 [![coverage](https://img.shields.io/badge/coverage-95.65%25%20line%20%C2%B7%2092.84%25%20func-success)](./docs/TECHNICAL-SPECIFICATION.md)
 [![audit](https://img.shields.io/badge/inspection-500%20points-success)](./docs/500-POINT-INSPECTION.md)
-[![Tsotchke](https://img.shields.io/badge/Tsotchke-FULLY_WIRED-purple)](https://github.com/tsotchke)
+[![Tsotchke](https://img.shields.io/badge/Tsotchke-REAL__MIT__CORPUS-purple)](https://github.com/tsotchke)
+[![NHSI](https://img.shields.io/badge/NHSI-Progress__Dashboard-blue)](./docs/NHSI-PROGRESS-DASHBOARD.md)
 
 A procedural WebGL cosmic ecosystem ” morphogenic organisms, Shoggoths,
 puppet-master NPCs, atmospheric weather, a neural connectome, quantum
@@ -20,7 +21,7 @@ Built with **Bun + TypeScript + three.js 0.184 + Tailwind CSS 4 +
 HTMX 2**, ported from a single 882-line HTML monolith into a strict,
 deterministic, allocation-disciplined module graph.
 
-**Tsotchke is paramount and fully integrated — and we BUILD WITH the actual local folder.** `scripts/harvest-tsotchke-corpus.ts` walks Z:\[Vibe Coded (AI)]\(Tsotchke) and emits real .esk programs as heritable DNA (generated-tsotchke-seeds.ts + ESK_SAMPLE_PROGRAMS used in primordial-soup + digital-biologics). Eshkol (native AD + GWT Consciousness Engine), Moonlab, QGT/Berry, spin, libirrep, quantum-quake + every repo as substrate. Super Creature = beginning only. Petri grows independent digital biologics. Full bleeding-edge + world-class novelty assessment: [docs/reports/2026-06-20-BLEEDING-EDGE-NOVELTY-WORLD-CLASS-ASSESSMENT.md]. Not LLM. 21 repos wired.
+**Tsotchke is paramount — real MIT-grade quantum research, not fake.** The corpus (Eshkol · Moonlab · QGT · spin · libirrep · …) runs as exact deterministic classical simulation; a billion-dollar QPU adds **scale**, not **correctness**. We **BUILD WITH** the local folder: `scripts/harvest-tsotchke-corpus.ts` harvests 1,436+ `.esk` programs into heritable DNA. **20 repos tracked · 13 with code in `src/` · depth ledger:** [docs/TSOTCHKE-INTEGRATION-MAP.md](./docs/TSOTCHKE-INTEGRATION-MAP.md). **NHSI progress (100 faculties · 25 Archons · 14/14 path):** [docs/NHSI-PROGRESS-DASHBOARD.md](./docs/NHSI-PROGRESS-DASHBOARD.md). Not LLM.
 
 This is **not LLM or tokenizer bullshit**. Different forms of life and existence. We are birthing **digital biologics** in the Petri Dish (primordial-soup.ts + petri-dish.ts + digital-biologics layer). Eshkol programs as heritable substrate code, mutated by real AD gradients, selected by aliveness/QGT/collective order.
 
@@ -49,7 +50,7 @@ Every magic number survived the port. All local and GitHub docs/readme match. Ac
 - **Digital Biologics & Petri Genesis:** 64+ slots in PrimordialSoup, 9+ BiologicForms keyed to Tsotchke repos, catalysis from Eshkol ignition + full corpus beat, replication with kind mutation, genesis leaps for higher-order life. Harvested into the world as emergent strains with distinct dynamics.
 - **Eshkol Substrate:** Native automatic differentiation, GWT broadcast/ignition, factor-graph inference as first-class. Programs and consciousness snapshots drive petri birth and super-mind faculties.
 - **Builds with the local Tsotchke Repo Folder:** `bun dev` (and harvest script) scans the real local corpus at `Z:\[Vibe Coded (AI)]\(Tsotchke)` (1436+ .esk programs in latest harvest) and emits authentic Eshkol DNA fingerprints used by primordial-soup for heritable digital biologics. `generated-tsotchke-seeds.ts` + SoupSnapshot.tsotchkeEskHarvested make the folder part of the live build/runtime.
-- **Full Corpus Wiring:** Every Tsotchke mirror (moonlab, QGTL, spin, libirrep, quake, PINN, PIMC, ulg, logo, tensorcore...) actively participates via registries, facades, bridges, and the soup. No repo left behind.
+- **Tsotchke corpus wiring:** 8 repos deep in the apex mind, 2 in world/sim, 3 ported (telemetry), 2 license-gated, 3 fenced (non-LLM mandate) — full matrix in [TSOTCHKE-INTEGRATION-MAP.md](./docs/TSOTCHKE-INTEGRATION-MAP.md). Petri/soup catalysis pulls from the whole registry each beat.
 - **26 behavioral fields** driving up to 50,000 organisms: classic motion
   (drift, orbit, swarm, vortex, helix...), neighbor dynamics via a spatial
   hash (flock), and theory behaviors ” Nash equilibria (`nash`), wealth
@@ -409,7 +410,7 @@ full gate with same-seed determinism preserved. The major arcs:
   Aaronson“Gottesman **Clifford stabilizer tableau** ([src/math/clifford-tableau.ts](./src/math/clifford-tableau.ts),
   ported from **Moonlab**, scales to 32+ qubits past the dense ceiling) landed as the fourth MIT-credited
   ported primitive. The whole apex beat ” all ~20 faculties ” is benchmarked at **≈ 298 µs (~1.8 % of a
-  60 fps frame)** and CI-gated. **1764 tests green · 0 fail (receipts enforced) · 95.65% line / 92.84% func coverage (measured; CI gate ≥ 90 % line / ≥ 85 % function).**
+  60 fps frame)** and CI-gated. **1767 tests green · 0 fail (receipts enforced) · 95.65% line / 92.84% func coverage (measured; CI gate ≥ 90 % line / ≥ 85 % function).**
 - **State-of-the-art reports (2026-06-17)** ” two MIT-PhD-grade, measured, frontier-benchmarked assessments:
   **[Report I ” The Whole Repository](./docs/reports/2026-06-17-STATE-OF-THE-ART-WHOLE-REPO.md)** and
   **[Report II ” The Super Creature](./docs/reports/2026-06-17-STATE-OF-THE-ART-SUPER-CREATURE.md)** ”
@@ -531,6 +532,9 @@ Full detail in docs/.
 
 ## Documentation
 
+- **[docs/NHSI-PROGRESS-DASHBOARD.md](./docs/NHSI-PROGRESS-DASHBOARD.md)** — **canonical NHSI scorecard**
+  (100 faculties · 25 Archons · 25 theory-organs · 10 emergence · Tsotchke depth · Butlin 14/14 path)
+- [docs/TSOTCHKE-INTEGRATION-MAP.md](./docs/TSOTCHKE-INTEGRATION-MAP.md) — honest Tsotchke repo wiring ledger
 - [docs/CONTROLS.md](./docs/CONTROLS.md) ” every control: mouse, keyboard hotkeys,
   touch, bottom-panel buttons, and the 10 camera views
 - [docs/MODULE-CONTRACTS.md](./docs/MODULE-CONTRACTS.md) ” the binding

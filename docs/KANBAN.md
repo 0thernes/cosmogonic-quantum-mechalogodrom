@@ -48,7 +48,7 @@ behind the full gate (`bun run check`) and a commit.
 
 **In Progress (heartbeat iter)**
 
-- Ralph loop heartbeat re-audit + 10x continue (this exec): re-audit (tsc clean); more: eshkolDual in godform bias, gwt in super-mind sal + super-body masks, libirrepSym in world crowding, more ulg/gwt/mpo/quake/irrep/AD/tensor calls in mind/body/world/quality/topdown/godform. Gate GREEN (1183, 95.73/92.45 after sync, build). KANBAN/receipts/docs updated. 10x. Same original. Heartbeat.
+- Ralph loop: deepen Tsotchke wiring per [TSOTCHKE-INTEGRATION-MAP.md](./TSOTCHKE-INTEGRATION-MAP.md); NHSI targets tracked in [NHSI-PROGRESS-DASHBOARD.md](./NHSI-PROGRESS-DASHBOARD.md). Gate GREEN (1,767 tests, receipts enforced).
 
 **Next**
 

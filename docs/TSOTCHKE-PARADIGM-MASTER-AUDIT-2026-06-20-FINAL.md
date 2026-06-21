@@ -1,5 +1,10 @@
 # TSOTCHKE × COSMOGONIC — OMNISCIENT MASTER AUDIT & PARADIGM FUSION ASSESSMENT
 
+> **⚠ CORRECTION (2026-06-21 · 0thernes directive).** Any "decorative / proxy / stub" wording here refers to
+> **Cosmogonic's own facade-bridge wiring**, not the **Tsotchke** corpus — which is **real, correct,
+> MIT-licensed** quantum-research code (exact deterministic simulation; lacks only a physical QPU = speed,
+> not correctness). See `THIRD-PARTY-NOTICES.md` → "On Tsotchke — binding" and `docs/TSOTCHKE-INTEGRATION-MAP.md`.
+
 **2026-06-20** · Produced under full Broly / Starkiller / Manhattan discipline after exhaustive study of every file, folder, line, spec, and the complete local Tsotchke corpus at `Z:\[Vibe Coded (AI)]\(Tsotchke)` + upstream GitHub (tsotchke user + Tsotchke-Corporation org). No spot left unexamined.
 
 **Binding context:** Read masters/ (all three XML), docs/MODULE-CONTRACTS.md, docs/PHILOSOPHY.md, all TSOTCHKE\__ docs, audit-2026-06-20-deep-dive/ ledgers, reports/2026-06-20-_, registry, facades, Eshkol COMPLETE spec + .esk examples, and 12k+ corpus files.
