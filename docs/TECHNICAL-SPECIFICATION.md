@@ -15,10 +15,10 @@
 
 ## 0 · Identity
 
-A single-page **TypeScript** simulation ” with an optional native **C++/Jolt** physics engine
-(ADR-0007) ” that renders up to **50,000 morphogenic organisms** (10,000 at 60 fps on integrated
+A single-page **TypeScript** simulation — with an optional native **C++/Jolt** physics engine
+(ADR-0007) — that renders up to **50,000 morphogenic organisms** (10,000 at 60 fps on integrated
 graphics; the 50k mega tier is opt-in for beefy GPUs), governed by **deterministic, seeded** physics and a
-**pre-2016 classical-AI** cognition stack ” finite-state machines, GOAP planning, utility AI, tiny
+**pre-2016 classical-AI** cognition stack — finite-state machines, GOAP planning, utility AI, tiny
 perceptrons, Markov chains, game theory. There is **no neural-network accelerator in the loop**: the
 intelligence is architectural, not parametric. The whole world is **bit-reproducible from one 32-bit
 seed**.
@@ -46,10 +46,10 @@ seed**.
 | TypeScript                     | 50,751 | 63.98 % | ≈ 2/3    |
 | Markdown                       | 15,965 | 20.13 % | ≈ 1/5    |
 | HTML                           | 8,190  | 10.32 % | ≈ 1/10   |
-| C++ (native engine, ADR-0007)  | 1,644  | 1.63 %  | ”        |
+| C++ (native engine, ADR-0007)  | 1,644  | 1.63 %  | —        |
 | CSS (Tailwind source)          | 1,644  | 1.55 %  | ≈ 1/64   |
-| XML (master files)             | 428    | 0.54 %  | ”        |
-| bun.lock / YAML / JSON / other | 1,644  | 1.84 %  | ”        |
+| XML (master files)             | 428    | 0.54 %  | —        |
+| bun.lock / YAML / JSON / other | 1,644  | 1.84 %  | —        |
 
 **Code (TS + C++ + HTML + CSS) = 61,644 lines = 77.5 %**; documentation + config = 22.5 %. (Totals are
 measured over all tracked authored files, excluding the vendored `node_modules/` and the generated
@@ -89,7 +89,7 @@ simple-statistics `^7.9.0` · @noble/hashes `^2.2.0` · htmx.org `^2.0.10` · @f
 **Dev tooling (10):** oxlint `^1.69.0` · prettier `^3.8.4` (+tailwind plugin) · tsc `^6.0.3` ·
 mitata `^1.0.34` (bench) · bun-plugin-tailwind `^0.1.2` · @types/{bun, three, d3-delaunay}.
 
-**22 declared dependencies resolve to 106 packages** (725 MB on disk) ” a deliberately lean,
+**22 declared dependencies resolve to 106 packages** (725 MB on disk) — a deliberately lean,
 facade-isolated tree (each dependency is behind an owned module with a documented escape route, per
 [ADR 0005](adr/0005-math-stack-selection.md)).
 
@@ -97,7 +97,7 @@ facade-isolated tree (each dependency is behind an owned module with a documente
 
 ## 3 · System architecture
 
-A strict acyclic layering (verified across 50+ modules ” no runtime import cycles):
+A strict acyclic layering (verified across 50+ modules — no runtime import cycles):
 
 ```
 math / constants  (leaves: rng, scalar, spatial-hash, quantum, heap, games)
@@ -131,7 +131,7 @@ Each frame (`dt` clamped to ≤ 50 ms, then × time-scale):
 1. camera + hotkeys + chaos/entropy decay
 2. audio analysis → 4-band reactivity
 3. macro-agents: puppet-masters, shoggoths, titans, leviathans, singularities
-4. **entities.update** ” up to 50k organisms: behaviour fields, physics, spatial-hash neighbours,
+4. **entities.update** — up to 50k organisms: behaviour fields, physics, spatial-hash neighbours,
    auto-split, temperature-modified death + sparse respawn
 5. **NHI beat** (every 18 frames, guarded): percept → GOAP-biased apex decision → spawn swarms /
    dominate / broadcast
@@ -147,7 +147,7 @@ Allocation-free in steady state (pre-allocated typed-array scratch); event-drive
 
 - **One seeded generator:** `mulberry32(seed)` (`math/rng.ts`). Same 32-bit seed → identical run,
   bit-for-bit. Human-readable run names map to seeds via FNV-1a.
-- **Banned in simulation logic:** `Math.random`, `Date.now`, wall-clock ” enforced by review + the
+- **Banned in simulation logic:** `Math.random`, `Date.now`, wall-clock — enforced by review + the
   determinism test suite (`determinism.test.ts`, `feature-determinism.test.ts`,
   `nan-stability.test.ts`).
 - **Boot-stream neutrality:** systems that draw no RNG at construction can be placed anywhere without
@@ -161,14 +161,14 @@ Allocation-free in steady state (pre-allocated typed-array scratch); event-drive
 - **WebGL2** via Three.js, ACES filmic tone-mapping, `LinearSRGBColorSpace` output with
   `ColorManagement` disabled (reproduces the authored legacy palette exactly).
 - **Instancing:** up to 50,000 organisms collapse into **InstancedMesh pools** (≤ 80 pools, one draw
-  call per geometry × transparency pair ” not 50,000 draws). Per-instance channels: transform matrix,
+  call per geometry × transparency pair — not 50,000 draws). Per-instance channels: transform matrix,
   `instanceColor`, and a custom `vec4 instEmissive` (rgb = emissive·intensity, a = opacity) patched
   into the standard shader via `onBeforeCompile`.
 - **Owned shader effects (GPU, no textures):** a baseline glass-jewel fresnel + thin-film sheen on
   every organism; 7 render modes (solid → wire → ghost → neon → chrome → hologram → iridescent); a
   SIMULATION N(2) vertex-melt gated on a `uNightmare` uniform.
 - **Optional cinematic post-FX (`?fx=1`):** a procedural cosmic PMREM environment map (glass
-  reflections) + an `EffectComposer` UnrealBloom pass ” guarded (any failure falls back to the plain
+  reflections) + an `EffectComposer` UnrealBloom pass — guarded (any failure falls back to the plain
   pipeline), OFF by default.
 - **Environment systems:** `cosmic-web.ts`, `gold-lattice.ts`, `quantum-lattice.ts` add depth and
   context (frost-fractal web, gold-line architecture, neon sacred-geometry lattice).
@@ -182,8 +182,8 @@ A deterministic, allocation-free kernel of pre-transformer techniques (`sim/ai/b
 | Primitive                                       | Technique (origin)                                                 |
 | ----------------------------------------------- | ------------------------------------------------------------------ |
 | `utilityPick` / `softmaxPick`                   | utility / needs AI (The Sims, 2000)                                |
-| `TinyMLP`                                       | single-hidden-layer perceptron ” an inheritable gene               |
-| `MarkovChain`                                   | first-order Markov (Shannon 1948) ” agent "speech"                 |
+| `TinyMLP`                                       | single-hidden-layer perceptron — an inheritable gene               |
+| `MarkovChain`                                   | first-order Markov (Shannon 1948) — agent "speech"                 |
 | `fsmStep`                                       | finite-state machine (Pac-Man 1980)                                |
 | `goapPlan`                                      | goal-oriented action planning (F.E.A.R., 2005)                     |
 | `MemoryRing`                                    | bounded episodic memory (Halo 2 blackboard, 2004)                  |
@@ -193,7 +193,7 @@ A deterministic, allocation-free kernel of pre-transformer techniques (`sim/ai/b
 factions as iterated-game players, **plans a multi-step GOAP scheme toward DOMINION**
 (`F_DOMINANT | F_DECEIVED`), nurses memory grudges, speaks an inherited alien Markov dialect, and
 WRITES to the world (spawns mutated swarms, manipulates factions, perturbs nearby behaviour,
-broadcasts hallucinated utterances) ” wired into `world.ts`, guarded, deterministic.
+broadcasts hallucinated utterances) — wired into `world.ts`, guarded, deterministic.
 
 ### 7.1 Model parameter sizes (measured)
 
@@ -212,42 +212,42 @@ brains, plus the 5×~10,081-weight Super Creature / Archon composites (GOAL5), t
 stored as Float32 = **≈ 14 MB of weights**, executed on **one CPU thread**. (The default ultra tier caps
 at 10,000 organisms ≈ 700 K params ≈ 2.8 MB.)
 
-The quantum minds no longer merely _study_ the Tsotchke quantum stack ” **V84 ports three of its
+The quantum minds no longer merely _study_ the Tsotchke quantum stack — **V84 ports three of its
 primitives into development** and wires them into the live apex creature: the **Eshkol** qubit-RNG
 (`src/math/eshkol-qrng.ts`) drives the Super Creature's thought-collapse Born sample; the **Quantum-
-Geometric-Tensor / Fubini“Study metric** (QGTL + **Moonlab** `qgt.c`, via `src/math/quantum-geometry.ts`)
+Geometric-Tensor / Fubini–Study metric** (QGTL + **Moonlab** `qgt.c`, via `src/math/quantum-geometry.ts`)
 reads the curvature of the mind's own thought-space; and a **spin-glass instinct**
 (`src/sim/spin-glass.ts`, from `spin_based_neural_network`) settles into a behavioural archetype each
-beat. All three are seeded + deterministic, unit-tested, and MIT-attributed to © 2024“2026 tsotchke (see
+beat. All three are seeded + deterministic, unit-tested, and MIT-attributed to © 2024–2026 tsotchke (see
 [NOTICE.md](../NOTICE.md) + [THIRD-PARTY-NOTICES.md](../THIRD-PARTY-NOTICES.md)); the 64-amplitude
 statevector simulator itself (`src/math/quantum.ts`) remains the project's own Moonlab-style
 implementation. See [AI-SUBSYSTEM.md](AI-SUBSYSTEM.md) for the full quantum-mind design.
 
-**Super Creature 1.1 (V89) ” the consciousness-metrics layer.** Atop those substrates, the apex mind now
+**Super Creature 1.1 (V89) — the consciousness-metrics layer.** Atop those substrates, the apex mind now
 measures itself against the two leading _scientific_ theories of consciousness each beat, both deterministic
-and unit-tested: a **Global-Workspace ignition** (GNW ” a winner-take-all over the 7 plan-coalitions that,
+and unit-tested: a **Global-Workspace ignition** (GNW — a winner-take-all over the 7 plan-coalitions that,
 on crossing an access threshold and dominating the runner-up, is "broadcast" and gates memory
-consolidation) and an **Integrated-Information Φ proxy** (IIT ” the participation/coherence ratio of 8 named
+consolidation) and an **Integrated-Information Φ proxy** (IIT — the participation/coherence ratio of 8 named
 module activations; a _tractable surrogate_, since true Φ is intractable + non-unique). Both ride on the
 `Consciousness` snapshot and render as the **Ignition / Φ** meters on the SuperCreature board. The real
-2023“2026 research grounding (the Cogitate IIT-vs-GNW adversarial test, organoid "wet computing", active
+2023–2026 research grounding (the Cogitate IIT-vs-GNW adversarial test, organoid "wet computing", active
 inference, quantum cognition) is catalogued with citations in
-[SUPER-CREATURE-RESEARCH.md](SUPER-CREATURE-RESEARCH.md) ” framed as _"models / inspired by"_, never
+[SUPER-CREATURE-RESEARCH.md](SUPER-CREATURE-RESEARCH.md) — framed as _"models / inspired by"_, never
 _"is conscious."_
 
-**Super Creature 1.1 (V90“V100) ” the multi-pillar expansion to ~20 coupled faculties (v0.11.0).** Beyond
+**Super Creature 1.1 (V90–V100) — the multi-pillar expansion to ~20 coupled faculties (v0.11.0).** Beyond
 ignition + Φ, the apex mind now runs roughly twenty deterministic, unit-tested faculties each beat, each
 reading from AND writing to the others (a negotiated plan-vote, not parallel gadgets): **Active Inference**
-(Friston FEP ” variational + expected free energy), a **Metacognitive Executive** (Higher-Order confidence
+(Friston FEP — variational + expected free energy), a **Metacognitive Executive** (Higher-Order confidence
 → control), a **Successor Representation** predictive map (Dayan/Stachenfeld), **Doya neuromodulation**
-(DA/5-HT/NE/ACh), an **Empowerment** drive (Blahut“Arimoto channel capacity), **Theory of Mind**, an
+(DA/5-HT/NE/ACh), an **Empowerment** drive (Blahut–Arimoto channel capacity), **Theory of Mind**, an
 **echo-state Reservoir**, **Neural Criticality** (edge-of-chaos σ̂→1), a **spin-glass instinct**, a
-**VSA/HRR holographic memory**, and a quantum core wired into the decision loop ” the genuine statevector
-**min-cut Φ**, **Quantum Reservoir Computing** (Fujii“Nakajima), a **Lindblad/GKSL deliberation qubit**,
-**Grover** amplitude amplification, and **Quantum Natural Gradient** descent on its own Fubini“Study
-geometry. The Aaronson“Gottesman **Clifford stabilizer tableau** (ported from Moonlab; 32+ qubits) is a
-fourth MIT-credited primitive. **Measured cost:** the whole apex beat (`SuperMind.think()`) is **≈ 272“304 µs/beat**
-(machine-dependent) ” **~1.7“1.8 % of a 60 fps frame** (`bench/super-mind.bench.ts`), enforced as a CI law
+**VSA/HRR holographic memory**, and a quantum core wired into the decision loop — the genuine statevector
+**min-cut Φ**, **Quantum Reservoir Computing** (Fujii–Nakajima), a **Lindblad/GKSL deliberation qubit**,
+**Grover** amplitude amplification, and **Quantum Natural Gradient** descent on its own Fubini–Study
+geometry. The Aaronson–Gottesman **Clifford stabilizer tableau** (ported from Moonlab; 32+ qubits) is a
+fourth MIT-credited primitive. **Measured cost:** the whole apex beat (`SuperMind.think()`) is **≈ 272–304 µs/beat**
+(machine-dependent) — **~1.7–1.8 % of a 60 fps frame** (`bench/super-mind.bench.ts`), enforced as a CI law
 (< 5 ms/beat). Full frontier assessment in [docs/reports/](reports/).
 
 ### 7.2 Contrast: this world vs. large language models
@@ -269,11 +269,11 @@ intelligence is engineered, not downloaded.**
 
 | Resource                        | Requirement                                                                                                                                                                                                                                                                                                                       |
 | ------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **GPU**                         | Any **WebGL2** device ” integrated Intel / Apple / Android included. Quality tiers auto-scale (DPR cap, shadows, entity cap, instancing) down to phones. No discrete/RTX GPU required.                                                                                                                                            |
-| **NPU / AI-accelerator / TOPS** | **Zero.** No transformer inference. All organism-brain forward passes ≈ 10,000 × ~140 FLOP × 60 fps ≈ **~0.08 GFLOP/s** ” negligible on one CPU core. (The optional copilot chat calls a **remote** free LLM; that model never runs on-device.)                                                                                   |
+| **GPU**                         | Any **WebGL2** device — integrated Intel / Apple / Android included. Quality tiers auto-scale (DPR cap, shadows, entity cap, instancing) down to phones. No discrete/RTX GPU required.                                                                                                                                            |
+| **NPU / AI-accelerator / TOPS** | **Zero.** No transformer inference. All organism-brain forward passes ≈ 10,000 × ~140 FLOP × 60 fps ≈ **~0.08 GFLOP/s** — negligible on one CPU core. (The optional copilot chat calls a **remote** free LLM; that model never runs on-device.)                                                                                   |
 | **CPU**                         | Any modern CPU. The single-threaded sim loop is the bottleneck at 10k, not the GPU. A `perf-budget.test.ts` enforces the per-frame budget.                                                                                                                                                                                        |
-| **RAM**                         | ≈ **300“600 MB** resident at full population (Three.js scene + typed-array entity state + instanced buffers + audit ring).                                                                                                                                                                                                        |
-| **Storage / download**          | `dist/` is 109 MB on disk (the full multi-page build), but the **app's initial payload is the ~960 KB entry chunk + Three.js** (single-digit MB; ~1“1.5 MB gzipped). The bulk ” **ten 3.2 MB chunks (~32 MB) of Mermaid** ” loads only on `/docs`, plus ~12 MB of self-hosted-font CSS. Routes load only what they need, gzipped. |
+| **RAM**                         | ≈ **300–600 MB** resident at full population (Three.js scene + typed-array entity state + instanced buffers + audit ring).                                                                                                                                                                                                        |
+| **Storage / download**          | `dist/` is 109 MB on disk (the full multi-page build), but the **app's initial payload is the ~960 KB entry chunk + Three.js** (single-digit MB; ~1–1.5 MB gzipped). The bulk — **ten 3.2 MB chunks (~32 MB) of Mermaid** — loads only on `/docs`, plus ~12 MB of self-hosted-font CSS. Routes load only what they need, gzipped. |
 
 Complexity classes are catalogued in [COMPLEXITY.md](COMPLEXITY.md); hot-path benchmarks in
 [BENCHMARKS.md](BENCHMARKS.md) (run via `bun run bench`, mitata).
@@ -302,7 +302,7 @@ Complexity classes are catalogued in [COMPLEXITY.md](COMPLEXITY.md); hot-path be
 - **Pages assembler:** `bun scripts/build-pages.ts` copies `dist/` → `site/`, adds the `/lab`
   artifact, and rewrites the absolute nav links (`/docs`, `/spec`, `/lab`) to subpath-relative for
   GitHub _project_ Pages.
-- **CI/CD:** GitHub Actions ” `ci.yml` runs the full gate on every push; `pages.yml` builds + deploys
+- **CI/CD:** GitHub Actions — `ci.yml` runs the full gate on every push; `pages.yml` builds + deploys
   the real app to GitHub Pages (source = GitHub Actions); `release.yml` packages a tarball + SBOM on
   `v*` tags.
 
@@ -310,7 +310,7 @@ Complexity classes are catalogued in [COMPLEXITY.md](COMPLEXITY.md); hot-path be
 
 ## 11 · Quality engineering
 
-The single gate ” `bun run check` ” must pass before every commit:
+The single gate — `bun run check` — must pass before every commit:
 
 `prettier --check` → `tsc --noEmit` (strict) → `oxlint` → `bun test` (**2,185 tests, 0 fail**) →
 `bun scripts/build.ts`. Coverage gate: line ≥ 0.90, function ≥ 0.85 (measured 95.23% line / 92.22% func, `bun test --coverage`).
@@ -354,12 +354,12 @@ Physicist** (determinism, measurement, frame budgets, provenance).
 |   293 | sim/factions.ts           |    92 | sim/cosmic-web.ts              |
 |   287 | sim/reaction-diffusion.ts |    87 | sim/nhi-system.ts              |
 |   249 | math/games.ts             |    64 | logging/logger.ts              |
-|     ” | ”                         |    63 | sim/gold-lattice.ts · main.ts  |
-|     ” | ”                         |    61 | math/scalar.ts                 |
-|     ” | ”                         |    59 | sim/quantum-lattice.ts         |
-|     ” | ”                         |    52 | core/postfx.ts                 |
-|     ” | ”                         |    40 | math/rng.ts                    |
-|     ” | ”                         |    20 | sim/morphotypes.ts             |
+|     — | —                         |    63 | sim/gold-lattice.ts · main.ts  |
+|     — | —                         |    61 | math/scalar.ts                 |
+|     — | —                         |    59 | sim/quantum-lattice.ts         |
+|     — | —                         |    52 | core/postfx.ts                 |
+|     — | —                         |    40 | math/rng.ts                    |
+|     — | —                         |    20 | sim/morphotypes.ts             |
 
 ### `tests/` (100 files · 14,117 lines)
 
@@ -379,8 +379,8 @@ contrast 62 · doc-links 57 · a11y-static 45`.
 This is a ~69k-line TypeScript (+ optional C++/Jolt native engine) browser-native simulation that
 renders **up to 50,000 agents** (10,000 at 60 fps on a laptop iGPU with zero AI accelerator), is
 **bit-reproducible from one seed**, ships through a **full CI/CD gate** (2,185 tests, 95.23% line / 92.22% func coverage),
-and whose entire emergent intelligence weighs **≈ 14 MB ” 1/50,000th of GPT-3** at the mega ceiling. It
+and whose entire emergent intelligence weighs **≈ 14 MB — 1/50,000th of GPT-3** at the mega ceiling. It
 demonstrates that depth comes from **architecture,
 determinism, and engineering discipline**, not parameter count or hardware.
 
-**Frontier assessments (2026-06-17):** [Report I ” Whole Repository](./reports/2026-06-17-STATE-OF-THE-ART-WHOLE-REPO.md) · [Report II ” Super Creature](./reports/2026-06-17-STATE-OF-THE-ART-SUPER-CREATURE.md) · [Combined ” unified §III scorecard](./reports/2026-06-17-STATE-OF-THE-ART-COMBINED.md) · [Super Creature Research](./SUPER-CREATURE-RESEARCH.md).
+**Frontier assessments (2026-06-17):** [Report I — Whole Repository](./reports/2026-06-17-STATE-OF-THE-ART-WHOLE-REPO.md) · [Report II — Super Creature](./reports/2026-06-17-STATE-OF-THE-ART-SUPER-CREATURE.md) · [Combined — unified §III scorecard](./reports/2026-06-17-STATE-OF-THE-ART-COMBINED.md) · [Super Creature Research](./SUPER-CREATURE-RESEARCH.md).

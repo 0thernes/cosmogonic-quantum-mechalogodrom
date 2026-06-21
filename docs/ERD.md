@@ -1,6 +1,6 @@
 # Entity-Relationship Model
 
-The Mechalogodrom has no database ” its "entities" live in scene graphs,
+The Mechalogodrom has no database — its "entities" live in scene graphs,
 typed arrays, rings, and `localStorage`. The relational structure is real
 nonetheless, and the composition root (`world.ts`) is effectively its join
 engine. Diagrams below follow ERD (structure), ERM (relationship narrative),
@@ -77,7 +77,7 @@ erDiagram
   PHYSICS_BODY }o--o{ PHYSICS_BODY : "sphere-sphere impulse collisions + friction spin"
   PHYSICS_BODY ||--|| SPECIMEN_SDF : "transform posed each frame (native ray-marcher)"
 
-  %% Tsotchke Petri Genesis / Digital Biologics (0.12+ ” paramount growth engine)
+  %% Tsotchke Petri Genesis / Digital Biologics (0.12+ — paramount growth engine)
   PRIMORDIAL_SOUP ||--o{ DIGITAL_BIOLOGIC : "catalyzes (Eshkol AD + GWT ignition + full corpus)"
   ARCHON }o--|| PRIMORDIAL_SOUP : "stirs with consciousness + substrate flux (beginning only)"
   DIGITAL_BIOLOGIC }o--o{ ENTITY : "harvestEmergent → world phyla / NHI / new life forms"
@@ -289,7 +289,7 @@ erDiagram
   }
 ```
 
-## ERM ” relationship narrative
+## ERM — relationship narrative
 
 - **MORPHOTYPE → ENTITY (1:N).** Each of the 250 morphotypes (10 lore-named
   phyla × 25 since PANTHEON 0.3.0; 100 in legacy mode) is a template:
@@ -310,7 +310,7 @@ erDiagram
 - **SHOGGOTH ↔ ENTITY (M:N + 1:N).** Tendrils connect each Shoggoth to up to
   8 nearby entities per frame (spatial-hash query, radius 15) and tug them
   inward. On its consumption interval, a Shoggoth deletes its nearest entity
-  within range and spawns 2 corrupted (`lorenz`, dark-violet) replacements ”
+  within range and spawns 2 corrupted (`lorenz`, dark-violet) replacements —
   a destructive 1:N relationship that recolors the population over time.
 - **PUPPET_MASTER → ENTITY / WEATHER / SimState (1:N).** KRONOS remorphs up
   to 30 random entities per trigger; SELENE overwrites the active weather
@@ -324,15 +324,15 @@ erDiagram
   indices, not copies: `songIdx`, `algoIdx`, `viewIdx`, `weatherIdx` point
   into the fixed catalogs (6 songs, 25 algorithms, 4 view modes, 6 weathers).
 - **AUDIT_EVENT (append-only ring).** Produced by user actions and puppet
-  events; stored three ways with no foreign keys back ” a local ring
+  events; stored three ways with no foreign keys back — a local ring
   (`AuditTrail`, cap 200), `localStorage` (`cqm.audit.v1`), and the server's
   in-memory ring via `POST /api/audit`.
 
 ### Wildbeyond V2 relationships
 
 - **PUPPET_MASTER → QUANTUM_REGISTER (N:1).** All three masters act on the
-  single 5-qubit register through characteristic gate signatures ” AETHON
-  applies `rx(chaos·π/4)`, SELENE `h+cz`, KRONOS `x+swap` ” and the sorting
+  single 5-qubit register through characteristic gate signatures — AETHON
+  applies `rx(chaos·π/4)`, SELENE `h+cz`, KRONOS `x+swap` — and the sorting
   field's swaps apply parity-targeted `cx`. The register answers back: its 32
   Born-rule probabilities become hue bands for the quantum cloud, its
   normalized entropy is telemetry `#v11`, and each measurement collapse
@@ -342,28 +342,28 @@ erDiagram
   Gray-Scott field at their position normalized to ground UV; the active
   weather tunes its parameters (STORM raises feed, VOID raises kill, AURORA
   boosts diffusion) and `chaos` scales the reaction rate. The field's U
-  channel is the ground's emissive map ” the ecosystem's history grows as
+  channel is the ground's emissive map — the ecosystem's history grows as
   living skin under it.
 - **GRAPH_TRIBE ↔ ENTITY (1:N, recomputed).** Every 240 frames a seeded
   Louvain pass over the connectome's link pairs partitions entities into
   tribes. Tribes are written back into member entities' `setGroup` (the
-  set-theory behavior becomes tribe-aware ” true feedback) and install an
+  set-theory behavior becomes tribe-aware — true feedback) and install an
   8-hue palette on connectome links; a PageRank pass every 600 frames (offset
   300, so it never shares a frame with the Louvain pass) grants the top-20 an
-  emissive floor while their rank holds. Tribe identity is not persisted ” it
+  emissive floor while their rank holds. Tribe identity is not persisted — it
   is re-derived from live topology each pass.
 - **CONSTELLATION_CELL → LORE_NAME (1:1).** The 24 Voronoi cells over the
   static monolith/diorama sites are built once; each is named by the
   `LoreEngine`, and the camera's `subSectorAt` lookup feeds the `#lore` line.
-- **LORE_NAME (derived, memoized).** No name is stored or chosen ” every
+- **LORE_NAME (derived, memoized).** No name is stored or chosen — every
   sector/tribe/star/omen name and puppet/weather/collapse epithet is digested
   out of `sha256(seed–kind–index)`. `PERSISTED_STATE.seed` is therefore the
   foreign key to the entire mythology: same seed, same names, forever.
 - **SONG → AUDIO_BANDS → world (1:1 tap).** One AnalyserNode taps the music
   and SFX gains; per-frame polling yields bass/mid/treble/level, which fan
-  out to exactly three couplings ” bass shimmers the six-light rig
+  out to exactly three couplings — bass shimmers the six-light rig
   (`EnvironmentSystem.setAudioBass`), treble pulses the constellation cells,
-  level breathes the quantum-cloud point size (`QuantumCloud.setBreath`) ” at
+  level breathes the quantum-cloud point size (`QuantumCloud.setBreath`) — at
   ≤ 0.35 strength. The cosmos hears itself sing and flinches.
 - **ANALYTICS_WINDOW → AUDIT_EVENT (1:N, throttled).** Rolling 120-sample
   rings of population/energy/links yield a regression trend (telemetry
@@ -371,7 +371,7 @@ erDiagram
   world-injected `nameOmen` hook digests the name out of the seed) into the
   same audit pipeline as user actions, at most once per 30 s.
 
-### GOAL5 ” 5 Archons / Godforms (exclusive ownership)
+### GOAL5 — 5 Archons / Godforms (exclusive ownership)
 
 - **GODFORM (leaf, godform.ts) 1:1 → SUPER_MIND + SUPER_BODY.** Exactly 5 at boot (world integrator). Names+biases single source in godform.ts (ORACLE-Σ etc). Per-creature SuperMind wires AST-1 (attention-schema), HOT-1 (topdown-perception), HOT-4 (quality-space), NarrativeMemory + MemoryOrchestra. Each has own child-seeded rng, local grid percepts (read), econ purse (write), body rig.
 - **SUPER_MIND / GODFORM → shared systems (read/write).** Grid for local crowding/threat, economy for wealthRel, audio bands, quantum for aspects (Clifford reflex), RD/entities via perturb/bursts on dominate. No shared mutation without owner.
@@ -379,7 +379,7 @@ erDiagram
 - **GODFORM → LORE_NAME.** Archetype epithets derived.
 - Transient: no new persisted except SuperEvolution per creature.
 
-## ERP ” process models
+## ERP — process models
 
 ### Boot sequence
 

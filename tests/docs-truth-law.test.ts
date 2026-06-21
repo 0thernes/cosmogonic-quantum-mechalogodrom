@@ -36,13 +36,21 @@ const CANONICAL = [
  */
 const MOJIBAKE = /â€|Â |ðŸ|Ã[¢-¿]|�/;
 
+// Curly quotes “/” ("..."): this repo's prose uses straight quotes + em/en dashes only, never
+// curly quotes, so these only appear when the loop mangles an em-dash (—) into one (it renders as a broken
+// quote on the GitHub front page). There are no legitimate curly-quote pairs in the canonical docs. The
+// \u escapes keep THIS test file resilient to the same corruption. Fix offenders with a dash-restore pass:
+// perl -i -CSD -pe 's/“–/—/g; s/”/—/g; s/“/–/g;' <file>.
+const CURLY_QUOTE = new RegExp('[\\u201C\\u201D]');
+
 describe('docs truth law — encoding', () => {
-  test('no UTF-8 mojibake in the canonical living docs (run scripts/normalize-docs.ts to fix)', async () => {
+  test('no UTF-8 mojibake or curly-quote dash-mangling in the canonical living docs', async () => {
     const offenders: string[] = [];
     for (const rel of CANONICAL) {
       const file = Bun.file(rel);
       if (!(await file.exists())) continue;
-      if (MOJIBAKE.test(await file.text())) offenders.push(rel);
+      const text = await file.text();
+      if (MOJIBAKE.test(text) || CURLY_QUOTE.test(text)) offenders.push(rel);
     }
     expect(offenders).toEqual([]);
   });
