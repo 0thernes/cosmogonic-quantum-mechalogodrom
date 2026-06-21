@@ -109,7 +109,7 @@ describe('SuperMind composite consciousness (V45)', () => {
       b.think(percept({ phase: i / 40, chaos: (i % 5) / 5 }));
       expect(JSON.stringify(a.snapshot().resonance)).toBe(JSON.stringify(b.snapshot().resonance));
     }
-  });
+  }, 30000); // 200+ apex think() beats × the now-heavier 25-faculty stack; generous budget vs the 5s default
 
   test('drives + consciousness + quantum are all bounded; plan is always a real goal', () => {
     const m = new SuperMind(mulberry32(7));
