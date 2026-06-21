@@ -87,8 +87,20 @@ export class FastWeights {
    */
   step(x: readonly number[], gain = 1): number[] {
     const recalled = this.recall(x);
-    this.imprint(x);
+    this.imprint(Array.from(x));
     return x.map((xi, i) => (xi ?? 0) + gain * (recalled[i] ?? 0));
+  }
+
+  /** Recall + imprint in one beat; writes overlay into `out` (length ≥ n). Allocation-free. */
+  overlayInPlace(x: ArrayLike<number>, out: Float32Array | number[], gain = 1): void {
+    const n = this.n;
+    for (let i = 0; i < n; i++) {
+      const row = i * n;
+      let s = 0;
+      for (let j = 0; j < n; j++) s += (this.w[row + j] ?? 0) * (x[j] ?? 0);
+      out[i] = (x[i] ?? 0) + gain * s;
+    }
+    this.imprint(Array.from(x));
   }
 
   snapshot(): PlasticSnapshot {

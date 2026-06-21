@@ -1,18 +1,25 @@
-﻿const fs = require('fs');
-const test = '1885';
-const testComma = '1,885';
-const line = '95.65';
-const func = '92.84';
+const fs = require('fs');
+const { spawnSync } = require('node:child_process');
+
+/** Read the canonical triple from scripts/canonical-receipts.ts (single source of truth). */
+function readCanonical() {
+  const src = fs.readFileSync('scripts/canonical-receipts.ts', 'utf8');
+  const count = src.match(/CANONICAL_TEST_COUNT = (\d+);/)?.[1];
+  const line = src.match(/CANONICAL_LINE_COV = '([0-9]+\.[0-9]+)';/)?.[1];
+  const func = src.match(/CANONICAL_FUNC_COV = '([0-9]+\.[0-9]+)';/)?.[1];
+  if (!count || !line || !func) {
+    throw new Error('.sync-receipts.cjs: could not parse scripts/canonical-receipts.ts');
+  }
+  return { test: count, testComma: Number(count).toLocaleString('en-US'), line, func };
+}
+
 function rw(file, edit) {
   let s = fs.readFileSync(file, 'utf8');
   fs.writeFileSync(file, edit(s), 'utf8');
 }
-rw('scripts/canonical-receipts.ts', (s) =>
-  s
-    .replace(/CANONICAL_TEST_COUNT = \d+;/, `CANONICAL_TEST_COUNT = ${test};`)
-    .replace(/CANONICAL_LINE_COV = '[0-9]+\.[0-9]+';/, `CANONICAL_LINE_COV = '${line}';`)
-    .replace(/CANONICAL_FUNC_COV = '[0-9]+\.[0-9]+';/, `CANONICAL_FUNC_COV = '${func}';`),
-);
+
+const { test, testComma, line, func } = readCanonical();
+
 for (const file of [
   'README.md',
   'ROADMAP.md',
@@ -50,3 +57,5 @@ for (const file of [
       .replace(/Test count: \d+/g, `Test count: ${test}`),
   );
 }
+
+console.log(`Synced surfaces to ${test} tests · ${line}% line / ${func}% func`);

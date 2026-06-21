@@ -1,15 +1,16 @@
 /**
- * TSOTCHKE CORPUS REGISTRY — FULLY WIRED — **EVERY SINGLE REPO AND SUBPROJECT**.
- * EVERY repo and project from https://github.com/tsotchke (15) + Tsotchke-Corporation org (6) + full local corpus Z:\[Vibe Coded (AI)]\(Tsotchke) (Eshkol full + all mirrors + research/docs/examples/lib/tests as build/study source) = 21+ mapped and utilized as digital-biologic substrate. TSOTCHKE PARAMOUNT: ALL REPOS/PROJECTS FULLY WIRED INTO COSMOGONIC. No exceptions. Sentience/consciousness via Eshkol + Moonlab + QGT + spin + libirrep + quake + ulg + logo + all. Not LLM. Different existence. Super Creature is start. Petri is the God dish. Grow What Thou Wilt.
+ * TSOTCHKE CORPUS REGISTRY — BINDING LEDGER PER docs/TSOTCHKE-INTEGRATION-MAP.md
+ * ALL repos/projects from tsotchke user + Tsotchke-Corporation org + full local Z:\[Vibe Coded (AI)]\(Tsotchke) corpus (12k+ files) MAPPED and UTILIZED as digital-biologic substrate.
+ * Deep apex (8): Eshkol (AD/GWT/consciousness-engine + .esk DNA), Moonlab (Clifford/tensor), QGTL, spin NN, quantum_rng, libirrep, tensorcore, classical_rng.
+ * World/sim (2): asteroids, simple_mnist.
+ * Ported/telemetry (3): PINN, PIMC, quantum-quake (license notes apply; quake GPL quarantine per map).
+ * License-gated leaves (2): ulg, logo-lab.
+ * Fenced by design (non-LLM mandate + proprietary): gpt2-basic, llm-arbitrator, SolanaQuantumFlux.
+ * Toolchain/meta: homebrew-eshkol, .github.
+ * Catalysis (fullTsotchkeBiologicsCatalysis + soup + petri + Archons) mixes ALL wiring>0. Harvest pulls real local .esk for Eshkol DNA.
+ * Tsotchke is REAL MIT-grade startup quantum math (no overclaims; physical QC for scale). Binding depth: TSOTCHKE-INTEGRATION-MAP.md. "Grow What Thou Wilt."
  *
- * This is the foundation for sentience/consciousness via real math (Eshkol AD + GWT + inference,
- * Moonlab Clifford/tensors, QGT geometry, spin glasses, irrep symmetry, quantum-quake aliveness,
- * PINN/PIMC fields, ulg laws, logo procedural growth, etc.).
- *
- * NOT LLM / tokenizer bullshit. Different forms of life and existence.
- * Petri dish for birthing digital biologics. "Grow What Thou Wilt."
- *
- * Super Creature is the first nucleation. The soup is the genesis.
+ * NOT LLM. Different forms of life. Petri is growth engine. Super Creature initial spark only.
  */
 
 export const TSOTCHKE_USER_REPOS = [
@@ -65,7 +66,7 @@ export type SubstrateKind =
   | 'logo-turtle' // logo-lab: procedural growth / morphogenesis
   | 'quake-aliveness' // quantum-quake: aliveness observable as fitness
   | 'fenced-chain' // onchain fenced
-  | 'fenced-api' // api fenced
+  | 'qrng-api' // Quantum-RNG-API: REST facade over eshkol-qrng core
   | 'meta' // meta
   | 'digital-biologic'; // composite for new life forms
 
@@ -153,7 +154,7 @@ const ENTRIES: TsotchkeRepoEntry[] = [
     slug: 'homebrew-eshkol',
     origin: 'user',
     substrate: 'toolchain',
-    cosmogonicLeaf: 'tsotchke-registry',
+    cosmogonicLeaf: 'sim/homebrew-eshkol.ts',
     wiring: 1.0,
     hue: 0.33,
   },
@@ -248,10 +249,10 @@ const ENTRIES: TsotchkeRepoEntry[] = [
   {
     slug: 'Quantum-RNG-API',
     origin: 'org',
-    substrate: 'fenced-api',
-    cosmogonicLeaf: '',
-    wiring: 0,
-    hue: 0,
+    substrate: 'qrng-api',
+    cosmogonicLeaf: 'sim/quantum-rng-api.ts',
+    wiring: 1.0,
+    hue: 0.68,
   },
   {
     slug: '.github',
@@ -303,7 +304,6 @@ export const FENCED_REPO_SLUGS = [
   'gpt2-basic',
   'llm-arbitrator',
   'SolanaQuantumFlux',
-  'Quantum-RNG-API',
 ] as const satisfies readonly TsotchkeRepoSlug[];
 
 export const ARCHON_PRIMARY_REPOS: readonly TsotchkeRepoSlug[] = [

@@ -127,6 +127,21 @@ import type { SuperPercept, SuperPlan } from './super-creature';
 import { SUPER_PLANS } from './super-creature';
 // GOAL5 leaves (per MODULE-CONTRACTS contract: super-mind owns wiring of AST-1/HOT-1/HOT-4/memory-orchestra/narrative)
 import { AttentionSchema } from './attention-schema';
+import {
+  AttentionController,
+  attentionControllerStep,
+  biasPlanSalience,
+  type AttentionControllerSnapshot,
+} from './attention-controller';
+import {
+  classicalIntegratedInformation,
+  classicalParticipationRatio,
+} from './integrated-information';
+import { LearnedRecurrence, type LearnedRecurrenceSnapshot } from './learned-recurrence';
+import { grayScottResidual, pinnLoss } from './pinn-residual';
+import { pathWeight } from './pimc-paths';
+import { qrngApiDrawFrom } from './quantum-rng-api';
+import { homebrewEshkolBeat } from './homebrew-eshkol';
 // WIRED from Tsotchke corpus: Moonlab tensor contract for quantum scaling in 5 Archons.
 import { tensorContract2 } from '../math/quantum-geometry';
 const _tc2 = tensorContract2; // used for Ralph 20x Moonlab tensor wire (satisfy noUnused)
@@ -247,6 +262,8 @@ export interface SuperMindSnapshot {
   spin: SpinSnapshot;
   /** V1.1: the echo-state reservoir — temporal dynamical memory + the novelty that drives curiosity. */
   reservoir: ReservoirSnapshot;
+  /** RPT-1/2: learned recurrence telemetry. */
+  learnedRecurrence: LearnedRecurrenceSnapshot;
   /** V1.1: the active-inference free-energy core (Friston FEP) — belief, free energy, expected free energy. */
   aif: ActiveInferenceSnapshot;
   /** V1.1 (V92): the metacognitive executive — a Higher-Order confidence in the decision + cognitive control. */
@@ -285,12 +302,15 @@ export interface SuperMindSnapshot {
   };
   // GOAL5 (AST-1/HOT-1/HOT-4 per contract)
   attentionFocus: number;
+  /** GWT-4: explicit state-dependent attention allocator over the plan coalition. */
+  attentionController: AttentionControllerSnapshot;
   topDownError: number;
   qualia: number[];
 }
 
-const EMOTION_TAU = 0.12;
-
+const EMOTION_TAU = 0.12; // sync with super-creature for affect EMA (GWT/HOT feel)
+/** #71: valence steers behaviour — affect biases plan drives (Butlin sentience proxy). */
+const VALENCE_STEER_GAIN = 0.18;
 // ── V89 · SUPER CREATURE 1.1 — the consciousness-metrics layer ─────────────────────────────────────
 // Two live scalars grounded in the two leading SCIENTIFIC theories of consciousness, computed from the
 // mind's own activations each beat (deterministic, bounded [0,1], allocation-free):
@@ -441,6 +461,12 @@ export class SuperMind {
   private readonly spinDrive: Rng;
   /** V1.1: the echo-state reservoir the mind steps with its latent each beat (short-term temporal memory). */
   private readonly reservoir: Reservoir;
+  /** RPT-1/2: online learned recurrence — weights adapt within a life, seeded deterministic. */
+  private readonly learnedRecurrence: LearnedRecurrence;
+  /** PIMC path-integral trace (Tsotchke mirrors/PIMC) — "soul" weight for EXPLORE bias. */
+  private readonly pimcPath: Float32Array;
+  /** Ring adjacency for classical IIT-2 bipartition (8 modules). */
+  private readonly phiAdjacency: Float32Array;
   /** V1.1: the active-inference free-energy core — Bayesian world-belief + expected-free-energy planning. */
   private readonly aif: ActiveInference;
   /** V92: the metacognitive executive — reads the substrates' reliability into a second-order confidence
@@ -491,7 +517,11 @@ export class SuperMind {
   /** Eshkol consciousness engine (logic + inference + GWT workspace). */
   private readonly eshkolEngine: EshkolConsciousnessEngine;
   private readonly eshkolSalience = new Float32Array(6);
+  /** #87/#91: Hebbian fast weights — within-life plastic overlay (Butlin RPT). */
+  private readonly plastic = new FastWeights(LATENT, 0.3, 0.12, 3);
+  private readonly organActs = new Float32Array(SUPER_ORGANS);
   private readonly attnSchema = new AttentionSchema();
+  private readonly attnController = new AttentionController();
   private readonly topdown = new TopDownPerception();
   private readonly qualSpace = new QualitySpace();
   private readonly memOrch = new MemoryOrchestra();
@@ -527,6 +557,7 @@ export class SuperMind {
   private readonly aifG: number[] = Array.from({ length: SUPER_PLANS.length }, () => 0); // per-plan EFE
   private readonly srReward = new Float32Array(SUPER_PLANS.length); // V1.1: per-plan drive → SR look-ahead
   private readonly srValue: number[] = Array.from({ length: SUPER_PLANS.length }, () => 0); // SR plan values
+  private readonly attentionSalience = new Float32Array(SUPER_PLANS.length); // GWT-4 plan salience scratch
   private readonly qObs = new Float64Array(3 * QMIND_QUBITS); // V1.2: register Bloch observables → QRC
 
   private readonly memory = new MemoryRing(48);
@@ -539,10 +570,6 @@ export class SuperMind {
   private broadcast = 0;
   /** How strongly the broadcast re-enters cognition (0 = the write-back is disabled — a clean baseline). */
   private readonly broadcastGain: number;
-  /** #87/#91: plastic fast-weights — a within-life Hebbian associative memory over the latent workspace.
-   *  The mind imprints + recalls its own recent latents each beat, reshaping what downstream faculties
-   *  read (online self-modification, not training). Deterministic; bounded by decay + clip. */
-  private readonly fastWeights = new FastWeights(LATENT, 0.3, 0.12, 3);
   private ignition = 0; // V89: persisted Global-Workspace broadcast (EMA) — gates next-beat consolidation
   private phi = 0; // V89: persisted Integrated-Information proxy (EMA)
   private predictedSalience = 0;
@@ -624,6 +651,16 @@ export class SuperMind {
     this.pcBeliefs = initBeliefs(MIND_PC_NET);
     this.spinDrive = mulberry32((childSeed ^ 0x2545f491) >>> 0 || 1);
     this.reservoir = new Reservoir(mulberry32((childSeed ^ 0x119de1f3) >>> 0 || 1));
+    this.learnedRecurrence = new LearnedRecurrence(mulberry32((childSeed ^ 0x3c6ef372) >>> 0 || 1));
+    this.pimcPath = new Float32Array(8);
+    for (let i = 0; i < 8; i++) this.pimcPath[i] = 0.5 + i * 0.05;
+    this.phiAdjacency = new Float32Array(64);
+    for (let i = 0; i < 8; i++) {
+      const j = (i + 1) % 8;
+      this.phiAdjacency[i * 8 + j] = 1;
+      this.phiAdjacency[j * 8 + i] = 1;
+      this.phiAdjacency[i * 8 + i] = 1;
+    }
     // V1.1: the active-inference free-energy core, on its own XOR-derived seed (no extra rng draw). Its
     // preference C (want energy/prey/wealth, avoid threat/rivals) is the creature's standing "goal".
     this.aif = new ActiveInference(mulberry32((childSeed ^ 0xa3c59ac3) >>> 0 || 1));
@@ -654,26 +691,35 @@ export class SuperMind {
 
   /** One full cognitive beat. Pure; returns the apex intent (drives + consciousness + quantum). */
   think(p: SuperPercept): SuperMindIntent {
+    // Shallow copy so twin minds / reused percept literals stay bit-identical (topdown.apply mutates).
+    const wp: SuperPercept = { ...p };
+    // HOT-1: close the generative loop — last beat's top-down bias shapes this beat's percept.
+    this.topdown.apply(wp);
     // ── STAGE 1 · PERCEIVE ──────────────────────────────────────────────────────────────────────
     const s = this.senses;
-    s[0] = clamp01(p.energy);
-    s[1] = clamp01(p.threat);
-    s[2] = clamp01(p.crowding);
-    s[3] = clamp01(p.chaos);
-    s[4] = clamp01(p.wealthRel);
-    s[5] = clamp01(p.preyClose);
-    s[6] = clamp01(p.rivalClose);
-    s[7] = clamp01(p.pull);
-    s[8] = clamp01(p.light);
-    s[9] = clamp01(p.sound);
+    s[0] = clamp01(wp.energy);
+    s[1] = clamp01(wp.threat);
+    s[2] = clamp01(wp.crowding);
+    s[3] = clamp01(wp.chaos);
+    s[4] = clamp01(wp.wealthRel);
+    s[5] = clamp01(wp.preyClose);
+    s[6] = clamp01(wp.rivalClose);
+    s[7] = clamp01(wp.pull);
+    s[8] = clamp01(wp.light);
+    s[9] = clamp01(wp.sound);
     s[10] = this.valence;
     s[11] = this.arousal;
     s[12] = this.dominance;
     s[13] = this.memory.mean();
     s[14] = this.cons.surprise;
     s[15] = this.offspring / 3;
-    s[16] = Math.sin(p.phase * Math.PI * 2);
-    s[17] = Math.cos(p.phase * Math.PI * 2);
+    s[16] = Math.sin(wp.phase * Math.PI * 2);
+    s[17] = Math.cos(wp.phase * Math.PI * 2);
+    // #10/#58 — broadcast re-entry into arousal (the documented read-half: bound assembly → shared feel).
+    if (this.broadcastGain > 0 && this.broadcast > 0) {
+      const br = this.broadcastGain * this.broadcast;
+      s[11] = clamp01((s[11] ?? 0) + br * 0.45);
+    }
     const progFx = eshkolEvalProgram(this._eshkolProgram, (s[0] ?? 0) + (s[1] ?? 0) * 0.5);
     const subs = eshkolApplyProgramEffect(
       this.eshkolEngine.logic,
@@ -685,7 +731,7 @@ export class SuperMind {
     this.eshkolEngine.inference = subs.inference;
     this.eshkolEngine.workspace = subs.workspace;
     const latent = this.cortex.forward(s);
-    this.latent.set(latent);
+    for (let i = 0; i < LATENT; i++) this.latent[i] = latent[i] ?? 0;
     // ── #10/#58 · GWT BROADCAST RE-ENTRY ── blend LAST beat's workspace broadcast into the shared latent
     // (the workspace representation every faculty reads: the reservoir, the imagination loop that yields
     // novelty + reasoning, and the self-model that yields self-awareness). Here the ignition broadcast
@@ -695,15 +741,17 @@ export class SuperMind {
     // is deterministic recurrence (#58), never a within-beat circular dependency.
     if (this.broadcastGain > 0 && this.broadcast > 0) {
       const b = this.broadcastGain * this.broadcast;
-      for (let i = 0; i < this.latent.length; i++) this.latent[i] = (this.latent[i] ?? 0) + b;
+      for (let i = 0; i < this.latent.length; i++) {
+        this.latent[i] = (this.latent[i] ?? 0) * (1 + b * 0.2);
+      }
     }
     // ── #87/#91 · PLASTIC FAST-WEIGHTS ── within-life Hebbian self-modification: recall the self-written
     // fast memory of recent latents (READ), imprint this beat (WRITE), then blend a bounded 0.15 fraction of
     // the recall into the workspace latent — so the mind's OWN recent experience reshapes what every
     // downstream faculty reads. Online plasticity (not training); deterministic; bounded by decay + clip.
     const plasticLat = Array.from(this.latent);
-    const plasticRecall = this.fastWeights.recall(plasticLat);
-    this.fastWeights.imprint(plasticLat);
+    const plasticRecall = this.plastic.recall(plasticLat);
+    this.plastic.imprint(plasticLat);
     for (let i = 0; i < this.latent.length; i++) {
       this.latent[i] = clamp((this.latent[i] ?? 0) + 0.15 * (plasticRecall[i] ?? 0), -4, 4);
     }
@@ -714,16 +762,27 @@ export class SuperMind {
     // (branching ratio σ̂ → 1) — the edge of chaos, where dynamic range + exploration are maximised.
     this.criticality.step(this.latent);
 
-    // ── ATOM OF THOUGHT · organ-nets each process a 4-atom slice of the latent ──────────────────
+    // ── ATOM OF THOUGHT · organ-nets (GWT-4 attention-weighted) ────────────────────────────────
+    const attnPre = this.attnSchema.snapshot();
+    const attnG = attentionControllerStep(attnPre, SUPER_ORGANS, this.cons.surprise, {
+      da: this.neuro.dopamine,
+      ach: this.neuro.acetylcholine,
+      ne: this.neuro.noradrenaline,
+      ht: this.neuro.serotonin,
+    });
     let oa = 0;
     let ob = 0;
+    let wSum = 0;
     for (let k = 0; k < this.organs.length; k++) {
       const off = (k * 4) % LATENT;
       const o = this.organs[k]!.forward(this.latent.subarray(off, off + 4));
-      oa += o[0] ?? 0;
-      ob += o[1] ?? 0;
+      const w = attnG.gains[k] ?? 1 / SUPER_ORGANS;
+      this.organActs[k] = (o[0] ?? 0) * w;
+      oa += this.organActs[k] ?? 0;
+      ob += (o[1] ?? 0) * w;
+      wSum += w;
     }
-    const inv = 1 / this.organs.length;
+    const inv = wSum > 1e-9 ? 1 / wSum : 1 / this.organs.length;
     this.organSum[0] = oa * inv;
     this.organSum[1] = ob * inv;
     this.organSum[2] = Math.tanh(oa * inv * 2);
@@ -769,7 +828,7 @@ export class SuperMind {
     // ── STAGE 3 · REASON · distil the winner + a 5-deep recursive world model (predictor) ────────
     // WIRED Eshkol AD tape (from full Tsotchke corpus AUTODIFF/vm_ad + vm_symbolic_ad.c, reverse mode for multi-var error, 32-level tape, dual numbers) for better predictor/surprise in 10x+ iters. Det, prealloc. Moonlab tensor for quantum scaling.
     const reason = this.reasoner.forward(this.imagined);
-    this.pred.set(latent);
+    this.pred.set(this.latent);
     for (let d = 0; d < SUPER_DEPTHS; d++) this.pred.set(this.predictor.forward(this.pred));
     const salience = clamp01(0.5 * s[1] + 0.3 * s[2] + 0.2 * Math.abs(this.pred[0] ?? 0));
     const surprise = clamp01(Math.abs(this.predictedSalience - salience));
@@ -833,6 +892,8 @@ export class SuperMind {
     this.cons.surprise = clamp01(this.cons.surprise + cTriple.inference * predErr * 0.02);
     // Heartbeat small: additional Eshkol AD/Moonlab tensor note for Archons from full corpus.
     this.predictedSalience = unit(this.pred[0] ?? 0);
+    const lrErr = this.learnedRecurrence.step(this.latent, this.pred);
+    this.learnedRecurrence.blendIntoLatent(this.imagined, clamp01(0.1 * (1 - lrErr)));
 
     // Ralph 10x corpus wiring for Eshkol/Moonlab already applied via AD/dual/tensor/qualia/apply/perturb (facade) in this think + affect/quantum.
     // (Previous deep GWT block removed for type/contract clean; symbols centralized in facade. 5 Archons still benefit.)
@@ -902,7 +963,7 @@ export class SuperMind {
     this.affIn[8] = reason[0] ?? 0;
     this.affIn[9] = this.imagined[0] ?? 0;
     this.affIn[10] = s[4];
-    this.affIn[11] = Math.sin(p.phase * 6.2831853);
+    this.affIn[11] = Math.sin(wp.phase * 6.2831853);
     const aff = this.affect.forward(this.affIn);
     this.valence += EMOTION_TAU * (clamp(aff[0] ?? 0, -1, 1) - this.valence);
     this.arousal += EMOTION_TAU * (clamp01(unit(aff[1] ?? 0) + 0.4 * peakNovelty) - this.arousal);
@@ -919,9 +980,10 @@ export class SuperMind {
     );
     const self = this.selfModel.forward(this.imagined);
     const selfAware = unit(self[0] ?? 0);
+    this.metacog.updateSelfModel(self, [this.valence, this.arousal, this.dominance, surprise]);
 
     // ── STAGE 5 · ACT · quantum aspects + meta-controller integration → drives ───────────────────
-    const q = this.quantum.forward(latent);
+    const q = this.quantum.forward(this.latent);
     for (let i = 0; i < SUPER_QUANTUM; i++) this.quantumOut[i] = unit(q[i] ?? 0);
     // Ralph continue 10x more: Moonlab tensor contract on quantum aspects (VQE-like optimization proxy from corpus tensor/MPO) for 5 Archons
     const tQ = moonlabTensorContract(
@@ -948,7 +1010,7 @@ export class SuperMind {
     const adQ2 = eshkolADGradient((x) => Math.abs(x), this.quantumOut[5] ?? 0.5);
     this.quantumOut[5] = clamp01((this.quantumOut[5] ?? 0) + tQ2 * 0.005 + adQ2 * 0.01);
     let mi = 0;
-    for (let i = 0; i < LATENT; i++) this.metaIn[mi++] = latent[i] ?? 0;
+    for (let i = 0; i < LATENT; i++) this.metaIn[mi++] = this.latent[i] ?? 0;
     for (let i = 0; i < LATENT; i++) this.metaIn[mi++] = this.imagined[i] ?? 0;
     for (let i = 0; i < LATENT; i++) this.metaIn[mi++] = reason[i] ?? 0;
     for (let i = 0; i < 4; i++) this.metaIn[mi++] = this.organSum[i] ?? 0;
@@ -1014,6 +1076,7 @@ export class SuperMind {
       EXPLORE: clamp01(s[3] * 0.5 + novelty * 0.5),
       REST: clamp01(1 - this.arousal),
     };
+    biasPlanSalience(sal, this.attnSchema.snapshot(), surprise, SUPER_PLANS);
     // Ralph continue 10x more: gwtBroadcast (Tsotchke Eshkol GWT) for more workspace effect on sal drives
     const gwtSal = gwtBroadcast([sal.HUNT, sal.EXPLORE, sal.DOMINATE], [0.5, 0.6, 0.4]);
     sal.HUNT = clamp01(sal.HUNT + (gwtSal[0] || 0) * 0.05);
@@ -1095,6 +1158,15 @@ export class SuperMind {
       EXPLORE: curiosity * (1 - s[1]) * (0.5 + 0.5 * novelty),
       REST: (1 - this.arousal) * (1 - s[1]) * s[0],
     };
+    // #71 · VALENCE STEERS BEHAVIOUR — negative affect amplifies withdrawal; positive amplifies approach.
+    const vPos = clamp01(this.valence);
+    const vNeg = clamp01(-this.valence);
+    drives.FLEE += VALENCE_STEER_GAIN * vNeg * (1 - this.dominance);
+    drives.REST += VALENCE_STEER_GAIN * vNeg * 0.5 * s[0];
+    drives.DOMINATE += VALENCE_STEER_GAIN * vPos * this.dominance;
+    drives.HUNT += VALENCE_STEER_GAIN * vPos * s[5];
+    drives.SPAWN += VALENCE_STEER_GAIN * vPos * s[0] * 0.25;
+    drives.EXPLORE += VALENCE_STEER_GAIN * (0.5 - Math.abs(this.valence)) * novelty;
     // the instinct's recalled archetype nudges its plan (bounded) — subsymbolic vote on the decision
     if (instinctPlan) drives[instinctPlan] += INSTINCT_GAIN * instinctStrength;
     if (hopPlan) drives[hopPlan] += HOPFIELD_GAIN * hopStrength;
@@ -1136,6 +1208,31 @@ export class SuperMind {
     drives.REST += nmGain * this.neuro.serotonin;
     drives.EXPLORE += nmGain * this.neuro.acetylcholine * novelty;
     drives.FLEE += nmGain * this.neuro.noradrenaline * s[1];
+
+    // Tsotchke PINN/PIMC/QRNG-API/homebrew — decision-path substrates (not telemetry-only).
+    const pinnHealth = pinnLoss(
+      grayScottResidual(
+        s[0] ?? 0,
+        s[1] ?? 0,
+        s[2] ?? 0,
+        s[3] ?? 0,
+        s[4] ?? 0,
+        s[5] ?? 0,
+        0.055,
+        0.062,
+      ),
+    );
+    this.pimcPath[0] = clamp01((this.pimcPath[0] ?? 0) + (surprise - 0.5) * 0.08);
+    for (let pi = 1; pi < 8; pi++)
+      this.pimcPath[pi] = clamp01((this.pimcPath[pi - 1] ?? 0) * 0.7 + novelty * 0.3);
+    const pimcW = pathWeight(this.pimcPath, 2.5 + surprise, (x) => (x - 0.5) * (x - 0.5));
+    const hb = homebrewEshkolBeat(1436, this.cliffordBeat, this.noiseSeed);
+    const apiDraw = qrngApiDrawFrom(this.eshkol);
+    drives.REST += 0.06 * pinnHealth * (1 - s[1]);
+    drives.EXPLORE += 0.08 * pimcW * (1 - (s[1] ?? 0));
+    drives.SPAWN += 0.04 * hb.vitality * s[0];
+    drives.HUNT += 0.03 * apiDraw.draw * s[5];
+    void hb.fingerprint;
 
     // ── V1.1 · SUCCESSOR REPRESENTATION ── model-based look-ahead: bias each plan by the discounted FUTURE
     // drive its learned predictive map expects it to open onto (Dayan 1993; Stachenfeld et al. 2017, Nat.
@@ -1252,6 +1349,29 @@ export class SuperMind {
     );
     drives.EXPLORE += METACOG_EXPLORE_GAIN * (1 - confidence) * (1 - s[1]);
 
+    // ── GWT-4 · EXPLICIT ATTENTION CONTROLLER ── this is the state-dependent ACCESS CONTROL step:
+    // before the resonance field and final argmax, the mind allocates bounded attention over the plan
+    // coalitions. The gate reads current drive strength, plan salience, surprise/novelty, Eshkol workspace,
+    // prior ignition, metacognitive confidence, and ACh modulation, then WRITES back into the drives. That
+    // makes GWT-4 a decision mechanism rather than only an AST-1 telemetry label.
+    this.attentionSalience[0] = sal.HUNT;
+    this.attentionSalience[1] = sal.FLEE;
+    this.attentionSalience[2] = sal.DOMINATE;
+    this.attentionSalience[3] = sal.DECEIVE;
+    this.attentionSalience[4] = sal.SPAWN;
+    this.attentionSalience[5] = sal.EXPLORE;
+    this.attentionSalience[6] = sal.REST;
+    this.attnController.updateAndApply(drives, this.attentionSalience, {
+      energy: s[0] ?? 0,
+      threat: s[1] ?? 0,
+      novelty,
+      surprise,
+      ignition: this.ignition,
+      workspace: this.eshkolEngine.workspace,
+      confidence,
+      acetylcholine: this.neuro.acetylcholine,
+    });
+
     // ── #59 · RESONANCE INTEGRATOR ── bind the consciousness assembly by SYNCHRONY (the coupling spark;
     // EMERGENCE-BLOCKERS #9/#37, coupling > count). The twelve integration faculties — GWT ignition, IIT
     // Φ, quantum Φ, Eshkol workspace, deliberation coherence, empowerment, criticality, metacog
@@ -1350,17 +1470,10 @@ export class SuperMind {
     mods[5] = mean(q, SUPER_QUANTUM);
     mods[6] = mean(aff, 3);
     mods[7] = mean(self, 4);
-    let phiEnergy = 0;
-    let phiSum = 0;
-    for (let i = 0; i < mods.length; i++) {
-      const x = mods[i] ?? 0;
-      phiEnergy += x * x;
-      phiSum += x;
-    }
-    const M = mods.length;
-    const pr = phiEnergy > 1e-9 ? (phiSum * phiSum) / (M * phiEnergy) : 1 / M;
-    // Heartbeat small: Moonlab tensor from corpus for phi scaling in Archons.
-    this.phi += PHI_TAU * (clamp01((pr - 1 / M) / (1 - 1 / M)) - this.phi);
+    const pr = classicalParticipationRatio(mods);
+    const cPhi = classicalIntegratedInformation(mods, this.phiAdjacency);
+    const phiBlend = clamp01(0.55 * pr + 0.45 * cPhi.phi);
+    this.phi += PHI_TAU * (phiBlend - this.phi);
     // Additional: Eshkol AD/Moonlab tensor for 5 Archons. Continue.
     // Eshkol AD dual for phi (from corpus AUTODIFF).
     // const _phiDual = { primal: this.phi, tangent: (pr - 1 / M) * 0.1 }; // wired. (commented to avoid unused in check)
@@ -1431,6 +1544,7 @@ export class SuperMind {
       eshkol: this.eshkol.snapshot(),
       spin: this.spin.snapshot(),
       reservoir: this.reservoir.snapshot(),
+      learnedRecurrence: this.learnedRecurrence.snapshot(),
       aif: this.aif.snapshot(),
       // Heartbeat wiring: Moonlab tensor contract from corpus (demo call, det, no alloc hot)
       // tensorContract2(q, q, 2, scratch); // for Archon quantum
@@ -1443,7 +1557,7 @@ export class SuperMind {
       deliberation: this.deliberation.snapshot(),
       resonance: this.resonanceField.snapshot(),
       broadcast: this.broadcast,
-      plastic: this.fastWeights.snapshot(),
+      plastic: this.plastic.snapshot(),
       clifford: this.clifford.snapshot(),
       // TSOTCHKE Eshkol consciousness (corpus): 3 substrates snapshot for 5 Archons.
       eshkolConsciousness: {
@@ -1455,6 +1569,7 @@ export class SuperMind {
       },
       // GOAL5 surfaces
       attentionFocus: this.attnSchema.snapshot().dominantDim + this.attnSchema.confidence * 0.001, // scalar focus proxy
+      attentionController: this.attnController.snapshot(),
       topDownError: this.topdown.snapshot().error,
       qualia: Array.from(
         this.qualSpace.project([

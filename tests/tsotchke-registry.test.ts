@@ -1,5 +1,5 @@
 /**
- * TSOTCHKE REGISTRY + PETRI DISH — all 21 repos, primordial biologics substrate.
+ * TSOTCHKE REGISTRY + PETRI DISH — all 22 repos, primordial biologics substrate.
  */
 import { describe, expect, test } from 'bun:test';
 import { mulberry32 } from '../src/math/rng';
@@ -36,9 +36,8 @@ describe('Tsotchke registry — ALL repos mapped (22 with classical-contrast for
   test('LLM repos are fenced (wiring 0)', () => {
     expect(getTsotchkeRepo('gpt2-basic')?.wiring).toBe(0);
     expect(getTsotchkeRepo('llm-arbitrator')?.wiring).toBe(0);
-    expect(getTsotchkeRepo('Quantum-RNG-API')?.wiring).toBe(0);
     expect(getTsotchkeRepo('SolanaQuantumFlux')?.wiring).toBe(0);
-    expect(FENCED_REPO_SLUGS.length).toBeGreaterThanOrEqual(4);
+    expect(FENCED_REPO_SLUGS.length).toBeGreaterThanOrEqual(3);
     // Floor, not exact: count of wired sim substrates grows as the corpus is wired deeper; assert a
     // healthy minimum rather than a brittle exact number that reds CI on every registry edit.
     expect(wiredSimRepoCount()).toBeGreaterThanOrEqual(15);
@@ -57,7 +56,7 @@ describe('Tsotchke registry — ALL repos mapped (22 with classical-contrast for
     expect(c).toBeLessThanOrEqual(1);
   });
 
-  test('corpus beat rotates all 21 repos deterministically', () => {
+  test('corpus beat rotates all 22 repos deterministically', () => {
     const a = corpusBeatForArchon(2, 100);
     const b = corpusBeatForArchon(2, 100);
     expect(a).toBe(b);

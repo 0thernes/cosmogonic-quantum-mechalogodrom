@@ -7,9 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### v0.17.0 NHSI structural build wave
+
+- Added a deterministic GWT-4 `AttentionController`, wired into `SuperMind` before final plan commitment, with focused determinism/bounds tests.
+- Replaced brittle generated 25-ToM and 100-faculty surfaces with compact deterministic `TomPantheon` and `FacultiesPantheon` engines that preserve the public telemetry API.
+- Hardened new Tsotchke/NHSI leaves for strict TypeScript and determinism: NQS/VMC, mixed-state QGT, emergence angles, deep Tsotchke wire, myth/ritual, symbiosis, and QRNG facade exports.
+- Synced canonical receipts to the measured gate: **2,161 tests / 0 fail** · **95.73% line / 92.69% func**.
+- Updated NHSI dashboard and 14/14 path docs to reflect 100 structural faculties, 25 ToM organs, 10 emergence angles, and 14/14 structural scaffolding without claiming phenomenal sentience.
+
 ### NHSI truth-sync dashboard and surface alignment
 
-- Added canonical **[docs/NHSI-PROGRESS-DASHBOARD.md](./docs/NHSI-PROGRESS-DASHBOARD.md)** — measured progress on 100 faculties · 25 Archons · 25 theory-organs · 10 emergence angles · Tsotchke repo depth · Butlin 14/14 path (14/14 = roadmap, not current).
+- Added canonical **[docs/NHSI-PROGRESS-DASHBOARD.md](./docs/NHSI-PROGRESS-DASHBOARD.md)** — measured progress on 100 faculties · 25 Archons · 25 theory-organs · 10 emergence angles · Tsotchke repo depth · Butlin 14/14 path (structural scaffolding, not phenomenal sentience).
 - Synced README, docs.html, specs.html, TECHNICAL-SPECIFICATION, KANBAN, CLAUDE.md, AGENTS.md with NHSI dashboard + honest Tsotchke depth ledger links.
 - Updated June-16 Super Creature report superseded banner: Clifford wired; link to NHSI dashboard.
 - Tsotchke binding: real MIT corpus — depth tracked in TSOTCHKE-INTEGRATION-MAP; never call upstream fake.

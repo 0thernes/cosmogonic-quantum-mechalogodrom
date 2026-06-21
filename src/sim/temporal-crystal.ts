@@ -52,6 +52,7 @@ export class TemporalCrystal {
   private periodDoublingStrength = 0;
   private floquetCycle = 0;
   private readonly disorder = new Float32Array(N_SPINS);
+  private readonly _correlator = new Float32Array(4);
   private readonly tA = new Float32Array(4);
   private readonly tB = new Float32Array(4);
   private lastMagnetization = 0;
@@ -130,6 +131,7 @@ export class TemporalCrystal {
       this.tB[i] = clamp01((this.spins[i * 2 + 1] ?? 0) * 0.5 + 0.5);
     }
     const zzzzCorr = moonlabTensorContract(this.tA, this.tB, 4);
+    this._correlator[0] = zzzzCorr;
     this.periodDoublingStrength = clamp01(this.periodDoublingStrength + Math.abs(zzzzCorr) * 0.02);
 
     // quakePerturb: QGE injects quantum noise (models decoherence)

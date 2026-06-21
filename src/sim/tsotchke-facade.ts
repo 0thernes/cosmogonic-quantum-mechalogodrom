@@ -54,6 +54,13 @@ export { quakeQgeFactor, quakePerturb, qgeHybridEnergy, qgePullMod } from './qge
 export { grayScottResidual, pinnLoss } from './pinn-residual';
 export { pathAction, pathMetropolisStep, pathWeight } from './pimc-paths';
 export { logoMorphScalar, logoSymmetryOrder, turtleNew } from './logo-turtle';
+export { qrngApiDraw, qrngApiDrawFrom } from './quantum-rng-api';
+export type { QrngApiReceipt } from './quantum-rng-api';
+// Note: no qrngApiDrawFromSeed or reset in the api module; removed stale re-exports.
+export { homebrewEshkolBeat, eskCatalogVitality, eskCatalogFingerprint } from './homebrew-eshkol';
+export type { HomebrewEshkolReceipt } from './homebrew-eshkol';
+export { LearnedRecurrence, LR_HIDDEN, LR_IN } from './learned-recurrence';
+export type { LearnedRecurrenceSnapshot } from './learned-recurrence';
 export { asteroidEnergy, asteroidSpawn, asteroidStep, asteroidThrust } from './asteroids-physics';
 export { classicalEntropyGap, classicalSample } from './classical-contrast';
 export { perceptronScore, perceptronTag } from './perceptron-baseline';

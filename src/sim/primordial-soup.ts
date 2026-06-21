@@ -10,6 +10,7 @@ import {
   TSOTCHKE_HARVEST as _TSOTCHKE_HARVEST,
 } from './generated-tsotchke-seeds'; // From real local Tsotchke Repo Folder harvest (builds with the folder)
 import { corpusBeatForArchon, getTsotchkeRepoByIndex } from './tsotchke-registry';
+import { grayScottResidual, pinnLoss } from './pinn-residual'; // DEEPEN: Tsotchke PINN (shallow telemetry -> decision) as physics-informed metabolism residual for vitality in soup. Real math from corpus.
 
 const clamp01 = (v: number): number => clamp(v, 0, 1);
 
@@ -100,7 +101,13 @@ export class PrimordialSoup {
             : (Number(prog) % 997) / 997;
       const growth =
         0.001 + (corpus + inputCatalysis * 0.25) * 0.002 * wiring + programBoost * 0.001;
-      this.vitality[i] = Math.min(1, v + growth);
+      // DEEP Tsotchke PINN wiring (promote telemetry): Gray-Scott residual as metabolism health -> vitality boost for digital biologics.
+      // PINN from Tsotchke corpus provides physics-informed field residual; high loss = low health = selection pressure.
+      const pinnHealth = pinnLoss(
+        grayScottResidual(0.5 + (i % 5) * 0.1, 0.3, 0.5, 0.5, 0.5, 0.5, 0.04, 0.06),
+      ); // full sig: u v L R U D feed kill; Tsotchke PINN real math for biologics metabolism (deepened)
+      const pinnFactor = 0.0005 * (pinnHealth - 0.5); // signed modulation; positive health aids growth
+      this.vitality[i] = Math.min(1, v + growth + pinnFactor);
       this.consciousness[i] = clamp01(
         c * 0.98 + (corpus + (this.symmetry[i] ?? 0)) * 0.01 * wiring,
       );

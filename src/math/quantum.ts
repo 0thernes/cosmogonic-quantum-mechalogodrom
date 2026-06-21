@@ -14,6 +14,8 @@
 import type { Rng } from './rng';
 
 /** Names of the supported gates (single-qubit, parameterized rotations, and two-qubit). */
+export type Complex = { re: number; im: number };
+
 export type GateName =
   | 'h'
   | 'x'

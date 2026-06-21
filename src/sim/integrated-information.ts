@@ -148,3 +148,153 @@ function popcount(x: number): number {
   }
   return c;
 }
+
+/**
+ * Classical IIT-2 proxy: participation-ratio Φ from module activations (tractable surrogate).
+ * `pr = (Σx)² / (M·Σx²)` rescaled so independent baseline maps to 0.
+ */
+export function classicalParticipationRatio(mods: ArrayLike<number>): number {
+  const M = mods.length;
+  if (M < 2) return 0;
+  let energy = 0;
+  let sum = 0;
+  for (let i = 0; i < M; i++) {
+    const x = mods[i] ?? 0;
+    energy += x * x;
+    sum += x;
+  }
+  const pr = energy > 1e-9 ? (sum * sum) / (M * energy) : 1 / M;
+  return clamp01((pr - 1 / M) / (1 - 1 / M));
+}
+
+/** Extended IIT-2 measurement across classical module graph. */
+export interface ClassicalPhiSnapshot {
+  /** Overall Φ across all modules. */
+  phi: number;
+  /** Φ per module (local integration). */
+  modulePhi: number[];
+  /** Minimum-information partition for classical modules. */
+  mipPartition: number[];
+  /** Mean integration across all cuts. */
+  meanIntegration: number;
+  /** Number of modules measured. */
+  moduleCount: number;
+}
+
+/**
+ * Compute IIT-2 Φ across classical module graph using bipartition analysis.
+ * This extends quantum Φ measurement to classical activation vectors.
+ */
+export function classicalIntegratedInformation(
+  activations: ArrayLike<number>,
+  adjacency: ArrayLike<number>, // adjacency matrix (flattened)
+): ClassicalPhiSnapshot {
+  const M = activations.length;
+  if (M < 2) {
+    return {
+      phi: 0,
+      modulePhi: Array.from(activations, () => 0),
+      mipPartition: [],
+      meanIntegration: 0,
+      moduleCount: M,
+    };
+  }
+
+  const modulePhi = new Float32Array(M);
+  let minPhi = Infinity;
+  let mipPartition: number[] = [];
+  let sumIntegration = 0;
+  let cuts = 0;
+
+  // Evaluate balanced bipartitions (fix module 0 in A to avoid double-count)
+  const half = Math.floor(M / 2);
+  for (let mask = 0; mask < 1 << M; mask++) {
+    if ((mask & 1) === 0) continue; // fix module 0 in A
+    if (popcount(mask) !== half) continue;
+
+    const aMask = mask;
+    const bMask = ((1 << M) - 1) ^ mask;
+
+    // Compute effective integration across this cut
+    const cutPhi = computeCutIntegration(activations, adjacency, aMask, bMask);
+    sumIntegration += cutPhi;
+    cuts++;
+
+    if (cutPhi < minPhi) {
+      minPhi = cutPhi;
+      mipPartition = [];
+      for (let i = 0; i < M; i++) {
+        if ((aMask & (1 << i)) !== 0) mipPartition.push(i);
+      }
+    }
+  }
+
+  // Compute per-module local integration
+  for (let i = 0; i < M; i++) {
+    const localPhi = computeLocalIntegration(activations, adjacency, i);
+    modulePhi[i] = localPhi;
+  }
+
+  const meanIntegration = cuts > 0 ? sumIntegration / cuts : 0;
+  const phi = cuts > 0 ? clamp01(minPhi) : 0;
+
+  return {
+    phi,
+    modulePhi: Array.from(modulePhi),
+    mipPartition,
+    meanIntegration: clamp01(meanIntegration),
+    moduleCount: M,
+  };
+}
+
+/**
+ * Compute integration across a specific bipartition cut.
+ */
+function computeCutIntegration(
+  activations: ArrayLike<number>,
+  adjacency: ArrayLike<number>,
+  aMask: number,
+  bMask: number,
+): number {
+  let crossFlow = 0;
+  let totalFlow = 0;
+
+  for (let i = 0; i < activations.length; i++) {
+    for (let j = 0; j < activations.length; j++) {
+      if (i === j) continue;
+      const weight = adjacency[i * activations.length + j] ?? 0;
+      const flow = Math.abs(activations[i] ?? 0) * Math.abs(activations[j] ?? 0) * weight;
+      totalFlow += flow;
+
+      const iInA = (aMask & (1 << i)) !== 0;
+      const jInB = (bMask & (1 << j)) !== 0;
+      if (iInA && jInB) {
+        crossFlow += flow;
+      }
+    }
+  }
+
+  return totalFlow > 1e-9 ? crossFlow / totalFlow : 0;
+}
+
+/**
+ * Compute local integration for a single module.
+ */
+function computeLocalIntegration(
+  activations: ArrayLike<number>,
+  adjacency: ArrayLike<number>,
+  moduleIndex: number,
+): number {
+  let localFlow = 0;
+  let totalFlow = 0;
+
+  for (let j = 0; j < activations.length; j++) {
+    if (j === moduleIndex) continue;
+    const weight = adjacency[moduleIndex * activations.length + j] ?? 0;
+    const flow = Math.abs(activations[moduleIndex] ?? 0) * Math.abs(activations[j] ?? 0) * weight;
+    totalFlow += flow;
+    localFlow += flow;
+  }
+
+  return totalFlow > 1e-9 ? localFlow / totalFlow : 0;
+}

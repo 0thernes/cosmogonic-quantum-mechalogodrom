@@ -16,7 +16,7 @@ export const TSOTCHKE_HARVEST = {
     'Eshkol/eshkol_repo/examples/differentiable_physics.esk',
   ],
   totalScanned: 3096,
-  timestamp: '2026-06-21T09:51:28.479Z',
+  timestamp: '2026-06-21T10:42:55.250Z',
   note: 'Harvested directly from local Tsotchke Repo Folder at build time. Eshkol .esk programs are the heritable substrate for digital biologics sentience. All other Tsotchke mirrors (moonlab, libirrep, QGT, spin, quake, etc.) provide the additional physics/geometry/order kernels.',
 } as const;
 

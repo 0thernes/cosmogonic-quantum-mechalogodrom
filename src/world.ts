@@ -95,6 +95,7 @@ import {
   petriGrowthMultiplier,
   type PetriDishState,
 } from './sim/godform'; // GOAL5 + TSOTCHKE full corpus (ralph 10x: Eshkol AD, Moonlab tensor, quake, irrep from (Tsotchke))
+import { PantheonSociety, FIELD_DIM } from './sim/pantheon';
 import { SuperMind, type SuperMindSnapshot, type SuperMindIntent } from './sim/super-mind';
 import {
   quakePerturb,
@@ -212,6 +213,8 @@ export class World {
   private readonly superMind: SuperMind; // GOAL5 compat; prime mind uses array[0]
   private superMindSnap: SuperMindSnapshot | null = null;
   private readonly superMinds: SuperMind[] = [];
+  /** 25-Archon society layer: 20 light echoes + shared stigmergic mind-field (emergence #5). */
+  private readonly pantheon = new PantheonSociety();
   private readonly _superMindSnaps: (SuperMindSnapshot | null)[] = [null, null, null, null, null]; // GOAL5 5 creatures // GOAL5
   private readonly superBodies: SuperBodySystem[] = [];
   // GOAL5: per-archon small creature snapshots (for body.setMind) + the 5 deep minds/bodies.
@@ -860,6 +863,8 @@ export class World {
     // Titans roam every frame; economy/diplomacy/strikes are internally cadenced
     // off s.frame (CONTRACTS V3.3) — after the grid so strikes can query it.
     this.titans.update(dt, t);
+    // 25-Archon pantheon society: light echoes + shared mind-field (emergence #5 stigmergy).
+    void this.pantheon.beat(s.frame);
     // F-BEINGS: the leviathans sail the mid-field (pure trig + the read-only hole force, no rng).
     this.leviathans.update(dt, t);
     // 5 SUPER CREATURES + F-SUPER: animate ALL 5 bodies (pantheon apexes) — each has own wander/flight.
@@ -1162,6 +1167,9 @@ export class World {
   private driveSuper(bass: number, level: number, t: number, n: number): void {
     try {
       const s = this.state;
+      const pantheonSnap = this.pantheon.beat(s.frame);
+      const collective = new Float32Array(FIELD_DIM);
+      this.pantheon.collectiveBias(0, collective);
       const econ = this.economy.summary();
       const mean = econ.agents > 0 ? econ.totalWealth / econ.agents : 1;
       const target = Math.max(1, this.quality.targetEntities);
@@ -1220,9 +1228,9 @@ export class World {
           chaos: c01(
             (basePercept.chaos + (bias.chaos - 0.5) * 0.12 + qgeMod) *
               quakePerturb(pulseForArchon.quakeAliveness ?? 0.5, i + 9, 0.1) *
-              qgeWorldPerturb(pulseForArchon.quakeAliveness ?? 0.5, i + 9),
-          ), // godform bias + quake + QGE aliveness (Tsotchke quantum-quake / PINN / PIMC)
-          // Ralph heartbeat re-audit 10x continue: use mpoF (Moonlab tensor) + qgeF (quantum-quake) for more corpus effect on crowding/threat in super world percepts
+              qgeWorldPerturb(pulseForArchon.quakeAliveness ?? 0.5, i + 9) +
+              (collective[2] ?? 0) * 0.04,
+          ),
           crowding: c01(
             basePercept.crowding * 0.35 +
               localD * 0.65 +
@@ -1231,7 +1239,6 @@ export class World {
           ),
           threat: c01(basePercept.threat + localD * 0.08 + qgeF * 0.04),
           wealthRel,
-          // enhance light/sound with archetype bias + tiny deterministic pos factor
           light: clamp(
             basePercept.light + (bias.generative - 0.5) * 0.04 + ((lz * 0.002) % 0.02),
             0,
@@ -1242,18 +1249,31 @@ export class World {
             0,
             1,
           ),
-          // Ralph 10x re-audit + continue: quantum-quake aliveness from Tsotchke corpus (pulse) perturbs pull for Archon world effect
-          // 10x more: use ulgHandoff + gwtBroadcast for hybrid corpus factor in pull (Eshkol+ulg+quake)
-          // + qgeF for more quantum-quake
           pull: c01(
             basePercept.pull +
               (pulseForArchon.quakeAliveness ?? 0) * 0.08 +
               mpoF * 0.05 +
-              qgeF * 0.03,
+              qgeF * 0.03 +
+              (collective[4] ?? 0) * 0.06,
           ),
         };
+        void pantheonSnap;
         this.superCreatures[i]!.think(p);
         const mo = this.superMinds[i]!.think(p);
+        this.pantheon.depositApex(
+          i,
+          [
+            mo.consciousness.ignition,
+            mo.consciousness.phi,
+            mo.consciousness.surprise,
+            mo.consciousness.novelty,
+            mo.consciousness.selfAware,
+            mo.consciousness.workspace,
+            mo.consciousness.qualiaTone,
+            clamp(mo.curiosity, 0, 1),
+          ],
+          0.35 + mo.consciousness.ignition * 0.5,
+        );
         // FULL TSOTCHKE: catalyze via update (Eshkol + all repos soup growth)
         this.primordialSoup.update(i, s.frame, this.petriRng);
         const dish = this.petriDishes[i];
