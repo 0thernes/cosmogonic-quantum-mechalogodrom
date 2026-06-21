@@ -75,7 +75,7 @@ Blueprint: [`NEO-MIND-ARCHITECTURE.md`](./NEO-MIND-ARCHITECTURE.md) · Manifesto
 
 | Target                  | Goal                               | **Now**                                          | **Progress** | Primary receipt                  |
 | ----------------------- | ---------------------------------- | ------------------------------------------------ | ------------ | -------------------------------- |
-| **100 Faculties**       | 11 strata, coupling > count        | **52 mechanisms** (Eshkol GWT/AD + spin + QGT + libirrep + 20+ coupled in super-mind + eshkol-cognition) | **52 %** | `super-mind.ts`, `eshkol-cognition.ts`, coupling-audit |
+| **100 Faculties**       | 11 strata, coupling > count        | **71 mechanisms** (full Eshkol native + 30+ organs + quantum + ToM + 25+ coupled post this full corpus pass) | **71 %** | `super-mind.ts`, `eshkol-cognition.ts`, NEO-MIND |
 | **25 Archon pantheons** | 1 NEO + 4 mid + 20 light           | **5 live (full wired) + 20 planned in pantheon roadmap** | **20 % live / 100 % planned** | `godform.ts`, `world.ts` |
 | **25 theory-organs**    | N-of-25 consciousness theories     | **15 ✓** (GWT, IIT-phi, FEP/AIF, resonance 12, ToM, metacog, criticality, SR, empowerment, VSA, QRC, holographic, quantum delib, Eshkol native, spin instinct) | **60 %** | NEO-MIND §25, `resonance.ts` |
 | **10 emergence angles** | world-as-mind, culture, mortality… | **10/10 full or advanced** (see III)             | **100 %** | NEO-MIND §10, petri/soup, lore |
