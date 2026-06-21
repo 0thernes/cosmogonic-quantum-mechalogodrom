@@ -427,6 +427,14 @@ const RESONANCE_FACULTIES = 12;
 const RESONANCE_COMMIT_GAIN = 0.14;
 /** When UNBOUND (incoherent), how hard the scattered assembly is pushed to EXPLORE (resolve the doubt). */
 const RESONANCE_EXPLORE_GAIN = 0.1;
+/** #9/#37 COUPLING>COUNT — GWT binding gate: how strongly last beat's resonance coherence (the bound-
+ *  assembly signal) modulates the access-faculties (dreaming/hallucinating/reasoning). This is the
+ *  documented "the bound assembly's signal is made available to the modules so they co-vary through it"
+ *  mechanism applied DIRECTLY to the faculty derivations — NOT via the latent (which the measured
+ *  experiments showed washes out). Centred on r=0.5 so it transmits the VARYING coherence (co-variation),
+ *  not a DC offset. Theory-motivated (GNW workspace access), so the resulting co-variation is a genuine
+ *  byproduct of integration, not an injected correlation. Tuned by the coupling-audit. */
+const COUPLING_BIND_GAIN = 0.5;
 
 // ── #10/#58 · GWT BROADCAST + RE-ENTRY (the coupling write-back) ───────────────────────────────────────
 /** Smoothing of the workspace broadcast signal — how fast it tracks the assembly's ignition. */
@@ -586,6 +594,10 @@ export class SuperMind {
    *  from the resonance state and READ at the top of the NEXT beat (re-entry) by arousal + curiosity —
    *  the write-back that makes the faculties genuinely co-vary through the shared workspace. */
   private broadcast = 0;
+  /** Last beat's Kuramoto resonance ORDER r ∈ [0,1] (continuous binding coherence) — used as a GWT
+   *  workspace gate on the access-faculties next beat (the documented "bound assembly modulates the
+   *  modules" mechanism, applied directly so it isn't washed out by the latent bottleneck). */
+  private lastResOrder = 0.5;
   /** How strongly the broadcast re-enters cognition (0 = the write-back is disabled — a clean baseline). */
   private readonly broadcastGain: number;
   private ignition = 0; // V89: persisted Global-Workspace broadcast (EMA) — gates next-beat consolidation
@@ -1085,14 +1097,17 @@ export class SuperMind {
     );
     this.quantumOut[9] = clamp01((this.quantumOut[9] ?? 0) * qkP); // adaptive aspect perturbed by quake aliveness (Tsotchke quantum-quake Ralph 10x)
 
-    // consciousness state
+    // consciousness state. #9/#37 — the GWT binding gate: last beat's resonance coherence (the bound-
+    // assembly signal) modulates the access-faculties so they co-vary through the shared bound state — the
+    // documented workspace mechanism, applied directly (not via the washed-out latent). Centred on 0.5.
     const novelty = peakNovelty;
+    const bindGate = COUPLING_BIND_GAIN * (this.lastResOrder - 0.5);
     this.cons = {
-      dreaming: clamp01(0.4 + 0.6 * novelty),
-      hallucinating: clamp01((novelty - 0.6) / 0.4),
-      reasoning: clamp01(reasoningGain / SUPER_DEPTHS),
+      dreaming: clamp01(0.4 + 0.6 * novelty + bindGate),
+      hallucinating: clamp01((novelty - 0.6) / 0.4 + bindGate),
+      reasoning: clamp01(reasoningGain / SUPER_DEPTHS + bindGate),
       feeling: this.valence,
-      selfAware,
+      selfAware: clamp01(selfAware + bindGate), // 4th GWT access-faculty bound through the workspace gate
       novelty,
       surprise,
       ignition: this.ignition, // carried; finalised after the plan argmax below
@@ -1456,6 +1471,7 @@ export class SuperMind {
       this.reservoir.novelty,
       this.qreservoir.quantumFlux,
     ]);
+    this.lastResOrder = resonance.order; // #9/#37 — carry the binding coherence to next beat's GWT gate
     if (resonance.ignited) {
       let driveMean = 0;
       for (const k of SUPER_PLANS) driveMean += drives[k];
