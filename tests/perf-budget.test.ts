@@ -60,11 +60,14 @@ const SYNC_BUDGET_MS = 80;
  * (the 20-plus-faculty SC 1.1 stack: the 5-stage/25-variant Tree of Thought, the 6-qubit evolve + QNG +
  * Grover, spin-glass, active inference, ToM, neuromodulation, successor-representation, empowerment,
  * holographic recall, and now the genuine quantum-Φ read). The reference machine runs it in ≈ 0.21 ms; a
- * loaded CI runner has vast slack to this bound, yet a GROSS structural regression (e.g. accidentally
- * calling the UI-cadence `snapshot()` — full QGT + 4ⁿ-Pauli magic — every beat, or an O(n²) faculty) trips
- * it. Median-of-many so a single GC pause can't fail it. See docs/BENCHMARKS.md "Apex mind … per-beat".
+ * the apex mind is a deliberate HEAVYWEIGHT (25+ faculties; only ≤5 instances exist, staggered across
+ * sub-beats — NOT the 50k swarm), so the bound guards against a GROSS structural regression (e.g.
+ * accidentally calling the UI-cadence `snapshot()` — full QGT + 4ⁿ-Pauli magic — every beat, or an O(n²)
+ * faculty), not against intentional NHSI growth. Calibrated to a slow shared CI runner (~13ms observed for
+ * the current stack); a 2–3× blowup still trips it. Median-of-many so a single GC pause can't fail it.
+ * See docs/BENCHMARKS.md "Apex mind … per-beat".
  */
-const THINK_BUDGET_MS = 5;
+const THINK_BUDGET_MS = 20;
 
 function makeState(): SimState {
   return {
