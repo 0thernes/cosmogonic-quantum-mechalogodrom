@@ -448,6 +448,14 @@ export class EnvironmentSystem {
   private readonly monoliths: MonolithRig[] = [];
   private readonly dioramas: DioramaRig[] = [];
   private readonly pipes: PipeRig[] = [];
+  /** BRUTALISM: architecture materials (halos, diorama shells/orbiters, pipes/packets), collected once. */
+  private brutalStructMats: THREE.Material[] | null = null;
+  /** BRUTALISM: each architecture material's captured base colour/emissive — so the concrete lerp
+   *  reads from the original every frame and never compounds toward grey. */
+  private readonly brutalBase = new Map<
+    THREE.Material,
+    { bc: THREE.Color; be: THREE.Color | null }
+  >();
   /** Ground material handle for the V2 reaction-diffusion emissiveMap coupling. */
   private readonly groundMaterial: THREE.MeshStandardMaterial;
   /** Ambient + key (sun) lights — captured so BRUTALISM can desaturate/dim them per frame. */
@@ -731,6 +739,51 @@ export class EnvironmentSystem {
       l.color.copy(LIGHT_BASE[i] ?? BRUTAL_LIGHT).lerp(BRUTAL_LIGHT, g);
       l.intensity *= 1 - 0.7 * g;
     }
+    // ── Architecture: desaturate the monolith halos, diorama shells/orbiters and data-pipes toward
+    //    concrete (lerp from each material's captured base — never compounds), and dim the structure
+    //    crown/glow lights (their intensity is re-animated each frame by update(), so this is safe). ──
+    if (!this.brutalStructMats) this.brutalStructMats = this.collectStructureMats();
+    for (const m of this.brutalStructMats) {
+      const base = this.brutalBase.get(m);
+      if (!base) continue;
+      if (m instanceof THREE.MeshStandardMaterial) {
+        m.color.copy(base.bc).lerp(BRUTAL_LIGHT, g);
+        m.emissive.copy(base.be ?? BRUTAL_GROUND_EMISSIVE).lerp(BRUTAL_GROUND_EMISSIVE, g);
+      } else if (m instanceof THREE.MeshBasicMaterial) {
+        m.color.copy(base.bc).lerp(BRUTAL_LIGHT, g);
+      }
+    }
+    for (const mono of this.monoliths) mono.crown.intensity *= 1 - 0.7 * g;
+    for (const dio of this.dioramas) dio.glow.intensity *= 1 - 0.7 * g;
+  }
+
+  /** BRUTALISM: gather every reachable architecture material (halo rings, diorama shells + orbiters,
+   *  pipe tubes + packets) ONCE and snapshot each base colour/emissive. O(structures); lazy. */
+  private collectStructureMats(): THREE.Material[] {
+    const out: THREE.Material[] = [];
+    const add = (mat: THREE.Material | THREE.Material[] | undefined): void => {
+      if (!mat) return;
+      const list = Array.isArray(mat) ? mat : [mat];
+      for (const m of list) {
+        if (this.brutalBase.has(m)) continue;
+        out.push(m);
+        if (m instanceof THREE.MeshStandardMaterial) {
+          this.brutalBase.set(m, { bc: m.color.clone(), be: m.emissive.clone() });
+        } else if (m instanceof THREE.MeshBasicMaterial) {
+          this.brutalBase.set(m, { bc: m.color.clone(), be: null });
+        }
+      }
+    };
+    for (const mono of this.monoliths) for (const ring of mono.rings) add(ring.mesh.material);
+    for (const dio of this.dioramas) {
+      for (const child of dio.group.children) add((child as Partial<THREE.Mesh>).material);
+      for (const mini of dio.minis) add(mini.mesh.material);
+    }
+    for (const pipe of this.pipes) {
+      add(pipe.tube.material);
+      for (const pkt of pipe.packets) add(pkt.mesh.material);
+    }
+    return out;
   }
 
   /**
