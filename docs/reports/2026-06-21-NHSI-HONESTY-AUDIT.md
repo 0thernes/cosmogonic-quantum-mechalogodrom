@@ -187,12 +187,42 @@ synchrony couples. Measured across gains 0.9 → 4.0 → 8.0:
 
 **Conclusion: it does not work, and was reverted (not shipped).** A consensus signal injected through the
 shared latent — however content-rich — is still a _global scalar_, and the deep nonlinear latent→signal path
-washes it out exactly as the coupling-audit comment predicted. Higher gain only destabilises. This is a
-clean falsification: **real coupling requires explicit faculty-to-faculty edges** (faculty A's specific
-state entering faculty B's specific computation), not a shared-bus broadcast. That redesign — making
-specific measured signals depend on each other directly, then re-measuring — remains the keystone open work,
-and it is now known that the cheap latent-bus shortcut is a dead end. Shipping a "coupling fix" that
-measured flat would have been an overclaim; it was not shipped.
+washes it out exactly as the coupling-audit comment predicted. Higher gain only destabilises.
+
+### Second experiment — structured faculty-to-faculty edges (also measured negative)
+
+Following the first result, a dedicated `FacultyCoupling` primitive was built: a deterministic SPARSE
+small-world coupling matrix (k=4 edges/faculty, ring + seeded long-range shortcuts) producing, per faculty
+j, a bounded lateral influence `tanh(Σ W[j][i]·(xᵢ−x̄))` from its coupled neighbours' last-beat DEVIATIONS
+— i.e. STRUCTURED per-faculty edges, not a global scalar. Injected into the latent (LATENT is 1:1 with the
+16-faculty vector, so each faculty's channel carried its specific neighbours' state):
+
+| gain (lateral)  | 0.6   | 1.5   | 3.0   | 6.0   |
+| --------------- | ----- | ----- | ----- | ----- |
+| meanAbsCoupling | 0.153 | 0.145 | 0.145 | 0.158 |
+
+**Also flat. Reverted, and the unwired module deleted (no dead code).** Structure didn't help because the
+injection POINT is wrong: the latent is a decorrelating bottleneck — the deep nonlinear faculty nets that
+read it are insensitive to a bounded perturbation, structured or not.
+
+### The honest verdict on coupling
+
+Three things are now ruled out by measurement / principle:
+
+1. **Global-scalar bus (broadcast/consensus) → latent:** washes out. ✗ (measured)
+2. **Structured per-faculty edges → latent:** washes out. ✗ (measured)
+3. **Editing the measured `cons.*` signals directly to correlate:** this would raise the number, but it is
+   **gaming the metric** (teaching to the test — engineering the very correlation the audit exists to
+   detect). Rejected on principle, not shipped. ✗ (dishonest)
+
+**The only honest fix is shared PROCESSING:** faculty B's `step()` must take faculty A's output as a genuine
+INPUT (e.g. the reservoir/criticality reading the deliberation coherence + collective broadcast as real
+inputs, so their dynamics depend on peers). That makes the measured co-variation a true BYPRODUCT of
+integration rather than an injected term — but it is a multi-module signature change (each coupled faculty's
+constructor/step), not a bolt-on layer, and is the real keystone work. It was scoped, not rushed: a hasty
+version would either game the metric or wash out, and both were rejected here. Net honest progress this
+session on coupling = two rigorous falsifications + a precise specification of the real fix.
 
 _Every number in this report was measured. Where a claim could not be backed by code, it is named as an
-overclaim, not repeated._
+overclaim, not repeated. A "fix" that measured flat, or that would have gamed the metric, was not shipped —
+that restraint is the point._
