@@ -579,11 +579,11 @@ export class EmergenceAnglesController {
 
   getGodScaleSnapshots(): EmergenceSnapshot[] {
     return [
-      this.archonWarfare.snapshot(),
-      this.realityFracture.snapshot(),
-      this.chaosEntropy.snapshot(),
-      this.cosmicHarvest.snapshot(),
-      this.transcendence.snapshot(),
+      this.archonWarfare.snapshot() as EmergenceSnapshot,
+      this.realityFracture.snapshot() as EmergenceSnapshot,
+      this.chaosEntropy.snapshot() as EmergenceSnapshot,
+      this.cosmicHarvest.snapshot() as EmergenceSnapshot,
+      this.transcendence.snapshot() as EmergenceSnapshot,
     ];
   }
 
