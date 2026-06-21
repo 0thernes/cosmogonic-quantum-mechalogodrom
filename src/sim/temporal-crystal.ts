@@ -32,7 +32,9 @@ const J_ISING = 1.0; // Ising coupling
 const DISORDER_EPS = 0.04; // explicit symmetry breaking (enables DTC)
 const FLOQUET_CYCLES = 2; // steps per "beat" (fast inner loop)
 
-function clamp01(v: number): number { return v < 0 ? 0 : v > 1 ? 1 : v; }
+function clamp01(v: number): number {
+  return v < 0 ? 0 : v > 1 ? 1 : v;
+}
 
 export interface TemporalCrystalSnapshot {
   spins: number[];
@@ -88,8 +90,9 @@ export class TemporalCrystal {
       for (let i = 0; i < N_SPINS; i++) {
         const eps = this.disorder[i] ?? 0;
         // Effective: spin flips with probability cos²((π+ε)/2)
-        const flipProb = Math.cos((driveAngle / 2 + eps)) ** 2;
-        if (flipProb < 0.3) { // flip (≈ π pulse → near-deterministic flip)
+        const flipProb = Math.cos(driveAngle / 2 + eps) ** 2;
+        if (flipProb < 0.3) {
+          // flip (≈ π pulse → near-deterministic flip)
           this.spins[i] = -(this.spins[i] ?? 1);
         }
       }
@@ -98,15 +101,13 @@ export class TemporalCrystal {
       let evenSum = 0;
       let oddSum = 0;
       for (let i = 0; i < N_SPINS; i++) {
-        const sym = libirrepSymmetry(1, i + this.floquetCycle % 7); // Z₂ irrep
-        const corr = (sym % 3 - 1) * 0.01;
+        const sym = libirrepSymmetry(1, i + (this.floquetCycle % 7)); // Z₂ irrep
+        const corr = ((sym % 3) - 1) * 0.01;
         this.spins[i] = Math.sign((this.spins[i] ?? 1) + corr);
         if (i % 2 === 0) evenSum += this.spins[i] ?? 0;
         else oddSum += this.spins[i] ?? 0;
       }
-      this.z2Symmetry = clamp01(
-        1 - Math.abs(evenSum / (N_SPINS / 2) + oddSum / (N_SPINS / 2)) / 2
-      );
+      this.z2Symmetry = clamp01(1 - Math.abs(evenSum / (N_SPINS / 2) + oddSum / (N_SPINS / 2)) / 2);
     }
 
     // Magnetization and period-doubling order parameter
@@ -117,9 +118,8 @@ export class TemporalCrystal {
     // Period doubling: order parameter measures sign-reversal each cycle
     const expectedSign = this.floquetCycle % 2 === 0 ? 1 : -1;
     this.orderParameter += 0.15 * (clamp01((mag * expectedSign + 1) / 2) - this.orderParameter);
-    this.periodDoublingStrength += 0.1 * (
-      clamp01(Math.abs(mag - this.lastMagnetization)) - this.periodDoublingStrength
-    );
+    this.periodDoublingStrength +=
+      0.1 * (clamp01(Math.abs(mag - this.lastMagnetization)) - this.periodDoublingStrength);
     this.lastMagnetization = mag;
 
     // Crystal phase: angle in [0, 2π] from magnetization oscillation
@@ -131,26 +131,25 @@ export class TemporalCrystal {
       this.tB[i] = clamp01((this.spins[i * 2 + 1] ?? 0) * 0.5 + 0.5);
     }
     const zzzzCorr = moonlabTensorContract(this.tA, this.tB, 4);
-    this.periodDoublingStrength = clamp01(
-      this.periodDoublingStrength + Math.abs(zzzzCorr) * 0.02
-    );
+    this.periodDoublingStrength = clamp01(this.periodDoublingStrength + Math.abs(zzzzCorr) * 0.02);
 
     // quakePerturb: QGE injects quantum noise (models decoherence)
     const qk = quakePerturb(this.orderParameter, this.floquetCycle % 41, 0.05);
     this.spins[this.floquetCycle % N_SPINS] = Math.sign(
-      ((this.spins[this.floquetCycle % N_SPINS] ?? 1)) * qk + 0.001
+      (this.spins[this.floquetCycle % N_SPINS] ?? 1) * qk + 0.001,
     );
 
     // Eshkol AD: gradient of order parameter w.r.t. disorder
-    const adGrad = eshkolADGradient(
-      (eps: number) => clamp01(1 - Math.abs(eps) * 2),
-      DISORDER_EPS,
-    );
+    const adGrad = eshkolADGradient((eps: number) => clamp01(1 - Math.abs(eps) * 2), DISORDER_EPS);
     this.orderParameter = clamp01(this.orderParameter + adGrad * 0.002);
   }
 
-  get order(): number { return this.orderParameter; }
-  get phase(): number { return this.crystalPhase; }
+  get order(): number {
+    return this.orderParameter;
+  }
+  get phase(): number {
+    return this.crystalPhase;
+  }
 
   snapshot(): TemporalCrystalSnapshot {
     return {

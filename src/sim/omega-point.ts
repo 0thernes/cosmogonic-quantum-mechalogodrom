@@ -38,7 +38,9 @@ import {
 const OMEGA_THRESHOLD = 0.85;
 const OMEGA_TAU = 0.02;
 
-function clamp01(v: number): number { return v < 0 ? 0 : v > 1 ? 1 : v; }
+function clamp01(v: number): number {
+  return v < 0 ? 0 : v > 1 ? 1 : v;
+}
 
 export interface OmegaPointSnapshot {
   omega: number;
@@ -110,19 +112,19 @@ export class OmegaPoint {
 
     // libirrep SO(7): symmetry measure of convergence trajectory
     const sym = libirrepSymmetry(3, this.beatCount % 11);
-    const symCorr = (sym % 7 - 3) * 0.002;
+    const symCorr = ((sym % 7) - 3) * 0.002;
 
     // Raw Omega: geometric mean of channels
     let geoMean = 1;
-    for (let i = 0; i < 7; i++) geoMean *= (this.channels[i] ?? 0.01);
+    for (let i = 0; i < 7; i++) geoMean *= this.channels[i] ?? 0.01;
     geoMean = Math.pow(Math.max(geoMean, 1e-9), 1 / 7);
 
     const rawOmega = clamp01(
       geoMean * 0.5 +
-      Math.abs(tensorOmega) * 0.2 +
-      Math.abs(mpoOut) * 0.1 +
-      adGrad * 0.1 +
-      Math.abs(symCorr) * 0.1
+        Math.abs(tensorOmega) * 0.2 +
+        Math.abs(mpoOut) * 0.1 +
+        adGrad * 0.1 +
+        Math.abs(symCorr) * 0.1,
     );
 
     // quakePerturb: prevent false omega (Ω never truly reaches 1)
@@ -137,14 +139,20 @@ export class OmegaPoint {
     // GWT broadcast when Ω exceeds threshold
     const gwtOut = gwtBroadcast(
       [this.omega, this.channels[0] ?? 0],
-      [this.omega > OMEGA_THRESHOLD ? 0.9 : 0.3, 0.5]
+      [this.omega > OMEGA_THRESHOLD ? 0.9 : 0.3, 0.5],
     );
     this.omegaBroadcast = clamp01(gwtOut[0] ?? 0);
   }
 
-  get score(): number { return this.omega; }
-  get converging(): boolean { return this.convergenceRate > 0; }
-  get broadcast(): number { return this.omegaBroadcast; }
+  get score(): number {
+    return this.omega;
+  }
+  get converging(): boolean {
+    return this.convergenceRate > 0;
+  }
+  get broadcast(): number {
+    return this.omegaBroadcast;
+  }
 
   snapshot(): OmegaPointSnapshot {
     return {

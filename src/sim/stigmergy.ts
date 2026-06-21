@@ -35,7 +35,9 @@ const EVAP_TAU = 0.05;
 const DIFFUSE_SIGMA = 0.3;
 const N = GRID * GRID;
 
-function clamp01(v: number): number { return v < 0 ? 0 : v > 1 ? 1 : v; }
+function clamp01(v: number): number {
+  return v < 0 ? 0 : v > 1 ? 1 : v;
+}
 function idx(x: number, y: number): number {
   return (((y % GRID) + GRID) % GRID) * GRID + (((x % GRID) + GRID) % GRID);
 }
@@ -93,11 +95,8 @@ export class Stigmergy {
     const gDy = north - south;
     const norm = Math.sqrt(gDx * gDx + gDy * gDy) + 1e-9;
     // Eshkol AD: gradient of trail strength for navigation confidence
-    const adGrad = eshkolADGradient(
-      (g: number) => clamp01(g * g),
-      Math.abs(gDx) + Math.abs(gDy),
-    );
-    return [gDx / norm * (1 + adGrad * 0.1), gDy / norm * (1 + adGrad * 0.1)];
+    const adGrad = eshkolADGradient((g: number) => clamp01(g * g), Math.abs(gDx) + Math.abs(gDy));
+    return [(gDx / norm) * (1 + adGrad * 0.1), (gDy / norm) * (1 + adGrad * 0.1)];
   }
 
   /** Advance pheromone field one beat: diffuse + evaporate + Tsotchke wiring. */
@@ -131,9 +130,10 @@ export class Stigmergy {
     // libirrep D₄ symmetry: enforce 4-fold rotational symmetry on food channel
     for (let i = 0; i < GRID; i++) {
       const sym = libirrepSymmetry(2, (i + this.beatCount) % 7); // D₄ irrep
-      const corr = (sym % 3 - 1) * 0.002;
-      this.grid[idx(i, 0) * CHANNELS + 0] =
-        clamp01((this.grid[idx(i, 0) * CHANNELS + 0] ?? 0) + corr);
+      const corr = ((sym % 3) - 1) * 0.002;
+      this.grid[idx(i, 0) * CHANNELS + 0] = clamp01(
+        (this.grid[idx(i, 0) * CHANNELS + 0] ?? 0) + corr,
+      );
     }
 
     // quakePerturb: stochastic noise (random-walk component)
@@ -141,7 +141,7 @@ export class Stigmergy {
     const randCell = this.beatCount % N;
     for (let ch = 0; ch < CHANNELS; ch++) {
       this.grid[randCell * CHANNELS + ch] = clamp01(
-        (this.grid[randCell * CHANNELS + ch] ?? 0) * qk
+        (this.grid[randCell * CHANNELS + ch] ?? 0) * qk,
       );
     }
 
@@ -166,27 +166,33 @@ export class Stigmergy {
     let alarmTotal = 0;
     let trailTotal = 0;
     for (let i = 0; i < N; i++) {
-      total += (this.grid[i * CHANNELS + 0] ?? 0) +
+      total +=
+        (this.grid[i * CHANNELS + 0] ?? 0) +
         (this.grid[i * CHANNELS + 1] ?? 0) +
         (this.grid[i * CHANNELS + 2] ?? 0) +
         (this.grid[i * CHANNELS + 3] ?? 0);
       alarmTotal += this.grid[i * CHANNELS + 1] ?? 0;
       trailTotal += this.grid[i * CHANNELS + 0] ?? 0;
     }
-    this.trailStrength = clamp01(trailTotal / N + Math.abs(mpoOut) * 0.02 + Math.abs(tensorAgg) * 0.01);
+    this.trailStrength = clamp01(
+      trailTotal / N + Math.abs(mpoOut) * 0.02 + Math.abs(tensorAgg) * 0.01,
+    );
     this.alarmLevel = clamp01(alarmTotal / N);
 
     // GWT alarm broadcast
-    const gwtOut = gwtBroadcast(
-      [this.alarmLevel, this.trailStrength],
-      [0.8, 0.4]
-    );
+    const gwtOut = gwtBroadcast([this.alarmLevel, this.trailStrength], [0.8, 0.4]);
     this.broadcastAlarm = clamp01(gwtOut[0] ?? 0);
   }
 
-  get trail(): number { return this.trailStrength; }
-  get alarm(): number { return this.alarmLevel; }
-  get alarmBroadcast(): number { return this.broadcastAlarm; }
+  get trail(): number {
+    return this.trailStrength;
+  }
+  get alarm(): number {
+    return this.alarmLevel;
+  }
+  get alarmBroadcast(): number {
+    return this.broadcastAlarm;
+  }
 
   snapshot(): StigmergySnapshot {
     const cx = GRID / 2;

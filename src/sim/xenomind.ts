@@ -33,13 +33,17 @@ import type { Rng } from '../math/rng';
 const HDIM = 8; // hyperbolic latent dimension
 const CDIM = 6; // output drive dimension
 
-function clamp01(v: number): number { return v < 0 ? 0 : v > 1 ? 1 : v; }
+function clamp01(v: number): number {
+  return v < 0 ? 0 : v > 1 ? 1 : v;
+}
 
 /** Möbius addition in Poincaré disk (2D slice). */
 function mobiusAdd(ax: number, ay: number, bx: number, by: number): [number, number] {
   const denom = 1 + 2 * (ax * bx + ay * by) + (ax * ax + ay * ay) * (bx * bx + by * by);
-  const numX = (1 + 2 * (ax * bx + ay * by) + bx * bx + by * by) * ax + (1 - ax * ax - ay * ay) * bx;
-  const numY = (1 + 2 * (ax * bx + ay * by) + bx * bx + by * by) * ay + (1 - ax * ax - ay * ay) * by;
+  const numX =
+    (1 + 2 * (ax * bx + ay * by) + bx * bx + by * by) * ax + (1 - ax * ax - ay * ay) * bx;
+  const numY =
+    (1 + 2 * (ax * bx + ay * by) + bx * bx + by * by) * ay + (1 - ax * ax - ay * ay) * by;
   const eps = 1e-9;
   return [numX / (Math.abs(denom) + eps), numY / (Math.abs(denom) + eps)];
 }
@@ -100,8 +104,8 @@ export class Xenomind {
     let symSum = 0;
     for (let i = 0; i < HDIM; i++) {
       const sym = libirrepSymmetry(i % 5, (this.beatCount + i) % 7);
-      this.latent[i] = clamp01((this.latent[i] ?? 0) + (sym % 5 - 2) * 0.008);
-      symSum += Math.abs(sym % 5 - 2);
+      this.latent[i] = clamp01((this.latent[i] ?? 0) + ((sym % 5) - 2) * 0.008);
+      symSum += Math.abs((sym % 5) - 2);
     }
     this.symmetryOrder = clamp01(symSum / (HDIM * 2));
 
@@ -115,9 +119,7 @@ export class Xenomind {
 
     // 4. quakePerturb: QGE aliveness in hyperbolic geometry
     const qk = quakePerturb(hNorm, this.beatCount % 23, 0.06);
-    this.latent[this.beatCount % HDIM] = clamp01(
-      (this.latent[this.beatCount % HDIM] ?? 0) * qk
-    );
+    this.latent[this.beatCount % HDIM] = clamp01((this.latent[this.beatCount % HDIM] ?? 0) * qk);
 
     // 5. Moonlab tensor: hyperbolic gyrovector product
     for (let i = 0; i < 4; i++) {
@@ -132,15 +134,13 @@ export class Xenomind {
       for (let h = 0; h < HDIM; h++) {
         acc += (this.latent[h] ?? 0) * (this.weights[d * HDIM + h] ?? 0);
       }
-      this.intent[d] = clamp01(Math.tanh(acc) * 0.5 + 0.5 +
-        Math.abs(tensorOut) * 0.01 + adGrad * 0.005);
+      this.intent[d] = clamp01(
+        Math.tanh(acc) * 0.5 + 0.5 + Math.abs(tensorOut) * 0.01 + adGrad * 0.005,
+      );
     }
 
     // 7. GWT alien broadcast
-    const gwtOut = gwtBroadcast(
-      [hNorm, this.symmetryOrder, Math.abs(tensorOut)],
-      [0.5, 0.4, 0.3]
-    );
+    const gwtOut = gwtBroadcast([hNorm, this.symmetryOrder, Math.abs(tensorOut)], [0.5, 0.4, 0.3]);
     this.alienBroadcast = clamp01(gwtOut[0] ?? 0);
 
     // Eshkol dual: subtle modulation of intent[0] via dual arithmetic
@@ -161,7 +161,9 @@ export class Xenomind {
     return eucNorm < 0.9999 ? 2 * Math.atanh(eucNorm) : 10;
   }
 
-  get broadcast(): number { return this.alienBroadcast; }
+  get broadcast(): number {
+    return this.alienBroadcast;
+  }
 
   snapshot(): XenomindSnapshot {
     return {

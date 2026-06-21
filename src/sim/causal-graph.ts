@@ -27,11 +27,7 @@
  * MIT © Tsotchke-wired; see THIRD-PARTY-NOTICES.md
  */
 
-import {
-  eshkolADGradient,
-  moonlabTensorContract,
-  eshkolDual,
-} from './tsotchke-facade';
+import { eshkolADGradient, moonlabTensorContract, eshkolDual } from './tsotchke-facade';
 
 export const CAUSAL_VARS = [
   'ignition',
@@ -71,18 +67,20 @@ export interface CausalSnapshot {
 }
 
 const EDGES: CausalEdge[] = [
-  { from: idx('surprise'),   to: idx('ignition'),   weight: 0.55 },
-  { from: idx('novelty'),    to: idx('ignition'),   weight: 0.45 },
-  { from: idx('novelty'),    to: idx('phi'),        weight: 0.35 },
-  { from: idx('ignition'),   to: idx('workspace'),  weight: 0.60 },
-  { from: idx('phi'),        to: idx('workspace'),  weight: 0.40 },
-  { from: idx('workspace'),  to: idx('selfAware'),  weight: 0.50 },
-  { from: idx('ignition'),   to: idx('reasoning'),  weight: 0.65 },
-  { from: idx('surprise'),   to: idx('qualiaTone'), weight: 0.30 },
-  { from: idx('phi'),        to: idx('qualiaTone'), weight: 0.45 },
+  { from: idx('surprise'), to: idx('ignition'), weight: 0.55 },
+  { from: idx('novelty'), to: idx('ignition'), weight: 0.45 },
+  { from: idx('novelty'), to: idx('phi'), weight: 0.35 },
+  { from: idx('ignition'), to: idx('workspace'), weight: 0.6 },
+  { from: idx('phi'), to: idx('workspace'), weight: 0.4 },
+  { from: idx('workspace'), to: idx('selfAware'), weight: 0.5 },
+  { from: idx('ignition'), to: idx('reasoning'), weight: 0.65 },
+  { from: idx('surprise'), to: idx('qualiaTone'), weight: 0.3 },
+  { from: idx('phi'), to: idx('qualiaTone'), weight: 0.45 },
 ];
 
-function clamp01(v: number): number { return v < 0 ? 0 : v > 1 ? 1 : v; }
+function clamp01(v: number): number {
+  return v < 0 ? 0 : v > 1 ? 1 : v;
+}
 
 export class CausalGraph {
   private readonly values = new Float32Array(N);
@@ -94,14 +92,21 @@ export class CausalGraph {
   private readonly tB = new Float32Array(4);
 
   constructor() {
-    this.edges = EDGES.map(e => ({ ...e }));
+    this.edges = EDGES.map((e) => ({ ...e }));
     this.values.fill(0.5);
   }
 
   /** Ingest current consciousness scalars from SuperMind. */
-  observe(ignition: number, phi: number, workspace: number,
-          surprise: number, novelty: number, selfAware: number,
-          reasoning: number, qualiaTone: number): void {
+  observe(
+    ignition: number,
+    phi: number,
+    workspace: number,
+    surprise: number,
+    novelty: number,
+    selfAware: number,
+    reasoning: number,
+    qualiaTone: number,
+  ): void {
     this.values[0] = ignition;
     this.values[1] = phi;
     this.values[2] = workspace;
@@ -137,10 +142,10 @@ export class CausalGraph {
 
     // Eshkol AD: gradient of effect w.r.t. the direct x->y edge weight (if exists)
     let grad = 0;
-    const directEdge = this.edges.find(e => e.from === xIdx && e.to === yIdx);
+    const directEdge = this.edges.find((e) => e.from === xIdx && e.to === yIdx);
     if (directEdge) {
       grad = eshkolADGradient(
-        (w: number) => clamp01((xVal * w) * 0.6 + (this.values[yIdx] ?? 0) * 0.4),
+        (w: number) => clamp01(xVal * w * 0.6 + (this.values[yIdx] ?? 0) * 0.4),
         directEdge.weight,
       );
     } else {
@@ -172,15 +177,16 @@ export class CausalGraph {
     this.tB[2] = mutated[6] ?? 0;
     this.tB[3] = mutated[7] ?? 0;
     const jointEffect = moonlabTensorContract(this.tA, this.tB, 4);
-    this.lastEffects[`do(${x}=${xVal.toFixed(2)})->${y}`] =
-      clamp01(effect + Math.abs(jointEffect) * 0.02);
+    this.lastEffects[`do(${x}=${xVal.toFixed(2)})->${y}`] = clamp01(
+      effect + Math.abs(jointEffect) * 0.02,
+    );
 
     return { effect, grad, counterfactual };
   }
 
   /** Adaptive structural weight update via observed outcomes (online SCM learning). */
   updateWeight(from: CausalVar, to: CausalVar, observedEffect: number): void {
-    const e = this.edges.find(e => e.from === idx(from) && e.to === idx(to));
+    const e = this.edges.find((e) => e.from === idx(from) && e.to === idx(to));
     if (!e) return;
     const predicted = clamp01((this.values[idx(from)] ?? 0) * e.weight);
     const delta = (observedEffect - predicted) * 0.05;

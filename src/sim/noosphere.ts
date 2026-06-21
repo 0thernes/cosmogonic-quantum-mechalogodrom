@@ -38,7 +38,9 @@ const NOOSPHERE_TAU = 0.08;
 const COHERENCE_THRESHOLD = 0.72;
 const KURAMOTO_K = 1.2;
 
-function clamp01(v: number): number { return v < 0 ? 0 : v > 1 ? 1 : v; }
+function clamp01(v: number): number {
+  return v < 0 ? 0 : v > 1 ? 1 : v;
+}
 
 export interface NoosphereSnapshot {
   collectiveCoherence: number;
@@ -53,7 +55,7 @@ export interface NoosphereSnapshot {
 export class Noosphere {
   private readonly archonStates = Array.from(
     { length: N_ARCHONS },
-    () => new Float32Array(FIELD_DIM)
+    () => new Float32Array(FIELD_DIM),
   );
   private readonly archonPhases = new Float32Array(N_ARCHONS);
   private readonly field = new Float32Array(FIELD_DIM);
@@ -104,9 +106,9 @@ export class Noosphere {
 
     // Update Kuramoto phase: driven by ignition and novelty
     const naturalFreq = 0.1 + archonIdx * 0.02; // Hz (natural frequency spread)
-    this.archonPhases[archonIdx] = (
-      (this.archonPhases[archonIdx] ?? 0) + naturalFreq * 0.1 + ignition * 0.3 + novelty * 0.2
-    ) % (2 * Math.PI);
+    this.archonPhases[archonIdx] =
+      ((this.archonPhases[archonIdx] ?? 0) + naturalFreq * 0.1 + ignition * 0.3 + novelty * 0.2) %
+      (2 * Math.PI);
   }
 
   /** Step the noospheric field one beat: aggregate all Archons. */
@@ -124,8 +126,9 @@ export class Noosphere {
           coupling += Math.sin((this.archonPhases[j] ?? 0) - (this.archonPhases[i] ?? 0));
         }
       }
-      newPhases[i] = ((this.archonPhases[i] ?? 0) +
-        (this.couplingK / N_ARCHONS) * coupling * 0.05) % (2 * Math.PI);
+      newPhases[i] =
+        ((this.archonPhases[i] ?? 0) + (this.couplingK / N_ARCHONS) * coupling * 0.05) %
+        (2 * Math.PI);
       sinSum += Math.sin(newPhases[i] ?? 0);
       cosSum += Math.cos(newPhases[i] ?? 0);
     }
@@ -137,8 +140,8 @@ export class Noosphere {
     for (let a = 0; a < N_ARCHONS; a++) {
       const phaseWeight = clamp01(0.5 + 0.5 * Math.cos(this.archonPhases[a] ?? 0));
       for (let d = 0; d < FIELD_DIM; d++) {
-        this.field[d] = (this.field[d] ?? 0) +
-          (this.archonStates[a]?.[d] ?? 0) * phaseWeight / N_ARCHONS;
+        this.field[d] =
+          (this.field[d] ?? 0) + ((this.archonStates[a]?.[d] ?? 0) * phaseWeight) / N_ARCHONS;
       }
     }
 
@@ -149,7 +152,7 @@ export class Noosphere {
     // Moonlab tensor qualia: manifold aggregation
     const qualiaField = moonlabTensorQualia(
       [this.field[0] ?? 0, this.field[1] ?? 0, this.field[2] ?? 0],
-      FIELD_DIM
+      FIELD_DIM,
     );
     this.field[FIELD_DIM - 1] = clamp01((this.field[FIELD_DIM - 1] ?? 0) + qualiaField * 0.02);
 
@@ -174,7 +177,7 @@ export class Noosphere {
 
     // libirrep SO(5): 5-archon collective symmetry
     const sym = libirrepSymmetry(N_ARCHONS - 1, this.beatCount % 13);
-    const symCorr = (sym % (N_ARCHONS + 1) - (N_ARCHONS / 2)) * 0.003;
+    const symCorr = ((sym % (N_ARCHONS + 1)) - N_ARCHONS / 2) * 0.003;
     for (let d = 0; d < FIELD_DIM; d++) {
       this.field[d] = clamp01((this.field[d] ?? 0) + symCorr * (d % 2 === 0 ? 1 : -1));
     }
@@ -188,13 +191,10 @@ export class Noosphere {
     const fieldMean = this.field.reduce((s, v) => s + v, 0) / FIELD_DIM;
     const fieldVar = this.field.reduce((s, v) => s + (v - fieldMean) ** 2, 0) / FIELD_DIM;
     const fieldCoherence = clamp01(1 - Math.sqrt(fieldVar));
-    this.collectiveCoherence += NOOSPHERE_TAU * (
-      clamp01(
-        0.5 * this.kuramotoOrder +
-        0.3 * fieldCoherence +
-        0.2 * Math.abs(tensorCoh)
-      ) - this.collectiveCoherence
-    );
+    this.collectiveCoherence +=
+      NOOSPHERE_TAU *
+      (clamp01(0.5 * this.kuramotoOrder + 0.3 * fieldCoherence + 0.2 * Math.abs(tensorCoh)) -
+        this.collectiveCoherence);
 
     // GWT: collective insight when coherence spikes
     const prevInsight = this.collectiveInsight;
@@ -203,14 +203,20 @@ export class Noosphere {
 
     const gwtOut = gwtBroadcast(
       [this.collectiveCoherence, this.kuramotoOrder],
-      [this.collectiveInsight ? 0.9 : 0.4, 0.6]
+      [this.collectiveInsight ? 0.9 : 0.4, 0.6],
     );
     this.broadcastStrength = clamp01(gwtOut[0] ?? 0);
   }
 
-  get coherence(): number { return this.collectiveCoherence; }
-  get insight(): boolean { return this.collectiveInsight; }
-  get broadcast(): number { return this.broadcastStrength; }
+  get coherence(): number {
+    return this.collectiveCoherence;
+  }
+  get insight(): boolean {
+    return this.collectiveInsight;
+  }
+  get broadcast(): number {
+    return this.broadcastStrength;
+  }
 
   snapshot(): NoosphereSnapshot {
     return {

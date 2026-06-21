@@ -41,7 +41,9 @@ const EOS_TARGET = -0.95; // equation-of-state target (near Λ)
 function clamp(v: number, lo: number, hi: number): number {
   return v < lo ? lo : v > hi ? hi : v;
 }
-function clamp01(v: number): number { return clamp(v, 0, 1); }
+function clamp01(v: number): number {
+  return clamp(v, 0, 1);
+}
 
 export interface DarkEnergySnapshot {
   lambda: number; // cosmological constant [0,1]
@@ -79,7 +81,7 @@ export class DarkEnergy {
 
     // Eshkol AD: ∂w/∂φ (equation of state gradient)
     const adGrad = eshkolADGradient(
-      (phi: number) => clamp(-1 - LAMBDA_Q * phi ** 4 / (0.5 + LAMBDA_Q * phi ** 4), -1, -1 / 3),
+      (phi: number) => clamp(-1 - (LAMBDA_Q * phi ** 4) / (0.5 + LAMBDA_Q * phi ** 4), -1, -1 / 3),
       this.phi,
     );
 
@@ -111,7 +113,7 @@ export class DarkEnergy {
 
     // libirrep SO(3) spatial sector: Lorentz sym → SO(3)
     const sym = libirrepSymmetry(1, this.beatCount % 11);
-    this.expansionRate = clamp01(this.expansionRate + (sym % 3 - 1) * 0.002);
+    this.expansionRate = clamp01(this.expansionRate + ((sym % 3) - 1) * 0.002);
 
     // MPO: compress Λ field across bond-dim (time-series compression)
     const scratchField = new Float32Array([this.lambda, this.phi, this.w + 1, this.hubble]);
@@ -123,9 +125,15 @@ export class DarkEnergy {
     this.phi *= qk;
   }
 
-  get expansion(): number { return this.expansionRate; }
-  get cosmologicalConstant(): number { return this.lambda; }
-  get equationOfState(): number { return this.w; }
+  get expansion(): number {
+    return this.expansionRate;
+  }
+  get cosmologicalConstant(): number {
+    return this.lambda;
+  }
+  get equationOfState(): number {
+    return this.w;
+  }
 
   snapshot(): DarkEnergySnapshot {
     return {

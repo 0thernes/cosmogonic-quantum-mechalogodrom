@@ -32,7 +32,9 @@ const FIELD_DIM = 16;
 const FIELD_TAU = 0.03; // slow morphic EMA
 const RESONANCE_GAIN = 0.04;
 
-function clamp01(v: number): number { return v < 0 ? 0 : v > 1 ? 1 : v; }
+function clamp01(v: number): number {
+  return v < 0 ? 0 : v > 1 ? 1 : v;
+}
 
 export interface MorphicSnapshot {
   fieldNorm: number;
@@ -66,7 +68,8 @@ export class MorphicField {
     const gain = clamp01(successScore) * RESONANCE_GAIN;
     for (let i = 0; i < FIELD_DIM; i++) {
       const l = (latent[i % latent.length] ?? 0) as number;
-      this.field[i] = (this.field[i] ?? 0) * (1 - FIELD_TAU) +
+      this.field[i] =
+        (this.field[i] ?? 0) * (1 - FIELD_TAU) +
         l * gain * FIELD_TAU +
         (this.field[i] ?? 0) * (1 - gain);
     }
@@ -77,7 +80,7 @@ export class MorphicField {
     // libirrep SO(3) symmetry: enforce rotational equivariance on pairs
     for (let i = 0; i < FIELD_DIM - 1; i += 2) {
       const sym = libirrepSymmetry(2, i + 1);
-      const corr = (sym % 7 - 3) * 0.002;
+      const corr = ((sym % 7) - 3) * 0.002;
       this.field[i] = clamp01((this.field[i] ?? 0) + corr);
       this.field[i + 1] = clamp01((this.field[i + 1] ?? 0) - corr);
     }
@@ -85,7 +88,7 @@ export class MorphicField {
     // quakePerturb: field never goes dead — quantum aliveness injection
     const qk = quakePerturb(0.5 + (successScore - 0.5) * 0.3, this.imprints % 31, 0.05);
     this.field[this.imprints % FIELD_DIM] = clamp01(
-      (this.field[this.imprints % FIELD_DIM] ?? 0) * qk
+      (this.field[this.imprints % FIELD_DIM] ?? 0) * qk,
     );
   }
 
@@ -102,21 +105,14 @@ export class MorphicField {
     const sim = moonlabTensorContract(this.tA, this.tB, 4);
 
     // GWT broadcast: amplify resonance when field is coherent
-    const gwtOut = gwtBroadcast(
-      [Math.abs(sim), this.fieldNorm()],
-      [0.6, 0.4]
-    );
-    this.resonanceStrength = clamp01((gwtOut[0] ?? 0));
+    const gwtOut = gwtBroadcast([Math.abs(sim), this.fieldNorm()], [0.6, 0.4]);
+    this.resonanceStrength = clamp01(gwtOut[0] ?? 0);
 
     // Eshkol AD: gradient of resonance w.r.t. similarity (for adaptation)
-    const grad = eshkolADGradient(
-      (s: number) => clamp01(s * s),
-      Math.abs(sim)
-    );
+    const grad = eshkolADGradient((s: number) => clamp01(s * s), Math.abs(sim));
 
     for (let i = 0; i < FIELD_DIM; i++) {
-      this.scratch[i] = (this.field[i] ?? 0) * this.resonanceStrength *
-        (1 + grad * 0.05);
+      this.scratch[i] = (this.field[i] ?? 0) * this.resonanceStrength * (1 + grad * 0.05);
     }
     return { bias: this.scratch, strength: this.resonanceStrength };
   }

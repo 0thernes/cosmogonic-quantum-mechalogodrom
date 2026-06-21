@@ -25,9 +25,15 @@ const DT = 0.002;
 function clamp(v: number, lo: number, hi: number): number {
   return v < lo ? lo : v > hi ? hi : v;
 }
-function clamp01(v: number): number { return clamp(v, 0, 1); }
+function clamp01(v: number): number {
+  return clamp(v, 0, 1);
+}
 
-interface Vec3 { x: number; y: number; z: number; }
+interface Vec3 {
+  x: number;
+  y: number;
+  z: number;
+}
 
 function lorenzDeriv(s: Vec3, sigma: number, rho: number, beta: number): Vec3 {
   return {
@@ -55,19 +61,23 @@ function rabinovichDeriv(s: Vec3, gamma: number, delta: number): Vec3 {
   };
 }
 
-function rk4Step(
-  s: Vec3,
-  dt: number,
-  deriv: (v: Vec3) => Vec3,
-): Vec3 {
+function rk4Step(s: Vec3, dt: number, deriv: (v: Vec3) => Vec3): Vec3 {
   const k1 = deriv(s);
-  const k2 = deriv({ x: s.x + k1.x * dt / 2, y: s.y + k1.y * dt / 2, z: s.z + k1.z * dt / 2 });
-  const k3 = deriv({ x: s.x + k2.x * dt / 2, y: s.y + k2.y * dt / 2, z: s.z + k2.z * dt / 2 });
+  const k2 = deriv({
+    x: s.x + (k1.x * dt) / 2,
+    y: s.y + (k1.y * dt) / 2,
+    z: s.z + (k1.z * dt) / 2,
+  });
+  const k3 = deriv({
+    x: s.x + (k2.x * dt) / 2,
+    y: s.y + (k2.y * dt) / 2,
+    z: s.z + (k2.z * dt) / 2,
+  });
   const k4 = deriv({ x: s.x + k3.x * dt, y: s.y + k3.y * dt, z: s.z + k3.z * dt });
   return {
-    x: s.x + (k1.x + 2 * k2.x + 2 * k3.x + k4.x) * dt / 6,
-    y: s.y + (k1.y + 2 * k2.y + 2 * k3.y + k4.y) * dt / 6,
-    z: s.z + (k1.z + 2 * k2.z + 2 * k3.z + k4.z) * dt / 6,
+    x: s.x + ((k1.x + 2 * k2.x + 2 * k3.x + k4.x) * dt) / 6,
+    y: s.y + ((k1.y + 2 * k2.y + 2 * k3.y + k4.y) * dt) / 6,
+    z: s.z + ((k1.z + 2 * k2.z + 2 * k3.z + k4.z) * dt) / 6,
   };
 }
 
@@ -100,15 +110,15 @@ export class StrangeAttractor {
     this.beatCount++;
     // RK4 step all three
     const lSig = this.sigma;
-    this.lorenz = rk4Step(this.lorenz, DT, s => lorenzDeriv(s, lSig, this.rho, this.beta));
-    this.rossler = rk4Step(this.rossler, DT, s => rosslerDeriv(s, 0.2, 0.2, 5.7));
-    this.rabinovich = rk4Step(this.rabinovich, DT, s => rabinovichDeriv(s, 0.87, 0.1));
+    this.lorenz = rk4Step(this.lorenz, DT, (s) => lorenzDeriv(s, lSig, this.rho, this.beta));
+    this.rossler = rk4Step(this.rossler, DT, (s) => rosslerDeriv(s, 0.2, 0.2, 5.7));
+    this.rabinovich = rk4Step(this.rabinovich, DT, (s) => rabinovichDeriv(s, 0.87, 0.1));
 
     // Lyapunov proxy: running variance of |dX/dt| for Lorenz
     const lorenzRate = Math.sqrt(
       lorenzDeriv(this.lorenz, lSig, this.rho, this.beta).x ** 2 +
-      lorenzDeriv(this.lorenz, lSig, this.rho, this.beta).y ** 2 +
-      lorenzDeriv(this.lorenz, lSig, this.rho, this.beta).z ** 2
+        lorenzDeriv(this.lorenz, lSig, this.rho, this.beta).y ** 2 +
+        lorenzDeriv(this.lorenz, lSig, this.rho, this.beta).z ** 2,
     );
     this.lyapunovProxy += 0.05 * (clamp01(lorenzRate / 30) - this.lyapunovProxy);
 
@@ -130,15 +140,15 @@ export class StrangeAttractor {
 
     // Eshkol AD: self-tune sigma to keep chaos index near criticality (target 0.5)
     const chaosTarget = 0.5 + externalDrive * 0.2;
-    const grad = eshkolADGradient(
-      (sig: number) => clamp01(Math.abs(sig - 10) / 10),
-      this.sigma,
-    );
+    const grad = eshkolADGradient((sig: number) => clamp01(Math.abs(sig - 10) / 10), this.sigma);
     this.sigma = clamp(this.sigma + (chaosTarget - this.lyapunovProxy) * 0.1 - grad * 0.05, 6, 16);
 
     // Final chaos index
-    this.chaosIndex = clamp01(0.4 * this.lyapunovProxy + 0.4 * this.phaseCoherence +
-      0.2 * clamp01(Math.abs(this.lorenz.x) / 20));
+    this.chaosIndex = clamp01(
+      0.4 * this.lyapunovProxy +
+        0.4 * this.phaseCoherence +
+        0.2 * clamp01(Math.abs(this.lorenz.x) / 20),
+    );
   }
 
   /** Cognitive bias vector [0..1]^8 from attractor coordinates. */
@@ -155,7 +165,9 @@ export class StrangeAttractor {
     ];
   }
 
-  get chaos(): number { return this.chaosIndex; }
+  get chaos(): number {
+    return this.chaosIndex;
+  }
 
   snapshot(): AttractorSnapshot {
     return {
