@@ -20,7 +20,7 @@ substantive change; they are personas of one discipline and they outrank vibes:
 - Full gate before any commit: `bun run check`
   (prettier → tsc strict → oxlint → bun test → verify:receipts → build).
 - **NHSI progress dashboard:** [docs/NHSI-PROGRESS-DASHBOARD.md](docs/NHSI-PROGRESS-DASHBOARD.md)
-  — canonical targets (100 faculties · 25 Archon pantheons · 25 theory of mind organs · 10 emergence angles · 14/14 Butlin path). All Tsotchke repos/projects (GH + local folder) wired (deep for Eshkol/Moonlab/libirrep core etc; studied for rest). Real, complete, world-class quantum math substrate. NHSI manifesto: beyond human, all species + mythic/scifi potentials, god simulation. 0thernes Corp. Full repo/XML/MD/TXT scan complete.
+  — measured progress (144 faculties · 25 Archon pantheons · 25 theory-of-mind organs · 15 emergence angles · 14/14 Butlin structural path). Original NHSI blueprint: 100/10; v0.17.1 BRUTALISM expansion adds god-layer faculties + 5 god-scale emergence substrates. All Tsotchke repos/projects (GH + local folder) wired. Real MIT quantum math — never call Tsotchke fake. NHSI manifesto: 0thernes Corp.
 - **Tsotchke binding:** real MIT corpus; depth in [docs/TSOTCHKE-INTEGRATION-MAP.md](docs/TSOTCHKE-INTEGRATION-MAP.md);
   never call upstream fake ([THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md) §On Tsotchke).
 - Dev server: `bun dev` — MUST run with cwd inside this repo (Bun HTML-import

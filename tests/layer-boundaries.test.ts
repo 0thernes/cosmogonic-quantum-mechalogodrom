@@ -12,6 +12,7 @@
  * and let the same-seed golden silently stop covering a leaf. Verified clean today; pinned so it stays.
  */
 import { describe, expect, test } from 'bun:test';
+import { readFileSync } from 'node:fs';
 
 /** Strip comments so a commented-out import is not a false positive (keep `://`). */
 function stripComments(src: string): string {
@@ -30,12 +31,7 @@ function importsLayer(spec: string, layer: string): boolean {
   return new RegExp(`(^|/)${layer}(/|$)`).test(spec);
 }
 
-import { readFileSync } from 'node:fs';
-
-function scan(
-  dir: string,
-  forbidden: readonly string[],
-): { offenders: string[]; scanned: number } {
+function scan(dir: string, forbidden: readonly string[]): { offenders: string[]; scanned: number } {
   const offenders: string[] = [];
   let scanned = 0;
   const glob = new Bun.Glob(dir);
