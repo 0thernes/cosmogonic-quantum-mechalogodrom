@@ -1,5 +1,5 @@
 /**
- * EMERGENCE ANGLES — 10 mechanisms for NHSI emergence (angles 8–10 here; 1–7 live elsewhere).
+ * EMERGENCE ANGLES — 15 mechanisms for NHSI emergence (angles 8–15 here; 1–7 live elsewhere).
  *
  * Deterministic, bounded [0,1], allocation-free in steady state. Seeded hashes replace Math.random.
  * NOT sentient — functional emergence substrates.
