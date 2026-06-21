@@ -118,6 +118,7 @@ import { TheoryOfMind } from './theory-of-mind';
 import { SuccessorRepresentation, type SuccessorSnapshot } from './successor-representation';
 import { Neuromodulation } from './neuromodulation';
 import { EmpowermentDrive, type EmpowermentSnapshot } from './empowerment';
+import { EligibilityLearner } from './online-learning';
 import { QuantumReservoir, type QuantumReservoirSnapshot } from './quantum-reservoir';
 import { HolographicMemory, type HolographicSnapshot } from './holographic-memory';
 import { QuantumDeliberation, type DeliberationSnapshot } from './quantum-deliberation';
@@ -396,6 +397,9 @@ const RESONANCE_EXPLORE_GAIN = 0.1;
 // ── #10/#58 · GWT BROADCAST + RE-ENTRY (the coupling write-back) ───────────────────────────────────────
 /** Smoothing of the workspace broadcast signal — how fast it tracks the assembly's ignition. */
 const BROADCAST_TAU = 0.25;
+/** V96 ONLINE LEARNING: bounded per-plan reward-bias adaptation — decay toward 0 + hard |bias| cap. */
+const PLAN_LEARN_DECAY = 0.002;
+const PLAN_LEARN_CLAMP = 0.5;
 /** Default strength of the broadcast's re-entry into the workspace latent (0 disables the write-back).
  *  Kept MODEST on purpose: larger gains saturate the nonlinear faculty subnets (washing out the signal),
  *  and cranking it to force the coupling metric up would be Goodhart-gaming the audit. It is a real but
@@ -525,6 +529,13 @@ export class SuperMind {
   private readonly srReward = new Float32Array(SUPER_PLANS.length); // V1.1: per-plan drive → SR look-ahead
   private readonly srValue: number[] = Array.from({ length: SUPER_PLANS.length }, () => 0); // SR plan values
   private readonly qObs = new Float64Array(3 * QMIND_QUBITS); // V1.2: register Bloch observables → QRC
+  // V96 · ONLINE LEARNING — the Stratum-X adaptation channel: a seeded, bounded, reward-reinforced
+  // per-plan bias. Default-OFF (planBias all-zero ⇒ byte-identical to the frozen-weight mind). O(plans).
+  private learnEnabled = false;
+  private learnRate = 0.02;
+  private readonly planBias: number[] = Array.from({ length: SUPER_PLANS.length }, () => 0);
+  private readonly planOneHot: number[] = Array.from({ length: SUPER_PLANS.length }, () => 0);
+  private readonly planLearner = new EligibilityLearner(SUPER_PLANS.length, 0.85);
 
   private readonly memory = new MemoryRing(48);
   private valence = 0;
@@ -643,6 +654,26 @@ export class SuperMind {
       const x = Math.sin((this.noiseSeed++ + i * 7.13) * 12.9898) * 43758.5453;
       this.noise[i] = (x - Math.floor(x)) * 2 - 1;
     }
+  }
+
+  /**
+   * V96 · ONLINE LEARNING: enable/disable the per-plan reward-bias adaptation channel. OFF by default ⇒
+   * the mind keeps its frozen-weight behaviour (byte-identical). `rate` (optional, clamped ≤ 0.2) sets the
+   * bounded step size. Disabling resets the learned bias + eligibility trace to zero. Determinism-safe
+   * (no rng — replays bit-for-bit from one seed). O(1).
+   */
+  setLearning(enabled: boolean, rate?: number): void {
+    this.learnEnabled = enabled;
+    if (rate !== undefined && rate >= 0) this.learnRate = rate > 0.2 ? 0.2 : rate;
+    if (!enabled) {
+      this.planBias.fill(0);
+      this.planLearner.reset();
+    }
+  }
+
+  /** V96: snapshot of the learned per-plan bias vector (for tests / inspection). O(plans). */
+  learnedPlanBias(): number[] {
+    return [...this.planBias];
   }
 
   /** One full cognitive beat. Pure; returns the apex intent (drives + consciousness + quantum). */
@@ -1275,6 +1306,14 @@ export class SuperMind {
     // when unbound. This is the write half of the read+write loop the coupling audit exists to enforce.
     this.broadcast += BROADCAST_TAU * ((resonance.ignited ? resonance.order : 0) - this.broadcast);
 
+    // ── V96 · ONLINE LEARNING ── add the reward-reinforced per-plan bias before the argmax. Default-off
+    //    ⇒ planBias is all-zero ⇒ this is `+= 0` ⇒ byte-identical to the frozen mind. When enabled, plans
+    //    that recently led to reward are nudged up (the eligibility trace below gives delayed credit).
+    for (let i = 0; i < SUPER_PLANS.length; i++) {
+      const plan = SUPER_PLANS[i];
+      if (plan) drives[plan] += this.planBias[i] ?? 0;
+    }
+
     let best: SuperPlan = 'REST';
     let bestScore = -Infinity;
     let runnerUp = -Infinity;
@@ -1289,6 +1328,18 @@ export class SuperMind {
       }
     }
     this.plan = best;
+    // V96 · ONLINE LEARNING: reinforce the chosen plan by this beat's (centred) reward via the eligibility
+    // trace — temporal credit, so reward also reaches plans that recently set it up. Only when enabled;
+    // otherwise planBias stays zero (no behavioural drift). Deterministic (no rng), bounded, O(plans).
+    if (this.learnEnabled) {
+      const bi = SUPER_PLANS.indexOf(best);
+      for (let i = 0; i < SUPER_PLANS.length; i++) this.planOneHot[i] = i === bi ? 1 : 0;
+      this.planLearner.step(this.planBias, this.planOneHot, reward - 0.5, {
+        rate: this.learnRate,
+        decay: PLAN_LEARN_DECAY,
+        clamp: PLAN_LEARN_CLAMP,
+      });
+    }
     // V1.1: fold the realised plan transition into the predictive map so next beat's look-ahead is informed.
     this.successor.observe(SUPER_PLANS.indexOf(best));
     // V95: credit LAST beat's action → THIS beat's latent cell and refresh the empowerment estimate the next
