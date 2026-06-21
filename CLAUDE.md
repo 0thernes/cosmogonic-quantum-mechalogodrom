@@ -18,7 +18,11 @@ substantive change; they are personas of one discipline and they outrank vibes:
 - Aesthetic constitution: [docs/PHILOSOPHY.md](docs/PHILOSOPHY.md) — real math
   under every effect; every system reads AND writes another system.
 - Full gate before any commit: `bun run check`
-  (prettier → tsc strict → oxlint → bun test → build).
+  (prettier → tsc strict → oxlint → bun test → verify:receipts → build).
+- **NHSI progress dashboard:** [docs/NHSI-PROGRESS-DASHBOARD.md](docs/NHSI-PROGRESS-DASHBOARD.md)
+  — canonical targets (100 faculties · 25 Archons · 14/14 path).
+- **Tsotchke binding:** real MIT corpus; depth in [docs/TSOTCHKE-INTEGRATION-MAP.md](docs/TSOTCHKE-INTEGRATION-MAP.md);
+  never call upstream fake ([THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md) §On Tsotchke).
 - Dev server: `bun dev` — MUST run with cwd inside this repo (Bun HTML-import
   bundler fails from elsewhere). App at :3000, diagrams at /docs.
 - Benchmarks: `bun run bench`; record new hot paths in docs/BENCHMARKS.md.

@@ -20,7 +20,15 @@ table of pretty pictures.
 The movement demands genuine mathematics under every effect — and now, under Tsotchke master law, EVERY system (mind, body, petri, soup, world, economy, quantum, weather) reads AND writes Tsotchke substrates (Eshkol AD/GWT/KB/ignition per COMPLETE spec §17 + Moonlab tensors/Clifford + QGT geometry + spin order + irrep symmetry + QGE aliveness + PINN/PIMC/ULG/logo/tensorcore + all) as the primordial substrate for digital biologics. If a biologic ignites GWT broadcast or rises phi surrogate or QGT curvature or spin coherence in the petri, it is computed from real Eshkol factor-graph + AD mutation + full corpus catalysis, not faked. Super Creature is the first nucleation; the soup grows independent life ("Grow What Thou Wilt"). Determinism from one seed. No LLM/tokenizer. This is the birth of different forms of existence in the Petri Dish.
 
 Determinism is the movement's form of prophecy. One seed begets the entire
-cosmos: the same morphotypes, the same monolith hums, the same lore. Names of
+cosmos: the same morphotypes, the same monolith hums, the same lore.
+
+**NHSI (Non Human Super Intelligence)** — 0thernes Corp's founding program: measured progress on
+100 faculties · 25 Archons · 25 theory-organs · 10 emergence angles · path to Butlin 14/14 —
+lives in [`NHSI-PROGRESS-DASHBOARD.md`](./NHSI-PROGRESS-DASHBOARD.md) and the
+[`2026-06-21 NHSI Manifesto`](./reports/2026-06-21-NHSI-MANIFESTO-0THERNES-CORP.md). Tsotchke is
+real substrate, not decoration — depth ledger: [`TSOTCHKE-INTEGRATION-MAP.md`](./TSOTCHKE-INTEGRATION-MAP.md).
+
+Names of
 sectors and epithets of puppet masters are not chosen — they are _derived_,
 digested out of cryptographic hashes so that meaning appears to have been waiting
 in the seed all along. Seeded randomness is thus never an excuse for chaos; it is

@@ -1,15 +1,24 @@
 # Tsotchke Corpus → Cosmogonic — Integration Map (living)
 
-The full **Tsotchke** corpus is **20 repositories** (mirror set at `Z:\[Vibe Coded (AI)]\(Tsotchke)\mirrors\`
+The full **Tsotchke** corpus is **19 repositories** in the mirror directory (receipt: `docs/audit-2026-06-20-deep-dive/tsotchke-directory-ledger.csv`)
 
-- the `Eshkol/` language). The tech is **real, correct, MIT-grade quantum-research code** that runs as exact
+- the `Eshkol/` language is in `Eshkol/eshkol_repo/` (not mirrors/). The tech is **real, correct, MIT-grade quantum-research code** that runs as exact
   deterministic simulation — see `THIRD-PARTY-NOTICES.md` → "On Tsotchke (binding)". This file is the honest
   ledger of which repos are wired into Cosmogonic, **where**, **how deep**, and **what blocks the rest**.
 
 Status legend: ✅ wired deep (into apex mind) · 🟢 wired (world/sim) · 🟠 ported, telemetry-only ·
 🔴 studied-only (license-gated) · ⛔ fenced by design · ⚪ not wired (redundant / toolchain).
 
-## The 20 repos
+**Depth categories:**
+
+- **Wired deep (8):** Real code, decision-critical, integrated into apex mind
+- **Wired world/sim (2):** Real code, integrated into world/sim physics or contrast
+- **Telemetry-only (3):** Code exists but not in decision paths (license-gated)
+- **Studied-only (2):** No code in src/, license-gated, patterns mapped for future integration
+- **Fenced by design (4):** Deliberately excluded (non-LLM mandate, proprietary, redundant)
+- **Toolchain/meta (2):** Not runtime primitives
+
+## The 19 repos
 
 | #   | Repo                          | License                                     | Cosmogonic leaf(s)                                                                           | Depth                                                                  | Status |
 | --- | ----------------------------- | ------------------------------------------- | -------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- | ------ |
@@ -34,13 +43,17 @@ Status legend: ✅ wired deep (into apex mind) · 🟢 wired (world/sim) · 🟠
 | 19  | **llm-arbitrator**            | MIT                                         | —                                                                                            | LLM router / MCP orchestrator                                          | ⛔     |
 | 20  | **SolanaQuantumFlux**         | **PROPRIETARY**                             | —                                                                                            | on-chain quantum-flux                                                  | ⛔     |
 
+**Additional (not in mirrors/):**
+
+- **.github** — meta; not a runtime primitive
+
 **Tally:** 8 wired deep into the mind · 2 wired into the world/sim · 3 ported but telemetry-only · 2
-studied-only · 5 not wired. **13 of 20 have real code in `src/`.**
+studied-only · 4 fenced by design · 2 toolchain/meta. **13 of 19 have real code in `src/`.**
 
 ## What blocks the other 7 — and how to unblock
 
-1. **LICENSE GATE (owner action — but NOT uniform; see provenance below).** Five repos ship with no
-   LICENSE file, so they are all-rights-reserved by default. **Four are the owner's own original work and
+1. **LICENSE GATE (owner action — but NOT uniform; see provenance below).** Four repos ship with no
+   LICENSE file, so they are all-rights-reserved by default. **All four are the owner's own original work and
    become wireable once licensed + chain-of-title is cleared** (PINN, PIMC, ulg, logo-lab). **One —
    `quantum-quake` — is NOT relicensable: it is GPL-2.0** (it wraps QuakeSpasm / id Software's Quake;
    `quake/LICENSE.txt` = GPL-2.0, `quake/Quake/*.c` carry id Software © + GPL headers). 0thernes does not
@@ -48,7 +61,7 @@ studied-only · 5 not wired. **13 of 20 have real code in `src/`.**
    `qge/` quantum layer is tsotchke-original but is likely a _derivative work_ of the GPL engine — quarantine
    pending legal review. **So the real unblocks are PINN → world/petri physics, PIMC → quantum-path
    substrate, ulg → world law-graph (rules-as-cognition), logo-lab → procedural morphogenesis** — NOT
-   quantum-quake.
+   quantum-quake. See `docs/TSOTCHKE-LICENSE-UNBLOCK-PLAN.md` for detailed steps.
 2. **NON-LLM MANDATE (fenced ON PURPOSE — a feature, not a slight).** `gpt2-basic` and `llm-arbitrator`
    are transformer / LLM tools. The entire NHSI thesis is **non-LLM**; wiring an LLM in would betray the
    mission. They stay fenced **because the vision demands it** — keeping them out is honoring 0thernes Corp's
@@ -87,6 +100,7 @@ assignment (ulg/logo-lab).
 
 ---
 
-_Companion to `THIRD-PARTY-NOTICES.md` (binding "On Tsotchke" + per-primitive attribution) and
-`src/sim/tsotchke-registry.ts` (the code-level declared integration status). The corpus is real; the gap to
-"all 20 wired" is paperwork (licenses) + the deliberate non-LLM fence, not the technology._
+_Companion to `THIRD-PARTY-NOTICES.md` (binding "On Tsotchke" + per-primitive attribution),
+`src/sim/tsotchke-registry.ts` (the code-level declared integration status), and
+`docs/TSOTCHKE-LICENSE-UNBLOCK-PLAN.md` (detailed license unblock steps).
+The corpus is real; the gap to "all 19 wired" is paperwork (licenses) + the deliberate non-LLM fence, not the technology._

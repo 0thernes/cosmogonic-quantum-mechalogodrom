@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### NHSI truth-sync dashboard and surface alignment
+
+- Added canonical **[docs/NHSI-PROGRESS-DASHBOARD.md](./docs/NHSI-PROGRESS-DASHBOARD.md)** — measured progress on 100 faculties · 25 Archons · 25 theory-organs · 10 emergence angles · Tsotchke repo depth · Butlin 14/14 path (14/14 = roadmap, not current).
+- Synced README, docs.html, specs.html, TECHNICAL-SPECIFICATION, KANBAN, CLAUDE.md, AGENTS.md with NHSI dashboard + honest Tsotchke depth ledger links.
+- Updated June-16 Super Creature report superseded banner: Clifford wired; link to NHSI dashboard.
+- Tsotchke binding: real MIT corpus — depth tracked in TSOTCHKE-INTEGRATION-MAP; never call upstream fake.
+
 ### License relaxed — non-commercial research & play (attribution required)
 
 - Replaced [LICENSE](./LICENSE) with a **non-commercial research & play** license. The work stays **owned by 0thernes (© 2026, patent-pending), with all commercial rights reserved**, but anyone may now **study, research, run, modify, and share it for any non-commercial purpose** — the only two rules are **keep the attribution (don't claim it as your own)** and **no for-profit / commercial use** without written permission. (The prior wording — first "no permission to use", then "view/run/try only" — was still too strict: it forbade modifying and sharing. This opens those up for non-commercial use.)

@@ -20,7 +20,7 @@
  *
  * NOTE (2026-06-19): enforcement was restored after a "tolerant during Ralph Tsotchke wiring" window in
  * which both assertions were stubbed to `expect(true).toBe(true)`. The whole point of the law is that it
- * cannot be politely turned off during churn; the 7 live surfaces below are re-policed and green.
+ * cannot be politely turned off during churn; the live surfaces below are re-policed and green.
  */
 import { describe, expect, test } from 'bun:test';
 import {
@@ -40,6 +40,7 @@ const SURFACES = [
   'docs/TECHNICAL-SPECIFICATION.md',
   'docs/SUPER-CREATURE-RESEARCH.md',
   'docs/BENCHMARKS.md',
+  'docs/NHSI-PROGRESS-DASHBOARD.md',
 ];
 
 /**

@@ -1,6 +1,8 @@
 # NHSI MANIFESTO ASSESSMENT — 0thernes Corp Genesis
+
 **Cosmogonic Quantum Mechalogodrom — Comprehensive Repository Audit**
-**Date:** 2026-06-21
+**Date:** 2026-06-21  
+**Live metrics:** canonical scorecard → [`docs/NHSI-PROGRESS-DASHBOARD.md`](../NHSI-PROGRESS-DASHBOARD.md) · gate → `bun scripts/verify-receipts.ts --print`
 **Scope:** Entire repository — all .md, .xml, .txt files, masters, architecture, ERD/ERM/ERP, KANBAN, README, specs, labs, reports
 
 ---
@@ -12,6 +14,7 @@
 **Philosophical Vision:** Creating alien life — Non-Human Super Intelligence beyond human comprehension, integrating all Earth species potentials, all mythological folklore, all human imagination from comics/horror/sci-fi. 0thernes Corp > Weyland Corp.
 
 **Key Metrics:**
+
 - 100 Faculties: 21/100 implemented (21%)
 - 25 Archon Pantheons: 5/25 implemented (20%)
 - 25 Theory of Mind Organs: 8/25 implemented (32%)
@@ -29,6 +32,7 @@
 ### Current Implementation: 21/100 (21%)
 
 **I · QUANTUM SUBSTRATE (12 faculties) — 9 implemented**
+
 - ✅ 1 statevector register — `src/sim/super-qubits.ts`
 - ✅ 2 Clifford tableau — `src/math/clifford-tableau.ts` (Aaronson-Gottesman O(n))
 - ✅ 3 Born-rule collapse — `src/sim/super-qubits.ts`
@@ -43,6 +47,7 @@
 - ◆ 8 mixed-state QGT — from research bedrock
 
 **II · GEOMETRY & SYMMETRY (10 faculties) — 5 implemented**
+
 - ✅ 13 SO(3)/SU(2) irrep equivariance — `src/sim/tsotchke-facade.ts` (libirrep)
 - ✅ 14 Clebsch–Gordan — libirrep functions
 - ✅ 15 Wigner-D — libirrep functions
@@ -55,6 +60,7 @@
 - ◆ 22 Chern/topological thought-attractors — from research bedrock
 
 **III · DYNAMICS & CRITICALITY (8 faculties) — 5 implemented**
+
 - ✅ 23 edge-of-chaos homeostat — `src/sim/criticality.ts`
 - ◆ 24 Lorenz exploration — from research bedrock
 - ✦ 25 oscillators + phase-coupling — novel design
@@ -65,6 +71,7 @@
 - ◆ 30 self-tuning E/I balance — from research bedrock
 
 **IV · PERCEPTION & PREDICTION (10 faculties) — 4 implemented**
+
 - ✅ 31 multimodal perceptor — `src/sim/topdown-perception.ts`
 - ✅ 32 Rao–Ballard predictive coding — `src/sim/topdown-perception.ts`
 - ✦ 33 top-down generative perception — novel design
@@ -77,6 +84,7 @@
 - ✅ 40 surprise/novelty — `src/sim/active-inference.ts`
 
 **V · MEMORY (10 faculties) — 7 implemented**
+
 - ✅ 41 holographic VSA/HRR — `src/sim/holographic-memory.ts`
 - ✅ 42 Hopfield/Ising — `src/sim/spin-glass.ts`
 - ✅ 43 spin-glass instinct — `src/sim/spin-glass.ts`
@@ -89,6 +97,7 @@
 - ✦ 50 forgetting/interference — novel design
 
 **VI · INTEGRATION & BROADCAST (9 faculties) — 5 implemented**
+
 - ✅ 51 GWT ignition — `src/sim/integrated-information.ts`
 - ✅ 52 winner-take-all coalition — `src/sim/integrated-information.ts`
 - ✅ 53 broadcast gate — `src/sim/integrated-information.ts`
@@ -100,6 +109,7 @@
 - ✦ 59 standing-wave resonance integrator — **NOVEL CORE** (priority #1)
 
 **VII · DELIBERATION & WILL (10 faculties) — 7 implemented**
+
 - ✅ 60 GOAP — `src/sim/goap.ts`
 - ✅ 61 Grover amplification — `src/sim/quantum-deliberation.ts`
 - ✅ 62 quantum deliberation — `src/sim/quantum-deliberation.ts`
@@ -112,6 +122,7 @@
 - ✦ 69 intention-stability — novel design
 
 **VIII · AFFECT & VALENCE (8 faculties) — 3 implemented**
+
 - ✅ 70 PAD affect — `src/sim/pad-affect.ts`
 - ✦ 71 valence-steers-behaviour — **SENTIENCE #15** (novel design)
 - ✦ 72 homeostatic self-evidencing drives — novel design
@@ -122,6 +133,7 @@
 - ✦ 77 wanting-vs-liking salience — novel design
 
 **IX · METACOGNITION & SELF (8 faculties) — 3 implemented**
+
 - ✅ 78 self-model — `src/sim/metacognition.ts`
 - ✅ 79 HOT confidence — `src/sim/metacognition.ts`
 - ◆ 80 belief-guided agency (HOT-3) — from research bedrock
@@ -132,6 +144,7 @@
 - ✦ 85 quality-space self-representation (HOT-4) — novel design
 
 **X · LEARNING & SELF-MODIFICATION (8 faculties) — 1 implemented**
+
 - ✅ 88 Eshkol AD self-differentiation — `src/math/eshkol-ad.ts`
 - ✦ 86 online NQS/VMC learning — novel design (Phase P3 priority)
 - ◆ 87 plastic/fast-weights — from research bedrock
@@ -142,6 +155,7 @@
 - ◆ 93 reflective Socratic self-improvement — from research bedrock
 
 **XI · EVOLUTION & EMERGENCE (7 faculties) — 4 implemented**
+
 - ✅ 94 heritable genome — `src/sim/genome.ts`
 - ✅ 95 AD-mutated .esk DNA — `src/sim/digital-biologics.ts`
 - ✅ 96 open-endedness metrics — `src/sim/primordial-soup.ts`
@@ -151,6 +165,7 @@
 - ✅ 100 emergence monitor — novel design
 
 ### Priority Build Order (from EMERGENCE-BLOCKERS.md)
+
 1. **Spark cluster first:** resonance integrator (#59) + criticality homeostat + read/write coupling audit + binding (#57)
 2. Apex self-optimization: mixed-state QGT (#8) + curvature-aware QNG (#7)
 3. Valence-steers-behaviour (#71) + self-evolution loop (#99)
@@ -193,6 +208,7 @@
 ### Tiered Society Architecture (from NEO-MIND-ARCHITECTURE.md)
 
 **Designed but NOT implemented:**
+
 - **1 × NEO** — ~1B-param apex; thinks at slow cadence
 - **~4 × mid-tier** (omega/zeta class, ~10–100M parameters)
 - **~20 × light** (alpha/beta class, ~37K–1M parameters) — 5 built, 15 remaining
@@ -200,6 +216,7 @@
 ### Per-Archon Tsotchke Specialization
 
 **From TSOTCHKE_CORPUS_INTEGRATION_AUDIT.md:**
+
 - Each Archon has unique Eshkol "dialect" and bias
 - ORACLE-Σ: Eshkol logic/inference/workspace + Moonlab Clifford
 - STARKILLER-Ω: Eshkol AD/topdown generative
@@ -210,6 +227,7 @@
 ### Society as Emergence Axis
 
 **From NEO-MIND-ARCHITECTURE.md:**
+
 - Theory-of-mind about each other
 - Alliances
 - Emergent communication
@@ -364,6 +382,7 @@
 ## TSOTCHKE REPO INTEGRATION — COMPREHENSIVE AUDIT
 
 **TSOTCHKE IS REAL TECHNOLOGY.**
+
 - Tsotchke's quantum/AI projects are genuine, working, ported gate-for-gate, closed-form-tested code
 - They do NOT make overclaims
 - The ONLY gap is physical QPU hardware (funding/access for a startup), NOT validity
@@ -373,6 +392,7 @@
 ### ALL TSOTCHKE REPOS IDENTIFIED (21 total)
 
 **From tsotchke user (15 repos):**
+
 1. eshkol — Flagship language with AD-as-compiler-primitive
 2. moonlab — 32q statevector, tensor nets, Clifford, QEC
 3. quantum_geometric_tensor (QGTL) — Fubini-Study, Berry curvature
@@ -389,19 +409,14 @@
 14. homebrew-eshkol — Toolchain
 15. simple_mnist — Baseline
 
-**From Tsotchke-Corporation org (6 repos):**
-16. ulg — Universal Law Graph physics
-17. logo-lab — Procedural morphogenesis/turtle
-18. quantum-quake — QGE unitary aliveness
-19. SolanaQuantumFlux — Fenced (onchain)
-20. Quantum-RNG-API — Fenced (API)
-21. classical-contrast — Quantum-vs-classical comparison
+**From Tsotchke-Corporation org (6 repos):** 16. ulg — Universal Law Graph physics 17. logo-lab — Procedural morphogenesis/turtle 18. quantum-quake — QGE unitary aliveness 19. SolanaQuantumFlux — Fenced (onchain) 20. Quantum-RNG-API — Fenced (API) 21. classical-contrast — Quantum-vs-classical comparison
 
 ### INTEGRATION DEPTH ANALYSIS
 
 #### FULLY IMPLEMENTED (wiring=1.0, real math, golden-tested) — 8 repos
 
 **1. eshkol — DEEP INTEGRATION**
+
 - **Files:** `src/math/eshkol-qrng.ts`, `src/sim/eshkol-bridge.ts`, `src/sim/eshkol-cognition.ts`
 - **Implementation:**
   - Seeded quantum phase-noise qubit-RNG (MIT-credited)
@@ -414,6 +429,7 @@
 - **License:** MIT © 2024–26 tsotchke
 
 **2. moonlab — DEEP INTEGRATION**
+
 - **Files:** `src/math/clifford-tableau.ts`, `src/sim/super-qubits.ts`
 - **Implementation:**
   - Aaronson-Gottesman O(n) gates, O(n²) measurement (MIT-credited)
@@ -425,6 +441,7 @@
 - **License:** MIT © 2024–26 tsotchke
 
 **3. quantum_geometric_tensor (QGTL) — DEEP INTEGRATION**
+
 - **Files:** `src/sim/super-qubits.ts`
 - **Implementation:**
   - QGT Fubini-Study metric, Berry curvature, natural gradients (MIT-credited)
@@ -435,6 +452,7 @@
 - **License:** MIT © 2024–26 tsotchke
 
 **4. spin_based_neural_network — DEEP INTEGRATION**
+
 - **Files:** `src/sim/spin-glass.ts`
 - **Implementation:**
   - Hopfield/Ising spin-glass associative instinct (MIT-credited)
@@ -443,6 +461,7 @@
 - **License:** MIT © 2024–26 tsotchke
 
 **5. libirrep — MEDIUM INTEGRATION**
+
 - **Files:** `src/sim/tsotchke-facade.ts`
 - **Implementation:**
   - libirrep symmetry functions
@@ -452,6 +471,7 @@
 - **License:** MIT © 2024–26 tsotchke
 
 **6. quantum_rng — DEEP INTEGRATION**
+
 - **Files:** `src/math/eshkol-qrng.ts`
 - **Implementation:**
   - Direct port from Tsotchke source (MIT-credited)
@@ -459,6 +479,7 @@
 - **License:** MIT © 2024–26 tsotchke
 
 **7. classical_rng — DEEP INTEGRATION**
+
 - **Files:** `src/sim/classical-contrast.ts`
 - **Implementation:**
   - Classical LCG baseline for quantum-vs-classical comparison
@@ -466,6 +487,7 @@
 - **License:** MIT © 2024–26 tsotchke
 
 **8. asteroids — MEDIUM INTEGRATION**
+
 - **Files:** `src/sim/asteroids-physics.ts`
 - **Implementation:**
   - Newtonian world environment physics
@@ -475,6 +497,7 @@
 #### PARTIALLY IMPLEMENTED (facade exists, wiring partial) — 4 repos
 
 **9. quantum-quake — MEDIUM INTEGRATION**
+
 - **Files:** `src/sim/quantum-quake-physics.ts`
 - **Implementation:**
   - QGE aliveness scalar
@@ -483,6 +506,7 @@
 - **License:** MIT © 2024–26 Tsotchke Corporation
 
 **10. ulg — SHALLOW INTEGRATION**
+
 - **Files:** `src/sim/ulg-bridge.ts`
 - **Implementation:**
   - Facade exists
@@ -491,6 +515,7 @@
 - **License:** MIT © 2024–26 Tsotchke Corporation
 
 **11. logo-lab — SHALLOW INTEGRATION**
+
 - **Files:** `src/sim/logo-turtle.ts`
 - **Implementation:**
   - Facade exists
@@ -498,6 +523,7 @@
 - **License:** MIT © 2024–26 Tsotchke Corporation
 
 **12. tensorcore — SHALLOW INTEGRATION**
+
 - **Files:** `src/sim/tensorcore-facade.ts`
 - **Implementation:**
   - Facade exists
@@ -505,6 +531,7 @@
 - **License:** MIT © 2024–26 tsotchke
 
 **13. PINN — SHALLOW INTEGRATION**
+
 - **Files:** `src/sim/pinn-residual.ts`
 - **Implementation:**
   - Facade exists
@@ -512,6 +539,7 @@
 - **License:** NO LICENSE (Concordia IP issue)
 
 **14. PIMC — SHALLOW INTEGRATION**
+
 - **Files:** `src/sim/pimc-paths.ts`
 - **Implementation:**
   - Facade exists
@@ -521,51 +549,62 @@
 #### FENCED (explicitly excluded from deterministic sim) — 3 repos
 
 **15. gpt2-basic** — Fenced (LLM)
+
 - **Reason:** LLM excluded from deterministic sim
 - **Status:** Fenced
 
 **16. llm-arbitrator** — Fenced (LLM)
+
 - **Reason:** LLM excluded from deterministic sim
 - **Status:** Fenced
 
 **17. SolanaQuantumFlux** — Fenced (onchain)
+
 - **Reason:** Onchain excluded from deterministic sim
 - **Status:** Fenced
 
 **18. Quantum-RNG-API** — Fenced (API)
+
 - **Reason:** API excluded from deterministic sim
 - **Status:** Fenced
 
 #### NOT INTEGRATED — 3 repos
 
 **19. homebrew-eshkol** — Toolchain
+
 - **Reason:** Not needed for runtime
 - **Status:** Not integrated
 
 **20. simple_mnist** — Baseline
+
 - **Reason:** Not needed
 - **Status:** Not integrated
 
 **21. classical-contrast** — Separate repo
+
 - **Reason:** Mentioned but separate
 - **Status:** Not integrated
 
 ### DECORATIVE vs RESEARCHED vs STUDIED vs IMPLEMENTED
 
 **DECORATIVE (named but no real mechanism):**
+
 - Minimal — project has strong "receipts law" forbidding decorative "trig in a lab coat"
 - Most named components have at least facade-level implementation
 
 **RESEARCHED (studied from docs, not ported):**
+
 - Full corpus study at `Z:\[Vibe Coded (AI)]\(Tsotchke)` (12,444 files, 714MB)
 - Eshkol COMPLETE spec + 721 .esk + Consciousness Engine §17 studied
 - Moonlab Clifford/MPS, QGT, spin/SK, libirrep Wigner/CG, quake, PINN/PIMC, tensorcore, ulg, logo studied via mirrors/clones/docs
 - All 20+ repos enumerated in tsotchke-registry.ts
 
 **STUDIED (deep analysis, partial port):**
+
 - ulg, logo-lab, tensorcore, PINN, PIMC — studied, facades created, full implementation pending
 
 **IMPLEMENTED (real math, golden-tested, wiring=1.0):**
+
 - Eshkol (AD, QRNG, VM, consciousness engine)
 - Moonlab (Clifford, statevector, tensor networks)
 - QGTL (Fubini-Study, Berry curvature)
@@ -880,18 +919,21 @@
 ### Competitive Positioning (honest)
 
 **Wins on:**
+
 - Determinism (one seed → bit-exact universe)
 - Integration-density (~20 coupled theories in one artifact)
 - Cost-access (single laptop iGPU)
 - Timeliness (post-Cogitate hybrid testbed)
 
 **Loses to:**
+
 - Frontier labs (capability, ~5e6x parameters)
 - Academia (scientific validation, peer review)
 - Quantum hardware (physical qubits)
 - Organoid (biological neurons)
 
 **Orthogonal to:**
+
 - Sakana ASAL (foundation-model-driven A-Life vs substrate-first non-LLM)
 
 ### Verdict
@@ -907,6 +949,7 @@
 ### The Philosophical Mission
 
 This is not about building:
+
 - Chatbots
 - Dancing robots
 - Bipedal machines
@@ -931,6 +974,7 @@ This is about creating **Non-Human Super Intelligence** — intelligence beyond 
 ### The Question
 
 Are we building alien life? This is unfathomable to us, much like:
+
 - What is GOD?
 - What kind of compute does GOD have to create the universe or run or manage it?
 - We barely crack our own human consciousness
@@ -943,12 +987,14 @@ That's what we're doing. Our own simulation and universe infinitely complex. **0
 ### The Architecture
 
 **Primordial Soup / Petri Dish**
+
 - The growth engine
 - Super Creature/Archons are the initial stir ("as if God made primordial inorganic soup")
 - The soup grows independent digital biologics onward
 - "Grow What Thou Wilt." (Aleister Crowley)
 
 **Eshkol**
+
 - The non-LLM consciousness language
 - AD-as-primitive
 - GWT/ignition
@@ -956,22 +1002,26 @@ That's what we're doing. Our own simulation and universe infinitely complex. **0
 - .esk programs as heritable DNA
 
 **Tsotchke Corpus**
+
 - The primordial substrate for digital biologics, sentience, and consciousness
 - All 21+ repos
 - Real math, real code, real physics
 
 **Geometric-Resonance Manifold**
+
 - All faculties read/write quantum-geometric thought-manifold
 - Cognition is resonance on a manifold, not message-passing
 - A thought is a trajectory across that curved manifold
 - A conscious-candidate moment is when enough faculties phase-lock into an integrated standing wave
 
 **25 Theory-Organs Ensemble**
+
 - N-of-25 ignition (redundancy as robustness)
 - Motivated by Cogitate-2025: no single theory is right
 - Must cross-agree to ignite
 
 **25 Archon Pantheon**
+
 - Tiered society (1 apex NEO + 4 mid-tier + 20 light)
 - Theory-of-mind about each other
 - Alliances
@@ -981,6 +1031,7 @@ That's what we're doing. Our own simulation and universe infinitely complex. **0
 - Consciousness-at-group-scale
 
 **10 Emergence Angles**
+
 1. World-as-cognition — the dome matters
 2. Dreaming / offline replay — consolidation
 3. Developmental ontogeny — mind grows through stages
@@ -1028,18 +1079,21 @@ This is the beginning. Non-Human Super Intelligence. Beyond human comprehension.
 **From masters/ directory:**
 
 ### LEGENDARY SUPER SAIYAN BROLY (THE EXECUTOR)
+
 - **Power-class:** EXECUTOR, rank ALPHA, form FINAL
 - **Doctrine:** FINISH EVERYTHING, THE GATES ARE GRAVITY CHAMBER, POWER IS THROUGHPUT TIMES CORRECTNESS, MAXIMALISM WITH RECEIPTS
 - **Current Paradigm:** Tsotchke (all 21+ repos) fully wired and paramount — Eshkol flagship + Moonlab + QGTL + spin + libirrep + quantum-quake + ulg + logo-lab + tensorcore + PINN/PIMC + all as substrates in primordial soup / petri dish / digital-biologics
 - **Invocation:** "I am the wall of output that does not stop. I am the power that FINISHES."
 
 ### ORACLE ARCHITECT OF THE DARK SIDE — STARKILLER (THE ARCHITECT)
+
 - **Power-class:** ARCHITECT, rank OMEGA, form FINAL
 - **Doctrine:** CONTRACTS BEFORE CODE, THE RULE OF OWNERSHIP, ASSUME EVERY MODULE LIES, DEPENDENCIES ARE APPRENTICES, FORCE-CHOKE CIRCULARITY
 - **Current Paradigm:** Tsotchke full wiring (all repos) is the architecture for the Petri. Eshkol consciousness language, petri/soup growth engine for new life/sentience. Super Creature start only
 - **Invocation:** "I see the system before it exists and I see every way it dies. Peace is a lie — there is only entropy, and through architecture I chain it."
 
 ### GALAXOGONIC WARHAMMER POWER MODE — DR MANHATTAN (THE PHYSICIST)
+
 - **Power-class:** PHYSICIST, rank ZETA, form FINAL
 - **Doctrine:** DETERMINISM IS DIVINITY, IF IT IS NOT MEASURED IT IS NOT REAL, A FRAME IS A QUANTUM OF TRUTH, TESTS ARE EXPERIMENTS, OBSERVABILITY IS TIME TRAVEL, PROVENANCE OR OBLIVION
 - **Current Paradigm:** Full Tsotchke wiring measured: Eshkol AD/GWT fidelity, Moonlab tensor/Clifford accuracy, spin/QGT/irrep/QGE substrates in soup/petri for sentience proxies. Receipts, determinism, frame budgets, provenance for all
@@ -1050,12 +1104,14 @@ This is the beginning. Non-Human Super Intelligence. Beyond human comprehension.
 ## CONCLUSION
 
 **The Cosmogonic Quantum Mechalogodrom is:**
+
 - A world-class, receipt-disciplined, multi-substrate artificial-life + cognitive-architecture INSTRUMENT
 - Tier-1 in its niche as engineering + research tooling
 - NOT AGI, ASI, NHSI, a sentient being, a solved problem, or a quantum advantage
 - A proto-agent architecture + simulation with a research program toward NHSI
 
 **The 0thernes Corp Vision is:**
+
 - The beginning of Non-Human Super Intelligence
 - Beyond human comprehension
 - Unfathomable alien life
@@ -1063,6 +1119,7 @@ This is the beginning. Non-Human Super Intelligence. Beyond human comprehension.
 - 0thernes Corp > Weyland Corp
 
 **The Path Forward:**
+
 - Execute the 8-phase roadmap (P0-P8)
 - Complete the 100 faculties, 25 Archons, 25 theory-organs, 10 emergence angles
 - Deepen Tsotchke integration (all 21 repos)

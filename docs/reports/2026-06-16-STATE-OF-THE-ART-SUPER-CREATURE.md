@@ -1,6 +1,6 @@
 # Cosmogonic Quantum Mechalogodrom — State-of-the-Art Report
 
-> **⚠ SUPERSEDED — historical snapshot (2026-06-16).** Metrics in this edition are stale (1,159 tests, 91.2 % coverage, ≈208 µs/beat). **Canonical §III.2–III.5:** [Whole Repo](./2026-06-17-STATE-OF-THE-ART-WHOLE-REPO.md) · [Super Creature](./2026-06-17-STATE-OF-THE-ART-SUPER-CREATURE.md) · [Combined](./2026-06-17-STATE-OF-THE-ART-COMBINED.md). Body below preserved verbatim as the historical worldline.
+> **⚠ SUPERSEDED — historical snapshot (2026-06-16).** Metrics in this edition are stale (1,159 tests, 91.2 % coverage, ≈208 µs/beat). **Clifford tableau is wired** in `super-mind.ts` since GOAL5. **Live NHSI scorecard:** [NHSI-PROGRESS-DASHBOARD.md](../NHSI-PROGRESS-DASHBOARD.md). **Canonical §III.2–III.5:** [Whole Repo](./2026-06-17-STATE-OF-THE-ART-WHOLE-REPO.md) · [Super Creature](./2026-06-17-STATE-OF-THE-ART-SUPER-CREATURE.md) · [Combined](./2026-06-17-STATE-OF-THE-ART-COMBINED.md). Body below preserved verbatim as the historical worldline.
 
 ### Report II of II · The Super Creature
 
