@@ -239,10 +239,32 @@ density 0.15 → 0.19, isolated faculties 3 → 2, with **all 16 signals still a
 and the full gate green (1489 tests, determinism + bounds intact). It is honestly MODEST — it gates 4 of 16
 faculties — and the regime is still "weak coupling", not a solved binding problem. But it is the first
 mechanism that measurably moves the number in the right direction without gaming, and it is plan-affecting
-(the gated `cons.*` feed the drives). The remaining lever is to extend genuine shared-PROCESSING to the
-other faculties (each coupled faculty's `step()` taking peers' outputs as real inputs) — a multi-module
-change that should be measured the same way, and only kept if it raises coupling without collapse.
+(the gated `cons.*` feed the drives).
 
-_Every number in this report was measured. The two latent approaches that measured flat were reverted and
-not shipped; the GWT bind-gate that measured a genuine (modest) gain was shipped. Restraint on the flat
-ones and shipping only the measured win — that is the discipline._
+### Fourth experiment — genuine shared-PROCESSING (SHIPPED, measured positive)
+
+A 6-module scout verified which INDEPENDENT faculties could take the last-beat coherence as a real INPUT to
+their computation (not an output edit) without breaking their contracts. The decisive finding: an edge only
+helps if it reaches a MEASURED signal. Routing coherence into the three faculties whose measured output it
+can actually move (each folded into an EXISTING input):
+
+| edge                                     | mechanism                                                 | reaches a measured signal?                                    |
+| ---------------------------------------- | --------------------------------------------------------- | ------------------------------------------------------------- |
+| **deliberation** — `arousal·(1−0.5·r)`   | bound coherence slows the Lindblad dephasing bath         | ✓ `deliberation.coherence`                                    |
+| **metacog** — `+0.1·r` in the Φ cue      | higher-order monitoring tracks the ensemble's reliability | ✓ `metacog.confidence`                                        |
+| **empowerment** — `surprise + 0.4·(1−r)` | incoherence ⇒ stale channel ⇒ faster forgetting           | ✓ `empowerment.empowerment`                                   |
+| reservoir — `stateDrive·acc`             | edge-of-chaos gain knob                                   | ✗ reverted (`novelty` is input-driven, not state-driven)      |
+| criticality — threshold modulation       | up-state participation                                    | ✗ reverted (criticality is not one of the 16 audited signals) |
+
+**Measured (80-beat audit config): no coupling 0.1666 → GWT bind-gate 0.1832 → + shared-processing 0.1966
+(+18% over baseline)**, density 0.15 → 0.225, isolated 2 → 1, all 16 signals alive, full gate green (1493
+tests). The reservoir/criticality edges were built, MEASURED to not move the audit, and reverted — only the
+three that reach measured signals were kept. The regression floor is now `> 0.188` (fails if either lever is
+removed). Honest framing unchanged: still "modest / weak regime" — these gate/route into ~7 of 16 faculties,
+not a solved binding problem. The remaining lever is denser faculty↔faculty edges among the still-independent
+signals (holographic, reservoir.novelty's actual driver, phi's module means), each measured the same way.
+
+_Every number in this report was measured. The two latent approaches and the two unmeasurable shared-
+processing edges (reservoir/criticality) were reverted and not shipped; the GWT bind-gate and the three
+shared-processing edges that measured a genuine gain were shipped. Restraint on the flat ones and shipping
+only the measured wins — that is the discipline._
