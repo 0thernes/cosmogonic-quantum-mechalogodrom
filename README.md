@@ -13,7 +13,7 @@
 
 A procedural WebGL cosmic ecosystem ” morphogenic organisms, Shoggoths,
 puppet-master NPCs, atmospheric weather, a neural connectome, quantum
-diffusion, **and the Tsotchke corpus wired as the primordial substrate for digital biologics — the deterministic, measured path toward proto-sentience and the consciousness indicators** (real math substrates, not a claim of achieved sentience).
+diffusion, **and the Tsotchke corpus wired as the primordial substrate for digital biologics — the deterministic, measured path toward proto-sentience and the consciousness indicators** (real math substrates; sentience is the GOAL, never claimed as reached).
 
 **Local docs (README, ARCHITECTURE, ERD/ERM/ERP, PHILOSOPHY, MODULE-CONTRACTS, SPECS, KANBAN, BOOK, AI-SUBSYSTEM, reports, LABS, masters references) are fully updated and match the code + GH repo.** All information accurate, truthful, current. The in-app "Dome/World" docs (observatory, help, /docs page, copilot) reflect the same. GitHub README + repo content match local exactly (pushed).
 
