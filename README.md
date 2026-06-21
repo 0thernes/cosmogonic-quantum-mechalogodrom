@@ -5,7 +5,7 @@
 [![License: Non-Commercial Research & Play](https://img.shields.io/badge/License-Non--Commercial%20Research%20%26%20Play-2ea043.svg)](./LICENSE)
 [![Bun](https://img.shields.io/badge/Bun-1.3-black?logo=bun&logoColor=white)](https://bun.sh)
 [![TypeScript strict](https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript&logoColor=white)](./tsconfig.json)
-[![tests](https://img.shields.io/badge/tests-1455%20passing-brightgreen)](./tests)
+[![tests](https://img.shields.io/badge/tests-1900%20passing-brightgreen)](./tests)
 [![coverage](https://img.shields.io/badge/coverage-95.68%25%20line%20%C2%B7%2092.89%25%20func-success)](./docs/TECHNICAL-SPECIFICATION.md)
 [![audit](https://img.shields.io/badge/inspection-500%20points-success)](./docs/500-POINT-INSPECTION.md)
 [![Tsotchke](https://img.shields.io/badge/Tsotchke-REAL__MIT__CORPUS-purple)](https://github.com/tsotchke)

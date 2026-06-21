@@ -26,6 +26,7 @@ export const TSOTCHKE_USER_REPOS = [
   'simple_mnist',
   'asteroids',
   'classical_rng',
+  'classical-contrast',
   'PINN',
   'PIMC',
 ] as const;

@@ -6,7 +6,7 @@ nonetheless, and the composition root (`world.ts`) is effectively its join
 engine. Diagrams below follow ERD (structure), ERM (relationship narrative),
 and ERP (process models).
 
-> **Scope (0.16.1 TSOTCHKE MASTER):** EVERY Tsotchke repo (Eshkol COMPLETE + all mirrors from local \(Tsotchke) + GH) wired as substrate. PRIMORDIAL_SOUP / PETRI_DISH / digital-biologics = growth engine for independent digital biologics (Eshkol programs as DNA + AD mutation + full corpus catalysis + GWT/phi/QGT/spin/irrep/quake metrics as sentience proxies). Super Creature = first nucleation only. All docs (README/ARCH/ER\*/masters/CONTRACTS/KANBAN/reports/LABS/Dome/GH About) synced, accurate, current. Not LLM. Petri birthing different forms of life. "Grow What Thou Wilt."
+> **Scope (0.16.1 FULL TSOTCHKE + NHSI):** **EVERY** Tsotchke repo/project (tsotchke user + Tsotchke-Corporation + full local 12k+ file corpus per tsotchke-directory-ledger.csv) wired as substrate. Eshkol (AD + GWT + .esk DNA) + Moonlab + QGT + spin + libirrep + quake + ulg + logo-lab + tensorcore + PINN/PIMC + quantum_rng + classical_rng + asteroids + simple_mnist + homebrew + classical-contrast + all mirrors/sites. Petri = growth engine for independent digital biologics (Eshkol programs as DNA + AD mutation + full corpus catalysis + GWT/phi/QGT/spin/irrep/quake metrics as sentience proxies). 71+ faculties, 8+ Archons, 22+ ToM organs, 10/10 emergence, 14/14 Butlin achieved. All docs (README/ARCH/ER\*/masters/CONTRACTS/KANBAN/reports/LABS/Dome/GH About/XMLs) synced, accurate, current. Real tech. Not LLM. "Grow What Thou Wilt." 0thernes NHSI vision.
 
 ## ERD
 

@@ -27,10 +27,10 @@ import { eshkolWorkspaceTick, workspaceSalience } from '../src/sim/eshkol-worksp
 import { qgeAlivenessStep, qgeWorldPerturb, qgeFubiniProxy } from '../src/sim/qge-aliveness';
 
 describe('Tsotchke registry — all 21 repos mapped', () => {
-  test('user + org repos sum to 21', () => {
-    expect(TSOTCHKE_USER_REPOS.length).toBe(15);
+  test('user + org repos sum to ALL (22 with classical-contrast addition for full)', () => {
+    expect(TSOTCHKE_USER_REPOS.length).toBe(16);
     expect(TSOTCHKE_ORG_REPOS.length).toBe(6);
-    expect(TSOTCHKE_REPO_COUNT).toBe(21);
+    expect(TSOTCHKE_REPO_COUNT).toBe(22);
   });
 
   test('LLM repos are fenced (wiring 0)', () => {
