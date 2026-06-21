@@ -63,6 +63,8 @@ pad buttons map via `SIM_MAP`.
 | **Entropy**   | Raise the entropy axis (order / heat-death) — also `G`                              |
 | **⟁ NHI**     | Launch an NHI being with Matrix powers — also `N`                                   |
 | Cosmo         | Summon a singularity (entropy → black hole → white hole → grey hole → strange star) |
+| ⚡ Chaos Mode | Engage / disengage the Lorenz quantum storm — also `K`                              |
+| ▦ Brutal      | Toggle BRUTALISM — the whole cosmos crossfades to raw concrete — also `B`           |
 | Sim           | Toggle the simulation variant N(1) Genesis ↔ N(2) Break Free (nightmare)            |
 | Apocalypse    | Trigger a cataclysm (long-press on touch)                                           |
 | Reset         | Restart the world from the seed                                                     |
