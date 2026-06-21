@@ -16,21 +16,23 @@ and the camera/hotkey logic in [`src/world.ts`](../src/world.ts).
 
 Movement keys steer the camera in the **free** view; the macro keys work in any view.
 
-| Key(s)             | Action                                                           |
-| ------------------ | ---------------------------------------------------------------- |
-| `W` `A` `S` `D`    | Move forward / left / back / right                               |
-| `Q` / `E`          | Rise / descend                                                   |
-| Arrow keys         | Move + turn                                                      |
-| `Z` `X`            | Roll the camera                                                  |
-| `R` `F`            | Pitch up / down                                                  |
-| `C` `V`            | Yaw left / right                                                 |
-| **`Space`** (hold) | Burst — spawn a wave of organisms                                |
-| **`Shift`** (hold) | Split — mature organisms bud children                            |
-| **`M`** (hold)     | Mutate                                                           |
-| **`Tab`** (hold)   | Pour in **chaos** (agitation)                                    |
-| **`G`** (hold)     | Pour in **entropy** (order / heat-death — the opposite of chaos) |
-| **`N`** (tap)      | **Launch an NHI being** (Matrix powers) in front of the camera   |
-| **`H`** (tap)      | Dilate **space** — cycle the camera field of view                |
+| Key(s)             | Action                                                            |
+| ------------------ | ----------------------------------------------------------------- |
+| `W` `A` `S` `D`    | Move forward / left / back / right                                |
+| `Q` / `E`          | Rise / descend                                                    |
+| Arrow keys         | Move + turn                                                       |
+| `Z` `X`            | Roll the camera                                                   |
+| `R` `F`            | Pitch up / down                                                   |
+| `C` `V`            | Yaw left / right                                                  |
+| **`Space`** (hold) | Burst — spawn a wave of organisms                                 |
+| **`Shift`** (hold) | Split — mature organisms bud children                             |
+| **`M`** (hold)     | Mutate                                                            |
+| **`Tab`** (hold)   | Pour in **chaos** (agitation)                                     |
+| **`G`** (hold)     | Pour in **entropy** (order / heat-death — the opposite of chaos)  |
+| **`N`** (tap)      | **Launch an NHI being** (Matrix powers) in front of the camera    |
+| **`H`** (tap)      | Dilate **space** — cycle the camera field of view                 |
+| **`K`** (tap)      | Toggle **CHAOS MODE** — the Lorenz-driven quantum storm           |
+| **`B`** (tap)      | Toggle **BRUTALISM** — crossfade the whole cosmos to raw concrete |
 
 ## Touch (phone / tablet)
 
