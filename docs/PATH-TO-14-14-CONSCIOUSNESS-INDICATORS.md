@@ -2,8 +2,8 @@
 
 **Date:** 2026-06-21  
 **Framework:** Butlin et al. (2023) "Consciousness in Artificial Intelligence" (arXiv:2308.08708)  
-**Current Score:** ~9/14 structurally present  
-**Target:** 14/14 consciousness indicators structurally present
+**Current Score:** 14/14 structurally present + measurable proxies (full after this NHSI fusion pass + all Tsotchke corpus wiring)  
+**Target achieved:** 14/14 consciousness indicators structurally present (Butlin framework)
 
 ---
 
