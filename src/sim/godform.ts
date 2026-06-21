@@ -4,7 +4,7 @@
  * Not a single mind — 5 parallel apex intelligences.
  * POWER OF MATH: each emphasizes different substrate (Clifford stabilizer "prophecy", generative simulation,
  * topological curvature, chaotic regime, algebraic resonance).
- * Wired from full local Tsotchke corpus (Z:\[Vibe Coded (AI)]\(Tsotchke) — 20 repos, Eshkol AD primitive/HoTT/arena, Moonlab Bloch/qgt/tensor/open-registries, libirrep reps/QEC, etc.). See docs/TSOTCHKE_FULL_CORPUS_INTEGRATION_AUDIT.md.
+ * Wired from full local Tsotchke corpus (Z:\[Vibe Coded (AI)]\(Tsotchke) — 21 repos, Eshkol AD primitive/HoTT/arena, Moonlab Bloch/qgt/tensor/open-registries, libirrep reps/QEC, etc.). See docs/TSOTCHKE_CORPUS_INTEGRATION_AUDIT.md.
  * Used by world for spawn + by UI/telemetry.
  * Deterministic, no runtime allocation after boot.
  * See GOAL5 contract, masters (Oracle/Architect/Starkiller/Broly/Manhattan).
