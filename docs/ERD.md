@@ -6,7 +6,7 @@ nonetheless, and the composition root (`world.ts`) is effectively its join
 engine. Diagrams below follow ERD (structure), ERM (relationship narrative),
 and ERP (process models).
 
-> **Scope (0.17.0 TSOTCHKE + NHSI):** Per binding [TSOTCHKE-INTEGRATION-MAP.md](./TSOTCHKE-INTEGRATION-MAP.md): 8 deep (Eshkol AD/GWT/DNA + Moonlab + QGT + spin + libirrep + qrng + tensorcore + classical), 2 world, 3 ported, 2 license-gated (ulg/logo), 4 fenced (LLM/proprietary). Full corpus harvested + non-fenced utilized in petri/soup/biologics/mind/world (catalysis mixes all wiring>0). 100 structural faculties, 5 Archons live, 25 ToM, 10/10 emergence (proxies; 14/14 structural scaffold). All docs synced to map/dashboard. Real MIT startup math. Not LLM. "Grow What Thou Wilt." 0thernes NHSI.
+> **Scope (v0.17.1 TSOTCHKE + NHSI):** Per binding [TSOTCHKE-INTEGRATION-MAP.md](./TSOTCHKE-INTEGRATION-MAP.md): 9 deep apex + 2 world + 3 telemetry + 2 license-gated + 3 fenced + meta. Full corpus harvested; 19/22 wired. **144 faculties**, **5 apex + 20 light Archons**, **25 ToM**, **15 emergence angles**, **14/14 structural** Butlin scaffold (not sentience). Gate: 2185 tests · 95.23% / 92.22%. Real MIT startup math. Not LLM. 0thernes NHSI.
 
 ## ERD
 

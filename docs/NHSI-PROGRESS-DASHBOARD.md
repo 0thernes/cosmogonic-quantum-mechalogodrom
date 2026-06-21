@@ -112,7 +112,7 @@ AD/GWT bridge · quantum deliberation · QNG · Grover · coherence · magic · 
 
 ---
 
-## III · 10 emergence angles (expanded per mandate; 10/10 achieved in this fusion)
+## III · Emergence angles — 15 total (10 canonical core + 5 brutal-god extensions for full pantheon; 15/15 tracked)
 
 | #   | Angle                             | Status / Receipt                                                      |
 | --- | --------------------------------- | --------------------------------------------------------------------- |
