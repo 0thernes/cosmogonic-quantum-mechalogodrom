@@ -9,6 +9,7 @@ import { describe, expect, test } from 'bun:test';
 import {
   RESONANCE_IGNITION_THRESHOLD,
   ResonanceField,
+  AdaptiveCouplingHomeostat,
   kuramotoOrder,
   kuramotoStep,
   wrapPhase,
@@ -169,7 +170,7 @@ describe('ResonanceField (stateful across-beats binding)', () => {
     expect(a.snapshot()).toEqual(b.snapshot());
   });
 
-  test('snapshot shape: order in [0,1], coupled = faculty count, phase finite', () => {
+  test('snapshot shape: order in [0,1], coupled = faculty count, phase finite, criticality null', () => {
     const f = new ResonanceField(5);
     f.step([0.5, 0.5, 0.5, 0.5, 0.5]);
     const s = f.snapshot();
@@ -178,5 +179,61 @@ describe('ResonanceField (stateful across-beats binding)', () => {
     expect(s.order).toBeLessThanOrEqual(1);
     expect(Number.isFinite(s.phase)).toBe(true);
     expect(typeof s.ignited).toBe('boolean');
+    expect(s.homeostat).toBeNull(); // fixed-coupling field has no homeostat
+  });
+});
+
+describe('AdaptiveCouplingHomeostat (self-tunes K to the responsive regime)', () => {
+  test('raises coupling when order sits below the setpoint, lowers it when above', () => {
+    const low = new AdaptiveCouplingHomeostat(0.5, 1.4);
+    for (let i = 0; i < 80; i++) low.observe(0.1); // persistently incoherent
+    expect(low.coupling).toBeGreaterThan(1.4); // crank K up to pull order toward the setpoint
+
+    const high = new AdaptiveCouplingHomeostat(0.5, 1.4);
+    for (let i = 0; i < 80; i++) high.observe(0.95); // persistently over-synchronised
+    expect(high.coupling).toBeLessThan(1.4); // back K off
+  });
+
+  test('mean order EMA converges to a constant input; responsiveness peaks at the setpoint', () => {
+    const h = new AdaptiveCouplingHomeostat(0.5, 1.4);
+    for (let i = 0; i < 400; i++) h.observe(0.3);
+    expect(h.snapshot().meanOrder).toBeCloseTo(0.3, 1);
+    // fresh homeostat sits exactly at the setpoint ⇒ responsiveness 1.
+    expect(new AdaptiveCouplingHomeostat(0.5).snapshot().responsiveness).toBeCloseTo(1, 10);
+  });
+
+  test('coupling stays bounded under sustained extremes', () => {
+    const h = new AdaptiveCouplingHomeostat(0.5, 1.4, 0.5, 0.03, 0.2, 6);
+    for (let i = 0; i < 2000; i++) h.observe(0); // would drive K up forever without the clamp
+    expect(h.coupling).toBeLessThanOrEqual(6);
+    expect(h.coupling).toBeGreaterThanOrEqual(0.2);
+  });
+
+  test('is deterministic: identical order streams → identical coupling + snapshot', () => {
+    const a = new AdaptiveCouplingHomeostat();
+    const b = new AdaptiveCouplingHomeostat();
+    const seq = [0.2, 0.8, 0.5, 0.1, 0.9, 0.45];
+    for (let i = 0; i < 60; i++) {
+      a.observe(seq[i % seq.length]!);
+      b.observe(seq[i % seq.length]!);
+    }
+    expect(a.coupling).toBe(b.coupling);
+    expect(a.snapshot()).toEqual(b.snapshot());
+  });
+
+  test('adaptive ResonanceField holds the mean order near the responsive setpoint a fixed field cannot reach', () => {
+    const spread = Array.from({ length: 12 }, (_, i) => i / 11); // maximally spread → fixed K stays low
+    const fixed = new ResonanceField(12);
+    let fixedOrder = 0;
+    for (let i = 0; i < 400; i++) fixedOrder = fixed.step(spread).order;
+
+    const adaptive = new ResonanceField(12, 1.4, 2 * Math.PI, 0.15, 3, true, 0.5);
+    for (let i = 0; i < 400; i++) adaptive.step(spread);
+    const s = adaptive.snapshot();
+    expect(s.homeostat).not.toBeNull();
+    // the homeostat dragged the mean order toward 0.5 — closer to the setpoint than the fixed field.
+    expect(Math.abs(s.homeostat!.meanOrder - 0.5)).toBeLessThan(Math.abs(fixedOrder - 0.5));
+    expect(s.homeostat!.responsiveness).toBeGreaterThan(0.6); // genuinely in the responsive regime
+    expect(s.homeostat!.coupling).toBeGreaterThan(1.4); // raised K to lift the spread assembly
   });
 });

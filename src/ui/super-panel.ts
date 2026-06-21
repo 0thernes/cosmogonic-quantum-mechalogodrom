@@ -357,11 +357,16 @@ export class SuperPanel {
         // V98 — quantum deliberation: how decohered (decisive) the open-system decider is this beat.
         `QDEC ${(mind.deliberation.decisiveness * 100).toFixed(0)}%${mind.deliberation.committed ? '✦' : ''}`;
       // #59 — resonance integrator: the standing-wave coherence binding the consciousness assembly by
-      // synchrony, whether it crossed into a BOUND (ignited) moment, and how many faculties phase-lock.
+      // synchrony, whether it crossed into a BOUND (ignited) moment, how many faculties phase-lock, and
+      // the adaptive-coupling homeostat's self-tuned coupling K + responsiveness (proximity to the
+      // sensitive operating point of the synchronization transition).
       const reso = mind.resonance;
+      const homeo = reso.homeostat
+        ? ` · resp ${(reso.homeostat.responsiveness * 100).toFixed(0)}% K${reso.homeostat.coupling.toFixed(2)}`
+        : '';
       this.id.resonance!.textContent =
         `Coherence ${(reso.order * 100).toFixed(0)}%${reso.ignited ? ' ✦ BOUND' : ''} · ` +
-        `${reso.coupled} faculties phase-locking`;
+        `${reso.coupled} faculties${homeo}`;
     }
 
     // V48 — the self-evolution: level · stage · power · day (it grows like Vegeta/Goku).

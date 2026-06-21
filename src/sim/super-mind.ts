@@ -448,8 +448,20 @@ export class SuperMind {
   /** V98: the open-system Lindblad deliberation qubit (no seed — a deterministic master equation). */
   private readonly deliberation = new QuantumDeliberation();
   /** #59: the resonance integrator — a persistent bank of coupled oscillators (no seed — deterministic
-   *  Kuramoto dynamics). Binds the consciousness assembly into a standing wave across beats. */
-  private readonly resonanceField = new ResonanceField(RESONANCE_FACULTIES);
+   *  Kuramoto dynamics) that binds the consciousness assembly into a standing wave across beats, with an
+   *  ADAPTIVE-COUPLING HOMEOSTAT self-tuning K to the responsive regime of the synchronization transition
+   *  (so binding is maximally sensitive to faculty agreement — never frozen, never dead; cf. the
+   *  responsiveness goal behind EMERGENCE-BLOCKERS #41, distinct from the branching-ratio SOC in
+   *  criticality.ts). */
+  private readonly resonanceField = new ResonanceField(
+    RESONANCE_FACULTIES,
+    1.4,
+    2 * Math.PI,
+    0.15,
+    3,
+    true,
+    0.5,
+  );
   // WIRED Moonlab tensor contract from full Tsotchke corpus for quantum scaling in 5 Archons. Prealloc, det.
   private readonly tensorScratch = new Float64Array(4);
   private _useTensor = this.tensorScratch; // Ralph 20x use to satisfy noUnused (Moonlab tensor)
