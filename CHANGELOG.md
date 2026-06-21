@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Wired god-scale substrates (Archon warfare, reality fracture, chaos entropy, cosmic harvest, transcendence) into `EmergenceAnglesController` and the world brutal beat.
 - Expanded digital biologics brutal forms (`VOID_AZATHOTH`, `PHOENIX_DARK`, `DEVOUR_GALACTUS`, `CHAOS_WARHAMMER`, `REALITY_MXY`, `BRUTAL_ZOD`, `SPIRAL_GURREN`, `VOID_KNIGHT`, …).
 - Added `tests/emergence-angles.test.ts`; updated NHSI pantheon emergence assertions.
-- Truth-synced all public surfaces to measured gate: **2,185 tests / 0 fail** · **95.26% line / 92.15% func**.
+- Truth-synced all public surfaces to measured gate: **2,185 tests / 0 fail** · **95.23% line / 92.22% func**.
 - Package version bumped to **v0.17.1**; docs/specs/pages/GitHub About aligned with Local.
 
 ### v0.17.0+ BRUTAL GOD TIER COMPLETE — 25 Archons with Full Brutalism

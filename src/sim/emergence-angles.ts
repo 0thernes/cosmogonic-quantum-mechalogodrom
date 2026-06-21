@@ -577,7 +577,7 @@ export class EmergenceAnglesController {
     void this.transcendence.transcend(archonA, powerA + powerB, seed);
   }
 
-  getGodScaleSnapshots(): GodScaleSnapshot[] {
+  getGodScaleSnapshots(): EmergenceSnapshot[] {
     return [
       this.archonWarfare.snapshot(),
       this.realityFracture.snapshot(),
