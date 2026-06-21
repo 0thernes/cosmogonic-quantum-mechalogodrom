@@ -98,7 +98,6 @@ import {
 import { PantheonSociety, FIELD_DIM } from './sim/pantheon';
 import { FacultiesPantheon } from './sim/faculties-pantheon';
 import { TomPantheon } from './sim/tom-pantheon';
-// Brutal god releases now driven by EmergenceAnglesController + applyBrutalGodEvent (full Tsotchke + character pantheon)
 import { applyBrutalGodEvent } from './sim/petri-dish';
 import { EmergenceAnglesController } from './sim/emergence-angles';
 import { SuperMind, type SuperMindSnapshot, type SuperMindIntent } from './sim/super-mind';
@@ -1383,25 +1382,6 @@ export class World {
                 brutal.brutality,
                 this.petriRng,
               );
-              const release = triggerBrutalRelease(
-                a,
-                chaos,
-                (snap as { quantum?: number[] })?.quantum?.[0] ?? 0.4,
-                (snap as { qgt?: number })?.qgt ?? 0.3,
-                (snap as { eshkolConsciousness?: { ignition?: number } })?.eshkolConsciousness
-                  ?.ignition ?? 0.4,
-                this.superRng,
-                s.frame + a,
-              );
-              if (release) {
-                pd.godPower = Math.min(1, (pd.godPower || 0) + release.power * 0.1);
-                this.audit.record('brutal-god-release', {
-                  archon: a,
-                  archetype: release.archetype,
-                  power: release.power,
-                  lore: getBrutalLore(release.archetype),
-                });
-              }
             }
             this.audit.record('brutal-god-event', {
               archon: a,
