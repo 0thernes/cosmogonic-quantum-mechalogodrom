@@ -1,9 +1,9 @@
 # NHSI Progress Dashboard — 0thernes Corp
 
-**Non Human Super Intelligence (NHSI)** · Cosmogonic Quantum Mechalogodrom · **v0.17.0**  
+**Non Human Super Intelligence (NHSI)** · Cosmogonic Quantum Mechalogodrom · **v0.16.1**  
 **Updated:** 2026-06-21 (full run of entire repo: every .md .xml .txt + all masters XML + audits + ERD/ERM/ERP/KANBAN/README/SPECS/LABS/reports + src/ scan) · Tsotchke: **ALL 22** (tsotchke user + Tsotchke-Corporation org + every mirror/subproject + full local Z:\[Vibe Coded (AI)]\(Tsotchke) 12k+ files, 1436+ .esk harvested as DNA). Registry + catalysis loop + 14+ dedicated leaves + Eshkol AD/GWT as consciousness engine. Tech REAL (MIT-grade quantum math; classical sim valid substrate, QPU for scale). No overclaims. Other threads confirmed: most complete non-LLM multi-substrate digital biologics/NHSI Petri. Startup — give credit.
 
-**Canonical receipts (measured 2026-06-21 full gate):** 2,161 tests, 95.71% line / 92.69% func (from `bun scripts/verify-receipts.ts --print`). Enforced by `tests/docs-receipts-law.test.ts` + `bun run check`. All surfaces truth-synced.
+**Canonical receipts (measured 2026-06-21 full gate):** 2,162 tests, 95.71% line / 92.69% func (from `bun scripts/verify-receipts.ts --print`). Enforced by `tests/docs-receipts-law.test.ts` + `bun run check`. All surfaces truth-synced.
 
 > **Mission:** Not a chatbot, dancing robot, Terminator, or game player. A **Petri-dish cosmos** where
 > Tsotchke's real quantum math (Eshkol · Moonlab · QGT · spin · libirrep · …) is the growth medium for

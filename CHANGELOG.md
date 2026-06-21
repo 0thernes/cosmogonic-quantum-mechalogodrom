@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### v0.17.0 NHSI structural build wave
+### v0.16.1 NHSI structural build wave
 
 - Added a deterministic GWT-4 `AttentionController`, wired into `SuperMind` before final plan commitment, with focused determinism/bounds tests.
 - Replaced brittle generated 25-ToM and 100-faculty surfaces with compact deterministic `TomPantheon` and `FacultiesPantheon` engines that preserve the public telemetry API.

@@ -742,7 +742,7 @@ export class SuperMind {
     if (this.broadcastGain > 0 && this.broadcast > 0) {
       const b = this.broadcastGain * this.broadcast;
       for (let i = 0; i < this.latent.length; i++) {
-        this.latent[i] = (this.latent[i] ?? 0) * (1 + b * 0.2);
+        this.latent[i] = (this.latent[i] ?? 0) + b * (0.5 + 0.5 * Math.sin((i + 1) * 0.618));
       }
     }
     // ── #87/#91 · PLASTIC FAST-WEIGHTS ── within-life Hebbian self-modification: recall the self-written
