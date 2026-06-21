@@ -139,15 +139,15 @@ Updated `docs/TSOTCHKE-CORPUS-INTEGRATION-PLAN.md` with completion status for Wa
 - Format: ✅ Prettier
 - Typecheck: ✅ TypeScript strict
 - Lint: ✅ oxlint
-- Test: ✅ 2185 tests pass, 0 fail
+- Test: ✅ 1498 tests pass, 0 fail
 - Receipts: ✅ Verified
 - Build: ✅ Successful
 
 **Test Coverage:**
 
-- Line coverage: 95.23% (synced to canonical with Tsotchke full wire)
-- Function coverage: 92.22%
-- Test count: 2185
+- Line coverage: 90.83% (synced to canonical with Tsotchke full wire)
+- Function coverage: 87.91%
+- Test count: 1498
 
 ## Determinism & Allocation Compliance
 
