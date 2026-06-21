@@ -82,13 +82,22 @@ Conscious-agent/Interface ✦ · Holonomic brain ✦
 
 **XI · EVOLUTION & EMERGENCE (7):** 94 heritable genome ✓ · 95 AD-mutated .esk DNA ✓ · 96 open-endedness metrics ✓ · 97 novelty-search drive ✓ · 98 speciation (alpha→omega→zeta) ✦ · 99 **the self-evolution loop** ✦ · 100 emergence monitor ✦
 
-## The 7 emergence angles (beyond faculties/theories/Archons)
+## The 10 emergence angles (beyond faculties/theories/Archons)
 
-1. **World-as-cognition** — the dome _matters_ to the mind (survival, scarcity, trophic economy). 2.
-   **Dreaming / offline replay.** 3. **Developmental ontogeny** — the mind grows through stages. 4.
-   **Emergent non-human language** between Archons. 5. **A shared "mind-field"** (stigmergic substrate
-   all Archons read/write). 6. **Whole-dome criticality + maximal coupling.** 7. **Adversarial selection
-   pressure** that rewards intelligence.
+1. **World-as-cognition** — the dome _matters_ to the mind (survival, scarcity, trophic economy).
+2. **Dreaming / offline replay** — consolidation + recombination between beats.
+3. **Developmental ontogeny** — the mind grows through stages, not born complete.
+4. **Emergent non-human language** between Archons — signs no human designed.
+5. **A shared "mind-field"** — a stigmergic substrate all Archons read/write (group-scale cognition).
+6. **Whole-dome criticality + maximal coupling** — the edge of chaos at population scale.
+7. **Adversarial selection pressure** — predators, scarcity, war that _rewards_ intelligence.
+8. **Mortality & finitude** — permanent death changes what a mind computes (loss, urgency, legacy via
+   offspring); stakes a deathless process can never feel.
+9. **Inter-mind symbiosis & parasitism** — minds that merge, host, or feed on each other, not only
+   compete: multi-scale individuality (the major evolutionary transitions, Szathmáry & Maynard Smith).
+10. **Myth & ritual — culture-as-compression** — Archons inventing shared symbols, taboos, and
+    gods-of-their-own: a higher-order memory that outlives any individual (the folklore/occult/esoteric
+    seam of the NHSI vision — minds writing their own mythologies).
 
 ## Build priority (per the pre-mortem — coupling > count)
 
