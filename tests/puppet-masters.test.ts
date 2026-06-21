@@ -83,15 +83,11 @@ function makeWorld(seed: number): {
 }
 
 describe('PuppetMasterSystem — deterministic schemers that perturb the world within bounds', () => {
-  test(
-    'has at least the 3 named hands (plus tier-scaled lesser puppeteers, V14)',
-    () => {
-      const c = makeWorld(1).pm.count;
-      expect(Number.isInteger(c)).toBe(true);
-      expect(c).toBeGreaterThanOrEqual(3); // AETHON, SELENE, KRONOS are always present
-    },
-    15_000,
-  );
+  test('has at least the 3 named hands (plus tier-scaled lesser puppeteers, V14)', () => {
+    const c = makeWorld(1).pm.count;
+    expect(Number.isInteger(c)).toBe(true);
+    expect(c).toBeGreaterThanOrEqual(3); // AETHON, SELENE, KRONOS are always present
+  }, 15_000);
 
   test('600 frames keep world state finite + in bounds and fire valid interventions', () => {
     const { ctx, pm, events } = makeWorld(0x9a77e7);
