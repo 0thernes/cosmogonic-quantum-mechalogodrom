@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Super Creature god-jewel skin — compile fix + V64 LIVING, EVOLVING SKIN
+
+- **Fixed** the god-jewel `MeshStandardMaterial` patch in `src/sim/super-body.ts`: the metalness
+  micro-variance assigned `metalnessFactor` immediately after `<roughnessmap_fragment>`, before three.js
+  declares it in the following `<metalnessmap_fragment>` chunk. This raised `'metalnessFactor' : undeclared
+identifier` / `l-value required` every frame, failing the shader program so the creature fell back to a
+  bare, skin-less surface. The assignment now defers to an injection after `<metalnessmap_fragment>`, so
+  the program links and the iridescent skin (relief, thin-film iridescence, Fresnel rim, god-glow,
+  roughness/metalness variance) renders again.
+- **V64 LIVING SKIN:** the skin now _evolves with the creature_. `SuperEvolution.appearance()` already
+  computed a hue rotation, an ascension `aura`, and a milestone `tier` — all of which `setEvolution()` was
+  dropping. They now feed the god-jewel shader via new uniforms (`uEvoAura`, `uEvoTier`, `uEvoHue`,
+  `uAscended`): the iridescence hue rotates into a unique shifting palette, the crystalline relief gains
+  finer detail at higher tiers, the jewel polishes (roughness↓/metalness↑), and an ascension blaze peaks
+  at the LV100 end-state. Every term is additive and gated by aura/tier, so a BASE creature is unchanged
+  and the surface only grows richer, cooler, and more unique over time. Deterministic, O(1), no alloc.
+
 ### License relaxed — non-commercial research & play (attribution required)
 
 - Replaced [LICENSE](./LICENSE) with a **non-commercial research & play** license. The work stays **owned by 0thernes (© 2026, patent-pending), with all commercial rights reserved**, but anyone may now **study, research, run, modify, and share it for any non-commercial purpose** — the only two rules are **keep the attribution (don't claim it as your own)** and **no for-profit / commercial use** without written permission. (The prior wording — first "no permission to use", then "view/run/try only" — was still too strict: it forbade modifying and sharing. This opens those up for non-commercial use.)

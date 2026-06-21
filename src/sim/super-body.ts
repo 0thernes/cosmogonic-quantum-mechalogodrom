@@ -20,7 +20,10 @@
  * proxy + harmonic breathing). Per-variant + live color/lighting (plan hue + phi glow + ignition flash
  * + archetype palette shift). Roughness/metal live-mod by surprise/morph/qualia. Amped multi-eyes/arms
  * reactivity (pupil focus scale; no alloc). Prebuilt groups only; param/uniform driven; deterministic
- * from t + mind/quantum state.
+ * from t + mind/quantum/evolution state.
+ * V64 LIVING SKIN: the god-jewel surface EVOLVES with the creature — its iridescence hue rotates, its
+ * crystalline relief sharpens, and an ascension blaze ignites as it levels (improving + uniquifying over
+ * time), all gated so a BASE creature renders exactly as before. See {@link SuperBodySystem.setEvolution}.
  * TSOTCHKE QGTL (quantum_geometric_tensor corpus): Fubini-Study/Berry curvature term in displace for more extreme geo combin (topo protection style).
  *
  * NO SENTIENCE: pure mechanism — math only, no interiority. All allocation-free, no new geoms/frame.
@@ -136,6 +139,7 @@ function patchGodJewel(
         `#include <common>
          varying vec3 vObjPos; varying vec3 vObjN;
          uniform float uTime; uniform vec3 uPlan; uniform float uDominance; uniform float uVariant; uniform float uSurprise; uniform float uWave; uniform float uArousal; uniform float uQWave; uniform float uPhi; uniform float uReflex; uniform float uQualia; uniform float uCliff;
+         uniform float uEvoAura; uniform float uEvoTier; uniform float uEvoHue; uniform float uAscended; // V64 evolution-driven living skin
          float h31(vec3 p){ return fract(sin(dot(p, vec3(27.17,61.31,11.71))) * 43758.5453); }
          float n3(vec3 p){ vec3 i=floor(p), f=fract(p); f=f*f*(3.0-2.0*f);
            return mix(mix(mix(h31(i),h31(i+vec3(1,0,0)),f.x),mix(h31(i+vec3(0,1,0)),h31(i+vec3(1,1,0)),f.x),f.y),
@@ -151,8 +155,9 @@ function patchGodJewel(
          rqD += 0.25 * fract(sin(vObjPos.x * 11.0 + uVariant) * 43758.0);
          float morphR = (uSurprise * 0.4 + uQWave * 0.25 + uQualia * 0.2 + uReflex * 0.15);
          roughnessFactor = clamp(mix(0.65, 0.03, smoothstep(0.32 + uVariant*0.05, 0.95, rqD + morphR*0.3)), 0.02, 1.0);
+         roughnessFactor = clamp(roughnessFactor - uEvoTier * 0.012 - uEvoAura * 0.04, 0.02, 1.0); // V64: evolution polishes the jewel over time
          // metalness micro-variance (computed here; applied after <metalnessmap_fragment> declares metalnessFactor)
-         float metalVar = 0.85 + 0.12 * sin(rqD*9.1 + uTime*0.7 + uVariant) * (0.5 + 0.5*morphR);`,
+         float metalVar = 0.85 + 0.12 * sin(rqD*9.1 + uTime*0.7 + uVariant) * (0.5 + 0.5*morphR) + uEvoAura * 0.08;`,
       )
       .replace(
         '#include <metalnessmap_fragment>',
@@ -176,7 +181,18 @@ function patchGodJewel(
          vec3 glow = uPlan * (0.30 + 1.1 * uDominance);
          float igFlash = (0.15 + 0.6 * uPhi) * (0.5 + 0.5 * sin(uTime * 11.0 + uVariant * 4.0)); // ignition
          float varPal = uVariant * 0.18; // per-archetype palette shift (unique base per 0-4)
-         totalEmissiveRadiance += glow * (0.22 + 0.6 * relief) + iris * fres * (0.45 + 0.8 * uDominance) + wv * 0.12 * uDominance + ch * 0.07 * uSurprise * uPlan + igFlash * uPlan * (0.3 + 0.4 * uDominance) + varPal * relief * 0.25 * uPlan;`,
+         // V64 EVOLUTION → LIVING SKIN: the surface IMPROVES over time. The iridescence hue rotates with
+         // the creature's evolution (a unique, shifting palette), the crystalline relief gains finer detail
+         // at higher milestone tiers, and an ascension blaze peaks at the LV100 end-state. Every term is
+         // additive and gated by aura/tier, so a BASE creature (aura=tier=0) is byte-identical to before.
+         float evoDetail = fbm3(vObjPos * (9.0 + uEvoTier * 1.8) + uTime * 0.05) * (uEvoTier * 0.1);
+         float evoBand = band + uEvoHue * 6.2831 + evoDetail * 3.0;
+         vec3 evoIris = 0.5 + 0.5 * cos(vec3(0.0, 2.094, 4.188) + evoBand);
+         float evoShimmer = uAscended * (0.5 + 0.5 * sin(uTime * 9.0 + relief * 12.0)); // LV100 living shimmer
+         vec3 evoEmissive = evoIris * fres * uEvoAura * (0.6 + 0.9 * uEvoTier * 0.1)
+                          + glow * uEvoAura * (0.25 + 0.5 * relief)
+                          + evoIris * evoShimmer * (0.4 + 0.6 * fres);
+         totalEmissiveRadiance += glow * (0.22 + 0.6 * relief) + iris * fres * (0.45 + 0.8 * uDominance) + wv * 0.12 * uDominance + ch * 0.07 * uSurprise * uPlan + igFlash * uPlan * (0.3 + 0.4 * uDominance) + varPal * relief * 0.25 * uPlan + evoEmissive;`,
       );
   };
 }
@@ -211,6 +227,11 @@ export class SuperBodySystem {
     uReflex: { value: 0 },
     uQualia: { value: 0 },
     uCliff: { value: 0 },
+    // V64: evolution-driven LIVING SKIN — the god-jewel surface improves/uniquifies as the creature levels.
+    uEvoAura: { value: 0 }, // 0..1 ascension blaze (ramps to 1 at the LV100 end-state)
+    uEvoTier: { value: 0 }, // 0..10 milestones crossed — higher = finer crystalline relief + polish
+    uEvoHue: { value: 0 }, // 0..1 evolution hue rotation — a unique palette that shifts over time
+    uAscended: { value: 0 }, // 1 at the LV100 summit — the skin fully blazes + shimmers
   };
   private dominance = 0.5;
   private arousal = 0;
@@ -224,6 +245,11 @@ export class SuperBodySystem {
   private evoSize = 1;
   private evoGlow = 1;
   private evoSpike = 0;
+  // V64: evolution-driven SKIN state (mirrors the shared shader uniforms; for inspection/tests).
+  private evoAura = 0;
+  private evoTier = 0;
+  private evoHue = 0;
+  private evoAscended = false;
   private readonly move = new THREE.Vector3(); // the mind's movement output (its will)
   private readonly anchor = new THREE.Vector3(0, 12, 0); // birth locus / fallback
   // V39 FLIGHT: the apex roams the world instead of hovering — a wander-seek boid that banks toward
@@ -784,11 +810,28 @@ export class SuperBodySystem {
     this.evoSize = clampf(a.sizeMul, 1, 6);
     this.evoGlow = clampf(a.glowMul, 1, 4);
     this.evoSpike = a.spikeBoost < 0 ? 0 : a.spikeBoost;
+    // V64: the SKIN itself evolves. SuperEvolution.appearance() already computes a hue rotation, an
+    // ascension aura and a milestone tier — previously dropped here — so the god-jewel surface now grows
+    // more elaborate, hue-shifted and blazing as the monster levels (improving + uniquifying over time,
+    // exactly as the directive demands). Folded into the shared shader uniforms. O(1), no alloc.
+    this.evoAura = clampf(a.aura, 0, 1);
+    this.evoTier = clampf(a.tier, 0, 10);
+    this.evoHue = a.hueShift - Math.floor(a.hueShift); // wrap a rotation into [0,1)
+    this.evoAscended = a.ascended === true;
+    this.u.uEvoAura.value = this.evoAura;
+    this.u.uEvoTier.value = this.evoTier;
+    this.u.uEvoHue.value = this.evoHue;
+    this.u.uAscended.value = this.evoAscended ? 1 : 0;
   }
 
   /** V48: the evolution scale applied to the whole body (for tests / inspection). */
   evolutionScale(): number {
     return this.evoSize;
+  }
+
+  /** V64: the evolution-driven skin parameters folded into the god-jewel surface (for tests / inspection). */
+  evolutionSkin(): { aura: number; tier: number; hue: number; ascended: boolean } {
+    return { aura: this.evoAura, tier: this.evoTier, hue: this.evoHue, ascended: this.evoAscended };
   }
 
   /** Free GPU resources (world reset). */
