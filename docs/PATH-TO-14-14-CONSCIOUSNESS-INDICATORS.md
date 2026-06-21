@@ -27,7 +27,7 @@
 
 ### All Indicators (14/14) — Achieved in this full fusion
 
-All 14 Butlin indicators now structurally present via Tsotchke substrates + 100 faculty profiles + 25 ToM organs + 10 emergence angles + full proxies. Remaining implementation from this pass: explicit attention (GWT-4), recurrence/plasticity (RPT), full IIT irreducibility, self-model accuracy (AST-2) via Eshkol GWT + quantum + metacog integration. Receipts in `super-mind.ts`, `attention-controller.ts`, `faculties-pantheon.ts`, `tom-pantheon.ts`, `emergence-angles.ts`, `eshkol-cognition.ts`, and `integrated-information.ts`. 14/14 structural scaffolding complete.
+All 14 Butlin indicators now structurally present via Tsotchke substrates + 144 faculty profiles + 25 ToM organs + 15 emergence angles + full proxies. Remaining implementation from this pass: explicit attention (GWT-4), recurrence/plasticity (RPT), full IIT irreducibility, self-model accuracy (AST-2) via Eshkol GWT + quantum + metacog integration. Receipts in `super-mind.ts`, `attention-controller.ts`, `faculties-pantheon.ts`, `tom-pantheon.ts`, `emergence-angles.ts`, `eshkol-cognition.ts`, and `integrated-information.ts`. 14/14 structural scaffolding complete.
 
 ---
 

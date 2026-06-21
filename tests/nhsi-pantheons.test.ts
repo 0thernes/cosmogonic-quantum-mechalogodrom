@@ -4,9 +4,9 @@ import { FacultiesPantheon, FACULTY_NAMES } from '../src/sim/faculties-pantheon'
 import { TomPantheon, TOM_ORGANS } from '../src/sim/tom-pantheon';
 import { EmergenceAnglesController } from '../src/sim/emergence-angles';
 
-describe('NHSI pantheon modules (100 faculties · 25 ToM · 15 emergence incl. 5 brutal god-scale for Valkorion/Thanos/Broly/Knull etc)', () => {
-  test('100 faculties are registered and advance deterministically', () => {
-    expect(FACULTY_NAMES.length).toBeGreaterThanOrEqual(100);
+describe('NHSI pantheon modules (144 faculties · 25 ToM · 15 emergence incl. 5 brutal god-scale for Valkorion/Thanos/Broly/Knull etc)', () => {
+  test('144 faculties are registered and advance deterministically', () => {
+    expect(FACULTY_NAMES.length).toBeGreaterThanOrEqual(144);
     const a = new FacultiesPantheon(mulberry32(42));
     const b = new FacultiesPantheon(mulberry32(42));
     const inputs = new Float32Array([0.2, 0.5, 0.8, 0.1, 0.4, 0.6, 0.3, 0.9]);

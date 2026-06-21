@@ -1214,7 +1214,7 @@ export class World {
       const econ = this.economy.summary();
       const mean = econ.agents > 0 ? econ.totalWealth / econ.agents : 1;
       const target = Math.max(1, this.quality.targetEntities);
-      // NHSI · 100 faculties + 25 ToM organs read the shared world field each apex beat.
+      // NHSI · 144 faculties + 25 ToM organs read the shared world field each apex beat.
       const fi = this.nhsiFacultyIn;
       fi[0] = clamp(s.chaos / CHAOS_MAX, 0, 1);
       fi[1] = clamp(n / target, 0, 1);
