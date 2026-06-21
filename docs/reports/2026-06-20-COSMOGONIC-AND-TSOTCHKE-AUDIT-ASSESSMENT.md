@@ -1,5 +1,13 @@
 # Cosmogonic Quantum Mechalogodrom × Tsotchke Corpus — Authoritative Audit & Path-to-Paradigm Assessment
 
+> **⚠ CORRECTION (2026-06-21 · 0thernes directive).** Where this dated report calls things
+> "decorative / stub / inspired-by / mostly not real," it is judging **Cosmogonic's own facade-bridge
+> wiring** — **not** the **Tsotchke** corpus, which this same report correctly affirms is "real and should
+> never be dismissed as fabricated." Tsotchke's tech is genuine, correct, MIT-licensed quantum research
+> that runs as exact deterministic simulation (it lacks only a physical QPU — speed/scale, not
+> correctness). Our bridge proxies have since been relabeled honestly — see `THIRD-PARTY-NOTICES.md` →
+> **"On Tsotchke — binding."** Preserved as a historical record; its non-Tsotchke findings stand.
+
 **Date: 2026-06-20** · Produced by a multi-agent audit workflow (12-area inventory + 5-check adversarial verification, degraded by transient platform rate-limiting) whose synthesizer did first-hand investigation, with **load-bearing claims independently re-measured cold by the orchestrator** (see Verification Addendum).
 
 ---

@@ -5,12 +5,23 @@ This file is the **source-level** attribution for algorithms that were ported / 
 project's own TypeScript from third-party research code. It complements [NOTICE.md](./NOTICE.md), which
 lists the bundled runtime dependencies and fonts.
 
-The quantum- and spin-mind layer of the apex **Super Creature** adapts four primitives — reimplemented
-at the source level, gate-for-gate / equation-for-equation — from the **Tsotchke** quantum research
-repositories (some of which also ship inside the **Eshkol** language and the **Moonlab** simulator). The
-original works are **MIT-licensed, © 2024–2026 tsotchke**. As required by the MIT License, the permission
-notice and copyright are retained below. Our derivative implementations remain governed by this project's
-proprietary license while honoring the upstream MIT terms.
+The quantum- and spin-mind layer of the apex **Super Creature** reimplements **ten primitives** at the
+source level — the core quantum / AD / symmetry kernels gate-for-gate / equation-for-equation — from the
+**Tsotchke** quantum research repositories (some of which also ship inside the **Eshkol** language and the
+**Moonlab** simulator). The original works are **MIT-licensed, © 2024–2026 tsotchke**. As required by the
+MIT License, the permission notice and copyright are retained below. Our derivative implementations remain
+governed by this project's proprietary license while honoring the upstream MIT terms.
+
+> **On Tsotchke — binding (0thernes directive, 2026-06-21).** The Tsotchke corpus is **real, correct,
+> MIT-licensed quantum-research code**: genuine algorithms (Aaronson–Gottesman stabilizer tableau,
+> Quantum Geometric Tensor / Fubini–Study + Berry curvature, VQE, QEC decoders, reverse-mode AD,
+> spin-glass / Hopfield, SO(3) / Wigner). Our ports run them as **exact deterministic classical
+> simulation** — a physical quantum computer (QPU) would add hardware **speed and scale, not
+> correctness**. **Nothing in this project may describe Tsotchke's technology as fake, overclaiming,
+> hallucinated, or fabricated.** Where a Cosmogonic _bridge_ function is a heuristic or telemetry-only
+> proxy, that is a fact about **our** wiring status — never about the upstream tech, which is genuine and,
+> as an integrated quantum corpus (statevector · stabilizer · tensor-network · QEC · VQE · QGT · QRNG),
+> remarkably comprehensive. Treat it accordingly.
 
 ## Ported primitives
 

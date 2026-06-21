@@ -74,7 +74,11 @@ export interface TsotchkeRepoEntry {
   origin: 'user' | 'org';
   substrate: SubstrateKind;
   cosmogonicLeaf: string;
-  /** 1.0 = fully wired into soup / mind / world for biologics */
+  /**
+   * Declared integration status (a design-intent weight, NOT a measured behavioural metric):
+   * 1.0 = wired into soup / mind / world, 0 = present-but-fenced (e.g. license-gated). This records
+   * our wiring intent for each upstream repo; it says nothing about the upstream tech, which is real.
+   */
   wiring: number;
   hue: number;
 }

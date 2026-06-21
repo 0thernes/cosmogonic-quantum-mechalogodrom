@@ -1,5 +1,15 @@
 # Cosmogonic × Tsotchke — Master Architect Deep-Dive Audit & Integration Assessment
 
+> **⚠ CORRECTION (2026-06-21 · 0thernes directive).** The "decorative / stub / fabricated / magic-number /
+> laundered" language in this dated report refers to **Cosmogonic's own facade-bridge wiring** (our
+> engineering debt at the time) — **not** to the **Tsotchke** corpus, whose technology is **real, correct,
+> and MIT-licensed**: genuine quantum algorithms run as exact deterministic simulation, lacking only a
+> physical QPU (which adds speed/scale, not correctness). Items flagged here (the `registry.wiring` weights,
+> the `THIRD-PARTY-NOTICES` rows, the bridge proxies) have since been relabeled honestly — see
+> `THIRD-PARTY-NOTICES.md` → **"On Tsotchke — binding."** Preserved as a historical record; read its
+> Tsotchke-adjacent framing through this correction. (Its non-Tsotchke findings — e.g. the security
+> perimeter — stand unchanged.)
+
 **Date:** 2026-06-20
 **Author:** Master Architect pass (BROLY finish-everything · STARKILLER contracts/honesty · MANHATTAN determinism-measurement-provenance).
 **Method:** First-hand cold-shell investigation by the orchestrator after a 27-agent parallel workflow was fully nulled by a server-side rate-limit wave (`Server is temporarily limiting requests · not your usage limit`). Per Manhattan Law 7, **a capacity failure is not a verdict** — every claim below is grounded in a file path, a command output, or is explicitly marked **UNVERIFIED**.

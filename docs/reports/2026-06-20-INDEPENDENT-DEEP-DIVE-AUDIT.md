@@ -2,6 +2,13 @@
 
 # TSOTCHKE × COSMOGONIC — INDEPENDENT DEEP-DIVE AUDIT & ASSESSMENT (2026-06-20)
 
+> **⚠ CORRECTION (2026-06-21 · 0thernes directive).** This report's "decorative / stub / laundered /
+> trig-surrogate" verdicts target **Cosmogonic's own facade-bridge leaves** (our wiring debt) — **not** the
+> **Tsotchke** corpus. Tsotchke's algorithms are **real, correct, MIT-licensed** quantum research; they run
+> as exact deterministic simulation and lack only a physical QPU (speed/scale, not correctness). The bridge
+> proxies noted here have since been relabeled honestly — see `THIRD-PARTY-NOTICES.md` → **"On Tsotchke —
+> binding."** Preserved as a historical record; read its Tsotchke-adjacent framing through this correction.
+
 > Authored as the master architect/engineer of both codebases, under the three governing personas: BROLY (finish/receipts), STARKILLER (contracts/skepticism), MANHATTAN (determinism/measurement — UNKNOWN is a result, never laundered). Every verdict cites a file. Stub counts are stubs; they are never inflated into "wired."
 
 ---
