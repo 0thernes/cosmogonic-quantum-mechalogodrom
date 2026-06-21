@@ -115,6 +115,7 @@ import { ActiveInference, AIF_OBS, type ActiveInferenceSnapshot } from './active
 import { Metacognition, type MetacognitionSnapshot } from './metacognition';
 import { Criticality, type CriticalitySnapshot } from './criticality';
 import { TheoryOfMind } from './theory-of-mind';
+import { TomPantheon, type TomPantheonSnapshot } from './tom-pantheon';
 import { SuccessorRepresentation, type SuccessorSnapshot } from './successor-representation';
 import { Neuromodulation } from './neuromodulation';
 import { EmpowermentDrive, type EmpowermentSnapshot } from './empowerment';
@@ -304,6 +305,9 @@ export interface SuperMindSnapshot {
   attentionFocus: number;
   /** GWT-4: explicit state-dependent attention allocator over the plan coalition. */
   attentionController: AttentionControllerSnapshot;
+  /** The 25-organ ToM ensemble: aggregate menace/confidence (which bias the social drives), belief diversity
+   *  across the 6 mechanism families (0 ⇒ clones), and the family histogram. */
+  tomPantheon: TomPantheonSnapshot;
   topDownError: number;
   qualia: number[];
 }
@@ -478,6 +482,12 @@ export class SuperMind {
   private readonly neuro = new Neuromodulation();
   /** V94: theory of mind — models the NEAREST RIVAL's intent from its observable cues (social cognition). */
   private readonly tom: TheoryOfMind;
+  /** The 25-organ ToM ensemble (6 distinct mechanism families) — its aggregate menace + confidence bias
+   *  the social drives below, making all 25 organs reachable + plan-affecting (not a parked name-list). */
+  private readonly tomPantheon: TomPantheon;
+  private readonly tomCues = new Float32Array(SUPER_PLANS.length); // reused social-cue buffer (no hot alloc)
+  private tomEnsembleMenace = 0;
+  private tomEnsembleConfidence = 0;
   /** V1.1: the successor-representation predictive map — model-based look-ahead over its own plan dynamics
    *  (no random weights ⇒ it draws nothing from the seed stream; identity-initialised). */
   private readonly successor = new SuccessorRepresentation();
@@ -667,6 +677,8 @@ export class SuperMind {
     this.aif.setPreference([1, -1, 0.6, -0.4, 0.3, 0.5]);
     // V94: theory of mind — its own XOR-derived child stream (no extra rng draw ⇒ determinism intact).
     this.tom = new TheoryOfMind(mulberry32((childSeed ^ 0xc2b2ae35) >>> 0 || 1));
+    // The 25-organ ToM ensemble — its own XOR-derived child stream (no extra rng draw ⇒ determinism intact).
+    this.tomPantheon = new TomPantheon(mulberry32((childSeed ^ 0x7f4a7c15) >>> 0 || 1));
     // V95: the empowerment drive — its own XOR-derived child stream for the frozen LSH hyperplanes (no draw
     // on the weight stream ⇒ every sub-network keeps bit-identical weights, determinism intact).
     this.empowerment = new EmpowermentDrive(mulberry32((childSeed ^ 0x27d4eb2f) >>> 0 || 1));
@@ -1196,6 +1208,28 @@ export class SuperMind {
     drives.DOMINATE += tomGain * (1 - menace) * this.dominance;
     drives.HUNT += tomGain * (1 - menace) * s[5];
 
+    // ── ToM PANTHEON ── the 25-organ ensemble (6 distinct mechanism families) re-reads the same social cues
+    // and casts an AGGREGATE social vote alongside the single opponent-model above. A many-models consensus is
+    // steadier than one net: its mean menace (gated by ensemble confidence, so a split jury votes weakly)
+    // sharpens the same FLEE/DECEIVE/DOMINATE social pressure — making all 25 organs reachable + plan-
+    // affecting, not a parked name-list. Bounded, deterministic, allocation-free.
+    const c = this.tomCues;
+    c[0] = s[6] ?? 0; // rival proximity
+    c[1] = s[1] ?? 0; // threat
+    c[2] = this.dominance; // my dominance
+    c[3] = aggression; // my aggression
+    c[4] = s[2] ?? 0; // crowding
+    c[5] = menace; // the single opponent-model's read (a shared prior the ensemble refines)
+    c[6] = s[3] ?? 0; // chaos (the deception family reads this last slot as concealment pressure)
+    this.tomPantheon.observe(c);
+    this.tomEnsembleMenace = this.tomPantheon.getAggregateMenace();
+    this.tomEnsembleConfidence = this.tomPantheon.getAggregateConfidence();
+    const tomEnsembleGain = 0.08;
+    const ensembleVote = tomEnsembleGain * this.tomEnsembleMenace * this.tomEnsembleConfidence;
+    drives.FLEE += ensembleVote * (1 - this.dominance);
+    drives.DECEIVE += ensembleVote * 0.6;
+    drives.DOMINATE += ensembleVote * this.dominance;
+
     // ── V95 · NEUROMODULATION ── Doya's metalearning chemistry: a reward-prediction error (dopamine) plus
     // serotonin (patience), noradrenaline (alarm gain) and acetylcholine (attention), computed from the
     // creature's own state, spent as a bounded modulation of the drives — DA → reward pursuit, 5-HT → REST,
@@ -1570,6 +1604,7 @@ export class SuperMind {
       // GOAL5 surfaces
       attentionFocus: this.attnSchema.snapshot().dominantDim + this.attnSchema.confidence * 0.001, // scalar focus proxy
       attentionController: this.attnController.snapshot(),
+      tomPantheon: this.tomPantheon.snapshot(),
       topDownError: this.topdown.snapshot().error,
       qualia: Array.from(
         this.qualSpace.project([
