@@ -1,7 +1,7 @@
 # NHSI Progress Dashboard — 0thernes Corp
 
 **Non Human Super Intelligence (NHSI)** · Cosmogonic Quantum Mechalogodrom · **v0.16.1**  
-**Updated:** 2026-06-21 · **Gate:** `1,885 tests / 0 fail` · **95.65 % line / 92.84 % function**  
+**Updated:** 2026-06-21 · **Gate:** `1,455 tests / 0 fail` · **95.68 % line / 92.89 % function**  
 **Canonical receipts:** [`scripts/canonical-receipts.ts`](../scripts/canonical-receipts.ts) · enforced by `tests/docs-receipts-law.test.ts`
 
 > **Mission:** Not a chatbot, dancing robot, Terminator, or game player. A **Petri-dish cosmos** where
