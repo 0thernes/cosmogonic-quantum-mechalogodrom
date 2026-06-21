@@ -108,6 +108,7 @@ const TOOLBAR_MAP: Readonly<Record<string, keyof UiActions>> = {
   apoc: 'apocalypse',
   // Wave 1-2 controls surfaced as bottom-panel buttons (also reachable via the G/N/H/K hotkeys).
   chaosmode: 'toggleChaosMode', // V62: engage/disengage the Lorenz quantum storm
+  brutal: 'toggleBrutalism', // BRUTALISM: Super Creature god-jewel ↔ poured-concrete monolith (also: B key)
   entropy: 'entropyBoost', // F-CHAOS-ENTROPY: raise the order/heat-death axis
   nhi: 'launchNhi', // F-NHI: launch an NHI being in front of the camera
   space: 'cycleSpace', // F-SPACE: dilate the camera field-of-view

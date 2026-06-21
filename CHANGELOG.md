@@ -18,6 +18,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `brutalismFactor()` accessor added; docs/contract synced.
 - **Wired it live:** a `toggleBrutalism` action + the **`B` hotkey** flip every Super Creature between
   god-jewel and concrete (state `brutalism`, HUD toast + audit record, mirroring the CHAOS-MODE toggle).
+  Also surfaced as a **▦ BRUTAL toolbar button** (`data-action="brutal"`) so it's clickable on
+  touch/mouse, not keyboard-only.
 
 ### Super Creature god-jewel skin — compile fix + V64 LIVING, EVOLVING SKIN
 
