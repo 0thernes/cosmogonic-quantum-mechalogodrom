@@ -66,6 +66,39 @@ describe('SuperMind composite consciousness (V45)', () => {
     expect(last.length).toBeGreaterThan(0);
   });
 
+  test('#59 resonance integrator is wired live: bounded, dynamic, ignites, deterministic', () => {
+    const m = new SuperMind(mulberry32(123));
+    let mn = 1;
+    let mx = 0;
+    let ignitedEver = false;
+    // A calm, concordant regime lets the consciousness assembly settle toward agreement over beats.
+    for (let i = 0; i < 300; i++) {
+      m.think(percept({ threat: 0.05, energy: 0.85, chaos: 0.05, crowding: 0.05, sound: 0.1 }));
+      const r = m.snapshot().resonance;
+      expect(r.coupled).toBe(12); // the consciousness assembly
+      expect(r.order).toBeGreaterThanOrEqual(0);
+      expect(r.order).toBeLessThanOrEqual(1);
+      expect(Number.isFinite(r.phase)).toBe(true);
+      mn = Math.min(mn, r.order);
+      mx = Math.max(mx, r.order);
+      if (r.ignited) ignitedEver = true;
+    }
+    // It is a genuine dynamical variable (binds AND unbinds), reaches strong coherence, and crosses into
+    // at least one bound (ignited) moment — not a decorative constant (EMERGENCE-BLOCKERS #14).
+    expect(mx - mn).toBeGreaterThan(0.3);
+    expect(mx).toBeGreaterThan(0.6);
+    expect(ignitedEver).toBe(true);
+
+    // Deterministic: the same seed replays the same standing-wave trajectory bit-for-bit.
+    const a = new SuperMind(mulberry32(55));
+    const b = new SuperMind(mulberry32(55));
+    for (let i = 0; i < 40; i++) {
+      a.think(percept({ phase: i / 40, chaos: (i % 5) / 5 }));
+      b.think(percept({ phase: i / 40, chaos: (i % 5) / 5 }));
+      expect(a.snapshot().resonance.order).toBe(b.snapshot().resonance.order);
+    }
+  });
+
   test('drives + consciousness + quantum are all bounded; plan is always a real goal', () => {
     const m = new SuperMind(mulberry32(7));
     for (let i = 0; i < 40; i++) {

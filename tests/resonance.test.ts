@@ -8,6 +8,7 @@
 import { describe, expect, test } from 'bun:test';
 import {
   RESONANCE_IGNITION_THRESHOLD,
+  ResonanceField,
   kuramotoOrder,
   kuramotoStep,
   wrapPhase,
@@ -125,5 +126,57 @@ describe('resonance integrator (Kuramoto binding-by-synchrony)', () => {
     const justOver = integrate([0, 2 * Math.acos(0.71)]); // r ≈ 0.71
     expect(justUnder.ignited).toBe(false);
     expect(justOver.ignited).toBe(true);
+  });
+});
+
+describe('ResonanceField (stateful across-beats binding)', () => {
+  test('agreement builds a standing wave that ignites; disagreement stays unbound', () => {
+    const agree = new ResonanceField(12);
+    const agreeActs = Array.from({ length: 12 }, () => 0.8); // all faculties firing together
+    let agreeOrder = 0;
+    for (let b = 0; b < 60; b++) agreeOrder = agree.step(agreeActs).order;
+    expect(agreeOrder).toBeGreaterThan(RESONANCE_IGNITION_THRESHOLD);
+    expect(agree.snapshot().ignited).toBe(true);
+
+    const disagree = new ResonanceField(12);
+    const spreadActs = Array.from({ length: 12 }, (_, i) => i / 11); // maximally spread 0..1
+    let disagreeOrder = 0;
+    for (let b = 0; b < 60; b++) disagreeOrder = disagree.step(spreadActs).order;
+    expect(agreeOrder).toBeGreaterThan(disagreeOrder); // agreement binds harder than disagreement
+    expect(disagree.snapshot().ignited).toBe(false);
+  });
+
+  test('coherence builds over beats (binding has temporal dynamics, not one-shot)', () => {
+    const f = new ResonanceField(12);
+    const acts = Array.from({ length: 12 }, () => 0.7);
+    const first = f.step(acts).order;
+    let later = first;
+    for (let b = 0; b < 40; b++) later = f.step(acts).order;
+    expect(later).toBeGreaterThan(first); // the standing wave rises as the bank entrains
+  });
+
+  test('is deterministic (no rng/clock): identical activation streams → identical coherence', () => {
+    const a = new ResonanceField(8);
+    const b = new ResonanceField(8);
+    const acts = [0.1, 0.9, 0.3, 0.6, 0.5, 0.2, 0.8, 0.4];
+    let ra = 0;
+    let rb = 0;
+    for (let i = 0; i < 25; i++) {
+      ra = a.step(acts).order;
+      rb = b.step(acts).order;
+    }
+    expect(ra).toBe(rb);
+    expect(a.snapshot()).toEqual(b.snapshot());
+  });
+
+  test('snapshot shape: order in [0,1], coupled = faculty count, phase finite', () => {
+    const f = new ResonanceField(5);
+    f.step([0.5, 0.5, 0.5, 0.5, 0.5]);
+    const s = f.snapshot();
+    expect(s.coupled).toBe(5);
+    expect(s.order).toBeGreaterThanOrEqual(0);
+    expect(s.order).toBeLessThanOrEqual(1);
+    expect(Number.isFinite(s.phase)).toBe(true);
+    expect(typeof s.ignited).toBe('boolean');
   });
 });

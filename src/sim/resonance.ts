@@ -159,3 +159,80 @@ export function integrate(
     consensus: vectors.length > 0 ? resonantConsensus(vectors, phases) : [],
   };
 }
+
+/** A lean, serialisable summary of a {@link ResonanceField}'s current binding state (for telemetry). */
+export interface ResonanceSnapshot {
+  /** Standing-wave coherence r ∈ [0,1] this beat. */
+  readonly order: number;
+  /** True when the assembly is bound (`order ≥ threshold`) — an ignited moment. */
+  readonly ignited: boolean;
+  /** Collective phase ψ the assembly is locked toward. */
+  readonly phase: number;
+  /** Number of faculties in the coupled assembly. */
+  readonly coupled: number;
+}
+
+/**
+ * RESONANCE FIELD — a stateful, deterministic across-beats integrator (the spark, with memory).
+ *
+ * Where {@link integrate} reads an instantaneous snapshot of phases, this holds a PERSISTENT bank of
+ * coupled oscillators (one per faculty) and steps them with {@link kuramotoStep} each beat. Faculty
+ * activations in [0,1] set each oscillator's natural frequency (centred so 0.5 = still): when the
+ * faculties AGREE on their activation level their frequencies match and the bank entrains into a
+ * standing wave (coherence rises over beats); when they disagree the frequencies spread and the bank
+ * cannot lock (coherence stays low). So binding has *temporal dynamics* — it builds and decays, with
+ * hysteresis — rather than being a one-frame correlation. The whole thing is pure + deterministic
+ * (no rng, no clock): phases are seeded by an even deterministic spread and evolved only from the
+ * supplied (already-deterministic) activations, so it never perturbs the seeded sim stream.
+ */
+export class ResonanceField {
+  private phases: number[];
+
+  constructor(
+    n: number,
+    /**
+     * Coupling strength K. The full-disagreement critical coupling is `K_c = omegaScale/π`; with the
+     * defaults below `K_c = 2.0`, so K = 1.4 (ratio 0.7) cannot lock a maximally-spread assembly, while
+     * a concordant one (equal frequencies lock at any K > 0) binds. Faculties spanning a band Δ lock
+     * when `K > Δ·K_c` — i.e. the assembly ignites when its activations agree to within ~0.7.
+     */
+    private readonly K = 1.4,
+    /** Maps each activation's deviation from 0.5 to a natural-frequency spread (sets K_c = scale/π). */
+    private readonly omegaScale = 2 * Math.PI,
+    /** Integration step per substep. */
+    private readonly dt = 0.15,
+    /** Substeps per beat (a few Euler steps for a stable, smoothly-building lock). */
+    private readonly substeps = 3,
+  ) {
+    const m = Math.max(1, n);
+    // Deterministic ASYMMETRIC scatter (Knuth multiplicative hash → uint32 → angle). A perfectly even
+    // spread would sit on the unstable "splay" state, where symmetry zeroes the coupling force and the
+    // bank can never synchronise; an irregular seed lets coupling actually bind under agreement. No rng.
+    this.phases = Array.from({ length: m }, (_, i) =>
+      wrapPhase(((((i + 1) * 2654435761) >>> 0) / 0xffffffff) * TWO_PI),
+    );
+  }
+
+  /**
+   * Advance the field one beat from the current faculty `activations` (each in [0,1]) and return the
+   * resulting standing-wave state. Activations set the natural frequencies; coupling then entrains.
+   */
+  step(activations: readonly number[]): ResonanceState {
+    const omega = this.phases.map((_, i) => ((activations[i] ?? 0.5) - 0.5) * this.omegaScale);
+    for (let s = 0; s < this.substeps; s++) {
+      this.phases = kuramotoStep(this.phases, omega, this.K, this.dt);
+    }
+    return integrate(this.phases);
+  }
+
+  /** Lean telemetry snapshot of the field's current coherence (no heavy weight/consensus arrays). */
+  snapshot(): ResonanceSnapshot {
+    const { r, psi } = kuramotoOrder(this.phases);
+    return {
+      order: r,
+      ignited: r >= RESONANCE_IGNITION_THRESHOLD,
+      phase: psi,
+      coupled: this.phases.length,
+    };
+  }
+}

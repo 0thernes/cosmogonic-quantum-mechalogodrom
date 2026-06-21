@@ -121,6 +121,7 @@ import { EmpowermentDrive, type EmpowermentSnapshot } from './empowerment';
 import { QuantumReservoir, type QuantumReservoirSnapshot } from './quantum-reservoir';
 import { HolographicMemory, type HolographicSnapshot } from './holographic-memory';
 import { QuantumDeliberation, type DeliberationSnapshot } from './quantum-deliberation';
+import { ResonanceField, type ResonanceSnapshot } from './resonance';
 import type { SuperPercept, SuperPlan } from './super-creature';
 import { SUPER_PLANS } from './super-creature';
 // GOAL5 leaves (per MODULE-CONTRACTS contract: super-mind owns wiring of AST-1/HOT-1/HOT-4/memory-orchestra/narrative)
@@ -263,6 +264,9 @@ export interface SuperMindSnapshot {
   /** V98: the open-system Lindblad deliberation qubit — coherent superposition of options decohering into
    *  a committed decision (T₂ dephasing + T₁ relaxation). */
   deliberation: DeliberationSnapshot;
+  /** #59: the resonance integrator — standing-wave coherence binding the consciousness assembly by
+   *  synchrony (Kuramoto), and whether it crossed into an ignited (bound) moment this beat. */
+  resonance: ResonanceSnapshot;
   /** V101: Clifford stabilizer snapshot (Moonlab port). */
   clifford: CliffordSnapshot;
   // TSOTCHKE Eshkol consciousness (corpus): 3 substrates + module/program for 5 Archons.
@@ -378,6 +382,14 @@ const DELIB_GAIN = 0.1;
 /** How strongly the quantum-state velocity (qFlux) drives curiosity (bounded, on par with the others). */
 const QRC_CURIOSITY_GAIN = 0.1;
 
+// ── #59 · RESONANCE INTEGRATOR (Kuramoto binding-by-synchrony — the coupling spark) ───────────────────
+/** The consciousness/integration faculties coupled into the standing wave (the "do they agree?" set). */
+const RESONANCE_FACULTIES = 12;
+/** When BOUND (ignited), how hard the standing wave contrast-sharpens the coalition (decisive commit). */
+const RESONANCE_COMMIT_GAIN = 0.14;
+/** When UNBOUND (incoherent), how hard the scattered assembly is pushed to EXPLORE (resolve the doubt). */
+const RESONANCE_EXPLORE_GAIN = 0.1;
+
 /**
  * The composite apex mind. Construct with a seeded {@link Rng}; `think` each beat. ~10k parameters
  * across the named sub-networks (see {@link paramCount}). Pure + allocation-free in steady state.
@@ -435,6 +447,9 @@ export class SuperMind {
   private readonly qreservoir: QuantumReservoir;
   /** V98: the open-system Lindblad deliberation qubit (no seed — a deterministic master equation). */
   private readonly deliberation = new QuantumDeliberation();
+  /** #59: the resonance integrator — a persistent bank of coupled oscillators (no seed — deterministic
+   *  Kuramoto dynamics). Binds the consciousness assembly into a standing wave across beats. */
+  private readonly resonanceField = new ResonanceField(RESONANCE_FACULTIES);
   // WIRED Moonlab tensor contract from full Tsotchke corpus for quantum scaling in 5 Archons. Prealloc, det.
   private readonly tensorScratch = new Float64Array(4);
   private _useTensor = this.tensorScratch; // Ralph 20x use to satisfy noUnused (Moonlab tensor)
@@ -1176,6 +1191,42 @@ export class SuperMind {
     );
     drives.EXPLORE += METACOG_EXPLORE_GAIN * (1 - confidence) * (1 - s[1]);
 
+    // ── #59 · RESONANCE INTEGRATOR ── bind the consciousness assembly by SYNCHRONY (the coupling spark;
+    // EMERGENCE-BLOCKERS #9/#37, coupling > count). The twelve integration faculties — GWT ignition, IIT
+    // Φ, quantum Φ, Eshkol workspace, deliberation coherence, empowerment, criticality, metacog
+    // confidence, FEP prediction-confirmation (1−surprise), HOT qualia tone, reservoir + quantum-reservoir
+    // novelty — drive a persistent bank of coupled Kuramoto oscillators. When they AGREE the bank
+    // phase-locks into a standing wave (high coherence ⇒ a bound, ignited moment); when they scatter it
+    // stays incoherent. The binding then STEERS the commit: a bound assembly contrast-sharpens the
+    // leading coalition about its mean (raising its margin ⇒ a more decisive downstream GWT ignition); an
+    // unbound one resolves itself by EXPLORING. The ignition/Φ inputs are last-beat values — that is
+    // recurrent re-entry (#58), not a hack. Pure + deterministic: phases evolve only from already-seeded
+    // faculty signals, drawing nothing from the rng stream, so the beat stays bit-reproducible.
+    const resonance = this.resonanceField.step([
+      this.ignition,
+      this.phi,
+      qPhi,
+      this.eshkolEngine.workspace,
+      this.deliberation.coherence,
+      this.empowerment.empowerment,
+      this.criticality.proximity,
+      confidence,
+      clamp01(1 - surprise),
+      this.cons.qualiaTone,
+      this.reservoir.novelty,
+      this.qreservoir.quantumFlux,
+    ]);
+    if (resonance.ignited) {
+      let driveMean = 0;
+      for (const k of SUPER_PLANS) driveMean += drives[k];
+      driveMean /= SUPER_PLANS.length;
+      for (const k of SUPER_PLANS) {
+        drives[k] += RESONANCE_COMMIT_GAIN * resonance.order * (drives[k] - driveMean);
+      }
+    } else {
+      drives.EXPLORE += RESONANCE_EXPLORE_GAIN * (1 - resonance.order);
+    }
+
     let best: SuperPlan = 'REST';
     let bestScore = -Infinity;
     let runnerUp = -Infinity;
@@ -1325,6 +1376,7 @@ export class SuperMind {
       holographic: this.holographic.snapshot(),
       quantumReservoir: this.qreservoir.snapshot(),
       deliberation: this.deliberation.snapshot(),
+      resonance: this.resonanceField.snapshot(),
       clifford: this.clifford.snapshot(),
       // TSOTCHKE Eshkol consciousness (corpus): 3 substrates snapshot for 5 Archons.
       eshkolConsciousness: {

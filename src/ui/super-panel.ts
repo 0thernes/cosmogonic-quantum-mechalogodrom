@@ -180,6 +180,7 @@ export class SuperPanel {
     this.id.brain = idRow(id, 'Conscious', doc); // V46: the live ~10k-param composite mind
     this.id.substrate = idRow(id, 'Substrate', doc); // V84 + Ralph 10x: ported Tsotchke (Eshkol QRNG/AD/GWT + Moonlab tensor/Clifford + QGT + libirrep sym + quake + mpo + ulg) substrates live in 5 Archons. See facade + full corpus.
     this.id.cognition = idRow(id, 'Cognition', doc); // V1.1: reservoir · active-inference · metacognition
+    this.id.resonance = idRow(id, 'Resonance', doc); // #59: standing-wave coherence binding the assembly
     this.id.power = idRow(id, 'Power', doc); // V48: the evolution — level / stage / power / day
 
     // GOAL5: 5 Archons/Godforms telemetry (first-class, distinct from prime singular) — rows built in ctor for live per-Archetype plan inspect
@@ -355,6 +356,12 @@ export class SuperPanel {
         `HOLO ${(holo.confidence * 100).toFixed(0)}%→${holoPlan} · ` +
         // V98 — quantum deliberation: how decohered (decisive) the open-system decider is this beat.
         `QDEC ${(mind.deliberation.decisiveness * 100).toFixed(0)}%${mind.deliberation.committed ? '✦' : ''}`;
+      // #59 — resonance integrator: the standing-wave coherence binding the consciousness assembly by
+      // synchrony, whether it crossed into a BOUND (ignited) moment, and how many faculties phase-lock.
+      const reso = mind.resonance;
+      this.id.resonance!.textContent =
+        `Coherence ${(reso.order * 100).toFixed(0)}%${reso.ignited ? ' ✦ BOUND' : ''} · ` +
+        `${reso.coupled} faculties phase-locking`;
     }
 
     // V48 — the self-evolution: level · stage · power · day (it grows like Vegeta/Goku).
