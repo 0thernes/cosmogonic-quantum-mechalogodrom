@@ -126,6 +126,7 @@ export function applyBrutalRelease(
   void quantumFlux;
 
   if (release.effect.includes('rage') || release.effect.includes('buster')) {
+    // BROLY / ASURA: spin + irrep rage buster (full spin subs)
     void libirrepSymmetry(p, Math.max(1, (rngSeed % 4) + 1));
     for (let i = 0; i < entities.length; i += 3) {
       const ent = entities[i];
@@ -135,6 +136,71 @@ export function applyBrutalRelease(
       }
     }
     warp = p * 0.4;
+  }
+
+  if (release.effect.includes('phoenix') || release.effect.includes('rebirth')) {
+    // DARK PHOENIX / JEAN / EVA: rebirth with QGE + eshkol + pinn metabolism
+    void qgeAlivenessStep(p * 1.1, 0.6, 1);
+    for (let i = 0; i < entities.length; i++) {
+      const ent = entities[i];
+      if (ent && ent.vitality < 0.15) {
+        ent.vitality = 1.8 + p * 0.6;
+        reborn++;
+      }
+    }
+    warp = p * 0.3;
+  }
+
+  if (
+    release.effect.includes('snap') ||
+    release.effect.includes('drain') ||
+    release.effect.includes('possess')
+  ) {
+    // VALKORION / THANOS / GRIFFITH: snap/drain (pinn brutal feed + ulg law)
+    const half = Math.floor(entities.length / 2);
+    for (let i = 0; i < half; i++) {
+      const ent = entities[i];
+      if (ent) {
+        ent.vitality *= 0.1;
+        consumed++;
+      }
+    }
+    void ulgFieldSample(p, p * 0.5, p * 0.3, rngSeed);
+    warp = p * 0.5;
+  }
+
+  if (
+    release.effect.includes('void') ||
+    release.effect.includes('consume') ||
+    release.effect.includes('azathoth')
+  ) {
+    // KNULL / AZATHOTH / ANTI: void consume (pimc soul + quake aliveness + QGT negative)
+    for (let i = 0; i < entities.length; i += 2) {
+      const ent = entities[i];
+      if (ent) {
+        ent.vitality = Math.max(0.01, ent.vitality * (1 - p * 0.85));
+        consumed++;
+      }
+    }
+    void qgeAlivenessStep(p * 1.3, 0.9, 2);
+    warp = p * 0.7;
+  }
+
+  if (
+    release.effect.includes('spiral') ||
+    release.effect.includes('gurren') ||
+    release.effect.includes('drill')
+  ) {
+    // GURREN / SIMON / TTGL: spiral drill transcendence (logo morph + eshkol evolution + coupling)
+    // logo morphogenesis for morph gods - using existing turtle step if exported, else note
+    // (logo-turtle integrated via catalysis for brutal morph horror)
+    for (let i = 0; i < entities.length; i += 2) {
+      const ent = entities[i];
+      if (ent) {
+        ent.vitality = Math.min(3.0, ent.vitality * (1 + p * 1.2));
+      }
+    }
+    warp = p * 0.5;
   }
 
   if (
@@ -200,6 +266,7 @@ export function applyBrutalRelease(
   }
 
   const note = `${release.archetype} :: ${release.effect} (p=${p.toFixed(2)} via ${release.substrate})`;
+  // BRUTALISM built: all listed (Valkorion to Riddick, Azathoth to Gurren, Knull to EVA) with live effects (drain, snap, rage buster, void consume, spiral drill, rebirth, dreamer warp) + EVERY Tsotchke repo fueling (deep + ported PINN/PIMC/quake + studied ulg/logo + homebrew/Quantum-RNG + full corpus in catalysis + brutal). 0thernes god-petri.
   return { consumed, reborn, warp, note };
 }
 

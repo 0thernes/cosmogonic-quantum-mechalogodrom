@@ -95,11 +95,17 @@ import {
   petriGrowthMultiplier,
   type PetriDishState,
 } from './sim/godform'; // GOAL5 + TSOTCHKE full corpus (ralph 10x: Eshkol AD, Moonlab tensor, quake, irrep from (Tsotchke))
-import { PantheonSociety, FIELD_DIM } from './sim/pantheon';
+import { PantheonSociety, FIELD_DIM, ARCHON_CHANNELS } from './sim/pantheon';
 import { FacultiesPantheon } from './sim/faculties-pantheon';
 import { TomPantheon } from './sim/tom-pantheon';
 import { applyBrutalGodEvent } from './sim/petri-dish';
+import { triggerBrutalRelease, getBrutalLore } from './sim/brutal-god-releases';
 import { EmergenceAnglesController } from './sim/emergence-angles';
+import { Mortality } from './sim/mortality';
+import { Stigmergy } from './sim/stigmergy';
+import { Noosphere } from './sim/noosphere';
+import { Symbiosis } from './sim/symbiosis';
+import { MythRitual } from './sim/myth-ritual';
 import { SuperMind, type SuperMindSnapshot, type SuperMindIntent } from './sim/super-mind';
 import {
   quakePerturb,
@@ -225,6 +231,11 @@ export class World {
   private readonly tomPantheon: TomPantheon;
   /** NHSI · emergence angles 8–10 (Eshkol evolution, cross-strain, collective). */
   private readonly emergenceAngles: EmergenceAnglesController;
+  private readonly stigmergy = new Stigmergy();
+  private readonly noosphere = new Noosphere();
+  private readonly symbiosis: Symbiosis;
+  private readonly mythRitual: MythRitual;
+  private readonly archonMortality: Mortality[];
   private readonly nhsiFacultyIn = new Float32Array(16);
   private readonly nhsiTomCues = new Float32Array(8);
   private readonly nhsiGenomeScratch = new Float32Array(32);
@@ -671,7 +682,13 @@ export class World {
     this.facultiesPantheon = new FacultiesPantheon(mulberry32(nhsiSeed));
     this.tomPantheon = new TomPantheon(mulberry32((nhsiSeed ^ 0x546f4d21) >>> 0 || 1));
     this.emergenceAngles = new EmergenceAnglesController();
-    for (let i = 0; i < 5; i++) {
+    this.symbiosis = new Symbiosis(this.superRng);
+    this.mythRitual = new MythRitual(this.superRng);
+    this.archonMortality = Array.from(
+      { length: 5 },
+      (_, i) => new Mortality(this.superRng, { baseLifespan: 4000 + i * 500 }),
+    );
+    for (let i = 0; i < ARCHON_CHANNELS; i++) {
       const g = this.nhsiGenomeScratch;
       for (let k = 0; k < g.length; k++) g[k] = 0.35 + 0.08 * ((i * 7 + k * 3) % 11);
       this.emergenceAngles.registerStrain(`archon-${i}`, g);
@@ -1228,6 +1245,8 @@ export class World {
       this.tomPantheon.observe(tc);
       const facultyBias = this.facultiesPantheon.getAggregateActivation();
       const tomMenace = this.tomPantheon.getAggregateMenace();
+      this.symbiosis.step();
+      this.mythRitual.step();
       const net0 = this.economy.wealthOf(World.ECON_SUPER_BASE + 0)?.netWorth ?? 0;
       // global fallback percept (used for twins/heroes); 5 get position-localized versions below
       const basePercept: SuperPercept = {
@@ -1317,8 +1336,24 @@ export class World {
           ),
         };
         void pantheonSnap;
-        this.superCreatures[i]!.think(p);
         const mo = this.superMinds[i]!.think(p);
+        this.noosphere.updateArchon(
+          i,
+          mo.consciousness.phi,
+          mo.consciousness.ignition,
+          mo.consciousness.workspace,
+          mo.consciousness.novelty,
+          mo.consciousness.qualiaTone,
+        );
+        this.superBodies[i]!.worldPosition(this.sv1);
+        this.stigmergy.deposit(
+          this.sv1.x / ARENA_MID,
+          this.sv1.z / ARENA_MID,
+          i % 4,
+          0.05 + mo.consciousness.ignition * 0.1,
+        );
+        this.archonMortality[i]!.step();
+        this.superCreatures[i]!.think(p);
         const coll = this.nhsiCollectiveScratch;
         coll[0] = mo.consciousness.ignition;
         coll[1] = mo.consciousness.phi;
@@ -1358,22 +1393,69 @@ export class World {
           primeMindOut = mo;
         }
       }
+      this.noosphere.step();
+      this.stigmergy.step();
+      const nooSnap = this.noosphere.snapshot();
+      if (nooSnap.collectiveInsight) {
+        s.chaos = Math.min(CHAOS_MAX, s.chaos + 0.08);
+      }
+      // Light Archons (5–24): deposit pantheon field into emergence angles 8–10 each apex beat.
+      for (let a = 5; a < ARCHON_CHANNELS; a++) {
+        this.pantheon.field.sample(a, this.nhsiCollectiveScratch);
+        this.emergenceAngles.aggregateCollective(`archon-${a}`, this.nhsiCollectiveScratch);
+      }
 
       if (s.frame % 120 === 0) {
+        this.symbiosis.step();
+        this.mythRitual.step();
+        if (s.frame % 480 === 0) {
+          for (let i = 0; i < 5; i++) {
+            for (let j = i + 1; j < 5; j++) {
+              this.symbiosis.formRelationship(i, j);
+            }
+          }
+        }
         const primeSnap = this.superMinds[0]!.snapshot();
-        void this.emergenceAngles.evolveEshkolProgram('archon-0', primeSnap.consciousness.phi, fi);
-        this.emergenceAngles.recombineStrains('archon-0', 'archon-1');
-        for (let a = 0; a < Math.min(5, this.superMinds.length); a++) {
-          const snap = this.superMinds[a]?.snapshot?.() ?? null;
-          const em = this.emergenceAngles.getAggregateEmergence();
-          const pwr =
-            (snap?.consciousness?.phi ?? 0.3) +
-            (snap?.consciousness?.ignition ?? 0.2) +
-            ((snap as { chaos?: number })?.chaos ?? 0);
-          const chaos = s.chaos ?? 0.5;
-          if (pwr > 0.6 || em > 0.55 || chaos > 4) {
+        const rot = s.frame % ARCHON_CHANNELS;
+        void this.emergenceAngles.evolveEshkolProgram(
+          `archon-${rot}`,
+          primeSnap.consciousness.phi,
+          fi,
+        );
+        this.emergenceAngles.recombineStrains(
+          `archon-${rot}`,
+          `archon-${(rot + 1) % ARCHON_CHANNELS}`,
+        );
+        const em = this.emergenceAngles.getAggregateEmergence();
+        const chaos = s.chaos ?? 0.5;
+        for (let a = 0; a < ARCHON_CHANNELS; a++) {
+          let pwr = 0;
+          let spinO = 0.4;
+          let qgtC = 0.3;
+          let esh = 0.4;
+          if (a < this.superMinds.length) {
+            const snap = this.superMinds[a]?.snapshot?.() ?? null;
+            pwr =
+              (snap?.consciousness?.phi ?? 0.3) +
+              (snap?.consciousness?.ignition ?? 0.2) +
+              ((snap as { chaos?: number })?.chaos ?? 0);
+            spinO = (snap as { quantum?: number[] })?.quantum?.[0] ?? 0.4;
+            qgtC = (snap as { qgt?: number })?.qgt ?? 0.3;
+            esh =
+              (snap as { eshkolConsciousness?: { ignition?: number } })?.eshkolConsciousness
+                ?.ignition ?? 0.4;
+          } else {
+            this.pantheon.field.sample(a, this.nhsiCollectiveScratch);
+            const c = this.nhsiCollectiveScratch;
+            pwr =
+              ((c[0] ?? 0) + (c[1] ?? 0) + (c[2] ?? 0) + (c[3] ?? 0)) * 0.25 + (c[4] ?? 0) * 0.5;
+            spinO = c[2] ?? 0.4;
+            qgtC = c[3] ?? 0.3;
+            esh = c[0] ?? 0.4;
+          }
+          if (pwr > 0.55 || em > 0.5 || chaos > 3.5) {
             const brutal = this.emergenceAngles.triggerBrutalGodEvent(a, em, pwr, s.frame + a * 13);
-            const pd = this.petriDishes[a];
+            const pd = this.petriDishes[a % this.petriDishes.length];
             if (pd) {
               applyBrutalGodEvent(
                 pd,
@@ -1382,6 +1464,24 @@ export class World {
                 brutal.brutality,
                 this.petriRng,
               );
+              const release = triggerBrutalRelease(
+                a,
+                chaos,
+                spinO,
+                qgtC,
+                esh,
+                this.superRng,
+                s.frame + a,
+              );
+              if (release) {
+                pd.godPower = Math.min(1, (pd.godPower || 0) + release.power * 0.1);
+                this.audit.record('brutal-god-release', {
+                  archon: a,
+                  archetype: release.archetype,
+                  power: release.power,
+                  lore: getBrutalLore(release.archetype),
+                });
+              }
             }
             this.audit.record('brutal-god-event', {
               archon: a,

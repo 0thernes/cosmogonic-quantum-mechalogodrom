@@ -46,7 +46,10 @@ describe('NHSI pantheon modules (100 faculties · 25 ToM · emergence 8–10)', 
     expect(newA.length).toBe(32);
     expect(newB.length).toBe(32);
     const snaps = e.getAllSnapshots();
-    expect(snaps.length).toBe(3);
+    expect(snaps.length).toBeGreaterThanOrEqual(3);
+    expect(snaps.some((s) => s.angle === 'HIGHER_ORDER_EMERGENCE')).toBe(true);
+    expect(e.getGodScaleSnapshots().length).toBe(5);
+    expect(e.getGodScaleSnapshots().some((g) => g.mode === 'ARCHON_WARFARE')).toBe(true);
     expect(e.getAggregateEmergence()).toBeGreaterThanOrEqual(0);
     expect(e.getAggregateEmergence()).toBeLessThanOrEqual(1);
   });

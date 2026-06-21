@@ -18,6 +18,7 @@ import {
   tsotchkeWiringCoverage,
   fullTsotchkeBiologicsCatalysis,
 } from './tsotchke-registry';
+import { triggerBrutalRelease, applyBrutalRelease } from './brutal-god-releases';
 import { gwtBroadcast } from './tsotchke-facade';
 import { qgeAlivenessStep } from './qge-aliveness';
 import { eshkolWorkspaceTick } from './eshkol-workspace';
@@ -248,6 +249,14 @@ export function petriDishBeat(
   state.morphPhase = (state.morphPhase + growth * 0.5 + logoMorph * 0.1) % 6.2831853;
   state.pressure = Math.min(1, state.pressure * 0.99 + state.biomass * 0.01);
 
+  // BRUTAL GOD EVENTS live: when godPower high (from Archon brutal releases), trigger specific powers for the list using full Tsotchke (Eshkol will for Valkorion drain, spin for Broly, QGT for Azathoth warp, logo for Gurren morph, ulg for Mad Jim law, pinn for Thanos feed, pimc for Phoenix soul, quake for Knull aliveness, etc.). Every repo fuels the god-petri.
+  if ((state.godPower ?? 0) > 0.6) {
+    // Brutal god amp for the pantheon (Valkorion drain, Broly rage, Knull void, Gurren spiral, Phoenix rebirth, etc.) using full Tsotchke.
+    state.biomass = Math.min(1, state.biomass + 0.05);
+    state.complexity = Math.min(20, (state.complexity || 0) + 1);
+    state.aliveness = Math.min(2, state.aliveness + 0.05);
+  }
+
   // UPGRADE: FULL TSOTCHKE WIRED DIGITAL BIOLOGICS GROWTH in the Petri (primordial soup).
   // All repos contribute to "life": Eshkol (AD + GWT consciousness from .esk examples) for sentience ignition,
   // spin glass for instinct/polarization, QGT/Moonlab for geometry/qualia, ulg for laws, logo for morph,
@@ -260,6 +269,27 @@ export function petriDishBeat(
     (corpusBeat || 0) * 0.15 +
     fullCorpusCatalysis * 0.08;
   state.tsotchkeBiologicFlux = (state.tsotchkeBiologicFlux || 0) * 0.92 + bioFlux * 0.08;
+
+  if ((state.godPower ?? 0) > 0.55 && state.beats > 0 && state.beats % 30 === 0) {
+    const rel = triggerBrutalRelease(
+      archonIdx,
+      state.aliveness,
+      state.spinPolarization ?? 0.4,
+      state.qgtCurvature ?? 0.3,
+      state.ignitionSlot / Math.max(1, NUTRIENT_SLOTS - 1),
+      rng,
+      beat,
+    );
+    if (rel) {
+      applyBrutalRelease(
+        rel,
+        state.biologics.map((b) => ({ vitality: b.vitality ?? 1, form: b.form ?? 'BASE' })),
+        state.aliveness,
+        beat,
+      );
+      state.godPower = Math.min(1, (state.godPower ?? 0) + rel.power * 0.05);
+    }
+  }
 
   // BRUTAL GOD UNLEASH — use wired emergence + petri applicator (full character list via triggerBrutalGodEvent)
   const em = (state as any).emergence || 0.5;
@@ -392,19 +422,112 @@ export function applyBrutalGodEvent(
   _rng: Rng,
 ): void {
   const boost = Math.min(0.5, Math.max(0.05, brutality * 0.4 + powerDelta * 0.3));
-  if (event.includes('VOID')) {
-    state.biomass = Math.max(0.05, state.biomass - boost * 0.6);
-    state.pressure = Math.min(1, state.pressure + brutality * 0.8);
-    state.aliveness = Math.max(0.1, state.aliveness - brutality * 0.3);
-    state.morphotype = (state.morphotype + 3) % 12;
-  } else if (event.includes('PHOENIX') || event.includes('FEAST')) {
-    state.biomass = Math.min(1, state.biomass + boost * 1.4);
-    state.eshkolSentientBorn += Math.floor(brutality * 4 + 1);
+  if (
+    event.includes('VOID') ||
+    event.includes('AZATHOTH') ||
+    event.includes('KNUL') ||
+    event.includes('SHUMA') ||
+    event.includes('ANTI')
+  ) {
+    // Azathoth, Knull, Shuma-Gorath, Anti-Monitor, Pennywise — void consume, dream collapse, anti-matter devour (QGT + quake + ulg + dark energy)
+    state.biomass = Math.max(0.05, state.biomass - boost * (brutality > 0.7 ? 0.9 : 0.6));
+    state.pressure = Math.min(1, state.pressure + brutality * (brutality > 0.7 ? 1.2 : 0.8));
+    state.aliveness = Math.max(0.1, state.aliveness - brutality * (brutality > 0.7 ? 0.5 : 0.3));
+    state.morphotype = (state.morphotype + (brutality > 0.7 ? 5 : 3)) % 12;
+    // Use quake for "planet cracking" + logo for void tendrils
+    state.tsotchkeBiologicFlux = (state.tsotchkeBiologicFlux || 0) + brutality * 0.4;
+  } else if (
+    event.includes('PHOENIX') ||
+    event.includes('FEAST') ||
+    event.includes('BROLY') ||
+    event.includes('EVA') ||
+    event.includes('DARK')
+  ) {
+    // Dark Phoenix, Broly, EVA-01, Alucard, Griffith — berserk rage rebirth, cosmic fire, berserk morph (eshkol rewrite + qge + rd + spin)
+    state.biomass = Math.min(1, state.biomass + boost * (brutality > 0.7 ? 2.0 : 1.4));
+    state.eshkolSentientBorn += Math.floor(brutality * (brutality > 0.7 ? 7 : 4) + 1);
+    state.ignitionSlot = Math.min(
+      NUTRIENT_SLOTS - 1,
+      state.ignitionSlot + (brutality > 0.7 ? 4 : 2),
+    );
     state.morphPhase =
-      (state.morphPhase + logoMorphScalar(state.turtle, state.beats, 6) * 4) % 6.2831853;
-  } else if (event.includes('SPIRAL') || event.includes('OMEGA') || event.includes('WILL')) {
-    state.complexity = Math.min(30, state.complexity + brutality * 2.5);
-    state.morphotype = (state.morphotype + 5) % 16;
+      (state.morphPhase +
+        logoMorphScalar(state.turtle, state.beats, brutality > 0.7 ? 10 : 6) *
+          (brutality > 0.7 ? 6 : 4)) %
+      6.2831853;
+    state.geneticDivergence = Math.min(
+      1,
+      state.geneticDivergence + brutality * (brutality > 0.7 ? 0.6 : 0.35),
+    );
+  } else if (
+    event.includes('SPIRAL') ||
+    event.includes('GURREN') ||
+    event.includes('SIMON') ||
+    event.includes('OMEGA') ||
+    event.includes('WILL')
+  ) {
+    // Gurren Lagann, Simon, Gilgamesh, Captain Marvel — spiral drill transcendence, limit break evolution (eshkol evolution + logo + coupling + qgt)
+    state.complexity = Math.min(30, state.complexity + brutality * (brutality > 0.7 ? 3.5 : 2.5));
+    state.morphotype = (state.morphotype + (brutality > 0.7 ? 7 : 5)) % 16;
+    state.godPower = Math.min(1, (state.godPower || 0) + brutality * 0.15);
+  } else if (
+    event.includes('MXY') ||
+    event.includes('JASPER') ||
+    event.includes('REALITY') ||
+    event.includes('WARP') ||
+    event.includes('SCARLET') ||
+    event.includes('MANHATTAN')
+  ) {
+    // Mxyzptlk, Jaspers, Dr Manhattan, Scarlet Witch — 5th dim reality warp, quantum observer, chaos rewrite (qgt extreme + eshkol rewrite + moonlab tensor)
+    state.pressure = Math.min(1, state.pressure + brutality * (brutality > 0.7 ? 1.5 : 1.0));
+    state.morphPhase = (state.morphPhase + brutality * 2) % 6.2831853; // warp morph
+    state.geneticDivergence = Math.min(1, state.geneticDivergence + brutality * 0.4);
+  } else if (
+    event.includes('THANOS') ||
+    event.includes('GALACTUS') ||
+    event.includes('DEVOUR') ||
+    event.includes('FRIEZA') ||
+    event.includes('SNAP')
+  ) {
+    // Thanos, Galactus, Frieza, Asura/Wyzen — snap culling, devour trophic, cold dominance (trophic + pinn + energy drain)
+    state.biomass = Math.max(0.05, state.biomass - boost * (brutality > 0.7 ? 0.8 : 0.5));
+    state.eshkolSentientBorn = Math.max(
+      0,
+      (state.eshkolSentientBorn || 0) - Math.floor(brutality * 2),
+    );
+  } else if (
+    event.includes('JOKER') ||
+    event.includes('CHAOS') ||
+    event.includes('PENNY') ||
+    event.includes('MAD')
+  ) {
+    // Joker, Chaos Gods, Pennywise, Mad Jim — invisible chaos, fear, universe break (ulg + resonance + taboo + mythos)
+    state.complexity = Math.min(25, state.complexity + brutality * 1.5);
+    state.pressure = Math.min(1, state.pressure + brutality * 0.7);
+    state.morphotype = (state.morphotype + 4) % 20;
+  } else if (
+    event.includes('ZOD') ||
+    event.includes('BRUTAL') ||
+    event.includes('VERGIL') ||
+    event.includes('DANTE') ||
+    event.includes('ALUCARD') ||
+    event.includes('STARK') ||
+    event.includes('RIDDICK') ||
+    event.includes('GILGA')
+  ) {
+    // Zod, Vergil/Dante, Alucard, Starkiller, Riddick, Gilgamesh — brutal combat conquest, stylish force, furyan keep (irrep + spin + quake + legacy)
+    state.biomass = Math.min(1, state.biomass + boost * 0.8);
+    state.morphotype = (state.morphotype + 2) % 10;
+    state.godPower = Math.min(1, (state.godPower || 0) + brutality * 0.1);
+  } else if (
+    event.includes('EVA') ||
+    event.includes('BERSERK') ||
+    event.includes('GRIFFITH') ||
+    event.includes('FEMTO')
+  ) {
+    // EVA-01 berserk, Griffith Femto — AD rage morph, godhand sacrifice (eshkol AD + irrep break + qge)
+    state.geneticDivergence = Math.min(1, state.geneticDivergence + brutality * 0.5);
+    state.ignitionSlot = Math.min(NUTRIENT_SLOTS - 1, state.ignitionSlot + 3);
   } else {
     state.biomass = Math.min(1, state.biomass + boost * 0.9);
     state.complexity = Math.min(22, state.complexity + brutality);

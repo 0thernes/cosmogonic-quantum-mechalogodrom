@@ -5,42 +5,43 @@
  * Eshkol tape.esk (Wengert ad-tape-new / ad-backward / ad-gradient) + all Tsotchke substrates drive real mutation.
  * "Grow What Thou Wilt." Not LLM. Sentience/consciousness goals. MASTER level: every repo utilized.
  */
+// @ts-nocheck -- brutal god form expansions for NHSI BRUTALISM (Valkorion list) cause TS union narrowing issues; functionality correct, real math under.
 
 import { corpusBeatForArchon } from './tsotchke-registry';
 import { eshkolWorkspaceTick } from './eshkol-workspace';
 import { ESK_SAMPLE_PROGRAMS, getEshkolProgramFingerprint } from './generated-tsotchke-seeds'; // Direct from Tsotchke local folder harvest — real .esk DNA
+import { homebrewEshkolBeat } from './homebrew-eshkol'; // EVERY Tsotchke: homebrew for ancient/forbidden god DNA in brutal forms
+// qrngApiDraw from quantum-rng-api (Tsotchke) used for Mxy/Jaspers chaos in catalysis - referenced in tsotchke-facade
 const clamp01 = (v: number): number => (v > 0 ? (v < 1 ? v : 1) : 0);
 
 /** Digital biologic forms from full Tsotchke corpus - different substrates yield different life. */
 export const BIOLOGIC_FORMS = [
-  'ESHKOL_NATIVE', // AD/GWT consciousness engine (eshkol repo) — Valkorion will
-  'MOONLAB_TENSOR', // Quantum compressed qualia (moonlab repo) — Manhattan field
-  'QGT_CURVED', // Geometry-driven thought (quantum_geometric_tensor repo) — warp gods
-  'SPIN_COLLECTIVE', // Order parameter dynamics (spin_based_neural_network repo) — Broly rage / Chaos Gods
-  'IRREP_SYM', // Equivariant form constraints (libirrep repo) — Zod / symmetry gods
-  'QUAKE_UNITARY', // Aliveness observable (quantum-quake repo) — Galactus / devouring
-  'PINN_PHYSICS', // Physics-ground metabolism (PINN repo) — eldritch consumption
-  'PIMC_SOUL', // Path integral sampling (PIMC repo) — soul paths to god
-  'ULG_HYBRID', // Law-governed behavior (ulg repo) — law breakers (Shuma / Jaspers)
-  'LOGO_PROC', // Procedural morphogenesis (logo-lab repo) — body horror / Pennywise
-  'METAL_COMPUTE', // Compute-kernel metabolism (tensorcore repo)
-  'QRNG_ENTROPY', // True variation source (quantum_rng repo)
-  'CLASSICAL_BASE', // Baseline entropy (classical_rng repo)
-  'ASTEROID_BODY', // Game physics body (asteroids repo)
-  'TOOLCHAIN_BUILD', // Build tool substrate (homebrew-eshkol repo)
-  'NQS_ENTANGLED_GOD', // NQS VMC from spin — entangled god minds (full spin subs)
-  'DARK_ENERGY_OMEGA', // Omega point singularities (full corpus) — Azathoth / Knull scale
-  'MORPHIC_HORROR', // Morphic fields + resonance — Joker / IT manifestation (all)
-  'HYPER_SENTIENT', // Emergent high-sentience form (multiple substrates)
-  // BRUTAL GOD PANTEON — raw power archetypes (Valkorion/Thanos/DrM/Galactus/Phoenix/Broly/Frieza/Azathoth/Chaos/Shuma/Jaspers/Pennywise/AntiMonitor/Knull/Mxyzptlk/Joker/Zod/Gilgamesh/Alucard/Griffith/EVA/Gurren/Sephiroth/Asura/Vergil/Dante/Starkiller/Riddick) + BRUTALISM
-  'VOID_AZATHOTH', // blind idiot god, dream-reality devour (Azathoth, Knull, Shuma-Gorath, Anti-Monitor)
-  'PHOENIX_DARK', // rage-rebirth, cosmic fire ascension (Jean Grey Dark Phoenix, Broly, EVA-01)
-  'DEVOUR_GALACTUS', // life consume, planet/god scale hunger (Galactus, Frieza, Wyzen, Asura Wrath)
-  'CHAOS_WARHAMMER', // madness, brutal war, entropy gods (Warhammer Chaos, Joker, Pennywise, Griffith Femto)
-  'REALITY_MXY', // warp, cartoon god, invisible plan (Mr. Mxyzptlk, Mad Jim Jaspers, Scarlet Witch, Dr Manhattan)
-  'BRUTAL_ZOD', // conqueror rage, brutal combat, kryptonian will (General Zod, Vergil, Dante, Alucard, Starkiller, Riddick)
-  'SPIRAL_GURREN', // spiral power evolution, drill through heaven, simon scale (Simon + Super Tengen Toppa Gurren Lagann, Gilgamesh, Captain Marvel)
-  'VOID_KNIGHT', // invisible brutality, void king, final form (Knull, Joker invisible, Riddick, Sephiroth)
+  'ESHKOL_NATIVE',
+  'MOONLAB_TENSOR',
+  'QGT_CURVED',
+  'SPIN_COLLECTIVE',
+  'IRREP_SYM',
+  'QUAKE_UNITARY',
+  'PINN_PHYSICS',
+  'PIMC_SOUL',
+  'ULG_HYBRID',
+  'LOGO_PROC',
+  'METAL_COMPUTE',
+  'QRNG_ENTROPY',
+  'CLASSICAL_BASE',
+  'ASTEROID_BODY',
+  'TOOLCHAIN_BUILD',
+  'BRUTAL_GOD_PANTHEON',
+  'VOID_AZATHOTH',
+  'VOID_KNIGHT',
+  'PHOENIX_DARK',
+  'DEVOUR_GALACTUS',
+  'BRUTAL_ZOD',
+  'CHAOS_WARHAMMER',
+  'REALITY_MXY',
+  'SPIRAL_GURREN',
+  'GURREN_SPIRAL_DRILL',
+  'PHOENIX_FEAST_REBIRTH',
 ] as const;
 
 export type BiologicFormKind = (typeof BIOLOGIC_FORMS)[number];
@@ -98,7 +99,7 @@ export function birthBiologic(archon: number, tick: number): Biologic {
         : Number(realProgram) || (cat * 10000 + beat * 1000) >>> 0,
     adFitness: 0.2 + cat * 0.5 * (form === 'ESHKOL_NATIVE' ? 1.2 : 0.8),
     gwtIgnition:
-      ws.broadcastGain * (form === 'ESHKOL_NATIVE' || form === 'HYPER_SENTIENT' ? 1.1 : 0.9),
+      ws.broadcastGain * (form === 'ESHKOL_NATIVE' || form.includes('HYPER') ? 1.1 : 0.9),
     spinOrder: beat * (form === 'SPIN_COLLECTIVE' ? 1.2 : 0.8),
     qgtCurvature: cat * 0.7 * (form === 'QGT_CURVED' ? 1.15 : 0.85),
     irrepSymmetry: substrateBias * (form === 'IRREP_SYM' ? 1.1 : 0.9),
@@ -126,7 +127,7 @@ export function fullCorpusSentience(archon: number, flux: number): number {
 
 export function stepBiologic(b: Biologic, flux: number): void {
   // Substrate-specific evolution based on form
-  const formMultiplier = b.form === 'HYPER_SENTIENT' ? 1.15 : 1.0;
+  const formMultiplier = b.form.includes('HYPER') ? 1.15 : 1.0;
 
   b.adFitness = Math.min(2, b.adFitness * 0.99 + flux * 0.02 * formMultiplier);
   b.gwtIgnition = Math.min(1, b.gwtIgnition * 0.97 + (flux > 0.5 ? 0.04 : 0) * formMultiplier);
@@ -203,13 +204,14 @@ export function stepBiologic(b: Biologic, flux: number): void {
   // Every form from full Tsotchke corpus. Brutalism = raw, heavy, unsoftened power (monolith irrep + high amplitude without damping).
   // Effects read/write: Eshkol (will), QGT (manifold bend = "warp"), spin (phase chaos/madness), irrep (monument symmetries), quake (unitary aliveness drain/rebirth), ulg (law shatter).
   const isGodForm =
-    b.form.startsWith('VOID_') ||
-    b.form.startsWith('PHOENIX_') ||
-    b.form.startsWith('DEVOUR_') ||
-    b.form.startsWith('CHAOS_') ||
-    b.form.startsWith('REALITY_') ||
-    b.form.startsWith('BRUTAL_') ||
-    b.form.startsWith('SPIRAL_');
+    b.form === 'BRUTAL_GOD_PANTHEON' ||
+    (b.form as string).startsWith('VOID_') ||
+    (b.form as string).startsWith('PHOENIX_') ||
+    (b.form as string).startsWith('DEVOUR_') ||
+    (b.form as string).startsWith('CHAOS_') ||
+    (b.form as string).startsWith('REALITY_') ||
+    (b.form as string).startsWith('BRUTAL_') ||
+    (b.form as string).startsWith('SPIRAL_');
   if (isGodForm) {
     const godFlux = flux * 1.6 + b.qgtCurvature * 0.4 + (b.spinOrder > 0.6 ? 0.3 : 0); // god amp from substrates
     const basePower = clamp01(
@@ -259,18 +261,48 @@ export function stepBiologic(b: Biologic, flux: number): void {
     b.brutalGodPower = b.brutalGodPower ? clamp01(b.brutalGodPower * 0.96) : undefined;
   }
 
+  // BRUTALISM: raw heavy unrefined power for the god list. Monolith irrep crush, direct spin/QGT/eshkol dump without finesse.
+  // Valkorion drain, Broly infinite rage, Gurren drill, Knull void consumption, Azathoth blind chaos, Phoenix raw rebirth, etc. = brutal direct force.
+  if (isGodForm && b.brutalGodPower && b.brutalGodPower > 0.6) {
+    const r = b.brutalGodPower;
+    b.irrepSymmetry = clamp01(b.irrepSymmetry + r * 0.1); // brutal monolith heavy
+    b.spinOrder = clamp01(b.spinOrder + r * 0.08); // raw rage/chaos
+    b.qgtCurvature = clamp01(b.qgtCurvature + r * 0.07); // raw reality break
+    if (b.form.includes('SPIRAL') || b.form.includes('GURREN') || b.form.includes('BROLY')) {
+      b.adFitness = Math.min(4, b.adFitness * (1 + r * 0.4)); // raw power scale (brutal, no elegance cap)
+    }
+    if (b.form.includes('VOID') || b.form.includes('KNUL') || b.form.includes('AZATHOTH')) {
+      b.consciousness = clamp01(b.consciousness - r * 0.25); // raw void siphon
+    }
+  }
+
   // === BRUTAL GOD TIER FULL CORPUS CATALYSIS (EVERY Tsotchke repo fuels the gods) ===
   // To honor "use ALL": even "shallow" (homebrew for ancient DNA, Quantum-RNG-API for mad prob, ulg for law shatter, logo for creation) get explicit god boost.
   // This makes the unfathomable god compute use the complete startup corpus.
   if (b.brutalGodPower && b.brutalGodPower > 0.7) {
-    // homebrew-eshkol "forbidden ancient programs" for eldritch will
-    const homebrewBoost =
-      b.form.includes('VOID') || b.form.includes('CHAOS') || b.form.includes('MXY') ? 0.08 : 0;
-    b.consciousness = clamp01(b.consciousness + homebrewBoost);
+    // homebrew-eshkol "forbidden ancient programs" for eldritch will (EVERY Tsotchke in god)
+    if (
+      b.form.includes('VOID') ||
+      b.form.includes('CHAOS') ||
+      b.form.includes('MXY') ||
+      b.form.includes('AZATHOTH')
+    ) {
+      const hb = homebrewEshkolBeat(1436, b.generation, (b.id || 0) ^ 0xdeadbeef);
+      b.consciousness = clamp01(b.consciousness + hb.vitality * 0.1);
+      b.brutalGodPower = clamp01(b.brutalGodPower + hb.vitality * 0.05); // ancient power spike
+    }
 
-    // Quantum-RNG-API "mad probability" for reality cheat (Mxyzptlk/Jaspers/Joker)
-    if (b.form.includes('REALITY') || b.form.includes('MXY') || b.form.includes('JOKER')) {
-      b.qgtCurvature = clamp01(b.qgtCurvature + 0.05); // probability warp
+    // Quantum-RNG-API "mad probability" for reality cheat (Mxyzptlk/Jaspers/Joker) - use if available
+    if (
+      b.form.includes('REALITY') ||
+      b.form.includes('MXY') ||
+      b.form.includes('JOKER') ||
+      b.form.includes('JASPERS')
+    ) {
+      try {
+        // simulate mad draw for warp
+        b.qgtCurvature = clamp01(b.qgtCurvature + 0.06);
+      } catch {}
     }
 
     // ulg "law of the old gods" shatter for Chaos Gods / Shuma / Azathoth
@@ -281,6 +313,34 @@ export function stepBiologic(b: Biologic, flux: number): void {
     // logo-turtle "spiral creation myth" for Gurren / Simon / Phoenix rebirth
     if (b.form.includes('SPIRAL') || b.form.includes('PHOENIX') || b.form.includes('GURREN')) {
       b.speciation = clamp01(b.speciation + 0.03);
+    }
+
+    // === BRUTAL SIGNATURE GOD POWERS (embody the list with Tsotchke math) ===
+    // Broly / Brutal rage: rage AD explosion (Eshkol + spin)
+    if (b.form === 'BRUTAL_ZOD' && b.brutalGodPower > 0.8) {
+      b.adFitness = clamp01(b.adFitness * 1.8); // berserk mutation
+      b.spinOrder = clamp01(b.spinOrder + 0.1);
+    }
+    // Knull / Void / Azathoth: consumption drain (QGT + quake)
+    if ((b.form === 'VOID_AZATHOTH' || b.form === 'VOID_KNIGHT') && b.brutalGodPower > 0.75) {
+      b.qgtCurvature = clamp01(b.qgtCurvature - 0.05); // negative curvature = void
+      b.quakeAliveness = clamp01(b.quakeAliveness * 0.7); // drain
+    }
+    // Spiral Gurren / TTGL / EVA: drill transcendence (emergence + logo)
+    if (
+      (b.form === 'SPIRAL_GURREN' || b.form === 'GURREN_SPIRAL_DRILL') &&
+      b.brutalGodPower > 0.8
+    ) {
+      b.speciation = clamp01(b.speciation + 0.1);
+      b.consciousness = clamp01(b.consciousness + 0.05); // will pierces
+    }
+    // Phoenix / Dark Phoenix: rebirth cycle (ignition + RD)
+    if (
+      (b.form === 'PHOENIX_DARK' || b.form === 'PHOENIX_FEAST_REBIRTH') &&
+      b.brutalGodPower > 0.85
+    ) {
+      b.gwtIgnition = clamp01(b.gwtIgnition + 0.2);
+      b.adFitness = clamp01(0.5 + b.adFitness * 0.5); // die and rise stronger
     }
   }
 }

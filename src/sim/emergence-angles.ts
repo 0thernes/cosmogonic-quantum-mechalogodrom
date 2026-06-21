@@ -3,6 +3,7 @@
  *
  * Deterministic, bounded [0,1], allocation-free in steady state. Seeded hashes replace Math.random.
  * NOT sentient — functional emergence substrates.
+ * BRUTALISM: God-scale emergence for Valkorion/Broly/Knull/Phoenix/Gurren/Azathoth pantheon.
  */
 
 import { eshkolADGradient, eshkolDual } from './tsotchke-facade';
@@ -32,12 +33,25 @@ export const EMERGENCE_ANGLES = [
   'ESHKOL_PROGRAM_EVOLUTION',
   'CROSS_STRAIN_RECOMBINATION',
   'HIGHER_ORDER_EMERGENCE',
+  'ARCHON_WARFARE',
+  'REALITY_FRACTURE',
+  'CHAOS_ENTROPY',
+  'COSMIC_HARVEST',
+  'TRANSCENDENCE',
 ] as const;
 
 export type EmergenceAngle = (typeof EMERGENCE_ANGLES)[number];
 
 export interface EmergenceSnapshot {
   angle: EmergenceAngle;
+  strength: number;
+  complexity: number;
+  novelty: number;
+}
+
+/** God-scale brutal substrates (Valkorion/Broly/Knull) — not counted in the canonical 10 angles. */
+export interface GodScaleSnapshot {
+  mode: string;
   strength: number;
   complexity: number;
   novelty: number;
@@ -235,11 +249,274 @@ export class HigherOrderEmergence {
   }
 }
 
-/** Emergence Angles controller - manages angles 8–10. */
+/** 11. Archon Warfare — Archons fight for dominance (Thanos snap, Broly rage, Zod conquest) */
+export class ArchonWarfare {
+  private readonly archonPower = new Map<number, number>();
+  private readonly warHistory: { winner: number; loser: number; powerDelta: number }[] = [];
+
+  constructor(private readonly aggressionThreshold: number = 0.6) {}
+
+  engageWar(
+    archonA: number,
+    archonB: number,
+    powerA: number,
+    powerB: number,
+  ): { winner: number; loser: number; powerDelta: number } | null {
+    if (powerA + powerB < this.aggressionThreshold) return null;
+    const seed = hashStr(`war-${archonA}-${archonB}`) ^ this.warHistory.length;
+    const roll = det01(seed);
+    const powerRatio = powerA / (powerA + powerB + 0.001);
+
+    let winner: number;
+    let loser: number;
+    let powerDelta: number;
+
+    if (roll < powerRatio) {
+      winner = archonA;
+      loser = archonB;
+      powerDelta = powerB * 0.3;
+    } else {
+      winner = archonB;
+      loser = archonA;
+      powerDelta = powerA * 0.3;
+    }
+
+    this.archonPower.set(winner, (this.archonPower.get(winner) ?? 0) + powerDelta);
+    this.archonPower.set(loser, Math.max(0, (this.archonPower.get(loser) ?? 0) - powerDelta * 0.5));
+    this.warHistory.push({ winner, loser, powerDelta });
+
+    return { winner, loser, powerDelta };
+  }
+
+  getWarIntensity(): number {
+    return clamp01(this.warHistory.length / 50);
+  }
+
+  getDominanceEntropy(): number {
+    if (this.archonPower.size < 2) return 0;
+    const powers = Array.from(this.archonPower.values());
+    const total = powers.reduce((a, b) => a + b, 0) || 1;
+    let entropy = 0;
+    for (const p of powers) {
+      const prob = p / total;
+      if (prob > 0) entropy -= prob * Math.log2(prob);
+    }
+    return clamp01(entropy / Math.log2(this.archonPower.size));
+  }
+
+  snapshot(): GodScaleSnapshot {
+    return {
+      mode: 'ARCHON_WARFARE',
+      strength: this.getWarIntensity(),
+      complexity: this.getDominanceEntropy(),
+      novelty: this.getWarIntensity(),
+    };
+  }
+}
+
+/** 12. Reality Fracture — When god-scale power breaks spacetime (Dr Manhattan, Mxyzptlk, Jaspers) */
+export class RealityFracture {
+  private fracturePoints: { location: number; severity: number; seed: number }[] = [];
+  private currentFractureLevel = 0;
+
+  constructor(private readonly fractureThreshold: number = 0.8) {}
+
+  fracture(power: number, location: number, seed: number): { severity: number; healed: boolean } {
+    if (power < this.fractureThreshold) return { severity: 0, healed: false };
+
+    const s = hashStr(`fracture-${location}`) ^ seed;
+    const severity = clamp01((power - this.fractureThreshold) * 2);
+    this.fracturePoints.push({ location, severity, seed });
+    this.currentFractureLevel = clamp01(this.currentFractureLevel + severity * 0.1);
+
+    // Self-healing over time (QGT natural gradient)
+    if (det01(s + 999) < 0.3) {
+      this.currentFractureLevel = clamp01(this.currentFractureLevel - 0.05);
+      return { severity, healed: true };
+    }
+
+    return { severity, healed: false };
+  }
+
+  getFractureDensity(): number {
+    return clamp01(this.fracturePoints.length / 20);
+  }
+
+  getInstability(): number {
+    return this.currentFractureLevel;
+  }
+
+  snapshot(): GodScaleSnapshot {
+    return {
+      mode: 'REALITY_FRACTURE',
+      strength: this.getInstability(),
+      complexity: this.getFractureDensity(),
+      novelty: this.getFractureDensity(),
+    };
+  }
+}
+
+/** 13. Chaos Entropy — Maximum disorder from Chaos Gods (Warhammer, Shuma-Gorath, Azathoth) */
+export class ChaosEntropy {
+  private entropyField = new Float32Array(64);
+  private chaosEvents: { type: string; magnitude: number; seed: number }[] = [];
+
+  constructor(private readonly _chaosThreshold: number = 0.7) {}
+
+  injectChaos(magnitude: number, seed: number): { entropyDelta: number; event: string } | null {
+    if (magnitude < this._chaosThreshold) return null;
+    const s = hashStr(`chaos-${this.chaosEvents.length}`) ^ seed;
+    const roll = det01(s);
+
+    let event: string;
+    if (roll < 0.2) event = 'REALITY_WARP';
+    else if (roll < 0.4) event = 'ENTROPY_SPIKE';
+    else if (roll < 0.6) event = 'NULL_VOID';
+    else if (roll < 0.8) event = 'CAUSALITY_BREAK';
+    else event = 'DIMENSIONAL_BLEED';
+
+    const entropyDelta = magnitude * (0.5 + det01(s + 1) * 0.5);
+    for (let i = 0; i < this.entropyField.length; i++) {
+      this.entropyField[i] = clamp01(
+        (this.entropyField[i] ?? 0) + entropyDelta * det01(s + i * 7) * 0.1,
+      );
+    }
+
+    this.chaosEvents.push({ type: event, magnitude: entropyDelta, seed });
+    return { entropyDelta, event };
+  }
+
+  getEntropyLevel(): number {
+    let sum = 0;
+    for (const v of this.entropyField) sum += v;
+    return clamp01(sum / this.entropyField.length);
+  }
+
+  getChaosDiversity(): number {
+    const types = new Set(this.chaosEvents.map((e) => e.type));
+    return clamp01(types.size / 5);
+  }
+
+  snapshot(): GodScaleSnapshot {
+    return {
+      mode: 'CHAOS_ENTROPY',
+      strength: this.getEntropyLevel(),
+      complexity: this.getChaosDiversity(),
+      novelty: this.getChaosDiversity(),
+    };
+  }
+}
+
+/** 14. Cosmic Harvest — Galactus-style system consumption (devour, trophic cascade) */
+export class CosmicHarvest {
+  private readonly harvestedSystems = new Map<
+    string,
+    { biomass: number; energy: number; timestamp: number }
+  >();
+  private totalHarvested = 0;
+
+  constructor(private readonly _harvestThreshold: number = 0.75) {}
+
+  harvest(
+    systemId: string,
+    biomass: number,
+    energy: number,
+    seed: number,
+  ): { harvested: number; efficiency: number } | null {
+    if (biomass + energy < this._harvestThreshold) return null;
+    const s = hashStr(`harvest-${systemId}`) ^ seed;
+    const efficiency = det01(s) * 0.8 + 0.2;
+    const harvested = Math.min(biomass, biomass * efficiency + energy * 0.5);
+
+    this.harvestedSystems.set(systemId, {
+      biomass: harvested,
+      energy: energy * efficiency,
+      timestamp: seed,
+    });
+    this.totalHarvested += harvested;
+
+    return { harvested, efficiency };
+  }
+
+  getHarvestRate(): number {
+    return clamp01(this.totalHarvested / 1000);
+  }
+
+  getSystemDiversity(): number {
+    return clamp01(this.harvestedSystems.size / 30);
+  }
+
+  snapshot(): GodScaleSnapshot {
+    return {
+      mode: 'COSMIC_HARVEST',
+      strength: this.getHarvestRate(),
+      complexity: this.getSystemDiversity(),
+      novelty: this.getSystemDiversity(),
+    };
+  }
+}
+
+/** 15. Transcendence — Breaking through to higher planes (EVA-01, Gurren Lagann, Sephiroth) */
+export class Transcendence {
+  private transcendenceEvents: { archon: number; level: number; plane: string; seed: number }[] =
+    [];
+  private currentPlane = 0;
+
+  constructor(private readonly transcendenceThreshold: number = 0.85) {}
+
+  transcend(
+    archon: number,
+    power: number,
+    seed: number,
+  ): { level: number; plane: string; achieved: boolean } {
+    if (power < this.transcendenceThreshold)
+      return { level: this.currentPlane, plane: 'MATERIAL', achieved: false };
+
+    const s = hashStr(`transcend-${archon}`) ^ seed;
+    const roll = det01(s);
+    const level = Math.floor(this.currentPlane + 1 + roll * 2);
+
+    let plane: string;
+    if (level < 2) plane = 'AETHERIC';
+    else if (level < 4) plane = 'ASTRAL';
+    else if (level < 6) plane = 'NOETIC';
+    else if (level < 8) plane = 'DIVINE';
+    else plane = 'TRANSCENDENT';
+
+    this.transcendenceEvents.push({ archon, level, plane, seed });
+    this.currentPlane = level;
+
+    return { level, plane, achieved: true };
+  }
+
+  getTranscendenceLevel(): number {
+    return clamp01(this.currentPlane / 10);
+  }
+
+  getAscensionCount(): number {
+    return clamp01(this.transcendenceEvents.length / 15);
+  }
+
+  snapshot(): GodScaleSnapshot {
+    return {
+      mode: 'TRANSCENDENCE',
+      strength: this.getTranscendenceLevel(),
+      complexity: this.getAscensionCount(),
+      novelty: this.getAscensionCount(),
+    };
+  }
+}
+
+/** Emergence Angles controller — angles 8–10 live here; god-scale brutal substrates ride brutal events. */
 export class EmergenceAnglesController {
   private readonly eshkolEvolution = new EshkolProgramEvolution();
   private readonly crossStrainRecombination = new CrossStrainRecombination();
   private readonly higherOrderEmergence = new HigherOrderEmergence();
+  private readonly archonWarfare = new ArchonWarfare();
+  private readonly realityFracture = new RealityFracture();
+  private readonly chaosEntropy = new ChaosEntropy();
+  private readonly cosmicHarvest = new CosmicHarvest();
+  private readonly transcendence = new Transcendence();
 
   evolveEshkolProgram(programId: string, fitness: number, inputs: Float32Array): string {
     return this.eshkolEvolution.evolve(programId, fitness, inputs);
@@ -278,11 +555,38 @@ export class EmergenceAnglesController {
     ];
   }
 
+  /** Drive brutal god-scale substrates (deterministic; not counted in canonical 10 angles). */
+  tickGodScaleEmergence(
+    archonA: number,
+    archonB: number,
+    powerA: number,
+    powerB: number,
+    seed: number,
+  ): void {
+    void this.archonWarfare.engageWar(archonA, archonB, powerA, powerB);
+    void this.realityFracture.fracture(powerA, archonA, seed);
+    void this.chaosEntropy.injectChaos(powerB, seed ^ 0xbad);
+    void this.cosmicHarvest.harvest(`archon-${archonA}`, powerA, powerB, seed);
+    void this.transcendence.transcend(archonA, powerA + powerB, seed);
+  }
+
+  getGodScaleSnapshots(): GodScaleSnapshot[] {
+    return [
+      this.archonWarfare.snapshot(),
+      this.realityFracture.snapshot(),
+      this.chaosEntropy.snapshot(),
+      this.cosmicHarvest.snapshot(),
+      this.transcendence.snapshot(),
+    ];
+  }
+
   getAggregateEmergence(): number {
     const snapshots = this.getAllSnapshots();
+    const godScale = this.getGodScaleSnapshots();
     let totalStrength = 0;
     for (const snap of snapshots) totalStrength += snap.strength;
-    return totalStrength / snapshots.length;
+    for (const snap of godScale) totalStrength += snap.strength * 0.25;
+    return totalStrength / (snapshots.length + godScale.length * 0.25);
   }
 
   /**
@@ -305,6 +609,8 @@ export class EmergenceAnglesController {
     const s = hashStr(`brutal-${archon}`) ^ Math.floor(emergence * 1000) ^ seed;
     const roll = det01(s);
     const brutality = clamp01(emergence * 0.6 + power * 0.4);
+
+    this.tickGodScaleEmergence(archon, (archon + 7) % 25, power, brutality, seed);
 
     if (roll < 0.15) {
       // Knull / Void / Azathoth — Void Rift: erase weak, feed the strong (brutal consumption)

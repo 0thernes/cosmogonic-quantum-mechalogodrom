@@ -30,7 +30,12 @@ function measureGate(): { count: number; line: string; func: string } {
   const out = run(['test', '--coverage']);
   const ran = out.match(/Ran\s+([0-9]+)\s+tests?\b/);
   const pass = out.match(/^\s*([0-9]+)\s+pass\s*$/m);
-  const count = ran ? Number(ran[1]) : pass ? Number(pass[1]) : NaN;
+  let count = ran ? Number(ran[1]) : pass ? Number(pass[1]) : NaN;
+  if (!Number.isFinite(count)) {
+    // Fallback for polluted or different output formats (e.g. "2181 pass")
+    const passLine = out.match(/(\d+)\s+pass\b/);
+    if (passLine) count = Number(passLine[1]);
+  }
   if (!Number.isFinite(count))
     throw new Error('verify-receipts: could not parse test count from `bun test --coverage`');
   // Bun prints: "All files                | % Funcs | % Lines | ..." then a row "All files | NN.NN | NN.NN |"

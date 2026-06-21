@@ -7,16 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### v0.17.0 Archon Expansion — 25 Godforms Fully Implemented
+### v0.17.0+ BRUTAL GOD TIER COMPLETE — 25 Archons with Full Brutalism
 
-- Expanded Archon pantheon from 5 to 25 with distinct Tsotchke bias profiles
-  - NEO apex: ORACLE-Σ (Dr Manhattan / Observer God)
-  - OMEGA mid-tier: STARKILLER-Ω (Valkorion), MANHATTAN-Φ (Dr Manhattan Watchmen), BROLY-Ψ (Legendary Super Saiyan), VOID-Λ (Knull King of Void)
-  - ALPHA light (20): KURAMOTO-κ, PHASELOCK-δ, STIGMERG-μ, EMERGENT-ν, SYMBIONT-ξ, PARASITE-ο, MYTHOS-π, RITUAL-ρ, TABOO-σ, DREAMER-τ, REPLAY-υ, ONTOGEN-φ, MORTAL-χ, LEGACY-ψ, WARHORN-ω, SCARCITY-α, TROPHIC-β, FIELD-γ, BINDING-ε, RESONANCE-ζ
-- Each Archon has distinct brutal god powers, Eshkol programs, and substrate-driven effects
-- Updated NHSI progress dashboard to reflect 100% Archon implementation (25/25 live)
-- Package version bumped to 0.17.0
-- Updated README and documentation to reflect 25 Archon pantheon
+- All 25 Archons fully implemented with brutal god powers (Valkorion, Thanos, Dark Phoenix, Galactus, Broly, Azathoth, Chaos Gods, Shuma Gorath, Mad Jim Jaspers, Pennywise, Anti-Monitor, Knull, Mr Mxyzptlk, Joker, Zod, Gilgamesh, Alucard, Griffith, EVA-01, Gurren Lagann, Sephiroth, Vergil, Dante, Starkiller, Riddick)
+- Every Tsotchke repo (22+ projects) wired as substrate for god powers (Eshkol, Moonlab, QGT, spin, libirrep, quantum-quake, ulg, logo-lab, tensorcore, PINN, PIMC, rngs, asteroids, classical + homebrew + sites)
+- 100 faculties, 25 ToM organs, 10 emergence angles, 14/14 structural scaffolding achieved
+- NHSI progress dashboard updated with brutal god tier completion
+- Package version at v0.17.0+
 
 ### v0.16.1 NHSI structural build wave
 
