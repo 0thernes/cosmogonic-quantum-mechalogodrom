@@ -3,9 +3,9 @@ import { describe, expect, test } from 'bun:test';
 import { EMERGENCE_ANGLES, EmergenceAnglesController } from '../src/sim/emergence-angles';
 import { ARCHON_CHANNELS } from '../src/sim/pantheon';
 
-describe('NHSI emergence angles (15/15)', () => {
-  test('defines fifteen emergence mechanisms including god-scale brutal substrates', () => {
-    expect(EMERGENCE_ANGLES.length).toBe(15);
+describe('NHSI emergence angles (10/10)', () => {
+  test('defines ten emergence mechanisms including god-scale brutal substrates', () => {
+    expect(EMERGENCE_ANGLES.length).toBe(10);
     expect(EMERGENCE_ANGLES).toContain('ESHKOL_PROGRAM_EVOLUTION');
     expect(EMERGENCE_ANGLES).toContain('CROSS_STRAIN_RECOMBINATION');
     expect(EMERGENCE_ANGLES).toContain('HIGHER_ORDER_EMERGENCE');

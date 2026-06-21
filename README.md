@@ -430,9 +430,20 @@ bun install
 bun dev
 ```
 
-Then visit **http://localhost:3000** ” plus **http://localhost:3000/docs** for
+Then visit **http://localhost:3000** — plus **http://localhost:3000/docs** for
 live architecture, ERD, and sequence diagrams rendered with Mermaid, and
 **http://localhost:3000/lab** for the seeded p5.js collapse-field artifact.
+
+**GitHub Pages (live, same build as CI):**
+
+| Surface | URL |
+| ------- | --- |
+| **Dome (app)** | https://0thernes.github.io/cosmogonic-quantum-mechalogodrom/ |
+| **Docs** | https://0thernes.github.io/cosmogonic-quantum-mechalogodrom/docs.html |
+| **Specs** | https://0thernes.github.io/cosmogonic-quantum-mechalogodrom/specs.html |
+| **Lab** | https://0thernes.github.io/cosmogonic-quantum-mechalogodrom/lab/ |
+
+Project contact: **0_0@0thernes.art** · org site **https://0thernes.art** (Pages host the app above).
 
 Useful next commands:
 

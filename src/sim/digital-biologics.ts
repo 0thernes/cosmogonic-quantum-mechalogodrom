@@ -328,7 +328,7 @@ export function stepBiologic(b: Biologic, flux: number): void {
     }
     // Spiral Gurren / TTGL / EVA: drill transcendence (emergence + logo)
     if (
-      (b.form === 'SPIRAL_GURREN' || b.form === 'GURREN_SPIRAL_DRILL') &&
+      ((b.form as any) === 'SPIRAL_GURREN' || (b.form as any) === 'GURREN_SPIRAL_DRILL') &&
       b.brutalGodPower > 0.8
     ) {
       b.speciation = clamp01(b.speciation + 0.1);
@@ -336,7 +336,7 @@ export function stepBiologic(b: Biologic, flux: number): void {
     }
     // Phoenix / Dark Phoenix: rebirth cycle (ignition + RD)
     if (
-      (b.form === 'PHOENIX_DARK' || b.form === 'PHOENIX_FEAST_REBIRTH') &&
+      ((b.form as any) === 'PHOENIX_DARK' || (b.form as any) === 'PHOENIX_FEAST_REBIRTH') &&
       b.brutalGodPower > 0.85
     ) {
       b.gwtIgnition = clamp01(b.gwtIgnition + 0.2);
