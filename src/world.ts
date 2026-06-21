@@ -1336,47 +1336,47 @@ export class World {
           ),
         };
         void pantheonSnap;
-        const mo = this.superMinds[i]!.think(p);
+        const mindOut = this.superMinds[i]!.think(p);
         this.noosphere.updateArchon(
           i,
-          mo.consciousness.phi,
-          mo.consciousness.ignition,
-          mo.consciousness.workspace,
-          mo.consciousness.novelty,
-          mo.consciousness.qualiaTone,
+          mindOut.consciousness.phi,
+          mindOut.consciousness.ignition,
+          mindOut.consciousness.workspace,
+          mindOut.consciousness.novelty,
+          mindOut.consciousness.qualiaTone,
         );
         this.superBodies[i]!.worldPosition(this.sv1);
         this.stigmergy.deposit(
           this.sv1.x / ARENA_MID,
           this.sv1.z / ARENA_MID,
           i % 4,
-          0.05 + mo.consciousness.ignition * 0.1,
+          0.05 + mindOut.consciousness.ignition * 0.1,
         );
         this.archonMortality[i]!.step();
         this.superCreatures[i]!.think(p);
         const coll = this.nhsiCollectiveScratch;
-        coll[0] = mo.consciousness.ignition;
-        coll[1] = mo.consciousness.phi;
-        coll[2] = mo.consciousness.surprise;
-        coll[3] = mo.consciousness.novelty;
-        coll[4] = mo.consciousness.selfAware;
-        coll[5] = mo.consciousness.workspace;
-        coll[6] = clamp(mo.curiosity, 0, 1);
-        coll[7] = mo.consciousness.qualiaTone;
+        coll[0] = mindOut.consciousness.ignition;
+        coll[1] = mindOut.consciousness.phi;
+        coll[2] = mindOut.consciousness.surprise;
+        coll[3] = mindOut.consciousness.novelty;
+        coll[4] = mindOut.consciousness.selfAware;
+        coll[5] = mindOut.consciousness.workspace;
+        coll[6] = clamp(mindOut.curiosity, 0, 1);
+        coll[7] = mindOut.consciousness.qualiaTone;
         this.emergenceAngles.aggregateCollective(`archon-${i}`, coll);
         this.pantheon.depositApex(
           i,
           [
-            mo.consciousness.ignition,
-            mo.consciousness.phi,
-            mo.consciousness.surprise,
-            mo.consciousness.novelty,
-            mo.consciousness.selfAware,
-            mo.consciousness.workspace,
-            mo.consciousness.qualiaTone,
-            clamp(mo.curiosity, 0, 1),
+            mindOut.consciousness.ignition,
+            mindOut.consciousness.phi,
+            mindOut.consciousness.surprise,
+            mindOut.consciousness.novelty,
+            mindOut.consciousness.selfAware,
+            mindOut.consciousness.workspace,
+            mindOut.consciousness.qualiaTone,
+            clamp(mindOut.curiosity, 0, 1),
           ],
-          0.35 + mo.consciousness.ignition * 0.5,
+          0.35 + mindOut.consciousness.ignition * 0.5,
         );
         // FULL TSOTCHKE: catalyze via update (Eshkol + all repos soup growth)
         this.primordialSoup.update(i, s.frame, this.petriRng);
@@ -1384,13 +1384,13 @@ export class World {
         if (dish) petriDishBeat(dish, i, s.frame, this.petriRng);
         this.superBodies[i]!.setMind(this.superCreatures[i]!.snapshot());
         this.superBodies[i]!.setConsciousness(
-          mo.quantum,
-          mo.consciousness.dreaming,
-          mo.consciousness.hallucinating,
+          mindOut.quantum,
+          mindOut.consciousness.dreaming,
+          mindOut.consciousness.hallucinating,
         );
         if (i === 0) {
           this.superMindSnap = this.superMinds[0]!.snapshot(); // typed, removed any per contract
-          primeMindOut = mo;
+          primeMindOut = mindOut;
         }
       }
       this.noosphere.step();

@@ -108,13 +108,17 @@ function run(seed: number, frames: number): number[] {
 }
 
 describe('same-seed golden determinism (integrated population sim)', () => {
-  test('two worlds from one seed are BIT-IDENTICAL after 300 frames', () => {
-    const a = run(0xc0541c, 300);
-    const b = run(0xc0541c, 300);
-    expect(b.length).toBe(a.length);
-    // toEqual on the arrays gives exact (bit) comparison for finite doubles.
-    expect(b).toEqual(a);
-  });
+  test(
+    'two worlds from one seed are BIT-IDENTICAL after 300 frames',
+    () => {
+      const a = run(0xc0541c, 300);
+      const b = run(0xc0541c, 300);
+      expect(b.length).toBe(a.length);
+      // toEqual on the arrays gives exact (bit) comparison for finite doubles.
+      expect(b).toEqual(a);
+    },
+    { timeout: 10000 },
+  ); // allow for heavy integrated sim in full suite (was timing out at default 5s under load)
 
   test('a different seed diverges (the trace is sensitive, not vacuous)', () => {
     const a = run(1, 120);

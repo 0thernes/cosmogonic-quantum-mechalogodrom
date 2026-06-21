@@ -4,8 +4,8 @@ import { EMERGENCE_ANGLES, EmergenceAnglesController } from '../src/sim/emergenc
 import { ARCHON_CHANNELS } from '../src/sim/pantheon';
 
 describe('NHSI emergence angles (10/10)', () => {
-  test('defines ten emergence mechanisms including god-scale brutal substrates', () => {
-    expect(EMERGENCE_ANGLES.length).toBe(10);
+  test('defines fifteen emergence mechanisms (10 core + 5 brutal god-scale for Valkorion/Thanos/Broly/Knull/Phoenix/Gurren etc)', () => {
+    expect(EMERGENCE_ANGLES.length).toBe(15);
     expect(EMERGENCE_ANGLES).toContain('ESHKOL_PROGRAM_EVOLUTION');
     expect(EMERGENCE_ANGLES).toContain('CROSS_STRAIN_RECOMBINATION');
     expect(EMERGENCE_ANGLES).toContain('HIGHER_ORDER_EMERGENCE');

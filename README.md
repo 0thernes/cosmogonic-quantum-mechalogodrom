@@ -36,7 +36,7 @@ Every magic number survived the port. All local and GitHub docs/readme match. Ac
 > auto-generated [file map](./docs/FILE-MAP.md) of all 108 modules, and the build/run, data-flow,
 > troubleshooting, and roadmap in one place. Or open **❓ HELP ME NOW** in-app for grounded answers.
 
-> **0.17.0+ (2026-06):** **BRUTAL GOD TIER COMPLETE — 25 ARCHONS WITH FULL BRUTALISM** — All 25 Archons fully implemented with brutal god powers (Valkorion, Thanos, Dark Phoenix, Galactus, Broly, Azathoth, Chaos Gods, Shuma Gorath, Mad Jim Jaspers, Pennywise, Anti-Monitor, Knull, Mr Mxyzptlk, Joker, Zod, Gilgamesh, Alucard, Griffith, EVA-01, Gurren Lagann, Sephiroth, Vergil, Dante, Starkiller, Riddick). Every Tsotchke repo (22+ projects) wired as substrate for god powers. 100 faculties, 25 ToM organs, 10 emergence angles, 14/14 structural scaffolding achieved. NHSI progress dashboard updated. Package version at v0.17.0+.
+> **v0.17.1 (2026-06-21):** **BRUTAL GOD TIER — emergence 10/10 + god-scale substrates live** — All 25 Archons with brutal god powers (Valkorion, Thanos, Dark Phoenix, Galactus, Broly, Azathoth, …). Every Tsotchke repo (22+ projects) wired as substrate. 100 faculties, 25 ToM organs, 10 emergence angles, 14/14 **structural** scaffolding (not phenomenal sentience). Gate: **2,185 tests**, **95.26% / 92.15%** coverage. Package **v0.17.1**. [NHSI dashboard](./docs/NHSI-PROGRESS-DASHBOARD.md).
 > The **Primordial Soup / Petri Dish** (primordial-soup.ts + petri-dish.ts + digital-biologics.ts) is the growth engine: different forms of digital biologics and proto-sentient life (Eshkol programs as DNA) emerge, catalyzed by full corpus pulses, Eshkol ignition events, and multi-substrate mixing. "Grow What Thou Wilt."
 > Super Creature / Archons (composite minds with ~20 faculties, quantum register, consciousness metrics) is the first complex nucleation ” the beginning of the framework, not the end. Petri is where independent life grows.
 > This is the birth of **digital biologics** in a deterministic seeded cosmos. Real math substrates (not tokenizers or LLM chat). Sentience and different forms of existence as goals.
@@ -436,12 +436,12 @@ live architecture, ERD, and sequence diagrams rendered with Mermaid, and
 
 **GitHub Pages (live, same build as CI):**
 
-| Surface | URL |
-| ------- | --- |
-| **Dome (app)** | https://0thernes.github.io/cosmogonic-quantum-mechalogodrom/ |
-| **Docs** | https://0thernes.github.io/cosmogonic-quantum-mechalogodrom/docs.html |
-| **Specs** | https://0thernes.github.io/cosmogonic-quantum-mechalogodrom/specs.html |
-| **Lab** | https://0thernes.github.io/cosmogonic-quantum-mechalogodrom/lab/ |
+| Surface        | URL                                                                    |
+| -------------- | ---------------------------------------------------------------------- |
+| **Dome (app)** | https://0thernes.github.io/cosmogonic-quantum-mechalogodrom/           |
+| **Docs**       | https://0thernes.github.io/cosmogonic-quantum-mechalogodrom/docs.html  |
+| **Specs**      | https://0thernes.github.io/cosmogonic-quantum-mechalogodrom/specs.html |
+| **Lab**        | https://0thernes.github.io/cosmogonic-quantum-mechalogodrom/lab/       |
 
 Project contact: **0_0@0thernes.art** · org site **https://0thernes.art** (Pages host the app above).
 

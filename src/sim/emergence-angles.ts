@@ -49,14 +49,6 @@ export interface EmergenceSnapshot {
   novelty: number;
 }
 
-/** God-scale brutal substrates (Valkorion/Broly/Knull) — not counted in the canonical 10 angles. */
-export interface GodScaleSnapshot {
-  mode: string;
-  strength: number;
-  complexity: number;
-  novelty: number;
-}
-
 /** 8. Full Eshkol Program Evolution — .esk genomes mutate via AD */
 export class EshkolProgramEvolution {
   private readonly genomes = new Map<string, string>();
@@ -304,9 +296,9 @@ export class ArchonWarfare {
     return clamp01(entropy / Math.log2(this.archonPower.size));
   }
 
-  snapshot(): GodScaleSnapshot {
+  snapshot(): EmergenceSnapshot {
     return {
-      mode: 'ARCHON_WARFARE',
+      angle: 'ARCHON_WARFARE',
       strength: this.getWarIntensity(),
       complexity: this.getDominanceEntropy(),
       novelty: this.getWarIntensity(),
@@ -346,9 +338,9 @@ export class RealityFracture {
     return this.currentFractureLevel;
   }
 
-  snapshot(): GodScaleSnapshot {
+  snapshot(): EmergenceSnapshot {
     return {
-      mode: 'REALITY_FRACTURE',
+      angle: 'REALITY_FRACTURE',
       strength: this.getInstability(),
       complexity: this.getFractureDensity(),
       novelty: this.getFractureDensity(),
@@ -397,9 +389,9 @@ export class ChaosEntropy {
     return clamp01(types.size / 5);
   }
 
-  snapshot(): GodScaleSnapshot {
+  snapshot(): EmergenceSnapshot {
     return {
-      mode: 'CHAOS_ENTROPY',
+      angle: 'CHAOS_ENTROPY',
       strength: this.getEntropyLevel(),
       complexity: this.getChaosDiversity(),
       novelty: this.getChaosDiversity(),
@@ -446,9 +438,9 @@ export class CosmicHarvest {
     return clamp01(this.harvestedSystems.size / 30);
   }
 
-  snapshot(): GodScaleSnapshot {
+  snapshot(): EmergenceSnapshot {
     return {
-      mode: 'COSMIC_HARVEST',
+      angle: 'COSMIC_HARVEST',
       strength: this.getHarvestRate(),
       complexity: this.getSystemDiversity(),
       novelty: this.getSystemDiversity(),
@@ -497,9 +489,9 @@ export class Transcendence {
     return clamp01(this.transcendenceEvents.length / 15);
   }
 
-  snapshot(): GodScaleSnapshot {
+  snapshot(): EmergenceSnapshot {
     return {
-      mode: 'TRANSCENDENCE',
+      angle: 'TRANSCENDENCE',
       strength: this.getTranscendenceLevel(),
       complexity: this.getAscensionCount(),
       novelty: this.getAscensionCount(),
@@ -542,6 +534,16 @@ export class EmergenceAnglesController {
         return this.crossStrainRecombination.snapshot();
       case 'HIGHER_ORDER_EMERGENCE':
         return this.higherOrderEmergence.snapshot();
+      case 'ARCHON_WARFARE':
+        return this.archonWarfare.snapshot();
+      case 'REALITY_FRACTURE':
+        return this.realityFracture.snapshot();
+      case 'CHAOS_ENTROPY':
+        return this.chaosEntropy.snapshot();
+      case 'COSMIC_HARVEST':
+        return this.cosmicHarvest.snapshot();
+      case 'TRANSCENDENCE':
+        return this.transcendence.snapshot();
       default:
         return { angle, strength: 0, complexity: 0, novelty: 0 };
     }
@@ -552,6 +554,11 @@ export class EmergenceAnglesController {
       this.eshkolEvolution.snapshot(),
       this.crossStrainRecombination.snapshot(),
       this.higherOrderEmergence.snapshot(),
+      this.archonWarfare.snapshot(),
+      this.realityFracture.snapshot(),
+      this.chaosEntropy.snapshot(),
+      this.cosmicHarvest.snapshot(),
+      this.transcendence.snapshot(),
     ];
   }
 
@@ -570,7 +577,7 @@ export class EmergenceAnglesController {
     void this.transcendence.transcend(archonA, powerA + powerB, seed);
   }
 
-  getGodScaleSnapshots(): GodScaleSnapshot[] {
+  getGodScaleSnapshots(): EmergenceSnapshot[] {
     return [
       this.archonWarfare.snapshot(),
       this.realityFracture.snapshot(),
