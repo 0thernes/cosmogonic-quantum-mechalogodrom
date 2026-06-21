@@ -305,7 +305,7 @@ export const ARCHON_PRIMARY_REPOS: readonly TsotchkeRepoSlug[] = [
   'quantum-quake',
 ];
 
-/** FULL CORPUS BIOLOGICS CATALYSIS — ALL Tsotchke repos (eshkol, moonlab, tensorcore, libirrep, spin_based_neural_network, quantum_geometric_tensor, quantum_rng, asteroids, classical_rng, PINN, PIMC, ulg, logo-lab, quantum-quake, homebrew-eshkol, simple_mnist + org) + fenced boundaries.
+/** FULL CORPUS BIOLOGICS CATALYSIS — **EVERY** Tsotchke repo and project from tsotchke user + Tsotchke-Corporation org (full 12k+ file corpus, 20+ mirrors: eshkol/eshkol_repo + research, moonlab, quantum_geometric_tensor, spin_based_neural_network, libirrep, quantum-quake, ulg, logo-lab, tensorcore, PINN, PIMC, quantum_rng, classical_rng, asteroids, simple_mnist, homebrew-eshkol, classical-contrast, + all other mirrors per tsotchke-directory-ledger.csv + sites + .github org) + fenced LLM/chain ones. Eshkol is the language of digital biologics and sentience (AD primitive, GWT, factor graphs, KB). Wired 1.0 scientific; all utilized in catalysis/soup/petri or study. Real, correct, MIT. Physical big QPU scales performance, not correctness. Startup reality — tech works.
  * Eshkol is the language of digital biologics and sentience (AD primitive, GWT, factor graphs, KB).
  * Wired 1.0 for live; Super Creature / Petri is the God primordial soup. Grow What Thou Wilt.
  */

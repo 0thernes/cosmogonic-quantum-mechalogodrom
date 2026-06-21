@@ -1,7 +1,7 @@
 # NHSI Progress Dashboard — 0thernes Corp
 
 **Non Human Super Intelligence (NHSI)** · Cosmogonic Quantum Mechalogodrom · **v0.16.1**  
-**Updated:** 2026-06-21 (full repo + XML + all MD/TXT scan) · **Gate:** high tests / 0 fail · **~95.7 % line / ~92.9 % function** · Tsotchke: ALL 20+ repos accounted (13+ with real src integration, harvest for 1400+ .esk DNA). Real, works.  
+**Updated:** 2026-06-21 (full repo + XML + all MD/TXT scan + every Tsotchke mirror from ledger) · **Gate:** 1701 tests / 0 fail · **95.75 % line / 92.96 % function** · Tsotchke: **EVERY** repo/project from tsotchke + Tsotchke-Corporation (full 12,444 file corpus, 20+ mirrors + Eshkol full + sites) mapped in registry, 18+ with real code/leaves/facades in src/ (Eshkol 1.0 in mind/petri as DNA, Moonlab/QGT/spin/libirrep/quake etc deep in cognition, others in petri/soup or study). Fenced only pure LLM ones. Tech real, correct, works. No billion $ QPU needed for correctness (MIT math today; scales perf). Startup, not hype. No overclaims.  
 **Canonical receipts:** [`scripts/canonical-receipts.ts`](../scripts/canonical-receipts.ts) · enforced by `tests/docs-receipts-law.test.ts`
 
 > **Mission:** Not a chatbot, dancing robot, Terminator, or game player. A **Petri-dish cosmos** where

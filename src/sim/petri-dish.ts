@@ -37,8 +37,8 @@ import { classicalEntropyGap, classicalSample } from './classical-contrast';
 import { logoMorphScalar, turtleNew, type TurtleState } from './logo-turtle';
 import { libirrepSymmetry, symmetryModes } from './irrep-symmetry';
 import { moonlabTensorQualia } from './moonlab-tensor';
-import { ulgHandoff, ulgTriadHandoff } from './ulg-bridge'; // deeper wire for ulg laws in biologics (ALL Tsotchke)
-import { logoMorphScalar } from './logo-turtle'; // logo-lab procedural for morph DNA (ALL)
+import { ulgHandoff } from './ulg-bridge'; // deeper ALL Tsotchke wire
+import { logoMorphScalar } from './logo-turtle'; // deeper ALL Tsotchke wire
 
 const NUTRIENT_SLOTS = 12; // Expanded Petri for more digital biologics growth from full Tsotchke soup
 const SCRATCH_NUTRIENTS = new Float32Array(NUTRIENT_SLOTS);
