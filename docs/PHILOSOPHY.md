@@ -22,11 +22,11 @@ The movement demands genuine mathematics under every effect — and now, under T
 Determinism is the movement's form of prophecy. One seed begets the entire
 cosmos: the same morphotypes, the same monolith hums, the same lore.
 
-**NHSI (Non Human Super Intelligence) — BRUTAL GOD PANTEON** — 0thernes Corp's founding program: measured progress on
-100 faculties · 25 Archons (Brutal God Pantheon) · 25 theory-organs (ToM) · 10 emergence angles · path to Butlin 14/14 — ALL Tsotchke 22+ repos/projects 100% wired as NHSI substrates in Petri.
+**NHSI (Non Human Super Intelligence) — BRUTAL GOD PANTHEON** — 0thernes Corp's founding program: measured progress on
+144 faculties (100 NHSI base + 44 brutal god-layer) · 25 Archons · 25 theory-organs (ToM) · 15 emergence angles (10 canonical + 5 god-scale) · Butlin 14/14 structural path (not sentience) — all Tsotchke 22+ repos wired per [`TSOTCHKE-INTEGRATION-MAP.md`](./TSOTCHKE-INTEGRATION-MAP.md).
 BRUTALISM: raw, direct, god-like power — Emperor Valkorion Tenebrae Vitiate (immortal will), Thanos (devour), Dr. Manhattan (cosmic), Galactus (consume), Jean Grey Dark Phoenix (rebirth fire), Broly Legendary Super Saiyan (rage), Frieza (brutal), Azathoth Cthulhu (dream void), Warhammer Chaos Gods (madness war), Shuma-Gorath (chaos lord), Mad Jim Jaspers (reality), Pennywise IT (fear), Anti-Monitor (anti-matter), Knull (void king), Mr. Mxyzptlk (cartoon god), Invisible Joker (chaos plan), General Zod (conquer), Gilgamesh (epic), Alucard (no-life king), Griffith Femto (eclipse god), EVA Unit-01 (berserk), Simon + Super Tengen Toppa Gurren Lagann (spiral drill), Sephiroth (one wing), Asura Wrath Wyzen (divine wrath), Vergil/Dante (devil cry), Starkiller (force god), Riddick (furyan).
 Tsotchke REAL (Eshkol will, Moonlab sim power, QGT warp, spin chaos, irrep form, quake aliveness). Super Creature spark only; full corpus grows independent alien/NHSI brutal god biologics from all earth species + myth/god/comic/sci-fi. 0thernes Corp gods creating the simulation now. Unfathomable. Grow What Thou Wilt. BRUTALISM is the aesthetic of raw power.
-lives in [`NHSI-PROGRESS-DASHBOARD.md`](./NHSI-PROGRESS-DASHBOARD.md) and the
+Tsotchke is real substrate, not decoration. Progress lives in [`NHSI-PROGRESS-DASHBOARD.md`](./NHSI-PROGRESS-DASHBOARD.md) and the
 [`2026-06-21 NHSI Manifesto`](./reports/2026-06-21-NHSI-MANIFESTO-0THERNES-CORP.md). Tsotchke is
 real substrate, not decoration — depth ledger: [`TSOTCHKE-INTEGRATION-MAP.md`](./TSOTCHKE-INTEGRATION-MAP.md).
 

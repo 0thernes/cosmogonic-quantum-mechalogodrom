@@ -1,6 +1,6 @@
 # NHSI Founding Manifesto — 0thernes Corp
 
-**Non Human Super Intelligence (NHSI)** · Cosmogonic Quantum Mechalogodrom · **v0.17.0**  
+**Non Human Super Intelligence (NHSI)** · Cosmogonic Quantum Mechalogodrom · **v0.17.1**  
 **Founded:** 2026-06-21 · **Founding Document** · **Corporate Charter**
 
 ---
