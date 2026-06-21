@@ -122,6 +122,7 @@ import { QuantumReservoir, type QuantumReservoirSnapshot } from './quantum-reser
 import { HolographicMemory, type HolographicSnapshot } from './holographic-memory';
 import { QuantumDeliberation, type DeliberationSnapshot } from './quantum-deliberation';
 import { ResonanceField, type ResonanceSnapshot } from './resonance';
+import { FastWeights, type PlasticSnapshot } from './plastic-weights';
 import type { SuperPercept, SuperPlan } from './super-creature';
 import { SUPER_PLANS } from './super-creature';
 // GOAL5 leaves (per MODULE-CONTRACTS contract: super-mind owns wiring of AST-1/HOT-1/HOT-4/memory-orchestra/narrative)
@@ -267,6 +268,8 @@ export interface SuperMindSnapshot {
   /** #59: the resonance integrator — standing-wave coherence binding the consciousness assembly by
    *  synchrony (Kuramoto), and whether it crossed into an ignited (bound) moment this beat. */
   resonance: ResonanceSnapshot;
+  /** #87/#91: plastic fast-weights — within-life Hebbian self-modification of the latent workspace. */
+  plastic: PlasticSnapshot;
   /** #10/#58: the GWT workspace broadcast strength [0,1] — the bound coherence that re-enters arousal +
    *  curiosity next beat, coupling the faculties through the shared workspace. */
   broadcast: number;
@@ -536,6 +539,10 @@ export class SuperMind {
   private broadcast = 0;
   /** How strongly the broadcast re-enters cognition (0 = the write-back is disabled — a clean baseline). */
   private readonly broadcastGain: number;
+  /** #87/#91: plastic fast-weights — a within-life Hebbian associative memory over the latent workspace.
+   *  The mind imprints + recalls its own recent latents each beat, reshaping what downstream faculties
+   *  read (online self-modification, not training). Deterministic; bounded by decay + clip. */
+  private readonly fastWeights = new FastWeights(LATENT, 0.3, 0.12, 3);
   private ignition = 0; // V89: persisted Global-Workspace broadcast (EMA) — gates next-beat consolidation
   private phi = 0; // V89: persisted Integrated-Information proxy (EMA)
   private predictedSalience = 0;
@@ -689,6 +696,16 @@ export class SuperMind {
     if (this.broadcastGain > 0 && this.broadcast > 0) {
       const b = this.broadcastGain * this.broadcast;
       for (let i = 0; i < this.latent.length; i++) this.latent[i] = (this.latent[i] ?? 0) + b;
+    }
+    // ── #87/#91 · PLASTIC FAST-WEIGHTS ── within-life Hebbian self-modification: recall the self-written
+    // fast memory of recent latents (READ), imprint this beat (WRITE), then blend a bounded 0.15 fraction of
+    // the recall into the workspace latent — so the mind's OWN recent experience reshapes what every
+    // downstream faculty reads. Online plasticity (not training); deterministic; bounded by decay + clip.
+    const plasticLat = Array.from(this.latent);
+    const plasticRecall = this.fastWeights.recall(plasticLat);
+    this.fastWeights.imprint(plasticLat);
+    for (let i = 0; i < this.latent.length; i++) {
+      this.latent[i] = clamp((this.latent[i] ?? 0) + 0.15 * (plasticRecall[i] ?? 0), -4, 4);
     }
     // V1.1: step the echo-state reservoir on the fresh latent — a fading nonlinear echo of the mind's
     // recent world-models that gives it temporal memory; its novelty (below) sharpens curiosity.
@@ -1426,6 +1443,7 @@ export class SuperMind {
       deliberation: this.deliberation.snapshot(),
       resonance: this.resonanceField.snapshot(),
       broadcast: this.broadcast,
+      plastic: this.fastWeights.snapshot(),
       clifford: this.clifford.snapshot(),
       // TSOTCHKE Eshkol consciousness (corpus): 3 substrates snapshot for 5 Archons.
       eshkolConsciousness: {
