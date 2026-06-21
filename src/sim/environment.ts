@@ -19,6 +19,20 @@ const PI = Math.PI;
 /** Non-negative floor for chaos-driven intensity/opacity waves (also seals NaN → 0). O(1). */
 const nn = (v: number): number => (v > 0 ? v : 0);
 
+// ── BRUTALISM: concrete targets + base colours (module consts → zero per-frame allocation). The
+//    rig + ground are lerped from these bases toward concrete by the 0..1 factor, so the f=0 path
+//    early-returns and leaves the animated cosmos byte-identical. ──
+const BRUTAL_GROUND = new THREE.Color(0x3a3a3e);
+const BRUTAL_GROUND_EMISSIVE = new THREE.Color(0x141416);
+const BRUTAL_LIGHT = new THREE.Color(0x9a9aa0); // cold overcast grey for the whole light rig
+const GROUND_BASE = new THREE.Color(0x080812);
+const GROUND_BASE_EMISSIVE = new THREE.Color(0x040410);
+const AMBIENT_BASE = new THREE.Color(0x0a0a22);
+const SUN_BASE = new THREE.Color(0xffeedd);
+const LIGHT_BASE: readonly THREE.Color[] = [
+  0xff0066, 0x00ffcc, 0xffaa00, 0x4488ff, 0xff2200, 0x8800ff,
+].map((h) => new THREE.Color(h));
+
 /**
  * Light-unit conversion gain for the r128 → r0.184 lighting migration.
  *
@@ -436,6 +450,9 @@ export class EnvironmentSystem {
   private readonly pipes: PipeRig[] = [];
   /** Ground material handle for the V2 reaction-diffusion emissiveMap coupling. */
   private readonly groundMaterial: THREE.MeshStandardMaterial;
+  /** Ambient + key (sun) lights — captured so BRUTALISM can desaturate/dim them per frame. */
+  private readonly ambient: THREE.AmbientLight;
+  private readonly sun: THREE.DirectionalLight;
   /** Audio bass band 0..1 (CONTRACTS V2 coupling); 0 = silent ⇒ output identical to v1. */
   private audioBass = 0;
 
@@ -446,7 +463,8 @@ export class EnvironmentSystem {
 
     // ── Lighting (legacy 369-382; intensities × LEGACY_LIGHT_GAIN for r0.184 units;
     //    rig spread/ranges × ARENA_MID so the core glow covers the 5× floor) ──
-    scene.add(new THREE.AmbientLight(0x0a0a22, 0.55 * LEGACY_LIGHT_GAIN));
+    this.ambient = new THREE.AmbientLight(0x0a0a22, 0.55 * LEGACY_LIGHT_GAIN);
+    scene.add(this.ambient);
     const sun = new THREE.DirectionalLight(0xffeedd, 0.65 * LEGACY_LIGHT_GAIN);
     sun.position.set(35 * ARENA_MID, 65 * ARENA_Y, 25 * ARENA_MID);
     sun.castShadow = quality.shadows;
@@ -455,6 +473,7 @@ export class EnvironmentSystem {
     sun.shadow.camera.right = 70 * ARENA;
     sun.shadow.camera.top = 70 * ARENA;
     sun.shadow.camera.bottom = -70 * ARENA;
+    this.sun = sun;
     scene.add(sun);
     // Legacy intensities × POINT_LIGHT_GAIN, decay 0 (legacy r128 falloff model).
     this.lts = [
@@ -680,6 +699,38 @@ export class EnvironmentSystem {
    */
   setAudioBass(b: number): void {
     this.audioBass = clamp(b, 0, 1);
+  }
+
+  /**
+   * BRUTALISM: crossfade the ground + the entire light rig toward a raw, overcast concrete look —
+   * matte grey ground, the glow killed, and the lurid six-light rig + ambient/sun desaturated and
+   * dimmed to cold concrete light. `f` is the 0..1 brutalism factor (smoothed by the world). The
+   * f=0 path early-returns so the animated cosmos is byte-identical when off. Allocation-free
+   * (module-const targets + in-place lerp); called every frame AFTER {@link update}, so the rig's
+   * intensity scaling rides this frame's already-animated values without compounding. O(1).
+   */
+  applyBrutalism(f: number): void {
+    if (f <= 0) return; // OFF — leave the animated rig + ground untouched (byte-identical)
+    const g = f > 1 ? 1 : f;
+    // Ground: static material → lerp from its known base toward poured concrete (no compounding).
+    this.groundMaterial.color.copy(GROUND_BASE).lerp(BRUTAL_GROUND, g);
+    this.groundMaterial.emissive.copy(GROUND_BASE_EMISSIVE).lerp(BRUTAL_GROUND_EMISSIVE, g);
+    this.groundMaterial.roughness = lerp(0.95, 1.0, g);
+    this.groundMaterial.metalness = lerp(0.1, 0.0, g);
+    this.groundMaterial.emissiveIntensity = lerp(0.3, 0.06, g);
+    // Ambient + sun: static lights → colour from base toward grey, intensity dimmed from base.
+    this.ambient.color.copy(AMBIENT_BASE).lerp(BRUTAL_LIGHT, g);
+    this.ambient.intensity = lerp(0.55 * LEGACY_LIGHT_GAIN, 0.34 * LEGACY_LIGHT_GAIN, g);
+    this.sun.color.copy(SUN_BASE).lerp(BRUTAL_LIGHT, g);
+    this.sun.intensity = lerp(0.65 * LEGACY_LIGHT_GAIN, 0.42 * LEGACY_LIGHT_GAIN, g);
+    // The lurid six-light rig: colour from each base toward grey (clean, no rainbow), intensity
+    // scaled down from this frame's already-animated value (update() reset it first → no compound).
+    for (let i = 0; i < this.lts.length; i++) {
+      const l = this.lts[i];
+      if (!l) continue;
+      l.color.copy(LIGHT_BASE[i] ?? BRUTAL_LIGHT).lerp(BRUTAL_LIGHT, g);
+      l.intensity *= 1 - 0.7 * g;
+    }
   }
 
   /**

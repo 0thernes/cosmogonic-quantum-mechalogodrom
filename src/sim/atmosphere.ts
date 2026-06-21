@@ -306,6 +306,12 @@ export class AtmosphereSystem {
         const s = clamp(lerp(0.85, 0.6, t) * sScale * chaosLift, 0, 1);
         TMP_A.setHSL(((hue % 1) + 1) % 1, s, clamp(l, 0, 1));
       }
+      // BRUTALISM: lerp the alien gradient toward overcast concrete (brighter at the horizon,
+      // darker toward the poles for monolithic depth). Off (0) ⇒ the alien sky is unchanged.
+      if (this.brutalismF > 0) {
+        TMP_B.setHSL(0.62, 0.04, lerp(0.34, 0.2, Math.abs(y)));
+        TMP_A.lerp(TMP_B, this.brutalismF);
+      }
       colors[i3] = TMP_A.r;
       colors[i3 + 1] = TMP_A.g;
       colors[i3 + 2] = TMP_A.b;
@@ -319,6 +325,10 @@ export class AtmosphereSystem {
   private lastChaosBucket = -1;
   /** SIMULATION N(2) nightmare flag (CONTRACTS V7.6): a lurid inverted sky when set. */
   private nightmare = false;
+  /** BRUTALISM 0..1 — lerps the baked sky-dome gradient toward overcast concrete. */
+  private brutalismF = 0;
+  /** Last brutalism bucket the dome was baked for (forces a re-bake on change). */
+  private lastBrutalismBucket = -1;
 
   /**
    * Toggle the SIMULATION N(2) nightmare sky (CONTRACTS V7.6). When on, {@link bakeDome}
@@ -330,6 +340,14 @@ export class AtmosphereSystem {
     this.nightmare = on;
     this.lastWeather = null; // invalidate the bake cache so update() re-bakes
     this.lastChaosBucket = -1;
+  }
+
+  /**
+   * BRUTALISM: set the 0..1 factor that lerps the sky-dome gradient toward overcast concrete. The
+   * gated re-bake in {@link update} (a coarse brutalism bucket) picks the change up next frame. O(1).
+   */
+  setBrutalism(f: number): void {
+    this.brutalismF = f < 0 ? 0 : f > 1 ? 1 : f;
   }
 
   /**
@@ -356,10 +374,16 @@ export class AtmosphereSystem {
 
     // ── Sky dome: gated re-bake (weather change or a new integer chaos bucket). ──
     const chaosBucket = Math.round(s.chaos);
-    if (weather !== this.lastWeather || chaosBucket !== this.lastChaosBucket) {
+    const brutalismBucket = Math.round(this.brutalismF * 12);
+    if (
+      weather !== this.lastWeather ||
+      chaosBucket !== this.lastChaosBucket ||
+      brutalismBucket !== this.lastBrutalismBucket
+    ) {
       this.bakeDome(weather, chaosNorm);
       this.lastWeather = weather;
       this.lastChaosBucket = chaosBucket;
+      this.lastBrutalismBucket = brutalismBucket;
     }
 
     // ── Haze ribbons: advect with wind, bob, pulse opacity with bass. ────────────

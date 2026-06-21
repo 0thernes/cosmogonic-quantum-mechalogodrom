@@ -149,6 +149,9 @@ const SFX_STRANGE = SFX_EXTRA_BANDS['strange']?.start ?? 0;
  * dedicated jitterGain in entities.update() carries the agitation PAST the clamp on top.
  */
 const CHAOS_NIGHTMARE_FLOOR = 6;
+/** BRUTALISM: cool overcast concrete fog the cosmos fades into (module consts → no per-frame alloc). */
+const BRUTAL_FOG = new THREE.Color(0x4a4a52);
+const BRUTAL_FOG_DENSITY = 0.0011;
 
 /** V57: singularity kind → telemetry display name (the chaos chooser cycles SINGULARITY_KINDS). */
 const SINGULARITY_LABEL: Record<string, string> = {
@@ -267,6 +270,8 @@ export class World {
   private readonly graphMind: GraphMind;
   private readonly constellations: ConstellationSystem;
   private readonly atmosphere: AtmosphereSystem;
+  /** BRUTALISM: smoothed 0..1 concrete-crossfade factor (eases toward state.brutalism each frame). */
+  private brutalismFactor = 0;
   private readonly viz3d: Viz3DSystem;
   /** Cosmological chaos effects (CONTRACTS V7.4) — at most one active at a time. */
   private readonly singularities: SingularitySystem;
@@ -983,6 +988,24 @@ export class World {
     // (phylumCounts/titanLedger/warMatrix), always current; internally cadenced.
     this.viz3d.update(this.viz3dSnap);
     this.environment.update(dt, t);
+    // ── BRUTALISM: smooth the toggle into a 0..1 factor and crossfade the WHOLE cosmos to raw
+    //    poured concrete — the apex bodies, every instanced organism, the ground + light rig, the
+    //    sky dome, and the fog. Driven each frame (after environment.update, so it rides this
+    //    frame's animated rig); f=0 is a no-op so the cosmos is byte-identical when OFF. No alloc. ──
+    const bTarget = s.brutalism ? 1 : 0;
+    this.brutalismFactor += (bTarget - this.brutalismFactor) * Math.min(1, dt * 2.5);
+    const bf = this.brutalismFactor;
+    for (let i = 0; i < this.superBodies.length; i++) this.superBodies[i]!.setBrutalism(bf);
+    this.environment.applyBrutalism(bf);
+    this.atmosphere.setBrutalism(bf);
+    if (this.instanced) this.instanced.setBrutalism(bf);
+    if (bf > 0) {
+      const fog = this.engine.scene.fog;
+      if (fog instanceof THREE.FogExp2) {
+        fog.color.lerp(BRUTAL_FOG, bf); // weather reset the colour this frame ⇒ no compounding
+        fog.density += (BRUTAL_FOG_DENSITY - fog.density) * bf;
+      }
+    }
     this.artifacts.update(dt, t); // F-ARTIFACTS (V9): animate + fade the relic pool (visual-only)
     this.monolithTemple.update(dt, t); // V63: rise + shimmer the ascension portal (no-op until revealed)
 
@@ -2533,8 +2556,8 @@ export class World {
     this.unlock();
     const on = !this.state.brutalism;
     this.state.brutalism = on;
-    const level = on ? 1 : 0;
-    for (let i = 0; i < this.superBodies.length; i++) this.superBodies[i]!.setBrutalism(level);
+    // The per-frame step() driver eases brutalismFactor toward this state and applies it to the
+    // bodies + the whole cosmos (organisms, ground, lights, sky, fog) — so no direct apply here.
     this.hud.showSector(on ? 'BRUTALISM ▦ CONCRETE' : 'BRUTALISM · OFF');
     this.audit.record('brutalism', { on });
     return on;

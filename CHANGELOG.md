@@ -20,6 +20,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   god-jewel and concrete (state `brutalism`, HUD toast + audit record, mirroring the CHAOS-MODE toggle).
   Also surfaced as a **▦ BRUTAL toolbar button** (`data-action="brutal"`) so it's clickable on
   touch/mouse, not keyboard-only.
+- **WORLD BRUTALISM — the whole cosmos turns to concrete.** The `B` toggle now eases a smoothed 0..1
+  factor (`World.brutalismFactor`) that crossfades the entire scene, not just the apex bodies:
+  - **Instanced organisms** (`InstancedEntityRenderer.setBrutalism`) — a single shared `uBrutalism`
+    uniform desaturates all thousands of creatures toward concrete grey in the reliquary fragment
+    shader (one per-frame write, zero per-instance CPU).
+  - **Ground + light rig** (`EnvironmentSystem.applyBrutalism`) — the ground goes matte grey, glow
+    killed; the lurid six-light rig + ambient/sun desaturate and dim to cold overcast concrete.
+  - **Sky dome** (`AtmosphereSystem.setBrutalism`) — the alien vertex-baked gradient lerps toward
+    overcast concrete via a bucketed re-bake (mirrors the nightmare-sky cache invalidation).
+  - **Fog** — the weather fog crossfades to a cool concrete haze (slightly denser).
+    All terms lerp from base/this-frame values gated by the factor, so `f=0` is byte-identical and the
+    cosmos only turns to concrete as you hold the mode. Deterministic, O(1) per system, allocation-free.
 
 ### Super Creature god-jewel skin — compile fix + V64 LIVING, EVOLVING SKIN
 
