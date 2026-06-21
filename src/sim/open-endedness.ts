@@ -2,10 +2,11 @@
  * OPEN-ENDEDNESS INSTRUMENTATION — measuring whether the soup actually evolves.
  *
  * Applies the research bedrock (docs/reports/2026-06-20-RESEARCH-BEDROCK.md): Bedau-Packard
- * EVOLUTIONARY ACTIVITY statistics + the 2026 Petri-Dish-NCA template (historical novelty +
- * contemporary diversity, Foerster/Hutter et al., arXiv:2604.11248). These turn "is it growing
- * open-endedly or just drifting/plateauing?" from a vibe into a measured signal — the same
- * receipts discipline the rest of the project lives by.
+ * EVOLUTIONARY ACTIVITY statistics (Bedau, Snyder & Packard 1998, "A classification of long-term
+ * evolutionary dynamics") + a historical-novelty + contemporary-diversity open-endedness template
+ * (cf. Lehman & Stanley 2011, novelty search). These turn "is it growing open-endedly or just
+ * drifting/plateauing?" from a vibe into a measured signal — the same receipts discipline the rest
+ * of the project lives by.
  *
  * PURE math: no rng draws, no Date.now, no DOM, no mutation of inputs — so it is determinism-safe
  * (never touches the seeded core stream) and fully unit-testable headlessly. A sim/UI layer can feed
