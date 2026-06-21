@@ -171,4 +171,57 @@ describe('coupling audit applied to the live SuperMind (the "coupling > count" r
     const b = couplingReport(record(77, 90)).correlation;
     expect(JSON.stringify(a)).toBe(JSON.stringify(b));
   });
+
+  // The #10/#58 GWT-broadcast write-back, measured as a CONTROLLED before/after: same seed + percepts,
+  // the broadcast re-entry gain the only difference. It is a real (modest) coupler — honest caveat below.
+  function recordGain(seed: number, beats: number, gain: number): number[][] {
+    const m = new SuperMind(
+      mulberry32(seed),
+      1.0,
+      0.5,
+      0.5,
+      0.5,
+      'EshkolConsciousness',
+      '(define (think state) state)',
+      gain,
+    );
+    const series: number[][] = Array.from({ length: 16 }, () => []);
+    for (let i = 0; i < beats; i++) {
+      m.think(
+        percept({
+          threat: (i % 11) / 11,
+          energy: 1 - (i % 7) / 7,
+          chaos: ((i % 9) + 1) / 10,
+          phase: i / 60,
+        }),
+      );
+      const v = vec(m.snapshot());
+      for (let f = 0; f < v.length; f++) series[f]!.push(v[f]!);
+    }
+    return series;
+  }
+
+  test('GWT broadcast re-entry RAISES measured coupling vs the same mind with the write-back off', () => {
+    const off = couplingReport(recordGain(123, 300, 0), 0.3); // baseline: re-entry disabled
+    const on = couplingReport(recordGain(123, 300, 0.5), 0.3); // the live default gain
+    // The write-back genuinely couples the assembly more than the broadcast-off baseline (controlled,
+    // deterministic). HONEST: the gain is modest and does NOT resolve every faculty — a global scalar is
+    // washed out by the deep nonlinear faculties; explicit faculty-to-faculty edges are the real fix.
+    expect(on.density).toBeGreaterThan(off.density);
+    expect(on.density).toBeLessThan(0.6); // still moderate — not an overclaimed "fully coupled" mind
+  });
+
+  test('the workspace broadcast is bounded [0,1] and deterministic', () => {
+    const m1 = new SuperMind(mulberry32(5));
+    const m2 = new SuperMind(mulberry32(5));
+    for (let i = 0; i < 120; i++) {
+      const p = percept({ threat: (i % 6) / 6, chaos: (i % 8) / 8, phase: i / 50 });
+      m1.think(p);
+      m2.think(p);
+      const b = m1.snapshot().broadcast;
+      expect(b).toBeGreaterThanOrEqual(0);
+      expect(b).toBeLessThanOrEqual(1);
+      expect(b).toBe(m2.snapshot().broadcast); // bit-reproducible
+    }
+  });
 });

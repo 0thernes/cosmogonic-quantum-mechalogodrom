@@ -267,6 +267,9 @@ export interface SuperMindSnapshot {
   /** #59: the resonance integrator — standing-wave coherence binding the consciousness assembly by
    *  synchrony (Kuramoto), and whether it crossed into an ignited (bound) moment this beat. */
   resonance: ResonanceSnapshot;
+  /** #10/#58: the GWT workspace broadcast strength [0,1] — the bound coherence that re-enters arousal +
+   *  curiosity next beat, coupling the faculties through the shared workspace. */
+  broadcast: number;
   /** V101: Clifford stabilizer snapshot (Moonlab port). */
   clifford: CliffordSnapshot;
   // TSOTCHKE Eshkol consciousness (corpus): 3 substrates + module/program for 5 Archons.
@@ -389,6 +392,16 @@ const RESONANCE_FACULTIES = 12;
 const RESONANCE_COMMIT_GAIN = 0.14;
 /** When UNBOUND (incoherent), how hard the scattered assembly is pushed to EXPLORE (resolve the doubt). */
 const RESONANCE_EXPLORE_GAIN = 0.1;
+
+// ── #10/#58 · GWT BROADCAST + RE-ENTRY (the coupling write-back) ───────────────────────────────────────
+/** Smoothing of the workspace broadcast signal — how fast it tracks the assembly's ignition. */
+const BROADCAST_TAU = 0.25;
+/** Default strength of the broadcast's re-entry into the workspace latent (0 disables the write-back).
+ *  Kept MODEST on purpose: larger gains saturate the nonlinear faculty subnets (washing out the signal),
+ *  and cranking it to force the coupling metric up would be Goodhart-gaming the audit. It is a real but
+ *  partial coupler — a global scalar cannot densely couple deep faculties; explicit faculty-to-faculty
+ *  edges are the genuine follow-up. */
+const BROADCAST_GAIN = 0.5;
 
 /**
  * The composite apex mind. Construct with a seeded {@link Rng}; `think` each beat. ~10k parameters
@@ -517,6 +530,12 @@ export class SuperMind {
   private valence = 0;
   private arousal = 0;
   private dominance = 0.5;
+  /** #10/#58: the GWT workspace broadcast strength [0,1] (smoothed from ignition). Written each beat
+   *  from the resonance state and READ at the top of the NEXT beat (re-entry) by arousal + curiosity —
+   *  the write-back that makes the faculties genuinely co-vary through the shared workspace. */
+  private broadcast = 0;
+  /** How strongly the broadcast re-enters cognition (0 = the write-back is disabled — a clean baseline). */
+  private readonly broadcastGain: number;
   private ignition = 0; // V89: persisted Global-Workspace broadcast (EMA) — gates next-beat consolidation
   private phi = 0; // V89: persisted Integrated-Information proxy (EMA)
   private predictedSalience = 0;
@@ -545,9 +564,11 @@ export class SuperMind {
     eshkolW = 0.5,
     module = 'EshkolConsciousness',
     program = '(define (think state) state)',
+    broadcastGain = BROADCAST_GAIN,
   ) {
     const cScale = clamp01(biasScale); // 0.2-0.9 range per godform, used for reflex
     this.cliffordScale = cScale;
+    this.broadcastGain = clamp01(broadcastGain);
     this.eshkolEngine = new EshkolConsciousnessEngine(eshkolL, eshkolI, eshkolW);
     this.tsotchkeModule = module;
     this._eshkolProgram = program;
@@ -658,6 +679,17 @@ export class SuperMind {
     this.eshkolEngine.workspace = subs.workspace;
     const latent = this.cortex.forward(s);
     this.latent.set(latent);
+    // ── #10/#58 · GWT BROADCAST RE-ENTRY ── blend LAST beat's workspace broadcast into the shared latent
+    // (the workspace representation every faculty reads: the reservoir, the imagination loop that yields
+    // novelty + reasoning, and the self-model that yields self-awareness). Here the ignition broadcast
+    // RE-ENTERS the workspace — the bound assembly's signal made available to the modules — so they co-vary
+    // through it instead of each running input-independently (the read-half of the read+write coupling
+    // loop the audit enforces, #10). A bounded MODULATION (not a takeover); uses last beat's value, so it
+    // is deterministic recurrence (#58), never a within-beat circular dependency.
+    if (this.broadcastGain > 0 && this.broadcast > 0) {
+      const b = this.broadcastGain * this.broadcast;
+      for (let i = 0; i < this.latent.length; i++) this.latent[i] = (this.latent[i] ?? 0) + b;
+    }
     // V1.1: step the echo-state reservoir on the fresh latent — a fading nonlinear echo of the mind's
     // recent world-models that gives it temporal memory; its novelty (below) sharpens curiosity.
     this.reservoir.step(this.latent);
@@ -670,7 +702,7 @@ export class SuperMind {
     let ob = 0;
     for (let k = 0; k < this.organs.length; k++) {
       const off = (k * 4) % LATENT;
-      const o = this.organs[k]!.forward(latent.subarray(off, off + 4));
+      const o = this.organs[k]!.forward(this.latent.subarray(off, off + 4));
       oa += o[0] ?? 0;
       ob += o[1] ?? 0;
     }
@@ -681,7 +713,7 @@ export class SuperMind {
     this.organSum[3] = Math.tanh(ob * inv * 2);
 
     // ── STAGE 2 · IMAGINE · Creativity Machine + Tree of Thought (5 depths × 5 variants = 25) ────
-    this.cur.set(latent);
+    this.cur.set(this.latent); // the broadcast-blended workspace latent (GWT re-entry feeds imagination)
     let peakNovelty = 0;
     let reasoningGain = 0;
     for (let d = 0; d < SUPER_DEPTHS; d++) {
@@ -1238,6 +1270,10 @@ export class SuperMind {
     } else {
       drives.EXPLORE += RESONANCE_EXPLORE_GAIN * (1 - resonance.order);
     }
+    // #10/#58 — write the GWT BROADCAST: when the assembly binds, its coherence becomes the workspace
+    // signal that arousal + curiosity read at the TOP of the next beat (re-entry above). Smoothed; decays
+    // when unbound. This is the write half of the read+write loop the coupling audit exists to enforce.
+    this.broadcast += BROADCAST_TAU * ((resonance.ignited ? resonance.order : 0) - this.broadcast);
 
     let best: SuperPlan = 'REST';
     let bestScore = -Infinity;
@@ -1389,6 +1425,7 @@ export class SuperMind {
       quantumReservoir: this.qreservoir.snapshot(),
       deliberation: this.deliberation.snapshot(),
       resonance: this.resonanceField.snapshot(),
+      broadcast: this.broadcast,
       clifford: this.clifford.snapshot(),
       // TSOTCHKE Eshkol consciousness (corpus): 3 substrates snapshot for 5 Archons.
       eshkolConsciousness: {

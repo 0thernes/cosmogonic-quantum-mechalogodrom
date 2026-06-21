@@ -366,7 +366,7 @@ export class SuperPanel {
         : '';
       this.id.resonance!.textContent =
         `Coherence ${(reso.order * 100).toFixed(0)}%${reso.ignited ? ' ✦ BOUND' : ''} · ` +
-        `${reso.coupled} faculties${homeo}`;
+        `${reso.coupled} faculties${homeo} · bcast ${(mind.broadcast * 100).toFixed(0)}%`;
     }
 
     // V48 — the self-evolution: level · stage · power · day (it grows like Vegeta/Goku).
