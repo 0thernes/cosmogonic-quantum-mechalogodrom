@@ -151,8 +151,13 @@ function patchGodJewel(
          rqD += 0.25 * fract(sin(vObjPos.x * 11.0 + uVariant) * 43758.0);
          float morphR = (uSurprise * 0.4 + uQWave * 0.25 + uQualia * 0.2 + uReflex * 0.15);
          roughnessFactor = clamp(mix(0.65, 0.03, smoothstep(0.32 + uVariant*0.05, 0.95, rqD + morphR*0.3)), 0.02, 1.0);
-         // metalness micro-variance (patch)
-         float metalVar = 0.85 + 0.12 * sin(rqD*9.1 + uTime*0.7 + uVariant) * (0.5 + 0.5*morphR);
+         // metalness micro-variance (computed here; applied after <metalnessmap_fragment> declares metalnessFactor)
+         float metalVar = 0.85 + 0.12 * sin(rqD*9.1 + uTime*0.7 + uVariant) * (0.5 + 0.5*morphR);`,
+      )
+      .replace(
+        '#include <metalnessmap_fragment>',
+        `#include <metalnessmap_fragment>
+         // apply the precomputed metalness micro-variance now that metalnessFactor exists (declared by the chunk above)
          metalnessFactor = clamp(metalVar, 0.4, 1.0);`,
       )
       .replace(
