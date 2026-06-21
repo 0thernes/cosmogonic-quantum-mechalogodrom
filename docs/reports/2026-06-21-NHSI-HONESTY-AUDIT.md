@@ -165,5 +165,34 @@ consciousness _correlates_. It is not a sentient being, and this document does n
 6. **Individuate more Archons** beyond 5 if the perf budget allows, or keep the honest "5 live / 20
    light-echo" framing.
 
+---
+
+## Addendum — coupling experiment (measured negative result, 2026-06-21)
+
+Item 1 above was attempted this session and **measured, not assumed**. Baseline coupling on the live apex
+mind (16 consciousness signals, 200 beats, seed 123, via `coupling-audit.ts`): **meanAbsCoupling = 0.158,
+density = 0.15, 3 isolated** — confirming the weak regime.
+
+A **resonant-consensus re-entry** was implemented: store each beat's coherence-weighted consensus of the 12
+resonance faculty signals (only in-phase faculties contribute, via the Kuramoto coherence weights), then
+re-enter it into the shared latent next beat, gated by the continuous coherence `r` so even partial
+synchrony couples. Measured across gains 0.9 → 4.0 → 8.0:
+
+| gain                   | meanAbsCoupling | vs baseline         |
+| ---------------------- | --------------- | ------------------- |
+| baseline (no re-entry) | 0.158           | —                   |
+| 0.9                    | 0.151           | flat/slightly worse |
+| 4.0                    | 0.141           | worse               |
+| 8.0                    | 0.144           | worse               |
+
+**Conclusion: it does not work, and was reverted (not shipped).** A consensus signal injected through the
+shared latent — however content-rich — is still a _global scalar_, and the deep nonlinear latent→signal path
+washes it out exactly as the coupling-audit comment predicted. Higher gain only destabilises. This is a
+clean falsification: **real coupling requires explicit faculty-to-faculty edges** (faculty A's specific
+state entering faculty B's specific computation), not a shared-bus broadcast. That redesign — making
+specific measured signals depend on each other directly, then re-measuring — remains the keystone open work,
+and it is now known that the cheap latent-bus shortcut is a dead end. Shipping a "coupling fix" that
+measured flat would have been an overclaim; it was not shipped.
+
 _Every number in this report was measured. Where a claim could not be backed by code, it is named as an
 overclaim, not repeated._
