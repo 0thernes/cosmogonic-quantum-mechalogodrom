@@ -190,6 +190,14 @@ const ENTRIES: TsotchkeRepoEntry[] = [
     hue: 0.71,
   },
   {
+    slug: 'classical-contrast',
+    origin: 'user',
+    substrate: 'classical-baseline',
+    cosmogonicLeaf: 'sim/classical-contrast.ts',
+    wiring: 1.0,
+    hue: 0.65,
+  },
+  {
     slug: 'PINN',
     origin: 'user',
     substrate: 'pinn-physics',

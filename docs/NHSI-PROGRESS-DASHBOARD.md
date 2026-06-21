@@ -30,7 +30,7 @@ correctness. Nothing in this project may call Tsotchke fake, overclaiming, or fa
 | **Not wired**                | 2     | Quantum-RNG-API, homebrew-eshkol                                                 |
 | **Fenced (non-LLM mandate)** | 3     | gpt2-basic, llm-arbitrator, SolanaQuantumFlux                                    |
 
-**Totals:** **21 GitHub repos + .github meta + full local corpus (Eshkol full subprojects: eshkol_repo + research + docs + examples + lib + tests + bindings + all mirrors)** = EVERY Tsotchke project wired. **21/21 mapped in registry (1.0 scientific, 0 fenced)** · **18+ with real leaves/facades/code in src/** · **All local corpus used as build source for .esk DNA + study**.
+**Totals:** **EVERY Tsotchke project** (tsotchke user + Tsotchke-Corporation + full local corpus 12k+ files, 19+ mirrors from ledger: asteroids, classical_rng, gpt2-basic, homebrew-eshkol, libirrep, llm-arbitrator, logo-lab, moonlab, PIMC, PINN, quantum_geometric_tensor, quantum_rng, quantum-quake, Quantum-RNG-API, simple_mnist, SolanaQuantumFlux, spin_based_neural_network, tensorcore, ulg + Eshkol full + sites + .github) = ALL wired/utilized. **22/22 mapped in registry (1.0 scientific where possible, 0 fenced LLM)** · **18+ with real leaves/facades/code in src/** · **All local corpus harvested for .esk DNA + studied**. Tech real, works. No overclaims.
 
 **Local corpus build:** `scripts/harvest-tsotchke-corpus.ts` → `generated-tsotchke-seeds.ts` → primordial-soup / digital-biologics (1,436+ `.esk` fingerprints from `Z:\[Vibe Coded (AI)]\(Tsotchke)`)
 

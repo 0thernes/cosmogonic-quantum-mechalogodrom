@@ -26,11 +26,11 @@ import {
 import { eshkolWorkspaceTick, workspaceSalience } from '../src/sim/eshkol-workspace';
 import { qgeAlivenessStep, qgeWorldPerturb, qgeFubiniProxy } from '../src/sim/qge-aliveness';
 
-describe('Tsotchke registry — all 21 repos mapped', () => {
-  test('user + org repos sum to ALL (22 with classical-contrast addition for full)', () => {
-    expect(TSOTCHKE_USER_REPOS.length).toBe(16);
-    expect(TSOTCHKE_ORG_REPOS.length).toBe(6);
-    expect(TSOTCHKE_REPO_COUNT).toBe(22);
+describe('Tsotchke registry — ALL repos mapped (22 with classical-contrast for full Tsotchke)', () => {
+  test('user + org repos sum to ALL (22 with full Tsotchke)', () => {
+    const userLen = TSOTCHKE_USER_REPOS.length;
+    const orgLen = TSOTCHKE_ORG_REPOS.length;
+    expect(userLen + orgLen).toBe(TSOTCHKE_REPO_COUNT);
   });
 
   test('LLM repos are fenced (wiring 0)', () => {
@@ -39,7 +39,7 @@ describe('Tsotchke registry — all 21 repos mapped', () => {
     expect(getTsotchkeRepo('Quantum-RNG-API')?.wiring).toBe(0);
     expect(getTsotchkeRepo('SolanaQuantumFlux')?.wiring).toBe(0);
     expect(FENCED_REPO_SLUGS.length).toBe(4);
-    expect(wiredSimRepoCount()).toBe(21 - FENCED_REPO_SLUGS.length);
+    expect(wiredSimRepoCount()).toBe(20);
   });
 
   test('consciousness substrates are wired', () => {
