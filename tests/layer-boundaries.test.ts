@@ -30,6 +30,8 @@ function importsLayer(spec: string, layer: string): boolean {
   return new RegExp(`(^|/)${layer}(/|$)`).test(spec);
 }
 
+import { readFileSync } from 'node:fs';
+
 function scan(
   dir: string,
   forbidden: readonly string[],
@@ -39,7 +41,7 @@ function scan(
   const glob = new Bun.Glob(dir);
   for (const path of glob.scanSync('.')) {
     scanned++;
-    const code = stripComments(Bun.file(path).textSync());
+    const code = stripComments(readFileSync(path, 'utf8'));
     for (const spec of importSpecifiers(code)) {
       for (const layer of forbidden) {
         if (importsLayer(spec, layer))
