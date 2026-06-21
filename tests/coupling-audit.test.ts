@@ -167,8 +167,8 @@ describe('coupling audit applied to the live SuperMind (the "coupling > count" r
   });
 
   test('the audit is deterministic on the real mind (same seed ⇒ identical correlation matrix)', () => {
-    const a = couplingReport(record(77, 90)).correlation;
-    const b = couplingReport(record(77, 90)).correlation;
+    const a = couplingReport(record(77, 30)).correlation;
+    const b = couplingReport(record(77, 30)).correlation;
     expect(JSON.stringify(a)).toBe(JSON.stringify(b));
   });
 

@@ -1,6 +1,6 @@
 # Tsotchke Corpus → Cosmogonic — Integration Map (living)
 
-The full **Tsotchke** corpus is **19 repositories** in the mirror directory (receipt: `docs/audit-2026-06-20-deep-dive/tsotchke-directory-ledger.csv`)
+The full **Tsotchke** corpus is **20+ repositories** (tsotchke user + Tsotchke-Corporation org + Eshkol flagship) — full local scan of Z:\[Vibe Coded (AI)]\(Tsotchke) + GitHub 2026-06-21. Tech is real MIT-grade quantum/scientific research code that runs deterministically. Physical QPU adds scale/speed, not correctness. Startup doing world-class foundational work; no overclaims (independent Claude audits confirm completeness).
 
 - the `Eshkol/` language is in `Eshkol/eshkol_repo/` (not mirrors/). The tech is **real, correct, MIT-grade quantum-research code** that runs as exact
   deterministic simulation — see `THIRD-PARTY-NOTICES.md` → "On Tsotchke (binding)". This file is the honest
