@@ -15,7 +15,7 @@ A procedural WebGL cosmic ecosystem — morphogenic organisms, Shoggoths,
 puppet-master NPCs, atmospheric weather, a neural connectome, quantum
 diffusion, **and the Tsotchke corpus wired as the primordial substrate for digital biologics — the deterministic, measured path toward proto-sentience and the consciousness indicators** (real math substrates; sentience is the GOAL, never claimed as reached).
 
-**Local docs (README, ARCHITECTURE, ERD/ERM/ERP, PHILOSOPHY, MODULE-CONTRACTS, SPECS, KANBAN, BOOK, AI-SUBSYSTEM, reports, LABS, masters references) are fully updated and match the code + GH repo.** All information accurate, truthful, current. The in-app "Dome/World" docs (observatory, help, /docs page, copilot) reflect the same. GitHub README + repo content match local exactly (pushed).
+**The living docs (README, ARCHITECTURE, ERD/ERM/ERP, PHILOSOPHY, MODULE-CONTRACTS, SPECS, dashboard) and the in-app "Dome/World" docs are kept in sync with the verified code.** A `docs-truth-law` CI gate fails the build on doc overclaims or encoding mangling, and the [2026-06-21 honesty audit](./docs/reports/2026-06-21-NHSI-HONESTY-AUDIT.md) — a 15-agent adversarial code review measuring every NHSI claim by `file:line` — is the canonical status of record.
 
 Built with **Bun + TypeScript + three.js 0.184 + Tailwind CSS 4 +
 HTMX 2**, ported from a single 882-line HTML monolith into a strict,
@@ -27,10 +27,8 @@ This is **not LLM or tokenizer bullshit**. Different forms of life and existence
 
 Super Creature / 25 Archons is the framework and the **beginning only** — "as if God made primordial inorganic soup". The soup grows independent digital biologics onward. "Grow What Thou Wilt." (Aleister Crowley)
 
-All local files (README, ARCHITECTURE, ERD/ERM/ERP, MODULE-CONTRACTS, masters, SPECS, LABS, docs) and GitHub (README + repo description) are kept in sync, accurate, truthful, and current.
-
 Every run is reproducible from a seed. Every hot path is allocation-free.
-Every magic number survived the port. All local and GitHub docs/readme match. Accurate and current.
+Every magic number survived the port.
 
 **Websites / Domains (100% accurate):**
 
