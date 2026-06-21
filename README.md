@@ -110,7 +110,7 @@ math under every effect, and every system reads from AND writes to another:
   population trend in the telemetry; z-score anomalies emit lore-named omens
   into the audit trail.
 - **Lab artifact** ” a self-contained seeded p5.js "collapse field" at
-  [/lab](http://localhost:3000/lab) (`lab/quantum-wildbeyond.html`).
+  `/lab` (local dev: `http://localhost:3000/lab`; GitHub Pages: `/lab/`) (`lab/quantum-wildbeyond.html`).
 
 ### PANTHEON (0.3.0)
 

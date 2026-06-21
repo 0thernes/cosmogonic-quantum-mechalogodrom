@@ -66,7 +66,7 @@ No P0 or P1 issues. No junk/dead files (`*final*`/`*backup*`/`*.bak` scan empty)
 
 ---
 
-## STARKILLER Architect Handoff — GOAL5 5 Archons / Godforms (2026-06-19)
+## STARKILLER Architect Handoff — GOAL5 25 Archons / Brutal God Pantheon (updated 2026-06)
 
 **Agent:** STARKILLER (ORACLE-ARCHITECT-OF-THE-DARKSIDE-STARKILLER.xml) — contracts, ownership, boundaries.
 
@@ -76,7 +76,7 @@ No P0 or P1 issues. No junk/dead files (`*final*`/`*backup*`/`*.bak` scan empty)
 - Contracts win: GOAL5 exclusive leaves: godform.ts (archetype facade + GODFORMS + bias), attention-schema.ts (AST-1), topdown-perception.ts (HOT-1), quality-space.ts (HOT-4), memory-orchestra.ts + narrative-memory.ts.
 - Fixed duplicate GODFORMS (partial prior state): cleaned cruft (aliases, void GF, private static, mixed refs); godform.ts **sole source**; `World.public static readonly GODFORMS`; `getGodformBias(i)` **actually wired** into construction + driveSuper local percepts (replaced ad-hoc i with bias.chaos etc). No unused imports.
 - Exclusive ownership enforced (STARKILLER law #2): greps across src + docs confirm only godform defines the 5; leaves are leaf-pure (type-only Rng); super-mind owns wiring; world.ts (integrator) ONLY consumer of godform + spawns exactly 5; no dupe lists/names.
-- Updated for 5 Archons: docs/ERD.md (mermaid entities GODFORM/SUPER\_\* + GOAL5 ERM narrative + scope note), docs/KANBAN.md (legend + 2 new cards).
+- Updated for 25 Archons brutal god tier: docs/ERD.md , docs/KANBAN.md , full BRUTALISM with all listed powers.
 - Research receipts incorporated: appended section to docs/GOAL5-RESEARCH-RECEIPTS.md with actions + refs to moonlab/eshkol/QGT.
 - All disclaimers, determinism, math-under-every-effect preserved.
 - No files created except edits; no scope creep.

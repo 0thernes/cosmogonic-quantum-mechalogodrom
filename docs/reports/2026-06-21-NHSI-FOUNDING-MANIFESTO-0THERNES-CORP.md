@@ -408,7 +408,7 @@ gpt2-basic, llm-arbitrator (non-LLM mandate); SolanaQuantumFlux (proprietary).
 
 ## XV · Canonical Receipts (Measured 2026-06-21)
 
-**2,161 tests · 95.73% line / 92.69% func coverage** (from `bun scripts/verify-receipts.ts --print`). Enforced by `tests/docs-receipts-law.test.ts` + `bun run check`. All surfaces truth-synced.
+**2,185 tests · 95.23% line / 92.22% func coverage** (from `bun scripts/verify-receipts.ts --print`). Enforced by `tests/docs-receipts-law.test.ts` + `bun run check`. All surfaces truth-synced.
 
 ---
 

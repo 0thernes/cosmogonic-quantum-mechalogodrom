@@ -1,4 +1,4 @@
-# BROLY (EXECUTOR) Research Receipts — GOAL5 5 Archons / Tsotchke Lineage (2026-06-19)
+# BROLY (EXECUTOR) Research Receipts — BRUTAL GOD TIER 25 Archons / Full Tsotchke (2026-06)
 
 **Ralph 10x heartbeat continue (scheduled):** 10x wiring of full Tsotchke corpus (Eshkol AUTODIFF dual + GWT from workspace.cpp/CONSCIOUSNESS_ENGINE, Moonlab MPO/tensor, libirrep, ulg, quake) everywhere: facade + super-mind/topdown/quality/godform/body/world + active-inference. Strict audits/logs appended (paths cited). Run bun run check. Gate 1183 tests, 95.74/92.42. Heartbeat mode. Same as original 1st prompt + context. 10x over and over.
 
@@ -59,7 +59,7 @@ Ralph heartbeat: re-audit + continued wiring of Tsotchke corpus (Eshkol AD/tape 
 - eshkol.ai / tsotchke sites: Playground WASM REPL for Eshkol (AD live); unified quantum-AI framing (sim only here: "inspired by").
 - Cross: spin_based etc for instinct. All MIT credited.
 
-**How research informs 5 Archons (GODFORMS in godform.ts + wiring):**
+**How research informs 25 Archons brutal god tier (GODFORMS + brutalGodAspect in godform.ts + wiring):**
 
 - Eshkol → Eshkol for det memory/AD in HOT-1 (topdown-perception.ts = predictive generate/correct loop mirrors AD/forward tape + active-inf primitives); arena for fixed narrative ring/memOrch (no GC/alloc hot, O(1) region style in CAP rings); GWT for ignition in super-mind; consciousness primitives for qualia/attention/metacog leaves.
 - Moonlab → Moonlab for Clifford reflex (super-mind: reflex = ... \* this.cliffordScale from bias; scales per Archon e.g. ORACLE-Σ 0.9 heavy); statevector sim in super-qubits/quantum mind; 32q+ scale for entanglement in snapshot.
