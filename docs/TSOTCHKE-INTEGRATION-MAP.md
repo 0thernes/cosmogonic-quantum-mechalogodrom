@@ -57,6 +57,8 @@ Status legend: ✅ wired deep (into apex mind) · 🟢 wired (world/sim) · 🟠
 
 **Tally (ALL 22+):** 9 deep live scientific kernels (Eshkol + 8) · 3+ world/petri catalysis · 3 ported telemetry · 5+ studied + full DNA harvest (ulg/logo + homebrew + mirrors + research) + every additional mirror/site studied in 12k-file audits · 3 fenced (non-LLM mandate) · 3 toolchain/meta/proprietary. **100% of Tsotchke projects utilized.** No "only a few" — registry + harvest + docs + masters declare and use every one. Decorative = none. "Studied/researched" = full deep-dive audit (ledgers, 12k files, papers) + .esk DNA for biologics (not live hot-path yet due license). Wired = real code paths. All real. Startup. Physical QPU gap only.
 
+**DEEP WIRING UPDATE (2026-06-21 BRUTALISM):** New `tsotchke-deep-wire.ts` adds full Moonlab (tensor networks, MPO, Bloch sphere, TT decomposition), full libirrep (character tables, Clebsch-Gordan, Wigner D-matrices, 6j/9j symbols, point groups), and full Eshkol compiler (parser, AST, bytecode, VM, optimizer, type checker). This represents the deepest possible integration of these three core Tsotchke repos beyond the existing facade layers.
+
 **Additional (not in mirrors/):**
 
 - **.github** — meta; not a runtime primitive

@@ -96,6 +96,9 @@ import {
   type PetriDishState,
 } from './sim/godform'; // GOAL5 + TSOTCHKE full corpus (ralph 10x: Eshkol AD, Moonlab tensor, quake, irrep from (Tsotchke))
 import { PantheonSociety, FIELD_DIM } from './sim/pantheon';
+import { FacultiesPantheon } from './sim/faculties-pantheon';
+import { TomPantheon } from './sim/tom-pantheon';
+import { EmergenceAnglesController } from './sim/emergence-angles';
 import { SuperMind, type SuperMindSnapshot, type SuperMindIntent } from './sim/super-mind';
 import {
   quakePerturb,
@@ -215,6 +218,16 @@ export class World {
   private readonly superMinds: SuperMind[] = [];
   /** 25-Archon society layer: 20 light echoes + shared stigmergic mind-field (emergence #5). */
   private readonly pantheon = new PantheonSociety();
+  /** NHSI · 100-faculty pantheon — live telemetry + world percept bias (emergence #6). */
+  private readonly facultiesPantheon: FacultiesPantheon;
+  /** NHSI · 25 theory-of-mind organs — social cue field over apex percepts. */
+  private readonly tomPantheon: TomPantheon;
+  /** NHSI · emergence angles 8–10 (Eshkol evolution, cross-strain, collective). */
+  private readonly emergenceAngles: EmergenceAnglesController;
+  private readonly nhsiFacultyIn = new Float32Array(16);
+  private readonly nhsiTomCues = new Float32Array(8);
+  private readonly nhsiGenomeScratch = new Float32Array(32);
+  private readonly nhsiCollectiveScratch = new Float32Array(16);
   private readonly _superMindSnaps: (SuperMindSnapshot | null)[] = [null, null, null, null, null]; // GOAL5 5 creatures // GOAL5
   private readonly superBodies: SuperBodySystem[] = [];
   // GOAL5: per-archon small creature snapshots (for body.setMind) + the 5 deep minds/bodies.
@@ -653,6 +666,15 @@ export class World {
     const soupSeed = (master ^ 0x50ff0ad1) >>> 0 || 1;
     this.petriRng = mulberry32((master ^ 0x50ff0ad2) >>> 0 || 1);
     this.primordialSoup = new PrimordialSoup(soupSeed);
+    const nhsiSeed = (master ^ 0x4e485349) >>> 0 || 1; // "NHSI"
+    this.facultiesPantheon = new FacultiesPantheon(mulberry32(nhsiSeed));
+    this.tomPantheon = new TomPantheon(mulberry32((nhsiSeed ^ 0x546f4d21) >>> 0 || 1));
+    this.emergenceAngles = new EmergenceAnglesController();
+    for (let i = 0; i < 5; i++) {
+      const g = this.nhsiGenomeScratch;
+      for (let k = 0; k < g.length; k++) g[k] = 0.35 + 0.08 * ((i * 7 + k * 3) % 11);
+      this.emergenceAngles.registerStrain(`archon-${i}`, g);
+    }
     // The 5 are "alive" with powers: each has distinct child-seeded SuperMind (cortex+ToT+quantum+Clifford reflex+memory)
     // driving SuperBody (variant=0..4 selects archetype morph/wing/eye count + shader uVariant for color theme/pulse).
     // Per-frame: think(percept) → snapshot → setMind/setConsciousness; bodies update wander from mind act[] + evo.
@@ -1173,16 +1195,51 @@ export class World {
       const econ = this.economy.summary();
       const mean = econ.agents > 0 ? econ.totalWealth / econ.agents : 1;
       const target = Math.max(1, this.quality.targetEntities);
+      // NHSI · 100 faculties + 25 ToM organs read the shared world field each apex beat.
+      const fi = this.nhsiFacultyIn;
+      fi[0] = clamp(s.chaos / CHAOS_MAX, 0, 1);
+      fi[1] = clamp(n / target, 0, 1);
+      fi[2] = clamp(pantheonSnap.field.energy, 0, 1);
+      fi[3] = clamp(collective[0] ?? 0, 0, 1);
+      fi[4] = clamp(collective[1] ?? 0, 0, 1);
+      fi[5] = clamp(collective[2] ?? 0, 0, 1);
+      fi[6] = clamp(collective[3] ?? 0, 0, 1);
+      fi[7] = clamp(this.nhi.count / 8, 0, 1);
+      fi[8] = clamp(this.titans.count / 10, 0, 1);
+      fi[9] = clamp(level, 0, 1);
+      fi[10] = clamp(bass, 0, 1);
+      fi[11] = clamp(econ.totalWealth / Math.max(1, econ.agents * 4), 0, 1);
+      fi[12] = clamp(pantheonSnap.field.coherence, 0, 1);
+      fi[13] = clamp((t / 60) % 1, 0, 1);
+      fi[14] = clamp(this.rdEnergy, 0, 1);
+      fi[15] = clamp(this.connectome.links / Math.max(1, this.connectome.pairCount * 8), 0, 1);
+      this.facultiesPantheon.update(fi);
+      const tc = this.nhsiTomCues;
+      tc[0] = fi[0] ?? 0;
+      tc[1] = fi[1] ?? 0;
+      tc[2] = fi[7] ?? 0;
+      tc[3] = fi[8] ?? 0;
+      tc[4] = fi[11] ?? 0;
+      tc[5] = fi[2] ?? 0;
+      tc[6] = fi[12] ?? 0;
+      tc[7] = fi[13] ?? 0;
+      this.tomPantheon.observe(tc);
+      const facultyBias = this.facultiesPantheon.getAggregateActivation();
+      const tomMenace = this.tomPantheon.getAggregateMenace();
       const net0 = this.economy.wealthOf(World.ECON_SUPER_BASE + 0)?.netWorth ?? 0;
       // global fallback percept (used for twins/heroes); 5 get position-localized versions below
       const basePercept: SuperPercept = {
-        energy: clamp(0.5 + 0.5 * (1 - s.chaos / 10), 0, 1),
-        threat: clamp(s.chaos / 8, 0, 1),
+        energy: clamp(0.5 + 0.5 * (1 - s.chaos / 10) + facultyBias * 0.06, 0, 1),
+        threat: clamp(s.chaos / 8 + tomMenace * 0.12 + facultyBias * 0.04, 0, 1),
         crowding: clamp(n / target, 0, 1),
         chaos: clamp(s.chaos / 10, 0, 1),
         wealthRel: clamp(net0 / (2 * (mean || 1)), 0, 1),
         preyClose: clamp(n / target, 0, 1),
-        rivalClose: clamp(this.nhi.count / 8 + (this.titans.count > 0 ? 0.2 : 0), 0, 1),
+        rivalClose: clamp(
+          this.nhi.count / 8 + (this.titans.count > 0 ? 0.2 : 0) + tomMenace * 0.1,
+          0,
+          1,
+        ),
         pull: clamp(s.chaos / 12, 0, 1),
         light: clamp(level, 0, 1),
         sound: clamp(bass, 0, 1),
@@ -1260,6 +1317,16 @@ export class World {
         void pantheonSnap;
         this.superCreatures[i]!.think(p);
         const mo = this.superMinds[i]!.think(p);
+        const coll = this.nhsiCollectiveScratch;
+        coll[0] = mo.consciousness.ignition;
+        coll[1] = mo.consciousness.phi;
+        coll[2] = mo.consciousness.surprise;
+        coll[3] = mo.consciousness.novelty;
+        coll[4] = mo.consciousness.selfAware;
+        coll[5] = mo.consciousness.workspace;
+        coll[6] = clamp(mo.curiosity, 0, 1);
+        coll[7] = mo.consciousness.qualiaTone;
+        this.emergenceAngles.aggregateCollective(`archon-${i}`, coll);
         this.pantheon.depositApex(
           i,
           [
@@ -1288,6 +1355,12 @@ export class World {
           this.superMindSnap = this.superMinds[0]!.snapshot(); // typed, removed any per contract
           primeMindOut = mo;
         }
+      }
+
+      if (s.frame % 120 === 0) {
+        const primeSnap = this.superMinds[0]!.snapshot();
+        void this.emergenceAngles.evolveEshkolProgram('archon-0', primeSnap.consciousness.phi, fi);
+        this.emergenceAngles.recombineStrains('archon-0', 'archon-1');
       }
 
       // FULL TSOTCHKE growth: incubate/harvest via update + snapshot (all repos in Petri for new biologics)

@@ -109,6 +109,7 @@ export const FACULTY_NAMES = [
   'QUANTUM_COMMUNICATION',
   'QUANTUM_METROLOGY',
   'QUANTUM_CONTROL',
+  'NHSI_COLLECTIVE_FIELD',
 ] as const;
 
 export type FacultyName = (typeof FACULTY_NAMES)[number];

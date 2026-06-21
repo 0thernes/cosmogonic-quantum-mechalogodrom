@@ -52,7 +52,7 @@ behind the full gate (`bun run check`) and a commit.
 
 **In Progress (heartbeat iter)**
 
-- Ralph loop: deepen Tsotchke wiring per [TSOTCHKE-INTEGRATION-MAP.md](./TSOTCHKE-INTEGRATION-MAP.md); NHSI targets tracked in [NHSI-PROGRESS-DASHBOARD.md](./NHSI-PROGRESS-DASHBOARD.md). Gate GREEN (1,885 tests, receipts enforced).
+- Ralph loop: deepen Tsotchke wiring per [TSOTCHKE-INTEGRATION-MAP.md](./TSOTCHKE-INTEGRATION-MAP.md); NHSI targets tracked in [NHSI-PROGRESS-DASHBOARD.md](./NHSI-PROGRESS-DASHBOARD.md). Gate GREEN (**2,162 tests**, receipts enforced).
 
 **Next**
 
