@@ -39,13 +39,16 @@ studied-only · 5 not wired. **13 of 20 have real code in `src/`.**
 
 ## What blocks the other 7 — and how to unblock
 
-1. **LICENSE GATE (the big unblock — owner action). 5 repos have NO LICENSE file:** PINN, PIMC,
-   quantum-quake, ulg, logo-lab. Under copyright law, "no license" = all-rights-reserved, so we cannot
-   redistribute/port them into this (licensed) repo — **even though 0thernes owns them.** The fix is one
-   line of paperwork: **add a `LICENSE` (MIT, or 0thernes' license) to each of those Tsotchke repos.** The
-   moment they carry a license, all 5 become wireable: PINN → world/petri physics, PIMC → quantum-path
-   substrate, quantum-quake → mind/world aliveness (verify it isn't GPL-encumbered from Quake first), **ulg
-   → the world's law-graph (huge — rules-as-cognition), logo-lab → procedural morphogenesis.**
+1. **LICENSE GATE (owner action — but NOT uniform; see provenance below).** Five repos ship with no
+   LICENSE file, so they are all-rights-reserved by default. **Four are the owner's own original work and
+   become wireable once licensed + chain-of-title is cleared** (PINN, PIMC, ulg, logo-lab). **One —
+   `quantum-quake` — is NOT relicensable: it is GPL-2.0** (it wraps QuakeSpasm / id Software's Quake;
+   `quake/LICENSE.txt` = GPL-2.0, `quake/Quake/*.c` carry id Software © + GPL headers). 0thernes does not
+   own that copyright and cannot MIT it; porting it into this proprietary repo would violate the GPL. Its
+   `qge/` quantum layer is tsotchke-original but is likely a _derivative work_ of the GPL engine — quarantine
+   pending legal review. **So the real unblocks are PINN → world/petri physics, PIMC → quantum-path
+   substrate, ulg → world law-graph (rules-as-cognition), logo-lab → procedural morphogenesis** — NOT
+   quantum-quake.
 2. **NON-LLM MANDATE (fenced ON PURPOSE — a feature, not a slight).** `gpt2-basic` and `llm-arbitrator`
    are transformer / LLM tools. The entire NHSI thesis is **non-LLM**; wiring an LLM in would betray the
    mission. They stay fenced **because the vision demands it** — keeping them out is honoring 0thernes Corp's
@@ -55,14 +58,31 @@ studied-only · 5 not wired. **13 of 20 have real code in `src/`.**
 4. **REDUNDANT / TOOLCHAIN.** `Quantum-RNG-API` (we ported the `quantum_rng` core directly, so the REST
    wrapper adds little) and `homebrew-eshkol` (a build toolchain, not a runtime primitive).
 
+## Provenance & relicensing risk (investigated 2026-06-21 — NOT legal advice; confirm with an attorney)
+
+A 5-repo provenance audit (authorship, copyright notices, copyleft contamination):
+
+| Repo          | Call        | Finding                                                                                                                                                                      |
+| ------------- | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| quantum-quake | 🔴 **STOP** | **GPL-2.0** (QuakeSpasm / id Software). Not the owner's to relicense; porting into a proprietary repo violates the GPL. Quarantine `qge/` until a lawyer rules it separable. |
+| PINN          | 🟡 caution  | Original tsotchke work, no contamination. README claims MIT but ships no LICENSE file; author email is `@concordia.ca` → clear any **university IP** claim first.            |
+| PIMC          | 🟡 caution  | Original tsotchke work; OSP is an external dep (don't vendor it). Same Concordia chain-of-title check.                                                                       |
+| ulg           | 🟢 go       | Original, all-permissive deps, zero copyleft. **Authored by `ubernaut` (Collin Schroeder)** → corp needs a copyright assignment from him.                                    |
+| logo-lab      | 🟢 go       | Original Three.js work, no contamination. Same ubernaut assignment; cites three-ascii/Acerola as inspiration (not vendored) → add a NOTICE credit.                           |
+
+**Chain of title ≠ repo ownership:** owning the GitHub repo is not the same as owning the copyright.
+The two non-code facts to confirm before relicensing: Concordia's claim (PINN/PIMC) and ubernaut's
+assignment (ulg/logo-lab).
+
 ## The integration roadmap
 
 - **Now (unblocked):** the 8 deep + 2 world repos are live and tested.
-- **Owner action → then I wire (highest leverage):** add LICENSE to PINN / PIMC / quantum-quake / **ulg** /
-  **logo-lab** → I port + wire them (ulg's law-graph and logo-lab's morphogenesis are the biggest new
+- **Owner action → then I wire (highest leverage):** clear chain-of-title + add LICENSE to **PINN / PIMC /
+  ulg / logo-lab** → I port + wire them (ulg's law-graph and logo-lab's morphogenesis are the biggest new
   capabilities — world-rules-as-cognition + procedural body growth).
-- **Deepen (no new license needed):** promote PINN / PIMC / quantum-quake from telemetry-only into the
-  actual mind/world decision paths (the code is ported; only the wiring is shallow).
+- **Deepen (no new license needed):** promote PINN / PIMC from telemetry-only into the actual mind/world
+  decision paths once licensed (the code is ported; only the wiring is shallow).
+- **Do NOT wire:** `quantum-quake` (GPL-2.0 — legal hard-stop) into this proprietary build.
 - **Stay fenced (by design):** gpt2-basic, llm-arbitrator (non-LLM mandate); SolanaQuantumFlux (proprietary).
 
 ---
