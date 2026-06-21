@@ -550,7 +550,7 @@ Full detail in docs/.
 ## Documentation
 
 - **[docs/NHSI-PROGRESS-DASHBOARD.md](./docs/NHSI-PROGRESS-DASHBOARD.md)** — **canonical NHSI scorecard**
-  (144 faculties · 25 Archons · 25 ToM organs · 15 emergence (10+5 god-scale) · Tsotchke depth · Butlin 14/14 path)
+  (100-faculty design ~30 deep-wired · 25 Archons = 5 live + 20 light-echo · 25 ToM organs wired · 10 emergence angles + 5 god-scale events · Tsotchke depth · Butlin 8/14 met + 6/14 partial path)
 - [docs/TSOTCHKE-INTEGRATION-MAP.md](./docs/TSOTCHKE-INTEGRATION-MAP.md) — honest Tsotchke repo wiring ledger
 - [docs/CONTROLS.md](./docs/CONTROLS.md) ” every control: mouse, keyboard hotkeys,
   touch, bottom-panel buttons, and the 10 camera views

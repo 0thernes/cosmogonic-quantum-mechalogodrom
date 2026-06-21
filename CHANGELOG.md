@@ -17,11 +17,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Truth-synced all public surfaces to measured gate: **2,185 tests / 0 fail** · **95.23% line / 92.22% func**.
 - Package version bumped to **v0.17.1**; docs/specs/pages/GitHub About aligned with Local.
 
-### v0.17.0+ BRUTAL GOD TIER COMPLETE — 25 Archons with Full Brutalism
+### v0.17.0+ BRUTAL GOD TIER — 25-Archon Pantheon (5 live + 20 light-echo) with Full Brutalism
 
-- All 25 Archons fully implemented with brutal god powers (Valkorion, Thanos, Dark Phoenix, Galactus, Broly, Azathoth, Chaos Gods, Shuma Gorath, Mad Jim Jaspers, Pennywise, Anti-Monitor, Knull, Mr Mxyzptlk, Joker, Zod, Gilgamesh, Alucard, Griffith, EVA-01, Gurren Lagann, Sephiroth, Vergil, Dante, Starkiller, Riddick)
-- Every Tsotchke repo (22+ projects) wired as substrate for god powers (Eshkol, Moonlab, QGT, spin, libirrep, quantum-quake, ulg, logo-lab, tensorcore, PINN, PIMC, rngs, asteroids, classical + homebrew + sites)
-- 100 faculties, 25 ToM organs, 10 emergence angles, 14/14 structural scaffolding achieved
+- All 25 Archon godforms named + carrying the brutal god aspect (Valkorion, Thanos, Dark Phoenix, Galactus, Broly, Azathoth, Chaos Gods, Shuma Gorath, Mad Jim Jaspers, Pennywise, Anti-Monitor, Knull, Mr Mxyzptlk, Joker, Zod, Gilgamesh, Alucard, Griffith, EVA-01, Gurren Lagann, Sephiroth, Vergil, Dante, Starkiller, Riddick) — **5 individuated apex SuperMinds + 20 live light-echo agents** (honest live count)
+- The Tsotchke corpus (all 20 projects enumerated; ~16 wired with real downstream effect) as substrate for god powers (Eshkol, Moonlab, QGT, spin, libirrep, quantum-quake, ulg, logo-lab, tensorcore, PINN, PIMC, rngs, asteroids, classical + homebrew)
+- 100-faculty design (~30 deep-wired into the apex), 25 ToM organs wired, 10/10 emergence angles; Butlin **8/14 met + 6/14 partial** (computational indicators, NOT sentience)
 - NHSI progress dashboard updated with brutal god tier completion
 - Package version at v0.17.0+
 
