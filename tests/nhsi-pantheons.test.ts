@@ -4,7 +4,7 @@ import { FacultiesPantheon, FACULTY_NAMES } from '../src/sim/faculties-pantheon'
 import { TomPantheon, TOM_ORGANS } from '../src/sim/tom-pantheon';
 import { EmergenceAnglesController } from '../src/sim/emergence-angles';
 
-describe('NHSI pantheon modules (100 faculties · 25 ToM · emergence 8–10)', () => {
+describe('NHSI pantheon modules (100 faculties · 25 ToM · 15 emergence incl. 5 brutal god-scale for Valkorion/Thanos/Broly/Knull etc)', () => {
   test('100 faculties are registered and advance deterministically', () => {
     expect(FACULTY_NAMES.length).toBeGreaterThanOrEqual(100);
     const a = new FacultiesPantheon(mulberry32(42));
@@ -49,7 +49,7 @@ describe('NHSI pantheon modules (100 faculties · 25 ToM · emergence 8–10)', 
     expect(snaps.length).toBeGreaterThanOrEqual(3);
     expect(snaps.some((s) => s.angle === 'HIGHER_ORDER_EMERGENCE')).toBe(true);
     expect(e.getGodScaleSnapshots().length).toBe(5);
-    expect(e.getGodScaleSnapshots().some((g) => g.mode === 'ARCHON_WARFARE')).toBe(true);
+    expect(e.getGodScaleSnapshots().some((g) => g.angle === 'ARCHON_WARFARE')).toBe(true);
     expect(e.getAggregateEmergence()).toBeGreaterThanOrEqual(0);
     expect(e.getAggregateEmergence()).toBeLessThanOrEqual(1);
   });
