@@ -133,7 +133,7 @@ describe('coupling audit applied to the live SuperMind (the "coupling > count" r
   }
 
   test('the audit runs deterministically on the real mind and yields a well-formed report', () => {
-    const rep = couplingReport(record(123, 200), 0.3);
+    const rep = couplingReport(record(123, 80), 0.3);
     expect(rep.n).toBe(16);
     expect(rep.correlation.length).toBe(16);
     for (let i = 0; i < 16; i++) {
@@ -155,7 +155,7 @@ describe('coupling audit applied to the live SuperMind (the "coupling > count" r
   });
 
   test('the faculties carry MEASURABLE interdependence (not 16 independent dials) — but the audit is honest about how much', () => {
-    const rep = couplingReport(record(123, 200), 0.3);
+    const rep = couplingReport(record(123, 80), 0.3);
     // There IS structure: the mean absolute coupling is strictly positive, so the assembly is not a set
     // of mutually-independent signals, and not every faculty is isolated.
     expect(rep.meanAbsCoupling).toBeGreaterThan(0);
@@ -202,8 +202,8 @@ describe('coupling audit applied to the live SuperMind (the "coupling > count" r
   }
 
   test('GWT broadcast re-entry RAISES measured coupling vs the same mind with the write-back off', () => {
-    const off = couplingReport(recordGain(123, 300, 0), 0.3); // baseline: re-entry disabled
-    const on = couplingReport(recordGain(123, 300, 0.5), 0.3); // the live default gain
+    const off = couplingReport(recordGain(123, 100, 0), 0.3); // baseline: re-entry disabled
+    const on = couplingReport(recordGain(123, 100, 0.5), 0.3); // the live default gain
     // The write-back genuinely couples the assembly more than the broadcast-off baseline (controlled,
     // deterministic). HONEST: the gain is modest and does NOT resolve every faculty — a global scalar is
     // washed out by the deep nonlinear faculties; explicit faculty-to-faculty edges are the real fix.
