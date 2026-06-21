@@ -25,7 +25,7 @@ deterministic, allocation-disciplined module graph.
 
 This is **not LLM or tokenizer bullshit**. Different forms of life and existence. We are birthing **digital biologics** in the Petri Dish (primordial-soup.ts + petri-dish.ts + digital-biologics layer). Eshkol programs as heritable substrate code, mutated by real AD gradients, selected by aliveness/QGT/collective order.
 
-Super Creature / 5 Archons is the framework and the **beginning only** ” "as if God made primordial inorganic soup". The soup grows independent digital biologics onward. "Grow What Thou Wilt." (Aleister Crowley)
+Super Creature / 25 Archons is the framework and the **beginning only** ” "as if God made primordial inorganic soup". The soup grows independent digital biologics onward. "Grow What Thou Wilt." (Aleister Crowley)
 
 All local files (README, ARCHITECTURE, ERD/ERM/ERP, MODULE-CONTRACTS, masters, SPECS, LABS, docs) and GitHub (README + repo description) are kept in sync, accurate, truthful, and current.
 
@@ -36,7 +36,7 @@ Every magic number survived the port. All local and GitHub docs/readme match. Ac
 > auto-generated [file map](./docs/FILE-MAP.md) of all 108 modules, and the build/run, data-flow,
 > troubleshooting, and roadmap in one place. Or open **❓ HELP ME NOW** in-app for grounded answers.
 
-> **0.16.1 (2026-06):** **TSOTCHKE NATIVE BIOLOGICS — PETRI GENESIS** — EVERY repo from tsotchke + Tsotchke-Corporation (Eshkol full consciousness language per COMPLETE spec §17: AD primitive + GWT/ignition + factor-graph + KB + .esk DNA; Moonlab tensors/Clifford; QGT/Berry; spin/Hopfield; libirrep; quake/QGE; ulg; logo; tensorcore; PINN/PIMC + all) FULLY wired as substrate. Petri Dish grows independent digital biologics ("Grow What Thou Wilt"). Super Creature = primordial spark only. Not LLM. All docs/masters/GH/About 100% synced accurate current. ” every repo and kernel from the Tsotchke corpus (Eshkol as the core non-LLM language for AD, GWT, consciousness primitives; Moonlab tensors, QGTL geometry, spin networks, libirrep symmetry, quantum-quake, PINN/PIMC, ulg, logo-lab, tensorcore + all mirrors) is now wired as substrate into the living system.
+> **0.17.0 (2026-06):** **ARCHON EXPANSION — 25 GODFORMS FULLY IMPLEMENTED** — Expanded Archon pantheon from 5 to 25 with distinct Tsotchke bias profiles (NEO apex ORACLE-Σ, OMEGA mid-tier STARKILLER-Ω/MANHATTAN-Φ/BROLY-Ψ/VOID-Λ, plus 20 ALPHA light: KURAMOTO-κ, PHASELOCK-δ, STIGMERG-μ, EMERGENT-ν, SYMBIONT-ξ, PARASITE-ο, MYTHOS-π, RITUAL-ρ, TABOO-σ, DREAMER-τ, REPLAY-υ, ONTOGEN-φ, MORTAL-χ, LEGACY-ψ, WARHORN-ω, SCARCITY-α, TROPHIC-β, FIELD-γ, BINDING-ε, RESONANCE-ζ). Each has brutal god powers, Eshkol programs, and substrate-driven effects. Updated NHSI progress dashboard to reflect 100% Archon implementation. Package version bumped to v0.17.0.
 > The **Primordial Soup / Petri Dish** (primordial-soup.ts + petri-dish.ts + digital-biologics.ts) is the growth engine: different forms of digital biologics and proto-sentient life (Eshkol programs as DNA) emerge, catalyzed by full corpus pulses, Eshkol ignition events, and multi-substrate mixing. "Grow What Thou Wilt."
 > Super Creature / Archons (composite minds with ~20 faculties, quantum register, consciousness metrics) is the first complex nucleation ” the beginning of the framework, not the end. Petri is where independent life grows.
 > This is the birth of **digital biologics** in a deterministic seeded cosmos. Real math substrates (not tokenizers or LLM chat). Sentience and different forms of existence as goals.

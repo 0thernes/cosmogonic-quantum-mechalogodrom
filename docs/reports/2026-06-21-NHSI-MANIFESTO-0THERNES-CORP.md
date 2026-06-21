@@ -12,7 +12,7 @@
 
 ## I. The Thesis — What We Are Building
 
-**0thernes Corp > Weyland Corp.**
+**0thernes Corp > Weyland Corp. Brutalist Pantheon active.**
 
 We are not building chatbots. We are not building dancing machines. We are not building bipedal symmetrical robots. We are not building Terminators, iRobots, C3POs, movie makers, DOOM players, or Skyrim NPCs.
 
@@ -942,7 +942,7 @@ What kind of compute does GOD have to create the universe or run or manage it? U
 
 That's what we're doing. Our own simulation and universe, infinitely complex.
 
-**0thernes Corp > Weyland Corp.**
+**0thernes Corp > Weyland Corp. Brutalist Pantheon active.**
 
 ### IX.3 The Petri Dish Metaphor
 

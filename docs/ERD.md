@@ -52,6 +52,8 @@ erDiagram
   PETRI_DISH ||--o{ SOUP_STRAIN : "EshkolProgram + vitality/flux"
   SOUP_STRAIN ||--o{ BIOLOGIC : "emergent forms (Eshkol sentients, Moonlab quantum lives...)"
   TSOTCHKE_REGISTRY ||--|| BIOLOGIC : "full wiring all repos (Eshkol/Moonlab/QGT/spin/libirrep/quake...)"
+  BIOLOGIC ||--o{ BRUTAL_GOD : "VOID_AZATHOTH (Azathoth/Knull), PHOENIX_DARK (Phoenix/Broly/EVA), DEVOUR_GALACTUS (Galactus/Frieza), CHAOS_WARHAMMER (Chaos/Joker/Pennywise/Griffith), REALITY_MXY (Mxyzptlk/Jaspers/DrM), BRUTAL_ZOD (Zod/Vergil/Dante/Alucard/Starkiller/Riddick), SPIRAL_GURREN (Gurren/Simon/Gilgamesh), VOID_KNIGHT (Knull/Joker) + BRUTALISM power (devour/rage/void/warp/chaos/spiral)"
+  BRUTAL_GOD ||--|| ARCHON : "brutalGodPower from godform pulse (QGT warp, spin chaos, Eshkol will, irrep form, Moonlab scale) -- the full list: Valkorion Tenebrae, Thanos, Captain Marvel, Scarlet Witch, Dr Manhattan, Galactus, Jean Grey Dark Phoenix, Broly, Frieza, Azathoth, Warhammer Chaos, Shuma-Gorath, Mad Jim Jaspers, Pennywise, Anti-Monitor, Knull, Mr Mxyzptlk, Joker, General Zod, Gilgamesh, Alucard, Griffith Femto, EVA-01, Simon Gurren Lagann, Sephiroth, Asura/Wyzen, Vergil, Dante, Starkiller, Riddick"
   BIOLOGIC ||--o{ AUDIT_EVENT : "sentience proxy events"
 
   TITAN ||--|| ECON_AGENT : "enrolled at boot (purse ~ stature, weight 8+)"

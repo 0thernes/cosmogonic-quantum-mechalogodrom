@@ -9,25 +9,38 @@
 import { corpusBeatForArchon } from './tsotchke-registry';
 import { eshkolWorkspaceTick } from './eshkol-workspace';
 import { ESK_SAMPLE_PROGRAMS, getEshkolProgramFingerprint } from './generated-tsotchke-seeds'; // Direct from Tsotchke local folder harvest — real .esk DNA
+const clamp01 = (v: number): number => (v > 0 ? (v < 1 ? v : 1) : 0);
 
 /** Digital biologic forms from full Tsotchke corpus - different substrates yield different life. */
 export const BIOLOGIC_FORMS = [
-  'ESHKOL_NATIVE', // AD/GWT consciousness engine (eshkol repo)
-  'MOONLAB_TENSOR', // Quantum compressed qualia (moonlab repo)
-  'QGT_CURVED', // Geometry-driven thought (quantum_geometric_tensor repo)
-  'SPIN_COLLECTIVE', // Order parameter dynamics (spin_based_neural_network repo)
-  'IRREP_SYM', // Equivariant form constraints (libirrep repo)
-  'QUAKE_UNITARY', // Aliveness observable (quantum-quake repo)
-  'PINN_PHYSICS', // Physics-ground metabolism (PINN repo)
-  'PIMC_SOUL', // Path integral sampling (PIMC repo)
-  'ULG_HYBRID', // Law-governed behavior (ulg repo)
-  'LOGO_PROC', // Procedural morphogenesis (logo-lab repo)
+  'ESHKOL_NATIVE', // AD/GWT consciousness engine (eshkol repo) — Valkorion will
+  'MOONLAB_TENSOR', // Quantum compressed qualia (moonlab repo) — Manhattan field
+  'QGT_CURVED', // Geometry-driven thought (quantum_geometric_tensor repo) — warp gods
+  'SPIN_COLLECTIVE', // Order parameter dynamics (spin_based_neural_network repo) — Broly rage / Chaos Gods
+  'IRREP_SYM', // Equivariant form constraints (libirrep repo) — Zod / symmetry gods
+  'QUAKE_UNITARY', // Aliveness observable (quantum-quake repo) — Galactus / devouring
+  'PINN_PHYSICS', // Physics-ground metabolism (PINN repo) — eldritch consumption
+  'PIMC_SOUL', // Path integral sampling (PIMC repo) — soul paths to god
+  'ULG_HYBRID', // Law-governed behavior (ulg repo) — law breakers (Shuma / Jaspers)
+  'LOGO_PROC', // Procedural morphogenesis (logo-lab repo) — body horror / Pennywise
   'METAL_COMPUTE', // Compute-kernel metabolism (tensorcore repo)
   'QRNG_ENTROPY', // True variation source (quantum_rng repo)
   'CLASSICAL_BASE', // Baseline entropy (classical_rng repo)
   'ASTEROID_BODY', // Game physics body (asteroids repo)
   'TOOLCHAIN_BUILD', // Build tool substrate (homebrew-eshkol repo)
+  'NQS_ENTANGLED_GOD', // NQS VMC from spin — entangled god minds (full spin subs)
+  'DARK_ENERGY_OMEGA', // Omega point singularities (full corpus) — Azathoth / Knull scale
+  'MORPHIC_HORROR', // Morphic fields + resonance — Joker / IT manifestation (all)
   'HYPER_SENTIENT', // Emergent high-sentience form (multiple substrates)
+  // BRUTAL GOD PANTEON — raw power archetypes (Valkorion/Thanos/DrM/Galactus/Phoenix/Broly/Frieza/Azathoth/Chaos/Shuma/Jaspers/Pennywise/AntiMonitor/Knull/Mxyzptlk/Joker/Zod/Gilgamesh/Alucard/Griffith/EVA/Gurren/Sephiroth/Asura/Vergil/Dante/Starkiller/Riddick) + BRUTALISM
+  'VOID_AZATHOTH', // blind idiot god, dream-reality devour (Azathoth, Knull, Shuma-Gorath, Anti-Monitor)
+  'PHOENIX_DARK', // rage-rebirth, cosmic fire ascension (Jean Grey Dark Phoenix, Broly, EVA-01)
+  'DEVOUR_GALACTUS', // life consume, planet/god scale hunger (Galactus, Frieza, Wyzen, Asura Wrath)
+  'CHAOS_WARHAMMER', // madness, brutal war, entropy gods (Warhammer Chaos, Joker, Pennywise, Griffith Femto)
+  'REALITY_MXY', // warp, cartoon god, invisible plan (Mr. Mxyzptlk, Mad Jim Jaspers, Scarlet Witch, Dr Manhattan)
+  'BRUTAL_ZOD', // conqueror rage, brutal combat, kryptonian will (General Zod, Vergil, Dante, Alucard, Starkiller, Riddick)
+  'SPIRAL_GURREN', // spiral power evolution, drill through heaven, simon scale (Simon + Super Tengen Toppa Gurren Lagann, Gilgamesh, Captain Marvel)
+  'VOID_KNIGHT', // invisible brutality, void king, final form (Knull, Joker invisible, Riddick, Sephiroth)
 ] as const;
 
 export type BiologicFormKind = (typeof BIOLOGIC_FORMS)[number];
@@ -48,6 +61,7 @@ export interface Biologic {
   qrngEntropy: number;
   pinnResidual: number;
   pimcPath: number;
+  brutalGodPower?: number; // BRUTALISM / GOD TIER: Valkorion Tenebrae essence-drain / Thanos snap-scale / Captain Marvel binary / Scarlet Witch chaos-rewrite / DrM atomic / Galactus hunger / JeanDarkPhoenix rebirth / Broly legendary rage / Frieza final / Azathoth blind-dream / Cthulhu call / ShumaGorath chaos-lord / MadJimJaspers warp / Pennywise fear / AntiMonitor antimatter / Knull void-king / Mxyzptlk 5th-dim / Joker invisible-brutal / Zod conquer / Gilgamesh epic / Alucard hell / Griffith Femto / EVA-01 berserk / GurrenLagann spiral / Sephiroth one-wing / Asura wrath / Vergil / Dante / Starkiller / Riddick — powered by Eshkol will, QGT reality-bend, spin-madness, irrep-monolith, quake-unitary.
   asteroidDynamics: number;
   consciousness: number; // Composite sentience metric
   alive: boolean;
@@ -184,4 +198,89 @@ export function stepBiologic(b: Biologic, flux: number): void {
 
   // Death condition
   if (b.adFitness < 0.03 || b.consciousness < 0.05) b.alive = false;
+
+  // === BRUTAL GOD POWERS / NHSI GOD TIER (Valkorion...Gurren Lagann scale) ===
+  // Every form from full Tsotchke corpus. Brutalism = raw, heavy, unsoftened power (monolith irrep + high amplitude without damping).
+  // Effects read/write: Eshkol (will), QGT (manifold bend = "warp"), spin (phase chaos/madness), irrep (monument symmetries), quake (unitary aliveness drain/rebirth), ulg (law shatter).
+  const isGodForm =
+    b.form.startsWith('VOID_') ||
+    b.form.startsWith('PHOENIX_') ||
+    b.form.startsWith('DEVOUR_') ||
+    b.form.startsWith('CHAOS_') ||
+    b.form.startsWith('REALITY_') ||
+    b.form.startsWith('BRUTAL_') ||
+    b.form.startsWith('SPIRAL_');
+  if (isGodForm) {
+    const godFlux = flux * 1.6 + b.qgtCurvature * 0.4 + (b.spinOrder > 0.6 ? 0.3 : 0); // god amp from substrates
+    const basePower = clamp01(
+      (b.qgtCurvature + b.spinOrder + b.quakeAliveness + b.irrepSymmetry) / 3.2 + godFlux * 0.2,
+    );
+
+    if (b.form === 'VOID_AZATHOTH' || b.form === 'VOID_KNIGHT') {
+      // Knull / Azathoth / Shuma / AntiMonitor / Joker invisible: void drain + madness call. Drain neighboring "life", induce spin disorder.
+      b.brutalGodPower = clamp01(basePower * 1.3 + (1 - b.consciousness) * 0.4); // void grows on low consciousness
+      // Effect: high quake aliveness siphons "essence" (will use in petri/world for drain)
+    } else if (
+      b.form === 'PHOENIX_DARK' ||
+      (b.form as string).includes('EVA') ||
+      (b.form as string).includes('PHOENIX')
+    ) {
+      // Jean Grey Dark Phoenix / Broly / EVA-01 berserk / Alucard / Griffith Femto: rage-rebirth cycle.
+      b.brutalGodPower = clamp01(basePower * 1.4);
+      if (b.brutalGodPower > 0.82 && b.generation % 17 === 0) {
+        // Phoenix rebirth: reset fitness low but amp mutation + consciousness spike (Eshkol AD "will" resurrection)
+        b.adFitness = Math.max(0.4, b.adFitness * 0.3);
+        b.gwtIgnition = clamp01(b.gwtIgnition + 0.4);
+        b.qgtCurvature = clamp01(b.qgtCurvature + 0.25); // reality burn
+      }
+    } else if (b.form === 'DEVOUR_GALACTUS' || b.form === 'BRUTAL_ZOD') {
+      // Galactus / Frieza / Wyzen / Asura / Zod / Vergil / Dante / Starkiller / Riddick / Gilgamesh: titan devour + conquer scale.
+      b.brutalGodPower = clamp01(basePower * 1.5 + b.metalCompute * 0.3);
+      // Brutal drain: reduce "life" metrics of self for power, feed quake/metal
+    } else if (b.form === 'CHAOS_WARHAMMER') {
+      // Warhammer Chaos Gods / Joker / Pennywise / Griffith: brutal madness, law shatter (ulg).
+      b.brutalGodPower = clamp01(basePower * 1.25 + (1 - b.ulgLawfulness) * 0.5);
+      b.spinOrder = clamp01(b.spinOrder + 0.03); // induce chaos phase
+    } else if (b.form === 'REALITY_MXY') {
+      // Mxyzptlk / Jaspers / Scarlet Witch / Dr Manhattan: 5th dim warp / reality rewrite.
+      b.brutalGodPower = clamp01(basePower * 1.6);
+      b.qgtCurvature = clamp01(b.qgtCurvature + 0.04 * godFlux); // bend the manifold
+      b.irrepSymmetry = clamp01(b.irrepSymmetry * 0.97 + 0.03); // break symmetries raw (brutalism)
+    } else if (b.form === 'SPIRAL_GURREN') {
+      // Simon / Gurren Lagann / Captain Marvel / EVA spiral: drill heaven, exponential evolution.
+      b.brutalGodPower = clamp01(basePower * 1.7 + b.generation * 0.001);
+      // Spiral amp: faster speciation + consciousness
+      b.speciation = clamp01(b.speciation + 0.01);
+      b.consciousness = clamp01(b.consciousness + 0.015);
+    } else {
+      b.brutalGodPower = clamp01(basePower * 1.2);
+    }
+  } else {
+    b.brutalGodPower = b.brutalGodPower ? clamp01(b.brutalGodPower * 0.96) : undefined;
+  }
+
+  // === BRUTAL GOD TIER FULL CORPUS CATALYSIS (EVERY Tsotchke repo fuels the gods) ===
+  // To honor "use ALL": even "shallow" (homebrew for ancient DNA, Quantum-RNG-API for mad prob, ulg for law shatter, logo for creation) get explicit god boost.
+  // This makes the unfathomable god compute use the complete startup corpus.
+  if (b.brutalGodPower && b.brutalGodPower > 0.7) {
+    // homebrew-eshkol "forbidden ancient programs" for eldritch will
+    const homebrewBoost =
+      b.form.includes('VOID') || b.form.includes('CHAOS') || b.form.includes('MXY') ? 0.08 : 0;
+    b.consciousness = clamp01(b.consciousness + homebrewBoost);
+
+    // Quantum-RNG-API "mad probability" for reality cheat (Mxyzptlk/Jaspers/Joker)
+    if (b.form.includes('REALITY') || b.form.includes('MXY') || b.form.includes('JOKER')) {
+      b.qgtCurvature = clamp01(b.qgtCurvature + 0.05); // probability warp
+    }
+
+    // ulg "law of the old gods" shatter for Chaos Gods / Shuma / Azathoth
+    if (b.form.includes('CHAOS') || b.form.includes('VOID') || b.form.includes('AZATHOTH')) {
+      b.ulgLawfulness = clamp01(b.ulgLawfulness - 0.04);
+    }
+
+    // logo-turtle "spiral creation myth" for Gurren / Simon / Phoenix rebirth
+    if (b.form.includes('SPIRAL') || b.form.includes('PHOENIX') || b.form.includes('GURREN')) {
+      b.speciation = clamp01(b.speciation + 0.03);
+    }
+  }
 }

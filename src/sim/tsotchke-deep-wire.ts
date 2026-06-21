@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * TSOTCHKE DEEP WIRING — Full integration of Moonlab, libirrep, and Eshkol compiler.
  *
@@ -435,7 +434,7 @@ function parseTokens(tokens: string[]): EshkolASTNode {
       return { type: 'literal', value: 0 };
     }
     const exprTokens = rest.slice(0, closeIdx);
-    const _remaining = rest.slice(closeIdx + 1);
+    rest.slice(closeIdx + 1);
 
     if (exprTokens.length === 0) {
       return { type: 'literal', value: 0 };

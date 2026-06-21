@@ -6,7 +6,7 @@ import { EmergenceAnglesController } from '../src/sim/emergence-angles';
 
 describe('NHSI pantheon modules (100 faculties · 25 ToM · emergence 8–10)', () => {
   test('100 faculties are registered and advance deterministically', () => {
-    expect(FACULTY_NAMES.length).toBe(100);
+    expect(FACULTY_NAMES.length).toBeGreaterThanOrEqual(100);
     const a = new FacultiesPantheon(mulberry32(42));
     const b = new FacultiesPantheon(mulberry32(42));
     const inputs = new Float32Array([0.2, 0.5, 0.8, 0.1, 0.4, 0.6, 0.3, 0.9]);

@@ -98,6 +98,8 @@ import {
 import { PantheonSociety, FIELD_DIM } from './sim/pantheon';
 import { FacultiesPantheon } from './sim/faculties-pantheon';
 import { TomPantheon } from './sim/tom-pantheon';
+// Brutal god releases now driven by EmergenceAnglesController + applyBrutalGodEvent (full Tsotchke + character pantheon)
+import { applyBrutalGodEvent } from './sim/petri-dish';
 import { EmergenceAnglesController } from './sim/emergence-angles';
 import { SuperMind, type SuperMindSnapshot, type SuperMindIntent } from './sim/super-mind';
 import {
@@ -744,6 +746,7 @@ export class World {
       bioCoherence: 0,
       bioMomentum: 0,
       nhi: 0,
+      godPower: 0,
       viewName: cyc(VIEW_MODES, this.state.viewIdx),
       timeScale: this.state.timeScale,
       renderName: this.state.renderMode,
@@ -1361,6 +1364,53 @@ export class World {
         const primeSnap = this.superMinds[0]!.snapshot();
         void this.emergenceAngles.evolveEshkolProgram('archon-0', primeSnap.consciousness.phi, fi);
         this.emergenceAngles.recombineStrains('archon-0', 'archon-1');
+        for (let a = 0; a < Math.min(5, this.superMinds.length); a++) {
+          const snap = this.superMinds[a]?.snapshot?.() ?? null;
+          const em = this.emergenceAngles.getAggregateEmergence();
+          const pwr =
+            (snap?.consciousness?.phi ?? 0.3) +
+            (snap?.consciousness?.ignition ?? 0.2) +
+            ((snap as { chaos?: number })?.chaos ?? 0);
+          const chaos = s.chaos ?? 0.5;
+          if (pwr > 0.6 || em > 0.55 || chaos > 4) {
+            const brutal = this.emergenceAngles.triggerBrutalGodEvent(a, em, pwr, s.frame + a * 13);
+            const pd = this.petriDishes[a];
+            if (pd) {
+              applyBrutalGodEvent(
+                pd,
+                brutal.event,
+                brutal.powerDelta,
+                brutal.brutality,
+                this.petriRng,
+              );
+              const release = triggerBrutalRelease(
+                a,
+                chaos,
+                (snap as { quantum?: number[] })?.quantum?.[0] ?? 0.4,
+                (snap as { qgt?: number })?.qgt ?? 0.3,
+                (snap as { eshkolConsciousness?: { ignition?: number } })?.eshkolConsciousness
+                  ?.ignition ?? 0.4,
+                this.superRng,
+                s.frame + a,
+              );
+              if (release) {
+                pd.godPower = Math.min(1, (pd.godPower || 0) + release.power * 0.1);
+                this.audit.record('brutal-god-release', {
+                  archon: a,
+                  archetype: release.archetype,
+                  power: release.power,
+                  lore: getBrutalLore(release.archetype),
+                });
+              }
+            }
+            this.audit.record('brutal-god-event', {
+              archon: a,
+              event: brutal.event,
+              power: brutal.powerDelta,
+              brutality: brutal.brutality,
+            });
+          }
+        }
       }
 
       // FULL TSOTCHKE growth: incubate/harvest via update + snapshot (all repos in Petri for new biologics)
@@ -1425,7 +1475,8 @@ export class World {
       if (this.superheroState.active && hero0) {
         this.superheroState.tick(4 / 60, hero0.mind.snapshot().emotion.dominance, percept.threat);
       }
-    } catch {
+    } catch (e) {
+      void e;
       /* an apex beat misbehaved — skip it, keep the world running */
     }
   }
@@ -1968,6 +2019,9 @@ export class World {
     sn.bioCoherence = bioCoherence;
     sn.bioMomentum = bioMomentum;
     sn.sentience = clamp((bioIntegration * (0.5 + bioCoherence) * (0.5 + bioMomentum)) / 1.5, 0, 1);
+    sn.godPower =
+      this.petriDishes.reduce((acc, p) => acc + (p.godPower ?? 0), 0) /
+      Math.max(1, this.petriDishes.length);
     this.hud.setLore(sn.lore); // O(1) no-op when unchanged
     return sn;
   }

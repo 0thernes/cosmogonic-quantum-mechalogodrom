@@ -108,6 +108,14 @@ import {
   freeEnergy,
   initBeliefs,
   type PCNet,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  eshkolParse,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  eshkolCompile,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  eshkolExecute,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  moonlabMPOApply,
 } from './tsotchke-facade'; // Ralph loop continue 10x: + ulgHandoff from Tsotchke for more corpus aliveness in super-mind
 import { SpinGlass, type SpinSnapshot } from './spin-glass';
 import { Reservoir, type ReservoirSnapshot } from './reservoir';
@@ -766,6 +774,23 @@ export class SuperMind {
     this.plastic.imprint(plasticLat);
     for (let i = 0; i < this.latent.length; i++) {
       this.latent[i] = clamp((this.latent[i] ?? 0) + 0.15 * (plasticRecall[i] ?? 0), -4, 4);
+    }
+    // Deep Tsotchke: Eshkol compiler VM + Moonlab MPO on cadence (real MIT ports, not decorative).
+    if (this.cliffordBeat % 17 === 0) {
+      const bc = eshkolCompile(eshkolParse(this._eshkolProgram));
+      const divine = eshkolExecute(bc, this.cons.surprise);
+      this.cons.workspace = clamp01(this.cons.workspace + divine * 0.012);
+      const mpoOut = moonlabMPOApply(
+        {
+          matrices: [this.latent.slice(0, 4)],
+          bondDimension: 1,
+          physicalDimension: LATENT,
+        },
+        this.latent,
+      );
+      for (let i = 0; i < Math.min(LATENT, mpoOut.length); i++) {
+        this.latent[i] = clamp((this.latent[i] ?? 0) + (mpoOut[i] ?? 0) * 0.008, -4, 4);
+      }
     }
     // V1.1: step the echo-state reservoir on the fresh latent — a fading nonlinear echo of the mind's
     // recent world-models that gives it temporal memory; its novelty (below) sharpens curiosity.

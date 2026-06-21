@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### v0.17.0 Archon Expansion — 25 Godforms Fully Implemented
+
+- Expanded Archon pantheon from 5 to 25 with distinct Tsotchke bias profiles
+  - NEO apex: ORACLE-Σ (Dr Manhattan / Observer God)
+  - OMEGA mid-tier: STARKILLER-Ω (Valkorion), MANHATTAN-Φ (Dr Manhattan Watchmen), BROLY-Ψ (Legendary Super Saiyan), VOID-Λ (Knull King of Void)
+  - ALPHA light (20): KURAMOTO-κ, PHASELOCK-δ, STIGMERG-μ, EMERGENT-ν, SYMBIONT-ξ, PARASITE-ο, MYTHOS-π, RITUAL-ρ, TABOO-σ, DREAMER-τ, REPLAY-υ, ONTOGEN-φ, MORTAL-χ, LEGACY-ψ, WARHORN-ω, SCARCITY-α, TROPHIC-β, FIELD-γ, BINDING-ε, RESONANCE-ζ
+- Each Archon has distinct brutal god powers, Eshkol programs, and substrate-driven effects
+- Updated NHSI progress dashboard to reflect 100% Archon implementation (25/25 live)
+- Package version bumped to 0.17.0
+- Updated README and documentation to reflect 25 Archon pantheon
+
 ### v0.16.1 NHSI structural build wave
 
 - Added a deterministic GWT-4 `AttentionController`, wired into `SuperMind` before final plan commitment, with focused determinism/bounds tests.

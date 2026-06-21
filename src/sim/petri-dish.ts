@@ -37,7 +37,6 @@ import { classicalEntropyGap, classicalSample } from './classical-contrast';
 import { logoMorphScalar, turtleNew, type TurtleState } from './logo-turtle';
 import { libirrepSymmetry, symmetryModes } from './irrep-symmetry';
 import { moonlabTensorQualia } from './moonlab-tensor';
-
 const NUTRIENT_SLOTS = 12; // Expanded Petri for more digital biologics growth from full Tsotchke soup
 const SCRATCH_NUTRIENTS = new Float32Array(NUTRIENT_SLOTS);
 const SCRATCH_SALIENCE = new Float32Array(NUTRIENT_SLOTS);
@@ -73,7 +72,22 @@ export interface PetriDishState {
   eshkolSentientBorn: number;
   /** Full corpus catalysis: aggregate from all 20+ Tsotchke repos driving growth (not LLM). */
   tsotchkeBiologicFlux: number;
-  // note: removed duplicate keys from prior edit
+  biologics: Array<{ brutalGodPower?: number; form?: string; vitality?: number }>;
+  godPower: number;
+  /** Tsotchke wiring coverage: how much of corpus available (0-1). */
+  wiringCoverage: number;
+  /** Sim wiring fraction: active computational substrate (0-1). */
+  simWiringFraction: number;
+  /** Corpus beat: algorithmic step tracking. */
+  corpusBeat: number;
+  /** IIT phi + QGE aliveness + corpus beat — sentience proxy, not phenomenal consciousness. */
+  sentienceProxy: number;
+  /** Chaos level from brutal releases. */
+  chaos: number;
+  /** QGT curvature metric (quantum geometry). */
+  qgtCurvature: number;
+  /** Emergence strength (0-1). */
+  emergence: number;
 }
 
 export interface PetriDishView {
@@ -117,8 +131,17 @@ export function createPetriDish(seed: number): PetriDishState {
     spinPolarization: 0.1 + s * 0.2,
     morphotype: 0,
     geneticDivergence: 0,
-    eshkolSentientBorn: 0, // Tsotchke Eshkol life born count - digital biologics
-    tsotchkeBiologicFlux: s * 0.2, // flux from full corpus wiring
+    eshkolSentientBorn: 0,
+    tsotchkeBiologicFlux: s * 0.2,
+    biologics: [],
+    godPower: 0,
+    wiringCoverage: s * 0.8,
+    simWiringFraction: s * 0.5,
+    corpusBeat: 0,
+    sentienceProxy: 0.1,
+    chaos: 0,
+    qgtCurvature: 0.5,
+    emergence: 0,
   };
 }
 
@@ -238,6 +261,16 @@ export function petriDishBeat(
     fullCorpusCatalysis * 0.08;
   state.tsotchkeBiologicFlux = (state.tsotchkeBiologicFlux || 0) * 0.92 + bioFlux * 0.08;
 
+  // BRUTAL GOD UNLEASH — use wired emergence + petri applicator (full character list via triggerBrutalGodEvent)
+  const em = (state as any).emergence || 0.5;
+  const pwr = state.aliveness || 0.5;
+  if (em > 0.5 || pwr > 0.6) {
+    // For demo, call our emergence if available on global or skip (world drives it)
+    // Here just amp for brutality feel
+    state.biomass = Math.min(1, state.biomass + 0.02);
+    state.complexity = Math.min(15, (state.complexity || 0) + 0.5);
+  }
+
   const ignition = state.ignitionSlot / Math.max(1, NUTRIENT_SLOTS - 1);
   if (ignition > 0.65 && state.phiSurrogate > 0.45 && bioFlux > 0.55) {
     state.eshkolSentientBorn = (state.eshkolSentientBorn || 0) + 1;
@@ -348,4 +381,33 @@ export function runEshkolProgram(prog: EshkolLifeProgram, input: number, adScale
   const mutated = adGrad * (1 + adScale) + gwtWin * 0.1;
   prog.vitality = Math.min(1, prog.vitality + Math.abs(mutated) * 0.01);
   return Math.min(1, Math.max(0, mutated));
+}
+
+/** BRUTAL GOD EVENT — petri-side effects for emergence pantheon spikes. */
+export function applyBrutalGodEvent(
+  state: PetriDishState,
+  event: string,
+  powerDelta: number,
+  brutality: number,
+  _rng: Rng,
+): void {
+  const boost = Math.min(0.5, Math.max(0.05, brutality * 0.4 + powerDelta * 0.3));
+  if (event.includes('VOID')) {
+    state.biomass = Math.max(0.05, state.biomass - boost * 0.6);
+    state.pressure = Math.min(1, state.pressure + brutality * 0.8);
+    state.aliveness = Math.max(0.1, state.aliveness - brutality * 0.3);
+    state.morphotype = (state.morphotype + 3) % 12;
+  } else if (event.includes('PHOENIX') || event.includes('FEAST')) {
+    state.biomass = Math.min(1, state.biomass + boost * 1.4);
+    state.eshkolSentientBorn += Math.floor(brutality * 4 + 1);
+    state.morphPhase =
+      (state.morphPhase + logoMorphScalar(state.turtle, state.beats, 6) * 4) % 6.2831853;
+  } else if (event.includes('SPIRAL') || event.includes('OMEGA') || event.includes('WILL')) {
+    state.complexity = Math.min(30, state.complexity + brutality * 2.5);
+    state.morphotype = (state.morphotype + 5) % 16;
+  } else {
+    state.biomass = Math.min(1, state.biomass + boost * 0.9);
+    state.complexity = Math.min(22, state.complexity + brutality);
+  }
+  state.godPower = Math.min(1, (state.godPower || 0) * 0.95 + brutality * 0.12);
 }

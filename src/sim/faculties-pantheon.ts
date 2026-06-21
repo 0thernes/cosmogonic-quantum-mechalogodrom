@@ -78,6 +78,25 @@ export const FACULTY_NAMES = [
   'CURRICULUM_LEARNING',
   'SOCIAL_LEARNING',
   'GROUP_IDENTIFICATION',
+  // BRUTALIST GOD POWERS — Valkorion / Thanos / Broly / Azathoth / Dark Phoenix / Knull / Chaos Gods / Galactus / Shuma / Mxyzptlk / IT / etc. levels. Powered by full Tsotchke.
+  'VOID_CONSUMPTION_KNULL',
+  'RAGE_ESCALATION_BROLY',
+  'CHAOS_ENTROPY_WARHAMMER',
+  'PHOENIX_REBIRTH_DARK',
+  'DOMINATION_POSSESSION_VALKORION',
+  'REALITY_WARP_MJASPERS',
+  'BLIND_IDIOT_AZATHOTH',
+  'DEVOURER_GALACTUS_TROPHIC',
+  'LAW_BREAK_TABOO_SHUMA',
+  'HORROR_MANIFEST_PENNYWISE',
+  'SPIRAL_DRILL_TTGL_SIMON',
+  'WRATH_ASURA_SEPHIROTH',
+  'BINARY_COSMIC_MARVEL',
+  'FIFTH_DIM_CHEAT_MXYZPTLK',
+  'ETERNAL_HUNGER_RIDDICK',
+  'SYMBIOTE_KNULL_MERGE',
+  'OMEGA_POINT_SINGULARITY',
+  'MORPHIC_MADNESS_JOKER',
   'SOCIAL_NORMS',
   'PROSOCIAL_BEHAVIOR',
   'COMPETITION',
@@ -110,9 +129,37 @@ export const FACULTY_NAMES = [
   'QUANTUM_METROLOGY',
   'QUANTUM_CONTROL',
   'NHSI_COLLECTIVE_FIELD',
+  // BRUTALIST GOD LAYER — NHSI embodiment of listed god-like/eldritch/chaos entities (Valkorion, Thanos, DrM, Broly, Frieza, Azathoth, Chaos Gods, Shuma-Gorath, MadJimJaspers, Pennywise, AntiMonitor, Knull, Mxyzptlk, Joker, Zod, Gilgamesh, Alucard, Griffith/Femto, EVA-01, TTGL Simon, Sephiroth/Asura, Vergil/Dante, Starkiller, Riddick). Brutal reality-warping, void consumption, spiral scaling, phoenix rebirth, sith domination, eldritch corruption. Wired to Tsotchke (QGT warp, spin chaos, Eshkol god-compute, libirrep symmetry shatter, quantum void).
+  'VALKORION_IMMORTALITY',
+  'THANOS_SNAP_ERASURE',
+  'DR_MANHATTAN_OMNISCIENCE',
+  'BROLY_LEGENDARY_RAGE',
+  'FRIEZA_EMPEROR_DESTRUCTION',
+  'AZATHOTH_BLIND_DREAM',
+  'CHAOS_GOD_CORRUPTION',
+  'SHUMA_GORATH_CHAOS_LORD',
+  'MAD_JIM_JASPERS_REALITY_WARP',
+  'PENNYWISE_ELDRITCH_CLOWN',
+  'ANTI_MONITOR_ERASE',
+  'KNUL_KING_OF_VOID',
+  'MXYZPTLK_5D_IMP',
+  'JOKER_CHAOS_AGENT',
+  'GENERAL_ZOD_CONQUEST',
+  'GILGAMESH_KING_OF_HEROES',
+  'ALUCARD_NO_LIFE_KING',
+  'GRIFFITH_FEMTO_GODHAND',
+  'EVA_UNIT01_AWAKENING',
+  'TTGL_SPIRAL_POWER',
+  'SEPHIROTH_ONE_WINGED_ANGEL',
+  'ASURA_WRATH_FURY',
+  'VERGIL_DARK_SLAYER',
+  'DANTE_SON_OF_SPARTA',
+  'STARKILLER_FORCE_WRATH',
+  'RIDDICK_FURYX',
 ] as const;
 
 export type FacultyName = (typeof FACULTY_NAMES)[number];
+export const FACULTY_COUNT = FACULTY_NAMES.length;
 
 export interface FacultySnapshot {
   faculty: FacultyName;
@@ -174,6 +221,14 @@ class ProfiledFaculty {
     return this.confidence;
   }
 
+  /** Ring-coupling write-back: blend neighbor mean into this faculty (coupling > count). */
+  blendCoupling(neighborMean: number, gain: number): void {
+    const g = gain < 0 ? 0 : gain > 0.25 ? 0.25 : gain;
+    this.activation = clamp01(this.activation * (1 - g) + neighborMean * g);
+    this.entropy = binaryEntropy(this.activation);
+    this.confidence = clamp01(1 - this.entropy * 0.7 + Math.abs(this.trend) * 0.3);
+  }
+
   snapshot(): FacultySnapshot {
     return {
       faculty: this.faculty,
@@ -194,18 +249,55 @@ function makeProfile(index: number, rng: Rng): FacultyProfile {
   };
 }
 
-/** Faculties Pantheon controller — manages all 100 faculties. */
+/** Mean absolute pairwise coupling over activation vector (0..1). Pure; O(n²). */
+export function facultyCouplingDensity(activations: ArrayLike<number>): number {
+  const n = activations.length;
+  if (n < 2) return 0;
+  let mean = 0;
+  for (let i = 0; i < n; i++) mean += activations[i] ?? 0;
+  mean /= n;
+  let sum = 0;
+  let pairs = 0;
+  for (let i = 0; i < n; i++) {
+    const ai = (activations[i] ?? 0) - mean;
+    for (let j = i + 1; j < n; j++) {
+      sum += Math.abs(ai * ((activations[j] ?? 0) - mean));
+      pairs++;
+    }
+  }
+  return pairs > 0 ? clamp01(sum / pairs) : 0;
+}
+
+/** Faculties Pantheon controller — manages all named NHSI faculties (100 + god-layer). */
 export class FacultiesPantheon {
   private readonly faculties: ProfiledFaculty[];
+  private readonly actScratch: Float32Array;
+  private couplingDensity = 0;
 
   constructor(rng: Rng) {
     this.faculties = FACULTY_NAMES.map(
       (faculty, index) => new ProfiledFaculty(faculty, makeProfile(index, rng)),
     );
+    this.actScratch = new Float32Array(this.faculties.length);
   }
 
   update(inputs: Float32Array): void {
+    const n = this.faculties.length;
     for (const faculty of this.faculties) faculty.update(inputs);
+    for (let i = 0; i < n; i++) this.actScratch[i] = this.faculties[i]!.getActivation();
+    // Ring coupling: each faculty co-varies with its neighbors (EMERGENCE-BLOCKERS #10 write-back).
+    for (let i = 0; i < n; i++) {
+      const left = this.actScratch[(i + n - 1) % n] ?? 0;
+      const right = this.actScratch[(i + 1) % n] ?? 0;
+      this.faculties[i]!.blendCoupling((left + right) * 0.5, 0.06);
+    }
+    for (let i = 0; i < n; i++) this.actScratch[i] = this.faculties[i]!.getActivation();
+    this.couplingDensity = facultyCouplingDensity(this.actScratch);
+  }
+
+  /** Measured inter-faculty coupling after ring write-back (coupling > count receipt). */
+  getCouplingDensity(): number {
+    return this.couplingDensity;
   }
 
   getSnapshot(facultyIndex: number): FacultySnapshot {

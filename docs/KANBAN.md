@@ -52,7 +52,8 @@ behind the full gate (`bun run check`) and a commit.
 
 **In Progress (heartbeat iter)**
 
-- Ralph loop: deepen Tsotchke wiring per [TSOTCHKE-INTEGRATION-MAP.md](./TSOTCHKE-INTEGRATION-MAP.md); NHSI targets tracked in [NHSI-PROGRESS-DASHBOARD.md](./NHSI-PROGRESS-DASHBOARD.md). Gate GREEN (**2,162 tests**, receipts enforced).
+- Ralph loop: deepen Tsotchke wiring per [TSOTCHKE-INTEGRATION-MAP.md](./TSOTCHKE-INTEGRATION-MAP.md); NHSI targets tracked in [NHSI-PROGRESS-DASHBOARD.md](./NHSI-PROGRESS-DASHBOARD.md). Gate GREEN (**2,167 tests**, receipts enforced).
+- BRUTAL GOD POWER: new brutal biologic strains (VOID_AZATHOTH, PHOENIX_DARK, DEVOUR_GALACTUS, CHAOS_WARHAMMER, REALITY_MXY, BRUTAL_ZOD, SPIRAL_GURREN, VOID_KNIGHT) + brutalGodPower() (QGT warp, spin rage, Eshkol will, irrep godform, Moonlab scale) wired in digital-biologics + petri for god-spawn when Archon pulse high. Pantheon embodies Valkorion/Thanos/DrM/Galactus/Phoenix/Broly/Frieza/Azathoth/Chaos/Shuma/Jaspers/Pennywise/AntiMonitor/Knull/Mxyzptlk/Joker/Zod/Gilgamesh/Alucard/Griffith/EVA/Gurren/Sephiroth/Asura/Vergil/Dante/Starkiller/Riddick + BRUTALISM (raw devour/rage/void/reality/chaos/spiral). 0thernes > Weyland god sim.
 
 **Next**
 

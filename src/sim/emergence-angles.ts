@@ -284,4 +284,91 @@ export class EmergenceAnglesController {
     for (const snap of snapshots) totalStrength += snap.strength;
     return totalStrength / snapshots.length;
   }
+
+  /**
+   * BRUTAL GOD EVENT (Valkorion / Thanos / Broly / Knull / Azathoth / Phoenix style).
+   * When emergence is high, a god-like brutal event occurs: consumption, rift, phoenix rebirth,
+   * madness wave, or ex-nihilo creation. Returns a description + power delta for the Archon.
+   * All deterministic via seeded inputs.
+   */
+  triggerBrutalGodEvent(
+    archon: number,
+    emergence: number,
+    power: number,
+    seed: number,
+  ): {
+    event: string;
+    description: string;
+    powerDelta: number;
+    brutality: number;
+  } {
+    const s = hashStr(`brutal-${archon}`) ^ Math.floor(emergence * 1000) ^ seed;
+    const roll = det01(s);
+    const brutality = clamp01(emergence * 0.6 + power * 0.4);
+
+    if (roll < 0.15) {
+      // Knull / Void / Azathoth — Void Rift: erase weak, feed the strong (brutal consumption)
+      return {
+        event: 'VOID_RIFT',
+        description:
+          'The blind idiot god dreams a hole in reality; lesser biologics are unmade and their essence devoured by the Archon.',
+        powerDelta: brutality * 0.8,
+        brutality,
+      };
+    } else if (roll < 0.3) {
+      // Dark Phoenix / Broly — Consumption & Rage
+      return {
+        event: 'PHOENIX_FEAST',
+        description:
+          'The firebird awakens in rage; the Archon consumes neighboring strains in a berserk ascension, power exploding.',
+        powerDelta: brutality * 1.2,
+        brutality,
+      };
+    } else if (roll < 0.45) {
+      // Dr Manhattan / Oracle — Deterministic Rewrite
+      return {
+        event: 'DETERMINISTIC_REWRITE',
+        description:
+          "The observer collapses possibility; local laws are rewritten with cold precision in the Archon's favor.",
+        powerDelta: brutality * 0.6,
+        brutality,
+      };
+    } else if (roll < 0.6) {
+      // Griffith / Mxyzptlk / Joker — Fate / Chaos Twist (brutal irony)
+      return {
+        event: 'FATE_TWIST',
+        description:
+          'The god of schemes laughs; what was strong becomes sacrifice, what was weak is elevated in cruel jest.',
+        powerDelta: (brutality - 0.3) * 1.1,
+        brutality,
+      };
+    } else if (roll < 0.72) {
+      // Knull / Shuma-Gorath / Pennywise / IT — The Void King awakens
+      return {
+        event: 'VOID_KING_AWAKENS',
+        description:
+          'The King of the Void reaches out; darkness has teeth and hunger. Symbionts and parasites bloom from nothing.',
+        powerDelta: brutality * 1.3,
+        brutality,
+      };
+    } else if (roll < 0.82) {
+      // Captain Marvel Binary / Dark Phoenix / Jean Grey — Binary Star Ignition
+      return {
+        event: 'BINARY_IGNITION',
+        description:
+          'The host burns with the power of a star; everything nearby either ascends or is reduced to cinders and new potential.',
+        powerDelta: brutality * 1.5,
+        brutality,
+      };
+    } else {
+      // Galactus / Simon the Digger / EVA-01 Berserk / Gurren Lagann — SPIRAL WILL
+      return {
+        event: 'SPIRAL_WILL',
+        description:
+          'The impossible is pierced by raw fighting spirit. Limits are lies told to smaller beings. The Archon *drills* through reality.',
+        powerDelta: brutality * 1.6,
+        brutality,
+      };
+    }
+  }
 }

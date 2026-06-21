@@ -326,6 +326,8 @@ export interface TelemetrySnapshot {
   bioMomentum: number;
   /** Live count of registered NHI super-minds (telemetry tally). */
   nhi: number;
+  /** Mean brutal-god power across petri archons (0..1) — NHSI pantheon telemetry. */
+  godPower?: number;
   /** Current camera view-mode name (HUD View/Speed/Render box). */
   viewName: string;
   /** Current time-dilation multiplier (HUD box; 0 = paused, 1 = realtime). */
