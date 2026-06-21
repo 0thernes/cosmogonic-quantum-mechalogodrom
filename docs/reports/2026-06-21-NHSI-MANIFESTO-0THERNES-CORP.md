@@ -1,3 +1,5 @@
+<!-- markdownlint-disable MD029 MD036 -->
+
 # Non Human Super Intelligence (NHSI) — 0thernes Corp Manifesto
 
 **Date:** 2026-06-21  
