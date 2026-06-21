@@ -53,7 +53,6 @@ function rosslerDeriv(s: Vec3, a: number, b: number, c: number): Vec3 {
 
 function rabinovichDeriv(s: Vec3, gamma: number, delta: number): Vec3 {
   const x2 = s.x * s.x;
-  const y2 = s.y * s.y;
   return {
     x: s.y * (s.z - 1 + x2) + gamma * s.x,
     y: s.x * (3 * s.z + 1 - x2) + gamma * s.y,

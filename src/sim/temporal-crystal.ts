@@ -52,7 +52,6 @@ export class TemporalCrystal {
   private periodDoublingStrength = 0;
   private floquetCycle = 0;
   private readonly disorder = new Float32Array(N_SPINS);
-  private readonly correlator = new Float32Array(4);
   private readonly tA = new Float32Array(4);
   private readonly tB = new Float32Array(4);
   private lastMagnetization = 0;

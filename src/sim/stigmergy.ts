@@ -195,8 +195,6 @@ export class Stigmergy {
   }
 
   snapshot(): StigmergySnapshot {
-    const cx = GRID / 2;
-    const cy = GRID / 2;
     const [gx, gy] = this.readGradient(0, 0, 0);
     const total = this.grid.reduce((s, v) => s + v, 0) / N;
     return {
