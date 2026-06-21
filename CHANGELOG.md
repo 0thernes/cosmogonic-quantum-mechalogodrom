@@ -16,6 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Every term is a `mix(jewel, concrete, uBrutalism)`, so `0` is byte-identical to the jewel and the mode
   composes cleanly with the V64 evolution skin and the flight math. Deterministic, O(1), no alloc. Tests +
   `brutalismFactor()` accessor added; docs/contract synced.
+- **Wired it live:** a `toggleBrutalism` action + the **`B` hotkey** flip every Super Creature between
+  god-jewel and concrete (state `brutalism`, HUD toast + audit record, mirroring the CHAOS-MODE toggle).
 
 ### Super Creature god-jewel skin — compile fix + V64 LIVING, EVOLVING SKIN
 

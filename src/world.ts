@@ -376,6 +376,7 @@ export class World {
       mutations: 0,
       timeScale: 1,
       renderMode: 'solid',
+      brutalism: false, // BRUTALISM: session-only Super Creature concrete-monolith mode (B hotkey)
       sim: this.persisted.sim === 2 ? 2 : 1,
       weatherIdx: this.persisted.weatherIdx % WEATHERS.length,
       temperature: 20,
@@ -1737,6 +1738,8 @@ export class World {
     if (k['h'] && s.frame % 30 === 0) this.dilateSpace();
     // V62 CHAOS MODE: tap K to engage/disengage the Lorenz quantum storm. Throttled like the taps.
     if (k['k'] && s.frame % 30 === 0) this.toggleChaosMode();
+    // BRUTALISM: tap B to crossfade the Super Creatures to a raw poured-concrete monolith (and back).
+    if (k['b'] && s.frame % 30 === 0) this.toggleBrutalism();
   }
 
   /**
@@ -2520,6 +2523,23 @@ export class World {
     return on;
   }
 
+  /**
+   * BRUTALISM: toggle the Super Creatures between the flamboyant god-jewel skin and a raw
+   * poured-concrete monolith. Shared by the `B` hotkey + the action map; applies the crossfade to
+   * every Archon body, toasts the HUD, and records the toggle so replays/audits reproduce it.
+   * Returns the new state.
+   */
+  private toggleBrutalism(): boolean {
+    this.unlock();
+    const on = !this.state.brutalism;
+    this.state.brutalism = on;
+    const level = on ? 1 : 0;
+    for (let i = 0; i < this.superBodies.length; i++) this.superBodies[i]!.setBrutalism(level);
+    this.hud.showSector(on ? 'BRUTALISM ▦ CONCRETE' : 'BRUTALISM · OFF');
+    this.audit.record('brutalism', { on });
+    return on;
+  }
+
   private buildActions(): UiActions {
     const s = this.state;
     return {
@@ -2554,6 +2574,7 @@ export class World {
         this.audit.record('chaos-boost', { chaos: s.chaos, level: next });
       },
       toggleChaosMode: () => this.toggleChaosMode(), // V62: the Lorenz quantum storm
+      toggleBrutalism: () => this.toggleBrutalism(), // BRUTALISM: god-jewel ↔ concrete monolith
       entropyBoost: () => {
         this.unlock();
         // F-CHAOS-ENTROPY: raise ENTROPY one step (the bipolar opposite of chaos — order/heat-death).
