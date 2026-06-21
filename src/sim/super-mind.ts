@@ -407,6 +407,12 @@ const SR_GAIN = 0.12;
 const EMP_VOTE_GAIN = 0.12;
 /** How strongly agency-hunger lifts curiosity toward regions the mind can actually steer. */
 const EMP_CURIOSITY_GAIN = 0.12;
+/** #9/#37 SHARED-PROCESSING — an INCOHERENT workspace (low last-beat coherence) means the mind's action→
+ *  outcome statistics are stale/unreliable, so the empowerment channel forgets faster (treats incoherence
+ *  as extra effective surprise — Salge/Polani non-stationary channel; FEP low-precision ⇒ faster update).
+ *  Routed into the EXISTING surprise input of empowerment.update, so empowerment co-varies with the
+ *  collective as a genuine adaptation-rate byproduct — not an output edit. */
+const INCOH_FORGET_GAIN = 0.4;
 
 // ── V97 · HOLOGRAPHIC MEMORY (VSA / HRR analogical recall — Plate 1995; Kanerva 2009) ────────────────
 /** Vote for the plan the holographic trace analogically recalls for this context (bounded, on par). */
@@ -415,6 +421,11 @@ const HRR_GAIN = 0.12;
 // ── V98 · QUANTUM DELIBERATION (Lindblad open-system decider — GKSL master equation) ─────────────────
 /** While the deliberation qubit stays COHERENT (undecided), lift exploration to keep deliberating. */
 const DELIB_GAIN = 0.1;
+/** #9/#37 SHARED-PROCESSING coupling — last beat's bound coherence SUPPRESSES the deliberation's dephasing
+ *  bath (a collectively-correlated environment dephases slower; GWT stabilises a bound coalition against
+ *  premature collapse). Routed into the EXISTING arousal→dephasing input, so deliberation.coherence becomes
+ *  a genuine Lindblad byproduct of the collective — not an output edit. Bounded; uses lastResOrder. */
+const DELIB_COUPLE = 0.5;
 
 // ── V1.2 · QUANTUM RESERVOIR COMPUTING (Fujii & Nakajima 2017 — the qubit register IS the reservoir) ──
 /** How strongly the quantum-state velocity (qFlux) drives curiosity (bounded, on par with the others). */
@@ -1384,7 +1395,12 @@ export class SuperMind {
     // ── V98 · QUANTUM DELIBERATION ── evolve the open-system decider: curiosity sustains the coherent
     // superposition of options (Rabi drive), dominance leans the preference (detuning), arousal is the
     // environmental noise that decoheres it. While it stays COHERENT (undecided), keep exploring.
-    this.deliberation.step(curiosity, clamp(2 * this.dominance - 1, -1, 1), this.arousal);
+    // #9/#37 — the collective coherence suppresses the dephasing bath (shared-processing input, not an edit).
+    this.deliberation.step(
+      curiosity,
+      clamp(2 * this.dominance - 1, -1, 1),
+      clamp01(this.arousal * (1 - DELIB_COUPLE * this.lastResOrder)),
+    );
     drives.EXPLORE += DELIB_GAIN * this.deliberation.coherence;
 
     // ── V92 · METACOGNITIVE EXECUTIVE ── before committing, the mind estimates its CONFIDENCE in the
@@ -1415,9 +1431,12 @@ export class SuperMind {
     const decisionMargin = m1 > 1e-6 ? clamp01((m1 - m2) / m1) : 0;
     // V99 — the metacog "integration" reliability cue now blends the classical module participation-ratio
     // (`this.phi`) with the GENUINE quantum register Φ (`qPhi`) — a richer, real-IIT integration signal.
+    // #9/#37 SHARED-PROCESSING — plus a small last-beat binding-coherence term: higher-order metacognition
+    // genuinely tracks the first-order ENSEMBLE's reliability (binding-by-synchrony as an integration cue,
+    // the same role the Φ arg plays). Bounded convex blend; metacog.confidence becomes a real byproduct.
     const confidence = this.metacog.update(
       decisionMargin,
-      clamp01(0.5 * this.phi + 0.5 * qPhi),
+      clamp01(0.45 * this.phi + 0.45 * qPhi + 0.1 * this.lastResOrder),
       aifPerc.beliefEntropy,
       surprise,
     );
@@ -1505,7 +1524,9 @@ export class SuperMind {
     this.successor.observe(SUPER_PLANS.indexOf(best));
     // V95: credit LAST beat's action → THIS beat's latent cell and refresh the empowerment estimate the next
     // beat's curiosity + plan vote will read. Drives no rng ⇒ the beat stream stays bit-reproducible.
-    this.empowerment.update(this.latent, SUPER_PLANS.indexOf(best), surprise);
+    // #9/#37 — collective incoherence ⇒ faster channel forgetting (shared-processing via the surprise input).
+    const effSurprise = clamp01(surprise + INCOH_FORGET_GAIN * (1 - this.lastResOrder));
+    this.empowerment.update(this.latent, SUPER_PLANS.indexOf(best), effSurprise);
     // V97: bind the committed (context ⊙ plan) into the holographic trace so next time a like context recalls it.
     this.holographic.observe(SUPER_PLANS.indexOf(best), s);
 
