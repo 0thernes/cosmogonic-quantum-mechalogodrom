@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Online-learning primitive — the Stratum-X gap (frozen weights → adaptation)
+
+- Added `src/sim/online-learning.ts`: bounded, **deterministic** weight-adaptation rules — the missing
+  "Learning & Self-Modification" primitive the audit flagged as the #1 gap (the apex mind's weights are
+  frozen; the AD tape computes gradients but never updates one). Rules: Widrow–Hoff/LMS delta (supervised),
+  Hebbian-with-decay (unsupervised), and an `EligibilityLearner` (TD(λ)-style delayed-reward credit).
+  Key property: each rule is a pure deterministic function (no `Math.random`/`Date.now`), so a learned
+  weight trajectory **replays bit-for-bit from the same seed** — learning is fully compatible with the
+  "one seed → one cosmos" determinism law (it forbids unseeded randomness, not change). Every update
+  decays + clamps weight magnitude (bounded, below-divergence) and seals NaN/Inf → 0; in-place, O(n),
+  zero per-step allocation. Unit-tested (6 tests: LMS convergence, boundedness under relentless error,
+  Hebbian correlation, delayed-credit eligibility traces, NaN sealing, replay determinism). The reviewed
+  next step is wiring it into `super-mind.think()` behind a seeded, bounded adaptation channel.
+
 ### Emergence angles 7 → 10 + audit integrity fixes
 
 - **Emergence 7 → 10.** Added `src/sim/emergence-angles.ts` — a pure, deterministic instrument that
