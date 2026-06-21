@@ -64,6 +64,9 @@ const NHSI_SURFACES = [
   'docs/NHSI-PROGRESS-DASHBOARD.md',
   'docs/ARCHITECTURE.md',
   'docs/TECHNICAL-SPECIFICATION.md',
+  'masters/LEGENDARY-SUPER-SAIYAN-BROLY-MANIFESTO.xml',
+  'masters/GALAXOGONIC-WARHAMMER-POWER-MODE-DR-MANHATTAN.xml',
+  'masters/ORACLE-ARCHITECT-OF-THE-DARKSIDE-STARKILLER.xml',
 ];
 
 /** Banned affirmative overclaims (verified false). `label` is shown when one is found. */
