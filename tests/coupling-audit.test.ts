@@ -160,9 +160,15 @@ describe('coupling audit applied to the live SuperMind (the "coupling > count" r
     // of mutually-independent signals, and not every faculty is isolated.
     expect(rep.meanAbsCoupling).toBeGreaterThan(0);
     expect(rep.isolated.length).toBeLessThan(16);
-    // HONEST: current activation-level coupling is still WEAK (this is the #9/#37/#10 finding the audit
-    // exists to surface). We assert the measured regime rather than pretending it is strong: density is
-    // real but modest. If a future coupling-strengthening pass raises it, tighten this bound deliberately.
+    // REGRESSION GUARD for the GWT binding gate (super-mind.ts COUPLING_BIND_GAIN): the last-beat resonance
+    // coherence directly modulates the 4 access-faculties, lifting measured coupling at THIS config from the
+    // no-gate baseline (0.1666, measured) to 0.1832 (measured). The 0.175 floor sits BETWEEN those two
+    // deterministic values, so it fails loudly if the bind-gate is removed/zeroed — locking in the win. The
+    // coupling is fully deterministic (seeded, no rng/clock in the measured path), so this is not flaky.
+    expect(rep.meanAbsCoupling).toBeGreaterThan(0.175);
+    // HONEST: coupling is still MODEST — this is the #9/#37/#10 finding the audit exists to surface, only
+    // partially closed by the bind-gate (it gates 4 of 16 faculties). NOT a solved binding problem; the
+    // remaining lever is shared-processing for the other faculties. Upper bound guards against overclaim.
     expect(rep.meanAbsCoupling).toBeLessThan(0.6);
   });
 
