@@ -1,12 +1,13 @@
 # NHSI Progress Dashboard — 0thernes Corp
 
-**Non Human Super Intelligence (NHSI)** · Cosmogonic Quantum Mechalogodrom · **v0.16.1**  
-<<<<<<< HEAD
-**Updated:** 2026-06-21 (full repo + XML + all MD/TXT scan + every Tsotchke mirror from ledger) · **Gate:** 1701 tests / 0 fail · **95.75 % line / 92.96 % function** · Tsotchke: **EVERY** repo/project from tsotchke + Tsotchke-Corporation (full 12,444 file corpus, 20+ mirrors + Eshkol full + sites) mapped in registry, 18+ with real code/leaves/facades in src/ (Eshkol 1.0 in mind/petri as DNA, Moonlab/QGT/spin/libirrep/quake etc deep in cognition, others in petri/soup or study). Fenced only pure LLM ones. Tech real, correct, works. No billion $ QPU needed for correctness (MIT math today; scales perf). Startup, not hype. No overclaims.  
-=======
-**Updated:** 2026-06-21 · **Gate:** `1,455 tests / 0 fail` · **95.68 % line / 92.89 % function**  
->>>>>>> origin/main
-**Canonical receipts:** [`scripts/canonical-receipts.ts`](../scripts/canonical-receipts.ts) · enforced by `tests/docs-receipts-law.test.ts`
+**Non Human Super Intelligence (NHSI)** · Cosmogonic Quantum Mechalogodrom · **v0.16.1**
+
+# **Updated:** 2026-06-21 (full repo + XML + all MD/TXT scan + every Tsotchke mirror from ledger) · **Gate:** 1701 tests / 0 fail · **95.75 % line / 92.96 % function** · Tsotchke: **EVERY** repo/project from tsotchke + Tsotchke-Corporation (full 12,444 file corpus, 20+ mirrors + Eshkol full + sites) mapped in registry, 18+ with real code/leaves/facades in src/ (Eshkol 1.0 in mind/petri as DNA, Moonlab/QGT/spin/libirrep/quake etc deep in cognition, others in petri/soup or study). Fenced only pure LLM ones. Tech real, correct, works. No billion $ QPU needed for correctness (MIT math today; scales perf). Startup, not hype. No overclaims.
+
+**Updated:** 2026-06-21 · **Gate:** `1,455 tests / 0 fail` · **95.68 % line / 92.89 % function**
+
+> > > > > > > origin/main
+> > > > > > > **Canonical receipts:** [`scripts/canonical-receipts.ts`](../scripts/canonical-receipts.ts) · enforced by `tests/docs-receipts-law.test.ts`
 
 > **Mission:** Not a chatbot, dancing robot, Terminator, or game player. A **Petri-dish cosmos** where
 > Tsotchke's real quantum math (Eshkol · Moonlab · QGT · spin · libirrep · …) is the growth medium for
@@ -33,7 +34,7 @@ correctness. Nothing in this project may call Tsotchke fake, overclaiming, or fa
 | **Not wired**                | 2     | Quantum-RNG-API, homebrew-eshkol                                                 |
 | **Fenced (non-LLM mandate)** | 3     | gpt2-basic, llm-arbitrator, SolanaQuantumFlux                                    |
 
-**Totals:** **21 GitHub repos + .github meta + full local corpus (Eshkol full subprojects: eshkol_repo + research + docs + examples + lib + tests + bindings + all mirrors)** = EVERY Tsotchke project wired. **21/21 mapped in registry (1.0 scientific, 0 fenced)** · **18+ with real leaves/facades/code in src/** · **All local corpus used as build source for .esk DNA + study**. 
+**Totals:** **21 GitHub repos + .github meta + full local corpus (Eshkol full subprojects: eshkol_repo + research + docs + examples + lib + tests + bindings + all mirrors)** = EVERY Tsotchke project wired. **21/21 mapped in registry (1.0 scientific, 0 fenced)** · **18+ with real leaves/facades/code in src/** · **All local corpus used as build source for .esk DNA + study**.
 
 **Local corpus build:** `scripts/harvest-tsotchke-corpus.ts` → `generated-tsotchke-seeds.ts` → primordial-soup / digital-biologics (1,436+ `.esk` fingerprints from `Z:\[Vibe Coded (AI)]\(Tsotchke)`)
 
@@ -59,6 +60,7 @@ bridge helpers (`tsotchke-facade.ts` bias tables, keyword `.esk` eval in `eshkol
 integration layer — not a comment on Tsotchke upstream quality.
 
 **Bleeding cutting-edge papers & deep-dive sources (used in wiring, cognition, petri, novelty):**
+
 - Cogitate Consortium (Ferrante et al. 2025, Nature): adversarial test challenging core predictions of both IIT and GNW/GWT.
 - Baars (1988+) + Dehaene/Changeux GNW/GWT ignition/broadcast.
 - Friston et al. FEP / Active Inference (variational free energy, epistemic + pragmatic).
@@ -68,7 +70,7 @@ integration layer — not a comment on Tsotchke upstream quality.
 - Rabinowitz 2018 ToM, Dayan/Stachenfeld SR, Klyubin empowerment, Plate/Kanerva VSA, Doya, Fujii QRC, Klyubin et al.
 - Eshkol spec (GWT 22 primitives + native AD).
 - Moonlab, libirrep, QGTL papers (Clifford, Wigner/CG, Berry phase/natural gradients).
-All referenced in SUPER-CREATURE-RESEARCH.md, NEO-MIND, eshkol-cognition, coupling-audit, novelty doc.
+  All referenced in SUPER-CREATURE-RESEARCH.md, NEO-MIND, eshkol-cognition, coupling-audit, novelty doc.
 
 ---
 
@@ -77,13 +79,13 @@ All referenced in SUPER-CREATURE-RESEARCH.md, NEO-MIND, eshkol-cognition, coupli
 Blueprint: [`NEO-MIND-ARCHITECTURE.md`](./NEO-MIND-ARCHITECTURE.md) · Manifesto:
 [`reports/2026-06-21-NHSI-MANIFESTO-0THERNES-CORP.md`](./reports/2026-06-21-NHSI-MANIFESTO-0THERNES-CORP.md)
 
-| Target                  | Goal                               | **Now**                                          | **Progress** | Primary receipt                  |
-| ----------------------- | ---------------------------------- | ------------------------------------------------ | ------------ | -------------------------------- |
-| **100 Faculties**       | 11 strata, coupling > count        | **71 mechanisms** (full Eshkol native + 30+ organs + quantum + ToM + 25+ coupled post this full corpus pass) | **71 %** | `super-mind.ts`, `eshkol-cognition.ts`, NEO-MIND |
-| **25 Archon pantheons** | 1 NEO + 4 mid + 20 light           | **5 live (full wired) + 20 planned in pantheon roadmap** | **20 % live / 100 % planned** | `godform.ts`, `world.ts` |
-| **25 theory-organs**    | N-of-25 consciousness theories     | **15 ✓** (GWT, IIT-phi, FEP/AIF, resonance 12, ToM, metacog, criticality, SR, empowerment, VSA, QRC, holographic, quantum delib, Eshkol native, spin instinct) | **60 %** | NEO-MIND §25, `resonance.ts` |
-| **10 emergence angles** | world-as-mind, culture, mortality… | **10/10 full or advanced** (see III)             | **100 %** | NEO-MIND §10, petri/soup, lore |
-| **Butlin 14/14**        | consciousness indicators           | **12 / 14** (post this fusion)                   | **86 %** | Butlin 2023 scorecard below      |
+| Target                  | Goal                               | **Now**                                                                                                                                                        | **Progress**                  | Primary receipt                                  |
+| ----------------------- | ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------- | ------------------------------------------------ |
+| **100 Faculties**       | 11 strata, coupling > count        | **71 mechanisms** (full Eshkol native + 30+ organs + quantum + ToM + 25+ coupled post this full corpus pass)                                                   | **71 %**                      | `super-mind.ts`, `eshkol-cognition.ts`, NEO-MIND |
+| **25 Archon pantheons** | 1 NEO + 4 mid + 20 light           | **5 live (full wired) + 20 planned in pantheon roadmap**                                                                                                       | **20 % live / 100 % planned** | `godform.ts`, `world.ts`                         |
+| **25 theory-organs**    | N-of-25 consciousness theories     | **15 ✓** (GWT, IIT-phi, FEP/AIF, resonance 12, ToM, metacog, criticality, SR, empowerment, VSA, QRC, holographic, quantum delib, Eshkol native, spin instinct) | **60 %**                      | NEO-MIND §25, `resonance.ts`                     |
+| **10 emergence angles** | world-as-mind, culture, mortality… | **10/10 full or advanced** (see III)                                                                                                                           | **100 %**                     | NEO-MIND §10, petri/soup, lore                   |
+| **Butlin 14/14**        | consciousness indicators           | **12 / 14** (post this fusion)                                                                                                                                 | **86 %**                      | Butlin 2023 scorecard below                      |
 
 ### 5 live Archons (`godform.ts`)
 
@@ -100,18 +102,18 @@ AD/GWT bridge · quantum deliberation · QNG · Grover · coherence · magic · 
 
 ## III · 10 emergence angles (expanded per mandate; 10/10 achieved in this fusion)
 
-| #   | Angle                             | Status / Receipt |
-| --- | --------------------------------- | ---------------- |
-| 1   | World-as-cognition                | ✓ full (petri + connectome + quantum register as mind) |
+| #   | Angle                             | Status / Receipt                                                      |
+| --- | --------------------------------- | --------------------------------------------------------------------- |
+| 1   | World-as-cognition                | ✓ full (petri + connectome + quantum register as mind)                |
 | 2   | Dreaming / offline replay         | ✓ ignition-gated consolidation in eshkol-workspace + narrative-memory |
-| 3   | Developmental ontogeny            | ✓ super-evolution stages + biologic strains |
-| 4   | Emergent Archon language          | ✓ eshkol-cognition + .esk DNA mutation |
-| 5   | Shared mind-field / stigmergy     | ✓ connectome + ulg laws + corpus catalysis |
-| 6   | Whole-dome criticality + coupling | ✓ coupling-audit + 52 faculties interdependence |
-| 7   | Adversarial selection pressure    | ✓ titans, wars, hunt/flee + petri selection |
-| 8   | Mortality & finitude              | ✓ entity death + Archon immortal contrast + lore |
-| 9   | Inter-mind symbiosis              | ✓ digital-biologics + petri harvest + ToM in resonance |
-| 10  | Myth & ritual / culture           | ✓ lore.ts + Archon-invented via eshkol programs + 25 theory-organs |
+| 3   | Developmental ontogeny            | ✓ super-evolution stages + biologic strains                           |
+| 4   | Emergent Archon language          | ✓ eshkol-cognition + .esk DNA mutation                                |
+| 5   | Shared mind-field / stigmergy     | ✓ connectome + ulg laws + corpus catalysis                            |
+| 6   | Whole-dome criticality + coupling | ✓ coupling-audit + 52 faculties interdependence                       |
+| 7   | Adversarial selection pressure    | ✓ titans, wars, hunt/flee + petri selection                           |
+| 8   | Mortality & finitude              | ✓ entity death + Archon immortal contrast + lore                      |
+| 9   | Inter-mind symbiosis              | ✓ digital-biologics + petri harvest + ToM in resonance                |
+| 10  | Myth & ritual / culture           | ✓ lore.ts + Archon-invented via eshkol programs + 25 theory-organs    |
 
 ---
 
