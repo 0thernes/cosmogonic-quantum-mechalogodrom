@@ -82,13 +82,21 @@ Conscious-agent/Interface ✦ · Holonomic brain ✦
 
 **XI · EVOLUTION & EMERGENCE (7):** 94 heritable genome ✓ · 95 AD-mutated .esk DNA ✓ · 96 open-endedness metrics ✓ · 97 novelty-search drive ✓ · 98 speciation (alpha→omega→zeta) ✦ · 99 **the self-evolution loop** ✦ · 100 emergence monitor ✦
 
-## The 7 emergence angles (beyond faculties/theories/Archons)
+## The 10 emergence angles (beyond faculties/theories/Archons)
+
+The original 7 architectural angles, plus 3 promoted from already-computed measures to first-class
+axes (the math exists in `empowerment.ts`, `integrated-information.ts`, `chaos-field.ts`/`hopfield.ts`).
+All 10 are scored as normalised signals by the pure instrument `src/sim/emergence-angles.ts`
+(`emergenceProfile()`), whose aggregate index rewards BOTH depth (mean strength) and breadth (how many
+angles fire) so no single maxed axis can fake emergence.
 
 1. **World-as-cognition** — the dome _matters_ to the mind (survival, scarcity, trophic economy). 2.
    **Dreaming / offline replay.** 3. **Developmental ontogeny** — the mind grows through stages. 4.
    **Emergent non-human language** between Archons. 5. **A shared "mind-field"** (stigmergic substrate
    all Archons read/write). 6. **Whole-dome criticality + maximal coupling.** 7. **Adversarial selection
-   pressure** that rewards intelligence.
+   pressure** that rewards intelligence. 8. **Empowerment** — Blahut–Arimoto channel capacity I(A;S′),
+   the agency axis. 9. **Integrated information** — Φ, the min-cut integration measure. 10. **Chaos /
+   Lyapunov** — edge-of-chaos magnitude (Lorenz attractor + Hopfield energy gradient).
 
 ## Build priority (per the pre-mortem — coupling > count)
 

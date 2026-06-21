@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Emergence angles 7 → 10 + audit integrity fixes
+
+- **Emergence 7 → 10.** Added `src/sim/emergence-angles.ts` — a pure, deterministic instrument that
+  scores all 10 emergence angles: the 7 canonical architectural angles plus 3 promoted from
+  already-computed measures to first-class axes — **empowerment** (Blahut–Arimoto channel capacity),
+  **integrated information** (Φ), and **chaos/Lyapunov** (edge-of-chaos). The aggregate index rewards
+  both depth (mean strength) and breadth (how many angles fire), so no single maxed axis can fake
+  emergence. Pure functions (no rng/Date/DOM), unit-tested, mirroring the `open-endedness.ts` pattern.
+  `docs/NEO-MIND-ARCHITECTURE.md` updated 7 → 10.
+- **Integrity:** removed a fabricated citation (`arXiv:2604.11248`, an impossible April-2026 ID) from
+  live code in `src/sim/open-endedness.ts`, replaced with verifiable sources (Bedau-Snyder-Packard
+  1998; Lehman-Stanley 2011).
+
 ### BRUTALISM — the concrete-monolith skin mode
 
 - Added a **BRUTALISM** crossfade to the Super Creature god-jewel material (`uBrutalism` 0..1, driven by
