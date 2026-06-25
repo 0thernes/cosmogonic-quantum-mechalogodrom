@@ -632,8 +632,7 @@ export class World {
       // Full local: Z:\[Vibe Coded (AI)]\(Tsotchke) — see TSOTCHKE-CORPUS-RALPH-WIRING-AUDIT-2026-06-19.md
       // Ralph 10x continue: quakeQge, mpo, gwt used in econ, pull, spawn for corpus aliveness.
       const pulse = getCorpusPulseForArchon(i, mindSeed); // 10x heartbeat: quantum-quake aliveness wired from corpus to world for this Archon
-      const quakeLife = pulse.quakeAliveness; // used for aliveness factor in future world interactions/percepts (Ralph)
-      void quakeLife; // wire without side effect on current det paths
+      const quakeLife = pulse.quakeAliveness; // corpus quake-aliveness; feeds econ vitality + hybrid aliveness below (deterministic from seed)
       const m = new SuperMind(
         mulberry32(mindSeed),
         bias.cliffordWeight,

@@ -50,14 +50,6 @@ export class QuantumCloud {
   private signalValue = 0;
   /** 32-entry band-hue buffer from QuantumCircuitSystem.bands(); null ⇒ legacy colors (V2). */
   private quantumBands: Float32Array | null = null;
-  // Moonlab tensor_network/MPO + CA-MPS from corpus (ARCHITECTURE.md, ca_mps.h): Clifford-assisted for scaling 5-Archon "entangled substrate".
-  // Hybrid stabilizer (clifford) + MPS for low bond dim. O(χ³) but here stub.
-  // From full Tsotchke mirrors/moonlab. Ralph 10x+ wire.
-  private _mpoBond: number = 4; // from corpus tensorChi (Moonlab) - used in future contraction (Ralph wire)
-  // Ralph 20x: mpoBond from Moonlab corpus, silenced for noUnused (real tensor use later)
-  private _useMpo = this._mpoBond || 0; // satisfy noUnused
-  private _caMpsEnabled = true; // CA-MPS hybrid per Moonlab v0.3+
-  // use below for noUnused (Ralph)
 
   /** Seeds particle positions, colors, and psi parameters (legacy 433-439). */
   constructor(ctx: SimContext) {
@@ -65,12 +57,6 @@ export class QuantumCloud {
     const n = ctx.quality.quantumCount;
     const rng = ctx.rng;
     this.n = n;
-    this._useMpo = this._useMpo; // read for noUnused (Ralph)
-    // Moonlab CA-MPS hybrid substrate (from Tsotchke mirror) — fields touched for provenance in hot path
-    const _mpo = this._mpoBond;
-    const _ca = this._caMpsEnabled;
-    void _mpo;
-    void _ca;
     this.positions = new Float32Array(n * 3);
     this.colors = new Float32Array(n * 3);
     this.velX = new Float32Array(n);

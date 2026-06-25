@@ -244,7 +244,9 @@ function buildSyndromeGraph(code: SurfaceCode): SyndromeGraph {
   const next: { to: number; qubit: number }[][] = [];
   for (let s = 0; s < nNodes; s++) {
     const dRow = new Array<number>(nNodes).fill(Infinity);
-    const nRow = new Array<{ to: number; qubit: number }>(nNodes).fill({ to: -1, qubit: -1 });
+    // Each slot needs its OWN sentinel object: `.fill({...})` would share one reference across
+    // every slot, so a later `nRow[i].to = …` mutation would corrupt all unvisited predecessors.
+    const nRow = Array.from({ length: nNodes }, () => ({ to: -1, qubit: -1 }));
     dRow[s] = 0;
     const queue: number[] = [s];
     let head = 0;

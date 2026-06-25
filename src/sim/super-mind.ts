@@ -108,15 +108,11 @@ import {
   freeEnergy,
   initBeliefs,
   type PCNet,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   eshkolParse,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   eshkolCompile,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   eshkolExecute,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   moonlabMPOApply,
-} from './tsotchke-facade'; // Ralph loop continue 10x: + ulgHandoff from Tsotchke for more corpus aliveness in super-mind
+} from './tsotchke-facade';
 import { SpinGlass, type SpinSnapshot } from './spin-glass';
 import { Reservoir, type ReservoirSnapshot } from './reservoir';
 import { ActiveInference, AIF_OBS, type ActiveInferenceSnapshot } from './active-inference';
@@ -543,7 +539,6 @@ export class SuperMind {
   );
   // WIRED Moonlab tensor contract from full Tsotchke corpus for quantum scaling in 5 Archons. Prealloc, det.
   private readonly tensorScratch = new Float64Array(4);
-  private _useTensor = this.tensorScratch; // Ralph 20x use to satisfy noUnused (Moonlab tensor)
   /** Eshkol reverse-mode AD tape (vm_autodiff.c) — prealloc, reused each beat for predictor surprise. */
   private readonly predTape: AdTape = adTapeNew(32);
   /** V101: Moonlab Clifford stabilizer tableau — live 16-qubit reflex (Aaronson–Gottesman). */
@@ -671,7 +666,6 @@ export class SuperMind {
       this.affect.params +
       this.quantum.params +
       this.meta.params;
-    this._useTensor = this._useTensor; // read for noUnused (Ralph tensor wire)
     // The quantum mind draws its seed LAST (after every weight is initialised) so it never perturbs
     // the weight stream — a dedicated child stream, so its per-beat Born sample stays independent.
     // V84: that child stream is now the Eshkol qubit-RNG itself (ported gate-for-gate from
