@@ -212,9 +212,10 @@ export class MythRitual {
    * Create a new myth.
    */
   private createMyth(): void {
+    const id = this.nextMythId++;
     const myth: Myth = {
-      id: this.nextMythId++,
-      title: `Myth-${this.nextMythId}`,
+      id,
+      title: `Myth-${id}`,
       content: this.generateMythContent(),
       believers: 1,
       strength: 0.5,
@@ -270,9 +271,10 @@ export class MythRitual {
    * Create a new ritual.
    */
   private createRitual(): void {
+    const id = this.nextRitualId++;
     const ritual: Ritual = {
-      id: this.nextRitualId++,
-      name: `Ritual-${this.nextRitualId}`,
+      id,
+      name: `Ritual-${id}`,
       action: this.generateRitualAction(),
       practitioners: 1,
       frequency: 0.5,
@@ -302,9 +304,10 @@ export class MythRitual {
    * Create a new taboo.
    */
   private createTaboo(): void {
+    const id = this.nextTabooId++;
     const taboo: Taboo = {
-      id: this.nextTabooId++,
-      name: `Taboo-${this.nextTabooId}`,
+      id,
+      name: `Taboo-${id}`,
       forbiddenAction: this.generateTabooAction(),
       respecters: 1,
       strength: 0.7,
@@ -334,9 +337,10 @@ export class MythRitual {
    * Create a new symbol.
    */
   private createSymbol(): void {
+    const id = this.nextSymbolId++;
     const symbol: Symbol = {
-      id: this.nextSymbolId++,
-      representation: this.nextSymbolId,
+      id,
+      representation: id,
       meaning: this.generateSymbolMeaning(),
       users: 1,
       age: 0,
