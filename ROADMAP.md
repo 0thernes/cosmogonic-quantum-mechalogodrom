@@ -3,7 +3,7 @@
 Where the Cosmogonic Quantum Mechalogodrom has been, is, and is going. Horizons ” not dated promises.
 Shipped work is in [CHANGELOG.md](./CHANGELOG.md); in-flight cards are on the
 [Kanban board](./docs/KANBAN.md); the quality bar is the [500-Point Inspection](./docs/500-POINT-INSPECTION.md).
-The **Next** horizon is sourced directly from that inspection's 14 open Ÿ¡ WARNs ” each is a named,
+The **Next** horizon is sourced directly from that inspection's 14 open 🟡 WARNs ” each is a named,
 deliberate limitation, and promoting one to ✅ is a roadmap item.
 
 ## Shipped (the "beyond" arc)
@@ -27,7 +27,7 @@ deliberate limitation, and promoting one to ✅ is a roadmap item.
 
 ## Next (promoting audit WARNs to PASS)
 
-Each item below is an open Ÿ¡ in the [inspection](./docs/500-POINT-INSPECTION.md); the section number
+Each item below is an open 🟡 in the [inspection](./docs/500-POINT-INSPECTION.md); the section number
 is cited so the work is traceable. (Promoted to ✅ post-`0.9.0` and retired from this list:
 reduced-motion §13.258, WCAG-contrast gate §13.260, CI coverage gate §17.339, cross-platform CI
 matrix §2.40, and a release SBOM §21.420.)

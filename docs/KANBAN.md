@@ -177,7 +177,7 @@ See TSOTCHKE-RALPH-LOOP-10X-ITER-REPORT.md and corpus logs.
 - Ÿ§ P1 `GODFORM-EXCLUSIVE` (STARKILLER architect) ” fixed partial dupe GODFORMS (world refs + alias cruft); single source godform.ts + World static + bias wired into driveSuper percepts (chaos/generative/narrative). Leaves verified exclusive (godform, attention, topdown, quality, narrative, orchestra); only super-mind wires + world integrates.
 - Ÿ¨ P2 `ERD-KANBAN-5ARCHONS` ” updated ERD (mermaid GODFORM/SUPER_MIND/BODY + relationships, GOAL5 ERM section), KANBAN legend + cards for 5 Archons current state + contract receipts.
 
-### ” Review (gate running, WIP ≤ 2)
+### ” Review (gate running, WIP ≤ 2)
 
 - _(empty)_
 

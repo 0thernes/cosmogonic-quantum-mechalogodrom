@@ -173,8 +173,8 @@ every existing tier and the determinism golden stay byte-identical; only the opt
 | 2,000        | 0.9          | 1.0                | ✅ 60 fps                    |
 | 5,000        | 2.2          | 2.1                | ✅ 60 fps                    |
 | 10,000       | 6.0          | 6.7                | ✅ 60 fps (ceiling)          |
-| 25,000       | 36.2         | **25.0**           | Ÿ¨ 30 fps                    |
-| 50,000       | 167.5        | **60.1**           | Ÿ¥ sim ~16 fps (2.8× faster) |
+| 25,000       | 36.2         | **25.0**           | 🟨 30 fps                    |
+| 50,000       | 167.5        | **60.1**           | 🟥 sim ~16 fps (2.8× faster) |
 
 The residual super-linearity past 25k is the flock/swarm behaviours actively **re-concentrating**
 entities the spawn spread out ” a deeper neighbour-list LOD is the next lever. The opt-in `mega` tier
