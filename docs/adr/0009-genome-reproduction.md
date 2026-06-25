@@ -1,6 +1,6 @@
 # 0009 — Genome reproduction: wire heritable breeding, or prune the dead code?
 
-- Status: **Proposed** (awaiting the operator's product decision — 2026-06-15)
+- Status: **Accepted** — Option A wired in the soup sub-stream (2026-06-24). See "Decision" below.
 - Deciders: the operator (product direction), with the ARCHITECT (ownership/boundaries) and the
   PHYSICIST (determinism / the same-seed golden)
 - Relates to: [0004 deterministic RNG](./0004-deterministic-rng.md),
@@ -45,17 +45,33 @@ sleep-shift one-liner — so it was explicitly NOT auto-applied during the unatt
 
 ## Decision
 
-**Pending the operator.** The reviewer recommends **C now → A later**: mark the exports as reserved
-(a safe, immediate doc fix) and schedule **A** as a proper feature with its own sub-stream + golden
-re-baseline when reproduction/selection is the focus. **B (prune)** is discouraged because the
-directive explicitly wants creature mutation. Whichever is chosen, record it here and flip Status to
-Accepted.
+**Accepted — Option A, wired in the primordial-soup sub-stream (2026-06-24).**
 
-## Consequences
+Heredity is now LIVE, but applied at the lowest-risk point: the `PrimordialSoup` rebirth path,
+which already runs on the soup's own seeded `soupRng` sub-stream — NOT the entity spawn path that
+the 300-frame population golden pins. Specifically:
 
-- If **A**: a new `genomeRng` (or reuse `entityBrainRng`) sub-stream; `tests/determinism.test.ts`
-  re-baselined with a documented rationale; a new test that offspring inherit parent traits.
-- If **B**: `genome.ts` shrinks; `genome.test.ts` trimmed; the "creature mutation" backlog item is
-  formally dropped.
-- If **C**: a few doc lines; the audit's "dead code" flag becomes "reserved, tracked in ADR-0009";
-  no behavior change.
+- `genome.ts` gains `recombine(a, b, rng, rate, scale)` — a generic, arbitrary-length seeded
+  crossover+mutation operator (the soup's `.esk` strain genomes are `SOUP_GENOME_LEN`, not the
+  fixed organism `GENOME_LEN`, so `breed` could not be reused verbatim).
+- `PrimordialSoup` now carries a per-slot `Float32Array` genome. When a dead slot is reborn it is
+  **bred from two living parents via `recombine`** (inherit + vary), and its phenotype (hue,
+  symmetry, `.esk` fingerprint, generation) is derived from the inherited genome. A founder
+  fallback preserves the legacy fresh-roll only when no living co-parent exists.
+- Because this lives entirely on `soupRng`, the entity-population golden (`tests/determinism.test.ts`)
+  is **untouched** — the full suite (1504 tests) stays green with no re-baseline required. This
+  realizes the heredity goal without the golden migration that Option A feared on the entity path.
+
+The original `breed`/`crossover` exports remain (still correct, still unit-tested) for the future
+entity-path wiring; extending heredity to `entities.ts`/`nhi.ts` on a dedicated `genomeRng` remains
+tracked as follow-up work. **B (prune)** is therefore moot; **C (reserve)** is superseded.
+
+## Consequences (as shipped)
+
+- `genome.ts` gains the `recombine` primitive; `genome.test.ts` gains heredity oracles (deterministic
+  child, offspring-resembles-lineage, clamping under mutation).
+- `primordial-soup.ts` carries per-slot genomes and breeds reborn slots from living parents.
+- The 300-frame entity golden is **unchanged** (soup runs on its own sub-stream); the full suite is
+  green (1504 tests) with no re-baseline.
+- Follow-up (tracked): wire heredity into the entity/NHI spawn path on a dedicated `genomeRng` with a
+  deliberate golden re-baseline, per the original Option A on the entity path.

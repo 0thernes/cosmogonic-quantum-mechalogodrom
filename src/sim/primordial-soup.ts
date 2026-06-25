@@ -11,6 +11,7 @@ import {
 } from './generated-tsotchke-seeds'; // From real local Tsotchke Repo Folder harvest (builds with the folder)
 import { corpusBeatForArchon, getTsotchkeRepoByIndex } from './tsotchke-registry';
 import { grayScottResidual, pinnLoss } from './pinn-residual'; // DEEPEN: Tsotchke PINN (shallow telemetry -> decision) as physics-informed metabolism residual for vitality in soup. Real math from corpus.
+import { recombine } from './genome'; // genuine seeded crossover+mutation — closes the heredity loop on rebirth
 
 const clamp01 = (v: number): number => clamp(v, 0, 1);
 
@@ -56,6 +57,9 @@ export class PrimordialSoup {
   private readonly consciousness = new Float32Array(SOUP_SLOTS);
   private readonly alive = new Uint8Array(SOUP_SLOTS);
   private readonly eshkolPrograms: (number | string | undefined)[] = new Array(SOUP_SLOTS);
+  /** Per-slot heritable gene vector (SOUP_GENOME_LEN). The genetic substrate that is
+   *  inherited-and-varied on rebirth via the genuine `recombine` operator. */
+  private readonly genomes: Float32Array[] = new Array(SOUP_SLOTS);
   private readonly rng: Rng;
   private tick = 0;
 
@@ -70,12 +74,33 @@ export class PrimordialSoup {
       this.symmetry[i] = (i % 5) / 4;
       this.consciousness[i] = 0.2 + s * 0.3;
       this.alive[i] = s > 0.3 || this.rng() < seedVitality ? 1 : 0;
+      // Seed a deterministic founder genome for every slot (genes in [0,1]).
+      const g = new Float32Array(SOUP_GENOME_LEN);
+      for (let k = 0; k < SOUP_GENOME_LEN; k++) {
+        g[k] = ((rngSeed + i * 2654435761 + k * 40503) % 997) / 997;
+      }
+      this.genomes[i] = g;
       if (this.alive[i]) {
         // Built from the actual local Tsotchke Repo Folder via scripts/harvest-tsotchke-corpus.ts
         // Real .esk programs (1436+) from Eshkol become heritable digital biologic DNA.
         this.eshkolPrograms[i] = i % 3 === 0 ? getEshkolProgramFingerprint(i) : (s * 10000) >>> 0;
       }
     }
+  }
+
+  /** Pick a living slot ≠ `exclude` by seeded scan; -1 if none. Used to choose a co-parent. */
+  private pickLivingParent(exclude: number, rng: Rng): number {
+    let live = 0;
+    for (let i = 0; i < SOUP_SLOTS; i++) if (this.alive[i] && i !== exclude) live++;
+    if (live === 0) return -1;
+    let target = Math.floor(rng() * live);
+    for (let i = 0; i < SOUP_SLOTS; i++) {
+      if (this.alive[i] && i !== exclude) {
+        if (target === 0) return i;
+        target--;
+      }
+    }
+    return -1;
   }
 
   update(input: number | Float32Array, beatOrDt = 0, rng: Rng = this.rng): void {
@@ -115,9 +140,30 @@ export class PrimordialSoup {
         this.alive[i] = 0;
       }
       if (rng() < 0.01 * wiring && !this.eshkolPrograms[i]) {
-        this.eshkolPrograms[i] = ((beat + i) * 2654435761) >>> 0;
+        // REBIRTH WITH HEREDITY: breed the reborn slot from two living parents instead of
+        // re-rolling a fresh genome. Real seeded crossover+mutation (genome.recombine) so the
+        // child INHERITS and varies parental DNA — this closes the digital-biologics evolution
+        // loop (ADR-0009). Falls back to a fresh hash program only when no parents are alive.
+        const pa = i;
+        const pb = this.pickLivingParent(i, rng);
+        const ga = this.genomes[pa];
+        const gb = pb >= 0 ? this.genomes[pb] : undefined;
+        if (ga && gb) {
+          const child = recombine(ga, gb, rng);
+          this.genomes[i] = child;
+          // Derive heritable phenotype from the inherited genome (deterministic, bounded).
+          this.hue[i] = child[0] ?? this.hue[i] ?? 0;
+          this.symmetry[i] = child[1] ?? this.symmetry[i] ?? 0;
+          // .esk program fingerprint inherited from the genome rather than a free hash.
+          this.eshkolPrograms[i] = ((((child[2] ?? 0) * 1e6) >>> 0) ^ (beat + i)) >>> 0;
+          this.generation[i] =
+            Math.max(this.generation[pa] ?? 0, pb >= 0 ? (this.generation[pb] ?? 0) : 0) + 1;
+        } else {
+          // No living co-parent: founder rebirth (legacy fresh program).
+          this.eshkolPrograms[i] = ((beat + i) * 2654435761) >>> 0;
+          this.generation[i] = (this.generation[i] ?? 0) + 1;
+        }
         this.alive[i] = 1;
-        this.generation[i] = (this.generation[i] ?? 0) + 1;
       }
     }
   }

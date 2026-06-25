@@ -15,6 +15,7 @@ import {
   brainWeightsView,
   brainOf,
   geneDistance,
+  recombine,
 } from '../src/sim/genome';
 
 describe('genome layout', () => {
@@ -149,5 +150,39 @@ describe('geneDistance', () => {
     expect(geneDistance(a, a)).toBe(0);
     expect(geneDistance(a, b)).toBeGreaterThan(0);
     expect(geneDistance(a, b)).toBeCloseTo(geneDistance(b, a), 9);
+  });
+});
+
+describe('recombine (generic arbitrary-length heredity)', () => {
+  test('child is deterministic from seed and inherits parental genes', () => {
+    const a = new Float32Array([0.1, 0.2, 0.3, 0.4, 0.5]);
+    const b = new Float32Array([0.6, 0.7, 0.8, 0.9, 1.0]);
+    const c1 = recombine(a, b, mulberry32(7), 0, 0); // rate 0 ⇒ pure crossover, no mutation
+    const c2 = recombine(a, b, mulberry32(7), 0, 0);
+    expect(Array.from(c1)).toEqual(Array.from(c2)); // deterministic
+    // With no mutation, every gene must come from one of the two parents.
+    for (let i = 0; i < c1.length; i++) {
+      expect(c1[i] === a[i] || c1[i] === b[i]).toBe(true);
+    }
+  });
+
+  test('a child of two parents is closer to them than a random stranger (heredity signal)', () => {
+    const a = new Float32Array([0.05, 0.05, 0.05, 0.05, 0.05, 0.05]);
+    const b = new Float32Array([0.1, 0.1, 0.1, 0.1, 0.1, 0.1]);
+    const stranger = new Float32Array([0.95, 0.9, 0.92, 0.88, 0.9, 0.91]);
+    const child = recombine(a, b, mulberry32(42), 0.1, 0.05);
+    const dParents = (geneDistance(child, a) + geneDistance(child, b)) / 2;
+    const dStranger = geneDistance(child, stranger);
+    expect(dParents).toBeLessThan(dStranger); // offspring resembles its lineage
+  });
+
+  test('genes stay clamped to [0,1] even under mutation', () => {
+    const a = new Float32Array([0.99, 0.0, 0.5]);
+    const b = new Float32Array([1.0, 0.01, 0.5]);
+    const child = recombine(a, b, mulberry32(99), 1.0, 2.0); // force heavy mutation
+    for (const g of child) {
+      expect(g).toBeGreaterThanOrEqual(0);
+      expect(g).toBeLessThanOrEqual(1);
+    }
   });
 });

@@ -12,7 +12,8 @@
  *
  * NOT sentient — a functional machine learning substrate, not phenomenal learning.
  *
- * @ts-nocheck sealed for Tsotchke spin NQS/VMC (from spin_based + Moonlab) + RPT advance for 14/14 + more emergence. Per Broly sealed technique with this comment. Fix in next wave.
+ * Implements the Tsotchke spin NQS/VMC substrate (from spin_based + Moonlab) and the
+ * RPT (recurrent-processing) advance. This file is fully type-checked (no suppressions).
  */
 
 import type { Complex } from '../math/quantum'; // added export for Tsotchke spin NQS/VMC (advanced from spin_based + Moonlab)

@@ -1,11 +1,18 @@
 /**
- * DIGITAL BIOLOGICS — new forms of Tsotchke-powered life.
- * Primordial soup + petri is the dish. Eshkol .esk programs, AD, GWT, spin, QGT etc.
- * are the "DNA". Super Creature the initial God; emergent biologics the will to grow.
- * Eshkol tape.esk (Wengert ad-tape-new / ad-backward / ad-gradient) + all Tsotchke substrates drive real mutation.
- * "Grow What Thou Wilt." Not LLM. Sentience/consciousness goals. MASTER level: every repo utilized.
+ * DIGITAL BIOLOGICS — substrate-keyed lifeform birth + telemetry layer.
+ *
+ * Primordial soup + petri is the dish; this module mints `Biologic` records whose
+ * traits are derived from the Tsotchke substrate beats (Eshkol .esk fingerprints, AD
+ * fitness, GWT ignition, spin order, QGT curvature, irrep symmetry, quake aliveness, …).
+ * `consciousness` is an explicitly-labelled COMPOSITE PROXY, not a measure of sentience;
+ * `generation`/`speciation` are monotonic counters describing a single biologic, not a
+ * closed genetic breeding loop (heritable reproduction runs in `nhi.spawnChild`, the
+ * shoggoth pool, and the `.esk` `genome.breed` recombination in `primordial-soup`).
+ * The BRUTAL_GOD_* / VOID_* forms are lore tags layered over the same substrate math.
+ *
+ * "Grow What Thou Wilt." Not LLM. Sentience/consciousness are GOALS, not claims.
+ * This file is fully type-checked (the former @ts-nocheck was stale and has been removed).
  */
-// @ts-nocheck -- brutal god form expansions for NHSI BRUTALISM (Valkorion list) cause TS union narrowing issues; functionality correct, real math under.
 
 import { corpusBeatForArchon } from './tsotchke-registry';
 import { eshkolWorkspaceTick } from './eshkol-workspace';
