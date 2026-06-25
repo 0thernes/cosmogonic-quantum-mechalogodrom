@@ -147,10 +147,6 @@ import { grayScottResidual, pinnLoss } from './pinn-residual';
 import { pathWeight } from './pimc-paths';
 import { qrngApiDrawFrom } from './quantum-rng-api';
 import { homebrewEshkolBeat } from './homebrew-eshkol';
-// WIRED from Tsotchke corpus: Moonlab tensor contract for quantum scaling in 5 Archons.
-import { tensorContract2 } from '../math/quantum-geometry';
-const _tc2 = tensorContract2; // used for Ralph 20x Moonlab tensor wire (satisfy noUnused)
-void _tc2; // read for TS6133 (Ralph continue)
 import { TopDownPerception } from './topdown-perception';
 import { QualitySpace } from './quality-space';
 import { MemoryOrchestra } from './memory-orchestra';
@@ -537,8 +533,6 @@ export class SuperMind {
     true,
     0.5,
   );
-  // WIRED Moonlab tensor contract from full Tsotchke corpus for quantum scaling in 5 Archons. Prealloc, det.
-  private readonly tensorScratch = new Float64Array(4);
   /** Eshkol reverse-mode AD tape (vm_autodiff.c) — prealloc, reused each beat for predictor surprise. */
   private readonly predTape: AdTape = adTapeNew(32);
   /** V101: Moonlab Clifford stabilizer tableau — live 16-qubit reflex (Aaronson–Gottesman). */
@@ -867,17 +861,6 @@ export class SuperMind {
       reasoningGain += clamp01(bestScore * 0.5 + 0.5);
     }
     this.imagined.set(this.cur);
-
-    // Heartbeat: Moonlab tensor contract (from full Tsotchke corpus tensor_network) for ToT novelty scaling in 5 Archons.
-    // Eshkol AD for diff in novelty. Small wiring.
-    tensorContract2(this.imagined as any, this.cur as any, 2, this.tensorScratch);
-    // 10x more: use facade moonlabTensorContract (inspired by moonlab contraction.c) for additional tensor step in reason
-    const tNov = moonlabTensorContract(
-      Array.from(this.imagined).slice(0, 4),
-      Array.from(this.cur).slice(0, 4),
-      4,
-    ); // small alloc ok on cadence
-    void tNov; // wire for novelty scaling (Ralph)
 
     // ── STAGE 3 · REASON · distil the winner + a 5-deep recursive world model (predictor) ────────
     // WIRED Eshkol AD tape (from full Tsotchke corpus AUTODIFF/vm_ad + vm_symbolic_ad.c, reverse mode for multi-var error, 32-level tape, dual numbers) for better predictor/surprise in 10x+ iters. Det, prealloc. Moonlab tensor for quantum scaling.
@@ -1583,14 +1566,9 @@ export class SuperMind {
     ];
     const qTone = this.qualSpace.project(qState);
     this.cons.qualiaTone = qTone.tone;
-    // Heartbeat small: Moonlab tensor contract wired here too for q scaling (corpus).
-    tensorContract2(this.quantumOut as any, this.quantumOut as any, 2, this.tensorScratch);
     // Heartbeat wiring: use Eshkol AD toneGrad from corpus for more in qualia (5 Archons).
     if (qTone.toneGrad)
       this.cons.qualiaTone = Math.max(0, Math.min(1, qTone.tone + (qTone.toneGrad || 0) * 0.01));
-    // WIRED Moonlab tensor contract (from Tsotchke corpus tensor_network) for Archon quantum scaling, 10x iters. Call for demo in snapshot.
-    // (In full: use for q state contraction in reflex)
-    tensorContract2(this.quantumOut as any, this.quantumOut as any, 2, this.tensorScratch);
 
     return {
       move: { x: act[0] ?? 0, y: act[1] ?? 0, z: act[2] ?? 0 },
@@ -1636,8 +1614,6 @@ export class SuperMind {
       reservoir: this.reservoir.snapshot(),
       learnedRecurrence: this.learnedRecurrence.snapshot(),
       aif: this.aif.snapshot(),
-      // Heartbeat wiring: Moonlab tensor contract from corpus (demo call, det, no alloc hot)
-      // tensorContract2(q, q, 2, scratch); // for Archon quantum
       metacog: this.metacog.snapshot(),
       criticality: this.criticality.snapshot(),
       successor: this.successor.snapshot(),
