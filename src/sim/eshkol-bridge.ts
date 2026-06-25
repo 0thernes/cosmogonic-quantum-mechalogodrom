@@ -14,6 +14,8 @@ const clamp01 = (v: number): number => clamp(v, 0, 1);
 const FACTS = 8;
 const BELIEFS = 8;
 const MODULES = 6;
+/** Cap on the exact-key `kbFacts` store so a float-keyed hot caller can't grow it without bound. */
+const KB_FACTS_MAX = 1024;
 
 export interface EshkolStepInput {
   surprise: number;
@@ -77,6 +79,12 @@ export class EshkolConsciousnessEngine {
     this.factKeys[slot] = key;
     this.facts[slot] = clamp01(val);
     this.kbFacts.set(key, clamp01(val));
+    // Bound the exact-key store: a per-beat float-derived key would otherwise grow it without
+    // limit. FIFO-evict the oldest entry past the cap (Map preserves insertion order).
+    if (this.kbFacts.size > KB_FACTS_MAX) {
+      const oldest = this.kbFacts.keys().next().value;
+      if (oldest !== undefined) this.kbFacts.delete(oldest);
+    }
     this.logic = clamp01(this.logic * 0.7 + 0.3);
   }
   kbQuery(pattern: string): number {

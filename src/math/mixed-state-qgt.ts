@@ -184,7 +184,11 @@ export function mixedStateQuantumGeometricTensor(
   }
 
   const purity = computePurity(baseRe, baseIm, d2);
-  const entropy = computeEntropy(baseRe, baseIm, dim);
+  // Tr(ρ²) sums all d² flattened entries — computeEntropy → computePurity → hermitianInner
+  // iterates the flattened array, so it must receive d2 (not the Hilbert dimension d), exactly
+  // like the purity call above. Passing `dim` summed only row 0 of ρ (pure states wrongly read
+  // entropy 0.5 instead of 0, and disagreed with `purity`).
+  const entropy = computeEntropy(baseRe, baseIm, d2);
 
   return {
     params: P,
