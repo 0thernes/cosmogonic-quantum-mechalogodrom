@@ -88,7 +88,7 @@ export function evolutionaryActivity(
 ): EvolutionaryActivity {
   let width = 0;
   for (const row of history) if (row.length > width) width = row.length;
-  const cumulative = new Array<number>(width).fill(0);
+  const cumulative = Array.from({ length: width }, () => 0);
   for (const row of history) {
     for (let i = 0; i < row.length; i++) {
       const v = row[i] ?? 0;

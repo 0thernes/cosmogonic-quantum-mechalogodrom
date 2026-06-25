@@ -69,7 +69,7 @@ export class FastWeights {
   /** Recall: `y = W·x` — the fast-memory's pull toward recently-co-active patterns. Pure (new array). */
   recall(x: readonly number[]): number[] {
     const n = this.n;
-    const y = new Array<number>(n).fill(0);
+    const y = Array.from({ length: n }, () => 0);
     for (let i = 0; i < n; i++) {
       const row = i * n;
       let s = 0;

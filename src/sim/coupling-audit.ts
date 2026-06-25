@@ -90,7 +90,7 @@ export function couplingReport(
   const n = series.length;
   const correlation: number[][] = [];
   for (let i = 0; i < n; i++) {
-    correlation[i] = new Array<number>(n).fill(0);
+    correlation[i] = Array.from({ length: n }, () => 0);
   }
   for (let i = 0; i < n; i++) {
     const row = correlation[i]!;
@@ -102,7 +102,7 @@ export function couplingReport(
     }
   }
 
-  const perFaculty = new Array<number>(n).fill(0);
+  const perFaculty = Array.from({ length: n }, () => 0);
   let pairCount = 0;
   let coupledPairs = 0;
   let absSum = 0;

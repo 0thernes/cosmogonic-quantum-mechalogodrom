@@ -181,7 +181,7 @@ export function moonlabTTDecompose(tensor: Float32Array, maxRank: number = 8): T
   const c = Math.ceil(len / r);
   const rows: number[][] = [];
   for (let i = 0; i < r; i++) {
-    const row: number[] = new Array(c).fill(0);
+    const row: number[] = Array.from({ length: c }, () => 0);
     for (let j = 0; j < c; j++) {
       const idx = i * c + j;
       row[j] = idx < len ? (tensor[idx] ?? 0) : 0;
@@ -372,7 +372,7 @@ export type EshkolASTNode =
   | { type: 'call'; func: string; args: EshkolASTNode[] }
   | { type: 'literal'; value: number }
   | { type: 'symbol'; name: string }
-  | { type: 'if'; condition: EshkolASTNode; then: EshkolASTNode; else?: EshkolASTNode }
+  | { type: 'if'; condition: EshkolASTNode; consequent: EshkolASTNode; alternate?: EshkolASTNode }
   | { type: 'let'; bindings: Array<{ name: string; value: EshkolASTNode }>; body: EshkolASTNode }
   | { type: 'lambda'; params: string[]; body: EshkolASTNode };
 
@@ -418,7 +418,6 @@ function parseTokens(tokens: string[]): EshkolASTNode {
       return { type: 'literal', value: 0 };
     }
     const exprTokens = rest.slice(0, closeIdx);
-    rest.slice(closeIdx + 1);
 
     if (exprTokens.length === 0) {
       return { type: 'literal', value: 0 };
@@ -440,8 +439,8 @@ function parseTokens(tokens: string[]): EshkolASTNode {
       return {
         type: 'if',
         condition: parseTokens([exprTokens[1] || '0']),
-        then: parseTokens([exprTokens[2] || '0']),
-        else: exprTokens[3] ? parseTokens([exprTokens[3]]) : undefined,
+        consequent: parseTokens([exprTokens[2] || '0']),
+        alternate: exprTokens[3] ? parseTokens([exprTokens[3]]) : undefined,
       };
     } else if (op === 'let') {
       return {
@@ -503,11 +502,11 @@ export function eshkolCompile(ast: EshkolASTNode): EshkolBytecode[] {
       case 'if':
         compileNode(node.condition);
         bytecode.push({ op: 'JZ', args: ['label_else'] });
-        compileNode(node.then);
-        if (node.else) {
+        compileNode(node.consequent);
+        if (node.alternate) {
           bytecode.push({ op: 'JMP', args: ['label_end'] });
           bytecode.push({ op: 'LABEL', args: ['label_else'] });
-          compileNode(node.else);
+          compileNode(node.alternate);
         }
         bytecode.push({ op: 'LABEL', args: ['label_end'] });
         break;
@@ -666,8 +665,8 @@ export function eshkolTypeCheck(ast: EshkolASTNode): { ok: boolean; errors: stri
         if (condType !== 'number') {
           errors.push('Type error: if condition must be number');
         }
-        checkNode(node.then);
-        if (node.else) checkNode(node.else);
+        checkNode(node.consequent);
+        if (node.alternate) checkNode(node.alternate);
         return 'any';
       default:
         return 'any';

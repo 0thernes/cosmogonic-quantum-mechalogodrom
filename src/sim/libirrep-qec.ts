@@ -243,8 +243,8 @@ function buildSyndromeGraph(code: SurfaceCode): SyndromeGraph {
   const dist: number[][] = [];
   const next: { to: number; qubit: number }[][] = [];
   for (let s = 0; s < nNodes; s++) {
-    const dRow = new Array<number>(nNodes).fill(Infinity);
-    const nRow = new Array<{ to: number; qubit: number }>(nNodes).fill({ to: -1, qubit: -1 });
+    const dRow = Array.from({ length: nNodes }, () => Infinity);
+    const nRow = Array.from({ length: nNodes }, () => ({ to: -1, qubit: -1 }));
     dRow[s] = 0;
     const queue: number[] = [s];
     let head = 0;
@@ -374,10 +374,10 @@ export function mwpmDecode(syndrome: Uint8Array, distance: number): DecodingResu
   const k = defects.length;
   const boundary = graph.nZ;
   const pairCost: number[][] = [];
-  const boundaryCost: number[] = new Array(k);
+  const boundaryCost: number[] = Array.from<number>({ length: k });
   for (let i = 0; i < k; i++) {
     boundaryCost[i] = graph.dist[defects[i]!]![boundary]!;
-    pairCost.push(new Array(k).fill(0));
+    pairCost.push(Array.from({ length: k }, () => 0));
     for (let j = 0; j < k; j++) {
       pairCost[i]![j] = graph.dist[defects[i]!]![defects[j]!]!;
     }

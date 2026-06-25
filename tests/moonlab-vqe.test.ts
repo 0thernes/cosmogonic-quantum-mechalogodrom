@@ -168,7 +168,7 @@ describe('determinism', () => {
 function exactGroundEnergy4(h: { terms: { coefficient: number; paulis: string[] }[] }): number {
   const dim = 4;
   // Build the real matrix M[y][x].
-  const M: number[][] = Array.from({ length: dim }, () => new Array<number>(dim).fill(0));
+  const M: number[][] = Array.from({ length: dim }, () => Array.from({ length: dim }, () => 0));
   for (const t of h.terms) {
     for (let x = 0; x < dim; x++) {
       let y = x;

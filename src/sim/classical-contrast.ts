@@ -59,7 +59,7 @@ export function classicalMixSample(state: number): { next: number; value: number
 export function classicalShannonEntropy(seed: number, n: number): number {
   const lim = Math.max(8, Math.min(256, n | 0));
   const bins = 16;
-  const hist = new Array(bins).fill(0) as number[];
+  const hist = Array.from({ length: bins }, () => 0);
   let s = seed >>> 0 || 1;
   for (let i = 0; i < lim; i++) {
     const r = classicalMixSample(s);

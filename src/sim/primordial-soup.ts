@@ -56,10 +56,12 @@ export class PrimordialSoup {
   private readonly symmetry = new Float32Array(SOUP_SLOTS);
   private readonly consciousness = new Float32Array(SOUP_SLOTS);
   private readonly alive = new Uint8Array(SOUP_SLOTS);
-  private readonly eshkolPrograms: (number | string | undefined)[] = new Array(SOUP_SLOTS);
+  private readonly eshkolPrograms: (number | string | undefined)[] = Array.from<
+    number | string | undefined
+  >({ length: SOUP_SLOTS });
   /** Per-slot heritable gene vector (SOUP_GENOME_LEN). The genetic substrate that is
    *  inherited-and-varied on rebirth via the genuine `recombine` operator. */
-  private readonly genomes: Float32Array[] = new Array(SOUP_SLOTS);
+  private readonly genomes: Float32Array[] = Array.from<Float32Array>({ length: SOUP_SLOTS });
   private readonly rng: Rng;
   private tick = 0;
 
