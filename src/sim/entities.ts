@@ -27,6 +27,7 @@ import type { PhylumMorphType } from './phyla';
 import { applyBehavior } from './behaviors';
 import type { BehaviorEnv } from './behaviors';
 import type { Entity, SimContext, UpdateStats } from '../types';
+import type { Rng } from '../math/rng';
 
 /** Base material parameters a {@link RenderMode} is layered on top of. */
 interface RenderModeBase {
@@ -145,7 +146,45 @@ export class EntityManager {
    * volume (x/z ∈ ±35, y ∈ [-8, 22)); `pos` is copied, so passing a scratch vector is safe.
    * O(1).
    */
-  spawn(pos: THREE.Vector3 | null, mi: number, scale = 1): Entity | null {
+  /**
+   * Breed the four heritable behavioral traits on the dedicated `genomeRng` sub-stream.
+   * With a `parent`: each trait is INHERITED, then mutated with a small probability (point
+   * mutation) — the discrete strategy/typeId/setGroup occasionally flip/step, the continuous
+   * `nW` gets a bounded jitter. Without a parent (genesis/sparse respawn): fresh draws. All
+   * randomness is on `gr`, so this never perturbs the main entity stream. Allocation = one
+   * small object per spawn (spawns are event-driven, not per-frame hot).
+   */
+  private breedTraits(
+    gr: Rng,
+    parent?: Entity,
+  ): { nW: number; strategy: 0 | 1; typeId: number; setGroup: number } {
+    const MUT = 0.12; // per-trait point-mutation probability
+    if (parent) {
+      const p = parent.userData;
+      // nW: inherit + bounded Gaussian-ish jitter, clamped to [0,1].
+      let nW = p.nW;
+      if (gr() < MUT) nW += (gr() * 2 - 1) * 0.2;
+      nW = nW < 0 ? 0 : nW > 1 ? 1 : nW;
+      // strategy: inherit, occasionally flip (cooperate <-> defect).
+      const strategy: 0 | 1 = gr() < MUT ? (p.strategy === 0 ? 1 : 0) : p.strategy;
+      // typeId in [0,5): inherit, occasionally step +/-1 (speciation drift).
+      let typeId = p.typeId;
+      if (gr() < MUT) typeId = (typeId + (gr() < 0.5 ? 4 : 1)) % 5;
+      // setGroup in [0,4): inherit, occasionally re-roll to a different cohort.
+      let setGroup = p.setGroup;
+      if (gr() < MUT) setGroup = Math.floor(gr() * 4);
+      return { nW, strategy, typeId, setGroup };
+    }
+    // Founder: fresh genome (same distributions as the legacy fresh roll).
+    return {
+      nW: gr(),
+      strategy: gr() < 0.5 ? 0 : 1,
+      typeId: Math.floor(gr() * 5),
+      setGroup: Math.floor(gr() * 4),
+    };
+  }
+
+  spawn(pos: THREE.Vector3 | null, mi: number, scale = 1, parent?: Entity): Entity | null {
     const ctx = this.ctx;
     if (this.list.length >= ctx.quality.maxEntities) return null;
     const morphCount = ctx.morphs.length;
@@ -193,6 +232,14 @@ export class EntityManager {
     } else {
       mesh.castShadow = ctx.quality.shadows && this.list.length < 120;
     }
+    // HERITABLE TRAITS (ADR-0009): nW / strategy / typeId / setGroup form the organism's genome —
+    // they drive the Prisoner's-Dilemma payoffs and grouping behaviors. When a dedicated genomeRng
+    // sub-stream is present they are bred from `parent` (inherit + mutate) on THAT stream, so a
+    // child resembles its parent and genome draws never perturb the main entity rng order. With no
+    // genomeRng (headless/legacy contexts) `gr` is the main rng and the draws happen inline at
+    // their exact legacy positions — keeping the original determinism golden byte-identical.
+    const gr = ctx.genomeRng;
+    const bred = gr ? this.breedTraits(gr, parent) : null;
     mesh.userData = {
       mi: mi % morphCount,
       vel: new THREE.Vector3((rng() - 0.5) * 0.1, (rng() - 0.5) * 0.05, (rng() - 0.5) * 0.1),
@@ -207,13 +254,14 @@ export class EntityManager {
       sT: 300 + rng() * 500,
       belly: 0,
       sortVal: rng() * 100,
-      nW: rng(),
+      // nW: inherited from genomeRng when present, else the legacy main-rng draw at this position.
+      nW: bred ? bred.nW : rng(),
       act: 0,
       qP: rng() * TAU,
       energy: 50 + rng() * 50,
-      strategy: rng() < 0.5 ? 0 : 1,
-      typeId: Math.floor(rng() * 5),
-      setGroup: Math.floor(rng() * 4),
+      strategy: bred ? bred.strategy : rng() < 0.5 ? 0 : 1,
+      typeId: bred ? bred.typeId : Math.floor(rng() * 5),
+      setGroup: bred ? bred.setGroup : Math.floor(rng() * 4),
       payoff: 0,
       phylum,
       beh2: m.beh2 ?? null,
@@ -464,7 +512,9 @@ export class EntityManager {
           e.position.y + rng(),
           e.position.z + (rng() - 0.5) * 2,
         );
-        this.spawn(SPAWN_AT, (u.mi + Math.floor(rng() * 5)) % ctx.morphs.length, 0.7);
+        // Auto-split: the offspring INHERITS its parent's genome (passed as `e`) — the trait
+        // heredity runs on ctx.genomeRng, so the main rng order here is unchanged.
+        this.spawn(SPAWN_AT, (u.mi + Math.floor(rng() * 5)) % ctx.morphs.length, 0.7, e);
       }
 
       // Temperature-modified death + respawn-when-sparse (legacy lines 790-795).

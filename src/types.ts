@@ -196,6 +196,14 @@ export interface SimContext {
   scene: THREE.Scene;
   quality: QualityProfile;
   rng: Rng;
+  /**
+   * Dedicated seeded sub-stream for heritable genetics (organism trait genomes + their
+   * inheritance on auto-split). Kept OFF the main `rng` so genome draws never shift the
+   * primary entity draw order (same golden-ratio-mix discipline as `econRng`/`superRng`).
+   * Optional for back-compat: headless test contexts may omit it, in which case spawn falls
+   * back to `rng` (legacy behavior).
+   */
+  genomeRng?: Rng;
   grid: SpatialHash<Entity>;
   morphs: MorphType[];
   geos: THREE.BufferGeometry[];

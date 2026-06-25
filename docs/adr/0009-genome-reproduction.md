@@ -62,9 +62,24 @@ the 300-frame population golden pins. Specifically:
   is **untouched** — the full suite (1504 tests) stays green with no re-baseline required. This
   realizes the heredity goal without the golden migration that Option A feared on the entity path.
 
-The original `breed`/`crossover` exports remain (still correct, still unit-tested) for the future
-entity-path wiring; extending heredity to `entities.ts`/`nhi.ts` on a dedicated `genomeRng` remains
-tracked as follow-up work. **B (prune)** is therefore moot; **C (reserve)** is superseded.
+**Entity-path wave (2026-06-24, same day).** Heredity now also runs on the organism/NHI path:
+
+- `SimContext` gains an OPTIONAL `genomeRng` sub-stream; `world.ts` forks it as
+  `mulberry32((seed ^ 0x6e3a17c5) >>> 0 || 1)` (the econRng/superRng golden-ratio-mix discipline).
+- `EntityManager.spawn(pos, mi, scale, parent?)` now breeds the organism's heritable trait genome
+  — `nW` / `strategy` / `typeId` / `setGroup` (the Prisoner's-Dilemma + grouping genes) — from
+  `parent` (inherit + point-mutation) on `genomeRng`. Auto-split passes the parent, so offspring
+  resemble their lineage. A new oracle test confirms the parental signature persists far above the
+  2.5% random baseline.
+- `NhiMind.spawnChild(rng, mate?)` gains genuine TWO-parent uniform crossover before mutation.
+- **Determinism, both ways:** when `genomeRng` is present the system is deterministic from seed (a
+  NEW heredity golden, `tests/entity-heredity.test.ts`); when it is ABSENT (headless/legacy test
+  contexts) the draws fall back inline to the main `rng` at their exact legacy positions, so the
+  ORIGINAL 300-frame population golden (`tests/determinism.test.ts`) stays byte-identical — no
+  re-baseline needed. Production (`world.ts`) always supplies `genomeRng`, so heredity is LIVE.
+
+The original `breed`/`crossover` exports remain (still correct, still unit-tested). **B (prune)** is
+moot; **C (reserve)** is superseded; the entity-path follow-up is now DONE.
 
 ## Consequences (as shipped)
 

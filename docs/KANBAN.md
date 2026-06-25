@@ -36,7 +36,7 @@ behind the full gate (`bun run check`) and a commit.
 
 **Goal:** Wire the complete Z:\[Vibe Coded (AI)]\(Tsotchke) corpus (19 repos + sites + Eshkol flagship + Moonlab + quantum-quake + libirrep + ... ) _everywhere_ in Cosmogonic: math, sim (mind/body), world, native, UI, docs. Maximal but contract-strict, det, measured, audited. See docs/TSOTCHKE-CORPUS-INTEGRATION-PLAN.md.
 
-**Status (v0.17.1):** FULL DEEP DIVE COMPLETE — Tsotchke local corpus (Eshkol COMPLETE spec + all mirrors at `Z:\[Vibe Coded (AI)]\(Tsotchke)`) + GH (22 repos) studied; registry maps all projects (19 wired, 3 fenced). Petri/soup + brutal god tier live. Gate **1,507 tests · 90.80% / 87.87%** (receipts enforced). Local==GH. "Grow What Thou Wilt."
+**Status (v0.17.1):** FULL DEEP DIVE COMPLETE — Tsotchke local corpus (Eshkol COMPLETE spec + all mirrors at `Z:\[Vibe Coded (AI)]\(Tsotchke)`) + GH (22 repos) studied; registry maps all projects (19 wired, 3 fenced). Petri/soup + brutal god tier live. Gate **1,514 tests · 90.80% / 87.88%** (receipts enforced). Local==GH. "Grow What Thou Wilt."
 
 **ALL Tsotchke repos/projects FULLY WIRED (2026-06-21 update per user mandate):** EVERY single one from the complete local corpus Z:\[Vibe Coded (AI)]\(Tsotchke) (Eshkol full + ALL 20 mirrors + org + sites) is utilized as substrate in the Petri. Full corpus catalysis (fullTsotchkeBiologicsCatalysis) + registry loops EVERY ENTRY. Dedicated real ports/leaves for all scientific (Eshkol AD/GWT/.esk DNA, Moonlab full advanced, spin NQS/anyons/skyrmion/etc full, QGT, libirrep, quake, PINN/PIMC, ulg, logo, tensorcore, asteroids, simple_mnist, classical/quantum rng). Fenced LLM/onchain for provenance only. Tsotchke tech REAL (world 1st per audits; no overclaim). 100% of Tsotchke projects wired into Cosmogonic NHSI growth. No "only a few" — all.
 
@@ -52,7 +52,7 @@ behind the full gate (`bun run check`) and a commit.
 
 **In Progress (heartbeat iter)**
 
-- Ralph loop: deepen Tsotchke wiring per [TSOTCHKE-INTEGRATION-MAP.md](./TSOTCHKE-INTEGRATION-MAP.md); NHSI targets tracked in [NHSI-PROGRESS-DASHBOARD.md](./NHSI-PROGRESS-DASHBOARD.md). Gate GREEN (**1,507 tests**, receipts enforced).
+- Ralph loop: deepen Tsotchke wiring per [TSOTCHKE-INTEGRATION-MAP.md](./TSOTCHKE-INTEGRATION-MAP.md); NHSI targets tracked in [NHSI-PROGRESS-DASHBOARD.md](./NHSI-PROGRESS-DASHBOARD.md). Gate GREEN (**1,514 tests**, receipts enforced).
 - BRUTAL GOD POWER: new brutal biologic strains (VOID_AZATHOTH, PHOENIX_DARK, DEVOUR_GALACTUS, CHAOS_WARHAMMER, REALITY_MXY, BRUTAL_ZOD, SPIRAL_GURREN, VOID_KNIGHT) + brutalGodPower() (QGT warp, spin rage, Eshkol will, irrep godform, Moonlab scale) wired in digital-biologics + petri for god-spawn when Archon pulse high. Pantheon embodies Valkorion/Thanos/DrM/Galactus/Phoenix/Broly/Frieza/Azathoth/Chaos/Shuma/Jaspers/Pennywise/AntiMonitor/Knull/Mxyzptlk/Joker/Zod/Gilgamesh/Alucard/Griffith/EVA/Gurren/Sephiroth/Asura/Vergil/Dante/Starkiller/Riddick + BRUTALISM (raw devour/rage/void/reality/chaos/spiral). 0thernes > Weyland god sim.
 
 **Next**

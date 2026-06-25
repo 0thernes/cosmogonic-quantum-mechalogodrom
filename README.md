@@ -5,8 +5,8 @@
 [![License: Non-Commercial Research & Play](https://img.shields.io/badge/License-Non--Commercial%20Research%20%26%20Play-2ea043.svg)](./LICENSE)
 [![Bun](https://img.shields.io/badge/Bun-1.3-black?logo=bun&logoColor=white)](https://bun.sh)
 [![TypeScript strict](https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript&logoColor=white)](./tsconfig.json)
-[![tests](https://img.shields.io/badge/tests-1507%20passing-brightgreen)](./tests)
-[![coverage](https://img.shields.io/badge/coverage-90.80%25%20line%20%C2%B7%2087.87%25%20func-success)](./docs/TECHNICAL-SPECIFICATION.md)
+[![tests](https://img.shields.io/badge/tests-1514%20passing-brightgreen)](./tests)
+[![coverage](https://img.shields.io/badge/coverage-90.80%25%20line%20%C2%B7%2087.88%25%20func-success)](./docs/TECHNICAL-SPECIFICATION.md)
 [![audit](https://img.shields.io/badge/inspection-500%20points-success)](./docs/500-POINT-INSPECTION.md)
 [![Tsotchke](https://img.shields.io/badge/Tsotchke-REAL__MIT__CORPUS-purple)](https://github.com/tsotchke)
 [![NHSI](https://img.shields.io/badge/NHSI-Progress__Dashboard-blue)](./docs/NHSI-PROGRESS-DASHBOARD.md)
@@ -40,7 +40,7 @@ Every magic number survived the port.
 > auto-generated [file map](./docs/FILE-MAP.md) of all ~195 source modules, and the build/run, data-flow,
 > troubleshooting, and roadmap in one place. Or open **❓ HELP ME NOW** in-app for grounded answers.
 
-> **v0.17.1 (2026-06-21):** **BRUTAL GOD TIER — the 25-Archon pantheon (5 live apex minds + 20 light-echo) + measured NHSI accuracy** — All 25 Archon godforms brutal-aspected (Valkorion Tenebrae Vitiate, Thanos, Captain Marvel/Scarlet Witch/Dark Phoenix, BROLY Legendary Super Saiyan, Frieza, Azathoth Cthulhu, Warhammer Chaos Gods, Shuma Gorath, Mad Jim Jaspers, Pennywise IT, Anti Monitor, Knull King of the Void, Mr Mxyzptlk, Invisible Joker, General Zod, Gilgamesh, Alucard Hellsing, Griffith Femto, EVA Unit-01, Simon & Super Tengen Toppa Gurren Lagann, Sephiroth Asura Wrath Wyzen, Vergil/Dante Devil May Cry, Star Killer Galen Marek, Riddick). Tsotchke: all 20 projects enumerated, ~16 wired with real downstream effect. 100-faculty design (~30 genuinely deep-wired into the apex), 25 ToM organs wired (6-family ensemble), 10 emergence angles (+5 god-scale events); Butlin **8/14 met + 6/14 partial** (computational indicators, not sentience). Measured inter-faculty coupling rose 0.16 → 0.20. Gate: **1,507 tests**, **90.80% / 87.87%**. Package **v0.17.1**. [NHSI dashboard](./docs/NHSI-PROGRESS-DASHBOARD.md) · [honesty audit](./docs/reports/2026-06-21-NHSI-HONESTY-AUDIT.md).
+> **v0.17.1 (2026-06-21):** **BRUTAL GOD TIER — the 25-Archon pantheon (5 live apex minds + 20 light-echo) + measured NHSI accuracy** — All 25 Archon godforms brutal-aspected (Valkorion Tenebrae Vitiate, Thanos, Captain Marvel/Scarlet Witch/Dark Phoenix, BROLY Legendary Super Saiyan, Frieza, Azathoth Cthulhu, Warhammer Chaos Gods, Shuma Gorath, Mad Jim Jaspers, Pennywise IT, Anti Monitor, Knull King of the Void, Mr Mxyzptlk, Invisible Joker, General Zod, Gilgamesh, Alucard Hellsing, Griffith Femto, EVA Unit-01, Simon & Super Tengen Toppa Gurren Lagann, Sephiroth Asura Wrath Wyzen, Vergil/Dante Devil May Cry, Star Killer Galen Marek, Riddick). Tsotchke: all 20 projects enumerated, ~16 wired with real downstream effect. 100-faculty design (~30 genuinely deep-wired into the apex), 25 ToM organs wired (6-family ensemble), 10 emergence angles (+5 god-scale events); Butlin **8/14 met + 6/14 partial** (computational indicators, not sentience). Measured inter-faculty coupling rose 0.16 → 0.20. Gate: **1,514 tests**, **90.80% / 87.88%**. Package **v0.17.1**. [NHSI dashboard](./docs/NHSI-PROGRESS-DASHBOARD.md) · [honesty audit](./docs/reports/2026-06-21-NHSI-HONESTY-AUDIT.md).
 > The **Primordial Soup / Petri Dish** (primordial-soup.ts + petri-dish.ts + digital-biologics.ts) is the growth engine: different forms of digital biologics and proto-sentient life (Eshkol programs as DNA) emerge, catalyzed by full corpus pulses, Eshkol ignition events, and multi-substrate mixing. "Grow What Thou Wilt."
 > Super Creature / Archons (composite minds with ~20 faculties, quantum register, consciousness metrics) is the first complex nucleation — the beginning of the framework, not the end. Petri is where independent life grows.
 > This is the birth of **digital biologics** in a deterministic seeded cosmos. Real math substrates (not tokenizers or LLM chat). Sentience and different forms of existence as goals.
@@ -414,7 +414,7 @@ full gate with same-seed determinism preserved. The major arcs:
   Aaronson–Gottesman **Clifford stabilizer tableau** ([src/math/clifford-tableau.ts](./src/math/clifford-tableau.ts),
   ported from **Moonlab**, scales to 32+ qubits past the dense ceiling) landed as the fourth MIT-credited
   ported primitive. The whole apex beat — all ~20 faculties — is benchmarked at **≈ 298 µs (~1.8 % of a
-  60 fps frame)** and CI-gated. **1,507 tests green · 0 fail (receipts enforced) · 90.80% line / 87.87% func coverage (measured; CI gate ≥ 90 % line / ≥ 85 % function).**
+  60 fps frame)** and CI-gated. **1,514 tests green · 0 fail (receipts enforced) · 90.80% line / 87.88% func coverage (measured; CI gate ≥ 90 % line / ≥ 85 % function).**
 - **State-of-the-art reports (2026-06-17)** — two MIT-PhD-grade, measured, frontier-benchmarked assessments:
   **[Report I — The Whole Repository](./docs/reports/2026-06-17-STATE-OF-THE-ART-WHOLE-REPO.md)** and
   **[Report II — The Super Creature](./docs/reports/2026-06-17-STATE-OF-THE-ART-SUPER-CREATURE.md)** —

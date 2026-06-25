@@ -33,7 +33,7 @@ bun start    # non-hot production server (bun server.ts)
 bun run check   # prettier --check → tsc --noEmit → oxlint → bun test → bun run build
 ```
 
-All five stages must pass. Current baseline: prettier clean · tsc 0 · oxlint 0 · **1,507 tests** · build 7
+All five stages must pass. Current baseline: prettier clean · tsc 0 · oxlint 0 · **1,514 tests** · build 7
 artifacts. Individual stages: `bun run format:check`, `bun run typecheck`, `bun run lint`, `bun test`,
 `bun run build`.
 

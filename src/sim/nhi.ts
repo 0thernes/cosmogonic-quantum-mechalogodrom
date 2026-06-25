@@ -227,11 +227,19 @@ export class NhiMind {
     this.gene = new TinyMLP(GENE_IN, GENE_HID, GENE_OUT, gw);
   }
 
-  /** Mutated offspring for SPAWN_SWARM: a fresh NHI whose gene is this one's, jittered. Seeded. */
-  spawnChild(rng: Rng): NhiMind {
+  /**
+   * Offspring for SPAWN_SWARM. The child INHERITS this NHI's intuition gene, jittered (point
+   * mutation). When a second parent `mate` is given, each weight is first recombined via uniform
+   * crossover (50/50 pick from either parent) BEFORE mutation — genuine two-parent heredity rather
+   * than a single-parent clone. Fully seeded by `rng`, so swarms stay bit-reproducible.
+   */
+  spawnChild(rng: Rng, mate?: NhiMind): NhiMind {
     const child = new NhiMind(rng);
-    for (let i = 0; i < child.gene.weights.length; i++) {
-      child.gene.weights[i] = (this.gene.weights[i] ?? 0) + (rng() * 2 - 1) * 0.15;
+    const w = child.gene.weights;
+    for (let i = 0; i < w.length; i++) {
+      const a = this.gene.weights[i] ?? 0;
+      const inherited = mate ? (rng() < 0.5 ? a : (mate.gene.weights[i] ?? 0)) : a;
+      w[i] = inherited + (rng() * 2 - 1) * 0.15; // point mutation
     }
     return child;
   }

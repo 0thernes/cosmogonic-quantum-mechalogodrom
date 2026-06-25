@@ -322,6 +322,7 @@ export class World {
   private static readonly ECON_SUPER_BASE = 9000;
   private readonly economy = new Economy();
   private readonly econRng: Rng;
+  private readonly genomeRng: Rng;
   /** Live NHI entities keyed by mind id; pruned when an NHI dies (leaves entities.list). */
   private readonly nhiEntities = new Map<number, Entity>();
   /** Monotonic NHI mind id — a stable key across the shifting entities.list. */
@@ -397,6 +398,10 @@ export class World {
     // Economy rng: a deterministic sub-stream derived from the world seed (golden-ratio mix), kept
     // separate from `this.rng` so the market never perturbs the main simulation's draw order.
     this.econRng = mulberry32((this.persisted.seed ^ 0x9e3779b1) >>> 0 || 1);
+    // Genome rng (ADR-0009): heritable organism genetics on their OWN seeded sub-stream so trait
+    // genomes + inheritance-on-split never shift the main entity draw order. Same golden-ratio-mix
+    // discipline as econRng/superRng. Passed via ctx; EntityManager uses it for trait heredity.
+    this.genomeRng = mulberry32((this.persisted.seed ^ 0x6e3a17c5) >>> 0 || 1);
 
     this.state = {
       chaos: 0.5,
@@ -444,6 +449,7 @@ export class World {
       scene: this.engine.scene,
       quality: this.quality,
       rng: this.rng,
+      genomeRng: this.genomeRng,
       grid: this.grid,
       morphs,
       geos,
