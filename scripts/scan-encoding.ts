@@ -93,3 +93,35 @@ console.log(
     ? 'SAFE: no balanced “…” pairs found — blanket ”→— / “→– is non-destructive.'
     : 'CAUTION: balanced pairs exist — use pattern-scoped replacement, not blanket.',
 );
+
+// ---- Sub-lead-byte orphan-remnant scan (lost-lead emoji tails + C1 controls) ----
+// When a 4-byte emoji loses its lead byte in a bad decode, an orphan run led by Ÿ (U+0178)
+// or œ/Œ (U+0153/0152) survives; C1 controls (U+0080–U+009F) leak in the same way. All sit
+// BELOW the UTF-8 lead-byte range, so `fixMojibake` and the truth-law MOJIBAKE regex both
+// miss them. `normalize-docs.fixOrphanEmojiTails` now auto-strips the Ÿ/š-led runs; this scan
+// surfaces any that remain (a lone C1 / œ may need the surgical exact-count fix instead).
+const isC1 = (c: number): boolean => c >= 0x80 && c <= 0x9f;
+const ORPHAN_LEAD = new Set([0x178, 0x152, 0x153]); // Ÿ Œ œ — never legit in this repo's prose
+let totalOrphan = 0;
+const orphanRows: string[] = [];
+for (const rel of await targets()) {
+  const file = Bun.file(rel);
+  if (!(await file.exists())) continue;
+  let n = 0;
+  for (const ch of await file.text()) {
+    const c = ch.codePointAt(0)!;
+    if (isC1(c) || ORPHAN_LEAD.has(c)) n++;
+  }
+  if (n > 0) {
+    totalOrphan += n;
+    orphanRows.push(`${String(n).padStart(4)} orphan-remnant  ${rel}`);
+  }
+}
+console.log('\n=== SUB-LEAD-BYTE ORPHAN-REMNANT SCAN (C1 controls + Ÿ / Œ / œ) ===');
+console.log(orphanRows.join('\n') || '(none)');
+console.log(
+  `TOTAL orphan remnants: ${totalOrphan}  ` +
+    (totalOrphan === 0
+      ? '(clean)'
+      : '(Ÿ/š-led emoji tails auto-strip via `bun scripts/normalize-docs.ts`; a lone C1/œ needs a surgical fix)'),
+);

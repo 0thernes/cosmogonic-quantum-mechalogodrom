@@ -132,6 +132,24 @@ export function fixCurlyDashes(input: string): string {
     .replace(/^\u201D(?= )/gm, '\u2014');
 }
 
+/**
+ * Repair the THIRD corruption class: lost-lead emoji TAILS. When a 4-byte emoji (the
+ * 🟥/🟧/🟨/🟦 priority squares, a 🟡 dot, etc.) loses its lead byte in a bad decode, what
+ * survives is an orphan run led by Ÿ (U+0178) or š (U+0161) followed by CP1252 companion
+ * bytes (¥¦§¨©…). Those leads sit BELOW the UTF-8 lead-byte range, so `fixMojibake` can't
+ * reverse them and the truth-law MOJIBAKE regex never matches them — they ride onto the
+ * front page. Ÿ/š never occur in this repo's English/technical .md/.xml prose, so we strip
+ * the lead + up to two companion bytes (+ one trailing space, so no double space is left).
+ * The original glyph is unrecoverable and its meaning is carried by adjacent text (the P0/P1
+ * label, the heading), so stripping is the honest repair. Legit separators (— – · × → ½ º)
+ * are NOT in the companion class and are left untouched — asserted by scan-encoding.ts.
+ */
+export function fixOrphanEmojiTails(input: string): string {
+  const COMP =
+    '[\\u00A5\\u00A6\\u00A7\\u00A8\\u00A9\\u00AA\\u00AB\\u00AC\\u00AE\\u0161\\u2039\\u203A\\u008D]';
+  return input.replace(new RegExp('[\\u0178\\u0161]' + COMP + '{0,2}[ ]?', 'g'), '');
+}
+
 /** Strip a UTF-8 BOM if present. */
 function stripBom(s: string): string {
   return s.charCodeAt(0) === 0xfeff ? s.slice(1) : s;
@@ -153,7 +171,7 @@ for (const rel of await docFiles()) {
   const file = Bun.file(rel);
   if (!(await file.exists())) continue;
   const original = await file.text();
-  const fixed = fixCurlyDashes(stripBom(fixMojibake(original)));
+  const fixed = fixOrphanEmojiTails(fixCurlyDashes(stripBom(fixMojibake(original))));
   if (fixed !== original) {
     dirty++;
     if (checkOnly) console.log(`mojibake: ${rel}`);
