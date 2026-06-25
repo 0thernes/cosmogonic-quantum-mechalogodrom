@@ -112,7 +112,7 @@ export class NarrativeMemory {
     const gate = surprise > 0.12 || confidence > 0.75 || kind === 'COMMIT' || kind === 'FAIL';
     if (!gate) return;
 
-    const e: any = this.ring[this.head];
+    const e = this.ring[this.head];
     if (e) {
       e.kind = kind;
       e.t = t % 1e9;
@@ -159,7 +159,7 @@ export class NarrativeMemory {
 
     for (let i = 0; i < this.count; i++) {
       const idx = (this.head - 1 - i + NARRATIVE_CAP) % NARRATIVE_CAP;
-      const e: any = this.ring[idx];
+      const e = this.ring[idx];
       if (!e) continue;
       const age = Math.max(0, (now - e.t + 1e9) % 1e9) / 1e9;
       const rec = Math.exp(-age * 3) * recencyBias;
@@ -183,7 +183,7 @@ export class NarrativeMemory {
     // promote high-conf recent into belief (low-rank)
     for (let i = 0; i < Math.min(8, this.count); i++) {
       const idx = (this.head - 1 - i + NARRATIVE_CAP) % NARRATIVE_CAP;
-      const e: any = this.ring[idx];
+      const e = this.ring[idx];
       if (e && e.confidence > 0.6) {
         const a = 0.05 * ignition;
         this.belief[0] = (1 - a) * (this.belief[0] ?? 0) + a * (e.val ?? 0) * e.confidence;

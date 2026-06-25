@@ -1,3 +1,28 @@
 # Quirks
 
-Project-specific weirdness — the non-obvious stuff.
+Project-specific weirdness — the non-obvious stuff that will trip you up.
+
+- **Test count is environment-dependent.** The receipts law enforces a FLOOR (≥1400) and a ±6pp
+  coverage band, not exact equality — a file-rich local tree can report more tests than a clean CI
+  checkout. The canonical number (`scripts/canonical-receipts.ts`) is the measured value; the gate
+  passes as long as reality ≥ floor and within band.
+- **`.esk` corpus harvest only works on 0thernes' machine.** `scripts/harvest-tsotchke-corpus.ts`
+  scans the local `Z:\[Vibe Coded (AI)]\(Tsotchke)` folder and emits `generated-tsotchke-seeds.ts`.
+  In CI / clean clones that folder doesn't exist, so the harvest emits empty/placeholder seeds — the
+  "authentic .esk DNA" is real locally, inert elsewhere. Tests must not depend on a populated harvest.
+- **Mojibake regenerates.** The autonomous doc-writing loop corrupts living docs to Windows-1252 each
+  cycle; `.githooks/pre-commit` + `scripts/normalize-docs.ts` repair and re-stage them. Don't fight it;
+  don't hand-fix encoding — let the hook run. The `docs-truth-law` encoding test guards the result.
+- **`tsconfig` excludes `src/math/moonlab-tensor.ts`** from typecheck (legacy). `tsotchke-deep-wire.ts`
+  was previously excluded too but is now type-checked (its symmetry/tensor fns delegate to the genuine
+  `math/irrep.ts` / `math/mps-svd.ts`).
+- **The 25-Archon roster is 5 + 20.** Five individuated apex minds (ORACLE-Σ, STARKILLER-Ω,
+  MANHATTAN-Φ, BROLY-Ψ, VOID-Λ) plus 20 live "light-echoes" — honestly qualified, not 25 distinct
+  deep minds. The "100/144 faculties" surface is one generic faculty cloned N× (~30 genuinely
+  deep-wired into the apex `super-mind`).
+- **Some `void x;` lines are legitimate** (signature fidelity, value used just above). Only delete a
+  graft if the computed value has NO effect on any return — like the one removed from
+  `integrated-information.ts`. Grafts that feed `acc += …` are behavior-bearing.
+- **Two correct-vs-stub forks:** symmetry → use `math/irrep.ts` (Racah/Wigner), NOT
+  `math/libirrep-symmetry.ts` (cosine stub, superseded/unused). Tensors → `moonlab-tensor.ts` /
+  `math/mps-svd.ts`, not bespoke contractions.
