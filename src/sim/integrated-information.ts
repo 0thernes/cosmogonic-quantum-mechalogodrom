@@ -226,10 +226,16 @@ export function classicalIntegratedInformation(
     }
   }
 
-  // Compute per-module local integration
+  // Per-module local integration: each module's SHARE of the system's total interaction flow,
+  // so modulePhi is a meaningful [0,1] participation distribution (summing to ~1) rather than the
+  // degenerate 0/1 the prior local/total ratio always produced.
+  let totalFlow = 0;
   for (let i = 0; i < M; i++) {
-    const localPhi = computeLocalIntegration(activations, adjacency, i);
-    modulePhi[i] = localPhi;
+    modulePhi[i] = computeModuleFlow(activations, adjacency, i);
+    totalFlow += modulePhi[i] ?? 0;
+  }
+  if (totalFlow > 1e-9) {
+    for (let i = 0; i < M; i++) modulePhi[i] = (modulePhi[i] ?? 0) / totalFlow;
   }
 
   const meanIntegration = cuts > 0 ? sumIntegration / cuts : 0;
@@ -275,23 +281,21 @@ function computeCutIntegration(
 }
 
 /**
- * Compute local integration for a single module.
+ * Total interaction flow incident on a single module: Σ_{j≠i} |aᵢ|·|aⱼ|·w(i,j). The caller
+ * normalizes these by the whole-graph total to get each module's [0,1] share of integration.
+ * (The prior version accumulated the same term into two locals and returned their ratio — always
+ * exactly 1 for any connected module, 0 otherwise — which carried no per-module information.)
  */
-function computeLocalIntegration(
+function computeModuleFlow(
   activations: ArrayLike<number>,
   adjacency: ArrayLike<number>,
   moduleIndex: number,
 ): number {
-  let localFlow = 0;
-  let totalFlow = 0;
-
+  let flow = 0;
   for (let j = 0; j < activations.length; j++) {
     if (j === moduleIndex) continue;
     const weight = adjacency[moduleIndex * activations.length + j] ?? 0;
-    const flow = Math.abs(activations[moduleIndex] ?? 0) * Math.abs(activations[j] ?? 0) * weight;
-    totalFlow += flow;
-    localFlow += flow;
+    flow += Math.abs(activations[moduleIndex] ?? 0) * Math.abs(activations[j] ?? 0) * weight;
   }
-
-  return totalFlow > 1e-9 ? localFlow / totalFlow : 0;
+  return flow;
 }
