@@ -145,3 +145,107 @@ export function irrepMultiplicity(j: number, baseCount: number): number {
   const dim = 2 * Math.min(Math.max(j, 0), IRREP_J_MAX) + 1;
   return Math.max(1, Math.round(baseCount / dim)) * dim;
 }
+
+/** Racah triangle coefficient Δ(a,b,c) = √[(a+b−c)!(a−b+c)!(−a+b+c)! / (a+b+c+1)!]; 0 if the triangle fails. */
+function triangleDelta(a: number, b: number, c: number): number {
+  const x1 = a + b - c;
+  const x2 = a - b + c;
+  const x3 = -a + b + c;
+  const x4 = a + b + c + 1;
+  if (x1 < 0 || x2 < 0 || x3 < 0 || !Number.isInteger(x1) || x4 >= FACT.length) return 0;
+  return Math.sqrt((fact(x1) * fact(x2) * fact(x3)) / fact(x4));
+}
+
+/**
+ * Wigner 6j symbol {j1 j2 j3; j4 j5 j6} via the exact Racah W-formula
+ * (Edmonds 6.3.7 / Racah 1942). Returns 0 unless the four triangles
+ * (j1 j2 j3), (j1 j5 j6), (j4 j2 j6), (j4 j5 j3) all hold. O(t) integer sum.
+ *
+ * { j1 j2 j3 } = Δ(j1j2j3)Δ(j1j5j6)Δ(j4j2j6)Δ(j4j5j3)
+ * { j4 j5 j6 }   · Σ_t (−1)^t (t+1)! / [ Π(t−αᵢ)! · Π(βⱼ−t)! ]
+ */
+export function wigner6j(
+  j1: number,
+  j2: number,
+  j3: number,
+  j4: number,
+  j5: number,
+  j6: number,
+): number {
+  for (const j of [j1, j2, j3, j4, j5, j6]) if (j < 0 || j > IRREP_J_MAX) return 0;
+  const d1 = triangleDelta(j1, j2, j3);
+  const d2 = triangleDelta(j1, j5, j6);
+  const d3 = triangleDelta(j4, j2, j6);
+  const d4 = triangleDelta(j4, j5, j3);
+  if (d1 === 0 || d2 === 0 || d3 === 0 || d4 === 0) return 0;
+
+  // α terms (lower bounds) and β terms (upper bounds) of the Racah sum.
+  const a = [j1 + j2 + j3, j1 + j5 + j6, j4 + j2 + j6, j4 + j5 + j3];
+  const b = [j1 + j2 + j4 + j5, j2 + j3 + j5 + j6, j3 + j1 + j6 + j4];
+  const tMin = Math.max(...a);
+  const tMax = Math.min(...b);
+  if (tMin > tMax + 1e-9) return 0;
+
+  let sum = 0;
+  for (let t = Math.round(tMin); t <= Math.round(tMax); t++) {
+    if (t + 1 >= FACT.length) continue;
+    let denom = 1;
+    let ok = true;
+    for (const ai of a) {
+      const v = t - ai;
+      if (v < 0 || v >= FACT.length) {
+        ok = false;
+        break;
+      }
+      denom *= fact(v);
+    }
+    if (!ok) continue;
+    for (const bj of b) {
+      const v = bj - t;
+      if (v < 0 || v >= FACT.length) {
+        ok = false;
+        break;
+      }
+      denom *= fact(v);
+    }
+    if (!ok || denom === 0 || !Number.isFinite(denom)) continue;
+    sum += (sign(t) * fact(t + 1)) / denom;
+  }
+  return d1 * d2 * d3 * d4 * sum;
+}
+
+/**
+ * Wigner 9j symbol via the standard single sum over a product of three 6j
+ * symbols (Edmonds 6.4.3 / Varshalovich 10.2.4):
+ *
+ * { a b c }            { a b c }{ d e f }{ g h j }
+ * { d e f } = Σ_x (2x+1){ f j x }{ b x h }{ x a d }
+ * { g h j }
+ *
+ * x runs over the overlap of the triangles in half-integer steps. Returns 0
+ * when no valid x exists. Exact (delegates to {@link wigner6j}).
+ */
+export function wigner9j(
+  a: number,
+  b: number,
+  c: number,
+  d: number,
+  e: number,
+  f: number,
+  g: number,
+  h: number,
+  j: number,
+): number {
+  for (const v of [a, b, c, d, e, f, g, h, j]) if (v < 0 || v > IRREP_J_MAX) return 0;
+  const xMin = Math.max(Math.abs(a - j), Math.abs(b - f), Math.abs(d - h));
+  const xMax = Math.min(a + j, b + f, d + h);
+  if (xMin > xMax + 1e-9) return 0;
+  let sum = 0;
+  for (let x = xMin; x <= xMax + 1e-9; x += 1) {
+    const w1 = wigner6j(a, b, c, f, j, x);
+    const w2 = wigner6j(d, e, f, b, x, h);
+    const w3 = wigner6j(g, h, j, x, a, d);
+    sum += sign(2 * x) * (2 * x + 1) * w1 * w2 * w3;
+  }
+  return sum;
+}

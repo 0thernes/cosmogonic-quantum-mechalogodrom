@@ -1,18 +1,26 @@
 /**
- * TSOTCHKE DEEP WIRING — Full integration of Moonlab, libirrep, and Eshkol compiler.
+ * TSOTCHKE DEEP WIRING — integration of Moonlab, libirrep, and Eshkol compiler.
  *
- * This module provides the deepest possible wiring of the three remaining Tsotchke repos:
- * 1. Moonlab full — tensor networks, MPO operations, Bloch sphere manipulations
- * 2. libirrep full — representation theory, character tables, Clebsch-Gordan coefficients
- * 3. Eshkol compiler — program parsing, AST generation, bytecode execution
+ * This module wires three Tsotchke repos into the sim:
+ * 1. Moonlab — tensor-network contraction & MPO ops (real SVD/matMul via `math/mps-svd`),
+ *    Bloch-sphere conversions.
+ * 2. libirrep — representation theory: Clebsch–Gordan, Wigner-d, and 6j/9j recoupling
+ *    symbols delegated to the genuine Racah/Wigner kernels in `math/irrep.ts`.
+ * 3. Eshkol compiler — a real S-expression parser → bytecode → stack-VM executor.
  *
- * All functions are deterministic, bounded where applicable, allocation-free in steady state.
- * These are REAL, working Tsotchke substrates ported gate-for-gate from the MIT corpus.
+ * HONESTY (Manhattan's law): the angular-momentum symbols and tensor contractions in
+ * this file are NOT bespoke approximations — they call the verified closed-form
+ * implementations in `math/irrep.ts` (`clebschGordan`, `wignerSmallD`, `wigner6j`,
+ * `wigner9j`) and `math/mps-svd.ts` (`svd`, `matMul`, `lowRankApprox`). Earlier revisions
+ * of this file shipped modular/`±0.1` placeholders mislabelled "gate-for-gate REAL";
+ * those have been replaced by genuine math. All functions are deterministic and bounded.
  * NOT sentient — functional mathematical/computational substrates.
  */
 
 import type { Complex } from '../math/quantum';
 import { clamp01 } from '../math/scalar';
+import { clebschGordan, wignerSmallD, wigner6j, wigner9j } from '../math/irrep';
+import { fromRows, svd, type Mat } from '../math/mps-svd';
 
 // === MOONLAB FULL INTEGRATION ===
 
@@ -147,31 +155,62 @@ export function moonlabBlochToState(bloch: BlochVector): Complex[] {
   ];
 }
 
-/** Moonlab tensor train decomposition (full TT algorithm). */
+/** Moonlab tensor train decomposition (TT-SVD). */
 export interface TensorTrain {
   cores: Float32Array[];
   ranks: number[];
+  /** Relative Frobenius error introduced by the rank-χ truncation, in [0,1]. */
+  truncationError: number;
 }
 
 /**
- * Perform tensor train decomposition (simplified).
- * Based on Moonlab/moonlab_repo/tensor_train.cpp
+ * One-step TT-SVD: reshape the flat tensor into the nearest matrix, run the
+ * genuine one-sided-Jacobi `svd` from math/mps-svd, and keep the leading
+ * `maxRank` singular triplets (Eckart–Young optimal low-rank approximation).
+ * The two emitted cores are U·√Σ and √Σ·Vᵀ so that core0 ⊗ core1 reconstructs
+ * the rank-χ approximant. `truncationError` is the real discarded-energy ratio.
+ * Replaces the prior array-slice placeholder.
  */
 export function moonlabTTDecompose(tensor: Float32Array, maxRank: number = 8): TensorTrain {
-  const cores: Float32Array[] = [];
-  const ranks: number[] = [];
+  const len = tensor.length;
+  if (len <= 1) return { cores: [tensor.slice()], ranks: [1], truncationError: 0 };
 
-  // Simple TT-SVD decomposition (full version uses SVD)
-  let current = tensor;
-  while (current.length > 1) {
-    const rank = Math.min(maxRank, Math.floor(Math.sqrt(current.length)));
-    ranks.push(rank);
-    const core = current.slice(0, rank);
-    cores.push(core);
-    current = current.slice(rank);
+  // Reshape flat tensor into an r×c matrix as square as possible, capped at MPS_MAX_DIM.
+  let r = Math.min(Math.floor(Math.sqrt(len)), 64);
+  if (r < 1) r = 1;
+  const c = Math.ceil(len / r);
+  const rows: number[][] = [];
+  for (let i = 0; i < r; i++) {
+    const row: number[] = new Array(c).fill(0);
+    for (let j = 0; j < c; j++) {
+      const idx = i * c + j;
+      row[j] = idx < len ? (tensor[idx] ?? 0) : 0;
+    }
+    rows.push(row);
+  }
+  const A: Mat = fromRows(rows);
+  const { U, S, V } = svd(A);
+  const chi = Math.max(1, Math.min(maxRank, S.length));
+
+  const core0 = new Float32Array(r * chi); // U·√Σ
+  const core1 = new Float32Array(chi * c); // √Σ·Vᵀ
+  for (let t = 0; t < chi; t++) {
+    const root = Math.sqrt(Math.max(0, S[t] ?? 0));
+    for (let i = 0; i < r; i++) core0[i * chi + t] = (U.data[i * S.length + t] ?? 0) * root;
+    for (let j = 0; j < c; j++) core1[t * c + j] = root * (V.data[j * S.length + t] ?? 0);
   }
 
-  return { cores, ranks };
+  // Genuine discarded-energy ratio (Frobenius): √(Σ_{k≥χ} σ²) / ‖A‖_F.
+  let kept = 0;
+  let total = 0;
+  for (let t = 0; t < S.length; t++) {
+    const e = (S[t] ?? 0) * (S[t] ?? 0);
+    total += e;
+    if (t < chi) kept += e;
+  }
+  const truncationError = total > 0 ? Math.sqrt(Math.max(0, total - kept) / total) : 0;
+
+  return { cores: [core0, core1], ranks: [chi], truncationError };
 }
 
 /**
@@ -194,22 +233,6 @@ export function moonlabTTReconstruct(tt: TensorTrain): Float32Array {
 }
 
 // === LIBIRREP FULL INTEGRATION ===
-
-/** Simple Legendre polynomial approximation (Tsotchke libirrep). */
-function legendrePoly(n: number, x: number): number {
-  if (n === 0) return 1;
-  if (n === 1) return x;
-  if (n === 2) return 0.5 * (3 * x * x - 1);
-  // Higher orders use recurrence relation
-  let p0 = 1;
-  let p1 = x;
-  for (let i = 2; i <= n; i++) {
-    const p2 = ((2 * i - 1) * x * p1 - (i - 1) * p0) / i;
-    p0 = p1;
-    p1 = p2;
-  }
-  return p1;
-}
 
 /** Character table for a group (full representation theory). */
 export interface CharacterTable {
@@ -259,39 +282,16 @@ export function libirrepClebschFull(
   m2: number,
   m: number,
 ): number {
-  // Simplified CG coefficient (full version uses Racah formula)
-  if (Math.abs(m1 + m2 - m) > 1e-6) return 0;
-  if (j < Math.abs(j1 - j2) || j > j1 + j2) return 0;
-
-  // Wigner 3j symbol approximation
-  const phase = Math.pow(-1, j1 - j2 + m) || 1;
-  const numerator = Math.sqrt(
-    (2 * j + 1) * factorial(j1 + j2 - j) * factorial(j1 - j2 + j) * factorial(-j1 + j2 + j),
-  );
-  const denominator = Math.sqrt(
-    factorial(j1 + j2 + j + 1) *
-      factorial(j1 - m1) *
-      factorial(j1 + m1) *
-      factorial(j2 - m2) *
-      factorial(j2 + m2) *
-      factorial(j - m) *
-      factorial(j + m),
-  );
-
-  return phase * (numerator / (denominator || 1));
-}
-
-function factorial(n: number): number {
-  if (n < 0) return 0;
-  if (n <= 1) return 1;
-  let result = 1;
-  for (let i = 2; i <= n; i++) result *= i;
-  return result;
+  // Genuine Racah closed form (delegates to the verified math/irrep.ts kernel).
+  // Note arg order: irrep.clebschGordan is (j1, m1, j2, m2, J, M).
+  return clebschGordan(j1, m1, j2, m2, j, m);
 }
 
 /**
- * Compute Wigner D-matrix (full rotation matrix).
- * Based on libirrep/mirrors/libirrep/wigner_d.h
+ * Wigner D-matrix D^j_{m'm}(α,β,γ) = e^{-i m'α} d^j_{m'm}(β) e^{-i mγ}.
+ * Returns the REAL part (cos of the Euler phase) times the genuine reduced
+ * rotation element `wignerSmallD` from math/irrep.ts, laid out row-major over
+ * the (2j+1)² elements. Replaces the prior Legendre approximation.
  */
 export function libirrepWignerD(
   j: number,
@@ -306,7 +306,7 @@ export function libirrepWignerD(
     for (let m2 = -j; m2 <= j; m2++) {
       const idx = (m1 + j) * dim + (m2 + j);
       const phase = -(m1 * alpha + m2 * gamma);
-      matrix[idx] = Math.cos(phase) * legendrePoly(2 * j, Math.cos(beta));
+      matrix[idx] = Math.cos(phase) * wignerSmallD(j, m1, m2, beta);
     }
   }
 
@@ -314,8 +314,7 @@ export function libirrepWignerD(
 }
 
 /**
- * Compute 6j symbol (full recoupling coefficient).
- * Based on libirrep/mirrors/libirrep/sixj.h
+ * Wigner 6j recoupling symbol — genuine Racah W-formula (delegates to math/irrep.ts).
  */
 export function libirrepSixJ(
   j1: number,
@@ -325,22 +324,11 @@ export function libirrepSixJ(
   j5: number,
   j6: number,
 ): number {
-  // Simplified 6j symbol (full version uses Racah formula)
-  const sum = j1 + j2 + j3 + j4 + j5 + j6;
-  if (sum % 2 !== 0) return 0;
-
-  // Triangle conditions
-  if (j3 < Math.abs(j1 - j2) || j3 > j1 + j2) return 0;
-  if (j6 < Math.abs(j2 - j4) || j6 > j2 + j4) return 0;
-  if (j5 < Math.abs(j1 - j4) || j5 > j1 + j4) return 0;
-
-  // Approximate value
-  return Math.pow(-1, sum) / Math.sqrt((2 * j1 + 1) * (2 * j4 + 1));
+  return wigner6j(j1, j2, j3, j4, j5, j6);
 }
 
 /**
- * Compute 9j symbol (full recoupling coefficient).
- * Based on libirrep/mirrors/libirrep/ninej.h
+ * Wigner 9j recoupling symbol — genuine single sum over three 6j (delegates to math/irrep.ts).
  */
 export function libirrepNineJ(
   j11: number,
@@ -353,11 +341,7 @@ export function libirrepNineJ(
   j32: number,
   j33: number,
 ): number {
-  // Simplified 9j symbol (full version uses sum over 6j symbols)
-  const sum = j11 + j12 + j13 + j21 + j22 + j23 + j31 + j32 + j33;
-  if (sum % 2 !== 0) return 0;
-
-  return Math.pow(-1, sum) * 0.1; // Approximation
+  return wigner9j(j11, j12, j13, j21, j22, j23, j31, j32, j33);
 }
 
 /**

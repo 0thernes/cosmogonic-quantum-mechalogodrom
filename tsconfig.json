@@ -18,5 +18,5 @@
     "skipLibCheck": true
   },
   "include": ["src", "server.ts", "tests", "bench", "scripts"],
-  "exclude": ["src/math/moonlab-tensor.ts", "src/sim/tsotchke-deep-wire.ts"]
+  "exclude": ["src/math/moonlab-tensor.ts"]
 }

@@ -13,6 +13,8 @@ import {
   clebschGordan,
   isValidProjection,
   irrepMultiplicity,
+  wigner6j,
+  wigner9j,
   IRREP_J_MAX,
 } from '../src/math/irrep';
 
@@ -128,5 +130,44 @@ describe('helpers', () => {
   test('IRREP_J_MAX keeps factorials exact (sanity)', () => {
     expect(IRREP_J_MAX).toBeGreaterThanOrEqual(4);
     expect(wignerSmallD(IRREP_J_MAX + 1, 0, 0, 0.5)).toBe(0); // out of range → 0
+  });
+});
+
+describe('Wigner 6j / 9j recoupling symbols (Racah)', () => {
+  // Tabulated reference values (Edmonds; Varshalovich tables).
+  test('tabulated 6j reference values', () => {
+    expect(Math.abs(wigner6j(1, 1, 1, 1, 1, 1) - 1 / 6)).toBeLessThan(TOL);
+    expect(Math.abs(wigner6j(2, 2, 2, 2, 2, 2) - -3 / 70)).toBeLessThan(TOL);
+    // {a b 0; c d e} closed form ⇒ {1 1 0;1 1 1} = (−1)^(1+1+1)/√((2·1+1)(2·1+1)) = −1/3
+    expect(Math.abs(wigner6j(1, 1, 0, 1, 1, 1) - -1 / 3)).toBeLessThan(TOL);
+  });
+
+  test('6j is invariant under column permutation (swap cols 1↔2)', () => {
+    const a = wigner6j(1, 2, 2, 2, 1, 1);
+    const b = wigner6j(2, 1, 2, 1, 2, 1);
+    expect(Math.abs(a - b)).toBeLessThan(TOL);
+  });
+
+  test('6j vanishes when a triangle rule fails', () => {
+    // (j1 j2 j3) = (1,1,5) violates the triangle |j1−j2|≤j3≤j1+j2.
+    expect(wigner6j(1, 1, 5, 1, 1, 1)).toBe(0);
+  });
+
+  test('6j returns 0 above IRREP_J_MAX (range guard)', () => {
+    expect(wigner6j(IRREP_J_MAX + 1, 1, 1, 1, 1, 1)).toBe(0);
+  });
+
+  test('9j is finite, real, and uses the 6j sum (no ±0.1 stub)', () => {
+    const v = wigner9j(1, 1, 2, 1, 1, 2, 2, 2, 2);
+    expect(Number.isFinite(v)).toBe(true);
+    // The discredited stub returned ±0.1 for any parity-even sum; the real value here is small & ≠ 0.1.
+    expect(Math.abs(Math.abs(v) - 0.1)).toBeGreaterThan(1e-3);
+    // {1 1 1;1 1 1;1 1 1} = 0 exactly (known).
+    expect(Math.abs(wigner9j(1, 1, 1, 1, 1, 1, 1, 1, 1))).toBeLessThan(TOL);
+  });
+
+  test('9j vanishes when no valid intermediate x exists', () => {
+    // Choose triangles with empty overlap for x.
+    expect(wigner9j(0, 0, 0, 0, 0, 0, 3, 3, 0)).toBe(0);
   });
 });
