@@ -7,6 +7,12 @@
  * This script reverses that double-encoding for the affected runs and rewrites the
  * file as clean UTF-8 (no BOM). It is idempotent: clean files are left untouched.
  *
+ * It ALSO repairs a second corruption class the loop introduces: bare curly quotes
+ * used as DASHES — em dashes (—) written as ” (U+201D) and en dashes (–) written as
+ * “ (U+201C). Those single chars sit below the UTF-8 lead-byte range, so the
+ * double-encoding reversal above cannot see them; `fixCurlyDashes` repairs them with
+ * tightly-scoped rules that never touch legitimate “…” quotations.
+ *
  * The companion gate test `tests/docs-truth-law.test.ts` FAILS if any mojibake
  * remains, so `bun run check` / CI enforce clean encoding no matter what wrote the
  * file. Run manually with:  bun scripts/normalize-docs.ts
@@ -104,6 +110,24 @@ export function fixMojibake(input: string): string {
   return out;
 }
 
+/**
+ * Repair the *other* corruption class: bare curly quotes used as DASHES. The loop
+ * has written em dashes (—) as ” (U+201D) and en dashes (–) as “ (U+201C). We fix
+ * them with tightly-scoped rules that never touch legitimate “…” quotations:
+ *   • en dash:  a “ wedged tightly between word chars / brackets  →  –
+ *   • em dash:  a ” that immediately follows a space               →  —
+ * A real OPENING quote “ is always preceded by whitespace, so the en-dash rule
+ * (which requires a word char on the left) skips it; a real CLOSING quote ” is
+ * never space-preceded, so the em-dash rule skips it. Lookbehind/lookahead keep the
+ * surrounding characters intact and let adjacent ranges (a“b“c) repair in one pass.
+ * Idempotent: the output contains neither corrupted form.
+ */
+export function fixCurlyDashes(input: string): string {
+  return input
+    .replace(/(?<=[0-9A-Za-z)\]])\u201C(?=[0-9A-Za-z(])/g, '\u2013')
+    .replace(/(?<= )\u201D/g, '\u2014');
+}
+
 /** Strip a UTF-8 BOM if present. */
 function stripBom(s: string): string {
   return s.charCodeAt(0) === 0xfeff ? s.slice(1) : s;
@@ -111,10 +135,12 @@ function stripBom(s: string): string {
 
 const TARGETS = ['README.md', 'CHANGELOG.md', 'ROADMAP.md'];
 async function docFiles(): Promise<string[]> {
-  const glob = new Bun.Glob('docs/**/*.md');
   const out = [...TARGETS];
-  for await (const f of glob.scan('.')) out.push(f);
-  return out;
+  for (const pat of ['docs/**/*.md', 'masters/**/*.xml']) {
+    const glob = new Bun.Glob(pat);
+    for await (const f of glob.scan('.')) out.push(f);
+  }
+  return [...new Set(out)];
 }
 
 const checkOnly = process.argv.includes('--check');
@@ -123,7 +149,7 @@ for (const rel of await docFiles()) {
   const file = Bun.file(rel);
   if (!(await file.exists())) continue;
   const original = await file.text();
-  const fixed = stripBom(fixMojibake(original));
+  const fixed = fixCurlyDashes(stripBom(fixMojibake(original)));
   if (fixed !== original) {
     dirty++;
     if (checkOnly) console.log(`mojibake: ${rel}`);

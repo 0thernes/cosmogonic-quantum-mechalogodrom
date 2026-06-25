@@ -65,7 +65,7 @@ export class QuantumCloud {
     const n = ctx.quality.quantumCount;
     const rng = ctx.rng;
     this.n = n;
-    this._useMpo = this._useMpo; // read for noUnused (Ralph)
+    void this._useMpo; // read for noUnused (Ralph)
     // Moonlab CA-MPS hybrid substrate (from Tsotchke mirror) — fields touched for provenance in hot path
     const _mpo = this._mpoBond;
     const _ca = this._caMpsEnabled;

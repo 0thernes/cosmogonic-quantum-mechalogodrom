@@ -79,6 +79,12 @@ const NHSI_SURFACES = [
   'masters/LEGENDARY-SUPER-SAIYAN-BROLY-MANIFESTO.xml',
   'masters/GALAXOGONIC-WARHAMMER-POWER-MODE-DR-MANHATTAN.xml',
   'masters/ORACLE-ARCHITECT-OF-THE-DARKSIDE-STARKILLER.xml',
+  // Public GitHub-Pages surfaces + repo manifest: the highest-visibility front pages,
+  // where the loop has historically re-inflated the retired numbers (144 faculties /
+  // 15 emergence angles) after the honesty audit. Gated here so they can never drift back.
+  'docs.html',
+  'specs.html',
+  'package.json',
 ];
 
 /** Banned affirmative overclaims (verified false). `label` is shown when one is found. */
