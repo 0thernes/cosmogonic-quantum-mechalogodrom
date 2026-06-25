@@ -57,6 +57,26 @@ describe('docs truth law — encoding', () => {
 });
 
 /**
+ * Deployed HTML surfaces (GitHub Pages: docs.html / specs.html / index.html). The .md normalizer and
+ * the encoding test above never scanned `.html`, so lossy U+FFFD replacement chars (a mangled `—`/`·`)
+ * and a broken `class="<FFFD>badge<FFFD>"` once shipped straight to the live site with green CI. This
+ * gate closes that hole: the same MOJIBAKE signature (which includes U+FFFD) is forbidden in the HTML.
+ */
+const HTML_SURFACES = ['index.html', 'docs.html', 'specs.html'];
+
+describe('docs truth law — encoding (deployed HTML surfaces)', () => {
+  test('no UTF-8 mojibake or lossy U+FFFD in index.html / docs.html / specs.html', async () => {
+    const offenders: string[] = [];
+    for (const rel of HTML_SURFACES) {
+      const file = Bun.file(rel);
+      if (!(await file.exists())) continue;
+      if (MOJIBAKE.test(await file.text())) offenders.push(rel);
+    }
+    expect(offenders).toEqual([]);
+  });
+});
+
+/**
  * Public surfaces whose NHSI claims must match the verified code (2026-06-21 honesty audit). The
  * autonomous doc loop repeatedly re-inflates these to unsupported ACHIEVEMENT numbers (144 faculties,
  * 15 emergence angles, "14/14 achieved", "25 Archons fully implemented", "100% live", "sentience
@@ -79,6 +99,11 @@ const NHSI_SURFACES = [
   'masters/LEGENDARY-SUPER-SAIYAN-BROLY-MANIFESTO.xml',
   'masters/GALAXOGONIC-WARHAMMER-POWER-MODE-DR-MANHATTAN.xml',
   'masters/ORACLE-ARCHITECT-OF-THE-DARKSIDE-STARKILLER.xml',
+  // Deployed front-page HTML — once shipped "144 faculties" / "15 emergence angles" to the live site
+  // because this list did not police them. Now policed like every other public surface.
+  'index.html',
+  'docs.html',
+  'specs.html',
 ];
 
 /** Banned affirmative overclaims (verified false). `label` is shown when one is found. */

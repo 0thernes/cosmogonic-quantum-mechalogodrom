@@ -1,8 +1,8 @@
-# Tsotchke Corpus Integration Report ” Wave 2-4 Complete
+# Tsotchke Corpus Integration Report — Wave 2-4 Complete
 
 **Date:** 2026-06-20
 **Mandate:** Full integration of Tsotchke quantum research corpus into Cosmogonic Quantum Mechalogodrom.
-**Status:** ✅ Waves 2-4 Complete ” Math Layer, Sim Layer, World/Physics integration finished.
+**Status:** ✅ Waves 2-4 Complete — Math Layer, Sim Layer, World/Physics integration finished.
 
 ## Executive Summary
 
@@ -15,36 +15,36 @@ The Tsotchke Full Corpus Integration (Ralph Loop) has successfully completed Wav
 
 ## Completed Waves
 
-### Wave 1 (Foundation) ” ✅ Complete
+### Wave 1 (Foundation) — ✅ Complete
 
 - Audit + plan + contract amendments
 - Provenance tracking everywhere
 - Enhanced godform/world with full corpus archetypes
 - Documentation infrastructure established
 
-### Wave 2 (Math Layer) ” ✅ Complete
+### Wave 2 (Math Layer) — ✅ Complete
 
 **New Math Leaves Created:**
 
-1. **`src/math/eshkol-ad.ts`** ” Reverse-mode automatic differentiation
+1. **`src/math/eshkol-ad.ts`** — Reverse-mode automatic differentiation
    - Wengert tape with 32-level capacity
    - Operations: ADD, SUB, MUL, DIV, POW, SIN, COS, EXP, LOG, SQRT, NEG, ABS, RELU, SIGMOID, TANH
    - Deterministic gradient computation via chain rule
    - Allocation-free hot paths
 
-2. **`src/math/moonlab-tensor.ts`** ” Full tensor contraction
+2. **`src/math/moonlab-tensor.ts`** — Full tensor contraction
    - MPS/TTN/MERA tensor network operations
    - MPO (Matrix Product Operator) sweep steps
    - Qualia manifold contraction for consciousness substrates
    - ULG browser triad handoff patterns
 
-3. **`src/math/libirrep-symmetry.ts`** ” Irreducible representation symmetry
+3. **`src/math/libirrep-symmetry.ts`** — Irreducible representation symmetry
    - Clebsch-Gordan coefficients for angular momentum coupling
    - Wigner-D matrix elements for rotations
    - Spherical harmonics Y_l^m(θ, φ)
    - Libirrep symmetry factors for quantum state analysis
 
-4. **`src/math/quantum-qrng-full.ts`** ” Enhanced quantum-inspired RNG
+4. **`src/math/quantum-qrng-full.ts`** — Enhanced quantum-inspired RNG
    - Bell state verification
    - 8-qubit phase array with noise simulator
    - 16-slot entropy pool with physical-constant mixing
@@ -55,31 +55,31 @@ The Tsotchke Full Corpus Integration (Ralph Loop) has successfully completed Wav
 - Updated `docs/MODULE-CONTRACTS.md` for new math leaves
 - Updated `docs/BENCHMARKS.md` with new hot paths
 
-### Wave 3 (Sim Layer) ” ✅ Complete
+### Wave 3 (Sim Layer) — ✅ Complete
 
 **New Simulation Substrates Created:**
 
-1. **`src/sim/eshkol-bridge.ts`** ” Eshkol consciousness engine
+1. **`src/sim/eshkol-bridge.ts`** — Eshkol consciousness engine
    - Three-substrate model: logic, inference, workspace
    - GWT (Global Workspace Theory) broadcast winner
    - Belief entropy calculation
    - Central-difference AD gradient computation
    - Eshkol dual numbers for automatic differentiation
 
-2. **`src/sim/moonlab-vqe.ts`** ” Variational Quantum Eigensolver
+2. **`src/sim/moonlab-vqe.ts`** — Variational Quantum Eigensolver
    - Eshkol AD integration for parameter optimization
    - VQE ansatz with rotation angles (θ, φ)
    - Gradient descent optimization
    - Energy proxy for Hamiltonian ground state
 
-3. **`src/sim/libirrep-qec.ts`** ” Quantum Error Correction decoding
+3. **`src/sim/libirrep-qec.ts`** — Quantum Error Correction decoding
    - MWPM (Minimum Weight Perfect Matching) decoder
    - BP-OSD (Belief Propagation OSD) decoder
    - Surface code syndrome calculation
    - Toric code syndrome with periodic boundaries
    - QEC decoding proxy for stability metrics
 
-4. **`src/sim/quantum-quake-physics.ts`** ” QGE physics integration
+4. **`src/sim/quantum-quake-physics.ts`** — QGE physics integration
    - Quantum Geometric Tensor (QGE) metric computation
    - Berry curvature calculation
    - Fubini-Study distance measurement
@@ -92,7 +92,7 @@ The Tsotchke Full Corpus Integration (Ralph Loop) has successfully completed Wav
 - **SuperBody:** Quantum-quake morph, tensor pulses for body dynamics
 - **World:** Quantum-quake physics for interaction perturbations
 
-### Wave 4 (World/Physics) ” ✅ Complete
+### Wave 4 (World/Physics) — ✅ Complete
 
 **World System Integration:**
 
@@ -107,11 +107,11 @@ The Tsotchke Full Corpus Integration (Ralph Loop) has successfully completed Wav
 - `src/sim/super-body.ts`: Wired QGE aliveness, tensor pulses, QEC stability into morph calculations
 - `src/sim/super-mind.ts`: Eshkol AD tape, Moonlab tensor for predictor error
 
-### Wave 5 (UI/Bridge + Web) ” ✅ Complete
+### Wave 5 (UI/Bridge + Web) — ✅ Complete
 
 **ULG Web Integration:**
 
-- **`src/ui/ulg-bridge.ts`** ” Universal Language Gateway bridge
+- **`src/ui/ulg-bridge.ts`** — Universal Language Gateway bridge
   - Browser triad handoff patterns
   - ULG resonance calculation
   - Pulse/sync/handoff message generation
@@ -121,12 +121,12 @@ The Tsotchke Full Corpus Integration (Ralph Loop) has successfully completed Wav
 
 Updated `THIRD-PARTY-NOTICES.md` with 4 new ported primitives:
 
-1. **Eshkol AD** ” Reverse-mode automatic differentiation (Wengert tape)
-2. **Moonlab VQE** ” Variational Quantum Eigensolver with autograd
-3. **Libirrep QEC** ” MWPM/BP-OSD decoding for surface/toric codes
-4. **Quantum Quake Physics** ” QGE integration for quantum simulation
+1. **Eshkol AD** — Reverse-mode automatic differentiation (Wengert tape)
+2. **Moonlab VQE** — Variational Quantum Eigensolver with autograd
+3. **Libirrep QEC** — MWPM/BP-OSD decoding for surface/toric codes
+4. **Quantum Quake Physics** — QGE integration for quantum simulation
 
-All ports properly attributed to Tsotchke (MIT, © 2024“2026 tsotchke).
+All ports properly attributed to Tsotchke (MIT, © 2024–2026 tsotchke).
 
 ## Integration Plan Updated
 
@@ -134,7 +134,7 @@ Updated `docs/TSOTCHKE-CORPUS-INTEGRATION-PLAN.md` with completion status for Wa
 
 ## Gate Verification
 
-**`bun run check` ” ✅ PASS**
+**`bun run check` — ✅ PASS**
 
 - Format: ✅ Prettier
 - Typecheck: ✅ TypeScript strict
@@ -167,24 +167,24 @@ Updated `docs/TSOTCHKE-CORPUS-INTEGRATION-PLAN.md` with completion status for Wa
 
 ## Remaining Work (Future Waves)
 
-### Wave 5 (UI/Bridge + Web) ” Partial Complete
+### Wave 5 (UI/Bridge + Web) — Partial Complete
 
 - ✅ ULG bridge created
 - ⏳ Optional WASM bridge notes
 - ⏳ Web integration into super-panel/observatory
 
-### Wave 6 (Native + Perf) ” Pending
+### Wave 6 (Native + Perf) — Pending
 
 - Selective C from mirrors into `native/` (via facade)
 - Performance optimization for hot paths
 
-### Wave 7 (Tests/Bench/Receipts) ” Pending
+### Wave 7 (Tests/Bench/Receipts) — Pending
 
 - Goldens for new modules
 - New benchmarks (tensor contraction, AD tape, irrep)
 - Receipts law updates (already done for test count)
 
-### Wave 8 (Docs/Audit/Close) ” Pending
+### Wave 8 (Docs/Audit/Close) — Pending
 
 - Full ERM update
 - Final CORPUS_INTEGRATION_REPORT (this document)
@@ -210,7 +210,7 @@ Waves 2-4 of the Tsotchke Full Corpus Integration are complete. The Cosmogonic Q
 
 All work follows the binding rules (MODULE-CONTRACTS + PHILOSOPHY), passes the full gate (`bun run check`), and maintains determinism and allocation-free hot paths as required by the Manhattan law.
 
-**"Grow What Thou Wilt" ” The primordial digital biologics are now wired with quantum consciousness substrates.**
+**"Grow What Thou Wilt" — The primordial digital biologics are now wired with quantum consciousness substrates.**
 
 ---
 
