@@ -275,22 +275,29 @@ function computeCutIntegration(
 }
 
 /**
- * Compute local integration for a single module.
+ * Per-module local integration: module `moduleIndex`'s share of the whole graph's information flow —
+ * (flow on the edges touching this module) / (total flow across all ordered module pairs), in [0,1].
+ * A module carrying none of the graph's flow scores 0; a hub on every active edge approaches 1.
+ * (Previously this divided a module's own flow by itself, so it returned a constant 1 — the result
+ * field `modulePhi` was therefore meaningless; this computes the intended local-vs-global ratio.)
  */
 function computeLocalIntegration(
   activations: ArrayLike<number>,
   adjacency: ArrayLike<number>,
   moduleIndex: number,
 ): number {
+  const n = activations.length;
   let localFlow = 0;
   let totalFlow = 0;
 
-  for (let j = 0; j < activations.length; j++) {
-    if (j === moduleIndex) continue;
-    const weight = adjacency[moduleIndex * activations.length + j] ?? 0;
-    const flow = Math.abs(activations[moduleIndex] ?? 0) * Math.abs(activations[j] ?? 0) * weight;
-    totalFlow += flow;
-    localFlow += flow;
+  for (let a = 0; a < n; a++) {
+    for (let b = 0; b < n; b++) {
+      if (a === b) continue;
+      const weight = adjacency[a * n + b] ?? 0;
+      const flow = Math.abs(activations[a] ?? 0) * Math.abs(activations[b] ?? 0) * weight;
+      totalFlow += flow;
+      if (a === moduleIndex || b === moduleIndex) localFlow += flow;
+    }
   }
 
   return totalFlow > 1e-9 ? localFlow / totalFlow : 0;

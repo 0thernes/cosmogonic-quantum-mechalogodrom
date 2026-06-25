@@ -671,7 +671,7 @@ export class SuperMind {
       this.affect.params +
       this.quantum.params +
       this.meta.params;
-    this._useTensor = this._useTensor; // read for noUnused (Ralph tensor wire)
+    void this._useTensor; // read for noUnused (no-self-assign; Moonlab tensor wire)
     // The quantum mind draws its seed LAST (after every weight is initialised) so it never perturbs
     // the weight stream — a dedicated child stream, so its per-beat Born sample stays independent.
     // V84: that child stream is now the Eshkol qubit-RNG itself (ported gate-for-gate from
