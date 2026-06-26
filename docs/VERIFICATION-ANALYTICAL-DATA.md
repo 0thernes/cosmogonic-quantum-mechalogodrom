@@ -209,3 +209,9 @@ methodology + the architectural facts so future audits don't re-chase the false 
   `extras`/`extraMats` and frees them on despawn; `super-body` was the lone real gap (freed only 3 of 9
   materials) — fixed (`a6b67ce`). **Rule for future audits: a high create/dispose ratio is only a leak if
   the meshes are rebuilt during the run; boot-once GPU resources are covered by `forceContextLoss`.**
+- **Time complexity (the entity hot path):** no accidental O(n²) over the 50,000-entity population — the
+  main loop uses the spatial hash (O(n), proven by `bench/scale.ts`: 50k in ~60 ms). Every O(n²) in the
+  tree is over a **small fixed** collection: faculties pairwise coupling (n=100 → 10k ops),
+  `factions.ts` `n×n` weight matrix (n=8), per-faculty/archon/qubit kernels (≤100/25/6). The high-loop
+  files (`super-mind`, `libirrep-qec`, `nqs-vmc-learning`, `tom-pantheon`) iterate these fixed sizes, not
+  the population — so they are O(constant), not O(entities). No quadratic blow-up reachable at scale.
