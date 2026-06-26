@@ -20,12 +20,9 @@ gate-enforced (`bun run sync:check`). The one-glance reference is
   novelty defense. Regenerable via [`scripts/alife-comparison-stats.ts`](../../scripts/alife-comparison-stats.ts)
   from the source CSV [2026-06-26-alife-comparison-matrix.csv](./2026-06-26-alife-comparison-matrix.csv);
   charts + stats JSON in [assets/](./assets/).
-- [2026-06-17-STATE-OF-THE-ART-COMBINED.md](./2026-06-17-STATE-OF-THE-ART-COMBINED.md) — unified
-  state-of-the-art assessment (whole repository + apex Super Creature).
-- [2026-06-17-STATE-OF-THE-ART-WHOLE-REPO.md](./2026-06-17-STATE-OF-THE-ART-WHOLE-REPO.md) — 360° survey of
-  the whole repository versus the field.
-- [2026-06-17-STATE-OF-THE-ART-SUPER-CREATURE.md](./2026-06-17-STATE-OF-THE-ART-SUPER-CREATURE.md) — deep
-  dive on the apex quantum-cognitive mind.
+- [2026-06-17-STATE-OF-THE-ART-COMBINED.md](./2026-06-17-STATE-OF-THE-ART-COMBINED.md) — the single,
+  unified state-of-the-art assessment: the whole repository (Part I), the apex Super Creature (Part II),
+  and the consciousness scorecard + verdict (Part III).
 - [2026-06-20-RESEARCH-BEDROCK.md](./2026-06-20-RESEARCH-BEDROCK.md) — the 2026 literature the project
   stands on (Established / Emerging / Fringe).
 - [2026-06-20-SUPER-REPORT-PATH-TO-NHSI-AND-SENTIENCE.md](./2026-06-20-SUPER-REPORT-PATH-TO-NHSI-AND-SENTIENCE.md)

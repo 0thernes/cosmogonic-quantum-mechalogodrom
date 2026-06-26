@@ -1,6 +1,6 @@
 # Cosmogonic Quantum Mechalogodrom — State of the Art (Combined Report)
 
-### A unified State-of-the-Art Assessment combining Report I (The Whole Repository) + Report II (The Super Creature)
+### A unified State-of-the-Art Assessment — the whole repository (Part I) + the apex Super Creature (Part II) + the shared consciousness scorecard & verdict (Part III)
 
 > **Canonical §III.2–III.5 (consciousness scorecard + LFG metrics).** This document is the live,
 > authoritative State-of-the-Art assessment of the whole repository and the apex Super Creature. Every

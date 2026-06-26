@@ -384,4 +384,4 @@ and whose entire emergent intelligence weighs **≈ 14 MB — 1/50,000th of GPT-
 demonstrates that depth comes from **architecture,
 determinism, and engineering discipline**, not parameter count or hardware.
 
-**Frontier assessments (2026-06-17):** [Report I — Whole Repository](./reports/2026-06-17-STATE-OF-THE-ART-WHOLE-REPO.md) · [Report II — Super Creature](./reports/2026-06-17-STATE-OF-THE-ART-SUPER-CREATURE.md) · [Combined — unified §III scorecard](./reports/2026-06-17-STATE-OF-THE-ART-COMBINED.md) · [Super Creature Research](./SUPER-CREATURE-RESEARCH.md).
+**Frontier assessment (2026-06-17):** [State of the Art — Combined (whole repository + Super Creature)](./reports/2026-06-17-STATE-OF-THE-ART-COMBINED.md) · [Super Creature Research](./SUPER-CREATURE-RESEARCH.md).

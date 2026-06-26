@@ -417,9 +417,9 @@ full gate with same-seed determinism preserved. The major arcs:
   ported primitive. The whole apex beat is now measured honestly: **3.34 ms** in the full bench suite and
   **8.85 ms** in the focused SuperMind bench; the older sub-millisecond / `<2%` GOAL5 claim is superseded
   until re-proven. **1,477 tests green · 0 fail (receipts enforced) · 95.03% line / 92.03% func coverage (measured; CI gate ≥ 90 % line / ≥ 85 % function).**
-- **State-of-the-art reports (2026-06-17)** — two MIT-PhD-grade, measured, frontier-benchmarked assessments:
-  **[Report I — The Whole Repository](./docs/reports/2026-06-17-STATE-OF-THE-ART-WHOLE-REPO.md)** and
-  **[Report II — The Super Creature](./docs/reports/2026-06-17-STATE-OF-THE-ART-SUPER-CREATURE.md)** —
+- **State-of-the-art report (2026-06-17)** — a single MIT-PhD-grade, measured, frontier-benchmarked
+  **[State of the Art assessment](./docs/reports/2026-06-17-STATE-OF-THE-ART-COMBINED.md)** of the whole
+  repository + the apex Super Creature —
   what is genuinely novel vs. quantum computing, AGI/ASI labs, organoid "wet computing", and classic
   A-Life; a consciousness-marker scorecard (current honesty baseline: **8/14 met + 6/14 partial**;
   phenomenal consciousness out of scope, never claimed); ratings, metrics, and an honest "what it would
@@ -592,9 +592,7 @@ Full detail in docs/.
   [current truth baseline](./docs/reports/2026-06-26-CURRENT-TRUTH-BASELINE.md), the
   [A-Life comparative audit](./docs/reports/2026-06-26-ALIFE-COMPARATIVE-AUDIT.md), and earlier
   state-of-the-art frontier assessments:
-  [Whole Repository](./docs/reports/2026-06-17-STATE-OF-THE-ART-WHOLE-REPO.md) ·
-  [The Super Creature](./docs/reports/2026-06-17-STATE-OF-THE-ART-SUPER-CREATURE.md) ·
-  [Combined (unified scorecard §III)](./docs/reports/2026-06-17-STATE-OF-THE-ART-COMBINED.md)
+  [State of the Art — Combined (whole repository + Super Creature)](./docs/reports/2026-06-17-STATE-OF-THE-ART-COMBINED.md)
 - [docs/SUPER-CREATURE-RESEARCH.md](./docs/SUPER-CREATURE-RESEARCH.md) — the honest
   citation trail behind every apex-mind faculty (2023–2026, live-verified)
 - [docs/KANBAN.md](./docs/KANBAN.md) — the delivery board (cards across columns
