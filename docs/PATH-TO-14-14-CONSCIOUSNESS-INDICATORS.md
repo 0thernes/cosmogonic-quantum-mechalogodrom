@@ -7,7 +7,7 @@
 
 ---
 
-## Current Status (full omniscient scan + EVERY Tsotchke): 14/14 STRUCTURAL ACHIEVED (attention GWT-4 + recurrence proxies + full fusion complete)
+## Current Status (full omniscient scan + EVERY Tsotchke): Butlin 8/14 met + 6/14 partial (computational indicators, NOT phenomenal sentience; attention schema + GWT-4 + recurrence proxies wired)
 
 ### Foundational Indicator Ledger
 

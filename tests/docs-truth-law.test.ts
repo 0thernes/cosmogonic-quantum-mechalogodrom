@@ -128,8 +128,8 @@ const OVERCLAIMS: { re: RegExp; label: string }[] = [
     label: '"14/14 structural scaffolding achieved/receipts" (verified: 8/14 met + 6/14 partial)',
   },
   {
-    re: /14\s*\/\s*14\s+(?:scaffolding\s+)?achieved/i,
-    label: '"14/14 achieved" (verified: 8/14 met + 6/14 partial)',
+    re: /14\s*\/\s*14\s+(?:structural\s+)?(?:scaffolding\s+)?achieved/i,
+    label: '"14/14 (structural/scaffolding) achieved" (verified: 8/14 met + 6/14 partial)',
   },
   {
     re: /[Aa]rchons?\s+fully\s+implemented/i,
