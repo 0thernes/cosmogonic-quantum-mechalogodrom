@@ -1517,7 +1517,7 @@ sim=1 and within each sim variant.
 ## V9 — AGImAGNOSIS: minds, lineage, factions, artifacts, Copilot
 
 The era that gives the world intelligence, using pre-transformer techniques only (research:
-[research/PRE-TRANSFORMER-GAME-AI.md](research/PRE-TRANSFORMER-GAME-AI.md); reference:
+[PRE-2016-AI.md](./PRE-2016-AI.md); reference:
 [AI-SUBSYSTEM.md](AI-SUBSYSTEM.md)). HARD LINE: in-world minds are DETERMINISTIC (seeded classical
 AI in `src/sim/**`); the live LLM Copilot is a NON-deterministic shell organ (`src/server/**`,
 `src/ui/copilot.ts`) fenced out of sim logic — it can never touch `SimState` or the RNG stream.

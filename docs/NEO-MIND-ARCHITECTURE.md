@@ -59,8 +59,9 @@ Conscious-agent/Interface ✦ · Holonomic brain ✦
 ## The 100 base faculties (11 concentric strata)
 
 > The base cognitive blueprint below is 100 faculties across 11 strata. The shipped
-> `FacultiesPantheon` extends this to **144 total** by adding 44 brutal god-layer
-> faculties (Valkorion/Thanos/Broly/Knull-class) on top of this base — see
+> `FacultiesPantheon` instantiates these 100 (of which **~30 are genuinely deep-wired**
+> into the apex `think()`), plus a brutal god-layer of faculties
+> (Valkorion/Thanos/Broly/Knull-class) on top of this base — see
 > [NHSI-PROGRESS-DASHBOARD.md](./NHSI-PROGRESS-DASHBOARD.md) for the measured count.
 
 ✓ already built · ◆ from the 2026 research bedrock · ✦ novel design. (~40 already exist — buildable, not vapor.)

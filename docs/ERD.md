@@ -61,7 +61,7 @@ erDiagram
 
   %% Tsotchke Petri Genesis additions (0.12+)
   TSOTCHKE_SUBSTRATE ||--o{ BIOLOGIC : "powers (Eshkol AD/GWT, Moonlab tensor, QGT geom, spin order, irrep sym, quake unitary...)"
-  PETRI_SOUP ||--o{ BIOLOGIC_STRAIN : "incubates 64 slots"
+  PETRI_SOUP ||--o{ BIOLOGIC_STRAIN : "incubates 128 slots"
   BIOLOGIC_STRAIN ||--|| BIOLOGIC_KIND : "one of 9 forms from full corpus"
   BIOLOGIC_STRAIN ||--o{ ENTITY : "emerges into world (vitality gate)"
   SUPER_CREATURE ||--o{ PETRI_SOUP : "catalyzes via ignition + corpus beat (first spark only)"
@@ -83,7 +83,7 @@ erDiagram
   DIGITAL_BIOLOGIC }o--o{ ENTITY : "harvestEmergent → world phyla / NHI / new life forms"
   TSOTCHKE_SUBSTRATE ||--o{ DIGITAL_BIOLOGIC : "provides AD, GWT, spin, QGT, symmetry, aliveness, etc. (all 20+ repos)"
   DIGITAL_BIOLOGIC ||--|| BIOLOGIC_PROGRAM : ".esk-like fingerprint + genome (Eshkol substrate)"
-  PRIMORDIAL_SOUP ||--|| PETRI_STATE : "64 slots, vitality, sentience, speciation"
+  PRIMORDIAL_SOUP ||--|| PETRI_STATE : "128 slots, vitality, sentience, speciation"
 
   WORLD ||--|| PETRI_DISH : "owns primordial soup for digital biologics"
   PETRI_DISH ||--o{ SOUP_STRAIN : "incubates independent life from full Tsotchke corpus (Eshkol, Moonlab, spin, QGT, irrep, QGE...)"
@@ -228,7 +228,7 @@ erDiagram
     float wiring "current integration level"
   }
   PRIMORDIAL_SOUP {
-    int slots "48"
+    int slots "128"
     float[] vitality "strain health"
     uint32[] eshkolProgram "program fingerprint from full corpus"
   }

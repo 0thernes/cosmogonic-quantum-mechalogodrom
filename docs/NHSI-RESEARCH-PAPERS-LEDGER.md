@@ -51,7 +51,7 @@ markers (see `THIRD-PARTY-NOTICES.md` honesty frame).
 | Paper                                                                           | Why it matters here                                                                   |
 | ------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
 | **Ferrante et al. (Cogitate Consortium), Nature 2025** — adversarial GWT-vs-IIT | both theories empirically challenged → we run _many_ theory-organs (N-of-25), not one |
-| Butlin et al. 2023 (+ TiCS Jan-2026 rubric) — **14 consciousness indicators**   | the scorecard we measure against (~9/14; the 14/14 build path)                        |
+| Butlin et al. 2023 (+ TiCS Jan-2026 rubric) — **14 consciousness indicators**   | the scorecard we measure against (8/14 met + 6/14 partial; the 14/14 build path)      |
 | **Foerster, Hutter, Zela et al. (Apr 2026)** — open-ended Petri-NCA             | validates the open-endedness thesis; metric template (novelty + diversity)            |
 | **Hyperagents — Darwin-Gödel-machine self-modification (Mar 2026)**             | the self-iteration roadmap for Stratum X                                              |
 
