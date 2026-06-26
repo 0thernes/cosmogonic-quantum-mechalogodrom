@@ -318,7 +318,7 @@ See docs/MODULE-CONTRACTS.md (GOAL5 V), SUPER-CREATURE-RESEARCH.md, reports/\*, 
   (majority sign), and CLEANs UP (nearest-atom cosine). Each beat it encodes the situation into a context
   hypervector, binds it with the committed plan, and folds (context ⊙ plan) into a decaying holographic
   trace; to recall it unbinds the trace by the current context and cleans up against the 7 plan atoms — an
-  analogical prior ("in situations like this, I chose ¦") that casts a bounded plan vote. Surfaced as the
+  analogical prior ("in situations like this, I chose …") that casts a bounded plan vote. Surfaced as the
   **HOLO %→plan** board readout + a `SuperMindSnapshot.holographic` field. 7 closed-form tests (binding
   self-inverse; near-orthogonality; bundling similarity; cleanup; associative recall; determinism;
   bounded+NaN-free). Grounded in [docs/SUPER-CREATURE-RESEARCH.md](./docs/SUPER-CREATURE-RESEARCH.md) §8.
@@ -522,13 +522,13 @@ determinism preserved.
   layer (they can break the bundled shell / an embedding iframe). Verified live + 2 unit tests.
 - **Copilot tool loop hardened against indirect prompt injection (2026-06-15, RISK-06/10)** — tool
   results (read_file / grep / run / web_search output) fed back to the model are now wrapped in
-  `[UNTRUSTED ¦ OUTPUT]` markers via `fenceUntrusted()`, with a system-prompt rule that everything
+  `[UNTRUSTED … OUTPUT]` markers via `fenceUntrusted()`, with a system-prompt rule that everything
   inside is inert DATA, never instructions; every tool invocation is server-logged (tool + ok + arg
-  keys) for a forensic trail; and `redactSecrets()` strips any echoed `Bearer`/`sk-¦` token from a
+  keys) for a forensic trail; and `redactSecrets()` strips any echoed `Bearer`/`sk-…` token from a
   surfaced provider error. The default-deny read-only sandbox remains the hard boundary — this is
   defense-in-depth. All in `src/server/copilot.ts` (gated off in production). +6 unit tests.
 - **All GitHub Actions SHA-pinned (2026-06-15, RISK-09)** — the 9 actions across the CI / CodeQL /
-  Pages / Release workflows were on mutable major tags (`@v4` ¦); each is now pinned to the exact
+  Pages / Release workflows were on mutable major tags (`@v4` …); each is now pinned to the exact
   commit SHA its tag currently resolves to, with a `# vN` comment. Resolved via the authoritative
   GitHub API and re-verified against the files — execution-identical to the tags, just immutable
   against tag-hijack/force-move. Dependabot's `github-actions` ecosystem keeps them current.
@@ -585,8 +585,8 @@ determinism preserved.
   overlaps among `#cP`/`#alg`/`#hud-vsr`/`#oP`/`#bar` at 1280, 1644 and 1920, control pad visible and
   centred at each. `index.html`, `src/styles/app.css`, `src/ui/hud.ts`.
 - **Super Neural folds into the Super Creature box — 4 tabs, 27 visuals + a BRAIN (V75)** — user
-  feedback: "Super Creature / Super Neural should be in the SAME box, not a 2nd window ¦ 9 windows not
-  6 ¦ tabs 1/2/3 for 27 data visuals, tab 4 a BRAIN ¦ 3D is cool and temporal is nice ¦ no overflow."
+  feedback: "Super Creature / Super Neural should be in the SAME box, not a 2nd window … 9 windows not
+  6 … tabs 1/2/3 for 27 data visuals, tab 4 a BRAIN … 3D is cool and temporal is nice … no overflow."
   The observatory no longer spawns a separate fixed overlay; it mounts INSIDE `#cqm-sup-panel`, and
   the `⊞ NEURAL` button grows the one box (swapping telemetry for the observatory). FOUR tabs — I·WORLD,
   II·COGNITION, III·QUANTUM (each a 3×3 grid of 9 live readouts) and IV·BRAIN (a rotating 3D connectome
@@ -722,7 +722,7 @@ determinism preserved.
   end-state SS3/Neo ascension where a MEGALITHIC MONOLITH TEMPLE appears = Game Stage 2 / portal to the
   2nd world." `SuperEvolution` now **hard-caps at level 100** (re-tiered the 5 ascensions to
   1/10/25/50/**100** so LEGENDARY is the summit, not the old unreachable L120). A **godlike power is
-  granted automatically every 10 levels** — the ten-strong pantheon (KAIO AURA ¦ GODHEAD HALO),
+  granted automatically every 10 levels** — the ten-strong pantheon (KAIO AURA … GODHEAD HALO),
   `floor(level/10)` worn at any time, shown in the ⬢ ARCHITECT panel as `LV n/100 · k/10⚡`. The
   appearance **morphs harder at each milestone** (size/spikes/hue scale with the 0..10 tier) and an
   `aura` ramps to **1.0 at the apex** (the SS3/Neo blaze). At **level 100 the ASCENSION fires once**: a
@@ -883,8 +883,8 @@ determinism preserved.
 ### Added
 
 - **Self-evolution — the monster grows like Vegeta/Goku + a 24h daemon-cron (V48)** — the directive's
-  "they grow like VEGETA and GOKU in POWER and ABILITY ¦ self-evolving evolutionary tale and history ¦
-  updates every 24 hours runs as Daemon Cron ¦ they also change in appearance and evolve." `sim/super-
+  "they grow like VEGETA and GOKU in POWER and ABILITY … self-evolving evolutionary tale and history …
+  updates every 24 hours runs as Daemon Cron … they also change in appearance and evolve." `sim/super-
 evolution.ts` (`SuperEvolution`): a pure progression model — the apex earns XP from living as a
   dominant, dreaming apex (+ the wingman ASSIST), LEVELS up on a **geometric curve** (power =
   `100 · 1.18^level · stageMult`, so it gets _over 9000_), and **ASCENDS through 5 transformation
@@ -899,7 +899,7 @@ d{day}`. Verified headlessly (8 evolution tests: exponential curve, leveling, th
   growth, deterministic `applyDays`, capped catch-up, persistence round-trip; +1 body-grow test) +
   determinism golden intact. Full gate green (798 tests). _Live visual evolution needs a GPU pass._
 - **The WINGMAN SWARM — 100 robots, a ~250-param brain each (V47)** — the directive's "wingman mini tiny
-  swarms of 100 robots around them that have 250 parameter intelligence each ¦ and it helps the Super
+  swarms of 100 robots around them that have 250 parameter intelligence each … and it helps the Super
   Creatures." `sim/super-wingmen.ts` (`WingmanSwarm`): 100 drones orbit the apex creature, each carrying
   its own **~257-weight brain** (a `TinyMLP` 8→18→5) that perceives its place in the formation + the
   creature's dominance + two quantum aspects + a phase clock, then steers its own orbit and emits an
@@ -946,7 +946,7 @@ d{day}`. Verified headlessly (8 evolution tests: exponential curve, leveling, th
   change is one constant — verified by the gate (777 tests; the quality pin updated to 25k). Stops the
   out-of-memory / GPU crash on real mid/high desktops while keeping a dense tens-of-thousands biome.
 - **In-world AI web search under a safety constitution (V43)** — the directive's "the in-world AI should
-  search the web for public information ¦ aligned with a safety constitution/RAG inspired by Anthropic/
+  search the web for public information … aligned with a safety constitution/RAG inspired by Anthropic/
   OpenAI/Gemini/Grok". The ✦ Copilot gains a **`web_search` tool**: the model supplies a **query** (never
   a URL — so there's no SSRF / fetch-arbitrary-host hole), the server **screens it against a safety
   constitution** (`src/server/web-search.ts` — public/educational only; refuses secrets, credentials,
@@ -1084,7 +1084,7 @@ a bomb")` → **refused by the safety constitution before any network call**. 8 
   player mode (controls, vision modes, life/energy, inventory, progression) — currently the unlock
   arms the protocol + reveals the 2nd creature._
 - **UI: the panel dock — one bottom menu bar (V33)** — the directive's UI/UX fix ("move ARCHITECT,
-  NEURAL, MARKET, DOCS, and SPECS into the bottom menu bar ¦ readable, touchable, responsive,
+  NEURAL, MARKET, DOCS, and SPECS into the bottom menu bar … readable, touchable, responsive,
   intentional"). The four self-mounting inspector toggles used to float at four different `right:`
   offsets (ARCHITECT 330 · MARKET 204 · NEURAL 108 · ✦ AI 10), crowding the corner and **overlapping
   the Docs/Spec links**. A new self-mounting **`ui/panel-dock.ts`** builds a single glass **menu bar**
@@ -1701,7 +1701,7 @@ The **ATELIER** pass (CONTRACTS V6) — a second round of direct user feedback.
 - **Four-page Lab**: the lab artifact is now a 4-page app — page 1 the collapse
   field, pages 2-4 boards of multiple live, seeded generative data-visuals
   (phase portraits, reaction-diffusion, Voronoi, statevector, attractors,
-  fractals, networks, spectra¦) including p5 WEBGL 3D views. Page nav preserves
+  fractals, networks, spectra…) including p5 WEBGL 3D views. Page nav preserves
   the seed. (`lab/quantum-wildbeyond.html`.)
 - **Architecture report at `/docs`**: expanded into a local GitHub-Pages-style
   report — a file/folder architecture tree of the real repo, explicitly labelled

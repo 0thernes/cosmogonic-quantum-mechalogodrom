@@ -43,6 +43,12 @@ const MOJIBAKE = /â€|Â |ðŸ|Ã[¢-¿]|�/;
 // perl -i -CSD -pe 's/“–/—/g; s/”/—/g; s/“/–/g;' <file>.
 const CURLY_QUOTE = new RegExp('[\\u201C\\u201D]');
 
+// Sub-lead-byte + orphaned-tail corruption the MOJIBAKE pattern misses (these ride BELOW the multi-byte
+// range): U+0178 (surviving lead of a lost-lead emoji tail), the C1 control block U+0080-U+009F, and
+// U+00A6 (surviving tail of a horizontal ellipsis: U+2026 = E2 80 A6, lead bytes lost -> bare A6). None
+// is ever legitimate in this repo's prose. (\u escapes keep this file pure ASCII.)
+const SUBLEAD = new RegExp('[\\u0080-\\u009F\\u00A6\\u0178]');
+
 describe('docs truth law — encoding', () => {
   test('no UTF-8 mojibake or curly-quote dash-mangling in the canonical living docs', async () => {
     const offenders: string[] = [];
@@ -50,16 +56,11 @@ describe('docs truth law — encoding', () => {
       const file = Bun.file(rel);
       if (!(await file.exists())) continue;
       const text = await file.text();
-      if (MOJIBAKE.test(text) || CURLY_QUOTE.test(text)) offenders.push(rel);
+      if (MOJIBAKE.test(text) || CURLY_QUOTE.test(text) || SUBLEAD.test(text)) offenders.push(rel);
     }
     expect(offenders).toEqual([]);
   });
 });
-
-// Sub-lead-byte corruption the MOJIBAKE pattern misses (it rides BELOW the multi-byte range):
-// U+0178 (the surviving lead of a lost-lead emoji tail) + the C1 control block U+0080-U+009F.
-// Neither is ever legitimate in this repo's prose. (\u escapes keep this file pure ASCII.)
-const SUBLEAD = new RegExp('[\\u0080-\\u009F\\u0178]');
 
 /**
  * Deployed HTML surfaces (GitHub Pages: index/docs/specs.html). The .md normalizer globs .md/.xml
