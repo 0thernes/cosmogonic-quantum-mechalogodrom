@@ -208,8 +208,11 @@ export function facultyGainsFromFocus(
     gains[i] = g;
     sum += g;
   }
-  if (sum > 1e-9) for (let i = 0; i < n; i++) gains[i] = (gains[i] ?? 0) / sum;
-  return { gains, mean: sum / n, spread };
+  const normalized = sum > 1e-9;
+  if (normalized) for (let i = 0; i < n; i++) gains[i] = (gains[i] ?? 0) / sum;
+  // mean must describe the gains actually returned: after normalization they sum to 1 (mean 1/n);
+  // a degenerate sum leaves them ~0. Reporting the pre-normalization sum/n was inconsistent.
+  return { gains, mean: normalized ? 1 / n : 0, spread };
 }
 
 /**

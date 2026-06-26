@@ -187,7 +187,9 @@ export function classicalIntegratedInformation(
   adjacency: ArrayLike<number>, // adjacency matrix (flattened)
 ): ClassicalPhiSnapshot {
   const M = activations.length;
-  if (M < 2) {
+  // Exhaustive bipartition is 2^M: undefined for M<2, and an unguarded `1 << M` would overflow
+  // (silently wrong) past M=30 while the cost explodes well before. Cap at 16 (2^16 scans, cheap).
+  if (M < 2 || M > 16) {
     return {
       phi: 0,
       modulePhi: Array.from(activations, () => 0),

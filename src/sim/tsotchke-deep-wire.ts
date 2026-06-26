@@ -475,6 +475,7 @@ function parseTokens(tokens: string[]): EshkolASTNode {
  */
 export function eshkolCompile(ast: EshkolASTNode): EshkolBytecode[] {
   const bytecode: EshkolBytecode[] = [];
+  let labelCounter = 0;
 
   function compileNode(node: EshkolASTNode): void {
     switch (node.type) {
@@ -500,17 +501,24 @@ export function eshkolCompile(ast: EshkolASTNode): EshkolBytecode[] {
       case 'symbol':
         bytecode.push({ op: 'LOAD', args: [node.name] });
         break;
-      case 'if':
+      case 'if': {
+        // Unique labels per `if` site: eshkolExecute resolves JZ/JMP to the FIRST matching LABEL,
+        // so duplicate `label_else`/`label_end` across 2+ ifs jump to the wrong (earlier) target —
+        // a backward jump that can loop forever. Suffixing each site keeps every jump local.
+        const site = labelCounter++;
+        const elseL = `label_else_${site}`;
+        const endL = `label_end_${site}`;
         compileNode(node.condition);
-        bytecode.push({ op: 'JZ', args: ['label_else'] });
+        bytecode.push({ op: 'JZ', args: [elseL] });
         compileNode(node.then);
         if (node.else) {
-          bytecode.push({ op: 'JMP', args: ['label_end'] });
-          bytecode.push({ op: 'LABEL', args: ['label_else'] });
+          bytecode.push({ op: 'JMP', args: [endL] });
+          bytecode.push({ op: 'LABEL', args: [elseL] });
           compileNode(node.else);
         }
-        bytecode.push({ op: 'LABEL', args: ['label_end'] });
+        bytecode.push({ op: 'LABEL', args: [endL] });
         break;
+      }
       case 'let':
         for (const binding of node.bindings) {
           compileNode(binding.value);

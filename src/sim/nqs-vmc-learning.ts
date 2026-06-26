@@ -109,7 +109,9 @@ export function initVMC(arch: NQSArchitecture, config: VMCConfig, seed = 0x51f15
   // Initialize samples to random bitstrings
   const rng = seededRng(seed);
   for (let i = 0; i < config.sampleCount; i++) {
-    samples[i] = rng() >>> (32 - arch.visibleCount);
+    // rng() is a float in [0,1); `>>>` ToUint32 would truncate it to 0, so every sample inited to the
+    // all-zero bitstring (seed-independent). Draw a real 32-bit integer first, then keep visibleCount bits.
+    samples[i] = (Math.floor(rng() * 0x100000000) >>> 0) >>> (32 - arch.visibleCount);
     amplitudes.push({ re: 0, im: 0 });
   }
 

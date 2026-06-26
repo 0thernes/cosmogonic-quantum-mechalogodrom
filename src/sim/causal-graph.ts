@@ -131,7 +131,7 @@ export class CausalGraph {
     // Forward propagation (one pass — DAG is shallow, 3 levels max)
     for (let pass = 0; pass < 3; pass++) {
       for (const e of this.edges) {
-        if (e.from === xIdx && pass === 0) continue; // surgery: skip edges INTO x
+        if (e.to === xIdx) continue; // surgery: cut edges INTO x (hold the intervention every pass)
         const cur = mutated[e.to] ?? 0;
         const contrib = (mutated[e.from] ?? 0) * e.weight;
         mutated[e.to] = clamp01(cur * 0.4 + contrib * 0.6);
@@ -160,7 +160,7 @@ export class CausalGraph {
     twin[xIdx] = xCf;
     for (let pass = 0; pass < 3; pass++) {
       for (const e of this.edges) {
-        if (e.from === xIdx && pass === 0) continue;
+        if (e.to === xIdx) continue; // surgery: cut edges INTO x in the twin too
         const cur = twin[e.to] ?? 0;
         twin[e.to] = clamp01(cur * 0.4 + (twin[e.from] ?? 0) * e.weight * 0.6);
       }
