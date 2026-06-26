@@ -10,5 +10,9 @@
 #     git config core.hooksPath .githooks
 bun scripts/normalize-docs.ts >/dev/null 2>&1 || true
 bun scripts/sync-surfaces.ts >/dev/null 2>&1 || true
-git add README.md CHANGELOG.md ROADMAP.md docs docs.html specs.html index.html package.json 2>/dev/null || true
+# Re-stage every surface the two hooks can touch so an auto-fix is never left unstaged. normalize-docs
+# globs ALL tracked .md + .xml (incl masters/*.xml + every root MD); sync-surfaces rewrites the MD/HTML
+# surfaces + package.json. The old explicit list missed masters/ and the root MDs, so a mojibake fix
+# there shipped uncommitted (then CI's docs-truth-law went RED). legacy/ is preserved verbatim — exclude it.
+git add -- '*.md' '*.xml' '*.html' package.json ':(exclude)legacy/**' 2>/dev/null || true
 exit 0
