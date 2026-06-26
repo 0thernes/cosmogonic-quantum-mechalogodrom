@@ -333,13 +333,16 @@ export function fenceUntrusted(tool: string, output: string): string {
 
 /**
  * Redact credential-looking tokens before a string is surfaced in an error (RISK-10): `Bearer
- * <token>` and `sk-…`-style keys become a placeholder. Bounded + pure. A provider should never echo
- * our Authorization header back, but if a misbehaving one does, we never relay the credential.
+ * <token>`, `sk-…` keys, AND the common non-`sk-` provider key prefixes (Groq `gsk_`, HuggingFace
+ * `hf_`, NVIDIA `nvapi-`, Google `AIza`, xAI `xai-`) become a placeholder. Bounded + pure. A provider
+ * should never echo our Authorization header back, but if a misbehaving one does — in any of these
+ * formats — we never relay the credential. (OpenRouter `sk-or-…` is already covered by the `sk-` rule.)
  */
 export function redactSecrets(s: string): string {
   return s
     .replace(/Bearer\s+[\w.-]+/gi, 'Bearer [redacted]')
-    .replace(/\bsk-[A-Za-z0-9_-]{8,}/g, '[redacted-key]');
+    .replace(/\bsk-[A-Za-z0-9_-]{8,}/g, '[redacted-key]')
+    .replace(/\b(?:gsk_|hf_|nvapi-|AIza|xai-)[A-Za-z0-9_-]{8,}/g, '[redacted-key]');
 }
 
 /** Safe-parse a tool call's JSON arguments string into a record. */

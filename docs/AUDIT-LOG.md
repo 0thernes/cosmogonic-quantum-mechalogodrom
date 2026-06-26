@@ -11,6 +11,37 @@ dated / historical / "superseded snapshot" copies (per the binding "Living docs,
 
 ---
 
+## 2026-06-26 — Exhaustive subsystem audit (UI · core/scripts/server · non-core sim)
+
+Completed the line-by-line code review beyond the math/mind core — three master-lens reviewers over
+**every remaining subsystem**:
+
+- **UI + rendering (`src/ui/**`×20,`src/core/{engine,postfx,frame-governor,quality}`, all Three.js
+render-bearing sim modules, `app.css`): 0 P0 / 0 P1 — exceptionally disciplined.** Every GPU
+allocation has a matching `dispose()`, hot paths are allocation-free (pre-allocated ring buffers +
+scratch), WebGL context-loss + HMR are handled throughout, DOM via `textContent` (no injection). Two
+P2 per-frame-allocation notes (`nhi-observatory.ts`un-throttled rAF vs`super-neural`'s 33 ms cap).
+- **Core / scripts / server / build / bench: 0 P0 / 0 P1 / 0 exploitable security.** The
+  sandbox/server/copilot security boundary is hardened (repo-confinement, default-deny, token-bucket,
+  no SSRF/ReDoS/injection found). 7 × P2 (latent/robustness/dev-tooling). **Fixed this pass:**
+  `redactSecrets` now also scrubs non-`sk-` provider key prefixes (`gsk_`/`hf_`/`nvapi-`/`AIza`/`xai-`)
+  before any provider error is surfaced (RISK-10 hardening) + a new gate test; and a new
+  `BIOLOGIC_FORMS.length === CANONICAL_BIOLOGIC_FORMS` invariant test (the one canonical count that is a
+  hard array length — previously ungated). **Flagged:** `sync-surfaces.ts:74` `tests-[0-9]{3,4}` won't
+  round-trip a future ≥5-digit count (latent; current 1,477 unaffected).
+- **Non-core sim (economy, factions, titans, leviathans, petri-dish, narrative, dark-energy,
+  digital-biologics, …): 0 P0, 7 × P1 (dead/frozen state), determinism CLEAN.** Real defects flagged
+  for careful (golden-affecting) follow-up — the fleet is actively in this area: `petri-dish.ts`
+  (complexity ratchet clobbered to 8; `qgtCurvature` computed-then-discarded, frozen 0.5; `emergence`
+  read-but-never-written; `state.biologics` never populated → brutal-release mutation loop is a no-op);
+  `narrative-memory.ts` `_skill` procedural store never written/read; `dark-energy.ts:92` `w += adGrad`
+  has no re-clamp so the `[-1,-1/3]` invariant can break; `digital-biologics.ts:97` Eshkol-native form's
+  `.esk` DNA is pinned to program 0 (`formIdx` always 0). + ~15 P2 (shared-scratch aliasing, FPS-coupled
+  impulse, dead `.includes('BROLY'/'KNUL')` branches, etc.).
+
+Determinism law re-confirmed: **0 `Math.random` / `Date.now` / `performance.now` in the entire `src/sim`
+tree** (every grep hit is a comment asserting their absence). Full per-finding detail in the ledger.
+
 ## 2026-06-26 — Dated MD filenames (safe set) + every reference rewired
 
 Per the owner's decision ("both renamed and don't break — figure it out"), the **24 pure-content docs
