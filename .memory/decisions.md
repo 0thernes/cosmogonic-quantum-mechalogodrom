@@ -1,3 +1,5 @@
+<!-- reviewed: 2026-06-26 | repo-wide consistency + correctness audit; canonical facts in docs/VERIFICATION-ANALYTICAL-DATA.md -->
+
 # Decisions
 
 Architectural commitments made in this project. The full rationale for each lives in `docs/adr/`.

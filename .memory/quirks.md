@@ -1,3 +1,5 @@
+<!-- reviewed: 2026-06-26 | repo-wide consistency + correctness audit; canonical facts in docs/VERIFICATION-ANALYTICAL-DATA.md -->
+
 # Quirks
 
 Project-specific weirdness — the non-obvious stuff that will trip you up.

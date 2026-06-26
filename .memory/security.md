@@ -1,3 +1,5 @@
+<!-- reviewed: 2026-06-26 | repo-wide consistency + correctness audit; canonical facts in docs/VERIFICATION-ANALYTICAL-DATA.md -->
+
 # Security
 
 Rules that must NEVER be broken. Always read this file.
