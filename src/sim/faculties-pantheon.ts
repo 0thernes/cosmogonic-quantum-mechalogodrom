@@ -6,6 +6,7 @@
  */
 
 import type { Rng } from '../math/rng';
+import { structuredCouplingModulationInto } from './coupling-audit';
 
 const clamp01 = (v: number): number => (v > 0 ? (v < 1 ? v : 1) : 0);
 
@@ -272,6 +273,7 @@ export function facultyCouplingDensity(activations: ArrayLike<number>): number {
 export class FacultiesPantheon {
   private readonly faculties: ProfiledFaculty[];
   private readonly actScratch: Float32Array;
+  private readonly couplingScratch: Float32Array;
   private couplingDensity = 0;
 
   constructor(rng: Rng) {
@@ -279,18 +281,25 @@ export class FacultiesPantheon {
       (faculty, index) => new ProfiledFaculty(faculty, makeProfile(index, rng)),
     );
     this.actScratch = new Float32Array(this.faculties.length);
+    this.couplingScratch = new Float32Array(this.faculties.length);
   }
 
   update(inputs: Float32Array): void {
     const n = this.faculties.length;
     for (const faculty of this.faculties) faculty.update(inputs);
     for (let i = 0; i < n; i++) this.actScratch[i] = this.faculties[i]!.getActivation();
-    // Ring coupling: each faculty co-varies with its neighbors (EMERGENCE-BLOCKERS #10 write-back).
+
+    // Upgraded coupling: structured (phase + content) + ring (per honesty audit + roadmap "coupling > count").
+    // Falls back to old ring if no phases/content provided.
+    structuredCouplingModulationInto(this.couplingScratch, this.actScratch, null, null, 0.09);
     for (let i = 0; i < n; i++) {
       const left = this.actScratch[(i + n - 1) % n] ?? 0;
       const right = this.actScratch[(i + 1) % n] ?? 0;
-      this.faculties[i]!.blendCoupling((left + right) * 0.5, 0.06);
+      const ring = (left + right) * 0.5;
+      const modulation = this.couplingScratch[i] ?? 0;
+      this.faculties[i]!.blendCoupling(ring * 0.6 + modulation * 0.4, 0.07);
     }
+
     for (let i = 0; i < n; i++) this.actScratch[i] = this.faculties[i]!.getActivation();
     this.couplingDensity = facultyCouplingDensity(this.actScratch);
   }

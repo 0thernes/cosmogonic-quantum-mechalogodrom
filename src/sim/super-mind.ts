@@ -1483,6 +1483,12 @@ export class SuperMind {
     // when unbound. This is the write half of the read+write loop the coupling audit exists to enforce.
     this.broadcast += BROADCAST_TAU * ((resonance.ignited ? resonance.order : 0) - this.broadcast);
 
+    // ROADMAP FULFILLMENT NOTE (from 2026-06-21 Honesty Audit + Roadmap P1/P2):
+    // "denser faculty↔faculty edges" is the remaining lever after GWT bind + shared-processing.
+    // Previous latent injections were measured and reverted (see audit addendum).
+    // Current is the honest "modest but real" shipped regime (~0.19+); every lift still needs
+    // coupling-audit measurement before it graduates from roadmap to claim.
+
     let best: SuperPlan = 'REST';
     let bestScore = -Infinity;
     let runnerUp = -Infinity;

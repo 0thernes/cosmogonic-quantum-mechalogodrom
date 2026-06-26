@@ -87,3 +87,11 @@ the current truth baseline supersedes conflicting old counts or overclaims.
 - **NHSI:** [`reports/2026-06-21-NHSI-HONESTY-AUDIT.md`](./reports/2026-06-21-NHSI-HONESTY-AUDIT.md) (honesty scorecard — gate-referenced) · [`reports/2026-06-21-NHSI-MANIFESTO-0THERNES-CORP.md`](./reports/2026-06-21-NHSI-MANIFESTO-0THERNES-CORP.md) · [`reports/2026-06-20-RESEARCH-BEDROCK.md`](./reports/2026-06-20-RESEARCH-BEDROCK.md) · [`reports/2026-06-20-SUPER-REPORT-PATH-TO-NHSI-AND-SENTIENCE.md`](./reports/2026-06-20-SUPER-REPORT-PATH-TO-NHSI-AND-SENTIENCE.md) · [`reports/2026-06-20-ROADMAP-TO-NHSI-AND-SENTIENCE.xml`](./reports/2026-06-20-ROADMAP-TO-NHSI-AND-SENTIENCE.xml).
 - **A-Life:** [`reports/2026-06-26-ALIFE-COMPARATIVE-AUDIT.md`](./reports/2026-06-26-ALIFE-COMPARATIVE-AUDIT.md) · [`reports/2026-06-26-alife-comparison-matrix.csv`](./reports/2026-06-26-alife-comparison-matrix.csv).
 - **Tsotchke:** living map [`TSOTCHKE-INTEGRATION-MAP.md`](./TSOTCHKE-INTEGRATION-MAP.md) · plan [`TSOTCHKE-CORPUS-INTEGRATION-PLAN.md`](./TSOTCHKE-CORPUS-INTEGRATION-PLAN.md) · source-provenance audits still cited from code (`TSOTCHKE-CORPUS-RALPH-WIRING-AUDIT-2026-06-19.md`, `TSOTCHKE_CORPUS_INTEGRATION_AUDIT.md`, `TSOTCHKE-ULTIMATE-COMPREHENSIVE-AUDIT-REPORT-ASSESSMENT-2026-06-20.md`).
+
+## 2026-06-26 — Roadmap Fulfillment: P1 Harness + Coupling Scaffold
+
+- Added deterministic `scripts/p1-quantum-classical-experiment.ts` for a falsifiable quantum-vs-classical contrast harness; the bootstrap uses seeded RNG, not `Math.random`.
+- Added `bench/quantum-classical.bench.ts` as a tiny reproducible scaffold around shipped contrast functions; it does not claim quantum advantage.
+- Added `structuredCouplingModulationInto` and wired it through `FacultiesPantheon` with caller-owned scratch, preserving the hot-loop allocation rule.
+- Added `bedauPackardActivity` as a pure open-endedness metric for future petri/soup ablations.
+- Truth boundary preserved: this is measurement infrastructure and a coupling scaffold, not a new sentience claim and not a 14/14 claim.

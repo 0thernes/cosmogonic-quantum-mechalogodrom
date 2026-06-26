@@ -146,3 +146,70 @@ export function couplingReport(
     isolated,
   };
 }
+
+/**
+ * Structured faculty-to-faculty coupling (phase + content aware small-world).
+ * Addresses the weak-coupling keystone finding from the 2026-06-21 Honesty Audit + ROADMAP P1/P2.
+ * Pure O(n²) worst case; writes into caller-owned scratch so the per-beat faculty loop stays allocation-free.
+ */
+export function structuredCouplingModulationInto(
+  out: Float32Array,
+  activations: ArrayLike<number>,
+  phases: ArrayLike<number> | null,
+  contentSim: readonly (readonly number[])[] | null,
+  gain = 0.12,
+): void {
+  const n = activations.length;
+  out.fill(0);
+  if (n < 2) return;
+
+  for (let i = 0; i < n; i++) {
+    let acc = 0;
+    let w = 0;
+    const left = (i + n - 1) % n;
+    const right = (i + 1) % n;
+    acc += activations[left] ?? 0;
+    w += 1;
+    acc += activations[right] ?? 0;
+    w += 1;
+
+    if (phases && phases.length === n) {
+      const p = phases[i] ?? 0;
+      if (Math.abs(Math.cos(p - (phases[left] ?? 0))) > 0.6) {
+        acc += (activations[left] ?? 0) * 0.8;
+        w += 0.8;
+      }
+      if (Math.abs(Math.cos(p - (phases[right] ?? 0))) > 0.6) {
+        acc += (activations[right] ?? 0) * 0.8;
+        w += 0.8;
+      }
+    }
+    if (contentSim && contentSim.length === n) {
+      for (let j = 0; j < n; j += 3) {
+        if (j === i) continue;
+        const sim = dotNorm(contentSim[i] || [], contentSim[j] || []);
+        if (sim > 0.5) {
+          acc += (activations[j] ?? 0) * sim;
+          w += sim;
+        }
+      }
+    }
+    if (w > 0) out[i] = (acc / w - (activations[i] ?? 0)) * gain;
+  }
+}
+
+function dotNorm(a: readonly number[], b: readonly number[]): number {
+  const len = Math.min(a.length, b.length);
+  if (len === 0) return 0;
+  let da = 0,
+    db = 0,
+    dot = 0;
+  for (let k = 0; k < len; k++) {
+    da += (a[k] ?? 0) ** 2;
+    db += (b[k] ?? 0) ** 2;
+    dot += (a[k] ?? 0) * (b[k] ?? 0);
+  }
+  const na = Math.sqrt(da) + 1e-9;
+  const nb = Math.sqrt(db) + 1e-9;
+  return dot / (na * nb);
+}

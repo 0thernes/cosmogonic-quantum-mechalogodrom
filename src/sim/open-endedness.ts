@@ -99,3 +99,31 @@ export function evolutionaryActivity(
   for (const c of cumulative) total += c;
   return { cumulative, total, mean: width === 0 ? 0 : total / width };
 }
+
+/**
+ * Bedau-Packard EVOLUTIONARY ACTIVITY (per ROADMAP P2).
+ * Measures persistent adaptive novelty: the fraction of "new" structure that is maintained over time.
+ * High + non-plateauing = open-ended (the substrate is doing real work, not just cycling).
+ * For a series of diversity/novelty snapshots, returns activity A = (new persisting) / total.
+ * Pure, for use in petri/soup ablations.
+ */
+export function bedauPackardActivity(
+  snapshots: readonly number[], // e.g. successive shannonDiversity or historicalNovelty values
+  window = 8,
+): number {
+  if (snapshots.length < window + 1) return 0;
+  let persistingNew = 0;
+  let total = 0;
+  for (let i = window; i < snapshots.length; i++) {
+    const curr = snapshots[i] || 0;
+    let prevMax = 0;
+    for (let j = i - window; j < i; j++) {
+      const prev = snapshots[j] || 0;
+      if (prev > prevMax) prevMax = prev;
+    }
+    const newThisStep = Math.max(0, curr - prevMax);
+    persistingNew += newThisStep;
+    total += curr;
+  }
+  return total > 0 ? Math.min(1, persistingNew / (total / snapshots.length)) : 0;
+}

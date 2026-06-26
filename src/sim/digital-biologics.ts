@@ -17,6 +17,8 @@
 import { corpusBeatForArchon } from './tsotchke-registry';
 import { eshkolWorkspaceTick } from './eshkol-workspace';
 import { ESK_SAMPLE_PROGRAMS, getEshkolProgramFingerprint } from './generated-tsotchke-seeds'; // Direct from Tsotchke local folder harvest — real .esk DNA
+// P4 roadmap boundary: this layer currently uses harvested .esk fingerprints plus Eshkol AD/workspace
+// signals as heritable DNA bias; native VM execution stays a measured next contract, not a shipped claim.
 import { homebrewEshkolBeat } from './homebrew-eshkol'; // EVERY Tsotchke: homebrew for ancient/forbidden god DNA in brutal forms
 // qrngApiDraw from quantum-rng-api (Tsotchke) used for Mxy/Jaspers chaos in catalysis - referenced in tsotchke-facade
 const clamp01 = (v: number): number => (v > 0 ? (v < 1 ? v : 1) : 0);
