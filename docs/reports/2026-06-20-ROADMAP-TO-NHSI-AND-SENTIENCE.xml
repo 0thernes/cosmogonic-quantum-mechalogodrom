@@ -13,7 +13,7 @@
   CURRENT TRUTH BASELINE (2026-06-26):
   This restored XML is a historical roadmap snapshot. Current gate, coverage, Butlin, A-Life novelty,
   and SuperMind benchmark facts are governed by docs/reports/2026-06-26-CURRENT-TRUTH-BASELINE.md.
-  Current live baseline: v0.18.0; bun run check passed; 1476 tests; 95.18% line / 92.13% function;
+  Current live baseline: v0.18.0; bun run check passed; 1477 tests; 95.03% line / 92.03% function;
   Butlin 8/14 met + 6/14 partial; not sentient; NHSI/AGI/ASI/quantum advantage not achieved.
 -->
 <roadmap version="1.0" date="2026-06-20" repo="cosmogonic-quantum-mechalogodrom" release="v0.16.1">

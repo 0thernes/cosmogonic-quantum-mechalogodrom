@@ -15,7 +15,8 @@ and all five SVGs below).
 > sources re-checked). Where a figure is a calibrated judgment rather than a fresh runtime measurement, it
 > is labelled as such. Read every claim against
 > [`2026-06-26-CURRENT-TRUTH-BASELINE.md`](./2026-06-26-CURRENT-TRUTH-BASELINE.md); the baseline wins on
-> any conflict.
+> any conflict. Current receipts after the P1/coupling sync: `1477` tests, `0` failures, `95.03%` line /
+> `92.03%` function coverage, sync clean, build clean.
 
 ---
 
@@ -119,7 +120,7 @@ conscious or sentient entity. The repo's own honesty audit grades the Butlin-sty
 | Check                         | Live result (2026-06-26, Bun 1.3.14, cold shell)                                                                 |
 | ----------------------------- | ---------------------------------------------------------------------------------------------------------------- |
 | `bun test` (re-measured here) | **`1477 pass`, `0 fail`, `1,744,891 expect() calls`, `151` files** (38.9 s)                                      |
-| Coverage receipt              | **`95.18%` line, `92.13%` function** (canonical, `±6 pp` gate-enforced)                                          |
+| Coverage receipt              | **`95.03%` line, `92.03%` function** (canonical, `±6 pp` gate-enforced)                                          |
 | `bun run check`               | full gate green: format, typecheck, lint, tests, receipts, sync, build                                           |
 | `SuperMind.think()`           | `3.34 ms` (full-suite) / `8.85 ms` (focused) — **not** the old `<2%` frame claim                                 |
 | `5× think()` batch            | `14.47 ms` / `25.40 ms` focused                                                                                  |
@@ -516,7 +517,7 @@ bun scripts/alife-comparison-stats.ts
 #   writes docs/reports/assets/alife-stats.json  + alife-*.svg  (deterministic; identical CSV -> identical bytes)
 
 # Re-confirm the live gate receipts cited above:
-bun test --coverage        # -> 1477 pass / 0 fail ; All files 95.18% line / 92.13% func
+bun test --coverage        # -> 1477 pass / 0 fail ; All files 95.03% line / 92.03% func
 bun run check              # full gate (format, typecheck, lint, tests, receipts, sync, build)
 ```
 

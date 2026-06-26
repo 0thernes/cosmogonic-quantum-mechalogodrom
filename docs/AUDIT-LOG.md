@@ -16,7 +16,7 @@ propagated automatically by `scripts/sync-surfaces.ts`. This log records what ch
 - Added the A-Life comparative audit and scoring matrix:
   [`reports/2026-06-26-ALIFE-COMPARATIVE-AUDIT.md`](./reports/2026-06-26-ALIFE-COMPARATIVE-AUDIT.md) and
   [`reports/2026-06-26-alife-comparison-matrix.csv`](./reports/2026-06-26-alife-comparison-matrix.csv).
-- Truth-sync corrections: current gate baseline is 1,477 tests with 95.18% line / 92.13% function
+- Truth-sync corrections: current gate baseline is 1,477 tests with 95.03% line / 92.03% function
   coverage; Butlin remains 8/14 met + 6/14 partial; GOAL5 `<2%` frame-budget status is a remediation
   target, not a current proven fact.
 

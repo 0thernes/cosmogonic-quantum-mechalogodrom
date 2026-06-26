@@ -415,7 +415,7 @@ and a CycloneDX SBOM shipped). The audit is re-run before each tagged release; d
 336. ✅ Tests are fast (~1–2 s full suite) — no slow integration drag discouraging runs.
 337. ✅ Tests assert behavior and invariants, not implementation trivia.
 338. ✅ Reference-implementation cross-checks are used where correctness is subtle (brute-force spatial, full-sort top-K).
-339. ✅ A coverage threshold is enforced in CI (`bun run test:coverage`, `bunfig.toml` line ≥ 90% / function ≥ 85%) — measured at 95.18% line / 92.13% function, guarded against regression.
+339. ✅ A coverage threshold is enforced in CI (`bun run test:coverage`, `bunfig.toml` line ≥ 90% / function ≥ 85%) — measured at 95.03% line / 92.03% function, guarded against regression.
 340. 🟡 No browser-level e2e (the DOM/WebGL integration is validated via unit-tested data + manual preview, not Playwright).
 
 ## 18. Benchmarks & Performance Budget

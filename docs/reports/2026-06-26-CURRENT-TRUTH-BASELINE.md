@@ -16,7 +16,7 @@ where it conflicts with this baseline or with the live repo gates.
 | Full gate          | `bun run check` passed on 2026-06-26                                                      |
 | Gate stages        | `format:check`, `typecheck`, `lint`, `bun test`, `verify:receipts`, `sync:check`, `build` |
 | Test result        | `1477 pass`, `0 fail`, `1744891 expect() calls`, `151` test files                         |
-| Coverage receipt   | `95.18%` line, `92.13%` function                                                          |
+| Coverage receipt   | `95.03%` line, `92.03%` function                                                          |
 | Build result       | `7` artifacts emitted to `dist/`                                                          |
 | Public sync source | `scripts/canonical-receipts.ts`                                                           |
 
