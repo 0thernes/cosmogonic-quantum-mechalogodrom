@@ -11,7 +11,9 @@
  *   M[s,s'] = E[ Σ_{t≥0} γ^t · 1(state_{t}=s') | state_0 = s ]
  * is the expected discounted future occupancy of s' when starting in s. It is learned online by the
  * temporal-difference rule (no model of the transition matrix needed):
- *   M[s,·] ← M[s,·] + α · ( e_{s'} + γ·M[s',·] − M[s,·] )      (s → s' observed this beat)
+ *   M[s,·] ← M[s,·] + α · ( e_s + γ·M[s',·] − M[s,·] )      (s → s' observed this beat)
+ * (the one-hot is the SOURCE state s — the row being updated — so M[s,s] carries the t=0 present
+ *  occupancy and the matrix converges to the closed form below; the code applies exactly this.)
  * For any fixed policy with transition T, M converges to the closed form M = (I − γT)⁻¹. Value lookahead
  * is then a single matrix–vector product against the current per-plan reward r: V(p) = Σ_{s'} M[p,s']·r_{s'}
  * — the discounted reward the creature expects to accumulate if it commits to plan p NOW. That V biases
