@@ -15,30 +15,40 @@ exact fix so the owner can apply it alongside a re-baseline.
 
 Landed on branch `audit/correctness-fixes` (rebased onto the latest `main`):
 
-| File:line | Sev | Bug | Fix |
-| --- | --- | --- | --- |
-| `math/mixed-state-qgt.ts:187` | major | `computeEntropy` got `dim` (d) not `d2` (d²) → `Tr(ρ²)` summed only row 0 of ρ; a pure state read linear-entropy 0.5 instead of 0 (disagreeing with `purity`). | pass `d2`. |
-| `math/irrep.ts:101` | minor | `clebschGordan` guarded only `J`; large unclamped `j1`/`j2` overflowed the factorial table to `Infinity` → non-finite CG. | guard `j1`/`j2` too. |
-| `sim/emergent-language.ts:184` | minor | `createSign` double-incremented `nextSignId` → ids/representations skipped (0,2,4,…). | drop the second increment. |
-| `sim/eshkol-bridge.ts` | minor | unbounded `kbFacts` Map (float-derived key). | FIFO-bound at `KB_FACTS_MAX`. |
-| `math/rng.ts:34` | minor | garbled "Ralph 10x" graft injected mid-sentence in the `hashSeed` doc. | remove (code unchanged). |
-| `sim/super-mind.ts:111` | minor | 4 stale `eslint-disable no-unused-vars` (imports are used; project lints with oxlint). | remove. |
-| `check-out.txt` / `.gitignore` | — | 542 KB UTF-16 console dump tracked + referenced nowhere. | untrack + gitignore; dedupe. |
+| File:line                      | Sev   | Bug                                                                                                                                                            | Fix                           |
+| ------------------------------ | ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------- |
+| `math/mixed-state-qgt.ts:187`  | major | `computeEntropy` got `dim` (d) not `d2` (d²) → `Tr(ρ²)` summed only row 0 of ρ; a pure state read linear-entropy 0.5 instead of 0 (disagreeing with `purity`). | pass `d2`.                    |
+| `math/irrep.ts:101`            | minor | `clebschGordan` guarded only `J`; large unclamped `j1`/`j2` overflowed the factorial table to `Infinity` → non-finite CG.                                      | guard `j1`/`j2` too.          |
+| `sim/emergent-language.ts:184` | minor | `createSign` double-incremented `nextSignId` → ids/representations skipped (0,2,4,…).                                                                          | drop the second increment.    |
+| `sim/eshkol-bridge.ts`         | minor | unbounded `kbFacts` Map (float-derived key).                                                                                                                   | FIFO-bound at `KB_FACTS_MAX`. |
+| `math/rng.ts:34`               | minor | garbled "Ralph 10x" graft injected mid-sentence in the `hashSeed` doc.                                                                                         | remove (code unchanged).      |
+| `sim/super-mind.ts:111`        | minor | 4 stale `eslint-disable no-unused-vars` (imports are used; project lints with oxlint).                                                                         | remove.                       |
+| `check-out.txt` / `.gitignore` | —     | 542 KB UTF-16 console dump tracked + referenced nowhere.                                                                                                       | untrack + gitignore; dedupe.  |
 
 A second batch (`nqs-vmc-learning`, `resonance-integrator`, `tsotchke-deep-wire`, all currently
 **dead code** — no live callers — hence golden-safe) lands in the follow-up commit:
 
-| File:line | Sev | Bug | Fix |
-| --- | --- | --- | --- |
-| `sim/nqs-vmc-learning.ts:112` | major | `rng() >>> (32-vc)` — `rng()`∈[0,1) is ToUint32-truncated to 0, so every VMC walker seeded the identical all-zeros bitstring (seed ignored). | `(rng()*0x100000000) >>> (32-vc)`. |
-| `sim/resonance-integrator.ts:109` | major | spurious `* Math.PI` blew the phase to [0, π²], breaking every downstream phase comparison. | use `atan2` directly. |
-| `sim/resonance-integrator.ts:165` | major | `findCoalition` angular wrap only handled [0,2π]; out-of-range angles admitted anti-phase faculties. | robust modulo wrap to [0,π]. |
-| `sim/tsotchke-deep-wire.ts:259` | major | SU(2) character table did `sin/sin` 0/0 at the row endpoints (m=0, m=j) and all of j=0 → `NaN`. | return the removable-singularity limit (dimension 2j+1). |
-| `sim/nqs-vmc-learning.ts:395` | minor | hand-rolled LCG multiply exceeded 2⁵³, losing low bits before the mask. | `Math.imul` exact 32-bit. |
+| File:line                         | Sev   | Bug                                                                                                                                          | Fix                                                      |
+| --------------------------------- | ----- | -------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
+| `sim/nqs-vmc-learning.ts:112`     | major | `rng() >>> (32-vc)` — `rng()`∈[0,1) is ToUint32-truncated to 0, so every VMC walker seeded the identical all-zeros bitstring (seed ignored). | `(rng()*0x100000000) >>> (32-vc)`.                       |
+| `sim/resonance-integrator.ts:109` | major | spurious `* Math.PI` blew the phase to [0, π²], breaking every downstream phase comparison.                                                  | use `atan2` directly.                                    |
+| `sim/resonance-integrator.ts:165` | major | `findCoalition` angular wrap only handled [0,2π]; out-of-range angles admitted anti-phase faculties.                                         | robust modulo wrap to [0,π].                             |
+| `sim/tsotchke-deep-wire.ts:259`   | major | SU(2) character table did `sin/sin` 0/0 at the row endpoints (m=0, m=j) and all of j=0 → `NaN`.                                              | return the removable-singularity limit (dimension 2j+1). |
+| `sim/nqs-vmc-learning.ts:395`     | minor | hand-rolled LCG multiply exceeded 2⁵³, losing low bits before the mask.                                                                      | `Math.imul` exact 32-bit.                                |
+
+Two further fixes are in **live** code but **defensive** (they only change behaviour on an edge case
+the golden run never hits), so they were applied and **verified golden-neutral** (the full gate,
+including the 300-frame determinism golden, stays green):
+
+| File:line                            | Sev   | Bug                                                                                                                                        | Fix                                                                     |
+| ------------------------------------ | ----- | ------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------- |
+| `sim/successor-representation.ts:75` | minor | an out-of-range plan index was silently remapped to state 0, injecting phantom transitions into the SR map and biasing lookahead toward 0. | treat out-of-range as a no-op (don't fabricate a transition).           |
+| `sim/self-evolution-loop.ts:161`     | minor | the complexity budget checked only a proposal's self-declared field; the live `metrics.complexity` (×1.1 per accepted mod) grew unbounded. | also reject when the projected live complexity would breach the budget. |
 
 ## Open — confirmed, but live/sim (needs a golden re-baseline; owner call)
 
 ### `sim/primordial-soup.ts:139` — major/logic — strain selection is dead code
+
 The only death branch `if (vitality < 0.05 && generation < 5) alive = 0` never fires: vitality is
 seeded in [0.1,0.3] and is **monotonically non-decreasing** (growth ≥ 0.001 every tick;
 `pinnFactor` magnitude ~8e-5 can't overcome it), and the only other write resets to 0.35. So
@@ -61,12 +71,6 @@ suggested fix. Re-baseline the golden if applied.
 - **`sim/petri-dish.ts:286`** — `applyBrutalRelease` is handed `state.biologics.map(b => ({...}))`, a
   throwaway copy; all vitality mutations land on disposable objects and are discarded (the release
   does nothing). Fix: operate on the real objects (and consume the returned summary).
-- **`sim/successor-representation.ts:75`** — an out-of-range plan index is silently remapped to state
-  0, injecting phantom transitions into the SR map and biasing lookahead toward plan 0. Fix: treat an
-  out-of-range index as a no-op (return early), don't fabricate a state-0 transition.
-- **`sim/self-evolution-loop.ts:161`** — the complexity budget is checked only against a proposal's
-  self-declared field; the live `metrics.complexity` (×1.1 per accepted architecture/faculty mod) is
-  never compared to `config.maxComplexity` → unbounded growth. Fix: validate the projected live value.
 - **`sim/temporal-crystal.ts:119`** — the period-doubling order parameter's `expectedSign` reads
   `floquetCycle % 2`, but `floquetCycle` advances by 2 each step so it is always even → sign is
   permanently +1 (the half-frequency signature never alternates). Fix: measure inside the inner
@@ -80,12 +84,12 @@ suggested fix. Re-baseline the golden if applied.
   (`re = √prob·cos φ`, `im = √prob·sin φ`).
 - **`sim/super-qubits.ts:262`** — `evolve()` stores `dSup = sup` (line 253) so the UI-cadence QGT can
   replay the same circuit, then overwrites it with a gwt-perturbed value (line 262) while the register
-  is evolved with `sup` — so `geometricMetric()` replays a *different* circuit than was evolved. Fix:
+  is evolved with `sup` — so `geometricMetric()` replays a _different_ circuit than was evolved. Fix:
   don't overwrite `dSup` after `applyCircuit` (or apply the gwt modulation to `sup` before storing).
 - **`sim/plastic-weights.ts:95`** — `overlayInPlace` reads `x` while writing `out` row-by-row; if a
   caller aliases `out === x` the output is corrupted. No current caller aliases (latent). Fix: document
-  + enforce non-aliasing (matching `recall()`), or snapshot inputs before writing.
-- **`sim/resonance-integrator.ts:298`** *(dead code)* — `applyValence` rebases `phaseTolerance` off the
+  - enforce non-aliasing (matching `recall()`), or snapshot inputs before writing.
+- **`sim/resonance-integrator.ts:298`** _(dead code)_ — `applyValence` rebases `phaseTolerance` off the
   module `DEFAULT_CONFIG` rather than the instance's configured base, discarding a constructor-supplied
   tolerance and never composing. Fix: capture `baseTolerance` at construction and modulate off it.
 
