@@ -220,7 +220,6 @@ export class World {
   // Legacy single creature path kept ONLY for player hero/twin spawn; the 5 drive the world.
   // All use distinct child seeds (master ^ + archetype 0-4 offsets) for determinism.
   private readonly superCreature: SuperCreature;
-  private readonly superMind: SuperMind; // GOAL5 compat; prime mind uses array[0]
   private superMindSnap: SuperMindSnapshot | null = null;
   private readonly superMinds: SuperMind[] = [];
   /** 25-Archon society layer: 20 light echoes + shared stigmergic mind-field (emergence #5). */
@@ -240,7 +239,6 @@ export class World {
   private readonly nhsiTomCues = new Float32Array(8);
   private readonly nhsiGenomeScratch = new Float32Array(32);
   private readonly nhsiCollectiveScratch = new Float32Array(16);
-  private readonly _superMindSnaps: (SuperMindSnapshot | null)[] = [null, null, null, null, null]; // GOAL5 5 creatures // GOAL5
   private readonly superBodies: SuperBodySystem[] = [];
   // GOAL5: per-archon small creature snapshots (for body.setMind) + the 5 deep minds/bodies.
   private readonly superCreatures: SuperCreature[] = [];
@@ -581,15 +579,6 @@ export class World {
     this.superRng = mulberry32((this.persisted.seed ^ 0x5e1f9d3b) >>> 0 || 1);
     // legacy single kept EXCLUSIVELY for player hero/twin paths (maybeSpawn + its snapshot in UI)
     this.superCreature = new SuperCreature(this.superRng);
-    // V46: the ~10k-param SUPER MIND on its OWN seeded sub-stream (so it never perturbs the superRng
-    // order the twins/wallets draw from). It thinks live each beat; its consciousness drives the body.
-    this.superMind = new SuperMind(
-      mulberry32((this.persisted.seed ^ 0x5e1f3d11) >>> 0 || 1),
-      0.9,
-      0.8,
-      0.5,
-      0.9,
-    ); // legacy prime + TSOTCHKE Eshkol consciousness defaults (corpus wired)
     // V47: the wingman swarm (logic on its own rng sub-stream) + its single-draw-call instanced render.
     this.wingSwarm = new WingmanSwarm(
       WINGMAN_COUNT,
@@ -617,8 +606,6 @@ export class World {
       mulberry32((this.persisted.seed ^ 0xb7a19e3d) >>> 0 || 1),
     );
     this.superScene = ctx.scene;
-    void this.superMind;
-    void this._superMindSnaps;
     // 5 SUPER CREATURES (GOAL5 Archons/Godforms): World.GODFORMS from exclusive godform.ts source.
     // WIRED FROM FULL TSOTCHKE CORPUS (Z:\[Vibe Coded (AI)]\(Tsotchke) 20 repos + sites; see docs/TSOTCHKE_FULL...AUDIT.md). Eshkol AD/HoTT/arena + Moonlab tensor/qgt/Bloch for per-Archon percepts/bias/pulses/entropy. 5 child seeds + getGodformBias + getArchonForm. Local grid + audio + bias. (Ralph-loop incorporation wave.)
     // Determinism: child seeds only (no consumption of main/super streams). Spaced + archetype bias.
@@ -704,8 +691,6 @@ export class World {
     // Per-frame: think(percept) → snapshot → setMind/setConsciousness; bodies update wander from mind act[] + evo.
     // No learning (fixed seeded weights); all read/write shared systems (grid for local, econ per purse, audio etc).
     this.superBody = this.superBodies[0]!; // legacy alias for prime (compat paths + wing swarm)
-    // keep legacy single pointing to [0] for compat code paths
-    this.superMind = this.superMinds[0]!;
     this.superMindSnap = null;
     this.superheroHud = new SuperheroHud(); // V35: self-mounting player HUD, hidden until unlock
     // F-SUPER V34/35: the access puzzle fires `superhero-unlock` once when solved → reveal #2 + the
@@ -919,7 +904,6 @@ export class World {
     for (let i = 0; i < this.superBodies.length; i++) {
       this.superBodies[i]!.update(t, dt);
     }
-    this.superBody.update(t, dt); // ensure prime (alias [0]) covered for legacy
     // V47: the wingman swarm orbits + assists the prime each frame; one InstancedMesh draws all 100.
     this.superBody.worldPosition(this.sv1);
     this.wingSwarm.update(
