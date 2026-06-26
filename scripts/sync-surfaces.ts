@@ -48,32 +48,41 @@ const SURFACES = [
   'docs/BENCHMARKS.md',
   'docs/CORPUS_INTEGRATION_REPORT.md',
   'docs/NHSI-PROGRESS-DASHBOARD.md',
+  // Canonical docs that publish the CURRENT gate figure (single "Gate:" line, no historical
+  // receipts to clobber). Their slash-form "LINE% / FUNC%" was drifting unseen until added here.
+  'docs/ERD.md',
+  'docs/KANBAN.md',
 ];
 
 /** Apply receipts (test count + coverage) propagation. */
 function syncReceipts(s: string): string {
-  return s
-    .replace(/tests-[0-9]{3,4}/g, `tests-${TEST}`)
-    .replace(/\b[0-9],[0-9]{3}\s+tests\b/g, `${TEST_COMMA} tests`)
-    .replace(/(?<![,0-9])\b[0-9]{3,4}\s+tests\b/g, `${TEST} tests`)
-    .replace(/\b[0-9],[0-9]{3}\s+pass\b/g, `${TEST_COMMA} pass`)
-    .replace(/\b[0-9],[0-9]{3}\s+tests\s*\/\s*0\s+fail\b/g, `${TEST_COMMA} tests / 0 fail`)
-    .replace(/(?<![,0-9])\b[0-9]{3,4}\s+tests\s*\/\s*0\s+fail\b/g, `${TEST} tests / 0 fail`)
-    .replace(
-      /\b[0-9]{2}\.[0-9]{2}%\s+line\s*\/\s*[0-9]{2}\.[0-9]{2}%\s+func\b/g,
-      `${LINE}% line / ${FUNC}% func`,
-    )
-    .replace(
-      /\b[0-9]{2}\.[0-9]{2}\s*%\s+line\s*\/\s*[0-9]{2}\.[0-9]{2}\s*%\s+function\b/g,
-      `${LINE} % line / ${FUNC} % function`,
-    )
-    .replace(
-      /coverage-[0-9]{2}\.[0-9]{2}%25%20line%20%C2%B7%20[0-9]{2}\.[0-9]{2}%25%20func/g,
-      `coverage-${LINE}%25%20line%20%C2%B7%20${FUNC}%25%20func`,
-    )
-    .replace(/Line coverage: [0-9]{2}\.[0-9]{2}%/g, `Line coverage: ${LINE}%`)
-    .replace(/Function coverage: [0-9]{2}\.[0-9]{2}%/g, `Function coverage: ${FUNC}%`)
-    .replace(/Test count: \d+/g, `Test count: ${TEST}`);
+  return (
+    s
+      .replace(/tests-[0-9]{3,4}/g, `tests-${TEST}`)
+      .replace(/\b[0-9],[0-9]{3}\s+tests\b/g, `${TEST_COMMA} tests`)
+      .replace(/(?<![,0-9])\b[0-9]{3,4}\s+tests\b/g, `${TEST} tests`)
+      .replace(/\b[0-9],[0-9]{3}\s+pass\b/g, `${TEST_COMMA} pass`)
+      .replace(/\b[0-9],[0-9]{3}\s+tests\s*\/\s*0\s+fail\b/g, `${TEST_COMMA} tests / 0 fail`)
+      .replace(/(?<![,0-9])\b[0-9]{3,4}\s+tests\s*\/\s*0\s+fail\b/g, `${TEST} tests / 0 fail`)
+      .replace(
+        /\b[0-9]{2}\.[0-9]{2}%\s+line\s*\/\s*[0-9]{2}\.[0-9]{2}%\s+func\b/g,
+        `${LINE}% line / ${FUNC}% func`,
+      )
+      .replace(
+        /\b[0-9]{2}\.[0-9]{2}\s*%\s+line\s*\/\s*[0-9]{2}\.[0-9]{2}\s*%\s+function\b/g,
+        `${LINE} % line / ${FUNC} % function`,
+      )
+      // Bare "LINE% / FUNC%" gate shorthand (e.g. "90.80% / 87.88%") in README/ERD/KANBAN "Gate:" lines.
+      // Runs AFTER the worded variants above, so it never touches "NN% line / NN% func".
+      .replace(/\b[0-9]{2}\.[0-9]{2}%\s*\/\s*[0-9]{2}\.[0-9]{2}%/g, `${LINE}% / ${FUNC}%`)
+      .replace(
+        /coverage-[0-9]{2}\.[0-9]{2}%25%20line%20%C2%B7%20[0-9]{2}\.[0-9]{2}%25%20func/g,
+        `coverage-${LINE}%25%20line%20%C2%B7%20${FUNC}%25%20func`,
+      )
+      .replace(/Line coverage: [0-9]{2}\.[0-9]{2}%/g, `Line coverage: ${LINE}%`)
+      .replace(/Function coverage: [0-9]{2}\.[0-9]{2}%/g, `Function coverage: ${FUNC}%`)
+      .replace(/Test count: \d+/g, `Test count: ${TEST}`)
+  );
 }
 
 /** Apply CURRENT-version propagation. Only explicit present-tense markers — never historical refs. */
