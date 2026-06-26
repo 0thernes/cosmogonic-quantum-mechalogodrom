@@ -33,7 +33,7 @@ substantive change; they are personas of one discipline and they outrank vibes:
 - **NO PULL REQUESTS — EVER (binding owner rule).** This is a one-person repo: commit to `main` and
   push directly. NEVER open a PR, never create a feature/`audit/*`/`claude/*` branch to merge, never
   `gh pr create`. Work ON `main`; if a push is rejected (non-fast-forward), `git pull --rebase
-  --autostash origin main` and push again — resolve conflicts in place. The post-commit hook already
+--autostash origin main` and push again — resolve conflicts in place. The post-commit hook already
   does this. Dependency bumps and fixes go straight to `main`. No dependabot PRs (no committed
   `.github/dependabot.yml`). The flow is local→`main`→GitHub, nothing in between.
 - **NHSI progress dashboard:** [docs/NHSI-PROGRESS-DASHBOARD.md](docs/NHSI-PROGRESS-DASHBOARD.md)
