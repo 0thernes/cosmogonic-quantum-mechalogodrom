@@ -49,22 +49,22 @@ if (!FACULTIES || !ARCHONS || !TOM || !EMERGENCE || !BIOFORMS)
 /** Markdown / HTML surfaces that publish shared facts. */
 const SURFACES = [
   'README.md',
-  'ROADMAP.md',
+  'ROADMAP-2026-06-26.md',
   'docs.html',
   'specs.html',
   'index.html',
-  'docs/TECHNICAL-SPECIFICATION.md',
-  'docs/ARCHITECTURE.md',
-  'docs/SUPER-CREATURE-RESEARCH.md',
-  'docs/BENCHMARKS.md',
-  'docs/CORPUS_INTEGRATION_REPORT.md',
-  'docs/NHSI-PROGRESS-DASHBOARD.md',
+  'docs/TECHNICAL-SPECIFICATION-2026-06-26.md',
+  'docs/ARCHITECTURE-2026-06-26.md',
+  'docs/SUPER-CREATURE-RESEARCH-2026-06-26.md',
+  'docs/BENCHMARKS-2026-06-26.md',
+  'docs/CORPUS_INTEGRATION_REPORT-2026-06-26.md',
+  'docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md',
   // Canonical docs that publish the CURRENT gate figure (single "Gate:" line, no historical
   // receipts to clobber). Their slash-form "LINE% / FUNC%" was drifting unseen until added here.
-  'docs/ERD.md',
-  'docs/KANBAN.md',
+  'docs/ERD-2026-06-26.md',
+  'docs/KANBAN-2026-06-26.md',
   // Binding contract whose present-tense "...ERA (vX)" header stamps the current version (synced below).
-  'docs/MODULE-CONTRACTS.md',
+  'docs/MODULE-CONTRACTS-2026-06-26.md',
 ];
 
 /** Apply receipts (test count + coverage) propagation. */
@@ -107,7 +107,7 @@ function syncVersion(s: string): string {
       .replace(/v?0\.[0-9]+\.[0-9]+\s+@\s+current/g, `v${VERSION} @ current`)
       .replace(/version-0\.[0-9]+\.[0-9]+/g, `version-${VERSION}`)
       // TECH-SPEC / spec-header "**Version:** vX.Y.Z" — the one current-version marker this missed,
-      // which left TECHNICAL-SPECIFICATION.md stuck a version behind until hand-reconciled. Now durable.
+      // which left TECHNICAL-SPECIFICATION-2026-06-26.md stuck a version behind until hand-reconciled. Now durable.
       .replace(/(\*\*Version:\*\*\s+)v?0\.[0-9]+\.[0-9]+/g, `$1v${VERSION}`)
       // Present-tense doc headers that stamp the CURRENT version next to current data: ERD
       // "Scope (vX)", KANBAN "Status (vX)", MODULE-CONTRACTS "...WIRE ERA (vX)". One occurrence

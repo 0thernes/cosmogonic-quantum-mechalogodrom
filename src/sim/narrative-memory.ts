@@ -19,7 +19,7 @@
  * POWER OF MATH: uses linear algebra (means, dots for relevance), info theory (entropy gate), graph (adjacency for causes),
  * fourier-ish temporal (recency decay), set ops (typed filters), probability (confidence).
  *
- * See docs/SUPER-CREATURE-RESEARCH.md and the memory orchestration research notes for full mapping.
+ * See docs/SUPER-CREATURE-RESEARCH-2026-06-26.md and the memory orchestration research notes for full mapping.
  * This fulfills the "persistent lifelong narrative memory + grounded symbol layer" (VSA holographic already provides
  * symbol grounding; this adds the typed event narrative + router on top).
  */

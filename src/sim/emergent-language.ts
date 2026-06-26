@@ -29,7 +29,7 @@
  * - Symbol grounding problem (Harnad)
  * - Cultural evolution of language
  *
- * This is emergence angle #4 from NEO-MIND-ARCHITECTURE.md.
+ * This is emergence angle #4 from NEO-MIND-ARCHITECTURE-2026-06-26.md.
  *
  * Pure leaf: deterministic (seeded initial mappings), allocation-free apart from working arrays.
  */

@@ -23,7 +23,7 @@ and a CycloneDX SBOM shipped). The audit is re-run before each tagged release; d
 [CHANGELOG.md](../CHANGELOG.md).
 
 > Provenance: this list is the human-readable companion to the binding
-> [MODULE-CONTRACTS.md](./MODULE-CONTRACTS.md) and the [COMPLEXITY-2026-06-26.md](./COMPLEXITY-2026-06-26.md) budget.
+> [MODULE-CONTRACTS-2026-06-26.md](./MODULE-CONTRACTS-2026-06-26.md) and the [COMPLEXITY-2026-06-26.md](./COMPLEXITY-2026-06-26.md) budget.
 > Where a point cites "contract Vn", see that file's section. Where it cites a Known Bug number,
 > see the contract's Known Bugs table (the legacy defects fixed in the port).
 
@@ -428,7 +428,7 @@ and a CycloneDX SBOM shipped). The audit is re-run before each tagged release; d
 344. ✅ `bun run bench` aggregates all suites via `bench/index.ts`.
 345. ✅ CI runs benchmarks in a non-blocking job (perf surfaces in logs; runner noise doesn't fail the gate).
 346. ✅ The frame budget (16.6 ms) is the stated target; per-stage costs are tabulated in `COMPLEXITY-2026-06-26.md`.
-347. ✅ The ultra-tier 10k optimization (theory stagger, half-rate flock, ULTRA_GRID_CELL, connectome cadence) is documented in `BENCHMARKS.md`.
+347. ✅ The ultra-tier 10k optimization (theory stagger, half-rate flock, ULTRA_GRID_CELL, connectome cadence) is documented in `BENCHMARKS-2026-06-26.md`.
 348. ✅ The dominant per-frame costs (entity loop, connectome, quantum cloud) are ranked and justified.
 349. ✅ Heavy substrates run on cadences chosen so they never collide on a frame.
 350. ✅ The reaction-diffusion step is measured (< 0.5 ms at 128²) — claims are numbers, not hand-waving.
@@ -446,12 +446,12 @@ and a CycloneDX SBOM shipped). The audit is re-run before each tagged release; d
 ## 19. Documentation Quality
 
 361. ✅ README is extensive and organized (overview, quickstart, structure, links).
-362. ✅ ARCHITECTURE.md describes the system layering and data flow.
-363. ✅ MODULE-CONTRACTS.md (78 KB) is a binding spec with signatures and a Known Bugs table.
+362. ✅ ARCHITECTURE-2026-06-26.md describes the system layering and data flow.
+363. ✅ MODULE-CONTRACTS-2026-06-26.md (78 KB) is a binding spec with signatures and a Known Bugs table.
 364. ✅ COMPLEXITY-2026-06-26.md is a single-source Big-O budget matching each module's JSDoc.
-365. ✅ BENCHMARKS.md records methodology and the ultra-tier optimization.
+365. ✅ BENCHMARKS-2026-06-26.md records methodology and the ultra-tier optimization.
 366. ✅ DESIGN-SYSTEM-2026-06-26.md defines tokens, color, type, and layout rules.
-367. ✅ ERD.md + the new ERM-2026-06-26.md + ERP-2026-06-26.md cover structure, relationships, and processes.
+367. ✅ ERD-2026-06-26.md + the new ERM-2026-06-26.md + ERP-2026-06-26.md cover structure, relationships, and processes.
 368. ✅ WIREFRAMES-2026-06-26.md documents the UI layout intent.
 369. ✅ PHILOSOPHY-2026-06-26.md states the design principles the code is held to.
 370. ✅ Five ADRs record the load-bearing decisions (Bun, three.js, HTMX+Tailwind, deterministic RNG, math stack).
@@ -459,8 +459,8 @@ and a CycloneDX SBOM shipped). The audit is re-run before each tagged release; d
 372. ✅ SECURITY.md defines the disclosure policy.
 373. ✅ NOTICE.md + LICENSE cover attribution and licensing.
 374. ✅ CHANGELOG.md is kept current per release with real deltas.
-375. ✅ KANBAN.md tracks delivery as cards across columns/epics.
-376. ✅ ROADMAP.md states shipped/now/next horizons.
+375. ✅ KANBAN-2026-06-26.md tracks delivery as cards across columns/epics.
+376. ✅ ROADMAP-2026-06-26.md states shipped/now/next horizons.
 377. ✅ This 500-point inspection provides an auditable quality bar.
 378. ✅ Every source module carries a header JSDoc explaining its role, complexity, and provenance.
 379. ✅ Reference material (math-libs catalog, domain CSV) is preserved under `docs/reference/`.
@@ -612,7 +612,7 @@ and a CycloneDX SBOM shipped). The audit is re-run before each tagged release; d
   points as the surface grows. A WARN flipping to ❌ blocks the tag.
 - **During review:** cite point numbers in PR comments (e.g. "regresses §6.101 allocation discipline").
 - **For newcomers:** read this top-to-bottom for a guided tour of what "done" means here, then dive into
-  [MODULE-CONTRACTS.md](./MODULE-CONTRACTS.md) for the binding detail.
+  [MODULE-CONTRACTS-2026-06-26.md](./MODULE-CONTRACTS-2026-06-26.md) for the binding detail.
 
 The 14 WARNs are deliberate, named limitations appropriate to a **local, single-author proof of
 concept** — none is a correctness, determinism, or security defect. They are the honest edge of the

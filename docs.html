@@ -474,7 +474,7 @@
         Page: it documents the <strong>file/folder architecture</strong>, the data model as an
         explicit <strong>ERD / ERM / ERP</strong> triad, the per-frame process pipeline, and the
         V1&ndash;V100 evolution of the system. The diagrams mirror the markdown sources in
-        <code>docs/ARCHITECTURE.md</code> and <code>docs/ERD.md</code>.
+        <code>docs/ARCHITECTURE-2026-06-26.md</code> and <code>docs/ERD-2026-06-26.md</code>.
       </p>
 
       <div class="badges">
@@ -575,14 +575,14 @@
 │   └─ <span class="dir">styles/</span>
 │       └─ <span class="file">app.css</span>      <span class="note">responsive system — phone sheets, foldable, tablet, TV 10-foot</span>
 ├─ <span class="dir">docs/</span>
-│   ├─ <span class="file">ARCHITECTURE.md</span>  <span class="note">module graph + composition narrative (mirrors this page)</span>
-│   ├─ <span class="file">ERD.md</span>           <span class="note">entity-relationship source for the diagram below</span>
-│   ├─ <span class="file">MODULE-CONTRACTS.md</span> <span class="note">binding per-module spec (V1..V6) — contract wins over vibes</span>
+│   ├─ <span class="file">ARCHITECTURE-2026-06-26.md</span>  <span class="note">module graph + composition narrative (mirrors this page)</span>
+│   ├─ <span class="file">ERD-2026-06-26.md</span>           <span class="note">entity-relationship source for the diagram below</span>
+│   ├─ <span class="file">MODULE-CONTRACTS-2026-06-26.md</span> <span class="note">binding per-module spec (V1..V6) — contract wins over vibes</span>
 │   ├─ <span class="file">PHILOSOPHY-2026-06-26.md</span>     <span class="note">aesthetic constitution — real math under every effect</span>
 │   ├─ <span class="file">DESIGN-SYSTEM.md</span>  <span class="note">color, type, panel + wireframe conventions</span>
 │   ├─ <span class="file">WIREFRAMES.md</span>     <span class="note">layout sketches for the dome + observatory</span>
 │   ├─ <span class="file">COMPLEXITY.md</span>     <span class="note">per-system complexity budgets</span>
-│   ├─ <span class="file">BENCHMARKS.md</span>     <span class="note">recorded hot-path measurements + ultra-tier calibration</span>
+│   ├─ <span class="file">BENCHMARKS-2026-06-26.md</span>     <span class="note">recorded hot-path measurements + ultra-tier calibration</span>
 │   ├─ <span class="dir">adr/</span>             <span class="note">architecture decision records (Bun, three.js, HTMX, seeded rng, math stack)</span>
 │   ├─ <span class="dir">reference/</span>       <span class="note">domain library catalog + math-libs survey</span>
 │   └─ <span class="dir">diagrams/</span>        <span class="note">exported diagram assets</span>
@@ -1074,9 +1074,9 @@ sequenceDiagram
       <h2 id="eras"><span class="tag">LOG</span>The eras</h2>
       <p>
         The system grew in many contract-governed waves. Each era is a binding section in
-        <code>docs/MODULE-CONTRACTS.md</code>; the later eras (V5 onward) are direct user-feedback
-        passes. Exclusive file ownership and a strict <code>bun run check</code> gate hold across
-        all of them.
+        <code>docs/MODULE-CONTRACTS-2026-06-26.md</code>; the later eras (V5 onward) are direct
+        user-feedback passes. Exclusive file ownership and a strict <code>bun run check</code> gate
+        hold across all of them.
       </p>
 
       <div class="era e1">
@@ -1284,7 +1284,7 @@ sequenceDiagram
         The simulation never calls the built-in unseeded random source: all randomness flows through
         an injected <code>mulberry32</code> Rng seeded from persisted state, so any run is
         reproducible from its seed. <code>Math.random</code> and <code>Date.now</code> are banned in
-        sim logic. See <code>docs/adr/0004-deterministic-rng.md</code>.
+        sim logic. See <code>docs/adr/0004-deterministic-rng-2026-06-26.md</code>.
       </p>
       <div class="grid2">
         <div class="keyval">
@@ -1329,7 +1329,7 @@ sequenceDiagram
         the adaptive steady-state target, and a set of throttles. The hard ceiling sizes every
         buffer (instanced pools, index tables, atmosphere Rng-draw count) and stays reachable via
         user bursts and apocalypse; organic growth relaxes back toward the target. Full per-stage
-        measurements live in <code>docs/BENCHMARKS.md</code>.
+        measurements live in <code>docs/BENCHMARKS-2026-06-26.md</code>.
       </p>
       <div class="card flush">
         <table>
@@ -1398,8 +1398,8 @@ sequenceDiagram
       <div class="card">
         <ul>
           <li>
-            <a href="./docs/NHSI-PROGRESS-DASHBOARD.md">NHSI Progress Dashboard</a> · measured
-            targets vs. receipts (Local = GitHub)
+            <a href="./docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md">NHSI Progress Dashboard</a> ·
+            measured targets vs. receipts (Local = GitHub)
           </li>
           <li>
             <a href="./docs/reports/2026-06-21-NHSI-MANIFESTO-0THERNES-CORP.md">NHSI Manifesto</a> ·
@@ -1434,8 +1434,8 @@ sequenceDiagram
             — Butlin indicators, sentience verdict, LFG metrics (single file)
           </li>
           <li>
-            <a href="./docs/SUPER-CREATURE-RESEARCH.md">Super Creature Research</a> — citation trail
-            for every faculty (2023–2026)
+            <a href="./docs/SUPER-CREATURE-RESEARCH-2026-06-26.md">Super Creature Research</a> —
+            citation trail for every faculty (2023–2026)
           </li>
         </ul>
         <p class="muted" style="margin-top: 8px">

@@ -64,7 +64,7 @@ Conscious-agent/Interface ✦ · Holonomic brain ✦
 > `FacultiesPantheon` instantiates these 100 (of which **~30 are genuinely deep-wired**
 > into the apex `think()`), plus a brutal god-layer of faculties
 > (Valkorion/Thanos/Broly/Knull-class) on top of this base — see
-> [NHSI-PROGRESS-DASHBOARD.md](./NHSI-PROGRESS-DASHBOARD.md) for the measured count.
+> [NHSI-PROGRESS-DASHBOARD-2026-06-26.md](./NHSI-PROGRESS-DASHBOARD-2026-06-26.md) for the measured count.
 
 ✓ already built · ◆ from the 2026 research bedrock · ✦ novel design. (~40 already exist — buildable, not vapor.)
 

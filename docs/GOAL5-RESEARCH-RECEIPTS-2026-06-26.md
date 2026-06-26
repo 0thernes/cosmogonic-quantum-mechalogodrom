@@ -27,7 +27,7 @@
 - **Other (libirrep, tensorcore, ulg, quantum-quake, etc.)**: Rep theory/QEC for symmetry in phyla/cognition, GPU tensor for perf (future), browser ULG for viz/GPU fallback, quake runtime for aliveness patterns.
   - Used for inspiration on math rigor, det, provenance.
 
-**Local cross-check:** Ports credited in THIRD-PARTY-NOTICES.md, SUPER-CREATURE-RESEARCH.md, CHANGELOG (Eshkol QRNG, Moonlab Clifford, QGT in quantum-geometry).
+**Local cross-check:** Ports credited in THIRD-PARTY-NOTICES.md, SUPER-CREATURE-RESEARCH-2026-06-26.md, CHANGELOG (Eshkol QRNG, Moonlab Clifford, QGT in quantum-geometry).
 
 **Integration (post-audit 2026-06-19):**
 

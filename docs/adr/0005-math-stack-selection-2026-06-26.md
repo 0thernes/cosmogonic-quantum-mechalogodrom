@@ -5,7 +5,7 @@
 ## Status
 
 Accepted (2026-06-10). Dependency installs pending capacity window; contracts in
-MODULE-CONTRACTS.md §V2 are written against this decision.
+MODULE-CONTRACTS-2026-06-26.md §V2 are written against this decision.
 
 ## Context
 

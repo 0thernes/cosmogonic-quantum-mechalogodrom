@@ -98,7 +98,7 @@ export const HELP_KB: readonly HelpEntry[] = [
       'power',
     ],
     body: 'The always-active apex being (ARCHITECT-Ω) — half a Titan but ~100× the power, driven by a genuine 1444-parameter deep neural mind (cortex→actor) with an emotion-like state, episodic memory, a prediction loop, GOAP planning, and self-replication (up to 3 mutated twins). It wears a masterful many-eyed god-jewel body and FLIES the whole world — roaming, banking, quantum-teleporting and morphing as it thinks. It also SELF-EVOLVES like Goku/Vegeta: a hard XP curve to a max of LEVEL 100 through five ascensions (BASE→ASCENDED→SUPER→ULTRA→LEGENDARY at 1/10/25/50/100). It earns one GODLIKE POWER automatically every 10 levels (ten in all, KAIO AURA → GODHEAD HALO) and visibly morphs — bigger, more spikes, a shifting hue, and a blazing aura that maxes at the summit. At LEVEL 100 it ASCENDS (SS3/Neo end-state) and a MEGALITHIC MONOLITH TEMPLE rises from the field — the portal to GAME STAGE 2 (a second world, built later). The ⬢ ARCHITECT panel shows its live level (n/100), godlike-power tally and stage.',
-    see: ['docs/adr/0008-super-creature-deep-mind.md', 'docs/ENTITY-SHEETS.md'],
+    see: ['docs/adr/0008-super-creature-deep-mind-2026-06-26.md', 'docs/ENTITY-SHEETS.md'],
   },
   {
     id: 'chaos-mode',
@@ -218,7 +218,7 @@ export const HELP_KB: readonly HelpEntry[] = [
       'how does it work',
     ],
     body: "Real math under every effect: seeded PRNGs for determinism, tiny neural nets (perceptrons/MLPs) for cognition, game theory (iterated prisoner's dilemma, Nash, Vickrey auctions, replicator dynamics) for diplomacy + markets, Louvain community detection for tribes, reaction-diffusion + Lorenz/chaos fields for motion, fBm noise + thin-film optics in the shaders, and Jolt rigid-body physics in the native engine.",
-    see: ['docs/adr/0005-math-stack-selection.md'],
+    see: ['docs/adr/0005-math-stack-selection-2026-06-26.md'],
   },
   {
     id: 'tsotchke-petri',
@@ -241,7 +241,7 @@ export const HELP_KB: readonly HelpEntry[] = [
     body: 'Tsotchke (Eshkol COMPLETE spec + native AD + GWT/§17 Consciousness Engine + all 21+ repos from tsotchke + Tsotchke-Corporation corpus + local Tsotchke Repo Folder as .esk DNA + kernel source) is the paramount non-LLM substrate for digital biologics and different forms of existence/sentience/consciousness. The Primordial Soup / Petri Dish (primordial-soup.ts + petri-dish.ts + digital-biologics.ts) is the God growth engine. Super Creature/5 Archons are the initial spark only ("as if God made primordial inorganic soup"); the soup grows independent biologics onward using Eshkol .esk programs (as heritable "DNA"), real AD mutation, GWT workspace ignition, full corpus catalysis (Moonlab, QGT, spin, irrep, quake, ulg, logo, PINN etc.). 9+ BiologicForms. Omniscient Master Audit + ULTIMATE REPORT complete (see docs/TSOTCHKE-ULTIMATE-COMPREHENSIVE-AUDIT-REPORT-ASSESSMENT-2026-06-20.md and CONTINUED). EVERY repo wired. "Grow What Thou Wilt." Not LLM/tokenizer/chat/SaaS/therapy — real math life in the mechalogodrom. See README, ARCHITECTURE, ERD/ERM/ERP, masters, digital-biologics.ts.',
     see: [
       'README.md',
-      'docs/ARCHITECTURE.md',
+      'docs/ARCHITECTURE-2026-06-26.md',
       'src/sim/digital-biologics.ts',
       'src/sim/primordial-soup.ts',
     ],
@@ -265,7 +265,7 @@ export const HELP_KB: readonly HelpEntry[] = [
     title: 'Is it the same every time? (determinism)',
     keywords: ['determinism', 'random', 'seed', 'reproducible', 'rng', 'same'],
     body: "Yes — one seed reproduces a whole run, byte for byte. All simulation randomness flows through a seeded mulberry32 PRNG; Math.random and Date.now are banned in sim logic. New systems (economy, super creature) draw from isolated sub-streams so they never perturb the core golden. This is the repo's #1 law.",
-    see: ['src/math/rng.ts', 'docs/adr/0004-deterministic-rng.md'],
+    see: ['src/math/rng.ts', 'docs/adr/0004-deterministic-rng-2026-06-26.md'],
   },
   {
     id: 'architecture',
@@ -281,7 +281,7 @@ export const HELP_KB: readonly HelpEntry[] = [
       'build',
     ],
     body: 'A TypeScript + three.js browser app (src/): sim/ holds the world systems (entities, economy, cognition, super creature), ui/ the self-mounting panels, math/ the primitives. A sibling native/ C++20 engine ray-marches the ornate specimens with Jolt physics. Everything passes a full gate (prettier → tsc → oxlint → tests → build) before commit.',
-    see: ['CLAUDE.md', 'docs/MODULE-CONTRACTS.md'],
+    see: ['CLAUDE.md', 'docs/MODULE-CONTRACTS-2026-06-26.md'],
   },
   {
     id: 'performance',
@@ -298,7 +298,7 @@ export const HELP_KB: readonly HelpEntry[] = [
       'speed',
     ],
     body: 'Creatures render through GPU-instanced pools (one draw call per geometry), a spatial hash for neighbour queries, and cadenced heavy work (the connectome, economy and graph passes run on slow frames that scale with population). Quality auto-detects the device tier. Telemetry tracks it all live in the ⊞ panels.',
-    see: ['docs/BENCHMARKS.md'],
+    see: ['docs/BENCHMARKS-2026-06-26.md'],
   },
 ];
 

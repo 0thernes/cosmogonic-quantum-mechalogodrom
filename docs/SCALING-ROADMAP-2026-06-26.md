@@ -39,7 +39,7 @@ shippable, gate-green, pushed increment that builds on the last.
 - **Deferred to Stage 3 (correctly):** the determinism-affecting **arena resize** and **per-instance distance-culling**. Both belong with streaming under the Hybrid decision (Stage 4) — that's where "near/simulated vs far/streamed/culled" is designed and visually tuned (a blind hard-cull distance pops against the fog), and the arena resize touches the sim, so it re-baselines goldens as part of the deterministic-core/streamed-wilderness split, not in isolation.
 - **Payoff:** you can roam now; the heavy world-growth lands with the streaming substrate where it's safe.
 
-## Stage 3 — Sim off the main thread + streamed world (effort: L) — see [ADR 0010](adr/0010-worker-offload-and-streamed-hybrid-world.md)
+## Stage 3 — Sim off the main thread + streamed world (effort: L) — see [ADR 0010](adr/0010-worker-offload-and-streamed-hybrid-world-2026-06-26.md)
 
 - Move neighbour queries + per-creature brain eval into **Web Workers** — finally use the other ~23 cores. Deterministic work partitioning (seeded, stable chunking) so the core one-seed property holds.
 - Absorbs Stage 2's deferred parts under the **Hybrid** contract: a deterministic **preserve core** (bit-exact) + a streamed best-effort **wilderness** (camera-chunked load/unload + per-instance distance-culling/LOD), which is also where the **arena grows** (the wilderness is the new space to roam).

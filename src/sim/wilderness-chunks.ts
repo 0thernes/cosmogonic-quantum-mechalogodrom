@@ -6,7 +6,7 @@
  * golden), and the camera-streaming load/unload plan. PURE math — no rng DRAWS, no `Date.now`,
  * no DOM — so it is determinism-safe (it never touches the seeded core stream) and fully
  * unit-testable headlessly. Consumed later by the worker wilderness sim (3b) and the streaming
- * integration (3c). See `docs/adr/0010-worker-offload-and-streamed-hybrid-world.md`.
+ * integration (3c). See `docs/adr/0010-worker-offload-and-streamed-hybrid-world-2026-06-26.md`.
  */
 import { hashSeed } from '../math/rng';
 

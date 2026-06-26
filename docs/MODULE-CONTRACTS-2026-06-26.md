@@ -527,14 +527,14 @@ AUDIT-LOG.md (hero, feature list, quickstart `bun install && bun dev`, scripts t
 mermaid digest, repo layout tree, links to all docs, license/legal section), LICENSE (MIT,
 "Copyright (c) 2026 0thernes"), NOTICE.md (three/MIT, htmx/0BSD, tailwindcss/MIT, mermaid/MIT,
 simplex-noise/MIT, Inter & JetBrains Mono/OFL-1.1, bun runtime note), SECURITY.md, CONTRIBUTING.md
-(bun workflow, `bun run check` gate), CHANGELOG.md (Keep-a-Changelog, 0.1.0), docs/ARCHITECTURE.md
+(bun workflow, `bun run check` gate), CHANGELOG.md (Keep-a-Changelog, 0.1.0), docs/ARCHITECTURE-2026-06-26.md
 (mermaid `graph TD` of modules matching this contract + data-flow + frame pipeline),
-docs/ERD.md (mermaid `erDiagram`: ENTITY, MORPHOTYPE, BEHAVIOR, SHOGGOTH, PUPPET_MASTER, WEATHER,
+docs/ERD-2026-06-26.md (mermaid `erDiagram`: ENTITY, MORPHOTYPE, BEHAVIOR, SHOGGOTH, PUPPET_MASTER, WEATHER,
 SONG, AUDIT_EVENT, PERSISTED_STATE + relationship narrative (ERM) + `sequenceDiagram`/`stateDiagram`
 process models (ERP)), docs/WIREFRAMES-2026-06-26.md (ASCII wireframes desktop/mobile + typography scale +
 spacing/color tokens), docs/COMPLEXITY-2026-06-26.md (per-hot-path big-O table: spatial hash, behaviors,
-connectome, quantum, sort step, with n/k definitions), docs/adr/0001-bun-runtime.md,
-0002-threejs-rendering.md, 0003-htmx-tailwind-ui.md, 0004-deterministic-rng.md (context/decision/
+connectome, quantum, sort step, with n/k definitions), docs/adr/0001-bun-runtime-2026-06-26.md,
+0002-threejs-rendering-2026-06-26.md, 0003-htmx-tailwind-ui-2026-06-26.md, 0004-deterministic-rng-2026-06-26.md (context/decision/
 consequences format).
 
 ### Benchmarks writer
@@ -1233,7 +1233,7 @@ Acceptance: ultra 10k ≥55fps desktop; phone tier ≥30fps; zero console errors
 ## CONTRACT AMENDMENT — 0.4.x (ultra-tier perf, binding)
 
 Forensic re-measurement (Master File III; full per-stage breakdown + calibration archive in
-docs/BENCHMARKS.md "Ultra-tier 10k optimization") established that the ≥55fps-at-10k acceptance
+docs/BENCHMARKS-2026-06-26.md "Ultra-tier 10k optimization") established that the ≥55fps-at-10k acceptance
 target is **not reachable on CPU optimization alone** on the reference class of machine: at the
 full 10k ceiling GPU render alone (~21ms) already exceeds the 18ms a 55fps total frame allows.
 The amendment lands as:

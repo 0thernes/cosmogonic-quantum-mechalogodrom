@@ -56,7 +56,7 @@ const FACTS: Fact[] = [
   {
     name: 'Fenced Tsotchke repos',
     // The non-LLM mandate fences exactly 3 repos (gpt2-basic, llm-arbitrator, SolanaQuantumFlux);
-    // Quantum-RNG-API is WIRED, not fenced. ARCHITECTURE.md had drifted to "four ... fenced".
+    // Quantum-RNG-API is WIRED, not fenced. ARCHITECTURE-2026-06-26.md had drifted to "four ... fenced".
     pattern: /\b(\d+)\s+(?:LLM(?:\/chain)?(?:\/API)?\s+(?:repos?\s+)?)?fenced\b/gi,
     allowed: new Set(['3']),
     note: '3 fenced (gpt2-basic, llm-arbitrator, SolanaQuantumFlux); Quantum-RNG-API is wired',

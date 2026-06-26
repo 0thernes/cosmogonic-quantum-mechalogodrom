@@ -1,6 +1,6 @@
 /**
  * CODEBASE METRICS — deterministic, measured-from-git source of truth for the
- * file-count / LOC figures quoted in docs/TECHNICAL-SPECIFICATION.md §1.
+ * file-count / LOC figures quoted in docs/TECHNICAL-SPECIFICATION-2026-06-26.md §1.
  *
  * Why this exists: those figures were hand-maintained and went badly stale
  * (claimed 108 src files / 35,226 LOC while the tree held ~195 / ~56k), and were

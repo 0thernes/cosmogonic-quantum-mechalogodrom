@@ -36,7 +36,7 @@ export interface QualityProfile {
    * ORGANIC growth — auto-split and sparse-respawn — stops at this count, so an idle world
    * settles here. Since 0.5.0 this equals {@link maxEntities} on EVERY tier (the ultra 6,500
    * adaptive throttle was retired on user feedback — an idle ultra world now fills its 10,000
-   * ceiling, carried by the per-frame neighbor-query throttles in docs/BENCHMARKS.md). The
+   * ceiling, carried by the per-frame neighbor-query throttles in docs/BENCHMARKS-2026-06-26.md). The
    * field is retained because bursts can still transiently exceed it on tiers where it might
    * diverge from the ceiling again. Must be ≤ maxEntities.
    */

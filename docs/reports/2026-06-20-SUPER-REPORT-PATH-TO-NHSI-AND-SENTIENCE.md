@@ -99,8 +99,8 @@ Rigor begins with refusing to let the words do undeserved work. The tribunal wil
 | Axis                         | Measured value                                                                                                 | Receipt                                                  |
 | ---------------------------- | -------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
 | Population ceiling           | **50,000** organisms (mega tier)                                                                               | `src/core/quality.ts`                                    |
-| Population @ 60 fps (iGPU)   | **10,000**                                                                                                     | `docs/BENCHMARKS.md`                                     |
-| Whole-world neural mass      | **≈3.5M** params (**≈14 MB** Float32), one CPU thread                                                          | `docs/TECHNICAL-SPECIFICATION.md`                        |
+| Population @ 60 fps (iGPU)   | **10,000**                                                                                                     | `docs/BENCHMARKS-2026-06-26.md`                          |
+| Whole-world neural mass      | **≈3.5M** params (**≈14 MB** Float32), one CPU thread                                                          | `docs/TECHNICAL-SPECIFICATION-2026-06-26.md`             |
 | Per-organism brain           | **70-weight** TinyMLP, heritable gene; **250** morphotypes; **26** behavioral fields                           | `src/sim/entities.ts`, `src/sim/genome.ts`               |
 | Apex mind ("Super Creature") | 100-faculty design, **~30 deep-wired**; **≈37,225** params (10,081 composite + 1,444 spine + 100×257 wingmen)  | `src/sim/super-mind.ts`, `src/sim/faculties-pantheon.ts` |
 | Apex `think()` cost          | **≈3.34 ms** (full bench suite) / **≈8.85 ms** (focused); snapshot ≈2.44 / 6.89 ms; 5× think ≈14.47 / 25.40 ms | `bench/*`, `tests/perf-budget.test.ts`                   |

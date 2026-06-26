@@ -10,7 +10,7 @@ green.
 
 - [Bun](https://bun.sh) >= 1.3 (runtime, bundler, and test runner — there is no
   Node/webpack/vitest setup here; see
-  [ADR 0001](./docs/adr/0001-bun-runtime.md)).
+  [ADR 0001](./docs/adr/0001-bun-runtime-2026-06-26.md)).
 
 ## Workflow
 
@@ -28,7 +28,7 @@ command, so running it locally is the fastest feedback you can get.
 ## Ground rules
 
 These mirror the binding spec in
-[docs/MODULE-CONTRACTS.md](./docs/MODULE-CONTRACTS.md) — read it before
+[docs/MODULE-CONTRACTS-2026-06-26.md](./docs/MODULE-CONTRACTS-2026-06-26.md) — read it before
 touching module boundaries.
 
 1. **Source of truth.** The legacy monolith at
@@ -50,7 +50,7 @@ touching module boundaries.
    All randomness flows through the injected seeded `Rng`
    (`SimContext.rng` or a constructor argument). Same seed, same universe —
    this is what makes tests assertable and benchmarks stable
-   ([ADR 0004](./docs/adr/0004-deterministic-rng.md)).
+   ([ADR 0004](./docs/adr/0004-deterministic-rng-2026-06-26.md)).
 6. **Hot paths are allocation-free.** No `new`, array literals, closures, or
    string building inside per-frame `update()` bodies. Use documented
    module-level scratch objects. If you add a hot path, document its time
@@ -79,8 +79,8 @@ touching module boundaries.
 - Explain _why_ in the description, especially for anything that changes a
   legacy constant or visual behavior.
 - If a change alters a module's public surface, update
-  `docs/MODULE-CONTRACTS.md` and the diagrams in `docs/ARCHITECTURE.md` /
-  `docs/ERD.md` in the same PR.
+  `docs/MODULE-CONTRACTS-2026-06-26.md` and the diagrams in `docs/ARCHITECTURE-2026-06-26.md` /
+  `docs/ERD-2026-06-26.md` in the same PR.
 - Add a `CHANGELOG.md` entry under `[Unreleased]` (Keep a Changelog format).
 
 ## Contributions & ownership

@@ -5,8 +5,8 @@
 - Status: **Accepted** — Option A wired in the soup sub-stream (2026-06-24). See "Decision" below.
 - Deciders: the operator (product direction), with the ARCHITECT (ownership/boundaries) and the
   PHYSICIST (determinism / the same-seed golden)
-- Relates to: [0004 deterministic RNG](./0004-deterministic-rng.md),
-  [0008 the super-creature deep mind](./0008-super-creature-deep-mind.md)
+- Relates to: [0004 deterministic RNG](./0004-deterministic-rng-2026-06-26.md),
+  [0008 the super-creature deep mind](./0008-super-creature-deep-mind-2026-06-26.md)
 
 ## Context
 

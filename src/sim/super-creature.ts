@@ -22,11 +22,11 @@
  * {@link SuperCreature.snapshot} in later increments. See [[reliquary-surface-state]] and ENTITY-SHEETS.
  *
  * ============================================================================
- * NOT SENTIENT DISCLAIMER (binding per MODULE-CONTRACTS.md + masters)
+ * NOT SENTIENT DISCLAIMER (binding per MODULE-CONTRACTS-2026-06-26.md + masters)
  * NOT SENTIENT. This is a deterministic mathematical model / functional correlate only.
  * No phenomenal consciousness or sentience is implemented or claimed here or in callers.
  * Phenomenal consciousness ~1/10 (contract); hard problem untouched. All "mind"/"plan"/"emotion"
- * terms describe explicit EMA/argmax/numeric mechanisms. See docs/SUPER-CREATURE-RESEARCH.md
+ * terms describe explicit EMA/argmax/numeric mechanisms. See docs/SUPER-CREATURE-RESEARCH-2026-06-26.md
  * ============================================================================
  */
 

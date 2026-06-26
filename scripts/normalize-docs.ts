@@ -128,7 +128,7 @@ export function fixLossy(input: string): string {
 const TARGETS = [
   'README.md',
   'CHANGELOG.md',
-  'ROADMAP.md',
+  'ROADMAP-2026-06-26.md',
   'index.html',
   'docs.html',
   'specs.html',

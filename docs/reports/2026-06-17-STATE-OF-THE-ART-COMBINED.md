@@ -128,7 +128,7 @@ the science of mind._
 A procedural WebGL cosmic ecosystem, ported from an 882-line single-file HTML monolith into a strict,
 deterministic, allocation-disciplined TypeScript module graph (Bun + three.js + Tailwind 4 + HTMX 2),
 with an optional native C++20 renderer. It is governed by a binding per-module contract
-(`../MODULE-CONTRACTS.md`) and an aesthetic constitution (`../PHILOSOPHY-2026-06-26.md`) whose first law is:
+(`../MODULE-CONTRACTS-2026-06-26.md`) and an aesthetic constitution (`../PHILOSOPHY-2026-06-26.md`) whose first law is:
 **real math under every effect; every system reads from AND writes to another system.** Nothing in it
 is set dressing.
 
@@ -137,7 +137,7 @@ is set dressing.
 | Axis                    | Measured value                                                                                                                                                                                                    | Where                                          |
 | ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
 | Population ceiling      | **50,000** organisms (mega tier), 10,000 at 60 fps on an iGPU                                                                                                                                                     | `core/quality.ts`                              |
-| Whole-world neural mass | **≈ 3.5 M params ≈ 14 MB** Float32, one CPU thread                                                                                                                                                                | `../TECHNICAL-SPECIFICATION.md §7`             |
+| Whole-world neural mass | **≈ 3.5 M params ≈ 14 MB** Float32, one CPU thread                                                                                                                                                                | `../TECHNICAL-SPECIFICATION-2026-06-26.md §7`  |
 | Per-organism brain      | **70-weight** TinyMLP (6→6→4), heritable as a gene                                                                                                                                                                | `sim/entities.ts`, `sim/genome.ts`             |
 | Behavioral fields       | **26** (drift … flock, nash, market, lorenz)                                                                                                                                                                      | `sim/constants.ts`                             |
 | Morphology              | **250** morphotypes (10 phyla × 25) + ~1 % wildcard outliers                                                                                                                                                      | `sim/phyla.ts`                                 |
@@ -283,22 +283,22 @@ measured against the field._
 
 ## II.1 · Receipts dashboard (the numbers, with provenance)
 
-| Metric                                     | Value                                                                                                          | Provenance / receipt                                             |
-| ------------------------------------------ | -------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
-| Build / gate                               | **v0.18.0**, **1,477 pass / 0 fail**, 151 files, 1,744,891 `expect()` calls                                    | `package.json`, `bun test` (origin/main @ `2233488`, Bun 1.3.14) |
-| Apex composite mind                        | **~10,081 weights** across ~12 sub-networks                                                                    | `super-mind.ts:382–393`                                          |
-| Apex total parameters                      | **≈ 37,225** = 10,081 mind + 1,444 legacy spine + 100 × 257 wingmen                                            | `super-mind.ts`, `super-creature.ts:36`, `super-wingmen.ts:24`   |
-| Faculties deep-wired into the apex think() | **~30** mechanisms (each reads state AND moves the plan/drives/consciousness), within a **100-faculty design** | `../NHSI-PROGRESS-DASHBOARD.md`, `faculties-pantheon.ts`         |
-| Cognitive pipeline                         | **5 stages** (PERCEIVE·IMAGINE·REASON·FEEL·ACT) × **5 depths** × **5 variants** = 25 thought branches          | `super-mind.ts:71–73`                                            |
-| Quantum register                           | **6 qubits / 64 complex amplitudes**, 3 circuit layers                                                         | `super-qubits.ts:46,48,49`                                       |
-| Decision vocabulary                        | **7 plans** (HUNT·FLEE·DOMINATE·DECEIVE·SPAWN·EXPLORE·REST)                                                    | `super-creature.ts`                                              |
-| Spin-glass instinct                        | **56 spins**, 7 imprinted archetypes, Metropolis settle                                                        | `spin-glass.ts`, `super-mind.ts:217`                             |
-| Apex `think()` cost                        | **~3.34 ms** (full bench suite) / **~8.85 ms** (focused); snapshot ~2.44 / 6.89 ms; 5× think ~14.47 / 25.40 ms | `bench/super-mind.bench.ts`                                      |
-| Consciousness metrics                      | **2** live scalars — GWT `ignition`, IIT `phi` (proxy) — + genuine register Φ                                  | `super-mind.ts:43–46`, `super-qubits.ts`                         |
-| Theory-of-Mind                             | **25 organs** wired as a 6-family ensemble (additive/bayesian/recursive/temporal/deception/coalition)          | `theory-of-mind.ts`, `../NHSI-PROGRESS-DASHBOARD.md`             |
-| Archon pantheon                            | **25-Archon** pantheon = 5 individuated apex SuperMinds + 20 live light-echo                                   | `faculties-pantheon.ts`, `super-mind.ts`                         |
-| Emergence                                  | **10 angles wired** (+ 5 god-scale release **events**)                                                         | `open-endedness.ts`, `../NHSI-PROGRESS-DASHBOARD.md`             |
-| Determinism                                | bit-identical psyche from one seed; Born collapse drawn through a seeded generator                             | `tests/determinism-law.test.ts`, `super-qubits.test.ts:184`      |
+| Metric                                     | Value                                                                                                          | Provenance / receipt                                                |
+| ------------------------------------------ | -------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| Build / gate                               | **v0.18.0**, **1,477 pass / 0 fail**, 151 files, 1,744,891 `expect()` calls                                    | `package.json`, `bun test` (origin/main @ `2233488`, Bun 1.3.14)    |
+| Apex composite mind                        | **~10,081 weights** across ~12 sub-networks                                                                    | `super-mind.ts:382–393`                                             |
+| Apex total parameters                      | **≈ 37,225** = 10,081 mind + 1,444 legacy spine + 100 × 257 wingmen                                            | `super-mind.ts`, `super-creature.ts:36`, `super-wingmen.ts:24`      |
+| Faculties deep-wired into the apex think() | **~30** mechanisms (each reads state AND moves the plan/drives/consciousness), within a **100-faculty design** | `../NHSI-PROGRESS-DASHBOARD-2026-06-26.md`, `faculties-pantheon.ts` |
+| Cognitive pipeline                         | **5 stages** (PERCEIVE·IMAGINE·REASON·FEEL·ACT) × **5 depths** × **5 variants** = 25 thought branches          | `super-mind.ts:71–73`                                               |
+| Quantum register                           | **6 qubits / 64 complex amplitudes**, 3 circuit layers                                                         | `super-qubits.ts:46,48,49`                                          |
+| Decision vocabulary                        | **7 plans** (HUNT·FLEE·DOMINATE·DECEIVE·SPAWN·EXPLORE·REST)                                                    | `super-creature.ts`                                                 |
+| Spin-glass instinct                        | **56 spins**, 7 imprinted archetypes, Metropolis settle                                                        | `spin-glass.ts`, `super-mind.ts:217`                                |
+| Apex `think()` cost                        | **~3.34 ms** (full bench suite) / **~8.85 ms** (focused); snapshot ~2.44 / 6.89 ms; 5× think ~14.47 / 25.40 ms | `bench/super-mind.bench.ts`                                         |
+| Consciousness metrics                      | **2** live scalars — GWT `ignition`, IIT `phi` (proxy) — + genuine register Φ                                  | `super-mind.ts:43–46`, `super-qubits.ts`                            |
+| Theory-of-Mind                             | **25 organs** wired as a 6-family ensemble (additive/bayesian/recursive/temporal/deception/coalition)          | `theory-of-mind.ts`, `../NHSI-PROGRESS-DASHBOARD-2026-06-26.md`     |
+| Archon pantheon                            | **25-Archon** pantheon = 5 individuated apex SuperMinds + 20 live light-echo                                   | `faculties-pantheon.ts`, `super-mind.ts`                            |
+| Emergence                                  | **10 angles wired** (+ 5 god-scale release **events**)                                                         | `open-endedness.ts`, `../NHSI-PROGRESS-DASHBOARD-2026-06-26.md`     |
+| Determinism                                | bit-identical psyche from one seed; Born collapse drawn through a seeded generator                             | `tests/determinism-law.test.ts`, `super-qubits.test.ts:184`         |
 
 **On the faculty count (stated precisely, not rounded).** The architecture is a **100-faculty
 design**; **~30 of those are genuinely deep-wired into the apex `think()`** — each one reads live state
@@ -331,7 +331,7 @@ by the GWT ignition broadcast**, a real downstream effect of the consciousness m
 ## II.3 · The faculty stack — cited, wired, tested
 
 Every wired faculty is a pure leaf or inline module: deterministic, bounded, allocation-disciplined,
-**unit-tested**, and grounded in a verified citation (`../SUPER-CREATURE-RESEARCH.md`). Each genuinely
+**unit-tested**, and grounded in a verified citation (`../SUPER-CREATURE-RESEARCH-2026-06-26.md`). Each genuinely
 **writes into the per-beat decision** (verified against `think()`, not dead code).
 
 **Cognitive (representative deep-wired set):**
@@ -673,7 +673,7 @@ novelty by integration, never a world-first.
 ## Appendix A — Consolidated Receipts (numbers with provenance)
 
 Every figure below is read from source or produced by the gate. Where two source reports phrased the
-same quantity differently, the canonical published value (README / `../TECHNICAL-SPECIFICATION.md`) is
+same quantity differently, the canonical published value (README / `../TECHNICAL-SPECIFICATION-2026-06-26.md`) is
 used, and the equivalent phrasings are noted.
 
 | Metric                            | Canonical value                                                                                                           | Provenance / receipt                                                                    |
@@ -682,16 +682,16 @@ used, and the equivalent phrasings are noted.
 | Tests / failures                  | **1,477 pass / 0 fail**                                                                                                   | `bun test`, 151 files, 1,744,891 `expect()` calls (Bun 1.3.14, origin/main @ `2233488`) |
 | Coverage (line / function)        | **~95 / ~92** (canonical 95.03 / 92.03; ±6 pp gate tolerance for env jitter)                                              | `scripts/canonical-receipts.ts`, `../AUDIT-LOG.md`                                      |
 | Population at 60 fps / ceiling    | 10,000 / **50,000** (mega tier)                                                                                           | `core/quality.ts`                                                                       |
-| Whole-world neural mass           | **≈ 3.5 M params ≈ 14 MB** Float32, one CPU thread                                                                        | `../TECHNICAL-SPECIFICATION.md §7`                                                      |
+| Whole-world neural mass           | **≈ 3.5 M params ≈ 14 MB** Float32, one CPU thread                                                                        | `../TECHNICAL-SPECIFICATION-2026-06-26.md §7`                                           |
 | Per-organism brain                | **70-weight** TinyMLP (6→6→4), heritable                                                                                  | `sim/entities.ts`, `sim/genome.ts`                                                      |
 | Behavioral fields / morphotypes   | **26** fields / **250** morphotypes (10 phyla × 25)                                                                       | `sim/constants.ts`, `sim/phyla.ts`                                                      |
 | Macro-intelligences               | 10 Titans · 8 factions · 100 shoggoths · 4 leviathans · 100 puppet-masters (5-qubit) · 1 NHI apex                         | `sim/titans.ts`, `factions.ts`, …                                                       |
 | Apex composite mind               | **~10,081 weights** across ~12 sub-networks                                                                               | `super-mind.ts:382–393`                                                                 |
 | Apex total parameters             | **≈ 37,225** = 10,081 mind + 1,444 legacy spine + 100 × 257 wingmen                                                       | `super-mind.ts`, `super-creature.ts:36`, `super-wingmen.ts:24`                          |
-| Faculty count (honest definition) | **100-faculty design**; **~30 genuinely deep-wired** into the apex `think()`; remainder a generic-profile bias bank       | `../NHSI-PROGRESS-DASHBOARD.md`, `faculties-pantheon.ts`                                |
+| Faculty count (honest definition) | **100-faculty design**; **~30 genuinely deep-wired** into the apex `think()`; remainder a generic-profile bias bank       | `../NHSI-PROGRESS-DASHBOARD-2026-06-26.md`, `faculties-pantheon.ts`                     |
 | Archon pantheon                   | **25-Archon** = 5 individuated apex SuperMinds + 20 live light-echo                                                       | `faculties-pantheon.ts`, `super-mind.ts`                                                |
 | Theory-of-Mind                    | **25 organs**, 6-family ensemble (additive/bayesian/recursive/temporal/deception/coalition)                               | `theory-of-mind.ts`                                                                     |
-| Emergence                         | **10 angles wired** (+ 5 god-scale release **events**, not additional angles)                                             | `open-endedness.ts`, `../NHSI-PROGRESS-DASHBOARD.md`                                    |
+| Emergence                         | **10 angles wired** (+ 5 god-scale release **events**, not additional angles)                                             | `open-endedness.ts`, `../NHSI-PROGRESS-DASHBOARD-2026-06-26.md`                         |
 | Cognitive pipeline                | 5 stages × 5 depths × 5 variants = **25 thought branches**                                                                | `super-mind.ts:71–73`                                                                   |
 | Quantum register (apex)           | **6 qubits / 64 complex amplitudes**, 3 circuit layers                                                                    | `super-qubits.ts:46,48,49`                                                              |
 | Large-scale quantum substrate     | Aaronson–Gottesman **Clifford tableau to 32/64+ qubits** (present, tested, **not yet wired**)                             | `clifford-tableau.ts`                                                                   |
@@ -722,7 +722,7 @@ used, and the equivalent phrasings are noted.
 
 ## Appendix B — References & Research Grounding
 
-Full per-faculty groundings, with verified citations, live in **`../SUPER-CREATURE-RESEARCH.md`**.
+Full per-faculty groundings, with verified citations, live in **`../SUPER-CREATURE-RESEARCH-2026-06-26.md`**.
 Ported-primitive provenance and licenses are in **`../../THIRD-PARTY-NOTICES.md`**.
 
 **Consciousness / theory-of-mind frameworks**
@@ -777,8 +777,8 @@ binaries; real MIT quantum math, never fake)**
   (Bun 1.3.14, cold shell), green.
 - **Coverage:** **~95 % line / ~92 % function** (canonical 95.03 / 92.03; ±6 pp gate tolerance for
   env jitter).
-- **Faculty receipts:** `../NHSI-PROGRESS-DASHBOARD.md` (~30 deep-wired in a 100-faculty design);
-  groundings in `../SUPER-CREATURE-RESEARCH.md`.
+- **Faculty receipts:** `../NHSI-PROGRESS-DASHBOARD-2026-06-26.md` (~30 deep-wired in a 100-faculty design);
+  groundings in `../SUPER-CREATURE-RESEARCH-2026-06-26.md`.
 - **External framework cited:** Butlin & Long et al. (2023), arXiv:2308.08708 — **8/14 met + 6/14
   partial**, computational indicators (not sentience).
 - **License:** Proprietary · All Rights Reserved · © 2026 0thernes LLC.

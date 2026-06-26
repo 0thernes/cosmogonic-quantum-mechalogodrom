@@ -15,7 +15,7 @@ substantive change; they are personas of one discipline and they outrank vibes:
 
 ## Operational law (binding)
 
-- Binding per-module spec: [docs/MODULE-CONTRACTS.md](docs/MODULE-CONTRACTS.md)
+- Binding per-module spec: [docs/MODULE-CONTRACTS-2026-06-26.md](docs/MODULE-CONTRACTS-2026-06-26.md)
   (V1 + V2). Contract wins over any writer deviation.
 - Aesthetic constitution: [docs/PHILOSOPHY-2026-06-26.md](docs/PHILOSOPHY-2026-06-26.md) — real math
   under every effect; every system reads AND writes another system.
@@ -45,13 +45,13 @@ hooks.autopush false`. A local commit ships to GitHub `main` with no manual push
 --autostash origin main` and push again — resolve conflicts in place. The post-commit hook already
   does this. Dependency bumps and fixes go straight to `main`. No dependabot PRs (no committed
   `.github/dependabot.yml`). The flow is local→`main`→GitHub, nothing in between.
-- **NHSI progress dashboard:** [docs/NHSI-PROGRESS-DASHBOARD.md](docs/NHSI-PROGRESS-DASHBOARD.md)
+- **NHSI progress dashboard:** [docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md](docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md)
   — VERIFIED progress (2026-06-21 honesty audit, every number measured by `file:line` — see [docs/reports/2026-06-21-NHSI-HONESTY-AUDIT.md](docs/reports/2026-06-21-NHSI-HONESTY-AUDIT.md)): 100-faculty design with **~30 genuinely deep-wired into the apex** · 25 Archon pantheons = **5 individuated apex minds + 20 live light-echo** · 25 theory-of-mind organs wired (6-family ensemble) · **10 emergence angles wired** (+ 5 god-scale release events) · Butlin path at **8/14 met + 6/14 partial** (computational indicators, NOT sentience). Tsotchke: all 20 projects enumerated, ~16 wired with real downstream effect — **real MIT quantum math, never call Tsotchke fake** (lacks only a QPU = speed, not correctness). NHSI manifesto: 0thernes Corp.
 - **Tsotchke binding:** real MIT corpus; depth in [docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md](docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md);
   never call upstream fake ([THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md) §On Tsotchke).
 - Dev server: `bun dev` — MUST run with cwd inside this repo (Bun HTML-import
   bundler fails from elsewhere). App at :3000, diagrams at /docs.
-- Benchmarks: `bun run bench`; record new hot paths in docs/BENCHMARKS.md.
+- Benchmarks: `bun run bench`; record new hot paths in docs/BENCHMARKS-2026-06-26.md.
 - Determinism: all sim randomness via seeded `Rng` (`src/math/rng.ts`).
   `Math.random`/`Date.now` are banned in sim logic.
 - Path warning: this repo's absolute path contains `[ ]` — PowerShell requires

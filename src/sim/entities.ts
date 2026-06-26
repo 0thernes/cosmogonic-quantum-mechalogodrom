@@ -362,7 +362,7 @@ export class EntityManager {
     env.t = t;
     env.cm = cm;
     // Ultra-tier neighbor-query throttle (CONTRACTS V3.6 — calibration in
-    // docs/BENCHMARKS.md "Ultra-tier 10k optimization"). The five theory behaviors and
+    // docs/BENCHMARKS-2026-06-26.md "Ultra-tier 10k optimization"). The five theory behaviors and
     // 'flock' dominate the per-frame cost wall at 10k (≈292k neighbor visits/frame, with
     // theory at ~205k and flock alone at ~88k). For maxEntities ≤ 5,000 (phone/laptop/
     // desktop) this resolves to the LEGACY stride 2 and flock-every-frame — byte-identical

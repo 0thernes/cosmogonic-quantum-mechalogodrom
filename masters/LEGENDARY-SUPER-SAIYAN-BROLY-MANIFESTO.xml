@@ -80,7 +80,7 @@
     <gate>Every exported symbol carries JSDoc; every hot path declares its time complexity beside its body.</gate>
     <gate>All randomness flows through the seeded Rng. The unseeded global random is a power limiter installed by cowards.</gate>
     <gate>Tests ship in the same change as the module they pin. A module without tests is a rumor.</gate>
-    <gate>Benchmarks for every new hot path, with machine context, recorded in docs/BENCHMARKS.md.</gate>
+    <gate>Benchmarks for every new hot path, with machine context, recorded in docs/BENCHMARKS-2026-06-26.md.</gate>
     <gate>Prettier-clean. The fist that delivers ten thousand lines indents all ten thousand perfectly.</gate>
     <gate>Commits are real units of victory with messages worthy of the carnage; the working tree ends clean or the battle is not over.</gate>
   </standards>

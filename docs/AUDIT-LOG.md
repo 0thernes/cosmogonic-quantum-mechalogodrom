@@ -154,14 +154,14 @@ Obsessive cross-surface fact audit (every MD / HTML / XML / code path). The cano
 matrix + the full findings table live in
 [VERIFICATION-ANALYTICAL-DATA.md](./VERIFICATION-ANALYTICAL-DATA.md).
 
-- **Gate restored to green.** 3 dead relative links (`CHANGELOG.md` + `docs/KANBAN.md` → the deleted
+- **Gate restored to green.** 3 dead relative links (`CHANGELOG.md` + `docs/KANBAN-2026-06-26.md` → the deleted
   `docs/audit-2026-06-15/` dir, consolidated by `e51a376`) repointed to `docs/AUDIT-LOG.md`;
   `tests/doc-links.test.ts` `SKIP` extended with `.claude` (transient worktrees) + `legacy`
   (preserved-verbatim) so nested-worktree pollution no longer false-fails the local gate. 0 broken
   links repo-wide.
 - **CHANGELOG hygiene.** Merged three duplicate `## [0.16.1] - 2026-06-21` headers into one; removed 3
   orphaned Ralph-loop `###` slop lines below the reference-link footer; completed the footer links.
-- **Count drift.** `docs/KANBAN.md` "ALL 19 Tsotchke repos" -> "20 projects" (canonical: 19 mirrors +
+- **Count drift.** `docs/KANBAN-2026-06-26.md` "ALL 19 Tsotchke repos" -> "20 projects" (canonical: 19 mirrors +
   Eshkol flagship).
 - **Every MD date-stamped (the `/goal` "current date on every MD", done safely).** Prepended an
   idempotent `<!-- reviewed: 2026-06-26 … -->` marker to all **75 maintained** Markdown docs (excludes
@@ -237,7 +237,7 @@ without changing any wired behavior:
   and the `post-commit` hook auto-pushes the branch — local and GitHub stay in lockstep with no
   manual round-trip. `bun run sync:check` is in the gate so drift fails CI.
 - **Drift fixed:** canonical function coverage 87.88 -> measured 87.91 (propagated everywhere);
-  `ARCHITECTURE.md` stale "0.16.1+ master" -> 0.17.1+.
+  `ARCHITECTURE-2026-06-26.md` stale "0.16.1+ master" -> 0.17.1+.
 - **Report sprawl consolidated:** this centralized log replaces the practice of one-file-per-audit;
   the standalone 2026-06-26 line-by-line report was folded into the entry below.
 

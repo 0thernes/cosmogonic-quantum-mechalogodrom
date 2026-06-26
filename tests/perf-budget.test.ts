@@ -5,7 +5,7 @@
  * The 10x scale-up to the ultra tier (10,000 entities) put the per-frame simulation cost on a
  * cliff dominated by the O(n·k) behavior loop's spatial-grid neighbor queries. After the
  * ultra-tier throttles landed (theory-stride 3, flock half-rate, 10-unit grid cell, connectome
- * cadence /6 — see docs/BENCHMARKS.md "Ultra-tier 10k optimization") the sim-CPU portion of a
+ * cadence /6 — see docs/BENCHMARKS-2026-06-26.md "Ultra-tier 10k optimization") the sim-CPU portion of a
  * frame at the full 10k ceiling measures ≈ 18 ms on the reference machine. (The 6,500 adaptive
  * steady-state target that originally accompanied those throttles was retired in 0.5.0 —
  * `targetEntities === maxEntities` on every tier now; the throttles alone carry the 10k cost.)
@@ -65,7 +65,7 @@ const SYNC_BUDGET_MS = 80;
  * accidentally calling the UI-cadence `snapshot()` — full QGT + 4ⁿ-Pauli magic — every beat, or an O(n²)
  * faculty), not against intentional NHSI growth. Calibrated to a slow shared CI runner (~13ms observed for
  * the current stack); a 2–3× blowup still trips it. Median-of-many so a single GC pause can't fail it.
- * See docs/BENCHMARKS.md "Apex mind … per-beat".
+ * See docs/BENCHMARKS-2026-06-26.md "Apex mind … per-beat".
  */
 const THINK_BUDGET_MS = 20;
 

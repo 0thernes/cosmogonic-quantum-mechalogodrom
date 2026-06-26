@@ -76,7 +76,7 @@ integration layer — not a comment on Tsotchke upstream quality.
 - spin_based_neural_network: spin glass/Ising/Hopfield/SK for associative neural computation + NQS.
 - PINN/PIMC: physics-informed neural nets + path-integral Monte Carlo (metabolism/soul traces in biologics).
 - quantum-quake / QGE: unitary aliveness observables + quantum game engine physics.
-- Overall first full multi-repo fusion (Eshkol + Moonlab + QGT + spin + libirrep + quake + ...) as substrate for deterministic seeded digital biologics Petri with native GWT/AD ignition for NHSI proxies. All in SUPER-CREATURE-RESEARCH.md, NEO-MIND, BLEEDING-EDGE reports, OMNISCIENT audits, TSOTCHKE master reports. Real tech. No overclaims.
+- Overall first full multi-repo fusion (Eshkol + Moonlab + QGT + spin + libirrep + quake + ...) as substrate for deterministic seeded digital biologics Petri with native GWT/AD ignition for NHSI proxies. All in SUPER-CREATURE-RESEARCH-2026-06-26.md, NEO-MIND, BLEEDING-EDGE reports, OMNISCIENT audits, TSOTCHKE master reports. Real tech. No overclaims.
 
 ---
 
@@ -133,7 +133,7 @@ AD/GWT bridge · quantum deliberation · QNG · Grover · coherence · magic · 
 
 ## IV · Consciousness / sentience / path to 14/14
 
-**Framework:** Butlin et al. (2023) arXiv:2308.08708 · citations in [`SUPER-CREATURE-RESEARCH.md`](./SUPER-CREATURE-RESEARCH.md)
+**Framework:** Butlin et al. (2023) arXiv:2308.08708 · citations in [`SUPER-CREATURE-RESEARCH-2026-06-26.md`](./SUPER-CREATURE-RESEARCH-2026-06-26.md)
 
 **Legend (read honestly):** the table below is **8 met (✅) + 6 partial (🟡)** = the canonical **8/14 + 6/14**. The 6 partials are real but architecturally thin — **NOT met**; never read this table as 14/14.
 
@@ -179,7 +179,7 @@ AD/GWT bridge · quantum deliberation · QNG · Grover · coherence · magic · 
 | Cognition               | Rabinowitz 2018 ToM · Dayan/Stachenfeld SR · Klyubin empowerment · Plate/Kanerva VSA · Doya · Jaeger/Maass · Fujii QRC |
 | Wet computing analogues | Brainoware 2023 · DishBrain 2022 · Organoid Intelligence 2023 (algorithm ports only)                                   |
 
-Full trail: [`SUPER-CREATURE-RESEARCH.md`](./SUPER-CREATURE-RESEARCH.md) · [`reports/2026-06-20-RESEARCH-BEDROCK.md`](./reports/2026-06-20-RESEARCH-BEDROCK.md)
+Full trail: [`SUPER-CREATURE-RESEARCH-2026-06-26.md`](./SUPER-CREATURE-RESEARCH-2026-06-26.md) · [`reports/2026-06-20-RESEARCH-BEDROCK.md`](./reports/2026-06-20-RESEARCH-BEDROCK.md)
 
 ---
 
@@ -187,22 +187,22 @@ Full trail: [`SUPER-CREATURE-RESEARCH.md`](./SUPER-CREATURE-RESEARCH.md) · [`re
 
 | Surface            | Path                                                                 |
 | ------------------ | -------------------------------------------------------------------- |
-| **This dashboard** | `docs/NHSI-PROGRESS-DASHBOARD.md`                                    |
+| **This dashboard** | `docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md`                         |
 | README             | root                                                                 |
-| Architecture       | `docs/ARCHITECTURE.md`                                               |
-| ERD / ERM / ERP    | `docs/ERD.md`, `ERM-2026-06-26.md`, `ERP-2026-06-26.md`              |
-| KANBAN             | `docs/KANBAN.md`                                                     |
-| MODULE-CONTRACTS   | `docs/MODULE-CONTRACTS.md`                                           |
+| Architecture       | `docs/ARCHITECTURE-2026-06-26.md`                                    |
+| ERD / ERM / ERP    | `docs/ERD-2026-06-26.md`, `ERM-2026-06-26.md`, `ERP-2026-06-26.md`   |
+| KANBAN             | `docs/KANBAN-2026-06-26.md`                                          |
+| MODULE-CONTRACTS   | `docs/MODULE-CONTRACTS-2026-06-26.md`                                |
 | PHILOSOPHY         | `docs/PHILOSOPHY-2026-06-26.md`                                      |
 | `/docs` page       | `docs.html`                                                          |
 | `/spec` page       | `specs.html`                                                         |
 | `/lab`             | `lab/`                                                               |
-| Technical spec     | `docs/TECHNICAL-SPECIFICATION.md`                                    |
+| Technical spec     | `docs/TECHNICAL-SPECIFICATION-2026-06-26.md`                         |
 | Tsotchke ledger    | `docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md`                        |
 | NHSI manifesto     | `docs/reports/2026-06-21-NHSI-MANIFESTO-0THERNES-CORP.md`            |
 | Super reports      | `docs/reports/2026-06-20-SUPER-REPORT-PATH-TO-NHSI-AND-SENTIENCE.md` |
 | Master XMLs        | `masters/` (Broly · Starkiller · Manhattan)                          |
-| Agent steering     | `CLAUDE.md`, `AGENTS.md`                                             |
+| Agent steering     | `CLAUDE.md`, `AGENTS-2026-06-26.md`                                  |
 
 ---
 

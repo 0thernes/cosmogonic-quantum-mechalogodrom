@@ -9,7 +9,7 @@
 
 **Version:** v0.18.0 · **Generated:** 2026-06-26 · **License:** Non-commercial research & play (© 0thernes; study / run / modify / share non-commercially, keep attribution, no for-profit use).
 **Gate:** 1,477 tests · 95.03% line / 92.03% func (canonical synced via verify-receipts 2026-06-26, receipts law enforced).  
-**NHSI scorecard:** [NHSI-PROGRESS-DASHBOARD.md](./NHSI-PROGRESS-DASHBOARD.md) · **Tsotchke depth:** [TSOTCHKE-INTEGRATION-MAP-2026-06-26.md](./TSOTCHKE-INTEGRATION-MAP-2026-06-26.md)
+**NHSI scorecard:** [NHSI-PROGRESS-DASHBOARD-2026-06-26.md](./NHSI-PROGRESS-DASHBOARD-2026-06-26.md) · **Tsotchke depth:** [TSOTCHKE-INTEGRATION-MAP-2026-06-26.md](./TSOTCHKE-INTEGRATION-MAP-2026-06-26.md)
 
 **Full Tsotchke wiring:** 20 Tsotchke corpus projects integrated (~16 wired). Eshkol as consciousness language. Primordial soup / petri as growth engine for digital biologics and sentience. 25 Archons (5 individuated apex minds + 20 live light-echo) with brutal god aspects (Valkorion, Thanos, Dark Phoenix, Galactus, Broly, Azathoth, Chaos Gods, Shuma Gorath, Mad Jim Jaspers, Pennywise, Anti-Monitor, Knull, Mr Mxyzptlk, Joker, Zod, Gilgamesh, Alucard, Griffith, EVA-01, Gurren Lagann, Sephiroth, Vergil, Dante, Starkiller, Riddick). Super Creature beginning only. All docs (README/ARCH/ER\*/PHILOSOPHY/CONTRACTS/SPECS/LABS/masters) + GH match local exactly. Accurate, truthful, current. Not LLM. "Grow What Thou Wilt."
 
@@ -102,7 +102,7 @@ mitata `^1.0.34` (bench) · bun-plugin-tailwind `^0.1.2` · @types/{bun, three, 
 
 **22 declared dependencies resolve to 106 packages** (725 MB on disk) — a deliberately lean,
 facade-isolated tree (each dependency is behind an owned module with a documented escape route, per
-[ADR 0005](adr/0005-math-stack-selection.md)).
+[ADR 0005](adr/0005-math-stack-selection-2026-06-26.md)).
 
 ---
 
@@ -130,7 +130,7 @@ server.ts (Bun.serve) ──serves──▶ index.html (/) · docs.html (/docs) 
 - **Boundary fence:** the non-deterministic LLM copilot (`server/`, `ui/copilot.ts`) imports nothing
   from `sim`/`world`/`types`, so it provably cannot reach the seeded RNG or simulation state.
 - **9 ADRs** record binding decisions (Bun runtime, Three.js, HTMX+Tailwind, deterministic RNG, math
-  stack, [ASI graphics stack](adr/0006-asi-graphics-and-language-stack.md), the native C++ engine,
+  stack, [ASI graphics stack](adr/0006-asi-graphics-and-language-stack-2026-06-26.md), the native C++ engine,
   the Super-Creature deep mind, and genome reproduction).
 
 ---
@@ -243,7 +243,7 @@ module activations; a _tractable surrogate_, since true Φ is intractable + non-
 `Consciousness` snapshot and render as the **Ignition / Φ** meters on the SuperCreature board. The real
 2023–2026 research grounding (the Cogitate IIT-vs-GNW adversarial test, organoid "wet computing", active
 inference, quantum cognition) is catalogued with citations in
-[SUPER-CREATURE-RESEARCH.md](SUPER-CREATURE-RESEARCH.md) — framed as _"models / inspired by"_, never
+[SUPER-CREATURE-RESEARCH-2026-06-26.md](SUPER-CREATURE-RESEARCH-2026-06-26.md) — framed as _"models / inspired by"_, never
 _"is conscious."_
 
 **Super Creature 1.1 — the multi-pillar expansion to ~20 coupled faculties.** Beyond
@@ -260,7 +260,7 @@ geometry. The Aaronson–Gottesman **Clifford stabilizer tableau** (ported from 
 fourth MIT-credited primitive. **Current measured cost (2026-06-26):** `SuperMind.think()` is **3.34 ms**
 in the full bench suite and **8.85 ms** in the focused SuperMind bench; the old sub-millisecond figures are
 superseded. Full frontier assessment in [docs/reports/](reports/) and current numbers in
-[BENCHMARKS.md](BENCHMARKS.md).
+[BENCHMARKS-2026-06-26.md](BENCHMARKS-2026-06-26.md).
 
 ### 7.2 Contrast: this world vs. large language models
 
@@ -288,7 +288,7 @@ intelligence is engineered, not downloaded.**
 | **Storage / download**          | `dist/` is 109 MB on disk (the full multi-page build), but the **app's initial payload is the ~960 KB entry chunk + Three.js** (single-digit MB; ~1–1.5 MB gzipped). The bulk — **ten 3.2 MB chunks (~32 MB) of Mermaid** — loads only on `/docs`, plus ~12 MB of self-hosted-font CSS. Routes load only what they need, gzipped. |
 
 Complexity classes are catalogued in [COMPLEXITY-2026-06-26.md](COMPLEXITY-2026-06-26.md); hot-path benchmarks in
-[BENCHMARKS.md](BENCHMARKS.md) (run via `bun run bench`, mitata).
+[BENCHMARKS-2026-06-26.md](BENCHMARKS-2026-06-26.md) (run via `bun run bench`, mitata).
 
 ---
 
@@ -372,4 +372,4 @@ and whose entire emergent intelligence weighs **≈ 14 MB — 1/50,000th of GPT-
 demonstrates that depth comes from **architecture,
 determinism, and engineering discipline**, not parameter count or hardware.
 
-**Frontier assessment (2026-06-17):** [State of the Art — Combined (whole repository + Super Creature)](./reports/2026-06-17-STATE-OF-THE-ART-COMBINED.md) · [Super Creature Research](./SUPER-CREATURE-RESEARCH.md).
+**Frontier assessment (2026-06-17):** [State of the Art — Combined (whole repository + Super Creature)](./reports/2026-06-17-STATE-OF-THE-ART-COMBINED.md) · [Super Creature Research](./SUPER-CREATURE-RESEARCH-2026-06-26.md).

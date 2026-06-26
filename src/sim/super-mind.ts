@@ -325,7 +325,7 @@ const VALENCE_STEER_GAIN = 0.18;
 //   • phi (Integrated Information / IIT — Tononi): a TRACTABLE surrogate for Φ. True Φ is super-
 //     exponential AND non-unique (Hanson & Walker 2023), so this is explicitly a proxy — the
 //     participation/coherence ratio of the named module activations: 1 when the parts act as one
-//     integrated whole, ≈0 when they act as independent specialists. See docs/SUPER-CREATURE-RESEARCH.md.
+//     integrated whole, ≈0 when they act as independent specialists. See docs/SUPER-CREATURE-RESEARCH-2026-06-26.md.
 /** Access threshold the winning coalition must cross to "ignite" (GWT). */
 const IGNITION_THRESHOLD = 0.25;
 /** Ignition EMA rate — punchy, so broadcast reads as a near-all-or-none event. */
@@ -1535,7 +1535,7 @@ export class SuperMind {
     // ── V89 · IIT Φ-PROXY ── the participation/coherence ratio pr = (Σxᵢ)²/(M·Σxᵢ²) ∈ [0,1] of the named
     // module activations: 1 when the parts move as one (integrated), ≈1/M when one dominates, → 0 when they
     // cancel (anti-correlated). Rescaled so the ~1/M "independent" baseline maps to 0; sub-baseline values
-    // clamp to 0. A TRACTABLE surrogate — true Φ is intractable + non-unique (see SUPER-CREATURE-RESEARCH.md).
+    // clamp to 0. A TRACTABLE surrogate — true Φ is intractable + non-unique (see SUPER-CREATURE-RESEARCH-2026-06-26.md).
     const mods = this.phiMods;
     mods[0] = mean(this.latent, LATENT);
     mods[1] = mean(this.imagined, LATENT);

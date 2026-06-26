@@ -228,6 +228,6 @@ quantum advantage. Cosmogonic models the indicators; it is not the thing.
 
 _Companion to `docs/reports/2026-06-20-SUPER-REPORT-PATH-TO-NHSI-AND-SENTIENCE.md`,
 `docs/INTELLIGENCE-LADDER.md` (planned), and
-`docs/adr/0010-worker-offload-and-streamed-hybrid-world.md`. Labels are honest: Established
+`docs/adr/0010-worker-offload-and-streamed-hybrid-world-2026-06-26.md`. Labels are honest: Established
 / Emerging / Fringe. No consciousness / sentience / AGI / ASI / quantum-advantage claim is
 made — Cosmogonic is a research architecture and a simulation, current as of 2026-06-26._

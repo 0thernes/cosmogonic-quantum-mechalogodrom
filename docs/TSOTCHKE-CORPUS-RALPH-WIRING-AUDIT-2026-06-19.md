@@ -5,7 +5,7 @@
 **Date:** 2026-06-19 (Ralph Loop Iteration 1+)
 **Corpus Location:** Z:\[Vibe Coded (AI)]\(Tsotchke) (~13,194 files, 714MB, 20 repos + sites)
 **Target:** Wire "everywhere" into Cosmogonic Quantum Mechalogodrom (src/, docs/, ui/, native ideas, contracts, receipts, all systems).
-**Steering:** Masters (BROLY executor, STARKILLER architect, DR-MANHATTAN physicist), MODULE-CONTRACTS.md, PHILOSOPHY-2026-06-26.md, determinism (Rng only), no hot alloc, full gates, receipts, honesty (sim only, inspired-by, MIT provenance).
+**Steering:** Masters (BROLY executor, STARKILLER architect, DR-MANHATTAN physicist), MODULE-CONTRACTS-2026-06-26.md, PHILOSOPHY-2026-06-26.md, determinism (Rng only), no hot alloc, full gates, receipts, honesty (sim only, inspired-by, MIT provenance).
 **Protocol:** Study corpus first (list, read, grep key files), update all reports/audits, make contract-compliant incremental wirings, measure, gate, log. No claim of completion until unequivocal (Ralph loop will re-feed until done).
 
 ## 1. CORPUS STUDY SUMMARY (Deep Dive — Every Relevant Line/Repo/Concept)
@@ -72,7 +72,7 @@
   - Added Eshkol AD/arena ideas to super-mind/topdown-perception (predict error as "dual tape" style; arena comments for memory).
   - New: libirrep symmetry stub in godform (for Archon rep theory in forms/biases — symmetry ops for multi-appendage).
   - Moonlab tensor/MPO hint in quantum sim comment + world 5-Archon entanglement note (for future MPO contraction on Archon group state).
-  - Updated "everywhere" refs: world.ts, super-body.ts, super-panel.ts, super-neural.ts, KANBAN, CHANGELOG, THIRD-PARTY (more credits to local corpus files), docs/SUPER-CREATURE-RESEARCH.md.
+  - Updated "everywhere" refs: world.ts, super-body.ts, super-panel.ts, super-neural.ts, KANBAN, CHANGELOG, THIRD-PARTY (more credits to local corpus files), docs/SUPER-CREATURE-RESEARCH-2026-06-26.md.
   - New facade ideas per Starkiller: external-like but since local corpus, "corpus-inspired" in comments + new src/math/tsotchke-ad.ts skeleton (dual number helper for HOT, allocation-free).
 - **Next iterations (loop will continue):** Full tensor network in quantum, actual .esk snippets modeling cognition, more ulg/quantum-quake for body/engine, libirrep full port for phyla, hardware backend hints, formal ERM/ERD from corpus ontology, benchmarks for new paths, full gate green + clean tree.
 
@@ -95,7 +95,7 @@
 - src/sim/godform.ts (libirrep symmetry stub + comments)
 - src/world.ts, src/sim/super-body.ts (tensor/MPO hints, "everywhere" refs)
 - src/ui/super-panel.ts, super-neural.ts (more Tsotchke telemetry)
-- docs/KANBAN.md, CHANGELOG.md, THIRD-PARTY-NOTICES.md, SUPER-CREATURE-RESEARCH.md (updates)
+- docs/KANBAN-2026-06-26.md, CHANGELOG.md, THIRD-PARTY-NOTICES.md, SUPER-CREATURE-RESEARCH-2026-06-26.md (updates)
 - (More in next loops: new tsotchke-ad.ts, full checks, more wirings)
 
 ## 6. VERIFICATION / NEXT ACTIONS (No Completion Claim)
@@ -201,7 +201,7 @@ LFG. Tsotchke now deeply wired 10x with strict everything. (Ralph active, no exi
 
 ### Iteration 12: Moonlab MPO in quantum sim
 
-- Explored: tensor_network/mps, MPO in ARCHITECTURE.md, O(χ³) contraction.
+- Explored: tensor_network/mps, MPO in ARCHITECTURE-2026-06-26.md, O(χ³) contraction.
 - Wired: Added MPO bond dim stub and contraction note in src/sim/quantum.ts for Archon entanglement (5 minds as MPS).
 - Audit: Updated.
 - Check: tests green.

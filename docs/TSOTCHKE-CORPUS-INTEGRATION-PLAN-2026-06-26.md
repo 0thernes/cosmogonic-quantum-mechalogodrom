@@ -52,8 +52,8 @@ Wave 2 (Math Layer): ✅ COMPLETE — Extended/new leaves for Eshkol AD (nested 
 - Created `src/math/moonlab-tensor.ts` (tensor contraction MPO/MPS/TTN/MERA)
 - Created `src/math/libirrep-symmetry.ts` (Clebsch-Gordan, Wigner-D, spherical harmonics)
 - Created `src/math/quantum-qrng-full.ts` (Bell verification)
-- Updated MODULE-CONTRACTS.md for new math leaves
-- Updated BENCHMARKS.md with new hot paths
+- Updated MODULE-CONTRACTS-2026-06-26.md for new math leaves
+- Updated BENCHMARKS-2026-06-26.md with new hot paths
   Wave 3 (Sim Layer): ✅ COMPLETE — Wired into SuperMind (new Eshkol organ or AD subnet), SuperBody (more morph from quake/tensor), memory/narrative using arena ideas.
 - Created `src/sim/eshkol-bridge.ts` (Eshkol language runtime bridge)
 - Created `src/sim/moonlab-vqe.ts` (VQE with autograd)
@@ -74,7 +74,7 @@ Each wave: small exclusive files → read contract → impl → gate → report 
 
 - docs/TSOTCHKE-INTEGRATION-\*.md (plan, audit, receipts)
 - logs/ or update_corpus_log sync
-- KANBAN.md updates
+- KANBAN-2026-06-26.md updates
 - receipts/verify updated
 - git? (only after green; use worktree for safety if large)
 - Subagent handoffs if parallel waves.

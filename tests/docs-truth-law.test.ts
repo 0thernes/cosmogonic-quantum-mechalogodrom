@@ -16,15 +16,19 @@
 import { describe, expect, test } from 'bun:test';
 
 /** Living, authoritative surfaces that must state the wiring truthfully. */
-const LIVING = ['README.md', 'docs/ARCHITECTURE.md', 'docs/MODULE-CONTRACTS.md'];
+const LIVING = [
+  'README.md',
+  'docs/ARCHITECTURE-2026-06-26.md',
+  'docs/MODULE-CONTRACTS-2026-06-26.md',
+];
 
 /** Canonical surfaces whose encoding must stay clean (the user-named living docs). */
 const CANONICAL = [
   'README.md',
-  'docs/ARCHITECTURE.md',
-  'docs/MODULE-CONTRACTS.md',
-  'docs/TECHNICAL-SPECIFICATION.md',
-  'docs/ERD.md',
+  'docs/ARCHITECTURE-2026-06-26.md',
+  'docs/MODULE-CONTRACTS-2026-06-26.md',
+  'docs/TECHNICAL-SPECIFICATION-2026-06-26.md',
+  'docs/ERD-2026-06-26.md',
   'docs/ERM-2026-06-26.md',
   'docs/ERP-2026-06-26.md',
 ];
@@ -93,7 +97,7 @@ const STEERING_SURFACES = [
   'masters/LEGENDARY-SUPER-SAIYAN-BROLY-MANIFESTO.xml',
   'masters/ORACLE-ARCHITECT-OF-THE-DARKSIDE-STARKILLER.xml',
   'masters/GALAXOGONIC-WARHAMMER-POWER-MODE-DR-MANHATTAN.xml',
-  'docs/KANBAN.md',
+  'docs/KANBAN-2026-06-26.md',
 ];
 
 describe('docs truth law — encoding (steering XML + KANBAN)', () => {
@@ -121,12 +125,12 @@ const NHSI_SURFACES = [
   'README.md',
   'CHANGELOG.md',
   'CLAUDE.md',
-  'ROADMAP.md',
-  'docs/NHSI-PROGRESS-DASHBOARD.md',
-  'docs/ARCHITECTURE.md',
-  'docs/TECHNICAL-SPECIFICATION.md',
-  'AGENTS.md',
-  'docs/ERD.md',
+  'ROADMAP-2026-06-26.md',
+  'docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md',
+  'docs/ARCHITECTURE-2026-06-26.md',
+  'docs/TECHNICAL-SPECIFICATION-2026-06-26.md',
+  'AGENTS-2026-06-26.md',
+  'docs/ERD-2026-06-26.md',
   'docs/PHILOSOPHY-2026-06-26.md',
   'docs/PATH-TO-14-14-CONSCIOUSNESS-INDICATORS-2026-06-26.md',
   'masters/LEGENDARY-SUPER-SAIYAN-BROLY-MANIFESTO.xml',

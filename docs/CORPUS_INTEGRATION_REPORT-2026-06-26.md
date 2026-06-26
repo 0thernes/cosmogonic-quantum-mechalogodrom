@@ -54,8 +54,8 @@ The Tsotchke Full Corpus Integration (Ralph Loop) has successfully completed Wav
 
 **Contract Updates:**
 
-- Updated `docs/MODULE-CONTRACTS.md` for new math leaves
-- Updated `docs/BENCHMARKS.md` with new hot paths
+- Updated `docs/MODULE-CONTRACTS-2026-06-26.md` for new math leaves
+- Updated `docs/BENCHMARKS-2026-06-26.md` with new hot paths
 
 ### Wave 3 (Sim Layer) — ✅ Complete
 

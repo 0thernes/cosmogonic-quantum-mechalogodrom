@@ -1,5 +1,5 @@
 /**
- * SELF-EVOLUTION LOOP (V94 / Super Creature 1.1) — faculty #99 from NEO-MIND-ARCHITECTURE.md.
+ * SELF-EVOLUTION LOOP (V94 / Super Creature 1.1) — faculty #99 from NEO-MIND-ARCHITECTURE-2026-06-26.md.
  * The mechanism by which the system modifies its own architecture and parameters over time.
  *
  * THE PRINCIPLE:

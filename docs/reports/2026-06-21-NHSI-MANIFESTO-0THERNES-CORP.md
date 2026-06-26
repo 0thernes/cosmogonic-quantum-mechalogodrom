@@ -479,11 +479,11 @@ It is **not** the first A-Life, the first digital evolution, the first morphogen
 **Local (matches GitHub):**
 
 - `docs/reports/2026-06-21-NHSI-MANIFESTO-0THERNES-CORP.md` — this manifesto
-- `docs/NHSI-PROGRESS-DASHBOARD.md` — canonical progress metrics
+- `docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md` — canonical progress metrics
 - `docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md` — honest Tsotchke wiring ledger (binding)
 - `docs/AUDIT-LOG.md` — centralized audit log (newest-first)
-- `docs/MODULE-CONTRACTS.md` — binding contracts · `docs/PHILOSOPHY-2026-06-26.md` — aesthetic constitution
-- `docs/ARCHITECTURE.md`, `docs/ERD.md` / `docs/ERM-2026-06-26.md` / `docs/ERP-2026-06-26.md`, `docs/KANBAN.md`
+- `docs/MODULE-CONTRACTS-2026-06-26.md` — binding contracts · `docs/PHILOSOPHY-2026-06-26.md` — aesthetic constitution
+- `docs/ARCHITECTURE-2026-06-26.md`, `docs/ERD-2026-06-26.md` / `docs/ERM-2026-06-26.md` / `docs/ERP-2026-06-26.md`, `docs/KANBAN-2026-06-26.md`
 - `CHANGELOG.md` — release log · `THIRD-PARTY-NOTICES.md` — Tsotchke attribution (binding §On Tsotchke)
 
 **Master XMLs (Agent Steering):** `masters/LEGENDARY-SUPER-SAIYAN-BROLY-MANIFESTO.xml` (Executor), `masters/ORACLE-ARCHITECT-OF-THE-DARKSIDE-STARKILLER.xml` (Architect), `masters/GALAXOGONIC-WARHAMMER-POWER-MODE-DR-MANHATTAN.xml` (Physicist).

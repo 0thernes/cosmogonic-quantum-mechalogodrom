@@ -28,7 +28,7 @@
  * - Affective neuroscience (Panksepp)
  * - Reinforcement learning with intrinsic motivation (Sutton & Barto)
  *
- * This is a high-priority faculty from the build priority list in NEO-MIND-ARCHITECTURE.md.
+ * This is a high-priority faculty from the build priority list in NEO-MIND-ARCHITECTURE-2026-06-26.md.
  *
  * Pure leaf: deterministic, allocation-free apart from working arrays.
  */

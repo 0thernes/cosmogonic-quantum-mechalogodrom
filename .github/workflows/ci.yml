@@ -93,7 +93,7 @@ jobs:
     needs: gate
     timeout-minutes: 10
     # Non-blocking: a perf regression should surface in the log, not fail the gate
-    # (CI runners are noisier than the reference machine — see docs/BENCHMARKS.md).
+    # (CI runners are noisier than the reference machine — see docs/BENCHMARKS-2026-06-26.md).
     continue-on-error: true
     steps:
       - name: Checkout

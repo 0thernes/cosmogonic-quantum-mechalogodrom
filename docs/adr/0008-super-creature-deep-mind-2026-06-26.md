@@ -4,8 +4,8 @@
 
 - Status: Accepted (V31, 2026-06-14)
 - Deciders: the EXECUTOR, with the ARCHITECT (contracts/ownership) and the PHYSICIST (determinism)
-- Supersedes / relates to: [0004 deterministic RNG](./0004-deterministic-rng.md),
-  [0006 ASI graphics + language stack](./0006-asi-graphics-and-language-stack.md)
+- Supersedes / relates to: [0004 deterministic RNG](./0004-deterministic-rng-2026-06-26.md),
+  [0006 ASI graphics + language stack](./0006-asi-graphics-and-language-stack-2026-06-26.md)
 
 ## Context
 

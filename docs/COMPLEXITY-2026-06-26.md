@@ -66,7 +66,7 @@ unless marked otherwise.
 10,000 on ultra, where the measured per-stage breakdown and the four
 ultra-only throttles — theory stagger stride 3, half-rate `flock`,
 `ULTRA_GRID_CELL` 10, connectome cadence /4 and /6 — live in
-[BENCHMARKS.md](./BENCHMARKS.md) "Ultra-tier 10k optimization".)
+[BENCHMARKS-2026-06-26.md](./BENCHMARKS-2026-06-26.md) "Ultra-tier 10k optimization".)
 
 1. **Entity loop** — O(n) base plus neighbor queries for the entities
    running `flock`/theory behaviors (assigned through each phylum's behavior
@@ -86,7 +86,7 @@ the O(128) analyser poll, the O(log 24) Voronoi point location, and O(1)
 constellation pulse work. The single largest per-event V2 cost is one
 O(SIZE²) = 16,384-cell RD step every 2nd frame (offset 1 from the grid
 rebuild so the two never share a frame), measured at < 0.5 ms at size 128 —
-see [BENCHMARKS.md](./BENCHMARKS.md).
+see [BENCHMARKS-2026-06-26.md](./BENCHMARKS-2026-06-26.md).
 
 ## Allocation discipline
 

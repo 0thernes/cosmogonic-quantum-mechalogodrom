@@ -4,7 +4,7 @@
 
 > How "intelligence" works in the Cosmogonic Quantum Mechalogodrom, and why it is split in two.
 > Companion to [PRE-2016-AI-2026-06-26.md](./PRE-2016-AI-2026-06-26.md) (the
-> "how AI was done before 2016" dossier) and [MODULE-CONTRACTS.md](MODULE-CONTRACTS.md). Every
+> "how AI was done before 2016" dossier) and [MODULE-CONTRACTS-2026-06-26.md](MODULE-CONTRACTS-2026-06-26.md). Every
 > module named here is pure, seeded, allocation-disciplined, and unit-tested.
 
 ## The two halves, and the hard line between them
@@ -102,7 +102,7 @@ larger composite mind (`SuperMind`): a world-model latent, a five-stage cognitio
 consciousness / emotion / drive readouts, and a 10-element bank of reactive "quantum aspects"
 (superposition, entanglement, ftl, … mutation). It exposes a read-only `SuperMindSnapshot` at the
 Observatory cadence — never per beat — which the in-box NEURAL observatory (`src/ui/super-neural.ts`,
-4 tabs × 9 readouts) paints. See [ADR-0008](adr/0008-super-creature-deep-mind.md).
+4 tabs × 9 readouts) paints. See [ADR-0008](adr/0008-super-creature-deep-mind-2026-06-26.md).
 
 Bolted onto that composite mind is a genuine **quantum-computing layer** (`QuantumMind`, V76): a
 **6-qubit statevector register** (`src/math/quantum.ts` `QuantumRegister` → 2⁶ = 64 complex
@@ -208,7 +208,7 @@ enforced in the server process, so a fully-compromised model still cannot escape
 ## Provenance
 
 Research → design: [PRE-2016-AI-2026-06-26.md](./PRE-2016-AI-2026-06-26.md).
-Apex minds (5× GOAL5): [ADR-0008](adr/0008-super-creature-deep-mind.md) + MODULE-CONTRACTS GOAL5. Modules + tests: `src/sim/ai/brains.ts`,
+Apex minds (5× GOAL5): [ADR-0008](adr/0008-super-creature-deep-mind-2026-06-26.md) + MODULE-CONTRACTS GOAL5. Modules + tests: `src/sim/ai/brains.ts`,
 `src/sim/genome.ts`, `src/sim/lineage.ts`, `src/sim/factions.ts`, `src/sim/super-mind.ts`,
 `src/sim/super-qubits.ts`, `src/math/quantum.ts`, `src/server/{copilot,ai-sandbox}.ts`,
 `src/ui/{copilot,super-neural,super-panel}.ts`, and their `tests/*.test.ts`.

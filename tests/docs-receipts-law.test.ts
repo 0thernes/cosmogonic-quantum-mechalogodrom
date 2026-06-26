@@ -34,13 +34,13 @@ import {
 // numbers that were true at publication.)
 const SURFACES = [
   'README.md',
-  'ROADMAP.md',
+  'ROADMAP-2026-06-26.md',
   'docs.html',
   'specs.html',
-  'docs/TECHNICAL-SPECIFICATION.md',
-  'docs/SUPER-CREATURE-RESEARCH.md',
-  'docs/BENCHMARKS.md',
-  'docs/NHSI-PROGRESS-DASHBOARD.md',
+  'docs/TECHNICAL-SPECIFICATION-2026-06-26.md',
+  'docs/SUPER-CREATURE-RESEARCH-2026-06-26.md',
+  'docs/BENCHMARKS-2026-06-26.md',
+  'docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md',
 ];
 
 /**

@@ -11,7 +11,7 @@
 ## Agent 1: STARKILLER-ARCHITECT (research focus: eshkol, moonlab, libirrep, quantum-quake, ulg, local contracts/arch)
 
 - Research receipts: eshkol (AD compiler primitive, HoTT, arena, GWT/active-inference consciousness), moonlab (Clifford, QGT, statevec, open-core), libirrep (reps/QEC), ulg (WebGPU closures + field sampling), quantum-quake (runtime conformance).
-- Edited (owned): docs/MODULE-CONTRACTS.md, ARCHITECTURE.md, ERD.md, ERM-2026-06-26.md, KANBAN.md, TECHNICAL-SPECIFICATION.md, adr/0005-_, reports/_.
+- Edited (owned): docs/MODULE-CONTRACTS-2026-06-26.md, ARCHITECTURE-2026-06-26.md, ERD-2026-06-26.md, ERM-2026-06-26.md, KANBAN-2026-06-26.md, TECHNICAL-SPECIFICATION-2026-06-26.md, adr/0005-_, reports/_.
 - Contracts updated for Tsotchke lineage (facades, determinism, feedback loops per PHILOSOPHY).
 - No src mutations.
 - Gates: core green (build/test/lint/type); receipts law crater noted as pre-existing data.
@@ -81,7 +81,7 @@ Swarm handoff complete. INTEGRATOR: main.
   All classical sim only. Credits in code + GOAL5-RESEARCH-RECEIPTS-2026-06-26.md.
 
 **Ownership Table (exclusive):**
-See table above in this handoff + MODULE-CONTRACTS.md (godform.ts STARKILLER sole source; super-mind+leaves MANHATTAN/ORACLE; body+world BROLY; UI VOID/ORACLE; contracts STARKILLER).
+See table above in this handoff + MODULE-CONTRACTS-2026-06-26.md (godform.ts STARKILLER sole source; super-mind+leaves MANHATTAN/ORACLE; body+world BROLY; UI VOID/ORACLE; contracts STARKILLER).
 
 **Failure Table (adversarial audit):**
 

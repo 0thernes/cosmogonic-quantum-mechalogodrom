@@ -9,7 +9,7 @@ A comprehensive technical reference for senior engineers. Covers quantum simulat
 > (original preserved verbatim in git history, commit "provenance baseline").
 > Annotations marked **[CQM]** record THIS repo's hands-on adoption decisions —
 > versions and licenses read directly from `node_modules`, refusals justified
-> in [ADR 0005](../adr/0005-math-stack-selection.md). Claims sourced from a
+> in [ADR 0005](../adr/0005-math-stack-selection-2026-06-26.md). Claims sourced from a
 > capacity-degraded research pass are marked **UNVERIFIED** per Master File III
 > (insufficient measurements mean UNKNOWN, not false). Treat unannotated
 > sections as upstream reference text, not endorsements.

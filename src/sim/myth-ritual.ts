@@ -30,7 +30,7 @@
  * - Ritual theory (Tambiah)
  * - Myth and meaning (Campbell)
  *
- * This is emergence angle #10 from NEO-MIND-ARCHITECTURE.md.
+ * This is emergence angle #10 from NEO-MIND-ARCHITECTURE-2026-06-26.md.
  *
  * Pure leaf: deterministic (seeded myths), allocation-free apart from working arrays.
  */

@@ -4,7 +4,7 @@
  * scales toward the directive's **50,000-entity** ceiling. Headless (the determinism-test fixture
  * pattern — no GL context needed for the data path), deterministic seed, and it just measures
  * wall-clock ms/frame at a ladder of population sizes. NOT part of `bun run bench` (it's heavy); run it
- * on demand and record the numbers in docs/BENCHMARKS.md. Standalone-only (`import.meta.main`).
+ * on demand and record the numbers in docs/BENCHMARKS-2026-06-26.md. Standalone-only (`import.meta.main`).
  */
 import * as THREE from 'three';
 import { mulberry32 } from '../src/math/rng';

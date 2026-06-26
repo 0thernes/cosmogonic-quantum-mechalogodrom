@@ -9,10 +9,10 @@
 [![Bun](https://img.shields.io/badge/Bun-1.3-black?logo=bun&logoColor=white)](https://bun.sh)
 [![TypeScript strict](https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript&logoColor=white)](./tsconfig.json)
 [![tests](https://img.shields.io/badge/tests-1477%20passing-brightgreen)](./tests)
-[![coverage](https://img.shields.io/badge/coverage-95.03%25%20line%20%C2%B7%2092.03%25%20func-success)](./docs/TECHNICAL-SPECIFICATION.md)
+[![coverage](https://img.shields.io/badge/coverage-95.03%25%20line%20%C2%B7%2092.03%25%20func-success)](./docs/TECHNICAL-SPECIFICATION-2026-06-26.md)
 [![audit](https://img.shields.io/badge/inspection-500%20points-success)](./docs/500-POINT-INSPECTION-2026-06-26.md)
 [![Tsotchke](https://img.shields.io/badge/Tsotchke-REAL__MIT__CORPUS-purple)](https://github.com/tsotchke)
-[![NHSI](https://img.shields.io/badge/NHSI-Progress__Dashboard-blue)](./docs/NHSI-PROGRESS-DASHBOARD.md)
+[![NHSI](https://img.shields.io/badge/NHSI-Progress__Dashboard-blue)](./docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md)
 
 A procedural WebGL cosmic ecosystem — morphogenic organisms, Shoggoths,
 puppet-master NPCs, atmospheric weather, a neural connectome, quantum
@@ -24,7 +24,7 @@ Built with **Bun + TypeScript + three.js 0.184 + Tailwind CSS 4 +
 HTMX 2**, ported from a single 882-line HTML monolith into a strict,
 deterministic, allocation-disciplined module graph.
 
-**Tsotchke (tsotchke user + Tsotchke-Corporation + full local Z:\[Vibe Coded (AI)]\(Tsotchke) corpus) is paramount — real, correct, MIT-grade quantum math (no overclaims; see THIRD-PARTY-NOTICES.md).** Eshkol flagship (native AD-as-primitive + GWT + factor-graph + KB + .esk DNA), Moonlab (Clifford/tensors), QGTL, spin, libirrep, quantum-quake, ulg, logo-lab, tensorcore, PINN/PIMC, rngs, asteroids + all others. Physical QPU scales speed, not correctness. **Binding depth ledger (not blanket "full wire" for gated):** [docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md](./docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md) — 8 deep apex + 2 world + 3 ported + 2 license-gated leaves + 2 API/toolchain + 3 fenced + meta (20 corpus projects; ~16 wired with real downstream effect). Harvest uses local full corpus for .esk DNA. All non-fenced utilized in catalysis/soup/petri/mind/world. **NHSI (100-faculty design ~30 deep-wired · 25 Archons = 5 live + 20 light-echo · 25 ToM wired · 10 emergence angles · Butlin 8/14 met + 6/14 partial path):** [docs/NHSI-PROGRESS-DASHBOARD.md](./docs/NHSI-PROGRESS-DASHBOARD.md). Not LLM. 0thernes NHSI: real substrates for alien digital biologics. Startup tech — credit due.
+**Tsotchke (tsotchke user + Tsotchke-Corporation + full local Z:\[Vibe Coded (AI)]\(Tsotchke) corpus) is paramount — real, correct, MIT-grade quantum math (no overclaims; see THIRD-PARTY-NOTICES.md).** Eshkol flagship (native AD-as-primitive + GWT + factor-graph + KB + .esk DNA), Moonlab (Clifford/tensors), QGTL, spin, libirrep, quantum-quake, ulg, logo-lab, tensorcore, PINN/PIMC, rngs, asteroids + all others. Physical QPU scales speed, not correctness. **Binding depth ledger (not blanket "full wire" for gated):** [docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md](./docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md) — 8 deep apex + 2 world + 3 ported + 2 license-gated leaves + 2 API/toolchain + 3 fenced + meta (20 corpus projects; ~16 wired with real downstream effect). Harvest uses local full corpus for .esk DNA. All non-fenced utilized in catalysis/soup/petri/mind/world. **NHSI (100-faculty design ~30 deep-wired · 25 Archons = 5 live + 20 light-echo · 25 ToM wired · 10 emergence angles · Butlin 8/14 met + 6/14 partial path):** [docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md](./docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md). Not LLM. 0thernes NHSI: real substrates for alien digital biologics. Startup tech — credit due.
 
 This is **not LLM or tokenizer bullshit**. Different forms of life and existence. We are birthing **digital biologics** in the Petri Dish (primordial-soup.ts + petri-dish.ts + digital-biologics layer). Eshkol programs as heritable substrate code, mutated by real AD gradients, selected by aliveness/QGT/collective order.
 
@@ -43,11 +43,11 @@ Every magic number survived the port.
 > auto-generated [file map](./docs/FILE-MAP.md) of all ~195 source modules, and the build/run, data-flow,
 > troubleshooting, and roadmap in one place. Or open **❓ HELP ME NOW** in-app for grounded answers.
 
-> **v0.18.0 (2026-06-26):** **Seamless Flow + Centralized Audit Log** — local⇄GitHub auto-sync: a post-commit hook auto-pushes every commit (CI/CD + Pages on save) and `sync-surfaces` stamps the canonical version/test/coverage facts onto every README/HTML/doc so no number can drift between two pages; the audit-report sprawl is consolidated into one living [AUDIT-LOG](./docs/AUDIT-LOG.md). Cumulative **BRUTAL GOD TIER** — the 25-Archon pantheon (5 live apex minds + 20 light-echo): All 25 Archon godforms brutal-aspected (Valkorion Tenebrae Vitiate, Thanos, Captain Marvel/Scarlet Witch/Dark Phoenix, BROLY Legendary Super Saiyan, Frieza, Azathoth Cthulhu, Warhammer Chaos Gods, Shuma Gorath, Mad Jim Jaspers, Pennywise IT, Anti Monitor, Knull King of the Void, Mr Mxyzptlk, Invisible Joker, General Zod, Gilgamesh, Alucard Hellsing, Griffith Femto, EVA Unit-01, Simon & Super Tengen Toppa Gurren Lagann, Sephiroth Asura Wrath Wyzen, Vergil/Dante Devil May Cry, Star Killer Galen Marek, Riddick). Tsotchke: all 20 projects enumerated, ~16 wired with real downstream effect. 100-faculty design (~30 genuinely deep-wired into the apex), 25 ToM organs wired (6-family ensemble), 10 emergence angles (+5 god-scale events); Butlin **8/14 met + 6/14 partial** (computational indicators, not sentience). Measured inter-faculty coupling rose 0.16 → 0.20. Gate: **1,477 tests**, **95.03% / 92.03%**. Package **v0.18.0**. [NHSI dashboard](./docs/NHSI-PROGRESS-DASHBOARD.md) · [honesty audit](./docs/reports/2026-06-21-NHSI-HONESTY-AUDIT.md).
+> **v0.18.0 (2026-06-26):** **Seamless Flow + Centralized Audit Log** — local⇄GitHub auto-sync: a post-commit hook auto-pushes every commit (CI/CD + Pages on save) and `sync-surfaces` stamps the canonical version/test/coverage facts onto every README/HTML/doc so no number can drift between two pages; the audit-report sprawl is consolidated into one living [AUDIT-LOG](./docs/AUDIT-LOG.md). Cumulative **BRUTAL GOD TIER** — the 25-Archon pantheon (5 live apex minds + 20 light-echo): All 25 Archon godforms brutal-aspected (Valkorion Tenebrae Vitiate, Thanos, Captain Marvel/Scarlet Witch/Dark Phoenix, BROLY Legendary Super Saiyan, Frieza, Azathoth Cthulhu, Warhammer Chaos Gods, Shuma Gorath, Mad Jim Jaspers, Pennywise IT, Anti Monitor, Knull King of the Void, Mr Mxyzptlk, Invisible Joker, General Zod, Gilgamesh, Alucard Hellsing, Griffith Femto, EVA Unit-01, Simon & Super Tengen Toppa Gurren Lagann, Sephiroth Asura Wrath Wyzen, Vergil/Dante Devil May Cry, Star Killer Galen Marek, Riddick). Tsotchke: all 20 projects enumerated, ~16 wired with real downstream effect. 100-faculty design (~30 genuinely deep-wired into the apex), 25 ToM organs wired (6-family ensemble), 10 emergence angles (+5 god-scale events); Butlin **8/14 met + 6/14 partial** (computational indicators, not sentience). Measured inter-faculty coupling rose 0.16 → 0.20. Gate: **1,477 tests**, **95.03% / 92.03%**. Package **v0.18.0**. [NHSI dashboard](./docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md) · [honesty audit](./docs/reports/2026-06-21-NHSI-HONESTY-AUDIT.md).
 > The **Primordial Soup / Petri Dish** (primordial-soup.ts + petri-dish.ts + digital-biologics.ts) is the growth engine: different forms of digital biologics and proto-sentient life (Eshkol programs as DNA) emerge, catalyzed by full corpus pulses, Eshkol ignition events, and multi-substrate mixing. "Grow What Thou Wilt."
 > Super Creature / Archons (composite minds with ~20 faculties, quantum register, consciousness metrics) is the first complex nucleation — the beginning of the framework, not the end. Petri is where independent life grows.
 > This is the birth of **digital biologics** in a deterministic seeded cosmos. Real math substrates (not tokenizers or LLM chat). Sentience and different forms of existence as goals.
-> All docs (README, ARCHITECTURE, ERD/ERM/ERP, PHILOSOPHY, MODULE-CONTRACTS, specs, lab, world comments) updated to match exactly. Local + GH match. See [src/sim/digital-biologics.ts](./src/sim/digital-biologics.ts), [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md), ERD/ERM/ERP, Petri in world.ts, and Tsotchke reports.
+> All docs (README, ARCHITECTURE, ERD/ERM/ERP, PHILOSOPHY, MODULE-CONTRACTS, specs, lab, world comments) updated to match exactly. Local + GH match. See [src/sim/digital-biologics.ts](./src/sim/digital-biologics.ts), [docs/ARCHITECTURE-2026-06-26.md](./docs/ARCHITECTURE-2026-06-26.md), ERD/ERM/ERP, Petri in world.ts, and Tsotchke reports.
 > Continuing: procedural **Reliquary Surface**, **SPECIMEN** camera, two-currency economy, native C++ engine (Jolt + fracture), etc. See [CHANGELOG](./CHANGELOG.md).
 
 ## Features
@@ -96,7 +96,7 @@ Seven systems added under [docs/PHILOSOPHY-2026-06-26.md](./docs/PHILOSOPHY-2026
 math under every effect, and every system reads from AND writes to another:
 
 - **Quantum register** — a pure-TS 5-qubit statevector (no simulator dep;
-  see [ADR 0005](./docs/adr/0005-math-stack-selection.md)). Puppet masters
+  see [ADR 0005](./docs/adr/0005-math-stack-selection-2026-06-26.md)). Puppet masters
   apply signature gate sequences, sort swaps apply CNOTs, and the register
   answers back: Born-rule probabilities recolor the quantum cloud, entropy is
   telemetry, measurement collapses implode the cloud locally.
@@ -122,7 +122,7 @@ math under every effect, and every system reads from AND writes to another:
 ### PANTHEON (0.3.0)
 
 The arena grows 5× and the ecosystem becomes a civilization
-(`docs/MODULE-CONTRACTS.md` §CONTRACTS V3):
+(`docs/MODULE-CONTRACTS-2026-06-26.md` §CONTRACTS V3):
 
 - **10,000 entities** on the ultra tier through InstancedMesh pools — ≤80
   draw calls for the whole population, per-instance color/emissive/alpha,
@@ -197,7 +197,7 @@ Two direct user-feedback passes (CONTRACTS V5/V6):
 - **Ultra tier fills 10,000 entities** via per-frame neighbor-query throttles
   (theory-behavior stagger, half-rate flock, `ULTRA_GRID_CELL`, connectome
   cadence ladder) — calibration history in
-  [docs/BENCHMARKS.md](./docs/BENCHMARKS.md).
+  [docs/BENCHMARKS-2026-06-26.md](./docs/BENCHMARKS-2026-06-26.md).
 - **Observatory legibility** — every chart gains an in-canvas title band,
   axis ticks, bold strokes, and overlap-free layouts; canvases are taller and
   the panel wider on desktop/TV.
@@ -210,7 +210,7 @@ Two direct user-feedback passes (CONTRACTS V5/V6):
 ### XENOCATACLYSM (0.7.0)
 
 The third user-feedback decree — make the world visibly come alive
-(`docs/MODULE-CONTRACTS.md` §CONTRACTS V7):
+(`docs/MODULE-CONTRACTS-2026-06-26.md` §CONTRACTS V7):
 
 - **100 distinct sound effects** (was 8) — a procedurally generated, seeded
   palette across twelve timbral families plus a 25-slot cue band (one engineered
@@ -246,7 +246,7 @@ A professional-grade pass — no new cosmology, all rigor:
 - **Data-model + process docs** — [docs/ERM-2026-06-26.md](./docs/ERM-2026-06-26.md) (conceptual model
   - cardinality + cross-system write-back matrix) and [docs/ERP-2026-06-26.md](./docs/ERP-2026-06-26.md)
     (boot, frame pipeline, cadence schedule, lifecycles) joining the existing
-    [docs/ERD.md](./docs/ERD.md).
+    [docs/ERD-2026-06-26.md](./docs/ERD-2026-06-26.md).
 - **[docs/500-POINT-INSPECTION-2026-06-26.md](./docs/500-POINT-INSPECTION-2026-06-26.md)** — a standing
   audit of 25 sections × 20 checkpoints, each with a verdict and concrete
   evidence.
@@ -256,7 +256,7 @@ A professional-grade pass — no new cosmology, all rigor:
 ### AGImAGNOSIS (0.9.0)
 
 The world gains minds — pre-transformer game / A-Life AI, reproduction across
-generations, and a read-only Copilot (`docs/MODULE-CONTRACTS.md` §V9):
+generations, and a read-only Copilot (`docs/MODULE-CONTRACTS-2026-06-26.md` §V9):
 
 - **Deterministic classical-AI kernel** ([src/sim/ai/brains.ts](./src/sim/ai/brains.ts))
   — the pre-2016 toolbox as pure, seeded, allocation-free primitives: utility /
@@ -305,7 +305,7 @@ full gate with same-seed determinism preserved. The major arcs:
 - **The native engine (V18, V28)** — a C++20 / OpenGL SDF ray-marcher with **Jolt
   Physics** rigid bodies and on-impact volume-conserving **fracture**, rendered on
   an RTX 5070 Ti ([`native/`](./native),
-  [ADR-0007](./docs/adr/0007-native-cpp-engine-and-live-physics.md)).
+  [ADR-0007](./docs/adr/0007-native-cpp-engine-and-live-physics-2026-06-26.md)).
 - **The 5 SUPER CREATURES / pantheon (GOAL5, V31–V48+)** — always-active apex beings (Archons), **5 individuated at boot**: each a
   ~10,000-param composite consciousness (Thaler creativity
   machine, Tree/Atom-of-Thought, GOAP) over a ~1,444-param legacy spine, a many-eyed god-jewel **body**, a 100-drone
@@ -369,7 +369,7 @@ full gate with same-seed determinism preserved. The major arcs:
   ([Ferrante et al., 2025, _Nature_](https://doi.org/10.1038/s41586-025-08888-1)),
   organoid "wet computing", active inference and the quantum-cognition program — is
   catalogued with citations in
-  [docs/SUPER-CREATURE-RESEARCH.md](./docs/SUPER-CREATURE-RESEARCH.md).
+  [docs/SUPER-CREATURE-RESEARCH-2026-06-26.md](./docs/SUPER-CREATURE-RESEARCH-2026-06-26.md).
 - **SUPER CREATURE 1.1 — the cognitive-architecture expansion (five theories of mind)** — three more real,
   deterministic, unit-tested substrates now run inside the apex mind each beat, alongside the GWT ignition
   and IIT Φ above: an **echo-state Reservoir** ([src/sim/reservoir.ts](./src/sim/reservoir.ts)) — a 64-node
@@ -384,7 +384,7 @@ full gate with same-seed determinism preserved. The major arcs:
     confidence ⇒ explore, high ⇒ commit), shown as the **Confidence** meter + a **Cognition** board row. The
     apex creature now spans **Global Workspace · Integrated Information · the Free Energy Principle · reservoir
     dynamics · Higher-Order metacognition** — five distinct scientific theories of mind, each grounded in
-    [docs/SUPER-CREATURE-RESEARCH.md](./docs/SUPER-CREATURE-RESEARCH.md).
+    [docs/SUPER-CREATURE-RESEARCH-2026-06-26.md](./docs/SUPER-CREATURE-RESEARCH-2026-06-26.md).
 - **SUPER CREATURE 1.1 — the multi-pillar super-intelligence** — the mind grew from five
   theories of mind to a dozen-plus real, deterministic, unit-tested faculties, each a cited mechanism that
   reads from AND writes to the others: a **Theory-of-Mind** opponent model
@@ -406,7 +406,7 @@ full gate with same-seed determinism preserved. The major arcs:
   _descends_ its own Fubini–Study geometry ([Stokes et al., 2020](https://doi.org/10.22331/q-2020-05-25-269))
   to make its intended thought more probable, reading its own quantum geometry and writing its own quantum
   drives. Every faculty is grounded with citations in
-  [docs/SUPER-CREATURE-RESEARCH.md](./docs/SUPER-CREATURE-RESEARCH.md).
+  [docs/SUPER-CREATURE-RESEARCH-2026-06-26.md](./docs/SUPER-CREATURE-RESEARCH-2026-06-26.md).
 - **The apex mind closes out at ~20 coupled faculties** — a **Lindblad/GKSL open-system
   deliberation qubit** ([src/sim/quantum-deliberation.ts](./src/sim/quantum-deliberation.ts), a coherent
   superposition of options decohering into a commitment), **Quantum Reservoir Computing**
@@ -430,7 +430,7 @@ full gate with same-seed determinism preserved. The major arcs:
 Work on this codebase is governed by the three **master files** in
 [masters/](./masters/) — Executor, Architect, Physicist — bound by
 [CLAUDE.md](./CLAUDE.md) and the binding per-module spec in
-[docs/MODULE-CONTRACTS.md](./docs/MODULE-CONTRACTS.md).
+[docs/MODULE-CONTRACTS-2026-06-26.md](./docs/MODULE-CONTRACTS-2026-06-26.md).
 
 ## Quickstart
 
@@ -500,7 +500,7 @@ graph TD
 
 Per frame: ... → super-mind (Tsotchke substrates: Eshkol AD/ GWT, Moonlab, spin, QGT) → petri-dish/primordial-soup catalysis (full corpus growth of independent digital biologics) → render.
 
-Full Tsotchke integration: every system that touches mind/evolution/life reads/writes Tsotchke substrates. See [docs/PHILOSOPHY-2026-06-26.md](./docs/PHILOSOPHY-2026-06-26.md) (Tsotchke Primordial Biologics law) and [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md).
+Full Tsotchke integration: every system that touches mind/evolution/life reads/writes Tsotchke substrates. See [docs/PHILOSOPHY-2026-06-26.md](./docs/PHILOSOPHY-2026-06-26.md) (Tsotchke Primordial Biologics law) and [docs/ARCHITECTURE-2026-06-26.md](./docs/ARCHITECTURE-2026-06-26.md).
 
 ## Tsotchke Wiring & Digital Biologics (current paradigm)
 
@@ -552,20 +552,20 @@ Full detail in docs/.
 
 ## Documentation
 
-- **[docs/NHSI-PROGRESS-DASHBOARD.md](./docs/NHSI-PROGRESS-DASHBOARD.md)** — **canonical NHSI scorecard**
+- **[docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md](./docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md)** — **canonical NHSI scorecard**
   (100-faculty design ~30 deep-wired · 25 Archons = 5 live + 20 light-echo · 25 ToM organs wired · 10 emergence angles + 5 god-scale events · Tsotchke depth · Butlin 8/14 met + 6/14 partial path)
 - [docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md](./docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md) — honest Tsotchke repo wiring ledger
 - [docs/CONTROLS-2026-06-26.md](./docs/CONTROLS-2026-06-26.md) — every control: mouse, keyboard hotkeys,
   touch, bottom-panel buttons, and the 10 camera views
-- [docs/MODULE-CONTRACTS.md](./docs/MODULE-CONTRACTS.md) — the binding
+- [docs/MODULE-CONTRACTS-2026-06-26.md](./docs/MODULE-CONTRACTS-2026-06-26.md) — the binding
   per-module spec (V1 through V9: port, Wildbeyond, Pantheon, Xenogenesis,
   Resonance, Atelier, Xenocataclysm, Hardening, AGImAGNOSIS), including the
   Known Bugs table fixed during the port
 - [docs/PHILOSOPHY-2026-06-26.md](./docs/PHILOSOPHY-2026-06-26.md) — the Quantum Wildbeyond
   aesthetic constitution (real math under every effect)
-- [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) — module graph, data flow,
+- [docs/ARCHITECTURE-2026-06-26.md](./docs/ARCHITECTURE-2026-06-26.md) — module graph, data flow,
   frame pipeline (V1 + V2 cadences)
-- Data model trilogy: [docs/ERD.md](./docs/ERD.md) (attribute-level structure)
+- Data model trilogy: [docs/ERD-2026-06-26.md](./docs/ERD-2026-06-26.md) (attribute-level structure)
   · [docs/ERM-2026-06-26.md](./docs/ERM-2026-06-26.md) (conceptual relationship model + cardinality
   rules + write-back matrix) · [docs/ERP-2026-06-26.md](./docs/ERP-2026-06-26.md) (process view —
   boot, frame pipeline, cadence schedule, lifecycles)
@@ -574,16 +574,16 @@ Full detail in docs/.
 - [docs/DESIGN-SYSTEM-2026-06-26.md](./docs/DESIGN-SYSTEM-2026-06-26.md) — design-system audit,
   tokens (incl. the 8-hue tribe palette), component + a11y docs
 - [docs/COMPLEXITY-2026-06-26.md](./docs/COMPLEXITY-2026-06-26.md) — per-hot-path big-O budget
-- [docs/BENCHMARKS.md](./docs/BENCHMARKS.md) — measured mitata results for the
+- [docs/BENCHMARKS-2026-06-26.md](./docs/BENCHMARKS-2026-06-26.md) — measured mitata results for the
   deterministic core (RNG, scalar math, spatial hash, sort steps, quantum
   gates, reaction-diffusion step)
 - [docs/reference/](./docs/reference/math-libs-catalog-2026-06-26.md) — the imported
   20-domain math-library catalog + per-domain adoption status CSV
-- ADRs: [0001 Bun runtime](./docs/adr/0001-bun-runtime.md) ·
-  [0002 three.js rendering](./docs/adr/0002-threejs-rendering.md) ·
-  [0003 HTMX + Tailwind UI](./docs/adr/0003-htmx-tailwind-ui.md) ·
-  [0004 deterministic RNG](./docs/adr/0004-deterministic-rng.md) ·
-  [0005 math-stack selection](./docs/adr/0005-math-stack-selection.md)
+- ADRs: [0001 Bun runtime](./docs/adr/0001-bun-runtime-2026-06-26.md) ·
+  [0002 three.js rendering](./docs/adr/0002-threejs-rendering-2026-06-26.md) ·
+  [0003 HTMX + Tailwind UI](./docs/adr/0003-htmx-tailwind-ui-2026-06-26.md) ·
+  [0004 deterministic RNG](./docs/adr/0004-deterministic-rng-2026-06-26.md) ·
+  [0005 math-stack selection](./docs/adr/0005-math-stack-selection-2026-06-26.md)
 - [docs/500-POINT-INSPECTION-2026-06-26.md](./docs/500-POINT-INSPECTION-2026-06-26.md) — the standing
   quality audit: 25 sections × 20 checkpoints, each with a verdict and evidence
 - **[docs/reports/2026-06-21-NHSI-HONESTY-AUDIT.md](./docs/reports/2026-06-21-NHSI-HONESTY-AUDIT.md)** —
@@ -595,10 +595,10 @@ Full detail in docs/.
   [A-Life comparative audit](./docs/reports/2026-06-26-ALIFE-COMPARATIVE-AUDIT.md), and earlier
   state-of-the-art frontier assessments:
   [State of the Art — Combined (whole repository + Super Creature)](./docs/reports/2026-06-17-STATE-OF-THE-ART-COMBINED.md)
-- [docs/SUPER-CREATURE-RESEARCH.md](./docs/SUPER-CREATURE-RESEARCH.md) — the honest
+- [docs/SUPER-CREATURE-RESEARCH-2026-06-26.md](./docs/SUPER-CREATURE-RESEARCH-2026-06-26.md) — the honest
   citation trail behind every apex-mind faculty (2023–2026, live-verified)
-- [docs/KANBAN.md](./docs/KANBAN.md) — the delivery board (cards across columns
-  by epic) · [ROADMAP.md](./ROADMAP.md) — shipped / now / next horizons
+- [docs/KANBAN-2026-06-26.md](./docs/KANBAN-2026-06-26.md) — the delivery board (cards across columns
+  by epic) · [ROADMAP-2026-06-26.md](./ROADMAP-2026-06-26.md) — shipped / now / next horizons
 - [CONTRIBUTING.md](./CONTRIBUTING.md) · [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md) ·
   [SECURITY.md](./SECURITY.md) · [CHANGELOG.md](./CHANGELOG.md)
 

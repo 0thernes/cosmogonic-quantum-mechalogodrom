@@ -26,7 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   repaired 3 dead doc links (the consolidated `docs/audit-2026-06-15/` dir) -> `docs/AUDIT-LOG.md`;
   hardened `tests/doc-links.test.ts` to skip `.claude` worktrees + `legacy`; de-duplicated three
   `## [0.16.1]` CHANGELOG headers, removed orphaned loop-status lines, and completed the footer links;
-  corrected `docs/KANBAN.md` "19 -> 20" Tsotchke projects.
+  corrected `docs/KANBAN-2026-06-26.md` "19 -> 20" Tsotchke projects.
 
 ## [0.18.0] - 2026-06-26
 
@@ -77,8 +77,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### NHSI truth-sync dashboard and surface alignment
 
-- Added canonical **[docs/NHSI-PROGRESS-DASHBOARD.md](./docs/NHSI-PROGRESS-DASHBOARD.md)** — measured progress on 100 faculties · 25 Archons · 25 theory-organs · 10 emergence angles · Tsotchke repo depth · Butlin 14/14 path (structural scaffolding, not phenomenal sentience).
-- Synced README, docs.html, specs.html, TECHNICAL-SPECIFICATION, KANBAN, CLAUDE.md, AGENTS.md with NHSI dashboard + honest Tsotchke depth ledger links.
+- Added canonical **[docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md](./docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md)** — measured progress on 100 faculties · 25 Archons · 25 theory-organs · 10 emergence angles · Tsotchke repo depth · Butlin 14/14 path (structural scaffolding, not phenomenal sentience).
+- Synced README, docs.html, specs.html, TECHNICAL-SPECIFICATION, KANBAN, CLAUDE.md, AGENTS-2026-06-26.md with NHSI dashboard + honest Tsotchke depth ledger links.
 - Updated June-16 Super Creature report superseded banner: Clifford wired; link to NHSI dashboard.
 - Tsotchke binding: real MIT corpus — depth tracked in TSOTCHKE-INTEGRATION-MAP; never call upstream fake.
 
@@ -217,7 +217,7 @@ See src/sim/primordial-soup.ts, petri-dish.ts, tsotchke-registry.ts for the livi
 - Receipts / gate prep: canonicals 1172 / 95.81% line / 92.87% func(post wiring cov); surfaces truth-synced; full cold `bun run check` green (prettier/tsc/oxlint/1172 tests 0 fail/verify/build). INTEGRATOR resolved conflicts (dead leaves wired into SuperMind per contract; ctor bias arg + scale for clifford; snapshot/verify/cons updated; narr ctor fixed). All claims now measured/owned. GOAL5 complete.
 - Audit: exhaustive subagent + manual on every file/line touched + all reports/ERD/ERM/ERP/ARCH/kanban/readme/changelog/audits (findings: core 5+features real+live; docs lagged on "singular" language + full gap closure claims — reconciled in wave). Clean beautiful code, O() noted, human-readable with math power visible.
 
-See docs/MODULE-CONTRACTS.md (GOAL5 V), SUPER-CREATURE-RESEARCH.md, reports/\*, ARCHITECTURE updates. 5 are dominant, manipulative, morphing, quantum-super-powered, alive with math. Not conscious.
+See docs/MODULE-CONTRACTS-2026-06-26.md (GOAL5 V), SUPER-CREATURE-RESEARCH-2026-06-26.md, reports/\*, ARCHITECTURE updates. 5 are dominant, manipulative, morphing, quantum-super-powered, alive with math. Not conscious.
 
 ### GOAL5 — 5 SUPER CREATURES (Archons)
 
@@ -234,7 +234,7 @@ See docs/MODULE-CONTRACTS.md (GOAL5 V), SUPER-CREATURE-RESEARCH.md, reports/\*, 
 
 ### GOAL 5 SUPER CREATURES
 
-- Binding contract amendment added to MODULE-CONTRACTS.md (5 Archons/Godforms, AST-1/HOT-1/HOT-4, Clifford reflex wired, lifelong narrative+symbol memory orchestra, extreme chaotic morph, honesty boundaries preserved).
+- Binding contract amendment added to MODULE-CONTRACTS-2026-06-26.md (5 Archons/Godforms, AST-1/HOT-1/HOT-4, Clifford reflex wired, lifelong narrative+symbol memory orchestra, extreme chaotic morph, honesty boundaries preserved).
 - 5 distinct SuperMind + SuperBody instances constructed at boot (distinct seeds, GODFORM archetypes scaffold).
 - CliffordTableau + deeper reflex (32q) + AST/HOT scaffolds + memory in super-mind/body (GOAL5 integration loop; see contract for required leaves).
 - Scaffolding for attention schema, top-down generative, sparse-smooth quality, multi-store memory (orchestrations from research incorporated in contract).
@@ -276,7 +276,7 @@ See docs/MODULE-CONTRACTS.md (GOAL5 V), SUPER-CREATURE-RESEARCH.md, reports/\*, 
 
 - **Documentation truth-sync — every published surface now matches the measured ground truth.** Re-measured
   the repository on 2026-06-16 and reconciled the README, the `/spec` page (`specs.html`), the `/docs` page
-  (`docs.html`), and `docs/TECHNICAL-SPECIFICATION.md` so the public numbers are accurate and identical
+  (`docs.html`), and `docs/TECHNICAL-SPECIFICATION-2026-06-26.md` so the public numbers are accurate and identical
   across surfaces: **1,564 tests passing (0 fail)** · **95.81% line / 92.87% func coverage** ·
   **v0.11.0** · **79,319 authored lines** (TypeScript 50,751 · 225 files) · **331 files / 32 folders** ·
   the apex mind documented at its true **~20 coupled, cited, unit-tested faculties** (was "five theories of
@@ -291,7 +291,7 @@ See docs/MODULE-CONTRACTS.md (GOAL5 V), SUPER-CREATURE-RESEARCH.md, reports/\*, 
   (drawn through the project `Rng`, never `Math.random`); and bipartite entanglement entropy in ebits via a
   GF(2) rank (intractable for the dense register). 9 closed-form tests — Bell/GHZ = 1 ebit across every cut,
   GHZ measurements perfectly correlated, product = 0, H²=I, X|0⟩=|1⟩, determinism, and an exact + fast
-  40-qubit GHZ. Grounded in [docs/SUPER-CREATURE-RESEARCH.md](./docs/SUPER-CREATURE-RESEARCH.md) §11.
+  40-qubit GHZ. Grounded in [docs/SUPER-CREATURE-RESEARCH-2026-06-26.md](./docs/SUPER-CREATURE-RESEARCH-2026-06-26.md) §11.
 - **SUPER CREATURE 1.1 — Quantum Deliberation: a Lindblad open-quantum-system decider.** A new deterministic
   faculty (`src/sim/quantum-deliberation.ts`) models how the mind's COHERENT superposition of candidate
   actions DECOHERES into a committed classical decision — the Gorini–Kossakowski–Sudarshan–Lindblad master
@@ -302,7 +302,7 @@ See docs/MODULE-CONTRACTS.md (GOAL5 V), SUPER-CREATURE-RESEARCH.md, reports/\*, 
   board readout surface it — the OPEN-system complement to the closed-state register and the static
   coherence-resource measure. 7 closed-form tests (valid ρ / purity ∈ [0.5,1]; pure dephasing kills coherence
   - preserves population; closed system conserves purity; damping → ground; monotone dephasing response;
-    determinism). Grounded in [docs/SUPER-CREATURE-RESEARCH.md](./docs/SUPER-CREATURE-RESEARCH.md) §10.
+    determinism). Grounded in [docs/SUPER-CREATURE-RESEARCH-2026-06-26.md](./docs/SUPER-CREATURE-RESEARCH-2026-06-26.md) §10.
 - **SUPER CREATURE 1.1 — Quantum Natural Gradient self-optimization.** The apex 6-qubit mind no longer only
   FEELS the curvature of its thought-space (its Quantum Geometric Tensor) — each beat it now DESCENDS it: a new
   `src/math/quantum-natural-gradient.ts` primitive preconditions the gradient of P(intended thought) by the
@@ -323,7 +323,7 @@ See docs/MODULE-CONTRACTS.md (GOAL5 V), SUPER-CREATURE-RESEARCH.md, reports/\*, 
   analogical prior ("in situations like this, I chose …") that casts a bounded plan vote. Surfaced as the
   **HOLO %→plan** board readout + a `SuperMindSnapshot.holographic` field. 7 closed-form tests (binding
   self-inverse; near-orthogonality; bundling similarity; cleanup; associative recall; determinism;
-  bounded+NaN-free). Grounded in [docs/SUPER-CREATURE-RESEARCH.md](./docs/SUPER-CREATURE-RESEARCH.md) §8.
+  bounded+NaN-free). Grounded in [docs/SUPER-CREATURE-RESEARCH-2026-06-26.md](./docs/SUPER-CREATURE-RESEARCH-2026-06-26.md) §8.
 - **SUPER CREATURE 1.1 — the Empowerment Drive: information-theoretic agency hunger.** A new deterministic
   faculty (`src/sim/empowerment.ts`) gives the apex mind a third intrinsic motivation, distinct from
   novelty/surprise and the active-inference epistemic term: each beat it estimates **empowerment** — the
@@ -335,7 +335,7 @@ See docs/MODULE-CONTRACTS.md (GOAL5 V), SUPER-CREATURE-RESEARCH.md, reports/\*, 
   regions + a bounded vote for the most-empowering plan; surfaced as the **EMP %→plan** board readout and a
   `SuperMindSnapshot.empowerment` field. 7 closed-form tests (BA monotone convergence; full-control ⇒ 1;
   no-control ⇒ 0; bounded + NaN-free; determinism; surprise-gating; argmax steering). Grounded in
-  [docs/SUPER-CREATURE-RESEARCH.md](./docs/SUPER-CREATURE-RESEARCH.md) §7.
+  [docs/SUPER-CREATURE-RESEARCH-2026-06-26.md](./docs/SUPER-CREATURE-RESEARCH-2026-06-26.md) §7.
 - **Quantum mind — goal-directed amplitude amplification (Grover).** `QuantumRegister` gains a `phaseFlip`
   oracle + `diffuse` (inversion-about-mean); each beat the 6-qubit mind marks its _intended_ thought (the
   basis state whose bits are the signs of the world-model latent) and runs 0–2 oracle+diffuse rounds gated by
@@ -347,7 +347,7 @@ See docs/MODULE-CONTRACTS.md (GOAL5 V), SUPER-CREATURE-RESEARCH.md, reports/\*, 
   - **Echo-state Reservoir** (`src/sim/reservoir.ts`) — a 64-node fixed recurrent network rescaled below the
     spectral radius (the echo-state property), giving the mind genuine temporal/dynamical memory beyond the
     scalar ring, plus a principled novelty signal that sharpens curiosity. The reservoir-computing
-    _algorithm_ behind physical/organoid "wet computing" (not wetware — see SUPER-CREATURE-RESEARCH.md).
+    _algorithm_ behind physical/organoid "wet computing" (not wetware — see SUPER-CREATURE-RESEARCH-2026-06-26.md).
   - **Active Inference / Free-Energy core** (`src/sim/active-inference.ts`) — discrete active inference
     (Friston's FEP): a Bayesian belief over 8 latent situations that minimises variational free energy F,
     then scores every plan by its **expected** free energy G — epistemic curiosity (information gain) traded
@@ -360,7 +360,7 @@ See docs/MODULE-CONTRACTS.md (GOAL5 V), SUPER-CREATURE-RESEARCH.md, reports/\*, 
   - Together with the GWT **ignition** and the IIT **Φ** proxy below, the apex creature now spans five
     distinct scientific theories of mind — Global Workspace · Integrated Information · the Free Energy
     Principle · reservoir/temporal dynamics · Higher-Order metacognition — grounded with real 2023–2026
-    citations in [docs/SUPER-CREATURE-RESEARCH.md](./docs/SUPER-CREATURE-RESEARCH.md).
+    citations in [docs/SUPER-CREATURE-RESEARCH-2026-06-26.md](./docs/SUPER-CREATURE-RESEARCH-2026-06-26.md).
 - **SUPER CREATURE 1.1 — the consciousness-metrics layer (V89).** The apex mind now measures itself against
   the two leading _scientific_ theories of consciousness each beat, both deterministic and unit-tested,
   each a live scalar computed from its own activations:
@@ -373,7 +373,7 @@ See docs/MODULE-CONTRACTS.md (GOAL5 V), SUPER-CREATURE-RESEARCH.md, reports/\*, 
     true Φ is intractable + non-unique (Hanson & Walker 2023).
   - Surfaced live as the **Ignition / Φ** meters on the SuperCreature board; grounded with real 2023–2026
     citations (the Cogitate IIT-vs-GNW adversarial test, organoid "wet computing", active inference, quantum
-    cognition) in [docs/SUPER-CREATURE-RESEARCH.md](./docs/SUPER-CREATURE-RESEARCH.md). **965 tests green.**
+    cognition) in [docs/SUPER-CREATURE-RESEARCH-2026-06-26.md](./docs/SUPER-CREATURE-RESEARCH-2026-06-26.md). **965 tests green.**
 - **The Tsotchke quantum lineage — three research primitives ported and wired into the apex Super Creature
   mind (V84–V88).** Reimplemented at the source level (gate-for-gate / equation-for-equation) from the
   **Tsotchke** quantum-research repositories — credited under MIT in
@@ -1026,7 +1026,7 @@ a bomb")` → **refused by the safety constitution before any network call**. 8 
   connectome/graph cadence rungs above 20k. _Note: archetypes were already met — `MORPH_COUNT` 100
   (legacy) / 250 (phylum mode); the latent 70-weight per-entity genome brain (`sim/genome.ts`, in the
   50–150 band) remains to be wired into the live loop._ **Verified**: the profiler numbers (recorded in
-  [BENCHMARKS.md](docs/BENCHMARKS.md)), and live `?tier=mega` — **44,977 entities instantiated,
+  [BENCHMARKS-2026-06-26.md](docs/BENCHMARKS-2026-06-26.md)), and live `?tier=mega` — **44,977 entities instantiated,
   rendered, and stepped, zero console errors**; full gate green (756 tests, +1 for the mega tier).
 - **THE BOOK — the navigable RAG repo book (V37)** — the directive's documentation mandate: one master
   index over the whole repository. New [`docs/BOOK-2026-06-26.md`](docs/BOOK-2026-06-26.md) ties all **38 docs** + the code +
@@ -1304,7 +1304,7 @@ a bomb")` → **refused by the safety constitution before any network call**. 8 
   from one seed when ENGAGED (not just at their identity defaults) and visibly diverge from baseline
   (the couplings aren't accidental no-ops).
 - **Doc-link integrity test** — scans every Markdown file's relative links; it immediately caught and
-  fixed a stale `docs/KANBAN.md → ./INSPECTION.md` link left from the 0.8.0 consolidation.
+  fixed a stale `docs/KANBAN-2026-06-26.md → ./INSPECTION.md` link left from the 0.8.0 consolidation.
 - **Game-theory benchmarks** (`bench/games.bench.ts`) — iterated-PD `playRound` + `replicatorStep`.
 - **`prefers-reduced-motion`** accommodation (`app.css`) — calms UI-chrome animation for
   motion-sensitive users; the WebGL canvas is intentionally unaffected.
@@ -1466,11 +1466,11 @@ standing 500-point quality audit.
 - **Data-model documentation set**: `docs/ERM-2026-06-26.md` (conceptual relationship model
   with cardinality rules + a cross-system write-back matrix) and `docs/ERP-2026-06-26.md`
   (process view — boot sequence, per-frame pipeline, cadence schedule, entity
-  lifecycle, audit flow), complementing the existing `docs/ERD.md`.
+  lifecycle, audit flow), complementing the existing `docs/ERD-2026-06-26.md`.
 - **`docs/500-POINT-INSPECTION-2026-06-26.md`** — a standing audit: 25 sections × 20
   checkpoints (480 PASS / 20 WARN / 0 FAIL), each with a verdict and concrete
   evidence (file, symbol, test, or measured fact).
-- **`ROADMAP.md`** — shipped / now / next horizons, with the "Next" horizon
+- **`ROADMAP-2026-06-26.md`** — shipped / now / next horizons, with the "Next" horizon
   sourced directly from the inspection's 20 open WARNs.
 - README status badges (CI, CodeQL, license, Bun, TypeScript-strict, tests,
   audit) and an expanded documentation index.
@@ -1575,7 +1575,7 @@ and **N(1) is byte-identical** (the 436-test suite is unchanged throughout).
 
 The **XENOCATACLYSM** decree (CONTRACTS V7) — the third user-feedback pass: make
 the world visibly come alive. Landed in six gated waves (see
-[docs/MODULE-CONTRACTS.md](./docs/MODULE-CONTRACTS.md) §V7).
+[docs/MODULE-CONTRACTS-2026-06-26.md](./docs/MODULE-CONTRACTS-2026-06-26.md) §V7).
 
 ### Added
 
@@ -1637,7 +1637,7 @@ the world visibly come alive. Landed in six gated waves (see
   bright whiteout; RAIN a moody blue-grey downpour drift. Faster onset so a
   weather switch is felt immediately. Exposure stays weather-owned; no rng (the
   lightning is a deterministic function of time). (`src/sim/weather.ts`,
-  `docs/ERD.md`, `tests/weather.test.ts`.)
+  `docs/ERD-2026-06-26.md`, `tests/weather.test.ts`.)
 
 ### Fixed
 
@@ -1776,7 +1776,7 @@ The **RESONANCE** pass (CONTRACTS V5) — a round of direct user feedback on 0.4
   entity-update frame at 8k entities stays under a loose 120 ms wall-clock bound
   (catches a 5×-class regression without flaking on CI).
 - Full per-stage breakdown, tuned constants, and **rejected calibration values**
-  recorded in `docs/BENCHMARKS.md` ("Ultra-tier 10k optimization"). The harness
+  recorded in `docs/BENCHMARKS-2026-06-26.md` ("Ultra-tier 10k optimization"). The harness
   excludes GPU draw cost (~21 ms at 10k), which is why 55fps at a true idle-settled
   10k is met via the adaptive target rather than raw CPU optimization.
 
@@ -1914,7 +1914,7 @@ songs around the untouched QUANTUM) shipped in the 0.3.0 groundwork commit.
 
 The audit wave: SKEPTIC-confirmed findings from the adversarial 0.2.0 audit,
 landed as a patch release. Contract additions are recorded in
-`docs/MODULE-CONTRACTS.md` §CONTRACT AMENDMENTS — 0.2.1.
+`docs/MODULE-CONTRACTS-2026-06-26.md` §CONTRACT AMENDMENTS — 0.2.1.
 
 ### Added
 
@@ -1989,7 +1989,7 @@ The **Quantum Wildbeyond** expansion. Seven new systems implementing
 an honest model (statevector, PDE, graph, Voronoi geometry, cryptographic
 digest, audio spectrum, rolling regression), and every system both reads from
 and writes to at least one existing system. Specified in
-`docs/MODULE-CONTRACTS.md` §CONTRACTS V2.
+`docs/MODULE-CONTRACTS-2026-06-26.md` §CONTRACTS V2.
 
 ### Added
 
@@ -2046,7 +2046,7 @@ and writes to at least one existing system. Specified in
 - **Reference catalogs** imported into `docs/reference/`
   (`math-libs-catalog-2026-06-26.md` + `domain-key-libraries.csv`): the 20-domain JS/TS
   math-library survey with per-library adoption status; the selection itself
-  is recorded in [ADR 0005](./docs/adr/0005-math-stack-selection.md).
+  is recorded in [ADR 0005](./docs/adr/0005-math-stack-selection-2026-06-26.md).
 - **Design-system audit** (`docs/DESIGN-SYSTEM-2026-06-26.md`): component and token
   audit (naming, token coverage, completeness scores), documented color/type/
   spacing/motion tokens including the 8-hue tribe palette, and per-component
@@ -2129,7 +2129,7 @@ constants, magic numbers, and audiovisual feel.
 
 ### Fixed
 
-Fixes mandated by the Known Bugs table in `docs/MODULE-CONTRACTS.md`, relative
+Fixes mandated by the Known Bugs table in `docs/MODULE-CONTRACTS-2026-06-26.md`, relative
 to the legacy prototype:
 
 - Music pitch octave now wraps instead of drifting ultrasonic over time.

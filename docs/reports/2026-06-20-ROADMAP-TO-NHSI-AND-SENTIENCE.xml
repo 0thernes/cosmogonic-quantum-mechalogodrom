@@ -39,20 +39,20 @@
     <metric name="lineCoverage" value="~95% (canonical 95.03, +-6pp gate tolerance)" source="scripts/canonical-receipts.ts"/>
     <metric name="funcCoverage" value="~92% (canonical 92.03, +-6pp gate tolerance)" source="scripts/canonical-receipts.ts"/>
     <metric name="populationCeiling" value="50000" source="src/core/quality.ts"/>
-    <metric name="population60fps" value="10000" target="iGPU" source="docs/BENCHMARKS.md"/>
-    <metric name="worldParams" value="~3.5M (~14MB Float32)" thread="1" source="docs/TECHNICAL-SPECIFICATION.md"/>
-    <metric name="perOrganismBrain" value="70-weight TinyMLP" morphotypes="250" behavioralFields="26" source="docs/TECHNICAL-SPECIFICATION.md"/>
+    <metric name="population60fps" value="10000" target="iGPU" source="docs/BENCHMARKS-2026-06-26.md"/>
+    <metric name="worldParams" value="~3.5M (~14MB Float32)" thread="1" source="docs/TECHNICAL-SPECIFICATION-2026-06-26.md"/>
+    <metric name="perOrganismBrain" value="70-weight TinyMLP" morphotypes="250" behavioralFields="26" source="docs/TECHNICAL-SPECIFICATION-2026-06-26.md"/>
     <metric name="apexParams" value="~37225 (10081 composite + 1444 spine + 100x257 wingmen)" source="src/sim/super-mind.ts"/>
-    <metric name="apexThink" value="~3.34ms full-suite / ~8.85ms focused" budget="full think() pass" source="bench/quantum-classical.bench.ts; docs/BENCHMARKS.md"/>
-    <metric name="apexSnapshot" value="~2.44ms full-suite / ~6.89ms focused" source="docs/BENCHMARKS.md"/>
-    <metric name="apexFiveThink" value="~14.47ms full-suite / ~25.40ms focused" source="docs/BENCHMARKS.md"/>
+    <metric name="apexThink" value="~3.34ms full-suite / ~8.85ms focused" budget="full think() pass" source="bench/quantum-classical.bench.ts; docs/BENCHMARKS-2026-06-26.md"/>
+    <metric name="apexSnapshot" value="~2.44ms full-suite / ~6.89ms focused" source="docs/BENCHMARKS-2026-06-26.md"/>
+    <metric name="apexFiveThink" value="~14.47ms full-suite / ~25.40ms focused" source="docs/BENCHMARKS-2026-06-26.md"/>
     <metric name="mathKernels" value="27" source="src/math/*.ts"/>
     <metric name="simModules" value="90+" source="src/sim/*.ts"/>
     <metric name="portedPrimitives" value="9" source="THIRD-PARTY-NOTICES.md"/>
-    <metric name="facultiesDesign" value="100-faculty DESIGN; ~30 genuinely deep-wired into the apex think()" note="each deep-wired faculty reads state AND moves the plan/drives/consciousness; the remainder are a generic-profile bias bank" source="src/sim/faculties-pantheon.ts; docs/NHSI-PROGRESS-DASHBOARD.md"/>
+    <metric name="facultiesDesign" value="100-faculty DESIGN; ~30 genuinely deep-wired into the apex think()" note="each deep-wired faculty reads state AND moves the plan/drives/consciousness; the remainder are a generic-profile bias bank" source="src/sim/faculties-pantheon.ts; docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md"/>
     <metric name="archons" value="25-Archon pantheon = 5 individuated apex SuperMinds + 20 live light-echo" source="src/sim/super-mind.ts; PantheonSociety"/>
-    <metric name="theoryOfMind" value="25 organs wired as a 6-family ensemble (additive/bayesian/recursive/temporal/deception/coalition)" source="docs/NHSI-PROGRESS-DASHBOARD.md"/>
-    <metric name="emergenceAngles" value="10 angles wired (+ 5 god-scale release EVENTS - events, not additional angles)" source="src/sim/open-endedness.ts; docs/NHSI-PROGRESS-DASHBOARD.md"/>
+    <metric name="theoryOfMind" value="25 organs wired as a 6-family ensemble (additive/bayesian/recursive/temporal/deception/coalition)" source="docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md"/>
+    <metric name="emergenceAngles" value="10 angles wired (+ 5 god-scale release EVENTS - events, not additional angles)" source="src/sim/open-endedness.ts; docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md"/>
     <metric name="tsotchkeCorpus" value="20 corpus projects; ~16 wired with real downstream effect (8 deep in the apex mind, 4 in the petri growth engine)" source="docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md"/>
     <metric name="butlinIndicators" value="8/14 met + 6/14 partial" note="computational INDICATORS, not sentience; the hard problem is untouched" source="Butlin et al. 2023, arXiv:2308.08708; docs SUPER-CREATURE-RESEARCH"/>
     <metric name="determinism" value="one mulberry32 seed; Math.random/Date.now GLOB-banned in sim/math" source="tests/determinism-law.test.ts"/>

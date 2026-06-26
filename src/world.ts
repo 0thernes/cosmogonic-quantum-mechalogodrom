@@ -1,6 +1,6 @@
 /**
  * Composition root of the simulation: constructs every system against the
- * contracts in docs/MODULE-CONTRACTS.md, owns the mutable SimState, implements
+ * contracts in docs/MODULE-CONTRACTS-2026-06-26.md, owns the mutable SimState, implements
  * all UiActions, and drives the per-frame pipeline
  * (camera → weather → puppet masters → grid → shoggoths → sector → sort step →
  *  entities → connectome → quantum → environment → telemetry → render).
@@ -219,7 +219,7 @@ export class World {
   // NOT SENTIENT DISCLAIMER (enforced): NOT SENTIENT / NO PHENOMENAL CONSCIOUSNESS.
   // Per contract + masters: models/scaffolding/functional correlates ONLY. Phenomenal ~1/10;
   // hard problem untouched. "Consciousness" = ignition/phi/self-model proxies. No claims
-  // of sentience in prose, UI, or docs. See SUPER-CREATURE-RESEARCH.md + MODULE-CONTRACTS.
+  // of sentience in prose, UI, or docs. See SUPER-CREATURE-RESEARCH-2026-06-26.md + MODULE-CONTRACTS.
   // ============================================================================
   // Legacy single creature path kept ONLY for player hero/twin spawn; the 5 drive the world.
   // All use distinct child seeds (master ^ + archetype 0-4 offsets) for determinism.
@@ -430,7 +430,7 @@ export class World {
     // (nash/market draw rng conditional on neighbor payoffs, so the cell size is part of the
     // seeded stream; tuning it at ≤5,000 would break reproducibility). At the ultra tier (10k)
     // the arena packs ~4× denser, so a 3×3 GRID_CELL block returns ~214 candidates per query.
-    // A 10-unit cell (measured sweet spot, docs/BENCHMARKS.md) cuts that ~36% while keeping the
+    // A 10-unit cell (measured sweet spot, docs/BENCHMARKS-2026-06-26.md) cuts that ~36% while keeping the
     // visited-cell count low for the radius-8..16 behavior queries — the smaller cells below 10
     // were rejected (per-query cell-iteration overhead overtook the neighbor savings). V3.6.
     this.grid = new SpatialHash<Entity>(
@@ -505,7 +505,7 @@ export class World {
     this.quantum = new QuantumCloud(ctx);
     this.connectome = new Connectome(ctx, this.entities);
 
-    // ── Wildbeyond V2 wiring (cadences in step(); see ARCHITECTURE.md) ──
+    // ── Wildbeyond V2 wiring (cadences in step(); see ARCHITECTURE-2026-06-26.md) ──
     this.qc = new QuantumCircuitSystem(ctx);
     // The bands buffer is live/reused — hand it to the cloud once; qc.bands()
     // refreshes its contents in place on the 6-frame cadence.
@@ -1002,7 +1002,7 @@ export class World {
     // Guarded; own sub-streams → main golden untouched. Bodies already animated above.
     if (s.frame % 4 === 0) this.driveSuper(bands.bass, bands.level, t, n);
 
-    // ── V2 cadences (ARCHITECTURE.md frame pipeline) ──
+    // ── V2 cadences (ARCHITECTURE-2026-06-26.md frame pipeline) ──
     if (s.frame % 30 === 0) {
       this.qc.update();
       if (this.qc.lastCollapse !== this.lastCollapseSeen) {
