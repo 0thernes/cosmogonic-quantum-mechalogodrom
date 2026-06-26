@@ -9,6 +9,21 @@ file, not added to. Live facts (version, test/coverage receipts) are propagated 
 
 ---
 
+## 2026-06-26 — Math-correctness pass (unwired research leaves)
+
+Independent sequential file-by-file sweep; fixes verified against the full gate. All in unwired,
+untested research modules (no live telemetry consumer — golden-safe), so the math is now correct
+without changing any wired behavior:
+
+- `math/mixed-state-qgt.ts` — the von-Neumann (linear) entropy summed only the FIRST ROW of ρ
+  (`computeEntropy(…, dim)` vs the purity's correct `d2`); now sums all d² entries. And
+  `statevectorToDensityMatrix` wrote ρᵀ — the imaginary part of ρ_ij = ψ_i·conj(ψ_j) was sign-flipped;
+  corrected to `ai·br − ar·bi`.
+- `sim/resonance-integrator.ts` — `facultyPhaseFromActivation` multiplied an `atan2` result by π,
+  pushing `angle` to ~π² and breaking the documented [-π, π] contract; `findCoalition`'s phase-wrap
+  then produced a NEGATIVE distance that trivially admitted out-of-phase faculties. Removed the bogus
+  `* π` and hardened the wrap to a true circular distance ∈ [0, π].
+
 ## 2026-06-26 — Consistency + flow pass
 
 - **Single-source sync + auto-push/auto-sync hooks.** `package.json` version and the canonical

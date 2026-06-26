@@ -184,7 +184,9 @@ export function mixedStateQuantumGeometricTensor(
   }
 
   const purity = computePurity(baseRe, baseIm, d2);
-  const entropy = computeEntropy(baseRe, baseIm, dim);
+  // d2 (the full ρ buffer length), not dim: linear entropy = 1 − Tr(ρ²) sums over ALL d² entries,
+  // exactly like the purity above. Passing `dim` summed only the first row of ρ — wrong for d ≥ 2.
+  const entropy = computeEntropy(baseRe, baseIm, d2);
 
   return {
     params: P,
@@ -215,9 +217,9 @@ export function statevectorToDensityMatrix(
       const ai = psiIm[i] ?? 0;
       const br = psiRe[j] ?? 0;
       const bi = psiIm[j] ?? 0;
-      // ρ_ij = ψ_i * conj(ψ_j)
+      // ρ_ij = ψ_i · conj(ψ_j) = (ar+i·ai)(br−i·bi) ⇒ Im = ai·br − ar·bi (was sign-flipped → ρᵀ).
       outRe[idx] = ar * br + ai * bi;
-      outIm[idx] = ar * bi - ai * br;
+      outIm[idx] = ai * br - ar * bi;
     }
   }
 }
