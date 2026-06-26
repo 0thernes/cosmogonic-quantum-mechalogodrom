@@ -54,7 +54,10 @@ for (const file of [
       )
       .replace(/Line coverage: [0-9]{2}\.[0-9]{2}%/g, `Line coverage: ${line}%`)
       .replace(/Function coverage: [0-9]{2}\.[0-9]{2}%/g, `Function coverage: ${func}%`)
-      .replace(/Test count: \d+/g, `Test count: ${test}`),
+      .replace(/Test count: \d+/g, `Test count: ${test}`)
+      // HTML stat card: `<div class="n …">2162</div> <div class="l">tests · …</div>` — the number and
+      // its "tests" label are split across tags, so the plain "N tests" patterns above miss it.
+      .replace(/(<div class="n[a-z ]*">)[0-9,]+(<\/div>\s*<div class="l">tests\b)/g, `$1${test}$2`),
   );
 }
 
