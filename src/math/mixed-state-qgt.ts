@@ -78,11 +78,13 @@ export function computePurity(rhoRe: Float64Array, rhoIm: Float64Array, dim: num
   return re; // Purity is real
 }
 
-/** Compute von Neumann entropy S = -Tr(ρ log ρ) via eigenvalue decomposition. */
+/**
+ * LINEAR entropy S_lin = 1 − Tr(ρ²) (impurity) — a cheap proxy for, NOT equal to, the von Neumann
+ * entropy S = −Tr(ρ log ρ). No eigendecomposition: it is 0 for a pure state, rises with mixedness, and
+ * is monotonically related to S_vN, so it is a valid mixedness signal for telemetry / the mixed-state QGT
+ * — but callers must not treat it as the exact von Neumann value (range is [0, 1−1/d], not [0, log d]).
+ */
 export function computeEntropy(rhoRe: Float64Array, rhoIm: Float64Array, dim: number): number {
-  // For simplicity, we use the linear entropy as a proxy:
-  // S_linear = 1 - Tr(ρ²) = 1 - purity
-  // This is easier to compute and correlates with von Neumann entropy
   const purity = computePurity(rhoRe, rhoIm, dim);
   return 1 - purity;
 }

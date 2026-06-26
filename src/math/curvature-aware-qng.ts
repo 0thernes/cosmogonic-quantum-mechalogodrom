@@ -25,6 +25,13 @@
  * - The curvature-aware metric is g_ij + λ Γ_ij (where λ is a curvature weighting factor)
  * - Solve (g + λΓ) x = ∇L for the natural gradient direction
  *
+ * CURRENT STATUS (honest — code matches this, not the idealized math above): `computeChristoffelSymbols`
+ * uses the local approximation ∂_k g_ij ≈ 0 (a full version needs the metric as a function of θ to
+ * finite-difference). With dg = 0 every Christoffel symbol is 0, so the curvature term Γ vanishes and the
+ * N×N path REDUCES TO STANDARD ridge-regularized QNG — the curvature-aware scaffolding is wired but the
+ * curvature itself is not yet computed. It degrades safely (never a wrong-shaped or NaN result), it is
+ * just not yet the full geodesic update; the `…2x2` helper uses a different `Γ_trace = g` approximation.
+ *
  * REFERENCES:
  * - "Curvature-Aware QNG via Weighted Projective Line Geometry" (Dec 2025, hf.co/papers/2512.00681)
  * - Riemannian geometry on projective spaces (Kobayashi & Nomizu)
