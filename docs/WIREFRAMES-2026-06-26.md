@@ -126,7 +126,7 @@ tabular-nums`** — telemetry values must not jitter horizontally as digits
 Defined via `@theme static` in `src/styles/app.css`. The full token registry
 (semantic danger family, ink family, control-pad `ctrl-*` blues, sim-action
 `sim-*` oranges, the 8-hue `tribe-*` palette, radii, shadows, motion) is
-documented in [DESIGN-SYSTEM.md](DESIGN-SYSTEM.md) — the core three:
+documented in [DESIGN-SYSTEM-2026-06-26.md](DESIGN-SYSTEM-2026-06-26.md) — the core three:
 
 | Token            | Value     | Usage                                          |
 | ---------------- | --------- | ---------------------------------------------- |

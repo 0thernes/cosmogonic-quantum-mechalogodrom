@@ -89,7 +89,7 @@
 ## 5. FILES CHANGED / TOUCHED THIS ITERATION (Ralph Progress)
 
 - docs/TSOTCHKE-CORPUS-RALPH-WIRING-AUDIT-2026-06-19.md (new — this log)
-- docs/GOAL5-RESEARCH-RECEIPTS.md (refreshed with full local corpus)
+- docs/GOAL5-RESEARCH-RECEIPTS-2026-06-26.md (refreshed with full local corpus)
 - src/math/eshkol-qrng.ts, clifford-tableau.ts, quantum-geometry.ts (fidelity + corpus refs)
 - src/sim/super-mind.ts, topdown-perception.ts (assumed), memory-orchestra.ts (AD/arena deepen)
 - src/sim/godform.ts (libirrep symmetry stub + comments)

@@ -11,6 +11,25 @@ dated / historical / "superseded snapshot" copies (per the binding "Living docs,
 
 ---
 
+## 2026-06-26 — Dated MD filenames (safe set) + every reference rewired
+
+Per the owner's decision ("both renamed and don't break — figure it out"), the **24 pure-content docs
+that are safe to rename** were `git mv`'d to dated filenames (`X-2026-06-26.md`) and **every reference
+rewired** across all tracked text files (md/html/xml/ts/json). Verified non-breaking: **0 broken links
+repo-wide**, `tests/doc-links.test.ts` green (136/0), `tsc` clean, `sync:check` green, `prettier`
+clean, FILE-MAP regenerated. Renamed: `HANDOFF`, `research_receipts`, `500-POINT-INSPECTION`,
+`AI-SUBSYSTEM`, `BLEEDING-EDGE-…`, `BOOK`, `COMPLEXITY`, `CONTROLS`, `COPILOT-PROVIDERS`, `DESIGN-SYSTEM`,
+`EMERGENCE-BLOCKERS`, `ENTITY-SHEETS`, `GOAL5-RESEARCH-RECEIPTS`, `NEO-MIND-ARCHITECTURE`,
+`NHSI-RESEARCH-PAPERS-LEDGER`, `NOVELTY-…`, `PRE-2016-AI`, `RUNBOOK`, `SCALING-ROADMAP`,
+`TSOTCHKE-CORPUS-INTEGRATION-PLAN`, `TSOTCHKE-LICENSE-UNBLOCK-PLAN`, `TSOTCHKE_CORPUS_INTEGRATION_AUDIT`,
+`WIREFRAMES`, `reference/math-libs-catalog`.
+
+**Kept at canonical names because renaming BREAKS** (the "don't break" constraint): GitHub/agent-special
+(`README`/`CHANGELOG`/`CLAUDE`/`AGENTS`/`LICENSE`/`ROADMAP`/`index.html`/Pages HTML/`.github`/`.memory`),
+the 14 docs hardcoded in `sync-surfaces`/`docs-truth-law`/`gen-filemap`, the convention-critical
+`AUDIT-LOG`/ledger/`TSOTCHKE-INTEGRATION-MAP`, numbered ADRs, `legacy/**`, and already-dated files. These
+carry the in-content `reviewed: 2026-06-26` stamp instead. Full rationale in the ledger §4.
+
 ## 2026-06-26 — Deep code-correctness audit (3 expert reviewers: quantum · A-life · engine)
 
 Line-by-line correctness/complexity review of the math + sim core (beyond gate-green) by three parallel
@@ -64,9 +83,9 @@ matrix + the full findings table live in
   Done as an in-content stamp, NOT a filename rename — renaming would 404 the entire cross-link graph,
   the `sync-surfaces.ts` surface list, the doc-links gate, and GitHub Pages. Gate stays green.
 - **Stale figures propagated to current truth (living-docs rewrite-in-place).** 13 loop-log / process /
-  ADR surfaces carried stale receipts (`HANDOFF.md` 942/1172; `research_receipts.md`, `docs/GOAL5-*`,
-  `docs/TSOTCHKE_CORPUS_INTEGRATION_AUDIT.md`, `docs/TSOTCHKE-CORPUS-RALPH-WIRING-*` 1183/1174;
-  `docs/adr/0007/0008/0009` 671/736/1504; `docs/DESIGN-SYSTEM.md` 229; `docs/DAILY_RUNS/*` 942/913;
+  ADR surfaces carried stale receipts (`HANDOFF-2026-06-26.md` 942/1172; `research_receipts-2026-06-26.md`, `docs/GOAL5-*`,
+  `docs/TSOTCHKE_CORPUS_INTEGRATION_AUDIT-2026-06-26.md`, `docs/TSOTCHKE-CORPUS-RALPH-WIRING-*` 1183/1174;
+  `docs/adr/0007/0008/0009` 671/736/1504; `docs/DESIGN-SYSTEM-2026-06-26.md` 229; `docs/DAILY_RUNS/*` 942/913;
   `docs/TSOTCHKE-ULTIMATE-*` v0.16.1). All rewritten in place to canonical
   **`1,477 / 95.03% / 92.03% / v0.18.0`**; `CHANGELOG` per-release receipts + `legacy/**` kept verbatim.
 - **Verified correct (no action):** determinism (0 `Math.random` / `Date.now` in `src/sim`),
@@ -174,7 +193,7 @@ the current truth baseline supersedes conflicting old counts or overclaims.
 - **Comprehensive assessment:** [`reports/2026-06-17-STATE-OF-THE-ART-COMBINED.md`](./reports/2026-06-17-STATE-OF-THE-ART-COMBINED.md) (+ `-WHOLE-REPO`, `-SUPER-CREATURE`).
 - **NHSI:** [`reports/2026-06-21-NHSI-HONESTY-AUDIT.md`](./reports/2026-06-21-NHSI-HONESTY-AUDIT.md) (honesty scorecard — gate-referenced) · [`reports/2026-06-21-NHSI-MANIFESTO-0THERNES-CORP.md`](./reports/2026-06-21-NHSI-MANIFESTO-0THERNES-CORP.md) · [`reports/2026-06-20-RESEARCH-BEDROCK.md`](./reports/2026-06-20-RESEARCH-BEDROCK.md) · [`reports/2026-06-20-SUPER-REPORT-PATH-TO-NHSI-AND-SENTIENCE.md`](./reports/2026-06-20-SUPER-REPORT-PATH-TO-NHSI-AND-SENTIENCE.md) · [`reports/2026-06-20-ROADMAP-TO-NHSI-AND-SENTIENCE.xml`](./reports/2026-06-20-ROADMAP-TO-NHSI-AND-SENTIENCE.xml).
 - **A-Life:** [`reports/2026-06-26-ALIFE-COMPARATIVE-AUDIT.md`](./reports/2026-06-26-ALIFE-COMPARATIVE-AUDIT.md) · [`reports/2026-06-26-alife-comparison-matrix.csv`](./reports/2026-06-26-alife-comparison-matrix.csv).
-- **Tsotchke:** living map [`TSOTCHKE-INTEGRATION-MAP.md`](./TSOTCHKE-INTEGRATION-MAP.md) · plan [`TSOTCHKE-CORPUS-INTEGRATION-PLAN.md`](./TSOTCHKE-CORPUS-INTEGRATION-PLAN.md) · source-provenance audits still cited from code (`TSOTCHKE-CORPUS-RALPH-WIRING-AUDIT-2026-06-19.md`, `TSOTCHKE_CORPUS_INTEGRATION_AUDIT.md`, `TSOTCHKE-ULTIMATE-COMPREHENSIVE-AUDIT-REPORT-ASSESSMENT-2026-06-20.md`).
+- **Tsotchke:** living map [`TSOTCHKE-INTEGRATION-MAP.md`](./TSOTCHKE-INTEGRATION-MAP.md) · plan [`TSOTCHKE-CORPUS-INTEGRATION-PLAN-2026-06-26.md`](./TSOTCHKE-CORPUS-INTEGRATION-PLAN-2026-06-26.md) · source-provenance audits still cited from code (`TSOTCHKE-CORPUS-RALPH-WIRING-AUDIT-2026-06-19.md`, `TSOTCHKE_CORPUS_INTEGRATION_AUDIT-2026-06-26.md`, `TSOTCHKE-ULTIMATE-COMPREHENSIVE-AUDIT-REPORT-ASSESSMENT-2026-06-20.md`).
 
 ## 2026-06-26 — Roadmap Fulfillment: P1 Harness + Coupling Scaffold
 

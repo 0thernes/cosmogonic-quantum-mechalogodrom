@@ -10,7 +10,7 @@
 [![TypeScript strict](https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript&logoColor=white)](./tsconfig.json)
 [![tests](https://img.shields.io/badge/tests-1477%20passing-brightgreen)](./tests)
 [![coverage](https://img.shields.io/badge/coverage-95.03%25%20line%20%C2%B7%2092.03%25%20func-success)](./docs/TECHNICAL-SPECIFICATION.md)
-[![audit](https://img.shields.io/badge/inspection-500%20points-success)](./docs/500-POINT-INSPECTION.md)
+[![audit](https://img.shields.io/badge/inspection-500%20points-success)](./docs/500-POINT-INSPECTION-2026-06-26.md)
 [![Tsotchke](https://img.shields.io/badge/Tsotchke-REAL__MIT__CORPUS-purple)](https://github.com/tsotchke)
 [![NHSI](https://img.shields.io/badge/NHSI-Progress__Dashboard-blue)](./docs/NHSI-PROGRESS-DASHBOARD.md)
 
@@ -37,9 +37,9 @@ Every magic number survived the port.
 
 - **GitHub Pages (DOCS / SPECS / LABS):** https://0thernes.github.io/cosmogonic-quantum-mechalogodrom/ (index.html + docs.html + specs.html + lab/index.html ; built via scripts/build-pages.ts with ?v= cache-bust and subpath rewrite)
 - **Local dev server:** http://localhost:3000/ (bun dev; serves /docs → docs page, /spec → specs, /lab → lab; full interactive + /api/audit)
-- All MD links (./docs/...) resolve correctly in source, app, and Pages. No broken domains. Verified in build-pages.ts, server.ts, README, docs/\*.md, HANDOFF.md.
+- All MD links (./docs/...) resolve correctly in source, app, and Pages. No broken domains. Verified in build-pages.ts, server.ts, README, docs/\*.md, HANDOFF-2026-06-26.md.
 
-> — **New here? Read [THE BOOK](./docs/BOOK.md)** — the master index over every doc, an
+> — **New here? Read [THE BOOK](./docs/BOOK-2026-06-26.md)** — the master index over every doc, an
 > auto-generated [file map](./docs/FILE-MAP.md) of all ~195 source modules, and the build/run, data-flow,
 > troubleshooting, and roadmap in one place. Or open **❓ HELP ME NOW** in-app for grounded answers.
 
@@ -247,7 +247,7 @@ A professional-grade pass — no new cosmology, all rigor:
   - cardinality + cross-system write-back matrix) and [docs/ERP.md](./docs/ERP.md)
     (boot, frame pipeline, cadence schedule, lifecycles) joining the existing
     [docs/ERD.md](./docs/ERD.md).
-- **[docs/500-POINT-INSPECTION.md](./docs/500-POINT-INSPECTION.md)** — a standing
+- **[docs/500-POINT-INSPECTION-2026-06-26.md](./docs/500-POINT-INSPECTION-2026-06-26.md)** — a standing
   audit of 25 sections × 20 checkpoints, each with a verdict and concrete
   evidence.
 - **Health-endpoint version** now derived from `package.json` at startup so it
@@ -281,8 +281,8 @@ generations, and a read-only Copilot (`docs/MODULE-CONTRACTS.md` §V9):
   the repo and the world, over a pluggable OpenAI-compatible provider (keyless
   Pollinations default; OpenRouter / Groq / `freellmapi` via env) behind a
   default-deny sandbox that can READ files and RUN read-only commands but never
-  change code. Provider reference: [docs/COPILOT-PROVIDERS.md](./docs/COPILOT-PROVIDERS.md)
-  · in-world minds: [docs/AI-SUBSYSTEM.md](./docs/AI-SUBSYSTEM.md).
+  change code. Provider reference: [docs/COPILOT-PROVIDERS-2026-06-26.md](./docs/COPILOT-PROVIDERS-2026-06-26.md)
+  · in-world minds: [docs/AI-SUBSYSTEM-2026-06-26.md](./docs/AI-SUBSYSTEM-2026-06-26.md).
 - **Five cinematic cameras** (follow / chase / cinematic / vortex / titan) with
   **TIME** (timeScale) and **SPACE** (FOV dilation) controls; **render modes now
   alter dynamics** (`solid` stays the exact determinism identity); singularities
@@ -555,7 +555,7 @@ Full detail in docs/.
 - **[docs/NHSI-PROGRESS-DASHBOARD.md](./docs/NHSI-PROGRESS-DASHBOARD.md)** — **canonical NHSI scorecard**
   (100-faculty design ~30 deep-wired · 25 Archons = 5 live + 20 light-echo · 25 ToM organs wired · 10 emergence angles + 5 god-scale events · Tsotchke depth · Butlin 8/14 met + 6/14 partial path)
 - [docs/TSOTCHKE-INTEGRATION-MAP.md](./docs/TSOTCHKE-INTEGRATION-MAP.md) — honest Tsotchke repo wiring ledger
-- [docs/CONTROLS.md](./docs/CONTROLS.md) — every control: mouse, keyboard hotkeys,
+- [docs/CONTROLS-2026-06-26.md](./docs/CONTROLS-2026-06-26.md) — every control: mouse, keyboard hotkeys,
   touch, bottom-panel buttons, and the 10 camera views
 - [docs/MODULE-CONTRACTS.md](./docs/MODULE-CONTRACTS.md) — the binding
   per-module spec (V1 through V9: port, Wildbeyond, Pantheon, Xenogenesis,
@@ -569,22 +569,22 @@ Full detail in docs/.
   · [docs/ERM.md](./docs/ERM.md) (conceptual relationship model + cardinality
   rules + write-back matrix) · [docs/ERP.md](./docs/ERP.md) (process view —
   boot, frame pipeline, cadence schedule, lifecycles)
-- [docs/WIREFRAMES.md](./docs/WIREFRAMES.md) — desktop/mobile wireframes,
+- [docs/WIREFRAMES-2026-06-26.md](./docs/WIREFRAMES-2026-06-26.md) — desktop/mobile wireframes,
   type scale, color tokens
-- [docs/DESIGN-SYSTEM.md](./docs/DESIGN-SYSTEM.md) — design-system audit,
+- [docs/DESIGN-SYSTEM-2026-06-26.md](./docs/DESIGN-SYSTEM-2026-06-26.md) — design-system audit,
   tokens (incl. the 8-hue tribe palette), component + a11y docs
-- [docs/COMPLEXITY.md](./docs/COMPLEXITY.md) — per-hot-path big-O budget
+- [docs/COMPLEXITY-2026-06-26.md](./docs/COMPLEXITY-2026-06-26.md) — per-hot-path big-O budget
 - [docs/BENCHMARKS.md](./docs/BENCHMARKS.md) — measured mitata results for the
   deterministic core (RNG, scalar math, spatial hash, sort steps, quantum
   gates, reaction-diffusion step)
-- [docs/reference/](./docs/reference/math-libs-catalog.md) — the imported
+- [docs/reference/](./docs/reference/math-libs-catalog-2026-06-26.md) — the imported
   20-domain math-library catalog + per-domain adoption status CSV
 - ADRs: [0001 Bun runtime](./docs/adr/0001-bun-runtime.md) ·
   [0002 three.js rendering](./docs/adr/0002-threejs-rendering.md) ·
   [0003 HTMX + Tailwind UI](./docs/adr/0003-htmx-tailwind-ui.md) ·
   [0004 deterministic RNG](./docs/adr/0004-deterministic-rng.md) ·
   [0005 math-stack selection](./docs/adr/0005-math-stack-selection.md)
-- [docs/500-POINT-INSPECTION.md](./docs/500-POINT-INSPECTION.md) — the standing
+- [docs/500-POINT-INSPECTION-2026-06-26.md](./docs/500-POINT-INSPECTION-2026-06-26.md) — the standing
   quality audit: 25 sections × 20 checkpoints, each with a verdict and evidence
 - **[docs/reports/2026-06-21-NHSI-HONESTY-AUDIT.md](./docs/reports/2026-06-21-NHSI-HONESTY-AUDIT.md)** —
   **the current, canonical status report**: a 15-agent adversarial code audit measuring the REAL wiring

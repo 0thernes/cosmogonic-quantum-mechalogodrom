@@ -10,7 +10,7 @@ Ralph heartbeat: re-audit + continued wiring of Tsotchke corpus (Eshkol AD/tape 
 
 **Role:** BROLY (LEGENDARY-SUPER-SAIYAN-BROLY-MANIFESTO.xml) — finish everything, full gates, maximalism with receipts. No mutation before research.
 
-**Protocol (binding):** Read ALL masters + MODULE-CONTRACTS.md (V1+V2+V3 pantheon + GOAL5) + PHILOSOPHY.md + full swarm XML (masters swarm-protocol sections + docs/GOAL5-SWARM-HANDOFF-2026-06-19.md + GOAL5-RESEARCH-RECEIPTS.md + HANDOFF.md + reports). External research via tools (MCP github/exa/firecrawl + base web/open_page/browse) on tsotchke/eshkol, moonlab, QGTL, eshkol.ai, tsotchke sites FIRST. Then produce this receipts. Then worktree ../grok-broly for fixes. Deterministic, no-alloc-hot, disclaimers, targeted tests, prepare `bun run check`.
+**Protocol (binding):** Read ALL masters + MODULE-CONTRACTS.md (V1+V2+V3 pantheon + GOAL5) + PHILOSOPHY.md + full swarm XML (masters swarm-protocol sections + docs/GOAL5-SWARM-HANDOFF-2026-06-19.md + GOAL5-RESEARCH-RECEIPTS-2026-06-26.md + HANDOFF-2026-06-26.md + reports). External research via tools (MCP github/exa/firecrawl + base web/open_page/browse) on tsotchke/eshkol, moonlab, QGTL, eshkol.ai, tsotchke sites FIRST. Then produce this receipts. Then worktree ../grok-broly for fixes. Deterministic, no-alloc-hot, disclaimers, targeted tests, prepare `bun run check`.
 
 **Masters read (verbatim via read_file):**
 
@@ -22,7 +22,7 @@ Ralph heartbeat: re-audit + continued wiring of Tsotchke corpus (Eshkol AD/tape 
 
 - docs/MODULE-CONTRACTS.md full (ground rules: strict TS no any, alloc-free hot, JSDoc+complexity, Rng determinism, leaf purity; GOAL5 pantheon amendments: 5 Archons, leaves wiring in super-mind ownership; V3 scale).
 - docs/PHILOSOPHY.md (real math under every effect; every system reads AND writes; collapse on cadence; feedback loops; one seed one cosmos).
-- Swarm: masters <swarm-protocol> (one contract many fists, surge waves, exclusive ownership); docs/GOAL5-SWARM-HANDOFF-2026-06-19.md (4-agent worktrees, research-first, receipts, 5 live Archons: ORACLE-Σ etc, godform sole, leaves wired, any cleaned, mem consolidated); prior GOAL5-RESEARCH-RECEIPTS.md + HANDOFF.md + reports/2026-06-\* + docs/SUPER-CREATURE-RESEARCH.md (GNW ignition, IIT phi proxy, Eshkol/Moonlab/QGT ports).
+- Swarm: masters <swarm-protocol> (one contract many fists, surge waves, exclusive ownership); docs/GOAL5-SWARM-HANDOFF-2026-06-19.md (4-agent worktrees, research-first, receipts, 5 live Archons: ORACLE-Σ etc, godform sole, leaves wired, any cleaned, mem consolidated); prior GOAL5-RESEARCH-RECEIPTS-2026-06-26.md + HANDOFF-2026-06-26.md + reports/2026-06-\* + docs/SUPER-CREATURE-RESEARCH.md (GNW ignition, IIT phi proxy, Eshkol/Moonlab/QGT ports).
 
 **Local code inspected (read_file + grep multi-pass):**
 

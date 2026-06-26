@@ -87,5 +87,5 @@ though free anonymous endpoints can rate-limit; set any one key above for reliab
   provider (default-deny on unknown ids), executing any read-only tool calls through the sandbox.
 - `POST /api/tool` → `{ tool, args }` — the panel's manual `/read /ls /grep /run` terminal.
 
-See also [AI-SUBSYSTEM.md](AI-SUBSYSTEM.md) (in-world minds + Copilot reference) and the full
+See also [AI-SUBSYSTEM-2026-06-26.md](AI-SUBSYSTEM-2026-06-26.md) (in-world minds + Copilot reference) and the full
 provider field-guide the design drew from in the project's free-LLM report.

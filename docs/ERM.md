@@ -166,7 +166,7 @@ system boundary (contract rule: no system reaches into another's internals).
    the next neighbor rebuild, so links/tribes/ranks computed afterward never point at a corpse.
 
 See [ERP.md](./ERP.md) for how these relationships are _exercised_ over time (the frame pipeline,
-cadences, and lifecycles), and [COMPLEXITY.md](./COMPLEXITY.md) for the cost of each relationship's
+cadences, and lifecycles), and [COMPLEXITY-2026-06-26.md](./COMPLEXITY-2026-06-26.md) for the cost of each relationship's
 
 ## Tsotchke Digital Biologics Layer (full integration, paramount)
 

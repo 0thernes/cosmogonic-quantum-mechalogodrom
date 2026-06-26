@@ -212,7 +212,7 @@ The `TomPantheon` wires 25 named Theory-of-Mind organs, organized as a **6-famil
 
 ### III.6 Emergence Angles — 10 wired
 
-Blueprint: [`NEO-MIND-ARCHITECTURE.md`](../NEO-MIND-ARCHITECTURE.md) §85–100.
+Blueprint: [`NEO-MIND-ARCHITECTURE-2026-06-26.md`](../NEO-MIND-ARCHITECTURE-2026-06-26.md) §85–100.
 
 **10 emergence angles wired** (plus **5 god-scale release events** — events, not additional angles):
 

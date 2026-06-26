@@ -18,7 +18,7 @@ written permission. See [LICENSE](../LICENSE).
 
 ## Design rules (enforced, not aspirational)
 
-**Documentation sync note (all must match):** README, this ARCHITECTURE.md, ERD/ERM/ERP.md, PHILOSOPHY.md, MODULE-CONTRACTS.md, TECHNICAL-SPECIFICATION.md / SPECS, KANBAN, BOOK.md, AI-SUBSYSTEM.md, reports, masters/ references, LABS (lab/), and in-app "Dome/World" docs (observatory, help-system, copilot, /docs page via docs-page.ts + mermaid) are fully updated and consistent with code + GitHub. Local == GH. Accurate, truthful, current. Tsotchke full wiring + digital biologics petri as core.
+**Documentation sync note (all must match):** README, this ARCHITECTURE.md, ERD/ERM/ERP.md, PHILOSOPHY.md, MODULE-CONTRACTS.md, TECHNICAL-SPECIFICATION.md / SPECS, KANBAN, BOOK-2026-06-26.md, AI-SUBSYSTEM-2026-06-26.md, reports, masters/ references, LABS (lab/), and in-app "Dome/World" docs (observatory, help-system, copilot, /docs page via docs-page.ts + mermaid) are fully updated and consistent with code + GitHub. Local == GH. Accurate, truthful, current. Tsotchke full wiring + digital biologics petri as core.
 
 **Tsotchke Petri Genesis (current paradigm):** Tsotchke's _scientific_ repos (Eshkol primary for AD/VM/QRNG, Moonlab for SVD tensor-networks/Clifford/H₂ VQE, QGTL geometry, spin-based NN, libirrep, quantum-quake, PINN, PIMC, ulg, logo-lab, tensorcore) are genuinely ported into `src/` and wired as the substrate for digital biologics — each verified leaf-by-leaf with golden tests, not asserted. The four LLM/chain/API repos (gpt2-basic, llm-arbitrator, SolanaQuantumFlux, Quantum-RNG-API) are **deliberately fenced** out of the deterministic sim (registry wiring 0), never "wired." The primordial soup / petri dish (primordial-soup.ts + digital-biologics.ts) grows different forms of life from these real kernels. Super Creature is the first spark / initial architecture. Sentience and consciousness via real mathematical substrates in a seeded deterministic world. "Grow What Thou Wilt." A leaf still using a heuristic rather than a full port (e.g. classical-contrast, eshkol-workspace) is tracked honestly in the audit, not credited as a real port.
 
@@ -333,7 +333,7 @@ flowchart LR
 
 The flowchart above is the **V1/V2 core**. The V10–V75 systems interleave on their own cadences
 (verified against `world.ts`); the full as-built per-stage frame order is in
-[BOOK.md §A](./BOOK.md). Cadences — V1 rows from the legacy loop, V2 rows from MODULE-CONTRACTS.md
+[BOOK-2026-06-26.md §A](./BOOK-2026-06-26.md). Cadences — V1 rows from the legacy loop, V2 rows from MODULE-CONTRACTS.md
 §Frame pipeline V2, V10+ rows verified against `world.ts`:
 
 | Step                         | Cadence                                                                                                                                  |

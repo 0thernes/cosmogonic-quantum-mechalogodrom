@@ -79,7 +79,7 @@ studied-only · 3 fenced by design (non-LLM mandate, studied for contrast) · 2 
    `qge/` quantum layer is tsotchke-original but is likely a _derivative work_ of the GPL engine — quarantine
    pending legal review. **So the real unblocks are PINN → world/petri physics, PIMC → quantum-path
    substrate, ulg → world law-graph (rules-as-cognition), logo-lab → procedural morphogenesis** — NOT
-   quantum-quake. See `docs/TSOTCHKE-LICENSE-UNBLOCK-PLAN.md` for detailed steps.
+   quantum-quake. See `docs/TSOTCHKE-LICENSE-UNBLOCK-PLAN-2026-06-26.md` for detailed steps.
 2. **NON-LLM MANDATE (fenced ON PURPOSE — a feature, not a slight).** `gpt2-basic` and `llm-arbitrator`
    are transformer / LLM tools. The entire NHSI thesis is **non-LLM**; wiring an LLM in would betray the
    mission. They stay fenced **because the vision demands it** — keeping them out is honoring 0thernes Corp's
@@ -120,5 +120,5 @@ assignment (ulg/logo-lab).
 
 _Companion to `THIRD-PARTY-NOTICES.md` (binding "On Tsotchke" + per-primitive attribution),
 `src/sim/tsotchke-registry.ts` (the code-level declared integration status), and
-`docs/TSOTCHKE-LICENSE-UNBLOCK-PLAN.md` (detailed license unblock steps).
+`docs/TSOTCHKE-LICENSE-UNBLOCK-PLAN-2026-06-26.md` (detailed license unblock steps).
 The corpus is real; the gap to wiring the remaining ~4 of 20 is paperwork (licenses) + the deliberate non-LLM fence, not the technology._

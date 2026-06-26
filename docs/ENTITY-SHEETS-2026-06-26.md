@@ -10,7 +10,7 @@ bug._
 > Source of truth: this doc names the intent; the code (`src/sim/*`, `native/src/*`) is the
 > implementation. When they disagree, fix the code or amend the sheet — never let them drift silently.
 > Cross-refs: [ERD.md](./ERD.md) · [MODULE-CONTRACTS.md](./MODULE-CONTRACTS.md) ·
-> [AI-SUBSYSTEM.md](./AI-SUBSYSTEM.md) · economy in [`src/sim/economy.ts`](../src/sim/economy.ts).
+> [AI-SUBSYSTEM-2026-06-26.md](./AI-SUBSYSTEM-2026-06-26.md) · economy in [`src/sim/economy.ts`](../src/sim/economy.ts).
 
 Legend for the **economic role** row (V13): which currency a class leans toward (AURUM ☉ hoarders vs
 UMBRA ☾ speculators), and a relative purse weight (stature).

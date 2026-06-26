@@ -4,7 +4,7 @@
 
 The canonical design for the apex Super-Creature mind ("Neo") and the Archon pantheon: a novel,
 non-human cognitive architecture built **architecture-first** (then scaled), as the deliberate
-counter-bet to data-scaled transformers. Build against `docs/EMERGENCE-BLOCKERS.md`.
+counter-bet to data-scaled transformers. Build against `docs/EMERGENCE-BLOCKERS-2026-06-26.md`.
 
 > **Honest frame:** this maximizes _measurable mind-architecture + emergence surface area_ — the most
 > complete, novel, non-LLM cognitive rig we can build, instrumented with receipts. It is an
@@ -118,6 +118,6 @@ Conscious-agent/Interface ✦ · Holonomic brain ✦
 
 ---
 
-_Companion to `docs/EMERGENCE-BLOCKERS.md`, `docs/SCALING-ROADMAP.md`,
+_Companion to `docs/EMERGENCE-BLOCKERS-2026-06-26.md`, `docs/SCALING-ROADMAP-2026-06-26.md`,
 `docs/reports/2026-06-20-RESEARCH-BEDROCK.md`, and `docs/adr/0010-...`. Existence-proof + instrument;
 no consciousness/ASI claim. Grow what thou wilt — and measure ruthlessly._

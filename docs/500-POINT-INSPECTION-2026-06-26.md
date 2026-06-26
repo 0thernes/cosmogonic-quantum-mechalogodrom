@@ -23,7 +23,7 @@ and a CycloneDX SBOM shipped). The audit is re-run before each tagged release; d
 [CHANGELOG.md](../CHANGELOG.md).
 
 > Provenance: this list is the human-readable companion to the binding
-> [MODULE-CONTRACTS.md](./MODULE-CONTRACTS.md) and the [COMPLEXITY.md](./COMPLEXITY.md) budget.
+> [MODULE-CONTRACTS.md](./MODULE-CONTRACTS.md) and the [COMPLEXITY-2026-06-26.md](./COMPLEXITY-2026-06-26.md) budget.
 > Where a point cites "contract Vn", see that file's section. Where it cites a Known Bug number,
 > see the contract's Known Bugs table (the legacy defects fixed in the port).
 
@@ -137,7 +137,7 @@ and a CycloneDX SBOM shipped). The audit is re-run before each tagged release; d
 92. ✅ Sort-visualization step batches 6–28 swaps/frame; per-step work documented O(1)–O(n) worst case.
 93. ✅ Audit ring push/render are O(1)/O(n≤200) — constant-bounded by design.
 94. ✅ Sparkline is a rolling O(w) draw over a 100-sample window; push is O(1).
-95. ✅ Every hot path's Big-O is documented in JSDoc AND tabulated in `COMPLEXITY.md` (single source of truth).
+95. ✅ Every hot path's Big-O is documented in JSDoc AND tabulated in `COMPLEXITY-2026-06-26.md` (single source of truth).
 96. ✅ Heavy passes (Louvain 240f, PageRank 600f offset 300) are scheduled to never share a frame.
 97. ✅ No accidental quadratic loops in per-frame code (audited; the only O(n) scan — shoggoth consumption — is a cold path firing every 200–500 ticks).
 98. ✅ Big-O claims are backed by `mitata` benchmarks for the leaf paths (`bench/`).
@@ -277,7 +277,7 @@ and a CycloneDX SBOM shipped). The audit is re-run before each tagged release; d
 214. ✅ Page-0 ids/aria-labels are kept verbatim so `panels.ts`/`hud.ts`/`observatory.ts` selectors stay stable.
 215. ✅ Visualization math (variance/diversity helpers) is pure and unit-tested (`tests/analytics.test.ts`).
 216. ✅ The Observatory snapshot is a typed, testable data structure (`ObservatorySnapshot`, 597-line test).
-217. ✅ Colors come from the design-system tokens (`docs/DESIGN-SYSTEM.md`), not ad-hoc hexes.
+217. ✅ Colors come from the design-system tokens (`docs/DESIGN-SYSTEM-2026-06-26.md`), not ad-hoc hexes.
 218. ✅ Text truncation is width-aware (`truncateToWidth`), not naive substring.
 219. ✅ The lab is a 4-page p5.js WEBGL surface with 12 3D boards per page (sound + reactive).
 220. ✅ UI work never blocks the sim; it reads snapshots, never mutates sim state.
@@ -427,7 +427,7 @@ and a CycloneDX SBOM shipped). The audit is re-run before each tagged release; d
 343. ✅ The heap bench directly contrasts `selectTopK` vs full sort+slice at V=10,000, K=20.
 344. ✅ `bun run bench` aggregates all suites via `bench/index.ts`.
 345. ✅ CI runs benchmarks in a non-blocking job (perf surfaces in logs; runner noise doesn't fail the gate).
-346. ✅ The frame budget (16.6 ms) is the stated target; per-stage costs are tabulated in `COMPLEXITY.md`.
+346. ✅ The frame budget (16.6 ms) is the stated target; per-stage costs are tabulated in `COMPLEXITY-2026-06-26.md`.
 347. ✅ The ultra-tier 10k optimization (theory stagger, half-rate flock, ULTRA_GRID_CELL, connectome cadence) is documented in `BENCHMARKS.md`.
 348. ✅ The dominant per-frame costs (entity loop, connectome, quantum cloud) are ranked and justified.
 349. ✅ Heavy substrates run on cadences chosen so they never collide on a frame.
@@ -448,11 +448,11 @@ and a CycloneDX SBOM shipped). The audit is re-run before each tagged release; d
 361. ✅ README is extensive and organized (overview, quickstart, structure, links).
 362. ✅ ARCHITECTURE.md describes the system layering and data flow.
 363. ✅ MODULE-CONTRACTS.md (78 KB) is a binding spec with signatures and a Known Bugs table.
-364. ✅ COMPLEXITY.md is a single-source Big-O budget matching each module's JSDoc.
+364. ✅ COMPLEXITY-2026-06-26.md is a single-source Big-O budget matching each module's JSDoc.
 365. ✅ BENCHMARKS.md records methodology and the ultra-tier optimization.
-366. ✅ DESIGN-SYSTEM.md defines tokens, color, type, and layout rules.
+366. ✅ DESIGN-SYSTEM-2026-06-26.md defines tokens, color, type, and layout rules.
 367. ✅ ERD.md + the new ERM.md + ERP.md cover structure, relationships, and processes.
-368. ✅ WIREFRAMES.md documents the UI layout intent.
+368. ✅ WIREFRAMES-2026-06-26.md documents the UI layout intent.
 369. ✅ PHILOSOPHY.md states the design principles the code is held to.
 370. ✅ Five ADRs record the load-bearing decisions (Bun, three.js, HTMX+Tailwind, deterministic RNG, math stack).
 371. ✅ CONTRIBUTING.md documents the gate, determinism rule, and allocation discipline.

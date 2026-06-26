@@ -54,7 +54,7 @@ touching module boundaries.
 6. **Hot paths are allocation-free.** No `new`, array literals, closures, or
    string building inside per-frame `update()` bodies. Use documented
    module-level scratch objects. If you add a hot path, document its time
-   complexity in JSDoc (see [docs/COMPLEXITY.md](./docs/COMPLEXITY.md)).
+   complexity in JSDoc (see [docs/COMPLEXITY-2026-06-26.md](./docs/COMPLEXITY-2026-06-26.md)).
 7. **Layering.** Browser globals only in `src/ui`, `src/core/engine.ts`,
    `src/audio/engine.ts`, `src/logging/audit.ts`, `src/memory/store.ts`, and
    `src/main.ts`. Leaf modules (`src/math/*`, `src/logging/logger.ts`,

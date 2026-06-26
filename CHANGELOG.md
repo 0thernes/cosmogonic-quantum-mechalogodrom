@@ -1029,7 +1029,7 @@ a bomb")` → **refused by the safety constitution before any network call**. 8 
   [BENCHMARKS.md](docs/BENCHMARKS.md)), and live `?tier=mega` — **44,977 entities instantiated,
   rendered, and stepped, zero console errors**; full gate green (756 tests, +1 for the mega tier).
 - **THE BOOK — the navigable RAG repo book (V37)** — the directive's documentation mandate: one master
-  index over the whole repository. New [`docs/BOOK.md`](docs/BOOK.md) ties all **38 docs** + the code +
+  index over the whole repository. New [`docs/BOOK-2026-06-26.md`](docs/BOOK-2026-06-26.md) ties all **38 docs** + the code +
   the build/run, data-flow, troubleshooting and roadmap into a single human- and AI-readable table of
   contents, organised by the spec's categories (orientation · architecture · world · systems · math ·
   AI/RAG · UI · data model · decisions · history · roadmap). The codebase half is **self-maintaining**:
@@ -1296,7 +1296,7 @@ a bomb")` → **refused by the safety constitution before any network call**. 8 
   the full desktop/ultra population. Absent → the auto-detect ladder is unchanged.
 - **True 4K plate (native)** — the C++ engine renders a 3840×2160 reliquary plate
   (`cqm_native.exe --shot --w3840x2160`) with live rigid-body physics on the RTX 5070 Ti.
-- **`docs/CONTROLS.md`** — a complete control reference (mouse, keyboard hotkeys incl. `G`/`N`/`H`,
+- **`docs/CONTROLS-2026-06-26.md`** — a complete control reference (mouse, keyboard hotkeys incl. `G`/`N`/`H`,
   touch, every bottom-panel button, and the 9 camera views).
 - **Bottom-panel buttons** for SPACE, ENTROPY, and LAUNCH NHI (the Wave 1-2 controls were previously
   hotkey-only) — runtime-verified firing through the audit trail.
@@ -1424,8 +1424,8 @@ Every wave shipped behind the full gate; same-seed determinism preserved.
   OpenRouter / Groq via env). A default-deny sandbox lets it READ files and RUN read-only
   commands but never change code.
 - **Documentation** — `docs/research/PRE-TRANSFORMER-GAME-AI.md` (how AI worked before the
-  transformer) and `docs/AI-SUBSYSTEM.md` (in-world minds + Copilot reference), plus the
-  `PRE-2016-AI.md` dossier.
+  transformer) and `docs/AI-SUBSYSTEM-2026-06-26.md` (in-world minds + Copilot reference), plus the
+  `PRE-2016-AI-2026-06-26.md` dossier.
 
 ### Changed
 
@@ -1467,7 +1467,7 @@ standing 500-point quality audit.
   with cardinality rules + a cross-system write-back matrix) and `docs/ERP.md`
   (process view — boot sequence, per-frame pipeline, cadence schedule, entity
   lifecycle, audit flow), complementing the existing `docs/ERD.md`.
-- **`docs/500-POINT-INSPECTION.md`** — a standing audit: 25 sections × 20
+- **`docs/500-POINT-INSPECTION-2026-06-26.md`** — a standing audit: 25 sections × 20
   checkpoints (480 PASS / 20 WARN / 0 FAIL), each with a verdict and concrete
   evidence (file, symbol, test, or measured fact).
 - **`ROADMAP.md`** — shipped / now / next horizons, with the "Next" horizon
@@ -1481,7 +1481,7 @@ standing 500-point quality audit.
   `GraphMind.updateRank` selects the top-20 via the bounded min-heap instead of a
   full sort over all V ≤ 10,000 node keys. The exact tie-break (rank descending,
   ties by ascending entity index) is preserved, so the chosen set is byte-identical
-  and deterministic. (`docs/COMPLEXITY.md` updated.)
+  and deterministic. (`docs/COMPLEXITY-2026-06-26.md` updated.)
 
 ### Fixed
 
@@ -2044,10 +2044,10 @@ and writes to at least one existing system. Specified in
   Architect (Starkiller), Physicist (Dr Manhattan) — bound by `CLAUDE.md`,
   plus the aesthetic constitution `docs/PHILOSOPHY.md`.
 - **Reference catalogs** imported into `docs/reference/`
-  (`math-libs-catalog.md` + `domain-key-libraries.csv`): the 20-domain JS/TS
+  (`math-libs-catalog-2026-06-26.md` + `domain-key-libraries.csv`): the 20-domain JS/TS
   math-library survey with per-library adoption status; the selection itself
   is recorded in [ADR 0005](./docs/adr/0005-math-stack-selection.md).
-- **Design-system audit** (`docs/DESIGN-SYSTEM.md`): component and token
+- **Design-system audit** (`docs/DESIGN-SYSTEM-2026-06-26.md`): component and token
   audit (naming, token coverage, completeness scores), documented color/type/
   spacing/motion tokens including the 8-hue tribe palette, and per-component
   accessibility notes.

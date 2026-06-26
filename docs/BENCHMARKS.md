@@ -67,7 +67,7 @@ hundreds per frame).
 Three algorithms (SELECTION SWEEP, CYCLE PHASE, PANCAKE FLIP) scan O(n) per
 step by construction; the rest are O(1)–O(small constant). Exactly one `step`
 runs per frame, so even the slowest costs <0.002% of the frame budget. See
-[COMPLEXITY.md](./COMPLEXITY.md) for the formal table.
+[COMPLEXITY-2026-06-26.md](./COMPLEXITY-2026-06-26.md) for the formal table.
 
 ### Wildbeyond V2 hot paths (added 2026-06-10, Bun 1.3.11 x64-win32, same CPU)
 

@@ -132,7 +132,7 @@ All ports properly attributed to Tsotchke (MIT, © 2024–2026 tsotchke).
 
 ## Integration Plan Updated
 
-Updated `docs/TSOTCHKE-CORPUS-INTEGRATION-PLAN.md` with completion status for Waves 1-4.
+Updated `docs/TSOTCHKE-CORPUS-INTEGRATION-PLAN-2026-06-26.md` with completion status for Waves 1-4.
 
 ## Gate Verification
 

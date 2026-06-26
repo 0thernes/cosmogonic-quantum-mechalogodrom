@@ -9,7 +9,7 @@ substrates off each other's frames, and the lifecycles entities and events pass 
 
 Think of it as the "resource plan" for a 16.6 ms frame budget: every system gets a slot and a cadence,
 and the composition root ([`src/world.ts`](../src/world.ts)) is the scheduler. Costs per stage live in
-[COMPLEXITY.md](./COMPLEXITY.md); this is the ordering and the why.
+[COMPLEXITY-2026-06-26.md](./COMPLEXITY-2026-06-26.md); this is the ordering and the why.
 
 > All mermaid labels below are punctuation-light by necessity — a semicolon inside a label is a
 > statement separator and crashes the parser (documented gotcha, fixed once already on `/docs`).
@@ -191,5 +191,5 @@ flowchart LR
 5. **Bounded everything** — every ring, buffer, and heap is fixed-size; the process cannot grow
    unbounded memory regardless of input or runtime.
 
-See [COMPLEXITY.md](./COMPLEXITY.md) for the measured cost of each stage and
+See [COMPLEXITY-2026-06-26.md](./COMPLEXITY-2026-06-26.md) for the measured cost of each stage and
 [BENCHMARKS.md](./BENCHMARKS.md) for the ultra-tier 10k interleave in detail.

@@ -36,7 +36,7 @@ behind the full gate (`bun run check`) and a commit.
 
 ### TSOTCHKE FULL CORPUS INTEGRATION (Ralph Loop — 2026-06-19+)
 
-**Goal:** Wire the complete Z:\[Vibe Coded (AI)]\(Tsotchke) corpus (20 corpus projects + sites + Eshkol flagship + Moonlab + quantum-quake + libirrep + ... ) _everywhere_ in Cosmogonic: math, sim (mind/body), world, native, UI, docs. Maximal but contract-strict, det, measured, audited. See docs/TSOTCHKE-CORPUS-INTEGRATION-PLAN.md.
+**Goal:** Wire the complete Z:\[Vibe Coded (AI)]\(Tsotchke) corpus (20 corpus projects + sites + Eshkol flagship + Moonlab + quantum-quake + libirrep + ... ) _everywhere_ in Cosmogonic: math, sim (mind/body), world, native, UI, docs. Maximal but contract-strict, det, measured, audited. See docs/TSOTCHKE-CORPUS-INTEGRATION-PLAN-2026-06-26.md.
 
 **Status (v0.18.0):** FULL DEEP DIVE COMPLETE — Tsotchke local corpus (Eshkol COMPLETE spec + all mirrors at `Z:\[Vibe Coded (AI)]\(Tsotchke)`) + GH (22 repos) studied; registry maps all 20 projects (~16 wired, 3 fenced). Petri/soup + brutal god tier live. Gate **1,477 tests · 95.03% / 92.03%** (receipts enforced). Local==GH. "Grow What Thou Wilt."
 
@@ -143,7 +143,7 @@ See AUDIT-LOG.md and corpus logs.
 - P1 `CHAOS-BIOME-50K` (V38 + V40) — **shipped:** the `mega` tier raises the ceiling to **50,000** (profiled `bench/scale.ts` + √N density scaling cut 50k 167→60 ms, golden byte-identical). **V40: now the AUTO DEFAULT** — `resolveTier` returns `mega` for ≥16-core/≥8 GB machines (opt-in killed per user); verified live booting **49,975 entities, glError 0**. Archetypes already met (100/250 morphotypes). **V42: the 70-param per-entity NN is wired** — `sim/entity-brain.ts` runs every organism's genome brain (6→6→4) on a round-robin cohort, perceiving its state + world and steering itself (bounded), determinism golden byte-identical, 7 headless tests. **Remaining:** neighbour-perception senses (currently self+global); deeper neighbour-list LOD for 50k @ 60 fps; cognition-driven mutation on split.
 - P0 `AI-WEB-SEARCH` (V43) — **shipped:** the ✦ Copilot gains a `web_search` tool — model supplies a QUERY (no URL → no SSRF), the server screens it against a **safety constitution** (`src/server/web-search.ts`; public/educational only, refuses secrets/private/harm) then looks it up via a fixed key-less PUBLIC endpoint (DuckDuckGo IA), source-cited. Constitution injected into the system prompt. 8 headless tests; **live-verified** (real summary for "nikola tesla", "build a bomb" refused pre-network). Completes the directive's 6 blocks.
 - P3 `AI-WEB-DEEPEN` — past V43 (web_search shipped): grow the help corpus as systems land; add multi-source search (Wikipedia REST fallback) + result re-ranking; richer RAG grounding.
-- ✅ `RAG-BOOK` (V37) — shipped: `docs/BOOK.md` is the master index over all 38 docs + code + build/run/data-flow/troubleshooting/roadmap; `scripts/gen-filemap.ts` (`bun run filemap`) self-generates `docs/FILE-MAP.md` from module headers (77 modules, deterministic). Verified: 43/43 BOOK links resolve, 0 broken. _Grows with the world (standing)._
+- ✅ `RAG-BOOK` (V37) — shipped: `docs/BOOK-2026-06-26.md` is the master index over all 38 docs + code + build/run/data-flow/troubleshooting/roadmap; `scripts/gen-filemap.ts` (`bun run filemap`) self-generates `docs/FILE-MAP.md` from module headers (77 modules, deterministic). Verified: 43/43 BOOK links resolve, 0 broken. _Grows with the world (standing)._
 - P3 `UI-ERGONOMICS` — past V33 (the dock consolidated NEURAL/MARKET/ARCHITECT/AI/Docs/Spec): still TODO — relocate the Sorting Count/Step meter clock (`#alg`) off the Sorting Fields panel (`#algoP`) into a clean zone, keep Sorting Fields draggable; typography/spacing pass.
 
 ### Next — V13/V14 directive backlog (user, 2026-06-14)
@@ -249,13 +249,13 @@ docs updated (CHANGELOG + any affected contract/diagram). Determinism preserved
 - **Data model (ERD/ERM)** — entities, relationships, cardinalities: [ERD.md](./ERD.md)
 - **Binding work specs** — per-era acceptance criteria: [MODULE-CONTRACTS.md](./MODULE-CONTRACTS.md)
 - **Release log** — what shipped per version: [../CHANGELOG.md](../CHANGELOG.md)
-- **Audit & review** — the 500-point inspection: [500-POINT-INSPECTION.md](./500-POINT-INSPECTION.md)
+- **Audit & review** — the 500-point inspection: [500-POINT-INSPECTION-2026-06-26.md](./500-POINT-INSPECTION-2026-06-26.md)
 
 ## TSOTCHKE CORPUS WIRING (ralph-loop 10x waves)
 
 - Studied entire Z:\[Vibe Coded (AI)]\(Tsotchke) (20 repos, Eshkol consciousness engine, Moonlab, QGTL, sites; 13k files, 714MB).
 - Wired everywhere: Eshkol 3 substrates + factor graphs in mind/orchestra, QGT geo in body, 5 Archon Tsotchke dialects.
-- Strict reports: TSOTCHKE_CORPUS_INTEGRATION_AUDIT.md + updated receipts/KANBAN/ERD.
+- Strict reports: TSOTCHKE_CORPUS_INTEGRATION_AUDIT-2026-06-26.md + updated receipts/KANBAN/ERD.
 - 5 live with Tsotchke (Eshkol mind, Moonlab reflex, etc.). Gate/tests green.
 - Continue: more .esk, QEC, audits. (Full incorporation for GOAL5.) Heartbeat 30s set. This scheduled 10x feed: corpus studied (Eshkol engine + .esk, Moonlab Clifford + QEC, QGTL, 20 repos, sites, AUDITs, CORPUS), wired eshkolProgram + modules + enhanced, docs/audit updated, tests 0 fail, law synced (1477 tests, 95.03% / 92.03% canon matches). 5 Super Creatures Tsotchke-powered everywhere. Reports strict. LFG. No false complete.
 - Ralph 10x this exec: dual arith in topdown, gwt+dual in deliberation, gwt re-wired in mind. Tsotchke wired 10x. Strict. Check run. Heartbeat continue.

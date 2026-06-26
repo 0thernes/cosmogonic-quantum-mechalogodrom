@@ -86,7 +86,7 @@ Wired into Cosmogonic everywhere for 5 Super Creatures:
 - Memory-orchestra/narrative: factor graph belief propagation from Eshkol active inference wired for better regime/consolidation.
 - Super-body/morph: QGT/geo tensors from corpus for extreme combinatronics/curvature.
 - Telemetry (super-panel/world): Eshkol engine state + 5 Archon consciousness per.
-- Docs: updated AI-SUBSYSTEM, receipts, new strict TSOTCHKE_CORPUS_INTEGRATION_AUDIT.md with logs/audits/assessments (every file studied: CORPUS.md, consciousness engine.md, moonlab clifford.h, etc.).
+- Docs: updated AI-SUBSYSTEM, receipts, new strict TSOTCHKE_CORPUS_INTEGRATION_AUDIT-2026-06-26.md with logs/audits/assessments (every file studied: CORPUS.md, consciousness engine.md, moonlab clifford.h, etc.).
 - Strict: no alloc hot (prealloc), det (Rng), disclaimers, reports kept (this + audit + handoff updates).
 - Upstream upgrades integrated: Eshkol tensor dtype + consciousness enhancements (recent 2026); Moonlab more QEC/GPU ideas for reflex; QGTL geo for morph.
   Study: Eshkol formalisms (AD primitive, HoTT, arena, consciousness engine with unification/factor graphs/GWT) + Moonlab sim depth + all 20 repos/websites deep dived via tools. All wired for 5 everywhere (mind, body, memory, quantum, docs, telemetry).

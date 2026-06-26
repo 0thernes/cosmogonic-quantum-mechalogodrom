@@ -511,7 +511,7 @@ ring (cap 200), 404 fallback. Port `Number(process.env.PORT) || 3000`. Log reque
   Scripts: `<script type="module" src="./src/main.ts">`. Stylesheet `./src/styles/app.css`.
   Inline SVG favicon data URI. OG/description meta from legacy 6-9.
 - Styling: Tailwind utilities; glassmorphic panels (backdrop-blur, translucent slate/cyan borders);
-  typography per docs/WIREFRAMES.md type scale — `Inter Variable` for UI labels (uppercase,
+  typography per docs/WIREFRAMES-2026-06-26.md type scale — `Inter Variable` for UI labels (uppercase,
   tracking-widest, 10-11px), `JetBrains Mono` for numerals/telemetry (tabular-nums). Custom theme
   tokens via `@theme` in app.css (colors: void #030612, accent #0ef, warn #fa0).
 - `app.css`: `@import 'tailwindcss';` + `@theme` tokens + the few non-utility rules (panel collapse
@@ -531,8 +531,8 @@ simplex-noise/MIT, Inter & JetBrains Mono/OFL-1.1, bun runtime note), SECURITY.m
 (mermaid `graph TD` of modules matching this contract + data-flow + frame pipeline),
 docs/ERD.md (mermaid `erDiagram`: ENTITY, MORPHOTYPE, BEHAVIOR, SHOGGOTH, PUPPET_MASTER, WEATHER,
 SONG, AUDIT_EVENT, PERSISTED_STATE + relationship narrative (ERM) + `sequenceDiagram`/`stateDiagram`
-process models (ERP)), docs/WIREFRAMES.md (ASCII wireframes desktop/mobile + typography scale +
-spacing/color tokens), docs/COMPLEXITY.md (per-hot-path big-O table: spatial hash, behaviors,
+process models (ERP)), docs/WIREFRAMES-2026-06-26.md (ASCII wireframes desktop/mobile + typography scale +
+spacing/color tokens), docs/COMPLEXITY-2026-06-26.md (per-hot-path big-O table: spatial hash, behaviors,
 connectome, quantum, sort step, with n/k definitions), docs/adr/0001-bun-runtime.md,
 0002-threejs-rendering.md, 0003-htmx-tailwind-ui.md, 0004-deterministic-rng.md (context/decision/
 consequences format).
@@ -803,9 +803,9 @@ measurement events; params: particle count, collapse rate, field blend, trail
 fade, palette shift. Seeded via randomSeed/noiseSeed. p5 from CDN only.
 The server.ts `/lab` route is the INTEGRATOR's job — do not touch server.ts.
 
-## Design system (writer: design) — owns index.html, src/styles/app.css, src/ui/panels.ts, src/ui/hud.ts, docs/WIREFRAMES.md
+## Design system (writer: design) — owns index.html, src/styles/app.css, src/ui/panels.ts, src/ui/hud.ts, docs/WIREFRAMES-2026-06-26.md
 
-1. Produce docs/DESIGN-SYSTEM.md: full audit per the /design-system skill format
+1. Produce docs/DESIGN-SYSTEM-2026-06-26.md: full audit per the /design-system skill format
    (summary + score; naming consistency; token-coverage table counting hardcoded
    hex/px in app.css + index.html; component completeness for Panel,
    ToolbarButton, ControlPad key, TelemetryRow, Banner `#sec`, Toast `#nm`,
@@ -1521,8 +1521,8 @@ sim=1 and within each sim variant.
 ## V9 — AGImAGNOSIS: minds, lineage, factions, artifacts, Copilot
 
 The era that gives the world intelligence, using pre-transformer techniques only (research:
-[PRE-2016-AI.md](./PRE-2016-AI.md); reference:
-[AI-SUBSYSTEM.md](AI-SUBSYSTEM.md)). HARD LINE: in-world minds are DETERMINISTIC (seeded classical
+[PRE-2016-AI-2026-06-26.md](./PRE-2016-AI-2026-06-26.md); reference:
+[AI-SUBSYSTEM-2026-06-26.md](AI-SUBSYSTEM-2026-06-26.md)). HARD LINE: in-world minds are DETERMINISTIC (seeded classical
 AI in `src/sim/**`); the live LLM Copilot is a NON-deterministic shell organ (`src/server/**`,
 `src/ui/copilot.ts`) fenced out of sim logic — it can never touch `SimState` or the RNG stream.
 

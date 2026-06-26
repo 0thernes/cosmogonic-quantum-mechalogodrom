@@ -51,7 +51,7 @@ Rewritten in place when the facts change (per the binding "Living docs, no archi
 
 | Class            | Surfaces                                                                                          |
 | ---------------- | ------------------------------------------------------------------------------------------------- |
-| Root MD          | `README.md`, `ROADMAP.md`, `CHANGELOG.md`, `CLAUDE.md`, `AGENTS.md`, `HANDOFF.md`, …              |
+| Root MD          | `README.md`, `ROADMAP.md`, `CHANGELOG.md`, `CLAUDE.md`, `AGENTS.md`, `HANDOFF-2026-06-26.md`, …   |
 | Steering         | `CLAUDE.md`, `AGENTS.md`, `masters/*.xml` (3), `docs/PHILOSOPHY.md`, `docs/MODULE-CONTRACTS.md`   |
 | Progress / truth | `docs/NHSI-PROGRESS-DASHBOARD.md`, `docs/reports/2026-06-26-CURRENT-TRUTH-BASELINE.md`            |
 | Consciousness    | `docs/PATH-TO-14-14-CONSCIOUSNESS-INDICATORS.md`, `docs/reports/2026-06-21-NHSI-HONESTY-AUDIT.md` |
@@ -71,7 +71,7 @@ Rewritten in place when the facts change (per the binding "Living docs, no archi
 | C2  | P1 test-hygiene            | `tests/doc-links.test.ts`         | `SKIP` set omitted `.claude/` → the test scanned nested worktree copies and false-failed                                                                                                       | add `.claude`, `legacy`, `site`, `coverage` to `SKIP`                                                    |
 | D   | P1 doc-rot                 | `docs/KANBAN.md`                  | mojibake: `×11/`×7/``×1 (orphaned-emoji fragments), `—`×34 used as `—`, plus `¦`/`–`/`©º`— slipped the encoding gate (orphaned fragments aren't double-encoding;`U+201D` is a legit codepoint) | byte-precise normalize: drop corrupted emoji prefixes, restore `—`/`–` separators                        |
 | E   | P2 count-drift             | `docs/KANBAN.md:17`               | "ALL **19** Tsotchke repos" — only outlier vs the canonical "20 corpus projects" everywhere                                                                                                    | `19 → 20`                                                                                                |
-| F   | flag (history)             | `HANDOFF.md`                      | a dated **2026-06-19** daily-run report framed as "Current repo status" (942 tests / v0.10.4)                                                                                                  | left as historical snapshot (editing the numbers would falsify the 2026-06-19 record); not current truth |
+| F   | flag (history)             | `HANDOFF-2026-06-26.md`           | a dated **2026-06-19** daily-run report framed as "Current repo status" (942 tests / v0.10.4)                                                                                                  | left as historical snapshot (editing the numbers would falsify the 2026-06-19 record); not current truth |
 | G   | flag (cleanliness)         | repo root                         | stray debug logs tracked at root (`.gate.log`, `.gate.baseline.log`, `.audit-gate.log`, `law.log`, `law_error.txt`, `tsc.log`, `tscout.txt`, `receipts_print.txt`)                             | noted for cleanup                                                                                        |
 | H   | flag (fidelity, not a bug) | `src/math/curvature-aware-qng.ts` | `computeChristoffelSymbols` sets `dg=0`, so the general N×N "curvature-aware" path reduces to ordinary QNG                                                                                     | honestly documented as a simplification; no NaN / wrong shape; noted so the caveat is visible            |
 
@@ -105,14 +105,31 @@ history with the correction logged), version `0.18.0` (all current markers), ent
 
 ## 4 · Reconciliation — "rename every MD with the current date"
 
-The `/goal` asked to "update the name (with current date) of every MD file." This is **intentionally not
-done as a rename**, because it directly conflicts with the repo's binding **"Living docs, no archives"**
-law (CLAUDE.md): docs are single, current documents rewritten in place; dated/forked copies are
-prohibited tech-debt, and renaming would break the cross-link graph that `tests/doc-links.test.ts`
-enforces (and the `sync-surfaces.ts` surface list). The intent — _every doc current and mutually
-consistent_ — is instead served by: (1) rewriting stale content in place, (2) refreshing the
-verified-on date stamps inside docs, and (3) this ledger. Filenames that legitimately carry a date
-(`docs/reports/2026-06-2x-*`, `docs/DAILY_RUNS/*`) are point-in-time records and keep their names.
+The `/goal` asked to "update the name (with current date) of every MD file"; the owner confirmed they
+want **both** the dated rename and a non-breaking repo ("make sure they don't break — figure it out").
+
+**Done (2026-06-26):** the **24 pure-content docs that are safe to rename** were `git mv`'d to dated
+names (`X-2026-06-26.md`) and **every reference rewired** across all tracked text files — verified **0
+broken links** repo-wide (`tests/doc-links.test.ts` green), `tsc` clean, `sync:check` green, FILE-MAP
+regenerated. Each also carries the in-content `reviewed: 2026-06-26` stamp.
+
+**Kept at their canonical names — renaming WOULD break, which the owner's "don't break" forbids:**
+
+- **GitHub / agent-special** (read by exact name): `README.md` (front-page render), `CHANGELOG.md`,
+  `LICENSE`, `NOTICE.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md`, `CONTRIBUTING.md`, `THIRD-PARTY-NOTICES.md`,
+  `CLAUDE.md` + `AGENTS.md` (loaded by the agent harness), `ROADMAP.md`, sub-dir `README.md`s,
+  `index.html` / `docs.html` / `specs.html` (GitHub Pages), `.github/**`, `.memory/**` (hacklm tool).
+- **Hardcoded in scripts / gates** (`sync-surfaces.ts`, `docs-truth-law.test.ts`, `gen-filemap`):
+  `ARCHITECTURE`, `KANBAN`, `ERD`/`ERM`/`ERP`, `MODULE-CONTRACTS`, `FILE-MAP`, `TECHNICAL-SPECIFICATION`,
+  `PHILOSOPHY`, `NHSI-PROGRESS-DASHBOARD`, `PATH-TO-14-14-…`, `SUPER-CREATURE-RESEARCH`, `BENCHMARKS`,
+  `CORPUS_INTEGRATION_REPORT` — renaming reds the gate / breaks the live sync machinery.
+- **Convention-critical / heavily-linked**: `AUDIT-LOG.md`, this ledger, `TSOTCHKE-INTEGRATION-MAP.md`.
+- **Numbered ADRs** (`docs/adr/000X-*`, referenced as "ADR-0009"), **legacy/** (verbatim), and
+  **already-dated** files (`docs/reports/2026-*`, `docs/DAILY_RUNS/*`, the `-2026-06-1x/20` audits) whose
+  filename date is their meaningful point-in-time record.
+
+For the kept set, the in-content `reviewed: 2026-06-26` stamp supplies the current date without breaking
+the repo — the maximal literal compliance consistent with "don't break."
 
 ---
 

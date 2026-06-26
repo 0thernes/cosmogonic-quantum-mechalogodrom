@@ -232,7 +232,7 @@ reads the curvature of the mind's own thought-space; and a **spin-glass instinct
 beat. All three are seeded + deterministic, unit-tested, and MIT-attributed to © 2024–2026 tsotchke (see
 [NOTICE.md](../NOTICE.md) + [THIRD-PARTY-NOTICES.md](../THIRD-PARTY-NOTICES.md)); the 64-amplitude
 statevector simulator itself (`src/math/quantum.ts`) remains the project's own Moonlab-style
-implementation. See [AI-SUBSYSTEM.md](AI-SUBSYSTEM.md) for the full quantum-mind design.
+implementation. See [AI-SUBSYSTEM-2026-06-26.md](AI-SUBSYSTEM-2026-06-26.md) for the full quantum-mind design.
 
 **Super Creature 1.1 (V89) — the consciousness-metrics layer.** Atop those substrates, the apex mind now
 measures itself against the two leading _scientific_ theories of consciousness each beat, both deterministic
@@ -287,7 +287,7 @@ intelligence is engineered, not downloaded.**
 | **RAM**                         | ≈ **300–600 MB** resident at full population (Three.js scene + typed-array entity state + instanced buffers + audit ring).                                                                                                                                                                                                        |
 | **Storage / download**          | `dist/` is 109 MB on disk (the full multi-page build), but the **app's initial payload is the ~960 KB entry chunk + Three.js** (single-digit MB; ~1–1.5 MB gzipped). The bulk — **ten 3.2 MB chunks (~32 MB) of Mermaid** — loads only on `/docs`, plus ~12 MB of self-hosted-font CSS. Routes load only what they need, gzipped. |
 
-Complexity classes are catalogued in [COMPLEXITY.md](COMPLEXITY.md); hot-path benchmarks in
+Complexity classes are catalogued in [COMPLEXITY-2026-06-26.md](COMPLEXITY-2026-06-26.md); hot-path benchmarks in
 [BENCHMARKS.md](BENCHMARKS.md) (run via `bun run bench`, mitata).
 
 ---

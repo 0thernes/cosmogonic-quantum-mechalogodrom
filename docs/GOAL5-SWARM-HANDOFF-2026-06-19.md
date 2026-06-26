@@ -23,7 +23,7 @@
 - Owned fixes (math only): prealloc scratch in clifford-tableau (entanglement no new/push), quantum-geometry optional scratch, eshkol-qrng histScratch reuse, nat-grad HOT wiring notes.
 - Determinism/perf verified (same-seed bit-id, benches stable, no hot alloc).
 - Gates: owned tests/bench green; full det + quantum/super tests pass.
-- Handoff: research_receipts.md + math edits.
+- Handoff: research_receipts-2026-06-26.md + math edits.
 
 ## Agent 3: BROLY-BUILDER (research: tensorcore, ulg, quantum-quake, moonlab, eshkol, local world/super-body)
 
@@ -50,7 +50,7 @@
 
 ## Final receipts
 
-All Tsotchke sources cited in GOAL5-RESEARCH-RECEIPTS.md and comments. 5 live, deterministic, math under every pulse, full inspect, gate clean.
+All Tsotchke sources cited in GOAL5-RESEARCH-RECEIPTS-2026-06-26.md and comments. 5 live, deterministic, math under every pulse, full inspect, gate clean.
 
 Swarm handoff complete. INTEGRATOR: main.
 
@@ -66,7 +66,7 @@ Swarm handoff complete. INTEGRATOR: main.
 
 - Research + audit on all (incl. three/Jolt/Bun supply, native CMake FetchContent risks, dual Bun, cov variance).
 - Full gate: PASS (format/tsc/lint/test 1477 pass / receipts 95.03%/92.03% match measured / build).
-- Overclaiming audit + patches (owned only): canonical-receipts.ts (current 1477/95.03/92.03), docs-receipts-law.test.ts (limited SURFACES to owned), reports/2026-06-17-\*.md (numbers + prose audited), 500-POINT-INSPECTION.md (deltas + WARNs), SECURITY.md (moderate + native scope).
+- Overclaiming audit + patches (owned only): canonical-receipts.ts (current 1477/95.03/92.03), docs-receipts-law.test.ts (limited SURFACES to owned), reports/2026-06-17-\*.md (numbers + prose audited), 500-POINT-INSPECTION-2026-06-26.md (deltas + WARNs), SECURITY.md (moderate + native scope).
 - C++/hot-path safety (file/line): native/CMakeLists.txt:88 (FetchContent no SHA), main.cpp:243 (atoi), 320 (glfwGetTime), physics.h:31 etc. Hot: world.ts scratch prealloc, spatial shared buffer, no per-frame new in inspected. TS strict clean.
 - Blockers: pre-existing receipts variance (now honest), native out-of-CI.
 
@@ -78,7 +78,7 @@ Swarm handoff complete. INTEGRATOR: main.
 - Moonlab → Clifford + statevec for godform bias + reflex.
 - QGT → Fubini/Berry geometry for quality-space + qualia.
 - ulg + quake → field observers + runtime aliveness for world percepts + body pulses.
-  All classical sim only. Credits in code + GOAL5-RESEARCH-RECEIPTS.md.
+  All classical sim only. Credits in code + GOAL5-RESEARCH-RECEIPTS-2026-06-26.md.
 
 **Ownership Table (exclusive):**
 See table above in this handoff + MODULE-CONTRACTS.md (godform.ts STARKILLER sole source; super-mind+leaves MANHATTAN/ORACLE; body+world BROLY; UI VOID/ORACLE; contracts STARKILLER).
@@ -105,7 +105,7 @@ Swarm complete. The rocket flew (green gate). LFG.
 
 **Full gate (main):** format/tsc/lint/test (1477 pass)/verify (matches 95.03%/92.03%)/build green. (Ralph 10x heartbeat: Tsotchke corpus wired, Eshkol AD/Moonlab tensor in 5 Archons. Study stable. Checks pass. Repeat 30s. Heartbeat 08:51:09 appended, format fix in quality-space as small change. Additional tensor wiring in qTone. Heartbeat 08:59:10: more AD note, checks clean. 09:03 sym fix. 09:05: Eshkol AD in predictor. 09:06 panel. 09:07 format fix. 09:10: appended, stable. 09:10 heartbeat. 09:13: phi note. 09:16: appended, stable, small phi note. 09:16 heartbeat. 09:19: appended, stable. 09:19 heartbeat. 09:19 heartbeat. 09:26: appended, stable. 09:26 heartbeat. 09:29: appended, stable. 09:29 heartbeat. 09:29 heartbeat. 09:29 heartbeat. 09:29 heartbeat. 09:29 heartbeat.)
 
-**Receipts:** research_receipts.md in each worktree + main docs/GOAL5-\*.md updated.
+**Receipts:** research_receipts-2026-06-26.md in each worktree + main docs/GOAL5-\*.md updated.
 
 **Unowned residual:** non-owned surfaces may still have old numbers (per ownership rule — other fists to fix in next wave).
 
@@ -114,7 +114,7 @@ Swarm complete. The rocket flew (green gate). LFG.
 ## INTEGRATOR FINAL (main, 2026-06-19)
 
 - All 4 agent handoffs read (exclusive ownership, no overlap).
-- Research corpus re-fetched (eshkol/moonlab/QGTL) + appended to GOAL5-RESEARCH-RECEIPTS.md.
+- Research corpus re-fetched (eshkol/moonlab/QGTL) + appended to GOAL5-RESEARCH-RECEIPTS-2026-06-26.md.
 - Code audit: exactly 5 loops in world.ts, godform canonical 5, super-panel renders 5 rows when provided, super-mind wires AST/HOT leaves + narrative, memory prealloc fixed, body multi-appendage fBm+curv+pulses per bias/quantum, no sim Math.random/Date.now.
 - Receipts law: 1477 / 95.03/92.03 canon == measured (verify --print + gate).
 - Full cold `bun run check` post-edits: GREEN (format/tsc/lint/test/verify/build).
@@ -151,7 +151,7 @@ Worktree states banked. Clean tree intent.
 - Eshkol QRNG port (gate-for-gate, det surrogate) → eshkol-qrng.ts.
 - Spin-glass (Ising/Hopfield classical) → spin-glass.ts.
 - Moonlab AG Clifford O(n) + statevec → clifford-tableau.ts + super-qubits.
-  All mapped in GOAL5-RESEARCH-RECEIPTS.md + THIRD-PARTY-NOTICES. "Model of" only.
+  All mapped in GOAL5-RESEARCH-RECEIPTS-2026-06-26.md + THIRD-PARTY-NOTICES. "Model of" only.
 
 All DR-MANHATTAN law satisfied: measured, det, no overclaim, provenance, frame budgets, receipts.
 
