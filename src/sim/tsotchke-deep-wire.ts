@@ -256,7 +256,13 @@ export function libirrepSU2CharacterTable(jMax: number = 4): CharacterTable {
     dimensions.push(dim);
     const char: number[] = [];
     for (let m = 0; m <= j; m++) {
-      char.push(Math.sin((2 * j + 1) * (m / j) * Math.PI) / Math.sin((m / j) * Math.PI));
+      // chi_j sampled as a Dirichlet kernel sin((2j+1)x)/sin(x) with x = (m/j)*pi. sin(x) = 0 at the
+      // endpoints (m=0 -> x=0; m=j -> x=pi) and for the whole j=0 row; those are removable
+      // singularities whose limit is the dimension 2j+1. The old form computed 0/0 there, making
+      // char[0] (and every entry of j=0) NaN.
+      const x = j === 0 ? 0 : (m / j) * Math.PI;
+      const denom = Math.sin(x);
+      char.push(Math.abs(denom) < 1e-12 ? dim : Math.sin((2 * j + 1) * x) / denom);
     }
     characters.push(char);
     classes.push(`spin_${j}`);

@@ -106,7 +106,9 @@ export function facultyPhaseFromActivation(
   const mean = n > 0 ? sum / n : 0;
   const variance = n > 1 ? sumSq / n - mean * mean : 0;
   const mag = Math.sqrt(mean * mean + variance * variance);
-  const angle = Math.atan2(variance, mean) * Math.PI;
+  // atan2 already returns radians in (-pi, pi]; the extra *Math.PI blew the "phase" out to
+  // [0, pi^2], breaking every downstream phase comparison. Use the atan2 result directly.
+  const angle = Math.atan2(variance, mean);
   return {
     id,
     re: mag * Math.cos(angle),
@@ -161,8 +163,11 @@ export function findCoalition(
   const coalition: number[] = [];
   for (let i = 0; i < n; i++) {
     const p = phases[i]!;
-    const diff = Math.abs(p.angle - meanAngle);
-    const wrappedDiff = diff > Math.PI ? 2 * Math.PI - diff : diff;
+    // Robust circular distance in [0, pi] regardless of the inputs' range (the old
+    // `diff>pi ? 2pi-diff : diff` only handled diff already within [0, 2pi]).
+    const wrappedDiff = Math.abs(
+      ((((p.angle - meanAngle + Math.PI) % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI)) - Math.PI,
+    );
     if (wrappedDiff <= tolerance) {
       coalition.push(p.id);
     }

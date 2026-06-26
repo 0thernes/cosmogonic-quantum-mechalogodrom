@@ -109,7 +109,10 @@ export function initVMC(arch: NQSArchitecture, config: VMCConfig, seed = 0x51f15
   // Initialize samples to random bitstrings
   const rng = seededRng(seed);
   for (let i = 0; i < config.sampleCount; i++) {
-    samples[i] = rng() >>> (32 - arch.visibleCount);
+    // rng() is a float in [0,1); `>>>` ToUint32-truncates anything < 1 to 0, so the old form
+    // seeded every walker with the identical all-zeros bitstring. Scale to a 32-bit integer first,
+    // then keep the top visibleCount bits for a uniform visibleCount-bit configuration.
+    samples[i] = (rng() * 0x100000000) >>> (32 - arch.visibleCount);
     amplitudes.push({ re: 0, im: 0 });
   }
 
@@ -389,7 +392,9 @@ export function vmcStep(
 function seededRng(seed: number): () => number {
   let s = seed;
   return () => {
-    s = (s * 1103515245 + 12345) & 0x7fffffff;
+    // Math.imul keeps the 32-bit multiply exact; plain `s * 1103515245` exceeds 2^53 and loses
+    // the low-order bits to float rounding before the mask, degrading the LCG it imitates.
+    s = (Math.imul(s, 1103515245) + 12345) & 0x7fffffff;
     return s / 0x7fffffff;
   };
 }
