@@ -1,3 +1,4 @@
+<!-- reviewed: 2026-06-26 | repo-wide consistency audit | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
 <!-- Thanks for contributing to Cosmogonic Quantum Mechalogodrom. Keep PRs small and focused. -->
 
 ## What & why

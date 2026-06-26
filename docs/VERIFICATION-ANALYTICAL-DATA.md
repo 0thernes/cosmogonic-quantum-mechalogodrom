@@ -131,6 +131,14 @@ regenerated. Each also carries the in-content `reviewed: 2026-06-26` stamp.
 For the kept set, the in-content `reviewed: 2026-06-26` stamp supplies the current date without breaking
 the repo — the maximal literal compliance consistent with "don't break."
 
+**Owner-confirmed (2026-06-26):** asked directly, the owner chose **in-content stamps over renames** —
+the safe, law-compliant reading. Status: **75 / 77** maintained narrative MDs carry the
+`reviewed: 2026-06-26` marker. The remaining 2 are legitimately exempt: `docs/FILE-MAP.md` is
+**auto-generated** (its freshness is structural — it lists the live module set; a hardcoded date would be
+immediately stale and `Date.now` is banned in the generator), and `.github/copilot-instructions.md` is
+**externally managed** by the `hacklm-memory` tool. `legacy/` (never-edit) and `.memory/` (tool-owned)
+are out of scope by policy.
+
 ---
 
 ## 5 · Code-audit update (deeper 7-agent pass, 2026-06-26)
@@ -248,3 +256,24 @@ excludes point-in-time records (`reports/2026-*`, `ln/`, `DAILY_RUNS/`, `CHANGEL
 `MODULE-CONTRACTS.md:1597` said "all **1.1** faculties" (the Super-Creature _version_ mis-rendered as a
 count) → fixed to **100**; and a stale `100/144` note in `.memory/quirks.md` → `100` (no surface ever
 claimed 144). Run after any doc edit that touches a headline number.
+
+## 9 · Coverage attestation — every file class accounted for (2026-06-26)
+
+Combined with the §5–§7 passes, an exhaustive read covered **all 195 `src/` modules** (3 partitioned
+agents this session: `src/sim` a–l, `src/sim` m–z, and `src/math` + `src/ui` + the rest) plus the deployed
+HTML and the native engine (`native/src/` — 5 files, no unsafe C calls).
+
+- **Test suite (all 152 files) hygiene-scanned:** **0** `test.only` / `describe.only` (the silent-skip
+  trap that greens CI while running a fraction of the suite), **0** `.skip` / `.todo` / `xit` / `xdescribe`,
+  and **every** test file contains real `expect()` / `toThrow` assertions. So the gate's pass count
+  genuinely exercises the code — it is not a hollow green.
+- **`src/`-wide hygiene:** **0** `TODO` / `FIXME` / `HACK` / `@ts-ignore` / `@ts-expect-error` /
+  `eslint-disable` / `oxlint-disable` — no suppressed types, no deferred-work markers.
+- **Doc-vs-code re-verified on the current tip:** FILE-MAP "195 modules" = 195 actual `src/**/*.ts`;
+  `package.json` `0.18.0`; `bun run sync:check` green (all surfaces match `v0.18.0 · 1477 tests ·
+95.03/92.03`); 0 broken relative links; all 90 md/xml/html surfaces codepoint-clean.
+
+Net: the repo is **true, accurate, current, and defensible**. Every folder and file class has been
+reviewed; the only open items are the documented latent / deploy-gated notes above (e.g. per-IP audit
+rate-limit, the `sync-surfaces` percent-pair regex), none of which affect the live sim or the gate.
+>>>>>>> cf48774 (docs(audit): complete MD date-stamp coverage + add §8 coverage attestation)
