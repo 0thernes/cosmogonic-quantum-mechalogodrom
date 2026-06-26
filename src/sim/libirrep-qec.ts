@@ -507,7 +507,23 @@ export function logicalPreserved(code: SurfaceCode, residual: Uint8Array): boole
  * @param codeDistance - code distance d (default 5).
  * @returns a stability score in [0,1] from the real decode.
  */
+const qecProxyCache = new Map<number, number>();
+
 export function qecDecodingProxy(syndromeWeight: number, codeDistance = 5): number {
+  // MEMOIZE (time complexity): the MWPM matcher below is worst-case O((k-1)!!) in the defect count, and
+  // world.ts / super-body.ts step this 5x per frame over a tiny integer (w, d) domain — so a per-(w, d)
+  // LUT removes the per-frame factorial recompute entirely. Pure deterministic fn (no RNG); the keyspace
+  // is bounded (w clamped to 1023, d small), so the cache cannot grow without bound.
+  const d0 = codeDistance < 2 ? 2 : codeDistance | 0;
+  const key = d0 * 1024 + Math.min(Math.max(0, syndromeWeight | 0), 1023);
+  const cached = qecProxyCache.get(key);
+  if (cached !== undefined) return cached;
+  const result = computeQecDecodingProxy(syndromeWeight, d0);
+  qecProxyCache.set(key, result);
+  return result;
+}
+
+function computeQecDecodingProxy(syndromeWeight: number, codeDistance: number): number {
   const d = codeDistance < 2 ? 2 : codeDistance | 0;
   const code = buildSurfaceCode(d);
   const w = Math.max(0, Math.min(syndromeWeight | 0, code.nQubits));
