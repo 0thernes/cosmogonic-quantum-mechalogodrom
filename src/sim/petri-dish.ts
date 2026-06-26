@@ -38,6 +38,7 @@ import { classicalEntropyGap, classicalSample } from './classical-contrast';
 import { logoMorphScalar, turtleNew, type TurtleState } from './logo-turtle';
 import { libirrepSymmetry, symmetryModes } from './irrep-symmetry';
 import { moonlabTensorQualia } from './moonlab-tensor';
+import { shannonDiversity, richness } from './open-endedness';
 const NUTRIENT_SLOTS = 12; // Expanded Petri for more digital biologics growth from full Tsotchke soup
 const SCRATCH_NUTRIENTS = new Float32Array(NUTRIENT_SLOTS);
 const SCRATCH_SALIENCE = new Float32Array(NUTRIENT_SLOTS);
@@ -108,6 +109,10 @@ export interface PetriDishView {
   spinPolarization: number;
   morphotype: number;
   geneticDivergence: number;
+  /** Open-endedness telemetry (read-only): number of distinct live biologic forms (richness). */
+  speciesRichness: number;
+  /** Open-endedness telemetry: Shannon diversity (bits) of live biologic forms; 0 = monoculture. */
+  speciesDiversity: number;
 }
 
 /** O(n) init, n=8. */
@@ -344,6 +349,13 @@ export function petriDishBeat(
 
 /** Telemetry view. O(1). */
 export function petriDishView(state: PetriDishState): PetriDishView {
+  // Open-endedness telemetry: tally live biologic forms (read-only — no effect on sim dynamics).
+  const formCounts = new Map<string, number>();
+  for (const b of state.biologics) {
+    const f = b.form ?? 'proto';
+    formCounts.set(f, (formCounts.get(f) ?? 0) + 1);
+  }
+  const formTally = [...formCounts.values()];
   return {
     biomass: state.biomass,
     phiSurrogate: state.phiSurrogate,
@@ -365,6 +377,8 @@ export function petriDishView(state: PetriDishState): PetriDishView {
     spinPolarization: state.spinPolarization,
     morphotype: state.morphotype,
     geneticDivergence: state.geneticDivergence,
+    speciesRichness: richness(formTally),
+    speciesDiversity: shannonDiversity(formTally),
   };
 }
 
