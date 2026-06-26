@@ -16,10 +16,14 @@ gate-enforced (`bun run sync:check`). The one-glance reference is
 - [2026-06-26-CURRENT-TRUTH-BASELINE.md](./2026-06-26-CURRENT-TRUTH-BASELINE.md) — canonical current facts,
   one-glance reference (gate receipts, claim baseline, SuperMind benchmark).
 - [2026-06-26-ALIFE-COMPARATIVE-AUDIT.md](./2026-06-26-ALIFE-COMPARATIVE-AUDIT.md) — A-Life comparative
-  audit vs 25 known systems: measured statistics (breadth z = +3.01σ), 5 SVG charts, and an adversarial
-  novelty defense. Regenerable via [`scripts/alife-comparison-stats.ts`](../../scripts/alife-comparison-stats.ts)
-  from the source CSV [2026-06-26-alife-comparison-matrix.csv](./2026-06-26-alife-comparison-matrix.csv);
-  charts + stats JSON in [assets/](./assets/).
+  audit vs 25 known systems (v3, code-grounded): measured statistics (breadth z = +3.01σ self / +2.10σ
+  source-audited), **11 SVG charts**, PCA + clustering + Pareto + Mahalanobis geometry, a 9-agent
+  code-grounding of the one self-scored row (`file:line`), and an adversarial novelty defense. Regenerable
+  from the source CSV [2026-06-26-alife-comparison-matrix.csv](./2026-06-26-alife-comparison-matrix.csv) via
+  three deterministic engines — [`scripts/alife-comparison-stats.ts`](../../scripts/alife-comparison-stats.ts),
+  [`scripts/alife-comparison-geometry.ts`](../../scripts/alife-comparison-geometry.ts), and
+  [`scripts/alife-codeground-sensitivity.ts`](../../scripts/alife-codeground-sensitivity.ts); charts + JSON in
+  [assets/](./assets/).
 - [2026-06-17-STATE-OF-THE-ART-COMBINED.md](./2026-06-17-STATE-OF-THE-ART-COMBINED.md) — the single,
   unified state-of-the-art assessment: the whole repository (Part I), the apex Super Creature (Part II),
   and the consciousness scorecard + verdict (Part III).

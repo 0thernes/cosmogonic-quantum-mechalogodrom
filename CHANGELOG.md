@@ -20,6 +20,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   language. Current live baseline is `1,477` tests, `95.03%` line / `92.03%` function coverage,
   Tsotchke `20` corpus projects with about `16` real downstream integrations, and Butlin
   `8/14 met + 6/14 partial` indicators only.
+- Repo-wide consistency audit (see [docs/VERIFICATION-ANALYTICAL-DATA.md](./docs/VERIFICATION-ANALYTICAL-DATA.md)):
+  repaired 3 dead doc links (the consolidated `docs/audit-2026-06-15/` dir) -> `docs/AUDIT-LOG.md`;
+  hardened `tests/doc-links.test.ts` to skip `.claude` worktrees + `legacy`; de-duplicated three
+  `## [0.16.1]` CHANGELOG headers, removed orphaned loop-status lines, and completed the footer links;
+  corrected `docs/KANBAN.md` "19 -> 20" Tsotchke projects.
 
 ## [0.18.0] - 2026-06-26
 
@@ -89,8 +94,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Bumped package/docs/masters to **0.16.1** because `v0.16.1` already points at an earlier pushed tag; this patch release is the truthful current ship point.
 - GitHub release/About/README are to be synchronized to the same Tsotchke Petri digital-biologics paradigm.
 
-## [0.16.1] - 2026-06-21
-
 ### OMNISCIENT DEEP DIVE + TSOTCHKE FULL WIRE EXPANSION + 0.16.1
 
 - Full study of Cosmogonic + local Tsotchke corpus Z:\[Vibe Coded (AI)]\(Tsotchke) (Eshkol full lang/AD/GWT/consciousness .esk + all mirrors moonlab/QGT/spin/libirrep/quake/ulg/logo/tensorcore/PINN/PIMC/rngs + corp) + GitHub (tsotchke 15 + Tsotchke-Corp 5). Catalogued all.
@@ -101,8 +104,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Direct push. Forward.
 - Version health + receipts re-pinned where drift.
 - Direct push (no PR). Ralph-loop safe. Gate executed.
-
-## [0.16.1] - 2026-06-21
 
 ### OMNISCIENT MASTER AUDIT & TSOTCHKE FULL FUSION - Release bump, deep research, docs/everything upgrade
 
@@ -2156,6 +2157,20 @@ to the legacy prototype:
 - The `mutations` counter is surfaced in telemetry (`#v8`) instead of being
   write-only.
 
+[Unreleased]: ./CHANGELOG.md
+[0.18.0]: ./CHANGELOG.md
+[0.17.1]: ./CHANGELOG.md
+[0.16.1]: ./CHANGELOG.md
+[0.14.0]: ./CHANGELOG.md
+[0.13.0]: ./CHANGELOG.md
+[0.12.0]: ./CHANGELOG.md
+[0.10.4]: ./CHANGELOG.md
+[0.10.3]: ./CHANGELOG.md
+[0.10.2]: ./CHANGELOG.md
+[0.10.1]: ./CHANGELOG.md
+[0.10.0]: ./CHANGELOG.md
+[0.9.0]: ./CHANGELOG.md
+[0.8.0]: ./CHANGELOG.md
 [0.7.2]: ./CHANGELOG.md
 [0.7.1]: ./CHANGELOG.md
 [0.7.0]: ./CHANGELOG.md
@@ -2167,9 +2182,3 @@ to the legacy prototype:
 [0.2.1]: ./CHANGELOG.md
 [0.2.0]: ./CHANGELOG.md
 [0.1.0]: ./CHANGELOG.md
-
-### Ralph 10x Surge (scheduled exec) - Body wiring restored live (sym + wigner + qge calls), phyla/quantum-geo/ui wired with corpus, 10x Eshkol/Moonlab/libirrep/quake. Strict reports. bun check. Heartbeat continue.
-
-### Ralph 10x (this): gwt/dual in super-qubits, ulg/gwt in economy. Gate 1183 clean. Heartbeat continue.
-
-### Ralph 10x (fresh): gwt+mpo in integrated-info. Gate clean. Heartbeat continue.

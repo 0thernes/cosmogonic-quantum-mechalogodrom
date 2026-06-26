@@ -9,6 +9,31 @@ dated / historical / "superseded snapshot" copies (per the binding "Living docs,
 
 ---
 
+## 2026-06-26 — Full-repo consistency audit + gate-RED fixes (verification ledger)
+
+Obsessive cross-surface fact audit (every MD / HTML / XML / code path). The canonical source-of-truth
+matrix + the full findings table live in
+[VERIFICATION-ANALYTICAL-DATA.md](./VERIFICATION-ANALYTICAL-DATA.md).
+
+- **Gate restored to green.** 3 dead relative links (`CHANGELOG.md` + `docs/KANBAN.md` → the deleted
+  `docs/audit-2026-06-15/` dir, consolidated by `e51a376`) repointed to `docs/AUDIT-LOG.md`;
+  `tests/doc-links.test.ts` `SKIP` extended with `.claude` (transient worktrees) + `legacy`
+  (preserved-verbatim) so nested-worktree pollution no longer false-fails the local gate. 0 broken
+  links repo-wide.
+- **CHANGELOG hygiene.** Merged three duplicate `## [0.16.1] - 2026-06-21` headers into one; removed 3
+  orphaned Ralph-loop `###` slop lines below the reference-link footer; completed the footer links.
+- **Count drift.** `docs/KANBAN.md` "ALL 19 Tsotchke repos" -> "20 projects" (canonical: 19 mirrors +
+  Eshkol flagship).
+- **Verified correct (no action):** determinism (0 `Math.random` / `Date.now` in `src/sim`),
+  `tsc` + oxlint 0, Butlin `8/14 met + 6/14 partial` across ~40 surfaces, entity `50,000`,
+  BiologicForms `26`, Tsotchke `20`, and the 2928-vs-1477 test count (floor-by-design,
+  `PORTABLE_TEST_FLOOR = 1400`).
+- **Flagged for owner (not auto-fixed):** `docs/KANBAN.md` orphaned-emoji mojibake the encoding gate
+  misses (`U+0178` / `U+201D`); 7 released tags without a CHANGELOG entry; dated loop-logs /
+  process-logs (`HANDOFF.md`, `research_receipts.md`, `docs/GOAL5-*`,
+  `docs/TSOTCHKE_CORPUS_INTEGRATION_AUDIT.md`) whose stale figures are correct-for-their-date —
+  consolidation candidates (deletion = owner call).
+
 ## 2026-06-26 — Living-docs policy; reports rewritten current; stray PR closed
 
 - **Policy shift (binding):** reports/docs are now LIVING — rewritten in place to the current truth,

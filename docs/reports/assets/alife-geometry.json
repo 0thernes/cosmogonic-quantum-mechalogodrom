@@ -1,0 +1,743 @@
+{
+  "generatedFrom": "docs/reports/2026-06-26-alife-comparison-matrix.csv",
+  "note": "extended multivariate geometry; companion to alife-stats.json. deterministic.",
+  "pca": {
+    "explainedVariance": [
+      0.3187,
+      0.2356,
+      0.1825,
+      0.0898,
+      0.0614,
+      0.0512,
+      0.0385,
+      0.0138,
+      0.0084
+    ],
+    "topLoadings": {
+      "pc1": [
+        {
+          "axis": "Substrate pluralism",
+          "w": 0.536
+        },
+        {
+          "axis": "Consciousness-theory",
+          "w": 0.492
+        },
+        {
+          "axis": "Cognition/Learning",
+          "w": 0.43
+        },
+        {
+          "axis": "Visual scale",
+          "w": 0.373
+        },
+        {
+          "axis": "Morphology/Physics",
+          "w": 0.344
+        },
+        {
+          "axis": "Ecology",
+          "w": 0.147
+        },
+        {
+          "axis": "Instrumentation",
+          "w": 0.07
+        },
+        {
+          "axis": "Open-endedness",
+          "w": 0.046
+        },
+        {
+          "axis": "Reproduction",
+          "w": 0.009
+        }
+      ],
+      "pc2": [
+        {
+          "axis": "Reproduction",
+          "w": 0.589
+        },
+        {
+          "axis": "Open-endedness",
+          "w": 0.511
+        },
+        {
+          "axis": "Instrumentation",
+          "w": -0.423
+        },
+        {
+          "axis": "Ecology",
+          "w": 0.417
+        },
+        {
+          "axis": "Morphology/Physics",
+          "w": -0.169
+        },
+        {
+          "axis": "Cognition/Learning",
+          "w": 0.081
+        },
+        {
+          "axis": "Visual scale",
+          "w": -0.049
+        },
+        {
+          "axis": "Substrate pluralism",
+          "w": -0.044
+        },
+        {
+          "axis": "Consciousness-theory",
+          "w": 0.01
+        }
+      ]
+    },
+    "scores": [
+      {
+        "name": "COSMOGONIC",
+        "pc1": 6.155,
+        "pc2": 0.284,
+        "cosmo": true
+      },
+      {
+        "name": "Game of Life",
+        "pc1": -1.464,
+        "pc2": -2.319,
+        "cosmo": false
+      },
+      {
+        "name": "Boids",
+        "pc1": -1.204,
+        "pc2": -1.989,
+        "cosmo": false
+      },
+      {
+        "name": "Biomorphs",
+        "pc1": -1.611,
+        "pc2": -0.499,
+        "cosmo": false
+      },
+      {
+        "name": "Core War",
+        "pc1": -2.022,
+        "pc2": 0.72,
+        "cosmo": false
+      },
+      {
+        "name": "Tierra",
+        "pc1": -2.133,
+        "pc2": 1.462,
+        "cosmo": false
+      },
+      {
+        "name": "Avida",
+        "pc1": -1.511,
+        "pc2": 1.238,
+        "cosmo": false
+      },
+      {
+        "name": "Polyworld",
+        "pc1": 0.637,
+        "pc2": 1.835,
+        "cosmo": false
+      },
+      {
+        "name": "Framsticks",
+        "pc1": 0.801,
+        "pc2": 0.737,
+        "cosmo": false
+      },
+      {
+        "name": "Karl Sims VC",
+        "pc1": 0.6,
+        "pc2": -0.086,
+        "cosmo": false
+      },
+      {
+        "name": "Creatures",
+        "pc1": 1.821,
+        "pc2": 1.992,
+        "cosmo": false
+      },
+      {
+        "name": "Darwin Pond",
+        "pc1": -0.433,
+        "pc2": 1.504,
+        "cosmo": false
+      },
+      {
+        "name": "Gene Pool",
+        "pc1": -0.092,
+        "pc2": 1.445,
+        "cosmo": false
+      },
+      {
+        "name": "Sugarscape",
+        "pc1": -0.951,
+        "pc2": 0.379,
+        "cosmo": false
+      },
+      {
+        "name": "Echo",
+        "pc1": -1.414,
+        "pc2": 0.974,
+        "cosmo": false
+      },
+      {
+        "name": "Swarm",
+        "pc1": -0.998,
+        "pc2": 0.292,
+        "cosmo": false
+      },
+      {
+        "name": "breve",
+        "pc1": 0.21,
+        "pc2": 0.136,
+        "cosmo": false
+      },
+      {
+        "name": "Picbreeder",
+        "pc1": 0.172,
+        "pc2": 0.813,
+        "cosmo": false
+      },
+      {
+        "name": "MABE",
+        "pc1": -0.602,
+        "pc2": 0.87,
+        "cosmo": false
+      },
+      {
+        "name": "Lenia",
+        "pc1": -0.642,
+        "pc2": -1.48,
+        "cosmo": false
+      },
+      {
+        "name": "Growing NCA",
+        "pc1": 0.029,
+        "pc2": -2.631,
+        "cosmo": false
+      },
+      {
+        "name": "OpenWorm",
+        "pc1": 2.02,
+        "pc2": -3.203,
+        "cosmo": false
+      },
+      {
+        "name": "POET",
+        "pc1": -0.376,
+        "pc2": -0.3,
+        "cosmo": false
+      },
+      {
+        "name": "EvoGym",
+        "pc1": 0.054,
+        "pc2": -2.434,
+        "cosmo": false
+      },
+      {
+        "name": "ALIEN",
+        "pc1": 2.294,
+        "pc2": 0.838,
+        "cosmo": false
+      },
+      {
+        "name": "ASAL",
+        "pc1": 0.66,
+        "pc2": -0.576,
+        "cosmo": false
+      }
+    ]
+  },
+  "clustering": {
+    "mergeOrderLeaves": [
+      "COSMOGONIC",
+      "Sugarscape",
+      "Swarm",
+      "MABE",
+      "Echo",
+      "Avida",
+      "Core War",
+      "Tierra",
+      "Polyworld",
+      "Creatures",
+      "ALIEN",
+      "Picbreeder",
+      "Framsticks",
+      "Karl Sims VC",
+      "breve",
+      "Darwin Pond",
+      "Gene Pool",
+      "OpenWorm",
+      "Boids",
+      "POET",
+      "ASAL",
+      "EvoGym",
+      "Lenia",
+      "Growing NCA",
+      "Game of Life",
+      "Biomorphs"
+    ],
+    "merges": [
+      {
+        "a": "Sugarscape",
+        "b": "Swarm",
+        "height": 1.118
+      },
+      {
+        "a": "Core War",
+        "b": "Tierra",
+        "height": 1.5
+      },
+      {
+        "a": "Darwin Pond",
+        "b": "Gene Pool",
+        "height": 1.5
+      },
+      {
+        "a": "Avida",
+        "b": "(2)",
+        "height": 2.019
+      },
+      {
+        "a": "Framsticks",
+        "b": "Karl Sims VC",
+        "height": 2.121
+      },
+      {
+        "a": "Echo",
+        "b": "(3)",
+        "height": 2.227
+      },
+      {
+        "a": "Polyworld",
+        "b": "Creatures",
+        "height": 2.345
+      },
+      {
+        "a": "Picbreeder",
+        "b": "(2)",
+        "height": 2.499
+      },
+      {
+        "a": "POET",
+        "b": "ASAL",
+        "height": 2.646
+      },
+      {
+        "a": "breve",
+        "b": "(2)",
+        "height": 2.75
+      },
+      {
+        "a": "Lenia",
+        "b": "Growing NCA",
+        "height": 2.872
+      },
+      {
+        "a": "(3)",
+        "b": "(3)",
+        "height": 2.883
+      },
+      {
+        "a": "ALIEN",
+        "b": "(6)",
+        "height": 3.091
+      },
+      {
+        "a": "MABE",
+        "b": "(4)",
+        "height": 3.152
+      },
+      {
+        "a": "(2)",
+        "b": "(5)",
+        "height": 3.275
+      },
+      {
+        "a": "EvoGym",
+        "b": "(2)",
+        "height": 3.672
+      },
+      {
+        "a": "Game of Life",
+        "b": "Biomorphs",
+        "height": 3.873
+      },
+      {
+        "a": "(2)",
+        "b": "(7)",
+        "height": 3.946
+      },
+      {
+        "a": "(3)",
+        "b": "(2)",
+        "height": 4.383
+      },
+      {
+        "a": "(2)",
+        "b": "(5)",
+        "height": 5.066
+      },
+      {
+        "a": "(7)",
+        "b": "(9)",
+        "height": 5.52
+      },
+      {
+        "a": "Boids",
+        "b": "(7)",
+        "height": 5.604
+      },
+      {
+        "a": "OpenWorm",
+        "b": "(8)",
+        "height": 5.792
+      },
+      {
+        "a": "(16)",
+        "b": "(9)",
+        "height": 6.017
+      },
+      {
+        "a": "COSMOGONIC",
+        "b": "(25)",
+        "height": 7.928
+      }
+    ]
+  },
+  "pareto": {
+    "front": [
+      "COSMOGONIC",
+      "Polyworld",
+      "Karl Sims VC",
+      "Creatures",
+      "ALIEN"
+    ],
+    "cosmogonicOnFront": true,
+    "dominatedByCount9d": 0,
+    "dominatesCount9d": 8,
+    "dominatesNames": [
+      "Boids",
+      "Biomorphs",
+      "Core War",
+      "Sugarscape",
+      "Echo",
+      "Swarm",
+      "Lenia",
+      "Growing NCA"
+    ]
+  },
+  "evenness": [
+    {
+      "name": "COSMOGONIC",
+      "evenness": 0.997,
+      "gini": 0.061
+    },
+    {
+      "name": "Creatures",
+      "evenness": 0.959,
+      "gini": 0.222
+    },
+    {
+      "name": "ALIEN",
+      "evenness": 0.959,
+      "gini": 0.19
+    },
+    {
+      "name": "Framsticks",
+      "evenness": 0.924,
+      "gini": 0.257
+    },
+    {
+      "name": "Polyworld",
+      "evenness": 0.918,
+      "gini": 0.272
+    },
+    {
+      "name": "breve",
+      "evenness": 0.911,
+      "gini": 0.293
+    },
+    {
+      "name": "Karl Sims VC",
+      "evenness": 0.907,
+      "gini": 0.308
+    },
+    {
+      "name": "MABE",
+      "evenness": 0.906,
+      "gini": 0.315
+    },
+    {
+      "name": "ASAL",
+      "evenness": 0.906,
+      "gini": 0.315
+    },
+    {
+      "name": "Picbreeder",
+      "evenness": 0.901,
+      "gini": 0.325
+    },
+    {
+      "name": "Darwin Pond",
+      "evenness": 0.89,
+      "gini": 0.343
+    },
+    {
+      "name": "Gene Pool",
+      "evenness": 0.89,
+      "gini": 0.331
+    },
+    {
+      "name": "Sugarscape",
+      "evenness": 0.888,
+      "gini": 0.36
+    },
+    {
+      "name": "Swarm",
+      "evenness": 0.888,
+      "gini": 0.359
+    },
+    {
+      "name": "Echo",
+      "evenness": 0.883,
+      "gini": 0.363
+    },
+    {
+      "name": "POET",
+      "evenness": 0.881,
+      "gini": 0.37
+    },
+    {
+      "name": "EvoGym",
+      "evenness": 0.88,
+      "gini": 0.374
+    },
+    {
+      "name": "OpenWorm",
+      "evenness": 0.846,
+      "gini": 0.394
+    },
+    {
+      "name": "Growing NCA",
+      "evenness": 0.836,
+      "gini": 0.414
+    },
+    {
+      "name": "Core War",
+      "evenness": 0.823,
+      "gini": 0.431
+    },
+    {
+      "name": "Game of Life",
+      "evenness": 0.821,
+      "gini": 0.444
+    },
+    {
+      "name": "Avida",
+      "evenness": 0.821,
+      "gini": 0.434
+    },
+    {
+      "name": "Lenia",
+      "evenness": 0.805,
+      "gini": 0.469
+    },
+    {
+      "name": "Tierra",
+      "evenness": 0.787,
+      "gini": 0.495
+    },
+    {
+      "name": "Biomorphs",
+      "evenness": 0.78,
+      "gini": 0.474
+    },
+    {
+      "name": "Boids",
+      "evenness": 0.728,
+      "gini": 0.533
+    }
+  ],
+  "cosmogonicEvenness": {
+    "name": "COSMOGONIC",
+    "evenness": 0.997,
+    "gini": 0.061,
+    "breadth": 4.444,
+    "cosmo": true
+  },
+  "axisCorrelation": {
+    "axes": [
+      "Reproduction",
+      "Open-endedness",
+      "Ecology",
+      "Morphology/Physics",
+      "Cognition/Learning",
+      "Substrate pluralism",
+      "Instrumentation",
+      "Consciousness-theory",
+      "Visual scale"
+    ],
+    "matrix": [
+      [
+        1,
+        0.535,
+        0.362,
+        -0.072,
+        0.017,
+        -0.043,
+        -0.512,
+        0.073,
+        -0.057
+      ],
+      [
+        0.535,
+        1,
+        0.255,
+        -0.074,
+        0.233,
+        -0.049,
+        -0.287,
+        -0.036,
+        0.091
+      ],
+      [
+        0.362,
+        0.255,
+        1,
+        -0.293,
+        0.274,
+        0.249,
+        -0.133,
+        0.296,
+        -0.074
+      ],
+      [
+        -0.072,
+        -0.074,
+        -0.293,
+        1,
+        0.335,
+        0.334,
+        -0.084,
+        0.198,
+        0.738
+      ],
+      [
+        0.017,
+        0.233,
+        0.274,
+        0.335,
+        1,
+        0.582,
+        0.151,
+        0.465,
+        0.228
+      ],
+      [
+        -0.043,
+        -0.049,
+        0.249,
+        0.334,
+        0.582,
+        1,
+        0.195,
+        0.895,
+        0.397
+      ],
+      [
+        -0.512,
+        -0.287,
+        -0.133,
+        -0.084,
+        0.151,
+        0.195,
+        1,
+        0.204,
+        -0.196
+      ],
+      [
+        0.073,
+        -0.036,
+        0.296,
+        0.198,
+        0.465,
+        0.895,
+        0.204,
+        1,
+        0.311
+      ],
+      [
+        -0.057,
+        0.091,
+        -0.074,
+        0.738,
+        0.228,
+        0.397,
+        -0.196,
+        0.311,
+        1
+      ]
+    ]
+  },
+  "mahalanobis": {
+    "d": 10.27,
+    "d2": 105.463,
+    "ridge": 0.15,
+    "eqEuclidSigma": 4.137
+  },
+  "perAxisPercentile": [
+    {
+      "axis": "Reproduction",
+      "score": 4,
+      "percentile": 73.1
+    },
+    {
+      "axis": "Open-endedness",
+      "score": 3.5,
+      "percentile": 53.8
+    },
+    {
+      "axis": "Ecology",
+      "score": 5,
+      "percentile": 100
+    },
+    {
+      "axis": "Morphology/Physics",
+      "score": 4,
+      "percentile": 73.1
+    },
+    {
+      "axis": "Cognition/Learning",
+      "score": 4.5,
+      "percentile": 100
+    },
+    {
+      "axis": "Substrate pluralism",
+      "score": 5,
+      "percentile": 100
+    },
+    {
+      "axis": "Instrumentation",
+      "score": 4.5,
+      "percentile": 92.3
+    },
+    {
+      "axis": "Consciousness-theory",
+      "score": 4.5,
+      "percentile": 100
+    },
+    {
+      "axis": "Visual scale",
+      "score": 5,
+      "percentile": 100
+    }
+  ],
+  "ratios": {
+    "breadthOverMaturity": 2.963,
+    "emptyAxisLeadShare": 0.594,
+    "breadthMean": 4.444
+  }
+}
