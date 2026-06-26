@@ -336,6 +336,8 @@ verify:facts` = 0 drift / 80 surfaces, 0 git-conflict-markers tree-wide, 100% of
 | docs `*.md` (83 non-legacy)                                                       | 83    | doc-consistency agent + `verify:facts`                   | 0 drift; ERM/COMPLEXITY/COPILOT/SECURITY/ADR + Butlin F1 FIXED; 100% date-current                |
 | assets (`.svg`/`.json`/`.csv`/`.docx`/lockfile)                                   | misc  | generated/data                                           | build artifacts + data, out of correctness scope                                                 |
 
+Per-file manifest (every tracked file + its audit mechanism + status): `docs/reports/assets/audit-coverage-2026-06-26.csv` (reproducible).
+
 **Closure:** no open findings. Deliberately-unfixed items are documented design no-ops
 (`curvature-aware-qng.ts` Christoffel = 0; native `kMaxBodies` sim-vs-render duplication) plus one
 borderline policy doc (`CONTRIBUTING.md` describes a PR workflow vs the binding no-PR law — left for an
