@@ -14,7 +14,10 @@ export interface AsteroidBody {
 
 /** O(1). Spawn body from seed. */
 export function asteroidSpawn(seed: number): AsteroidBody {
-  const s = (seed % 1000) / 1000;
+  // Euclidean modulo: the caller derives `seed` via `^`/`>>> 0` (signed int32), so a high-bit
+  // seed is negative. Plain `seed % 1000` would then yield s < 0, pushing x out of [-1, 1] and the
+  // angle negative. Normalize to [0, 1) so the spawn domain is correct for every seed.
+  const s = (((seed % 1000) + 1000) % 1000) / 1000;
   return {
     x: (s - 0.5) * 2,
     y: ((s * 7) % 1) - 0.5,
