@@ -1072,10 +1072,8 @@ export class SuperMind {
     // quantum integration now WRITES into cognition (PHILOSOPHY: every system reads AND writes another).
     // Fed into the metacognition "integration" cue below, blended with the classical module proxy.
     const qPhi = this.qmind.integratedInformationNow();
-    // 10x: blend Eshkol AD qPhi grad (from corpus tape) into cons for more AD in quantum delib
-    const adQ = eshkolDual((x: number) => Math.abs(x - 0.5), Math.abs(qPhi - 0.5));
-    this.cons.phi = adQ.value;
-    // Ralph continue 10x: quakePerturb (quantum-quake corpus) modulates one quantum aspect for Archon aliveness
+    // quakePerturb (quantum-quake corpus) modulates one quantum aspect for Archon aliveness
+    // (qPhi is the genuine quantum register Φ; it is consumed by the integration cue at the plan stage below)
     const qkP = quakePerturb(
       0.5 + (this.eshkolEngine.inference - 0.5) * 0.5 /*proxy*/,
       17 + ((this.eshkolEngine.logic * 10) | 0),

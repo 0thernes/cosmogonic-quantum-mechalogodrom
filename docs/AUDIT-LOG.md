@@ -11,6 +11,38 @@ dated / historical / "superseded snapshot" copies (per the binding "Living docs,
 
 ---
 
+## 2026-06-26 — Deep code-correctness audit (3 expert reviewers: quantum · A-life · engine)
+
+Line-by-line correctness/complexity review of the math + sim core (beyond gate-green) by three parallel
+domain reviewers, each verifying against closed forms. **Verdict: the quantum/numerical core is
+expert-clean — 0 P0, 0 genuine P1; every closed-form invariant holds to machine precision** (Bell/GHZ
+correlations, CHSH = 2√2, Grover gain, Wigner-d/CG/6j/9j, stabilizer magic = log₂(4/3), Crank–Nicolson
+unitarity to 1e-13, hyperdual AD). Determinism law holds (0 `Math.random` / `Date.now` in sim logic).
+
+Real findings (3 × P1):
+
+- **FIXED — `src/sim/super-mind.ts:1078` dead write.** `const adQ = eshkolDual(…); this.cons.phi =
+adQ.value;` was discarded by the wholesale `this.cons = {…}` rebuild 14 lines later (`phi: this.phi`).
+  Removed the dead per-beat `eshkolDual` compute; `qPhi` + `eshkolDual` stay used elsewhere; 10
+  super-mind tests + determinism goldens green, behaviour unchanged.
+- **FLAGGED — `src/sim/holographic-memory.ts:191-482` `PersistentNarrative` never invoked.** ~230 lines
+  (event ring, 12-symbol Bayesian belief, regime detector, retrieval router) reachable only via
+  `recordEvent` / `routeRecall`, which nothing in `src` calls → its state is perpetually zero (telemetry
+  only). Wire-into-the-beat vs delete is a golden-affecting architecture call — owner decision.
+- **FLAGGED — `src/sim/shoggoths.ts:481` O(shoggoths × N) prey scan.** Each feeding shoggoth full-scans
+  `entities.list` (~100 × 50,000 ≈ 5M dist²/frame worst case at the mega tier). The radius-12 consume
+  circle is inside the existing radius-15 grid query (`nearby`, line 304), so filtering `nearby` would be
+  O(k) and byte-identical — but `disposeAt` needs a list index and swap-removes (indices unstable; no
+  id→index map in scope), so a safe fix needs that infra. Not rushed under the active loop (a wrong index
+  disposes the wrong entity → golden break). Determinism-safe fix documented for careful follow-up.
+
+P2 doc-honesty notes (no wrong results — comments over-claim vs the code): `curvature-aware-qng.ts`
+hardcodes Christoffel `dg=0` so it is plain QNG (name over-promises); `mixed-state-qgt.ts`
+`computeEntropy` returns linear entropy `1−Tr ρ²`, doc says von Neumann; `eshkol-bridge.ts`
+`eshkolADGradient` is a central finite-difference, doc says "reverse-mode tape"; `libirrep-symmetry.ts`
+is a simplified surrogate vs the exact `irrep.ts` (foot-gun if imported by mistake). Recommend tightening
+the comments to match the code.
+
 ## 2026-06-26 — Full-repo consistency audit + gate-RED fixes (verification ledger)
 
 Obsessive cross-surface fact audit (every MD / HTML / XML / code path). The canonical source-of-truth
