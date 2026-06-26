@@ -1,0 +1,42 @@
+#!/bin/sh
+# post-commit — "Instant Transmission": auto-push every main-line commit to origin so
+# LOCAL and GITHUB never drift. One-man-dev flow: a commit IS a ship. No going back and
+# forth, no PRs. Enable once per clone (already set in this repo, and `bun install`
+# re-applies it via the package.json "prepare" script):
+#     git config core.hooksPath .githooks
+#
+# Safe by design: only auto-pushes the `main` branch; never acts mid-merge/rebase; on a
+# non-fast-forward it fetches + rebases + retries ONCE; on a real conflict it aborts the
+# rebase cleanly and leaves your commit local with instructions. Always exits 0 — it can
+# slow a commit slightly but can never block or corrupt one.
+
+branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null)
+[ "$branch" = "main" ] || exit 0
+
+# Opt-out escape hatch for offline / batching work:  git config cqm.autopush false
+[ "$(git config --get cqm.autopush)" = "false" ] && exit 0
+
+# Never act in the middle of a merge or rebase (the replay itself makes commits).
+git rev-parse -q --verify MERGE_HEAD >/dev/null 2>&1 && exit 0
+[ -d "$(git rev-parse --git-path rebase-merge 2>/dev/null)" ] && exit 0
+[ -d "$(git rev-parse --git-path rebase-apply 2>/dev/null)" ] && exit 0
+
+if git push origin HEAD:main 2>/dev/null; then
+  echo "[ship] -> origin/main (Instant Transmission)."
+  exit 0
+fi
+
+echo "[ship] non-fast-forward; syncing with origin/main and retrying once..."
+git fetch origin -q || { echo "[ship] fetch failed - push manually when online."; exit 0; }
+if git rebase origin/main >/dev/null 2>&1; then
+  if git push origin HEAD:main 2>/dev/null; then
+    echo "[ship] -> origin/main (after rebase)."
+  else
+    echo "[ship] push still rejected - run: git push origin HEAD:main"
+  fi
+else
+  git rebase --abort >/dev/null 2>&1
+  echo "[ship] auto-rebase hit a conflict - your commit is safe & local."
+  echo "[ship] resolve with: git pull --rebase origin main && git push origin HEAD:main"
+fi
+exit 0
