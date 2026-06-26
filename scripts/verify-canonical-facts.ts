@@ -54,6 +54,14 @@ const FACTS: Fact[] = [
     note: '20 corpus projects (~16 wired); 22 = raw GH repo count — see TSOTCHKE-INTEGRATION-MAP',
   },
   {
+    name: 'Fenced Tsotchke repos',
+    // The non-LLM mandate fences exactly 3 repos (gpt2-basic, llm-arbitrator, SolanaQuantumFlux);
+    // Quantum-RNG-API is WIRED, not fenced. ARCHITECTURE.md had drifted to "four ... fenced".
+    pattern: /\b(\d+)\s+(?:LLM(?:\/chain)?(?:\/API)?\s+(?:repos?\s+)?)?fenced\b/gi,
+    allowed: new Set(['3']),
+    note: '3 fenced (gpt2-basic, llm-arbitrator, SolanaQuantumFlux); Quantum-RNG-API is wired',
+  },
+  {
     name: 'Faculties (design)',
     // Exclude the apex-active framings (~20, ~30 deep-wired) that canonical-receipts explicitly permits.
     pattern: /(?<![~\d])\b(\d+)[-\s]facult(?:y|ies)\b/gi,
