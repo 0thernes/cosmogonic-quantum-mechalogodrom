@@ -30,6 +30,12 @@ substantive change; they are personas of one discipline and they outrank vibes:
 - **Seamless local↔GitHub:** `core.hooksPath=.githooks` (wired by the `prepare` script on install).
   pre-commit auto-syncs surfaces + normalizes encoding; post-commit auto-pushes the current branch
   (opt out: `git config hooks.autopush false`). A local commit ships to GitHub with no manual push.
+- **NO PULL REQUESTS — EVER (binding owner rule).** This is a one-person repo: commit to `main` and
+  push directly. NEVER open a PR, never create a feature/`audit/*`/`claude/*` branch to merge, never
+  `gh pr create`. Work ON `main`; if a push is rejected (non-fast-forward), `git pull --rebase
+  --autostash origin main` and push again — resolve conflicts in place. The post-commit hook already
+  does this. Dependency bumps and fixes go straight to `main`. No dependabot PRs (no committed
+  `.github/dependabot.yml`). The flow is local→`main`→GitHub, nothing in between.
 - **NHSI progress dashboard:** [docs/NHSI-PROGRESS-DASHBOARD.md](docs/NHSI-PROGRESS-DASHBOARD.md)
   — VERIFIED progress (2026-06-21 honesty audit, every number measured by `file:line` — see [docs/reports/2026-06-21-NHSI-HONESTY-AUDIT.md](docs/reports/2026-06-21-NHSI-HONESTY-AUDIT.md)): 100-faculty design with **~30 genuinely deep-wired into the apex** · 25 Archon pantheons = **5 individuated apex minds + 20 live light-echo** · 25 theory-of-mind organs wired (6-family ensemble) · **10 emergence angles wired** (+ 5 god-scale release events) · Butlin path at **8/14 met + 6/14 partial** (computational indicators, NOT sentience). Tsotchke: all 20 projects enumerated, ~16 wired with real downstream effect — **real MIT quantum math, never call Tsotchke fake** (lacks only a QPU = speed, not correctness). NHSI manifesto: 0thernes Corp.
 - **Tsotchke binding:** real MIT corpus; depth in [docs/TSOTCHKE-INTEGRATION-MAP.md](docs/TSOTCHKE-INTEGRATION-MAP.md);

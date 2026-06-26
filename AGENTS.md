@@ -13,6 +13,10 @@ substantive change; they are personas of one discipline and they outrank vibes:
 
 ## Operational law (binding)
 
+- **NO PULL REQUESTS — EVER.** One-person repo: commit to `main` and push directly (the post-commit
+  hook auto-pushes). NEVER `gh pr create`, never branch-to-merge, never a `claude/*` or `audit/*` PR
+  branch. On a rejected push: `git pull --rebase --autostash origin main` then push; resolve conflicts
+  in place. Fixes and dependency bumps land straight on `main`. Flow = local → `main` → GitHub.
 - Binding per-module spec: [docs/MODULE-CONTRACTS.md](docs/MODULE-CONTRACTS.md)
   (V1 + V2). Contract wins over any writer deviation.
 - Aesthetic constitution: [docs/PHILOSOPHY.md](docs/PHILOSOPHY.md) — real math
