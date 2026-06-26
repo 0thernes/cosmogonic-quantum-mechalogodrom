@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Added a deterministic P1 quantum-vs-classical contrast harness and tiny mitata bench scaffold for
+  falsifiable substrate-ablation work; no quantum-advantage claim is made.
+- Added a caller-scratch `structuredCouplingModulationInto` path for faculty coupling and a pure
+  Bedau-Packard open-endedness metric scaffold.
+
+### Fixed
+
+- Truth-synced live steering/spec surfaces that still carried stale `1,514`, `v0.17.1`, or `14/14`
+  language. Current live baseline is `1,477` tests, `95.18%` line / `92.13%` function coverage,
+  Tsotchke `20` corpus projects with about `16` real downstream integrations, and Butlin
+  `8/14 met + 6/14 partial` indicators only.
+
 ## [0.18.0] - 2026-06-26
 
 ### SYNC & SHIP — single source of truth, seamless local↔GitHub, correctness sweep

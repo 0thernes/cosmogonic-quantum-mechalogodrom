@@ -397,7 +397,7 @@ and a CycloneDX SBOM shipped). The audit is re-run before each tagged release; d
 
 ## 17. Testing & Coverage
 
-321. ✅ 40 test files, **1,514 tests**, ~928k `expect()` assertions — substantial coverage.
+321. ✅ 151 test files, **1,477 tests**, 1,744,891 `expect()` assertions — substantial coverage.
 322. ✅ Every `src/math/` primitive has a dedicated test (rng, scalar, spatial-hash, quantum, heap).
 323. ✅ Every major sim system has a test (entities, phyla, titans/games, connectome/graph-mind, quantum, RD, singularities, weather, atmosphere).
 324. ✅ Determinism is golden-tested at the integrated population layer (`tests/determinism.test.ts`).
@@ -415,7 +415,7 @@ and a CycloneDX SBOM shipped). The audit is re-run before each tagged release; d
 336. ✅ Tests are fast (~1–2 s full suite) — no slow integration drag discouraging runs.
 337. ✅ Tests assert behavior and invariants, not implementation trivia.
 338. ✅ Reference-implementation cross-checks are used where correctness is subtle (brute-force spatial, full-sort top-K).
-339. ✅ A coverage threshold is enforced in CI (`bun run test:coverage`, `bunfig.toml` line ≥ 90% / function ≥ 85%) — measured at ~90.80% line / ~87.91% function, guarded against regression.
+339. ✅ A coverage threshold is enforced in CI (`bun run test:coverage`, `bunfig.toml` line ≥ 90% / function ≥ 85%) — measured at 95.18% line / 92.13% function, guarded against regression.
 340. 🟡 No browser-level e2e (the DOM/WebGL integration is validated via unit-tested data + manual preview, not Playwright).
 
 ## 18. Benchmarks & Performance Budget
