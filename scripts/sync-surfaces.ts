@@ -35,6 +35,17 @@ if (!TEST || !LINE || !FUNC)
   throw new Error('sync-surfaces: cannot parse scripts/canonical-receipts.ts');
 const TEST_COMMA = Number(TEST).toLocaleString('en-US');
 
+/** Single source of truth: the NHSI design facts (sibling constants in canonical-receipts.ts). */
+const nhsi = (name: string): string =>
+  receiptsSrc.match(new RegExp(`${name} = (\\d+);`))?.[1] ?? '';
+const FACULTIES = nhsi('CANONICAL_FACULTIES');
+const ARCHONS = nhsi('CANONICAL_ARCHONS');
+const TOM = nhsi('CANONICAL_TOM_ORGANS');
+const EMERGENCE = nhsi('CANONICAL_EMERGENCE_ANGLES');
+const BIOFORMS = nhsi('CANONICAL_BIOLOGIC_FORMS');
+if (!FACULTIES || !ARCHONS || !TOM || !EMERGENCE || !BIOFORMS)
+  throw new Error('sync-surfaces: cannot parse NHSI design facts from canonical-receipts.ts');
+
 /** Markdown / HTML surfaces that publish shared facts. */
 const SURFACES = [
   'README.md',
@@ -116,6 +127,25 @@ function syncVersion(s: string): string {
   );
 }
 
+/**
+ * Propagate the NHSI design counts. SURGICAL: only the unambiguous canonical phrasings, so legit
+ * other-framings stay intact ("~20 apex faculties", "5 individuated Archons", "10 + 5 events" are
+ * never touched) — matches "-faculty", "Archon pantheon", "ToM/theory-of-mind organs",
+ * "emergence angles", "BiologicForms"; never bare "faculties"/"Archons" or "N-Archon" (= individuated).
+ */
+function syncNHSI(s: string): string {
+  return (
+    s
+      .replace(/\b[0-9]+(-faculty\b)/g, `${FACULTIES}$1`)
+      .replace(/\b[0-9]+( Archon pantheons?\b)/g, `${ARCHONS}$1`)
+      // NOTE: bare "N-Archon" is NOT synced — "5-Archon live table" legitimately means the 5 individuated
+      // apex minds, not the 25-Archon pantheon. Only the unambiguous "Archon pantheon" form is enforced.
+      .replace(/\b[0-9]+( (?:ToM|theory-of-mind) organs\b)/g, `${TOM}$1`)
+      .replace(/\b[0-9]+( emergence angles\b)/g, `${EMERGENCE}$1`)
+      .replace(/\b[0-9]+( BiologicForms\b)/g, `${BIOFORMS}$1`)
+  );
+}
+
 let changed = 0;
 const drift: string[] = [];
 for (const file of SURFACES) {
@@ -125,7 +155,7 @@ for (const file of SURFACES) {
   } catch {
     continue; // surface may not exist in every tree
   }
-  const next = syncVersion(syncReceipts(s));
+  const next = syncNHSI(syncVersion(syncReceipts(s)));
   if (next !== s) {
     drift.push(file);
     if (!checkOnly) writeFileSync(file, next, 'utf8');

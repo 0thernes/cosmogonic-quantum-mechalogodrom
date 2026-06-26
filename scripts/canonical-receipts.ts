@@ -10,3 +10,16 @@
 export const CANONICAL_TEST_COUNT = 1514;
 export const CANONICAL_LINE_COV = '90.80';
 export const CANONICAL_FUNC_COV = '87.91';
+
+/**
+ * NHSI DESIGN FACTS — single source of truth for the architecture counts published on every surface.
+ * sync-surfaces.ts propagates these; `bun run sync:check` (gate-enforced) fails CI on any drift.
+ * CAUTION — synced ONLY in their UNAMBIGUOUS canonical phrasing; the same noun carries legit other
+ * framings that must NEVER be rewritten: "100-faculty DESIGN" != "~20 apex-active faculties" != "~30
+ * deep-wired"; "25 Archon PANTHEON" != "5 individuated apex minds"; "10 emergence angles WIRED" (+5 events).
+ */
+export const CANONICAL_FACULTIES = 100;
+export const CANONICAL_ARCHONS = 25;
+export const CANONICAL_TOM_ORGANS = 25;
+export const CANONICAL_EMERGENCE_ANGLES = 10;
+export const CANONICAL_BIOLOGIC_FORMS = 26;
