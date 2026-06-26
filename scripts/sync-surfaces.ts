@@ -52,6 +52,8 @@ const SURFACES = [
   // receipts to clobber). Their slash-form "LINE% / FUNC%" was drifting unseen until added here.
   'docs/ERD.md',
   'docs/KANBAN.md',
+  // Binding contract whose present-tense "...ERA (vX)" header stamps the current version (synced below).
+  'docs/MODULE-CONTRACTS.md',
 ];
 
 /** Apply receipts (test count + coverage) propagation. */
@@ -96,6 +98,13 @@ function syncVersion(s: string): string {
       // TECH-SPEC / spec-header "**Version:** vX.Y.Z" — the one current-version marker this missed,
       // which left TECHNICAL-SPECIFICATION.md stuck a version behind until hand-reconciled. Now durable.
       .replace(/(\*\*Version:\*\*\s+)v?0\.[0-9]+\.[0-9]+/g, `$1v${VERSION}`)
+      // Present-tense doc headers that stamp the CURRENT version next to current data: ERD
+      // "Scope (vX)", KANBAN "Status (vX)", MODULE-CONTRACTS "...WIRE ERA (vX)". One occurrence
+      // each, never a historical series — the TECH-SPEC release tag "(v0.11.0)" uses a different
+      // shape (no Scope/Status/ERA prefix) and is correctly left untouched.
+      .replace(/(Scope \(v?)0\.[0-9]+\.[0-9]+/g, `$1${VERSION}`)
+      .replace(/(Status \(v?)0\.[0-9]+\.[0-9]+/g, `$1${VERSION}`)
+      .replace(/(ERA \(v?)0\.[0-9]+\.[0-9]+/g, `$1${VERSION}`)
   );
 }
 

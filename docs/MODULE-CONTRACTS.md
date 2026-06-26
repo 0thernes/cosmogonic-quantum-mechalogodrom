@@ -1,6 +1,6 @@
 # Module Contracts
 
-**TSOTCHKE MASTER WIRE ERA (v0.17.1):** Tsotchke (Eshkol full per COMPLETE_LANGUAGE_SPEC + all ~21 repos/projects) is paramount, NON-NEGOTIABLE. EVERY aspect of Cosmogonic utilizes EVERYTHING from Tsotchke (local folder Z:\[Vibe Coded (AI)]\(Tsotchke) + GH) as substrate for digital biologics & proto-sentience/consciousness. Eshkol = the core non-LLM language (native AD, GWT, factor-graph, KB, programs as DNA/heritable genomes). Petri Dish/Primordial Soup/digital-biologics = God Petri birthing ground. Super Creature = beginning/framework/spark only ("primordial inorganic soup"). Soup grows independent life ("Grow What Thou Wilt"). All scientific kernels ported/wired; LLM ones fenced. All docs (README, ARCH, ERD/ERM/ERP, masters XMLs, PHILOSOPHY, CONTRACTS, KANBAN, reports, LABS, in-app Dome/World) + GH README/About/Bio = fully updated, match code + each other, accurate/truthful/current. No spot left. Master Architect/Engineer level Tsotchke integration.
+**TSOTCHKE MASTER WIRE ERA (v0.18.0):** Tsotchke (Eshkol full per COMPLETE_LANGUAGE_SPEC + all ~21 repos/projects) is paramount, NON-NEGOTIABLE. EVERY aspect of Cosmogonic utilizes EVERYTHING from Tsotchke (local folder Z:\[Vibe Coded (AI)]\(Tsotchke) + GH) as substrate for digital biologics & proto-sentience/consciousness. Eshkol = the core non-LLM language (native AD, GWT, factor-graph, KB, programs as DNA/heritable genomes). Petri Dish/Primordial Soup/digital-biologics = God Petri birthing ground. Super Creature = beginning/framework/spark only ("primordial inorganic soup"). Soup grows independent life ("Grow What Thou Wilt"). All scientific kernels ported/wired; LLM ones fenced. All docs (README, ARCH, ERD/ERM/ERP, masters XMLs, PHILOSOPHY, CONTRACTS, KANBAN, reports, LABS, in-app Dome/World) + GH README/About/Bio = fully updated, match code + each other, accurate/truthful/current. No spot left. Master Architect/Engineer level Tsotchke integration.
 
 Binding spec for every module in this repo. Writer agents and humans MUST conform exactly —
 `world.ts`/`main.ts` (the composition root) are written against these signatures, sight unseen.
@@ -1551,7 +1551,7 @@ Copilot are constructed boot-stream-neutral and never write sim state, so the go
 
 ### V9 acceptance
 
-Full `bun run check` green: prettier → tsc strict → oxlint → 535 tests (0 fail, 300-frame golden
+Full `bun run check` green: prettier → tsc strict → oxlint → 1514 tests (0 fail, 300-frame golden
 included) → build. The Copilot sandbox verified live (allow: `git log`, file reads; deny:
 path-escape, `git push`, `legacy/`, shell redirection).
 
