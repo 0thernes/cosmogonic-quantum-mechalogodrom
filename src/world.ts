@@ -83,6 +83,7 @@ import { Hud } from './ui/hud';
 import { Observatory } from './ui/observatory';
 import { NhiObservatory } from './ui/nhi-observatory';
 import { MarketTicker } from './ui/market-ticker';
+import { PantheonArchitecturePanel } from './ui/pantheon-architecture-panel';
 import { SuperCreature, type SuperPercept } from './sim/super-creature';
 import {
   GODFORMS,
@@ -600,6 +601,10 @@ export class World {
       this.superAscended = true;
     }
     this.superPanel = new SuperPanel();
+    // GOAL "101 Super Creatures": the ⟁ ARCHITECTURE cycler self-mounts its own dock button + panel,
+    // reads sim/pantheon-breeding directly, and animates each creature/baby's dynamics on demand. It
+    // is fire-and-forget (manages its own rAF + DOM), so it is constructed without retaining a field.
+    void new PantheonArchitecturePanel();
     // NOTE: legacy single register removed; 5 SUPER CREATURES register their own purses below (ECON 9000+i).
     // F-SUPER V32: the masterful many-eyed apex BODY (god-jewel shader) — additive, draws no rng.
     // F-BRAIN V42: every organism's compact 70-param genome brain, on its OWN seeded sub-stream (so the
