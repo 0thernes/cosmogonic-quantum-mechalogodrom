@@ -228,3 +228,33 @@ describe('docs truth law — honest Tsotchke wiring', () => {
     }
   });
 });
+
+// Unresolved git conflict markers must NEVER ship. A botched fleet rebase once left a ">>>>>>> <sha>"
+// line committed in docs/VERIFICATION-ANALYTICAL-DATA.md that NO existing gate caught (prettier accepts
+// it as plain text, and the encoding scans only cover allow-lists). This scans EVERY tracked, non-binary,
+// non-legacy file. The marker strings are built programmatically (repeat()) so this test file stays clean
+// and never matches itself. Only the unambiguous "<<<<<<< " / ">>>>>>> " ends are checked — a bare
+// "=======" line collides with Markdown setext headings, so it is intentionally not matched.
+const CONFLICT_OPEN = '<'.repeat(7) + ' ';
+const CONFLICT_CLOSE = '>'.repeat(7) + ' ';
+const BINARY_EXT =
+  /\.(png|jpe?g|gif|ico|webp|svg|woff2?|ttf|otf|eot|mp[34]|wav|bmp|pdf|zip|gz|lock|wasm)$/i;
+
+describe('docs truth law — no unresolved git conflict markers', () => {
+  test('no tracked text file contains a git conflict marker', async () => {
+    const ls = Bun.spawnSync(['git', 'ls-files']).stdout.toString();
+    const offenders: string[] = [];
+    for (const rel of ls
+      .split('\n')
+      .map((s) => s.trim())
+      .filter(Boolean)) {
+      if (rel.startsWith('legacy/') || BINARY_EXT.test(rel)) continue;
+      const file = Bun.file(rel);
+      if (!(await file.exists())) continue;
+      const text = await file.text();
+      if (text.split('\n').some((l) => l.startsWith(CONFLICT_OPEN) || l.startsWith(CONFLICT_CLOSE)))
+        offenders.push(rel);
+    }
+    expect(offenders).toEqual([]);
+  });
+});

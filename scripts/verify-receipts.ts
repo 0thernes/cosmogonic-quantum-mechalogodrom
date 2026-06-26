@@ -83,9 +83,10 @@ if (count < effectiveFloor)
 // Coverage % is environment-sensitive: Bun instruments a slightly different file set locally vs in
 // CI (observed ~4pp lower in CI), so EXACT cross-environment equality is unsatisfiable — it made
 // every tagged release build fail at this step. Per Dr. Manhattan's numerical canon ("never bare
-// === on derived floats; state tolerances explicitly"), the test COUNT (deterministic) stays exact
-// while coverage is enforced within an explicit ±band. Canonical stays the locally-measured headline
-// that docs publish; this guards against real regression without lying about float identity.
+// === on derived floats; state tolerances explicitly"), the test count is enforced as a FLOOR (above)
+// and coverage within an explicit ±band — neither is checked for exact equality, precisely because both
+// vary by environment. Canonical stays the locally-measured headline that docs publish; this guards
+// against real regression without lying about float identity or pinning an env-dependent count.
 const COV_TOLERANCE_PP = 6;
 if (Math.abs(Number(cov.line) - Number(CANONICAL_LINE_COV)) > COV_TOLERANCE_PP)
   problems.push(

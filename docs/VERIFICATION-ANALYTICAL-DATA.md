@@ -288,4 +288,23 @@ Net: the repo is **true, accurate, current, and defensible**. Every folder and f
 reviewed; the only open items are the documented latent / deploy-gated notes above (e.g. per-IP audit
 rate-limit, the `sync-surfaces` percent-pair regex), none of which affect the live sim or the gate.
 
-> > > > > > > cf48774 (docs(audit): complete MD date-stamp coverage + add §8 coverage attestation)
+## 10 · Scripts + gate-tooling audit (16 scripts, 2026-06-26)
+
+Line-by-line audit of the build/gate scripts (the highest-blast-radius non-`src` code):
+
+- **`build.ts` / `build-pages.ts`** — correct: `dist/` is cleaned before build (no chunk rot); Pages nav
+  rewrites + per-deploy cache-buster are sound and the live nav already uses rewrite-proof `data-nav`.
+- **`verify-receipts.ts`** — correct floor + ±band logic; fixed a stale comment that claimed "the test
+  COUNT stays exact" when it is enforced as a FLOOR (≥1400), not exact.
+- **`sync-surfaces.ts`** — surgical and correct: only present-tense version markers + unambiguous NHSI
+  phrasings are rewritten; historical refs and legit alt-framings are deliberately untouched.
+- **`normalize-docs.ts`** — `fixMojibake` (byte-level) is safe on every file; the `fixLossy`
+  curly-quote→dash heuristic relies on the straight-quote convention. VERIFIED non-active: the only
+  curly-quote files in the tree are under `legacy/` (excluded), so it corrupts nothing today (latent
+  risk documented in-script).
+- **Gate gap found + this very defect:** a stray git conflict marker (a trailing `>`-run + a commit sha)
+  shipped into this ledger — a botched rebase resolution that **no gate caught** (prettier accepts it as
+  text, even re-flowing it into a nested blockquote; docs-truth-law scanned only allow-lists). Removed;
+  added a `docs-truth-law` scan over every tracked non-binary file for conflict markers so it can never
+  ship again. Analysis scripts (`alife-*`, `p1-*`, `sbom`, `gen-filemap`, `bmp2png`, `decode-capture`)
+  are lint+type-clean via the gate and carry no sim/deploy risk.
