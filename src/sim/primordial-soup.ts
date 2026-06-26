@@ -113,7 +113,39 @@ export class PrimordialSoup {
     const wiring = repo?.wiring ?? 0.5;
 
     for (let i = 0; i < SOUP_SLOTS; i++) {
-      if (!this.alive[i]) continue;
+      if (!this.alive[i]) {
+        // REBIRTH WITH HEREDITY (ADR-0009): a dead slot has a per-tick chance to be re-seeded by
+        // breeding two living parents via the genuine seeded `recombine` (inherit + vary), so the
+        // digital-biologics evolution loop actually closes. This branch was previously *below* the
+        // alive-guard and gated on `!eshkolPrograms[i]`; since a slot's program is not cleared on
+        // death, a dead slot was skipped here every tick and could never recover — the documented
+        // rebirth path was unreachable (it bred nothing at runtime).
+        if (rng() < 0.01 * wiring) {
+          const pa = i;
+          const pb = this.pickLivingParent(i, rng);
+          const ga = this.genomes[pa];
+          const gb = pb >= 0 ? this.genomes[pb] : undefined;
+          if (ga && gb) {
+            const child = recombine(ga, gb, rng);
+            this.genomes[i] = child;
+            // Heritable phenotype derived from the bred genome (deterministic, bounded).
+            this.hue[i] = child[0] ?? this.hue[i] ?? 0;
+            this.symmetry[i] = child[1] ?? this.symmetry[i] ?? 0;
+            this.vitality[i] = 0.1 + (child[3] ?? 0.5) * 0.2; // viable inherited starting vitality (mirrors init)
+            // .esk program fingerprint inherited from the genome rather than a free hash.
+            this.eshkolPrograms[i] = ((((child[2] ?? 0) * 1e6) >>> 0) ^ (beat + i)) >>> 0;
+            this.generation[i] =
+              Math.max(this.generation[pa] ?? 0, pb >= 0 ? (this.generation[pb] ?? 0) : 0) + 1;
+          } else {
+            // No living co-parent: founder rebirth (legacy fresh program + baseline vitality).
+            this.eshkolPrograms[i] = ((beat + i) * 2654435761) >>> 0;
+            this.vitality[i] = 0.15;
+            this.generation[i] = (this.generation[i] ?? 0) + 1;
+          }
+          this.alive[i] = 1;
+        }
+        continue;
+      }
       const v = this.vitality[i] ?? 0;
       const c = this.consciousness[i] ?? 0;
       const prog = this.eshkolPrograms[i];
@@ -138,32 +170,6 @@ export class PrimordialSoup {
       );
       if ((this.vitality[i] ?? 0) < 0.05 && (this.generation[i] ?? 0) < 5) {
         this.alive[i] = 0;
-      }
-      if (rng() < 0.01 * wiring && !this.eshkolPrograms[i]) {
-        // REBIRTH WITH HEREDITY: breed the reborn slot from two living parents instead of
-        // re-rolling a fresh genome. Real seeded crossover+mutation (genome.recombine) so the
-        // child INHERITS and varies parental DNA — this closes the digital-biologics evolution
-        // loop (ADR-0009). Falls back to a fresh hash program only when no parents are alive.
-        const pa = i;
-        const pb = this.pickLivingParent(i, rng);
-        const ga = this.genomes[pa];
-        const gb = pb >= 0 ? this.genomes[pb] : undefined;
-        if (ga && gb) {
-          const child = recombine(ga, gb, rng);
-          this.genomes[i] = child;
-          // Derive heritable phenotype from the inherited genome (deterministic, bounded).
-          this.hue[i] = child[0] ?? this.hue[i] ?? 0;
-          this.symmetry[i] = child[1] ?? this.symmetry[i] ?? 0;
-          // .esk program fingerprint inherited from the genome rather than a free hash.
-          this.eshkolPrograms[i] = ((((child[2] ?? 0) * 1e6) >>> 0) ^ (beat + i)) >>> 0;
-          this.generation[i] =
-            Math.max(this.generation[pa] ?? 0, pb >= 0 ? (this.generation[pb] ?? 0) : 0) + 1;
-        } else {
-          // No living co-parent: founder rebirth (legacy fresh program).
-          this.eshkolPrograms[i] = ((beat + i) * 2654435761) >>> 0;
-          this.generation[i] = (this.generation[i] ?? 0) + 1;
-        }
-        this.alive[i] = 1;
       }
     }
   }

@@ -97,10 +97,15 @@ describe('Primordial soup (Petri dish growth)', () => {
   test('same seed produces identical soup telemetry', () => {
     const a = new PrimordialSoup(777);
     const b = new PrimordialSoup(777);
-    const rng = mulberry32(777);
+    // Each soup must be driven by its OWN identically-seeded stream. Sharing one rng across both
+    // (a.update then b.update in the same iteration) hands them different slices of the stream, so
+    // once the heredity-rebirth path is live (ADR-0009) they desync — the determinism this test
+    // checks is per-seed, not per-shared-cursor.
+    const rngA = mulberry32(777);
+    const rngB = mulberry32(777);
     for (let i = 0; i < 20; i++) {
-      a.update(0, i, rng);
-      b.update(0, i, rng);
+      a.update(0, i, rngA);
+      b.update(0, i, rngB);
     }
     expect(a.snapshot().tick).toBe(b.snapshot().tick);
     expect(a.snapshot().meanVitality).toBe(b.snapshot().meanVitality);
