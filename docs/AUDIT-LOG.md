@@ -2,8 +2,7 @@
 
 **One place for the project's audit history.** New audits, reviews, and fix-passes append a dated
 entry HERE (newest first) instead of spawning a new standalone report file each time. The dated
-reports under [`docs/reports/`](./reports/) and the `docs/*AUDIT*` / `docs/*REPORT*` files are a
-**redundant per-audit report files were **consolidated into the dated entries below and removed\*\* (full content in git history). Only a handful of canonical reports survive, listed at the bottom. Live facts (version, test/coverage receipts) are propagated automatically by
+reports under [`docs/reports/`](./reports/) and the `docs/*AUDIT*` / `docs/*REPORT*` files are a **frozen historical archive**: the redundant per-audit report files were consolidated into the dated entries below and removed (full content preserved in git history), and only a handful of canonical reports survive, listed at the bottom. Live facts (version, test/coverage receipts) are propagated automatically by
 `scripts/sync-surfaces.ts`; this log records what changed and why.
 
 ---
@@ -35,6 +34,11 @@ without changing any wired behavior:
   `ARCHITECTURE.md` stale "0.16.1+ master" -> 0.17.1+.
 - **Report sprawl consolidated:** this centralized log replaces the practice of one-file-per-audit;
   the standalone 2026-06-26 line-by-line report was folded into the entry below.
+- **Last version-drift markers brought into the propagator:** `sync-surfaces` now also rewrites the
+  present-tense headers that stamp the current version next to current data — `docs/ERD.md`
+  "Scope (vX)", `docs/KANBAN.md` "Status (vX)", `docs/MODULE-CONTRACTS.md` "...WIRE ERA (vX)" — which
+  had stuck at v0.17.1 while main shipped v0.18.0. One occurrence each; historical release tags (a
+  different shape) are left untouched, so no current-state version stamp can silently drift again.
 
 ## 2026-06-26 — Line-by-line source audit + fixes
 
