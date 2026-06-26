@@ -105,6 +105,14 @@ function syncVersion(s: string): string {
       .replace(/(Scope \(v?)0\.[0-9]+\.[0-9]+/g, `$1${VERSION}`)
       .replace(/(Status \(v?)0\.[0-9]+\.[0-9]+/g, `$1${VERSION}`)
       .replace(/(ERA \(v?)0\.[0-9]+\.[0-9]+/g, `$1${VERSION}`)
+      // docs.html prose current-version slots the patterns above missed (left them stuck at 0.12.0):
+      //   the file-tree note "version history -> X" and "(0.7.0 -> X, Tsotchke Petri full, current)".
+      // Scoped tightly so they never touch a historical era label.
+      .replace(/(version history (?:&rarr;|→)\s*)v?0\.[0-9]+\.[0-9]+/g, `$1${VERSION}`)
+      .replace(
+        /((?:&rarr;|→)\s*)v?0\.[0-9]+\.[0-9]+(,\s*Tsotchke Petri full, current)/g,
+        `$1${VERSION}$2`,
+      )
   );
 }
 
