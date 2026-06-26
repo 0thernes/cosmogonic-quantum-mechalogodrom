@@ -175,7 +175,7 @@ export function petriDishBeat(
   );
   // Wire the REAL computed QGT curvature into state — it was frozen at the init 0.5 and that stale value
   // was fed into triggerBrutalRelease below; now the genuine per-beat qgeOut.curvature drives it.
-  state.qgtCurvature = clamp01(qgeOut.curvature);
+  state.qgtCurvature = Math.max(0, Math.min(1, qgeOut.curvature));
   const ulgField = ulgFieldSample(archonIdx * 0.2, beat * 0.01, primary.hue, beat);
   const ulgTriad = ulgTriadHandoff(ws.broadcastGain, sub[1] ?? 0.5, state.aliveness);
 
