@@ -1,3 +1,5 @@
+<!-- reviewed: 2026-06-26 | repo-wide consistency audit | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+
 # Changelog
 
 All notable changes to this project will be documented in this file.

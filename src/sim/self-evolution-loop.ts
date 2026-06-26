@@ -251,6 +251,7 @@ export class SelfEvolutionLoop {
       this.metrics = newMetrics;
       this.modificationsApplied++;
       this.history.push({ ...newMetrics });
+      if (this.history.length > 500) this.history.shift(); // bounded history (no unbounded growth)
       return true;
     } else if (newScore < this.config.rollbackThreshold * currentScore) {
       // Rollback: fitness dropped too much
@@ -260,6 +261,7 @@ export class SelfEvolutionLoop {
       // Marginal degradation: keep for exploration
       this.metrics = newMetrics;
       this.history.push({ ...newMetrics });
+      if (this.history.length > 500) this.history.shift(); // bounded history (no unbounded growth)
       return true;
     }
   }
