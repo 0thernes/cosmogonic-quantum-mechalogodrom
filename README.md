@@ -602,6 +602,45 @@ Full detail in docs/.
 - [CONTRIBUTING.md](./CONTRIBUTING.md) · [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md) ·
   [SECURITY.md](./SECURITY.md) · [CHANGELOG.md](./CHANGELOG.md)
 
+## A-Life comparative analysis (vs 25 known systems)
+
+A reproducible, **code-grounded** comparison of this repo against 25 well-known Artificial-Life /
+open-ended-evolution / digital-organism systems (Tierra, Avida, Polyworld, Framsticks, Karl Sims, Creatures,
+Lenia, ALIEN, ASAL, and more). Full report — **11 charts**, per-axis `file:line` code-grounding, and an
+adversarial novelty defense — in
+**[docs/reports/2026-06-26-ALIFE-COMPARATIVE-AUDIT.md](./docs/reports/2026-06-26-ALIFE-COMPARATIVE-AUDIT.md)**.
+Every figure is computed (never hand-typed) by three deterministic engines from one CSV:
+[`alife-comparison-stats.ts`](./scripts/alife-comparison-stats.ts),
+[`alife-comparison-geometry.ts`](./scripts/alife-comparison-geometry.ts),
+[`alife-codeground-sensitivity.ts`](./scripts/alife-codeground-sensitivity.ts).
+
+The 25 peers are literature judgments; the one self-scored row (this repo) was re-audited against the actual
+TypeScript source by a 9-agent pass — so the headline is shown **two ways**, honest about the gap:
+
+| Metric                         | Self-scored | Code-grounded (re-audited vs source) |
+| ------------------------------ | ----------: | -----------------------------------: |
+| Breadth (mean of 9 axes)       |    4.44 / 5 |                         **3.68 / 5** |
+| Rank among 26 systems          |          #1 |                               **#1** |
+| z-score vs population          |      +3.01σ |                           **+2.10σ** |
+| Mahalanobis vs peer centroid   |       10.27 |          **8.02** (≈ 4.1× peer mean) |
+| Systems that dominate it (9-D) |           0 |                                **0** |
+| Breadth lead over nearest peer |       +0.94 |                            **+0.18** |
+
+<p align="center">
+  <img src="./docs/reports/assets/alife-breadth-ranked.svg" alt="Ranked breadth of integrated mechanisms — Cosmogonic ranks #1 of 26" width="49%">
+  <img src="./docs/reports/assets/alife-pca.svg" alt="PCA of 26 A-Life systems — Cosmogonic is a lone outlier on PC1" width="49%">
+</p>
+
+![Nine-axis capability radar — Cosmogonic vs survey mean vs nearest peer ALIEN](./docs/reports/assets/alife-radar-profile.svg)
+
+**Honest reading.** The lead is real but concentrated in the field's two emptiest axes — consciousness-theory
+instrumentation (+4.60σ) and substrate pluralism (+3.66σ). Meanwhile **scientific maturity is low (1.5 / 5)**,
+ecology and open-endedness fall to average-or-below once code-grounded, and two consciousness-theory modules
+are real math that is **not yet wired** into the loop. Novelty is **by integration** (0 hard refutations in an
+adversarial hunt) — **not** the first A-Life system and **not** evidence of sentience (Butlin **8/14 met +
+6/14 partial**, computational indicators only; Tsotchke is real MIT quantum math, lacking only a physical QPU
+= a speed/scale limit, not a correctness one).
+
 ## License & legal
 
 **Owned by 0thernes — © 2026 0thernes. Non-commercial research & play license.**
