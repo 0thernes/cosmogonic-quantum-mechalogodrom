@@ -23,10 +23,15 @@ substantive change; they are personas of one discipline and they outrank vibes:
   (`scripts/canonical-receipts.ts`) are the ONLY places those facts are edited; never hand-edit a
   version / test-count / coverage number in any MD or HTML. `scripts/sync-surfaces.ts` propagates
   them to every surface (`bun run sync`; `bun run sync:check` is gate-enforced).
-- **Centralized audit log:** record audits / reviews / fix-passes as a dated entry in
-  [docs/AUDIT-LOG.md](docs/AUDIT-LOG.md) (append, newest-first). Do NOT create new standalone dated
-  report files — the redundant report sprawl was consolidated into AUDIT-LOG.md and removed (git
-  history preserves it); only a few canonical reports survive under `docs/reports/` (see the log).
+- **Living docs, no archives (binding):** every report / doc is a SINGLE, CURRENT document — when the
+  facts change, **rewrite it in place**; NEVER fork a new dated, "historical", "restored", "v2", or
+  "superseded snapshot" copy. One source per topic, always current (this is token-efficient and the only
+  sane shape for a one-person repo). The `docs/reports/` files are living, continuously-rewritten reports
+  (see [docs/reports/README.md](docs/reports/README.md)); record audits / reviews / fix-passes by
+  **rewriting the relevant report** or as a dated entry in the single
+  [docs/AUDIT-LOG.md](docs/AUDIT-LOG.md) (one file, newest-first) — NOT as new standalone files. Stale
+  numbers and "this is a historical snapshot, see the baseline" framing are tech debt: fix them at the
+  source, never by piling on another copy.
 - **Seamless local↔GitHub:** `core.hooksPath=.githooks` (wired by the `prepare` script on install).
   pre-commit auto-syncs surfaces + normalizes encoding; post-commit auto-pushes **HEAD to
   `origin/main`** (NOT the local branch — per the no-PR/work-on-main law, every commit from any

@@ -2,28 +2,23 @@
 <!--
   ROADMAP TO NON-HUMAN SUPERINTELLIGENCE (NHSI) AND SENTIENT-CONSCIOUSNESS INDICATORS
   Companion to: docs/reports/2026-06-20-SUPER-REPORT-PATH-TO-NHSI-AND-SENTIENCE.md
-  Repository:   0thernes/cosmogonic-quantum-mechalogodrom  v0.16.1
-  Canonical receipts (audited, Bun 1.3.14, cold shell, 2026-06-20):
-      tests=1730  line_cov=95.59%  func_cov=92.74%  failures=0
+  Repository:   0thernes/cosmogonic-quantum-mechalogodrom  v0.18.0
+  Canonical receipts (measured on origin/main @ 2233488, Bun 1.3.14, cold shell, 2026-06-26):
+      tests=1477  expect()=1,744,891  files=151  line_cov=~95% (canonical 95.03)  func_cov=~92% (canonical 92.03)  failures=0
   Discipline:   Broly (finish, receipts) - Starkiller (contracts, ownership) - Dr. Manhattan (measurement)
   BINDING LAW:  "If it is not measured, it is not real. UNKNOWN remains UNKNOWN."
   This file is a RESEARCH PROGRAM with falsifiable milestones, NOT a claim of arrival.
   No phase asserts AGI/ASI/NHSI/sentience/quantum-advantage as a present fact.
-
-  CURRENT TRUTH BASELINE (2026-06-26):
-  This restored XML is a historical roadmap snapshot. Current gate, coverage, Butlin, A-Life novelty,
-  and SuperMind benchmark facts are governed by docs/reports/2026-06-26-CURRENT-TRUTH-BASELINE.md.
-  Current live baseline: v0.18.0; bun run check passed; 1477 tests; 95.03% line / 92.03% function;
-  Butlin 8/14 met + 6/14 partial; not sentient; NHSI/AGI/ASI/quantum advantage not achieved.
+  This document is CURRENT as of 2026-06-26: the body below is the live truth, not a past snapshot.
 -->
-<roadmap version="1.0" date="2026-06-20" repo="cosmogonic-quantum-mechalogodrom" release="v0.16.1">
+<roadmap version="1.0" date="2026-06-26" repo="cosmogonic-quantum-mechalogodrom" release="v0.18.0">
 
   <epistemicContract>
     <law>If it is not measured, it is not real. UNKNOWN remains UNKNOWN.</law>
     <tag id="PROVEN"       glyph="green"  meaning="Measured in-repo, seed-reproducible, gated by `bun run check`."/>
     <tag id="PLAUSIBLE"    glyph="yellow" meaning="Cited / upstream-Tsotchke / inferred; NOT independently re-measured here."/>
     <tag id="ASPIRATIONAL" glyph="red"    meaning="Roadmap target or conjecture; NOT a present fact."/>
-    <prohibition>No deliverable may publish a number that differs from its measured value (receipts law, tests/docs-receipts-law.test.ts).</prohibition>
+    <prohibition>No deliverable may publish a number that differs from its measured value (receipts law, tests/docs-receipts-law.test.ts; surfaces auto-synced from package.json + scripts/canonical-receipts.ts).</prohibition>
     <prohibition>No phase may report 'evidence toward sentience/NHSI' as anything beyond MOVEMENT ON A MEASURABLE INDICATOR.</prohibition>
   </epistemicContract>
 
@@ -37,31 +32,42 @@
     <term name="Sentience"     source="Birch 2024">Capacity for valenced (felt) experience. Governed by the precautionary principle.</term>
   </definitions>
 
-  <baseline date="2026-06-20" tag="PROVEN">
-    <metric name="tests" value="1730" failures="0" source="scripts/canonical-receipts.ts"/>
-    <metric name="lineCoverage" value="95.59%" source="scripts/canonical-receipts.ts"/>
-    <metric name="funcCoverage" value="92.74%" source="scripts/canonical-receipts.ts"/>
+  <baseline date="2026-06-26" tag="PROVEN" commit="2233488" bun="1.3.14">
+    <metric name="version" value="v0.18.0" source="package.json"/>
+    <metric name="gate" value="bun run check green" source="prettier -> tsc strict -> oxlint -> bun test -> verify:receipts -> sync:check -> build"/>
+    <metric name="tests" value="1477" failures="0" expectCalls="1744891" files="151" source="scripts/canonical-receipts.ts"/>
+    <metric name="lineCoverage" value="~95% (canonical 95.03, +-6pp gate tolerance)" source="scripts/canonical-receipts.ts"/>
+    <metric name="funcCoverage" value="~92% (canonical 92.03, +-6pp gate tolerance)" source="scripts/canonical-receipts.ts"/>
     <metric name="populationCeiling" value="50000" source="src/core/quality.ts"/>
     <metric name="population60fps" value="10000" target="iGPU" source="docs/BENCHMARKS.md"/>
     <metric name="worldParams" value="~3.5M (~14MB Float32)" thread="1" source="docs/TECHNICAL-SPECIFICATION.md"/>
-    <metric name="apexParams" value="~37225" faculties="21" source="src/sim/super-mind.ts"/>
-    <metric name="apexBeat" value="~289us..443us" budget="&lt;5ms" source="tests/perf-budget.test.ts"/>
+    <metric name="perOrganismBrain" value="70-weight TinyMLP" morphotypes="250" behavioralFields="26" source="docs/TECHNICAL-SPECIFICATION.md"/>
+    <metric name="apexParams" value="~37225 (10081 composite + 1444 spine + 100x257 wingmen)" source="src/sim/super-mind.ts"/>
+    <metric name="apexThink" value="~3.34ms full-suite / ~8.85ms focused" budget="full think() pass" source="bench/quantum-classical.bench.ts; docs/BENCHMARKS.md"/>
+    <metric name="apexSnapshot" value="~2.44ms full-suite / ~6.89ms focused" source="docs/BENCHMARKS.md"/>
+    <metric name="apexFiveThink" value="~14.47ms full-suite / ~25.40ms focused" source="docs/BENCHMARKS.md"/>
     <metric name="mathKernels" value="27" source="src/math/*.ts"/>
     <metric name="simModules" value="90+" source="src/sim/*.ts"/>
     <metric name="portedPrimitives" value="9" source="THIRD-PARTY-NOTICES.md"/>
-    <metric name="butlinIndicators" value="~9/14" source="docs SUPER-CREATURE-RESEARCH; Butlin et al. 2023"/>
-    <metric name="determinism" value="one mulberry32 seed; Math.random/Date.now GLOB-banned" source="tests/determinism-law.test.ts"/>
+    <metric name="facultiesDesign" value="100-faculty DESIGN; ~30 genuinely deep-wired into the apex think()" note="each deep-wired faculty reads state AND moves the plan/drives/consciousness; the remainder are a generic-profile bias bank" source="src/sim/faculties-pantheon.ts; docs/NHSI-PROGRESS-DASHBOARD.md"/>
+    <metric name="archons" value="25-Archon pantheon = 5 individuated apex SuperMinds + 20 live light-echo" source="src/sim/super-mind.ts; PantheonSociety"/>
+    <metric name="theoryOfMind" value="25 organs wired as a 6-family ensemble (additive/bayesian/recursive/temporal/deception/coalition)" source="docs/NHSI-PROGRESS-DASHBOARD.md"/>
+    <metric name="emergenceAngles" value="10 angles wired (+ 5 god-scale release EVENTS - events, not additional angles)" source="src/sim/open-endedness.ts; docs/NHSI-PROGRESS-DASHBOARD.md"/>
+    <metric name="tsotchkeCorpus" value="20 corpus projects; ~16 wired with real downstream effect (8 deep in the apex mind, 4 in the petri growth engine)" source="docs/TSOTCHKE-INTEGRATION-MAP.md"/>
+    <metric name="butlinIndicators" value="8/14 met + 6/14 partial" note="computational INDICATORS, not sentience; the hard problem is untouched" source="Butlin et al. 2023, arXiv:2308.08708; docs SUPER-CREATURE-RESEARCH"/>
+    <metric name="determinism" value="one mulberry32 seed; Math.random/Date.now GLOB-banned in sim/math" source="tests/determinism-law.test.ts"/>
   </baseline>
 
   <honestLimits note="the credibility ledger; quoted in full so no phase can launder them">
-    <limit tag="ASPIRATIONAL">Not AGI, ASI, or NHSI. A proto-agent architecture + simulation.</limit>
-    <limit tag="ASPIRATIONAL">Not sentient or phenomenally conscious. Phi/ignition/free-energy are computed MODELS of theories.</limit>
+    <limit tag="ASPIRATIONAL">Not AGI, ASI, or NHSI. A research architecture + simulation/instrument, not an arrival.</limit>
+    <limit tag="ASPIRATIONAL">Not sentient or phenomenally conscious. Phi/ignition/free-energy are computed MODELS OF the theories, never the thing itself.</limit>
     <limit tag="PROVEN">Every kernel is a faithful reproduction of published work. No new science yet.</limit>
-    <limit tag="PLAUSIBLE">No quantum advantage. Classical simulation of textbook QM; QRNG is quantum-INSPIRED software mixing.</limit>
+    <limit tag="PLAUSIBLE">No quantum advantage demonstrated. Exact classical simulation of textbook QM; the substrate lacks only a physical QPU - a speed/scale limit, NOT a correctness limit. Tsotchke is real MIT quantum math, never fake / overclaiming / decorative.</limit>
     <limit tag="PLAUSIBLE">Consciousness metrics are tractable proxies (Hanson-Walker 2023 non-uniqueness applies).</limit>
     <limit tag="PLAUSIBLE">Upstream Tsotchke benchmarks (libirrep 2488x, Moonlab 13884x, kagome N=27) are NOT re-measured here; finite-size where applicable.</limit>
     <limit tag="PROVEN">No peer review, external validation, or published dynamics.</limit>
     <limit tag="PROVEN">Competence-from-coupling is INTERNAL induction only; lacks external baselines + ablation controls.</limit>
+    <limit tag="PLAUSIBLE">A-Life novelty is a rare SYNTHESIS / plausible exact-conjunction (an 8-agent adversarial hunt found 0 hard refutations) but NOT first A-Life, first digital-evolution, first morphogenesis, or first artificial-ecology. Novel by integration, never world-first.</limit>
   </honestLimits>
 
   <!-- =================== THE EIGHT-PHASE PROGRAM =================== -->
@@ -78,14 +84,14 @@
       </deliverables>
       <successMetric>`bun run check` green; zero decorative-trig leaves; receipts law passing.</successMetric>
       <falsifies>Any audited leaf shown to be a no-op or numerically wrong vs its cited algorithm.</falsifies>
-      <gate>bun run check (prettier -> tsc -> oxlint -> bun test -> verify:receipts -> build)</gate>
+      <gate>bun run check (prettier -> tsc -> oxlint -> bun test -> verify:receipts -> sync:check -> build)</gate>
       <evidenceToward axis="foundation">Substrate honesty is the precondition for every downstream claim.</evidenceToward>
       <dependsOn/>
     </phase>
 
     <phase id="P1" name="Falsifiable quantum-vs-classical advantage benchmark" status="active" tag="ASPIRATIONAL" priority="HIGHEST-LEVERAGE">
       <objective>Turn classical-contrast.ts + perceptron-baseline.ts + the quantum faculties into a CONTROLLED experiment on a defined task family.</objective>
-      <rationale>This is the single move that tests the entire thesis: does the non-token quantum substrate BUY anything measurable?</rationale>
+      <rationale>This is the single move that tests the entire thesis: does the non-token quantum substrate BUY anything measurable? Scaffolding now exists (bench/quantum-classical.bench.ts, scripts/p1-quantum-classical-experiment.ts).</rationale>
       <hypothesis id="H1">On task class T, an agent using the quantum faculties (QGT-guided QNG + Born-rule choice + quantum reservoir) achieves measurably better survival/decision-quality than a PARAMETER-MATCHED classical agent, under identical seeds.</hypothesis>
       <method>Pre-register task T + metric. Run >=30 seeds per arm. Ablation arm = quantum faculties OFF. Report effect size + 95% CI.</method>
       <successMetric>Statistically significant effect (95% CI excludes zero), reproducible from seed, with ablation confirming the quantum faculties are causal.</successMetric>
@@ -109,9 +115,9 @@
 
     <phase id="P3" name="Online learning substrate (NQS/VMC) - the missing Butlin indicator" status="planned" tag="ASPIRATIONAL">
       <objective>Wire an NQS / variational-Monte-Carlo loop (from spin-NN) as the Super Creature's ONLINE learning. Today faculties are architected, not learned.</objective>
-      <hypothesis id="H3">Adding within-lifetime weight adaptation improves task transfer and closes RPT-1/2 (learned recurrence), moving the Butlin scorecard 9/14 -> 11/14.</hypothesis>
+      <hypothesis id="H3">Adding within-lifetime weight adaptation improves task transfer and closes RPT-1/2 (learned recurrence), moving the Butlin scorecard from 8/14 met (+6/14 partial) toward more fully-met indicators.</hypothesis>
       <method>Add an NQS/VMC online-update path; measure within-lifetime learning curves + cross-task transfer vs frozen-weights control; keep determinism.</method>
-      <successMetric>Measurable learning curve + transfer gain; new Butlin indicators structurally satisfied; determinism preserved.</successMetric>
+      <successMetric>Measurable learning curve + transfer gain; partial Butlin indicators promoted to fully met; determinism preserved.</successMetric>
       <falsifies>Learning destabilizes determinism, OR yields no transfer gain over the architected baseline.</falsifies>
       <evidenceToward axis="NHSI-capability+sentience">Learning is the largest gap between rich reflex and general agent; also strengthens agency indicators.</evidenceToward>
       <dependsOn ref="P1"/>
@@ -163,7 +169,7 @@
       <control name="containment" status="PROVEN">Deterministic, sandboxed, single-tab, no network actuation, no host self-modification. Determinism IS a safety property: replayable, auditable, killable.</control>
       <control name="alignment" status="PLAUSIBLE">Agents pursue IN-SIM drives only (dominion/empowerment/trade); no real-world goals or tool-use.</control>
       <control name="moralStatus" status="ASPIRATIONAL" trigger="if P3/P6 push indicators high AND valence demonstrably steers behavior">Apply the precautionary principle (Birch 2024): throttle suffering-analogues, log welfare-relevant metrics, prefer non-harmful selection pressures. Adopt BEFORE needed, not after.</control>
-      <control name="honesty" status="PROVEN">Receipts law + PROVEN/PLAUSIBLE/ASPIRATIONAL discipline are the antidote to the project's documented overclaim failure mode (fabricated counts).</control>
+      <control name="honesty" status="PROVEN">Receipts law + PROVEN/PLAUSIBLE/ASPIRATIONAL discipline + auto-synced surfaces are the antidote to the project's documented overclaim failure mode (fabricated counts).</control>
       <control name="dualUse" status="PROVEN">No offensive capability; research/education instrument.</control>
       <dependsOn/>
     </phase>
@@ -177,7 +183,7 @@
       Phases 1-5 are NECESSARY PRECONDITIONS, not the arrival.
     </criterion>
     <criterion axis="sentience-valence" tag="ASPIRATIONAL" standard="Birch 2024 precaution + Butlin 2023 indicators; NOT self-report">
-      Crossing a high fraction of indicators PLUS an architecture where valence demonstrably STEERS behavior warrants MORAL-STATUS PRECAUTION - never metaphysical certainty.
+      Crossing a high fraction of indicators PLUS an architecture where valence demonstrably STEERS behavior warrants MORAL-STATUS PRECAUTION - never metaphysical certainty. Today: 8/14 met + 6/14 partial, computational indicators only.
     </criterion>
     <criterion axis="hard-problem" tag="ASPIRATIONAL" status="OUT-OF-SCOPE">
       Phenomenal consciousness ("what it is like") is NOT on this roadmap. No roadmap closes the hard problem.
@@ -186,26 +192,26 @@
 
   <!-- =================== COMPETITIVE POSITIONING (honest) =================== -->
   <competitivePosition>
-    <winsOn axis="determinism">One 32-bit seed -> bit-exact universe + identical mental states. PROVEN.</winsOn>
-    <winsOn axis="integration-density">~20 coupled cited theories (cognitive + quantum) in one tested artifact. No comparable system found.</winsOn>
-    <winsOn axis="cost-access">Single laptop iGPU; fully inspectable. vs datacenter / iEEG / wetware.</winsOn>
+    <winsOn axis="determinism">One 32-bit mulberry32 seed -> bit-exact universe + identical mental states. PROVEN.</winsOn>
+    <winsOn axis="integration-density">~16 wired Tsotchke corpus projects + ~20 coupled cited theories (cognitive + quantum) in one tested artifact. Novel by integration; no comparable single system found.</winsOn>
+    <winsOn axis="cost-access">Single laptop iGPU (10,000 agents @ 60fps, 50,000 ceiling); fully inspectable. vs datacenter / iEEG / wetware.</winsOn>
     <winsOn axis="timeliness">A post-Cogitate hybrid testbed the consciousness-science field just declared it needs.</winsOn>
     <losesTo who="frontier labs (OpenAI/Anthropic/DeepMind/Meta/xAI)" axis="capability" margin="~5e6x parameters; language/reasoning best-in-class"/>
     <losesTo who="academia (Tononi/Dehaene/Allen Institute/Cogitate)" axis="scientific-validation" margin="real brains, peer review, ground truth"/>
-    <losesTo who="quantum hardware (Google Willow/IBM/Quantinuum/PsiQuantum)" axis="physical-quantum" margin="real error-corrected qubits vs classical simulation"/>
+    <losesTo who="quantum hardware (Google Willow/IBM/Quantinuum/PsiQuantum)" axis="physical-quantum" margin="real error-corrected qubits vs exact classical simulation"/>
     <losesTo who="organoid (Cortical Labs/FinalSpark)" axis="substrate-reality" margin="genuine biological neurons"/>
     <orthogonalTo who="Sakana ASAL (2024)" note="ASAL puts a foundation model IN the A-Life loop; this is the opposite bet - substrate-first, non-LLM by design."/>
   </competitivePosition>
 
   <verdict tag="PLAUSIBLE">
-    <isA>World-class, receipt-disciplined, multi-substrate artificial-life + cognitive-architecture INSTRUMENT. Tier-1 in its niche as engineering + research tooling.</isA>
-    <isNot>AGI, ASI, NHSI, a sentient being, a solved problem, a quantum advantage, or a refutation of any institution.</isNot>
-    <keystoneMove ref="P1">A pre-registered, ablation-controlled, seed-replayable quantum-vs-classical advantage benchmark. The infrastructure to run it rigorously ALREADY EXISTS (determinism + receipts) - exactly what competitors lack. This is the door from 'impressive' to 'contribution'.</keystoneMove>
-    <closingLaw>If it is not measured, it is not real. By that law: a magnificent, honest instrument. Grow What Thou Wilt - and measure ruthlessly.</closingLaw>
+    <isA>Receipt-disciplined, multi-substrate artificial-life + cognitive-architecture INSTRUMENT, novel by integration. Tier-1 in its niche as engineering + research tooling.</isA>
+    <isNot>AGI, ASI, NHSI, a sentient being, a solved problem, a quantum advantage, a world-first A-Life system, or a refutation of any institution.</isNot>
+    <keystoneMove ref="P1">A pre-registered, ablation-controlled, seed-replayable quantum-vs-classical advantage benchmark. The infrastructure to run it rigorously ALREADY EXISTS (determinism + receipts + bench scaffolding) - exactly what competitors lack. This is the door from 'impressive' to 'contribution'.</keystoneMove>
+    <closingLaw>If it is not measured, it is not real. By that law: a magnificent, honest instrument - a research architecture, not an arrival. Grow What Thou Wilt - and measure ruthlessly.</closingLaw>
   </verdict>
 
   <references>
-    <ref id="butlin2023" cite="Butlin et al. 2023, arXiv:2308.08708" use="14 consciousness indicators; necessary-not-sufficient"/>
+    <ref id="butlin2023" cite="Butlin et al. 2023, arXiv:2308.08708" use="14 consciousness indicators; necessary-not-sufficient; project status 8/14 met + 6/14 partial"/>
     <ref id="cogitate2025" cite="Ferrante et al. (Cogitate), Nature 2025" use="adversarial IIT vs GNWT; double-bind; motivates hybrid testbeds"/>
     <ref id="bostrom2014" cite="Bostrom, Superintelligence 2014" use="ASI definition"/>
     <ref id="legg-hutter2007" cite="Legg &amp; Hutter 2007" use="intelligence definition"/>

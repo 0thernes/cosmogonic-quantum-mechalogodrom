@@ -1,51 +1,48 @@
-# Current Truth Baseline For Restored Reports
+# Current Facts — Cosmogonic Quantum Mechalogodrom
 
-**Date:** 2026-06-26  
-**Canonical location:** `docs/reports/` inside the Git repository  
-**Non-canonical source folder:** `C:\Users\Alexa\Downloads\COSMOGONIC REPORTS`
+**Date:** 2026-06-26 · canonical one-glance quick-reference.
 
-This file is the current-state guardrail for the restored dated report archive. The older reports remain
-valuable as point-in-time research and strategy snapshots, but their body text must not be read as current
-where it conflicts with this baseline or with the live repo gates.
+Every report and doc in this repo reflects these measured values. They are propagated from
+`scripts/canonical-receipts.ts` + `package.json` by `scripts/sync-surfaces.ts` and gate-enforced
+(`bun run sync:check`, `bun run verify:receipts`). This is a single current-facts sheet, not an archive —
+when the numbers change it is rewritten in place.
 
-## Current Measured Baseline
+## Measured gate
 
-| Fact               | Current verified value                                                                    |
-| ------------------ | ----------------------------------------------------------------------------------------- |
-| Repo package       | `v0.18.0`                                                                                 |
-| Full gate          | `bun run check` passed on 2026-06-26                                                      |
-| Gate stages        | `format:check`, `typecheck`, `lint`, `bun test`, `verify:receipts`, `sync:check`, `build` |
-| Test result        | `1477 pass`, `0 fail`, `1744891 expect() calls`, `151` test files                         |
-| Coverage receipt   | `95.03%` line, `92.03%` function                                                          |
-| Build result       | `7` artifacts emitted to `dist/`                                                          |
-| Public sync source | `scripts/canonical-receipts.ts`                                                           |
+| Fact          | Value                                                                                     |
+| ------------- | ----------------------------------------------------------------------------------------- |
+| Repo package  | `v0.18.0`                                                                                 |
+| Full gate     | `bun run check` green (2026-06-26)                                                        |
+| Gate stages   | `format:check`, `typecheck`, `lint`, `bun test`, `verify:receipts`, `sync:check`, `build` |
+| Tests         | `1477 pass`, `0 fail`, `1,744,891 expect() calls`, `151` test files                       |
+| Coverage      | `~95%` line / `~92%` function (canonical 95.03 / 92.03; ±6 pp env-jitter, gate-enforced)  |
+| Build         | `7` artifacts emitted to `dist/`                                                          |
+| Single source | `scripts/canonical-receipts.ts` + `package.json`                                          |
 
-## Current Scientific / Claim Baseline
+## Claim baseline
 
-| Claim area                | Current truthful framing                                                                                                               |
-| ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| Sentience / consciousness | **Not demonstrated. Not claimed.** Butlin-style indicators are computational proxies only.                                             |
-| Butlin scorecard          | **8/14 met + 6/14 partial**, not "14/14 achieved."                                                                                     |
-| NHSI / AGI / ASI          | Research target and architecture program, not achieved capability.                                                                     |
-| Quantum advantage         | Not demonstrated; Tsotchke-derived quantum math is classically simulated unless a physical QPU is added.                               |
-| A-Life novelty            | Rare synthesis and plausible exact-conjunction novelty; **not** first A-Life, digital evolution, morphogenesis, or artificial ecology. |
-| GOAL5 / SuperMind budget  | Old sub-millisecond and `<2%` 5-Archon frame-budget claims are stale. Current live benches show millisecond-scale costs.               |
+| Claim area                | Truthful framing                                                                                                                                                                                            |
+| ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Sentience / consciousness | **Not demonstrated, not claimed.** Butlin-style indicators are computational proxies only; the hard problem is untouched.                                                                                   |
+| Butlin scorecard          | **8/14 met + 6/14 partial** — never "9/14", never "14/14 achieved".                                                                                                                                         |
+| Faculties                 | **100-faculty design, ~30 genuinely deep-wired** into the apex `think()`; the rest are a generic-profile bias bank.                                                                                         |
+| Archons                   | **25-Archon pantheon = 5 individuated apex minds + 20 live light-echo.**                                                                                                                                    |
+| Emergence                 | **10 angles wired** (+ 5 god-scale release events — events, not additional angles).                                                                                                                         |
+| Tsotchke                  | **20 corpus projects, ~16 wired** with real downstream effect. Real MIT quantum math (never "fake"); lacks only a physical QPU = a speed/scale limit, not correctness.                                      |
+| NHSI / AGI / ASI          | Research target + architecture program, not achieved capability.                                                                                                                                            |
+| Quantum advantage         | Not demonstrated; the Tsotchke quantum math is an exact classical simulation unless a physical QPU is added.                                                                                                |
+| A-Life novelty            | Rare synthesis / plausible exact-conjunction (0 hard refutations in an 8-agent hunt); **not** first A-Life, digital evolution, morphogenesis, or artificial ecology. Novel by integration, not world-first. |
+| SuperMind frame budget    | Millisecond-scale (see below). The old sub-millisecond / `<2%` 5-Archon claims are stale and not repeated.                                                                                                  |
 
-## Current SuperMind Benchmark Baseline
+## SuperMind benchmark
 
-Measured on 2026-06-26, Bun 1.3.14, Intel Core Ultra 9 275HX:
+Measured 2026-06-26, Bun 1.3.14, Intel Core Ultra 9 275HX:
 
 | Operation              | Full bench suite | Focused `bench/super-mind.bench.ts` |
 | ---------------------- | ---------------: | ----------------------------------: |
 | `SuperMind.think()`    |    `3.34 ms` avg |                       `8.85 ms` avg |
 | `SuperMind.snapshot()` |    `2.44 ms` avg |                       `6.89 ms` avg |
-| `5x think()` batch     |   `14.47 ms` avg |                      `25.40 ms` avg |
+| `5× think()` batch     |   `14.47 ms` avg |                      `25.40 ms` avg |
 
-The current evidence supports an engineering-readiness claim, not a solved frame-budget claim for every
-GOAL5 scenario. Treat the `<2%` GOAL5 target as a remediation target until a new benchmark proves it again.
-
-## Reading Rule
-
-When a restored historical report says `v0.11.0`, `v0.16.1`, `1174 tests`, `1730 tests`, `1514 tests`,
-`~9/14`, `14/14 achieved`, `~289 us`, `~443 us`, `266 us`, or `<2%`, read that as a historical measurement
-or historical overclaim. The current baseline above supersedes it.
+This supports an engineering-readiness claim, not a solved frame-budget claim for every GOAL5 scenario; the
+`<2%` target is a remediation goal until a fresh benchmark proves it.
