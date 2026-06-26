@@ -1,3 +1,5 @@
+<!-- reviewed: 2026-06-26 | repo-wide consistency audit | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+
 # TSOTCHKE / ESHKOL CORPUS FULL WIRING INTO COSMOGONIC — RALPH LOOP AUDIT & PROGRESS LOG
 
 **Date:** 2026-06-19 (Ralph Loop Iteration 1+)

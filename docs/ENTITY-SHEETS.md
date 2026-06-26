@@ -1,3 +1,5 @@
+<!-- reviewed: 2026-06-26 | repo-wide consistency audit | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+
 # Entity Sheets — the Bestiary of the Mechalogodrom
 
 _The differentiation bible. Every inhabitant of the world gets a sheet so it reads as a distinct

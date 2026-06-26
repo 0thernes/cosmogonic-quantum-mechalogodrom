@@ -1,3 +1,5 @@
+<!-- reviewed: 2026-06-26 | repo-wide consistency audit | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+
 # Super Creature 1.1 — Scientific Grounding
 
 The apex creature's "consciousness" is a set of **explicit, measurable, deterministic mechanisms**, not a

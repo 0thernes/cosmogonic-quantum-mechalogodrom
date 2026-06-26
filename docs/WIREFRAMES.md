@@ -1,3 +1,5 @@
+<!-- reviewed: 2026-06-26 | repo-wide consistency audit | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+
 # Wireframes & Visual Spec
 
 The UI is chrome around a fullscreen WebGL canvas: glassmorphic fixed panels

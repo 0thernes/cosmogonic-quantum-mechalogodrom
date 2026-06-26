@@ -1,3 +1,5 @@
+<!-- reviewed: 2026-06-26 | repo-wide consistency audit | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+
 # Entity-Relationship Model
 
 The Mechalogodrom has no database — its "entities" live in scene graphs,

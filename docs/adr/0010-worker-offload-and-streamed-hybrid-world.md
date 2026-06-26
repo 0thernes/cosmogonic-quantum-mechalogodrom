@@ -1,3 +1,5 @@
+<!-- reviewed: 2026-06-26 | repo-wide consistency audit | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+
 # ADR 0010 — Worker offload + streamed "Hybrid world" for scaling
 
 - Status: Accepted

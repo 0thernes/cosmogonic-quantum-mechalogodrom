@@ -1,3 +1,5 @@
+<!-- reviewed: 2026-06-26 | repo-wide consistency audit | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+
 # Reports
 
 Living technical reports and audits for Cosmogonic Quantum Mechalogodrom. **Each file here is a single,

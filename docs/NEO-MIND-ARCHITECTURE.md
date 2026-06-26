@@ -1,3 +1,5 @@
+<!-- reviewed: 2026-06-26 | repo-wide consistency audit | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+
 # Neo Mind Architecture — the 100-faculty geometric-resonance blueprint
 
 The canonical design for the apex Super-Creature mind ("Neo") and the Archon pantheon: a novel,

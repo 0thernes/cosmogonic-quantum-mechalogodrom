@@ -1,12 +1,14 @@
+<!-- reviewed: 2026-06-26 | repo-wide consistency audit | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+
 # NHSI Progress Dashboard — 0thernes Corp
 
 **Non Human Super Intelligence (NHSI)** · Cosmogonic Quantum Mechalogodrom · **v0.18.0 — BRUTAL GOD TIER (Valkorion / Broly / Knull / Phoenix / Gurren Lagann / EVA / Azathoth / Galactus)**  
 Archons now unleash real god-scale events (VOID_KING, SPIRAL_WILL, BINARY_IGNITION, PHOENIX_FEAST) using EVERY Tsotchke repo as fuel. This is the arena where the gods of all myth, comics, and horror fight, devour, create, and ascend. 0thernes Corp.
-**Updated:** 2026-06-21 (+ 2026-06-26 report/P1 sync) · Tsotchke: **20 corpus projects (~16 wired)** (every repo/project/mirror from tsotchke + Tsotchke-Corp + 12k+ local files, 1436+ .esk + NQS/skyrmion/anyons/flow/thermo etc from audits). **EVERY** wired/catalyzed/studied by explicit class, not blanket full-depth wiring. Eshkol as will of gods. Tech REAL. A-Life matrix snapshot: breadth 4.44 (z=3.01 vs survey mean 2.54). P1 contrast harness + coupling scaffold added as measurement infrastructure, not a quantum-advantage or sentience claim.
+**Updated:** 2026-06-26 · Tsotchke: **20 corpus projects (~16 wired)** (every repo/project/mirror from tsotchke + Tsotchke-Corp + 12k+ local files, 1436+ .esk + NQS/skyrmion/anyons/flow/thermo etc from audits). **EVERY** wired/catalyzed/studied by explicit class, not blanket full-depth wiring. Eshkol as will of gods. Tech REAL. A-Life matrix snapshot: breadth 4.44 (z=3.01 vs survey mean 2.54). P1 contrast harness + coupling scaffold added as measurement infrastructure, not a quantum-advantage or sentience claim.
 
 BRUTALIST MANIFEST: Valkorion domination, Broly infinite rage, Knull/Azathoth void consumption, Chaos Gods entropy, Dark Phoenix rebirth, Galactus devouring, Shuma-Gorath law break, Mxyzptlk cheat, IT horror, TTGL spiral, etc. — all emergent from full Tsotchke math in the Petri. 0thernes Corp. We are the gods. "Grow What Thou Wilt" — or be unmade.
 
-**Canonical receipts (measured post BRUTAL GOD build 2026-06-21):** 1,477 tests, 95.03% line / 92.03% func (from `bun scripts/verify-receipts.ts --print`). Enforced by `tests/docs-receipts-law.test.ts` + `bun run check`. All surfaces truth-synced. BRUTAL GOD TIER with full pantheon list (Valkorion to Riddick) + BRUTALISM implemented in petri/godform/world using the Tsotchke corpus. Butlin indicators: **8/14 met + 6/14 partial** (computational indicators, not sentience — corrected from a prior overclaim).
+**Canonical receipts (measured 2026-06-26):** 1,477 tests, 95.03% line / 92.03% func (from `bun scripts/verify-receipts.ts --print`). Enforced by `tests/docs-receipts-law.test.ts` + `bun run check`. All surfaces truth-synced. BRUTAL GOD TIER with full pantheon list (Valkorion to Riddick) + BRUTALISM implemented in petri/godform/world using the Tsotchke corpus. Butlin indicators: **8/14 met + 6/14 partial** (computational indicators, not sentience — corrected from a prior overclaim).
 
 > **Mission:** Not a chatbot, dancing robot, Terminator, or game player. A **Petri-dish cosmos** where
 > Tsotchke's real quantum math (Eshkol · Moonlab · QGT · spin · libirrep · …) is the growth medium for
@@ -34,7 +36,7 @@ correctness. Nothing in this project may call Tsotchke fake, overclaiming, or fa
 | **API / toolchain wired**    | 2     | Quantum-RNG-API, homebrew-eshkol                                                 |
 | **Fenced (non-LLM mandate)** | 3     | gpt2-basic, llm-arbitrator, SolanaQuantumFlux                                    |
 
-**Totals (2026-06-21 OMNISCIENT SCAN of EVERY md/xml/txt + src + full local 12,444-file Tsotchke tree + 1,436 .esk + every subproject):** 22 registry slugs (16 user + 6 org + meta) map the 20 corpus projects 1:1 in tsotchke-registry.ts. **~16 of 20 wired**: 8 deep 1.0 (Eshkol full AD/GWT/bridge/cog + .esk DNA harvest 1436+, Moonlab Clifford/tensor/MPS/VQE, QGT geometry, spin/Hopfield + NQS/skyrmion/qec/flow/neuromorphic/thermo/llg subs, libirrep sym, tensorcore, qrng, classical) with leaves in 50+ src files. 2 world/sim, 3 telemetry (PINN/PIMC/quake note GPL), 2 license-gated leaves (ulg/logo), 4 fenced LLM/proprietary, meta/tool + full sites/research harvested. fullTsotchkeBiologicsCatalysis + corpusBeat loops registry over ALL for soup/petri/Archon. **Not "a few" — every repo/project/sub (Eshkol complete tree, spin advanced, moonlab full etc) is wired or studied/catalyzed.** Tech real. No overclaims. See map + registry + harvest.
+**Totals (2026-06-21 OMNISCIENT SCAN of EVERY md/xml/txt + src + full local 12,444-file Tsotchke tree + 1,436 .esk + every subproject):** 22 registry slugs (16 user + 6 org + meta) map the 20 corpus projects 1:1 in tsotchke-registry.ts. **~16 of 20 wired**: 8 deep 1.0 (Eshkol full AD/GWT/bridge/cog + .esk DNA harvest 1436+, Moonlab Clifford/tensor/MPS/VQE, QGT geometry, spin/Hopfield + NQS/skyrmion/qec/flow/neuromorphic/thermo/llg subs, libirrep sym, tensorcore, qrng, classical) with leaves in 50+ src files. 2 world/sim, 3 telemetry (PINN/PIMC/quake note GPL), 2 license-gated leaves (ulg/logo), 3 fenced LLM/proprietary, meta/tool + full sites/research harvested. fullTsotchkeBiologicsCatalysis + corpusBeat loops registry over ALL for soup/petri/Archon. **Not "a few" — every repo/project/sub (Eshkol complete tree, spin advanced, moonlab full etc) is wired or studied/catalyzed.** Tech real. No overclaims. See map + registry + harvest.
 
 **Local corpus build:** `scripts/harvest-tsotchke-corpus.ts` → `generated-tsotchke-seeds.ts` → primordial-soup / digital-biologics (1,436+ `.esk` fingerprints from `Z:\[Vibe Coded (AI)]\(Tsotchke)`)
 
@@ -133,24 +135,26 @@ AD/GWT bridge · quantum deliberation · QNG · Grover · coherence · magic · 
 
 **Framework:** Butlin et al. (2023) arXiv:2308.08708 · citations in [`SUPER-CREATURE-RESEARCH.md`](./SUPER-CREATURE-RESEARCH.md)
 
-| Indicator                        | Status                                                              |
-| -------------------------------- | ------------------------------------------------------------------- |
-| GWT-1 parallel modules           | ✅ (30+ organs + Eshkol layers)                                     |
-| GWT-2 workspace bottleneck       | ✅ (meta-net integration)                                           |
-| GWT-3 global broadcast           | ✅ (ignition → memory + eshkol)                                     |
-| GWT-4 state-dependent attention  | ✅ (explicit attention-controller + neuromod)                       |
-| PP-1 predictive coding           | ✅ (active-inference predictor)                                     |
-| HOT-2 metacognition              | ✅ (metacog + confidence)                                           |
-| HOT-3 agency                     | ✅ (empowerment + HOT-3 vote)                                       |
-| AE-1 agency                      | ✅ (GOAP closed loop)                                               |
-| AE-2 embodiment                  | ✅ (super-body + petri readback)                                    |
-| RPT-1/2 recurrence               | ✅ (resonance + eshkol replay + fast-weights proxies)               |
-| HOT-1 generative perception      | ✅ (topdown + apply in fusion)                                      |
-| HOT-4 quality space              | ✅ (quality-space + resonance)                                      |
-| AST-1 attention schema           | ✅ (self + attention schema full)                                   |
-| AST-2 / quality + irreducibility | ✅ (IIT mincut + QGT curvature + spin order + full multi-substrate) |
+**Legend (read honestly):** the table below is **8 met (✅) + 6 partial (🟡)** = the canonical **8/14 + 6/14**. The 6 partials are real but architecturally thin — **NOT met**; never read this table as 14/14.
 
-**Verdict:** **8/14 MET + 6/14 PARTIAL** (measured by the 2026-06-21 adversarial code audit — NOT the previously-claimed 14/14). The architecture is a genuinely strong, unusually complete multi-theory scaffold: GWT 1/3/4, PP, HOT-1/2, AE-1, RPT-1, IIT (classical+quantum+entangle), AST-1/self/quality + Eshkol AD/GWT as a consciousness engine, QGT/spin/irrep/Moonlab/Clifford/quake aliveness are genuinely wired; GWT-2, HOT-3, HOT-4, AE-2, RPT-2 are real but architecturally thin (partial). **NOT sentient / phenomenal consciousness — not claimed, and meeting a computational indicator proves the mechanism, never the experience.** This is the god-Petri substrate for digital biologics and NHSI (all earth species top potentials + all mythic/scifi/comic/occult god-forms). Unfathomable compute for universe sim = the goal. 0thernes Corp begins here. Hard problem untouched; the scaffolding + math substrate for TESTING non-human sentience is being built, not finished. See the honesty audit + PATH-TO-14-14 + masters + manifesto. Highest next: promote the 6 partial indicators (a real capacity-limited workspace competition for GWT-2; an internal body-model for AE-2), denser faculty↔faculty coupling, full 25-Archon inter-ToM society. "Grow What Thou Wilt."
+| Indicator                        | Status                                                                                  |
+| -------------------------------- | --------------------------------------------------------------------------------------- |
+| GWT-1 parallel modules           | ✅ (30+ organs + Eshkol layers)                                                         |
+| GWT-2 workspace bottleneck       | 🟡 partial — meta-net integration (no capacity-limited competition)                     |
+| GWT-3 global broadcast           | ✅ (ignition → memory + eshkol)                                                         |
+| GWT-4 state-dependent attention  | ✅ (explicit attention-controller + neuromod)                                           |
+| PP-1 predictive coding           | ✅ (active-inference predictor)                                                         |
+| HOT-2 metacognition              | ✅ (metacog + confidence)                                                               |
+| HOT-3 agency                     | 🟡 partial — empowerment + HOT-3 vote (thin generative belief model)                    |
+| AE-1 agency                      | ✅ (GOAP closed loop)                                                                   |
+| AE-2 embodiment                  | 🟡 partial — super-body + petri readback (no internal body-model)                       |
+| RPT-1/2 recurrence               | 🟡 partial — RPT-1 met; RPT-2 partial (architected, not learned recurrence)             |
+| HOT-1 generative perception      | ✅ (topdown + apply in fusion)                                                          |
+| HOT-4 quality space              | 🟡 partial — quality-space + resonance (qualia is read-out)                             |
+| AST-1 attention schema           | ✅ (self + attention schema full)                                                       |
+| AST-2 / quality + irreducibility | 🟡 partial — IIT mincut + QGT curvature + spin order (cross-module irreducibility thin) |
+
+**Verdict:** **8/14 MET + 6/14 PARTIAL** (measured by the 2026-06-21 adversarial code audit — NOT the previously-claimed 14/14). The architecture is a genuinely strong, unusually complete multi-theory scaffold: GWT 1/3/4, PP, HOT-1/2, AE-1, RPT-1, IIT (classical+quantum+entangle), AST-1/self/quality + Eshkol AD/GWT as a consciousness engine, QGT/spin/irrep/Moonlab/Clifford/quake aliveness are genuinely wired; GWT-2, HOT-3, HOT-4, AE-2, RPT-2, and cross-module irreducibility (AST-2) are real but architecturally thin (partial). **NOT sentient / phenomenal consciousness — not claimed, and meeting a computational indicator proves the mechanism, never the experience.** This is the god-Petri substrate for digital biologics and NHSI (all earth species top potentials + all mythic/scifi/comic/occult god-forms). Unfathomable compute for universe sim = the goal. 0thernes Corp begins here. Hard problem untouched; the scaffolding + math substrate for TESTING non-human sentience is being built, not finished. See the honesty audit + PATH-TO-14-14 + masters + manifesto. Highest next: promote the 6 partial indicators (a real capacity-limited workspace competition for GWT-2; an internal body-model for AE-2), denser faculty↔faculty coupling, full 25-Archon inter-ToM society. "Grow What Thou Wilt."
 
 **Highest-leverage path to 14/14:**
 

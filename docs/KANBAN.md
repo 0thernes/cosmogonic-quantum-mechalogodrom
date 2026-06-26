@@ -1,3 +1,5 @@
+<!-- reviewed: 2026-06-26 | repo-wide consistency audit | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+
 # Kanban — Cosmogonic Quantum Mechalogodrom
 
 The delivery board for the project. It tracks work as cards moving left→right

@@ -1,3 +1,5 @@
+<!-- reviewed: 2026-06-26 | repo-wide consistency audit | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+
 # ADR 0004 — Deterministic seeded RNG (mulberry32) injected everywhere
 
 - Status: Accepted

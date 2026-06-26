@@ -1,3 +1,5 @@
+<!-- reviewed: 2026-06-26 | repo-wide consistency audit | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+
 # Audit Log (centralized)
 
 **One place for the project's audit history.** New audits, reviews, and fix-passes append a dated
@@ -24,6 +26,11 @@ matrix + the full findings table live in
   orphaned Ralph-loop `###` slop lines below the reference-link footer; completed the footer links.
 - **Count drift.** `docs/KANBAN.md` "ALL 19 Tsotchke repos" -> "20 projects" (canonical: 19 mirrors +
   Eshkol flagship).
+- **Every MD date-stamped (the `/goal` "current date on every MD", done safely).** Prepended an
+  idempotent `<!-- reviewed: 2026-06-26 … -->` marker to all **75 maintained** Markdown docs (excludes
+  `legacy/**` verbatim, `.github/**` + `.memory/**` external-tool files, and the dated `CHANGELOG.md`).
+  Done as an in-content stamp, NOT a filename rename — renaming would 404 the entire cross-link graph,
+  the `sync-surfaces.ts` surface list, the doc-links gate, and GitHub Pages. Gate stays green.
 - **Verified correct (no action):** determinism (0 `Math.random` / `Date.now` in `src/sim`),
   `tsc` + oxlint 0, Butlin `8/14 met + 6/14 partial` across ~40 surfaces, entity `50,000`,
   BiologicForms `26`, Tsotchke `20`, and the 2928-vs-1477 test count (floor-by-design,

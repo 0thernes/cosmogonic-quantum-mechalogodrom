@@ -1,3 +1,5 @@
+<!-- reviewed: 2026-06-26 | repo-wide consistency audit | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+
 # Emergence Blockers — the pre-mortem (50 things that would stop it)
 
 A standing design checklist: the obstacles that would stop consciousness / sentience / measurable

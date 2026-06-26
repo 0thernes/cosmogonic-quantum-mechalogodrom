@@ -1,3 +1,5 @@
+<!-- reviewed: 2026-06-26 | repo-wide consistency audit | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+
 # Tsotchke Corpus Integration Report — Wave 2-4 Complete
 
 **Date:** 2026-06-20

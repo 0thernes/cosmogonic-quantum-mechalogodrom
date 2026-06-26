@@ -1,3 +1,5 @@
+<!-- reviewed: 2026-06-26 | repo-wide consistency audit | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+
 # Copilot — Free-LLM Providers & Setup
 
 The in-app **Copilot** (the `✦` button, bottom-right) is a read-only AI you can chat with about the

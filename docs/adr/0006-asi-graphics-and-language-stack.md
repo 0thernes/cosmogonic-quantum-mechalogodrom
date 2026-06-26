@@ -1,3 +1,5 @@
+<!-- reviewed: 2026-06-26 | repo-wide consistency audit | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+
 # ADR 0006 — ASI-grade graphics: the rendering stack, languages, and libraries
 
 **Status:** Accepted · **Date:** 2026-06-13 · supersedes the flat-shaded "1980s feel" baseline.

@@ -1,3 +1,5 @@
+<!-- reviewed: 2026-06-26 | repo-wide consistency audit | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+
 # ADR 0005 — Math-stack selection for the Quantum Wildbeyond expansion
 
 ## Status

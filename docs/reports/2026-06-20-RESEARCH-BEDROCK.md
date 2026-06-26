@@ -1,3 +1,5 @@
+<!-- reviewed: 2026-06-26 | repo-wide consistency audit | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+
 # Research Bedrock — the 2026 cutting/bleeding edge under Cosmogonic
 
 **Date:** 2026-06-26 · **Purpose:** the current (2025–2026) literature this project

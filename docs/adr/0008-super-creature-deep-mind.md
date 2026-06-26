@@ -1,3 +1,5 @@
+<!-- reviewed: 2026-06-26 | repo-wide consistency audit | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+
 # 0008 — The Super Creature: a 1444-parameter deep mind as a stack of two TinyMLPs
 
 - Status: Accepted (V31, 2026-06-14)

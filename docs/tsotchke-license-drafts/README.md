@@ -1,3 +1,5 @@
+<!-- reviewed: 2026-06-26 | repo-wide consistency audit | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+
 # Tsotchke relicense drafts — drop-in files to unblock corpus integration
 
 Ready-to-commit license/notice files for the 4 **relicensable** Tsotchke repos, so Cosmogonic can port

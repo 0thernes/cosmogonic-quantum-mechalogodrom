@@ -1,3 +1,5 @@
+<!-- reviewed: 2026-06-26 | repo-wide consistency audit | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+
 # GOAL5 Research Receipts (2026-06-19)
 
 **Protocol:** External research _before any mutation_. Read all required sources using tools (browse_page, open_page, web_search, github tools if available). Local masters/contracts first.

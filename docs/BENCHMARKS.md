@@ -1,3 +1,5 @@
+<!-- reviewed: 2026-06-26 | repo-wide consistency audit | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+
 # Benchmarks
 
 Measured results for the hot-path primitives. Reproduce with `bun run bench`

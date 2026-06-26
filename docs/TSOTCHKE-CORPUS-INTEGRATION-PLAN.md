@@ -1,3 +1,5 @@
+<!-- reviewed: 2026-06-26 | repo-wide consistency audit | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+
 # Tsotchke Full Corpus Integration Plan (Ralph Loop)
 
 **Date:** 2026-06-19 (Iteration 0)

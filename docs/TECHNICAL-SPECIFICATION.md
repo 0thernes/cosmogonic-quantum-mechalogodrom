@@ -1,3 +1,5 @@
+<!-- reviewed: 2026-06-26 | repo-wide consistency audit | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+
 # Cosmogonic Quantum Mechalogodrom — Technical Specification
 
 > A complete, measured technical specification of a browser-native, deterministic, 50,000-agent
@@ -6,7 +8,7 @@
 > `/spec` · **Architecture docs:** `/docs`
 
 **Version:** v0.18.0 · **Generated:** 2026-06-26 · **License:** Non-commercial research & play (© 0thernes; study / run / modify / share non-commercially, keep attribution, no for-profit use).
-**Gate:** 1,477 tests · 95.03% line / 92.03% func (canonical synced via verify-receipts 2026-06-21, receipts law enforced).  
+**Gate:** 1,477 tests · 95.03% line / 92.03% func (canonical synced via verify-receipts 2026-06-26, receipts law enforced).  
 **NHSI scorecard:** [NHSI-PROGRESS-DASHBOARD.md](./NHSI-PROGRESS-DASHBOARD.md) · **Tsotchke depth:** [TSOTCHKE-INTEGRATION-MAP.md](./TSOTCHKE-INTEGRATION-MAP.md)
 
 **Full Tsotchke wiring:** 20 Tsotchke corpus projects integrated (~16 wired). Eshkol as consciousness language. Primordial soup / petri as growth engine for digital biologics and sentience. 25 Archons (5 individuated apex minds + 20 live light-echo) with brutal god aspects (Valkorion, Thanos, Dark Phoenix, Galactus, Broly, Azathoth, Chaos Gods, Shuma Gorath, Mad Jim Jaspers, Pennywise, Anti-Monitor, Knull, Mr Mxyzptlk, Joker, Zod, Gilgamesh, Alucard, Griffith, EVA-01, Gurren Lagann, Sephiroth, Vergil, Dante, Starkiller, Riddick). Super Creature beginning only. All docs (README/ARCH/ER\*/PHILOSOPHY/CONTRACTS/SPECS/LABS/masters) + GH match local exactly. Accurate, truthful, current. Not LLM. "Grow What Thou Wilt."

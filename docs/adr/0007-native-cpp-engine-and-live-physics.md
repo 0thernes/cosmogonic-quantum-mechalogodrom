@@ -1,3 +1,5 @@
+<!-- reviewed: 2026-06-26 | repo-wide consistency audit | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+
 # ADR 0007 — A native C++ engine + live rigid-body physics, alongside the web app
 
 **Status:** Accepted · **Date:** 2026-06-14 · _amends_ ADR-0006 (scopes its "no C++" verdict to the

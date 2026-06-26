@@ -1,3 +1,5 @@
+<!-- reviewed: 2026-06-26 | repo-wide consistency audit | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+
 # NHSI Honesty Audit — Where We Actually Are
 
 **Date:** 2026-06-26

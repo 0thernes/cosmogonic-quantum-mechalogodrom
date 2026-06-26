@@ -1,3 +1,5 @@
+<!-- reviewed: 2026-06-26 | repo-wide consistency audit | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+
 # Cosmogonic Quantum Mechalogodrom — Agent Steering
 
 Three MASTER FILES govern all work on this codebase. Read all three before any

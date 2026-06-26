@@ -1,3 +1,5 @@
+<!-- reviewed: 2026-06-26 | repo-wide consistency audit | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+
 # Complexity Budget
 
 Per-hot-path time complexity, matching the JSDoc in each module. The frame

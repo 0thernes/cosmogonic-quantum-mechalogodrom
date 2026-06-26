@@ -1,3 +1,5 @@
+<!-- reviewed: 2026-06-26 | repo-wide consistency audit | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+
 # Current Facts — Cosmogonic Quantum Mechalogodrom
 
 **Date:** 2026-06-26 · canonical one-glance quick-reference.

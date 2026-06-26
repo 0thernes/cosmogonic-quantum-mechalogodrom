@@ -1,3 +1,5 @@
+<!-- reviewed: 2026-06-26 | repo-wide consistency audit | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+
 # THIRD-PARTY NOTICES — source-level ported algorithms
 
 Cosmogonic Quantum Mechalogodrom is owned by 0thernes — © 2026 (see [LICENSE](./LICENSE)); released under a non-commercial research & play license (study / run / modify / share non-commercially, keep attribution, no for-profit use).

@@ -1,3 +1,5 @@
+<!-- reviewed: 2026-06-26 | repo-wide consistency audit | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+
 # Verification Analytical Data — cross-surface fact ledger
 
 **Living index** (not an archive). One place that records every fact duplicated across the repo's

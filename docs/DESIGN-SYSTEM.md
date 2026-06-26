@@ -1,3 +1,5 @@
+<!-- reviewed: 2026-06-26 | repo-wide consistency audit | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+
 # Design System — Cosmogonic Quantum Mechalogodrom
 
 Audit + token reference + component documentation for the void/cyan glass UI.

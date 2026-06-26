@@ -1,3 +1,5 @@
+<!-- reviewed: 2026-06-26 | repo-wide consistency audit | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+
 <!-- markdownlint-disable MD029 MD036 -->
 
 # Non Human Super Intelligence (NHSI) — 0thernes Corp Manifesto

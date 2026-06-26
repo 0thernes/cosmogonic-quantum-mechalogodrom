@@ -1,9 +1,11 @@
+<!-- reviewed: 2026-06-26 | repo-wide consistency audit | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+
 # Bleeding Cutting Edge, Novelty, and Scientific Impact — Cosmogonic + Full Tsotchke Corpus
 
 **Date:** 2026-06-20 (Omniscient Master Audit pass)  
 **Context:** Full integration of the Tsotchke corpus (Eshkol + Moonlab + QGTL + spin nets + libirrep + quantum-quake/QGE + ulg + logo-lab + tensorcore + PINN/PIMC + rngs + all others) as the primordial substrate inside the Cosmogonic Petri Dish for digital biologics. Super Creature is the initial catalyst only.
 
-This document is truthful, receipt-based, and distinguishes **actual implemented novelty** from aspirational claims. It draws from direct code inspection (eshkol-ad.ts, digital-biologics.ts with 16+ BIOLOGIC_FORMS, tsotchke-registry.ts 1.0 wiring for core repos, primordial-soup.ts, petri-dish.ts, stepBiologic substrate dynamics, composite consciousness metric, Eshkol .esk programs as heritable DNA, GWT workspace ignition, AD-driven mutation), masters, philosophy, and external contrast.
+This document is truthful, receipt-based, and distinguishes **actual implemented novelty** from aspirational claims. It draws from direct code inspection (eshkol-ad.ts, digital-biologics.ts with 26 BIOLOGIC_FORMS, tsotchke-registry.ts 1.0 wiring for core repos, primordial-soup.ts, petri-dish.ts, stepBiologic substrate dynamics, composite consciousness metric, Eshkol .esk programs as heritable DNA, GWT workspace ignition, AD-driven mutation), masters, philosophy, and external contrast.
 
 ## 1. Core Bleeding-Edge Technical Contributions
 

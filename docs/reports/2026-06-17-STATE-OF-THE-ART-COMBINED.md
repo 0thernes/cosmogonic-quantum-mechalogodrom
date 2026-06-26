@@ -1,3 +1,5 @@
+<!-- reviewed: 2026-06-26 | repo-wide consistency audit | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+
 # Cosmogonic Quantum Mechalogodrom — State of the Art (Combined Report)
 
 ### A unified State-of-the-Art Assessment — the whole repository (Part I) + the apex Super Creature (Part II) + the shared consciousness scorecard & verdict (Part III)

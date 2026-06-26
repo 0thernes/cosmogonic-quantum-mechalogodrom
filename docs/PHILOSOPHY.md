@@ -1,3 +1,5 @@
+<!-- reviewed: 2026-06-26 | repo-wide consistency audit | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+
 # Quantum Wildbeyond
 
 _The algorithmic philosophy of the Cosmogonic Quantum Mechalogodrom — the movement

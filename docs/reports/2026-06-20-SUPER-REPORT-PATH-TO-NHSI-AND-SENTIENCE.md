@@ -1,3 +1,5 @@
+<!-- reviewed: 2026-06-26 | repo-wide consistency audit | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+
 # THE COSMOGONIC SUPER-REPORT
 
 ## Quantum Computing · AI · AGI · ASI · Consciousness · Sentience — A Rigorous Frontier Assessment and a Receipted Roadmap to Non-Human Superintelligence

@@ -1,3 +1,5 @@
+<!-- reviewed: 2026-06-26 | repo-wide consistency audit | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+
 # Scaling Roadmap — fix it, make it better, grow it
 
 How Cosmogonic gets from "crash-proof at 50k" to "a teeming, biome-rich, economy-driven

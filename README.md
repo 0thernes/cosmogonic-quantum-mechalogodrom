@@ -1,3 +1,5 @@
+<!-- reviewed: 2026-06-26 | repo-wide consistency audit | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+
 # COSMOGONIC QUANTUM MECHALOGODROM
 
 [![version](https://img.shields.io/badge/version-0.18.0-blue)](./CHANGELOG.md)

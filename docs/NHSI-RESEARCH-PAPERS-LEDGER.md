@@ -1,3 +1,5 @@
+<!-- reviewed: 2026-06-26 | repo-wide consistency audit | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+
 # NHSI Research Papers Ledger — the bleeding-edge bedrock, and where it's used
 
 The deep-dive corpus behind Cosmogonic's apex mind, with an honest status per paper:

@@ -1,3 +1,5 @@
+<!-- reviewed: 2026-06-26 | repo-wide consistency audit | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+
 # TSOTCHKE CORPUS INTEGRATION AUDIT & ASSESSMENT (ralph-loop 2026-06-19)
 
 **Strict Report / Log / Audit**

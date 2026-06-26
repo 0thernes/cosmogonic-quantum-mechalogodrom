@@ -1,3 +1,5 @@
+<!-- reviewed: 2026-06-26 | repo-wide consistency audit | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+
 # ERP — Entity Relationships in Process (the dynamic view)
 
 The **process** companion to [ERD.md](./ERD.md) (attribute structure) and [ERM.md](./ERM.md)

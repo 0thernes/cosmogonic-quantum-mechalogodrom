@@ -1,3 +1,5 @@
+<!-- reviewed: 2026-06-26 | repo-wide consistency audit | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+
 # RUNBOOK — Cosmogonic Quantum Mechalogodrom
 
 The one canonical ops doc: install, run, gate, build, deploy, release, roll back, troubleshoot.

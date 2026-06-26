@@ -1,3 +1,5 @@
+<!-- reviewed: 2026-06-26 | repo-wide consistency audit | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+
 # Bleeding-Edge, Novel, and Scientific Positioning of Cosmogonic + Tsotchke
 
 **Date:** 2026-06-20  

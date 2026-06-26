@@ -1,3 +1,5 @@
+<!-- reviewed: 2026-06-26 | repo-wide consistency audit | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+
 # Cosmogonic Quantum Mechalogodrom — AI, Integration & Implementation Master Document
 
 > Single synthesized reference for the deterministic WebGL ecosystem sim. Four parts:

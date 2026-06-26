@@ -1,3 +1,5 @@
+<!-- reviewed: 2026-06-26 | repo-wide consistency audit | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+
 # THE BOOK — the Cosmogonic Quantum Mechalogodrom, end to end
 
 _The master index for the whole repository: a human- **and** AI-readable map of every document, every

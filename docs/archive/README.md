@@ -1,3 +1,5 @@
+<!-- reviewed: 2026-06-26 | repo-wide consistency audit | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+
 # docs/archive — superseded historical reports
 
 These are **point-in-time snapshots** from earlier development runs (autonomous-loop

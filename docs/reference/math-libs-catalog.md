@@ -1,3 +1,5 @@
+<!-- reviewed: 2026-06-26 | repo-wide consistency audit | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+
 # JavaScript / TypeScript Libraries for Advanced Math, Quantum, Statistics, Physics & Scientific Computing
 
 A comprehensive technical reference for senior engineers. Covers quantum simulation, symbolic algebra, numerical methods, GPU compute, WebAssembly physics, signal processing, cryptographic math, and more. Package names are given as inline `code`; npm install targets are in bold where they differ from common usage.

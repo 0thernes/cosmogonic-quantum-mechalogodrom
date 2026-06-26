@@ -1,3 +1,5 @@
+<!-- reviewed: 2026-06-26 | repo-wide consistency audit | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+
 # Roadmap
 
 Where the Cosmogonic Quantum Mechalogodrom has been, is, and is going. Horizons — not dated promises.

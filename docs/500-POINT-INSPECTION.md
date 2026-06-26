@@ -1,3 +1,5 @@
+<!-- reviewed: 2026-06-26 | repo-wide consistency audit | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+
 # 500-Point Inspection
 
 A standing audit of the Cosmogonic Quantum Mechalogodrom: **25 sections × 20 checkpoints = 500

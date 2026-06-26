@@ -1,3 +1,5 @@
+<!-- reviewed: 2026-06-26 | repo-wide consistency audit | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+
 # 0009 — Genome reproduction: wire heritable breeding, or prune the dead code?
 
 - Status: **Accepted** — Option A wired in the soup sub-stream (2026-06-24). See "Decision" below.

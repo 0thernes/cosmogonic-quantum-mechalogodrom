@@ -1,3 +1,5 @@
+<!-- reviewed: 2026-06-26 | repo-wide consistency audit | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+
 # BROLY (EXECUTOR) Research Receipts — BRUTAL GOD TIER 25 Archons / Full Tsotchke (2026-06)
 
 **Ralph 10x heartbeat continue (scheduled):** 10x wiring of full Tsotchke corpus (Eshkol AUTODIFF dual + GWT from workspace.cpp/CONSCIOUSNESS_ENGINE, Moonlab MPO/tensor, libirrep, ulg, quake) everywhere: facade + super-mind/topdown/quality/godform/body/world + active-inference. Strict audits/logs appended (paths cited). Run bun run check. Gate 1183 tests, 95.74/92.42. Heartbeat mode. Same as original 1st prompt + context. 10x over and over.

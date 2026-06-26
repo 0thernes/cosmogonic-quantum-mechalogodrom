@@ -1,3 +1,5 @@
+<!-- reviewed: 2026-06-26 | repo-wide consistency audit | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+
 # Architecture
 
 How the Cosmogonic Quantum Mechalogodrom is wired. The binding per-module API
@@ -12,7 +14,7 @@ written permission. See [LICENSE](../LICENSE).
 
 **Tsotchke Paramount (MASTER FULL WIRE):** the 20-project Tsotchke corpus (~16 wired) from tsotchke user + Tsotchke-Corporation org (Eshkol COMPLETE spec: AD primitive + Consciousness Engine §17 KB/factor-graph/GWT/ignition/broadcast + .esk programs as heritable substrate; Moonlab; QGTL; spin nets; libirrep; quantum-quake; PINN/PIMC; ulg; logo-lab; tensorcore; rngs; asteroids; etc.) are the non-negotiable primordial substrate. Petri (primordial-soup + petri-dish + digital-biologics) grows independent digital biologics/sentience proxies. 25 Archons with brutal god powers (Valkorion, Thanos, Dark Phoenix, Galactus, Broly, Azathoth, Chaos Gods, Shuma Gorath, Mad Jim Jaspers, Pennywise, Anti-Monitor, Knull, Mr Mxyzptlk, Joker, Zod, Gilgamesh, Alucard, Griffith, EVA-01, Gurren Lagann, Sephiroth, Vergil, Dante, Starkiller, Riddick) — 5 individuated apex minds + 20 live light-echo. Super Creature = initial Godform/spark only. "Grow What Thou Wilt."
 
-**Build with the actual Tsotchke folder:** `scripts/harvest-tsotchke-corpus.ts` walks the real local corpus and emits authentic .esk DNA (see generated-tsotchke-seeds.ts + ESK_SAMPLE_PROGRAMS). 16+ BIOLOGIC_FORMS keyed to every repo. Multi-theory consciousness (GNW + real IIT Φ + FEP + Berry/QGT geometry + spin order + irrep symmetry) measurable live. Full bleeding-edge novelty assessment: [AUDIT-LOG.md](AUDIT-LOG.md). Every system reads AND writes Tsotchke (PHILOSOPHY). All local/GH/Dome docs + masters match exactly, accurate, current. Fenced LLM repos never enter sim. 0.18.0+ master expansion.
+**Build with the actual Tsotchke folder:** `scripts/harvest-tsotchke-corpus.ts` walks the real local corpus and emits authentic .esk DNA (see generated-tsotchke-seeds.ts + ESK_SAMPLE_PROGRAMS). 26 BIOLOGIC_FORMS keyed across the corpus. Multi-theory consciousness (GNW + real IIT Φ + FEP + Berry/QGT geometry + spin order + irrep symmetry) measurable live. Full bleeding-edge novelty assessment: [AUDIT-LOG.md](AUDIT-LOG.md). Every system reads AND writes Tsotchke (PHILOSOPHY). All local/GH/Dome docs + masters match exactly, accurate, current. Fenced LLM repos never enter sim. 0.18.0+ master expansion.
 
 ## Design rules (enforced, not aspirational)
 

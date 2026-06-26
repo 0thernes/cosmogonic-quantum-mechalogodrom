@@ -1,3 +1,5 @@
+<!-- reviewed: 2026-06-26 | repo-wide consistency audit | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+
 # Controls
 
 Every way to drive the Cosmogonic Quantum Mechalogodrom — mouse, keyboard, touch, and the

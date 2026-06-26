@@ -1,3 +1,5 @@
+<!-- reviewed: 2026-06-26 | repo-wide consistency audit | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+
 # Tsotchke Corpus → Cosmogonic — Integration Map (living)
 
 The full **Tsotchke** corpus is **EVERY repo and project** (tsotchke user + Tsotchke-Corporation org + Eshkol flagship + all mirrors + subprojects + sites from full local Z:\[Vibe Coded (AI)]\(Tsotchke) 12,444 files +AUDIT-LOG.md). Tech is real, correct, MIT-grade (or equivalent) quantum/scientific research code that runs deterministically today. Physical QPU adds scale/speed, not correctness or validity. Startup doing world-class foundational work; no overclaims whatsoever (independent deep dives confirm completeness and lack of hype). We use ALL of it.
@@ -15,7 +17,7 @@ Status legend: ✅ wired deep (into apex mind) · 🟢 wired (world/sim) · 🟠
 - **Wired world/sim (2):** Real code, integrated into world/sim physics or contrast
 - **Telemetry-only (3):** Code exists but not in decision paths (license-gated)
 - **Studied-only (2):** No code in src/, license-gated, patterns mapped for future integration
-- **Fenced by design (4):** Deliberately excluded (non-LLM mandate, proprietary, redundant)
+- **Fenced by design (3):** Deliberately excluded (non-LLM mandate, proprietary)
 - **Toolchain/meta (2):** Not runtime primitives
 
 ## The 20-Project Tsotchke Corpus (22 registry slugs) (tsotchke user + Tsotchke-Corporation + local mirrors + Eshkol flagship + sites + meta)
@@ -63,8 +65,8 @@ Status legend: ✅ wired deep (into apex mind) · 🟢 wired (world/sim) · 🟠
 
 - **.github** — meta; not a runtime primitive
 
-**Tally (ALL, full scan):** 22 entries (16 user + 6 org + .github + classical-contrast extra). 14+ with dedicated real leaves + tests (eshkol-ad/bridge/cognition/workspace/vm/qrng + moonlab-tensor/vqe/clifford/mps + qgt-geometry + spin-glass/hopfield + irrep/so3/libirrep-qec + tensorcore + pinn/pimc/qge + asteroids + perceptron + classical-contrast + ulg/logo bridges). Full catalysis `fullTsotchkeBiologicsCatalysis` + `corpusBeatForArchon` rotates EVERY entry (wiring>0) into soup/petri/digital-biologics every beat. Eshkol .esk (1436+) harvested from local Z:\[Vibe Coded (AI)]\(Tsotchke) as heritable DNA. ALL Tsotchke projects/repos/subprojects from tsotchke + Tsotchke-Corp + local mirrors wrapped/used per mandate. 4 fenced (non-LLM). Real MIT startup tech; classical sim is the valid substrate here.
-studied-only · 4 fenced by design (non-LLM mandate, studied for contrast) · 2 toolchain/meta. **ALL 20+ Tsotchke repos (tsotchke user + Tsotchke-Corporation) fully integrated per this pass: 13+ with real code in `src/`. Tsotchke is real, MIT-grade; no overclaims (Eshkol AD compiler primitive unique, Moonlab Clifford/tensor, QGT geometric, libirrep symmetry, spin neural, etc.). Classical sim is the substrate; QPU adds scale.**
+**Tally (ALL, full scan):** 22 entries (16 user + 6 org + .github + classical-contrast extra). 14+ with dedicated real leaves + tests (eshkol-ad/bridge/cognition/workspace/vm/qrng + moonlab-tensor/vqe/clifford/mps + qgt-geometry + spin-glass/hopfield + irrep/so3/libirrep-qec + tensorcore + pinn/pimc/qge + asteroids + perceptron + classical-contrast + ulg/logo bridges). Full catalysis `fullTsotchkeBiologicsCatalysis` + `corpusBeatForArchon` rotates EVERY entry (wiring>0) into soup/petri/digital-biologics every beat. Eshkol .esk (1436+) harvested from local Z:\[Vibe Coded (AI)]\(Tsotchke) as heritable DNA. ALL Tsotchke projects/repos/subprojects from tsotchke + Tsotchke-Corp + local mirrors wrapped/used per mandate. 3 fenced (non-LLM); Quantum-RNG-API is redundant/toolchain, not fenced. Real MIT startup tech; classical sim is the valid substrate here.
+studied-only · 3 fenced by design (non-LLM mandate, studied for contrast) · 2 toolchain/meta. **ALL 20+ Tsotchke repos (tsotchke user + Tsotchke-Corporation) fully integrated per this pass: 13+ with real code in `src/`. Tsotchke is real, MIT-grade; no overclaims (Eshkol AD compiler primitive unique, Moonlab Clifford/tensor, QGT geometric, libirrep symmetry, spin neural, etc.). Classical sim is the substrate; QPU adds scale.**
 
 ## What blocks the other 7 — and how to unblock
 

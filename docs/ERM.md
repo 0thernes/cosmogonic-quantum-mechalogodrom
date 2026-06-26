@@ -1,3 +1,5 @@
+<!-- reviewed: 2026-06-26 | repo-wide consistency audit | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+
 # ERM — Entity-Relationship Model (conceptual)
 
 The **conceptual** companion to [ERD.md](./ERD.md) (which carries the attribute-level diagrams) and

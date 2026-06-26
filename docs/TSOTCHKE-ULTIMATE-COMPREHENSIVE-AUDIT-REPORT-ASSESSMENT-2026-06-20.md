@@ -1,3 +1,5 @@
+<!-- reviewed: 2026-06-26 | repo-wide consistency audit | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+
 # TSOTCHKE × COSMOGONIC — ULTIMATE COMPREHENSIVE AUDIT, RESEARCH, ASSESSMENT & WIRING REPORT (2026-06-20)
 
 **Omniscient full deep dive.** Every repo, every file surface, every architecture claim, every doc, every line of integration, ERD/ERM/ERP, masters, in-app Dome/World, GitHub (README + state). Local == GH truth. All information accurate, current, truthful.

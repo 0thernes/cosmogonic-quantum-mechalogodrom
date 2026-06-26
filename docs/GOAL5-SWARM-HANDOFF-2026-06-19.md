@@ -1,3 +1,5 @@
+<!-- reviewed: 2026-06-26 | repo-wide consistency audit | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+
 # GOAL 5 Four-Grok Swarm Handoff (2026-06-19)
 
 **Swarm mode:** four-agent-separate-worktrees (STARKILLER-ARCHITECT, DR-MANHATTAN-PHYSICIST, BROLY-BUILDER, ADVERSARIAL-VERIFIER).
