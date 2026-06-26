@@ -190,6 +190,9 @@ export class World {
   private readonly state: SimState;
   private readonly grid: SpatialHash<Entity>;
   private readonly audio: AudioEngine;
+  /** Aborts the global (window) hero-event listeners on {@link dispose} — without this they leaked
+   *  one set per dev hot-reload, each firing against a dead World (the HMR hook calls dispose()). */
+  private readonly disposeAbort = new AbortController();
   private readonly entities: EntityManager;
   private readonly entityBrains: EntityBrainField; // V42: per-organism 70-param neural controller
   private readonly shoggoths: ShoggothSystem;
@@ -710,21 +713,29 @@ export class World {
     // F-SUPER V34/35: the access puzzle fires `superhero-unlock` once when solved → reveal #2 + the
     // player HUD; the HUD's buttons fire `hero-power`/`hero-vision`/`hero-cam` for the world to apply.
     if (typeof window !== 'undefined') {
+      const signal = this.disposeAbort.signal;
       window.addEventListener('cqm:superhero-unlock', () => this.revealSecondSuper(), {
         once: true,
+        signal,
       });
-      window.addEventListener('cqm:hero-power', (e) =>
-        this.heroPower(((e as CustomEvent).detail?.id as string) ?? ''),
+      window.addEventListener(
+        'cqm:hero-power',
+        (e) => this.heroPower(((e as CustomEvent).detail?.id as string) ?? ''),
+        { signal },
       );
-      window.addEventListener('cqm:hero-vision', () => this.heroCycleRender());
-      window.addEventListener('cqm:hero-cam', () => this.heroCycleCam()); // V41: orbit/3rd/1st
-      window.addEventListener('cqm:hero-mode', () => this.heroCycleControl()); // V41: autopilot/assist/manual
-      window.addEventListener('cqm:hero-move', (e) => {
-        const d = (e as CustomEvent).detail ?? {};
-        this.heroPad.x = Number(d.x) || 0; // on-screen D-pad / touch steer (held vector)
-        this.heroPad.y = Number(d.y) || 0;
-        this.heroPad.z = Number(d.z) || 0;
-      });
+      window.addEventListener('cqm:hero-vision', () => this.heroCycleRender(), { signal });
+      window.addEventListener('cqm:hero-cam', () => this.heroCycleCam(), { signal }); // V41: orbit/3rd/1st
+      window.addEventListener('cqm:hero-mode', () => this.heroCycleControl(), { signal }); // V41: autopilot/assist/manual
+      window.addEventListener(
+        'cqm:hero-move',
+        (e) => {
+          const d = (e as CustomEvent).detail ?? {};
+          this.heroPad.x = Number(d.x) || 0; // on-screen D-pad / touch steer (held vector)
+          this.heroPad.y = Number(d.y) || 0;
+          this.heroPad.z = Number(d.z) || 0;
+        },
+        { signal },
+      );
     }
     bindPanelToggles();
     this.bindObservatoryTabs();
@@ -816,6 +827,17 @@ export class World {
    */
   private bootPopulation(): number {
     return Math.max(120, Math.min(World.BOOT_POP, this.quality.targetEntities));
+  }
+
+  /**
+   * Lifecycle teardown for the dev HMR hook (`main.ts` calls `world.dispose?.()` before a hot-replace).
+   * Drops the global hero-event listeners and tears the audio engine down (timers + context); without
+   * it those leaked one set per reload, each bound to the now-dead World. Idempotent and a no-op in
+   * production (HMR is dev-only). The renderer Engine is freed separately by the HMR hook.
+   */
+  dispose(): void {
+    this.disposeAbort.abort();
+    this.audio.dispose();
   }
 
   /**

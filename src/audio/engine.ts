@@ -91,6 +91,10 @@ export class AudioEngine {
   private musicGain: GainNode | null = null;
   private sfxGain: GainNode | null = null;
   private musicInterval: ReturnType<typeof setInterval> | null = null;
+  /** Ambient auto-SFX timer + its visibilitychange handler — retained so {@link dispose} can clear
+   *  them (the renderer side already tears down via Engine.dispose; the audio side must match). */
+  private ambientInterval: ReturnType<typeof setInterval> | null = null;
+  private visibilityHandler: (() => void) | null = null;
   private _musicOn = false;
   private _sfxOn = false;
   /** Preview cursor for {@link cycleSfxPreview} (legacy `sfxIdx`). */
@@ -155,21 +159,48 @@ export class AudioEngine {
     this.sfxGain.gain.value = 0;
     this.sfxGain.connect(this.ctx.destination);
     // Ambient auto-SFX (legacy 548): only ticks while SFX are on AND the tab is visible.
-    setInterval(
+    this.ambientInterval = setInterval(
       () => {
         if (this._sfxOn && !document.hidden) this.play('ambient');
       },
       3500 + this.rng() * 3500,
     );
     // Known Bug 3: park the whole context while hidden; wake it only if audio is enabled.
-    document.addEventListener('visibilitychange', () => {
+    this.visibilityHandler = () => {
       if (!this.ctx) return;
       if (document.hidden) {
         if (this._musicOn || this._sfxOn) void this.ctx.suspend();
       } else if (this._musicOn || this._sfxOn) {
         void this.ctx.resume();
       }
-    });
+    };
+    document.addEventListener('visibilitychange', this.visibilityHandler);
+  }
+
+  /**
+   * Lifecycle teardown (HMR / world disposal): stop the scheduler, clear the ambient timer, drop the
+   * visibilitychange listener, and close the AudioContext. Idempotent — safe to call when never
+   * `init()`-ed. Without this, every dev hot-reload leaked a live interval + listener + context
+   * bound to the dead engine (the renderer side already disposed via Engine.dispose; this matches it).
+   */
+  dispose(): void {
+    this.stopScheduler();
+    if (this.ambientInterval !== null) {
+      clearInterval(this.ambientInterval);
+      this.ambientInterval = null;
+    }
+    if (this.visibilityHandler) {
+      document.removeEventListener('visibilitychange', this.visibilityHandler);
+      this.visibilityHandler = null;
+    }
+    const ctx = this.ctx;
+    this.ctx = null;
+    this.musicGain = null;
+    this.sfxGain = null;
+    this.analyser = null;
+    this._musicOn = false;
+    this._sfxOn = false;
+    if (ctx && ctx.state !== 'closed') void ctx.close();
   }
 
   /**

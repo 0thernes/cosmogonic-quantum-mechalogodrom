@@ -215,9 +215,10 @@ export function statevectorToDensityMatrix(
       const ai = psiIm[i] ?? 0;
       const br = psiRe[j] ?? 0;
       const bi = psiIm[j] ?? 0;
-      // ρ_ij = ψ_i * conj(ψ_j)
+      // ρ_ij = ψ_i · conj(ψ_j) = (ar+i·ai)(br−i·bi) ⇒ Im = ai·br − ar·bi (NOT ar·bi − ai·br,
+      // which is the conjugate ρ* — a sign error that flips every off-diagonal phase).
       outRe[idx] = ar * br + ai * bi;
-      outIm[idx] = ar * bi - ai * br;
+      outIm[idx] = ai * br - ar * bi;
     }
   }
 }
