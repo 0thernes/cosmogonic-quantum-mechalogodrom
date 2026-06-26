@@ -78,11 +78,16 @@ function syncReceipts(s: string): string {
 
 /** Apply CURRENT-version propagation. Only explicit present-tense markers — never historical refs. */
 function syncVersion(s: string): string {
-  return s
-    .replace(/Package\s+\*\*v?0\.[0-9]+\.[0-9]+\*\*/g, `Package **v${VERSION}**`)
-    .replace(/Package\s+v?0\.[0-9]+\.[0-9]+/g, `Package v${VERSION}`)
-    .replace(/v?0\.[0-9]+\.[0-9]+\s+@\s+current/g, `v${VERSION} @ current`)
-    .replace(/version-0\.[0-9]+\.[0-9]+/g, `version-${VERSION}`);
+  return (
+    s
+      .replace(/Package\s+\*\*v?0\.[0-9]+\.[0-9]+\*\*/g, `Package **v${VERSION}**`)
+      .replace(/Package\s+v?0\.[0-9]+\.[0-9]+/g, `Package v${VERSION}`)
+      .replace(/v?0\.[0-9]+\.[0-9]+\s+@\s+current/g, `v${VERSION} @ current`)
+      .replace(/version-0\.[0-9]+\.[0-9]+/g, `version-${VERSION}`)
+      // TECH-SPEC / spec-header "**Version:** vX.Y.Z" — the one current-version marker this missed,
+      // which left TECHNICAL-SPECIFICATION.md stuck a version behind until hand-reconciled. Now durable.
+      .replace(/(\*\*Version:\*\*\s+)v?0\.[0-9]+\.[0-9]+/g, `$1v${VERSION}`)
+  );
 }
 
 let changed = 0;
