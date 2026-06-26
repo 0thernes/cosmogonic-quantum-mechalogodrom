@@ -5,7 +5,7 @@
 **Date:** 2026-06-19 (Ralph Loop Iteration 1+)
 **Corpus Location:** Z:\[Vibe Coded (AI)]\(Tsotchke) (~13,194 files, 714MB, 20 repos + sites)
 **Target:** Wire "everywhere" into Cosmogonic Quantum Mechalogodrom (src/, docs/, ui/, native ideas, contracts, receipts, all systems).
-**Steering:** Masters (BROLY executor, STARKILLER architect, DR-MANHATTAN physicist), MODULE-CONTRACTS.md, PHILOSOPHY.md, determinism (Rng only), no hot alloc, full gates, receipts, honesty (sim only, inspired-by, MIT provenance).
+**Steering:** Masters (BROLY executor, STARKILLER architect, DR-MANHATTAN physicist), MODULE-CONTRACTS.md, PHILOSOPHY-2026-06-26.md, determinism (Rng only), no hot alloc, full gates, receipts, honesty (sim only, inspired-by, MIT provenance).
 **Protocol:** Study corpus first (list, read, grep key files), update all reports/audits, make contract-compliant incremental wirings, measure, gate, log. No claim of completion until unequivocal (Ralph loop will re-feed until done).
 
 ## 1. CORPUS STUDY SUMMARY (Deep Dive — Every Relevant Line/Repo/Concept)

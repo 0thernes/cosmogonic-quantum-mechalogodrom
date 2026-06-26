@@ -5,7 +5,7 @@
  * `.esk` programs via `scripts/harvest-tsotchke-corpus.ts`; this leaf exposes catalog receipts for
  * primordial-soup / digital-biologics DNA without duplicating the harvest pipeline.
  *
- * © tsotchke — see THIRD-PARTY-NOTICES.md + docs/TSOTCHKE-INTEGRATION-MAP.md.
+ * © tsotchke — see THIRD-PARTY-NOTICES.md + docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md.
  */
 
 /** Fingerprint mix for a harvested program index (deterministic). */

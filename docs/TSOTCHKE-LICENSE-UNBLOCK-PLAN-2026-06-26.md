@@ -154,4 +154,4 @@ SOFTWARE.
 
 ---
 
-_Receipt source:_ `docs/TSOTCHKE-INTEGRATION-MAP.md` §61-76
+_Receipt source:_ `docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md` §61-76

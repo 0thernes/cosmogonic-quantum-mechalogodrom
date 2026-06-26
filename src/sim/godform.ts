@@ -2,7 +2,7 @@
  * GOAL5 Godform / Pantheon facade — 25 Archons (1 NEO + 4 OMEGA apex + 20 ALPHA light).
  * POWER OF MATH: each emphasizes different substrate (Clifford stabilizer "prophecy", generative simulation,
  * topological curvature, chaotic regime, algebraic resonance).
- * Wired from full local Tsotchke corpus (20 repos: Eshkol AD primitive/HoTT/arena, Moonlab Bloch/qgt/tensor/open-registries, libirrep reps/QEC, etc.). See docs/TSOTCHKE-INTEGRATION-MAP.md.
+ * Wired from full local Tsotchke corpus (20 repos: Eshkol AD primitive/HoTT/arena, Moonlab Bloch/qgt/tensor/open-registries, libirrep reps/QEC, etc.). See docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md.
  * Used by world for spawn + by UI/telemetry.
  * Deterministic, no runtime allocation after boot.
  * See GOAL5 contract, masters (Oracle/Architect/Starkiller/Broly/Manhattan).

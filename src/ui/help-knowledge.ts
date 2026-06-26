@@ -38,7 +38,7 @@ export const HELP_KB: readonly HelpEntry[] = [
       'about',
     ],
     body: 'The Cosmogonic Quantum Mechalogodrom is a living chaos-biome simulation: thousands of procedural creatures drift, feed, mutate and trade inside a reactive cosmos, watched over by apex minds. Every visual effect sits on real math, and every system both reads and writes another — cognition feeds the economy, the economy steers war, war triggers sanctions. Open the panels from the menu bar (centered, just above the bottom toolbar) to inspect any layer live.',
-    see: ['docs/PHILOSOPHY.md', 'README.md'],
+    see: ['docs/PHILOSOPHY-2026-06-26.md', 'README.md'],
   },
   {
     id: 'how-to-play',

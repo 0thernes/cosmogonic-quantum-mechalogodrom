@@ -157,7 +157,7 @@ graph TD
   WORLD -. "feedback: economy/selection writes back to minds" .-> SOUP
 ```
 
-**The architectural stance (Starkiller's contract):** _Cosmogonic is the synthesis layer; Tsotchke is the engine room._ The defining design law (`docs/PHILOSOPHY.md`) is **mutual coupling**: every subsystem must _read from and write to_ another. That coupling — not any one kernel — is the object of evaluation.
+**The architectural stance (Starkiller's contract):** _Cosmogonic is the synthesis layer; Tsotchke is the engine room._ The defining design law (`docs/PHILOSOPHY-2026-06-26.md`) is **mutual coupling**: every subsystem must _read from and write to_ another. That coupling — not any one kernel — is the object of evaluation.
 
 ---
 

@@ -3,7 +3,7 @@
 # Tsotchke relicense drafts — drop-in files to unblock corpus integration
 
 Ready-to-commit license/notice files for the 4 **relicensable** Tsotchke repos, so Cosmogonic can port
-them in. Provenance-checked 2026-06-21 (see `../TSOTCHKE-INTEGRATION-MAP.md` → "Provenance & relicensing
+them in. Provenance-checked 2026-06-21 (see `../TSOTCHKE-INTEGRATION-MAP-2026-06-26.md` → "Provenance & relicensing
 risk"). **Not legal advice — confirm chain-of-title first.**
 
 ## Before you commit any LICENSE: confirm 2 non-code facts

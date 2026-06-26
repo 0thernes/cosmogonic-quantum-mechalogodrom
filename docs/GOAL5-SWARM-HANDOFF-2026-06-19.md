@@ -11,7 +11,7 @@
 ## Agent 1: STARKILLER-ARCHITECT (research focus: eshkol, moonlab, libirrep, quantum-quake, ulg, local contracts/arch)
 
 - Research receipts: eshkol (AD compiler primitive, HoTT, arena, GWT/active-inference consciousness), moonlab (Clifford, QGT, statevec, open-core), libirrep (reps/QEC), ulg (WebGPU closures + field sampling), quantum-quake (runtime conformance).
-- Edited (owned): docs/MODULE-CONTRACTS.md, ARCHITECTURE.md, ERD.md, ERM.md, KANBAN.md, TECHNICAL-SPECIFICATION.md, adr/0005-_, reports/_.
+- Edited (owned): docs/MODULE-CONTRACTS.md, ARCHITECTURE.md, ERD.md, ERM-2026-06-26.md, KANBAN.md, TECHNICAL-SPECIFICATION.md, adr/0005-_, reports/_.
 - Contracts updated for Tsotchke lineage (facades, determinism, feedback loops per PHILOSOPHY).
 - No src mutations.
 - Gates: core green (build/test/lint/type); receipts law crater noted as pre-existing data.

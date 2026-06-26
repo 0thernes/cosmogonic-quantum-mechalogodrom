@@ -30,7 +30,7 @@ Rewritten in place when the facts change (per the binding "Living docs, no archi
 | Biologic forms      | `26`                      | `CANONICAL_BIOLOGIC_FORMS`                                                           | `sync-surfaces.ts`      |
 | Morphotypes         | `250` live · `100` legacy | `phyla.ts` (`PHYLUM_COUNT 10 × MORPHS_PER_PHYLUM 25`) / `constants.ts` `MORPH_COUNT` | prose (NOT auto-synced) |
 | Butlin scorecard    | `8/14 met + 6/14 partial` | measured 2026-06-21 adversarial code audit                                           | prose (NOT auto-synced) |
-| Tsotchke corpus     | `20 projects, ~16 wired`  | [TSOTCHKE-INTEGRATION-MAP.md](./TSOTCHKE-INTEGRATION-MAP.md)                         | prose (NOT auto-synced) |
+| Tsotchke corpus     | `20 projects, ~16 wired`  | [TSOTCHKE-INTEGRATION-MAP-2026-06-26.md](./TSOTCHKE-INTEGRATION-MAP-2026-06-26.md)   | prose (NOT auto-synced) |
 | Entity ceiling      | `50,000` (mega tier)      | `src/core/quality.ts` `resolveTier`                                                  | prose (NOT auto-synced) |
 | Apex composite mind | `~10,081` weights         | `src/sim/super-mind.ts`                                                              | prose (NOT auto-synced) |
 | Legacy spine        | `~1,444` params           | `src/sim/super-mind.ts` / ADR-0008                                                   | prose (NOT auto-synced) |
@@ -49,15 +49,15 @@ Rewritten in place when the facts change (per the binding "Living docs, no archi
 
 ## 2 · Surface inventory (where shared facts are published)
 
-| Class            | Surfaces                                                                                          |
-| ---------------- | ------------------------------------------------------------------------------------------------- |
-| Root MD          | `README.md`, `ROADMAP.md`, `CHANGELOG.md`, `CLAUDE.md`, `AGENTS.md`, `HANDOFF-2026-06-26.md`, …   |
-| Steering         | `CLAUDE.md`, `AGENTS.md`, `masters/*.xml` (3), `docs/PHILOSOPHY.md`, `docs/MODULE-CONTRACTS.md`   |
-| Progress / truth | `docs/NHSI-PROGRESS-DASHBOARD.md`, `docs/reports/2026-06-26-CURRENT-TRUTH-BASELINE.md`            |
-| Consciousness    | `docs/PATH-TO-14-14-CONSCIOUSNESS-INDICATORS.md`, `docs/reports/2026-06-21-NHSI-HONESTY-AUDIT.md` |
-| HTML surfaces    | `index.html`, `docs.html`, `specs.html` (+ `lab/`)                                                |
-| Tsotchke         | `docs/TSOTCHKE-INTEGRATION-MAP.md` (authoritative), `THIRD-PARTY-NOTICES.md`                      |
-| Diagrams         | `docs/ERD.md`, `docs/ERM.md`, `docs/ERP.md`, `docs/ARCHITECTURE.md`                               |
+| Class            | Surfaces                                                                                                     |
+| ---------------- | ------------------------------------------------------------------------------------------------------------ |
+| Root MD          | `README.md`, `ROADMAP.md`, `CHANGELOG.md`, `CLAUDE.md`, `AGENTS.md`, `HANDOFF-2026-06-26.md`, …              |
+| Steering         | `CLAUDE.md`, `AGENTS.md`, `masters/*.xml` (3), `docs/PHILOSOPHY-2026-06-26.md`, `docs/MODULE-CONTRACTS.md`   |
+| Progress / truth | `docs/NHSI-PROGRESS-DASHBOARD.md`, `docs/reports/2026-06-26-CURRENT-TRUTH-BASELINE.md`                       |
+| Consciousness    | `docs/PATH-TO-14-14-CONSCIOUSNESS-INDICATORS-2026-06-26.md`, `docs/reports/2026-06-21-NHSI-HONESTY-AUDIT.md` |
+| HTML surfaces    | `index.html`, `docs.html`, `specs.html` (+ `lab/`)                                                           |
+| Tsotchke         | `docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md` (authoritative), `THIRD-PARTY-NOTICES.md`                      |
+| Diagrams         | `docs/ERD.md`, `docs/ERM-2026-06-26.md`, `docs/ERP-2026-06-26.md`, `docs/ARCHITECTURE.md`                    |
 
 ---
 
@@ -123,7 +123,7 @@ regenerated. Each also carries the in-content `reviewed: 2026-06-26` stamp.
   `ARCHITECTURE`, `KANBAN`, `ERD`/`ERM`/`ERP`, `MODULE-CONTRACTS`, `FILE-MAP`, `TECHNICAL-SPECIFICATION`,
   `PHILOSOPHY`, `NHSI-PROGRESS-DASHBOARD`, `PATH-TO-14-14-…`, `SUPER-CREATURE-RESEARCH`, `BENCHMARKS`,
   `CORPUS_INTEGRATION_REPORT` — renaming reds the gate / breaks the live sync machinery.
-- **Convention-critical / heavily-linked**: `AUDIT-LOG.md`, this ledger, `TSOTCHKE-INTEGRATION-MAP.md`.
+- **Convention-critical / heavily-linked**: `AUDIT-LOG.md`, this ledger, `TSOTCHKE-INTEGRATION-MAP-2026-06-26.md`.
 - **Numbered ADRs** (`docs/adr/000X-*`, referenced as "ADR-0009"), **legacy/** (verbatim), and
   **already-dated** files (`docs/reports/2026-*`, `docs/DAILY_RUNS/*`, the `-2026-06-1x/20` audits) whose
   filename date is their meaningful point-in-time record.

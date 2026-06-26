@@ -51,7 +51,7 @@ ports; they are layered **on top of** our own statevector.
 ### Determinism deviation (intentional)
 
 The upstream qubit-RNG seeds itself from host entropy (`gettimeofday` / `rdtsc` / PID / ASLR). This
-project's determinism law (CLAUDE.md; ADR 0004; `docs/PHILOSOPHY.md`) forbids `Math.random` / `Date.now`
+project's determinism law (CLAUDE.md; ADR 0004; `docs/PHILOSOPHY-2026-06-26.md`) forbids `Math.random` / `Date.now`
 in sim logic, so those host-entropy sources are replaced by a single seeded `Rng` stream plus an internal
 golden-ratio "runtime" surrogate. Everything downstream of the entropy source is upstream-exact, so the
 same world seed replays the same quantum bitstream.

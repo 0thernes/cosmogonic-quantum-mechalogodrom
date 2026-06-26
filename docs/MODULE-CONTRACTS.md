@@ -569,7 +569,7 @@ rAF → dt = min(clock.delta, 0.05) * timeScale
 
 # CONTRACTS V2 — Quantum Wildbeyond expansion (0.2.0)
 
-Seven new systems per docs/PHILOSOPHY.md. Every system must READ from and WRITE
+Seven new systems per docs/PHILOSOPHY-2026-06-26.md. Every system must READ from and WRITE
 to at least one existing system (philosophy rule 4). All V1 ground rules apply
 (strict TS, seeded Rng only, allocation-free update bodies, JSDoc + complexity).
 File ownership is EXCLUSIVE — the named writer is the only agent touching a file.
@@ -792,7 +792,7 @@ anomaly fires once per window on a step impulse; ring buffers are pre-allocated.
 
 ## lab/quantum-wildbeyond.html (writer: lab) — algorithmic-art deliverable
 
-Self-contained p5.js artifact expressing docs/PHILOSOPHY.md. MUST start from the
+Self-contained p5.js artifact expressing docs/PHILOSOPHY-2026-06-26.md. MUST start from the
 skill template at
 `C:\Users\Alexa\AppData\Roaming\Claude\local-agent-mode-sessions\skills-plugin\cdc38a9f-1e3b-4c72-a4e7-8d39e1ccb11d\5da6077d-38bd-4073-b218-1373e774ec00\skills\algorithmic-art\templates\viewer.html`
 (Read it FIRST; keep header/sidebar/branding/seed controls/action buttons

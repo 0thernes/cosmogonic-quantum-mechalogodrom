@@ -1,5 +1,5 @@
 /**
- * TSOTCHKE CORPUS REGISTRY — BINDING LEDGER PER docs/TSOTCHKE-INTEGRATION-MAP.md
+ * TSOTCHKE CORPUS REGISTRY — BINDING LEDGER PER docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md
  * ALL repos/projects from tsotchke user + Tsotchke-Corporation org + full local Z:\[Vibe Coded (AI)]\(Tsotchke) corpus (12k+ files) MAPPED and UTILIZED as digital-biologic substrate.
  * Deep apex (8): Eshkol (AD/GWT/consciousness-engine + .esk DNA), Moonlab (Clifford/tensor), QGTL, spin NN, quantum_rng, libirrep, tensorcore, classical_rng.
  * World/sim (2): asteroids, simple_mnist.
@@ -8,7 +8,7 @@
  * Fenced by design (non-LLM mandate + proprietary): gpt2-basic, llm-arbitrator, SolanaQuantumFlux.
  * Toolchain/meta: homebrew-eshkol, .github.
  * Catalysis (fullTsotchkeBiologicsCatalysis + soup + petri + Archons) mixes ALL wiring>0. Harvest pulls real local .esk for Eshkol DNA.
- * Tsotchke is REAL MIT-grade startup quantum math (no overclaims; physical QC for scale). Binding depth: TSOTCHKE-INTEGRATION-MAP.md. "Grow What Thou Wilt."
+ * Tsotchke is REAL MIT-grade startup quantum math (no overclaims; physical QC for scale). Binding depth: TSOTCHKE-INTEGRATION-MAP-2026-06-26.md. "Grow What Thou Wilt."
  *
  * NOT LLM. Different forms of life. Petri is growth engine. Super Creature initial spark only.
  */

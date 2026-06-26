@@ -1463,8 +1463,8 @@ standing 500-point quality audit.
   and repo **governance**: a PR template (gate checklist), bug/feature issue
   templates, and CODEOWNERS. (Complements the existing CI gate, tagged-release CD,
   and grouped Dependabot.)
-- **Data-model documentation set**: `docs/ERM.md` (conceptual relationship model
-  with cardinality rules + a cross-system write-back matrix) and `docs/ERP.md`
+- **Data-model documentation set**: `docs/ERM-2026-06-26.md` (conceptual relationship model
+  with cardinality rules + a cross-system write-back matrix) and `docs/ERP-2026-06-26.md`
   (process view — boot sequence, per-frame pipeline, cadence schedule, entity
   lifecycle, audit flow), complementing the existing `docs/ERD.md`.
 - **`docs/500-POINT-INSPECTION-2026-06-26.md`** — a standing audit: 25 sections × 20
@@ -1985,7 +1985,7 @@ landed as a patch release. Contract additions are recorded in
 ## [0.2.0] - 2026-06-10
 
 The **Quantum Wildbeyond** expansion. Seven new systems implementing
-[docs/PHILOSOPHY.md](./docs/PHILOSOPHY.md): every effect earns its visuals from
+[docs/PHILOSOPHY-2026-06-26.md](./docs/PHILOSOPHY-2026-06-26.md): every effect earns its visuals from
 an honest model (statevector, PDE, graph, Voronoi geometry, cryptographic
 digest, audio spectrum, rolling regression), and every system both reads from
 and writes to at least one existing system. Specified in
@@ -2042,7 +2042,7 @@ and writes to at least one existing system. Specified in
   sites, interference rings on measurement events; p5 from CDN only.
 - **Master files** (`masters/`): the steering trinity — Executor (Broly),
   Architect (Starkiller), Physicist (Dr Manhattan) — bound by `CLAUDE.md`,
-  plus the aesthetic constitution `docs/PHILOSOPHY.md`.
+  plus the aesthetic constitution `docs/PHILOSOPHY-2026-06-26.md`.
 - **Reference catalogs** imported into `docs/reference/`
   (`math-libs-catalog-2026-06-26.md` + `domain-key-libraries.csv`): the 20-domain JS/TS
   math-library survey with per-library adoption status; the selection itself

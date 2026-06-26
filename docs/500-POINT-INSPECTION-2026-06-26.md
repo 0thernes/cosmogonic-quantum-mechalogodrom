@@ -451,9 +451,9 @@ and a CycloneDX SBOM shipped). The audit is re-run before each tagged release; d
 364. ✅ COMPLEXITY-2026-06-26.md is a single-source Big-O budget matching each module's JSDoc.
 365. ✅ BENCHMARKS.md records methodology and the ultra-tier optimization.
 366. ✅ DESIGN-SYSTEM-2026-06-26.md defines tokens, color, type, and layout rules.
-367. ✅ ERD.md + the new ERM.md + ERP.md cover structure, relationships, and processes.
+367. ✅ ERD.md + the new ERM-2026-06-26.md + ERP-2026-06-26.md cover structure, relationships, and processes.
 368. ✅ WIREFRAMES-2026-06-26.md documents the UI layout intent.
-369. ✅ PHILOSOPHY.md states the design principles the code is held to.
+369. ✅ PHILOSOPHY-2026-06-26.md states the design principles the code is held to.
 370. ✅ Five ADRs record the load-bearing decisions (Bun, three.js, HTMX+Tailwind, deterministic RNG, math stack).
 371. ✅ CONTRIBUTING.md documents the gate, determinism rule, and allocation discipline.
 372. ✅ SECURITY.md defines the disclosure policy.

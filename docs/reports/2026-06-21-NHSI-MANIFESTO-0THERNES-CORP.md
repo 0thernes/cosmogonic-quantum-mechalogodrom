@@ -75,7 +75,7 @@ The tech is real. It works. It is not fake. The corpus is genuine MIT-grade quan
 
 **All of this is real math.** The honest Cosmogonic ledger is not "fake vs real"; it is **deep-wired, world-wired,
 telemetry-wired, studied/license-gated, redundant/toolchain, or deliberately fenced**. The binding source of truth is
-`docs/TSOTCHKE-INTEGRATION-MAP.md`. Nothing in this project may call Tsotchke fake, overclaiming, or decorative
+`docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md`. Nothing in this project may call Tsotchke fake, overclaiming, or decorative
 (`THIRD-PARTY-NOTICES.md` §On Tsotchke).
 
 ---
@@ -93,7 +93,7 @@ All figures below are measured, not aspirational. The aspirational targets (100 
 
 ### III.2 Tsotchke Corpus Integration
 
-**Total Tsotchke corpus projects accounted: 20** (binding ledger: `docs/TSOTCHKE-INTEGRATION-MAP.md`).
+**Total Tsotchke corpus projects accounted: 20** (binding ledger: `docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md`).
 
 **Wiring status — ~16 of 20 wired with real downstream effect:**
 
@@ -480,10 +480,10 @@ It is **not** the first A-Life, the first digital evolution, the first morphogen
 
 - `docs/reports/2026-06-21-NHSI-MANIFESTO-0THERNES-CORP.md` — this manifesto
 - `docs/NHSI-PROGRESS-DASHBOARD.md` — canonical progress metrics
-- `docs/TSOTCHKE-INTEGRATION-MAP.md` — honest Tsotchke wiring ledger (binding)
+- `docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md` — honest Tsotchke wiring ledger (binding)
 - `docs/AUDIT-LOG.md` — centralized audit log (newest-first)
-- `docs/MODULE-CONTRACTS.md` — binding contracts · `docs/PHILOSOPHY.md` — aesthetic constitution
-- `docs/ARCHITECTURE.md`, `docs/ERD.md` / `docs/ERM.md` / `docs/ERP.md`, `docs/KANBAN.md`
+- `docs/MODULE-CONTRACTS.md` — binding contracts · `docs/PHILOSOPHY-2026-06-26.md` — aesthetic constitution
+- `docs/ARCHITECTURE.md`, `docs/ERD.md` / `docs/ERM-2026-06-26.md` / `docs/ERP-2026-06-26.md`, `docs/KANBAN.md`
 - `CHANGELOG.md` — release log · `THIRD-PARTY-NOTICES.md` — Tsotchke attribution (binding §On Tsotchke)
 
 **Master XMLs (Agent Steering):** `masters/LEGENDARY-SUPER-SAIYAN-BROLY-MANIFESTO.xml` (Executor), `masters/ORACLE-ARCHITECT-OF-THE-DARKSIDE-STARKILLER.xml` (Architect), `masters/GALAXOGONIC-WARHAMMER-POWER-MODE-DR-MANHATTAN.xml` (Physicist).

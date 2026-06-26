@@ -11,7 +11,7 @@ numbers/claims that were true at publication and have since been corrected.
 
 - [NHSI Progress Dashboard](../NHSI-PROGRESS-DASHBOARD.md) — the single living scorecard
   (measured receipts + honest NHSI counts).
-- [Tsotchke Integration Map](../TSOTCHKE-INTEGRATION-MAP.md) — the canonical corpus-wiring ledger.
+- [Tsotchke Integration Map](../TSOTCHKE-INTEGRATION-MAP-2026-06-26.md) — the canonical corpus-wiring ledger.
 - [Architecture](../ARCHITECTURE.md) · [Technical Specification](../TECHNICAL-SPECIFICATION.md)
   · [Module Contracts](../MODULE-CONTRACTS.md).
 

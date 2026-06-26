@@ -128,7 +128,7 @@ the science of mind._
 A procedural WebGL cosmic ecosystem, ported from an 882-line single-file HTML monolith into a strict,
 deterministic, allocation-disciplined TypeScript module graph (Bun + three.js + Tailwind 4 + HTMX 2),
 with an optional native C++20 renderer. It is governed by a binding per-module contract
-(`../MODULE-CONTRACTS.md`) and an aesthetic constitution (`../PHILOSOPHY.md`) whose first law is:
+(`../MODULE-CONTRACTS.md`) and an aesthetic constitution (`../PHILOSOPHY-2026-06-26.md`) whose first law is:
 **real math under every effect; every system reads from AND writes to another system.** Nothing in it
 is set dressing.
 
@@ -697,7 +697,7 @@ used, and the equivalent phrasings are noted.
 | Large-scale quantum substrate     | Aaronson–Gottesman **Clifford tableau to 32/64+ qubits** (present, tested, **not yet wired**)                             | `clifford-tableau.ts`                                                                   |
 | Decision vocabulary               | **7 plans** (HUNT·FLEE·DOMINATE·DECEIVE·SPAWN·EXPLORE·REST)                                                               | `super-creature.ts`                                                                     |
 | Spin-glass instinct               | **56 spins**, 7 archetypes, Metropolis settle                                                                             | `spin-glass.ts`, `super-mind.ts:217`                                                    |
-| Tsotchke corpus integration       | **20 projects**, **~16 wired** with real downstream effect (8 deep in apex mind, 4 in petri growth engine); real MIT math | `../TSOTCHKE-INTEGRATION-MAP.md`                                                        |
+| Tsotchke corpus integration       | **20 projects**, **~16 wired** with real downstream effect (8 deep in apex mind, 4 in petri growth engine); real MIT math | `../TSOTCHKE-INTEGRATION-MAP-2026-06-26.md`                                             |
 | Apex `think()` cost               | **~3.34 ms** (full bench suite) / **~8.85 ms** (focused); snapshot ~2.44 / 6.89 ms; 5× think ~14.47 / 25.40 ms            | `bench/super-mind.bench.ts`                                                             |
 | Consciousness metrics             | **2** live scalars (GWT ignition, IIT Φ proxy) + genuine register Φ                                                       | `super-mind.ts:43–46`, `super-qubits.ts`                                                |
 | Butlin indicator coverage         | **8 / 14 met + 6 / 14 partial** (computational indicators, NOT sentience)                                                 | Part III §III.2; Butlin et al. 2023, arXiv:2308.08708                                   |

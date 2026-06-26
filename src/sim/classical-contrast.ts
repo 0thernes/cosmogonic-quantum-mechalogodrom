@@ -18,7 +18,7 @@
  * r₁ that collapses to 0-variance (treated as maximally degenerate) and a maximally non-uniform χ²,
  * so its contrast against either real generator saturates near 1.
  *
- * Determinism (CLAUDE.md operational law; docs/PHILOSOPHY.md): no Math.random / Date.now. The LCG is
+ * Determinism (CLAUDE.md operational law; docs/PHILOSOPHY-2026-06-26.md): no Math.random / Date.now. The LCG is
  * a closed-form recurrence; the Eshkol generator is seeded through {@link mulberry32}.
  *
  * MIT © tsotchke for the LCG baseline + Eshkol QRNG — see THIRD-PARTY-NOTICES.md.

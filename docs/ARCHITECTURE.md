@@ -18,7 +18,7 @@ written permission. See [LICENSE](../LICENSE).
 
 ## Design rules (enforced, not aspirational)
 
-**Documentation sync note (all must match):** README, this ARCHITECTURE.md, ERD/ERM/ERP.md, PHILOSOPHY.md, MODULE-CONTRACTS.md, TECHNICAL-SPECIFICATION.md / SPECS, KANBAN, BOOK-2026-06-26.md, AI-SUBSYSTEM-2026-06-26.md, reports, masters/ references, LABS (lab/), and in-app "Dome/World" docs (observatory, help-system, copilot, /docs page via docs-page.ts + mermaid) are fully updated and consistent with code + GitHub. Local == GH. Accurate, truthful, current. Tsotchke full wiring + digital biologics petri as core.
+**Documentation sync note (all must match):** README, this ARCHITECTURE.md, ERD/ERM/ERP-2026-06-26.md, PHILOSOPHY-2026-06-26.md, MODULE-CONTRACTS.md, TECHNICAL-SPECIFICATION.md / SPECS, KANBAN, BOOK-2026-06-26.md, AI-SUBSYSTEM-2026-06-26.md, reports, masters/ references, LABS (lab/), and in-app "Dome/World" docs (observatory, help-system, copilot, /docs page via docs-page.ts + mermaid) are fully updated and consistent with code + GitHub. Local == GH. Accurate, truthful, current. Tsotchke full wiring + digital biologics petri as core.
 
 **Tsotchke Petri Genesis (current paradigm):** Tsotchke's _scientific_ repos (Eshkol primary for AD/VM/QRNG, Moonlab for SVD tensor-networks/Clifford/H₂ VQE, QGTL geometry, spin-based NN, libirrep, quantum-quake, PINN, PIMC, ulg, logo-lab, tensorcore) are genuinely ported into `src/` and wired as the substrate for digital biologics — each verified leaf-by-leaf with golden tests, not asserted. The three LLM/chain repos (gpt2-basic, llm-arbitrator, SolanaQuantumFlux) are **deliberately fenced** out of the deterministic sim (registry wiring 0), never "wired"; Quantum-RNG-API is a thin **wired** REST-style wrapper over the Eshkol QRNG core (not fenced). The primordial soup / petri dish (primordial-soup.ts + digital-biologics.ts) grows different forms of life from these real kernels. Super Creature is the first spark / initial architecture. Sentience and consciousness via real mathematical substrates in a seeded deterministic world. "Grow What Thou Wilt." A leaf still using a heuristic rather than a full port (e.g. classical-contrast, eshkol-workspace) is tracked honestly in the audit, not credited as a real port.
 
@@ -286,7 +286,7 @@ Notes:
 - The `hunt` behavior is the one sim consumer that imports `MONOLITH_CONFIG`
   directly from `constants.ts` (it steers toward the nearest of 16 monoliths).
 - `math/quantum.ts` (QuantumRegister), `sim/lore.ts` (LoreEngine), and the
-  dotted V2 edges express PHILOSOPHY.md rule 4 — every Wildbeyond system reads
+  dotted V2 edges express PHILOSOPHY-2026-06-26.md rule 4 — every Wildbeyond system reads
   from AND writes to at least one existing system. The dotted arrows are the
   feedback web: register bands recolor the quantum cloud, the RD field lights
   the ground, Louvain tribes recolor connectome links and rewrite entity

@@ -8,7 +8,7 @@
  * gates, and a non-destructive Born sample reads a "thought collapse" — all deterministic from a
  * seeded {@link Rng} (no `Math.random`/`Date.now`), so the whole quantum psyche replays from a seed.
  *
- * Honest math (docs/PHILOSOPHY.md): every amplitude obeys the Schrödinger evolution of the applied
+ * Honest math (docs/PHILOSOPHY-2026-06-26.md): every amplitude obeys the Schrödinger evolution of the applied
  * gates; the per-qubit Bloch vectors come from the true single-qubit reduced density matrices; the
  * entanglement reading is the reduced-state purity deficit (1 − |r|²); the entropy is the normalized
  * Shannon entropy of the Born distribution. The statevector register + RY/RZ/CNOT gate set are our own

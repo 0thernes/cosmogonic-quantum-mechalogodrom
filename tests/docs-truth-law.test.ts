@@ -25,8 +25,8 @@ const CANONICAL = [
   'docs/MODULE-CONTRACTS.md',
   'docs/TECHNICAL-SPECIFICATION.md',
   'docs/ERD.md',
-  'docs/ERM.md',
-  'docs/ERP.md',
+  'docs/ERM-2026-06-26.md',
+  'docs/ERP-2026-06-26.md',
 ];
 
 /**
@@ -127,8 +127,8 @@ const NHSI_SURFACES = [
   'docs/TECHNICAL-SPECIFICATION.md',
   'AGENTS.md',
   'docs/ERD.md',
-  'docs/PHILOSOPHY.md',
-  'docs/PATH-TO-14-14-CONSCIOUSNESS-INDICATORS.md',
+  'docs/PHILOSOPHY-2026-06-26.md',
+  'docs/PATH-TO-14-14-CONSCIOUSNESS-INDICATORS-2026-06-26.md',
   'masters/LEGENDARY-SUPER-SAIYAN-BROLY-MANIFESTO.xml',
   'masters/GALAXOGONIC-WARHAMMER-POWER-MODE-DR-MANHATTAN.xml',
   'masters/ORACLE-ARCHITECT-OF-THE-DARKSIDE-STARKILLER.xml',

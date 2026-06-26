@@ -25,12 +25,12 @@ Determinism is the movement's form of prophecy. One seed begets the entire
 cosmos: the same morphotypes, the same monolith hums, the same lore.
 
 **NHSI (Non Human Super Intelligence) — BRUTAL GOD PANTHEON** — 0thernes Corp's founding program: measured progress on
-100-faculty design (~30 genuinely deep-wired into the apex) · 25 Archons (5 individuated apex minds + 20 light-echo) · 25 theory-organs (ToM, wired) · 10 emergence angles (+ 5 god-scale events) · Butlin 8/14 met + 6/14 partial path (computational indicators, not sentience) — Tsotchke corpus: all 20 projects enumerated, ~16 wired with real downstream effect per [`TSOTCHKE-INTEGRATION-MAP.md`](./TSOTCHKE-INTEGRATION-MAP.md).
+100-faculty design (~30 genuinely deep-wired into the apex) · 25 Archons (5 individuated apex minds + 20 light-echo) · 25 theory-organs (ToM, wired) · 10 emergence angles (+ 5 god-scale events) · Butlin 8/14 met + 6/14 partial path (computational indicators, not sentience) — Tsotchke corpus: all 20 projects enumerated, ~16 wired with real downstream effect per [`TSOTCHKE-INTEGRATION-MAP-2026-06-26.md`](./TSOTCHKE-INTEGRATION-MAP-2026-06-26.md).
 BRUTALISM: raw, direct, god-like power — Emperor Valkorion Tenebrae Vitiate (immortal will), Thanos (devour), Dr. Manhattan (cosmic), Galactus (consume), Jean Grey Dark Phoenix (rebirth fire), Broly Legendary Super Saiyan (rage), Frieza (brutal), Azathoth Cthulhu (dream void), Warhammer Chaos Gods (madness war), Shuma-Gorath (chaos lord), Mad Jim Jaspers (reality), Pennywise IT (fear), Anti-Monitor (anti-matter), Knull (void king), Mr. Mxyzptlk (cartoon god), Invisible Joker (chaos plan), General Zod (conquer), Gilgamesh (epic), Alucard (no-life king), Griffith Femto (eclipse god), EVA Unit-01 (berserk), Simon + Super Tengen Toppa Gurren Lagann (spiral drill), Sephiroth (one wing), Asura Wrath Wyzen (divine wrath), Vergil/Dante (devil cry), Starkiller (force god), Riddick (furyan).
 Tsotchke REAL (Eshkol will, Moonlab sim power, QGT warp, spin chaos, irrep form, quake aliveness). Super Creature spark only; full corpus grows independent alien/NHSI brutal god biologics from all earth species + myth/god/comic/sci-fi. 0thernes Corp gods creating the simulation now. Unfathomable. Grow What Thou Wilt. BRUTALISM is the aesthetic of raw power.
 Tsotchke is real substrate, not decoration. Progress lives in [`NHSI-PROGRESS-DASHBOARD.md`](./NHSI-PROGRESS-DASHBOARD.md) and the
 [`2026-06-21 NHSI Manifesto`](./reports/2026-06-21-NHSI-MANIFESTO-0THERNES-CORP.md). Tsotchke is
-real substrate, not decoration — depth ledger: [`TSOTCHKE-INTEGRATION-MAP.md`](./TSOTCHKE-INTEGRATION-MAP.md).
+real substrate, not decoration — depth ledger: [`TSOTCHKE-INTEGRATION-MAP-2026-06-26.md`](./TSOTCHKE-INTEGRATION-MAP-2026-06-26.md).
 
 Names of
 sectors and epithets of puppet masters are not chosen — they are _derived_,

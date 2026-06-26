@@ -14,7 +14,7 @@
  *   conversion, and every physical-constant mixing word (fine-structure, Planck, Rydberg, Heisenberg,
  *   Schrödinger, the three Pauli words, …). Full corpus adds QRNG_SQRT2, enhanced wrappers, ctx, get_system/runtime_entropy (host in upstream; det surrogate here).
  *
- * THE ONE DELIBERATE DEVIATION — determinism (CLAUDE.md operational law; docs/PHILOSOPHY.md): the
+ * THE ONE DELIBERATE DEVIATION — determinism (CLAUDE.md operational law; docs/PHILOSOPHY-2026-06-26.md): the
  * upstream draws unpredictability from the host (`gettimeofday`/`rdtsc`/PID/stack ASLR via
  * `get_system_entropy`/`get_runtime_entropy`). Sim randomness in this repo MUST be reproducible from a
  * seed (no `Math.random`/`Date.now` in sim logic), so those host-entropy sources are replaced by a
@@ -27,7 +27,7 @@
  * pipeline uses {@link bigint} (exact 64-bit wraparound); only the apex creature draws from it, at its
  * cognitive cadence — well within the frame budget (see bench/eshkol-qrng.bench.ts).
  *
- * WIRED FROM FULL TSOTCHKE CORPUS: see docs/TSOTCHKE-INTEGRATION-MAP.md (Eshkol AD + this QRNG, Moonlab qgt/Bloch, etc.). Used for all 5 Archons collapse/entropy.
+ * WIRED FROM FULL TSOTCHKE CORPUS: see docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md (Eshkol AD + this QRNG, Moonlab qgt/Bloch, etc.). Used for all 5 Archons collapse/entropy.
  */
 
 import type { Rng } from './rng';

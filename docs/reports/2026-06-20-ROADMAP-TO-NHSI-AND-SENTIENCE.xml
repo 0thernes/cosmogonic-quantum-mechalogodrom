@@ -53,7 +53,7 @@
     <metric name="archons" value="25-Archon pantheon = 5 individuated apex SuperMinds + 20 live light-echo" source="src/sim/super-mind.ts; PantheonSociety"/>
     <metric name="theoryOfMind" value="25 organs wired as a 6-family ensemble (additive/bayesian/recursive/temporal/deception/coalition)" source="docs/NHSI-PROGRESS-DASHBOARD.md"/>
     <metric name="emergenceAngles" value="10 angles wired (+ 5 god-scale release EVENTS - events, not additional angles)" source="src/sim/open-endedness.ts; docs/NHSI-PROGRESS-DASHBOARD.md"/>
-    <metric name="tsotchkeCorpus" value="20 corpus projects; ~16 wired with real downstream effect (8 deep in the apex mind, 4 in the petri growth engine)" source="docs/TSOTCHKE-INTEGRATION-MAP.md"/>
+    <metric name="tsotchkeCorpus" value="20 corpus projects; ~16 wired with real downstream effect (8 deep in the apex mind, 4 in the petri growth engine)" source="docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md"/>
     <metric name="butlinIndicators" value="8/14 met + 6/14 partial" note="computational INDICATORS, not sentience; the hard problem is untouched" source="Butlin et al. 2023, arXiv:2308.08708; docs SUPER-CREATURE-RESEARCH"/>
     <metric name="determinism" value="one mulberry32 seed; Math.random/Date.now GLOB-banned in sim/math" source="tests/determinism-law.test.ts"/>
   </baseline>

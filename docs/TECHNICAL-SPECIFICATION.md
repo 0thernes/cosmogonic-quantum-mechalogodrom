@@ -9,7 +9,7 @@
 
 **Version:** v0.18.0 · **Generated:** 2026-06-26 · **License:** Non-commercial research & play (© 0thernes; study / run / modify / share non-commercially, keep attribution, no for-profit use).
 **Gate:** 1,477 tests · 95.03% line / 92.03% func (canonical synced via verify-receipts 2026-06-26, receipts law enforced).  
-**NHSI scorecard:** [NHSI-PROGRESS-DASHBOARD.md](./NHSI-PROGRESS-DASHBOARD.md) · **Tsotchke depth:** [TSOTCHKE-INTEGRATION-MAP.md](./TSOTCHKE-INTEGRATION-MAP.md)
+**NHSI scorecard:** [NHSI-PROGRESS-DASHBOARD.md](./NHSI-PROGRESS-DASHBOARD.md) · **Tsotchke depth:** [TSOTCHKE-INTEGRATION-MAP-2026-06-26.md](./TSOTCHKE-INTEGRATION-MAP-2026-06-26.md)
 
 **Full Tsotchke wiring:** 20 Tsotchke corpus projects integrated (~16 wired). Eshkol as consciousness language. Primordial soup / petri as growth engine for digital biologics and sentience. 25 Archons (5 individuated apex minds + 20 live light-echo) with brutal god aspects (Valkorion, Thanos, Dark Phoenix, Galactus, Broly, Azathoth, Chaos Gods, Shuma Gorath, Mad Jim Jaspers, Pennywise, Anti-Monitor, Knull, Mr Mxyzptlk, Joker, Zod, Gilgamesh, Alucard, Griffith, EVA-01, Gurren Lagann, Sephiroth, Vergil, Dante, Starkiller, Riddick). Super Creature beginning only. All docs (README/ARCH/ER\*/PHILOSOPHY/CONTRACTS/SPECS/LABS/masters) + GH match local exactly. Accurate, truthful, current. Not LLM. "Grow What Thou Wilt."
 
@@ -124,7 +124,7 @@ server.ts (Bun.serve) ──serves──▶ index.html (/) · docs.html (/docs) 
 
 - **Composition root:** `world.ts` owns the `SimContext` dependency bag and ticks every system once
   per frame. Leaf modules never import the type hub at runtime.
-- **The aesthetic law** ([PHILOSOPHY.md](PHILOSOPHY.md)): _every system reads AND writes at least one
+- **The aesthetic law** ([PHILOSOPHY-2026-06-26.md](PHILOSOPHY-2026-06-26.md)): _every system reads AND writes at least one
   other system._ The frame loop is an explicit feedback web (e.g. quantum collapse → quantum cloud;
   reaction-diffusion → ground emissive map; analytics → audit; NHI → entity behaviour + factions).
 - **Boundary fence:** the non-deterministic LLM copilot (`server/`, `ui/copilot.ts`) imports nothing

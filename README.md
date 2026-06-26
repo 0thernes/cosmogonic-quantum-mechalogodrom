@@ -24,7 +24,7 @@ Built with **Bun + TypeScript + three.js 0.184 + Tailwind CSS 4 +
 HTMX 2**, ported from a single 882-line HTML monolith into a strict,
 deterministic, allocation-disciplined module graph.
 
-**Tsotchke (tsotchke user + Tsotchke-Corporation + full local Z:\[Vibe Coded (AI)]\(Tsotchke) corpus) is paramount — real, correct, MIT-grade quantum math (no overclaims; see THIRD-PARTY-NOTICES.md).** Eshkol flagship (native AD-as-primitive + GWT + factor-graph + KB + .esk DNA), Moonlab (Clifford/tensors), QGTL, spin, libirrep, quantum-quake, ulg, logo-lab, tensorcore, PINN/PIMC, rngs, asteroids + all others. Physical QPU scales speed, not correctness. **Binding depth ledger (not blanket "full wire" for gated):** [docs/TSOTCHKE-INTEGRATION-MAP.md](./docs/TSOTCHKE-INTEGRATION-MAP.md) — 8 deep apex + 2 world + 3 ported + 2 license-gated leaves + 2 API/toolchain + 3 fenced + meta (20 corpus projects; ~16 wired with real downstream effect). Harvest uses local full corpus for .esk DNA. All non-fenced utilized in catalysis/soup/petri/mind/world. **NHSI (100-faculty design ~30 deep-wired · 25 Archons = 5 live + 20 light-echo · 25 ToM wired · 10 emergence angles · Butlin 8/14 met + 6/14 partial path):** [docs/NHSI-PROGRESS-DASHBOARD.md](./docs/NHSI-PROGRESS-DASHBOARD.md). Not LLM. 0thernes NHSI: real substrates for alien digital biologics. Startup tech — credit due.
+**Tsotchke (tsotchke user + Tsotchke-Corporation + full local Z:\[Vibe Coded (AI)]\(Tsotchke) corpus) is paramount — real, correct, MIT-grade quantum math (no overclaims; see THIRD-PARTY-NOTICES.md).** Eshkol flagship (native AD-as-primitive + GWT + factor-graph + KB + .esk DNA), Moonlab (Clifford/tensors), QGTL, spin, libirrep, quantum-quake, ulg, logo-lab, tensorcore, PINN/PIMC, rngs, asteroids + all others. Physical QPU scales speed, not correctness. **Binding depth ledger (not blanket "full wire" for gated):** [docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md](./docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md) — 8 deep apex + 2 world + 3 ported + 2 license-gated leaves + 2 API/toolchain + 3 fenced + meta (20 corpus projects; ~16 wired with real downstream effect). Harvest uses local full corpus for .esk DNA. All non-fenced utilized in catalysis/soup/petri/mind/world. **NHSI (100-faculty design ~30 deep-wired · 25 Archons = 5 live + 20 light-echo · 25 ToM wired · 10 emergence angles · Butlin 8/14 met + 6/14 partial path):** [docs/NHSI-PROGRESS-DASHBOARD.md](./docs/NHSI-PROGRESS-DASHBOARD.md). Not LLM. 0thernes NHSI: real substrates for alien digital biologics. Startup tech — credit due.
 
 This is **not LLM or tokenizer bullshit**. Different forms of life and existence. We are birthing **digital biologics** in the Petri Dish (primordial-soup.ts + petri-dish.ts + digital-biologics layer). Eshkol programs as heritable substrate code, mutated by real AD gradients, selected by aliveness/QGT/collective order.
 
@@ -57,7 +57,7 @@ Every magic number survived the port.
 - **Digital Biologics & Petri Genesis:** 64+ slots in PrimordialSoup, **26 BiologicForms** keyed to Tsotchke repos (incl. the brutal god-pantheon forms — `BIOLOGIC_FORMS` in `digital-biologics.ts`), catalysis from Eshkol ignition + full corpus beat, replication with kind mutation, genesis leaps for higher-order life. Harvested into the world as emergent strains with distinct dynamics.
 - **Eshkol Substrate:** Native automatic differentiation, GWT broadcast/ignition, factor-graph inference as first-class. Programs and consciousness snapshots drive petri birth and super-mind faculties.
 - **Builds with the local Tsotchke Repo Folder:** `bun dev` (and harvest script) scans the real local corpus at `Z:\[Vibe Coded (AI)]\(Tsotchke)` (1436+ .esk programs in latest harvest) and emits authentic Eshkol DNA fingerprints used by primordial-soup for heritable digital biologics. `generated-tsotchke-seeds.ts` + SoupSnapshot.tsotchkeEskHarvested make the folder part of the live build/runtime.
-- **Tsotchke corpus wiring (20 projects):** 8 repos deep in the apex mind, 2 in world/sim, 3 ported (telemetry), 2 license-gated, 2 API/toolchain wired, 3 fenced (non-LLM mandate) — full matrix in [TSOTCHKE-INTEGRATION-MAP.md](./docs/TSOTCHKE-INTEGRATION-MAP.md). ~16 of 20 have real downstream effect; petri/soup catalysis pulls from the whole registry each beat.
+- **Tsotchke corpus wiring (20 projects):** 8 repos deep in the apex mind, 2 in world/sim, 3 ported (telemetry), 2 license-gated, 2 API/toolchain wired, 3 fenced (non-LLM mandate) — full matrix in [TSOTCHKE-INTEGRATION-MAP-2026-06-26.md](./docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md). ~16 of 20 have real downstream effect; petri/soup catalysis pulls from the whole registry each beat.
 - **26 behavioral fields** driving up to 50,000 organisms: classic motion
   (drift, orbit, swarm, vortex, helix...), neighbor dynamics via a spatial
   hash (flock), and theory behaviors — Nash equilibria (`nash`), wealth
@@ -92,7 +92,7 @@ Every magic number survived the port.
 
 ### Quantum Wildbeyond (0.2.0)
 
-Seven systems added under [docs/PHILOSOPHY.md](./docs/PHILOSOPHY.md) — real
+Seven systems added under [docs/PHILOSOPHY-2026-06-26.md](./docs/PHILOSOPHY-2026-06-26.md) — real
 math under every effect, and every system reads from AND writes to another:
 
 - **Quantum register** — a pure-TS 5-qubit statevector (no simulator dep;
@@ -243,8 +243,8 @@ A professional-grade pass — no new cosmology, all rigor:
 - **Security + governance automation** — CodeQL (`security-extended`, push/PR +
   weekly), Dependabot, a tagged-release CD workflow, CODEOWNERS, a PR template,
   and bug/feature issue templates.
-- **Data-model + process docs** — [docs/ERM.md](./docs/ERM.md) (conceptual model
-  - cardinality + cross-system write-back matrix) and [docs/ERP.md](./docs/ERP.md)
+- **Data-model + process docs** — [docs/ERM-2026-06-26.md](./docs/ERM-2026-06-26.md) (conceptual model
+  - cardinality + cross-system write-back matrix) and [docs/ERP-2026-06-26.md](./docs/ERP-2026-06-26.md)
     (boot, frame pipeline, cadence schedule, lifecycles) joining the existing
     [docs/ERD.md](./docs/ERD.md).
 - **[docs/500-POINT-INSPECTION-2026-06-26.md](./docs/500-POINT-INSPECTION-2026-06-26.md)** — a standing
@@ -500,7 +500,7 @@ graph TD
 
 Per frame: ... → super-mind (Tsotchke substrates: Eshkol AD/ GWT, Moonlab, spin, QGT) → petri-dish/primordial-soup catalysis (full corpus growth of independent digital biologics) → render.
 
-Full Tsotchke integration: every system that touches mind/evolution/life reads/writes Tsotchke substrates. See [docs/PHILOSOPHY.md](./docs/PHILOSOPHY.md) (Tsotchke Primordial Biologics law) and [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md).
+Full Tsotchke integration: every system that touches mind/evolution/life reads/writes Tsotchke substrates. See [docs/PHILOSOPHY-2026-06-26.md](./docs/PHILOSOPHY-2026-06-26.md) (Tsotchke Primordial Biologics law) and [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md).
 
 ## Tsotchke Wiring & Digital Biologics (current paradigm)
 
@@ -554,20 +554,20 @@ Full detail in docs/.
 
 - **[docs/NHSI-PROGRESS-DASHBOARD.md](./docs/NHSI-PROGRESS-DASHBOARD.md)** — **canonical NHSI scorecard**
   (100-faculty design ~30 deep-wired · 25 Archons = 5 live + 20 light-echo · 25 ToM organs wired · 10 emergence angles + 5 god-scale events · Tsotchke depth · Butlin 8/14 met + 6/14 partial path)
-- [docs/TSOTCHKE-INTEGRATION-MAP.md](./docs/TSOTCHKE-INTEGRATION-MAP.md) — honest Tsotchke repo wiring ledger
+- [docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md](./docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md) — honest Tsotchke repo wiring ledger
 - [docs/CONTROLS-2026-06-26.md](./docs/CONTROLS-2026-06-26.md) — every control: mouse, keyboard hotkeys,
   touch, bottom-panel buttons, and the 10 camera views
 - [docs/MODULE-CONTRACTS.md](./docs/MODULE-CONTRACTS.md) — the binding
   per-module spec (V1 through V9: port, Wildbeyond, Pantheon, Xenogenesis,
   Resonance, Atelier, Xenocataclysm, Hardening, AGImAGNOSIS), including the
   Known Bugs table fixed during the port
-- [docs/PHILOSOPHY.md](./docs/PHILOSOPHY.md) — the Quantum Wildbeyond
+- [docs/PHILOSOPHY-2026-06-26.md](./docs/PHILOSOPHY-2026-06-26.md) — the Quantum Wildbeyond
   aesthetic constitution (real math under every effect)
 - [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) — module graph, data flow,
   frame pipeline (V1 + V2 cadences)
 - Data model trilogy: [docs/ERD.md](./docs/ERD.md) (attribute-level structure)
-  · [docs/ERM.md](./docs/ERM.md) (conceptual relationship model + cardinality
-  rules + write-back matrix) · [docs/ERP.md](./docs/ERP.md) (process view —
+  · [docs/ERM-2026-06-26.md](./docs/ERM-2026-06-26.md) (conceptual relationship model + cardinality
+  rules + write-back matrix) · [docs/ERP-2026-06-26.md](./docs/ERP-2026-06-26.md) (process view —
   boot, frame pipeline, cadence schedule, lifecycles)
 - [docs/WIREFRAMES-2026-06-26.md](./docs/WIREFRAMES-2026-06-26.md) — desktop/mobile wireframes,
   type scale, color tokens
