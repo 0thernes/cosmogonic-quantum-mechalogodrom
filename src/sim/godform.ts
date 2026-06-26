@@ -216,6 +216,11 @@ import {
   quakeQgeFactor,
   eshkolDual,
 } from './tsotchke-facade'; // Ralph loop continue 10x: + eshkolDual for more AD/tape in godform
+import {
+  alphabetArchetypeByGlyph,
+  alphabetArchetypeAt,
+  type AlphabetArchetype,
+} from './alphabet-pantheon';
 
 export function getFullTsotchkeBias(i: number): GodformBias & {
   quakeFactor: number;
@@ -276,3 +281,21 @@ export {
 } from './tsotchke-registry';
 export { createPetriDish, petriDishBeat, petriDishView, petriGrowthMultiplier } from './petri-dish';
 export type { PetriDishState, PetriDishView } from './petri-dish';
+
+// === ALPHABET PANTHEON (100 Greek+Latin archetypes; the 25 Greek-keyed Archons are a subset) ===
+export { ALPHABET_ROSTER, ALPHABET_PANTHEON_SIZE } from './alphabet-pantheon';
+export { alphabetArchetypeByGlyph, alphabetArchetypeAt };
+export type { AlphabetArchetype };
+
+/**
+ * Map one of the 25 godform Archons to its alphabet archetype by its trailing Greek-letter glyph
+ * (ORACLE-Σ → Σ, KURAMOTO-κ → κ, …), so every Archon carries the deterministic, differentiated
+ * alphabet identity + bias. The 100-archetype roster is the principled superset of this 25-Archon
+ * pantheon; live-spawning all 100 as stepped creatures is perf-gated follow-up (like full Archon
+ * individuation), but every Archon already resolves to its archetype here.
+ */
+export function alphabetArchetypeForGodform(i: number): AlphabetArchetype {
+  const name = GODFORMS[((i % PANTHEON_SIZE) + PANTHEON_SIZE) % PANTHEON_SIZE] ?? GODFORMS[0];
+  const glyph = name.slice(-1);
+  return alphabetArchetypeByGlyph(glyph) ?? alphabetArchetypeAt(i);
+}
