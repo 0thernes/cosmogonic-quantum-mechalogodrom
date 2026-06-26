@@ -232,3 +232,19 @@ methodology + the architectural facts so future audits don't re-chase the false 
   `factions.ts` `n×n` weight matrix (n=8), per-faculty/archon/qubit kernels (≤100/25/6). The high-loop
   files (`super-mind`, `libirrep-qec`, `nqs-vmc-learning`, `tom-pantheon`) iterate these fixed sizes, not
   the population — so they are O(constant), not O(entities). No quadratic blow-up reachable at scale.
+
+## 8 · Automated cross-surface fact auditor (`bun run verify:facts`, 2026-06-26)
+
+The §1 canonical table is now backed by a **tool**, not just hand-checking:
+[`scripts/verify-canonical-facts.ts`](../scripts/verify-canonical-facts.ts) scans **every** tracked
+MD/HTML/XML surface for each canonical fact (Butlin `X/14`, entity ceiling, morphotypes, Tsotchke count,
+faculties, Archons, ToM) and flags any occurrence stating a non-canonical value. The synced receipts
+(version/tests/coverage/NHSI counts) are already gate-policed by `sync-surfaces` + `docs-receipts-law`;
+this covers the **prose** facts those don't. It reports for human triage (prose carries legitimate
+multi-framings — `5 apex` / `25 pantheon`, `~20 active` / `100 design` — which are allow-listed) and
+excludes point-in-time records (`reports/2026-*`, `ln/`, `DAILY_RUNS/`, `CHANGELOG`, `AUDIT-LOG`).
+
+**Current result: 0 drift across all 80 surfaces.** Building it surfaced one real bug —
+`MODULE-CONTRACTS.md:1597` said "all **1.1** faculties" (the Super-Creature _version_ mis-rendered as a
+count) → fixed to **100**; and a stale `100/144` note in `.memory/quirks.md` → `100` (no surface ever
+claimed 144). Run after any doc edit that touches a headline number.

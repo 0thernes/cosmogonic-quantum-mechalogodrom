@@ -1594,7 +1594,7 @@ path-escape, `git push`, `legacy/`, shell redirection).
 
 **Intelligence / Behavior**:
 
-- Full SuperMind stack per creature (cortex, 30 organ-nets, imagitron+ToT, predictor, quantum deliberation, all 1.1 faculties + the 5 new above).
+- Full SuperMind stack per creature (cortex, 30 organ-nets, imagitron+ToT, predictor, quantum deliberation, all 100 faculties + the 5 new above).
 - Vision + sound fully wired into percepts + internal models.
 - Dominant, master-smart, manipulative, deceptive, gaslighting: high DECEIVE/DOMINATE bias; actions that perturb other systems (entities, quantum cloud, RD, audio, weather) to advantage.
 - Reactive / responsive / adaptive / inductive-deductive via full stack (AIF + SR + empowerment + memory orchestra + quantum).

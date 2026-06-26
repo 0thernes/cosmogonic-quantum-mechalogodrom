@@ -18,7 +18,7 @@ Project-specific weirdness — the non-obvious stuff that will trip you up.
   `math/irrep.ts` / `math/mps-svd.ts`).
 - **The 25-Archon roster is 5 + 20.** Five individuated apex minds (ORACLE-Σ, STARKILLER-Ω,
   MANHATTAN-Φ, BROLY-Ψ, VOID-Λ) plus 20 live "light-echoes" — honestly qualified, not 25 distinct
-  deep minds. The "100/144 faculties" surface is one generic faculty cloned N× (~30 genuinely
+  deep minds. The 100-faculty surface is one generic faculty cloned N× (~30 genuinely
   deep-wired into the apex `super-mind`).
 - **Some `void x;` lines are legitimate** (signature fidelity, value used just above). Only delete a
   graft if the computed value has NO effect on any return — like the one removed from
