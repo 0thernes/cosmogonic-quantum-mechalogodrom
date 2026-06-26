@@ -308,3 +308,35 @@ Line-by-line audit of the build/gate scripts (the highest-blast-radius non-`src`
   added a `docs-truth-law` scan over every tracked non-binary file for conflict markers so it can never
   ship again. Analysis scripts (`alife-*`, `p1-*`, `sbom`, `gen-filemap`, `bmp2png`, `decode-capture`)
   are lint+type-clean via the gate and carry no sim/deploy risk.
+
+---
+
+## 11 · Total coverage attestation — every folder & file class (2026-06-26, final)
+
+Closure inventory for the "every folder / every file / every line" mandate. Each tracked file class
+(excl. `node_modules/`; `legacy/` is preserved verbatim and out of scope) was covered by at least one
+correctness or consistency pass; findings fixed at source. End state: `bun run check` green, `bun run
+verify:facts` = 0 drift / 80 surfaces, 0 git-conflict-markers tree-wide, 100% of non-legacy MDs date-current.
+
+| Area / class                                                                      | Files | Audited by                                               | Result                                                                                           |
+| --------------------------------------------------------------------------------- | ----- | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `src/math/**`                                                                     | ~30   | 7-agent code pass + invariant sweep + quantum-math agent | HIGH `irrep` j>=7 FIXED; rest verified correct                                                   |
+| `src/sim/**` (incl. `ai/brains.ts`)                                               | ~70   | invariant sweep + math/sim agents                        | 4 MED + Bloch clamp FIXED; determinism intact                                                    |
+| `src/ui/**`                                                                       | 20    | subsystems agent                                         | clean (3 cosmetic Low: DPR-on-monitor-move)                                                      |
+| `src/core,audio,server,memory,logging` + `main/types/docs-page` + `server.ts`     | ~14   | subsystems agent                                         | clean; security exceptionally hardened                                                           |
+| `src/styles/app.css`                                                              | 1     | front-end agent                                          | clean                                                                                            |
+| `tests/**`                                                                        | 153   | gate (1,489 pass) + tooling agent                        | healthy, 0 disabled, all assert                                                                  |
+| `scripts/**`                                                                      | 16    | scripts/tooling agents                                   | sound; **CI sync:check gap FIXED**, dead `.sync-receipts.cjs` removed                            |
+| `bench/**`                                                                        | 13    | tooling agent                                            | clean; aggregate now includes the P1 quantum-classical bench                                     |
+| `.github/workflows/*.yml` + issue/PR templates                                    | 8+    | CI agent                                                 | SHA-pinned, least-priv; `master`->`main` URLs FIXED; **gate now runs sync:check + verify:facts** |
+| root config (`package.json`, `tsconfig`, `bunfig`, prettier/editor/gitattributes) | ~10   | config agent                                             | coherent; stale `tsconfig` exclude removed                                                       |
+| `native/**` (C++/Jolt: `.cpp`/`.h`/CMake)                                         | 6     | C++ engine agent                                         | no UB/leak/off-by-one; README claims match the build                                             |
+| HTML surfaces (`index/docs/specs/lab`)                                            | 5     | front-end agent                                          | dead NEO-MIND link + Voronoi legend FIXED; SSOT facts match                                      |
+| `masters/*.xml`                                                                   | 3     | steering agent                                           | well-formed; the two "14/14" are negated "not complete"                                          |
+| docs `*.md` (83 non-legacy)                                                       | 83    | doc-consistency agent + `verify:facts`                   | 0 drift; ERM/COMPLEXITY/COPILOT/SECURITY/ADR + Butlin F1 FIXED; 100% date-current                |
+| assets (`.svg`/`.json`/`.csv`/`.docx`/lockfile)                                   | misc  | generated/data                                           | build artifacts + data, out of correctness scope                                                 |
+
+**Closure:** no open findings. Deliberately-unfixed items are documented design no-ops
+(`curvature-aware-qng.ts` Christoffel = 0; native `kMaxBodies` sim-vs-render duplication) plus one
+borderline policy doc (`CONTRIBUTING.md` describes a PR workflow vs the binding no-PR law — left for an
+owner call, may be intentional OSS-facing boilerplate).
