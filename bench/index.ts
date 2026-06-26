@@ -12,6 +12,7 @@ import './spatial-hash.bench';
 import './algorithms.bench';
 import './games.bench';
 import './quantum.bench';
+import './quantum-classical.bench';
 import './reaction-diffusion.bench';
 import './super-mind.bench';
 import './eshkol-ad.bench';
