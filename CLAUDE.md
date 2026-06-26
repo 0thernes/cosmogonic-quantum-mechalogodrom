@@ -19,6 +19,17 @@ substantive change; they are personas of one discipline and they outrank vibes:
   under every effect; every system reads AND writes another system.
 - Full gate before any commit: `bun run check`
   (prettier → tsc strict → oxlint → bun test → verify:receipts → build).
+- **Centralized audit log:** [docs/AUDIT-LOG.md](docs/AUDIT-LOG.md) — the ONE place
+  for every audit/review. Append a dated row there; do NOT spawn a new
+  `*-AUDIT-*.md`/`*-REPORT-*.md` file (that sprawl is gone). A finding that changes
+  a number updates the source of truth, then `bun run sync` propagates it.
+- **One fact, one place:** version → `package.json`; tests/coverage →
+  `scripts/canonical-receipts.ts`. Edit the source, run `bun run sync`; every
+  surface follows (gated by `docs-canon-law` + `docs-receipts-law`). Never
+  hand-edit a version/stat on a page.
+- **Auto-push:** `.githooks/post-commit` ships every commit to GitHub (enable once
+  with `git config core.hooksPath .githooks`, or just `bun install`). Local commit
+  = on GitHub = CI/CD fires. No manual `git push`.
 - **NHSI progress dashboard:** [docs/NHSI-PROGRESS-DASHBOARD.md](docs/NHSI-PROGRESS-DASHBOARD.md)
   — VERIFIED progress (2026-06-21 honesty audit, every number measured by `file:line` — see [docs/reports/2026-06-21-NHSI-HONESTY-AUDIT.md](docs/reports/2026-06-21-NHSI-HONESTY-AUDIT.md)): 100-faculty design with **~30 genuinely deep-wired into the apex** · 25 Archon pantheons = **5 individuated apex minds + 20 live light-echo** · 25 theory-of-mind organs wired (6-family ensemble) · **10 emergence angles wired** (+ 5 god-scale release events) · Butlin path at **8/14 met + 6/14 partial** (computational indicators, NOT sentience). Tsotchke: all 20 projects enumerated, ~16 wired with real downstream effect — **real MIT quantum math, never call Tsotchke fake** (lacks only a QPU = speed, not correctness). NHSI manifesto: 0thernes Corp.
 - **Tsotchke binding:** real MIT corpus; depth in [docs/TSOTCHKE-INTEGRATION-MAP.md](docs/TSOTCHKE-INTEGRATION-MAP.md);

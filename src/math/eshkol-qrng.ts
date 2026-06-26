@@ -27,7 +27,7 @@
  * pipeline uses {@link bigint} (exact 64-bit wraparound); only the apex creature draws from it, at its
  * cognitive cadence — well within the frame budget (see bench/eshkol-qrng.bench.ts).
  *
- * WIRED FROM FULL TSOTCHKE CORPUS (ralph-loop 2026-06-19): See docs/TSOTCHKE_FULL_CORPUS_INTEGRATION_AUDIT.md for deep dive (13k files, Eshkol AD + this QRNG, Moonlab qgt/Bloch etc.). Used for all 5 Archons collapse/entropy.
+ * WIRED FROM FULL TSOTCHKE CORPUS: see docs/TSOTCHKE-INTEGRATION-MAP.md (Eshkol AD + this QRNG, Moonlab qgt/Bloch, etc.). Used for all 5 Archons collapse/entropy.
  */
 
 import type { Rng } from './rng';
