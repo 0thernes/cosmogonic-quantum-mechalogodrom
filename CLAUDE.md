@@ -31,7 +31,7 @@ substantive change; they are personas of one discipline and they outrank vibes:
   pre-commit auto-syncs surfaces + normalizes encoding; post-commit auto-pushes **HEAD to
   `origin/main`** (NOT the local branch — per the no-PR/work-on-main law, every commit from any
   worktree lands on `main`, with rebase-autostash + retry on non-ff). Opt out: `git config
-  hooks.autopush false`. A local commit ships to GitHub `main` with no manual push, from any worktree.
+hooks.autopush false`. A local commit ships to GitHub `main` with no manual push, from any worktree.
 - **NO PULL REQUESTS — EVER (binding owner rule).** This is a one-person repo: commit to `main` and
   push directly. NEVER open a PR, never create a feature/`audit/*`/`claude/*` branch to merge, never
   `gh pr create`. Work ON `main`; if a push is rejected (non-fast-forward), `git pull --rebase
