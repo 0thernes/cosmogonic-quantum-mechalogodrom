@@ -6,6 +6,8 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "prepare": "git config core.hooksPath .githooks 2>/dev/null || true",
+    "sync": "bun scripts/sync-canon.ts",
     "dev": "bun scripts/harvest-tsotchke-corpus.ts && bun --hot server.ts",
     "start": "bun server.ts",
     "build": "bun scripts/build.ts",
