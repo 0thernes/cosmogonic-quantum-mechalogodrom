@@ -11,6 +11,30 @@ dated / historical / "superseded snapshot" copies (per the binding "Living docs,
 
 ---
 
+## 2026-06-26 — Line-by-line read: petri-dish active-bug fixes + dead-state reclassification + doc honesty
+
+Deep per-file read (~84 src files read directly, beyond agents/manifest) of the math/quantum core, every
+consciousness faculty, every Tsotchke port, and the petri/genetics layer. The math is verified
+expert-grade (RNG mulberry32 + FNV, statevector, Crank–Nicolson unitary, irrep wigner6j LF-fix present,
+Clifford tableau, dual/hyperdual/eshkol-ad exact, so3 Hamilton, coherence/IIT/GWT/FEP/SR/empowerment/
+metacog/criticality/neuromod all correct + well-cited). **Every Tsotchke port is genuine + honest** —
+several explicitly RETIRE prior decorative stubs (moonlab-tensor "retires the #1 decorative lie";
+tensorcore "retires the PROXY_STUB"; eshkol-vm "retires the NOT-a-VM note"; qge-aliveness "no bare trig").
+
+- **FIXED (2 active sim bugs — golden-safe; petri-dish has no test/golden capture, full suite green):**
+  `petri-dish.ts` complexity **ratchet-DOWN** (`Math.min(8,…)` every 40 beats clobbered complexity the
+  brutal branches raised to 12–30 → gated `< 8`, now monotone, `214f65e`); and `state.qgtCurvature`
+  **computed-then-discarded** (frozen 0.5 fed into `triggerBrutalRelease` while the real per-beat
+  `qgeOut.curvature` was thrown away → now wired, `af968ea`+`106302f` hotfix for a `clamp01` typo).
+- **3 doc-honesty overclaims FIXED (`a152edf`, comment-only):** `mixed-state-qgt computeEntropy` said
+  "von Neumann" but returns LINEAR entropy; `eshkol-bridge eshkolADGradient` "AD" is actually central
+  finite-difference; `curvature-aware-qng` header described the full geodesic update but `dg=0` reduces it
+  to ridge QNG. Plus `faculties-pantheon` 100-vs-144 header + Tsotchke `.esk` 721-census-vs-1436-harvest.
+- **Reclassified the 7 flagged "dead-state P1s": 2 were ACTIVE bugs (fixed above)**; the other 3 in this
+  layer (`petri.emergence` dead-guard, `narrative-memory._skill`, holographic `PersistentNarrative`) are
+  **benign reserved placeholders** — honestly `void`-marked, never consumed downstream with a wrong value,
+  so they are a wiring backlog (design decision on the source), not correctness defects.
+
 ## 2026-06-26 — Code-vs-canonical COUNT audit (every count constant verified)
 
 Swept every count-defining constant in `src/` against its published/canonical value (the "numbers must
