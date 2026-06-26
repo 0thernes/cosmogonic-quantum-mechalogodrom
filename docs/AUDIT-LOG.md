@@ -11,6 +11,29 @@ dated / historical / "superseded snapshot" copies (per the binding "Living docs,
 
 ---
 
+## 2026-06-26 — Code-vs-canonical COUNT audit (every count constant verified)
+
+Swept every count-defining constant in `src/` against its published/canonical value (the "numbers must
+match" mandate). Counts are consistent EXCEPT two framing gaps, both reconciled as honest code comments
+(no value changed):
+
+- **`faculties-pantheon.ts`** — `FACULTY_NAMES.length = 144` but the header claimed "100 bounded cognitive
+  faculties / 100-faculty surface". `FACULTY_COUNT (144)` has **0 consumers** outside the file, so public
+  surfaces correctly publish the canonical **100** — the header was just inaccurate. Rewritten to disclose
+  **100 design + brutal-god layer = 144 named (internal-only)** (`eb06788`).
+- **Tsotchke `.esk` count (721 vs 1436)** — `corpus-audit-receipts.ts` `TSOTCHKE_ESK_COUNT = 721` is the
+  **2026-06-20 CSV census snapshot**; the **live runtime harvest** (`generated-tsotchke-seeds.ts`
+  `eskCount`) scans **1436** recursively — which is what README / NHSI-dashboard / INTEGRATION-MAP publish
+  ("1436+"). Both correct (dated root census vs current recursive harvest); added a comment so they never
+  read as drift. **Tsotchke tech is real; no value touched.**
+
+Verified MATCHING vs canonical: `BIOLOGIC_FORMS = 26`, `ARCHON_CHANNELS = 25`, `TOM_ORGANS = 25`,
+`EMERGENCE_ANGLES = 15` (= 10 canonical + 5 god events, honestly framed in its own header), `MORPH_COUNT =
+100` legacy / `PHYLUM_COUNT = 10` (×25 = 250 live), `FACTION_COUNT = 8`, `WINGMAN_COUNT = 100` × 257
+params, `SUPER_PARAM_COUNT = 1444`, `SUPER_ORGANS = 30`, `SOUP_SLOTS = 128`, `TSOTCHKE_REPO_COUNT = 22` /
+20 projects / 21 registry. Corpus census (12,444 files / 501 MB / 3.87M lines) is the measured authority;
+"~13k / 714 MB" in loop-logs are rough/older mentions.
+
 ## 2026-06-26 — Independent re-baseline after fleet churn (0 new findings)
 
 A fresh full-repo re-audit off the current `origin/main` tip (taken **after** the 24 dated-doc renames +
