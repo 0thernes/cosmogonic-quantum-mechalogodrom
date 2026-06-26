@@ -58,6 +58,7 @@
  */
 import type { Rng } from '../math/rng';
 import { mulberry32 } from '../math/rng';
+import { latentSubstrateStep, type LatentSubstrateState } from './latent-substrates';
 import { TinyMLP, MemoryRing } from './ai/brains';
 import { QuantumMind, QMIND_QUBITS, type QubitSnapshot } from './super-qubits';
 import { EshkolQrng, type EshkolQrngSnapshot } from '../math/eshkol-qrng';
@@ -309,6 +310,8 @@ export interface SuperMindSnapshot {
   tomPantheon: TomPantheonSnapshot;
   topDownError: number;
   qualia: number[];
+  /** V1.3: the latent-substrate read — Schrödinger uncertainty, SO(3) coherence, Pearl-causal effect. */
+  latentSubstrates: LatentSubstrateState;
 }
 
 const EMOTION_TAU = 0.12; // sync with super-creature for affect EMA (GWT/HOT feel)
@@ -421,6 +424,8 @@ const DELIB_COUPLE = 0.5;
 // ── V1.2 · QUANTUM RESERVOIR COMPUTING (Fujii & Nakajima 2017 — the qubit register IS the reservoir) ──
 /** How strongly the quantum-state velocity (qFlux) drives curiosity (bounded, on par with the others). */
 const QRC_CURIOSITY_GAIN = 0.1;
+/** V1.3: how strongly the evolved-wavepacket positional uncertainty (Schrödinger) lifts curiosity. */
+const LATENT_CURIOSITY_GAIN = 0.1;
 
 // ── #59 · RESONANCE INTEGRATOR (Kuramoto binding-by-synchrony — the coupling spark) ───────────────────
 /** The consciousness/integration faculties coupled into the standing wave (the "do they agree?" set). */
@@ -1175,13 +1180,31 @@ export class SuperMind {
     const deception = unit(act[4] ?? 0);
     const domProject = unit(act[5] ?? 0);
     const spawnDesire = unit(act[6] ?? 0);
+    // V1.3 LATENT SUBSTRATES — wire the (formerly dead, 0-import) Schrödinger / SO(3) / Pearl-causal
+    // modules into the live decision: a real Crank–Nicolson wavepacket's positional spread is an
+    // exploration cue; the SO(3) geodesic coherence of the latent + the do(surprise→workspace) causal
+    // effect ride as measured substrates (surfaced in snapshot). Deterministic + bounded.
+    const ls = latentSubstrateStep({
+      drive: this.arousal,
+      angles: Array.from(this.latent),
+      ignition: this.ignition,
+      phi: this.phi,
+      workspace: this.ignition,
+      surprise: novelty,
+      novelty: this.reservoir.novelty,
+      selfAware: this.attnSchema.confidence,
+      reasoning: this.dominance,
+      qualiaTone: this.valence * 0.5 + 0.5,
+    });
+    this.lastLatentSub = ls;
     const curiosity = clamp01(
       unit(act[7] ?? 0) +
         0.3 * novelty +
         0.15 * this.reservoir.novelty +
         0.12 * (1 - this.criticality.proximity) + // off-criticality ⇒ explore to recover the edge of chaos
         EMP_CURIOSITY_GAIN * this.empowerment.empowerment + // agency hunger ⇒ seek regions it can steer
-        QRC_CURIOSITY_GAIN * this.qreservoir.quantumFlux, // a churning quantum state ⇒ restless exploration
+        QRC_CURIOSITY_GAIN * this.qreservoir.quantumFlux + // a churning quantum state ⇒ restless exploration
+        LATENT_CURIOSITY_GAIN * ls.quantumUncertainty, // V1.3: real Schrödinger positional spread ⇒ explore
     );
 
     // plan (argmax over drive scores; same vocabulary as the V31 mind)
@@ -1597,6 +1620,14 @@ export class SuperMind {
   }
 
   /** Immutable telemetry snapshot. */
+  /** V1.3: last beat's latent-substrate read (Schrödinger uncertainty / SO(3) coherence / causal effect). */
+  private lastLatentSub: LatentSubstrateState = {
+    quantumUncertainty: 0,
+    orientationCoherence: 0,
+    causalEffect: 0,
+    causalGrad: 0,
+  };
+
   snapshot(): SuperMindSnapshot {
     return {
       paramCount: this.paramCount,
@@ -1654,6 +1685,7 @@ export class SuperMind {
           this.attnSchema.confidence,
         ]).code,
       ),
+      latentSubstrates: { ...this.lastLatentSub },
     };
   }
 }
