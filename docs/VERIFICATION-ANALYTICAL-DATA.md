@@ -62,17 +62,17 @@ Rewritten in place when the facts change (per the binding "Living docs, no archi
 
 ## 3 · Audit findings (2026-06-26)
 
-| #   | Severity                   | Where                             | Issue                                                                                                                                                                                                                    | Resolution                                                                                                                                                                              |
-| --- | -------------------------- | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| A   | **P0 gate-RED**            | `.github/copilot-instructions.md` | markdown tables collapsed by the external `hacklm-memory` tool → fails `prettier --check` (first gate stage) in the working tree                                                                                         | `prettier --write` (re-pad tables)                                                                                                                                                      |
-| B   | reconciled (not a bug)     | `scripts/canonical-receipts.ts`   | `CANONICAL_TEST_COUNT = 1477` vs measured 2924                                                                                                                                                                           | floor semantics confirmed correct; 1477 is the published headline floor                                                                                                                 |
-| C   | **P0 gate-RED**            | `CHANGELOG.md`, `docs/KANBAN.md`  | 3 dead relative links into the deleted `docs/audit-2026-06-15/` folder (consolidated into AUDIT-LOG by `e51a376`)                                                                                                        | repoint to `docs/AUDIT-LOG.md`                                                                                                                                                          |
-| C2  | P1 test-hygiene            | `tests/doc-links.test.ts`         | `SKIP` set omitted `.claude/` → the test scanned nested worktree copies and false-failed                                                                                                                                 | add `.claude`, `legacy`, `site`, `coverage` to `SKIP`                                                                                                                                   |
-| D   | P1 doc-rot                 | `docs/KANBAN.md`                  | mojibake: `Ÿ¥`×11/`Ÿ§`×7/`Ÿ¨`×1 (orphaned-emoji fragments), `”`×34 used as `—`, plus `¦`/`“`/`©º` — slipped the encoding gate (orphaned fragments aren't double-encoding; `U+201D` is a legit codepoint)                 | byte-precise normalize: drop corrupted emoji prefixes, restore `—`/`–` separators                                                                                                       |
-| E   | P2 count-drift             | `docs/KANBAN.md:17`               | "ALL **19** Tsotchke repos" — only outlier vs the canonical "20 corpus projects" everywhere                                                                                                                              | `19 → 20`                                                                                                                                                                               |
-| F   | ✅ FIXED                   | `HANDOFF.md` + 12 surfaces        | dated loop-log / process / ADR surfaces carried stale current-state receipts (`HANDOFF` `942 tests`; `research_receipts` / `GOAL5-*` / `TSOTCHKE_CORPUS` `1183`; ADRs `671`/`736`/`1504`; `TSOTCHKE-ULTIMATE` `v0.16.1`) | per the living-docs law (rewrite in place to current truth), **propagated all → `1477 / 95.03% / 92.03% / v0.18.0`**; only `CHANGELOG` per-release receipts + `legacy/**` kept verbatim |
-| G   | flag (cleanliness)         | repo root                         | stray debug logs tracked at root (`.gate.log`, `.gate.baseline.log`, `.audit-gate.log`, `law.log`, `law_error.txt`, `tsc.log`, `tscout.txt`, `receipts_print.txt`)                                                       | noted for cleanup                                                                                                                                                                       |
-| H   | flag (fidelity, not a bug) | `src/math/curvature-aware-qng.ts` | `computeChristoffelSymbols` sets `dg=0`, so the general N×N "curvature-aware" path reduces to ordinary QNG                                                                                                               | honestly documented as a simplification; no NaN / wrong shape; noted so the caveat is visible                                                                                           |
+| #   | Severity                   | Where                             | Issue                                                                                                                                                                                          | Resolution                                                                                               |
+| --- | -------------------------- | --------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| A   | **P0 gate-RED**            | `.github/copilot-instructions.md` | markdown tables collapsed by the external `hacklm-memory` tool → fails `prettier --check` (first gate stage) in the working tree                                                               | `prettier --write` (re-pad tables)                                                                       |
+| B   | reconciled (not a bug)     | `scripts/canonical-receipts.ts`   | `CANONICAL_TEST_COUNT = 1477` vs measured 2924                                                                                                                                                 | floor semantics confirmed correct; 1477 is the published headline floor                                  |
+| C   | **P0 gate-RED**            | `CHANGELOG.md`, `docs/KANBAN.md`  | 3 dead relative links into the deleted `docs/audit-2026-06-15/` folder (consolidated into AUDIT-LOG by `e51a376`)                                                                              | repoint to `docs/AUDIT-LOG.md`                                                                           |
+| C2  | P1 test-hygiene            | `tests/doc-links.test.ts`         | `SKIP` set omitted `.claude/` → the test scanned nested worktree copies and false-failed                                                                                                       | add `.claude`, `legacy`, `site`, `coverage` to `SKIP`                                                    |
+| D   | P1 doc-rot                 | `docs/KANBAN.md`                  | mojibake: `×11/`×7/``×1 (orphaned-emoji fragments), `—`×34 used as `—`, plus `¦`/`–`/`©º`— slipped the encoding gate (orphaned fragments aren't double-encoding;`U+201D` is a legit codepoint) | byte-precise normalize: drop corrupted emoji prefixes, restore `—`/`–` separators                        |
+| E   | P2 count-drift             | `docs/KANBAN.md:17`               | "ALL **19** Tsotchke repos" — only outlier vs the canonical "20 corpus projects" everywhere                                                                                                    | `19 → 20`                                                                                                |
+| F   | flag (history)             | `HANDOFF.md`                      | a dated **2026-06-19** daily-run report framed as "Current repo status" (942 tests / v0.10.4)                                                                                                  | left as historical snapshot (editing the numbers would falsify the 2026-06-19 record); not current truth |
+| G   | flag (cleanliness)         | repo root                         | stray debug logs tracked at root (`.gate.log`, `.gate.baseline.log`, `.audit-gate.log`, `law.log`, `law_error.txt`, `tsc.log`, `tscout.txt`, `receipts_print.txt`)                             | noted for cleanup                                                                                        |
+| H   | flag (fidelity, not a bug) | `src/math/curvature-aware-qng.ts` | `computeChristoffelSymbols` sets `dg=0`, so the general N×N "curvature-aware" path reduces to ordinary QNG                                                                                     | honestly documented as a simplification; no NaN / wrong shape; noted so the caveat is visible            |
 
 **Finding D2 — master governance XML mojibake (root cause + fix).** All three `masters/*.xml` files
 (the EXECUTOR / ARCHITECT / PHYSICIST steering docs read before every change) each carried ~150
@@ -83,10 +83,10 @@ with green CI. Fix: normalize-docs now globs `masters/**/*.xml` + `docs/**/*.xml
 verified clean), and a new `docs-truth-law` block encoding-gates the steering XML + KANBAN against
 mojibake / U+FFFD / sub-lead-byte / curly-quote corruption.
 
-### Code audit (core math / sim / AI) — CLEAN
+### Code audit (core math / sim / AI) -- initial hand-review (see §5 for the deeper pass that found + fixed real defects)
 
 A line-by-line review of `src/math/**` and `src/sim/**` (hand-verified against standard formulas, not
-docstrings) found **no P0/P1 correctness bugs**. Quantum gates / Born rule / Bloch vector, mulberry32 +
+docstrings) initially reported no P0/P1 bugs (a deeper 7-agent pass in §5 did find several). Quantum gates / Born rule / Bloch vector, mulberry32 +
 FNV-1a RNG, Aaronson–Gottesman Clifford tableau, mixed-state QGT (Im sign + entropy), QGT / natural
 gradient, SO(3) quaternion algebra, Crank–Nicolson Schrödinger, Jacobi SVD / MPS, Wigner-d / Clebsch–
 Gordan / 6j / 9j, coherence / magic / GWT, spin-glass, criticality, Fubini–Study aliveness, HRR
@@ -112,3 +112,31 @@ enforces (and the `sync-surfaces.ts` surface list). The intent — _every doc cu
 consistent_ — is instead served by: (1) rewriting stale content in place, (2) refreshing the
 verified-on date stamps inside docs, and (3) this ledger. Filenames that legitimately carry a date
 (`docs/reports/2026-06-2x-*`, `docs/DAILY_RUNS/*`) are point-in-time records and keep their names.
+
+---
+
+## 5 · Code-audit update (deeper 7-agent pass, 2026-06-26)
+
+The §3 "code audit — CLEAN" line was an earlier hand-review. A deeper 7-subsystem MIT-master audit (137
+files, verified against references rather than docstrings) found and **FIXED** real defects it had missed:
+
+- **HIGH — `src/math/irrep.ts` `wigner6j` / `wigner9j`:** wrong for `j >= 7`. The Racah sum needs ~33! at
+  j=8, but the linear factorial table topped out at 25! and silently dropped terms, so `{8 8 8;8 8 8}`
+  returned `4.2e-12` vs the true `-1.265e-2` (wrong sign). **FIXED** by rewriting in log-factorial space
+  (exact across j=1..8) + a regression test. (Today only reachable via the dead `tsotchke-deep-wire.ts`,
+  but the module advertised `IRREP_J_MAX = 8`.)
+- **HIGH — `src/sim/super-mind.ts` `quantumMagic`:** fed a malformed amplitude vector (`re = sqrt(p)`
+  magnitudes only, `im = sin(phase)` phase only — neither the real amplitudes nor normalized), feeding
+  `reflex` → attention schema + jewel shader. **FIXED** by using `snap.magicNorm`, already computed on the
+  true register amplitudes in `super-qubits.ts`.
+- **HIGH — `src/sim/super-body.ts` `dispose()`:** freed only 3 of 9 owned materials → a recurring WebGL
+  leak on every body teardown / world reset. **FIXED** by disposing every material in the traverse
+  (leak-safe; three.js `dispose()` is idempotent for the few materials shared across sibling meshes).
+- **MED (tracked, not yet fixed):** `mortality.ts` `reproduce()` can drive lifespan to 0 → NaN
+  `legacyScore`; `brutal-god-releases.ts` mutates a throwaway `.map()` copy (effect dead);
+  `emergence-angles.ts` history arrays grow unbounded; `harvest-tsotchke-corpus.ts` `readdirSync` order is
+  non-deterministic (git-tracked seeds can differ across machines).
+
+Everything else the §3 review listed (Born rule, Bloch, Clifford tableau, mixed-state QGT, SO(3),
+Crank–Nicolson, SVD/MPS, coherence, GWT, spin-glass, HRR, the determinism law) remains verified correct.
+The standalone `docs/VERIFICATION-MATRIX.md` draft was folded into this ledger and removed (one source).

@@ -385,7 +385,7 @@ full gate with same-seed determinism preserved. The major arcs:
     apex creature now spans **Global Workspace · Integrated Information · the Free Energy Principle · reservoir
     dynamics · Higher-Order metacognition** — five distinct scientific theories of mind, each grounded in
     [docs/SUPER-CREATURE-RESEARCH.md](./docs/SUPER-CREATURE-RESEARCH.md).
-- **SUPER CREATURE 1.1 — the multi-pillar super-intelligence (v0.11.0, V90–V97)** — the mind grew from five
+- **SUPER CREATURE 1.1 — the multi-pillar super-intelligence** — the mind grew from five
   theories of mind to a dozen-plus real, deterministic, unit-tested faculties, each a cited mechanism that
   reads from AND writes to the others: a **Theory-of-Mind** opponent model
   ([src/sim/theory-of-mind.ts](./src/sim/theory-of-mind.ts)) that anticipates the rival; **Neural
@@ -406,8 +406,8 @@ full gate with same-seed determinism preserved. The major arcs:
   _descends_ its own Fubini–Study geometry ([Stokes et al., 2020](https://doi.org/10.22331/q-2020-05-25-269))
   to make its intended thought more probable, reading its own quantum geometry and writing its own quantum
   drives. Every faculty is grounded with citations in
-  [docs/SUPER-CREATURE-RESEARCH.md](./docs/SUPER-CREATURE-RESEARCH.md), released as **v0.11.0**.
-- **The apex mind closes out at ~20 coupled faculties (V98–V100)** — a **Lindblad/GKSL open-system
+  [docs/SUPER-CREATURE-RESEARCH.md](./docs/SUPER-CREATURE-RESEARCH.md).
+- **The apex mind closes out at ~20 coupled faculties** — a **Lindblad/GKSL open-system
   deliberation qubit** ([src/sim/quantum-deliberation.ts](./src/sim/quantum-deliberation.ts), a coherent
   superposition of options decohering into a commitment), **Quantum Reservoir Computing**
   ([src/sim/quantum-reservoir.ts](./src/sim/quantum-reservoir.ts), the register's state-velocity as a

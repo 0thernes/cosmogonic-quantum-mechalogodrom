@@ -142,6 +142,16 @@ describe('Wigner 6j / 9j recoupling symbols (Racah)', () => {
     expect(Math.abs(wigner6j(1, 1, 0, 1, 1, 1) - -1 / 3)).toBeLessThan(TOL);
   });
 
+  test('6j stays exact at large j (log-space; regression for the j>=7 factorial-overflow bug)', () => {
+    // {j j j; j j j} at the top of the supported range. The old linear-factorial path overflowed the FACT
+    // table (the Racah sum needs ~33! at j=8) and silently dropped terms -> a 28%-off value at j=7 and a
+    // wrong-sign ~0 at j=8. Reference values (exact Racah, cross-checked against BigInt rationals):
+    expect(Math.abs(wigner6j(7, 7, 7, 7, 7, 7) - 0.00854965)).toBeLessThan(1e-7);
+    expect(Math.abs(wigner6j(8, 8, 8, 8, 8, 8) - -0.01265208)).toBeLessThan(1e-7);
+    // Non-negligible + correctly signed (the bug returned ~4e-12).
+    expect(wigner6j(8, 8, 8, 8, 8, 8)).toBeLessThan(-1e-3);
+  });
+
   test('6j is invariant under column permutation (swap cols 1↔2)', () => {
     const a = wigner6j(1, 2, 2, 2, 1, 1);
     const b = wigner6j(2, 1, 2, 1, 2, 1);

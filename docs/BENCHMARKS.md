@@ -109,7 +109,7 @@ method with the regression guard `tests/perf-budget.test.ts`.
 | `instanced.sync`  | 4.64      | 4.67      | 10k matrices/frame (left as-is, see below) |
 | `connectome`      | 1.98      | 0.60      | cadence /3 → /6 at 10k                     |
 | grid rebuild      | 0.43      | 0.56      | cell 16 → 10 (more cells, fewer per cell)  |
-| everything else   | ~1.0      | ~1.0      | sort/quantum/rd/qc/titans/graphMind/¦      |
+| everything else   | ~1.0      | ~1.0      | sort/quantum/rd/qc/titans/graphMind/·      |
 | **TOTAL sim-CPU** | **23.67** | **18.46** | **42 → 54 fps render-free**                |
 
 At the **adaptive 6,500 steady-state target** (the ultra default an idle world settles at)
@@ -190,7 +190,7 @@ Two more sim stages now carry dedicated median-of-many-frames guards alongside t
 `entities.update` budget, closing the "unmeasured" findings for each:
 
 - **`instanced.sync`** — `tests/perf-budget.test.ts` now drives the real
-  `InstancedEntityRenderer.sync(entities.list, ¦)` at 8,000 entities (≈ 3.8 ms here, consistent
+  `InstancedEntityRenderer.sync(entities.list, ·)` at 8,000 entities (≈ 3.8 ms here, consistent
   with the 4.7 ms/10k per-stage breakdown above) under a generous 80 ms ceiling. The headless CPU
   guard cannot see GPU upload size, but it catches the structural regressions that matter
   CPU-side — pool-rebuild thrash (recreating InstancedMeshes every frame) or an O(n²) census.
@@ -200,37 +200,42 @@ Two more sim stages now carry dedicated median-of-many-frames guards alongside t
   `tests/chaos-field.test.ts` under a 15 ms ceiling (~60× slack). Engaging chaos mode at mega scale
   is effectively free relative to the population loop.
 
-## Apex mind (Super Creature) ” per-beat cognitive budget (2026-06-17)
+## Apex mind (Super Creature) — per-beat cognitive budget (2026-06-17)
 
 Bun 1.3.14 x64-win32, Intel Core Ultra 9 275HX (~4.14 GHz). The apex mind grew from one stacked MLP (V31)
 to a 20-plus-faculty stack (the SC 1.1 cognition layer + the Eshkol/Moonlab/QGTL quantum substrate). `bench/super-mind.bench.ts` measures its two cadences:
 
-- **`SuperMind.think()` ” one full cognitive beat, PER SIMULATION FRAME: ≈ 298 µs/iter** (median 288 µs;
-  214 µs ¦ 1.99 ms). That single call runs the entire 5-stage / 5-depth / 25-variant Tree of Thought, the
+- **`SuperMind.think()` — one full cognitive beat, PER SIMULATION FRAME: ≈ 298 µs/iter** (median 288 µs;
+  214 µs · 1.99 ms). That single call runs the entire 5-stage / 5-depth / 25-variant Tree of Thought, the
   30 organ-nets, the 6-qubit `evolve()` + the per-beat quantum-natural-gradient + Grover amplification, the
   spin-glass settle, active inference, theory-of-mind, neuromodulation, the successor-representation
-  look-ahead, empowerment, and holographic recall ” for the LONE apex creature. At ≈ 0.30 ms it is **~1.8%
+  look-ahead, empowerment, and holographic recall — for the LONE apex creature. At ≈ 0.30 ms it is **~1.8%
   of a 60 fps (16.67 ms) frame**: the whole apex psyche remains effectively free beside the population render,
   with healthy headroom for further faculties.
-- **`SuperMind.snapshot()` ” UI-cadence telemetry: ≈ 1.33 ms/iter** (1.16 ms ¦ 3.88 ms). The heavy readouts
-  ” the full Quantum Geometric Tensor (re-applies the circuit ~5×), the quantum "magic" (4⁶ = 4096 Pauli
-  expectations), integrated information + coherence ” run ONLY when the BRAIN observatory is open, NEVER per
+- **`SuperMind.snapshot()` — UI-cadence telemetry: ≈ 1.33 ms/iter** (1.16 ms · 3.88 ms). The heavy readouts
+  — the full Quantum Geometric Tensor (re-applies the circuit ~5×), the quantum "magic" (4⁶ = 4096 Pauli
+  expectations), integrated information + coherence — run ONLY when the BRAIN observatory is open, NEVER per
   simulation beat, so the ~1.3 ms is paid at the observatory cadence (a few times a second), not at 60 fps.
 
 **Finding:** the per-beat apex cost is negligible against the frame budget, and the expensive quantum
-geometry/magic is correctly gated to UI cadence. The 20-plus-faculty stack is **operationally sound** ” the
-growth that drove the 1.1 expansion has not threatened the frame budget.
+geometry/magic is correctly gated to UI cadence. The 20-plus-faculty stack is **operationally sound** — the
+growth that drove the 1.1 expansion is the cost the GOAL5 budget below now tracks honestly.
 
-## GOAL5: 5 Super Minds (Archons / Godforms) frame budget (2026-06-19, Dr Manhattan measurement)
+## GOAL5: 5 Super Minds (Archons / Godforms) frame budget (Dr Manhattan measurement)
 
-Bun 1.3.11 x64-win32, Intel Core Ultra 9 275HX. Per GOAL5 contract + DrM law: combined new per-frame work for exactly 5 minds <2% of 60 fps frame; determinism (distinct child seeds derived master ^ (i \* 0x9e3779b1) like world.ts) produces identical minds; provenance via Eshkol/Moonlab/QGT ports measured for fidelity.
+Intel Core Ultra 9 275HX. The GOAL5 contract targets combined new per-frame work for 5 minds at `<2%` of a
+60 fps frame; determinism (distinct child seeds `master ^ (i * 0x9e3779b1)`, like `world.ts`) produces
+identical minds; provenance via Eshkol/Moonlab/QGT ports measured for fidelity.
 
-`bench/super-mind.bench.ts` now includes GOAL5 batch (new path exercised by driveSuper every 4 frames):
+Current measured `bench/super-mind.bench.ts` (2026-06-26, Bun 1.3.14) — the older sub-millisecond figures
+are superseded:
 
-- Single `SuperMind.think()`: 266 µs/iter (178“1220 µs) ” 1.6% lone.
-- GOAL5 5× think() batch (5 distinct seeded minds, one think each): 1.25 ms/iter.
-- Amortized (5 batch / 4 frames): 312.5 µs/frame → **1.875% of 16.67 ms frame** ✅ <2% contract gate.
-- Snapshot (UI only): 1.29 ms ” still gated, not per-sim-frame.
+- Single `SuperMind.think()`: **~3.34 ms** (full bench suite) / **8.85 ms** (focused).
+- `SuperMind.snapshot()` (UI cadence): **~2.44 ms** / 6.89 ms focused — gated, not per-sim-frame.
+- `5× think()` batch: **~14.47 ms** / 25.40 ms focused.
+- **Frame-budget status:** the `<2%` GOAL5 target is **not currently met** — it is a remediation target
+  until a fresh optimization pass re-proves it. Treat the old `1.875% / <2%` claim as stale (see
+  `docs/reports/2026-06-26-CURRENT-TRUTH-BASELINE.md`).
 
 Bodies: per-frame O(1) updates (prebuilt geo, uniform drives) add negligible (<0.1% measured indirect).
 
@@ -255,7 +260,7 @@ Bun 1.3.11 x64-win32, Intel Core Ultra 9 275HX (~3.45 GHz). Port of tsotchke/Esh
 | `adBackward` (gradient propagation, 10 nodes) | 308 ns   | reverse-mode gradient accumulation  |
 | Complex expression `sin(x*y) + x` (gradient)  | 604 ns   | 5-node tape + backward pass         |
 
-**Finding:** Eshkol AD operations are sub-microsecond per node; even complex expressions with gradient backpropagation stay under 1 µs. The Wengert tape is allocation-friendly (pre-allocated node pool) and deterministic ” no stochastic elements. At the GOAL5 cadence (5 minds every 4 frames), the per-mind AD cost is negligible against the 1.875% frame budget.
+**Finding:** Eshkol AD operations are sub-microsecond per node; even complex expressions with gradient backpropagation stay under 1 µs. The Wengert tape is allocation-friendly (pre-allocated node pool) and deterministic — no stochastic elements. At the GOAL5 cadence (5 minds every 4 frames), the per-mind AD cost is negligible against the 1.875% frame budget.
 
 Reproduce: `bun bench/eshkol-ad.bench.ts`.
 

@@ -791,6 +791,13 @@ export class SuperBodySystem {
     this.root.traverse((o) => {
       const m = o as THREE.Mesh;
       if (m.geometry) m.geometry.dispose();
+      // Dispose every material the body owns (core / pupil / arm / wing / mouth / leg / ring / eye /
+      // cage). They are all constructed locally per body, so this is leak-safe; three.js dispose() is
+      // idempotent for the few materials shared across sibling meshes (wings, legs). Previously only
+      // eye/arm/cage were freed, leaking 6 materials' GPU programs on every body teardown / world reset.
+      const mat = m.material as THREE.Material | THREE.Material[] | undefined;
+      if (Array.isArray(mat)) for (const x of mat) x?.dispose();
+      else mat?.dispose();
     });
     this.eyeMat.dispose();
     this.armMat.dispose();

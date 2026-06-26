@@ -98,7 +98,6 @@ import {
   storeHebbian,
   recall,
   overlap,
-  quantumMagic,
   type HopfieldNet,
   izhStep,
   izhRest,
@@ -965,12 +964,11 @@ export class SuperMind {
 
     // Quantum magic: beyond-classical non-stabilizerness (Tsotchke quantum-magic leaf)
     // Compute stabilizer 2-Rényi entropy to measure how far beyond Clifford the state is
-    const magic = quantumMagic(
-      snap.probs.map((p) => Math.sqrt(p)),
-      snap.phase.map((_, i) => Math.sin(snap.phase[i] || 0)),
-      Math.min(6, Math.log2(cq)),
-    );
-    const magicNorm = magic.magicNorm;
+    // Use the magic already computed on the TRUE register amplitudes inside snapshot() (super-qubits.ts).
+    // The previous quantumMagic() call here was fed a malformed vector — re = sqrt(p) (magnitudes only),
+    // im = sin(phase) (phase only); neither the real amplitudes nor normalized — so its result was wrong
+    // and still fed `reflex` -> the attention schema + god-jewel shader.
+    const magicNorm = snap.magicNorm;
 
     const reflex = clamp01(
       ((this.quantumOut[1] ?? 0) + (this.quantumOut[0] ?? 0)) * 0.5 * this.cliffordScale +

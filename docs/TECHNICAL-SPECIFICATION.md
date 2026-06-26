@@ -104,7 +104,7 @@ A strict acyclic layering (verified across 50+ modules — no runtime import cyc
 ```
 math / constants  (leaves: rng, scalar, spatial-hash, quantum, heap, games)
         ▲
-sim/*  (30+ behavioural systems: entities, titans, shoggoths, nhi, factions, ¦)
+sim/*  (30+ behavioural systems: entities, titans, shoggoths, nhi, factions, ·)
         ▲
 core (engine, quality) ── world.ts (composition root: builds SimContext, ticks every system)
         ▲
@@ -237,7 +237,7 @@ inference, quantum cognition) is catalogued with citations in
 [SUPER-CREATURE-RESEARCH.md](SUPER-CREATURE-RESEARCH.md) — framed as _"models / inspired by"_, never
 _"is conscious."_
 
-**Super Creature 1.1 (V90–V100) — the multi-pillar expansion to ~20 coupled faculties (v0.11.0).** Beyond
+**Super Creature 1.1 — the multi-pillar expansion to ~20 coupled faculties.** Beyond
 ignition + Φ, the apex mind now runs roughly twenty deterministic, unit-tested faculties each beat, each
 reading from AND writing to the others (a negotiated plan-vote, not parallel gadgets): **Active Inference**
 (Friston FEP — variational + expected free energy), a **Metacognitive Executive** (Higher-Order confidence

@@ -1386,7 +1386,7 @@ types.ts.
 - Each `.algo-row` is VISUALLY UNIQUE: a deterministic per-index accent hue
   (`algoIdx · 360/25` rotated), a leading **glyph** from a 25-entry glyph table
   (exported `ALGO_GLYPHS` in src/sim/algorithms.ts — a distinct symbol per field,
-  e.g. ◆ ▲ ✶ ⌘ ∿ ¦), and a varied type treatment (the integrator sets per-row CSS
+  e.g. ◆ ▲ ✶ ⌘ ∿ ·), and a varied type treatment (the integrator sets per-row CSS
   custom props `--algo-hue`/`--algo-glyph`; app.css styles `.algo-row` to consume
   them). Rows have a clear `:hover`/`:active`/`.active` reactive treatment
   (glow + scale ≤1.04, ≥44px touch targets, `:focus-visible` ring, reduced-motion

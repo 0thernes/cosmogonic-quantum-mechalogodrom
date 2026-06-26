@@ -16,7 +16,7 @@
  * Angular-momentum quantum numbers are half-integers represented as JS numbers
  * in steps of 0.5 (e.g. spin-½ → j = 0.5). Degrees are capped at {@link IRREP_J_MAX}
  * so every integer factorial that appears stays EXACT in IEEE-754 float64
- * (n! is exact through 18!, and the largest argument here is 2·J_MAX + 2 ≤ 18).
+ * (Clebsch-Gordan + Wigner-d arguments stay within the exact FACT table; 6j/9j use the log-factorial table LF for their larger ~4*J range).
  *
  * Refs: Edmonds, *Angular Momentum in Quantum Mechanics* (1957); Varshalovich,
  * Moskalev & Khersonskii, *Quantum Theory of Angular Momentum* (1988); Wigner
@@ -36,6 +36,22 @@ const FACT: readonly number[] = (() => {
 /** n! for a non-negative integer n within the supported range; Infinity if out of range. */
 function fact(n: number): number {
   return n >= 0 && n < FACT.length ? FACT[n]! : Number.POSITIVE_INFINITY;
+}
+
+/**
+ * ln(n!) table, 0..(4*J_MAX+2). The 6j/9j Racah sum needs factorials up to ~4*J (≈ 33! at J=8) — far
+ * beyond the linear FACT table (25!) and the f64-exact factorial limit (18!). Evaluating those terms with
+ * FACT silently dropped them (the `t+1 >= FACT.length` guard) and returned a wrong/near-zero 6j for j >= 7
+ * (verified: {8 8 8;8 8 8} gave 4.2e-12 vs the true -1.265e-2). Log-factorials stay accurate to ~1e-14.
+ */
+const LF: readonly number[] = (() => {
+  const t: number[] = [0];
+  for (let n = 1; n <= 4 * IRREP_J_MAX + 2; n++) t.push(t[n - 1]! + Math.log(n));
+  return t;
+})();
+/** ln(n!) within range; +Infinity if out of range. */
+function lf(n: number): number {
+  return n >= 0 && n < LF.length ? LF[n]! : Number.POSITIVE_INFINITY;
 }
 
 /** True when m is a valid projection of j: |m| ≤ j and (j − m) is a non-negative integer. */
@@ -149,14 +165,14 @@ export function irrepMultiplicity(j: number, baseCount: number): number {
   return Math.max(1, Math.round(baseCount / dim)) * dim;
 }
 
-/** Racah triangle coefficient Δ(a,b,c) = √[(a+b−c)!(a−b+c)!(−a+b+c)! / (a+b+c+1)!]; 0 if the triangle fails. */
-function triangleDelta(a: number, b: number, c: number): number {
+/** ln of the Racah triangle coefficient (a sqrt of a factorial ratio); null if the triangle inequality fails. Log-space keeps large-j exact. */
+function logTriangleDelta(a: number, b: number, c: number): number | null {
   const x1 = a + b - c;
   const x2 = a - b + c;
   const x3 = -a + b + c;
   const x4 = a + b + c + 1;
-  if (x1 < 0 || x2 < 0 || x3 < 0 || !Number.isInteger(x1) || x4 >= FACT.length) return 0;
-  return Math.sqrt((fact(x1) * fact(x2) * fact(x3)) / fact(x4));
+  if (x1 < 0 || x2 < 0 || x3 < 0 || !Number.isInteger(x1)) return null;
+  return 0.5 * (lf(x1) + lf(x2) + lf(x3) - lf(x4));
 }
 
 /**
@@ -176,45 +192,47 @@ export function wigner6j(
   j6: number,
 ): number {
   for (const j of [j1, j2, j3, j4, j5, j6]) if (j < 0 || j > IRREP_J_MAX) return 0;
-  const d1 = triangleDelta(j1, j2, j3);
-  const d2 = triangleDelta(j1, j5, j6);
-  const d3 = triangleDelta(j4, j2, j6);
-  const d4 = triangleDelta(j4, j5, j3);
-  if (d1 === 0 || d2 === 0 || d3 === 0 || d4 === 0) return 0;
+  const ld1 = logTriangleDelta(j1, j2, j3);
+  const ld2 = logTriangleDelta(j1, j5, j6);
+  const ld3 = logTriangleDelta(j4, j2, j6);
+  const ld4 = logTriangleDelta(j4, j5, j3);
+  if (ld1 === null || ld2 === null || ld3 === null || ld4 === null) return 0;
+  const logDelta = ld1 + ld2 + ld3 + ld4;
 
-  // α terms (lower bounds) and β terms (upper bounds) of the Racah sum.
+  // a = lower bounds, b = upper bounds of the Racah sum index t.
   const a = [j1 + j2 + j3, j1 + j5 + j6, j4 + j2 + j6, j4 + j5 + j3];
   const b = [j1 + j2 + j4 + j5, j2 + j3 + j5 + j6, j3 + j1 + j6 + j4];
   const tMin = Math.max(...a);
   const tMax = Math.min(...b);
   if (tMin > tMax + 1e-9) return 0;
 
+  // Each summand = (-1)^t (t+1)! / [Prod(t-ai)! Prod(bj-t)!] * Delta1*Delta2*Delta3*Delta4, evaluated in
+  // LOG space so the ~33! factorials at j=8 stay exact (the old linear-FACT path overflowed -> wrong/~0).
   let sum = 0;
   for (let t = Math.round(tMin); t <= Math.round(tMax); t++) {
-    if (t + 1 >= FACT.length) continue;
-    let denom = 1;
+    let logTerm = logDelta + lf(t + 1);
     let ok = true;
     for (const ai of a) {
       const v = t - ai;
-      if (v < 0 || v >= FACT.length) {
+      if (v < 0) {
         ok = false;
         break;
       }
-      denom *= fact(v);
+      logTerm -= lf(v);
     }
     if (!ok) continue;
     for (const bj of b) {
       const v = bj - t;
-      if (v < 0 || v >= FACT.length) {
+      if (v < 0) {
         ok = false;
         break;
       }
-      denom *= fact(v);
+      logTerm -= lf(v);
     }
-    if (!ok || denom === 0 || !Number.isFinite(denom)) continue;
-    sum += (sign(t) * fact(t + 1)) / denom;
+    if (!ok || !Number.isFinite(logTerm)) continue;
+    sum += sign(t) * Math.exp(logTerm);
   }
-  return d1 * d2 * d3 * d4 * sum;
+  return sum;
 }
 
 /**
