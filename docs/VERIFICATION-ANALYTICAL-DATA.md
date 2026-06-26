@@ -132,10 +132,19 @@ files, verified against references rather than docstrings) found and **FIXED** r
 - **HIGH — `src/sim/super-body.ts` `dispose()`:** freed only 3 of 9 owned materials → a recurring WebGL
   leak on every body teardown / world reset. **FIXED** by disposing every material in the traverse
   (leak-safe; three.js `dispose()` is idempotent for the few materials shared across sibling meshes).
-- **MED (tracked, not yet fixed):** `mortality.ts` `reproduce()` can drive lifespan to 0 → NaN
-  `legacyScore`; `brutal-god-releases.ts` mutates a throwaway `.map()` copy (effect dead);
-  `emergence-angles.ts` history arrays grow unbounded; `harvest-tsotchke-corpus.ts` `readdirSync` order is
-  non-deterministic (git-tracked seeds can differ across machines).
+- **MED — all four now FIXED (regression-tested where observable):**
+  - `src/sim/mortality.ts` — `reproduce()` could drive `lifespan` negative (cost 100 × N), making
+    `age/lifespan` produce `NaN`/negative in `legacyScore`, `lifespanProgress`, `urgency`. **FIXED:** floor
+    lifespan at 1 on reproduce + guard the divisor with `Math.max(1, …)`. New `tests/mortality.test.ts`.
+  - `src/sim/petri-dish.ts` — the brutal-god release called `applyBrutalRelease(rel, state.biologics.map(…))`
+    on a throwaway copy, so its consume/rebirth/drain mutations were discarded (effect dead). **FIXED:**
+    normalize the live `state.biologics` in place and pass them by reference; fold `outcome.warp` into godPower.
+  - `src/sim/emergence-angles.ts` — five append-only history arrays (`exchangeHistory`, `warHistory`,
+    `fracturePoints`, `chaosEvents`, `transcendenceEvents`) grew unbounded though only `.length` (and chaos's
+    distinct-type set) was ever read. **FIXED:** replaced with O(1) counters + a `Set` for chaos types — same
+    metrics, bounded memory. Regression test asserts saturation + distinct-type contract under 4–5k iterations.
+  - `scripts/harvest-tsotchke-corpus.ts` — `readdirSync` walk order is filesystem-dependent but feeds the
+    committed `ESK_SAMPLE_PROGRAMS` list. **FIXED:** sort entries by name → reproducible across machines/OSes.
 
 Everything else the §3 review listed (Born rule, Bloch, Clifford tableau, mixed-state QGT, SO(3),
 Crank–Nicolson, SVD/MPS, coherence, GWT, spin-glass, HRR, the determinism law) remains verified correct.

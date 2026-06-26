@@ -43,7 +43,12 @@ function harvest(): Harvest {
     if (!existsSync(base)) continue;
     try {
       const walk = (dir: string) => {
-        const ents = readdirSync(dir, { withFileTypes: true });
+        // Sort by name: readdirSync order is filesystem-dependent, but this harvest
+        // emits ESK_SAMPLE_PROGRAMS into generated source — the sample set (and the
+        // committed output) must be reproducible across machines/OSes.
+        const ents = readdirSync(dir, { withFileTypes: true }).sort((a, b) =>
+          a.name < b.name ? -1 : a.name > b.name ? 1 : 0,
+        );
         for (const e of ents) {
           const p = join(dir, e.name);
           if (e.isDirectory()) {

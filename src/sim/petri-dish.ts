@@ -281,13 +281,20 @@ export function petriDishBeat(
       beat,
     );
     if (rel) {
-      applyBrutalRelease(
-        rel,
-        state.biologics.map((b) => ({ vitality: b.vitality ?? 1, form: b.form ?? 'BASE' })),
-        state.aliveness,
-        beat,
-      );
-      state.godPower = Math.min(1, (state.godPower ?? 0) + rel.power * 0.05);
+      // Mutate the LIVE biologics in place. The previous `.map()` built throwaway
+      // objects, so applyBrutalRelease's vitality changes (consume/rebirth/drain)
+      // were discarded — the brutal release had no effect on the population.
+      const ents = state.biologics as Array<{
+        vitality: number;
+        form: string;
+        brutalGodPower?: number;
+      }>;
+      for (const b of ents) {
+        if (b.vitality === undefined) b.vitality = 1;
+        if (b.form === undefined) b.form = 'BASE';
+      }
+      const outcome = applyBrutalRelease(rel, ents, state.aliveness, beat);
+      state.godPower = Math.min(1, (state.godPower ?? 0) + rel.power * 0.05 + outcome.warp * 0.02);
     }
   }
 

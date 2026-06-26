@@ -137,9 +137,11 @@ export class Mortality {
     this.state.alive = false;
     this.state.causeOfDeath = cause;
 
-    // Compute legacy score based on offspring and age
+    // Compute legacy score based on offspring and age.
+    // Guard the denominator: reproduce() can drive lifespan to 0 (life-history
+    // trade-off), and age/0 → Infinity while 0/0 → NaN would corrupt legacyScore.
     const offspringBonus = this.state.offspringCount * 0.1;
-    const ageBonus = (this.state.age / this.state.lifespan) * 0.2;
+    const ageBonus = (this.state.age / Math.max(1, this.state.lifespan)) * 0.2;
     this.state.legacyScore = clamp01(offspringBonus + ageBonus);
   }
 
@@ -151,8 +153,10 @@ export class Mortality {
     if (!this.state.alive) return false;
     if (this.state.age < this.config.reproductionAge) return false;
 
-    // Reproduction costs lifespan
-    this.state.lifespan -= this.config.reproductionCost;
+    // Reproduction costs lifespan (life-history trade-off). Floor at 1 so the
+    // lifespan stays a valid positive denominator; the next step() still lets a
+    // unit that reproduced past its age die of old age.
+    this.state.lifespan = Math.max(1, this.state.lifespan - this.config.reproductionCost);
     this.state.offspringCount++;
 
     return true;
@@ -205,7 +209,7 @@ export class Mortality {
    * Get lifespan progress (0..1, 1 = death).
    */
   get lifespanProgress(): number {
-    return clamp01(this.state.age / this.state.lifespan);
+    return clamp01(this.state.age / Math.max(1, this.state.lifespan));
   }
 
   /**

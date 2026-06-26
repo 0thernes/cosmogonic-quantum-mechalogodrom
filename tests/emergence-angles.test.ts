@@ -1,6 +1,11 @@
 // @ts-nocheck
 import { describe, expect, test } from 'bun:test';
-import { EMERGENCE_ANGLES, EmergenceAnglesController } from '../src/sim/emergence-angles';
+import {
+  EMERGENCE_ANGLES,
+  EmergenceAnglesController,
+  ArchonWarfare,
+  ChaosEntropy,
+} from '../src/sim/emergence-angles';
 import { ARCHON_CHANNELS } from '../src/sim/pantheon';
 
 describe('NHSI emergence angles (10/10)', () => {
@@ -42,5 +47,28 @@ describe('NHSI emergence angles (10/10)', () => {
     expect(a.event).toBe(b.event);
     expect(a.powerDelta).toBe(b.powerDelta);
     expect(a.brutality).toBe(b.brutality);
+  });
+
+  // Regression: the per-event history arrays were append-only and unbounded (memory
+  // leak in a long sim). They were replaced by counters/sets; these assert the
+  // observable metric contract is preserved under heavy, repeated invocation.
+  test('warfare intensity saturates and stays bounded under many wars', () => {
+    const war = new ArchonWarfare(0);
+    for (let i = 0; i < 5000; i++) war.engageWar(i % 25, (i + 7) % 25, 0.9, 0.6);
+    const intensity = war.getWarIntensity();
+    expect(intensity).toBe(1); // count/50 clamped — saturated
+    expect(Number.isFinite(war.getDominanceEntropy())).toBe(true);
+  });
+
+  test('chaos diversity still counts distinct event types after many injections', () => {
+    const chaos = new ChaosEntropy(0);
+    const seen = new Set<string>();
+    for (let i = 0; i < 4000; i++) {
+      const r = chaos.injectChaos(0.95, i * 13 + 1);
+      if (r) seen.add(r.event);
+    }
+    // Diversity = distinctTypes/5, clamped — must match what we actually observed.
+    expect(chaos.getChaosDiversity()).toBeCloseTo(Math.min(1, seen.size / 5), 10);
+    expect(seen.size).toBeGreaterThan(1);
   });
 });

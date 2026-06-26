@@ -116,14 +116,16 @@ export class EshkolProgramEvolution {
 /** 9. Cross-Strain Recombination — Biologics exchange genetic material */
 export class CrossStrainRecombination {
   private readonly strainGenomes = new Map<string, Float32Array>();
-  private readonly exchangeHistory: number[][] = [];
+  // Only the running TALLY of exchanges is ever read (seed mix + saturation metric);
+  // the per-event payloads were never consumed, so an unbounded array was a pure leak.
+  private exchangeCount = 0;
 
   constructor(private readonly recombinationRate: number = 0.05) {}
 
   recombine(strainA: string, strainB: string): { newA: Float32Array; newB: Float32Array } {
     const genomeA = this.strainGenomes.get(strainA) ?? new Float32Array(32).fill(0.5);
     const genomeB = this.strainGenomes.get(strainB) ?? new Float32Array(32).fill(0.5);
-    const seed = hashStr(strainA) ^ hashStr(strainB) ^ this.exchangeHistory.length;
+    const seed = hashStr(strainA) ^ hashStr(strainB) ^ this.exchangeCount;
     const crossoverPoint = Math.floor(det01(seed) * genomeA.length);
     const newA = new Float32Array(genomeA);
     const newB = new Float32Array(genomeB);
@@ -144,7 +146,7 @@ export class CrossStrainRecombination {
 
     this.strainGenomes.set(strainA, newA);
     this.strainGenomes.set(strainB, newB);
-    this.exchangeHistory.push([hashStr(strainA), hashStr(strainB)]);
+    this.exchangeCount++;
     return { newA, newB };
   }
 
@@ -170,7 +172,7 @@ export class CrossStrainRecombination {
   }
 
   getExchangeRate(): number {
-    return clamp01(this.exchangeHistory.length / 100);
+    return clamp01(this.exchangeCount / 100);
   }
 
   snapshot(): EmergenceSnapshot {
@@ -244,7 +246,8 @@ export class HigherOrderEmergence {
 /** 11. Archon Warfare — Archons fight for dominance (Thanos snap, Broly rage, Zod conquest) */
 export class ArchonWarfare {
   private readonly archonPower = new Map<number, number>();
-  private readonly warHistory: { winner: number; loser: number; powerDelta: number }[] = [];
+  // Only the war tally feeds the seed + intensity metric; per-war records were unused.
+  private warCount = 0;
 
   constructor(private readonly aggressionThreshold: number = 0.6) {}
 
@@ -255,7 +258,7 @@ export class ArchonWarfare {
     powerB: number,
   ): { winner: number; loser: number; powerDelta: number } | null {
     if (powerA + powerB < this.aggressionThreshold) return null;
-    const seed = hashStr(`war-${archonA}-${archonB}`) ^ this.warHistory.length;
+    const seed = hashStr(`war-${archonA}-${archonB}`) ^ this.warCount;
     const roll = det01(seed);
     const powerRatio = powerA / (powerA + powerB + 0.001);
 
@@ -275,13 +278,13 @@ export class ArchonWarfare {
 
     this.archonPower.set(winner, (this.archonPower.get(winner) ?? 0) + powerDelta);
     this.archonPower.set(loser, Math.max(0, (this.archonPower.get(loser) ?? 0) - powerDelta * 0.5));
-    this.warHistory.push({ winner, loser, powerDelta });
+    this.warCount++;
 
     return { winner, loser, powerDelta };
   }
 
   getWarIntensity(): number {
-    return clamp01(this.warHistory.length / 50);
+    return clamp01(this.warCount / 50);
   }
 
   getDominanceEntropy(): number {
@@ -308,7 +311,8 @@ export class ArchonWarfare {
 
 /** 12. Reality Fracture — When god-scale power breaks spacetime (Dr Manhattan, Mxyzptlk, Jaspers) */
 export class RealityFracture {
-  private fracturePoints: { location: number; severity: number; seed: number }[] = [];
+  // Only the fracture tally feeds the density metric; per-point records were unused.
+  private fractureCount = 0;
   private currentFractureLevel = 0;
 
   constructor(private readonly fractureThreshold: number = 0.8) {}
@@ -318,7 +322,7 @@ export class RealityFracture {
 
     const s = hashStr(`fracture-${location}`) ^ seed;
     const severity = clamp01((power - this.fractureThreshold) * 2);
-    this.fracturePoints.push({ location, severity, seed });
+    this.fractureCount++;
     this.currentFractureLevel = clamp01(this.currentFractureLevel + severity * 0.1);
 
     // Self-healing over time (QGT natural gradient)
@@ -331,7 +335,7 @@ export class RealityFracture {
   }
 
   getFractureDensity(): number {
-    return clamp01(this.fracturePoints.length / 20);
+    return clamp01(this.fractureCount / 20);
   }
 
   getInstability(): number {
@@ -351,13 +355,16 @@ export class RealityFracture {
 /** 13. Chaos Entropy — Maximum disorder from Chaos Gods (Warhammer, Shuma-Gorath, Azathoth) */
 export class ChaosEntropy {
   private entropyField = new Float32Array(64);
-  private chaosEvents: { type: string; magnitude: number; seed: number }[] = [];
+  // Only the event tally (seed mix) and the distinct-type set (diversity metric)
+  // are read; the full per-event log was unbounded and otherwise unused.
+  private chaosCount = 0;
+  private readonly chaosTypes = new Set<string>();
 
   constructor(private readonly _chaosThreshold: number = 0.7) {}
 
   injectChaos(magnitude: number, seed: number): { entropyDelta: number; event: string } | null {
     if (magnitude < this._chaosThreshold) return null;
-    const s = hashStr(`chaos-${this.chaosEvents.length}`) ^ seed;
+    const s = hashStr(`chaos-${this.chaosCount}`) ^ seed;
     const roll = det01(s);
 
     let event: string;
@@ -374,7 +381,8 @@ export class ChaosEntropy {
       );
     }
 
-    this.chaosEvents.push({ type: event, magnitude: entropyDelta, seed });
+    this.chaosCount++;
+    this.chaosTypes.add(event);
     return { entropyDelta, event };
   }
 
@@ -385,8 +393,7 @@ export class ChaosEntropy {
   }
 
   getChaosDiversity(): number {
-    const types = new Set(this.chaosEvents.map((e) => e.type));
-    return clamp01(types.size / 5);
+    return clamp01(this.chaosTypes.size / 5);
   }
 
   snapshot(): EmergenceSnapshot {
@@ -450,8 +457,8 @@ export class CosmicHarvest {
 
 /** 15. Transcendence — Breaking through to higher planes (EVA-01, Gurren Lagann, Sephiroth) */
 export class Transcendence {
-  private transcendenceEvents: { archon: number; level: number; plane: string; seed: number }[] =
-    [];
+  // Only the ascension tally feeds the metric; per-event records were unused.
+  private transcendenceCount = 0;
   private currentPlane = 0;
 
   constructor(private readonly transcendenceThreshold: number = 0.85) {}
@@ -475,7 +482,7 @@ export class Transcendence {
     else if (level < 8) plane = 'DIVINE';
     else plane = 'TRANSCENDENT';
 
-    this.transcendenceEvents.push({ archon, level, plane, seed });
+    this.transcendenceCount++;
     this.currentPlane = level;
 
     return { level, plane, achieved: true };
@@ -486,7 +493,7 @@ export class Transcendence {
   }
 
   getAscensionCount(): number {
-    return clamp01(this.transcendenceEvents.length / 15);
+    return clamp01(this.transcendenceCount / 15);
   }
 
   snapshot(): EmergenceSnapshot {
