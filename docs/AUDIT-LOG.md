@@ -39,8 +39,18 @@ P2 per-frame-allocation notes (`nhi-observatory.ts`un-throttled rAF vs`super-neu
   `.esk` DNA is pinned to program 0 (`formIdx` always 0). + ~15 P2 (shared-scratch aliasing, FPS-coupled
   impulse, dead `.includes('BROLY'/'KNUL')` branches, etc.).
 
-Determinism law re-confirmed: **0 `Math.random` / `Date.now` / `performance.now` in the entire `src/sim`
-tree** (every grep hit is a comment asserting their absence). Full per-finding detail in the ledger.
+Determinism law re-confirmed by direct grep: **0 actual `Math.random` / `Date.now` / `performance.now`
+calls in the entire `src/sim` + `src/math` tree** (every match is a comment asserting their absence).
+
+**Per-file line-by-line re-read of the asserted-clean non-core sim modules** (explicit, not agent-
+asserted): `strange-attractor`, `morphic-field`, `causal-graph`, `reaction-diffusion`, `leviathans`,
+`noosphere`, `stigmergy`, `asteroids-physics`, `quality-space`, `gold-lattice`, `quantum-lattice`,
+`plastic-weights`, `temporal-crystal`, `omega-point` — all confirmed correct + deterministic
+(`causal-graph`'s "3-pass" propagation is intentional for the documented shallow DAG, not a convergence
+bug; `reaction-diffusion` carries a written Gray–Scott boundedness/stability proof; the `dark-energy`
+`w` over-range is masked downstream by `omega-point`'s `clamp01(1+darkW)`). **FIXED `strange-attractor.ts`:**
+`lorenzDeriv` (pure) was recomputed 3× per step for `.x/.y/.z`; now computed once — byte-identical output,
+full suite + determinism goldens green. Full per-finding detail in the ledger.
 
 ## 2026-06-26 — Dated MD filenames (safe set) + every reference rewired
 

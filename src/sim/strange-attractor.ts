@@ -114,11 +114,9 @@ export class StrangeAttractor {
     this.rabinovich = rk4Step(this.rabinovich, DT, (s) => rabinovichDeriv(s, 0.87, 0.1));
 
     // Lyapunov proxy: running variance of |dX/dt| for Lorenz
-    const lorenzRate = Math.sqrt(
-      lorenzDeriv(this.lorenz, lSig, this.rho, this.beta).x ** 2 +
-        lorenzDeriv(this.lorenz, lSig, this.rho, this.beta).y ** 2 +
-        lorenzDeriv(this.lorenz, lSig, this.rho, this.beta).z ** 2,
-    );
+    // lorenzDeriv is pure of (this.lorenz, …) — compute once, not 3× (byte-identical, fewer ops).
+    const lDeriv = lorenzDeriv(this.lorenz, lSig, this.rho, this.beta);
+    const lorenzRate = Math.sqrt(lDeriv.x ** 2 + lDeriv.y ** 2 + lDeriv.z ** 2);
     this.lyapunovProxy += 0.05 * (clamp01(lorenzRate / 30) - this.lyapunovProxy);
 
     // Moonlab tensor: phase coherence across three attractors
