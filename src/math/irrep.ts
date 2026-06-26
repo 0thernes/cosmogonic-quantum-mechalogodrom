@@ -29,7 +29,7 @@ export const IRREP_J_MAX = 8;
 /** Exact factorial table 0!..(2·J_MAX+2)!, built once at module load. O(1) lookup. */
 const FACT: readonly number[] = (() => {
   const f: number[] = [1];
-  for (let n = 1; n <= 2 * IRREP_J_MAX + 2; n++) f.push(f[n - 1]! * n);
+  for (let n = 1; n <= 3 * IRREP_J_MAX + 1; n++) f.push(f[n - 1]! * n);
   return f;
 })();
 
