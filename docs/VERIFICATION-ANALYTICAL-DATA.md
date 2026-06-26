@@ -185,3 +185,27 @@ Confirms §5 and adds four items §5 did not cover:
   met names; `PATH-TO-14-14:5` lists only 5 explicit partials. The repo meets _9/14 by its own
   enumerations_ yet headlines a conservative _8_. Which single indicator is borderline (AST-1 or RPT-1)
   is an **owner ruling**; the 8/14 floor is kept everywhere until then.
+
+---
+
+## 7 · Repo-wide invariant sweep (every `src/` file, 2026-06-26)
+
+Beyond the deep per-module reads, a systematic pattern sweep across **all 196 `src/` files** for the
+exact bug-classes already found this audit. Result: the codebase is clean on each; recording the
+methodology + the architectural facts so future audits don't re-chase the false positives.
+
+- **Determinism (banned `Math.random` / `Date.now` / `performance.now` in `sim`/`math`/`core`):** 0 real
+  violations — every hit is a docstring asserting purity. The seeded `Rng` discipline holds repo-wide.
+- **Unbounded growth (append-only arrays in long-lived state):** all bounded. `emergent-language.signs`
+  caps at `maxSigns`; `self-evolution-loop.history` shifts at 500; `economy.dQ/dI/nw` are per-agent
+  parallel arrays (bounded by the fixed roster); `analytics.values` is length-assigned, not pushed.
+  The 5 `emergence-angles` arrays were the one real leak — fixed (`4e2d6fb`).
+- **three.js dispose leaks:** the `creates ≫ disposes` heuristic flags many files, but **most are not
+  leaks.** `engine.dispose()` calls `renderer.forceContextLoss()`, which frees the **entire** GL context
+  on HMR — so boot-once systems (`environment` 35 creates / 0 disposes, `geometry-cache` 41/0 by design,
+  `titans`, `atmosphere`, `viz3d`, …) need no per-object dispose; they live for the page and the context
+  is nuked wholesale at teardown. Per-object `dispose()` only matters for systems **rebuilt mid-sim in the
+  live context**. Those were verified balanced: `singularities` tracks every aura/photon/glow/particle in
+  `extras`/`extraMats` and frees them on despawn; `super-body` was the lone real gap (freed only 3 of 9
+  materials) — fixed (`a6b67ce`). **Rule for future audits: a high create/dispose ratio is only a leak if
+  the meshes are rebuilt during the run; boot-once GPU resources are covered by `forceContextLoss`.**
