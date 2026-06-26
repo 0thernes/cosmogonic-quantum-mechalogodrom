@@ -11,6 +11,19 @@ dated / historical / "superseded snapshot" copies (per the binding "Living docs,
 
 ---
 
+## 2026-06-26 — Independent re-baseline after fleet churn (0 new findings)
+
+A fresh full-repo re-audit off the current `origin/main` tip (taken **after** the 24 dated-doc renames +
+the 532-file per-file coverage manifest) confirms nothing regressed: `bun run check` is **green** (1,489
+pass / 0 fail, 7 build artifacts; `verify:receipts` + `sync:check` match `v0.18.0 · 95.03/92.03`); `bun
+run verify:facts` reports **0 drift across 80 MD/HTML/XML surfaces**; an independent codepoint scan finds
+**0 mojibake** (U+0080–009F / U+00A6 / U+0178 / U+201C/D / U+FFFD) and **0 broken relative links** across
+all 90 doc surfaces; and the Butlin-membership reconciliation is verified to have **landed** — the honesty
+audit and `PATH-TO-14-14` both enumerate exactly **8 met** (GWT-1/3/4, HOT-1/2, AST-1, PP-1, AE-1) / **6
+partial** (RPT-1/2, GWT-2, HOT-3/4, AE-2), RPT-1 in partial, "never 9/14". Canonical sources unchanged
+(`canonical-receipts.ts` · `package.json`). Verdict: the repo is **true, accurate, current, and
+defensible** — 0 new findings on re-read.
+
 ## 2026-06-26 — Exhaustive subsystem audit (UI · core/scripts/server · non-core sim)
 
 Completed the line-by-line code review beyond the math/mind core — three master-lens reviewers over
