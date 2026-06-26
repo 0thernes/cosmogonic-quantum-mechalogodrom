@@ -1,11 +1,24 @@
 # Audit Log (centralized)
 
 **One place for the project's audit history.** New audits, reviews, and fix-passes append a dated
-entry HERE (newest first) instead of spawning a new standalone report file each time. The dated
-reports under [`docs/reports/`](./reports/) and the `docs/*AUDIT*` / `docs/*REPORT*` files are a **frozen historical archive**: the redundant per-audit report files were consolidated into the dated entries below and removed\*\* (full content in git history). Only a handful of canonical reports survive, listed at the bottom. Live facts (version, test/coverage receipts) are propagated automatically by
-`scripts/sync-surfaces.ts`; this log records what changed and why.
+entry HERE (newest first). The dated reports under [`docs/reports/`](./reports/) are restored
+historical snapshots with a current truth baseline; live facts (version, test/coverage receipts) are
+propagated automatically by `scripts/sync-surfaces.ts`. This log records what changed and why.
 
 ---
+
+## 2026-06-26 — Report archive restored + A-Life comparison truth sync
+
+- Restored the `C:\Users\Alexa\Downloads\COSMOGONIC REPORTS` archive into canonical repo location
+  `docs/reports/` so the reports ship with the local/GitHub repo instead of living only in Downloads.
+- Added [`reports/2026-06-26-CURRENT-TRUTH-BASELINE.md`](./reports/2026-06-26-CURRENT-TRUTH-BASELINE.md)
+  and stamped the restored historical reports with a current-baseline warning.
+- Added the A-Life comparative audit and scoring matrix:
+  [`reports/2026-06-26-ALIFE-COMPARATIVE-AUDIT.md`](./reports/2026-06-26-ALIFE-COMPARATIVE-AUDIT.md) and
+  [`reports/2026-06-26-alife-comparison-matrix.csv`](./reports/2026-06-26-alife-comparison-matrix.csv).
+- Truth-sync corrections: current gate baseline is 1,477 tests with 95.18% line / 92.13% function
+  coverage; Butlin remains 8/14 met + 6/14 partial; GOAL5 `<2%` frame-budget status is a remediation
+  target, not a current proven fact.
 
 ## 2026-06-26 — Math-correctness pass (unwired research leaves)
 
@@ -67,9 +80,10 @@ oxlint 0 + tests + receipts + build) and classified by wiring before changing.
 
 ## Surviving reports (canonical)
 
-The per-audit sprawl was folded into the entries above and the redundant files removed (git history
-preserves them). These canonical references survive:
+The dated archive now lives in `docs/reports/`. Historical report bodies preserve publication-era numbers;
+the current truth baseline supersedes conflicting old counts or overclaims.
 
 - **Comprehensive assessment:** [`reports/2026-06-17-STATE-OF-THE-ART-COMBINED.md`](./reports/2026-06-17-STATE-OF-THE-ART-COMBINED.md) (+ `-WHOLE-REPO`, `-SUPER-CREATURE`).
 - **NHSI:** [`reports/2026-06-21-NHSI-HONESTY-AUDIT.md`](./reports/2026-06-21-NHSI-HONESTY-AUDIT.md) (honesty scorecard — gate-referenced) · [`reports/2026-06-21-NHSI-MANIFESTO-0THERNES-CORP.md`](./reports/2026-06-21-NHSI-MANIFESTO-0THERNES-CORP.md) · [`reports/2026-06-20-RESEARCH-BEDROCK.md`](./reports/2026-06-20-RESEARCH-BEDROCK.md) · [`reports/2026-06-20-SUPER-REPORT-PATH-TO-NHSI-AND-SENTIENCE.md`](./reports/2026-06-20-SUPER-REPORT-PATH-TO-NHSI-AND-SENTIENCE.md) · [`reports/2026-06-20-ROADMAP-TO-NHSI-AND-SENTIENCE.xml`](./reports/2026-06-20-ROADMAP-TO-NHSI-AND-SENTIENCE.xml).
+- **A-Life:** [`reports/2026-06-26-ALIFE-COMPARATIVE-AUDIT.md`](./reports/2026-06-26-ALIFE-COMPARATIVE-AUDIT.md) · [`reports/2026-06-26-alife-comparison-matrix.csv`](./reports/2026-06-26-alife-comparison-matrix.csv).
 - **Tsotchke:** living map [`TSOTCHKE-INTEGRATION-MAP.md`](./TSOTCHKE-INTEGRATION-MAP.md) · plan [`TSOTCHKE-CORPUS-INTEGRATION-PLAN.md`](./TSOTCHKE-CORPUS-INTEGRATION-PLAN.md) · source-provenance audits still cited from code (`TSOTCHKE-CORPUS-RALPH-WIRING-AUDIT-2026-06-19.md`, `TSOTCHKE_CORPUS_INTEGRATION_AUDIT.md`, `TSOTCHKE-ULTIMATE-COMPREHENSIVE-AUDIT-REPORT-ASSESSMENT-2026-06-20.md`).

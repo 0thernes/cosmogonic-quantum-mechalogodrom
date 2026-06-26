@@ -1551,7 +1551,7 @@ Copilot are constructed boot-stream-neutral and never write sim state, so the go
 
 ### V9 acceptance
 
-Full `bun run check` green: prettier → tsc strict → oxlint → 1514 tests (0 fail, 300-frame golden
+Full `bun run check` green: prettier → tsc strict → oxlint → 1477 tests (0 fail, 300-frame golden
 included) → build. The Copilot sandbox verified live (allow: `git log`, file reads; deny:
 path-escape, `git push`, `legacy/`, shell redirection).
 
@@ -1614,7 +1614,10 @@ path-escape, `git push`, `legacy/`, shell redirection).
 - Each shows unique quantum super-powers (fringe curiosities modeled honestly as sim algebra — e.g. stabilizer-protected "prophecy", entanglement "manipulation" of local fields).
 - Memory orchestra demonstrably used (narrative trace + symbol recall in snapshot/telemetry).
 - No claims of sentience anywhere; all disclaimers preserved.
-- Frame budget share of new per-frame work <2% combined on desktop ultra (measured).
+- Frame budget share target for GOAL5 remains <2% combined on desktop ultra, but the current
+  2026-06-26 live bench does **not** prove that target: `5x think()` measures 14.47-25.40 ms per batch
+  (3.62-6.35 ms/frame amortized over 4 frames). Treat <2% as a remediation target until BENCHMARKS proves
+  it again.
 - Any human can read the changed modules + contracts + research doc and understand the math.
 
 All prior contracts bind. File ownership exclusive. World wires. No black-box slop — POWER OF MATH.

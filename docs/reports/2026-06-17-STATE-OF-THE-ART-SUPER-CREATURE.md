@@ -1,5 +1,9 @@
 # Cosmogonic Quantum Mechalogodrom — State-of-the-Art Report
 
+> **Current truth baseline:** This is a restored historical snapshot. Present-tense counts, status
+> claims, Butlin scores, and benchmark numbers below are superseded where they conflict with
+> [2026-06-26-CURRENT-TRUTH-BASELINE.md](./2026-06-26-CURRENT-TRUTH-BASELINE.md).
+
 ### Report II of II · The Super Creature
 
 **Classification:** Technical / strategic briefing — _MIT-PhD caliber, executive-meeting grade_

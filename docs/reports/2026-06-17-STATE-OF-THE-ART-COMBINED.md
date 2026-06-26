@@ -1,5 +1,9 @@
 # Cosmogonic Quantum Mechalogodrom — State of the Art (Combined Report)
 
+> **Current truth baseline:** This is a restored historical snapshot. Present-tense counts, status
+> claims, Butlin scores, and benchmark numbers below are superseded where they conflict with
+> [2026-06-26-CURRENT-TRUTH-BASELINE.md](./2026-06-26-CURRENT-TRUTH-BASELINE.md).
+
 ### A unified State-of-the-Art Assessment combining Report I (The Whole Repository) + Report II (The Super Creature)
 
 > **Canonical §III.2–III.5 (sentience scorecard + LFG metrics).** Obsolete editions cite wrong gate receipts (~91 % coverage, ≈208 µs/beat, or pre–receipts-law test tallies). This document is authoritative as of 2026-06-17.

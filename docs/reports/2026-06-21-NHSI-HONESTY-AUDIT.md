@@ -1,5 +1,9 @@
 # NHSI Honesty Audit — Where We Actually Are (2026-06-21)
 
+> **Current truth baseline:** This restored audit remains the canonical honesty frame for Butlin/NHSI
+> claims: **8/14 met + 6/14 partial; indicators are not sentience.** Current gate and benchmark numbers
+> are in [2026-06-26-CURRENT-TRUTH-BASELINE.md](./2026-06-26-CURRENT-TRUTH-BASELINE.md).
+
 **Method:** a 15-agent adversarial audit (one auditor per dimension, each finding re-verified by an
 independent skeptic against the real source by `file:line`), plus a dedicated emergence pass. Every
 classification below was read out of the code, not the docs. Verifiers confirmed the audits with high

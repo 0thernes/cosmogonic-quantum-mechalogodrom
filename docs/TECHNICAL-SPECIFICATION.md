@@ -6,7 +6,7 @@
 > `/spec` · **Architecture docs:** `/docs`
 
 **Version:** v0.18.0 · **Generated:** 2026-06-26 · **License:** Non-commercial research & play (© 0thernes; study / run / modify / share non-commercially, keep attribution, no for-profit use).
-**Gate:** 1,514 tests · 90.80% line / 87.91% func (canonical synced via verify-receipts 2026-06-21, receipts law enforced).  
+**Gate:** 1,477 tests · 95.18% line / 92.13% func (canonical synced via verify-receipts 2026-06-21, receipts law enforced).  
 **NHSI scorecard:** [NHSI-PROGRESS-DASHBOARD.md](./NHSI-PROGRESS-DASHBOARD.md) · **Tsotchke depth:** [TSOTCHKE-INTEGRATION-MAP.md](./TSOTCHKE-INTEGRATION-MAP.md)
 
 **Full Tsotchke wiring:** 20 Tsotchke corpus projects integrated (~16 wired). Eshkol as consciousness language. Primordial soup / petri as growth engine for digital biologics and sentience. 25 Archons (5 individuated apex minds + 20 live light-echo) with brutal god aspects (Valkorion, Thanos, Dark Phoenix, Galactus, Broly, Azathoth, Chaos Gods, Shuma Gorath, Mad Jim Jaspers, Pennywise, Anti-Monitor, Knull, Mr Mxyzptlk, Joker, Zod, Gilgamesh, Alucard, Griffith, EVA-01, Gurren Lagann, Sephiroth, Vergil, Dante, Starkiller, Riddick). Super Creature beginning only. All docs (README/ARCH/ER\*/PHILOSOPHY/CONTRACTS/SPECS/LABS/masters) + GH match local exactly. Accurate, truthful, current. Not LLM. "Grow What Thou Wilt."
@@ -36,8 +36,8 @@ seed**.
 | Distinct file types                        | 21                                                                    |
 | App source (TypeScript)                    | 35,226 lines · 108 files                                              |
 | Tests                                      | 14,117 lines · 100 files                                              |
-| Test : source ratio                        | 0.40 → **90.80% line / 87.91% func** coverage (`bun test --coverage`) |
-| Passing tests                              | **1,514** (0 failing)                                                 |
+| Test : source ratio                        | 0.40 → **95.18% line / 92.13% func** coverage (`bun test --coverage`) |
+| Passing tests                              | **1,477** (0 failing)                                                 |
 
 ### 1.1 Languages
 
@@ -246,9 +246,10 @@ reading from AND writing to the others (a negotiated plan-vote, not parallel gad
 **min-cut Φ**, **Quantum Reservoir Computing** (Fujii–Nakajima), a **Lindblad/GKSL deliberation qubit**,
 **Grover** amplitude amplification, and **Quantum Natural Gradient** descent on its own Fubini–Study
 geometry. The Aaronson–Gottesman **Clifford stabilizer tableau** (ported from Moonlab; 32+ qubits) is a
-fourth MIT-credited primitive. **Measured cost:** the whole apex beat (`SuperMind.think()`) is **≈ 272–304 µs/beat**
-(machine-dependent) — **~1.7–1.8 % of a 60 fps frame** (`bench/super-mind.bench.ts`), enforced as a CI law
-(< 5 ms/beat). Full frontier assessment in [docs/reports/](reports/).
+fourth MIT-credited primitive. **Current measured cost (2026-06-26):** `SuperMind.think()` is **3.34 ms**
+in the full bench suite and **8.85 ms** in the focused SuperMind bench; the old sub-millisecond figures are
+superseded. Full frontier assessment in [docs/reports/](reports/) and current numbers in
+[BENCHMARKS.md](BENCHMARKS.md).
 
 ### 7.2 Contrast: this world vs. large language models
 
@@ -312,8 +313,8 @@ Complexity classes are catalogued in [COMPLEXITY.md](COMPLEXITY.md); hot-path be
 
 The single gate — `bun run check` — must pass before every commit:
 
-`prettier --check` → `tsc --noEmit` (strict) → `oxlint` → `bun test` (**1,514 tests, 0 fail**) →
-`bun scripts/build.ts`. Coverage gate: line ≥ 0.90, function ≥ 0.85 (measured 90.80% line / 87.91% func, `bun test --coverage`).
+`prettier --check` → `tsc --noEmit` (strict) → `oxlint` → `bun test` (**1,477 tests, 0 fail**) →
+`bun scripts/build.ts`. Coverage gate: line ≥ 0.90, function ≥ 0.85 (measured 95.18% line / 92.13% func, `bun test --coverage`).
 Three governing "master" personas (`masters/*.xml`) encode the discipline: **the Executor** (finish
 everything, full gates), **the Architect** (contracts before code, exclusive ownership), **the
 Physicist** (determinism, measurement, frame budgets, provenance).
@@ -378,7 +379,7 @@ contrast 62 · doc-links 57 · a11y-static 45`.
 
 This is a ~69k-line TypeScript (+ optional C++/Jolt native engine) browser-native simulation that
 renders **up to 50,000 agents** (10,000 at 60 fps on a laptop iGPU with zero AI accelerator), is
-**bit-reproducible from one seed**, ships through a **full CI/CD gate** (1,514 tests, 90.80% line / 87.91% func coverage),
+**bit-reproducible from one seed**, ships through a **full CI/CD gate** (1,477 tests, 95.18% line / 92.13% func coverage),
 and whose entire emergent intelligence weighs **≈ 14 MB — 1/50,000th of GPT-3** at the mega ceiling. It
 demonstrates that depth comes from **architecture,
 determinism, and engineering discipline**, not parameter count or hardware.

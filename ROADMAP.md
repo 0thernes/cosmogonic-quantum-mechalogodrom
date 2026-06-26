@@ -21,7 +21,7 @@ deliberate limitation, and promoting one to ✅ is a roadmap item.
 
 ## Now (in progress)
 
-- Keep the full gate green at every commit (`bun run check`): 1,514 tests, ~1.69M assertions, 90.80% line / 87.91% func coverage (canonical, receipts enforced). Tsotchke fully wired, digital biologics growing in the soup.
+- Keep the full gate green at every commit (`bun run check`): 1,477 tests, ~1.69M assertions, 95.18% line / 92.13% func coverage (canonical, receipts enforced). Tsotchke fully wired, digital biologics growing in the soup.
 - Maintain the 500-point inspection as the pre-release bar; re-walk WARNs each tag.
 - Documentation completeness sweep ” README, architecture, ERD/ERM/ERP, Kanban, roadmap all cross-linked.
 

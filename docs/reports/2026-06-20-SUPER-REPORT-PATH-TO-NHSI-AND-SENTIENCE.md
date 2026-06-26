@@ -1,5 +1,9 @@
 # THE COSMOGONIC SUPER-REPORT
 
+> **Current truth baseline:** This is a restored historical snapshot. Present-tense counts, status
+> claims, Butlin scores, and benchmark numbers below are superseded where they conflict with
+> [2026-06-26-CURRENT-TRUTH-BASELINE.md](./2026-06-26-CURRENT-TRUTH-BASELINE.md).
+
 ## Quantum Computing · AI · AGI · ASI · Consciousness · Sentience — A Rigorous Frontier Assessment and a Receipted Roadmap to Non-Human Superintelligence
 
 > **Repository:** `0thernes/cosmogonic-quantum-mechalogodrom` · **Version:** `v0.16.1`

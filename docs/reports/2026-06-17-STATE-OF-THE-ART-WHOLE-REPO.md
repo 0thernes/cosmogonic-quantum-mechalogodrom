@@ -1,5 +1,9 @@
 # Report I — The Whole Repository at the Frontier
 
+> **Current truth baseline:** This is a restored historical snapshot. Present-tense counts, status
+> claims, Butlin scores, and benchmark numbers below are superseded where they conflict with
+> [2026-06-26-CURRENT-TRUTH-BASELINE.md](./2026-06-26-CURRENT-TRUTH-BASELINE.md).
+
 ### Cosmogonic Quantum Mechalogodrom · A State-of-the-Art Assessment
 
 **0thernes LLC** · prepared 2026-06-17 · against `v0.11.0` (`main` @ `60478a4`)

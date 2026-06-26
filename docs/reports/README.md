@@ -1,13 +1,29 @@
-# Reports — frozen historical archive
+# Reports Archive
 
-These dated files are **point-in-time worldline snapshots**. They are frozen: read them for
-history, but **do not add new standalone report files here**.
+These reports are now restored into the repository. The copies in
+`C:\Users\Alexa\Downloads\COSMOGONIC REPORTS` are non-canonical exports; the canonical copies live here.
 
-- New audits / reviews / fix-passes → append a dated entry to [`../AUDIT-LOG.md`](../AUDIT-LOG.md)
-  (the single centralized log, indexed there).
-- Shipped changes → [`../../CHANGELOG.md`](../../CHANGELOG.md).
-- Living status → [`../NHSI-PROGRESS-DASHBOARD.md`](../NHSI-PROGRESS-DASHBOARD.md).
+Read all dated reports with the current guardrail:
 
-Live facts (version, test/coverage receipts) are not hand-edited anywhere — they are propagated
-from the single sources of truth (`package.json`, `scripts/canonical-receipts.ts`) by
-`scripts/sync-surfaces.ts` and policed by `bun run sync:check` in the gate.
+- [2026-06-26-CURRENT-TRUTH-BASELINE.md](./2026-06-26-CURRENT-TRUTH-BASELINE.md)
+
+## Current Reports
+
+- [2026-06-26-ALIFE-COMPARATIVE-AUDIT.md](./2026-06-26-ALIFE-COMPARATIVE-AUDIT.md)
+- [2026-06-26-alife-comparison-matrix.csv](./2026-06-26-alife-comparison-matrix.csv)
+
+## Historical Reports Restored From Downloads
+
+- [2026-06-17-STATE-OF-THE-ART-COMBINED.md](./2026-06-17-STATE-OF-THE-ART-COMBINED.md)
+- [2026-06-17-STATE-OF-THE-ART-SUPER-CREATURE.md](./2026-06-17-STATE-OF-THE-ART-SUPER-CREATURE.md)
+- [2026-06-17-STATE-OF-THE-ART-WHOLE-REPO.md](./2026-06-17-STATE-OF-THE-ART-WHOLE-REPO.md)
+- [2026-06-20-RESEARCH-BEDROCK.md](./2026-06-20-RESEARCH-BEDROCK.md)
+- [2026-06-20-ROADMAP-TO-NHSI-AND-SENTIENCE.xml](./2026-06-20-ROADMAP-TO-NHSI-AND-SENTIENCE.xml)
+- [2026-06-20-SUPER-REPORT-PATH-TO-NHSI-AND-SENTIENCE.md](./2026-06-20-SUPER-REPORT-PATH-TO-NHSI-AND-SENTIENCE.md)
+- [2026-06-21-NHSI-HONESTY-AUDIT.md](./2026-06-21-NHSI-HONESTY-AUDIT.md)
+- [2026-06-21-NHSI-MANIFESTO-0THERNES-CORP.md](./2026-06-21-NHSI-MANIFESTO-0THERNES-CORP.md)
+
+## Rule
+
+The body of each older report preserves its publication-era measurements for provenance. If a historical
+number conflicts with the current baseline, the baseline wins.

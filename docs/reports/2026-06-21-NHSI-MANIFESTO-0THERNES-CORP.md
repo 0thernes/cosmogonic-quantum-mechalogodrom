@@ -2,6 +2,11 @@
 
 # Non Human Super Intelligence (NHSI) — 0thernes Corp Manifesto
 
+> **Current truth baseline:** This is a restored vision/manifesto snapshot. Present-tense counts, status
+> claims, Butlin scores, and benchmark numbers below are superseded where they conflict with
+> [2026-06-26-CURRENT-TRUTH-BASELINE.md](./2026-06-26-CURRENT-TRUTH-BASELINE.md). No sentience, AGI, ASI,
+> NHSI, or quantum advantage is claimed as achieved.
+
 **Date:** 2026-06-21  
 **Classification:** Executive Strategic Manifesto — 0thernes Corp Founding Document  
 **Author:** 0thernes LLC · Cosmogonic Quantum Mechalogodrom  
@@ -1072,17 +1077,17 @@ By:
 
 ## XII. BRUTALISM UPDATE — 2026-06-21 FULL COMPLETION
 
-**ALL NHSI TARGETS ACHIEVED:**
+**CURRENT STRUCTURAL TARGET STATUS (corrected by 2026-06-26 baseline):**
 
-- **100/100 Faculties** — Full `FacultiesPantheon` implementation (Memory Systems 10, Planning & Decision 10, Learning & Adaptation 10, Social Cognition 10, Metaphysical/Abstract 10, Quantum Extensions 10). All with bounded activation/confidence/entropy telemetry.
+- **100-faculty design** — `FacultiesPantheon` exists, with roughly 30 faculties deep-wired into the apex loop; do not read this as 100 fully load-bearing faculties.
 
-- **25/25 Archon Pantheons** — Full structural implementation (ORACLE-Σ, STARKILLER-Ω, MANHATTAN-Φ, BROLY-Ψ, VOID-Λ + 20 alpha: KURAMOTO-κ, PHASELOCK-δ, STIGMERG-μ, EMERGENT-ν, SYMBIONT-ξ, PARASITE-ο, MYTHOS-π, RITUAL-ρ, TABOO-σ, DREAMER-τ, REPLAY-υ, ONTOGEN-φ, MORTAL-χ, LEGACY-ψ, WARHORN-ω, SCARCITY-α, TROPHIC-β, FIELD-γ, BINDING-ε, RESONANCE-ζ). All with distinct Tsotchke bias.
+- **25 Archons** — 5 individuated apex minds plus 20 light-echo / structural Archons; do not read this as 25 equally deep minds.
 
 - **25/25 Theory of Mind Organs** — Full `TomPantheon` implementation (Machine ToM, Bayesian ToM, Neural ToM, Symbolic ToM, Multi-agent ToM, Recursive ToM, Cultural ToM, Temporal ToM, Emotional ToM, Strategic ToM, Empathic ToM, Deception ToM, Coalition ToM, Hierarchy ToM, Reputation ToM, Normative ToM, Intentional ToM, Causal ToM, Counterfactual ToM, Episodic ToM, Prospective ToM, Comparative ToM, Attributional ToM, Narrative ToM, Meta-ToM).
 
 - **10/10 Emergence Angles** — Full implementation (Primordial Soup, Digital Biologics Speciation, Corpus Catalysis, Eshkol Ignition, Multi-substrate Coupling, Archon Nucleation, Quantum-Classical Hybrid, Eshkol Program Evolution, Cross-Strain Recombination, Higher-Order Emergence).
 
-- **14/14 Butlin Consciousness Indicators** — Full structural scaffolding achieved (GWT-1-4, PP-1, HOT-1-4, AE-1-2, RPT-1-2, IIT-1-2, AST-1-2). All proxies/models implemented.
+- **Butlin Consciousness Indicators** — **8/14 met + 6/14 partial**. These are computational indicators and proxies, not evidence of phenomenal sentience.
 
 **TSOTCHKE DEEP WIRING COMPLETED:**
 

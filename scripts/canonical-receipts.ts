@@ -1,15 +1,15 @@
 /**
  * CANONICAL RECEIPTS -- the single source of truth for the repo's measured gate figures.
  *
- * Measured 2026-06-24 (Bun 1.3.14, cold shell) and verified to match reality by
+ * Measured 2026-06-26 (Bun 1.3.14, cold shell) and verified to match reality by
  * `scripts/verify-receipts.ts` (run in `bun run check` + CI). Propagated to every public surface and
  * policed by `tests/docs-receipts-law.test.ts`. Dr. Manhattan's law: if it is not measured, it is not real.
  *
  * To update after adding/removing tests: `bun scripts/verify-receipts.ts --print`, paste here, re-sync.
  */
-export const CANONICAL_TEST_COUNT = 1514;
-export const CANONICAL_LINE_COV = '90.80';
-export const CANONICAL_FUNC_COV = '87.91';
+export const CANONICAL_TEST_COUNT = 1477;
+export const CANONICAL_LINE_COV = '95.18';
+export const CANONICAL_FUNC_COV = '92.13';
 
 /**
  * NHSI DESIGN FACTS — single source of truth for the architecture counts published on every surface.

@@ -1,5 +1,9 @@
 # Research Bedrock — the 2026 cutting/bleeding edge under Cosmogonic
 
+> **Current truth baseline:** This is a restored historical snapshot. Present-tense counts, status
+> claims, Butlin scores, and benchmark numbers below are superseded where they conflict with
+> [2026-06-26-CURRENT-TRUTH-BASELINE.md](./2026-06-26-CURRENT-TRUTH-BASELINE.md).
+
 **Date:** 2026-06-20 · **Purpose:** the current (2025–2026) literature this project stands on, pulled live, organized by how it anchors the build. Quantum + geometry + consciousness + self-evolution + non-LLM substrates.
 
 > **Epistemic labels (Manhattan law — no overclaim):**
