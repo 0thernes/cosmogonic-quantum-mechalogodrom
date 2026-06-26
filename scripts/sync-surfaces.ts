@@ -105,10 +105,7 @@ for (const file of SURFACES) {
 // package.json description carries a trailing "vX.Y.Z" that must equal the version field.
 {
   const pkgRaw = readFileSync('package.json', 'utf8');
-  const pkgNext = pkgRaw.replace(
-    /("description":\s*"[^"]*?)v0\.[0-9]+\.[0-9]+/g,
-    `$1v${VERSION}`,
-  );
+  const pkgNext = pkgRaw.replace(/("description":\s*"[^"]*?)v0\.[0-9]+\.[0-9]+/g, `$1v${VERSION}`);
   if (pkgNext !== pkgRaw) {
     drift.push('package.json');
     if (!checkOnly) writeFileSync('package.json', pkgNext, 'utf8');
