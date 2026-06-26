@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.18.0] - 2026-06-26
+
+### Flow automation + single-source-of-truth cross-surface sync + correctness hardening
+
+- **Seamless local→GitHub flow ("Instant Transmission"):** a `post-commit` hook auto-pushes every `main` commit to origin (rebase-retry on non-fast-forward; opt-out with `git config cqm.autopush false`). One commit IS a ship — no manual `git push`, no PRs, no local/GitHub drift.
+- **One source of truth, every surface:** `scripts/canonical.ts` holds each shared fact once (version · NHSI numbers · test/coverage receipts); `scripts/sync-surfaces.ts` (`bun run sync`) propagates them into every README / HTML / doc surface via `<!--canon:KEY-->` markers + the package.json description. `bun run sync:check` is wired into the gate (`tests/docs-sync-law.test.ts`), so CI fails on any cross-surface inconsistency — no more chunk-by-chunk hand-editing.
+- **Heritable genetics** wired into the entity + NHI spawn path (digital-biologics heredity loop closed).
+- **Correctness hardening:** IIT local-integration share, SR TD-rule indicator, myth-ritual id/label agreement, and several sim NaN / bounds / conservation fixes; genuine Racah/SVD math replacing deep-wire stubs; honesty cleanup of cosmetic grafts.
+- **Encoding gate** hardened to fail CI on sub-lead-byte (Ÿ / C1-control) corruption across the canonical + HTML surfaces.
+
 ## [0.17.1] - 2026-06-21
 
 ### BRUTALISM god-scale wiring — emergence 10/10, brutal biologics, receipts sync

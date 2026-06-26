@@ -17,7 +17,7 @@
 import { CANONICAL_TEST_COUNT, CANONICAL_LINE_COV, CANONICAL_FUNC_COV } from './canonical-receipts';
 
 /** The shipped release version. Mirror of package.json "version" (sync keeps them equal). */
-export const VERSION = '0.17.1';
+export const VERSION = '0.18.0';
 
 /**
  * Verified NHSI state — every number measured by the 2026-06-21 honesty audit
