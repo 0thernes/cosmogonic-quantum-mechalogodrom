@@ -132,6 +132,14 @@ const OVERCLAIMS: { re: RegExp; label: string }[] = [
     label: '"14/14 (structural/scaffolding) achieved" (verified: 8/14 met + 6/14 partial)',
   },
   {
+    // "14/14" immediately followed by an achievement verb (no honest qualifier between). Requires the
+    // verb adjacent so it can't trip on honest framing like "path to 14/14, not complete" or
+    // "Butlin 14/14 | … 8/14 MET". Catches "14/14 achieved", "14/14 is complete", "14/14 fully met".
+    re: /14\s*\/\s*14\s+(?:is\s+|are\s+|now\s+|fully\s+)?(?:achieved|complete|met)\b/i,
+    label:
+      '"14/14 achieved/complete/met" (verified: 8/14 met + 6/14 partial; on the path, not complete)',
+  },
+  {
     re: /[Aa]rchons?\s+fully\s+implemented/i,
     label: '"Archons fully implemented" (verified: 5 individuated + 20 light-echo)',
   },
