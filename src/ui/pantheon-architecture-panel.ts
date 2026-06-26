@@ -27,6 +27,7 @@ import {
   type BabyGenome,
   type LineageGlyph,
 } from '../sim/pantheon-breeding';
+import { createApexBrain, type ApexBrainSnapshot } from '../sim/apex-brain';
 import { mulberry32, type Rng } from '../math/rng';
 import { mountToggle } from './panel-dock';
 
@@ -120,6 +121,8 @@ export class PantheonArchitecturePanel {
   private lineageIdx = 100; // open on the APEX ς
   private broodIdx = 0;
   private mode: VizMode = 'attractor';
+  /** When the apex ς is selected, its warmed Entropic-Tesseract-Hydra brain snapshot (else null). */
+  private apexSnap: ApexBrainSnapshot | null = null;
 
   // Animation buffers for the current subject (widened to ArrayBufferLike for the viz returns).
   private attractor: Float64Array = new Float64Array(0);
@@ -357,6 +360,23 @@ export class PantheonArchitecturePanel {
     this.loop = babyLoopPath(genome, 360);
     this.blaschke = babyBlaschkeImage(genome, 360);
     this.reveal = 0;
+
+    // The apex ς carries its own brain — THE ENTROPIC TESSERACT HYDRA. Warm it deterministically so
+    // the cycler shows live organ telemetry (level ramps toward the Sim-3 transcendence threshold).
+    this.apexSnap = null;
+    if (this.view === 'lineage' && isApex(lineageAt(this.lineageIdx))) {
+      const brain = createApexBrain();
+      for (let i = 0; i < 64; i++) {
+        brain.tick({
+          threat: 0.4 + 0.3 * Math.sin(i * 0.2),
+          energy: 0.6,
+          chaos: 0.5 + 0.4 * Math.cos(i * 0.17),
+          novelty: 0.5 + 0.4 * Math.sin(i * 0.09),
+          level: i * 15,
+        });
+      }
+      this.apexSnap = brain.snapshot();
+    }
     this.renderData(genome);
   }
 
@@ -386,6 +406,7 @@ export class PantheonArchitecturePanel {
       ['rarity', (g.rarity * 100).toFixed(0) + '%'],
       ['rank', g.rank],
     ];
+    if (this.apexSnap) for (const r of apexRows(this.apexSnap)) rows.push(r);
     const doc = this.data.ownerDocument;
     this.data.replaceChildren();
     for (const r of rows) {
@@ -518,4 +539,50 @@ export class PantheonArchitecturePanel {
 /** Format a signed integer with an explicit + sign for readability. */
 function signed(n: number): string {
   return n > 0 ? `+${n}` : String(n);
+}
+
+/** Compact billions/millions formatter for the neuron counts. */
+function bigNum(v: number): string {
+  if (v >= 1e9) return (v / 1e9).toFixed(2) + 'B';
+  if (v >= 1e6) return (v / 1e6).toFixed(2) + 'M';
+  if (v >= 1e3) return (v / 1e3).toFixed(1) + 'k';
+  return String(v);
+}
+
+/** Render the apex ς brain (Entropic Tesseract Hydra) snapshot as data rows for the cycler. */
+function apexRows(s: ApexBrainSnapshot): Array<[string, string] | string> {
+  const t = s.thought;
+  return [
+    'APEX BRAIN — ENTROPIC TESSERACT HYDRA',
+    ['plan', `${t.plan}${t.superposed ? ' (superposed)' : ''}`],
+    ['simulation', `Sim ${t.simulation} · ${(t.transcendence * 100).toFixed(0)}% → Sim 3`],
+    ['vitality / agony', `${(t.vitality * 100).toFixed(0)}% / ${(t.agony * 100).toFixed(0)}%`],
+    ['neurons', `${bigNum(s.liveNeurons)} live · target ${bigNum(s.targetNeurons)}`],
+    [
+      '1 loom',
+      `${s.loom.activeEdges}/${s.loom.builtEdges} edges · allergy ${(s.loom.allergy * 100).toFixed(0)}%`,
+    ],
+    ['2 drum', `E ${s.drum.energy.toFixed(2)} · mode ${s.drum.dominantMode}`],
+    [
+      '3 necro',
+      `live ${(s.necro.liveFraction * 100).toFixed(0)}% · budget ${s.necro.budget}${s.necro.brainDead ? ' · DEAD' : ''}`,
+    ],
+    ['4 klein', `fold ${s.klein.headTailCorr.toFixed(2)} · seam ${s.klein.seamFlux.toFixed(2)}`],
+    [
+      '5 hive',
+      `λ ${s.hive.lyapunov.toFixed(3)}${s.hive.chaotic ? ' ✦' : ''} · R ${s.hive.order.toFixed(2)}`,
+    ],
+    ['6 hydra', `${s.hydra.heads} heads · conflict ${s.hydra.conflict.toFixed(2)}`],
+    ['7 wraith', `dissonance ${s.wraith.dissonance.toFixed(2)} · core ${s.wraith.core.toFixed(2)}`],
+    ['8 tunnel', `${s.tunnel.manifested} edges · H ${s.tunnel.entropy.toFixed(2)}`],
+    ['9 thermo', `heat ${s.thermo.totalHeat.toFixed(1)} · necrotic ${s.thermo.necrotic}`],
+    [
+      '10 ouroboros',
+      `${s.ouroboros.limbs}/${s.ouroboros.cap} limbs · weird ${s.ouroboros.weirdness.toFixed(2)}`,
+    ],
+    [
+      'meta',
+      `resid ${s.meta.godelResidual.toFixed(3)} · |z−zT| ${s.meta.distanceToTarget.toFixed(2)} · dust ${s.meta.cantorPoints}`,
+    ],
+  ];
 }
