@@ -1,11 +1,30 @@
 # Audit Log (centralized)
 
 **One place for the project's audit history.** New audits, reviews, and fix-passes append a dated
-entry HERE (newest first). The dated reports under [`docs/reports/`](./reports/) are restored
-historical snapshots with a current truth baseline; live facts (version, test/coverage receipts) are
-propagated automatically by `scripts/sync-surfaces.ts`. This log records what changed and why.
+entry HERE (newest first). The dated reports under [`docs/reports/`](./reports/) are **living,
+continuously-rewritten current documents** — rewritten in place to current truth, never forked into
+dated / historical / "superseded snapshot" copies (per the binding "Living docs, no archives" law in
+[CLAUDE.md](../CLAUDE.md)). Live facts (version, test/coverage receipts) are propagated automatically by
+`scripts/sync-surfaces.ts`. This log records what changed and why.
 
 ---
+
+## 2026-06-26 — Living-docs policy; reports rewritten current; stray PR closed
+
+- **Policy shift (binding):** reports/docs are now LIVING — rewritten in place to the current truth,
+  never forked into dated / historical / "superseded snapshot" copies. Encoded in
+  [CLAUDE.md](../CLAUDE.md) ("Living docs, no archives") and [`reports/README.md`](./reports/README.md).
+  Reverses the prior frozen-archive + guardrail-header approach.
+- **All dated reports rewritten in place** to current truth (v0.18.0 · 1477 tests · ~95% line / ~92%
+  function · Butlin 8/14 met + 6/14 partial · SuperMind `think()` ~3.34 / 8.85 ms); removed every stale
+  figure and every "restored historical snapshot" header. The bloated manifesto trimmed ~1116 → ~470 lines.
+- **Report dedup:** the three overlapping 2026-06-17 state-of-the-art reports collapsed to one
+  ([`STATE-OF-THE-ART-COMBINED.md`](./reports/2026-06-17-STATE-OF-THE-ART-COMBINED.md) = Parts I/II/III);
+  the WHOLE-REPO + SUPER-CREATURE splits removed, all references repointed (README, docs.html, specs.html,
+  TECHNICAL-SPECIFICATION). 11 → 9 report files; no broken links.
+- **No-PR law enforced:** closed stray PR #20 (`ship` → `main`, a superseded `AUDIT-LOG` edit that
+  re-asserted a "frozen archive" framing) by absorbing `ship` with `git merge -s ours` — main's tree
+  unchanged, 0 open PRs at rest.
 
 ## 2026-06-26 — Report archive restored + A-Life comparison truth sync
 
