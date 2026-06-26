@@ -72,6 +72,15 @@ Rewritten in place when the facts change (per the binding "Living docs, no archi
 | G   | flag (cleanliness)         | repo root                         | stray debug logs tracked at root (`.gate.log`, `.gate.baseline.log`, `.audit-gate.log`, `law.log`, `law_error.txt`, `tsc.log`, `tscout.txt`, `receipts_print.txt`)                                       | noted for cleanup                                                                                        |
 | H   | flag (fidelity, not a bug) | `src/math/curvature-aware-qng.ts` | `computeChristoffelSymbols` sets `dg=0`, so the general N×N "curvature-aware" path reduces to ordinary QNG                                                                                               | honestly documented as a simplification; no NaN / wrong shape; noted so the caveat is visible            |
 
+**Finding D2 — master governance XML mojibake (root cause + fix).** All three `masters/*.xml` files
+(the EXECUTOR / ARCHITECT / PHYSICIST steering docs read before every change) each carried ~150
+box-drawing `═` rules double-encoded into `â•` runs, plus `â€"`→`—`, `·`→`·`, `â†'`→`→`. Root cause:
+`scripts/normalize-docs.ts` globbed `.md` + the 3 HTML files but **not `masters/*.xml`**, and the
+`docs-truth-law` encoding gate scanned only the `.md` CANONICAL list + HTML — so XML corruption shipped
+with green CI. Fix: normalize-docs now globs `masters/**/*.xml` + `docs/**/*.xml` (repaired all 3, byte-
+verified clean), and a new `docs-truth-law` block encoding-gates the steering XML + KANBAN against
+mojibake / U+FFFD / sub-lead-byte / curly-quote corruption.
+
 ### Code audit (core math / sim / AI) — CLEAN
 
 A line-by-line review of `src/math/**` and `src/sim/**` (hand-verified against standard formulas, not

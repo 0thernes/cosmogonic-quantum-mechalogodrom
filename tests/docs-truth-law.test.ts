@@ -82,6 +82,32 @@ describe('docs truth law — encoding (deployed HTML surfaces)', () => {
   });
 });
 
+// Steering XML (the 3 master files) + the KANBAN board sit OUTSIDE the .md CANONICAL list and the HTML
+// list, so their corruption shipped unseen with green CI: each master carried ~150 box-drawing rules
+// (U+2550) re-encoded into double-encoding mojibake, and KANBAN carried orphaned-emoji fragments +
+// curly-quote-as-em-dash separators. normalize-docs.ts now also globs the master + report XML so they get
+// repaired; this gate keeps them clean no matter what writer touches them. (Kept as line comments + pure
+// ASCII so this corruption-detector can never itself be corrupted.)
+const STEERING_SURFACES = [
+  'masters/LEGENDARY-SUPER-SAIYAN-BROLY-MANIFESTO.xml',
+  'masters/ORACLE-ARCHITECT-OF-THE-DARKSIDE-STARKILLER.xml',
+  'masters/GALAXOGONIC-WARHAMMER-POWER-MODE-DR-MANHATTAN.xml',
+  'docs/KANBAN.md',
+];
+
+describe('docs truth law — encoding (steering XML + KANBAN)', () => {
+  test('no mojibake / U+FFFD / sub-lead-byte / curly-quote corruption in the steering surfaces', async () => {
+    const offenders: string[] = [];
+    for (const rel of STEERING_SURFACES) {
+      const file = Bun.file(rel);
+      if (!(await file.exists())) continue;
+      const text = await file.text();
+      if (MOJIBAKE.test(text) || SUBLEAD.test(text) || CURLY_QUOTE.test(text)) offenders.push(rel);
+    }
+    expect(offenders).toEqual([]);
+  });
+});
+
 /**
  * Public surfaces whose NHSI claims must match the verified code (2026-06-21 honesty audit). The
  * autonomous doc loop repeatedly re-inflates these to unsupported ACHIEVEMENT numbers (144 faculties,

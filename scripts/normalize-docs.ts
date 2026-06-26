@@ -120,9 +120,13 @@ const TARGETS = [
   'specs.html',
 ];
 async function docFiles(): Promise<string[]> {
-  const glob = new Bun.Glob('docs/**/*.md');
   const out = [...TARGETS];
-  for await (const f of glob.scan('.')) out.push(f);
+  // The master governance XMLs + dated report XMLs were OUTSIDE this normalizer's scope, so their
+  // double-encoded box-drawing rules (`═` re-encoded as `â•` runs) never got repaired. Glob them too.
+  for (const pat of ['docs/**/*.md', 'masters/**/*.xml', 'docs/**/*.xml']) {
+    const glob = new Bun.Glob(pat);
+    for await (const f of glob.scan('.')) out.push(f);
+  }
   return out;
 }
 
