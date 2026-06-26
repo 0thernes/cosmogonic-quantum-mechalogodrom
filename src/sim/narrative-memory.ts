@@ -155,7 +155,9 @@ export class NarrativeMemory {
     let bestRel = 0;
     let sumConf = 0;
     let hits = 0;
-    const now = this.ring[Math.max(0, this.head - 1)]?.t ?? 0;
+    // Most-recent entry sits one slot behind head, with ring wraparound (matches the loops below).
+    // `Math.max(0, head-1)` read slot 0 instead of NARRATIVE_CAP-1 right after head wrapped to 0.
+    const now = this.ring[(this.head - 1 + NARRATIVE_CAP) % NARRATIVE_CAP]?.t ?? 0;
 
     for (let i = 0; i < this.count; i++) {
       const idx = (this.head - 1 - i + NARRATIVE_CAP) % NARRATIVE_CAP;

@@ -256,7 +256,11 @@ export function libirrepSU2CharacterTable(jMax: number = 4): CharacterTable {
     dimensions.push(dim);
     const char: number[] = [];
     for (let m = 0; m <= j; m++) {
-      char.push(Math.sin((2 * j + 1) * (m / j) * Math.PI) / Math.sin((m / j) * Math.PI));
+      const a = j === 0 ? 0 : (m / j) * Math.PI;
+      const denom = Math.sin(a);
+      // χ_j(a) = sin((2j+1)a)/sin(a). At a = 0 and a = π (m = 0, m = j, and the whole j = 0 row)
+      // this is 0/0; the limit is the Dirichlet-kernel value 2j+1, so use it instead of NaN.
+      char.push(Math.abs(denom) < 1e-12 ? 2 * j + 1 : Math.sin((2 * j + 1) * a) / denom);
     }
     characters.push(char);
     classes.push(`spin_${j}`);

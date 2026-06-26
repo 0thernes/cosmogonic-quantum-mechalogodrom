@@ -106,10 +106,12 @@ export function initVMC(arch: NQSArchitecture, config: VMCConfig, seed = 0x51f15
   const visibleGradients = new Float32Array(arch.visibleCount);
   const hiddenGradients = new Float32Array(arch.hiddenCount);
 
-  // Initialize samples to random bitstrings
+  // Initialize samples to random bitstrings. seededRng() yields a float in [0,1); applying `>>>`
+  // to it directly truncates to 0 (ToUint32 of a value < 1), which made every sample the all-zero
+  // bitstring. Scale to a full uint32 first, then keep the top `visibleCount` bits.
   const rng = seededRng(seed);
   for (let i = 0; i < config.sampleCount; i++) {
-    samples[i] = rng() >>> (32 - arch.visibleCount);
+    samples[i] = (rng() * 0x1_0000_0000) >>> (32 - arch.visibleCount);
     amplitudes.push({ re: 0, im: 0 });
   }
 
