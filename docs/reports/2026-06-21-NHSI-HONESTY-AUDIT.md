@@ -182,8 +182,8 @@ primitive/queued.
 
 ## 7. Consciousness / sentience — honestly 8/14 Butlin, and that is not sentience
 
-8/14 indicators are genuinely met (RPT-1, GWT-1, GWT-3, GWT-4, HOT-1, HOT-2,
-AST-1, PP-1, AE-1); 6 are partial (RPT-2, GWT-2, HOT-3, HOT-4, AE-2 — e.g. the
+8/14 indicators are genuinely met (GWT-1, GWT-3, GWT-4, HOT-1, HOT-2,
+AST-1, PP-1, AE-1); 6 are partial (RPT-1, RPT-2, GWT-2, HOT-3, HOT-4, AE-2 — e.g. the
 workspace lacks true capacity-limited competition; qualia is read-out telemetry;
 embodiment is closed at the world level, not modeled inside `think()`). Against
 Butlin et al. (2023, _Consciousness in Artificial Intelligence_, arXiv:2308.08708)

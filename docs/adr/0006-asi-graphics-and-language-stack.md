@@ -62,5 +62,5 @@ catalog's deferred upgrades (`gpu-io`, `typegpu`, Rapier WASM) remain the GPU-co
 
 The preview's software-GPU is wedged this session, so **logic is verified by `bun test` + the full
 gate**, and **visuals are verified on the real GPU via the live deploy** (CI/CD on every push to
-`master`). High-risk visual changes ship **flag-gated OFF** until confirmed, then are promoted to
+`main`). High-risk visual changes ship **flag-gated OFF** until confirmed, then are promoted to
 default — so the working public deploy is never regressed blind.

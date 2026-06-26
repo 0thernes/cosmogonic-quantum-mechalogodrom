@@ -205,7 +205,7 @@ Confirms §5 and adds four items §5 did not cover:
   future mis-wiring.
 - **`HANDOFF.md` + `research_receipts.md`** — were stale present-tense (v0.10.4 / 942-1183 tests).
   Added historical banners pointing to current truth (`canonical-receipts.ts` / the dashboard).
-- **FLAG (Butlin membership):** the headline `8/14 met + 6/14 partial` is consistent everywhere, but the
+- **RESOLVED (Butlin membership, F1):** reconciled to one canonical Butlin-14 set across the honesty audit, PATH-TO-14-14, and the dashboard — **8 met** {GWT-1, GWT-3, GWT-4, PP-1, HOT-1, HOT-2, AST-1, AE-1} / **6 partial** {RPT-1, RPT-2, GWT-2, HOT-3, HOT-4, AE-2}; RPT-1 moved to partial (recurrence is architected, not learned). _Original finding:_ the headline `8/14 met + 6/14 partial` is consistent everywhere, but the
   prose enumerations disagree on _which_: `reports/2026-06-21-NHSI-HONESTY-AUDIT.md:183-184` lists **9**
   met names; `PATH-TO-14-14:5` lists only 5 explicit partials. The repo meets _9/14 by its own
   enumerations_ yet headlines a conservative _8_. Which single indicator is borderline (AST-1 or RPT-1)
@@ -287,4 +287,5 @@ HTML and the native engine (`native/src/` — 5 files, no unsafe C calls).
 Net: the repo is **true, accurate, current, and defensible**. Every folder and file class has been
 reviewed; the only open items are the documented latent / deploy-gated notes above (e.g. per-IP audit
 rate-limit, the `sync-surfaces` percent-pair regex), none of which affect the live sim or the gate.
->>>>>>> cf48774 (docs(audit): complete MD date-stamp coverage + add §8 coverage attestation)
+
+> > > > > > > cf48774 (docs(audit): complete MD date-stamp coverage + add §8 coverage attestation)

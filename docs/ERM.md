@@ -23,7 +23,7 @@ erDiagram
   WORLD ||--|| CONNECTOME : "owns the neural web"
   WORLD ||--|| GRAPH_MIND : "owns the analytical cortex"
   WORLD ||--o{ TITAN : "owns 10 game-theoretic minds"
-  WORLD ||--o{ SHOGGOTH : "owns 3 predators"
+  WORLD ||--o{ SHOGGOTH : "owns 100 predators (16 mobile)"
   WORLD ||--o{ PUPPET_MASTER : "owns the event triggers"
   WORLD ||--|| QUANTUM_SUBSTRATE : "owns cloud + register + circuit"
   WORLD ||--|| RD_FIELD : "owns the living ground"
@@ -106,28 +106,28 @@ erDiagram
 
 ## Entity catalog
 
-| Entity                 | Lives in                                           | Identity / key                | Cardinality (typical)            |
-| ---------------------- | -------------------------------------------------- | ----------------------------- | -------------------------------- |
-| `PERSISTED_STATE`      | `localStorage` (MemoryStore)                       | fixed namespaced keys         | 1                                |
-| `WORLD`                | `world.ts` (composition root)                      | singleton                     | 1                                |
-| `ENTITY`               | InstancedMesh pools + `entities.list`              | list index                    | ≤ `maxEntities` (650…10,000)     |
-| `PHYLUM`               | `sim/phyla.ts` + `sim/lore.ts`                     | phylum id 0…9                 | 10                               |
-| `MORPHOTYPE`           | `sim/morphotypes.ts` / phyla                       | morph id 0…249                | 250 (+ ~1% outliers)             |
-| `BEHAVIOR`             | `sim/behaviors.ts`                                 | behavior name (26)            | 26                               |
-| `CONNECTOME` / `LINK`  | `sim/connectome.ts` + GPU buffers                  | link = (i, j) pair            | links ≤ `maxLinks` (2,200…6,000) |
-| `GRAPH_MIND`/`TRIBE`   | `sim/graph-mind.ts` (graphology)                   | community index               | tribes = Louvain count           |
-| `TITAN`                | `sim/titans.ts` + `math/games.ts`                  | titan id 0…9                  | 10                               |
-| `SHOGGOTH`             | `sim/shoggoths.ts`                                 | shoggoth id 0…2               | 3                                |
-| `PUPPET_MASTER`        | `sim/puppet-masters.ts`                            | named (AETHON/SELENE/KRONOS…) | fixed small set                  |
-| `QUANTUM_SUBSTRATE`    | `sim/quantum.ts`, `qcircuit.ts`, `math/quantum.ts` | register (n=5 → 32 amps)      | 1 cloud + 1 register + 1 circuit |
-| `QUANTUM_MIND` (V76)   | `sim/super-qubits.ts` + `math/quantum.ts`          | register (n=6 → 64 amps)      | 1 (the apex creature only)       |
-| `RD_FIELD`             | `sim/reaction-diffusion.ts`                        | grid cell (SIZE²)             | 16,384 cells (128²)              |
-| `ATMOSPHERE`/`WEATHER` | `sim/atmosphere.ts`, `sim/weather.ts`              | weather regime id             | 1 sky, N regimes                 |
-| `CONSTELLATION_CELL`   | `sim/constellations.ts` (d3-delaunay)              | Voronoi cell index            | 24 sites                         |
-| `LORE_NAME`            | `sim/lore.ts` (sha256-derived)                     | (kind, seed-hash)             | derived on demand                |
-| `SONG`/`AUDIO_BANDS`   | `audio/songs.ts`, `audio/analysis.ts`              | song idx / 128 freq bins      | 6 songs, 128 bins                |
-| `ANALYTICS_WINDOW`     | `sim/analytics.ts`                                 | rolling 120-sample ring       | 3 rings                          |
-| `AUDIT_EVENT`          | `logging/audit.ts` + server ring                   | ring slot                     | ≤ 200                            |
+| Entity                 | Lives in                                           | Identity / key                          | Cardinality (typical)            |
+| ---------------------- | -------------------------------------------------- | --------------------------------------- | -------------------------------- |
+| `PERSISTED_STATE`      | `localStorage` (MemoryStore)                       | fixed namespaced keys                   | 1                                |
+| `WORLD`                | `world.ts` (composition root)                      | singleton                               | 1                                |
+| `ENTITY`               | InstancedMesh pools + `entities.list`              | list index                              | ≤ `maxEntities` (650…10,000)     |
+| `PHYLUM`               | `sim/phyla.ts` + `sim/lore.ts`                     | phylum id 0…9                           | 10                               |
+| `MORPHOTYPE`           | `sim/morphotypes.ts` / phyla                       | morph id 0…249                          | 250 (+ ~1% outliers)             |
+| `BEHAVIOR`             | `sim/behaviors.ts`                                 | behavior name (26)                      | 26                               |
+| `CONNECTOME` / `LINK`  | `sim/connectome.ts` + GPU buffers                  | link = (i, j) pair                      | links ≤ `maxLinks` (2,200…6,000) |
+| `GRAPH_MIND`/`TRIBE`   | `sim/graph-mind.ts` (graphology)                   | community index                         | tribes = Louvain count           |
+| `TITAN`                | `sim/titans.ts` + `math/games.ts`                  | titan id 0…9                            | 10                               |
+| `SHOGGOTH`             | `sim/shoggoths.ts`                                 | shoggoth id 0…99 (16 on mobile)         | 100                              |
+| `PUPPET_MASTER`        | `sim/puppet-masters.ts`                            | id 0…99 (3 named: AETHON/SELENE/KRONOS) | 100                              |
+| `QUANTUM_SUBSTRATE`    | `sim/quantum.ts`, `qcircuit.ts`, `math/quantum.ts` | register (n=5 → 32 amps)                | 1 cloud + 1 register + 1 circuit |
+| `QUANTUM_MIND` (V76)   | `sim/super-qubits.ts` + `math/quantum.ts`          | register (n=6 → 64 amps)                | 1 (the apex creature only)       |
+| `RD_FIELD`             | `sim/reaction-diffusion.ts`                        | grid cell (SIZE²)                       | 16,384 cells (128²)              |
+| `ATMOSPHERE`/`WEATHER` | `sim/atmosphere.ts`, `sim/weather.ts`              | weather regime id                       | 1 sky, N regimes                 |
+| `CONSTELLATION_CELL`   | `sim/constellations.ts` (d3-delaunay)              | Voronoi cell index                      | 24 sites                         |
+| `LORE_NAME`            | `sim/lore.ts` (sha256-derived)                     | (kind, seed-hash)                       | derived on demand                |
+| `SONG`/`AUDIO_BANDS`   | `audio/songs.ts`, `audio/analysis.ts`              | song idx / 128 freq bins                | 6 songs, 128 bins                |
+| `ANALYTICS_WINDOW`     | `sim/analytics.ts`                                 | rolling 120-sample ring                 | 3 rings                          |
+| `AUDIT_EVENT`          | `logging/audit.ts` + server ring                   | ring slot                               | ≤ 200                            |
 
 ## Relationship matrix (who writes to whom)
 

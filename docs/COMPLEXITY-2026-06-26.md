@@ -17,7 +17,7 @@ unless marked otherwise.
 | `q`    | Quantum particles — `quality.quantumCount` (3,500 phone … 8,000 ultra)                                                                |
 | `L`    | Connectome link cap — `quality.maxLinks` (2,200 phone … 6,000 ultra)                                                                  |
 | `m`    | Monoliths (16, fixed)                                                                                                                 |
-| `s`    | Shoggoths (3, fixed)                                                                                                                  |
+| `s`    | Shoggoths (100, 16 mobile)                                                                                                            |
 | `p`    | Pipelines (21) × packets (3–6 each), fixed                                                                                            |
 | `w`    | Sparkline rolling window (100 samples)                                                                                                |
 | `2^n`  | Quantum basis states — n = 5 qubits in the sim → 32 amplitudes (n ≤ 8 hard cap)                                                       |

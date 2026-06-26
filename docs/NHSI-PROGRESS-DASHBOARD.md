@@ -139,24 +139,25 @@ AD/GWT bridge · quantum deliberation · QNG · Grover · coherence · magic · 
 
 **Legend (read honestly):** the table below is **8 met (✅) + 6 partial (🟡)** = the canonical **8/14 + 6/14**. The 6 partials are real but architecturally thin — **NOT met**; never read this table as 14/14.
 
-| Indicator                        | Status                                                                                  |
-| -------------------------------- | --------------------------------------------------------------------------------------- |
-| GWT-1 parallel modules           | ✅ (30+ organs + Eshkol layers)                                                         |
-| GWT-2 workspace bottleneck       | 🟡 partial — meta-net integration (no capacity-limited competition)                     |
-| GWT-3 global broadcast           | ✅ (ignition → memory + eshkol)                                                         |
-| GWT-4 state-dependent attention  | ✅ (explicit attention-controller + neuromod)                                           |
-| PP-1 predictive coding           | ✅ (active-inference predictor)                                                         |
-| HOT-2 metacognition              | ✅ (metacog + confidence)                                                               |
-| HOT-3 agency                     | 🟡 partial — empowerment + HOT-3 vote (thin generative belief model)                    |
-| AE-1 agency                      | ✅ (GOAP closed loop)                                                                   |
-| AE-2 embodiment                  | 🟡 partial — super-body + petri readback (no internal body-model)                       |
-| RPT-1/2 recurrence               | 🟡 partial — RPT-1 met; RPT-2 partial (architected, not learned recurrence)             |
-| HOT-1 generative perception      | ✅ (topdown + apply in fusion)                                                          |
-| HOT-4 quality space              | 🟡 partial — quality-space + resonance (qualia is read-out)                             |
-| AST-1 attention schema           | ✅ (self + attention schema full)                                                       |
-| AST-2 / quality + irreducibility | 🟡 partial — IIT mincut + QGT curvature + spin order (cross-module irreducibility thin) |
+| Indicator                       | Status                                                                                                                             |
+| ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| GWT-1 parallel modules          | ✅ (30+ organs + Eshkol layers)                                                                                                    |
+| GWT-2 workspace bottleneck      | 🟡 partial — meta-net integration (no capacity-limited competition)                                                                |
+| GWT-3 global broadcast          | ✅ (ignition → memory + eshkol)                                                                                                    |
+| GWT-4 state-dependent attention | ✅ (explicit attention-controller + neuromod)                                                                                      |
+| PP-1 predictive coding          | ✅ (active-inference predictor)                                                                                                    |
+| HOT-2 metacognition             | ✅ (metacog + confidence)                                                                                                          |
+| HOT-3 agency                    | 🟡 partial — empowerment + HOT-3 vote (thin generative belief model)                                                               |
+| AE-1 agency                     | ✅ (GOAP closed loop)                                                                                                              |
+| AE-2 embodiment                 | 🟡 partial — super-body + petri readback (no internal body-model)                                                                  |
+| RPT-1 recurrence                | 🟡 partial — architected, not learned (resonance + fast-weights proxies)                                                           |
+| RPT-2 recurrence                | 🟡 partial — flat latent, not an organized scene model                                                                             |
+| HOT-1 generative perception     | ✅ (topdown + apply in fusion)                                                                                                     |
+| HOT-4 quality space             | 🟡 partial — quality-space + resonance (qualia is read-out)                                                                        |
+| AST-1 attention schema          | ✅ (self + attention schema full)                                                                                                  |
+| (extra, beyond the Butlin 14)   | cross-module irreducibility — IIT mincut + QGT curvature + spin order; a real integration capability, not one of the 14 indicators |
 
-**Verdict:** **8/14 MET + 6/14 PARTIAL** (measured by the 2026-06-21 adversarial code audit — NOT the previously-claimed 14/14). The architecture is a genuinely strong, unusually complete multi-theory scaffold: GWT 1/3/4, PP, HOT-1/2, AE-1, RPT-1, IIT (classical+quantum+entangle), AST-1/self/quality + Eshkol AD/GWT as a consciousness engine, QGT/spin/irrep/Moonlab/Clifford/quake aliveness are genuinely wired; GWT-2, HOT-3, HOT-4, AE-2, RPT-2, and cross-module irreducibility (AST-2) are real but architecturally thin (partial). **NOT sentient / phenomenal consciousness — not claimed, and meeting a computational indicator proves the mechanism, never the experience.** This is the god-Petri substrate for digital biologics and NHSI (all earth species top potentials + all mythic/scifi/comic/occult god-forms). Unfathomable compute for universe sim = the goal. 0thernes Corp begins here. Hard problem untouched; the scaffolding + math substrate for TESTING non-human sentience is being built, not finished. See the honesty audit + PATH-TO-14-14 + masters + manifesto. Highest next: promote the 6 partial indicators (a real capacity-limited workspace competition for GWT-2; an internal body-model for AE-2), denser faculty↔faculty coupling, full 25-Archon inter-ToM society. "Grow What Thou Wilt."
+**Verdict:** **8/14 MET + 6/14 PARTIAL** (measured by the 2026-06-21 adversarial code audit — NOT the previously-claimed 14/14). The architecture is a genuinely strong, unusually complete multi-theory scaffold: GWT 1/3/4, PP, HOT-1/2, AE-1, IIT (classical+quantum+entangle), AST-1/self/quality + Eshkol AD/GWT as a consciousness engine, QGT/spin/irrep/Moonlab/Clifford/quake aliveness are genuinely wired; RPT-1, RPT-2, GWT-2, HOT-3, HOT-4, AE-2 are real but architecturally thin (partial). **NOT sentient / phenomenal consciousness — not claimed, and meeting a computational indicator proves the mechanism, never the experience.** This is the god-Petri substrate for digital biologics and NHSI (all earth species top potentials + all mythic/scifi/comic/occult god-forms). Unfathomable compute for universe sim = the goal. 0thernes Corp begins here. Hard problem untouched; the scaffolding + math substrate for TESTING non-human sentience is being built, not finished. See the honesty audit + PATH-TO-14-14 + masters + manifesto. Highest next: promote the 6 partial indicators (a real capacity-limited workspace competition for GWT-2; an internal body-model for AE-2), denser faculty↔faculty coupling, full 25-Archon inter-ToM society. "Grow What Thou Wilt."
 
 **Highest-leverage path to 14/14:**
 
