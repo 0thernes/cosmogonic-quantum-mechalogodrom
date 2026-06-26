@@ -323,7 +323,10 @@ export function petriDishBeat(
     state.geneticDivergence = Math.min(1, (state.geneticDivergence || 0) + 0.015 * bioFlux);
   }
 
-  if (state.beats > 0 && state.beats % 40 === 0 && state.biomass > 0.4) {
+  if (state.beats > 0 && state.beats % 40 === 0 && state.biomass > 0.4 && state.complexity < 8) {
+    // Basic-growth tick toward 8 — gated on `< 8` so it NEVER regresses complexity that the brutal
+    // branches (caps 12/15/20/22/25/30) already raised higher. Was a silent ratchet-DOWN to 8 each
+    // 40 beats (a hard-won metric regressing); now a monotone floor-fill that only ever increases.
     state.complexity = Math.min(8, state.complexity + 1);
   }
   if (state.beats > 0 && state.beats % 60 === 0 && state.biomass > 0.6 && state.complexity >= 3) {
