@@ -6,7 +6,7 @@ nonetheless, and the composition root (`world.ts`) is effectively its join
 engine. Diagrams below follow ERD (structure), ERM (relationship narrative),
 and ERP (process models).
 
-> **Scope (v0.18.0 TSOTCHKE + NHSI):** Per binding [TSOTCHKE-INTEGRATION-MAP.md](./TSOTCHKE-INTEGRATION-MAP.md): 9 deep apex + 2 world + 3 telemetry + 2 license-gated + 3 fenced + meta. Full corpus enumerated; ~16 of 20 wired with real downstream effect. **100-faculty design (~30 deep-wired)**, **5 individuated apex + 20 light-echo Archons**, **25 ToM wired**, **10 emergence angles** (+5 god-scale events), **Butlin 8/14 met + 6/14 partial** (computational indicators, not sentience). Gate: 1,514 tests · 90.80% / 87.91%. Real MIT startup math. Not LLM. 0thernes NHSI.
+> **Scope (v0.18.0 TSOTCHKE + NHSI):** Per binding [TSOTCHKE-INTEGRATION-MAP.md](./TSOTCHKE-INTEGRATION-MAP.md): 8 deep apex + 2 world + 3 ported + 2 license-gated + 2 API + 3 fenced + meta. Full corpus enumerated; ~16 of 20 wired with real downstream effect. **100-faculty design (~30 deep-wired)**, **5 individuated apex + 20 light-echo Archons**, **25 ToM wired**, **10 emergence angles** (+5 god-scale events), **Butlin 8/14 met + 6/14 partial** (computational indicators, not sentience). Gate: 1,514 tests · 90.80% / 87.91%. Real MIT startup math. Not LLM. 0thernes NHSI.
 
 ## ERD
 
@@ -253,7 +253,7 @@ erDiagram
     float tsotchkeBiologicFlux "full corpus catalysis"
   }
 
-  TSOTCHKE_REGISTRY ||--o{ TSOTCHKE_SUBSTRATE : "maps all 21"
+  TSOTCHKE_REGISTRY ||--o{ TSOTCHKE_SUBSTRATE : "maps all 20 corpus projects"
   PRIMORDIAL_SOUP ||--o{ SOUP_STRAIN : "births via fullTsotchkeBiologicsCatalysis + Eshkol AD"
   SOUP_STRAIN ||--|| ESHKOL_PROGRAM : "AD-mutable heritable code"
   SOUP_STRAIN ||--|| BIOLOGIC_FORM : "substrate kind"

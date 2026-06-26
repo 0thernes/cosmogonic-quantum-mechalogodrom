@@ -151,7 +151,7 @@ Compiled 2026-06-16 (research scout pass).
   _Phys. Rev. Applied_; Mujal et al., 2021, _Adv. Quantum Technol._) makes that reservoir a quantum
   system: the exponentially large Hilbert space of a few qubits is itself the rich nonlinear feature
   space, and only a linear readout of its measured observables over time is used/trained.
-- **What Super Creature 1.2 computes:** `src/sim/quantum-reservoir.ts` ” the apex mind's existing 6-qubit
+- **What Super Creature 1.1 computes:** `src/sim/quantum-reservoir.ts` — the apex mind's existing 6-qubit
   statevector register IS the reservoir; the module is the readout, a fixed seeded linear projection of the
   register's per-qubit Bloch observables (⟨X⟩,⟨Y⟩,⟨Z⟩ × 6) over a leaky temporal trace, plus a
   quantum-state-velocity (`qFlux`) signal that feeds the curiosity drive (a churning wavefunction ⇒ a
