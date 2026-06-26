@@ -50,7 +50,16 @@ asserted): `strange-attractor`, `morphic-field`, `causal-graph`, `reaction-diffu
 bug; `reaction-diffusion` carries a written Gray–Scott boundedness/stability proof; the `dark-energy`
 `w` over-range is masked downstream by `omega-point`'s `clamp01(1+darkW)`). **FIXED `strange-attractor.ts`:**
 `lorenzDeriv` (pure) was recomputed 3× per step for `.x/.y/.z`; now computed once — byte-identical output,
-full suite + determinism goldens green. Full per-finding detail in the ledger.
+full suite + determinism goldens green.
+
+**Independent line-by-line re-read of the thinly-covered non-`sim` dirs** (corroborating the ledger §11
+attestation with direct reads): `src/logging/{audit,logger}.ts` (bounded rings, tamper-guarded, `Date.now`
+is a legit log timestamp outside sim), `src/memory/store.ts` (tamper-**rejecting** versioned validation;
+its `performance.now()` is the persisted boot-seed source, not sim logic), `src/sim/ai/brains.ts` (the
+deterministic classical-AI kernel — pure + injected seeded `Rng`, alloc-free, lowest-index tie-break),
+`src/audio/{analysis,engine,songs}.ts` (alloc-free FFT bands; `dispose()` clears timers + closes the
+AudioContext; `createSfxPalette(rng)` uses the seeded `Rng`) — **all clean, 0 new findings.** Full
+per-finding detail + the every-folder/file coverage matrix in the ledger §7/§9/§11.
 
 ## 2026-06-26 — Dated MD filenames (safe set) + every reference rewired
 
