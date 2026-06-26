@@ -91,7 +91,7 @@ erDiagram
   SOUP_STRAIN ||--|| TSOTCHKE_SUBSTRATE : "Eshkol AD/GWT, Moonlab tensor, irrep sym, spin instinct, QGT curvature, QGE aliveness..."
 
   %% FULL TSOTCHKE INTEGRATION (all repos paramount, non-negotiable)
-  TSOTCHKE_REGISTRY ||--o{ TSOTCHKE_SUBSTRATE : "21 repos (Eshkol flagship + Moonlab + QGTL + spin_nn + libirrep + quake + PINN + PIMC + ulg + logo-lab + tensorcore + rngs + asteroids + classical + homebrew)"
+  TSOTCHKE_REGISTRY ||--o{ TSOTCHKE_SUBSTRATE : "20 corpus projects (Eshkol flagship + Moonlab + QGTL + spin_nn + libirrep + quake + PINN + PIMC + ulg + logo-lab + tensorcore + rngs + asteroids + classical + homebrew)"
   PRIMORDIAL_SOUP ||--o{ SOUP_STRAIN : "digital biologics born (EshkolProgram + AD mutation + full corpus catalysis)"
   SOUP_STRAIN ||--|| ESHKOL_PROGRAM : "heritable program fingerprint (from biologicProgramFingerprint + AD gradients)"
   SOUP_STRAIN ||--o{ ENTITY : "emergent life injected into world with substrate-specific dynamics"
