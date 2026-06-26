@@ -1,8 +1,11 @@
 /**
- * FACULTIES PANTHEON — 100 bounded cognitive faculties for NHSI telemetry.
+ * FACULTIES PANTHEON — the canonical 100-faculty NHSI design PLUS a brutal-god layer, 144 named total.
+ * Canonical design target = 100 (the published headline); `FACULTY_NAMES` adds the god-layer (Valkorion
+ * … Riddick) on top, so `FACULTY_COUNT === 144`. The 144 is internal only — it is never surfaced as a
+ * "faculty count" (no consumer reads `FACULTY_COUNT`), so public surfaces correctly publish 100.
  *
  * This module is intentionally compact: every faculty has a distinct deterministic profile, but they all
- * share one strict implementation so the 100-faculty surface stays maintainable and gate-clean.
+ * share one strict implementation so the faculty surface stays maintainable and gate-clean.
  */
 
 import type { Rng } from '../math/rng';
