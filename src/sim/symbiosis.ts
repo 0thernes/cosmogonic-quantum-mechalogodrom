@@ -117,6 +117,12 @@ export class Symbiosis {
       return false;
     }
 
+    // Probabilistic formation: only a `formationRate` fraction of otherwise-valid
+    // attempts actually bond. The rate was configured (default 0.01) but never
+    // consulted, so every eligible pair bonded on its first attempt — the world
+    // loop tries all 10 archon pairs each cycle, saturating symbiosis immediately.
+    if (this.rng() >= this.config.formationRate) return false;
+
     // Determine relationship type based on random factors
     const r = this.rng();
     let type: RelationshipType;
