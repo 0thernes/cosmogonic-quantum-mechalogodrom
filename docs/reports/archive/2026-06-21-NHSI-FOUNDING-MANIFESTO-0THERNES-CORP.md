@@ -132,9 +132,9 @@ We use **every single one** — deep live code for scientific kernels, .esk DNA 
 
 ### The Blueprint
 
-- **Architecture:** [`NEO-MIND-ARCHITECTURE.md`](../NEO-MIND-ARCHITECTURE.md)
-- **Integration Map:** [`TSOTCHKE-INTEGRATION-MAP.md`](../TSOTCHKE-INTEGRATION-MAP.md)
-- **Progress Dashboard:** [`NHSI-PROGRESS-DASHBOARD.md`](../NHSI-PROGRESS-DASHBOARD.md)
+- **Architecture:** [`NEO-MIND-ARCHITECTURE.md`](../../NEO-MIND-ARCHITECTURE.md)
+- **Integration Map:** [`TSOTCHKE-INTEGRATION-MAP.md`](../../TSOTCHKE-INTEGRATION-MAP.md)
+- **Progress Dashboard:** [`NHSI-PROGRESS-DASHBOARD.md`](../../NHSI-PROGRESS-DASHBOARD.md)
 
 ### Current Status (2026-06-21)
 
@@ -177,7 +177,7 @@ GWT ignition · IIT Φ (classical + quantum) · active inference · reservoir ·
 
 ### Framework
 
-Butlin et al. (2023) arXiv:2308.08708 · citations in [`SUPER-CREATURE-RESEARCH.md`](../SUPER-CREATURE-RESEARCH.md)
+Butlin et al. (2023) arXiv:2308.08708 · citations in [`SUPER-CREATURE-RESEARCH.md`](../../SUPER-CREATURE-RESEARCH.md)
 
 ### Indicator Status
 
