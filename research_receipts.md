@@ -124,7 +124,7 @@ Ralph continue 10x: tensor in mind, hybrid in world. Gate green.
 
 Ralph continue 10x: wigner in body, tensor/AD in mind, qge/mpo in world. Gate green 1183/95.74/92.40.
 **Gate:** clean 1183/0, verify OK. 10x done. Heartbeat.
-**Gate sync:** 1183 tests � 95.74/92.40. 10x. Heartbeat continue.
+**Gate sync:** 1183 tests · 95.74/92.40. 10x. Heartbeat continue.
 10x heartbeat: integrated more (body rings, quality tone, mind emp, world percepts) from Tsotchke corpus.
 **Ralph 10x (fresh):** gwt/dual in qubits, ulg/gwt in economy. 10x Tsotchke everywhere. Strict. Run check. 1183. Heartbeat continue.
 **Gate this 10x:** clean (format/tsc/lint/test/verify/build), 1183/0, 95.7x/92.4x. 10x qubits+economy. Heartbeat continue.
