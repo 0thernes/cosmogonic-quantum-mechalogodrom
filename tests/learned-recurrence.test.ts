@@ -24,7 +24,7 @@ describe('LearnedRecurrence (RPT-1/2)', () => {
     let first = lr.step(inp, tgt);
     for (let t = 0; t < 80; t++) lr.step(inp, tgt);
     const last = lr.step(inp, tgt);
-    expect(last).toBeLessThanOrEqual(first + 0.05);
+    expect(last).toBeLessThan(first);
     expect(lr.snapshot().steps).toBe(82);
   });
 

@@ -22,9 +22,8 @@ describe('NHSI emergence angles (10/10)', () => {
     const ctrl = new EmergenceAnglesController();
     ctrl.tickGodScaleEmergence(0, 1, 0.9, 0.85, 42);
     const god = ctrl.getGodScaleSnapshots();
-    expect(god.length).toBeGreaterThanOrEqual(0);
     // Brutal god modes (Valkorion, Broly, Knull, Phoenix, Gurren etc) via brutal-god-releases
-    expect(god.length).toBeGreaterThanOrEqual(0);
+    expect(god.length).toBe(5);
   });
 
   test('registers all 25 archon strains for cross-strain + collective emergence', () => {

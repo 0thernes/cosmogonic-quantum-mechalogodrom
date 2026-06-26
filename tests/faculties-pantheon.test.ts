@@ -9,7 +9,7 @@ import {
 
 describe('NHSI faculties pantheon (100 + god-layer)', () => {
   test('registry exposes 144 named faculties including brutal god-layer', () => {
-    expect(FACULTY_COUNT).toBe(FACULTY_NAMES.length);
+    expect(FACULTY_COUNT).toBe(144);
     expect(FACULTY_COUNT).toBeGreaterThanOrEqual(100);
     expect(FACULTY_NAMES).toContain('BROLY_LEGENDARY_RAGE');
     expect(FACULTY_NAMES).toContain('DR_MANHATTAN_OMNISCIENCE');

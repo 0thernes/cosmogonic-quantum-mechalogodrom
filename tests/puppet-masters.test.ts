@@ -89,7 +89,7 @@ describe('PuppetMasterSystem — deterministic schemers that perturb the world w
     expect(c).toBeGreaterThanOrEqual(3); // AETHON, SELENE, KRONOS are always present
   }, 15_000);
 
-  test('600 frames keep world state finite + in bounds and fire valid interventions', () => {
+  test('6000 frames keep world state finite + in bounds and fire valid interventions', () => {
     const { ctx, pm, events } = makeWorld(0x9a77e7);
     for (let f = 0; f < 6000; f++) pm.update(1 / 60, f / 60); // ~100s — long enough for all 3 hands to act
     const s = ctx.state;
