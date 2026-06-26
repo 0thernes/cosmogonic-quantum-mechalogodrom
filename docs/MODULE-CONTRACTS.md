@@ -954,7 +954,7 @@ export class AnalyticsSystem {
 # CONTRACTS V3 — PANTHEON (0.3.0) — the /goal mandate
 
 Summoner decree: up to 10,000 entities in an arena 5× larger; 10 creature
-phyla (250 each at full tier) plus wildcard outliers; 10 colossal non-human
+phyla (25 morphotypes each → 250 total) plus wildcard outliers; 10 colossal non-human
 intelligences (TITANS) running a global economy and waging war under explicit
 game theory; full-device responsive UI with real touch controls; live
 data-viz; the QUANTUM-tier soundtrack (SHIPPED in 0.2.1 — songs.ts rescore).
@@ -985,9 +985,11 @@ wfmdqlias output) land FIRST in the same wave.
 
 - `sim/phyla.ts`: 10 named phyla (lore-named via LoreEngine at boot), each a
   template distribution over geometry families, palette band, behavior pool,
-  size/speed ranges, preferred sector. `createMorphotypes` grows to
-  MORPH_COUNT 250 per phylum at ultra (scaled down per tier proportionally);
-  morphotype → phylum index recorded in EntityData (`phylum: number`).
+  size/speed ranges, preferred sector. In phylum mode `createMorphotypes`
+  grows to MORPHS_PER_PHYLUM (25) × PHYLUM_COUNT (10) = 250 morphotypes total
+  (vs the legacy no-phyla MORPH_COUNT = 100); the count is tier-independent —
+  tiers scale the entity ceiling, not the morphotype table. Morphotype → phylum
+  index recorded in EntityData (`phylum: number`).
 - Wildcard outliers: per-boot, seeded, ~1% of spawns draw an OUTLIER template:
   composite geometry (two cached geos merged at boot into extra pool slots),
   exotic behavior pairs (two behaviors blended), impossible palettes, named

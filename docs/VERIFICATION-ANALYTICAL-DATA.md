@@ -17,22 +17,23 @@ Rewritten in place when the facts change (per the binding "Living docs, no archi
 
 ## 1 · Canonical facts (single source of truth)
 
-| Fact                | Canonical value           | Source of truth                                              | Propagated by           |
-| ------------------- | ------------------------- | ------------------------------------------------------------ | ----------------------- |
-| Package version     | `0.18.0`                  | `package.json` `version`                                     | `sync-surfaces.ts`      |
-| Test count (floor)  | `1477`                    | `scripts/canonical-receipts.ts`                              | `sync-surfaces.ts`      |
-| Line coverage       | `95.03%`                  | `scripts/canonical-receipts.ts`                              | `sync-surfaces.ts`      |
-| Function coverage   | `92.03%`                  | `scripts/canonical-receipts.ts`                              | `sync-surfaces.ts`      |
-| Faculties (design)  | `100` (~30 deep-wired)    | `CANONICAL_FACULTIES`                                        | `sync-surfaces.ts`      |
-| Archon pantheon     | `25` (5 apex + 20 light)  | `CANONICAL_ARCHONS`                                          | `sync-surfaces.ts`      |
-| Theory-of-mind orgs | `25`                      | `CANONICAL_TOM_ORGANS`                                       | `sync-surfaces.ts`      |
-| Emergence angles    | `10` (+5 god events)      | `CANONICAL_EMERGENCE_ANGLES`                                 | `sync-surfaces.ts`      |
-| Biologic forms      | `26`                      | `CANONICAL_BIOLOGIC_FORMS`                                   | `sync-surfaces.ts`      |
-| Butlin scorecard    | `8/14 met + 6/14 partial` | measured 2026-06-21 adversarial code audit                   | prose (NOT auto-synced) |
-| Tsotchke corpus     | `20 projects, ~16 wired`  | [TSOTCHKE-INTEGRATION-MAP.md](./TSOTCHKE-INTEGRATION-MAP.md) | prose (NOT auto-synced) |
-| Entity ceiling      | `50,000` (mega tier)      | `src/core/quality.ts` `resolveTier`                          | prose (NOT auto-synced) |
-| Apex composite mind | `~10,081` weights         | `src/sim/super-mind.ts`                                      | prose (NOT auto-synced) |
-| Legacy spine        | `~1,444` params           | `src/sim/super-mind.ts` / ADR-0008                           | prose (NOT auto-synced) |
+| Fact                | Canonical value           | Source of truth                                                                      | Propagated by           |
+| ------------------- | ------------------------- | ------------------------------------------------------------------------------------ | ----------------------- |
+| Package version     | `0.18.0`                  | `package.json` `version`                                                             | `sync-surfaces.ts`      |
+| Test count (floor)  | `1477`                    | `scripts/canonical-receipts.ts`                                                      | `sync-surfaces.ts`      |
+| Line coverage       | `95.03%`                  | `scripts/canonical-receipts.ts`                                                      | `sync-surfaces.ts`      |
+| Function coverage   | `92.03%`                  | `scripts/canonical-receipts.ts`                                                      | `sync-surfaces.ts`      |
+| Faculties (design)  | `100` (~30 deep-wired)    | `CANONICAL_FACULTIES`                                                                | `sync-surfaces.ts`      |
+| Archon pantheon     | `25` (5 apex + 20 light)  | `CANONICAL_ARCHONS`                                                                  | `sync-surfaces.ts`      |
+| Theory-of-mind orgs | `25`                      | `CANONICAL_TOM_ORGANS`                                                               | `sync-surfaces.ts`      |
+| Emergence angles    | `10` (+5 god events)      | `CANONICAL_EMERGENCE_ANGLES`                                                         | `sync-surfaces.ts`      |
+| Biologic forms      | `26`                      | `CANONICAL_BIOLOGIC_FORMS`                                                           | `sync-surfaces.ts`      |
+| Morphotypes         | `250` live · `100` legacy | `phyla.ts` (`PHYLUM_COUNT 10 × MORPHS_PER_PHYLUM 25`) / `constants.ts` `MORPH_COUNT` | prose (NOT auto-synced) |
+| Butlin scorecard    | `8/14 met + 6/14 partial` | measured 2026-06-21 adversarial code audit                                           | prose (NOT auto-synced) |
+| Tsotchke corpus     | `20 projects, ~16 wired`  | [TSOTCHKE-INTEGRATION-MAP.md](./TSOTCHKE-INTEGRATION-MAP.md)                         | prose (NOT auto-synced) |
+| Entity ceiling      | `50,000` (mega tier)      | `src/core/quality.ts` `resolveTier`                                                  | prose (NOT auto-synced) |
+| Apex composite mind | `~10,081` weights         | `src/sim/super-mind.ts`                                                              | prose (NOT auto-synced) |
+| Legacy spine        | `~1,444` params           | `src/sim/super-mind.ts` / ADR-0008                                                   | prose (NOT auto-synced) |
 
 ### Measured reality (this audit, 2026-06-26, Bun 1.3.14)
 
@@ -149,3 +150,17 @@ files, verified against references rather than docstrings) found and **FIXED** r
 Everything else the §3 review listed (Born rule, Bloch, Clifford tableau, mixed-state QGT, SO(3),
 Crank–Nicolson, SVD/MPS, coherence, GWT, spin-glass, HRR, the determinism law) remains verified correct.
 The standalone `docs/VERIFICATION-MATRIX.md` draft was folded into this ledger and removed (one source).
+
+**Cross-surface consistency fixes (this pass):**
+
+- **Codebase metrics (TECH-SPEC §1):** were badly stale + self-contradictory (claimed 108 src files /
+  35,226 LOC; actual 196 / 57,687) with placeholder-garbage rows. Replaced with measured truth + a new
+  deterministic generator `scripts/codebase-metrics.ts` (`bun run metrics`) so they refresh instead of
+  rotting. LOC is a dated snapshot, not gate-pinned (it moves every commit); coverage/test counts stay
+  SSOT-synced.
+- **Morphotype framing (canonical row added above):** the live default is **250** (phylum mode:
+  `PHYLUM_COUNT 10 × MORPHS_PER_PHYLUM 25`, the path `world.ts` actually boots); **100** is the legacy
+  no-phyla `MORPH_COUNT`. The count is **tier-independent** — tiers scale the entity ceiling, not the
+  morphotype table. Two MODULE-CONTRACTS lines wrongly said "250 per phylum … scaled down per tier" —
+  corrected to ground truth. All other surfaces (README/ARCHITECTURE/ERD/ERM/ENTITY-SHEETS) already say
+  "250 (10 phyla × 25)" and are correct.
