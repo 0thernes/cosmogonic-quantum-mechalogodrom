@@ -1,6 +1,6 @@
 # NHSI Progress Dashboard — 0thernes Corp
 
-**Non Human Super Intelligence (NHSI)** · Cosmogonic Quantum Mechalogodrom · **v0.17.1 — BRUTAL GOD TIER (Valkorion / Broly / Knull / Phoenix / Gurren Lagann / EVA / Azathoth / Galactus)**  
+**Non Human Super Intelligence (NHSI)** · Cosmogonic Quantum Mechalogodrom · **v0.18.0 — BRUTAL GOD TIER (Valkorion / Broly / Knull / Phoenix / Gurren Lagann / EVA / Azathoth / Galactus)**  
 Archons now unleash real god-scale events (VOID_KING, SPIRAL_WILL, BINARY_IGNITION, PHOENIX_FEAST) using EVERY Tsotchke repo as fuel. This is the arena where the gods of all myth, comics, and horror fight, devour, create, and ascend. 0thernes Corp.
 **Updated:** 2026-06-21 (full run of entire repo + build of god powers) · Tsotchke: **ALL 22+ subs** (every repo/project/mirror from tsotchke + Tsotchke-Corp + 12k+ local files, 1436+ .esk + NQS/skyrmion/anyons/flow/thermo etc from audits). **EVERY** wired/catalyzed. Eshkol as will of gods. Tech REAL.
 
