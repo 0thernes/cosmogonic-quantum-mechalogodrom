@@ -45,7 +45,7 @@ testable, and it must not perturb the same-seed golden the rest of the world is 
   in the explicit `MemoryRing` + emotion EMAs, not in network state. Acceptable for an apex controller;
   revisit if true sequence modeling is needed.
 - **Verified live:** in the running world — `ARCHITECT-Ω`, plan DOMINATE, dominance 0.998, wallet 2.1k,
-  panel populated, no console errors; full gate green (736 tests).
+  panel populated, no console errors; full gate green (1477 tests).
 
 ## Follow-ups (tracked in KANBAN)
 

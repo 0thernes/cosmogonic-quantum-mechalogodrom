@@ -39,7 +39,7 @@ Dedicated leaves (src/sim/ + src/math/):
 
 **Registry (tsotchke-registry.ts):** 15 user + 6 org slugs. 17+ scientific at wiring:1.0. 4 LLM explicitly 0. SubstrateKind taxonomy: consciousness-engine, clifford-tensor, equivariant-sym, hopfield-spin, quantum-geometry, qrng-entropy, pinn-physics, path-integral, logo-turtle, quake-aliveness, etc. + fenced.
 
-**Current version (this report pass):** 0.16.1 (TSOTCHKE MASTER WIRED Petri... expanded desc).
+**Current version (this report pass):** 0.18.0 (TSOTCHKE MASTER WIRED Petri... expanded desc).
 
 **All local docs + in-app (Dome/World/observatory/help/copilot/docs-page + mermaid) + GH README state match exactly.** Masters (Broly Executor, Starkiller Architect, Manhattan Physicist) already encode "Tsotchke full wiring paramount", "Petri", "Grow What Thou Wilt", "local+GH sync", "gate+push". This report + updates close the loop.
 

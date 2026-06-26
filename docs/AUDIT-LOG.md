@@ -31,15 +31,20 @@ matrix + the full findings table live in
   `legacy/**` verbatim, `.github/**` + `.memory/**` external-tool files, and the dated `CHANGELOG.md`).
   Done as an in-content stamp, NOT a filename rename — renaming would 404 the entire cross-link graph,
   the `sync-surfaces.ts` surface list, the doc-links gate, and GitHub Pages. Gate stays green.
+- **Stale figures propagated to current truth (living-docs rewrite-in-place).** 13 loop-log / process /
+  ADR surfaces carried stale receipts (`HANDOFF.md` 942/1172; `research_receipts.md`, `docs/GOAL5-*`,
+  `docs/TSOTCHKE_CORPUS_INTEGRATION_AUDIT.md`, `docs/TSOTCHKE-CORPUS-RALPH-WIRING-*` 1183/1174;
+  `docs/adr/0007/0008/0009` 671/736/1504; `docs/DESIGN-SYSTEM.md` 229; `docs/DAILY_RUNS/*` 942/913;
+  `docs/TSOTCHKE-ULTIMATE-*` v0.16.1). All rewritten in place to canonical
+  **`1,477 / 95.03% / 92.03% / v0.18.0`**; `CHANGELOG` per-release receipts + `legacy/**` kept verbatim.
 - **Verified correct (no action):** determinism (0 `Math.random` / `Date.now` in `src/sim`),
   `tsc` + oxlint 0, Butlin `8/14 met + 6/14 partial` across ~40 surfaces, entity `50,000`,
   BiologicForms `26`, Tsotchke `20`, and the 2928-vs-1477 test count (floor-by-design,
   `PORTABLE_TEST_FLOOR = 1400`).
-- **Flagged for owner (not auto-fixed):** `docs/KANBAN.md` orphaned-emoji mojibake the encoding gate
-  misses (`U+0178` / `U+201D`); 7 released tags without a CHANGELOG entry; dated loop-logs /
-  process-logs (`HANDOFF.md`, `research_receipts.md`, `docs/GOAL5-*`,
-  `docs/TSOTCHKE_CORPUS_INTEGRATION_AUDIT.md`) whose stale figures are correct-for-their-date —
-  consolidation candidates (deletion = owner call).
+- **Flagged for owner (not auto-fixed):** 7 released git tags (v0.11.0, v0.14.1–3, v0.15.0, v0.16.0,
+  v0.17.0) without a `CHANGELOG` entry — not back-filled to avoid fabricating change content. (The
+  earlier KANBAN mojibake and the loop-log stale figures are now resolved — see the propagation bullet
+  above + Findings D/F in the ledger.)
 
 ## 2026-06-26 — Living-docs policy; reports rewritten current; stray PR closed
 

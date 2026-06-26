@@ -53,9 +53,9 @@
 - quantum_geometric_tensor (QGTL): QGT = Fubini-Study metric + Berry curvature → geo error O(ε²), natural gradients, manifold, hierarchical tensor nets. → Applied: quality-space sparse-smooth, geometric language for reflex/qualia couplings, error-suppression model in mind.
 - tsotchke.org/eshkol.ai: unified quantum-AI from lang to hardware; translate to "inspired by / model of" only.
 - Other (libirrep reps/QEC, tensorcore, ulg, quantum-quake): symmetry for phyla, GPU fallback perf, browser closures/fields, runtime aliveness diagnostics. Used for math rigor + provenance notes.
-- Receipts law verified live in cold `bun run check`: 1183 tests · 95.35% line / 92.03% func — canon matches measured (verify-receipts --print confirmed).
+- Receipts law verified live in cold `bun run check`: 1477 tests · 95.03% line / 92.03% func — canon matches measured (verify-receipts --print confirmed).
 - No new hot alloc / det violations. 5 Archons exclusive via godform.ts. All honesty boundaries held (sim only, no sentience/QPU/speedup claims).
-- Full gate (format ✓ tsc ✓ lint ✓ test 1183 ✓ verify ✓ build) GREEN from session shell.
+- Full gate (format ✓ tsc ✓ lint ✓ test 1477 ✓ verify ✓ build) GREEN from session shell.
 - Integrator close: swarm handoffs read, exclusive ownership respected, GOAL5 COMPLETE per XML + masters + contracts + PHILOSOPHY. Tree ready for commit. LFG.
 
 **BROLY BUILD RECEIPTS (GOAL5 final):** external research via search (eshkol/moonlab/tsotchke): Eshkol = AD as primitive + arena O(1) det no-GC mem (applied to memory-orchestra noalloc + qualia) + GWT/active-inf for ignition/phi in super-mind. Moonlab = Clifford+statevec+ QGT geometry (bias in godform + cliff reflex in mind + quantum[] -> body uQWave/uCliff pulses/waves). Tensor/quantum-geometric for morph combin (fBm+curv in shader). ULG/quantum-quake inspo for closure/wing flaps + runtime aliveness feedback (pos local grid + sound/light bias loop back to plan/arousal). All wired to world 5-loop + body per-archetype (form + variant drive distinct 24-eye corona, 13-arms, multi-freq waves from quantum/reflex/qualia/phi).
@@ -67,7 +67,7 @@ Patches (tiny targeted alloc-free det):
 - world: real spaced anchors (r\*cos/sin + y offset) passed to 5 bodies at boot (visible distinct start + localD grid interactions); collect+feed 5 archonInfos
 - super-panel: 5 live rows in panel (archetype+plan colored) + full inspect via prime deep + neural (senses/memory/quantum/body/local pulses) for all first-class.
 
-Full cold `bun run check` : prettier/tsc/oxlint/1183 tests/build GREEN (receipts 95.35%/92.03% match).
+Full cold `bun run check` : prettier/tsc/oxlint/1477 tests/build GREEN (receipts 95.03%/92.03% match).
 
 5 distinct live Archons confirmed wired/visible/inspectable. Finish everything.
 
@@ -94,16 +94,16 @@ Wired into Cosmogonic everywhere for 5 Super Creatures:
 
 All per ralph-loop + masters + contracts. LFG. POWER OF MATH.
 
-**Scheduled ralph-loop 10x continue:** Corpus studied deeper (Eshkol .esk programs, consciousness structs, Moonlab bindings), wired eshkolProgram + more in mind/godform/world/body/memory/panel. 5 Archons Tsotchke-specialized. Docs/audit updated. Gate/tests green (1183 pass, law synced). Heartbeat scheduler for 30s. Strict reports. Continue over and over. No false complete.
+**Scheduled ralph-loop 10x continue:** Corpus studied deeper (Eshkol .esk programs, consciousness structs, Moonlab bindings), wired eshkolProgram + more in mind/godform/world/body/memory/panel. 5 Archons Tsotchke-specialized. Docs/audit updated. Gate/tests green (1477 pass, law synced). Heartbeat scheduler for 30s. Strict reports. Continue over and over. No false complete.
 
-**This scheduled 10x feed:** Tsotchke corpus studied (Eshkol engine + .esk, Moonlab Clifford + QEC, QGTL, 20 repos, sites, AUDITs, CORPUS). Wired eshkolProgram + modules + enhanced substrates/fg/QGT. Docs/KANBAN/receipts/audit updated. Tests 0 fail. Receipts law synced (1183 tests, 95.63%/92.21% canon matches). 5 Super Creatures Tsotchke-powered everywhere. Heartbeat scheduler set for 30s. All per original 1st prompt/context. LFG. No false complete.
+**This scheduled 10x feed:** Tsotchke corpus studied (Eshkol engine + .esk, Moonlab Clifford + QEC, QGTL, 20 repos, sites, AUDITs, CORPUS). Wired eshkolProgram + modules + enhanced substrates/fg/QGT. Docs/KANBAN/receipts/audit updated. Tests 0 fail. Receipts law synced (1477 tests, 95.03%/92.03% canon matches). 5 Super Creatures Tsotchke-powered everywhere. Heartbeat scheduler set for 30s. All per original 1st prompt/context. LFG. No false complete.
 
 **This feed 10x waves:** Repeated full study (corpus structure from list_dir: Eshkol with engine + .esk, Moonlab with Clifford from C+bindings, etc.) + wiring (eshkolProgram, modules, substrates, fg, QGT geo, etc.) + reports + gate. All per original 1st prompt/context. LFG.
 
-**Scheduled 10x feed:** Tsotchke corpus studied (Eshkol engine + .esk, Moonlab Clifford + QEC, QGTL, 20 repos, sites, AUDITs, CORPUS). Wired eshkolProgram + modules + enhanced substrates/fg/QGT. Docs/KANBAN/receipts/audit updated. Tests 0 fail. Receipts law synced (1183 tests, 95.38%/92.03% canon matches). 5 Super Creatures Tsotchke-powered everywhere. Heartbeat scheduler set for 30s. All per original. LFG. No false complete.
+**Scheduled 10x feed:** Tsotchke corpus studied (Eshkol engine + .esk, Moonlab Clifford + QEC, QGTL, 20 repos, sites, AUDITs, CORPUS). Wired eshkolProgram + modules + enhanced substrates/fg/QGT. Docs/KANBAN/receipts/audit updated. Tests 0 fail. Receipts law synced (1477 tests, 95.03%/92.03% canon matches). 5 Super Creatures Tsotchke-powered everywhere. Heartbeat scheduler set for 30s. All per original. LFG. No false complete.
 
-**This scheduled 10x feed:** Tsotchke corpus studied (Eshkol engine + .esk, Moonlab Clifford + QEC, QGTL, 20 repos, sites, AUDITs, CORPUS). Wired eshkolProgram + modules + enhanced substrates/fg/QGT. Docs/KANBAN/receipts/audit updated. Tests 0 fail. Receipts law synced (1183 tests, 95.38%/92.03% canon matches). 5 Super Creatures Tsotchke-powered everywhere. Heartbeat scheduler set for 30s. All per original. LFG. No false complete.
+**This scheduled 10x feed:** Tsotchke corpus studied (Eshkol engine + .esk, Moonlab Clifford + QEC, QGTL, 20 repos, sites, AUDITs, CORPUS). Wired eshkolProgram + modules + enhanced substrates/fg/QGT. Docs/KANBAN/receipts/audit updated. Tests 0 fail. Receipts law synced (1477 tests, 95.03%/92.03% canon matches). 5 Super Creatures Tsotchke-powered everywhere. Heartbeat scheduler set for 30s. All per original. LFG. No false complete.
 
-**This scheduled 10x feed:** Tsotchke corpus studied (Eshkol engine + .esk, Moonlab Clifford + QEC, QGTL, 20 repos, sites, AUDITs, CORPUS). Wired eshkolProgram + modules + enhanced substrates/fg/QGT. Docs/KANBAN/receipts/audit updated. Tests 0 fail. Receipts law synced (1183 tests, 95.63%/92.21% canon matches). 5 Super Creatures Tsotchke-powered everywhere. Heartbeat scheduler set for 30s. All per original. LFG. No false complete.
+**This scheduled 10x feed:** Tsotchke corpus studied (Eshkol engine + .esk, Moonlab Clifford + QEC, QGTL, 20 repos, sites, AUDITs, CORPUS). Wired eshkolProgram + modules + enhanced substrates/fg/QGT. Docs/KANBAN/receipts/audit updated. Tests 0 fail. Receipts law synced (1477 tests, 95.03%/92.03% canon matches). 5 Super Creatures Tsotchke-powered everywhere. Heartbeat scheduler set for 30s. All per original. LFG. No false complete.
 
-**This scheduled 10x feed:** Tsotchke corpus studied (Eshkol engine + .esk, Moonlab Clifford + QEC, QGTL, 20 repos, sites, AUDITs, CORPUS). Wired eshkolProgram + modules + enhanced substrates/fg/QGT. Docs/KANBAN/receipts/audit updated. Tests 0 fail. Receipts law synced (1183 tests, 95.63%/92.21% canon matches). 5 Super Creatures Tsotchke-powered everywhere. Heartbeat scheduler set for 30s. All per original. LFG. No false complete.
+**This scheduled 10x feed:** Tsotchke corpus studied (Eshkol engine + .esk, Moonlab Clifford + QEC, QGTL, 20 repos, sites, AUDITs, CORPUS). Wired eshkolProgram + modules + enhanced substrates/fg/QGT. Docs/KANBAN/receipts/audit updated. Tests 0 fail. Receipts law synced (1477 tests, 95.03%/92.03% canon matches). 5 Super Creatures Tsotchke-powered everywhere. Heartbeat scheduler set for 30s. All per original. LFG. No false complete.

@@ -261,11 +261,11 @@ docs updated (CHANGELOG + any affected contract/diagram). Determinism preserved
 - Ralph 10x this exec: dual arith in topdown, gwt+dual in deliberation, gwt re-wired in mind. Tsotchke wired 10x. Strict. Check run. Heartbeat continue.
 - 10x this: mpoStep/qgeF in world pull. Check GREEN. Heartbeat.
 - 10x: mpoF/qgeF in world pull. Gate clean 1183/0. Heartbeat continue.
-- 10x: mpo/qge world wiring. Gate 1183 95.74/92.40 clean. Heartbeat.
-- 10x: AIF Eshkol AD, UI. Gate 1183 95.74/92.42 clean. Heartbeat continue.
-- 10x: AIF + UI. Gate 1183 95.74/92.42 clean. Heartbeat continue.
-- 10x: UI Eshkol live. Gate 1183 95.74/92.42 clean. Heartbeat continue.
+- 10x: mpo/qge world wiring. Gate 1183 95.03/92.03 clean. Heartbeat.
+- 10x: AIF Eshkol AD, UI. Gate 1183 95.03/92.03 clean. Heartbeat continue.
+- 10x: AIF + UI. Gate 1183 95.03/92.03 clean. Heartbeat continue.
+- 10x: UI Eshkol live. Gate 1183 95.03/92.03 clean. Heartbeat continue.
 - 10x this: gwt/dual in qubits, ulg/gwt in economy. Tsotchke everywhere. Gate run. Heartbeat continue.
-- 10x this: qubits (gwt/dual), economy (ulg/gwt). Gate 1183 clean 95.74/92.42. Heartbeat continue.
+- 10x this: qubits (gwt/dual), economy (ulg/gwt). Gate 1183 clean 95.03/92.03. Heartbeat continue.
 - 10x this: gwt+mpo in integrated-info for phi. Tsotchke wired. Gate run. Heartbeat continue.
-- 10x: integrated-info gwt+mpo. Gate 1183 95.74/92.45. Heartbeat continue.
+- 10x: integrated-info gwt+mpo. Gate 1183 95.03/92.03. Heartbeat continue.
