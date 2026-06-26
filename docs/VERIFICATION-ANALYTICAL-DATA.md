@@ -342,3 +342,29 @@ Per-file manifest (every tracked file + its audit mechanism + status): `docs/rep
 (`curvature-aware-qng.ts` Christoffel = 0; native `kMaxBodies` sim-vs-render duplication) plus one
 borderline policy doc (`CONTRIBUTING.md` describes a PR workflow vs the binding no-PR law — left for an
 owner call, may be intentional OSS-facing boilerplate).
+
+## 12 · Line-by-line docs sweep + CI/config/native re-audit (2026-06-26)
+
+**Docs (3 parallel readers, all 82 md + 5 HTML + 3 XML line-by-line vs §1 canon):** pattern-based
+`verify:facts` only checks what it patterns, so reading caught drift it couldn't — **6 fixed**:
+`docs.html` NEO-MIND link 404 (date-rename wasn't repointed); `ARCHITECTURE.md:23/:89` "four fenced" →
+**3** (Quantum-RNG-API is WIRED per `tsotchke-registry.ts:8` + README:510; added a "Fenced = 3" check to
+`verify:facts`); `NOTICE.md` QGT location → `src/math/quantum-geometry.ts`; `TSOTCHKE-MAP:69` orphaned
+fragment. KANBAN "Gate 1183" lines = historical ralph-loop log (point-in-time, left).
+
+**CI / config (independently re-verified, not just trusted from §11):** `.github/workflows/ci.yml` runs
+the FULL gate in CI — format → tsc → lint → test:coverage → **verify:receipts → sync:check → verify:facts
+→ build** (so drift cannot ship green); **27/27** action `uses:` are 40-hex SHA-pinned;
+`persist-credentials: false`; least-priv `permissions:`. Configs coherent (`package.json` 0.18.0, `type:
+module`; `tsconfig` strict + ESNext/bundler). CLEAN.
+
+**Native C++ engine (ADR-0007; dedicated agent, all 8 files):** core is **unusually clean** — BMP
+4-byte row stride + flip, full GL resource lifecycle (tex/fbo/vao/prog all deleted on every path), shader
+compile/link error handling, the X-macro GL loader, and Jolt member-init order are all correctly done
+(the classic crash/leak/UB hotspots). **FIXED:** `main.cpp` `--wWxH` now rejects malformed (≤0) shot
+dims before they reach the FBO/BMP (was a corrupt-output path). **Tracked owner-decisions (not changed):**
+`CMakeLists.txt:123` `-ffast-math` permits FP reassociation/FMA-contraction — a reproducibility hazard vs
+the determinism ethos, but the native engine is the optional/streamed tier with no golden tests, so it is
+an owner perf-vs-determinism call. The README's "Verified: GCC 16.1 / RTX 5070 Ti" provenance is the
+owner's real 2026 hardware (plausible for the date — not fabricated). NOTE: native is **not** built by
+`bun run check`, so the `main.cpp` guard is source-reviewed but not compiled in this environment.
