@@ -109,7 +109,16 @@ function stripBom(s: string): string {
   return s.charCodeAt(0) === 0xfeff ? s.slice(1) : s;
 }
 
-const TARGETS = ['README.md', 'CHANGELOG.md', 'ROADMAP.md'];
+// Root docs + the GitHub-Pages HTML surfaces (the loop has corrupted those too — `·` separators and
+// `class="badge"` names turned into mojibake). fixMojibake is content-agnostic, so it's safe on HTML.
+const TARGETS = [
+  'README.md',
+  'CHANGELOG.md',
+  'ROADMAP.md',
+  'index.html',
+  'docs.html',
+  'specs.html',
+];
 async function docFiles(): Promise<string[]> {
   const glob = new Bun.Glob('docs/**/*.md');
   const out = [...TARGETS];

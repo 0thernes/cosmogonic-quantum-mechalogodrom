@@ -8,5 +8,5 @@
 #     git config core.hooksPath .githooks
 # Never blocks the commit (exit 0) — it only cleans.
 bun scripts/normalize-docs.ts >/dev/null 2>&1 || exit 0
-git add README.md CHANGELOG.md ROADMAP.md docs 2>/dev/null || true
+git add README.md CHANGELOG.md ROADMAP.md docs index.html docs.html specs.html 2>/dev/null || true
 exit 0
