@@ -239,7 +239,18 @@ methodology + the architectural facts so future audits don't re-chase the false 
   tree is over a **small fixed** collection: faculties pairwise coupling (n=100 → 10k ops),
   `factions.ts` `n×n` weight matrix (n=8), per-faculty/archon/qubit kernels (≤100/25/6). The high-loop
   files (`super-mind`, `libirrep-qec`, `nqs-vmc-learning`, `tom-pantheon`) iterate these fixed sizes, not
-  the population — so they are O(constant), not O(entities). No quadratic blow-up reachable at scale.
+  the population — so they are O(constant), not O(entities). The entity↔entity neighbour loop is O(n) via
+  the spatial hash.
+  - **Honest caveat — full-list entity scans exist, but they fall in two classes.** _Global forces_
+    (`singularities.ts:293/378` gravity/consumption over all entities) are **intentionally** O(entities)
+    per active source: a global field touches everyone, so the spatial hash can't help — correct, not a
+    bug. _Local queries_ are the real smell: **`shoggoths.ts:481` scans the entire entity list to find the
+    nearest prey within `CONSUME_REACH`** instead of using the available `spatial-hash.query(x,z,r)`
+    (O(cells+k)). It's throttled (only when a shoggoth's `feedTimer` fires AND `list.length > 50`), so the
+    practical cost is bounded, but a same-frame feeding burst is O(shoggoths × entities). **Tracked, not
+    yet fixed:** the safe fix must preserve the deterministic _nearest-by-lowest-list-index_ tie-break
+    (`disposeAt` takes a list index, the grid yields entities) or the golden breaks — a delicate change,
+    not a drop-in swap. So: no quadratic blow-up in the **main** loop; one throttled local scan remains.
 
 ## 8 · Automated cross-surface fact auditor (`bun run verify:facts`, 2026-06-26)
 
