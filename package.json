@@ -6,6 +6,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "prepare": "git config core.hooksPath .githooks || true",
     "dev": "bun scripts/harvest-tsotchke-corpus.ts && bun --hot server.ts",
     "start": "bun server.ts",
     "build": "bun scripts/build.ts",
@@ -19,8 +20,10 @@
     "sbom": "bun scripts/sbom.ts",
     "bench": "bun bench/index.ts",
     "filemap": "bun scripts/gen-filemap.ts",
-    "check": "bun run format:check && bun run typecheck && bun run lint && bun test && bun run verify:receipts && bun run build",
+    "check": "bun run format:check && bun run typecheck && bun run lint && bun test && bun run verify:receipts && bun run sync:check && bun run build",
     "verify:receipts": "bun scripts/verify-receipts.ts",
+    "sync": "bun scripts/sync-surfaces.ts",
+    "sync:check": "bun scripts/sync-surfaces.ts --check",
     "harvest:tsotchke": "bun scripts/harvest-tsotchke-corpus.ts"
   },
   "dependencies": {

@@ -9,4 +9,4 @@
  */
 export const CANONICAL_TEST_COUNT = 1514;
 export const CANONICAL_LINE_COV = '90.80';
-export const CANONICAL_FUNC_COV = '87.88';
+export const CANONICAL_FUNC_COV = '87.91';
