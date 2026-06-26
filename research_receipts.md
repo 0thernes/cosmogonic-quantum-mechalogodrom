@@ -2,6 +2,8 @@
 
 # BROLY (EXECUTOR) Research Receipts — BRUTAL GOD TIER 25 Archons / Full Tsotchke (2026-06)
 
+> **Historical run-log (2026-06).** A Ralph-loop heartbeat record from the BRUTAL-GOD build wave; its gate figures (1183 tests · 95.74/92.42) are a snapshot, NOT canonical. The single source of truth for receipts is [scripts/canonical-receipts.ts](scripts/canonical-receipts.ts) — currently **1,477 tests · 95.03% line / 92.03% func**.
+
 **Ralph 10x heartbeat continue (scheduled):** 10x wiring of full Tsotchke corpus (Eshkol AUTODIFF dual + GWT from workspace.cpp/CONSCIOUSNESS_ENGINE, Moonlab MPO/tensor, libirrep, ulg, quake) everywhere: facade + super-mind/topdown/quality/godform/body/world + active-inference. Strict audits/logs appended (paths cited). Run bun run check. Gate 1477 tests, 95.03/92.03. Heartbeat mode. Same as original 1st prompt + context. 10x over and over.
 
 Ralph heartbeat: re-audit + continued wiring of Tsotchke corpus (Eshkol AD/tape + GWT/workspace, Moonlab tensor/MPO, libirrep sym, ulg/quake) into Cosmogonic (super-mind, body, world, topdown, quality, godform). Gate pending check. KANBAN/receipts/docs/audits updated strict. 10x surge (Dual/gwt/mpo/ulg/qge wired + calls everywhere). 1477 tests, 95.03/92.03 target. (see TSOTCHKE\_\* reports + this exec). Continue over and over. Original prompt.

@@ -164,3 +164,24 @@ The standalone `docs/VERIFICATION-MATRIX.md` draft was folded into this ledger a
   morphotype table. Two MODULE-CONTRACTS lines wrongly said "250 per phylum … scaled down per tier" —
   corrected to ground truth. All other surfaces (README/ARCHITECTURE/ERD/ERM/ENTITY-SHEETS) already say
   "250 (10 phyla × 25)" and are correct.
+
+---
+
+## 6 · Second-auditor addendum (2026-06-26)
+
+Confirms §5 and adds four items §5 did not cover:
+
+- **`src/sim/tsotchke-deep-wire.ts:146` `moonlabBlochToState`** clamped Bloch `z` with `clamp01`
+  (`[0,1]`), folding the southern hemisphere (`z<0`) onto the equator. Fixed to `clamp(-1,1)`. (The
+  module is dead/unused per §5; the fix keeps it correct regardless. Dropped the now-unused `clamp01` import.)
+- **`src/math/libirrep-symmetry.ts`** — added a prominent NOT-WIRED / APPROXIMATE header: its
+  Clebsch-Gordan / Wigner-D / spherical-harmonic bodies are coarse placeholders, never imported by
+  sim/cognition; the exact, test-verified math is `irrep.ts` (the file §5 hardened for j>=7). Prevents
+  future mis-wiring.
+- **`HANDOFF.md` + `research_receipts.md`** — were stale present-tense (v0.10.4 / 942-1183 tests).
+  Added historical banners pointing to current truth (`canonical-receipts.ts` / the dashboard).
+- **FLAG (Butlin membership):** the headline `8/14 met + 6/14 partial` is consistent everywhere, but the
+  prose enumerations disagree on _which_: `reports/2026-06-21-NHSI-HONESTY-AUDIT.md:183-184` lists **9**
+  met names; `PATH-TO-14-14:5` lists only 5 explicit partials. The repo meets _9/14 by its own
+  enumerations_ yet headlines a conservative _8_. Which single indicator is borderline (AST-1 or RPT-1)
+  is an **owner ruling**; the 8/14 floor is kept everywhere until then.

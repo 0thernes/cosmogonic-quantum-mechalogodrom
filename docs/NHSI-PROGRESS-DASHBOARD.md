@@ -137,6 +137,8 @@ AD/GWT bridge · quantum deliberation · QNG · Grover · coherence · magic · 
 
 **Legend (read honestly):** the table below is **8 met (✅) + 6 partial (🟡)** = the canonical **8/14 + 6/14**. The 6 partials are real but architecturally thin — **NOT met**; never read this table as 14/14.
 
+**Legend (read honestly):** the table below is **8 met (✅) + 6 partial (🟡)** = the canonical **8/14 + 6/14**. The 6 partials are real but architecturally thin — **NOT met**; never read this table as 14/14.
+
 | Indicator                        | Status                                                                                  |
 | -------------------------------- | --------------------------------------------------------------------------------------- |
 | GWT-1 parallel modules           | ✅ (30+ organs + Eshkol layers)                                                         |

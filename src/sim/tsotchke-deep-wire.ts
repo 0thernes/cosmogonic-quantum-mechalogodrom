@@ -18,7 +18,6 @@
  */
 
 import type { Complex } from '../math/quantum';
-import { clamp01 } from '../math/scalar';
 import { clebschGordan, wignerSmallD, wigner6j, wigner9j } from '../math/irrep';
 import { fromRows, svd, type Mat } from '../math/mps-svd';
 
@@ -143,7 +142,9 @@ export function moonlabStateToBloch(state: Complex[]): BlochVector {
  * Convert Bloch vector to statevector.
  */
 export function moonlabBlochToState(bloch: BlochVector): Complex[] {
-  const theta = Math.acos(clamp01(bloch.z));
+  // Bloch z spans the full [-1, 1] range; clamp both ends (was clamp01, which folded the
+  // southern hemisphere z<0 onto the equator).
+  const theta = Math.acos(Math.max(-1, Math.min(1, bloch.z)));
   const phi = Math.atan2(bloch.y, bloch.x);
 
   const cosHalf = Math.cos(theta / 2);

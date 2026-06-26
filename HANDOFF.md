@@ -2,6 +2,8 @@
 
 # Daily Repo Run Report — Solo Agentic 100-Point Loop
 
+> **Historical handoff (2026-06-19).** This records the GOAL5 four-Grok swarm run when the repo was at **v0.10.4 / 942-1172 tests**. It is a point-in-time log, not current state. For the live truth see [docs/NHSI-PROGRESS-DASHBOARD.md](docs/NHSI-PROGRESS-DASHBOARD.md) and [CHANGELOG.md](CHANGELOG.md): the repo is now **v0.18.0 · 1,477 tests · 95.03% line / 92.03% func**.
+
 ## Run Context
 
 - **Date/time:** 2026-06-19, BROLY executor for GOAL5 swarm (post eshkol-AD / moonlab-quantum research)
