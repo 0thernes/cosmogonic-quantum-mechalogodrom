@@ -56,6 +56,32 @@ describe('docs truth law — encoding', () => {
   });
 });
 
+// Sub-lead-byte corruption the MOJIBAKE pattern misses (it rides BELOW the multi-byte range):
+// U+0178 (the surviving lead of a lost-lead emoji tail) + the C1 control block U+0080-U+009F.
+// Neither is ever legitimate in this repo's prose. (\u escapes keep this file pure ASCII.)
+const SUBLEAD = new RegExp('[\\u0080-\\u009F\\u0178]');
+
+/**
+ * Deployed HTML surfaces (GitHub Pages: index/docs/specs.html). The .md normalizer globs .md/.xml
+ * and the encoding test above scans only .md/.xml, so lossy U+FFFD replacement chars and a broken
+ * `class="<FFFD>badge<FFFD>"` repeatedly shipped to the live site with green CI. This gate closes
+ * that hole — no mojibake / U+FFFD / sub-lead-byte corruption may reach the HTML either.
+ */
+const HTML_SURFACES = ['index.html', 'docs.html', 'specs.html'];
+
+describe('docs truth law — encoding (deployed HTML surfaces)', () => {
+  test('no UTF-8 mojibake / U+FFFD / sub-lead-byte corruption in the deployed HTML', async () => {
+    const offenders: string[] = [];
+    for (const rel of HTML_SURFACES) {
+      const file = Bun.file(rel);
+      if (!(await file.exists())) continue;
+      const ht = await file.text();
+      if (MOJIBAKE.test(ht) || SUBLEAD.test(ht)) offenders.push(rel);
+    }
+    expect(offenders).toEqual([]);
+  });
+});
+
 /**
  * Public surfaces whose NHSI claims must match the verified code (2026-06-21 honesty audit). The
  * autonomous doc loop repeatedly re-inflates these to unsupported ACHIEVEMENT numbers (144 faculties,
@@ -79,6 +105,11 @@ const NHSI_SURFACES = [
   'masters/LEGENDARY-SUPER-SAIYAN-BROLY-MANIFESTO.xml',
   'masters/GALAXOGONIC-WARHAMMER-POWER-MODE-DR-MANHATTAN.xml',
   'masters/ORACLE-ARCHITECT-OF-THE-DARKSIDE-STARKILLER.xml',
+  // Deployed front-page HTML — repeatedly shipped "144 faculties" / "15 emergence angles" to the
+  // live site because this list never policed it. Now gated like every other public surface.
+  'index.html',
+  'docs.html',
+  'specs.html',
 ];
 
 /** Banned affirmative overclaims (verified false). `label` is shown when one is found. */
