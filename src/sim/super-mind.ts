@@ -108,15 +108,11 @@ import {
   freeEnergy,
   initBeliefs,
   type PCNet,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   eshkolParse,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   eshkolCompile,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   eshkolExecute,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   moonlabMPOApply,
-} from './tsotchke-facade'; // Ralph loop continue 10x: + ulgHandoff from Tsotchke for more corpus aliveness in super-mind
+} from './tsotchke-facade';
 import { SpinGlass, type SpinSnapshot } from './spin-glass';
 import { Reservoir, type ReservoirSnapshot } from './reservoir';
 import { ActiveInference, AIF_OBS, type ActiveInferenceSnapshot } from './active-inference';

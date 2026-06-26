@@ -98,7 +98,10 @@ export function clebschGordan(
   J: number,
   M: number,
 ): number {
-  if (J > IRREP_J_MAX) return 0;
+  // Guard every angular momentum, not just J: fact() saturates to Infinity past the table
+  // (2·J_MAX+2 entries), so an unclamped large j1/j2 (reachable via the unclamped getClebsch
+  // path in tsotchke-deep-wire) would make the prefactor sqrt(Infinity) → a non-finite CG.
+  if (j1 > IRREP_J_MAX || j2 > IRREP_J_MAX || J > IRREP_J_MAX) return 0;
   if (!isValidProjection(j1, m1) || !isValidProjection(j2, m2) || !isValidProjection(J, M))
     return 0;
   if (Math.abs(m1 + m2 - M) > 1e-12) return 0;

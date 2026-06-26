@@ -181,8 +181,10 @@ export class EmergentLanguage {
    * Create a new sign in the lexicon.
    */
   private createSign(signId?: number): Sign {
+    // `signId ?? this.nextSignId++` already advances nextSignId exactly once when no id is
+    // supplied; a second increment here skipped every other id (0, 2, 4, …) and made the
+    // lexicon's id/representation space sparse.
     const id = signId ?? this.nextSignId++;
-    if (signId === undefined) this.nextSignId++;
 
     const sign: Sign = {
       id,
