@@ -9,7 +9,10 @@ import { readdirSync, readFileSync, existsSync } from 'node:fs';
 import { join, dirname, resolve } from 'node:path';
 
 const ROOT = resolve(import.meta.dir, '..');
-const SKIP = new Set(['node_modules', '.git', 'dist']);
+// `.claude` holds transient git worktrees (whole-repo scratch copies); `legacy` is preserved
+// verbatim and never edited; `site`/`coverage` are build/report outputs. None are part of the
+// deliverable doc set, and scanning them false-fails on stale copies outside the canonical tree.
+const SKIP = new Set(['node_modules', '.git', 'dist', '.claude', 'legacy', 'site', 'coverage']);
 
 function markdownFiles(dir: string): string[] {
   const out: string[] = [];

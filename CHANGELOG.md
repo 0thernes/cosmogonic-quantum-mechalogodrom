@@ -505,7 +505,7 @@ determinism preserved.
   `.env`/`.git`/`legacy` prefix-block; (3) `run sort -o <file>` **writing** a file. Fix: a universal
   exec/write-option denylist + per-binary forbidden-flag maps, and every positional now routes through
   the same `confine()` block as the file tools. +9 regression tests. Full report:
-  [`docs/audit-2026-06-15/`](./docs/audit-2026-06-15/ULTRACODE-INSPECTION-2026-06-15.md).
+  [`docs/AUDIT-LOG.md`](./docs/AUDIT-LOG.md) (the 2026-06-15 audit dir was consolidated there).
 - **`POST /api/audit` rate-limited against ring-eviction flood (2026-06-15, RISK-04/05)** ” the
   unauthenticated audit endpoint had no rate limit, so a tight POST loop could evict all 200 real
   entries from the in-memory ring (and burn parse CPU). Added a pure token-bucket limiter (60-burst /
