@@ -59,7 +59,7 @@ behind the full gate (`bun run check`) and a commit.
 
 - Wave: Eshkol .esk for behavior scripts, Moonlab full tensor net in quantum, native quake bridge, final docs sweep, completion receipt.
 
-See TSOTCHKE-RALPH-LOOP-10X-ITER-REPORT.md and corpus logs.
+See AUDIT-LOG.md and corpus logs.
 
 ### š§ V69“V75 NEURAL-BOX + QUANTUM MIND + HUD POLISH (current ” 2026-06-15)
 
@@ -82,11 +82,11 @@ See TSOTCHKE-RALPH-LOOP-10X-ITER-REPORT.md and corpus logs.
 
 ### ✅ Done ” V62“V68 CHAOS · LEVELING · TITANS + Ultracode inspection (2026-06-15)
 
-- Ÿ¥ P0 `V62-CHAOS-MODE` ” CHAOS MODE: a toggled Lorenz quantum storm (tunnelling/entanglement/superposition) that disturbs weather, the economy + the sorting fields; own rng sub-stream, off ⇒ byte-identical. Independently validated PASS ” _bdb9ddd · [validation](./audit-2026-06-15/CHAOS-MODE-V62-VALIDATION.md)_
+- Ÿ¥ P0 `V62-CHAOS-MODE` ” CHAOS MODE: a toggled Lorenz quantum storm (tunnelling/entanglement/superposition) that disturbs weather, the economy + the sorting fields; own rng sub-stream, off ⇒ byte-identical. Independently validated PASS ” _bdb9ddd · [validation](AUDIT-LOG.md)_
 - Ÿ¥ P0 `V63-LEVELING` ” super-creature leveling to 100 + a godlike power every 10 levels + the ASCENSION monolith temple (directive #7) ” _3b95efa_
 - Ÿ§ P1 `V64-SINGULARITY-STIR` ” a summoned hole raises world chaos while it lives, so weather/economy/quantum/jitter react, not just the bodies it pulls ” _55b50d6_
 - Ÿ§ P1 `V65“V68` ” lens + chaos-field polish; Titans become ominous 4D freak-geometry that affects the world ” _¦618dc98_
-- Ÿ¥ P0 `SEC-SANDBOX-HARDEN` ” closed 3 verified Copilot read-only-sandbox escapes (git `--open-files-in-pager` option-injection → process exec; `run cat .env` read of blocked files; `sort -o` write) + 9 regression tests ” _[inspection](./audit-2026-06-15/ULTRACODE-INSPECTION-2026-06-15.md)_
+- Ÿ¥ P0 `SEC-SANDBOX-HARDEN` ” closed 3 verified Copilot read-only-sandbox escapes (git `--open-files-in-pager` option-injection → process exec; `run cat .env` read of blocked files; `sort -o` write) + 9 regression tests ” _[inspection](AUDIT-LOG.md)_
 - Ÿ¨ P2 `ULTRACODE-INSPECTION` ” full 250-point inspection (10 dimensions, adversarial verify, grade B+); README/FILE-MAP/types synced; SECURITY-GOVERNANCE added ” _docs/audit-2026-06-15/_
 
 ### ✅ Done ” V12 RELIQUARY + V13 ECONOMY/PHYSICS (2026-06-14)

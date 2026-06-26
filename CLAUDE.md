@@ -25,8 +25,8 @@ substantive change; they are personas of one discipline and they outrank vibes:
   them to every surface (`bun run sync`; `bun run sync:check` is gate-enforced).
 - **Centralized audit log:** record audits / reviews / fix-passes as a dated entry in
   [docs/AUDIT-LOG.md](docs/AUDIT-LOG.md) (append, newest-first). Do NOT create new standalone dated
-  report files — `docs/reports/*` and `docs/*AUDIT*` are a frozen historical archive (indexed in
-  AUDIT-LOG.md).
+  report files — the redundant report sprawl was consolidated into AUDIT-LOG.md and removed (git
+  history preserves it); only a few canonical reports survive under `docs/reports/` (see the log).
 - **Seamless local↔GitHub:** `core.hooksPath=.githooks` (wired by the `prepare` script on install).
   pre-commit auto-syncs surfaces + normalizes encoding; post-commit auto-pushes the current branch
   (opt out: `git config hooks.autopush false`). A local commit ships to GitHub with no manual push.

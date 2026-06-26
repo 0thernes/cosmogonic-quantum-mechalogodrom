@@ -368,8 +368,8 @@ The filled diagonal in the last column, against empty cells elsewhere, **is** th
 ## Appendix C · Deep claims verification
 
 The scientific claims in §3 were not merely cited — they were executed and, where mathematical,
-independently re-derived this pass. Full results: [`docs/audit-2026-06-17-DEEP-CLAIMS-VERIFICATION.md`](../audit-2026-06-17-DEEP-CLAIMS-VERIFICATION.md).
+independently re-derived this pass. Full results: [`../AUDIT-LOG.md`](../AUDIT-LOG.md).
 
 ---
 
-_0thernes LLC — measured, deterministic, reproducible — 2026-06-17. Receipts CI-enforced via the receipts law (`scripts/verify-receipts.ts`). Companion: [Report II — The Super Creature](./2026-06-17-STATE-OF-THE-ART-SUPER-CREATURE.md). Prior revision: [2026-06-16](./2026-06-16-STATE-OF-THE-ART-WHOLE-REPO.md)._
+_0thernes LLC — measured, deterministic, reproducible — 2026-06-17. Receipts CI-enforced via the receipts law (`scripts/verify-receipts.ts`). Companion: [Report II — The Super Creature](./2026-06-17-STATE-OF-THE-ART-SUPER-CREATURE.md). Prior revision: [2026-06-16](../AUDIT-LOG.md)._

@@ -75,7 +75,7 @@ telemetry-wired, studied/license-gated, redundant/toolchain, or deliberately fen
 
 ### III.1 Tsotchke Corpus Integration
 
-**Total Tsotchke repos in mirror directory: 19** (receipt: `docs/audit-2026-06-20-deep-dive/tsotchke-directory-ledger.csv`)
+**Total Tsotchke repos in mirror directory: 19** (receipt: `AUDIT-LOG.md`)
 
 **User Repos (15):**
 
@@ -983,7 +983,7 @@ By:
 - `docs/TSOTCHKE-CORPUS-INTEGRATION-PLAN.md` — integration roadmap
 - `docs/TSOTCHKE-CORPUS-RALPH-WIRING-AUDIT-2026-06-19.md` — wiring audit log
 - `docs/CORPUS_INTEGRATION_REPORT.md` — executive summary
-- `docs/OMNISCIENT-TSOTCHKE-COSMOGONIC-MASTER-REPORT-2026-06-20-CONTINUED.md` — master synthesis
+- `../AUDIT-LOG.md` — master synthesis
 - `docs/SUPER-CREATURE-RESEARCH.md` — scientific grounding
 - `docs/BLEEDING-EDGE-NOVEL-CONTRIBUTIONS-AND-SCIENTIFIC-IMPACT.md` — novelty assessment
 - `docs/ARCHITECTURE.md` — system architecture
@@ -991,7 +991,7 @@ By:
 - `docs/KANBAN.md` — delivery board
 - `docs/MODULE-CONTRACTS.md` — binding contracts
 - `docs/PHILOSOPHY.md` — aesthetic constitution
-- `README.md` — root README
+- `../AUDIT-LOG.md` — root README
 - `CHANGELOG.md` — release log
 - `THIRD-PARTY-NOTICES.md` — Tsotchke attribution (binding "On Tsotchke")
 
@@ -1003,7 +1003,7 @@ By:
 
 **GitHub (matches Local):**
 
-- README.md
+- ../AUDIT-LOG.md
 - About page
 - All docs in `/docs`
 - All specs in `/spec`

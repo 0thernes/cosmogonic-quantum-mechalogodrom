@@ -26,14 +26,14 @@ The Super Creature is an **always-on apex intelligence that lives in a single br
 | Build / gate                               | **v0.11.0**, **1,174 pass / 0 fail**, 100 files, 1,738,808 assertions                                                                          | `package.json`, `bun test` (2026-06-17, Bun 1.3.11)            |
 | Apex composite mind                        | **~10,081 weights** across ~12 sub-networks (re-summed this revision: 1,174 + 1,740 + 1,328 + 424 + 808 + 808 + 544 + 340 + 259 + 550 + 2,144) | `super-mind.ts:382–393`                                        |
 | Apex total parameters                      | **≈ 37,225** = 10,081 mind + 1,444 legacy spine + 100 × 257 wingmen                                                                            | `super-mind.ts`, `super-creature.ts:36`, `super-wingmen.ts:24` |
-| Faculties wired into the per-beat decision | **14** (Report I receipts); cataloged as **11 cognitive + 10 quantum** named modules; **~30** distinct mechanisms incl. composite sub-nets     | `docs/audit-2026-06-16/SUPER-CREATURE-COGNITION-AUDIT.md §3`   |
+| Faculties wired into the per-beat decision | **14** (Report I receipts); cataloged as **11 cognitive + 10 quantum** named modules; **~30** distinct mechanisms incl. composite sub-nets     | `../AUDIT-LOG.md §3`                                           |
 | Cognitive pipeline                         | **5 stages** (PERCEIVE·IMAGINE·REASON·FEEL·ACT) × **5 depths** × **5 variants** = 25 thought branches                                          | `super-mind.ts:71–73`                                          |
 | Quantum register                           | **6 qubits / 64 complex amplitudes**, 3 circuit layers                                                                                         | `super-qubits.ts:46,48,49`                                     |
 | Decision vocabulary                        | **7 plans** (HUNT·FLEE·DOMINATE·DECEIVE·SPAWN·EXPLORE·REST)                                                                                    | `super-creature.ts`                                            |
 | Spin-glass instinct                        | **56 spins**, 7 imprinted archetypes, Metropolis settle                                                                                        | `spin-glass.ts`, `super-mind.ts:217`                           |
 | Apex `think()` cost                        | **≈ 285–304 µs/beat** mean (≈ 273–300 µs median) ≈ 1.7–1.8 % of a 60 fps frame, CI-enforced **< 5 ms**                                         | `bench/super-mind.bench.ts`, `tests/perf-budget.test.ts`       |
 | Consciousness metrics                      | **2** live scalars — GWT `ignition`, IIT `phi` (proxy) — + genuine register Φ                                                                  | `super-mind.ts:43–46`, `super-qubits.ts`                       |
-| Adversarial review                         | **14-agent** correctness sweep over the 1.1 faculties → **0 confirmed defects**                                                                | `docs/audit-2026-06-16/SUPER-CREATURE-COGNITION-AUDIT.md §1`   |
+| Adversarial review                         | **14-agent** correctness sweep over the 1.1 faculties → **0 confirmed defects**                                                                | `../AUDIT-LOG.md §1`                                           |
 | Determinism                                | bit-identical psyche from one seed; Born collapse drawn through a seeded generator                                                             | `tests/determinism-law.test.ts`, `super-qubits.test.ts:184`    |
 
 **On the faculty count (stated precisely, not rounded).** "14 wired" counts the faculties that vote in the per-beat decision; the cognition audit catalogs **11 cognitive + 10 quantum** named modules (some at UI cadence, two measuring Φ of _different_ systems); counting the composite's ~12 sub-networks and the spin-glass instinct gives **~30 distinct, individually unit-tested mechanisms.** All three numbers are true under their stated definition — we give all three rather than pick a flattering one.
@@ -254,7 +254,7 @@ gap is therefore not a mystery; it is a named, ranked, falsifiable research prog
 | Apex total                        | 10,081 + 1,444 + 25,700 = **37,225**                                                 | re-summed from running constructor                     |
 | QFI / Fubini–Study identity       | QFI = 4·g                                                                            | `quantum-geometry.test.ts` (= 1 to 1e-4)               |
 
-Full deep-claims results: [`docs/audit-2026-06-17-DEEP-CLAIMS-VERIFICATION.md`](../audit-2026-06-17-DEEP-CLAIMS-VERIFICATION.md).
+Full deep-claims results: [`../AUDIT-LOG.md`](../AUDIT-LOG.md).
 
 ---
 
@@ -262,7 +262,7 @@ Full deep-claims results: [`docs/audit-2026-06-17-DEEP-CLAIMS-VERIFICATION.md`](
 
 - **Build:** v0.11.0 · commit baseline `main` · 2026-06-17 · gate re-verified from a cold shell (Bun 1.3.14).
 - **Gate witness:** `bun test` → **1,174 pass / 0 fail / 100 files / ≈1.74 M assertions**; `bun test --coverage` → **95.91 % line / 92.78 % function**; `bun bench/index.ts` → `think()` ≈ **289 µs/beat on author Core Ultra 9 HW, ≈ 443 µs on an Intel Xeon @ 2.90 GHz / 2 cores** (Bun 1.3.14). Benchmark figures are hardware-dependent and quoted with machine context per Manhattan's law; the published count/coverage are CI-enforced by the receipts law (`scripts/verify-receipts.ts`).
-- **Faculty receipts:** `docs/audit-2026-06-16/SUPER-CREATURE-COGNITION-AUDIT.md` (14-agent adversarial sweep, 0 defects); groundings in `docs/SUPER-CREATURE-RESEARCH.md`.
+- **Faculty receipts:** `../AUDIT-LOG.md` (14-agent adversarial sweep, 0 defects); groundings in `docs/SUPER-CREATURE-RESEARCH.md`.
 - **External framework cited:** Butlin & Long et al. (2023), arXiv:2308.08708.
-- **Companion:** _Report I — The Whole Repository_ (`docs/reports/2026-06-17-STATE-OF-THE-ART-WHOLE-REPO.md`). Prior revision: [2026-06-16](./2026-06-16-STATE-OF-THE-ART-SUPER-CREATURE.md).
+- **Companion:** _Report I — The Whole Repository_ (`docs/reports/2026-06-17-STATE-OF-THE-ART-WHOLE-REPO.md`). Prior revision: [2026-06-16](../AUDIT-LOG.md).
 - **License:** Proprietary · All Rights Reserved · © 2026 0thernes LLC.

@@ -33,7 +33,7 @@ every commit, contracts over vibes. See [CLAUDE.md](../CLAUDE.md) and the three 
 
 | Doc                                                         | What you'll learn                                                                                                                                        |
 | ----------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [README.md](../README.md)                                   | The pitch + top-level overview. **Tsotchke fully wired for digital biologics (Eshkol consciousness language, petri soup growth, sentience substrates).** |
+| [AUDIT-LOG.md](AUDIT-LOG.md)                                | The pitch + top-level overview. **Tsotchke fully wired for digital biologics (Eshkol consciousness language, petri soup growth, sentience substrates).** |
 | [PHILOSOPHY.md](./PHILOSOPHY.md)                            | The aesthetic constitution: real math under every effect; every system reads AND writes another. **+ Tsotchke biologics paradigm.**                      |
 | [CONTROLS.md](./CONTROLS.md)                                | Every key, button, and gesture.                                                                                                                          |
 | [TECHNICAL-SPECIFICATION.md](./TECHNICAL-SPECIFICATION.md)  | The full technical spec sheet (also at `/spec`). **Updated with Tsotchke corpus, soup, sentience metrics.**                                              |
@@ -93,12 +93,12 @@ every commit, contracts over vibes. See [CLAUDE.md](../CLAUDE.md) and the three 
 
 ## 8. Data model (ERD / ERM / ERP)
 
-| Doc                                                                                            | What you'll learn                             |
-| ---------------------------------------------------------------------------------------------- | --------------------------------------------- |
-| [ERD.md](./ERD.md)                                                                             | Entity-relationship diagram.                  |
-| [ERM.md](./ERM.md)                                                                             | Entity-relationship model.                    |
-| [ERP.md](./ERP.md)                                                                             | Entity-relationship / process model.          |
-| [audit-2026-06-13/DOMAIN-MODEL-ERD-ERM-ERP.md](./audit-2026-06-13/DOMAIN-MODEL-ERD-ERM-ERP.md) | The consolidated domain model from the audit. |
+| Doc                          | What you'll learn                             |
+| ---------------------------- | --------------------------------------------- |
+| [ERD.md](./ERD.md)           | Entity-relationship diagram.                  |
+| [ERM.md](./ERM.md)           | Entity-relationship model.                    |
+| [ERP.md](./ERP.md)           | Entity-relationship / process model.          |
+| [AUDIT-LOG.md](AUDIT-LOG.md) | The consolidated domain model from the audit. |
 
 ## 9. Decisions (ADRs)
 
@@ -118,7 +118,7 @@ every commit, contracts over vibes. See [CLAUDE.md](../CLAUDE.md) and the three 
 | [KANBAN.md](./KANBAN.md)                             | The live board — done / in-progress / backlog.                                                                             |
 | [../CHANGELOG.md](../CHANGELOG.md)                   | Every increment, V1 → today, with verification receipts.                                                                   |
 | [500-POINT-INSPECTION.md](./500-POINT-INSPECTION.md) | The deep inspection checklist.                                                                                             |
-| [audit-2026-06-13/](./audit-2026-06-13/)             | The full audit set: executive summary, architecture/engineering assessments, code review, security + supply-chain, kanban. |
+| [audit-2026-06-13/](./AUDIT-LOG.md)                  | The full audit set: executive summary, architecture/engineering assessments, code review, security + supply-chain, kanban. |
 
 ---
 

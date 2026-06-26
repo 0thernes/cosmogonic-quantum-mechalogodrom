@@ -521,7 +521,7 @@ ring (cap 200), 404 fallback. Port `Number(process.env.PORT) || 3000`. Log reque
 
 ### Docs/legal writer
 
-README.md (hero, feature list, quickstart `bun install && bun dev`, scripts table, architecture
+AUDIT-LOG.md (hero, feature list, quickstart `bun install && bun dev`, scripts table, architecture
 mermaid digest, repo layout tree, links to all docs, license/legal section), LICENSE (MIT,
 "Copyright (c) 2026 0thernes"), NOTICE.md (three/MIT, htmx/0BSD, tailwindcss/MIT, mermaid/MIT,
 simplex-noise/MIT, Inter & JetBrains Mono/OFL-1.1, bun runtime note), SECURITY.md, CONTRIBUTING.md

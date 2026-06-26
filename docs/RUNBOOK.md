@@ -1,7 +1,7 @@
 # RUNBOOK — Cosmogonic Quantum Mechalogodrom
 
 The one canonical ops doc: install, run, gate, build, deploy, release, roll back, troubleshoot.
-For _what the project is_ see [README.md](../README.md); for architecture see
+For _what the project is_ see [AUDIT-LOG.md](AUDIT-LOG.md); for architecture see
 [docs/ARCHITECTURE.md](ARCHITECTURE.md); for change history see [CHANGELOG.md](../CHANGELOG.md).
 
 > **Path caveat:** this repo's absolute path contains `[ ]`. In PowerShell use `-LiteralPath` (or the

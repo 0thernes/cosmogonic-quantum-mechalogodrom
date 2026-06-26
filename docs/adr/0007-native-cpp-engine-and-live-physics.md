@@ -41,7 +41,7 @@ physics, screenshot export).
 No compiler existed on the build machine (only CMake — no MSVC/LLVM/MinGW/SDK). We installed
 **MinGW-w64 GCC 16.1 (UCRT)** via `winget BrechtSanders.WinLibs.POSIX.UCRT` — self-contained, links a
 GL app standalone, statically linked into a portable `cqm_native.exe`. (See [[native-engine-build]]
-memory + `native/README.md` for paths.)
+memory + `../AUDIT-LOG.md` for paths.)
 
 ### Physics is ACTIVE, not optional
 

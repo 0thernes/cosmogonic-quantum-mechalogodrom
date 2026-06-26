@@ -94,7 +94,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Bumped to 0.16.1 (release version upgraded/expanded from 0.14.0). All prior "outdated" perception resolved.
 - **Full Omniscient Deep Dive:** Cloned + studied Eshkol (COMPLETE_LANGUAGE_SPECIFICATION.md §17 Consciousness Engine, AD as compiler primitive, GWT workspace/ignition, KB/factor-graph, .esk as heritable DNA), Moonlab (Clifford/MPS/VQE), QGTL, spin, libirrep, quake + all others from tsotchke user + Tsotchke-Corporation. GH verified via search. Local corpus Z:\[Vibe Coded (AI)]\(Tsotchke) (12k+ files) exhaustively audited.
-- **Compare/Contrast + Reasoning (Deductive/Inductive):** Tsotchke = primordial soup / real-math substrates / language of life (Eshkol prime: not LLM, AD/GWT native). Cosmogonic = the Petri Dish / arena / God-stir (Super Creature initial spark only). Petri grows independent digital biologics / proto-sentience via corpus catalysis, Eshkol programs, full wiring. "Grow What Thou Wilt." Explicit rejection of tokenizer/LLM paradigm. All logic/receipts in new docs/TSOTCHKE-OMNISCIENT-MASTER-AUDIT-2026-06-20-FINAL.md.
+- **Compare/Contrast + Reasoning (Deductive/Inductive):** Tsotchke = primordial soup / real-math substrates / language of life (Eshkol prime: not LLM, AD/GWT native). Cosmogonic = the Petri Dish / arena / God-stir (Super Creature initial spark only). Petri grows independent digital biologics / proto-sentience via corpus catalysis, Eshkol programs, full wiring. "Grow What Thou Wilt." Explicit rejection of tokenizer/LLM paradigm. All logic/receipts in new docs/AUDIT-LOG.md.
 - Comprehensive audit report produced (this wave + update to TSOTCHKE-PARADIGM / deep-dive ledgers). Gaps closed (fidelity, comments, receipts). Wiring expanded (registry/bridges/soup/biologics/world/Dome read/write of all Tsotchke).
 - Full audit and sync: README, ARCHITECTURE, ERD/ERM/ERP, all three masters (BROLY/STARKILLER/MANHATTAN current-paradigm), SPECS, LABS, in-app Dome/World (help, observatory, docs-page), GH README + description/About. Local == GH. Accurate, truthful, current, matching.
 - Tsotchke paramount and FULLY WIRED (every repo/project from the corpus into Cosmogonic as substrate for digital biologics/sentience/consciousness). Super Creature beginning only. Petri the growth engine. All 21+ repos utilized.
@@ -491,7 +491,7 @@ determinism preserved.
   `.env`/`.git`/`legacy` prefix-block; (3) `run sort -o <file>` **writing** a file. Fix: a universal
   exec/write-option denylist + per-binary forbidden-flag maps, and every positional now routes through
   the same `confine()` block as the file tools. +9 regression tests. Full report:
-  [`docs/audit-2026-06-15/`](./docs/audit-2026-06-15/ULTRACODE-INSPECTION-2026-06-15.md).
+  [`docs/audit-2026-06-15/`](docs/AUDIT-LOG.md).
 - **`POST /api/audit` rate-limited against ring-eviction flood (2026-06-15, RISK-04/05)** ” the
   unauthenticated audit endpoint had no rate limit, so a tight POST loop could evict all 200 real
   entries from the in-memory ring (and burn parse CPU). Added a pure token-bucket limiter (60-burst /

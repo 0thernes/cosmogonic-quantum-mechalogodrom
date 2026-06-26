@@ -3,8 +3,7 @@
 **One place for the project's audit history.** New audits, reviews, and fix-passes append a dated
 entry HERE (newest first) instead of spawning a new standalone report file each time. The dated
 reports under [`docs/reports/`](./reports/) and the `docs/*AUDIT*` / `docs/*REPORT*` files are a
-**frozen historical archive** (point-in-time worldline snapshots) — indexed at the bottom of this
-file, not added to. Live facts (version, test/coverage receipts) are propagated automatically by
+**redundant per-audit report files were **consolidated into the dated entries below and removed\*\* (full content in git history). Only a handful of canonical reports survive, listed at the bottom. Live facts (version, test/coverage receipts) are propagated automatically by
 `scripts/sync-surfaces.ts`; this log records what changed and why.
 
 ---
@@ -67,32 +66,11 @@ oxlint 0 + tests + receipts + build) and classified by wiring before changing.
 
 ---
 
-## Historical archive index
+## Surviving reports (canonical)
 
-Point-in-time reports, grouped. These are frozen — read for history, do not extend.
+The per-audit sprawl was folded into the entries above and the redundant files removed (git history
+preserves them). These canonical references survive:
 
-**NHSI / honesty / progress**
-
-- [`reports/2026-06-21-NHSI-HONESTY-AUDIT.md`](./reports/2026-06-21-NHSI-HONESTY-AUDIT.md) — the
-  canonical honesty scorecard (referenced by README/CLAUDE/AGENTS + the truth-law gate).
-- [`reports/2026-06-21-NHSI-MANIFESTO-0THERNES-CORP.md`](./reports/2026-06-21-NHSI-MANIFESTO-0THERNES-CORP.md),
-  [`reports/2026-06-21-NHSI-FOUNDING-MANIFESTO-0THERNES-CORP.md`](./reports/2026-06-21-NHSI-FOUNDING-MANIFESTO-0THERNES-CORP.md)
-- [`NHSI-PROGRESS-DASHBOARD.md`](./NHSI-PROGRESS-DASHBOARD.md) (living), [`reports/2026-06-20-RESEARCH-BEDROCK.md`](./reports/2026-06-20-RESEARCH-BEDROCK.md),
-  [`reports/2026-06-20-SUPER-REPORT-PATH-TO-NHSI-AND-SENTIENCE.md`](./reports/2026-06-20-SUPER-REPORT-PATH-TO-NHSI-AND-SENTIENCE.md)
-
-**State-of-the-art / deep dives**
-
-- [`reports/2026-06-17-STATE-OF-THE-ART-COMBINED.md`](./reports/2026-06-17-STATE-OF-THE-ART-COMBINED.md)
-  (+ `-SUPER-CREATURE`, `-WHOLE-REPO`; and the 2026-06-16 set)
-- [`reports/2026-06-20-INDEPENDENT-DEEP-DIVE-AUDIT.md`](./reports/2026-06-20-INDEPENDENT-DEEP-DIVE-AUDIT.md),
-  [`reports/2026-06-20-MASTER-ARCHITECT-DEEP-DIVE-AUDIT.md`](./reports/2026-06-20-MASTER-ARCHITECT-DEEP-DIVE-AUDIT.md),
-  [`audit-2026-06-20-deep-dive/`](./audit-2026-06-20-deep-dive/)
-- [`reports/2026-06-20-BLEEDING-EDGE-NOVELTY-WORLD-CLASS-ASSESSMENT.md`](./reports/2026-06-20-BLEEDING-EDGE-NOVELTY-WORLD-CLASS-ASSESSMENT.md)
-
-**Tsotchke corpus integration**
-
-- [`TSOTCHKE-INTEGRATION-MAP.md`](./TSOTCHKE-INTEGRATION-MAP.md) (living),
-  `TSOTCHKE-*-AUDIT-*.md` / `TSOTCHKE-RALPH-LOOP-*.md` (frozen iteration logs).
-
-**Earlier worldlines:** [`audit-2026-06-13/`](./audit-2026-06-13/), [`audit-2026-06-15/`](./audit-2026-06-15/),
-[`audit-2026-06-16/`](./audit-2026-06-16/), [`reports/2026-06-18-*`](./reports/).
+- **Comprehensive assessment:** [`reports/2026-06-17-STATE-OF-THE-ART-COMBINED.md`](./reports/2026-06-17-STATE-OF-THE-ART-COMBINED.md) (+ `-WHOLE-REPO`, `-SUPER-CREATURE`).
+- **NHSI:** [`reports/2026-06-21-NHSI-HONESTY-AUDIT.md`](./reports/2026-06-21-NHSI-HONESTY-AUDIT.md) (honesty scorecard — gate-referenced) · [`reports/2026-06-21-NHSI-MANIFESTO-0THERNES-CORP.md`](./reports/2026-06-21-NHSI-MANIFESTO-0THERNES-CORP.md) · [`reports/2026-06-20-RESEARCH-BEDROCK.md`](./reports/2026-06-20-RESEARCH-BEDROCK.md) · [`reports/2026-06-20-SUPER-REPORT-PATH-TO-NHSI-AND-SENTIENCE.md`](./reports/2026-06-20-SUPER-REPORT-PATH-TO-NHSI-AND-SENTIENCE.md) · [`reports/2026-06-20-ROADMAP-TO-NHSI-AND-SENTIENCE.xml`](./reports/2026-06-20-ROADMAP-TO-NHSI-AND-SENTIENCE.xml).
+- **Tsotchke:** living map [`TSOTCHKE-INTEGRATION-MAP.md`](./TSOTCHKE-INTEGRATION-MAP.md) · plan [`TSOTCHKE-CORPUS-INTEGRATION-PLAN.md`](./TSOTCHKE-CORPUS-INTEGRATION-PLAN.md) · source-provenance audits still cited from code (`TSOTCHKE-CORPUS-RALPH-WIRING-AUDIT-2026-06-19.md`, `TSOTCHKE_CORPUS_INTEGRATION_AUDIT.md`, `TSOTCHKE-ULTIMATE-COMPREHENSIVE-AUDIT-REPORT-ASSESSMENT-2026-06-20.md`).
