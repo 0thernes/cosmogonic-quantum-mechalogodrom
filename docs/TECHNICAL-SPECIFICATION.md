@@ -29,51 +29,60 @@ seed**.
 
 ## 1 · Codebase metrics (measured)
 
-| Metric                                     | Value                                                                 |
-| ------------------------------------------ | --------------------------------------------------------------------- |
-| Total authored lines (incl. native engine) | **79,319**                                                            |
-| Native C++ engine (separate, ADR-0007)     | 1,644 lines · 6 files                                                 |
-| Files                                      | **331**                                                               |
-| Folders                                    | **32** (+ root)                                                       |
-| Distinct file types                        | 21                                                                    |
-| App source (TypeScript)                    | 35,226 lines · 108 files                                              |
-| Tests                                      | 14,117 lines · 100 files                                              |
-| Test : source ratio                        | 0.40 → **95.03% line / 92.03% func** coverage (`bun test --coverage`) |
-| Passing tests                              | **1,477** (0 failing)                                                 |
+These figures are **measured, not pinned** — line counts move every commit, so they are a dated
+snapshot rather than a gate-enforced receipt. Refresh them with `bun run metrics`
+([`scripts/codebase-metrics.ts`](../scripts/codebase-metrics.ts), deterministic over `git ls-files`).
+Snapshot: **2026-06-26**. (Coverage + passing-test counts ARE SSOT-synced — see §1's last two rows.)
 
-### 1.1 Languages
+| Metric                                  | Value                                                                 |
+| --------------------------------------- | --------------------------------------------------------------------- |
+| Total tracked authored files            | **530**                                                               |
+| Total tracked authored lines            | **115,817**                                                           |
+| App source (`src/`)                     | 57,687 lines · 196 files                                              |
+| Tests (`tests/`)                        | 19,687 lines · 152 files                                              |
+| Native C++ engine (`native/`, ADR-0007) | 1,529 lines · 9 files                                                 |
+| Test : source ratio                     | 0.34 → **95.03% line / 92.03% func** coverage (`bun test --coverage`) |
+| Passing tests                           | **1,477** (0 failing)                                                 |
 
-| Language                       | Lines  | Share   | Fraction |
-| ------------------------------ | ------ | ------- | -------- |
-| TypeScript                     | 50,751 | 63.98 % | ≈ 2/3    |
-| Markdown                       | 15,965 | 20.13 % | ≈ 1/5    |
-| HTML                           | 8,190  | 10.32 % | ≈ 1/10   |
-| C++ (native engine, ADR-0007)  | 1,644  | 1.63 %  | —        |
-| CSS (Tailwind source)          | 1,644  | 1.55 %  | ≈ 1/64   |
-| XML (master files)             | 428    | 0.54 %  | —        |
-| bun.lock / YAML / JSON / other | 1,644  | 1.84 %  | —        |
+(Excludes the vendored `node_modules/`, generated `dist/` · `coverage/` · `native/build/`, and nested
+`.claude/worktrees/` checkouts.)
 
-**Code (TS + C++ + HTML + CSS) = 61,644 lines = 77.5 %**; documentation + config = 22.5 %. (Totals are
-measured over all tracked authored files, excluding the vendored `node_modules/` and the generated
-`native/build/` artifacts.)
+### 1.1 By file type
+
+| Type                | Files | Lines  | Share   |
+| ------------------- | ----- | ------ | ------- |
+| TypeScript          | 376   | 79,934 | 69.02 % |
+| Markdown            | 87    | 20,954 | 18.09 % |
+| HTML                | 5     | 8,283  | 7.15 %  |
+| JSON                | 9     | 1,271  | 1.10 %  |
+| CSS (Tailwind)      | 1     | 1,230  | 1.06 %  |
+| C/C++ hdr (`.h`)    | 4     | 934    | 0.81 %  |
+| XML (masters)       | 4     | 708    | 0.61 %  |
+| C++ (`.cpp`)        | 2     | 362    | 0.31 %  |
+| YAML · lock · other | —     | ~1,500 | ~1.3 %  |
+
+**Code (TS + C++ + HTML + CSS) ≈ 91,000 lines ≈ 78 %**; documentation + config ≈ 22 %.
 
 ### 1.2 Lines by area
 
-| Area                                            | Files | Lines  |
-| ----------------------------------------------- | ----- | ------ |
-| `src/` (application)                            | 109   | 36,456 |
-| `tests/`                                        | 99    | 14,117 |
-| `docs/`                                         | 50    | 11,644 |
-| repo root (README, LICENSE, configs)            | 24    | 7,000  |
-| `lab/` (self-contained artifact)                | 1     | 3,861  |
-| `legacy/` (preserved origin)                    | 7     | 2,035  |
-| `native/` (C++ engine, ADR-0007)                | 6     | 1,644  |
-| `masters/` (3 governing XML personas)           | 3     | 428    |
-| `.github/` · `bench/` · `scripts/` · `.claude/` | 27    | 1,644  |
+| Area                                  | Files | Lines  |
+| ------------------------------------- | ----- | ------ |
+| `src/` (application)                  | 196   | 57,687 |
+| `tests/`                              | 152   | 19,687 |
+| `docs/`                               | 82    | 17,241 |
+| repo root (README, LICENSE, configs)  | 29    | 8,490  |
+| `lab/` (self-contained artifact)      | 1     | 3,862  |
+| `scripts/`                            | 16    | 3,073  |
+| `legacy/` (preserved origin)          | 7     | 2,100  |
+| `native/` (C++ engine, ADR-0007)      | 9     | 1,529  |
+| `bench/`                              | 13    | 722    |
+| `.github/`                            | 11    | 645    |
+| `masters/` (3 governing XML personas) | 3     | 478    |
 
-`src/` subsystems: `sim/` 17,353 (61 files) · `ui/` 9,007 (19 files) · `world.ts` 2,395 (composition
-root) · `math/` 2,246 (12 files) · `audio/` 1,644 · `server/` 1,644 · `styles/` 1,644 · `core/` 582 ·
-plus `types.ts` · `main.ts` · `docs-page.ts` · `logging/`.
+`src/` subsystems: `sim/` 33,822 (127 files) · `ui/` 9,322 (21 files) · `math/` 5,924 (30 files) ·
+src-root composition (`world.ts` · `types.ts` · `main.ts` · `docs-page.ts`) 3,650 (4 files) ·
+`audio/` 1,305 (3) · `server/` 1,264 (3) · `styles/` 1,230 (1) · `core/` 777 (4) · `logging/` 219 (2) ·
+`memory/` 174 (1).
 
 ---
 
@@ -325,55 +334,32 @@ Physicist** (determinism, measurement, frame budgets, provenance).
 
 ## 12 · Per-file line counts
 
-### `src/` (89 files · 30,871 lines)
+A full per-file roster is generated, not hand-kept — run `bun run metrics`
+([`scripts/codebase-metrics.ts`](../scripts/codebase-metrics.ts)) for the current per-area / per-type
+breakdown, or `bun run filemap` for the file tree. Below is a dated snapshot of the **heaviest files**
+(where the weight sits); refresh on demand. Snapshot: **2026-06-26**.
 
-| Lines | File                      | Lines | File                           |
-| ----: | ------------------------- | ----: | ------------------------------ |
-|  2234 | ui/observatory.ts         |   246 | sim/connectome.ts              |
-|  1656 | world.ts                  |   240 | sim/quantum.ts                 |
-|  1126 | styles/app.css            |   216 | sim/analytics.ts               |
-|   815 | sim/titans.ts             |   208 | sim/puppet-masters.ts          |
-|   714 | sim/environment.ts        |   203 | sim/lore.ts                    |
-|   627 | audio/engine.ts           |   192 | sim/graph-mind.ts              |
-|   538 | sim/singularities.ts      |   184 | sim/constellations.ts          |
-|   534 | ui/input.ts               |   183 | core/engine.ts                 |
-|   514 | sim/entities.ts           |   182 | sim/artifacts.ts               |
-|   491 | audio/songs.ts            |   179 | sim/lineage.ts                 |
-|   475 | sim/behaviors.ts          |   174 | memory/store.ts · math/heap.ts |
-|   446 | sim/algorithms.ts         |   170 | docs-page.ts                   |
-|   438 | server/ai-sandbox.ts      |   165 | sim/qcircuit.ts                |
-|   437 | sim/atmosphere.ts         |   162 | ui/panels.ts                   |
-|   427 | server/copilot.ts         |   156 | audio/analysis.ts              |
-|   420 | sim/instanced-entities.ts |   155 | logging/audit.ts               |
-|   398 | sim/ai/brains.ts          |   153 | sim/genome.ts                  |
-|   394 | sim/constants.ts          |   148 | sim/leviathans.ts              |
-|   388 | sim/viz3d.ts              |   131 | sim/nhi-body.ts                |
-|   354 | ui/copilot.ts             |   120 | sim/weather.ts                 |
-|   353 | sim/phyla.ts              |   117 | ui/graphs.ts                   |
-|   347 | types.ts                  |   112 | sim/geometry-cache.ts          |
-|   324 | math/quantum.ts           |   105 | core/quality.ts                |
-|   312 | sim/nhi.ts                |    95 | math/spatial-hash.ts           |
-|   306 | sim/shoggoths.ts          |    93 | ui/hud.ts                      |
-|   293 | sim/factions.ts           |    92 | sim/cosmic-web.ts              |
-|   287 | sim/reaction-diffusion.ts |    87 | sim/nhi-system.ts              |
-|   249 | math/games.ts             |    64 | logging/logger.ts              |
-|     — | —                         |    63 | sim/gold-lattice.ts · main.ts  |
-|     — | —                         |    61 | math/scalar.ts                 |
-|     — | —                         |    59 | sim/quantum-lattice.ts         |
-|     — | —                         |    52 | core/postfx.ts                 |
-|     — | —                         |    40 | math/rng.ts                    |
-|     — | —                         |    20 | sim/morphotypes.ts             |
+### `src/` — heaviest files (196 files · 57,687 lines total)
 
-### `tests/` (100 files · 14,117 lines)
+| Lines | File                        | Lines | File                      |
+| ----: | --------------------------- | ----: | ------------------------- |
+|  2906 | world.ts (composition root) |   690 | sim/singularities.ts      |
+|  2283 | ui/observatory.ts           |   658 | audio/engine.ts           |
+|  1659 | sim/super-mind.ts           |   616 | sim/economy.ts            |
+|  1363 | ui/super-neural.ts          |   604 | sim/entities.ts           |
+|  1230 | styles/app.css              |   590 | sim/instanced-entities.ts |
+|  1186 | sim/titans.ts               |   579 | server/copilot.ts         |
+|  1101 | ui/nhi-observatory.ts       |   567 | sim/super-qubits.ts       |
+|   811 | sim/tsotchke-deep-wire.ts   |   559 | ui/center-hud.ts          |
+|   806 | sim/super-body.ts           |   543 | sim/petri-dish.ts         |
+|   714 | sim/environment.ts          |   535 | sim/libirrep-qec.ts       |
+|   694 | sim/emergence-angles.ts     |   532 | math/eshkol-ad.ts         |
 
-`observatory 658 · quantum 396 · graph-mind 389 · viz3d 309 · singularities 286 · atmosphere 276 ·
-reaction-diffusion 273 · phyla 264 · analytics 252 · songs 218 · store 214 · brains 205 ·
-audio-analysis 202 · instanced 191 · audit 190 · spatial-hash 188 · heap 181 · games 180 ·
-nan-stability 179 · nhi 166 · algorithms 161 · genome 153 · perf-budget 144 · lore 142 ·
-quantum-cloud 132 · entities-death 125 · determinism 124 · leviathans 119 · scalar 116 ·
-wave1-foundations 113 · render-modes 110 · weather 108 · feature-determinism 108 · lineage 100 ·
-factions 98 · rng 94 · nhi-system 91 · ai-sandbox 89 · viz-systems 80 · artifacts 72 · quality 63 ·
-contrast 62 · doc-links 57 · a11y-static 45`.
+### `tests/` — heaviest files (152 files · 19,687 lines total)
+
+`observatory 658 · quantum 462 · graph-mind 389 · viz3d 309 · super-qubits 289 · singularities 286 ·
+atmosphere 276 · reaction-diffusion 273 · phyla 264 · analytics 252 · economy 250 · moonlab-vqe 240` ·
+… (full list via `bun run metrics`).
 
 ---
 
