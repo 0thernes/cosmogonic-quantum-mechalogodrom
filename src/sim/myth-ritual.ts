@@ -212,9 +212,10 @@ export class MythRitual {
    * Create a new myth.
    */
   private createMyth(): void {
+    const id = this.nextMythId++;
     const myth: Myth = {
-      id: this.nextMythId++,
-      title: `Myth-${this.nextMythId}`,
+      id,
+      title: `Myth-${id}`,
       content: this.generateMythContent(),
       believers: 1,
       strength: 0.5,
@@ -270,9 +271,10 @@ export class MythRitual {
    * Create a new ritual.
    */
   private createRitual(): void {
+    const id = this.nextRitualId++;
     const ritual: Ritual = {
-      id: this.nextRitualId++,
-      name: `Ritual-${this.nextRitualId}`,
+      id,
+      name: `Ritual-${id}`,
       action: this.generateRitualAction(),
       practitioners: 1,
       frequency: 0.5,
@@ -302,9 +304,10 @@ export class MythRitual {
    * Create a new taboo.
    */
   private createTaboo(): void {
+    const id = this.nextTabooId++;
     const taboo: Taboo = {
-      id: this.nextTabooId++,
-      name: `Taboo-${this.nextTabooId}`,
+      id,
+      name: `Taboo-${id}`,
       forbiddenAction: this.generateTabooAction(),
       respecters: 1,
       strength: 0.7,
@@ -334,9 +337,10 @@ export class MythRitual {
    * Create a new symbol.
    */
   private createSymbol(): void {
+    const id = this.nextSymbolId++;
     const symbol: Symbol = {
-      id: this.nextSymbolId++,
-      representation: this.nextSymbolId,
+      id,
+      representation: id,
       meaning: this.generateSymbolMeaning(),
       users: 1,
       age: 0,
@@ -373,39 +377,47 @@ export class MythRitual {
    */
   private decayCulture(): void {
     const decay = this.config.decayRate;
+    // A cultural element is forgotten once its hold fades below this. Removal is
+    // driven by the smoothly-decaying strength/frequency (and the float user count
+    // for symbols) — NOT by Math.floor of an integer count, which rounded a fresh
+    // element's count of 1 down to 0 on its very FIRST decay step (every element
+    // born this step() is decayed in the same step()), deleting all culture before
+    // it could ever persist.
+    const FADED = 1e-3;
 
-    // Decay myths
+    // Decay myths (population count kept as a smooth float, no instant floor-to-zero)
     for (const myth of this.culture.myths) {
       myth.age++;
       myth.strength = clamp01(myth.strength - decay);
-      myth.believers = Math.max(0, Math.floor(myth.believers * (1 - decay)));
+      myth.believers = Math.max(0, myth.believers * (1 - decay));
     }
 
     // Decay rituals
     for (const ritual of this.culture.rituals) {
       ritual.age++;
       ritual.frequency = clamp01(ritual.frequency - decay);
-      ritual.practitioners = Math.max(0, Math.floor(ritual.practitioners * (1 - decay)));
+      ritual.practitioners = Math.max(0, ritual.practitioners * (1 - decay));
     }
 
     // Decay taboos
     for (const taboo of this.culture.taboos) {
       taboo.age++;
       taboo.strength = clamp01(taboo.strength - decay);
-      taboo.respecters = Math.max(0, Math.floor(taboo.respecters * (1 - decay)));
+      taboo.respecters = Math.max(0, taboo.respecters * (1 - decay));
     }
 
-    // Decay symbols
+    // Decay symbols (no strength field — fade by their own user count)
     for (const symbol of this.culture.symbols) {
       symbol.age++;
-      symbol.users = Math.max(0, Math.floor(symbol.users * (1 - decay)));
+      symbol.users = Math.max(0, symbol.users * (1 - decay));
     }
 
-    // Remove decayed culture
-    this.culture.myths = this.culture.myths.filter((m) => m.believers > 0);
-    this.culture.rituals = this.culture.rituals.filter((r) => r.practitioners > 0);
-    this.culture.taboos = this.culture.taboos.filter((t) => t.respecters > 0);
-    this.culture.symbols = this.culture.symbols.filter((s) => s.users > 0);
+    // Remove fully-faded culture by the continuous fade metric, so culture now
+    // persists and turns over instead of vanishing the instant it is created.
+    this.culture.myths = this.culture.myths.filter((m) => m.strength > FADED);
+    this.culture.rituals = this.culture.rituals.filter((r) => r.frequency > FADED);
+    this.culture.taboos = this.culture.taboos.filter((t) => t.strength > FADED);
+    this.culture.symbols = this.culture.symbols.filter((s) => s.users > FADED);
   }
 
   /**

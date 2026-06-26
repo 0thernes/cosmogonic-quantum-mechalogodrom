@@ -162,6 +162,15 @@ export function validateModification(
     const change = proposal.change as { complexity?: number };
     if (change.complexity && change.complexity > config.maxComplexity) return false;
   }
+  // The LIVE metric grows x1.1 per accepted architecture/faculty mod (see applyModification); the
+  // declared-field check above misses faculty mods entirely and never inspects the running total.
+  // Reject when the projected live complexity would breach the budget, so it can't grow unbounded.
+  if (
+    (proposal.type === 'architecture' || proposal.type === 'faculty') &&
+    _currentMetrics.complexity * 1.1 > config.maxComplexity
+  ) {
+    return false;
+  }
 
   // Check for self-destruction (extreme negative impact)
   if (proposal.impact < -0.5) return false;

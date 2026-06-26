@@ -391,7 +391,9 @@ export function vmcStep(
 function seededRng(seed: number): () => number {
   let s = seed;
   return () => {
-    s = (s * 1103515245 + 12345) & 0x7fffffff;
+    // Math.imul keeps the 32-bit multiply exact; plain `s * 1103515245` exceeds 2^53 and loses
+    // the low-order bits to float rounding before the mask, degrading the LCG it imitates.
+    s = (Math.imul(s, 1103515245) + 12345) & 0x7fffffff;
     return s / 0x7fffffff;
   };
 }

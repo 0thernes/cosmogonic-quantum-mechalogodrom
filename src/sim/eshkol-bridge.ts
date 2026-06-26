@@ -56,6 +56,8 @@ export class EshkolConsciousnessEngine {
 
   // Master expansion (Eshkol COMPLETE spec fidelity): KB store for biologics (Eshkol KB from local corpus)
   private kbFacts: Map<string, number> = new Map();
+  /** Cap on the exact-key `kbFacts` store so a float-keyed hot caller can't grow it without bound. */
+  private readonly KB_FACTS_MAX = 1024;
 
   constructor(logic = 0.5, inference = 0.5, workspace = 0.5) {
     this.logic = clamp01(logic);
@@ -77,6 +79,12 @@ export class EshkolConsciousnessEngine {
     this.factKeys[slot] = key;
     this.facts[slot] = clamp01(val);
     this.kbFacts.set(key, clamp01(val));
+    // Bound the exact-key store: a per-beat float-derived key would otherwise grow it without
+    // limit. FIFO-evict the oldest entry past the cap (Map preserves insertion order).
+    if (this.kbFacts.size > this.KB_FACTS_MAX) {
+      const oldest = this.kbFacts.keys().next().value;
+      if (oldest !== undefined) this.kbFacts.delete(oldest);
+    }
     this.logic = clamp01(this.logic * 0.7 + 0.3);
   }
   kbQuery(pattern: string): number {
