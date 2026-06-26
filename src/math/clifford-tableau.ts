@@ -202,7 +202,7 @@ export class CliffordTableau {
   measure(a: number, rng: Rng): CliffordMeasure {
     if (a < 0 || a >= this.n)
       throw new RangeError(`CliffordTableau: qubit ${a} out of [0, ${this.n})`);
-    const { x, z, r, n, rows } = this;
+    const { x, z, r, n } = this;
     let p = -1;
     for (let i = n; i < 2 * n; i++) {
       if (x[i * n + a]) {
@@ -243,7 +243,6 @@ export class CliffordTableau {
     for (let i = 0; i < n; i++) {
       if (x[i * n + a]) this.rowsum(scratch, i + n);
     }
-    void rows;
     return { outcome: (r[scratch] ?? 0) === 0 ? 0 : 1, deterministic: true };
   }
 

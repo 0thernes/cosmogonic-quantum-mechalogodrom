@@ -75,7 +75,7 @@ export function kuramotoStep(
   dt: number,
 ): number[] {
   const n = phases.length;
-  const next = new Array<number>(n);
+  const next = Array.from<number>({ length: n });
   for (let i = 0; i < n; i++) {
     const thetaI = phases[i] ?? 0;
     let coupling = 0;
@@ -121,7 +121,7 @@ export function resonantConsensus(
   const weights = coherenceWeights(phases, psi);
   let width = 0;
   for (const v of vectors) if (v.length > width) width = v.length;
-  const acc = new Array<number>(width).fill(0);
+  const acc = Array.from({ length: width }, () => 0);
   let wSum = 0;
   for (let i = 0; i < vectors.length; i++) {
     const w = weights[i] ?? 0;

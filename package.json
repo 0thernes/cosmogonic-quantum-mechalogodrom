@@ -1,13 +1,12 @@
 {
   "name": "cosmogonic-quantum-mechalogodrom",
-  "version": "0.17.1",
-  "description": "Tsotchke-powered Petri dish for NHSI digital biologics & proto-sentience. 22+ Tsotchke repos integrated (see TSOTCHKE-INTEGRATION-MAP: deep + harvest + studied; LLM fenced). Eshkol AD/GWT, Moonlab, QGT, spin, libirrep, quake, ulg, logo, tensorcore, PINN, PIMC, rngs, asteroids, classical, homebrew. 26 BiologicForms · 25 Archons · 144 faculties · 25 ToM organs · 15 emergence angles · 14/14 structural path. Deterministic Rng, not LLM. 0thernes Corp NHSI. Grow What Thou Wilt. v0.17.1",
+  "version": "0.18.0",
+  "description": "Tsotchke-powered Petri dish for NHSI digital biologics & proto-sentience. 22+ Tsotchke repos integrated (see TSOTCHKE-INTEGRATION-MAP: deep + harvest + studied; LLM fenced). Eshkol AD/GWT, Moonlab, QGT, spin, libirrep, quake, ulg, logo, tensorcore, PINN, PIMC, rngs, asteroids, classical, homebrew. 26 BiologicForms · 25 Archons · 144 faculties · 25 ToM organs · 15 emergence angles · 14/14 structural path. Deterministic Rng, not LLM. 0thernes Corp NHSI. Grow What Thou Wilt. v0.18.0",
   "license": "SEE LICENSE IN LICENSE",
   "private": true,
   "type": "module",
   "scripts": {
-    "prepare": "git config core.hooksPath .githooks 2>/dev/null || true",
-    "sync": "bun scripts/sync-canon.ts",
+    "prepare": "git config core.hooksPath .githooks || true",
     "dev": "bun scripts/harvest-tsotchke-corpus.ts && bun --hot server.ts",
     "start": "bun server.ts",
     "build": "bun scripts/build.ts",
@@ -21,8 +20,10 @@
     "sbom": "bun scripts/sbom.ts",
     "bench": "bun bench/index.ts",
     "filemap": "bun scripts/gen-filemap.ts",
-    "check": "bun run format:check && bun run typecheck && bun run lint && bun test && bun run verify:receipts && bun run build",
+    "check": "bun run format:check && bun run typecheck && bun run lint && bun test && bun run verify:receipts && bun run sync:check && bun run build",
     "verify:receipts": "bun scripts/verify-receipts.ts",
+    "sync": "bun scripts/sync-surfaces.ts",
+    "sync:check": "bun scripts/sync-surfaces.ts --check",
     "harvest:tsotchke": "bun scripts/harvest-tsotchke-corpus.ts"
   },
   "dependencies": {

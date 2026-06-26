@@ -84,7 +84,7 @@ export class MindField {
     let energy = 0;
     let peak = 0;
     let peakCh = 0;
-    const chEnergy = new Array<number>(this.channels).fill(0);
+    const chEnergy = Array.from({ length: this.channels }, () => 0);
     for (let c = 0; c < this.channels; c++) {
       for (let k = 0; k < this.dim; k++) {
         const v = this.buf[c * this.dim + k] ?? 0;

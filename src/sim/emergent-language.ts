@@ -181,8 +181,8 @@ export class EmergentLanguage {
    * Create a new sign in the lexicon.
    */
   private createSign(signId?: number): Sign {
-    // `?? this.nextSignId++` already advances the counter once when signId is omitted; a second
-    // `nextSignId++` here double-advanced it, so mutation-minted sign IDs skipped every other integer.
+    // `this.nextSignId++` already advances the counter when signId is undefined; a second
+    // increment here would skip every other id (0, 2, 4, …) and overstate the sign count.
     const id = signId ?? this.nextSignId++;
 
     const sign: Sign = {

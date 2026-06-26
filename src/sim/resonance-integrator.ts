@@ -87,7 +87,7 @@ const clamp01 = (v: number): number => (v < 0 ? 0 : v > 1 ? 1 : v);
 /**
  * Compute the phase of a faculty from its activation vector.
  * Maps activation to a complex phase on the unit circle via:
- *   angle = atan2(mean, variance) * π
+ *   angle = atan2(variance, mean)  ∈ [0, π]  (honors the FacultyPhase [-π, π] contract)
  *   magnitude = sqrt(mean² + variance²)
  * This is a heuristic; any faculty can provide a phase directly.
  */
@@ -106,7 +106,9 @@ export function facultyPhaseFromActivation(
   const mean = n > 0 ? sum / n : 0;
   const variance = n > 1 ? sumSq / n - mean * mean : 0;
   const mag = Math.sqrt(mean * mean + variance * variance);
-  const angle = Math.atan2(variance, mean) * Math.PI;
+  // atan2 already returns radians in [-π, π]; the old `* Math.PI` pushed `angle` up to ~π² (≈9.87),
+  // breaking the FacultyPhase contract and findCoalition's phase-wrap. variance ≥ 0 ⇒ angle ∈ [0, π].
+  const angle = Math.atan2(variance, mean);
   return {
     id,
     re: mag * Math.cos(angle),
@@ -161,8 +163,10 @@ export function findCoalition(
   const coalition: number[] = [];
   for (let i = 0; i < n; i++) {
     const p = phases[i]!;
-    const diff = Math.abs(p.angle - meanAngle);
-    const wrappedDiff = diff > Math.PI ? 2 * Math.PI - diff : diff;
+    // True circular distance ∈ [0, π], robust to any angle representation (a raw diff > 2π used to
+    // wrap to a NEGATIVE value and trivially pass `<= tolerance`, admitting out-of-phase faculties).
+    let wrappedDiff = (((p.angle - meanAngle) % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
+    if (wrappedDiff > Math.PI) wrappedDiff = 2 * Math.PI - wrappedDiff;
     if (wrappedDiff <= tolerance) {
       coalition.push(p.id);
     }

@@ -1,54 +1,98 @@
-# AUDIT LOG — the one place
+# Audit Log (centralized)
 
-**This is the single, centralized, chronological log for every audit, review, and assessment.**
+**One place for the project's audit history.** New audits, reviews, and fix-passes append a dated
+entry HERE (newest first) instead of spawning a new standalone report file each time. The dated
+reports under [`docs/reports/`](./reports/) and the `docs/*AUDIT*` / `docs/*REPORT*` files are a
+**frozen historical archive** (point-in-time worldline snapshots) — indexed at the bottom of this
+file, not added to. Live facts (version, test/coverage receipts) are propagated automatically by
+`scripts/sync-surfaces.ts`; this log records what changed and why.
 
-The rule (so this never sprawls again):
+---
 
-> **New audit? Append ONE dated row to the table below. Do NOT create a new
-> `*-AUDIT-*.md` / `*-REPORT-*.md` / `*-ASSESSMENT-*.md` file.** A finding that
-> changes a measured number updates the **source of truth**, not a prose report —
-> then `bun run sync` propagates it to every surface. One fact, one place.
+## 2026-06-26 — Math-correctness pass (unwired research leaves)
 
-Why: the project had accumulated ~40 overlapping audit/report files (five
-different "comprehensive" whole-repo audits, a 188 KB `RALPH_10X_LOG.txt`, five
-`RALPH-LOOP-ITER*` process dumps, an empty `FULL_CORPUS_INTEGRATION_AUDIT.md`).
-That is tech debt: the same conclusions, re-derived and re-filed, drifting out of
-sync. This log replaces that pattern.
+Independent sequential file-by-file sweep; fixes verified against the full gate. All in unwired,
+untested research modules (no live telemetry consumer — golden-safe), so the math is now correct
+without changing any wired behavior:
 
-## Sources of truth (read these — they are always current)
+- `math/mixed-state-qgt.ts` — the von-Neumann (linear) entropy summed only the FIRST ROW of ρ
+  (`computeEntropy(…, dim)` vs the purity's correct `d2`); now sums all d² entries. And
+  `statevectorToDensityMatrix` wrote ρᵀ — the imaginary part of ρ_ij = ψ_i·conj(ψ_j) was sign-flipped;
+  corrected to `ai·br − ar·bi`.
+- `sim/resonance-integrator.ts` — `facultyPhaseFromActivation` multiplied an `atan2` result by π,
+  pushing `angle` to ~π² and breaking the documented [-π, π] contract; `findCoalition`'s phase-wrap
+  then produced a NEGATIVE distance that trivially admitted out-of-phase faculties. Removed the bogus
+  `* π` and hardened the wrap to a true circular distance ∈ [0, π].
 
-| Fact                     | Lives in                                                                            | Propagated by                                                                                    |
-| ------------------------ | ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
-| Version                  | `package.json` `version`                                                            | `bun run sync` → README badge + headlines; gated by `tests/docs-canon-law.test.ts`               |
-| Test count / coverage    | `scripts/canonical-receipts.ts`                                                     | `bun run sync` (`.sync-receipts.cjs`) → all surfaces; gated by `tests/docs-receipts-law.test.ts` |
-| NHSI progress (verified) | [NHSI-PROGRESS-DASHBOARD.md](./NHSI-PROGRESS-DASHBOARD.md)                          | hand-curated; honesty-audited (see 2026-06-21 row)                                               |
-| Architecture             | [ARCHITECTURE.md](./ARCHITECTURE.md) · [MODULE-CONTRACTS.md](./MODULE-CONTRACTS.md) | living docs                                                                                      |
-| Tsotchke wiring          | [TSOTCHKE-INTEGRATION-MAP.md](./TSOTCHKE-INTEGRATION-MAP.md)                        | living doc                                                                                       |
-| Honesty claims           | enforced by `tests/docs-truth-law.test.ts`                                          | the gate                                                                                         |
+## 2026-06-26 — Consistency + flow pass
 
-## The log
+- **Single-source sync + auto-push/auto-sync hooks.** `package.json` version and the canonical
+  receipts (`scripts/canonical-receipts.ts`) are now the single sources of truth, propagated to
+  every MD/HTML surface by `scripts/sync-surfaces.ts` (surgical on version — historical refs
+  preserved). `core.hooksPath` is wired (`prepare`), so the `pre-commit` hook auto-syncs surfaces
+  and the `post-commit` hook auto-pushes the branch — local and GitHub stay in lockstep with no
+  manual round-trip. `bun run sync:check` is in the gate so drift fails CI.
+- **Drift fixed:** canonical function coverage 87.88 -> measured 87.91 (propagated everywhere);
+  `ARCHITECTURE.md` stale "0.16.1+ master" -> 0.17.1+.
+- **Report sprawl consolidated:** this centralized log replaces the practice of one-file-per-audit;
+  the standalone 2026-06-26 line-by-line report was folded into the entry below.
 
-Newest first. **Status** is `canonical` (the current source for its scope),
-`superseded` (kept for provenance; a newer row covers the same ground), or
-`historical` (a point-in-time snapshot, not maintained).
+## 2026-06-26 — Line-by-line source audit + fixes
 
-| Date               | Audit / scope                                                                                                                                                                                                                                                                                                                        | Status                                                                                                                                                        | Where                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2026-06-26         | Line-by-line code + supply-chain + docs/flow audit — fixed the dead ADR-0009 soup-rebirth loop, the HMR teardown leak, a dompurify CVE, `mixed-state-qgt` ρ sign, causal-graph/emergent-language bugs; verified the math/sim/ui/server cores; built the auto-push hook + `sync-canon` single-source machinery; consolidated this log | canonical                                                                                                                                                     | this file + git history (branch `claude/audit-log-upgrade-debug`)                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| 2026-06-21         | NHSI honesty audit — every progress number re-measured by `file:line`                                                                                                                                                                                                                                                                | **canonical**                                                                                                                                                 | [reports/2026-06-21-NHSI-HONESTY-AUDIT.md](./reports/2026-06-21-NHSI-HONESTY-AUDIT.md)                                                                                                                                                                                                                                                                                                                                                                                                                                          |
-| 2026-06-21         | NHSI founding manifesto / 0thernes Corp                                                                                                                                                                                                                                                                                              | canonical                                                                                                                                                     | [reports/2026-06-21-NHSI-FOUNDING-MANIFESTO-0THERNES-CORP.md](./reports/2026-06-21-NHSI-FOUNDING-MANIFESTO-0THERNES-CORP.md) · [reports/2026-06-21-NHSI-MANIFESTO-0THERNES-CORP.md](./reports/2026-06-21-NHSI-MANIFESTO-0THERNES-CORP.md)                                                                                                                                                                                                                                                                                       |
-| 2026-06-21         | Comprehensive NHSI audit                                                                                                                                                                                                                                                                                                             | superseded (by the honesty audit)                                                                                                                             | [COMPREHENSIVE-NHSI-AUDIT-2026-06-21.md](./COMPREHENSIVE-NHSI-AUDIT-2026-06-21.md)                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| 2026-06-20         | Independent + master-architect deep-dive audits; integration blueprint; path-to-NHSI super-report                                                                                                                                                                                                                                    | historical                                                                                                                                                    | [reports/](./reports/) (`2026-06-20-*`)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
-| 2026-06-20         | Tsotchke OMNISCIENT / PARADIGM / ULTIMATE-COMPREHENSIVE master audits (overlapping whole-corpus passes)                                                                                                                                                                                                                              | superseded (by [TSOTCHKE-INTEGRATION-MAP.md](./TSOTCHKE-INTEGRATION-MAP.md))                                                                                  | [TSOTCHKE-OMNISCIENT-MASTER-AUDIT-2026-06-20-FINAL.md](./TSOTCHKE-OMNISCIENT-MASTER-AUDIT-2026-06-20-FINAL.md) · [TSOTCHKE-PARADIGM-MASTER-AUDIT-2026-06-20-FINAL.md](./TSOTCHKE-PARADIGM-MASTER-AUDIT-2026-06-20-FINAL.md) · [TSOTCHKE-ULTIMATE-COMPREHENSIVE-AUDIT-REPORT-ASSESSMENT-2026-06-20.md](./TSOTCHKE-ULTIMATE-COMPREHENSIVE-AUDIT-REPORT-ASSESSMENT-2026-06-20.md) · [OMNISCIENT-TSOTCHKE-COSMOGONIC-MASTER-REPORT-2026-06-20-CONTINUED.md](./OMNISCIENT-TSOTCHKE-COSMOGONIC-MASTER-REPORT-2026-06-20-CONTINUED.md) |
-| 2026-06-19         | Tsotchke corpus wiring audit                                                                                                                                                                                                                                                                                                         | superseded (by [TSOTCHKE-INTEGRATION-MAP.md](./TSOTCHKE-INTEGRATION-MAP.md) + [TSOTCHKE_CORPUS_INTEGRATION_AUDIT.md](./TSOTCHKE_CORPUS_INTEGRATION_AUDIT.md)) | [TSOTCHKE-CORPUS-RALPH-WIRING-AUDIT-2026-06-19.md](./TSOTCHKE-CORPUS-RALPH-WIRING-AUDIT-2026-06-19.md)                                                                                                                                                                                                                                                                                                                                                                                                                          |
-| 2026-06-17         | State-of-the-art (combined / super-creature / whole-repo)                                                                                                                                                                                                                                                                            | superseded (by 2026-06-20 deep-dives)                                                                                                                         | [reports/](./reports/) (`2026-06-17-STATE-OF-THE-ART-*`)                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
-| 2026-06-16         | State-of-the-art (combined / super-creature / whole-repo)                                                                                                                                                                                                                                                                            | superseded (by 2026-06-17)                                                                                                                                    | [reports/](./reports/) (`2026-06-16-STATE-OF-THE-ART-*`)                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
-| 2026-06-13 → 06-20 | Dated audit bundles (architecture/security/code-review/500-point/deep-dive + CSV ledgers)                                                                                                                                                                                                                                            | historical                                                                                                                                                    | [audit-2026-06-13/](./audit-2026-06-13/) · [audit-2026-06-15/](./audit-2026-06-15/) · [audit-2026-06-16/](./audit-2026-06-16/) · [audit-2026-06-17-DEEP-CLAIMS-VERIFICATION.md](./audit-2026-06-17-DEEP-CLAIMS-VERIFICATION.md) · [audit-2026-06-20-deep-dive/](./audit-2026-06-20-deep-dive/)                                                                                                                                                                                                                                  |
+Obsessive file-by-file review; every fix verified against the full gate (prettier + tsc strict +
+oxlint 0 + tests + receipts + build) and classified by wiring before changing.
 
-### Removed 2026-06-26 (pure process noise, no reference value)
+- **Gate restored:** the container had no `node_modules` (gate couldn't run); installed.
+- **Lint 27 warnings -> 0:** removed cosmetic `x = x` "Ralph 10x" grafts (`quantum.ts`,
+  `super-mind.ts`); converted 23 `new Array(n)` -> `Array.from`; renamed Eshkol AST `then`/`else`
+  -> `consequent`/`alternate` (no-thenable); removed stale `eslint-disable`s + a garbled `hashSeed`
+  JSDoc graft.
+- **Supply chain:** `dompurify` override `^3.4.9` -> `^3.4.11` (clears GHSA-cmwh-pvxp-8882; the CI
+  supply-chain audit failure).
+- **8 latent bugs fixed** (all in unwired/unread paths — golden-safe):
+  - `causal-graph.ts` — do(X=x) cut edges OUT of X (should be INTO X), defeating interventions.
+  - `tsotchke-deep-wire.ts` — SU(2) character table returned NaN (0/0); use Dirichlet limit 2j+1.
+  - `nqs-vmc-learning.ts` — VMC samples seeded all-zero (`float >>> k` = 0); scale to uint32 first.
+  - `morphic-field.ts` — malformed EMA (coeff ~1.93, saturating); reduced to a proper tau-decay EMA.
+  - `narrative-memory.ts` — ring wraparound bug in the "now" timestamp.
+  - `emergent-language.ts` — double-increment skipping every other sign id.
+  - `integrated-information.ts` — `computeLocalIntegration` always returned 1; made a real share.
+  - `quantum-qrng-full.ts` latent unchecked index; `clifford-tableau.ts` unused-var graft.
+- **Verified clean:** audit subsystem (`logging/*`, server `/api/audit`), server security
+  (`ai-sandbox`, `web-search`, `copilot` secret handling), 16 math kernels (SVD, Crank-Nicolson,
+  Clifford, Wigner/CG/6j/9j), `world.ts` `Date.now` containment, `verify-receipts.ts`. An
+  adversarial finder->verify workflow over the sim/ui clusters returned zero confirmed bugs.
+- **Noted, not changed:** `brutal-god-releases.ts` duplicated block (wired flavor module, golden
+  regen risk on ambiguous intent); `tsotchke-registry` honesty-metric (documented policy item).
 
-`TSOTCHKE_RALPH_10X_LOG.txt` (188 KB loop dump) · `TSOTCHKE_WIRING_AUDIT_LOG.txt`
-· `TSOTCHKE_WIRING_ITER_LOG.txt` · `TSOTCHKE-RALPH-LOOP-{10X-ITER-REPORT,10X-SURGE-2,ITER0-AUDIT,ITER0-STATUS,ITER1-5-REPORT}.md`
-· `TSOTCHKE_FULL_CORPUS_INTEGRATION_AUDIT.md` (was empty). Recoverable from git
-history if ever needed; provenance comments that pointed at them now point at
-[TSOTCHKE-INTEGRATION-MAP.md](./TSOTCHKE-INTEGRATION-MAP.md).
+---
+
+## Historical archive index
+
+Point-in-time reports, grouped. These are frozen — read for history, do not extend.
+
+**NHSI / honesty / progress**
+
+- [`reports/2026-06-21-NHSI-HONESTY-AUDIT.md`](./reports/2026-06-21-NHSI-HONESTY-AUDIT.md) — the
+  canonical honesty scorecard (referenced by README/CLAUDE/AGENTS + the truth-law gate).
+- [`reports/2026-06-21-NHSI-MANIFESTO-0THERNES-CORP.md`](./reports/2026-06-21-NHSI-MANIFESTO-0THERNES-CORP.md),
+  [`reports/2026-06-21-NHSI-FOUNDING-MANIFESTO-0THERNES-CORP.md`](./reports/2026-06-21-NHSI-FOUNDING-MANIFESTO-0THERNES-CORP.md)
+- [`NHSI-PROGRESS-DASHBOARD.md`](./NHSI-PROGRESS-DASHBOARD.md) (living), [`reports/2026-06-20-RESEARCH-BEDROCK.md`](./reports/2026-06-20-RESEARCH-BEDROCK.md),
+  [`reports/2026-06-20-SUPER-REPORT-PATH-TO-NHSI-AND-SENTIENCE.md`](./reports/2026-06-20-SUPER-REPORT-PATH-TO-NHSI-AND-SENTIENCE.md)
+
+**State-of-the-art / deep dives**
+
+- [`reports/2026-06-17-STATE-OF-THE-ART-COMBINED.md`](./reports/2026-06-17-STATE-OF-THE-ART-COMBINED.md)
+  (+ `-SUPER-CREATURE`, `-WHOLE-REPO`; and the 2026-06-16 set)
+- [`reports/2026-06-20-INDEPENDENT-DEEP-DIVE-AUDIT.md`](./reports/2026-06-20-INDEPENDENT-DEEP-DIVE-AUDIT.md),
+  [`reports/2026-06-20-MASTER-ARCHITECT-DEEP-DIVE-AUDIT.md`](./reports/2026-06-20-MASTER-ARCHITECT-DEEP-DIVE-AUDIT.md),
+  [`audit-2026-06-20-deep-dive/`](./audit-2026-06-20-deep-dive/)
+- [`reports/2026-06-20-BLEEDING-EDGE-NOVELTY-WORLD-CLASS-ASSESSMENT.md`](./reports/2026-06-20-BLEEDING-EDGE-NOVELTY-WORLD-CLASS-ASSESSMENT.md)
+
+**Tsotchke corpus integration**
+
+- [`TSOTCHKE-INTEGRATION-MAP.md`](./TSOTCHKE-INTEGRATION-MAP.md) (living),
+  `TSOTCHKE-*-AUDIT-*.md` / `TSOTCHKE-RALPH-LOOP-*.md` (frozen iteration logs).
+
+**Earlier worldlines:** [`audit-2026-06-13/`](./audit-2026-06-13/), [`audit-2026-06-15/`](./audit-2026-06-15/),
+[`audit-2026-06-16/`](./audit-2026-06-16/), [`reports/2026-06-18-*`](./reports/).

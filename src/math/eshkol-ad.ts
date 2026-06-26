@@ -90,7 +90,7 @@ const AD_TAPE_INIT_CAP = 64;
  */
 export function adTapeNew(initialCapacity = AD_TAPE_INIT_CAP): AdTape {
   const cap = initialCapacity > 0 ? initialCapacity : AD_TAPE_INIT_CAP;
-  const nodes: AdNode[] = new Array(cap);
+  const nodes: AdNode[] = Array.from<AdNode>({ length: cap });
   for (let i = 0; i < cap; i++) {
     nodes[i] = {
       op: AdOpType.AD_CONST,

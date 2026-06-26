@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.18.0] - 2026-06-26
+
+### SYNC & SHIP — single source of truth, seamless local↔GitHub, correctness sweep
+
+- **Single-source consistency.** `package.json` version + `scripts/canonical-receipts.ts` are the only
+  places version/test/coverage facts are edited; `scripts/sync-surfaces.ts` (`bun run sync`,
+  `bun run sync:check` gate-enforced) propagates them to every surface. This release reconciles the
+  full version surface to **v0.18.0** (the README/docs.html badges plus the previously-missed
+  `TECHNICAL-SPECIFICATION` / `NHSI-PROGRESS-DASHBOARD` / `specs.html` / `ARCHITECTURE` headers that
+  the propagator did not yet cover), so local == GitHub == the release tag.
+- **Seamless flow.** `.githooks/post-commit` auto-pushes every commit; the `prepare` script wires
+  `core.hooksPath` on install. A commit ships to GitHub — no manual round-trip; CI/CD fires on push.
+- **Centralized audit log.** [docs/AUDIT-LOG.md](./docs/AUDIT-LOG.md) is the single, append-only ledger;
+  `docs/reports/*` + `docs/*AUDIT*` are a frozen historical archive (no new per-pass report files).
+- **Correctness sweep (line-by-line, adversarially verified):** causal-graph do-op direction, SU(2)
+  character-table NaN (Dirichlet limit), NQS all-zero sample init, IIT `computeLocalIntegration`
+  (was constant 1), morphic-field EMA, narrative-memory ring wrap, emergent-language sign ids,
+  myth-ritual culture persistence, plus 27→0 oxlint warnings and a `dompurify` advisory bump.
+- **Heritable digital biologics (ADR-0009):** reborn primordial-soup strains breed from two living
+  parents via seeded `recombine()` (golden untouched); genetics wired into the entity + NHI spawn path.
+
 ## [0.17.1] - 2026-06-21
 
 ### BRUTALISM god-scale wiring — emergence 10/10, brutal biologics, receipts sync

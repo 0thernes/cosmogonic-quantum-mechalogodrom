@@ -1,28 +1,14 @@
 #!/bin/sh
-# AUTO-PUSH every commit to its upstream — seamless local→GitHub flow (Instant Transmission).
+# Seamless local -> GitHub: auto-push every commit to its upstream the instant it lands, so the
+# working branch on GitHub is never behind local and there is no manual "git push" round-trip.
 #
-# The one-dev flow: `git commit` here = it's on GitHub a beat later, so CI/CD (the gate, the
-# Pages build, the release workflow) fires without any manual `git push`. No back-and-forth.
-#
-# Safety: post-commit runs AFTER the commit is written, so a failed push NEVER loses work — the
-# commit stays local and the next successful push (or `git push`) ships it. Skips detached HEAD and
-# any in-progress rebase/merge/cherry-pick so it never pushes a half-finished history. Enable once
-# per clone with `git config core.hooksPath .githooks` (the `prepare` npm script does this on install).
-set -e
-
-branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo HEAD)
-[ "$branch" = "HEAD" ] && exit 0 # detached (rebase/bisect/tag checkout) — don't push
-
-gitdir=$(git rev-parse --git-dir 2>/dev/null || echo .git)
-for marker in rebase-merge rebase-apply MERGE_HEAD CHERRY_PICK_HEAD REVERT_HEAD BISECT_LOG; do
-  [ -e "$gitdir/$marker" ] && exit 0 # mid-operation — let it finish first
-done
-
-# Push the current branch to its tracking remote; fall back to setting upstream on first push.
-# All non-fatal: the commit is already safe locally.
-if git rev-parse --abbrev-ref --symbolic-full-name '@{upstream}' >/dev/null 2>&1; then
-  git push --quiet 2>/dev/null || echo "post-commit: push deferred (offline?) — run 'git push' to ship $branch"
-else
-  git push --quiet -u origin "$branch" 2>/dev/null || echo "post-commit: push deferred — run 'git push -u origin $branch'"
-fi
+# - Pushes the CURRENT branch to origin, setting upstream on first push.
+# - NON-blocking: a failed push (offline / rejected) never harms the commit (it stays local; the
+#   next commit's push, or a manual push, ships it).
+# - Opt out per clone with:  git config hooks.autopush false
+# Enabled via core.hooksPath .githooks (wired by the `prepare` npm/bun script on install).
+[ "$(git config --bool hooks.autopush 2>/dev/null)" = "false" ] && exit 0
+branch="$(git rev-parse --abbrev-ref HEAD 2>/dev/null)"
+[ -z "$branch" ] || [ "$branch" = "HEAD" ] && exit 0
+git push -u origin "$branch" >/dev/null 2>&1 || echo "post-commit: auto-push deferred (push failed; commit is safe locally)"
 exit 0

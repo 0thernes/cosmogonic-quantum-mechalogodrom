@@ -46,7 +46,7 @@ export class EshkolConsciousnessEngine {
 
   // FULL Eshkol KB (logic programming substrate from .esk examples + COMPLETE spec)
   private readonly facts = new Float32Array(FACTS);
-  private readonly factKeys = new Array<string>(FACTS).fill('');
+  private readonly factKeys = Array.from({ length: FACTS }, () => '');
   // Factor graph beliefs (active inference from Eshkol §17)
   private readonly beliefs = new Float32Array(BELIEFS);
   private readonly moduleSalience = new Float32Array(MODULES);

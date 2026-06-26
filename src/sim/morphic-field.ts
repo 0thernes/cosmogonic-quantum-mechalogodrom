@@ -68,10 +68,10 @@ export class MorphicField {
     const gain = clamp01(successScore) * RESONANCE_GAIN;
     for (let i = 0; i < FIELD_DIM; i++) {
       const l = (latent[i % latent.length] ?? 0) as number;
-      this.field[i] =
-        (this.field[i] ?? 0) * (1 - FIELD_TAU) +
-        l * gain * FIELD_TAU +
-        (this.field[i] ?? 0) * (1 - gain);
+      // Slow morphic EMA (τ = FIELD_TAU): decay the stored field and blend in the gain-weighted
+      // latent. The prior form added an extra `field*(1-gain)` term, giving field a coefficient of
+      // ~1.93 — it saturated to the clamp ceiling every imprint instead of accumulating patterns.
+      this.field[i] = (this.field[i] ?? 0) * (1 - FIELD_TAU) + l * gain * FIELD_TAU;
     }
     // Moonlab MPO: compress field through bond-dim=4 MPO propagation
     const mpo = moonlabMpoStep(this.field, 4, 4);

@@ -91,17 +91,17 @@ export class QuantumRngFull extends EshkolQrng {
    */
   entropy(): EntropyEstimate {
     // Collect recent samples
-    const samples = new Array(64).fill(0);
+    const samples = Array.from({ length: 64 }, () => 0);
     for (let i = 0; i < samples.length; i++) {
       samples[i] = this.next01();
     }
 
     // Bin samples into histogram
     const bins = 16;
-    const histogram = new Array(bins).fill(0);
+    const histogram = Array.from({ length: bins }, () => 0);
     for (const s of samples) {
       const bin = Math.min(bins - 1, Math.floor(s * bins));
-      histogram[bin]++;
+      histogram[bin] = (histogram[bin] ?? 0) + 1;
     }
 
     // Compute Shannon entropy

@@ -1,12 +1,14 @@
 #!/bin/sh
-# Auto-repair UTF-8 mojibake in docs before EVERY commit (root-cause doc hygiene).
+# Auto-keep every commit's human-readable surfaces consistent with the single sources of truth,
+# so duplicated info (version, test/coverage receipts) can NEVER drift across MD/HTML.
 #
-# The autonomous doc-writing loop corrupts README/docs into Windows-1252 mojibake
-# each cycle. This hook runs the normalizer and re-stages the cleaned canonical
-# docs so corrupted text can never land in a commit, keeping `tests/docs-truth-law`
-# green without manual intervention. Enable once per clone with:
+# 1. normalize-docs : reverse any UTF-8 -> Windows-1252 mojibake (docs-truth-law stays green).
+# 2. sync-surfaces  : propagate package.json `version` + canonical-receipts to every surface.
+# Both are idempotent and NON-blocking (exit 0 always) — they only clean/sync, never reject a commit.
+#
+# Enable once per clone (the `prepare` npm/bun script does this automatically on install):
 #     git config core.hooksPath .githooks
-# Never blocks the commit (exit 0) — it only cleans.
-bun scripts/normalize-docs.ts >/dev/null 2>&1 || exit 0
-git add README.md CHANGELOG.md ROADMAP.md docs index.html docs.html specs.html 2>/dev/null || true
+bun scripts/normalize-docs.ts >/dev/null 2>&1 || true
+bun scripts/sync-surfaces.ts >/dev/null 2>&1 || true
+git add README.md CHANGELOG.md ROADMAP.md docs docs.html specs.html index.html package.json 2>/dev/null || true
 exit 0

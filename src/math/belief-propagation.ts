@@ -103,7 +103,7 @@ export function beliefPropagation(fg: FactorGraph, iterations = 20): Float64Arra
       for (let p = 0; p < vars.length; p++) {
         const vp = vars[p]!;
         const out = new Float64Array(card[p]!);
-        const a = new Array<number>(vars.length).fill(0);
+        const a = Array.from({ length: vars.length }, () => 0);
         for (let lin = 0; lin < total; lin++) {
           // decode lin → assignment a
           let rem = lin;
