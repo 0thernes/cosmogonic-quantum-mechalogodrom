@@ -14,19 +14,27 @@
  * call anywhere in sim logic.
  *
  * Angular-momentum quantum numbers are half-integers represented as JS numbers
- * in steps of 0.5 (e.g. spin-½ → j = 0.5). Degrees are capped at {@link IRREP_J_MAX}
- * so every integer factorial that appears stays EXACT in IEEE-754 float64
- * (Clebsch-Gordan + Wigner-d arguments stay within the exact FACT table; 6j/9j use the log-factorial table LF for their larger ~4*J range).
+ * in steps of 0.5 (e.g. spin-½ → j = 0.5). Degrees are capped at {@link IRREP_J_MAX}.
+ * Clebsch–Gordan + Wigner-d draw their factorials from the linear FACT table (built
+ * to 3·J_MAX+1 = 25!, the largest argument `(j1+j2+J+1)` reaches at J=8); the upper
+ * entries past 18! are not bit-exact in f64, but the balanced numerator/denominator
+ * ratios keep CG/Wigner-d accurate to ~1e-16 (verified by orthonormality at j=8).
+ * 6j/9j need a far larger range (~4·J ≈ 33! at J=8) and use the log-factorial table LF.
  *
  * Refs: Edmonds, *Angular Momentum in Quantum Mechanics* (1957); Varshalovich,
  * Moskalev & Khersonskii, *Quantum Theory of Angular Momentum* (1988); Wigner
  * (1931). Upstream: libirrep `src/wigner_d.c`, `src/clebsch_gordan.c`.
  */
 
-/** Max angular momentum so all factorials below stay exact in float64 (2·J+2 ≤ 18). */
+/** Max angular momentum the closed-form coefficients are validated for. */
 export const IRREP_J_MAX = 8;
 
-/** Exact factorial table 0!..(2·J_MAX+2)!, built once at module load. O(1) lookup. */
+/**
+ * Factorial table 0!..(3·J_MAX+1)! = 0!..25!, built once at module load. 25! is the
+ * largest argument Clebsch–Gordan reaches `(j1+j2+J+1)` at J=8. Entries 0..18 are
+ * bit-exact in f64; 19!..25! carry f64 rounding (~1e-10 rel) but appear only inside
+ * balanced ratios, so CG/Wigner-d stay accurate to ~1e-16. O(1) lookup.
+ */
 const FACT: readonly number[] = (() => {
   const f: number[] = [1];
   for (let n = 1; n <= 3 * IRREP_J_MAX + 1; n++) f.push(f[n - 1]! * n);

@@ -97,6 +97,20 @@ describe('Clebsch–Gordan coefficients', () => {
     }
   });
 
+  test('high-j edge (j=8): correct despite the 19!..25! inexact-factorial regime', () => {
+    // Regression for the same bug class as wigner6j: small-j tests can't catch a
+    // factorial-range defect. At j₁=j₂=J=8 the triangle term reaches (j₁+j₂+J+1)=25!,
+    // past f64-exact 18! — assert CG is still machine-accurate there.
+    // Known analytic: ⟨j 0 j 0 | 0 0⟩ = (−1)^j / √(2j+1); j=8 → 1/√17.
+    expect(Math.abs(clebschGordan(8, 0, 8, 0, 0, 0) - 1 / Math.sqrt(17))).toBeLessThan(1e-12);
+    // Orthonormality at the 25! edge: Σ_{m₁} ⟨8 m₁ 8 (M−m₁) | 8 M⟩² = 1.
+    for (const M of [0, 3, 8]) {
+      let s = 0;
+      for (let m1 = -8; m1 <= 8; m1 += 1) s += clebschGordan(8, m1, 8, M - m1, 8, M) ** 2;
+      expect(Math.abs(s - 1)).toBeLessThan(1e-12);
+    }
+  });
+
   test('full normalization: Σ_{m₁m₂} ⟨..|J M⟩² = 1 for a valid (J,M)', () => {
     const j1 = 1.5;
     const j2 = 1;
