@@ -1,22 +1,24 @@
 /**
  * Leviathans (F-BEINGS) — a fourth order of colossal non-human intelligence beyond the shoggoths,
  * puppet-masters, and titans: serpentine drifters that sail the mid-field on slow sinusoidal
- * currents, undulating and pulsing with an inner glow. They are majestic scenery-scale life — they
- * roam and react but (in this first increment) never touch the organism sim, so the system is
- * PURELY ADDITIVE.
+ * currents, undulating and pulsing with an inner glow. They are majestic scenery-scale life — and as
+ * of V1.3 they are no longer pure scenery: as they roam they STIR the primordial reaction-diffusion
+ * substrate beneath them (via {@link ReactionDiffusionSystem.seedDeterministic}, opt-in), a genuine
+ * reciprocal ecological effect on the world the organisms grow in.
  *
  * Determinism: the constructor draws NO rng and `update()` draws none either — every position, hue,
- * and undulation is a pure function of the leviathan's index and the sim clock. So the system is
- * boot-stream-neutral (the composition root may construct it anywhere without shifting the seeded
- * stream) and its motion is identical for a given seed. The only world coupling is read-only: it
- * feels an active singularity through {@link SingularitySystem.bodyForce} (F-HOLES), which also
- * draws no rng.
+ * undulation, AND substrate stir is a pure function of the leviathan's index and the sim clock. So the
+ * system is boot-stream-neutral (the composition root may construct it anywhere without shifting the
+ * seeded stream) and its motion is identical for a given seed. World coupling: it READS an active
+ * singularity through {@link SingularitySystem.bodyForce} (F-HOLES) and WRITES a deterministic (rng-free)
+ * disturbance into the RD ground — neither draws rng, so bit-reproducibility is preserved.
  */
 import * as THREE from 'three';
-import { ARENA_MID, MID_RADIUS2 } from './constants';
+import { ARENA_MID, MID_RADIUS2, GROUND_EXTENT } from './constants';
 import { POINT_LIGHT_GAIN } from './environment';
 import type { SimContext } from '../types';
 import type { SingularitySystem } from './singularities';
+import type { ReactionDiffusionSystem } from './reaction-diffusion';
 
 /** How many leviathans sail the world (fixed — telemetry-friendly, cheap). */
 const COUNT = 4;
@@ -26,6 +28,8 @@ const COLOSSAL = 4;
 const ROAM_R = 48 * ARENA_MID;
 /** Per-leviathan additive base hues (cold abyssal palette), indexed by id. */
 const HUES = [0.55, 0.62, 0.48, 0.7] as const;
+/** V1.3 ECOLOGY: a leviathan stirs the RD substrate every STIR_EVERY frames (slow, deterministic, rng-free). */
+const STIR_EVERY = 45;
 
 /** Module scratch — `update()` never allocates per frame. */
 const HOLE_F = new THREE.Vector3();
@@ -51,6 +55,10 @@ interface Leviathan {
 export class LeviathanSystem {
   private readonly levs: Leviathan[] = [];
   private singularity: SingularitySystem | null = null;
+  /** V1.3 ECOLOGY: the reaction-diffusion ground the colossi stir as they roam (opt-in, no-op until set). */
+  private rd: ReactionDiffusionSystem | null = null;
+  /** Deterministic frame counter gating the (rng-free) substrate stir — keeps the colossi stream-neutral. */
+  private stirTick = 0;
 
   // Only the scene is needed past construction; the rest of the context (rng, grid, …) is unused
   // by design — leviathans draw no rng and touch no organism state (F-BEINGS additive contract).
@@ -102,11 +110,20 @@ export class LeviathanSystem {
     this.singularity = singularity;
   }
 
+  /** V1.3 ECOLOGY: opt the colossi into stirring the primordial RD substrate as they roam (or null to detach). */
+  attachReactionDiffusion(rd: ReactionDiffusionSystem | null): void {
+    this.rd = rd;
+  }
+
   /**
    * Advance all leviathans: a slow sinusoidal sail through the mid-field, a gentle undulation +
    * glow pulse, and the F-HOLES body force. Allocation-free, rng-free. O(COUNT) per frame.
    */
   update(dt: number, t: number): void {
+    // V1.3 ECOLOGY: every STIR_EVERY frames the colossi seed the RD substrate at their position — a real
+    // reciprocal effect on the world (no longer pure scenery), done deterministically so they stay
+    // stream-neutral; the RD ground's own Gray-Scott decay means this can never diverge.
+    const doStir = this.rd !== null && this.stirTick++ % STIR_EVERY === 0;
     for (let i = 0; i < this.levs.length; i++) {
       const lv = this.levs[i];
       if (!lv) continue; // noUncheckedIndexedAccess: i < length
@@ -133,6 +150,10 @@ export class LeviathanSystem {
 
       V1.copy(lv.vel).multiplyScalar(dt * 60);
       p.add(V1);
+      // V1.3 ECOLOGY: stir the primordial substrate at the colossus's wake (deterministic, rng-free).
+      if (doStir && this.rd) {
+        this.rd.seedDeterministic(0.5 + p.x / GROUND_EXTENT, 0.5 - p.z / GROUND_EXTENT, 2);
+      }
       // Face travel direction (yaw toward velocity) + a slow body undulation (roll).
       if (lv.vel.x * lv.vel.x + lv.vel.z * lv.vel.z > 1e-6) {
         g.rotation.y = Math.atan2(lv.vel.x, lv.vel.z);

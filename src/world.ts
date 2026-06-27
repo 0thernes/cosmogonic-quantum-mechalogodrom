@@ -562,6 +562,7 @@ export class World {
     // F-BEINGS: a fourth order of colossi (leviathans). Boot-stream-neutral — draws no rng here.
     this.leviathans = new LeviathanSystem(ctx);
     this.leviathans.attachSingularity(this.singularities);
+    this.leviathans.attachReactionDiffusion(this.rd); // V1.3 ECOLOGY: colossi stir the primordial substrate
     // F-NHI V10: alien biomechanical bodies for launched NHIs (additive; draws no rng).
     this.nhiBody = new NhiBodySystem(ctx.scene);
     // V11: far-field cosmic-web backdrop for depth + context (additive; draws no rng).
