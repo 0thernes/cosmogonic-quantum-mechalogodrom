@@ -47,7 +47,7 @@ const Z_AXIS: readonly [number, number, number] = [0, 0, 1];
 export function quantumUncertainty(drive: number): number {
   const d = clamp01(drive);
   const mid = (GRID - 1) / 2;
-  const V = new Array<number>(GRID);
+  const V = Array.from({ length: GRID }, () => 0);
   for (let j = 0; j < GRID; j++) {
     const dxm = j - mid;
     V[j] = -d * Math.exp(-(dxm * dxm) / 18); // attractive well, depth ∝ drive
