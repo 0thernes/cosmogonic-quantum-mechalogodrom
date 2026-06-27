@@ -37,6 +37,37 @@ interface Msg {
   role: 'user' | 'assistant';
   content: string;
 }
+
+/**
+ * STATIC-DEPLOY AI FALLBACK — Pollinations is a free, key-less, CORS-enabled OpenAI-compatible API the
+ * BROWSER can call directly (verified `Access-Control-Allow-Origin: *`). On the GitHub Pages build there
+ * is no Bun server (no `/api/chat`), so the chat would otherwise be dead; instead the client calls this
+ * directly so the ✦ AI still answers. The repo-reading tools (/read /ls /grep /run) stay dev-only — they
+ * need the server — but plain conversation works everywhere. This is the SAME provider the local server
+ * fails over to (`src/server/copilot.ts` PRESETS: `text.pollinations.ai`), now reachable client-side.
+ */
+const POLLINATIONS_URL = 'https://text.pollinations.ai/openai';
+const STATIC_AI_SYSTEM =
+  'You are the ✦ AI guide inside the Cosmogonic Quantum Mechalogodrom — a deterministic, browser-native ' +
+  '50,000-agent quantum + artificial-life cosmos simulation (real seeded math, not an LLM toy). Answer ' +
+  'questions about the cosmos, its creatures, the apex super-creatures, and how the simulation works — ' +
+  'vivid but accurate, concise. You are on the static GitHub Pages build, so the repo commands ' +
+  '(/read /ls /grep /run) are unavailable here (they need the local `bun dev` server); just converse.';
+
+/** Call the free Pollinations LLM straight from the browser. Returns the assistant text. */
+async function askPollinationsDirect(history: readonly Msg[]): Promise<string> {
+  const res = await fetch(POLLINATIONS_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'openai',
+      messages: [{ role: 'system', content: STATIC_AI_SYSTEM }, ...history],
+    }),
+  });
+  if (!res.ok) throw new Error(`pollinations ${res.status}`);
+  const data = (await res.json()) as { choices?: { message?: { content?: string } }[] };
+  return data.choices?.[0]?.message?.content?.trim() || '(no answer)';
+}
 /** One provider's health from /api/copilot/health (the recovery-pipeline rows). */
 interface ProviderHealth {
   id: string;
@@ -343,12 +374,22 @@ function mount(): void {
       // "Unexpected token <" JSON-parse error — the ✦ AI agent is a local-dev-server feature.
       const ctype = res.headers.get('content-type') ?? '';
       if (!res.ok || !ctype.includes('application/json')) {
-        thinking.remove();
-        addMsg(
-          'cqm-cop-sys',
-          'The ✦ AI agent needs the local dev server — run `bun dev`, then reload. The static ' +
-            'GitHub Pages build ships no LLM backend (no /api/chat), so the chat is dev-only here.',
-        );
+        // No Bun server (static GitHub Pages) → call the free, key-less Pollinations LLM DIRECTLY from
+        // the browser so the chat still works. The repo-command tools stay dev-only (they need /api/tool).
+        try {
+          const reply = await askPollinationsDirect(history);
+          thinking.remove();
+          addMsg('cqm-cop-ai', reply);
+          history.push({ role: 'assistant', content: reply });
+          prov.textContent = 'pollinations · static';
+        } catch {
+          thinking.remove();
+          addMsg(
+            'cqm-cop-sys',
+            'The free static AI (Pollinations) was unreachable just now — try again in a moment. For the ' +
+              'full repo-aware agent (/read /ls /grep /run), run `bun dev` locally.',
+          );
+        }
         return;
       }
       const data = (await res.json()) as AgentResult;
@@ -524,11 +565,15 @@ function mount(): void {
           if (list.length === 0) sel.style.display = 'none';
         })
         .catch(() => {
-          prov.textContent = 'offline';
+          // No Bun server (static GitHub Pages, or the local server is down). The chat still works —
+          // it calls the free key-less Pollinations LLM directly from the browser. Only the repo
+          // tools (/read /ls /grep /run) need `bun dev`. So: NOT a dead end — don't lock the input.
+          prov.textContent = 'pollinations · static';
           sel.style.display = 'none';
           addMsg(
             'cqm-cop-sys',
-            'Could not reach the AI gate (offline). Click 🩺 in the header to run diagnostics + see the recovery pipeline.',
+            'Static build — no local server. The chat works (it calls the free Pollinations AI directly); ' +
+              'just ask. Repo commands (/read /ls /grep /run) need `bun dev`. Click 🩺 for diagnostics.',
           );
         });
     }
