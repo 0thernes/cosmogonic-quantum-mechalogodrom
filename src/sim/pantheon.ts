@@ -22,6 +22,8 @@ export interface LightArchonSnapshot {
   readonly tier: ArchonTier;
   readonly decision: number;
   readonly confidence: number;
+  /** V1.3: the Archon's PERSISTENT identity memory (EMA of its planBias across its own sub-beats). */
+  readonly memory: number;
 }
 
 export interface PantheonSnapshot {
@@ -32,6 +34,8 @@ export interface PantheonSnapshot {
 
 const LIGHT_FIRST = 5;
 const LIGHT_COUNT = ARCHON_CHANNELS - LIGHT_FIRST;
+/** V1.3: EMA rate of each light Archon's persistent identity memory (individuation, not stateless echo). */
+const LIGHT_MEM_TAU = 0.2;
 
 /**
  * Society layer for the 20 light Archons + shared mind-field.
@@ -39,6 +43,9 @@ const LIGHT_COUNT = ARCHON_CHANNELS - LIGHT_FIRST;
 export class PantheonSociety {
   readonly field = new MindField();
   private readonly scratch = new Float32Array(FIELD_DIM);
+  /** V1.3: one persistent identity scalar per light Archon — each evolves across its OWN sub-beats, so the
+   *  20 light echoes have continuity (distinct individuated minds) rather than stateless per-beat recomputes. */
+  private readonly lightMemory = new Float32Array(LIGHT_COUNT);
   private lastLight: LightArchonSnapshot | null = null;
 
   /** One world frame: diffuse field + tick one light Archon (staggered). */
@@ -56,13 +63,25 @@ export class PantheonSociety {
     this.scratch[5] = idx / ARCHON_CHANNELS;
     this.scratch[6] = thought.steps / 32;
     this.scratch[7] = thought.planBias;
-    this.field.deposit(idx, Array.from(this.scratch), 0.35 + 0.65 * thought.planBias);
+    // V1.3 INDIVIDUATION: the active light Archon updates its PERSISTENT identity memory (EMA of its
+    // planBias) and that memory shapes its ongoing field contribution — so its history, not just this
+    // beat, drives its deposit. Deterministic (no rng), bounded; reproducibility + field.energy>0 hold.
+    const mem =
+      (this.lightMemory[slot] ?? 0) +
+      LIGHT_MEM_TAU * (thought.planBias - (this.lightMemory[slot] ?? 0));
+    this.lightMemory[slot] = mem;
+    this.field.deposit(
+      idx,
+      Array.from(this.scratch),
+      0.35 + 0.65 * (0.5 * thought.planBias + 0.5 * mem),
+    );
     this.lastLight = {
       index: idx,
       name: GODFORMS[idx] ?? `ARCHON-${idx}`,
       tier: getArchonTier(idx),
       decision: thought.planBias,
       confidence: thought.decisive ? thought.planBias : 1 - thought.planBias,
+      memory: mem,
     };
     return this.snapshot();
   }
