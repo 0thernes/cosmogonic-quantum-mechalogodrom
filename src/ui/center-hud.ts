@@ -26,6 +26,15 @@ const SLOTS: readonly Slot[] = [
   { name: 'NEURAL', icon: '⊞', panel: 'cqm-nhi-panel', toggle: 'cqm-nhi-toggle', open: 'open' },
   { name: 'MARKET', icon: '⊙', panel: 'cqm-mkt-panel', toggle: 'cqm-mkt-toggle', open: 'open' },
   { name: 'ARCHITECT', icon: '⬢', panel: 'cqm-sup-panel', toggle: 'cqm-sup-toggle', open: 'open' },
+  // The ⟁ ARCHITECTURE pantheon cycler (101 super creatures + brood + the apex ς Quantum Brain).
+  // Lives in the launcher next to ARCHITECT (its toggle is otherwise hidden — #cqm-dock is display:none).
+  {
+    name: 'ARCHITECTURE',
+    icon: '⟁',
+    panel: 'cqm-arch-panel',
+    toggle: 'cqm-arch-toggle',
+    open: 'open',
+  },
 ];
 
 const PANEL_SEL = SLOTS.map((s) => '#' + s.panel).join(',');
@@ -472,6 +481,19 @@ function buildNav(doc: Document): void {
     if (a) {
       a.classList.add('cqm-hud-btn', 'cqm-hud-link');
       nav.appendChild(a);
+    }
+  }
+  // Surface any OTHER self-mounted dock toggle (e.g. ⛓ ACCESS) that ISN'T one of the SLOT panels:
+  // #cqm-dock is display:none, so a `mountToggle`'d modal-opener button is otherwise invisible (the
+  // recurring "there's no button for it" bug). Adopt them into the launcher so they can never go
+  // missing again. SLOT toggles are skipped — they already appear as named tabs above.
+  const slotToggles = new Set(SLOTS.map((s) => s.toggle));
+  const dock = doc.getElementById('cqm-dock');
+  if (dock) {
+    for (const btn of Array.from(dock.querySelectorAll<HTMLElement>('button'))) {
+      if (btn.id && slotToggles.has(btn.id)) continue;
+      btn.classList.add('cqm-hud-btn', 'cqm-hud-link');
+      nav.appendChild(btn);
     }
   }
   doc.body.appendChild(nav);

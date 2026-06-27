@@ -54,8 +54,9 @@ const STYLE = `
   backdrop-filter:blur(12px);box-shadow:0 10px 48px rgba(0,0,0,.78);color:#d8cce6;overflow:hidden;
   font:11px/1.5 var(--font-mono,ui-monospace,monospace)}
 #cqm-arch-panel.open{display:flex}
-/* center-hud clamps bare-id panels to ~30vh; the .live class lifts specificity so the canvas gets room. */
-#cqm-arch-panel.live{height:min(86vh,724px)!important;max-height:calc(100vh - 118px)!important}
+/* center-hud owns this panel's geometry (it's a launcher SLOT): it re-homes the panel into the centred
+   HUD slot with !important left/right/bottom/height. We deliberately DON'T fight that height here (an
+   earlier .live override was higher-specificity and broke the slot fit); the body scrolls instead. */
 .cqm-arch-head{display:flex;align-items:center;gap:8px;padding:7px 10px;border-bottom:1px solid rgba(255,59,78,.22);
   background:linear-gradient(90deg,rgba(34,6,14,.9),rgba(20,4,30,.85))}
 .cqm-arch-head b{font-size:11px;letter-spacing:.16em;color:#ff8a98;white-space:nowrap}
@@ -75,7 +76,7 @@ const STYLE = `
 .cqm-arch-btn:focus-visible{outline:1px solid #ff5a6b}
 .cqm-arch-btn.on{background:rgba(80,16,40,.96);color:#fff}
 .cqm-arch-bar{display:flex;gap:4px;padding:6px 10px;flex-wrap:wrap;border-bottom:1px solid rgba(255,59,78,.12)}
-.cqm-arch-canvas{display:block;width:100%;height:222px;background:radial-gradient(120% 90% at 50% 0%,rgba(30,4,18,.6),rgba(2,2,5,1));border-bottom:1px solid rgba(255,59,78,.14)}
+.cqm-arch-canvas{display:block;width:100%;height:160px;background:radial-gradient(120% 90% at 50% 0%,rgba(30,4,18,.6),rgba(2,2,5,1));border-bottom:1px solid rgba(255,59,78,.14)}
 .cqm-arch-mode{display:flex;gap:4px;padding:6px 10px;border-bottom:1px solid rgba(255,59,78,.12)}
 .cqm-arch-data{flex:1 1 auto;min-height:0;overflow-y:auto;padding:6px 10px 10px;display:grid;
   grid-template-columns:auto 1fr;gap:2px 10px;align-items:baseline}
@@ -194,7 +195,7 @@ export class PantheonArchitecturePanel {
     // Dynamics canvas
     this.canvas = el(doc, 'canvas', 'cqm-arch-canvas');
     this.canvas.width = 372;
-    this.canvas.height = 222;
+    this.canvas.height = 160;
     this.ctx = this.canvas.getContext('2d');
     panel.appendChild(this.canvas);
 
@@ -229,7 +230,6 @@ export class PantheonArchitecturePanel {
   private setOpen(v: boolean): void {
     this.open = v;
     this.panel.classList.toggle('open', v);
-    this.panel.classList.toggle('live', v);
     if (v) this.startAnim();
     else this.stopAnim();
   }

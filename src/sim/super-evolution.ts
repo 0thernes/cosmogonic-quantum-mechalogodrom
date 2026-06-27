@@ -180,9 +180,19 @@ export class SuperEvolution {
     }
   }
 
-  /** One beat of passive growth: existing as a dominant, dreaming apex earns XP. `vitality` 0..1. */
+  /**
+   * One beat of passive growth: existing as a dominant, dreaming apex earns XP. `vitality` 0..1.
+   *
+   * XP is granted as a FRACTION of the current {@link xpForNext}, not a fixed absolute amount. The
+   * power curve is geometric (×1.35 per level), so a fixed XP trickle is swamped past ~LV5 and the
+   * level visibly STALLS (the bug the owner reported: "experience is stagnant, never reaches 100").
+   * Scaling the grant to the level keeps the climb STEADY — a fully-dominant apex advances roughly
+   * one level every few seconds of play and can actually reach the LV100 summit, while a dormant one
+   * still creeps forward (the 0.02 floor) so it is never frozen. The power/visual leap stays exponential.
+   */
   tick(dt: number, vitality: number): void {
-    this.gainXp(dt * (3 + 12 * clamp01(vitality)));
+    const v = clamp01(vitality);
+    this.gainXp(this.xpForNext() * dt * (0.02 + 0.1 * v));
   }
 
   /**
