@@ -47,3 +47,26 @@ describe('petri open-endedness telemetry', () => {
     expect(v.speciesDiversity).toBeCloseTo(2, 6); // log2(4) = 2
   });
 });
+
+describe('petri open-endedness — live novelty search (historicalNovelty wired)', () => {
+  test('empty / single population → novelty 0 (no neighbours to be novel against)', () => {
+    expect(petriDishView(createPetriDish(7)).populationNovelty).toBe(0);
+    expect(petriDishView(withForms(['solo'])).populationNovelty).toBe(0);
+  });
+
+  test('a monoculture (identical signatures) → novelty 0', () => {
+    expect(petriDishView(withForms(['x', 'x', 'x', 'x'])).populationNovelty).toBe(0);
+  });
+
+  test('a diverse population → positive, bounded novelty (it occupies spread-out feature space)', () => {
+    const v = petriDishView(withForms(['alpha', 'beta', 'gamma', 'delta', 'omega']));
+    expect(v.populationNovelty).toBeGreaterThan(0);
+    expect(v.populationNovelty).toBeLessThanOrEqual(1);
+  });
+
+  test('more-distinct forms are at least as novel as a near-monoculture (novelty tracks divergence)', () => {
+    const mono = petriDishView(withForms(['a', 'a', 'a', 'b'])).populationNovelty;
+    const diverse = petriDishView(withForms(['a', 'm', 'z', 'Q'])).populationNovelty;
+    expect(diverse).toBeGreaterThanOrEqual(mono);
+  });
+});

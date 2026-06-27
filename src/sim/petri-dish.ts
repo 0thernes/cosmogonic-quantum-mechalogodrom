@@ -39,7 +39,7 @@ import { classicalEntropyGap, classicalSample } from './classical-contrast';
 import { logoMorphScalar, turtleNew, type TurtleState } from './logo-turtle';
 import { libirrepSymmetry, symmetryModes } from './irrep-symmetry';
 import { moonlabTensorQualia } from './moonlab-tensor';
-import { shannonDiversity, richness } from './open-endedness';
+import { shannonDiversity, richness, historicalNovelty } from './open-endedness';
 const NUTRIENT_SLOTS = 12; // Expanded Petri for more digital biologics growth from full Tsotchke soup
 const SCRATCH_NUTRIENTS = new Float32Array(NUTRIENT_SLOTS);
 const SCRATCH_SALIENCE = new Float32Array(NUTRIENT_SLOTS);
@@ -114,6 +114,8 @@ export interface PetriDishView {
   speciesRichness: number;
   /** Open-endedness telemetry: Shannon diversity (bits) of live biologic forms; 0 = monoculture. */
   speciesDiversity: number;
+  /** Open-endedness: mean novelty-search distance of each biologic to the rest of the population [0,1]. */
+  populationNovelty: number;
 }
 
 /** O(n) init, n=8. */
@@ -377,6 +379,26 @@ export function petriDishView(state: PetriDishState): PetriDishView {
     formCounts.set(f, (formCounts.get(f) ?? 0) + 1);
   }
   const formTally = [...formCounts.values()];
+  // OPEN-ENDEDNESS: mean novelty-search distance of each live biologic to the REST of the population
+  // (Lehman–Stanley novelty search via historicalNovelty — a tested-but-UNWIRED kernel, now live on the
+  // running soup). Signature = [form-hash, vitality]; pure + deterministic; bounded [0,1]. View cadence.
+  const sigs = state.biologics.map((b) => {
+    const f = b.form ?? 'proto';
+    let h = 0;
+    for (let k = 0; k < f.length; k++) h = (h * 31 + f.charCodeAt(k)) >>> 0;
+    return [(h % 997) / 997, b.vitality ?? 0];
+  });
+  let novSum = 0;
+  let novN = 0;
+  for (let i = 0; i < sigs.length; i++) {
+    const others = sigs.filter((_, j) => j !== i);
+    const nv = historicalNovelty(sigs[i]!, others);
+    if (Number.isFinite(nv)) {
+      novSum += nv;
+      novN++;
+    }
+  }
+  const populationNovelty = novN > 0 ? Math.min(1, novSum / novN) : 0;
   return {
     biomass: state.biomass,
     phiSurrogate: state.phiSurrogate,
@@ -400,6 +422,7 @@ export function petriDishView(state: PetriDishState): PetriDishView {
     geneticDivergence: state.geneticDivergence,
     speciesRichness: richness(formTally),
     speciesDiversity: shannonDiversity(formTally),
+    populationNovelty,
   };
 }
 
