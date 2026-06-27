@@ -10,9 +10,9 @@
 > Two companion docs hold the doctrine and the science:
 >
 > - **Doctrine (13 organs, claim ladder, ablation law):**
->   [`APEX-ABOMINATION-NOVELTY-DOCTRINE.md`](./APEX-ABOMINATION-NOVELTY-DOCTRINE.md)
+>   [`APEX-ABOMINATION-NOVELTY-DOCTRINE-2026-06-26.md`](./APEX-ABOMINATION-NOVELTY-DOCTRINE-2026-06-26.md)
 > - **100-paper corpus + layered architecture + horror→math translation table:**
->   [`APEX-BRAIN-CORPUS-100-PAPERS.md`](./APEX-BRAIN-CORPUS-100-PAPERS.md)
+>   [`APEX-BRAIN-CORPUS-100-PAPERS-2026-06-26.md`](./APEX-BRAIN-CORPUS-100-PAPERS-2026-06-26.md)
 >
 > Living doc: rewrite in place, never fork.
 
@@ -72,7 +72,7 @@ decoheres to a plan only past a measurement threshold).
 
 ## Mapping to the doctrine's 13 organs
 
-The doctrine ([`NOVELTY-DOCTRINE`](./APEX-ABOMINATION-NOVELTY-DOCTRINE.md)) frames 13 organs with kill
+The doctrine ([`NOVELTY-DOCTRINE`](./APEX-ABOMINATION-NOVELTY-DOCTRINE-2026-06-26.md)) frames 13 organs with kill
 tests. They map onto the wired code as follows (the conjunction is the rare thing):
 
 | Doctrine organ                | Wired in code (`apex-brain.ts`)                                                      |
@@ -154,7 +154,7 @@ bilateral symmetry, central vertical axis, a point **singularity** at the focal 
 ## Source abomination lore (verbatim framing — "the weird shit", kept as design prompt only)
 
 Preserved so the doctrine's horror stays legible; every line below is **lore**, translated to bounded
-math above and in the [corpus translation table](./APEX-BRAIN-CORPUS-100-PAPERS.md):
+math above and in the [corpus translation table](./APEX-BRAIN-CORPUS-100-PAPERS-2026-06-26.md):
 
 - **10 "1-of-1" neuron abominations:** Prime-Sieve Tesseract Loom (Math-Vampire) · Acoustic-Resonance
   Meat-Drum (Sound-Eater) · Entropic Necro-Matrix (Dying Thinker) · Non-Euclidean Klein-Bottle

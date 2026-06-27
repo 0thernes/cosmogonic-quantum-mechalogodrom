@@ -1,9 +1,9 @@
-<!-- reviewed: 2026-06-26 | companion to APEX 100-paper report | novelty doctrine, not capability claim -->
+<!-- reviewed: 2026-06-27 | companion to APEX 100-paper report | novelty doctrine, not capability claim -->
 
 # APEX Abomination 1-of-1 Novelty Doctrine
 
 **Date:** 2026-06-26  
-**Companion:** [`APEX-BRAIN-CORPUS-100-PAPERS.md`](./APEX-BRAIN-CORPUS-100-PAPERS.md) · implementation: [`APEX-BRAIN-ABOMINATION.md`](./APEX-BRAIN-ABOMINATION.md)  
+**Companion:** [`APEX-BRAIN-CORPUS-100-PAPERS-2026-06-26.md`](./APEX-BRAIN-CORPUS-100-PAPERS-2026-06-26.md) · implementation: [`APEX-BRAIN-ABOMINATION-2026-06-26.md`](./APEX-BRAIN-ABOMINATION-2026-06-26.md)  
 **Mandate:** make the APEX biologic maximally alien, scientifically rare, and operationally testable without
 claiming fake physics, sentience, AGI, ASI, or quantum advantage.
 

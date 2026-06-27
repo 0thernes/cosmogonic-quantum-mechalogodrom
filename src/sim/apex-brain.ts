@@ -2,7 +2,7 @@
  * APEX-BRAIN — THE ENTROPIC TESSERACT HYDRA, the brain of the final-sigma ς apex creature (the
  * pantheon's 101st; see [[pantheon-breeding]]). Ten *incompatible* neuron architectures forced into
  * one deterministic engine, governed by a meta-paradox layer. The owner's design corpus and the
- * 5-image render look are in `docs/APEX-BRAIN-ABOMINATION.md`.
+ * 5-image render look are in `docs/APEX-BRAIN-ABOMINATION-2026-06-26.md`.
  *
  * ──────────────────────────────────────────────────────────────────────────────────────────────
  * HONESTY CONTRACT (binding). The source brief frames these organs as impossible (retrocausal time
@@ -1526,7 +1526,7 @@ export const SCALE_MEDIUM: ApexScale = {
  * The MASSIVE design scale — the brief's per-organ node targets. `apexDesignedNeurons(SCALE_MASSIVE)`
  * exceeds **one billion**, which is the apex's stated scaling target. The live engine still caps
  * actual allocation at {@link LIVE_NODE_CAP}; reaching the designed scale is the C/C++/GPU backend's
- * job (roadmap, see docs/APEX-BRAIN-ABOMINATION.md). Numbers mirror the source brief: prime loom
+ * job (roadmap, see docs/APEX-BRAIN-ABOMINATION-2026-06-26.md). Numbers mirror the source brief: prime loom
  * 100M, acoustic ~100M, necro 50M, Klein-bottle centipede 30000², pendulum 10M, slime 30M, etc.
  */
 export const SCALE_MASSIVE: ApexScale = {
