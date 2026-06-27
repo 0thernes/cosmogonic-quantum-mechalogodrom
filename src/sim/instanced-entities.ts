@@ -460,6 +460,28 @@ const RELIQUARY_FRAG_BODY = /* glsl */ `#include <emissivemap_fragment>
 	float sShim = 0.5 + 0.5 * sin(vObjPos.x * 10.0 + vObjPos.y * 8.0 + sQ * 12.566370);
 	totalEmissiveRadiance += vec3(0.55, 0.40, 1.0) * pow(sShim, 6.0) * 0.45;
 
+	// ══ V-VITALS3 KINETIC + ENVIRONMENTAL SUITE ═══════════════════════════════════════════════════
+	// More named effects, each still bound to a REAL signal — the per-entity lanes already unpacked
+	// above (vExe/vNeu/vSen/sQ) plus the world's real audio (uBass) and chaos (uChaos). Low-magnitude,
+	// signal-gated, additive: detail not flood. GPU-only, no rng.
+	// VORTEXICAL SWIRL (exertion) — a sprinting body twists a vortex into its rim.
+	float v3ang = atan(rqN.z, rqN.x) + vExe * sin(length(vObjPos) * 5.0 - uTime * 6.0) * 3.0;
+	totalEmissiveRadiance += (0.5 + 0.5 * cos(vec3(0.0, 2.094, 4.188) + v3ang * 3.0)) * vExe * pow(rqFres, 2.0) * 0.5;
+	// HELIXOLOGY COSMOS (quantum phase) — twin bright strands wind the shell, advancing with qP.
+	float v3hel = pow(0.5 + 0.5 * sin(vObjPos.y * 12.0 + atan(rqN.z, rqN.x) * 2.0 + sQ * 12.566370), 10.0);
+	totalEmissiveRadiance += vec3(0.7, 0.5, 1.0) * v3hel * 0.55;
+	// ORBITAL PLASMOIDS (neural firing) — plasma blobs orbit a firing body.
+	float v3orb = pow(0.5 + 0.5 * sin(atan(rqN.z, rqN.x) * 5.0 + uTime * 4.0) * sin(rqN.y * 6.0 - uTime * 3.0), 16.0);
+	totalEmissiveRadiance += vec3(1.0, 0.6, 0.3) * v3orb * vNeu * 1.6;
+	// LAPSE-COLLAPSE BREATH (senescence × audio) — an aged body's glow expands/contracts with the bass.
+	float v3breath = 0.5 + 0.5 * sin(uTime * 1.5 + length(vObjPos) * 6.0 - uBass * 6.2831853);
+	totalEmissiveRadiance += vec3(0.6, 0.3, 0.5) * v3breath * vSen * (0.3 + 0.7 * uBass) * 0.4;
+	// STORM THERMAL RADIANCE (world chaos × firing) — a chaotic, firing body glows blackbody-hot.
+	totalEmissiveRadiance += vec3(1.0, 0.45, 0.12) * uChaos * vNeu * (0.5 + 0.5 * rqGlitch) * 0.7;
+	// CYMATIC RIPPLES (audio) — concentric standing waves ride the surface with the bass.
+	float v3cym = 0.5 + 0.5 * sin(length(vObjPos) * 22.0 - uTime * 5.0);
+	totalEmissiveRadiance += vec3(0.3, 0.8, 0.9) * pow(v3cym, 4.0) * uBass * 0.5;
+
 	// Exotic render modes layer on top (V7-beyond, unchanged).
 	if (uMode > 5.5) {
 		float ct = abs(dot(normalize(vNormal), rqV));

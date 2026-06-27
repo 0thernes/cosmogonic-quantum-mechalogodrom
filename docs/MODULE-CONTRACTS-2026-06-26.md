@@ -1094,10 +1094,14 @@ Deviations from and clarifications of the V3 goal spec, as landed:
    bit-glitch chaos core (world chaos × senescence). The **V-VITALS2 suite** binds
    the `instVitals2` lane: cooperator halo vs defector barb-corona (strategy),
    payoff-swing iridescence (payoff), faction war-paint + hive-resonance (community
-   hue), superposition probability shimmer (quantum phase). All never decorative; an
-   idle poor young still organism is quiet, a rich/firing/ancient/sprinting one
-   blazes, allegiance + tribe + fortune + quantum state legible at a glance.
-   GPU-only, no rng, so the seeded trajectory is byte-identical. Pools are lazily
+   hue), superposition probability shimmer (quantum phase). The **V-VITALS3 suite**
+   adds kinetic + environmental terms over the SAME lanes + the world's real audio
+   (`uBass`) and chaos (`uChaos`): vortexical swirl (exertion), helixology cosmos
+   (quantum phase), orbital plasmoids (neural), lapse-collapse breath (senescence ×
+   bass), storm thermal radiance (chaos × neural), cymatic ripples (audio). All never
+   decorative; an idle poor young still organism is quiet, a rich/firing/ancient/
+   sprinting one blazes, allegiance + tribe + fortune + quantum state legible at a
+   glance. GPU-only, no rng, so the seeded trajectory is byte-identical. Pools are lazily
    built at `ceil(maxEntities/geoCount)·4` capacity, grow ×2 (event-driven
    rebuild), clamp at `maxEntities`; `frustumCulled = false` (instances span
    the arena). Data meshes set `matrixAutoUpdate = false`; the renderer calls

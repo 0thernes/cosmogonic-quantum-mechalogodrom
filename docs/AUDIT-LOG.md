@@ -11,6 +11,26 @@ dated / historical / "superseded snapshot" copies (per the binding "Living docs,
 
 ---
 
+## 2026-06-27 — V-VITALS3: kinetic + environmental body-effect suite (6 more, reusing the lanes + real audio/chaos)
+
+Third catalog batch — pure shader additions, **no new plumbing**: the six new named effects reuse the
+already-packed `instVitals`/`instVitals2` lanes (proven by the vitals tests) plus the world's real
+audio (`uBass`) and chaos (`uChaos`) uniforms, so no new CPU surface and no new attribute.
+
+- **The effects (`src/sim/instanced-entities.ts`, reliquary fragment), each bound to a REAL signal:**
+  VORTEXICAL SWIRL (exertion), HELIXOLOGY COSMOS (quantum phase), ORBITAL PLASMOIDS (neural firing),
+  LAPSE-COLLAPSE BREATH (senescence × bass), STORM THERMAL RADIANCE (world chaos × firing), CYMATIC
+  RIPPLES (audio — "the cosmos hears itself sing"). Low-magnitude, signal-gated, additive: detail not
+  flood; the ACES tonemap rolls off the peaks.
+- **Still falsifiable:** every term's intensity is one of the lanes whose packing is already pinned by
+  `tests/entity-vitals.test.ts` + `tests/entity-vitals2.test.ts`; V-VITALS3 adds **no new CPU logic**,
+  so the data contract is unchanged and no new unit test is owed. The new GLSL was compiled **directly
+  in the live WebGL2 context** (stale-bundle workaround): `COMPILE_STATUS` true, empty info-log.
+- **Determinism preserved:** pure `f(state)`, no rng — seeded trajectory byte-identical; only pixels.
+- **Catalog progress: 19 named real-bound body effects now live** (8 V-VITALS + 5 V-VITALS2 + 6
+  V-VITALS3) on every instanced creature, each a readout of real vital / social / quantum / world state.
+- **Contract synced:** the instanced per-instance-channels bullet in `MODULE-CONTRACTS-2026-06-26.md`.
+
 ## 2026-06-27 — V-VITALS2: social + quantum body-effect suite (strategy · payoff · community · quantum phase)
 
 Second batch from the effect catalog — a new `instVitals2` per-instance lane carrying four more REAL
