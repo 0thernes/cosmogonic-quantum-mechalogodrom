@@ -67,6 +67,29 @@ Refuted / left alone (no slop): `pinn-residual` test-gap (math correct); dead-bu
 `nqs-vmc-learning` / `curvature-aware-qng` (no false "wired" claim — NEO-MIND marks them partial ◆);
 `pimc-paths` (actually wired). Gate green: prettier, tsc, oxlint, **1585 pass / 0 fail**, receipts, sync, build.
 
+## 2026-06-27 — UI/UX cross-surface design audit + Local↔GitHub parity + 5 visual fixes
+
+Two design-master agents audited all four public HTML surfaces (`index`/`specs`/`docs`/`lab`), `app.css`,
+and the 22 `src/ui/**` panels for typography, legibility, ergonomics, and **cross-surface consistency**
+(the owner's "the UI/UX wireframing is different" concern). Confirmed: the surfaces are 3–4 different
+design systems sharing a dark vibe but diverging on nearly every token (ink/line/panel hex, heading font,
+type scale, nav component); the lab is a separate light theme with no nav home. Per-surface quality is
+high; consistency is the gap. Fixed the objective/safe items (zero visual risk):
+
+- `specs.html` footer printed "© 2026 0thernes" **twice** → removed the dup; added the **favicon** specs
+  was missing (the orbit-glyph SVG that index + docs already carry) → all 3 dark surfaces now match.
+- `docs.html` `--ink-faint 0.5` ≈ 4.0:1 at 9–10px = **WCAG-AA fail** → `0.62` (≈5.0:1); and `--ink`
+  brightened `#b8c8e8 → #cfe0fb` to unify body text with specs + improve legibility.
+- `lab/` added `theme-color` + `viewport-fit=cover` (was missing both).
+
+Recorded (ledger §15) the full divergence inventory + a recommended canonical token set for the deliberate
+follow-up unification (one `:root`, one nav component, propagate `--text-*` tokens into the ~12 JS-injected
+HUD panels that hardcode 8.5–13px sprawl, and a min-px floor on the `nhi-observatory`/`super-neural` canvas
+labels that render ~5.5–6px on phones). Left the stylistic-identity calls (specs mono-vs-Inter headings)
+and the hot `app.css` dup-motion block for owner/loop. **Local↔GitHub parity:** fast-forwarded the primary
+checkout (was 5 commits behind `origin/main` — the documented fleet-drift symptom) so local == GitHub;
+confirmed the prior audit commit `d3a5fb1` is in GitHub history. Gate green (prettier full-repo).
+
 ## 2026-06-27 — Singularities scale to the mega ceiling: O(n) force sweep → O(k) reach query (exact physics, no stride)
 
 The owner reported singularities "die around 25,000 entities" and asked them to stay physically accurate

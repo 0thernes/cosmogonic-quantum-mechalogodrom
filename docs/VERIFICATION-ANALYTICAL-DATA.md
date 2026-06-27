@@ -472,3 +472,54 @@ j=8, Clifford, Crank-Nicolson, MPS-SVD, QGT, CHSH; only the §6-style header hon
 determinism law holds across all `src/sim`+`src/math` (sole `Date.now` = the fenced `world.ts` idle-growth
 localStorage, outside sim logic); test suite **0** `.only`/`.skip`/vacuous across 156 files; CI runs the full
 superset gate. Net at this pass's tip: `verify:facts` 0 drift / 83 surfaces, gate green.
+
+## 15 · UI/UX/typography cross-surface audit (the four public surfaces, 2026-06-27)
+
+Two design-master agents read all four HTML surfaces + `src/styles/app.css` + the 22 `src/ui/**` panels.
+**The owner's instinct is correct: the surfaces are 3–4 different design systems wearing a similar dark
+coat.** `index.html` (via `app.css`), `specs.html`, and `docs.html` each redeclare `:root` from scratch
+with _different hex values for the same conceptual roles_; `lab/` is a separate light (Anthropic-template)
+theme. The per-surface visual quality is individually high; the cross-surface CONSISTENCY is the gap.
+
+**FIXED this pass (objective / safe — verified prettier-clean):**
+
+| Where                 | Issue                                                                                                  | Fix                                                                                |
+| --------------------- | ------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------- |
+| `specs.html` footer   | "© 2026 0thernes" printed **twice** in one line (copy-paste)                                           | removed the duplicate                                                              |
+| `specs.html` `<head>` | **no favicon** (index + docs both carry the orbit-glyph SVG icon)                                      | added the same `data:` SVG favicon → all 3 dark surfaces now match                 |
+| `docs.html:26`        | `--ink-faint rgba(…,0.5)` ≈ **4.0:1** at 9–10px = **WCAG-AA FAIL** (the diagram-hints/captions/footer) | → `0.62` (≈5.0:1, passes AA)                                                       |
+| `docs.html:24`        | `--ink #b8c8e8` diverged from specs `#cfe0fb`                                                          | → `#cfe0fb` (unifies body text across the two doc pages + brighter = more legible) |
+| `lab/…html:40`        | no `theme-color`, no `viewport-fit=cover`                                                              | added `theme-color #faf9f5` (light theme) + `viewport-fit=cover`                   |
+
+**Cross-surface divergence inventory (RECORDED — the "wireframing is different" finding; a deliberate
+token-unification is the real fix, best done with rendering + owner sign-off):**
+
+- **No shared design-token source.** Same role, different value across surfaces: `--ink` (`#9fb6d9` app /
+  `#cfe0fb` specs / now-`#cfe0fb` docs), `--line` (cyan vs periwinkle `rgba(120,160,220,.18)` on specs),
+  `--panel` (`rgba(8,14,30,.66)` specs vs `rgba(3,6,18,.85)` docs), and border-radius (`app.css` uses two
+  tokens; specs hand-codes five different radii; docs uses three).
+- **Heading font/scale divergence.** `specs.html h1` has **no `font-family`** → renders in JetBrains Mono
+  while `docs.html` h1 uses Inter; scales are non-modular (specs h1 46px→h2 13px vs docs h1 15px→h2 11px).
+  (Left unchanged — mono-spec vs Inter-headings is a stylistic-identity owner call.)
+- **Nav is a different component on every surface**, and the **lab has no link back** to dome/docs/spec
+  (navigational dead-end). `index.html` corner pills even use 3 different accent colors for 3 peer links.
+- **In-app HUD is split-brained:** the `index.html` _markup_ panels honor the `--text-*`/`--radius-panel`/
+  `--shadow-panel` tokens perfectly (exemplary), but **~12 JS-injected dock panels** (`market-ticker`,
+  `super-panel`, `super-neural`, `nhi-observatory`, `pantheon-architecture-panel`, `help-system`,
+  `copilot`, `access-puzzle`, `center-hud`, …) each hardcode raw px/hex in a `STYLE` template, producing a
+  non-harmonious type sprawl (8.5/9/9.5/10/10.5/11/12/13px where the token scale intends 8/9/10), 7 panel
+  backgrounds, 3 radii, 4 shadows. `center-hud.ts` then `!important`-re-homes them all (a smell rooted in
+  each panel owning its own geometry). **Recommended canonical set** (apply to specs+docs, propagate tokens
+  into the JS `STYLE` blocks): `--ink #cfe0fb · --ink-faint rgba(207,224,251,.55) (never <11px) · --accent
+#0ef · --line rgba(0,160,240,.16) · --panel rgba(3,6,18,.85) · --radius-panel 12px · --radius-btn 6px ·
+headings Inter, body JetBrains Mono`.
+- **Canvas-label legibility (HIGH, deferred — needs code-change + render test):** `nhi-observatory.ts`/
+  `super-neural.ts` `lab()` helper draws chart labels at base 6.5–7px × k(0.85) ≈ **5.5–6px on a phone
+  sheet** — effectively unreadable. Needs a min-px floor (~8px) in the two helpers.
+- **app.css duplicate `prefers-reduced-motion`** global block (`:116` `1ms` and `:1221` `0.01ms` — both
+  documented; the later supersedes) — harmless redundancy, left for the owner/loop (app.css is hot).
+
+**Verdict:** per-surface quality high; cross-surface consistency poor (owner is right). The fixes above
+close the objective bugs + the one WCAG-AA failure + 3 consistency gaps with zero visual risk; the larger
+token-unification (one `:root` + one nav component + propagating tokens into the JS panels + a canvas-label
+floor) is the high-value follow-up, documented here so it can be done deliberately rather than blind.
