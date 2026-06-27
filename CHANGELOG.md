@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Tests for the three GOAL5 consciousness leaves (closing an audit-flagged coverage gap)
+
+- Added `tests/super-mind-leaves.test.ts` (8 tests) for **AST-1 attention-schema**, **HOT-1
+  top-down-perception**, and **HOT-4 quality-space** — the three leaves a prior audit flagged as having
+  NO dedicated unit tests (only indirect coverage via super-mind). Guards each leaf's real contract:
+  AST-1's salience stays a normalised distribution and a peaked input yields higher confidence than a
+  flat one (low entropy = focused); HOT-1's bias is bounded to ±0.3 and `apply()` keeps every percept
+  channel in [0,1]; HOT-4's tone ∈ [0,1] with a finite, discriminating code vector. Documents a real
+  finding: HOT-4's `project()` is **sequence-dependent, not cross-instance pure** (the Tsotchke-facade
+  "Ralph 10x" calls carry hidden global state) — world-level determinism still holds via the seeded
+  facade sequence, but unit-level cross-instance purity does not.
+
 ### Online learning WIRED INTO the apex mind (the Stratum-X gap closes)
 
 - `SuperMind.think()` now carries a real **online-learning adaptation channel** (`setLearning(enabled, rate)`):
