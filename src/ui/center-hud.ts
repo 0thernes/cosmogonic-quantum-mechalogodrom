@@ -483,18 +483,21 @@ function buildNav(doc: Document): void {
       nav.appendChild(a);
     }
   }
-  // Surface any OTHER self-mounted dock toggle (e.g. ⛓ ACCESS) that ISN'T one of the SLOT panels:
-  // #cqm-dock is display:none, so a `mountToggle`'d modal-opener button is otherwise invisible (the
-  // recurring "there's no button for it" bug). Adopt them into the launcher so they can never go
-  // missing again. SLOT toggles are skipped — they already appear as named tabs above.
-  const slotToggles = new Set(SLOTS.map((s) => s.toggle));
-  const dock = doc.getElementById('cqm-dock');
-  if (dock) {
-    for (const btn of Array.from(dock.querySelectorAll<HTMLElement>('button'))) {
-      if (btn.id && slotToggles.has(btn.id)) continue;
-      btn.classList.add('cqm-hud-btn', 'cqm-hud-link');
-      nav.appendChild(btn);
-    }
+  // ⛓ ACCESS — the cryptographic terminal (access-puzzle.ts: "only the Romans know" 3455456754) that
+  // unlocks the playable 2nd super creature. Its self-mounted toggle is buried in the hidden #cqm-dock
+  // (display:none), so it was invisible (the owner's "secret password isn't showing up" report). We add
+  // a FRESH launcher button here that opens it — created anew each buildNav, so it survives HMR re-init
+  // (moving the dock node would lose it when the old nav is removed). The modal lives outside the HUD.
+  const accToggle = doc.getElementById('cqm-acc-toggle');
+  if (accToggle) {
+    nav.appendChild(
+      mk(
+        '⛓ ACCESS',
+        'Cryptographic access terminal — unlock the playable super creature ("only the Romans know")',
+        'cqm-hud-link',
+        () => accToggle.click(),
+      ),
+    );
   }
   doc.body.appendChild(nav);
 }
