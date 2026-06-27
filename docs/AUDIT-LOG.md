@@ -11,6 +11,42 @@ dated / historical / "superseded snapshot" copies (per the binding "Living docs,
 
 ---
 
+## 2026-06-27 — Apex-body shader RED fix (`metalnessFactor` inject-before-declare) + repo-wide shader-injection sweep
+
+Fixed a live shader-compile failure in the apex/super-creature body and then swept every shader patch in
+the repo for the same bug class.
+
+- **The bug (`src/sim/super-body.ts`, `patchGodJewel` onBeforeCompile):** the metalness micro-variance
+  patch assigned `metalnessFactor = clamp(metalVar, 0.4, 1.0);` inside the `#include <roughnessmap_fragment>`
+  replacement — but in the Three.js (r184) MeshStandard fragment chunk order, `metalnessFactor` is declared
+  only by the **later** `#include <metalnessmap_fragment>` (`float metalnessFactor = metalness;`). So every
+  god-jewel material failed to compile with `'metalnessFactor' : undeclared identifier` +
+  `'assign' : l-value required (can't modify a const)`, flooding the console with
+  `THREE.WebGLProgram: Shader Error` and breaking the apex body's PBR (fallback/wrong render).
+- **The fix:** split the patch — the roughness replace keeps only `roughnessFactor` (declared by its own
+  chunk); a new `.replace('#include <metalnessmap_fragment>', …)` computes `metalVar` + assigns
+  `metalnessFactor` **after** the include declares it. `rqD`/`morphR` stay in scope (same `main()`, declared
+  earlier in the roughness block). No new uniforms; determinism intact. Shipped `126875f`.
+- **Verified live, not just compiled:** full `bun run check` gate green; browser preview driven 30+ frames
+  via the `__CQM__.step()` hook showed **zero** `THREE.WebGLProgram`/"Fragment shader is not compiled"
+  errors, with the **5 god-jewel apex-body MeshStandardMaterials present and rendering** and 24 GL programs
+  compiled. (The lone `GL_INVALID_FRAMEBUFFER_OPERATION` is the hidden preview tab's 0×0 canvas / 1×1
+  drawing buffer — environmental, not a shader error; the default FB reports `FRAMEBUFFER_COMPLETE`.)
+- **Repo-wide sweep — super-body was the SOLE instance.** Audited all 5 shader-bearing src files two ways:
+  line-by-line by hand AND a 5-agent adversarial workflow (each candidate re-checked by a skeptic prompted
+  to _refute_ it against the canonical r184 chunk order). **0 findings.** `titans.ts` (onBeforeCompile +
+  cage/aura ShaderMaterials) sets `roughnessFactor` at its own chunk and never touches `metalnessFactor`;
+  `instanced-entities.ts` (reliquary) is the textbook-correct version of this exact pattern — relief locals
+  declared in the roughness chunk and reused in the later emissive chunk, `metalnessFactor`/`normal` touched
+  only at `<emissivemap_fragment>` (after their declaring chunks); `postfx.ts` (gravitational-lens
+  ShaderPass, guarded fallback) and `engine.ts` (cosmic-env ShaderMaterial) declare all uniforms/varyings
+  and use only auto-injected built-ins. All clean.
+- **Gate gotcha (recorded, not a code bug):** the worktree's `CLAUDE.md` had been checked out CRLF (global
+  `core.autocrlf=true` fighting `.gitattributes eol=lf`), which alone failed `prettier --check` and blocked
+  the whole gate while `git status` showed it "clean" (git normalizes on compare; prettier reads raw bytes).
+  Repaired to LF — its clean-filtered blob hash is identical to HEAD, so **zero** content change entered the
+  commit (the fix commit is `super-body.ts` only, +7/−2).
+
 ## 2026-06-27 — New-feature audit (pantheon-breeding) + gate-RED catch
 
 Re-baselined off the current `origin/main` after the day's churn (the 101-super-creature breeding feature,
