@@ -77,8 +77,11 @@ CQM_LLM_KEY=sk-or-... \
 bun dev
 ```
 
-With no env vars, the box runs on the key-less Pollinations default (and LLM7) — useful immediately,
-though free anonymous endpoints can rate-limit; set any one key above for reliable answers.
+With no env vars, the chain head is **FreeLLMAPI** (the `localhost:3001` proxy); when that proxy
+isn't running the box falls through to the key-less **LLM7** then **Pollinations**, so it answers
+immediately out of the box. Free anonymous endpoints can rate-limit; set any one key above for
+reliable answers. (On the static Pages build the browser path is **LLM7-only** — see _Static deploy_
+above.)
 
 > The dev server registers routes at boot, so after changing env vars (or pulling new provider
 > presets) **restart `bun dev`** — `--hot` does not re-register `Bun.serve` routes.
