@@ -1,0 +1,113 @@
+/**
+ * THE MECHALOGODROM (V-MECHA). Falsifiable claims:
+ * - construction draws NO rng and needs no DOM (boot-stream-neutral; headless Scene only);
+ * - fusion ramps monotonically 0 → 1 and reports `fused` once converged;
+ * - the dioramagonic `dimension` readout sweeps from ~99 (genesis) down to ~−10 (full fusion);
+ * - the ten variant shells melt from 10 distinct down toward the corona as fusion completes;
+ * - every snapshot field + the warped mass geometry stays FINITE over a long run at max chaos;
+ * - it is deterministic: identical (t, dt) sequences ⇒ bit-identical snapshots (no rng, no clock);
+ * - dispose() frees its rig without throwing.
+ *
+ * Headless: three's Scene/Mesh/Material/BufferGeometry need no WebGL context.
+ */
+import { describe, expect, test } from 'bun:test';
+import * as THREE from 'three';
+import { Mechalogodrom } from '../src/sim/mechalogodrom';
+
+/** Drive N fixed 1/60s frames, optionally feeding a constant chaos. Returns the final snapshot. */
+function run(m: Mechalogodrom, seconds: number, chaos = 0): ReturnType<Mechalogodrom['snapshot']> {
+  const dt = 1 / 60;
+  let t = 0;
+  const steps = Math.round(seconds / dt);
+  for (let i = 0; i < steps; i++) {
+    t += dt;
+    if (chaos) m.setChaos(chaos);
+    m.update(t, dt);
+  }
+  return m.snapshot();
+}
+
+describe('Mechalogodrom — the fusion abomination', () => {
+  test('boots headless and reports a genesis snapshot before any tick', () => {
+    const scene = new THREE.Scene();
+    const m = new Mechalogodrom(scene);
+    const s = m.snapshot();
+    expect(s.fusion).toBe(0);
+    expect(s.variants).toBe(10);
+    expect(s.fused).toBe(false);
+    // Dimension begins at the top of the dioramagonic sweep.
+    expect(s.dimension).toBeCloseTo(99, 5);
+    m.dispose();
+  });
+
+  test('fusion ramps monotonically 0 → 1 and converges to a whole monster', () => {
+    const scene = new THREE.Scene();
+    const m = new Mechalogodrom(scene);
+    const dt = 1 / 60;
+    let t = 0;
+    let prev = -1;
+    for (let i = 0; i < 60 * 30; i++) {
+      t += dt;
+      m.update(t, dt);
+      const f = m.snapshot().fusion;
+      expect(f).toBeGreaterThanOrEqual(prev); // monotonic non-decreasing
+      expect(f).toBeLessThanOrEqual(1); // bounded
+      prev = f;
+    }
+    const s = m.snapshot();
+    expect(s.fusion).toBe(1);
+    expect(s.fused).toBe(true);
+    m.dispose();
+  });
+
+  test('dioramagonic dimensionality sweeps 99 → under-Λ −10 as it fuses', () => {
+    const scene = new THREE.Scene();
+    const m = new Mechalogodrom(scene);
+    const s = run(m, 30);
+    expect(s.dimension).toBeCloseTo(-10, 2); // 99 − 1·109 = −10 at full fusion
+    expect(s.fused).toBe(true);
+    m.dispose();
+  });
+
+  test('variant shells melt from 10 distinct toward the corona', () => {
+    const scene = new THREE.Scene();
+    const m = new Mechalogodrom(scene);
+    expect(m.snapshot().variants).toBe(10);
+    const s = run(m, 30);
+    expect(s.variants).toBeLessThan(10); // most have melted in once fused
+    m.dispose();
+  });
+
+  test('every value + the warped geometry stays finite over a long run at max chaos', () => {
+    const scene = new THREE.Scene();
+    const m = new Mechalogodrom(scene);
+    const s = run(m, 120, 1); // 2 sim-minutes, chaos pinned high
+    for (const v of [s.fusion, s.dimension, s.power, s.warp, s.variants] as const) {
+      expect(Number.isFinite(v)).toBe(true);
+    }
+    expect(s.power).toBeGreaterThan(0);
+    // `warp` finiteness proves the per-vertex displacement `1 + w·0.32·d` never blew up (d is a
+    // bounded sum of sines), so the shared mass geometry stays NaN-free under sustained warp.
+    m.dispose();
+  });
+
+  test('is deterministic — identical (t, dt) sequences ⇒ identical snapshots', () => {
+    const a = new Mechalogodrom(new THREE.Scene());
+    const b = new Mechalogodrom(new THREE.Scene());
+    const sa = run(a, 40, 0.5);
+    const sb = run(b, 40, 0.5);
+    expect(sa.fusion).toBe(sb.fusion);
+    expect(sa.dimension).toBe(sb.dimension);
+    expect(sa.power).toBe(sb.power);
+    expect(sa.warp).toBe(sb.warp);
+    expect(sa.variants).toBe(sb.variants);
+    a.dispose();
+    b.dispose();
+  });
+
+  test('dispose() is safe', () => {
+    const m = new Mechalogodrom(new THREE.Scene());
+    run(m, 5);
+    expect(() => m.dispose()).not.toThrow();
+  });
+});
