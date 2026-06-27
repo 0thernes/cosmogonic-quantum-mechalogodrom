@@ -19,7 +19,7 @@
  * {@link mulberry32}; no `Math.random`, no `Date.now`. Same seed + same inputs ⇒ identical evolution,
  * bit for bit. Pure, three.js-/DOM-free — a `bun test` leaf.
  *
- * The ten organs (lore → wired real math):
+ * The organs (lore → wired real math) — ten classic substrates + the QUANTUM BRAIN (organ 11):
  *   1 PrimeSieveLoom      — edges only where |i−j| is a TWIN PRIME; sieve propagation + allergy purge.
  *   2 AcousticMeatDrum    — discrete WAVE EQUATION on a ring; thought = standing-wave interference.
  *   3 EntropicNecroMatrix — finite budget; a fired edge BURNS OUT permanently; thoughts reroute.
@@ -1712,7 +1712,7 @@ export class ApexBrain {
     return this.liveNeurons + (1 << q) * 2; // statevector carries re+im per amplitude
   }
 
-  /** One cognitive beat across all ten organs + the meta layer. Deterministic. */
+  /** One cognitive beat across all eleven organs + the meta layer. Deterministic. */
   tick(p: ApexPercept): ApexThought {
     this.beat++;
     this.lastLevel = p.level;
