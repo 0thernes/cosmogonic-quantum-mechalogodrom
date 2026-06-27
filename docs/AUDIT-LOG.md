@@ -11,6 +11,30 @@ dated / historical / "superseded snapshot" copies (per the binding "Living docs,
 
 ---
 
+## 2026-06-27 — Honesty sweep: 5 verified doc/comment-truth fixes (NOT-WIRED labels · entropy doc · provider + contract drift)
+
+Round-2 adversarial audit (6 deep finders — deep-math, uncovered-sim, test-quality, wiring-honesty,
+docdrift, contracts — then refute-by-default verify). The **math-deep finder returned clean-empty** (core
+math sound). 3 confirmed by the workflow + 2 re-verified by hand after the verify stage hit transient
+rate-limiting. All **comment/doc-ONLY, zero behavior change**; landed on `main` as `9512b02`:
+
+- **`self-evolution-loop.ts` ("faculty #99")** & **`morphic-field.ts`** — both fully-built classes with 0
+  import/call/test sites, yet their headers (and FILE-MAP) implied LIVE faculties ("Tsotchke-wired",
+  "Called once per creature per beat"). Relabeled IMPLEMENTED-BUT-NOT-WIRED (matching the
+  `libirrep-symmetry.ts` precedent) + softened the JSDoc + annotated the FILE-MAP row.
+- **`mixed-state-qgt.ts`** — the `entropy` field doc claimed von Neumann `−Tr(ρ log ρ) ∈ [0, log d]` but
+  `computeEntropy()` returns LINEAR entropy `1 − Tr(ρ²) ∈ [0, 1−1/d]`. Doc corrected to the real formula.
+- **`docs/COPILOT-PROVIDERS`** — claimed default=Pollinations + "fails over once"; the code
+  (`src/server/copilot.ts`) makes **FreeLLMAPI** the always-present PRIMARY/default with a multi-step
+  failover (FreeLLMAPI → LLM7 → Pollinations). Corrected default, failover, label, and the FreeLLMAPI section.
+- **`docs/MODULE-CONTRACTS` (`EntityManager.onDeath`)** — contract said `((e: Entity) => void)` but the code
+  is `((x, z) => void)` via `disposeAt()` ("audit fix A"; wired at `world.ts:521`). Updated the **stale
+  contract** to match the deliberate code.
+
+Refuted / left alone (no slop): `pinn-residual` test-gap (math correct); dead-but-honest
+`nqs-vmc-learning` / `curvature-aware-qng` (no false "wired" claim — NEO-MIND marks them partial ◆);
+`pimc-paths` (actually wired). Gate green: prettier, tsc, oxlint, **1585 pass / 0 fail**, receipts, sync, build.
+
 ## 2026-06-27 — Singularities scale to the mega ceiling: O(n) force sweep → O(k) reach query (exact physics, no stride)
 
 The owner reported singularities "die around 25,000 entities" and asked them to stay physically accurate
