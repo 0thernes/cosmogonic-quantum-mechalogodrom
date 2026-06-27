@@ -138,7 +138,11 @@ export function applyBrutalRelease(
     warp = p * 0.4;
   }
 
-  if (release.effect.includes('phoenix') || release.effect.includes('rebirth')) {
+  if (
+    release.effect.includes('phoenix') ||
+    release.effect.includes('rebirth') ||
+    release.effect.includes('fire')
+  ) {
     // DARK PHOENIX / JEAN / EVA: rebirth with QGE + eshkol + pinn metabolism
     void qgeAlivenessStep(p * 1.1, 0.6, 1);
     for (let i = 0; i < entities.length; i++) {
@@ -172,9 +176,11 @@ export function applyBrutalRelease(
   if (
     release.effect.includes('void') ||
     release.effect.includes('consume') ||
-    release.effect.includes('azathoth')
+    release.effect.includes('azathoth') ||
+    release.effect.includes('anti')
   ) {
-    // KNULL / AZATHOTH / ANTI: void consume (pimc soul + quake aliveness + QGT negative)
+    // KNULL / AZATHOTH / ANTI: void consume (pimc soul + quake aliveness + QGT negative + pinn)
+    void pinnLoss(p * 0.9);
     for (let i = 0; i < entities.length; i += 2) {
       const ent = entities[i];
       if (ent) {
@@ -189,80 +195,20 @@ export function applyBrutalRelease(
   if (
     release.effect.includes('spiral') ||
     release.effect.includes('gurren') ||
-    release.effect.includes('drill')
+    release.effect.includes('drill') ||
+    release.effect.includes('transcend')
   ) {
-    // GURREN / SIMON / TTGL: spiral drill transcendence (logo morph + eshkol evolution + coupling)
-    // logo morphogenesis for morph gods - using existing turtle step if exported, else note
-    // (logo-turtle integrated via catalysis for brutal morph horror)
+    // GURREN / SIMON / TTGL: spiral drill transcendence (logo morph + eshkol evolution + coupling).
+    const turtle = turtleNew(rngSeed);
+    void logoMorphScalar(turtle, rngSeed % 120, (p * 10) | 0);
     for (let i = 0; i < entities.length; i += 2) {
       const ent = entities[i];
       if (ent) {
         ent.vitality = Math.min(3.0, ent.vitality * (1 + p * 1.2));
       }
     }
+    reborn = Math.max(reborn, Math.floor(p * 5));
     warp = p * 0.5;
-  }
-
-  if (
-    release.effect.includes('void') ||
-    release.effect.includes('consume') ||
-    release.effect.includes('anti')
-  ) {
-    void pinnLoss(p * 0.9);
-    for (let i = 0; i < entities.length; i++) {
-      const ent = entities[i];
-      if (ent && i % 2 === 0) {
-        ent.vitality = Math.max(0.01, ent.vitality * (1 - p * 0.9));
-        consumed++;
-      }
-    }
-    warp = p * 0.6;
-  }
-
-  if (
-    release.effect.includes('spiral') ||
-    release.effect.includes('drill') ||
-    release.effect.includes('transcend')
-  ) {
-    const turtle = turtleNew(rngSeed);
-    void logoMorphScalar(turtle, rngSeed % 120, (p * 10) | 0);
-    for (let i = 0; i < entities.length; i += 2) {
-      const ent = entities[i];
-      if (ent) ent.vitality = Math.min(2.5, ent.vitality * (1 + p * 0.8));
-    }
-    reborn = Math.floor(p * 5);
-    warp = p * 0.3;
-  }
-
-  if (
-    release.effect.includes('phoenix') ||
-    release.effect.includes('rebirth') ||
-    release.effect.includes('fire')
-  ) {
-    for (let i = 0; i < entities.length; i++) {
-      const ent = entities[i];
-      if (ent && ent.vitality < 0.2) {
-        ent.vitality = 1.2 + p * 0.5;
-        reborn++;
-      }
-    }
-    warp = Math.max(warp, p * 0.3);
-  }
-
-  if (
-    release.effect.includes('snap') ||
-    release.effect.includes('drain') ||
-    release.effect.includes('possess')
-  ) {
-    const half = Math.floor(entities.length / 2);
-    for (let i = 0; i < half; i++) {
-      const ent = entities[i];
-      if (ent) {
-        ent.vitality *= 0.1;
-        consumed++;
-      }
-    }
-    warp = Math.max(warp, p * 0.5);
   }
 
   const note = `${release.archetype} :: ${release.effect} (p=${p.toFixed(2)} via ${release.substrate})`;

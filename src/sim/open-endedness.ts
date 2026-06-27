@@ -125,5 +125,8 @@ export function bedauPackardActivity(
     persistingNew += newThisStep;
     total += curr;
   }
-  return total > 0 ? Math.min(1, persistingNew / (total / snapshots.length)) : 0;
+  // A = (new persisting) / total — a proper [0,1] fraction (matches the docstring). The previous
+  // divisor `total / snapshots.length` (per-snapshot mean) over-scaled by snapshots.length and
+  // saturated to 1 for any rising series. Instrumentation-only (not sim-coupled).
+  return total > 0 ? Math.min(1, persistingNew / total) : 0;
 }

@@ -826,8 +826,19 @@ export class World {
    * production (HMR is dev-only). The renderer Engine is freed separately by the HMR hook.
    */
   dispose(): void {
+    if (this.disposeAbort.signal.aborted) return; // idempotent — abort() is the sentinel
     this.disposeAbort.abort();
     this.audio.dispose();
+    // Free the GPU-resource-owning subsystems that expose a dispose(). The Engine's
+    // forceContextLoss() reclaims the context's VRAM, but these JS-side geometry/material
+    // dispose paths were skipped entirely — each HMR reload built a fresh World whose
+    // subsystems were never torn down. Only subsystems that actually have a dispose() are called.
+    this.singularities.dispose();
+    this.wingRender.dispose();
+    this.monolithTemple.dispose();
+    this.artifacts.dispose(this.engine.scene);
+    for (const b of this.superBodies) b.dispose();
+    for (const h of this.heroBodies) h.body.dispose();
   }
 
   /**

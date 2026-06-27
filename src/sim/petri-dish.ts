@@ -313,14 +313,21 @@ export function petriDishBeat(
     // For demo, call our emergence if available on global or skip (world drives it)
     // Here just amp for brutality feel
     state.biomass = Math.min(1, state.biomass + 0.02);
-    state.complexity = Math.min(15, (state.complexity || 0) + 0.5);
+    // Monotone floor-fill toward this tier's cap (15) — gated so it NEVER regresses
+    // complexity the godPower branch (cap 20) already raised higher. See e67eacb.
+    if ((state.complexity || 0) < 15) {
+      state.complexity = Math.min(15, (state.complexity || 0) + 0.5);
+    }
   }
 
   const ignition = state.ignitionSlot / Math.max(1, NUTRIENT_SLOTS - 1);
   if (ignition > 0.65 && state.phiSurrogate > 0.45 && bioFlux > 0.55) {
     state.eshkolSentientBorn = (state.eshkolSentientBorn || 0) + 1;
     state.biomass = Math.min(1, state.biomass + 0.025 * bioFlux);
-    state.complexity = Math.min(12, (state.complexity || 0) + 0.6);
+    // Monotone toward this tier's cap (12) — never regress a higher complexity.
+    if ((state.complexity || 0) < 12) {
+      state.complexity = Math.min(12, (state.complexity || 0) + 0.6);
+    }
     // Speciation using full Tsotchke (different forms of life)
     state.morphotype = ((state.morphotype || 0) + (state.eshkolSentientBorn % 3 === 0 ? 1 : 0)) % 7;
     state.geneticDivergence = Math.min(1, (state.geneticDivergence || 0) + 0.015 * bioFlux);
