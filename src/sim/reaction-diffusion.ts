@@ -140,6 +140,11 @@ export class ReactionDiffusionSystem {
     this.texture = tex;
   }
 
+  /** Free the GPU DataTexture on world teardown / HMR reload. Idempotent. */
+  dispose(): void {
+    this.texture.dispose();
+  }
+
   /**
    * Live front U field (background ≈ 1, patterns ≈ 0.2–0.4). Shared buffer,
    * valid until the next `step()` swap; read-only by convention. For tests and

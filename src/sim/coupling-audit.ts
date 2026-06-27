@@ -108,12 +108,9 @@ export function couplingReport(
   let absSum = 0;
   for (let i = 0; i < n; i++) {
     let sumAbs = 0;
-    let maxAbs = 0;
     for (let j = 0; j < n; j++) {
       if (i === j) continue;
-      const a = Math.abs(correlation[i]![j] ?? 0);
-      sumAbs += a;
-      if (a > maxAbs) maxAbs = a;
+      sumAbs += Math.abs(correlation[i]![j] ?? 0);
     }
     perFaculty[i] = n > 1 ? sumAbs / (n - 1) : 0;
     correlation[i]![i] = correlation[i]![i] ?? 0; // keep diag well-defined

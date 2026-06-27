@@ -22,7 +22,7 @@ Status legend: ✅ wired deep (into apex mind) · 🟢 wired (world/sim) · 🟠
 
 ## The 20-Project Tsotchke Corpus (22 registry slugs) (tsotchke user + Tsotchke-Corporation + local mirrors + Eshkol flagship + sites + meta)
 
-**All 20 corpus projects (mapped from https://github.com/tsotchke (15) + https://github.com/Tsotchke-Corporation (6) repos) + full local Z:\[Vibe Coded (AI)]\(Tsotchke) 12,444-file corpus are accounted for and utilized.** Tsotchke tech is real MIT-grade quantum research (startup; physical QPU for scale/speed only, not correctness). No overclaims. Independent audits confirm it is the most complete/comprehensive foundational quantum corpus available. We use **every single one** — deep live code for scientific kernels, .esk DNA harvest + full study/audit for all others, explicit fences only for non-LLM mandate or license/proprietary.
+**All 20 corpus projects (mapped from https://github.com/tsotchke (16) + https://github.com/Tsotchke-Corporation (6) repos) + full local Z:\[Vibe Coded (AI)]\(Tsotchke) 12,444-file corpus are accounted for and utilized.** Tsotchke tech is real MIT-grade quantum research (startup; physical QPU for scale/speed only, not correctness). No overclaims. Independent audits confirm it is the most complete/comprehensive foundational quantum corpus available. We use **every single one** — deep live code for scientific kernels, .esk DNA harvest + full study/audit for all others, explicit fences only for non-LLM mandate or license/proprietary.
 
 **Classification (this full 2026-06-21 scan):**
 

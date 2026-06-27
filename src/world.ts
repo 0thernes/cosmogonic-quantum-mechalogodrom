@@ -837,6 +837,8 @@ export class World {
     this.wingRender.dispose();
     this.monolithTemple.dispose();
     this.artifacts.dispose(this.engine.scene);
+    this.nhiBody.dispose(); // 3 shared geometries + live body materials
+    this.rd.dispose(); // the Gray–Scott GPU DataTexture
     for (const b of this.superBodies) b.dispose();
     for (const h of this.heroBodies) h.body.dispose();
   }

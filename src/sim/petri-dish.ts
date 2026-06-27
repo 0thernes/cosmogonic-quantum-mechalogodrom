@@ -331,6 +331,13 @@ export function petriDishBeat(
     // Speciation using full Tsotchke (different forms of life)
     state.morphotype = ((state.morphotype || 0) + (state.eshkolSentientBorn % 3 === 0 ? 1 : 0)) % 7;
     state.geneticDivergence = Math.min(1, (state.geneticDivergence || 0) + 0.015 * bioFlux);
+    // Materialize the born strain into the LIVE population so it is no longer an always-empty
+    // array: this gives the open-endedness telemetry (speciesRichness/Diversity) real morphotype
+    // spread to measure AND makes the applyBrutalRelease pass above operate on real entities
+    // instead of a no-op. Deterministic (form/vitality derive from already-seeded morphotype/bioFlux);
+    // ring-capped so memory stays bounded.
+    state.biologics.push({ form: `M${state.morphotype}`, vitality: Math.min(1, bioFlux) });
+    if (state.biologics.length > 64) state.biologics.shift();
   }
 
   if (state.beats > 0 && state.beats % 40 === 0 && state.biomass > 0.4 && state.complexity < 8) {
@@ -475,7 +482,8 @@ export function applyBrutalGodEvent(
     event.includes('FEAST') ||
     event.includes('BROLY') ||
     event.includes('EVA') ||
-    event.includes('DARK')
+    event.includes('DARK') ||
+    event.includes('IGNITION') // BINARY_IGNITION (Captain-Marvel binary-star ignition)
   ) {
     // Dark Phoenix, Broly, EVA-01, Alucard, Griffith — berserk rage rebirth, cosmic fire, berserk morph (eshkol rewrite + qge + rd + spin)
     state.biomass = Math.min(1, state.biomass + boost * (brutality > 0.7 ? 2.0 : 1.4));
@@ -510,7 +518,8 @@ export function applyBrutalGodEvent(
     event.includes('REALITY') ||
     event.includes('WARP') ||
     event.includes('SCARLET') ||
-    event.includes('MANHATTAN')
+    event.includes('MANHATTAN') ||
+    event.includes('REWRITE') // DETERMINISTIC_REWRITE (Dr-Manhattan reality rewrite)
   ) {
     // Mxyzptlk, Jaspers, Dr Manhattan, Scarlet Witch — 5th dim reality warp, quantum observer, chaos rewrite (qgt extreme + eshkol rewrite + moonlab tensor)
     state.pressure = Math.min(1, state.pressure + brutality * (brutality > 0.7 ? 1.5 : 1.0));
@@ -533,7 +542,9 @@ export function applyBrutalGodEvent(
     event.includes('JOKER') ||
     event.includes('CHAOS') ||
     event.includes('PENNY') ||
-    event.includes('MAD')
+    event.includes('MAD') ||
+    event.includes('FATE') || // FATE_TWIST (Griffith/Joker fate-twist)
+    event.includes('TWIST')
   ) {
     // Joker, Chaos Gods, Pennywise, Mad Jim — invisible chaos, fear, universe break (ulg + resonance + taboo + mythos)
     state.complexity = Math.min(25, state.complexity + brutality * 1.5);

@@ -221,6 +221,17 @@ export class Mortality {
   }
 
   /**
+   * Live legacy proxy — the SAME formula {@link die} records, but evaluated while still alive.
+   * `legacyScore` is only written at death, so a survivor's stored score is always 0; selection
+   * pressure must read this live value to compare survivors against the deceased meaningfully.
+   */
+  get liveLegacy(): number {
+    const offspringBonus = this.state.offspringCount * 0.1;
+    const ageBonus = (this.state.age / Math.max(1, this.state.lifespan)) * 0.2;
+    return clamp01(offspringBonus + ageBonus);
+  }
+
+  /**
    * Reset to initial state (rebirth).
    */
   rebirth(): void {
@@ -287,10 +298,11 @@ export function computePopulationMortalityStats(
 export function computeSelectionPressure(survivors: Mortality[], deceased: Mortality[]): number {
   if (deceased.length === 0) return 0;
 
-  // Compare average legacy scores
+  // Compare average legacy scores. Survivors are alive, so their stored legacyScore is still 0
+  // (it is only written at death) — read the live proxy instead; the deceased carry the real one.
   const survivorLegacy =
     survivors.length > 0
-      ? survivors.reduce((sum, m) => sum + m.currentState.legacyScore, 0) / survivors.length
+      ? survivors.reduce((sum, m) => sum + m.liveLegacy, 0) / survivors.length
       : 0;
   const deceasedLegacy =
     deceased.reduce((sum, m) => sum + m.currentState.legacyScore, 0) / deceased.length;
