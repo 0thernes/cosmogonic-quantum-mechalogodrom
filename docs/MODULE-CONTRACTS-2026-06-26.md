@@ -1077,9 +1077,20 @@ Deviations from and clarifications of the V3 goal spec, as landed:
    0.5/0.5 (per-instance PBR scalars rejected: two more attributes for an
    effect emissive dominates anyway) and cast NO shadows (legacy capped
    entity casters at 120). Per-instance channels: matrix, `instanceColor`,
-   and a vec4 `instEmissive` (rgb = emissive·intensity, a = opacity) patched
-   into MeshStandardMaterial via `onBeforeCompile` (replaces
-   `totalEmissiveRadiance`, multiplies `diffuseColor.a`). Pools are lazily
+   a vec4 `instEmissive` (rgb = emissive·intensity, a = opacity), and a vec4
+   `instVitals` (x=wealth `energy/100`, y=senescence `age/life`, z=neural firing
+   `act`, w=exertion `speed×8`; packed by exported pure `packVitals`, finite + in
+   [0,1], bare-mesh→zeros) — all patched into MeshStandardMaterial via
+   `onBeforeCompile` (replaces `totalEmissiveRadiance`, multiplies
+   `diffuseColor.a`). **V-VITALS effect suite** (reliquary fragment, GPU-only,
+   reuses the relief/fresnel/normal already computed + 1 extra fbm): each named
+   term's strength is a FALSIFIABLE readout of one `instVitals` lane — phosphor
+   gaseousness + gilded buffer shimmer (wealth), laser-dance synapse arcs +
+   shardwarp vertex bristle (neural firing), ashen cataract greying (senescence),
+   hyperspace ionizing flutter (exertion), singulrosity bloom (wealth×firing),
+   bit-glitch chaos core (world chaos × senescence) — never decorative; an idle
+   poor young still organism is quiet, a rich/firing/ancient/sprinting one blazes.
+   GPU-only, no rng, so the seeded trajectory is byte-identical. Pools are lazily
    built at `ceil(maxEntities/geoCount)·4` capacity, grow ×2 (event-driven
    rebuild), clamp at `maxEntities`; `frustumCulled = false` (instances span
    the arena). Data meshes set `matrixAutoUpdate = false`; the renderer calls

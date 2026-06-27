@@ -31,6 +31,7 @@
  * untouched.
  */
 import * as THREE from 'three';
+import { clamp01 } from '../math/scalar';
 import { RENDER_MODES, RENDER_MODE_FX } from './constants';
 import type { RenderMode } from './constants';
 import type { Entity, SimContext } from '../types';
@@ -78,6 +79,12 @@ interface Pool {
   mesh: THREE.InstancedMesh;
   /** vec4 per instance: rgb = emissive·intensity, a = opacity. */
   emissive: THREE.InstancedBufferAttribute;
+  /**
+   * vec4 per instance: REAL packed vital signals driving the V-VITALS effect suite —
+   * x = wealth (energy/100), y = senescence (age/life), z = neural firing (act), w = exertion
+   * (speed). Written from {@link packVitals} in `sync`; each is a falsifiable readout, never decor.
+   */
+  vitals: THREE.InstancedBufferAttribute;
   capacity: number;
   /** Live instances written this frame (reset each sync). */
   used: number;
@@ -93,6 +100,39 @@ interface ShaderUniforms {
   uBass: { value: number };
   /** Active render mode index (RENDER_MODES order) — drives the exotic fragment effects. */
   uMode: { value: number };
+}
+
+/** Speed→exertion normalizer: a damped-velocity magnitude of ~0.125 saturates the exertion lane. */
+const VITAL_EXERTION_SCALE = 8;
+
+/**
+ * Pack an organism's REAL per-frame state into the `instVitals` vec4 that drives the V-VITALS GPU
+ * effect suite — written allocation-free into `out[offset..offset+3]`:
+ * - **x = wealth** `clamp01(energy/100)` (the market-behavior payoff) — phosphor gas + gilded shimmer;
+ * - **y = senescence** `clamp01(age/life)` — ashen cataract + bit-glitch scramble;
+ * - **z = neural firing** `clamp01(act)` (activation accumulator) — laser-dance synapse arcs + shardwarp;
+ * - **w = exertion** `clamp01(speed × {@link VITAL_EXERTION_SCALE})` — hyperspace ionizing streaks.
+ *
+ * Every lane is finite and in `[0, 1]`: non-finite inputs and `life <= 0` are guarded (a bare
+ * data-mesh without full `EntityData` packs zeros, never NaN), and each is clamped. Pure, no rng — so
+ * the spectacle is a deterministic function of state, not decoration. O(1). See
+ * tests/entity-vitals.test.ts.
+ */
+export function packVitals(
+  out: Float32Array,
+  offset: number,
+  energy: number,
+  age: number,
+  life: number,
+  act: number,
+  speed: number,
+): void {
+  const a = Number.isFinite(age) ? age : 0;
+  const l = Number.isFinite(life) && life > 0 ? life : 0;
+  out[offset] = clamp01((Number.isFinite(energy) ? energy : 0) / 100); // x wealth
+  out[offset + 1] = l > 0 ? clamp01(a / l) : 0; // y senescence
+  out[offset + 2] = clamp01(Number.isFinite(act) ? act : 0); // z neural firing
+  out[offset + 3] = clamp01((Number.isFinite(speed) ? speed : 0) * VITAL_EXERTION_SCALE); // w exertion
 }
 
 /**
@@ -132,18 +172,22 @@ function patchPoolMaterial(
     shader.vertexShader = shader.vertexShader
       .replace(
         '#include <common>',
-        '#include <common>\nattribute vec4 instEmissive;\nvarying vec4 vInstEmissive;\nvarying vec3 vObjPos;\nuniform float uTime;\nuniform float uNightmare;',
+        '#include <common>\nattribute vec4 instEmissive;\nattribute vec4 instVitals;\nvarying vec4 vInstEmissive;\nvarying vec4 vVitals;\nvarying vec3 vObjPos;\nuniform float uTime;\nuniform float uNightmare;',
       )
       .replace(
         '#include <begin_vertex>',
         '#include <begin_vertex>\n' +
           'vInstEmissive = instEmissive;\n' +
+          'vVitals = instVitals;\n' +
           'vObjPos = position;\n' +
           'if (uNightmare > 0.0) {\n' +
           '  float ph = float(gl_InstanceID) * 0.6180339887;\n' +
           '  float warp = sin(position.y * 8.0 + uTime * 3.0 + ph) * 0.5 + sin(position.x * 6.0 - uTime * 2.0 + ph) * 0.5;\n' +
           '  transformed += objectNormal * (uNightmare * warp * 0.18);\n' +
-          '}',
+          '}\n' +
+          '// SHARDWARP (neural firing, vVitals.z): a firing body bristles with tiny shards along its\n' +
+          '// normal; amplitude scales with real activation, so an idle organism is byte-identical.\n' +
+          'transformed += objectNormal * (instVitals.z * sin(position.x * 31.0 + position.y * 27.0 - uTime * 11.0) * 0.04);',
       );
     shader.fragmentShader = shader.fragmentShader
       .replace(
@@ -186,6 +230,7 @@ function materialClassFor(gi: number): number {
  */
 const RELIQUARY_FRAG_HEADER = /* glsl */ `
 varying vec4 vInstEmissive;
+varying vec4 vVitals;
 varying vec3 vObjPos;
 uniform float uTime;
 uniform float uBass;
@@ -316,6 +361,36 @@ const RELIQUARY_FRAG_BODY = /* glsl */ `#include <emissivemap_fragment>
 	totalEmissiveRadiance += rqFilm * (rqFres * 0.38 + rqRidge * 0.26) * RQ_FILM;
 	// Wet-glass rim glint.
 	totalEmissiveRadiance += vec3(0.95, 0.98, 1.0) * pow(rqFres, 1.4) * 0.14;
+
+	// ══ V-VITALS REAL-BOUND EFFECT SUITE ══════════════════════════════════════════════════════
+	// Every term's strength is a FALSIFIABLE readout of one packed per-entity signal (vVitals:
+	// x=wealth energy, y=senescence age/life, z=neural firing act, w=exertion speed). The spectacle
+	// IS the state: a poor, young, idle, still organism stays quiet; a rich, ancient, firing, sprinting
+	// one blazes. GPU-only, zero per-entity CPU; reuses the relief/fresnel/normal already computed.
+	float vWealth = vVitals.x, vSen = vVitals.y, vNeu = vVitals.z, vExe = vVitals.w;
+	// PHOSPHOR GASEOUSNESS (wealth) — a slow roiling luminous gas wreathes the well-fed body.
+	float rqGas = fract(rqDetail * 1.9 + uTime * 0.12); rqGas = rqGas * (1.0 - rqGas) * 4.0;
+	totalEmissiveRadiance += vec3(0.30, 0.95, 0.72) * rqGas * vWealth * 0.5;
+	// LASER-DANCE SYNAPSE ARCS (neural firing) — thin electric filaments race across the shell.
+	float rqArc = pow(0.5 + 0.5 * sin(vObjPos.y * 24.0 + vObjPos.x * 15.0 + uTime * 9.0), 20.0);
+	totalEmissiveRadiance += vec3(0.45, 0.85, 1.0) * rqArc * vNeu * 2.4;
+	// ASHEN CATARACT (senescence) — pigment greys and a cold frost rim creeps in; the body ages on screen.
+	float rqLum = dot(diffuseColor.rgb, vec3(0.299, 0.587, 0.114));
+	diffuseColor.rgb = mix(diffuseColor.rgb, vec3(rqLum * 0.82), vSen * 0.7);
+	totalEmissiveRadiance += vec3(0.55, 0.62, 0.80) * pow(rqFres, 2.0) * vSen * 0.5;
+	// HYPERSPACE IONIZING FLUTTER (exertion) — ion streaks band along the engraved normal as it sprints.
+	float rqStreak = pow(0.5 + 0.5 * sin(rqN.y * 28.0 - uTime * 15.0), 7.0);
+	totalEmissiveRadiance += vec3(0.30, 0.60, 1.0) * rqStreak * vExe * 1.4;
+	// GILDED BUFFER SHIMMER (wealth) — a high-frequency sparkle gilds the fresnel rim of the rich.
+	float rqSpk = step(0.85, rqFbm(vObjPos * 21.0 + uTime * 0.6)) * pow(rqFres, 1.5);
+	totalEmissiveRadiance += vec3(1.0, 0.85, 0.45) * rqSpk * vWealth * 1.4;
+	// SINGULROSITY BLOOM (vitality = wealth × firing) — the most alive bodies bloom a hot core halo.
+	totalEmissiveRadiance += vec3(1.0, 0.70, 1.0) * pow(rqFres, 0.6) * (vWealth * vNeu) * 1.5;
+	// BIT-GLITCH CHAOS CORE (global chaos × senescence) — the shell quantizes into flickering data blocks,
+	// scrambling harder on stressed, aged bodies; ties the body to the real world-chaos system.
+	float rqGlitch = floor((rqN0 + sin(uTime * 11.0) * 0.25) * 6.0) / 6.0;
+	totalEmissiveRadiance += vec3(0.10, 1.0, 0.40) * rqGlitch * uChaos * (0.25 + 0.75 * vSen) * 0.4;
+
 	// Exotic render modes layer on top (V7-beyond, unchanged).
 	if (uMode > 5.5) {
 		float ct = abs(dot(normalize(vNormal), rqV));
@@ -459,6 +534,19 @@ export class InstancedEntityRenderer {
         a[o + 2] = em.b * eI;
       }
       a[o + 3] = e.material.transparent ? Math.max(e.material.opacity, MIN_ALPHA) : 1;
+      // V-VITALS: pack this organism's REAL state into the per-instance vitals lane that drives the
+      // GPU effect suite. Defensive — a bare data-mesh lacking full EntityData packs zeros, never NaN.
+      const ud = e.userData;
+      const vel = ud.vel as THREE.Vector3 | undefined;
+      packVitals(
+        pool.vitals.array as Float32Array,
+        o,
+        ud.energy,
+        ud.age,
+        ud.life,
+        ud.act,
+        vel ? vel.length() : 0,
+      );
     }
 
     // Publish: live counts, clipped uploads, render mode (V7.3). Per-instance colour/emissive/
@@ -485,6 +573,9 @@ export class InstancedEntityRenderer {
         pool.emissive.clearUpdateRanges();
         pool.emissive.addUpdateRange(0, used * 4);
         pool.emissive.needsUpdate = true;
+        pool.vitals.clearUpdateRanges();
+        pool.vitals.addUpdateRange(0, used * 4);
+        pool.vitals.needsUpdate = true;
       }
       if (modeChanged) {
         this.applyModeToPool(pool.mesh.material as THREE.MeshStandardMaterial);
@@ -542,19 +633,24 @@ export class InstancedEntityRenderer {
     mesh.count = 0;
     const emissive = new THREE.InstancedBufferAttribute(new Float32Array(capacity * 4), 4);
     emissive.setUsage(THREE.DynamicDrawUsage);
+    // vec4 per-instance VITAL signals (V-VITALS) — same lifecycle as `emissive`: owned by the pool's
+    // geometry clone, disposed on growth, re-uploaded clipped to the live range each sync.
+    const vitals = new THREE.InstancedBufferAttribute(new Float32Array(capacity * 4), 4);
+    vitals.setUsage(THREE.DynamicDrawUsage);
     // The pool renders a per-pool CLONE of the cached geometry so the
     // `instEmissive` attribute never leaks onto the shared cache entry (entity
     // geometries are tiny — ≤80 small clones, boot/growth-time only). The clone
     // is owned by the pool and disposed on growth; the cache original never is.
     const instGeo = geo.clone();
     instGeo.setAttribute('instEmissive', emissive);
+    instGeo.setAttribute('instVitals', vitals);
     mesh.geometry = instGeo;
     // Force instanceColor allocation now so sync() can assume it exists.
     mesh.setColorAt(0, WHITE);
     const ic = mesh.instanceColor;
     if (ic) ic.setUsage(THREE.DynamicDrawUsage);
     this.scene.add(mesh);
-    return { mesh, emissive, capacity, used: 0 };
+    return { mesh, emissive, vitals, capacity, used: 0 };
   }
 
   /** Replace a pool with a doubled-capacity successor (event-driven, rare). */

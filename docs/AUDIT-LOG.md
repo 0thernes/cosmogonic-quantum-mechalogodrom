@@ -11,6 +11,38 @@ dated / historical / "superseded snapshot" copies (per the binding "Living docs,
 
 ---
 
+## 2026-06-27 — V-VITALS: a per-entity GPU effect suite where every spectacle is a falsifiable state readout
+
+Pushed the "real, not decorative" mandate into a full **named effect library** on every instanced
+creature body — spectacular AND provable. Added a per-instance `instVitals` vec4 carrying four REAL
+signals, feeding the reliquary shader so the visuals encode the ecosystem's actual condition.
+
+- **New per-instance channel (`src/sim/instanced-entities.ts`):** `instVitals` vec4, packed by the
+  exported pure `packVitals` — x=wealth (`energy/100`), y=senescence (`age/life`), z=neural firing
+  (`act`), w=exertion (`speed×8`). Every lane finite and in `[0,1]`; non-finite inputs and `life<=0`
+  pack 0 (a bare data-mesh → zeros, never NaN). Same buffer lifecycle as `instEmissive` (built in
+  `buildPool`, written in `sync` pass-2, uploaded clipped to the live range).
+- **The effect suite (reliquary fragment + one vertex term), each a falsifiable readout of one lane:**
+  PHOSPHOR GASEOUSNESS + GILDED BUFFER SHIMMER (wealth), LASER-DANCE SYNAPSE ARCS + SHARDWARP vertex
+  bristle (neural firing), ASHEN CATARACT pigment-greying (senescence), HYPERSPACE IONIZING FLUTTER
+  (exertion), SINGULROSITY BLOOM (wealth×firing), BIT-GLITCH CHAOS CORE (world chaos × senescence). An
+  idle poor young still organism stays quiet; a rich, firing, ancient, sprinting one blazes — _the
+  spectacle is the state_. GPU-only (zero per-entity CPU), reuses the relief/fresnel/normal already
+  computed + one extra fbm; the shardwarp is gated on `act` so idle geometry is byte-identical.
+- **Determinism preserved:** pure `f(state)`, **no rng** — seeded trajectory byte-identical; only
+  pixels change.
+- **Verified, despite the stale-bundle trap:** `tsc` clean; **tests/entity-vitals.test.ts** (8 tests)
+  pins `packVitals` (lanes, clamps, NaN/`life<=0` guards, offset window) AND a headless
+  `InstancedEntityRenderer.sync` integration proving the packed real state reaches the pool's
+  `instVitals` buffer (and a bare mesh packs zeros); existing `tests/instanced.test.ts` still green.
+  Because `preview_start` served a stale bundle, the new GLSL was compiled **directly in the live
+  WebGL2 context** (both the fragment suite and the shardwarp vertex term: `COMPILE_STATUS` true, empty
+  info-log) with the prerequisite locals the integrated shader provides — conclusive that it compiles.
+- **Extensible by design:** the four-lane channel + the additive-term pattern is the substrate for the
+  next batch of named effects (vortexical swirl, helix cosmos, orbital plasmoids, lapse-collapse
+  breathing, storm thermal radiance …), each to be wired to a real signal — never decoration.
+- **Contract synced:** the instanced per-instance-channels bullet in `MODULE-CONTRACTS-2026-06-26.md`.
+
 ## 2026-06-27 — Honesty sweep: 5 verified doc/comment-truth fixes (NOT-WIRED labels · entropy doc · provider + contract drift)
 
 Round-2 adversarial audit (6 deep finders — deep-math, uncovered-sim, test-quality, wiring-honesty,
