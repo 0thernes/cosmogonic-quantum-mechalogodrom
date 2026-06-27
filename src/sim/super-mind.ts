@@ -637,6 +637,9 @@ export class SuperMind {
     workspace: 0, // Eshkol GWT from corpus
   };
   private plan: SuperPlan = 'REST';
+  /** P1 quantum-ablation gate: 1 = quantum-substrate faculties contribute, 0 = ablated (a parameter-matched
+   *  control arm for the quantum-vs-classical experiment). Default ON — existing behaviour unchanged. */
+  private qGate = 1;
 
   constructor(
     rng: Rng,
@@ -1224,8 +1227,8 @@ export class SuperMind {
         0.15 * this.reservoir.novelty +
         0.12 * (1 - this.criticality.proximity) + // off-criticality ⇒ explore to recover the edge of chaos
         EMP_CURIOSITY_GAIN * this.empowerment.empowerment + // agency hunger ⇒ seek regions it can steer
-        QRC_CURIOSITY_GAIN * this.qreservoir.quantumFlux + // a churning quantum state ⇒ restless exploration
-        LATENT_CURIOSITY_GAIN * ls.quantumUncertainty + // V1.3: real Schrödinger positional spread ⇒ explore
+        QRC_CURIOSITY_GAIN * this.qreservoir.quantumFlux * this.qGate + // quantum reservoir (P1-ablatable)
+        LATENT_CURIOSITY_GAIN * ls.quantumUncertainty * this.qGate + // Schrödinger spread (P1-ablatable)
         GWT_CAPACITY_REENTRY_GAIN * this.lastGwtCapacity.pressure, // V1.3 GWT-2: overloaded workspace ⇒ explore
     );
 
@@ -1677,6 +1680,12 @@ export class SuperMind {
     causalEffect: 0,
     causalGrad: 0,
   };
+
+  /** P1: ablate (true) or restore (false) the quantum-substrate contributions to the decision — the
+   *  parameter-matched control arm for the quantum-vs-classical advantage experiment. Default = ON. */
+  setQuantumAblated(on: boolean): void {
+    this.qGate = on ? 0 : 1;
+  }
 
   snapshot(): SuperMindSnapshot {
     return {

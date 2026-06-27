@@ -5,11 +5,14 @@
  *   - "Classical" arm: disable or minimize quantum faculties (QGT, spin, Eshkol quantum collapse, resonance order bias, etc.).
  *   - "Full" arm: normal quantum-substrate faculties.
  *
- * Metrics (deterministic, seeded): survival steps, resource efficiency, decision quality proxy.
- * Reports effect size, 95% CI skeleton (bootstrap later), ablation signal.
+ * Metrics (deterministic, seeded): survival steps, resource accumulation, empowerment proxy.
+ * Reports the paired Full−Classical effect size + a bootstrap 95% CI.
  *
- * This is the infrastructure. Run many seeds, pre-register tasks in future.
- * Current task: simple resource-foraging survival in a noisy field (uses existing economy + percept bias).
+ * 2026-06-27 — the arms are now a REAL parameter-matched ablation (classical = setQuantumAblated(true),
+ * identical percepts). The earlier scaffold differed the arms only by chaos level, which the survival
+ * model rewards directly, so that delta measured CHAOS, not a quantum advantage. The honest expectation
+ * with this minimal gate is a SMALL or NULL effect — and a null is a valid result: the substrate is not
+ * yet shown to buy a behavioural advantage. Pre-register the task + widen the ablation before any claim.
  *
  * Usage (manual or CI probe):
  *   bun scripts/p1-quantum-classical-experiment.ts --seeds 30 --beats 200
@@ -50,19 +53,22 @@ function makePercept(t: number, chaos: number): SuperPercept {
 
 function runArm(seed: number, maxBeats: number, arm: Arm): RunResult {
   const rng = mulberry32(seed);
-  // For "classical" we bias the mind constructor / percepts to reduce quantum signals.
-  // In real use this would be a flag on SuperMind or faculty mask.
-  // For scaffold we simulate by higher chaos + lower phase coherence bias in percept.
-  const effectiveChaos = arm === 'classical' ? 0.7 : 0.35;
+  // CONTROLLED ABLATION (fixed 2026-06-27): both arms see IDENTICAL percepts (same fixed chaos); the ONLY
+  // difference is whether the quantum-substrate faculties contribute (classical → setQuantumAblated(true)).
+  // The previous scaffold differed the arms by CHAOS level, which the survival model rewards directly — so
+  // its delta measured chaos, NOT a quantum advantage. Now any Full−Classical delta is attributable to the
+  // quantum substrate alone (architecture, params, seed, percepts all matched).
+  const FIXED_CHAOS = 0.4;
 
   const mind = new SuperMind(rng);
+  if (arm === 'classical') mind.setQuantumAblated(true);
   let energy = 1.0;
   let totalRes = 0;
   let empSum = 0;
   let t = 0;
 
   for (t = 0; t < maxBeats; t++) {
-    const p = makePercept(t, effectiveChaos);
+    const p = makePercept(t, FIXED_CHAOS);
     const intent = mind.think(p);
     const snap = mind.snapshot();
 
