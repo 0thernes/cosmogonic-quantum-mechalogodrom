@@ -39,14 +39,19 @@ interface Msg {
 }
 
 /**
- * STATIC-DEPLOY AI FALLBACK — Pollinations is a free, key-less, CORS-enabled OpenAI-compatible API the
- * BROWSER can call directly (verified `Access-Control-Allow-Origin: *`). On the GitHub Pages build there
- * is no Bun server (no `/api/chat`), so the chat would otherwise be dead; instead the client calls this
- * directly so the ✦ AI still answers. The repo-reading tools (/read /ls /grep /run) stay dev-only — they
- * need the server — but plain conversation works everywhere. This is the SAME provider the local server
- * fails over to (`src/server/copilot.ts` PRESETS: `text.pollinations.ai`), now reachable client-side.
+ * STATIC-DEPLOY AI FALLBACK — on the GitHub Pages build there is no Bun server (no `/api/chat`), so the
+ * chat would otherwise be dead. We call a free, KEY-LESS, CORS-enabled, **browser-callable** LLM directly.
+ *
+ * Provider = LLM7 (`api.llm7.io`, the same keyless provider the local server lists). Two of its models
+ * answer ANONYMOUSLY (no token, no CAPTCHA): `codestral-latest` + `devstral-small-2:24b` — we try them in
+ * order. (Pollinations, the server's other fallback, now gates *browser* requests behind a Cloudflare
+ * Turnstile token — `{"error":"Missing Turnstile token"}` — so it works from the server/curl but NOT from
+ * a static page; LLM7 is the one that works client-side.) Verified live: CORS open, real content returned.
+ * The repo-reading tools (/read /ls /grep /run) stay dev-only — they need the server — but conversation
+ * works everywhere. For the bigger models + higher limits, a free token from token.llm7.io can be added.
  */
-const POLLINATIONS_URL = 'https://text.pollinations.ai/openai';
+const LLM7_URL = 'https://api.llm7.io/v1/chat/completions';
+const STATIC_AI_MODELS = ['codestral-latest', 'devstral-small-2:24b'] as const;
 const STATIC_AI_SYSTEM =
   'You are the ✦ AI guide inside the Cosmogonic Quantum Mechalogodrom — a deterministic, browser-native ' +
   '50,000-agent quantum + artificial-life cosmos simulation (real seeded math, not an LLM toy). Answer ' +
@@ -54,19 +59,33 @@ const STATIC_AI_SYSTEM =
   'vivid but accurate, concise. You are on the static GitHub Pages build, so the repo commands ' +
   '(/read /ls /grep /run) are unavailable here (they need the local `bun dev` server); just converse.';
 
-/** Call the free Pollinations LLM straight from the browser. Returns the assistant text. */
-async function askPollinationsDirect(history: readonly Msg[]): Promise<string> {
-  const res = await fetch(POLLINATIONS_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      model: 'openai',
-      messages: [{ role: 'system', content: STATIC_AI_SYSTEM }, ...history],
-    }),
-  });
-  if (!res.ok) throw new Error(`pollinations ${res.status}`);
-  const data = (await res.json()) as { choices?: { message?: { content?: string } }[] };
-  return data.choices?.[0]?.message?.content?.trim() || '(no answer)';
+/** Call a free, key-less, browser-callable LLM straight from the page. Tries each anonymous model. */
+async function askStaticAi(history: readonly Msg[]): Promise<string> {
+  const messages = [{ role: 'system' as const, content: STATIC_AI_SYSTEM }, ...history];
+  let lastErr = 'no provider';
+  for (const model of STATIC_AI_MODELS) {
+    try {
+      const res = await fetch(LLM7_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ model, messages }),
+      });
+      if (!res.ok) {
+        lastErr = `llm7 ${res.status}`;
+        continue;
+      }
+      const data = (await res.json()) as {
+        choices?: { message?: { content?: string } }[];
+        detail?: string;
+      };
+      const content = data.choices?.[0]?.message?.content?.trim();
+      if (content) return content;
+      lastErr = data.detail || 'empty reply'; // e.g. a model that needs a token → try the next
+    } catch (e) {
+      lastErr = e instanceof Error ? e.message : String(e);
+    }
+  }
+  throw new Error(lastErr);
 }
 /** One provider's health from /api/copilot/health (the recovery-pipeline rows). */
 interface ProviderHealth {
@@ -374,19 +393,19 @@ function mount(): void {
       // "Unexpected token <" JSON-parse error — the ✦ AI agent is a local-dev-server feature.
       const ctype = res.headers.get('content-type') ?? '';
       if (!res.ok || !ctype.includes('application/json')) {
-        // No Bun server (static GitHub Pages) → call the free, key-less Pollinations LLM DIRECTLY from
-        // the browser so the chat still works. The repo-command tools stay dev-only (they need /api/tool).
+        // No Bun server (static GitHub Pages) → call the free, key-less LLM7 DIRECTLY from the browser
+        // so the chat still works. The repo-command tools stay dev-only (they need /api/tool).
         try {
-          const reply = await askPollinationsDirect(history);
+          const reply = await askStaticAi(history);
           thinking.remove();
           addMsg('cqm-cop-ai', reply);
           history.push({ role: 'assistant', content: reply });
-          prov.textContent = 'pollinations · static';
+          prov.textContent = 'llm7 · static';
         } catch {
           thinking.remove();
           addMsg(
             'cqm-cop-sys',
-            'The free static AI (Pollinations) was unreachable just now — try again in a moment. For the ' +
+            'The free static AI (LLM7) was unreachable just now — try again in a moment. For the ' +
               'full repo-aware agent (/read /ls /grep /run), run `bun dev` locally.',
           );
         }
@@ -566,13 +585,13 @@ function mount(): void {
         })
         .catch(() => {
           // No Bun server (static GitHub Pages, or the local server is down). The chat still works —
-          // it calls the free key-less Pollinations LLM directly from the browser. Only the repo
-          // tools (/read /ls /grep /run) need `bun dev`. So: NOT a dead end — don't lock the input.
-          prov.textContent = 'pollinations · static';
+          // it calls the free key-less LLM7 directly from the browser. Only the repo tools
+          // (/read /ls /grep /run) need `bun dev`. So: NOT a dead end — don't lock the input.
+          prov.textContent = 'llm7 · static';
           sel.style.display = 'none';
           addMsg(
             'cqm-cop-sys',
-            'Static build — no local server. The chat works (it calls the free Pollinations AI directly); ' +
+            'Static build — no local server. The chat works (it calls the free LLM7 AI directly); ' +
               'just ask. Repo commands (/read /ls /grep /run) need `bun dev`. Click 🩺 for diagnostics.',
           );
         });
