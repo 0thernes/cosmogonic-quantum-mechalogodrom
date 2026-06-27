@@ -1,4 +1,4 @@
-<!-- reviewed: 2026-06-26 | repo-wide consistency audit | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+<!-- reviewed: 2026-06-27 | repo-wide consistency audit | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
 
 # The AI Subsystem (V84) — pre-transformer minds, a quantum register, ported Tsotchke primitives, + the read-only Copilot
 

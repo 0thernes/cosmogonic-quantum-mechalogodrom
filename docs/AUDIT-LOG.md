@@ -1,4 +1,4 @@
-<!-- reviewed: 2026-06-26 | repo-wide consistency audit | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+<!-- reviewed: 2026-06-27 | repo-wide consistency audit | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
 
 # Audit Log (centralized)
 
@@ -138,7 +138,7 @@ clean, FILE-MAP regenerated. Renamed: `HANDOFF`, `research_receipts`, `500-POINT
 (`README`/`CHANGELOG`/`CLAUDE`/`AGENTS`/`LICENSE`/`ROADMAP`/`index.html`/Pages HTML/`.github`/`.memory`),
 the 14 docs hardcoded in `sync-surfaces`/`docs-truth-law`/`gen-filemap`, the convention-critical
 `AUDIT-LOG`/ledger/`TSOTCHKE-INTEGRATION-MAP`, numbered ADRs, `legacy/**`, and already-dated files. These
-carry the in-content `reviewed: 2026-06-26` stamp instead. Full rationale in the ledger §4.
+carry the in-content `reviewed: 2026-06-27` stamp instead. Full rationale in the ledger §4.
 
 ## 2026-06-26 — Deep code-correctness audit (3 expert reviewers: quantum · A-life · engine)
 
@@ -188,7 +188,7 @@ matrix + the full findings table live in
 - **Count drift.** `docs/KANBAN-2026-06-26.md` "ALL 19 Tsotchke repos" -> "20 projects" (canonical: 19 mirrors +
   Eshkol flagship).
 - **Every MD date-stamped (the `/goal` "current date on every MD", done safely).** Prepended an
-  idempotent `<!-- reviewed: 2026-06-26 … -->` marker to all **75 maintained** Markdown docs (excludes
+  idempotent `<!-- reviewed: 2026-06-27 … -->` marker to all **75 maintained** Markdown docs (excludes
   `legacy/**` verbatim, `.github/**` + `.memory/**` external-tool files, and the dated `CHANGELOG.md`).
   Done as an in-content stamp, NOT a filename rename — renaming would 404 the entire cross-link graph,
   the `sync-surfaces.ts` surface list, the doc-links gate, and GitHub Pages. Gate stays green.

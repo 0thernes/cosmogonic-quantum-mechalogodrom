@@ -1,4 +1,4 @@
-<!-- reviewed: 2026-06-26 | repo-wide consistency audit | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+<!-- reviewed: 2026-06-27 | repo-wide consistency audit | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
 
 # ADR 0006 — ASI-grade graphics: the rendering stack, languages, and libraries
 

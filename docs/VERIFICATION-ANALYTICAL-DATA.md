@@ -1,4 +1,4 @@
-<!-- reviewed: 2026-06-26 | repo-wide consistency audit | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+<!-- reviewed: 2026-06-27 | repo-wide consistency audit | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
 
 # Verification Analytical Data — cross-surface fact ledger
 
@@ -111,7 +111,7 @@ want **both** the dated rename and a non-breaking repo ("make sure they don't br
 **Done (2026-06-26):** the **24 pure-content docs that are safe to rename** were `git mv`'d to dated
 names (`X-2026-06-26.md`) and **every reference rewired** across all tracked text files — verified **0
 broken links** repo-wide (`tests/doc-links.test.ts` green), `tsc` clean, `sync:check` green, FILE-MAP
-regenerated. Each also carries the in-content `reviewed: 2026-06-26` stamp.
+regenerated. Each also carries the in-content `reviewed: 2026-06-27` stamp.
 
 **Kept at their canonical names — renaming WOULD break, which the owner's "don't break" forbids:**
 
@@ -128,12 +128,12 @@ regenerated. Each also carries the in-content `reviewed: 2026-06-26` stamp.
   **already-dated** files (`docs/reports/2026-*`, `docs/DAILY_RUNS/*`, the `-2026-06-1x/20` audits) whose
   filename date is their meaningful point-in-time record.
 
-For the kept set, the in-content `reviewed: 2026-06-26` stamp supplies the current date without breaking
+For the kept set, the in-content `reviewed: 2026-06-27` stamp supplies the current date without breaking
 the repo — the maximal literal compliance consistent with "don't break."
 
 **Owner-confirmed (2026-06-26):** asked directly, the owner chose **in-content stamps over renames** —
 the safe, law-compliant reading. Status: **75 / 77** maintained narrative MDs carry the
-`reviewed: 2026-06-26` marker. The remaining 2 are legitimately exempt: `docs/FILE-MAP.md` is
+`reviewed: 2026-06-27` marker. The remaining 2 are legitimately exempt: `docs/FILE-MAP.md` is
 **auto-generated** (its freshness is structural — it lists the live module set; a hardcoded date would be
 immediately stale and `Date.now` is banned in the generator), and `.github/copilot-instructions-2026-06-26.md` is
 **externally managed** by the `hacklm-memory` tool. `legacy/` (never-edit) and `.memory/` (tool-owned)
