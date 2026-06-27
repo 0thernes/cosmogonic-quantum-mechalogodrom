@@ -59,6 +59,7 @@
 import type { Rng } from '../math/rng';
 import { mulberry32 } from '../math/rng';
 import { latentSubstrateStep, type LatentSubstrateState } from './latent-substrates';
+import { gwtCapacityCompete, type GwtCapacityResult } from '../math/global-workspace';
 import { TinyMLP, MemoryRing } from './ai/brains';
 import { QuantumMind, QMIND_QUBITS, type QubitSnapshot } from './super-qubits';
 import { EshkolQrng, type EshkolQrngSnapshot } from '../math/eshkol-qrng';
@@ -312,6 +313,8 @@ export interface SuperMindSnapshot {
   qualia: number[];
   /** V1.3: the latent-substrate read — Schrödinger uncertainty, SO(3) coherence, Pearl-causal effect. */
   latentSubstrates: LatentSubstrateState;
+  /** V1.3 GWT-2: limited-capacity workspace read — occupancy/capacity/access/pressure (Cowan bottleneck). */
+  gwtCapacity: { occupancy: number; capacity: number; access: number; pressure: number };
 }
 
 const EMOTION_TAU = 0.12; // sync with super-creature for affect EMA (GWT/HOT feel)
@@ -426,6 +429,10 @@ const DELIB_COUPLE = 0.5;
 const QRC_CURIOSITY_GAIN = 0.1;
 /** V1.3: how strongly the evolved-wavepacket positional uncertainty (Schrödinger) lifts curiosity. */
 const LATENT_CURIOSITY_GAIN = 0.1;
+/** V1.3 · GWT-2: the limited-capacity workspace size (Cowan's ~4 ± 1 conscious slots). */
+const GWT_WORKSPACE_CAPACITY = 4;
+/** V1.3 · GWT-2: how strongly last beat's workspace competition pressure re-enters curiosity. */
+const GWT_CAPACITY_REENTRY_GAIN = 0.08;
 
 // ── #59 · RESONANCE INTEGRATOR (Kuramoto binding-by-synchrony — the coupling spark) ───────────────────
 /** The consciousness/integration faculties coupled into the standing wave (the "do they agree?" set). */
@@ -1204,7 +1211,8 @@ export class SuperMind {
         0.12 * (1 - this.criticality.proximity) + // off-criticality ⇒ explore to recover the edge of chaos
         EMP_CURIOSITY_GAIN * this.empowerment.empowerment + // agency hunger ⇒ seek regions it can steer
         QRC_CURIOSITY_GAIN * this.qreservoir.quantumFlux + // a churning quantum state ⇒ restless exploration
-        LATENT_CURIOSITY_GAIN * ls.quantumUncertainty, // V1.3: real Schrödinger positional spread ⇒ explore
+        LATENT_CURIOSITY_GAIN * ls.quantumUncertainty + // V1.3: real Schrödinger positional spread ⇒ explore
+        GWT_CAPACITY_REENTRY_GAIN * this.lastGwtCapacity.pressure, // V1.3 GWT-2: overloaded workspace ⇒ explore
     );
 
     // plan (argmax over drive scores; same vocabulary as the V31 mind)
@@ -1522,6 +1530,17 @@ export class SuperMind {
       }
     }
     this.plan = best;
+    // ── V1.3 · GWT-2 LIMITED-CAPACITY WORKSPACE (Baars/Dehaene broadcast + Cowan ~4 bottleneck) ──
+    // The 7 plan-coalitions compete for a capacity-bounded workspace: only the top GWT_WORKSPACE_CAPACITY
+    // gain conscious access; the excluded salient mass is the competition `pressure`. An explicit
+    // limited-capacity competition (Butlin GWT-2), not a bare argmax — surfaced on snapshot().gwtCapacity
+    // and re-entered into next beat's curiosity (read above). Deterministic, allocation-free.
+    for (let i = 0; i < SUPER_PLANS.length; i++) this.gwtSal[i] = drives[SUPER_PLANS[i]!] ?? 0;
+    this.lastGwtCapacity = gwtCapacityCompete(
+      this.gwtSal,
+      SUPER_PLANS.length,
+      GWT_WORKSPACE_CAPACITY,
+    );
     // V1.1: fold the realised plan transition into the predictive map so next beat's look-ahead is informed.
     this.successor.observe(SUPER_PLANS.indexOf(best));
     // V95: credit LAST beat's action → THIS beat's latent cell and refresh the empowerment estimate the next
@@ -1620,6 +1639,17 @@ export class SuperMind {
   }
 
   /** Immutable telemetry snapshot. */
+  /** V1.3 GWT-2: scratch for the plan-drive saliences fed to the capacity competition (alloc-free). */
+  private readonly gwtSal = new Float32Array(SUPER_PLANS.length);
+  /** V1.3 GWT-2: last beat's limited-capacity workspace read (occupancy / access / competition pressure). */
+  private lastGwtCapacity: GwtCapacityResult = {
+    admitted: [],
+    occupancy: 0,
+    capacity: GWT_WORKSPACE_CAPACITY,
+    access: 0,
+    pressure: 0,
+    ignited: false,
+  };
   /** V1.3: last beat's latent-substrate read (Schrödinger uncertainty / SO(3) coherence / causal effect). */
   private lastLatentSub: LatentSubstrateState = {
     quantumUncertainty: 0,
@@ -1686,6 +1716,12 @@ export class SuperMind {
         ]).code,
       ),
       latentSubstrates: { ...this.lastLatentSub },
+      gwtCapacity: {
+        occupancy: this.lastGwtCapacity.occupancy,
+        capacity: this.lastGwtCapacity.capacity,
+        access: this.lastGwtCapacity.access,
+        pressure: this.lastGwtCapacity.pressure,
+      },
     };
   }
 }
