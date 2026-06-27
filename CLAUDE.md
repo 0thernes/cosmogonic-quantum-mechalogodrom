@@ -39,6 +39,12 @@ substantive change; they are personas of one discipline and they outrank vibes:
   `origin/main`** (NOT the local branch — per the no-PR/work-on-main law, every commit from any
   worktree lands on `main`, with rebase-autostash + retry on non-ff). Opt out: `git config
 hooks.autopush false`. A local commit ships to GitHub `main` with no manual push, from any worktree.
+  The REVERSE direction is automatic too: `predev` runs `bun run pull` (`scripts/sync-local.ts`) before
+  `bun dev`, fast-forwarding the checkout up to `origin/main` so **Local always matches GitHub** when you
+  start the app. It ONLY fast-forwards (never rebases/resets/discards): a checkout with local-only commits
+  or a blocking dirty tree is left untouched with a note. Opt out: `CQM_NO_SYNC=1 bun dev`. (Without this,
+  a primary checkout silently drifts BEHIND while the fleet pushes from worktrees — the recurring
+  "GitHub and Local don't match / renamed docs missing in Local" symptom.)
 - **NO PULL REQUESTS — EVER (binding owner rule).** This is a one-person repo: commit to `main` and
   push directly. NEVER open a PR, never create a feature/`audit/*`/`claude/*` branch to merge, never
   `gh pr create`. Work ON `main`; if a push is rejected (non-fast-forward), `git pull --rebase
