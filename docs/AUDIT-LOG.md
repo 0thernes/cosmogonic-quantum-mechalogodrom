@@ -11,6 +11,24 @@ dated / historical / "superseded snapshot" copies (per the binding "Living docs,
 
 ---
 
+## 2026-06-27 — New-feature audit (pantheon-breeding) + gate-RED catch
+
+Re-baselined off the current `origin/main` after the day's churn (the 101-super-creature breeding feature,
+26 more dated-doc renames, a tsc-RED→green scramble). Findings:
+
+- **Caught a real gate-RED:** `src/sim/petri-dish.ts` imported `clamp01` but never used it (`TS6133`,
+  `noUnusedLocals`) — `main` was TypeScript-RED. Independently confirmed; the fleet had fixed it in
+  parallel (dropped the import), so no duplicate landed. Verified `bun run typecheck` clean on the result.
+- **Fixed a real P1 in the new feature:** `src/ui/pantheon-architecture-panel.ts` grew its `brood` array
+  without bound (MATE +1 / STORM +6 per click, each entry holding four genome sub-structures) — a
+  user-driven memory leak. Added a `capBrood(incoming)` ring-cap (ceiling 256, cap-before-push so the
+  storm `rarest` index stays stable). Rest of the 1,357-line feature audited **clean**: determinism (seeded
+  `mulberry32` only), clamped numerics, O(1) breed hot path, XSS-safe panel (`textContent`, no `innerHTML`),
+  non-vacuous tests (Bell(4)=15, |B|=1 on the circle, bit-for-bit determinism).
+- **Whole-repo re-verify green:** `bun run check` (1,537 pass / 0 fail, 7 artifacts, receipts 95.02/92.14),
+  `verify:facts` 0 drift / 80 surfaces, 0 mojibake + 0 broken links / 90 surfaces, Butlin still 8 met / 6
+  partial. Canonical sources unchanged (v0.18.0, 1477 floor).
+
 ## 2026-06-26 — Line-by-line read: petri-dish active-bug fixes + dead-state reclassification + doc honesty
 
 Deep per-file read (~84 src files read directly, beyond agents/manifest) of the math/quantum core, every
