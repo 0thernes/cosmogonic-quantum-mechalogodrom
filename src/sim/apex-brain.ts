@@ -41,6 +41,7 @@
  */
 import { mulberry32, type Rng } from '../math/rng';
 import { LINEAGE } from './pantheon-breeding';
+import { corpusPulse, getTsotchkeBias } from './tsotchke-facade';
 
 // ════════════════════════════════════════════════════════════════════════════════════════════════
 // Shared helpers
@@ -1214,6 +1215,223 @@ class MetaParadoxLayer {
   }
 }
 
+// ════════════════════════════════════════════════════════════════════════════════════════════════
+// ORGAN 11 — QuantumBrainOrgan (the non-negotiable QUANTUM BRAIN): exact statevector + Tsotchke corpus
+// ════════════════════════════════════════════════════════════════════════════════════════════════
+
+/**
+ * A genuine exact statevector quantum register (the apex's "quantum geometry deliberation" organ,
+ * doctrine organ #6 / master-report Layer 2). Unitary gates (Hadamard / RZ phase / CNOT) evolve a
+ * dense 2^nQ amplitude vector, so ⟨ψ|ψ⟩ = 1 holds exactly (the tested invariant). Telemetry is real
+ * quantum information: l1-coherence, single-qubit entanglement (linear entropy of the reduced ρ),
+ * Born entropy, and — wired to the **real Tsotchke corpus** via {@link corpusPulse} / {@link
+ * getTsotchkeBias} — QGT volume + non-stabilizerness ("magic"). The gate angles are driven by the
+ * percept AND the Tsotchke pulse, so the quantum layer changes action (it folds a plan-bias into the
+ * meta layer) — it is load-bearing, not decoration. This is exact classical *simulation* of quantum
+ * dynamics (no QPU, no speedup claim — the honest frame from the corpus).
+ */
+export interface QuantumView {
+  qubits: number;
+  norm: number; // ⟨ψ|ψ⟩, must be ≈1
+  coherence: number; // l1-coherence (0..1)
+  entanglement: number; // 1-qubit linear entropy (0..1)
+  bornEntropy: number; // Shannon entropy of |amp|² (0..1)
+  qgtVolume: number; // Tsotchke QGT volume (real corpus)
+  magic: number; // Tsotchke non-stabilizerness proxy (real corpus)
+  collapsed: boolean;
+  plan: number; // collapsed plan index, or −1 while superposed
+}
+
+class QuantumBrainOrgan {
+  private readonly nQ: number;
+  private readonly dim: number;
+  private re: Float64Array;
+  private im: Float64Array;
+  private readonly formIdx: number;
+  private qgtVolume = 0;
+  private magic = 0;
+  private collapsed = false;
+  private collapseIdx = -1;
+
+  constructor(nQ = 6, seed = 1) {
+    this.nQ = nQ;
+    this.dim = 1 << nQ;
+    this.re = new Float64Array(this.dim);
+    this.im = new Float64Array(this.dim);
+    this.re[0] = 1; // |00…0⟩
+    this.formIdx = (seed >>> 3) % 25; // which Tsotchke repo/archetype drives this register
+    for (let q = 0; q < nQ; q++) this.hadamard(q); // boot into uniform superposition
+  }
+
+  qubitCount(): number {
+    return this.nQ;
+  }
+
+  /** ⟨ψ|ψ⟩ — exactly 1 under unitary evolution (the tested invariant). */
+  norm(): number {
+    let s = 0;
+    for (let i = 0; i < this.dim; i++) s += this.re[i]! * this.re[i]! + this.im[i]! * this.im[i]!;
+    return s;
+  }
+
+  /** Born probabilities |amp_i|² (sum to 1). */
+  bornProbabilities(): number[] {
+    const out: number[] = [];
+    for (let i = 0; i < this.dim; i++)
+      out.push(this.re[i]! * this.re[i]! + this.im[i]! * this.im[i]!);
+    return out;
+  }
+
+  private hadamard(q: number): void {
+    const bit = 1 << q;
+    const inv = Math.SQRT1_2;
+    for (let i = 0; i < this.dim; i++) {
+      if ((i & bit) === 0) {
+        const j = i | bit;
+        const ar = this.re[i]!;
+        const ai = this.im[i]!;
+        const br = this.re[j]!;
+        const bi = this.im[j]!;
+        this.re[i] = (ar + br) * inv;
+        this.im[i] = (ai + bi) * inv;
+        this.re[j] = (ar - br) * inv;
+        this.im[j] = (ai - bi) * inv;
+      }
+    }
+  }
+
+  /** RZ(θ): phase e^{∓iθ/2} on |0⟩/|1⟩ of qubit q. Phase-only → norm preserved. */
+  private rz(q: number, theta: number): void {
+    const bit = 1 << q;
+    const c0 = Math.cos(-theta / 2);
+    const s0 = Math.sin(-theta / 2);
+    const c1 = Math.cos(theta / 2);
+    const s1 = Math.sin(theta / 2);
+    for (let i = 0; i < this.dim; i++) {
+      const c = (i & bit) === 0 ? c0 : c1;
+      const s = (i & bit) === 0 ? s0 : s1;
+      const r = this.re[i]!;
+      const m = this.im[i]!;
+      this.re[i] = r * c - m * s;
+      this.im[i] = r * s + m * c;
+    }
+  }
+
+  /** CNOT(control,target): a basis permutation (toggles target where control=1) → unitary. */
+  private cnot(control: number, target: number): void {
+    const cb = 1 << control;
+    const tb = 1 << target;
+    for (let i = 0; i < this.dim; i++) {
+      if ((i & cb) !== 0 && (i & tb) === 0) {
+        const j = i | tb;
+        const r = this.re[i]!;
+        const m = this.im[i]!;
+        this.re[i] = this.re[j]!;
+        this.im[i] = this.im[j]!;
+        this.re[j] = r;
+        this.im[j] = m;
+      }
+    }
+  }
+
+  /**
+   * One quantum beat: a unitary layer (RZ phases from the percept + Tsotchke pulse, a CNOT
+   * entangling ring, then a Hadamard interference layer) evolves the register. Pulls real QGT
+   * volume + magic from the Tsotchke corpus. Stays superposed (Wigner shield) unless `measure`
+   * forces a collapse. Deterministic.
+   */
+  step(drive: number, seed: number): void {
+    const pulse = corpusPulse(seed, this.formIdx);
+    const bias = getTsotchkeBias(this.formIdx);
+    this.qgtVolume = pulse.qgtVolume;
+    this.magic = pulse.cliffordEnt;
+    this.collapsed = false;
+    this.collapseIdx = -1;
+    for (let q = 0; q < this.nQ; q++) {
+      const ang =
+        (drive + pulse.qgtVolume + bias.cliffordWeight * 0.5) * (q + 1) * 0.7 + pulse.adGradient;
+      this.rz(q, ang);
+    }
+    for (let q = 0; q < this.nQ; q++) this.cnot(q, (q + 1) % this.nQ); // entangling ring
+    this.hadamard(this.nQ - 1); // turn accumulated phase into amplitude interference
+    this.hadamard(0);
+  }
+
+  /** Collapse the register by Born sampling (Wigner measurement); sets a definite basis state. */
+  measure(rng: Rng): number {
+    const probs = this.bornProbabilities();
+    const r = rng();
+    let cum = 0;
+    let idx = this.dim - 1;
+    for (let i = 0; i < this.dim; i++) {
+      cum += probs[i]!;
+      if (r <= cum) {
+        idx = i;
+        break;
+      }
+    }
+    this.re.fill(0);
+    this.im.fill(0);
+    this.re[idx] = 1;
+    this.collapsed = true;
+    this.collapseIdx = idx;
+    return idx;
+  }
+
+  /** Born probabilities folded onto `nPlans` groups — the quantum plan-bias the meta layer consumes. */
+  planBias(nPlans: number): number[] {
+    const out = Array.from({ length: nPlans }, () => 0);
+    const probs = this.bornProbabilities();
+    for (let i = 0; i < this.dim; i++) out[i % nPlans]! += probs[i]!;
+    return out;
+  }
+
+  /** l1-coherence of the pure state in the computational basis: (Σ|cᵢ|)² − 1, normalised by dim−1. */
+  private coherence(): number {
+    let s = 0;
+    for (let i = 0; i < this.dim; i++) s += Math.hypot(this.re[i]!, this.im[i]!);
+    const c = s * s - 1;
+    return clamp01(c / (this.dim - 1));
+  }
+
+  view(): QuantumView {
+    // single-qubit (q0) entanglement = linear entropy 2(1−tr ρ²) of the reduced density matrix.
+    // reduced density matrix of qubit 0
+    let r00 = 0;
+    let r11 = 0;
+    let oRe = 0;
+    let oIm = 0;
+    for (let i = 0; i < this.dim; i++) {
+      const p = this.re[i]! * this.re[i]! + this.im[i]! * this.im[i]!;
+      if ((i & 1) === 0) {
+        r00 += p;
+        const j = i | 1;
+        // ρ01 += amp_i * conj(amp_j)
+        oRe += this.re[i]! * this.re[j]! + this.im[i]! * this.im[j]!;
+        oIm += this.im[i]! * this.re[j]! - this.re[i]! * this.im[j]!;
+      } else {
+        r11 += p;
+      }
+    }
+    const purity = r00 * r00 + r11 * r11 + 2 * (oRe * oRe + oIm * oIm);
+    const entanglement = clamp01(2 * (1 - purity));
+    const probs = this.bornProbabilities();
+    let h = 0;
+    for (const pi of probs) if (pi > 0) h -= pi * Math.log(pi);
+    return {
+      qubits: this.nQ,
+      norm: round4(this.norm()),
+      coherence: round4(this.coherence()),
+      entanglement: round4(entanglement),
+      bornEntropy: round4(h / Math.log(this.dim)),
+      qgtVolume: round4(this.qgtVolume),
+      magic: round4(this.magic),
+      collapsed: this.collapsed,
+      plan: this.collapseIdx,
+    };
+  }
+}
+
 /** Organ classes exported so `tests/apex-brain.test.ts` can assert each organ's math directly. */
 export {
   PrimeSieveLoom,
@@ -1227,6 +1445,7 @@ export {
   ThermodynamicEngine,
   CancerousOuroboros,
   MetaParadoxLayer,
+  QuantumBrainOrgan,
 };
 
 // ════════════════════════════════════════════════════════════════════════════════════════════════
@@ -1235,6 +1454,119 @@ export {
 
 /** Roadmap target neuron count for the apex (HONEST aspiration, not instantiated). */
 export const APEX_BRAIN_TARGET_NEURONS = 1_000_000_000;
+
+// ════════════════════════════════════════════════════════════════════════════════════════════════
+// SCALING SCAFFOLDING — the architecture that scales from the live engine toward 1 BILLION neurons
+// ════════════════════════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Hard cap on the number of nodes ANY organ actually allocates in the JS/TS runtime. The DESIGNED
+ * scale (per {@link ApexScale}) can declare millions per organ — that is the architecture target and
+ * what a native C/C++/GPU backend (roadmap) would run — but the live deterministic engine only ever
+ * allocates up to this cap, so a billion-neuron design still runs (capped) in the browser today. The
+ * gap between designed and live is reported honestly (`designedNeurons` vs `liveNeurons`).
+ */
+export const LIVE_NODE_CAP = 4096;
+
+/** Per-organ node budget. Drives both the designed-neuron accounting and the (capped) live allocation. */
+export interface ApexScale {
+  readonly name: string;
+  readonly loom: number;
+  readonly acoustic: number;
+  readonly necro: number;
+  readonly kleinW: number;
+  readonly kleinH: number;
+  readonly pendulum: number;
+  readonly slime: number;
+  readonly chronoD1: number;
+  readonly chronoD2: number;
+  readonly tunnel: number;
+  readonly thermo: number;
+  readonly ouroboros: number;
+  readonly qubits: number;
+}
+
+/** The tractable live scale the engine boots at (every organ below the cap). */
+export const SCALE_LIVE: ApexScale = {
+  name: 'LIVE',
+  loom: 96,
+  acoustic: 128,
+  necro: 64,
+  kleinW: 16,
+  kleinH: 12,
+  pendulum: 24,
+  slime: 60,
+  chronoD1: 5,
+  chronoD2: 30,
+  tunnel: 48,
+  thermo: 64,
+  ouroboros: 48,
+  qubits: 6,
+};
+
+/** A mid-tier scale (still browser-safe; organs at the cap). */
+export const SCALE_MEDIUM: ApexScale = {
+  name: 'MEDIUM',
+  loom: 4096,
+  acoustic: 2048,
+  necro: 2048,
+  kleinW: 64,
+  kleinH: 64,
+  pendulum: 1024,
+  slime: 2048,
+  chronoD1: 30,
+  chronoD2: 180,
+  tunnel: 2048,
+  thermo: 2048,
+  ouroboros: 2048,
+  qubits: 10,
+};
+
+/**
+ * The MASSIVE design scale — the brief's per-organ node targets. `apexDesignedNeurons(SCALE_MASSIVE)`
+ * exceeds **one billion**, which is the apex's stated scaling target. The live engine still caps
+ * actual allocation at {@link LIVE_NODE_CAP}; reaching the designed scale is the C/C++/GPU backend's
+ * job (roadmap, see docs/APEX-BRAIN-ABOMINATION.md). Numbers mirror the source brief: prime loom
+ * 100M, acoustic ~100M, necro 50M, Klein-bottle centipede 30000², pendulum 10M, slime 30M, etc.
+ */
+export const SCALE_MASSIVE: ApexScale = {
+  name: 'MASSIVE',
+  loom: 100_000_000,
+  acoustic: 100_000_000,
+  necro: 50_000_000,
+  kleinW: 30_000,
+  kleinH: 30_000,
+  pendulum: 10_000_000,
+  slime: 30_000_000,
+  chronoD1: 150,
+  chronoD2: 900,
+  tunnel: 120_000_000,
+  thermo: 50_000_000,
+  ouroboros: 50_000_000,
+  qubits: 12,
+};
+
+/** The DESIGNED neuron count of a scale (the architecture target; ≥1e9 at {@link SCALE_MASSIVE}). */
+export function apexDesignedNeurons(s: ApexScale): number {
+  return (
+    s.loom +
+    s.acoustic +
+    s.necro +
+    s.kleinW * s.kleinH +
+    s.pendulum +
+    s.slime +
+    (s.chronoD2 + 1) +
+    s.tunnel +
+    s.thermo +
+    s.ouroboros +
+    (1 << Math.min(30, s.qubits))
+  );
+}
+
+/** Clamp a designed organ size down to what the live runtime will actually allocate. */
+function liveSize(designed: number): number {
+  return Math.max(1, Math.min(designed, LIVE_NODE_CAP));
+}
 
 /** What the apex perceives each beat (all 0..1 unless noted). */
 export interface ApexPercept {
@@ -1257,13 +1589,20 @@ export interface ApexThought {
   motor: { x: number; y: number; z: number };
 }
 
-/** Full telemetry snapshot of all ten organs + the meta layer. */
+/** Full telemetry snapshot of all eleven organs + the meta layer. */
 export interface ApexBrainSnapshot {
   beat: number;
+  scaleName: string;
   targetNeurons: number;
+  /** DESIGNED neurons at the current scale (the architecture target — ≥1e9 at MASSIVE). */
+  designedNeurons: number;
+  /** Neurons the live runtime actually allocates (capped at {@link LIVE_NODE_CAP}). */
   liveNeurons: number;
+  /** Live state parameters actually held (floats across all organ buffers + the statevector). */
+  parameterCount: number;
   thought: ApexThought;
   meta: MetaView;
+  quantum: QuantumView;
   loom: LoomView;
   drum: DrumView;
   necro: NecroView;
@@ -1279,6 +1618,11 @@ export interface ApexBrainSnapshot {
 export class ApexBrain {
   readonly seed: number;
   readonly targetNeurons = APEX_BRAIN_TARGET_NEURONS;
+  readonly scale: ApexScale;
+  /** DESIGNED neurons at this scale (architecture target; ≥1e9 at MASSIVE). */
+  readonly designedNeurons: number;
+  /** Neurons actually allocated in the live runtime (capped at {@link LIVE_NODE_CAP}). */
+  readonly liveNeurons: number;
   private beat = 0;
 
   private readonly loom: PrimeSieveLoom;
@@ -1291,9 +1635,8 @@ export class ApexBrain {
   private readonly tunnel: QuantumTunnelLattice;
   private readonly thermo: ThermodynamicEngine;
   private readonly ouroboros: CancerousOuroboros;
+  private readonly quantum: QuantumBrainOrgan;
   private readonly meta: MetaParadoxLayer;
-  /** The number of tractable "live neurons" the engine actually runs (vs the target). */
-  readonly liveNeurons: number;
 
   // sub-streams reused per organ (deterministic draws each beat)
   private readonly rLoom: Rng;
@@ -1301,26 +1644,72 @@ export class ApexBrain {
   private readonly rTunnel: Rng;
   private readonly rOuro: Rng;
 
-  constructor(seed: number) {
+  constructor(seed: number, opts?: { scale?: ApexScale }) {
     this.seed = seed >>> 0 || 1;
-    this.loom = new PrimeSieveLoom(96);
-    this.drum = new AcousticMeatDrum(128);
-    this.necro = new EntropicNecroMatrix(64, sub(this.seed, 0x03));
-    this.klein = new KleinBottleCortex(16, 12);
-    this.hive = new PendulumHive(24, 2.7, 0.15, sub(this.seed, 0x05));
-    this.hydra = new SlimeMoldHydra(60);
-    this.wraith = new ChronoWraith(5, 30);
-    this.tunnel = new QuantumTunnelLattice(48, sub(this.seed, 0x08));
-    this.thermo = new ThermodynamicEngine(64);
-    this.ouroboros = new CancerousOuroboros(48);
+    const s = opts?.scale ?? SCALE_LIVE;
+    this.scale = s;
+    // Each organ allocates the CAPPED live size; the designed scale can be far larger (up to 1B).
+    const loomN = liveSize(s.loom);
+    const acousticN = liveSize(s.acoustic);
+    const necroN = liveSize(s.necro);
+    const kleinW = liveSize(Math.min(s.kleinW, 64));
+    const kleinH = liveSize(Math.min(s.kleinH, 64));
+    const pendulumN = liveSize(Math.min(s.pendulum, 64));
+    const slimeN = liveSize(s.slime);
+    const chronoD2 = liveSize(Math.min(s.chronoD2, 256));
+    const chronoD1 = Math.max(1, Math.min(s.chronoD1, chronoD2 - 1));
+    const tunnelN = liveSize(Math.min(s.tunnel, 96)); // O(n²) organ → tighter cap
+    const thermoN = liveSize(s.thermo);
+    const ouroN = liveSize(s.ouroboros);
+    const qubits = Math.max(1, Math.min(s.qubits, 12)); // statevector = 2^q; cap at 4096 amplitudes
+
+    this.loom = new PrimeSieveLoom(loomN);
+    this.drum = new AcousticMeatDrum(acousticN);
+    this.necro = new EntropicNecroMatrix(necroN, sub(this.seed, 0x03));
+    this.klein = new KleinBottleCortex(kleinW, kleinH);
+    this.hive = new PendulumHive(pendulumN, 2.7, 0.15, sub(this.seed, 0x05));
+    this.hydra = new SlimeMoldHydra(slimeN);
+    this.wraith = new ChronoWraith(chronoD1, chronoD2);
+    this.tunnel = new QuantumTunnelLattice(tunnelN, sub(this.seed, 0x08));
+    this.thermo = new ThermodynamicEngine(thermoN);
+    this.ouroboros = new CancerousOuroboros(ouroN);
+    this.quantum = new QuantumBrainOrgan(qubits, this.seed);
     this.meta = new MetaParadoxLayer(this.seed);
     this.rLoom = sub(this.seed, 0x1001);
     this.rHydra = sub(this.seed, 0x1006);
     this.rTunnel = sub(this.seed, 0x1008);
     this.rOuro = sub(this.seed, 0x100a);
-    this.drum.excite(3, 0.6); // a faint standing wave at boot
+    this.drum.excite(Math.min(3, acousticN - 1), 0.6); // a faint standing wave at boot
+
+    this.designedNeurons = apexDesignedNeurons(s);
     this.liveNeurons =
-      96 + 128 + 64 + 16 * 12 + 24 + 60 + (30 + 1) + 48 + 64 + 48 + APEX_PLANS.length;
+      loomN +
+      acousticN +
+      necroN +
+      kleinW * kleinH +
+      pendulumN +
+      slimeN +
+      (chronoD2 + 1) +
+      tunnelN +
+      thermoN +
+      ouroN +
+      (1 << qubits) +
+      APEX_PLANS.length;
+  }
+
+  /** DESIGNED neuron count at the current scale (the architecture target). */
+  neuronCount(): number {
+    return this.designedNeurons;
+  }
+
+  /**
+   * Live state parameters actually held (floats across organ buffers + the 2·2^q statevector). This
+   * is the honest "running parameter count" — far below {@link neuronCount} at large scales, because
+   * the live runtime caps allocation and the full design awaits the native backend.
+   */
+  parameterCount(): number {
+    const q = this.quantum.qubitCount();
+    return this.liveNeurons + (1 << q) * 2; // statevector carries re+im per amplitude
   }
 
   /** One cognitive beat across all ten organs + the meta layer. Deterministic. */
@@ -1356,8 +1745,12 @@ export class ApexBrain {
     const thermoView = this.thermo.view();
     const immune = clamp01(thermoView.paralysis + dissonance * 0.2);
     const limbFrac = this.ouroboros.step(1 + Math.floor(p.novelty * 3), immune, this.rOuro);
+    // 11 QUANTUM BRAIN — evolve the exact statevector (Tsotchke-coupled) and read its plan-bias.
+    this.quantum.step(drive, (this.seed ^ (this.beat * 0x9e3779b1)) >>> 0);
+    const qBias = this.quantum.planBias(APEX_PLANS.length);
 
-    // Aggregate per-plan signal for the meta layer (six plans).
+    // Aggregate per-plan signal for the meta layer (six plans); the quantum Born plan-bias is folded
+    // in (≈30%), so the quantum register genuinely steers the committed plan — ablation-meaningful.
     const signal = [
       clamp01(p.level / 1000 + loomOut * 0.2), // ASCEND
       clamp01(limbFrac + drive * 0.2), // CONSUME
@@ -1365,7 +1758,7 @@ export class ApexBrain {
       clamp01(corePast * 0.5 + 0.5), // DREAM
       clamp01(p.threat + Math.abs(hiveMotor)), // HUNT
       clamp01(p.level / 1000), // TRANSCEND
-    ];
+    ].map((v, i) => clamp01(0.7 * v + 0.3 * (qBias[i] ?? 0) * APEX_PLANS.length));
     this.meta.step(signal);
 
     return this.assemble(p, { drumMotor, hiveMotor, fold, necroVit, limbFrac });
@@ -1408,10 +1801,14 @@ export class ApexBrain {
     );
     return {
       beat: this.beat,
+      scaleName: this.scale.name,
       targetNeurons: this.targetNeurons,
+      designedNeurons: this.designedNeurons,
       liveNeurons: this.liveNeurons,
+      parameterCount: this.parameterCount(),
       thought,
       meta: this.meta.view(),
+      quantum: this.quantum.view(),
       loom: this.loom.view(),
       drum: this.drum.view(),
       necro: this.necro.view(),

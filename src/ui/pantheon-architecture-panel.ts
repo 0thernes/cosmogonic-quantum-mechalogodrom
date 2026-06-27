@@ -557,7 +557,18 @@ function apexRows(s: ApexBrainSnapshot): Array<[string, string] | string> {
     ['plan', `${t.plan}${t.superposed ? ' (superposed)' : ''}`],
     ['simulation', `Sim ${t.simulation} · ${(t.transcendence * 100).toFixed(0)}% → Sim 3`],
     ['vitality / agony', `${(t.vitality * 100).toFixed(0)}% / ${(t.agony * 100).toFixed(0)}%`],
-    ['neurons', `${bigNum(s.liveNeurons)} live · target ${bigNum(s.targetNeurons)}`],
+    [
+      'neurons',
+      `${bigNum(s.designedNeurons)} designed · ${bigNum(s.liveNeurons)} live · →${bigNum(s.targetNeurons)} (${s.scaleName})`,
+    ],
+    [
+      '0 quantum brain',
+      `${s.quantum.qubits}q · ‖ψ‖${s.quantum.norm.toFixed(2)} · coh ${s.quantum.coherence.toFixed(2)} · ent ${s.quantum.entanglement.toFixed(2)}`,
+    ],
+    [
+      '  ·qgt/magic',
+      `QGT ${s.quantum.qgtVolume.toFixed(2)} · magic ${s.quantum.magic.toFixed(2)} · ${s.quantum.collapsed ? 'COLLAPSED' : 'superposed'}`,
+    ],
     [
       '1 loom',
       `${s.loom.activeEdges}/${s.loom.builtEdges} edges · allergy ${(s.loom.allergy * 100).toFixed(0)}%`,

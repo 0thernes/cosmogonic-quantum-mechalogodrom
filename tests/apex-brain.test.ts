@@ -32,6 +32,12 @@ import {
   ThermodynamicEngine,
   CancerousOuroboros,
   MetaParadoxLayer,
+  QuantumBrainOrgan,
+  apexDesignedNeurons,
+  SCALE_LIVE,
+  SCALE_MEDIUM,
+  SCALE_MASSIVE,
+  LIVE_NODE_CAP,
   type ApexPercept,
 } from '../src/sim/apex-brain';
 import { mulberry32 } from '../src/math/rng';
@@ -307,5 +313,95 @@ describe('composite — ApexBrain', () => {
     expect(brain.tick({ threat: 0, energy: 1, chaos: 0, novelty: 0, level: 1000 }).simulation).toBe(
       3,
     );
+  });
+});
+
+describe('organ 11 — QuantumBrainOrgan (exact statevector + Tsotchke corpus)', () => {
+  test('the statevector stays normalised (⟨ψ|ψ⟩ = 1) under unitary evolution', () => {
+    const q = new QuantumBrainOrgan(6, 12345);
+    expect(q.norm()).toBeCloseTo(1, 9);
+    for (let t = 0; t < 200; t++) q.step(0.5 + 0.4 * Math.sin(t), (t * 2654435761) >>> 0);
+    expect(q.norm()).toBeCloseTo(1, 9);
+    expect(q.bornProbabilities().reduce((a, b) => a + b, 0)).toBeCloseTo(1, 9);
+  });
+  test('quantum telemetry stays in range and the register is live (varies over beats)', () => {
+    const q = new QuantumBrainOrgan(6, 7);
+    const seen = new Set<number>();
+    for (let t = 0; t < 60; t++) {
+      q.step(Math.abs(Math.sin(t * 0.4)), (t * 40503) >>> 0);
+      const v = q.view();
+      for (const x of [v.coherence, v.entanglement, v.bornEntropy, v.qgtVolume, v.magic]) {
+        expect(x).toBeGreaterThanOrEqual(0);
+        expect(x).toBeLessThanOrEqual(1);
+      }
+      seen.add(v.bornEntropy);
+    }
+    expect(seen.size).toBeGreaterThan(5); // genuinely evolving, not a constant
+  });
+  test('measurement collapses to a definite basis state (coherence → 0, norm preserved)', () => {
+    const q = new QuantumBrainOrgan(5, 99);
+    for (let t = 0; t < 20; t++) q.step(0.6, (t * 7919) >>> 0);
+    const idx = q.measure(mulberry32(3));
+    expect(idx).toBeGreaterThanOrEqual(0);
+    expect(q.norm()).toBeCloseTo(1, 9);
+    const probs = q.bornProbabilities();
+    expect(Math.max(...probs)).toBeCloseTo(1, 9); // one basis state carries all probability
+    const v = q.view();
+    expect(v.collapsed).toBe(true);
+    expect(v.coherence).toBeCloseTo(0, 6); // a basis state has no coherence
+    expect(v.entanglement).toBeCloseTo(0, 6);
+  });
+  test('planBias is a normalised distribution over the plans; deterministic', () => {
+    const a = new QuantumBrainOrgan(6, 555);
+    const b = new QuantumBrainOrgan(6, 555);
+    for (let t = 0; t < 30; t++) {
+      a.step(0.5, (t * 13) >>> 0);
+      b.step(0.5, (t * 13) >>> 0);
+    }
+    const bias = a.planBias(6);
+    expect(bias.length).toBe(6);
+    expect(bias.reduce((s, x) => s + x, 0)).toBeCloseTo(1, 9);
+    expect(JSON.stringify(a.view())).toBe(JSON.stringify(b.view()));
+  });
+});
+
+describe('scaling scaffolding — toward 1 billion neurons', () => {
+  test('the MASSIVE design scale exceeds one billion neurons; LIVE is tiny', () => {
+    expect(apexDesignedNeurons(SCALE_MASSIVE)).toBeGreaterThanOrEqual(1_000_000_000);
+    expect(apexDesignedNeurons(SCALE_LIVE)).toBeLessThan(10_000);
+    expect(apexDesignedNeurons(SCALE_MEDIUM)).toBeGreaterThan(apexDesignedNeurons(SCALE_LIVE));
+    expect(apexDesignedNeurons(SCALE_MASSIVE)).toBeGreaterThan(apexDesignedNeurons(SCALE_MEDIUM));
+  });
+  test('a MASSIVE-scale brain declares ≥1B designed neurons but allocates only capped live state', () => {
+    const brain = new ApexBrain(0x5161, { scale: SCALE_MASSIVE });
+    expect(brain.designedNeurons).toBeGreaterThanOrEqual(1_000_000_000);
+    expect(brain.neuronCount()).toBe(brain.designedNeurons);
+    expect(brain.liveNeurons).toBeLessThan(brain.designedNeurons); // honest: live ≪ designed
+    expect(brain.liveNeurons).toBeLessThan(LIVE_NODE_CAP * 14); // every organ capped
+    expect(brain.parameterCount()).toBeGreaterThan(0);
+    expect(Number.isFinite(brain.parameterCount())).toBe(true);
+  });
+  test('a MASSIVE-scale brain still ticks deterministically without NaN', () => {
+    const a = new ApexBrain(0x42, { scale: SCALE_MASSIVE });
+    const b = new ApexBrain(0x42, { scale: SCALE_MASSIVE });
+    for (const p of seq(40, 500)) {
+      const ta = a.tick(p);
+      b.tick(p);
+      expect(Number.isFinite(ta.vitality)).toBe(true);
+      expect(APEX_PLAN_NAMES).toContain(ta.plan);
+    }
+    const snap = a.snapshot();
+    expect(snap.scaleName).toBe('MASSIVE');
+    expect(snap.targetNeurons).toBe(APEX_BRAIN_TARGET_NEURONS);
+    expect(snap.quantum.norm).toBeCloseTo(1, 6);
+    expect(JSON.stringify(a.snapshot())).toBe(JSON.stringify(b.snapshot()));
+  });
+  test('the default (LIVE) brain exposes the quantum organ in its snapshot', () => {
+    const brain = new ApexBrain(0x1);
+    brain.tick({ threat: 0.5, energy: 0.5, chaos: 0.5, novelty: 0.5, level: 10 });
+    const snap = brain.snapshot();
+    expect(snap.scaleName).toBe('LIVE');
+    expect(snap.quantum.qubits).toBe(6);
+    expect(snap.quantum.norm).toBeCloseTo(1, 6);
   });
 });
