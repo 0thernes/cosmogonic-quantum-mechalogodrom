@@ -11,6 +11,36 @@ dated / historical / "superseded snapshot" copies (per the binding "Living docs,
 
 ---
 
+## 2026-06-27 — V-VITALS2: social + quantum body-effect suite (strategy · payoff · community · quantum phase)
+
+Second batch from the effect catalog — a new `instVitals2` per-instance lane carrying four more REAL
+signals, so game-theory allegiance, fortune, tribe, and quantum state are all legible on every
+instanced creature body. Spectacular AND falsifiable, same discipline as V-VITALS.
+
+- **New channel (`src/sim/instanced-entities.ts`):** `instVitals2` vec4 packed by exported pure
+  `packVitals2` — x=strategy (`0|1`, the Prisoner's-Dilemma cooperator↔defector flipped on a losing
+  payoff), y=payoff (`clamp01(payoff/5)`, the PD outcome `{0,1,3,5}`), z=community hue
+  (`fract(setGroup×φ)`, the graph-mind louvain tribe), w=quantum phase (`fract(qP/2π)`, advanced every
+  frame by the quantum behavior). Finite + in [0,1]; non-finite + negative-community guarded; cyclic
+  lanes wrap. Same buffer lifecycle as `instVitals`/`instEmissive`.
+- **The effects, each a falsifiable readout of one lane:** COOPERATOR HALO vs DEFECTOR BARB-CORONA
+  (strategy — green broad halo ↔ red spiked azimuthal corona), PAYOFF-SWING IRIDESCENCE (payoff,
+  phase-drifted by qP), FACTION WAR-PAINT (community hue → shared tribe hue + banded sigil),
+  HIVE-RESONANCE (same community ⇒ same pulse phase, so a tribe breathes together), SUPERPOSITION
+  PROBABILITY SHIMMER (interference cycling with qP).
+- **Determinism preserved:** pure `f(state)`, **no rng** — seeded trajectory byte-identical; the
+  signals (`qP`/`strategy`/`payoff`/`setGroup`) are read-only here (driven by the quantum/Nash/louvain
+  systems), only pixels change.
+- **Verified, despite the stale-bundle trap:** `tsc` clean; **tests/entity-vitals2.test.ts** (7 tests)
+  pin `packVitals2` (lanes, clamps, community-hue spread, qP wrap, NaN/negative guards, offset window)
+  AND a headless `sync` integration proving the packed state reaches the pool's `instVitals2` buffer
+  (bare mesh → zeros); existing instanced/vitals tests green. The new GLSL (V-VITALS2 fragment suite +
+  the `vVit2` vertex pass-through) compiled **directly in the live WebGL2 context** (`COMPILE_STATUS`
+  true, empty info-log).
+- **Catalog progress:** 13 named real-bound body effects now live (8 V-VITALS + 5 V-VITALS2); the two
+  four-lane channels are the substrate for the remaining catalog, each to be wired to a real signal.
+- **Contract synced:** the instanced per-instance-channels bullet in `MODULE-CONTRACTS-2026-06-26.md`.
+
 ## 2026-06-27 — Singularity O(k) change: adversarial audit follow-up (consume O(n·k)→O(n), docstring honesty, 5 regression nets; entropy stays global — verified)
 
 Ran a 5-dimension adversarial audit (17 agents, refute-by-default verify) over the shipped O(k)

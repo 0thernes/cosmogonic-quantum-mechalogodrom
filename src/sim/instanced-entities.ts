@@ -85,6 +85,11 @@ interface Pool {
    * (speed). Written from {@link packVitals} in `sync`; each is a falsifiable readout, never decor.
    */
   vitals: THREE.InstancedBufferAttribute;
+  /**
+   * vec4 per instance: REAL social + quantum signals driving the V-VITALS2 suite — x = strategy
+   * (coop/defect), y = payoff, z = community hue, w = quantum phase. Packed by {@link packVitals2}.
+   */
+  vitals2: THREE.InstancedBufferAttribute;
   capacity: number;
   /** Live instances written this frame (reset each sync). */
   used: number;
@@ -135,6 +140,44 @@ export function packVitals(
   out[offset + 3] = clamp01((Number.isFinite(speed) ? speed : 0) * VITAL_EXERTION_SCALE); // w exertion
 }
 
+/** Golden-ratio hue hash → a stable, well-spread hue in [0,1) for each integer community index. */
+const VITAL_COMMUNITY_HUE = 0.61803398875;
+/** Prisoner's-Dilemma temptation payoff (T=5) — normalizes `payoff` into the [0,1] iridescence lane. */
+const VITAL_PAYOFF_MAX = 5;
+/** 1/2π — wraps the ever-advancing quantum phase `qP` into a [0,1) cycling lane. */
+const VITAL_INV_TAU = 1 / (Math.PI * 2);
+
+/**
+ * Pack an organism's REAL social + quantum state into the `instVitals2` vec4 that drives the V-VITALS2
+ * GPU effect suite — written allocation-free into `out[offset..offset+3]`:
+ * - **x = strategy** `0|1` (the Prisoner's-Dilemma cooperator↔defector, flipped on a losing payoff) —
+ *   cooperator halo vs defector barb-corona;
+ * - **y = payoff** `clamp01(payoff / 5)` (last PD payoff in `{0,1,3,5}`) — payoff-swing iridescence;
+ * - **z = community hue** `fract(setGroup × φ)` (the graph-mind louvain tribe index) — faction war-paint
+ *   + in-tribe hive-resonance (same community ⇒ same hue ⇒ pulses in phase);
+ * - **w = quantum phase** `fract(qP / 2π)` (advances every frame via the quantum behavior) —
+ *   superposition probability shimmer.
+ *
+ * Every lane is finite and in `[0, 1]`: non-finite inputs and a negative community pack 0, and the
+ * cyclic lanes wrap. Pure, no rng — the spectacle is a deterministic function of state. O(1). See
+ * tests/entity-vitals2.test.ts.
+ */
+export function packVitals2(
+  out: Float32Array,
+  offset: number,
+  strategy: number,
+  payoff: number,
+  setGroup: number,
+  qP: number,
+): void {
+  out[offset] = strategy === 1 ? 1 : 0; // x strategy (defector = 1, cooperator/other = 0)
+  out[offset + 1] = clamp01((Number.isFinite(payoff) ? payoff : 0) / VITAL_PAYOFF_MAX); // y payoff
+  const g = Number.isFinite(setGroup) && setGroup >= 0 ? setGroup * VITAL_COMMUNITY_HUE : 0;
+  out[offset + 2] = g - Math.floor(g); // z community hue (fract)
+  const q = (Number.isFinite(qP) ? qP : 0) * VITAL_INV_TAU;
+  out[offset + 3] = q - Math.floor(q); // w quantum phase (fract, wrapped)
+}
+
 /**
  * Patch a pool material with the per-instance emissive+alpha attribute (V3.1), the V7-beyond
  * shared-uniform block, the SIMULATION N(2) vertex-melt, AND the RELIQUARY SURFACE (V12) — a
@@ -172,13 +215,14 @@ function patchPoolMaterial(
     shader.vertexShader = shader.vertexShader
       .replace(
         '#include <common>',
-        '#include <common>\nattribute vec4 instEmissive;\nattribute vec4 instVitals;\nvarying vec4 vInstEmissive;\nvarying vec4 vVitals;\nvarying vec3 vObjPos;\nuniform float uTime;\nuniform float uNightmare;',
+        '#include <common>\nattribute vec4 instEmissive;\nattribute vec4 instVitals;\nattribute vec4 instVitals2;\nvarying vec4 vInstEmissive;\nvarying vec4 vVitals;\nvarying vec4 vVit2;\nvarying vec3 vObjPos;\nuniform float uTime;\nuniform float uNightmare;',
       )
       .replace(
         '#include <begin_vertex>',
         '#include <begin_vertex>\n' +
           'vInstEmissive = instEmissive;\n' +
           'vVitals = instVitals;\n' +
+          'vVit2 = instVitals2;\n' +
           'vObjPos = position;\n' +
           'if (uNightmare > 0.0) {\n' +
           '  float ph = float(gl_InstanceID) * 0.6180339887;\n' +
@@ -231,6 +275,7 @@ function materialClassFor(gi: number): number {
 const RELIQUARY_FRAG_HEADER = /* glsl */ `
 varying vec4 vInstEmissive;
 varying vec4 vVitals;
+varying vec4 vVit2;
 varying vec3 vObjPos;
 uniform float uTime;
 uniform float uBass;
@@ -391,6 +436,30 @@ const RELIQUARY_FRAG_BODY = /* glsl */ `#include <emissivemap_fragment>
 	float rqGlitch = floor((rqN0 + sin(uTime * 11.0) * 0.25) * 6.0) / 6.0;
 	totalEmissiveRadiance += vec3(0.10, 1.0, 0.40) * rqGlitch * uChaos * (0.25 + 0.75 * vSen) * 0.4;
 
+	// ══ V-VITALS2 SOCIAL + QUANTUM SUITE ══════════════════════════════════════════════════════════
+	// Bound to the second packed lane (vVit2: x=strategy coop/defect, y=payoff, z=community hue,
+	// w=quantum phase) — game-theory allegiance, fortunes, tribe, and quantum state made legible.
+	float sStrat = vVit2.x, sPay = vVit2.y, sComm = vVit2.z, sQ = vVit2.w;
+	// COOPERATOR HALO vs DEFECTOR BARB-CORONA (strategy) — allegiance reads off the body.
+	vec3 sAlleg = mix(vec3(0.25, 1.0, 0.55), vec3(1.0, 0.30, 0.20), sStrat); // green coop ↔ red defect
+	float sHalo = pow(rqFres, 2.2) * (1.0 - sStrat); // cooperators wear a soft broad halo
+	float sBarb = pow(0.5 + 0.5 * sin(atan(rqN.z, rqN.x) * 16.0 + uTime * 3.0), 18.0) * pow(rqFres, 1.3) * sStrat; // defectors a spiked corona
+	totalEmissiveRadiance += sAlleg * (sHalo * 0.45 + sBarb * 1.8);
+	// PAYOFF-SWING IRIDESCENCE (payoff, phase-drifted by the quantum lane) — winners flare iridescent.
+	vec3 sIris = 0.5 + 0.5 * cos(vec3(0.0, 2.094, 4.188) + rqFres * 8.0 + sQ * 6.2831853);
+	totalEmissiveRadiance += sIris * sPay * pow(rqFres, 1.5) * 1.2;
+	// FACTION WAR-PAINT (community hue) — same louvain tribe ⇒ same hue + banded sigil.
+	vec3 sTribe = 0.5 + 0.5 * cos(6.2831853 * (sComm + vec3(0.0, 0.33, 0.67)));
+	float sSigil = step(0.62, fract(rqDetail * 3.0 + sComm * 7.0));
+	diffuseColor.rgb = mix(diffuseColor.rgb, sTribe, sSigil * 0.45);
+	totalEmissiveRadiance += sTribe * sSigil * 0.4;
+	// HIVE-RESONANCE (community) — a tribe breathes in phase: same hue ⇒ same pulse offset.
+	float sHive = 0.5 + 0.5 * sin(uTime * 2.0 + sComm * 6.2831853);
+	totalEmissiveRadiance += sTribe * sHive * 0.18;
+	// SUPERPOSITION PROBABILITY SHIMMER (quantum phase) — an interference shimmer cycles with qP.
+	float sShim = 0.5 + 0.5 * sin(vObjPos.x * 10.0 + vObjPos.y * 8.0 + sQ * 12.566370);
+	totalEmissiveRadiance += vec3(0.55, 0.40, 1.0) * pow(sShim, 6.0) * 0.45;
+
 	// Exotic render modes layer on top (V7-beyond, unchanged).
 	if (uMode > 5.5) {
 		float ct = abs(dot(normalize(vNormal), rqV));
@@ -547,6 +616,14 @@ export class InstancedEntityRenderer {
         ud.act,
         vel ? vel.length() : 0,
       );
+      packVitals2(
+        pool.vitals2.array as Float32Array,
+        o,
+        ud.strategy,
+        ud.payoff,
+        ud.setGroup,
+        ud.qP,
+      );
     }
 
     // Publish: live counts, clipped uploads, render mode (V7.3). Per-instance colour/emissive/
@@ -576,6 +653,9 @@ export class InstancedEntityRenderer {
         pool.vitals.clearUpdateRanges();
         pool.vitals.addUpdateRange(0, used * 4);
         pool.vitals.needsUpdate = true;
+        pool.vitals2.clearUpdateRanges();
+        pool.vitals2.addUpdateRange(0, used * 4);
+        pool.vitals2.needsUpdate = true;
       }
       if (modeChanged) {
         this.applyModeToPool(pool.mesh.material as THREE.MeshStandardMaterial);
@@ -637,6 +717,9 @@ export class InstancedEntityRenderer {
     // geometry clone, disposed on growth, re-uploaded clipped to the live range each sync.
     const vitals = new THREE.InstancedBufferAttribute(new Float32Array(capacity * 4), 4);
     vitals.setUsage(THREE.DynamicDrawUsage);
+    // vec4 per-instance SOCIAL + QUANTUM signals (V-VITALS2) — same lifecycle as the lanes above.
+    const vitals2 = new THREE.InstancedBufferAttribute(new Float32Array(capacity * 4), 4);
+    vitals2.setUsage(THREE.DynamicDrawUsage);
     // The pool renders a per-pool CLONE of the cached geometry so the
     // `instEmissive` attribute never leaks onto the shared cache entry (entity
     // geometries are tiny — ≤80 small clones, boot/growth-time only). The clone
@@ -644,13 +727,14 @@ export class InstancedEntityRenderer {
     const instGeo = geo.clone();
     instGeo.setAttribute('instEmissive', emissive);
     instGeo.setAttribute('instVitals', vitals);
+    instGeo.setAttribute('instVitals2', vitals2);
     mesh.geometry = instGeo;
     // Force instanceColor allocation now so sync() can assume it exists.
     mesh.setColorAt(0, WHITE);
     const ic = mesh.instanceColor;
     if (ic) ic.setUsage(THREE.DynamicDrawUsage);
     this.scene.add(mesh);
-    return { mesh, emissive, vitals, capacity, used: 0 };
+    return { mesh, emissive, vitals, vitals2, capacity, used: 0 };
   }
 
   /** Replace a pool with a doubled-capacity successor (event-driven, rare). */

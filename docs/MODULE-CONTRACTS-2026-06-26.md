@@ -1079,8 +1079,11 @@ Deviations from and clarifications of the V3 goal spec, as landed:
    entity casters at 120). Per-instance channels: matrix, `instanceColor`,
    a vec4 `instEmissive` (rgb = emissive·intensity, a = opacity), and a vec4
    `instVitals` (x=wealth `energy/100`, y=senescence `age/life`, z=neural firing
-   `act`, w=exertion `speed×8`; packed by exported pure `packVitals`, finite + in
-   [0,1], bare-mesh→zeros) — all patched into MeshStandardMaterial via
+   `act`, w=exertion `speed×8`; packed by exported pure `packVitals`), and a vec4
+   `instVitals2` (x=strategy coop/defect, y=payoff `/5`, z=community hue
+   `fract(setGroup×φ)`, w=quantum phase `fract(qP/2π)`; packed by exported pure
+   `packVitals2`) — all lanes finite + in [0,1], bare-mesh→zeros; all patched into
+   MeshStandardMaterial via
    `onBeforeCompile` (replaces `totalEmissiveRadiance`, multiplies
    `diffuseColor.a`). **V-VITALS effect suite** (reliquary fragment, GPU-only,
    reuses the relief/fresnel/normal already computed + 1 extra fbm): each named
@@ -1088,8 +1091,12 @@ Deviations from and clarifications of the V3 goal spec, as landed:
    gaseousness + gilded buffer shimmer (wealth), laser-dance synapse arcs +
    shardwarp vertex bristle (neural firing), ashen cataract greying (senescence),
    hyperspace ionizing flutter (exertion), singulrosity bloom (wealth×firing),
-   bit-glitch chaos core (world chaos × senescence) — never decorative; an idle
-   poor young still organism is quiet, a rich/firing/ancient/sprinting one blazes.
+   bit-glitch chaos core (world chaos × senescence). The **V-VITALS2 suite** binds
+   the `instVitals2` lane: cooperator halo vs defector barb-corona (strategy),
+   payoff-swing iridescence (payoff), faction war-paint + hive-resonance (community
+   hue), superposition probability shimmer (quantum phase). All never decorative; an
+   idle poor young still organism is quiet, a rich/firing/ancient/sprinting one
+   blazes, allegiance + tribe + fortune + quantum state legible at a glance.
    GPU-only, no rng, so the seeded trajectory is byte-identical. Pools are lazily
    built at `ceil(maxEntities/geoCount)·4` capacity, grow ×2 (event-driven
    rebuild), clamp at `maxEntities`; `frustumCulled = false` (instances span
