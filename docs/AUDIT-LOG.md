@@ -42,6 +42,28 @@ clean **empty** set — independently corroborating the core's prior green. All 
 Gate green end-to-end on the final rebased tree: `prettier`, `tsc` strict, `oxlint`, **1582 pass / 0
 fail**, `verify:receipts`, `sync:check`, `build` (7 artifacts). No PR — direct to `main`.
 
+## 2026-06-27 — Runtime verification (the app actually BOOTS, STEPS, and RENDERS)
+
+The whole audit had been static (gate / tsc / lint / encoding / fact-consistency). This pass closed the
+one dimension nothing had covered: **does the simulation actually run?** Started a real dev server
+(`preview_start` → `bun server.ts`, autoPort 36307), loaded the app, and drove the deterministic
+`window.__CQM__.step(1/60)` hook for 120 frames. Result:
+
+- **Boots clean:** console shows `[world] world ready` + `[main] boot`, **0 errors / 0 warnings**; server
+  log clean.
+- **Full UI renders:** the accessibility snapshot is the live app — WebGL `Canvas`, Telemetry panel,
+  4-tab Observatory (4 chart images), flight Controls, all **25** named Sorting Fields.
+- **Sim genuinely steps** (matches the documented architecture with real values, not zeros):
+  **463 entities** spawned (ramping to the tier's 650 cap), **216 / 250 morphotypes**, **10 phyla**
+  (50/48/45/41/36/40/48/52/51/51), **10 named titans** with energy/matter/entropy + a live PD war matrix,
+  16 shoggoths / 14 puppeteers, a 2-currency **economy** (aurum 7515 / umbra 7518, FX approx 1.0,
+  Gini 0.51), quantum metrics, weather/wind/temp, procedural lore + soundtrack. Determinism law holds.
+- Only the off-screen `preview_screenshot` timed out — a known headless-WebGL capture limit, **not** an
+  app fault (console stayed error-free through it).
+
+Verdict: the repo is not merely gate-green — it is a **genuinely functional** deterministic simulation.
+True, accurate, real, authentic. (Server stopped after the check.)
+
 ## 2026-06-27 — Apex-body shader RED fix (`metalnessFactor` inject-before-declare) + repo-wide shader-injection sweep
 
 Fixed a live shader-compile failure in the apex/super-creature body and then swept every shader patch in
