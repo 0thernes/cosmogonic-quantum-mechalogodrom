@@ -372,3 +372,41 @@ the determinism ethos, but the native engine is the optional/streamed tier with 
 an owner perf-vs-determinism call. The README's "Verified: GCC 16.1 / RTX 5070 Ti" provenance is the
 owner's real 2026 hardware (plausible for the date — not fabricated). NOTE: native is **not** built by
 `bun run check`, so the `main.cpp` guard is source-reviewed but not compiled in this environment.
+
+## 13 · Three-lens breadth re-audit — bugs the pattern sweeps missed (2026-06-26)
+
+Three independent read-only master-lens agents (quantum/math · a-life · render/UI) re-read the full
+`src/` tree and **empirically** probed each candidate. This caught real defects that §7's _pattern
+reasoning_ could not — the lesson recurs: a heuristic that concludes "X is covered" never checks the
+specific call site. Findings (fixed in `59aa9c4`):
+
+- **HIGH — `petri-dish.ts` complexity ratchet-DOWN (regression-of-a-fix).** `e67eacb` had gated the
+  `%40` growth tick on `complexity < 8`; **a later fleet rebase silently reverted it**, and lines 308/315
+  (caps 15/12) had the same clamp-down. So complexity sawtoothed (8→15→8) and never reached its 20 ceiling.
+  All three sites are now monotone floor-fills (only raise toward their tier). _§7 didn't probe the
+  complexity trajectory; only a runtime drive caught it._
+- **HIGH — `world.ts` `dispose()` tore down NO GPU subsystems.** §7 reasoned "boot-once systems are covered
+  by `forceContextLoss`" — true, but it never checked that `world.dispose()` itself called **zero** of the
+  ~10 subsystem `dispose()` methods, including the **rebuilt-mid-sim** super/hero bodies that §7's own rule
+  says DO need it. Now disposes singularities, wingRender, monolithTemple, artifacts, and every super/hero
+  body (idempotent via the abort sentinel). The 5 with no `dispose()` method (instanced/nhiBody/gold/quantum/
+  cosmicWeb) are left to `forceContextLoss`.
+- **MED — `brutal-god-releases.ts` double-mutation.** `applyBrutalRelease` had duplicated effect blocks
+  (snap×2, void×2, spiral×2, phoenix×2); an effect string matching a family's keywords fired **twice** —
+  vitality squared (1→0.1→0.01), `consumed` double-counted. This went **live** the moment the earlier fix
+  made the petri pass mutate `state.biologics` in place. Merged each family to one block (union of keywords
+  - folded wiring); verified single application.
+- **LOW — `open-endedness.ts` `bedauPackardActivity`** divided by the per-snapshot mean (`total/len`),
+  over-scaling ×len and saturating to 1; restored the documented `/ total` fraction (instrumentation-only).
+- **LOW — `ui/super-neural.ts`** footer `innerHTML` with interpolated `snap.plan` → DOM nodes + textContent
+  (the WebGL-card hardening pattern; removes the sink though `plan` is a closed enum today).
+- **Quantum/math core: ZERO real bugs** — re-verified to machine precision against analytic ground truth
+  (Wigner-6j/9j j=8, CG orthonormality, Clifford, Crank–Nicolson norm/energy, MPS-SVD, QGT, CHSH = 2√2,
+  VQE parameter-shift). Refuted 4 false candidates (resonance `atan2` contract, NQS bit-extraction,
+  moonlab `log(k)`, pinn proxy) empirically.
+- **Reviewed-not-changed (false positives):** `stigmergy.ts` `idx()` modulo is **intentional toroidal
+  wrap** (the gradient neighbour lookups `gx±1` rely on edge-wrap; a clamp would break them).
+- **Remaining (dev-HMR / interaction hygiene, low real impact, tracked):** `super-neural` per-tab canvas
+  churn + `pantheon-architecture-panel` rAF/listener have no `dispose()`; a few `world.ts` HMR listeners
+  omit `{ signal }`; `driveSuper()` allocates scratch typed-arrays per call. None affect a production run
+  (HMR is dev-only); deferred as hygiene.
