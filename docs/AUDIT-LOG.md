@@ -29,6 +29,49 @@ Re-baselined off the current `origin/main` after the day's churn (the 101-super-
   `verify:facts` 0 drift / 80 surfaces, 0 mojibake + 0 broken links / 90 surfaces, Butlin still 8 met / 6
   partial. Canonical sources unchanged (v0.18.0, 1477 floor).
 
+## 2026-06-27 — Independent second-auditor re-verification at the live tip + causal-graph test gap closed
+
+Re-ran the full audit as an independent second auditor against the current `origin/main` tip
+(`0df3d41`, the "bump every reviewed-stamp to 2026-06-27" mass edit — the highest-drift-risk commit) in
+an isolated worktree off origin/main. **Every load-bearing claim independently re-confirmed GREEN:**
+`prettier --check`, `tsc --noEmit` strict, `oxlint`, `verify:receipts`, `sync:check`, and `verify:facts`
+all pass; `verify:facts` = **0 drift across 80 MD/HTML/XML surfaces**; `sync:check` = all surfaces match
+`v0.18.0 · 1477 tests · 95.03/92.03%`. The `0df3d41` date bump touched only the `reviewed:` stamp comment
+across 83 files (no filename churn, no body-date rewrite) — internally consistent (a 06-27 re-review stamp
+over findings legitimately dated 06-26), not drift.
+
+- **Receipts split is benign (verified, not a bug):** `verify:receipts` printed `1537 tests · 95.02 /
+92.14` while `sync:check`/canon publish `1477 · 95.03 / 92.03`. These are _measured-now vs published
+  headline_: `verify-receipts.ts` enforces a **floor** (`count >= min(canon, PORTABLE_TEST_FLOOR=1400)`)
+  and a **±6pp coverage band**, then prints the measured triple — it never asserts equality. The leaner
+  worktree measures 1537 (vs 2924 in the file-rich main tree) because `bun test` counts every `*.test.ts`
+  present; the floor semantics absorb this by design. Correct.
+- **Newest loop code hand-verified correct (the freshest = highest bug-risk):** `latent-substrates.ts`
+  (real Crank–Nicolson positional spread, SO(3) geodesic coherence, all bounded; `observe()` arg order
+  matches the call exactly) and `causal-graph.ts` Pearl do-calculus (graph surgery holds X; the
+  twin-network counterfactual uses dynamics **algebraically identical** to the main propagation —
+  `(p·w)·0.6 = p·w·0.6`). Both are genuinely **wired live** into `super-mind.ts` (imported :61 → called
+  :1187 → stored → exposed on `snapshot()` :1688), not computed-and-discarded.
+- **FIXED — real coverage gap (additive, `tests/causal-graph.test.ts`, 9 tests / 36 assertions):**
+  `causal-graph.ts` is now load-bearing (drives `latent-substrates` → the apex snapshot) yet had **no
+  direct test** — it was exercised only indirectly through the `clamp01`-bounded `latentSubstrateStep`
+  wrapper, which cannot catch a regression in the do-operator itself (the same blind spot that hid the
+  earlier `wigner6j` j≥7 sign bug behind small-case tests). The new test pins the **defining do-calculus
+  contract**: do(X=x) surgery holds X so a change to X's _parent_ cannot reach Y (exact equality);
+  counterfactual of do(X=x) equals the factual effect of do(X=1−x) (exact, byte-identical); plus
+  determinism, [0,1] bounds, finite AD gradient on both the direct-edge and indirect branches, snapshot
+  intervention-count, and `updateWeight` online learning + safe no-op on a missing edge. Gate-clean
+  (prettier/tsc/oxlint green).
+- **Observation (latent process gap, not a defect):** `verify:facts` runs in CI (`ci.yml:76`) but is
+  **not** in the local `bun run check` chain (`format:check → typecheck → lint → test → verify:receipts →
+sync:check → build`), so a prose-fact drift is only caught post-push by CI rather than at the
+  pre-commit gate. By design — `verify:facts` is a report-for-triage auditor (legit multi-framings are
+  allow-listed) — so it is intentionally out of the fast local gate; recorded so the asymmetry is known.
+
+Net: the repo is **true, accurate, current, and defensible** at `0df3d41`. No new bugs and no new
+cross-surface drift beyond what the ledger already documents; one genuine test-coverage gap on
+freshly-elevated apex code closed.
+
 ## 2026-06-26 — Line-by-line read: petri-dish active-bug fixes + dead-state reclassification + doc honesty
 
 Deep per-file read (~84 src files read directly, beyond agents/manifest) of the math/quantum core, every
