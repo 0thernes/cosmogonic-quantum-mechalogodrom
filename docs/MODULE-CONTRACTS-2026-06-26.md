@@ -882,19 +882,19 @@ accumulators.
 export class EntityManager {
   // ...
   /**
-   * Death hook, invoked synchronously inside update() for every natural death
-   * (age > life · tempMod), BEFORE the entity is disposed — position is still
-   * valid. Null disables (default). The reused Entity reference must be read
-   * synchronously; the hook body must be allocation-free (it runs on the
-   * per-frame path).
+   * Death→ground feedback hook, invoked with the dying entity's world (x, z) exactly
+   * once per disposal routed through `disposeAt()` — covering BOTH the age-death branch
+   * of `update()` AND external consumers (shoggoth consumption, singularity event-horizon).
+   * NOT fired by `reset()` (mass disposal is a genesis event, not a death). Null disables
+   * (default). Allocation-free to invoke — passes coords, not the Entity ref (audit fix A).
    */
-  onDeath: ((e: Entity) => void) | null;
+  onDeath: ((x: number, z: number) => void) | null;
 }
 ```
 
-World wiring: `entities.onDeath = (e) => rd.perturb(0.5 + e.position.x / 240,
-0.5 - e.position.z / 240)` — the ground-UV mapping of the 240×240 plane (same
-mapping `doSplit` uses).
+World wiring: `entities.onDeath = (x, z) => { rd.perturb(0.5 + x / GROUND_EXTENT, 0.5 -
+z / GROUND_EXTENT, 2); artifacts.placeGround(x, z, 'scar', elapsed); }` — the ground-UV
+mapping of the plane (scar the corpse's UV + drop a scar relic).
 
 ## src/sim/quantum.ts — QuantumCloud.implodeAt + setBreath
 

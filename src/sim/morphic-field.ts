@@ -1,13 +1,14 @@
 /**
- * MORPHIC FIELD — Tsotchke-wired morphogenetic resonance field (BRUTALISM 2/9)
+ * MORPHIC FIELD — NOT WIRED (standalone morphogenetic-resonance math model; no sim consumer yet) (BRUTALISM 2/9)
  *
  * Inspired by Rupert Sheldrake's morphic resonance hypothesis (treated here as a
  * mathematical model of cross-creature state correlation, NOT as empirical science).
  *
- * Maintains a shared field tensor F ∈ R^{FIELD_DIM} that accumulates resonance
- * contributions from every creature each beat. Each creature reads the field and
- * receives a morphic bias that subtly aligns its cognition toward past successful
- * patterns imprinted by ALL creatures.
+ * Maintains a shared field tensor F ∈ R^{FIELD_DIM} designed so that — ONCE WIRED into
+ * the loop — it would accumulate resonance contributions from every creature each beat,
+ * and each creature would read the field and receive a morphic bias that subtly aligns its
+ * cognition toward past successful patterns imprinted by ALL creatures. No sim consumer
+ * instantiates it yet (0 import/call sites); the class is correct and test-ready, dormant.
  *
  * Implementation:
  *   • EMA decay field (slow timescale: τ=0.03)
@@ -61,7 +62,8 @@ export class MorphicField {
 
   /**
    * Imprint a creature's consciousness latent into the morphic field.
-   * Called once per creature per beat from the simulation loop.
+   * Intended to be called once per creature per beat once wired into the simulation loop
+   * (no caller yet — see the NOT-WIRED note in the file header).
    */
   imprint(latent: ArrayLike<number>, successScore: number): void {
     this.imprints++;

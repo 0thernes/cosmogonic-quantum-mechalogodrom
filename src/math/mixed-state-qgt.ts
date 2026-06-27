@@ -51,7 +51,8 @@ export interface MixedStateGeometry {
   fisher: number;
   /** Purity of the state: Tr(ρ²) ∈ [1/d, 1] (1 = pure, 1/d = maximally mixed). */
   purity: number;
-  /** Von Neumann entropy: S = -Tr(ρ log ρ) ∈ [0, log d]. */
+  /** Linear (impurity) entropy: S = 1 - Tr(ρ²) ∈ [0, 1-1/d] (0 = pure). This is what
+   * `computeEntropy` returns — NOT the von Neumann value -Tr(ρ log ρ). */
   entropy: number;
 }
 

@@ -26,13 +26,15 @@ allowed`).
 ## Providers the box offers
 
 Keys live **server-side only** (env vars, never in the browser). A keyed provider appears in the
-picker **only when its key is set**; the two key-less providers always appear, so the box works with
-zero config. If the chosen provider errors, the box **fails over once** to the key-less default
-(Pollinations) so it still answers.
+picker **only when its key is set**; the key-less providers always appear, so the box works with
+zero config. The **default/primary** is **FreeLLMAPI** (always present, defaulting to the
+`localhost:3001` proxy) — or a `custom` endpoint when `CQM_LLM_ENDPOINT` is set. If a provider errors,
+the box **fails over down the chain** (FreeLLMAPI → LLM7 → Pollinations) to an always-available
+key-less provider so it still answers.
 
 | Provider (picker id)          | Env var to enable     | Free tier (per the June-2026 report)             | Get a key                       |
 | ----------------------------- | --------------------- | ------------------------------------------------ | ------------------------------- |
-| Pollinations (`pollinations`) | _(none — default)_    | No key, anonymous; can rate-limit (HTTP 429)     | —                               |
+| Pollinations (`pollinations`) | _(none)_              | No key, anonymous; can rate-limit (HTTP 429)     | —                               |
 | LLM7 (`llm7`)                 | _(none)_              | No key, 30 RPM anonymous                         | optional token at token.llm7.io |
 | Groq (`groq`)                 | `GROQ_API_KEY`        | 30 RPM, fast LPU inference, no card              | console.groq.com                |
 | Cerebras (`cerebras`)         | `CEREBRAS_API_KEY`    | 1M tokens/day, fastest throughput, 8K ctx (free) | cloud.cerebras.ai               |
@@ -44,13 +46,15 @@ zero config. If the chosen provider errors, the box **fails over once** to the k
 | DeepSeek (`deepseek`)         | `DEEPSEEK_API_KEY`    | V3/R1; 5M trial tokens then paid                 | platform.deepseek.com           |
 | Hugging Face (`huggingface`)  | `HF_TOKEN`            | router → many backends, 100K credits/month       | huggingface.co/settings/tokens  |
 
-### Two extra, dynamically-offered providers
+### FreeLLMAPI (the primary) + the Custom provider
 
-- **FreeLLMAPI pool (`freellmapi`)** — point the box at a locally-running
+- **FreeLLMAPI pool (`freellmapi`)** — the **primary/default** provider and the **chain head**;
+  **always present** in the picker. It points at a locally-running
   [tashfeenahmed/freellmapi](https://github.com/tashfeenahmed/freellmapi) proxy, which stacks the
-  free tiers of 16 providers (~1.7B tokens/month) behind one endpoint with its own failover. Set
-  `FREELLMAPI_BASE=http://localhost:3001/v1` (optionally `FREELLMAPI_KEY`, `FREELLMAPI_MODEL`,
-  default `auto`). Appears in the picker when `FREELLMAPI_BASE` is set.
+  free tiers of 16 providers (~1.7B tokens/month) behind one endpoint with its own failover. Its base
+  defaults to `http://localhost:3001/v1`; `FREELLMAPI_BASE` overrides it (optionally `FREELLMAPI_KEY`,
+  `FREELLMAPI_MODEL`, default `auto`). Tried FIRST; when the proxy isn't running the box falls through
+  to the key-less LLM7 then Pollinations.
 - **Custom (`custom`)** — any other OpenAI-compatible endpoint via `CQM_LLM_ENDPOINT`
   (+ `CQM_LLM_MODEL`, `CQM_LLM_KEY`). When set, it becomes the **default** provider. Appears when
   `CQM_LLM_ENDPOINT` is set.

@@ -31,8 +31,11 @@
  * - Boundless Socratic Learning (2025, hf.co/papers/2411.16905)
  * - Capacity-bounded safe self-change (research bedrock)
  *
- * This is faculty #99 — the self-evolution loop that enables open-ended
- * improvement without external intervention.
+ * This is faculty #99 — IMPLEMENTED BUT NOT WIRED (no sim consumer yet): no system feeds it
+ * EvolutionMetrics or applies its ModificationProposals, so the loop does NOT run in the live
+ * sim. The class below is correct and test-ready; it stays dormant until a tick builds metrics
+ * from fitness/emergence/Butlin/Phi/complexity and calls step(). Until then it enables
+ * open-ended self-modification only on paper.
  *
  * Pure leaf: deterministic (seeded mutations), allocation-free apart from working arrays.
  */
