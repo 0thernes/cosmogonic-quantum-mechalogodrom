@@ -234,6 +234,29 @@ bodies are forced, and two clean probes receive the exact `|Δv| = G·dt/r²` (a
 double it). `k` is conservative here — the bench's legacy square spawn is denser at the core than the
 live phylum-disk spread, which puts a smaller fraction inside REACH.
 
+**Scope of the flatness (V7.5 audit refinement):** `k` is held population-flat only **above the 10k
+knee**, where `EntityManager.densityScale = √(maxEntities/10000) > 1` spreads the arena to pin areal
+density. Below 10k `densityScale` clamps to 1, so the fixed arena's density (and `k`) rise with `n` —
+which is why the 2k–10k rows above show `k = n`. That regime is sub-millisecond and never the
+bottleneck, and the O(k) query is still a strict net win there (`k ≤ n`, always ≤ the removed O(n)
+sweep). The exact, un-strided physics runs at **every** tier.
+
+**Consuming-hole worst case (V7.5):** a black/grey hole's per-frame disposal is bounded by
+**MAX_CONSUME = 25**, not `n`. The deferred consume originally did a per-victim `list.indexOf`
+(`O(n·consumeCap)` — up to ~1.25M ops/frame at 50k _while actively eating_); it is now a **single
+reverse `list` scan** with a `Set` membership test (`O(n)` once + the `disposeAt` left-shifts that were
+always there), which also serves as the stale-grid / same-frame-cross-system liveness guard. This is a
+transient spike on the consuming path only — the force pass itself is `O(k)` every frame.
+
+**Entropy stays global by design (V7.5):** `applyEntropy` is **deliberately NOT** converted to the
+O(k) reach query (≈ 5 ms/frame at 50k, a global strided `i += 2` pass). Two reasons, confirmed by an
+adversarial audit: (1) heat death is a global thermodynamic end-state, not a finite-speed front — the
+expanding shell is a stylized rig, and the genuinely global reach of the effect is the world-heat
+coupling (`s.chaos`); (2) the stride + per-visit `rng()` draws are part of the seeded stream, so
+bounding the thermalization spatially would perturb determinism for every entropy-active replay.
+Global+strided is the determinism-preserving correct state; the ~5 ms is a bounded, transient-effect
+tradeoff, not a scaling defect.
+
 ## Apex mind (Super Creature) — per-beat cognitive budget (2026-06-17)
 
 Bun 1.3.14 x64-win32, Intel Core Ultra 9 275HX (~4.14 GHz). The apex mind grew from one stacked MLP (V31)

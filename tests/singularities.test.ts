@@ -403,4 +403,224 @@ describe('SingularitySystem', () => {
     expect(dA).toBeCloseTo((G * dt) / (rA * rA), 6);
     expect(dB).toBeCloseTo((G * dt) / (rB * rB), 6);
   }, 60000);
+
+  test('greyhole: absorb half-cycle CONSUMES at the quarter cap (MAX_CONSUME>>2); emit half EJECTS without consuming', () => {
+    const { HORIZON, MAX_CONSUME } = SINGULARITY_FIELD;
+    const cap = MAX_CONSUME >> 2; // 6 — a quarter of a black hole's rate
+
+    // ABSORB phase: Math.sin(t·1.3) ≥ 0 at t=0. Park > cap bodies inside the horizon; one frame must
+    // eat EXACTLY the quarter cap — falsifying both the audited "greyhole never retains" bug
+    // (consumed===0) and an over-consume (consumed>cap).
+    const ctxA = makeCtx(31, 500);
+    const entA = new EntityManager(ctxA);
+    entA.reset(80);
+    for (let i = 0; i < cap + 6; i++) {
+      entA.list[i]!.position.set(CENTER.x + 4 + i * 0.4, CENTER.y, CENTER.z); // r ∈ [4, ~8.4] < HORIZON
+    }
+    const sysA = new SingularitySystem(ctxA, entA);
+    sysA.summon('greyhole', CENTER);
+    rebuildGrid(ctxA, entA);
+    sysA.update(1 / 60, 0); // t=0 ⇒ Math.sin(0) = 0 ≥ 0 ⇒ the absorb half-cycle (cap = MAX_CONSUME>>2)
+    expect(sysA.consumed).toBe(cap); // > 0 (not the audited bug) AND ≤ cap (no over-consume)
+
+    // EMIT phase: a t with Math.sin(t·1.3) < 0. A body inside the horizon is EJECTED, none consumed.
+    const ctxE = makeCtx(32, 500);
+    const entE = new EntityManager(ctxE);
+    entE.reset(50);
+    const body = entE.list[0]!;
+    body.position.set(CENTER.x + 3, CENTER.y, CENTER.z); // inside the horizon
+    const dBefore = body.position.distanceTo(CENTER);
+    const sysE = new SingularitySystem(ctxE, entE);
+    sysE.summon('greyhole', CENTER);
+    rebuildGrid(ctxE, entE);
+    const tEmit = 3; // sin(3·1.3)=sin(3.9) ≈ −0.69 < 0 ⇒ emit
+    expect(Math.sin(tEmit * 1.3)).toBeLessThan(0);
+    sysE.update(1 / 60, tEmit);
+    const dAfter = body.position.distanceTo(CENTER);
+    expect(dAfter).toBeGreaterThan(HORIZON); // ejected past the event horizon (to HORIZON·1.05)
+    expect(dAfter).toBeGreaterThan(dBefore + 10); // and well outward from where it started
+    expect(sysE.consumed).toBe(0); // the emit half NEVER eats
+    expect(entE.list.includes(body)).toBe(true); // ejected, not consumed
+  });
+
+  test('black hole: > MAX_CONSUME horizon-crossers ⇒ consumed === MAX_CONSUME in ONE frame, the eaten SUBSET = first-MAX_CONSUME in grid order, and it is deterministic', () => {
+    const { HORIZON, MAX_CONSUME, REACH } = SINGULARITY_FIELD;
+    const PLACED = 40; // > MAX_CONSUME (25)
+    const H2 = HORIZON * HORIZON;
+
+    // Deterministic scenario: PLACED normal bodies parked strictly inside the horizon on a golden-angle
+    // spiral (distinct cells, off dead-centre); the rest shoved far outside REACH so they never force
+    // or consume. No rng touches these positions, so the grid order — and thus the eaten subset — is a
+    // pure function of the seed.
+    const runScenario = (seed: number) => {
+      const ctx = makeCtx(seed, 600);
+      const ent = new EntityManager(ctx);
+      ent.reset(120);
+      for (let i = 0; i < PLACED; i++) {
+        const ang = i * 2.399963; // golden angle
+        const rad = 3 + (i % 7) * 1.5; // r ∈ [3, 12] < HORIZON
+        ent.list[i]!.position.set(
+          CENTER.x + Math.cos(ang) * rad,
+          CENTER.y,
+          CENTER.z + Math.sin(ang) * rad,
+        );
+      }
+      for (let i = PLACED; i < ent.list.length; i++) {
+        ent.list[i]!.position.set(CENTER.x + 1e6, CENTER.y, CENTER.z); // far outside REACH
+      }
+      const placed = ent.list.slice(0, PLACED); // hold refs to the parked bodies
+      const sys = new SingularitySystem(ctx, ent);
+      sys.summon('blackhole', CENTER);
+      rebuildGrid(ctx, ent);
+      // Predict the eaten subset BEFORE the update: grid-query order, in-horizon, first MAX_CONSUME.
+      const predicted: typeof placed = [];
+      for (const e of ctx.grid.query(CENTER.x, CENTER.z, REACH)) {
+        const dx = CENTER.x - e.position.x;
+        const dy = CENTER.y - e.position.y;
+        const dz = CENTER.z - e.position.z;
+        if (dx * dx + dy * dy + dz * dz < H2) {
+          predicted.push(e);
+          if (predicted.length === MAX_CONSUME) break;
+        }
+      }
+      sys.update(1 / 60, 0);
+      const survivalMask = placed.map((e) => ent.list.includes(e));
+      const predictedConsumedMask = placed.map((e) => predicted.includes(e));
+      return {
+        consumed: sys.consumed,
+        survivors: survivalMask.filter(Boolean).length,
+        survivalMask,
+        predictedConsumedMask,
+        predictedLen: predicted.length,
+      };
+    };
+
+    const r1 = runScenario(7);
+    expect(r1.predictedLen).toBe(MAX_CONSUME); // the cap is genuinely saturated this frame
+    expect(r1.consumed).toBe(MAX_CONSUME); // cap honored EXACTLY in one frame
+    expect(r1.survivors).toBe(PLACED - MAX_CONSUME);
+    // The eaten set is EXACTLY the predicted first-MAX_CONSUME in grid order: survived ⟺ not predicted.
+    for (let i = 0; i < PLACED; i++) {
+      expect(r1.survivalMask[i]).toBe(!r1.predictedConsumedMask[i]);
+    }
+    // DETERMINISM: a second identically-seeded run consumes the SAME subset (by placement index).
+    const r2 = runScenario(7);
+    expect(r2.survivalMask).toEqual(r1.survivalMask);
+  });
+
+  test('warp shell: a body at HORIZON < r < HORIZON·WARP_R_MULT is time-dilated (|Δv| < pure r⁻²) and redshifted', () => {
+    const { HORIZON, WARP_R_MULT, G } = SINGULARITY_FIELD;
+    const ctx = makeCtx(15, 500);
+    const ent = new EntityManager(ctx);
+    ent.reset(60);
+    const probe = ent.list[0]!;
+    const r = HORIZON + (WARP_R_MULT * HORIZON - HORIZON) * 0.5; // midway in the shell (= 56.25)
+    expect(r).toBeGreaterThan(HORIZON);
+    expect(r).toBeLessThan(WARP_R_MULT * HORIZON);
+    probe.position.set(CENTER.x + r, CENTER.y, CENTER.z);
+    probe.userData.vel.set(0, 0, 0); // start at rest so the single kick is the only contribution
+    const colorBefore = probe.material.color.clone();
+    const sys = new SingularitySystem(ctx, ent);
+    sys.summon('blackhole', CENTER); // sign > 0 ⇒ REDSHIFT
+    rebuildGrid(ctx, ent);
+    sys.update(1 / 60, 0);
+    const dt = 1 / 60;
+    const pure = (G * dt) / (r * r); // the UN-warped |Δv| this body would receive
+    const actual = probe.userData.vel.length();
+    // Time dilation scales the post-kick velocity by (1 − 0.42·k) < 1 ⇒ the real delta is STRICTLY less
+    // (deleting the dilation line would make actual === pure and fail this).
+    expect(actual).toBeLessThan(pure);
+    const k = 1 - (r - HORIZON) / (HORIZON * (WARP_R_MULT - 1));
+    expect(actual).toBeCloseTo(pure * (1 - 0.42 * k), 6);
+    // Redshift: the colour moved toward REDSHIFT (deleting the lerp would leave it byte-identical).
+    expect(probe.material.color.equals(colorBefore)).toBe(false);
+  }, 20000);
+
+  test('strange star: the O(k) CONV_R conversion recolours EVERY body inside the sphere and ONLY those, at N ≥ 25k', () => {
+    const { CONV_R2 } = SINGULARITY_FIELD;
+    const N = 25000;
+    const ctx = makeCtx(4242, N + 64);
+    const ent = new EntityManager(ctx);
+    ent.reset(N);
+    const list = ent.list;
+    const beforeR = new Float64Array(N);
+    const beforeG = new Float64Array(N);
+    const beforeB = new Float64Array(N);
+    const inConv = new Uint8Array(N);
+    let nIn = 0;
+    let nOut = 0;
+    for (let i = 0; i < N; i++) {
+      const e = list[i]!;
+      const dx = CENTER.x - e.position.x;
+      const dy = CENTER.y - e.position.y;
+      const dz = CENTER.z - e.position.z;
+      inConv[i] = dx * dx + dy * dy + dz * dz <= CONV_R2 ? 1 : 0;
+      if (inConv[i] === 1) nIn++;
+      else nOut++;
+      const c = e.material.color;
+      beforeR[i] = c.r;
+      beforeG[i] = c.g;
+      beforeB[i] = c.b;
+    }
+    expect(nIn).toBeGreaterThan(100); // a genuinely populated conversion zone
+    expect(nOut).toBeGreaterThan(0); // …and bodies outside it (the query EXCLUDES them)
+    const sys = new SingularitySystem(ctx, ent);
+    sys.summon('strangestar', CENTER);
+    rebuildGrid(ctx, ent);
+    sys.update(1 / 60, 0);
+    // in-CONV ⟺ recoloured to the fixed quark-green (0.18, 0.34, 0.12); out-CONV ⇒ byte-identical.
+    let ok = true;
+    for (let i = 0; i < N; i++) {
+      const c = list[i]!.material.color;
+      if (inConv[i] === 1) {
+        if (
+          Math.abs(c.r - 0.18) > 1e-6 ||
+          Math.abs(c.g - 0.34) > 1e-6 ||
+          Math.abs(c.b - 0.12) > 1e-6
+        ) {
+          ok = false;
+        }
+      } else if (c.r !== beforeR[i] || c.g !== beforeG[i] || c.b !== beforeB[i]) {
+        ok = false;
+      }
+    }
+    expect(ok).toBe(true);
+  }, 60000);
+
+  test('entropy: the i+=2 stride thermalizes EXACTLY the even-index bodies (odd untouched), deterministically, and raises chaos', () => {
+    const N = 2000;
+    const runEntropyFrame = (seed: number) => {
+      const ctx = makeCtx(seed, 4000); // densityScale = 1, no spread — entropy ignores the grid anyway
+      const ent = new EntityManager(ctx);
+      ent.reset(N);
+      const sys = new SingularitySystem(ctx, ent);
+      sys.summon('entropy', CENTER);
+      // Snapshot velocities AFTER summon (summon draws rng for the particle rig, not entity vel).
+      const before = ent.list.map((e) => e.userData.vel.clone());
+      const chaosBefore = ctx.state.chaos;
+      sys.update(1 / 60, 0); // one entropy frame: strides i += 2 over the list, kicks + greys
+      const changed = ent.list.map((e, i) => !e.userData.vel.equals(before[i]!));
+      let sum = 0; // a compact float checksum of the post-state velocities (bit-exact under replay)
+      for (const e of ent.list) {
+        const v = e.userData.vel;
+        sum += v.x * 1.000001 + v.y * 1.0000007 + v.z;
+      }
+      return { changed, chaosBefore, chaosAfter: ctx.state.chaos, sum, n: ent.list.length };
+    };
+    const r = runEntropyFrame(88);
+    expect(r.n).toBe(N);
+    // EXACTLY the even indices changed; odd indices are byte-identical — pins the i += 2 stride
+    // coverage AND its exclusion (a deleted/strided-wrong/distance-bounded loop would fail this).
+    let parityOk = true;
+    for (let i = 0; i < r.n; i++) {
+      if (r.changed[i] !== (i % 2 === 0)) parityOk = false;
+    }
+    expect(parityOk).toBe(true);
+    expect(r.chaosAfter).toBeGreaterThan(r.chaosBefore); // the global heat coupling
+    expect(r.chaosAfter).toBeLessThanOrEqual(10);
+    // DETERMINISM: same seed ⇒ bit-identical post-state (the ctx.rng draw order is reproducible).
+    const r2 = runEntropyFrame(88);
+    expect(r2.sum).toBe(r.sum);
+    expect(r2.changed).toEqual(r.changed);
+  });
 });

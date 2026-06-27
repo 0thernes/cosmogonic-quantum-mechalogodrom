@@ -89,6 +89,13 @@ const V = new THREE.Vector3();
  * left-shift never invalidates an index mid-pass. Length is reset to 0 each call, so it retains
  * at most {@link MAX_CONSUME} references between frames (≤ 25 entities — negligible). */
 const CONSUME: Entity[] = [];
+/**
+ * Membership view of {@link CONSUME} used by the disposal pass: a single reverse scan of the live
+ * list disposes any member (O(n) once + the disposeAt shifts), replacing a per-victim O(n)
+ * `indexOf` (which made disposal O(n·consumeCap) — the consuming hole's real ceiling at 50k). The
+ * Set lookup also IS the liveness guard: a victim no longer in `list` (a stale grid or a same-frame
+ * cross-system disposal) is simply never encountered, so it can never be double-disposed. */
+const CONSUME_SET = new Set<Entity>();
 /** Heat-death grey target for the ENTROPY colour fade. */
 const GREY = new THREE.Color(0.5, 0.5, 0.5);
 /** V59 gravitational redshift/blueshift targets — infalling light reddens, ejected light blueshifts. */
@@ -278,10 +285,12 @@ export class SingularitySystem {
   /**
    * Advance the active singularity: apply its force field to the population, animate the rig,
    * and expire after {@link DURATION}. No-op when inactive. Allocation-free. The hole/strange
-   * passes are O(cells + k) where k = entities within REACH/CONV_R (a population-INDEPENDENT
-   * count — the shared spatial hash holds areal density constant as n climbs to the mega ceiling),
-   * so the EXACT per-frame physics runs without a population-scaling cost; entropy is a global
-   * heat-death and stays an O(n) strided pass. O(1) when inactive.
+   * passes are O(cells + k) where k = entities within REACH/CONV_R. Above the 10k mega-tier knee
+   * the shared hash holds AREAL density constant (EntityManager.densityScale = √(maxEntities/10000)
+   * spreads the arena), so k — and the cost — stop scaling with n through the 50k ceiling; below 10k
+   * densityScale clamps to 1, so k rises with n but stays ≤ the removed O(n) full-list sweep (and the
+   * absolute cost there is small). Either way the EXACT per-frame physics runs at every tier. Entropy
+   * is a global heat-death and stays an O(n) strided pass (see {@link applyEntropy}). O(1) inactive.
    */
   update(dt: number, t: number): void {
     if (this._kind === null || !this.rig) return;
@@ -321,7 +330,22 @@ export class SingularitySystem {
     this.animateRig(dt, t, fade);
   }
 
-  /** ENTROPY: thermalize velocities, grey the glow, raise the heat. Strided for budget. */
+  /**
+   * ENTROPY: thermalize velocities, grey the glow, raise the heat. Strided (i += 2) for budget.
+   *
+   * INTENTIONALLY a GLOBAL O(n) pass — NOT converted to the O(k) reach query the holes use, by
+   * design (V7.5 adversarial-audit ruling, two dimensions concurring):
+   * - PHYSICS: heat death is a global thermodynamic end-state, not a finite-speed propagating front;
+   *   the expanding translucent shell ({@link animateRig}) is a stylized RIG, not a force boundary.
+   *   The global REACH of the effect is the world-heat coupling (`s.chaos`), which weather, economy,
+   *   quantum cadence and entity jitter all read — so entropy is felt everywhere via chaos, while the
+   *   per-body kick is the local face of the same global process.
+   * - DETERMINISM: the `i += 2` stride + the per-visit `rng()` draws are part of the seeded stream.
+   *   Bounding the thermalization to a shell would change WHICH and HOW MANY bodies draw from
+   *   `ctx.rng` each frame, perturbing the stream for every entropy-active replay. Global+strided is
+   *   the determinism-preserving correct state. (Cost is ~5 ms/frame at 50k — a documented, bounded,
+   *   transient-effect tradeoff, not a scaling defect.)
+   */
   private applyEntropy(dt: number): void {
     const rng = this.ctx.rng;
     const list = this.entities.list;
@@ -351,13 +375,16 @@ export class SingularitySystem {
     const c = this.center;
     // O(k) reach query (V7.5 perf): instead of an O(n) sweep of the WHOLE population, ask the
     // shared per-frame spatial hash for only the bodies whose grid cells overlap the REACH square
-    // — a superset of the 3D REACH sphere (|xz| ≤ ‖Δ‖ ≤ REACH), which we then filter exactly. The
-    // hash is held constant in AREAL density as the population climbs (EntityManager.densityScale),
-    // so k = entities within REACH is roughly population-INDEPENDENT: the cost no longer scales
-    // with n, and the EXACT per-frame r⁻² physics runs at every tier (the old >5,000 half-rate
-    // stride + 2× accel approximation is GONE — accuracy preserved at the 50k mega ceiling). The
-    // query buffer is a shared instance valid until the next query(); we read it before any other
-    // query call. Reading it draws no rng, so the seeded stream is untouched.
+    // — a superset of the 3D REACH sphere (|xz| ≤ ‖Δ‖ ≤ REACH) for a CURRENT grid, which we then
+    // filter exactly. Above the 10k knee EntityManager.densityScale (√(maxEntities/10000)) spreads
+    // the arena to hold AREAL density constant, so k = entities within REACH stops scaling with n
+    // through the 50k mega ceiling; below 10k densityScale clamps to 1 so k rises with n but stays
+    // ≤ the removed O(n) sweep (small absolute cost). The EXACT per-frame r⁻² physics runs at every
+    // tier (the old >5,000 half-rate stride + 2× accel approximation is GONE). The query buffer is a
+    // shared instance valid until the next query(); we read it before any other query call, and
+    // reading it draws no rng, so the seeded stream is untouched. (NB: world.ts rebuilds the grid
+    // every OTHER frame, so on odd frames membership is ±1 frame stale — accepted sim-wide, and the
+    // weakest boundary force re-acquires any 1-frame-missed body at the next rebuild.)
     const near = this.ctx.grid.query(c.x, c.z, REACH);
     let eaten = 0;
     CONSUME.length = 0;
@@ -399,18 +426,26 @@ export class SingularitySystem {
         e.material.color.lerp(sign > 0 ? REDSHIFT : BLUESHIFT, 0.05 * k);
       }
     }
-    // Dispose the collected horizon-crossers. disposeAt fires the world's onDeath hook, which scars
-    // the RD ground at the corpse's UV (the mortality feedback loop). indexOf is O(n) but bounded
-    // by consumeCap (≤ MAX_CONSUME) and only runs while the hole is actively eating; the lookup is
-    // also the liveness guard — a stale grid (rebuilt every other frame) or a same-frame disposal
-    // by another system (shoggoth/titan) leaves index −1, so we never double-dispose.
-    for (let ci = 0; ci < eaten; ci++) {
-      const e = CONSUME[ci]!;
-      const idx = list.indexOf(e);
-      if (idx >= 0) {
-        this.entities.disposeAt(idx);
-        this._consumed++;
+    // Dispose the collected horizon-crossers in a SINGLE reverse scan (O(n) once + the disposeAt
+    // shifts), not a per-victim O(n) `indexOf` (which made this O(n·consumeCap) — the consuming
+    // hole's real cost ceiling at 50k). disposeAt fires the world's onDeath hook, which scars the RD
+    // ground at the corpse's UV (the mortality feedback loop), and does the ordered left-shift.
+    // Iterating DESCENDING means each disposeAt only moves the already-scanned tail and lower indices
+    // stay valid. The CONSUME_SET membership doubles as the liveness guard — a victim no longer in
+    // `list` (a stale grid, rebuilt every other frame, or a same-frame disposal by another system
+    // like shoggoth/titan) is simply never encountered, so we never double-dispose.
+    if (eaten > 0) {
+      CONSUME_SET.clear();
+      for (let ci = 0; ci < eaten; ci++) CONSUME_SET.add(CONSUME[ci]!);
+      for (let i = list.length - 1; i >= 0 && CONSUME_SET.size > 0; i--) {
+        const e = list[i];
+        if (e !== undefined && CONSUME_SET.has(e)) {
+          this.entities.disposeAt(i);
+          this._consumed++;
+          CONSUME_SET.delete(e); // each entity is in the list once — stop tracking it
+        }
       }
+      CONSUME_SET.clear(); // release references — no per-frame retention
     }
     CONSUME.length = 0; // release the collected references — no per-frame retention
     // V60: a summoned hole STIRS reality — the warped spacetime raises the world's disorder while it
@@ -425,7 +460,8 @@ export class SingularitySystem {
     const c = this.center;
     // O(k) reach query (V7.5 perf): the conversion front is a CONTACT effect, so only the bodies in
     // the shared hash's cells overlapping the CONV_R square can be inside it — query them, filter by
-    // the true 3D conversion sphere, recolour. Population-independent (density held constant), so the
+    // the true 3D conversion sphere, recolour. Above the 10k knee k is held population-flat by the
+    // areal-density scaling (below it k scales with n but stays ≤ the removed O(n) sweep), so the
     // old >5,000 half-rate stride is GONE: every body in the zone converts every frame. Idempotent
     // (a fixed recolour), so a 1-frame-stale grid entry just re-stains an already-strange body.
     const near = this.ctx.grid.query(c.x, c.z, CONV_R);

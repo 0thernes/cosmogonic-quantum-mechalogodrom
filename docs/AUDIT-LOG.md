@@ -11,6 +11,44 @@ dated / historical / "superseded snapshot" copies (per the binding "Living docs,
 
 ---
 
+## 2026-06-27 — Singularity O(k) change: adversarial audit follow-up (consume O(n·k)→O(n), docstring honesty, 5 regression nets; entropy stays global — verified)
+
+Ran a 5-dimension adversarial audit (17 agents, refute-by-default verify) over the shipped O(k)
+singularity change ([abed50b]) — correctness/determinism, perf/complexity, physics-fidelity,
+edge/stale-grid, test-coverage. **9 findings confirmed (all low/nit — zero shipped bugs), 3
+dismissed.** Acted on every confirmed one; landed the real improvements, left correct code alone.
+
+- **Consume disposal O(n·consumeCap) → O(n) (`singularities.ts`):** the deferred horizon-consume did a
+  per-victim `list.indexOf` (up to ~1.25M ops/frame at 50k _while actively eating_ — the real ceiling on
+  the consuming path). Replaced with a **single reverse `list` scan** + a `Set` membership test (`CONSUME_SET`):
+  O(n) once plus the `disposeAt` left-shifts that were always there. The Set lookup still doubles as the
+  stale-grid / same-frame-cross-system liveness guard (no double-dispose). Force pass stays O(k) every frame.
+- **Docstring honesty (3 comments):** the "population-INDEPENDENT" framing overclaimed — `densityScale`
+  clamps to 1 below 10k, so `k` is population-flat only **above** the 10k knee (below it `k` scales with
+  `n` but stays ≤ the removed O(n) sweep). Scoped the `update`/`applyHole`/`applyStrange` comments to match
+  reality, and noted the every-other-frame grid staleness explicitly.
+- **Entropy stays global — and now says WHY (`applyEntropy` doc):** both the perf and physics dimensions
+  **dismissed** making entropy O(k). Heat death is a global thermodynamic end-state (the expanding shell is
+  a rig, not a force boundary; the global reach is the `s.chaos` world-heat coupling), and entropy's
+  `i += 2` stride + per-visit `rng()` draws are part of the seeded stream — a spatial bound would break
+  determinism for entropy-active replays. Documented the rationale so it isn't re-attempted.
+- **5 regression nets added (`tests/singularities.test.ts`, now 17 tests):** the audit found several
+  correct-but-untested paths a future refactor could silently break. Added: (1) **greyhole** absorb cap
+  (`consumed === MAX_CONSUME>>2`, the audited "never retains" bug site) + emit ejects-without-consuming;
+  (2) **>MAX_CONSUME** — `consumed === MAX_CONSUME` in one frame, the eaten subset is exactly the
+  first-`MAX_CONSUME` in grid-query order, and it's deterministic (directly exercises the new consume
+  scan); (3) **warp shell** — a probe at `HORIZON < r < HORIZON·WARP_R_MULT` gets `|Δv| < ` pure r⁻²
+  (time dilation) + redshift (deleting the warp block now fails); (4) **strange star at N≥25k** — recolour
+  ⟺ inside `CONV_R` (the O(k) `CONV_R` path, previously only a single-probe test); (5) **entropy** — the
+  `i += 2` stride changes exactly even-index bodies (odd byte-identical), deterministically, chaos rises.
+
+Dismissed (correctly): the "entropy is O(n)" finding (intentional, documented); the "entropy contradicts
+its shell" physics framing (heat death IS global); a `forceOk` comment-precision nit (the test is sound —
+the y-offset makes `r ≥ 10` a hard invariant, so no body can hit the dead-centre guard). Full
+`bun run check` gate green.
+
+---
+
 ## 2026-06-27 — V-VITALS: a per-entity GPU effect suite where every spectacle is a falsifiable state readout
 
 Pushed the "real, not decorative" mandate into a full **named effect library** on every instanced
