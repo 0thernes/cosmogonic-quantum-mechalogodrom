@@ -87,6 +87,60 @@ async function askStaticAi(history: readonly Msg[]): Promise<string> {
   }
   throw new Error(lastErr);
 }
+
+/** One static-fallback model's browser-direct liveness (the recovery pipeline when there's no server). */
+interface StaticProbe {
+  model: string;
+  reachable: boolean;
+  status: number;
+  latencyMs: number;
+  detail: string;
+}
+
+/**
+ * Probe the static-deploy LLM7 models DIRECTLY from the browser — the recovery pipeline the 🩺
+ * diagnostics show when `/api/copilot/health` is absent (static GitHub Pages build). This also proves
+ * the CORS reachability the browser-direct chat relies on. Never throws (a failure ⇒ a not-reachable
+ * row). NB: LLM7 anonymous is ~1/sec, so a transient 429 on the 2nd model right after the 1st is
+ * expected — ≥1 reachable means the chat answers (it fails over across the models).
+ */
+async function probeStaticAi(): Promise<StaticProbe[]> {
+  const out: StaticProbe[] = [];
+  for (const model of STATIC_AI_MODELS) {
+    const t0 = performance.now();
+    let status = 0;
+    let errMsg = '';
+    try {
+      const res = await fetch(LLM7_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model,
+          messages: [{ role: 'user', content: 'ping' }],
+          max_tokens: 1,
+        }),
+      });
+      status = res.status;
+      await res.text().catch(() => ''); // drain so the socket frees
+    } catch (e) {
+      errMsg = e instanceof Error ? e.message : String(e);
+    }
+    const reachable = status >= 200 && status < 300;
+    // A browser CORS rejection surfaces as a TypeError ("Failed to fetch") with no status.
+    const detail = reachable
+      ? 'ok'
+      : status === 429
+        ? 'rate-limited (429)'
+        : status > 0
+          ? `http ${status}`
+          : /failed to fetch|load failed|networkerror/i.test(errMsg)
+            ? 'blocked (CORS/offline)'
+            : errMsg || 'unreachable';
+    out.push({ model, reachable, status, latencyMs: Math.round(performance.now() - t0), detail });
+  }
+  return out;
+}
+
 /** One provider's health from /api/copilot/health (the recovery-pipeline rows). */
 interface ProviderHealth {
   id: string;
@@ -364,6 +418,18 @@ function mount(): void {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ tool: m.tool, args: { [m.key]: rest } }),
       });
+      // No Bun server (static GitHub Pages) → the read-only sandbox doesn't exist here. Say so
+      // clearly instead of throwing "Unexpected token <" on the 404 HTML. Freeform questions still
+      // work (they call LLM7 directly from the browser); only the repo tools need `bun dev`.
+      const ctype = res.headers.get('content-type') ?? '';
+      if (!res.ok || !ctype.includes('application/json')) {
+        addMsg(
+          'cqm-cop-sys',
+          `${verb} needs the local dev server — the static build ships no read-only sandbox. Run ` +
+            '`bun dev` to use /read /ls /grep /run. (You can still ask freeform questions here — those use the free LLM7 AI.)',
+        );
+        return;
+      }
       const data = (await res.json()) as ToolResult;
       addTool({
         tool: m.tool,
@@ -492,16 +558,56 @@ function mount(): void {
           input.placeholder = 'Ask about the cosmos… or /help';
         prov.textContent = d.default ?? prov.textContent;
       }
-    } catch (e) {
+    } catch {
+      // No server diagnostics endpoint (static GitHub Pages build, or the local server is down) →
+      // probe the browser-direct LLM7 fallback the chat actually uses here, instead of telling the
+      // user to "restart the dev server" (which doesn't exist on Pages). This also proves the CORS
+      // reachability the static chat relies on.
       card.replaceChildren();
       const h2 = document.createElement('h4');
-      h2.textContent = '🩺 AI DIAGNOSTICS — probe failed';
-      const msg = document.createElement('div');
-      msg.className = 'verdict';
-      msg.textContent = `Could not reach the diagnostics endpoint: ${
-        e instanceof Error ? e.message : String(e)
-      }. The dev server may be down — restart it and re-probe.`;
-      card.append(h2, msg);
+      h2.textContent = '🩺 AI DIAGNOSTICS — browser-direct (no server)';
+      const verdict = document.createElement('div');
+      verdict.className = 'verdict';
+      verdict.textContent =
+        'No local AI server — the chat answers by calling the free, key-less LLM7 directly in your browser. Probing it:';
+      card.append(h2, verdict);
+      try {
+        const probes = await probeStaticAi();
+        for (const p of probes) {
+          const row = document.createElement('div');
+          row.className = 'row';
+          const dot = document.createElement('span');
+          dot.className = `dot ${p.reachable ? 'up' : 'down'}`;
+          dot.textContent = p.reachable ? '●' : '○';
+          const name = document.createElement('span');
+          name.textContent = `LLM7 · ${p.model} — ${p.detail}`;
+          const lat = document.createElement('span');
+          lat.className = 'lat';
+          lat.textContent = `${p.latencyMs}ms`;
+          row.append(dot, name, lat);
+          card.appendChild(row);
+        }
+        const up = probes.filter((p) => p.reachable).length;
+        const note = document.createElement('div');
+        note.className = 'verdict';
+        note.textContent =
+          up > 0
+            ? `Operational — ${up}/${probes.length} LLM7 models reachable from your browser (≥1 ⇒ the chat answers). Repo tools (/read /ls /grep /run) still need \`bun dev\`.`
+            : `All ${probes.length} LLM7 models unreachable (rate-limited or blocked) — try again shortly. Repo tools need \`bun dev\`.`;
+        card.appendChild(note);
+        prov.textContent = up > 0 ? 'llm7 · static' : prov.textContent;
+      } catch (err) {
+        const msg = document.createElement('div');
+        msg.className = 'verdict';
+        msg.textContent = `Browser probe failed: ${err instanceof Error ? err.message : String(err)}.`;
+        card.appendChild(msg);
+      }
+      const reprobe = document.createElement('button');
+      reprobe.className = 'reprobe';
+      reprobe.type = 'button';
+      reprobe.textContent = '↻ Re-probe';
+      reprobe.addEventListener('click', () => void runDiagnostics());
+      card.appendChild(reprobe);
     } finally {
       diagBusy = false;
       diag.disabled = false;

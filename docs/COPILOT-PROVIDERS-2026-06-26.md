@@ -91,5 +91,27 @@ though free anonymous endpoints can rate-limit; set any one key above for reliab
   provider (default-deny on unknown ids), executing any read-only tool calls through the sandbox.
 - `POST /api/tool` → `{ tool, args }` — the panel's manual `/read /ls /grep /run` terminal.
 
+## Static deploy (GitHub Pages) — browser-direct fallback
+
+The public site is a **static** build with **no Bun server**, so `/api/chat`, `/api/tool`, and
+`/api/copilot` all 404 there. To keep the chat alive, `src/ui/copilot.ts` (`askStaticAi`) detects the
+non-JSON 404 and calls a **browser-callable, key-less** LLM **directly from the page** — public,
+educational conversation only.
+
+- **Provider = LLM7 only**, trying its two anonymous models in order: `codestral-latest` →
+  `devstral-small-2:24b`. Both answer from the browser with **no token and no CAPTCHA** (CORS open,
+  OpenAI-shaped JSON). The header shows `llm7 · static` when a browser-direct answer is served.
+- **Why not Pollinations?** It's the server's other key-less provider and works from the server/curl,
+  but it now **gates _browser_ requests behind a Cloudflare Turnstile token** (`{"error":"Missing
+Turnstile token"}`) — so it is deliberately **excluded from the client path** (it would always fail
+  from a static page). Headless tests (curl/`bun`) don't trigger Turnstile and give a false positive,
+  so this must be verified in a real browser.
+- **No repo tools, no keys.** `/read /ls /grep /run` need the server sandbox and stay disabled here
+  (they answer with a clear "run `bun dev`" notice); only anonymous providers are ever called from the
+  client, so no key or secret lives in the bundle. The `🩺` diagnostics, with no server present, probe
+  LLM7's models **in the browser** (proving the CORS reachability the fallback relies on).
+- **Server parity:** the server's LLM7 preset (`src/server/copilot.ts`) also uses `codestral-latest`
+  for the same reason — `gpt-4o-mini` is no longer served anonymously by LLM7.
+
 See also [AI-SUBSYSTEM-2026-06-26.md](AI-SUBSYSTEM-2026-06-26.md) (in-world minds + Copilot reference) and the full
 provider field-guide the design drew from in the project's free-LLM report.

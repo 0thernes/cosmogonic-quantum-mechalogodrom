@@ -41,9 +41,13 @@ interface ProviderPreset {
 const PRESETS: readonly ProviderPreset[] = [
   {
     id: 'llm7',
+    // Key-less. `gpt-4o-mini` is no longer served anonymously by LLM7 ("model currently
+    // unavailable"), which silently killed LLM7 in the failover chain. `codestral-latest` is its
+    // free `turbo` tier — anonymous, tool-calling, ~100% uptime — the SAME model the static-deploy
+    // browser fallback uses (src/ui/copilot.ts STATIC_AI_MODELS) for parity.
     label: 'LLM7 (no key)',
     endpoint: 'https://api.llm7.io/v1/chat/completions',
-    model: 'gpt-4o-mini',
+    model: 'codestral-latest',
   },
   {
     id: 'pollinations',
