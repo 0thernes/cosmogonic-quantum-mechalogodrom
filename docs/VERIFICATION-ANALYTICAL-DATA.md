@@ -108,10 +108,14 @@ history with the correction logged), version `0.18.0` (all current markers), ent
 The `/goal` asked to "update the name (with current date) of every MD file"; the owner confirmed they
 want **both** the dated rename and a non-breaking repo ("make sure they don't break — figure it out").
 
-**Done (2026-06-26):** the **24 pure-content docs that are safe to rename** were `git mv`'d to dated
-names (`X-2026-06-26.md`) and **every reference rewired** across all tracked text files — verified **0
-broken links** repo-wide (`tests/doc-links.test.ts` green), `tsc` clean, `sync:check` green, FILE-MAP
-regenerated. Each also carries the in-content `reviewed: 2026-06-27` stamp.
+**Done (2026-06-26 → 27, in waves):** the **58 content / ADR / spec / report docs that are safe to rename**
+were `git mv`'d to dated names (`X-2026-06-2N.md`) and **every reference rewired** across all tracked text
+files — verified **0 broken links** repo-wide (`tests/doc-links.test.ts` green), `tsc` clean, `sync:check`
+green, FILE-MAP regenerated. A further **8 `docs/reports/2026-06-NN-…` files** already encode their
+point-in-time date as a filename prefix and keep it. **Net: 66 of 86 non-legacy MDs now carry a date in
+the filename; the remaining 20 are name-pinned (below).** Each renamed doc also carries the in-content
+`reviewed: 2026-06-27` stamp. _(Count verified by `git ls-tree origin/main` on 2026-06-27 — the earlier
+"24" was a first-wave figure that went stale as later waves renamed more.)_
 
 **Kept at their canonical names — renaming WOULD break, which the owner's "don't break" forbids:**
 
