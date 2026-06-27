@@ -174,9 +174,35 @@ interface TitanUniforms {
   uTime: THREE.IUniform<number>;
   uMenace: THREE.IUniform<number>;
   uColor: THREE.IUniform<THREE.Color>;
+  /** energy/RESOURCE_CAP ∈ [0,1] — drives the stellar-core forge glow (a fed titan burns like a star). */
+  uEnergy: THREE.IUniform<number>;
+  /** entropy/ENTROPY_WASTE_THRESHOLD ∈ [0,1] — drives the waste-rot ashen fissures (a wasteful titan cracks). */
+  uEntropy: THREE.IUniform<number>;
 }
 function makeTitanUniforms(): TitanUniforms {
-  return { uTime: { value: 0 }, uMenace: { value: 0 }, uColor: { value: new THREE.Color() } };
+  return {
+    uTime: { value: 0 },
+    uMenace: { value: 0 },
+    uColor: { value: new THREE.Color() },
+    uEnergy: { value: 0 },
+    uEntropy: { value: 0 },
+  };
+}
+
+/**
+ * Normalize a titan's raw economy into the two shader vitality lanes, both clamped to `[0,1]` and
+ * guarded against non-finite input: `energyN = energy/RESOURCE_CAP` (stellar-core forge brightness),
+ * `entropyN = entropy/ENTROPY_WASTE_THRESHOLD` (waste-rot fissure depth). Pure, no rng. O(1). See
+ * tests/titan-vitals.test.ts.
+ */
+export function titanVitalLanes(
+  energy: number,
+  entropy: number,
+): { energyN: number; entropyN: number } {
+  return {
+    energyN: clamp((Number.isFinite(energy) ? energy : 0) / RESOURCE_CAP, 0, 1),
+    entropyN: clamp((Number.isFinite(entropy) ? entropy : 0) / ENTROPY_WASTE_THRESHOLD, 0, 1),
+  };
 }
 
 /**
@@ -225,6 +251,8 @@ function patchTitanBody(mat: THREE.MeshStandardMaterial, u: TitanUniforms): void
     shader.uniforms['uTime'] = u.uTime;
     shader.uniforms['uMenace'] = u.uMenace;
     shader.uniforms['uColor'] = u.uColor;
+    shader.uniforms['uEnergy'] = u.uEnergy;
+    shader.uniforms['uEntropy'] = u.uEntropy;
     shader.vertexShader = shader.vertexShader
       .replace(
         '#include <common>',
@@ -254,6 +282,7 @@ function patchTitanBody(mat: THREE.MeshStandardMaterial, u: TitanUniforms): void
         '#include <common>',
         `#include <common>
         varying vec3 vObjP; uniform float uTime; uniform float uMenace; uniform vec3 uColor;
+        uniform float uEnergy; uniform float uEntropy;
         float h31(vec3 p){return fract(sin(dot(p, vec3(27.17, 61.31, 11.71))) * 43758.5453);}
         float n31(vec3 p){vec3 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);
           return mix(mix(mix(h31(i),h31(i+vec3(1,0,0)),f.x),mix(h31(i+vec3(0,1,0)),h31(i+vec3(1,1,0)),f.x),f.y),
@@ -275,7 +304,14 @@ function patchTitanBody(mat: THREE.MeshStandardMaterial, u: TitanUniforms): void
         vec3 iris = 0.5 + 0.5 * cos(vec3(0.0, 2.094, 4.188) + band);  // thin-film hue cycle
         vec3 voidGlow = uColor * (0.4 + 3.0 * uMenace);               // HOT (>1) — ACES rolls it off
         totalEmissiveRadiance += voidGlow * pow(1.0 - fres, 3.0) * (0.3 + 0.7 * relief)
-                               + iris * fres * (0.6 + 1.2 * uMenace);`,
+                               + iris * fres * (0.6 + 1.2 * uMenace);
+        // STELLAR CORE FORGE (uEnergy = energy/RESOURCE_CAP) — a well-fed titan burns a pulsing star-core.
+        float core = pow(1.0 - fres, 4.0) * (0.6 + 0.4 * sin(uTime * 3.0 + relief * 6.2831));
+        totalEmissiveRadiance += uColor * core * uEnergy * 1.6;
+        // WASTE-ROT ASHEN FISSURES (uEntropy = entropy/threshold) — a wasteful titan cracks; embers glow in the rot.
+        float rot = smoothstep(0.62, 0.78, fbm3(vObjP * 4.0 + uTime * 0.02));
+        diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.04, 0.03, 0.03), rot * uEntropy * 0.85);
+        totalEmissiveRadiance += vec3(1.0, 0.32, 0.06) * rot * uEntropy * 1.3;`,
       );
   };
   mat.customProgramCacheKey = () => 'titanBodyV67';
@@ -865,6 +901,12 @@ export class TitanSystem {
     ti.tu.uTime.value = t;
     ti.tu.uColor.value.setHSL(warHot ? 0.015 : ti.hue, 0.85, 0.5);
     ti.tu.uMenace.value = Math.min(1, 0.18 * ti.warCount + 0.7 * (entropyN > 1 ? 1 : entropyN));
+    // V-TITAN-VITALS: distinct REAL economy lanes — energy → stellar-core forge, entropy → waste-rot
+    // fissures — so a fed titan blazes a star-core and a wasteful one cracks/rots (granular, not just
+    // the blended menace). Pure f(state), no rng.
+    const tvl = titanVitalLanes(ti.energy, ti.entropy);
+    ti.tu.uEnergy.value = tvl.energyN;
+    ti.tu.uEntropy.value = tvl.entropyN;
   }
 
   /**

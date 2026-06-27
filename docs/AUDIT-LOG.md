@@ -11,6 +11,30 @@ dated / historical / "superseded snapshot" copies (per the binding "Living docs,
 
 ---
 
+## 2026-06-27 — V-TITAN-VITALS: the spectacle spreads to the titans (energy + entropy body lanes)
+
+Diversified the real-bound effect campaign to a SECOND body class — the 10 god-scale titans — instead
+of piling more onto the masses. The titan body already read the blended `uMenace` (war + entropy); now
+two DISTINCT real economy lanes drive distinct effects, so a titan's fortunes are legible on its body.
+
+- **New lanes (`src/sim/titans.ts`):** exported pure `titanVitalLanes(energy, entropy)` →
+  `{energyN: energy/RESOURCE_CAP, entropyN: entropy/ENTROPY_WASTE_THRESHOLD}`, both clamped [0,1] +
+  finite-guarded. Wired into the per-frame titan update as new `uEnergy`/`uEntropy` uniforms (the
+  freak-geometry body patch links + declares them).
+- **Two new effects, each a falsifiable readout:** STELLAR CORE FORGE (`uEnergy`) — a well-fed titan
+  burns a pulsing star-core (energy-scaled core glow); WASTE-ROT ASHEN FISSURES (`uEntropy`) — a
+  wasteful titan cracks, embers glowing in the rot (entropy-scaled fissure darkening + ember emissive).
+  Complements the existing `uMenace` writhe/void-glow/iris (war + clash-heat).
+- **Determinism preserved:** pure `f(state)`, no rng — titan economy already deterministic; the lanes
+  are read-only normalizations.
+- **Verified:** `tsc` clean; **tests/titan-vitals.test.ts** (5 tests, property-based so they survive
+  the RESOURCE_CAP/THRESHOLD constants) pin bounds [0,1], monotonicity, zero/huge/negative/NaN guards,
+  and genuine mid-range variation; existing `tests/titans.test.ts` green. New titan-body GLSL compiled
+  **directly in the live WebGL2 context** (`COMPILE_STATUS` true, empty log).
+- **Catalog progress: 21 named real-bound body effects across two body classes** (19 on the masses +
+  2 on the titans), each a readout of real vital / social / quantum / world / economy state.
+- **Contract synced:** the `sim/titans.ts` bullet in `MODULE-CONTRACTS-2026-06-26.md`.
+
 ## 2026-06-27 — V-VITALS3: kinetic + environmental body-effect suite (6 more, reusing the lanes + real audio/chaos)
 
 Third catalog batch — pure shader additions, **no new plumbing**: the six new named effects reuse the
