@@ -41,9 +41,13 @@ interface ProviderPreset {
 const PRESETS: readonly ProviderPreset[] = [
   {
     id: 'llm7',
+    // Key-less. `gpt-4o-mini` is no longer served anonymously by LLM7 ("model currently
+    // unavailable"), which silently killed LLM7 in the failover chain. `codestral-latest` is its
+    // free `turbo` tier — anonymous, tool-calling, ~100% uptime — the SAME model the static-deploy
+    // browser fallback uses (src/ui/copilot.ts STATIC_AI_MODELS) for parity.
     label: 'LLM7 (no key)',
     endpoint: 'https://api.llm7.io/v1/chat/completions',
-    model: 'gpt-4o-mini',
+    model: 'codestral-latest',
   },
   {
     id: 'pollinations',
@@ -333,13 +337,16 @@ export function fenceUntrusted(tool: string, output: string): string {
 
 /**
  * Redact credential-looking tokens before a string is surfaced in an error (RISK-10): `Bearer
- * <token>` and `sk-…`-style keys become a placeholder. Bounded + pure. A provider should never echo
- * our Authorization header back, but if a misbehaving one does, we never relay the credential.
+ * <token>`, `sk-…` keys, AND the common non-`sk-` provider key prefixes (Groq `gsk_`, HuggingFace
+ * `hf_`, NVIDIA `nvapi-`, Google `AIza`, xAI `xai-`) become a placeholder. Bounded + pure. A provider
+ * should never echo our Authorization header back, but if a misbehaving one does — in any of these
+ * formats — we never relay the credential. (OpenRouter `sk-or-…` is already covered by the `sk-` rule.)
  */
 export function redactSecrets(s: string): string {
   return s
     .replace(/Bearer\s+[\w.-]+/gi, 'Bearer [redacted]')
-    .replace(/\bsk-[A-Za-z0-9_-]{8,}/g, '[redacted-key]');
+    .replace(/\bsk-[A-Za-z0-9_-]{8,}/g, '[redacted-key]')
+    .replace(/\b(?:gsk_|hf_|nvapi-|AIza|xai-)[A-Za-z0-9_-]{8,}/g, '[redacted-key]');
 }
 
 /** Safe-parse a tool call's JSON arguments string into a record. */

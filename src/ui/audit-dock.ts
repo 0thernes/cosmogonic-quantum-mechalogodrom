@@ -1,12 +1,24 @@
 /**
  * AUDIT dock toggle (V51) — moves the audit trail OFF the crowded left column (where it squeezed
  * SORTING FIELDS) and INTO the bottom menu bar, as a 🗒 AUDIT toggle that shows/hides the existing
- * `#aP` panel (now a fixed bottom-right overlay; see app.css) WITHOUT disturbing its HTMX polling
- * (`hx-trigger="load, every 5s"` keeps running whether the panel is shown or not). UI shell only — it
- * never imports or touches sim state. Self-mounts on import (`import './ui/audit-dock'` in main.ts),
- * which runs before the engine boots, so the toggle exists even if WebGL fails.
+ * `#aP` panel (a fixed bottom-right overlay; see app.css). UI shell only — it never imports or touches
+ * sim state. Self-mounts on import (`import './ui/audit-dock'` in main.ts), which runs before the
+ * engine boots, so the toggle exists even if WebGL fails.
+ *
+ * V-DEPLOY-FIX: the `#aP` panel was HTMX-polling the server route `GET /api/audit`. That route only
+ * exists under the local Bun dev server — on the STATIC GitHub Pages deploy it 404s, so the audit
+ * trail was permanently EMPTY there (the owner's "Audit doesn't work on GitHub, no live data" report).
+ * The {@link AuditTrail} already mirrors every recorded action to `localStorage['cqm.audit.v1']`
+ * (client-side, works on any host), so this module now (a) NEUTRALISES the dead server poll and (b)
+ * renders the audit list straight from that localStorage ring on a short interval — real-time audit
+ * that works identically on `bun dev` and on the static deploy, with no server dependency.
  */
 import { mountToggle } from './panel-dock';
+
+/** Same key {@link AuditTrail} persists its ring to (logging/audit.ts). */
+const AUDIT_KEY = 'cqm.audit.v1';
+/** Client-render cadence (ms) — cheap (≤200 bounded entries), feels real-time. */
+const RENDER_MS = 1500;
 
 const STYLE = `
 #cqm-aud-toggle{height:42px;padding:0 12px;border-radius:21px;border:1px solid rgba(120,170,200,.5);
@@ -16,7 +28,7 @@ const STYLE = `
 #cqm-aud-toggle:focus-visible{outline:2px solid #5cc6e0;outline-offset:2px}
 #cqm-aud-toggle.on{background:rgba(20,40,50,.95);border-color:rgba(120,200,230,.8);color:#e6f7ff}
 /* V71: the directive's "Audit 50/50 — just organizes it better". When open, widen the overlay and
-   flow the server-rendered <li> trail into TWO equal columns (it scrolls vertically as before). The
+   flow the <li> trail into TWO equal columns (it scrolls vertically as before). The
    #ui+#aP+#audit-list id chain outranks app.css's single-id "#audit-list ol{display:flex}" rule. */
 #ui > #aP.audit-on{width:min(94vw,560px);max-height:60vh}
 #ui > #aP.audit-on #audit-list ol{display:grid;grid-template-columns:1fr 1fr;gap:2px 14px;align-content:start}
@@ -25,9 +37,93 @@ const STYLE = `
   #ui > #aP.audit-on{width:min(94vw,360px)}
   #ui > #aP.audit-on #audit-list ol{grid-template-columns:1fr}
 }
+/* Client-rendered trail rows (host-independent — no server needed). */
+#audit-list ol{list-style:none;margin:0;padding:0;font:10px/1.5 var(--font-mono,ui-monospace,monospace)}
+#audit-list li{color:#d6ecf5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#audit-list .cqm-aud-t{color:#5fb8d6;font-variant-numeric:tabular-nums}
+#audit-list .cqm-aud-a{color:#e6f7ff;font-weight:700;margin:0 4px}
+#audit-list .cqm-aud-d{color:#7fa8b8;opacity:.85}
+#audit-list .cqm-aud-empty{color:#6b8a96;opacity:.7;padding:6px 2px}
 `;
 
-/** Build the 🗒 AUDIT toggle into the dock and wire it to the existing `#aP` overlay. Idempotent (HMR). */
+/** Human relative age, e.g. "now", "3s", "5m", "2h". `ms` is the age in milliseconds. */
+function rel(ms: number): string {
+  if (!Number.isFinite(ms) || ms < 0) return 'now';
+  const s = Math.round(ms / 1000);
+  if (s < 1) return 'now';
+  if (s < 60) return `${s}s`;
+  const m = Math.round(s / 60);
+  if (m < 60) return `${m}m`;
+  const h = Math.round(m / 60);
+  if (h < 24) return `${h}h`;
+  return `${Math.round(h / 24)}d`;
+}
+
+/** Compact a detail object to a short, safe one-liner (textContent — never innerHTML). */
+function compactDetail(detail: Record<string, unknown>): string {
+  let s: string;
+  try {
+    s = JSON.stringify(detail);
+  } catch {
+    return '';
+  }
+  s = s.replace(/^\{|\}$/g, '').replace(/"/g, '');
+  return s.length > 72 ? s.slice(0, 71) + '…' : s;
+}
+
+/** Read + render the localStorage audit ring into `#audit-list`, newest first. Guarded; never throws. */
+function renderClientAudit(doc: Document): void {
+  const host = doc.getElementById('audit-list');
+  if (!host) return;
+  let raw: string | null;
+  try {
+    raw = typeof localStorage === 'undefined' ? null : localStorage.getItem(AUDIT_KEY);
+  } catch {
+    return; // storage disabled / SecurityError — leave the panel as-is
+  }
+  let arr: unknown = [];
+  if (raw !== null) {
+    try {
+      arr = JSON.parse(raw);
+    } catch {
+      return;
+    }
+  }
+  const list = Array.isArray(arr) ? arr : [];
+  const ol = doc.createElement('ol');
+  const now = Date.now();
+  if (list.length === 0) {
+    const empty = doc.createElement('div');
+    empty.className = 'cqm-aud-empty';
+    empty.textContent = 'no audit events yet — interact with the sim to populate the trail.';
+    host.replaceChildren(empty);
+    return;
+  }
+  for (let i = list.length - 1; i >= 0; i--) {
+    const e = list[i];
+    if (!e || typeof e !== 'object') continue;
+    const rec = e as { ts?: unknown; action?: unknown; detail?: unknown };
+    if (typeof rec.action !== 'string') continue;
+    const li = doc.createElement('li');
+    const t = doc.createElement('span');
+    t.className = 'cqm-aud-t';
+    t.textContent = rel(now - (typeof rec.ts === 'number' ? rec.ts : now));
+    const a = doc.createElement('span');
+    a.className = 'cqm-aud-a';
+    a.textContent = rec.action;
+    li.append(t, a);
+    if (rec.detail && typeof rec.detail === 'object') {
+      const d = doc.createElement('span');
+      d.className = 'cqm-aud-d';
+      d.textContent = compactDetail(rec.detail as Record<string, unknown>);
+      li.append(d);
+    }
+    ol.appendChild(li);
+  }
+  host.replaceChildren(ol);
+}
+
+/** Build the 🗒 AUDIT toggle into the dock and wire the client-side audit renderer. Idempotent (HMR). */
 function mountAuditToggle(doc: Document = document): void {
   if (doc.getElementById('cqm-aud-toggle')) return;
   const panel = doc.getElementById('aP');
@@ -37,6 +133,10 @@ function mountAuditToggle(doc: Document = document): void {
   style.id = 'cqm-aud-style';
   style.textContent = STYLE;
   doc.head.appendChild(style);
+
+  // Neutralise the dead `/api/audit` HTMX poll — on the static deploy it 404s and the client render
+  // below is the single source of truth (works on dev too: localStorage mirrors every recorded action).
+  for (const attr of ['hx-get', 'hx-trigger', 'hx-target', 'hx-swap']) panel.removeAttribute(attr);
 
   const toggle = doc.createElement('button');
   toggle.id = 'cqm-aud-toggle';
@@ -48,8 +148,13 @@ function mountAuditToggle(doc: Document = document): void {
     const open = panel.classList.toggle('audit-on');
     toggle.classList.toggle('on', open);
     toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    if (open) renderClientAudit(doc); // refresh immediately on open
   });
   mountToggle(toggle, doc);
+
+  // Real-time client render (server-free). `setInterval` is a UI heartbeat, not sim logic.
+  renderClientAudit(doc);
+  if (typeof setInterval === 'function') setInterval(() => renderClientAudit(doc), RENDER_MS);
 }
 
 mountAuditToggle();

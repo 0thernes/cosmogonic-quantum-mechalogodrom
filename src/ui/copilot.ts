@@ -37,6 +37,110 @@ interface Msg {
   role: 'user' | 'assistant';
   content: string;
 }
+
+/**
+ * STATIC-DEPLOY AI FALLBACK — on the GitHub Pages build there is no Bun server (no `/api/chat`), so the
+ * chat would otherwise be dead. We call a free, KEY-LESS, CORS-enabled, **browser-callable** LLM directly.
+ *
+ * Provider = LLM7 (`api.llm7.io`, the same keyless provider the local server lists). Two of its models
+ * answer ANONYMOUSLY (no token, no CAPTCHA): `codestral-latest` + `devstral-small-2:24b` — we try them in
+ * order. (Pollinations, the server's other fallback, now gates *browser* requests behind a Cloudflare
+ * Turnstile token — `{"error":"Missing Turnstile token"}` — so it works from the server/curl but NOT from
+ * a static page; LLM7 is the one that works client-side.) Verified live: CORS open, real content returned.
+ * The repo-reading tools (/read /ls /grep /run) stay dev-only — they need the server — but conversation
+ * works everywhere. For the bigger models + higher limits, a free token from token.llm7.io can be added.
+ */
+const LLM7_URL = 'https://api.llm7.io/v1/chat/completions';
+const STATIC_AI_MODELS = ['codestral-latest', 'devstral-small-2:24b'] as const;
+const STATIC_AI_SYSTEM =
+  'You are the ✦ AI guide inside the Cosmogonic Quantum Mechalogodrom — a deterministic, browser-native ' +
+  '50,000-agent quantum + artificial-life cosmos simulation (real seeded math, not an LLM toy). Answer ' +
+  'questions about the cosmos, its creatures, the apex super-creatures, and how the simulation works — ' +
+  'vivid but accurate, concise. You are on the static GitHub Pages build, so the repo commands ' +
+  '(/read /ls /grep /run) are unavailable here (they need the local `bun dev` server); just converse.';
+
+/** Call a free, key-less, browser-callable LLM straight from the page. Tries each anonymous model. */
+async function askStaticAi(history: readonly Msg[]): Promise<string> {
+  const messages = [{ role: 'system' as const, content: STATIC_AI_SYSTEM }, ...history];
+  let lastErr = 'no provider';
+  for (const model of STATIC_AI_MODELS) {
+    try {
+      const res = await fetch(LLM7_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ model, messages }),
+      });
+      if (!res.ok) {
+        lastErr = `llm7 ${res.status}`;
+        continue;
+      }
+      const data = (await res.json()) as {
+        choices?: { message?: { content?: string } }[];
+        detail?: string;
+      };
+      const content = data.choices?.[0]?.message?.content?.trim();
+      if (content) return content;
+      lastErr = data.detail || 'empty reply'; // e.g. a model that needs a token → try the next
+    } catch (e) {
+      lastErr = e instanceof Error ? e.message : String(e);
+    }
+  }
+  throw new Error(lastErr);
+}
+
+/** One static-fallback model's browser-direct liveness (the recovery pipeline when there's no server). */
+interface StaticProbe {
+  model: string;
+  reachable: boolean;
+  status: number;
+  latencyMs: number;
+  detail: string;
+}
+
+/**
+ * Probe the static-deploy LLM7 models DIRECTLY from the browser — the recovery pipeline the 🩺
+ * diagnostics show when `/api/copilot/health` is absent (static GitHub Pages build). This also proves
+ * the CORS reachability the browser-direct chat relies on. Never throws (a failure ⇒ a not-reachable
+ * row). NB: LLM7 anonymous is ~1/sec, so a transient 429 on the 2nd model right after the 1st is
+ * expected — ≥1 reachable means the chat answers (it fails over across the models).
+ */
+async function probeStaticAi(): Promise<StaticProbe[]> {
+  const out: StaticProbe[] = [];
+  for (const model of STATIC_AI_MODELS) {
+    const t0 = performance.now();
+    let status = 0;
+    let errMsg = '';
+    try {
+      const res = await fetch(LLM7_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model,
+          messages: [{ role: 'user', content: 'ping' }],
+          max_tokens: 1,
+        }),
+      });
+      status = res.status;
+      await res.text().catch(() => ''); // drain so the socket frees
+    } catch (e) {
+      errMsg = e instanceof Error ? e.message : String(e);
+    }
+    const reachable = status >= 200 && status < 300;
+    // A browser CORS rejection surfaces as a TypeError ("Failed to fetch") with no status.
+    const detail = reachable
+      ? 'ok'
+      : status === 429
+        ? 'rate-limited (429)'
+        : status > 0
+          ? `http ${status}`
+          : /failed to fetch|load failed|networkerror/i.test(errMsg)
+            ? 'blocked (CORS/offline)'
+            : errMsg || 'unreachable';
+    out.push({ model, reachable, status, latencyMs: Math.round(performance.now() - t0), detail });
+  }
+  return out;
+}
+
 /** One provider's health from /api/copilot/health (the recovery-pipeline rows). */
 interface ProviderHealth {
   id: string;
@@ -314,6 +418,18 @@ function mount(): void {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ tool: m.tool, args: { [m.key]: rest } }),
       });
+      // No Bun server (static GitHub Pages) → the read-only sandbox doesn't exist here. Say so
+      // clearly instead of throwing "Unexpected token <" on the 404 HTML. Freeform questions still
+      // work (they call LLM7 directly from the browser); only the repo tools need `bun dev`.
+      const ctype = res.headers.get('content-type') ?? '';
+      if (!res.ok || !ctype.includes('application/json')) {
+        addMsg(
+          'cqm-cop-sys',
+          `${verb} needs the local dev server — the static build ships no read-only sandbox. Run ` +
+            '`bun dev` to use /read /ls /grep /run. (You can still ask freeform questions here — those use the free LLM7 AI.)',
+        );
+        return;
+      }
       const data = (await res.json()) as ToolResult;
       addTool({
         tool: m.tool,
@@ -338,6 +454,29 @@ function mount(): void {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ messages: history, provider: selectedProvider || undefined }),
       });
+      // On the STATIC GitHub Pages deploy there is no Bun server, so `/api/chat` 404s (or the SPA
+      // fallback returns index.html). Detect that and explain it honestly instead of spilling a raw
+      // "Unexpected token <" JSON-parse error — the ✦ AI agent is a local-dev-server feature.
+      const ctype = res.headers.get('content-type') ?? '';
+      if (!res.ok || !ctype.includes('application/json')) {
+        // No Bun server (static GitHub Pages) → call the free, key-less LLM7 DIRECTLY from the browser
+        // so the chat still works. The repo-command tools stay dev-only (they need /api/tool).
+        try {
+          const reply = await askStaticAi(history);
+          thinking.remove();
+          addMsg('cqm-cop-ai', reply);
+          history.push({ role: 'assistant', content: reply });
+          prov.textContent = 'llm7 · static';
+        } catch {
+          thinking.remove();
+          addMsg(
+            'cqm-cop-sys',
+            'The free static AI (LLM7) was unreachable just now — try again in a moment. For the ' +
+              'full repo-aware agent (/read /ls /grep /run), run `bun dev` locally.',
+          );
+        }
+        return;
+      }
       const data = (await res.json()) as AgentResult;
       thinking.remove();
       for (const step of data.steps ?? []) addTool(step);
@@ -419,16 +558,56 @@ function mount(): void {
           input.placeholder = 'Ask about the cosmos… or /help';
         prov.textContent = d.default ?? prov.textContent;
       }
-    } catch (e) {
+    } catch {
+      // No server diagnostics endpoint (static GitHub Pages build, or the local server is down) →
+      // probe the browser-direct LLM7 fallback the chat actually uses here, instead of telling the
+      // user to "restart the dev server" (which doesn't exist on Pages). This also proves the CORS
+      // reachability the static chat relies on.
       card.replaceChildren();
       const h2 = document.createElement('h4');
-      h2.textContent = '🩺 AI DIAGNOSTICS — probe failed';
-      const msg = document.createElement('div');
-      msg.className = 'verdict';
-      msg.textContent = `Could not reach the diagnostics endpoint: ${
-        e instanceof Error ? e.message : String(e)
-      }. The dev server may be down — restart it and re-probe.`;
-      card.append(h2, msg);
+      h2.textContent = '🩺 AI DIAGNOSTICS — browser-direct (no server)';
+      const verdict = document.createElement('div');
+      verdict.className = 'verdict';
+      verdict.textContent =
+        'No local AI server — the chat answers by calling the free, key-less LLM7 directly in your browser. Probing it:';
+      card.append(h2, verdict);
+      try {
+        const probes = await probeStaticAi();
+        for (const p of probes) {
+          const row = document.createElement('div');
+          row.className = 'row';
+          const dot = document.createElement('span');
+          dot.className = `dot ${p.reachable ? 'up' : 'down'}`;
+          dot.textContent = p.reachable ? '●' : '○';
+          const name = document.createElement('span');
+          name.textContent = `LLM7 · ${p.model} — ${p.detail}`;
+          const lat = document.createElement('span');
+          lat.className = 'lat';
+          lat.textContent = `${p.latencyMs}ms`;
+          row.append(dot, name, lat);
+          card.appendChild(row);
+        }
+        const up = probes.filter((p) => p.reachable).length;
+        const note = document.createElement('div');
+        note.className = 'verdict';
+        note.textContent =
+          up > 0
+            ? `Operational — ${up}/${probes.length} LLM7 models reachable from your browser (≥1 ⇒ the chat answers). Repo tools (/read /ls /grep /run) still need \`bun dev\`.`
+            : `All ${probes.length} LLM7 models unreachable (rate-limited or blocked) — try again shortly. Repo tools need \`bun dev\`.`;
+        card.appendChild(note);
+        prov.textContent = up > 0 ? 'llm7 · static' : prov.textContent;
+      } catch (err) {
+        const msg = document.createElement('div');
+        msg.className = 'verdict';
+        msg.textContent = `Browser probe failed: ${err instanceof Error ? err.message : String(err)}.`;
+        card.appendChild(msg);
+      }
+      const reprobe = document.createElement('button');
+      reprobe.className = 'reprobe';
+      reprobe.type = 'button';
+      reprobe.textContent = '↻ Re-probe';
+      reprobe.addEventListener('click', () => void runDiagnostics());
+      card.appendChild(reprobe);
     } finally {
       diagBusy = false;
       diag.disabled = false;
@@ -511,11 +690,15 @@ function mount(): void {
           if (list.length === 0) sel.style.display = 'none';
         })
         .catch(() => {
-          prov.textContent = 'offline';
+          // No Bun server (static GitHub Pages, or the local server is down). The chat still works —
+          // it calls the free key-less LLM7 directly from the browser. Only the repo tools
+          // (/read /ls /grep /run) need `bun dev`. So: NOT a dead end — don't lock the input.
+          prov.textContent = 'llm7 · static';
           sel.style.display = 'none';
           addMsg(
             'cqm-cop-sys',
-            'Could not reach the AI gate (offline). Click 🩺 in the header to run diagnostics + see the recovery pipeline.',
+            'Static build — no local server. The chat works (it calls the free LLM7 AI directly); ' +
+              'just ask. Repo commands (/read /ls /grep /run) need `bun dev`. Click 🩺 for diagnostics.',
           );
         });
     }

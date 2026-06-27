@@ -18,7 +18,7 @@
  * r₁ that collapses to 0-variance (treated as maximally degenerate) and a maximally non-uniform χ²,
  * so its contrast against either real generator saturates near 1.
  *
- * Determinism (CLAUDE.md operational law; docs/PHILOSOPHY.md): no Math.random / Date.now. The LCG is
+ * Determinism (CLAUDE.md operational law; docs/PHILOSOPHY-2026-06-26.md): no Math.random / Date.now. The LCG is
  * a closed-form recurrence; the Eshkol generator is seeded through {@link mulberry32}.
  *
  * MIT © tsotchke for the LCG baseline + Eshkol QRNG — see THIRD-PARTY-NOTICES.md.
@@ -59,7 +59,7 @@ export function classicalMixSample(state: number): { next: number; value: number
 export function classicalShannonEntropy(seed: number, n: number): number {
   const lim = Math.max(8, Math.min(256, n | 0));
   const bins = 16;
-  const hist = new Array(bins).fill(0) as number[];
+  const hist = Array.from({ length: bins }, () => 0);
   let s = seed >>> 0 || 1;
   for (let i = 0; i < lim; i++) {
     const r = classicalMixSample(s);

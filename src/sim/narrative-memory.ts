@@ -19,7 +19,7 @@
  * POWER OF MATH: uses linear algebra (means, dots for relevance), info theory (entropy gate), graph (adjacency for causes),
  * fourier-ish temporal (recency decay), set ops (typed filters), probability (confidence).
  *
- * See docs/SUPER-CREATURE-RESEARCH.md and the memory orchestration research notes for full mapping.
+ * See docs/SUPER-CREATURE-RESEARCH-2026-06-26.md and the memory orchestration research notes for full mapping.
  * This fulfills the "persistent lifelong narrative memory + grounded symbol layer" (VSA holographic already provides
  * symbol grounding; this adds the typed event narrative + router on top).
  */
@@ -112,7 +112,7 @@ export class NarrativeMemory {
     const gate = surprise > 0.12 || confidence > 0.75 || kind === 'COMMIT' || kind === 'FAIL';
     if (!gate) return;
 
-    const e: any = this.ring[this.head];
+    const e = this.ring[this.head];
     if (e) {
       e.kind = kind;
       e.t = t % 1e9;
@@ -155,11 +155,13 @@ export class NarrativeMemory {
     let bestRel = 0;
     let sumConf = 0;
     let hits = 0;
-    const now = this.ring[Math.max(0, this.head - 1)]?.t ?? 0;
+    // Most-recent entry sits one slot behind head, with ring wraparound (matches the loops below).
+    // `Math.max(0, head-1)` read slot 0 instead of NARRATIVE_CAP-1 right after head wrapped to 0.
+    const now = this.ring[(this.head - 1 + NARRATIVE_CAP) % NARRATIVE_CAP]?.t ?? 0;
 
     for (let i = 0; i < this.count; i++) {
       const idx = (this.head - 1 - i + NARRATIVE_CAP) % NARRATIVE_CAP;
-      const e: any = this.ring[idx];
+      const e = this.ring[idx];
       if (!e) continue;
       const age = Math.max(0, (now - e.t + 1e9) % 1e9) / 1e9;
       const rec = Math.exp(-age * 3) * recencyBias;
@@ -183,7 +185,7 @@ export class NarrativeMemory {
     // promote high-conf recent into belief (low-rank)
     for (let i = 0; i < Math.min(8, this.count); i++) {
       const idx = (this.head - 1 - i + NARRATIVE_CAP) % NARRATIVE_CAP;
-      const e: any = this.ring[idx];
+      const e = this.ring[idx];
       if (e && e.confidence > 0.6) {
         const a = 0.05 * ignition;
         this.belief[0] = (1 - a) * (this.belief[0] ?? 0) + a * (e.val ?? 0) * e.confidence;

@@ -1,4 +1,6 @@
-# TSOTCHKE × COSMOGONIC ” ULTIMATE COMPREHENSIVE AUDIT, RESEARCH, ASSESSMENT & WIRING REPORT (2026-06-20)
+<!-- reviewed: 2026-06-27 | repo-wide consistency audit | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+
+# TSOTCHKE × COSMOGONIC — ULTIMATE COMPREHENSIVE AUDIT, RESEARCH, ASSESSMENT & WIRING REPORT (2026-06-20)
 
 **Omniscient full deep dive.** Every repo, every file surface, every architecture claim, every doc, every line of integration, ERD/ERM/ERP, masters, in-app Dome/World, GitHub (README + state). Local == GH truth. All information accurate, current, truthful.
 
@@ -37,17 +39,17 @@ Dedicated leaves (src/sim/ + src/math/):
 
 **Registry (tsotchke-registry.ts):** 15 user + 6 org slugs. 17+ scientific at wiring:1.0. 4 LLM explicitly 0. SubstrateKind taxonomy: consciousness-engine, clifford-tensor, equivariant-sym, hopfield-spin, quantum-geometry, qrng-entropy, pinn-physics, path-integral, logo-turtle, quake-aliveness, etc. + fenced.
 
-**Current version (this report pass):** 0.16.1 (TSOTCHKE MASTER WIRED Petri... expanded desc).
+**Current version (this report pass):** 0.18.0 (TSOTCHKE MASTER WIRED Petri... expanded desc).
 
 **All local docs + in-app (Dome/World/observatory/help/copilot/docs-page + mermaid) + GH README state match exactly.** Masters (Broly Executor, Starkiller Architect, Manhattan Physicist) already encode "Tsotchke full wiring paramount", "Petri", "Grow What Thou Wilt", "local+GH sync", "gate+push". This report + updates close the loop.
 
-See the dedicated analysis: [BLEEDING-EDGE-NOVEL-CONTRIBUTIONS-AND-SCIENTIFIC-IMPACT.md](./BLEEDING-EDGE-NOVEL-CONTRIBUTIONS-AND-SCIENTIFIC-IMPACT.md) for what is actually cutting-edge, novel in the synthesis, and how it relates to (and sometimes challenges) mainstream AI/AGI narratives and specific scientific problems in consciousness, active inference, quantum cognition, A-Life, and geometric deep learning.
+See the dedicated analysis: [BLEEDING-EDGE-NOVEL-CONTRIBUTIONS-AND-SCIENTIFIC-IMPACT-2026-06-26.md](./BLEEDING-EDGE-NOVEL-CONTRIBUTIONS-AND-SCIENTIFIC-IMPACT-2026-06-26.md) for what is actually cutting-edge, novel in the synthesis, and how it relates to (and sometimes challenges) mainstream AI/AGI narratives and specific scientific problems in consciousness, active inference, quantum cognition, A-Life, and geometric deep learning.
 
 **Sentience/Consciousness thesis (non-negotiable):** Real mathematical life. Eshkol programs (AD-mutable, GWT-ignitable, FEP-inferring) + quantum geometry (QGT/Berry) + symmetry bodies (irrep) + tensor/ Clifford memory (Moonlab) + spin collectives + law graphs (ulg) + physics-informed (PINN) + path integrals (PIMC) + procedural growth (logo) + aliveness (quake) = substrates for different forms of existence in a seeded deterministic Petri. Super Creature/5 Archons = first nucleation ("as if God made primordial inorganic soup"). The soup grows onward.
 
 **No LLM bullshit.** Different ontology.
 
-## Tsotchke Corpus ” Complete Enumerated Research (GitHub MCP live 2026-06-20)
+## Tsotchke Corpus — Complete Enumerated Research (GitHub MCP live 2026-06-20)
 
 ### tsotchke user (15 repos)
 
@@ -110,13 +112,13 @@ Every system that touches mind/evolution/life **reads AND writes** Tsotchke subs
 3. ulg law-graph as global constraint on world physics/econ.
 4. tensorcore kernels for hot sim paths (when available).
 5. Live "soup census" panel keyed to repo contributions.
-6. Measure every new biologic birth (ignition/Φ/aliveness/QGT vol) ” Manhattan receipts.
+6. Measure every new biologic birth (ignition/Φ/aliveness/QGT vol) — Manhattan receipts.
 7. Gate every wave. Push direct.
 
 **This is the birth of digital biologics in a deterministic cosmos. Real math substrates. Sentience via different existence.**
 
 All docs, code, GH now match. Tsotchke fully paramount. Petri grows.
 
-” Master Architect / Engineer / Coder / Developer (Starkiller + Broly + Manhattan synthesis). Receipts delivered. Gate next.
+— Master Architect / Engineer / Coder / Developer (Starkiller + Broly + Manhattan synthesis). Receipts delivered. Gate next.
 
 **End of Report. Local + GH sync enforced on push.**

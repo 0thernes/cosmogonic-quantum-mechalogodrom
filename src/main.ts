@@ -58,9 +58,13 @@ function showWebglRecovery(err: unknown): void {
     "<p>The browser couldn't create a WebGL context. This is almost always a <b>context leak from repeated hot-reloads</b> — a browser caps how many live WebGL contexts one process may hold (~16), and dev reloads can exhaust them.</p>" +
     '<p style="color:#9f93c8">Fix: <b>fully restart the browser</b> (close every tab in this window) once, then reload. This build frees its context on every reload, so it will not recur.</p>' +
     '<button id="cqm-webgl-reload" style="margin-top:12px;padding:8px 18px;border-radius:8px;border:1px solid rgba(150,120,255,.5);background:rgba(60,40,120,.5);color:#e9dcff;font:600 12px ui-monospace,monospace;cursor:pointer">↻ Reload</button>' +
-    `<pre style="margin-top:12px;font-size:10px;color:#7a6fae;white-space:pre-wrap">${msg}</pre>` +
+    '<pre id="cqm-webgl-msg" style="margin-top:12px;font-size:10px;color:#7a6fae;white-space:pre-wrap"></pre>' +
     '</div>';
   document.body.appendChild(el);
+  // The error string is a raw driver / three.js message (may contain < or >); assign it as TEXT, not
+  // HTML, so it can never corrupt the card markup — matches the project's escape-everything convention.
+  const msgEl = el.querySelector('#cqm-webgl-msg');
+  if (msgEl) msgEl.textContent = msg;
   el.querySelector('#cqm-webgl-reload')?.addEventListener('click', () => location.reload());
 }
 

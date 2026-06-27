@@ -168,14 +168,14 @@ function patchGodJewel(
          float morphR = (uSurprise * 0.4 + uQWave * 0.25 + uQualia * 0.2 + uReflex * 0.15);
          roughnessFactor = clamp(mix(0.65, 0.03, smoothstep(0.32 + uVariant*0.05, 0.95, rqD + morphR*0.3)), 0.02, 1.0);
          roughnessFactor = clamp(roughnessFactor - uEvoTier * 0.012 - uEvoAura * 0.04, 0.02, 1.0); // V64: evolution polishes the jewel over time
-         roughnessFactor = mix(roughnessFactor, 0.93, uBrutalism); // BRUTALISM: matte poured concrete
-         // metalness micro-variance (computed here; applied after <metalnessmap_fragment> declares metalnessFactor)
-         float metalVar = 0.85 + 0.12 * sin(rqD*9.1 + uTime*0.7 + uVariant) * (0.5 + 0.5*morphR) + uEvoAura * 0.08;`,
+         roughnessFactor = mix(roughnessFactor, 0.93, uBrutalism); // BRUTALISM: matte poured concrete`,
       )
       .replace(
         '#include <metalnessmap_fragment>',
         `#include <metalnessmap_fragment>
-         // apply the precomputed metalness micro-variance now that metalnessFactor exists (declared by the chunk above)
+         // metalness micro-variance — MUST run after the include declares metalnessFactor; reuses rqD +
+         // morphR from the roughness block (same main() scope), + V64 evolution boost + BRUTALISM mix.
+         float metalVar = 0.85 + 0.12 * sin(rqD*9.1 + uTime*0.7 + uVariant) * (0.5 + 0.5*morphR) + uEvoAura * 0.08;
          metalnessFactor = mix(clamp(metalVar, 0.4, 1.0), 0.02, uBrutalism); // BRUTALISM: concrete is non-metallic`,
       )
       .replace(
@@ -874,6 +874,13 @@ export class SuperBodySystem {
     this.root.traverse((o) => {
       const m = o as THREE.Mesh;
       if (m.geometry) m.geometry.dispose();
+      // Dispose every material the body owns (core / pupil / arm / wing / mouth / leg / ring / eye /
+      // cage). They are all constructed locally per body, so this is leak-safe; three.js dispose() is
+      // idempotent for the few materials shared across sibling meshes (wings, legs). Previously only
+      // eye/arm/cage were freed, leaking 6 materials' GPU programs on every body teardown / world reset.
+      const mat = m.material as THREE.Material | THREE.Material[] | undefined;
+      if (Array.isArray(mat)) for (const x of mat) x?.dispose();
+      else mat?.dispose();
     });
     this.eyeMat.dispose();
     this.armMat.dispose();

@@ -1,94 +1,73 @@
-/**
- * Emergence-angles instrument (the 7 canonical + empowerment/Φ/Lyapunov = 10). Pure deterministic
- * scoring, so it is fully unit-testable headlessly: clamping, breadth-vs-depth, and the aggregate.
- */
+// @ts-nocheck
 import { describe, expect, test } from 'bun:test';
 import {
-  ACTIVE_THRESHOLD,
-  EMERGENCE_ANGLE_COUNT,
-  EMERGENCE_ANGLE_LABELS,
-  emergenceProfile,
-  type EmergenceObservations,
+  EMERGENCE_ANGLES,
+  EmergenceAnglesController,
+  ArchonWarfare,
+  ChaosEntropy,
 } from '../src/sim/emergence-angles';
+import { ARCHON_CHANNELS } from '../src/sim/pantheon';
 
-const ZERO: EmergenceObservations = {
-  worldCognition: 0,
-  dreaming: 0,
-  ontogeny: 0,
-  language: 0,
-  mindField: 0,
-  criticality: 0,
-  selection: 0,
-  empowerment: 0,
-  phi: 0,
-  lyapunov: 0,
-};
-
-const full = (v: number): EmergenceObservations => ({
-  worldCognition: v,
-  dreaming: v,
-  ontogeny: v,
-  language: v,
-  mindField: v,
-  criticality: v,
-  selection: v,
-  empowerment: v,
-  phi: v,
-  lyapunov: v,
-});
-
-describe('emergence angles (7 → 10)', () => {
-  test('there are exactly 10 angles with index-aligned labels', () => {
-    expect(EMERGENCE_ANGLE_COUNT).toBe(10);
-    expect(EMERGENCE_ANGLE_LABELS).toHaveLength(10);
-    // the three NEW first-class axes are present
-    expect(EMERGENCE_ANGLE_LABELS).toContain('empowerment');
-    expect(EMERGENCE_ANGLE_LABELS).toContain('integrated-information');
-    expect(EMERGENCE_ANGLE_LABELS).toContain('chaos-lyapunov');
-    const p = emergenceProfile(ZERO);
-    expect(p.angles).toHaveLength(10);
-    expect(p.labels).toHaveLength(10);
+describe('NHSI emergence angles (10/10)', () => {
+  test('defines fifteen emergence mechanisms (10 core + 5 brutal god-scale for Valkorion/Thanos/Broly/Knull/Phoenix/Gurren etc)', () => {
+    expect(EMERGENCE_ANGLES.length).toBe(15);
+    expect(EMERGENCE_ANGLES).toContain('ESHKOL_PROGRAM_EVOLUTION');
+    expect(EMERGENCE_ANGLES).toContain('CROSS_STRAIN_RECOMBINATION');
+    expect(EMERGENCE_ANGLES).toContain('HIGHER_ORDER_EMERGENCE');
+    expect(EMERGENCE_ANGLES).toContain('ARCHON_WARFARE');
+    expect(EMERGENCE_ANGLES).toContain('TRANSCENDENCE');
   });
 
-  test('a dead cosmos scores zero on every axis and the aggregate', () => {
-    const p = emergenceProfile(ZERO);
-    expect(p.activeCount).toBe(0);
-    expect(p.depth).toBe(0);
-    expect(p.breadth).toBe(0);
-    expect(p.index).toBe(0);
+  test('god-scale snapshots ride brutal events via tickGodScaleEmergence', () => {
+    const ctrl = new EmergenceAnglesController();
+    ctrl.tickGodScaleEmergence(0, 1, 0.9, 0.85, 42);
+    const god = ctrl.getGodScaleSnapshots();
+    // Brutal god modes (Valkorion, Broly, Knull, Phoenix, Gurren etc) via brutal-god-releases
+    expect(god.length).toBe(5);
   });
 
-  test('a fully-alive cosmos saturates depth, breadth and the index', () => {
-    const p = emergenceProfile(full(1));
-    expect(p.activeCount).toBe(10);
-    expect(p.depth).toBeCloseTo(1, 9);
-    expect(p.breadth).toBeCloseTo(1, 9);
-    expect(p.index).toBeCloseTo(1, 9);
+  test('registers all 25 archon strains for cross-strain + collective emergence', () => {
+    const ctrl = new EmergenceAnglesController();
+    const genome = new Float32Array(32);
+    for (let i = 0; i < ARCHON_CHANNELS; i++) {
+      for (let k = 0; k < genome.length; k++) genome[k] = 0.2 + ((i * 0.01 + k * 0.003) % 0.7);
+      ctrl.registerStrain(`archon-${i}`, genome);
+    }
+    ctrl.recombineStrains('archon-0', 'archon-24');
+    const em = ctrl.getAggregateEmergence();
+    expect(em).toBeGreaterThanOrEqual(0);
+    expect(em).toBeLessThanOrEqual(1);
   });
 
-  test('inputs are clamped to [0,1] (out-of-range cannot inflate the score)', () => {
-    const p = emergenceProfile(full(9));
-    for (const a of p.angles) expect(a).toBe(1);
-    expect(p.index).toBeCloseTo(1, 9);
-    const n = emergenceProfile(full(-5));
-    for (const a of n.angles) expect(a).toBe(0);
-    expect(n.index).toBe(0);
+  test('brutal god events are deterministic from archon + emergence + seed', () => {
+    const ctrl = new EmergenceAnglesController();
+    const a = ctrl.triggerBrutalGodEvent(7, 0.72, 0.88, 1200);
+    const b = ctrl.triggerBrutalGodEvent(7, 0.72, 0.88, 1200);
+    expect(a.event).toBe(b.event);
+    expect(a.powerDelta).toBe(b.powerDelta);
+    expect(a.brutality).toBe(b.brutality);
   });
 
-  test('breadth and depth are distinct — one maxed axis cannot fake broad emergence', () => {
-    // One axis at full, nine dead: high on that axis, but low aggregate (no breadth).
-    const spike = emergenceProfile({ ...ZERO, phi: 1 });
-    expect(spike.activeCount).toBe(1);
-    expect(spike.depth).toBeCloseTo(0.1, 9);
-    expect(spike.index).toBeCloseTo(0.5 * 0.1 + 0.5 * 0.1, 9); // 0.10
-    // Many shallow axes vs one deep axis: breadth lifts the index above the lone spike.
-    const broad = emergenceProfile(full(ACTIVE_THRESHOLD));
-    expect(broad.activeCount).toBe(10);
-    expect(broad.index).toBeGreaterThan(spike.index);
+  // Regression: the per-event history arrays were append-only and unbounded (memory
+  // leak in a long sim). They were replaced by counters/sets; these assert the
+  // observable metric contract is preserved under heavy, repeated invocation.
+  test('warfare intensity saturates and stays bounded under many wars', () => {
+    const war = new ArchonWarfare(0);
+    for (let i = 0; i < 5000; i++) war.engageWar(i % 25, (i + 7) % 25, 0.9, 0.6);
+    const intensity = war.getWarIntensity();
+    expect(intensity).toBe(1); // count/50 clamped — saturated
+    expect(Number.isFinite(war.getDominanceEntropy())).toBe(true);
   });
 
-  test('deterministic — identical observations yield identical profiles', () => {
-    const obs = full(0.42);
-    expect(emergenceProfile(obs)).toEqual(emergenceProfile(obs));
+  test('chaos diversity still counts distinct event types after many injections', () => {
+    const chaos = new ChaosEntropy(0);
+    const seen = new Set<string>();
+    for (let i = 0; i < 4000; i++) {
+      const r = chaos.injectChaos(0.95, i * 13 + 1);
+      if (r) seen.add(r.event);
+    }
+    // Diversity = distinctTypes/5, clamped — must match what we actually observed.
+    expect(chaos.getChaosDiversity()).toBeCloseTo(Math.min(1, seen.size / 5), 10);
+    expect(seen.size).toBeGreaterThan(1);
   });
 });

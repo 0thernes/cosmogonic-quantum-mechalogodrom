@@ -41,7 +41,7 @@ export const GRID_CELL = 16;
 /**
  * Ultra-tier (10k entities) spatial-hash cell edge. At 10k the arena is ~4× denser than the
  * desktop tier, so the legacy 16-unit cell returns ~214 candidates per behavior query. A
- * 10-unit cell is the measured cost sweet spot (docs/BENCHMARKS.md "Ultra-tier 10k
+ * 10-unit cell is the measured cost sweet spot (docs/BENCHMARKS-2026-06-26.md "Ultra-tier 10k
  * optimization"): it cuts neighbors-per-query ~36% (214 → 136) while the radius-8..16 queries
  * still span only a 3×3 / 5×5 cell block. Rejected: 8 (15.8ms, per-query cell overhead climbs),
  * 6 (16.3ms), 4 (16.0ms) — all WORSE than 10 (13.5ms) and even than 16, because shrinking the

@@ -109,15 +109,40 @@ export function mutate(g: Float32Array, rng: Rng, rate = 0.12, scale = 0.2): voi
 /**
  * Breed two parents: crossover then mutate the child. Returns the child genome.
  *
- * RESERVED — not yet wired. `breed`/`crossover` are correct and unit-tested but currently imported
- * nowhere in the live sim: organisms re-roll fresh genomes at spawn instead of inheriting. Wiring
- * heredity into the spawn path is a deliberate, determinism-sensitive feature (it adds rng draws to
- * the golden-pinned path), so it was not auto-applied. See ADR-0009 for the wire-vs-prune decision —
- * do NOT delete these as "dead code" without reading it.
+ * Heredity is now LIVE in the sim via {@link recombine} (the arbitrary-length variant), which the
+ * `PrimordialSoup` rebirth path uses to breed reborn strains from two living parents on the soup's
+ * own seeded sub-stream (ADR-0009, Accepted). These fixed-`GENOME_LEN` `breed`/`crossover` exports
+ * remain reserved for the planned entity/NHI spawn-path wiring (which needs a dedicated `genomeRng`
+ * + a deliberate golden re-baseline) — do NOT delete them as "dead code" without reading ADR-0009.
  */
 export function breed(a: Float32Array, b: Float32Array, rng: Rng, rate?: number): Float32Array {
   const child = crossover(a, b, rng);
   mutate(child, rng, rate);
+  return child;
+}
+
+/**
+ * Generic seeded recombination for arbitrary-length gene vectors (e.g. the primordial
+ * soup's `.esk`-derived strain genomes, which are NOT the fixed organism `GENOME_LEN`).
+ * Uniform crossover of two equal-length parents followed by in-place point mutation;
+ * returns a new child array. All randomness flows through the injected {@link Rng}, so
+ * offspring are deterministic from the seed. This is the genuine heredity primitive the
+ * soup uses to inherit-and-vary parent DNA instead of re-rolling fresh genomes.
+ */
+export function recombine(
+  a: Float32Array,
+  b: Float32Array,
+  rng: Rng,
+  rate = 0.12,
+  scale = 0.2,
+): Float32Array {
+  const n = Math.min(a.length, b.length);
+  const child = new Float32Array(n);
+  for (let i = 0; i < n; i++) {
+    let v = (rng() < 0.5 ? a[i] : b[i]) ?? 0;
+    if (rng() < rate) v += (rng() * 2 - 1) * scale;
+    child[i] = v < 0 ? 0 : v > 1 ? 1 : v;
+  }
   return child;
 }
 

@@ -1,8 +1,13 @@
 /**
  * LIBIRREP SYMMETRY — Clebsch-Gordan, Wigner-D, spherical harmonics from Tsotchke libirrep.
  *
+ * NOTE (NOT WIRED / APPROXIMATE): the three functions below are SIMPLIFIED closed-form placeholders
+ * (e.g. the CG coefficient here is a coarse approximation, NOT the exact Racah formula) and are
+ * deliberately not imported by the sim or cognition layers. The EXACT, test-verified SO(3)/SU(2)
+ * Racah/Wigner math the apex mind actually uses lives in `irrep.ts` — use that. This file is kept
+ * only as a documentation stub of the libirrep API surface; do not wire it into a decision path.
+ *
  * Port of libirrep's symmetry substrate (src/symmetry/clebsch_gordan.c, wigner_d.c, spherical_harmonics.c).
- * Provides irreducible representation calculations for quantum state symmetry analysis.
  *
  * MIT © tsotchke — see THIRD-PARTY-NOTICES.md.
  */

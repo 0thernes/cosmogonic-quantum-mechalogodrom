@@ -2,7 +2,7 @@
  * ECONOMY (CONTRACTS V13) — two competing currencies, two commodities, and a
  * game-theoretic clearing market that every intelligence in the cosmos plugs into.
  *
- * The movement's law (docs/PHILOSOPHY.md) demands real math under every effect, so this is a
+ * The movement's law (docs/PHILOSOPHY-2026-06-26.md) demands real math under every effect, so this is a
  * genuine micro-economy, not a flavour counter:
  *
  * - **Two competing currencies** — AURUM (☉, sun-gold) and UMBRA (☾, shadow-silver). They float

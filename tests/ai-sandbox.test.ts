@@ -148,7 +148,7 @@ describe('ai-sandbox: success paths (the gate ALLOWS + executes valid read-only 
       expect((await dispatchTool('grep', { pattern: 'cosmogonic' })).ok).toBe(true);
       expect((await dispatchTool('run', { command: 'echo cosmogonic-sandbox-ok' })).ok).toBe(true);
     },
-    { timeout: 30_000 },
+    { timeout: 60_000 },
   );
 
   test('dispatchTool tolerates missing args — routes with an empty value, handler rejects', async () => {

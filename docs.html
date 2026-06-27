@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -6,7 +6,7 @@
     <!-- V81: revalidate the document so a returning visitor never reads a stale cached page (paired with
          the build-pages ?v= cache-buster on nav links). -->
     <meta http-equiv="Cache-Control" content="no-cache, must-revalidate" />
-    <title>Docs â€” Cosmogonic Quantum Mechalogodrom</title>
+    <title>Docs — Cosmogonic Quantum Mechalogodrom</title>
     <meta
       name="description"
       content="Report page: file/folder architecture, ERD/ERM/ERP data model, frame pipeline, and the V1-V100 evolution of the Cosmogonic Quantum Mechalogodrom."
@@ -21,9 +21,9 @@
         --void: #030612;
         --accent: #0ef;
         --warn: #fa0;
-        --ink: #b8c8e8;
+        --ink: #cfe0fb;
         --ink-dim: rgba(184, 200, 232, 0.75);
-        --ink-faint: rgba(184, 200, 232, 0.5);
+        --ink-faint: rgba(184, 200, 232, 0.62);
         --line: rgba(0, 160, 240, 0.15);
         --line-strong: rgba(0, 238, 255, 0.45);
         --panel: rgba(3, 6, 18, 0.85);
@@ -202,7 +202,7 @@
         color: var(--accent);
       }
       .toc a::before {
-        content: 'â€º ';
+        content: '› ';
         color: var(--warn);
       }
       .card {
@@ -223,7 +223,7 @@
       pre.mermaid[data-processed='true'] {
         color: inherit;
       }
-      /* Interactive diagram viewport (pan / zoom / fullscreen) â€” wired in src/docs-page.ts */
+      /* Interactive diagram viewport (pan / zoom / fullscreen) — wired in src/docs-page.ts */
       .diagram-zoom {
         position: relative;
         overflow: hidden;
@@ -401,7 +401,7 @@
         max-width: 78ch;
       }
       ul.spec li::before {
-        content: 'â—†';
+        content: '◆';
         position: absolute;
         left: 0;
         color: var(--warn);
@@ -440,6 +440,9 @@
         color: var(--ink-faint);
         border: none;
       }
+      .muted {
+        color: var(--ink-faint);
+      }
     </style>
   </head>
   <body>
@@ -471,7 +474,7 @@
         Page: it documents the <strong>file/folder architecture</strong>, the data model as an
         explicit <strong>ERD / ERM / ERP</strong> triad, the per-frame process pipeline, and the
         V1&ndash;V100 evolution of the system. The diagrams mirror the markdown sources in
-        <code>docs/ARCHITECTURE.md</code> and <code>docs/ERD.md</code>.
+        <code>docs/ARCHITECTURE-2026-06-26.md</code> and <code>docs/ERD-2026-06-26.md</code>.
       </p>
 
       <div class="badges">
@@ -484,7 +487,7 @@
         <span class="badge">titans <b>10</b></span>
         <span class="badge">algorithms <b>25</b></span>
         <span class="badge">songs <b>6</b></span>
-        <span class="”badge”">license <b>Non-commercial research &amp; play</b></span>
+        <span class="badge">license <b>Non-commercial research &amp; play</b></span>
       </div>
 
       <nav class="toc" aria-label="Table of contents">
@@ -511,92 +514,92 @@
           class="tree"
           aria-label="Repository file tree"
         ><span class="root">cosmogonic-quantum-mechalogodrom/</span>
-â”œâ”€ <span class="file">server.ts</span>            <span class="note">Bun.serve fullstack host: bundles /, /docs, serves /lab + /api/{health,audit}</span>
-â”œâ”€ <span class="file">index.html</span>           <span class="note">the dome (/) â€” app shell, panels, observatory DOM, touch controls</span>
-â”œâ”€ <span class="file">docs.html</span>            <span class="note">this report (/docs) â€” architecture, ERD/ERM/ERP, eras (mermaid inline)</span>
-â”œâ”€ <span class="dir">lab/</span>
-â”‚   â””â”€ <span class="file">quantum-wildbeyond.html</span>  <span class="note">self-contained p5.js lab, 4 pages of 3D data-visuals (CDN-only, not bundled)</span>
-â”œâ”€ <span class="dir">src/</span>
-â”‚   â”œâ”€ <span class="file">main.ts</span>           <span class="note">browser entry: boots the World from index.html</span>
-â”‚   â”œâ”€ <span class="file">world.ts</span>          <span class="note">composition root: owns SimState, builds SimContext, ticks every system per frame</span>
-â”‚   â”œâ”€ <span class="file">types.ts</span>          <span class="note">the type hub â€” SimState, SimContext, TelemetrySnapshot, MorphType</span>
-â”‚   â”œâ”€ <span class="file">docs-page.ts</span>      <span class="note">this page's entry: initializes mermaid (dark theme) and renders the diagrams</span>
-â”‚   â”œâ”€ <span class="dir">core/</span>
-â”‚   â”‚   â”œâ”€ <span class="file">engine.ts</span>      <span class="note">three.js renderer, scene, camera, lighting rig</span>
-â”‚   â”‚   â””â”€ <span class="file">quality.ts</span>     <span class="note">detectQuality â€” device tier ladder (phone..ultra), entity caps, throttles</span>
-â”‚   â”œâ”€ <span class="dir">sim/</span>              <span class="note">the simulation systems (V1 core + V2 wildbeyond + V3 pantheon + V4 atmosphere)</span>
-â”‚   â”‚   â”œâ”€ <span class="file">constants.ts</span>   <span class="note">leaf â€” arena scale, behavior names, morph count, tuning tuples</span>
-â”‚   â”‚   â”œâ”€ <span class="file">geometry-cache.ts</span> <span class="note">40 shared geometries reused across all meshes</span>
-â”‚   â”‚   â”œâ”€ <span class="file">morphotypes.ts</span> <span class="note">deterministic creature templates (100 legacy / 250 phylum-mode)</span>
-â”‚   â”‚   â”œâ”€ <span class="file">phyla.ts</span>       <span class="note">10 phyla â€” hue bands, geometry families, behavior pools, home sectors</span>
-â”‚   â”‚   â”œâ”€ <span class="file">behaviors.ts</span>   <span class="note">26 behavioral fields driving per-entity motion</span>
-â”‚   â”‚   â”œâ”€ <span class="file">algorithms.ts</span>  <span class="note">25 visible sorting-field algorithms, each a distinct spatial signature</span>
-â”‚   â”‚   â”œâ”€ <span class="file">entities.ts</span>    <span class="note">EntityManager â€” births, deaths, behavior dispatch, RD scars on death</span>
-â”‚   â”‚   â”œâ”€ <span class="file">instanced-entities.ts</span> <span class="note">instanced PBR pools (per-instance color + emissive vec4)</span>
-â”‚   â”‚   â”œâ”€ <span class="file">shoggoths.ts</span>   <span class="note">drifting Lorenz-ish predators with tendrils</span>
-â”‚   â”‚   â”œâ”€ <span class="file">puppet-masters.ts</span> <span class="note">100 NPC intelligences (14 mobile) â€” 3 named heroes + WRAITH hands</span>
-â”‚   â”‚   â”œâ”€ <span class="file">titans.ts</span>      <span class="note">10 colossal economies waging an iterated prisoner's dilemma</span>
-â”‚   â”‚   â”œâ”€ <span class="file">weather.ts</span>     <span class="note">weather state machine (CLEAR..FOG..STORM..VOID..AURORA)</span>
-â”‚   â”‚   â”œâ”€ <span class="file">quantum.ts</span>     <span class="note">QuantumCloud â€” point cloud that implodes on register collapse</span>
-â”‚   â”‚   â”œâ”€ <span class="file">qcircuit.ts</span>    <span class="note">QuantumCircuitSystem â€” gate sequences, bands to the cloud</span>
-â”‚   â”‚   â”œâ”€ <span class="file">reaction-diffusion.ts</span> <span class="note">Gray-Scott 128x128 field, ground emissiveMap</span>
-â”‚   â”‚   â”œâ”€ <span class="file">graph-mind.ts</span>  <span class="note">graphology Louvain communities + PageRank over the connectome</span>
-â”‚   â”‚   â”œâ”€ <span class="file">connectome.ts</span>  <span class="note">neural link graph between nearby entities</span>
-â”‚   â”‚   â”œâ”€ <span class="file">constellations.ts</span> <span class="note">d3-delaunay Voronoi sectors over fixed monolith sites</span>
-â”‚   â”‚   â”œâ”€ <span class="file">lore.ts</span>        <span class="note">sha256-seeded name generator (sectors, tribes, stars, omens)</span>
-â”‚   â”‚   â”œâ”€ <span class="file">analytics.ts</span>   <span class="note">simple-statistics windows â€” trend, z-omens</span>
-â”‚   â”‚   â”œâ”€ <span class="file">atmosphere.ts</span>  <span class="note">alien sky dome, haze bands, particulate layer, aurora curtain</span>
-â”‚   â”‚   â”œâ”€ <span class="file">viz3d.ts</span>       <span class="note">in-scene holographic data sculptures (phylum towers, titan obelisks)</span>
-â”‚   â”‚   â””â”€ <span class="file">environment.ts</span> <span class="note">ground, light rig, audio-reactive shimmer</span>
-â”‚   â”œâ”€ <span class="dir">math/</span>            <span class="note">pure deterministic leaves (no three.js, fully bun-testable)</span>
-â”‚   â”‚   â”œâ”€ <span class="file">rng.ts</span>        <span class="note">mulberry32 seeded Rng â€” the single source of all sim randomness</span>
-â”‚   â”‚   â”œâ”€ <span class="file">scalar.ts</span>     <span class="note">clamp, lerp, TAU, dist2XZ and friends</span>
-â”‚   â”‚   â”œâ”€ <span class="file">spatial-hash.ts</span> <span class="note">uniform grid for neighbor queries</span>
-â”‚   â”‚   â”œâ”€ <span class="file">quantum.ts</span>    <span class="note">QuantumRegister â€” 2^n complex amplitudes, gates, measurement</span>
-â”‚   â”‚   â””â”€ <span class="file">games.ts</span>      <span class="note">prisoner's-dilemma payoff + replicator-dynamics helpers</span>
-â”‚   â”œâ”€ <span class="dir">audio/</span>
-â”‚   â”‚   â”œâ”€ <span class="file">songs.ts</span>      <span class="note">leaf â€” 6 dramatic songs (chords, melodies, character)</span>
-â”‚   â”‚   â”œâ”€ <span class="file">engine.ts</span>     <span class="note">AudioEngine â€” WebAudio synthesis, sub-bass, arpeggios, LFO swells</span>
-â”‚   â”‚   â””â”€ <span class="file">analysis.ts</span>   <span class="note">AudioBands â€” AnalyserNode tap to bass/mid/treble/level</span>
-â”‚   â”œâ”€ <span class="dir">ui/</span>
-â”‚   â”‚   â”œâ”€ <span class="file">input.ts</span>      <span class="note">keys, mouse look, zoom, touch joystick + radial wheel accumulators</span>
-â”‚   â”‚   â”œâ”€ <span class="file">hud.ts</span>        <span class="note">heads-up readouts (sector, weather, algorithm, lore)</span>
-â”‚   â”‚   â”œâ”€ <span class="file">panels.ts</span>    <span class="note">collapsible glass panels (telemetry, control, audit)</span>
-â”‚   â”‚   â”œâ”€ <span class="file">graphs.ts</span>     <span class="note">Sparkline â€” small canvas time-series</span>
-â”‚   â”‚   â””â”€ <span class="file">observatory.ts</span> <span class="note">4-page, 16-canvas live data observatory</span>
-â”‚   â”œâ”€ <span class="dir">logging/</span>
-â”‚   â”‚   â”œâ”€ <span class="file">logger.ts</span>     <span class="note">leaf ring logger (client + server)</span>
-â”‚   â”‚   â””â”€ <span class="file">audit.ts</span>      <span class="note">AuditTrail â€” fire-and-forget POST /api/audit</span>
-â”‚   â”œâ”€ <span class="dir">memory/</span>
-â”‚   â”‚   â””â”€ <span class="file">store.ts</span>      <span class="note">MemoryStore â€” persisted seed/song/sessions across reloads</span>
-â”‚   â””â”€ <span class="dir">styles/</span>
-â”‚       â””â”€ <span class="file">app.css</span>      <span class="note">responsive system â€” phone sheets, foldable, tablet, TV 10-foot</span>
-â”œâ”€ <span class="dir">docs/</span>
-â”‚   â”œâ”€ <span class="file">ARCHITECTURE.md</span>  <span class="note">module graph + composition narrative (mirrors this page)</span>
-â”‚   â”œâ”€ <span class="file">ERD.md</span>           <span class="note">entity-relationship source for the diagram below</span>
-â”‚   â”œâ”€ <span class="file">MODULE-CONTRACTS.md</span> <span class="note">binding per-module spec (V1..V6) â€” contract wins over vibes</span>
-â”‚   â”œâ”€ <span class="file">PHILOSOPHY.md</span>     <span class="note">aesthetic constitution â€” real math under every effect</span>
-â”‚   â”œâ”€ <span class="file">DESIGN-SYSTEM.md</span>  <span class="note">color, type, panel + wireframe conventions</span>
-â”‚   â”œâ”€ <span class="file">WIREFRAMES.md</span>     <span class="note">layout sketches for the dome + observatory</span>
-â”‚   â”œâ”€ <span class="file">COMPLEXITY.md</span>     <span class="note">per-system complexity budgets</span>
-â”‚   â”œâ”€ <span class="file">BENCHMARKS.md</span>     <span class="note">recorded hot-path measurements + ultra-tier calibration</span>
-â”‚   â”œâ”€ <span class="dir">adr/</span>             <span class="note">architecture decision records (Bun, three.js, HTMX, seeded rng, math stack)</span>
-â”‚   â”œâ”€ <span class="dir">reference/</span>       <span class="note">domain library catalog + math-libs survey</span>
-â”‚   â””â”€ <span class="dir">diagrams/</span>        <span class="note">exported diagram assets</span>
-â”œâ”€ <span class="dir">tests/</span>             <span class="note">122 bun test suites Â· 1794 tests â€” determinism, NaN-stability, per-system invariants, Tsotchke biologics receipts</span>
-â”œâ”€ <span class="dir">bench/</span>             <span class="note">mitata micro-benchmarks for the hot paths (incl. the apex-mind per-beat budget)</span>
-â”œâ”€ <span class="dir">masters/</span>           <span class="note">3 master persona XML files â€” Executor, Architect, Physicist (the discipline)</span>
-â”œâ”€ <span class="dir">legacy/</span>            <span class="note">the original single-file artifact, preserved verbatim â€” never edited</span>
-â”œâ”€ <span class="dir">scripts/</span>
-â”‚   â””â”€ <span class="file">build.ts</span>        <span class="note">Bun build pipeline (HTML bundling + Tailwind)</span>
-â”œâ”€ <span class="dir">public/</span>            <span class="note">static assets served as-is</span>
-â”œâ”€ <span class="dir">.github/workflows/</span>  <span class="note">CI â€” the full check gate on push</span>
-â”œâ”€ <span class="file">package.json</span>         <span class="note">deps + scripts (dev, check, bench)</span>
-â”œâ”€ <span class="file">tsconfig.json</span>        <span class="note">strict TypeScript configuration</span>
-â”œâ”€ <span class="file">bunfig.toml</span>          <span class="note">Bun config â€” Tailwind plugin wiring</span>
-â”œâ”€ <span class="file">.prettierrc</span>          <span class="note">prettier â€” 100 cols, single quotes, semicolons</span>
-â”œâ”€ <span class="file">CHANGELOG.md</span>         <span class="note">version history â†’ 0.12.0 (Tsotchke full) / V100+</span>
-â””â”€ <span class="file">README.md</span>            <span class="note">project overview + quickstart</span></pre>
+├─ <span class="file">server.ts</span>            <span class="note">Bun.serve fullstack host: bundles /, /docs, serves /lab + /api/{health,audit}</span>
+├─ <span class="file">index.html</span>           <span class="note">the dome (/) — app shell, panels, observatory DOM, touch controls</span>
+├─ <span class="file">docs.html</span>            <span class="note">this report (/docs) — architecture, ERD/ERM/ERP, eras (mermaid inline)</span>
+├─ <span class="dir">lab/</span>
+│   └─ <span class="file">quantum-wildbeyond.html</span>  <span class="note">self-contained p5.js lab, 4 pages of 3D data-visuals (CDN-only, not bundled)</span>
+├─ <span class="dir">src/</span>
+│   ├─ <span class="file">main.ts</span>           <span class="note">browser entry: boots the World from index.html</span>
+│   ├─ <span class="file">world.ts</span>          <span class="note">composition root: owns SimState, builds SimContext, ticks every system per frame</span>
+│   ├─ <span class="file">types.ts</span>          <span class="note">the type hub — SimState, SimContext, TelemetrySnapshot, MorphType</span>
+│   ├─ <span class="file">docs-page.ts</span>      <span class="note">this page's entry: initializes mermaid (dark theme) and renders the diagrams</span>
+│   ├─ <span class="dir">core/</span>
+│   │   ├─ <span class="file">engine.ts</span>      <span class="note">three.js renderer, scene, camera, lighting rig</span>
+│   │   └─ <span class="file">quality.ts</span>     <span class="note">detectQuality — device tier ladder (phone..ultra), entity caps, throttles</span>
+│   ├─ <span class="dir">sim/</span>              <span class="note">the simulation systems (V1 core + V2 wildbeyond + V3 pantheon + V4 atmosphere)</span>
+│   │   ├─ <span class="file">constants.ts</span>   <span class="note">leaf — arena scale, behavior names, morph count, tuning tuples</span>
+│   │   ├─ <span class="file">geometry-cache.ts</span> <span class="note">40 shared geometries reused across all meshes</span>
+│   │   ├─ <span class="file">morphotypes.ts</span> <span class="note">deterministic creature templates (100 legacy / 250 phylum-mode)</span>
+│   │   ├─ <span class="file">phyla.ts</span>       <span class="note">10 phyla — hue bands, geometry families, behavior pools, home sectors</span>
+│   │   ├─ <span class="file">behaviors.ts</span>   <span class="note">26 behavioral fields driving per-entity motion</span>
+│   │   ├─ <span class="file">algorithms.ts</span>  <span class="note">25 visible sorting-field algorithms, each a distinct spatial signature</span>
+│   │   ├─ <span class="file">entities.ts</span>    <span class="note">EntityManager — births, deaths, behavior dispatch, RD scars on death</span>
+│   │   ├─ <span class="file">instanced-entities.ts</span> <span class="note">instanced PBR pools (per-instance color + emissive vec4)</span>
+│   │   ├─ <span class="file">shoggoths.ts</span>   <span class="note">drifting Lorenz-ish predators with tendrils</span>
+│   │   ├─ <span class="file">puppet-masters.ts</span> <span class="note">100 NPC intelligences (14 mobile) — 3 named heroes + WRAITH hands</span>
+│   │   ├─ <span class="file">titans.ts</span>      <span class="note">10 colossal economies waging an iterated prisoner's dilemma</span>
+│   │   ├─ <span class="file">weather.ts</span>     <span class="note">weather state machine (CLEAR..FOG..STORM..VOID..AURORA)</span>
+│   │   ├─ <span class="file">quantum.ts</span>     <span class="note">QuantumCloud — point cloud that implodes on register collapse</span>
+│   │   ├─ <span class="file">qcircuit.ts</span>    <span class="note">QuantumCircuitSystem — gate sequences, bands to the cloud</span>
+│   │   ├─ <span class="file">reaction-diffusion.ts</span> <span class="note">Gray-Scott 128x128 field, ground emissiveMap</span>
+│   │   ├─ <span class="file">graph-mind.ts</span>  <span class="note">graphology Louvain communities + PageRank over the connectome</span>
+│   │   ├─ <span class="file">connectome.ts</span>  <span class="note">neural link graph between nearby entities</span>
+│   │   ├─ <span class="file">constellations.ts</span> <span class="note">d3-delaunay Voronoi sectors over fixed monolith sites</span>
+│   │   ├─ <span class="file">lore.ts</span>        <span class="note">sha256-seeded name generator (sectors, tribes, stars, omens)</span>
+│   │   ├─ <span class="file">analytics.ts</span>   <span class="note">simple-statistics windows — trend, z-omens</span>
+│   │   ├─ <span class="file">atmosphere.ts</span>  <span class="note">alien sky dome, haze bands, particulate layer, aurora curtain</span>
+│   │   ├─ <span class="file">viz3d.ts</span>       <span class="note">in-scene holographic data sculptures (phylum towers, titan obelisks)</span>
+│   │   └─ <span class="file">environment.ts</span> <span class="note">ground, light rig, audio-reactive shimmer</span>
+│   ├─ <span class="dir">math/</span>            <span class="note">pure deterministic leaves (no three.js, fully bun-testable)</span>
+│   │   ├─ <span class="file">rng.ts</span>        <span class="note">mulberry32 seeded Rng — the single source of all sim randomness</span>
+│   │   ├─ <span class="file">scalar.ts</span>     <span class="note">clamp, lerp, TAU, dist2XZ and friends</span>
+│   │   ├─ <span class="file">spatial-hash.ts</span> <span class="note">uniform grid for neighbor queries</span>
+│   │   ├─ <span class="file">quantum.ts</span>    <span class="note">QuantumRegister — 2^n complex amplitudes, gates, measurement</span>
+│   │   └─ <span class="file">games.ts</span>      <span class="note">prisoner's-dilemma payoff + replicator-dynamics helpers</span>
+│   ├─ <span class="dir">audio/</span>
+│   │   ├─ <span class="file">songs.ts</span>      <span class="note">leaf — 6 dramatic songs (chords, melodies, character)</span>
+│   │   ├─ <span class="file">engine.ts</span>     <span class="note">AudioEngine — WebAudio synthesis, sub-bass, arpeggios, LFO swells</span>
+│   │   └─ <span class="file">analysis.ts</span>   <span class="note">AudioBands — AnalyserNode tap to bass/mid/treble/level</span>
+│   ├─ <span class="dir">ui/</span>
+│   │   ├─ <span class="file">input.ts</span>      <span class="note">keys, mouse look, zoom, touch joystick + radial wheel accumulators</span>
+│   │   ├─ <span class="file">hud.ts</span>        <span class="note">heads-up readouts (sector, weather, algorithm, lore)</span>
+│   │   ├─ <span class="file">panels.ts</span>    <span class="note">collapsible glass panels (telemetry, control, audit)</span>
+│   │   ├─ <span class="file">graphs.ts</span>     <span class="note">Sparkline — small canvas time-series</span>
+│   │   └─ <span class="file">observatory.ts</span> <span class="note">4-page, 16-canvas live data observatory</span>
+│   ├─ <span class="dir">logging/</span>
+│   │   ├─ <span class="file">logger.ts</span>     <span class="note">leaf ring logger (client + server)</span>
+│   │   └─ <span class="file">audit.ts</span>      <span class="note">AuditTrail — fire-and-forget POST /api/audit</span>
+│   ├─ <span class="dir">memory/</span>
+│   │   └─ <span class="file">store.ts</span>      <span class="note">MemoryStore — persisted seed/song/sessions across reloads</span>
+│   └─ <span class="dir">styles/</span>
+│       └─ <span class="file">app.css</span>      <span class="note">responsive system — phone sheets, foldable, tablet, TV 10-foot</span>
+├─ <span class="dir">docs/</span>
+│   ├─ <span class="file">ARCHITECTURE-2026-06-26.md</span>  <span class="note">module graph + composition narrative (mirrors this page)</span>
+│   ├─ <span class="file">ERD-2026-06-26.md</span>           <span class="note">entity-relationship source for the diagram below</span>
+│   ├─ <span class="file">MODULE-CONTRACTS-2026-06-26.md</span> <span class="note">binding per-module spec (V1..V6) — contract wins over vibes</span>
+│   ├─ <span class="file">PHILOSOPHY-2026-06-26.md</span>     <span class="note">aesthetic constitution — real math under every effect</span>
+│   ├─ <span class="file">DESIGN-SYSTEM.md</span>  <span class="note">color, type, panel + wireframe conventions</span>
+│   ├─ <span class="file">WIREFRAMES.md</span>     <span class="note">layout sketches for the dome + observatory</span>
+│   ├─ <span class="file">COMPLEXITY.md</span>     <span class="note">per-system complexity budgets</span>
+│   ├─ <span class="file">BENCHMARKS-2026-06-26.md</span>     <span class="note">recorded hot-path measurements + ultra-tier calibration</span>
+│   ├─ <span class="dir">adr/</span>             <span class="note">architecture decision records (Bun, three.js, HTMX, seeded rng, math stack)</span>
+│   ├─ <span class="dir">reference/</span>       <span class="note">domain library catalog + math-libs survey</span>
+│   └─ <span class="dir">diagrams/</span>        <span class="note">exported diagram assets</span>
+├─ <span class="dir">tests/</span>             <span class="note">151 bun test files · 1,477 tests — determinism, NaN-stability, per-system invariants, Tsotchke biologics receipts</span>
+├─ <span class="dir">bench/</span>             <span class="note">mitata micro-benchmarks for the hot paths (incl. the apex-mind per-beat budget)</span>
+├─ <span class="dir">masters/</span>           <span class="note">3 master persona XML files — Executor, Architect, Physicist (the discipline)</span>
+├─ <span class="dir">legacy/</span>            <span class="note">the original single-file artifact, preserved verbatim — never edited</span>
+├─ <span class="dir">scripts/</span>
+│   └─ <span class="file">build.ts</span>        <span class="note">Bun build pipeline (HTML bundling + Tailwind)</span>
+├─ <span class="dir">public/</span>            <span class="note">static assets served as-is</span>
+├─ <span class="dir">.github/workflows/</span>  <span class="note">CI — the full check gate on push</span>
+├─ <span class="file">package.json</span>         <span class="note">deps + scripts (dev, check, bench)</span>
+├─ <span class="file">tsconfig.json</span>        <span class="note">strict TypeScript configuration</span>
+├─ <span class="file">bunfig.toml</span>          <span class="note">Bun config — Tailwind plugin wiring</span>
+├─ <span class="file">.prettierrc</span>          <span class="note">prettier — 100 cols, single quotes, semicolons</span>
+├─ <span class="file">CHANGELOG.md</span>         <span class="note">version history → 0.18.0 (Tsotchke full) / V100+</span>
+└─ <span class="file">README.md</span>            <span class="note">project overview + quickstart</span></pre>
       </div>
       <p><a class="totop" href="#architecture">&uarr; top</a></p>
 
@@ -916,7 +919,7 @@ erDiagram
             <tr>
               <td>PHYLUM</td>
               <td>index 0..9, hueBand, geometry family, behavior pool, homeSector</td>
-              <td>templates N MORPHOTYPE (1:N) â€” 25 morphotypes per phylum in phylum-mode</td>
+              <td>templates N MORPHOTYPE (1:N) — 25 morphotypes per phylum in phylum-mode</td>
             </tr>
             <tr>
               <td>BEHAVIOR</td>
@@ -1035,8 +1038,8 @@ sequenceDiagram
   W->>G: clear + insert all entities (every 2nd frame)
   W->>SYS: shoggoths.update
   W->>SYS: sort step ALGOS[algoIdx], swaps feed qcircuit.onSortSwap
-  W->>SYS: entities.update â€” 26 behaviors, deaths scar the RD field
-  W->>SYS: titans.update â€” economy ticks, diplomacy slot, war strikes
+  W->>SYS: entities.update — 26 behaviors, deaths scar the RD field
+  W->>SYS: titans.update — economy ticks, diplomacy slot, war strikes
   W->>SYS: connectome.update (every 1/2/3 frames by n)
   W->>V2: qcircuit.update (every 30th, bands to cloud every 6th)
   W->>SYS: quantum.update (cloud, implodeAt on collapse)
@@ -1071,9 +1074,9 @@ sequenceDiagram
       <h2 id="eras"><span class="tag">LOG</span>The eras</h2>
       <p>
         The system grew in many contract-governed waves. Each era is a binding section in
-        <code>docs/MODULE-CONTRACTS.md</code>; the later eras (V5 onward) are direct user-feedback
-        passes. Exclusive file ownership and a strict <code>bun run check</code> gate hold across
-        all of them.
+        <code>docs/MODULE-CONTRACTS-2026-06-26.md</code>; the later eras (V5 onward) are direct
+        user-feedback passes. Exclusive file ownership and a strict <code>bun run check</code> gate
+        hold across all of them.
       </p>
 
       <div class="era e1">
@@ -1146,7 +1149,7 @@ sequenceDiagram
       <div class="era e2">
         <h3>
           V7&ndash;V100 &mdash; The Living Era
-          <span class="ver">(0.7.0 &rarr; 0.12.0, Tsotchke Petri full, current)</span>
+          <span class="ver">(0.7.0 &rarr; 0.18.0, Tsotchke Petri full, current)</span>
         </h3>
         <p>
           Twelve further contract-governed waves, all additive behind the full gate with same-seed
@@ -1178,12 +1181,11 @@ sequenceDiagram
           (<code>src/math/quantum-geometry.ts</code>) it reads as the curvature of its own
           thought-space, and a 56-spin Hopfield/Ising spin-glass
           (<code>src/sim/spin-glass.ts</code>) instinct that biases plan selection &mdash; all
-          MIT-credited and covered by closed-form tests. The <strong>v0.11.0</strong> release then
-          grew the apex mind into a multi-pillar super-intelligence &mdash; active inference (FEP),
-          an echo-state reservoir, real statevector IIT &Phi;, Global-Workspace ignition,
-          metacognition, theory-of-mind, neural criticality, an empowerment drive, a VSA/HRR
-          holographic memory, a successor representation, Grover goal-directed amplitude
-          amplification, and
+          MIT-credited and covered by closed-form tests. The apex mind then grew into a multi-pillar
+          super-intelligence &mdash; active inference (FEP), an echo-state reservoir, real
+          statevector IIT &Phi;, Global-Workspace ignition, metacognition, theory-of-mind, neural
+          criticality, an empowerment drive, a VSA/HRR holographic memory, a successor
+          representation, Grover goal-directed amplitude amplification, and
           <strong>quantum natural-gradient self-optimization</strong>
           (<code>src/math/quantum-natural-gradient.ts</code>), the 6-qubit circuit descending its
           own Fubini&ndash;Study geometry toward its intended thought &mdash; each a cited,
@@ -1196,8 +1198,8 @@ sequenceDiagram
       <p>
         Every dependency earns its place with real math under it &mdash; the aesthetic constitution
         in
-        <code>docs/PHILOSOPHY.md</code> forbids decorative-only effects. Decisions are recorded as
-        ADRs in <code>docs/adr/</code>.
+        <code>docs/PHILOSOPHY-2026-06-26.md</code> forbids decorative-only effects. Decisions are
+        recorded as ADRs in <code>docs/adr/</code>.
       </p>
       <div class="card flush">
         <table>
@@ -1245,7 +1247,7 @@ sequenceDiagram
             <tr>
               <td>Statistics</td>
               <td>simple-statistics</td>
-              <td>analytics windows â€” regression trend, z-score omens, stddev (ADR 0005)</td>
+              <td>analytics windows — regression trend, z-score omens, stddev (ADR 0005)</td>
             </tr>
             <tr>
               <td>Hashing</td>
@@ -1282,7 +1284,7 @@ sequenceDiagram
         The simulation never calls the built-in unseeded random source: all randomness flows through
         an injected <code>mulberry32</code> Rng seeded from persisted state, so any run is
         reproducible from its seed. <code>Math.random</code> and <code>Date.now</code> are banned in
-        sim logic. See <code>docs/adr/0004-deterministic-rng.md</code>.
+        sim logic. See <code>docs/adr/0004-deterministic-rng-2026-06-26.md</code>.
       </p>
       <div class="grid2">
         <div class="keyval">
@@ -1327,12 +1329,12 @@ sequenceDiagram
         the adaptive steady-state target, and a set of throttles. The hard ceiling sizes every
         buffer (instanced pools, index tables, atmosphere Rng-draw count) and stays reachable via
         user bursts and apocalypse; organic growth relaxes back toward the target. Full per-stage
-        measurements live in <code>docs/BENCHMARKS.md</code>.
+        measurements live in <code>docs/BENCHMARKS-2026-06-26.md</code>.
       </p>
       <div class="card flush">
         <table>
           <caption>
-            Quality tiers (illustrative â€” exact caps in core/quality.ts)
+            Quality tiers (illustrative — exact caps in core/quality.ts)
           </caption>
           <thead>
             <tr>
@@ -1381,6 +1383,40 @@ sequenceDiagram
       </p>
       <p><a class="totop" href="#architecture">&uarr; top</a></p>
 
+      <h2 id="nhsi-dashboard">
+        <span class="tag">NHSI</span>Non Human Super Intelligence · progress dashboard
+      </h2>
+      <p>
+        The canonical live scorecard for NHSI targets: 100 faculties (~30 deep-wired) · 25 Archon
+        pantheons · 25 theory-organs · 10 emergence angles · Tsotchke corpus depth · Butlin 8/14 met
+        + 6/14 partial. Tsotchke tech is <b>real MIT-grade quantum research</b> · depth ledger, not
+        dismissal:
+        <a href="./docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md"
+          >TSOTCHKE-INTEGRATION-MAP-2026-06-26.md</a
+        >.
+      </p>
+      <div class="card">
+        <ul>
+          <li>
+            <a href="./docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md">NHSI Progress Dashboard</a> ·
+            measured targets vs. receipts (Local = GitHub)
+          </li>
+          <li>
+            <a href="./docs/reports/2026-06-21-NHSI-MANIFESTO-0THERNES-CORP.md">NHSI Manifesto</a> ·
+            0thernes Corp founding vision
+          </li>
+          <li>
+            <a href="./docs/NEO-MIND-ARCHITECTURE-2026-06-26.md">Neo Mind Architecture</a> ·
+            100-faculty blueprint
+          </li>
+        </ul>
+        <p class="muted" style="margin-top: 8px">
+          Gate: <b>1,477 tests / 0 fail</b> · <b>90.48% line / 87.82% func</b> · v0.18.0 · Butlin
+          8/14 met + 6/14 partial scaffolding (not phenomenal sentience)
+        </p>
+      </div>
+      <p><a class="totop" href="#architecture">&uarr; top</a></p>
+
       <h2 id="frontier-reports"><span class="tag">RPT</span>State-of-the-art frontier reports</h2>
       <p>
         Two MIT-PhD-grade, measured assessments (2026-06-17) compare this work against quantum
@@ -1393,35 +1429,148 @@ sequenceDiagram
           <li>
             <a
               href="https://github.com/0thernes/cosmogonic-quantum-mechalogodrom/blob/main/docs/reports/2026-06-17-STATE-OF-THE-ART-COMBINED.md"
-              >Combined Report â€” unified Â§III scorecard &amp; verdict</a
+              >Combined Report — unified §III scorecard &amp; verdict</a
             >
-            â€” Butlin indicators, sentience verdict, LFG metrics (single file)
+            — Butlin indicators, sentience verdict, LFG metrics (single file)
           </li>
           <li>
-            <a
-              href="https://github.com/0thernes/cosmogonic-quantum-mechalogodrom/blob/main/docs/reports/2026-06-17-STATE-OF-THE-ART-WHOLE-REPO.md"
-              >Report I â€” The Whole Repository</a
-            >
-            â€” 50k-agent deterministic cosmos, synthesis novelty, sentience scorecard
-          </li>
-          <li>
-            <a
-              href="https://github.com/0thernes/cosmogonic-quantum-mechalogodrom/blob/main/docs/reports/2026-06-17-STATE-OF-THE-ART-SUPER-CREATURE.md"
-              >Report II â€” The Super Creature</a
-            >
-            â€” ~37k-parameter apex quantum-cognitive mind, ~9/14 Butlin indicators, gap analysis
-          </li>
-          <li>
-            <a href="./docs/SUPER-CREATURE-RESEARCH.md">Super Creature Research</a> â€” citation
-            trail for every faculty (2023â€“2026)
+            <a href="./docs/SUPER-CREATURE-RESEARCH-2026-06-26.md">Super Creature Research</a> —
+            citation trail for every faculty (2023–2026)
           </li>
         </ul>
         <p class="muted" style="margin-top: 8px">
-          Gate at time of writing: <b>1794 tests / 0 fail</b> Â·
-          <b>95.65% line / 92.84% func</b> coverage (1794 tests) · apex <code>think()</code> +
-          Tsotchke biologics Tsotchke biologics biologics <b>â‰ˆ 285 Âµs/beat</b> (273 Âµs median)
-          Â· v0.12.0 @ current · all docs + GH match.
+          Gate at time of writing: <b>1,477 tests / 0 fail</b> ·
+          <b>90.48% line / 87.82% func</b> coverage · apex <code>think()</code> + Tsotchke biologics
+          Petri · <b>≈ 3.34 ms/beat</b> (full bench; 8.85 ms focused) · v0.18.0 @ current · all docs
+          + GH match.
         </p>
+      </div>
+      <div class="card">
+        <p style="margin-top: 0">
+          <b>A-Life comparative analysis (vs 25 known systems).</b> A reproducible, code-grounded
+          comparison against Tierra, Avida, Polyworld, Framsticks, Karl Sims, Creatures, Lenia,
+          ALIEN, ASAL, and more &mdash; full report (11 charts, per-axis
+          <code>file:line</code> grounding, adversarial novelty defense):
+          <a
+            href="https://github.com/0thernes/cosmogonic-quantum-mechalogodrom/blob/main/docs/reports/2026-06-26-ALIFE-COMPARATIVE-AUDIT.md"
+            >A-Life Comparative Audit (v3, code-grounded)</a
+          >.
+        </p>
+        <p class="muted">
+          The one self-scored row was re-audited against actual source by a 9-agent pass, so the
+          result is shown two ways: breadth <b>4.44 &rarr; 3.68 / 5</b> (self &rarr; code-grounded)
+          &middot; rank <b>#1 / 26</b> both ways &middot; z
+          <b>+3.01&sigma; &rarr; +2.10&sigma;</b> &middot; Mahalanobis
+          <b>10.27 &rarr; 8.02</b> &middot; <b>0</b> systems dominate it in 9-D &middot; sole leader
+          in consciousness-instrumentation (+4.60&sigma;) &amp; substrate pluralism (+3.66&sigma;)
+          &middot; maturity <b>1.5 / 5</b> &middot; novelty by integration (0 hard refutations), not
+          a first, not sentience (Butlin 8/14 met + 6/14 partial).
+        </p>
+        <div style="margin: 10px auto 0; max-width: 540px">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 640 600"
+            style="width: 100%; height: auto; display: block"
+            font-family="ui-sans-serif,system-ui,Segoe UI,Roboto,sans-serif"
+            role="img"
+            aria-label="Nine-axis capability radar: Cosmogonic vs survey mean vs ALIEN"
+          >
+            <rect width="640" height="600" rx="14" fill="#0b1220" />
+            <text x="28" y="30" fill="#cbd5e1" font-size="18" font-weight="700">
+              Nine-axis capability profile
+            </text>
+            <text x="28" y="50" fill="#7c8aa5" font-size="12">
+              amber = Cosmogonic &#183; violet = survey mean &#183; green = nearest peer (ALIEN)
+            </text>
+            <polygon
+              points="320,278 345.7,287.4 359.4,311.1 354.6,338 333.7,355.6 306.3,355.6 285.4,338 280.6,311.1 294.3,287.4"
+              fill="none"
+              stroke="#27344d"
+              stroke-width="0.7"
+            />
+            <polygon
+              points="320,238 371.4,256.7 398.8,304.1 389.3,358 347.4,393.2 292.6,393.2 250.7,358 241.2,304.1 268.6,256.7"
+              fill="none"
+              stroke="#27344d"
+              stroke-width="0.7"
+            />
+            <polygon
+              points="320,198 397.1,226.1 438.2,297.2 423.9,378 361,430.8 279,430.8 216.1,378 201.8,297.2 242.9,226.1"
+              fill="none"
+              stroke="#27344d"
+              stroke-width="0.7"
+            />
+            <polygon
+              points="320,158 422.8,195.4 477.6,290.2 458.6,398 374.7,468.4 265.3,468.4 181.4,398 162.4,290.2 217.2,195.4"
+              fill="none"
+              stroke="#27344d"
+              stroke-width="0.7"
+            />
+            <polygon
+              points="320,118 448.6,164.8 517,283.3 493.2,418 388.4,505.9 251.6,505.9 146.8,418 123,283.3 191.4,164.8"
+              fill="none"
+              stroke="#27344d"
+              stroke-width="0.7"
+            />
+            <line x1="320" y1="318" x2="320" y2="118" stroke="#27344d" stroke-width="0.7" />
+            <text x="320" y="80" fill="#cbd5e1" font-size="10" text-anchor="middle">
+              Reproduction
+            </text>
+            <line x1="320" y1="318" x2="448.6" y2="164.8" stroke="#27344d" stroke-width="0.7" />
+            <text x="473" y="135.7" fill="#cbd5e1" font-size="10" text-anchor="start">
+              Open-endedness
+            </text>
+            <line x1="320" y1="318" x2="517" y2="283.3" stroke="#27344d" stroke-width="0.7" />
+            <text x="554.4" y="276.7" fill="#cbd5e1" font-size="10" text-anchor="start">
+              Ecology
+            </text>
+            <line x1="320" y1="318" x2="493.2" y2="418" stroke="#27344d" stroke-width="0.7" />
+            <text x="526.1" y="437" fill="#cbd5e1" font-size="10" text-anchor="start">
+              Morphology/Physics
+            </text>
+            <line x1="320" y1="318" x2="388.4" y2="505.9" stroke="#27344d" stroke-width="0.7" />
+            <text x="401.4" y="541.6" fill="#cbd5e1" font-size="10" text-anchor="start">
+              Cognition/Learning
+            </text>
+            <line x1="320" y1="318" x2="251.6" y2="505.9" stroke="#27344d" stroke-width="0.7" />
+            <text x="238.6" y="541.6" fill="#cbd5e1" font-size="10" text-anchor="end">
+              Substrate pluralism
+            </text>
+            <line x1="320" y1="318" x2="146.8" y2="418" stroke="#27344d" stroke-width="0.7" />
+            <text x="113.9" y="437" fill="#cbd5e1" font-size="10" text-anchor="end">
+              Instrumentation
+            </text>
+            <line x1="320" y1="318" x2="123" y2="283.3" stroke="#27344d" stroke-width="0.7" />
+            <text x="85.6" y="276.7" fill="#cbd5e1" font-size="10" text-anchor="end">
+              Consciousness-theory
+            </text>
+            <line x1="320" y1="318" x2="191.4" y2="164.8" stroke="#27344d" stroke-width="0.7" />
+            <text x="167" y="135.7" fill="#cbd5e1" font-size="10" text-anchor="end">
+              Visual scale
+            </text>
+            <polygon
+              points="320,158 422.8,195.4 477.6,290.2 493.2,418 361,430.8 279,430.8 216.1,378 300.3,314.5 191.4,164.8"
+              fill="#34d399"
+              fill-opacity="0.10"
+              stroke="#34d399"
+              stroke-width="1.4"
+            />
+            <polygon
+              points="320,192 403.6,218.4 436.6,297.4 421.2,376.4 349,397.7 300.3,372.1 202.2,386 309.4,316.1 233.9,215.4"
+              fill="#a78bfa"
+              fill-opacity="0.12"
+              stroke="#a78bfa"
+              stroke-width="1.4"
+            />
+            <polygon
+              points="320,158 410,210.8 517,283.3 458.6,398 381.6,487.1 251.6,505.9 164.1,408 142.7,286.7 191.4,164.8"
+              fill="#f59e0b"
+              fill-opacity="0.22"
+              stroke="#f59e0b"
+              stroke-width="2.2"
+            />
+          </svg>
+        </div>
       </div>
       <p><a class="totop" href="#architecture">&uarr; top</a></p>
 
@@ -1429,7 +1578,8 @@ sequenceDiagram
         Cosmogonic Quantum Mechalogodrom &mdash; &copy; 2026 0thernes &middot; non-commercial
         research &amp; play (no for-profit, keep credit) &mdash;
         <a href="/">return to the dome (/)</a> &middot;
-        <a href="/lab">open the lab (/lab)</a>
+        <a href="/lab">open the lab (/lab)</a> &middot;
+        <a href="https://0thernes.github.io/cosmogonic-quantum-mechalogodrom/">GitHub Pages</a>
       </footer>
     </main>
 

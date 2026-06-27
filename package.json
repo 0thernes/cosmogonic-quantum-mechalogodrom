@@ -1,12 +1,15 @@
 {
   "name": "cosmogonic-quantum-mechalogodrom",
-  "version": "0.16.1",
-  "description": "Tsotchke-powered Petri dish for digital biologics & proto-sentience. Full wiring of Eshkol (AD/GWT/consciousness language) + all Tsotchke repos (moonlab, QGTL, spin, libirrep, quake, PINN, PIMC, ulg, logo-lab, tensorcore, quantum_rng, asteroids, classical, homebrew). 15 BiologicForms from full corpus. Super Creature is the first spark; primordial-soup grows different forms of life/existence. Deterministic seeded math, not LLM. Grow What Thou Wilt. Bun + TS + Three.js. v0.16.1",
+  "version": "0.18.0",
+  "description": "Tsotchke-powered Petri dish for NHSI digital biologics & proto-sentience. 22+ Tsotchke repos integrated (see TSOTCHKE-INTEGRATION-MAP: deep + harvest + studied; LLM fenced). Eshkol AD/GWT, Moonlab, QGT, spin, libirrep, quake, ulg, logo, tensorcore, PINN, PIMC, rngs, asteroids, classical, homebrew. 26 BiologicForms · 25 Archons · 100 faculties (~30 deep-wired) · 25 ToM organs · 10 emergence angles · 8/14 met + 6/14 partial path. Deterministic Rng, not LLM. 0thernes Corp NHSI. Grow What Thou Wilt. v0.18.0",
   "license": "SEE LICENSE IN LICENSE",
   "private": true,
   "type": "module",
   "scripts": {
+    "prepare": "git config core.hooksPath .githooks && git config core.autocrlf input || true",
+    "predev": "bun scripts/sync-local.ts",
     "dev": "bun scripts/harvest-tsotchke-corpus.ts && bun --hot server.ts",
+    "pull": "bun scripts/sync-local.ts",
     "start": "bun server.ts",
     "build": "bun scripts/build.ts",
     "pages": "bun run build && bun scripts/build-pages.ts",
@@ -19,8 +22,12 @@
     "sbom": "bun scripts/sbom.ts",
     "bench": "bun bench/index.ts",
     "filemap": "bun scripts/gen-filemap.ts",
-    "check": "bun run format:check && bun run typecheck && bun run lint && bun test && bun run verify:receipts && bun run build",
+    "metrics": "bun scripts/codebase-metrics.ts",
+    "verify:facts": "bun scripts/verify-canonical-facts.ts",
+    "check": "bun run format:check && bun run typecheck && bun run lint && bun test && bun run verify:receipts && bun run sync:check && bun run build",
     "verify:receipts": "bun scripts/verify-receipts.ts",
+    "sync": "bun scripts/sync-surfaces.ts",
+    "sync:check": "bun scripts/sync-surfaces.ts --check",
     "harvest:tsotchke": "bun scripts/harvest-tsotchke-corpus.ts"
   },
   "dependencies": {
@@ -50,6 +57,6 @@
     "typescript": "^6.0.3"
   },
   "overrides": {
-    "dompurify": "^3.4.9"
+    "dompurify": "^3.4.11"
   }
 }

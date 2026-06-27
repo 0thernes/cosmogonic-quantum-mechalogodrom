@@ -1,3 +1,5 @@
+<!-- reviewed: 2026-06-27 | repo-wide consistency audit | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+
 # Code of Conduct
 
 ## Our pledge

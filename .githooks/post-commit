@@ -1,0 +1,27 @@
+#!/bin/sh
+# GOKU INSTANT TRANSMISSION — every commit ships straight to origin/main the instant it lands,
+# regardless of which branch or worktree it was made on. Per the binding NO-PR / work-on-main law
+# the only destination is `main`, so the local branch name is irrelevant: HEAD goes to origin/main.
+# No manual "git push", no PR, no per-branch round-trip — local commit → main → GitHub → CI/CD/Pages.
+#
+# - Pushes HEAD to origin/main. On a non-fast-forward (someone pushed first), rebase --autostash onto
+#   main and retry once; on a real conflict, the commit simply stays local (safe) and we log how to finish.
+# - NON-blocking: a failed push never harms the commit.
+# - Opt out per clone with:  git config hooks.autopush false   (or one commit: CQM_NO_AUTOPUSH=1 git commit)
+# Enabled via core.hooksPath .githooks (wired by the `prepare` script on install).
+[ "$(git config --bool hooks.autopush 2>/dev/null)" = "false" ] && exit 0
+[ "$CQM_NO_AUTOPUSH" = "1" ] && exit 0
+git rev-parse --verify -q HEAD >/dev/null 2>&1 || exit 0
+
+if git push origin HEAD:main >/dev/null 2>&1; then
+  exit 0
+fi
+# Rejected (origin/main moved). Rebase onto it and retry once; abort cleanly on conflict.
+if git pull --rebase --autostash origin main >/dev/null 2>&1; then
+  git push origin HEAD:main >/dev/null 2>&1 \
+    || echo "post-commit: push to main deferred (commit is safe locally; run 'git push origin HEAD:main')."
+else
+  git rebase --abort >/dev/null 2>&1
+  echo "post-commit: rebase conflict vs origin/main — commit is local; run 'git pull --rebase origin main' then 'git push origin HEAD:main'."
+fi
+exit 0

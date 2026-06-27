@@ -36,7 +36,7 @@ export interface QualityProfile {
    * ORGANIC growth — auto-split and sparse-respawn — stops at this count, so an idle world
    * settles here. Since 0.5.0 this equals {@link maxEntities} on EVERY tier (the ultra 6,500
    * adaptive throttle was retired on user feedback — an idle ultra world now fills its 10,000
-   * ceiling, carried by the per-frame neighbor-query throttles in docs/BENCHMARKS.md). The
+   * ceiling, carried by the per-frame neighbor-query throttles in docs/BENCHMARKS-2026-06-26.md). The
    * field is retained because bursts can still transiently exceed it on tiers where it might
    * diverge from the ceiling again. Must be ≤ maxEntities.
    */
@@ -198,6 +198,14 @@ export interface SimContext {
   scene: THREE.Scene;
   quality: QualityProfile;
   rng: Rng;
+  /**
+   * Dedicated seeded sub-stream for heritable genetics (organism trait genomes + their
+   * inheritance on auto-split). Kept OFF the main `rng` so genome draws never shift the
+   * primary entity draw order (same golden-ratio-mix discipline as `econRng`/`superRng`).
+   * Optional for back-compat: headless test contexts may omit it, in which case spawn falls
+   * back to `rng` (legacy behavior).
+   */
+  genomeRng?: Rng;
   grid: SpatialHash<Entity>;
   morphs: MorphType[];
   geos: THREE.BufferGeometry[];
@@ -328,6 +336,8 @@ export interface TelemetrySnapshot {
   bioMomentum: number;
   /** Live count of registered NHI super-minds (telemetry tally). */
   nhi: number;
+  /** Mean brutal-god power across petri archons (0..1) — NHSI pantheon telemetry. */
+  godPower?: number;
   /** Current camera view-mode name (HUD View/Speed/Render box). */
   viewName: string;
   /** Current time-dilation multiplier (HUD box; 0 = paused, 1 = realtime). */

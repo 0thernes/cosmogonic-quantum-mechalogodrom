@@ -4,7 +4,7 @@
  * scales toward the directive's **50,000-entity** ceiling. Headless (the determinism-test fixture
  * pattern — no GL context needed for the data path), deterministic seed, and it just measures
  * wall-clock ms/frame at a ladder of population sizes. NOT part of `bun run bench` (it's heavy); run it
- * on demand and record the numbers in docs/BENCHMARKS.md. Standalone-only (`import.meta.main`).
+ * on demand and record the numbers in docs/BENCHMARKS-2026-06-26.md. Standalone-only (`import.meta.main`).
  */
 import * as THREE from 'three';
 import { mulberry32 } from '../src/math/rng';
@@ -12,6 +12,7 @@ import { SpatialHash } from '../src/math/spatial-hash';
 import { createGeometryCache } from '../src/sim/geometry-cache';
 import { createMorphotypes } from '../src/sim/morphotypes';
 import { EntityManager } from '../src/sim/entities';
+import { SINGULARITY_FIELD, SingularitySystem } from '../src/sim/singularities';
 import type { AuditTrail } from '../src/logging/audit';
 import type { Entity, SimContext, SimState } from '../src/types';
 
@@ -91,6 +92,53 @@ function profile(n: number, frames: number, warm: number): { ms: number; live: n
   return { ms, live: entities.list.length };
 }
 
+/**
+ * Profile JUST the singularity force pass with a hole active at population `n`. A WHITE hole is
+ * used (non-consuming) so the population stays at `n` and we measure the steady O(k) reach-query +
+ * exact r⁻² cost — NOT one-off consumption. Proves the cost is ~FLAT as `n` climbs (the retired
+ * O(n) sweep grew with `n`): k = entities within REACH is held roughly constant by the areal-density
+ * scaling, so the singularity's marginal cost no longer scales with the population. Returns the
+ * median ms/frame for `singularities.update` and the measured in-REACH count `k`.
+ */
+function profileHole(
+  n: number,
+  frames: number,
+  warm: number,
+): { ms: number; live: number; k: number } {
+  const ctx = makeCtx(0x5106e7, n);
+  const entities = new EntityManager(ctx);
+  entities.reset(n);
+  const sys = new SingularitySystem(ctx, entities);
+  const state = ctx.state;
+  const center = new THREE.Vector3(0, 16 * 2.5, 0); // mid-field, inside the populated core
+  sys.summon('whitehole', center);
+  const rebuild = (): void => {
+    if (state.frame % 2 === 0) {
+      ctx.grid.clear();
+      const list = entities.list;
+      for (let i = 0; i < list.length; i++) {
+        const e = list[i];
+        if (e) ctx.grid.insert(e);
+      }
+    }
+  };
+  const samples: number[] = [];
+  const tick = (measure: boolean): void => {
+    state.frame++;
+    state.elapsed += 1 / 60;
+    rebuild();
+    if (!sys.active) sys.summon('whitehole', center); // keep one alive across the whole run
+    const t0 = measure ? performance.now() : 0;
+    sys.update(1 / 60, state.elapsed);
+    if (measure) samples.push(performance.now() - t0);
+  };
+  for (let f = 0; f < warm; f++) tick(false);
+  for (let f = 0; f < frames; f++) tick(true);
+  samples.sort((a, b) => a - b);
+  const k = ctx.grid.query(center.x, center.z, SINGULARITY_FIELD.REACH).length;
+  return { ms: samples[samples.length >> 1] ?? 0, live: entities.list.length, k };
+}
+
 if (import.meta.main) {
   const LADDER = [2000, 5000, 10000, 25000, 50000];
   console.log('\nPopulation scale profile — entity sim pipeline (update + grid), headless\n');
@@ -101,6 +149,16 @@ if (import.meta.main) {
     const verdict = ms <= 16.7 ? '✅ 60fps' : ms <= 33.3 ? '🟨 30fps' : '🟥 < 30fps';
     console.log(
       `  ${String(n).padStart(5)} | ${String(live).padStart(6)} | ${ms.toFixed(2).padStart(8)} | ${verdict}`,
+    );
+  }
+
+  console.log('\nSingularity force pass — O(k) reach query, white hole active (median ms/frame)\n');
+  console.log('     N  |  live  |    k   | sing ms | note (cost ~flat ⇒ O(k), not O(n))');
+  console.log('  ------+--------+--------+---------+-----------------------------------');
+  for (const n of LADDER) {
+    const { ms, live, k } = profileHole(n, 120, 40);
+    console.log(
+      `  ${String(n).padStart(5)} | ${String(live).padStart(6)} | ${String(k).padStart(6)} | ${ms.toFixed(3).padStart(7)} | k = entities within REACH`,
     );
   }
   console.log('');

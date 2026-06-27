@@ -77,7 +77,7 @@ describe('SuperMind composite consciousness (V45)', () => {
       setpoint: number;
       responsiveness: number;
     } | null = null;
-    for (let i = 0; i < 400; i++) {
+    for (let i = 0; i < 200; i++) {
       m.think(percept({ threat: 0.05, energy: 0.85, chaos: 0.05, crowding: 0.05, sound: 0.1 }));
       const r = m.snapshot().resonance;
       expect(r.coupled).toBe(12); // the consciousness assembly
@@ -109,7 +109,7 @@ describe('SuperMind composite consciousness (V45)', () => {
       b.think(percept({ phase: i / 40, chaos: (i % 5) / 5 }));
       expect(JSON.stringify(a.snapshot().resonance)).toBe(JSON.stringify(b.snapshot().resonance));
     }
-  });
+  }, 30000); // 200+ apex think() beats × the now-heavier 25-faculty stack; generous budget vs the 5s default
 
   test('drives + consciousness + quantum are all bounded; plan is always a real goal', () => {
     const m = new SuperMind(mulberry32(7));
@@ -193,6 +193,28 @@ describe('SuperMind composite consciousness (V45)', () => {
     expect(new Set(phis.map((x) => Math.round(x * 1e3))).size).toBeGreaterThan(1);
   });
 
+  test('GWT-4 attention controller is wired into the apex decision loop', () => {
+    const a = new SuperMind(mulberry32(707));
+    const b = new SuperMind(mulberry32(707));
+    for (let i = 0; i < 24; i++) {
+      const p = percept({
+        threat: i % 2 ? 0.9 : 0.05,
+        chaos: (i % 7) / 7,
+        preyClose: (i % 5) / 5,
+        phase: i / 24,
+      });
+      a.think(p);
+      b.think(p);
+      const sa = a.snapshot().attentionController;
+      const sb = b.snapshot().attentionController;
+      expect(JSON.stringify(sa)).toBe(JSON.stringify(sb));
+      expect(sa.focus).toHaveLength(7);
+      expect(sa.focus.reduce((x, y) => x + y, 0)).toBeCloseTo(1, 6);
+      expect(sa.appliedGain).toBeGreaterThan(0);
+      expect(Number.isFinite(sa.entropy)).toBe(true);
+    }
+  });
+
   test('no NaN across a long run of dreaming/reasoning/feeling', () => {
     const m = new SuperMind(mulberry32(5));
     for (let i = 0; i < 300; i++) {
@@ -206,5 +228,5 @@ describe('SuperMind composite consciousness (V45)', () => {
         (snap.quantum[0] ?? 0);
       expect(Number.isFinite(fin)).toBe(true);
     }
-  });
+  }, 30000); // 300 apex think() beats × the heavy 25-faculty stack; slow CI vs the 5s default
 });

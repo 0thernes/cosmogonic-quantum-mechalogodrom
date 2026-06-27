@@ -12,6 +12,7 @@
  * and let the same-seed golden silently stop covering a leaf. Verified clean today; pinned so it stays.
  */
 import { describe, expect, test } from 'bun:test';
+import { readFileSync } from 'node:fs';
 
 /** Strip comments so a commented-out import is not a false positive (keep `://`). */
 function stripComments(src: string): string {
@@ -30,16 +31,13 @@ function importsLayer(spec: string, layer: string): boolean {
   return new RegExp(`(^|/)${layer}(/|$)`).test(spec);
 }
 
-async function scan(
-  dir: string,
-  forbidden: readonly string[],
-): Promise<{ offenders: string[]; scanned: number }> {
+function scan(dir: string, forbidden: readonly string[]): { offenders: string[]; scanned: number } {
   const offenders: string[] = [];
   let scanned = 0;
   const glob = new Bun.Glob(dir);
-  for await (const path of glob.scan('.')) {
+  for (const path of glob.scanSync('.')) {
     scanned++;
-    const code = stripComments(await Bun.file(path).text());
+    const code = stripComments(readFileSync(path, 'utf8'));
     for (const spec of importSpecifiers(code)) {
       for (const layer of forbidden) {
         if (importsLayer(spec, layer))
@@ -63,14 +61,14 @@ describe('architecture — leaves never import the layers above them', () => {
     expect(importsLayer('../observer/x', 'server')).toBe(false); // 'server' ⊄ 'observer'
   });
 
-  test('src/sim/** never imports the UI or server layers', async () => {
-    const { offenders, scanned } = await scan('src/sim/**/*.ts', ['ui', 'server']);
+  test('src/sim/** never imports the UI or server layers', () => {
+    const { offenders, scanned } = scan('src/sim/**/*.ts', ['ui', 'server']);
     expect(scanned).toBeGreaterThan(30); // sanity: the glob matched the sim files
     expect(offenders).toEqual([]);
   });
 
-  test('src/math/** imports only ../types + external libs (no sim/ui/server/core/audio/logging)', async () => {
-    const { offenders, scanned } = await scan('src/math/**/*.ts', [
+  test('src/math/** imports only ../types + external libs (no sim/ui/server/core/audio/logging)', () => {
+    const { offenders, scanned } = scan('src/math/**/*.ts', [
       'sim',
       'ui',
       'server',

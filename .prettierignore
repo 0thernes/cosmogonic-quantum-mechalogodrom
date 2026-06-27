@@ -8,6 +8,9 @@ docs/FILE-MAP.md
 # breaks the LOCAL gate (CI is unaffected — it runs on a clean checkout). See the multi-context note.
 .claude
 coverage
+# Generated A-Life comparison assets (SVG charts + stats JSON emitted by
+# scripts/alife-comparison-stats.ts). Re-running the generator must never trip the formatter.
+docs/reports/assets
 # Throwaway scratch/verify scripts a session leaves in the root (e.g. __verify_*.ts). They are not in
 # tsc's `include` nor oxlint's scope, but `prettier --check .` scans them and a stray one breaks the
 # LOCAL gate. Ignore the `__`-prefixed scratch convention so the daily gate stays robust to cruft.
@@ -23,3 +26,8 @@ mcps
 mcps
 mcps/**
 **/mcps/**
+# hacklm-memory tool state (per-session decisions/instructions/preferences/quirks/security notes).
+# Tool-owned, not product source — same category as .claude/mcps. The tool emits *undated* working
+# copies (.memory/decisions.md …) alongside the tracked dated snapshots; without this they trip
+# `prettier --check .` and red the LOCAL gate (CI runs on a clean checkout and is unaffected).
+.memory

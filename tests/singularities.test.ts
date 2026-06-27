@@ -14,10 +14,11 @@ import { describe, expect, test } from 'bun:test';
 import * as THREE from 'three';
 import { mulberry32 } from '../src/math/rng';
 import { SpatialHash } from '../src/math/spatial-hash';
+import { GRID_CELL, ULTRA_GRID_CELL } from '../src/sim/constants';
 import { createGeometryCache } from '../src/sim/geometry-cache';
 import { createMorphotypes } from '../src/sim/morphotypes';
 import { EntityManager } from '../src/sim/entities';
-import { SINGULARITY_KINDS, SingularitySystem } from '../src/sim/singularities';
+import { SINGULARITY_FIELD, SINGULARITY_KINDS, SingularitySystem } from '../src/sim/singularities';
 import type { AuditTrail } from '../src/logging/audit';
 import type { Entity, SimContext, SimState } from '../src/types';
 
@@ -61,7 +62,9 @@ function makeCtx(seed: number, maxEntities: number): SimContext {
       starCount: 10,
     },
     rng,
-    grid: new SpatialHash<Entity>(8),
+    // Mirror world.ts:436 — the production grid cell size is tier-dependent, so coverage/exact-
+    // physics tests run at the SHIPPED resolution (10 above the 5,000 ultra threshold, else 16).
+    grid: new SpatialHash<Entity>(maxEntities > 5000 ? ULTRA_GRID_CELL : GRID_CELL),
     morphs: createMorphotypes(rng, geos.length),
     geos,
     state: makeState(),
@@ -71,6 +74,17 @@ function makeCtx(seed: number, maxEntities: number): SimContext {
 }
 
 const CENTER = new THREE.Vector3(0, 32, 0);
+
+/**
+ * Rebuild the shared spatial hash from the live population — mirrors the world.ts per-frame step
+ * (clear + insert every entity) that runs BEFORE singularities.update. The O(k) force passes query
+ * this hash, so a test that exercises consume/eject/convert must populate it first, exactly as the
+ * real frame loop does (world.ts:923). Insert order = list order, so the query stays deterministic.
+ */
+function rebuildGrid(ctx: SimContext, entities: EntityManager): void {
+  ctx.grid.clear();
+  for (const e of entities.list) if (e) ctx.grid.insert(e);
+}
 
 describe('SingularitySystem', () => {
   test('SINGULARITY_KINDS is the five-effect cycle, all distinct', () => {
@@ -151,6 +165,7 @@ describe('SingularitySystem', () => {
     sys.summon('blackhole', CENTER.clone());
     for (let f = 0; f < 40; f++) {
       ctx.state.frame = f;
+      rebuildGrid(ctx, ent); // the O(k) hole reads the shared hash (world.ts populates it per frame)
       sys.update(0.016, f * 0.016);
     }
     expect(ent.list.includes(nhi)).toBe(true); // immune — ejected, never consumed
@@ -182,7 +197,10 @@ describe('SingularitySystem', () => {
     }
     const before = entities.list.length;
     sys.summon('blackhole', CENTER);
-    for (let f = 0; f < 5; f++) sys.update(1 / 60, f / 60);
+    for (let f = 0; f < 5; f++) {
+      rebuildGrid(ctx, entities); // refresh the hash each frame so consumed bodies leave it
+      sys.update(1 / 60, f / 60);
+    }
     expect(entities.list.length).toBeLessThan(before);
     expect(sys.consumed).toBeGreaterThan(0);
   });
@@ -197,6 +215,7 @@ describe('SingularitySystem', () => {
     e!.position.set(CENTER.x + 2, CENTER.y, CENTER.z); // 2 units from centre — inside the horizon
     const dBefore = e!.position.distanceTo(CENTER);
     sys.summon('whitehole', CENTER);
+    rebuildGrid(ctx, entities);
     sys.update(1 / 60, 0);
     const dAfter = e!.position.distanceTo(CENTER);
     expect(dAfter).toBeGreaterThan(dBefore + 10); // thrown out well past where it was
@@ -212,6 +231,7 @@ describe('SingularitySystem', () => {
     e!.position.set(CENTER.x + 3, CENTER.y, CENTER.z);
     const before = e!.material.color.clone();
     sys.summon('strangestar', CENTER);
+    rebuildGrid(ctx, entities);
     sys.update(1 / 60, 0);
     // The strange-matter stain is a fixed quark-green; the colour must have changed.
     expect(e!.material.color.equals(before)).toBe(false);
@@ -271,6 +291,7 @@ describe('SingularitySystem', () => {
       for (let f = 0; f < 120; f++) {
         state.frame++;
         state.elapsed += 1 / 60;
+        rebuildGrid(ctx, entities); // the O(k) hole + behaviors both read the shared hash
         sys.update(1 / 60, state.elapsed);
         entities.update(1 / 60, state.elapsed);
       }
@@ -282,5 +303,327 @@ describe('SingularitySystem', () => {
       return out;
     };
     expect(run()).toEqual(run());
+  });
+
+  test('O(k) reach query visits EVERY in-REACH entity exactly once (and only those) at N ≥ 25k, with exact un-strided r⁻²', () => {
+    const N = 25000;
+    const { REACH, REACH2, HORIZON, WARP_R_MULT, G, ACCEL_MAX } = SINGULARITY_FIELD;
+    const ctx = makeCtx(2026, N + 64);
+    const entities = new EntityManager(ctx);
+    entities.reset(N);
+    expect(entities.list.length).toBe(N);
+    const sys = new SingularitySystem(ctx, entities);
+    const list = entities.list;
+
+    // Two PROBES at clean radii — outside the warp shell (r > WARP_R_MULT·HORIZON ⇒ no time
+    // dilation) and inside REACH, with G/r² < ACCEL_MAX (uncapped). Each must receive a PURE r⁻²
+    // kick of magnitude exactly G·dt/r²; a second (double) visit would double it, so this falsifies
+    // any accidental re-application — and proves the ultra-tier half-rate stride is truly gone.
+    const rA = WARP_R_MULT * HORIZON + 20; // 110: clean, uncapped, inside REACH
+    const rB = 200; // a second clean radius
+    expect(G / (rA * rA)).toBeLessThan(ACCEL_MAX); // not clamped → tests the TRUE r⁻², not the cap
+    expect(G / (rB * rB)).toBeLessThan(ACCEL_MAX);
+    expect(rB).toBeLessThan(REACH);
+    const probeA = list[0]!;
+    const probeB = list[1]!;
+    probeA.position.set(CENTER.x + rA, CENTER.y, CENTER.z);
+    probeB.position.set(CENTER.x + rB, CENTER.y, CENTER.z);
+
+    // Populate the shared hash from the live population (the world.ts per-frame step the O(k) pass
+    // relies on), then prove the HASH-LEVEL property directly: the REACH query buffer (a superset of
+    // the 3D sphere) holds each entity at most once, and every truly in-REACH body is present.
+    rebuildGrid(ctx, entities);
+    const buf = [...ctx.grid.query(CENTER.x, CENTER.z, REACH)]; // copy: query returns a shared buffer
+    expect(new Set(buf).size).toBe(buf.length); // SpatialHash invariant: one cell per entity ⇒ no dup
+    const bufSet = new Set(buf);
+
+    // Snapshot every velocity + position and classify each body by TRUE 3D distance to the centre.
+    const bvx = new Float64Array(N);
+    const bvy = new Float64Array(N);
+    const bvz = new Float64Array(N);
+    const bpx = new Float64Array(N);
+    const bpy = new Float64Array(N);
+    const bpz = new Float64Array(N);
+    const inReachMask = new Uint8Array(N);
+    let inReach = 0;
+    let outReach = 0;
+    let coverageOk = true;
+    for (let i = 0; i < N; i++) {
+      const e = list[i]!;
+      const dx = CENTER.x - e.position.x;
+      const dy = CENTER.y - e.position.y;
+      const dz = CENTER.z - e.position.z;
+      const isIn = dx * dx + dy * dy + dz * dz <= REACH2;
+      inReachMask[i] = isIn ? 1 : 0;
+      if (isIn) {
+        inReach++;
+        if (!bufSet.has(e)) coverageOk = false; // an in-REACH body the query MISSED → fail
+      } else {
+        outReach++;
+      }
+      const v = e.userData.vel;
+      bvx[i] = v.x;
+      bvy[i] = v.y;
+      bvz[i] = v.z;
+      bpx[i] = e.position.x;
+      bpy[i] = e.position.y;
+      bpz[i] = e.position.z;
+    }
+    expect(coverageOk).toBe(true); // every in-REACH entity is in the query buffer (complete coverage)
+    expect(inReach).toBeGreaterThan(5000); // the heavy regime is genuinely exercised at N ≥ 25k
+    expect(outReach).toBeGreaterThan(0); // …and the query EXCLUDES distant bodies — the O(k) property
+
+    const aBefore = probeA.userData.vel.clone();
+    const bBefore = probeB.userData.vel.clone();
+
+    // White hole: non-destructive (no consumption), so list indices are stable and the force-level
+    // coverage is a clean 1:1 with the in-REACH set. One exact-physics frame.
+    sys.summon('whitehole', CENTER);
+    sys.update(1 / 60, 0);
+
+    // FORCE-LEVEL coverage: a body's state changed ⟺ it was in REACH. Out-of-REACH bodies are
+    // byte-untouched (the query never visited them); in-REACH bodies all moved (the force is non-zero
+    // everywhere r² ≥ 100 > 1e-6, which holds since the centre's y-offset keeps every body ≥ 10 away).
+    let forceOk = true;
+    for (let i = 0; i < N; i++) {
+      const e = list[i]!;
+      const v = e.userData.vel;
+      const changed =
+        v.x !== bvx[i] ||
+        v.y !== bvy[i] ||
+        v.z !== bvz[i] ||
+        e.position.x !== bpx[i] ||
+        e.position.y !== bpy[i] ||
+        e.position.z !== bpz[i];
+      if (changed !== (inReachMask[i] === 1)) forceOk = false;
+    }
+    expect(forceOk).toBe(true);
+
+    // EXACT, un-strided r⁻²: |Δv| = G·dt/r² for each clean probe. Double-application ⇒ 2× ⇒ fails.
+    const dt = 1 / 60;
+    const dA = probeA.userData.vel.clone().sub(aBefore).length();
+    const dB = probeB.userData.vel.clone().sub(bBefore).length();
+    expect(dA).toBeCloseTo((G * dt) / (rA * rA), 6);
+    expect(dB).toBeCloseTo((G * dt) / (rB * rB), 6);
+  }, 60000);
+
+  test('greyhole: absorb half-cycle CONSUMES at the quarter cap (MAX_CONSUME>>2); emit half EJECTS without consuming', () => {
+    const { HORIZON, MAX_CONSUME } = SINGULARITY_FIELD;
+    const cap = MAX_CONSUME >> 2; // 6 — a quarter of a black hole's rate
+
+    // ABSORB phase: Math.sin(t·1.3) ≥ 0 at t=0. Park > cap bodies inside the horizon; one frame must
+    // eat EXACTLY the quarter cap — falsifying both the audited "greyhole never retains" bug
+    // (consumed===0) and an over-consume (consumed>cap).
+    const ctxA = makeCtx(31, 500);
+    const entA = new EntityManager(ctxA);
+    entA.reset(80);
+    for (let i = 0; i < cap + 6; i++) {
+      entA.list[i]!.position.set(CENTER.x + 4 + i * 0.4, CENTER.y, CENTER.z); // r ∈ [4, ~8.4] < HORIZON
+    }
+    const sysA = new SingularitySystem(ctxA, entA);
+    sysA.summon('greyhole', CENTER);
+    rebuildGrid(ctxA, entA);
+    sysA.update(1 / 60, 0); // t=0 ⇒ Math.sin(0) = 0 ≥ 0 ⇒ the absorb half-cycle (cap = MAX_CONSUME>>2)
+    expect(sysA.consumed).toBe(cap); // > 0 (not the audited bug) AND ≤ cap (no over-consume)
+
+    // EMIT phase: a t with Math.sin(t·1.3) < 0. A body inside the horizon is EJECTED, none consumed.
+    const ctxE = makeCtx(32, 500);
+    const entE = new EntityManager(ctxE);
+    entE.reset(50);
+    const body = entE.list[0]!;
+    body.position.set(CENTER.x + 3, CENTER.y, CENTER.z); // inside the horizon
+    const dBefore = body.position.distanceTo(CENTER);
+    const sysE = new SingularitySystem(ctxE, entE);
+    sysE.summon('greyhole', CENTER);
+    rebuildGrid(ctxE, entE);
+    const tEmit = 3; // sin(3·1.3)=sin(3.9) ≈ −0.69 < 0 ⇒ emit
+    expect(Math.sin(tEmit * 1.3)).toBeLessThan(0);
+    sysE.update(1 / 60, tEmit);
+    const dAfter = body.position.distanceTo(CENTER);
+    expect(dAfter).toBeGreaterThan(HORIZON); // ejected past the event horizon (to HORIZON·1.05)
+    expect(dAfter).toBeGreaterThan(dBefore + 10); // and well outward from where it started
+    expect(sysE.consumed).toBe(0); // the emit half NEVER eats
+    expect(entE.list.includes(body)).toBe(true); // ejected, not consumed
+  });
+
+  test('black hole: > MAX_CONSUME horizon-crossers ⇒ consumed === MAX_CONSUME in ONE frame, the eaten SUBSET = first-MAX_CONSUME in grid order, and it is deterministic', () => {
+    const { HORIZON, MAX_CONSUME, REACH } = SINGULARITY_FIELD;
+    const PLACED = 40; // > MAX_CONSUME (25)
+    const H2 = HORIZON * HORIZON;
+
+    // Deterministic scenario: PLACED normal bodies parked strictly inside the horizon on a golden-angle
+    // spiral (distinct cells, off dead-centre); the rest shoved far outside REACH so they never force
+    // or consume. No rng touches these positions, so the grid order — and thus the eaten subset — is a
+    // pure function of the seed.
+    const runScenario = (seed: number) => {
+      const ctx = makeCtx(seed, 600);
+      const ent = new EntityManager(ctx);
+      ent.reset(120);
+      for (let i = 0; i < PLACED; i++) {
+        const ang = i * 2.399963; // golden angle
+        const rad = 3 + (i % 7) * 1.5; // r ∈ [3, 12] < HORIZON
+        ent.list[i]!.position.set(
+          CENTER.x + Math.cos(ang) * rad,
+          CENTER.y,
+          CENTER.z + Math.sin(ang) * rad,
+        );
+      }
+      for (let i = PLACED; i < ent.list.length; i++) {
+        ent.list[i]!.position.set(CENTER.x + 1e6, CENTER.y, CENTER.z); // far outside REACH
+      }
+      const placed = ent.list.slice(0, PLACED); // hold refs to the parked bodies
+      const sys = new SingularitySystem(ctx, ent);
+      sys.summon('blackhole', CENTER);
+      rebuildGrid(ctx, ent);
+      // Predict the eaten subset BEFORE the update: grid-query order, in-horizon, first MAX_CONSUME.
+      const predicted: typeof placed = [];
+      for (const e of ctx.grid.query(CENTER.x, CENTER.z, REACH)) {
+        const dx = CENTER.x - e.position.x;
+        const dy = CENTER.y - e.position.y;
+        const dz = CENTER.z - e.position.z;
+        if (dx * dx + dy * dy + dz * dz < H2) {
+          predicted.push(e);
+          if (predicted.length === MAX_CONSUME) break;
+        }
+      }
+      sys.update(1 / 60, 0);
+      const survivalMask = placed.map((e) => ent.list.includes(e));
+      const predictedConsumedMask = placed.map((e) => predicted.includes(e));
+      return {
+        consumed: sys.consumed,
+        survivors: survivalMask.filter(Boolean).length,
+        survivalMask,
+        predictedConsumedMask,
+        predictedLen: predicted.length,
+      };
+    };
+
+    const r1 = runScenario(7);
+    expect(r1.predictedLen).toBe(MAX_CONSUME); // the cap is genuinely saturated this frame
+    expect(r1.consumed).toBe(MAX_CONSUME); // cap honored EXACTLY in one frame
+    expect(r1.survivors).toBe(PLACED - MAX_CONSUME);
+    // The eaten set is EXACTLY the predicted first-MAX_CONSUME in grid order: survived ⟺ not predicted.
+    for (let i = 0; i < PLACED; i++) {
+      expect(r1.survivalMask[i]).toBe(!r1.predictedConsumedMask[i]);
+    }
+    // DETERMINISM: a second identically-seeded run consumes the SAME subset (by placement index).
+    const r2 = runScenario(7);
+    expect(r2.survivalMask).toEqual(r1.survivalMask);
+  });
+
+  test('warp shell: a body at HORIZON < r < HORIZON·WARP_R_MULT is time-dilated (|Δv| < pure r⁻²) and redshifted', () => {
+    const { HORIZON, WARP_R_MULT, G } = SINGULARITY_FIELD;
+    const ctx = makeCtx(15, 500);
+    const ent = new EntityManager(ctx);
+    ent.reset(60);
+    const probe = ent.list[0]!;
+    const r = HORIZON + (WARP_R_MULT * HORIZON - HORIZON) * 0.5; // midway in the shell (= 56.25)
+    expect(r).toBeGreaterThan(HORIZON);
+    expect(r).toBeLessThan(WARP_R_MULT * HORIZON);
+    probe.position.set(CENTER.x + r, CENTER.y, CENTER.z);
+    probe.userData.vel.set(0, 0, 0); // start at rest so the single kick is the only contribution
+    const colorBefore = probe.material.color.clone();
+    const sys = new SingularitySystem(ctx, ent);
+    sys.summon('blackhole', CENTER); // sign > 0 ⇒ REDSHIFT
+    rebuildGrid(ctx, ent);
+    sys.update(1 / 60, 0);
+    const dt = 1 / 60;
+    const pure = (G * dt) / (r * r); // the UN-warped |Δv| this body would receive
+    const actual = probe.userData.vel.length();
+    // Time dilation scales the post-kick velocity by (1 − 0.42·k) < 1 ⇒ the real delta is STRICTLY less
+    // (deleting the dilation line would make actual === pure and fail this).
+    expect(actual).toBeLessThan(pure);
+    const k = 1 - (r - HORIZON) / (HORIZON * (WARP_R_MULT - 1));
+    expect(actual).toBeCloseTo(pure * (1 - 0.42 * k), 6);
+    // Redshift: the colour moved toward REDSHIFT (deleting the lerp would leave it byte-identical).
+    expect(probe.material.color.equals(colorBefore)).toBe(false);
+  }, 20000);
+
+  test('strange star: the O(k) CONV_R conversion recolours EVERY body inside the sphere and ONLY those, at N ≥ 25k', () => {
+    const { CONV_R2 } = SINGULARITY_FIELD;
+    const N = 25000;
+    const ctx = makeCtx(4242, N + 64);
+    const ent = new EntityManager(ctx);
+    ent.reset(N);
+    const list = ent.list;
+    const beforeR = new Float64Array(N);
+    const beforeG = new Float64Array(N);
+    const beforeB = new Float64Array(N);
+    const inConv = new Uint8Array(N);
+    let nIn = 0;
+    let nOut = 0;
+    for (let i = 0; i < N; i++) {
+      const e = list[i]!;
+      const dx = CENTER.x - e.position.x;
+      const dy = CENTER.y - e.position.y;
+      const dz = CENTER.z - e.position.z;
+      inConv[i] = dx * dx + dy * dy + dz * dz <= CONV_R2 ? 1 : 0;
+      if (inConv[i] === 1) nIn++;
+      else nOut++;
+      const c = e.material.color;
+      beforeR[i] = c.r;
+      beforeG[i] = c.g;
+      beforeB[i] = c.b;
+    }
+    expect(nIn).toBeGreaterThan(100); // a genuinely populated conversion zone
+    expect(nOut).toBeGreaterThan(0); // …and bodies outside it (the query EXCLUDES them)
+    const sys = new SingularitySystem(ctx, ent);
+    sys.summon('strangestar', CENTER);
+    rebuildGrid(ctx, ent);
+    sys.update(1 / 60, 0);
+    // in-CONV ⟺ recoloured to the fixed quark-green (0.18, 0.34, 0.12); out-CONV ⇒ byte-identical.
+    let ok = true;
+    for (let i = 0; i < N; i++) {
+      const c = list[i]!.material.color;
+      if (inConv[i] === 1) {
+        if (
+          Math.abs(c.r - 0.18) > 1e-6 ||
+          Math.abs(c.g - 0.34) > 1e-6 ||
+          Math.abs(c.b - 0.12) > 1e-6
+        ) {
+          ok = false;
+        }
+      } else if (c.r !== beforeR[i] || c.g !== beforeG[i] || c.b !== beforeB[i]) {
+        ok = false;
+      }
+    }
+    expect(ok).toBe(true);
+  }, 60000);
+
+  test('entropy: the i+=2 stride thermalizes EXACTLY the even-index bodies (odd untouched), deterministically, and raises chaos', () => {
+    const N = 2000;
+    const runEntropyFrame = (seed: number) => {
+      const ctx = makeCtx(seed, 4000); // densityScale = 1, no spread — entropy ignores the grid anyway
+      const ent = new EntityManager(ctx);
+      ent.reset(N);
+      const sys = new SingularitySystem(ctx, ent);
+      sys.summon('entropy', CENTER);
+      // Snapshot velocities AFTER summon (summon draws rng for the particle rig, not entity vel).
+      const before = ent.list.map((e) => e.userData.vel.clone());
+      const chaosBefore = ctx.state.chaos;
+      sys.update(1 / 60, 0); // one entropy frame: strides i += 2 over the list, kicks + greys
+      const changed = ent.list.map((e, i) => !e.userData.vel.equals(before[i]!));
+      let sum = 0; // a compact float checksum of the post-state velocities (bit-exact under replay)
+      for (const e of ent.list) {
+        const v = e.userData.vel;
+        sum += v.x * 1.000001 + v.y * 1.0000007 + v.z;
+      }
+      return { changed, chaosBefore, chaosAfter: ctx.state.chaos, sum, n: ent.list.length };
+    };
+    const r = runEntropyFrame(88);
+    expect(r.n).toBe(N);
+    // EXACTLY the even indices changed; odd indices are byte-identical — pins the i += 2 stride
+    // coverage AND its exclusion (a deleted/strided-wrong/distance-bounded loop would fail this).
+    let parityOk = true;
+    for (let i = 0; i < r.n; i++) {
+      if (r.changed[i] !== (i % 2 === 0)) parityOk = false;
+    }
+    expect(parityOk).toBe(true);
+    expect(r.chaosAfter).toBeGreaterThan(r.chaosBefore); // the global heat coupling
+    expect(r.chaosAfter).toBeLessThanOrEqual(10);
+    // DETERMINISM: same seed ⇒ bit-identical post-state (the ctx.rng draw order is reproducible).
+    const r2 = runEntropyFrame(88);
+    expect(r2.sum).toBe(r.sum);
+    expect(r2.changed).toEqual(r.changed);
   });
 });

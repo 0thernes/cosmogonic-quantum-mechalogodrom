@@ -1,0 +1,144 @@
+{
+  "note": "sensitivity of the A-Life headline stats to code-grounded re-scoring of the one self-scored row",
+  "selfScored": {
+    "axes": [
+      4,
+      3.5,
+      5,
+      4,
+      4.5,
+      5,
+      4.5,
+      4.5,
+      5
+    ],
+    "breadth": 4.444,
+    "rank": 1,
+    "percentile": 100,
+    "zPopulation": 3.01,
+    "zVsPeers": 3.843,
+    "mahalanobis": 10.27,
+    "dominatedBy9d": 0,
+    "leadOverNearestPeerBreadth": 0.944,
+    "perAxisZ": [
+      {
+        "axis": "Reproduction",
+        "score": 4,
+        "z": 0.49
+      },
+      {
+        "axis": "Open-endedness",
+        "score": 3.5,
+        "z": 0.21
+      },
+      {
+        "axis": "Ecology",
+        "score": 5,
+        "z": 1.43
+      },
+      {
+        "axis": "Morphology/Physics",
+        "score": 4,
+        "z": 0.61
+      },
+      {
+        "axis": "Cognition/Learning",
+        "score": 4.5,
+        "z": 1.72
+      },
+      {
+        "axis": "Substrate pluralism",
+        "score": 5,
+        "z": 3.9
+      },
+      {
+        "axis": "Instrumentation",
+        "score": 4.5,
+        "z": 1.32
+      },
+      {
+        "axis": "Consciousness-theory",
+        "score": 4.5,
+        "z": 4.75
+      },
+      {
+        "axis": "Visual scale",
+        "score": 5,
+        "z": 1.24
+      }
+    ]
+  },
+  "codeGrounded": {
+    "axes": [
+      4,
+      2.2,
+      3,
+      3.8,
+      3.8,
+      4.5,
+      4.3,
+      3.5,
+      4
+    ],
+    "breadth": 3.678,
+    "rank": 1,
+    "percentile": 100,
+    "zPopulation": 2.097,
+    "zVsPeers": 2.355,
+    "mahalanobis": 8.016,
+    "dominatedBy9d": 0,
+    "leadOverNearestPeerBreadth": 0.178,
+    "perAxisZ": [
+      {
+        "axis": "Reproduction",
+        "score": 4,
+        "z": 0.49
+      },
+      {
+        "axis": "Open-endedness",
+        "score": 2.2,
+        "z": -0.83
+      },
+      {
+        "axis": "Ecology",
+        "score": 3,
+        "z": 0.08
+      },
+      {
+        "axis": "Morphology/Physics",
+        "score": 3.8,
+        "z": 0.51
+      },
+      {
+        "axis": "Cognition/Learning",
+        "score": 3.8,
+        "z": 1.27
+      },
+      {
+        "axis": "Substrate pluralism",
+        "score": 4.5,
+        "z": 3.66
+      },
+      {
+        "axis": "Instrumentation",
+        "score": 4.3,
+        "z": 1.1
+      },
+      {
+        "axis": "Consciousness-theory",
+        "score": 3.5,
+        "z": 4.6
+      },
+      {
+        "axis": "Visual scale",
+        "score": 4,
+        "z": 0.53
+      }
+    ]
+  },
+  "deltas": {
+    "breadth": -0.766,
+    "zPopulation": -0.913,
+    "mahalanobis": -2.254
+  }
+}

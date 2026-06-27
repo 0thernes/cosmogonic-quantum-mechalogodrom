@@ -1,0 +1,199 @@
+{
+  "generatedFrom": "docs/reports/2026-06-26-alife-comparison-matrix.csv",
+  "method": "population statistics over all systems incl. Cosmogonic; breadth = mean of 9 axes",
+  "nSystems": 26,
+  "nPeers": 25,
+  "cosmogonic": {
+    "breadthMean": 4.44,
+    "breadthRank": 1,
+    "zScorePopulation": 3.01,
+    "zScoreVsPeers": 3.84,
+    "percentile": 100,
+    "peerMaturity": 1.5
+  },
+  "survey": {
+    "breadthMeanAll": 2.54,
+    "breadthStdAll": 0.63,
+    "breadthMeanPeers": 2.46,
+    "breadthStdPeers": 0.52,
+    "medianBreadth": 2.44,
+    "medianPeerMaturity": 4,
+    "corrBreadthVsMaturity": -0.618
+  },
+  "perAxis": [
+    {
+      "axis": "Reproduction",
+      "mean": 3.15,
+      "std": 1.73,
+      "max": 5,
+      "cosmo": 4,
+      "cosmoZ": 0.49,
+      "leaders": [
+        "Tierra",
+        "Avida",
+        "Framsticks",
+        "Creatures",
+        "Darwin Pond",
+        "Gene Pool",
+        "MABE"
+      ]
+    },
+    {
+      "axis": "Open-endedness",
+      "mean": 3.25,
+      "std": 1.19,
+      "max": 5,
+      "cosmo": 3.5,
+      "cosmoZ": 0.21,
+      "leaders": [
+        "Picbreeder",
+        "POET",
+        "ASAL"
+      ]
+    },
+    {
+      "axis": "Ecology",
+      "mean": 2.96,
+      "std": 1.43,
+      "max": 5,
+      "cosmo": 5,
+      "cosmoZ": 1.43,
+      "leaders": [
+        "COSMOGONIC",
+        "Polyworld",
+        "Sugarscape",
+        "Swarm"
+      ]
+    },
+    {
+      "axis": "Morphology/Physics",
+      "mean": 2.92,
+      "std": 1.75,
+      "max": 5,
+      "cosmo": 4,
+      "cosmoZ": 0.61,
+      "leaders": [
+        "Framsticks",
+        "Karl Sims VC",
+        "Gene Pool",
+        "breve",
+        "OpenWorm",
+        "EvoGym",
+        "ALIEN"
+      ]
+    },
+    {
+      "axis": "Cognition/Learning",
+      "mean": 2.12,
+      "std": 1.39,
+      "max": 4.5,
+      "cosmo": 4.5,
+      "cosmoZ": 1.72,
+      "leaders": [
+        "COSMOGONIC"
+      ]
+    },
+    {
+      "axis": "Substrate pluralism",
+      "mean": 1.44,
+      "std": 0.91,
+      "max": 5,
+      "cosmo": 5,
+      "cosmoZ": 3.9,
+      "leaders": [
+        "COSMOGONIC"
+      ]
+    },
+    {
+      "axis": "Instrumentation",
+      "mean": 3.4,
+      "std": 0.83,
+      "max": 5,
+      "cosmo": 4.5,
+      "cosmoZ": 1.32,
+      "leaders": [
+        "Game of Life",
+        "EvoGym"
+      ]
+    },
+    {
+      "axis": "Consciousness-theory",
+      "mean": 0.27,
+      "std": 0.89,
+      "max": 4.5,
+      "cosmo": 4.5,
+      "cosmoZ": 4.75,
+      "leaders": [
+        "COSMOGONIC"
+      ]
+    },
+    {
+      "axis": "Visual scale",
+      "mean": 3.35,
+      "std": 1.33,
+      "max": 5,
+      "cosmo": 5,
+      "cosmoZ": 1.24,
+      "leaders": [
+        "COSMOGONIC",
+        "Karl Sims VC",
+        "Creatures",
+        "Picbreeder",
+        "Lenia",
+        "ALIEN"
+      ]
+    }
+  ],
+  "nearestNeighbours": [
+    {
+      "name": "ALIEN",
+      "full": "ALIEN",
+      "d": 5.17
+    },
+    {
+      "name": "Creatures",
+      "full": "Creatures",
+      "d": 5.57
+    },
+    {
+      "name": "Polyworld",
+      "full": "Polyworld",
+      "d": 6.48
+    },
+    {
+      "name": "Framsticks",
+      "full": "Framsticks",
+      "d": 6.56
+    },
+    {
+      "name": "breve",
+      "full": "breve",
+      "d": 7
+    },
+    {
+      "name": "Karl Sims VC",
+      "full": "Karl Sims Evolved Virtual Creatures",
+      "d": 7.14
+    },
+    {
+      "name": "ASAL",
+      "full": "ASAL",
+      "d": 7.35
+    },
+    {
+      "name": "Picbreeder",
+      "full": "Picbreeder",
+      "d": 7.48
+    },
+    {
+      "name": "Gene Pool",
+      "full": "Gene Pool / Swimbots",
+      "d": 7.53
+    },
+    {
+      "name": "MABE",
+      "full": "MABE",
+      "d": 7.55
+    }
+  ]
+}

@@ -34,7 +34,6 @@ export interface PhiSnapshot {
   cuts: number;
 }
 
-import { gwtBroadcast, moonlabMpoStep } from './tsotchke-facade'; // Ralph 10x continue: Eshkol GWT + Moonlab MPO from Tsotchke corpus wired into IIT phi (consciousness measure)
 const clamp01 = (v: number): number => (v < 0 ? 0 : v > 1 ? 1 : v);
 
 /**
@@ -124,11 +123,9 @@ export function integratedInformation(
     }
   }
   if (cuts === 0) return { qubits: nQubits, phi: 0, meanIntegration: 0, mipBits: '', cuts: 0 };
-  // Ralph 10x: use gwtBroadcast + mpo for Tsotchke-weighted mean phi (Eshkol GWT salience + Moonlab MPO bond) -- wire without semantic change for tests
-  const gwtW = gwtBroadcast(new Array(cuts).fill(1), new Array(cuts).fill(0.5));
-  const mpoM = moonlabMpoStep(new Float32Array([sum, cuts]), 2);
-  void gwtW;
-  void mpoM; // live wire for corpus, no effect on return
+  // (Removed a cosmetic "Ralph 10x" graft here that computed gwtBroadcast + moonlabMpoStep
+  //  only to `void` them — it had no effect on the returned Φ and existed purely to claim
+  //  corpus wiring. Φ is the genuine min-cut integrated information computed above.)
   return {
     qubits: nQubits,
     phi: clamp01(phi),
@@ -147,4 +144,158 @@ function popcount(x: number): number {
     c++;
   }
   return c;
+}
+
+/**
+ * Classical IIT-2 proxy: participation-ratio Φ from module activations (tractable surrogate).
+ * `pr = (Σx)² / (M·Σx²)` rescaled so independent baseline maps to 0.
+ */
+export function classicalParticipationRatio(mods: ArrayLike<number>): number {
+  const M = mods.length;
+  if (M < 2) return 0;
+  let energy = 0;
+  let sum = 0;
+  for (let i = 0; i < M; i++) {
+    const x = mods[i] ?? 0;
+    energy += x * x;
+    sum += x;
+  }
+  const pr = energy > 1e-9 ? (sum * sum) / (M * energy) : 1 / M;
+  return clamp01((pr - 1 / M) / (1 - 1 / M));
+}
+
+/** Extended IIT-2 measurement across classical module graph. */
+export interface ClassicalPhiSnapshot {
+  /** Overall Φ across all modules. */
+  phi: number;
+  /** Φ per module (local integration). */
+  modulePhi: number[];
+  /** Minimum-information partition for classical modules. */
+  mipPartition: number[];
+  /** Mean integration across all cuts. */
+  meanIntegration: number;
+  /** Number of modules measured. */
+  moduleCount: number;
+}
+
+/**
+ * Compute IIT-2 Φ across classical module graph using bipartition analysis.
+ * This extends quantum Φ measurement to classical activation vectors.
+ */
+export function classicalIntegratedInformation(
+  activations: ArrayLike<number>,
+  adjacency: ArrayLike<number>, // adjacency matrix (flattened)
+): ClassicalPhiSnapshot {
+  const M = activations.length;
+  if (M < 2) {
+    return {
+      phi: 0,
+      modulePhi: Array.from(activations, () => 0),
+      mipPartition: [],
+      meanIntegration: 0,
+      moduleCount: M,
+    };
+  }
+
+  const modulePhi = new Float32Array(M);
+  let minPhi = Infinity;
+  let mipPartition: number[] = [];
+  let sumIntegration = 0;
+  let cuts = 0;
+
+  // Evaluate balanced bipartitions (fix module 0 in A to avoid double-count)
+  const half = Math.floor(M / 2);
+  for (let mask = 0; mask < 1 << M; mask++) {
+    if ((mask & 1) === 0) continue; // fix module 0 in A
+    if (popcount(mask) !== half) continue;
+
+    const aMask = mask;
+    const bMask = ((1 << M) - 1) ^ mask;
+
+    // Compute effective integration across this cut
+    const cutPhi = computeCutIntegration(activations, adjacency, aMask, bMask);
+    sumIntegration += cutPhi;
+    cuts++;
+
+    if (cutPhi < minPhi) {
+      minPhi = cutPhi;
+      mipPartition = [];
+      for (let i = 0; i < M; i++) {
+        if ((aMask & (1 << i)) !== 0) mipPartition.push(i);
+      }
+    }
+  }
+
+  // Per-module local integration: each module's SHARE of the system's total interaction flow,
+  // so modulePhi is a meaningful [0,1] participation distribution (summing to ~1) rather than the
+  // degenerate 0/1 the prior local/total ratio always produced.
+  let totalFlow = 0;
+  for (let i = 0; i < M; i++) {
+    modulePhi[i] = computeModuleFlow(activations, adjacency, i);
+    totalFlow += modulePhi[i] ?? 0;
+  }
+  if (totalFlow > 1e-9) {
+    for (let i = 0; i < M; i++) modulePhi[i] = (modulePhi[i] ?? 0) / totalFlow;
+  }
+
+  const meanIntegration = cuts > 0 ? sumIntegration / cuts : 0;
+  const phi = cuts > 0 ? clamp01(minPhi) : 0;
+
+  return {
+    phi,
+    modulePhi: Array.from(modulePhi),
+    mipPartition,
+    meanIntegration: clamp01(meanIntegration),
+    moduleCount: M,
+  };
+}
+
+/**
+ * Compute integration across a specific bipartition cut.
+ */
+function computeCutIntegration(
+  activations: ArrayLike<number>,
+  adjacency: ArrayLike<number>,
+  aMask: number,
+  bMask: number,
+): number {
+  let crossFlow = 0;
+  let totalFlow = 0;
+
+  for (let i = 0; i < activations.length; i++) {
+    for (let j = 0; j < activations.length; j++) {
+      if (i === j) continue;
+      const weight = adjacency[i * activations.length + j] ?? 0;
+      const flow = Math.abs(activations[i] ?? 0) * Math.abs(activations[j] ?? 0) * weight;
+      totalFlow += flow;
+
+      const iInA = (aMask & (1 << i)) !== 0;
+      const jInB = (bMask & (1 << j)) !== 0;
+      if (iInA && jInB) {
+        crossFlow += flow;
+      }
+    }
+  }
+
+  return totalFlow > 1e-9 ? crossFlow / totalFlow : 0;
+}
+
+/**
+ * Total interaction flow incident on a single module: Σ_{j≠i} |aᵢ|·|aⱼ|·w(i,j). The caller
+ * normalizes these by the whole-graph total to get each module's [0,1] share of integration.
+ * (The prior version accumulated the same term into two locals and returned their ratio — always
+ * exactly 1 for any connected module, 0 otherwise — which carried no per-module information.)
+ */
+function computeModuleFlow(
+  activations: ArrayLike<number>,
+  adjacency: ArrayLike<number>,
+  moduleIndex: number,
+): number {
+  let flow = 0;
+  for (let j = 0; j < activations.length; j++) {
+    if (j === moduleIndex) continue;
+    const weight = adjacency[moduleIndex * activations.length + j] ?? 0;
+    flow += Math.abs(activations[moduleIndex] ?? 0) * Math.abs(activations[j] ?? 0) * weight;
+  }
+  return flow;
 }

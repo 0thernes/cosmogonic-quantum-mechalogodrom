@@ -1,3 +1,5 @@
+<!-- reviewed: 2026-06-27 | repo-wide consistency audit | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+
 # NOTICE
 
 Cosmogonic Quantum Mechalogodrom
@@ -51,11 +53,11 @@ from the **Tsotchke** quantum research repositories. The original works are MIT-
 tsotchke; the MIT permission notice is retained here as required, and our derivative implementations
 remain governed by this project's proprietary license while honoring the upstream MIT terms.
 
-| Adapted algorithm                              | Ported into               | Upstream source                                                               | License                |
-| ---------------------------------------------- | ------------------------- | ----------------------------------------------------------------------------- | ---------------------- |
-| Quantum Geometric Tensor / Fubini–Study metric | `src/sim/super-qubits.ts` | Tsotchke `quantum_geometric_tensor` (QGTL) + Moonlab `quantum_geometry/qgt.c` | MIT © 2024–26 tsotchke |
-| Seeded quantum phase-noise qubit-RNG           | `src/math/eshkol-qrng.ts` | Tsotchke `Eshkol/eshkol_repo/lib/quantum/quantum_rng.{c,h}`                   | MIT © 2024–26 tsotchke |
-| Hopfield/Ising spin-glass associative instinct | `src/sim/spin-glass.ts`   | Tsotchke `spin_based_neural_network` (`ising_model.c`, `nqs_gradient.c`)      | MIT © 2024–26 tsotchke |
+| Adapted algorithm                              | Ported into                                                            | Upstream source                                                               | License                |
+| ---------------------------------------------- | ---------------------------------------------------------------------- | ----------------------------------------------------------------------------- | ---------------------- |
+| Quantum Geometric Tensor / Fubini–Study metric | `src/math/quantum-geometry.ts` (consumed by `src/sim/super-qubits.ts`) | Tsotchke `quantum_geometric_tensor` (QGTL) + Moonlab `quantum_geometry/qgt.c` | MIT © 2024–26 tsotchke |
+| Seeded quantum phase-noise qubit-RNG           | `src/math/eshkol-qrng.ts`                                              | Tsotchke `Eshkol/eshkol_repo/lib/quantum/quantum_rng.{c,h}`                   | MIT © 2024–26 tsotchke |
+| Hopfield/Ising spin-glass associative instinct | `src/sim/spin-glass.ts`                                                | Tsotchke `spin_based_neural_network` (`ising_model.c`, `nqs_gradient.c`)      | MIT © 2024–26 tsotchke |
 
 Academic references for the geometric tensor: Provost & Vallée, _Riemannian structure on manifolds of
 quantum states_ (1980); Berry, _Quantal phase factors_ (1984); Fukui–Hatsugai–Suzuki (2005). The

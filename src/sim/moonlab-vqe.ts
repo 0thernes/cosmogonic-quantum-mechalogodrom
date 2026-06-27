@@ -334,10 +334,10 @@ export function vqeMinimize(
   iterations = 200,
   learningRate = 0.2,
 ): { energy: number; angles: number[] } {
-  const angles = new Array<number>(h.qubits);
+  const angles = Array.from<number>({ length: h.qubits });
   for (let k = 0; k < h.qubits; k++) angles[k] = initialAngles[k] ?? 0;
-  const grad = new Array<number>(h.qubits).fill(0);
-  const work = new Array<number>(h.qubits).fill(0);
+  const grad = Array.from({ length: h.qubits }, () => 0);
+  const work = Array.from({ length: h.qubits }, () => 0);
 
   let bestEnergy = Infinity;
   const bestAngles = angles.slice();

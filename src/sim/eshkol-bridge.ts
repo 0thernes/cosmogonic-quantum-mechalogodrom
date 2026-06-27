@@ -46,7 +46,7 @@ export class EshkolConsciousnessEngine {
 
   // FULL Eshkol KB (logic programming substrate from .esk examples + COMPLETE spec)
   private readonly facts = new Float32Array(FACTS);
-  private readonly factKeys = new Array<string>(FACTS).fill('');
+  private readonly factKeys = Array.from({ length: FACTS }, () => '');
   // Factor graph beliefs (active inference from Eshkol §17)
   private readonly beliefs = new Float32Array(BELIEFS);
   private readonly moduleSalience = new Float32Array(MODULES);
@@ -56,6 +56,8 @@ export class EshkolConsciousnessEngine {
 
   // Master expansion (Eshkol COMPLETE spec fidelity): KB store for biologics (Eshkol KB from local corpus)
   private kbFacts: Map<string, number> = new Map();
+  /** Cap on the exact-key `kbFacts` store so a float-keyed hot caller can't grow it without bound. */
+  private readonly KB_FACTS_MAX = 1024;
 
   constructor(logic = 0.5, inference = 0.5, workspace = 0.5) {
     this.logic = clamp01(logic);
@@ -77,6 +79,12 @@ export class EshkolConsciousnessEngine {
     this.factKeys[slot] = key;
     this.facts[slot] = clamp01(val);
     this.kbFacts.set(key, clamp01(val));
+    // Bound the exact-key store: a per-beat float-derived key would otherwise grow it without
+    // limit. FIFO-evict the oldest entry past the cap (Map preserves insertion order).
+    if (this.kbFacts.size > this.KB_FACTS_MAX) {
+      const oldest = this.kbFacts.keys().next().value;
+      if (oldest !== undefined) this.kbFacts.delete(oldest);
+    }
     this.logic = clamp01(this.logic * 0.7 + 0.3);
   }
   kbQuery(pattern: string): number {
@@ -226,8 +234,13 @@ function getEshkolTape(): AdTape {
   return _eshkolTape;
 }
 
+/**
+ * CENTRAL FINITE-DIFFERENCE gradient surrogate — despite the "AD" in the name, this is
+ * `(f(x+ε) − f(x−ε)) / 2ε`, NOT the reverse-mode tape. It is the cheap path most callers use; the
+ * genuine exact-AD tape lives in `eshkolDualReal` + the `eshkol-ad.ts` primitives. The result is a valid
+ * O(ε²) gradient approximation, just not exact — accurate enough for the telemetry/bias paths it feeds.
+ */
 export function eshkolADGradient(f: (x: number) => number, x: number, eps = 1e-4): number {
-  // Fallback central for non-AD paths; prefer real tape via eshkolDualReal
   return (f(x + eps) - f(x - eps)) / (2 * eps);
 }
 

@@ -249,7 +249,13 @@ int main(int argc, char** argv) {
       gHero = true;
     } else if (a.rfind("--w", 0) == 0) {
       auto x = a.find('x');
-      if (x != std::string::npos) { shotW = std::atoi(a.c_str() + 3); shotH = std::atoi(a.c_str() + x + 1); }
+      if (x != std::string::npos) {
+        shotW = std::atoi(a.c_str() + 3);
+        shotH = std::atoi(a.c_str() + x + 1);
+        // Reject malformed dims (atoi of garbage -> 0/negative) before they reach the FBO/BMP,
+        // which would otherwise produce an incomplete framebuffer or a zero-size image.
+        if (shotW < 1 || shotH < 1) { shotW = 1600; shotH = 900; }
+      }
     }
   }
 

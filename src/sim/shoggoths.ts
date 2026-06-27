@@ -1,5 +1,5 @@
 /**
- * Shoggoth system — three writhing eldritch horrors that drift on lorenz-flavored currents,
+ * Shoggoth system — a writhing swarm of eldritch horrors (100 on desktop, 16 on mobile) that drift on lorenz-flavored currents,
  * lash nearby organisms with tendrils, and periodically consume one, spawning a pair of
  * corrupted lorenz-driven children. Faithful port of legacy lines 505-539.
  */
@@ -89,7 +89,7 @@ interface Shoggoth {
 }
 
 /**
- * Owns the three shoggoths: deformed icosahedron cores studded with 7-11 blinking eyes,
+ * Owns the shoggoth swarm (100 desktop / 16 mobile): deformed icosahedron cores studded with 7-11 blinking eyes,
  * tendril LineSegments fed by spatial-grid queries, and a consumption cycle that eats the
  * nearest organism and respawns two corrupted children.
  */
@@ -131,7 +131,7 @@ export class ShoggothSystem {
     }
   }
 
-  /** Number of active shoggoths (constant 3 — feeds the telemetry `shoggoths` field). */
+  /** Number of active shoggoths (100 on desktop, 16 on mobile — feeds the telemetry `shoggoths` field). */
   get count(): number {
     return this.shogs.length;
   }
@@ -265,7 +265,7 @@ export class ShoggothSystem {
 
   /**
    * Advance drift, glow, tendrils, and consumption for all shoggoths (legacy 519-539).
-   * O(s·k) per frame — s = 3 shoggoths, k = grid neighbors within 15u; the O(n) nearest-victim
+   * O(s·k) per frame — s = shoggoth count (100 desktop, 16 mobile), k = grid neighbors within 15u; the O(n) nearest-victim
    * scan runs only on consumption ticks (~every 200-500 sim ticks per shoggoth).
    * Allocation-free: module scratch vectors only; the grid query reuses its shared buffer.
    */

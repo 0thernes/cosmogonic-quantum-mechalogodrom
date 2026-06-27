@@ -26,6 +26,15 @@ const SLOTS: readonly Slot[] = [
   { name: 'NEURAL', icon: '⊞', panel: 'cqm-nhi-panel', toggle: 'cqm-nhi-toggle', open: 'open' },
   { name: 'MARKET', icon: '⊙', panel: 'cqm-mkt-panel', toggle: 'cqm-mkt-toggle', open: 'open' },
   { name: 'ARCHITECT', icon: '⬢', panel: 'cqm-sup-panel', toggle: 'cqm-sup-toggle', open: 'open' },
+  // The ⟁ ARCHITECTURE pantheon cycler (101 super creatures + brood + the apex ς Quantum Brain).
+  // Lives in the launcher next to ARCHITECT (its toggle is otherwise hidden — #cqm-dock is display:none).
+  {
+    name: 'ARCHITECTURE',
+    icon: '⟁',
+    panel: 'cqm-arch-panel',
+    toggle: 'cqm-arch-toggle',
+    open: 'open',
+  },
 ];
 
 const PANEL_SEL = SLOTS.map((s) => '#' + s.panel).join(',');
@@ -473,6 +482,22 @@ function buildNav(doc: Document): void {
       a.classList.add('cqm-hud-btn', 'cqm-hud-link');
       nav.appendChild(a);
     }
+  }
+  // ⛓ ACCESS — the cryptographic terminal (access-puzzle.ts: "only the Romans know" 3455456754) that
+  // unlocks the playable 2nd super creature. Its self-mounted toggle is buried in the hidden #cqm-dock
+  // (display:none), so it was invisible (the owner's "secret password isn't showing up" report). We add
+  // a FRESH launcher button here that opens it — created anew each buildNav, so it survives HMR re-init
+  // (moving the dock node would lose it when the old nav is removed). The modal lives outside the HUD.
+  const accToggle = doc.getElementById('cqm-acc-toggle');
+  if (accToggle) {
+    nav.appendChild(
+      mk(
+        '⛓ ACCESS',
+        'Cryptographic access terminal — unlock the playable super creature ("only the Romans know")',
+        'cqm-hud-link',
+        () => accToggle.click(),
+      ),
+    );
   }
   doc.body.appendChild(nav);
 }

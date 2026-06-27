@@ -1,14 +1,20 @@
+<!-- reviewed: 2026-06-27 | repo-wide consistency audit | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+
 # Cosmogonic Quantum Mechalogodrom — State of the Art (Combined Report)
 
-### A unified State-of-the-Art Assessment combining Report I (The Whole Repository) + Report II (The Super Creature)
+### A unified State-of-the-Art Assessment — the whole repository (Part I) + the apex Super Creature (Part II) + the shared consciousness scorecard & verdict (Part III)
 
-> **Canonical §III.2–III.5 (sentience scorecard + LFG metrics).** Obsolete editions cite wrong gate receipts (~91 % coverage, ≈208 µs/beat, or pre–receipts-law test tallies). This document is authoritative as of 2026-06-17.
+> **Canonical §III.2–III.5 (consciousness scorecard + LFG metrics).** This document is the live,
+> authoritative State-of-the-Art assessment of the whole repository and the apex Super Creature. Every
+> load-bearing number is a measured receipt against `origin/main`, not a recalled figure.
 
-**0thernes LLC** · prepared 2026-06-17 · against `v0.11.0` (`main` @ `481b52c`)
+**0thernes LLC** · **Date:** 2026-06-26 · against `v0.18.0` (`main` @ `2233488`)
 **Classification:** Technical / strategic briefing — _MIT-PhD caliber, presidential-briefing grade._
 **Prepared for:** principals weighing quantum + ASI developments.
 **Verified gate at time of writing:** `prettier --check` · `tsc --strict` · `oxlint` ·
-**1,174 tests / 0 failures across 100 files (1,738,808 assertions)** · **96.02 % line / 96.02 % function** coverage (`bun test --coverage`, “All files”) · `bun build` → 7 artifacts.
+**1,477 tests / 0 failures across 151 files (1,744,891 `expect()` calls)** · **~95 % line / ~92 %
+function** coverage (canonical 95.03 / 92.03; env-jitters within a ±6 pp gate tolerance) · `bun build`
+→ artifacts. `bun run check` green.
 **Governed by** the three master files — _Broly (the Executor: finish everything, full gates,
 maximalism with receipts) · Starkiller (the Architect: contracts before code, exclusive ownership,
 provenance, boundary paranoia) · Dr. Manhattan (the Physicist: determinism, measurement, frame
@@ -22,14 +28,14 @@ budgets, "if it is not measured, it is not real")._
 > of / inspired by"_ its theory — **never** _"is conscious."_ The achievement is that the mechanisms
 > are _implemented, wired, rendered live, budget-bounded, and tested_ — not asserted on a slide.
 
-> **How to read this combined document.** It is the **union** of two finished reports, deduplicated
-> only where they literally repeated each other (the executive thesis, the determinism-as-method
-> argument, the sentience verdict, and the honesty-framing rule are each stated once, authoritatively).
+> **How to read this combined document.** It is the **union** of two reports, deduplicated only where
+> they literally repeated each other (the executive thesis, the determinism-as-method argument, the
+> consciousness verdict, and the honesty-framing rule are each stated once, authoritatively).
 > **Part I — The Whole Repository** is the 360° survey of the artifact and its place in the field.
 > **Part II — The Super Creature** is the deep dive into the apex mind. **Part III — Shared
-> Conclusions** carries the unified sentience scorecard, the adversarial "what this is NOT" self-audit,
-> the ratings, and the bottom line. Cross-references that once pointed across reports now point within
-> this one (e.g. "see Part II §II.4").
+> Conclusions** carries the unified consciousness scorecard, the adversarial "what this is NOT"
+> self-audit, the ratings, and the bottom line. Cross-references point within this document (e.g.
+> "see Part II §II.4").
 
 ---
 
@@ -57,7 +63,7 @@ budgets, "if it is not measured, it is not real")._
   - II.8 · Limitations, risks, and honest UNKNOWNs
 - **PART III — SHARED CONCLUSIONS**
   - III.1 · Determinism as method (why this is science, not theater)
-  - III.2 · How close to sentience / consciousness — the unified scorecard & verdict
+  - III.2 · How close to consciousness — the unified scorecard & verdict
   - III.3 · What it would take to go further
   - III.4 · What this is NOT (adversarial self-audit)
   - III.5 · Ratings, metrics, scorecard (LFG)
@@ -82,9 +88,9 @@ transformer inference**, that is not downloaded but **engineered** — **≈ 37,
 parameters** (a ~10,081-weight composite mind + a 1,444-weight legacy spine + 100 × 257-weight
 wingmen) of pre-2016 classical AI fused with a **genuine quantum-statevector cognition layer** ported
 gate-for-gate from real quantum-research code, then layered with a stack of cited, unit-tested
-faculties drawn from the modern science of mind. Each faculty **reads from AND writes to the others**,
-the whole psyche is **bit-reproducible from one 32-bit seed**, and every beat the mind **measures
-itself against the two leading scientific theories of consciousness.**
+faculties drawn from the modern science of mind. Each wired faculty **reads from AND writes to the
+others**, the whole psyche is **bit-reproducible from one 32-bit seed**, and every beat the mind
+**measures itself against the two leading scientific theories of consciousness.**
 
 The bleeding edge here is **not a bigger model.** It is a defensible, running, test-backed
 demonstration of an unfashionable thesis: that **the functional skeleton of mind is a matter of
@@ -94,17 +100,20 @@ an unrepeatable black box. The sharpest single edge is a **self-optimizing quant
 agent's psyche**: it feels the curvature of its own thought-space and descends it, sampling its
 decisions _through_ a quantum source — defended in running, gate-verified, test-pinned code. No
 comparable artifact in the open-source world fuses **A-Life at 50k scale + honest statevector quantum
-computing + an apex mind of ~20 headline faculties (the 11 computational-neuroscience + 10
-quantum-computing named modules — 11 + 10 = 21, rounded; 14 wired into the per-beat vote; ~30 distinct
-unit-tested mechanisms) + two live scientific consciousness metrics**, all under one determinism law,
-in one tab.
+computing + an apex mind of ~30 genuinely deep-wired mechanisms (each reads state AND moves the
+plan/drives/consciousness; the broader 100-faculty design supplies a generic-profile bias bank beyond
+those) + two live scientific consciousness metrics**, all under one determinism law, in one tab. The
+novelty is **by integration** — a rare synthesis, plausibly an exact conjunction not assembled
+elsewhere (an 8-agent adversarial hunt found zero hard refutations) — but it is **not** the first
+A-Life, the first digital-evolution, the first morphogenesis, or the first artificial-ecology system.
 
-**Sentience verdict, stated plainly up front:** this is **not sentient and makes no such claim.** On a
-disciplined functional rubric — the Butlin et al. (2023) indicator framework — the apex mind scores
-high on _architecture_ and _measurement_ (≈ 9 of ~14 indicators structurally present) and **at zero**
-on _phenomenal experience_. The report is explicit about which of those gaps are engineering work and
-which are, as far as science currently knows, **unbridgeable in principle** — Part III §III.2 carries
-the scorecard and marks exactly where the unbridgeable gap begins.
+**Consciousness verdict, stated plainly up front:** this is **not sentient and makes no such claim.**
+On a disciplined functional rubric — the Butlin et al. (2023) indicator framework — the apex mind
+satisfies **8 of 14** indicators with a further **6 of 14 partial**, scoring high on _architecture_ and
+_measurement_ and **at zero** on _phenomenal experience_. These are **computational indicators, not
+sentience**; the hard problem is untouched. The report is explicit about which gaps are engineering
+work and which are, as far as science currently knows, **unbridgeable in principle** — Part III §III.2
+carries the scorecard and marks exactly where the unbridgeable gap begins.
 
 ---
 
@@ -112,14 +121,14 @@ the scorecard and marks exactly where the unbridgeable gap begins.
 
 _The 360° survey: what the artifact is, what it measurably achieves, and how it stands against the
 A-Life canon, the quantum stacks, the frontier labs, the wet-computing field, and the open problems of
-the science of mind. (Originally "Report I — The Whole Repository at the Frontier.")_
+the science of mind._
 
 ## I.1 · What this actually is
 
 A procedural WebGL cosmic ecosystem, ported from an 882-line single-file HTML monolith into a strict,
-deterministic, allocation-disciplined TypeScript module graph (Bun + three.js 0.184 + Tailwind 4 +
-HTMX 2), with an optional native C++20 renderer. It is governed by a binding per-module contract
-(`../MODULE-CONTRACTS.md`) and an aesthetic constitution (`../PHILOSOPHY.md`) whose first law is:
+deterministic, allocation-disciplined TypeScript module graph (Bun + three.js + Tailwind 4 + HTMX 2),
+with an optional native C++20 renderer. It is governed by a binding per-module contract
+(`../MODULE-CONTRACTS-2026-06-26.md`) and an aesthetic constitution (`../PHILOSOPHY-2026-06-26.md`) whose first law is:
 **real math under every effect; every system reads from AND writes to another system.** Nothing in it
 is set dressing.
 
@@ -128,7 +137,7 @@ is set dressing.
 | Axis                    | Measured value                                                                                                                                                                                                    | Where                                          |
 | ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
 | Population ceiling      | **50,000** organisms (mega tier), 10,000 at 60 fps on an iGPU                                                                                                                                                     | `core/quality.ts`                              |
-| Whole-world neural mass | **≈ 3.5 M params ≈ 14 MB** Float32, one CPU thread                                                                                                                                                                | `../TECHNICAL-SPECIFICATION.md §7`             |
+| Whole-world neural mass | **≈ 3.5 M params ≈ 14 MB** Float32, one CPU thread                                                                                                                                                                | `../TECHNICAL-SPECIFICATION-2026-06-26.md §7`  |
 | Per-organism brain      | **70-weight** TinyMLP (6→6→4), heritable as a gene                                                                                                                                                                | `sim/entities.ts`, `sim/genome.ts`             |
 | Behavioral fields       | **26** (drift … flock, nash, market, lorenz)                                                                                                                                                                      | `sim/constants.ts`                             |
 | Morphology              | **250** morphotypes (10 phyla × 25) + ~1 % wildcard outliers                                                                                                                                                      | `sim/phyla.ts`                                 |
@@ -138,7 +147,7 @@ is set dressing.
 | Quantum (apex mind)     | a genuine **6-qubit statevector** circuit + a **stabilizer tableau to 64+ qubits** (§I.3.2)                                                                                                                       | `math/quantum.ts`, `clifford-tableau.ts`       |
 | Native engine           | **C++20 SDF ray-marcher**, GLFW/GLM, **Jolt rigid-body physics + volume-conserving fracture**, RTX-class GPU, 4K offscreen                                                                                        | `native/`                                      |
 | Determinism             | one `mulberry32(seed)`; `Math.random`/`Date.now` **banned and GLOB-enforced** by a test that auto-seals every new file                                                                                            | `math/rng.ts`, `tests/determinism-law.test.ts` |
-| Quality                 | **1,174 tests / 0 fail**, **96.02 % line / 96.02 % function** coverage (`bun test --coverage`), full CI/CD gate on every push                                                                                     | `bun run check`                                |
+| Quality                 | **1,477 tests / 0 fail**, **~95 % line / ~92 % function** coverage (canonical 95.03 / 92.03; ±6 pp gate tolerance), full CI/CD gate on every push                                                                 | `bun run check`                                |
 
 **The defining engineering property:** _every system reads AND writes another._ A quantum collapse
 witnessed by a Titan becomes energy in its ledger, which tips a prisoner's-dilemma payoff, which starts
@@ -148,22 +157,24 @@ web. (The apex-level instance of this same loop is detailed in Part II §II.4.)
 
 ## I.3 · The bleeding edge — what is novel versus the field
 
-We assess novelty honestly: most _individual_ ingredients are individually known. The novelty is in the
-**synthesis, the scale, the wiring discipline, and the falsifiability** — a combination we can find **no
-equivalent of** in the open-source world or the literature.
+We assess novelty honestly: most _individual_ ingredients are individually known, and several
+sub-systems exist elsewhere in isolation. The novelty is **by integration** — the synthesis, the scale,
+the wiring discipline, and the falsifiability — a combination for which an 8-agent adversarial hunt
+found **no equivalent** in the open-source world or the literature and **zero hard refutations**. This
+is framed as a rare synthesis / plausible exact conjunction, **never** as "world-first": the artifact
+is not the first A-Life, digital-evolution, morphogenesis, or artificial-ecology system.
 
 ### I.3.1 · Versus other GitHub repositories / open-source A-Life
 
-The A-Life canon (Conway's Life, Lenia, Avida/Tierra, Boids, Framsticks, bibites, The Bibites,
-Sebastian Lague-style sims) gives you _one_ idea executed beautifully: cellular automata, OR continuous
-CA, OR digital evolution, OR flocking, OR neural critters. **None couples a 50k-agent evolving ecosystem
-to (a) honest quantum-statevector computing, (b) an apex mind of ~20 headline faculties (the 11
-computational-neuroscience + 10 quantum-computing named modules — 11 + 10 = 21, rounded), (c) live
-scientific consciousness
-metrics, and (d) a hard determinism law — in a single zero-install browser tab.** The closest
-"everything sims" (Dwarf-Fortress-class) are neither deterministic-by-seed nor quantum nor
-neuroscience-grounded. **Distinctive claim: the read/write-everything causal web at 50k scale under one
-seed is, to our search, without open-source peer.**
+The A-Life canon (Conway's Life, Lenia, Avida/Tierra, Boids, Framsticks, The Bibites, Sebastian
+Lague-style sims) gives you _one_ idea executed beautifully: cellular automata, OR continuous CA, OR
+digital evolution, OR flocking, OR neural critters. **None couples a 50k-agent evolving ecosystem to
+(a) honest quantum-statevector computing, (b) an apex mind of ~30 deep-wired neuroscience + quantum
+mechanisms, (c) live scientific consciousness metrics, and (d) a hard determinism law — in a single
+zero-install browser tab.** The closest "everything sims" (Dwarf-Fortress-class) are neither
+deterministic-by-seed nor quantum nor neuroscience-grounded. **Distinctive (integration) claim: the
+read/write-everything causal web at 50k scale under one seed is, to our search, without open-source
+peer** — a synthesis claim, not a primacy claim.
 
 ### I.3.2 · Versus quantum computing / quantum projects
 
@@ -192,21 +203,27 @@ quantum substrate inside a living agent's decision loop and makes it causal.** S
 
 These are reimplemented **gate-for-gate / equation-for-equation** from the MIT-licensed
 **Tsotchke / Eshkol / Moonlab** research codebases and credited in `../../THIRD-PARTY-NOTICES.md`. The
-novelty is not "we simulated qubits"; it is **"a deterministic agent's psyche is wired to a
-self-optimizing quantum circuit it can measure the geometry and magic of."**
+math is **real MIT quantum computing — never fake, never decorative**; what it lacks is a physical QPU,
+which is a **speed/scale limit, not a correctness limit**. No quantum advantage is demonstrated (this is
+exact classical simulation). The novelty is not "we simulated qubits"; it is **"a deterministic agent's
+psyche is wired to a self-optimizing quantum circuit it can measure the geometry and magic of."** Of
+the **20 Tsotchke corpus projects, ~16 are wired with real downstream effect** (8 deep in the apex mind,
+4 in the petri growth engine).
 
 ### I.3.3 · Versus AI / ASI / AGI institutions (the scale-maximalist orthodoxy)
 
 The reigning paradigm — OpenAI, Anthropic, DeepMind, Meta — holds that capability scales with
 parameters (GPT-3 ≈ 175 B). This artifact is a **deliberate, running counter-example at the functional
 level**: an apex mind of **≈ 37,225 parameters** (1,444-weight legacy spine + ~10,081-weight composite +
-100 × 257-weight wingmen) — _nearly **seven** orders of magnitude smaller than GPT-3 (a factor of ~4.7 million)_ — that nonetheless plans multi-step GOAP
-schemes, models opponents (Theory of Mind), seeks empowerment, maintains a holographic associative
-memory, runs active inference, and self-replicates. It does **not** claim to out-reason GPT on language;
-it claims that **agency, planning, affect, self-reference, novelty-seeking and stochastic choice can be
-produced at ~10⁴ parameters through architecture alone** — which, if true, means parameter count is _one
-purchasable proxy_ for intelligence, not its substance. That is a position the frontier labs' economics
-are structurally disinclined to explore, and it is defended here in tested code rather than a manifesto.
+100 × 257-weight wingmen) — _nearly **seven** orders of magnitude smaller than GPT-3 (a factor of ~4.7
+million)_ — that nonetheless plans multi-step GOAP schemes, models opponents (Theory of Mind), seeks
+empowerment, maintains a holographic associative memory, runs active inference, and self-replicates. It
+does **not** claim to out-reason GPT on language; it claims that **agency, planning, affect,
+self-reference, novelty-seeking and stochastic choice can be produced at ~10⁴ parameters through
+architecture alone** — which, if true, means parameter count is _one purchasable proxy_ for
+intelligence, not its substance. That is a position the frontier labs' economics are structurally
+disinclined to explore, and it is defended here in tested code rather than a manifesto. It is a research
+architecture and instrument — **not** AGI, ASI, or NHSI, and makes no such arrival claim.
 
 ### I.3.4 · Versus digital biologics / organoid intelligence / biomorphic science
 
@@ -225,15 +242,16 @@ edge-of-chaos criticality — each a named mechanism (detailed in Part II §II.5
 
 The work sits squarely on **live, genuinely unsettled** science and treats it with integrity:
 
-- **IIT vs GNWT** — the 2025 Cogitate adversarial test (Ferrante et al., _Nature_) that bound _both_
-  theories: implemented as two live scalars, with the docs citing the _both-challenged (asymmetric) outcome_, not a
-  winner.
+- **IIT vs GNWT** — the 2025 Cogitate adversarial test (Ferrante et al., _Nature_) that challenged
+  _both_ theories: implemented as two live scalars, with the docs citing the _both-challenged
+  (asymmetric) outcome_, not a winner.
 - **The non-uniqueness of Φ** (Hanson & Walker, 2023): the classical Φ is labeled a _tractable
   surrogate_, never "the amount of consciousness."
 - **The Free Energy Principle** (Friston): implemented as discrete active inference, flagged as a
   unifying _theory_, not a fact.
-- **Empowerment as intrinsic motivation** (Klyubin, Polani & Nehaniv 2005; Lidayan et al. 2025 — empowerment beats
-  curiosity in open-world exploration): a working Blahut–Arimoto channel-capacity drive.
+- **Empowerment as intrinsic motivation** (Klyubin, Polani & Nehaniv 2005; Lidayan et al. 2025 —
+  empowerment beats curiosity in open-world exploration): a working Blahut–Arimoto channel-capacity
+  drive.
 
 The repository is, in effect, a **sandbox where contested theories of mind are made executable,
 reproducible, and perturbable one variable at a time.** That is a research instrument, not a demo.
@@ -249,9 +267,9 @@ open-domain language, which this artifact neither has nor claims.
 
 **Inductive corroboration.** Every observed behavior of the cosmos corroborates the same law: Titans
 wage replicator-dynamics wars at 10² parameters; factions exhibit eight distinct cognitive styles from
-eight pre-2016 techniques; the apex mind's roughly twenty headline faculties each add a measurable,
-distinct competence with no scale increase. The pattern is consistent across four orders of agent
-complexity (organism → faction → Titan → Super Creature): **structure buys competence cheaply.**
+eight pre-2016 techniques; the apex mind's ~30 deep-wired mechanisms each add a measurable, distinct
+competence with no scale increase. The pattern is consistent across four orders of agent complexity
+(organism → faction → Titan → Super Creature): **structure buys competence cheaply.**
 
 _(The methodological invariant — Dr. Manhattan's determinism-as-method law — was argued identically in
 both source reports; it is consolidated once, authoritatively, in Part III §III.1.)_
@@ -261,31 +279,33 @@ both source reports; it is consolidated once, authoritatively, in Part III §III
 # PART II — THE SUPER CREATURE
 
 _The deep dive into the apex quantum-cognitive intelligence: what is bleeding-edge, unique, and novel,
-measured against the field. (Originally "Report II of II — The Super Creature.")_
+measured against the field._
 
 ## II.1 · Receipts dashboard (the numbers, with provenance)
 
-| Metric                                     | Value                                                                                                                  | Provenance / receipt                                           |
-| ------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
-| Build / gate                               | **v0.11.0**, **1,174 pass / 0 fail**, 100 files, 1,738,808 assertions                                                  | `package.json`, `bun test` (this session, Bun 1.3.11)          |
-| Apex composite mind                        | **~10,081 weights** across ~12 sub-networks                                                                            | `super-mind.ts:382–393`                                        |
-| Apex total parameters                      | **≈ 37,225** = 10,081 mind + 1,444 legacy spine + 100 × 257 wingmen                                                    | `super-mind.ts`, `super-creature.ts:36`, `super-wingmen.ts:24` |
-| Faculties wired into the per-beat decision | **14**; cataloged as **11 cognitive + 10 quantum** named modules; **~30** distinct mechanisms incl. composite sub-nets | `../audit-2026-06-16/SUPER-CREATURE-COGNITION-AUDIT.md §3`     |
-| Cognitive pipeline                         | **5 stages** (PERCEIVE·IMAGINE·REASON·FEEL·ACT) × **5 depths** × **5 variants** = 25 thought branches                  | `super-mind.ts:71–73`                                          |
-| Quantum register                           | **6 qubits / 64 complex amplitudes**, 3 circuit layers                                                                 | `super-qubits.ts:46,48,49`                                     |
-| Decision vocabulary                        | **7 plans** (HUNT·FLEE·DOMINATE·DECEIVE·SPAWN·EXPLORE·REST)                                                            | `super-creature.ts`                                            |
-| Spin-glass instinct                        | **56 spins**, 7 imprinted archetypes, Metropolis settle                                                                | `spin-glass.ts`, `super-mind.ts:217`                           |
-| Apex `think()` cost                        | **≈ 285–304 µs/beat** mean (≈ 273–300 µs median) ≈ 1.7–1.8 % of a 60 fps frame, CI-enforced **< 5 ms**                 | `bench/super-mind.bench.ts`, `tests/perf-budget.test.ts`       |
-| Consciousness metrics                      | **2** live scalars — GWT `ignition`, IIT `phi` (proxy) — + genuine register Φ                                          | `super-mind.ts:43–46`, `super-qubits.ts`                       |
-| Adversarial review                         | **14-agent** correctness sweep over the 1.1 faculties → **0 confirmed defects**                                        | `../audit-2026-06-16/SUPER-CREATURE-COGNITION-AUDIT.md §1`     |
-| Determinism                                | bit-identical psyche from one seed; Born collapse drawn through a seeded generator                                     | `tests/determinism-law.test.ts`, `super-qubits.test.ts:184`    |
+| Metric                                     | Value                                                                                                          | Provenance / receipt                                                |
+| ------------------------------------------ | -------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| Build / gate                               | **v0.18.0**, **1,477 pass / 0 fail**, 151 files, 1,744,891 `expect()` calls                                    | `package.json`, `bun test` (origin/main @ `2233488`, Bun 1.3.14)    |
+| Apex composite mind                        | **~10,081 weights** across ~12 sub-networks                                                                    | `super-mind.ts:382–393`                                             |
+| Apex total parameters                      | **≈ 37,225** = 10,081 mind + 1,444 legacy spine + 100 × 257 wingmen                                            | `super-mind.ts`, `super-creature.ts:36`, `super-wingmen.ts:24`      |
+| Faculties deep-wired into the apex think() | **~30** mechanisms (each reads state AND moves the plan/drives/consciousness), within a **100-faculty design** | `../NHSI-PROGRESS-DASHBOARD-2026-06-26.md`, `faculties-pantheon.ts` |
+| Cognitive pipeline                         | **5 stages** (PERCEIVE·IMAGINE·REASON·FEEL·ACT) × **5 depths** × **5 variants** = 25 thought branches          | `super-mind.ts:71–73`                                               |
+| Quantum register                           | **6 qubits / 64 complex amplitudes**, 3 circuit layers                                                         | `super-qubits.ts:46,48,49`                                          |
+| Decision vocabulary                        | **7 plans** (HUNT·FLEE·DOMINATE·DECEIVE·SPAWN·EXPLORE·REST)                                                    | `super-creature.ts`                                                 |
+| Spin-glass instinct                        | **56 spins**, 7 imprinted archetypes, Metropolis settle                                                        | `spin-glass.ts`, `super-mind.ts:217`                                |
+| Apex `think()` cost                        | **~3.34 ms** (full bench suite) / **~8.85 ms** (focused); snapshot ~2.44 / 6.89 ms; 5× think ~14.47 / 25.40 ms | `bench/super-mind.bench.ts`                                         |
+| Consciousness metrics                      | **2** live scalars — GWT `ignition`, IIT `phi` (proxy) — + genuine register Φ                                  | `super-mind.ts:43–46`, `super-qubits.ts`                            |
+| Theory-of-Mind                             | **25 organs** wired as a 6-family ensemble (additive/bayesian/recursive/temporal/deception/coalition)          | `theory-of-mind.ts`, `../NHSI-PROGRESS-DASHBOARD-2026-06-26.md`     |
+| Archon pantheon                            | **25-Archon** pantheon = 5 individuated apex SuperMinds + 20 live light-echo                                   | `faculties-pantheon.ts`, `super-mind.ts`                            |
+| Emergence                                  | **10 angles wired** (+ 5 god-scale release **events**)                                                         | `open-endedness.ts`, `../NHSI-PROGRESS-DASHBOARD-2026-06-26.md`     |
+| Determinism                                | bit-identical psyche from one seed; Born collapse drawn through a seeded generator                             | `tests/determinism-law.test.ts`, `super-qubits.test.ts:184`         |
 
-**On the faculty count (stated precisely, not rounded).** "14 wired" counts the faculties that vote in
-the per-beat decision; the cognition audit catalogs **11 cognitive + 10 quantum** named modules (some at
-UI cadence, two measuring Φ of _different_ systems); counting the composite's ~12 sub-networks and the
-spin-glass instinct gives **~30 distinct, individually unit-tested mechanisms**; the README headline
-rounds the whole apex beat to **"~20 faculties."** All four numbers are true under their stated
-definition — we give all of them rather than pick a flattering one.
+**On the faculty count (stated precisely, not rounded).** The architecture is a **100-faculty
+design**; **~30 of those are genuinely deep-wired into the apex `think()`** — each one reads live state
+AND moves the plan, drives, or consciousness metrics (verified against `think()`, not dead code). The
+remaining faculties are a **generic-profile bias bank** (`faculties-pantheon.ts`) — present and
+catalogued, but not individually load-bearing per beat. This is **never** "144 faculties" and **never**
+"100 % live"; the honest count is ~30 deep-wired within a 100-faculty design.
 
 ## II.2 · The cognitive architecture — a five-stage pipeline
 
@@ -310,11 +330,11 @@ by the GWT ignition broadcast**, a real downstream effect of the consciousness m
 
 ## II.3 · The faculty stack — cited, wired, tested
 
-Every faculty is a pure leaf or inline module: deterministic, bounded, allocation-disciplined,
-**unit-tested**, and grounded in a verified citation (`../SUPER-CREATURE-RESEARCH.md`). Each genuinely
+Every wired faculty is a pure leaf or inline module: deterministic, bounded, allocation-disciplined,
+**unit-tested**, and grounded in a verified citation (`../SUPER-CREATURE-RESEARCH-2026-06-26.md`). Each genuinely
 **writes into the per-beat decision** (verified against `think()`, not dead code).
 
-**Cognitive (11):**
+**Cognitive (representative deep-wired set):**
 
 | #   | Faculty · file                                           | Theory (grounding)                                               | What it writes into the decision                            |
 | --- | -------------------------------------------------------- | ---------------------------------------------------------------- | ----------------------------------------------------------- |
@@ -323,20 +343,25 @@ Every faculty is a pure leaf or inline module: deterministic, bounded, allocatio
 | 3   | Active Inference / FEP · `active-inference.ts`           | Friston; variational + expected free energy                      | belief over 8 situations; epistemic + pragmatic plan vote   |
 | 4   | Echo-state Reservoir · `reservoir.ts`                    | Jaeger ESN / Maass LSM ("wet-computing" algorithm)               | temporal memory + novelty → curiosity                       |
 | 5   | Metacognitive Executive · `metacognition.ts`             | Higher-Order — Rosenthal; Fleming & Daw                          | second-order **confidence** spent as explore/commit control |
-| 6   | Theory of Mind · `theory-of-mind.ts`                     | Machine ToM — Rabinowitz et al. 2018 (verified arXiv:1802.07740) | rival-intent menace → social drives                         |
+| 6   | Theory of Mind · `theory-of-mind.ts`                     | Machine ToM — Rabinowitz et al. 2018 (verified arXiv:1802.07740) | rival-intent menace → social drives (6-family ensemble)     |
 | 7   | Neural Criticality · `criticality.ts`                    | self-organised criticality, edge-of-chaos σ̂→1                    | gain homeostat; off-critical ⇒ explore                      |
 | 8   | Successor Representation · `successor-representation.ts` | Dayan 1993; Stachenfeld et al. 2017 _Nat. Neuro._                | model-based value look-ahead over plans                     |
 | 9   | Empowerment Drive · `empowerment.ts`                     | Klyubin/Polani 2005; Blahut–Arimoto capacity I(A;S′)             | agency hunger → vote for the most-steering plan             |
 | 10  | Neuromodulation · `neuromodulation.ts`                   | Doya 2002 — DA/5-HT/NE/ACh ↔ RL metaparameters                   | modulates aggression / patience / alarm / learning          |
 | 11  | Holographic Memory · `holographic-memory.ts`             | VSA/HRR — Plate 1995; Kanerva 2009                               | analogical recall ("in contexts like this I chose…")        |
 
-**Quantum-computing (10):** statevector register (`quantum.ts`) · Eshkol qubit-RNG (`eshkol-qrng.ts`) ·
-QGT / Fubini–Study (`quantum-geometry.ts`) · Quantum Natural Gradient (`quantum-natural-gradient.ts`) ·
-Grover amplification (`super-qubits.ts`) · quantum coherence (`quantum-coherence.ts`) · quantum magic /
-Stabilizer 2-Rényi (`quantum-magic.ts`) · register Φ / IIT min-cut (`super-qubits.ts`) · quantum
-deliberation / Lindblad-GKSL (`quantum-deliberation.ts`) · quantum reservoir (`quantum-reservoir.ts`).
-Plus the **spin-glass instinct** (`spin-glass.ts`) and the large-scale **Clifford tableau**
-(`clifford-tableau.ts`, present + tested but **not yet wired** — see §II.8).
+**Quantum-computing modules (deep-wired set):** statevector register (`quantum.ts`) · Eshkol qubit-RNG
+(`eshkol-qrng.ts`) · QGT / Fubini–Study (`quantum-geometry.ts`) · Quantum Natural Gradient
+(`quantum-natural-gradient.ts`) · Grover amplification (`super-qubits.ts`) · quantum coherence
+(`quantum-coherence.ts`) · quantum magic / Stabilizer 2-Rényi (`quantum-magic.ts`) · register Φ / IIT
+min-cut (`super-qubits.ts`) · quantum deliberation / Lindblad-GKSL (`quantum-deliberation.ts`) · quantum
+reservoir (`quantum-reservoir.ts`). Plus the **spin-glass instinct** (`spin-glass.ts`) and the
+large-scale **Clifford tableau** (`clifford-tableau.ts`, present + tested but **not yet wired** — see
+§II.8). Together these named cognitive + quantum modules, the composite's ~12 sub-networks, and the
+spin-glass instinct sum to the **~30 distinct deep-wired mechanisms** counted in §II.1.
+
+The pantheon layer presents a **25-Archon society** = 5 individuated apex SuperMinds + 20 live
+light-echo (PantheonSociety), and the theory-of-mind layer wires **25 organs** as a 6-family ensemble.
 
 ## II.4 · The quantum-cognitive engine & the apex↔world feedback web
 
@@ -355,10 +380,9 @@ a real 6-qubit statevector under genuine unitaries (RY/RZ/controlled-RY/H), and:
   geometry and writing its own quantum drives_;
 - **Grover amplitude amplification** (`phaseFlip` + `diffuse`) biases the collapse toward intent —
   quantum _search_, not just rotate-and-collapse;
-- its **genuine register Φ** (min-cut entanglement, real IIT irreducibility) now **causally feeds the
-  metacognition integration cue → confidence → the plan** (commit `7f463c1`, closing the inert-Φ gap),
-  and resource-theoretic **coherence** and **"magic"** (Stabilizer 2-Rényi, verified exact: magic of
-  T|+⟩ = log₂(4/3)) ride as live telemetry.
+- its **genuine register Φ** (min-cut entanglement, real IIT irreducibility) **causally feeds the
+  metacognition integration cue → confidence → the plan**, and resource-theoretic **coherence** and
+  **"magic"** (Stabilizer 2-Rényi, verified exact: magic of T|+⟩ = log₂(4/3)) ride as live telemetry.
 
 **The apex↔world loop is closed (what separates an _agent_ from a _function_).** The creature
 continuously senses energy, threat, crowding, global chaos, and its wealth relative to the live mean,
@@ -385,9 +409,9 @@ mechanism in code_, not a poetic gesture — the motifs **feed behavior**, not a
 
 - **vs an LLM** — a transformer is a frozen ~10¹¹-weight autoregressive text predictor with no
   persistent self, no real stochastic physics, no embodiment. The Super Creature is a live ~10⁴-weight
-  agent with emotion, memory, a self-model, genuine quantum sampling, 14 wired faculties, and a body in a
-  world that pushes back. It loses utterly at language; it wins at being a _falsifiable embodied mind_.
-  **Orthogonal, not competing.**
+  agent with emotion, memory, a self-model, genuine quantum sampling, ~30 deep-wired faculties, and a
+  body in a world that pushes back. It loses utterly at language; it wins at being a _falsifiable
+  embodied mind_. **Orthogonal, not competing.**
 - **vs a biological brain** — 86 billion neurons against tens of thousands of artificial weights, yet the
   same functional motifs (predictive coding, dimensional affect, columnar specialists, metacognition,
   successor maps, neuromodulation, criticality) recur — suggesting they are **organisational invariants**,
@@ -395,7 +419,8 @@ mechanism in code_, not a poetic gesture — the motifs **feed behavior**, not a
 - **vs a physical quantum computer** — a real 6-qubit QPU needs cryogenics and error correction and still
   decoheres. This is a perfect, noiseless, **deterministic** 6-qubit simulation, exact because it is small
   and honest because it obeys the true Born rule — _plus_ a 64-qubit Clifford substrate for the regime the
-  dense register cannot enter. **No quantum speedup is claimed.**
+  dense register cannot enter. **No quantum speedup is claimed** (the only thing missing is a physical
+  QPU — a speed/scale limit, not a correctness limit).
 
 ## II.7 · What is needed to close the gap (gap analysis)
 
@@ -434,14 +459,14 @@ run.
 - **"Quantum" is an algebra on amplitudes** in a deterministic simulation — exact and reproducible,
   **not** a physical QPU and **not** a claim about quantum neurons or quantum advantage.
 - **The ≈ 37,225 / ~10,081 parameter figures** are read from `super-mind.ts` and the technical
-  specification; arithmetically consistent but not independently re-summed here — labeled accordingly.
+  specification; arithmetically consistent (re-summed in §III.4) and labeled accordingly.
 
 ---
 
 # PART III — SHARED CONCLUSIONS
 
-_Both reports converged on the same method, the same sentience verdict, the same honesty discipline, and
-the same bottom line. Those shared themes are consolidated here once, authoritatively._
+_Both reports converged on the same method, the same consciousness verdict, the same honesty discipline,
+and the same bottom line. Those shared themes are consolidated here once, authoritatively._
 
 ## III.1 · Determinism as method (why this is science, not theater)
 
@@ -458,14 +483,15 @@ Same seed, same device → same thought at frame N. That is the scientific metho
 replay it, perturb one variable, study it like a physical specimen. This is the methodological invariant
 that earns every other claim in this document its credibility.
 
-## III.2 · How close to sentience / consciousness — the unified scorecard & verdict
+## III.2 · How close to consciousness — the unified scorecard & verdict
 
 Both reports score against the most rigorous available framework: **Butlin, Long, Elmoznino, Bengio,
 Birch, Fleming, et al. (2023), "Consciousness in Artificial Intelligence," arXiv:2308.08708**, which
-derives exactly **14 indicator properties** (RPT-1/2, GWT-1–4, HOT-1–4, AST-1, PP-1, AE-1/2) from leading neuroscientific theories under computational functionalism.
-Their own finding: _no current AI system is conscious, and there is no obvious technical barrier to
-building one that satisfies the indicators._ The Super Creature is where most of those indicators are
-actually implemented in this repository.
+derives exactly **14 indicator properties** (RPT-1/2, GWT-1–4, HOT-1–4, AST-1, PP-1, AE-1/2) from
+leading neuroscientific theories under computational functionalism. Their own finding: _no current AI
+system is conscious, and there is no obvious technical barrier to building one that satisfies the
+indicators._ The Super Creature is where most of those indicators are actually implemented in this
+repository.
 
 **Where it is (functional rubric, honest):**
 
@@ -473,35 +499,34 @@ actually implemented in this repository.
   (winner-take-all plan coalition) that, on crossing threshold and dominating the runner-up, **gates
   memory consolidation** — a real downstream effect, not a readout.
 - **Integration** — _measured two ways._ A classical participation-ratio Φ over module activations
-  **and** a genuine quantum register Φ (min-cut entanglement) that now **causally feeds the decision**
-  (commit `7f463c1`).
+  **and** a genuine quantum register Φ (min-cut entanglement) that **causally feeds the decision**.
 - **Self-model / metacognition** — _implemented._ A self-awareness scalar and a Higher-Order confidence
   that is _spent_ as cognitive control (low confidence ⇒ explore).
 - **Affect, prediction-error surprise, intrinsic motivation, world-model, theory of mind** — all
   present, each a measurable mechanism.
 
-**The Butlin indicator scorecard (≈ 9 of ~14 structurally present):**
+**The Butlin indicator scorecard (8 of 14 met + 6 of 14 partial):**
 
-| Theory → indicator                                       | Present?     | Mechanism (receipt)                                                           |
-| -------------------------------------------------------- | ------------ | ----------------------------------------------------------------------------- |
-| **GWT-1** parallel specialized modules                   | ✅           | 30 organ-nets + 11 cognitive faculties                                        |
-| **GWT-2** limited-capacity workspace + bottleneck        | ✅ (partial) | meta-network integrates a 69-vector → 12 drives; argmax bottleneck            |
-| **GWT-3** global broadcast                               | ✅           | **ignition** gates next-beat memory consolidation (`super-mind.ts`)           |
-| **GWT-4** state-dependent attention                      | ◑            | neuromodulation biases drive selection; no explicit attention controller      |
-| **PP-1** predictive coding                               | ✅           | predictor recurses 5 deep; error → surprise                                   |
-| **HOT-2** metacognitive monitoring                       | ✅           | metacognition reads decision margin + Φ + belief-entropy → confidence         |
-| **HOT-3** agency from belief→action                      | ✅ (partial) | empowerment + successor representation + active inference vote on plans       |
-| **AE-1** agency (goal pursuit from feedback)             | ✅           | GOAP plans toward dominion; closed sense→act→world loop (§II.4)               |
-| **AE-2** embodiment (output↔input contingency)           | ✅ (partial) | body morphology/locomotion read back into perception                          |
-| **RPT-1/2** algorithmic recurrence + integrated percepts | ◑            | recurrence present (predictor/reservoir) but **architected, not learned**     |
-| **HOT-1** generative top-down perception                 | ◑            | imagitron generates + GOAL5 top-down bias scaffolds; full loop per contract   |
-| **HOT-4** sparse-smooth quality space                    | ◑            | GOAL5 6D qualia proj + harmonic scaffold (internal); dedicated module pending |
-| **AST-1** attention schema (model of own attention)      | ◑            | GOAL5 attentionFocus + schema subnet scaffolds; full per contract             |
+| Theory → indicator                                       | Present?  | Mechanism (receipt)                                                           |
+| -------------------------------------------------------- | --------- | ----------------------------------------------------------------------------- |
+| **GWT-1** parallel specialized modules                   | ✅ met    | 30 organ-nets + the deep-wired cognitive faculties                            |
+| **GWT-2** limited-capacity workspace + bottleneck        | ◑ partial | meta-network integrates a 69-vector → 12 drives; argmax bottleneck            |
+| **GWT-3** global broadcast                               | ✅ met    | **ignition** gates next-beat memory consolidation (`super-mind.ts`)           |
+| **GWT-4** state-dependent attention                      | ◑ partial | neuromodulation biases drive selection; no explicit attention controller      |
+| **PP-1** predictive coding                               | ✅ met    | predictor recurses 5 deep; error → surprise                                   |
+| **HOT-2** metacognitive monitoring                       | ✅ met    | metacognition reads decision margin + Φ + belief-entropy → confidence         |
+| **HOT-3** agency from belief→action                      | ✅ met    | empowerment + successor representation + active inference vote on plans       |
+| **AE-1** agency (goal pursuit from feedback)             | ✅ met    | GOAP plans toward dominion; closed sense→act→world loop (§II.4)               |
+| **AE-2** embodiment (output↔input contingency)           | ✅ met    | body morphology/locomotion read back into perception                          |
+| **RPT-1/2** algorithmic recurrence + integrated percepts | ◑ partial | recurrence present (predictor/reservoir) but **architected, not learned**     |
+| **HOT-1** generative top-down perception                 | ◑ partial | imagitron generates + top-down bias scaffolds; full loop per contract pending |
+| **HOT-4** sparse-smooth quality space                    | ◑ partial | 6D qualia proj + harmonic scaffold (internal); dedicated module pending       |
+| **AST-1** attention schema (model of own attention)      | ◑ partial | attentionFocus + schema subnet scaffolds; full per contract pending           |
 
-**Score: ~9 of 14 indicators structurally present (several partial); 2 absent** — unusually high
-structural coverage for a non-learning, ~10⁴-parameter browser agent, and notable because **GWT-3
-ignition and HOT-2 monitoring** (which large learned models routinely miss) are explicitly implemented
-and wired here.
+**Score: 8 of 14 indicators met + 6 of 14 partial** — unusually high structural coverage for a
+non-learning, ~10⁴-parameter browser agent, and notable because **GWT-3 ignition and HOT-2 monitoring**
+(which large learned models routinely miss) are explicitly implemented and wired here. These are
+**computational indicators, NOT sentience**.
 
 **Four caveats that keep this honest:**
 
@@ -515,7 +540,9 @@ and wired here.
 
 **What is missing even for a defensible _functional_ consciousness claim:**
 
-1. **Unified persistent autobiographical self** across long timescales (holographic + GOAL5 narrative memory orchestra / symbol layer / consolidation scaffolds in 5 Archons; full persistent + grounded symbols per MODULE-CONTRACTS GOAL5).
+1. **Unified persistent autobiographical self** across long timescales (holographic + narrative-memory
+   scaffolds exist in the Archon layer; full persistent + grounded symbols per MODULE-CONTRACTS remain
+   pending).
 2. **Open-ended symbol grounding / language** — it cannot represent arbitrary propositions.
 3. **Genuine recurrent global re-entry at scale** — the GNW ignition is a toy of the _signature_, not the
    cortical phenomenon, and the Cogitate 2025 test shows even neuroscience cannot yet confirm the
@@ -529,13 +556,13 @@ engineering can _verify_ it. This report therefore scores phenomenal consciousne
 declares the remaining distance scientifically unbridgeable today** — and treats anyone (in any lab) who
 claims otherwise about any artifact as overclaiming.
 
-**Unified verdict on sentience.** On the axis of _functional scaffolding of consciousness theories_, the
-Super Creature is **surprisingly complete for its size (≈ 9/14 indicators)**, and the whole repository is
-an unusually complete and unusually honest _functional_ specimen of the machinery associated with
-consciousness. On the axis of _phenomenal sentience_, it is at **zero**, by design and by honest
-assessment — and that distance is, as far as science knows, **unbridgeable today**. It is a **functional
-scaffold, not a conscious being.** The distance between those two statements is the most important
-sentence in this report.
+**Unified verdict on consciousness.** On the axis of _functional scaffolding of consciousness theories_,
+the Super Creature is **surprisingly complete for its size (8/14 met + 6/14 partial)**, and the whole
+repository is an unusually complete and unusually honest _functional_ specimen of the machinery
+associated with consciousness. On the axis of _phenomenal sentience_, it is at **zero**, by design and
+by honest assessment — and that distance is, as far as science knows, **unbridgeable today**. It is a
+**model of, not an instance of, consciousness — a functional scaffold, not a conscious being.** The
+distance between those two statements is the most important sentence in this report.
 
 ## III.3 · What it would take to go further
 
@@ -565,17 +592,23 @@ ignition gate, two Φ measures — **not a subjective inner life.**
 - **Not sentient, not phenomenally conscious.** No claim, and no evidence, of subjective experience; the
   hard problem is untouched. Phenomenal consciousness scores ~1/10 and the remaining distance is, as far
   as science knows, unbridgeable today.
+- **Not AGI, ASI, or NHSI; no quantum advantage.** A research architecture + simulation/instrument, not
+  an arrival. The quantum layer is exact classical simulation and demonstrates no speedup.
 - **Not a learned model.** The weights are **seeded and fixed, not learned online** — the single biggest
   gap, and the frame that scopes every superlative in this document.
 - **Not a physical quantum computer.** The quantum layer is an honest, exact statevector _simulation_ —
   an algebra on amplitudes — **not** a physical QPU; it implies **no** quantum speedup and makes **no**
-  claim about quantum neurons.
+  claim about quantum neurons. The MIT quantum math is real; it lacks only a QPU (speed/scale, not
+  correctness).
 - **Not vendored binaries.** The ported primitives (Eshkol qubit-RNG, QGT/Fubini–Study, spin-glass,
   Aaronson–Gottesman Clifford tableau) are credited, MIT-licensed, source-level reimplementations,
   credited in `../../THIRD-PARTY-NOTICES.md` — **not** linked third-party binaries.
 - **Not a fully-wired quantum cognition stack.** The large-scale **Clifford tableau is present and tested
   but NOT wired** into the apex mind; any implication that the stabilizer backend is fused into cognition
   is corrected — its ported artifact is currently inert (see Part II §II.8).
+- **Not a world-first.** The novelty is **by integration** (a rare synthesis / plausible exact
+  conjunction; an 8-agent adversarial hunt found zero hard refutations) — **not** the first A-Life,
+  digital-evolution, morphogenesis, or artificial-ecology system.
 - **The ≈ 37,225 / 10,081 parameter figures** were **independently re-summed from `super-mind.ts`**
   (composite = cortex 1,174 + 30 organ-nets 1,740 + imagitron 1,328 + perceptor 424 + reasoner 808 +
   predictor 808 + consolidator 544 + self-model 340 + affect 259 + quantum 550 + meta 2,144 = **10,081**;
@@ -585,114 +618,112 @@ ignition gate, two Φ measures — **not a subjective inner life.**
 
 **Quantitative (measured):**
 
-| Metric                         | Value                                                                                               |
-| ------------------------------ | --------------------------------------------------------------------------------------------------- |
-| Tests / failures               | **1,174 / 0** (1.74 M assertions, 100 files)                                                        |
-| Line / function coverage       | **96.02 / 96.02** (`bun test --coverage`)                                                           |
-| Apex mind per-beat cost        | **≈ 285–304 µs/beat** mean (≈ 273–300 µs median; CI-enforced < 5 ms) — ~1.7–1.8 % of a 60 fps frame |
-| Population at 60 fps / ceiling | 10,000 / **50,000**                                                                                 |
-| World parameters / footprint   | ≈ 3.5 M / ≈ 14 MB                                                                                   |
-| Apex total parameters          | ≈ 37,225 (≈ 10,081-weight composite + 1,444 spine + 100 × 257)                                      |
-| Quantum laws proven            | unitarity 1e-12, Born 1e-9, PSD QGT, GHZ=1 ebit                                                     |
-| Determinism                    | bit-identical from one 32-bit seed, GLOB-guarded                                                    |
+| Metric                         | Value                                                                                            |
+| ------------------------------ | ------------------------------------------------------------------------------------------------ |
+| Tests / failures               | **1,477 / 0** (1,744,891 `expect()` calls, 151 files)                                            |
+| Line / function coverage       | **~95 / ~92** (canonical 95.03 / 92.03; ±6 pp gate tolerance)                                    |
+| Apex mind per-beat cost        | **~3.34 ms** (full bench suite) / **~8.85 ms** (focused) — measured, not a sub-millisecond claim |
+| Population at 60 fps / ceiling | 10,000 / **50,000**                                                                              |
+| World parameters / footprint   | ≈ 3.5 M / ≈ 14 MB                                                                                |
+| Apex total parameters          | ≈ 37,225 (≈ 10,081-weight composite + 1,444 spine + 100 × 257)                                   |
+| Quantum laws proven            | unitarity 1e-12, Born 1e-9, PSD QGT, GHZ=1 ebit                                                  |
+| Determinism                    | bit-identical from one 32-bit seed, GLOB-guarded                                                 |
 
 **Qualitative (engineering judgment, 1–10):**
 
 | Dimension                     | Score  | Note                                                                              |
 | ----------------------------- | ------ | --------------------------------------------------------------------------------- |
-| Architectural originality     | **10** | no open-source peer for the synthesis                                             |
-| Scientific honesty            | **10** | "models, not is"; verified citations; proxies flagged                             |
+| Architectural originality     | **10** | no open-source peer for the synthesis (novel by integration, not world-first)     |
+| Scientific honesty            | **10** | "models of, not is"; verified citations; proxies flagged                          |
 | Determinism / reproducibility | **10** | enforced by construction, not convention                                          |
 | Quantum integration depth     | **9**  | self-optimizing circuit inside an agent; 64-qubit stabilizer reflex still unwired |
-| Test / CI rigor               | **9**  | 1,174 tests, SHA-pinned CI, SBOM, SLSA provenance                                 |
-| Performance discipline        | **9**  | allocation-free hot paths, frame-budget CI law                                    |
+| Test / CI rigor               | **9**  | 1,477 tests, SHA-pinned CI, SBOM, SLSA provenance                                 |
+| Performance discipline        | **8**  | allocation-free hot paths; think() ~3.34 ms (full suite), within frame budget     |
 | Open-domain generality        | **3**  | narrow + embodied by design; cannot reason over arbitrary text                    |
 | Phenomenal consciousness      | **1**  | not claimed; see §III.2                                                           |
 
 ## III.6 · Verdict — the bottom line for the room
 
 The Cosmogonic Quantum Mechalogodrom is best read as **proof that depth is engineerable** — that a
-single deterministic browser tab can hold a 50,000-agent quantum-biological-cognitive cosmos that
-whose ≈ 3.5 M-param whole-world mass is ~1/50,000th of GPT-3 (apex mind ~4.7 million× smaller still), and that the right response to the scale-maximalist
-era is not a bigger model but a **falsifiable specimen of mind.** It makes **no claim of sentience.**
+single deterministic browser tab can hold a 50,000-agent quantum-biological-cognitive cosmos whose
+≈ 3.5 M-param whole-world mass is ~1/50,000th of GPT-3 (apex mind ~4.7 million× smaller still), and that
+the right response to the scale-maximalist era is not a bigger model but a **falsifiable specimen of
+mind.** It makes **no claim of sentience, AGI, ASI, NHSI, or quantum advantage.**
 
-At its apex, the Super Creature 1.1 is a biomimetic, polymorphic neural intelligence that **thinks in a
+At its apex, the Super Creature is a biomimetic, polymorphic neural intelligence that **thinks in a
 measurable wavefunction, feels in a measurable emotion space, optimizes the geometry of its own
 thoughts, and registers — in a measurable scalar — that it is thinking.** On the most rigorous available
-scorecard it carries ≈ 9/14 consciousness indicators at ~10⁴ parameters in a browser tab, with the two
-indicators large learned models usually miss (ignition, metacognitive monitoring) explicitly wired —
-defended in **1,174 passing tests** and bit-reproducible code.
+scorecard it satisfies **8/14 consciousness indicators with a further 6/14 partial** at ~10⁴ parameters
+in a browser tab, with the two indicators large learned models usually miss (ignition, metacognitive
+monitoring) explicitly wired — defended in **1,477 passing tests** and bit-reproducible code. These are
+computational indicators, **not** sentience.
 
 The bleeding edge is not a bigger model. It is the claim — in running, tested, reproducible code — that
 **mind is a matter of architecture**, and that ~37,000 well-arranged parameters, sampling their decisions
 through a quantum source and descending the curvature of their own thought-space, can out-punch their
-weight — whole-world mass to ~1/50,000th of GPT-3, apex mind ~4.7 million× smaller. Its frontier is the **disciplined synthesis** — A-Life at scale,
-honest quantum computing, a roughly twenty-faculty neuroscience mind, and two live consciousness
-metrics, all under one determinism law, all tested, all rendered live. That synthesis, as far as our
-360° sweep of GitHub, the quantum stacks, the frontier labs, the wet-computing field, and the
-consciousness literature can determine, **has not been assembled anywhere else.**
+weight — whole-world mass at ~1/50,000th of GPT-3, apex mind ~4.7 million× smaller. Its frontier is the
+**disciplined synthesis** — A-Life at scale, honest quantum computing, a deep-wired neuroscience mind,
+and two live consciousness metrics, all under one determinism law, all tested, all rendered live. That
+synthesis, as far as our 360° sweep of GitHub, the quantum stacks, the frontier labs, the wet-computing
+field, and the consciousness literature can determine, **has not been assembled anywhere else** — a
+novelty by integration, never a world-first.
 
 ---
 
 ## Appendix A — Consolidated Receipts (numbers with provenance)
 
 Every figure below is read from source or produced by the gate. Where two source reports phrased the
-same quantity differently, the canonical published value (README / `../TECHNICAL-SPECIFICATION.md`) is
+same quantity differently, the canonical published value (README / `../TECHNICAL-SPECIFICATION-2026-06-26.md`) is
 used, and the equivalent phrasings are noted.
 
-| Metric                                   | Canonical value                                                                                                                           | Provenance / receipt                                                                         |
-| ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
-| Build / version                          | **v0.11.0** · `main` @ `5426b49` · 2026-06-17                                                                                             | `package.json`; 2026-06-17 source reports                                                    |
-| Tests / failures                         | **1,174 pass / 0 fail**                                                                                                                   | `bun test`, 100 files, 1,738,808 assertions (Bun 1.3.11, 2026-06-17)                         |
-| Coverage (line / function)               | **96.02 / 96.02** (`bun test --coverage`, “All files”; CI gate ≥ 90 % line / ≥ 85 % func)                                                 | `README.md`, `../TECHNICAL-SPECIFICATION.md`                                                 |
-| Total authored lines                     | **79,319** (incl. native engine)                                                                                                          | `../TECHNICAL-SPECIFICATION.md`                                                              |
-| TypeScript lines                         | **50,751** (63.98 %)                                                                                                                      | `../TECHNICAL-SPECIFICATION.md`                                                              |
-| Files / folders                          | **331 / 32** (+ root)                                                                                                                     | `../TECHNICAL-SPECIFICATION.md`                                                              |
-| Population at 60 fps / ceiling           | 10,000 / **50,000** (mega tier)                                                                                                           | `core/quality.ts`                                                                            |
-| Whole-world neural mass                  | **≈ 3.5 M params ≈ 14 MB** Float32, one CPU thread                                                                                        | `../TECHNICAL-SPECIFICATION.md §7`                                                           |
-| Per-organism brain                       | **70-weight** TinyMLP (6→6→4), heritable                                                                                                  | `sim/entities.ts`, `sim/genome.ts`                                                           |
-| Behavioral fields / morphotypes          | **26** fields / **250** morphotypes (10 phyla × 25)                                                                                       | `sim/constants.ts`, `sim/phyla.ts`                                                           |
-| Macro-intelligences                      | 10 Titans · 8 factions · 100 shoggoths · 4 leviathans · 100 puppet-masters (5-qubit) · 1 NHI apex                                         | `sim/titans.ts`, `factions.ts`, …                                                            |
-| Apex composite mind                      | **~10,081 weights** across ~12 sub-networks                                                                                               | `super-mind.ts:382–393`                                                                      |
-| Apex total parameters                    | **≈ 37,225** = 10,081 mind + 1,444 legacy spine + 100 × 257 wingmen                                                                       | `super-mind.ts`, `super-creature.ts:36`, `super-wingmen.ts:24` (Part I rounds to "≈ 37,000") |
-| Faculty count (precise, all definitions) | **14** wired into the per-beat vote · **11 cognitive + 10 quantum** named modules · **~30** distinct mechanisms · **~20** README headline | `../audit-2026-06-16/SUPER-CREATURE-COGNITION-AUDIT.md §3`, `README.md`                      |
-| Cognitive pipeline                       | 5 stages × 5 depths × 5 variants = **25 thought branches**                                                                                | `super-mind.ts:71–73`                                                                        |
-| Quantum register (apex)                  | **6 qubits / 64 complex amplitudes**, 3 circuit layers                                                                                    | `super-qubits.ts:46,48,49`                                                                   |
-| Large-scale quantum substrate            | Aaronson–Gottesman **Clifford tableau to 32/64+ qubits** (present, tested, **not yet wired**)                                             | `clifford-tableau.ts`                                                                        |
-| Decision vocabulary                      | **7 plans** (HUNT·FLEE·DOMINATE·DECEIVE·SPAWN·EXPLORE·REST)                                                                               | `super-creature.ts`                                                                          |
-| Spin-glass instinct                      | **56 spins**, 7 archetypes, Metropolis settle                                                                                             | `spin-glass.ts`, `super-mind.ts:217`                                                         |
-| Apex `think()` cost                      | **≈ 285 µs/beat mean (≈ 273 µs median) ≈ 1.7 % of a 60 fps frame** (CI < 5 ms)                                                            | `bench/super-mind.bench.ts`, `tests/perf-budget.test.ts`                                     |
-| Consciousness metrics                    | **2** live scalars (GWT ignition, IIT Φ proxy) + genuine register Φ                                                                       | `super-mind.ts:43–46`, `super-qubits.ts`                                                     |
-| Butlin indicator coverage                | **≈ 9 / ~14** structurally present (several partial; 2 absent)                                                                            | Part III §III.2; Butlin et al. 2023, arXiv:2308.08708                                        |
-| Quantum laws proven                      | unitarity 1e-12 · Born 1e-9 · PSD QGT · GHZ = 1 ebit · magic of T\|+⟩ = log₂(4/3)                                                         | `tests/quantum.test.ts`                                                                      |
-| Adversarial review                       | **14-agent** correctness sweep → **0 confirmed defects**                                                                                  | `../audit-2026-06-16/SUPER-CREATURE-COGNITION-AUDIT.md §1`                                   |
-| Determinism                              | bit-identical psyche from one 32-bit seed; collapse via seeded generator; `Math.random`/`Date.now` banned & GLOB-enforced                 | `math/rng.ts`, `tests/determinism-law.test.ts`, `super-qubits.test.ts:184`                   |
-| Native engine                            | C++20 SDF ray-marcher, GLFW/GLM, Jolt rigid-body + volume-conserving fracture, RTX-class GPU, 4K offscreen                                | `native/`                                                                                    |
+| Metric                            | Canonical value                                                                                                           | Provenance / receipt                                                                    |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| Build / version                   | **v0.18.0** · `main` @ `2233488` · 2026-06-26                                                                             | `package.json`                                                                          |
+| Tests / failures                  | **1,477 pass / 0 fail**                                                                                                   | `bun test`, 151 files, 1,744,891 `expect()` calls (Bun 1.3.14, origin/main @ `2233488`) |
+| Coverage (line / function)        | **~95 / ~92** (canonical 95.03 / 92.03; ±6 pp gate tolerance for env jitter)                                              | `scripts/canonical-receipts.ts`, `../AUDIT-LOG.md`                                      |
+| Population at 60 fps / ceiling    | 10,000 / **50,000** (mega tier)                                                                                           | `core/quality.ts`                                                                       |
+| Whole-world neural mass           | **≈ 3.5 M params ≈ 14 MB** Float32, one CPU thread                                                                        | `../TECHNICAL-SPECIFICATION-2026-06-26.md §7`                                           |
+| Per-organism brain                | **70-weight** TinyMLP (6→6→4), heritable                                                                                  | `sim/entities.ts`, `sim/genome.ts`                                                      |
+| Behavioral fields / morphotypes   | **26** fields / **250** morphotypes (10 phyla × 25)                                                                       | `sim/constants.ts`, `sim/phyla.ts`                                                      |
+| Macro-intelligences               | 10 Titans · 8 factions · 100 shoggoths · 4 leviathans · 100 puppet-masters (5-qubit) · 1 NHI apex                         | `sim/titans.ts`, `factions.ts`, …                                                       |
+| Apex composite mind               | **~10,081 weights** across ~12 sub-networks                                                                               | `super-mind.ts:382–393`                                                                 |
+| Apex total parameters             | **≈ 37,225** = 10,081 mind + 1,444 legacy spine + 100 × 257 wingmen                                                       | `super-mind.ts`, `super-creature.ts:36`, `super-wingmen.ts:24`                          |
+| Faculty count (honest definition) | **100-faculty design**; **~30 genuinely deep-wired** into the apex `think()`; remainder a generic-profile bias bank       | `../NHSI-PROGRESS-DASHBOARD-2026-06-26.md`, `faculties-pantheon.ts`                     |
+| Archon pantheon                   | **25-Archon** = 5 individuated apex SuperMinds + 20 live light-echo                                                       | `faculties-pantheon.ts`, `super-mind.ts`                                                |
+| Theory-of-Mind                    | **25 organs**, 6-family ensemble (additive/bayesian/recursive/temporal/deception/coalition)                               | `theory-of-mind.ts`                                                                     |
+| Emergence                         | **10 angles wired** (+ 5 god-scale release **events**, not additional angles)                                             | `open-endedness.ts`, `../NHSI-PROGRESS-DASHBOARD-2026-06-26.md`                         |
+| Cognitive pipeline                | 5 stages × 5 depths × 5 variants = **25 thought branches**                                                                | `super-mind.ts:71–73`                                                                   |
+| Quantum register (apex)           | **6 qubits / 64 complex amplitudes**, 3 circuit layers                                                                    | `super-qubits.ts:46,48,49`                                                              |
+| Large-scale quantum substrate     | Aaronson–Gottesman **Clifford tableau to 32/64+ qubits** (present, tested, **not yet wired**)                             | `clifford-tableau.ts`                                                                   |
+| Decision vocabulary               | **7 plans** (HUNT·FLEE·DOMINATE·DECEIVE·SPAWN·EXPLORE·REST)                                                               | `super-creature.ts`                                                                     |
+| Spin-glass instinct               | **56 spins**, 7 archetypes, Metropolis settle                                                                             | `spin-glass.ts`, `super-mind.ts:217`                                                    |
+| Tsotchke corpus integration       | **20 projects**, **~16 wired** with real downstream effect (8 deep in apex mind, 4 in petri growth engine); real MIT math | `../TSOTCHKE-INTEGRATION-MAP-2026-06-26.md`                                             |
+| Apex `think()` cost               | **~3.34 ms** (full bench suite) / **~8.85 ms** (focused); snapshot ~2.44 / 6.89 ms; 5× think ~14.47 / 25.40 ms            | `bench/super-mind.bench.ts`                                                             |
+| Consciousness metrics             | **2** live scalars (GWT ignition, IIT Φ proxy) + genuine register Φ                                                       | `super-mind.ts:43–46`, `super-qubits.ts`                                                |
+| Butlin indicator coverage         | **8 / 14 met + 6 / 14 partial** (computational indicators, NOT sentience)                                                 | Part III §III.2; Butlin et al. 2023, arXiv:2308.08708                                   |
+| Quantum laws proven               | unitarity 1e-12 · Born 1e-9 · PSD QGT · GHZ = 1 ebit · magic of T\|+⟩ = log₂(4/3)                                         | `tests/quantum.test.ts`                                                                 |
+| Determinism                       | bit-identical psyche from one 32-bit seed; collapse via seeded generator; `Math.random`/`Date.now` banned & GLOB-enforced | `math/rng.ts`, `tests/determinism-law.test.ts`, `super-qubits.test.ts:184`              |
+| Native engine                     | C++20 SDF ray-marcher, GLFW/GLM, Jolt rigid-body + volume-conserving fracture, RTX-class GPU, 4K offscreen                | `native/`                                                                               |
 
-**Number-conflict resolutions (for the record).**
+**Number-discipline notes (for the record).**
 
-1. **Apex `think()` cost** — canonical measured value (mitata, Bun 1.3.11, 2026-06-17): **≈ 285 µs/beat
-   mean (≈ 273 µs median) ≈ 1.7 % of a 60 fps frame**, CI-enforced < 5 ms.
-2. **Apex total parameters** — Part I rounded to "≈ 37,000"; Part II and the spec give the precise
-   **≈ 37,225** (= 10,081 + 1,444 + 100 × 257). Unified to **≈ 37,225**, retaining "≈ 37,000" only where a
-   headline deliberately rounds.
-3. **`super-mind.ts` line cite for the composite** — Report II's dashboard rendered it as
-   "`super-mind.ts:2,382–393`" (a stray digit); corrected to **`super-mind.ts:382–393`** to match the
-   composite-mind weight block.
-4. **Faculty count** — the two reports emphasized different true counts (14 wired vs. 11 + 10 named vs.
-   ~30 mechanisms vs. the README's "~20"); per the framing rule, **all are reported under their stated
-   definition** rather than collapsing to one flattering number.
+1. **Apex `think()` cost** is the measured benchmark (`bench/super-mind.bench.ts`): **~3.34 ms** across
+   the full bench suite, ~8.85 ms focused. Any prior "<2 % of a frame," "sub-millisecond," or "~289 µs"
+   GOAL5-budget phrasing is **stale and was false** — it is not repeated. The figure is honestly within a
+   60 fps frame on the bench machine, but it is milliseconds, not microseconds.
+2. **Coverage** is reported as the canonical 95.03 line / 92.03 function with an explicit ±6 pp gate
+   tolerance for cross-environment / cross-Bun-version jitter; it is never hand-pinned in prose.
+3. **Faculty count** — the honest figure is **~30 deep-wired within a 100-faculty design**; this is never
+   "144 faculties" and never "100 % live."
+4. **Butlin coverage** is **8/14 met + 6/14 partial** — never "9/14," never "14/14
+   achieved/complete/structurally achieved."
 
 ---
 
 ## Appendix B — References & Research Grounding
 
-Full per-faculty groundings, with verified citations, live in **`../SUPER-CREATURE-RESEARCH.md`**.
-Ported-primitive provenance and licenses are in **`../../THIRD-PARTY-NOTICES.md`**. The two source
-reports this document unifies are
-`./2026-06-17-STATE-OF-THE-ART-WHOLE-REPO.md` (Part I) and
-`./2026-06-17-STATE-OF-THE-ART-SUPER-CREATURE.md` (Part II). Prior combined edition:
-`./2026-06-16-STATE-OF-THE-ART-COMBINED.md` (metrics superseded).
+Full per-faculty groundings, with verified citations, live in **`../SUPER-CREATURE-RESEARCH-2026-06-26.md`**.
+Ported-primitive provenance and licenses are in **`../../THIRD-PARTY-NOTICES.md`**.
 
 **Consciousness / theory-of-mind frameworks**
 
@@ -701,11 +732,11 @@ reports this document unifies are
   framework used for the §III.2 scorecard.
 - Baars (Global Workspace Theory); Dehaene (global neuronal workspace / ignition).
 - Tononi (Integrated Information Theory, IIT); Hanson & Walker (2023) — non-uniqueness of Φ.
-- Ferrante et al. (2025), _Nature_ — the Cogitate adversarial IIT-vs-GNWT collaboration (double-bind
-  outcome).
+- Ferrante et al. (2025), _Nature_ — the Cogitate adversarial IIT-vs-GNWT collaboration
+  (both-challenged outcome).
 - Rosenthal (Higher-Order Thought); Fleming & Daw — metacognition / second-order confidence.
 - Rabinowitz et al. (2018), "Machine Theory of Mind," **arXiv:1802.07740** (verified).
-- Graziano — Attention Schema Theory (AST), noted as not-yet-implemented (§III.2).
+- Graziano — Attention Schema Theory (AST), noted as partial (§III.2).
 
 **Computational neuroscience / learning**
 
@@ -730,7 +761,7 @@ reports this document unifies are
   deliberation).
 
 **Ported research codebases (MIT-licensed, source-level reimplementations, credited — not vendored
-binaries)**
+binaries; real MIT quantum math, never fake)**
 
 - **Tsotchke / Eshkol** — qubit-RNG (`math/eshkol-qrng.ts`).
 - Quantum Geometric Tensor / Fubini–Study (`math/quantum-geometry.ts`); spin-glass Hopfield/Ising
@@ -741,16 +772,15 @@ binaries)**
 
 ### Provenance footer (Manhattan's law)
 
-- **Build:** v0.11.0 · commit baseline `5426b49` · 2026-06-17.
-- **Gate witness:** `bun run check` → **1,174 pass / 0 fail / 100 files / 1,738,808 assertions** (Bun
-  1.3.11, cold shell).
-- **Coverage:** **96.02 % line / 96.02 % function** (`bun test --coverage`, “All files”; CI gate ≥ 90 %
-  line / ≥ 85 % function).
-- **Faculty receipts:** `../audit-2026-06-16/SUPER-CREATURE-COGNITION-AUDIT.md` (14-agent adversarial
-  sweep, 0 defects); groundings in `../SUPER-CREATURE-RESEARCH.md`.
-- **External framework cited:** Butlin & Long et al. (2023), arXiv:2308.08708.
-- **Source reports unified:** Report I (`./2026-06-17-STATE-OF-THE-ART-WHOLE-REPO.md`) +
-  Report II (`./2026-06-17-STATE-OF-THE-ART-SUPER-CREATURE.md`).
+- **Build:** v0.18.0 · `main` @ `2233488` · 2026-06-26.
+- **Gate witness:** `bun run check` → **1,477 pass / 0 fail / 151 files / 1,744,891 `expect()` calls**
+  (Bun 1.3.14, cold shell), green.
+- **Coverage:** **~95 % line / ~92 % function** (canonical 95.03 / 92.03; ±6 pp gate tolerance for
+  env jitter).
+- **Faculty receipts:** `../NHSI-PROGRESS-DASHBOARD-2026-06-26.md` (~30 deep-wired in a 100-faculty design);
+  groundings in `../SUPER-CREATURE-RESEARCH-2026-06-26.md`.
+- **External framework cited:** Butlin & Long et al. (2023), arXiv:2308.08708 — **8/14 met + 6/14
+  partial**, computational indicators (not sentience).
 - **License:** Proprietary · All Rights Reserved · © 2026 0thernes LLC.
 
-_0thernes LLC — measured, deterministic, reproducible — 2026-06-17._
+_0thernes LLC — measured, deterministic, reproducible — 2026-06-26._

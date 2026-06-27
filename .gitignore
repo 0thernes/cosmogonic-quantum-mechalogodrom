@@ -15,6 +15,9 @@ native/build/
 native/build*/
 # Local MCP tool descriptors (Cursor harness; not part of the app).
 mcps/
+# hacklm-memory tool: undated working copies (.memory/*.md); tool-owned, never part of the app
+# (the tracked dated snapshots stay tracked — gitignore only affects untracked files).
+.memory/*.md
 # Agent harness terminal snapshots (never part of the app).
 terminals/
 agent-tools/

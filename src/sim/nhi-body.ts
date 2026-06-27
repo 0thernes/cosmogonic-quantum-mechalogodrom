@@ -16,6 +16,8 @@ interface Body {
   group: THREE.Group;
   coreMat: THREE.MeshStandardMaterial;
   ringMat: THREE.MeshStandardMaterial;
+  /** Shared material for both ocular points; owned by the body so it is disposed on death. */
+  eyeMat: THREE.MeshStandardMaterial;
   /** Golden-angle phase from the spawn index — even, rng-free variation between bodies. */
   phase: number;
 }
@@ -81,7 +83,13 @@ export class NhiBodySystem {
     group.add(eyeL, eyeR);
 
     this.root.add(group);
-    this.bodies.set(id, { group, coreMat, ringMat, phase: this.spawnIndex++ * 2.399963229728653 });
+    this.bodies.set(id, {
+      group,
+      coreMat,
+      ringMat,
+      eyeMat,
+      phase: this.spawnIndex++ * 2.399963229728653,
+    });
   }
 
   /**
@@ -123,9 +131,20 @@ export class NhiBodySystem {
     this.bodies.clear();
   }
 
+  /** Free ALL GPU resources (live body materials via clear(), then the shared geometries) on world
+   * teardown / HMR reload. Idempotent — geometry.dispose() is safe to call twice. */
+  dispose(): void {
+    this.clear();
+    this.coreGeo.dispose();
+    this.ringGeo.dispose();
+    this.eyeGeo.dispose();
+    this.root.removeFromParent();
+  }
+
   private disposeBody(b: Body): void {
     this.root.remove(b.group);
     b.coreMat.dispose();
     b.ringMat.dispose();
+    b.eyeMat.dispose();
   }
 }

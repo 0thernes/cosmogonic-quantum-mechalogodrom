@@ -13,7 +13,13 @@ export const TSOTCHKE_BYTE_COUNT = 501_271_131;
 /** Tsotchke text lines (recursive). */
 export const TSOTCHKE_TEXT_LINES = 3_874_892;
 
-/** Eshkol .esk program files in corpus. */
+/**
+ * Eshkol `.esk` program files counted in the 2026-06-20 deep-dive CSV census (a dated provenance
+ * snapshot). NOT the live figure: the runtime harvest (`generated-tsotchke-seeds.ts` `eskCount`)
+ * currently scans **1436** `.esk` recursively, which is what README / NHSI dashboard / INTEGRATION-MAP
+ * publish ("1436+"). Both are correct for what they measure (a dated root census vs the current
+ * recursive harvest) — not a drift. Pinned to the 2026-06-20 capture.
+ */
 export const TSOTCHKE_ESK_COUNT = 721;
 
 /** GitHub mirrors bound in TSOTCHKE_REPO_BINDINGS. */

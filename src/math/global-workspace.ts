@@ -190,3 +190,58 @@ export function gwtCompeteScalar(
     entropy: gwtEntropy(weights, n),
   };
 }
+
+/** Result of a limited-capacity (Cowan ~4) workspace competition — Butlin GWT-2. */
+export interface GwtCapacityResult {
+  /** Indices admitted to the limited workspace (top-K by softmax weight) — the conscious spotlight. */
+  admitted: number[];
+  /** How many were admitted (≤ capacity). */
+  occupancy: number;
+  /** The workspace capacity bound (Cowan's ~4 ± 1). */
+  capacity: number;
+  /** Summed softmax weight of the admitted set — the conscious-access mass, [0,1]. */
+  access: number;
+  /** Competition pressure: the softmax mass EXCLUDED by the bottleneck, [0,1] (0 = everything fit). */
+  pressure: number;
+  /** True when the strongest contender crosses the ignition threshold. */
+  ignited: boolean;
+}
+
+/**
+ * Limited-capacity Global-Workspace competition (Baars / Dehaene global broadcast + Cowan's capacity
+ * bound). Unlike the winner-take-ALL {@link gwtCompete}, only the top `capacity` contenders gain access
+ * to the workspace; the remainder are inhibited. Returns the admitted set, the conscious-access mass, and
+ * the competition `pressure` (the salient content the bottleneck had to EXCLUDE) — a genuine
+ * limited-capacity bottleneck (Butlin GWT-2), not an argmax. Pure + deterministic; ties break by index.
+ */
+export function gwtCapacityCompete(
+  saliences: ArrayLike<number>,
+  n: number,
+  capacity = 4,
+  ignitionThreshold = 0.5,
+  temperature = 1,
+): GwtCapacityResult {
+  const cap = capacity < 1 ? 1 : capacity > n ? n : capacity;
+  if (n <= 0) {
+    return { admitted: [], occupancy: 0, capacity: cap, access: 0, pressure: 0, ignited: false };
+  }
+  const weights = new Float32Array(n);
+  gwtSoftmax(saliences, weights, n, temperature);
+  // Rank indices by weight (desc), ties broken by lower index for determinism; admit the top `cap`.
+  const order = Array.from({ length: n }, (_, i) => i).sort((a, b) => {
+    const d = weights[b]! - weights[a]!;
+    return d !== 0 ? d : a - b;
+  });
+  const admitted = order.slice(0, cap);
+  let access = 0;
+  for (const i of admitted) access += weights[i]!;
+  const accessClamped = access > 1 ? 1 : access < 0 ? 0 : access;
+  return {
+    admitted,
+    occupancy: admitted.length,
+    capacity: cap,
+    access: accessClamped,
+    pressure: 1 - accessClamped,
+    ignited: (weights[admitted[0]!] ?? 0) >= ignitionThreshold,
+  };
+}

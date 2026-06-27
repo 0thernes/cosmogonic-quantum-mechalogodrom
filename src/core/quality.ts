@@ -13,14 +13,14 @@ import type { QualityProfile, QualityTier } from '../types';
  * - **desktop** — ≥ 10 cores. 5,000 entities, instanced.
  * - **ultra** — 10,000-entity hard ceiling, instanced; FILLS that ceiling
  *   (`targetEntities === maxEntities`). V40: reachable via `?tier=ultra` (the ≥16-core auto path now
- *   goes to `mega`); the per-frame neighbor-query throttles in docs/BENCHMARKS.md keep sim-CPU smooth.
+ *   goes to `mega`); the per-frame neighbor-query throttles in docs/BENCHMARKS-2026-06-26.md keep sim-CPU smooth.
  * - **mega** — ≥ 16 cores AND ≥ 8 GB reported memory. The directive's 50,000-entity ceiling and the
  *   **V40 AUTO default** for capable machines (no opt-in); √N density scaling bounds neighbour cost.
  *
  * `targetEntities` is the steady-state population organic growth settles at;
  * `maxEntities` is the HARD ceiling all buffers are sized from. They are equal on every
  * tier (the earlier ultra 6,500 adaptive throttle was retired in 0.5.0 — history in
- * the "Ultra-tier 10k optimization" note in docs/BENCHMARKS.md and CHANGELOG 0.5.0).
+ * the "Ultra-tier 10k optimization" note in docs/BENCHMARKS-2026-06-26.md and CHANGELOG 0.5.0).
  *
  * quantum/links/stars scale sublinearly with the entity budget (they are ambience
  * layers, not the population). The tier is decided ONCE at boot — no runtime
@@ -66,7 +66,7 @@ export const QUALITY_LADDER: Readonly<
     // which implies a GPU that can carry it (the perf optimizations keep sim-CPU ≈ 18 ms at
     // 10k; a discrete GPU absorbs the draw). `targetEntities === maxEntities` on every tier,
     // so organic growth deterministically settles at the ceiling (same seed + same device →
-    // same cosmos). Per-frame neighbor-query throttles (docs/BENCHMARKS.md) keep it smooth.
+    // same cosmos). Per-frame neighbor-query throttles (docs/BENCHMARKS-2026-06-26.md) keep it smooth.
     targetEntities: 10000,
     quantumCount: 8000,
     maxLinks: 6000,

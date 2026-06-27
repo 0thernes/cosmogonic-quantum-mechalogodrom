@@ -1,3 +1,5 @@
+<!-- reviewed: 2026-06-27 | repo-wide consistency audit | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+
 # Contributing
 
 Thanks for poking at the Mechalogodrom. The bar is simple: keep it
@@ -8,7 +10,7 @@ green.
 
 - [Bun](https://bun.sh) >= 1.3 (runtime, bundler, and test runner — there is no
   Node/webpack/vitest setup here; see
-  [ADR 0001](./docs/adr/0001-bun-runtime.md)).
+  [ADR 0001](./docs/adr/0001-bun-runtime-2026-06-26.md)).
 
 ## Workflow
 
@@ -17,16 +19,18 @@ bun install        # install dependencies
 bun dev            # hot-reloading server at http://localhost:3000
 bun test           # unit tests
 bun run bench      # mitata micro-benchmarks
-bun run check      # THE gate: format:check + typecheck + lint + test + build
+bun run check      # THE gate: format:check + typecheck + lint + test + verify:receipts + sync:check + build
 ```
 
-`bun run check` must pass before any PR is mergeable. CI runs the same
-command, so running it locally is the fastest feedback you can get.
+`bun run check` must pass before any change lands on `main` (this repo commits
+straight to `main` — no pull requests). CI re-runs the same gate as a superset
+(it uses `test --coverage` for the coverage threshold and adds `verify:facts`),
+so running `check` locally is the fastest feedback you can get.
 
 ## Ground rules
 
 These mirror the binding spec in
-[docs/MODULE-CONTRACTS.md](./docs/MODULE-CONTRACTS.md) — read it before
+[docs/MODULE-CONTRACTS-2026-06-26.md](./docs/MODULE-CONTRACTS-2026-06-26.md) — read it before
 touching module boundaries.
 
 1. **Source of truth.** The legacy monolith at
@@ -48,11 +52,11 @@ touching module boundaries.
    All randomness flows through the injected seeded `Rng`
    (`SimContext.rng` or a constructor argument). Same seed, same universe —
    this is what makes tests assertable and benchmarks stable
-   ([ADR 0004](./docs/adr/0004-deterministic-rng.md)).
+   ([ADR 0004](./docs/adr/0004-deterministic-rng-2026-06-26.md)).
 6. **Hot paths are allocation-free.** No `new`, array literals, closures, or
    string building inside per-frame `update()` bodies. Use documented
    module-level scratch objects. If you add a hot path, document its time
-   complexity in JSDoc (see [docs/COMPLEXITY.md](./docs/COMPLEXITY.md)).
+   complexity in JSDoc (see [docs/COMPLEXITY-2026-06-26.md](./docs/COMPLEXITY-2026-06-26.md)).
 7. **Layering.** Browser globals only in `src/ui`, `src/core/engine.ts`,
    `src/audio/engine.ts`, `src/logging/audit.ts`, `src/memory/store.ts`, and
    `src/main.ts`. Leaf modules (`src/math/*`, `src/logging/logger.ts`,
@@ -71,14 +75,18 @@ touching module boundaries.
   with deterministic inputs (`mulberry32(42)`). Don't benchmark against
   `Math.random()`-generated data — results won't be comparable across runs.
 
-## Pull requests
+## Commits (no pull requests)
 
-- Keep diffs focused; one concern per PR.
-- Explain _why_ in the description, especially for anything that changes a
+This repo commits **directly to `main`** — there are no pull requests, feature
+branches, or forks. If a push is rejected (non-fast-forward), `git pull --rebase
+--autostash origin main` and push again.
+
+- Keep each commit focused; one concern per commit.
+- Explain _why_ in the commit message, especially for anything that changes a
   legacy constant or visual behavior.
 - If a change alters a module's public surface, update
-  `docs/MODULE-CONTRACTS.md` and the diagrams in `docs/ARCHITECTURE.md` /
-  `docs/ERD.md` in the same PR.
+  `docs/MODULE-CONTRACTS-2026-06-26.md` and the diagrams in `docs/ARCHITECTURE-2026-06-26.md` /
+  `docs/ERD-2026-06-26.md` in the same commit.
 - Add a `CHANGELOG.md` entry under `[Unreleased]` (Keep a Changelog format).
 
 ## Contributions & ownership

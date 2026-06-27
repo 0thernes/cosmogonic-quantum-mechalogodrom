@@ -1307,7 +1307,16 @@ export class SuperNeural {
   update(snap: Snap | null): void {
     this.snap = snap;
     if (!snap) return;
-    this.footEl.innerHTML = `<b>${snap.plan}</b> · ${snap.paramCount}p · ${snap.stages}st × ${snap.depths}d × ${snap.variants}v · ${snap.organs} organs`;
+    // textContent (not innerHTML) for the dynamic plan label — matches the WebGL-card hardening.
+    // snap.plan is a closed enum today, but this removes the HTML-injection sink outright.
+    const planEl = document.createElement('b');
+    planEl.textContent = String(snap.plan);
+    this.footEl.replaceChildren(
+      planEl,
+      document.createTextNode(
+        ` · ${snap.paramCount}p · ${snap.stages}st × ${snap.depths}d × ${snap.variants}v · ${snap.organs} organs`,
+      ),
+    );
     if (this.active) {
       const now = typeof performance !== 'undefined' ? performance.now() : 0;
       this.paint(now / 1000);

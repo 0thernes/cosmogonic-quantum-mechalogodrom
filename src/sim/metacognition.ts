@@ -40,6 +40,8 @@ export interface MetacognitionSnapshot {
   control: number;
   /** 0..1 — last first-order decision margin (winning plan vs the runner-up). */
   margin: number;
+  /** AST-2: 0..1 — self-model accuracy (prediction vs actual state EMA). */
+  selfModelAccuracy: number;
 }
 
 /**
@@ -50,6 +52,7 @@ export interface MetacognitionSnapshot {
 export class Metacognition {
   private confidence = 0.5;
   private lastMargin = 0;
+  private selfModelAccuracy = 0.5;
 
   /**
    * Fold this beat's reliability cues into the confidence EMA and return the updated confidence (0..1).
@@ -71,6 +74,28 @@ export class Metacognition {
     return this.confidence;
   }
 
+  /**
+   * AST-2: fold self-model prediction error into a slow accuracy EMA (0..1).
+   * `predicted` vs `actual` are parallel vectors (e.g. self-model output vs interoception).
+   */
+  updateSelfModel(predicted: ArrayLike<number>, actual: ArrayLike<number>): number {
+    const n = Math.min(predicted.length, actual.length, 8);
+    if (n === 0) return this.selfModelAccuracy;
+    let err = 0;
+    for (let i = 0; i < n; i++) {
+      const d = (predicted[i] ?? 0) - (actual[i] ?? 0);
+      err += d * d;
+    }
+    const acc = clamp01(1 - Math.sqrt(err / n));
+    this.selfModelAccuracy += CONF_TAU * (acc - this.selfModelAccuracy);
+    return this.selfModelAccuracy;
+  }
+
+  /** The current self-model accuracy (0..1). */
+  get selfAccuracy(): number {
+    return this.selfModelAccuracy;
+  }
+
   /** The current second-order confidence (0..1). */
   get value(): number {
     return this.confidence;
@@ -82,6 +107,11 @@ export class Metacognition {
   }
 
   snapshot(): MetacognitionSnapshot {
-    return { confidence: this.confidence, control: 1 - this.confidence, margin: this.lastMargin };
+    return {
+      confidence: this.confidence,
+      control: 1 - this.confidence,
+      margin: this.lastMargin,
+      selfModelAccuracy: this.selfModelAccuracy,
+    };
   }
 }

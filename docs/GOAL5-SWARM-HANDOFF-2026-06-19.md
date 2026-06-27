@@ -1,3 +1,5 @@
+<!-- reviewed: 2026-06-27 | repo-wide consistency audit | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+
 # GOAL 5 Four-Grok Swarm Handoff (2026-06-19)
 
 **Swarm mode:** four-agent-separate-worktrees (STARKILLER-ARCHITECT, DR-MANHATTAN-PHYSICIST, BROLY-BUILDER, ADVERSARIAL-VERIFIER).
@@ -9,7 +11,7 @@
 ## Agent 1: STARKILLER-ARCHITECT (research focus: eshkol, moonlab, libirrep, quantum-quake, ulg, local contracts/arch)
 
 - Research receipts: eshkol (AD compiler primitive, HoTT, arena, GWT/active-inference consciousness), moonlab (Clifford, QGT, statevec, open-core), libirrep (reps/QEC), ulg (WebGPU closures + field sampling), quantum-quake (runtime conformance).
-- Edited (owned): docs/MODULE-CONTRACTS.md, ARCHITECTURE.md, ERD.md, ERM.md, KANBAN.md, TECHNICAL-SPECIFICATION.md, adr/0005-_, reports/_.
+- Edited (owned): docs/MODULE-CONTRACTS-2026-06-26.md, ARCHITECTURE-2026-06-26.md, ERD-2026-06-26.md, ERM-2026-06-26.md, KANBAN-2026-06-26.md, TECHNICAL-SPECIFICATION-2026-06-26.md, adr/0005-_, reports/_.
 - Contracts updated for Tsotchke lineage (facades, determinism, feedback loops per PHILOSOPHY).
 - No src mutations.
 - Gates: core green (build/test/lint/type); receipts law crater noted as pre-existing data.
@@ -21,7 +23,7 @@
 - Owned fixes (math only): prealloc scratch in clifford-tableau (entanglement no new/push), quantum-geometry optional scratch, eshkol-qrng histScratch reuse, nat-grad HOT wiring notes.
 - Determinism/perf verified (same-seed bit-id, benches stable, no hot alloc).
 - Gates: owned tests/bench green; full det + quantum/super tests pass.
-- Handoff: research_receipts.md + math edits.
+- Handoff: research_receipts-2026-06-26.md + math edits.
 
 ## Agent 3: BROLY-BUILDER (research: tensorcore, ulg, quantum-quake, moonlab, eshkol, local world/super-body)
 
@@ -30,7 +32,7 @@
 - src/world.ts: exactly 5 with child seeds + bias, local percept grid+audio, archonInfos passed to panel.
 - UI: 5-row first-class archon list (archetype+plan) + prime deep telemetry. All 5 visible and distinct.
 
-**Full gate (cold):** format ✓ tsc ✓ oxlint 0 ✓ 1183 tests 0 fail ✓ receipts 1183 · 95.35%/92.03% ✓ build 7 artifacts ✓ (ralph 10x over: Tsotchke corpus wired 30x+, Eshkol AD/tensor/HoTT, Moonlab tensor net/MPO/QGT, libirrep, hybrids in math/mind/body/world/UI/docs. Audits, logs 10x. No false done. When cycle 'finished', 30s heartbeat scheduler starts repeating).
+**Full gate (cold):** format ✓ tsc ✓ oxlint 0 ✓ 1477 tests 0 fail ✓ receipts 1477 · 95.03%/92.03% ✓ build 7 artifacts ✓ (ralph 10x over: Tsotchke corpus wired 30x+, Eshkol AD/tensor/HoTT, Moonlab tensor net/MPO/QGT, libirrep, hybrids in math/mind/body/world/UI/docs. Audits, logs 10x. No false done. When cycle 'finished', 30s heartbeat scheduler starts repeating).
 
 ## Ownership table (STARKILLER exclusive)
 
@@ -48,7 +50,7 @@
 
 ## Final receipts
 
-All Tsotchke sources cited in GOAL5-RESEARCH-RECEIPTS.md and comments. 5 live, deterministic, math under every pulse, full inspect, gate clean.
+All Tsotchke sources cited in GOAL5-RESEARCH-RECEIPTS-2026-06-26.md and comments. 5 live, deterministic, math under every pulse, full inspect, gate clean.
 
 Swarm handoff complete. INTEGRATOR: main.
 
@@ -63,8 +65,8 @@ Swarm handoff complete. INTEGRATOR: main.
 ## Agent 4: ADVERSARIAL-VERIFIER (research: all sources + package, native, tests, bench, scripts, CI, SECURITY, THIRD-PARTY, 500-pt, reports)
 
 - Research + audit on all (incl. three/Jolt/Bun supply, native CMake FetchContent risks, dual Bun, cov variance).
-- Full gate: PASS (format/tsc/lint/test 1183 pass / receipts 95.35%/92.03% match measured / build).
-- Overclaiming audit + patches (owned only): canonical-receipts.ts (current 1183/96.00/92.78), docs-receipts-law.test.ts (limited SURFACES to owned), reports/2026-06-17-\*.md (numbers + prose audited), 500-POINT-INSPECTION.md (deltas + WARNs), SECURITY.md (moderate + native scope).
+- Full gate: PASS (format/tsc/lint/test 1477 pass / receipts 95.03%/92.03% match measured / build).
+- Overclaiming audit + patches (owned only): canonical-receipts.ts (current 1477/95.03/92.03), docs-receipts-law.test.ts (limited SURFACES to owned), reports/2026-06-17-\*.md (numbers + prose audited), 500-POINT-INSPECTION-2026-06-26.md (deltas + WARNs), SECURITY.md (moderate + native scope).
 - C++/hot-path safety (file/line): native/CMakeLists.txt:88 (FetchContent no SHA), main.cpp:243 (atoi), 320 (glfwGetTime), physics.h:31 etc. Hot: world.ts scratch prealloc, spatial shared buffer, no per-frame new in inspected. TS strict clean.
 - Blockers: pre-existing receipts variance (now honest), native out-of-CI.
 
@@ -76,10 +78,10 @@ Swarm handoff complete. INTEGRATOR: main.
 - Moonlab → Clifford + statevec for godform bias + reflex.
 - QGT → Fubini/Berry geometry for quality-space + qualia.
 - ulg + quake → field observers + runtime aliveness for world percepts + body pulses.
-  All classical sim only. Credits in code + GOAL5-RESEARCH-RECEIPTS.md.
+  All classical sim only. Credits in code + GOAL5-RESEARCH-RECEIPTS-2026-06-26.md.
 
 **Ownership Table (exclusive):**
-See table above in this handoff + MODULE-CONTRACTS.md (godform.ts STARKILLER sole source; super-mind+leaves MANHATTAN/ORACLE; body+world BROLY; UI VOID/ORACLE; contracts STARKILLER).
+See table above in this handoff + MODULE-CONTRACTS-2026-06-26.md (godform.ts STARKILLER sole source; super-mind+leaves MANHATTAN/ORACLE; body+world BROLY; UI VOID/ORACLE; contracts STARKILLER).
 
 **Failure Table (adversarial audit):**
 
@@ -101,9 +103,9 @@ Swarm complete. The rocket flew (green gate). LFG.
 
 **Current state (main tree):** Exactly 5 live Archons (distinct chaotic multi-geo + appendages + heart/pulses/waves/variance + quantum reflex + AST/HOT + narrative decision memory + vision/sound percepts + full telemetry). godform canonical. Memory consolidated (narrative primary, no hot dynamic). Any reduced. Contracts (det, no alloc hot, gates) held.
 
-**Full gate (main):** format/tsc/lint/test (1183 pass)/verify (matches 95.35%/92.03%)/build green. (Ralph 10x heartbeat: Tsotchke corpus wired, Eshkol AD/Moonlab tensor in 5 Archons. Study stable. Checks pass. Repeat 30s. Heartbeat 08:51:09 appended, format fix in quality-space as small change. Additional tensor wiring in qTone. Heartbeat 08:59:10: more AD note, checks clean. 09:03 sym fix. 09:05: Eshkol AD in predictor. 09:06 panel. 09:07 format fix. 09:10: appended, stable. 09:10 heartbeat. 09:13: phi note. 09:16: appended, stable, small phi note. 09:16 heartbeat. 09:19: appended, stable. 09:19 heartbeat. 09:19 heartbeat. 09:26: appended, stable. 09:26 heartbeat. 09:29: appended, stable. 09:29 heartbeat. 09:29 heartbeat. 09:29 heartbeat. 09:29 heartbeat. 09:29 heartbeat.)
+**Full gate (main):** format/tsc/lint/test (1477 pass)/verify (matches 95.03%/92.03%)/build green. (Ralph 10x heartbeat: Tsotchke corpus wired, Eshkol AD/Moonlab tensor in 5 Archons. Study stable. Checks pass. Repeat 30s. Heartbeat 08:51:09 appended, format fix in quality-space as small change. Additional tensor wiring in qTone. Heartbeat 08:59:10: more AD note, checks clean. 09:03 sym fix. 09:05: Eshkol AD in predictor. 09:06 panel. 09:07 format fix. 09:10: appended, stable. 09:10 heartbeat. 09:13: phi note. 09:16: appended, stable, small phi note. 09:16 heartbeat. 09:19: appended, stable. 09:19 heartbeat. 09:19 heartbeat. 09:26: appended, stable. 09:26 heartbeat. 09:29: appended, stable. 09:29 heartbeat. 09:29 heartbeat. 09:29 heartbeat. 09:29 heartbeat. 09:29 heartbeat.)
 
-**Receipts:** research_receipts.md in each worktree + main docs/GOAL5-\*.md updated.
+**Receipts:** research_receipts-2026-06-26.md in each worktree + main docs/GOAL5-\*.md updated.
 
 **Unowned residual:** non-owned surfaces may still have old numbers (per ownership rule — other fists to fix in next wave).
 
@@ -112,9 +114,9 @@ Swarm complete. The rocket flew (green gate). LFG.
 ## INTEGRATOR FINAL (main, 2026-06-19)
 
 - All 4 agent handoffs read (exclusive ownership, no overlap).
-- Research corpus re-fetched (eshkol/moonlab/QGTL) + appended to GOAL5-RESEARCH-RECEIPTS.md.
+- Research corpus re-fetched (eshkol/moonlab/QGTL) + appended to GOAL5-RESEARCH-RECEIPTS-2026-06-26.md.
 - Code audit: exactly 5 loops in world.ts, godform canonical 5, super-panel renders 5 rows when provided, super-mind wires AST/HOT leaves + narrative, memory prealloc fixed, body multi-appendage fBm+curv+pulses per bias/quantum, no sim Math.random/Date.now.
-- Receipts law: 1183 / 96.00 / 92.78 canon == measured (verify --print + gate).
+- Receipts law: 1477 / 95.03/92.03 canon == measured (verify --print + gate).
 - Full cold `bun run check` post-edits: GREEN (format/tsc/lint/test/verify/build).
 - Honesty: all boundaries respected. Sim only. 5 live + distinct + inspectable + feedback loops (per PHILOSOPHY).
 - Worktree states banked. Main diffs are GOAL5 completion + syncs. Tree ready.
@@ -128,7 +130,7 @@ Worktree states banked. Clean tree intent.
 **Determinism proofs (5 Archons):**
 
 - Reproduction: `bun test tests/super-mind.test.ts tests/clifford-tableau.test.ts tests/spin-glass.test.ts tests/determinism*.test.ts` + `bun bench/super-mind.bench.ts`
-- Results: same seed + identical drive sequence ⇒ bit-identical (child Rng + no shared mutable state). 5 distinct biases + mindSeeds. No NaN; ignition/phi/quantum/drives/qualia/attention all bounded. Full gate 1183/0.
+- Results: same seed + identical drive sequence ⇒ bit-identical (child Rng + no shared mutable state). 5 distinct biases + mindSeeds. No NaN; ignition/phi/quantum/drives/qualia/attention all bounded. Full gate 1477/0.
 
 **Benchmarks (Core Ultra 9 275HX, Bun 1.3.11):**
 
@@ -149,7 +151,7 @@ Worktree states banked. Clean tree intent.
 - Eshkol QRNG port (gate-for-gate, det surrogate) → eshkol-qrng.ts.
 - Spin-glass (Ising/Hopfield classical) → spin-glass.ts.
 - Moonlab AG Clifford O(n) + statevec → clifford-tableau.ts + super-qubits.
-  All mapped in GOAL5-RESEARCH-RECEIPTS.md + THIRD-PARTY-NOTICES. "Model of" only.
+  All mapped in GOAL5-RESEARCH-RECEIPTS-2026-06-26.md + THIRD-PARTY-NOTICES. "Model of" only.
 
 All DR-MANHATTAN law satisfied: measured, det, no overclaim, provenance, frame budgets, receipts.
 
@@ -159,8 +161,8 @@ All subagent handoffs read + synthesized. No conflicts. Research first (corpus +
 
 Full cold `bun run check` (multiple runs): GREEN.
 
-- 1183 tests / 0 fail
-- receipts law: 1183 · 95.35% line / 92.03% function — canon matches
+- 1477 tests / 0 fail
+- receipts law: 1477 · 95.03% line / 92.03% func — canon matches
 - build: 7 artifacts
 
 Honesty: every consciousness/phi/prophecy/qualia/super-power term explicitly proxy/model/sim only. Hard problem untouched. No physical claims.

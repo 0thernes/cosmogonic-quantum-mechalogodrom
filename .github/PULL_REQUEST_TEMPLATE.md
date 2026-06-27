@@ -1,3 +1,4 @@
+<!-- reviewed: 2026-06-27 | repo-wide consistency audit | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
 <!-- Thanks for contributing to Cosmogonic Quantum Mechalogodrom. Keep PRs small and focused. -->
 
 ## What & why
@@ -21,9 +22,9 @@ Closes #
 - [ ] `bun run check` passes locally (format, types, lint, tests, build)
 - [ ] New behaviour is covered by tests; determinism-sensitive code has a seeded test
 - [ ] No `Math.random` / `Date.now()` in sim logic (seeded `mulberry32` via `SimContext` only)
-- [ ] Per-frame `update()` bodies stay allocation-free (module scratch only) — see docs/COMPLEXITY.md
-- [ ] Touched modules' JSDoc + `docs/MODULE-CONTRACTS.md` updated if the contract changed
-- [ ] If a hot path's Big-O changed, `docs/COMPLEXITY.md` (and `bench/` if applicable) updated
+- [ ] Per-frame `update()` bodies stay allocation-free (module scratch only) — see docs/COMPLEXITY-2026-06-26.md
+- [ ] Touched modules' JSDoc + `docs/MODULE-CONTRACTS-2026-06-26.md` updated if the contract changed
+- [ ] If a hot path's Big-O changed, `docs/COMPLEXITY-2026-06-26.md` (and `bench/` if applicable) updated
 
 ## Notes for the reviewer
 

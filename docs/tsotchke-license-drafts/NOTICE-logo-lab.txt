@@ -1,0 +1,11 @@
+logo-lab
+Copyright (c) 2024-2026 Tsotchke Corporation
+
+This product includes original work by Tsotchke Corporation, with control
+patterns and ASCII glyph algorithms independently reimplemented following the
+publicly-available "three-ascii" / Acerola demonstration (algorithmic
+reference / inspiration; no source code vendored). Credit to Acerola for the
+ASCII-shader technique that informed the effect design.
+
+If any glyph data tables were copied verbatim from three-ascii, confirm that
+project's license permits reuse, or regenerate the tables independently.

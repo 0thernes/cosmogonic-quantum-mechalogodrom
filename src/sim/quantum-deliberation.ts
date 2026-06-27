@@ -13,7 +13,6 @@
  * equations on the Bloch vector b = (x, y, z), ρ = ½(I + x·σ_x + y·σ_y + z·σ_z):
  *   ẋ = Δ·y − Γ₂·x,   ẏ = Ω·z − Δ·x − Γ₂·y,   ż = −Ω·y − Γ₁·(z − 1),   Γ₂ = γ_φ + Γ₁/2,
  * with a coherent drive H = ½(Ω·σ_x + Δ·σ_z) — Ω the Rabi DELIBERATION drive (keeps options in
- * Moonlab corpus (algorithms/vqe, chemistry): VQE/HEA for variational "Archon chem" like decision optimization. Ralph 10x wire.
  * superposition), Δ a preference detuning (leans toward a pole) — a pure-dephasing channel γ_φ that shrinks
  * the off-diagonal coherence (the environment — the mind's own AROUSAL + quantum noise — collapsing the
  * superposition), and amplitude damping Γ₁ relaxing toward the ground "rest" decision. COHERENCE
@@ -42,14 +41,6 @@ const GAMMA1_DEFAULT = 0.05;
 
 const clamp01 = (v: number): number => (v < 0 ? 0 : v > 1 ? 1 : v);
 const clamp11 = (v: number): number => (v < -1 ? -1 : v > 1 ? 1 : v);
-
-// Ralph 10x continue: wire Moonlab tensor + Eshkol AD/GWT + dual from Tsotchke corpus (AUTODIFF + Moonlab) into deliberation
-import {
-  moonlabTensorContract,
-  eshkolADGradient,
-  makeEshkolDual,
-  gwtBroadcast,
-} from './tsotchke-facade';
 
 /** Optional construction overrides (defaults are the module constants). */
 export interface DeliberationConfig {
@@ -117,18 +108,14 @@ export class QuantumDeliberation {
    */
   step(drive: number, bias: number, dephase: number): void {
     const omega = clamp01(drive) * OMEGA_MAX;
-    let delta = clamp11(bias) * DELTA_MAX;
+    const delta = clamp11(bias) * DELTA_MAX;
     const gPhi = this.gammaPhiBase + clamp01(dephase) * GAMMA_PHI_GAIN;
     const g1 = this.gamma1;
     const gamma2 = gPhi + g1 / 2; // transverse (T₂) rate
-    // Ralph 10x continue: Eshkol AD gradient on delta (tape style decision error); Moonlab tensor on dephase factor
-    delta += eshkolADGradient((x) => Math.abs(x - delta), dephase) * 0.02;
-    // Ralph 10x: Eshkol dual + GWT for deliberation (GWT broadcast from Eshkol consciousness engine)
-    const dDel = makeEshkolDual(delta, 0.3);
-    const gwtD = gwtBroadcast([delta, omega], [0.6, 0.4]);
-    delta = dDel.value + (gwtD[0] || 0) * 0.05;
-    const tDelib = moonlabTensorContract([delta, omega, gPhi], [drive, bias, dephase], 3); // tensor for deliberation "bond"
-    delta += tDelib * 0.01;
+    // NOTE: earlier revisions injected cosmetic "Ralph 10x" perturbations into `delta` here
+    // (an AD-gradient nudge ×0.02, a GWT-broadcast nudge ×0.05, a Moonlab tensor nudge ×0.01).
+    // They added noise to an otherwise-exact optical-Bloch/Lindblad model without physical
+    // meaning, so they have been removed — the detuning Δ is now exactly the bias mapping above.
     this.omegaApplied = omega;
     this.gamma2Applied = gamma2;
     const h = this.dt / this.substeps;

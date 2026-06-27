@@ -1,6 +1,7 @@
 name: CI
 
-# The full gate (CONTRIBUTING.md): prettier → tsc strict → oxlint → bun test → build.
+# The full gate (CONTRIBUTING.md): prettier → tsc strict → oxlint → bun test+coverage →
+# verify:receipts → sync:check → verify:facts → build.
 # Runs on every push to the default branch and every PR. `workflow_dispatch` allows a manual
 # run from the Actions tab. Concurrency cancels superseded runs on the same ref.
 on:
@@ -31,7 +32,7 @@ jobs:
     timeout-minutes: 15
     steps:
       - name: Checkout
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false # don't leave the GITHUB_TOKEN in .git/config (supply-chain hardening)
 
@@ -69,6 +70,12 @@ jobs:
         # with the live gate. Closes GOV-DOC: "if it is not measured, it is not real."
         run: bun run verify:receipts
 
+      - name: Surface sync check (version + receipts propagated to every MD/HTML)
+        run: bun run sync:check
+
+      - name: Cross-surface fact audit (no canonical-fact drift across surfaces)
+        run: bun run verify:facts
+
       - name: Production build
         run: bun run build
 
@@ -87,11 +94,11 @@ jobs:
     needs: gate
     timeout-minutes: 10
     # Non-blocking: a perf regression should surface in the log, not fail the gate
-    # (CI runners are noisier than the reference machine — see docs/BENCHMARKS.md).
+    # (CI runners are noisier than the reference machine — see docs/BENCHMARKS-2026-06-26.md).
     continue-on-error: true
     steps:
       - name: Checkout
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false # don't leave the GITHUB_TOKEN in .git/config (supply-chain hardening)
       - name: Set up Bun
@@ -122,7 +129,7 @@ jobs:
       pull-requests: write # post the review summary as a PR comment on failure
     steps:
       - name: Checkout
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
       - name: Review dependencies
@@ -143,7 +150,7 @@ jobs:
     continue-on-error: true
     steps:
       - name: Checkout
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
       - name: Set up Bun

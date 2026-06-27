@@ -150,7 +150,9 @@ const CORE_DETAIL = 4;
 /** Aura field: organisms within this reach are dragged + hue-stained (titan↔organism interaction). */
 const AURA_R = 48;
 const AURA_R2 = AURA_R * AURA_R;
-const AURA_G = 1100; // r⁻² pull gain (capped) — a spacetime drag, not a hard collision
+const AURA_G = 700; // r⁻² pull gain (capped) — a spacetime drag, not a hard collision. Softened
+// (was 1100) so passing organisms SWIRL around + slingshot past a colossus instead of being yanked
+// straight into it and clotting — paired with a stronger tangential wake below (orbital, dynamic).
 const AURA_CAP = 6;
 /** Titan↔titan soft collision: they REPEL (no more silent pass-through) + flare on contact. */
 const TITAN_TOUCH_K = 3.0; // touch distance = TITAN_TOUCH_K · (sizeA + sizeB)
@@ -824,9 +826,14 @@ export class TitanSystem {
     vel.x += Math.sin(t * 0.23 + ti.ph) * (10 * (ay - ax)) * dt * 0.00045;
     vel.y += Math.cos(t * 0.17 + ti.ph * 1.7) * (ax * (28 - az) - ay) * dt * 0.00012;
     vel.z += Math.sin(t * 0.19 + ti.ph * 0.6) * (ax * ay - 2.667 * az) * dt * 0.00045;
-    // Core pull keeps harvest routes crossing the populated centre of the arena.
-    vel.x -= p.x * 0.000035 * dt * 60;
-    vel.z -= p.z * 0.000035 * dt * 60;
+    // TERRITORY pull — a gentle spring toward THIS titan's OWN distributed home wedge (homeX/homeZ,
+    // one per phylum around the arena ring), NOT the global origin. The old origin-seeking pull made
+    // all 10 titans collapse onto the centre, and their AURA wells then dragged the whole population
+    // into one central clot (the owner's "everything clusters in the middle / sucked into titan
+    // gravity" bug). Home-springing spreads the colossi across the world so each roams + harvests its
+    // own region — a far more dynamic, realistic ecology, while their roams still cross + clash (war).
+    vel.x -= (p.x - ti.homeX) * 0.00003 * dt * 60;
+    vel.z -= (p.z - ti.homeZ) * 0.00003 * dt * 60;
     vel.multiplyScalar(0.985);
     VA.copy(vel).multiplyScalar(dt * 60);
     p.add(VA);
@@ -888,9 +895,12 @@ export class TitanSystem {
         if (r2 > AURA_R2 || r2 < 1e-3) continue;
         const r = Math.sqrt(r2);
         const inv = (Math.min(AURA_G / r2, AURA_CAP) * dt) / r; // capped r⁻² pull → unit·accel·dt
-        v.x += dx * inv - dz * inv * 0.4; // radial drag + a tangential swirl (the colossus's wake)
+        // Radial drag + a STRONG tangential swirl (≈ radial) so organisms ORBIT the colossus's wake
+        // and slingshot past it rather than falling straight in — a dynamic, reactive flow, not a sink
+        // (the inner shock zone below still catches the few that stray deep, feeding the economy).
+        v.x += dx * inv - dz * inv * 0.95;
         v.y += dy * inv * 0.5;
-        v.z += dz * inv + dx * inv * 0.4;
+        v.z += dz * inv + dx * inv * 0.95;
         e.material.color.lerp(tk.tu.uColor.value, 0.02 * (1 - r / AURA_R)); // ontological hue-stain
         // V69 SHOCK: an organism that strays into the inner well RECOILS — a brief speed-sap (stun), so
         // it no longer drifts through "like nothing"; the colossus's freak-geometry physically rebukes

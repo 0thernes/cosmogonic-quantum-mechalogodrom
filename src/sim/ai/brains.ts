@@ -11,7 +11,7 @@
  *
  * Leaf module: imports only the {@link Rng} type from `src/math`, nothing from the rest of `sim`,
  * so it stays unit-testable under `bun test` with no DOM and no three.js, and the dependency graph
- * stays acyclic (ARCHITECTURE.md rule). Sentience tiers, factions, and the user-launched NHI beings
+ * stays acyclic (ARCHITECTURE-2026-06-26.md rule). Sentience tiers, factions, and the user-launched NHI beings
  * all dispatch into these primitives.
  */
 import type { Rng } from '../../math/rng';

@@ -1,6 +1,6 @@
 /**
  * Composition root of the simulation: constructs every system against the
- * contracts in docs/MODULE-CONTRACTS.md, owns the mutable SimState, implements
+ * contracts in docs/MODULE-CONTRACTS-2026-06-26.md, owns the mutable SimState, implements
  * all UiActions, and drives the per-frame pipeline
  * (camera → weather → puppet masters → grid → shoggoths → sector → sort step →
  *  entities → connectome → quantum → environment → telemetry → render).
@@ -83,6 +83,7 @@ import { Hud } from './ui/hud';
 import { Observatory } from './ui/observatory';
 import { NhiObservatory } from './ui/nhi-observatory';
 import { MarketTicker } from './ui/market-ticker';
+import { PantheonArchitecturePanel } from './ui/pantheon-architecture-panel';
 import { SuperCreature, type SuperPercept } from './sim/super-creature';
 import {
   GODFORMS,
@@ -95,6 +96,17 @@ import {
   petriGrowthMultiplier,
   type PetriDishState,
 } from './sim/godform'; // GOAL5 + TSOTCHKE full corpus (ralph 10x: Eshkol AD, Moonlab tensor, quake, irrep from (Tsotchke))
+import { PantheonSociety, FIELD_DIM, ARCHON_CHANNELS } from './sim/pantheon';
+import { FacultiesPantheon } from './sim/faculties-pantheon';
+import { TomPantheon } from './sim/tom-pantheon';
+import { applyBrutalGodEvent } from './sim/petri-dish';
+import { triggerBrutalRelease, getBrutalLore } from './sim/brutal-god-releases';
+import { EmergenceAnglesController } from './sim/emergence-angles';
+import { Mortality } from './sim/mortality';
+import { Stigmergy } from './sim/stigmergy';
+import { Noosphere } from './sim/noosphere';
+import { Symbiosis } from './sim/symbiosis';
+import { MythRitual } from './sim/myth-ritual';
 import { SuperMind, type SuperMindSnapshot, type SuperMindIntent } from './sim/super-mind';
 import {
   quakePerturb,
@@ -182,6 +194,9 @@ export class World {
   private readonly state: SimState;
   private readonly grid: SpatialHash<Entity>;
   private readonly audio: AudioEngine;
+  /** Aborts the global (window) hero-event listeners on {@link dispose} — without this they leaked
+   *  one set per dev hot-reload, each firing against a dead World (the HMR hook calls dispose()). */
+  private readonly disposeAbort = new AbortController();
   private readonly entities: EntityManager;
   private readonly entityBrains: EntityBrainField; // V42: per-organism 70-param neural controller
   private readonly shoggoths: ShoggothSystem;
@@ -207,15 +222,30 @@ export class World {
   // NOT SENTIENT DISCLAIMER (enforced): NOT SENTIENT / NO PHENOMENAL CONSCIOUSNESS.
   // Per contract + masters: models/scaffolding/functional correlates ONLY. Phenomenal ~1/10;
   // hard problem untouched. "Consciousness" = ignition/phi/self-model proxies. No claims
-  // of sentience in prose, UI, or docs. See SUPER-CREATURE-RESEARCH.md + MODULE-CONTRACTS.
+  // of sentience in prose, UI, or docs. See SUPER-CREATURE-RESEARCH-2026-06-26.md + MODULE-CONTRACTS.
   // ============================================================================
   // Legacy single creature path kept ONLY for player hero/twin spawn; the 5 drive the world.
   // All use distinct child seeds (master ^ + archetype 0-4 offsets) for determinism.
   private readonly superCreature: SuperCreature;
-  private readonly superMind: SuperMind; // GOAL5 compat; prime mind uses array[0]
   private superMindSnap: SuperMindSnapshot | null = null;
   private readonly superMinds: SuperMind[] = [];
-  private readonly _superMindSnaps: (SuperMindSnapshot | null)[] = [null, null, null, null, null]; // GOAL5 5 creatures // GOAL5
+  /** 25-Archon society layer: 20 light echoes + shared stigmergic mind-field (emergence #5). */
+  private readonly pantheon = new PantheonSociety();
+  /** NHSI · 100-faculty pantheon — live telemetry + world percept bias (emergence #6). */
+  private readonly facultiesPantheon: FacultiesPantheon;
+  /** NHSI · 25 theory-of-mind organs — social cue field over apex percepts. */
+  private readonly tomPantheon: TomPantheon;
+  /** NHSI · emergence angles 8–10 (Eshkol evolution, cross-strain, collective). */
+  private readonly emergenceAngles: EmergenceAnglesController;
+  private readonly stigmergy = new Stigmergy();
+  private readonly noosphere = new Noosphere();
+  private readonly symbiosis: Symbiosis;
+  private readonly mythRitual: MythRitual;
+  private readonly archonMortality: Mortality[];
+  private readonly nhsiFacultyIn = new Float32Array(16);
+  private readonly nhsiTomCues = new Float32Array(8);
+  private readonly nhsiGenomeScratch = new Float32Array(32);
+  private readonly nhsiCollectiveScratch = new Float32Array(16);
   private readonly superBodies: SuperBodySystem[] = [];
   // GOAL5: per-archon small creature snapshots (for body.setMind) + the 5 deep minds/bodies.
   private readonly superCreatures: SuperCreature[] = [];
@@ -299,6 +329,7 @@ export class World {
   private static readonly ECON_SUPER_BASE = 9000;
   private readonly economy = new Economy();
   private readonly econRng: Rng;
+  private readonly genomeRng: Rng;
   /** Live NHI entities keyed by mind id; pruned when an NHI dies (leaves entities.list). */
   private readonly nhiEntities = new Map<number, Entity>();
   /** Monotonic NHI mind id — a stable key across the shifting entities.list. */
@@ -374,6 +405,10 @@ export class World {
     // Economy rng: a deterministic sub-stream derived from the world seed (golden-ratio mix), kept
     // separate from `this.rng` so the market never perturbs the main simulation's draw order.
     this.econRng = mulberry32((this.persisted.seed ^ 0x9e3779b1) >>> 0 || 1);
+    // Genome rng (ADR-0009): heritable organism genetics on their OWN seeded sub-stream so trait
+    // genomes + inheritance-on-split never shift the main entity draw order. Same golden-ratio-mix
+    // discipline as econRng/superRng. Passed via ctx; EntityManager uses it for trait heredity.
+    this.genomeRng = mulberry32((this.persisted.seed ^ 0x6e3a17c5) >>> 0 || 1);
 
     this.state = {
       chaos: 0.5,
@@ -401,7 +436,7 @@ export class World {
     // (nash/market draw rng conditional on neighbor payoffs, so the cell size is part of the
     // seeded stream; tuning it at ≤5,000 would break reproducibility). At the ultra tier (10k)
     // the arena packs ~4× denser, so a 3×3 GRID_CELL block returns ~214 candidates per query.
-    // A 10-unit cell (measured sweet spot, docs/BENCHMARKS.md) cuts that ~36% while keeping the
+    // A 10-unit cell (measured sweet spot, docs/BENCHMARKS-2026-06-26.md) cuts that ~36% while keeping the
     // visited-cell count low for the radius-8..16 behavior queries — the smaller cells below 10
     // were rejected (per-query cell-iteration overhead overtook the neighbor savings). V3.6.
     this.grid = new SpatialHash<Entity>(
@@ -422,6 +457,7 @@ export class World {
       scene: this.engine.scene,
       quality: this.quality,
       rng: this.rng,
+      genomeRng: this.genomeRng,
       grid: this.grid,
       morphs,
       geos,
@@ -475,7 +511,7 @@ export class World {
     this.quantum = new QuantumCloud(ctx);
     this.connectome = new Connectome(ctx, this.entities);
 
-    // ── Wildbeyond V2 wiring (cadences in step(); see ARCHITECTURE.md) ──
+    // ── Wildbeyond V2 wiring (cadences in step(); see ARCHITECTURE-2026-06-26.md) ──
     this.qc = new QuantumCircuitSystem(ctx);
     // The bands buffer is live/reused — hand it to the cloud once; qc.bands()
     // refreshes its contents in place on the 6-frame cadence.
@@ -532,6 +568,7 @@ export class World {
     // F-BEINGS: a fourth order of colossi (leviathans). Boot-stream-neutral — draws no rng here.
     this.leviathans = new LeviathanSystem(ctx);
     this.leviathans.attachSingularity(this.singularities);
+    this.leviathans.attachReactionDiffusion(this.rd); // V1.3 ECOLOGY: colossi stir the primordial substrate
     // F-NHI V10: alien biomechanical bodies for launched NHIs (additive; draws no rng).
     this.nhiBody = new NhiBodySystem(ctx.scene);
     // V11: far-field cosmic-web backdrop for depth + context (additive; draws no rng).
@@ -553,15 +590,6 @@ export class World {
     this.superRng = mulberry32((this.persisted.seed ^ 0x5e1f9d3b) >>> 0 || 1);
     // legacy single kept EXCLUSIVELY for player hero/twin paths (maybeSpawn + its snapshot in UI)
     this.superCreature = new SuperCreature(this.superRng);
-    // V46: the ~10k-param SUPER MIND on its OWN seeded sub-stream (so it never perturbs the superRng
-    // order the twins/wallets draw from). It thinks live each beat; its consciousness drives the body.
-    this.superMind = new SuperMind(
-      mulberry32((this.persisted.seed ^ 0x5e1f3d11) >>> 0 || 1),
-      0.9,
-      0.8,
-      0.5,
-      0.9,
-    ); // legacy prime + TSOTCHKE Eshkol consciousness defaults (corpus wired)
     // V47: the wingman swarm (logic on its own rng sub-stream) + its single-draw-call instanced render.
     this.wingSwarm = new WingmanSwarm(
       WINGMAN_COUNT,
@@ -580,6 +608,10 @@ export class World {
       this.superAscended = true;
     }
     this.superPanel = new SuperPanel();
+    // GOAL "101 Super Creatures": the ⟁ ARCHITECTURE cycler self-mounts its own dock button + panel,
+    // reads sim/pantheon-breeding directly, and animates each creature/baby's dynamics on demand. It
+    // is fire-and-forget (manages its own rAF + DOM), so it is constructed without retaining a field.
+    void new PantheonArchitecturePanel();
     // NOTE: legacy single register removed; 5 SUPER CREATURES register their own purses below (ECON 9000+i).
     // F-SUPER V32: the masterful many-eyed apex BODY (god-jewel shader) — additive, draws no rng.
     // F-BRAIN V42: every organism's compact 70-param genome brain, on its OWN seeded sub-stream (so the
@@ -589,8 +621,6 @@ export class World {
       mulberry32((this.persisted.seed ^ 0xb7a19e3d) >>> 0 || 1),
     );
     this.superScene = ctx.scene;
-    void this.superMind;
-    void this._superMindSnaps;
     // 5 SUPER CREATURES (GOAL5 Archons/Godforms): World.GODFORMS from exclusive godform.ts source.
     // WIRED FROM FULL TSOTCHKE CORPUS (Z:\[Vibe Coded (AI)]\(Tsotchke) 20 repos + sites; see docs/TSOTCHKE_FULL...AUDIT.md). Eshkol AD/HoTT/arena + Moonlab tensor/qgt/Bloch for per-Archon percepts/bias/pulses/entropy. 5 child seeds + getGodformBias + getArchonForm. Local grid + audio + bias. (Ralph-loop incorporation wave.)
     // Determinism: child seeds only (no consumption of main/super streams). Spaced + archetype bias.
@@ -604,8 +634,7 @@ export class World {
       // Full local: Z:\[Vibe Coded (AI)]\(Tsotchke) — see TSOTCHKE-CORPUS-RALPH-WIRING-AUDIT-2026-06-19.md
       // Ralph 10x continue: quakeQge, mpo, gwt used in econ, pull, spawn for corpus aliveness.
       const pulse = getCorpusPulseForArchon(i, mindSeed); // 10x heartbeat: quantum-quake aliveness wired from corpus to world for this Archon
-      const quakeLife = pulse.quakeAliveness; // used for aliveness factor in future world interactions/percepts (Ralph)
-      void quakeLife; // wire without side effect on current det paths
+      const quakeLife = pulse.quakeAliveness; // corpus quake-aliveness; feeds econ vitality + hybrid aliveness below (deterministic from seed)
       const m = new SuperMind(
         mulberry32(mindSeed),
         bias.cliffordWeight,
@@ -656,33 +685,54 @@ export class World {
     const soupSeed = (master ^ 0x50ff0ad1) >>> 0 || 1;
     this.petriRng = mulberry32((master ^ 0x50ff0ad2) >>> 0 || 1);
     this.primordialSoup = new PrimordialSoup(soupSeed);
+    const nhsiSeed = (master ^ 0x4e485349) >>> 0 || 1; // "NHSI"
+    this.facultiesPantheon = new FacultiesPantheon(mulberry32(nhsiSeed));
+    this.tomPantheon = new TomPantheon(mulberry32((nhsiSeed ^ 0x546f4d21) >>> 0 || 1));
+    this.emergenceAngles = new EmergenceAnglesController();
+    this.symbiosis = new Symbiosis(this.superRng);
+    this.mythRitual = new MythRitual(this.superRng);
+    this.archonMortality = Array.from(
+      { length: 5 },
+      (_, i) => new Mortality(this.superRng, { baseLifespan: 4000 + i * 500 }),
+    );
+    for (let i = 0; i < ARCHON_CHANNELS; i++) {
+      const g = this.nhsiGenomeScratch;
+      for (let k = 0; k < g.length; k++) g[k] = 0.35 + 0.08 * ((i * 7 + k * 3) % 11);
+      this.emergenceAngles.registerStrain(`archon-${i}`, g);
+    }
     // The 5 are "alive" with powers: each has distinct child-seeded SuperMind (cortex+ToT+quantum+Clifford reflex+memory)
     // driving SuperBody (variant=0..4 selects archetype morph/wing/eye count + shader uVariant for color theme/pulse).
     // Per-frame: think(percept) → snapshot → setMind/setConsciousness; bodies update wander from mind act[] + evo.
     // No learning (fixed seeded weights); all read/write shared systems (grid for local, econ per purse, audio etc).
     this.superBody = this.superBodies[0]!; // legacy alias for prime (compat paths + wing swarm)
-    // keep legacy single pointing to [0] for compat code paths
-    this.superMind = this.superMinds[0]!;
     this.superMindSnap = null;
     this.superheroHud = new SuperheroHud(); // V35: self-mounting player HUD, hidden until unlock
     // F-SUPER V34/35: the access puzzle fires `superhero-unlock` once when solved → reveal #2 + the
     // player HUD; the HUD's buttons fire `hero-power`/`hero-vision`/`hero-cam` for the world to apply.
     if (typeof window !== 'undefined') {
+      const signal = this.disposeAbort.signal;
       window.addEventListener('cqm:superhero-unlock', () => this.revealSecondSuper(), {
         once: true,
+        signal,
       });
-      window.addEventListener('cqm:hero-power', (e) =>
-        this.heroPower(((e as CustomEvent).detail?.id as string) ?? ''),
+      window.addEventListener(
+        'cqm:hero-power',
+        (e) => this.heroPower(((e as CustomEvent).detail?.id as string) ?? ''),
+        { signal },
       );
-      window.addEventListener('cqm:hero-vision', () => this.heroCycleRender());
-      window.addEventListener('cqm:hero-cam', () => this.heroCycleCam()); // V41: orbit/3rd/1st
-      window.addEventListener('cqm:hero-mode', () => this.heroCycleControl()); // V41: autopilot/assist/manual
-      window.addEventListener('cqm:hero-move', (e) => {
-        const d = (e as CustomEvent).detail ?? {};
-        this.heroPad.x = Number(d.x) || 0; // on-screen D-pad / touch steer (held vector)
-        this.heroPad.y = Number(d.y) || 0;
-        this.heroPad.z = Number(d.z) || 0;
-      });
+      window.addEventListener('cqm:hero-vision', () => this.heroCycleRender(), { signal });
+      window.addEventListener('cqm:hero-cam', () => this.heroCycleCam(), { signal }); // V41: orbit/3rd/1st
+      window.addEventListener('cqm:hero-mode', () => this.heroCycleControl(), { signal }); // V41: autopilot/assist/manual
+      window.addEventListener(
+        'cqm:hero-move',
+        (e) => {
+          const d = (e as CustomEvent).detail ?? {};
+          this.heroPad.x = Number(d.x) || 0; // on-screen D-pad / touch steer (held vector)
+          this.heroPad.y = Number(d.y) || 0;
+          this.heroPad.z = Number(d.z) || 0;
+        },
+        { signal },
+      );
     }
     bindPanelToggles();
     this.bindObservatoryTabs();
@@ -725,6 +775,7 @@ export class World {
       bioCoherence: 0,
       bioMomentum: 0,
       nhi: 0,
+      godPower: 0,
       viewName: cyc(VIEW_MODES, this.state.viewIdx),
       timeScale: this.state.timeScale,
       renderName: this.state.renderMode,
@@ -773,6 +824,30 @@ export class World {
    */
   private bootPopulation(): number {
     return Math.max(120, Math.min(World.BOOT_POP, this.quality.targetEntities));
+  }
+
+  /**
+   * Lifecycle teardown for the dev HMR hook (`main.ts` calls `world.dispose?.()` before a hot-replace).
+   * Drops the global hero-event listeners and tears the audio engine down (timers + context); without
+   * it those leaked one set per reload, each bound to the now-dead World. Idempotent and a no-op in
+   * production (HMR is dev-only). The renderer Engine is freed separately by the HMR hook.
+   */
+  dispose(): void {
+    if (this.disposeAbort.signal.aborted) return; // idempotent — abort() is the sentinel
+    this.disposeAbort.abort();
+    this.audio.dispose();
+    // Free the GPU-resource-owning subsystems that expose a dispose(). The Engine's
+    // forceContextLoss() reclaims the context's VRAM, but these JS-side geometry/material
+    // dispose paths were skipped entirely — each HMR reload built a fresh World whose
+    // subsystems were never torn down. Only subsystems that actually have a dispose() are called.
+    this.singularities.dispose();
+    this.wingRender.dispose();
+    this.monolithTemple.dispose();
+    this.artifacts.dispose(this.engine.scene);
+    this.nhiBody.dispose(); // 3 shared geometries + live body materials
+    this.rd.dispose(); // the Gray–Scott GPU DataTexture
+    for (const b of this.superBodies) b.dispose();
+    for (const h of this.heroBodies) h.body.dispose();
   }
 
   /**
@@ -866,6 +941,8 @@ export class World {
     // Titans roam every frame; economy/diplomacy/strikes are internally cadenced
     // off s.frame (CONTRACTS V3.3) — after the grid so strikes can query it.
     this.titans.update(dt, t);
+    // 25-Archon pantheon society: light echoes + shared mind-field (emergence #5 stigmergy).
+    void this.pantheon.beat(s.frame);
     // F-BEINGS: the leviathans sail the mid-field (pure trig + the read-only hole force, no rng).
     this.leviathans.update(dt, t);
     // 5 SUPER CREATURES + F-SUPER: animate ALL 5 bodies (pantheon apexes) — each has own wander/flight.
@@ -873,7 +950,6 @@ export class World {
     for (let i = 0; i < this.superBodies.length; i++) {
       this.superBodies[i]!.update(t, dt);
     }
-    this.superBody.update(t, dt); // ensure prime (alias [0]) covered for legacy
     // V47: the wingman swarm orbits + assists the prime each frame; one InstancedMesh draws all 100.
     this.superBody.worldPosition(this.sv1);
     this.wingSwarm.update(
@@ -946,7 +1022,7 @@ export class World {
     // Guarded; own sub-streams → main golden untouched. Bodies already animated above.
     if (s.frame % 4 === 0) this.driveSuper(bands.bass, bands.level, t, n);
 
-    // ── V2 cadences (ARCHITECTURE.md frame pipeline) ──
+    // ── V2 cadences (ARCHITECTURE-2026-06-26.md frame pipeline) ──
     if (s.frame % 30 === 0) {
       this.qc.update();
       if (this.qc.lastCollapse !== this.lastCollapseSeen) {
@@ -1186,19 +1262,59 @@ export class World {
   private driveSuper(bass: number, level: number, t: number, n: number): void {
     try {
       const s = this.state;
+      const pantheonSnap = this.pantheon.beat(s.frame);
+      const collective = new Float32Array(FIELD_DIM);
+      this.pantheon.collectiveBias(0, collective);
       const econ = this.economy.summary();
       const mean = econ.agents > 0 ? econ.totalWealth / econ.agents : 1;
       const target = Math.max(1, this.quality.targetEntities);
+      // NHSI · 144 faculties + 25 ToM organs read the shared world field each apex beat.
+      const fi = this.nhsiFacultyIn;
+      fi[0] = clamp(s.chaos / CHAOS_MAX, 0, 1);
+      fi[1] = clamp(n / target, 0, 1);
+      fi[2] = clamp(pantheonSnap.field.energy, 0, 1);
+      fi[3] = clamp(collective[0] ?? 0, 0, 1);
+      fi[4] = clamp(collective[1] ?? 0, 0, 1);
+      fi[5] = clamp(collective[2] ?? 0, 0, 1);
+      fi[6] = clamp(collective[3] ?? 0, 0, 1);
+      fi[7] = clamp(this.nhi.count / 8, 0, 1);
+      fi[8] = clamp(this.titans.count / 10, 0, 1);
+      fi[9] = clamp(level, 0, 1);
+      fi[10] = clamp(bass, 0, 1);
+      fi[11] = clamp(econ.totalWealth / Math.max(1, econ.agents * 4), 0, 1);
+      fi[12] = clamp(pantheonSnap.field.coherence, 0, 1);
+      fi[13] = clamp((t / 60) % 1, 0, 1);
+      fi[14] = clamp(this.rdEnergy, 0, 1);
+      fi[15] = clamp(this.connectome.links / Math.max(1, this.connectome.pairCount * 8), 0, 1);
+      this.facultiesPantheon.update(fi);
+      const tc = this.nhsiTomCues;
+      tc[0] = fi[0] ?? 0;
+      tc[1] = fi[1] ?? 0;
+      tc[2] = fi[7] ?? 0;
+      tc[3] = fi[8] ?? 0;
+      tc[4] = fi[11] ?? 0;
+      tc[5] = fi[2] ?? 0;
+      tc[6] = fi[12] ?? 0;
+      tc[7] = fi[13] ?? 0;
+      this.tomPantheon.observe(tc);
+      const facultyBias = this.facultiesPantheon.getAggregateActivation();
+      const tomMenace = this.tomPantheon.getAggregateMenace();
+      this.symbiosis.step();
+      this.mythRitual.step();
       const net0 = this.economy.wealthOf(World.ECON_SUPER_BASE + 0)?.netWorth ?? 0;
       // global fallback percept (used for twins/heroes); 5 get position-localized versions below
       const basePercept: SuperPercept = {
-        energy: clamp(0.5 + 0.5 * (1 - s.chaos / 10), 0, 1),
-        threat: clamp(s.chaos / 8, 0, 1),
+        energy: clamp(0.5 + 0.5 * (1 - s.chaos / 10) + facultyBias * 0.06, 0, 1),
+        threat: clamp(s.chaos / 8 + tomMenace * 0.12 + facultyBias * 0.04, 0, 1),
         crowding: clamp(n / target, 0, 1),
         chaos: clamp(s.chaos / 10, 0, 1),
         wealthRel: clamp(net0 / (2 * (mean || 1)), 0, 1),
         preyClose: clamp(n / target, 0, 1),
-        rivalClose: clamp(this.nhi.count / 8 + (this.titans.count > 0 ? 0.2 : 0), 0, 1),
+        rivalClose: clamp(
+          this.nhi.count / 8 + (this.titans.count > 0 ? 0.2 : 0) + tomMenace * 0.1,
+          0,
+          1,
+        ),
         pull: clamp(s.chaos / 12, 0, 1),
         light: clamp(level, 0, 1),
         sound: clamp(bass, 0, 1),
@@ -1244,9 +1360,9 @@ export class World {
           chaos: c01(
             (basePercept.chaos + (bias.chaos - 0.5) * 0.12 + qgeMod) *
               quakePerturb(pulseForArchon.quakeAliveness ?? 0.5, i + 9, 0.1) *
-              qgeWorldPerturb(pulseForArchon.quakeAliveness ?? 0.5, i + 9),
-          ), // godform bias + quake + QGE aliveness (Tsotchke quantum-quake / PINN / PIMC)
-          // Ralph heartbeat re-audit 10x continue: use mpoF (Moonlab tensor) + qgeF (quantum-quake) for more corpus effect on crowding/threat in super world percepts
+              qgeWorldPerturb(pulseForArchon.quakeAliveness ?? 0.5, i + 9) +
+              (collective[2] ?? 0) * 0.04,
+          ),
           crowding: c01(
             basePercept.crowding * 0.35 +
               localD * 0.65 +
@@ -1255,7 +1371,6 @@ export class World {
           ),
           threat: c01(basePercept.threat + localD * 0.08 + qgeF * 0.04),
           wealthRel,
-          // enhance light/sound with archetype bias + tiny deterministic pos factor
           light: clamp(
             basePercept.light + (bias.generative - 0.5) * 0.04 + ((lz * 0.002) % 0.02),
             0,
@@ -1266,31 +1381,169 @@ export class World {
             0,
             1,
           ),
-          // Ralph 10x re-audit + continue: quantum-quake aliveness from Tsotchke corpus (pulse) perturbs pull for Archon world effect
-          // 10x more: use ulgHandoff + gwtBroadcast for hybrid corpus factor in pull (Eshkol+ulg+quake)
-          // + qgeF for more quantum-quake
           pull: c01(
             basePercept.pull +
               (pulseForArchon.quakeAliveness ?? 0) * 0.08 +
               mpoF * 0.05 +
-              qgeF * 0.03,
+              qgeF * 0.03 +
+              (collective[4] ?? 0) * 0.06,
           ),
         };
+        void pantheonSnap;
+        const mindOut = this.superMinds[i]!.think(p);
+        this.noosphere.updateArchon(
+          i,
+          mindOut.consciousness.phi,
+          mindOut.consciousness.ignition,
+          mindOut.consciousness.workspace,
+          mindOut.consciousness.novelty,
+          mindOut.consciousness.qualiaTone,
+        );
+        this.superBodies[i]!.worldPosition(this.sv1);
+        this.stigmergy.deposit(
+          this.sv1.x / ARENA_MID,
+          this.sv1.z / ARENA_MID,
+          i % 4,
+          0.05 + mindOut.consciousness.ignition * 0.1,
+        );
+        this.archonMortality[i]!.step();
         this.superCreatures[i]!.think(p);
-        const mo = this.superMinds[i]!.think(p);
+        const coll = this.nhsiCollectiveScratch;
+        coll[0] = mindOut.consciousness.ignition;
+        coll[1] = mindOut.consciousness.phi;
+        coll[2] = mindOut.consciousness.surprise;
+        coll[3] = mindOut.consciousness.novelty;
+        coll[4] = mindOut.consciousness.selfAware;
+        coll[5] = mindOut.consciousness.workspace;
+        coll[6] = clamp(mindOut.curiosity, 0, 1);
+        coll[7] = mindOut.consciousness.qualiaTone;
+        this.emergenceAngles.aggregateCollective(`archon-${i}`, coll);
+        this.pantheon.depositApex(
+          i,
+          [
+            mindOut.consciousness.ignition,
+            mindOut.consciousness.phi,
+            mindOut.consciousness.surprise,
+            mindOut.consciousness.novelty,
+            mindOut.consciousness.selfAware,
+            mindOut.consciousness.workspace,
+            mindOut.consciousness.qualiaTone,
+            clamp(mindOut.curiosity, 0, 1),
+          ],
+          0.35 + mindOut.consciousness.ignition * 0.5,
+        );
         // FULL TSOTCHKE: catalyze via update (Eshkol + all repos soup growth)
         this.primordialSoup.update(i, s.frame, this.petriRng);
         const dish = this.petriDishes[i];
         if (dish) petriDishBeat(dish, i, s.frame, this.petriRng);
         this.superBodies[i]!.setMind(this.superCreatures[i]!.snapshot());
         this.superBodies[i]!.setConsciousness(
-          mo.quantum,
-          mo.consciousness.dreaming,
-          mo.consciousness.hallucinating,
+          mindOut.quantum,
+          mindOut.consciousness.dreaming,
+          mindOut.consciousness.hallucinating,
         );
         if (i === 0) {
           this.superMindSnap = this.superMinds[0]!.snapshot(); // typed, removed any per contract
-          primeMindOut = mo;
+          primeMindOut = mindOut;
+        }
+      }
+      this.noosphere.step();
+      this.stigmergy.step();
+      const nooSnap = this.noosphere.snapshot();
+      if (nooSnap.collectiveInsight) {
+        s.chaos = Math.min(CHAOS_MAX, s.chaos + 0.08);
+      }
+      // Light Archons (5–24): deposit pantheon field into emergence angles 8–10 each apex beat.
+      for (let a = 5; a < ARCHON_CHANNELS; a++) {
+        this.pantheon.field.sample(a, this.nhsiCollectiveScratch);
+        this.emergenceAngles.aggregateCollective(`archon-${a}`, this.nhsiCollectiveScratch);
+      }
+
+      if (s.frame % 120 === 0) {
+        this.symbiosis.step();
+        this.mythRitual.step();
+        if (s.frame % 480 === 0) {
+          for (let i = 0; i < 5; i++) {
+            for (let j = i + 1; j < 5; j++) {
+              this.symbiosis.formRelationship(i, j);
+            }
+          }
+        }
+        const primeSnap = this.superMinds[0]!.snapshot();
+        const rot = s.frame % ARCHON_CHANNELS;
+        void this.emergenceAngles.evolveEshkolProgram(
+          `archon-${rot}`,
+          primeSnap.consciousness.phi,
+          fi,
+        );
+        this.emergenceAngles.recombineStrains(
+          `archon-${rot}`,
+          `archon-${(rot + 1) % ARCHON_CHANNELS}`,
+        );
+        const em = this.emergenceAngles.getAggregateEmergence();
+        const chaos = s.chaos ?? 0.5;
+        for (let a = 0; a < ARCHON_CHANNELS; a++) {
+          let pwr = 0;
+          let spinO = 0.4;
+          let qgtC = 0.3;
+          let esh = 0.4;
+          if (a < this.superMinds.length) {
+            const snap = this.superMinds[a]?.snapshot?.() ?? null;
+            pwr =
+              (snap?.consciousness?.phi ?? 0.3) +
+              (snap?.consciousness?.ignition ?? 0.2) +
+              ((snap as { chaos?: number })?.chaos ?? 0);
+            spinO = (snap as { quantum?: number[] })?.quantum?.[0] ?? 0.4;
+            qgtC = (snap as { qgt?: number })?.qgt ?? 0.3;
+            esh =
+              (snap as { eshkolConsciousness?: { ignition?: number } })?.eshkolConsciousness
+                ?.ignition ?? 0.4;
+          } else {
+            this.pantheon.field.sample(a, this.nhsiCollectiveScratch);
+            const c = this.nhsiCollectiveScratch;
+            pwr =
+              ((c[0] ?? 0) + (c[1] ?? 0) + (c[2] ?? 0) + (c[3] ?? 0)) * 0.25 + (c[4] ?? 0) * 0.5;
+            spinO = c[2] ?? 0.4;
+            qgtC = c[3] ?? 0.3;
+            esh = c[0] ?? 0.4;
+          }
+          if (pwr > 0.55 || em > 0.5 || chaos > 3.5) {
+            const brutal = this.emergenceAngles.triggerBrutalGodEvent(a, em, pwr, s.frame + a * 13);
+            const pd = this.petriDishes[a % this.petriDishes.length];
+            if (pd) {
+              applyBrutalGodEvent(
+                pd,
+                brutal.event,
+                brutal.powerDelta,
+                brutal.brutality,
+                this.petriRng,
+              );
+              const release = triggerBrutalRelease(
+                a,
+                chaos,
+                spinO,
+                qgtC,
+                esh,
+                this.superRng,
+                s.frame + a,
+              );
+              if (release) {
+                pd.godPower = Math.min(1, (pd.godPower || 0) + release.power * 0.1);
+                this.audit.record('brutal-god-release', {
+                  archon: a,
+                  archetype: release.archetype,
+                  power: release.power,
+                  lore: getBrutalLore(release.archetype),
+                });
+              }
+            }
+            this.audit.record('brutal-god-event', {
+              archon: a,
+              event: brutal.event,
+              power: brutal.powerDelta,
+              brutality: brutal.brutality,
+            });
+          }
         }
       }
 
@@ -1356,7 +1609,8 @@ export class World {
       if (this.superheroState.active && hero0) {
         this.superheroState.tick(4 / 60, hero0.mind.snapshot().emotion.dominance, percept.threat);
       }
-    } catch {
+    } catch (e) {
+      void e;
       /* an apex beat misbehaved — skip it, keep the world running */
     }
   }
@@ -1901,6 +2155,9 @@ export class World {
     sn.bioCoherence = bioCoherence;
     sn.bioMomentum = bioMomentum;
     sn.sentience = clamp((bioIntegration * (0.5 + bioCoherence) * (0.5 + bioMomentum)) / 1.5, 0, 1);
+    sn.godPower =
+      this.petriDishes.reduce((acc, p) => acc + (p.godPower ?? 0), 0) /
+      Math.max(1, this.petriDishes.length);
     this.hud.setLore(sn.lore); // O(1) no-op when unchanged
     return sn;
   }

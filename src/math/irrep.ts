@@ -14,28 +14,52 @@
  * call anywhere in sim logic.
  *
  * Angular-momentum quantum numbers are half-integers represented as JS numbers
- * in steps of 0.5 (e.g. spin-½ → j = 0.5). Degrees are capped at {@link IRREP_J_MAX}
- * so every integer factorial that appears stays EXACT in IEEE-754 float64
- * (n! is exact through 18!, and the largest argument here is 2·J_MAX + 2 ≤ 18).
+ * in steps of 0.5 (e.g. spin-½ → j = 0.5). Degrees are capped at {@link IRREP_J_MAX}.
+ * Clebsch–Gordan + Wigner-d draw their factorials from the linear FACT table (built
+ * to 3·J_MAX+1 = 25!, the largest argument `(j1+j2+J+1)` reaches at J=8); the upper
+ * entries past 18! are not bit-exact in f64, but the balanced numerator/denominator
+ * ratios keep CG/Wigner-d accurate to ~1e-16 (verified by orthonormality at j=8).
+ * 6j/9j need a far larger range (~4·J ≈ 33! at J=8) and use the log-factorial table LF.
  *
  * Refs: Edmonds, *Angular Momentum in Quantum Mechanics* (1957); Varshalovich,
  * Moskalev & Khersonskii, *Quantum Theory of Angular Momentum* (1988); Wigner
  * (1931). Upstream: libirrep `src/wigner_d.c`, `src/clebsch_gordan.c`.
  */
 
-/** Max angular momentum so all factorials below stay exact in float64 (2·J+2 ≤ 18). */
+/** Max angular momentum the closed-form coefficients are validated for. */
 export const IRREP_J_MAX = 8;
 
-/** Exact factorial table 0!..(2·J_MAX+2)!, built once at module load. O(1) lookup. */
+/**
+ * Factorial table 0!..(3·J_MAX+1)! = 0!..25!, built once at module load. 25! is the
+ * largest argument Clebsch–Gordan reaches `(j1+j2+J+1)` at J=8. Entries 0..18 are
+ * bit-exact in f64; 19!..25! carry f64 rounding (~1e-10 rel) but appear only inside
+ * balanced ratios, so CG/Wigner-d stay accurate to ~1e-16. O(1) lookup.
+ */
 const FACT: readonly number[] = (() => {
   const f: number[] = [1];
-  for (let n = 1; n <= 2 * IRREP_J_MAX + 2; n++) f.push(f[n - 1]! * n);
+  for (let n = 1; n <= 3 * IRREP_J_MAX + 1; n++) f.push(f[n - 1]! * n);
   return f;
 })();
 
 /** n! for a non-negative integer n within the supported range; Infinity if out of range. */
 function fact(n: number): number {
   return n >= 0 && n < FACT.length ? FACT[n]! : Number.POSITIVE_INFINITY;
+}
+
+/**
+ * ln(n!) table, 0..(4*J_MAX+2). The 6j/9j Racah sum needs factorials up to ~4*J (≈ 33! at J=8) — far
+ * beyond the linear FACT table (25!) and the f64-exact factorial limit (18!). Evaluating those terms with
+ * FACT silently dropped them (the `t+1 >= FACT.length` guard) and returned a wrong/near-zero 6j for j >= 7
+ * (verified: {8 8 8;8 8 8} gave 4.2e-12 vs the true -1.265e-2). Log-factorials stay accurate to ~1e-14.
+ */
+const LF: readonly number[] = (() => {
+  const t: number[] = [0];
+  for (let n = 1; n <= 4 * IRREP_J_MAX + 2; n++) t.push(t[n - 1]! + Math.log(n));
+  return t;
+})();
+/** ln(n!) within range; +Infinity if out of range. */
+function lf(n: number): number {
+  return n >= 0 && n < LF.length ? LF[n]! : Number.POSITIVE_INFINITY;
 }
 
 /** True when m is a valid projection of j: |m| ≤ j and (j − m) is a non-negative integer. */
@@ -98,7 +122,10 @@ export function clebschGordan(
   J: number,
   M: number,
 ): number {
-  if (J > IRREP_J_MAX) return 0;
+  // Guard every angular momentum, not just J: fact() saturates to Infinity past the table, so an
+  // unclamped large j1/j2 (reachable via the unclamped getClebsch path in tsotchke-deep-wire) would
+  // make the prefactor sqrt(Infinity) -> a non-finite CG.
+  if (j1 > IRREP_J_MAX || j2 > IRREP_J_MAX || J > IRREP_J_MAX) return 0;
   if (!isValidProjection(j1, m1) || !isValidProjection(j2, m2) || !isValidProjection(J, M))
     return 0;
   if (Math.abs(m1 + m2 - M) > 1e-12) return 0;
@@ -144,4 +171,110 @@ export function clebschGordan(
 export function irrepMultiplicity(j: number, baseCount: number): number {
   const dim = 2 * Math.min(Math.max(j, 0), IRREP_J_MAX) + 1;
   return Math.max(1, Math.round(baseCount / dim)) * dim;
+}
+
+/** ln of the Racah triangle coefficient (a sqrt of a factorial ratio); null if the triangle inequality fails. Log-space keeps large-j exact. */
+function logTriangleDelta(a: number, b: number, c: number): number | null {
+  const x1 = a + b - c;
+  const x2 = a - b + c;
+  const x3 = -a + b + c;
+  const x4 = a + b + c + 1;
+  if (x1 < 0 || x2 < 0 || x3 < 0 || !Number.isInteger(x1)) return null;
+  return 0.5 * (lf(x1) + lf(x2) + lf(x3) - lf(x4));
+}
+
+/**
+ * Wigner 6j symbol {j1 j2 j3; j4 j5 j6} via the exact Racah W-formula
+ * (Edmonds 6.3.7 / Racah 1942). Returns 0 unless the four triangles
+ * (j1 j2 j3), (j1 j5 j6), (j4 j2 j6), (j4 j5 j3) all hold. O(t) integer sum.
+ *
+ * { j1 j2 j3 } = Δ(j1j2j3)Δ(j1j5j6)Δ(j4j2j6)Δ(j4j5j3)
+ * { j4 j5 j6 }   · Σ_t (−1)^t (t+1)! / [ Π(t−αᵢ)! · Π(βⱼ−t)! ]
+ */
+export function wigner6j(
+  j1: number,
+  j2: number,
+  j3: number,
+  j4: number,
+  j5: number,
+  j6: number,
+): number {
+  for (const j of [j1, j2, j3, j4, j5, j6]) if (j < 0 || j > IRREP_J_MAX) return 0;
+  const ld1 = logTriangleDelta(j1, j2, j3);
+  const ld2 = logTriangleDelta(j1, j5, j6);
+  const ld3 = logTriangleDelta(j4, j2, j6);
+  const ld4 = logTriangleDelta(j4, j5, j3);
+  if (ld1 === null || ld2 === null || ld3 === null || ld4 === null) return 0;
+  const logDelta = ld1 + ld2 + ld3 + ld4;
+
+  // a = lower bounds, b = upper bounds of the Racah sum index t.
+  const a = [j1 + j2 + j3, j1 + j5 + j6, j4 + j2 + j6, j4 + j5 + j3];
+  const b = [j1 + j2 + j4 + j5, j2 + j3 + j5 + j6, j3 + j1 + j6 + j4];
+  const tMin = Math.max(...a);
+  const tMax = Math.min(...b);
+  if (tMin > tMax + 1e-9) return 0;
+
+  // Each summand = (-1)^t (t+1)! / [Prod(t-ai)! Prod(bj-t)!] * Delta1*Delta2*Delta3*Delta4, evaluated in
+  // LOG space so the ~33! factorials at j=8 stay exact (the old linear-FACT path overflowed -> wrong/~0).
+  let sum = 0;
+  for (let t = Math.round(tMin); t <= Math.round(tMax); t++) {
+    let logTerm = logDelta + lf(t + 1);
+    let ok = true;
+    for (const ai of a) {
+      const v = t - ai;
+      if (v < 0) {
+        ok = false;
+        break;
+      }
+      logTerm -= lf(v);
+    }
+    if (!ok) continue;
+    for (const bj of b) {
+      const v = bj - t;
+      if (v < 0) {
+        ok = false;
+        break;
+      }
+      logTerm -= lf(v);
+    }
+    if (!ok || !Number.isFinite(logTerm)) continue;
+    sum += sign(t) * Math.exp(logTerm);
+  }
+  return sum;
+}
+
+/**
+ * Wigner 9j symbol via the standard single sum over a product of three 6j
+ * symbols (Edmonds 6.4.3 / Varshalovich 10.2.4):
+ *
+ * { a b c }            { a b c }{ d e f }{ g h j }
+ * { d e f } = Σ_x (2x+1){ f j x }{ b x h }{ x a d }
+ * { g h j }
+ *
+ * x runs over the overlap of the triangles in half-integer steps. Returns 0
+ * when no valid x exists. Exact (delegates to {@link wigner6j}).
+ */
+export function wigner9j(
+  a: number,
+  b: number,
+  c: number,
+  d: number,
+  e: number,
+  f: number,
+  g: number,
+  h: number,
+  j: number,
+): number {
+  for (const v of [a, b, c, d, e, f, g, h, j]) if (v < 0 || v > IRREP_J_MAX) return 0;
+  const xMin = Math.max(Math.abs(a - j), Math.abs(b - f), Math.abs(d - h));
+  const xMax = Math.min(a + j, b + f, d + h);
+  if (xMin > xMax + 1e-9) return 0;
+  let sum = 0;
+  for (let x = xMin; x <= xMax + 1e-9; x += 1) {
+    const w1 = wigner6j(a, b, c, f, j, x);
+    const w2 = wigner6j(d, e, f, b, x, h);
+    const w3 = wigner6j(g, h, j, x, a, d);
+    sum += sign(2 * x) * (2 * x + 1) * w1 * w2 * w3;
+  }
+  return sum;
 }

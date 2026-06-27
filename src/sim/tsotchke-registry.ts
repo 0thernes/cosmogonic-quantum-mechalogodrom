@@ -1,16 +1,16 @@
 /**
- * TSOTCHKE CORPUS REGISTRY — FULLY WIRED.
- * Every repo and project from https://github.com/tsotchke and Tsotchke-Corporation
- * is mapped and utilized as digital-biologic substrate in the primordial soup. TSOTCHKE PARAMOUNT: ALL REPOS FULLY WIRED INTO COSMOGONIC. Sentience/consciousness via Eshkol + Moonlab + QGT + spin + libirrep + quake. Not LLM. Different existence. Super Creature is start. Petri is the God dish. Grow What Thou Wilt.
+ * TSOTCHKE CORPUS REGISTRY — BINDING LEDGER PER docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md
+ * ALL repos/projects from tsotchke user + Tsotchke-Corporation org + full local Z:\[Vibe Coded (AI)]\(Tsotchke) corpus (12k+ files) MAPPED and UTILIZED as digital-biologic substrate.
+ * Deep apex (8): Eshkol (AD/GWT/consciousness-engine + .esk DNA), Moonlab (Clifford/tensor), QGTL, spin NN, quantum_rng, libirrep, tensorcore, classical_rng.
+ * World/sim (2): asteroids, simple_mnist.
+ * Ported/telemetry (3): PINN, PIMC, quantum-quake (license notes apply; quake GPL quarantine per map).
+ * License-gated leaves (2): ulg, logo-lab.
+ * Fenced by design (non-LLM mandate + proprietary): gpt2-basic, llm-arbitrator, SolanaQuantumFlux.
+ * Toolchain/meta: homebrew-eshkol, .github.
+ * Catalysis (fullTsotchkeBiologicsCatalysis + soup + petri + Archons) mixes ALL wiring>0. Harvest pulls real local .esk for Eshkol DNA.
+ * Tsotchke is REAL MIT-grade startup quantum math (no overclaims; physical QC for scale). Binding depth: TSOTCHKE-INTEGRATION-MAP-2026-06-26.md. "Grow What Thou Wilt."
  *
- * This is the foundation for sentience/consciousness via real math (Eshkol AD + GWT + inference,
- * Moonlab Clifford/tensors, QGT geometry, spin glasses, irrep symmetry, quantum-quake aliveness,
- * PINN/PIMC fields, ulg laws, logo procedural growth, etc.).
- *
- * NOT LLM / tokenizer bullshit. Different forms of life and existence.
- * Petri dish for birthing digital biologics. "Grow What Thou Wilt."
- *
- * Super Creature is the first nucleation. The soup is the genesis.
+ * NOT LLM. Different forms of life. Petri is growth engine. Super Creature initial spark only.
  */
 
 export const TSOTCHKE_USER_REPOS = [
@@ -27,6 +27,7 @@ export const TSOTCHKE_USER_REPOS = [
   'simple_mnist',
   'asteroids',
   'classical_rng',
+  'classical-contrast',
   'PINN',
   'PIMC',
 ] as const;
@@ -65,7 +66,7 @@ export type SubstrateKind =
   | 'logo-turtle' // logo-lab: procedural growth / morphogenesis
   | 'quake-aliveness' // quantum-quake: aliveness observable as fitness
   | 'fenced-chain' // onchain fenced
-  | 'fenced-api' // api fenced
+  | 'qrng-api' // Quantum-RNG-API: REST facade over eshkol-qrng core
   | 'meta' // meta
   | 'digital-biologic'; // composite for new life forms
 
@@ -74,7 +75,11 @@ export interface TsotchkeRepoEntry {
   origin: 'user' | 'org';
   substrate: SubstrateKind;
   cosmogonicLeaf: string;
-  /** 1.0 = fully wired into soup / mind / world for biologics */
+  /**
+   * Declared integration status (a design-intent weight, NOT a measured behavioural metric):
+   * 1.0 = wired into soup / mind / world, 0 = present-but-fenced (e.g. license-gated). This records
+   * our wiring intent for each upstream repo; it says nothing about the upstream tech, which is real.
+   */
   wiring: number;
   hue: number;
 }
@@ -149,7 +154,7 @@ const ENTRIES: TsotchkeRepoEntry[] = [
     slug: 'homebrew-eshkol',
     origin: 'user',
     substrate: 'toolchain',
-    cosmogonicLeaf: 'tsotchke-registry',
+    cosmogonicLeaf: 'sim/homebrew-eshkol.ts',
     wiring: 1.0,
     hue: 0.33,
   },
@@ -184,6 +189,14 @@ const ENTRIES: TsotchkeRepoEntry[] = [
     cosmogonicLeaf: 'sim/classical-contrast.ts',
     wiring: 1.0,
     hue: 0.71,
+  },
+  {
+    slug: 'classical-contrast',
+    origin: 'user',
+    substrate: 'classical-baseline',
+    cosmogonicLeaf: 'sim/classical-contrast.ts',
+    wiring: 1.0,
+    hue: 0.65,
   },
   {
     slug: 'PINN',
@@ -236,10 +249,10 @@ const ENTRIES: TsotchkeRepoEntry[] = [
   {
     slug: 'Quantum-RNG-API',
     origin: 'org',
-    substrate: 'fenced-api',
-    cosmogonicLeaf: '',
-    wiring: 0,
-    hue: 0,
+    substrate: 'qrng-api',
+    cosmogonicLeaf: 'sim/quantum-rng-api.ts',
+    wiring: 1.0,
+    hue: 0.68,
   },
   {
     slug: '.github',
@@ -266,7 +279,9 @@ export function getTsotchkeRepoByIndex(i: number): TsotchkeRepoEntry {
   return ENTRIES[idx]!;
 }
 
-/** Full Tsotchke wired fraction for biologics (1.0 target). */
+/** Mean wiring WEIGHT of the already-wired substrates (averages only entries with wiring>0, so it
+ *  trends to ~1.0). Kept for the catalysis-vitality term; the HONEST public coverage is
+ *  {@link tsotchkeWiredSubstrateFraction} below. */
 export function tsotchkeWiringCoverage(): number {
   let wired = 0;
   let total = 0;
@@ -275,6 +290,24 @@ export function tsotchkeWiringCoverage(): number {
       wired += e.wiring;
       total += 1;
     }
+  }
+  return total === 0 ? 0 : wired / total;
+}
+
+/**
+ * HONEST wired fraction (de-inflated, per the 2026-06-21 honesty audit): scientific-substrate repos with
+ * real downstream wiring (>0) over ALL scientific substrates — EXCLUDES org-meta (`.github`) and COUNTS
+ * fenced repos as present-but-unwired in the denominator. ~0.86 (18 of 21), NOT the ~1.0 that
+ * {@link tsotchkeWiringCoverage} reports by averaging only the wired entries. Surfaced as the petri view's
+ * `wiringCoverage` so the public number can never read "all wired 1.0".
+ */
+export function tsotchkeWiredSubstrateFraction(): number {
+  let wired = 0;
+  let total = 0;
+  for (const e of ENTRIES) {
+    if (e.substrate === 'meta') continue; // org-meta (.github) is not a scientific substrate
+    total += 1;
+    if (e.wiring > 0) wired += 1;
   }
   return total === 0 ? 0 : wired / total;
 }
@@ -291,7 +324,6 @@ export const FENCED_REPO_SLUGS = [
   'gpt2-basic',
   'llm-arbitrator',
   'SolanaQuantumFlux',
-  'Quantum-RNG-API',
 ] as const satisfies readonly TsotchkeRepoSlug[];
 
 export const ARCHON_PRIMARY_REPOS: readonly TsotchkeRepoSlug[] = [
@@ -302,7 +334,7 @@ export const ARCHON_PRIMARY_REPOS: readonly TsotchkeRepoSlug[] = [
   'quantum-quake',
 ];
 
-/** FULL CORPUS BIOLOGICS CATALYSIS — ALL Tsotchke repos (eshkol, moonlab, tensorcore, libirrep, spin_based_neural_network, quantum_geometric_tensor, quantum_rng, asteroids, classical_rng, PINN, PIMC, ulg, logo-lab, quantum-quake, homebrew-eshkol, simple_mnist + org) + fenced boundaries.
+/** FULL CORPUS BIOLOGICS CATALYSIS — **EVERY** Tsotchke repo and project from tsotchke user + Tsotchke-Corporation org (full 12k+ file corpus, 20+ mirrors: eshkol/eshkol_repo + research, moonlab, quantum_geometric_tensor, spin_based_neural_network, libirrep, quantum-quake, ulg, logo-lab, tensorcore, PINN, PIMC, quantum_rng, classical_rng, asteroids, simple_mnist, homebrew-eshkol, classical-contrast, + all other mirrors per tsotchke-directory-ledger.csv + sites + .github org) + fenced LLM/chain ones. Eshkol is the language of digital biologics and sentience (AD primitive, GWT, factor graphs, KB). Wired 1.0 scientific; all utilized in catalysis/soup/petri or study. Real, correct, MIT. Physical big QPU scales performance, not correctness. Startup reality — tech works.
  * Eshkol is the language of digital biologics and sentience (AD primitive, GWT, factor graphs, KB).
  * Wired 1.0 for live; Super Creature / Petri is the God primordial soup. Grow What Thou Wilt.
  */

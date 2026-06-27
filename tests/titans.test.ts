@@ -216,3 +216,69 @@ describe('TitanSystem.setStrategy — NaN seal + bounds (audit fix)', () => {
     }
   });
 });
+
+/** Minimal structural view of a Titan for the roam regression (TS `private` is runtime-accessible). */
+interface TitanRoamView {
+  group: { position: { x: number; z: number } };
+  homeX: number;
+  homeZ: number;
+}
+
+describe('TitanSystem — roam stays in home territory (anti-clustering regression)', () => {
+  // Guards the 2026-06-27 fix: the old roam "core pull" sprang EVERY titan toward the global origin,
+  // collapsing all 10 onto the centre (and their aura wells then dragged the whole population into one
+  // central clot). The fix springs each titan toward its OWN distributed home wedge (radius 130/175/220
+  // on a ring). This is a DETERMINISTIC behavioural property the golden test can't catch — a regression
+  // to origin-seeking would keep the sim deterministic but drive every titan to (0,0).
+  test('after a long roam, titans hover near their own homes and never collapse to the centre', () => {
+    const ctx = makeCtx(0x7174a4);
+    const entities = new EntityManager(ctx);
+    entities.reset(POP);
+    const titans = new TitanSystem(ctx, entities, LORE, { perturb: () => undefined });
+    const dt = 1 / 60;
+    for (let f = 1; f <= 1200; f++) {
+      ctx.state.frame = f;
+      titans.update(dt, f * dt);
+    }
+    const arr = (titans as unknown as { titans: TitanRoamView[] }).titans;
+    expect(arr.length).toBe(10);
+    let nearHome = 0;
+    let meanOriginR = 0;
+    const xs: number[] = [];
+    for (const t of arr) {
+      const p = t.group.position;
+      const dHome = Math.hypot(p.x - t.homeX, p.z - t.homeZ);
+      const dOrigin = Math.hypot(p.x, p.z);
+      meanOriginR += dOrigin;
+      xs.push(p.x);
+      // each titan should still be roaming the neighbourhood of its OWN home wedge, not the centre.
+      if (dHome < 90) nearHome++;
+      expect(Number.isFinite(p.x + p.z)).toBe(true);
+    }
+    meanOriginR /= arr.length;
+    // NOT collapsed to the centre: homes sit on a ring at radius 130-220, so the mean distance from
+    // the origin must stay well off zero (origin-seeking would crush this toward 0).
+    expect(meanOriginR).toBeGreaterThan(90);
+    // Most titans hover near their distributed homes (territorial roaming, not a central pile).
+    expect(nearHome).toBeGreaterThanOrEqual(8);
+    // The colossi remain SPREAD across the arena — the x-extent spans a wide band, not a point.
+    expect(Math.max(...xs) - Math.min(...xs)).toBeGreaterThan(180);
+  });
+
+  test('the roam is deterministic — same seed reproduces identical titan positions', () => {
+    const drive = (seed: number): number[] => {
+      const ctx = makeCtx(seed);
+      const entities = new EntityManager(ctx);
+      entities.reset(POP);
+      const titans = new TitanSystem(ctx, entities, LORE, { perturb: () => undefined });
+      const dt = 1 / 60;
+      for (let f = 1; f <= 300; f++) {
+        ctx.state.frame = f;
+        titans.update(dt, f * dt);
+      }
+      const arr = (titans as unknown as { titans: TitanRoamView[] }).titans;
+      return arr.flatMap((t) => [t.group.position.x, t.group.position.z]);
+    };
+    expect(drive(0x42)).toEqual(drive(0x42));
+  });
+});

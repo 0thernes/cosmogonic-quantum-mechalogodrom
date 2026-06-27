@@ -5,7 +5,7 @@
  * (puppet-master interventions and sort-field swaps apply characteristic gate sequences,
  * chaos drives a drift rotation) and reads OUT of it (normalized entropy → telemetry QBIT-S,
  * periodic measurement collapses → QuantumCloud implosions, Born-rule band hues → QuantumCloud
- * colors). Feedback over garnish, per docs/PHILOSOPHY.md rule 4.
+ * colors). Feedback over garnish, per docs/PHILOSOPHY-2026-06-26.md rule 4.
  *
  * Cadences (enforced by world.ts, documented here): update() every 30 frames; bands() every
  * 6 frames; events arrive whenever the source systems fire. Every operation is O(2^n) with

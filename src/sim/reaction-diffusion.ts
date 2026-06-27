@@ -140,6 +140,11 @@ export class ReactionDiffusionSystem {
     this.texture = tex;
   }
 
+  /** Free the GPU DataTexture on world teardown / HMR reload. Idempotent. */
+  dispose(): void {
+    this.texture.dispose();
+  }
+
   /**
    * Live front U field (background ≈ 1, patterns ≈ 0.2–0.4). Shared buffer,
    * valid until the next `step()` swap; read-only by convention. For tests and
@@ -284,6 +289,34 @@ export class ReactionDiffusionSystem {
         const cutU = 0.2 + rng() * 0.3;
         if (seedV > (v[i] ?? 0)) v[i] = seedV;
         if (cutU < (u[i] ?? 1)) u[i] = cutU;
+      }
+    }
+  }
+
+  /**
+   * Deterministic seed disturbance (draws NO rng) at normalized (nx, ny) ∈ [0,1]². For stream-NEUTRAL
+   * writers like the leviathans, which stir the primordial substrate as they roam WITHOUT consuming the
+   * shared seeded stream — so the cosmos stays bit-reproducible and the writer's cadence never shifts any
+   * downstream rng draw. Same disk + toroidal wrap + clamp as {@link perturb}, but the inhibitor seed /
+   * activator cut are FIXED rather than jittered. O(radius²); allocation-free.
+   */
+  seedDeterministic(nx: number, ny: number, radius = DEFAULT_PERTURB_RADIUS): void {
+    const s = this.size;
+    const r = Math.max(1, Math.min(Math.floor(radius), s >> 2));
+    const cx = Math.floor((nx - Math.floor(nx)) * s);
+    const cy = Math.floor((ny - Math.floor(ny)) * s);
+    const r2 = r * r;
+    const u = this.u;
+    const v = this.v;
+    for (let dy = -r; dy <= r; dy++) {
+      const row = (((cy + dy) % s) + s) % s;
+      const rowBase = row * s;
+      for (let dx = -r; dx <= r; dx++) {
+        if (dx * dx + dy * dy > r2) continue;
+        const col = (((cx + dx) % s) + s) % s;
+        const i = rowBase + col;
+        if (0.8 > (v[i] ?? 0)) v[i] = 0.8;
+        if (0.35 < (u[i] ?? 1)) u[i] = 0.35;
       }
     }
   }

@@ -1,6 +1,6 @@
 # Code ownership for review routing. The integrator owns the cross-cutting composition root and
 # the binding specs; everything else defaults to the same owner while this is a solo project.
-# See docs/MODULE-CONTRACTS.md for the file-ownership map used during parallel-agent work.
+# See docs/MODULE-CONTRACTS-2026-06-26.md for the file-ownership map used during parallel-agent work.
 
 *                       @0thernes
 
@@ -11,8 +11,8 @@
 /src/core/quality.ts    @0thernes
 
 # Binding contracts and complexity budget — the source of truth a reviewer checks against.
-/docs/MODULE-CONTRACTS.md @0thernes
-/docs/COMPLEXITY.md       @0thernes
+/docs/MODULE-CONTRACTS-2026-06-26.md @0thernes
+/docs/COMPLEXITY-2026-06-26.md        @0thernes
 
 # CI/CD and release automation.
 /.github/                @0thernes

@@ -1,3 +1,5 @@
+<!-- reviewed: 2026-06-27 | repo-wide consistency audit | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+
 # Cosmogonic Quantum Mechalogodrom — Native Reliquary (C++ / OpenGL)
 
 A **native C++20 engine** that renders the ornate NHI specimens as a ray-marched

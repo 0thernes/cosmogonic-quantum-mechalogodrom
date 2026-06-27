@@ -1,11 +1,13 @@
+<!-- reviewed: 2026-06-27 | repo-wide consistency audit | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+
 # Security Policy
 
 ## Supported versions
 
 | Version | Supported |
 | ------- | --------- |
-| 0.9.x   | Yes       |
-| < 0.9   | No        |
+| 0.18.x  | Yes       |
+| < 0.18  | No        |
 
 ## Reporting a vulnerability
 

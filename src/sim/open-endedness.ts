@@ -89,7 +89,7 @@ export function evolutionaryActivity(
 ): EvolutionaryActivity {
   let width = 0;
   for (const row of history) if (row.length > width) width = row.length;
-  const cumulative = new Array<number>(width).fill(0);
+  const cumulative = Array.from({ length: width }, () => 0);
   for (const row of history) {
     for (let i = 0; i < row.length; i++) {
       const v = row[i] ?? 0;
@@ -99,4 +99,35 @@ export function evolutionaryActivity(
   let total = 0;
   for (const c of cumulative) total += c;
   return { cumulative, total, mean: width === 0 ? 0 : total / width };
+}
+
+/**
+ * Bedau-Packard EVOLUTIONARY ACTIVITY (per ROADMAP P2).
+ * Measures persistent adaptive novelty: the fraction of "new" structure that is maintained over time.
+ * High + non-plateauing = open-ended (the substrate is doing real work, not just cycling).
+ * For a series of diversity/novelty snapshots, returns activity A = (new persisting) / total.
+ * Pure, for use in petri/soup ablations.
+ */
+export function bedauPackardActivity(
+  snapshots: readonly number[], // e.g. successive shannonDiversity or historicalNovelty values
+  window = 8,
+): number {
+  if (snapshots.length < window + 1) return 0;
+  let persistingNew = 0;
+  let total = 0;
+  for (let i = window; i < snapshots.length; i++) {
+    const curr = snapshots[i] || 0;
+    let prevMax = 0;
+    for (let j = i - window; j < i; j++) {
+      const prev = snapshots[j] || 0;
+      if (prev > prevMax) prevMax = prev;
+    }
+    const newThisStep = Math.max(0, curr - prevMax);
+    persistingNew += newThisStep;
+    total += curr;
+  }
+  // A = (new persisting) / total — a proper [0,1] fraction (matches the docstring). The previous
+  // divisor `total / snapshots.length` (per-snapshot mean) over-scaled by snapshots.length and
+  // saturated to 1 for any rising series. Instrumentation-only (not sim-coupled).
+  return total > 0 ? Math.min(1, persistingNew / total) : 0;
 }

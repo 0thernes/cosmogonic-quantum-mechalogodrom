@@ -71,8 +71,12 @@ export class SuccessorRepresentation {
    */
   observe(current: number): void {
     const K = SR_STATES;
+    // An out-of-range plan index (caller bug, or a -1 "no plan" sentinel) must NOT be folded in as a
+    // real transition into state 0 — that fabricates occupancy mass on the first row and biases
+    // lookahead toward plan 0 while hiding the upstream error. Treat it as a no-op.
+    if (current < 0 || current >= K) return;
     const s = this.last;
-    const sp = current >= 0 && current < K ? current : 0;
+    const sp = current;
     if (s >= 0 && s < K) {
       const rowS = s * K;
       const rowSp = sp * K;

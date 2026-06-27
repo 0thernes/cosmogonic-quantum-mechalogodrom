@@ -271,3 +271,37 @@ describe('texture upload contract', () => {
     expect(rd.texture.version).toBe(before + 3);
   });
 });
+
+describe('seedDeterministic — stream-neutral substrate stir (leviathan ecology, V1.3)', () => {
+  test('deposits a disturbance (V↑, U↓) at the target, fully deterministically', () => {
+    const a = new ReactionDiffusionSystem(makeCtx(1), 32);
+    const b = new ReactionDiffusionSystem(makeCtx(1), 32);
+    a.seedDeterministic(0.5, 0.5, 3);
+    b.seedDeterministic(0.5, 0.5, 3);
+    expect(Array.from(a.fieldV)).toEqual(Array.from(b.fieldV)); // identical ⇒ deterministic
+    expect(Array.from(a.fieldU)).toEqual(Array.from(b.fieldU));
+    let raised = 0;
+    for (let i = 0; i < a.fieldV.length; i++) if ((a.fieldV[i] ?? 0) >= 0.79) raised++;
+    expect(raised).toBeGreaterThan(0); // it actually wrote to the substrate
+  });
+
+  test('draws NO rng — a prior seedDeterministic does not shift a later perturb (bit-reproducibility kept)', () => {
+    const idx = 16 * 32 + 16; // grid center: perturb(0.5,0.5) touches it; seedDeterministic(0.2,0.7) does not
+    const withSeed = new ReactionDiffusionSystem(makeCtx(9), 32);
+    withSeed.seedDeterministic(0.2, 0.7, 2); // must consume no rng
+    withSeed.perturb(0.5, 0.5, 3);
+    const noSeed = new ReactionDiffusionSystem(makeCtx(9), 32);
+    noSeed.perturb(0.5, 0.5, 3); // same seed ⇒ same rng draws iff seedDeterministic took none
+    expect(withSeed.fieldV[idx]).toBe(noSeed.fieldV[idx]);
+    expect(withSeed.fieldU[idx]).toBe(noSeed.fieldU[idx]);
+  });
+
+  test('stays bounded and wraps toroidally for out-of-[0,1] coords', () => {
+    const rd = new ReactionDiffusionSystem(makeCtx(2), 32);
+    rd.seedDeterministic(1.3, -0.4, 2); // fractional wrap, no throw
+    for (let i = 0; i < rd.fieldV.length; i++) {
+      expect(rd.fieldV[i]! >= 0 && rd.fieldV[i]! <= 1).toBe(true);
+      expect(rd.fieldU[i]! >= 0 && rd.fieldU[i]! <= 1).toBe(true);
+    }
+  });
+});

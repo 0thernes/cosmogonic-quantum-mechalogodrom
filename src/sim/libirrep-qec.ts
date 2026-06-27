@@ -243,8 +243,8 @@ function buildSyndromeGraph(code: SurfaceCode): SyndromeGraph {
   const dist: number[][] = [];
   const next: { to: number; qubit: number }[][] = [];
   for (let s = 0; s < nNodes; s++) {
-    const dRow = new Array<number>(nNodes).fill(Infinity);
-    const nRow = new Array<{ to: number; qubit: number }>(nNodes).fill({ to: -1, qubit: -1 });
+    const dRow = Array.from({ length: nNodes }, () => Infinity);
+    const nRow = Array.from({ length: nNodes }, () => ({ to: -1, qubit: -1 }));
     dRow[s] = 0;
     const queue: number[] = [s];
     let head = 0;
@@ -374,10 +374,10 @@ export function mwpmDecode(syndrome: Uint8Array, distance: number): DecodingResu
   const k = defects.length;
   const boundary = graph.nZ;
   const pairCost: number[][] = [];
-  const boundaryCost: number[] = new Array(k);
+  const boundaryCost: number[] = Array.from<number>({ length: k });
   for (let i = 0; i < k; i++) {
     boundaryCost[i] = graph.dist[defects[i]!]![boundary]!;
-    pairCost.push(new Array(k).fill(0));
+    pairCost.push(Array.from({ length: k }, () => 0));
     for (let j = 0; j < k; j++) {
       pairCost[i]![j] = graph.dist[defects[i]!]![defects[j]!]!;
     }
@@ -507,7 +507,23 @@ export function logicalPreserved(code: SurfaceCode, residual: Uint8Array): boole
  * @param codeDistance - code distance d (default 5).
  * @returns a stability score in [0,1] from the real decode.
  */
+const qecProxyCache = new Map<number, number>();
+
 export function qecDecodingProxy(syndromeWeight: number, codeDistance = 5): number {
+  // MEMOIZE (time complexity): the MWPM matcher below is worst-case O((k-1)!!) in the defect count, and
+  // world.ts / super-body.ts step this 5x per frame over a tiny integer (w, d) domain — so a per-(w, d)
+  // LUT removes the per-frame factorial recompute entirely. Pure deterministic fn (no RNG); the keyspace
+  // is bounded (w clamped to 1023, d small), so the cache cannot grow without bound.
+  const d0 = codeDistance < 2 ? 2 : codeDistance | 0;
+  const key = d0 * 1024 + Math.min(Math.max(0, syndromeWeight | 0), 1023);
+  const cached = qecProxyCache.get(key);
+  if (cached !== undefined) return cached;
+  const result = computeQecDecodingProxy(syndromeWeight, d0);
+  qecProxyCache.set(key, result);
+  return result;
+}
+
+function computeQecDecodingProxy(syndromeWeight: number, codeDistance: number): number {
   const d = codeDistance < 2 ? 2 : codeDistance | 0;
   const code = buildSurfaceCode(d);
   const w = Math.max(0, Math.min(syndromeWeight | 0, code.nQubits));

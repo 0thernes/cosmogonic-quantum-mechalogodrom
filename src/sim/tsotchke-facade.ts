@@ -54,6 +54,12 @@ export { quakeQgeFactor, quakePerturb, qgeHybridEnergy, qgePullMod } from './qge
 export { grayScottResidual, pinnLoss } from './pinn-residual';
 export { pathAction, pathMetropolisStep, pathWeight } from './pimc-paths';
 export { logoMorphScalar, logoSymmetryOrder, turtleNew } from './logo-turtle';
+export { qrngApiDraw, qrngApiDrawFrom } from './quantum-rng-api';
+export type { QrngApiReceipt } from './quantum-rng-api';
+export { homebrewEshkolBeat, eskCatalogVitality, eskCatalogFingerprint } from './homebrew-eshkol';
+export type { HomebrewEshkolReceipt } from './homebrew-eshkol';
+export { LearnedRecurrence, LR_HIDDEN, LR_IN } from './learned-recurrence';
+export type { LearnedRecurrenceSnapshot } from './learned-recurrence';
 export { asteroidEnergy, asteroidSpawn, asteroidStep, asteroidThrust } from './asteroids-physics';
 export { classicalEntropyGap, classicalSample } from './classical-contrast';
 export { perceptronScore, perceptronTag } from './perceptron-baseline';
@@ -118,7 +124,7 @@ export {
 } from './corpus-audit-receipts';
 
 export { createPetriDish, petriDishBeat, petriDishView, petriGrowthMultiplier } from './petri-dish';
-export type { PetriDishState, PetriDishView } from './petri-dish';
+export type { PetriDishState } from './petri-dish';
 
 export { PrimordialSoup, SOUP_SLOTS, SOUP_GENOME_LEN } from './primordial-soup';
 export type { SoupStrain, SoupSnapshot } from './primordial-soup';
@@ -218,3 +224,13 @@ export function corpusPulse(seed: number, formIdx: number): TsotchkeQuantumPulse
     adGradient: c01((b.adDepth / 8) * (0.5 + s * 0.5) * scale),
   };
 }
+
+/** Deepest Tsotchke ports — Moonlab TN/MPO, libirrep CG/Wigner, Eshkol compiler VM. */
+export {
+  moonlabMPOApply,
+  moonlabContractNetwork,
+  libirrepClebschFull,
+  eshkolParse,
+  eshkolCompile,
+  eshkolExecute,
+} from './tsotchke-deep-wire';

@@ -109,11 +109,47 @@ function stripBom(s: string): string {
   return s.charCodeAt(0) === 0xfeff ? s.slice(1) : s;
 }
 
-const TARGETS = ['README.md', 'CHANGELOG.md', 'ROADMAP.md'];
+/**
+ * Lossy single-char corruption that the byte-level {@link fixMojibake} cannot catch: the loop has also
+ * mangled em/en dashes into curly double-quotes (— → ”, – → “) and emoji into an orphaned U+0178 lead
+ * remnant. By this repo's straight-quote convention (enforced for canonical docs by
+ * `tests/docs-truth-law.test.ts`) curly double-quotes never appear legitimately, so reverse them; the
+ * orphaned emoji remnant is unrecoverable, so strip it.
+ */
+export function fixLossy(input: string): string {
+  return input
+    .replace(/”/g, '—') // ” → em dash
+    .replace(/“/g, '–') // “ → en dash
+    .replace(/Ÿ[-ÿ]?/g, ''); // orphaned emoji lead remnant (U+0178 + stray byte)
+}
+
+// Root docs + the GitHub-Pages HTML surfaces (the loop has corrupted those too — `·` separators and
+// `class="badge"` names turned into mojibake). fixMojibake is content-agnostic, so it's safe on HTML.
+const TARGETS = [
+  'README.md',
+  'CHANGELOG.md',
+  'ROADMAP-2026-06-26.md',
+  'index.html',
+  'docs.html',
+  'specs.html',
+];
+// Cover EVERY tracked .md and .xml surface (the masters/*.xml governance files, docs/reports/*.xml, the
+// other root MDs) — not just docs/**/*.md. Earlier the masters XML accreted `â€"` mojibake because they
+// were never in scope. fixMojibake is content-agnostic + idempotent, so a broad sweep is safe; `legacy/`
+// is the only exclusion (the original artifact is preserved verbatim — never edited), plus build/tool dirs.
 async function docFiles(): Promise<string[]> {
-  const glob = new Bun.Glob('docs/**/*.md');
   const out = [...TARGETS];
-  for await (const f of glob.scan('.')) out.push(f);
+  const seen = new Set(out);
+  const EXCLUDE = /^(legacy|node_modules|dist|coverage|mcps)[/\\]|^\.(git|claude)[/\\]/;
+  for (const pattern of ['**/*.md', '**/*.xml']) {
+    const glob = new Bun.Glob(pattern);
+    for await (const f of glob.scan('.')) {
+      const rel = f.replace(/\\/g, '/');
+      if (EXCLUDE.test(f) || EXCLUDE.test(rel) || seen.has(rel)) continue;
+      seen.add(rel);
+      out.push(rel);
+    }
+  }
   return out;
 }
 
@@ -123,7 +159,7 @@ for (const rel of await docFiles()) {
   const file = Bun.file(rel);
   if (!(await file.exists())) continue;
   const original = await file.text();
-  const fixed = stripBom(fixMojibake(original));
+  const fixed = stripBom(fixLossy(fixMojibake(original)));
   if (fixed !== original) {
     dirty++;
     if (checkOnly) console.log(`mojibake: ${rel}`);

@@ -1,0 +1,533 @@
+path,area,ext,lines,audit_mechanism,status
+.claude/launch.json,.claude,.json,12,config agent,audited (tsconfig exclude removed)
+.coderabbit.yaml,(root),.yaml,10,config agent,audited (tsconfig exclude removed)
+.editorconfig,(root),.editorconfig,13,config agent,audited (tsconfig exclude removed)
+.gitattributes,(root),.gitattributes,8,config agent,audited (tsconfig exclude removed)
+.githooks/post-commit,.githooks,(none),28,config agent,audited (tsconfig exclude removed)
+.githooks/pre-commit,.githooks,(none),15,config agent,audited (tsconfig exclude removed)
+.github/CODEOWNERS,.github,(none),19,CI agent,audited (master->main; gate steps added)
+.github/ISSUE_TEMPLATE/bug_report.yml,.github/ISSUE_TEMPLATE,.yml,51,CI agent,audited (master->main; gate steps added)
+.github/ISSUE_TEMPLATE/config.yml,.github/ISSUE_TEMPLATE,.yml,9,CI agent,audited (master->main; gate steps added)
+.github/ISSUE_TEMPLATE/feature_request.yml,.github/ISSUE_TEMPLATE,.yml,25,CI agent,audited (master->main; gate steps added)
+.github/PULL_REQUEST_TEMPLATE.md,.github,.md,32,CI agent,audited (master->main; gate steps added)
+.github/copilot-instructions.md,.github,.md,47,CI agent,audited (master->main; gate steps added)
+.github/workflows/auto-tag.yml,.github/workflows,.yml,59,CI agent,audited (master->main; gate steps added)
+.github/workflows/ci.yml,.github/workflows,.yml,171,CI agent,audited (master->main; gate steps added)
+.github/workflows/codeql.yml,.github/workflows,.yml,49,CI agent,audited (master->main; gate steps added)
+.github/workflows/pages.yml,.github/workflows,.yml,72,CI agent,audited (master->main; gate steps added)
+.github/workflows/release.yml,.github/workflows,.yml,131,CI agent,audited (master->main; gate steps added)
+.gitignore,(root),.gitignore,28,config agent,audited (tsconfig exclude removed)
+.memory/decisions.md,.memory,.md,41,doc-consistency agent + verify:facts (0 drift),audited (date-current)
+.memory/instructions.md,.memory,.md,35,doc-consistency agent + verify:facts (0 drift),audited (date-current)
+.memory/preferences.md,.memory,.md,29,doc-consistency agent + verify:facts (0 drift),audited (date-current)
+.memory/quirks.md,.memory,.md,31,doc-consistency agent + verify:facts (0 drift),audited (date-current)
+.memory/security.md,.memory,.md,36,doc-consistency agent + verify:facts (0 drift),audited (date-current)
+.prettierignore,(root),.prettierignore,29,config agent,audited (tsconfig exclude removed)
+.prettierrc,(root),.prettierrc,9,config agent,audited (tsconfig exclude removed)
+.vscode/c_cpp_properties.json,.vscode,.json,15,config agent,audited (tsconfig exclude removed)
+.vscode/launch.json,.vscode,.json,25,config agent,audited (tsconfig exclude removed)
+.vscode/settings.json,.vscode,.json,57,config agent,audited (tsconfig exclude removed)
+AGENTS.md,(root),.md,41,doc-consistency agent + verify:facts (0 drift),audited (date-current)
+CHANGELOG.md,(root),.md,2187,doc-consistency agent + verify:facts (0 drift),audited (date-current)
+CLAUDE.md,(root),.md,61,doc-consistency agent + verify:facts (0 drift),audited (date-current)
+CODE_OF_CONDUCT.md,(root),.md,61,doc-consistency agent + verify:facts (0 drift),audited (date-current)
+CONTRIBUTING.md,(root),.md,97,doc-consistency agent + verify:facts (0 drift),audited (date-current)
+HANDOFF-2026-06-26.md,(root),.md,261,doc-consistency agent + verify:facts (0 drift),audited (date-current)
+LICENSE,(root),(none),61,enumerated,accounted-for
+NOTICE.md,(root),.md,76,doc-consistency agent + verify:facts (0 drift),audited (date-current)
+README.md,(root),.md,668,doc-consistency agent + verify:facts (0 drift),audited (date-current)
+ROADMAP.md,(root),.md,67,doc-consistency agent + verify:facts (0 drift),audited (date-current)
+SECURITY.md,(root),.md,64,doc-consistency agent + verify:facts (0 drift),audited (date-current)
+THIRD-PARTY-NOTICES.md,(root),.md,90,doc-consistency agent + verify:facts (0 drift),audited (date-current)
+TSOTCHKE_BIOLOGICS_GROWTH_RECEIPT.txt,(root),.txt,4,enumerated,accounted-for
+bench/algorithms.bench.ts,bench,.ts,39,tooling agent,audited-clean
+bench/eshkol-ad.bench.ts,bench,.ts,68,tooling agent,audited-clean
+bench/games.bench.ts,bench,.ts,47,tooling agent,audited-clean
+bench/heap.bench.ts,bench,.ts,48,tooling agent,audited-clean
+bench/index.ts,bench,.ts,22,tooling agent,audited-clean
+bench/quantum-classical.bench.ts,bench,.ts,49,tooling agent,audited-clean
+bench/quantum.bench.ts,bench,.ts,44,tooling agent,audited-clean
+bench/reaction-diffusion.bench.ts,bench,.ts,80,tooling agent,audited-clean
+bench/rng.bench.ts,bench,.ts,31,tooling agent,audited-clean
+bench/scalar.bench.ts,bench,.ts,67,tooling agent,audited-clean
+bench/scale.ts,bench,.ts,108,tooling agent,audited-clean
+bench/spatial-hash.bench.ts,bench,.ts,51,tooling agent,audited-clean
+bench/super-mind.bench.ts,bench,.ts,82,tooling agent,audited-clean
+bun.lock,(root),.lock,408,config agent,audited (tsconfig exclude removed)
+bunfig.toml,(root),.toml,10,config agent,audited (tsconfig exclude removed)
+docs.html,(root),.html,1588,front-end agent + verify:facts,audited (dead links fixed)
+docs/500-POINT-INSPECTION-2026-06-26.md,docs,.md,620,doc-consistency agent + verify:facts (0 drift),audited (date-current)
+docs/AI-SUBSYSTEM-2026-06-26.md,docs,.md,215,doc-consistency agent + verify:facts (0 drift),audited (date-current)
+docs/ARCHITECTURE.md,docs,.md,469,doc-consistency agent + verify:facts (0 drift),audited (date-current)
+docs/AUDIT-LOG.md,docs,.md,246,doc-consistency agent + verify:facts (0 drift),audited (date-current)
+docs/BENCHMARKS.md,docs,.md,276,doc-consistency agent + verify:facts (0 drift),audited (date-current)
+docs/BLEEDING-EDGE-NOVEL-CONTRIBUTIONS-AND-SCIENTIFIC-IMPACT-2026-06-26.md,docs,.md,111,doc-consistency agent + verify:facts (0 drift),audited (date-current)
+docs/BOOK-2026-06-26.md,docs,.md,178,doc-consistency agent + verify:facts (0 drift),audited (date-current)
+docs/COMPLEXITY-2026-06-26.md,docs,.md,108,doc-consistency agent + verify:facts (0 drift),audited (date-current)
+docs/CONTROLS-2026-06-26.md,docs,.md,95,doc-consistency agent + verify:facts (0 drift),audited (date-current)
+docs/COPILOT-PROVIDERS-2026-06-26.md,docs,.md,92,doc-consistency agent + verify:facts (0 drift),audited (date-current)
+docs/CORPUS_INTEGRATION_REPORT.md,docs,.md,221,doc-consistency agent + verify:facts (0 drift),audited (date-current)
+docs/DAILY_RUNS/2026-06-16-0030.md,docs/DAILY_RUNS,.md,76,doc-consistency agent + verify:facts (0 drift),audited (date-current)
+docs/DESIGN-SYSTEM-2026-06-26.md,docs,.md,385,doc-consistency agent + verify:facts (0 drift),audited (date-current)
+docs/EMERGENCE-BLOCKERS-2026-06-26.md,docs,.md,107,doc-consistency agent + verify:facts (0 drift),audited (date-current)
+docs/ENTITY-SHEETS-2026-06-26.md,docs,.md,212,doc-consistency agent + verify:facts (0 drift),audited (date-current)
+docs/ERD.md,docs,.md,519,doc-consistency agent + verify:facts (0 drift),audited (date-current)
+docs/ERM.md,docs,.md,183,doc-consistency agent + verify:facts (0 drift),audited (date-current)
+docs/ERP.md,docs,.md,196,doc-consistency agent + verify:facts (0 drift),audited (date-current)
+docs/FILE-MAP.md,docs,.md,252,doc-consistency agent + verify:facts (0 drift),audited (date-current)
+docs/GOAL5-RESEARCH-RECEIPTS-2026-06-26.md,docs,.md,110,doc-consistency agent + verify:facts (0 drift),audited (date-current)
+docs/GOAL5-SWARM-HANDOFF-2026-06-19.md,docs,.md,175,doc-consistency agent + verify:facts (0 drift),audited (date-current)
+docs/KANBAN.md,docs,.md,272,doc-consistency agent + verify:facts (0 drift),audited (date-current)
+docs/MODULE-CONTRACTS.md,docs,.md,1679,doc-consistency agent + verify:facts (0 drift),audited (date-current)
+docs/NEO-MIND-ARCHITECTURE-2026-06-26.md,docs,.md,124,doc-consistency agent + verify:facts (0 drift),audited (date-current)
+docs/NHSI-PROGRESS-DASHBOARD.md,docs,.md,210,doc-consistency agent + verify:facts (0 drift),audited (date-current)
+docs/NHSI-RESEARCH-PAPERS-LEDGER-2026-06-26.md,docs,.md,74,doc-consistency agent + verify:facts (0 drift),audited (date-current)
+docs/NOVELTY-SCIENTIFIC-EDGE-AND-CONTRIBUTIONS-2026-06-26.md,docs,.md,127,doc-consistency agent + verify:facts (0 drift),audited (date-current)
+docs/PATH-TO-14-14-CONSCIOUSNESS-INDICATORS.md,docs,.md,218,doc-consistency agent + verify:facts (0 drift),audited (date-current)
+docs/PHILOSOPHY.md,docs,.md,89,doc-consistency agent + verify:facts (0 drift),audited (date-current)
+docs/PRE-2016-AI-2026-06-26.md,docs,.md,866,doc-consistency agent + verify:facts (0 drift),audited (date-current)
+docs/RUNBOOK-2026-06-26.md,docs,.md,106,doc-consistency agent + verify:facts (0 drift),audited (date-current)
+docs/SCALING-ROADMAP-2026-06-26.md,docs,.md,99,doc-consistency agent + verify:facts (0 drift),audited (date-current)
+docs/SUPER-CREATURE-RESEARCH.md,docs,.md,264,doc-consistency agent + verify:facts (0 drift),audited (date-current)
+docs/TECHNICAL-SPECIFICATION.md,docs,.md,376,doc-consistency agent + verify:facts (0 drift),audited (date-current)
+docs/TSOTCHKE-CORPUS-INTEGRATION-PLAN-2026-06-26.md,docs,.md,101,doc-consistency agent + verify:facts (0 drift),audited (date-current)
+docs/TSOTCHKE-CORPUS-RALPH-WIRING-AUDIT-2026-06-19.md,docs,.md,657,doc-consistency agent + verify:facts (0 drift),audited (date-current)
+docs/TSOTCHKE-INTEGRATION-MAP.md,docs,.md,125,doc-consistency agent + verify:facts (0 drift),audited (date-current)
+docs/TSOTCHKE-LICENSE-UNBLOCK-PLAN-2026-06-26.md,docs,.md,158,doc-consistency agent + verify:facts (0 drift),audited (date-current)
+docs/TSOTCHKE-ULTIMATE-COMPREHENSIVE-AUDIT-REPORT-ASSESSMENT-2026-06-20.md,docs,.md,125,doc-consistency agent + verify:facts (0 drift),audited (date-current)
+docs/TSOTCHKE_CORPUS_INTEGRATION_AUDIT-2026-06-26.md,docs,.md,328,doc-consistency agent + verify:facts (0 drift),audited (date-current)
+docs/VERIFICATION-ANALYTICAL-DATA.md,docs,.md,343,doc-consistency agent + verify:facts (0 drift),audited (date-current)
+docs/WIREFRAMES-2026-06-26.md,docs,.md,194,doc-consistency agent + verify:facts (0 drift),audited (date-current)
+docs/adr/0001-bun-runtime.md,docs/adr,.md,58,doc-consistency agent + verify:facts (0 drift),audited (date-current)
+docs/adr/0002-threejs-rendering.md,docs/adr,.md,64,doc-consistency agent + verify:facts (0 drift),audited (date-current)
+docs/adr/0003-htmx-tailwind-ui.md,docs/adr,.md,61,doc-consistency agent + verify:facts (0 drift),audited (date-current)
+docs/adr/0004-deterministic-rng.md,docs/adr,.md,64,doc-consistency agent + verify:facts (0 drift),audited (date-current)
+docs/adr/0005-math-stack-selection.md,docs/adr,.md,43,doc-consistency agent + verify:facts (0 drift),audited (date-current)
+docs/adr/0006-asi-graphics-and-language-stack.md,docs/adr,.md,67,doc-consistency agent + verify:facts (0 drift),audited (date-current)
+docs/adr/0007-native-cpp-engine-and-live-physics.md,docs/adr,.md,94,doc-consistency agent + verify:facts (0 drift),audited (date-current)
+docs/adr/0008-super-creature-deep-mind.md,docs/adr,.md,55,doc-consistency agent + verify:facts (0 drift),audited (date-current)
+docs/adr/0009-genome-reproduction.md,docs/adr,.md,95,doc-consistency agent + verify:facts (0 drift),audited (date-current)
+docs/adr/0010-worker-offload-and-streamed-hybrid-world.md,docs/adr,.md,102,doc-consistency agent + verify:facts (0 drift),audited (date-current)
+docs/archive/README.md,docs/archive,.md,22,doc-consistency agent + verify:facts (0 drift),audited (date-current)
+docs/reference/domain-key-libraries.csv,docs/reference,.csv,22,n/a,generated/data-artifact
+docs/reference/math-libs-catalog-2026-06-26.md,docs/reference,.md,641,doc-consistency agent + verify:facts (0 drift),audited (date-current)
+docs/reports/2026-06-17-STATE-OF-THE-ART-COMBINED.md,docs/reports,.md,787,doc-consistency agent + verify:facts (0 drift),audited (date-current)
+docs/reports/2026-06-20-RESEARCH-BEDROCK.md,docs/reports,.md,234,doc-consistency agent + verify:facts (0 drift),audited (date-current)
+docs/reports/2026-06-20-ROADMAP-TO-NHSI-AND-SENTIENCE.xml,docs/reports,.xml,231,steering/front-end agent,audited-clean
+docs/reports/2026-06-20-SUPER-REPORT-PATH-TO-NHSI-AND-SENTIENCE.md,docs/reports,.md,717,doc-consistency agent + verify:facts (0 drift),audited (date-current)
+docs/reports/2026-06-21-NHSI-HONESTY-AUDIT.md,docs/reports,.md,327,doc-consistency agent + verify:facts (0 drift),audited (date-current)
+docs/reports/2026-06-21-NHSI-MANIFESTO-0THERNES-CORP.md,docs/reports,.md,540,doc-consistency agent + verify:facts (0 drift),audited (date-current)
+docs/reports/2026-06-26-ALIFE-COMPARATIVE-AUDIT.md,docs/reports,.md,622,doc-consistency agent + verify:facts (0 drift),audited (date-current)
+docs/reports/2026-06-26-CURRENT-TRUTH-BASELINE.md,docs/reports,.md,51,doc-consistency agent + verify:facts (0 drift),audited (date-current)
+docs/reports/2026-06-26-alife-comparison-matrix.csv,docs/reports,.csv,28,n/a,generated/data-artifact
+docs/reports/README.md,docs/reports,.md,48,doc-consistency agent + verify:facts (0 drift),audited (date-current)
+docs/reports/assets/alife-axis-correlation.svg,docs/reports/assets,.svg,4,n/a,generated/data-artifact
+docs/reports/assets/alife-axis-heatmap.svg,docs/reports/assets,.svg,4,n/a,generated/data-artifact
+docs/reports/assets/alife-breadth-ranked.svg,docs/reports/assets,.svg,4,n/a,generated/data-artifact
+docs/reports/assets/alife-breadth-vs-maturity.svg,docs/reports/assets,.svg,4,n/a,generated/data-artifact
+docs/reports/assets/alife-codeground.json,docs/reports/assets,.json,145,config agent,audited (tsconfig exclude removed)
+docs/reports/assets/alife-dendrogram.svg,docs/reports/assets,.svg,4,n/a,generated/data-artifact
+docs/reports/assets/alife-distance-matrix.svg,docs/reports/assets,.svg,4,n/a,generated/data-artifact
+docs/reports/assets/alife-entropy.svg,docs/reports/assets,.svg,4,n/a,generated/data-artifact
+docs/reports/assets/alife-geometry.json,docs/reports/assets,.json,744,config agent,audited (tsconfig exclude removed)
+docs/reports/assets/alife-nearest-neighbors.svg,docs/reports/assets,.svg,4,n/a,generated/data-artifact
+docs/reports/assets/alife-pareto.svg,docs/reports/assets,.svg,4,n/a,generated/data-artifact
+docs/reports/assets/alife-pca.svg,docs/reports/assets,.svg,4,n/a,generated/data-artifact
+docs/reports/assets/alife-radar-profile.svg,docs/reports/assets,.svg,4,n/a,generated/data-artifact
+docs/reports/assets/alife-stats.json,docs/reports/assets,.json,200,config agent,audited (tsconfig exclude removed)
+docs/tsotchke-license-drafts/MIT-LICENSE.txt,docs/tsotchke-license-drafts,.txt,22,enumerated,accounted-for
+docs/tsotchke-license-drafts/NOTICE-logo-lab.txt,docs/tsotchke-license-drafts,.txt,12,enumerated,accounted-for
+docs/tsotchke-license-drafts/README.md,docs/tsotchke-license-drafts,.md,33,doc-consistency agent + verify:facts (0 drift),audited (date-current)
+index.html,(root),.html,1224,front-end agent + verify:facts,audited (dead links fixed)
+lab/quantum-wildbeyond.html,lab,.html,3863,front-end agent + verify:facts,audited (dead links fixed)
+legacy/cosmogonic-quantum-mechalogodrom.html,legacy,.html,882,preserved-verbatim (CLAUDE.md law),out-of-scope
+legacy/opus-4.7-origin/CLAUDE-CHAT-HISTORY-PERSONAL-ACCOUNT.md,legacy/opus-4.7-origin,.md,570,preserved-verbatim (CLAUDE.md law),out-of-scope
+legacy/opus-4.7-origin/CLAUDE-OPUS-4.7-DEVELOPMENT-HISTORY.md,legacy/opus-4.7-origin,.md,459,preserved-verbatim (CLAUDE.md law),out-of-scope
+legacy/opus-4.7-origin/Cosmogonic Claude History Personal.docx,legacy/opus-4.7-origin,.docx,64,preserved-verbatim (CLAUDE.md law),out-of-scope
+legacy/opus-4.7-origin/GIT-HISTORY.txt,legacy/opus-4.7-origin,.txt,63,preserved-verbatim (CLAUDE.md law),out-of-scope
+legacy/opus-4.7-origin/PROVENANCE.md,legacy/opus-4.7-origin,.md,38,preserved-verbatim (CLAUDE.md law),out-of-scope
+legacy/opus-4.7-origin/README-original.md,legacy/opus-4.7-origin,.md,29,preserved-verbatim (CLAUDE.md law),out-of-scope
+masters/GALAXOGONIC-WARHAMMER-POWER-MODE-DR-MANHATTAN.xml,masters,.xml,167,steering agent,audited-clean (well-formed)
+masters/LEGENDARY-SUPER-SAIYAN-BROLY-MANIFESTO.xml,masters,.xml,141,steering agent,audited-clean (well-formed)
+masters/ORACLE-ARCHITECT-OF-THE-DARKSIDE-STARKILLER.xml,masters,.xml,173,steering agent,audited-clean (well-formed)
+native/CMakeLists.txt,native,.txt,131,C++ engine agent,audited-clean (no UB/leak)
+native/README.md,native,.md,77,C++ engine agent,audited-clean (no UB/leak)
+native/build.ps1,native,.ps1,28,C++ engine agent,audited-clean (no UB/leak)
+native/src/gl_core.cpp,native/src,.cpp,18,C++ engine agent,audited-clean (no UB/leak)
+native/src/gl_core.h,native/src,.h,138,C++ engine agent,audited-clean (no UB/leak)
+native/src/main.cpp,native/src,.cpp,346,C++ engine agent,audited-clean (no UB/leak)
+native/src/physics.h,native/src,.h,176,C++ engine agent,audited-clean (no UB/leak)
+native/src/physics_jolt.h,native/src,.h,286,C++ engine agent,audited-clean (no UB/leak)
+native/src/shaders.h,native/src,.h,338,C++ engine agent,audited-clean (no UB/leak)
+package.json,(root),.json,61,config agent,audited (tsconfig exclude removed)
+research_receipts-2026-06-26.md,(root),.md,138,doc-consistency agent + verify:facts (0 drift),audited (date-current)
+scripts/alife-codeground-sensitivity.ts,scripts,.ts,214,scripts/tooling agents,audited (CI gap fixed)
+scripts/alife-comparison-geometry.ts,scripts,.ts,772,scripts/tooling agents,audited (CI gap fixed)
+scripts/alife-comparison-stats.ts,scripts,.ts,445,scripts/tooling agents,audited (CI gap fixed)
+scripts/bmp2png.ts,scripts,.ts,93,scripts/tooling agents,audited (CI gap fixed)
+scripts/build-pages.ts,scripts,.ts,70,scripts/tooling agents,audited (CI gap fixed)
+scripts/build.ts,scripts,.ts,26,scripts/tooling agents,audited (CI gap fixed)
+scripts/canonical-receipts.ts,scripts,.ts,26,scripts/tooling agents,audited (CI gap fixed)
+scripts/codebase-metrics.ts,scripts,.ts,129,scripts/tooling agents,audited (CI gap fixed)
+scripts/decode-capture.ts,scripts,.ts,23,scripts/tooling agents,audited (CI gap fixed)
+scripts/gen-filemap.ts,scripts,.ts,53,scripts/tooling agents,audited (CI gap fixed)
+scripts/harvest-tsotchke-corpus.ts,scripts,.ts,130,scripts/tooling agents,audited (CI gap fixed)
+scripts/launch-oppengrok.ps1,scripts,.ps1,489,scripts/tooling agents,audited (CI gap fixed)
+scripts/normalize-docs.ts,scripts,.ts,177,scripts/tooling agents,audited (CI gap fixed)
+scripts/p1-quantum-classical-experiment.ts,scripts,.ts,180,scripts/tooling agents,audited (CI gap fixed)
+scripts/sbom.ts,scripts,.ts,85,scripts/tooling agents,audited (CI gap fixed)
+scripts/sync-surfaces.ts,scripts,.ts,194,scripts/tooling agents,audited (CI gap fixed)
+scripts/verify-canonical-facts.ts,scripts,.ts,146,scripts/tooling agents,audited (CI gap fixed)
+scripts/verify-receipts.ts,scripts,.ts,113,scripts/tooling agents,audited (CI gap fixed)
+server.ts,(root),.ts,484,subsystems agent (security),audited-clean (hardened)
+specs.html,(root),.html,1019,front-end agent + verify:facts,audited (dead links fixed)
+src/audio/analysis.ts,src/audio,.ts,157,subsystems/front-end agent,audited-clean
+src/audio/engine.ts,src/audio,.ts,659,subsystems/front-end agent,audited-clean
+src/audio/songs.ts,src/audio,.ts,492,subsystems/front-end agent,audited-clean
+src/core/engine.ts,src/core,.ts,282,subsystems/front-end agent,audited-clean
+src/core/frame-governor.ts,src/core,.ts,158,subsystems/front-end agent,audited-clean
+src/core/postfx.ts,src/core,.ts,201,subsystems/front-end agent,audited-clean
+src/core/quality.ts,src/core,.ts,140,subsystems/front-end agent,audited-clean
+src/docs-page.ts,src,.ts,171,subsystems/front-end agent,audited-clean
+src/logging/audit.ts,src/logging,.ts,156,subsystems/front-end agent,audited-clean
+src/logging/logger.ts,src/logging,.ts,65,subsystems/front-end agent,audited-clean
+src/main.ts,src,.ts,178,subsystems/front-end agent,audited-clean
+src/math/belief-propagation.ts,src/math,.ts,152,7-agent code pass + invariant sweep + quantum-math agent,audited (irrep j>=7 fixed)
+src/math/clifford-tableau.ts,src/math,.ts,351,7-agent code pass + invariant sweep + quantum-math agent,audited (irrep j>=7 fixed)
+src/math/curvature-aware-qng.ts,src/math,.ts,359,7-agent code pass + invariant sweep + quantum-math agent,audited (irrep j>=7 fixed)
+src/math/dual.ts,src/math,.ts,67,7-agent code pass + invariant sweep + quantum-math agent,audited (irrep j>=7 fixed)
+src/math/eshkol-ad.ts,src/math,.ts,533,7-agent code pass + invariant sweep + quantum-math agent,audited (irrep j>=7 fixed)
+src/math/eshkol-qrng.ts,src/math,.ts,370,7-agent code pass + invariant sweep + quantum-math agent,audited (irrep j>=7 fixed)
+src/math/games.ts,src/math,.ts,254,7-agent code pass + invariant sweep + quantum-math agent,audited (irrep j>=7 fixed)
+src/math/global-workspace.ts,src/math,.ts,193,7-agent code pass + invariant sweep + quantum-math agent,audited (irrep j>=7 fixed)
+src/math/heap.ts,src/math,.ts,175,7-agent code pass + invariant sweep + quantum-math agent,audited (irrep j>=7 fixed)
+src/math/hopfield.ts,src/math,.ts,120,7-agent code pass + invariant sweep + quantum-math agent,audited (irrep j>=7 fixed)
+src/math/hyperdual.ts,src/math,.ts,131,7-agent code pass + invariant sweep + quantum-math agent,audited (irrep j>=7 fixed)
+src/math/irrep.ts,src/math,.ts,281,7-agent code pass + invariant sweep + quantum-math agent,audited (irrep j>=7 fixed)
+src/math/izhikevich.ts,src/math,.ts,100,7-agent code pass + invariant sweep + quantum-math agent,audited (irrep j>=7 fixed)
+src/math/libirrep-symmetry.ts,src/math,.ts,143,7-agent code pass + invariant sweep + quantum-math agent,audited (irrep j>=7 fixed)
+src/math/mixed-state-qgt.ts,src/math,.ts,256,7-agent code pass + invariant sweep + quantum-math agent,audited (irrep j>=7 fixed)
+src/math/mps-svd.ts,src/math,.ts,217,7-agent code pass + invariant sweep + quantum-math agent,audited (irrep j>=7 fixed)
+src/math/predictive-coding.ts,src/math,.ts,140,7-agent code pass + invariant sweep + quantum-math agent,audited (irrep j>=7 fixed)
+src/math/quantum-coherence.ts,src/math,.ts,60,7-agent code pass + invariant sweep + quantum-math agent,audited (irrep j>=7 fixed)
+src/math/quantum-geometry.ts,src/math,.ts,188,7-agent code pass + invariant sweep + quantum-math agent,audited (irrep j>=7 fixed)
+src/math/quantum-magic.ts,src/math,.ts,110,7-agent code pass + invariant sweep + quantum-math agent,audited (irrep j>=7 fixed)
+src/math/quantum-natural-gradient.ts,src/math,.ts,148,7-agent code pass + invariant sweep + quantum-math agent,audited (irrep j>=7 fixed)
+src/math/quantum-qrng-full.ts,src/math,.ts,157,7-agent code pass + invariant sweep + quantum-math agent,audited (irrep j>=7 fixed)
+src/math/quantum.ts,src/math,.ts,441,7-agent code pass + invariant sweep + quantum-math agent,audited (irrep j>=7 fixed)
+src/math/rng-stats.ts,src/math,.ts,284,7-agent code pass + invariant sweep + quantum-math agent,audited (irrep j>=7 fixed)
+src/math/rng.ts,src/math,.ts,44,7-agent code pass + invariant sweep + quantum-math agent,audited (irrep j>=7 fixed)
+src/math/scalar.ts,src/math,.ts,67,7-agent code pass + invariant sweep + quantum-math agent,audited (irrep j>=7 fixed)
+src/math/schrodinger.ts,src/math,.ts,169,7-agent code pass + invariant sweep + quantum-math agent,audited (irrep j>=7 fixed)
+src/math/so3.ts,src/math,.ts,227,7-agent code pass + invariant sweep + quantum-math agent,audited (irrep j>=7 fixed)
+src/math/spatial-hash.ts,src/math,.ts,96,7-agent code pass + invariant sweep + quantum-math agent,audited (irrep j>=7 fixed)
+src/math/unification.ts,src/math,.ts,134,7-agent code pass + invariant sweep + quantum-math agent,audited (irrep j>=7 fixed)
+src/memory/store.ts,src/memory,.ts,175,subsystems/front-end agent,audited-clean
+src/server/ai-sandbox.ts,src/server,.ts,523,subsystems/front-end agent,audited-clean
+src/server/copilot.ts,src/server,.ts,583,subsystems/front-end agent,audited-clean
+src/server/web-search.ts,src/server,.ts,164,subsystems/front-end agent,audited-clean
+src/sim/active-inference.ts,src/sim,.ts,255,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/ai/brains.ts,src/sim/ai,.ts,399,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/algorithms.ts,src/sim,.ts,447,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/analytics.ts,src/sim,.ts,217,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/artifacts.ts,src/sim,.ts,183,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/asteroids-physics.ts,src/sim,.ts,52,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/atmosphere.ts,src/sim,.ts,438,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/attention-controller.ts,src/sim,.ts,258,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/attention-schema.ts,src/sim,.ts,86,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/behaviors.ts,src/sim,.ts,476,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/brutal-god-releases.ts,src/sim,.ts,305,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/causal-graph.ts,src/sim,.ts,206,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/chaos-field.ts,src/sim,.ts,247,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/classical-contrast.ts,src/sim,.ts,256,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/cognition.ts,src/sim,.ts,79,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/connectome.ts,src/sim,.ts,247,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/constants.ts,src/sim,.ts,396,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/constellations.ts,src/sim,.ts,185,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/corpus-audit-receipts.ts,src/sim,.ts,38,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/cosmic-web.ts,src/sim,.ts,93,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/coupling-audit.ts,src/sim,.ts,216,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/criticality.ts,src/sim,.ts,113,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/dark-energy.ts,src/sim,.ts,149,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/digital-biologics.ts,src/sim,.ts,356,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/economy.ts,src/sim,.ts,617,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/emergence-angles.ts,src/sim,.ts,695,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/emergent-language.ts,src/sim,.ts,328,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/empowerment.ts,src/sim,.ts,303,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/entities.ts,src/sim,.ts,605,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/entity-brain.ts,src/sim,.ts,119,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/environment.ts,src/sim,.ts,715,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/eshkol-bridge.ts,src/sim,.ts,376,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/eshkol-cognition.ts,src/sim,.ts,85,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/eshkol-vm.ts,src/sim,.ts,160,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/eshkol-workspace.ts,src/sim,.ts,116,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/factions.ts,src/sim,.ts,294,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/faculties-pantheon.ts,src/sim,.ts,333,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/generated-tsotchke-seeds.ts,src/sim,.ts,43,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/genome.ts,src/sim,.ts,187,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/geometry-cache.ts,src/sim,.ts,113,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/godform.ts,src/sim,.ts,279,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/gold-lattice.ts,src/sim,.ts,64,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/graph-mind.ts,src/sim,.ts,193,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/holographic-memory.ts,src/sim,.ts,483,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/homebrew-eshkol.ts,src/sim,.ts,44,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/instanced-entities.ts,src/sim,.ts,591,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/integrated-information.ts,src/sim,.ts,302,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/irrep-symmetry.ts,src/sim,.ts,80,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/learned-recurrence.ts,src/sim,.ts,107,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/leviathans.ts,src/sim,.ts,149,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/libirrep-qec.ts,src/sim,.ts,552,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/lineage.ts,src/sim,.ts,180,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/logo-turtle.ts,src/sim,.ts,49,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/lore.ts,src/sim,.ts,204,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/memory-orchestra.ts,src/sim,.ts,161,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/metacognition.ts,src/sim,.ts,118,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/mind-field.ts,src/sim,.ts,117,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/monolith-temple.ts,src/sim,.ts,210,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/moonlab-tensor.ts,src/sim,.ts,132,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/moonlab-vqe.ts,src/sim,.ts,422,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/morphic-field.ts,src/sim,.ts,142,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/morphotypes.ts,src/sim,.ts,21,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/mortality.ts,src/sim,.ts,301,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/myth-ritual.ts,src/sim,.ts,492,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/narrative-memory.ts,src/sim,.ts,208,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/neuromodulation.ts,src/sim,.ts,110,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/nhi-body.ts,src/sim,.ts,141,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/nhi-system.ts,src/sim,.ts,98,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/nhi.ts,src/sim,.ts,410,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/noosphere.ts,src/sim,.ts,233,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/nqs-vmc-learning.ts,src/sim,.ts,451,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/omega-point.ts,src/sim,.ts,168,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/open-endedness.ts,src/sim,.ts,130,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/pantheon.ts,src/sim,.ts,91,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/perceptron-baseline.ts,src/sim,.ts,104,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/petri-dish.ts,src/sim,.ts,544,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/phyla.ts,src/sim,.ts,361,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/pimc-paths.ts,src/sim,.ts,39,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/pinn-residual.ts,src/sim,.ts,28,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/plastic-weights.ts,src/sim,.ts,117,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/primordial-soup.ts,src/sim,.ts,254,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/puppet-masters.ts,src/sim,.ts,317,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/qcircuit.ts,src/sim,.ts,166,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/qge-aliveness.ts,src/sim,.ts,154,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/qge-physics.ts,src/sim,.ts,30,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/quality-space.ts,src/sim,.ts,146,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/quantum-deliberation.ts,src/sim,.ts,185,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/quantum-lattice.ts,src/sim,.ts,60,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/quantum-quake-physics.ts,src/sim,.ts,355,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/quantum-reservoir.ts,src/sim,.ts,124,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/quantum-rng-api.ts,src/sim,.ts,37,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/quantum.ts,src/sim,.ts,241,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/reaction-diffusion.ts,src/sim,.ts,291,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/reservoir.ts,src/sim,.ts,187,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/resonance-integrator.ts,src/sim,.ts,325,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/resonance.ts,src/sim,.ts,340,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/self-evolution-loop.ts,src/sim,.ts,353,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/shoggoths.ts,src/sim,.ts,510,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/singularities.ts,src/sim,.ts,691,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/spin-glass.ts,src/sim,.ts,204,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/stigmergy.ts,src/sim,.ts,214,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/strange-attractor.ts,src/sim,.ts,180,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/successor-representation.ts,src/sim,.ts,147,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/super-body.ts,src/sim,.ts,807,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/super-creature.ts,src/sim,.ts,349,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/super-evolution.ts,src/sim,.ts,288,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/super-mind.ts,src/sim,.ts,1660,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/super-qubits.ts,src/sim,.ts,568,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/super-wingmen-render.ts,src/sim,.ts,54,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/super-wingmen.ts,src/sim,.ts,142,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/symbiosis.ts,src/sim,.ts,349,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/temporal-crystal.ts,src/sim,.ts,166,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/tensorcore-facade.ts,src/sim,.ts,97,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/theory-of-mind.ts,src/sim,.ts,157,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/titans.ts,src/sim,.ts,1187,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/tom-pantheon.ts,src/sim,.ts,407,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/topdown-perception.ts,src/sim,.ts,106,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/tsotchke-corpus.ts,src/sim,.ts,150,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/tsotchke-deep-wire.ts,src/sim,.ts,813,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/tsotchke-facade.ts,src/sim,.ts,237,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/tsotchke-registry.ts,src/sim,.ts,379,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/ulg-bridge.ts,src/sim,.ts,96,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/valence-steering.ts,src/sim,.ts,260,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/viz3d.ts,src/sim,.ts,389,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/weather.ts,src/sim,.ts,121,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/wilderness-chunks.ts,src/sim,.ts,83,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/sim/xenomind.ts,src/sim,.ts,178,invariant sweep + math/sim agents,audited (4 MED + Bloch fixed)
+src/styles/app.css,src/styles,.css,1231,subsystems/front-end agent,audited-clean
+src/types.ts,src,.ts,402,subsystems/front-end agent,audited-clean
+src/ui/access-code.ts,src/ui,.ts,41,subsystems agent,audited-clean
+src/ui/access-puzzle.ts,src/ui,.ts,333,subsystems agent,audited-clean
+src/ui/audit-dock.ts,src/ui,.ts,56,subsystems agent,audited-clean
+src/ui/center-hud.ts,src/ui,.ts,560,subsystems agent,audited-clean
+src/ui/copilot.ts,src/ui,.ts,559,subsystems agent,audited-clean
+src/ui/graphs.ts,src/ui,.ts,118,subsystems agent,audited-clean
+src/ui/help-knowledge.ts,src/ui,.ts,376,subsystems agent,audited-clean
+src/ui/help-system.ts,src/ui,.ts,180,subsystems agent,audited-clean
+src/ui/hud.ts,src/ui,.ts,112,subsystems agent,audited-clean
+src/ui/input.ts,src/ui,.ts,536,subsystems agent,audited-clean
+src/ui/market-ticker.ts,src/ui,.ts,377,subsystems agent,audited-clean
+src/ui/nhi-observatory.ts,src/ui,.ts,1102,subsystems agent,audited-clean
+src/ui/observatory.ts,src/ui,.ts,2284,subsystems agent,audited-clean
+src/ui/panel-dock.ts,src/ui,.ts,64,subsystems agent,audited-clean
+src/ui/panels.ts,src/ui,.ts,212,subsystems agent,audited-clean
+src/ui/perf-hud.ts,src/ui,.ts,113,subsystems agent,audited-clean
+src/ui/super-neural.ts,src/ui,.ts,1364,subsystems agent,audited-clean
+src/ui/super-panel.ts,src/ui,.ts,398,subsystems agent,audited-clean
+src/ui/superhero-hud.ts,src/ui,.ts,314,subsystems agent,audited-clean
+src/ui/superhero-state.ts,src/ui,.ts,156,subsystems agent,audited-clean
+src/ui/ulg-bridge.ts,src/ui,.ts,88,subsystems agent,audited-clean
+src/world.ts,src,.ts,2907,subsystems/front-end agent,audited-clean
+tests/a11y-static.test.ts,tests,.ts,46,gate (1;489 pass) + tooling agent,audited-healthy
+tests/access-code.test.ts,tests,.ts,52,gate (1;489 pass) + tooling agent,audited-healthy
+tests/active-inference.test.ts,tests,.ts,108,gate (1;489 pass) + tooling agent,audited-healthy
+tests/ai-sandbox.test.ts,tests,.ts,160,gate (1;489 pass) + tooling agent,audited-healthy
+tests/algorithms.test.ts,tests,.ts,162,gate (1;489 pass) + tooling agent,audited-healthy
+tests/analytics.test.ts,tests,.ts,253,gate (1;489 pass) + tooling agent,audited-healthy
+tests/artifacts.test.ts,tests,.ts,73,gate (1;489 pass) + tooling agent,audited-healthy
+tests/atmosphere.test.ts,tests,.ts,277,gate (1;489 pass) + tooling agent,audited-healthy
+tests/attention-controller.test.ts,tests,.ts,84,gate (1;489 pass) + tooling agent,audited-healthy
+tests/audio-analysis.test.ts,tests,.ts,203,gate (1;489 pass) + tooling agent,audited-healthy
+tests/audit.test.ts,tests,.ts,191,gate (1;489 pass) + tooling agent,audited-healthy
+tests/behaviors.test.ts,tests,.ts,166,gate (1;489 pass) + tooling agent,audited-healthy
+tests/belief-propagation.test.ts,tests,.ts,81,gate (1;489 pass) + tooling agent,audited-healthy
+tests/brains.test.ts,tests,.ts,206,gate (1;489 pass) + tooling agent,audited-healthy
+tests/butlin-indicators.test.ts,tests,.ts,97,gate (1;489 pass) + tooling agent,audited-healthy
+tests/chaos-field.test.ts,tests,.ts,169,gate (1;489 pass) + tooling agent,audited-healthy
+tests/classical-contrast-perceptron.test.ts,tests,.ts,67,gate (1;489 pass) + tooling agent,audited-healthy
+tests/classical-contrast.test.ts,tests,.ts,80,gate (1;489 pass) + tooling agent,audited-healthy
+tests/clifford-tableau.test.ts,tests,.ts,110,gate (1;489 pass) + tooling agent,audited-healthy
+tests/cognition.test.ts,tests,.ts,140,gate (1;489 pass) + tooling agent,audited-healthy
+tests/connectome.test.ts,tests,.ts,115,gate (1;489 pass) + tooling agent,audited-healthy
+tests/constellations.test.ts,tests,.ts,157,gate (1;489 pass) + tooling agent,audited-healthy
+tests/contrast.test.ts,tests,.ts,63,gate (1;489 pass) + tooling agent,audited-healthy
+tests/copilot-fence.test.ts,tests,.ts,55,gate (1;489 pass) + tooling agent,audited-healthy
+tests/copilot-health.test.ts,tests,.ts,64,gate (1;489 pass) + tooling agent,audited-healthy
+tests/copilot-providers.test.ts,tests,.ts,124,gate (1;489 pass) + tooling agent,audited-healthy
+tests/corpus-leaves.test.ts,tests,.ts,68,gate (1;489 pass) + tooling agent,audited-healthy
+tests/coupling-audit.test.ts,tests,.ts,236,gate (1;489 pass) + tooling agent,audited-healthy
+tests/criticality.test.ts,tests,.ts,72,gate (1;489 pass) + tooling agent,audited-healthy
+tests/determinism-law.test.ts,tests,.ts,68,gate (1;489 pass) + tooling agent,audited-healthy
+tests/determinism.test.ts,tests,.ts,129,gate (1;489 pass) + tooling agent,audited-healthy
+tests/doc-links.test.ts,tests,.ts,61,gate (1;489 pass) + tooling agent,audited-healthy
+tests/docs-receipts-law.test.ts,tests,.ts,131,gate (1;489 pass) + tooling agent,audited-healthy
+tests/docs-truth-law.test.ts,tests,.ts,261,gate (1;489 pass) + tooling agent,audited-healthy
+tests/dual.test.ts,tests,.ts,72,gate (1;489 pass) + tooling agent,audited-healthy
+tests/economy.test.ts,tests,.ts,251,gate (1;489 pass) + tooling agent,audited-healthy
+tests/emergence-angles.test.ts,tests,.ts,74,gate (1;489 pass) + tooling agent,audited-healthy
+tests/empowerment.test.ts,tests,.ts,192,gate (1;489 pass) + tooling agent,audited-healthy
+tests/entities-death.test.ts,tests,.ts,126,gate (1;489 pass) + tooling agent,audited-healthy
+tests/entity-brain.test.ts,tests,.ts,97,gate (1;489 pass) + tooling agent,audited-healthy
+tests/entity-heredity.test.ts,tests,.ts,158,gate (1;489 pass) + tooling agent,audited-healthy
+tests/environment.test.ts,tests,.ts,137,gate (1;489 pass) + tooling agent,audited-healthy
+tests/eshkol-ad.test.ts,tests,.ts,73,gate (1;489 pass) + tooling agent,audited-healthy
+tests/eshkol-cognition.test.ts,tests,.ts,43,gate (1;489 pass) + tooling agent,audited-healthy
+tests/eshkol-qrng.test.ts,tests,.ts,72,gate (1;489 pass) + tooling agent,audited-healthy
+tests/eshkol-vm-bytecode.test.ts,tests,.ts,66,gate (1;489 pass) + tooling agent,audited-healthy
+tests/eshkol-vm.test.ts,tests,.ts,43,gate (1;489 pass) + tooling agent,audited-healthy
+tests/factions.test.ts,tests,.ts,99,gate (1;489 pass) + tooling agent,audited-healthy
+tests/faculties-pantheon.test.ts,tests,.ts,53,gate (1;489 pass) + tooling agent,audited-healthy
+tests/feature-determinism.test.ts,tests,.ts,109,gate (1;489 pass) + tooling agent,audited-healthy
+tests/frame-governor.test.ts,tests,.ts,70,gate (1;489 pass) + tooling agent,audited-healthy
+tests/games.test.ts,tests,.ts,198,gate (1;489 pass) + tooling agent,audited-healthy
+tests/genome.test.ts,tests,.ts,189,gate (1;489 pass) + tooling agent,audited-healthy
+tests/geometry-cache.test.ts,tests,.ts,27,gate (1;489 pass) + tooling agent,audited-healthy
+tests/global-workspace.test.ts,tests,.ts,127,gate (1;489 pass) + tooling agent,audited-healthy
+tests/graph-mind.test.ts,tests,.ts,390,gate (1;489 pass) + tooling agent,audited-healthy
+tests/heap.test.ts,tests,.ts,182,gate (1;489 pass) + tooling agent,audited-healthy
+tests/help-knowledge.test.ts,tests,.ts,51,gate (1;489 pass) + tooling agent,audited-healthy
+tests/holographic-memory.test.ts,tests,.ts,135,gate (1;489 pass) + tooling agent,audited-healthy
+tests/hopfield.test.ts,tests,.ts,110,gate (1;489 pass) + tooling agent,audited-healthy
+tests/hyperdual.test.ts,tests,.ts,136,gate (1;489 pass) + tooling agent,audited-healthy
+tests/instanced.test.ts,tests,.ts,192,gate (1;489 pass) + tooling agent,audited-healthy
+tests/integrated-information.test.ts,tests,.ts,92,gate (1;489 pass) + tooling agent,audited-healthy
+tests/irrep-symmetry.test.ts,tests,.ts,84,gate (1;489 pass) + tooling agent,audited-healthy
+tests/irrep.test.ts,tests,.ts,198,gate (1;489 pass) + tooling agent,audited-healthy
+tests/izhikevich.test.ts,tests,.ts,80,gate (1;489 pass) + tooling agent,audited-healthy
+tests/layer-boundaries.test.ts,tests,.ts,83,gate (1;489 pass) + tooling agent,audited-healthy
+tests/leaf-dom-freedom.test.ts,tests,.ts,43,gate (1;489 pass) + tooling agent,audited-healthy
+tests/learned-recurrence.test.ts,tests,.ts,43,gate (1;489 pass) + tooling agent,audited-healthy
+tests/leviathans.test.ts,tests,.ts,120,gate (1;489 pass) + tooling agent,audited-healthy
+tests/libirrep-qec.test.ts,tests,.ts,220,gate (1;489 pass) + tooling agent,audited-healthy
+tests/lineage.test.ts,tests,.ts,101,gate (1;489 pass) + tooling agent,audited-healthy
+tests/logger.test.ts,tests,.ts,89,gate (1;489 pass) + tooling agent,audited-healthy
+tests/lore.test.ts,tests,.ts,143,gate (1;489 pass) + tooling agent,audited-healthy
+tests/metacognition.test.ts,tests,.ts,106,gate (1;489 pass) + tooling agent,audited-healthy
+tests/moonlab-tensor.test.ts,tests,.ts,72,gate (1;489 pass) + tooling agent,audited-healthy
+tests/moonlab-vqe.test.ts,tests,.ts,241,gate (1;489 pass) + tooling agent,audited-healthy
+tests/mortality.test.ts,tests,.ts,53,gate (1;489 pass) + tooling agent,audited-healthy
+tests/mps-svd.test.ts,tests,.ts,139,gate (1;489 pass) + tooling agent,audited-healthy
+tests/nan-stability.test.ts,tests,.ts,180,gate (1;489 pass) + tooling agent,audited-healthy
+tests/neuromodulation.test.ts,tests,.ts,100,gate (1;489 pass) + tooling agent,audited-healthy
+tests/nhi-observatory.test.ts,tests,.ts,60,gate (1;489 pass) + tooling agent,audited-healthy
+tests/nhi-system.test.ts,tests,.ts,92,gate (1;489 pass) + tooling agent,audited-healthy
+tests/nhi.test.ts,tests,.ts,195,gate (1;489 pass) + tooling agent,audited-healthy
+tests/nhsi-pantheons.test.ts,tests,.ts,57,gate (1;489 pass) + tooling agent,audited-healthy
+tests/observatory.test.ts,tests,.ts,659,gate (1;489 pass) + tooling agent,audited-healthy
+tests/open-endedness.test.ts,tests,.ts,78,gate (1;489 pass) + tooling agent,audited-healthy
+tests/pantheon.test.ts,tests,.ts,27,gate (1;489 pass) + tooling agent,audited-healthy
+tests/perf-budget.test.ts,tests,.ts,233,gate (1;489 pass) + tooling agent,audited-healthy
+tests/perf-hud.test.ts,tests,.ts,35,gate (1;489 pass) + tooling agent,audited-healthy
+tests/phyla.test.ts,tests,.ts,265,gate (1;489 pass) + tooling agent,audited-healthy
+tests/plastic-weights.test.ts,tests,.ts,88,gate (1;489 pass) + tooling agent,audited-healthy
+tests/postfx.test.ts,tests,.ts,59,gate (1;489 pass) + tooling agent,audited-healthy
+tests/predictive-coding.test.ts,tests,.ts,91,gate (1;489 pass) + tooling agent,audited-healthy
+tests/puppet-masters.test.ts,tests,.ts,125,gate (1;489 pass) + tooling agent,audited-healthy
+tests/qcircuit.test.ts,tests,.ts,105,gate (1;489 pass) + tooling agent,audited-healthy
+tests/qge-aliveness.test.ts,tests,.ts,103,gate (1;489 pass) + tooling agent,audited-healthy
+tests/quality-detect.test.ts,tests,.ts,77,gate (1;489 pass) + tooling agent,audited-healthy
+tests/quality.test.ts,tests,.ts,77,gate (1;489 pass) + tooling agent,audited-healthy
+tests/quantum-cloud.test.ts,tests,.ts,133,gate (1;489 pass) + tooling agent,audited-healthy
+tests/quantum-coherence.test.ts,tests,.ts,61,gate (1;489 pass) + tooling agent,audited-healthy
+tests/quantum-deliberation.test.ts,tests,.ts,93,gate (1;489 pass) + tooling agent,audited-healthy
+tests/quantum-geometry.test.ts,tests,.ts,78,gate (1;489 pass) + tooling agent,audited-healthy
+tests/quantum-magic.test.ts,tests,.ts,79,gate (1;489 pass) + tooling agent,audited-healthy
+tests/quantum-natural-gradient.test.ts,tests,.ts,185,gate (1;489 pass) + tooling agent,audited-healthy
+tests/quantum-qrng-full.test.ts,tests,.ts,31,gate (1;489 pass) + tooling agent,audited-healthy
+tests/quantum-quake-physics.test.ts,tests,.ts,61,gate (1;489 pass) + tooling agent,audited-healthy
+tests/quantum-quake-qge-geometry.test.ts,tests,.ts,166,gate (1;489 pass) + tooling agent,audited-healthy
+tests/quantum-reservoir.test.ts,tests,.ts,112,gate (1;489 pass) + tooling agent,audited-healthy
+tests/quantum.test.ts,tests,.ts,463,gate (1;489 pass) + tooling agent,audited-healthy
+tests/reaction-diffusion.test.ts,tests,.ts,274,gate (1;489 pass) + tooling agent,audited-healthy
+tests/redaction-and-counts-law.test.ts,tests,.ts,49,gate (1;489 pass) + tooling agent,audited-healthy
+tests/render-modes.test.ts,tests,.ts,111,gate (1;489 pass) + tooling agent,audited-healthy
+tests/reservoir.test.ts,tests,.ts,155,gate (1;489 pass) + tooling agent,audited-healthy
+tests/resonance.test.ts,tests,.ts,240,gate (1;489 pass) + tooling agent,audited-healthy
+tests/rng-stats.test.ts,tests,.ts,147,gate (1;489 pass) + tooling agent,audited-healthy
+tests/rng.test.ts,tests,.ts,95,gate (1;489 pass) + tooling agent,audited-healthy
+tests/scalar.test.ts,tests,.ts,117,gate (1;489 pass) + tooling agent,audited-healthy
+tests/schrodinger.test.ts,tests,.ts,99,gate (1;489 pass) + tooling agent,audited-healthy
+tests/server.test.ts,tests,.ts,153,gate (1;489 pass) + tooling agent,audited-healthy
+tests/shoggoths.test.ts,tests,.ts,121,gate (1;489 pass) + tooling agent,audited-healthy
+tests/singularities.test.ts,tests,.ts,287,gate (1;489 pass) + tooling agent,audited-healthy
+tests/so3.test.ts,tests,.ts,137,gate (1;489 pass) + tooling agent,audited-healthy
+tests/songs.test.ts,tests,.ts,219,gate (1;489 pass) + tooling agent,audited-healthy
+tests/spatial-hash.test.ts,tests,.ts,189,gate (1;489 pass) + tooling agent,audited-healthy
+tests/spawn-budget.test.ts,tests,.ts,109,gate (1;489 pass) + tooling agent,audited-healthy
+tests/spin-glass.test.ts,tests,.ts,74,gate (1;489 pass) + tooling agent,audited-healthy
+tests/store.test.ts,tests,.ts,215,gate (1;489 pass) + tooling agent,audited-healthy
+tests/successor-representation.test.ts,tests,.ts,146,gate (1;489 pass) + tooling agent,audited-healthy
+tests/super-body-control.test.ts,tests,.ts,89,gate (1;489 pass) + tooling agent,audited-healthy
+tests/super-creature.test.ts,tests,.ts,120,gate (1;489 pass) + tooling agent,audited-healthy
+tests/super-evolution.test.ts,tests,.ts,160,gate (1;489 pass) + tooling agent,audited-healthy
+tests/super-mind.test.ts,tests,.ts,233,gate (1;489 pass) + tooling agent,audited-healthy
+tests/super-qubits-selfopt.test.ts,tests,.ts,76,gate (1;489 pass) + tooling agent,audited-healthy
+tests/super-qubits.test.ts,tests,.ts,290,gate (1;489 pass) + tooling agent,audited-healthy
+tests/super-wingmen-render.test.ts,tests,.ts,92,gate (1;489 pass) + tooling agent,audited-healthy
+tests/super-wingmen.test.ts,tests,.ts,74,gate (1;489 pass) + tooling agent,audited-healthy
+tests/superhero-state.test.ts,tests,.ts,99,gate (1;489 pass) + tooling agent,audited-healthy
+tests/tensorcore-facade.test.ts,tests,.ts,47,gate (1;489 pass) + tooling agent,audited-healthy
+tests/theory-of-mind.test.ts,tests,.ts,95,gate (1;489 pass) + tooling agent,audited-healthy
+tests/titans.test.ts,tests,.ts,219,gate (1;489 pass) + tooling agent,audited-healthy
+tests/tom-pantheon.test.ts,tests,.ts,145,gate (1;489 pass) + tooling agent,audited-healthy
+tests/tsotchke-facade.test.ts,tests,.ts,115,gate (1;489 pass) + tooling agent,audited-healthy
+tests/tsotchke-registry.test.ts,tests,.ts,164,gate (1;489 pass) + tooling agent,audited-healthy
+tests/tsotchke-wiring.test.ts,tests,.ts,78,gate (1;489 pass) + tooling agent,audited-healthy
+tests/ulg-bridge.test.ts,tests,.ts,59,gate (1;489 pass) + tooling agent,audited-healthy
+tests/unification.test.ts,tests,.ts,120,gate (1;489 pass) + tooling agent,audited-healthy
+tests/viz-systems.test.ts,tests,.ts,105,gate (1;489 pass) + tooling agent,audited-healthy
+tests/viz3d.test.ts,tests,.ts,310,gate (1;489 pass) + tooling agent,audited-healthy
+tests/wave1-foundations.test.ts,tests,.ts,117,gate (1;489 pass) + tooling agent,audited-healthy
+tests/weather.test.ts,tests,.ts,127,gate (1;489 pass) + tooling agent,audited-healthy
+tests/web-search.test.ts,tests,.ts,121,gate (1;489 pass) + tooling agent,audited-healthy
+tests/wilderness-chunks.test.ts,tests,.ts,63,gate (1;489 pass) + tooling agent,audited-healthy
+tsconfig.json,(root),.json,22,config agent,audited (tsconfig exclude removed)

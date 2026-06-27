@@ -163,4 +163,32 @@ describe('NhiMind', () => {
     expect(intent.action).toBeGreaterThanOrEqual(0);
     expect(intent.action).toBeLessThan(7);
   });
+
+  // Behavioral decision signature over many beats — a fingerprint of the child's inherited gene.
+  const decisionTrace = (mind: NhiMind, seed: number): number[] => {
+    const rng = mulberry32(seed);
+    const out: number[] = [];
+    for (let b = 0; b < 80; b++) {
+      out.push(mind.think({ ...PERCEPT, beat: b, chaos: (b % 5) / 5 }, rng).action);
+    }
+    return out;
+  };
+
+  test('two-parent spawnChild is deterministic from seed', () => {
+    const pa = new NhiMind(mulberry32(101));
+    const pb = new NhiMind(mulberry32(202));
+    const c1 = pa.spawnChild(mulberry32(303), pb);
+    const c2 = pa.spawnChild(mulberry32(303), pb);
+    expect(decisionTrace(c1, 9)).toEqual(decisionTrace(c2, 9));
+  });
+
+  test('a two-parent child differs from the single-parent clone (crossover is engaged)', () => {
+    const pa = new NhiMind(mulberry32(101));
+    const pb = new NhiMind(mulberry32(202));
+    // Same parent A and same child-seed; the ONLY difference is whether mate B contributes genes.
+    const solo = pa.spawnChild(mulberry32(303));
+    const crossed = pa.spawnChild(mulberry32(303), pb);
+    // With B's genes mixed in, the inherited gene — and thus the decision fingerprint — should differ.
+    expect(decisionTrace(crossed, 9)).not.toEqual(decisionTrace(solo, 9));
+  });
 });
