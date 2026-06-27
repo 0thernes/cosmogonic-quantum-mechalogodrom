@@ -44,7 +44,11 @@ hooks.autopush false`. A local commit ships to GitHub `main` with no manual push
   start the app. It ONLY fast-forwards (never rebases/resets/discards): a checkout with local-only commits
   or a blocking dirty tree is left untouched with a note. Opt out: `CQM_NO_SYNC=1 bun dev`. (Without this,
   a primary checkout silently drifts BEHIND while the fleet pushes from worktrees — the recurring
-  "GitHub and Local don't match / renamed docs missing in Local" symptom.)
+  "GitHub and Local don't match / renamed docs missing in Local" symptom.) The `prepare` script also sets
+  `core.autocrlf=input` (with `.gitattributes` `* text=auto eol=lf`) so a Windows checkout never acquires
+  phantom-CRLF — the OTHER face of "Local ≠ GitHub" (`git status` shows dozens of files `M` with an EMPTY
+  `git diff`; content is identical, only on-disk CRLF differs, and it blocks the ff-sync). If it recurs,
+  `git reset --hard origin/main` re-checks-out as LF (0 real changes lost).
 - **NO PULL REQUESTS — EVER (binding owner rule).** This is a one-person repo: commit to `main` and
   push directly. NEVER open a PR, never create a feature/`audit/*`/`claude/*` branch to merge, never
   `gh pr create`. Work ON `main`; if a push is rejected (non-fast-forward), `git pull --rebase
