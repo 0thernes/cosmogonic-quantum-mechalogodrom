@@ -11,6 +11,37 @@ dated / historical / "superseded snapshot" copies (per the binding "Living docs,
 
 ---
 
+## 2026-06-27 — Adversarial multi-dimension audit: 9 verified defects fixed (GPU leaks · misrouted dispatch · dead telemetry · doc drift)
+
+Ran an 8-finder adversarial workflow (correctness · efficiency · deadcode · security · determinism ·
+docdrift · config) over an isolated worktree off the live `origin/main`, then put every candidate through
+a **refute-by-default** skeptic that re-read the actual code. 9 findings survived (9 raw → 9 deduped → 9
+confirmed real + still-present); the **efficiency, security, and determinism** finders each returned a
+clean **empty** set — independently corroborating the core's prior green. All 9 landed on `main`:
+
+- **GPU-resource leaks on HMR teardown (MED + LOW):** `NhiBodySystem` (3 shared geometries + live body
+  materials) and `ReactionDiffusionSystem` (the Gray–Scott `DataTexture`) had no `dispose()` and were
+  absent from `World.dispose()` — which already tears down every other GPU-owning subsystem. Added a
+  `dispose()` to each and wired both into `World.dispose()`.
+- **`petri-dish.applyBrutalGodEvent` misroute (MED):** 3 of the 7 real emitted events
+  (`DETERMINISTIC_REWRITE`, `FATE_TWIST`, `BINARY_IGNITION`) matched no `includes()` token and fell
+  through to the generic `else`, so their themed effects never fired. Routed each to its intended branch
+  (`REWRITE`→Manhattan, `FATE`/`TWIST`→Joker, `IGNITION`→Phoenix); extensible branches preserved.
+- **`petri-dish` dead telemetry (MED):** `state.biologics` was never populated → `speciesRichness` /
+  `speciesDiversity` structurally 0 and `applyBrutalRelease` a perpetual no-op on `[]`. Now materialize
+  the born strain (deterministic from seeded `morphotype`/`bioFlux`, ring-capped at 64) at the
+  sentient-birth site.
+- **`mortality.computeSelectionPressure` (LOW):** survivors' `legacyScore` is death-only (0 while alive),
+  so it always returned 0. Added a `liveLegacy` getter (same formula, evaluated live) read for survivors.
+- **`coupling-audit` (LOW):** dead `maxAbs` local — computed/updated but never read — removed.
+- **doc/config drift (3):** TSOTCHKE-MAP user-repo `(15)`→`(16)` (so 16+6 = 22 reconciles with the
+  header + the 16-entry registry); `bunfig.toml` coverage comment de-hard-coded to point at the
+  `canonical-receipts` SSOT (per the no-hand-edit-coverage law); TECH-SPEC §1 codebase-metrics snapshot
+  refreshed to measured 2026-06-27 (548 files / 201 `src` / 160 `tests` / 131 `sim` — was 530/196/152/127).
+
+Gate green end-to-end on the final rebased tree: `prettier`, `tsc` strict, `oxlint`, **1582 pass / 0
+fail**, `verify:receipts`, `sync:check`, `build` (7 artifacts). No PR — direct to `main`.
+
 ## 2026-06-27 — Apex-body shader RED fix (`metalnessFactor` inject-before-declare) + repo-wide shader-injection sweep
 
 Fixed a live shader-compile failure in the apex/super-creature body and then swept every shader patch in
