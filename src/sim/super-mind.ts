@@ -60,6 +60,7 @@ import type { Rng } from '../math/rng';
 import { mulberry32 } from '../math/rng';
 import { latentSubstrateStep, type LatentSubstrateState } from './latent-substrates';
 import { gwtCapacityCompete, type GwtCapacityResult } from '../math/global-workspace';
+import { Embodiment, type EmbodimentSnapshot } from './embodiment';
 import { TinyMLP, MemoryRing } from './ai/brains';
 import { QuantumMind, QMIND_QUBITS, type QubitSnapshot } from './super-qubits';
 import { EshkolQrng, type EshkolQrngSnapshot } from '../math/eshkol-qrng';
@@ -315,6 +316,8 @@ export interface SuperMindSnapshot {
   latentSubstrates: LatentSubstrateState;
   /** V1.3 GWT-2: limited-capacity workspace read — occupancy/capacity/access/pressure (Cowan bottleneck). */
   gwtCapacity: { occupancy: number; capacity: number; access: number; pressure: number };
+  /** V1.3 AE-2: the forward body-model — contingency / prediction-error / steps. */
+  embodiment: EmbodimentSnapshot;
 }
 
 const EMOTION_TAU = 0.12; // sync with super-creature for affect EMA (GWT/HOT feel)
@@ -433,6 +436,10 @@ const LATENT_CURIOSITY_GAIN = 0.1;
 const GWT_WORKSPACE_CAPACITY = 4;
 /** V1.3 · GWT-2: how strongly last beat's workspace competition pressure re-enters curiosity. */
 const GWT_CAPACITY_REENTRY_GAIN = 0.08;
+/** V1.3 · AE-2: sensory dimensions the forward body-model predicts (s[0..7]). */
+const EMBODIMENT_DIM = 8;
+/** V1.3 · AE-2: how strongly body-contingency (knowing one's own body) lifts the self-awareness signal. */
+const EMBODIMENT_SELF_GAIN = 0.12;
 
 // ── #59 · RESONANCE INTEGRATOR (Kuramoto binding-by-synchrony — the coupling spark) ───────────────────
 /** The consciousness/integration faculties coupled into the standing wave (the "do they agree?" set). */
@@ -691,6 +698,11 @@ export class SuperMind {
     this.pcBeliefs = initBeliefs(MIND_PC_NET);
     this.spinDrive = mulberry32((childSeed ^ 0x2545f491) >>> 0 || 1);
     this.reservoir = new Reservoir(mulberry32((childSeed ^ 0x119de1f3) >>> 0 || 1));
+    this.embodiment = new Embodiment(
+      SUPER_PLANS.length,
+      EMBODIMENT_DIM,
+      (childSeed ^ 0xe3b0c442) >>> 0 || 1,
+    );
     this.learnedRecurrence = new LearnedRecurrence(mulberry32((childSeed ^ 0x3c6ef372) >>> 0 || 1));
     this.pimcPath = new Float32Array(8);
     for (let i = 0; i < 8; i++) this.pimcPath[i] = 0.5 + i * 0.05;
@@ -1103,7 +1115,9 @@ export class SuperMind {
       hallucinating: clamp01((novelty - 0.6) / 0.4 + bindGate),
       reasoning: clamp01(reasoningGain / SUPER_DEPTHS + bindGate),
       feeling: this.valence,
-      selfAware: clamp01(selfAware + bindGate), // 4th GWT access-faculty bound through the workspace gate
+      selfAware: clamp01(
+        selfAware + bindGate + EMBODIMENT_SELF_GAIN * this.lastEmbodimentContingency,
+      ), // 4th GWT access-faculty; V1.3 AE-2 body-contingency lifts self-awareness
       novelty,
       surprise,
       ignition: this.ignition, // carried; finalised after the plan argmax below
@@ -1541,6 +1555,8 @@ export class SuperMind {
       SUPER_PLANS.length,
       GWT_WORKSPACE_CAPACITY,
     );
+    // V1.3 AE-2 EMBODIMENT — learn + read how contingent the senses are on THIS chosen action (body-model).
+    this.lastEmbodimentContingency = this.embodiment.step(SUPER_PLANS.indexOf(best), s);
     // V1.1: fold the realised plan transition into the predictive map so next beat's look-ahead is informed.
     this.successor.observe(SUPER_PLANS.indexOf(best));
     // V95: credit LAST beat's action → THIS beat's latent cell and refresh the empowerment estimate the next
@@ -1639,6 +1655,10 @@ export class SuperMind {
   }
 
   /** Immutable telemetry snapshot. */
+  /** V1.3 AE-2: the within-life forward body-model (output↔input contingency). */
+  private embodiment: Embodiment;
+  /** V1.3 AE-2: last beat's body-contingency, re-entered into self-awareness. */
+  private lastEmbodimentContingency = 0;
   /** V1.3 GWT-2: scratch for the plan-drive saliences fed to the capacity competition (alloc-free). */
   private readonly gwtSal = new Float32Array(SUPER_PLANS.length);
   /** V1.3 GWT-2: last beat's limited-capacity workspace read (occupancy / access / competition pressure). */
@@ -1722,6 +1742,7 @@ export class SuperMind {
         access: this.lastGwtCapacity.access,
         pressure: this.lastGwtCapacity.pressure,
       },
+      embodiment: this.embodiment.snapshot(),
     };
   }
 }
