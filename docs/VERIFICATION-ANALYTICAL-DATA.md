@@ -108,6 +108,16 @@ history with the correction logged), version `0.18.0` (all current markers), ent
 The `/goal` asked to "update the name (with current date) of every MD file"; the owner confirmed they
 want **both** the dated rename and a non-breaking repo ("make sure they don't break — figure it out").
 
+**Owner ruling — SETTLED, re-confirmed 2026-06-27 (second explicit AskUserQuestion; do not re-litigate):**
+keep the 20 **name-pinned** files at their canonical names. Renaming them breaks EXTERNAL systems that
+cannot be rewired from inside the repo — `README.md` (GitHub renders it as the homepage), `CLAUDE.md` (the
+Claude Code harness loads this exact name), the GitHub community-health files
+(`SECURITY`/`CODE_OF_CONDUCT`/`CONTRIBUTING`/`PULL_REQUEST_TEMPLATE`/`.github/copilot-instructions`), the
+four directory `README.md`s (folder-index render), `FILE-MAP.md` (generator-emitted), and the stamp-target
+ledgers (`VERIFICATION-ANALYTICAL-DATA.md`, `AUDIT-LOG.md` — ~66 in-content stamps + CLAUDE.md point at
+these exact names). They each carry the in-content `reviewed: <date>` stamp instead. Every MD that CAN be
+safely renamed already is (66 of 86 dated, refs rewired, gate green).
+
 **Done (2026-06-26 → 27, in waves):** the **58 content / ADR / spec / report docs that are safe to rename**
 were `git mv`'d to dated names (`X-2026-06-2N.md`) and **every reference rewired** across all tracked text
 files — verified **0 broken links** repo-wide (`tests/doc-links.test.ts` green), `tsc` clean, `sync:check`
