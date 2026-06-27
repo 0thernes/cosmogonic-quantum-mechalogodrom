@@ -14,6 +14,7 @@ import { describe, expect, test } from 'bun:test';
 import * as THREE from 'three';
 import { mulberry32 } from '../src/math/rng';
 import { SpatialHash } from '../src/math/spatial-hash';
+import { GRID_CELL, ULTRA_GRID_CELL } from '../src/sim/constants';
 import { createGeometryCache } from '../src/sim/geometry-cache';
 import { createMorphotypes } from '../src/sim/morphotypes';
 import { EntityManager } from '../src/sim/entities';
@@ -61,7 +62,9 @@ function makeCtx(seed: number, maxEntities: number): SimContext {
       starCount: 10,
     },
     rng,
-    grid: new SpatialHash<Entity>(8),
+    // Mirror world.ts:436 — the production grid cell size is tier-dependent, so coverage/exact-
+    // physics tests run at the SHIPPED resolution (10 above the 5,000 ultra threshold, else 16).
+    grid: new SpatialHash<Entity>(maxEntities > 5000 ? ULTRA_GRID_CELL : GRID_CELL),
     morphs: createMorphotypes(rng, geos.length),
     geos,
     state: makeState(),
