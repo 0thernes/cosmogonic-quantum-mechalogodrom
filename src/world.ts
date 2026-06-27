@@ -76,6 +76,7 @@ import { CosmicWeb } from './sim/cosmic-web';
 import { GoldLattice } from './sim/gold-lattice';
 import { QuantumLattice } from './sim/quantum-lattice';
 import { Mechalogodrom } from './sim/mechalogodrom';
+import { AlphabetPantheonRender } from './sim/alphabet-pantheon-render';
 import { LoreEngine } from './sim/lore';
 import { AnalyticsSystem } from './sim/analytics';
 import { AudioEngine } from './audio/engine';
@@ -346,6 +347,8 @@ export class World {
   private readonly quantumLattice: QuantumLattice;
   /** V-MECHA: the central fusion abomination — 10 bipolar titan shells converge + fuse into one monster (additive; no rng). */
   private readonly mechalogodrom: Mechalogodrom;
+  /** V-ABC: the 100 Greek+Latin alphabet archetypes alive across the dome (instanced; no rng). */
+  private readonly alphabetPantheon: AlphabetPantheonRender;
   /** Cycle cursor for the chaos control's singularity chooser. */
   private singularityCursor = 0;
   /** V57: total resets this session — surfaced in the HUD View/Speed/Render box. */
@@ -576,6 +579,8 @@ export class World {
     this.quantumLattice = new QuantumLattice(ctx.scene);
     // V-MECHA: the central fusion abomination — boot-stream-neutral (no rng), reacts to world chaos.
     this.mechalogodrom = new Mechalogodrom(ctx.scene);
+    // V-ABC: the 100 Greek+Latin alphabet archetypes, alive across the dome (instanced; no rng).
+    this.alphabetPantheon = new AlphabetPantheonRender(ctx.scene);
 
     this.hud = new Hud();
     this.panel = new TelemetryPanel();
@@ -843,6 +848,7 @@ export class World {
     this.wingRender.dispose();
     this.monolithTemple.dispose();
     this.mechalogodrom.dispose(); // V-MECHA: free the fusion abomination's geometries + materials
+    this.alphabetPantheon.dispose(); // V-ABC: free the 100-archetype instanced pools
     this.artifacts.dispose(this.engine.scene);
     this.nhiBody.dispose(); // 3 shared geometries + live body materials
     this.rd.dispose(); // the Gray–Scott GPU DataTexture
@@ -969,6 +975,9 @@ export class World {
     // V-MECHA: the fusion abomination reads world chaos (one-way), then writhes (additive, no rng).
     this.mechalogodrom.setChaos(this.state.chaos / CHAOS_MAX);
     this.mechalogodrom.update(t, dt);
+    // V-ABC: the 100 alphabet archetypes bob/spin/pulse across the dome (chaos quickens them).
+    this.alphabetPantheon.setChaos(this.state.chaos / CHAOS_MAX);
+    this.alphabetPantheon.update(t);
     // F-NHI V10: alien bodies follow + morph their NHI every frame (guarded; additive viz only).
     if (this.nhiBody.count > 0) {
       try {
