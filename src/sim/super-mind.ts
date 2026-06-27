@@ -638,7 +638,9 @@ export class SuperMind {
   };
   private plan: SuperPlan = 'REST';
   /** P1 quantum-ablation gate: 1 = quantum-substrate faculties contribute, 0 = ablated (a parameter-matched
-   *  control arm for the quantum-vs-classical experiment). Default ON — existing behaviour unchanged. */
+   *  control arm for the quantum-vs-classical experiment). Gates the quantum-reservoir + Schrödinger-spread
+   *  curiosity terms AND the quantum Lindblad-decider's influence on the EXPLORE drive — the substrate's
+   *  contribution to the actual plan, not just to a scalar. Default ON — existing behaviour unchanged. */
   private qGate = 1;
 
   constructor(
@@ -1422,7 +1424,10 @@ export class SuperMind {
       clamp(2 * this.dominance - 1, -1, 1),
       clamp01(this.arousal * (1 - DELIB_COUPLE * this.lastResOrder)),
     );
-    drives.EXPLORE += DELIB_GAIN * this.deliberation.coherence;
+    // P1-ablatable: the quantum DECIDER's influence on the plan (the qubit still evolves + reports its
+    // coherence on the snapshot; only its drive contribution is gated, so the ablation is observable but
+    // the classical arm's deliberation telemetry is unchanged).
+    drives.EXPLORE += DELIB_GAIN * this.deliberation.coherence * this.qGate;
 
     // ── V92 · METACOGNITIVE EXECUTIVE ── before committing, the mind estimates its CONFIDENCE in the
     // decision from four reliability cues — the provisional decision margin, integration (Φ, last beat),

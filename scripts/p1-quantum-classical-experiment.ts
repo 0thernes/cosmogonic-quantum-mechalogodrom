@@ -10,9 +10,12 @@
  *
  * 2026-06-27 — the arms are now a REAL parameter-matched ablation (classical = setQuantumAblated(true),
  * identical percepts). The earlier scaffold differed the arms only by chaos level, which the survival
- * model rewards directly, so that delta measured CHAOS, not a quantum advantage. The honest expectation
- * with this minimal gate is a SMALL or NULL effect — and a null is a valid result: the substrate is not
- * yet shown to buy a behavioural advantage. Pre-register the task + widen the ablation before any claim.
+ * model rewards directly, so that delta measured CHAOS, not a quantum advantage. The ablation gates the
+ * quantum-substrate contributions to the DECISION: the quantum-reservoir + Schrödinger-spread curiosity
+ * terms AND the open-system Lindblad deliberation qubit's influence on the EXPLORE drive (the plan, not
+ * just a scalar). The honest expectation is still a SMALL or NULL effect — and a null is a valid result:
+ * the substrate is not yet shown to buy a behavioural advantage. Pre-register the task + widen the
+ * ablation further (QGT off, spin off, Eshkol QRNG off) before any advantage claim.
  *
  * Usage (manual or CI probe):
  *   bun scripts/p1-quantum-classical-experiment.ts --seeds 30 --beats 200
