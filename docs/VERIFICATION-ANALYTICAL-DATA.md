@@ -6,7 +6,7 @@
 surfaces (MD · HTML · XML · code), its **single source of truth**, and where each surface restates it —
 so a drift between the README, the dashboard, a master XML, or a spec page is caught at a glance.
 Rewritten in place when the facts change (per the binding "Living docs, no archives" law in
-[CLAUDE.md](../CLAUDE.md)). Last reconciled by a full-repo audit pass on **2026-06-26**.
+[CLAUDE.md](../CLAUDE.md)). Last reconciled by a full-repo audit pass on **2026-06-27** (§14).
 
 > **How the numbers stay honest:** the version (`package.json`) and the measured receipts +
 > NHSI design counts (`scripts/canonical-receipts.ts`) are the ONLY places those facts are edited.
@@ -420,3 +420,55 @@ specific call site. Findings (fixed in `59aa9c4`):
   churn + `pantheon-architecture-panel` rAF/listener have no `dispose()`; a few `world.ts` HMR listeners
   omit `{ signal }`; `driveSuper()` allocates scratch typed-arrays per call. None affect a production run
   (HMR is dev-only); deferred as hygiene.
+
+## 14 · Exhaustive 8-partition ground-up re-audit (every folder/file, 2026-06-27)
+
+An independent second-auditor pass dispatched **8 read-only master-lens agents** partitioning the WHOLE
+tree (`src/math` · `src/sim` a-e · f-n · o-z+world · `src/ui`+core/audio/server · all 83 `docs/*.md` ·
+root MD+XML+HTML+`.github` · `scripts`+`bench`+`native`+`tests`), each reading line-by-line and
+cross-checking the §1 canon. **Methodology note (binding lesson):** the agents read the main checkout,
+which lagged `origin/main` by ~15 commits, so every candidate was **re-verified against `origin/main`
+before acting** — and several agent findings were already loop-fixed there (e.g. the `brutal-god-releases`
+double-application is gone on main — §13's `59aa9c4`; petri-dish bug classes fixed). _Verify against the
+live tip, never the local tree._
+
+**FIXED this pass (7 — all verified still-real on `origin/main`, none caught by `verify:facts`/`sync`):**
+
+| #   | Where                                  | Drift / defect                                                                                                                                                                                  | Fix                                                                                                 |
+| --- | -------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| 1   | `specs.html:812`                       | apex "**1,644**-weight spine" — customer-facing, contradicts canon `~1,444` (lines 393/400/407 `1,644` are legit C++ line-counts)                                                               | → `~1,444-weight legacy spine`. Prose-only fact the auto-sync structurally can't police.            |
+| 2   | `README.md:43`                         | "~**195** source modules" vs the FILE-MAP it cites (200)                                                                                                                                        | → `~200` (true tracked `src/*.ts` = **200**; see dual-count note below)                             |
+| 3   | `docs/ERD-…:67`                        | "one of **9** forms" — `BIOLOGIC_FORMS.length = 26`                                                                                                                                             | → `26 forms`                                                                                        |
+| 4   | `docs/BLEEDING-EDGE-…:22,58`           | "**16+** Forms / 16+ archetypes" — self-contradicts its own line 8 ("26 BIOLOGIC_FORMS")                                                                                                        | → `26`                                                                                              |
+| 5   | `.github/CODEOWNERS:3,14,15`           | 3 dead links to undated `MODULE-CONTRACTS.md`/`COMPLEXITY.md` (only the `-2026-06-26.md` files exist) — routed **no** reviews                                                                   | → dated filenames                                                                                   |
+| 6   | `src/math/mixed-state-qgt.ts` (header) | claimed "**the Bures metric** … reduces to the standard QGT … SLD formulation"; the code (line ~162) drops the leading ρ and computes `Tr(∂ρ∂ρ)` (≈**2×** Fubini-Study for pure states, no SLD) | header rewritten to state the bounded derivative-overlap **approximation** it actually is (honesty) |
+| 7   | `src/math/quantum-geometry.ts:1`       | the file-header `/**` was **never closed** → it swallowed the `QuantumGeometry` interface's own JSDoc (lines 1-31 = one comment)                                                                | closed the header with `*/` (interface doc restored; tsc-clean)                                     |
+
+**Known dual-count (NOT drift — recorded so it never reads as one):** the src figure is **200** by the
+FILE-MAP generator (`gen-filemap.ts`, filesystem `Glob('**/*.ts')` — `.ts` _modules_) and **201** in the
+TECH-SPEC §1 metrics table (`codebase-metrics.ts`, `git ls-files` tally that counts src **files**, so it
+adds `src/styles/app.css`: 200 `.ts` + 1 css = 201). Both are deterministic, regen-stable instruments of
+the same tree — the 1-file gap is exactly `app.css` (modules vs files). README's prose "~200 source
+modules" tracks the FILE-MAP module count. Do not hand-edit either generated value. (Like the `721`/`1436`
+`.esk` census-vs-harvest pair, two correct numbers measuring different things.)
+
+**Verified-real but DEFERRED (recorded, not changed — owner call / by-design / risk):**
+
+- `src/ui/{market-ticker,nhi-observatory,super-neural}.ts` snapshot `devicePixelRatio` once at construction
+  → canvases blur after a monitor/DPR change (cosmetic; fix = re-read DPR in the size path). Server/core/
+  audio layers audited **security-clean** (path-traversal/XSS/ReDoS/proto-pollution all guarded).
+- `native/CMakeLists.txt:123` `-ffast-math` (FP-reassociation vs the determinism ethos) — the documented
+  owner perf call (the native engine is the optional streamed tier, no golden tests); also `main.cpp` vertex-
+  shader leak on a fragment-compile-fail path + missing dim clamps (one-time fatal paths).
+- Honesty-header candidates the agents flagged on the **behind** tree — `nqs-vmc-learning.ts` ("implements
+  RPT-1/2, integrated" but 0 importers), `morphic-field.ts` ("called each beat" but never instantiated),
+  `temporal-crystal.ts` (Metropolis wording vs hard thresholds): re-verify wiring on `origin/main` before
+  softening (the loop wires dead modules continuously — cf. latent-substrates).
+- `ulg-bridge.ts:2` "Universal **Language Gateway**" vs other docs' "Universal **Law Graph**" — genuinely
+  ambiguous (the file IS a web bridge); an owner ruling, not a safe unilateral edit.
+
+**Confirmed clean by this pass:** quantum/math core machine-precision-correct (math agent re-probed Wigner-6j
+j=8, Clifford, Crank-Nicolson, MPS-SVD, QGT, CHSH; only the §6-style header honesty above remained);
+determinism law holds across all `src/sim`+`src/math` (sole `Date.now` = the fenced `world.ts` idle-growth
+localStorage, outside sim logic); test suite **0** `.only`/`.skip`/vacuous across 156 files; CI runs the full
+superset gate. Net at this pass's tip: `verify:facts` 0 drift / 83 surfaces, gate green.

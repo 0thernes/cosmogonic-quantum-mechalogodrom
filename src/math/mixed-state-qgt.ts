@@ -1,25 +1,29 @@
 /**
  * MIXED-STATE QUANTUM GEOMETRIC TENSOR (V94 / Super Creature 1.1) — faculty #8 from research bedrock.
- * Extends the pure-state QGT to mixed states (density matrices) using the Bures metric.
+ * Extends the pure-state QGT toward mixed states (density matrices) with a bounded APPROXIMATION to the
+ * Bures metric (NOT the exact metric — see THE MATH).
  *
- * THE MATH:
- * For a mixed state ρ (density matrix) depending on parameters θ, the mixed-state QGT is:
+ * THE MATH (this module computes an APPROXIMATION — see the honesty note, not the exact metric):
+ * The exact mixed-state QGT / Bures metric for ρ(θ) is
  *
- *   Q_ij = Tr(ρ ∂_i ρ ∂_j ρ) - Tr(ρ ∂_i ρ) Tr(ρ ∂_j ρ)
+ *   Q_ij(exact) = Tr(ρ ∂_i ρ ∂_j ρ) - Tr(ρ ∂_i ρ) Tr(ρ ∂_j ρ)   (via the SLD; involves ρ⁺)
  *
- * This is the Bures metric, the natural extension of the Fubini-Study metric to mixed states.
- * For pure states (ρ = |ψ⟩⟨ψ|), this reduces to the standard QGT.
+ * For efficiency this module DROPS the leading ρ weighting and instead computes the derivative-overlap
+ * proxy
  *
- * The Bures distance between two density matrices ρ and σ is:
- *   D_B(ρ, σ)² = 2(1 - F(ρ, σ))
- * where F(ρ, σ) = Tr(√(√ρ σ √ρ)) is the fidelity.
- * The Bures metric is the infinitesimal form of the Bures distance.
+ *   Q_ij(here)  = Tr(∂_i ρ ∂_j ρ) - Tr(ρ ∂_i ρ) Tr(ρ ∂_j ρ)
+ *
+ * so it is NOT the exact Bures metric, and for a pure state (ρ = |ψ⟩⟨ψ|) it is PROPORTIONAL to (≈2×)
+ * the Fubini-Study QGT rather than an exact reduction to it — a bounded state-sensitivity /
+ * coherence-of-derivatives proxy. The ideal it approximates has Bures distance
+ *   D_B(ρ, σ)² = 2(1 - F(ρ, σ)),  F(ρ, σ) = Tr(√(√ρ σ √ρ))  (the fidelity).
  *
  * IMPLEMENTATION:
  * - We represent the density matrix as a flattened array (row-major) of size d²
  * - Derivatives are computed via finite difference (central difference)
  * - The metric is symmetric positive-semidefinite
- * - For computational efficiency, we use the symmetric logarithmic derivative (SLD) formulation
+ * - The SLD / leading-ρ weighting is OMITTED for speed (the approximation noted above), so downstream
+ *   uses are qualitative (state-sensitivity telemetry), not exact quantum Fisher information
  *
  * REFERENCES:
  * - Bures metric (Bures 1969)

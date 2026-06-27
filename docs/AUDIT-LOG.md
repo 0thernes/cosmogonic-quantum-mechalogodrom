@@ -94,6 +94,37 @@ one dimension nothing had covered: **does the simulation actually run?** Started
 Verdict: the repo is not merely gate-green — it is a **genuinely functional** deterministic simulation.
 True, accurate, real, authentic. (Server stopped after the check.)
 
+## 2026-06-27 — Exhaustive 8-partition ground-up re-audit (every folder/file) + 7 cross-surface fixes
+
+Dispatched **8 read-only master-lens agents** partitioning the entire tree (math · sim a-e/f-n/o-z+world ·
+ui+core+server · all 83 docs · root MD/XML/HTML/.github · scripts+bench+native+tests), each reading
+line-by-line vs the §1 canon, then **re-verified every candidate against `origin/main`** (the agents read
+the main checkout, ~15 commits behind — several findings were already loop-fixed there, e.g. the
+`brutal-god-releases` double-application). Fixed 7 verified-real items that the automated `verify:facts` /
+`sync:check` structurally cannot catch (prose/comment facts):
+
+- `specs.html:812` apex "**1,644**-weight spine" → `~1,444` (customer-facing; canon spine is ~1,444 — the
+  other `1,644`s on the page are legit C++ line-counts).
+- `README.md:43` "~**195** source modules" → `~200` (true tracked `src/*.ts` = 200, matching the FILE-MAP
+  it cites). Recorded the FILE-MAP-200-vs-metrics-196 **dual-count** (two deterministic generators, not
+  drift) in ledger §14.
+- `docs/ERD:67` "one of **9** forms" + `docs/BLEEDING-EDGE:22,58` "**16+** Forms" → **26**
+  (`BIOLOGIC_FORMS.length`; BLEEDING-EDGE self-contradicted its own line 8).
+- `.github/CODEOWNERS:3,14,15` three dead links (undated `MODULE-CONTRACTS.md`/`COMPLEXITY.md`) → dated
+  filenames — they had been routing zero reviews.
+- `src/math/mixed-state-qgt.ts` header claimed "the Bures metric / reduces to standard QGT / SLD"; the code
+  drops the leading ρ and computes the `Tr(∂ρ∂ρ)` proxy (≈2× Fubini-Study for pure states) → header
+  rewritten honestly (comment-only; the math is unchanged and bounded).
+- `src/math/quantum-geometry.ts:1` file-header `/**` was never closed → swallowed the `QuantumGeometry`
+  interface JSDoc; closed it (tsc-clean).
+
+Recorded-but-deferred (owner-call / by-design / risk): 3 UI canvases snapshot DPR once (blur on monitor
+change; cosmetic), native `-ffast-math` (documented owner perf call) + a shader-leak/dim-clamp edge,
+honesty-header candidates (`nqs-vmc-learning`/`morphic-field`/`temporal-crystal` — re-verify wiring on main
+first), and the `ulg-bridge` "Language Gateway"-vs-"Law Graph" ambiguity (owner ruling). Full inventory:
+ledger §14. Gate green at fix tip; `verify:facts` 0 drift / 83 surfaces; quantum/math core re-verified
+machine-precision-correct; test suite 0 skips/vacuous across 156 files.
+
 ## 2026-06-27 — Apex-body shader RED fix (`metalnessFactor` inject-before-declare) + repo-wide shader-injection sweep
 
 Fixed a live shader-compile failure in the apex/super-creature body and then swept every shader patch in

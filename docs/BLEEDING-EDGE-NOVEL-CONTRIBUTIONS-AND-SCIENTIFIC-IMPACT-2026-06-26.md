@@ -19,7 +19,7 @@ This document is truthful, receipt-based, and distinguishes **actual implemented
   - Supports exact symbolic + forward + reverse in one system with arena memory.
 - **Novelty level**: High within scientific computing / neuro-symbolic / differentiable programming. "Calculus should be a compiler primitive" is a strong philosophical + engineering stance. In the context of ALife, using it for heritable life code is rare-to-unique.
 
-### 1.2 Multi-Substrate Digital Biologics — 16+ Forms Directly Mapped to Tsotchke Repos
+### 1.2 Multi-Substrate Digital Biologics — 26 Forms Directly Mapped to Tsotchke Repos
 
 - `src/sim/digital-biologics.ts`:
   - `BIOLOGIC_FORMS`: ESHKOL_NATIVE, MOONLAB_TENSOR, QGT_CURVED, SPIN_COLLECTIVE, IRREP_SYM, QUAKE_UNITARY, PINN_PHYSICS, PIMC_SOUL, ULG_HYBRID, LOGO_PROC, METAL_COMPUTE, QRNG_ENTROPY, CLASSICAL_BASE, ASTEROID_BODY, TOOLCHAIN_BUILD, HYPER_SENTIENT.
@@ -55,7 +55,7 @@ This document is truthful, receipt-based, and distinguishes **actual implemented
 
 - **Broadest practical integration of advanced non-LLM math substrates into a single coherent evolutionary digital-life system** (as of 2026 knowledge from searches). Stacking Clifford/tensor nets + QGT + exact symmetry theory + spin glasses + path integrals + GWT primitives + AD genomes in one deterministic, renderable Petri is not commonly seen in published ALife or consciousness simulation work.
 - **AD as first-class heritable genome operation in ALife**. Using a language where gradients are native to mutate executable programs that then drive "life" metrics (fitness, ignition, speciation) in a multi-physics world.
-- **Substrate pluralism done rigorously**: 16+ distinct life archetypes, each with mathematically justified differential evolution, rather than "all agents use the same NN".
+- **Substrate pluralism done rigorously**: 26 distinct life archetypes, each with mathematically justified differential evolution, rather than "all agents use the same NN".
 - **Engineering discipline at this ambition level**: Strict determinism, no Math.random in sim, full gate + receipts, masters/persona governance, ERD/ERM/ERP + contracts. Rare for vibe-coded or research-y projects claiming sentience-adjacent goals.
 - **Rejection of the dominant paradigm while staying computationally serious**: While mainstream 2025-2026 pushes scale + transformers + "emergence from prediction", this explicitly builds an alternative stack (Eshkol + quantum/classical advanced libs) and makes it runnable and visual.
 

@@ -27,6 +27,7 @@
  * 64-amplitude circuit rebuilds — well within budget.
  *
  * WIRED FROM FULL TSOTCHKE CORPUS (ralph-loop 2026-06-19 + this 10x surge continue): Eshkol AUTODIFF dual for param derivs + GWT, Moonlab qgt.c Bloch + Chern, QGTL Fubini/Berry, libirrep sym for n-band. See TSOTCHKE-CORPUS-RALPH-WIRING-AUDIT + Z:\[Vibe Coded (AI)]\(Tsotchke)\mirrors\quantum_geometric_tensor + Eshkol. Used in super-mind/quantum for 5 Archons. 10x: mpo/gwt notes in callers.
+ */
 
 /** The geometry of a parameterised quantum state at a point θ. */
 export interface QuantumGeometry {
