@@ -263,11 +263,19 @@ export class PantheonArchitecturePanel {
     this.select();
   }
 
+  /** Ring-cap the brood before adding `incoming` more so a long MATE/STORM session can't grow it
+   * without bound (each entry retains four genome sub-structures). Oldest rites fall off the front. */
+  private capBrood(incoming: number): void {
+    const over = this.brood.length + incoming - 256;
+    if (over > 0) this.brood.splice(0, over);
+  }
+
   /** Breed the selected lineage creature with a panel-rng partner; show the child. */
   private mate(): void {
     const a =
       this.view === 'lineage' ? this.lineageIdx : (this.brood[this.broodIdx]?.parents[0] ?? 0);
     const child = this.makeChild(a);
+    this.capBrood(1);
     this.brood.push(child);
     this.broodIdx = this.brood.length - 1;
     this.view = 'brood';
@@ -291,6 +299,7 @@ export class PantheonArchitecturePanel {
 
   /** Loose `n` random rites into the brood and jump to the rarest of them. */
   private storm(n: number): void {
+    this.capBrood(n);
     let rarest = -1;
     let rarestRarity = -1;
     for (let i = 0; i < n; i++) {
