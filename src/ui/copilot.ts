@@ -338,6 +338,19 @@ function mount(): void {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ messages: history, provider: selectedProvider || undefined }),
       });
+      // On the STATIC GitHub Pages deploy there is no Bun server, so `/api/chat` 404s (or the SPA
+      // fallback returns index.html). Detect that and explain it honestly instead of spilling a raw
+      // "Unexpected token <" JSON-parse error — the ✦ AI agent is a local-dev-server feature.
+      const ctype = res.headers.get('content-type') ?? '';
+      if (!res.ok || !ctype.includes('application/json')) {
+        thinking.remove();
+        addMsg(
+          'cqm-cop-sys',
+          'The ✦ AI agent needs the local dev server — run `bun dev`, then reload. The static ' +
+            'GitHub Pages build ships no LLM backend (no /api/chat), so the chat is dev-only here.',
+        );
+        return;
+      }
       const data = (await res.json()) as AgentResult;
       thinking.remove();
       for (const step of data.steps ?? []) addTool(step);
