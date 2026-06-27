@@ -31,7 +31,7 @@
 import * as THREE from 'three';
 import { TAU } from '../math/scalar';
 import { ARENA_MID } from './constants';
-import type { SimContext } from '../types';
+import type { Entity, SimContext } from '../types';
 import type { EntityManager } from './entities';
 
 /** The five summonable singularity kinds, in chaos-control cycle order. */
@@ -83,6 +83,12 @@ const PARTICLE_COLOR: Readonly<Record<SingularityKind, number>> = {
 
 /** Module scratch — update() and summon() never allocate per frame. */
 const V = new THREE.Vector3();
+/**
+ * Scratch list of horizon-crossers a black/grey hole will consume THIS frame. The force pass
+ * collects them (capped at {@link MAX_CONSUME}); the disposal runs afterwards so `disposeAt`'s
+ * left-shift never invalidates an index mid-pass. Length is reset to 0 each call, so it retains
+ * at most {@link MAX_CONSUME} references between frames (≤ 25 entities — negligible). */
+const CONSUME: Entity[] = [];
 /** Heat-death grey target for the ENTROPY colour fade. */
 const GREY = new THREE.Color(0.5, 0.5, 0.5);
 /** V59 gravitational redshift/blueshift targets — infalling light reddens, ejected light blueshifts. */
@@ -90,6 +96,33 @@ const REDSHIFT = new THREE.Color(1.0, 0.18, 0.05);
 const BLUESHIFT = new THREE.Color(0.35, 0.66, 1.0);
 /** V59 time-dilation reach (multiples of the horizon) — matter crawls + light shifts within this. */
 const WARP_R_MULT = 4;
+
+/**
+ * V7.5 falsifiable field parameters (world units), frozen + exported for tests and audits. These
+ * are the EXACT constants the O(k) force passes read, surfaced so a regression test can assert the
+ * r⁻² law, the REACH/HORIZON/CONV_R geometry, and the consume cap without re-deriving magic
+ * numbers. Read-only; nothing mutates them.
+ */
+export const SINGULARITY_FIELD = {
+  /** Gravitational force-field reach (entities beyond are unaffected). */
+  REACH,
+  /** {@link REACH} squared (the 3D sphere test). */
+  REACH2,
+  /** Event-horizon radius (consume/eject boundary for black/white/grey holes). */
+  HORIZON,
+  /** Strange-matter contact-conversion radius. */
+  CONV_R,
+  /** {@link CONV_R} squared. */
+  CONV_R2,
+  /** Time-dilation/redshift reach as a multiple of {@link HORIZON}. */
+  WARP_R_MULT,
+  /** Gravitational constant (Σ accel = min(G/r², {@link ACCEL_MAX})). */
+  G,
+  /** Per-frame radial acceleration cap. */
+  ACCEL_MAX,
+  /** Max organisms a black hole consumes per frame. */
+  MAX_CONSUME,
+} as const;
 /**
  * V60 screen-lens strength per kind (signed): + PINCHES light inward (absorbers), − BULGES it out
  * (emitters). Fed to the post-FX gravitational-lens pass, scaled by the lifetime fade. Tuned so the
@@ -244,8 +277,11 @@ export class SingularitySystem {
 
   /**
    * Advance the active singularity: apply its force field to the population, animate the rig,
-   * and expire after {@link DURATION}. No-op when inactive. Allocation-free. O(n) over live
-   * entities while active (a transient — singularities last seconds), O(1) otherwise.
+   * and expire after {@link DURATION}. No-op when inactive. Allocation-free. The hole/strange
+   * passes are O(cells + k) where k = entities within REACH/CONV_R (a population-INDEPENDENT
+   * count — the shared spatial hash holds areal density constant as n climbs to the mega ceiling),
+   * so the EXACT per-frame physics runs without a population-scaling cost; entropy is a global
+   * heat-death and stays an O(n) strided pass. O(1) when inactive.
    */
   update(dt: number, t: number): void {
     if (this._kind === null || !this.rig) return;
@@ -313,32 +349,33 @@ export class SingularitySystem {
   private applyHole(dt: number, sign: number, consumeCap: number): void {
     const list = this.entities.list;
     const c = this.center;
-    // Ultra-tier half-rate stride (matches the entity theory-stagger contract): at >5,000
-    // entities the force visits each body every other frame with 2× accel, so a 9s hole stops
-    // adding a full 10k+sqrt pass per frame (audit perf fix). ≤5,000 is the unstrided legacy.
-    const ultra = this.ctx.quality.maxEntities > 5000;
-    const frame = this.ctx.state.frame;
-    const gain = ultra ? 2 : 1;
+    // O(k) reach query (V7.5 perf): instead of an O(n) sweep of the WHOLE population, ask the
+    // shared per-frame spatial hash for only the bodies whose grid cells overlap the REACH square
+    // — a superset of the 3D REACH sphere (|xz| ≤ ‖Δ‖ ≤ REACH), which we then filter exactly. The
+    // hash is held constant in AREAL density as the population climbs (EntityManager.densityScale),
+    // so k = entities within REACH is roughly population-INDEPENDENT: the cost no longer scales
+    // with n, and the EXACT per-frame r⁻² physics runs at every tier (the old >5,000 half-rate
+    // stride + 2× accel approximation is GONE — accuracy preserved at the 50k mega ceiling). The
+    // query buffer is a shared instance valid until the next query(); we read it before any other
+    // query call. Reading it draws no rng, so the seeded stream is untouched.
+    const near = this.ctx.grid.query(c.x, c.z, REACH);
     let eaten = 0;
-    // Iterate from the end so disposeAt()'s left-shift never skips an unvisited entity.
-    for (let i = list.length - 1; i >= 0; i--) {
-      const e = list[i];
-      if (!e) continue;
-      if (ultra && (frame + i) & 1) continue; // half-rate at the ultra tier
+    CONSUME.length = 0;
+    for (let qi = 0; qi < near.length; qi++) {
+      const e = near[qi]!; // invariant: query buffer is a dense array of live grid entries
       V.copy(c).sub(e.position); // points toward the centre
       const r2 = V.lengthSq();
-      if (r2 > REACH2 || r2 < 1e-6) continue;
+      if (r2 > REACH2 || r2 < 1e-6) continue; // outside the true 3D sphere (or dead-centre)
       const r = Math.sqrt(r2);
       if (r < HORIZON) {
         // F-NHI: a launched being is immune to consumption (its "Matrix" power) — it is thrown back
         // out like the white-hole case instead of being eaten. `isNhi` is undefined on every normal
         // organism, so this is byte-identical until you launch one.
         if (consumeCap > 0 && eaten < consumeCap && e.userData.isNhi !== true) {
-          // Crossed the event horizon — consumed. disposeAt fires the world's onDeath hook,
-          // which scars the RD ground at the corpse's UV (the mortality feedback loop).
-          this.entities.disposeAt(i);
-          this._consumed++;
-          eaten++;
+          // Crossed the event horizon — defer the consume so disposeAt()'s left-shift can't
+          // invalidate the index of an entity still to be forced (the query is unordered w.r.t.
+          // `list`). Collected now, disposed after the pass.
+          CONSUME[eaten++] = e;
           continue;
         }
         if (consumeCap === 0 || e.userData.isNhi === true) {
@@ -349,7 +386,7 @@ export class SingularitySystem {
           continue;
         }
       }
-      const accel = Math.min(G / r2, ACCEL_MAX) * sign * gain;
+      const accel = Math.min(G / r2, ACCEL_MAX) * sign;
       e.userData.vel.addScaledVector(V, (accel * dt) / r); // V/r = unit toward centre
       // V59: SPACE-TIME WARP — not just gravity. TIME DILATES toward the horizon (velocities are
       // scaled down, so matter visibly CRAWLS as it nears the hole) and infalling light REDSHIFTS
@@ -362,6 +399,20 @@ export class SingularitySystem {
         e.material.color.lerp(sign > 0 ? REDSHIFT : BLUESHIFT, 0.05 * k);
       }
     }
+    // Dispose the collected horizon-crossers. disposeAt fires the world's onDeath hook, which scars
+    // the RD ground at the corpse's UV (the mortality feedback loop). indexOf is O(n) but bounded
+    // by consumeCap (≤ MAX_CONSUME) and only runs while the hole is actively eating; the lookup is
+    // also the liveness guard — a stale grid (rebuilt every other frame) or a same-frame disposal
+    // by another system (shoggoth/titan) leaves index −1, so we never double-dispose.
+    for (let ci = 0; ci < eaten; ci++) {
+      const e = CONSUME[ci]!;
+      const idx = list.indexOf(e);
+      if (idx >= 0) {
+        this.entities.disposeAt(idx);
+        this._consumed++;
+      }
+    }
+    CONSUME.length = 0; // release the collected references — no per-frame retention
     // V60: a summoned hole STIRS reality — the warped spacetime raises the world's disorder while it
     // lives, so weather, economy, quantum cadence and entity jitter (all chaos-coupled) visibly react
     // to it, not just the bodies it pulls. Deterministic (no rng); the integrator clamps the ceiling.
@@ -371,14 +422,15 @@ export class SingularitySystem {
 
   /** STRANGE STAR: organisms inside the conversion radius are recoloured to strange matter. */
   private applyStrange(): void {
-    const list = this.entities.list;
     const c = this.center;
-    const ultra = this.ctx.quality.maxEntities > 5000;
-    const frame = this.ctx.state.frame;
-    for (let i = 0; i < list.length; i++) {
-      const e = list[i];
-      if (!e) continue;
-      if (ultra && (frame + i) & 1) continue; // half-rate at ultra (conversion is idempotent)
+    // O(k) reach query (V7.5 perf): the conversion front is a CONTACT effect, so only the bodies in
+    // the shared hash's cells overlapping the CONV_R square can be inside it — query them, filter by
+    // the true 3D conversion sphere, recolour. Population-independent (density held constant), so the
+    // old >5,000 half-rate stride is GONE: every body in the zone converts every frame. Idempotent
+    // (a fixed recolour), so a 1-frame-stale grid entry just re-stains an already-strange body.
+    const near = this.ctx.grid.query(c.x, c.z, CONV_R);
+    for (let qi = 0; qi < near.length; qi++) {
+      const e = near[qi]!; // invariant: query buffer is a dense array of live grid entries
       if (V.copy(c).sub(e.position).lengthSq() > CONV_R2) continue;
       // Strange-matter stain: a sickly quark-green body with a violet glow. Colour persists
       // after the star expires (update() only re-targets emissiveIntensity, not the hues),

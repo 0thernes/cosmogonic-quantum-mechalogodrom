@@ -200,6 +200,40 @@ Two more sim stages now carry dedicated median-of-many-frames guards alongside t
   `tests/chaos-field.test.ts` under a 15 ms ceiling (~60× slack). Engaging chaos mode at mega scale
   is effectively free relative to the population loop.
 
+### Singularity force pass — O(k) reach query (V7.5, added 2026-06-27, Bun 1.3.x, same CPU)
+
+A summoned singularity (`src/sim/singularities.ts`) applies an r⁻² gravity + horizon consume/eject +
+time-dilation/redshift field to the population. The original pass swept the **whole** `entities.list`
+every frame (`O(n)`), and above 5,000 entities fell back to a half-rate stride + 2× accel — a physics
+**approximation** that degraded the r⁻² + dilation accuracy and still collapsed the frame as `n` grew
+(holes visibly "died" ≈ 25k). **Fix:** the force passes now query the shared per-frame spatial hash at
+`REACH` (black/grey/white holes) / `CONV_R` (strange star) — the grid cells overlapping the reach
+square are a superset of the 3D sphere, filtered exactly — so they touch only the `k` bodies in range.
+Because the V38 areal-density scaling holds density constant, **`k` saturates** as `n` climbs: the
+cost is decoupled from the population and the EXACT, un-strided physics runs at every tier (the
+half-rate stride is **gone**). The passes draw no rng, so the seeded stream is byte-identical.
+
+Profiled with `bun bench/scale.ts` (seed `0x5106e7`, white hole — non-consuming so `n` is held — 120
+measured frames after a 40-frame warm-up; median ms/frame for `singularities.update`):
+
+| N (entities) | k (within REACH) | sing ms/frame | note                                   |
+| ------------ | ---------------- | ------------- | -------------------------------------- |
+| 2,000        | 2,000            | 0.119         | small arena (density=1) ⇒ all in reach |
+| 5,000        | 5,000            | 0.239         | "                                      |
+| 10,000       | 10,000           | 0.731         | "                                      |
+| 25,000       | 19,996           | 5.98          | arena spreads (√N) ⇒ `k` decouples     |
+| 50,000       | 20,008           | **6.03**      | **N doubles, k + cost FLAT ⇒ O(k)**    |
+
+The receipt: from 25k→50k the population **doubles** while `k` (and the singularity cost) stays flat
+at ≈ 6 ms — the hole's marginal cost no longer scales with `n`, where the old `O(n)` sweep would have
+≈ doubled. Below 10k the small fixed arena puts every body in reach (`k=n`) so the cost tracks `n`, but
+those tiers are sub-millisecond and never the bottleneck. Correctness is guarded by
+`tests/singularities.test.ts` "O(k) reach query visits EVERY in-REACH entity exactly once …": at
+N=25k it asserts the query buffer has no duplicates, every in-REACH body is covered, only in-REACH
+bodies are forced, and two clean probes receive the exact `|Δv| = G·dt/r²` (a double-visit would
+double it). `k` is conservative here — the bench's legacy square spawn is denser at the core than the
+live phylum-disk spread, which puts a smaller fraction inside REACH.
+
 ## Apex mind (Super Creature) — per-beat cognitive budget (2026-06-17)
 
 Bun 1.3.14 x64-win32, Intel Core Ultra 9 275HX (~4.14 GHz). The apex mind grew from one stacked MLP (V31)

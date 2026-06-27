@@ -17,7 +17,7 @@ import { SpatialHash } from '../src/math/spatial-hash';
 import { createGeometryCache } from '../src/sim/geometry-cache';
 import { createMorphotypes } from '../src/sim/morphotypes';
 import { EntityManager } from '../src/sim/entities';
-import { SINGULARITY_KINDS, SingularitySystem } from '../src/sim/singularities';
+import { SINGULARITY_FIELD, SINGULARITY_KINDS, SingularitySystem } from '../src/sim/singularities';
 import type { AuditTrail } from '../src/logging/audit';
 import type { Entity, SimContext, SimState } from '../src/types';
 
@@ -71,6 +71,17 @@ function makeCtx(seed: number, maxEntities: number): SimContext {
 }
 
 const CENTER = new THREE.Vector3(0, 32, 0);
+
+/**
+ * Rebuild the shared spatial hash from the live population — mirrors the world.ts per-frame step
+ * (clear + insert every entity) that runs BEFORE singularities.update. The O(k) force passes query
+ * this hash, so a test that exercises consume/eject/convert must populate it first, exactly as the
+ * real frame loop does (world.ts:923). Insert order = list order, so the query stays deterministic.
+ */
+function rebuildGrid(ctx: SimContext, entities: EntityManager): void {
+  ctx.grid.clear();
+  for (const e of entities.list) if (e) ctx.grid.insert(e);
+}
 
 describe('SingularitySystem', () => {
   test('SINGULARITY_KINDS is the five-effect cycle, all distinct', () => {
@@ -151,6 +162,7 @@ describe('SingularitySystem', () => {
     sys.summon('blackhole', CENTER.clone());
     for (let f = 0; f < 40; f++) {
       ctx.state.frame = f;
+      rebuildGrid(ctx, ent); // the O(k) hole reads the shared hash (world.ts populates it per frame)
       sys.update(0.016, f * 0.016);
     }
     expect(ent.list.includes(nhi)).toBe(true); // immune — ejected, never consumed
@@ -182,7 +194,10 @@ describe('SingularitySystem', () => {
     }
     const before = entities.list.length;
     sys.summon('blackhole', CENTER);
-    for (let f = 0; f < 5; f++) sys.update(1 / 60, f / 60);
+    for (let f = 0; f < 5; f++) {
+      rebuildGrid(ctx, entities); // refresh the hash each frame so consumed bodies leave it
+      sys.update(1 / 60, f / 60);
+    }
     expect(entities.list.length).toBeLessThan(before);
     expect(sys.consumed).toBeGreaterThan(0);
   });
@@ -197,6 +212,7 @@ describe('SingularitySystem', () => {
     e!.position.set(CENTER.x + 2, CENTER.y, CENTER.z); // 2 units from centre — inside the horizon
     const dBefore = e!.position.distanceTo(CENTER);
     sys.summon('whitehole', CENTER);
+    rebuildGrid(ctx, entities);
     sys.update(1 / 60, 0);
     const dAfter = e!.position.distanceTo(CENTER);
     expect(dAfter).toBeGreaterThan(dBefore + 10); // thrown out well past where it was
@@ -212,6 +228,7 @@ describe('SingularitySystem', () => {
     e!.position.set(CENTER.x + 3, CENTER.y, CENTER.z);
     const before = e!.material.color.clone();
     sys.summon('strangestar', CENTER);
+    rebuildGrid(ctx, entities);
     sys.update(1 / 60, 0);
     // The strange-matter stain is a fixed quark-green; the colour must have changed.
     expect(e!.material.color.equals(before)).toBe(false);
@@ -271,6 +288,7 @@ describe('SingularitySystem', () => {
       for (let f = 0; f < 120; f++) {
         state.frame++;
         state.elapsed += 1 / 60;
+        rebuildGrid(ctx, entities); // the O(k) hole + behaviors both read the shared hash
         sys.update(1 / 60, state.elapsed);
         entities.update(1 / 60, state.elapsed);
       }
@@ -283,4 +301,106 @@ describe('SingularitySystem', () => {
     };
     expect(run()).toEqual(run());
   });
+
+  test('O(k) reach query visits EVERY in-REACH entity exactly once (and only those) at N ≥ 25k, with exact un-strided r⁻²', () => {
+    const N = 25000;
+    const { REACH, REACH2, HORIZON, WARP_R_MULT, G, ACCEL_MAX } = SINGULARITY_FIELD;
+    const ctx = makeCtx(2026, N + 64);
+    const entities = new EntityManager(ctx);
+    entities.reset(N);
+    expect(entities.list.length).toBe(N);
+    const sys = new SingularitySystem(ctx, entities);
+    const list = entities.list;
+
+    // Two PROBES at clean radii — outside the warp shell (r > WARP_R_MULT·HORIZON ⇒ no time
+    // dilation) and inside REACH, with G/r² < ACCEL_MAX (uncapped). Each must receive a PURE r⁻²
+    // kick of magnitude exactly G·dt/r²; a second (double) visit would double it, so this falsifies
+    // any accidental re-application — and proves the ultra-tier half-rate stride is truly gone.
+    const rA = WARP_R_MULT * HORIZON + 20; // 110: clean, uncapped, inside REACH
+    const rB = 200; // a second clean radius
+    expect(G / (rA * rA)).toBeLessThan(ACCEL_MAX); // not clamped → tests the TRUE r⁻², not the cap
+    expect(G / (rB * rB)).toBeLessThan(ACCEL_MAX);
+    expect(rB).toBeLessThan(REACH);
+    const probeA = list[0]!;
+    const probeB = list[1]!;
+    probeA.position.set(CENTER.x + rA, CENTER.y, CENTER.z);
+    probeB.position.set(CENTER.x + rB, CENTER.y, CENTER.z);
+
+    // Populate the shared hash from the live population (the world.ts per-frame step the O(k) pass
+    // relies on), then prove the HASH-LEVEL property directly: the REACH query buffer (a superset of
+    // the 3D sphere) holds each entity at most once, and every truly in-REACH body is present.
+    rebuildGrid(ctx, entities);
+    const buf = [...ctx.grid.query(CENTER.x, CENTER.z, REACH)]; // copy: query returns a shared buffer
+    expect(new Set(buf).size).toBe(buf.length); // SpatialHash invariant: one cell per entity ⇒ no dup
+    const bufSet = new Set(buf);
+
+    // Snapshot every velocity + position and classify each body by TRUE 3D distance to the centre.
+    const bvx = new Float64Array(N);
+    const bvy = new Float64Array(N);
+    const bvz = new Float64Array(N);
+    const bpx = new Float64Array(N);
+    const bpy = new Float64Array(N);
+    const bpz = new Float64Array(N);
+    const inReachMask = new Uint8Array(N);
+    let inReach = 0;
+    let outReach = 0;
+    let coverageOk = true;
+    for (let i = 0; i < N; i++) {
+      const e = list[i]!;
+      const dx = CENTER.x - e.position.x;
+      const dy = CENTER.y - e.position.y;
+      const dz = CENTER.z - e.position.z;
+      const isIn = dx * dx + dy * dy + dz * dz <= REACH2;
+      inReachMask[i] = isIn ? 1 : 0;
+      if (isIn) {
+        inReach++;
+        if (!bufSet.has(e)) coverageOk = false; // an in-REACH body the query MISSED → fail
+      } else {
+        outReach++;
+      }
+      const v = e.userData.vel;
+      bvx[i] = v.x;
+      bvy[i] = v.y;
+      bvz[i] = v.z;
+      bpx[i] = e.position.x;
+      bpy[i] = e.position.y;
+      bpz[i] = e.position.z;
+    }
+    expect(coverageOk).toBe(true); // every in-REACH entity is in the query buffer (complete coverage)
+    expect(inReach).toBeGreaterThan(5000); // the heavy regime is genuinely exercised at N ≥ 25k
+    expect(outReach).toBeGreaterThan(0); // …and the query EXCLUDES distant bodies — the O(k) property
+
+    const aBefore = probeA.userData.vel.clone();
+    const bBefore = probeB.userData.vel.clone();
+
+    // White hole: non-destructive (no consumption), so list indices are stable and the force-level
+    // coverage is a clean 1:1 with the in-REACH set. One exact-physics frame.
+    sys.summon('whitehole', CENTER);
+    sys.update(1 / 60, 0);
+
+    // FORCE-LEVEL coverage: a body's state changed ⟺ it was in REACH. Out-of-REACH bodies are
+    // byte-untouched (the query never visited them); in-REACH bodies all moved (the force is non-zero
+    // everywhere r² ≥ 100 > 1e-6, which holds since the centre's y-offset keeps every body ≥ 10 away).
+    let forceOk = true;
+    for (let i = 0; i < N; i++) {
+      const e = list[i]!;
+      const v = e.userData.vel;
+      const changed =
+        v.x !== bvx[i] ||
+        v.y !== bvy[i] ||
+        v.z !== bvz[i] ||
+        e.position.x !== bpx[i] ||
+        e.position.y !== bpy[i] ||
+        e.position.z !== bpz[i];
+      if (changed !== (inReachMask[i] === 1)) forceOk = false;
+    }
+    expect(forceOk).toBe(true);
+
+    // EXACT, un-strided r⁻²: |Δv| = G·dt/r² for each clean probe. Double-application ⇒ 2× ⇒ fails.
+    const dt = 1 / 60;
+    const dA = probeA.userData.vel.clone().sub(aBefore).length();
+    const dB = probeB.userData.vel.clone().sub(bBefore).length();
+    expect(dA).toBeCloseTo((G * dt) / (rA * rA), 6);
+    expect(dB).toBeCloseTo((G * dt) / (rB * rB), 6);
+  }, 60000);
 });

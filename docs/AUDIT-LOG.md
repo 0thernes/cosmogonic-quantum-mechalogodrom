@@ -11,6 +11,43 @@ dated / historical / "superseded snapshot" copies (per the binding "Living docs,
 
 ---
 
+## 2026-06-27 — Singularities scale to the mega ceiling: O(n) force sweep → O(k) reach query (exact physics, no stride)
+
+The owner reported singularities "die around 25,000 entities" and asked them to stay physically accurate
+and falsifiable as the world scales toward the 50,000 mega ceiling.
+
+- **Root cause:** `SingularitySystem.applyHole`/`applyStrange` (`src/sim/singularities.ts`) swept the
+  **whole** `entities.list` every frame (`O(n)`) — a per-body `sqrt` + r⁻² + horizon + redshift +
+  time-dilation pass on top of the rest of the sim. Above 5,000 entities it fell back to a **half-rate
+  stride + 2× accel** approximation that degraded the r⁻² + dilation accuracy AND still collapsed the
+  frame as `n` grew, so the hole's dt-based forces/animation went erratic and it visually "died".
+
+* **Fix:** the force passes now query the shared per-frame spatial hash (`ctx.grid`, already rebuilt in
+  `world.ts` before `singularities.update`) at `REACH` (black/grey/white holes) / `CONV_R` (strange
+  star). The grid cells overlapping the reach **square** are a superset of the 3D reach **sphere**
+  (`|xz| ≤ ‖Δ‖ ≤ REACH`), filtered exactly by 3D distance². Cost is now `O(cells + k)` where `k` =
+  bodies within reach — and because the V38 areal-density scaling holds density constant, **`k`
+  saturates** as `n` climbs, so the cost is decoupled from population. The `>5,000` half-rate stride +
+  2× gain is **removed**: the EXACT per-frame physics runs at every tier (mega included).
+* **Determinism preserved:** the passes draw **no rng**, so the seeded stream is byte-identical (the
+  global determinism golden never summons a singularity and is untouched). Horizon consumption is
+  **deferred** — collected during the force pass (capped at `MAX_CONSUME`), disposed afterwards via
+  `list.indexOf` + `disposeAt`, which also guards against a stale-grid / same-frame cross-system
+  (shoggoth/titan) disposal so a body is never double-consumed. Query iteration order is the hash's
+  deterministic cell-raster × insert order. Entropy stays a global O(n) strided heat-death (no reach,
+  not the bug). New export `SINGULARITY_FIELD` surfaces the falsifiable field constants for tests/audits.
+* **Receipt (`bun bench/scale.ts`, white hole, median ms/frame for `singularities.update`):** from
+  **25k→50k the population doubles while `k` and the cost stay FLAT at ≈ 6.0 ms** (k≈20k both) — the
+  old O(n) sweep would have ≈ doubled. Recorded in
+  [BENCHMARKS-2026-06-26.md](./BENCHMARKS-2026-06-26.md) ("Singularity force pass — O(k) reach query").
+* **Tests:** `tests/singularities.test.ts` updated to populate `ctx.grid` per frame (mirrors the real
+  loop) + a new at-scale guard: at **N = 25,000** it asserts the REACH query buffer has **no
+  duplicates**, **every** in-REACH body is covered, **only** in-REACH bodies are forced, and two clean
+  probes receive the exact `|Δv| = G·dt/r²` (a double-visit would double it — falsifies re-application
+  and proves the stride is gone). Full `bun run check` gate green (1583 tests, 0 fail).
+
+---
+
 ## 2026-06-27 — Creature-body visuals made falsifiable: metabolic-luminance readout (energy + senescence → glow)
 
 Per the PHILOSOPHY laws ("Real math or no math" + "Feedback over garnish") — visuals must be honest
