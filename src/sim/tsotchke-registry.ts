@@ -279,7 +279,9 @@ export function getTsotchkeRepoByIndex(i: number): TsotchkeRepoEntry {
   return ENTRIES[idx]!;
 }
 
-/** Full Tsotchke wired fraction for biologics (1.0 target). */
+/** Mean wiring WEIGHT of the already-wired substrates (averages only entries with wiring>0, so it
+ *  trends to ~1.0). Kept for the catalysis-vitality term; the HONEST public coverage is
+ *  {@link tsotchkeWiredSubstrateFraction} below. */
 export function tsotchkeWiringCoverage(): number {
   let wired = 0;
   let total = 0;
@@ -288,6 +290,24 @@ export function tsotchkeWiringCoverage(): number {
       wired += e.wiring;
       total += 1;
     }
+  }
+  return total === 0 ? 0 : wired / total;
+}
+
+/**
+ * HONEST wired fraction (de-inflated, per the 2026-06-21 honesty audit): scientific-substrate repos with
+ * real downstream wiring (>0) over ALL scientific substrates — EXCLUDES org-meta (`.github`) and COUNTS
+ * fenced repos as present-but-unwired in the denominator. ~0.86 (18 of 21), NOT the ~1.0 that
+ * {@link tsotchkeWiringCoverage} reports by averaging only the wired entries. Surfaced as the petri view's
+ * `wiringCoverage` so the public number can never read "all wired 1.0".
+ */
+export function tsotchkeWiredSubstrateFraction(): number {
+  let wired = 0;
+  let total = 0;
+  for (const e of ENTRIES) {
+    if (e.substrate === 'meta') continue; // org-meta (.github) is not a scientific substrate
+    total += 1;
+    if (e.wiring > 0) wired += 1;
   }
   return total === 0 ? 0 : wired / total;
 }

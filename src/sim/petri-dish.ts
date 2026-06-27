@@ -16,6 +16,7 @@ import {
   substrateVectorForArchon,
   tsotchkeSimWiringFraction,
   tsotchkeWiringCoverage,
+  tsotchkeWiredSubstrateFraction,
   fullTsotchkeBiologicsCatalysis,
 } from './tsotchke-registry';
 import { triggerBrutalRelease, applyBrutalRelease } from './brutal-god-releases';
@@ -383,7 +384,7 @@ export function petriDishView(state: PetriDishState): PetriDishView {
     tsotchkeBiologicFlux: state.tsotchkeBiologicFlux || 0,
     aliveness: state.aliveness,
     ignitionSlot: state.ignitionSlot,
-    wiringCoverage: tsotchkeWiringCoverage(),
+    wiringCoverage: tsotchkeWiredSubstrateFraction(), // honest de-inflated fraction (not the ~1.0 mean-weight)
     simWiringFraction: tsotchkeSimWiringFraction(),
     corpusBeat: corpusBeatForArchon(0, state.beats),
     complexity: state.complexity,
