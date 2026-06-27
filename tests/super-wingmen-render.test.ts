@@ -7,12 +7,18 @@
  */
 import { describe, expect, test } from 'bun:test';
 import * as THREE from 'three';
-import { WingmanRenderer } from '../src/sim/super-wingmen-render';
+import { WingmanRenderer, droneSpeed } from '../src/sim/super-wingmen-render';
 
 function meshOf(scene: THREE.Scene): THREE.InstancedMesh {
   const m = scene.children.find((o) => o instanceof THREE.InstancedMesh);
   expect(m).toBeInstanceOf(THREE.InstancedMesh);
   return m as THREE.InstancedMesh;
+}
+
+function instanceScale(mesh: THREE.InstancedMesh, i: number): number {
+  const m = new THREE.Matrix4();
+  mesh.getMatrixAt(i, m);
+  return new THREE.Vector3().setFromMatrixScale(m).x;
 }
 
 function instancePosition(mesh: THREE.InstancedMesh, i: number): THREE.Vector3 {
@@ -77,6 +83,30 @@ describe('WingmanRenderer — sync', () => {
       expect(Number.isFinite(p.x) && Number.isFinite(p.y) && Number.isFinite(p.z)).toBe(true);
       expect(p.toArray()).toEqual([0, 0, 0]);
     }
+  });
+});
+
+describe('droneSpeed (pure)', () => {
+  test('frame-to-frame displacement magnitude; 0 with no previous frame; short buffer falls back to 0', () => {
+    expect(droneSpeed(null, new Float32Array([1, 2, 3]), 0)).toBe(0); // no previous frame
+    const prev = new Float32Array([0, 0, 0]);
+    const cur = new Float32Array([3, 4, 0]);
+    expect(droneSpeed(prev, cur, 0)).toBeCloseTo(5, 6); // 3-4-5 right triangle
+    expect(droneSpeed(new Float32Array([]), cur, 0)).toBeCloseTo(5, 6); // missing prev components → 0
+  });
+});
+
+describe('WingmanRenderer — drone size reads REAL speed (de-decorated)', () => {
+  test('a maneuvering drone swells; an idle one stays at the base size', () => {
+    const scene = new THREE.Scene();
+    const r = new WingmanRenderer(scene, 2);
+    const mesh = meshOf(scene);
+    r.sync(new Float32Array([0, 0, 0, 10, 0, 0]), 0, 0.5); // frame 1 establishes the previous positions
+    r.sync(new Float32Array([2, 0, 0, 10, 0, 0]), 1, 0.5); // drone 0 moved 2 units; drone 1 held still
+    const moving = instanceScale(mesh, 0);
+    const still = instanceScale(mesh, 1);
+    expect(moving).toBeGreaterThan(still);
+    expect(still).toBeCloseTo(0.45, 6); // idle drone sits at the base size, no fake pulse
   });
 });
 

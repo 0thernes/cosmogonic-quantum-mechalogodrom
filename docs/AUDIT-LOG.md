@@ -11,6 +11,24 @@ dated / historical / "superseded snapshot" copies (per the binding "Living docs,
 
 ---
 
+## 2026-06-27 — Wingman drones de-decorated: size now reads REAL per-drone speed (3rd body class)
+
+Carried the "real, not decorative" mandate to a THIRD body class — the 100-drone escort swarm
+(`src/sim/super-wingmen-render.ts`). The drone size pulse was a pure clock decoration
+(`0.55 + 0.25·sin(t·4 + i)`); it now reads each drone's REAL per-frame speed, so a hard-maneuvering
+escort drone visibly swells while an idle one stays small (its glow already read the escort's real
+assist/dominance).
+
+- **New exported pure `droneSpeed(prev, cur, j)`** — frame-to-frame displacement magnitude from the
+  flat XYZ buffers; 0 on the first frame, `?? 0` short-buffer fallback. The renderer keeps a
+  `prevPositions` buffer (resized on swarm-size change) and maps speed → a `[0.45, 1.0]` size swell.
+- **Falsifiable (`tests/super-wingmen-render.test.ts`, +2 tests):** `droneSpeed` pure (3-4-5
+  displacement, no-prev → 0, short-buffer → 0) + an integration test that a moved drone swells while a
+  still one stays at the 0.45 base. Existing position/glow-clamp/fallback tests untouched + green.
+- **Determinism preserved:** pure `f(positions)`, no rng, no clock-driven size.
+- **3 body classes now carry real-bound visuals** (masses · titans · wingmen); 21 named GPU effects
+  plus this de-decoration.
+
 ## 2026-06-27 — V-TITAN-VITALS: the spectacle spreads to the titans (energy + entropy body lanes)
 
 Diversified the real-bound effect campaign to a SECOND body class — the 10 god-scale titans — instead
