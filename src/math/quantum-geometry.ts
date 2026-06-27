@@ -26,7 +26,8 @@
  * the Super Creature evaluates it over P=2 behavioural drives at UI cadence, so the cost is a handful of
  * 64-amplitude circuit rebuilds — well within budget.
  *
- * WIRED FROM FULL TSOTCHKE CORPUS (ralph-loop 2026-06-19 + this 10x surge continue): Eshkol AUTODIFF dual for param derivs + GWT, Moonlab qgt.c Bloch + Chern, QGTL Fubini/Berry, libirrep sym for n-band. See TSOTCHKE-CORPUS-RALPH-WIRING-AUDIT + Z:\[Vibe Coded (AI)]\(Tsotchke)\mirrors\quantum_geometric_tensor + Eshkol. Used in super-mind/quantum for 5 Archons. 10x: mpo/gwt notes in callers.
+ * Ported from the Tsotchke corpus: Eshkol AUTODIFF dual for parameter derivatives, Moonlab qgt.c Bloch +
+ * Chern number, QGTL Fubini–Study / Berry curvature, libirrep symmetry for n-band. See THIRD-PARTY-NOTICES.md.
  */
 
 /** The geometry of a parameterised quantum state at a point θ. */
@@ -163,26 +164,4 @@ export function quantumGeometricTensor(
     fisher: 4 * volume,
     berryMagnitude: berryCount > 0 ? berrySum / berryCount : 0,
   };
-}
-
-/** Moonlab tensor network inspired simple contraction (from full Tsotchke corpus tensor_network/contraction.c MPO style).
- * For 2 tensors rank 2, O(chi^3) like, alloc free for small fixed.
- * Wired for Archon quantum scaling.
- */
-export function tensorContract2(
-  a: Float64Array,
-  b: Float64Array,
-  dim: number,
-  out: Float64Array,
-): void {
-  out.fill(0);
-  for (let i = 0; i < dim; i++) {
-    for (let k = 0; k < dim; k++) {
-      let s = 0;
-      for (let j = 0; j < dim; j++) {
-        s += a[i * dim + j]! * b[j * dim + k]!;
-      }
-      out[i * dim + k] = s;
-    }
-  }
 }

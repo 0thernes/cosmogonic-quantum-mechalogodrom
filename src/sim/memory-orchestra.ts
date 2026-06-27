@@ -29,7 +29,7 @@ export class MemoryOrchestra {
   private gLen = 0;
   private regime = 0.5;
   private lastConsol = 0;
-  // TSOTCHKE Eshkol corpus: factor graph for active inference (belief prop like corpus inference.cpp). 12 symbols.
+  // 12 grounded-symbol confidence EMAs — a lightweight belief-state (NOT true sum-product belief propagation).
   private readonly fgBeliefs = new Float32Array(12);
   private fgEnergy = 0.5;
 
@@ -54,17 +54,14 @@ export class MemoryOrchestra {
 
   constructor(_rng?: Rng) {}
 
-  /** Surprise/entropy gate + type contract write. Fixed ring, no realloc.
-   * Eshkol corpus arena O(1) bump + ownership (from DESIGN.md + lib): reinforced prealloc ring as "arena scope".
-   * Ralph 10x+ : arena discipline for narrative consolidation.
-   */
+  /** Surprise/entropy gate + type-contract write. Fixed ring, no realloc (arena-style O(1) bump). */
   write(kind: MemKind, t: number, conf: number, src: number, data: number[], cause?: number): void {
     if (conf < 0.15 && kind !== 'failure') return;
     // reuse preallocated data slot (no slice/new in hot path)
     const dst = this.datas[this.head]!;
     for (let j = 0; j < 8; j++) dst[j] = data[j] ?? 0;
     const rec: MemRecord = { kind, t, conf, src, data: dst, cause };
-    // TSOTCHKE Eshkol factor graph: update beliefs from data (sum-product style, corpus inference).
+    // Update the per-symbol confidence EMAs from this record's data (lightweight belief-state, not sum-product).
     for (let s = 0; s < 12; s++) {
       const d = dst[s % 8] ?? 0;
       this.fgBeliefs[s] = (this.fgBeliefs[s] ?? 0) * 0.8 + (d > 0.5 ? conf * 0.2 : 0);

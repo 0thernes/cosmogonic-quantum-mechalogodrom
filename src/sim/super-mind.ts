@@ -131,7 +131,7 @@ import { QuantumDeliberation, type DeliberationSnapshot } from './quantum-delibe
 import { ResonanceField, type ResonanceSnapshot } from './resonance';
 import { FastWeights, type PlasticSnapshot } from './plastic-weights';
 import type { SuperPercept, SuperPlan } from './super-creature';
-import { SUPER_PLANS } from './super-creature';
+import { SUPER_PLANS, SUPER_MAX_OFFSPRING } from './super-creature';
 // GOAL5 leaves (per MODULE-CONTRACTS contract: super-mind owns wiring of AST-1/HOT-1/HOT-4/memory-orchestra/narrative)
 import { AttentionSchema } from './attention-schema';
 import {
@@ -766,7 +766,7 @@ export class SuperMind {
     s[12] = this.dominance;
     s[13] = this.memory.mean();
     s[14] = this.cons.surprise;
-    s[15] = this.offspring / 3;
+    s[15] = this.offspring / SUPER_MAX_OFFSPRING;
     s[16] = Math.sin(wp.phase * Math.PI * 2);
     s[17] = Math.cos(wp.phase * Math.PI * 2);
     // #10/#58 — broadcast re-entry into arousal (the documented read-half: bound assembly → shared feel).
@@ -1637,7 +1637,7 @@ export class SuperMind {
       dominance: domProject,
       spawn: spawnDesire,
       curiosity,
-      wantsSpawn: spawnDesire > 0.8 && this.offspring < 3 && s[0] > 0.5,
+      wantsSpawn: spawnDesire > 0.8 && this.offspring < SUPER_MAX_OFFSPRING && s[0] > 0.5,
       plan: best,
       consciousness: this.cons,
       quantum: this.quantumOut.slice(),
@@ -1697,8 +1697,6 @@ export class SuperMind {
       reservoir: this.reservoir.snapshot(),
       learnedRecurrence: this.learnedRecurrence.snapshot(),
       aif: this.aif.snapshot(),
-      // Heartbeat wiring: Moonlab tensor contract from corpus (demo call, det, no alloc hot)
-      // tensorContract2(q, q, 2, scratch); // for Archon quantum
       metacog: this.metacog.snapshot(),
       criticality: this.criticality.snapshot(),
       successor: this.successor.snapshot(),

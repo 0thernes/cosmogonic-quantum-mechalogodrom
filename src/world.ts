@@ -1238,7 +1238,9 @@ export class World {
   private driveSuper(bass: number, level: number, t: number, n: number): void {
     try {
       const s = this.state;
-      const pantheonSnap = this.pantheon.beat(s.frame);
+      // The pantheon is already beaten once per frame in update(); read its current snapshot here
+      // (driveSuper runs on a frame % 4 cadence) so the stigmergic field is not double-stepped.
+      const pantheonSnap = this.pantheon.snapshot();
       const collective = new Float32Array(FIELD_DIM);
       this.pantheon.collectiveBias(0, collective);
       const econ = this.economy.summary();
@@ -1365,7 +1367,6 @@ export class World {
               (collective[4] ?? 0) * 0.06,
           ),
         };
-        void pantheonSnap;
         const mindOut = this.superMinds[i]!.think(p);
         this.noosphere.updateArchon(
           i,
