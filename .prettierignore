@@ -26,3 +26,8 @@ mcps
 mcps
 mcps/**
 **/mcps/**
+# hacklm-memory tool state (per-session decisions/instructions/preferences/quirks/security notes).
+# Tool-owned, not product source — same category as .claude/mcps. The tool emits *undated* working
+# copies (.memory/decisions.md …) alongside the tracked dated snapshots; without this they trip
+# `prettier --check .` and red the LOCAL gate (CI runs on a clean checkout and is unaffected).
+.memory
