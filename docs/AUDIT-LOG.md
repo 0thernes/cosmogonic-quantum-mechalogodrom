@@ -11,6 +11,36 @@ dated / historical / "superseded snapshot" copies (per the binding "Living docs,
 
 ---
 
+## 2026-06-27 — Creature-body visuals made falsifiable: metabolic-luminance readout (energy + senescence → glow)
+
+Per the PHILOSOPHY laws ("Real math or no math" + "Feedback over garnish") — visuals must be honest
+readouts of real state, never decoration. The masses' resting self-glow was a constant
+(`morphBase.emI × emissiveBoost`); now it is `× metabolicLuminance(energy, age, life)`, so an idle
+organism's body reads out its REAL condition.
+
+- **New coupling (`src/sim/entities.ts`):** exported pure `metabolicLuminance(energy, age, life)` →
+  `[0.27, 1.0]`. **Wealth** (`energy` 0..100, the market-behavior payoff the trade loop
+  redistributes) drives a `0.45..1.0` burn — a destitute organism still smoulders, never goes black;
+  a wealthy one burns at full base. **Senescence** (`age/life`) drives a quadratic late-life fade
+  bottoming at `0.6×`. Monotonic increasing in energy, decreasing in age; finite and bounded (energy
+  clamped, `life<=0` guarded). Wired into the resting-emissive target in `update()` (the `act<=1`
+  branch); a neural spike or a graph-mind connectome-hub boost still overrides it and decays back.
+- **Why this is legitimate, not garnish:** it makes EXISTING feedback loops visible — the market
+  economy (energy) and mortality (age/life) — complementing the market behavior's pre-existing
+  `energy→scale` readout. Wealth and age are now legible on every organism, every frame, not just
+  market entities on their cadence.
+- **Determinism preserved:** pure `f(state)`, **no rng** — the seeded trajectory (positions, rng
+  stream) is byte-identical; only the rendered glow scalar changes. No determinism/golden test
+  snapshots entity emissive, and graph-mind's emissive tests use isolated stubs (unaffected).
+- **Falsifiable (`tests/entity-metabolic-luminance.test.ts`, 6 tests / 691 assertions):** pure-function
+  anchors (rich+young = 1.0, destitute = 0.45, end-of-life floor = 0.27), monotonicity in both axes,
+  bounds + guards over a grid; AND a live `EntityManager.update` integration proving a thriving body
+  ends visibly brighter than a starving, aged one (converging on the analytic targets) — isolated via
+  `chaos=0` (zeroes the market rng nudge + neural `act`) and an empty grid (no trades) — plus a
+  bit-for-bit determinism check across two identically-seeded runs.
+- **Contract synced:** the V7.3 emissive-coupling line in `MODULE-CONTRACTS-2026-06-26.md` now states
+  the full target `morphBase.emI × emissiveBoost × metabolicLuminance(...)`.
+
 ## 2026-06-27 — Adversarial multi-dimension audit: 9 verified defects fixed (GPU leaks · misrouted dispatch · dead telemetry · doc drift)
 
 Ran an 8-finder adversarial workflow (correctness · efficiency · deadcode · security · determinism ·

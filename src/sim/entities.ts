@@ -11,7 +11,7 @@
  * never disposed; the MeshStandardMaterial is per-entity and always disposed.
  */
 import * as THREE from 'three';
-import { TAU, lerp } from '../math/scalar';
+import { TAU, lerp, clamp01 } from '../math/scalar';
 import {
   ARENA,
   ARENA_Y,
@@ -62,6 +62,29 @@ export function applyRenderModeTo(
   mat.depthWrite = fx.depthWrite ?? true;
   mat.emissiveIntensity = base.emI * fx.emissiveBoost;
   mat.needsUpdate = true;
+}
+
+/**
+ * Metabolic luminance — the multiplier in `[0.27, 1.0]` applied to an organism's RESTING
+ * self-glow so an idle body is a *falsifiable readout of its real vital state*, never a constant:
+ * - **wealth** (`energy`, 0..100 — the market-behavior payoff that the trade loop in `behaviors.ts`
+ *   redistributes) → a `0.45..1.0` "burn": a destitute organism still smoulders (never goes fully
+ *   dark), a wealthy one burns at the full morphotype base;
+ * - **senescence** (`age / life`) → a late-life fade, quadratic so the young/prime stay bright and
+ *   only the genuinely old visibly dim, bottoming at `0.6×` of the wealth burn at end of life.
+ *
+ * Monotonic increasing in `energy`, monotonic decreasing in `age`; `energy` is clamped to `[0,100]`
+ * and `life <= 0` is guarded, so the result is always finite and within `[0.27, 1.0]`. Pure,
+ * allocation-free, no rng (so it never perturbs the seeded trajectory). O(1). The market behavior
+ * already maps the same `energy` to body SCALE (`behaviors.ts`); this maps it to GLOW, so wealth and
+ * age are legible on every organism, on every frame, not just market entities on their cadence.
+ * See tests/entity-metabolic-luminance.test.ts.
+ */
+export function metabolicLuminance(energy: number, age: number, life: number): number {
+  const burn = 0.45 + 0.55 * clamp01(energy / 100); // wealth → [0.45, 1.0]
+  const senescence = life > 0 ? clamp01(age / life) : 0; // age → [0, 1]
+  const vitality = 1 - 0.4 * senescence * senescence; // late-life fade → [0.6, 1.0]
+  return burn * vitality; // [0.27, 1.0]
 }
 
 /** Scratch vector for velocity integration / containment impulses (no per-frame allocation). */
@@ -453,9 +476,14 @@ export class EntityManager {
       } else {
         const m = ctx.morphs[u.mi];
         if (m)
+          // Resting self-glow = morphotype base × the organism's REAL metabolic vitality (wealth
+          // sustains the burn, senescence fades it), so an idle body reads out its condition rather
+          // than holding a decorative constant. A neural spike (the `act > 1` branch above) or a
+          // connectome-hub boost (graph-mind) still overrides this floor and then decays back toward
+          // it. Pure f(state), no rng → the seeded trajectory is unchanged.
           e.material.emissiveIntensity = lerp(
             e.material.emissiveIntensity,
-            m.emI * emiBoost,
+            m.emI * emiBoost * metabolicLuminance(u.energy, u.age, u.life),
             dt * 2,
           );
       }

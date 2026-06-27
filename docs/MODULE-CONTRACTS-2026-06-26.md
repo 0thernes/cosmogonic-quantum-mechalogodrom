@@ -1425,10 +1425,17 @@ types.ts.
   applies the mode's pool-level flags (wireframe/metalness/roughness) on change
   and on pool build; per-instance colour/emissive/alpha already flow from each
   entity material, which `setRenderMode` updates. The mode→flags mapping lives as
-  pure data (`RENDER_MODE_FX`) in `sim/constants.ts`; `update()`'s per-frame
-  emissive target multiplies by the mode's `emissiveBoost` so NEON holds (the only
-  `update()` coupling; `emissiveBoost === 1` for every non-NEON mode keeps the
-  ≤5,000-tier visuals byte-identical).
+  pure data (`RENDER_MODE_FX`) in `sim/constants.ts`; `update()`'s per-frame resting
+  emissive target is `morphBase.emI × emissiveBoost × metabolicLuminance(energy, age,
+life)` — the mode's `emissiveBoost` so NEON holds, AND a metabolic-vitality readout
+  (`metabolicLuminance`, exported from `entities.ts`) so an idle body is a falsifiable
+  reading of its wealth (`energy`) and senescence (`age/life`), never a decorative
+  constant — wealth and age made legible on every organism, complementing the market
+  behavior's existing `energy→scale`. A neural spike (`act > 1`) or a connectome-hub
+  boost (graph-mind) still overrides this floor and decays back toward it. Both factors
+  are pure `f(state)` with no rng, so the **seeded trajectory stays byte-identical**
+  (only the rendered glow scalar changes); `emissiveBoost === 1` for every non-NEON
+  mode. See tests/entity-metabolic-luminance.test.ts.
 
 ## V7.4 — Cosmological chaos (writer: cosmo — NEW src/sim/singularities.ts; integrator wires)
 
