@@ -471,6 +471,19 @@ export class SuperBodySystem {
     this.move.set(snap.act[0] ?? 0, (snap.act[1] ?? 0) * 0.5, snap.act[2] ?? 0);
   }
 
+  /**
+   * V1.3 AE-1/HOT-3: let the apex SuperMind's explicit move vector steer the body.
+   * Blended with the SuperCreature's act so the composite mind has real downstream effect on the
+   * avatar's flight target. Called from World.driveSuper after setMind.
+   */
+  setSuperMindMove(x: number, y: number, z: number, gain = 0.7): void {
+    this.move.set(
+      (1 - gain) * this.move.x + gain * x,
+      (1 - gain) * this.move.y + gain * y * 0.5,
+      (1 - gain) * this.move.z + gain * z,
+    );
+  }
+
   /** Animate every frame from the sim clock + the stored mind targets. Allocation-free. O(1).
    * EXTREME + CHAOTIC: computes live feature masks from uVariant + stored quantum[] + reflex/qualia +
    * surprise/morph/arousal; drives prebuilt children scales (mask active count) + per-appendage anims.

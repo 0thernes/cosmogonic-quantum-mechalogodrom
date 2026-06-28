@@ -85,4 +85,14 @@ describe('SuperBodySystem flight + control (V41)', () => {
     expect(body.evolutionScale()).toBeGreaterThan(base); // it grew
     expect(body.evolutionScale()).toBeCloseTo(3.5, 5);
   });
+
+  test('V1.3 AE-1/HOT-3: SuperMind move vector steers the autopilot flight target', () => {
+    const body = new SuperBodySystem(new THREE.Scene());
+    const from = body.worldPosition(new THREE.Vector3());
+    body.setSuperMindMove(1, 0, 0, 1.0); // full +X steer from the apex mind
+    for (let i = 0; i < 200; i++) body.update(i / 60, 1 / 60);
+    const to = body.worldPosition(new THREE.Vector3());
+    expect(to.x).toBeGreaterThan(from.x + 5); // net drift in +X from the mind's will
+    expect(Number.isFinite(to.x + to.y + to.z)).toBe(true);
+  });
 });

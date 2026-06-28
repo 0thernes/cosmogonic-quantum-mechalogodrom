@@ -11,6 +11,7 @@
  */
 import * as THREE from 'three';
 import type { Engine } from './core/engine';
+import { Level } from './core/frame-governor';
 import type {
   PersistedState,
   QualityProfile,
@@ -475,7 +476,7 @@ export class World {
       entropy: 0,
       mutations: 0,
       timeScale: 1,
-      renderMode: 'solid',
+      renderMode: cyc(RENDER_MODES, this.persisted.renderIdx ?? 0),
       sim: this.persisted.sim === 2 ? 2 : 1,
       weatherIdx: this.persisted.weatherIdx % WEATHERS.length,
       temperature: 20,
@@ -937,14 +938,34 @@ export class World {
 
   /**
    * First-gesture unlock: initializes the AudioContext and restores the
-   * persisted SFX preference exactly once. Safe to call repeatedly.
+   * persisted SFX and music preferences exactly once. Safe to call repeatedly.
    */
   unlock(): void {
     this.audio.init();
     if (!this.sfxRestored) {
       this.sfxRestored = true;
       if (this.persisted.sfxOn && !this.audio.sfxOn) this.audio.toggleSfx();
+      if (this.persisted.musicOn && !this.audio.musicOn) this.audio.setMusicOn(true);
     }
+  }
+
+  /**
+   * V81: surface render-governor quality changes in the HUD. Called from the render loop in
+   * main.ts when the governor drops or restores DPR/FX/shadows, so the user sees *why* the
+   * world got sharper or blurrier.
+   */
+  showQualityNotice(level: Level): void {
+    const label =
+      level === Level.FULL
+        ? 'QUALITY RESTORED · FULL'
+        : level === Level.DPR_85
+          ? 'QUALITY · DPR 85%'
+          : level === Level.DPR_65
+            ? 'QUALITY · DPR 65%'
+            : level === Level.FX_OFF
+              ? 'QUALITY · FX OFF'
+              : 'QUALITY · SHADOWS OFF';
+    this.hud.showSector(label);
   }
 
   /** Advance one frame. rawDt is the unclamped clock delta in seconds. */
@@ -1514,6 +1535,8 @@ export class World {
           mindOut.consciousness.dreaming,
           mindOut.consciousness.hallucinating,
         );
+        // V1.3 AE-1/HOT-3: the apex SuperMind's chosen move vector now steers the avatar's flight target.
+        this.superBodies[i]!.setSuperMindMove(mindOut.move.x, mindOut.move.y, mindOut.move.z);
         if (i === 0) {
           this.superMindSnap = this.superMinds[0]!.snapshot(); // typed, removed any per contract
           primeMindOut = mindOut;
@@ -1862,6 +1885,8 @@ export class World {
     const i = RENDER_MODES.indexOf(this.state.renderMode);
     const mode = cyc(RENDER_MODES, i + 1);
     this.state.renderMode = mode;
+    this.persisted.renderIdx = RENDER_MODES.indexOf(mode);
+    this.save();
     this.entities.setRenderMode(mode);
     this.hud.showSector('VISION · ' + mode.toUpperCase());
   }
@@ -3047,6 +3072,8 @@ export class World {
       toggleMusic: () => {
         this.unlock();
         const on = this.audio.toggleMusic();
+        this.persisted.musicOn = on;
+        this.save();
         this.audit.record('music', { on });
         return on;
       },
@@ -3093,6 +3120,8 @@ export class World {
         const i = RENDER_MODES.indexOf(s.renderMode);
         const mode = cyc(RENDER_MODES, i + 1);
         s.renderMode = mode; // set first — spawn/remorph read it for new/rewritten materials
+        this.persisted.renderIdx = RENDER_MODES.indexOf(mode);
+        this.save();
         this.entities.setRenderMode(mode);
         this.hud.showSector('RENDER: ' + mode.toUpperCase());
         this.audit.record('render-mode', { mode });
