@@ -55,6 +55,10 @@ const CHIPS: { label: string; q: string }[] = [
   { label: 'Butlin indicators', q: 'butlin consciousness indicators sentience audit' },
   { label: 'GPU / instancing', q: 'instanced rendering quality tier mega ultra desktop' },
   { label: 'WildBeyond lab', q: 'quantum wildbeyond lab four boards thirty six tiles' },
+  { label: 'Shoggoths', q: 'shoggoth tendrils weather environment creatures' },
+  { label: 'Sim settings', q: 'sim settings view speed render quality hud' },
+  { label: 'Post-FX / bloom', q: 'post processing bloom lens cinematic fx' },
+  { label: 'Faculties', q: '100 faculties pantheon cognitive modules NHSI' },
 ];
 
 const STYLE = `

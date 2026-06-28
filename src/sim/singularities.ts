@@ -73,9 +73,9 @@ const PARTICLES_LO = 350;
 function particleBudget(tier: QualityTier): number {
   switch (tier) {
     case 'mega':
-      return 5200;
+      return 6200;
     case 'ultra':
-      return 3600;
+      return 4000;
     case 'desktop':
       return 2400;
     case 'laptop':

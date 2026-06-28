@@ -318,6 +318,7 @@ export class EntityManager {
     };
     if (!ctx.quality.instanced) ctx.scene.add(mesh);
     this.list.push(mesh);
+    ctx.creatureSfx?.(mi % morphCount);
     return mesh;
   }
 

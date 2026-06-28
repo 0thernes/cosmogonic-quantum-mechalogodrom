@@ -210,6 +210,8 @@ export interface SimContext {
   state: SimState;
   audit: AuditTrail;
   sfx: (type: SfxType) => void;
+  /** Rare per-morph creature voice (palette index); optional — wired by world.ts. */
+  creatureSfx?: (morphIndex: number) => void;
 }
 
 /** Returned by EntityManager.update each frame. */

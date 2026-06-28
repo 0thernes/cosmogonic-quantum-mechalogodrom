@@ -524,6 +524,10 @@ export class World {
       state: this.state,
       audit: this.audit,
       sfx: (type) => this.audio.play(type),
+      creatureSfx: (mi) => {
+        if (this.rng() > 0.035) return;
+        this.audio.playId(SFX_STRANGE + (mi % 14));
+      },
     };
     this.audit.setSimClock(() => this.state.frame);
 
@@ -2728,11 +2732,13 @@ export class World {
     this.save();
     this.applySimVisuals();
     if (s.sim === 2) {
-      s.chaos = Math.max(s.chaos, CHAOS_NIGHTMARE_FLOOR); // snap straight into the nightmare
-      s.mutations += 8;
+      s.chaos = Math.max(s.chaos + 1.5, CHAOS_NIGHTMARE_FLOOR);
+      s.mutations += 12;
       this.audio.playId(SFX_STRANGE);
+      this.audio.playId(SFX_STRANGE + 7);
       this.audio.play('warp');
       this.audio.play('burst');
+      this.audio.play('decay');
       this.hud.showSector('SIMULATION N(2) — BREAK FREE');
     } else {
       this.audio.play('crystallize');
