@@ -157,10 +157,10 @@ describe('SFX_TYPES catalog', () => {
 describe('SFX palette (CONTRACTS V7.1)', () => {
   const VALID_WAVES: ReadonlySet<string> = new Set(['sine', 'square', 'sawtooth', 'triangle']);
 
-  test('createSfxPalette returns exactly SFX_PALETTE_SIZE (100) specs', () => {
+  test('createSfxPalette returns exactly SFX_PALETTE_SIZE (110) specs', () => {
     const palette = createSfxPalette(mulberry32(7));
-    expect(SFX_PALETTE_SIZE).toBe(100);
-    expect(palette.length).toBe(100);
+    expect(SFX_PALETTE_SIZE).toBe(110);
+    expect(palette.length).toBe(110);
   });
 
   test('every spec is well-formed: finite, positive freq/dur, sane envelope', () => {

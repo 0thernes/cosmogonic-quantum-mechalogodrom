@@ -85,6 +85,48 @@ function particleBudget(tier: QualityTier): number {
   }
 }
 
+/** Tier-scaled sphere segments — ultra/mega get 48, desktop 32, laptop/phone 20. */
+function sphereSegs(tier: QualityTier): number {
+  switch (tier) {
+    case 'mega':
+      return 48;
+    case 'ultra':
+      return 48;
+    case 'desktop':
+      return 32;
+    default:
+      return 20;
+  }
+}
+
+/** Tier-scaled torus radial segments — ultra/mega get 128, desktop 64, laptop/phone 48. */
+function torusSegs(tier: QualityTier): number {
+  switch (tier) {
+    case 'mega':
+      return 128;
+    case 'ultra':
+      return 128;
+    case 'desktop':
+      return 64;
+    default:
+      return 48;
+  }
+}
+
+/** Tier-scaled icosahedron detail — ultra/mega get 3, desktop 1, laptop/phone 0. */
+function icoDetail(tier: QualityTier): number {
+  switch (tier) {
+    case 'mega':
+      return 3;
+    case 'ultra':
+      return 3;
+    case 'desktop':
+      return 1;
+    default:
+      return 0;
+  }
+}
+
 function particleSizeMul(tier: QualityTier): number {
   switch (tier) {
     case 'mega':
@@ -126,7 +168,7 @@ const CONSUME: Entity[] = [];
  * cross-system disposal) is simply never encountered, so it can never be double-disposed. */
 const CONSUME_SET = new Set<Entity>();
 /** Heat-death dark target for the ENTROPY colour fade — a deep ash, not washed grey. */
-const GREY = new THREE.Color(0.12, 0.10, 0.08);
+const GREY = new THREE.Color(0.12, 0.1, 0.08);
 /** V59 gravitational redshift/blueshift targets — infalling light reddens, ejected light blueshifts. */
 const REDSHIFT = new THREE.Color(1.0, 0.18, 0.05);
 const BLUESHIFT = new THREE.Color(0.35, 0.66, 1.0);
@@ -585,6 +627,10 @@ export class SingularitySystem {
 
   /** Build the visual rig for `kind`. Allocates (user event); freed by {@link disposeRig}. */
   private buildRig(kind: SingularityKind): Rig {
+    const tier = this.ctx.quality.tier;
+    const ss = sphereSegs(tier);
+    const ts = torusSegs(tier);
+    const id = icoDetail(tier);
     const group = new THREE.Group();
     let primary: THREE.Mesh;
     let primaryMat: THREE.MeshBasicMaterial | THREE.MeshStandardMaterial;
@@ -598,7 +644,7 @@ export class SingularitySystem {
       // The shadow: a pure-black sphere. Everything bright sits OUTSIDE it (additive), so the
       // horizon reads as the dark disc real images show — the EHT "ring of fire" silhouette.
       primaryMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
-      primary = new THREE.Mesh(new THREE.SphereGeometry(HORIZON, 32, 32), primaryMat);
+      primary = new THREE.Mesh(new THREE.SphereGeometry(HORIZON, ss, ss), primaryMat);
       // Hot accretion disk — additive so the infalling plasma GLOWS rather than paints flat.
       ringMat = new THREE.MeshBasicMaterial({
         color: 0xffb24a,
@@ -608,11 +654,11 @@ export class SingularitySystem {
         blending: THREE.AdditiveBlending,
         depthWrite: false,
       });
-      ring = new THREE.Mesh(new THREE.TorusGeometry(DISK_R, HORIZON * 0.5, 20, 64), ringMat);
+      ring = new THREE.Mesh(new THREE.TorusGeometry(DISK_R, HORIZON * 0.5, 20, ts), ringMat);
       this.addHoleHalo(0xffe1a0, 0xff6a1e, extras, extraMats);
     } else if (kind === 'whitehole') {
       primaryMat = new THREE.MeshBasicMaterial({ color: 0xeaf4ff });
-      primary = new THREE.Mesh(new THREE.SphereGeometry(HORIZON, 32, 32), primaryMat);
+      primary = new THREE.Mesh(new THREE.SphereGeometry(HORIZON, ss, ss), primaryMat);
       ringMat = new THREE.MeshBasicMaterial({
         color: 0x8fd6ff,
         transparent: true,
@@ -621,11 +667,11 @@ export class SingularitySystem {
         blending: THREE.AdditiveBlending,
         depthWrite: false,
       });
-      ring = new THREE.Mesh(new THREE.TorusGeometry(DISK_R, HORIZON * 0.32, 20, 64), ringMat);
+      ring = new THREE.Mesh(new THREE.TorusGeometry(DISK_R, HORIZON * 0.32, 20, ts), ringMat);
       this.addHoleHalo(0xdff0ff, 0x4aa8ff, extras, extraMats);
     } else if (kind === 'greyhole') {
       primaryMat = new THREE.MeshBasicMaterial({ color: 0x3a3f4a });
-      primary = new THREE.Mesh(new THREE.SphereGeometry(HORIZON, 32, 32), primaryMat);
+      primary = new THREE.Mesh(new THREE.SphereGeometry(HORIZON, ss, ss), primaryMat);
       ringMat = new THREE.MeshBasicMaterial({
         color: 0xb6bccc,
         transparent: true,
@@ -634,7 +680,7 @@ export class SingularitySystem {
         blending: THREE.AdditiveBlending,
         depthWrite: false,
       });
-      ring = new THREE.Mesh(new THREE.TorusGeometry(DISK_R, HORIZON * 0.38, 20, 64), ringMat);
+      ring = new THREE.Mesh(new THREE.TorusGeometry(DISK_R, HORIZON * 0.38, 20, ts), ringMat);
       this.addHoleHalo(0xc8cedb, 0x8088a0, extras, extraMats);
     } else if (kind === 'strangestar') {
       primaryMat = new THREE.MeshStandardMaterial({
@@ -644,7 +690,7 @@ export class SingularitySystem {
         metalness: 0.3,
         roughness: 0.4,
       });
-      primary = new THREE.Mesh(new THREE.IcosahedronGeometry(HORIZON * 0.9, 1), primaryMat);
+      primary = new THREE.Mesh(new THREE.IcosahedronGeometry(HORIZON * 0.9, id), primaryMat);
       // A violet strangelet aura — the conversion front made visible.
       const auraMat = new THREE.MeshBasicMaterial({
         color: 0x9a2cff,
@@ -655,7 +701,7 @@ export class SingularitySystem {
         depthWrite: false,
       });
       auraMat.userData.baseOpacity = 0.22;
-      const aura = new THREE.Mesh(new THREE.SphereGeometry(HORIZON * 1.5, 20, 20), auraMat);
+      const aura = new THREE.Mesh(new THREE.SphereGeometry(HORIZON * 1.5, ss, ss), auraMat);
       aura.frustumCulled = false;
       extras.push(aura);
       extraMats.push(auraMat);
@@ -667,7 +713,7 @@ export class SingularitySystem {
         opacity: 0.22,
         side: THREE.BackSide,
       });
-      primary = new THREE.Mesh(new THREE.SphereGeometry(REACH * 0.4, 20, 20), primaryMat);
+      primary = new THREE.Mesh(new THREE.SphereGeometry(REACH * 0.4, ss, ss), primaryMat);
     }
 
     primary.frustumCulled = false;

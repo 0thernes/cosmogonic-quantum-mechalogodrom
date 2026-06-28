@@ -44,15 +44,15 @@ function paintVibrant(mat: THREE.MeshStandardMaterial, m: PhylumMorphType, mi: n
     // wider gradient spin + ±0.11 golden jitter fans the palette into ~1000 distinct variations.
     (hsl.h + slot * 0.005 + j * 0.22 - 0.11 + 1) % 1,
     1.0, // S = 1.0 — MAXIMUM chroma, never wash out
-    Math.min(0.46, 0.28 + hsl.l * 0.12 + j * 0.04), // L 0.28..0.46 — darker, deeply saturated
+    Math.min(0.42, 0.22 + hsl.l * 0.1 + j * 0.05), // L 0.22..0.42 — dark, hyper-saturated
   );
   m.em.getHSL(hsl);
   mat.emissive.setHSL(
     (hsl.h + 0.08 + j * 0.18 + slot * 0.003) % 1,
     1.0, // S = 1.0 — max emissive saturation
-    Math.min(0.62, 0.26 + hsl.l * 0.32),
+    Math.min(0.68, 0.3 + hsl.l * 0.34),
   );
-  mat.emissiveIntensity = Math.min(4.5, m.emI * 2.3 + 0.9);
+  mat.emissiveIntensity = Math.min(5.2, m.emI * 2.6 + 1.1);
 }
 
 /** Base material parameters a {@link RenderMode} is layered on top of. */

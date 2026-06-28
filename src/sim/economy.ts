@@ -55,9 +55,11 @@ const ADOPT_BETA = 6;
 /** The richest few agents form a CARTEL that colludes to restrict supply (oligopoly). */
 const CARTEL_SIZE = 7;
 /** Fraction of its commodity production a cartel member withholds to prop up scarcity/price. */
-const CARTEL_WITHHOLD = 0.32;
+const CARTEL_WITHHOLD = 0.28;
 /** Arbitrage gain: how fast preferences mean-revert toward the under-priced commodity (gap → 0). */
-const ARB_GAIN = 0.078;
+const ARB_GAIN = 0.092;
+/** When commodity price dispersion exceeds this, a circuit-breaker nudges both prices toward parity. */
+const ARB_CIRCUIT = 0.42;
 /** A sanctioned agent trades at this fraction of its budget (capital controls / embargo). */
 const SANCTION_BUDGET = 0.35;
 /** …and is cut off from resources, producing only this fraction (the embargo's real bite). */
@@ -377,6 +379,13 @@ export class Economy {
       const a = this.agents[i]!;
       a.prefQuanta = clamp(a.prefQuanta + ARB_GAIN * gap, 0.05, 0.95);
     }
+    // (3c) Price circuit-breaker — when dispersion blows out, mean-revert commodity prices (regulatory backstop).
+    if (this.arbSpread > ARB_CIRCUIT && denom > 1e-9) {
+      const mid = (this.pQuanta + this.pIchor) * 0.5;
+      const pull = (this.arbSpread - ARB_CIRCUIT) * 0.12;
+      this.pQuanta += (mid - this.pQuanta) * pull;
+      this.pIchor += (mid - this.pIchor) * pull;
+    }
 
     // (4) Clearing — match buys against sells so the same volume trades on both sides; scale each
     // side to the cleared volume and settle in AURUM-valued currency (paid from/into each purse,
@@ -386,9 +395,9 @@ export class Economy {
 
     // (4a) Gini guard — progressive skim from ultra-rich to tail agents when wealth concentrates.
     const gCoeff = gini(this.nw);
-    if (gCoeff > 0.52 && n >= 4) {
+    if (gCoeff > 0.48 && n >= 4) {
       const mean = totalNW / n;
-      const rate = (gCoeff - 0.52) * 0.035;
+      const rate = (gCoeff - 0.48) * 0.042;
       let pool = 0;
       for (let i = 0; i < n; i++) {
         const a = this.agents[i]!;

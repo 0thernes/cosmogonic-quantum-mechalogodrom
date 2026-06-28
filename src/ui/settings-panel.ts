@@ -27,28 +27,42 @@ const GROUPS = [
   {
     title: 'Audio',
     buttons: [
-      { action: 'music', label: 'Toggle Music' },
-      { action: 'sfx', label: 'Toggle SFX' },
-      { action: 'song', label: 'Next Song' },
-      { action: 'sfxcycle', label: 'Preview SFX' },
+      { action: 'music', label: '♪ Music' },
+      { action: 'sfx', label: '♫ SFX' },
+      { action: 'song', label: '▶ Next Song' },
+      { action: 'sfxcycle', label: '🔔 Preview SFX' },
     ],
   },
   {
     title: 'Visual',
     buttons: [
-      { action: 'wire', label: 'Cycle Render' },
-      { action: 'view', label: 'Cycle View' },
-      { action: 'algo', label: 'Cycle Algo' },
-      { action: 'weather', label: 'Cycle Weather' },
+      { action: 'wire', label: '◐ Render' },
+      { action: 'view', label: '👁 View' },
+      { action: 'space', label: '⬡ Space' },
+      { action: 'weather', label: '☁ Weather' },
     ],
   },
   {
     title: 'World',
     buttons: [
-      { action: 'time', label: 'Time Scale' },
-      { action: 'sim', label: 'Sim Variant' },
-      { action: 'reset', label: 'Reset World' },
-      { action: 'apoc', label: 'Apocalypse' },
+      { action: 'time', label: '⏱ Time' },
+      { action: 'sim', label: '⇄ Sim N1/N2' },
+      { action: 'reset', label: '↻ Reset' },
+      { action: 'apoc', label: '☠ Apocalypse' },
+    ],
+  },
+  {
+    title: 'Cosmos',
+    buttons: [
+      { action: 'cosmo', label: '★ Singularity' },
+      { action: 'nhi', label: '◈ Launch NHI' },
+    ],
+  },
+  {
+    title: 'Chaos',
+    buttons: [
+      { action: 'chaosmode', label: '⚡ Chaos Mode' },
+      { action: 'entropy', label: '🔥 Entropy' },
     ],
   },
 ];

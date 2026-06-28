@@ -525,8 +525,22 @@ export class World {
       audit: this.audit,
       sfx: (type) => this.audio.play(type),
       creatureSfx: (mi) => {
-        if (this.rng() > 0.035) return;
-        this.audio.playId(SFX_STRANGE + (mi % 14));
+        if (this.rng() > 0.048) return;
+        const bands = SFX_EXTRA_BANDS;
+        const pick = mi % 5;
+        const band =
+          pick === 0
+            ? bands['demonic']
+            : pick === 1
+              ? bands['chitter']
+              : pick === 2
+                ? bands['howl']
+                : pick === 3
+                  ? bands['abyssal']
+                  : bands['strange'];
+        const start = band?.start ?? SFX_STRANGE;
+        const count = band?.count ?? 24;
+        this.audio.playId(start + (mi % count));
       },
     };
     this.audit.setSimClock(() => this.state.frame);
@@ -1299,9 +1313,7 @@ export class World {
       const f = this.state.frame;
       // Multi-frequency wobble: 3 overlapping sine waves for chaotic, non-repeating distortion.
       const wobble =
-        Math.sin(f * 0.017) * 0.14 +
-        Math.sin(f * 0.043) * 0.08 +
-        Math.sin(f * 0.091) * 0.05;
+        Math.sin(f * 0.017) * 0.14 + Math.sin(f * 0.043) * 0.08 + Math.sin(f * 0.091) * 0.05;
       // Chaotic lens center: 3 frequencies create a Lissajous-like drift that never repeats.
       const cx = 0.5 + Math.sin(f * 0.011) * 0.09 + Math.sin(f * 0.037) * 0.04;
       const cy = 0.5 + Math.cos(f * 0.013) * 0.07 + Math.cos(f * 0.053) * 0.03;
@@ -2745,6 +2757,7 @@ export class World {
       s.mutations += 12;
       this.audio.playId(SFX_STRANGE);
       this.audio.playId(SFX_STRANGE + 7);
+      this.audio.playId(SFX_STRANGE + 19);
       this.audio.play('warp');
       this.audio.play('burst');
       this.audio.play('decay');

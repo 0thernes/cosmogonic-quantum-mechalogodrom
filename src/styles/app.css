@@ -1276,7 +1276,10 @@ html.cqm-shell-ready .algo-list:empty::after {
    off-screen. A wide portrait desktop now keeps the full desktop layout
    (the bottom-right readout column + centred control pad).
    ════════════════════════════════════════════════════════════════ */
-@media (max-width: 768px), (orientation: portrait) and (max-width: 1024px), (pointer: coarse) and (max-width: 768px), (pointer: coarse) and (orientation: portrait) {
+@media (max-width: 768px),
+  (orientation: portrait) and (max-width: 1024px),
+  (pointer: coarse) and (max-width: 768px),
+  (pointer: coarse) and (orientation: portrait) {
   /* Drop the grid: #ui becomes a passthrough layer; sheets self-position. */
   #ui {
     display: block;

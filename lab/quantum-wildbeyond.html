@@ -1556,6 +1556,18 @@
           fm.start(t0);
           fm.stop(t0 + dur);
         }
+        if (slot % 6 === 0) {
+          const sub = audioCtx.createOscillator();
+          const subG = audioCtx.createGain();
+          sub.type = 'sawtooth';
+          sub.frequency.setValueAtTime(28 + (slot % 9) * 3, t0);
+          subG.gain.setValueAtTime(0.07 + (slot % 4) * 0.02, t0);
+          subG.gain.exponentialRampToValueAtTime(0.0004, t0 + dur * 1.1);
+          sub.connect(subG);
+          subG.connect(gain);
+          sub.start(t0);
+          sub.stop(t0 + dur + 0.03);
+        }
         gain.connect(audioCtx.destination);
         osc.start(t0);
         osc.stop(t0 + dur + 0.02);

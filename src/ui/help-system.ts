@@ -59,6 +59,15 @@ const CHIPS: { label: string; q: string }[] = [
   { label: 'Sim settings', q: 'sim settings view speed render quality hud' },
   { label: 'Post-FX / bloom', q: 'post processing bloom lens cinematic fx' },
   { label: 'Faculties', q: '100 faculties pantheon cognitive modules NHSI' },
+  { label: 'Titans', q: 'titans roaming economy energy matter entropy war' },
+  { label: 'Moonlab / QGT', q: 'moonlab tensor entanglement quantum geometry tsotchke' },
+  { label: 'Eshkol QRNG', q: 'eshkol qrng quantum random archon collapse' },
+  { label: 'Puppet master', q: 'puppet master events creatures actions' },
+  { label: 'Memory orchestra', q: 'memory orchestra recall lattice graph' },
+  { label: 'Settings ⚙', q: 'settings panel audio render sim chaos apocalypse' },
+  { label: 'Bottom dock', q: 'bottom dock toolbar panels AI help audit' },
+  { label: 'Entity colors', q: 'entity colors morph phylum vibrant saturated render' },
+  { label: 'Cartel / Gini', q: 'market cartel gini wealth inequality economy balance' },
 ];
 
 const STYLE = `
