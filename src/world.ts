@@ -1297,24 +1297,33 @@ export class World {
     // N(2) BREAK FREE — transdimensional screen warp even without an active singularity.
     if (this.state.sim === 2) {
       const f = this.state.frame;
-      const wobble = Math.sin(f * 0.017) * 0.14;
-      const cx = 0.5 + Math.sin(f * 0.011) * 0.09;
-      const cy = 0.5 + Math.cos(f * 0.013) * 0.07;
+      // Multi-frequency wobble: 3 overlapping sine waves for chaotic, non-repeating distortion.
+      const wobble =
+        Math.sin(f * 0.017) * 0.14 +
+        Math.sin(f * 0.043) * 0.08 +
+        Math.sin(f * 0.091) * 0.05;
+      // Chaotic lens center: 3 frequencies create a Lissajous-like drift that never repeats.
+      const cx = 0.5 + Math.sin(f * 0.011) * 0.09 + Math.sin(f * 0.037) * 0.04;
+      const cy = 0.5 + Math.cos(f * 0.013) * 0.07 + Math.cos(f * 0.053) * 0.03;
+      // Periodic "dimensional tear" — every ~900 frames a sudden reverse-warp surprise.
+      const tearPhase = (f % 900) / 900;
+      const tear = tearPhase < 0.05 ? Math.sin(tearPhase * 62.8) * 0.3 : 0;
       const singStrength = this.singularities.lensStrength;
       if (singStrength !== 0 && this.singularities.lensCenter(this.lensWorld)) {
         this.lensNdc.copy(this.lensWorld).project(this.engine.camera);
         if (this.lensNdc.z <= 1) {
-          const boost = 1.45 + wobble;
+          const boost = 1.45 + wobble + tear;
           this.engine.setLens(
             this.lensNdc.x * 0.5 + 0.5,
             this.lensNdc.y * 0.5 + 0.5,
             singStrength * boost,
-            0.58,
+            0.58 + Math.sin(f * 0.02) * 0.06,
           );
           return;
         }
       }
-      this.engine.setLens(cx, cy, -0.22 + wobble, 0.64);
+      // Stronger base warp + wider radius for the "transdimensional" feel.
+      this.engine.setLens(cx, cy, -0.28 + wobble + tear, 0.72 + Math.sin(f * 0.02) * 0.08);
       return;
     }
     const strength = this.singularities.lensStrength;

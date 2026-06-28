@@ -1276,7 +1276,7 @@ html.cqm-shell-ready .algo-list:empty::after {
    off-screen. A wide portrait desktop now keeps the full desktop layout
    (the bottom-right readout column + centred control pad).
    ════════════════════════════════════════════════════════════════ */
-@media (max-width: 768px), (orientation: portrait) and (max-width: 1024px), (pointer: coarse) {
+@media (max-width: 768px), (orientation: portrait) and (max-width: 1024px), (pointer: coarse) and (max-width: 768px), (pointer: coarse) and (orientation: portrait) {
   /* Drop the grid: #ui becomes a passthrough layer; sheets self-position. */
   #ui {
     display: block;
@@ -1416,11 +1416,9 @@ html.cqm-shell-ready .algo-list:empty::after {
   }
 }
 
-/* ── Tablet/laptop LANDSCAPE, FINE pointer (769–1280px): tighter rails than the wide
-     laptop so the center 3D view keeps room. Scoped to fine + landscape so coarse tablets
-     and any portrait window fall through to the V5.5 sheets above (the user's portrait QHD
-     monitor and tablets want slide-out sheets, not eaten side columns). ── */
-@media (min-width: 769px) and (max-width: 1280px) and (min-height: 521px) and (pointer: fine) and (orientation: landscape) {
+/* ── Tablet/laptop LANDSCAPE (769–1280px): tighter rails — fine + coarse 12" tablets
+     keep the grid (Observatory visible); portrait/coarse phones stay on sheets above. ── */
+@media (min-width: 769px) and (max-width: 1280px) and (min-height: 521px) and (orientation: landscape) {
   #ui {
     grid-template-columns: clamp(150px, 22vw, 220px) 1fr clamp(170px, 24vw, 250px);
   }
@@ -1428,6 +1426,40 @@ html.cqm-shell-ready .algo-list:empty::after {
     max-height: clamp(180px, 46vh, 56vh);
   }
   /* 12" tablet landscape: Observatory needs more vertical room — don't crush it with the generic cap. */
+  #ui > section#oP {
+    max-height: min(68vh, calc(100vh - 210px));
+    min-height: clamp(220px, 38vh, 420px);
+  }
+  #oP > .obs-body {
+    max-height: min(62vh, calc(100vh - 250px));
+  }
+}
+
+/* ── 12" tablet LANDSCAPE, COARSE pointer (769–1280px): keep the grid layout so the
+     Observatory doesn't vanish into sheet mode. A 12" touch tablet in landscape has
+     enough room for side columns; sheet mode is for phones and portrait. ── */
+@media (min-width: 769px) and (max-width: 1280px) and (min-height: 521px) and (pointer: coarse) and (orientation: landscape) {
+  #ui {
+    display: grid;
+    pointer-events: none;
+    grid-template-columns: clamp(140px, 20vw, 200px) 1fr clamp(160px, 22vw, 230px);
+    grid-template-areas: 'left . right';
+    gap: 8px;
+    padding: 8px;
+  }
+  #ui > * {
+    pointer-events: auto;
+  }
+  .sheet {
+    position: static;
+    transform: none;
+    width: auto;
+    max-height: clamp(180px, 46vh, 56vh);
+    overflow: hidden;
+  }
+  .sheet-handle {
+    display: none;
+  }
   #ui > section#oP {
     max-height: min(68vh, calc(100vh - 210px));
     min-height: clamp(220px, 38vh, 420px);
