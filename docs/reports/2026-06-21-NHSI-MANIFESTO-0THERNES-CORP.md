@@ -87,8 +87,8 @@ All figures below are measured, not aspirational. The aspirational targets (100 
 ### III.1 Build Health (v0.18.0)
 
 - **Version:** v0.18.0 · `bun run check` green (prettier → tsc strict → oxlint → bun test → verify:receipts → sync:check → build)
-- **Tests:** 1477 pass / 0 fail · 1,744,891 `expect()` calls · 151 files
-- **Coverage:** ~95% line / ~92% function (canonical 95.03 / 92.03; env-jitters within a ±6pp gate tolerance)
+- **Tests:** 1771 pass / 0 fail · 2,047,523 `expect()` calls · 175 files
+- **Coverage:** ~92% line / ~95% function (canonical 91.97 / 94.85; env-jitters within a ±6pp gate tolerance)
 - **Determinism:** one mulberry32 seed; `Math.random` / `Date.now` glob-banned in `sim/` and `math/`
 
 ### III.2 Tsotchke Corpus Integration
@@ -506,7 +506,7 @@ The version and receipts are single-sourced (`package.json` + `scripts/canonical
 - **10 emergence angles** wired (+ 5 god-scale release events)
 - **8/14 Butlin consciousness indicators met + 6/14 partial** (computational indicators, NOT sentience)
 - **20 Tsotchke corpus projects** tracked, **~16 wired with real downstream effect** (8 deep in the apex, 4 in the petri engine)
-- **1477 tests** passing (1,744,891 `expect()` calls, 151 files), ~95% line / ~92% function coverage (canonical, ±6pp)
+- **1771 tests** passing (2,047,523 `expect()` calls, 175 files), ~92% line / ~95% function coverage (canonical, ±6pp)
 - **Deterministic** — one seed, one cosmos, eternally · **Measured** — receipts law, benchmarks, provenance
 
 ### XI.2 What We Are NOT
