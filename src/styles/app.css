@@ -14,6 +14,46 @@
 @import '@fontsource/jetbrains-mono/400.css';
 @import '@fontsource/jetbrains-mono/600.css';
 
+/* ── V86 first-paint shell (FOUC guard) ───────────────────────────
+   Panels + chrome must land in final columns before module JS runs.
+   Duplicates index.html #cqm-critical-shell for stylesheet-only loads. */
+@media (min-width: 769px) and (pointer: fine) and (orientation: landscape) {
+  #ui:not(:has(.ui-col-left)) > #sP,
+  #ui:not(:has(.ui-col-left)) > #algoP,
+  #ui:not(:has(.ui-col-left)) > #perf-slot {
+    grid-column: 1;
+  }
+  #ui:not(:has(.ui-col-right)) > #oP,
+  #ui:not(:has(.ui-col-right)) > #cP,
+  #ui:not(:has(.ui-col-right)) > #alg,
+  #ui:not(:has(.ui-col-right)) > #hud-vsr {
+    grid-column: 3;
+  }
+}
+body > a[data-nav] {
+  position: fixed !important;
+  left: -100vw !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+#cqm-persist-nav a[data-nav] {
+  position: static !important;
+  left: auto !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+#cqm-dock {
+  display: none !important;
+}
+body > #bar {
+  opacity: 0;
+  pointer-events: none;
+}
+#bar-shell #bar {
+  opacity: 1;
+  pointer-events: auto;
+}
+
 /* `static`: emit every token as a :root custom property even when no utility
    references it — the tribe palette and motion tokens are runtime-readable
    (getComputedStyle) for canvas/three.js consumers and future UI. */

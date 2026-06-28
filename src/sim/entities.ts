@@ -29,22 +29,29 @@ import type { BehaviorEnv } from './behaviors';
 import type { Entity, SimContext, UpdateStats } from '../types';
 import type { Rng } from '../math/rng';
 
-/** Push morph colours toward saturated, luminous read (render-only — morph tables unchanged). */
+/** Push morph colours toward SATURATED, VIBRANT read (render-only — morph tables unchanged).
+ * The base diffuse is held in the peak-chroma lightness zone (~0.36..0.62) so saturated hues read
+ * STRONG rather than washing to white; a golden-ratio per-morph jitter (`j`) fans the 250 morphs into
+ * a far wider, ~1000-variation palette without touching the seeded morph tables. The per-instance GPU
+ * suites (tribe hue, quantum shimmer, payoff iridescence, vital glow) then layer dynamic variety on top. */
 function paintVibrant(mat: THREE.MeshStandardMaterial, m: PhylumMorphType, mi: number): void {
   const hsl = { h: 0, s: 0, l: 0 };
+  // Golden-ratio hash → a well-spread, deterministic per-morph value in [0,1).
+  const j = (mi * 0.6180339887) % 1;
   m.col.getHSL(hsl);
   mat.color.setHSL(
-    (hsl.h + mi * 0.0037) % 1,
-    Math.min(1, 0.76 + hsl.s * 0.24),
-    Math.min(0.86, 0.4 + hsl.l * 0.52),
+    // gentle gradient spin + ±0.07 golden jitter widens the palette (more "1000 variations").
+    (hsl.h + mi * 0.0041 + j * 0.14 - 0.07 + 1) % 1,
+    Math.min(1, 0.88 + hsl.s * 0.12), // S 0.88..1.0 — near-maximum chroma
+    Math.min(0.62, 0.36 + hsl.l * 0.26 + j * 0.04), // L 0.36..0.62 — VIBRANT, never washed
   );
   m.em.getHSL(hsl);
   mat.emissive.setHSL(
-    (hsl.h + 0.06 + mi * 0.002) % 1,
-    Math.min(1, 0.8 + hsl.s * 0.2),
-    Math.min(0.8, 0.36 + hsl.l * 0.48),
+    (hsl.h + 0.06 + j * 0.12) % 1,
+    Math.min(1, 0.86 + hsl.s * 0.14),
+    Math.min(0.6, 0.3 + hsl.l * 0.32),
   );
-  mat.emissiveIntensity = Math.min(2.8, m.emI * 1.45 + 0.4);
+  mat.emissiveIntensity = Math.min(3.0, m.emI * 1.55 + 0.45);
 }
 
 /** Base material parameters a {@link RenderMode} is layered on top of. */

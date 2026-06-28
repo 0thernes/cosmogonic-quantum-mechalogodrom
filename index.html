@@ -22,6 +22,45 @@
       href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='15' fill='%23030612'/%3E%3Cellipse cx='16' cy='16' rx='13' ry='5' fill='none' stroke='%230ef' stroke-width='1.6' transform='rotate(28 16 16)'/%3E%3Cellipse cx='16' cy='16' rx='13' ry='5' fill='none' stroke='%23fa0' stroke-width='1.6' transform='rotate(-28 16 16)'/%3E%3Ccircle cx='16' cy='16' r='4.5' fill='%230ef'/%3E%3C/svg%3E"
     />
     <link rel="stylesheet" href="./src/styles/app.css" />
+    <!-- V86 critical shell: correct panel columns + hide orphan chrome before module JS runs -->
+    <style id="cqm-critical-shell">
+      @media (min-width: 769px) and (pointer: fine) and (orientation: landscape) {
+        #ui:not(:has(.ui-col-left)) > #sP,
+        #ui:not(:has(.ui-col-left)) > #algoP,
+        #ui:not(:has(.ui-col-left)) > #perf-slot {
+          grid-column: 1;
+        }
+        #ui:not(:has(.ui-col-right)) > #oP,
+        #ui:not(:has(.ui-col-right)) > #cP,
+        #ui:not(:has(.ui-col-right)) > #alg,
+        #ui:not(:has(.ui-col-right)) > #hud-vsr {
+          grid-column: 3;
+        }
+      }
+      body > a[data-nav] {
+        position: fixed !important;
+        left: -100vw !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+      }
+      #cqm-persist-nav a[data-nav] {
+        position: static !important;
+        left: auto !important;
+        opacity: 1 !important;
+        pointer-events: auto !important;
+      }
+      #cqm-dock {
+        display: none !important;
+      }
+      body > #bar {
+        opacity: 0;
+        pointer-events: none;
+      }
+      #bar-shell #bar {
+        opacity: 1;
+        pointer-events: auto;
+      }
+    </style>
   </head>
   <body class="touch-none overflow-hidden bg-black font-mono text-slate-300">
     <!-- Drag = mouse-look, wheel = zoom (ui/input.ts pointer capture; world consumes) -->
@@ -895,180 +934,202 @@
       <div id="perf-slot" aria-hidden="true"></div>
     </div>
 
-    <!-- Bottom toolbar — grouped into Audio, World, Visual, Creative, Special.
-         ui/toolbar.ts adds roving tabindex and arrow-key navigation. -->
-    <div
-      id="bar"
-      role="toolbar"
-      aria-label="Simulation toolbar"
-      class="flex max-w-[calc(100vw-16px)] [scrollbar-width:none] flex-nowrap items-center justify-start gap-1 overflow-x-auto rounded-panel border border-bar-line/15 bg-void/90 px-2 py-1.25 backdrop-blur-xl md:max-w-[calc(100vw-220px)] [&::-webkit-scrollbar]:hidden"
-    >
-      <div class="toolbar-group" role="group" aria-label="Audio">
+    <!-- Bottom dock stack (V86): persist nav + toolbar — shell exists in HTML so first paint never
+         shows a stray #bar or corner DOCS links. center-hud.ts fills #cqm-persist-nav; toolbar.ts
+         wires scroll buttons on #bar-shell. -->
+    <div id="cqm-bottom-stack" aria-label="Bottom navigation and toolbar">
+      <nav id="cqm-persist-nav" aria-label="Documentation, lab, access, and settings" hidden></nav>
+      <div id="bar-shell" aria-label="Simulation toolbar scroll">
         <button
           type="button"
-          data-action="music"
-          aria-label="Toggle music"
-          title="Toggle music"
-          class="toolbar-btn"
+          class="bar-scroll-btn"
+          aria-label="Scroll toolbar left"
+          title="Scroll toolbar left"
         >
-          &#9835;
+          ‹
         </button>
-        <button
-          type="button"
-          data-action="song"
-          aria-label="Next song"
-          title="Next song"
-          class="toolbar-btn"
+        <div
+          id="bar"
+          role="toolbar"
+          aria-label="Simulation toolbar"
+          class="flex max-w-[calc(100vw-16px)] [scrollbar-width:none] flex-nowrap items-center justify-start gap-1 overflow-x-auto rounded-panel border border-bar-line/15 bg-void/90 px-2 py-1.25 backdrop-blur-xl md:max-w-[calc(100vw-220px)] [&::-webkit-scrollbar]:hidden"
         >
-          Song
-        </button>
-        <button
-          type="button"
-          data-action="sfx"
-          aria-label="Toggle sound effects"
-          title="Toggle sound effects"
-          class="toolbar-btn"
-        >
-          SFX
-        </button>
-        <button
-          type="button"
-          data-action="sfxcycle"
-          aria-label="Preview next sound effect"
-          title="Preview next sound effect"
-          class="toolbar-btn"
-        >
-          Fx
-        </button>
-      </div>
-      <div class="toolbar-group" role="group" aria-label="World">
-        <button
-          type="button"
-          data-action="reset"
-          aria-label="Reset simulation"
-          title="Reset simulation"
-          class="toolbar-btn"
-        >
-          &#8635;
-        </button>
-        <button
-          type="button"
-          data-action="time"
-          aria-label="Cycle time scale"
-          title="Cycle time scale"
-          class="toolbar-btn"
-        >
-          &#9201;
-        </button>
-        <button
-          type="button"
-          data-action="weather"
-          aria-label="Cycle weather"
-          title="Cycle weather"
-          class="toolbar-btn"
-        >
-          &#9729;
-        </button>
-        <button
-          type="button"
-          data-action="sim"
-          aria-label="Toggle simulation variant"
-          title="Toggle SIMULATION N(1) Genesis ↔ N(2) Break Free"
-          class="toolbar-btn"
-        >
-          N(1/2)
-        </button>
-      </div>
-      <div class="toolbar-group" role="group" aria-label="Visual">
-        <button
-          type="button"
-          data-action="wire"
-          aria-label="Cycle render mode"
-          title="Cycle render mode: solid → wire → ghost → neon → chrome → hologram → iridescent"
-          class="toolbar-btn"
-        >
-          Render
-        </button>
-        <button
-          type="button"
-          data-action="view"
-          aria-label="Cycle camera view"
-          title="Cycle camera view"
-          class="toolbar-btn"
-        >
-          View
-        </button>
-        <button
-          type="button"
-          data-action="algo"
-          aria-label="Cycle sorting algorithm"
-          title="Cycle sorting algorithm"
-          class="toolbar-btn"
-        >
-          Algo
-        </button>
-      </div>
-      <div class="toolbar-group" role="group" aria-label="Creative">
-        <button
-          type="button"
-          data-action="cosmo"
-          aria-label="Summon cosmological singularity"
-          title="Summon singularity: entropy → black hole → white hole → grey hole → strange star"
-          class="toolbar-btn"
-        >
-          &#9899;
-        </button>
-        <button
-          type="button"
-          data-action="space"
-          aria-label="Dilate space"
-          title="SPACE — dilate the camera field of view (also: H key)"
-          class="toolbar-btn"
-        >
-          SPACE
-        </button>
-        <button
-          type="button"
-          data-action="entropy"
-          aria-label="Raise entropy"
-          title="ENTROPY — order / heat-death, the opposite of chaos (also: G key)"
-          class="toolbar-btn"
-        >
-          ENTROPY
-        </button>
-      </div>
-      <div class="toolbar-group" role="group" aria-label="Special">
-        <button
-          type="button"
-          data-action="chaosmode"
-          aria-label="Toggle CHAOS MODE"
-          title="CHAOS MODE — a Lorenz quantum storm (also: K key)"
-          class="toolbar-btn"
-        >
-          &#9889; CHAOS
-        </button>
-        <button
-          type="button"
-          data-action="nhi"
-          aria-label="Launch an NHI being"
-          title="LAUNCH NHI — a non-human intelligence (also: N key)"
-          class="toolbar-btn"
-        >
-          &#x27C1; NHI
-        </button>
-        <button
-          type="button"
-          data-action="apoc"
-          aria-label="Trigger apocalypse"
-          title="Trigger apocalypse"
-          class="toolbar-btn"
-        >
-          &#9760;
-        </button>
-      </div>
-      <!-- V51: Lab + Spec nav links removed from the toolbar — they were duplicated in the bottom dock
+          <div class="toolbar-group" role="group" aria-label="Audio">
+            <button
+              type="button"
+              data-action="music"
+              aria-label="Toggle music"
+              title="Toggle music"
+              class="toolbar-btn"
+            >
+              &#9835;
+            </button>
+            <button
+              type="button"
+              data-action="song"
+              aria-label="Next song"
+              title="Next song"
+              class="toolbar-btn"
+            >
+              Song
+            </button>
+            <button
+              type="button"
+              data-action="sfx"
+              aria-label="Toggle sound effects"
+              title="Toggle sound effects"
+              class="toolbar-btn"
+            >
+              SFX
+            </button>
+            <button
+              type="button"
+              data-action="sfxcycle"
+              aria-label="Preview next sound effect"
+              title="Preview next sound effect"
+              class="toolbar-btn"
+            >
+              Fx
+            </button>
+          </div>
+          <div class="toolbar-group" role="group" aria-label="World">
+            <button
+              type="button"
+              data-action="reset"
+              aria-label="Reset simulation"
+              title="Reset simulation"
+              class="toolbar-btn"
+            >
+              &#8635;
+            </button>
+            <button
+              type="button"
+              data-action="time"
+              aria-label="Cycle time scale"
+              title="Cycle time scale"
+              class="toolbar-btn"
+            >
+              &#9201;
+            </button>
+            <button
+              type="button"
+              data-action="weather"
+              aria-label="Cycle weather"
+              title="Cycle weather"
+              class="toolbar-btn"
+            >
+              &#9729;
+            </button>
+            <button
+              type="button"
+              data-action="sim"
+              aria-label="Toggle simulation variant"
+              title="Toggle SIMULATION N(1) Genesis ↔ N(2) Break Free"
+              class="toolbar-btn"
+            >
+              N(1/2)
+            </button>
+          </div>
+          <div class="toolbar-group" role="group" aria-label="Visual">
+            <button
+              type="button"
+              data-action="wire"
+              aria-label="Cycle render mode"
+              title="Cycle render mode: solid → wire → ghost → neon → chrome → hologram → iridescent"
+              class="toolbar-btn"
+            >
+              Render
+            </button>
+            <button
+              type="button"
+              data-action="view"
+              aria-label="Cycle camera view"
+              title="Cycle camera view"
+              class="toolbar-btn"
+            >
+              View
+            </button>
+            <button
+              type="button"
+              data-action="algo"
+              aria-label="Cycle sorting algorithm"
+              title="Cycle sorting algorithm"
+              class="toolbar-btn"
+            >
+              Algo
+            </button>
+          </div>
+          <div class="toolbar-group" role="group" aria-label="Creative">
+            <button
+              type="button"
+              data-action="cosmo"
+              aria-label="Summon cosmological singularity"
+              title="Summon singularity: entropy → black hole → white hole → grey hole → strange star"
+              class="toolbar-btn"
+            >
+              &#9899;
+            </button>
+            <button
+              type="button"
+              data-action="space"
+              aria-label="Dilate space"
+              title="SPACE — dilate the camera field of view (also: H key)"
+              class="toolbar-btn"
+            >
+              SPACE
+            </button>
+            <button
+              type="button"
+              data-action="entropy"
+              aria-label="Raise entropy"
+              title="ENTROPY — order / heat-death, the opposite of chaos (also: G key)"
+              class="toolbar-btn"
+            >
+              ENTROPY
+            </button>
+          </div>
+          <div class="toolbar-group" role="group" aria-label="Special">
+            <button
+              type="button"
+              data-action="chaosmode"
+              aria-label="Toggle CHAOS MODE"
+              title="CHAOS MODE — a Lorenz quantum storm (also: K key)"
+              class="toolbar-btn"
+            >
+              &#9889; CHAOS
+            </button>
+            <button
+              type="button"
+              data-action="nhi"
+              aria-label="Launch an NHI being"
+              title="LAUNCH NHI — a non-human intelligence (also: N key)"
+              class="toolbar-btn"
+            >
+              &#x27C1; NHI
+            </button>
+            <button
+              type="button"
+              data-action="apoc"
+              aria-label="Trigger apocalypse"
+              title="Trigger apocalypse"
+              class="toolbar-btn"
+            >
+              &#9760;
+            </button>
+          </div>
+          <!-- V51: Lab + Spec nav links removed from the toolbar — they were duplicated in the bottom dock
            (DOCS · SPEC · LAB now live there). The toolbar is purely world CONTROLS; the dock is panels
            + nav. -->
+        </div>
+        <button
+          type="button"
+          class="bar-scroll-btn"
+          aria-label="Scroll toolbar right"
+          title="Scroll toolbar right"
+        >
+          ›
+        </button>
+      </div>
     </div>
 
     <!-- Touch joystick — MOVE (left thumb; shown on coarse pointers via app.css;
@@ -1201,6 +1262,40 @@
           var open = document.querySelectorAll('.sheet.open');
           for (var j = 0; j < open.length; j++) setOpen(open[j], false);
         });
+      })();
+    </script>
+
+    <!-- V86: synchronous column layout before the module bundle (avoids FOUC on refresh) -->
+    <script>
+      (function () {
+        'use strict';
+        function initColumns() {
+          var ui = document.getElementById('ui');
+          if (!ui) return;
+          var sP = document.getElementById('sP');
+          var algoP = document.getElementById('algoP');
+          var perf = document.getElementById('perf-slot');
+          var oP = document.getElementById('oP');
+          var cP = document.getElementById('cP');
+          var alg = document.getElementById('alg');
+          var vsr = document.getElementById('hud-vsr');
+          if (sP && algoP && perf && !document.getElementById('ui-col-left')) {
+            var left = document.createElement('div');
+            left.id = 'ui-col-left';
+            left.className = 'ui-col-left';
+            ui.insertBefore(left, ui.firstChild);
+            left.append(sP, algoP, perf);
+          }
+          if (oP && cP && alg && vsr && !document.getElementById('ui-col-right')) {
+            var right = document.createElement('div');
+            right.id = 'ui-col-right';
+            right.className = 'ui-col-right';
+            var audit = document.getElementById('aP');
+            ui.insertBefore(right, audit || null);
+            right.append(oP, cP, alg, vsr);
+          }
+        }
+        initColumns();
       })();
     </script>
 

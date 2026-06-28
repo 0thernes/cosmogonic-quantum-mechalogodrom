@@ -8,14 +8,31 @@ import { dockBottomBar } from './bottom-dock';
 
 const SHELL_ID = 'bar-shell';
 
+function wireScrollButtons(
+  bar: HTMLElement,
+  shell: HTMLElement,
+  mkScrollBtn: (label: string, title: string, dir: -1 | 1) => HTMLButtonElement,
+): void {
+  let btns = shell.querySelectorAll<HTMLButtonElement>('.bar-scroll-btn');
+  if (btns.length < 2) {
+    shell.insertBefore(mkScrollBtn('‹', 'Scroll toolbar left', -1), bar);
+    shell.appendChild(mkScrollBtn('›', 'Scroll toolbar right', 1));
+    btns = shell.querySelectorAll<HTMLButtonElement>('.bar-scroll-btn');
+  }
+  btns.forEach((b, i) => {
+    if (b.dataset['scrollWired']) return;
+    b.dataset['scrollWired'] = '1';
+    const dir: -1 | 1 = i === 0 ? -1 : 1;
+    b.addEventListener('click', () => {
+      bar.scrollBy({ left: dir * Math.max(120, bar.clientWidth * 0.55), behavior: 'smooth' });
+    });
+  });
+}
+
 /** Wrap #bar once in a scroll shell with prev/next buttons. Idempotent. */
 export function initToolbarScroll(doc: Document = document): void {
   const bar = doc.getElementById('bar');
-  if (!bar || doc.getElementById(SHELL_ID)) return;
-
-  const shell = doc.createElement('div');
-  shell.id = SHELL_ID;
-  shell.setAttribute('aria-label', 'Simulation toolbar scroll');
+  if (!bar) return;
 
   const mkScrollBtn = (label: string, title: string, dir: -1 | 1): HTMLButtonElement => {
     const b = doc.createElement('button');
@@ -30,12 +47,23 @@ export function initToolbarScroll(doc: Document = document): void {
     return b;
   };
 
-  const prev = mkScrollBtn('‹', 'Scroll toolbar left', -1);
-  const next = mkScrollBtn('›', 'Scroll toolbar right', 1);
-
-  bar.parentNode?.insertBefore(shell, bar);
-  shell.append(prev, bar, next);
-  dockBottomBar(shell, document);
+  let shell = doc.getElementById(SHELL_ID);
+  if (!shell) {
+    shell = doc.createElement('div');
+    shell.id = SHELL_ID;
+    shell.setAttribute('aria-label', 'Simulation toolbar scroll');
+    bar.parentNode?.insertBefore(shell, bar);
+    shell.append(
+      mkScrollBtn('‹', 'Scroll toolbar left', -1),
+      bar,
+      mkScrollBtn('›', 'Scroll toolbar right', 1),
+    );
+  } else {
+    if (bar.parentElement !== shell)
+      shell.insertBefore(bar, shell.querySelector('.bar-scroll-btn:last-of-type'));
+    wireScrollButtons(bar, shell, mkScrollBtn);
+  }
+  dockBottomBar(shell, doc);
 }
 
 /** Initialize roving tabindex on the toolbar. Idempotent. */

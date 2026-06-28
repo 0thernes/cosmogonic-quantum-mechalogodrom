@@ -40,14 +40,18 @@ import { ARENA_RADIUS } from './constants';
 const VARIANT_COUNT = 10;
 /** Seconds the variants take to migrate from the spawn ring to the fused centre. */
 const CONVERGE_SECONDS = 24;
-/** Warp icosahedron subdivision (detail 3 ⇒ 642 vertices ⇒ a rich, cheap writhe). */
+/** Warp icosahedron subdivision (detail 4 ⇒ 2562 vertices ⇒ a rich, cheap mandelbulb writhe). */
 const WARP_DETAIL = 4;
 /** Radius of the fused mass at the world centre. */
-const CORE_R = 26;
+const CORE_R = 30;
 /** Spawn-ring radius for the ten variants (mid-far, framing the centre). */
 const RING_R = ARENA_RADIUS * 0.72;
-/** Elevation of the whole abomination above the arena floor (a cosmic centrepiece, not a ground prop). */
-const ALTITUDE = 188;
+/** Elevation of the whole abomination above the arena floor. Raised so its LOWEST extent (rings/halos)
+ *  clears the LV100 MONOLITH TEMPLE's lintel top (~Y 113) with margin — it floats ABOVE the temple, a
+ *  structurally-sensible cosmic crown rather than a ground prop. */
+const ALTITUDE = 252;
+/** Mandelbulb iteration budget for the per-vertex escape proxy (power-8 lobes; NaN-guarded). */
+const BULB_ITERS = 4;
 
 /** Read-only telemetry of the fusion abomination (built fresh each call — UI cadence only). */
 export interface MechalogodromSnapshot {
@@ -97,6 +101,9 @@ export class Mechalogodrom {
   private readonly labNodes: THREE.Mesh[] = [];
   private readonly labMat: THREE.LineBasicMaterial;
   private readonly labNodeMat: THREE.MeshBasicMaterial;
+  /** Outer EXO-CAGE: a large counter-rotating wireframe shell enclosing the whole abomination. */
+  private readonly exoCage: THREE.LineSegments;
+  private readonly exoMat: THREE.LineBasicMaterial;
 
   private readonly warpGeo: THREE.IcosahedronGeometry;
   private readonly basePos: Float32Array; // pristine icosa vertices (warp source of truth)
@@ -114,6 +121,12 @@ export class Mechalogodrom {
   private power = 0;
   private warp = 0;
   private chaos = 0;
+  /** Apex (ς) brain projection — the Entropic Tesseract Hydra's live mind state drives THIS body. */
+  private apexTranscend = 0;
+  private apexVitality = 0;
+  private apexAgony = 0;
+  /** Combined chaos+apex arousal, recomputed each update; with no apex feed it equals `chaos`. */
+  private drive = 0;
   private normalsTick = 0;
 
   constructor(scene: THREE.Scene) {
@@ -221,14 +234,36 @@ export class Mechalogodrom {
       this.group.add(shell);
       this.labShells.push(shell);
     }
-    const NODE_N = 24;
+    const NODE_N = 40;
     for (let n = 0; n < NODE_N; n++) {
       const th = (n / NODE_N) * TAU;
-      const node = new THREE.Mesh(new THREE.OctahedronGeometry(1.4 + (n % 3) * 0.35, 0), this.labNodeMat);
-      node.position.set(Math.cos(th) * CORE_R * 0.55, Math.sin(th * 1.7) * CORE_R * 0.35, Math.sin(th) * CORE_R * 0.55);
+      const node = new THREE.Mesh(
+        new THREE.OctahedronGeometry(1.4 + (n % 3) * 0.35, 0),
+        this.labNodeMat,
+      );
+      node.position.set(
+        Math.cos(th) * CORE_R * 0.55,
+        Math.sin(th * 1.7) * CORE_R * 0.35,
+        Math.sin(th) * CORE_R * 0.55,
+      );
       this.group.add(node);
       this.labNodes.push(node);
     }
+
+    // ── Outer EXO-CAGE: a colossal counter-rotating wireframe icosphere enclosing the whole monster,
+    //    adding a fractal "sections" layer that tumbles against the inner rig (more parts, bizarro). ──
+    this.exoMat = new THREE.LineBasicMaterial({
+      color: 0x6a00ff,
+      transparent: true,
+      opacity: 0.16,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+    const exoBase = new THREE.IcosahedronGeometry(CORE_R * 2.7, 1);
+    const exoWire = new THREE.WireframeGeometry(exoBase);
+    exoBase.dispose();
+    this.exoCage = new THREE.LineSegments(exoWire, this.exoMat);
+    this.group.add(this.exoCage);
 
     // ── The ten bipolar variant shells (golden-angle ring placement; varied platonic solids). ───
     this.shellMat = new THREE.LineBasicMaterial({
@@ -275,7 +310,7 @@ export class Mechalogodrom {
 
   /** A fixed radial burst of N spike segments (centre → outward), reused; scaled live by power. */
   private buildSpikeGeo(): THREE.BufferGeometry {
-    const N = 36;
+    const N = 60;
     const arr = new Float32Array(N * 6);
     const golden = Math.PI * (3 - Math.sqrt(5));
     for (let i = 0; i < N; i++) {
@@ -304,6 +339,16 @@ export class Mechalogodrom {
     this.chaos = clamp(c, 0, 1);
   }
 
+  /** Apex (ς) brain projection — the Entropic Tesseract Hydra's live mind state drives THIS body.
+   *  `transcendence` quickens the warp (the mass writhes as the mind ascends), `vitality` boosts
+   *  power + glow (the body blazes as the mind is alive), `agony` dampens both (pain dims it).
+   *  All clamped 0..1; READ-only, one-way. */
+  setApex(transcendence: number, vitality: number, agony: number): void {
+    this.apexTranscend = clamp(transcendence, 0, 1);
+    this.apexVitality = clamp(vitality, 0, 1);
+    this.apexAgony = clamp(agony, 0, 1);
+  }
+
   /**
    * Advance the migration + fusion + writhe. Pure function of (t, dt, chaos); draws no rng.
    * @param t elapsed seconds (s.elapsed) · @param dt clamped frame delta
@@ -315,12 +360,25 @@ export class Mechalogodrom {
     // Smootherstep ease so the convergence accelerates into the centre.
     const ease = f * f * f * (f * (f * 6 - 15) + 10);
 
+    // Combined arousal: chaos + apex transcendence (quickens) − agony (dampens), vitality adds glow.
+    this.drive = clamp(
+      this.chaos + this.apexTranscend * 0.42 + this.apexVitality * 0.28 - this.apexAgony * 0.12,
+      0,
+      1,
+    );
+    const d = this.drive;
+
     // Strange vast power: a geometric climb that only ignites once mostly fused (past 9000 at full).
     const surge = 0.5 + 0.5 * Math.sin(t * 0.37) * Math.sin(t * 0.11); // bipolar power breathing
-    this.power = ease * (1200 + 8200 * ease) * (0.7 + 0.6 * surge) * (1 + 0.8 * this.chaos);
+    this.power =
+      ease *
+      (1200 + 8200 * ease) *
+      (0.7 + 0.6 * surge) *
+      (1 + 0.8 * d) *
+      (1 + 0.5 * this.apexVitality);
 
-    // Warp amplitude: the mass writhes harder as it fuses and as the world grows chaotic.
-    this.warp = (0.08 + 0.5 * ease) * (0.6 + 0.9 * this.chaos);
+    // Warp amplitude: the mass writhes harder as it fuses and as the world/apex-mind grows chaotic.
+    this.warp = (0.08 + 0.5 * ease) * (0.6 + 0.9 * d);
 
     this.warpMass(t);
     this.driveCentre(t, ease);
@@ -345,26 +403,40 @@ export class Mechalogodrom {
         Math.sin(bz * 0.25 + t * 1.7) +
         0.6 * Math.sin((bx + by + bz) * 0.13 + t * 2.1) +
         0.45 * Math.sin(bx * by * 0.11 + bz * 0.09 + t * 1.1);
-      // Mandelbrot-ish escape proxy on the xz plane (deterministic, no rng) — creases the mesh.
-      let cx = bx * 0.018 + 0.4 * Math.sin(t * 0.07);
-      let cy = bz * 0.018 + 0.3 * Math.cos(t * 0.09);
-      let zx = 0;
-      let zy = 0;
-      let esc = 0;
-      for (let it = 0; it < 6; it++) {
-        const zx2 = zx * zx - zy * zy + cx;
-        zy = 2 * zx * zy + cy;
-        zx = zx2;
-        if (zx * zx + zy * zy > 4) {
-          esc = it / 6;
+      // 3D MANDELBULB escape field (power-8, deterministic, NaN-guarded). The base vertex direction
+      // (a point on the CORE_R sphere) seeds `c`; a slow `t` breathe drifts the set so the lobes
+      // crawl. Vertices that stay BOUNDED (deep in the bulb) bulge OUT into fractal lobes; those that
+      // escape recede — neighbouring verts land on opposite sides of the fractal boundary, creasing
+      // the mass into the iconic bulbous mandelbulb freakshow. Iterations capped at BULB_ITERS.
+      const inv = 1 / CORE_R;
+      const sc = 1.05 + 0.18 * Math.sin(t * 0.06);
+      const cbx = bx * inv * sc;
+      const cby = by * inv * sc + 0.22 * Math.sin(t * 0.05);
+      const cbz = bz * inv * sc;
+      let zxb = cbx;
+      let zyb = cby;
+      let zzb = cbz;
+      let escB = 1; // stays 1 ⇒ bounded (in-set) ⇒ a lobe; drops toward 0 the earlier it escapes
+      for (let it = 0; it < BULB_ITERS; it++) {
+        const r = Math.sqrt(zxb * zxb + zyb * zyb + zzb * zzb);
+        if (r > 2) {
+          escB = it / BULB_ITERS;
           break;
         }
+        const rr = r > 1e-6 ? r : 1e-6;
+        const theta = 8 * Math.acos(clamp(zzb / rr, -1, 1));
+        const phi = 8 * Math.atan2(zyb, zxb);
+        const zr = Math.pow(rr, 8); // rr ≤ 2 here ⇒ zr ≤ 256, finite
+        const st = Math.sin(theta);
+        zxb = zr * st * Math.cos(phi) + cbx;
+        zyb = zr * st * Math.sin(phi) + cby;
+        zzb = zr * Math.cos(theta) + cbz;
       }
-      const mb = esc * 0.14 * w;
+      const mb = escB * 0.55 * w;
       const s = 1 + w * 0.32 * d + mb;
-      arr[i] = bx * s + Math.sin(by * 3.1 + t) * mb * 8;
-      arr[i + 1] = by * s + Math.cos(bx * 2.7 - t * 1.2) * mb * 6;
-      arr[i + 2] = bz * s + Math.sin(bx * bz * 0.08 + t * 0.8) * mb * 8;
+      arr[i] = bx * s + Math.sin(by * 3.1 + t) * mb * 9;
+      arr[i + 1] = by * s + Math.cos(bx * 2.7 - t * 1.2) * mb * 7;
+      arr[i + 2] = bz * s + Math.sin(bx * bz * 0.08 + t * 0.8) * mb * 9;
     }
     pos.needsUpdate = true;
     // Recompute normals on a cadence so the emissive solid still catches a little scene light.
@@ -375,8 +447,8 @@ export class Mechalogodrom {
   private driveCentre(t: number, ease: number): void {
     // Hue cycles through the palette: blood-red → sigma-gold → cyan → violet.
     const hue = (t * 0.05) % 1;
-    this.massMat.emissive.setHSL(hue, 0.85, 0.18 + 0.22 * ease);
-    this.massMat.emissiveIntensity = 1.2 + 2.4 * ease + 1.2 * this.chaos;
+    this.massMat.emissive.setHSL(hue, 0.85, 0.18 + 0.22 * ease + 0.08 * this.apexVitality);
+    this.massMat.emissiveIntensity = 1.2 + 2.4 * ease + 1.2 * this.drive + 0.8 * this.apexVitality;
     this.wireMat.color.setHSL((hue + 0.5) % 1, 1, 0.6);
     // Flash envelope: sharp sparkle on a fast beat, stronger once fused + chaotic.
     const flash = 0.5 + 0.5 * Math.sin(t * 6.3) * Math.sin(t * 2.1);
@@ -436,6 +508,14 @@ export class Mechalogodrom {
       node.scale.setScalar(0.8 + 0.5 * ease + 0.2 * Math.sin(t * 2.2 + n));
     }
     this.labNodeMat.color.setHSL((hue + 0.15) % 1, 1, 0.62);
+
+    // Outer exo-cage: a slow counter-tumble against the inner rig, breathing wider as power climbs.
+    this.exoCage.rotation.x = -t * 0.05;
+    this.exoCage.rotation.y = t * 0.07 + Math.sin(t * 0.13) * 0.4;
+    this.exoCage.rotation.z = Math.cos(t * 0.09) * 0.3;
+    this.exoCage.scale.setScalar(0.9 + 0.18 * ease + 0.05 * Math.sin(t * 0.8));
+    this.exoMat.color.setHSL((hue + 0.78) % 1, 0.9, 0.6);
+    this.exoMat.opacity = 0.1 + 0.22 * ease + 0.08 * flash;
   }
 
   /** Migrate + bipolar-oscillate the ten variant shells; melt them into the corona as fusion completes. */
@@ -499,6 +579,7 @@ export class Mechalogodrom {
     for (const r of this.rings) r.geometry.dispose();
     for (const sh of this.labShells) sh.geometry.dispose();
     for (const n of this.labNodes) n.geometry.dispose();
+    this.exoCage.geometry.dispose();
     for (const v of this.variants) v.mesh.geometry.dispose();
     this.coreMat.dispose();
     this.rimMat.dispose();
@@ -509,6 +590,7 @@ export class Mechalogodrom {
     this.ringMat.dispose();
     this.labMat.dispose();
     this.labNodeMat.dispose();
+    this.exoMat.dispose();
     this.group.removeFromParent();
   }
 }

@@ -1059,9 +1059,14 @@ export class World {
     const baseChaos = this.state.chaos / CHAOS_MAX;
     const apex = this.lastApexThought;
     const visChaos = apex
-      ? clamp(baseChaos + apex.transcendence * 0.42 + apex.vitality * 0.28 - apex.agony * 0.12, 0, 1)
+      ? clamp(
+          baseChaos + apex.transcendence * 0.42 + apex.vitality * 0.28 - apex.agony * 0.12,
+          0,
+          1,
+        )
       : baseChaos;
-    this.mechalogodrom.setChaos(visChaos);
+    this.mechalogodrom.setChaos(baseChaos);
+    if (apex) this.mechalogodrom.setApex(apex.transcendence, apex.vitality, apex.agony);
     this.mechalogodrom.update(t, dt);
     // V-ABC: the 100 alphabet archetypes bob/spin/pulse across the dome (chaos quickens them).
     this.alphabetPantheon.setChaos(visChaos);

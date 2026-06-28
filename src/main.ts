@@ -38,6 +38,13 @@ THREE.ColorManagement.enabled = false;
 
 const log = createLogger('main');
 
+/** Shell layout before WebGL boot — panels must paint in final positions on first frame. */
+function initAppShell(): void {
+  initUiColumns();
+  initCenterHud();
+  syncBottomDockHeight();
+}
+
 const canvas = document.getElementById('c');
 if (!(canvas instanceof HTMLCanvasElement)) {
   throw new Error('boot failure: #c canvas element is missing');
@@ -115,10 +122,6 @@ function boot(): void {
     maxEntities: quality.maxEntities,
   });
 
-  initUiColumns();
-  initCenterHud();
-  syncBottomDockHeight();
-
   // V-toolbar: enable arrow-key / Home / End navigation inside the bottom toolbar.
   initToolbarKeyboard();
 
@@ -170,6 +173,7 @@ function boot(): void {
   rafId = requestAnimationFrame(frame);
 }
 
+initAppShell();
 boot();
 
 // HMR teardown — THE fix for the dev WebGL-context leak. Before a hot-replaced module re-boots, stop the

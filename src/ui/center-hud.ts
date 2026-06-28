@@ -553,10 +553,15 @@ function buildNav(doc: Document): void {
 
 /** V85: always-visible Docs / Spec / Lab / Access / Set — never dropped by chooseNavMode. */
 function buildPersistentNav(doc: Document): void {
-  doc.getElementById('cqm-persist-nav')?.remove();
-  const strip = doc.createElement('nav');
-  strip.id = 'cqm-persist-nav';
-  strip.setAttribute('aria-label', 'Documentation, lab, access, and settings');
+  let strip = doc.getElementById('cqm-persist-nav');
+  if (!strip) {
+    strip = doc.createElement('nav');
+    strip.id = 'cqm-persist-nav';
+    strip.setAttribute('aria-label', 'Documentation, lab, access, and settings');
+  } else {
+    strip.replaceChildren();
+  }
+  strip.removeAttribute('hidden');
 
   const mkBtn = (label: string, title: string, fn: () => void): HTMLButtonElement => {
     const b = doc.createElement('button');
@@ -579,20 +584,16 @@ function buildPersistentNav(doc: Document): void {
   const accToggle = doc.getElementById('cqm-acc-toggle');
   if (accToggle) {
     strip.appendChild(
-      mkBtn(
-        '⛓ ACCESS',
-        'Cryptographic access terminal — unlock the playable super creature',
-        () => accToggle.click(),
+      mkBtn('⛓ ACCESS', 'Cryptographic access terminal — unlock the playable super creature', () =>
+        accToggle.click(),
       ),
     );
   }
   const settingsToggle = doc.getElementById('cqm-settings-toggle');
   if (settingsToggle) {
-    strip.appendChild(
-      mkBtn('⚙ SET', 'Simulation settings', () => settingsToggle.click()),
-    );
+    strip.appendChild(mkBtn('⚙ SET', 'Simulation settings', () => settingsToggle.click()));
   }
-  doc.body.appendChild(strip);
+  if (!strip.parentElement) doc.body.appendChild(strip);
   dockBottomBar(strip, doc);
 }
 
