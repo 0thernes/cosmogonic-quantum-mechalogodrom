@@ -346,22 +346,19 @@ a:focus-visible {
   box-shadow: 0 4px 18px rgba(0, 0, 0, 0.45);
   pointer-events: auto;
 }
-/* Desktop grid: perf HUD lives in #perf-slot below Sorting Fields — no overlap. */
+/* Desktop grid: perf HUD in left flex stack — flush under Sorting Fields. */
 @media (min-width: 769px) and (pointer: fine) and (orientation: landscape) {
-  #perf-slot {
-    grid-area: perf;
-    align-self: end;
-    justify-self: stretch;
-    pointer-events: auto;
-    min-width: 0;
-    max-width: 100%;
-  }
   #perf-slot #perf-hud {
     position: static;
     width: 100%;
     max-width: 100%;
     margin: 0;
-    padding: 6px 10px;
+    padding: 8px 10px;
+    font-size: 14px;
+  }
+  #perf-slot #perf-hud .perf-hud-tier {
+    font-size: 13px;
+    padding: 4px 9px;
   }
 }
 #perf-hud .perf-hud-row {
@@ -791,13 +788,40 @@ a:focus-visible {
   padding-bottom: calc(108px + env(safe-area-inset-bottom, 0px));
   grid-template-columns: clamp(200px, 20vw, 280px) 1fr clamp(260px, 26vw, 400px);
   grid-template-rows: minmax(0, 1fr) minmax(0, 1fr) auto auto auto;
-  /* V85: left tel+agp split evenly; obs spans 2 rows (bigger); right ctl/ralg/rset stacked; perf below agp. */
+  /* V85b: `left` flex column (tel + agp + perf); obs spans 2 rows; right stacks ctl/ralg/rset. */
   grid-template-areas:
-    'tel . obs'
-    'agp . obs'
-    'perf . ctl'
+    'left . obs'
+    'left . obs'
+    ' . . ctl'
     ' . . ralg'
     ' . . rset';
+}
+.ui-col-left {
+  grid-area: left;
+  grid-row: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-height: 0;
+  min-width: 0;
+  pointer-events: none;
+  align-self: stretch;
+}
+.ui-col-left > * {
+  pointer-events: auto;
+  min-width: 0;
+}
+@media (min-width: 769px) and (pointer: fine) and (orientation: landscape) {
+  .ui-col-left #sP,
+  .ui-col-left #algoP {
+    flex: 1 1 0;
+    min-height: 0;
+    max-height: none;
+    height: auto;
+  }
+  .ui-col-left #perf-slot {
+    flex: 0 0 auto;
+  }
 }
 @media (min-width: 769px) and (pointer: fine) and (orientation: landscape) {
   #sP,
@@ -831,8 +855,8 @@ a:focus-visible {
   min-width: 0;
   min-height: 0;
 }
-#sP {
-  grid-area: tel;
+#oP {
+  grid-area: obs;
 }
 /* V51/V53: AUDIT is a dock-toggled fixed overlay on EVERY viewport — like the other dock panels
    (NEURAL/MARKET/ARCHITECT/…), NOT a left-column grid panel and NOT an edge sheet. So it never crowds
@@ -857,9 +881,6 @@ a:focus-visible {
 #aP > .sheet-handle {
   display: none;
 }
-#oP {
-  grid-area: obs;
-}
 /* V84: Control pad lives in the right column directly under the Observatory (grid `ctl`). */
 #cP {
   grid-area: ctl;
@@ -872,9 +893,8 @@ a:focus-visible {
   z-index: auto;
   text-align: center;
 }
-/* Algorithm picker — lower half of the left column (even split with telemetry). */
+/* Algorithm picker — lower half of the left flex column (even split with telemetry). */
 #algoP {
-  grid-area: agp;
   align-self: stretch;
   min-height: 0;
 }
@@ -1165,6 +1185,9 @@ a:focus-visible {
     padding: 0;
     pointer-events: none;
   }
+  .ui-col-left {
+    display: contents;
+  }
   #ui > * {
     pointer-events: auto;
   }
@@ -1290,9 +1313,9 @@ a:focus-visible {
     grid-template-columns: clamp(180px, 22vw, 260px) 1fr clamp(240px, 28vw, 380px);
     grid-template-rows: minmax(0, 1fr) minmax(0, 1fr) auto auto auto;
     grid-template-areas:
-      'tel . obs'
-      'agp . obs'
-      'perf . ctl'
+      'left . obs'
+      'left . obs'
+      ' . . ctl'
       ' . . ralg'
       ' . . rset';
   }

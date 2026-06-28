@@ -23,6 +23,7 @@ import './ui/help-system';
 import './ui/audit-dock';
 // Center HUD (V56/V84): cyclable center popup for AI · HELP · AUDIT · NEURAL · MARKET · ARCHITECT · ARCHITECTURE.
 import { initCenterHud } from './ui/center-hud';
+import { initLeftColumn } from './ui/left-column';
 // Toolbar keyboard navigation: roving tabindex + arrow keys for #bar buttons.
 import { initToolbarKeyboard } from './ui/toolbar';
 // Onboarding overlay (V81): one-time, dismissible first-run hint.
@@ -113,6 +114,7 @@ function boot(): void {
     maxEntities: quality.maxEntities,
   });
 
+  initLeftColumn();
   initCenterHud();
 
   // V-toolbar: enable arrow-key / Home / End navigation inside the bottom toolbar.
