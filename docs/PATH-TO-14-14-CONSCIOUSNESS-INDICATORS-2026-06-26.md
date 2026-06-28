@@ -149,7 +149,7 @@
 4. Document any missing or partial indicators
 5. Create test suite for each indicator
 
-**Receipt:** Current audit is partial; full audit needed
+**Receipt:** COMPLETE. `tests/butlin-indicators.test.ts` now contains 15 explicit receipt tests — one per Butlin indicator plus an integration test — covering GWT-1/2/3/4, PP-1, HOT-2/3, AE-1/2, RPT-1/2, IIT-1/2, AST-1/2, and a SuperMind snapshot that exposes all substrates in one telemetry surface. The scorecard remains **8/14 met + 6/14 partial** (computational indicators, NOT phenomenal sentience); the audit is now fully mapped and continuously verified on every `bun test` run.
 
 ---
 
@@ -159,7 +159,7 @@
 2. **Phase 2: Learned Recurrence (RPT-1/2)** — DONE — `LearnedRecurrence` (online BPTT) + `NQSLearningController` (NQS/VMC quantum-state learning) wired into `think()`
 3. **Phase 3: Full Irreducibility (IIT-2)** — DONE structurally — classical participation + quantum/mincut proxies present; deepen ablation proofs next
 4. **Phase 4: Self-Model Accuracy (AST-2)** — DONE structurally — metacognitive self-model update present; deepen calibration tests next
-5. **Phase 5: Complete Butlin Audit** — ONGOING — verification and documentation stay live with every build wave
+5. **Phase 5: Complete Butlin Audit** — DONE — all 14 indicators mapped to code receipts and covered by `tests/butlin-indicators.test.ts`
 
 ---
 
