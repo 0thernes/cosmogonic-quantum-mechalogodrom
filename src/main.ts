@@ -116,6 +116,17 @@ function boot(): void {
 
   // V56: CENTER HUD DISABLED — original dock-based UI restored.
   // initCenterHud();
+  // V82: hard-purge any stale center-hud DOM leftovers from an earlier build/cache so they can't block
+  // clicks or re-home the panels back into the broken centered slot.
+  if (typeof document !== 'undefined') {
+    document.getElementById('cqm-hud-nav')?.remove();
+    document.getElementById('cqm-hud-style')?.remove();
+    document.documentElement.style.removeProperty('--cqm-hud-left');
+    document.documentElement.style.removeProperty('--cqm-hud-right');
+    document.documentElement.style.removeProperty('--cqm-hud-bottom');
+    document.documentElement.style.removeProperty('--cqm-hud-height');
+    document.documentElement.style.removeProperty('--cqm-nav-bottom');
+  }
 
   // V-toolbar: enable arrow-key / Home / End navigation inside the bottom toolbar.
   initToolbarKeyboard();
