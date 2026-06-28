@@ -16,8 +16,8 @@ when the numbers change it is rewritten in place.
 | Repo package  | `v0.18.0`                                                                                 |
 | Full gate     | `bun run check` green (2026-06-26)                                                        |
 | Gate stages   | `format:check`, `typecheck`, `lint`, `bun test`, `verify:receipts`, `sync:check`, `build` |
-| Tests         | `1477 pass`, `0 fail`, `1,744,891 expect() calls`, `151` test files                       |
-| Coverage      | `~95%` line / `~92%` function (canonical 95.03 / 92.03; ±6 pp env-jitter, gate-enforced)  |
+| Tests         | `1771 pass`, `0 fail`, `2,047,523 expect() calls`, `175` test files                       |
+| Coverage      | `~92%` line / `~95%` function (canonical 91.97 / 94.85; ±6 pp env-jitter, gate-enforced)  |
 | Build         | `7` artifacts emitted to `dist/`                                                          |
 | Single source | `scripts/canonical-receipts.ts` + `package.json`                                          |
 

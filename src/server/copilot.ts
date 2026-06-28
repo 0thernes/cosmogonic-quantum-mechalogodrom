@@ -11,9 +11,12 @@
  * a curated table of free, OpenAI-compatible endpoints (docs/research free-LLM report). Two are
  * key-less and always available (Pollinations, LLM7); the rest light up only when their key is
  * present in a SERVER-SIDE env var — keys never reach the browser, and the picker only ever offers
- * a provider the server can actually use. A request may name a provider; the server resolves it
- * (default-deny: unknown/keyless → the default) and, if the chosen provider errors, FAILS OVER once
- * to the key-less default so the box still answers. The legacy single-endpoint env override
+ * a provider the server can actually use. Keyed providers may expose a rolling key pool via
+ * `FOO_API_KEY`, `FOO_API_KEYS` (comma/semicolon/newline separated), and `FOO_API_KEY_2`...
+ * `FOO_API_KEY_9`; each key slot is tried as its own recovery step. A request may name a provider;
+ * the server resolves it (default-deny: unknown/keyless → the default) and, if the chosen provider
+ * errors, FAILS OVER across every configured key slot and provider until one answers. The legacy
+ * single-endpoint env override
  * (`CQM_LLM_ENDPOINT`/`CQM_LLM_MODEL`/`CQM_LLM_KEY`) survives as the `custom` provider and, when
  * set, becomes the default.
  */
@@ -127,6 +130,10 @@ interface ResolvedProvider {
   endpoint: string;
   model: string;
   key: string;
+  /** 0-based key slot in the provider pool; 0 for key-less providers. */
+  keySlot: number;
+  /** Total key slots for this provider; 1 for key-less providers. */
+  keySlotCount: number;
 }
 
 function envStr(name: string): string {
@@ -134,20 +141,66 @@ function envStr(name: string): string {
   return typeof v === 'string' ? v.trim() : '';
 }
 
+/** Add one or many env-token values into a deduped key list without ever logging them. */
+function addKeyTokens(out: string[], seen: Set<string>, raw: string): void {
+  for (const part of raw.split(/[,;\n\r]+/)) {
+    const key = part.trim();
+    if (key && !seen.has(key)) {
+      seen.add(key);
+      out.push(key);
+    }
+  }
+}
+
+/**
+ * Resolve a provider's rolling server-side key pool. Given `GROQ_API_KEY`, this accepts:
+ * - `GROQ_API_KEY` for the primary slot,
+ * - `GROQ_API_KEYS` for a comma/semicolon/newline-separated pool,
+ * - `GROQ_API_KEY_2` ... `GROQ_API_KEY_9` for explicit overflow slots.
+ *
+ * Returns an empty list when no key is configured. Keys never leave this module.
+ */
+function keySlots(primaryEnv: string | undefined): string[] {
+  if (!primaryEnv) return [];
+  const out: string[] = [];
+  const seen = new Set<string>();
+  addKeyTokens(out, seen, envStr(primaryEnv));
+  addKeyTokens(out, seen, envStr(primaryEnv + 'S'));
+  for (let i = 2; i <= 9; i++) addKeyTokens(out, seen, envStr(`${primaryEnv}_${i}`));
+  return out;
+}
+
+function slotLabel(label: string, slot: number, total: number): string {
+  return total > 1 ? `${label} · key ${slot + 1}/${total}` : label;
+}
+
+function summaryLabel(label: string, total: number): string {
+  return total > 1 ? `${label} · ${total} key slots` : label;
+}
+
 /**
  * The `custom` provider from the legacy single-endpoint env vars. Present only when
  * `CQM_LLM_ENDPOINT` is set; when present it is the DEFAULT (back-compat with the 0.9.0 wiring).
  */
-function customProvider(): ResolvedProvider | null {
+function customProviders(): ResolvedProvider[] {
   const endpoint = envStr('CQM_LLM_ENDPOINT');
-  if (!endpoint) return null;
-  return {
+  if (!endpoint) return [];
+  const keys = keySlots('CQM_LLM_KEY');
+  const slots = keys.length > 0 ? keys : [''];
+  const label = `custom @ ${safeHost(endpoint)}`;
+  return slots.map((key, i) => ({
     id: 'custom',
-    label: `custom @ ${safeHost(endpoint)}`,
+    label: slotLabel(label, i, slots.length),
     endpoint,
     model: envStr('CQM_LLM_MODEL') || 'openai',
-    key: envStr('CQM_LLM_KEY'),
-  };
+    key,
+    keySlot: i,
+    keySlotCount: slots.length,
+  }));
+}
+
+function customProvider(): ResolvedProvider | null {
+  return customProviders()[0] ?? null;
 }
 
 /** Whether the user explicitly pointed at a FreeLLMAPI proxy (vs the implicit localhost:3001 default). */
@@ -163,30 +216,46 @@ function freellmapiConfigured(): boolean {
  * `freellmapi` proxy (docs/research/free-LLM guide) — or set `FREELLMAPI_BASE` — to light it up.
  * Always returns a provider now (the localhost default), so it is always the chain head.
  */
-function freellmapiProvider(): ResolvedProvider {
+function freellmapiProviders(): ResolvedProvider[] {
   const base = envStr('FREELLMAPI_BASE') || 'http://localhost:3001/v1';
-  return {
+  const keys = keySlots('FREELLMAPI_KEY');
+  const slots = keys.length > 0 ? keys : [''];
+  return slots.map((key, i) => ({
     id: 'freellmapi',
-    label: 'FreeLLMAPI · auto (16-provider pool)',
+    label: slotLabel('FreeLLMAPI · auto (16-provider pool)', i, slots.length),
     endpoint: base.replace(/\/$/, '') + '/chat/completions',
     model: envStr('FREELLMAPI_MODEL') || 'auto',
-    key: envStr('FREELLMAPI_KEY'),
+    key,
+    keySlot: i,
+    keySlotCount: slots.length,
+  }));
+}
+
+function freellmapiProvider(): ResolvedProvider {
+  return freellmapiProviders()[0]!;
+}
+
+function presetToResolved(p: ProviderPreset, key = '', slot = 0, total = 1): ResolvedProvider {
+  return {
+    id: p.id,
+    label: slotLabel(p.label, slot, total),
+    endpoint: p.endpoint,
+    model: p.model,
+    key,
+    keySlot: slot,
+    keySlotCount: total,
   };
 }
 
-function presetToResolved(p: ProviderPreset): ResolvedProvider {
-  return {
-    id: p.id,
-    label: p.label,
-    endpoint: p.endpoint,
-    model: p.model,
-    key: p.keyEnv ? envStr(p.keyEnv) : '',
-  };
+function presetSlots(p: ProviderPreset): ResolvedProvider[] {
+  if (p.keyEnv === undefined) return [presetToResolved(p)];
+  const keys = keySlots(p.keyEnv);
+  return keys.map((key, i) => presetToResolved(p, key, i, keys.length));
 }
 
 /** True when a preset can actually be called now (key-less, or its env key is present). */
 function presetAvailable(p: ProviderPreset): boolean {
-  return p.keyEnv === undefined || envStr(p.keyEnv).length > 0;
+  return p.keyEnv === undefined || keySlots(p.keyEnv).length > 0;
 }
 
 /** The default provider: an explicit `custom` env override wins, else **FreeLLMAPI** (the primary). */
@@ -204,11 +273,27 @@ export function availableProviders(): { id: string; label: string; def: boolean 
   const def = defaultProvider();
   const out: { id: string; label: string; def: boolean }[] = [];
   const custom = customProvider();
-  if (custom) out.push({ id: custom.id, label: custom.label, def: def.id === custom.id });
-  const fre = freellmapiProvider(); // always present now — the primary chain head
-  out.push({ id: fre.id, label: fre.label, def: def.id === fre.id });
+  const customSlots = customProviders();
+  if (custom)
+    out.push({
+      id: custom.id,
+      label: summaryLabel(`custom @ ${safeHost(custom.endpoint)}`, customSlots.length),
+      def: def.id === custom.id,
+    });
+  const freSlots = freellmapiProviders(); // always present now — the primary chain head
+  const fre = freSlots[0]!;
+  out.push({
+    id: fre.id,
+    label: summaryLabel('FreeLLMAPI · auto (16-provider pool)', freSlots.length),
+    def: def.id === fre.id,
+  });
   for (const p of PRESETS) {
-    if (presetAvailable(p)) out.push({ id: p.id, label: p.label, def: def.id === p.id });
+    if (presetAvailable(p))
+      out.push({
+        id: p.id,
+        label: summaryLabel(p.label, presetSlots(p).length),
+        def: def.id === p.id,
+      });
   }
   // Guarantee the default is marked exactly once (custom may duplicate a preset id — it won't here).
   if (!out.some((o) => o.def) && out[0]) out[0].def = true;
@@ -222,7 +307,7 @@ export function resolveProvider(id: string | undefined): ResolvedProvider {
   if (id === 'freellmapi') return freellmapiProvider();
   const p = PRESETS.find((x) => x.id === id);
   if (!p || !presetAvailable(p)) return defaultProvider();
-  return presetToResolved(p);
+  return presetSlots(p)[0] ?? defaultProvider();
 }
 
 function safeHost(url: string): string {
@@ -401,23 +486,32 @@ async function runLoop(
 }
 
 /**
- * Every callable provider in failover order (key-less first), deduped by endpoint. This is the
- * chain `runAgent` walks so a single dead/rate-limited provider (e.g. Pollinations 429) no longer
- * sinks the whole box — it falls through to the next live one.
+ * Every callable provider/key-slot in failover order, deduped by endpoint+model+key. This is the
+ * chain `runAgent` walks so a single dead/rate-limited provider or exhausted key no longer sinks
+ * the whole box — it falls through to the next live slot.
  */
 function providerChain(): ResolvedProvider[] {
   const out: ResolvedProvider[] = [];
   const seen = new Set<string>();
   const add = (p: ResolvedProvider | null): void => {
-    if (p && p.endpoint && !seen.has(p.endpoint)) {
-      seen.add(p.endpoint);
+    const k = p ? `${p.endpoint}\0${p.model}\0${p.key}` : '';
+    if (p && p.endpoint && !seen.has(k)) {
+      seen.add(k);
       out.push(p);
     }
   };
-  add(customProvider());
-  add(freellmapiProvider());
-  for (const p of PRESETS) if (presetAvailable(p)) add(presetToResolved(p));
+  for (const p of customProviders()) add(p);
+  for (const p of freellmapiProviders()) add(p);
+  for (const p of PRESETS) for (const slot of presetSlots(p)) add(slot);
   return out;
+}
+
+/**
+ * Sanitized recovery plan for tests/UI diagnostics: ids and labels only, never endpoints or keys.
+ * Multiple key slots intentionally appear as multiple rows so the recovery pipeline is visible.
+ */
+export function providerRecoveryPlan(): { id: string; label: string; keyed: boolean }[] {
+  return providerChain().map((p) => ({ id: p.id, label: p.label, keyed: !!p.key }));
 }
 
 /**
@@ -430,13 +524,15 @@ export async function runAgent(history: ChatMessage[], providerId?: string): Pro
   const chosen = resolveProvider(providerId);
   const order: ResolvedProvider[] = [];
   const seen = new Set<string>();
+  const keyOf = (p: ResolvedProvider): string => `${p.endpoint}\0${p.model}\0${p.key}`;
   if (chosen.endpoint) {
     order.push(chosen);
-    seen.add(chosen.endpoint);
+    seen.add(keyOf(chosen));
   }
   for (const p of providerChain()) {
-    if (!seen.has(p.endpoint)) {
-      seen.add(p.endpoint);
+    const k = keyOf(p);
+    if (!seen.has(k)) {
+      seen.add(k);
       order.push(p);
     }
   }

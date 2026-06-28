@@ -24,7 +24,7 @@
     "filemap": "bun scripts/gen-filemap.ts",
     "metrics": "bun scripts/codebase-metrics.ts",
     "verify:facts": "bun scripts/verify-canonical-facts.ts",
-    "check": "bun run format:check && bun run typecheck && bun run lint && bun test && bun run verify:receipts && bun run sync:check && bun run build",
+    "check": "bun run format:check && bun run typecheck && bun run lint && bun run test:coverage && bun run verify:receipts && bun run sync:check && bun run verify:facts && bun run build",
     "verify:receipts": "bun scripts/verify-receipts.ts",
     "sync": "bun scripts/sync-surfaces.ts",
     "sync:check": "bun scripts/sync-surfaces.ts --check",

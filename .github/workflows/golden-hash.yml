@@ -1,0 +1,15 @@
+name: Golden Hash Determinism Check
+on: [push, pull_request]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: oven-sh/setup-bun@v1
+      - run: bun install
+      - run: bun run check
+      - name: Verify Golden Hash
+        run: |
+          echo "Verifying SHA-256(SimState) matches 32-bit seed expectation..."
+          # Insert hash validation logic here

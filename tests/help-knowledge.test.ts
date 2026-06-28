@@ -23,6 +23,11 @@ describe('help knowledge', () => {
     expect(findHelp('what is the super creature')[0]?.id).toBe('super-creature');
     expect(findHelp('how does the economy and money work')[0]?.id).toBe('economy');
     expect(findHelp('what are all these creatures')[0]?.id).toBe('entities');
+    expect(findHelp('what is the center monster mechalogodrom')[0]?.id).toBe('mechalogodrom');
+    expect(findHelp('what are the 100 alphabet creatures in the dome')[0]?.id).toBe(
+      'alphabet-dome',
+    );
+    expect(findHelp('what is the ascension shadow core temple')[0]?.id).toBe('ascension-temple');
     expect(findHelp('is it the same every time, random seed')[0]?.id).toBe('determinism');
     expect(findHelp('superhero powers and xp')[0]?.id).toBe('superhero');
   });

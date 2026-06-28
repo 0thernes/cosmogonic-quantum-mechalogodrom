@@ -315,6 +315,20 @@ export class EntityManager {
     const list = this.list;
     const e = list[index];
     if (!e) return;
+
+    // Fix Bug 14: Extinction-triggered decrement of genetic diversity (mutations)
+    let isExtinct = true;
+    for (let k = 0; k < list.length; k++) {
+      const other = list[k];
+      if (k !== index && other && other.userData.mi === e.userData.mi) {
+        isExtinct = false;
+        break;
+      }
+    }
+    if (isExtinct && this.ctx.state.mutations > 0) {
+      this.ctx.state.mutations--;
+    }
+
     this.dispose(e);
     for (let j = index + 1; j < list.length; j++) {
       const next = list[j];
@@ -484,7 +498,7 @@ export class EntityManager {
           e.material.emissiveIntensity = lerp(
             e.material.emissiveIntensity,
             m.emI * emiBoost * metabolicLuminance(u.energy, u.age, u.life),
-            dt * 2,
+            clamp01(dt * 2),
           );
       }
 
@@ -515,6 +529,14 @@ export class EntityManager {
         e.scale.y = u.sc * (1 + Math.cos(t * 5) * 0.3);
         e.scale.z = u.sc;
         if (u.belly <= 0) e.scale.setScalar(u.sc);
+      }
+
+      // Finite seal (NaN guard)
+      if (
+        !Number.isFinite(e.position.x + e.position.y + e.position.z + u.vel.x + u.vel.y + u.vel.z)
+      ) {
+        e.position.set(0, 5, 0);
+        u.vel.set(0, 0, 0);
       }
 
       // Containment — squared distance, no sqrt (legacy 4225 × ARENA²; V3.1, V38 density-scaled).

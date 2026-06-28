@@ -157,11 +157,14 @@ instinct's settled archetype, so the ported machinery is visible live.
 A side panel to "ask, learn, and talk about this world" with a free AI — strictly read-only.
 
 - **`src/server/copilot.ts`** — pluggable, OpenAI-compatible LLM bridge. Default provider is
-  **Pollinations.ai** (`https://text.pollinations.ai/openai`, no API key). Env overrides:
-  `CQM_LLM_ENDPOINT`, `CQM_LLM_MODEL`, `CQM_LLM_KEY` — point it at **`freellmapi`** (the GitHub
-  project that stacks 16 providers' free tiers into a ~1.7B-token/month OpenAI-compatible `/v1`
-  endpoint), OpenRouter `:free`, Groq, etc. A bounded agent loop runs the model's read-only tool
-  calls and degrades gracefully when the provider is offline.
+  **FreeLLMAPI** (`http://localhost:3001/v1` by default), with key-less LLM7 and Pollinations behind
+  it and keyed presets for Groq, Cerebras, OpenRouter, GitHub Models, Mistral, Gemini, NVIDIA,
+  DeepSeek, and Hugging Face. Env overrides: `FREELLMAPI_BASE`, `FREELLMAPI_MODEL`,
+  `FREELLMAPI_KEY`, or `CQM_LLM_ENDPOINT` / `CQM_LLM_MODEL` / `CQM_LLM_KEY` for a custom endpoint.
+  Keyed providers accept rolling pools (`FOO_API_KEY`, `FOO_API_KEYS`, `FOO_API_KEY_2` ...
+  `FOO_API_KEY_9`) so a rate-limited slot falls through to the next configured slot. A bounded
+  agent loop runs the model's read-only tool calls and degrades gracefully when the provider is
+  offline.
 - **`src/server/ai-sandbox.ts`** — the hard boundary behind "read and run, can't change code." The
   model never gets a raw shell — only four gated tools: `read_file` / `list_dir` / `grep` (repo-
   confined; `legacy/`, `.git`, `.env`, `node_modules`, `dist`, and any `..` escape are blocked) and
@@ -182,8 +185,9 @@ A side panel to "ask, learn, and talk about this world" with a free AI — stric
 When the free pool is rate-limited the chat goes quiet, so the panel's **🩺 DIAGNOSTICS** button
 calls `GET /api/copilot/health`, which probes every provider in the failover chain **in parallel** (a
 1-token ping, 6 s timeout each) and returns per-provider `{reachable, status, latencyMs, detail}` plus
-an overall verdict. The panel renders the **recovery pipeline** in failover order with green ● / red ○
-health lights, latency, and a human reason — `classifyHealth(status, err)` maps the ping to
+an overall verdict. Multi-key providers appear as separate recovery rows (`key 1/N`, `key 2/N`, ...)
+without exposing the credential values. The panel renders the **recovery pipeline** in failover order
+with green ● / red ○ health lights, latency, and a human reason — `classifyHealth(status, err)` maps the ping to
 `ok` / `rate-limited (429)` / `auth (401/403)` / `http NNN` / `timeout` / the network error, and
 `healthVerdict(probes)` rolls them into `operational — k/n reachable` or an all-down recovery hint
 (both pure + unit-tested). A **↻ Re-probe / restart** control re-runs the probe and re-enables the

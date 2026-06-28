@@ -198,6 +198,9 @@ export class QuantumMind {
   private amplifyTarget = 0;
   /** V1.1: how many Grover oracle+diffuse rounds ran this beat (0..2, gated by focus). */
   private amplifyRounds = 0;
+  /** Pre-allocated scratch for gwtBroadcast calls in evolve() — no per-beat array allocation. */
+  private readonly gwtContent = [0, 0, 0, 0];
+  private readonly gwtSalience = [0.7, 0.8, 0.5, 0.6];
   // ── V93: natural-gradient self-optimization — persisted biases + preallocated finite-diff buffers ──
   /** Persisted natural-gradient bias on the superposition drive (steers the circuit toward intent). */
   private optSup = 0;
@@ -257,7 +260,12 @@ export class QuantumMind {
     this.dLatent = latent;
     this.dL = L;
     // Ralph 10x: use gwtBroadcast (Eshkol GWT from Tsotchke) + dual for corpus modulation of qubit drives
-    const gwt = gwtBroadcast([sup, ent, ftl, mut], [0.7, 0.8, 0.5, 0.6]);
+    const gwtC = this.gwtContent;
+    gwtC[0] = sup;
+    gwtC[1] = ent;
+    gwtC[2] = ftl;
+    gwtC[3] = mut;
+    const gwt = gwtBroadcast(gwtC, this.gwtSalience);
     const dSup = makeEshkolDual(this.dSup, gwt[0] || 0);
     this.dSup = clamp01(dSup.value + (gwt[1] || 0) * 0.01);
     this.gateCount = this.applyCircuit(sup, ent, ftl, mut, latent, L);

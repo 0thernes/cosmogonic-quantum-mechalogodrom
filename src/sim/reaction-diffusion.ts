@@ -272,8 +272,13 @@ export class ReactionDiffusionSystem {
   perturb(nx: number, ny: number, radius = DEFAULT_PERTURB_RADIUS): void {
     const s = this.size;
     const r = Math.max(1, Math.min(Math.floor(radius), s >> 2));
-    const cx = Math.floor((nx - Math.floor(nx)) * s); // fractional part ⇒ [0, s)
-    const cy = Math.floor((ny - Math.floor(ny)) * s);
+    if (!Number.isFinite(nx) || !Number.isFinite(ny)) return;
+    nx = Math.max(0, Math.min(1, nx));
+    ny = Math.max(0, Math.min(1, ny));
+    let cx = Math.floor(nx * s);
+    let cy = Math.floor(ny * s);
+    cx = ((cx % s) + s) % s;
+    cy = ((cy % s) + s) % s;
     const r2 = r * r;
     const u = this.u;
     const v = this.v;
@@ -303,8 +308,13 @@ export class ReactionDiffusionSystem {
   seedDeterministic(nx: number, ny: number, radius = DEFAULT_PERTURB_RADIUS): void {
     const s = this.size;
     const r = Math.max(1, Math.min(Math.floor(radius), s >> 2));
-    const cx = Math.floor((nx - Math.floor(nx)) * s);
-    const cy = Math.floor((ny - Math.floor(ny)) * s);
+    if (!Number.isFinite(nx) || !Number.isFinite(ny)) return;
+    nx = Math.max(0, Math.min(1, nx));
+    ny = Math.max(0, Math.min(1, ny));
+    let cx = Math.floor(nx * s);
+    let cy = Math.floor(ny * s);
+    cx = ((cx % s) + s) % s;
+    cy = ((cy % s) + s) % s;
     const r2 = r * r;
     const u = this.u;
     const v = this.v;

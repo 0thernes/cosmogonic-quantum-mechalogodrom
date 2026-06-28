@@ -42,7 +42,7 @@ import {
 } from './sim/constants';
 import { ALGOS, ALGO_GLYPHS, ALGO_IGNITE } from './sim/algorithms';
 import { SONGS, SFX_EXTRA_BANDS } from './audio/songs';
-import { mulberry32, type Rng } from './math/rng';
+import { mulberry32, createIsolatedStreams, type Rng } from './math/rng';
 import { clamp } from './math/scalar';
 import { SpatialHash } from './math/spatial-hash';
 import { createGeometryCache } from './sim/geometry-cache';
@@ -87,6 +87,10 @@ import { NhiObservatory } from './ui/nhi-observatory';
 import { MarketTicker } from './ui/market-ticker';
 import { PantheonArchitecturePanel } from './ui/pantheon-architecture-panel';
 import { SuperCreature, type SuperPercept } from './sim/super-creature';
+import { ApexBrain, type ApexPercept, type ApexThought } from './sim/apex-brain';
+import { breedAt, type BabyGenome, PANTHEON_TOTAL } from './sim/pantheon-breeding';
+import { SelfEvolutionLoop, type EvolutionMetrics } from './sim/self-evolution-loop';
+import { bedauPackardActivity, shannonDiversity } from './sim/open-endedness';
 import {
   GODFORMS,
   getArchonForm,
@@ -190,6 +194,7 @@ export class World {
   private readonly log = createLogger('world');
 
   private readonly rng: Rng;
+  private readonly uiRng: Rng;
   private readonly state: SimState;
   private readonly grid: SpatialHash<Entity>;
   private readonly audio: AudioEngine;
@@ -207,6 +212,7 @@ export class World {
   private readonly hud: Hud;
   private readonly panel: TelemetryPanel;
   private readonly input: InputSystem;
+  private readonly pantheonArchitecturePanel: PantheonArchitecturePanel;
 
   // ── PANTHEON V3 systems (CONTRACTS V3) ──
   private readonly titans: TitanSystem;
@@ -387,6 +393,56 @@ export class World {
   private readonly heroIntent = new THREE.Vector3();
   private readonly heroF = new THREE.Vector3();
   private readonly heroR = new THREE.Vector3();
+  /** Pre-allocated driveSuper scratch — eliminates per-call allocations (audit fix #2/#3). */
+  private readonly superCollective = new Float32Array(FIELD_DIM);
+  private readonly superBasePercept: SuperPercept = {
+    energy: 0,
+    threat: 0,
+    crowding: 0,
+    chaos: 0,
+    wealthRel: 0,
+    preyClose: 0,
+    rivalClose: 0,
+    pull: 0,
+    light: 0,
+    sound: 0,
+    phase: 0,
+  };
+  private readonly superArchonPercept: SuperPercept = {
+    energy: 0,
+    threat: 0,
+    crowding: 0,
+    chaos: 0,
+    wealthRel: 0,
+    preyClose: 0,
+    rivalClose: 0,
+    pull: 0,
+    light: 0,
+    sound: 0,
+    phase: 0,
+  };
+  private readonly superMpoInput = new Float32Array(2);
+  /** V-APEX: the Entropic Tesseract Hydra brain (10 organs + quantum + meta-paradox). Wired into the apex beat. */
+  private readonly apexBrain: ApexBrain;
+  private lastApexThought: ApexThought | null = null;
+  private readonly apexPercept: ApexPercept = {
+    threat: 0,
+    energy: 0,
+    chaos: 0,
+    novelty: 0,
+    level: 0,
+  };
+  /** V-BREED: the 101-glyph pantheon breeding system. Periodic rites produce BabyGenome children
+   *  whose 4 mathematical structures (Touchard, winding, de Jong, Blaschke) boost petri dish growth. */
+  private breedNonce = 0;
+  private lastBaby: BabyGenome | null = null;
+  /** V-SELFEVO: the self-evolution loop (Gödel-machine style self-improvement). Runs every 1200 frames. */
+  private selfEvoLoop: SelfEvolutionLoop | null = null;
+  private readonly evoRng2 = mulberry32(0xc0ffee42 >>> 0); // deterministic sub-stream for self-evo (fixed seed: seed-independent meta-layer outside the population golden)
+  /** V-BEDAU: Bedau-Packard evolutionary activity tracking. Diversity snapshots feed the activity metric. */
+  private readonly diversitySnapshots: number[] = [];
+  private lastBedauActivity = 0;
+
   /** Reused telemetry snapshot (panel reads synchronously). */
   private readonly snap: TelemetrySnapshot;
 
@@ -402,7 +458,8 @@ export class World {
     this.store = opts.store;
     this.audit = opts.audit;
 
-    this.rng = mulberry32(this.persisted.seed);
+    const streams = createIsolatedStreams(this.persisted.seed);
+    this.rng = streams.physicsRng;
     // Economy rng: a deterministic sub-stream derived from the world seed (golden-ratio mix), kept
     // separate from `this.rng` so the market never perturbs the main simulation's draw order.
     this.econRng = mulberry32((this.persisted.seed ^ 0x9e3779b1) >>> 0 || 1);
@@ -410,6 +467,8 @@ export class World {
     // genomes + inheritance-on-split never shift the main entity draw order. Same golden-ratio-mix
     // discipline as econRng/superRng. Passed via ctx; EntityManager uses it for trait heredity.
     this.genomeRng = mulberry32((this.persisted.seed ^ 0x6e3a17c5) >>> 0 || 1);
+    // UI rng: isolated stream to prevent pointer events and hover states from advancing the physics seed.
+    this.uiRng = streams.uiRng;
 
     this.state = {
       chaos: 0.5,
@@ -592,6 +651,9 @@ export class World {
     // byte-identical. Its wallet (apex stature, weight 20) is enrolled on the SAME sub-stream, so
     // econRng's order is untouched too. The panel self-mounts; the ⬢ ARCHITECT toggle is always shown.
     this.superRng = mulberry32((this.persisted.seed ^ 0x5e1f9d3b) >>> 0 || 1);
+    // V-APEX: the Entropic Tesseract Hydra brain on its OWN seeded sub-stream (determinism-safe).
+    // 10 incompatible neuron architectures + quantum brain + meta-paradox layer. Wired into the apex beat.
+    this.apexBrain = new ApexBrain((this.persisted.seed ^ 0xa1e8b6a4) >>> 0 || 1);
     // legacy single kept EXCLUSIVELY for player hero/twin paths (maybeSpawn + its snapshot in UI)
     this.superCreature = new SuperCreature(this.superRng);
     // V47: the wingman swarm (logic on its own rng sub-stream) + its single-draw-call instanced render.
@@ -612,10 +674,7 @@ export class World {
       this.superAscended = true;
     }
     this.superPanel = new SuperPanel();
-    // GOAL "101 Super Creatures": the ⟁ ARCHITECTURE cycler self-mounts its own dock button + panel,
-    // reads sim/pantheon-breeding directly, and animates each creature/baby's dynamics on demand. It
-    // is fire-and-forget (manages its own rAF + DOM), so it is constructed without retaining a field.
-    void new PantheonArchitecturePanel();
+    this.pantheonArchitecturePanel = new PantheonArchitecturePanel();
     // NOTE: legacy single register removed; 5 SUPER CREATURES register their own purses below (ECON 9000+i).
     // F-SUPER V32: the masterful many-eyed apex BODY (god-jewel shader) — additive, draws no rng.
     // F-BRAIN V42: every organism's compact 70-param genome brain, on its OWN seeded sub-stream (so the
@@ -854,6 +913,8 @@ export class World {
     this.rd.dispose(); // the Gray–Scott GPU DataTexture
     for (const b of this.superBodies) b.dispose();
     for (const h of this.heroBodies) h.body.dispose();
+    this.pantheonArchitecturePanel.dispose();
+    this.input.dispose();
   }
 
   /**
@@ -1077,6 +1138,12 @@ export class World {
     this.viz3d.update(this.viz3dSnap);
     this.environment.update(dt, t);
     this.artifacts.update(dt, t); // F-ARTIFACTS (V9): animate + fade the relic pool (visual-only)
+    this.monolithTemple.setEnvironment({
+      chaos: s.chaos / CHAOS_MAX,
+      entropy: (s.entropy ?? 0) / ENTROPY_MAX,
+      population: n,
+      capacity: this.quality.maxEntities,
+    });
     this.monolithTemple.update(dt, t); // V63: rise + shimmer the ascension portal (no-op until revealed)
 
     if (s.frame % 60 === 30) {
@@ -1259,7 +1326,7 @@ export class World {
       // The pantheon is already beaten once per frame in update(); read its current snapshot here
       // (driveSuper runs on a frame % 4 cadence) so the stigmergic field is not double-stepped.
       const pantheonSnap = this.pantheon.snapshot();
-      const collective = new Float32Array(FIELD_DIM);
+      const collective = this.superCollective;
       this.pantheon.collectiveBias(0, collective);
       const econ = this.economy.summary();
       const mean = econ.agents > 0 ? econ.totalWealth / econ.agents : 1;
@@ -1299,27 +1366,25 @@ export class World {
       this.mythRitual.step();
       const net0 = this.economy.wealthOf(World.ECON_SUPER_BASE + 0)?.netWorth ?? 0;
       // global fallback percept (used for twins/heroes); 5 get position-localized versions below
-      const basePercept: SuperPercept = {
-        energy: clamp(0.5 + 0.5 * (1 - s.chaos / 10) + facultyBias * 0.06, 0, 1),
-        threat: clamp(s.chaos / 8 + tomMenace * 0.12 + facultyBias * 0.04, 0, 1),
-        crowding: clamp(n / target, 0, 1),
-        chaos: clamp(s.chaos / 10, 0, 1),
-        wealthRel: clamp(net0 / (2 * (mean || 1)), 0, 1),
-        preyClose: clamp(n / target, 0, 1),
-        rivalClose: clamp(
-          this.nhi.count / 8 + (this.titans.count > 0 ? 0.2 : 0) + tomMenace * 0.1,
-          0,
-          1,
-        ),
-        pull: clamp(s.chaos / 12, 0, 1),
-        light: clamp(level, 0, 1),
-        sound: clamp(bass, 0, 1),
-        phase: (t / 60) % 1,
-      };
-      const percept = { ...basePercept }; // legacy view for twins + hero state (global signals)
+      // Pre-allocated scratch (audit fix #2/#3 — no per-call object allocation)
+      const basePercept = this.superBasePercept;
+      basePercept.energy = clamp(0.5 + 0.5 * (1 - s.chaos / 10) + facultyBias * 0.06, 0, 1);
+      basePercept.threat = clamp(s.chaos / 8 + tomMenace * 0.12 + facultyBias * 0.04, 0, 1);
+      basePercept.crowding = clamp(n / target, 0, 1);
+      basePercept.chaos = clamp(s.chaos / 10, 0, 1);
+      basePercept.wealthRel = clamp(net0 / (2 * (mean || 1)), 0, 1);
+      basePercept.preyClose = clamp(n / target, 0, 1);
+      basePercept.rivalClose = clamp(
+        this.nhi.count / 8 + (this.titans.count > 0 ? 0.2 : 0) + tomMenace * 0.1,
+        0,
+        1,
+      );
+      basePercept.pull = clamp(s.chaos / 12, 0, 1);
+      basePercept.light = clamp(level, 0, 1);
+      basePercept.sound = clamp(bass, 0, 1);
+      basePercept.phase = (t / 60) % 1;
       // GOAL5: drive EXACTLY 5 SUPER CREATURES (archetypes 0-4) with per-position percepts.
       // local crowding/threat from grid query at body pos; light/sound/chaos biased by godform.ts (exclusive).
-      const c01 = (v: number) => (v < 0 ? 0 : v > 1 ? 1 : v);
       let primeMindOut: SuperMindIntent | null = null; // typed; avoid any per contract
       for (let i = 0; i < 5; i++) {
         const bias = getFullTsotchkeBias(i); // full corpus extension (Eshkol/Moonlab/Quake factors) // ARCHITECT rule: use the facade bias for differentiation
@@ -1336,7 +1401,10 @@ export class World {
           /* det seed proxy */ (this.persisted.seed ^ (i * 0x9e37)) >>> 0,
         );
         // Ralph loop continue 10x more: compute hybrid ulg/gwt + moonlabMpo (Tsotchke corpus Moonlab)
-        const mpoF = moonlabMpoStep(new Float32Array([pulseForArchon.quakeAliveness, localD]), 2);
+        const mpoInput = this.superMpoInput;
+        mpoInput[0] = pulseForArchon.quakeAliveness ?? 0.5;
+        mpoInput[1] = localD;
+        const mpoF = moonlabMpoStep(mpoInput, 2);
         // Ralph continue 10x: quakeQgeFactor for more quantum-quake aliveness in world step percepts
         const qgeF = quakeQgeFactor(pulseForArchon.quakeAliveness, 0.15);
         // Wire QGE aliveness proxy for enhanced chaos modulation
@@ -1351,40 +1419,49 @@ export class World {
         const qecStability = qecDecodingProxy(Math.floor(basePercept.chaos * 10), 5);
         // Apply new math to chaos
         const qgeMod = qgeAlive * 0.15 + tensorPulse * 0.1 + qecStability * 0.05;
-        const p: SuperPercept = {
-          ...basePercept,
-          chaos: c01(
-            (basePercept.chaos + (bias.chaos - 0.5) * 0.12 + qgeMod) *
-              quakePerturb(pulseForArchon.quakeAliveness ?? 0.5, i + 9, 0.1) *
-              qgeWorldPerturb(pulseForArchon.quakeAliveness ?? 0.5, i + 9) +
-              (collective[2] ?? 0) * 0.04,
-          ),
-          crowding: c01(
-            basePercept.crowding * 0.35 +
-              localD * 0.65 +
-              Math.abs(mpoF) * 0.03 +
-              libirrepSymmetry(2, localD * 5) * 0.01,
-          ),
-          threat: c01(basePercept.threat + localD * 0.08 + qgeF * 0.04),
-          wealthRel,
-          light: clamp(
-            basePercept.light + (bias.generative - 0.5) * 0.04 + ((lz * 0.002) % 0.02),
-            0,
-            1,
-          ),
-          sound: clamp(
-            basePercept.sound + (bias.narrative - 0.5) * 0.03 + ((lx * 0.0015) % 0.015),
-            0,
-            1,
-          ),
-          pull: c01(
-            basePercept.pull +
-              (pulseForArchon.quakeAliveness ?? 0) * 0.08 +
-              mpoF * 0.05 +
-              qgeF * 0.03 +
-              (collective[4] ?? 0) * 0.06,
-          ),
-        };
+        // Pre-allocated per-archon percept (audit fix — no per-iteration object allocation)
+        const p = this.superArchonPercept;
+        p.energy = basePercept.energy;
+        p.threat = clamp(basePercept.threat + localD * 0.08 + qgeF * 0.04, 0, 1);
+        p.crowding = clamp(
+          basePercept.crowding * 0.35 +
+            localD * 0.65 +
+            Math.abs(mpoF) * 0.03 +
+            libirrepSymmetry(2, localD * 5) * 0.01,
+          0,
+          1,
+        );
+        p.chaos = clamp(
+          (basePercept.chaos + (bias.chaos - 0.5) * 0.12 + qgeMod) *
+            quakePerturb(pulseForArchon.quakeAliveness ?? 0.5, i + 9, 0.1) *
+            qgeWorldPerturb(pulseForArchon.quakeAliveness ?? 0.5, i + 9) +
+            (collective[2] ?? 0) * 0.04,
+          0,
+          1,
+        );
+        p.wealthRel = wealthRel;
+        p.preyClose = basePercept.preyClose;
+        p.rivalClose = basePercept.rivalClose;
+        p.pull = clamp(
+          basePercept.pull +
+            (pulseForArchon.quakeAliveness ?? 0) * 0.08 +
+            mpoF * 0.05 +
+            qgeF * 0.03 +
+            (collective[4] ?? 0) * 0.06,
+          0,
+          1,
+        );
+        p.light = clamp(
+          basePercept.light + (bias.generative - 0.5) * 0.04 + ((lz * 0.002) % 0.02),
+          0,
+          1,
+        );
+        p.sound = clamp(
+          basePercept.sound + (bias.narrative - 0.5) * 0.03 + ((lx * 0.0015) % 0.015),
+          0,
+          1,
+        );
+        p.phase = basePercept.phase;
         const mindOut = this.superMinds[i]!.think(p);
         this.noosphere.updateArchon(
           i,
@@ -1442,6 +1519,26 @@ export class World {
           primeMindOut = mindOut;
         }
       }
+      // V-APEX: tick the Entropic Tesseract Hydra brain (10 organs + quantum + meta-paradox).
+      // The apex brain runs on the same driveSuper cadence (frame % 4), reading the world percept
+      // and producing a plan + vitality + agony + transcendence. Its output feeds the noosphere
+      // and the emergence angles, so the 10-organ brain genuinely influences the world.
+      const ap = this.apexPercept;
+      ap.threat = basePercept.threat;
+      ap.energy = basePercept.energy;
+      ap.chaos = basePercept.chaos;
+      ap.novelty = clamp(primeMindOut?.consciousness?.novelty ?? 0, 0, 1);
+      ap.level = this.superEvo.view().level;
+      this.lastApexThought = this.apexBrain.tick(ap);
+      // Feed the apex brain's transcendence into the noosphere (the 10-organ mind's output joins the collective).
+      this.noosphere.updateArchon(
+        0, // prime channel
+        this.lastApexThought.vitality,
+        this.lastApexThought.agony,
+        this.lastApexThought.superposed ? 0.3 : 0.6,
+        this.lastApexThought.transcendence,
+        clamp(this.lastApexThought.vitality * 0.5, 0, 1),
+      );
       this.noosphere.step();
       this.stigmergy.step();
       const nooSnap = this.noosphere.snapshot();
@@ -1544,6 +1641,79 @@ export class World {
 
       // FULL TSOTCHKE growth: incubate/harvest via update + snapshot (all repos in Petri for new biologics)
       this.primordialSoup.update(0, s.frame, this.petriRng);
+      // V-BREED: run a 101-glyph pantheon breeding rite every 600 frames (~10s at 60fps).
+      // breedAt() is deterministic (hashSeed-based, no RNG perturbation). The child's 4 mathematical
+      // structures (Touchard polynomial, winding number, de Jong attractor, Blaschke product) boost
+      // a petri dish's godPower, coupling the breeding system to the live digital-biologics growth.
+      if (s.frame % 600 === 0 && s.frame > 0) {
+        const i = (this.breedNonce * 7 + 3) % PANTHEON_TOTAL;
+        let j = (this.breedNonce * 13 + 17) % PANTHEON_TOTAL;
+        if (j === i) j = (j + 1) % PANTHEON_TOTAL; // avoid self-fertilization (i===j at nonce=65)
+        this.lastBaby = breedAt(i, j, this.breedNonce);
+        this.breedNonce++;
+        const dish = this.petriDishes[i % this.petriDishes.length];
+        if (dish) {
+          // The child's Lyapunov exponent (chaos) + umbral degree drive petri dish growth.
+          const boost = clamp(
+            this.lastBaby.chaos.lyapunov * 0.1 + this.lastBaby.umbral.degree * 0.02,
+            0,
+            0.3,
+          );
+          dish.godPower = Math.min(1, (dish.godPower || 0) + boost);
+        }
+        this.audit.record('pantheon-breeding', {
+          nonce: this.breedNonce - 1,
+          parents: `${i}×${j}`,
+          lyapunov: this.lastBaby.chaos.lyapunov,
+          winding: this.lastBaby.homotopy.winding,
+          umbralDegree: this.lastBaby.umbral.degree,
+          blaschkeDegree: this.lastBaby.blaschke.degree,
+        });
+      }
+      // V-SELFEVO: initialize + step the self-evolution loop (Gödel-machine style self-improvement).
+      // Runs every 1200 frames (~20s at 60fps) on its own deterministic sub-stream (evoRng2).
+      // Metrics are built from the prime super mind's consciousness + the world's chaos + diversity.
+      if (!this.selfEvoLoop) {
+        const initMetrics: EvolutionMetrics = {
+          fitness: clamp(this.superMindSnap?.emotion?.dominance ?? 0.5, 0, 1),
+          emergence: clamp(n / target, 0, 1),
+          complexity: this.apexBrain.parameterCount(),
+          consciousness: clamp(this.superMindSnap?.consciousness?.phi ?? 0, 0, 1),
+          stability: clamp(1 - s.chaos / CHAOS_MAX, 0, 1),
+        };
+        this.selfEvoLoop = new SelfEvolutionLoop(initMetrics);
+      }
+      if (s.frame % 1200 === 0 && s.frame > 0) {
+        // Feed metrics into the loop + step (the loop mutates its own metrics via safe self-modification)
+        const applied = this.selfEvoLoop.step(this.evoRng2);
+        if (applied) {
+          this.audit.record('self-evolution', {
+            generation: this.selfEvoLoop.generationCount,
+            score: this.selfEvoLoop.score,
+          });
+        }
+      }
+      // V-BEDAU: compute Bedau-Packard evolutionary activity from morphotype diversity snapshots.
+      // Every 300 frames (~5s), sample shannonDiversity of the live morphotype distribution,
+      // feed it into the activity window, and surface the result for telemetry.
+      if (s.frame % 300 === 0 && s.frame > 0) {
+        const morphCounts = Array.from({ length: this.morphTotal }, () => 0);
+        const list = this.entities.list;
+        for (let i = 0; i < list.length; i++) {
+          const e = list[i];
+          if (!e) continue;
+          const mi = e.userData.mi ?? 0;
+          if (mi >= 0 && mi < this.morphTotal) morphCounts[mi]!++;
+        }
+        const div = shannonDiversity(morphCounts);
+        this.diversitySnapshots.push(div);
+        if (this.diversitySnapshots.length > 32) this.diversitySnapshots.shift();
+        this.lastBedauActivity = bedauPackardActivity(this.diversitySnapshots, 8);
+        this.audit.record('bedau-packard-activity', {
+          activity: this.lastBedauActivity,
+          diversity: div,
+        });
+      }
       if (s.frame % 120 === 0 && n < target) {
         const snap = this.primordialSoup.snapshot();
         const strain = snap.strains && snap.strains[0] ? snap.strains[0] : null;
@@ -1597,12 +1767,16 @@ export class World {
       }
       // V35: the twin budget (cap 3) is now spent by the PLAYER — the puzzle reveal sires the 2nd
       // creature and the FORK power sires the rest — so the prime no longer auto-spawns (no contention).
-      for (const tw of this.superTwins) tw.think(percept); // twins reason with their own minds
+      for (const tw of this.superTwins) tw.think(basePercept); // twins reason with their own minds
       // V34/35: fold each revealed hero/twin mind into its body; tick the player progression layer.
       for (const hb of this.heroBodies) hb.body.setMind(hb.mind.snapshot());
       const hero0 = this.heroBodies[0];
       if (this.superheroState.active && hero0) {
-        this.superheroState.tick(4 / 60, hero0.mind.snapshot().emotion.dominance, percept.threat);
+        this.superheroState.tick(
+          4 / 60,
+          hero0.mind.snapshot().emotion.dominance,
+          basePercept.threat,
+        );
       }
     } catch (e) {
       void e;
@@ -2165,7 +2339,7 @@ export class World {
     const cam = this.engine.camera;
     cam.getWorldDirection(this.sv2);
     this.sv1.copy(cam.position).addScaledVector(this.sv2, 45);
-    const mi = Math.floor(this.rng() * this.morphTotal);
+    const mi = Math.floor(this.uiRng() * this.morphTotal);
     const e = this.entities.spawn(this.sv1, mi, 2.2);
     if (!e) return 0;
     const u = e.userData;
@@ -2173,7 +2347,7 @@ export class World {
     u.beh = 'helix'; // ethereal, weaving motion (now OMNIDIRECTIONAL + contained — see steerNhiBeings)
     u.spd *= 2.2; // quick
     // V57: launch in a RANDOM direction (was a fixed +y, which made every NHI climb to the sky).
-    u.vel.set((this.rng() - 0.5) * 0.4, (this.rng() - 0.5) * 0.4, (this.rng() - 0.5) * 0.4);
+    u.vel.set((this.uiRng() - 0.5) * 0.4, (this.uiRng() - 0.5) * 0.4, (this.uiRng() - 0.5) * 0.4);
     e.material.emissive.setRGB(0.25, 0.95, 1.0); // unmistakable cyan NHI glow
     e.material.emissiveIntensity = 3.2;
     // V10: birth a deterministic super-mind for this NHI and register it so it ACTS on the world
@@ -2234,7 +2408,7 @@ export class World {
     }
     return {
       energy: u ? c01(u.energy / 100) : 0.5,
-      crowding: c01(this.entities.list.length / this.quality.maxEntities),
+      crowding: c01(this.entities.list.length / Math.max(1, this.quality.maxEntities)),
       chaos,
       threat: c01(chaos * 0.5),
       rivalFaction,
@@ -2251,11 +2425,15 @@ export class World {
       const n = Math.min(intent.spawn, 6);
       for (let i = 0; i < n; i++) {
         this.sv1.set(
-          p.x + (this.rng() - 0.5) * 12,
-          p.y + (this.rng() - 0.5) * 12,
-          p.z + (this.rng() - 0.5) * 12,
+          p.x + (this.uiRng() - 0.5) * 12,
+          p.y + (this.uiRng() - 0.5) * 12,
+          p.z + (this.uiRng() - 0.5) * 12,
         );
-        const child = this.entities.spawn(this.sv1, Math.floor(this.rng() * this.morphTotal), 0.8);
+        const child = this.entities.spawn(
+          this.sv1,
+          Math.floor(this.uiRng() * this.morphTotal),
+          0.8,
+        );
         if (child) child.material.emissive.setRGB(0.6, 0.2, 0.85); // swarmling glow
       }
       this.audio.play('warp');
@@ -2396,11 +2574,11 @@ export class World {
       // Birth scars the living ground (UV over the GROUND_EXTENT plane).
       this.rd.perturb(0.5 + e.position.x / GROUND_EXTENT, 0.5 - e.position.z / GROUND_EXTENT, 3);
       for (let j = 0; j < 4; j++) {
-        this.sv1.set((this.rng() - 0.5) * 3, (this.rng() - 0.5) * 2, (this.rng() - 0.5) * 3);
+        this.sv1.set((this.uiRng() - 0.5) * 3, (this.uiRng() - 0.5) * 2, (this.uiRng() - 0.5) * 3);
         this.sv2.copy(e.position).add(this.sv1);
         const child = this.entities.spawn(
           this.sv2,
-          (e.userData.mi + 1 + Math.floor(this.rng() * 10)) % this.morphTotal,
+          (e.userData.mi + 1 + Math.floor(this.uiRng() * 10)) % this.morphTotal,
           0.6,
         );
         if (child) child.userData.vel.copy(this.sv1.normalize().multiplyScalar(0.15));
@@ -2415,11 +2593,11 @@ export class World {
     const count = Math.min(Math.max(30, Math.floor(this.quality.maxEntities / 100)), room);
     for (let i = 0; i < count; i++) {
       this.sv1.set(
-        (this.rng() - 0.5) * 25 * ARENA_MID,
-        this.rng() * 14 * ARENA_Y,
-        (this.rng() - 0.5) * 25 * ARENA_MID,
+        (this.uiRng() - 0.5) * 25 * ARENA_MID,
+        this.uiRng() * 14 * ARENA_Y,
+        (this.uiRng() - 0.5) * 25 * ARENA_MID,
       );
-      this.entities.spawn(this.sv1, Math.floor(this.rng() * this.morphTotal), 0.5 + this.rng());
+      this.entities.spawn(this.sv1, Math.floor(this.uiRng() * this.morphTotal), 0.5 + this.uiRng());
     }
   }
 
@@ -2430,7 +2608,7 @@ export class World {
     this.state.mutations += list.length;
     for (let i = 0; i < list.length; i++) {
       const e = list[i];
-      if (e) this.entities.remorph(e, Math.floor(this.rng() * this.morphTotal));
+      if (e) this.entities.remorph(e, Math.floor(this.uiRng() * this.morphTotal));
     }
   }
 
@@ -2440,12 +2618,16 @@ export class World {
     this.audio.play('warp');
     this.audio.play('resonance');
     this.state.chaos = CHAOS_MAX;
-    this.hud.showSector('APOCALYPSE');
+    this.hud.showSector('MASS EXTINCTION EVENT');
     const list = this.entities.list;
     for (let i = 0; i < list.length; i++) {
       const e = list[i];
       if (!e) continue;
-      e.userData.vel.set((this.rng() - 0.5) * 3, (this.rng() - 0.5) * 3, (this.rng() - 0.5) * 3);
+      e.userData.vel.set(
+        (this.uiRng() - 0.5) * 3,
+        (this.uiRng() - 0.5) * 3,
+        (this.uiRng() - 0.5) * 3,
+      );
       e.userData.belly = 120;
     }
     this.doBurst();
@@ -2521,9 +2703,9 @@ export class World {
     const kind = cyc(SINGULARITY_KINDS, this.singularityCursor++);
     // Seeded mid-field placement (y ~16·ARENA_Y so the rig floats in the volume).
     this.sv1.set(
-      (this.rng() - 0.5) * 50 * ARENA_MID,
+      (this.uiRng() - 0.5) * 50 * ARENA_MID,
       16 * ARENA_Y,
-      (this.rng() - 0.5) * 50 * ARENA_MID,
+      (this.uiRng() - 0.5) * 50 * ARENA_MID,
     );
     this.singularities.summon(kind, this.sv1);
     this.artifacts.place(this.sv1.x, this.sv1.y, this.sv1.z, 'relic', this.state.elapsed); // F-ARTIFACTS

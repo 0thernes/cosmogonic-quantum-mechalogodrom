@@ -8,8 +8,9 @@
  * receipts discipline the rest of the project lives by.
  *
  * PURE math: no rng draws, no Date.now, no DOM, no mutation of inputs — so it is determinism-safe
- * (never touches the seeded core stream) and fully unit-testable headlessly. A sim/UI layer can feed
- * it per-epoch observations later; the metrics themselves live here as pure functions.
+ * (never touches the seeded core stream) and fully unit-testable headlessly. The sim layer feeds it
+ * per-epoch diversity snapshots every 300 frames in world.ts driveSuper (V-BEDAU); the metrics
+ * themselves live here as pure functions.
  */
 
 /** log2 with a 0-safe guard (0 contributes 0 to entropy). */

@@ -86,6 +86,7 @@ describe('MonolithTemple — the V63 ascension Stage-2 portal', () => {
     const scene = new THREE.Scene();
     const temple = new MonolithTemple(scene);
     expect(temple.revealed).toBe(false);
+    expect(temple.snapshot().visualNodes).toBeGreaterThanOrEqual(25);
     expect(scene.children.length).toBeGreaterThan(0); // meshes are built up-front (hidden until reveal)
     temple.reveal(0, 0, 0);
     expect(temple.revealed).toBe(true);
@@ -100,5 +101,58 @@ describe('MonolithTemple — the V63 ascension Stage-2 portal', () => {
     temple.reveal(10, 0, -5, true); // silent = no rise animation, just THERE
     expect(temple.revealed).toBe(true);
     expect(() => temple.update(1 / 60, 5)).not.toThrow();
+    expect(temple.snapshot().rise).toBe(1);
+  });
+
+  test('reacts to real world state: chaos + entropy + crowding intensify the shadow cage', () => {
+    const calm = new MonolithTemple(new THREE.Scene());
+    calm.reveal(0, 0, 0, true);
+    calm.setEnvironment({ chaos: 0, entropy: 0, population: 0, capacity: 50000 });
+    calm.update(1 / 60, 12);
+    const a = calm.snapshot();
+
+    const storm = new MonolithTemple(new THREE.Scene());
+    storm.reveal(0, 0, 0, true);
+    storm.setEnvironment({ chaos: 1, entropy: 1, population: 50000, capacity: 50000 });
+    storm.update(1 / 60, 12);
+    const b = storm.snapshot();
+
+    expect(b.reactivity).toBeGreaterThan(a.reactivity);
+    expect(b.cageWarp).toBeGreaterThan(a.cageWarp);
+    expect(b.shadow).toBeGreaterThan(a.shadow);
+    expect(b.shimmer).toBeGreaterThan(a.shimmer);
+    expect(b.crowding).toBe(1);
+  });
+
+  test('reactive snapshot is deterministic for the same update stream', () => {
+    const a = new MonolithTemple(new THREE.Scene());
+    const b = new MonolithTemple(new THREE.Scene());
+    a.reveal(0, 0, 0, true);
+    b.reveal(0, 0, 0, true);
+    a.setEnvironment({ chaos: 0.42, entropy: 0.25, population: 1234, capacity: 50000 });
+    b.setEnvironment({ chaos: 0.42, entropy: 0.25, population: 1234, capacity: 50000 });
+    for (let i = 0; i < 120; i++) {
+      a.update(1 / 60, i / 60);
+      b.update(1 / 60, i / 60);
+    }
+    expect(b.snapshot()).toEqual(a.snapshot());
+  });
+
+  test('environment guards clamp bad inputs instead of poisoning the temple with NaN', () => {
+    const temple = new MonolithTemple(new THREE.Scene());
+    temple.reveal(0, 0, 0, true);
+    temple.setEnvironment({
+      chaos: Number.POSITIVE_INFINITY,
+      entropy: Number.NaN,
+      population: -50,
+      capacity: 0,
+    });
+    temple.update(Number.NaN, Number.POSITIVE_INFINITY);
+    const snap = temple.snapshot();
+    expect(Number.isFinite(snap.reactivity)).toBe(true);
+    expect(Number.isFinite(snap.shadow)).toBe(true);
+    expect(Number.isFinite(snap.shimmer)).toBe(true);
+    expect(Number.isFinite(snap.cageWarp)).toBe(true);
+    expect(snap.crowding).toBe(0);
   });
 });

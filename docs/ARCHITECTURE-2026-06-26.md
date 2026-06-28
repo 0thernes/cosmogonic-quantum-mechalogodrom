@@ -232,7 +232,7 @@ graph TD
     singularities["singularities.ts<br/>SingularitySystem (5 holes · warp · lens)"]
     chaosfield["chaos-field.ts<br/>ChaosField (Lorenz quantum storm, V62)"]
     supercreature["5× super-creatures (GOAL5 Archons/Godforms: ORACLE-Σ etc) · super-body · super-mind<br/>super-evolution · super-wingmen<br/>apex beings (~10k-param each, Clifford+AST/HOT wired)"]
-    monolith["monolith-temple.ts<br/>MonolithTemple (LV100 ascension portal)"]
+    monolith["monolith-temple.ts<br/>MonolithTemple (reactive LV100 shadow-core temple)"]
     lattices["cosmic-web · gold-lattice · quantum-lattice<br/>(far-field visuals)"]
   end
 
@@ -273,6 +273,7 @@ graph TD
   singularities -. "r⁻² force + time-dilation; raises state.chaos (V64)" .-> entities
   chaosfield -. "tunnel/entangle/superpose · storm-band chaos · weather/algo kicks" .-> entities
   supercreature -. "consciousness/quantum drive body + powers; LV100 → reveal" .-> monolith
+  world -. "chaos + entropy + crowding read-only shimmer" .-> monolith
   postfx -. "lens centre ← active singularity (screen-projected)" .-> singularities
 ```
 

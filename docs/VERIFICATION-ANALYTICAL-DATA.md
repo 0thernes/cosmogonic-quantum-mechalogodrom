@@ -20,9 +20,9 @@ Rewritten in place when the facts change (per the binding "Living docs, no archi
 | Fact                | Canonical value           | Source of truth                                                                      | Propagated by           |
 | ------------------- | ------------------------- | ------------------------------------------------------------------------------------ | ----------------------- |
 | Package version     | `0.18.0`                  | `package.json` `version`                                                             | `sync-surfaces.ts`      |
-| Test count (floor)  | `1477`                    | `scripts/canonical-receipts.ts`                                                      | `sync-surfaces.ts`      |
-| Line coverage       | `95.03%`                  | `scripts/canonical-receipts.ts`                                                      | `sync-surfaces.ts`      |
-| Function coverage   | `92.03%`                  | `scripts/canonical-receipts.ts`                                                      | `sync-surfaces.ts`      |
+| Test count (floor)  | `1771`                    | `scripts/canonical-receipts.ts`                                                      | `sync-surfaces.ts`      |
+| Line coverage       | `91.97%`                  | `scripts/canonical-receipts.ts`                                                      | `sync-surfaces.ts`      |
+| Function coverage   | `94.85%`                  | `scripts/canonical-receipts.ts`                                                      | `sync-surfaces.ts`      |
 | Faculties (design)  | `100` (~30 deep-wired)    | `CANONICAL_FACULTIES`                                                                | `sync-surfaces.ts`      |
 | Archon pantheon     | `25` (5 apex + 20 light)  | `CANONICAL_ARCHONS`                                                                  | `sync-surfaces.ts`      |
 | Theory-of-mind orgs | `25`                      | `CANONICAL_TOM_ORGANS`                                                               | `sync-surfaces.ts`      |
@@ -295,8 +295,8 @@ HTML and the native engine (`native/src/` — 5 files, no unsafe C calls).
 - **`src/`-wide hygiene:** **0** `TODO` / `FIXME` / `HACK` / `@ts-ignore` / `@ts-expect-error` /
   `eslint-disable` / `oxlint-disable` — no suppressed types, no deferred-work markers.
 - **Doc-vs-code re-verified on the current tip:** FILE-MAP "195 modules" = 195 actual `src/**/*.ts`;
-  `package.json` `0.18.0`; `bun run sync:check` green (all surfaces match `v0.18.0 · 1477 tests ·
-95.03/92.03`); 0 broken relative links; all 90 md/xml/html surfaces codepoint-clean.
+  `package.json` `0.18.0`; `bun run sync:check` green (all surfaces match `v0.18.0 · 1771 tests ·
+91.97/94.85`); 0 broken relative links; all 90 md/xml/html surfaces codepoint-clean.
 
 Net: the repo is **true, accurate, current, and defensible**. Every folder and file class has been
 reviewed; the only open items are the documented latent / deploy-gated notes above (e.g. per-IP audit

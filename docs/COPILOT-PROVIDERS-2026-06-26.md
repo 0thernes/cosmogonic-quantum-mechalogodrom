@@ -26,11 +26,12 @@ allowed`).
 ## Providers the box offers
 
 Keys live **server-side only** (env vars, never in the browser). A keyed provider appears in the
-picker **only when its key is set**; the key-less providers always appear, so the box works with
-zero config. The **default/primary** is **FreeLLMAPI** (always present, defaulting to the
+picker **only when at least one key slot is set**; the key-less providers always appear, so the box
+works with zero config. The **default/primary** is **FreeLLMAPI** (always present, defaulting to the
 `localhost:3001` proxy) — or a `custom` endpoint when `CQM_LLM_ENDPOINT` is set. If a provider errors,
-the box **fails over down the chain** (FreeLLMAPI → LLM7 → Pollinations) to an always-available
-key-less provider so it still answers.
+the box **fails over down the chain**: selected provider → every configured key slot for that
+provider → FreeLLMAPI slot(s) → LLM7 → Pollinations → every other configured provider slot. This is
+the "rolling" reliability path: one dead endpoint or exhausted key no longer ends the turn.
 
 | Provider (picker id)          | Env var to enable     | Free tier (per the June-2026 report)             | Get a key                       |
 | ----------------------------- | --------------------- | ------------------------------------------------ | ------------------------------- |
@@ -58,6 +59,33 @@ key-less provider so it still answers.
 - **Custom (`custom`)** — any other OpenAI-compatible endpoint via `CQM_LLM_ENDPOINT`
   (+ `CQM_LLM_MODEL`, `CQM_LLM_KEY`). When set, it becomes the **default** provider. Appears when
   `CQM_LLM_ENDPOINT` is set.
+
+### Rolling key slots
+
+Every keyed provider accepts the primary env var plus optional overflow slots:
+
+```bash
+# One Groq slot
+GROQ_API_KEY=gsk_... bun dev
+
+# Three Groq slots; diagnostics show them as key 1/3, key 2/3, key 3/3.
+GROQ_API_KEYS="gsk_one,gsk_two" GROQ_API_KEY_2=gsk_three bun dev
+
+# Same pattern works for any keyed preset:
+# CEREBRAS_API_KEYS / CEREBRAS_API_KEY_2
+# OPENROUTER_API_KEYS / OPENROUTER_API_KEY_2
+# GITHUB_MODELS_TOKENS / GITHUB_MODELS_TOKEN_2
+# MISTRAL_API_KEYS / MISTRAL_API_KEY_2
+# GEMINI_API_KEYS / GEMINI_API_KEY_2
+# NVIDIA_API_KEYS / NVIDIA_API_KEY_2
+# DEEPSEEK_API_KEYS / DEEPSEEK_API_KEY_2
+# HF_TOKENS / HF_TOKEN_2
+# FREELLMAPI_KEYS / FREELLMAPI_KEY_2
+# CQM_LLM_KEYS / CQM_LLM_KEY_2
+```
+
+Labels only reveal the slot count (`3 key slots` / `key 2/3`); endpoint URLs and credentials never
+leave the server process.
 
 ## Enabling a provider
 
@@ -89,10 +117,13 @@ above.)
 ## How it's wired
 
 - `GET /api/copilot` → `{ provider, providers: [{ id, label, def }] }` — the picker's list (only
-  currently-usable providers; labels + ids only, never endpoints or keys).
+  currently-usable providers; labels + ids only, never endpoints or keys; multi-key providers are
+  summarized as `N key slots`).
 - `POST /api/chat` → `{ messages, provider? }` — runs the bounded agent loop against the chosen
   provider (default-deny on unknown ids), executing any read-only tool calls through the sandbox.
 - `POST /api/tool` → `{ tool, args }` — the panel's manual `/read /ls /grep /run` terminal.
+- `GET /api/copilot/health` → probes the recovery chain in parallel. Multi-key providers appear as
+  separate rows (`key 1/N`, `key 2/N`, ...), still without exposing credential values.
 
 ## Static deploy (GitHub Pages) — browser-direct fallback
 

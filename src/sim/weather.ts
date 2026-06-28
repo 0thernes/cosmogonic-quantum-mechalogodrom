@@ -9,7 +9,7 @@
  * neighbour sets). Exposure remains weather-OWNED (the 0.2.1 audit removed the audio coupling).
  */
 import * as THREE from 'three';
-import { lerp } from '../math/scalar';
+import { lerp, clamp } from '../math/scalar';
 import { FOG_SCALE, WEATHERS, type Weather } from './constants';
 import type { SimContext } from '../types';
 import type { Engine } from '../core/engine';
@@ -46,7 +46,7 @@ export class WeatherSystem {
    */
   cycle(): Weather {
     const s = this.ctx.state;
-    s.weatherIdx = (s.weatherIdx + 1) % WEATHERS.length;
+    s.weatherIdx = (((s.weatherIdx + 1) % WEATHERS.length) + WEATHERS.length) % WEATHERS.length;
     this.ctx.sfx('crystallize');
     // Invariant: weatherIdx ∈ [0, WEATHERS.length) after the modulo above.
     return WEATHERS[s.weatherIdx]!;
@@ -69,17 +69,21 @@ export class WeatherSystem {
   apply(dt: number, t: number): void {
     const s = this.ctx.state;
     // Defensive modulo: puppet masters and persistence may write any non-negative index.
-    const w: Weather = WEATHERS[s.weatherIdx % WEATHERS.length] ?? 'CLEAR';
+    const w: Weather =
+      WEATHERS[((s.weatherIdx % WEATHERS.length) + WEATHERS.length) % WEATHERS.length] ?? 'CLEAR';
     // Wind — a real gale in STORM, a steady drift in RAIN, a breath otherwise.
     const windAmp = w === 'STORM' ? 9 : w === 'RAIN' ? 3.5 : w === 'AURORA' ? 1.2 : 0.8;
     s.wind.x = Math.sin(t * 0.4) * 2.4 * windAmp;
     s.wind.z = Math.cos(t * 0.28) * 1.8 * (w === 'STORM' ? 7 : w === 'RAIN' ? 3 : 1);
+
+    const c01 = (v: number) => clamp(v, 0, 1);
+
     // Temperature — deep extremes (cold < 0 °C shortens lifespan via tMod, thinning the
     // population in VOID/AURORA). Faster onset than the legacy dt·0.1.
     s.temperature = lerp(
       s.temperature,
       w === 'VOID' ? -60 : w === 'STORM' ? 2 : w === 'AURORA' ? -18 : w === 'FOG' ? 14 : 22,
-      dt * 0.25,
+      c01(dt * 0.25),
     );
     // Fog density — a real whiteout in FOG, a smothering dark in VOID/STORM. Targets ×FOG_SCALE
     // (÷ ARENA) keep the optical depth honest at 5× sightlines; faster onset (dt·0.6).
@@ -94,7 +98,7 @@ export class WeatherSystem {
             : w === 'RAIN'
               ? 0.006
               : 0.003) * FOG_SCALE,
-      dt * 0.6,
+      c01(dt * 0.6),
     );
     // Fog colour — vivid AURORA cycling, pale FOG whiteout, blue-grey RAIN, near-black storm/void.
     if (w === 'AURORA') this.fog.color.setHSL((t * 0.04) % 1, 0.7, 0.12);
@@ -106,7 +110,7 @@ export class WeatherSystem {
     // Exposure — luminous AURORA, near-lightless VOID, dim STORM, bright FOG whiteout.
     const exTarget =
       w === 'VOID' ? 0.35 : w === 'AURORA' ? 2.0 : w === 'STORM' ? 0.6 : w === 'FOG' ? 1.35 : 1.15;
-    this.exposureBase = lerp(this.exposureBase, exTarget, dt * 0.3);
+    this.exposureBase = lerp(this.exposureBase, exTarget, c01(dt * 0.3));
     // STORM lightning: two sharp, deterministic exposure spikes (sin raised to a high power is a
     // narrow flash near its peak) added INSTANTLY on top of the smoothed base — a stroke of light.
     let exposure = this.exposureBase;

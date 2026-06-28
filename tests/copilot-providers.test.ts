@@ -6,7 +6,12 @@
  * restoring the provider env vars around each case. Pure (PRESETS + process.env) — no network.
  */
 import { afterEach, beforeEach, describe, expect, test } from 'bun:test';
-import { availableProviders, providerLabel, resolveProvider } from '../src/server/copilot';
+import {
+  availableProviders,
+  providerLabel,
+  providerRecoveryPlan,
+  resolveProvider,
+} from '../src/server/copilot';
 
 const KEY_ENVS = [
   'GROQ_API_KEY',
@@ -20,6 +25,18 @@ const KEY_ENVS = [
   'CQM_LLM_ENDPOINT',
   'CQM_LLM_MODEL',
   'CQM_LLM_KEY',
+  'CQM_LLM_KEYS',
+  'CQM_LLM_KEY_2',
+  'FREELLMAPI_KEY',
+  'FREELLMAPI_KEYS',
+  'FREELLMAPI_KEY_2',
+  'FREELLMAPI_BASE',
+  'FREELLMAPI_MODEL',
+  'GROQ_API_KEYS',
+  'GROQ_API_KEY_2',
+  'HF_TOKEN',
+  'HF_TOKENS',
+  'HF_TOKEN_2',
 ];
 const saved = new Map<string, string | undefined>();
 
@@ -58,6 +75,31 @@ describe('availableProviders — env-gated free-LLM list', () => {
     const list = availableProviders();
     expect(list.some((p) => p.id === 'groq')).toBe(true);
     expect(list.filter((p) => p.def).length).toBe(1); // invariant survives the new entry
+  });
+
+  test('a keyed provider can expose a rolling multi-key pool without leaking key values', () => {
+    process.env['GROQ_API_KEYS'] = 'slot-a, slot-b';
+    process.env['GROQ_API_KEY_2'] = 'slot-c';
+    const list = availableProviders();
+    const groq = list.find((p) => p.id === 'groq');
+    expect(groq).toBeDefined();
+    expect(groq!.label).toContain('3 key slots');
+    expect(groq!.label).not.toContain('slot-a');
+    expect(groq!.label).not.toContain('slot-b');
+    expect(groq!.label).not.toContain('slot-c');
+
+    const resolved = resolveProvider('groq');
+    expect(resolved.id).toBe('groq');
+    expect(resolved.key).toBe('slot-a');
+
+    const plan = providerRecoveryPlan().filter((p) => p.id === 'groq');
+    expect(plan.length).toBe(3);
+    expect(plan.map((p) => p.label)).toEqual([
+      'Groq · Llama-3.3-70B · key 1/3',
+      'Groq · Llama-3.3-70B · key 2/3',
+      'Groq · Llama-3.3-70B · key 3/3',
+    ]);
+    expect(plan.every((p) => p.keyed)).toBe(true);
   });
 
   test('every offered id is unique (no duplicate picker rows)', () => {

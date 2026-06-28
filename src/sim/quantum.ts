@@ -198,7 +198,11 @@ export class QuantumCloud {
       ph += dt * f;
       this.phase[qi] = ph;
       qs += Math.abs(psi);
-      if (px * px + pz * pz > MID_RADIUS2 || Math.abs(py) > 38 * ARENA_Y) {
+      if (
+        !Number.isFinite(px + py + pz) ||
+        px * px + pz * pz > MID_RADIUS2 ||
+        Math.abs(py) > 38 * ARENA_Y
+      ) {
         px = (rng() - 0.5) * 35 * ARENA_MID;
         py = (rng() * 22 - 5) * ARENA_Y;
         pz = (rng() - 0.5) * 35 * ARENA_MID;
@@ -208,7 +212,7 @@ export class QuantumCloud {
       pos[i3 + 2] = pz;
       if (colorTick) {
         // Legacy psi hue, 50/50-blended with the register band hue when bands are installed (V2).
-        let hue = (t * 0.02 + ph * 0.1) % 1;
+        let hue = (((t * 0.02 + ph * 0.1) % 1) + 1) % 1;
         const qb = this.quantumBands;
         if (qb !== null) hue = (hue + (qb[qi % BASIS_COUNT] ?? 0)) * 0.5;
         TMP_COLOR.setHSL(

@@ -120,6 +120,12 @@ const TOOLBAR_MAP: Readonly<Record<string, keyof UiActions>> = {
  * to the render loop. `look` and `zoom` are accumulators the world consumes-and-zeroes.
  */
 export class InputSystem {
+  private readonly ac = new AbortController();
+
+  dispose(): void {
+    this.ac.abort();
+  }
+
   /** Live lowercase key-name → held map (legacy `keys`). Mutated only by this system. */
   readonly keys: Readonly<Record<string, boolean>>;
   /** Button-driven camera velocity (legacy `camVel`); the frame loop reads it every frame. */
@@ -189,16 +195,24 @@ export class InputSystem {
       const tag = el.tagName;
       return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || el.isContentEditable;
     };
-    window.addEventListener('keydown', (e) => {
-      if (inField(e.target)) return;
-      this.keyState[e.key.toLowerCase()] = true;
-      if (e.key === 'Tab' || e.key === ' ') e.preventDefault();
-    });
-    window.addEventListener('keyup', (e) => {
-      this.keyState[e.key.toLowerCase()] = false;
-    });
+    window.addEventListener(
+      'keydown',
+      (e) => {
+        if (inField(e.target)) return;
+        this.keyState[e.key.toLowerCase()] = true;
+        if (e.key === 'Tab' || e.key === ' ') e.preventDefault();
+      },
+      { signal: this.ac.signal },
+    );
+    window.addEventListener(
+      'keyup',
+      (e) => {
+        this.keyState[e.key.toLowerCase()] = false;
+      },
+      { signal: this.ac.signal },
+    );
     // Known Bug 11: held keys (and held buttons) must not survive losing window focus.
-    window.addEventListener('blur', () => this.clearHeldInput());
+    window.addEventListener('blur', () => this.clearHeldInput(), { signal: this.ac.signal });
   }
 
   /**

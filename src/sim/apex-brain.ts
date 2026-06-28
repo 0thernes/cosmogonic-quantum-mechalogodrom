@@ -102,6 +102,7 @@ export interface LoomView {
 class PrimeSieveLoom {
   private readonly n: number;
   private readonly state: Float64Array;
+  private readonly next: Float64Array; // pre-allocated scratch for step()
   /** Active edges as packed (i*n+j) keys; every edge has a twin-prime |i−j| (the membership law). */
   private readonly edges: Array<[number, number]> = [];
   private readonly twin: boolean[];
@@ -113,6 +114,7 @@ class PrimeSieveLoom {
   constructor(n = 96) {
     this.n = n;
     this.state = new Float64Array(n);
+    this.next = new Float64Array(n);
     this.twin = twinPrimeDistances(n);
     for (let i = 0; i < n; i++) {
       for (let j = i + 1; j < n; j++) {
@@ -147,7 +149,8 @@ class PrimeSieveLoom {
    * longest-distance live edges are purged (monotone removal). Returns the loom's scalar output.
    */
   step(drive: number, rng: Rng): number {
-    const next = new Float64Array(this.n);
+    const next = this.next;
+    next.fill(0);
     for (let e = 0; e < this.edges.length; e++) {
       if (!this.alive[e]) continue;
       const [i, j] = this.edges[e]!;
@@ -220,6 +223,7 @@ class AcousticMeatDrum {
   private readonly m: number;
   private readonly u: Float64Array; // displacement
   private readonly v: Float64Array; // velocity
+  private readonly accel: Float64Array; // pre-allocated scratch for step()
   private readonly c2: number;
   private readonly dt: number;
   private readonly damping: number;
@@ -228,6 +232,7 @@ class AcousticMeatDrum {
     this.m = m;
     this.u = new Float64Array(m);
     this.v = new Float64Array(m);
+    this.accel = new Float64Array(m);
     this.c2 = 1; // wave speed²
     this.dt = 0.2; // c·dt = 0.2 < 1 → below the CFL stability limit
     this.damping = opts?.damping ?? 0;
@@ -255,7 +260,7 @@ class AcousticMeatDrum {
    */
   step(drive: number, screamAt = 0): number {
     if (drive !== 0) this.v[screamAt % this.m]! += drive;
-    const a = new Float64Array(this.m);
+    const a = this.accel;
     for (let i = 0; i < this.m; i++) {
       const lap = this.u[(i + 1) % this.m]! - 2 * this.u[i]! + this.u[(i - 1 + this.m) % this.m]!;
       a[i] = this.c2 * lap - this.damping * this.v[i]!;
@@ -876,6 +881,7 @@ export interface ThermoView {
 class ThermodynamicEngine {
   private readonly n: number;
   private heat: Float64Array;
+  private readonly nextHeat: Float64Array; // pre-allocated scratch for step()
   private dead: Uint8Array;
   private readonly D = 0.2; // diffusion coeff (≤0.5 for explicit 1-D stability)
   private readonly tMelt = 6;
@@ -885,6 +891,7 @@ class ThermodynamicEngine {
   constructor(n = 64) {
     this.n = n;
     this.heat = new Float64Array(n);
+    this.nextHeat = new Float64Array(n);
     this.dead = new Uint8Array(n);
   }
 
@@ -907,7 +914,7 @@ class ThermodynamicEngine {
       if (this.dead[i]) continue;
       this.heat[i]! += 0.9 * clamp01(firing(i));
     }
-    const next = new Float64Array(this.n);
+    const next = this.nextHeat;
     for (let i = 0; i < this.n; i++) {
       const lap =
         this.heat[(i + 1) % this.n]! - 2 * this.heat[i]! + this.heat[(i - 1 + this.n) % this.n]!;
@@ -916,7 +923,8 @@ class ThermodynamicEngine {
       if (h < 0) h = 0;
       next[i] = h;
     }
-    this.heat = next;
+    // Copy back (no per-step allocation — swap content into the persistent heat array)
+    this.heat.set(next);
     for (let i = 0; i < this.n; i++) {
       if (!this.dead[i] && this.heat[i]! > this.tMelt) {
         this.dead[i] = 1;

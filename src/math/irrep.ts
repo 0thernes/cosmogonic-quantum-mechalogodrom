@@ -65,6 +65,7 @@ function lf(n: number): number {
 /** True when m is a valid projection of j: |m| ≤ j and (j − m) is a non-negative integer. */
 export function isValidProjection(j: number, m: number): boolean {
   if (j < 0 || Math.abs(m) > j) return false;
+  if (!Number.isInteger(j * 2) || !Number.isInteger(m * 2)) return false;
   const d = j - m;
   return Number.isInteger(d) && d >= 0;
 }
@@ -179,7 +180,8 @@ function logTriangleDelta(a: number, b: number, c: number): number | null {
   const x2 = a - b + c;
   const x3 = -a + b + c;
   const x4 = a + b + c + 1;
-  if (x1 < 0 || x2 < 0 || x3 < 0 || !Number.isInteger(x1)) return null;
+  if (x1 < 0 || x2 < 0 || x3 < 0) return null;
+  if (!Number.isInteger(x1) || !Number.isInteger(x2) || !Number.isInteger(x3)) return null;
   return 0.5 * (lf(x1) + lf(x2) + lf(x3) - lf(x4));
 }
 

@@ -31,13 +31,14 @@
  * - Boundless Socratic Learning (2025, hf.co/papers/2411.16905)
  * - Capacity-bounded safe self-change (research bedrock)
  *
- * This is faculty #99 — IMPLEMENTED BUT NOT WIRED (no sim consumer yet): no system feeds it
- * EvolutionMetrics or applies its ModificationProposals, so the loop does NOT run in the live
- * sim. The class below is correct and test-ready; it stays dormant until a tick builds metrics
- * from fitness/emergence/Butlin/Phi/complexity and calls step(). Until then it enables
- * open-ended self-modification only on paper.
+ * This is faculty #99 — WIRED into world.ts driveSuper (V-SELFEVO): constructed lazily on first
+ * apex beat with metrics from the prime super mind (fitness, emergence, complexity, consciousness,
+ * stability); step() called every 1200 frames on a deterministic sub-stream (evoRng2, seed
+ * 0xc0ffee42). Applied modifications are recorded in the audit trail. The loop mutates its own
+ * metrics via safe self-modification with rollback — a Gödel-machine style self-improvement path.
  *
- * Pure leaf: deterministic (seeded mutations), allocation-free apart from working arrays.
+ * Pure leaf: deterministic (seeded mutations), allocation-bounded (cold cadence only — per-step
+ * object allocation is acceptable at 1200f cadence, not per-frame).
  */
 
 /** Performance metrics for evolution assessment. */

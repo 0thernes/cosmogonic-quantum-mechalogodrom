@@ -2,9 +2,9 @@
  * CENTER HUD (V56) — unifies the six inspector panels (✦ AI · ❓ HELP · 🗒 AUDIT · ⊞ NEURAL · ⊙ MARKET ·
  * ⬢ ARCHITECT) into ONE same-size, fit-to-window pop-up CENTERED on screen that you CYCLE through (the
  * ‹ › arrows or the tab strip) instead of tap-close-tap-open. A ◐ button fades it transparent so you can
- * see the simulation behind it; ✕ closes. It fits any aspect ratio + works on touch — the slot is
- * `min(94vw,760px) × min(82vh,780px)`, always centered. This also permanently fixes "NEURAL overlaps the
- * menu bars": nothing opens at the bottom anymore.
+ * see the simulation behind it; ✕ closes. It fits any aspect ratio + works on touch — the slot is a
+ * tall readable centre column, not the old shallow strip. This also permanently fixes "NEURAL overlaps
+ * the menu bars": nothing opens at the bottom anymore.
  *
  * It does NOT rewrite the six panels — it drives each one's EXISTING dock toggle (so the panel's own
  * open/close + repaint logic runs), re-homes them to a centered `!important` slot, and enforces
@@ -41,6 +41,11 @@ const PANEL_SEL = SLOTS.map((s) => '#' + s.panel).join(',');
 /** The open+visible panel selectors — the base (solid) opacity rule. */
 const VIS_SEL = SLOTS.map((s) => '#' + s.panel + '.cqm-hud-vis').join(',');
 
+/** Desktop/fine-pointer center HUD height: tall enough for Architecture/Architect data, still bounded. */
+export const CENTER_HUD_DESKTOP_HEIGHT = 'clamp(300px, 56vh, 660px)';
+/** Touch/sheet-mode center HUD height: lets popups breathe without covering the full world. */
+export const CENTER_HUD_TOUCH_HEIGHT = 'clamp(320px, 64vh, 720px)';
+
 const STYLE = `
 /* V69: the HUD fits the grid's CENTRE column — between the side panels (Telemetry/Sorting on the left,
    Observatory/Control on the right) and ABOVE both bottom bars, so NOTHING overlaps and the ecosystem
@@ -57,8 +62,8 @@ ${PANEL_SEL} {
   transform: none !important;
   bottom: var(--cqm-hud-bottom, 96px) !important;
   top: auto !important;
-  height: var(--cqm-hud-height, clamp(176px, 30vh, 380px)) !important;
-  max-height: calc(100vh - 210px) !important;
+  height: var(--cqm-hud-height, ${CENTER_HUD_DESKTOP_HEIGHT}) !important;
+  max-height: calc(100vh - 156px) !important;
   z-index: 71 !important;
 }
 /* TRANSPARENCY (◐): the open panel is SOLID by default. The see-through state is applied as an INLINE
@@ -226,7 +231,7 @@ ${VIS_SEL} {
     left: 8px !important;
     right: 8px !important;
     bottom: var(--cqm-hud-bottom, 104px) !important;
-    height: var(--cqm-hud-height, clamp(190px, 40vh, 540px)) !important;
+    height: var(--cqm-hud-height, ${CENTER_HUD_TOUCH_HEIGHT}) !important;
     border-radius: 14px 14px 0 0 !important;
   }
   #cqm-hud-nav {

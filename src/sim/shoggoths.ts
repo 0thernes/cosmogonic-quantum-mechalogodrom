@@ -396,6 +396,10 @@ export class ShoggothSystem {
       if (singActive) sg.vel.add(HOLE_F);
       V1.copy(sg.vel).multiplyScalar(dt * 60);
       p.add(V1);
+      if (!Number.isFinite(p.x + p.y + p.z + sg.vel.x + sg.vel.y + sg.vel.z)) {
+        p.set(0, 5, 0);
+        sg.vel.set(0, 0, 0);
+      }
       if (p.lengthSq() > MID_RADIUS2) {
         V1.copy(p).normalize().multiplyScalar(-0.01);
         sg.vel.add(V1);
@@ -407,7 +411,7 @@ export class ShoggothSystem {
       g.rotation.x += Math.sin(t * 0.4 + sg.ph) * 0.008;
       g.rotation.y += dt * (0.15 + drive.agitation * 0.35); // agitated → spins faster
       g.rotation.z += Math.cos(t * 0.3 + sg.ph) * 0.006;
-      const hue = (t * 0.05 + sg.ph) % 1;
+      const hue = (((t * 0.05 + sg.ph) % 1) + 1) % 1;
       sg.coreMat.emissive.setHSL(hue, 0.6, 0.04 + Math.sin(t * 2 + sg.ph) * 0.02);
       // Wealth shows on the body: a rich shoggoth glows brighter + looms larger (the visible purse).
       // DECEIVE (V26): a threatened, outmatched shoggoth FEIGNS WEAKNESS — dims its glow + shrinks so

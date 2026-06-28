@@ -16,6 +16,9 @@ const CHIPS: { label: string; q: string }[] = [
   { label: 'Super creature', q: 'what is the super creature' },
   { label: 'Access puzzle', q: 'how do I solve the access puzzle' },
   { label: 'Economy', q: 'how does the economy and money work' },
+  { label: 'Mechalogodrom', q: 'what is the mechalogodrom center monster' },
+  { label: 'Alphabet dome', q: 'what are the 100 alphabet creatures' },
+  { label: 'Temple', q: 'what is the ascension shadow core temple' },
   { label: 'The math', q: 'what math science powers this' },
 ];
 

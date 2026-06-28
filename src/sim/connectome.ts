@@ -127,9 +127,13 @@ export class Connectome {
     const gens = this.idxGens;
     const gen = this.idxGen;
     const cap = keys.length;
-    let h = id % cap;
+    let h = (id % cap) >>> 0;
+    let probes = 0;
     // Load factor ≤ 0.25 (cap ≥ 4·maxEntities ≥ 4·list.length) ⇒ an empty slot always exists.
-    while (gens[h] === gen && keys[h] !== id) h = h + 1 >= cap ? 0 : h + 1;
+    while (gens[h] === gen && keys[h] !== id) {
+      h = h + 1 >= cap ? 0 : h + 1;
+      if (++probes > cap) break;
+    }
     keys[h] = id;
     this.idxVals[h] = value;
     gens[h] = gen;
@@ -141,13 +145,15 @@ export class Connectome {
     const gens = this.idxGens;
     const gen = this.idxGen;
     const cap = keys.length;
-    let h = id % cap;
+    let h = (id % cap) >>> 0;
+    let probes = 0;
     while (gens[h] === gen) {
       if (keys[h] === id) {
         const v = this.idxVals[h];
         return v === undefined ? -1 : v; // h < cap by construction — guard satisfies the checker
       }
       h = h + 1 >= cap ? 0 : h + 1;
+      if (++probes > cap) break;
     }
     return -1;
   }

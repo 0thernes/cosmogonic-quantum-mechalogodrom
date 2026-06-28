@@ -69,7 +69,7 @@ export class Engine {
 
     this.camera = new THREE.PerspectiveCamera(
       68,
-      window.innerWidth / window.innerHeight,
+      window.innerWidth / Math.max(1, window.innerHeight),
       0.1,
       CAMERA_FAR,
     );
@@ -131,7 +131,7 @@ export class Engine {
   onResize(): void {
     const w = window.innerWidth;
     const h = window.innerHeight;
-    this.camera.aspect = w / h;
+    this.camera.aspect = w / Math.max(1, h);
     this.camera.updateProjectionMatrix();
     this.renderer.setPixelRatio(
       Math.min(window.devicePixelRatio || 1, this.dprCap) * this.dprScale,

@@ -41,6 +41,15 @@ const RANK_COLOR: Record<string, string> = {
   FORBIDDEN: '#ff3b4e',
 };
 
+/** Responsive canvas height for the Architecture dynamics viewport. */
+export const ARCHITECTURE_PANEL_CANVAS_HEIGHT = 'clamp(170px, 30vh, 280px)';
+/** Minimum usable data well; prevents the table from becoming the old thin strip. */
+export const ARCHITECTURE_PANEL_DATA_MIN_HEIGHT = '180px';
+/** Keep the canvas inside the panel box; the clamp controls its height. */
+export const ARCHITECTURE_PANEL_CANVAS_FLEX = '0 0 auto';
+/** Let the data well consume the bounded panel body and scroll internally. */
+export const ARCHITECTURE_PANEL_DATA_HEIGHT = '100%';
+
 const STYLE = `
 #cqm-arch-toggle{height:42px;padding:0 12px;border-radius:21px;border:1px solid rgba(255,59,78,.5);
   background:rgba(10,4,8,.9);color:#ffb3bd;font:600 11px/1 var(--font-mono,ui-monospace,monospace);
@@ -76,14 +85,24 @@ const STYLE = `
 .cqm-arch-btn:focus-visible{outline:1px solid #ff5a6b}
 .cqm-arch-btn.on{background:rgba(80,16,40,.96);color:#fff}
 .cqm-arch-bar{display:flex;gap:4px;padding:6px 10px;flex-wrap:wrap;border-bottom:1px solid rgba(255,59,78,.12)}
-.cqm-arch-canvas{display:block;width:100%;height:160px;background:radial-gradient(120% 90% at 50% 0%,rgba(30,4,18,.6),rgba(2,2,5,1));border-bottom:1px solid rgba(255,59,78,.14)}
-.cqm-arch-mode{display:flex;gap:4px;padding:6px 10px;border-bottom:1px solid rgba(255,59,78,.12)}
-.cqm-arch-data{flex:1 1 auto;min-height:0;overflow-y:auto;padding:6px 10px 10px;display:grid;
-  grid-template-columns:auto 1fr;gap:2px 10px;align-items:baseline}
+.cqm-arch-main{flex:1 1 0;min-height:0;display:flex;flex-wrap:wrap;align-items:stretch;overflow:hidden}
+.cqm-arch-viz{flex:1 1 320px;min-width:min(100%,280px);min-height:0;display:flex;flex-direction:column;overflow:hidden;
+  border-right:1px solid rgba(255,59,78,.12);background:rgba(10,3,12,.45)}
+.cqm-arch-canvas{display:block;width:100%;height:${ARCHITECTURE_PANEL_CANVAS_HEIGHT};max-height:${ARCHITECTURE_PANEL_CANVAS_HEIGHT};min-height:170px;
+  flex:${ARCHITECTURE_PANEL_CANVAS_FLEX};background:radial-gradient(120% 90% at 50% 0%,rgba(30,4,18,.6),rgba(2,2,5,1));border-bottom:1px solid rgba(255,59,78,.14)}
+.cqm-arch-mode{display:flex;gap:4px;padding:6px 10px;border-bottom:1px solid rgba(255,59,78,.12);flex:0 0 auto}
+.cqm-arch-data{flex:1 1 270px;min-width:min(100%,250px);min-height:${ARCHITECTURE_PANEL_DATA_MIN_HEIGHT};height:${ARCHITECTURE_PANEL_DATA_HEIGHT};max-height:100%;overflow-y:auto;
+  padding:8px 12px 12px;display:grid;grid-template-columns:auto minmax(90px,1fr);gap:3px 12px;align-items:baseline}
 .cqm-arch-data .k{color:#9b7fb4;font-size:9.5px;letter-spacing:.04em;text-transform:uppercase}
 .cqm-arch-data .v{color:#ece2ff;text-align:right;font-variant-numeric:tabular-nums;font-size:10px}
 .cqm-arch-data .sec{grid-column:1/-1;margin-top:5px;color:#ff8a98;font-size:9px;letter-spacing:.18em;
   border-bottom:1px dotted rgba(255,90,107,.25);padding-bottom:2px}
+@media (max-width:900px){
+  .cqm-arch-main{overflow-y:auto;display:block;align-items:initial}
+  .cqm-arch-viz{border-right:0;border-bottom:1px solid rgba(255,59,78,.12)}
+  .cqm-arch-canvas{height:clamp(150px,28vh,220px);max-height:none;flex:none}
+  .cqm-arch-data{height:auto;max-height:none;min-height:220px;overflow:visible}
+}
 `;
 
 /** Make an element with optional class + text. */
@@ -106,6 +125,7 @@ function el<K extends keyof HTMLElementTagNameMap>(
 export class PantheonArchitecturePanel {
   private readonly panel: HTMLElement;
   private readonly canvas: HTMLCanvasElement;
+  private readonly styleEl: HTMLStyleElement;
   private readonly ctx: CanvasRenderingContext2D | null;
   private readonly glyphEl: HTMLElement;
   private readonly nameEl: HTMLElement;
@@ -140,6 +160,7 @@ export class PantheonArchitecturePanel {
     const style = doc.createElement('style');
     style.textContent = STYLE;
     doc.head.appendChild(style);
+    this.styleEl = style;
 
     const toggle = el(doc, 'button', undefined, '⟁ ARCHITECTURE');
     toggle.id = 'cqm-arch-toggle';
@@ -192,12 +213,16 @@ export class PantheonArchitecturePanel {
     bar.append(this.viewBtns.lineage, this.viewBtns.brood, mate, storm);
     panel.appendChild(bar);
 
+    // Main body: dynamics viewport + readable data well.
+    const main = el(doc, 'div', 'cqm-arch-main');
+    const viz = el(doc, 'div', 'cqm-arch-viz');
+
     // Dynamics canvas
     this.canvas = el(doc, 'canvas', 'cqm-arch-canvas');
     this.canvas.width = 372;
     this.canvas.height = 160;
     this.ctx = this.canvas.getContext('2d');
-    panel.appendChild(this.canvas);
+    viz.appendChild(this.canvas);
 
     // Viz-mode switch
     const modeRow = el(doc, 'div', 'cqm-arch-mode');
@@ -205,11 +230,12 @@ export class PantheonArchitecturePanel {
     this.modeBtns.loop = this.makeToggle(doc, 'WINDING', () => this.setMode('loop'));
     this.modeBtns.blaschke = this.makeToggle(doc, 'BLASCHKE', () => this.setMode('blaschke'));
     modeRow.append(this.modeBtns.attractor, this.modeBtns.loop, this.modeBtns.blaschke);
-    panel.appendChild(modeRow);
+    viz.appendChild(modeRow);
 
     // Data grid
     this.data = el(doc, 'div', 'cqm-arch-data');
-    panel.appendChild(this.data);
+    main.append(viz, this.data);
+    panel.appendChild(main);
 
     doc.body.appendChild(panel);
     this.syncToggles();
@@ -436,6 +462,7 @@ export class PantheonArchitecturePanel {
   private frame(): void {
     const ctx = this.ctx;
     if (!ctx) return;
+    this.resizeCanvas();
     const w = this.canvas.width;
     const h = this.canvas.height;
     // Ominous fade trail.
@@ -445,6 +472,15 @@ export class PantheonArchitecturePanel {
     if (this.mode === 'attractor') this.drawAttractor(ctx, w, h, col);
     else if (this.mode === 'loop') this.drawLoop(ctx, w, h, col);
     else this.drawBlaschke(ctx, w, h, col);
+  }
+
+  /** Match the backing canvas to the readable CSS box whenever the HUD grants more space. */
+  private resizeCanvas(): void {
+    const w = Math.max(260, Math.floor(this.canvas.clientWidth || this.canvas.width));
+    const h = Math.max(150, Math.floor(this.canvas.clientHeight || this.canvas.height));
+    if (this.canvas.width === w && this.canvas.height === h) return;
+    this.canvas.width = w;
+    this.canvas.height = h;
   }
 
   private drawAttractor(ctx: CanvasRenderingContext2D, w: number, h: number, col: string): void {
@@ -533,6 +569,13 @@ export class PantheonArchitecturePanel {
     ctx.stroke();
     if (upto < n) this.reveal += 6;
     else this.reveal = 0;
+  }
+
+  dispose(): void {
+    this.stopAnim();
+    this.panel.remove();
+    this.styleEl.remove();
+    document.getElementById('cqm-arch-toggle')?.remove();
   }
 }
 
