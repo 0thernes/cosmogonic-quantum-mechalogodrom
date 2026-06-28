@@ -53,11 +53,11 @@ const ADOPT_BETA = 6;
 
 // ── Market-mechanic layer (CONTRACTS V20) — explicit game theory on top of the clearing market ──
 /** The richest few agents form a CARTEL that colludes to restrict supply (oligopoly). */
-const CARTEL_SIZE = 5;
+const CARTEL_SIZE = 7;
 /** Fraction of its commodity production a cartel member withholds to prop up scarcity/price. */
-const CARTEL_WITHHOLD = 0.45;
+const CARTEL_WITHHOLD = 0.32;
 /** Arbitrage gain: how fast preferences mean-revert toward the under-priced commodity (gap → 0). */
-const ARB_GAIN = 0.05;
+const ARB_GAIN = 0.078;
 /** A sanctioned agent trades at this fraction of its budget (capital controls / embargo). */
 const SANCTION_BUDGET = 0.35;
 /** …and is cut off from resources, producing only this fraction (the embargo's real bite). */
@@ -383,6 +383,29 @@ export class Economy {
     // currency conserved across the book to floating-point tolerance).
     this.clear(this.dQ, this.pQuanta, 'quanta');
     this.clear(this.dI, this.pIchor, 'ichor');
+
+    // (4a) Gini guard — progressive skim from ultra-rich to tail agents when wealth concentrates.
+    const gCoeff = gini(this.nw);
+    if (gCoeff > 0.52 && n >= 4) {
+      const mean = totalNW / n;
+      const rate = (gCoeff - 0.52) * 0.035;
+      let pool = 0;
+      for (let i = 0; i < n; i++) {
+        const a = this.agents[i]!;
+        const nw = this.nw[i] ?? 0;
+        if (nw > mean * 1.75) {
+          const skim = (nw - mean * 1.75) * rate;
+          a.aurum = Math.max(0, a.aurum - skim);
+          pool += skim;
+        }
+      }
+      if (pool > 1e-6) {
+        const poor: number[] = [];
+        for (let i = 0; i < n; i++) if ((this.nw[i] ?? 0) < mean * 0.62) poor.push(i);
+        const share = poor.length > 0 ? pool / poor.length : 0;
+        for (const i of poor) this.agents[i]!.aurum += share;
+      }
+    }
 
     // (4b) BLACK MARKET — SANCTIONED agents evade the embargo via smugglers: a second clearing over
     // ONLY the sanctioned set, at a premium (the smuggler's cut). Non-sanctioned get a zero delta so

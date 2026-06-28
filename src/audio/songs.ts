@@ -221,18 +221,18 @@ export interface SfxBand {
  * {@link SFX_CUE_BAND}. Sums to {@link SFX_PALETTE_SIZE}.
  */
 const FAMILY_LAYOUT = [
-  { fam: 'pluck', count: 8 },
-  { fam: 'zap', count: 8 },
-  { fam: 'bend', count: 7 },
-  { fam: 'drone', count: 6 },
-  { fam: 'sweep', count: 7 },
-  { fam: 'bell', count: 8 },
-  { fam: 'fall', count: 7 },
-  { fam: 'vibrato', count: 6 },
-  { fam: 'fmclang', count: 6 },
-  { fam: 'subboom', count: 5 },
-  { fam: 'glint', count: 4 },
-  { fam: 'strange', count: 3 },
+  { fam: 'pluck', count: 7 },
+  { fam: 'zap', count: 7 },
+  { fam: 'bend', count: 6 },
+  { fam: 'drone', count: 5 },
+  { fam: 'sweep', count: 6 },
+  { fam: 'bell', count: 7 },
+  { fam: 'fall', count: 6 },
+  { fam: 'vibrato', count: 5 },
+  { fam: 'fmclang', count: 5 },
+  { fam: 'subboom', count: 4 },
+  { fam: 'glint', count: 3 },
+  { fam: 'strange', count: 14 },
   { fam: 'cue', count: 25 },
 ] as const;
 
@@ -270,6 +270,9 @@ export const SFX_EXTRA_BANDS: Readonly<Record<string, SfxBand>> = {
   subboom: bandOf('subboom'),
   glint: bandOf('glint'),
   strange: bandOf('strange'),
+  demonic: bandOf('strange'),
+  chitter: bandOf('strange'),
+  howl: bandOf('strange'),
 };
 
 const WAVES: readonly OscillatorType[] = ['sine', 'triangle', 'square', 'sawtooth'];
@@ -314,7 +317,7 @@ export function createSfxPalette(rng: Rng): SfxSpec[] {
   });
 
   // PLUCK — bright descending mitosis blips (the 'split' family).
-  for (let i = 0; i < 8; i++) {
+  for (let i = 0; i < 7; i++) {
     const s = base(
       `pluck#${i}`,
       i % 2 === 0 ? 'sawtooth' : i % 3 === 0 ? 'square' : 'triangle',
@@ -330,7 +333,7 @@ export function createSfxPalette(rng: Rng): SfxSpec[] {
     out.push(s);
   }
   // ZAP — noisy explosive spawns (the 'burst' family): up then crash down.
-  for (let i = 0; i < 8; i++) {
+  for (let i = 0; i < 7; i++) {
     const s = base(
       `zap#${i}`,
       i % 2 === 0 ? 'square' : 'sawtooth',
@@ -346,7 +349,7 @@ export function createSfxPalette(rng: Rng): SfxSpec[] {
     out.push(s);
   }
   // BEND — wobbling transmutations (the 'mutate' family).
-  for (let i = 0; i < 7; i++) {
+  for (let i = 0; i < 6; i++) {
     const s = base(
       `bend#${i}`,
       i % 2 === 0 ? 'sine' : 'triangle',
@@ -360,7 +363,7 @@ export function createSfxPalette(rng: Rng): SfxSpec[] {
     out.push(s);
   }
   // DRONE — low ambient pads (the 'ambient' family).
-  for (let i = 0; i < 6; i++) {
+  for (let i = 0; i < 5; i++) {
     const s = base(
       `drone#${i}`,
       i % 2 === 0 ? 'sawtooth' : 'sine',
@@ -375,7 +378,7 @@ export function createSfxPalette(rng: Rng): SfxSpec[] {
     out.push(s);
   }
   // SWEEP — bandpass space-warps (the 'warp' family): rise then fall.
-  for (let i = 0; i < 7; i++) {
+  for (let i = 0; i < 6; i++) {
     const s = base(`sweep#${i}`, 'sawtooth', R(45, 70), R(1.0, 1.8), R(0.07, 0.1));
     s.f1 = R(2500, 3600);
     s.f2 = R(80, 150);
@@ -386,7 +389,7 @@ export function createSfxPalette(rng: Rng): SfxSpec[] {
     out.push(s);
   }
   // BELL — high crystalline glints (the 'crystallize' family).
-  for (let i = 0; i < 8; i++) {
+  for (let i = 0; i < 7; i++) {
     const s = base(`bell#${i}`, 'sine', R(1500, 3500), R(0.6, 1.2), R(0.05, 0.085));
     s.f1 = s.f0 * R(1.02, 1.12);
     s.f2 = R(700, 1100);
@@ -399,7 +402,7 @@ export function createSfxPalette(rng: Rng): SfxSpec[] {
     out.push(s);
   }
   // FALL — long sinking decays (the 'decay'/death family).
-  for (let i = 0; i < 7; i++) {
+  for (let i = 0; i < 6; i++) {
     const s = base(`fall#${i}`, 'triangle', R(350, 520), R(1.2, 2.2), R(0.06, 0.09));
     s.f1 = R(16, 32);
     s.filterType = 'lowpass';
@@ -409,7 +412,7 @@ export function createSfxPalette(rng: Rng): SfxSpec[] {
     out.push(s);
   }
   // VIBRATO — resonant sustains (the 'resonance' family).
-  for (let i = 0; i < 6; i++) {
+  for (let i = 0; i < 5; i++) {
     const s = base(`vibrato#${i}`, 'sine', R(180, 320), R(1.2, 2.2), R(0.05, 0.08));
     s.lfoRate = R(5, 15);
     s.lfoDepth = R(80, 260);
@@ -417,8 +420,8 @@ export function createSfxPalette(rng: Rng): SfxSpec[] {
     out.push(s);
   }
   // FM-CLANG — inharmonic metallic strikes (cosmology / strange events).
-  for (let i = 0; i < 6; i++) {
-    const ratios = [1.41, 2.4, 3.1, 5.1, 1.73, 2.83];
+  for (let i = 0; i < 5; i++) {
+    const ratios = [1.41, 2.4, 3.1, 5.1, 1.73];
     const s = base(
       `fmclang#${i}`,
       i % 2 === 0 ? 'sine' : 'square',
@@ -435,7 +438,7 @@ export function createSfxPalette(rng: Rng): SfxSpec[] {
     out.push(s);
   }
   // SUB-BOOM — subterranean impacts (black-hole / apocalypse weight).
-  for (let i = 0; i < 5; i++) {
+  for (let i = 0; i < 4; i++) {
     const s = base(
       `subboom#${i}`,
       i % 2 === 0 ? 'sine' : 'triangle',
@@ -450,27 +453,45 @@ export function createSfxPalette(rng: Rng): SfxSpec[] {
     out.push(s);
   }
   // GLINT — tiny high sparkles.
-  for (let i = 0; i < 4; i++) {
+  for (let i = 0; i < 3; i++) {
     const s = base(`glint#${i}`, 'sine', R(2600, 5200), R(0.15, 0.4), R(0.03, 0.055));
     s.partial = 1.5;
     s.jitter = 0.22;
     out.push(s);
   }
-  // STRANGE — exotic hybrids (FM + LFO + noise): the unexplained.
-  for (let i = 0; i < 3; i++) {
+  // STRANGE — demonic / chitter / howl / gurgle hybrids (creature + cosmology voices).
+  const strangeWaves: OscillatorType[] = ['sawtooth', 'square', 'triangle', 'sine'];
+  for (let i = 0; i < 14; i++) {
+    const kind = i % 4;
     const s = base(
       `strange#${i}`,
-      i % 2 === 0 ? 'sawtooth' : 'square',
-      R(200, 900),
-      R(0.8, 1.6),
-      R(0.05, 0.085),
+      strangeWaves[i % strangeWaves.length] ?? 'sawtooth',
+      kind === 0 ? R(38, 95) : kind === 1 ? R(900, 2800) : kind === 2 ? R(120, 420) : R(200, 900),
+      kind === 1 ? R(0.08, 0.22) : R(0.6, 2.1),
+      R(0.04, 0.14),
     );
-    s.lfoRate = R(6, 20);
-    s.lfoDepth = R(60, 240);
-    s.fmRatio = [1.61, 2.71, 3.33][i] ?? 1.61;
-    s.fmDepth = R(80, 300);
-    s.noise = R(0.1, 0.35);
-    s.jitter = 0.3;
+    if (kind === 0) {
+      s.f1 = R(18, 42);
+      s.noise = R(0.15, 0.45);
+      s.filterType = 'lowpass';
+      s.filterFreq = R(180, 520);
+    } else if (kind === 1) {
+      s.f1 = R(40, 120);
+      s.noise = R(0.35, 0.75);
+      s.attack = 0.001;
+    } else if (kind === 2) {
+      s.f1 = R(680, 1400);
+      s.f2 = R(90, 220);
+      s.lfoRate = R(3, 9);
+      s.lfoDepth = R(40, 180);
+    } else {
+      s.lfoRate = R(6, 22);
+      s.lfoDepth = R(60, 280);
+      s.fmRatio = [1.61, 2.71, 3.33, 4.17][i % 4] ?? 1.61;
+      s.fmDepth = R(80, 420);
+      s.noise = R(0.12, 0.55);
+    }
+    s.jitter = 0.32;
     out.push(s);
   }
   // CUE — 25 ascending engineered voices, one per sorting field (~3 octaves over the list).

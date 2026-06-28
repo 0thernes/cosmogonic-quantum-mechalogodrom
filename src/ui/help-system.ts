@@ -41,6 +41,20 @@ const CHIPS: { label: string; q: string }[] = [
   { label: 'Music & SFX', q: 'music song sfx audio sound' },
   { label: 'Tsotchke', q: 'tsotchke quantum substrate eshkol moonlab qgtl' },
   { label: 'Self-evolution', q: 'self evolution loop emergence complexity' },
+  { label: '✦ AI Copilot', q: 'AI copilot free LLM chat read repo' },
+  { label: 'Quantum WildBeyond', q: 'quantum wildbeyond lab boards tiles' },
+  { label: 'Center HUD', q: 'center HUD panels architecture audit neural market' },
+  { label: 'Market ticker', q: 'market ticker economy aurum umbra prices' },
+  { label: 'Singularities', q: 'black hole white hole grey hole entropy strangestar summon' },
+  { label: 'N(2) Break Free', q: 'simulation N2 break free nightmare chaos' },
+  { label: 'Apex brain', q: 'apex brain abomination million parameters super creature' },
+  { label: 'Render modes', q: 'render mode wireframe ghost neon solid visual' },
+  { label: 'Lab & dome', q: 'lab quantum wildbeyond link dome broadcast' },
+  { label: 'God events', q: 'god scale release emergence pantheon events' },
+  { label: 'Gravitational lens', q: 'gravitational lens post processing singularity warp' },
+  { label: 'Butlin indicators', q: 'butlin consciousness indicators sentience audit' },
+  { label: 'GPU / instancing', q: 'instanced rendering quality tier mega ultra desktop' },
+  { label: 'WildBeyond lab', q: 'quantum wildbeyond lab four boards thirty six tiles' },
 ];
 
 const STYLE = `
@@ -121,7 +135,7 @@ export class HelpSystem {
       `<div class="cqm-help-colhead">Topics</div><div class="cqm-help-chips" data-chips></div>` +
       `<div class="cqm-help-colhead">Ask anything</div>` +
       `<div class="cqm-help-search"><input class="cqm-help-in" data-in placeholder="e.g. how does the economy work?" autocomplete="off" /><button class="cqm-help-go" data-go>ASK</button></div>` +
-      `<div class="cqm-help-foot"><span class="note">Grounded in public project knowledge only — no secrets or private data. For freeform / web questions:</span><button class="cqm-help-ai" data-ai>Ask the ✦ AI</button></div>` +
+      `<div class="cqm-help-foot"><span class="note">Repo-grounded instant answers. For freeform / web / full corpus RAG:</span><button class="cqm-help-ai" data-ai>Ask the ✦ AI</button></div>` +
       `</div>`;
     this.panel.appendChild(body);
     doc.body.appendChild(this.panel);

@@ -389,7 +389,7 @@ const RELIQUARY_FRAG_BODY = /* glsl */ `#include <emissivemap_fragment>
 	// Pull metalness toward this material class (glass→dielectric, metal→conductor).
 	metalnessFactor = mix(metalnessFactor, RQ_METAL, 0.8);
 	// Groove self-shadow + the class subsurface tint settling into the recesses.
-	float rqAO = mix(0.45, 1.05, smoothstep(0.12, 0.85, rqDetail));
+	float rqAO = mix(0.55, 1.15, smoothstep(0.12, 0.85, rqDetail));
 	diffuseColor.rgb *= rqAO;
 	float rqValley = 1.0 - smoothstep(0.3, 0.7, rqN0);
 	diffuseColor.rgb = mix(diffuseColor.rgb, diffuseColor.rgb * RQ_SSS, rqValley * 0.3);
@@ -421,7 +421,7 @@ const RELIQUARY_FRAG_BODY = /* glsl */ `#include <emissivemap_fragment>
 	totalEmissiveRadiance += vec3(0.45, 0.85, 1.0) * rqArc * vNeu * 2.4;
 	// ASHEN CATARACT (senescence) — pigment greys and a cold frost rim creeps in; the body ages on screen.
 	float rqLum = dot(diffuseColor.rgb, vec3(0.299, 0.587, 0.114));
-	diffuseColor.rgb = mix(diffuseColor.rgb, vec3(rqLum * 0.82), vSen * 0.7);
+	diffuseColor.rgb = mix(diffuseColor.rgb, vec3(rqLum * 0.82), vSen * 0.35);
 	totalEmissiveRadiance += vec3(0.55, 0.62, 0.80) * pow(rqFres, 2.0) * vSen * 0.5;
 	// HYPERSPACE IONIZING FLUTTER (exertion) — ion streaks band along the engraved normal as it sprints.
 	float rqStreak = pow(0.5 + 0.5 * sin(rqN.y * 28.0 - uTime * 15.0), 7.0);

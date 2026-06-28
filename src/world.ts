@@ -1290,6 +1290,29 @@ export class World {
    * guarded forward). O(1).
    */
   private updateLens(): void {
+    // N(2) BREAK FREE — transdimensional screen warp even without an active singularity.
+    if (this.state.sim === 2) {
+      const f = this.state.frame;
+      const wobble = Math.sin(f * 0.017) * 0.14;
+      const cx = 0.5 + Math.sin(f * 0.011) * 0.09;
+      const cy = 0.5 + Math.cos(f * 0.013) * 0.07;
+      const singStrength = this.singularities.lensStrength;
+      if (singStrength !== 0 && this.singularities.lensCenter(this.lensWorld)) {
+        this.lensNdc.copy(this.lensWorld).project(this.engine.camera);
+        if (this.lensNdc.z <= 1) {
+          const boost = 1.45 + wobble;
+          this.engine.setLens(
+            this.lensNdc.x * 0.5 + 0.5,
+            this.lensNdc.y * 0.5 + 0.5,
+            singStrength * boost,
+            0.58,
+          );
+          return;
+        }
+      }
+      this.engine.setLens(cx, cy, -0.22 + wobble, 0.64);
+      return;
+    }
     const strength = this.singularities.lensStrength;
     if (strength === 0 || !this.singularities.lensCenter(this.lensWorld)) {
       this.engine.setLens(0.5, 0.5, 0, 0.5);
@@ -2706,7 +2729,10 @@ export class World {
     this.applySimVisuals();
     if (s.sim === 2) {
       s.chaos = Math.max(s.chaos, CHAOS_NIGHTMARE_FLOOR); // snap straight into the nightmare
+      s.mutations += 8;
       this.audio.playId(SFX_STRANGE);
+      this.audio.play('warp');
+      this.audio.play('burst');
       this.hud.showSector('SIMULATION N(2) — BREAK FREE');
     } else {
       this.audio.play('crystallize');

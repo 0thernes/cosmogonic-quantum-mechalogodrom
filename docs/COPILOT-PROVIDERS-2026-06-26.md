@@ -33,22 +33,22 @@ the box **fails over down the chain**: selected provider → every configured ke
 provider → FreeLLMAPI slot(s) → LLM7 → Pollinations → every other configured provider slot. This is
 the "rolling" reliability path: one dead endpoint or exhausted key no longer ends the turn.
 
-| Provider (picker id)          | Env var to enable     | Free tier (per the June-2026 report)             | Get a key                       |
-| ----------------------------- | --------------------- | ------------------------------------------------ | ------------------------------- |
-| LLM7 · Codestral (`llm7`)     | _(none)_              | No key, 30 RPM anonymous, tool-calling, 32K ctx  | optional token at token.llm7.io |
-| LLM7 · Devstral (`llm7-devstral`) | _(none)_          | No key, 30 RPM anonymous, tool-calling, 384K ctx | optional token at token.llm7.io |
-| Pollinations (`pollinations`) | `POLLINATIONS_API_KEY`| Now keyed (gen.pollinations.ai); legacy API deprecated | enter.pollinations.ai      |
-| SambaNova (`sambanova`)       | `SAMBANOVA_API_KEY`   | Free tier, Llama-3.3-70B, 96K ctx, fast inference | cloud.sambanova.ai              |
-| Together AI (`together`)      | `TOGETHER_API_KEY`    | Free Llama-3.3-70B-Instruct-Turbo-Free model     | api.together.ai                 |
-| Groq (`groq`)                 | `GROQ_API_KEY`        | 30 RPM, fast LPU inference, no card              | console.groq.com                |
-| Cerebras (`cerebras`)         | `CEREBRAS_API_KEY`    | 1M tokens/day, fastest throughput, 8K ctx (free) | cloud.cerebras.ai               |
-| OpenRouter (`openrouter`)     | `OPENROUTER_API_KEY`  | `:free` models (auto-router), 20 RPM / 50 RPD    | openrouter.ai                   |
-| GitHub Models (`github`)      | `GITHUB_MODELS_TOKEN` | frontier models (GPT-5/4.1, o-series) via a PAT  | github.com/marketplace/models   |
-| Mistral (`mistral`)           | `MISTRAL_API_KEY`     | "Experiment" plan, ~1B tokens/month              | console.mistral.ai              |
-| Google Gemini (`gemini`)      | `GEMINI_API_KEY`      | 2.5 Flash, large context; not available in EU/UK | aistudio.google.com             |
-| NVIDIA NIM (`nvidia`)         | `NVIDIA_API_KEY`      | 100+ models, ~40 RPM shared                      | build.nvidia.com                |
-| DeepSeek (`deepseek`)         | `DEEPSEEK_API_KEY`    | V3/R1; 5M trial tokens then paid                 | platform.deepseek.com           |
-| Hugging Face (`huggingface`)  | `HF_TOKEN`            | router → many backends, 100K credits/month       | huggingface.co/settings/tokens  |
+| Provider (picker id)              | Env var to enable      | Free tier (per the June-2026 report)                   | Get a key                       |
+| --------------------------------- | ---------------------- | ------------------------------------------------------ | ------------------------------- |
+| LLM7 · Codestral (`llm7`)         | _(none)_               | No key, 30 RPM anonymous, tool-calling, 32K ctx        | optional token at token.llm7.io |
+| LLM7 · Devstral (`llm7-devstral`) | _(none)_               | No key, 30 RPM anonymous, tool-calling, 384K ctx       | optional token at token.llm7.io |
+| Pollinations (`pollinations`)     | `POLLINATIONS_API_KEY` | Now keyed (gen.pollinations.ai); legacy API deprecated | enter.pollinations.ai           |
+| SambaNova (`sambanova`)           | `SAMBANOVA_API_KEY`    | Free tier, Llama-3.3-70B, 96K ctx, fast inference      | cloud.sambanova.ai              |
+| Together AI (`together`)          | `TOGETHER_API_KEY`     | Free Llama-3.3-70B-Instruct-Turbo-Free model           | api.together.ai                 |
+| Groq (`groq`)                     | `GROQ_API_KEY`         | 30 RPM, fast LPU inference, no card                    | console.groq.com                |
+| Cerebras (`cerebras`)             | `CEREBRAS_API_KEY`     | 1M tokens/day, fastest throughput, 8K ctx (free)       | cloud.cerebras.ai               |
+| OpenRouter (`openrouter`)         | `OPENROUTER_API_KEY`   | `:free` models (auto-router), 20 RPM / 50 RPD          | openrouter.ai                   |
+| GitHub Models (`github`)          | `GITHUB_MODELS_TOKEN`  | frontier models (GPT-5/4.1, o-series) via a PAT        | github.com/marketplace/models   |
+| Mistral (`mistral`)               | `MISTRAL_API_KEY`      | "Experiment" plan, ~1B tokens/month                    | console.mistral.ai              |
+| Google Gemini (`gemini`)          | `GEMINI_API_KEY`       | 2.5 Flash, large context; not available in EU/UK       | aistudio.google.com             |
+| NVIDIA NIM (`nvidia`)             | `NVIDIA_API_KEY`       | 100+ models, ~40 RPM shared                            | build.nvidia.com                |
+| DeepSeek (`deepseek`)             | `DEEPSEEK_API_KEY`     | V3/R1; 5M trial tokens then paid                       | platform.deepseek.com           |
+| Hugging Face (`huggingface`)      | `HF_TOKEN`             | router → many backends, 100K credits/month             | huggingface.co/settings/tokens  |
 
 ### FreeLLMAPI (the primary) + the Custom provider
 

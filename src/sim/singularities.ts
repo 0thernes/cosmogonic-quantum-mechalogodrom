@@ -31,7 +31,7 @@
 import * as THREE from 'three';
 import { TAU } from '../math/scalar';
 import { ARENA_MID } from './constants';
-import type { Entity, SimContext } from '../types';
+import type { Entity, QualityTier, SimContext } from '../types';
 import type { EntityManager } from './entities';
 
 /** The five summonable singularity kinds, in chaos-control cycle order. */
@@ -68,13 +68,42 @@ const MAX_CONSUME = 25;
 /** Accretion/fountain particle count by tier (instanced = laptop+). Independent of population. */
 const PARTICLES_HI = 1400;
 const PARTICLES_LO = 350;
+
+/** Tier-scaled particle budget — ultra/mega keep full YOLO fidelity (no instanced gate). */
+function particleBudget(tier: QualityTier): number {
+  switch (tier) {
+    case 'mega':
+      return 5200;
+    case 'ultra':
+      return 3600;
+    case 'desktop':
+      return 2400;
+    case 'laptop':
+      return PARTICLES_HI;
+    default:
+      return PARTICLES_LO;
+  }
+}
+
+function particleSizeMul(tier: QualityTier): number {
+  switch (tier) {
+    case 'mega':
+      return 2.35;
+    case 'ultra':
+      return 1.85;
+    case 'desktop':
+      return 1.4;
+    default:
+      return 1;
+  }
+}
 /** Per-particle radial drift speed (infall for black holes, fountain for white). */
 const PARTICLE_DRIFT = 14 * ARENA_MID;
 /** Keplerian angular-rate gain (inner particles orbit faster: ω ∝ √(G/ρ³)). */
 const PARTICLE_OMEGA_K = 3;
 /** Additive particle tint per kind. */
 const PARTICLE_COLOR: Readonly<Record<SingularityKind, number>> = {
-  entropy: 0xb0b4b8,
+  entropy: 0x4a3a30,
   blackhole: 0xffaa33,
   whitehole: 0x9fdcff,
   greyhole: 0xa0a8b8,
@@ -96,8 +125,8 @@ const CONSUME: Entity[] = [];
  * Set lookup also IS the liveness guard: a victim no longer in `list` (a stale grid or a same-frame
  * cross-system disposal) is simply never encountered, so it can never be double-disposed. */
 const CONSUME_SET = new Set<Entity>();
-/** Heat-death grey target for the ENTROPY colour fade. */
-const GREY = new THREE.Color(0.5, 0.5, 0.5);
+/** Heat-death dark target for the ENTROPY colour fade — a deep ash, not washed grey. */
+const GREY = new THREE.Color(0.12, 0.10, 0.08);
 /** V59 gravitational redshift/blueshift targets — infalling light reddens, ejected light blueshifts. */
 const REDSHIFT = new THREE.Color(1.0, 0.18, 0.05);
 const BLUESHIFT = new THREE.Color(0.35, 0.66, 1.0);
@@ -358,7 +387,7 @@ export class SingularitySystem {
       u.vel.y += (rng() - 0.5) * mag * 0.6;
       u.vel.z += (rng() - 0.5) * mag;
       // Fade emissive toward a uniform heat-death grey (colour persists; update() manages emI).
-      e.material.color.lerp(GREY, 0.02);
+      e.material.color.lerp(GREY, 0.01);
     }
     // The world heats: nudge chaos up toward its ceiling (the integrator clamps it).
     const s = this.ctx.state;
@@ -633,9 +662,9 @@ export class SingularitySystem {
     } else {
       // entropy — an inverted translucent shell that expands as disorder spreads.
       primaryMat = new THREE.MeshBasicMaterial({
-        color: 0xb0b4b8,
+        color: 0x2a2520,
         transparent: true,
-        opacity: 0.18,
+        opacity: 0.22,
         side: THREE.BackSide,
       });
       primary = new THREE.Mesh(new THREE.SphereGeometry(REACH * 0.4, 20, 20), primaryMat);
@@ -723,7 +752,9 @@ export class SingularitySystem {
     kind: SingularityKind,
   ): { points: THREE.Points; pointsMat: THREE.PointsMaterial; pState: Float32Array } | null {
     const rng = this.ctx.rng;
-    const n = this.ctx.quality.instanced ? PARTICLES_HI : PARTICLES_LO;
+    const tier = this.ctx.quality.tier;
+    const n = particleBudget(tier);
+    const sizeMul = particleSizeMul(tier);
     const pos = new Float32Array(n * 3);
     const st = new Float32Array(n * 3);
     // Per-kind initial radial band + vertical spread (disk for holes, cloud for strange/entropy).
@@ -747,9 +778,9 @@ export class SingularitySystem {
     geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
     const pointsMat = new THREE.PointsMaterial({
       color: PARTICLE_COLOR[kind],
-      size: 1.6 * ARENA_MID,
+      size: 1.6 * ARENA_MID * sizeMul,
       transparent: true,
-      opacity: 0.85,
+      opacity: tier === 'mega' || tier === 'ultra' ? 0.96 : 0.85,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
       sizeAttenuation: true,

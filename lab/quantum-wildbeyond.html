@@ -1504,29 +1504,61 @@
       let audioCtx = null;
 
       /**
-       * Short synthesized blip for a tile click. Pitch is deterministic in the
-       * tile id — 220·2^((hash % 24)/12) Hz, two octaves of semitones — triangle
-       * wave with a fast exponential decay, peak gain 0.13, ~0.25s. The context
-       * is created lazily inside the click gesture (autoplay-policy safe) and
-       * shared by every tile on every board.
+       * Per-tile synthesized SFX — 36 unique bizarre voices (waveform + pitch + noise + FM chosen
+       * deterministically from tile id). Shared AudioContext, autoplay-safe inside click gesture.
        */
       function tileBlip(tileId) {
         const AC = window.AudioContext || window.webkitAudioContext;
         if (!AC) return;
         if (!audioCtx) audioCtx = new AC();
         if (audioCtx.state === 'suspended') audioCtx.resume();
-        const freq = 220 * Math.pow(2, (derivedSeed(0, tileId) % 24) / 12);
+        const h = derivedSeed(0, tileId);
+        const slot = h % 36;
         const t0 = audioCtx.currentTime;
+        const dur = 0.18 + (slot % 7) * 0.04;
+        const waves = ['triangle', 'square', 'sawtooth', 'sine'];
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(freq, t0);
-        gain.gain.setValueAtTime(0.13, t0);
-        gain.gain.exponentialRampToValueAtTime(0.0008, t0 + 0.25);
-        osc.connect(gain);
+        const filter = audioCtx.createBiquadFilter();
+        osc.type = waves[slot % waves.length];
+        const baseHz = 55 * Math.pow(2, (slot % 24) / 12);
+        osc.frequency.setValueAtTime(baseHz * (1 + (slot % 5) * 0.31), t0);
+        osc.frequency.exponentialRampToValueAtTime(Math.max(28, baseHz * 0.35), t0 + dur);
+        filter.type = slot % 3 === 0 ? 'bandpass' : slot % 3 === 1 ? 'lowpass' : 'highpass';
+        filter.frequency.setValueAtTime(180 + ((slot * 97) % 4200), t0);
+        filter.Q.setValueAtTime(1.2 + (slot % 8), t0);
+        gain.gain.setValueAtTime(0.11 + (slot % 4) * 0.02, t0);
+        gain.gain.exponentialRampToValueAtTime(0.0006, t0 + dur);
+        osc.connect(filter);
+        filter.connect(gain);
+        if (slot % 5 === 0 || slot % 7 === 2) {
+          const noise = audioCtx.createBufferSource();
+          const nb = audioCtx.createBuffer(1, audioCtx.sampleRate * 0.12, audioCtx.sampleRate);
+          const nd = nb.getChannelData(0);
+          for (let i = 0; i < nd.length; i++) nd[i] = (Math.random() * 2 - 1) * 0.35;
+          noise.buffer = nb;
+          const ng = audioCtx.createGain();
+          ng.gain.setValueAtTime(0.06 + (slot % 3) * 0.03, t0);
+          ng.gain.exponentialRampToValueAtTime(0.0005, t0 + dur * 0.7);
+          noise.connect(ng);
+          ng.connect(gain);
+          noise.start(t0);
+          noise.stop(t0 + dur);
+        }
+        if (slot % 4 === 1) {
+          const fm = audioCtx.createOscillator();
+          const fmG = audioCtx.createGain();
+          fm.type = 'square';
+          fm.frequency.setValueAtTime(3 + (slot % 11), t0);
+          fmG.gain.setValueAtTime(40 + slot * 3, t0);
+          fm.connect(fmG);
+          fmG.connect(osc.frequency);
+          fm.start(t0);
+          fm.stop(t0 + dur);
+        }
         gain.connect(audioCtx.destination);
         osc.start(t0);
-        osc.stop(t0 + 0.26);
+        osc.stop(t0 + dur + 0.02);
       }
 
       // ─── Per-tile reaction state (click pulse + hover heat) ───
@@ -3725,6 +3757,26 @@
       };
 
       /**
+       * Guarantee every tile sketch gets pulse/hot interaction — even legacy 2D makers that
+       * omitted makeReact(). Wraps draw to honor kick bursts and hover heat.
+       */
+      function installUniversalReact(p) {
+        if (p.__cqmReactInstalled) return p.__cqmReact;
+        p.__cqmReactInstalled = true;
+        if (typeof p.pulse === 'function') return null;
+        const rx = makeReact(p);
+        p.__cqmReact = rx;
+        const origDraw = p.draw;
+        if (typeof origDraw !== 'function') return rx;
+        p.draw = function () {
+          const k = rx.tick();
+          const burst = 1 + ((k * 5) | 0) + (p.hot ? 2 : 0);
+          for (let s = 0; s < burst; s++) origDraw.call(this);
+        };
+        return rx;
+      }
+
+      /**
        * Destroy the currently-built board: remove every p5 instance (freeing its
        * WebGL context) and clear the grid DOM. After this, ZERO board contexts are
        * live. The whole reason boards are built lazily: 3 boards × 12 WEBGL tiles =
@@ -3791,15 +3843,16 @@
           const sketch = (pp) => {
             const rng = makeRng(derivedSeed(params.seed, spec.id));
             spec.make(pp, rng, TILE_RES);
+            installUniversalReact(pp);
           };
           const inst = new p5(sketch, host);
           activeTiles.push({ instance: inst, spec, tile });
 
-          // Interaction: click/Enter → blip + pulse; hover → hot. p.pulse/p.hot are
-          // installed by makeReact inside make(); guard in case a sketch omits them.
+          // Interaction: click/Enter → blip + pulse; hover → hot.
           const fire = () => {
             tileBlip(spec.id);
             if (typeof inst.pulse === 'function') inst.pulse();
+            else if (inst.__cqmReact) inst.__cqmReact.kick = 1;
           };
           tile.addEventListener('click', fire);
           tile.addEventListener('keydown', (e) => {
@@ -3814,6 +3867,7 @@
           tile.addEventListener('pointerleave', () => {
             inst.hot = false;
           });
+          tile.classList.add('viz-tile--live');
         }
 
         // V81: keyboard roving focus across the 12 tiles so arrow keys move between visuals.

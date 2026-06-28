@@ -80,6 +80,8 @@ describe('availableProviders — env-gated free-LLM list', () => {
     // Both keyless LLM7 models should appear as separate entries.
     expect(list.some((p) => p.id === 'llm7')).toBe(true);
     expect(list.some((p) => p.id === 'llm7-devstral')).toBe(true);
+    expect(list.filter((p) => p.id.startsWith('llm7')).length).toBeGreaterThanOrEqual(7);
+    expect(list.some((p) => p.id === 'freellmapi')).toBe(false);
   });
 
   test('setting a provider key surfaces exactly that provider (still one default)', () => {
@@ -152,18 +154,23 @@ describe('customProvider env override (CQM_LLM_ENDPOINT)', () => {
 });
 
 describe('resolveProvider — default-deny resolution (security)', () => {
-  test('no id, or the primary id, resolves to FreeLLMAPI (the default chain head)', () => {
-    expect(resolveProvider(undefined).id).toBe('freellmapi');
+  test('no id resolves to the first key-less LLM7 provider (default chain head)', () => {
+    expect(resolveProvider(undefined).id).toBe('llm7');
+  });
+
+  test('freellmapi resolves only when FREELLMAPI_BASE is configured', () => {
+    expect(resolveProvider('freellmapi').id).toBe('llm7');
+    process.env['FREELLMAPI_BASE'] = 'http://localhost:3001/v1';
     expect(resolveProvider('freellmapi').id).toBe('freellmapi');
   });
 
   test('an UNKNOWN provider id falls back to the default (never honored)', () => {
-    expect(resolveProvider('totally-made-up-provider').id).toBe('freellmapi');
-    expect(resolveProvider('').id).toBe('freellmapi');
+    expect(resolveProvider('totally-made-up-provider').id).toBe('llm7');
+    expect(resolveProvider('').id).toBe('llm7');
   });
 
   test('a keyed preset is denied without its key, and resolves once the key is present', () => {
-    expect(resolveProvider('groq').id).toBe('freellmapi'); // no GROQ_API_KEY → default-deny
+    expect(resolveProvider('groq').id).toBe('llm7'); // no GROQ_API_KEY → default-deny
     process.env['GROQ_API_KEY'] = 'a-key';
     const got = resolveProvider('groq');
     expect(got.id).toBe('groq');
@@ -171,7 +178,7 @@ describe('resolveProvider — default-deny resolution (security)', () => {
   });
 
   test('Pollinations is now keyed: denied without POLLINATIONS_API_KEY, resolves with it', () => {
-    expect(resolveProvider('pollinations').id).toBe('freellmapi'); // no key → default-deny
+    expect(resolveProvider('pollinations').id).toBe('llm7'); // no key → default-deny
     process.env['POLLINATIONS_API_KEY'] = 'pk_test';
     const got = resolveProvider('pollinations');
     expect(got.id).toBe('pollinations');
@@ -186,7 +193,7 @@ describe('resolveProvider — default-deny resolution (security)', () => {
   });
 
   test('the custom id resolves only when its endpoint env is set, else the default', () => {
-    expect(resolveProvider('custom').id).toBe('freellmapi'); // no CQM_LLM_ENDPOINT → default
+    expect(resolveProvider('custom').id).toBe('llm7'); // no CQM_LLM_ENDPOINT → default
     process.env['CQM_LLM_ENDPOINT'] = 'https://c.example/v1/chat/completions';
     expect(resolveProvider('custom').id).toBe('custom');
   });

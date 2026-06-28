@@ -30,7 +30,7 @@ import type { Entity, SimContext, UpdateStats } from '../types';
 import type { Rng } from '../math/rng';
 
 /** Push morph colours toward SATURATED, VIBRANT read (render-only — morph tables unchanged).
- * The base diffuse is held in the peak-chroma lightness zone (~0.36..0.62) so saturated hues read
+ * The base diffuse is held in the peak-chroma lightness zone (~0.28..0.46) so saturated hues read
  * STRONG rather than washing to white; a golden-ratio per-morph jitter (`j`) fans the 250 morphs into
  * a far wider, ~1000-variation palette without touching the seeded morph tables. The per-instance GPU
  * suites (tribe hue, quantum shimmer, payoff iridescence, vital glow) then layer dynamic variety on top. */
@@ -38,20 +38,21 @@ function paintVibrant(mat: THREE.MeshStandardMaterial, m: PhylumMorphType, mi: n
   const hsl = { h: 0, s: 0, l: 0 };
   // Golden-ratio hash → a well-spread, deterministic per-morph value in [0,1).
   const j = (mi * 0.6180339887) % 1;
+  const slot = mi + Math.floor(j * 9973);
   m.col.getHSL(hsl);
   mat.color.setHSL(
-    // gentle gradient spin + ±0.07 golden jitter widens the palette (more "1000 variations").
-    (hsl.h + mi * 0.0041 + j * 0.14 - 0.07 + 1) % 1,
-    Math.min(1, 0.88 + hsl.s * 0.12), // S 0.88..1.0 — near-maximum chroma
-    Math.min(0.62, 0.36 + hsl.l * 0.26 + j * 0.04), // L 0.36..0.62 — VIBRANT, never washed
+    // wider gradient spin + ±0.11 golden jitter fans the palette into ~1000 distinct variations.
+    (hsl.h + slot * 0.005 + j * 0.22 - 0.11 + 1) % 1,
+    1.0, // S = 1.0 — MAXIMUM chroma, never wash out
+    Math.min(0.46, 0.28 + hsl.l * 0.12 + j * 0.04), // L 0.28..0.46 — darker, deeply saturated
   );
   m.em.getHSL(hsl);
   mat.emissive.setHSL(
-    (hsl.h + 0.06 + j * 0.12) % 1,
-    Math.min(1, 0.86 + hsl.s * 0.14),
-    Math.min(0.6, 0.3 + hsl.l * 0.32),
+    (hsl.h + 0.08 + j * 0.18 + slot * 0.003) % 1,
+    1.0, // S = 1.0 — max emissive saturation
+    Math.min(0.62, 0.26 + hsl.l * 0.32),
   );
-  mat.emissiveIntensity = Math.min(3.0, m.emI * 1.55 + 0.45);
+  mat.emissiveIntensity = Math.min(4.5, m.emI * 2.3 + 0.9);
 }
 
 /** Base material parameters a {@link RenderMode} is layered on top of. */
@@ -257,7 +258,7 @@ export class EntityManager {
     // Layer the active render style on top of the morphotype base (CONTRACTS V7.3).
     // For SOLID this re-sets identical values, so the legacy look is byte-identical.
     applyRenderModeTo(mat, ctx.state.renderMode, m);
-    paintVibrant(mat, m, mi % morphCount);
+    paintVibrant(mat, m, (mi % morphCount) + this.list.length);
     const mesh = new THREE.Mesh(geo, mat) as Entity;
     mesh.scale.setScalar(s);
     const phylum = m.phylum ?? -1;
@@ -638,7 +639,7 @@ export class EntityManager {
     const mat = e.material;
     mat.color.copy(m.col);
     mat.emissive.copy(m.em);
-    paintVibrant(mat, m, mi % morphCount);
+    paintVibrant(mat, m, (mi % morphCount) + this.list.length);
     // metalness/roughness/transparent/opacity/side/wireframe/emissive + depthWrite are all set
     // by applyRenderModeTo on top of the morphotype base (CONTRACTS V7.3).
     applyRenderModeTo(mat, ctx.state.renderMode, m);

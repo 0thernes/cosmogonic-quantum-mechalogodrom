@@ -1049,14 +1049,17 @@ html.cqm-shell-ready .algo-list:empty::after {
   scrollbar-width: thin;
 }
 #ui > #hud-vsr {
-  padding: 5px 8px;
+  padding: 3px 6px;
+  font-size: 0.92em;
 }
 #ui > #hud-vsr .ui-readout-card__row {
-  margin-top: 1px;
+  margin-top: 0;
+  line-height: 1.25;
 }
 #ui > #hud-vsr .ui-readout-card__head {
-  margin-bottom: 3px;
-  padding-bottom: 2px;
+  margin-bottom: 2px;
+  padding-bottom: 1px;
+  font-size: 0.88em;
 }
 #alg #a-name {
   font: 600 var(--text-2xs) var(--font-ui);
@@ -1121,7 +1124,7 @@ html.cqm-shell-ready .algo-list:empty::after {
   overflow-y: auto;
   overflow-x: hidden;
   scrollbar-width: thin;
-  max-height: min(28vh, 220px);
+  max-height: min(22vh, 180px);
 }
 /* Side-panel legibility — telemetry keys/values, observatory labels, sorting list */
 #sP .panel-body [class*='text-4xs'],
@@ -1423,6 +1426,14 @@ html.cqm-shell-ready .algo-list:empty::after {
   }
   #ui > section {
     max-height: clamp(180px, 46vh, 56vh);
+  }
+  /* 12" tablet landscape: Observatory needs more vertical room — don't crush it with the generic cap. */
+  #ui > section#oP {
+    max-height: min(68vh, calc(100vh - 210px));
+    min-height: clamp(220px, 38vh, 420px);
+  }
+  #oP > .obs-body {
+    max-height: min(62vh, calc(100vh - 250px));
   }
 }
 
