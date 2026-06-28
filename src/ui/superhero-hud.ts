@@ -25,18 +25,21 @@ export interface HeroHudView extends SuperheroView {
 const INVENTORY = ['◈', '❄', '⚛', '✶', '☍', '⬡'];
 
 const STYLE = `
-#cqm-hero{position:fixed;top:8px;left:50%;transform:translate(-50%,-150%);z-index:58;width:min(98vw,880px);
-  transition:transform .55s cubic-bezier(.2,.9,.3,1);font:11px/1.4 var(--font-mono,ui-monospace,monospace);
+#cqm-hero{position:fixed;top:8px;left:50%;transform:translate(-50%,-150%);z-index:58;width:min(96vw,780px);
+  transition:transform .55s cubic-bezier(.2,.9,.3,1);font-size:11px;line-height:1.4;font-family:var(--font-mono,ui-monospace,monospace);
   color:#e9e3ff;pointer-events:none}
 #cqm-hero.on{transform:translate(-50%,0)}
+@media (max-width:640px){#cqm-hero{width:min(96vw,420px);top:4px;font-size:10px}}
 .cqm-hero-box{pointer-events:auto;border:1px solid rgba(150,120,255,.4);border-radius:14px;
   background:linear-gradient(180deg,rgba(14,9,28,.95),rgba(8,6,18,.92));backdrop-filter:blur(12px);
   box-shadow:0 10px 40px rgba(0,0,0,.6),inset 0 0 30px rgba(80,40,160,.18);padding:9px 12px;
   display:flex;flex-direction:column;gap:7px}
+@media (max-width:640px){.cqm-hero-box{padding:7px 8px;border-radius:10px}}
 .cqm-hero-r{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .cqm-hero-av{display:flex;align-items:center;gap:8px;white-space:nowrap}
 .cqm-hero-glyph{font-size:20px;color:#c79bff;text-shadow:0 0 12px rgba(170,110,255,.8);animation:cqm-hero-pulse 2.4s ease-in-out infinite}
 @keyframes cqm-hero-pulse{0%,100%{text-shadow:0 0 10px rgba(170,110,255,.55)}50%{text-shadow:0 0 22px rgba(200,150,255,.95)}}
+@media (prefers-reduced-motion:reduce){.cqm-hero-glyph{animation:none}}
 .cqm-hero-name{font-weight:700;letter-spacing:.12em;color:#f0e8ff}
 .cqm-hero-lvl{font-size:9px;letter-spacing:.1em;color:#bda4ff;border:1px solid rgba(150,120,255,.4);border-radius:8px;padding:1px 6px}
 .cqm-hero-bar{display:flex;align-items:center;gap:6px;min-width:120px;flex:1}
@@ -54,17 +57,20 @@ const STYLE = `
 .cqm-hero-pw{display:flex;gap:5px;flex-wrap:wrap}
 .cqm-hero-btn{pointer-events:auto;border:1px solid rgba(150,120,255,.45);border-radius:7px;background:rgba(40,24,80,.5);
   color:#e6dcff;font:600 9px/1 var(--font-mono,ui-monospace,monospace);letter-spacing:.06em;padding:5px 8px;cursor:pointer;
-  transition:transform .1s,background .12s;white-space:nowrap}
+  transition:transform .1s,background .12s,opacity .12s;white-space:nowrap}
 .cqm-hero-btn:hover{background:rgba(70,42,130,.7);transform:translateY(-1px)}
 .cqm-hero-btn:active{transform:translateY(0)}
 .cqm-hero-btn .c{color:#8fe0ff;margin-left:4px}
 .cqm-hero-btn.flash{background:rgba(150,110,255,.85);color:#fff}
 .cqm-hero-btn.alt{border-color:rgba(110,200,255,.45);color:#cdecff}
-.cqm-hero-dpad{display:grid;grid-template-columns:repeat(3,22px);gap:2px}
-.cqm-hero-pad{pointer-events:auto;width:22px;height:22px;display:grid;place-items:center;border:1px solid rgba(110,200,255,.4);
-  border-radius:5px;background:rgba(30,40,70,.55);color:#cdecff;font-size:11px;cursor:pointer;user-select:none;touch-action:none}
+.cqm-hero-btn:disabled,.cqm-hero-btn-disabled{opacity:.45;cursor:not-allowed;transform:none;pointer-events:none}
+.cqm-hero-dpad{display:grid;grid-template-columns:repeat(3,44px);gap:2px}
+.cqm-hero-pad{pointer-events:auto;width:44px;height:44px;display:grid;place-items:center;border:1px solid rgba(110,200,255,.4);
+  border-radius:5px;background:rgba(30,40,70,.55);color:#cdecff;font-size:14px;cursor:pointer;user-select:none;touch-action:none}
 .cqm-hero-pad:hover{background:rgba(50,70,120,.8)}
+.cqm-hero-pad:focus-visible{outline:2px solid rgba(140,200,255,.85);outline-offset:2px;background:rgba(50,70,120,.8)}
 .cqm-hero-pad:active{background:rgba(120,110,255,.85);color:#fff}
+.cqm-hero-inv[title]{cursor:help}
 `;
 
 function bar(
@@ -112,6 +118,7 @@ export class SuperheroHud {
   private readonly bars: Record<string, { fil: HTMLElement; num: HTMLElement }> = {};
   private readonly stats: Record<string, HTMLElement> = {};
   private readonly dots: Record<string, HTMLElement> = {};
+  private readonly powers: Record<string, { btn: HTMLElement; cost: number }> = {};
   private readonly nameEl: HTMLElement;
   private readonly lvlEl: HTMLElement;
   private pilotBtn!: HTMLElement; // V41: shows + cycles the control mode (autopilot/assist/manual)
@@ -156,7 +163,7 @@ export class SuperheroHud {
     rowB.className = 'cqm-hero-r';
     this.stats.power = stat(rowB, 'PWR', doc);
     this.stats.plan = stat(rowB, 'PLAN', doc);
-    this.stats.wallet = stat(rowB, '☉☾◇❖', doc);
+    this.stats.wallet = stat(rowB, 'WALLET', doc);
     // neural emotion dots
     const neu = doc.createElement('div');
     neu.className = 'cqm-hero-sec';
@@ -175,9 +182,14 @@ export class SuperheroHud {
       this.dots[k] = i;
     }
     rowB.appendChild(neu);
-    // inventory
+    // inventory (cosmetic relics until active power-ups land in V42)
     const inv = doc.createElement('div');
     inv.className = 'cqm-hero-inv';
+    inv.setAttribute(
+      'title',
+      'Relic inventory — cosmetic slots for now; active powers coming in V42',
+    );
+    inv.setAttribute('aria-label', 'Relic inventory');
     for (const g of INVENTORY) {
       const s = doc.createElement('div');
       s.className = 'cqm-hero-slot';
@@ -198,12 +210,14 @@ export class SuperheroHud {
       b.className = 'cqm-hero-btn';
       b.innerHTML = `${p.name}<span class="c">${Math.round(p.cost * 100)}⚡</span>`;
       b.title = p.desc;
+      b.setAttribute('aria-label', `${p.name}: ${p.desc} (${Math.round(p.cost * 100)} energy)`);
       b.addEventListener('click', () => {
         b.classList.add('flash');
         setTimeout(() => b.classList.remove('flash'), 180);
         window.dispatchEvent(new CustomEvent('cqm:hero-power', { detail: { id: p.id } }));
       });
       pw.appendChild(b);
+      this.powers[p.id] = { btn: b, cost: p.cost };
     }
     rowC.appendChild(pw);
     // V41 — PILOT mode + VISION + CAMERA controls (the PILOT/CAM labels refresh each beat in update()).
@@ -242,8 +256,16 @@ export class SuperheroHud {
     );
     this.stats.power!.textContent = `×${v.power}`;
     this.stats.plan!.textContent = v.plan;
-    this.stats.wallet!.textContent = `${fmt(v.wallet.aurum)}·${fmt(v.wallet.umbra)}·${fmt(v.wallet.quanta)}·${fmt(v.wallet.ichor)}`;
-    this.stats.world!.textContent = `${v.world.entities} ent · f${v.world.frame}`;
+    this.stats.wallet!.setAttribute('title', 'Aurum ☉ · Umbra ☾ · Quanta ◇ · Ichor ❖');
+    this.stats.wallet!.textContent = `☉${fmt(v.wallet.aurum)} · ☾${fmt(v.wallet.umbra)} · ◇${fmt(v.wallet.quanta)} · ❖${fmt(v.wallet.ichor)}`;
+    this.stats.world!.textContent = `${v.world.entities} entities · f${v.world.frame}`;
+    for (const id of Object.keys(this.powers)) {
+      const { btn, cost } = this.powers[id]!;
+      const canAfford = v.energy >= cost;
+      btn.classList.toggle('cqm-hero-btn-disabled', !canAfford);
+      (btn as HTMLButtonElement).disabled = !canAfford;
+      btn.setAttribute('aria-disabled', String(!canAfford));
+    }
     this.pilotBtn.textContent = 'PILOT · ' + v.controlMode.toUpperCase();
     this.camBtn.textContent =
       'CAM · ' + (v.camMode === 'orbit' ? 'ORBIT' : v.camMode === 'third' ? '3RD' : '1ST');
@@ -276,6 +298,8 @@ function actionBtn(parent: HTMLElement, label: string, event: string, doc: Docum
 function buildDpad(parent: HTMLElement, doc: Document): void {
   const pad = doc.createElement('div');
   pad.className = 'cqm-hero-dpad';
+  pad.setAttribute('role', 'group');
+  pad.setAttribute('aria-label', 'Hero movement pad');
   // row 1: strafe-left · forward · strafe-right   row 2: descend · back · ascend
   const dirs: readonly [string, number, number, number, string][] = [
     ['◀', -1, 0, 0, 'Strafe left'],
@@ -293,12 +317,38 @@ function buildDpad(parent: HTMLElement, doc: Document): void {
     b.className = 'cqm-hero-pad';
     b.textContent = glyph;
     b.title = title;
+    b.setAttribute('aria-label', title);
+    let active = false;
+    const start = (): void => {
+      active = true;
+      move(x, y, z);
+    };
+    const stop = (): void => {
+      if (!active) return;
+      active = false;
+      move(0, 0, 0);
+    };
     b.addEventListener('pointerdown', (e) => {
       e.preventDefault();
-      move(x, y, z);
+      start();
     });
-    b.addEventListener('pointerup', () => move(0, 0, 0));
-    b.addEventListener('pointerleave', () => move(0, 0, 0));
+    b.addEventListener('pointerup', stop);
+    b.addEventListener('pointerleave', stop);
+    b.addEventListener('pointercancel', stop);
+    // Keyboard activation: Tab to the pad, Enter/Space to press, release to stop.
+    b.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ' || e.code === 'Space') {
+        e.preventDefault();
+        start();
+      }
+    });
+    b.addEventListener('keyup', (e) => {
+      if (e.key === 'Enter' || e.key === ' ' || e.code === 'Space') {
+        e.preventDefault();
+        stop();
+      }
+    });
+    b.addEventListener('blur', stop); // release if focus leaves while pressed
     pad.appendChild(b);
   }
   parent.appendChild(pad);
