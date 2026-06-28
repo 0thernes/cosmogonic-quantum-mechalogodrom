@@ -12,15 +12,25 @@ import { mountToggle } from './panel-dock';
 const STYLE = `
 #cqm-settings-modal::before{content:'';position:absolute;inset:0;pointer-events:none;opacity:.12;
   background:repeating-linear-gradient(0deg,transparent 0 2px,rgba(120,160,255,.5) 2px 3px)}
-.cqm-set-gr{margin-bottom:16px}
-.cqm-set-gr h3{margin:0 0 8px;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#a99fce;font-weight:600}
-.cqm-set-row{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+#cqm-settings-modal .glass-box{max-height:86vh;overflow-y:auto;scrollbar-width:thin;
+  scrollbar-color:rgba(120,160,255,.4) transparent}
+.cqm-set-gr{margin-bottom:10px}
+.cqm-set-gr h3{margin:0 0 4px;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:#a99fce;font-weight:600}
+.cqm-set-row{display:grid;grid-template-columns:repeat(2,1fr);gap:5px}
 .cqm-set-btn{pointer-events:auto;border:1px solid rgba(120,160,255,.35);border-radius:8px;background:rgba(30,40,80,.45);
-  color:#e6dcff;padding:8px 10px;cursor:pointer;font:11px var(--font-mono,ui-monospace,monospace);text-align:left;
+  color:#e6dcff;padding:5px 8px;cursor:pointer;font:10px var(--font-mono,ui-monospace,monospace);text-align:left;
   transition:background .12s,border-color .12s}
 .cqm-set-btn:hover{border-color:rgba(120,160,255,.6);background:rgba(50,70,130,.6)}
 .cqm-set-btn[data-action="apoc"]{border-color:rgba(255,80,80,.35);color:#ffb3b3}
 .cqm-set-btn[data-action="apoc"]:hover{border-color:rgba(255,80,80,.6);background:rgba(120,30,30,.5)}
+.cqm-set-btn[data-action="cosmo"]{border-color:rgba(255,200,80,.35);color:#ffd9a0}
+.cqm-set-btn[data-action="cosmo"]:hover{border-color:rgba(255,200,80,.6);background:rgba(80,60,20,.5)}
+.cqm-set-btn[data-action="nhi"]{border-color:rgba(180,100,255,.35);color:#d4b0ff}
+.cqm-set-btn[data-action="nhi"]:hover{border-color:rgba(180,100,255,.6);background:rgba(60,30,90,.5)}
+.cqm-set-btn[data-action="chaosmode"]{border-color:rgba(255,160,40,.35);color:#ffcc88}
+.cqm-set-btn[data-action="chaosmode"]:hover{border-color:rgba(255,160,40,.6);background:rgba(100,60,20,.5)}
+.cqm-set-btn[data-action="entropy"]{border-color:rgba(255,100,60,.35);color:#ffaa88}
+.cqm-set-btn[data-action="entropy"]:hover{border-color:rgba(255,100,60,.6);background:rgba(100,40,20,.5)}
 `;
 
 const GROUPS = [
@@ -88,7 +98,7 @@ class SettingsPanel {
 
     const { root, box } = glassPanel({
       id: 'cqm-settings-modal',
-      width: 'min(92vw,420px)',
+      width: 'min(88vw,340px)',
       zIndex: 200,
       doc,
     });

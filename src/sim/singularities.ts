@@ -85,31 +85,31 @@ function particleBudget(tier: QualityTier): number {
   }
 }
 
-/** Tier-scaled sphere segments — ultra/mega get 48, desktop 32, laptop/phone 20. */
+/** Tier-scaled sphere segments — YOLO: high detail at every tier (no phone dumbedown). */
 function sphereSegs(tier: QualityTier): number {
   switch (tier) {
     case 'mega':
-      return 48;
+      return 64;
     case 'ultra':
-      return 48;
+      return 56;
     case 'desktop':
-      return 32;
+      return 48;
     default:
-      return 20;
+      return 40;
   }
 }
 
-/** Tier-scaled torus radial segments — ultra/mega get 128, desktop 64, laptop/phone 48. */
+/** Tier-scaled torus radial segments — YOLO fidelity. */
 function torusSegs(tier: QualityTier): number {
   switch (tier) {
     case 'mega':
-      return 128;
+      return 160;
     case 'ultra':
-      return 128;
+      return 144;
     case 'desktop':
-      return 64;
+      return 112;
     default:
-      return 48;
+      return 96;
   }
 }
 
@@ -758,6 +758,9 @@ export class SingularitySystem {
     extras: THREE.Mesh[],
     extraMats: THREE.Material[],
   ): void {
+    const tier = this.ctx.quality.tier;
+    const ss = sphereSegs(tier);
+    const ts = torusSegs(tier);
     const photonMat = new THREE.MeshBasicMaterial({
       color: ringHex,
       transparent: true,
@@ -768,7 +771,7 @@ export class SingularitySystem {
     });
     photonMat.userData.baseOpacity = 0.95;
     const photon = new THREE.Mesh(
-      new THREE.TorusGeometry(HORIZON * 1.18, HORIZON * 0.06, 12, 80),
+      new THREE.TorusGeometry(HORIZON * 1.18, HORIZON * 0.06, 12, ts),
       photonMat,
     );
     photon.frustumCulled = false;
@@ -782,7 +785,7 @@ export class SingularitySystem {
       depthWrite: false,
     });
     glowMat.userData.baseOpacity = 0.28;
-    const glow = new THREE.Mesh(new THREE.SphereGeometry(HORIZON * 1.75, 24, 24), glowMat);
+    const glow = new THREE.Mesh(new THREE.SphereGeometry(HORIZON * 1.75, ss, ss), glowMat);
     glow.frustumCulled = false;
     extras.push(photon, glow);
     extraMats.push(photonMat, glowMat);

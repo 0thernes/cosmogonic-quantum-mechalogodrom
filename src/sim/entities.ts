@@ -30,29 +30,32 @@ import type { Entity, SimContext, UpdateStats } from '../types';
 import type { Rng } from '../math/rng';
 
 /** Push morph colours toward SATURATED, VIBRANT read (render-only — morph tables unchanged).
- * The base diffuse is held in the peak-chroma lightness zone (~0.28..0.46) so saturated hues read
- * STRONG rather than washing to white; a golden-ratio per-morph jitter (`j`) fans the 250 morphs into
- * a far wider, ~1000-variation palette without touching the seeded morph tables. The per-instance GPU
+ * The base diffuse is held in the peak-chroma lightness zone (~0.18..0.40) so saturated hues read
+ * STRONG rather than washing to white; a triple-prime per-morph hash fans the 250 morphs into
+ * a ~1000+ variation palette without touching the seeded morph tables. The per-instance GPU
  * suites (tribe hue, quantum shimmer, payoff iridescence, vital glow) then layer dynamic variety on top. */
 function paintVibrant(mat: THREE.MeshStandardMaterial, m: PhylumMorphType, mi: number): void {
   const hsl = { h: 0, s: 0, l: 0 };
-  // Golden-ratio hash → a well-spread, deterministic per-morph value in [0,1).
-  const j = (mi * 0.6180339887) % 1;
-  const slot = mi + Math.floor(j * 9973);
+  // Triple-prime hash → a well-spread, deterministic per-morph value in [0,1).
+  // Three independent hashes give ~1000+ distinct color slots across the population.
+  const j1 = (mi * 0.6180339887) % 1;
+  const j2 = (mi * 0.4142135624) % 1;
+  const j3 = (mi * 0.7320508076) % 1;
+  const slot = mi + Math.floor(j1 * 9973) + Math.floor(j2 * 449);
   m.col.getHSL(hsl);
   mat.color.setHSL(
-    // wider gradient spin + ±0.11 golden jitter fans the palette into ~1000 distinct variations.
-    (hsl.h + slot * 0.005 + j * 0.22 - 0.11 + 1) % 1,
+    // wider gradient spin + triple-prime jitter fans the palette into ~1000+ distinct variations.
+    (hsl.h + slot * 0.007 + j1 * 0.28 + j2 * 0.17 - 0.14 + 1) % 1,
     1.0, // S = 1.0 — MAXIMUM chroma, never wash out
-    Math.min(0.42, 0.22 + hsl.l * 0.1 + j * 0.05), // L 0.22..0.42 — dark, hyper-saturated
+    Math.min(0.4, 0.18 + hsl.l * 0.12 + j3 * 0.08), // L 0.18..0.40 — dark, hyper-saturated
   );
   m.em.getHSL(hsl);
   mat.emissive.setHSL(
-    (hsl.h + 0.08 + j * 0.18 + slot * 0.003) % 1,
+    (hsl.h + 0.08 + j1 * 0.22 + j3 * 0.12 + slot * 0.004) % 1,
     1.0, // S = 1.0 — max emissive saturation
-    Math.min(0.68, 0.3 + hsl.l * 0.34),
+    Math.min(0.62, 0.28 + hsl.l * 0.36 + j2 * 0.06),
   );
-  mat.emissiveIntensity = Math.min(5.2, m.emI * 2.6 + 1.1);
+  mat.emissiveIntensity = Math.min(6.0, m.emI * 3.0 + 1.4);
 }
 
 /** Base material parameters a {@link RenderMode} is layered on top of. */

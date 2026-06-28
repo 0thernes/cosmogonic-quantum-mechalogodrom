@@ -50,6 +50,16 @@ const PRICE_GAIN = 0.06;
 const FX_GAIN = 0.04;
 /** Softmax temperature for the currency-adoption best-response (higher = more herd-following). */
 const ADOPT_BETA = 6;
+/** Tobin tax: fraction skimmed from every currency trade to damp speculation (game-theoretic noise reduction). */
+const TOBIN_TAX = 0.012;
+/** Gini threshold above which the progressive redistribution fires (lowered from 0.48 for earlier intervention). */
+const GINI_GUARD = 0.38;
+/** Progressive skim rate multiplier (higher = more aggressive redistribution). */
+const GINI_SKIM_RATE = 0.085;
+/** Anti-cartel auto-sanction: when cartel share exceeds this, the top member is sanctioned. */
+const CARTEL_SANCTION_THRESHOLD = 0.55;
+/** How often to evaluate auto-sanctions (every N ticks). */
+const SANCTION_EVAL_PERIOD = 15;
 
 // ── Market-mechanic layer (CONTRACTS V20) — explicit game theory on top of the clearing market ──
 /** The richest few agents form a CARTEL that colludes to restrict supply (oligopoly). */
@@ -59,7 +69,7 @@ const CARTEL_WITHHOLD = 0.28;
 /** Arbitrage gain: how fast preferences mean-revert toward the under-priced commodity (gap → 0). */
 const ARB_GAIN = 0.092;
 /** When commodity price dispersion exceeds this, a circuit-breaker nudges both prices toward parity. */
-const ARB_CIRCUIT = 0.42;
+const ARB_CIRCUIT = 0.28;
 /** A sanctioned agent trades at this fraction of its budget (capital controls / embargo). */
 const SANCTION_BUDGET = 0.35;
 /** …and is cut off from resources, producing only this fraction (the embargo's real bite). */
@@ -223,6 +233,8 @@ interface Agent {
   loyalty: number;
   /** Under sanction → trades at {@link SANCTION_BUDGET} of its budget (set via {@link Economy.sanction}). */
   sanctioned: boolean;
+  /** True if the sanction was auto-imposed by the antitrust regulator (not manual). Auto-lifted when cartel share drops. */
+  autoSanctioned: boolean;
 }
 
 /**
@@ -276,6 +288,7 @@ export class Economy {
       prefQuanta: 0.3 + 0.4 * rng(),
       loyalty: (rng() - 0.5) * 0.4,
       sanctioned: false,
+      autoSanctioned: false,
     };
     this.agents.push(a);
     this.byId.set(id, a);
@@ -394,10 +407,14 @@ export class Economy {
     this.clear(this.dI, this.pIchor, 'ichor');
 
     // (4a) Gini guard — progressive skim from ultra-rich to tail agents when wealth concentrates.
+    // Uses GINI_GUARD threshold (0.38, lowered from 0.48 for earlier intervention) and GINI_SKIM_RATE
+    // for more aggressive redistribution. This is the game-theoretic regulatory backstop: a Walrasian
+    // auctioneer's progressive tax that prevents runaway wealth concentration and keeps the market
+    // competitive (Nash equilibrium stays in a balanced basin rather than collapsing to oligopoly).
     const gCoeff = gini(this.nw);
-    if (gCoeff > 0.48 && n >= 4) {
+    if (gCoeff > GINI_GUARD && n >= 4) {
       const mean = totalNW / n;
-      const rate = (gCoeff - 0.48) * 0.042;
+      const rate = (gCoeff - GINI_GUARD) * GINI_SKIM_RATE;
       let pool = 0;
       for (let i = 0; i < n; i++) {
         const a = this.agents[i]!;
@@ -413,6 +430,36 @@ export class Economy {
         for (let i = 0; i < n; i++) if ((this.nw[i] ?? 0) < mean * 0.62) poor.push(i);
         const share = poor.length > 0 ? pool / poor.length : 0;
         for (const i of poor) this.agents[i]!.aurum += share;
+      }
+    }
+
+    // (4c) AUTO-CARTEL SANCTION — every SANCTION_EVAL_PERIOD ticks (after a 2-period warmup), if the
+    // cartel's wealth share exceeds CARTEL_SANCTION_THRESHOLD, the single richest agent is auto-sanctioned.
+    // This is the game-theoretic antitrust regulator: a dominant coalition (share > 55%) triggers capital
+    // controls on its leader, breaking the oligopoly's market power and restoring competitive balance.
+    const sanctionTick =
+      this.auctionTick % SANCTION_EVAL_PERIOD === 0 && this.auctionTick >= SANCTION_EVAL_PERIOD * 2;
+    if (sanctionTick && n >= 10 && this.cartelShare > CARTEL_SANCTION_THRESHOLD) {
+      let richest = -1;
+      let richestNW = -Infinity;
+      for (let i = 0; i < n; i++) {
+        if ((this.nw[i] ?? 0) > richestNW) {
+          richestNW = this.nw[i] ?? 0;
+          richest = i;
+        }
+      }
+      if (richest >= 0) {
+        this.agents[richest]!.sanctioned = true;
+        this.agents[richest]!.autoSanctioned = true;
+      }
+      // Lift auto-sanctions on non-leaders if cartel share drops below threshold next cycle
+    } else if (sanctionTick && n >= 10 && this.cartelShare < CARTEL_SANCTION_THRESHOLD * 0.6) {
+      // Re-enable only AUTO-sanctioned agents when the cartel is no longer dominant (manual sanctions stay)
+      for (let i = 0; i < n; i++) {
+        if (this.agents[i]!.autoSanctioned) {
+          this.agents[i]!.sanctioned = false;
+          this.agents[i]!.autoSanctioned = false;
+        }
       }
     }
 
@@ -466,15 +513,17 @@ export class Economy {
       const haveAurum = a.aurum;
       const move = (wantAurum - haveAurum) * 0.2; // move 20% of the gap, in AURUM units
       if (move > 0) {
-        // buy AURUM with UMBRA
+        // buy AURUM with UMBRA — Tobin tax dampens speculative churn (game-theoretic noise reduction)
         const umbraSpent = Math.min(a.umbra, move / this.fx);
+        const tax = umbraSpent * TOBIN_TAX;
         a.umbra -= umbraSpent;
-        a.aurum += umbraSpent * this.fx;
+        a.aurum += (umbraSpent - tax) * this.fx;
         netUmbra -= umbraSpent; // UMBRA being sold → downward pressure
       } else {
         const aurumSpent = Math.min(a.aurum, -move);
+        const tax = aurumSpent * TOBIN_TAX;
         a.aurum -= aurumSpent;
-        a.umbra += aurumSpent / this.fx;
+        a.umbra += (aurumSpent - tax) / this.fx;
         netUmbra += aurumSpent / this.fx; // UMBRA being bought → upward pressure
       }
     }

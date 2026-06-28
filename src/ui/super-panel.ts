@@ -42,10 +42,14 @@ const STYLE = `
 @keyframes cqm-sup-breathe{0%,100%{box-shadow:0 2px 14px rgba(140,60,220,.35)}50%{box-shadow:0 2px 22px rgba(196,120,255,.7)}}
 #cqm-sup-toggle:hover{transform:scale(1.06);background:rgba(34,16,54,.95)}
 #cqm-sup-toggle:focus-visible{outline:2px solid #c478ff;outline-offset:2px}
-#cqm-sup-panel{position:fixed;right:10px;bottom:128px;z-index:71;width:min(94vw,326px);display:none;flex-direction:column;
+#cqm-sup-panel{position:fixed;left:50%;top:50%;right:auto;bottom:auto;transform:translate(-50%,-50%);
+  z-index:71;width:min(92vw,380px);max-height:min(72vh,calc(100vh - 160px));display:none;flex-direction:column;
   border:1px solid rgba(196,120,255,.34);border-radius:12px;background:rgba(8,5,16,.96);backdrop-filter:blur(12px);
   box-shadow:0 10px 46px rgba(0,0,0,.7);font:12px/1.5 var(--font-mono,ui-monospace,monospace);color:#ece2ff;overflow:hidden}
 #cqm-sup-panel.open{display:flex}
+@media (max-width:640px){
+#cqm-sup-panel{left:auto;top:auto;right:10px;bottom:128px;transform:none;width:min(94vw,326px);max-height:min(74vh,560px)}
+}
 .cqm-sup-head{display:flex;align-items:center;gap:8px;padding:7px 10px;border-bottom:1px solid rgba(196,120,255,.24);background:rgba(28,14,46,.8)}
 .cqm-sup-head b{font-size:11px;letter-spacing:.14em;color:#d8a8ff;white-space:nowrap}
 .cqm-sup-head .plan{margin-left:auto;font-weight:700;letter-spacing:.1em;padding:1px 8px;border-radius:9px;background:rgba(0,0,0,.35)}

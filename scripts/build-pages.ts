@@ -8,7 +8,8 @@
  * This script (run AFTER `bun run build`):
  *   1. copies `dist/` (bundled index.html + docs.html + chunks) into `site/`,
  *   2. drops the self-contained `/lab` artifact at `site/lab/index.html`,
- *   3. rewrites the absolute nav links to be subpath-relative, and neutralizes the server-only
+ *   3. copies `docs/reports/assets/` for ALife SVG metrics (relative paths in the gallery),
+ *   4. rewrites the absolute nav links to be subpath-relative, and neutralizes the server-only
  *      `/api/audit` poll (no server on Pages — leaving it would 404 every 5 s).
  *
  * The dev server (server.ts) is untouched: it keeps its absolute `/docs` `/lab` routes for local
@@ -39,6 +40,11 @@ await cp(DIST, SITE, { recursive: true });
 await mkdir(new URL('lab/', SITE), { recursive: true });
 await cp(new URL('lab/quantum-wildbeyond.html', ROOT), new URL('lab/index.html', SITE));
 
+// 2b. ALife SVG assets for docs/specs gallery (repo-relative paths).
+await cp(new URL('docs/reports/assets/', ROOT), new URL('docs/reports/assets/', SITE), {
+  recursive: true,
+});
+
 // 3. Rewrite absolute nav links → subpath-relative; neutralize the server-only audit poll.
 // V81: append a per-deploy `?v=` cache-buster to every cross-page nav link so a returning visitor never
 // sees a STALE cached docs/spec page. The browser keys its HTTP cache by URL — an unchanged `specs.html`
@@ -47,6 +53,13 @@ await cp(new URL('lab/quantum-wildbeyond.html', ROOT), new URL('lab/index.html',
 // matters); it falls back to a local marker for local builds.
 const V = (process.env.GITHUB_SHA || '').slice(0, 8) || 'local';
 const q = `?v=${V}`;
+const navFromLab: ReadonlyArray<readonly [string, string]> = [
+  ['href="/"', `href="../index.html${q}"`],
+  ['href="/docs"', `href="../docs.html${q}"`],
+  ['href="/spec"', `href="../specs.html${q}"`],
+  ['href="/lab"', `href="./${q}"`],
+  ['href="/lab/"', `href="./${q}"`],
+];
 await rewrite('index.html', [
   ['href="/docs"', `href="docs.html${q}"`],
   ['href="/spec"', `href="specs.html${q}"`],
@@ -57,13 +70,16 @@ await rewrite('docs.html', [
   ['href="/spec"', `href="specs.html${q}"`],
   ['href="/lab"', `href="lab/${q}"`],
   ['href="/"', `href="index.html${q}"`],
+  ['href="/docs"', `href="docs.html${q}"`],
 ]);
 await rewrite('specs.html', [
   ['href="/docs"', `href="docs.html${q}"`],
   ['href="/lab"', `href="lab/${q}"`],
   ['href="/"', `href="index.html${q}"`],
+  ['href="/spec"', `href="specs.html${q}"`],
 ]);
+await rewrite('lab/index.html', navFromLab);
 
 console.log(
-  `assembled Pages site -> site/ (index.html, docs.html, specs.html, lab/index.html) · cache-bust v=${V}`,
+  `assembled Pages site -> site/ (index.html, docs.html, specs.html, lab/index.html, docs/reports/assets/) · cache-bust v=${V}`,
 );

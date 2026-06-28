@@ -493,6 +493,15 @@ if (import.meta.main) {
       }),
     },
     fetch(req) {
+      const url = new URL(req.url);
+      const p = url.pathname;
+      if (p.startsWith('/docs/reports/assets/') && p.endsWith('.svg')) {
+        const file = Bun.file(new URL(`.${p}`, import.meta.url));
+        logRequest(req, 200);
+        return withSecurityHeaders(
+          new Response(file, { headers: { 'Content-Type': 'image/svg+xml; charset=utf-8' } }),
+        );
+      }
       logRequest(req, 404);
       return withSecurityHeaders(new Response('Not Found', { status: 404 }));
     },

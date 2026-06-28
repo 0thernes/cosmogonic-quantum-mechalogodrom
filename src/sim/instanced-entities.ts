@@ -39,9 +39,11 @@ import type { Entity, SimContext } from '../types';
 /** Capacity headroom multiplier over the uniform per-pool share. */
 const HEADROOM = 4;
 
-/** Pool-material base metalness/roughness (per-instance PBR is not representable — V3.1). */
-const POOL_METALNESS = 0.5;
-const POOL_ROUGHNESS = 0.5;
+/** Pool-material base metalness/roughness (per-instance PBR is not representable — V3.1).
+ *  Low metalness so the per-instance COLOR reads as pigment, not grey metal; moderate roughness
+ *  for a glossy, saturated read. The reliquary shader overrides per material-class anyway. */
+const POOL_METALNESS = 0.15;
+const POOL_ROUGHNESS = 0.35;
 
 /** Fixed translucent-pool blending opacity is carried per instance — this is the floor. */
 const MIN_ALPHA = 0.05;
@@ -304,24 +306,24 @@ float rqFbm(vec3 p){ float a = 0.5, s = 0.0; for (int i = 0; i < RQ_OCTAVES; i++
   #define RQ_RELIEF 0.30
   #define RQ_ROUGH 0.42
   #define RQ_METAL 0.10
-  #define RQ_SSS vec3(1.5, 1.4, 1.5)
-  #define RQ_SSSAMT 0.45
+  #define RQ_SSS vec3(0.85, 0.80, 0.90)
+  #define RQ_SSSAMT 0.28
   #define RQ_FILM 0.55
 #elif RQ_MAT == 1 // CRYSTAL — sharp faceted ribs, prismatic, glossy
   #define RQ_FREQ 9.0
   #define RQ_RELIEF 0.62
   #define RQ_ROUGH 0.14
   #define RQ_METAL 0.12
-  #define RQ_SSS vec3(1.3, 1.4, 1.7)
-  #define RQ_SSSAMT 0.22
+  #define RQ_SSS vec3(0.75, 0.82, 0.95)
+  #define RQ_SSSAMT 0.15
   #define RQ_FILM 0.95
 #elif RQ_MAT == 2 // GLASS — transmissive, cool, razor rim
   #define RQ_FREQ 6.0
   #define RQ_RELIEF 0.35
   #define RQ_ROUGH 0.07
   #define RQ_METAL 0.0
-  #define RQ_SSS vec3(1.2, 1.5, 1.75)
-  #define RQ_SSSAMT 0.32
+  #define RQ_SSS vec3(0.70, 0.85, 0.95)
+  #define RQ_SSSAMT 0.20
   #define RQ_FILM 0.75
 #elif RQ_MAT == 4 // METAL — machined, sharp specular, ridged
   #define RQ_FREQ 7.0
@@ -336,16 +338,16 @@ float rqFbm(vec3 p){ float a = 0.5, s = 0.0; for (int i = 0; i < RQ_OCTAVES; i++
   #define RQ_RELIEF 0.65
   #define RQ_ROUGH 0.70
   #define RQ_METAL 0.15
-  #define RQ_SSS vec3(1.25, 1.15, 0.95)
-  #define RQ_SSSAMT 0.15
+  #define RQ_SSS vec3(0.72, 0.65, 0.55)
+  #define RQ_SSSAMT 0.10
   #define RQ_FILM 0.06
 #else // RQ_MAT == 3 — AMBER, the warm default jewel
   #define RQ_FREQ 6.0
   #define RQ_RELIEF 0.50
   #define RQ_ROUGH 0.55
   #define RQ_METAL 0.06
-  #define RQ_SSS vec3(1.7, 1.0, 0.5)
-  #define RQ_SSSAMT 0.50
+  #define RQ_SSS vec3(0.95, 0.55, 0.28)
+  #define RQ_SSSAMT 0.32
   #define RQ_FILM 0.40
 #endif
 `;

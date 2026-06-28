@@ -52,7 +52,25 @@ interface Msg {
  * works everywhere. For the bigger models + higher limits, a free token from token.llm7.io can be added.
  */
 const LLM7_URL = 'https://api.llm7.io/v1/chat/completions';
-const STATIC_AI_MODELS = ['codestral-latest', 'devstral-small-2:24b'] as const;
+const STATIC_AI_MODELS = [
+  'codestral-latest',
+  'devstral-small-2:24b',
+  'open-mistral-nemo',
+  'google/gemma-3-12b-it',
+  'qwen3-4b',
+  'ministral-3b-latest',
+  'llama-3.2-3b-instruct',
+] as const;
+
+const STATIC_PROVIDER_LABELS: Record<string, string> = {
+  'codestral-latest': 'LLM7 · Codestral',
+  'devstral-small-2:24b': 'LLM7 · Devstral',
+  'open-mistral-nemo': 'LLM7 · Mistral Nemo',
+  'google/gemma-3-12b-it': 'LLM7 · Gemma 3',
+  'qwen3-4b': 'LLM7 · Qwen3',
+  'ministral-3b-latest': 'LLM7 · Ministral',
+  'llama-3.2-3b-instruct': 'LLM7 · Llama 3.2',
+};
 const STATIC_AI_SYSTEM =
   'You are the ✦ AI guide inside the Cosmogonic Quantum Mechalogodrom — a deterministic, browser-native ' +
   '50,000-agent quantum + artificial-life cosmos simulation (real seeded math, not an LLM toy). ' +
@@ -60,11 +78,14 @@ const STATIC_AI_SYSTEM =
   'Vivid but accurate, concise. Static GitHub Pages build: repo commands (/read /ls /grep /run) need ' +
   '`bun dev` locally; the server agent reads the full corpus (.md/.html/.xml/.txt) as RAG.';
 
-/** Call a free, key-less, browser-callable LLM straight from the page. Tries each anonymous model. */
-async function askStaticAi(history: readonly Msg[]): Promise<string> {
+/** Call a free, key-less, browser-callable LLM straight from the page. Tries preferred model first. */
+async function askStaticAi(history: readonly Msg[], preferredModel?: string): Promise<string> {
   const messages = [{ role: 'system' as const, content: STATIC_AI_SYSTEM }, ...history];
   let lastErr = 'no provider';
-  for (const model of STATIC_AI_MODELS) {
+  const order: string[] = [];
+  if (preferredModel) order.push(preferredModel);
+  for (const m of STATIC_AI_MODELS) if (!order.includes(m)) order.push(m);
+  for (const model of order) {
     try {
       const res = await fetch(LLM7_URL, {
         method: 'POST',
@@ -140,6 +161,66 @@ async function probeStaticAi(): Promise<StaticProbe[]> {
     out.push({ model, reachable, status, latencyMs: Math.round(performance.now() - t0), detail });
   }
   return out;
+}
+
+function statusDot(p: StaticProbe): string {
+  if (p.reachable) return '🟢';
+  if (p.status === 429) return '🟡';
+  return '🔴';
+}
+
+/** Static deploy: fill the provider picker with live LLM7 health lights. */
+async function populateStaticProviders(sel: HTMLSelectElement, prov: HTMLElement): Promise<void> {
+  const probes = await probeStaticAi();
+  sel.replaceChildren();
+  let firstUp = '';
+  for (const p of probes) {
+    const opt = document.createElement('option');
+    opt.value = p.model;
+    const label = STATIC_PROVIDER_LABELS[p.model] ?? p.model;
+    opt.textContent = `${statusDot(p)} ${label}${p.reachable ? '' : ` (${p.detail})`}`;
+    if (p.reachable && !firstUp) firstUp = p.model;
+    sel.appendChild(opt);
+  }
+  sel.style.display = probes.length ? '' : 'none';
+  if (firstUp) sel.value = firstUp;
+  const up = probes.filter((p) => p.reachable).length;
+  prov.textContent = `llm7 · static · ${up}/${probes.length} online`;
+}
+
+async function enrichServerProviders(
+  sel: HTMLSelectElement,
+  prov: HTMLElement,
+  list: { id: string; label: string; def: boolean }[],
+): Promise<void> {
+  try {
+    const res = await fetch('/api/copilot/health');
+    const d = (await res.json()) as HealthResult;
+    if (d.providers?.length) {
+      sel.replaceChildren();
+      for (const row of d.providers) {
+        const opt = document.createElement('option');
+        opt.value = row.id;
+        const dot = row.reachable ? '🟢' : /429|rate/i.test(row.detail) ? '🟡' : '🔴';
+        opt.textContent = `${dot} ${row.label}${row.keyed ? ' 🔑' : ''}`;
+        if (list.some((p) => p.id === row.id && p.def)) opt.selected = true;
+        sel.appendChild(opt);
+      }
+      sel.style.display = '';
+      prov.textContent = d.default ?? prov.textContent;
+      return;
+    }
+  } catch {
+    /* fall through */
+  }
+  sel.replaceChildren();
+  for (const p of list) {
+    const opt = document.createElement('option');
+    opt.value = p.id;
+    opt.textContent = `⚪ ${p.label}`;
+    if (p.def) opt.selected = true;
+    sel.appendChild(opt);
+  }
 }
 
 /** One provider's health from /api/copilot/health (the recovery-pipeline rows). */
@@ -466,11 +547,12 @@ function mount(): void {
         // No Bun server (static GitHub Pages) → call the free, key-less LLM7 DIRECTLY from the browser
         // so the chat still works. The repo-command tools stay dev-only (they need /api/tool).
         try {
-          const reply = await askStaticAi(history);
+          const reply = await askStaticAi(history, sel.value || selectedProvider || undefined);
           thinking.remove();
           addMsg('cqm-cop-ai', reply);
           history.push({ role: 'assistant', content: reply });
-          prov.textContent = 'llm7 · static';
+          if (!prov.textContent.includes('online'))
+            prov.textContent = `llm7 · ${sel.value || 'static'}`;
         } catch {
           thinking.remove();
           addMsg(
@@ -657,7 +739,7 @@ function mount(): void {
               providers?: { id: string; label: string; def: boolean }[];
             }>,
         )
-        .then((d) => {
+        .then(async (d) => {
           // Copilot is opt-in and off by default in production (server gate) so a public deploy
           // never exposes source. When disabled, present a clear notice and lock the input.
           if (d.enabled === false) {
@@ -674,16 +756,9 @@ function mount(): void {
           }
           prov.textContent = d.provider ?? '';
           const list = d.providers ?? [];
-          sel.replaceChildren();
+          await enrichServerProviders(sel, prov, list);
           for (const p of list) {
-            const opt = document.createElement('option');
-            opt.value = p.id;
-            opt.textContent = p.label;
-            if (p.def) {
-              opt.selected = true;
-              selectedProvider = p.id;
-            }
-            sel.appendChild(opt);
+            if (p.def) selectedProvider = p.id;
           }
           // Restore a previously-picked provider if it's still on offer.
           let saved: string | null = null;
@@ -698,16 +773,15 @@ function mount(): void {
           }
           if (list.length === 0) sel.style.display = 'none';
         })
-        .catch(() => {
+        .catch(async () => {
           // No Bun server (static GitHub Pages, or the local server is down). The chat still works —
           // it calls the free key-less LLM7 directly from the browser. Only the repo tools
           // (/read /ls /grep /run) need `bun dev`. So: NOT a dead end — don't lock the input.
-          prov.textContent = 'llm7 · static';
-          sel.style.display = 'none';
+          await populateStaticProviders(sel, prov);
+          selectedProvider = sel.value;
           addMsg(
             'cqm-cop-sys',
-            'Static build — no local server. The chat works (it calls the free LLM7 AI directly); ' +
-              'just ask. Repo commands (/read /ls /grep /run) need `bun dev`. Click 🩺 for diagnostics.',
+            'Static build — browser-direct LLM7. Pick a 🟢 provider above; repo commands (/read /ls /grep /run) need `bun dev`. Click 🩺 to re-probe.',
           );
         });
     }

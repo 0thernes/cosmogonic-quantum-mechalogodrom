@@ -1049,17 +1049,19 @@ html.cqm-shell-ready .algo-list:empty::after {
   scrollbar-width: thin;
 }
 #ui > #hud-vsr {
-  padding: 3px 6px;
-  font-size: 0.92em;
+  padding: 2px 5px;
+  font-size: 0.85em;
+  max-height: 22vh;
 }
 #ui > #hud-vsr .ui-readout-card__row {
   margin-top: 0;
-  line-height: 1.25;
+  line-height: 1.15;
+  font-size: 0.92em;
 }
 #ui > #hud-vsr .ui-readout-card__head {
-  margin-bottom: 2px;
-  padding-bottom: 1px;
-  font-size: 0.88em;
+  margin-bottom: 1px;
+  padding-bottom: 0;
+  font-size: 0.82em;
 }
 #alg #a-name {
   font: 600 var(--text-2xs) var(--font-ui);
@@ -1764,6 +1766,58 @@ html.cqm-shell-ready .algo-list:empty::after {
 }
 #audit-list code {
   color: var(--color-ink-dim);
+}
+
+/* ── Tablet 8–12" (600–1280px, tall enough): ALWAYS keep side-column grid — Observatory visible
+   like Telemetry/Sorting Fields; cancel off-screen sheet parking. Phones stay on sheets above. ── */
+@media (min-width: 600px) and (max-width: 1280px) and (min-height: 521px) {
+  #ui {
+    display: grid !important;
+    pointer-events: none;
+    grid-template-columns: clamp(130px, 24vw, 200px) 1fr clamp(130px, 24vw, 200px);
+    grid-template-areas: 'left . right';
+    gap: 8px;
+    padding: 8px;
+  }
+  #ui > * {
+    pointer-events: auto;
+  }
+  .ui-col-left,
+  .ui-col-right {
+    display: flex !important;
+    flex-direction: column;
+    gap: 8px;
+    min-height: 0;
+  }
+  .ui-col-left {
+    grid-area: left;
+  }
+  .ui-col-right {
+    grid-area: right;
+  }
+  .sheet {
+    position: static !important;
+    transform: none !important;
+    width: auto !important;
+    max-height: clamp(160px, 28vh, 36vh);
+    overflow: hidden;
+  }
+  .sheet-handle {
+    display: none !important;
+  }
+  #ui > section#oP {
+    max-height: min(62vh, calc(100vh - 200px));
+    min-height: clamp(200px, 32vh, 380px);
+    flex: 1 1 auto;
+  }
+  #oP > .obs-body {
+    max-height: min(56vh, calc(100vh - 240px));
+    flex: 1 1 auto;
+  }
+  #sP,
+  #algoP {
+    max-height: clamp(140px, 22vh, 28vh);
+  }
 }
 
 /* ── Accessibility: prefers-reduced-motion (500-point §13.258) ─

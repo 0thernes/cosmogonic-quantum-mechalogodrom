@@ -155,10 +155,13 @@ function cyc<T>(arr: readonly T[], i: number): T {
 /** AUTO mode dwell: seconds on each sorting field before advancing to the next (V7.2). */
 const ALGO_AUTO_PERIOD = 6;
 
-/** Cosmology SFX palette entries (V7.4) — band starts from the 100-voice palette. */
+/** Cosmology SFX palette entries (V7.4) — band starts from the 110-voice palette. */
 const SFX_SUBBOOM = SFX_EXTRA_BANDS['subboom']?.start ?? 0;
 const SFX_FMCLANG = SFX_EXTRA_BANDS['fmclang']?.start ?? 0;
 const SFX_STRANGE = SFX_EXTRA_BANDS['strange']?.start ?? 0;
+const SFX_DEMONIC = SFX_EXTRA_BANDS['demonicgrowl']?.start ?? SFX_STRANGE;
+const SFX_TRANSWARP = SFX_EXTRA_BANDS['transwarp']?.start ?? SFX_STRANGE;
+const SFX_ABYSSAL = SFX_EXTRA_BANDS['abyssal']?.start ?? SFX_STRANGE;
 
 /**
  * SIMULATION N(2) chaos floor (V7.6): the nightmare never settles below this. Set at the cMul
@@ -527,7 +530,7 @@ export class World {
       creatureSfx: (mi) => {
         if (this.rng() > 0.048) return;
         const bands = SFX_EXTRA_BANDS;
-        const pick = mi % 5;
+        const pick = mi % 9;
         const band =
           pick === 0
             ? bands['demonic']
@@ -537,7 +540,15 @@ export class World {
                 ? bands['howl']
                 : pick === 3
                   ? bands['abyssal']
-                  : bands['strange'];
+                  : pick === 4
+                    ? bands['voidgurgle']
+                    : pick === 5
+                      ? bands['alienchitter']
+                      : pick === 6
+                        ? bands['demonicgrowl']
+                        : pick === 7
+                          ? bands['transwarp']
+                          : bands['phantomscale'];
         const start = band?.start ?? SFX_STRANGE;
         const count = band?.count ?? 24;
         this.audio.playId(start + (mi % count));
@@ -2758,6 +2769,9 @@ export class World {
       this.audio.playId(SFX_STRANGE);
       this.audio.playId(SFX_STRANGE + 7);
       this.audio.playId(SFX_STRANGE + 19);
+      this.audio.playId(SFX_DEMONIC);
+      this.audio.playId(SFX_TRANSWARP);
+      this.audio.playId(SFX_ABYSSAL);
       this.audio.play('warp');
       this.audio.play('burst');
       this.audio.play('decay');

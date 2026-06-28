@@ -25,7 +25,8 @@ export interface HeroHudView extends SuperheroView {
 const INVENTORY = ['◈', '❄', '⚛', '✶', '☍', '⬡'];
 
 const STYLE = `
-#cqm-hero{position:fixed;top:8px;left:50%;transform:translate(-50%,-150%);z-index:58;width:min(96vw,780px);
+#cqm-hero{position:fixed;top:8px;left:50%;transform:translate(-50%,-150%);z-index:58;
+  width:min(calc(100vw - 420px),720px);max-width:96vw;
   transition:transform .55s cubic-bezier(.2,.9,.3,1);font-size:11px;line-height:1.4;font-family:var(--font-mono,ui-monospace,monospace);
   color:#e9e3ff;pointer-events:none}
 #cqm-hero.on{transform:translate(-50%,0)}

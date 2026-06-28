@@ -26,7 +26,11 @@ mermaid.initialize({
   },
 });
 
+import { mountAlifeMetricsGallery } from './alife-metrics-gallery';
+
 await mermaid.run({ querySelector: 'pre.mermaid' });
+
+mountAlifeMetricsGallery(document.getElementById('alife-metrics'));
 
 // ── Interactive diagrams: pan (drag) + zoom (wheel) + fullscreen on every rendered mermaid SVG,
 // so the architecture / ERD / sequence diagrams are actually viewable and explorable (the user
