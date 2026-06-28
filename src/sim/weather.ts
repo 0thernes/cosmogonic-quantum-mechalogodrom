@@ -79,10 +79,20 @@ export class WeatherSystem {
     const c01 = (v: number) => clamp(v, 0, 1);
 
     // Temperature — deep extremes (cold < 0 °C shortens lifespan via tMod, thinning the
-    // population in VOID/AURORA). Faster onset than the legacy dt·0.1.
+    // population in VOID/AURORA; heat > 30 °C extends it via entities.ts tMod). STORM under high
+    // chaos can spike hot (heat-lightning) so the hot branch is reachable, not dead code.
+    const stormTarget = w === 'STORM' && s.chaos > 3 ? 35 : w === 'STORM' ? 2 : null;
     s.temperature = lerp(
       s.temperature,
-      w === 'VOID' ? -60 : w === 'STORM' ? 2 : w === 'AURORA' ? -18 : w === 'FOG' ? 14 : 22,
+      w === 'VOID'
+        ? -60
+        : stormTarget !== null
+          ? stormTarget
+          : w === 'AURORA'
+            ? -18
+            : w === 'FOG'
+              ? 14
+              : 22,
       c01(dt * 0.25),
     );
     // Fog density — a real whiteout in FOG, a smothering dark in VOID/STORM. Targets ×FOG_SCALE

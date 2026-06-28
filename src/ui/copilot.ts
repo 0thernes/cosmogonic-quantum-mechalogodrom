@@ -58,7 +58,12 @@ const STATIC_AI_SYSTEM =
   '50,000-agent quantum + artificial-life cosmos simulation (real seeded math, not an LLM toy). Answer ' +
   'questions about the cosmos, its creatures, the apex super-creatures, and how the simulation works — ' +
   'vivid but accurate, concise. You are on the static GitHub Pages build, so the repo commands ' +
-  '(/read /ls /grep /run) are unavailable here (they need the local `bun dev` server); just converse.';
+  '(/read /ls /grep /run) are unavailable here (they need the local `bun dev` server); just converse. ' +
+  'The repo has 50+ living docs under docs/ (MODULE-CONTRACTS, PHILOSOPHY, ARCHITECTURE, TECHNICAL-SPECIFICATION, ' +
+  'DESIGN-SYSTEM, NHSI-PROGRESS-DASHBOARD, TSOTCHKE-INTEGRATION-MAP, CONTROLS, AI-SUBSYSTEM, COPILOT-PROVIDERS, ' +
+  'AUDIT-LOG, and more), plus CLAUDE.md and masters/*.xml personas. When the user runs `bun dev` locally, ' +
+  'the full repo-aware agent can read all of these as RAG. On this static build, reference them by name ' +
+  'and encourage the user to run locally for deep repo-grounded answers.';
 
 /** Call a free, key-less, browser-callable LLM straight from the page. Tries each anonymous model. */
 async function askStaticAi(history: readonly Msg[]): Promise<string> {
@@ -164,15 +169,15 @@ interface HealthResult {
 const STYLE = `
 /* V71: the "down the middle 50/50 split" the directive asks for — answers on the left half, the
    textbox + options on the right half. Wider so both halves breathe; stacks on narrow screens. */
-#cqm-cop-panel{position:fixed;right:10px;bottom:128px;z-index:60;width:min(94vw,760px);height:min(74vh,600px);
+#cqm-cop-panel{position:fixed;right:10px;bottom:128px;z-index:71;width:min(94vw,760px);height:min(74vh,600px);
   display:none;flex-direction:column;border:1px solid rgba(120,160,220,.4);border-radius:12px;
   background:rgba(4,8,18,.94);backdrop-filter:blur(10px);box-shadow:0 8px 40px rgba(0,0,0,.6);
-  font:12px/1.5 var(--font-mono,ui-monospace,monospace);color:#cfe0fb;overflow:hidden}
+  font:13px/1.5 var(--font-mono,ui-monospace,monospace);color:#cfe0fb;overflow:hidden}
 #cqm-cop-panel.open{display:flex}
 .cqm-cop-head{margin-bottom:0 !important;padding:8px 10px;border-bottom:1px solid rgba(120,160,220,.25);
   background:rgba(10,16,34,.7);flex:0 0 auto;justify-content:flex-start !important}
-.cqm-cop-head b{font-size:12px;letter-spacing:.08em;color:#9fc0ff}
-.cqm-cop-prov{font-size:9px;opacity:.6;margin-left:6px;white-space:nowrap}
+.cqm-cop-head b{font-size:13px;letter-spacing:.08em;color:#9fc0ff}
+.cqm-cop-prov{font-size:10px;opacity:.6;margin-left:6px;white-space:nowrap}
 .cqm-cop-head .cqm-panel-x{margin-left:auto;color:#9fc0ff}
 /* The 50/50 body: answer column | controls column. */
 .cqm-cop-body{flex:1 1 auto;min-height:0;display:flex}
@@ -193,7 +198,7 @@ const STYLE = `
 .cqm-cop-chip:focus-visible{outline:1px solid #6da8ff}
 .cqm-cop-log{flex:1 1 auto;min-height:0;overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:8px}
 @media (max-width:560px){.cqm-cop-body{flex-direction:column}.cqm-cop-right{border-left:none;border-top:1px solid rgba(120,160,220,.22)}}
-.cqm-cop-msg{padding:6px 9px;border-radius:8px;white-space:pre-wrap;word-break:break-word}
+.cqm-cop-msg{padding:7px 10px;border-radius:8px;white-space:pre-wrap;word-break:break-word;font-size:13px}
 .cqm-cop-user{align-self:flex-end;background:rgba(50,80,150,.4);max-width:88%}
 .cqm-cop-ai{align-self:flex-start;background:rgba(20,30,56,.7);max-width:94%}
 .cqm-cop-sys{align-self:center;font-size:10px;opacity:.65;text-align:center;max-width:96%}

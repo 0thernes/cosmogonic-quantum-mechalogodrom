@@ -272,6 +272,18 @@ export interface PersistedStateV1 {
    * with `sim = 1`, the GENESIS default). `1` = GENESIS, `2` = BREAK FREE (nightmare).
    */
   sim: 1 | 2;
+  /**
+   * Audio/music toggle (additive — defaults to false when absent).
+   */
+  musicOn?: boolean;
+  /**
+   * Active render mode index (additive — defaults to 0 when absent).
+   */
+  renderIdx?: number;
+  /**
+   * Quality tier string (additive — defaults to detected tier when absent).
+   */
+  tier?: string;
 }
 export type PersistedState = PersistedStateV1;
 

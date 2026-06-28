@@ -31,14 +31,24 @@ const CHIPS: { label: string; q: string }[] = [
   { label: 'Reset & seed', q: 'deterministic seed rng reset sessions' },
   { label: 'Docs & specs', q: 'where are docs module contracts specifications' },
   { label: 'The math', q: 'what math science powers this quantum tsotchke' },
+  { label: 'Weather', q: 'weather wind temperature shoggoths environment' },
+  { label: 'War & conflict', q: 'war alliance truce titan conflict' },
+  { label: 'Tribes', q: 'tribes communities graph mind social' },
+  { label: 'Mutations', q: 'mutations morphs evolution genetic' },
+  { label: 'Singularity', q: 'cosmological singularity black hole white hole' },
+  { label: 'Apocalypse', q: 'apocalypse end world destruction event' },
+  { label: 'CHAOS mode', q: 'chaos mode lorenz quantum storm' },
+  { label: 'Music & SFX', q: 'music song sfx audio sound' },
+  { label: 'Tsotchke', q: 'tsotchke quantum substrate eshkol moonlab qgtl' },
+  { label: 'Self-evolution', q: 'self evolution loop emergence complexity' },
 ];
 
 const STYLE = `
 /* V71: "down the middle 50/50" — the answer fills the LEFT half, the topic chips + search box + AI
    hand-off live on the RIGHT half. Wider so both halves breathe; stacks on narrow screens. */
-#cqm-help-panel{position:fixed;right:10px;bottom:128px;z-index:59;width:min(94vw,720px);height:min(74vh,560px);display:none;
+#cqm-help-panel{position:fixed;right:10px;bottom:128px;z-index:71;width:min(94vw,720px);height:min(74vh,560px);display:none;
   flex-direction:column;border:1px solid rgba(120,220,160,.32);border-radius:12px;background:rgba(6,12,10,.96);
-  backdrop-filter:blur(12px);box-shadow:0 10px 46px rgba(0,0,0,.66);font:12px/1.55 var(--font-ui,system-ui,sans-serif);
+  backdrop-filter:blur(12px);box-shadow:0 10px 46px rgba(0,0,0,.66);font:13px/1.55 var(--font-ui,system-ui,sans-serif);
   color:#e6f6ec;overflow:hidden}
 #cqm-help-panel.open{display:flex}
 .cqm-help-head{margin-bottom:0 !important;padding:8px 11px;border-bottom:1px solid rgba(120,220,160,.22);background:rgba(10,26,18,.8);flex:0 0 auto}

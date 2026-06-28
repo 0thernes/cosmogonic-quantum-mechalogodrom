@@ -11,6 +11,7 @@ import { SUPER_PLANS } from '../sim/super-creature';
 import type { SuperMindSnapshot } from '../sim/super-mind';
 import type { EvoView } from '../sim/super-evolution';
 import { mountToggle } from './panel-dock';
+import { injectPanelBaseCSS } from './panel-shell';
 import { SuperNeural } from './super-neural';
 
 /** Primordial petri dish telemetry — digital biologics soup, not chat. */
@@ -36,16 +37,14 @@ const PLAN_COLOR: Record<SuperPlan, string> = {
 };
 
 const STYLE = `
-#cqm-sup-toggle{position:fixed;right:330px;bottom:10px;z-index:60;height:42px;padding:0 12px;border-radius:21px;
-  border:1px solid rgba(196,120,255,.55);background:rgba(16,8,28,.86);color:#e9c8ff;font:600 11px/1 var(--font-mono,ui-monospace,monospace);
-  letter-spacing:.12em;cursor:pointer;backdrop-filter:blur(6px);box-shadow:0 2px 14px rgba(0,0,0,.5);
-  transition:transform .15s,background .15s;animation:cqm-sup-breathe 3.4s ease-in-out infinite}
+#cqm-sup-toggle{border-color:rgba(196,120,255,.58);background:linear-gradient(180deg,rgba(20,10,34,.92),rgba(12,6,22,.88));color:#e9c8ff;
+  animation:cqm-sup-breathe 3.4s ease-in-out infinite}
 @keyframes cqm-sup-breathe{0%,100%{box-shadow:0 2px 14px rgba(140,60,220,.35)}50%{box-shadow:0 2px 22px rgba(196,120,255,.7)}}
 #cqm-sup-toggle:hover{transform:scale(1.06);background:rgba(34,16,54,.95)}
 #cqm-sup-toggle:focus-visible{outline:2px solid #c478ff;outline-offset:2px}
-#cqm-sup-panel{position:fixed;right:10px;bottom:128px;z-index:59;width:min(94vw,326px);display:none;flex-direction:column;
+#cqm-sup-panel{position:fixed;right:10px;bottom:128px;z-index:71;width:min(94vw,326px);display:none;flex-direction:column;
   border:1px solid rgba(196,120,255,.34);border-radius:12px;background:rgba(8,5,16,.96);backdrop-filter:blur(12px);
-  box-shadow:0 10px 46px rgba(0,0,0,.7);font:11px/1.5 var(--font-mono,ui-monospace,monospace);color:#ece2ff;overflow:hidden}
+  box-shadow:0 10px 46px rgba(0,0,0,.7);font:12px/1.5 var(--font-mono,ui-monospace,monospace);color:#ece2ff;overflow:hidden}
 #cqm-sup-panel.open{display:flex}
 .cqm-sup-head{display:flex;align-items:center;gap:8px;padding:7px 10px;border-bottom:1px solid rgba(196,120,255,.24);background:rgba(28,14,46,.8)}
 .cqm-sup-head b{font-size:11px;letter-spacing:.14em;color:#d8a8ff;white-space:nowrap}
@@ -136,6 +135,7 @@ export class SuperPanel {
   constructor(doc: Document = document) {
     doc.getElementById('cqm-sup-toggle')?.remove();
     doc.getElementById('cqm-sup-panel')?.remove();
+    injectPanelBaseCSS(doc);
     const style = doc.createElement('style');
     style.textContent = STYLE;
     doc.head.appendChild(style);
@@ -143,6 +143,7 @@ export class SuperPanel {
     const toggle = doc.createElement('button');
     toggle.id = 'cqm-sup-toggle';
     toggle.type = 'button';
+    toggle.className = 'cqm-dock-toggle';
     toggle.textContent = '⬢ ARCHITECT';
     toggle.setAttribute('aria-label', 'Open the Super Creature telemetry');
     toggle.addEventListener('click', () => this.setOpen(!this.open));

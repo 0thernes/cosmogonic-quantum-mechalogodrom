@@ -58,10 +58,10 @@ const STYLE = `
 @keyframes cqm-arch-pulse{0%,100%{box-shadow:0 2px 14px rgba(160,40,80,.3)}50%{box-shadow:0 2px 22px rgba(255,59,78,.6)}}
 #cqm-arch-toggle:hover{transform:scale(1.06);background:rgba(26,6,14,.96)}
 #cqm-arch-toggle:focus-visible{outline:2px solid #ff3b4e;outline-offset:2px}
-#cqm-arch-panel{position:fixed;right:10px;bottom:128px;z-index:59;width:min(95vw,720px);display:none;
+#cqm-arch-panel{position:fixed;right:10px;bottom:128px;z-index:71;width:min(95vw,720px);display:none;
   flex-direction:column;border:1px solid rgba(255,59,78,.32);border-radius:12px;background:rgba(4,3,7,.97);
   backdrop-filter:blur(12px);box-shadow:0 10px 48px rgba(0,0,0,.78);color:#d8cce6;overflow:hidden;
-  font:11px/1.5 var(--font-mono,ui-monospace,monospace)}
+  font:12px/1.5 var(--font-mono,ui-monospace,monospace)}
 #cqm-arch-panel.open{display:flex}
 /* center-hud owns this panel's geometry (it's a launcher SLOT): it re-homes the panel into the centred
    HUD slot with !important left/right/bottom/height. We deliberately DON'T fight that height here (an

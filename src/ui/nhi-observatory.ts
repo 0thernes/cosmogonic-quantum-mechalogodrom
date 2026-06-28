@@ -30,6 +30,7 @@
 import type { NhiSnapshot } from '../sim/nhi';
 import { NHI_ACTION_LABELS, NHI_FACT_LABELS } from '../sim/nhi';
 import { mountToggle } from './panel-dock';
+import { injectPanelBaseCSS } from './panel-shell';
 
 const PAL = {
   bg: '#060a16',
@@ -85,19 +86,17 @@ const VIEW_DESC = [
 const SENSORY_LABELS = ['ENRG', 'THRT', 'CRWD', 'CHAOS', 'MOOD'] as const;
 
 const STYLE = `
-#cqm-nhi-toggle{position:fixed;right:108px;bottom:10px;z-index:60;height:42px;padding:0 12px;border-radius:21px;
-  border:1px solid rgba(80,220,255,.5);background:rgba(6,12,26,.84);color:#9be8ff;font:600 11px/1 var(--font-mono,ui-monospace,monospace);
-  letter-spacing:.12em;cursor:pointer;backdrop-filter:blur(6px);box-shadow:0 2px 14px rgba(0,0,0,.5);transition:transform .15s,background .15s}
+#cqm-nhi-toggle{border-color:rgba(80,220,255,.55);background:linear-gradient(180deg,rgba(8,16,32,.92),rgba(4,10,22,.88));color:#9be8ff}
 #cqm-nhi-toggle:hover{transform:scale(1.06);background:rgba(12,24,48,.94)}
 #cqm-nhi-toggle:focus-visible{outline:2px solid #34e0ff;outline-offset:2px}
 /* V39: raised well clear of the centered dock so the 3×3 grid never clashes with the menu bars.
    V71: wider so the nine labelled diagrams + their captions breathe. NOTE: the CENTER HUD
    (center-hud.ts) re-homes this panel into its centred slot with !important (position/size), so
    these are only the standalone fallback used before the HUD initialises. */
-#cqm-nhi-panel{position:fixed;left:50%;bottom:134px;transform:translateX(-50%);z-index:59;width:min(96vw,860px);
+#cqm-nhi-panel{position:fixed;left:50%;bottom:134px;transform:translateX(-50%);z-index:71;width:min(96vw,860px);
   max-height:min(82vh,720px);display:none;flex-direction:column;border:1px solid rgba(80,220,255,.32);border-radius:12px;
   background:rgba(4,8,18,.95);backdrop-filter:blur(12px);box-shadow:0 10px 46px rgba(0,0,0,.65);
-  font:11px/1.5 var(--font-mono,ui-monospace,monospace);color:#cfe0fb;overflow:hidden}
+  font:12px/1.5 var(--font-mono,ui-monospace,monospace);color:#cfe0fb;overflow:hidden}
 #cqm-nhi-panel.open{display:flex}
 .cqm-nhi-head{display:flex;align-items:center;gap:8px;padding:7px 10px;border-bottom:1px solid rgba(80,220,255,.22);background:rgba(8,16,34,.75)}
 .cqm-nhi-head b{font-size:11px;letter-spacing:.14em;color:#7fd6ff;white-space:nowrap}
@@ -126,7 +125,7 @@ const STYLE = `
 .cqm-nhi-empty{position:relative;padding:0;text-align:center;color:#7f94c0;font-size:12px;line-height:1.7;flex:1 1 auto;min-height:0;overflow-y:auto}
 .cqm-nhi-empty canvas{display:block;width:100%;height:auto;border-radius:8px}
 .cqm-nhi-hint{position:absolute;left:0;right:0;bottom:14px;padding:0 16px;pointer-events:none;text-shadow:0 1px 6px #000}
-@media (max-width:560px){.cqm-nhi-grid{grid-template-columns:repeat(2,1fr)}#cqm-nhi-toggle{right:96px}}
+@media (max-width:560px){.cqm-nhi-grid{grid-template-columns:repeat(2,1fr)}}
 `;
 
 /**
@@ -914,6 +913,7 @@ export class NhiObservatory {
     // single live toggle/panel exists and the click handler always targets THIS instance.
     doc.getElementById('cqm-nhi-toggle')?.remove();
     doc.getElementById('cqm-nhi-panel')?.remove();
+    injectPanelBaseCSS(doc);
     const style = doc.createElement('style');
     style.textContent = STYLE;
     doc.head.appendChild(style);
@@ -921,6 +921,7 @@ export class NhiObservatory {
     const toggle = doc.createElement('button');
     toggle.id = 'cqm-nhi-toggle';
     toggle.type = 'button';
+    toggle.className = 'cqm-dock-toggle';
     toggle.textContent = '⊞ NEURAL';
     toggle.setAttribute('aria-label', 'Open the NHI neural observatory');
     toggle.addEventListener('click', () => this.setOpen(!this.open));

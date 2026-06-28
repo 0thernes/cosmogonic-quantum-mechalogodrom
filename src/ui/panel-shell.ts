@@ -47,8 +47,15 @@ const BASE_CSS = `
 .cqm-panel-top b{font-size:16px;letter-spacing:.04em;color:#c79bff}
 .cqm-panel-x{background:rgba(0,0,0,.4);color:#a99fce;border:1px solid rgba(150,120,255,.3);border-radius:6px;padding:4px 10px;cursor:pointer;font:12px var(--font-mono,ui-monospace,monospace)}
 .cqm-panel-x:hover{background:rgba(70,42,130,.5);color:#fff}
-.cqm-dock-toggle{border:1px solid rgba(120,160,220,.4);background:rgba(8,14,30,.86);color:#cfe0fb;font:600 11px/1 var(--font-mono,ui-monospace,monospace);letter-spacing:.1em;height:42px;padding:0 12px;border-radius:21px;cursor:pointer;backdrop-filter:blur(6px);box-shadow:0 2px 14px rgba(0,0,0,.5);transition:transform .15s,background .15s}
-.cqm-dock-toggle:hover{transform:scale(1.06);background:rgba(14,24,48,.95)}
+.cqm-dock-toggle{display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;
+  border:1px solid rgba(120,160,220,.42);background:linear-gradient(180deg,rgba(14,22,42,.92),rgba(8,12,24,.88));
+  color:#dfeaff;font:600 11px/1 var(--font-mono,ui-monospace,monospace);letter-spacing:.08em;height:42px;
+  padding:0 14px;border-radius:21px;cursor:pointer;white-space:nowrap;backdrop-filter:blur(8px);
+  box-shadow:0 2px 16px rgba(0,0,0,.52),inset 0 1px 0 rgba(200,220,255,.07);
+  transition:transform .15s,background .15s,border-color .15s,box-shadow .15s}
+.cqm-dock-toggle:hover{transform:scale(1.06);background:linear-gradient(180deg,rgba(20,32,58,.98),rgba(12,18,36,.94));
+  border-color:rgba(140,190,255,.58);box-shadow:0 4px 20px rgba(0,0,0,.58),inset 0 1px 0 rgba(220,235,255,.1)}
+.cqm-dock-toggle:focus-visible{outline:2px solid rgba(120,180,255,.75);outline-offset:2px}
 `;
 
 /** Inject a <style> block once; if an id is provided, any existing style with that id is replaced. */

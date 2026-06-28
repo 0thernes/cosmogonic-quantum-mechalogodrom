@@ -525,6 +525,7 @@ export class World {
       audit: this.audit,
       sfx: (type) => this.audio.play(type),
     };
+    this.audit.setSimClock(() => this.state.frame);
 
     this.environment = new EnvironmentSystem(ctx);
     this.entities = new EntityManager(ctx);
@@ -1707,6 +1708,13 @@ export class World {
         this.selfEvoLoop = new SelfEvolutionLoop(initMetrics);
       }
       if (s.frame % 1200 === 0 && s.frame > 0) {
+        this.selfEvoLoop.ingestLive({
+          fitness: clamp(this.superMindSnap?.emotion?.dominance ?? 0.5, 0, 1),
+          emergence: clamp(n / target, 0, 1),
+          complexity: this.apexBrain.parameterCount(),
+          consciousness: clamp(this.superMindSnap?.consciousness?.phi ?? 0, 0, 1),
+          stability: clamp(1 - s.chaos / CHAOS_MAX, 0, 1),
+        });
         // Feed metrics into the loop + step (the loop mutates its own metrics via safe self-modification)
         const applied = this.selfEvoLoop.step(this.evoRng2);
         if (applied) {

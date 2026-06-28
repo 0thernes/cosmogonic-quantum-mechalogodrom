@@ -334,16 +334,16 @@ a:focus-visible {
   left: max(10px, env(safe-area-inset-left, 0px));
   bottom: calc(54px + env(safe-area-inset-bottom, 0px));
   z-index: 40;
-  font: 13px/1.5 var(--font-mono, ui-monospace, monospace);
+  font: 14px/1.6 var(--font-mono, ui-monospace, monospace);
   color: #e8f0ff;
-  background: rgba(8, 14, 30, 0.86);
+  background: rgba(8, 14, 30, 0.88);
   border: 1px solid rgba(120, 160, 220, 0.32);
-  border-radius: 10px;
-  padding: 8px 12px;
-  min-width: 148px;
+  border-radius: 12px;
+  padding: 10px 14px;
+  min-width: 180px;
   user-select: none;
-  backdrop-filter: blur(10px);
-  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 4px 22px rgba(0, 0, 0, 0.5);
 }
 #perf-hud .perf-hud-row {
   display: flex;
@@ -355,8 +355,8 @@ a:focus-visible {
 #perf-hud .perf-hud-tier {
   all: unset;
   cursor: pointer;
-  font: 600 11px/1.3 var(--font-mono, ui-monospace, monospace);
-  padding: 2px 6px;
+  font: 600 12px/1.3 var(--font-mono, ui-monospace, monospace);
+  padding: 3px 8px;
   border-radius: 6px;
   color: #9fb6d9;
   border: 1px solid transparent;
@@ -371,10 +371,10 @@ a:focus-visible {
   background: rgba(0, 80, 120, 0.35);
 }
 #perf-hud .perf-hud-hint {
-  margin-top: 5px;
-  opacity: 0.65;
-  font-size: 11px;
-  line-height: 1.35;
+  margin-top: 6px;
+  opacity: 0.7;
+  font-size: 12px;
+  line-height: 1.4;
 }
 #perf-hud .perf-hud-quality {
   opacity: 0.92;

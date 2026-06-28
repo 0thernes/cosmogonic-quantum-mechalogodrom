@@ -247,14 +247,14 @@ export class InputSystem {
 
   /** Toolbar `[data-action]` buttons dispatch straight to UiActions (returns are ignored). */
   private bindToolbar(): void {
-    document.querySelectorAll<HTMLElement>('[data-action]').forEach((btn) => {
+    document.body.addEventListener('click', (e) => {
+      const btn = (e.target as HTMLElement).closest<HTMLElement>('[data-action]');
+      if (!btn) return;
       const name = btn.dataset['action'];
       if (!name) return;
       const method = TOOLBAR_MAP[name];
       if (!method) return;
-      btn.addEventListener('click', () => {
-        this.actions[method]();
-      });
+      this.actions[method]();
     });
   }
 

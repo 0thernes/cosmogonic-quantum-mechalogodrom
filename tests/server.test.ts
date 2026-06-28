@@ -5,7 +5,13 @@
  * `import.meta.main`, so importing it here opens no socket and the suite stays hermetic.
  */
 import { describe, expect, test } from 'bun:test';
-import { makeRateLimiter, parseAuditBody, parseChatMessages, withSecurityHeaders } from '../server';
+import {
+  auditPostOriginAllowed,
+  makeRateLimiter,
+  parseAuditBody,
+  parseChatMessages,
+  withSecurityHeaders,
+} from '../server';
 
 describe('parseAuditBody — audit POST body narrowing', () => {
   test('accepts a minimal valid body and stamps a finite ts', () => {
@@ -130,6 +136,36 @@ describe('makeRateLimiter — POST /api/audit flood seal (SERVER-RL)', () => {
     // long session must always be admitted — the seal only sheds machine-speed floods.
     const rl = makeRateLimiter(60, 30);
     for (let i = 0; i < 50; i++) expect(rl.tryRemove(i * 2000)).toBe(true);
+  });
+});
+
+describe('auditPostOriginAllowed — same-origin POST guard', () => {
+  test('allows missing Origin (same-origin fetch)', () => {
+    expect(
+      auditPostOriginAllowed(new Request('http://localhost:3000/api/audit', { method: 'POST' })),
+    ).toBe(true);
+  });
+
+  test('allows matching Origin header', () => {
+    expect(
+      auditPostOriginAllowed(
+        new Request('http://localhost:3000/api/audit', {
+          method: 'POST',
+          headers: { Origin: 'http://localhost:3000' },
+        }),
+      ),
+    ).toBe(true);
+  });
+
+  test('rejects cross-origin Origin', () => {
+    expect(
+      auditPostOriginAllowed(
+        new Request('http://localhost:3000/api/audit', {
+          method: 'POST',
+          headers: { Origin: 'https://evil.example' },
+        }),
+      ),
+    ).toBe(false);
   });
 });
 

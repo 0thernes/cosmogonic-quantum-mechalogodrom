@@ -275,6 +275,21 @@ export function withSecurityHeaders(res: Response): Response {
 }
 
 /**
+ * Same-origin guard for POST /api/audit. Allows missing Origin (same-origin fetch from the app)
+ * and rejects cross-origin POST floods. O(1).
+ */
+export function auditPostOriginAllowed(req: Request): boolean {
+  const origin = req.headers.get('Origin');
+  if (origin === null || origin === 'null') return true;
+  try {
+    const url = new URL(req.url);
+    return origin === `${url.protocol}//${url.host}`;
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Wrap a Bun route handler-map so EVERY response it returns passes through {@link withSecurityHeaders}
  * exactly once — sync or async, every status code, with no per-return edits. Static HTML-bundle routes
  * (`/`, `/docs`, `/spec`) are served by Bun's bundler and keep their own headers; their CSP is the
@@ -324,6 +339,10 @@ if (import.meta.main) {
           });
         },
         async POST(req) {
+          if (!auditPostOriginAllowed(req)) {
+            logRequest(req, 403);
+            return Response.json({ ok: false, error: 'forbidden origin' }, { status: 403 });
+          }
           // Shed floods BEFORE any work: a tight unauthenticated POST loop would otherwise evict
           // the whole 200-entry ring and burn parse CPU. The bucket is generous enough that real
           // user-action audit posts never reach it — see auditPostLimiter.

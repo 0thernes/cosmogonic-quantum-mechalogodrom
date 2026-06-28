@@ -227,6 +227,18 @@ export class SelfEvolutionLoop {
   }
 
   /**
+   * Ingest live sim metrics before {@link step} (world feeds dominance, emergence, Φ, etc. each cadence).
+   * Merges into the current metrics without resetting modification history.
+   */
+  ingestLive(live: Partial<EvolutionMetrics>): void {
+    if (live.fitness !== undefined) this.metrics.fitness = live.fitness;
+    if (live.emergence !== undefined) this.metrics.emergence = live.emergence;
+    if (live.complexity !== undefined) this.metrics.complexity = live.complexity;
+    if (live.consciousness !== undefined) this.metrics.consciousness = live.consciousness;
+    if (live.stability !== undefined) this.metrics.stability = live.stability;
+  }
+
+  /**
    * Advance the evolution loop one generation.
    * Returns true if a modification was applied, false otherwise.
    */

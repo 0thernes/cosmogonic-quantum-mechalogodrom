@@ -12,6 +12,7 @@
  */
 import { mulberry32 } from '../math/rng';
 import { ACCESS_SEED, seedRomans, checkAccessCode } from './access-code';
+import { injectPanelBaseCSS } from './panel-shell';
 import { mountToggle } from './panel-dock';
 
 /** "ACCESS DENIED" in 100 tongues (the last few are cipher/alien, fitting the terminal's vibe). */
@@ -121,12 +122,15 @@ const DENIED = [
 const GLYPHS = 'ｦｱｳｴｵｶｷｸｹｺﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓ0123456789ΔΣΛΩΞΨαβγλψ⟁⟐⌖✶✷✦∴∷⋮⋰⊹';
 
 const STYLE = `
-#cqm-acc-toggle{border:1px solid rgba(80,255,170,.5);background:rgba(4,16,10,.86);color:#7dffc0;
+#cqm-acc-toggle{border-color:rgba(80,255,170,.55);background:linear-gradient(180deg,rgba(6,20,12,.92),rgba(4,12,8,.88));color:#7dffc0;
+  animation:cqm-acc-pulse 2.8s ease-in-out infinite}
   font:600 11px/1 var(--font-mono,ui-monospace,monospace);letter-spacing:.12em;height:42px;padding:0 12px;
   border-radius:21px;cursor:pointer;backdrop-filter:blur(6px);box-shadow:0 2px 14px rgba(0,0,0,.5);
   transition:transform .15s,background .15s;animation:cqm-acc-flick 2.2s steps(2) infinite}
 @keyframes cqm-acc-flick{0%,92%,100%{color:#7dffc0}94%{color:#ff5a6b}96%{color:#fff}}
 #cqm-acc-toggle:hover{transform:scale(1.06);background:rgba(8,30,18,.95)}
+#cqm-acc-toggle.solved{border-color:rgba(80,255,170,.85);background:rgba(8,40,24,.95);color:#c9ffe6;animation:none;box-shadow:0 0 14px rgba(80,255,170,.35)}
+#cqm-acc-toggle.solved:hover{transform:scale(1.03);background:rgba(12,60,36,.98)}
 #cqm-acc-modal{position:fixed;inset:0;z-index:200;display:none;align-items:center;justify-content:center;
   background:radial-gradient(120% 120% at 50% 30%,rgba(2,10,8,.86),rgba(0,0,0,.96));backdrop-filter:blur(3px)}
 #cqm-acc-modal.open{display:flex}
@@ -173,6 +177,7 @@ class AccessPuzzle {
   private readonly deniedEl: HTMLElement;
   private readonly input: HTMLInputElement;
   private readonly attemptsEl: HTMLElement;
+  private readonly toggle: HTMLButtonElement;
   private readonly noiseEls: HTMLElement[] = [];
   private deniedIdx = 0;
   private attempts = 0;
@@ -184,18 +189,20 @@ class AccessPuzzle {
   constructor(doc: Document = document) {
     doc.getElementById('cqm-acc-toggle')?.remove();
     doc.getElementById('cqm-acc-modal')?.remove();
+    injectPanelBaseCSS(doc);
     const style = doc.createElement('style');
     style.textContent = STYLE;
     doc.head.appendChild(style);
 
-    const toggle = doc.createElement('button');
-    toggle.id = 'cqm-acc-toggle';
-    toggle.type = 'button';
-    toggle.textContent = '⛓ ACCESS';
-    toggle.title = 'Cryptographic access terminal — unlock the 2nd super creature';
-    toggle.setAttribute('aria-label', 'Open the access terminal');
-    toggle.addEventListener('click', () => this.open());
-    mountToggle(toggle, doc);
+    this.toggle = doc.createElement('button');
+    this.toggle.id = 'cqm-acc-toggle';
+    this.toggle.type = 'button';
+    this.toggle.className = 'cqm-dock-toggle';
+    this.toggle.textContent = '⛓ ACCESS';
+    this.toggle.title = 'Cryptographic access terminal — unlock the 2nd super creature';
+    this.toggle.setAttribute('aria-label', 'Open the access terminal');
+    this.toggle.addEventListener('click', () => this.open());
+    mountToggle(this.toggle, doc);
 
     this.modal = doc.createElement('div');
     this.modal.id = 'cqm-acc-modal';
@@ -305,6 +312,10 @@ class AccessPuzzle {
   /** Correct code — stop the denial loop, show ACCESS GRANTED, and signal the world to reveal #2. */
   private grant(): void {
     this.solved = true;
+    this.toggle.classList.add('solved');
+    this.toggle.textContent = '✓ ACCESS GRANTED';
+    this.toggle.title = 'Access already granted — the 2nd super creature is active';
+    this.toggle.setAttribute('aria-label', 'Access already granted');
     if (this.langTimer) clearInterval(this.langTimer);
     if (this.scrambleTimer) clearInterval(this.scrambleTimer);
     this.deniedEl.textContent = 'ACCESS GRANTED';

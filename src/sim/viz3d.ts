@@ -277,7 +277,7 @@ export class Viz3DSystem {
         depthWrite: false,
       });
 
-      // Apply the 1-to-1 benchmark shader to this obelisk's material
+      // Apply mega-report visual benchmark (25-suite) — obelisk i maps to benchmark i mod 25
       applyVizBenchmarks(mat, i);
 
       const a = (i / TITANS) * TAU + 0.31; // offset so obelisks interleave with the inner towers

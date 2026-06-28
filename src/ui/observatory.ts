@@ -530,6 +530,8 @@ export class Observatory {
   private readonly pageWarned: boolean[];
   /** Currently selected page; `draw()` renders only this page's four canvases. */
   private page: ObsPage = 0;
+  /** Hidden aria-live region that announces the latest snapshot summary to screen readers. */
+  private readonly liveEl: HTMLElement | null;
 
   /** 10 series colors: tribe tokens 0..7 then accent and warn (resolved once). */
   private readonly seriesColors: readonly string[];
@@ -675,6 +677,24 @@ export class Observatory {
     this.names = Array.from({ length: OBS_SERIES }, () => '');
     this.statColors = [this.accent, this.warnColor, this.danger];
     this.warStackColors = [DIM, this.danger, this.accent];
+
+    if (doc) {
+      const panel = doc.getElementById('oP');
+      if (panel) {
+        const live = doc.createElement('div');
+        live.className = 'sr-only';
+        live.setAttribute('aria-live', 'polite');
+        live.setAttribute('aria-atomic', 'true');
+        live.setAttribute('aria-label', 'Observatory summary');
+        live.textContent = 'Observatory panel ready.';
+        panel.appendChild(live);
+        this.liveEl = live;
+      } else {
+        this.liveEl = null;
+      }
+    } else {
+      this.liveEl = null;
+    }
   }
 
   /**
@@ -792,6 +812,21 @@ export class Observatory {
     if (!this.primed) {
       this.primed = true;
       this.push(snapshot);
+    }
+
+    // V81: surface a terse summary for screen readers. Throttled naturally by the push cadence.
+    if (this.liveEl && this.primed) {
+      const pageNames = ['Overview', 'Variance', 'Ecology', 'Conflict'];
+      const pageName = pageNames[this.page] ?? 'Observatory';
+      const total =
+        snapshot.entities !== undefined && Number.isFinite(snapshot.entities)
+          ? snapshot.entities
+          : this.lastPopulation;
+      this.liveEl.textContent =
+        `${pageName}: ${Math.round(total)} entities. ` +
+        `Energy ${(snapshot.energy ?? 0).toFixed(1)}, ` +
+        `links ${snapshot.links ?? 0}, ` +
+        `sentience ${((snapshot.sentience ?? 0) * 100).toFixed(0)}%.`;
     }
   }
 

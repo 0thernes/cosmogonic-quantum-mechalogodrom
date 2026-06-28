@@ -20,6 +20,8 @@ const TENDRIL_RADIUS = 15;
 const TENDRIL_REACH2 = 225;
 /** Squared consumption reach — 12^2 (legacy threshold 144). */
 const CONSUME_REACH2 = 144;
+/** Grid query radius for consumption candidates (matches √CONSUME_REACH2). */
+const CONSUME_RADIUS = 12;
 /** Attractor-unit clamp for Lorenz drift samples (mirrors the entity 'lorenz' NaN seal). */
 const LORENZ_BOUND = 25;
 
@@ -265,8 +267,7 @@ export class ShoggothSystem {
 
   /**
    * Advance drift, glow, tendrils, and consumption for all shoggoths (legacy 519-539).
-   * O(s·k) per frame — s = shoggoth count (100 desktop, 16 mobile), k = grid neighbors within 15u; the O(n) nearest-victim
-   * scan runs only on consumption ticks (~every 200-500 sim ticks per shoggoth).
+   * O(s·k) per frame — s = shoggoth count, k = grid neighbors; consumption uses the same spatial hash (O(k)), not a full population scan.
    * Allocation-free: module scratch vectors only; the grid query reuses its shared buffer.
    */
   update(dt: number, t: number): void {
@@ -480,16 +481,22 @@ export class ShoggothSystem {
       ) {
         sg.feedTimer = 0;
         sg.consumed++;
-        let bestD = 9999;
+        // O(k) via spatial hash — same deterministic tie-break as the legacy full scan (closest,
+        // then lowest list index on equal distance).
+        const consumeCandidates = ctx.grid.query(p.x, p.z, CONSUME_RADIUS);
+        let bestD = CONSUME_REACH2;
         let bestI = -1;
-        for (let i = 0; i < list.length; i++) {
-          const e = list[i];
-          if (!e) continue; // noUncheckedIndexedAccess: i < length
+        for (let ci = 0; ci < consumeCandidates.length; ci++) {
+          const e = consumeCandidates[ci];
+          if (!e) continue;
           const ep = e.position;
           const sd = dist2(p.x, p.y, p.z, ep.x, ep.y, ep.z);
-          if (sd < CONSUME_REACH2 && sd < bestD) {
+          if (sd >= CONSUME_REACH2) continue;
+          const idx = list.indexOf(e);
+          if (idx < 0) continue;
+          if (sd < bestD || (sd === bestD && (bestI < 0 || idx < bestI))) {
             bestD = sd;
-            bestI = i;
+            bestI = idx;
           }
         }
         if (bestI >= 0) {

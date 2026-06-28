@@ -301,6 +301,14 @@ describe('SelfEvolutionLoop', () => {
     const loop = new SelfEvolutionLoop(BASE_METRICS);
     expect(loop.score).toBeCloseTo(computeEvolutionScore(BASE_METRICS), 10);
   });
+
+  test('ingestLive merges live sim metrics before step', () => {
+    const loop = new SelfEvolutionLoop(BASE_METRICS);
+    loop.ingestLive({ fitness: 0.99, emergence: 0.75 });
+    expect(loop._currentMetrics.fitness).toBeCloseTo(0.99, 10);
+    expect(loop._currentMetrics.emergence).toBeCloseTo(0.75, 10);
+    expect(loop._currentMetrics.complexity).toBe(BASE_METRICS.complexity);
+  });
 });
 
 describe('computeEvolutionRate', () => {

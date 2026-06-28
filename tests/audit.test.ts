@@ -187,4 +187,11 @@ describe('AuditTrail', () => {
     expect(typeof first?.ts).toBe('number');
     expect(first?.detail).toBeUndefined();
   });
+
+  test('setSimClock uses the sim tick instead of wall clock for in-sim records', () => {
+    const trail = new AuditTrail();
+    trail.setSimClock(() => 42_000);
+    trail.record('sim-action', { k: 1 });
+    expect(trail.entries().at(-1)?.ts).toBe(42_000);
+  });
 });
