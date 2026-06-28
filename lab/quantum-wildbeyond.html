@@ -52,6 +52,92 @@
       rel="stylesheet"
     />
     <style>
+      /* SHARED SATELLITE CHROME (V81) — inlined so the lab page needs no external stylesheet. */
+      .sat-header {
+        border-bottom: 1px solid rgba(120, 160, 220, 0.18);
+        background: rgba(8, 14, 30, 0.88);
+        backdrop-filter: blur(12px);
+        position: sticky;
+        top: 0;
+        z-index: 50;
+      }
+      .sat-header-inner {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 12px 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+      }
+      .sat-logo {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: #cfe0fb;
+        text-decoration: none;
+        font-size: 13px;
+        letter-spacing: 0.04em;
+        font-weight: 600;
+      }
+      .sat-logo:hover {
+        color: #0ef;
+      }
+      .sat-logo svg {
+        width: 24px;
+        height: 24px;
+        display: block;
+      }
+      .sat-nav {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex-wrap: wrap;
+      }
+      .sat-nav a {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 10px;
+        border-radius: 6px;
+        border: 1px solid transparent;
+        color: #7f93b8;
+        text-decoration: none;
+        font-size: 11px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        transition:
+          background 0.12s,
+          border-color 0.12s,
+          color 0.12s;
+      }
+      .sat-nav a:hover,
+      .sat-nav a:focus-visible {
+        background: rgba(120, 160, 220, 0.1);
+        border-color: rgba(120, 160, 220, 0.18);
+        color: #cfe0fb;
+        outline: none;
+      }
+      .sat-nav a:focus-visible {
+        outline: 2px solid #0ef;
+        outline-offset: 2px;
+      }
+      .sat-nav a[aria-current='page'] {
+        border-color: rgba(0, 238, 255, 0.45);
+        color: #0ef;
+      }
+      @media (max-width: 640px) {
+        .sat-header-inner {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 10px;
+        }
+        .sat-nav {
+          width: 100%;
+          justify-content: flex-start;
+        }
+      }
+
       /* Anthropic Brand Colors */
       :root {
         --anthropic-dark: #141413;
@@ -552,6 +638,44 @@
     </style>
   </head>
   <body>
+    <div class="sat-header">
+      <div class="sat-header-inner">
+        <a class="sat-logo" href="/" aria-label="Return to the simulation">
+          <svg viewBox="0 0 32 32" aria-hidden="true">
+            <circle cx="16" cy="16" r="15" fill="#030612" />
+            <ellipse
+              cx="16"
+              cy="16"
+              rx="13"
+              ry="5"
+              fill="none"
+              stroke="#0ef"
+              stroke-width="1.6"
+              transform="rotate(28 16 16)"
+            />
+            <ellipse
+              cx="16"
+              cy="16"
+              rx="13"
+              ry="5"
+              fill="none"
+              stroke="#fa0"
+              stroke-width="1.6"
+              transform="rotate(-28 16 16)"
+            />
+            <circle cx="16" cy="16" r="4.5" fill="#0ef" />
+          </svg>
+          <span>COSMOGONIC</span>
+        </a>
+        <nav class="sat-nav" aria-label="Satellite pages">
+          <a href="/">Dome</a>
+          <a href="/docs">Docs</a>
+          <a href="/spec">Spec</a>
+          <a href="/lab" aria-current="page">Lab</a>
+        </nav>
+      </div>
+    </div>
+
     <div class="container">
       <!-- Control Sidebar (present on every page) -->
       <div class="sidebar">
@@ -3691,6 +3815,37 @@
             inst.hot = false;
           });
         }
+
+        // V81: keyboard roving focus across the 12 tiles so arrow keys move between visuals.
+        // Assigned via onkeydown so rebuilding a board never accumulates duplicate listeners.
+        grid.onkeydown = (e) => {
+          const tiles = Array.from(grid.querySelectorAll('.viz-tile'));
+          const idx = tiles.indexOf(document.activeElement);
+          if (idx === -1) return;
+          let next = idx;
+          switch (e.key) {
+            case 'ArrowRight':
+            case 'ArrowDown':
+              e.preventDefault();
+              next = (idx + 1) % tiles.length;
+              break;
+            case 'ArrowLeft':
+            case 'ArrowUp':
+              e.preventDefault();
+              next = (idx - 1 + tiles.length) % tiles.length;
+              break;
+            case 'Home':
+              e.preventDefault();
+              next = 0;
+              break;
+            case 'End':
+              e.preventDefault();
+              next = tiles.length - 1;
+              break;
+          }
+          if (next !== idx) tiles[next].focus();
+        };
+
         activeBoardPage = page;
       }
 

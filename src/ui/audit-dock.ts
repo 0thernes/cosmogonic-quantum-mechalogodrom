@@ -13,6 +13,7 @@
  * renders the audit list straight from that localStorage ring on a short interval — real-time audit
  * that works identically on `bun dev` and on the static deploy, with no server dependency.
  */
+import { dockToggle, injectPanelBaseCSS } from './panel-shell';
 import { mountToggle } from './panel-dock';
 
 /** Same key {@link AuditTrail} persists its ring to (logging/audit.ts). */
@@ -21,11 +22,6 @@ const AUDIT_KEY = 'cqm.audit.v1';
 const RENDER_MS = 1500;
 
 const STYLE = `
-#cqm-aud-toggle{height:42px;padding:0 12px;border-radius:21px;border:1px solid rgba(120,170,200,.5);
-  background:rgba(8,16,20,.84);color:#bfe6f2;font:600 11px/1 var(--font-mono,ui-monospace,monospace);
-  letter-spacing:.12em;cursor:pointer;white-space:nowrap;transition:transform .15s,background .15s}
-#cqm-aud-toggle:hover{transform:scale(1.06);background:rgba(16,30,38,.94)}
-#cqm-aud-toggle:focus-visible{outline:2px solid #5cc6e0;outline-offset:2px}
 #cqm-aud-toggle.on{background:rgba(20,40,50,.95);border-color:rgba(120,200,230,.8);color:#e6f7ff}
 /* V71: the directive's "Audit 50/50 — just organizes it better". When open, widen the overlay and
    flow the <li> trail into TWO equal columns (it scrolls vertically as before). The
@@ -129,6 +125,7 @@ function mountAuditToggle(doc: Document = document): void {
   const panel = doc.getElementById('aP');
   if (!panel) return; // index.html not present (e.g. a non-app context) — nothing to toggle
 
+  injectPanelBaseCSS(doc);
   const style = doc.createElement('style');
   style.id = 'cqm-aud-style';
   style.textContent = STYLE;
@@ -138,18 +135,20 @@ function mountAuditToggle(doc: Document = document): void {
   // below is the single source of truth (works on dev too: localStorage mirrors every recorded action).
   for (const attr of ['hx-get', 'hx-trigger', 'hx-target', 'hx-swap']) panel.removeAttribute(attr);
 
-  const toggle = doc.createElement('button');
-  toggle.id = 'cqm-aud-toggle';
-  toggle.type = 'button';
-  toggle.textContent = '🗒 AUDIT';
-  toggle.setAttribute('aria-label', 'Open or close the audit trail');
-  toggle.setAttribute('aria-expanded', 'false');
-  toggle.addEventListener('click', () => {
-    const open = panel.classList.toggle('audit-on');
-    toggle.classList.toggle('on', open);
-    toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
-    if (open) renderClientAudit(doc); // refresh immediately on open
+  const toggle = dockToggle({
+    id: 'cqm-aud-toggle',
+    label: '🗒 AUDIT',
+    title: 'Open or close the audit trail',
+    ariaLabel: 'Open or close the audit trail',
+    onClick: () => {
+      const open = panel.classList.toggle('audit-on');
+      toggle.classList.toggle('on', open);
+      toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+      if (open) renderClientAudit(doc); // refresh immediately on open
+    },
+    doc,
   });
+  toggle.setAttribute('aria-expanded', 'false');
   mountToggle(toggle, doc);
 
   // Real-time client render (server-free). `setInterval` is a UI heartbeat, not sim logic.

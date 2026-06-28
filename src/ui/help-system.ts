@@ -6,6 +6,7 @@
  * hands off to the ✦ Copilot for freeform / web questions. UI shell only; pure presentation.
  */
 import { HELP_KB, findHelp, type HelpEntry } from './help-knowledge';
+import { dockToggle, injectPanelBaseCSS, panelHeader, wireClose } from './panel-shell';
 import { mountToggle } from './panel-dock';
 
 /** The quick chips — the directive's named entry points + a few common topics → seed queries. */
@@ -23,12 +24,6 @@ const CHIPS: { label: string; q: string }[] = [
 ];
 
 const STYLE = `
-#cqm-help-toggle{border:1px solid rgba(120,220,160,.5);background:rgba(6,18,12,.86);color:#9bffce;
-  font:600 11px/1 var(--font-mono,ui-monospace,monospace);letter-spacing:.1em;height:42px;padding:0 12px;
-  border-radius:21px;cursor:pointer;backdrop-filter:blur(6px);box-shadow:0 2px 14px rgba(0,0,0,.5);
-  transition:transform .15s,background .15s}
-#cqm-help-toggle:hover{transform:scale(1.06);background:rgba(12,34,22,.95)}
-#cqm-help-toggle:focus-visible{outline:2px solid #66e0a0;outline-offset:2px}
 /* V71: "down the middle 50/50" — the answer fills the LEFT half, the topic chips + search box + AI
    hand-off live on the RIGHT half. Wider so both halves breathe; stacks on narrow screens. */
 #cqm-help-panel{position:fixed;right:10px;bottom:128px;z-index:59;width:min(94vw,720px);height:min(74vh,560px);display:none;
@@ -36,10 +31,9 @@ const STYLE = `
   backdrop-filter:blur(12px);box-shadow:0 10px 46px rgba(0,0,0,.66);font:12px/1.55 var(--font-ui,system-ui,sans-serif);
   color:#e6f6ec;overflow:hidden}
 #cqm-help-panel.open{display:flex}
-.cqm-help-head{display:flex;align-items:center;gap:8px;padding:8px 11px;border-bottom:1px solid rgba(120,220,160,.22);background:rgba(10,26,18,.8);flex:0 0 auto}
+.cqm-help-head{margin-bottom:0 !important;padding:8px 11px;border-bottom:1px solid rgba(120,220,160,.22);background:rgba(10,26,18,.8);flex:0 0 auto}
 .cqm-help-head b{font-size:11px;letter-spacing:.14em;color:#aaffd2;font-family:var(--font-mono,monospace)}
-.cqm-help-x{margin-left:auto;background:rgba(4,10,8,.9);color:#9bffce;border:1px solid rgba(120,220,160,.3);border-radius:5px;
-  font:11px var(--font-mono,monospace);padding:2px 7px;cursor:pointer}
+.cqm-help-head .cqm-panel-x{color:#9bffce}
 .cqm-help-body{flex:1 1 auto;min-height:0;display:flex}
 .cqm-help-left{flex:1 1 50%;min-width:0;display:flex;flex-direction:column}
 .cqm-help-right{flex:1 1 50%;min-width:0;display:flex;flex-direction:column;border-left:1px solid rgba(120,220,160,.2);background:rgba(8,18,13,.45)}
@@ -78,39 +72,43 @@ export class HelpSystem {
   constructor(doc: Document = document) {
     doc.getElementById('cqm-help-toggle')?.remove();
     doc.getElementById('cqm-help-panel')?.remove();
+    injectPanelBaseCSS(doc);
     const style = doc.createElement('style');
     style.textContent = STYLE;
     doc.head.appendChild(style);
 
-    const toggle = doc.createElement('button');
-    toggle.id = 'cqm-help-toggle';
-    toggle.type = 'button';
-    toggle.textContent = '❓ HELP ME NOW';
-    toggle.title = 'Repo-grounded help — ask anything about this world';
-    toggle.setAttribute('aria-label', 'Open help');
-    toggle.addEventListener('click', () => this.setOpen(!this.open));
+    const toggle = dockToggle({
+      id: 'cqm-help-toggle',
+      label: '❓ HELP ME NOW',
+      title: 'Repo-grounded help — ask anything about this world',
+      ariaLabel: 'Open help',
+      onClick: () => this.setOpen(!this.open),
+      doc,
+    });
     mountToggle(toggle, doc);
 
     this.panel = doc.createElement('section');
     this.panel.id = 'cqm-help-panel';
     this.panel.setAttribute('aria-label', 'Help me now');
-    this.panel.innerHTML =
-      `<div class="cqm-help-head"><b>❓ HELP ME NOW</b><button class="cqm-help-x" data-x aria-label="Close">✕</button></div>` +
-      `<div class="cqm-help-body">` +
+    const head = panelHeader({ title: '❓ HELP ME NOW', onClose: () => this.setOpen(false), doc });
+    head.classList.add('cqm-help-head');
+    this.panel.appendChild(head);
+    const body = doc.createElement('div');
+    body.className = 'cqm-help-body';
+    body.innerHTML =
       `<div class="cqm-help-left"><div class="cqm-help-colhead">Answer</div><div class="cqm-help-ans" data-ans></div></div>` +
       `<div class="cqm-help-right">` +
       `<div class="cqm-help-colhead">Topics</div><div class="cqm-help-chips" data-chips></div>` +
       `<div class="cqm-help-colhead">Ask anything</div>` +
       `<div class="cqm-help-search"><input class="cqm-help-in" data-in placeholder="e.g. how does the economy work?" autocomplete="off" /><button class="cqm-help-go" data-go>ASK</button></div>` +
       `<div class="cqm-help-foot"><span class="note">Grounded in public project knowledge only — no secrets or private data. For freeform / web questions:</span><button class="cqm-help-ai" data-ai>Ask the ✦ AI</button></div>` +
-      `</div></div>`;
+      `</div>`;
+    this.panel.appendChild(body);
     doc.body.appendChild(this.panel);
 
     this.ansEl = this.panel.querySelector('[data-ans]') as HTMLElement;
     this.input = this.panel.querySelector('[data-in]') as HTMLInputElement;
-    (this.panel.querySelector('[data-x]') as HTMLElement).addEventListener('click', () =>
-      this.setOpen(false),
-    );
+    wireClose(this.panel, () => this.setOpen(false));
     (this.panel.querySelector('[data-go]') as HTMLElement).addEventListener('click', () =>
       this.ask(this.input.value),
     );

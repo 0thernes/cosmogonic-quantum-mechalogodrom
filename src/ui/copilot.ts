@@ -18,6 +18,7 @@
  * `textContent`, never `innerHTML`, so untrusted text can't inject markup.
  */
 
+import { dockToggle, injectPanelBaseCSS, panelHeader, wireClose } from './panel-shell';
 import { mountToggle } from './panel-dock';
 
 interface ToolStep {
@@ -161,11 +162,6 @@ interface HealthResult {
 }
 
 const STYLE = `
-#cqm-cop-toggle{position:fixed;right:10px;bottom:10px;z-index:60;width:42px;height:42px;border-radius:50%;
-  border:1px solid rgba(120,160,220,.5);background:rgba(6,10,22,.82);color:#bcd2f5;font-size:19px;cursor:pointer;
-  backdrop-filter:blur(6px);box-shadow:0 2px 14px rgba(0,0,0,.5);transition:transform .15s,background .15s}
-#cqm-cop-toggle:hover{transform:scale(1.08);background:rgba(14,22,44,.92)}
-#cqm-cop-toggle:focus-visible{outline:2px solid #6da8ff;outline-offset:2px}
 /* V71: the "down the middle 50/50 split" the directive asks for — answers on the left half, the
    textbox + options on the right half. Wider so both halves breathe; stacks on narrow screens. */
 #cqm-cop-panel{position:fixed;right:10px;bottom:128px;z-index:60;width:min(94vw,760px);height:min(74vh,600px);
@@ -173,11 +169,11 @@ const STYLE = `
   background:rgba(4,8,18,.94);backdrop-filter:blur(10px);box-shadow:0 8px 40px rgba(0,0,0,.6);
   font:12px/1.5 var(--font-mono,ui-monospace,monospace);color:#cfe0fb;overflow:hidden}
 #cqm-cop-panel.open{display:flex}
-.cqm-cop-head{display:flex;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid rgba(120,160,220,.25);
-  background:rgba(10,16,34,.7);flex:0 0 auto}
+.cqm-cop-head{margin-bottom:0 !important;padding:8px 10px;border-bottom:1px solid rgba(120,160,220,.25);
+  background:rgba(10,16,34,.7);flex:0 0 auto;justify-content:flex-start !important}
 .cqm-cop-head b{font-size:12px;letter-spacing:.08em;color:#9fc0ff}
 .cqm-cop-prov{font-size:9px;opacity:.6;margin-left:6px;white-space:nowrap}
-.cqm-cop-x{margin-left:auto;background:none;border:none;color:#9fc0ff;font-size:16px;cursor:pointer;padding:0 4px}
+.cqm-cop-head .cqm-panel-x{margin-left:auto;color:#9fc0ff}
 /* The 50/50 body: answer column | controls column. */
 .cqm-cop-body{flex:1 1 auto;min-height:0;display:flex}
 .cqm-cop-left{flex:1 1 50%;min-width:0;display:flex;flex-direction:column}
@@ -234,26 +230,33 @@ const STYLE = `
 function mount(): void {
   if (document.getElementById('cqm-cop-toggle')) return; // idempotent
 
+  injectPanelBaseCSS();
   const style = document.createElement('style');
   style.textContent = STYLE;
   document.head.appendChild(style);
 
-  const toggle = document.createElement('button');
-  toggle.id = 'cqm-cop-toggle';
-  toggle.type = 'button';
-  toggle.textContent = '✦';
-  toggle.title = 'Copilot — chat about this world (read-only AI)';
-  toggle.setAttribute('aria-label', 'Open Copilot chat');
+  const toggle = dockToggle({
+    id: 'cqm-cop-toggle',
+    label: '✦',
+    title: 'Copilot — chat about this world (read-only AI)',
+    ariaLabel: 'Open Copilot chat',
+    onClick: () => {
+      if (panel.classList.contains('open')) closePanel();
+      else openPanel();
+    },
+  });
 
   const panel = document.createElement('div');
   panel.id = 'cqm-cop-panel';
   panel.setAttribute('role', 'dialog');
   panel.setAttribute('aria-label', 'Copilot chat');
 
-  const head = document.createElement('div');
-  head.className = 'cqm-cop-head';
-  const title = document.createElement('b');
-  title.textContent = 'COPILOT';
+  const head = panelHeader({
+    title: 'COPILOT',
+    closeLabel: 'Close Copilot',
+    onClose: () => closePanel(),
+  });
+  head.classList.add('cqm-cop-head');
   const prov = document.createElement('span');
   prov.className = 'cqm-cop-prov';
   prov.textContent = '…';
@@ -268,12 +271,9 @@ function mount(): void {
   diag.textContent = '🩺';
   diag.title = 'AI diagnostics — probe provider health + recovery pipeline';
   diag.setAttribute('aria-label', 'Run AI diagnostics');
-  const close = document.createElement('button');
-  close.className = 'cqm-cop-x';
-  close.type = 'button';
-  close.textContent = '×';
-  close.setAttribute('aria-label', 'Close Copilot');
-  head.append(title, prov, close);
+  head.insertBefore(prov, head.lastElementChild);
+  head.insertBefore(sel, head.lastElementChild);
+  head.insertBefore(diag, head.lastElementChild);
 
   // 50/50 body: the generative answer/conversation on the LEFT, the compose box + options on the RIGHT.
   const body = document.createElement('div');
@@ -630,6 +630,11 @@ function mount(): void {
     }
   };
 
+  const closePanel = (): void => {
+    panel.classList.remove('open');
+    toggle.focus();
+  };
+
   const openPanel = (): void => {
     panel.classList.add('open');
     input.focus();
@@ -705,10 +710,10 @@ function mount(): void {
   };
 
   toggle.addEventListener('click', () => {
-    if (panel.classList.contains('open')) panel.classList.remove('open');
+    if (panel.classList.contains('open')) closePanel();
     else openPanel();
   });
-  close.addEventListener('click', () => panel.classList.remove('open'));
+  wireClose(panel, closePanel);
   sel.addEventListener('change', () => {
     selectedProvider = sel.value;
     try {
@@ -723,8 +728,7 @@ function mount(): void {
       e.preventDefault();
       submit();
     } else if (e.key === 'Escape') {
-      panel.classList.remove('open');
-      toggle.focus();
+      closePanel();
     }
   });
 }
