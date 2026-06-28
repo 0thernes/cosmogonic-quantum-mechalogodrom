@@ -65,7 +65,7 @@ const PLAN_RGB: Record<SuperPlan, [number, number, number]> = {
 };
 
 /** Silhouette radius of the core — ½-a-Titan-class colossus (NHI bodies are R≈3.4). */
-const R = 6.0;
+const R = 7.4;
 const EYES = 24; // ocular corona count (amped for extreme multi-eye reactivity)
 const ARMS = 13; // radial spike-arms (amped)
 const WINGS = 8; // max animated wing strips

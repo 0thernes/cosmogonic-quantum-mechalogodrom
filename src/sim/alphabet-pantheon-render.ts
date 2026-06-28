@@ -54,6 +54,9 @@ interface Body {
   readonly phase: number; // per-body phase offset
   readonly spin: number; // spin rate (rad/s), scaled by chaos bias
   readonly pulse: number; // pulse depth (from curiosity bias)
+  readonly hue: number;
+  readonly sat: number;
+  readonly light: number;
 }
 
 /** Which shape pool an archetype belongs to (vowels stand out as knots). */
@@ -91,7 +94,7 @@ export class AlphabetPantheonRender {
     this.mat = new THREE.MeshBasicMaterial({
       color: 0xffffff, // white base so instanceColor shows the true hue
       transparent: true,
-      opacity: 0.9,
+      opacity: 0.96,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
     });
@@ -122,16 +125,18 @@ export class AlphabetPantheonRender {
         const ax = Math.cos(th) * ringR;
         const az = Math.sin(th) * ringR;
         const ay = y * DOME_R * 0.66 + 24;
-        const baseScale = 4 + 9 * (0.5 * b.empowerment + 0.3 * b.order + 0.2 * b.generative);
+        const baseScale = (4.5 + 10 * (0.5 * b.empowerment + 0.3 * b.order + 0.2 * b.generative)) * 1.12;
         // Seed-derived (no rng) per-body cadence so none lockstep.
         const freq = 0.18 + ((a.seed % 600) / 600) * 0.6;
         const phase = ((a.seed >>> 7) % 6283) / 1000;
         const spin = 0.08 + b.chaos * 0.5;
         const pulse = 0.1 + b.curiosity * 0.25;
-        list.push({ ax, ay, az, baseScale, freq, phase, spin, pulse });
+        const sat = 0.9 + 0.1 * b.quantum;
+        const light = 0.54 + 0.32 * b.generative;
+        list.push({ ax, ay, az, baseScale, freq, phase, spin, pulse, hue: b.hue, sat, light });
 
-        // Colour from the bias.
-        C.setHSL(b.hue, 0.6 + 0.35 * b.quantum, 0.45 + 0.2 * b.generative);
+        // Colour from the bias — saturated, luminous read.
+        C.setHSL(b.hue, sat, light);
         mesh.setColorAt(s, C);
         // Initial transform.
         P.set(ax, ay, az);
@@ -170,8 +175,14 @@ export class AlphabetPantheonRender {
         S.setScalar(b.baseScale * (1 + b.pulse * Math.sin(ph * 1.7)));
         M.compose(P, Q, S);
         mesh.setMatrixAt(s, M);
+        // Live hue drift + brightness pulse — each body its own cadence (no rng).
+        const hue = (b.hue + Math.sin(ph * 0.31) * 0.06 + t * 0.002 * b.spin) % 1;
+        const lit = b.light + 0.12 * Math.sin(ph * 2.3);
+        C.setHSL(hue < 0 ? hue + 1 : hue, b.sat, Math.min(0.92, lit));
+        mesh.setColorAt(s, C);
       }
       mesh.instanceMatrix.needsUpdate = true;
+      if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
     }
   }
 

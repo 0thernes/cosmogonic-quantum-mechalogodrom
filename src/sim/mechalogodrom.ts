@@ -41,13 +41,13 @@ const VARIANT_COUNT = 10;
 /** Seconds the variants take to migrate from the spawn ring to the fused centre. */
 const CONVERGE_SECONDS = 24;
 /** Warp icosahedron subdivision (detail 3 ⇒ 642 vertices ⇒ a rich, cheap writhe). */
-const WARP_DETAIL = 3;
+const WARP_DETAIL = 4;
 /** Radius of the fused mass at the world centre. */
 const CORE_R = 26;
 /** Spawn-ring radius for the ten variants (mid-far, framing the centre). */
 const RING_R = ARENA_RADIUS * 0.72;
 /** Elevation of the whole abomination above the arena floor (a cosmic centrepiece, not a ground prop). */
-const ALTITUDE = 120;
+const ALTITUDE = 188;
 
 /** Read-only telemetry of the fusion abomination (built fresh each call — UI cadence only). */
 export interface MechalogodromSnapshot {
@@ -91,7 +91,12 @@ export class Mechalogodrom {
   private readonly mass: THREE.Mesh; // warped emissive solid
   private readonly wire: THREE.Mesh; // additive wireframe (material.wireframe) over the SAME warped geometry
   private readonly spikes: THREE.LineSegments; // radial spike-arms
-  private readonly rings: THREE.Mesh[] = []; // 3 counter-rotating torus halos
+  private readonly rings: THREE.Mesh[] = []; // counter-rotating torus halos
+  /** Quantum BEYOND Lab mesh: nested wire shells + orbiting nodes inside the fusion core. */
+  private readonly labShells: THREE.LineSegments[] = [];
+  private readonly labNodes: THREE.Mesh[] = [];
+  private readonly labMat: THREE.LineBasicMaterial;
+  private readonly labNodeMat: THREE.MeshBasicMaterial;
 
   private readonly warpGeo: THREE.IcosahedronGeometry;
   private readonly basePos: Float32Array; // pristine icosa vertices (warp source of truth)
@@ -180,7 +185,7 @@ export class Mechalogodrom {
       blending: THREE.AdditiveBlending,
       depthWrite: false,
     });
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < 4; i++) {
       const ring = new THREE.Mesh(
         new THREE.TorusGeometry(CORE_R * (1.5 + i * 0.55), 0.9 + i * 0.4, 3, 96),
         this.ringMat,
@@ -189,6 +194,40 @@ export class Mechalogodrom {
       ring.rotation.y = (i * TAU) / 7;
       this.group.add(ring);
       this.rings.push(ring);
+    }
+
+    // ── Quantum BEYOND Lab lattice: nested wire icosa shells + orbiting probe nodes (Mandelbrot-ish
+    //    chaos read without GLSL — the inner cage writhes as the monster fuses). ────────────────
+    this.labMat = new THREE.LineBasicMaterial({
+      color: 0x00ffcc,
+      transparent: true,
+      opacity: 0.42,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+    this.labNodeMat = new THREE.MeshBasicMaterial({
+      color: 0xff44aa,
+      transparent: true,
+      opacity: 0.75,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+    for (let layer = 0; layer < 5; layer++) {
+      const geo = new THREE.IcosahedronGeometry(CORE_R * (0.28 + layer * 0.11), 1);
+      const wire = new THREE.WireframeGeometry(geo);
+      geo.dispose();
+      const shell = new THREE.LineSegments(wire, this.labMat);
+      shell.rotation.set(layer * 0.4, layer * 0.55, layer * 0.31);
+      this.group.add(shell);
+      this.labShells.push(shell);
+    }
+    const NODE_N = 24;
+    for (let n = 0; n < NODE_N; n++) {
+      const th = (n / NODE_N) * TAU;
+      const node = new THREE.Mesh(new THREE.OctahedronGeometry(1.4 + (n % 3) * 0.35, 0), this.labNodeMat);
+      node.position.set(Math.cos(th) * CORE_R * 0.55, Math.sin(th * 1.7) * CORE_R * 0.35, Math.sin(th) * CORE_R * 0.55);
+      this.group.add(node);
+      this.labNodes.push(node);
     }
 
     // ── The ten bipolar variant shells (golden-angle ring placement; varied platonic solids). ───
@@ -304,11 +343,28 @@ export class Mechalogodrom {
         Math.sin(bx * 0.22 + t * 1.3) +
         Math.sin(by * 0.19 - t * 0.9) +
         Math.sin(bz * 0.25 + t * 1.7) +
-        0.6 * Math.sin((bx + by + bz) * 0.13 + t * 2.1);
-      const s = 1 + w * 0.32 * d;
-      arr[i] = bx * s;
-      arr[i + 1] = by * s;
-      arr[i + 2] = bz * s;
+        0.6 * Math.sin((bx + by + bz) * 0.13 + t * 2.1) +
+        0.45 * Math.sin(bx * by * 0.11 + bz * 0.09 + t * 1.1);
+      // Mandelbrot-ish escape proxy on the xz plane (deterministic, no rng) — creases the mesh.
+      let cx = bx * 0.018 + 0.4 * Math.sin(t * 0.07);
+      let cy = bz * 0.018 + 0.3 * Math.cos(t * 0.09);
+      let zx = 0;
+      let zy = 0;
+      let esc = 0;
+      for (let it = 0; it < 6; it++) {
+        const zx2 = zx * zx - zy * zy + cx;
+        zy = 2 * zx * zy + cy;
+        zx = zx2;
+        if (zx * zx + zy * zy > 4) {
+          esc = it / 6;
+          break;
+        }
+      }
+      const mb = esc * 0.14 * w;
+      const s = 1 + w * 0.32 * d + mb;
+      arr[i] = bx * s + Math.sin(by * 3.1 + t) * mb * 8;
+      arr[i + 1] = by * s + Math.cos(bx * 2.7 - t * 1.2) * mb * 6;
+      arr[i + 2] = bz * s + Math.sin(bx * bz * 0.08 + t * 0.8) * mb * 8;
     }
     pos.needsUpdate = true;
     // Recompute normals on a cadence so the emissive solid still catches a little scene light.
@@ -320,7 +376,7 @@ export class Mechalogodrom {
     // Hue cycles through the palette: blood-red → sigma-gold → cyan → violet.
     const hue = (t * 0.05) % 1;
     this.massMat.emissive.setHSL(hue, 0.85, 0.18 + 0.22 * ease);
-    this.massMat.emissiveIntensity = 0.8 + 1.8 * ease + 0.8 * this.chaos;
+    this.massMat.emissiveIntensity = 1.2 + 2.4 * ease + 1.2 * this.chaos;
     this.wireMat.color.setHSL((hue + 0.5) % 1, 1, 0.6);
     // Flash envelope: sharp sparkle on a fast beat, stronger once fused + chaotic.
     const flash = 0.5 + 0.5 * Math.sin(t * 6.3) * Math.sin(t * 2.1);
@@ -353,6 +409,33 @@ export class Mechalogodrom {
     }
     this.ringMat.opacity = 0.12 + 0.28 * ease;
     this.ringMat.color.setHSL((hue + 0.66) % 1, 0.9, 0.6);
+
+    // Lab lattice: counter-rotating nested shells + orbiting probe nodes.
+    for (let i = 0; i < this.labShells.length; i++) {
+      const sh = this.labShells[i];
+      if (!sh) continue;
+      const dir = i % 2 === 0 ? 1 : -1;
+      sh.rotation.x += dir * 0.004 * (1 + ease);
+      sh.rotation.y += dir * 0.006 * (1 + 0.5 * this.chaos);
+      sh.rotation.z += dir * 0.003;
+      sh.scale.setScalar(0.85 + 0.22 * ease + 0.04 * Math.sin(t * 1.1 + i));
+    }
+    this.labMat.opacity = 0.2 + 0.35 * ease + 0.15 * flash;
+    this.labMat.color.setHSL((hue + 0.33) % 1, 1, 0.55);
+    for (let n = 0; n < this.labNodes.length; n++) {
+      const node = this.labNodes[n];
+      if (!node) continue;
+      const th = (n / this.labNodes.length) * TAU + t * (0.35 + (n % 5) * 0.04);
+      const r = CORE_R * (0.42 + 0.12 * ease + 0.06 * Math.sin(t * 0.9 + n));
+      node.position.set(
+        Math.cos(th) * r,
+        Math.sin(th * 1.9 + t * 0.5) * r * 0.55,
+        Math.sin(th) * r,
+      );
+      node.rotation.set(t * 0.7 + n, t * 0.5, t * 0.3);
+      node.scale.setScalar(0.8 + 0.5 * ease + 0.2 * Math.sin(t * 2.2 + n));
+    }
+    this.labNodeMat.color.setHSL((hue + 0.15) % 1, 1, 0.62);
   }
 
   /** Migrate + bipolar-oscillate the ten variant shells; melt them into the corona as fusion completes. */
@@ -414,6 +497,8 @@ export class Mechalogodrom {
     this.rim.geometry.dispose();
     this.spikes.geometry.dispose();
     for (const r of this.rings) r.geometry.dispose();
+    for (const sh of this.labShells) sh.geometry.dispose();
+    for (const n of this.labNodes) n.geometry.dispose();
     for (const v of this.variants) v.mesh.geometry.dispose();
     this.coreMat.dispose();
     this.rimMat.dispose();
@@ -422,6 +507,8 @@ export class Mechalogodrom {
     this.shellMat.dispose();
     this.spikeMat.dispose();
     this.ringMat.dispose();
+    this.labMat.dispose();
+    this.labNodeMat.dispose();
     this.group.removeFromParent();
   }
 }

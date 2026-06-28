@@ -61,6 +61,8 @@ export function mountPerfHud(currentTier: string): PerfHud {
   const el = document.createElement('div');
   el.id = 'perf-hud';
 
+  const mountParent = document.getElementById('perf-slot') ?? document.body;
+
   const fpsEl = document.createElement('span');
   const qEl = document.createElement('span');
   qEl.className = 'perf-hud-quality';
@@ -93,7 +95,7 @@ export function mountPerfHud(currentTier: string): PerfHud {
   el.appendChild(line1);
   el.appendChild(tierRow);
   el.appendChild(hint);
-  document.body.appendChild(el);
+  mountParent.appendChild(el);
 
   return {
     update(fps: number, level: Level): void {

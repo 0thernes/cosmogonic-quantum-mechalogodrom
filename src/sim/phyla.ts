@@ -221,12 +221,12 @@ function phylumMorph(
 
   // Base palette/material draws (mirror legacy field structure & ranges).
   const baseHue = rng();
-  const colS = 0.4 + rng() * 0.6;
-  const colL = 0.1 + rng() * 0.55;
+  const colS = 0.82 + rng() * 0.18;
+  const colL = 0.42 + rng() * 0.38;
   const emH = rng();
-  const emS = 0.5 + rng() * 0.5;
-  const emL = 0.15 + rng() * 0.4;
-  const emI = 0.1 + rng() * 0.9;
+  const emS = 0.88 + rng() * 0.12;
+  const emL = 0.35 + rng() * 0.42;
+  const emI = 0.35 + rng() * 0.65;
   const met = 0.05 + rng() * 0.9;
   const rou = 0.05 + rng() * 0.9;
   const op = 0.25 + rng() * 0.75;

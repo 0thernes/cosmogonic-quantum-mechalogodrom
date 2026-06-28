@@ -73,9 +73,9 @@
   --font-mono: 'JetBrains Mono', 'SF Mono', ui-monospace, monospace;
   /* Micro type scale (font-size only — line-height inherits, matching
      the arbitrary text-[Npx] utilities these tokens replaced). */
-  --text-xs: 14px; /* primary panel values — telemetry counters, key readouts */
-  --text-2xs: 13px; /* telemetry values, panel headers, toast */
-  --text-3xs: 12px; /* toolbar captions, algo name, docs/lab links */
+  --text-xs: 15px; /* primary panel values — telemetry counters, key readouts */
+  --text-2xs: 14px; /* telemetry values, panel headers, toast */
+  --text-3xs: 13px; /* toolbar captions, algo name, docs/lab links */
   --text-4xs: 11px; /* telemetry keys, env rows, control-pad captions */
   --text-display: clamp(14px, 4vw, 28px); /* sector banner #sec */
   --tracking-display: clamp(4px, 1.5vw, 14px); /* #sec letterspacing */
@@ -332,18 +332,37 @@ a:focus-visible {
 #perf-hud {
   position: fixed;
   left: max(10px, env(safe-area-inset-left, 0px));
-  bottom: calc(54px + env(safe-area-inset-bottom, 0px));
-  z-index: 40;
-  font: 14px/1.6 var(--font-mono, ui-monospace, monospace);
+  bottom: calc(100px + env(safe-area-inset-bottom, 0px));
+  z-index: 39;
+  font: 13px/1.45 var(--font-mono, ui-monospace, monospace);
   color: #e8f0ff;
-  background: rgba(8, 14, 30, 0.88);
-  border: 1px solid rgba(120, 160, 220, 0.32);
-  border-radius: 12px;
-  padding: 10px 14px;
-  min-width: 180px;
+  background: rgba(8, 14, 30, 0.92);
+  border: 1px solid rgba(120, 160, 220, 0.35);
+  border-radius: 10px;
+  padding: 8px 12px;
+  max-width: min(210px, 44vw);
   user-select: none;
   backdrop-filter: blur(12px);
-  box-shadow: 0 4px 22px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.45);
+  pointer-events: auto;
+}
+/* Desktop grid: perf HUD lives in #perf-slot below Sorting Fields — no overlap. */
+@media (min-width: 769px) and (pointer: fine) and (orientation: landscape) {
+  #perf-slot {
+    grid-area: perf;
+    align-self: end;
+    justify-self: stretch;
+    pointer-events: auto;
+    min-width: 0;
+    max-width: 100%;
+  }
+  #perf-slot #perf-hud {
+    position: static;
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    padding: 6px 10px;
+  }
 }
 #perf-hud .perf-hud-row {
   display: flex;
@@ -371,10 +390,7 @@ a:focus-visible {
   background: rgba(0, 80, 120, 0.35);
 }
 #perf-hud .perf-hud-hint {
-  margin-top: 6px;
-  opacity: 0.7;
-  font-size: 12px;
-  line-height: 1.4;
+  display: none;
 }
 #perf-hud .perf-hud-quality {
   opacity: 0.92;
@@ -772,19 +788,43 @@ a:focus-visible {
   /* V72: clear BOTH bottom dock rows — the #bar toolbar (~46px) AND the nav launcher above it (its top
      sits ~90px off the bottom). 96px ends SORTING FIELDS (the tall lower-left #algoP) a touch higher so
      it no longer runs flush into the bottom-dock band — "a little shorter… everything fits nicer". */
-  padding-bottom: calc(82px + env(safe-area-inset-bottom, 0px));
-  /* Right column widened (CONTRACTS V6.2a) so the observatory has more room to breathe on
-     desktop/QHD; the TV block below grows it further. Left column hosts telemetry, audit and
-     the new algorithm picker (#algoP), stacked top→bottom. */
-  grid-template-columns: clamp(180px, 19vw, 260px) 1fr clamp(220px, 23vw, 340px);
-  grid-template-rows: auto auto auto auto;
-  /* V84: right column stacks Observatory → Control → sorting readout → sim settings (mirrors the left
-     telemetry + sorting-fields column). Center stays free for the 3D view + center-HUD popups. */
+  padding-bottom: calc(108px + env(safe-area-inset-bottom, 0px));
+  grid-template-columns: clamp(200px, 20vw, 280px) 1fr clamp(260px, 26vw, 400px);
+  grid-template-rows: minmax(0, 1fr) minmax(0, 1fr) auto auto auto;
+  /* V85: left tel+agp split evenly; obs spans 2 rows (bigger); right ctl/ralg/rset stacked; perf below agp. */
   grid-template-areas:
     'tel . obs'
-    'agp . ctl'
-    'agp . ralg'
-    'agp . rset';
+    'agp . obs'
+    'perf . ctl'
+    ' . . ralg'
+    ' . . rset';
+}
+@media (min-width: 769px) and (pointer: fine) and (orientation: landscape) {
+  #sP,
+  #algoP,
+  #oP {
+    max-height: none;
+    min-height: 0;
+    height: 100%;
+  }
+  #algoP {
+    align-self: stretch;
+  }
+  #oP > .obs-body,
+  #oP .panel-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    max-height: none;
+    overflow-y: auto;
+  }
+  #cP {
+    max-height: min(32vh, 280px);
+    overflow: hidden;
+  }
+  #ui > #alg,
+  #ui > #hud-vsr {
+    max-height: min(24vh, 200px);
+  }
 }
 #ui > * {
   pointer-events: auto;
@@ -832,7 +872,7 @@ a:focus-visible {
   z-index: auto;
   text-align: center;
 }
-/* Algorithm picker fills the tall free-left rows so its scroll list gets real height. */
+/* Algorithm picker — lower half of the left column (even split with telemetry). */
 #algoP {
   grid-area: agp;
   align-self: stretch;
@@ -951,10 +991,22 @@ a:focus-visible {
   max-height: clamp(180px, 50vh, 60vh);
   container-type: inline-size;
 }
-#ui > section > .panel-body {
+#ui > section > .panel-body,
+#cP > .panel-body {
   flex: 1 1 auto;
   font-size: var(--text-3xs);
   line-height: 1.55;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 238, 255, 0.35) transparent;
+}
+#ui > #alg,
+#ui > #hud-vsr {
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  max-height: min(28vh, 220px);
 }
 /* Side-panel legibility — telemetry keys/values, observatory labels, sorting list */
 #sP .panel-body [class*='text-4xs'],
@@ -965,7 +1017,7 @@ a:focus-visible {
 }
 #sP .panel-body [id^='v'],
 #oP .panel-body [id^='v'] {
-  font-size: var(--text-xs);
+  font-size: calc(var(--text-xs) + 1px);
   font-weight: 600;
 }
 #sP .panel-body [class*='text-2xs'],
@@ -1235,15 +1287,17 @@ a:focus-visible {
      is scoped to `pointer: fine` and landscape to avoid fighting sheet mode. ── */
 @media (min-height: 520px) and (min-width: 769px) and (pointer: fine) and (orientation: landscape) {
   #ui {
-    grid-template-columns: clamp(160px, 24vw, 230px) 1fr clamp(170px, 26vw, 250px);
+    grid-template-columns: clamp(180px, 22vw, 260px) 1fr clamp(240px, 28vw, 380px);
+    grid-template-rows: minmax(0, 1fr) minmax(0, 1fr) auto auto auto;
     grid-template-areas:
       'tel . obs'
-      'agp . ctl'
-      'agp . ralg'
-      'agp . rset';
+      'agp . obs'
+      'perf . ctl'
+      ' . . ralg'
+      ' . . rset';
   }
   #ui > section {
-    max-height: calc(100vh - 64px);
+    max-height: none;
   }
 }
 

@@ -105,8 +105,8 @@ body:has(#cqm-hud-nav) #cqm-dock {
   width: max-content;
   max-width: calc(100vw - 16px);
   margin-inline: auto;
-  /* V84: 52px clears the #bar toolbar with a tight 4px gap (was 66px — the two bars felt too far apart). */
-  bottom: var(--cqm-nav-bottom, 48px);
+  /* V84: 42px clears the #bar toolbar with a tight 4px gap (was 66px — the two bars felt too far apart). */
+  bottom: var(--cqm-nav-bottom, 42px);
   z-index: 73;
   display: flex;
   align-items: center;
@@ -197,6 +197,62 @@ body:has(#cqm-hud-nav) #cqm-dock {
 }
 #cqm-hud-nav.cqm-hud-tabs .cqm-hud-label {
   display: none;
+}
+/* V85: persistent Docs/Spec/Lab/Access/Set strip — NEVER hidden by chooseNavMode. */
+#cqm-persist-nav {
+  position: fixed;
+  bottom: calc(78px + env(safe-area-inset-bottom, 0px));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 77;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  max-width: calc(100vw - 12px);
+  padding: 4px 10px;
+  border-radius: 18px;
+  border: 1px solid rgba(120, 160, 220, 0.38);
+  background: rgba(6, 10, 22, 0.94);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.55);
+  pointer-events: auto;
+}
+#cqm-persist-nav .cqm-persist-btn {
+  position: static;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 14px;
+  border: 1px solid rgba(120, 160, 220, 0.32);
+  background: rgba(14, 22, 42, 0.88);
+  color: #cfe0fb;
+  font: 600 11px/1 var(--font-mono, ui-monospace, monospace);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    transform 0.12s,
+    background 0.12s,
+    border-color 0.12s;
+}
+#cqm-persist-nav .cqm-persist-btn:hover {
+  transform: scale(1.05);
+  background: rgba(28, 40, 72, 0.95);
+  border-color: rgba(150, 190, 255, 0.55);
+}
+#cqm-persist-nav .cqm-persist-btn[data-nav='spec'] {
+  border-color: rgba(220, 120, 255, 0.35);
+  color: #f0c8ff;
+}
+#cqm-persist-nav .cqm-persist-btn:focus-visible {
+  outline: 2px solid rgba(120, 180, 255, 0.75);
+  outline-offset: 1px;
 }
 /* The secondary Docs/Spec/Lab links drop the moment the launcher would otherwise overflow its centre-
    column band — chooseNavMode() adds .cqm-hud-nolinks after MEASURING (covers the narrow-desktop band
@@ -322,7 +378,7 @@ function fitHud(): void {
   // Vertical: sit the HUD just above the HIGHEST bar (nav launcher / toolbar) — adapts if a bar grows.
   const vh = window.innerHeight;
   let barsTop = vh;
-  for (const id of ['cqm-hud-nav', 'bar']) {
+  for (const id of ['cqm-persist-nav', 'cqm-hud-nav', 'bar-shell', 'bar']) {
     const el = document.getElementById(id);
     if (!el) continue;
     const r = el.getBoundingClientRect();
@@ -481,47 +537,51 @@ function buildNav(doc: Document): void {
   ghostBtn.setAttribute('aria-pressed', String(ghostOn));
   nav.appendChild(ghostBtn);
   nav.appendChild(mk('✕', 'Close', 'cqm-hud-close', () => showOnly(-1)));
-  // V80c: DOCS / SPEC / LAB as flat in-flow buttons at the end of the centred launcher — the user's
-  // "just stick them in the dock, in the centre, like before". CSS forces them position:static so they
-  // can NEVER float back to their source bottom-right corner (their `fixed` utility otherwise wins).
-  const lsep = doc.createElement('span');
-  lsep.className = 'cqm-hud-sep';
-  nav.appendChild(lsep);
-  // Adopt by `data-nav` (NOT href): build-pages.ts rewrites the absolute /docs /spec /lab hrefs to
-  // subpath-relative for the GitHub Pages deploy, so the old href query matched NOTHING there — the links
-  // were never pulled into the launcher and stayed stranded in their source bottom-right corner (the bug
-  // the user kept reporting). The data-nav attribute survives the rewrite, so the dock gets them on Pages
-  // too. center-hud is now their single owner (panel-dock.ts no longer competes for these nodes).
+  doc.body.appendChild(nav);
+}
+
+/** V85: always-visible Docs / Spec / Lab / Access / Set — never dropped by chooseNavMode. */
+function buildPersistentNav(doc: Document): void {
+  doc.getElementById('cqm-persist-nav')?.remove();
+  const strip = doc.createElement('nav');
+  strip.id = 'cqm-persist-nav';
+  strip.setAttribute('aria-label', 'Documentation, lab, access, and settings');
+
+  const mkBtn = (label: string, title: string, fn: () => void): HTMLButtonElement => {
+    const b = doc.createElement('button');
+    b.type = 'button';
+    b.className = 'cqm-persist-btn';
+    b.textContent = label;
+    b.title = title;
+    b.setAttribute('aria-label', title);
+    b.addEventListener('click', fn);
+    return b;
+  };
+
   for (const key of ['docs', 'spec', 'lab']) {
     const a = doc.querySelector<HTMLAnchorElement>(`a[data-nav="${key}"]`);
     if (a) {
-      a.classList.add('cqm-hud-btn', 'cqm-hud-link');
-      nav.appendChild(a);
+      a.classList.add('cqm-persist-btn');
+      strip.appendChild(a);
     }
   }
-  // ⛓ ACCESS — the cryptographic terminal (access-puzzle.ts: "only the Romans know" 3455456754) that
-  // unlocks the playable 2nd super creature. Its self-mounted toggle is buried in the hidden #cqm-dock
-  // (display:none), so it was invisible (the owner's "secret password isn't showing up" report). We add
-  // a FRESH launcher button here that opens it — created anew each buildNav, so it survives HMR re-init
-  // (moving the dock node would lose it when the old nav is removed). The modal lives outside the HUD.
   const accToggle = doc.getElementById('cqm-acc-toggle');
   if (accToggle) {
-    nav.appendChild(
-      mk(
+    strip.appendChild(
+      mkBtn(
         '⛓ ACCESS',
-        'Cryptographic access terminal — unlock the playable super creature ("only the Romans know")',
-        'cqm-hud-link',
+        'Cryptographic access terminal — unlock the playable super creature',
         () => accToggle.click(),
       ),
     );
   }
   const settingsToggle = doc.getElementById('cqm-settings-toggle');
   if (settingsToggle) {
-    nav.appendChild(
-      mk('⚙ SET', 'Simulation settings', 'cqm-hud-link', () => settingsToggle.click()),
+    strip.appendChild(
+      mkBtn('⚙ SET', 'Simulation settings', () => settingsToggle.click()),
     );
   }
-  doc.body.appendChild(nav);
+  doc.body.appendChild(strip);
 }
 
 /** Each dock toggle still opens "its" panel — but centered, and closing the others (single-open). */
@@ -568,6 +628,7 @@ export function initCenterHud(doc: Document = document): void {
   style.textContent = STYLE;
   doc.head.appendChild(style);
   buildNav(doc); // removes the old nav + rebuilds with the current code
+  buildPersistentNav(doc);
   wireDockToggles(); // dataset-guarded: binds each toggle once
   doc.removeEventListener('keydown', onKeydown);
   doc.addEventListener('keydown', onKeydown);

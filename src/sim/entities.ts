@@ -29,6 +29,24 @@ import type { BehaviorEnv } from './behaviors';
 import type { Entity, SimContext, UpdateStats } from '../types';
 import type { Rng } from '../math/rng';
 
+/** Push morph colours toward saturated, luminous read (render-only — morph tables unchanged). */
+function paintVibrant(mat: THREE.MeshStandardMaterial, m: PhylumMorphType, mi: number): void {
+  const hsl = { h: 0, s: 0, l: 0 };
+  m.col.getHSL(hsl);
+  mat.color.setHSL(
+    (hsl.h + mi * 0.0037) % 1,
+    Math.min(1, 0.76 + hsl.s * 0.24),
+    Math.min(0.86, 0.4 + hsl.l * 0.52),
+  );
+  m.em.getHSL(hsl);
+  mat.emissive.setHSL(
+    (hsl.h + 0.06 + mi * 0.002) % 1,
+    Math.min(1, 0.8 + hsl.s * 0.2),
+    Math.min(0.8, 0.36 + hsl.l * 0.48),
+  );
+  mat.emissiveIntensity = Math.min(2.8, m.emI * 1.45 + 0.4);
+}
+
 /** Base material parameters a {@link RenderMode} is layered on top of. */
 interface RenderModeBase {
   met: number;
@@ -232,6 +250,7 @@ export class EntityManager {
     // Layer the active render style on top of the morphotype base (CONTRACTS V7.3).
     // For SOLID this re-sets identical values, so the legacy look is byte-identical.
     applyRenderModeTo(mat, ctx.state.renderMode, m);
+    paintVibrant(mat, m, mi % morphCount);
     const mesh = new THREE.Mesh(geo, mat) as Entity;
     mesh.scale.setScalar(s);
     const phylum = m.phylum ?? -1;
@@ -612,6 +631,7 @@ export class EntityManager {
     const mat = e.material;
     mat.color.copy(m.col);
     mat.emissive.copy(m.em);
+    paintVibrant(mat, m, mi % morphCount);
     // metalness/roughness/transparent/opacity/side/wireframe/emissive + depthWrite are all set
     // by applyRenderModeTo on top of the morphotype base (CONTRACTS V7.3).
     applyRenderModeTo(mat, ctx.state.renderMode, m);

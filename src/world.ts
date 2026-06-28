@@ -1055,11 +1055,16 @@ export class World {
     this.cosmicWeb.update(t); // V11: far-field cosmic-web shimmer (additive backdrop, no rng)
     this.goldLattice.update(t); // V11: floating gold architecture tumble (additive, no rng)
     this.quantumLattice.update(t); // V11: neon sacred-geometry shells (additive, no rng)
-    // V-MECHA: the fusion abomination reads world chaos (one-way), then writhes (additive, no rng).
-    this.mechalogodrom.setChaos(this.state.chaos / CHAOS_MAX);
+    // V-MECHA / V-ABC: chaos + apex-brain vitality/transcendence drive the visual intensity (read-only).
+    const baseChaos = this.state.chaos / CHAOS_MAX;
+    const apex = this.lastApexThought;
+    const visChaos = apex
+      ? clamp(baseChaos + apex.transcendence * 0.42 + apex.vitality * 0.28 - apex.agony * 0.12, 0, 1)
+      : baseChaos;
+    this.mechalogodrom.setChaos(visChaos);
     this.mechalogodrom.update(t, dt);
     // V-ABC: the 100 alphabet archetypes bob/spin/pulse across the dome (chaos quickens them).
-    this.alphabetPantheon.setChaos(this.state.chaos / CHAOS_MAX);
+    this.alphabetPantheon.setChaos(visChaos);
     this.alphabetPantheon.update(t);
     // F-NHI V10: alien bodies follow + morph their NHI every frame (guarded; additive viz only).
     if (this.nhiBody.count > 0) {

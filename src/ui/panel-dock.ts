@@ -14,7 +14,7 @@ const STYLE = `
 /* V83: ONE centered single-row pill dock above the toolbar (#bar). The bar itself is clickable
    (pointer-events:auto) — the V82 pass-through experiment let clicks fall through gaps AND fought
    onboarding's ghost overlay bug; children still neutralise their own fixed positioning. */
-#${DOCK_ID}{position:fixed;left:50%;transform:translateX(-50%);bottom:48px;z-index:75;display:flex;
+#${DOCK_ID}{position:fixed;left:50%;transform:translateX(-50%);bottom:42px;z-index:75;display:flex;
   align-items:center;gap:6px;flex-wrap:nowrap;justify-content:center;width:max-content;
   max-width:calc(100vw - 16px);overflow:hidden;scrollbar-width:none;
   padding:5px 10px;border-radius:26px;border:1px solid rgba(120,150,210,.32);
