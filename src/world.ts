@@ -2799,41 +2799,58 @@ export class World {
     if (!listEl) return;
     // The ui-shell ships #algo-active as a container with an inner name span.
     this.algoActiveEl = document.getElementById('algo-active-name');
-    const n = ALGOS.length;
-    const frag = document.createDocumentFragment();
-    for (let i = 0; i < n; i++) {
-      const algo = ALGOS[i];
-      if (!algo) continue;
-      const row = document.createElement('div');
-      row.className = 'algo-row';
-      row.dataset['algo'] = String(i);
-      row.setAttribute('role', 'option'); // #algo-list is a role=listbox
-      row.setAttribute('tabindex', '0');
-      row.setAttribute('aria-label', `Select ${algo.name} sorting field`);
-      // V7.2: a deterministic per-field accent hue + a distinct leading glyph so every
-      // row reads uniquely (CSS consumes `--algo-hue`; the glyph is its own span).
-      row.style.setProperty('--algo-hue', String(Math.round((i * 360) / n)));
-      const glyph = document.createElement('span');
-      glyph.className = 'algo-glyph';
-      glyph.setAttribute('aria-hidden', 'true');
-      glyph.textContent = ALGO_GLYPHS[i % ALGO_GLYPHS.length] ?? '◆';
-      const name = document.createElement('span');
-      name.className = 'algo-name';
-      name.textContent = algo.name;
-      const prog = document.createElement('div');
-      prog.className = 'algo-prog';
-      row.append(glyph, name, prog);
-      row.addEventListener('click', () => this.selectAlgo(i, true));
-      row.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          this.selectAlgo(i, true);
-        }
-      });
-      frag.appendChild(row);
-      this.algoRows.push(row);
+
+    const existing = listEl.querySelectorAll<HTMLElement>('.algo-row');
+    if (existing.length > 0) {
+      for (const row of existing) {
+        const idx = Number(row.dataset['algo']);
+        if (!Number.isFinite(idx)) continue;
+        this.algoRows.push(row);
+        row.addEventListener('click', () => this.selectAlgo(idx, true));
+        row.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            this.selectAlgo(idx, true);
+          }
+        });
+      }
+    } else {
+      const n = ALGOS.length;
+      const frag = document.createDocumentFragment();
+      for (let i = 0; i < n; i++) {
+        const algo = ALGOS[i];
+        if (!algo) continue;
+        const row = document.createElement('div');
+        row.className = 'algo-row';
+        row.dataset['algo'] = String(i);
+        row.setAttribute('role', 'option'); // #algo-list is a role=listbox
+        row.setAttribute('tabindex', '0');
+        row.setAttribute('aria-label', `Select ${algo.name} sorting field`);
+        // V7.2: a deterministic per-field accent hue + a distinct leading glyph so every
+        // row reads uniquely (CSS consumes `--algo-hue`; the glyph is its own span).
+        row.style.setProperty('--algo-hue', String(Math.round((i * 360) / n)));
+        const glyph = document.createElement('span');
+        glyph.className = 'algo-glyph';
+        glyph.setAttribute('aria-hidden', 'true');
+        glyph.textContent = ALGO_GLYPHS[i % ALGO_GLYPHS.length] ?? '◆';
+        const name = document.createElement('span');
+        name.className = 'algo-name';
+        name.textContent = algo.name;
+        const prog = document.createElement('div');
+        prog.className = 'algo-prog';
+        row.append(glyph, name, prog);
+        row.addEventListener('click', () => this.selectAlgo(i, true));
+        row.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            this.selectAlgo(i, true);
+          }
+        });
+        frag.appendChild(row);
+        this.algoRows.push(row);
+      }
+      listEl.appendChild(frag);
     }
-    listEl.appendChild(frag);
     // V7.2 RUN ALL / AUTO controls (degrade silently if the ui-shell omits them).
     this.algoAllBtn = document.getElementById('algo-all');
     this.algoAutoBtn = document.getElementById('algo-auto');

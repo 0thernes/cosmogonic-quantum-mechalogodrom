@@ -25,6 +25,7 @@ import './ui/audit-dock';
 import { initCenterHud } from './ui/center-hud';
 import { initUiColumns } from './ui/ui-columns';
 import { syncBottomDockHeight } from './ui/bottom-dock';
+import { mountAlgoPickerShell } from './ui/algo-picker-shell';
 // Toolbar keyboard navigation: roving tabindex + arrow keys for #bar buttons.
 import { initToolbarKeyboard } from './ui/toolbar';
 // Onboarding overlay (V81): one-time, dismissible first-run hint.
@@ -41,8 +42,10 @@ const log = createLogger('main');
 /** Shell layout before WebGL boot — panels must paint in final positions on first frame. */
 function initAppShell(): void {
   initUiColumns();
+  mountAlgoPickerShell();
   initCenterHud();
   syncBottomDockHeight();
+  document.documentElement.classList.add('cqm-shell-ready');
 }
 
 const canvas = document.getElementById('c');

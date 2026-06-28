@@ -725,16 +725,29 @@ a:focus-visible {
   }
 }
 
-/* Empty-list affordance: before the integrator populates #algo-list, show a hint
-   instead of a blank box (matches the audit-list empty state pattern). */
+/* Empty-list affordance: only while the shell has not yet mounted rows (WebGL boot is late). */
 .algo-list:empty::after {
-  content: 'loading fields…';
+  content: 'sorting fields…';
   display: block;
-  padding: 8px 4px;
-  font: 300 var(--text-4xs) var(--font-ui);
-  letter-spacing: 1px;
+  padding: 10px 6px;
+  font: 500 var(--text-3xs) var(--font-ui);
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--color-ink-ghost);
+  color: rgba(160, 200, 255, 0.55);
+  animation: cqm-algo-pulse 1.2s ease-in-out infinite;
+}
+@keyframes cqm-algo-pulse {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 0.95;
+  }
+}
+html.cqm-shell-ready .algo-list:empty::after {
+  content: '';
+  animation: none;
 }
 
 /* ── Control-pad held state ─────────────────────────────────────
