@@ -35,8 +35,11 @@ the "rolling" reliability path: one dead endpoint or exhausted key no longer end
 
 | Provider (picker id)          | Env var to enable     | Free tier (per the June-2026 report)             | Get a key                       |
 | ----------------------------- | --------------------- | ------------------------------------------------ | ------------------------------- |
-| Pollinations (`pollinations`) | _(none)_              | No key, anonymous; can rate-limit (HTTP 429)     | —                               |
-| LLM7 (`llm7`)                 | _(none)_              | No key, 30 RPM anonymous                         | optional token at token.llm7.io |
+| LLM7 · Codestral (`llm7`)     | _(none)_              | No key, 30 RPM anonymous, tool-calling, 32K ctx  | optional token at token.llm7.io |
+| LLM7 · Devstral (`llm7-devstral`) | _(none)_          | No key, 30 RPM anonymous, tool-calling, 384K ctx | optional token at token.llm7.io |
+| Pollinations (`pollinations`) | `POLLINATIONS_API_KEY`| Now keyed (gen.pollinations.ai); legacy API deprecated | enter.pollinations.ai      |
+| SambaNova (`sambanova`)       | `SAMBANOVA_API_KEY`   | Free tier, Llama-3.3-70B, 96K ctx, fast inference | cloud.sambanova.ai              |
+| Together AI (`together`)      | `TOGETHER_API_KEY`    | Free Llama-3.3-70B-Instruct-Turbo-Free model     | api.together.ai                 |
 | Groq (`groq`)                 | `GROQ_API_KEY`        | 30 RPM, fast LPU inference, no card              | console.groq.com                |
 | Cerebras (`cerebras`)         | `CEREBRAS_API_KEY`    | 1M tokens/day, fastest throughput, 8K ctx (free) | cloud.cerebras.ai               |
 | OpenRouter (`openrouter`)     | `OPENROUTER_API_KEY`  | `:free` models (auto-router), 20 RPM / 50 RPD    | openrouter.ai                   |
@@ -106,10 +109,14 @@ bun dev
 ```
 
 With no env vars, the chain head is **FreeLLMAPI** (the `localhost:3001` proxy); when that proxy
-isn't running the box falls through to the key-less **LLM7** then **Pollinations**, so it answers
-immediately out of the box. Free anonymous endpoints can rate-limit; set any one key above for
-reliable answers. (On the static Pages build the browser path is **LLM7-only** — see _Static deploy_
-above.)
+isn't running the box falls through to the key-less **LLM7 Codestral** then **LLM7 Devstral** (two
+separate models = two separate rate-limit buckets), so it answers immediately out of the box.
+Pollinations is now **keyed only** (the legacy `text.pollinations.ai` endpoint is deprecated with a
+queue limit of 1; the new `gen.pollinations.ai` requires an API key from `enter.pollinations.ai`).
+Free anonymous endpoints can rate-limit; set any one key above for reliable answers. A built-in
+800ms cooldown pauses between failover attempts when the previous provider returned 429, giving
+the rate-limit window time to reset. (On the static Pages build the browser path is **LLM7-only** —
+see _Static deploy_ below.)
 
 > The dev server registers routes at boot, so after changing env vars (or pulling new provider
 > presets) **restart `bun dev`** — `--hot` does not re-register `Bun.serve` routes.
@@ -135,11 +142,10 @@ educational conversation only.
 - **Provider = LLM7 only**, trying its two anonymous models in order: `codestral-latest` →
   `devstral-small-2:24b`. Both answer from the browser with **no token and no CAPTCHA** (CORS open,
   OpenAI-shaped JSON). The header shows `llm7 · static` when a browser-direct answer is served.
-- **Why not Pollinations?** It's the server's other key-less provider and works from the server/curl,
-  but it now **gates _browser_ requests behind a Cloudflare Turnstile token** (`{"error":"Missing
-Turnstile token"}`) — so it is deliberately **excluded from the client path** (it would always fail
-  from a static page). Headless tests (curl/`bun`) don't trigger Turnstile and give a false positive,
-  so this must be verified in a real browser.
+- **Why not Pollinations?** The legacy `text.pollinations.ai` endpoint is deprecated (queue limit
+  of 1, 429 "Queue full for IP"). The new `gen.pollinations.ai` requires an API key — it is still
+  available as a **keyed server-side provider** (`POLLINATIONS_API_KEY`), but deliberately excluded
+  from the browser-direct static path (no key in the bundle).
 - **No repo tools, no keys.** `/read /ls /grep /run` need the server sandbox and stay disabled here
   (they answer with a clear "run `bun dev`" notice); only anonymous providers are ever called from the
   client, so no key or secret lives in the bundle. The `🩺` diagnostics, with no server present, probe

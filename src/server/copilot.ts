@@ -48,15 +48,45 @@ const PRESETS: readonly ProviderPreset[] = [
     // unavailable"), which silently killed LLM7 in the failover chain. `codestral-latest` is its
     // free `turbo` tier — anonymous, tool-calling, ~100% uptime — the SAME model the static-deploy
     // browser fallback uses (src/ui/copilot.ts STATIC_AI_MODELS) for parity.
-    label: 'LLM7 (no key)',
+    label: 'LLM7 · Codestral (no key)',
     endpoint: 'https://api.llm7.io/v1/chat/completions',
     model: 'codestral-latest',
   },
   {
+    id: 'llm7-devstral',
+    // Key-less — LLM7's SECOND free `turbo` tier model (anonymous, tool-calling, 384K context).
+    // Splitting LLM7 into 2 presets gives 2 keyless failover slots: if codestral 429s, devstral is
+    // tried next (separate model ⇒ separate rate-limit bucket on LLM7's side).
+    label: 'LLM7 · Devstral (no key)',
+    endpoint: 'https://api.llm7.io/v1/chat/completions',
+    model: 'devstral-small-2:24b',
+  },
+  {
     id: 'pollinations',
-    label: 'Pollinations (no key)',
-    endpoint: 'https://text.pollinations.ai/openai',
+    // Pollinations migrated to gen.pollinations.ai — the legacy text.pollinations.ai/openai endpoint
+    // is deprecated (queue limit of 1, 429 “Queue full for IP”). The new endpoint requires an API
+    // key from enter.pollinations.ai. Kept as a keyed provider so users with a Pollinations key
+    // can still use it; no longer keyless.
+    label: 'Pollinations · openai',
+    endpoint: 'https://gen.pollinations.ai/v1/chat/completions',
     model: 'openai',
+    keyEnv: 'POLLINATIONS_API_KEY',
+  },
+  {
+    id: 'sambanova',
+    // SambaNova Cloud — free tier, OpenAI-compatible, fast inference. 96K context.
+    label: 'SambaNova · Llama-3.3-70B',
+    endpoint: 'https://api.sambanova.ai/v1/chat/completions',
+    model: 'Meta-Llama-3.3-70B-Instruct',
+    keyEnv: 'SAMBANOVA_API_KEY',
+  },
+  {
+    id: 'together',
+    // Together AI — has a free Llama-3.3-70B-Instruct-Turbo-Free model. OpenAI-compatible.
+    label: 'Together · Llama-3.3-70B Free',
+    endpoint: 'https://api.together.xyz/v1/chat/completions',
+    model: 'meta-llama/Llama-3.3-70B-Instruct-Turbo-Free',
+    keyEnv: 'TOGETHER_API_KEY',
   },
   {
     id: 'groq',
@@ -324,6 +354,13 @@ const MAX_STEPS = 5;
 const FETCH_TIMEOUT_MS = 40_000;
 /** Cap on messages carried per request (defends the provider + our prompt budget). */
 const MAX_MESSAGES = 24;
+/** Brief pause between failover attempts when the previous provider was rate-limited (429). */
+const RATE_LIMIT_COOLDOWN_MS = 800;
+
+/** Resolve after `ms` milliseconds (used to pause between rate-limited failover attempts). */
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 /** A chat message in the OpenAI wire shape (the subset we send/receive). */
 export interface ChatMessage {
@@ -548,9 +585,16 @@ export async function runAgent(history: ChatMessage[], providerId?: string): Pro
   }
 
   let lastErr: unknown = null;
+  let lastWas429 = false;
   for (let i = 0; i < order.length; i++) {
     const prov = order[i];
     if (!prov) continue;
+    // If the previous provider was rate-limited (429), pause briefly before trying the next one.
+    // This gives the rate-limit window a moment to reset — without it, rapid-fire attempts cascade
+    // 429s across providers that share IP-based limits. Connection-refused (FreeLLMAPI not running)
+    // does NOT trigger the delay (lastWas429 stays false).
+    if (lastWas429) await sleep(RATE_LIMIT_COOLDOWN_MS);
+    lastWas429 = false;
     try {
       const reply = await runLoop(prov, history, steps);
       // Suppress the failover note when the only thing skipped was the IMPLICIT FreeLLMAPI proxy (not
@@ -571,11 +615,13 @@ export async function runAgent(history: ChatMessage[], providerId?: string): Pro
       };
     } catch (e) {
       lastErr = e;
+      const msg = e instanceof Error ? e.message : String(e);
+      lastWas429 = /\b429\b/.test(msg);
     }
   }
   return {
     ok: false,
-    reply: `Every available AI provider was unreachable (${lastErr instanceof Error ? lastErr.message : String(lastErr)}). It may be rate-limited or disabled — try again shortly, or pick another provider in the header.`,
+    reply: `Every available AI provider was unreachable (${lastErr instanceof Error ? lastErr.message : String(lastErr)}). It may be rate-limited or disabled — try again shortly, or pick another provider in the header. Tip: set any one free API key (e.g. GROQ_API_KEY, GEMINI_API_KEY, or SAMBANOVA_API_KEY) for reliable, non-rate-limited answers — see docs/COPILOT-PROVIDERS-2026-06-26.md.`,
     steps,
     provider: order[0] ? `${order[0].model} @ ${safeHost(order[0].endpoint)}` : 'none',
   };

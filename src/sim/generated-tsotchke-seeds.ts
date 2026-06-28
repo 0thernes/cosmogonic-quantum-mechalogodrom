@@ -4,44 +4,37 @@
 // This file makes Cosmogonic actually BUILD WITH the Tsotchke Repo Folder.
 
 export const TSOTCHKE_HARVEST = {
-  "eskCount": 1436,
-  "eskSamples": [
-    "Eshkol/eshkol_repo/benchmarks/activation_bench.esk",
-    "Eshkol/eshkol_repo/benchmarks/conv2d_bench.esk",
-    "Eshkol/eshkol_repo/benchmarks/gpu_vs_cpu_bench.esk",
-    "Eshkol/eshkol_repo/benchmarks/matmul_bench.esk",
-    "Eshkol/eshkol_repo/examples/autodiff.esk",
-    "Eshkol/eshkol_repo/examples/bayesian_diagnosis.esk",
-    "Eshkol/eshkol_repo/examples/consciousness.esk",
-    "Eshkol/eshkol_repo/examples/differentiable_physics.esk"
+  eskCount: 1436,
+  eskSamples: [
+    'Eshkol/eshkol_repo/benchmarks/activation_bench.esk',
+    'Eshkol/eshkol_repo/benchmarks/conv2d_bench.esk',
+    'Eshkol/eshkol_repo/benchmarks/gpu_vs_cpu_bench.esk',
+    'Eshkol/eshkol_repo/benchmarks/matmul_bench.esk',
+    'Eshkol/eshkol_repo/examples/autodiff.esk',
+    'Eshkol/eshkol_repo/examples/bayesian_diagnosis.esk',
+    'Eshkol/eshkol_repo/examples/consciousness.esk',
+    'Eshkol/eshkol_repo/examples/differentiable_physics.esk',
   ],
-  "totalScanned": 3096,
-  "timestamp": "corpus:1436esk/3096files",
-  "note": "Harvested directly from local Tsotchke Repo Folder at build time. Eshkol .esk programs are the heritable substrate for digital biologics sentience. All other Tsotchke mirrors (moonlab, libirrep, QGT, spin, quake, etc.) provide the additional physics/geometry/order kernels."
+  totalScanned: 3096,
+  timestamp: 'corpus:1436esk/3096files',
+  note: 'Harvested directly from local Tsotchke Repo Folder at build time. Eshkol .esk programs are the heritable substrate for digital biologics sentience. All other Tsotchke mirrors (moonlab, libirrep, QGT, spin, quake, etc.) provide the additional physics/geometry/order kernels.',
 } as const;
 
 export const ESK_SAMPLE_PROGRAMS: readonly string[] = [
-  "Eshkol/eshkol_repo/benchmarks/activation_bench.esk",
-  "Eshkol/eshkol_repo/benchmarks/conv2d_bench.esk",
-  "Eshkol/eshkol_repo/benchmarks/gpu_vs_cpu_bench.esk",
-  "Eshkol/eshkol_repo/benchmarks/matmul_bench.esk",
-  "Eshkol/eshkol_repo/examples/autodiff.esk",
-  "Eshkol/eshkol_repo/examples/bayesian_diagnosis.esk",
-  "Eshkol/eshkol_repo/examples/consciousness.esk",
-  "Eshkol/eshkol_repo/examples/differentiable_physics.esk"
+  'Eshkol/eshkol_repo/benchmarks/activation_bench.esk',
+  'Eshkol/eshkol_repo/benchmarks/conv2d_bench.esk',
+  'Eshkol/eshkol_repo/benchmarks/gpu_vs_cpu_bench.esk',
+  'Eshkol/eshkol_repo/benchmarks/matmul_bench.esk',
+  'Eshkol/eshkol_repo/examples/autodiff.esk',
+  'Eshkol/eshkol_repo/examples/bayesian_diagnosis.esk',
+  'Eshkol/eshkol_repo/examples/consciousness.esk',
+  'Eshkol/eshkol_repo/examples/differentiable_physics.esk',
 ];
 
 // Convenience: a small set of numeric "genomes" derived from real .esk file name hashes.
 // These can seed primordial-soup / digital-biologics with authentic Eshkol DNA.
 export const ESK_DERIVED_SEEDS: readonly number[] = [
-  1316209996,
-  606386545,
-  422515204,
-  1369330040,
-  1146061712,
-  2856991252,
-  23463820,
-  34062416
+  1316209996, 606386545, 422515204, 1369330040, 1146061712, 2856991252, 23463820, 34062416,
 ];
 
 export function getEshkolProgramFingerprint(index: number): number {

@@ -37,6 +37,15 @@ const KEY_ENVS = [
   'HF_TOKEN',
   'HF_TOKENS',
   'HF_TOKEN_2',
+  'POLLINATIONS_API_KEY',
+  'POLLINATIONS_API_KEYS',
+  'POLLINATIONS_API_KEY_2',
+  'SAMBANOVA_API_KEY',
+  'SAMBANOVA_API_KEYS',
+  'SAMBANOVA_API_KEY_2',
+  'TOGETHER_API_KEY',
+  'TOGETHER_API_KEYS',
+  'TOGETHER_API_KEY_2',
 ];
 const saved = new Map<string, string | undefined>();
 
@@ -67,6 +76,10 @@ describe('availableProviders — env-gated free-LLM list', () => {
     }
     // A keyed provider must NOT be offered when its key is absent.
     expect(list.some((p) => p.id === 'groq')).toBe(false);
+    expect(list.some((p) => p.id === 'pollinations')).toBe(false); // now keyed
+    // Both keyless LLM7 models should appear as separate entries.
+    expect(list.some((p) => p.id === 'llm7')).toBe(true);
+    expect(list.some((p) => p.id === 'llm7-devstral')).toBe(true);
   });
 
   test('setting a provider key surfaces exactly that provider (still one default)', () => {
@@ -155,6 +168,21 @@ describe('resolveProvider — default-deny resolution (security)', () => {
     const got = resolveProvider('groq');
     expect(got.id).toBe('groq');
     expect(got.endpoint).toContain('groq');
+  });
+
+  test('Pollinations is now keyed: denied without POLLINATIONS_API_KEY, resolves with it', () => {
+    expect(resolveProvider('pollinations').id).toBe('freellmapi'); // no key → default-deny
+    process.env['POLLINATIONS_API_KEY'] = 'pk_test';
+    const got = resolveProvider('pollinations');
+    expect(got.id).toBe('pollinations');
+    expect(got.endpoint).toContain('gen.pollinations.ai');
+  });
+
+  test('llm7-devstral resolves to the devstral model (keyless, separate from llm7)', () => {
+    const got = resolveProvider('llm7-devstral');
+    expect(got.id).toBe('llm7-devstral');
+    expect(got.model).toBe('devstral-small-2:24b');
+    expect(got.endpoint).toContain('api.llm7.io');
   });
 
   test('the custom id resolves only when its endpoint env is set, else the default', () => {
