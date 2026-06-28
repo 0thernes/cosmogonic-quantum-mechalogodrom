@@ -4,6 +4,7 @@
  * Wraps #bar in a compact scroll shell with ‹ › buttons (no fat horizontal scrollbar) and adds roving
  * tabindex so keyboard users can move between buttons with arrow keys, Home, and End.
  */
+import { dockBottomBar } from './bottom-dock';
 
 const SHELL_ID = 'bar-shell';
 
@@ -34,6 +35,7 @@ export function initToolbarScroll(doc: Document = document): void {
 
   bar.parentNode?.insertBefore(shell, bar);
   shell.append(prev, bar, next);
+  dockBottomBar(shell, document);
 }
 
 /** Initialize roving tabindex on the toolbar. Idempotent. */

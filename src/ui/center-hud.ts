@@ -10,6 +10,7 @@
  * open/close + repaint logic runs), re-homes them to a centered `!important` slot, and enforces
  * one-open-at-a-time. UI shell only; no sim coupling, no rng.
  */
+import { dockBottomBar, syncBottomDockHeight, reorderBottomDock } from './bottom-dock';
 
 interface Slot {
   name: string;
@@ -99,14 +100,11 @@ body:has(#cqm-hud-nav) #cqm-dock {
    chooseNavMode() measures the content against the live gap width and shows the named tabs only when
    they fit, else the clean ‹ CURRENT › cycler — so it never clips. */
 #cqm-hud-nav {
-  position: fixed;
-  left: var(--cqm-hud-left, 8px);
-  right: var(--cqm-hud-right, 8px);
+  position: static;
   width: max-content;
   max-width: calc(100vw - 16px);
   margin-inline: auto;
-  /* V84: 42px clears the #bar toolbar with a tight 4px gap (was 66px — the two bars felt too far apart). */
-  bottom: var(--cqm-nav-bottom, 42px);
+  bottom: auto;
   z-index: 73;
   display: flex;
   align-items: center;
@@ -198,13 +196,13 @@ body:has(#cqm-hud-nav) #cqm-dock {
 #cqm-hud-nav.cqm-hud-tabs .cqm-hud-label {
   display: none;
 }
-/* V85: persistent Docs/Spec/Lab/Access/Set strip — NEVER hidden by chooseNavMode. */
+/* V85: persistent Docs/Spec/Lab/Access/Set — lives in #cqm-bottom-stack (app.css), never hidden. */
 #cqm-persist-nav {
-  position: fixed;
-  bottom: calc(78px + env(safe-area-inset-bottom, 0px));
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 77;
+  position: static;
+  transform: none;
+  bottom: auto;
+  left: auto;
+  z-index: auto;
   display: flex;
   flex-wrap: nowrap;
   align-items: center;
@@ -362,8 +360,19 @@ function fitHud(): void {
     const mid = vw / 2;
     let leftR = 0; // right edge of the left column (Telemetry / Sorting Fields)
     let rightL = vw; // left edge of the right column (Observatory / Control)
+    const leftCol = document.getElementById('ui-col-left');
+    const rightCol = document.getElementById('ui-col-right');
+    if (leftCol) {
+      const r = leftCol.getBoundingClientRect();
+      if (r.width > 8) leftR = Math.max(leftR, r.right);
+    }
+    if (rightCol) {
+      const r = rightCol.getBoundingClientRect();
+      if (r.width > 8) rightL = Math.min(rightL, r.left);
+    }
     for (const el of Array.from(ui.children)) {
       if (!(el instanceof HTMLElement) || HUD_IDS.has(el.id)) continue;
+      if (el.id === 'ui-col-left' || el.id === 'ui-col-right') continue;
       const r = el.getBoundingClientRect();
       if (r.width < 8 || r.height < 8) continue; // hidden / zero-box
       if (r.right <= mid) leftR = Math.max(leftR, r.right);
@@ -378,12 +387,13 @@ function fitHud(): void {
   // Vertical: sit the HUD just above the HIGHEST bar (nav launcher / toolbar) — adapts if a bar grows.
   const vh = window.innerHeight;
   let barsTop = vh;
-  for (const id of ['cqm-persist-nav', 'cqm-hud-nav', 'bar-shell', 'bar']) {
+  for (const id of ['cqm-bottom-stack']) {
     const el = document.getElementById(id);
     if (!el) continue;
     const r = el.getBoundingClientRect();
     if (r.height > 4) barsTop = Math.min(barsTop, r.top);
   }
+  syncBottomDockHeight();
   if (barsTop < vh)
     root.style.setProperty('--cqm-hud-bottom', `${Math.round(vh - barsTop + 10)}px`);
   else root.style.removeProperty('--cqm-hud-bottom');
@@ -538,6 +548,7 @@ function buildNav(doc: Document): void {
   nav.appendChild(ghostBtn);
   nav.appendChild(mk('✕', 'Close', 'cqm-hud-close', () => showOnly(-1)));
   doc.body.appendChild(nav);
+  dockBottomBar(nav, doc);
 }
 
 /** V85: always-visible Docs / Spec / Lab / Access / Set — never dropped by chooseNavMode. */
@@ -582,6 +593,7 @@ function buildPersistentNav(doc: Document): void {
     );
   }
   doc.body.appendChild(strip);
+  dockBottomBar(strip, doc);
 }
 
 /** Each dock toggle still opens "its" panel — but centered, and closing the others (single-open). */
@@ -627,9 +639,10 @@ export function initCenterHud(doc: Document = document): void {
   style.id = 'cqm-hud-style';
   style.textContent = STYLE;
   doc.head.appendChild(style);
-  buildNav(doc); // removes the old nav + rebuilds with the current code
+  buildNav(doc);
   buildPersistentNav(doc);
-  wireDockToggles(); // dataset-guarded: binds each toggle once
+  reorderBottomDock(doc);
+  wireDockToggles();
   doc.removeEventListener('keydown', onKeydown);
   doc.addEventListener('keydown', onKeydown);
   // V69: keep the centre-column fit live — re-measure on resize / orientation change (re-bound cleanly
@@ -647,6 +660,7 @@ export function initCenterHud(doc: Document = document): void {
   // on the ‹ CURRENT › cycler until the next animation frame — and under heavy HMR churn (a co-editor
   // saving repeatedly) that frame can be starved by back-to-back reboots, leaving it stuck on the cycler.
   fitHud();
+  syncBottomDockHeight();
 }
 
 // HMR — hot-replace the HUD IN PLACE (re-inject the new CSS + rebuild the nav) without a full page

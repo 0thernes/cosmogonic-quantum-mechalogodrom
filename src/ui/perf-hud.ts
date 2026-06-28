@@ -58,10 +58,11 @@ const NOOP: PerfHud = { update: () => undefined };
 export function mountPerfHud(currentTier: string): PerfHud {
   if (typeof document === 'undefined' || !document.body) return NOOP;
 
+  const mountParent = document.getElementById('perf-slot') ?? document.body;
+  if (document.getElementById('perf-hud')) return NOOP;
+
   const el = document.createElement('div');
   el.id = 'perf-hud';
-
-  const mountParent = document.getElementById('perf-slot') ?? document.body;
 
   const fpsEl = document.createElement('span');
   const qEl = document.createElement('span');

@@ -73,9 +73,9 @@
   --font-mono: 'JetBrains Mono', 'SF Mono', ui-monospace, monospace;
   /* Micro type scale (font-size only — line-height inherits, matching
      the arbitrary text-[Npx] utilities these tokens replaced). */
-  --text-xs: 15px; /* primary panel values — telemetry counters, key readouts */
-  --text-2xs: 14px; /* telemetry values, panel headers, toast */
-  --text-3xs: 13px; /* toolbar captions, algo name, docs/lab links */
+  --text-xs: 16px;
+  --text-2xs: 15px;
+  --text-3xs: 14px;
   --text-4xs: 11px; /* telemetry keys, env rows, control-pad captions */
   --text-display: clamp(14px, 4vw, 28px); /* sector banner #sec */
   --tracking-display: clamp(4px, 1.5vw, 14px); /* #sec letterspacing */
@@ -274,14 +274,38 @@ a:focus-visible {
   background: --alpha(var(--color-danger) / 25%);
 }
 
-/* ── Bottom toolbar scroll shell (src/ui/toolbar.ts) ────────────
-   Hides the fat horizontal scrollbar; ‹ › buttons scroll one group at a time. */
-#bar-shell {
+/* ── Unified bottom dock stack (V86) ───────────────────────────── */
+#cqm-bottom-stack {
   position: fixed;
   left: 50%;
   transform: translateX(-50%);
-  bottom: calc(6px + env(safe-area-inset-bottom, 0px));
-  z-index: 76;
+  bottom: calc(4px + env(safe-area-inset-bottom, 0px));
+  z-index: 80;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 3px;
+  max-width: calc(100vw - 8px);
+  pointer-events: none;
+}
+#cqm-bottom-stack > * {
+  pointer-events: auto;
+  position: static !important;
+  transform: none !important;
+  left: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+  margin: 0 !important;
+}
+#cqm-bottom-stack #bar-shell {
+  width: max-content;
+  max-width: calc(100vw - 8px);
+}
+
+/* ── Bottom toolbar scroll shell (src/ui/toolbar.ts) ────────────
+   Hides the fat horizontal scrollbar; ‹ › buttons scroll one group at a time. */
+#bar-shell {
   display: flex;
   align-items: center;
   gap: 4px;
@@ -331,10 +355,10 @@ a:focus-visible {
    Replaces the inline style.cssText block with typed, theme-aware CSS. */
 #perf-hud {
   position: fixed;
-  left: max(10px, env(safe-area-inset-left, 0px));
-  bottom: calc(100px + env(safe-area-inset-bottom, 0px));
+  left: max(6px, env(safe-area-inset-left, 0px));
+  bottom: calc(var(--cqm-bottom-h, 108px) + 4px);
   z-index: 39;
-  font: 13px/1.45 var(--font-mono, ui-monospace, monospace);
+  font: 14px/1.5 var(--font-mono, ui-monospace, monospace);
   color: #e8f0ff;
   background: rgba(8, 14, 30, 0.92);
   border: 1px solid rgba(120, 160, 220, 0.35);
@@ -345,21 +369,6 @@ a:focus-visible {
   backdrop-filter: blur(12px);
   box-shadow: 0 4px 18px rgba(0, 0, 0, 0.45);
   pointer-events: auto;
-}
-/* Desktop grid: perf HUD in left flex stack — flush under Sorting Fields. */
-@media (min-width: 769px) and (pointer: fine) and (orientation: landscape) {
-  #perf-slot #perf-hud {
-    position: static;
-    width: 100%;
-    max-width: 100%;
-    margin: 0;
-    padding: 8px 10px;
-    font-size: 14px;
-  }
-  #perf-slot #perf-hud .perf-hud-tier {
-    font-size: 13px;
-    padding: 4px 9px;
-  }
 }
 #perf-hud .perf-hud-row {
   display: flex;
@@ -785,20 +794,13 @@ a:focus-visible {
   /* V72: clear BOTH bottom dock rows — the #bar toolbar (~46px) AND the nav launcher above it (its top
      sits ~90px off the bottom). 96px ends SORTING FIELDS (the tall lower-left #algoP) a touch higher so
      it no longer runs flush into the bottom-dock band — "a little shorter… everything fits nicer". */
-  padding-bottom: calc(108px + env(safe-area-inset-bottom, 0px));
+  padding-bottom: calc(var(--cqm-bottom-h, 108px) + 6px);
   grid-template-columns: clamp(200px, 20vw, 280px) 1fr clamp(260px, 26vw, 400px);
-  grid-template-rows: minmax(0, 1fr) minmax(0, 1fr) auto auto auto;
-  /* V85b: `left` flex column (tel + agp + perf); obs spans 2 rows; right stacks ctl/ralg/rset. */
-  grid-template-areas:
-    'left . obs'
-    'left . obs'
-    ' . . ctl'
-    ' . . ralg'
-    ' . . rset';
+  grid-template-rows: 1fr;
+  grid-template-areas: 'left . right';
 }
-.ui-col-left {
-  grid-area: left;
-  grid-row: 1 / -1;
+.ui-col-left,
+.ui-col-right {
   display: flex;
   flex-direction: column;
   gap: 5px;
@@ -807,7 +809,14 @@ a:focus-visible {
   pointer-events: none;
   align-self: stretch;
 }
-.ui-col-left > * {
+.ui-col-left {
+  grid-area: left;
+}
+.ui-col-right {
+  grid-area: right;
+}
+.ui-col-left > *,
+.ui-col-right > * {
   pointer-events: auto;
   min-width: 0;
 }
@@ -818,36 +827,65 @@ a:focus-visible {
     min-height: 0;
     max-height: none;
     height: auto;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .ui-col-left #sP > .panel-body,
+  .ui-col-left #algoP > .panel-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
   }
   .ui-col-left #perf-slot {
     flex: 0 0 auto;
   }
-}
-@media (min-width: 769px) and (pointer: fine) and (orientation: landscape) {
-  #sP,
-  #algoP,
-  #oP {
-    max-height: none;
+  .ui-col-right #oP {
+    flex: 1 1 55%;
     min-height: 0;
-    height: 100%;
+    max-height: none;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
   }
-  #algoP {
-    align-self: stretch;
-  }
-  #oP > .obs-body,
-  #oP .panel-body {
+  .ui-col-right #oP > .obs-body,
+  .ui-col-right #oP .panel-body {
     flex: 1 1 auto;
     min-height: 0;
-    max-height: none;
     overflow-y: auto;
+    overflow-x: hidden;
   }
-  #cP {
-    max-height: min(32vh, 280px);
+  .ui-col-right #cP {
+    flex: 0 0 auto;
+    max-height: min(26vh, 220px);
     overflow: hidden;
+    display: flex;
+    flex-direction: column;
   }
-  #ui > #alg,
-  #ui > #hud-vsr {
-    max-height: min(24vh, 200px);
+  .ui-col-right #cP > .panel-body {
+    overflow-y: auto;
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+  .ui-col-right #alg {
+    flex: 0 0 auto;
+  }
+  .ui-col-right #hud-vsr {
+    flex: 0 0 auto;
+    max-height: none;
+  }
+  #perf-slot #perf-hud {
+    position: static;
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    padding: 8px 10px;
+    font-size: 14px;
+  }
+  #perf-slot #perf-hud .perf-hud-tier {
+    font-size: 13px;
+    padding: 4px 9px;
   }
 }
 #ui > * {
@@ -856,7 +894,7 @@ a:focus-visible {
   min-height: 0;
 }
 #oP {
-  grid-area: obs;
+  /* inside .ui-col-right flex stack */
 }
 /* V51/V53: AUDIT is a dock-toggled fixed overlay on EVERY viewport — like the other dock panels
    (NEURAL/MARKET/ARCHITECT/…), NOT a left-column grid panel and NOT an edge sheet. So it never crowds
@@ -881,15 +919,12 @@ a:focus-visible {
 #aP > .sheet-handle {
   display: none;
 }
-/* V84: Control pad lives in the right column directly under the Observatory (grid `ctl`). */
+/* Control pad — right flex column, directly under Observatory. */
 #cP {
-  grid-area: ctl;
   position: static;
   width: auto;
   max-width: 100%;
-  max-height: none;
-  height: max-content;
-  align-self: start;
+  align-self: stretch;
   z-index: auto;
   text-align: center;
 }
@@ -951,17 +986,24 @@ a:focus-visible {
   color: rgba(230, 240, 255, 0.95);
   font-variant-numeric: tabular-nums;
 }
+#ui > #alg,
 #ui > #alg {
-  grid-area: ralg;
   position: static;
-  align-self: start;
+  align-self: stretch;
   max-width: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
 }
 #ui > #hud-vsr {
-  grid-area: rset;
-  position: static;
-  align-self: start;
-  max-width: 100%;
+  padding: 5px 8px;
+}
+#ui > #hud-vsr .ui-readout-card__row {
+  margin-top: 1px;
+}
+#ui > #hud-vsr .ui-readout-card__head {
+  margin-bottom: 3px;
+  padding-bottom: 2px;
 }
 #alg #a-name {
   font: 600 var(--text-2xs) var(--font-ui);
@@ -1188,6 +1230,9 @@ a:focus-visible {
   .ui-col-left {
     display: contents;
   }
+  .ui-col-right {
+    display: contents;
+  }
   #ui > * {
     pointer-events: auto;
   }
@@ -1311,16 +1356,7 @@ a:focus-visible {
 @media (min-height: 520px) and (min-width: 769px) and (pointer: fine) and (orientation: landscape) {
   #ui {
     grid-template-columns: clamp(180px, 22vw, 260px) 1fr clamp(240px, 28vw, 380px);
-    grid-template-rows: minmax(0, 1fr) minmax(0, 1fr) auto auto auto;
-    grid-template-areas:
-      'left . obs'
-      'left . obs'
-      ' . . ctl'
-      ' . . ralg'
-      ' . . rset';
-  }
-  #ui > section {
-    max-height: none;
+    grid-template-areas: 'left . right';
   }
 }
 
