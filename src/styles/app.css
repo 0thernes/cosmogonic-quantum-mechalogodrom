@@ -32,6 +32,7 @@
   --color-ink: #9fb6d9;
   --color-ink-dim: #8fa8c8;
   --color-ink-ghost: rgba(184, 200, 232, 0.4);
+  --color-white: #ffffff;
 
   /* ── Control-pad (held [data-a] movement keys) — blue family ── */
   --color-ctrl-line: #0078dc; /* idle border */
@@ -99,6 +100,19 @@
   -webkit-tap-highlight-color: transparent;
 }
 
+/* ── Screen-reader-only utility ───────────────────────────────── */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 /* ── Keyboard focus ─────────────────────────────────────────────
    Every interactive element (toolbar buttons, control-pad keys,
    chevrons, Docs//lab links) gets a visible accent ring on
@@ -122,6 +136,182 @@ a:focus-visible {
     animation-iteration-count: 1 !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* ── Component classes ───────────────────────────────────────────
+   Replaces the repeated 200+ character Tailwind utility chains on
+   control-pad and sim-action buttons with maintainable, typed CSS. */
+.ctrl-pad-btn {
+  display: inline-flex;
+  height: 2rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-btn);
+  border: 1px solid --alpha(var(--color-ctrl-line) / 30%);
+  background: --alpha(var(--color-ctrl-bg) / 15%);
+  padding: 0 0.25rem;
+  font: 600 var(--text-4xs) / 1.5 var(--font-ui);
+  white-space: nowrap;
+  color: var(--color-ctrl-ink);
+  transition: all var(--motion-tap);
+  user-select: none;
+}
+.ctrl-pad-btn:hover {
+  border-color: --alpha(var(--color-ctrl-glow) / 45%);
+  background: --alpha(var(--color-ctrl-hot) / 20%);
+  color: var(--color-white);
+}
+.ctrl-pad-btn:active {
+  border-color: --alpha(var(--color-ctrl-glow) / 50%);
+  background: --alpha(var(--color-ctrl-hot) / 30%);
+  color: var(--color-white);
+}
+.ctrl-pad-sim {
+  display: inline-flex;
+  height: 2rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-btn);
+  border: 1px solid --alpha(var(--color-sim-line) / 30%);
+  background: --alpha(var(--color-sim-bg) / 15%);
+  padding: 0 0.25rem;
+  font: 600 var(--text-4xs) / 1.5 var(--font-ui);
+  white-space: nowrap;
+  color: var(--color-sim-ink);
+  transition: all var(--motion-tap);
+  user-select: none;
+}
+.ctrl-pad-sim:hover {
+  border-color: --alpha(var(--color-sim-glow) / 45%);
+  background: --alpha(var(--color-sim-line) / 20%);
+  color: var(--color-white);
+}
+.ctrl-pad-sim:active {
+  border-color: --alpha(var(--color-sim-glow) / 55%);
+  background: --alpha(var(--color-sim-line) / 30%);
+  color: var(--color-white);
+}
+
+/* ── Toolbar component classes ───────────────────────────────────
+   Replaces the repeated toolbar button utility chains in index.html. */
+.toolbar-btn {
+  display: flex;
+  min-height: 1.75rem;
+  align-items: center;
+  gap: 0.25rem;
+  border-radius: var(--radius-btn);
+  border: 1px solid --alpha(var(--color-bar-line) / 20%);
+  background: --alpha(var(--color-bar-bg) / 10%);
+  padding: 0.25rem 0.625rem;
+  font: 600 var(--text-3xs) / 1.4 var(--font-ui);
+  white-space: nowrap;
+  color: var(--color-bar-ink);
+  transition: all var(--motion-tap);
+  user-select: none;
+}
+.toolbar-btn:hover {
+  border-color: --alpha(var(--color-bar-line) / 40%);
+  background: --alpha(var(--color-bar-hot) / 15%);
+  color: var(--color-white);
+}
+.toolbar-btn:active {
+  background: --alpha(var(--color-bar-hot) / 25%);
+  color: var(--color-white);
+}
+.toolbar-btn[aria-pressed='true'] {
+  border-color: --alpha(var(--color-bar-hot) / 50%);
+  background: --alpha(var(--color-bar-hot) / 25%);
+  color: var(--color-white);
+}
+.toolbar-group {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0 0.25rem;
+  border-right: 1px solid --alpha(var(--color-bar-line) / 12%);
+}
+.toolbar-group:last-child {
+  border-right: none;
+}
+.toolbar-btn[data-action='chaosmode'] {
+  border-color: --alpha(var(--color-bar-hot) / 30%);
+  background: --alpha(var(--color-bar-hot) / 10%);
+  color: var(--color-bar-hot);
+}
+.toolbar-btn[data-action='chaosmode']:hover {
+  border-color: --alpha(var(--color-bar-hot) / 50%);
+  background: --alpha(var(--color-bar-hot) / 20%);
+  color: var(--color-white);
+}
+.toolbar-btn[data-action='chaosmode']:active {
+  background: --alpha(var(--color-bar-hot) / 30%);
+}
+.toolbar-btn[data-action='nhi'] {
+  border-color: --alpha(var(--color-accent) / 20%);
+  background: --alpha(var(--color-accent) / 5%);
+  color: --alpha(var(--color-accent) / 90%);
+}
+.toolbar-btn[data-action='nhi']:hover {
+  border-color: --alpha(var(--color-accent) / 40%);
+  background: --alpha(var(--color-accent) / 15%);
+  color: var(--color-white);
+}
+.toolbar-btn[data-action='nhi']:active {
+  background: --alpha(var(--color-accent) / 25%);
+}
+.toolbar-btn[data-action='apoc'] {
+  border-color: --alpha(var(--color-danger-line) / 30%);
+  background: --alpha(var(--color-danger) / 5%);
+  color: var(--color-danger-ink);
+}
+.toolbar-btn[data-action='apoc']:hover {
+  border-color: --alpha(var(--color-danger-line) / 60%);
+  background: --alpha(var(--color-danger) / 15%);
+  color: var(--color-white);
+}
+.toolbar-btn[data-action='apoc']:active {
+  background: --alpha(var(--color-danger) / 25%);
+}
+
+/* ── Perf HUD (src/ui/perf-hud.ts) ──────────────────────────────
+   Replaces the inline style.cssText block with typed, theme-aware CSS. */
+#perf-hud {
+  position: fixed;
+  left: 8px;
+  bottom: 8px;
+  z-index: 40;
+  font: 11px/1.4 var(--font-mono, ui-monospace, monospace);
+  color: #cfe0fb;
+  background: rgba(8, 14, 30, 0.72);
+  border: 1px solid rgba(120, 160, 220, 0.22);
+  border-radius: 8px;
+  padding: 5px 8px;
+  user-select: none;
+  backdrop-filter: blur(6px);
+}
+#perf-hud .perf-hud-row {
+  display: flex;
+  gap: 4px;
+  margin-top: 3px;
+  opacity: 0.7;
+}
+#perf-hud .perf-hud-tier {
+  all: unset;
+  cursor: pointer;
+  font: 10px var(--font-mono, ui-monospace, monospace);
+  padding: 0 2px;
+  color: #7f93b8;
+}
+#perf-hud .perf-hud-tier.current {
+  color: #0ef;
+}
+#perf-hud .perf-hud-hint {
+  margin-top: 3px;
+  opacity: 0.5;
+  font-size: 10px;
+}
+#perf-hud .perf-hud-quality {
+  opacity: 0.8;
 }
 
 /* ── Panel collapse ─────────────────────────────────────────────
@@ -485,14 +675,10 @@ a:focus-visible {
   padding-bottom: calc(5px + env(safe-area-inset-bottom, 0px));
 }
 
-/* V74: the old #cqm-dock (panel-dock.ts) is SUPERSEDED by the always-on #cqm-hud-nav launcher — its
-   panel toggles are still mounted there as hidden click-targets the nav drives, but the bar itself must
-   never show. center-hud.ts also hides it, but that style is injected late (end of boot); hiding it HERE
-   in app.css (loaded before any JS) kills the boot/HMR flash where #cqm-dock briefly rendered the
-   Docs/Spec/Lab links above the launcher before center-hud re-homed them ("floating above the bubbles"). */
-#cqm-dock {
-  display: none !important;
-}
+/* V74: the original #cqm-dock (panel-dock.ts) is RESTORED. The center-hud experiment is disabled
+   because it re-homed panels into a centered pop-up that broke the user's layout: the dock buttons
+   looked wrong, panels had dead space, and the AI box appeared empty. The dock now shows its own
+   toggles again (the panel-dock CSS is re-injected by the first panel mount). */
 
 /* ════════════════════════════════════════════════════════════════
    RESPONSIVE PANEL SYSTEM (CONTRACTS V3.4)

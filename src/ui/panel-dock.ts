@@ -48,12 +48,16 @@ export function getDock(doc: Document = document): HTMLElement {
   dock.id = DOCK_ID;
   dock.setAttribute('aria-label', 'Panel and navigation dock');
   doc.body.appendChild(dock);
-  // NOTE: the DOCS / SPEC / LAB nav links are NOT adopted here anymore — the center-HUD launcher
-  // (center-hud.ts) is their SINGLE owner. It adopts them by the rewrite-proof `data-nav` attribute
-  // (the old `a.fixed[href="/docs"]` selector silently failed on the deployed Pages site, where
-  // build-pages.ts rewrites the absolute hrefs to subpath-relative — stranding the links in the
-  // bottom-right corner). A second owner here would just race for the same nodes; this dock now holds
-  // ONLY the panel toggles (which center-hud drives, hidden behind the launcher).
+  // V81: with center-hud disabled, the dock is the single owner of the DOCS / SPEC / LAB nav links.
+  // Adopt them by the `data-nav` attribute so the GitHub Pages rewrite (which changes absolute hrefs
+  // to subpath-relative) doesn't break the selector.
+  for (const key of ['docs', 'spec', 'lab']) {
+    const a = doc.querySelector<HTMLAnchorElement>(`a[data-nav="${key}"]`);
+    if (a) {
+      a.classList.remove('fixed');
+      dock.appendChild(a);
+    }
+  }
   return dock;
 }
 
