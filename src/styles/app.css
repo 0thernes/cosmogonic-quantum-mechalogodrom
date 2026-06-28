@@ -73,9 +73,10 @@
   --font-mono: 'JetBrains Mono', 'SF Mono', ui-monospace, monospace;
   /* Micro type scale (font-size only — line-height inherits, matching
      the arbitrary text-[Npx] utilities these tokens replaced). */
-  --text-2xs: 10px; /* telemetry values, panel headers, toast */
-  --text-3xs: 9px; /* toolbar captions, algo name, docs/lab links */
-  --text-4xs: 8px; /* telemetry keys, env rows, control-pad captions */
+  --text-xs: 14px; /* primary panel values — telemetry counters, key readouts */
+  --text-2xs: 13px; /* telemetry values, panel headers, toast */
+  --text-3xs: 12px; /* toolbar captions, algo name, docs/lab links */
+  --text-4xs: 11px; /* telemetry keys, env rows, control-pad captions */
   --text-display: clamp(14px, 4vw, 28px); /* sector banner #sec */
   --tracking-display: clamp(4px, 1.5vw, 14px); /* #sec letterspacing */
 
@@ -273,45 +274,112 @@ a:focus-visible {
   background: --alpha(var(--color-danger) / 25%);
 }
 
+/* ── Bottom toolbar scroll shell (src/ui/toolbar.ts) ────────────
+   Hides the fat horizontal scrollbar; ‹ › buttons scroll one group at a time. */
+#bar-shell {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: calc(6px + env(safe-area-inset-bottom, 0px));
+  z-index: 76;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  max-width: calc(100vw - 12px);
+  pointer-events: none;
+}
+#bar-shell > * {
+  pointer-events: auto;
+}
+.bar-scroll-btn {
+  flex: 0 0 auto;
+  width: 28px;
+  height: 32px;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 230, 100, 0.22);
+  background: rgba(3, 6, 18, 0.92);
+  color: #8ea;
+  font: 700 14px/1 var(--font-mono);
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+}
+.bar-scroll-btn:hover {
+  border-color: rgba(0, 255, 100, 0.45);
+  background: rgba(0, 180, 90, 0.15);
+}
+.bar-scroll-btn:focus-visible {
+  outline: 2px solid rgba(0, 255, 100, 0.55);
+  outline-offset: 1px;
+}
+#bar-shell #bar {
+  position: static;
+  transform: none;
+  left: auto;
+  bottom: auto;
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+#bar-shell #bar::-webkit-scrollbar {
+  display: none;
+}
+
 /* ── Perf HUD (src/ui/perf-hud.ts) ──────────────────────────────
    Replaces the inline style.cssText block with typed, theme-aware CSS. */
 #perf-hud {
   position: fixed;
-  left: 8px;
-  bottom: 8px;
+  left: max(10px, env(safe-area-inset-left, 0px));
+  bottom: calc(54px + env(safe-area-inset-bottom, 0px));
   z-index: 40;
-  font: 11px/1.4 var(--font-mono, ui-monospace, monospace);
-  color: #cfe0fb;
-  background: rgba(8, 14, 30, 0.72);
-  border: 1px solid rgba(120, 160, 220, 0.22);
-  border-radius: 8px;
-  padding: 5px 8px;
+  font: 13px/1.5 var(--font-mono, ui-monospace, monospace);
+  color: #e8f0ff;
+  background: rgba(8, 14, 30, 0.86);
+  border: 1px solid rgba(120, 160, 220, 0.32);
+  border-radius: 10px;
+  padding: 8px 12px;
+  min-width: 148px;
   user-select: none;
-  backdrop-filter: blur(6px);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.45);
 }
 #perf-hud .perf-hud-row {
   display: flex;
-  gap: 4px;
-  margin-top: 3px;
-  opacity: 0.7;
+  flex-wrap: wrap;
+  gap: 5px 8px;
+  margin-top: 6px;
+  opacity: 0.85;
 }
 #perf-hud .perf-hud-tier {
   all: unset;
   cursor: pointer;
-  font: 10px var(--font-mono, ui-monospace, monospace);
-  padding: 0 2px;
-  color: #7f93b8;
+  font: 600 11px/1.3 var(--font-mono, ui-monospace, monospace);
+  padding: 2px 6px;
+  border-radius: 6px;
+  color: #9fb6d9;
+  border: 1px solid transparent;
+}
+#perf-hud .perf-hud-tier:hover {
+  border-color: rgba(120, 160, 220, 0.35);
+  background: rgba(20, 32, 56, 0.55);
 }
 #perf-hud .perf-hud-tier.current {
   color: #0ef;
+  border-color: rgba(0, 238, 255, 0.45);
+  background: rgba(0, 80, 120, 0.35);
 }
 #perf-hud .perf-hud-hint {
-  margin-top: 3px;
-  opacity: 0.5;
-  font-size: 10px;
+  margin-top: 5px;
+  opacity: 0.65;
+  font-size: 11px;
+  line-height: 1.35;
 }
 #perf-hud .perf-hud-quality {
-  opacity: 0.8;
+  opacity: 0.92;
+  font-weight: 600;
+  letter-spacing: 0.04em;
 }
 
 /* ── Panel collapse ─────────────────────────────────────────────
@@ -704,22 +772,19 @@ a:focus-visible {
   /* V72: clear BOTH bottom dock rows — the #bar toolbar (~46px) AND the nav launcher above it (its top
      sits ~90px off the bottom). 96px ends SORTING FIELDS (the tall lower-left #algoP) a touch higher so
      it no longer runs flush into the bottom-dock band — "a little shorter… everything fits nicer". */
-  padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px));
+  padding-bottom: calc(82px + env(safe-area-inset-bottom, 0px));
   /* Right column widened (CONTRACTS V6.2a) so the observatory has more room to breathe on
      desktop/QHD; the TV block below grows it further. Left column hosts telemetry, audit and
      the new algorithm picker (#algoP), stacked top→bottom. */
   grid-template-columns: clamp(180px, 19vw, 260px) 1fr clamp(220px, 23vw, 340px);
-  grid-template-rows: auto auto 1fr auto;
-  /* V51: AUDIT + the algo readout left the left column (they crowded SORTING FIELDS) — `agp` now owns
-     the whole lower-left, telemetry the top-left, observatory + control the right. */
-  /* V76: 'ctl' (the Control pad) left the grid — it's now a fixed, centered cluster pinned in the
-     little bottom-right empty corner (see #cP below). The right column's lower rows stay free so the
-     fixed pad + the #alg/#hud-vsr readout column sit there without colliding with the observatory. */
+  grid-template-rows: auto auto auto auto;
+  /* V84: right column stacks Observatory → Control → sorting readout → sim settings (mirrors the left
+     telemetry + sorting-fields column). Center stays free for the 3D view + center-HUD popups. */
   grid-template-areas:
     'tel . obs'
-    'agp . .  '
-    'agp . .  '
-    'agp . .  ';
+    'agp . ctl'
+    'agp . ralg'
+    'agp . rset';
 }
 #ui > * {
   pointer-events: auto;
@@ -755,51 +820,126 @@ a:focus-visible {
 #oP {
   grid-area: obs;
 }
-/* V76: the Control pad is a CENTERED, compact cluster anchored in the little bottom-right empty
-   corner — right of the #bar toolbar, left of the #alg/#hud-vsr readout column, below the
-   observatory. Pinned to the corner so it reflows on resize; on touch the @media block far below
-   sets #cP display:none (the joystick/look-pad/wheel replace it), so this is a desktop-only place. */
+/* V84: Control pad lives in the right column directly under the Observatory (grid `ctl`). */
 #cP {
-  position: fixed;
-  right: 172px;
-  bottom: 56px;
-  width: clamp(150px, 13vw, 178px);
-  max-height: 42vh;
-  z-index: 21;
+  grid-area: ctl;
+  position: static;
+  width: auto;
+  max-width: 100%;
+  max-height: none;
+  height: max-content;
+  align-self: start;
+  z-index: auto;
   text-align: center;
 }
-/* V79: the bottom-right readout boxes (#hud-vsr Sim-Settings + #alg sorting field) now use the SAME
-   shared `--text-*` tokens as every other panel, so their type stays CONSISTENT across viewports —
-   small at the default scale, and scaling up with the 10-foot/4K TV block like the telemetry +
-   observatory panels (the V76 fixed-px lock made them render ~11px next to ~22px telemetry on a wide
-   monitor — "fonts off comparing"). The overlap the lock used to prevent only happens in the TV block
-   (scaled fonts → bigger boxes); it is handled there with scaled corner gaps (see the ≥1900px block). */
-/* Algorithm picker fills the tall free-left row (row 3) so its 25-row scroll list gets real
-   height; the algo readout sits in row 4 below it, both clear of the center 3D view. */
+/* Algorithm picker fills the tall free-left rows so its scroll list gets real height. */
 #algoP {
   grid-area: agp;
-  /* V51: stretch to fill its (now AUDIT-free) cell instead of overflowing past the padding into the
-     bottom strip — the inner #algo-list scrolls. This keeps the bottom-left strip free for the readout. */
   align-self: stretch;
   min-height: 0;
 }
-/* V51: the algo readout is grouped with the View/Speed/Render box at the bottom-RIGHT (stacked just
-   above it), beside the right end of the menu bars — clear of SORTING FIELDS which now fills the whole
-   lower-LEFT. (A bottom-left strip would collide with the now-tall #algoP.) Mobile @media rules below
-   still reposition it on phones. */
-#ui > #alg {
-  position: fixed;
-  right: 2px;
-  /* V75: the Simulation-Settings box (#hud-vsr) grew taller when Song moved into it + the text was
-     enlarged for readability (~132px now), so the sorting-field readout stacks clear ABOVE it with a
-     gap — zero overlap, the two boxes read as one tidy bottom-right column that reflows on resize. */
-  bottom: 180px;
-  z-index: 20;
-  /* V78: capped narrower (was 195) so this far-right readout column never reaches into the centred
-     control pad's space when a long field/lore name widens it — the intermittent #cP×#alg overlap.
-     Sparkline + field name still fit; an over-long lore line ellipsis-truncates (it is secondary). */
-  max-width: clamp(120px, 18vw, 150px);
+/* V84: shared readout cards — sorting field + sim settings stack in the right column. */
+.ui-readout-card {
+  border-radius: var(--radius-panel, 10px);
+  border: 1px solid rgba(150, 180, 230, 0.2);
+  background: rgba(3, 6, 18, 0.9);
+  backdrop-filter: blur(12px);
+  padding: 8px 10px;
   pointer-events: none;
+  min-width: 0;
+  font-size: var(--text-3xs);
+}
+.ui-readout-card--purple {
+  border-color: rgba(180, 140, 255, 0.22);
+}
+.ui-readout-card--cyan {
+  border-color: rgba(100, 220, 255, 0.22);
+}
+.ui-readout-card__head {
+  margin-bottom: 6px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid rgba(150, 180, 230, 0.15);
+  font: 600 var(--text-3xs) var(--font-ui);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(200, 220, 255, 0.85);
+}
+.ui-readout-card--purple .ui-readout-card__head {
+  border-color: rgba(180, 140, 255, 0.2);
+  color: rgba(220, 200, 255, 0.9);
+}
+.ui-readout-card--cyan .ui-readout-card__head {
+  border-color: rgba(100, 220, 255, 0.2);
+  color: rgba(180, 240, 255, 0.9);
+}
+.ui-readout-card__row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 3px;
+  font-size: var(--text-3xs);
+}
+.ui-readout-card__key {
+  color: rgba(160, 180, 210, 0.85);
+  font: 500 var(--text-3xs) var(--font-ui);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.ui-readout-card__val {
+  font: 500 var(--text-2xs) var(--font-mono);
+  color: rgba(230, 240, 255, 0.95);
+  font-variant-numeric: tabular-nums;
+}
+#ui > #alg {
+  grid-area: ralg;
+  position: static;
+  align-self: start;
+  max-width: 100%;
+}
+#ui > #hud-vsr {
+  grid-area: rset;
+  position: static;
+  align-self: start;
+  max-width: 100%;
+}
+#alg #a-name {
+  font: 600 var(--text-2xs) var(--font-ui);
+  letter-spacing: 0.04em;
+  color: #fff;
+}
+#alg #a-step {
+  font: 400 var(--text-3xs) var(--font-mono);
+  color: rgba(210, 190, 255, 0.95);
+  margin-top: 2px;
+}
+#alg #g-alg {
+  height: 18px;
+  margin-top: 4px;
+}
+#alg #lore {
+  font: 400 var(--text-3xs) var(--font-ui);
+  letter-spacing: 0.08em;
+  margin-top: 3px;
+}
+
+/* Short desktop windows: keep the right column stack from overlapping the bottom bars or itself. */
+@media (max-height: 780px) and (min-width: 769px) and (pointer: fine) and (orientation: landscape) {
+  #ui > section#oP {
+    max-height: min(42vh, calc(100vh - 300px));
+    overflow: hidden;
+  }
+  #oP > .obs-body {
+    overflow-y: auto;
+    max-height: min(38vh, calc(100vh - 340px));
+  }
+  #cP {
+    max-height: 28vh;
+    overflow: hidden;
+  }
+  #cP > .panel-body {
+    overflow-y: auto;
+  }
 }
 /* Panels are flex shells so a viewport clamp squeezes the scrolling body. Each is
    also a size container so chart canvases can scale to the panel width (not just the
@@ -813,15 +953,49 @@ a:focus-visible {
 }
 #ui > section > .panel-body {
   flex: 1 1 auto;
+  font-size: var(--text-3xs);
+  line-height: 1.55;
+}
+/* Side-panel legibility — telemetry keys/values, observatory labels, sorting list */
+#sP .panel-body [class*='text-4xs'],
+#oP .panel-body [class*='text-4xs'],
+#algoP .panel-body [class*='text-4xs'] {
+  font-size: var(--text-3xs);
+  letter-spacing: 0.06em;
+}
+#sP .panel-body [id^='v'],
+#oP .panel-body [id^='v'] {
+  font-size: var(--text-xs);
+  font-weight: 600;
+}
+#sP .panel-body [class*='text-2xs'],
+#oP .panel-body [class*='text-2xs'],
+#algoP .panel-body [class*='text-2xs'],
+#algoP #algo-list button {
+  font-size: var(--text-2xs);
+}
+#sP .panel-header,
+#oP .panel-header,
+#algoP .panel-header,
+#cP .panel-header {
+  font-size: calc(var(--text-2xs) + 1px);
 }
 /* The observatory holds four tall charts per page — give it more vertical room than the
    other panels so the raised canvas heights aren't clipped behind its scroll (CONTRACTS
    V6.2a). The TV block below grows it further still. */
 #ui > section#oP {
-  max-height: clamp(240px, 72vh, 82vh);
+  max-height: none;
+  height: auto;
+  align-self: start;
 }
 #oP > .obs-body {
   max-height: none;
+  flex: 0 0 auto;
+}
+#observatory-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 /* Observatory canvases scale with the panel's own width (container query), clamped so
@@ -1038,26 +1212,20 @@ a:focus-visible {
     container-type: inline-size;
   }
 
-  /* Algo readout: a compact always-visible strip pinned bottom-left, ABOVE the two scrollable bottom
-     bars (V53: dock top ≈ 122px). Never a sheet — it is glanceable lore. (A touch device lifts it
-     further over the joystick in the coarse block below.) */
+  /* V84: on sheet mode the readout cards pin to the bottom edges above the bars (never sheets). */
   #ui > #alg {
     position: fixed;
     left: 6px;
     bottom: calc(128px + env(safe-area-inset-bottom, 0px));
-    max-width: min(60vw, 240px);
+    max-width: min(60vw, 260px);
     z-index: 19;
   }
-  /* V78: the live Simulation-Settings box (View/Speed/Render/Music/SFX/Song/Resets) USED to hide here
-     ("it vanished!"). The user wants it visible on the RIGHT in sheet mode too — mirroring the #alg
-     readout on the left. Pin it bottom-RIGHT, lifted ABOVE the #alg band (which sits at bottom:128) so
-     the two little data cards flank the bottom bars without ever touching, on every portrait/narrow
-     viewport. Data stays glanceable; never collides with the full-width bottom bars. */
-  #hud-vsr {
+  #ui > #hud-vsr {
+    position: fixed;
     right: max(6px, env(safe-area-inset-right, 0px));
     left: auto;
-    bottom: calc(210px + env(safe-area-inset-bottom, 0px));
-    max-width: min(52vw, 220px);
+    bottom: calc(128px + env(safe-area-inset-bottom, 0px));
+    max-width: min(52vw, 260px);
     z-index: 19;
   }
 }
@@ -1065,14 +1233,14 @@ a:focus-visible {
 /* ── Low landscape, FINE pointer only (e.g. a short desktop window): twin side rails.
      Coarse rotated phones/foldables now use the V5.5 edge sheets above instead, so this
      is scoped to `pointer: fine` and landscape to avoid fighting sheet mode. ── */
-@media (max-height: 520px) and (min-width: 769px) and (pointer: fine) and (orientation: landscape) {
+@media (min-height: 520px) and (min-width: 769px) and (pointer: fine) and (orientation: landscape) {
   #ui {
     grid-template-columns: clamp(160px, 24vw, 230px) 1fr clamp(170px, 26vw, 250px);
     grid-template-areas:
       'tel . obs'
-      'tel . ctl'
-      'agp . .  '
-      'agp . .  '; /* V51: readout is a fixed bottom-strip card now, not the `alg` grid row */
+      'agp . ctl'
+      'agp . ralg'
+      'agp . rset';
   }
   #ui > section {
     max-height: calc(100vh - 64px);
@@ -1139,14 +1307,13 @@ a:focus-visible {
   #ui {
     display: grid;
     pointer-events: none;
-    grid-template-rows: auto auto 1fr auto;
-    /* V51: same as the default grid — AUDIT + readout are out of the left column (now a dock overlay +
-       a bottom-strip card), so SORTING FIELDS (`agp`) owns the whole lower-left on the 10-foot/4K view. */
+    grid-template-rows: auto auto auto auto;
+    /* V84: right column readouts stack under control on 10-foot displays too. */
     grid-template-areas:
       'tel . obs'
       'agp . ctl'
-      'agp . .  '
-      'agp . .  ';
+      'agp . ralg'
+      'agp . rset';
     gap: clamp(12px, 0.8vw, 22px);
     padding: clamp(14px, 0.9vw, 26px);
     padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px));
@@ -1155,20 +1322,8 @@ a:focus-visible {
   #ui > * {
     pointer-events: auto;
   }
-  /* V79: scale the fixed bottom-right corner cluster WITH the 10-foot/4K type bump. The unlocked
-     readout boxes now grow with the scaled font (consistent with telemetry/observatory), so the
-     Control pad widens to not read as tiny, and the corner gaps grow to clear the larger Sim-Settings
-     box + the taller bottom bar. Gaps are sized for the font-capped MAX box, so they hold from 1900px
-     to 4K (they merely over-clear at the low end). */
   #cP {
-    right: 244px;
-    bottom: 94px;
-    width: clamp(196px, 8.5vw, 250px);
-    max-height: 46vh;
-  }
-  #ui > #alg {
-    bottom: 292px;
-    max-width: clamp(170px, 9vw, 240px);
+    max-width: 100%;
   }
   /* Sheets become ordinary grid panels again; handles disappear. */
   .sheet {

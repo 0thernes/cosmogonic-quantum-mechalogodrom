@@ -237,13 +237,10 @@ function mount(): void {
 
   const toggle = dockToggle({
     id: 'cqm-cop-toggle',
-    label: '✦',
+    label: '✦ AI',
     title: 'Copilot — chat about this world (read-only AI)',
     ariaLabel: 'Open Copilot chat',
-    onClick: () => {
-      if (panel.classList.contains('open')) closePanel();
-      else openPanel();
-    },
+    onClick: () => {}, // wired below after openPanel/closePanel exist — avoids double-toggle
   });
 
   const panel = document.createElement('div');
@@ -369,6 +366,13 @@ function mount(): void {
     scroll();
     return el;
   };
+
+  // Visible welcome so the Answer column is never an empty faint box before the first message.
+  addMsg(
+    'cqm-cop-sys',
+    'Ask about the cosmos, creatures, math, or code. Type /help for repo commands, or click 🩺 to probe AI health.',
+  );
+  greeted = true;
 
   const addTool = (step: ToolStep): void => {
     const wrap = document.createElement('div');

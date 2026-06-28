@@ -840,32 +840,55 @@
         </div>
       </section>
 
-      <!-- Sorting-field readout (grid area `alg`; phone portrait: bottom-cluster strip) -->
+      <!-- Sorting-field readout (grid area `ralg`; phone portrait: bottom-left strip) -->
+      <div id="alg" class="ui-readout-card ui-readout-card--purple pointer-events-none">
+        <div class="ui-readout-card__head">Sorting · Field</div>
+        <div id="a-name" class="overflow-hidden text-ellipsis whitespace-nowrap">BUBBLE FIELD</div>
+        <div id="a-step" class="overflow-hidden text-ellipsis whitespace-nowrap tabular-nums">
+          ---
+        </div>
+        <canvas id="g-alg" class="mt-0.5 block w-full opacity-85"></canvas>
+        <div id="lore" class="overflow-hidden text-ellipsis whitespace-nowrap uppercase">---</div>
+      </div>
+
+      <!-- Simulation settings readout (grid area `rset`) -->
       <div
-        id="alg"
-        class="pointer-events-none rounded-panel border border-purple-300/15 bg-void/90 px-2.5 py-1.25 backdrop-blur-lg"
+        id="hud-vsr"
+        class="ui-readout-card ui-readout-card--cyan pointer-events-none"
+        aria-label="Simulation settings — view, speed, render, audio"
       >
-        <div
-          id="a-name"
-          class="overflow-hidden font-ui text-3xs font-semibold tracking-wide text-ellipsis whitespace-nowrap text-white"
-        >
-          BUBBLE FIELD
+        <div class="ui-readout-card__head">Sim · Settings</div>
+        <div class="ui-readout-card__row">
+          <span class="ui-readout-card__key">View</span>
+          <span id="hud-view" class="ui-readout-card__val normal-case">free</span>
         </div>
-        <div
-          id="a-step"
-          class="overflow-hidden font-mono text-4xs font-light text-ellipsis whitespace-nowrap text-purple-200 tabular-nums"
-        >
-          ---
+        <div class="ui-readout-card__row">
+          <span class="ui-readout-card__key">Speed</span>
+          <span id="hud-speed" class="ui-readout-card__val normal-case">1×</span>
         </div>
-        <!-- V75: live swap-activity sparkline — the sorting field's variance over time, so the box
-             shows MORE than a counter (a real data-visual of how hard the algorithm is working). -->
-        <canvas id="g-alg" class="mt-0.5 block h-3.5 w-full opacity-80"></canvas>
-        <!-- V2: lore name of the camera's Voronoi sub-sector (ui/hud.ts setLore) -->
-        <div
-          id="lore"
-          class="overflow-hidden font-ui text-4xs font-light tracking-widest text-ellipsis whitespace-nowrap text-purple-300/80 uppercase"
-        >
-          ---
+        <div class="ui-readout-card__row">
+          <span class="ui-readout-card__key">Render</span>
+          <span id="hud-render" class="ui-readout-card__val normal-case">solid</span>
+        </div>
+        <div class="ui-readout-card__row">
+          <span class="ui-readout-card__key">Music</span>
+          <span id="hud-music" class="ui-readout-card__val normal-case">OFF</span>
+        </div>
+        <div class="ui-readout-card__row">
+          <span class="ui-readout-card__key">SFX</span>
+          <span id="hud-sfx" class="ui-readout-card__val normal-case">OFF</span>
+        </div>
+        <div class="ui-readout-card__row">
+          <span class="ui-readout-card__key">Song</span>
+          <span
+            id="v7"
+            class="ui-readout-card__val max-w-[140px] overflow-hidden text-ellipsis whitespace-nowrap normal-case"
+            >—</span
+          >
+        </div>
+        <div class="ui-readout-card__row">
+          <span class="ui-readout-card__key">Resets</span>
+          <span id="hud-resets" class="ui-readout-card__val normal-case">0</span>
         </div>
       </div>
     </div>
@@ -876,7 +899,7 @@
       id="bar"
       role="toolbar"
       aria-label="Simulation toolbar"
-      class="fixed bottom-1.5 left-1/2 z-20 flex max-w-[calc(100vw-16px)] -translate-x-1/2 [scrollbar-width:thin] flex-nowrap items-center justify-start gap-1 overflow-x-auto rounded-panel border border-bar-line/15 bg-void/90 px-2 py-1.25 backdrop-blur-xl md:max-w-[calc(100vw-220px)]"
+      class="flex max-w-[calc(100vw-16px)] [scrollbar-width:none] flex-nowrap items-center justify-start gap-1 overflow-x-auto rounded-panel border border-bar-line/15 bg-void/90 px-2 py-1.25 backdrop-blur-xl md:max-w-[calc(100vw-220px)] [&::-webkit-scrollbar]:hidden"
     >
       <div class="toolbar-group" role="group" aria-label="Audio">
         <button
@@ -1131,54 +1154,7 @@
       >Lab</a
     >
 
-    <!-- V13: View / Speed / Render readout box. V51: moved to the bottom edge, flanking the centered
-         menu bars on the RIGHT (the algo readout flanks the left). pointer-events-none so it never
-         blocks clicks. Written every telemetry tick by ui/panels.ts. -->
-    <div
-      id="hud-vsr"
-      class="pointer-events-none fixed right-2 bottom-1.5 z-20 rounded-panel border border-cyan-300/15 bg-void/90 px-3 py-2 font-ui text-3xs tracking-widest text-cyan-300/80 uppercase backdrop-blur-md"
-      aria-label="Simulation settings — view, speed, render, audio"
-    >
-      <!-- V75: a small header so the readout reads as an organized 'Simulation Settings' card. -->
-      <div class="mb-1 border-b border-cyan-300/15 pb-0.5 text-3xs font-semibold text-cyan-200/70">
-        SIM · SETTINGS
-      </div>
-      <div class="flex items-baseline justify-between gap-3">
-        <span class="text-slate-400">View</span>
-        <span id="hud-view" class="font-mono text-cyan-100 normal-case tabular-nums">free</span>
-      </div>
-      <div class="flex items-baseline justify-between gap-3">
-        <span class="text-slate-400">Speed</span>
-        <span id="hud-speed" class="font-mono text-cyan-100 normal-case tabular-nums">1×</span>
-      </div>
-      <div class="flex items-baseline justify-between gap-3">
-        <span class="text-slate-400">Render</span>
-        <span id="hud-render" class="font-mono text-cyan-100 normal-case tabular-nums">solid</span>
-      </div>
-      <!-- V57: audio toggles (on/off) + a running reset counter. -->
-      <div class="flex items-baseline justify-between gap-3">
-        <span class="text-slate-400">Music</span>
-        <span id="hud-music" class="font-mono text-cyan-100 normal-case tabular-nums">OFF</span>
-      </div>
-      <div class="flex items-baseline justify-between gap-3">
-        <span class="text-slate-400">SFX</span>
-        <span id="hud-sfx" class="font-mono text-cyan-100 normal-case tabular-nums">OFF</span>
-      </div>
-      <!-- V75: now-playing song name, relocated here from the telemetry listing (keeps id #v7). -->
-      <div class="flex items-baseline justify-between gap-3">
-        <span class="text-slate-400">Song</span>
-        <span
-          id="v7"
-          class="max-w-[120px] overflow-hidden font-mono text-ellipsis whitespace-nowrap text-cyan-100 normal-case tabular-nums"
-          >—</span
-        >
-      </div>
-      <div class="flex items-baseline justify-between gap-3">
-        <span class="text-slate-400">Resets</span>
-        <span id="hud-resets" class="font-mono text-cyan-100 normal-case tabular-nums">0</span>
-      </div>
-    </div>
-
+    <!-- V13 hud-vsr moved into #ui grid (right column `rset`). -->
     <!-- V5.5 edge-docked sheet toggler (CLASS-ONLY; no module imports, no sim/state access).
          Each [data-sheet-handle="<panelId>"] tab toggles `.open` on its panel. CSS owns ALL
          geometry (transform/translate, handle placement) and gates the whole mechanism behind

@@ -75,8 +75,21 @@ ${PANEL_SEL} {
 ${VIS_SEL} {
   opacity: 1 !important;
 }
-/* The old 2nd dock bar is REDUNDANT — the always-on nav launcher below replaces it. Hide it. */
-#cqm-dock {
+/* V84: panel toggles cycle through the center HUD — hide them from the legacy dock bar (settings +
+   access live in the HUD launcher instead). The dock itself stays hidden when the HUD nav is active. */
+#cqm-dock > #cqm-cop-toggle,
+#cqm-dock > #cqm-help-toggle,
+#cqm-dock > #cqm-aud-toggle,
+#cqm-dock > #cqm-nhi-toggle,
+#cqm-dock > #cqm-mkt-toggle,
+#cqm-dock > #cqm-sup-toggle,
+#cqm-dock > #cqm-arch-toggle,
+#cqm-dock > #cqm-settings-toggle,
+#cqm-dock > #cqm-acc-toggle,
+#cqm-dock > a.cqm-dock-nav {
+  display: none !important;
+}
+body:has(#cqm-hud-nav) #cqm-dock {
   display: none !important;
 }
 /* The nav LAUNCHER: anchored to the SAME gap fitHud measures between the side panels
@@ -92,10 +105,8 @@ ${VIS_SEL} {
   width: max-content;
   max-width: calc(100vw - 16px);
   margin-inline: auto;
-  /* V79: 66px clears the #bar toolbar (bottom:6 + ~56px tall ⇒ its top sits ~62px off the bottom);
-     the old 50px let the launcher pill sink ~12px INTO the toolbar on a short landscape window (the
-     1920×1080 deploy) — the two glass bars overlapped. They now stack with a 4px gap. */
-  bottom: var(--cqm-nav-bottom, 66px);
+  /* V84: 52px clears the #bar toolbar with a tight 4px gap (was 66px — the two bars felt too far apart). */
+  bottom: var(--cqm-nav-bottom, 48px);
   z-index: 73;
   display: flex;
   align-items: center;
@@ -502,6 +513,12 @@ function buildNav(doc: Document): void {
         'cqm-hud-link',
         () => accToggle.click(),
       ),
+    );
+  }
+  const settingsToggle = doc.getElementById('cqm-settings-toggle');
+  if (settingsToggle) {
+    nav.appendChild(
+      mk('⚙ SET', 'Simulation settings', 'cqm-hud-link', () => settingsToggle.click()),
     );
   }
   doc.body.appendChild(nav);

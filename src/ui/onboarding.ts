@@ -10,9 +10,10 @@
 import { injectPanelBaseCSS, overlayPanel, panelHeader, wireClose } from './panel-shell';
 
 const STYLE = `
-#cqm-onboarding.on{opacity:1}
+#cqm-onboarding{display:none;opacity:0;pointer-events:none}
+#cqm-onboarding.on{display:flex;opacity:1;pointer-events:auto}
 @media (prefers-reduced-motion:reduce){#cqm-onboarding{transition:none}}
-#cqm-onboarding[aria-hidden="true"]{display:none}
+#cqm-onboarding[aria-hidden="true"]{display:none!important;opacity:0!important;pointer-events:none!important}
 .cqm-onb-body{display:flex;flex-direction:column;gap:12px}
 .cqm-onb-row{display:flex;gap:14px;align-items:flex-start}
 .cqm-onb-row i{font-style:normal;font-size:20px;min-width:28px;text-align:center;color:#8fe0ff}
@@ -95,18 +96,15 @@ export class OnboardingOverlay {
     wireClose(this.root, close);
 
     if (this.visible) {
-      // One frame delay so the opacity transition fires after append.
-      requestAnimationFrame(() => {
-        this.root.style.display = 'flex';
-        this.root.classList.add('on');
-      });
+      // One frame delay so the opacity transition fires after append (class-only — no inline
+      // display, which would beat the aria-hidden dismiss rule and leave a click-blocking ghost).
+      requestAnimationFrame(() => this.root.classList.add('on'));
     }
   }
 
   close(): void {
     this.root.setAttribute('aria-hidden', 'true');
     this.root.classList.remove('on');
-    this.root.style.opacity = '0';
   }
 }
 

@@ -21,9 +21,8 @@ import './ui/help-system';
 // Audit dock (V51): self-mounting 🗒 AUDIT toggle that moves the audit trail off the left column into
 // the bottom dock (frees SORTING FIELDS); toggles the existing #aP overlay, HTMX polling untouched.
 import './ui/audit-dock';
-// Center HUD (V56): DISABLED — the original shared dock (#cqm-dock) is restored because the centered
-// cyclable HUD broke the user's layout (buttons looked wrong, panels had dead space, AI box appeared empty).
-// import { initCenterHud } from './ui/center-hud';
+// Center HUD (V56/V84): cyclable center popup for AI · HELP · AUDIT · NEURAL · MARKET · ARCHITECT · ARCHITECTURE.
+import { initCenterHud } from './ui/center-hud';
 // Toolbar keyboard navigation: roving tabindex + arrow keys for #bar buttons.
 import { initToolbarKeyboard } from './ui/toolbar';
 // Onboarding overlay (V81): one-time, dismissible first-run hint.
@@ -114,19 +113,7 @@ function boot(): void {
     maxEntities: quality.maxEntities,
   });
 
-  // V56: CENTER HUD DISABLED — original dock-based UI restored.
-  // initCenterHud();
-  // V82: hard-purge any stale center-hud DOM leftovers from an earlier build/cache so they can't block
-  // clicks or re-home the panels back into the broken centered slot.
-  if (typeof document !== 'undefined') {
-    document.getElementById('cqm-hud-nav')?.remove();
-    document.getElementById('cqm-hud-style')?.remove();
-    document.documentElement.style.removeProperty('--cqm-hud-left');
-    document.documentElement.style.removeProperty('--cqm-hud-right');
-    document.documentElement.style.removeProperty('--cqm-hud-bottom');
-    document.documentElement.style.removeProperty('--cqm-hud-height');
-    document.documentElement.style.removeProperty('--cqm-nav-bottom');
-  }
+  initCenterHud();
 
   // V-toolbar: enable arrow-key / Home / End navigation inside the bottom toolbar.
   initToolbarKeyboard();
