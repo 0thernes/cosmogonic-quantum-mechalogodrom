@@ -83,7 +83,7 @@
    - Measure convergence speed and stability
    - Ensure determinism (seeded learning)
 
-**Receipt:** `src/sim/reservoir.ts` exists but recurrence is architected, not learned
+**Receipt:** `src/sim/learned-recurrence.ts` provides online learned recurrence (seeded BPTT each beat, weights adapt within a life). `src/sim/nqs-vmc-learning.ts` provides NQS/VMC quantum-state learning (Carleo & Troyer 2017 RBM ansatz + Metropolis sampling + energy-variance surprise coupling). Both are wired into `super-mind.ts:think()` — `LearnedRecurrence.step()` blends into the latent, `NQSLearningController.step()` feeds energy variance into surprise. Telemetry surfaced in `SuperMindSnapshot.nqs`. Covered by `tests/learned-recurrence.test.ts` and `tests/self-evolution-loop.test.ts`.
 
 ---
 
@@ -156,7 +156,7 @@
 ## Priority Order
 
 1. **Phase 1: Explicit Attention Controller (GWT-4)** — DONE — deterministic drive gate wired into `SuperMind`
-2. **Phase 2: Learned Recurrence (RPT-1/2)** — DONE structurally — fast weights / learned recurrence substrates present; deepen online learning next
+2. **Phase 2: Learned Recurrence (RPT-1/2)** — DONE — `LearnedRecurrence` (online BPTT) + `NQSLearningController` (NQS/VMC quantum-state learning) wired into `think()`
 3. **Phase 3: Full Irreducibility (IIT-2)** — DONE structurally — classical participation + quantum/mincut proxies present; deepen ablation proofs next
 4. **Phase 4: Self-Model Accuracy (AST-2)** — DONE structurally — metacognitive self-model update present; deepen calibration tests next
 5. **Phase 5: Complete Butlin Audit** — ONGOING — verification and documentation stay live with every build wave
