@@ -114,7 +114,7 @@ export class AlphabetPantheonRender {
     this.mat = new THREE.MeshBasicMaterial({
       color: 0xffffff, // white base so instanceColor shows the true hue
       transparent: true,
-      opacity: 0.78,
+      opacity: 0.88,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
     });
@@ -146,14 +146,14 @@ export class AlphabetPantheonRender {
         const az = Math.sin(th) * ringR;
         const ay = y * DOME_R * 0.66 + 24;
         const baseScale =
-          (4.5 + 10 * (0.5 * b.empowerment + 0.3 * b.order + 0.2 * b.generative)) * 1.12;
+          (6 + 14 * (0.5 * b.empowerment + 0.3 * b.order + 0.2 * b.generative)) * 1.25;
         // Seed-derived (no rng) per-body cadence so none lockstep.
         const freq = 0.18 + ((a.seed % 600) / 600) * 0.6;
         const phase = ((a.seed >>> 7) % 6283) / 1000;
-        const spin = 0.08 + b.chaos * 0.5;
-        const pulse = 0.1 + b.curiosity * 0.25;
-        const sat = Math.min(1, 0.92 + 0.08 * b.quantum);
-        const light = 0.24 + 0.14 * b.generative;
+        const spin = 0.15 + b.chaos * 0.8;
+        const pulse = 0.15 + b.curiosity * 0.35;
+        const sat = Math.min(1, 0.95 + 0.05 * b.quantum);
+        const light = 0.32 + 0.16 * b.generative;
         list.push({
           ax,
           ay,
@@ -285,14 +285,14 @@ export class AlphabetPantheonRender {
         const ba = this.brainActivity?.[b.gIdx] ?? 0;
         const bn = this.brainNovelty?.[b.gIdx] ?? 0;
         const bv = this.brainValence?.[b.gIdx] ?? 0;
-        const brainPulse = 1 + ba * 0.55;
+        const brainPulse = 1 + ba * 0.8;
         const mx = this.motorX[b.gIdx] ?? 0;
         const my = this.motorY[b.gIdx] ?? 0;
         const mz = this.motorZ[b.gIdx] ?? 0;
-        const orbitR = 60 + ba * 180 + this.chaos * 120 + b.baseScale * 1.2;
-        const driftX = Math.sin(ph * 0.73 + mx * 2.4) * orbitR + mx * 130;
-        const driftZ = Math.cos(ph * 0.61 + mz * 2.1) * orbitR + mz * 130;
-        const driftY = Math.sin(ph * 1.05 + my * 1.9) * (32 + ba * 55) + my * 70;
+        const orbitR = 80 + ba * 240 + this.chaos * 160 + b.baseScale * 1.5;
+        const driftX = Math.sin(ph * 0.73 + mx * 2.4) * orbitR + mx * 180;
+        const driftZ = Math.cos(ph * 0.61 + mz * 2.1) * orbitR + mz * 180;
+        const driftY = Math.sin(ph * 1.05 + my * 1.9) * (42 + ba * 75) + my * 95;
         P.set(b.ax + driftX, b.ay + driftY, b.az + driftZ);
         E.set(
           Math.sin(ph * 0.6 + mx) * 0.85,
@@ -307,9 +307,9 @@ export class AlphabetPantheonRender {
         // Brain novelty shifts hue, valence rotates it
         const hueShift = Math.sin(ph * 0.31) * 0.06 + t * 0.002 * b.spin + bn * 0.04 * bv;
         const hue = (b.hue + hueShift) % 1;
-        const litBoost = ba * 0.12 + bn * 0.06;
-        const lit = b.light + 0.08 * Math.sin(ph * 2.3) + litBoost;
-        C.setHSL(hue < 0 ? hue + 1 : hue, Math.min(1, b.sat + bn * 0.12), clamp(lit, 0.22, 0.48));
+        const litBoost = ba * 0.18 + bn * 0.09;
+        const lit = b.light + 0.12 * Math.sin(ph * 2.3) + litBoost;
+        C.setHSL(hue < 0 ? hue + 1 : hue, Math.min(1, b.sat + bn * 0.15), clamp(lit, 0.28, 0.58));
         mesh.setColorAt(s, C);
       }
       mesh.instanceMatrix.needsUpdate = true;

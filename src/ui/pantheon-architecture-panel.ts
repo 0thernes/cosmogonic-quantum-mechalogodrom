@@ -227,7 +227,7 @@ export class PantheonArchitecturePanel {
     // Dynamics canvas
     this.canvas = el(doc, 'canvas', 'cqm-arch-canvas');
     this.canvas.width = 372;
-    this.canvas.height = 160;
+    this.canvas.height = 300;
     this.ctx = this.canvas.getContext('2d');
     viz.appendChild(this.canvas);
 
