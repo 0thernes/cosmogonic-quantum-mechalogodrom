@@ -166,6 +166,9 @@ const STYLE = `
 .cqm-help-right{flex:1 1 50%;min-width:0;display:flex;flex-direction:column;border-left:1px solid rgba(120,220,160,.2);background:rgba(8,18,13,.45);min-height:0}
 .cqm-help-right-main{flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;scrollbar-width:thin;
   display:flex;flex-direction:column;padding-bottom:4px}
+.cqm-help-right-main::-webkit-scrollbar,.cqm-help-ans::-webkit-scrollbar{width:6px}
+.cqm-help-right-main::-webkit-scrollbar-thumb,.cqm-help-ans::-webkit-scrollbar-thumb{background:rgba(120,220,160,.45);border-radius:3px}
+.cqm-help-right-main::-webkit-scrollbar-track,.cqm-help-ans::-webkit-scrollbar-track{background:rgba(0,0,0,.25)}
 .cqm-help-ans{flex:1 1 auto;min-height:0;padding:4px 11px 10px;overflow-y:auto;scrollbar-width:thin}
 .cqm-help-colhead{font:600 9px var(--font-mono,monospace);letter-spacing:.14em;color:#7fcea6;text-transform:uppercase;padding:7px 11px 3px;opacity:.85;flex:0 0 auto}
 .cqm-help-chips{display:flex;flex-wrap:wrap;gap:5px;padding:3px 11px 9px;flex:0 0 auto}

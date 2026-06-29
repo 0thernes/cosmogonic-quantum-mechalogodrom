@@ -93,7 +93,7 @@ const STYLE = `
    V71: wider so the nine labelled diagrams + their captions breathe. NOTE: the CENTER HUD
    (center-hud.ts) re-homes this panel into its centred slot with !important (position/size), so
    these are only the standalone fallback used before the HUD initialises. */
-#cqm-nhi-panel{position:fixed;left:50%;bottom:134px;transform:translateX(-50%);z-index:71;width:min(96vw,860px);
+#cqm-nhi-panel{position:fixed;left:50%;bottom:calc(var(--cqm-bottom-h,108px) + 130px);transform:translateX(-50%);z-index:71;width:min(96vw,860px);
   max-height:min(82vh,720px);display:none;flex-direction:column;border:1px solid rgba(80,220,255,.32);border-radius:12px;
   background:rgba(4,8,18,.95);backdrop-filter:blur(12px);box-shadow:0 10px 46px rgba(0,0,0,.65);
   font:12px/1.5 var(--font-mono,ui-monospace,monospace);color:#cfe0fb;overflow:hidden}

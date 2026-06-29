@@ -44,13 +44,13 @@ const STYLE = `
 #cqm-sup-toggle:focus-visible{outline:2px solid #c478ff;outline-offset:2px}
 #cqm-sup-panel{position:fixed;left:var(--cqm-hud-left,calc(clamp(180px,19vw,260px) + 16px));
   right:var(--cqm-hud-right,calc(clamp(220px,23vw,340px) + 16px));
-  top:auto;bottom:var(--cqm-hud-bottom,96px);transform:none;
+  top:auto;bottom:var(--cqm-hud-bottom,calc(var(--cqm-bottom-h,108px) + 130px));transform:none;
   z-index:71;width:auto;max-width:none;max-height:var(--cqm-hud-height,min(64vh,520px));display:none;flex-direction:column;
   border:1px solid rgba(196,120,255,.34);border-radius:12px;background:rgba(8,5,16,.96);backdrop-filter:blur(12px);
   box-shadow:0 10px 46px rgba(0,0,0,.7);font:11px/1.45 var(--font-mono,ui-monospace,monospace);color:#ece2ff;overflow:hidden}
 #cqm-sup-panel.open{display:flex}
 @media (max-width:640px){
-#cqm-sup-panel{left:auto;top:auto;right:10px;bottom:128px;transform:none;width:min(94vw,326px);max-height:min(74vh,560px)}
+#cqm-sup-panel{left:auto;top:auto;right:10px;bottom:calc(var(--cqm-bottom-h,108px) + 130px);transform:none;width:min(94vw,326px);max-height:min(66vh,480px)}
 }
 .cqm-sup-head{display:flex;align-items:center;gap:8px;padding:7px 10px;border-bottom:1px solid rgba(196,120,255,.24);background:rgba(28,14,46,.8)}
 .cqm-sup-head b{font-size:11px;letter-spacing:.14em;color:#d8a8ff;white-space:nowrap}
@@ -61,6 +61,14 @@ const STYLE = `
 .cqm-sup-neu:focus-visible{outline:1px solid #b98cff}
 .cqm-sup-x{background:rgba(6,4,12,.9);color:#e9c8ff;border:1px solid rgba(196,120,255,.3);border-radius:5px;
   font:11px var(--font-mono,ui-monospace,monospace);padding:2px 7px;cursor:pointer}
+.cqm-sup-min{background:rgba(6,4,12,.9);color:#e9c8ff;border:1px solid rgba(196,120,255,.3);border-radius:5px;
+  font:11px var(--font-mono,ui-monospace,monospace);padding:2px 7px;cursor:pointer}
+#cqm-sup-panel.minimized{height:auto !important;max-height:52px !important;min-height:0 !important}
+#cqm-sup-panel.minimized .cqm-sup-body,
+#cqm-sup-panel.minimized .cqm-sup-neural-host,
+#cqm-sup-panel.minimized .cqm-sup-archons{display:none}
+#cqm-sup-panel.minimized .cqm-sup-head{border-bottom:none}
+#cqm-sup-panel.minimized .cqm-sup-min::before{content:'+'}
 .cqm-sup-x:focus-visible{outline:1px solid #c478ff}
 /* V70: the data area SCROLLS within the short HUD strip (nothing is cut off / "lost") + lays the rows
    out in TWO columns so the wide-but-short panel is used fully. */
@@ -134,6 +142,7 @@ export class SuperPanel {
   /** V75: the apex creature's NEURAL observatory — now mounted INSIDE this same box (not a window). */
   private readonly neural: SuperNeural;
   private open = false;
+  private minimized = false;
   private neuralOn = false;
   // GOAL5: rows for all 5 Archons (name + plan) for first-class telemetry (not just prime)
   private archonRows: Array<{ nm: HTMLElement; pl: HTMLElement }> = [];
@@ -161,6 +170,7 @@ export class SuperPanel {
     panel.innerHTML =
       `<div class="cqm-sup-head"><b>⬢ 5 ARCHONS / GODFORMS</b><span class="plan" data-plan>—</span>` +
       `<button class="cqm-sup-neu" data-neu aria-label="Toggle the Archon neural observatories" title="Toggle neural for focused Archon">⊞ NEURAL</button>` +
+      `<button class="cqm-sup-min" data-min aria-label="Minimize">−</button>` +
       `<button class="cqm-sup-x" data-close aria-label="Close">✕</button></div>` +
       `<div class="cqm-sup-body"><div class="cqm-sup-id" data-id></div>` +
       `<div class="cqm-sup-bars" data-bars></div></div>` +
@@ -173,6 +183,9 @@ export class SuperPanel {
     this.neural = new SuperNeural(panel.querySelector('[data-neural]') as HTMLElement, doc);
     (panel.querySelector('[data-close]') as HTMLElement).addEventListener('click', () =>
       this.setOpen(false),
+    );
+    (panel.querySelector('[data-min]') as HTMLElement).addEventListener('click', () =>
+      this.toggleMinimize(),
     );
     (panel.querySelector('[data-neu]') as HTMLElement).addEventListener('click', () =>
       this.toggleNeural(),
@@ -248,6 +261,12 @@ export class SuperPanel {
     this.open = v;
     this.panel.classList.toggle('open', v);
     if (!v) this.setNeural(false); // closing the box also stops the observatory's rAF loop
+  }
+
+  /** Collapse the Super Creature panel to a compact header bar or restore it. */
+  private toggleMinimize(): void {
+    this.minimized = !this.minimized;
+    this.panel.classList.toggle('minimized', this.minimized);
   }
 
   /** V75: flip the box between the telemetry readout and the in-box neural observatory. */

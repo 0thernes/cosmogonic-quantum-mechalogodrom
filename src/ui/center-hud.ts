@@ -61,7 +61,7 @@ ${PANEL_SEL} {
   width: auto !important;
   max-width: none !important;
   transform: none !important;
-  bottom: var(--cqm-hud-bottom, 96px) !important;
+  bottom: var(--cqm-hud-bottom, calc(var(--cqm-bottom-h, 108px) + 130px)) !important;
   top: auto !important;
   height: var(--cqm-hud-height, ${CENTER_HUD_DESKTOP_HEIGHT}) !important;
   max-height: calc(100vh - 156px) !important;
@@ -295,7 +295,7 @@ body:has(#cqm-hud-nav) #cqm-dock {
   ${PANEL_SEL} {
     left: 8px !important;
     right: 8px !important;
-    bottom: var(--cqm-hud-bottom, 104px) !important;
+    bottom: var(--cqm-hud-bottom, calc(var(--cqm-bottom-h, 108px) + 130px)) !important;
     height: var(--cqm-hud-height, ${CENTER_HUD_TOUCH_HEIGHT}) !important;
     border-radius: 14px 14px 0 0 !important;
   }

@@ -975,7 +975,7 @@ html.cqm-shell-ready .algo-list:empty::after {
 #ui > #aP {
   position: fixed;
   right: 10px;
-  bottom: 128px;
+  bottom: calc(var(--cqm-bottom-h, 108px) + 130px);
   z-index: 59;
   width: min(94vw, 340px);
   max-height: 52vh;

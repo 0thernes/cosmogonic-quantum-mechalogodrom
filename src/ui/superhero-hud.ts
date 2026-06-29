@@ -25,9 +25,9 @@ export interface HeroHudView extends SuperheroView {
 const INVENTORY = ['◈', '❄', '⚛', '✶', '☍', '⬡'];
 
 const STYLE = `
-#cqm-hero{position:fixed;top:calc(44px + env(safe-area-inset-top,0px));left:var(--cqm-hud-left,calc(clamp(200px,20vw,280px) + 10px));
-  right:var(--cqm-hud-right,calc(clamp(260px,26vw,400px) + 10px));
-  width:auto;max-width:none;max-height:min(28vh,200px);overflow:visible;
+#cqm-hero{position:fixed;top:calc(38px + env(safe-area-inset-top,0px));left:var(--cqm-hud-left,calc(clamp(220px,21vw,300px) + 14px));
+  right:var(--cqm-hud-right,calc(clamp(280px,27vw,420px) + 14px));
+  width:auto;max-width:none;max-height:min(22vh,150px);overflow:visible;
   transform:translateY(-150%);z-index:24;
   transition:transform .55s cubic-bezier(.2,.9,.3,1);font-size:11px;line-height:1.4;font-family:var(--font-mono,ui-monospace,monospace);
   color:#e9e3ff;pointer-events:none}
@@ -76,8 +76,8 @@ const STYLE = `
 }
 .cqm-hero-box{pointer-events:auto;border:1px solid rgba(150,120,255,.4);border-radius:14px;
   background:linear-gradient(180deg,rgba(14,9,28,.95),rgba(8,6,18,.92));backdrop-filter:blur(12px);
-  box-shadow:0 10px 40px rgba(0,0,0,.6),inset 0 0 30px rgba(80,40,160,.18);padding:9px 12px;
-  display:flex;flex-direction:column;gap:7px;max-height:min(28vh,200px);overflow-y:auto;overflow-x:hidden}
+  box-shadow:0 10px 40px rgba(0,0,0,.6),inset 0 0 30px rgba(80,40,160,.18);padding:7px 10px;
+  display:flex;flex-direction:column;gap:5px;max-height:min(22vh,150px);overflow-y:auto;overflow-x:hidden}
 @media (max-width:599px){.cqm-hero-box{padding:7px 8px;border-radius:10px}}
 .cqm-hero-r{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .cqm-hero-av{display:flex;align-items:center;gap:8px;white-space:nowrap}

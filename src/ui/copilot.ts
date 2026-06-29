@@ -353,7 +353,7 @@ interface HealthResult {
 const STYLE = `
 /* V71: the "down the middle 50/50 split" the directive asks for — answers on the left half, the
    textbox + options on the right half. Wider so both halves breathe; stacks on narrow screens. */
-#cqm-cop-panel{position:fixed;right:10px;bottom:128px;z-index:71;width:min(94vw,760px);height:min(74vh,600px);
+#cqm-cop-panel{position:fixed;right:10px;bottom:calc(var(--cqm-bottom-h,108px) + 130px);z-index:71;width:min(94vw,760px);height:min(74vh,600px);
   display:none;flex-direction:column;border:1px solid rgba(120,160,220,.4);border-radius:12px;
   background:rgba(4,8,18,.94);backdrop-filter:blur(10px);box-shadow:0 8px 40px rgba(0,0,0,.6);
   font:13px/1.5 var(--font-mono,ui-monospace,monospace);color:#cfe0fb;overflow:hidden}

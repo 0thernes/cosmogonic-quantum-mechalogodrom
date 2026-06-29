@@ -787,10 +787,10 @@
                 min="500"
                 max="4000"
                 step="50"
-                value="2600"
+                value="3200"
                 oninput="updateParam('particles', this.value)"
               />
-              <span class="value-display" id="particles-value">2600</span>
+              <span class="value-display" id="particles-value">3200</span>
             </div>
           </div>
 
@@ -804,10 +804,10 @@
                 min="0"
                 max="2"
                 step="0.05"
-                value="0.6"
+                value="0.8"
                 oninput="updateParam('collapseRate', this.value)"
               />
-              <span class="value-display" id="collapseRate-value">0.60</span>
+              <span class="value-display" id="collapseRate-value">0.80</span>
             </div>
           </div>
 
@@ -955,8 +955,8 @@
 
       let params = {
         seed: 12345,
-        particles: 2600, // 500..4000 — denser default field, still inside the 60fps budget
-        collapseRate: 0.6, // measurement events per second, 0..2
+        particles: 3200, // 500..4000 — denser, more dynamic default field
+        collapseRate: 0.8, // measurement events per second, 0..2
         fieldBlend: 0.45, // 0 = pure Lorenz-XZ, 1 = pure curl noise
         trailFade: 8, // background-alpha fade per frame (255 scale), 2..40 — longer trails
         paletteShift: 0, // global hue rotation, degrees
@@ -1044,16 +1044,16 @@
       const MIN_NOISE_BLEND = 0.06; // floor keeps pure-Lorenz mode from stalling at fixed points
       const NOISE_SCALE = 0.0042; // Perlin potential frequency (canvas px → noise space)
       const NOISE_EPS = 2.0; // finite-difference half-step for the curl, in px
-      const BASE_SPEED = 2.6; // px per frame after direction normalization
-      const RING_SPEED = 4.2; // wavefront expansion, px per frame
+      const BASE_SPEED = 3.4; // px per frame after direction normalization
+      const RING_SPEED = 5.6; // wavefront expansion, px per frame
       const RING_MAX_R = 480; // ring dies past this radius
       const RING_BAND = 26; // half-width of the wavefront's particle-kick band, px
 
       // ─── HUD overlay layout (canvas-space px, sized against the 1200² field) ───
       const HUD_PAD = 8;
-      const HUD_W = 210;
-      const HUD_CARD_H = 124;
-      const HUD_MATH_H = 64;
+      const HUD_W = 220;
+      const HUD_CARD_H = 146;
+      const HUD_MATH_H = 88;
       const HUD_MATH_LINES = [
         ['v = (1−f)·L̂ + f·N̂', 0],
         ['f = 0.06+0.94·blend', 1],
@@ -1498,13 +1498,13 @@
         fill(cyan[0], cyan[1], cyan[2]);
         textStyle(BOLD);
         textAlign(LEFT, TOP);
-        textSize(10);
+        textSize(12);
         text('THE MATH', mx, my);
         textStyle(NORMAL);
-        my += 18;
+        my += 20;
 
-        textSize(8);
-        const mlH = 11;
+        textSize(12);
+        const mlH = 16;
         const mathBottom = ly0 + HUD_MATH_H - 8;
         for (let k = 0; k < HUD_MATH_LINES.length; k++) {
           const seg = HUD_MATH_LINES[k];
