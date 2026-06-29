@@ -58,15 +58,6 @@ export function getDock(doc: Document = document): HTMLElement {
   dock.id = DOCK_ID;
   dock.setAttribute('aria-label', 'Panel and navigation dock');
   doc.body.appendChild(dock);
-  // V95: global pause/resume button in the dock bar.
-  const pauseBtn = doc.createElement('button');
-  pauseBtn.type = 'button';
-  pauseBtn.className = 'cqm-dock-toggle';
-  pauseBtn.dataset.action = 'pause';
-  pauseBtn.textContent = '⏸';
-  pauseBtn.title = 'Pause / Resume simulation';
-  pauseBtn.setAttribute('aria-label', 'Pause or resume simulation');
-  dock.appendChild(pauseBtn);
   // Adopt DOCS / SPEC / LAB by `data-nav` (rewrite-proof on GitHub Pages).
   for (const key of ['docs', 'spec', 'lab']) {
     const a = doc.querySelector<HTMLAnchorElement>(`a[data-nav="${key}"]`);
@@ -75,6 +66,23 @@ export function getDock(doc: Document = document): HTMLElement {
       dock.appendChild(a);
     }
   }
+  // V95: global utility actions in the dock bar — PAUSE, RESET, SPEED, VIEW, SPACE —
+  // so the side toolbar is no longer needed and front-end space is reclaimed.
+  const util = (label: string, action: string, title: string) => {
+    const b = doc.createElement('button');
+    b.type = 'button';
+    b.className = 'cqm-dock-toggle';
+    b.dataset.action = action;
+    b.textContent = label;
+    b.title = title;
+    b.setAttribute('aria-label', title);
+    return b;
+  };
+  dock.appendChild(util('⏸', 'pause', 'Pause / Resume simulation'));
+  dock.appendChild(util('↻', 'reset', 'Reset simulation'));
+  dock.appendChild(util('⏱', 'time', 'Cycle speed / time scale'));
+  dock.appendChild(util('👁', 'view', 'Cycle camera view'));
+  dock.appendChild(util('⬡', 'space', 'Dilate space / FOV'));
   return dock;
 }
 
