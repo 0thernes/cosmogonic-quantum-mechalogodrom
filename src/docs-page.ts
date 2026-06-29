@@ -56,8 +56,8 @@ function makeZoomable(pre: HTMLElement, svg: SVGSVGElement): void {
   // Intrinsic diagram size (mermaid always emits a viewBox); pin it so our transform owns scaling.
   const vb = svg.viewBox.baseVal;
   const measured = svg.getBoundingClientRect();
-  const w = vb && vb.width ? vb.width : measured.width || 800;
-  const h = vb && vb.height ? vb.height : measured.height || 400;
+  const w = (vb && vb.width > 0 ? vb.width : measured.width) || 800;
+  const h = (vb && vb.height > 0 ? vb.height : measured.height) || 400;
   svg.removeAttribute('width');
   svg.removeAttribute('height');
   svg.style.width = `${w}px`;

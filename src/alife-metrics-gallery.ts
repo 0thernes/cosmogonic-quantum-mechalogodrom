@@ -90,8 +90,10 @@ async function loadMetricImg(
   const embedded = ALIFE_SVG_EMBED[file];
   if (embedded) {
     const blob = new Blob([embedded], { type: 'image/svg+xml;charset=utf-8' });
-    img.src = URL.createObjectURL(blob);
-    img.classList.remove('error');
+    const url = URL.createObjectURL(blob);
+    if (await imgFromUrl(img, url)) {
+      img.classList.remove('error');
+    }
     return;
   }
   const cands = alifeMetricCandidates(file);
@@ -100,9 +102,11 @@ async function loadMetricImg(
       const res = await fetch(url, { cache: 'force-cache' });
       if (res.ok) {
         const blob = await res.blob();
-        img.src = URL.createObjectURL(blob);
-        img.classList.remove('error');
-        return;
+        const blobUrl = URL.createObjectURL(blob);
+        if (await imgFromUrl(img, blobUrl)) {
+          img.classList.remove('error');
+          return;
+        }
       }
     } catch {
       /* try img tag next */
@@ -240,6 +244,7 @@ const STYLE = `
 interface ZoomView {
   img: HTMLImageElement;
   stage: HTMLElement;
+  metricFile?: string;
   scale: number;
   tx: number;
   ty: number;
@@ -270,7 +275,7 @@ function scheduleZoomFit(view: ZoomView): void {
 }
 
 /** Wire pan/zoom on a stage; returns controls for toolbar buttons. */
-function mountZoomView(stage: HTMLElement, onTap?: () => void): ZoomView {
+function mountZoomView(stage: HTMLElement, onTap?: () => void, file?: string): ZoomView {
   const img = document.createElement('img');
   img.draggable = false;
   // Error overlay — only shown when loadMetricImg exhausts ALL candidate paths.
@@ -289,6 +294,7 @@ function mountZoomView(stage: HTMLElement, onTap?: () => void): ZoomView {
   const view: ZoomView = {
     img,
     stage,
+    metricFile: file,
     scale: 1,
     tx: 0,
     ty: 0,
@@ -300,9 +306,24 @@ function mountZoomView(stage: HTMLElement, onTap?: () => void): ZoomView {
     },
     fit: () => {
       const vp = stage.getBoundingClientRect();
-      const iw = img.naturalWidth || img.width || 800;
-      const ih = img.naturalHeight || img.height || 600;
-      if (!vp.width || !iw) return;
+      let iw = img.naturalWidth || img.width || 0;
+      let ih = img.naturalHeight || img.height || 0;
+      if (!iw || !ih) {
+        const mf = view.metricFile;
+        if (mf) {
+          const m = ALIFE_SVG_EMBED[mf];
+          if (m) {
+            const vbMatch = m.match(/viewBox=["'](\d+)\s+(\d+)\s+(\d+)\s+(\d+)["']/i);
+            if (vbMatch) {
+              iw = Number(vbMatch[3]);
+              ih = Number(vbMatch[4]);
+            }
+          }
+        }
+      }
+      if (!iw) iw = 800;
+      if (!ih) ih = 600;
+      if (!vp.width) return;
       img.style.width = `${iw}px`;
       img.style.height = `${ih}px`;
       view.scale = clampScale(Math.min(vp.width / iw, vp.height / ih) * 0.96);
@@ -420,9 +441,13 @@ export function mountAlifeMetricsGallery(root: HTMLElement | null): void {
   const thumbViews: ZoomView[] = [];
   const cardEls: HTMLElement[] = [];
 
-  const heroView = mountZoomView(heroStage, () => {
-    show(idx + 1);
-  });
+  const heroView = mountZoomView(
+    heroStage,
+    () => {
+      show(idx + 1);
+    },
+    ALIFE_METRICS[0]?.file,
+  );
   wireToolbar(hero, '.alife-tool', heroView);
 
   const show = (i: number): void => {
@@ -432,7 +457,10 @@ export function mountAlifeMetricsGallery(root: HTMLElement | null): void {
       heroView.img.classList.add('error');
       const err = heroStage.querySelector('.alife-loaderr') as HTMLElement | null;
       if (err) err.style.display = 'grid';
-    }).then(() => heroView.fit());
+    }).then(() => {
+      heroView.metricFile = m.file;
+      heroView.fit();
+    });
     heroView.img.alt = m.alt;
     caption.textContent = m.label;
     tabs.querySelectorAll('.alife-tab').forEach((el, j) => {
@@ -463,7 +491,7 @@ export function mountAlifeMetricsGallery(root: HTMLElement | null): void {
       `<button type="button" class="alife-thumb-tool" data-fit title="Fit">Fit</button>` +
       `</div><div class="alife-thumb-stage"></div></div>`;
     const thumbStage = card.querySelector('.alife-thumb-stage') as HTMLElement;
-    const tv = mountZoomView(thumbStage, () => show(i));
+    const tv = mountZoomView(thumbStage, () => show(i), m.file);
     void loadMetricImg(tv.img, m.file, () => {
       tv.img.classList.add('error');
       const err = thumbStage.querySelector('.alife-thumb-loaderr') as HTMLElement | null;
