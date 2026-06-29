@@ -34,6 +34,8 @@ const STYLE = `
 #${DOCK_ID} > a.cqm-dock-nav:focus-visible{outline:2px solid rgba(120,180,255,.75);outline-offset:2px}
 #${DOCK_ID} > a.cqm-dock-nav[data-nav="spec"]{border-color:rgba(220,120,255,.35);color:#f0c8ff}
 #${DOCK_ID} > a.cqm-dock-nav[data-nav="spec"]:hover{background:rgba(40,16,54,.92);border-color:rgba(220,120,255,.55)}
+#${DOCK_ID} > a.cqm-dock-nav[data-nav="bible"]{border-color:rgba(255,200,80,.35);color:#ffe8a6}
+#${DOCK_ID} > a.cqm-dock-nav[data-nav="bible"]:hover{background:rgba(60,50,12,.92);border-color:rgba(255,200,80,.55)}
 @media (max-width: 599px) {
   #${DOCK_ID}{flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;justify-content:flex-start;
     max-width:calc(100vw - 12px);scrollbar-width:thin;-webkit-overflow-scrolling:touch;bottom:56px}
@@ -58,8 +60,8 @@ export function getDock(doc: Document = document): HTMLElement {
   dock.id = DOCK_ID;
   dock.setAttribute('aria-label', 'Panel and navigation dock');
   doc.body.appendChild(dock);
-  // Adopt DOCS / SPEC / LAB by `data-nav` (rewrite-proof on GitHub Pages).
-  for (const key of ['docs', 'spec', 'lab']) {
+  // Adopt DOCS / SPEC / LAB / BIBLE by `data-nav` (rewrite-proof on GitHub Pages).
+  for (const key of ['docs', 'spec', 'lab', 'bible']) {
     const a = doc.querySelector<HTMLAnchorElement>(`a[data-nav="${key}"]`);
     if (a) {
       a.classList.add('cqm-dock-nav');
