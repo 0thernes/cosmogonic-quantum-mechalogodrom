@@ -81,8 +81,7 @@ export function hebbianUpdate(
  * Eligibility-trace learner for DELAYED reward (temporal credit assignment, à la TD(λ)): the trace
  * remembers which inputs were recently active, so a reward that arrives later still reaches the weights
  * that earned it. Per step:
- *   eᵢ ← λ·eᵢ + inputᵢ           (decit the trace, add current activity)
- *   wᵢ ← clamp( wᵢ·(1−decay) + rate·reward·eᵢ )
+ *   eᵢ ← λ·eᵢ + inputᵢ           (decay the trace, add current activity)
  * Deterministic, bounded, allocation-free after construction (one fixed trace buffer). O(n) per step.
  */
 export class EligibilityLearner {
