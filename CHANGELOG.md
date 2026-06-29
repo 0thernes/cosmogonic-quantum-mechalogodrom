@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed — visual-benchmark shader compile error (found by runtime WebGL verification)
+
+- `applyVizBenchmarks` injected the shadertoy-style `void mainImageN(...) {...}` function DEFINITION
+  after `#include <color_fragment>` — which is INSIDE `main()`. GLSL forbids nested function definitions,
+  so the benchmark `MeshStandardMaterial` failed to compile (`'{' : syntax error`) and rendered broken.
+  The definition + its `u_entropy` uniform now inject at GLOBAL scope (after `#include <common>`); only
+  the CALL stays in `main()`. Caught by loading the live app in headless Chromium and reading the WebGL
+  program log — the whole app now boots with **0 shader errors / 0 page errors** (verified), where the
+  scene-graph unit tests could not see a GPU compile failure. Pinned by a structural injection test.
+
 ### V-VITALS3 — a third real-signal channel + 8 new named body effects (organism visual expansion)
 
 - Organisms already wear ~20 effects bound to 8 real signals across two GPU lanes (wealth / senescence /

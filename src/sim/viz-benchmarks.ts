@@ -274,13 +274,22 @@ export function applyVizBenchmarks(material: VizShaderMaterial, index: number): 
     shader.uniforms.u_entropy = { value: 0.35 };
     const shaderCode = VIZ_BENCHMARKS_GLSL[bench] ?? '';
     const fn = bench + 1;
-    shader.fragmentShader = shader.fragmentShader.replace(
-      '#include <color_fragment>',
-      '#include <color_fragment>\n' +
-        `// Visual benchmark ${fn}/25\n${shaderCode}\n` +
-        'vec4 benchCol = vec4(0.0);\n' +
-        `mainImage${fn}(benchCol, gl_FragCoord.xy, vec2(800.0, 600.0));\n` +
-        'diffuseColor = mix(diffuseColor, benchCol, 0.42);\n',
-    );
+    shader.fragmentShader = shader.fragmentShader
+      .replace(
+        // The function DEFINITION (`void mainImageN(...) {...}`) + its custom uniform must live at
+        // GLOBAL scope. GLSL forbids nested function definitions, so injecting them after
+        // `<color_fragment>` (which is INSIDE main()) raised `'{' : syntax error` and the whole
+        // material failed to compile (a black/uncoloured benchmark mesh). They go after <common> now.
+        '#include <common>',
+        `#include <common>\nuniform float u_entropy;\n// Visual benchmark ${fn}/25\n${shaderCode}\n`,
+      )
+      .replace(
+        // Only the CALL belongs inside main(), after the base colour is established.
+        '#include <color_fragment>',
+        '#include <color_fragment>\n' +
+          'vec4 benchCol = vec4(0.0);\n' +
+          `mainImage${fn}(benchCol, gl_FragCoord.xy, vec2(800.0, 600.0));\n` +
+          'diffuseColor = mix(diffuseColor, benchCol, 0.42);\n',
+      );
   };
 }
