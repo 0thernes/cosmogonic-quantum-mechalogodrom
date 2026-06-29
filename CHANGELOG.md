@@ -11,6 +11,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### BRUTALISM frame-coherence + completeness (post-merge review follow-up)
 
+- **Whole apex body concrete (`super-body.ts`).** `setBrutalism` now crossfades the Super Creature's
+  STATIC appendages (arms, wings, mouths, legs, chrome rings) from their captured base toward concrete,
+  and `setMind` crossfades the plan-coloured eyes + cage — so at full BRUTALISM the entire body goes
+  monolithic, not just the god-jewel core (the surrounding appendages no longer stay plan-coloured and
+  emissive). Stateless lerp FROM each base ⇒ exact restore at f=0. Test pins the on/off round-trip.
+
 - **Whole-population concrete (`instanced-entities.ts`).** At full BRUTALISM the reliquary shader now
   collapses ALL accumulated self-glow (vital / social / quantum / render-mode emissive) to zero, so the
   thousands of instanced organisms read as raw scene-lit grey forms instead of still glowing neon

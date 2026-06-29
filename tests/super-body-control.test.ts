@@ -145,6 +145,33 @@ describe('SuperBodySystem flight + control (V41)', () => {
     expect(body.brutalismFactor()).toBe(0); // clamped — back to the jewel
   });
 
+  test('BRUTALISM turns the whole apex body concrete — the static appendages, not just the core', () => {
+    const body = new SuperBodySystem(new THREE.Scene());
+    // Reach the registered static appendage materials (arms/wings/mouths/legs/chrome rings).
+    const reg = (
+      body as unknown as { brutalStatic: { mat: THREE.MeshStandardMaterial; base: THREE.Color }[] }
+    ).brutalStatic;
+    expect(reg.length).toBeGreaterThanOrEqual(5); // arms, wings, mouths, legs, rings
+    const bases = reg.map((e) => e.mat.color.getHex());
+
+    // OFF: appendages keep their lurid base colours (byte-identical).
+    body.setBrutalism(0);
+    reg.forEach((e, i) => expect(e.mat.color.getHex()).toBe(bases[i]!));
+
+    // FULL concrete: every appendage crossfades to the raw concrete grey (0.34, 0.335, 0.32).
+    body.setBrutalism(1);
+    const concrete = new THREE.Color(0.34, 0.335, 0.32);
+    for (const e of reg) {
+      expect(e.mat.color.r).toBeCloseTo(concrete.r, 5);
+      expect(e.mat.color.g).toBeCloseTo(concrete.g, 5);
+      expect(e.mat.color.b).toBeCloseTo(concrete.b, 5);
+    }
+
+    // OFF again restores every appendage EXACTLY (stateless lerp FROM the captured base).
+    body.setBrutalism(0);
+    reg.forEach((e, i) => expect(e.mat.color.getHex()).toBe(bases[i]!));
+  });
+
   test('BRUTALISM coexists with evolution + flight (no NaN, both factors independent)', () => {
     const body = new SuperBodySystem(new THREE.Scene());
     body.setBrutalism(1);

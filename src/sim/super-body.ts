@@ -67,6 +67,11 @@ const PLAN_RGB: Record<SuperPlan, [number, number, number]> = {
   REST: [0.54, 0.54, 0.63],
 };
 
+/** BRUTALISM: the raw poured-concrete diffuse + a near-black emissive the apex appendages crossfade
+ *  toward at full concrete (matches the instanced/entity concrete grey). Module consts → no alloc. */
+const SB_CONCRETE = new THREE.Color(0.34, 0.335, 0.32);
+const SB_CONCRETE_DARK = new THREE.Color(0.05, 0.05, 0.06);
+
 /** Silhouette radius of the core — ½-a-Titan-class colossus (NHI bodies are R≈3.4). */
 const R = 7.4;
 const EYES = 24; // ocular corona count (amped for extreme multi-eye reactivity)
@@ -249,6 +254,14 @@ export class SuperBodySystem {
   private readonly eyeMat: THREE.MeshStandardMaterial;
   private readonly armMat: THREE.MeshStandardMaterial;
   private readonly cageMat: THREE.LineBasicMaterial;
+  /** BRUTALISM: the STATIC (non-plan-driven) appendage materials + their captured base colour/emissive,
+   *  so {@link update} can lerp each toward concrete by `this.brutalism` without compounding. The
+   *  plan-driven eye/cage materials are handled in {@link setMind} instead. */
+  private readonly brutalStatic: {
+    mat: THREE.MeshStandardMaterial;
+    base: THREE.Color;
+    baseEmissive: THREE.Color;
+  }[] = [];
 
   // Reused uniforms (shared core+cage) + mind-derived targets — no per-frame allocation.
   // extreme edge + math morph: added qwave/phi/reflex/qualia for multi-freq quantum pulses + combinatronics.
@@ -418,6 +431,11 @@ export class SuperBodySystem {
       emissive: 0x2a0a40,
       emissiveIntensity: 0.8,
     });
+    this.brutalStatic.push({
+      mat: this.armMat,
+      base: this.armMat.color.clone(),
+      baseEmissive: this.armMat.emissive.clone(),
+    });
     const armGeo = new THREE.ConeGeometry(R * 0.16, R * 1.5, 6);
     for (let i = 0; i < ARMS; i++) {
       const y = 1 - (i / (ARMS - 1)) * 2;
@@ -456,6 +474,14 @@ export class SuperBodySystem {
       roughness: 0.55,
       emissive: 0x2a1030,
     });
+    // BRUTALISM: register the static appendage materials so update() can crossfade them to concrete.
+    for (const mat of [wMat, mMat, legMat]) {
+      this.brutalStatic.push({
+        mat,
+        base: mat.color.clone(),
+        baseEmissive: mat.emissive.clone(),
+      });
+    }
     // WINGS (8 strips max): wave anim + fourier chaos
     this.wings = new THREE.Group();
     for (let w = 0; w < WINGS; w++) {
@@ -501,6 +527,11 @@ export class SuperBodySystem {
       emissive: 0x4a2a70,
       emissiveIntensity: 0.5,
     });
+    this.brutalStatic.push({
+      mat: ringMat,
+      base: ringMat.color.clone(),
+      baseEmissive: ringMat.emissive.clone(),
+    });
     // Ralph heartbeat re-audit 10x continue: use libirrepSymmetry (Tsotchke libirrep) to modulate ring geo for symmetry per Archon (more wiring into body)
     const ringSym = libirrepSymmetry(this.variant + 1, 3);
     for (let i = 0; i < 3; i++) {
@@ -534,6 +565,14 @@ export class SuperBodySystem {
     this.eyeMat.color.setRGB(c[0] * 0.16, c[1] * 0.16, c[2] * 0.16);
     (this.eyeMat.emissive as THREE.Color).setRGB(c[0], c[1], c[2]);
     this.cageMat.color.setRGB(0.4 + c[0] * 0.5, 0.4 + c[1] * 0.5, 0.5 + c[2] * 0.4);
+    // BRUTALISM: the eyes + cage are PLAN-coloured (just set above), so crossfade them to concrete
+    // HERE — non-compounding because setMind re-sets them from the plan each cadence before this runs.
+    // (The static appendages are handled per-frame in update(); the core is the shader uniform.)
+    if (this.brutalism > 0) {
+      this.eyeMat.color.lerp(SB_CONCRETE, this.brutalism);
+      (this.eyeMat.emissive as THREE.Color).lerp(SB_CONCRETE_DARK, this.brutalism);
+      this.cageMat.color.lerp(SB_CONCRETE, this.brutalism);
+    }
     // the mind's own movement output (act[0..2]) becomes a slow drift target
     this.move.set(snap.act[0] ?? 0, (snap.act[1] ?? 0) * 0.5, snap.act[2] ?? 0);
   }
@@ -897,6 +936,17 @@ export class SuperBodySystem {
   setBrutalism(level: number): void {
     this.brutalism = clampf(level, 0, 1);
     this.u.uBrutalism.value = this.brutalism;
+    // BRUTALISM: crossfade the STATIC appendage materials (arms/wings/mouths/legs/chrome rings) from
+    // their captured base toward concrete so the whole apex body goes monolithic, not just the core
+    // god-jewel shader. Stateless — always lerps FROM the base, so level 0 restores EXACTLY (the static
+    // materials carry no other animation on their colour). The plan-coloured eyes/cage are crossfaded
+    // in setMind (re-set from the plan each cadence). Called every frame by world.ts. O(appendages).
+    const b = this.brutalism;
+    for (let i = 0; i < this.brutalStatic.length; i++) {
+      const e = this.brutalStatic[i]!;
+      e.mat.color.copy(e.base).lerp(SB_CONCRETE, b);
+      e.mat.emissive.copy(e.baseEmissive).lerp(SB_CONCRETE_DARK, b);
+    }
   }
 
   /** BRUTALISM: the current concrete crossfade applied to the skin (for tests / inspection). */
