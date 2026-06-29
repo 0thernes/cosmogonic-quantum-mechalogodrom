@@ -92,6 +92,11 @@ interface Pool {
    * (coop/defect), y = payoff, z = community hue, w = quantum phase. Packed by {@link packVitals2}.
    */
   vitals2: THREE.InstancedBufferAttribute;
+  /**
+   * vec4 per instance: REAL identity + kinetic signals driving the V-VITALS3 suite — x = lineage hue
+   * (phylum), y = species hue (morphotype), z = ascent (vel.y), w = girth (scale). By {@link packVitals3}.
+   */
+  vitals3: THREE.InstancedBufferAttribute;
   capacity: number;
   /** Live instances written this frame (reset each sync). */
   used: number;
@@ -150,6 +155,13 @@ const VITAL_COMMUNITY_HUE = 0.61803398875;
 const VITAL_PAYOFF_MAX = 5;
 /** 1/2π — wraps the ever-advancing quantum phase `qP` into a [0,1) cycling lane. */
 const VITAL_INV_TAU = 1 / (Math.PI * 2);
+/** Golden-ratio hue hash for lineage (phylum) + species (morphotype) → well-separated identity hues. */
+const VITAL_LINEAGE_HUE = 0.61803398875;
+/** Vertical-velocity → ascent normalizer: a vel.y of ±0.0625 saturates the rising/sinking lane (0.5 = level). */
+const VITAL_ASCENT_SCALE = 8;
+/** Market-driven render-scale → girth lane: maps body scale [0.4, 2.0] into [0,1] (the fattened bloom large). */
+const VITAL_GIRTH_MIN = 0.4;
+const VITAL_GIRTH_RANGE = 1.6;
 
 /**
  * Pack an organism's REAL social + quantum state into the `instVitals2` vec4 that drives the V-VITALS2
@@ -180,6 +192,38 @@ export function packVitals2(
   out[offset + 2] = g - Math.floor(g); // z community hue (fract)
   const q = (Number.isFinite(qP) ? qP : 0) * VITAL_INV_TAU;
   out[offset + 3] = q - Math.floor(q); // w quantum phase (fract, wrapped)
+}
+
+/**
+ * Pack an organism's REAL identity + kinetic state into the `instVitals3` vec4 driving the V-VITALS3
+ * effect suite — written allocation-free into `out[offset..offset+3]`:
+ * - **x = lineage hue** `phylum >= 0 ? fract(phylum × φ) : 0` (the V3.2 phylum) — milky-brushed lineage
+ *   bands + species/lineage identity made readable straight off the body;
+ * - **y = species hue** `fract(mi × φ)` (the morphotype index) — per-species crystalline sigil shards;
+ * - **z = ascent** `clamp01(0.5 + vel.y × {@link VITAL_ASCENT_SCALE})` (vertical velocity, 0.5 = level
+ *   flight) — storm-thermal updraft (rising ⇒ warm) vs cool downwell (sinking), + vortexical swirl;
+ * - **w = girth** `clamp01((scale − {@link VITAL_GIRTH_MIN}) / {@link VITAL_GIRTH_RANGE})` (the
+ *   market-driven render scale — wealth made geometric) — plasmoid orbs orbit the large.
+ *
+ * Every lane is finite + in `[0,1]`: non-finite inputs and an unaffiliated phylum (−1) pack 0, the hue
+ * lanes wrap. Pure, no rng — a deterministic function of the organism's identity + real motion, never
+ * decoration. O(1). See tests/entity-vitals3.test.ts.
+ */
+export function packVitals3(
+  out: Float32Array,
+  offset: number,
+  phylum: number,
+  mi: number,
+  velY: number,
+  scale: number,
+): void {
+  const ph = Number.isFinite(phylum) && phylum >= 0 ? phylum * VITAL_LINEAGE_HUE : 0;
+  out[offset] = ph - Math.floor(ph); // x lineage hue (fract)
+  const sp = Number.isFinite(mi) && mi >= 0 ? mi * VITAL_LINEAGE_HUE : 0;
+  out[offset + 1] = sp - Math.floor(sp); // y species hue (fract)
+  out[offset + 2] = clamp01(0.5 + (Number.isFinite(velY) ? velY : 0) * VITAL_ASCENT_SCALE); // z ascent
+  const g = Number.isFinite(scale) ? (scale - VITAL_GIRTH_MIN) / VITAL_GIRTH_RANGE : 0;
+  out[offset + 3] = clamp01(g); // w girth
 }
 
 /**
@@ -220,7 +264,7 @@ function patchPoolMaterial(
     shader.vertexShader = shader.vertexShader
       .replace(
         '#include <common>',
-        '#include <common>\nattribute vec4 instEmissive;\nattribute vec4 instVitals;\nattribute vec4 instVitals2;\nvarying vec4 vInstEmissive;\nvarying vec4 vVitals;\nvarying vec4 vVit2;\nvarying vec3 vObjPos;\nuniform float uTime;\nuniform float uNightmare;',
+        '#include <common>\nattribute vec4 instEmissive;\nattribute vec4 instVitals;\nattribute vec4 instVitals2;\nattribute vec4 instVitals3;\nvarying vec4 vInstEmissive;\nvarying vec4 vVitals;\nvarying vec4 vVit2;\nvarying vec4 vVit3;\nvarying vec3 vObjPos;\nuniform float uTime;\nuniform float uNightmare;',
       )
       .replace(
         '#include <begin_vertex>',
@@ -228,6 +272,7 @@ function patchPoolMaterial(
           'vInstEmissive = instEmissive;\n' +
           'vVitals = instVitals;\n' +
           'vVit2 = instVitals2;\n' +
+          'vVit3 = instVitals3;\n' +
           'vObjPos = position;\n' +
           'if (uNightmare > 0.0) {\n' +
           '  float ph = float(gl_InstanceID) * 0.6180339887;\n' +
@@ -281,6 +326,7 @@ const RELIQUARY_FRAG_HEADER = /* glsl */ `
 varying vec4 vInstEmissive;
 varying vec4 vVitals;
 varying vec4 vVit2;
+varying vec4 vVit3;
 varying vec3 vObjPos;
 uniform float uTime;
 uniform float uBass;
@@ -488,6 +534,49 @@ const RELIQUARY_FRAG_BODY = /* glsl */ `#include <emissivemap_fragment>
 	float v3cym = 0.5 + 0.5 * sin(length(vObjPos) * 22.0 - uTime * 5.0);
 	totalEmissiveRadiance += vec3(0.3, 0.8, 0.9) * pow(v3cym, 4.0) * uBass * 0.5;
 
+	// ══ V-VITALS4 IDENTITY + TRUE-KINETIC SUITE ═══════════════════════════════════════════════════
+	// Bound to the NEW third packed lane (vVit3): x=lineage hue (phylum), y=species hue (morphotype),
+	// z=ascent (TRUE vel.y, 0.5=level flight), w=girth (the market-driven render scale). These are
+	// dimensions the suites above never showed — identity/taxonomy, real vertical motion, and body
+	// size — each a FALSIFIABLE readout, signal-gated + additive, GPU-only, no rng.
+	float vLin = vVit3.x, vSpec = vVit3.y, vAsc = vVit3.z, vGirth = vVit3.w;
+	// MILKY-EXPANDED-BRUSHED LINEAGE BANDS (lineage) — brushed-metal bands tint per phylum, so you can
+	// READ a creature's lineage straight off its body (taxonomy made visible).
+	vec3 vLinCol = 0.5 + 0.5 * cos(6.2831853 * (vLin + vec3(0.0, 0.33, 0.67)));
+	float vBrush = 0.5 + 0.5 * sin(dot(vObjPos.xz, vec2(17.0, 13.0)) + uTime * 0.35);
+	diffuseColor.rgb = mix(diffuseColor.rgb, vLinCol, vBrush * 0.10);
+	totalEmissiveRadiance += vLinCol * pow(rqFres, 2.2) * vBrush * 0.14;
+	// SHARDWARP SPECIES SIGILS (species) — a per-morphotype crystalline shard sigil flickers; creatures
+	// of one species wear the same shards, a different species different ones.
+	vec3 vSpecCol = 0.5 + 0.5 * cos(6.2831853 * (vSpec + vec3(0.12, 0.5, 0.88)));
+	float vShard = step(0.70, fract(rqDetail * 5.0 + vSpec * 11.0 + sin(uTime * 1.3) * 0.2));
+	totalEmissiveRadiance += vSpecCol * vShard * pow(rqFres, 1.2) * 0.5;
+	// ASCENSION THERMAL UPDRAFT (true vel.y) — a RISING body sheds warm thermal radiance, a SINKING one a
+	// cool downwell: the creature's real climb/dive is legible as heat.
+	float vRise = vAsc - 0.5;
+	vec3 vThermCol = mix(vec3(0.20, 0.50, 1.0), vec3(1.0, 0.55, 0.18), step(0.0, vRise));
+	float vTherm = abs(vRise) * 2.0 * pow(0.5 + 0.5 * sin(vObjPos.y * 9.0 - uTime * 7.0), 4.0);
+	totalEmissiveRadiance += vThermCol * vTherm * 0.9;
+	// SUNSET-EXPANDED HORIZON (senescence) — an aging body bleeds a warm dusk→violet vertical gradient
+	// (a HUE read of age, distinct from the ashen GREY cataract): old age is a sunset, not just a fade.
+	vec3 vSunset = mix(vec3(1.0, 0.42, 0.12), vec3(0.5, 0.14, 0.6), clamp(vObjPos.y * 0.5 + 0.5, 0.0, 1.0));
+	totalEmissiveRadiance += vSunset * vSen * pow(rqFres, 1.6) * 0.45;
+	// PLASMA-EXPANDED FILAMENTS (neural × world-chaos) — writhing plasma crawls a stressed, firing body,
+	// hotter as the cosmos's real chaos rises (a cross-system coupling: turbulence feeds the body).
+	float vPlasma = pow(0.5 + 0.5 * sin(rqDetail * 17.0 + uTime * 4.0 + vObjPos.x * 6.0), 8.0);
+	totalEmissiveRadiance += vec3(0.7, 0.3, 1.0) * vPlasma * vNeu * (0.4 + 0.6 * uChaos) * 1.0;
+	// NEURALMIMETIC LATTICE (neural) — a mimetic synaptic mesh flickers, denser as the body fires harder.
+	float vCell = floor(vObjPos.x * 8.0) + floor(vObjPos.y * 8.0) + floor(vObjPos.z * 8.0);
+	float vLat = step(0.8, fract(sin(vCell * 12.9898 + uTime * 0.6) * 43758.5453));
+	totalEmissiveRadiance += vec3(0.4, 1.0, 0.85) * vLat * vNeu * 0.55;
+	// PLASMOID GIRTH ORBS (size) — the market-fattened large orbit slow plasmoid light-orbs; a thin,
+	// destitute body shows none (size is wealth made geometric, here made luminous).
+	float vOrb = pow(0.5 + 0.5 * sin(atan(rqN.y, rqN.x) * 5.0 + uTime * 2.0), 16.0);
+	totalEmissiveRadiance += vec3(1.0, 0.8, 0.5) * vOrb * vGirth * pow(rqFres, 0.8) * 0.7;
+	// VISION-EXPANDED OCULUS (lineage) — a faint iris/oculus gradient blooms on the rim in the lineage hue.
+	float vIris = pow(rqFres, 0.5) * (0.5 + 0.5 * sin(length(vObjPos) * 7.0 - uTime * 1.2));
+	totalEmissiveRadiance += vLinCol * vIris * 0.18;
+
 	// Exotic render modes layer on top (V7-beyond, unchanged).
 	if (uMode > 5.5) {
 		float ct = abs(dot(normalize(vNormal), rqV));
@@ -662,6 +751,14 @@ export class InstancedEntityRenderer {
         ud.setGroup,
         ud.qP,
       );
+      packVitals3(
+        pool.vitals3.array as Float32Array,
+        o,
+        ud.phylum,
+        ud.mi,
+        vel ? vel.y : 0,
+        e.scale.x, // the market-driven render scale (girth = wealth made geometric)
+      );
     }
 
     // Publish: live counts, clipped uploads, render mode (V7.3). Per-instance colour/emissive/
@@ -694,6 +791,9 @@ export class InstancedEntityRenderer {
         pool.vitals2.clearUpdateRanges();
         pool.vitals2.addUpdateRange(0, used * 4);
         pool.vitals2.needsUpdate = true;
+        pool.vitals3.clearUpdateRanges();
+        pool.vitals3.addUpdateRange(0, used * 4);
+        pool.vitals3.needsUpdate = true;
       }
       if (modeChanged) {
         this.applyModeToPool(pool.mesh.material as THREE.MeshStandardMaterial);
@@ -758,6 +858,9 @@ export class InstancedEntityRenderer {
     // vec4 per-instance SOCIAL + QUANTUM signals (V-VITALS2) — same lifecycle as the lanes above.
     const vitals2 = new THREE.InstancedBufferAttribute(new Float32Array(capacity * 4), 4);
     vitals2.setUsage(THREE.DynamicDrawUsage);
+    // vec4 per-instance IDENTITY + KINETIC signals (V-VITALS3) — same lifecycle as the lanes above.
+    const vitals3 = new THREE.InstancedBufferAttribute(new Float32Array(capacity * 4), 4);
+    vitals3.setUsage(THREE.DynamicDrawUsage);
     // The pool renders a per-pool CLONE of the cached geometry so the
     // `instEmissive` attribute never leaks onto the shared cache entry (entity
     // geometries are tiny — ≤80 small clones, boot/growth-time only). The clone
@@ -766,13 +869,14 @@ export class InstancedEntityRenderer {
     instGeo.setAttribute('instEmissive', emissive);
     instGeo.setAttribute('instVitals', vitals);
     instGeo.setAttribute('instVitals2', vitals2);
+    instGeo.setAttribute('instVitals3', vitals3);
     mesh.geometry = instGeo;
     // Force instanceColor allocation now so sync() can assume it exists.
     mesh.setColorAt(0, WHITE);
     const ic = mesh.instanceColor;
     if (ic) ic.setUsage(THREE.DynamicDrawUsage);
     this.scene.add(mesh);
-    return { mesh, emissive, vitals, vitals2, capacity, used: 0 };
+    return { mesh, emissive, vitals, vitals2, vitals3, capacity, used: 0 };
   }
 
   /** Replace a pool with a doubled-capacity successor (event-driven, rare). */

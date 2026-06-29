@@ -9,6 +9,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### V-VITALS3 — a third real-signal channel + 8 new named body effects (organism visual expansion)
+
+- Organisms already wear ~20 effects bound to 8 real signals across two GPU lanes (wealth / senescence /
+  neural / exertion · strategy / payoff / tribe / quantum). This adds a **third per-instance channel**
+  (`instVitals3`) packing four MORE real, previously-unvisualized dimensions — **lineage** (phylum hue),
+  **species** (morphotype hue), **ascent** (TRUE vertical velocity `vel.y`, 0.5 = level), and **girth**
+  (the market-driven render scale = wealth made geometric). Pure `packVitals3`, every lane finite + in
+  `[0,1]`, NaN/Inf-sealed, hue lanes wrap; a bare data-mesh packs zeros. 9 tests pin the data contract +
+  the sync→GPU wiring (tests/entity-vitals3.test.ts).
+- The reliquary fragment shader gains a **V-VITALS4 suite** of 8 new named effects, each a FALSIFIABLE
+  readout of one of those signals (never decorative): **Milky-Expanded brushed lineage bands** + a
+  **Vision-Expanded oculus** (lineage — taxonomy you can read off the body), **Shardwarp species sigils**
+  (per-morphotype), **Ascension thermal updraft** (rising ⇒ warm radiance, sinking ⇒ cool downwell —
+  real climb/dive as heat), **Sunset-Expanded horizon** (a warm dusk→violet hue read of age, distinct
+  from the ashen-grey cataract), **Plasma-Expanded filaments** (neural × world-chaos — a cross-system
+  coupling), **Neuralmimetic lattice** (firing density), and **Plasmoid girth orbs** (the fattened large
+  orbit light-orbs). Signal-gated + additive, deterministic, GPU-only (zero per-entity CPU), and killed
+  by `uBrutalism` so concrete still reads concrete.
+
 ### BRUTALISM frame-coherence + completeness (post-merge review follow-up)
 
 - **Whole monolith body concrete (`environment.ts`).** `collectStructureMats` now traverses each
