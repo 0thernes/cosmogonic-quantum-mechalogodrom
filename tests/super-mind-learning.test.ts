@@ -95,5 +95,8 @@ describe('SuperMind online learning (V96)', () => {
       );
     }
     expect(m.learnedPlanBias().every((b) => Number.isFinite(b))).toBe(true);
-  });
+    // 30s timeout: 400 full think() beats is genuinely heavy (apex mind + GWT-2 workspace +
+    // embodiment), and under full-suite parallel CPU contention it brushes bun's 5s default. The
+    // run is deterministic — this guards only against the scheduler flake, not any logic change.
+  }, 30_000);
 });

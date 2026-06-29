@@ -274,3 +274,39 @@ describe('audio + entropy couplings', () => {
     expect(clearInt.auroraMesh.material.opacity).toBeLessThanOrEqual(0.01);
   });
 });
+
+describe('BRUTALISM sky dome — the OFF toggle fully restores the pristine sky', () => {
+  test('easing brutalism to 0 re-bakes the exact pristine gradient (no permanent concrete tint)', () => {
+    const ctx = makeCtx(7, 800); // CLEAR weather, fixed chaos ⇒ only the brutalism bucket varies
+    const atmos = new AtmosphereSystem(ctx);
+    const internals = atmos as unknown as AtmosInternals;
+
+    // Pristine baseline after a normal (brutalism-off) update.
+    atmos.update(0.016, 1, ZERO_BANDS, 0.5);
+    const pristine = Float32Array.from(internals.domeColors);
+
+    // Full brutalism → the dome bakes toward concrete (must actually change, or the test is vacuous).
+    atmos.setBrutalism(1);
+    atmos.update(0.016, 1.1, ZERO_BANDS, 0.5);
+    let changed = false;
+    for (let i = 0; i < pristine.length; i++) {
+      if (Math.abs((internals.domeColors[i] ?? 0) - (pristine[i] ?? 0)) > 1e-4) {
+        changed = true;
+        break;
+      }
+    }
+    expect(changed).toBe(true);
+
+    // Ease brutalism back toward 0 the way the world does — geometric decay that never lands EXACTLY
+    // on 0, passing through the bottom rounding bucket where the old code froze the dome ~4% concrete.
+    let f = 1;
+    for (let frame = 0; frame < 80; frame++) {
+      f += (0 - f) * 0.2;
+      atmos.setBrutalism(f);
+      atmos.update(0.016, 2 + frame * 0.016, ZERO_BANDS, 0.5);
+    }
+
+    // The < 0.02 snap + bucket-0 re-bake must return the sky to byte-identical pristine.
+    expect(Float32Array.from(internals.domeColors)).toEqual(pristine);
+  });
+});

@@ -134,3 +134,50 @@ describe('EnvironmentSystem — purity + build contract', () => {
     expect(point).toBeGreaterThanOrEqual(6); // 6 colored rig lights + monolith crowns + diorama glows
   });
 });
+
+describe('EnvironmentSystem — BRUTALISM restores the reaction-diffusion ground glow', () => {
+  /** Internals cast (sibling-test pattern): the ground material is private. */
+  interface EnvInternals {
+    groundMaterial: THREE.MeshStandardMaterial;
+  }
+
+  test('after attaching the RD emissiveMap, brutalism on→off returns the glow to 0.85 (not 0.3)', () => {
+    const ctx = makeCtx(0x9d, 4);
+    const env = new EnvironmentSystem(ctx);
+    const ground = (env as unknown as EnvInternals).groundMaterial;
+
+    // RD coupling lifts the ground glow from its build value (0.3) to 0.85 so the living veins read.
+    const tex = new THREE.DataTexture(new Uint8Array([255, 255, 255, 255]), 1, 1);
+    env.attachGroundEmissiveMap(tex);
+    expect(ground.emissiveIntensity).toBeCloseTo(0.85, 6);
+
+    // Full concrete dims the veins almost out.
+    env.applyBrutalism(1);
+    expect(ground.emissiveIntensity).toBeCloseTo(0.06, 6);
+
+    // Ease brutalism back toward 0 (geometric decay, never exactly 0): the glow must converge to the
+    // POST-ATTACH 0.85, not the build-time 0.3 — the regression a PR review flagged.
+    let f = 1;
+    for (let i = 0; i < 60; i++) {
+      f += (0 - f) * 0.25;
+      env.applyBrutalism(f);
+    }
+    expect(ground.emissiveIntensity).toBeGreaterThan(0.8);
+    expect(ground.emissiveIntensity).toBeLessThanOrEqual(0.85 + 1e-9);
+  });
+
+  test('without the RD map, brutalism off still restores the build-time 0.3 baseline', () => {
+    const ctx = makeCtx(0x9e, 4);
+    const env = new EnvironmentSystem(ctx);
+    const ground = (env as unknown as EnvInternals).groundMaterial;
+    expect(ground.emissiveIntensity).toBeCloseTo(0.3, 6);
+    env.applyBrutalism(1);
+    let f = 1;
+    for (let i = 0; i < 60; i++) {
+      f += (0 - f) * 0.25;
+      env.applyBrutalism(f);
+    }
+    expect(ground.emissiveIntensity).toBeGreaterThan(0.29);
+    expect(ground.emissiveIntensity).toBeLessThanOrEqual(0.3 + 1e-9);
+  });
+});

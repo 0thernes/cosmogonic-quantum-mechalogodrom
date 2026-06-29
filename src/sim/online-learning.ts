@@ -92,7 +92,7 @@ export class EligibilityLearner {
   private readonly lambda: number;
 
   constructor(size: number, lambda = 0.9) {
-    this.trace = new Array<number>(size).fill(0);
+    this.trace = Array.from({ length: size }, () => 0);
     this.lambda = lambda < 0 ? 0 : lambda > 0.999 ? 0.999 : lambda;
   }
 

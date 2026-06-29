@@ -87,6 +87,11 @@ export function metabolicLuminance(energy: number, age: number, life: number): n
   return burn * vitality; // [0.27, 1.0]
 }
 
+/** BRUTALISM concrete target (matches the instanced shader's `vec3(0.42, 0.42, 0.45)`) and a reused
+ *  scratch colour — module consts ⇒ zero per-frame allocation in {@link EntityManager.applyBrutalism}. */
+const ENT_BRUTAL_CONCRETE = new THREE.Color(0.42, 0.42, 0.45);
+const ENT_BRUTAL_SCRATCH = new THREE.Color();
+
 /** Scratch vector for velocity integration / containment impulses (no per-frame allocation). */
 const MOVE = new THREE.Vector3();
 /** Scratch vector for spawn positions — `spawn()` copies it, so reuse is safe. */
@@ -130,6 +135,11 @@ export class EntityManager {
    */
   onDeath: ((x: number, z: number) => void) | null = null;
   private readonly ctx: SimContext;
+  /** BRUTALISM (phone tier): per-material captured TRUE colour, so {@link applyBrutalism} lerps FROM
+   *  it and never compounds; keyed by the per-entity material (GC'd with it on disposal). */
+  private readonly brutalBase = new WeakMap<THREE.MeshStandardMaterial, THREE.Color>();
+  /** BRUTALISM previous applied factor — drives the on/off edge logic in {@link applyBrutalism}. */
+  private brutalPrevG = 0;
   /** Single long-lived behavior env; per-entity fields are rewritten in `update()` (no alloc). */
   private readonly env: BehaviorEnv;
   /**
@@ -620,6 +630,60 @@ export class EntityManager {
       const m = morphCount > 0 ? ctx.morphs[e.userData.mi % morphCount] : undefined;
       if (m) applyRenderModeTo(e.material, mode, m);
     }
+  }
+
+  /**
+   * BRUTALISM (phone-tier parity): desaturate every real-mesh organism toward raw concrete, the
+   * exact CPU mirror of {@link InstancedEntityRenderer}'s in-shader desaturate
+   * (`mix(color, mix(luma-grey, concrete, 0.55), f)`). On the instanced tiers organisms are GPU
+   * instances and this is a no-op (the shader uniform already does it); only the legacy per-mesh
+   * path — `quality.instanced === false`, where each organism is a real `THREE.Mesh` in the scene
+   * (see {@link spawn}) — needs the CPU pass, otherwise the ▦ BRUTAL toggle turned sky + ground +
+   * apex bodies to concrete while the whole organism population kept its lurid colours (mobile/touch).
+   *
+   * Each material's TRUE colour is captured at the on-edge (and for any organism spawned mid-mode)
+   * into a {@link WeakMap}, so the desaturate lerps FROM the base every frame and never compounds;
+   * the OFF edge restores the captured colour exactly, making `f = 0` byte-identical. Emissive is
+   * left to {@link update} (which re-targets it each frame), matching the instanced shader, which
+   * also touches only the diffuse. Allocation-free after first sight; O(n) and called only on the
+   * phone tier. See tests/entity-brutalism.test.ts.
+   */
+  applyBrutalism(f: number): void {
+    if (this.ctx.quality.instanced) return; // GPU instances desaturate in-shader — nothing to do here
+    const g = f < 0 ? 0 : f > 1 ? 1 : f;
+    const list = this.list;
+    if (g <= 0) {
+      if (this.brutalPrevG > 0) {
+        // OFF edge — restore each organism's true colour from its captured base.
+        for (let i = 0; i < list.length; i++) {
+          const e = list[i];
+          if (!e) continue;
+          const base = this.brutalBase.get(e.material);
+          if (base) e.material.color.copy(base);
+        }
+      }
+      this.brutalPrevG = 0;
+      return; // steady OFF: never touch the rendered colour ⇒ byte-identical
+    }
+    const onEdge = this.brutalPrevG <= 0;
+    const concrete = ENT_BRUTAL_CONCRETE;
+    const tgt = ENT_BRUTAL_SCRATCH;
+    for (let i = 0; i < list.length; i++) {
+      const e = list[i];
+      if (!e) continue;
+      const mat = e.material;
+      let base = this.brutalBase.get(mat);
+      if (!base) {
+        base = new THREE.Color().copy(mat.color); // first sight (incl. mid-mode spawns)
+        this.brutalBase.set(mat, base);
+      } else if (onEdge) {
+        base.copy(mat.color); // re-capture the live true colour the moment brutalism engages
+      }
+      const lum = base.r * 0.299 + base.g * 0.587 + base.b * 0.114; // Rec.601 luma (matches shader)
+      tgt.setRGB(lum, lum, lum).lerp(concrete, 0.55);
+      mat.color.copy(base).lerp(tgt, g);
+    }
+    this.brutalPrevG = g;
   }
 
   /**

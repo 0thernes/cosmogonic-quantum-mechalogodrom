@@ -458,6 +458,9 @@ export class EnvironmentSystem {
   >();
   /** Ground material handle for the V2 reaction-diffusion emissiveMap coupling. */
   private readonly groundMaterial: THREE.MeshStandardMaterial;
+  /** Live restore baseline for the ground's emissiveIntensity (0.3 at build; lifted to 0.85 once the
+   *  reaction-diffusion emissiveMap attaches). BRUTALISM lerps FROM this so OFF restores the RD glow. */
+  private groundBaseEmissiveIntensity = 0.3;
   /** Ambient + key (sun) lights — captured so BRUTALISM can desaturate/dim them per frame. */
   private readonly ambient: THREE.AmbientLight;
   private readonly sun: THREE.DirectionalLight;
@@ -725,7 +728,7 @@ export class EnvironmentSystem {
     this.groundMaterial.emissive.copy(GROUND_BASE_EMISSIVE).lerp(BRUTAL_GROUND_EMISSIVE, g);
     this.groundMaterial.roughness = lerp(0.95, 1.0, g);
     this.groundMaterial.metalness = lerp(0.1, 0.0, g);
-    this.groundMaterial.emissiveIntensity = lerp(0.3, 0.06, g);
+    this.groundMaterial.emissiveIntensity = lerp(this.groundBaseEmissiveIntensity, 0.06, g);
     // Ambient + sun: static lights → colour from base toward grey, intensity dimmed from base.
     this.ambient.color.copy(AMBIENT_BASE).lerp(BRUTAL_LIGHT, g);
     this.ambient.intensity = lerp(0.55 * LEGACY_LIGHT_GAIN, 0.34 * LEGACY_LIGHT_GAIN, g);
@@ -799,6 +802,10 @@ export class EnvironmentSystem {
   attachGroundEmissiveMap(tex: THREE.Texture): void {
     this.groundMaterial.emissiveMap = tex;
     this.groundMaterial.emissiveIntensity = 0.85;
+    // BRUTALISM restore baseline: applyBrutalism() lerps the ground glow FROM this value, so the OFF
+    // toggle returns to the post-attach 0.85 (living RD veins) instead of the build-time 0.3. Without
+    // capturing it, toggling brutalism on→off would permanently dim the reaction-diffusion field.
+    this.groundBaseEmissiveIntensity = 0.85;
     this.groundMaterial.needsUpdate = true;
   }
 

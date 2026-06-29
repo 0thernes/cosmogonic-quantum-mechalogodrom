@@ -347,7 +347,12 @@ export class AtmosphereSystem {
    * gated re-bake in {@link update} (a coarse brutalism bucket) picks the change up next frame. O(1).
    */
   setBrutalism(f: number): void {
-    this.brutalismF = f < 0 ? 0 : f > 1 ? 1 : f;
+    const c = f < 0 ? 0 : f > 1 ? 1 : f;
+    // Snap the easing tail to a clean OFF. The world eases brutalism toward 0 but never reaches it,
+    // so without this snap the dome would freeze ~4% concrete-tinted forever: the coarse re-bake
+    // bucket in update() cannot distinguish a tiny positive factor from 0, so the last bake (at the
+    // bucket-0 boundary, ≈0.04) would persist. < 0.02 is imperceptible. See update()'s bucketing.
+    this.brutalismF = c < 0.02 ? 0 : c;
   }
 
   /**
@@ -374,7 +379,11 @@ export class AtmosphereSystem {
 
     // ── Sky dome: gated re-bake (weather change or a new integer chaos bucket). ──
     const chaosBucket = Math.round(s.chaos);
-    const brutalismBucket = Math.round(this.brutalismF * 12);
+    // Bucket 0 ⇔ exactly OFF (re-bakes the pristine alien sky; the lerp in bakeDome is gated on
+    // `brutalismF > 0`); buckets 1..12 span the live (0,1] range. Distinguishing "off" from
+    // "barely on" is what lets the OFF toggle fully restore the sky instead of parking it on the
+    // bottom rounding bucket (paired with the < 0.02 snap in setBrutalism).
+    const brutalismBucket = this.brutalismF <= 0 ? 0 : 1 + Math.round(this.brutalismF * 11);
     if (
       weather !== this.lastWeather ||
       chaosBucket !== this.lastChaosBucket ||

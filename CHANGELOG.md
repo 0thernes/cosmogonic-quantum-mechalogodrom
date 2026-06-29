@@ -9,6 +9,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### BRUTALISM state-restoration fixes — the OFF toggle now fully restores the cosmos (PR review)
+
+- **Sky dome (`atmosphere.ts`).** The OFF toggle eases `brutalismF` toward 0 but never lands exactly
+  on it, so the coarse re-bake bucket (`round(f·12)`) used to freeze the dome on its bottom rounding
+  bucket — leaving the sky ~4% concrete-tinted forever. Now `setBrutalism` snaps the easing tail
+  (`< 0.02`) to a clean 0 and the bucket reserves `0 ⇔ exactly off` (buckets `1..12` span the live
+  range), so reaching off re-bakes the pristine alien gradient. Pinned by an atmosphere restore test.
+- **Reaction-diffusion ground glow (`environment.ts`).** `attachGroundEmissiveMap` lifts the ground
+  `emissiveIntensity` from its build value `0.3` to `0.85` so the living RD veins read against the
+  void, but `applyBrutalism` hard-coded the OFF baseline back to `0.3` — permanently dimming the field
+  after a single brutal toggle. It now lerps FROM the captured live baseline (`0.85` post-attach), so
+  OFF restores the veins. Two env tests (with and without the RD map attached) lock it.
+- **Phone-tier per-mesh parity (`entities.ts` / `world.ts`).** On the phone tier `quality.instanced`
+  is false, so organisms are real `THREE.Mesh`es, not GPU instances — and the new concrete uniform
+  never reached them, so mobile/touch users got a concrete sky + ground + apex bodies while the whole
+  organism population kept its lurid colours. Added `EntityManager.applyBrutalism`, the exact CPU
+  mirror of the instanced shader's desaturate (`mix(color, mix(luma-grey, concrete, 0.55), f)`,
+  Rec.601 luma), captured-base so it never compounds and `f = 0` is byte-identical; `world.ts` routes
+  the phone path through it. 7 parity tests (exact-formula, off-edge restore, idempotence, clamp,
+  instanced-tier no-op).
+- Stabilised the `super-mind-learning` long-run NaN guard with an explicit 30s timeout — 400 full
+  apex `think()` beats (now heavier with the merged GWT-2 workspace + embodiment) brushed bun's 5s
+  default only under full-suite parallel CPU contention; the run itself is deterministic. Also
+  switched an `online-learning` allocation to `Array.from` (oxlint back to 0 warnings).
+
 ### Tests for the three GOAL5 consciousness leaves (closing an audit-flagged coverage gap)
 
 - Added `tests/super-mind-leaves.test.ts` (8 tests) for **AST-1 attention-schema**, **HOT-1

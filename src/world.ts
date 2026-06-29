@@ -1075,6 +1075,7 @@ export class World {
     this.environment.applyBrutalism(bf);
     this.atmosphere.setBrutalism(bf);
     if (this.instanced) this.instanced.setBrutalism(bf);
+    else this.entities.applyBrutalism(bf); // phone tier: organisms are real meshes → desaturate them too
     if (bf > 0) {
       const fog = this.engine.scene.fog;
       if (fog instanceof THREE.FogExp2) {
