@@ -1186,6 +1186,54 @@ const drawBrain: Drawer = (ctx, w, h, s, t) => {
 
 /** 4D hyper-grid neuron projected through a rotating w-axis slice — MEGA GODLIKE mode. */
 const MEGA_N = 160;
+/** 4D→3D stereographic-style projection: rotate in the x-w and y-w planes, then project. */
+function project4(
+  x: number,
+  y: number,
+  z: number,
+  w: number,
+  aXW: number,
+  aYW: number,
+  aXY: number,
+  cx: number,
+  cy: number,
+  scale: number,
+): P3 {
+  const cxw = Math.cos(aXW),
+    sxw = Math.sin(aXW);
+  const cyw = Math.cos(aYW),
+    syw = Math.sin(aYW);
+  const cxy = Math.cos(aXY),
+    sxy = Math.sin(aXY);
+  // rotate x-w
+  let x1 = x * cxw - w * sxw;
+  let w1 = x * sxw + w * cxw;
+  // rotate y-w
+  let y1 = y * cyw - w1 * syw;
+  let w2 = y * syw + w1 * cyw;
+  // rotate x-y
+  let x2 = x1 * cxy - y1 * sxy;
+  let y2 = x1 * sxy + y1 * cxy;
+  // perspective through w2
+  const k = 1 / (1 - w2 * 0.18);
+  const rx = x2 * k;
+  const ry = y2 * k;
+  const rz = z * k;
+  // 3D tilt + project
+  return project(rx, ry, rz, 0, cx, cy, scale);
+}
+const TESS_VERTS: readonly (readonly [number, number, number, number])[] = [
+  [-1, -1, -1, -1], [1, -1, -1, -1], [-1, 1, -1, -1], [1, 1, -1, -1],
+  [-1, -1, 1, -1], [1, -1, 1, -1], [-1, 1, 1, -1], [1, 1, 1, -1],
+  [-1, -1, -1, 1], [1, -1, -1, 1], [-1, 1, -1, 1], [1, 1, -1, 1],
+  [-1, -1, 1, 1], [1, -1, 1, 1], [-1, 1, 1, 1], [1, 1, 1, 1],
+];
+const TESS_EDGES: readonly (readonly [number, number])[] = [
+  [0, 1], [0, 2], [1, 3], [2, 3], [0, 4], [1, 5], [2, 6], [3, 7],
+  [4, 5], [4, 6], [5, 7], [6, 7], [8, 9], [8, 10], [9, 11], [10, 11],
+  [8, 12], [9, 13], [10, 14], [11, 15], [12, 13], [12, 14], [13, 15], [14, 15],
+  [0, 8], [1, 9], [2, 10], [3, 11], [4, 12], [5, 13], [6, 14], [7, 15],
+];
 const drawMegaBrain: Drawer = (ctx, w, h, s, t) => {
   ctx.fillStyle = '#03010a';
   ctx.fillRect(0, 0, w, h);
@@ -1193,78 +1241,141 @@ const drawMegaBrain: Drawer = (ctx, w, h, s, t) => {
   lab(ctx, w, 9, '600 ');
   ctx.textBaseline = 'top';
   ctx.textAlign = 'left';
-  ctx.fillText(`IV · MEGA GODLIKE BRAIN — 4D spiking tesseract · ${s.paramCount}p`, 8, 6);
+  ctx.fillText(
+    `IV · MEGA GODLIKE BRAIN — 4D tesseract connectome · ${s.paramCount}p · ${s.organs} organs`,
+    8,
+    6,
+  );
   const cx = w / 2;
-  const cy = h / 2 + 6;
-  const scale = Math.min(w, h) * 0.38;
-  const ang = t * 0.22;
+  const cy = h / 2 + 10;
+  const scale = Math.min(w, h) * 0.42;
+  const axw = t * 0.18;
+  const ayw = t * 0.13;
+  const axy = t * 0.09;
   const latent = s.latent.length ? s.latent : new Float32Array([0.5]);
   const quantum = s.quantum.length ? s.quantum : new Float32Array([0.5]);
   const k = s.consciousness;
+  const glob =
+    0.25 * (k.dreaming ?? 0) +
+    0.25 * (k.reasoning ?? 0) +
+    0.2 * (k.selfAware ?? 0) +
+    0.15 * (k.novelty ?? 0) +
+    0.15 * (s.emotion.dominance ?? 0.5);
+
+  // 1) Draw the 4D tesseract skeleton (the spacetime scaffolding of the brain).
+  const tpts: P3[] = [];
+  for (const v of TESS_VERTS) {
+    tpts.push(
+      project4(
+        v[0] * 0.78,
+        v[1] * 0.78,
+        v[2] * 0.78,
+        v[3] * 0.78,
+        axw,
+        ayw,
+        axy,
+        cx,
+        cy,
+        scale,
+      ),
+    );
+  }
+  ctx.strokeStyle = 'hsla(220,90%,55%,0.28)';
+  ctx.lineWidth = 1;
+  for (const [i, j] of TESS_EDGES) {
+    const a = tpts[i]!;
+    const b = tpts[j]!;
+    if (a.d < -0.95 || b.d < -0.95) continue;
+    ctx.beginPath();
+    ctx.moveTo(a.x, a.y);
+    ctx.lineTo(b.x, b.y);
+    ctx.stroke();
+  }
+
+  // 2) 160 neural somas distributed on a 4D hypersphere, split into organ regions.
   const pts: P3[] = [];
   const act: number[] = [];
+  const organ: number[] = [];
   for (let i = 0; i < MEGA_N; i++) {
     const u = (i + 0.5) / MEGA_N;
-    const v = (i * 0.6180339887) % 1;
+    const v = frac(i * 0.6180339887);
     const th = 2 * Math.PI * u;
     const ph = Math.acos(2 * v - 1);
-    const r4 = 0.55 + 0.45 * Math.sin(i * 0.17 + t * 1.3);
+    const r4 = 0.58 + 0.42 * Math.sin(i * 0.17 + t * 1.3);
     const x4 = r4 * Math.sin(ph) * Math.cos(th);
     const y4 = r4 * Math.sin(ph) * Math.sin(th);
     const z4 = r4 * Math.cos(ph);
     const w4 = r4 * Math.sin(t * 0.41 + i * 0.08);
-    const cw = Math.cos(t * 0.33);
-    const sw = Math.sin(t * 0.33);
-    const x3 = x4 + w4 * cw * 0.42;
-    const y3 = y4 + w4 * sw * 0.38;
-    const z3 = z4 + w4 * 0.22;
-    pts.push(project(x3, y3, z3, ang + w4 * 0.5, cx, cy, scale));
+    pts.push(project4(x4, y4, z4, w4, axw, ayw, axy, cx, cy, scale));
     const lv = Math.abs(latent[i % latent.length] ?? 0);
     const qv = Math.abs(quantum[i % quantum.length] ?? 0);
-    const cv =
+    const region =
       0.22 * (k.dreaming ?? 0) +
       0.18 * (k.reasoning ?? 0) +
       0.16 * (k.selfAware ?? 0) +
       0.14 * (k.novelty ?? 0) +
       0.12 * (s.emotion.dominance ?? 0.5);
-    const spike = Math.max(0, Math.sin(t * 6 + i * 0.37) * 0.5 + 0.5) * (lv + qv);
-    act.push(clamp01(lv * 0.45 + qv * 0.35 + cv + spike * 0.35));
+    const spike = Math.max(0, Math.sin(t * 6 + i * 0.37) * 0.5 + 0.5) * (lv + qv + glob);
+    act.push(clamp01(lv * 0.45 + qv * 0.35 + region + spike * 0.35));
+    organ.push(i % s.organs);
   }
+
+  // 3) Axonal connections: small-world by 4D Hamming distance, with traveling spikes.
   const pulse = frac(t * 0.55);
+  const conns: [number, number, number, number][] = []; // i,j,strength,hue
   for (let i = 0; i < MEGA_N; i++) {
     for (let j = i + 1; j < MEGA_N; j++) {
-      const d4 = Math.abs((i ^ j) & 7);
-      if (d4 > 2) continue;
+      const d4 = Math.abs((i ^ j) & 15);
+      if (d4 > 4 || d4 === 0) continue;
       const strength = (act[i]! + act[j]!) * 0.5;
-      if (strength < 0.08) continue;
+      if (strength < 0.12) continue;
       const near = ((pts[i]!.d + pts[j]!.d) / 2 + 1) / 2;
-      const hue = (i * 37 + j * 19 + t * 40) % 360;
-      ctx.strokeStyle = `hsla(${hue},100%,${(42 + strength * 38).toFixed(0)}%,${(strength * 0.55 * near).toFixed(2)})`;
-      ctx.lineWidth = 0.4 + strength * 2.2 * near;
+      const hue = (organ[i]! * 37 + organ[j]! * 19 + t * 40) % 360;
+      ctx.strokeStyle = `hsla(${hue},100%,${(46 + strength * 38).toFixed(0)}%,${(strength * 0.45 * near).toFixed(2)})`;
+      ctx.lineWidth = 0.35 + strength * 1.8 * near;
       ctx.beginPath();
       ctx.moveTo(pts[i]!.x, pts[i]!.y);
       ctx.lineTo(pts[j]!.x, pts[j]!.y);
       ctx.stroke();
+      // traveling pulse packet
       const pp = (pulse + (i + j) * 0.013) % 1;
       const px = pts[i]!.x + (pts[j]!.x - pts[i]!.x) * pp;
       const py = pts[i]!.y + (pts[j]!.y - pts[i]!.y) * pp;
-      spark(ctx, px, py, 1.5 + strength * 3, `${(hue + 60) % 360},255,200`, strength * 0.65 * near);
+      spark(ctx, px, py, 1.5 + strength * 3.5, `${(hue + 60) % 360},255,200`, strength * 0.7 * near);
+      conns.push([i, j, strength, hue]);
     }
   }
+
+  // 4) Dendritic halo + soma core for each neuron.
   for (let i = 0; i < MEGA_N; i++) {
     const p = pts[i]!;
     const v = act[i]!;
     const near = (p.d + 1) / 2;
-    const hue = (i * 53 + v * 120 + t * 28) % 360;
+    const ohue = (organ[i]! * 53 + v * 120 + t * 28) % 360;
     const sat = 88 + v * 12;
     const lit = 38 + v * 42;
-    if (v > 0.55 && near > 0.3) {
-      spark(ctx, p.x, p.y, 6 + v * 16 * near, `${hue},255,180`, 0.35 + v * 0.45);
-    }
-    ctx.fillStyle = `hsla(${hue},${sat}%,${lit}%,${(0.55 + v * 0.45).toFixed(2)})`;
+    // dendritic shimmer ring
+    spark(ctx, p.x, p.y, 5 + v * 14 * near, `${ohue},255,180`, 0.25 + v * 0.35);
+    // soma core
+    ctx.fillStyle = `hsla(${ohue},${sat}%,${lit}%,${(0.55 + v * 0.45).toFixed(2)})`;
     ctx.beginPath();
-    ctx.arc(p.x, p.y, 1.2 + v * 2.8 * near, 0, Math.PI * 2);
+    ctx.arc(p.x, p.y, 1.3 + v * 3.2 * near, 0, Math.PI * 2);
     ctx.fill();
+    // spike glow on high activity
+    if (v > 0.55 && near > 0.3) {
+      spark(ctx, p.x, p.y, 8 + v * 22 * near, `${ohue},255,160`, 0.4 + v * 0.45);
+    }
+  }
+
+  // 5) Global broadcast wavefront when consciousness is high.
+  if (glob > 0.4) {
+    const wave = frac(t * 0.8);
+    const r = scale * (0.2 + wave * 0.75);
+    ctx.strokeStyle = `hsla(170,100%,${(50 + glob * 30).toFixed(0)}%,${(glob * (1 - wave) * 0.55).toFixed(2)})`;
+    ctx.lineWidth = 1 + glob * 2;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.stroke();
   }
   ctx.textAlign = 'left';
 };
