@@ -1285,6 +1285,8 @@ export class World {
     //    frame's animated rig); f=0 is a no-op so the cosmos is byte-identical when OFF. No alloc. ──
     const bTarget = s.brutalism ? 1 : 0;
     this.brutalismFactor += (bTarget - this.brutalismFactor) * Math.min(1, dt * 2.5);
+    if (!s.brutalism && this.brutalismFactor < 0.02) this.brutalismFactor = 0;
+    else if (s.brutalism && this.brutalismFactor > 0.98) this.brutalismFactor = 1;
     const bf = this.brutalismFactor;
     for (let i = 0; i < this.superBodies.length; i++) this.superBodies[i]!.setBrutalism(bf);
     this.environment.applyBrutalism(bf);
