@@ -384,10 +384,10 @@ function fitHud(): void {
       `${Math.round((rightL < vw ? vw - rightL : 0) + GUTTER)}px`,
     );
   }
-  // Vertical: sit the HUD just above the HIGHEST bar (nav launcher / toolbar) — adapts if a bar grows.
+  // Vertical: sit the HUD just above the HIGHEST bar (nav launcher / toolbar / readout strip).
   const vh = window.innerHeight;
   let barsTop = vh;
-  for (const id of ['cqm-bottom-stack']) {
+  for (const id of ['perf-hud', 'hud-vsr', 'alg', 'cqm-bottom-stack']) {
     const el = document.getElementById(id);
     if (!el) continue;
     const r = el.getBoundingClientRect();

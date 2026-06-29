@@ -12,14 +12,14 @@ import { mountToggle } from './panel-dock';
 const STYLE = `
 #cqm-settings-modal::before{content:'';position:absolute;inset:0;pointer-events:none;opacity:.12;
   background:repeating-linear-gradient(0deg,transparent 0 2px,rgba(120,160,255,.5) 2px 3px)}
-#cqm-settings-modal .glass-box{max-height:86vh;overflow-y:auto;scrollbar-width:thin;
-  scrollbar-color:rgba(120,160,255,.4) transparent}
-.cqm-set-gr{margin-bottom:10px}
-.cqm-set-gr h3{margin:0 0 4px;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:#a99fce;font-weight:600}
-.cqm-set-row{display:grid;grid-template-columns:repeat(2,1fr);gap:5px}
-.cqm-set-btn{pointer-events:auto;border:1px solid rgba(120,160,255,.35);border-radius:8px;background:rgba(30,40,80,.45);
-  color:#e6dcff;padding:5px 8px;cursor:pointer;font:10px var(--font-mono,ui-monospace,monospace);text-align:left;
-  transition:background .12s,border-color .12s}
+#cqm-settings-modal .glass-box{max-height:62vh;overflow-y:auto;scrollbar-width:thin;
+  scrollbar-color:rgba(120,160,255,.4) transparent;padding:6px 8px}
+.cqm-set-gr{margin-bottom:4px}
+.cqm-set-gr h3{margin:0 0 2px;font-size:7px;letter-spacing:.1em;text-transform:uppercase;color:#a99fce;font-weight:600}
+.cqm-set-row{display:grid;grid-template-columns:repeat(3,1fr);gap:2px}
+.cqm-set-btn{pointer-events:auto;border:1px solid rgba(120,160,255,.35);border-radius:5px;background:rgba(30,40,80,.45);
+  color:#e6dcff;padding:2px 4px;cursor:pointer;font:8px var(--font-mono,ui-monospace,monospace);text-align:center;
+  transition:background .12s,border-color .12s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cqm-set-btn:hover{border-color:rgba(120,160,255,.6);background:rgba(50,70,130,.6)}
 .cqm-set-btn[data-action="apoc"]{border-color:rgba(255,80,80,.35);color:#ffb3b3}
 .cqm-set-btn[data-action="apoc"]:hover{border-color:rgba(255,80,80,.6);background:rgba(120,30,30,.5)}
@@ -98,7 +98,7 @@ class SettingsPanel {
 
     const { root, box } = glassPanel({
       id: 'cqm-settings-modal',
-      width: 'min(88vw,340px)',
+      width: 'min(82vw,260px)',
       zIndex: 200,
       doc,
     });

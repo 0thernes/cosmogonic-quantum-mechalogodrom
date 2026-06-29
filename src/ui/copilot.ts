@@ -62,15 +62,38 @@ const STATIC_AI_MODELS = [
   'llama-3.2-3b-instruct',
 ] as const;
 
-const STATIC_PROVIDER_LABELS: Record<string, string> = {
-  'codestral-latest': 'LLM7 · Codestral',
-  'devstral-small-2:24b': 'LLM7 · Devstral',
-  'open-mistral-nemo': 'LLM7 · Mistral Nemo',
-  'google/gemma-3-12b-it': 'LLM7 · Gemma 3',
-  'qwen3-4b': 'LLM7 · Qwen3',
-  'ministral-3b-latest': 'LLM7 · Ministral',
-  'llama-3.2-3b-instruct': 'LLM7 · Llama 3.2',
-};
+/** Full provider catalog shown in the picker (matches server PRESETS + FreeLLMAPI). */
+const STATIC_PROVIDER_CATALOG: readonly {
+  id: string;
+  label: string;
+  model?: string;
+  serverOnly?: boolean;
+}[] = [
+  { id: 'codestral-latest', label: 'LLM7 · Codestral (no key)', model: 'codestral-latest' },
+  { id: 'devstral-small-2:24b', label: 'LLM7 · Devstral (no key)', model: 'devstral-small-2:24b' },
+  { id: 'open-mistral-nemo', label: 'LLM7 · Mistral Nemo (no key)', model: 'open-mistral-nemo' },
+  { id: 'google/gemma-3-12b-it', label: 'LLM7 · Gemma 3 (no key)', model: 'google/gemma-3-12b-it' },
+  { id: 'qwen3-4b', label: 'LLM7 · Qwen3 (no key)', model: 'qwen3-4b' },
+  { id: 'ministral-3b-latest', label: 'LLM7 · Ministral (no key)', model: 'ministral-3b-latest' },
+  {
+    id: 'llama-3.2-3b-instruct',
+    label: 'LLM7 · Llama 3.2 (no key)',
+    model: 'llama-3.2-3b-instruct',
+  },
+  { id: 'freellmapi', label: 'FreeLLMAPI · 16-provider pool', serverOnly: true },
+  { id: 'pollinations', label: 'Pollinations · openai', serverOnly: true },
+  { id: 'sambanova', label: 'SambaNova · Llama-3.3-70B', serverOnly: true },
+  { id: 'together', label: 'Together · Llama-3.3-70B Free', serverOnly: true },
+  { id: 'groq', label: 'Groq · Llama-3.3-70B', serverOnly: true },
+  { id: 'cerebras', label: 'Cerebras · Llama-3.3-70B', serverOnly: true },
+  { id: 'openrouter', label: 'OpenRouter · :free auto', serverOnly: true },
+  { id: 'github', label: 'GitHub Models · GPT-4.1-mini', serverOnly: true },
+  { id: 'mistral', label: 'Mistral · small', serverOnly: true },
+  { id: 'gemini', label: 'Google Gemini · 2.5 Flash', serverOnly: true },
+  { id: 'nvidia', label: 'NVIDIA NIM · Llama-3.3-70B', serverOnly: true },
+  { id: 'deepseek', label: 'DeepSeek · chat', serverOnly: true },
+  { id: 'huggingface', label: 'Hugging Face · Llama-3.3-70B', serverOnly: true },
+];
 const STATIC_AI_SYSTEM =
   'You are the ✦ AI guide inside the Cosmogonic Quantum Mechalogodrom — a deterministic, browser-native ' +
   '50,000-agent quantum + artificial-life cosmos simulation (real seeded math, not an LLM toy). ' +
@@ -169,23 +192,56 @@ function statusDot(p: StaticProbe): string {
   return '🔴';
 }
 
-/** Static deploy: fill the provider picker with live LLM7 health lights. */
+function makeOptGroup(label: string): HTMLOptGroupElement {
+  const g = document.createElement('optgroup');
+  g.label = label;
+  return g;
+}
+
+/** Static deploy: fill the provider picker with full catalog + live LLM7 health lights, grouped by status. */
 async function populateStaticProviders(sel: HTMLSelectElement, prov: HTMLElement): Promise<void> {
   const probes = await probeStaticAi();
+  const probeByModel = new Map(probes.map((p) => [p.model, p]));
   sel.replaceChildren();
+  const upGroup = makeOptGroup('🟢 Online / ready');
+  const slowGroup = makeOptGroup('🟡 Rate-limited / slow');
+  const downGroup = makeOptGroup('🔴 Offline / blocked');
+  const keyGroup = makeOptGroup('🔑 Needs key (server only)');
   let firstUp = '';
-  for (const p of probes) {
+  let upCount = 0;
+  for (const row of STATIC_PROVIDER_CATALOG) {
     const opt = document.createElement('option');
-    opt.value = p.model;
-    const label = STATIC_PROVIDER_LABELS[p.model] ?? p.model;
-    opt.textContent = `${statusDot(p)} ${label}${p.reachable ? '' : ` (${p.detail})`}`;
-    if (p.reachable && !firstUp) firstUp = p.model;
-    sel.appendChild(opt);
+    opt.value = row.model ?? row.id;
+    if (row.serverOnly) {
+      opt.textContent = row.label;
+      opt.disabled = true;
+      keyGroup.appendChild(opt);
+    } else {
+      const p = probeByModel.get(row.model!);
+      const dot = p ? statusDot(p) : '⚪';
+      if (p?.reachable) {
+        upCount++;
+        if (!firstUp) firstUp = row.model!;
+        opt.textContent = `${dot} ${row.label}`;
+        upGroup.appendChild(opt);
+      } else if (p?.status === 429) {
+        opt.textContent = `${dot} ${row.label} (${p.detail})`;
+        slowGroup.appendChild(opt);
+      } else {
+        opt.textContent = `${dot} ${row.label}${p ? ` (${p.detail})` : ''}`;
+        downGroup.appendChild(opt);
+      }
+    }
   }
-  sel.style.display = probes.length ? '' : 'none';
+  if (upGroup.children.length) sel.appendChild(upGroup);
+  if (slowGroup.children.length) sel.appendChild(slowGroup);
+  if (downGroup.children.length) sel.appendChild(downGroup);
+  if (keyGroup.children.length) sel.appendChild(keyGroup);
+  sel.style.display = '';
+  sel.disabled = false;
   if (firstUp) sel.value = firstUp;
-  const up = probes.filter((p) => p.reachable).length;
-  prov.textContent = `llm7 · static · ${up}/${probes.length} online`;
+  const serverCount = STATIC_PROVIDER_CATALOG.filter((r) => r.serverOnly).length;
+  prov.textContent = `static · ${upCount}/${STATIC_AI_MODELS.length} LLM7 online · ${STATIC_PROVIDER_CATALOG.length} total (${serverCount} server-only)`;
 }
 
 async function enrichServerProviders(
@@ -193,34 +249,86 @@ async function enrichServerProviders(
   prov: HTMLElement,
   list: { id: string; label: string; def: boolean }[],
 ): Promise<void> {
+  // Build a set of health-checked provider ids for quick lookup.
+  let healthMap = new Map<string, ProviderHealth>();
+  let healthDefault = '';
   try {
     const res = await fetch('/api/copilot/health');
     const d = (await res.json()) as HealthResult;
     if (d.providers?.length) {
-      sel.replaceChildren();
-      for (const row of d.providers) {
-        const opt = document.createElement('option');
-        opt.value = row.id;
-        const dot = row.reachable ? '🟢' : /429|rate/i.test(row.detail) ? '🟡' : '🔴';
-        opt.textContent = `${dot} ${row.label}${row.keyed ? ' 🔑' : ''}`;
-        if (list.some((p) => p.id === row.id && p.def)) opt.selected = true;
-        sel.appendChild(opt);
-      }
-      sel.style.display = '';
-      prov.textContent = d.default ?? prov.textContent;
-      return;
+      healthMap = new Map(d.providers.map((p) => [p.id, p]));
+      healthDefault = d.default ?? '';
     }
   } catch {
-    /* fall through */
+    /* fall through to static catalog */
   }
+
   sel.replaceChildren();
-  for (const p of list) {
+  let upCount = 0;
+  const upGroup = makeOptGroup('🟢 Online / ready');
+  const slowGroup = makeOptGroup('🟡 Rate-limited / slow');
+  const downGroup = makeOptGroup('🔴 Offline / blocked');
+  const keyGroup = makeOptGroup('🔑 Needs key / not configured');
+  // Show the FULL catalog: health-checked providers first (with live dots), then
+  // any remaining catalog entries that weren't probed (keyed providers without keys
+  // configured show as 🔑 so users can see what's available to configure).
+  const seenIds = new Set<string>();
+  for (const row of STATIC_PROVIDER_CATALOG) {
     const opt = document.createElement('option');
-    opt.value = p.id;
-    opt.textContent = `⚪ ${p.label}`;
-    if (p.def) opt.selected = true;
-    sel.appendChild(opt);
+    opt.value = row.model ?? row.id;
+    const h = healthMap.get(row.id);
+    if (h) {
+      const dot = h.reachable ? '🟢' : /429|rate/i.test(h.detail) ? '🟡' : '🔴';
+      opt.textContent = `${dot} ${row.label}${h.keyed ? ' 🔑' : ''}`;
+      if (h.reachable) {
+        upCount++;
+        upGroup.appendChild(opt);
+      } else if (/429|rate/i.test(h.detail)) {
+        slowGroup.appendChild(opt);
+      } else {
+        downGroup.appendChild(opt);
+      }
+    } else if (row.serverOnly) {
+      opt.textContent = row.label;
+      opt.disabled = true;
+      keyGroup.appendChild(opt);
+    } else {
+      opt.textContent = `⚪ ${row.label}`;
+      downGroup.appendChild(opt);
+    }
+    if (list.some((p) => p.id === row.id && p.def)) opt.selected = true;
+    seenIds.add(row.id);
   }
+  // Also show any health-checked providers not in the static catalog (e.g. custom/freellmapi).
+  for (const [id, h] of healthMap) {
+    if (seenIds.has(id)) continue;
+    const opt = document.createElement('option');
+    opt.value = id;
+    const dot = h.reachable ? '🟢' : /429|rate/i.test(h.detail) ? '🟡' : '🔴';
+    opt.textContent = `${dot} ${h.label}${h.keyed ? ' 🔑' : ''}`;
+    if (h.reachable) {
+      upCount++;
+      upGroup.appendChild(opt);
+    } else if (/429|rate/i.test(h.detail)) {
+      slowGroup.appendChild(opt);
+    } else {
+      downGroup.appendChild(opt);
+    }
+    if (list.some((p) => p.id === id && p.def)) opt.selected = true;
+  }
+  if (upGroup.children.length) sel.appendChild(upGroup);
+  if (slowGroup.children.length) sel.appendChild(slowGroup);
+  if (downGroup.children.length) sel.appendChild(downGroup);
+  if (keyGroup.children.length) sel.appendChild(keyGroup);
+  sel.style.display = '';
+  const total =
+    upGroup.children.length +
+    slowGroup.children.length +
+    downGroup.children.length +
+    keyGroup.children.length;
+  prov.textContent = healthDefault
+    ? `${healthDefault} · ${upCount}/${total} online`
+    : `${upCount}/${total} online`;
 }
 
 /** One provider's health from /api/copilot/health (the recovery-pipeline rows). */
@@ -262,8 +370,10 @@ const STYLE = `
 .cqm-cop-colhead{font:600 9px var(--font-mono,ui-monospace,monospace);letter-spacing:.14em;color:#7fa0d8;
   text-transform:uppercase;padding:6px 10px 3px;opacity:.8}
 .cqm-cop-opts{padding:2px 10px 8px;border-bottom:1px solid rgba(120,160,220,.16);display:flex;flex-direction:column;gap:6px}
-.cqm-cop-optrow{display:flex;align-items:center;gap:6px}
-.cqm-cop-sel{flex:1;min-width:0;background:rgba(2,6,16,.9);color:#bcd2f5;
+.cqm-cop-optrow{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.cqm-cop-optlabel{font:600 9px var(--font-mono,ui-monospace,monospace);letter-spacing:.1em;
+  color:#7fa0d8;text-transform:uppercase;flex:0 0 100%;margin-top:2px}
+.cqm-cop-sel{flex:1 1 100%;min-width:0;min-height:28px;background:rgba(2,6,16,.9);color:#bcd2f5;
   border:1px solid rgba(120,160,220,.35);border-radius:5px;font:10px var(--font-mono,ui-monospace,monospace);
   padding:3px 5px;cursor:pointer}
 .cqm-cop-sel:focus-visible{outline:1px solid #6da8ff}
@@ -376,7 +486,10 @@ function mount(): void {
   opts.className = 'cqm-cop-opts';
   const optRow = document.createElement('div');
   optRow.className = 'cqm-cop-optrow';
-  optRow.append(sel, diag);
+  const optLabel = document.createElement('div');
+  optLabel.className = 'cqm-cop-optlabel';
+  optLabel.textContent = 'AI provider · 🟢 online · 🟡 rate-limited · 🔴 offline · 🔑 needs key';
+  optRow.append(optLabel, sel, diag);
   const chips = document.createElement('div');
   chips.className = 'cqm-cop-chips';
 
@@ -431,7 +544,6 @@ function mount(): void {
 
   const history: Msg[] = [];
   let busy = false;
-  let greeted = false;
   /** The free-LLM provider id the user picked (empty = server default). */
   let selectedProvider = '';
 
@@ -453,7 +565,7 @@ function mount(): void {
     'cqm-cop-sys',
     'Ask about the cosmos, creatures, math, or code. Type /help for repo commands, or click 🩺 to probe AI health.',
   );
-  greeted = true;
+  let providersLoaded = false;
 
   const addTool = (step: ToolStep): void => {
     const wrap = document.createElement('div');
@@ -724,33 +836,30 @@ function mount(): void {
   const openPanel = (): void => {
     panel.classList.add('open');
     input.focus();
-    if (!greeted) {
-      greeted = true;
+    if (!providersLoaded) {
+      providersLoaded = true;
       addMsg(
         'cqm-cop-sys',
         'Copilot online. I can read this repo and run read-only commands to answer questions about the cosmos and its code — but I can never change anything. Note: messages are sent to a free external AI.',
       );
       fetch('/api/copilot')
-        .then(
-          (r) =>
-            r.json() as Promise<{
-              enabled?: boolean;
-              provider?: string;
-              providers?: { id: string; label: string; def: boolean }[];
-            }>,
-        )
+        .then((r) => {
+          if (!r.ok) throw new Error(`HTTP ${r.status}`);
+          return r.json() as Promise<{
+            enabled?: boolean;
+            provider?: string;
+            providers?: { id: string; label: string; def: boolean }[];
+          }>;
+        })
         .then(async (d) => {
           // Copilot is opt-in and off by default in production (server gate) so a public deploy
           // never exposes source. When disabled, present a clear notice and lock the input.
           if (d.enabled === false) {
-            prov.textContent = 'disabled in this deployment';
-            sel.style.display = 'none';
-            input.disabled = true;
-            input.placeholder = 'Copilot is disabled in this deployment';
-            send.disabled = true;
+            prov.textContent = 'static · browser-direct';
+            await populateStaticProviders(sel, prov);
             addMsg(
               'cqm-cop-sys',
-              'Copilot is disabled in this deployment. Click 🩺 in the header for diagnostics + how to re-enable it.',
+              'Server agent disabled in this deployment — browser-direct LLM7 still works. Pick a 🟢 provider in OPTIONS.',
             );
             return;
           }
@@ -771,7 +880,9 @@ function mount(): void {
             sel.value = saved;
             selectedProvider = saved;
           }
-          if (list.length === 0) sel.style.display = 'none';
+          if (list.length === 0) {
+            await populateStaticProviders(sel, prov);
+          }
         })
         .catch(async () => {
           // No Bun server (static GitHub Pages, or the local server is down). The chat still works —
@@ -809,6 +920,25 @@ function mount(): void {
       closePanel();
     }
   });
+
+  // Pre-populate provider list so OPTIONS shows models before first open (static + server).
+  void fetch('/api/copilot')
+    .then(
+      (r) =>
+        r.json() as Promise<{
+          enabled?: boolean;
+          providers?: { id: string; label: string; def: boolean }[];
+        }>,
+    )
+    .then(async (d) => {
+      if (d.enabled !== false && d.providers?.length) {
+        await enrichServerProviders(sel, prov, d.providers);
+        for (const p of d.providers) if (p.def) selectedProvider = p.id;
+      } else {
+        await populateStaticProviders(sel, prov);
+      }
+    })
+    .catch(() => void populateStaticProviders(sel, prov));
 }
 
 // Self-mount once the DOM is ready (UI shell; safe to no-op if there is no document).

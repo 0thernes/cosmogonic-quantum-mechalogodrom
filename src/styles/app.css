@@ -396,7 +396,7 @@ a:focus-visible {
 #perf-hud {
   position: fixed;
   left: max(6px, env(safe-area-inset-left, 0px));
-  bottom: calc(var(--cqm-bottom-h, 108px) + 4px);
+  bottom: calc(var(--cqm-dock-h, var(--cqm-bottom-h, 108px)) + 4px);
   z-index: 39;
   font: 14px/1.5 var(--font-mono, ui-monospace, monospace);
   color: #e8f0ff;
@@ -437,6 +437,22 @@ a:focus-visible {
 }
 #perf-hud .perf-hud-hint {
   display: none;
+}
+@media (max-width: 599px), (pointer: coarse) and (max-width: 599px) {
+  #perf-hud {
+    font-size: 9px;
+    line-height: 1.25;
+    padding: 4px 5px !important;
+    border-radius: 8px;
+  }
+  #perf-hud .perf-hud-tier {
+    font-size: 8px;
+    padding: 1px 4px;
+  }
+  #perf-hud .perf-hud-row {
+    margin-top: 2px;
+    gap: 2px 4px;
+  }
 }
 #perf-hud .perf-hud-quality {
   opacity: 0.92;
@@ -1039,29 +1055,15 @@ html.cqm-shell-ready .algo-list:empty::after {
   color: rgba(230, 240, 255, 0.95);
   font-variant-numeric: tabular-nums;
 }
-#ui > #alg,
-#ui > #alg {
+#ui #alg {
   position: static;
-  align-self: stretch;
   max-width: 100%;
   overflow-y: auto;
   overflow-x: hidden;
   scrollbar-width: thin;
 }
-#ui > #hud-vsr {
-  padding: 2px 5px;
-  font-size: 0.85em;
-  max-height: 22vh;
-}
-#ui > #hud-vsr .ui-readout-card__row {
-  margin-top: 0;
-  line-height: 1.15;
-  font-size: 0.92em;
-}
-#ui > #hud-vsr .ui-readout-card__head {
-  margin-bottom: 1px;
-  padding-bottom: 0;
-  font-size: 0.82em;
+.ui-col-right #alg {
+  align-self: stretch;
 }
 #alg #a-name {
   font: 600 var(--text-2xs) var(--font-ui);
@@ -1121,12 +1123,11 @@ html.cqm-shell-ready .algo-list:empty::after {
   scrollbar-width: thin;
   scrollbar-color: rgba(0, 238, 255, 0.35) transparent;
 }
-#ui > #alg,
-#ui > #hud-vsr {
-  overflow-y: auto;
+#ui #alg,
+#ui #hud-vsr {
   overflow-x: hidden;
   scrollbar-width: thin;
-  max-height: min(22vh, 180px);
+  flex: 0 0 auto;
 }
 /* Side-panel legibility — telemetry keys/values, observatory labels, sorting list */
 #sP .panel-body [class*='text-4xs'],
@@ -1279,9 +1280,9 @@ html.cqm-shell-ready .algo-list:empty::after {
    (the bottom-right readout column + centred control pad).
    ════════════════════════════════════════════════════════════════ */
 @media (max-width: 768px),
-  (orientation: portrait) and (max-width: 1024px),
+  (orientation: portrait) and (max-width: 768px),
   (pointer: coarse) and (max-width: 768px),
-  (pointer: coarse) and (orientation: portrait) {
+  (pointer: coarse) and (orientation: portrait) and (max-width: 768px) {
   /* Drop the grid: #ui becomes a passthrough layer; sheets self-position. */
   #ui {
     display: block;
@@ -1393,21 +1394,116 @@ html.cqm-shell-ready .algo-list:empty::after {
     container-type: inline-size;
   }
 
-  /* V84: on sheet mode the readout cards pin to the bottom edges above the bars (never sheets). */
-  #ui > #alg {
-    position: fixed;
-    left: 6px;
-    bottom: calc(128px + env(safe-area-inset-bottom, 0px));
-    max-width: min(60vw, 260px);
+  /* V102: phone bottom readout row — three even boxes: FPS · Sorting · Sim Settings */
+  #perf-hud,
+  #ui #alg,
+  #ui #hud-vsr {
+    position: fixed !important;
     z-index: 19;
+    bottom: calc(
+      var(--cqm-dock-h, var(--cqm-bottom-h, 108px)) + env(safe-area-inset-bottom, 0px)
+    ) !important;
+    top: auto !important;
+    width: calc((100vw - 12px - 2 * var(--cqm-readout-gap, 6px)) / 3) !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    height: var(--cqm-readout-strip-h, 92px) !important;
+    max-height: var(--cqm-readout-strip-h, 92px) !important;
+    min-height: var(--cqm-readout-strip-h, 92px) !important;
+    align-self: auto !important;
+    flex: none !important;
+    overflow: hidden;
+    box-sizing: border-box;
+    transform: none !important;
+    padding: 5px 6px !important;
+    font-size: 10px !important;
   }
-  #ui > #hud-vsr {
-    position: fixed;
-    right: max(6px, env(safe-area-inset-right, 0px));
-    left: auto;
-    bottom: calc(128px + env(safe-area-inset-bottom, 0px));
-    max-width: min(52vw, 260px);
-    z-index: 19;
+  #perf-hud {
+    left: max(6px, env(safe-area-inset-left, 0px)) !important;
+    right: auto !important;
+  }
+  #ui #alg {
+    left: calc(
+      max(6px, env(safe-area-inset-left, 0px)) + (100vw - 12px - 2 * var(--cqm-readout-gap, 6px)) /
+        3 + var(--cqm-readout-gap, 6px)
+    ) !important;
+    right: auto !important;
+  }
+  #ui #hud-vsr {
+    right: max(6px, env(safe-area-inset-right, 0px)) !important;
+    left: auto !important;
+    display: grid !important;
+    grid-template-columns: 1fr 1fr;
+    column-gap: 5px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: thin;
+  }
+  #ui #hud-vsr .ui-readout-card__row {
+    display: flex !important;
+  }
+  #ui #alg #a-name {
+    font-size: 9px;
+    line-height: 1.2;
+  }
+  #ui #alg #a-step {
+    font-size: 8px;
+  }
+  #ui #alg #g-alg {
+    width: 100% !important;
+    max-width: 100%;
+    height: 10px !important;
+    margin-top: 2px;
+  }
+  #ui #alg #lore {
+    display: none;
+  }
+  #ui #alg .ui-readout-card__head {
+    font-size: 9px !important;
+    margin-bottom: 3px !important;
+  }
+  #hud-vsr .ui-readout-card__head {
+    font-size: 9px !important;
+  }
+  #hud-vsr .ui-readout-card__row {
+    font-size: 9px !important;
+    margin-bottom: 1px !important;
+  }
+  #hud-vsr .ui-readout-card__key {
+    font-size: 8px !important;
+  }
+  #hud-vsr .ui-readout-card__val {
+    font-size: 9px !important;
+  }
+  /* Stagger left sheet handles so TEL / CTL / ALG tabs never overlap on phones. */
+  #sP > .sheet-handle {
+    top: calc(10px + env(safe-area-inset-top, 0px));
+    bottom: auto;
+    transform: translateY(0);
+  }
+  #cP > .sheet-handle {
+    top: calc(74px + env(safe-area-inset-top, 0px));
+    bottom: auto;
+    transform: translateY(0);
+  }
+  #algoP > .sheet-handle {
+    top: calc(138px + env(safe-area-inset-top, 0px));
+    bottom: auto;
+    transform: translateY(0);
+  }
+  #oP > .sheet-handle {
+    top: calc(10px + env(safe-area-inset-top, 0px));
+  }
+  /* Touch phones: wheel = split/burst/mutate/chaos; hide redundant CTL + ALG picker sheets. */
+  @media (pointer: coarse) {
+    #cP,
+    #cP > .sheet-handle {
+      display: none !important;
+    }
+    #algoP,
+    #algoP > .sheet-handle {
+      display: none !important;
+    }
   }
 }
 
@@ -1423,11 +1519,8 @@ html.cqm-shell-ready .algo-list:empty::after {
 
 /* ── Tablet/laptop LANDSCAPE (769–1280px): tighter rails — fine + coarse 12" tablets
      keep the grid (Observatory visible); portrait/coarse phones stay on sheets above. ── */
-@media (min-width: 769px) and (max-width: 1280px) and (min-height: 521px) and (orientation: landscape) {
-  #ui {
-    grid-template-columns: clamp(150px, 22vw, 220px) 1fr clamp(170px, 24vw, 250px);
-  }
-  #ui > section {
+@media (min-width: 769px) and (max-width: 1400px) and (min-height: 521px) and (orientation: landscape) {
+  #ui > section:not(#oP) {
     max-height: clamp(180px, 46vh, 56vh);
   }
   /* 12" tablet landscape: Observatory needs more vertical room — don't crush it with the generic cap. */
@@ -1443,28 +1536,7 @@ html.cqm-shell-ready .algo-list:empty::after {
 /* ── 12" tablet LANDSCAPE, COARSE pointer (769–1280px): keep the grid layout so the
      Observatory doesn't vanish into sheet mode. A 12" touch tablet in landscape has
      enough room for side columns; sheet mode is for phones and portrait. ── */
-@media (min-width: 769px) and (max-width: 1280px) and (min-height: 521px) and (pointer: coarse) and (orientation: landscape) {
-  #ui {
-    display: grid;
-    pointer-events: none;
-    grid-template-columns: clamp(140px, 20vw, 200px) 1fr clamp(160px, 22vw, 230px);
-    grid-template-areas: 'left . right';
-    gap: 8px;
-    padding: 8px;
-  }
-  #ui > * {
-    pointer-events: auto;
-  }
-  .sheet {
-    position: static;
-    transform: none;
-    width: auto;
-    max-height: clamp(180px, 46vh, 56vh);
-    overflow: hidden;
-  }
-  .sheet-handle {
-    display: none;
-  }
+@media (min-width: 769px) and (max-width: 1400px) and (min-height: 521px) and (pointer: coarse) and (orientation: landscape) {
   #ui > section#oP {
     max-height: min(68vh, calc(100vh - 210px));
     min-height: clamp(220px, 38vh, 420px);
@@ -1701,13 +1773,6 @@ html.cqm-shell-ready .algo-list:empty::after {
     min-height: 44px;
     min-width: 44px;
   }
-  /* Algo readout clears the left joystick: lift it above the move pad so neither the
-     joystick nor the toolbar covers the lore line. */
-  #ui > #alg {
-    bottom: calc(168px + env(safe-area-inset-bottom, 0px));
-    left: max(8px, env(safe-area-inset-left, 0px));
-    max-width: clamp(120px, 44vw, 200px);
-  }
 }
 
 /* Coarse + very short landscape (rotated phone): the two thumb pads + wheel + toolbar +
@@ -1721,13 +1786,6 @@ html.cqm-shell-ready .algo-list:empty::after {
   }
   #wheel {
     bottom: calc(120px + env(safe-area-inset-bottom, 0px));
-  }
-  #ui > #alg {
-    top: calc(6px + env(safe-area-inset-top, 0px));
-    bottom: auto;
-    left: 50%;
-    transform: translateX(-50%);
-    max-width: min(70vw, 280px);
   }
 }
 
@@ -1768,13 +1826,13 @@ html.cqm-shell-ready .algo-list:empty::after {
   color: var(--color-ink-dim);
 }
 
-/* ── Tablet 8–12" (600–1280px, tall enough): ALWAYS keep side-column grid — Observatory visible
+/* ── Tablet 8–12" (600–1400px, tall enough): ALWAYS keep side-column grid — Observatory visible
    like Telemetry/Sorting Fields; cancel off-screen sheet parking. Phones stay on sheets above. ── */
-@media (min-width: 600px) and (max-width: 1280px) and (min-height: 521px) {
+@media (min-width: 600px) and (max-width: 1400px) and (min-height: 521px) {
   #ui {
     display: grid !important;
     pointer-events: none;
-    grid-template-columns: clamp(130px, 24vw, 200px) 1fr clamp(130px, 24vw, 200px);
+    grid-template-columns: clamp(120px, 20vw, 190px) 1fr clamp(120px, 22vw, 210px);
     grid-template-areas: 'left . right';
     gap: 8px;
     padding: 8px;
@@ -1817,6 +1875,364 @@ html.cqm-shell-ready .algo-list:empty::after {
   #sP,
   #algoP {
     max-height: clamp(140px, 22vh, 28vh);
+  }
+  /* V101: ultra-compact Sim·Settings readout on tablets — single-line strip, tiny font */
+  #hud-vsr {
+    max-height: 42px !important;
+    padding: 1px 3px !important;
+    font-size: 0.65em !important;
+    flex: 0 0 auto !important;
+  }
+  #hud-vsr .ui-readout-card__row {
+    line-height: 1 !important;
+  }
+  #hud-vsr .ui-readout-card__head {
+    font-size: 7px !important;
+  }
+  #cP {
+    max-height: clamp(60px, 10vh, 100px) !important;
+    flex: 0 0 auto !important;
+  }
+  #alg {
+    max-height: clamp(50px, 8vh, 80px) !important;
+    flex: 0 0 auto !important;
+  }
+}
+
+/* ── Tablet 8–12" PORTRAIT (769–1400px): keep Observatory visible — PHONES (≤768px) stay on sheet mode. ── */
+@media (min-width: 769px) and (max-width: 1400px) and (pointer: coarse) and (orientation: portrait) {
+  #ui {
+    display: grid !important;
+    pointer-events: none;
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas: 'left right';
+    gap: 6px;
+    padding: 6px;
+  }
+  #ui > * {
+    pointer-events: auto;
+  }
+  .ui-col-left,
+  .ui-col-right {
+    display: flex !important;
+    flex-direction: column;
+    gap: 6px;
+    min-height: 0;
+  }
+  .ui-col-left {
+    grid-area: left;
+  }
+  .ui-col-right {
+    grid-area: right;
+  }
+  .sheet {
+    position: static !important;
+    transform: none !important;
+    width: auto !important;
+    max-height: clamp(140px, 24vh, 32vh);
+    overflow: hidden;
+  }
+  .sheet-handle {
+    display: none !important;
+  }
+  #ui > section#oP {
+    max-height: min(52vh, calc(100vh - 180px));
+    min-height: clamp(180px, 28vh, 340px);
+    flex: 1 1 auto;
+  }
+  #oP > .obs-body {
+    max-height: min(48vh, calc(100vh - 220px));
+    flex: 1 1 auto;
+  }
+  #sP,
+  #algoP {
+    max-height: clamp(120px, 20vh, 26vh);
+  }
+  #hud-vsr {
+    max-height: 42px !important;
+    padding: 1px 3px !important;
+    font-size: 0.65em !important;
+    flex: 0 0 auto !important;
+  }
+  #hud-vsr .ui-readout-card__row {
+    line-height: 1 !important;
+  }
+  #hud-vsr .ui-readout-card__head {
+    font-size: 7px !important;
+  }
+  #cP {
+    max-height: clamp(60px, 10vh, 100px) !important;
+    flex: 0 0 auto !important;
+  }
+  #alg {
+    max-height: clamp(50px, 8vh, 80px) !important;
+    flex: 0 0 auto !important;
+  }
+}
+
+/* ── Sim Settings readout (#hud-vsr): 2-col grid — all 7 rows (View…Resets) always visible ── */
+#ui #hud-vsr {
+  padding: 6px 8px !important;
+  overflow: visible;
+  flex: 0 0 auto !important;
+  display: grid !important;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 8px;
+  row-gap: 2px;
+  align-content: start;
+  margin-top: auto;
+  min-height: 118px;
+  max-height: 140px;
+  background: rgba(6, 10, 22, 0.78);
+  border: 1px solid rgba(100, 160, 255, 0.18);
+}
+#hud-vsr .ui-readout-card__head {
+  grid-column: 1 / -1;
+  font: 600 10px var(--font-ui, system-ui, sans-serif) !important;
+  letter-spacing: 0.12em;
+  margin-bottom: 3px !important;
+  padding-bottom: 2px !important;
+  line-height: 1.2;
+  color: #b0d0ff;
+  border-bottom: 1px solid rgba(100, 160, 255, 0.12);
+}
+#hud-vsr .ui-readout-card__row {
+  display: flex;
+  width: auto;
+  margin: 0 0 2px 0 !important;
+  line-height: 1.25 !important;
+  font-size: 10px !important;
+  gap: 5px;
+  min-width: 0;
+}
+#hud-vsr .ui-readout-card__key {
+  font: 600 9px var(--font-ui, system-ui, sans-serif) !important;
+  letter-spacing: 0.06em;
+  flex: 0 0 auto;
+  opacity: 0.82;
+  text-transform: uppercase;
+}
+#hud-vsr .ui-readout-card__val {
+  font: 500 10px var(--font-mono, ui-monospace, monospace) !important;
+  max-width: 6.5em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: right;
+  flex: 1 1 auto;
+  color: rgba(210, 245, 255, 0.98);
+}
+#hud-vsr #hud-song {
+  max-width: 6em !important;
+}
+/* Even bottom readout trio: FPS · Sorting · Sim Settings */
+#perf-hud,
+#ui #alg,
+#ui #hud-vsr.ui-readout-card {
+  border-radius: 10px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.42);
+}
+#ui #alg .ui-readout-card__head,
+#perf-hud {
+  font-weight: 600;
+  letter-spacing: 0.1em;
+}
+
+/* ── Tablet 8–12" LANDSCAPE (600–1400px): Observatory must stay visible like left column ── */
+@media (min-width: 600px) and (max-width: 1400px) and (orientation: landscape) {
+  .ui-col-right #oP {
+    flex: 1 1 auto !important;
+    min-height: clamp(160px, 36vh, 52vh) !important;
+    max-height: none !important;
+  }
+  #ui > section#oP {
+    max-height: none !important;
+    min-height: clamp(160px, 36vh, 52vh) !important;
+  }
+  #oP > .obs-body,
+  #oP > .panel-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    max-height: none !important;
+    overflow-y: auto;
+  }
+}
+
+/* ── Desktop / tablet: edge handles side-hide panels (same-side tabs, no overlap) ── */
+@media (min-width: 769px) {
+  .ui-col-left .sheet-l,
+  .ui-col-right .sheet-r {
+    position: relative;
+    transition: transform 0.26s ease;
+    overflow: visible;
+  }
+  .ui-col-left .sheet-l > .sheet-handle,
+  .ui-col-right .sheet-r > .sheet-handle {
+    display: inline-flex !important;
+    position: absolute;
+    z-index: 45;
+    transform: translateY(0);
+  }
+  .ui-col-left .sheet-l > .sheet-handle {
+    right: -20px;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+  }
+  .ui-col-right .sheet-r > .sheet-handle {
+    left: -20px;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+  /* Stagger handles by panel so they never overlap. Telemetry/Control on left, Observatory/Algo on right. */
+  #sP > .sheet-handle,
+  #oP > .sheet-handle {
+    top: 14%;
+  }
+  #cP > .sheet-handle,
+  #algoP > .sheet-handle {
+    top: 42%;
+  }
+  #algoP > .sheet-handle {
+    top: 70%;
+  }
+  .ui-col-left .sheet-l:not(.open) {
+    transform: translateX(calc(-100% + 24px));
+  }
+  .ui-col-right .sheet-r:not(.open) {
+    transform: translateX(calc(100% - 24px));
+  }
+}
+
+/* ── Compact bottom readout row (phones + narrow windows): three even boxes above dock ── */
+@media (max-width: 900px), (pointer: coarse) and (max-width: 1024px) and (orientation: portrait) {
+  #perf-hud,
+  #ui #alg,
+  #ui #hud-vsr {
+    position: fixed !important;
+    z-index: 19;
+    bottom: calc(
+      var(--cqm-dock-h, var(--cqm-bottom-h, 108px)) + env(safe-area-inset-bottom, 0px)
+    ) !important;
+    top: auto !important;
+    width: calc((100vw - 12px - 2 * var(--cqm-readout-gap, 6px)) / 3) !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    height: var(--cqm-readout-strip-h, 92px) !important;
+    max-height: var(--cqm-readout-strip-h, 92px) !important;
+    align-self: auto !important;
+    flex: none !important;
+    overflow: hidden;
+    box-sizing: border-box;
+    transform: none !important;
+    padding: 5px 6px !important;
+  }
+  #perf-hud {
+    left: max(6px, env(safe-area-inset-left, 0px)) !important;
+    right: auto !important;
+    font-size: 9px;
+    line-height: 1.25;
+    padding: 4px 5px !important;
+  }
+  #ui #alg {
+    left: calc(
+      max(6px, env(safe-area-inset-left, 0px)) + (100vw - 12px - 2 * var(--cqm-readout-gap, 6px)) /
+        3 + var(--cqm-readout-gap, 6px)
+    ) !important;
+    right: auto !important;
+    font-size: 10px;
+  }
+  #ui #hud-vsr {
+    right: max(6px, env(safe-area-inset-right, 0px)) !important;
+    left: auto !important;
+    overflow-y: auto;
+    scrollbar-width: thin;
+  }
+  #ui #alg #g-alg {
+    width: 100% !important;
+    max-width: 100%;
+    height: 10px !important;
+  }
+  #ui #alg #lore {
+    display: none;
+  }
+}
+
+/* ── PHONE (≤768px): final override — beats tablet portrait flex column that stretches readouts ── */
+@media (max-width: 768px) {
+  #ui {
+    display: block !important;
+    padding: 0 !important;
+  }
+  .ui-col-left,
+  .ui-col-right {
+    display: contents !important;
+  }
+  #perf-hud,
+  #ui #alg,
+  #ui #hud-vsr {
+    position: fixed !important;
+    z-index: 19 !important;
+    width: calc((100vw - 12px - 2 * var(--cqm-readout-gap, 6px)) / 3) !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    height: var(--cqm-readout-strip-h, 92px) !important;
+    max-height: var(--cqm-readout-strip-h, 92px) !important;
+    align-self: auto !important;
+    flex: none !important;
+    top: auto !important;
+    transform: none !important;
+    bottom: calc(
+      var(--cqm-dock-h, var(--cqm-bottom-h, 108px)) + env(safe-area-inset-bottom, 0px)
+    ) !important;
+    box-sizing: border-box;
+  }
+  #perf-hud {
+    left: max(6px, env(safe-area-inset-left, 0px)) !important;
+    right: auto !important;
+  }
+  #ui #alg {
+    left: calc(
+      max(6px, env(safe-area-inset-left, 0px)) + (100vw - 12px - 2 * var(--cqm-readout-gap, 6px)) /
+        3 + var(--cqm-readout-gap, 6px)
+    ) !important;
+    right: auto !important;
+    padding: 4px 5px !important;
+    overflow: hidden;
+  }
+  #ui #alg #a-name,
+  #ui #alg #a-step {
+    font-size: 9px;
+    max-width: 100%;
+  }
+  #ui #alg #g-alg {
+    width: 100% !important;
+    max-width: 100%;
+    height: 10px !important;
+  }
+  #ui #alg #lore {
+    display: none !important;
+  }
+  #ui #hud-vsr {
+    right: max(6px, env(safe-area-inset-right, 0px)) !important;
+    left: auto !important;
+    padding: 4px 5px !important;
+    overflow-y: auto;
+  }
+  #sP > .sheet-handle {
+    top: calc(8px + env(safe-area-inset-top, 0px)) !important;
+  }
+  #cP > .sheet-handle {
+    top: calc(72px + env(safe-area-inset-top, 0px)) !important;
+  }
+  #algoP > .sheet-handle {
+    top: calc(136px + env(safe-area-inset-top, 0px)) !important;
+  }
+  #oP > .sheet-handle {
+    top: calc(8px + env(safe-area-inset-top, 0px)) !important;
+  }
+  /* PHONE: side panel handles are not needed — touch users use the bottom dock. */
+  .sheet-handle {
+    display: none !important;
   }
 }
 

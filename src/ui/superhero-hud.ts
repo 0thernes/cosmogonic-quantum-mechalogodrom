@@ -25,17 +25,60 @@ export interface HeroHudView extends SuperheroView {
 const INVENTORY = ['◈', '❄', '⚛', '✶', '☍', '⬡'];
 
 const STYLE = `
-#cqm-hero{position:fixed;top:8px;left:50%;transform:translate(-50%,-150%);z-index:58;
-  width:min(calc(100vw - 420px),720px);max-width:96vw;
+#cqm-hero{position:fixed;top:calc(44px + env(safe-area-inset-top,0px));left:var(--cqm-hud-left,calc(clamp(200px,20vw,280px) + 10px));
+  right:var(--cqm-hud-right,calc(clamp(260px,26vw,400px) + 10px));
+  width:auto;max-width:none;max-height:min(28vh,200px);overflow:visible;
+  transform:translateY(-150%);z-index:24;
   transition:transform .55s cubic-bezier(.2,.9,.3,1);font-size:11px;line-height:1.4;font-family:var(--font-mono,ui-monospace,monospace);
   color:#e9e3ff;pointer-events:none}
-#cqm-hero.on{transform:translate(-50%,0)}
-@media (max-width:640px){#cqm-hero{width:min(96vw,420px);top:4px;font-size:10px}}
+#cqm-hero.on{transform:translateY(0)}
+#cqm-hero.on.min .cqm-hero-box{display:none}
+#cqm-hero.on.min .cqm-hero-fab{display:grid}
+#cqm-hero:not(.min) .cqm-hero-fab{display:none}
+.cqm-hero-fab{pointer-events:auto;display:none;position:absolute;top:0;right:0;width:36px;height:36px;border-radius:50%;
+  border:1px solid rgba(150,120,255,.55);background:linear-gradient(180deg,rgba(24,14,48,.95),rgba(10,8,22,.92));
+  color:#d4b8ff;font-size:16px;cursor:pointer;place-items:center;box-shadow:0 4px 18px rgba(0,0,0,.55);
+  transition:transform .12s,background .12s}
+.cqm-hero-fab:hover{background:rgba(60,36,110,.85);transform:scale(1.06)}
+.cqm-hero-min{pointer-events:auto;margin-left:auto;border:1px solid rgba(150,120,255,.35);border-radius:6px;
+  background:rgba(30,18,60,.55);color:#cbb0ff;font:600 10px/1 var(--font-mono,ui-monospace,monospace);padding:2px 7px;cursor:pointer}
+.cqm-hero-min:hover{background:rgba(50,32,95,.75)}
+.cqm-hero-head{display:flex;align-items:center;gap:6px;width:100%}
+@media (max-width:599px){#cqm-hero{left:6px;right:6px;top:calc(52px + env(safe-area-inset-top,0px));font-size:10px;max-height:34vh}}
+@media (max-width:640px){#cqm-hero{left:4px;right:4px;top:calc(48px + env(safe-area-inset-top,0px));font-size:9px}}
+@media (min-width:769px) and (max-width:1400px){
+  #cqm-hero{left:calc(clamp(120px,20vw,190px) + 10px);right:calc(clamp(120px,22vw,210px) + 10px);
+    top:calc(42px + env(safe-area-inset-top,0px));max-height:min(18vh,108px);font-size:8px}
+  .cqm-hero-box{padding:4px 7px;gap:3px;max-width:100%}
+  .cqm-hero-r{gap:4px}
+  .cqm-hero-bar{min-width:60px}
+  .cqm-hero-bar .lab{width:28px;font-size:7px}
+  .cqm-hero-bar .trk{min-width:42px;height:6px}
+  .cqm-hero-bar .num{width:26px;font-size:7px}
+  .cqm-hero-sec{padding:1px 3px;gap:3px}
+  .cqm-hero-sec .v{font-size:8px}
+  .cqm-hero-pw{gap:2px}
+  .cqm-hero-btn{padding:2px 4px;font-size:6px}
+  .cqm-hero-glyph{font-size:14px}
+  .cqm-hero-slot{width:14px;height:14px;font-size:9px}
+}
+/* V101: tablet landscape 600-1400px — same column values as app.css (already set above for 769-1400).
+   For 600-768px tablets, match the same clamp values so the HUD sits between the grid columns. */
+@media (min-width:600px) and (max-width:768px) and (orientation:landscape){
+  #cqm-hero{left:calc(clamp(120px,20vw,190px) + 10px);right:calc(clamp(120px,22vw,210px) + 10px);
+    top:4px;max-height:min(22vh,130px);overflow-y:auto;overflow-x:hidden}
+}
+/* V100: very narrow landscape (rotated phone / small tablet) — stack vertically, don't overlap */
+@media (max-height:520px) and (orientation:landscape){
+  #cqm-hero{left:6px;right:6px;top:3px;font-size:9px;max-height:48vh;overflow-y:auto}
+  .cqm-hero-box{padding:5px 7px;gap:4px}
+  .cqm-hero-r{gap:4px}
+}
 .cqm-hero-box{pointer-events:auto;border:1px solid rgba(150,120,255,.4);border-radius:14px;
   background:linear-gradient(180deg,rgba(14,9,28,.95),rgba(8,6,18,.92));backdrop-filter:blur(12px);
   box-shadow:0 10px 40px rgba(0,0,0,.6),inset 0 0 30px rgba(80,40,160,.18);padding:9px 12px;
-  display:flex;flex-direction:column;gap:7px}
-@media (max-width:640px){.cqm-hero-box{padding:7px 8px;border-radius:10px}}
+  display:flex;flex-direction:column;gap:7px;max-height:min(28vh,200px);overflow-y:auto;overflow-x:hidden}
+@media (max-width:599px){.cqm-hero-box{padding:7px 8px;border-radius:10px}}
 .cqm-hero-r{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .cqm-hero-av{display:flex;align-items:center;gap:8px;white-space:nowrap}
 .cqm-hero-glyph{font-size:20px;color:#c79bff;text-shadow:0 0 12px rgba(170,110,255,.8);animation:cqm-hero-pulse 2.4s ease-in-out infinite}
@@ -73,6 +116,24 @@ const STYLE = `
 .cqm-hero-pad:active{background:rgba(120,110,255,.85);color:#fff}
 .cqm-hero-inv[title]{cursor:help}
 `;
+
+/** Pin the hero HUD between measured left/right column edges (ResizeObserver + resize). */
+function syncHeroHudGutters(doc: Document): void {
+  const left = doc.querySelector('.ui-col-left');
+  const right = doc.querySelector('.ui-col-right');
+  const root = doc.documentElement;
+  if (left instanceof HTMLElement) {
+    const r = left.getBoundingClientRect();
+    root.style.setProperty('--cqm-hud-left', `${Math.round(r.right + 8)}px`);
+  }
+  if (right instanceof HTMLElement) {
+    const r = right.getBoundingClientRect();
+    root.style.setProperty(
+      '--cqm-hud-right',
+      `${Math.round(doc.defaultView?.innerWidth ?? 0) - r.left + 8}px`,
+    );
+  }
+}
 
 function bar(
   parent: HTMLElement,
@@ -138,11 +199,29 @@ export class SuperheroHud {
     this.root.setAttribute('aria-label', 'Superhero player HUD');
     const box = doc.createElement('div');
     box.className = 'cqm-hero-box';
+
+    const fab = doc.createElement('button');
+    fab.type = 'button';
+    fab.className = 'cqm-hero-fab';
+    fab.setAttribute('aria-label', 'Expand superhero HUD');
+    fab.title = 'Show hero HUD';
+    fab.textContent = '⬢';
+    fab.addEventListener('click', () => this.root.classList.remove('min'));
+    this.root.appendChild(fab);
+
+    const minBtn = doc.createElement('button');
+    minBtn.type = 'button';
+    minBtn.className = 'cqm-hero-min';
+    minBtn.setAttribute('aria-label', 'Minimize superhero HUD');
+    minBtn.title = 'Minimize hero HUD';
+    minBtn.textContent = '−';
+    minBtn.addEventListener('click', () => this.root.classList.add('min'));
+
     this.root.appendChild(box);
 
     // Row A — identity + vitals
     const rowA = doc.createElement('div');
-    rowA.className = 'cqm-hero-r';
+    rowA.className = 'cqm-hero-r cqm-hero-head';
     const av = doc.createElement('div');
     av.className = 'cqm-hero-av';
     av.innerHTML = `<span class="cqm-hero-glyph">⬢</span>`;
@@ -154,6 +233,7 @@ export class SuperheroHud {
     this.lvlEl.textContent = 'LV 1';
     av.append(this.nameEl, this.lvlEl);
     rowA.appendChild(av);
+    rowA.appendChild(minBtn);
     this.bars.life = bar(rowA, 'Life', '#ff5a6b', doc);
     this.bars.energy = bar(rowA, 'Energy', '#39d6ff', doc);
     this.bars.xp = bar(rowA, 'XP', '#c79bff', doc);
@@ -231,6 +311,14 @@ export class SuperheroHud {
     box.appendChild(rowC);
 
     doc.body.appendChild(this.root);
+
+    const sync = (): void => syncHeroHudGutters(doc);
+    sync();
+    doc.defaultView?.addEventListener('resize', sync, { passive: true });
+    const ui = doc.getElementById('ui');
+    if (ui && typeof ResizeObserver !== 'undefined') {
+      new ResizeObserver(sync).observe(ui);
+    }
   }
 
   get isActive(): boolean {

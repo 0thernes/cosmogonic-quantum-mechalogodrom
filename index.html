@@ -1262,6 +1262,13 @@
           var open = document.querySelectorAll('.sheet.open');
           for (var j = 0; j < open.length; j++) setOpen(open[j], false);
         });
+        // Desktop/tablet ≥600px: panels start expanded; handles collapse to the edge.
+        if (window.matchMedia('(min-width: 600px)').matches) {
+          for (var k = 0; k < handles.length; k++) {
+            var p = handles[k].parentElement;
+            if (p) setOpen(p, true);
+          }
+        }
       })();
     </script>
 

@@ -27,10 +27,17 @@ mermaid.initialize({
 });
 
 import { mountAlifeMetricsGallery } from './alife-metrics-gallery';
+import './satellite-music';
 
-await mermaid.run({ querySelector: 'pre.mermaid' });
-
+// Mount the gallery FIRST — never let mermaid issues block it.
 mountAlifeMetricsGallery(document.getElementById('alife-metrics'));
+
+// Mermaid is non-blocking — if it fails, the gallery is already up.
+try {
+  await mermaid.run({ querySelector: 'pre.mermaid' });
+} catch (e) {
+  console.warn('[docs] mermaid render skipped:', e);
+}
 
 // ── Interactive diagrams: pan (drag) + zoom (wheel) + fullscreen on every rendered mermaid SVG,
 // so the architecture / ERD / sequence diagrams are actually viewable and explorable (the user

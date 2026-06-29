@@ -127,8 +127,19 @@ function patchGodJewel(
          float qfac = (uQWave * 0.4 + uPhi * 0.3 + uCliff * 0.25 + uReflex * 0.2 + uQualia * 0.15);
          // TSOTCHKE QGTL corpus: Fubini-Study like geo term for extreme edge (Berry curv proxy in displace).
          float qgtGeo = sin(px*41.3 + t*1.3)*cos(py*37.9 - t*0.9) * 0.007 * (0.5 + 0.5 * (uQWave + uCliff));
-         float ext = (beat*0.11 + morph*(0.17 + 0.14*uSurprise) + curv*uArousal + fhb*(0.04 + 0.05*uSurprise) + curvD*(0.6 + 0.4*qfac) + nm*0.09*uSurprise*(0.5+0.5*uQualia) + qgtGeo) * ${R.toFixed(1)} * 0.065;
-         transformed += normal * ext + vec3(chaos*0.025*uSurprise, sin(t*3.1 + v)*0.018 + nm*0.011*uSurprise, fhb*0.009*qfac);`,
+         // DEMONIC WARP: stronger displacement + larger amplitude as arousal/surprise rise
+         float warpAmp = 0.09 + 0.22 * uArousal + 0.18 * uSurprise + 0.1 * qfac;
+         float ext = (beat*0.18 + morph*(0.34 + 0.28*uSurprise) + curv*uArousal*1.3 + fhb*(0.12 + 0.14*uSurprise) + curvD*(1.0 + 0.7*qfac) + nm*0.22*uSurprise*(0.5+0.5*uQualia) + qgtGeo) * ${R.toFixed(1)} * warpAmp;
+         // DEMONIC TWIST: spiral deformation around the Y axis — the body warps like flesh being torqued
+         float twistAng = t * 0.45 * (0.5 + uArousal) + py * 0.55 * (0.4 + uSurprise);
+         float ctw = cos(twistAng), stw = sin(twistAng);
+         vec3 twisted = vec3(ctw * transformed.x - stw * transformed.z, transformed.y, stw * transformed.x + ctw * transformed.z);
+         float twistMix = 0.25 + 0.35 * uSurprise + 0.2 * uArousal;
+         transformed = mix(transformed, twisted, twistMix);
+         // DIMENSIONAL WARP: radial pulsing bulges that make the creature feel like it is folding through space
+         float radialPulse = sin(t*1.9 + py*5.0) * cos(t*2.7 + px*4.0) * sin(pz*3.0 + t*3.3);
+         transformed += normal * (ext + radialPulse * 0.12 * (0.5 + uSurprise) * ${R.toFixed(1)});
+         transformed += vec3(chaos*0.055*uSurprise, sin(t*3.1 + v)*0.038 + nm*0.028*uSurprise, fhb*0.022*qfac);`,
       );
     shader.fragmentShader = shader.fragmentShader
       .replace(
@@ -173,10 +184,20 @@ function patchGodJewel(
          // thin-film iridescence + variant hue shift + per-archetype base palette + live phi/ignition flash
          float band = relief * 6.2831 + fres * 9.0 + uTime * 0.5 + uVariant * 1.7 + uQWave * 0.9 + uPhi * 1.3;
          vec3 iris = 0.5 + 0.5 * cos(vec3(0.0, 2.094, 4.188) + band);
-         vec3 glow = uPlan * (0.30 + 1.1 * uDominance);
+         // DARK DEMONIC GLOW: deeper, richer base glow with variant-specific dark hue shift
+         vec3 darkTint = mix(vec3(0.15, 0.02, 0.08), vec3(0.05, 0.08, 0.18), uVariant * 0.25);
+         vec3 glow = uPlan * (0.30 + 1.1 * uDominance) + darkTint * (0.15 + 0.3 * relief);
          float igFlash = (0.15 + 0.6 * uPhi) * (0.5 + 0.5 * sin(uTime * 11.0 + uVariant * 4.0)); // ignition
          float varPal = uVariant * 0.18; // per-archetype palette shift (unique base per 0-4)
-         totalEmissiveRadiance += glow * (0.22 + 0.6 * relief) + iris * fres * (0.45 + 0.8 * uDominance) + wv * 0.12 * uDominance + ch * 0.07 * uSurprise * uPlan + igFlash * uPlan * (0.3 + 0.4 * uDominance) + varPal * relief * 0.25 * uPlan;`,
+         // DARK VEINS: high-frequency dark striations for a cracked, demonic skin texture
+         float veins = abs(sin(vObjPos.x * 15.0 + uTime * 0.3 + vObjPos.y * 11.0) * sin(vObjPos.z * 13.0 - uTime * 0.2));
+         float veinMask = smoothstep(0.7, 0.95, veins) * (0.3 + 0.4 * uSurprise);
+         vec3 veinColor = mix(darkTint * 0.3, uPlan * 0.5, veinMask);
+         // DEMONIC PULSE: a slow breathing dark aura that intensifies with arousal — the creature "heaves"
+         float demonicPulse = 0.5 + 0.5 * sin(uTime * 0.8 + uVariant * 2.0);
+         float auraStrength = (0.3 + 0.5 * uArousal + 0.2 * uSurprise) * demonicPulse;
+         vec3 auraColor = mix(vec3(0.08, 0.0, 0.12), uPlan * 0.3, 0.4) * auraStrength;
+         totalEmissiveRadiance += glow * (0.22 + 0.6 * relief) + iris * fres * (0.45 + 0.8 * uDominance) + wv * 0.12 * uDominance + ch * 0.07 * uSurprise * uPlan + igFlash * uPlan * (0.3 + 0.4 * uDominance) + varPal * relief * 0.25 * uPlan - veinColor * veinMask * 0.4 + auraColor * relief * 0.15;`,
       );
   };
 }
@@ -290,11 +311,11 @@ export class SuperBodySystem {
     // ── CORE: a faceted crystalline jewel (detail 3 → smooth enough for relief, faceted read) ──
     const coreGeo = new THREE.IcosahedronGeometry(R, 3);
     const coreMat = new THREE.MeshStandardMaterial({
-      color: 0x0a0612,
-      metalness: 0.6,
-      roughness: 0.3,
-      emissive: 0x140a22,
-      emissiveIntensity: 1.0,
+      color: 0x05030a,
+      metalness: 0.75,
+      roughness: 0.22,
+      emissive: 0x0a0418,
+      emissiveIntensity: 1.4,
     });
     patchGodJewel(coreMat, this.u, this.variant);
     this.core = new THREE.Mesh(coreGeo, coreMat);
@@ -302,9 +323,9 @@ export class SuperBodySystem {
 
     // ── ARCHITECTURE CAGE: a wireframe lattice shell — the "complex architecture" plate ──
     this.cageMat = new THREE.LineBasicMaterial({
-      color: 0xc890ff,
+      color: 0x8a40ff,
       transparent: true,
-      opacity: 0.5,
+      opacity: 0.42,
       blending: THREE.AdditiveBlending,
     });
     this.cage = new THREE.LineSegments(
@@ -317,9 +338,9 @@ export class SuperBodySystem {
     // AMPED: 24 eyes; pupil focus reactivity (scale) + quantum-driven in update. Prebuilt; mask live.
     this.eyes = new THREE.Group();
     this.eyeMat = new THREE.MeshStandardMaterial({
-      color: 0x200818,
-      emissive: 0xc83cff,
-      emissiveIntensity: 4.0,
+      color: 0x100408,
+      emissive: 0xff2a3c,
+      emissiveIntensity: 5.5,
     });
     const irisGeo = new THREE.SphereGeometry(R * 0.12, 14, 14);
     const pupilGeo = new THREE.SphereGeometry(R * 0.06, 10, 10);
@@ -345,11 +366,11 @@ export class SuperBodySystem {
     // AMPED 13 arms + live mask/reactivity from quantum/variant.
     this.arms = new THREE.Group();
     this.armMat = new THREE.MeshStandardMaterial({
-      color: 0x12101a,
-      metalness: 0.95,
-      roughness: 0.22,
-      emissive: 0x3a1860,
-      emissiveIntensity: 0.6,
+      color: 0x080610,
+      metalness: 0.98,
+      roughness: 0.15,
+      emissive: 0x2a0a40,
+      emissiveIntensity: 0.8,
     });
     const armGeo = new THREE.ConeGeometry(R * 0.16, R * 1.5, 6);
     for (let i = 0; i < ARMS; i++) {

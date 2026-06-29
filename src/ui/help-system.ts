@@ -153,7 +153,7 @@ const CHIPS: { label: string; q: string }[] = [
 const STYLE = `
 /* V71: "down the middle 50/50" — the answer fills the LEFT half, the topic chips + search box + AI
    hand-off live on the RIGHT half. Wider so both halves breathe; stacks on narrow screens. */
-#cqm-help-panel{position:fixed;right:10px;bottom:128px;z-index:71;width:min(94vw,720px);height:min(74vh,560px);display:none;
+#cqm-help-panel{position:fixed;right:10px;bottom:calc(var(--cqm-bottom-h,108px) + 118px);z-index:71;width:min(94vw,720px);height:min(62vh,520px);display:none;
   flex-direction:column;border:1px solid rgba(120,220,160,.32);border-radius:12px;background:rgba(6,12,10,.96);
   backdrop-filter:blur(12px);box-shadow:0 10px 46px rgba(0,0,0,.66);font:13px/1.55 var(--font-ui,system-ui,sans-serif);
   color:#e6f6ec;overflow:hidden}
@@ -163,9 +163,12 @@ const STYLE = `
 .cqm-help-head .cqm-panel-x{color:#9bffce}
 .cqm-help-body{flex:1 1 auto;min-height:0;display:flex}
 .cqm-help-left{flex:1 1 50%;min-width:0;display:flex;flex-direction:column}
-.cqm-help-right{flex:1 1 50%;min-width:0;display:flex;flex-direction:column;border-left:1px solid rgba(120,220,160,.2);background:rgba(8,18,13,.45)}
-.cqm-help-colhead{font:600 9px var(--font-mono,monospace);letter-spacing:.14em;color:#7fcea6;text-transform:uppercase;padding:7px 11px 3px;opacity:.85}
-.cqm-help-chips{display:flex;flex-wrap:wrap;gap:5px;padding:3px 11px 9px}
+.cqm-help-right{flex:1 1 50%;min-width:0;display:flex;flex-direction:column;border-left:1px solid rgba(120,220,160,.2);background:rgba(8,18,13,.45);min-height:0}
+.cqm-help-right-main{flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;scrollbar-width:thin;
+  display:flex;flex-direction:column;padding-bottom:4px}
+.cqm-help-ans{flex:1 1 auto;min-height:0;padding:4px 11px 10px;overflow-y:auto;scrollbar-width:thin}
+.cqm-help-colhead{font:600 9px var(--font-mono,monospace);letter-spacing:.14em;color:#7fcea6;text-transform:uppercase;padding:7px 11px 3px;opacity:.85;flex:0 0 auto}
+.cqm-help-chips{display:flex;flex-wrap:wrap;gap:5px;padding:3px 11px 9px;flex:0 0 auto}
 .cqm-help-chip{border:1px solid rgba(120,220,160,.35);background:rgba(16,40,28,.5);color:#cdfce0;border-radius:14px;
   font:11px var(--font-ui,system-ui,sans-serif);padding:4px 10px;cursor:pointer;transition:background .12s}
 .cqm-help-chip:hover{background:rgba(30,70,48,.75)}
@@ -176,7 +179,7 @@ const STYLE = `
 .cqm-help-go{background:rgba(40,200,130,.16);border:1px solid rgba(120,220,160,.5);border-radius:7px;color:#cdfce0;
   font:600 11px var(--font-mono,monospace);padding:7px 11px;cursor:pointer}
 .cqm-help-go:hover{background:rgba(40,200,130,.3)}
-.cqm-help-ans{flex:1 1 auto;min-height:0;padding:4px 11px 10px;overflow-y:auto}
+.cqm-help-search{flex:0 0 auto}
 .cqm-help-card{border:1px solid rgba(120,220,160,.18);border-radius:9px;background:rgba(10,22,16,.6);padding:9px 11px;margin-top:8px}
 .cqm-help-card h4{margin:0 0 4px;font:600 12px var(--font-mono,monospace);letter-spacing:.04em;color:#aaffd2}
 .cqm-help-card p{margin:0;color:#d6ecdd}
@@ -225,9 +228,11 @@ export class HelpSystem {
     body.innerHTML =
       `<div class="cqm-help-left"><div class="cqm-help-colhead">Answer</div><div class="cqm-help-ans" data-ans></div></div>` +
       `<div class="cqm-help-right">` +
+      `<div class="cqm-help-right-main">` +
       `<div class="cqm-help-colhead">Topics</div><div class="cqm-help-chips" data-chips></div>` +
       `<div class="cqm-help-colhead">Ask anything</div>` +
       `<div class="cqm-help-search"><input class="cqm-help-in" data-in placeholder="e.g. how does the economy work?" autocomplete="off" /><button class="cqm-help-go" data-go>ASK</button></div>` +
+      `</div>` +
       `<div class="cqm-help-foot"><span class="note">Repo-grounded instant answers. For freeform / web / full corpus RAG:</span><button class="cqm-help-ai" data-ai>Ask the ✦ AI</button></div>` +
       `</div>`;
     this.panel.appendChild(body);

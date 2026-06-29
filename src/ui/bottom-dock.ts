@@ -36,13 +36,29 @@ export function reorderBottomDock(doc: Document = document): void {
   syncBottomDockHeight(doc);
 }
 
-/** Measure stack height for #ui padding and perf-HUD clearance. */
+/** Measure stack height + fixed readout strip for #ui padding and HUD clearance. */
 export function syncBottomDockHeight(doc: Document = document): void {
   const stack = doc.getElementById(STACK_ID);
   if (!stack) return;
   const h = stack.getBoundingClientRect().height;
   const bottom = parseFloat(getComputedStyle(stack).bottom) || 4;
-  doc.documentElement.style.setProperty('--cqm-bottom-h', `${Math.ceil(h + bottom + 8)}px`);
+  let readoutStrip = 0;
+  for (const id of ['perf-hud', 'hud-vsr', 'alg']) {
+    const el = doc.getElementById(id);
+    if (!el) continue;
+    const cs = getComputedStyle(el);
+    if (cs.position !== 'fixed') continue;
+    const rh = el.getBoundingClientRect().height;
+    if (rh > 8) readoutStrip = Math.max(readoutStrip, rh);
+  }
+  const dockH = Math.ceil(h + bottom + 8);
+  const stripGap = readoutStrip > 0 ? readoutStrip + 6 : 0;
+  doc.documentElement.style.setProperty('--cqm-dock-h', `${dockH}px`);
+  doc.documentElement.style.setProperty(
+    '--cqm-readout-strip-h',
+    `${Math.ceil(readoutStrip || 92)}px`,
+  );
+  doc.documentElement.style.setProperty('--cqm-bottom-h', `${dockH + stripGap}px`);
 }
 
 if (typeof document !== 'undefined') {

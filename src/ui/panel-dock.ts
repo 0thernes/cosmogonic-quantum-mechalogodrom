@@ -34,7 +34,7 @@ const STYLE = `
 #${DOCK_ID} > a.cqm-dock-nav:focus-visible{outline:2px solid rgba(120,180,255,.75);outline-offset:2px}
 #${DOCK_ID} > a.cqm-dock-nav[data-nav="spec"]{border-color:rgba(220,120,255,.35);color:#f0c8ff}
 #${DOCK_ID} > a.cqm-dock-nav[data-nav="spec"]:hover{background:rgba(40,16,54,.92);border-color:rgba(220,120,255,.55)}
-@media (max-width: 768px), (orientation: portrait), (pointer: coarse) {
+@media (max-width: 599px) {
   #${DOCK_ID}{flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;justify-content:flex-start;
     max-width:calc(100vw - 12px);scrollbar-width:thin;-webkit-overflow-scrolling:touch;bottom:56px}
   #${DOCK_ID} > *{flex:0 0 auto}

@@ -1,7 +1,6 @@
 /**
- * Entry module for specs.html — ALife metric gallery (shared with docs.html).
+ * Standalone ALife gallery boot — bundled to dist/alife-gallery.js for Docs/Spec/Lab static hosts.
  */
 import { mountAlifeMetricsGallery } from './alife-metrics-gallery';
-import './satellite-music';
 
 mountAlifeMetricsGallery(document.getElementById('alife-metrics'));

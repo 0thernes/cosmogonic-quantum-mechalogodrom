@@ -327,10 +327,12 @@
         border-radius: 2px;
         outline: none;
         -webkit-appearance: none;
+        appearance: none;
       }
 
       .slider-container input[type='range']::-webkit-slider-thumb {
         -webkit-appearance: none;
+        appearance: none;
         width: 16px;
         height: 16px;
         background: var(--anthropic-orange);
@@ -549,15 +551,51 @@
         position: relative;
         cursor: pointer;
         transition:
-          box-shadow 0.18s ease,
-          transform 0.18s ease;
+          box-shadow 0.22s cubic-bezier(0.2, 0.8, 0.3, 1),
+          transform 0.22s cubic-bezier(0.2, 0.8, 0.3, 1);
+      }
+      .viz-tile::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        border-radius: 12px;
+        pointer-events: none;
+        box-shadow: inset 0 0 0 2px rgba(0, 238, 255, 0);
+        transition: box-shadow 0.3s ease;
       }
 
       .viz-tile:hover {
-        transform: translateY(-2px);
+        transform: translateY(-3px) scale(1.01);
         box-shadow:
-          0 16px 34px rgba(20, 20, 19, 0.22),
-          0 0 0 1px rgba(217, 119, 87, 0.35);
+          0 18px 40px rgba(20, 20, 19, 0.28),
+          0 0 0 1px rgba(217, 119, 87, 0.35),
+          0 0 24px rgba(0, 238, 255, 0.12);
+      }
+      .viz-tile:hover::after {
+        box-shadow: inset 0 0 0 2px rgba(0, 238, 255, 0.25);
+      }
+      .viz-tile--live::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: linear-gradient(90deg, transparent, rgba(0, 238, 255, 0.4), transparent);
+        z-index: 3;
+        pointer-events: none;
+        animation: viz-scan 3.5s ease-in-out infinite;
+      }
+      @keyframes viz-scan {
+        0%,
+        100% {
+          transform: translateX(-100%);
+          opacity: 0;
+        }
+        50% {
+          transform: translateX(100%);
+          opacity: 1;
+        }
       }
 
       .viz-tile:focus-visible {
@@ -571,24 +609,29 @@
         left: 0;
         right: 0;
         padding: 10px 12px 18px;
-        background: linear-gradient(180deg, rgba(4, 7, 17, 0.92) 0%, rgba(4, 7, 17, 0) 100%);
+        background: linear-gradient(180deg, rgba(4, 7, 17, 0.88) 0%, rgba(4, 7, 17, 0) 100%);
         z-index: 2;
         pointer-events: none;
+        transition: background 0.2s ease;
+      }
+      .viz-tile:hover .viz-titlebar {
+        background: linear-gradient(180deg, rgba(4, 7, 17, 0.94) 0%, rgba(4, 7, 17, 0) 100%);
       }
 
       .viz-tile .viz-name {
-        font-size: 12.5px;
-        font-weight: 600;
-        letter-spacing: 0.03em;
-        color: #cfe6ff;
+        font-size: 14px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        color: #e2f0ff;
         text-transform: uppercase;
+        text-shadow: 0 1px 8px rgba(0, 0, 0, 0.65);
       }
 
       .viz-tile .viz-legend {
-        font-size: 10.5px;
-        color: #8aa3bd;
-        line-height: 1.35;
-        margin-top: 2px;
+        font-size: 12px;
+        color: #9eb8d4;
+        line-height: 1.4;
+        margin-top: 3px;
         font-family: 'Courier New', monospace;
       }
 
@@ -1001,24 +1044,20 @@
       const MIN_NOISE_BLEND = 0.06; // floor keeps pure-Lorenz mode from stalling at fixed points
       const NOISE_SCALE = 0.0042; // Perlin potential frequency (canvas px → noise space)
       const NOISE_EPS = 2.0; // finite-difference half-step for the curl, in px
-      const BASE_SPEED = 2.1; // px per frame after direction normalization
-      const RING_SPEED = 3.4; // wavefront expansion, px per frame
+      const BASE_SPEED = 2.6; // px per frame after direction normalization
+      const RING_SPEED = 4.2; // wavefront expansion, px per frame
       const RING_MAX_R = 480; // ring dies past this radius
       const RING_BAND = 26; // half-width of the wavefront's particle-kick band, px
 
       // ─── HUD overlay layout (canvas-space px, sized against the 1200² field) ───
-      const HUD_PAD = 22;
-      const HUD_W = 268;
-      const HUD_CARD_H = 196;
-      const HUD_MATH_H = 152;
+      const HUD_PAD = 8;
+      const HUD_W = 210;
+      const HUD_CARD_H = 124;
+      const HUD_MATH_H = 64;
       const HUD_MATH_LINES = [
-        ['v = (1−f)·L̂ + f·N̂   (then renormalized)', 0],
-        ['blend f = 0.06 + 0.94·fieldBlend', 1],
-        ['L: Lorenz σρβ flow on the X–Z plane;', 1],
-        ['   Ẏ = X(ρ−Z) − Y  (hidden Y per particle)', 0],
-        ['N: curl noise  (∂n/∂y, −∂n/∂x) → div-free', 0],
-        ['collapse: P(cell) = occupancy / Σ  (Born)', 0],
-        ['→ amplitudes localize; ring kicks the flow', 1],
+        ['v = (1−f)·L̂ + f·N̂', 0],
+        ['f = 0.06+0.94·blend', 1],
+        ['L: Lorenz σρβ · N: curl', 1],
       ];
 
       const px = new Float32Array(MAXP);
@@ -1383,7 +1422,7 @@
         fill(valueColor[0], valueColor[1], valueColor[2]);
         textStyle(BOLD);
         textAlign(RIGHT, TOP);
-        text(value, x + HUD_W - 28, y);
+        text(value, x + HUD_W - 22, y);
         textStyle(NORMAL);
       }
 
@@ -1402,81 +1441,80 @@
         const cx = HUD_PAD;
         let cy = HUD_PAD;
         noStroke();
-        fill(6, 10, 22, 205);
-        rect(cx, cy, HUD_W, HUD_CARD_H, 10);
-        stroke(120, 200, 255, 70);
+        fill(6, 10, 22, 140);
+        rect(cx, cy, HUD_W, HUD_CARD_H, 8);
+        stroke(120, 200, 255, 50);
         strokeWeight(1);
         noFill();
-        rect(cx + 0.5, cy + 0.5, HUD_W - 1, HUD_CARD_H - 1, 10);
+        rect(cx + 0.5, cy + 0.5, HUD_W - 1, HUD_CARD_H - 1, 8);
 
-        const ix = cx + 18;
-        let iy = cy + 16;
+        const ix = cx + 12;
+        let iy = cy + 10;
         noStroke();
         fill(cyan[0], cyan[1], cyan[2]);
         textStyle(BOLD);
         textAlign(LEFT, TOP);
-        textSize(15);
+        textSize(13);
         text('QUANTUM WILDBEYOND', ix, iy);
         textStyle(NORMAL);
         fill(130, 150, 170);
         textSize(10);
-        text('COLLAPSE FIELD · LIVE TELEMETRY', ix, iy + 19);
+        text('COLLAPSE FIELD · LIVE TELEMETRY', ix, iy + 15);
 
-        iy += 42;
-        textSize(13);
-        const lineH = 21;
+        iy += 32;
+        textSize(12);
+        const lineH = 17;
         hudRow('seed', String(params.seed), ix, iy, cyan);
         iy += lineH;
         hudRow('particles', n.toLocaleString('en-US'), ix, iy, [225, 230, 235]);
         iy += lineH;
-        hudRow('collapse events', String(collapseCount), ix, iy, orange);
+        hudRow('collapses', String(collapseCount), ix, iy, orange);
         iy += lineH;
-        const lastCellStr =
-          lastChosenCell < 0 ? '—' : 'cell ' + lastChosenCell + '  p=' + lastBornP.toFixed(3);
-        hudRow('last measurement', lastCellStr, ix, iy, [200, 175, 255]);
+        hudRow(
+          'blend',
+          Math.round((1 - effectiveBlend) * 100) + '/' + Math.round(effectiveBlend * 100),
+          ix,
+          iy,
+          [225, 230, 235],
+        );
         iy += lineH;
-        const blendStr =
-          'L ' +
-          Math.round((1 - effectiveBlend) * 100) +
-          '% · N ' +
-          Math.round(effectiveBlend * 100) +
-          '%';
-        hudRow('field blend', blendStr, ix, iy, [225, 230, 235]);
-        iy += lineH;
-        hudRow('collapse rate', params.collapseRate.toFixed(2) + '/s', ix, iy, [225, 230, 235]);
+        hudRow('rate', params.collapseRate.toFixed(2) + '/s', ix, iy, [225, 230, 235]);
         iy += lineH;
         hudRow('fps', fps.toFixed(1), ix, iy, fpsColor);
 
         const ly0 = H - HUD_PAD - HUD_MATH_H;
+        const lx0 = HUD_PAD;
         noStroke();
-        fill(6, 10, 22, 205);
-        rect(cx, ly0, HUD_W, HUD_MATH_H, 10);
-        stroke(120, 200, 255, 70);
+        fill(6, 10, 22, 140);
+        rect(lx0, ly0, HUD_W, HUD_MATH_H, 8);
+        stroke(120, 200, 255, 50);
         strokeWeight(1);
         noFill();
-        rect(cx + 0.5, ly0 + 0.5, HUD_W - 1, HUD_MATH_H - 1, 10);
+        rect(lx0 + 0.5, ly0 + 0.5, HUD_W - 1, HUD_MATH_H - 1, 8);
 
-        const mx = cx + 18;
-        let my = ly0 + 14;
+        const mx = lx0 + 14;
+        let my = ly0 + 10;
         noStroke();
         fill(cyan[0], cyan[1], cyan[2]);
         textStyle(BOLD);
         textAlign(LEFT, TOP);
-        textSize(12);
+        textSize(10);
         text('THE MATH', mx, my);
         textStyle(NORMAL);
-        my += 22;
+        my += 18;
 
-        textSize(10.5);
-        const mlH = 15;
+        textSize(8);
+        const mlH = 11;
+        const mathBottom = ly0 + HUD_MATH_H - 8;
         for (let k = 0; k < HUD_MATH_LINES.length; k++) {
           const seg = HUD_MATH_LINES[k];
+          if (my + mlH > mathBottom) break;
           if (seg[1] === 1) {
             fill(140, 158, 176);
           } else {
             fill(165, 215, 255);
           }
-          text(seg[0], mx, my);
+          text(seg[0], mx, my, HUD_W - 24);
           my += mlH;
         }
 
@@ -1593,9 +1631,9 @@
           r.kick = 1;
         };
         r.tick = () => {
-          r.kick *= 0.94;
+          r.kick *= 0.95;
           if (r.kick < 0.004) r.kick = 0;
-          r.orbit += (p.hot ? 0.016 : 0.006) * (1 + r.kick * 2.6);
+          r.orbit += (p.hot ? 0.022 : 0.009) * (1 + r.kick * 3.2);
           return r.kick;
         };
         return r;
@@ -3832,7 +3870,7 @@
         for (let k = 0; k < specs.length; k++) {
           const spec = specs[k];
           const tile = document.createElement('div');
-          tile.className = 'viz-tile';
+          tile.className = 'viz-tile viz-tile--live';
           tile.tabIndex = 0; // keyboard-focusable
           tile.setAttribute('role', 'button');
           tile.setAttribute(
@@ -4084,5 +4122,6 @@
         setPage(1); // page 1 only — no board contexts until a board page is opened
       });
     </script>
+    <script type="module" src="../satellite-music.js"></script>
   </body>
 </html>

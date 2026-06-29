@@ -32,6 +32,8 @@ import { initToolbarKeyboard } from './ui/toolbar';
 import './ui/onboarding';
 // Settings panel (V81): centralized simulation controls.
 import './ui/settings-panel';
+// Panel edge toggles (V98): side hide/show buttons for desktop/tablet panel columns.
+import './ui/panel-edge-toggles';
 
 // Legacy r128 color fidelity: the original rendered without color management;
 // disable it BEFORE any THREE.Color is constructed (audit finding, 0.2.1).

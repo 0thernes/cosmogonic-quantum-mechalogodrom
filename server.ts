@@ -18,8 +18,6 @@
  * Tailwind is applied to the HTML bundles via `bun-plugin-tailwind` (see bunfig.toml).
  */
 import index from './index.html';
-import docs from './docs.html';
-import spec from './specs.html';
 import { createLogger } from './src/logging/logger';
 import {
   runAgent,
@@ -309,14 +307,28 @@ function secured<T extends Record<string, (req: Request) => Response | Promise<R
 // Start the HTTP server only when this file is run directly (`bun server.ts` / `bun --hot server.ts`).
 // When imported — e.g. by unit tests of the pure body-parsers above — `import.meta.main` is false, so
 // no socket is opened and the test process exits cleanly.
+const HTML_ROOT = new URL('./dist/', import.meta.url);
+
+function serveHtml(path: string): (req: Request) => Promise<Response> {
+  return async (req) => {
+    const file = Bun.file(new URL(path, HTML_ROOT));
+    if (!(await file.exists())) {
+      log.warn(`${path} not found in dist/ — run \`bun run build\` first`);
+      return new Response('Not built yet — run `bun run build` first', { status: 503 });
+    }
+    logRequest(req, 200);
+    return new Response(file, { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+  };
+}
+
 if (import.meta.main) {
   const server = Bun.serve({
     port: Number(process.env.PORT) || 3000,
     development: process.env.NODE_ENV !== 'production',
     routes: {
       '/': index,
-      '/docs': docs,
-      '/spec': spec,
+      '/docs': serveHtml('docs.html'),
+      '/spec': serveHtml('specs.html'),
       '/lab': secured({
         GET(req) {
           logRequest(req, 200);
@@ -492,7 +504,7 @@ if (import.meta.main) {
         },
       }),
     },
-    fetch(req) {
+    fetch: async (req) => {
       const url = new URL(req.url);
       const p = url.pathname;
       if (p.startsWith('/docs/reports/assets/') && p.endsWith('.svg')) {
@@ -501,6 +513,51 @@ if (import.meta.main) {
         return withSecurityHeaders(
           new Response(file, { headers: { 'Content-Type': 'image/svg+xml; charset=utf-8' } }),
         );
+      }
+      if (p.startsWith('/assets/alife/') && p.endsWith('.svg')) {
+        const rel = p.replace('/assets/alife/', 'docs/reports/assets/');
+        const file = Bun.file(new URL(`./${rel}`, import.meta.url));
+        logRequest(req, 200);
+        return withSecurityHeaders(
+          new Response(file, { headers: { 'Content-Type': 'image/svg+xml; charset=utf-8' } }),
+        );
+      }
+      if (p === '/satellite-music.js') {
+        const dist = Bun.file(new URL('./dist/satellite-music.js', import.meta.url));
+        if (await dist.exists()) {
+          logRequest(req, 200);
+          return withSecurityHeaders(
+            new Response(dist, {
+              headers: { 'Content-Type': 'application/javascript; charset=utf-8' },
+            }),
+          );
+        }
+        // Dev fallback: transpile the TS source on the fly so the lab page still gets the music
+        // widget without a manual `bun run build`.
+        const srcPath = new URL('./src/satellite-music.ts', import.meta.url);
+        const src = Bun.file(srcPath);
+        if (await src.exists()) {
+          const transpiler = new Bun.Transpiler();
+          const source = await src.text();
+          const out = await transpiler.transform(source, 'ts' as 'ts');
+          logRequest(req, 200);
+          return withSecurityHeaders(
+            new Response(out, {
+              headers: { 'Content-Type': 'application/javascript; charset=utf-8' },
+            }),
+          );
+        }
+      }
+      if (p === '/alife-gallery.js') {
+        const file = Bun.file(new URL('./dist/alife-gallery.js', import.meta.url));
+        if (await file.exists()) {
+          logRequest(req, 200);
+          return withSecurityHeaders(
+            new Response(file, {
+              headers: { 'Content-Type': 'application/javascript; charset=utf-8' },
+            }),
+          );
+        }
       }
       logRequest(req, 404);
       return withSecurityHeaders(new Response('Not Found', { status: 404 }));

@@ -88,6 +88,11 @@ export class AlphabetPantheonRender {
   /** Per pool: the bodies it draws, in instance-slot order. */
   private readonly bodies: Body[][] = [];
   private readonly mat: THREE.MeshBasicMaterial;
+  /** #101 — APEX ABOMINATION capstone (ς): warped dimensional horror above the 100-letter pantheon. */
+  private readonly apexGroup = new THREE.Group();
+  private readonly apexCore: THREE.Mesh;
+  private readonly apexHalo: THREE.Mesh;
+  private readonly apexSpikes: THREE.Mesh;
   private chaos = 0;
 
   constructor(scene: THREE.Scene) {
@@ -153,6 +158,35 @@ export class AlphabetPantheonRender {
       this.bodies.push(list);
     }
 
+    // #101 APEX ABOMINATION — the capstone entity: impossible geometry, hyper-chromatic, alive.
+    const apexMat = new THREE.MeshBasicMaterial({
+      color: 0xff1a6e,
+      transparent: true,
+      opacity: 0.94,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+    const apexHaloMat = new THREE.MeshBasicMaterial({
+      color: 0x6a00ff,
+      transparent: true,
+      opacity: 0.55,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+    const spikeMat = new THREE.MeshBasicMaterial({
+      color: 0x00ffd5,
+      transparent: true,
+      opacity: 0.72,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+    this.apexCore = new THREE.Mesh(new THREE.TorusKnotGeometry(1.4, 0.42, 128, 16, 2, 5), apexMat);
+    this.apexHalo = new THREE.Mesh(new THREE.IcosahedronGeometry(2.8, 2), apexHaloMat);
+    this.apexSpikes = new THREE.Mesh(new THREE.OctahedronGeometry(1.9, 1), spikeMat);
+    this.apexGroup.position.set(0, DOME_R * 0.88, 0);
+    this.apexGroup.add(this.apexCore, this.apexHalo, this.apexSpikes);
+    this.group.add(this.apexGroup);
+
     scene.add(this.group);
   }
 
@@ -185,13 +219,34 @@ export class AlphabetPantheonRender {
       mesh.instanceMatrix.needsUpdate = true;
       if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
     }
+    // APEX ABOMINATION #101 — dimensional warp pulse (pure trig, no rng).
+    const w = 1 + 0.9 * this.chaos;
+    const ph = t * 0.42 * w;
+    this.apexCore.rotation.set(ph * 1.3, ph * 0.9, ph * 1.7);
+    this.apexHalo.rotation.set(-ph * 0.6, ph * 1.1, ph * 0.4);
+    this.apexSpikes.rotation.set(ph * 2.1, -ph * 1.4, ph * 0.8);
+    const pulse = 1 + 0.35 * Math.sin(ph * 3.7) + 0.15 * Math.sin(ph * 11.3);
+    this.apexCore.scale.setScalar(22 * pulse);
+    this.apexHalo.scale.setScalar(14 * (1 + 0.2 * Math.sin(ph * 2.9)));
+    this.apexSpikes.scale.setScalar(18 * (1 + 0.25 * Math.cos(ph * 5.1)));
+    C.setHSL((0.92 + Math.sin(ph * 0.7) * 0.08) % 1, 1, 0.52);
+    (this.apexCore.material as THREE.MeshBasicMaterial).color.copy(C);
+    C.setHSL((0.72 + Math.cos(ph * 0.5) * 0.12) % 1, 1, 0.48);
+    (this.apexHalo.material as THREE.MeshBasicMaterial).color.copy(C);
+    C.setHSL((0.55 + Math.sin(ph * 1.2) * 0.15) % 1, 1, 0.55);
+    (this.apexSpikes.material as THREE.MeshBasicMaterial).color.copy(C);
   }
 
-  /** Total bodies rendered (100). */
+  /** Total letter archetypes rendered (100). Apex #101 is a separate capstone mesh. */
   get count(): number {
     let n = 0;
     for (const l of this.bodies) n += l.length;
     return n;
+  }
+
+  /** The APEX ABOMINATION capstone (#101) is present above the 100-letter pantheon. */
+  get hasApexCapstone(): boolean {
+    return true;
   }
 
   /** Free every pool geometry + the shared material (HMR / world-reset safe). */
@@ -201,6 +256,12 @@ export class AlphabetPantheonRender {
       m.dispose();
     }
     this.mat.dispose();
+    this.apexCore.geometry.dispose();
+    this.apexHalo.geometry.dispose();
+    this.apexSpikes.geometry.dispose();
+    (this.apexCore.material as THREE.Material).dispose();
+    (this.apexHalo.material as THREE.Material).dispose();
+    (this.apexSpikes.material as THREE.Material).dispose();
     this.group.removeFromParent();
   }
 }

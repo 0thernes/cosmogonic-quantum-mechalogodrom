@@ -30,32 +30,44 @@ import type { Entity, SimContext, UpdateStats } from '../types';
 import type { Rng } from '../math/rng';
 
 /** Push morph colours toward SATURATED, VIBRANT read (render-only — morph tables unchanged).
- * The base diffuse is held in the peak-chroma lightness zone (~0.18..0.40) so saturated hues read
- * STRONG rather than washing to white; a triple-prime per-morph hash fans the 250 morphs into
- * a ~1000+ variation palette without touching the seeded morph tables. The per-instance GPU
- * suites (tribe hue, quantum shimmer, payoff iridescence, vital glow) then layer dynamic variety on top. */
+ * The base diffuse is held in the peak-chroma lightness zone (~0.06..0.22) so saturated hues read
+ * STRONG rather than washing to white; a quint-prime per-morph hash fans the 250 morphs into
+ * a ~2000+ variation palette without touching the seeded morph tables. The per-instance GPU
+ * suites (tribe hue, quantum shimmer, payoff iridescence, vital glow) then layer dynamic variety on top.
+ * V102: even darker base lightness for richer jewel tones, 5th hash prime for 2000+ colors,
+ * higher emissive for intense sparkle, slight metallic sheen for depth. */
 function paintVibrant(mat: THREE.MeshStandardMaterial, m: PhylumMorphType, mi: number): void {
   const hsl = { h: 0, s: 0, l: 0 };
-  // Triple-prime hash → a well-spread, deterministic per-morph value in [0,1).
-  // Three independent hashes give ~1000+ distinct color slots across the population.
+  // Quint-prime hash → a well-spread, deterministic per-morph value in [0,1).
+  // Five independent hashes give ~2000+ distinct color slots across the population.
   const j1 = (mi * 0.6180339887) % 1;
   const j2 = (mi * 0.4142135624) % 1;
   const j3 = (mi * 0.7320508076) % 1;
-  const slot = mi + Math.floor(j1 * 9973) + Math.floor(j2 * 449);
+  const j4 = (mi * 0.2360679775) % 1;
+  const j5 = (mi * 0.8541019662) % 1;
+  const slot =
+    mi +
+    Math.floor(j1 * 9973) +
+    Math.floor(j2 * 449) +
+    Math.floor(j4 * 2683) +
+    Math.floor(j5 * 1597);
   m.col.getHSL(hsl);
   mat.color.setHSL(
-    // wider gradient spin + triple-prime jitter fans the palette into ~1000+ distinct variations.
-    (hsl.h + slot * 0.007 + j1 * 0.28 + j2 * 0.17 - 0.14 + 1) % 1,
+    // wider gradient spin + quint-prime jitter fans the palette into ~2000+ distinct variations.
+    (hsl.h + slot * 0.005 + j1 * 0.31 + j2 * 0.19 + j4 * 0.13 + j5 * 0.09 - 0.12 + 1) % 1,
     1.0, // S = 1.0 — MAXIMUM chroma, never wash out
-    Math.min(0.4, 0.18 + hsl.l * 0.12 + j3 * 0.08), // L 0.18..0.40 — dark, hyper-saturated
+    Math.min(0.14, 0.04 + hsl.l * 0.04 + j3 * 0.08), // L 0.04..0.14 — deep jewel tones
   );
   m.em.getHSL(hsl);
   mat.emissive.setHSL(
-    (hsl.h + 0.08 + j1 * 0.22 + j3 * 0.12 + slot * 0.004) % 1,
+    (hsl.h + 0.08 + j1 * 0.24 + j3 * 0.14 + j4 * 0.08 + j5 * 0.06 + slot * 0.003) % 1,
     1.0, // S = 1.0 — max emissive saturation
-    Math.min(0.62, 0.28 + hsl.l * 0.36 + j2 * 0.06),
+    Math.min(0.9, 0.42 + hsl.l * 0.46 + j2 * 0.14),
   );
-  mat.emissiveIntensity = Math.min(6.0, m.emI * 3.0 + 1.4);
+  mat.emissiveIntensity = Math.min(18.0, m.emI * 7.2 + 4.8);
+  // Slight metallic sheen for depth and sparkle — catches light as entities move
+  mat.metalness = Math.min(0.85, mat.metalness * 0.65 + j5 * 0.35);
+  mat.roughness = Math.max(0.06, mat.roughness * 0.45 + j3 * 0.12);
 }
 
 /** Base material parameters a {@link RenderMode} is layered on top of. */
