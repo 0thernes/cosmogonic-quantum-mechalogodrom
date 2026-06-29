@@ -230,7 +230,13 @@ export class AlphabetPantheonRender {
     this.apexInner = new THREE.Mesh(new THREE.DodecahedronGeometry(0.9, 0), innerMat);
     this.apexShell = new THREE.Mesh(new THREE.TetrahedronGeometry(3.8, 0), shellMat);
     this.apexGroup.position.set(0, DOME_R * 0.88, 0);
-    this.apexGroup.add(this.apexShell, this.apexHalo, this.apexSpikes, this.apexCore, this.apexInner);
+    this.apexGroup.add(
+      this.apexShell,
+      this.apexHalo,
+      this.apexSpikes,
+      this.apexCore,
+      this.apexInner,
+    );
     this.group.add(this.apexGroup);
 
     scene.add(this.group);

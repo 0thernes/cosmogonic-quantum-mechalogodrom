@@ -635,7 +635,7 @@ export class PantheonArchitecturePanel {
       const layerHues = [220, 260, 30, 0, 330];
       const spike = Math.max(0, Math.sin(t * (3 + layer * 2.5) + i * 0.41) * 0.5 + 0.5);
       const a = clamp01(drive * 0.5 + spike * 0.45 + Math.abs(Math.sin(i * 0.31 + t)) * 0.2);
-      const hue = (layerHues[layer]! + (i * 47 + t * 80) % 60) % 360;
+      const hue = (layerHues[layer]! + ((i * 47 + t * 80) % 60)) % 360;
       pts.push({ x: px, y: py, d, a, hue, layer });
     }
     for (let i = 0; i < N; i++) {
@@ -682,7 +682,13 @@ export class PantheonArchitecturePanel {
       }
     }
     // Frequency band legend
-    const LAYER_NAMES = ['\u03b4 delta', '\u03b8 theta', '\u03b1 alpha', '\u03b2 beta', '\u03b3 gamma'];
+    const LAYER_NAMES = [
+      '\u03b4 delta',
+      '\u03b8 theta',
+      '\u03b1 alpha',
+      '\u03b2 beta',
+      '\u03b3 gamma',
+    ];
     const LAYER_HUES_ARR = [220, 260, 30, 0, 330];
     ctx.font = '600 8px ui-monospace,monospace';
     ctx.textBaseline = 'bottom';

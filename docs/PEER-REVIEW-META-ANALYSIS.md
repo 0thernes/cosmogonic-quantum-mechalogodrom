@@ -111,19 +111,19 @@ Each major claim maps to a test or metric — this document.
 
 ### 14. Comparative ALife benchmarks (20)
 
-| #         | Checkpoint                                      | CQM anchor                        |
-| --------- | ----------------------------------------------- | --------------------------------- |
-| 14.1      | Tierra comparison (population scale)            | 50k vs ~1k                        |
-| 14.2      | Avida comparison (determinism)                  | Seeded RNG, golden hash           |
-| 14.3      | Lenia comparison (continuous dynamics)          | RD tiles in WildBeyond            |
-| 14.4      | Polyworld comparison (neural nets)              | 25k glyph brains                  |
-| 14.5      | Boids comparison (flocking)                     | Wolfpack behavior                 |
-| 14.6      | Open-endedness metrics (Bedau/Packard)          | `open-endedness.ts`               |
-| 14.7      | Browser-native advantage (zero install)         | Bun + WebGL                       |
-| 14.8      | Quantum layer uniqueness                        | Tsotchke statevector sim          |
-| 14.9      | Multi-currency economy comparison               | 4-currency market                 |
-| 14.10     | Brain observatory comparison                    | 4-tab neural observatory          |
-| 14.11–14.20 | _(extend: Neural Darwinism, Heap of Souls, etc.)_ | TBD                             |
+| #           | Checkpoint                                        | CQM anchor               |
+| ----------- | ------------------------------------------------- | ------------------------ |
+| 14.1        | Tierra comparison (population scale)              | 50k vs ~1k               |
+| 14.2        | Avida comparison (determinism)                    | Seeded RNG, golden hash  |
+| 14.3        | Lenia comparison (continuous dynamics)            | RD tiles in WildBeyond   |
+| 14.4        | Polyworld comparison (neural nets)                | 25k glyph brains         |
+| 14.5        | Boids comparison (flocking)                       | Wolfpack behavior        |
+| 14.6        | Open-endedness metrics (Bedau/Packard)            | `open-endedness.ts`      |
+| 14.7        | Browser-native advantage (zero install)           | Bun + WebGL              |
+| 14.8        | Quantum layer uniqueness                          | Tsotchke statevector sim |
+| 14.9        | Multi-currency economy comparison                 | 4-currency market        |
+| 14.10       | Brain observatory comparison                      | 4-tab neural observatory |
+| 14.11–14.20 | _(extend: Neural Darwinism, Heap of Souls, etc.)_ | TBD                      |
 
 ### 15. Neuroscience plausibility (20)
 
@@ -173,38 +173,38 @@ Explicit conditions under which claims would be withdrawn (failed golden hash, b
 
 ## Institution outreach scaffold (cold contact — verify before send)
 
-| Institution                               | Contact type            | Interest angle                      |
-| ----------------------------------------- | ----------------------- | ----------------------------------- |
-| Santa Fe Institute                        | Complex systems / ALife | Emergence metrics, graph mind       |
-| MIT CSAIL Synthetic Biology               | ALife + computation     | Tsotchke quantum corpus integration |
-| ELSI Tokyo                                | Origins of life         | Chemo-digital hybrid metaphor       |
-| University of Sussex CCNR                 | Cognitive science       | Butlin-indicator honesty framework  |
-| IT University Copenhagen                  | Game AI / ALife         | Browser-scale deterministic dome    |
-| International Society for Artificial Life | Conference              | Demo + reproducibility package      |
-| ALife Society (ISAL)                      | Conference / journal    | ALife 2026 submission, demo track   |
-| MIT Media Lab                             | HCI + ALife             | Browser-native interactive evolution|
-| Stanford SAIL                             | AI / cognition          | Active inference + free energy impl |
-| OpenAI Scholars                           | Research access         | Deterministic ALife benchmark env   |
-| Google DeepMind                           | Research collaboration  | Open-endedness metrics, ALife env   |
-| NVIDIA Research                           | GPU / simulation        | WebGPU shader brain scaling path    |
-| Mozilla Foundation                        | Open web / OSS          | Browser-native research instrument  |
-| Wellcome Trust                            | Computational biology   | Digital biologics, Tsotchke corpus  |
-| Schmidt Sciences                          | AI research funding     | Falsifiable ALife meta-analysis     |
-| Moore Foundation                          | Science research        | Emergence, complex systems          |
-| Templeton Foundation                      | Consciousness research  | Computational correlates (non-sentience) |
-| NSF (CISE)                                | Grant                   | ALife / complex systems / education |
-| EU Horizon Europe                         | Grant                   | Digital twins, ALife, quantum sim   |
-| JSPS KAKENHI                              | Grant (Japan)           | ELSI collaboration, origins of life |
-| Max Planck Institute                      | Neuroscience            | Connectome visualization, spike models |
-| Imperial College London                   | Computational neuroscience | IIT / Φ metrics, active inference  |
-| UCL Gatsby Unit                           | Neuroscience / ML       | Neural dynamics, latent space models|
-| Caltech CNS                               | Computational neuro     | Brain observatory, cortical layers  |
-| Berkeley AI Research (BAIR)               | AI / RL                 | Multi-agent economy, emergent behavior |
-| CMU Robotics Institute                    | ALife / robotics        | Embodied cognition, morphology      |
-| ETH Zurich AI Center                      | AI / simulation         | Deterministic ALife, quantum sim    |
-| Allen Institute for Brain Science         | Neuroscience            | Brain observatory, connectome       |
-| Human Brain Project / EBRAINS             | Neuroscience platform   | Brain simulation, connectome        |
-| New York University (NYU) CDS             | Data science / ALife    | Open-endedness, complexity metrics  |
+| Institution                               | Contact type               | Interest angle                           |
+| ----------------------------------------- | -------------------------- | ---------------------------------------- |
+| Santa Fe Institute                        | Complex systems / ALife    | Emergence metrics, graph mind            |
+| MIT CSAIL Synthetic Biology               | ALife + computation        | Tsotchke quantum corpus integration      |
+| ELSI Tokyo                                | Origins of life            | Chemo-digital hybrid metaphor            |
+| University of Sussex CCNR                 | Cognitive science          | Butlin-indicator honesty framework       |
+| IT University Copenhagen                  | Game AI / ALife            | Browser-scale deterministic dome         |
+| International Society for Artificial Life | Conference                 | Demo + reproducibility package           |
+| ALife Society (ISAL)                      | Conference / journal       | ALife 2026 submission, demo track        |
+| MIT Media Lab                             | HCI + ALife                | Browser-native interactive evolution     |
+| Stanford SAIL                             | AI / cognition             | Active inference + free energy impl      |
+| OpenAI Scholars                           | Research access            | Deterministic ALife benchmark env        |
+| Google DeepMind                           | Research collaboration     | Open-endedness metrics, ALife env        |
+| NVIDIA Research                           | GPU / simulation           | WebGPU shader brain scaling path         |
+| Mozilla Foundation                        | Open web / OSS             | Browser-native research instrument       |
+| Wellcome Trust                            | Computational biology      | Digital biologics, Tsotchke corpus       |
+| Schmidt Sciences                          | AI research funding        | Falsifiable ALife meta-analysis          |
+| Moore Foundation                          | Science research           | Emergence, complex systems               |
+| Templeton Foundation                      | Consciousness research     | Computational correlates (non-sentience) |
+| NSF (CISE)                                | Grant                      | ALife / complex systems / education      |
+| EU Horizon Europe                         | Grant                      | Digital twins, ALife, quantum sim        |
+| JSPS KAKENHI                              | Grant (Japan)              | ELSI collaboration, origins of life      |
+| Max Planck Institute                      | Neuroscience               | Connectome visualization, spike models   |
+| Imperial College London                   | Computational neuroscience | IIT / Φ metrics, active inference        |
+| UCL Gatsby Unit                           | Neuroscience / ML          | Neural dynamics, latent space models     |
+| Caltech CNS                               | Computational neuro        | Brain observatory, cortical layers       |
+| Berkeley AI Research (BAIR)               | AI / RL                    | Multi-agent economy, emergent behavior   |
+| CMU Robotics Institute                    | ALife / robotics           | Embodied cognition, morphology           |
+| ETH Zurich AI Center                      | AI / simulation            | Deterministic ALife, quantum sim         |
+| Allen Institute for Brain Science         | Neuroscience               | Brain observatory, connectome            |
+| Human Brain Project / EBRAINS             | Neuroscience platform      | Brain simulation, connectome             |
+| New York University (NYU) CDS             | Data science / ALife       | Open-endedness, complexity metrics       |
 
 _(Expand to 50+ rows with names/emails in a private CRM — not committed to repo.)_
 
@@ -225,14 +225,14 @@ _(Expand to 50+ rows with names/emails in a private CRM — not committed to rep
 
 ## Comparative benchmark scaffold (to be filled with literature scores)
 
-| System          | Population | Determinism | Brain model | Economy | Quantum layer | Browser-native | Open-endedness metrics |
-| --------------- | ---------- | ----------- | ----------- | ------- | ------------- | -------------- | ---------------------- |
-| CQM (this repo) | 50k        | Seeded      | 25k–5M      | 4-currency | Statevector sim | Yes (Bun+WebGL) | Bedau/Packard live    |
-| Tierra          | ~1k        | Seeded      | None        | No      | No            | No             | Bedau/Packard          |
-| Avida           | ~3.6k      | Seeded      | Digital organisms | No | No       | No             | Complexity metrics     |
-| Lenia           | ~100       | Seeded      | Continuous CA | No     | No            | No (Python)    | Variety metrics        |
-| Polyworld       | ~100       | Seeded      | Neural nets | No      | No            | No (C++)       | Behavioral diversity   |
-| Boids++         | ~1k        | Seeded      | None        | No      | No            | No             | Flocking metrics       |
+| System          | Population | Determinism | Brain model       | Economy    | Quantum layer   | Browser-native  | Open-endedness metrics |
+| --------------- | ---------- | ----------- | ----------------- | ---------- | --------------- | --------------- | ---------------------- |
+| CQM (this repo) | 50k        | Seeded      | 25k–5M            | 4-currency | Statevector sim | Yes (Bun+WebGL) | Bedau/Packard live     |
+| Tierra          | ~1k        | Seeded      | None              | No         | No              | No              | Bedau/Packard          |
+| Avida           | ~3.6k      | Seeded      | Digital organisms | No         | No              | No              | Complexity metrics     |
+| Lenia           | ~100       | Seeded      | Continuous CA     | No         | No              | No (Python)     | Variety metrics        |
+| Polyworld       | ~100       | Seeded      | Neural nets       | No         | No              | No (C++)        | Behavioral diversity   |
+| Boids++         | ~1k        | Seeded      | None              | No         | No              | No              | Flocking metrics       |
 
 ---
 
