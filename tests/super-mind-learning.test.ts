@@ -1,9 +1,10 @@
 /**
  * V96 ONLINE LEARNING in the apex mind — the Stratum-X adaptation channel (per-plan reward bias).
- * Guards the four properties that make it safe to ship: (1) OFF by default ⇒ the learned bias stays
- * exactly zero ⇒ byte-identical frozen-weight behaviour; (2) it genuinely LEARNS when enabled (the bias
- * moves off zero); (3) it stays BOUNDED (no divergence); (4) it is DETERMINISM-safe (same seed + inputs →
- * identical learned bias) and resets cleanly on disable.
+ * Guards the four properties that make it safe to ship: (1) ON by default ⇒ the learned bias moves
+ * off zero deterministically (behavioural change is intentional); (2) setLearning(false) freezes the
+ * mind — the bias stays exactly zero ⇒ byte-identical frozen-weight behaviour; (3) it stays BOUNDED
+ * (no divergence); (4) it is DETERMINISM-safe (same seed + inputs → identical learned bias) and
+ * resets cleanly on disable.
  */
 import { describe, expect, test } from 'bun:test';
 import { mulberry32 } from '../src/math/rng';
