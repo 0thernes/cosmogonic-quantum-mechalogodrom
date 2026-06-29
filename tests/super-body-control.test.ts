@@ -86,6 +86,85 @@ describe('SuperBodySystem flight + control (V41)', () => {
     expect(body.evolutionScale()).toBeCloseTo(3.5, 5);
   });
 
+  test('V64: evolution makes the SKIN evolve (aura/tier/hue/ascended feed the god-jewel surface)', () => {
+    const body = new SuperBodySystem(new THREE.Scene());
+    // BASE: the appearance fields the skin reads start neutral, so the surface is unchanged.
+    const base = body.evolutionSkin();
+    expect(base.aura).toBe(0);
+    expect(base.tier).toBe(0);
+    expect(base.hue).toBe(0);
+    expect(base.ascended).toBe(false);
+    // Ascend to the LV100 end-state — the skin should blaze (aura→1), gain detail (tier→10),
+    // shift its palette (hue) and flip the ascended shimmer on.
+    body.setEvolution({
+      sizeMul: 5,
+      hueShift: 0.6,
+      glowMul: 3,
+      spikeBoost: 5,
+      aura: 1,
+      tier: 10,
+      ascended: true,
+    });
+    const evolved = body.evolutionSkin();
+    expect(evolved.aura).toBeCloseTo(1, 5);
+    expect(evolved.tier).toBeCloseTo(10, 5);
+    expect(evolved.hue).toBeCloseTo(0.6, 5);
+    expect(evolved.ascended).toBe(true);
+  });
+
+  test('V64: evolution skin params stay bounded + hue wraps (defensive against out-of-range appearance)', () => {
+    const body = new SuperBodySystem(new THREE.Scene());
+    body.setEvolution({
+      sizeMul: 99,
+      hueShift: 2.25, // >1 — must wrap into [0,1)
+      glowMul: 99,
+      spikeBoost: -5, // negative — clamps to 0 via existing spike rule
+      aura: 5, // >1 — clamps to 1
+      tier: 50, // >10 — clamps to 10
+      ascended: false,
+    });
+    const s = body.evolutionSkin();
+    expect(s.aura).toBe(1); // clamped
+    expect(s.tier).toBe(10); // clamped
+    expect(s.hue).toBeCloseTo(0.25, 5); // 2.25 wrapped into [0,1)
+    expect(s.hue).toBeGreaterThanOrEqual(0);
+    expect(s.hue).toBeLessThan(1);
+    expect(s.ascended).toBe(false);
+  });
+
+  test('BRUTALISM: setBrutalism crossfades the skin and clamps to [0,1]', () => {
+    const body = new SuperBodySystem(new THREE.Scene());
+    expect(body.brutalismFactor()).toBe(0); // default: full god-jewel, unchanged
+    body.setBrutalism(0.5);
+    expect(body.brutalismFactor()).toBeCloseTo(0.5, 5); // half-way to concrete
+    body.setBrutalism(1);
+    expect(body.brutalismFactor()).toBe(1); // full poured-concrete monolith
+    body.setBrutalism(5); // over the top
+    expect(body.brutalismFactor()).toBe(1); // clamped
+    body.setBrutalism(-3); // below floor
+    expect(body.brutalismFactor()).toBe(0); // clamped — back to the jewel
+  });
+
+  test('BRUTALISM coexists with evolution + flight (no NaN, both factors independent)', () => {
+    const body = new SuperBodySystem(new THREE.Scene());
+    body.setBrutalism(1);
+    body.setEvolution({
+      sizeMul: 4,
+      hueShift: 0.3,
+      glowMul: 2,
+      spikeBoost: 4,
+      aura: 0.8,
+      tier: 8,
+      ascended: false,
+    });
+    body.setControl(2, 1, 0.2, -0.5, true);
+    for (let i = 0; i < 120; i++) body.update(i / 60, 1 / 60);
+    const p = body.worldPosition(new THREE.Vector3());
+    expect(Number.isFinite(p.x + p.y + p.z)).toBe(true); // brutalism doesn't disturb the flight math
+    expect(body.brutalismFactor()).toBe(1); // still concrete
+    expect(body.evolutionSkin().tier).toBeCloseTo(8, 5); // evolution still applied alongside
+  });
+
   test('V1.3 AE-1/HOT-3: SuperMind move vector steers the autopilot flight target', () => {
     const body = new SuperBodySystem(new THREE.Scene());
     const from = body.worldPosition(new THREE.Vector3());

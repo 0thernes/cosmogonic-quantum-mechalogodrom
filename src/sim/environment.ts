@@ -19,6 +19,20 @@ const PI = Math.PI;
 /** Non-negative floor for chaos-driven intensity/opacity waves (also seals NaN → 0). O(1). */
 const nn = (v: number): number => (v > 0 ? v : 0);
 
+// ── BRUTALISM: concrete targets + base colours (module consts → zero per-frame allocation). The
+//    rig + ground are lerped from these bases toward concrete by the 0..1 factor, so the f=0 path
+//    early-returns and leaves the animated cosmos byte-identical. ──
+const BRUTAL_GROUND = new THREE.Color(0x3a3a3e);
+const BRUTAL_GROUND_EMISSIVE = new THREE.Color(0x141416);
+const BRUTAL_LIGHT = new THREE.Color(0x9a9aa0); // cold overcast grey for the whole light rig
+const GROUND_BASE = new THREE.Color(0x080812);
+const GROUND_BASE_EMISSIVE = new THREE.Color(0x040410);
+const AMBIENT_BASE = new THREE.Color(0x0a0a22);
+const SUN_BASE = new THREE.Color(0xffeedd);
+const LIGHT_BASE: readonly THREE.Color[] = [
+  0xff0066, 0x00ffcc, 0xffaa00, 0x4488ff, 0xff2200, 0x8800ff,
+].map((h) => new THREE.Color(h));
+
 /**
  * Light-unit conversion gain for the r128 → r0.184 lighting migration.
  *
@@ -434,8 +448,22 @@ export class EnvironmentSystem {
   private readonly monoliths: MonolithRig[] = [];
   private readonly dioramas: DioramaRig[] = [];
   private readonly pipes: PipeRig[] = [];
+  /** BRUTALISM: architecture materials (halos, diorama shells/orbiters, pipes/packets), collected once. */
+  private brutalStructMats: THREE.Material[] | null = null;
+  /** BRUTALISM: each architecture material's captured base colour/emissive — so the concrete lerp
+   *  reads from the original every frame and never compounds toward grey. */
+  private readonly brutalBase = new Map<
+    THREE.Material,
+    { bc: THREE.Color; be: THREE.Color | null }
+  >();
   /** Ground material handle for the V2 reaction-diffusion emissiveMap coupling. */
   private readonly groundMaterial: THREE.MeshStandardMaterial;
+  /** Live restore baseline for the ground's emissiveIntensity (0.3 at build; lifted to 0.85 once the
+   *  reaction-diffusion emissiveMap attaches). BRUTALISM lerps FROM this so OFF restores the RD glow. */
+  private groundBaseEmissiveIntensity = 0.3;
+  /** Ambient + key (sun) lights — captured so BRUTALISM can desaturate/dim them per frame. */
+  private readonly ambient: THREE.AmbientLight;
+  private readonly sun: THREE.DirectionalLight;
   /** Audio bass band 0..1 (CONTRACTS V2 coupling); 0 = silent ⇒ output identical to v1. */
   private audioBass = 0;
 
@@ -446,7 +474,8 @@ export class EnvironmentSystem {
 
     // ── Lighting (legacy 369-382; intensities × LEGACY_LIGHT_GAIN for r0.184 units;
     //    rig spread/ranges × ARENA_MID so the core glow covers the 5× floor) ──
-    scene.add(new THREE.AmbientLight(0x0a0a22, 0.55 * LEGACY_LIGHT_GAIN));
+    this.ambient = new THREE.AmbientLight(0x0a0a22, 0.55 * LEGACY_LIGHT_GAIN);
+    scene.add(this.ambient);
     const sun = new THREE.DirectionalLight(0xffeedd, 0.65 * LEGACY_LIGHT_GAIN);
     sun.position.set(35 * ARENA_MID, 65 * ARENA_Y, 25 * ARENA_MID);
     sun.castShadow = quality.shadows;
@@ -455,6 +484,7 @@ export class EnvironmentSystem {
     sun.shadow.camera.right = 70 * ARENA;
     sun.shadow.camera.top = 70 * ARENA;
     sun.shadow.camera.bottom = -70 * ARENA;
+    this.sun = sun;
     scene.add(sun);
     // Legacy intensities × POINT_LIGHT_GAIN, decay 0 (legacy r128 falloff model).
     this.lts = [
@@ -683,6 +713,83 @@ export class EnvironmentSystem {
   }
 
   /**
+   * BRUTALISM: crossfade the ground + the entire light rig toward a raw, overcast concrete look —
+   * matte grey ground, the glow killed, and the lurid six-light rig + ambient/sun desaturated and
+   * dimmed to cold concrete light. `f` is the 0..1 brutalism factor (smoothed by the world). The
+   * f=0 path early-returns so the animated cosmos is byte-identical when off. Allocation-free
+   * (module-const targets + in-place lerp); called every frame AFTER {@link update}, so the rig's
+   * intensity scaling rides this frame's already-animated values without compounding. O(1).
+   */
+  applyBrutalism(f: number): void {
+    if (f <= 0) return; // OFF — leave the animated rig + ground untouched (byte-identical)
+    const g = f > 1 ? 1 : f;
+    // Ground: static material → lerp from its known base toward poured concrete (no compounding).
+    this.groundMaterial.color.copy(GROUND_BASE).lerp(BRUTAL_GROUND, g);
+    this.groundMaterial.emissive.copy(GROUND_BASE_EMISSIVE).lerp(BRUTAL_GROUND_EMISSIVE, g);
+    this.groundMaterial.roughness = lerp(0.95, 1.0, g);
+    this.groundMaterial.metalness = lerp(0.1, 0.0, g);
+    this.groundMaterial.emissiveIntensity = lerp(this.groundBaseEmissiveIntensity, 0.06, g);
+    // Ambient + sun: static lights → colour from base toward grey, intensity dimmed from base.
+    this.ambient.color.copy(AMBIENT_BASE).lerp(BRUTAL_LIGHT, g);
+    this.ambient.intensity = lerp(0.55 * LEGACY_LIGHT_GAIN, 0.34 * LEGACY_LIGHT_GAIN, g);
+    this.sun.color.copy(SUN_BASE).lerp(BRUTAL_LIGHT, g);
+    this.sun.intensity = lerp(0.65 * LEGACY_LIGHT_GAIN, 0.42 * LEGACY_LIGHT_GAIN, g);
+    // The lurid six-light rig: colour from each base toward grey (clean, no rainbow), intensity
+    // scaled down from this frame's already-animated value (update() reset it first → no compound).
+    for (let i = 0; i < this.lts.length; i++) {
+      const l = this.lts[i];
+      if (!l) continue;
+      l.color.copy(LIGHT_BASE[i] ?? BRUTAL_LIGHT).lerp(BRUTAL_LIGHT, g);
+      l.intensity *= 1 - 0.7 * g;
+    }
+    // ── Architecture: desaturate the monolith halos, diorama shells/orbiters and data-pipes toward
+    //    concrete (lerp from each material's captured base — never compounds), and dim the structure
+    //    crown/glow lights (their intensity is re-animated each frame by update(), so this is safe). ──
+    if (!this.brutalStructMats) this.brutalStructMats = this.collectStructureMats();
+    for (const m of this.brutalStructMats) {
+      const base = this.brutalBase.get(m);
+      if (!base) continue;
+      if (m instanceof THREE.MeshStandardMaterial) {
+        m.color.copy(base.bc).lerp(BRUTAL_LIGHT, g);
+        m.emissive.copy(base.be ?? BRUTAL_GROUND_EMISSIVE).lerp(BRUTAL_GROUND_EMISSIVE, g);
+      } else if (m instanceof THREE.MeshBasicMaterial) {
+        m.color.copy(base.bc).lerp(BRUTAL_LIGHT, g);
+      }
+    }
+    for (const mono of this.monoliths) mono.crown.intensity *= 1 - 0.7 * g;
+    for (const dio of this.dioramas) dio.glow.intensity *= 1 - 0.7 * g;
+  }
+
+  /** BRUTALISM: gather every reachable architecture material (halo rings, diorama shells + orbiters,
+   *  pipe tubes + packets) ONCE and snapshot each base colour/emissive. O(structures); lazy. */
+  private collectStructureMats(): THREE.Material[] {
+    const out: THREE.Material[] = [];
+    const add = (mat: THREE.Material | THREE.Material[] | undefined): void => {
+      if (!mat) return;
+      const list = Array.isArray(mat) ? mat : [mat];
+      for (const m of list) {
+        if (this.brutalBase.has(m)) continue;
+        out.push(m);
+        if (m instanceof THREE.MeshStandardMaterial) {
+          this.brutalBase.set(m, { bc: m.color.clone(), be: m.emissive.clone() });
+        } else if (m instanceof THREE.MeshBasicMaterial) {
+          this.brutalBase.set(m, { bc: m.color.clone(), be: null });
+        }
+      }
+    };
+    for (const mono of this.monoliths) for (const ring of mono.rings) add(ring.mesh.material);
+    for (const dio of this.dioramas) {
+      for (const child of dio.group.children) add((child as Partial<THREE.Mesh>).material);
+      for (const mini of dio.minis) add(mini.mesh.material);
+    }
+    for (const pipe of this.pipes) {
+      add(pipe.tube.material);
+      for (const pkt of pipe.packets) add(pkt.mesh.material);
+    }
+    return out;
+  }
+
+  /**
    * Attach the reaction-diffusion U-field texture as the ground material's
    * emissiveMap (CONTRACTS V2 amendment). The emissiveIntensity coupling lifts
    * the ground glow from its build value (0.3) to 0.85 so the field's dark
@@ -695,6 +802,10 @@ export class EnvironmentSystem {
   attachGroundEmissiveMap(tex: THREE.Texture): void {
     this.groundMaterial.emissiveMap = tex;
     this.groundMaterial.emissiveIntensity = 0.85;
+    // BRUTALISM restore baseline: applyBrutalism() lerps the ground glow FROM this value, so the OFF
+    // toggle returns to the post-attach 0.85 (living RD veins) instead of the build-time 0.3. Without
+    // capturing it, toggling brutalism on→off would permanently dim the reaction-diffusion field.
+    this.groundBaseEmissiveIntensity = 0.85;
     this.groundMaterial.needsUpdate = true;
   }
 

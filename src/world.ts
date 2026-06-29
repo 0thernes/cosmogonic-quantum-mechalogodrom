@@ -178,6 +178,9 @@ const SFX_ABYSSAL = SFX_EXTRA_BANDS['abyssal']?.start ?? SFX_STRANGE;
  * dedicated jitterGain in entities.update() carries the agitation PAST the clamp on top.
  */
 const CHAOS_NIGHTMARE_FLOOR = 6;
+/** BRUTALISM: cool overcast concrete fog the cosmos fades into (module consts → no per-frame alloc). */
+const BRUTAL_FOG = new THREE.Color(0x4a4a52);
+const BRUTAL_FOG_DENSITY = 0.0011;
 
 /** V57: singularity kind → telemetry display name (the chaos chooser cycles SINGULARITY_KINDS). */
 const SINGULARITY_LABEL: Record<string, string> = {
@@ -317,6 +320,8 @@ export class World {
   private readonly graphMind: GraphMind;
   private readonly constellations: ConstellationSystem;
   private readonly atmosphere: AtmosphereSystem;
+  /** BRUTALISM: smoothed 0..1 concrete-crossfade factor (eases toward state.brutalism each frame). */
+  private brutalismFactor = 0;
   private readonly viz3d: Viz3DSystem;
   /** Cosmological chaos effects (CONTRACTS V7.4) — at most one active at a time. */
   private readonly singularities: SingularitySystem;
@@ -515,6 +520,7 @@ export class World {
       mutations: 0,
       timeScale: 1,
       renderMode: cyc(RENDER_MODES, this.persisted.renderIdx ?? 0),
+      brutalism: false, // BRUTALISM: session-only Super Creature concrete-monolith mode (B hotkey)
       sim: this.persisted.sim === 2 ? 2 : 1,
       weatherIdx: this.persisted.weatherIdx % WEATHERS.length,
       temperature: 20,
@@ -1273,6 +1279,27 @@ export class World {
     // (phylumCounts/titanLedger/warMatrix), always current; internally cadenced.
     this.viz3d.update(this.viz3dSnap);
     this.environment.update(dt, t);
+    // ── BRUTALISM: smooth the toggle into a 0..1 factor and crossfade the WHOLE cosmos to raw
+    //    poured concrete — the apex bodies, every instanced organism, the ground + light rig, the
+    //    sky dome, and the fog. Driven each frame (after environment.update, so it rides this
+    //    frame's animated rig); f=0 is a no-op so the cosmos is byte-identical when OFF. No alloc. ──
+    const bTarget = s.brutalism ? 1 : 0;
+    this.brutalismFactor += (bTarget - this.brutalismFactor) * Math.min(1, dt * 2.5);
+    if (!s.brutalism && this.brutalismFactor < 0.02) this.brutalismFactor = 0;
+    else if (s.brutalism && this.brutalismFactor > 0.98) this.brutalismFactor = 1;
+    const bf = this.brutalismFactor;
+    for (let i = 0; i < this.superBodies.length; i++) this.superBodies[i]!.setBrutalism(bf);
+    this.environment.applyBrutalism(bf);
+    this.atmosphere.setBrutalism(bf);
+    if (this.instanced) this.instanced.setBrutalism(bf);
+    else this.entities.applyBrutalism(bf); // phone tier: organisms are real meshes → desaturate them too
+    if (bf > 0) {
+      const fog = this.engine.scene.fog;
+      if (fog instanceof THREE.FogExp2) {
+        fog.color.lerp(BRUTAL_FOG, bf); // weather reset the colour this frame ⇒ no compounding
+        fog.density += (BRUTAL_FOG_DENSITY - fog.density) * bf;
+      }
+    }
     this.artifacts.update(dt, t); // F-ARTIFACTS (V9): animate + fade the relic pool (visual-only)
     this.monolithTemple.setEnvironment({
       chaos: s.chaos / CHAOS_MAX,
@@ -2379,6 +2406,8 @@ export class World {
     if (k['h'] && s.frame % 30 === 0) this.dilateSpace();
     // V62 CHAOS MODE: tap K to engage/disengage the Lorenz quantum storm. Throttled like the taps.
     if (k['k'] && s.frame % 30 === 0) this.toggleChaosMode();
+    // BRUTALISM: tap B to crossfade the Super Creatures to a raw poured-concrete monolith (and back).
+    if (k['b'] && s.frame % 30 === 0) this.toggleBrutalism();
   }
 
   /**
@@ -3215,6 +3244,23 @@ export class World {
     return on;
   }
 
+  /**
+   * BRUTALISM: toggle the Super Creatures between the flamboyant god-jewel skin and a raw
+   * poured-concrete monolith. Shared by the `B` hotkey + the action map; applies the crossfade to
+   * every Archon body, toasts the HUD, and records the toggle so replays/audits reproduce it.
+   * Returns the new state.
+   */
+  private toggleBrutalism(): boolean {
+    this.unlock();
+    const on = !this.state.brutalism;
+    this.state.brutalism = on;
+    // The per-frame step() driver eases brutalismFactor toward this state and applies it to the
+    // bodies + the whole cosmos (organisms, ground, lights, sky, fog) — so no direct apply here.
+    this.hud.showSector(on ? 'BRUTALISM ▦ CONCRETE' : 'BRUTALISM · OFF');
+    this.audit.record('brutalism', { on });
+    return on;
+  }
+
   private buildActions(): UiActions {
     const s = this.state;
     return {
@@ -3249,6 +3295,7 @@ export class World {
         this.audit.record('chaos-boost', { chaos: s.chaos, level: next });
       },
       toggleChaosMode: () => this.toggleChaosMode(), // V62: the Lorenz quantum storm
+      toggleBrutalism: () => this.toggleBrutalism(), // BRUTALISM: god-jewel ↔ concrete monolith
       entropyBoost: () => {
         this.unlock();
         // F-CHAOS-ENTROPY: raise ENTROPY one step (the bipolar opposite of chaos — order/heat-death).

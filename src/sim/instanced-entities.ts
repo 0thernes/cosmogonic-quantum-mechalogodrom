@@ -107,6 +107,8 @@ interface ShaderUniforms {
   uBass: { value: number };
   /** Active render mode index (RENDER_MODES order) — drives the exotic fragment effects. */
   uMode: { value: number };
+  /** BRUTALISM 0..1 — desaturate every organism toward raw concrete grey (0 = off, byte-identical). */
+  uBrutalism: { value: number };
 }
 
 /** Speed→exertion normalizer: a damped-velocity magnitude of ~0.125 saturates the exertion lane. */
@@ -214,6 +216,7 @@ function patchPoolMaterial(
     shader.uniforms['uChaos'] = uniforms.uChaos;
     shader.uniforms['uBass'] = uniforms.uBass;
     shader.uniforms['uMode'] = uniforms.uMode;
+    shader.uniforms['uBrutalism'] = uniforms.uBrutalism;
     shader.vertexShader = shader.vertexShader
       .replace(
         '#include <common>',
@@ -242,7 +245,7 @@ function patchPoolMaterial(
       )
       .replace(
         'vec4 diffuseColor = vec4( diffuse, opacity );',
-        'vec4 diffuseColor = vec4( diffuse, opacity * vInstEmissive.a );',
+        'vec4 diffuseColor = vec4( diffuse, opacity * vInstEmissive.a );\n  diffuseColor.rgb = mix( diffuseColor.rgb, mix( vec3( dot( diffuseColor.rgb, vec3( 0.299, 0.587, 0.114 ) ) ), vec3( 0.42, 0.42, 0.45 ), 0.55 ), uBrutalism );',
       )
       .replace('#include <roughnessmap_fragment>', RELIQUARY_FRAG_ROUGH)
       .replace('#include <emissivemap_fragment>', RELIQUARY_FRAG_BODY);
@@ -283,6 +286,7 @@ uniform float uTime;
 uniform float uBass;
 uniform float uChaos;
 uniform float uMode;
+uniform float uBrutalism;
 #define RQ_OCTAVES 3
 float rqHash(vec3 p){ p = fract(p * 0.3183099 + 0.1); p *= 17.0; return fract(p.x * p.y * p.z * (p.x + p.y + p.z)); }
 float rqNoise(vec3 x){
@@ -523,6 +527,7 @@ export class InstancedEntityRenderer {
     uChaos: { value: 0 },
     uBass: { value: 0 },
     uMode: { value: 0 },
+    uBrutalism: { value: 0 },
   };
 
   /** Stores references and builds the geometry-id lookup. No pools yet. O(geos). */
@@ -537,6 +542,11 @@ export class InstancedEntityRenderer {
       const g = ctx.geos[i];
       if (g) this.geoIndex.set(g.id, i);
     }
+  }
+
+  /** BRUTALISM: desaturate every instanced organism toward raw concrete grey (0 = off, 1 = full). O(1). */
+  setBrutalism(level: number): void {
+    this.shaderUniforms.uBrutalism.value = level < 0 ? 0 : level > 1 ? 1 : level;
   }
 
   /**

@@ -140,6 +140,8 @@ export interface SimState {
   timeScale: number;
   /** Entity render style (CONTRACTS V7.3; session-only, cycled by the toolbar). */
   renderMode: RenderMode;
+  /** BRUTALISM: Super Creature skin mode (session-only; `B` hotkey). undefined/false = god-jewel, true = concrete. */
+  brutalism?: boolean;
   /**
    * Simulation variant (CONTRACTS V7.6): `1` = GENESIS (the cosmos as it ships), `2` = BREAK
    * FREE (the nightmare — raised chaos floor, a lurid inverted sky). Persisted.
@@ -409,6 +411,8 @@ export interface UiActions {
   cycleSpace(): number;
   /** Cycle the entity render style (CONTRACTS V7.3); returns the new mode. */
   cycleRenderMode(): RenderMode;
+  /** BRUTALISM: toggle the Super Creatures between god-jewel and raw concrete; returns the new state. */
+  toggleBrutalism(): boolean;
   /** Toggle the simulation variant N(1)↔N(2) (CONTRACTS V7.6); returns the new variant. */
   cycleSim(): 1 | 2;
   cycleView(): ViewMode;

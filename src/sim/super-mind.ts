@@ -125,6 +125,7 @@ import { TomPantheon, type TomPantheonSnapshot } from './tom-pantheon';
 import { SuccessorRepresentation, type SuccessorSnapshot } from './successor-representation';
 import { Neuromodulation } from './neuromodulation';
 import { EmpowermentDrive, type EmpowermentSnapshot } from './empowerment';
+import { EligibilityLearner } from './online-learning';
 import { QuantumReservoir, type QuantumReservoirSnapshot } from './quantum-reservoir';
 import { HolographicMemory, type HolographicSnapshot } from './holographic-memory';
 import { QuantumDeliberation, type DeliberationSnapshot } from './quantum-deliberation';
@@ -463,6 +464,9 @@ const COUPLING_BIND_GAIN = 0.5;
 // ── #10/#58 · GWT BROADCAST + RE-ENTRY (the coupling write-back) ───────────────────────────────────────
 /** Smoothing of the workspace broadcast signal — how fast it tracks the assembly's ignition. */
 const BROADCAST_TAU = 0.25;
+/** V96 ONLINE LEARNING: bounded per-plan reward-bias adaptation — decay toward 0 + hard |bias| cap. */
+const PLAN_LEARN_DECAY = 0.002;
+const PLAN_LEARN_CLAMP = 0.5;
 /** Default strength of the broadcast's re-entry into the workspace latent (0 disables the write-back).
  *  Kept MODEST on purpose: larger gains saturate the nonlinear faculty subnets (washing out the signal),
  *  and cranking it to force the coupling metric up would be Goodhart-gaming the audit. It is a real but
@@ -611,6 +615,14 @@ export class SuperMind {
   private readonly srValue: number[] = Array.from({ length: SUPER_PLANS.length }, () => 0); // SR plan values
   private readonly attentionSalience = new Float32Array(SUPER_PLANS.length); // GWT-4 plan salience scratch
   private readonly qObs = new Float64Array(3 * QMIND_QUBITS); // V1.2: register Bloch observables → QRC
+  // V96 · ONLINE LEARNING — the Stratum-X adaptation channel: a seeded, bounded, reward-reinforced
+  // per-plan bias. ON by default (the apex mind LEARNS at runtime); setLearning(false) freezes it back to
+  // the byte-identical frozen-weight mind. Deterministic (no rng) + bounded (|bias| ≤ 0.5). O(plans).
+  private learnEnabled = true;
+  private learnRate = 0.02;
+  private readonly planBias: number[] = Array.from({ length: SUPER_PLANS.length }, () => 0);
+  private readonly planOneHot: number[] = Array.from({ length: SUPER_PLANS.length }, () => 0);
+  private readonly planLearner = new EligibilityLearner(SUPER_PLANS.length, 0.85);
 
   private readonly memory = new MemoryRing(48);
   private valence = 0;
@@ -800,6 +812,26 @@ export class SuperMind {
       const x = Math.sin((this.noiseSeed++ + i * 7.13) * 12.9898) * 43758.5453;
       this.noise[i] = (x - Math.floor(x)) * 2 - 1;
     }
+  }
+
+  /**
+   * V96 · ONLINE LEARNING: enable/disable the per-plan reward-bias adaptation channel. ON by default ⇒
+   * the apex mind learns at runtime; setLearning(false) freezes it back to byte-identical frozen-weight
+   * behaviour (and resets the learned bias + eligibility trace to zero). `rate` (optional, clamped ≤ 0.2)
+   * sets the bounded step size. Determinism-safe (no rng — replays bit-for-bit from one seed). O(1).
+   */
+  setLearning(enabled: boolean, rate?: number): void {
+    this.learnEnabled = enabled;
+    if (rate !== undefined && rate >= 0) this.learnRate = rate > 0.2 ? 0.2 : rate;
+    if (!enabled) {
+      this.planBias.fill(0);
+      this.planLearner.reset();
+    }
+  }
+
+  /** V96: snapshot of the learned per-plan bias vector (for tests / inspection). O(plans). */
+  learnedPlanBias(): number[] {
+    return [...this.planBias];
   }
 
   /** One full cognitive beat. Pure; returns the apex intent (drives + consciousness + quantum). */
@@ -1597,21 +1629,42 @@ export class SuperMind {
     // Previous latent injections were measured and reverted (see audit addendum).
     // Current is the honest "modest but real" shipped regime (~0.19+); every lift still needs
     // coupling-audit measurement before it graduates from roadmap to claim.
+    // ── V96 · ONLINE LEARNING ── add the reward-reinforced per-plan bias before the argmax. ON by default
+    //    ⇒ plans that recently led to reward are nudged up (the eligibility trace below gives delayed
+    //    credit); setLearning(false) zeroes planBias ⇒ this is `+= 0` ⇒ byte-identical to the frozen mind.
+    for (let i = 0; i < SUPER_PLANS.length; i++) {
+      const plan = SUPER_PLANS[i];
+      if (plan) drives[plan] += this.planBias[i] ?? 0;
+    }
 
     let best: SuperPlan = 'REST';
     let bestScore = -Infinity;
+    let bestIdx = 0;
     let runnerUp = -Infinity;
-    for (const k of SUPER_PLANS) {
+    for (let ki = 0; ki < SUPER_PLANS.length; ki++) {
+      const k = SUPER_PLANS[ki]!;
       const d = drives[k];
       if (d > bestScore) {
         runnerUp = bestScore;
         bestScore = d;
         best = k;
+        bestIdx = ki;
       } else if (d > runnerUp) {
         runnerUp = d;
       }
     }
     this.plan = best;
+    // V96 · ONLINE LEARNING: reinforce the chosen plan by this beat's (centred) reward via the eligibility
+    // trace — temporal credit, so reward also reaches plans that recently set it up. Only when enabled;
+    // otherwise planBias stays zero (no behavioural drift). Deterministic (no rng), bounded, O(plans).
+    if (this.learnEnabled) {
+      for (let i = 0; i < SUPER_PLANS.length; i++) this.planOneHot[i] = i === bestIdx ? 1 : 0;
+      this.planLearner.step(this.planBias, this.planOneHot, reward - 0.5, {
+        rate: this.learnRate,
+        decay: PLAN_LEARN_DECAY,
+        clamp: PLAN_LEARN_CLAMP,
+      });
+    }
     // ── V1.3 · GWT-2 LIMITED-CAPACITY WORKSPACE (Baars/Dehaene broadcast + Cowan ~4 bottleneck) ──
     // The 7 plan-coalitions compete for a capacity-bounded workspace: only the top GWT_WORKSPACE_CAPACITY
     // gain conscious access; the excluded salient mass is the competition `pressure`. An explicit
@@ -1624,16 +1677,16 @@ export class SuperMind {
       GWT_WORKSPACE_CAPACITY,
     );
     // V1.3 AE-2 EMBODIMENT — learn + read how contingent the senses are on THIS chosen action (body-model).
-    this.lastEmbodimentContingency = this.embodiment.step(SUPER_PLANS.indexOf(best), s);
+    this.lastEmbodimentContingency = this.embodiment.step(bestIdx, s);
     // V1.1: fold the realised plan transition into the predictive map so next beat's look-ahead is informed.
-    this.successor.observe(SUPER_PLANS.indexOf(best));
+    this.successor.observe(bestIdx);
     // V95: credit LAST beat's action → THIS beat's latent cell and refresh the empowerment estimate the next
     // beat's curiosity + plan vote will read. Drives no rng ⇒ the beat stream stays bit-reproducible.
     // #9/#37 — collective incoherence ⇒ faster channel forgetting (shared-processing via the surprise input).
     const effSurprise = clamp01(surprise + INCOH_FORGET_GAIN * (1 - this.lastResOrder));
-    this.empowerment.update(this.latent, SUPER_PLANS.indexOf(best), effSurprise);
+    this.empowerment.update(this.latent, bestIdx, effSurprise);
     // V97: bind the committed (context ⊙ plan) into the holographic trace so next time a like context recalls it.
-    this.holographic.observe(SUPER_PLANS.indexOf(best), s);
+    this.holographic.observe(bestIdx, s);
 
     // ── V89 · GWT IGNITION ── the winning plan-coalition is "broadcast" when it crosses the access
     // threshold AND dominates the runner-up (a near-all-or-none event). Persisted so it gates the NEXT

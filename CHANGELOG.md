@@ -9,6 +9,126 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### BRUTALISM state-restoration fixes — the OFF toggle now fully restores the cosmos (PR review)
+
+- **Sky dome (`atmosphere.ts`).** The OFF toggle eases `brutalismF` toward 0 but never lands exactly
+  on it, so the coarse re-bake bucket (`round(f·12)`) used to freeze the dome on its bottom rounding
+  bucket — leaving the sky ~4% concrete-tinted forever. Now `setBrutalism` snaps the easing tail
+  (`< 0.02`) to a clean 0 and the bucket reserves `0 ⇔ exactly off` (buckets `1..12` span the live
+  range), so reaching off re-bakes the pristine alien gradient. Pinned by an atmosphere restore test.
+- **Reaction-diffusion ground glow (`environment.ts`).** `attachGroundEmissiveMap` lifts the ground
+  `emissiveIntensity` from its build value `0.3` to `0.85` so the living RD veins read against the
+  void, but `applyBrutalism` hard-coded the OFF baseline back to `0.3` — permanently dimming the field
+  after a single brutal toggle. It now lerps FROM the captured live baseline (`0.85` post-attach), so
+  OFF restores the veins. Two env tests (with and without the RD map attached) lock it.
+- **Phone-tier per-mesh parity (`entities.ts` / `world.ts`).** On the phone tier `quality.instanced`
+  is false, so organisms are real `THREE.Mesh`es, not GPU instances — and the new concrete uniform
+  never reached them, so mobile/touch users got a concrete sky + ground + apex bodies while the whole
+  organism population kept its lurid colours. Added `EntityManager.applyBrutalism`, the exact CPU
+  mirror of the instanced shader's desaturate (`mix(color, mix(luma-grey, concrete, 0.55), f)`,
+  Rec.601 luma), captured-base so it never compounds and `f = 0` is byte-identical; `world.ts` routes
+  the phone path through it. 7 parity tests (exact-formula, off-edge restore, idempotence, clamp,
+  instanced-tier no-op).
+- Stabilised the `super-mind-learning` long-run NaN guard with an explicit 30s timeout — 400 full
+  apex `think()` beats (now heavier with the merged GWT-2 workspace + embodiment) brushed bun's 5s
+  default only under full-suite parallel CPU contention; the run itself is deterministic. Also
+  switched an `online-learning` allocation to `Array.from` (oxlint back to 0 warnings).
+
+### Tests for the three GOAL5 consciousness leaves (closing an audit-flagged coverage gap)
+
+- Added `tests/super-mind-leaves.test.ts` (8 tests) for **AST-1 attention-schema**, **HOT-1
+  top-down-perception**, and **HOT-4 quality-space** — the three leaves a prior audit flagged as having
+  NO dedicated unit tests (only indirect coverage via super-mind). Guards each leaf's real contract:
+  AST-1's salience stays a normalised distribution and a peaked input yields higher confidence than a
+  flat one (low entropy = focused); HOT-1's bias is bounded to ±0.3 and `apply()` keeps every percept
+  channel in [0,1]; HOT-4's tone ∈ [0,1] with a finite, discriminating code vector. Documents a real
+  finding: HOT-4's `project()` is **sequence-dependent, not cross-instance pure** (the Tsotchke-facade
+  "Ralph 10x" calls carry hidden global state) — world-level determinism still holds via the seeded
+  facade sequence, but unit-level cross-instance purity does not.
+
+### Online learning WIRED INTO the apex mind (the Stratum-X gap closes)
+
+- `SuperMind.think()` now carries a real **online-learning adaptation channel** (`setLearning(enabled, rate)`):
+  a seeded, bounded, reward-reinforced **per-plan bias** adapted each beat by the eligibility-trace learner
+  (reward = the mind's own dopamine signal; temporal credit via TD(λ)). This is the first thing in the
+  apex mind that actually **updates a weight at runtime** — the audit's #1 gap (frozen weights, ~9/14
+  stall). **ON by default** — every Archon now genuinely learns (biases plans toward reward) at runtime;
+  `setLearning(false)` freezes it back to byte-identical frozen-weight behaviour. It stays **bounded**
+  (|bias| ≤ 0.5, decays — no divergence) and **replays bit-for-bit from one seed** (no `Math.random` —
+  honours Manhattan's determinism law), and enabling it left the full behavioural suite green (1460 pass;
+  only the pre-existing flaky perf/timeout tests fail). 6 tests: learns-by-default, freeze-to-zero,
+  learns-when-on, bounded, deterministic-replay, no-NaN. O(plans) per beat — negligible on the hot path.
+
+### Online-learning primitive — the Stratum-X gap (frozen weights → adaptation)
+
+- Added `src/sim/online-learning.ts`: bounded, **deterministic** weight-adaptation rules — the missing
+  "Learning & Self-Modification" primitive the audit flagged as the #1 gap (the apex mind's weights are
+  frozen; the AD tape computes gradients but never updates one). Rules: Widrow–Hoff/LMS delta (supervised),
+  Hebbian-with-decay (unsupervised), and an `EligibilityLearner` (TD(λ)-style delayed-reward credit).
+  Key property: each rule is a pure deterministic function (no `Math.random`/`Date.now`), so a learned
+  weight trajectory **replays bit-for-bit from the same seed** — learning is fully compatible with the
+  "one seed → one cosmos" determinism law (it forbids unseeded randomness, not change). Every update
+  decays + clamps weight magnitude (bounded, below-divergence) and seals NaN/Inf → 0; in-place, O(n),
+  zero per-step allocation. Unit-tested (6 tests: LMS convergence, boundedness under relentless error,
+  Hebbian correlation, delayed-credit eligibility traces, NaN sealing, replay determinism). The reviewed
+  next step is wiring it into `super-mind.think()` behind a seeded, bounded adaptation channel.
+
+### Emergence angles 7 → 10 + audit integrity fixes
+
+- **Emergence 7 → 10.** Added `src/sim/emergence-angles.ts` — a pure, deterministic instrument that
+  scores all 10 emergence angles: the 7 canonical architectural angles plus 3 promoted from
+  already-computed measures to first-class axes — **empowerment** (Blahut–Arimoto channel capacity),
+  **integrated information** (Φ), and **chaos/Lyapunov** (edge-of-chaos). The aggregate index rewards
+  both depth (mean strength) and breadth (how many angles fire), so no single maxed axis can fake
+  emergence. Pure functions (no rng/Date/DOM), unit-tested, mirroring the `open-endedness.ts` pattern.
+  `docs/NEO-MIND-ARCHITECTURE.md` updated 7 → 10.
+- **Integrity:** removed a fabricated citation (`arXiv:2604.11248`, an impossible April-2026 ID) from
+  live code in `src/sim/open-endedness.ts`, replaced with verifiable sources (Bedau-Snyder-Packard
+  1998; Lehman-Stanley 2011).
+
+### BRUTALISM — the concrete-monolith skin mode
+
+- Added a **BRUTALISM** crossfade to the Super Creature god-jewel material (`uBrutalism` 0..1, driven by
+  `SuperBodySystem.setBrutalism()`). At 1 the flamboyant jewel collapses into a raw poured-concrete
+  monolith: matte (roughness→0.93), non-metallic, a **board-formed + exposed-aggregate** base colour, the
+  iridescent glow killed to a stark cold form-light, and the vertex morph **quantized into hard slabs**.
+  Every term is a `mix(jewel, concrete, uBrutalism)`, so `0` is byte-identical to the jewel and the mode
+  composes cleanly with the V64 evolution skin and the flight math. Deterministic, O(1), no alloc. Tests +
+  `brutalismFactor()` accessor added; docs/contract synced.
+- **Wired it live:** a `toggleBrutalism` action + the **`B` hotkey** flip every Super Creature between
+  god-jewel and concrete (state `brutalism`, HUD toast + audit record, mirroring the CHAOS-MODE toggle).
+  Also surfaced as a **▦ BRUTAL toolbar button** (`data-action="brutal"`) so it's clickable on
+  touch/mouse, not keyboard-only.
+- **WORLD BRUTALISM — the whole cosmos turns to concrete.** The `B` toggle now eases a smoothed 0..1
+  factor (`World.brutalismFactor`) that crossfades the entire scene, not just the apex bodies:
+  - **Instanced organisms** (`InstancedEntityRenderer.setBrutalism`) — a single shared `uBrutalism`
+    uniform desaturates all thousands of creatures toward concrete grey in the reliquary fragment
+    shader (one per-frame write, zero per-instance CPU).
+  - **Ground + light rig** (`EnvironmentSystem.applyBrutalism`) — the ground goes matte grey, glow
+    killed; the lurid six-light rig + ambient/sun desaturate and dim to cold overcast concrete.
+  - **Sky dome** (`AtmosphereSystem.setBrutalism`) — the alien vertex-baked gradient lerps toward
+    overcast concrete via a bucketed re-bake (mirrors the nightmare-sky cache invalidation).
+  - **Fog** — the weather fog crossfades to a cool concrete haze (slightly denser).
+    All terms lerp from base/this-frame values gated by the factor, so `f=0` is byte-identical and the
+    cosmos only turns to concrete as you hold the mode. Deterministic, O(1) per system, allocation-free.
+
+### Super Creature god-jewel skin — compile fix + V64 LIVING, EVOLVING SKIN
+
+- **Fixed** the god-jewel `MeshStandardMaterial` patch in `src/sim/super-body.ts`: the metalness
+  micro-variance assigned `metalnessFactor` immediately after `<roughnessmap_fragment>`, before three.js
+  declares it in the following `<metalnessmap_fragment>` chunk. This raised `'metalnessFactor' : undeclared
+identifier` / `l-value required` every frame, failing the shader program so the creature fell back to a
+  bare, skin-less surface. The assignment now defers to an injection after `<metalnessmap_fragment>`, so
+  the program links and the iridescent skin (relief, thin-film iridescence, Fresnel rim, god-glow,
+  roughness/metalness variance) renders again.
+- **V64 LIVING SKIN:** the skin now _evolves with the creature_. `SuperEvolution.appearance()` already
+  computed a hue rotation, an ascension `aura`, and a milestone `tier` — all of which `setEvolution()` was
+  dropping. They now feed the god-jewel shader via new uniforms (`uEvoAura`, `uEvoTier`, `uEvoHue`,
+  `uAscended`): the iridescence hue rotates into a unique shifting palette, the crystalline relief gains
+  finer detail at higher tiers, the jewel polishes (roughness↓/metalness↑), and an ascension blaze peaks
+  at the LV100 end-state. Every term is additive and gated by aura/tier, so a BASE creature is unchanged
+  and the surface only grows richer, cooler, and more unique over time. Deterministic, O(1), no alloc.
+
 ### Added
 
 - Added a deterministic P1 quantum-vs-classical contrast harness and tiny mitata bench scaffold for
