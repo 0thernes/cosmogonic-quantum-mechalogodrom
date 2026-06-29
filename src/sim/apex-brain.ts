@@ -1792,7 +1792,7 @@ export class ApexBrain {
 
   constructor(seed: number, opts?: { scale?: ApexScale }) {
     this.seed = seed >>> 0 || 1;
-    const s = opts?.scale ?? SCALE_APEX_START;
+    const s = opts?.scale ?? SCALE_LIVE;
     this.scale = s;
     // Each organ allocates the CAPPED live size; the designed scale can be far larger (up to 1B).
     const loomN = liveSize(s.loom);
@@ -1976,9 +1976,6 @@ export class ApexBrain {
  * pantheon and the brain agree on the apex's identity. A clean one-way dependency
  * (apex-brain → pantheon-breeding); pantheon-breeding never imports this module.
  */
-export function createApexBrain(
-  seed: number = LINEAGE[100]!.seed,
-  scale: ApexScale = SCALE_APEX_START,
-): ApexBrain {
-  return new ApexBrain(seed, { scale });
+export function createApexBrain(seed: number = LINEAGE[100]!.seed): ApexBrain {
+  return new ApexBrain(seed);
 }

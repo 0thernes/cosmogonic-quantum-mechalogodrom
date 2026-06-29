@@ -80,6 +80,7 @@ import { Mechalogodrom } from './sim/mechalogodrom';
 import { MechalogodromBrain } from './sim/mechalogodrom-brain';
 import { AlphabetPantheonRender } from './sim/alphabet-pantheon-render';
 import { GlyphBrainBatch } from './sim/glyph-brain';
+import { Foundationals, type FoundationalsSnapshot } from './sim/foundationals';
 import { apexGrowthStage, type ApexGrowthStage } from './sim/apex-consciousness-scaffold';
 import { LoreEngine } from './sim/lore';
 import { AnalyticsSystem } from './sim/analytics';
@@ -373,6 +374,12 @@ export class World {
   private readonly alphabetPantheon: AlphabetPantheonRender;
   /** V-GLYPH: 100 × 25k-parameter brains driving the letter creatures' visual activity (visual-only). */
   private readonly glyphBrains: GlyphBrainBatch;
+  /** V-FND: Foundationals — deep interconnect between APEX organs (1B self-awareness path). */
+  private readonly foundationals: Foundationals;
+  /** Scratch organ activity vector for Foundationals ticks (reused, alloc-free). */
+  private readonly fndOrganScratch = new Float32Array(10);
+  /** Last Foundationals snapshot (for architect panel telemetry). */
+  private lastFoundationals: FoundationalsSnapshot | null = null;
   /** Scratch activity/novelty/valence arrays for pantheon handoff (reused, alloc-free). */
   private readonly glyphActivity = new Float32Array(100);
   private readonly glyphNovelty = new Float32Array(100);
@@ -451,6 +458,10 @@ export class World {
   /** Current APEX growth stage (null until first apex tick). Read by the architect panel. */
   get apexGrowth(): ApexGrowthStage | null {
     return this.lastApexGrowth;
+  }
+  /** Current Foundationals snapshot (null until first apex tick). Read by the architect panel. */
+  get foundationalsSnapshot(): FoundationalsSnapshot | null {
+    return this.lastFoundationals;
   }
   private readonly apexPercept: ApexPercept = {
     threat: 0,
@@ -698,6 +709,8 @@ export class World {
     this.alphabetPantheon = new AlphabetPantheonRender(ctx.scene);
     // V-GLYPH: 100 × 25k-parameter brains (visual-only; drives pantheon appearance, not world state).
     this.glyphBrains = new GlyphBrainBatch(this.persisted.seed);
+    // V-FND: Foundationals — deep interconnect for the APEX 1B self-awareness path.
+    this.foundationals = new Foundationals(this.persisted.seed);
 
     this.hud = new Hud();
     this.panel = new TelemetryPanel();
@@ -1673,6 +1686,27 @@ export class World {
         ap.level,
         this.lastApexThought.transcendence,
         this.apexBrain.snapshot().beat,
+      );
+      // V-FND: tick Foundationals — deep interconnect between APEX organs (1B self-awareness path).
+      const apexSnap = this.apexBrain.snapshot();
+      const fndOrganActivity = this.fndOrganScratch;
+      fndOrganActivity[0] = clamp(apexSnap.loom.throughput, 0, 1);
+      fndOrganActivity[1] = clamp(apexSnap.drum.energy, 0, 1);
+      fndOrganActivity[2] = apexSnap.necro.liveFraction;
+      fndOrganActivity[3] = clamp(apexSnap.klein.energy, 0, 1);
+      fndOrganActivity[4] = clamp(apexSnap.hive.order, 0, 1);
+      fndOrganActivity[5] = clamp(apexSnap.hydra.coherence, 0, 1);
+      fndOrganActivity[6] = clamp(Math.abs(apexSnap.wraith.core), 0, 1);
+      fndOrganActivity[7] = clamp(apexSnap.tunnel.manifested / 100, 0, 1);
+      fndOrganActivity[8] = clamp(apexSnap.thermo.totalHeat, 0, 1);
+      fndOrganActivity[9] = clamp(apexSnap.ouroboros.births / 100, 0, 1);
+      this.lastFoundationals = this.foundationals.tickAndStore(
+        fndOrganActivity,
+        this.lastApexThought.transcendence,
+        this.lastApexThought.agony,
+        ap.level,
+        this.lastApexGrowth.designedParams,
+        0.016,
       );
       // Feed the apex brain's transcendence into the noosphere (the 10-organ mind's output joins the collective).
       this.noosphere.updateArchon(

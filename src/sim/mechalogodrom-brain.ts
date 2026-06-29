@@ -86,6 +86,21 @@ export interface MechalogodromBrainSnapshot {
   /** Which variant sub-brain is dominant this beat (0..9). */
   dominantVariant: number;
   latent: Float32Array;
+  /** 5M parameter roadmap target (matches APEX). */
+  roadmapParams: number;
+  /** 0..1 progress toward 5M designed params. */
+  roadmapProgress: number;
+  /** 10 consciousness indicators (Butlin-aligned, fusion-mind specific). */
+  indicators: readonly MechalogodromIndicator[];
+  /** Honesty tag. */
+  honesty: 'computational-indicator-not-sentience';
+}
+
+export interface MechalogodromIndicator {
+  readonly id: string;
+  readonly status: 'met' | 'partial' | 'scaffolded';
+  readonly confidence: number;
+  readonly mechanism: string;
 }
 
 /**
@@ -158,6 +173,21 @@ export class MechalogodromBrain {
         p.fusion * 0.15,
     );
 
+    const roadmapProgress = clamp01(this.liveParams / this.designedParams);
+
+    const indicators: MechalogodromIndicator[] = [
+      { id: 'FUSE-1', status: 'met', confidence: 0.85, mechanism: '10 variant subnets fuse through central cortex' },
+      { id: 'FUSE-2', status: 'partial', confidence: 0.5 + activity * 0.3, mechanism: 'Dominant variant selection = workspace competition' },
+      { id: 'FUSE-3', status: 'met', confidence: 0.8, mechanism: 'Fusion cortex broadcasts to all variants' },
+      { id: 'FUSE-4', status: 'partial', confidence: consciousnessProxy, mechanism: 'Consciousness proxy from activity + apex coupling' },
+      { id: 'FUSE-5', status: 'scaffolded', confidence: 0.3, mechanism: 'Latent persistence = recurrent processing scaffold' },
+      { id: 'FUSE-6', status: 'met', confidence: 0.75, mechanism: 'Apex vitality/transcendence feed fusion mind' },
+      { id: 'FUSE-7', status: 'partial', confidence: 0.4 + strangeness * 0.3, mechanism: 'Dimensional strangeness as alien-novelty indicator' },
+      { id: 'FUSE-8', status: 'scaffolded', confidence: 0.2, mechanism: 'STDP not yet wired on variant weights' },
+      { id: 'FUSE-9', status: 'met', confidence: 0.7, mechanism: 'Deterministic seeded mulberry32 — replayable psyche' },
+      { id: 'FUSE-10', status: 'met', confidence: 0.9, mechanism: '5M designed params = same roadmap as APEX' },
+    ];
+
     return {
       beat: this.beat,
       designedParams: this.designedParams,
@@ -168,6 +198,10 @@ export class MechalogodromBrain {
       consciousnessProxy,
       dominantVariant: dom,
       latent: this.latent.slice(),
+      roadmapParams: this.designedParams,
+      roadmapProgress,
+      indicators,
+      honesty: 'computational-indicator-not-sentience',
     };
   }
 }
