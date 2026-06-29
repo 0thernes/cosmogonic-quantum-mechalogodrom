@@ -11,6 +11,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### BRUTALISM frame-coherence + completeness (post-merge review follow-up)
 
+- **Whole monolith body concrete (`environment.ts`).** `collectStructureMats` now traverses each
+  monolith's full group (slab, beams, edges, kind-specific toppers AND halos) instead of only the halo
+  rings, so at full BRUTALISM the main monolith mass desaturates too (was: only the rings greyed while
+  the slab/beams/toppers kept their colored/metallic look). Test pins the body-material crossfade.
+
 - **Whole apex body concrete (`super-body.ts`).** `setBrutalism` now crossfades the Super Creature's
   STATIC appendages (arms, wings, mouths, legs, chrome rings) from their captured base toward concrete,
   and `setMind` crossfades the plan-coloured eyes + cage — so at full BRUTALISM the entire body goes

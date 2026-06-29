@@ -78,6 +78,9 @@ interface MonolithRig {
   crown: THREE.PointLight;
   hue: number;
   rings: HaloRing[];
+  /** The whole monolith group (slab, beams, edges, kind-specific toppers, halos) — so BRUTALISM can
+   *  desaturate the entire body, not only the halo rings. */
+  group: THREE.Group;
 }
 
 /** One orbiting mini inside a diorama dome (legacy `mg` child userData). */
@@ -269,7 +272,7 @@ function buildMonolith(
 
   g.position.set(x, -2, z);
   parent.add(g);
-  return { crown, hue, rings };
+  return { crown, hue, rings, group: g };
 }
 
 /**
@@ -786,7 +789,11 @@ export class EnvironmentSystem {
         }
       }
     };
-    for (const mono of this.monoliths) for (const ring of mono.rings) add(ring.mesh.material);
+    // Whole monolith body: slab, beams, edges, kind-specific toppers AND halos (all children of the
+    // group), not just the halo rings — so at full concrete the main monolith mass desaturates too.
+    // The crown PointLight has no `.material`, so add() skips it.
+    for (const mono of this.monoliths)
+      for (const child of mono.group.children) add((child as Partial<THREE.Mesh>).material);
     for (const dio of this.dioramas) {
       for (const child of dio.group.children) add((child as Partial<THREE.Mesh>).material);
       for (const mini of dio.minis) add(mini.mesh.material);

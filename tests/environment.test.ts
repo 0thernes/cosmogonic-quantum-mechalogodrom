@@ -139,7 +139,36 @@ describe('EnvironmentSystem — BRUTALISM restores the reaction-diffusion ground
   /** Internals cast (sibling-test pattern): the ground material is private. */
   interface EnvInternals {
     groundMaterial: THREE.MeshStandardMaterial;
+    monoliths: { group: THREE.Group }[];
   }
+
+  test('full BRUTALISM desaturates the whole monolith body, not just the halo rings', () => {
+    const ctx = makeCtx(0xa17, 4);
+    const env = new EnvironmentSystem(ctx);
+    const monoliths = (env as unknown as EnvInternals).monoliths;
+    expect(monoliths.length).toBeGreaterThan(0);
+    // Pick a NON-light monolith-body mesh material (slab/beam/edge/topper — not the crown PointLight).
+    const bodyMats: THREE.MeshStandardMaterial[] = [];
+    for (const mono of monoliths) {
+      for (const child of mono.group.children) {
+        const m = (child as Partial<THREE.Mesh>).material;
+        if (m instanceof THREE.MeshStandardMaterial) bodyMats.push(m);
+      }
+    }
+    expect(bodyMats.length).toBeGreaterThanOrEqual(3); // slab + edges + ≥1 topper/beam per monolith
+    const beforeHexes = bodyMats.map((m) => m.color.getHex());
+
+    // Full concrete: every collected monolith body material lerps to the rig concrete grey (0x9a9aa0).
+    env.applyBrutalism(1);
+    const concrete = new THREE.Color(0x9a9aa0);
+    for (const m of bodyMats) {
+      expect(m.color.r).toBeCloseTo(concrete.r, 5);
+      expect(m.color.g).toBeCloseTo(concrete.g, 5);
+      expect(m.color.b).toBeCloseTo(concrete.b, 5);
+    }
+    // At least one body material actually changed (the pass did real work, not a vacuous identity).
+    expect(bodyMats.some((m, i) => m.color.getHex() !== beforeHexes[i])).toBe(true);
+  });
 
   test('after attaching the RD emissiveMap, brutalism on→off returns the glow to 0.85 (not 0.3)', () => {
     const ctx = makeCtx(0x9d, 4);
