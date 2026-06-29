@@ -1049,7 +1049,8 @@ export class World {
     const s = this.state;
     // Clamp to [0, 50ms]: negative deltas (clock skew) and tab-switch gaps
     // would otherwise drive curve parameters and physics out of range.
-    const dt = Math.min(Math.max(rawDt, 0), 0.05) * s.timeScale;
+    const uiDt = Math.min(Math.max(rawDt, 0), 0.05); // real frame delta, UNSCALED by timeScale
+    const dt = uiDt * s.timeScale;
     s.elapsed += dt;
     s.frame++;
     const t = s.elapsed;
@@ -1278,7 +1279,10 @@ export class World {
     //    factor (not last frame's) and stays frame-coherent with the bodies/ground/organisms/fog. The
     //    ease is snapped to its exact 0/1 target so OFF is byte-identical (full restore). No alloc. ──
     const bTarget = s.brutalism ? 1 : 0;
-    this.brutalismFactor += (bTarget - this.brutalismFactor) * Math.min(1, dt * 2.5);
+    // Ease on the UNSCALED frame delta: BRUTALISM is a visual/UI toggle, so it must crossfade even
+    // while the sim is PAUSED (timeScale === 0) — otherwise pressing B / ▦ on a paused scene flips the
+    // state + audit text but the concrete never appears until you unpause.
+    this.brutalismFactor += (bTarget - this.brutalismFactor) * Math.min(1, uiDt * 2.5);
     if (!s.brutalism && this.brutalismFactor < 0.02) this.brutalismFactor = 0;
     else if (s.brutalism && this.brutalismFactor > 0.98) this.brutalismFactor = 1;
     const bf = this.brutalismFactor;

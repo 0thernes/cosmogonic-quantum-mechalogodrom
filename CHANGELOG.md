@@ -11,6 +11,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### BRUTALISM frame-coherence + completeness (post-merge review follow-up)
 
+- **Whole-population concrete (`instanced-entities.ts`).** At full BRUTALISM the reliquary shader now
+  collapses ALL accumulated self-glow (vital / social / quantum / render-mode emissive) to zero, so the
+  thousands of instanced organisms read as raw scene-lit grey forms instead of still glowing neon
+  through the concrete (the desaturate previously only greyed the base diffuse). Exact ×1 at f=0.
+- **Pause-proof toggle (`world.ts`).** The brutalism crossfade eases on the UNSCALED frame delta, so
+  pressing `B` / ▦ while the sim is PAUSED (`timeScale === 0`) still animates the concrete (was frozen
+  until unpause).
+
 - **Sky frame-coherence (`world.ts`).** The eased brutalism factor is now computed BEFORE
   `atmosphere.update`, so the sky dome re-bakes with THIS frame's factor instead of last frame's —
   the dome no longer drifts a frame behind the bodies/ground/organisms/fog during toggles/easing.

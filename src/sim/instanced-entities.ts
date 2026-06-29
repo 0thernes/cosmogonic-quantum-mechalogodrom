@@ -499,7 +499,11 @@ const RELIQUARY_FRAG_BODY = /* glsl */ `#include <emissivemap_fragment>
 		float scan = 0.5 + 0.5 * sin(gl_FragCoord.y * 0.15 - uTime * 4.0);
 		totalEmissiveRadiance = (totalEmissiveRadiance + vec3(0.1, 0.45, 0.6)) * fres * scan * (1.0 + uBass);
 		diffuseColor.a *= clamp(fres + 0.2, 0.0, 1.0);
-	}`;
+	}
+	// BRUTALISM: collapse ALL self-glow (the vital / social / quantum / render-mode emissive accumulated
+	// above) toward zero so a concrete organism stops emitting neon and reads as a raw, scene-lit grey
+	// form — the diffuse is already greyed in <color_fragment>. At uBrutalism=0 this is an exact ×1.
+	totalEmissiveRadiance *= (1.0 - uBrutalism);`;
 
 /**
  * Owns the InstancedMesh pools and the per-frame mirror pass. Construct once in
