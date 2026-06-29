@@ -49,7 +49,7 @@ const RANK_COLOR: Record<string, string> = {
 };
 
 /** Responsive canvas height for the Architecture dynamics viewport. */
-export const ARCHITECTURE_PANEL_CANVAS_HEIGHT = 'clamp(170px, 30vh, 280px)';
+export const ARCHITECTURE_PANEL_CANVAS_HEIGHT = 'clamp(200px, 42vh, 420px)';
 /** Minimum usable data well; prevents the table from becoming the old thin strip. */
 export const ARCHITECTURE_PANEL_DATA_MIN_HEIGHT = '180px';
 /** Keep the canvas inside the panel box; the clamp controls its height. */
@@ -92,7 +92,7 @@ const STYLE = `
 .cqm-arch-btn:focus-visible{outline:1px solid #ff5a6b}
 .cqm-arch-btn.on{background:rgba(80,16,40,.96);color:#fff}
 .cqm-arch-bar{display:flex;gap:4px;padding:6px 10px;flex-wrap:wrap;border-bottom:1px solid rgba(255,59,78,.12)}
-.cqm-arch-main{flex:1 1 0;min-height:0;display:flex;flex-wrap:wrap;align-items:stretch;overflow:hidden}
+.cqm-arch-main{flex:1 1 0;min-height:0;display:flex;flex-wrap:wrap;align-items:stretch;overflow:auto}
 .cqm-arch-viz{flex:1 1 320px;min-width:min(100%,280px);min-height:0;display:flex;flex-direction:column;overflow:hidden;
   border-right:1px solid rgba(255,59,78,.12);background:rgba(10,3,12,.45)}
 .cqm-arch-canvas{display:block;width:100%;height:${ARCHITECTURE_PANEL_CANVAS_HEIGHT};max-height:${ARCHITECTURE_PANEL_CANVAS_HEIGHT};min-height:170px;
@@ -148,7 +148,7 @@ export class PantheonArchitecturePanel {
   private view: View = 'lineage';
   private lineageIdx = 100; // open on the APEX ς
   private broodIdx = 0;
-  private mode: VizMode = 'attractor';
+  private mode: VizMode = 'brain4d';
   /** When the apex ς is selected, its warmed Entropic-Tesseract-Hydra brain snapshot (else null). */
   private apexSnap: ApexBrainSnapshot | null = null;
 
@@ -252,6 +252,7 @@ export class PantheonArchitecturePanel {
 
     doc.body.appendChild(panel);
     this.syncToggles();
+    this.setMode('brain4d');
     this.select();
   }
 
@@ -599,15 +600,15 @@ export class PantheonArchitecturePanel {
     const t = this.reveal * 0.02;
     const cx = w / 2;
     const cy = h / 2;
-    const scale = Math.min(w, h) * 0.36;
+    const scale = Math.min(w, h) * 0.42;
     const snap = this.apexSnap;
     const drive = snap
       ? clamp01(
           snap.thought.vitality * 0.4 + snap.thought.agony * 0.3 + snap.quantum.coherence * 0.3,
         )
       : clamp01(this.hue);
-    const N = 96;
-    const pts: { x: number; y: number; d: number; a: number; hue: number }[] = [];
+    const N = 320;
+    const pts: { x: number; y: number; d: number; a: number; hue: number; layer: number }[] = [];
     for (let i = 0; i < N; i++) {
       const u = (i + 0.5) / N;
       const th = 2 * Math.PI * u;
@@ -630,9 +631,12 @@ export class PantheonArchitecturePanel {
       const d = 1 / (2.8 + z2);
       const px = cx + x2 * scale * d;
       const py = cy + y3 * scale * d;
-      const spike = Math.max(0, Math.sin(t * 7 + i * 0.41) * 0.5 + 0.5);
+      const layer = Math.floor((i / N) * 5); // 5 cortical layers: delta, theta, alpha, beta, gamma
+      const layerHues = [220, 260, 30, 0, 330];
+      const spike = Math.max(0, Math.sin(t * (3 + layer * 2.5) + i * 0.41) * 0.5 + 0.5);
       const a = clamp01(drive * 0.5 + spike * 0.45 + Math.abs(Math.sin(i * 0.31 + t)) * 0.2);
-      pts.push({ x: px, y: py, d, a, hue: (i * 47 + t * 80) % 360 });
+      const hue = (layerHues[layer]! + (i * 47 + t * 80) % 60) % 360;
+      pts.push({ x: px, y: py, d, a, hue, layer });
     }
     for (let i = 0; i < N; i++) {
       for (let j = i + 1; j < N; j++) {
@@ -648,25 +652,52 @@ export class PantheonArchitecturePanel {
         ctx.stroke();
       }
     }
+    // Dendritic halos + soma cores + spike traces
     for (const p of pts) {
       const near = Math.min(1, p.d * 1.2);
-      if (p.a > 0.5 && near > 0.25) {
-        const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, 4 + p.a * 12 * near);
-        g.addColorStop(0, `hsla(${p.hue},100%,75%,${(0.35 + p.a * 0.5).toFixed(2)})`);
-        g.addColorStop(1, `hsla(${p.hue},100%,50%,0)`);
+      // Dendritic halo — larger soft glow for active neurons
+      if (p.a > 0.4 && near > 0.2) {
+        const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, 6 + p.a * 18 * near);
+        g.addColorStop(0, `hsla(${p.hue},100%,72%,${(0.4 + p.a * 0.5).toFixed(2)})`);
+        g.addColorStop(0.4, `hsla(${p.hue},90%,55%,${(0.15 + p.a * 0.2).toFixed(2)})`);
+        g.addColorStop(1, `hsla(${p.hue},100%,40%,0)`);
         ctx.fillStyle = g;
         ctx.beginPath();
-        ctx.arc(p.x, p.y, 4 + p.a * 12 * near, 0, Math.PI * 2);
+        ctx.arc(p.x, p.y, 6 + p.a * 18 * near, 0, Math.PI * 2);
         ctx.fill();
       }
-      ctx.fillStyle = `hsla(${p.hue},100%,${(42 + p.a * 38).toFixed(0)}%,${(0.6 + p.a * 0.4).toFixed(2)})`;
+      // Soma core — bright dot
+      ctx.fillStyle = `hsla(${p.hue},100%,${(45 + p.a * 40).toFixed(0)}%,${(0.65 + p.a * 0.35).toFixed(2)})`;
       ctx.beginPath();
-      ctx.arc(p.x, p.y, 1.2 + p.a * 2.5 * near, 0, Math.PI * 2);
+      ctx.arc(p.x, p.y, 1.5 + p.a * 3 * near, 0, Math.PI * 2);
       ctx.fill();
+      // Spike ring — expanding circle on spike peaks
+      if (p.a > 0.75) {
+        const sr = (p.a - 0.75) * 24 * near;
+        ctx.strokeStyle = `hsla(${p.hue},100%,80%,${((p.a - 0.75) * 0.6).toFixed(2)})`;
+        ctx.lineWidth = 0.8;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 3 + sr, 0, Math.PI * 2);
+        ctx.stroke();
+      }
     }
+    // Frequency band legend
+    const LAYER_NAMES = ['\u03b4 delta', '\u03b8 theta', '\u03b1 alpha', '\u03b2 beta', '\u03b3 gamma'];
+    const LAYER_HUES_ARR = [220, 260, 30, 0, 330];
+    ctx.font = '600 8px ui-monospace,monospace';
+    ctx.textBaseline = 'bottom';
+    for (let l = 0; l < 5; l++) {
+      const lh = LAYER_HUES_ARR[l]!;
+      const ly = h - 4 - (5 - l) * 10;
+      ctx.fillStyle = `hsl(${lh},90%,60%)`;
+      ctx.fillRect(8, ly, 6, 6);
+      ctx.fillStyle = `hsla(${lh},80%,70%,0.85)`;
+      ctx.fillText(LAYER_NAMES[l] ?? '', 18, ly + 6);
+    }
+    ctx.textBaseline = 'top';
     ctx.fillStyle = 'rgba(0,255,220,0.85)';
     ctx.font = '600 9px ui-monospace,monospace';
-    ctx.fillText('MEGA GODLIKE BRAIN · 4D tesseract · live spikes', 8, 8);
+    ctx.fillText('MEGA GODLIKE BRAIN · 4D tesseract · 320 neurons · 5 layers · live spikes', 8, 8);
     this.reveal = (this.reveal + 1) % 10000;
   }
 

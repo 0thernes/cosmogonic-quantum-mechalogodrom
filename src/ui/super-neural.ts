@@ -58,8 +58,8 @@ const STYLE = `
 .cqm-sneu-brain-cycle:hover{color:#ffe0f8;background:rgba(70,20,60,.9)}
 .cqm-sneu-brain-cycle.mega{border-color:rgba(0,255,220,.55);color:#9fffe8}
 .cqm-sneu-grid{display:grid;grid-template-columns:repeat(3,1fr);grid-auto-rows:1fr;gap:5px;padding:7px;overflow:hidden;
-  flex:1 1 auto;min-height:0;border-top:1px solid rgba(180,120,255,.28)}
-.cqm-sneu-grid.brain{grid-template-columns:1fr;grid-template-rows:1fr}
+  flex:1 1 auto;min-height:160px;border-top:1px solid rgba(180,120,255,.28)}
+.cqm-sneu-grid.brain{grid-template-columns:1fr;grid-template-rows:1fr;min-height:min(48vh,380px)}
 .cqm-sneu-cell{position:relative;border:1px solid rgba(180,120,255,.14);border-radius:6px;background:rgba(5,3,12,.66);
   overflow:hidden;display:flex;min-height:0}
 .cqm-sneu-cell canvas{display:block;width:100%;height:100%}
@@ -1112,7 +1112,7 @@ const drawBrain: Drawer = (ctx, w, h, s, t) => {
   ctx.fillText(`IV · BRAIN — composite connectome · ${s.paramCount}p · ${s.organs} organs`, 8, 6);
   const cx = w / 2;
   const cy = h / 2 + 8;
-  const scale = Math.min(w, h) * 0.34;
+  const scale = Math.min(w, h) * 0.38;
   const ang = t * 0.25;
   const k = s.consciousness;
   const act = [
@@ -1204,10 +1204,24 @@ const drawBrain: Drawer = (ctx, w, h, s, t) => {
     }
   }
   ctx.textAlign = 'left';
+  // Secondary glomerular ring — 36 micro-satellite nodes between organ hubs.
+  for (let g = 0; g < 36; g++) {
+    const ga = (g / 36) * Math.PI * 2 + ang * 0.4;
+    const gb = Math.sin(t * 2.1 + g * 0.37) * 0.5 + 0.5;
+    const gr = scale * (0.55 + gb * 0.22);
+    const gx = cx + Math.cos(ga) * gr;
+    const gy = cy + Math.sin(ga) * gr * 0.72;
+    const gh = (BRAIN_HUES[g % n]! + t * 40 + gb * 80) % 360;
+    ctx.fillStyle = `hsla(${gh},100%,${(38 + gb * 42).toFixed(0)}%,${(0.35 + gb * 0.45).toFixed(2)})`;
+    ctx.beginPath();
+    ctx.arc(gx, gy, 1.2 + gb * 2.8, 0, Math.PI * 2);
+    ctx.fill();
+    if (gb > 0.55) spark(ctx, gx, gy, 3 + gb * 6, `${gh},255,180`, gb * 0.5);
+  }
 };
 
 /** 4D hyper-grid neuron projected through a rotating w-axis slice — MEGA GODLIKE mode. */
-const MEGA_N = 240;
+const MEGA_N = 420;
 /** Per-neuron spike-train history (ring buffer of binary spikes). */
 const SPIKE_HIST = 24;
 const spikeBuf: Float32Array[] = Array.from({ length: MEGA_N }, () => new Float32Array(SPIKE_HIST));
@@ -1321,7 +1335,7 @@ const drawMegaBrain: Drawer = (ctx, w, h, s, t) => {
   );
   const cx = w / 2;
   const cy = h / 2 + 10;
-  const scale = Math.min(w, h) * 0.42;
+  const scale = Math.min(w, h) * 0.48;
   const axw = t * 0.18;
   const ayw = t * 0.13;
   const axy = t * 0.09;
@@ -1490,7 +1504,7 @@ const drawMegaBrain: Drawer = (ctx, w, h, s, t) => {
   ctx.textAlign = 'left';
 };
 
-let megaBrainMode = false;
+let megaBrainMode = true;
 const drawBrainRouted: Drawer = (ctx, w, h, s, t, H) => {
   if (megaBrainMode) drawMegaBrain(ctx, w, h, s, t, H);
   else drawBrain(ctx, w, h, s, t, H);
@@ -1594,7 +1608,8 @@ export class SuperNeural {
     this.brainCycleBtn = doc.createElement('button');
     this.brainCycleBtn.type = 'button';
     this.brainCycleBtn.className = 'cqm-sneu-brain-cycle';
-    this.brainCycleBtn.textContent = '⟁ COMPOSITE';
+    this.brainCycleBtn.textContent = getMegaBrainMode() ? '⬡ MEGA 4D' : '⟁ COMPOSITE';
+    this.brainCycleBtn.classList.toggle('mega', getMegaBrainMode());
     this.brainCycleBtn.title = 'Cycle brain view: composite connectome ↔ MEGA GODLIKE 4D tesseract';
     this.brainCycleBtn.hidden = true;
     this.brainCycleBtn.addEventListener('click', () => {

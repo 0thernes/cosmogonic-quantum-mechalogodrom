@@ -406,8 +406,8 @@ const RELIQUARY_FRAG_BODY = /* glsl */ `#include <emissivemap_fragment>
 	vec3 rqFilm = 0.5 + 0.5 * cos(6.2831853 * (vec3(1.0, 0.85, 0.7) * rqFres * 2.2
 		+ vec3(0.0, 0.18, 0.36) + rqDetail * 1.5 + uTime * 0.04 + uChaos * 0.015));
 	totalEmissiveRadiance += rqFilm * (rqFres * 0.38 + rqRidge * 0.26) * RQ_FILM;
-	// Wet-glass rim glint.
-	totalEmissiveRadiance += vec3(0.95, 0.98, 1.0) * pow(rqFres, 1.4) * 0.14;
+	// Wet-glass rim glint — colored, not white, to prevent ACES washout.
+	totalEmissiveRadiance += vec3(0.40, 0.55, 0.75) * pow(rqFres, 1.4) * 0.08;
 
 	// ══ V-VITALS REAL-BOUND EFFECT SUITE ══════════════════════════════════════════════════════
 	// Every term's strength is a FALSIFIABLE readout of one packed per-entity signal (vVitals:

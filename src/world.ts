@@ -157,7 +157,7 @@ function cyc<T>(arr: readonly T[], i: number): T {
 }
 
 /** AUTO mode dwell: seconds on each sorting field before advancing to the next (V7.2). */
-const ALGO_AUTO_PERIOD = 6;
+const ALGO_AUTO_PERIOD = 2.5;
 
 /** V105: 101-glyph pantheon breeding is visual-only — no petri coupling until re-enabled. */
 const PANTHEON_BREEDING_LIVE = false;
@@ -1150,8 +1150,8 @@ export class World {
     });
     // V-ABC: the 100 alphabet archetypes bob/spin/pulse across the dome (chaos quickens them).
     this.alphabetPantheon.setChaos(visChaos);
-    // V-GLYPH: tick the 100 × 25k-parameter brains every 4 frames (visual-only; drives appearance).
-    if (s.frame % 4 === 0) {
+    // V-GLYPH: tick the 100 × 25k-parameter brains every frame (visual-only; drives appearance + travel).
+    {
       const percept = this.glyphPercept;
       percept[0] = visChaos; // threat
       percept[1] = clamp(s.mutations / 1000, 0, 1); // energy (mutation pressure)
@@ -1172,6 +1172,7 @@ export class World {
         val[i] = sn.valence;
       }
       this.alphabetPantheon.setBrainActivity(act, nov, val);
+      this.alphabetPantheon.setBrainMotors(snaps);
     }
     this.alphabetPantheon.update(t);
     // F-NHI V10: alien bodies follow + morph their NHI every frame (guarded; additive viz only).
@@ -2185,12 +2186,12 @@ export class World {
       if (!heroNav) {
         if (k['w'] || k['arrowup']) cam.translateZ(-spd);
         if (k['s'] || k['arrowdown']) cam.translateZ(spd);
-        if (k['a']) cam.translateX(-spd);
-        if (k['d']) cam.translateX(spd);
+        if (k['a'] || k['arrowleft']) cam.translateX(-spd);
+        if (k['d'] || k['arrowright']) cam.translateX(spd);
         if (k['q']) cam.position.y += spd;
         if (k['e']) cam.position.y -= spd;
-        if (k['c'] || k['arrowleft']) cam.rotation.y += rs;
-        if (k['v'] || k['arrowright']) cam.rotation.y -= rs;
+        if (k['c']) cam.rotation.y += rs;
+        if (k['v']) cam.rotation.y -= rs;
         if (touch.active) {
           cam.translateX(touch.x * spd);
           cam.translateZ(touch.y * spd);
@@ -2414,7 +2415,11 @@ export class World {
     // neighbour-dependent rng (nash/market), so coupling it to wall-clock audio would diverge
     // the seeded sim. The audio reactivity lives in the FLASH below, which is visual-only.
     const batch =
-      mode === 'all' ? Math.min(48, Math.max(25, n >> 7)) : Math.min(28, Math.max(6, n >> 8));
+      mode === 'all'
+        ? Math.min(48, Math.max(25, n >> 7))
+        : mode === 'auto'
+          ? Math.min(40, Math.max(12, n >> 7))
+          : Math.min(28, Math.max(6, n >> 8));
     // Treble = sparkle: the per-swap emissive flash brightens with the highs (4..8). Emissive is
     // purely visual (entities.update never feeds it back into positions/rng), so the swarm
     // visibly sparkles ON THE BEAT without touching sim reproducibility (V7-beyond).
@@ -2450,8 +2455,8 @@ export class World {
       // Brighter sparkle per swap so the field's working front reads as a shimmering light
       // show (entities.update fades it back). max(), not a hard set, so a swap can't DIM a body
       // the neural-activation cap or a belly pulse already pushed above 4. (audit 13b)
-      ea.material.emissiveIntensity = Math.max(ea.material.emissiveIntensity, flash);
-      eb.material.emissiveIntensity = Math.max(eb.material.emissiveIntensity, flash);
+      ea.material.emissiveIntensity = Math.min(Math.max(ea.material.emissiveIntensity, flash), 3.2);
+      eb.material.emissiveIntensity = Math.min(Math.max(eb.material.emissiveIntensity, flash), 3.2);
       if (swaps === 0) this.qc.onSortSwap(a0, a1); // one CNOT/frame (preserve coupling rate)
       swaps++;
     }
@@ -3130,7 +3135,14 @@ export class World {
     s.algoTimer += dt;
     if (s.algoTimer < ALGO_AUTO_PERIOD) return;
     s.algoTimer = 0;
+    const prev = s.algoIdx;
     this.selectAlgo(s.algoIdx + 1, false); // fromUser=false keeps AUTO mode engaged
+    if (prev !== s.algoIdx) {
+      this.algoActiveEl?.classList.add('algo-auto-flash');
+      setTimeout(() => this.algoActiveEl?.classList.remove('algo-auto-flash'), 420);
+      const name = cyc(ALGOS, s.algoIdx).name;
+      this.hud.showSector(`AUTO ▸ ${name}`);
+    }
     this.unlock();
     this.audio.cue(s.algoIdx, ALGOS.length); // each new field announces itself
     this.sortPerformance();

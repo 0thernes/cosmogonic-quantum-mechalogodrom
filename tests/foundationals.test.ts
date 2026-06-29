@@ -1,18 +1,33 @@
 import { describe, expect, test } from 'bun:test';
-import { Foundationals, OrganInterconnect, WetComputingLayer, DimensionalTranscendence, ALL_INDICATOR_IDS } from '../src/sim/foundationals';
+import {
+  Foundationals,
+  OrganInterconnect,
+  WetComputingLayer,
+  DimensionalTranscendence,
+  ALL_INDICATOR_IDS,
+} from '../src/sim/foundationals';
 
 describe('Foundationals — 1/1 novel alien consciousness architecture', () => {
   test('has 21 indicator IDs (16 Butlin-aligned + 5 Foundationals extensions)', () => {
     const ids: readonly string[] = ALL_INDICATOR_IDS;
     expect(ids.length).toBe(21);
     expect(ALL_INDICATOR_IDS.slice(0, 16)).toEqual([
-      'GWT-1', 'GWT-2', 'GWT-3', 'GWT-4',
+      'GWT-1',
+      'GWT-2',
+      'GWT-3',
+      'GWT-4',
       'PP-1',
-      'HOT-2', 'HOT-3', 'HOT-4',
-      'AE-1', 'AE-2',
-      'RPT-1', 'RPT-2',
-      'IIT-1', 'IIT-2',
-      'AST-1', 'AST-2',
+      'HOT-2',
+      'HOT-3',
+      'HOT-4',
+      'AE-1',
+      'AE-2',
+      'RPT-1',
+      'RPT-2',
+      'IIT-1',
+      'IIT-2',
+      'AST-1',
+      'AST-2',
     ]);
     expect(ALL_INDICATOR_IDS.slice(16)).toEqual(['FND-1', 'FND-2', 'FND-3', 'FND-4', 'FND-5']);
   });

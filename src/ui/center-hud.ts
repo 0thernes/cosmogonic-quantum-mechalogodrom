@@ -62,10 +62,16 @@ ${PANEL_SEL} {
   max-width: none !important;
   transform: none !important;
   bottom: var(--cqm-hud-bottom, calc(var(--cqm-bottom-h, 108px) + 130px)) !important;
-  top: auto !important;
+  top: var(--cqm-hud-top, auto) !important;
   height: min(var(--cqm-hud-height, ${CENTER_HUD_DESKTOP_HEIGHT}), var(--cqm-hud-max-height, calc(100vh - 156px))) !important;
   max-height: var(--cqm-hud-max-height, calc(100vh - 156px)) !important;
   z-index: 71 !important;
+}
+/* Desktop / landscape grid: anchor panels from the TOP so fullscreen never clips above the viewport. */
+html[data-cqm-hud-anchor='top'] ${PANEL_SEL} {
+  top: var(--cqm-hud-top, 52px) !important;
+  bottom: auto !important;
+  height: var(--cqm-hud-max-height, calc(100vh - 156px)) !important;
 }
 /* TRANSPARENCY (◐): the open panel is SOLID by default. The see-through state is applied as an INLINE
    opacity !important on the active panel (see applyGhost) — inline !important beats ANY panel's own
@@ -306,6 +312,7 @@ body:has(#cqm-hud-nav) #cqm-dock {
   ${PANEL_SEL} {
     left: 8px !important;
     right: 8px !important;
+    top: auto !important;
     bottom: var(--cqm-hud-bottom, calc(var(--cqm-bottom-h, 108px) + 130px)) !important;
     height: var(--cqm-hud-height, ${CENTER_HUD_TOUCH_HEIGHT}) !important;
     border-radius: 14px 14px 0 0 !important;
@@ -406,10 +413,17 @@ function fitHud(): void {
   }
   syncBottomDockHeight();
   const fs = typeof document !== 'undefined' && !!document.fullscreenElement;
-  const topInset = fs ? 8 : 52;
+  const topInset = fs ? 10 : 52;
   const bottomPx = barsTop < vh ? Math.round(vh - barsTop + 10) : 130;
-  const maxH = Math.max(120, Math.min(barsTop - topInset - 8, vh - bottomPx - topInset - 4));
+  const maxH = Math.max(120, Math.min(barsTop - topInset - 14, vh - topInset - bottomPx - 8));
   root.style.setProperty('--cqm-hud-max-height', `${Math.round(maxH)}px`);
+  if (sheetMode) {
+    root.dataset.cqmHudAnchor = 'bottom';
+    root.style.removeProperty('--cqm-hud-top');
+  } else {
+    root.dataset.cqmHudAnchor = 'top';
+    root.style.setProperty('--cqm-hud-top', `${topInset}px`);
+  }
   if (barsTop < vh)
     root.style.setProperty('--cqm-hud-bottom', `${Math.round(vh - barsTop + 10)}px`);
   else root.style.removeProperty('--cqm-hud-bottom');

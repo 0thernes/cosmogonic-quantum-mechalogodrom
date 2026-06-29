@@ -27,7 +27,7 @@ const INVENTORY = ['◈', '❄', '⚛', '✶', '☍', '⬡'];
 const STYLE = `
 #cqm-hero{position:fixed;top:calc(38px + env(safe-area-inset-top,0px));left:var(--cqm-hud-left,calc(clamp(220px,21vw,300px) + 14px));
   right:var(--cqm-hud-right,calc(clamp(280px,27vw,420px) + 14px));
-  width:auto;max-width:none;max-height:min(22vh,150px);overflow:visible;
+  width:auto;max-width:none;max-height:min(28vh,180px);overflow:hidden;
   transform:translateY(-150%);z-index:24;
   transition:transform .55s cubic-bezier(.2,.9,.3,1);font-size:11px;line-height:1.4;font-family:var(--font-mono,ui-monospace,monospace);
   color:#e9e3ff;pointer-events:none}
@@ -66,21 +66,19 @@ const STYLE = `
    For 600-768px tablets, match the same clamp values so the HUD sits between the grid columns. */
 @media (min-width:600px) and (max-width:768px) and (orientation:landscape){
   #cqm-hero{left:calc(clamp(120px,20vw,190px) + 10px);right:calc(clamp(120px,22vw,210px) + 10px);
-    top:4px;max-height:none;overflow:visible}
+    top:4px;max-height:none;overflow:hidden}
 }
 /* V100: very narrow landscape (rotated phone / small tablet) — stack vertically, don't overlap */
 @media (max-height:520px) and (orientation:landscape){
-  #cqm-hero{left:6px;right:6px;top:3px;font-size:9px;max-height:none;overflow:visible}
+  #cqm-hero{left:6px;right:6px;top:3px;font-size:9px;max-height:none;overflow:hidden}
   .cqm-hero-box{padding:5px 7px;gap:4px}
   .cqm-hero-r{gap:4px}
 }
 .cqm-hero-box{pointer-events:auto;border:1px solid rgba(150,120,255,.4);border-radius:14px;
   background:linear-gradient(180deg,rgba(14,9,28,.95),rgba(8,6,18,.92));backdrop-filter:blur(12px);
   box-shadow:0 10px 40px rgba(0,0,0,.6),inset 0 0 30px rgba(80,40,160,.18);padding:5px 8px;
-  display:flex;flex-flow:row nowrap;align-items:center;gap:6px;max-height:none;overflow-x:auto;overflow-y:hidden;
-  scrollbar-width:thin;-webkit-overflow-scrolling:touch}
-.cqm-hero-box::-webkit-scrollbar{height:4px}
-.cqm-hero-box::-webkit-scrollbar-thumb{background:rgba(150,120,255,.45);border-radius:2px}
+  display:flex;flex-flow:column nowrap;align-items:stretch;gap:3px;max-height:inherit;overflow:hidden;
+  transform-origin:top center;will-change:transform}
 @media (max-width:599px){.cqm-hero-box{padding:5px 7px;border-radius:10px}}
 .cqm-hero-r{display:flex;align-items:center;gap:8px;flex-wrap:nowrap;flex:0 0 auto}
 .cqm-hero-av{display:flex;align-items:center;gap:8px;white-space:nowrap}
@@ -135,6 +133,24 @@ function syncHeroHudGutters(doc: Document): void {
       '--cqm-hud-right',
       `${Math.round(doc.defaultView?.innerWidth ?? 0) - r.left + 8}px`,
     );
+  }
+}
+
+/** Scale the hero band to fit its column — no horizontal scrollbar. */
+function fitHeroBox(box: HTMLElement): void {
+  box.style.transform = '';
+  const host = box.parentElement;
+  if (!host) return;
+  const budget = host.clientWidth - 12;
+  // Find the widest row — the box is column layout, so scrollWidth is the max row width.
+  let need = 0;
+  for (const child of box.children) {
+    if (child instanceof HTMLElement) {
+      need = Math.max(need, child.scrollWidth);
+    }
+  }
+  if (need > budget && need > 0) {
+    box.style.transform = `scale(${Math.max(0.45, budget / need)})`;
   }
 }
 
@@ -315,13 +331,17 @@ export class SuperheroHud {
 
     doc.body.appendChild(this.root);
 
-    const sync = (): void => syncHeroHudGutters(doc);
+    const sync = (): void => {
+      syncHeroHudGutters(doc);
+      fitHeroBox(box);
+    };
     sync();
     doc.defaultView?.addEventListener('resize', sync, { passive: true });
     const ui = doc.getElementById('ui');
     if (ui && typeof ResizeObserver !== 'undefined') {
       new ResizeObserver(sync).observe(ui);
     }
+    new ResizeObserver(() => fitHeroBox(box)).observe(box);
   }
 
   get isActive(): boolean {
@@ -332,6 +352,8 @@ export class SuperheroHud {
   activate(): void {
     this.active = true;
     this.root.classList.add('on');
+    const box = this.root.querySelector('.cqm-hero-box');
+    if (box instanceof HTMLElement) fitHeroBox(box);
   }
 
   /** Repaint from the latest hero view. Cheap; world calls it on the telemetry cadence. */

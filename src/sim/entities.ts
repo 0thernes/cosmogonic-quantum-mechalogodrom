@@ -34,8 +34,9 @@ import type { Rng } from '../math/rng';
  * STRONG rather than washing to white; a quint-prime per-morph hash fans the 250 morphs into
  * a ~2000+ variation palette without touching the seeded morph tables. The per-instance GPU
  * suites (tribe hue, quantum shimmer, payoff iridescence, vital glow) then layer dynamic variety on top.
- * V102: even darker base lightness for richer jewel tones, 5th hash prime for 2000+ colors,
- * higher emissive for intense sparkle, slight metallic sheen for depth. */
+ * V103: MUCH darker base lightness (max 0.10) for deep jewel tones that survive ACES tone mapping,
+ * 5th hash prime for 2000+ colors, reduced emissive intensity to prevent white blowout,
+ * colored (non-white) emissive additions, slight metallic sheen for depth. */
 function paintVibrant(mat: THREE.MeshStandardMaterial, m: PhylumMorphType, mi: number): void {
   const hsl = { h: 0, s: 0, l: 0 };
   // Quint-prime hash → a well-spread, deterministic per-morph value in [0,1).
@@ -56,15 +57,15 @@ function paintVibrant(mat: THREE.MeshStandardMaterial, m: PhylumMorphType, mi: n
     // wider gradient spin + quint-prime jitter fans the palette into ~2000+ distinct variations.
     (hsl.h + slot * 0.008 + j1 * 0.39 + j2 * 0.25 + j4 * 0.18 + j5 * 0.12 - 0.06 + 1) % 1,
     1.0, // S = 1.0 — MAXIMUM chroma, never wash out
-    Math.min(0.26, 0.1 + hsl.l * 0.08 + j3 * 0.14 + j4 * 0.05), // saturated jewel, not white
+    Math.min(0.1, 0.03 + hsl.l * 0.03 + j3 * 0.05 + j4 * 0.02), // VERY dark jewel — survives ACES
   );
   m.em.getHSL(hsl);
   mat.emissive.setHSL(
     (hsl.h + 0.14 + j1 * 0.33 + j3 * 0.21 + j4 * 0.12 + j5 * 0.09 + slot * 0.005) % 1,
     1.0, // S = 1.0 — max emissive saturation
-    Math.min(0.72, 0.38 + hsl.l * 0.32 + j2 * 0.14), // vivid emissive glow
+    Math.min(0.32, 0.12 + hsl.l * 0.1 + j2 * 0.06), // colored glow, not blown-out white
   );
-  mat.emissiveIntensity = Math.min(18.0, m.emI * 6.8 + 5.0);
+  mat.emissiveIntensity = Math.min(2.8, m.emI * 1.0 + 0.8); // capped low — ACES rolls >1 to white
   // Slight metallic sheen for depth and sparkle — catches light as entities move
   mat.metalness = Math.min(0.85, mat.metalness * 0.65 + j5 * 0.35);
   mat.roughness = Math.max(0.06, mat.roughness * 0.45 + j3 * 0.12);
@@ -567,7 +568,7 @@ export class EntityManager {
       // Belly pulse — post-split digestion visual (legacy line 779).
       if (u.belly > 0) {
         u.belly -= dt * 30;
-        e.material.emissiveIntensity = 1.5 + Math.sin(t * 8) * 0.5;
+        e.material.emissiveIntensity = Math.min(1.5 + Math.sin(t * 8) * 0.5, 3.0);
         e.scale.x = u.sc * (1 + Math.sin(t * 6) * 0.4);
         e.scale.y = u.sc * (1 + Math.cos(t * 5) * 0.3);
         e.scale.z = u.sc;

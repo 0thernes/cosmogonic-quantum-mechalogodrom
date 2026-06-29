@@ -91,7 +91,8 @@ const STYLE = `
 /* center-hud owns the shared panel slot; the .neural class lifts specificity (0,1,1,0 > 0,1,0,0)
    so the 4-tab / 27-visual observatory can temporarily expand even further when needed. Capped so it
    never runs off the viewport. */
-#cqm-sup-panel.neural{height:min(80vh,640px)!important;max-height:calc(100vh - 116px)!important}
+#cqm-sup-panel.neural{height:min(var(--cqm-hud-max-height,calc(100vh - 156px)),640px)!important;
+  max-height:var(--cqm-hud-max-height,calc(100vh - 156px))!important;min-height:0!important}
 #cqm-sup-panel.neural .cqm-sup-body{display:none}
 #cqm-sup-panel.neural .cqm-sup-neural-host{display:flex}
 #cqm-sup-panel.neural .cqm-sup-neu{background:rgba(52,20,82,.95);color:#f3ecff}

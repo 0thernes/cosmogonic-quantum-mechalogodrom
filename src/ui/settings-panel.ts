@@ -38,6 +38,7 @@ const GROUPS = [
     title: 'Controls',
     buttons: [
       { action: 'pause', label: '⏸ Pause' },
+      { action: 'time', label: '⏱ Speed' },
       { action: 'split', label: '⇄ Split' },
       { action: 'burst', label: '✦ Burst' },
       { action: 'mutate', label: '☢ Mutate' },

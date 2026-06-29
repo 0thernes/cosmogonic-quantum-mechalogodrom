@@ -628,6 +628,27 @@ a:focus-visible {
   outline-offset: 1px;
 }
 
+#algo-auto.on {
+  animation: algo-auto-pulse 1.2s ease-in-out infinite;
+  box-shadow:
+    0 0 0 1px hsl(var(--algo-hue) 88% 62% / 0.55),
+    inset 0 0 10px hsl(var(--algo-hue) 90% 58% / 0.35);
+}
+@keyframes algo-auto-pulse {
+  0%,
+  100% {
+    filter: brightness(1);
+  }
+  50% {
+    filter: brightness(1.35);
+  }
+}
+#algo-active.algo-auto-flash {
+  color: hsl(var(--algo-hue) 92% 72%);
+  text-shadow: 0 0 12px hsl(var(--algo-hue) 90% 64% / 0.85);
+  transition: color 0.15s ease;
+}
+
 /* The per-row progress bar (sorted-fraction / inversion estimate). A fixed-width thin
    track on the right; the integrator drives the fill by setting `--algo-prog` (0..1)
    or width on a child fill element. Both conventions are supported: a child
@@ -983,7 +1004,9 @@ html.cqm-shell-ready .algo-list:empty::after {
 #ui > #aP.audit-on {
   display: flex;
 }
-/* V95: clamp all floating dock panels so they never grow above the top of the screen in fullscreen. */
+/* V95/V103: clamp all floating dock panels so they never grow above the top of the screen in fullscreen.
+   The bottom is calc(var(--cqm-bottom-h) + 130px), so max-height must never exceed 100vh minus that offset
+   minus 8px top margin. This prevents the panel top from going above the viewport. */
 #cqm-cop-panel,
 #cqm-help-panel,
 #cqm-nhi-panel,
@@ -991,7 +1014,7 @@ html.cqm-shell-ready .algo-list:empty::after {
 #cqm-arch-panel,
 #cqm-sup-panel,
 #ui > #aP {
-  max-height: min(70vh, calc(100vh - 140px)) !important;
+  max-height: min(70vh, calc(100vh - var(--cqm-bottom-h, 108px) - 142px)) !important;
 }
 #aP > .sheet-handle {
   display: none;

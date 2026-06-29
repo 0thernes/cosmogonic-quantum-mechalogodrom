@@ -68,23 +68,7 @@ export function getDock(doc: Document = document): HTMLElement {
       dock.appendChild(a);
     }
   }
-  // V95: global utility actions in the dock bar — PAUSE, RESET, SPEED, VIEW, SPACE —
-  // so the side toolbar is no longer needed and front-end space is reclaimed.
-  const util = (label: string, action: string, title: string) => {
-    const b = doc.createElement('button');
-    b.type = 'button';
-    b.className = 'cqm-dock-toggle';
-    b.dataset.action = action;
-    b.textContent = label;
-    b.title = title;
-    b.setAttribute('aria-label', title);
-    return b;
-  };
-  dock.appendChild(util('⏸', 'pause', 'Pause / Resume simulation'));
-  dock.appendChild(util('↻', 'reset', 'Reset simulation'));
-  dock.appendChild(util('⏱', 'time', 'Cycle speed / time scale'));
-  dock.appendChild(util('👁', 'view', 'Cycle camera view'));
-  dock.appendChild(util('⬡', 'space', 'Dilate space / FOV'));
+  // V103: utility control buttons (PAUSE, RESET, SPEED, VIEW, SPACE) moved into SETTINGS panel.
   return dock;
 }
 

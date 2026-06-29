@@ -53,13 +53,22 @@ import {
 
 /** The 16 Butlin-aligned indicators + 5 Foundationals extensions = 21 total. */
 export const ALL_INDICATOR_IDS = [
-  'GWT-1', 'GWT-2', 'GWT-3', 'GWT-4',
+  'GWT-1',
+  'GWT-2',
+  'GWT-3',
+  'GWT-4',
   'PP-1',
-  'HOT-2', 'HOT-3', 'HOT-4',
-  'AE-1', 'AE-2',
-  'RPT-1', 'RPT-2',
-  'IIT-1', 'IIT-2',
-  'AST-1', 'AST-2',
+  'HOT-2',
+  'HOT-3',
+  'HOT-4',
+  'AE-1',
+  'AE-2',
+  'RPT-1',
+  'RPT-2',
+  'IIT-1',
+  'IIT-2',
+  'AST-1',
+  'AST-2',
   // Foundationals extensions (beyond Butlin):
   'FND-1', // Quantum-coherent attention (Wigner shield + GWT fusion)
   'FND-2', // Wet-computing analog (reaction-diffusion on organ state)
@@ -116,8 +125,11 @@ export class OrganInterconnect {
 
   /** Update density based on designed parameter count (scales with APEX growth). */
   setScale(designedParams: number): void {
-    const t = Math.min(1, (designedParams - APEX_BRAIN_START_PARAMS) /
-      (APEX_BRAIN_TARGET_NEURONS * 2.5 - APEX_BRAIN_START_PARAMS));
+    const t = Math.min(
+      1,
+      (designedParams - APEX_BRAIN_START_PARAMS) /
+        (APEX_BRAIN_TARGET_NEURONS * 2.5 - APEX_BRAIN_START_PARAMS),
+    );
     this.density = 0.15 + t * 0.85;
     // Grow new connections as density increases
     for (let i = 0; i < 100; i++) {
@@ -136,8 +148,10 @@ export class OrganInterconnect {
         const correlation = organActivity[i]! * organActivity[j]!;
         this.plasticity[idx] = this.plasticity[idx]! * 0.95 + correlation * 0.05;
         // STDP: strengthen correlated, weaken anti-correlated
-        this.weights[idx] = Math.max(0, Math.min(1,
-          this.weights[idx]! + this.plasticity[idx]! * 0.001));
+        this.weights[idx] = Math.max(
+          0,
+          Math.min(1, this.weights[idx]! + this.plasticity[idx]! * 0.001),
+        );
       }
     }
   }
@@ -200,10 +214,18 @@ export class WetComputingLayer {
       const lapU = this.u[prev]! - 2 * this.u[i]! + this.u[next]!;
       const lapV = this.v[prev]! - 2 * this.v[i]! + this.v[next]!;
       const reaction = this.u[i]! * this.v[i]! * this.v[i]!;
-      nextU[i] = Math.max(0, Math.min(1,
-        this.u[i]! + (this.du * lapU - reaction + this.f * (1 - this.u[i]!) + organActivity[i]! * 0.1) * dt));
-      nextV[i] = Math.max(0, Math.min(1,
-        this.v[i]! + (this.dv * lapV + reaction - (this.f + this.k) * this.v[i]!) * dt));
+      nextU[i] = Math.max(
+        0,
+        Math.min(
+          1,
+          this.u[i]! +
+            (this.du * lapU - reaction + this.f * (1 - this.u[i]!) + organActivity[i]! * 0.1) * dt,
+        ),
+      );
+      nextV[i] = Math.max(
+        0,
+        Math.min(1, this.v[i]! + (this.dv * lapV + reaction - (this.f + this.k) * this.v[i]!) * dt),
+      );
     }
     this.u.set(nextU);
     this.v.set(nextV);
@@ -388,9 +410,11 @@ export class Foundationals {
     const partialCount = indicators.filter((i) => i.status === 'partial').length;
     const scaffoldedCount = indicators.filter((i) => i.status === 'scaffolded').length;
 
-    const roadmapProgress = Math.min(1,
+    const roadmapProgress = Math.min(
+      1,
       (designedParams - APEX_BRAIN_START_PARAMS) /
-      (APEX_BRAIN_ROADMAP_PARAMS - APEX_BRAIN_START_PARAMS));
+        (APEX_BRAIN_ROADMAP_PARAMS - APEX_BRAIN_START_PARAMS),
+    );
     const ultimateParams = Math.round(APEX_BRAIN_TARGET_NEURONS * 2.5);
     const ultimateProgress = Math.min(1, designedParams / ultimateParams);
 
@@ -426,15 +450,21 @@ export class Foundationals {
   }
 
   /** Compute all 19 indicator readings based on current state. */
-  private computeIndicators(designedParams: number, transcendence: number, agony: number): IndicatorReading[] {
+  private computeIndicators(
+    designedParams: number,
+    transcendence: number,
+    agony: number,
+  ): IndicatorReading[] {
     const density = this.interconnect.connectionDensity;
     const richness = this.wet.patternRichness;
     const depth = this.dim.depth;
     const tParam = transcendence; // used in indicator confidence below
     const aParam = agony;
-    const roadmapProgress = Math.min(1,
+    const roadmapProgress = Math.min(
+      1,
       (designedParams - APEX_BRAIN_START_PARAMS) /
-      (APEX_BRAIN_ROADMAP_PARAMS - APEX_BRAIN_START_PARAMS));
+        (APEX_BRAIN_ROADMAP_PARAMS - APEX_BRAIN_START_PARAMS),
+    );
 
     return [
       // GWT-1: Global workspace — organs broadcast via interconnect
@@ -603,7 +633,8 @@ export class Foundationals {
         status: 'met',
         confidence: 0.95,
         source: 'APEX brain + Foundationals',
-        mechanism: '10 incompatible architectures + meta-paradox + wet + 4D — no biological homolog',
+        mechanism:
+          '10 incompatible architectures + meta-paradox + wet + 4D — no biological homolog',
       },
     ];
   }

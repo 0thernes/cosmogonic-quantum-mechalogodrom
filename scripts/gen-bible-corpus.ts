@@ -77,6 +77,24 @@ const EXTRA: Entry[] = [
     blurb: 'Multiplayer, accounts, outreach (aspirational).',
     tier: 'Research',
   },
+  {
+    title: 'FRONTEND-ACTION-PLAN — UI/UX backlog',
+    href: '/docs/FRONTEND-ACTION-PLAN.md',
+    blurb: 'Living plan for HUD, brain viz, pantheon, BIBLE depth.',
+    tier: 'Research',
+  },
+  {
+    title: 'PEER-REVIEW META-ANALYSIS — falsifiable defense',
+    href: '/docs/PEER-REVIEW-META-ANALYSIS.md',
+    blurb: '500-point academic framework vs A-Life field.',
+    tier: 'Research',
+  },
+  {
+    title: 'BRAIN-PARAMETER-SCALE-PLAN',
+    href: '/docs/BRAIN-PARAMETER-SCALE-PLAN.md',
+    blurb: '25k glyph · 100k→5M apex · Mechalogodrom roadmap.',
+    tier: 'Architecture',
+  },
 ];
 
 function render(entries: Entry[]): string {

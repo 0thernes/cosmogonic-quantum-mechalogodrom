@@ -176,16 +176,66 @@ export class MechalogodromBrain {
     const roadmapProgress = clamp01(this.liveParams / this.designedParams);
 
     const indicators: MechalogodromIndicator[] = [
-      { id: 'FUSE-1', status: 'met', confidence: 0.85, mechanism: '10 variant subnets fuse through central cortex' },
-      { id: 'FUSE-2', status: 'partial', confidence: 0.5 + activity * 0.3, mechanism: 'Dominant variant selection = workspace competition' },
-      { id: 'FUSE-3', status: 'met', confidence: 0.8, mechanism: 'Fusion cortex broadcasts to all variants' },
-      { id: 'FUSE-4', status: 'partial', confidence: consciousnessProxy, mechanism: 'Consciousness proxy from activity + apex coupling' },
-      { id: 'FUSE-5', status: 'scaffolded', confidence: 0.3, mechanism: 'Latent persistence = recurrent processing scaffold' },
-      { id: 'FUSE-6', status: 'met', confidence: 0.75, mechanism: 'Apex vitality/transcendence feed fusion mind' },
-      { id: 'FUSE-7', status: 'partial', confidence: 0.4 + strangeness * 0.3, mechanism: 'Dimensional strangeness as alien-novelty indicator' },
-      { id: 'FUSE-8', status: 'scaffolded', confidence: 0.2, mechanism: 'STDP not yet wired on variant weights' },
-      { id: 'FUSE-9', status: 'met', confidence: 0.7, mechanism: 'Deterministic seeded mulberry32 — replayable psyche' },
-      { id: 'FUSE-10', status: 'met', confidence: 0.9, mechanism: '5M designed params = same roadmap as APEX' },
+      {
+        id: 'FUSE-1',
+        status: 'met',
+        confidence: 0.85,
+        mechanism: '10 variant subnets fuse through central cortex',
+      },
+      {
+        id: 'FUSE-2',
+        status: 'partial',
+        confidence: 0.5 + activity * 0.3,
+        mechanism: 'Dominant variant selection = workspace competition',
+      },
+      {
+        id: 'FUSE-3',
+        status: 'met',
+        confidence: 0.8,
+        mechanism: 'Fusion cortex broadcasts to all variants',
+      },
+      {
+        id: 'FUSE-4',
+        status: 'partial',
+        confidence: consciousnessProxy,
+        mechanism: 'Consciousness proxy from activity + apex coupling',
+      },
+      {
+        id: 'FUSE-5',
+        status: 'scaffolded',
+        confidence: 0.3,
+        mechanism: 'Latent persistence = recurrent processing scaffold',
+      },
+      {
+        id: 'FUSE-6',
+        status: 'met',
+        confidence: 0.75,
+        mechanism: 'Apex vitality/transcendence feed fusion mind',
+      },
+      {
+        id: 'FUSE-7',
+        status: 'partial',
+        confidence: 0.4 + strangeness * 0.3,
+        mechanism: 'Dimensional strangeness as alien-novelty indicator',
+      },
+      {
+        id: 'FUSE-8',
+        status: 'scaffolded',
+        confidence: 0.2,
+        mechanism: 'STDP not yet wired on variant weights',
+      },
+      {
+        id: 'FUSE-9',
+        status: 'met',
+        confidence: 0.7,
+        mechanism: 'Deterministic seeded mulberry32 — replayable psyche',
+      },
+      {
+        id: 'FUSE-10',
+        status: 'met',
+        confidence: 0.9,
+        mechanism: '5M designed params = same roadmap as APEX',
+      },
     ];
 
     return {

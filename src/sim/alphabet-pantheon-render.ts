@@ -95,6 +95,9 @@ export class AlphabetPantheonRender {
   private readonly apexCore: THREE.Mesh;
   private readonly apexHalo: THREE.Mesh;
   private readonly apexSpikes: THREE.Mesh;
+  /** V104: additional alien geometry — warped inner core + dimensional shell. */
+  private readonly apexInner: THREE.Mesh;
+  private readonly apexShell: THREE.Mesh;
   private chaos = 0;
   /** Per-creature brain activity (0..1) from GlyphBrainBatch — drives visual pulse intensity. */
   private brainActivity: Float32Array | null = null;
@@ -102,12 +105,16 @@ export class AlphabetPantheonRender {
   private brainNovelty: Float32Array | null = null;
   /** Per-creature valence (−1..1) — drives hue rotation direction. */
   private brainValence: Float32Array | null = null;
+  /** Motor outputs from GlyphBrainBatch (visual-only locomotion). */
+  private readonly motorX = new Float32Array(100);
+  private readonly motorY = new Float32Array(100);
+  private readonly motorZ = new Float32Array(100);
 
   constructor(scene: THREE.Scene) {
     this.mat = new THREE.MeshBasicMaterial({
       color: 0xffffff, // white base so instanceColor shows the true hue
       transparent: true,
-      opacity: 0.96,
+      opacity: 0.78,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
     });
@@ -145,8 +152,8 @@ export class AlphabetPantheonRender {
         const phase = ((a.seed >>> 7) % 6283) / 1000;
         const spin = 0.08 + b.chaos * 0.5;
         const pulse = 0.1 + b.curiosity * 0.25;
-        const sat = Math.min(1, 0.98 + 0.02 * b.quantum);
-        const light = 0.32 + 0.22 * b.generative;
+        const sat = Math.min(1, 0.92 + 0.08 * b.quantum);
+        const light = 0.24 + 0.14 * b.generative;
         list.push({
           ax,
           ay,
@@ -204,8 +211,26 @@ export class AlphabetPantheonRender {
     this.apexCore = new THREE.Mesh(new THREE.TorusKnotGeometry(1.4, 0.42, 128, 16, 2, 5), apexMat);
     this.apexHalo = new THREE.Mesh(new THREE.IcosahedronGeometry(2.8, 2), apexHaloMat);
     this.apexSpikes = new THREE.Mesh(new THREE.OctahedronGeometry(1.9, 1), spikeMat);
+    // V104: additional alien geometry — warped inner core + dimensional shell
+    const innerMat = new THREE.MeshBasicMaterial({
+      color: 0xff00aa,
+      transparent: true,
+      opacity: 0.82,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+    const shellMat = new THREE.MeshBasicMaterial({
+      color: 0x00aaff,
+      transparent: true,
+      opacity: 0.38,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      wireframe: true,
+    });
+    this.apexInner = new THREE.Mesh(new THREE.DodecahedronGeometry(0.9, 0), innerMat);
+    this.apexShell = new THREE.Mesh(new THREE.TetrahedronGeometry(3.8, 0), shellMat);
     this.apexGroup.position.set(0, DOME_R * 0.88, 0);
-    this.apexGroup.add(this.apexCore, this.apexHalo, this.apexSpikes);
+    this.apexGroup.add(this.apexShell, this.apexHalo, this.apexSpikes, this.apexCore, this.apexInner);
     this.group.add(this.apexGroup);
 
     scene.add(this.group);
@@ -227,6 +252,20 @@ export class AlphabetPantheonRender {
     this.brainValence = valence;
   }
 
+  /**
+   * Feed glyph-brain motor outputs for visual-only travel/orbit (no world physics).
+   * Each snapshot's motor vec4 drives horizontal drift + vertical bob amplitude.
+   */
+  setBrainMotors(motors: ReadonlyArray<{ motor: Float32Array }>): void {
+    const n = Math.min(motors.length, 100);
+    for (let i = 0; i < n; i++) {
+      const m = motors[i]!.motor;
+      this.motorX[i] = m[0] ?? 0;
+      this.motorY[i] = m[1] ?? 0;
+      this.motorZ[i] = m[2] ?? 0;
+    }
+  }
+
   /** Bob / spin / pulse every body on its own cadence. Pure trig, allocation-free, no rng. */
   update(t: number): void {
     const quick = 1 + 0.6 * this.chaos; // chaos speeds the whole pantheon
@@ -240,9 +279,20 @@ export class AlphabetPantheonRender {
         const ba = this.brainActivity?.[b.gIdx] ?? 0;
         const bn = this.brainNovelty?.[b.gIdx] ?? 0;
         const bv = this.brainValence?.[b.gIdx] ?? 0;
-        const brainPulse = 1 + ba * 0.4; // activity scales the pulse depth
-        P.set(b.ax, b.ay + Math.sin(ph) * 7, b.az);
-        E.set(Math.sin(ph * 0.6) * 0.5, t * b.spin * quick + b.phase, Math.cos(ph * 0.5) * 0.4);
+        const brainPulse = 1 + ba * 0.55;
+        const mx = this.motorX[b.gIdx] ?? 0;
+        const my = this.motorY[b.gIdx] ?? 0;
+        const mz = this.motorZ[b.gIdx] ?? 0;
+        const orbitR = 60 + ba * 180 + this.chaos * 120 + b.baseScale * 1.2;
+        const driftX = Math.sin(ph * 0.73 + mx * 2.4) * orbitR + mx * 130;
+        const driftZ = Math.cos(ph * 0.61 + mz * 2.1) * orbitR + mz * 130;
+        const driftY = Math.sin(ph * 1.05 + my * 1.9) * (32 + ba * 55) + my * 70;
+        P.set(b.ax + driftX, b.ay + driftY, b.az + driftZ);
+        E.set(
+          Math.sin(ph * 0.6 + mx) * 0.85,
+          t * b.spin * quick * (1 + ba * 0.5) + b.phase + mz * 0.4,
+          Math.cos(ph * 0.5 + mz) * 0.75,
+        );
         Q.setFromEuler(E);
         S.setScalar(b.baseScale * (1 + b.pulse * Math.sin(ph * 1.7) * brainPulse + ba * 0.08));
         M.compose(P, Q, S);
@@ -252,19 +302,34 @@ export class AlphabetPantheonRender {
         const hueShift = Math.sin(ph * 0.31) * 0.06 + t * 0.002 * b.spin + bn * 0.04 * bv;
         const hue = (b.hue + hueShift) % 1;
         const litBoost = ba * 0.12 + bn * 0.06;
-        const lit = b.light + 0.1 * Math.sin(ph * 2.3) + litBoost;
-        C.setHSL(hue < 0 ? hue + 1 : hue, Math.min(1, b.sat + bn * 0.1), clamp(lit, 0.35, 0.72));
+        const lit = b.light + 0.08 * Math.sin(ph * 2.3) + litBoost;
+        C.setHSL(hue < 0 ? hue + 1 : hue, Math.min(1, b.sat + bn * 0.12), clamp(lit, 0.22, 0.48));
         mesh.setColorAt(s, C);
       }
       mesh.instanceMatrix.needsUpdate = true;
       if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
     }
-    // APEX ABOMINATION #101 — dimensional warp pulse (pure trig, no rng).
-    const w = 1 + 0.9 * this.chaos;
+    // APEX ABOMINATION #101 — wild orbit + dimensional warp pulse (pure trig, no rng).
+    const w = 1 + 1.2 * this.chaos;
     const ph = t * 0.42 * w;
+    const apexR = DOME_R * (0.28 + 0.14 * Math.sin(t * 0.19));
+    this.apexGroup.position.set(
+      Math.sin(t * 0.31 + ph * 0.2) * apexR,
+      DOME_R * 0.52 + Math.sin(t * 0.17 + ph * 0.15) * 55,
+      Math.cos(t * 0.27 + ph * 0.18) * apexR,
+    );
     this.apexCore.rotation.set(ph * 1.3, ph * 0.9, ph * 1.7);
     this.apexHalo.rotation.set(-ph * 0.6, ph * 1.1, ph * 0.4);
     this.apexSpikes.rotation.set(ph * 2.1, -ph * 1.4, ph * 0.8);
+    // V104: alien inner core + dimensional shell animation
+    this.apexInner.rotation.set(ph * 2.8, -ph * 1.9, ph * 3.2);
+    this.apexInner.scale.setScalar(10 * (1 + 0.3 * Math.sin(ph * 4.5)));
+    this.apexShell.rotation.set(-ph * 0.4, ph * 0.7, -ph * 0.3);
+    this.apexShell.scale.setScalar(20 * (1 + 0.15 * Math.cos(ph * 2.2)));
+    C.setHSL((0.88 + Math.sin(ph * 1.5) * 0.12) % 1, 1, 0.5);
+    (this.apexInner.material as THREE.MeshBasicMaterial).color.copy(C);
+    C.setHSL((0.58 + Math.cos(ph * 0.8) * 0.15) % 1, 0.9, 0.45);
+    (this.apexShell.material as THREE.MeshBasicMaterial).color.copy(C);
     const pulse = 1 + 0.35 * Math.sin(ph * 3.7) + 0.15 * Math.sin(ph * 11.3);
     this.apexCore.scale.setScalar(22 * pulse);
     this.apexHalo.scale.setScalar(14 * (1 + 0.2 * Math.sin(ph * 2.9)));
@@ -299,9 +364,13 @@ export class AlphabetPantheonRender {
     this.apexCore.geometry.dispose();
     this.apexHalo.geometry.dispose();
     this.apexSpikes.geometry.dispose();
+    this.apexInner.geometry.dispose();
+    this.apexShell.geometry.dispose();
     (this.apexCore.material as THREE.Material).dispose();
     (this.apexHalo.material as THREE.Material).dispose();
     (this.apexSpikes.material as THREE.Material).dispose();
+    (this.apexInner.material as THREE.Material).dispose();
+    (this.apexShell.material as THREE.Material).dispose();
     this.group.removeFromParent();
   }
 }

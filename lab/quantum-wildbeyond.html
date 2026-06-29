@@ -1537,6 +1537,25 @@
       // ═══════════════════════════════════════════════════════════════════════
 
       const TILE_RES = 300; // backing px per tile (12 live WEBGL canvases; CSS scales to cell)
+      /** Compact tiles (mobile / coarse pointer) need a pulled-back camera + smaller world scale. */
+      function tileIsCompact() {
+        return (
+          window.innerWidth < 768 ||
+          window.innerHeight < 520 ||
+          window.matchMedia('(pointer: coarse)').matches
+        );
+      }
+      function attractorCamZ(S) {
+        return S * (tileIsCompact() ? 2.55 : 0.78);
+      }
+      function attractorDrawScale(k) {
+        const base = tileIsCompact() ? 0.4 : 0.78;
+        return base + k * 0.08;
+      }
+      function attractorVertexScale(S, desktopDenom) {
+        const denom = tileIsCompact() ? desktopDenom * 2.55 : desktopDenom;
+        return S / denom;
+      }
       const VOID = [4, 7, 17];
       const activeTiles = []; // { instance, spec } — ONLY the visible board's sketches
       let activeBoardPage = 0; // 0 = no board built (page 1 showing)
@@ -1685,7 +1704,7 @@
           p.pixelDensity(1);
           for (let i = 0; i < PTS; i++) step(); // pre-fill the ribbon
           p.colorMode(p.HSB, 360, 100, 100, 100);
-          p.camera(0, 0, S * 0.78, 0, 0, 0, 0, 1, 0);
+          p.camera(0, 0, attractorCamZ(S), 0, 0, 0, 0, 1, 0);
         };
         p.draw = () => {
           const k = rx.tick();
@@ -1694,8 +1713,8 @@
           p.background(VOID[0], VOID[1], VOID[2]);
           p.rotateX(0.5 + Math.sin(rx.orbit * 0.6) * 0.2);
           p.rotateY(rx.orbit);
-          p.scale(0.78 + k * 0.1);
-          const sc = S / 110;
+          p.scale(attractorDrawScale(k));
+          const sc = attractorVertexScale(S, 110);
           const al = p.hot ? 86 : 64;
           p.noFill();
           p.strokeWeight(1.3 + k);
@@ -1743,7 +1762,7 @@
           p.pixelDensity(1);
           for (let i = 0; i < PTS; i++) step();
           p.colorMode(p.HSB, 360, 100, 100, 100);
-          p.camera(0, 0, S * 0.78, 0, 0, 0, 0, 1, 0);
+          p.camera(0, 0, attractorCamZ(S), 0, 0, 0, 0, 1, 0);
         };
         p.draw = () => {
           const k = rx.tick();
@@ -1752,8 +1771,8 @@
           p.background(VOID[0], VOID[1], VOID[2]);
           p.rotateX(0.55 + Math.sin(rx.orbit * 0.5) * 0.18);
           p.rotateY(rx.orbit);
-          p.scale(0.78 + k * 0.1);
-          const sc = S / 58;
+          p.scale(attractorDrawScale(k));
+          const sc = attractorVertexScale(S, 58);
           const al = p.hot ? 86 : 64;
           p.noFill();
           p.strokeWeight(1.3 + k);

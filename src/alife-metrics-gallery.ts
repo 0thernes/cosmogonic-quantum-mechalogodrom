@@ -196,9 +196,9 @@ const STYLE = `
 .alife-tab.active{border-color:rgba(0,238,255,.75);background:rgba(0,80,120,.35);color:#fff}
 .alife-hero{position:relative;border:1px solid rgba(120,160,255,.28);border-radius:12px;
   background:rgba(4,8,18,.92);width:100%;height:min(70vh,1200px);min-height:min(52vh,420px);overflow:hidden;touch-action:none;margin-bottom:14px}
-.alife-stage{position:absolute;inset:0;display:grid;place-items:center;cursor:grab}
+.alife-stage{position:absolute;inset:0;cursor:grab;overflow:hidden}
 .alife-stage.dragging{cursor:grabbing}
-.alife-stage img{max-width:none;max-height:none;user-select:none;-webkit-user-drag:none;transform-origin:0 0;object-fit:contain;width:100%;height:100%}
+.alife-stage img{max-width:none;max-height:none;width:auto;height:auto;display:block;user-select:none;-webkit-user-drag:none;transform-origin:0 0}
 .alife-stage img.error{display:none}
 .alife-loaderr{position:absolute;inset:0;display:grid;place-items:center;color:#7f93b8;font:600 14px var(--font-mono,monospace);text-align:center;padding:2rem;pointer-events:none}
 .alife-toolbar{position:absolute;top:8px;right:8px;display:flex;gap:6px;z-index:2}
@@ -257,9 +257,16 @@ function clampScale(s: number): number {
 function scheduleZoomFit(view: ZoomView): void {
   const run = (): void => {
     const vp = view.stage.getBoundingClientRect();
-    if (vp.width > 4 && vp.height > 4) view.fit();
+    if (vp.width > 4 && vp.height > 4) {
+      view.fit();
+      view.img.style.opacity = '1';
+    }
   };
+  view.img.style.opacity = '0';
   requestAnimationFrame(() => requestAnimationFrame(run));
+  setTimeout(run, 50);
+  setTimeout(run, 250);
+  setTimeout(run, 600);
 }
 
 /** Wire pan/zoom on a stage; returns controls for toolbar buttons. */
@@ -296,6 +303,8 @@ function mountZoomView(stage: HTMLElement, onTap?: () => void): ZoomView {
       const iw = img.naturalWidth || img.width || 800;
       const ih = img.naturalHeight || img.height || 600;
       if (!vp.width || !iw) return;
+      img.style.width = `${iw}px`;
+      img.style.height = `${ih}px`;
       view.scale = clampScale(Math.min(vp.width / iw, vp.height / ih) * 0.96);
       view.tx = (vp.width - iw * view.scale) / 2;
       view.ty = (vp.height - ih * view.scale) / 2;
