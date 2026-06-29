@@ -1639,13 +1639,16 @@ export class SuperMind {
 
     let best: SuperPlan = 'REST';
     let bestScore = -Infinity;
+    let bestIdx = 0;
     let runnerUp = -Infinity;
-    for (const k of SUPER_PLANS) {
+    for (let ki = 0; ki < SUPER_PLANS.length; ki++) {
+      const k = SUPER_PLANS[ki]!;
       const d = drives[k];
       if (d > bestScore) {
         runnerUp = bestScore;
         bestScore = d;
         best = k;
+        bestIdx = ki;
       } else if (d > runnerUp) {
         runnerUp = d;
       }
@@ -1655,8 +1658,7 @@ export class SuperMind {
     // trace — temporal credit, so reward also reaches plans that recently set it up. Only when enabled;
     // otherwise planBias stays zero (no behavioural drift). Deterministic (no rng), bounded, O(plans).
     if (this.learnEnabled) {
-      const bi = SUPER_PLANS.indexOf(best);
-      for (let i = 0; i < SUPER_PLANS.length; i++) this.planOneHot[i] = i === bi ? 1 : 0;
+      for (let i = 0; i < SUPER_PLANS.length; i++) this.planOneHot[i] = i === bestIdx ? 1 : 0;
       this.planLearner.step(this.planBias, this.planOneHot, reward - 0.5, {
         rate: this.learnRate,
         decay: PLAN_LEARN_DECAY,
@@ -1675,16 +1677,16 @@ export class SuperMind {
       GWT_WORKSPACE_CAPACITY,
     );
     // V1.3 AE-2 EMBODIMENT — learn + read how contingent the senses are on THIS chosen action (body-model).
-    this.lastEmbodimentContingency = this.embodiment.step(SUPER_PLANS.indexOf(best), s);
+    this.lastEmbodimentContingency = this.embodiment.step(bestIdx, s);
     // V1.1: fold the realised plan transition into the predictive map so next beat's look-ahead is informed.
-    this.successor.observe(SUPER_PLANS.indexOf(best));
+    this.successor.observe(bestIdx);
     // V95: credit LAST beat's action → THIS beat's latent cell and refresh the empowerment estimate the next
     // beat's curiosity + plan vote will read. Drives no rng ⇒ the beat stream stays bit-reproducible.
     // #9/#37 — collective incoherence ⇒ faster channel forgetting (shared-processing via the surprise input).
     const effSurprise = clamp01(surprise + INCOH_FORGET_GAIN * (1 - this.lastResOrder));
-    this.empowerment.update(this.latent, SUPER_PLANS.indexOf(best), effSurprise);
+    this.empowerment.update(this.latent, bestIdx, effSurprise);
     // V97: bind the committed (context ⊙ plan) into the holographic trace so next time a like context recalls it.
-    this.holographic.observe(SUPER_PLANS.indexOf(best), s);
+    this.holographic.observe(bestIdx, s);
 
     // ── V89 · GWT IGNITION ── the winning plan-coalition is "broadcast" when it crosses the access
     // threshold AND dominates the runner-up (a near-all-or-none event). Persisted so it gates the NEXT
