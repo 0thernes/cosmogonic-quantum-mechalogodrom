@@ -54,17 +54,17 @@ function paintVibrant(mat: THREE.MeshStandardMaterial, m: PhylumMorphType, mi: n
   m.col.getHSL(hsl);
   mat.color.setHSL(
     // wider gradient spin + quint-prime jitter fans the palette into ~2000+ distinct variations.
-    (hsl.h + slot * 0.005 + j1 * 0.31 + j2 * 0.19 + j4 * 0.13 + j5 * 0.09 - 0.12 + 1) % 1,
+    (hsl.h + slot * 0.008 + j1 * 0.39 + j2 * 0.25 + j4 * 0.18 + j5 * 0.12 - 0.06 + 1) % 1,
     1.0, // S = 1.0 — MAXIMUM chroma, never wash out
-    Math.min(0.14, 0.04 + hsl.l * 0.04 + j3 * 0.08), // L 0.04..0.14 — deep jewel tones
+    Math.min(0.26, 0.1 + hsl.l * 0.08 + j3 * 0.14 + j4 * 0.05), // saturated jewel, not white
   );
   m.em.getHSL(hsl);
   mat.emissive.setHSL(
-    (hsl.h + 0.08 + j1 * 0.24 + j3 * 0.14 + j4 * 0.08 + j5 * 0.06 + slot * 0.003) % 1,
+    (hsl.h + 0.14 + j1 * 0.33 + j3 * 0.21 + j4 * 0.12 + j5 * 0.09 + slot * 0.005) % 1,
     1.0, // S = 1.0 — max emissive saturation
-    Math.min(0.9, 0.42 + hsl.l * 0.46 + j2 * 0.14),
+    Math.min(0.72, 0.38 + hsl.l * 0.32 + j2 * 0.14), // vivid emissive glow
   );
-  mat.emissiveIntensity = Math.min(18.0, m.emI * 7.2 + 4.8);
+  mat.emissiveIntensity = Math.min(18.0, m.emI * 6.8 + 5.0);
   // Slight metallic sheen for depth and sparkle — catches light as entities move
   mat.metalness = Math.min(0.85, mat.metalness * 0.65 + j5 * 0.35);
   mat.roughness = Math.max(0.06, mat.roughness * 0.45 + j3 * 0.12);

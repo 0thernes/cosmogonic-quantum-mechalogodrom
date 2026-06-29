@@ -137,8 +137,8 @@ export class AlphabetPantheonRender {
         const phase = ((a.seed >>> 7) % 6283) / 1000;
         const spin = 0.08 + b.chaos * 0.5;
         const pulse = 0.1 + b.curiosity * 0.25;
-        const sat = Math.min(1, 0.92 + 0.08 * b.quantum);
-        const light = 0.42 + 0.24 * b.generative;
+        const sat = Math.min(1, 0.98 + 0.02 * b.quantum);
+        const light = 0.32 + 0.22 * b.generative;
         list.push({ ax, ay, az, baseScale, freq, phase, spin, pulse, hue: b.hue, sat, light });
 
         // Colour from the bias — saturated, luminous read.

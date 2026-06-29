@@ -66,20 +66,23 @@ const STYLE = `
    For 600-768px tablets, match the same clamp values so the HUD sits between the grid columns. */
 @media (min-width:600px) and (max-width:768px) and (orientation:landscape){
   #cqm-hero{left:calc(clamp(120px,20vw,190px) + 10px);right:calc(clamp(120px,22vw,210px) + 10px);
-    top:4px;max-height:min(22vh,130px);overflow-y:auto;overflow-x:hidden}
+    top:4px;max-height:none;overflow:visible}
 }
 /* V100: very narrow landscape (rotated phone / small tablet) — stack vertically, don't overlap */
 @media (max-height:520px) and (orientation:landscape){
-  #cqm-hero{left:6px;right:6px;top:3px;font-size:9px;max-height:48vh;overflow-y:auto}
+  #cqm-hero{left:6px;right:6px;top:3px;font-size:9px;max-height:none;overflow:visible}
   .cqm-hero-box{padding:5px 7px;gap:4px}
   .cqm-hero-r{gap:4px}
 }
 .cqm-hero-box{pointer-events:auto;border:1px solid rgba(150,120,255,.4);border-radius:14px;
   background:linear-gradient(180deg,rgba(14,9,28,.95),rgba(8,6,18,.92));backdrop-filter:blur(12px);
-  box-shadow:0 10px 40px rgba(0,0,0,.6),inset 0 0 30px rgba(80,40,160,.18);padding:7px 10px;
-  display:flex;flex-direction:column;gap:5px;max-height:min(22vh,150px);overflow-y:auto;overflow-x:hidden}
-@media (max-width:599px){.cqm-hero-box{padding:7px 8px;border-radius:10px}}
-.cqm-hero-r{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  box-shadow:0 10px 40px rgba(0,0,0,.6),inset 0 0 30px rgba(80,40,160,.18);padding:5px 8px;
+  display:flex;flex-flow:row nowrap;align-items:center;gap:6px;max-height:none;overflow-x:auto;overflow-y:hidden;
+  scrollbar-width:thin;-webkit-overflow-scrolling:touch}
+.cqm-hero-box::-webkit-scrollbar{height:4px}
+.cqm-hero-box::-webkit-scrollbar-thumb{background:rgba(150,120,255,.45);border-radius:2px}
+@media (max-width:599px){.cqm-hero-box{padding:5px 7px;border-radius:10px}}
+.cqm-hero-r{display:flex;align-items:center;gap:8px;flex-wrap:nowrap;flex:0 0 auto}
 .cqm-hero-av{display:flex;align-items:center;gap:8px;white-space:nowrap}
 .cqm-hero-glyph{font-size:20px;color:#c79bff;text-shadow:0 0 12px rgba(170,110,255,.8);animation:cqm-hero-pulse 2.4s ease-in-out infinite}
 @keyframes cqm-hero-pulse{0%,100%{text-shadow:0 0 10px rgba(170,110,255,.55)}50%{text-shadow:0 0 22px rgba(200,150,255,.95)}}

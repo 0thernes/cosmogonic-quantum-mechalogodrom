@@ -79,11 +79,19 @@ function makeZoomable(pre: HTMLElement, svg: SVGSVGElement): void {
   };
   const fit = (): void => {
     const vp = viewport.getBoundingClientRect();
-    if (!vp.width || !vp.height) return;
+    if (!vp.width || !vp.height) {
+      requestAnimationFrame(fit);
+      return;
+    }
     scale = clamp(Math.min(vp.width / w, vp.height / h) * 0.94);
     tx = (vp.width - w * scale) / 2;
     ty = (vp.height - h * scale) / 2;
     apply();
+  };
+  const fitSoon = (): void => {
+    fit();
+    setTimeout(fit, 60);
+    setTimeout(fit, 250);
   };
   const zoomAt = (px: number, py: number, factor: number): void => {
     const ns = clamp(scale * factor);
@@ -155,7 +163,7 @@ function makeZoomable(pre: HTMLElement, svg: SVGSVGElement): void {
   ctrls.append(
     mkBtn('+', 'Zoom in', () => center(1.25)),
     mkBtn('−', 'Zoom out', () => center(1 / 1.25)),
-    mkBtn('⟳', 'Reset / fit', fit),
+    mkBtn('⟳', 'Reset / fit', fitSoon),
     mkBtn('⛶', 'Fullscreen', () => {
       if (document.fullscreenElement === viewport) {
         void document.exitFullscreen();
@@ -176,6 +184,6 @@ function makeZoomable(pre: HTMLElement, svg: SVGSVGElement): void {
 
   viewport.append(stage, ctrls, hint);
   pre.replaceWith(viewport);
-  requestAnimationFrame(fit);
-  document.addEventListener('fullscreenchange', () => requestAnimationFrame(fit));
+  fitSoon();
+  document.addEventListener('fullscreenchange', () => fitSoon());
 }

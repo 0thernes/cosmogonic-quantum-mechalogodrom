@@ -63,8 +63,8 @@ ${PANEL_SEL} {
   transform: none !important;
   bottom: var(--cqm-hud-bottom, calc(var(--cqm-bottom-h, 108px) + 130px)) !important;
   top: auto !important;
-  height: var(--cqm-hud-height, ${CENTER_HUD_DESKTOP_HEIGHT}) !important;
-  max-height: calc(100vh - 156px) !important;
+  height: min(var(--cqm-hud-height, ${CENTER_HUD_DESKTOP_HEIGHT}), var(--cqm-hud-max-height, calc(100vh - 156px))) !important;
+  max-height: var(--cqm-hud-max-height, calc(100vh - 156px)) !important;
   z-index: 71 !important;
 }
 /* TRANSPARENCY (◐): the open panel is SOLID by default. The see-through state is applied as an INLINE
@@ -248,6 +248,17 @@ body:has(#cqm-hud-nav) #cqm-dock {
   border-color: rgba(220, 120, 255, 0.35);
   color: #f0c8ff;
 }
+#cqm-persist-nav .cqm-persist-btn.cqm-persist-sim {
+  border-color: rgba(255, 160, 80, 0.42);
+  color: #ffd4a8;
+  padding: 0 7px;
+  font-size: 10px;
+}
+#cqm-persist-nav .cqm-persist-btn.cqm-persist-transport {
+  border-color: rgba(100, 220, 180, 0.38);
+  color: #b8f5dc;
+  padding: 0 8px;
+}
 #cqm-persist-nav .cqm-persist-btn:focus-visible {
   outline: 2px solid rgba(120, 180, 255, 0.75);
   outline-offset: 1px;
@@ -394,6 +405,11 @@ function fitHud(): void {
     if (r.height > 4) barsTop = Math.min(barsTop, r.top);
   }
   syncBottomDockHeight();
+  const topInset = 52;
+  const available = barsTop - topInset - 8;
+  if (available > 120)
+    root.style.setProperty('--cqm-hud-max-height', `${Math.round(available)}px`);
+  else root.style.removeProperty('--cqm-hud-max-height');
   if (barsTop < vh)
     root.style.setProperty('--cqm-hud-bottom', `${Math.round(vh - barsTop + 10)}px`);
   else root.style.removeProperty('--cqm-hud-bottom');
@@ -551,22 +567,27 @@ function buildNav(doc: Document): void {
   dockBottomBar(nav, doc);
 }
 
-/** V85: always-visible Docs / Spec / Lab / Access / Set — never dropped by chooseNavMode. */
+/** V85: always-visible Docs / Spec / Bible / Lab + sim + transport + Access / Set. */
 function buildPersistentNav(doc: Document): void {
   let strip = doc.getElementById('cqm-persist-nav');
   if (!strip) {
     strip = doc.createElement('nav');
     strip.id = 'cqm-persist-nav';
-    strip.setAttribute('aria-label', 'Documentation, lab, access, and settings');
+    strip.setAttribute('aria-label', 'Documentation, lab, simulation controls, and settings');
   } else {
     strip.replaceChildren();
   }
   strip.removeAttribute('hidden');
 
-  const mkBtn = (label: string, title: string, fn: () => void): HTMLButtonElement => {
+  const mkBtn = (
+    label: string,
+    title: string,
+    fn: () => void,
+    extra = '',
+  ): HTMLButtonElement => {
     const b = doc.createElement('button');
     b.type = 'button';
-    b.className = 'cqm-persist-btn';
+    b.className = 'cqm-persist-btn' + (extra ? ' ' + extra : '');
     b.textContent = label;
     b.title = title;
     b.setAttribute('aria-label', title);
@@ -574,13 +595,45 @@ function buildPersistentNav(doc: Document): void {
     return b;
   };
 
-  for (const key of ['docs', 'spec', 'lab']) {
+  for (const key of ['docs', 'spec', 'bible', 'lab']) {
     const a = doc.querySelector<HTMLAnchorElement>(`a[data-nav="${key}"]`);
     if (a) {
       a.classList.add('cqm-persist-btn');
       strip.appendChild(a);
     }
   }
+
+  const mkAct = (
+    label: string,
+    title: string,
+    action: string,
+    extra = '',
+  ): HTMLButtonElement => {
+    const b = doc.createElement('button');
+    b.type = 'button';
+    b.className = 'cqm-persist-btn' + (extra ? ' ' + extra : '');
+    b.dataset.action = action;
+    b.textContent = label;
+    b.title = title;
+    b.setAttribute('aria-label', title);
+    return b;
+  };
+
+  strip.appendChild(mkAct('⏸', 'Pause / resume simulation', 'pause', 'cqm-persist-transport'));
+  strip.appendChild(mkAct('↻', 'Reset world', 'reset', 'cqm-persist-transport'));
+  strip.appendChild(mkAct('⏱', 'Cycle simulation speed', 'time', 'cqm-persist-transport'));
+  strip.appendChild(mkAct('👁', 'Cycle camera view', 'view', 'cqm-persist-transport'));
+  strip.appendChild(mkAct('⬡', 'Cycle space / FOV', 'space', 'cqm-persist-transport'));
+
+  for (const [action, label, title] of [
+    ['split', '⇄', 'Split mature entities'],
+    ['burst', '✦', 'Burst-spawn entities'],
+    ['mutate', '☢', 'Mutate all entities'],
+    ['chaos', '⚡', 'Boost chaos'],
+  ] as const) {
+    strip.appendChild(mkAct(label, title, action, 'cqm-persist-sim'));
+  }
+
   const accToggle = doc.getElementById('cqm-acc-toggle');
   if (accToggle) {
     strip.appendChild(

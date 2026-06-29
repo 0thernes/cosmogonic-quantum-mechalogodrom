@@ -155,6 +155,9 @@ function cyc<T>(arr: readonly T[], i: number): T {
 /** AUTO mode dwell: seconds on each sorting field before advancing to the next (V7.2). */
 const ALGO_AUTO_PERIOD = 6;
 
+/** V105: 101-glyph pantheon breeding is visual-only — no petri coupling until re-enabled. */
+const PANTHEON_BREEDING_LIVE = false;
+
 /** Cosmology SFX palette entries (V7.4) — band starts from the 110-voice palette. */
 const SFX_SUBBOOM = SFX_EXTRA_BANDS['subboom']?.start ?? 0;
 const SFX_FMCLANG = SFX_EXTRA_BANDS['fmclang']?.start ?? 0;
@@ -200,6 +203,7 @@ export class World {
   private readonly rng: Rng;
   private readonly uiRng: Rng;
   private readonly state: SimState;
+  private prePauseTimeScale = 1;
   private readonly grid: SpatialHash<Entity>;
   private readonly audio: AudioEngine;
   /** Aborts the global (window) hero-event listeners on {@link dispose} — without this they leaked
@@ -1370,33 +1374,18 @@ export class World {
    * the super creature's power/look, never the population golden), so the `Date.now` use is contained.
    */
   private loadEvolution(): SuperEvolution {
+    // V105: every browser reload resets super-creature evolution — fresh start, no carryover.
     try {
-      if (typeof localStorage === 'undefined') return new SuperEvolution();
-      const raw = localStorage.getItem('cqm:superevo:v1');
-      if (!raw) return new SuperEvolution();
-      const parsed = JSON.parse(raw) as { ts?: number; state?: string };
-      const evo = SuperEvolution.fromJSON(parsed.state ?? '');
-      if (typeof parsed.ts === 'number') {
-        const days = (Date.now() - parsed.ts) / 86_400_000;
-        if (days > 0) evo.applyDays(days, this.evoRng);
-      }
-      return evo;
+      if (typeof localStorage !== 'undefined') localStorage.removeItem('cqm:superevo:v1');
     } catch {
-      return new SuperEvolution();
+      /* storage unavailable */
     }
+    return new SuperEvolution();
   }
 
-  /** V48: persist the evolution state + a wall-clock stamp (so the next session catches up the days). */
+  /** V105: evolution is session-only — no cross-reload persistence. */
   private saveEvolution(): void {
-    try {
-      if (typeof localStorage === 'undefined') return;
-      localStorage.setItem(
-        'cqm:superevo:v1',
-        JSON.stringify({ ts: Date.now(), state: this.superEvo.serialize() }),
-      );
-    } catch {
-      /* storage unavailable / quota — fine, the in-memory evolution still runs */
-    }
+    /* intentionally empty */
   }
 
   /**
@@ -1734,11 +1723,8 @@ export class World {
 
       // FULL TSOTCHKE growth: incubate/harvest via update + snapshot (all repos in Petri for new biologics)
       this.primordialSoup.update(0, s.frame, this.petriRng);
-      // V-BREED: run a 101-glyph pantheon breeding rite every 600 frames (~10s at 60fps).
-      // breedAt() is deterministic (hashSeed-based, no RNG perturbation). The child's 4 mathematical
-      // structures (Touchard polynomial, winding number, de Jong attractor, Blaschke product) boost
-      // a petri dish's godPower, coupling the breeding system to the live digital-biologics growth.
-      if (s.frame % 600 === 0 && s.frame > 0) {
+      // V-BREED: pantheon breeding rite (disabled V105 — visual dome only, no petri coupling).
+      if (PANTHEON_BREEDING_LIVE && s.frame % 600 === 0 && s.frame > 0) {
         const i = (this.breedNonce * 7 + 3) % PANTHEON_TOTAL;
         let j = (this.breedNonce * 13 + 17) % PANTHEON_TOTAL;
         if (j === i) j = (j + 1) % PANTHEON_TOTAL; // avoid self-fertilization (i===j at nonce=65)
@@ -3064,10 +3050,15 @@ export class World {
     this.algoAutoBtn?.classList.toggle('on', s.algoMode === 'auto');
     this.algoAutoBtn?.setAttribute('aria-pressed', s.algoMode === 'auto' ? 'true' : 'false');
     if (this.algoActiveEl) {
-      this.algoActiveEl.textContent =
-        s.algoMode === 'all'
-          ? 'ALL FIELDS'
-          : (s.algoMode === 'auto' ? '▸ ' : '') + cyc(ALGOS, active).name;
+      const name = cyc(ALGOS, active).name;
+      if (s.algoMode === 'all') {
+        this.algoActiveEl.textContent = 'ALL FIELDS';
+      } else if (s.algoMode === 'auto') {
+        const left = Math.max(0, ALGO_AUTO_PERIOD - s.algoTimer);
+        this.algoActiveEl.textContent = `▸ AUTO · ${name} · ${left.toFixed(1)}s`;
+      } else {
+        this.algoActiveEl.textContent = name;
+      }
     }
   }
 
@@ -3211,8 +3202,21 @@ export class World {
         const i = scales.indexOf(s.timeScale);
         // A value not in the table (e.g. a legacy persisted scale) resumes at realtime.
         s.timeScale = i < 0 ? 1 : (scales[(i + 1) % scales.length] ?? 1);
+        this.prePauseTimeScale = s.timeScale === 0 ? 1 : s.timeScale;
         this.audit.record('time-scale', { value: s.timeScale });
         return s.timeScale;
+      },
+      togglePause: () => {
+        this.unlock();
+        if (s.timeScale === 0) {
+          s.timeScale = this.prePauseTimeScale || 1;
+        } else {
+          this.prePauseTimeScale = s.timeScale;
+          s.timeScale = 0;
+        }
+        this.hud.showSector(s.timeScale === 0 ? 'PAUSED' : 'RESUME · ' + s.timeScale + '×');
+        this.audit.record('pause', { paused: s.timeScale === 0 });
+        return s.timeScale === 0;
       },
       cycleSpace: () => {
         this.unlock();

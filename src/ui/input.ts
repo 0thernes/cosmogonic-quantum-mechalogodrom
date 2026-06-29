@@ -93,11 +93,16 @@ const SIM_MAP: Readonly<Record<string, keyof UiActions>> = {
 
 /** `[data-action]` toolbar buttons → UiActions methods (legacy lines 124-129 inline onclicks). */
 const TOOLBAR_MAP: Readonly<Record<string, keyof UiActions>> = {
+  split: 'split',
+  burst: 'burst',
+  mutate: 'mutate',
+  chaos: 'chaosBoost',
   music: 'toggleMusic',
   song: 'cycleSong',
   sfx: 'toggleSfx',
   sfxcycle: 'cycleSfxPreview',
   reset: 'reset',
+  pause: 'togglePause',
   time: 'cycleTimeScale',
   wire: 'cycleRenderMode',
   view: 'cycleView',

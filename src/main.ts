@@ -104,7 +104,13 @@ function boot(): void {
   }
 
   const store = new MemoryStore();
-  const persisted = store.load() ?? store.defaults();
+  const loaded = store.load() ?? store.defaults();
+  // V95: every browser reload starts a fresh cosmos — new seed, new creatures, new economy.
+  // Preferences (audio, view, render, etc.) are kept; only the deterministic seed is reset.
+  const persisted = {
+    ...loaded,
+    seed: (0xc05a06 ^ ((performance.now() * 1000) | 0)) >>> 0,
+  };
   persisted.sessions += 1;
   store.save(persisted);
 

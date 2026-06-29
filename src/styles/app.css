@@ -42,7 +42,8 @@ body > a[data-nav] {
   opacity: 1 !important;
   pointer-events: auto !important;
 }
-#cqm-dock {
+/* V105: sim actions live in Settings + persist nav — hide duplicate pad on desktop too. */
+#pad-sim {
   display: none !important;
 }
 body > #bar {
@@ -962,9 +963,6 @@ html.cqm-shell-ready .algo-list:empty::after {
   min-width: 0;
   min-height: 0;
 }
-#oP {
-  /* inside .ui-col-right flex stack */
-}
 /* V51/V53: AUDIT is a dock-toggled fixed overlay on EVERY viewport — like the other dock panels
    (NEURAL/MARKET/ARCHITECT/…), NOT a left-column grid panel and NOT an edge sheet. So it never crowds
    SORTING FIELDS, and the 🗒 AUDIT dock button works on mobile + PORTRAIT too (V52 review: the old
@@ -978,12 +976,22 @@ html.cqm-shell-ready .algo-list:empty::after {
   bottom: calc(var(--cqm-bottom-h, 108px) + 130px);
   z-index: 59;
   width: min(94vw, 340px);
-  max-height: 52vh;
+  max-height: min(52vh, calc(100vh - 140px));
   transform: none;
   display: none;
 }
 #ui > #aP.audit-on {
   display: flex;
+}
+/* V95: clamp all floating dock panels so they never grow above the top of the screen in fullscreen. */
+#cqm-cop-panel,
+#cqm-help-panel,
+#cqm-nhi-panel,
+#cqm-mkt-panel,
+#cqm-arch-panel,
+#cqm-sup-panel,
+#ui > #aP {
+  max-height: min(70vh, calc(100vh - 140px)) !important;
 }
 #aP > .sheet-handle {
   display: none;

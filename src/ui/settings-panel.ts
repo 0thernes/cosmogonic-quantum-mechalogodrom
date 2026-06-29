@@ -35,6 +35,16 @@ const STYLE = `
 
 const GROUPS = [
   {
+    title: 'Controls',
+    buttons: [
+      { action: 'pause', label: '⏸ Pause' },
+      { action: 'split', label: '⇄ Split' },
+      { action: 'burst', label: '✦ Burst' },
+      { action: 'mutate', label: '☢ Mutate' },
+      { action: 'chaos', label: '⚡ Chaos' },
+    ],
+  },
+  {
     title: 'Audio',
     buttons: [
       { action: 'music', label: '♪ Music' },
@@ -55,6 +65,7 @@ const GROUPS = [
   {
     title: 'World',
     buttons: [
+      { action: 'pause', label: '⏸ Pause' },
       { action: 'time', label: '⏱ Time' },
       { action: 'sim', label: '⇄ Sim N1/N2' },
       { action: 'reset', label: '↻ Reset' },

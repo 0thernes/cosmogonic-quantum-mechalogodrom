@@ -58,6 +58,15 @@ export function getDock(doc: Document = document): HTMLElement {
   dock.id = DOCK_ID;
   dock.setAttribute('aria-label', 'Panel and navigation dock');
   doc.body.appendChild(dock);
+  // V95: global pause/resume button in the dock bar.
+  const pauseBtn = doc.createElement('button');
+  pauseBtn.type = 'button';
+  pauseBtn.className = 'cqm-dock-toggle';
+  pauseBtn.dataset.action = 'pause';
+  pauseBtn.textContent = '⏸';
+  pauseBtn.title = 'Pause / Resume simulation';
+  pauseBtn.setAttribute('aria-label', 'Pause or resume simulation');
+  dock.appendChild(pauseBtn);
   // Adopt DOCS / SPEC / LAB by `data-nav` (rewrite-proof on GitHub Pages).
   for (const key of ['docs', 'spec', 'lab']) {
     const a = doc.querySelector<HTMLAnchorElement>(`a[data-nav="${key}"]`);

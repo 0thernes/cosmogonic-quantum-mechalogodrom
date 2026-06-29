@@ -48,6 +48,8 @@ const STYLE = `
   z-index:71;width:auto;max-width:none;max-height:var(--cqm-hud-height,min(64vh,520px));display:none;flex-direction:column;
   border:1px solid rgba(196,120,255,.34);border-radius:12px;background:rgba(8,5,16,.96);backdrop-filter:blur(12px);
   box-shadow:0 10px 46px rgba(0,0,0,.7);font:11px/1.45 var(--font-mono,ui-monospace,monospace);color:#ece2ff;overflow:hidden}
+#cqm-sup-panel:not(.neural){max-height:220px}
+@media (max-width:640px){#cqm-sup-panel:not(.neural){max-height:200px}}
 #cqm-sup-panel.open{display:flex}
 @media (max-width:640px){
 #cqm-sup-panel{left:auto;top:auto;right:10px;bottom:calc(var(--cqm-bottom-h,108px) + 130px);transform:none;width:min(94vw,326px);max-height:min(66vh,480px)}
@@ -70,14 +72,14 @@ const STYLE = `
 #cqm-sup-panel.minimized .cqm-sup-head{border-bottom:none}
 #cqm-sup-panel.minimized .cqm-sup-min::before{content:'+'}
 .cqm-sup-x:focus-visible{outline:1px solid #c478ff}
-/* V70: the data area SCROLLS within the short HUD strip (nothing is cut off / "lost") + lays the rows
-   out in TWO columns so the wide-but-short panel is used fully. */
-.cqm-sup-body{flex:1 1 auto;min-height:0;overflow-y:auto}
-.cqm-sup-id{padding:6px 10px;border-bottom:1px solid rgba(196,120,255,.14);display:grid;
-  grid-template-columns:auto 1fr;gap:2px 10px;align-items:baseline}
+/* V70: the data area lays out HORIZONTALLY so the short HUD strip never needs a vertical scrollbar.
+   Identity column on the left; the bars wrap into a compact multi-column grid on the right. */
+.cqm-sup-body{flex:1 1 auto;min-height:0;display:flex;flex-direction:row;gap:10px;overflow-x:auto;overflow-y:hidden;align-items:stretch}
+.cqm-sup-id{flex:0 0 auto;padding:6px 10px;border-right:1px solid rgba(196,120,255,.14);display:grid;
+  grid-template-columns:auto 1fr;gap:2px 10px;align-items:baseline;min-width:160px;max-width:220px;overflow:hidden}
 .cqm-sup-id .k{color:#a98fce;font-size:10px;letter-spacing:.05em;text-transform:uppercase}
 .cqm-sup-id .v{color:#f3ecff;text-align:right;font-variant-numeric:tabular-nums}
-.cqm-sup-bars{padding:7px 10px;display:grid;grid-template-columns:1fr 1fr;gap:6px 16px}
+.cqm-sup-bars{flex:1 1 auto;padding:7px 10px;display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:6px 14px;align-content:start;min-width:0}
 .cqm-sup-bar{display:grid;grid-template-columns:58px 1fr 34px;align-items:center;gap:7px;min-width:0}
 .cqm-sup-bar .lab{color:#a98fce;font-size:10px;letter-spacing:.04em;text-transform:uppercase}
 .cqm-sup-bar .track{height:7px;border-radius:4px;background:rgba(196,120,255,.12);overflow:hidden}

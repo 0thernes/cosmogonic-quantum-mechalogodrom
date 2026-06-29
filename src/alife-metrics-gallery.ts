@@ -254,6 +254,14 @@ function clampScale(s: number): number {
   return Math.min(12, Math.max(0.08, s));
 }
 
+function scheduleZoomFit(view: ZoomView): void {
+  const run = (): void => {
+    const vp = view.stage.getBoundingClientRect();
+    if (vp.width > 4 && vp.height > 4) view.fit();
+  };
+  requestAnimationFrame(() => requestAnimationFrame(run));
+}
+
 /** Wire pan/zoom on a stage; returns controls for toolbar buttons. */
 function mountZoomView(stage: HTMLElement, onTap?: () => void): ZoomView {
   const img = document.createElement('img');
@@ -285,8 +293,8 @@ function mountZoomView(stage: HTMLElement, onTap?: () => void): ZoomView {
     },
     fit: () => {
       const vp = stage.getBoundingClientRect();
-      const iw = img.naturalWidth || 800;
-      const ih = img.naturalHeight || 600;
+      const iw = img.naturalWidth || img.width || 800;
+      const ih = img.naturalHeight || img.height || 600;
       if (!vp.width || !iw) return;
       view.scale = clampScale(Math.min(vp.width / iw, vp.height / ih) * 0.96);
       view.tx = (vp.width - iw * view.scale) / 2;
@@ -295,7 +303,13 @@ function mountZoomView(stage: HTMLElement, onTap?: () => void): ZoomView {
     },
   };
 
-  img.addEventListener('load', () => view.fit());
+  img.addEventListener('load', () => {
+    void img.decode?.().then(() => scheduleZoomFit(view)).catch(() => scheduleZoomFit(view));
+  });
+  if (typeof ResizeObserver !== 'undefined') {
+    const ro = new ResizeObserver(() => scheduleZoomFit(view));
+    ro.observe(stage);
+  }
   stage.addEventListener('click', (e) => {
     if (view.drag) return;
     if ((e.target as HTMLElement).closest('.alife-toolbar, .alife-thumb-toolbar')) return;
