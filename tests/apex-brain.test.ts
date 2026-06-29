@@ -396,12 +396,12 @@ describe('scaling scaffolding — toward 1 billion neurons', () => {
     expect(snap.quantum.norm).toBeCloseTo(1, 6);
     expect(JSON.stringify(a.snapshot())).toBe(JSON.stringify(b.snapshot()));
   });
-  test('the default (LIVE) brain exposes the quantum organ in its snapshot', () => {
+  test('the default (APEX-100K) brain exposes the quantum organ in its snapshot', () => {
     const brain = new ApexBrain(0x1);
     brain.tick({ threat: 0.5, energy: 0.5, chaos: 0.5, novelty: 0.5, level: 10 });
     const snap = brain.snapshot();
-    expect(snap.scaleName).toBe('LIVE');
-    expect(snap.quantum.qubits).toBe(6);
+    expect(snap.scaleName).toBe('APEX-100K');
+    expect(snap.quantum.qubits).toBe(8);
     expect(snap.quantum.norm).toBeCloseTo(1, 6);
   });
 });

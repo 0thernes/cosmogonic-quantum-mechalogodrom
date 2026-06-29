@@ -77,7 +77,10 @@ import { CosmicWeb } from './sim/cosmic-web';
 import { GoldLattice } from './sim/gold-lattice';
 import { QuantumLattice } from './sim/quantum-lattice';
 import { Mechalogodrom } from './sim/mechalogodrom';
+import { MechalogodromBrain } from './sim/mechalogodrom-brain';
 import { AlphabetPantheonRender } from './sim/alphabet-pantheon-render';
+import { GlyphBrainBatch } from './sim/glyph-brain';
+import { apexGrowthStage, type ApexGrowthStage } from './sim/apex-consciousness-scaffold';
 import { LoreEngine } from './sim/lore';
 import { AnalyticsSystem } from './sim/analytics';
 import { AudioEngine } from './audio/engine';
@@ -361,8 +364,19 @@ export class World {
   private readonly quantumLattice: QuantumLattice;
   /** V-MECHA: the central fusion abomination — 10 bipolar titan shells converge + fuse into one monster (additive; no rng). */
   private readonly mechalogodrom: Mechalogodrom;
+  private readonly mechalogodromBrain: MechalogodromBrain;
+  /** V-MECHA brain snapshot getter (for architect panel telemetry). */
+  get mechaBrain(): MechalogodromBrain {
+    return this.mechalogodromBrain;
+  }
   /** V-ABC: the 100 Greek+Latin alphabet archetypes alive across the dome (instanced; no rng). */
   private readonly alphabetPantheon: AlphabetPantheonRender;
+  /** V-GLYPH: 100 × 25k-parameter brains driving the letter creatures' visual activity (visual-only). */
+  private readonly glyphBrains: GlyphBrainBatch;
+  /** Scratch activity/novelty/valence arrays for pantheon handoff (reused, alloc-free). */
+  private readonly glyphActivity = new Float32Array(100);
+  private readonly glyphNovelty = new Float32Array(100);
+  private readonly glyphValence = new Float32Array(100);
   /** Cycle cursor for the chaos control's singularity chooser. */
   private singularityCursor = 0;
   /** V57: total resets this session — surfaced in the HUD View/Speed/Render box. */
@@ -433,6 +447,11 @@ export class World {
   /** V-APEX: the Entropic Tesseract Hydra brain (10 organs + quantum + meta-paradox). Wired into the apex beat. */
   private readonly apexBrain: ApexBrain;
   private lastApexThought: ApexThought | null = null;
+  private lastApexGrowth: ApexGrowthStage | null = null;
+  /** Current APEX growth stage (null until first apex tick). Read by the architect panel. */
+  get apexGrowth(): ApexGrowthStage | null {
+    return this.lastApexGrowth;
+  }
   private readonly apexPercept: ApexPercept = {
     threat: 0,
     energy: 0,
@@ -440,6 +459,7 @@ export class World {
     novelty: 0,
     level: 0,
   };
+  private readonly glyphPercept = new Float32Array(8);
   /** V-BREED: the 101-glyph pantheon breeding system. Periodic rites produce BabyGenome children
    *  whose 4 mathematical structures (Touchard, winding, de Jong, Blaschke) boost petri dish growth. */
   private breedNonce = 0;
@@ -673,8 +693,11 @@ export class World {
     this.quantumLattice = new QuantumLattice(ctx.scene);
     // V-MECHA: the central fusion abomination — boot-stream-neutral (no rng), reacts to world chaos.
     this.mechalogodrom = new Mechalogodrom(ctx.scene);
+    this.mechalogodromBrain = new MechalogodromBrain((this.persisted.seed ^ 0x8e4ac471) >>> 0 || 1);
     // V-ABC: the 100 Greek+Latin alphabet archetypes, alive across the dome (instanced; no rng).
     this.alphabetPantheon = new AlphabetPantheonRender(ctx.scene);
+    // V-GLYPH: 100 × 25k-parameter brains (visual-only; drives pantheon appearance, not world state).
+    this.glyphBrains = new GlyphBrainBatch(this.persisted.seed);
 
     this.hud = new Hud();
     this.panel = new TelemetryPanel();
@@ -1101,8 +1124,42 @@ export class World {
     this.mechalogodrom.setChaos(baseChaos);
     if (apex) this.mechalogodrom.setApex(apex.transcendence, apex.vitality, apex.agony);
     this.mechalogodrom.update(t, dt);
+    const mechaSnap = this.mechalogodrom.snapshot();
+    void this.mechalogodromBrain.tick({
+      fusion: mechaSnap.fusion,
+      dimension: mechaSnap.dimension,
+      power: mechaSnap.power,
+      chaos: baseChaos,
+      warp: mechaSnap.warp,
+      apexVitality: apex?.vitality ?? 0,
+      apexTranscendence: apex?.transcendence ?? 0,
+      apexAgony: apex?.agony ?? 0,
+    });
     // V-ABC: the 100 alphabet archetypes bob/spin/pulse across the dome (chaos quickens them).
     this.alphabetPantheon.setChaos(visChaos);
+    // V-GLYPH: tick the 100 × 25k-parameter brains every 4 frames (visual-only; drives appearance).
+    if (s.frame % 4 === 0) {
+      const percept = this.glyphPercept;
+      percept[0] = visChaos; // threat
+      percept[1] = clamp(s.mutations / 1000, 0, 1); // energy (mutation pressure)
+      percept[2] = s.chaos; // chaos
+      percept[3] = s.entropy ?? 0; // novelty (entropy as novelty proxy)
+      percept[4] = s.temperature; // level (temperature as arousal)
+      percept[5] = 0.5; // hue placeholder
+      percept[6] = 0.5; // sat placeholder
+      percept[7] = 0.5; // lit placeholder
+      const snaps = this.glyphBrains.thinkAll(percept);
+      const act = this.glyphActivity;
+      const nov = this.glyphNovelty;
+      const val = this.glyphValence;
+      for (let i = 0; i < snaps.length; i++) {
+        const sn = snaps[i]!;
+        act[i] = sn.activity;
+        nov[i] = sn.novelty;
+        val[i] = sn.valence;
+      }
+      this.alphabetPantheon.setBrainActivity(act, nov, val);
+    }
     this.alphabetPantheon.update(t);
     // F-NHI V10: alien bodies follow + morph their NHI every frame (guarded; additive viz only).
     if (this.nhiBody.count > 0) {
@@ -1612,6 +1669,11 @@ export class World {
       ap.novelty = clamp(primeMindOut?.consciousness?.novelty ?? 0, 0, 1);
       ap.level = this.superEvo.view().level;
       this.lastApexThought = this.apexBrain.tick(ap);
+      this.lastApexGrowth = apexGrowthStage(
+        ap.level,
+        this.lastApexThought.transcendence,
+        this.apexBrain.snapshot().beat,
+      );
       // Feed the apex brain's transcendence into the noosphere (the 10-organ mind's output joins the collective).
       this.noosphere.updateArchon(
         0, // prime channel

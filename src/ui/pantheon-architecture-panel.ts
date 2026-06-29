@@ -32,6 +32,7 @@ import {
   type ApexBrainSnapshot,
   APEX_BRAIN_ROADMAP_PARAMS,
   APEX_BRAIN_START_PARAMS,
+  APEX_BRAIN_TARGET_NEURONS,
   PANTHEON_GLYPH_BRAIN_PARAMS,
 } from '../sim/apex-brain';
 import { mulberry32, type Rng } from '../math/rng';
@@ -704,7 +705,11 @@ function apexRows(s: ApexBrainSnapshot): Array<[string, string] | string> {
     ['vitality / agony', `${(t.vitality * 100).toFixed(0)}% / ${(t.agony * 100).toFixed(0)}%`],
     [
       'neurons',
-      `${bigNum(APEX_BRAIN_START_PARAMS)} start · ${bigNum(s.designedNeurons)} designed · ${bigNum(s.liveNeurons)} live · →${bigNum(APEX_BRAIN_ROADMAP_PARAMS)} (${s.scaleName})`,
+      `${bigNum(APEX_BRAIN_START_PARAMS)} start · ${bigNum(s.designedNeurons)} designed · ${bigNum(s.liveNeurons)} live · →${bigNum(APEX_BRAIN_ROADMAP_PARAMS)} · ultimate ${bigNum(APEX_BRAIN_TARGET_NEURONS)} (${s.scaleName})`,
+    ],
+    [
+      'roadmap',
+      `100k→5M params · 1B neuron architecture · 100 thought-variation substrates (computational indicators only)`,
     ],
     [
       '0 quantum brain',

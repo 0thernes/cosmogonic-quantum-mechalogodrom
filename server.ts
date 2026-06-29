@@ -359,6 +359,73 @@ if (import.meta.main) {
           return Response.json({ ok: true, uptime: process.uptime(), version: VERSION });
         },
       }),
+      '/api/ventures': secured({
+        GET(req) {
+          logRequest(req, 200);
+          return Response.json({
+            ok: true,
+            version: VERSION,
+            horizon: 'ventures',
+            doc: '/docs/VENTURES-2026-06-26.md',
+            milestones: [
+              'hosted-deploy',
+              'waitlist',
+              'cloud-profiles',
+              'multiplayer-10',
+              'monetization',
+              'peer-review-study',
+              'institution-outreach',
+            ],
+            waitlistSize: waitlistRing.length,
+          });
+        },
+      }),
+      '/api/waitlist': secured({
+        async POST(req) {
+          if (!auditPostOriginAllowed(req)) {
+            logRequest(req, 403);
+            return Response.json({ ok: false, error: 'forbidden origin' }, { status: 403 });
+          }
+          if (!waitlistLimiter.tryRemove(Date.now())) {
+            logRequest(req, 429);
+            return Response.json({ ok: false, error: 'rate limited' }, { status: 429 });
+          }
+          let text: string;
+          try {
+            text = await req.text();
+          } catch {
+            logRequest(req, 400);
+            return Response.json({ ok: false, error: 'unreadable body' }, { status: 400 });
+          }
+          if (text.length > 512) {
+            logRequest(req, 413);
+            return Response.json({ ok: false, error: 'body too large' }, { status: 413 });
+          }
+          let body: unknown;
+          try {
+            body = JSON.parse(text);
+          } catch {
+            logRequest(req, 400);
+            return Response.json({ ok: false, error: 'invalid JSON' }, { status: 400 });
+          }
+          const entry = parseWaitlistBody(body);
+          if (!entry) {
+            logRequest(req, 400);
+            return Response.json(
+              { ok: false, error: 'expected { email: string, tier?: string }' },
+              { status: 400 },
+            );
+          }
+          if (waitlistRing.length >= WAITLIST_CAP) waitlistRing.shift();
+          waitlistRing.push({ ...entry, ts: Date.now() });
+          log.info(`waitlist +1 ${entry.email}${entry.tier ? ` (${entry.tier})` : ''}`);
+          logRequest(req, 202);
+          return Response.json(
+            { ok: true, accepted: true, queue: waitlistRing.length },
+            { status: 202 },
+          );
+        },
+      }),
       '/api/audit': secured({
         GET(req) {
           logRequest(req, 200);

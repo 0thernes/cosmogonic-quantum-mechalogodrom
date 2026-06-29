@@ -175,6 +175,7 @@
         white-space: nowrap;
         border: 0;
       }
+      .bible-search {
         width: 100%;
         max-width: 480px;
         margin: 1rem 0 1.5rem;
@@ -355,13 +356,11 @@
           sentience.
         </p>
         <h3>Neural Observatory (IV · BRAIN tab)</h3>
-        <p>
-          The BRAIN tab has a cycle button that toggles between two visualizations:
-        </p>
+        <p>The BRAIN tab has a cycle button that toggles between two visualizations:</p>
         <ul>
           <li>
-            <strong>COMPOSITE</strong> — the original 3D connectome showing the mind's organs
-            (loom, acoustic, necro, quantum, etc.) with signal flow arrows and labeled nodes.
+            <strong>COMPOSITE</strong> — the original 3D connectome showing the mind's organs (loom,
+            acoustic, necro, quantum, etc.) with signal flow arrows and labeled nodes.
           </li>
           <li>
             <strong>MEGA GODLIKE 4D</strong> — a 4D tesseract connectome with 160 neurons
@@ -373,7 +372,10 @@
               <li>Axonal connections by 4D Hamming distance with traveling spike pulses</li>
               <li>Dendritic shimmer rings and soma cores sized by activity</li>
               <li>Global broadcast wavefront when consciousness is high</li>
-              <li>Activity driven by real <code>SuperMindSnapshot</code> latent + quantum + consciousness fields</li>
+              <li>
+                Activity driven by real <code>SuperMindSnapshot</code> latent + quantum +
+                consciousness fields
+              </li>
             </ul>
           </li>
         </ul>
@@ -395,16 +397,28 @@
         </p>
         <h3>The 36 tiles</h3>
         <ul>
-          <li><strong>Board 1 — Collapse</strong>: Born-rule measurement fields, quantum decoherence visualizations, wavefront interference patterns.</li>
-          <li><strong>Board 2 — Attractors</strong>: Lorenz (butterfly), Rössler (single scroll), Thomas (double scroll), Aizawa, Chen, and Newton–Leipnik strange attractors — each rendered as 3D particle trails.</li>
-          <li><strong>Board 3 — Fields</strong>: Gray–Scott reaction–diffusion, Voronoi tessellation, curl-noise advection, and hybrid quantum–classical flow fields.</li>
+          <li>
+            <strong>Board 1 — Collapse</strong>: Born-rule measurement fields, quantum decoherence
+            visualizations, wavefront interference patterns.
+          </li>
+          <li>
+            <strong>Board 2 — Attractors</strong>: Lorenz (butterfly), Rössler (single scroll),
+            Thomas (double scroll), Aizawa, Chen, and Newton–Leipnik strange attractors — each
+            rendered as 3D particle trails.
+          </li>
+          <li>
+            <strong>Board 3 — Fields</strong>: Gray–Scott reaction–diffusion, Voronoi tessellation,
+            curl-noise advection, and hybrid quantum–classical flow fields.
+          </li>
         </ul>
         <h3>Controls</h3>
         <ul>
           <li><strong>Sliders</strong>: particle count, collapse rate, base speed, ring speed.</li>
           <li><strong>Tap</strong>: pulse a tile's hot state (brightens + quickens).</li>
           <li><strong>Page Up/Down</strong>: switch boards.</li>
-          <li><strong>Mobile</strong>: pinch to zoom, drag to orbit; attractor tiles auto-frame.</li>
+          <li>
+            <strong>Mobile</strong>: pinch to zoom, drag to orbit; attractor tiles auto-frame.
+          </li>
         </ul>
       </section>
 
@@ -419,15 +433,21 @@
         </p>
         <h3>What it is not</h3>
         <ul>
-          <li>Not sentient — the mind models are functional correlates, not phenomenal consciousness.</li>
+          <li>
+            Not sentient — the mind models are functional correlates, not phenomenal consciousness.
+          </li>
           <li>Not an LLM — no text generation, no language model inference.</li>
-          <li>Not a game in the traditional sense — it is a research instrument you can watch and influence.</li>
+          <li>
+            Not a game in the traditional sense — it is a research instrument you can watch and
+            influence.
+          </li>
         </ul>
         <h3>Determinism as a design principle</h3>
         <p>
           Every random draw in the simulation uses a seeded <code>Rng</code> (mulberry32). No
           <code>Math.random</code> exists in sim logic. The same seed produces the same population
-          trajectory byte-for-byte. This is essential for reproducibility and scientific defensibility.
+          trajectory byte-for-byte. This is essential for reproducibility and scientific
+          defensibility.
         </p>
         <h3>Tsotchke quantum corpus</h3>
         <p>
@@ -454,89 +474,205 @@
         <h2>10. Glossary &amp; terminology</h2>
         <dl>
           <dt>Active Inference</dt>
-          <dd>Friston's framework — agents minimize free energy by updating beliefs and acting to match predictions. Implemented in <code>src/sim/active-inference.ts</code>.</dd>
+          <dd>
+            Friston's framework — agents minimize free energy by updating beliefs and acting to
+            match predictions. Implemented in <code>src/sim/active-inference.ts</code>.
+          </dd>
           <dt>ALGO_AUTO_PERIOD</dt>
-          <dd>Seconds the sorting-field AUTO mode dwells on each field before advancing. Currently 6 seconds (<code>ALGO_AUTO_PERIOD</code> in <code>src/world.ts</code>).</dd>
+          <dd>
+            Seconds the sorting-field AUTO mode dwells on each field before advancing. Currently 6
+            seconds (<code>ALGO_AUTO_PERIOD</code> in <code>src/world.ts</code>).
+          </dd>
           <dt>Alphabet Pantheon</dt>
-          <dd>100 Greek + Latin + Roman letter archetypes rendered as instanced meshes in the dome sky. Visual-only — no physics, no AI, no economy.</dd>
+          <dd>
+            100 Greek + Latin + Roman letter archetypes rendered as instanced meshes in the dome
+            sky. Visual-only — no physics, no AI, no economy.
+          </dd>
           <dt>APEX</dt>
-          <dd>Entity #101 — hyper-chromatic capstone above the 100-letter pantheon. 100k-parameter brain baseline scaling toward 5M. Visual-only for now.</dd>
+          <dd>
+            Entity #101 — hyper-chromatic capstone above the 100-letter pantheon. 100k-parameter
+            brain baseline scaling toward 5M. Visual-only for now.
+          </dd>
           <dt>Archon</dt>
-          <dd>One of 5 Super Creatures (godforms) with full mind + body + economy wiring. Distinct from the 100 letter creatures.</dd>
+          <dd>
+            One of 5 Super Creatures (godforms) with full mind + body + economy wiring. Distinct
+            from the 100 letter creatures.
+          </dd>
           <dt>Atom of Thought</dt>
-          <dd>Each organ-net processes a 4-dim slice of the latent — the smallest unit of the composite mind's reasoning.</dd>
+          <dd>
+            Each organ-net processes a 4-dim slice of the latent — the smallest unit of the
+            composite mind's reasoning.
+          </dd>
           <dt>Born Rule</dt>
-          <dd>Quantum measurement postulate: probability = |amplitude|². Used in WildBeyond collapse tiles and super-qubit thought collapse.</dd>
+          <dd>
+            Quantum measurement postulate: probability = |amplitude|². Used in WildBeyond collapse
+            tiles and super-qubit thought collapse.
+          </dd>
           <dt>Chaos Mode</dt>
-          <dd>Lorenz-driven quantum storm engaged via settings or hotkey K. Quickens the pantheon, intensifies visuals.</dd>
+          <dd>
+            Lorenz-driven quantum storm engaged via settings or hotkey K. Quickens the pantheon,
+            intensifies visuals.
+          </dd>
           <dt>Connectome</dt>
-          <dd>The wiring diagram of the super creature's mind — 30 organs + signal flow paths. Visualized in the BRAIN tab.</dd>
+          <dd>
+            The wiring diagram of the super creature's mind — 30 organs + signal flow paths.
+            Visualized in the BRAIN tab.
+          </dd>
           <dt>Cortex</dt>
-          <dd>The perception sub-network: 18 senses → 32 hidden → 16-d latent. The first stage of the 5-stage cognitive pipeline.</dd>
+          <dd>
+            The perception sub-network: 18 senses → 32 hidden → 16-d latent. The first stage of the
+            5-stage cognitive pipeline.
+          </dd>
           <dt>Creativity Machine</dt>
-          <dd>Thaler's architecture: a generator network perturbed by noise + a perceptor critic that scores novelty. Implemented as IMAGITRON + PERCEPTOR.</dd>
+          <dd>
+            Thaler's architecture: a generator network perturbed by noise + a perceptor critic that
+            scores novelty. Implemented as IMAGITRON + PERCEPTOR.
+          </dd>
           <dt>Determinism / Rng</dt>
-          <dd>All sim randomness uses seeded <code>Rng</code> (mulberry32); no <code>Math.random</code> in sim logic. Same seed ⇒ identical trajectory.</dd>
+          <dd>
+            All sim randomness uses seeded <code>Rng</code> (mulberry32); no
+            <code>Math.random</code> in sim logic. Same seed ⇒ identical trajectory.
+          </dd>
           <dt>Digital Biologics</dt>
-          <dd>The Tsotchke-pioneered approach to modeling biological processes digitally — wired into entity life cycles, mortality, and evolution.</dd>
+          <dd>
+            The Tsotchke-pioneered approach to modeling biological processes digitally — wired into
+            entity life cycles, mortality, and evolution.
+          </dd>
           <dt>Eshkol</dt>
-          <dd>The qubit-RNG system — a real quantum randomness simulation ported from the Tsotchke corpus. Used for thought collapse salience.</dd>
+          <dd>
+            The qubit-RNG system — a real quantum randomness simulation ported from the Tsotchke
+            corpus. Used for thought collapse salience.
+          </dd>
           <dt>Free Energy</dt>
-          <dd>Friston's variational free energy — the surprise between prediction and observation. Tracked as a live readout in the cognition tab.</dd>
+          <dd>
+            Friston's variational free energy — the surprise between prediction and observation.
+            Tracked as a live readout in the cognition tab.
+          </dd>
           <dt>Global Workspace (GNW)</dt>
-          <dd>Baars/Dehaene's theory — a broadcast space where winning coalitions of processors ignite. Implemented as the ignition readout.</dd>
+          <dd>
+            Baars/Dehaene's theory — a broadcast space where winning coalitions of processors
+            ignite. Implemented as the ignition readout.
+          </dd>
           <dt>Gray–Scott</dt>
-          <dd>Reaction–diffusion system producing spot/stripe patterns. One of the 36 WildBeyond tiles.</dd>
+          <dd>
+            Reaction–diffusion system producing spot/stripe patterns. One of the 36 WildBeyond
+            tiles.
+          </dd>
           <dt>Holographic Memory</dt>
-          <dd>A distributed associative memory system — each memory stored across the entire weight matrix. Implemented in <code>src/sim/holographic-memory.ts</code>.</dd>
+          <dd>
+            A distributed associative memory system — each memory stored across the entire weight
+            matrix. Implemented in <code>src/sim/holographic-memory.ts</code>.
+          </dd>
           <dt>Imagitron</dt>
-          <dd>The Creativity Machine generator: (latent ⊕ noise) → imagined latent. 24 → 32 → 16.</dd>
+          <dd>
+            The Creativity Machine generator: (latent ⊕ noise) → imagined latent. 24 → 32 → 16.
+          </dd>
           <dt>Integrated Information (Φ)</dt>
-          <dd>Tononi's IIT — a measure of how much a system is "more than the sum of its parts." Tracked as the phi readout.</dd>
+          <dd>
+            Tononi's IIT — a measure of how much a system is "more than the sum of its parts."
+            Tracked as the phi readout.
+          </dd>
           <dt>Lorenz Attractor</dt>
-          <dd>The butterfly-shaped strange attractor from the 1963 weather-convection equations. One of the 36 WildBeyond tiles.</dd>
+          <dd>
+            The butterfly-shaped strange attractor from the 1963 weather-convection equations. One
+            of the 36 WildBeyond tiles.
+          </dd>
           <dt>MEGA GODLIKE BRAIN</dt>
-          <dd>The 4D tesseract connectome visualization — 240 neurons on a rotating 4D hypersphere with five frequency layers (δ–γ), axonal pulses, dendritic halos, spike-train traces, and a global broadcast wavefront. Toggle via <strong>⟁ COMPOSITE / ⬡ MEGA 4D</strong> in Neural tab IV · BRAIN or <strong>⬡ MEGA 4D</strong> in ⟁ ARCHITECTURE.</dd>
+          <dd>
+            The 4D tesseract connectome visualization — 240 neurons on a rotating 4D hypersphere
+            with five frequency layers (δ–γ), axonal pulses, dendritic halos, spike-train traces,
+            and a global broadcast wavefront. Toggle via <strong>⟁ COMPOSITE / ⬡ MEGA 4D</strong> in
+            Neural tab IV · BRAIN or <strong>⬡ MEGA 4D</strong> in ⟁ ARCHITECTURE.
+          </dd>
           <dt>Mechalogodrom</dt>
-          <dd>The central arena organism and namesake simulation dome. 10 bipolar titan shells converge + fuse into one monster.</dd>
+          <dd>
+            The central arena organism and namesake simulation dome. 10 bipolar titan shells
+            converge + fuse into one monster.
+          </dd>
           <dt>Mind Field</dt>
-          <dd>The spatial substrate where cognitive operations happen — a 2D field model in <code>src/sim/mind-field.ts</code>.</dd>
+          <dd>
+            The spatial substrate where cognitive operations happen — a 2D field model in
+            <code>src/sim/mind-field.ts</code>.
+          </dd>
           <dt>Mulberry32</dt>
-          <dd>The specific PRNG algorithm used for all sim randomness. Fast, deterministic, good distribution.</dd>
+          <dd>
+            The specific PRNG algorithm used for all sim randomness. Fast, deterministic, good
+            distribution.
+          </dd>
           <dt>NHSI</dt>
-          <dd>Neural Hierarchy Super-Intelligence — 100-faculty pantheon + 25 theory-of-mind organs wired to world telemetry.</dd>
+          <dd>
+            Neural Hierarchy Super-Intelligence — 100-faculty pantheon + 25 theory-of-mind organs
+            wired to world telemetry.
+          </dd>
           <dt>NHI</dt>
-          <dd>Non-Human Intelligence — the 5 apex super-minds that READ the world and WRITE to it (spawn swarms, dominate, broadcast).</dd>
+          <dd>
+            Non-Human Intelligence — the 5 apex super-minds that READ the world and WRITE to it
+            (spawn swarms, dominate, broadcast).
+          </dd>
           <dt>Noosphere</dt>
-          <dd>The sphere of human thought — modeled as a collective field in <code>src/sim/noosphere.ts</code>.</dd>
+          <dd>
+            The sphere of human thought — modeled as a collective field in
+            <code>src/sim/noosphere.ts</code>.
+          </dd>
           <dt>Open-Endedness</dt>
-          <dd>Bedau/Packard metrics for whether the system keeps producing novel, interesting behavior. Tracked in <code>src/sim/open-endedness.ts</code>.</dd>
+          <dd>
+            Bedau/Packard metrics for whether the system keeps producing novel, interesting
+            behavior. Tracked in <code>src/sim/open-endedness.ts</code>.
+          </dd>
           <dt>Perceptor</dt>
           <dd>The Creativity Machine critic: scores imagined latents for novelty. 16 → 20 → 4.</dd>
           <dt>Petri Dish</dt>
-          <dd>Each super creature has a petri dish — a sub-ecology of organisms that grow and evolve around it.</dd>
+          <dd>
+            Each super creature has a petri dish — a sub-ecology of organisms that grow and evolve
+            around it.
+          </dd>
           <dt>Quantum Reservoir</dt>
-          <dd>A quantum-enhanced reservoir computing layer — uses quantum states as a computational substrate for temporal processing.</dd>
+          <dd>
+            A quantum-enhanced reservoir computing layer — uses quantum states as a computational
+            substrate for temporal processing.
+          </dd>
           <dt>Rössler Attractor</dt>
           <dd>A single-scroll strange attractor (1976). One of the 36 WildBeyond tiles.</dd>
           <dt>Spin Glass</dt>
-          <dd>A disordered magnetic system modeled as a Hopfield/Ising lattice — the INSTINCT readout in the cognition tab. Ported from the Tsotchke corpus.</dd>
+          <dd>
+            A disordered magnetic system modeled as a Hopfield/Ising lattice — the INSTINCT readout
+            in the cognition tab. Ported from the Tsotchke corpus.
+          </dd>
           <dt>Statevector</dt>
-          <dd>The full quantum state of a system — a complex vector of 2^n amplitudes for n qubits. Simulated exactly on classical silicon.</dd>
+          <dd>
+            The full quantum state of a system — a complex vector of 2^n amplitudes for n qubits.
+            Simulated exactly on classical silicon.
+          </dd>
           <dt>Super Creature</dt>
-          <dd>The player-controllable entity with a ~10k-parameter composite mind, twin HUD, and superhero mode. Unlocked via ACCESS.</dd>
+          <dd>
+            The player-controllable entity with a ~10k-parameter composite mind, twin HUD, and
+            superhero mode. Unlocked via ACCESS.
+          </dd>
           <dt>SuperMindSnapshot</dt>
-          <dd>The read-only telemetry struct pushed to the neural observatory each beat — contains latent, quantum, consciousness, emotion, plan, and param count.</dd>
+          <dd>
+            The read-only telemetry struct pushed to the neural observatory each beat — contains
+            latent, quantum, consciousness, emotion, plan, and param count.
+          </dd>
           <dt>Theory of Mind (ToM)</dt>
           <dd>The ability to model another agent's mental state. 25-organ ensemble in the NHSI.</dd>
           <dt>Thomas Attractor</dt>
           <dd>A double-scroll strange attractor. One of the 36 WildBeyond tiles.</dd>
           <dt>Tree of Thought</dt>
-          <dd>5 depths × 5 variants = 25 imagined branches; the best branch is kept each depth. The IMAGINE stage's search strategy.</dd>
+          <dd>
+            5 depths × 5 variants = 25 imagined branches; the best branch is kept each depth. The
+            IMAGINE stage's search strategy.
+          </dd>
           <dt>Tsotchke</dt>
-          <dd>Real MIT quantum corpus integration — ported gate-for-gate, closed-form-tested. Runs exact statevector simulation on classical silicon, not a physical QPU. The absence of hardware is a funding gap, not a validity gap.</dd>
+          <dd>
+            Real MIT quantum corpus integration — ported gate-for-gate, closed-form-tested. Runs
+            exact statevector simulation on classical silicon, not a physical QPU. The absence of
+            hardware is a funding gap, not a validity gap.
+          </dd>
           <dt>WildBeyond</dt>
-          <dd>Standalone p5 lab blending Lorenz collapse, Born-rule measurement, and 36 mathematical tiles across 3 boards.</dd>
+          <dd>
+            Standalone p5 lab blending Lorenz collapse, Born-rule measurement, and 36 mathematical
+            tiles across 3 boards.
+          </dd>
           <dt>ACCESS</dt>
           <dd>Cryptographic puzzle terminal; unlocks playable super creature + twin HUD.</dd>
         </dl>
@@ -546,8 +682,8 @@
         <h2>11. Repo MD corpus guide</h2>
         <p>
           The <code>docs/</code> directory contains the full research corpus. Master index:
-          <a href="/docs/BOOK-2026-06-26.md">BOOK-2026-06-26.md</a>. Generated from BOOK tables
-          (run <code>bun scripts/gen-bible-corpus.ts</code> after BOOK edits):
+          <a href="/docs/BOOK-2026-06-26.md">BOOK-2026-06-26.md</a>. Generated from BOOK tables (run
+          <code>bun scripts/gen-bible-corpus.ts</code> after BOOK edits):
         </p>
         <div class="corpus-tier">
           <!-- CQM-BIBLE-CORPUS-START -->
@@ -555,6 +691,106 @@
           <dl>
             <dt><a href="/docs/BOOK-2026-06-26.md">BOOK — master RAG index</a></dt>
             <dd>Superset index over every doc and module.</dd>
+            <dt><a href="/docs/RUNBOOK-2026-06-26.md">RUNBOOK — ops & smoke</a></dt>
+            <dd>Bootstrap, gate, deploy.</dd>
+            <dt><a href="/docs/AUDIT-LOG.md">AUDIT-LOG.md</a></dt>
+            <dd>
+              The pitch + top-level overview. **Tsotchke fully wired for digital biologics (Eshkol
+              consciousness language, petri soup growth, sentience substrates).**
+            </dd>
+            <dt><a href="/docs/PHILOSOPHY-2026-06-26.md">PHILOSOPHY-2026-06-26.md</a></dt>
+            <dd>
+              The aesthetic constitution: real math under every effect; every system reads AND
+              writes another. **+ Tsotchke biologics paradigm.**
+            </dd>
+            <dt><a href="/docs/CONTROLS-2026-06-26.md">CONTROLS-2026-06-26.md</a></dt>
+            <dd>Every key, button, and gesture.</dd>
+            <dt>
+              <a href="/docs/TECHNICAL-SPECIFICATION-2026-06-26.md"
+                >TECHNICAL-SPECIFICATION-2026-06-26.md</a
+              >
+            </dt>
+            <dd>
+              The full technical spec sheet (also at `/spec`). **Updated with Tsotchke corpus, soup,
+              sentience metrics.**
+            </dd>
+          </dl>
+          <h3>Architecture</h3>
+          <dl>
+            <dt><a href="/docs/FILE-MAP.md">FILE-MAP — auto module map</a></dt>
+            <dd>All src modules summarised from headers.</dd>
+            <dt><a href="/docs/ARCHITECTURE-2026-06-26.md">ARCHITECTURE-2026-06-26.md</a></dt>
+            <dd>The layered system architecture + frame pipeline.</dd>
+            <dt>
+              <a href="/docs/MODULE-CONTRACTS-2026-06-26.md">MODULE-CONTRACTS-2026-06-26.md</a>
+            </dt>
+            <dd>The binding per-module spec (V1 + V2) — contract wins over any writer.</dd>
+            <dt><a href="/docs/COMPLEXITY-2026-06-26.md">COMPLEXITY-2026-06-26.md</a></dt>
+            <dd>Big-O of the hot paths.</dd>
+            <dt><a href="/docs/ENTITY-SHEETS-2026-06-26.md">ENTITY-SHEETS-2026-06-26.md</a></dt>
+            <dd>
+              The bestiary: biology / behaviour / silhouette / material / animation / world-meaning
+              / economic-role for every class — entities, Shoggoths, Puppeteers, Titans, NHIs, the
+              **SUPER CREATURE** (§5★), Leviathans, singularities, tribes, market agents.
+            </dd>
+          </dl>
+          <h3>World</h3>
+          <dl>
+            <dt>
+              <a href="/docs/adr/0005-math-stack-selection-2026-06-26.md">ADR-0005 math stack</a>
+            </dt>
+            <dd>Why these math libraries / techniques.</dd>
+            <dt>
+              <a href="/docs/reference/math-libs-catalog-2026-06-26.md"
+                >reference/math-libs-catalog-2026-06-26.md</a
+              >
+            </dt>
+            <dd>The catalog of math building blocks.</dd>
+            <dt><a href="/docs/PRE-2016-AI-2026-06-26.md">PRE-2016-AI-2026-06-26.md</a></dt>
+            <dd>
+              The classical-AI techniques behind the minds (perceptrons, Markov, GOAP,
+              regret-matching).
+            </dd>
+            <dt><a href="/docs/BENCHMARKS-2026-06-26.md">BENCHMARKS-2026-06-26.md</a></dt>
+            <dd>Measured hot-path costs (the PHYSICIST's law: measure, don't guess).</dd>
+          </dl>
+          <h3>Research</h3>
+          <dl>
+            <dt><a href="/docs/AUDIT-LOG.md">AUDIT-LOG — living audit trail</a></dt>
+            <dd>Newest-first audit entries.</dd>
+            <dt><a href="/docs/KANBAN-2026-06-26.md">KANBAN — in-flight work</a></dt>
+            <dd>Live task board.</dd>
+            <dt><a href="/docs/VENTURES-2026-06-26.md">VENTURES — product horizon</a></dt>
+            <dd>Multiplayer, accounts, outreach (aspirational).</dd>
+            <dt><a href="/docs/AI-SUBSYSTEM-2026-06-26.md">AI-SUBSYSTEM-2026-06-26.md</a></dt>
+            <dd>The Copilot architecture + safety posture.</dd>
+            <dt>
+              <a href="/docs/COPILOT-PROVIDERS-2026-06-26.md">COPILOT-PROVIDERS-2026-06-26.md</a>
+            </dt>
+            <dd>The failover provider chain + the offline 🩺 diagnostics.</dd>
+            <dt><a href="/docs/../src/ui/help-knowledge.ts">`src/ui/help-knowledge.ts`</a></dt>
+            <dd>
+              The repo-grounded HELP corpus + retriever (the in-world RAG; safety constitution baked
+              in).
+            </dd>
+            <dt><a href="/docs/DESIGN-SYSTEM-2026-06-26.md">DESIGN-SYSTEM-2026-06-26.md</a></dt>
+            <dd>Tokens, typography, the glass aesthetic.</dd>
+            <dt><a href="/docs/WIREFRAMES-2026-06-26.md">WIREFRAMES-2026-06-26.md</a></dt>
+            <dd>Panel layouts + the dock.</dd>
+            <dt><a href="/docs/ERD-2026-06-26.md">ERD-2026-06-26.md</a></dt>
+            <dd>Entity-relationship diagram.</dd>
+            <dt><a href="/docs/ERM-2026-06-26.md">ERM-2026-06-26.md</a></dt>
+            <dd>Entity-relationship model.</dd>
+            <dt><a href="/docs/ERP-2026-06-26.md">ERP-2026-06-26.md</a></dt>
+            <dd>Entity-relationship / process model.</dd>
+            <dt><a href="/docs/../CHANGELOG.md">../CHANGELOG.md</a></dt>
+            <dd>Every increment, V1 → today, with verification receipts.</dd>
+            <dt>
+              <a href="/docs/500-POINT-INSPECTION-2026-06-26.md"
+                >500-POINT-INSPECTION-2026-06-26.md</a
+              >
+            </dt>
+            <dd>The deep inspection checklist.</dd>
           </dl>
           <!-- CQM-BIBLE-CORPUS-END -->
         </div>
@@ -574,14 +810,30 @@
         </ul>
         <h3>Planned milestones</h3>
         <ul>
-          <li><strong>GPU shader brain</strong>: 25k params per letter creature, 100k→5M for APEX</li>
-          <li><strong>Full-stack deployment</strong>: browser + mobile + tablet, Windows/Mac/Linux</li>
+          <li>
+            <strong>GPU shader brain</strong>: 25k params per letter creature, 100k→5M for APEX
+          </li>
+          <li>
+            <strong>Full-stack deployment</strong>: browser + mobile + tablet, Windows/Mac/Linux
+          </li>
           <li><strong>Multiplayer</strong>: up to 10 simultaneous global players</li>
           <li><strong>User accounts</strong>: contact info, donations, in-game purchases</li>
-          <li><strong>Subscriptions</strong>: $10/mo early access + 10 min personal meeting; $5 EDU/non-profit</li>
-          <li><strong>Free AI resources</strong>: models, learning links, library resources for all players</li>
-          <li><strong>Peer-review meta-analysis</strong>: defensible, falsifiable study of the simulation</li>
-          <li><strong>Institution outreach</strong>: labs, professors, engineers, scientists, foundations</li>
+          <li>
+            <strong>Subscriptions</strong>: $10/mo early access + 10 min personal meeting; $5
+            EDU/non-profit
+          </li>
+          <li>
+            <strong>Free AI resources</strong>: models, learning links, library resources for all
+            players
+          </li>
+          <li>
+            <strong>Peer-review meta-analysis</strong>: defensible, falsifiable study of the
+            simulation
+          </li>
+          <li>
+            <strong>Institution outreach</strong>: labs, professors, engineers, scientists,
+            foundations
+          </li>
           <li><strong>APEX scaling</strong>: 100k → 250k → 500k → 1M → 2.5M → 5M parameters</li>
         </ul>
         <h3>Funding vision</h3>
@@ -591,7 +843,8 @@
           falsifiable — it can hold its own against 100 A-Life projects in peer review.
         </p>
         <p>
-          See <code>docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md</code> for measured progress receipts.
+          See <code>docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md</code> for measured progress
+          receipts.
         </p>
       </section>
 
@@ -604,9 +857,18 @@
           institution outreach, and a peer-review meta-analysis study.
         </p>
         <ul>
-          <li><strong>Waitlist</strong> — <code>POST /api/waitlist</code> with <code>{ "email": "…" }</code> (scaffold).</li>
-          <li><strong>Roadmap JSON</strong> — <code>GET /api/ventures</code> returns milestone summary.</li>
-          <li><strong>Social amplify</strong> — GitHub star / follow / repost helps grow the A-Life community.</li>
+          <li>
+            <strong>Waitlist</strong> — <code>POST /api/waitlist</code> with
+            <code>{ "email": "…" }</code> (scaffold).
+          </li>
+          <li>
+            <strong>Roadmap JSON</strong> — <code>GET /api/ventures</code> returns milestone
+            summary.
+          </li>
+          <li>
+            <strong>Social amplify</strong> — GitHub star / follow / repost helps grow the A-Life
+            community.
+          </li>
         </ul>
       </section>
 

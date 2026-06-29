@@ -57,6 +57,8 @@ interface Body {
   readonly hue: number;
   readonly sat: number;
   readonly light: number;
+  /** Global archetype index (0–99) for brain-activity lookup. */
+  readonly gIdx: number;
 }
 
 /** Which shape pool an archetype belongs to (vowels stand out as knots). */
@@ -94,6 +96,12 @@ export class AlphabetPantheonRender {
   private readonly apexHalo: THREE.Mesh;
   private readonly apexSpikes: THREE.Mesh;
   private chaos = 0;
+  /** Per-creature brain activity (0..1) from GlyphBrainBatch — drives visual pulse intensity. */
+  private brainActivity: Float32Array | null = null;
+  /** Per-creature novelty (0..1) — drives shimmer/hue shift. */
+  private brainNovelty: Float32Array | null = null;
+  /** Per-creature valence (−1..1) — drives hue rotation direction. */
+  private brainValence: Float32Array | null = null;
 
   constructor(scene: THREE.Scene) {
     this.mat = new THREE.MeshBasicMaterial({
@@ -139,7 +147,20 @@ export class AlphabetPantheonRender {
         const pulse = 0.1 + b.curiosity * 0.25;
         const sat = Math.min(1, 0.98 + 0.02 * b.quantum);
         const light = 0.32 + 0.22 * b.generative;
-        list.push({ ax, ay, az, baseScale, freq, phase, spin, pulse, hue: b.hue, sat, light });
+        list.push({
+          ax,
+          ay,
+          az,
+          baseScale,
+          freq,
+          phase,
+          spin,
+          pulse,
+          hue: b.hue,
+          sat,
+          light,
+          gIdx: i,
+        });
 
         // Colour from the bias — saturated, luminous read.
         C.setHSL(b.hue, sat, light);
@@ -195,6 +216,17 @@ export class AlphabetPantheonRender {
     this.chaos = clamp(c, 0, 1);
   }
 
+  /**
+   * Feed per-creature brain activity from {@link GlyphBrainBatch} to modulate visual appearance.
+   * Activity drives pulse intensity, novelty drives hue shimmer, valence drives hue rotation.
+   * Visual-only — does not affect world state.
+   */
+  setBrainActivity(activity: Float32Array, novelty: Float32Array, valence: Float32Array): void {
+    this.brainActivity = activity;
+    this.brainNovelty = novelty;
+    this.brainValence = valence;
+  }
+
   /** Bob / spin / pulse every body on its own cadence. Pure trig, allocation-free, no rng. */
   update(t: number): void {
     const quick = 1 + 0.6 * this.chaos; // chaos speeds the whole pantheon
@@ -204,16 +236,24 @@ export class AlphabetPantheonRender {
       for (let s = 0; s < list.length; s++) {
         const b = list[s]!;
         const ph = t * b.freq * quick + b.phase;
+        // Brain-driven activity modulation (visual-only)
+        const ba = this.brainActivity?.[b.gIdx] ?? 0;
+        const bn = this.brainNovelty?.[b.gIdx] ?? 0;
+        const bv = this.brainValence?.[b.gIdx] ?? 0;
+        const brainPulse = 1 + ba * 0.4; // activity scales the pulse depth
         P.set(b.ax, b.ay + Math.sin(ph) * 7, b.az);
         E.set(Math.sin(ph * 0.6) * 0.5, t * b.spin * quick + b.phase, Math.cos(ph * 0.5) * 0.4);
         Q.setFromEuler(E);
-        S.setScalar(b.baseScale * (1 + b.pulse * Math.sin(ph * 1.7)));
+        S.setScalar(b.baseScale * (1 + b.pulse * Math.sin(ph * 1.7) * brainPulse + ba * 0.08));
         M.compose(P, Q, S);
         mesh.setMatrixAt(s, M);
         // Live hue drift + brightness pulse — each body its own cadence (no rng).
-        const hue = (b.hue + Math.sin(ph * 0.31) * 0.06 + t * 0.002 * b.spin) % 1;
-        const lit = b.light + 0.1 * Math.sin(ph * 2.3);
-        C.setHSL(hue < 0 ? hue + 1 : hue, b.sat, clamp(lit, 0.38, 0.68));
+        // Brain novelty shifts hue, valence rotates it
+        const hueShift = Math.sin(ph * 0.31) * 0.06 + t * 0.002 * b.spin + bn * 0.04 * bv;
+        const hue = (b.hue + hueShift) % 1;
+        const litBoost = ba * 0.12 + bn * 0.06;
+        const lit = b.light + 0.1 * Math.sin(ph * 2.3) + litBoost;
+        C.setHSL(hue < 0 ? hue + 1 : hue, Math.min(1, b.sat + bn * 0.1), clamp(lit, 0.35, 0.72));
         mesh.setColorAt(s, C);
       }
       mesh.instanceMatrix.needsUpdate = true;

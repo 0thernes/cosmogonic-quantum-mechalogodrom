@@ -1109,11 +1109,7 @@ const drawBrain: Drawer = (ctx, w, h, s, t) => {
   lab(ctx, w, 9, '600 ');
   ctx.textBaseline = 'top';
   ctx.textAlign = 'left';
-  ctx.fillText(
-    `IV · BRAIN — composite connectome · ${s.paramCount}p · ${s.organs} organs`,
-    8,
-    6,
-  );
+  ctx.fillText(`IV · BRAIN — composite connectome · ${s.paramCount}p · ${s.organs} organs`, 8, 6);
   const cx = w / 2;
   const cy = h / 2 + 8;
   const scale = Math.min(w, h) * 0.34;
@@ -1148,8 +1144,7 @@ const drawBrain: Drawer = (ctx, w, h, s, t) => {
     );
   }
   const pulse = frac(t * 0.4);
-  const glob =
-    0.3 * (k.selfAware ?? 0) + 0.25 * (k.reasoning ?? 0) + 0.2 * (k.novelty ?? 0);
+  const glob = 0.3 * (k.selfAware ?? 0) + 0.25 * (k.reasoning ?? 0) + 0.2 * (k.novelty ?? 0);
   if (glob > 0.35) {
     const wave = frac(t * 0.65);
     const r = scale * (0.15 + wave * 0.8);
@@ -1404,7 +1399,7 @@ const drawMegaBrain: Drawer = (ctx, w, h, s, t) => {
       const lj = layer[j]!;
       const lhue = LAYER_HUES[li]!;
       const lhue2 = LAYER_HUES[lj]!;
-      const hue = (lhue + lhue2) / 2 + (t * 20) % 360;
+      const hue = (lhue + lhue2) / 2 + ((t * 20) % 360);
       ctx.strokeStyle = `hsla(${hue},100%,${(46 + strength * 38).toFixed(0)}%,${(strength * 0.4 * near).toFixed(2)})`;
       ctx.lineWidth = 0.3 + strength * 1.6 * near;
       ctx.beginPath();
@@ -1415,7 +1410,14 @@ const drawMegaBrain: Drawer = (ctx, w, h, s, t) => {
       const pp = (pulse + (i + j) * 0.013) % 1;
       const px = pts[i]!.x + (pts[j]!.x - pts[i]!.x) * pp;
       const py = pts[i]!.y + (pts[j]!.y - pts[i]!.y) * pp;
-      spark(ctx, px, py, 1.5 + strength * 3.5, `${(hue + 60) % 360},255,200`, strength * 0.7 * near);
+      spark(
+        ctx,
+        px,
+        py,
+        1.5 + strength * 3.5,
+        `${(hue + 60) % 360},255,200`,
+        strength * 0.7 * near,
+      );
     }
   }
 

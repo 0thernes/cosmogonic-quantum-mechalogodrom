@@ -10,6 +10,7 @@ import {
   makeRateLimiter,
   parseAuditBody,
   parseChatMessages,
+  parseWaitlistBody,
   withSecurityHeaders,
 } from '../server';
 
@@ -62,6 +63,24 @@ describe('parseAuditBody — audit POST body narrowing', () => {
   test('a valid in-range ts is preserved', () => {
     const e = parseAuditBody({ action: 'a', ts: 1700000000000 });
     expect(e?.ts).toBe(1700000000000);
+  });
+});
+
+describe('parseWaitlistBody — ventures waitlist POST narrowing', () => {
+  test('accepts a valid email and normalizes case', () => {
+    const e = parseWaitlistBody({ email: ' Player@Example.COM ' });
+    expect(e?.email).toBe('player@example.com');
+  });
+
+  test('accepts optional tier tag', () => {
+    const e = parseWaitlistBody({ email: 'a@b.co', tier: ' edu ' });
+    expect(e?.tier).toBe('edu');
+  });
+
+  test('rejects invalid email shapes', () => {
+    expect(parseWaitlistBody(null)).toBeNull();
+    expect(parseWaitlistBody({ email: 'not-an-email' })).toBeNull();
+    expect(parseWaitlistBody({ email: 'x'.repeat(200) + '@y.co' })).toBeNull();
   });
 });
 

@@ -118,10 +118,11 @@ export class GlyphBrain {
   private readonly affect: Subnet;
   private readonly motor: Subnet;
   private readonly meta: Subnet;
+  private readonly memory: Subnet;
   private readonly plastic: Float32Array; // 32×32 Hebbian overlay
 
   private readonly latent = new Float32Array(LATENT_DIM);
-  private readonly scratch = new Float32Array(64);
+  private readonly scratch = new Float32Array(128);
   private readonly noise = new Float32Array(NOISE_DIM);
   private readonly senses = new Float32Array(SENSORY_DIM);
   private beat = 0;
@@ -130,7 +131,7 @@ export class GlyphBrain {
     this.index = index;
     const rng = mulberry32(seed ^ (index * 0x9e3779b9));
 
-    this.cortex = makeSubnet(SENSORY_DIM, 64, LATENT_DIM, rng);
+    this.cortex = makeSubnet(SENSORY_DIM, 128, LATENT_DIM, rng);
     this.organs = Array.from({ length: ORGAN_COUNT }, () => makeSubnet(4, 16, 2, rng));
     this.imagitron = makeSubnet(LATENT_DIM + NOISE_DIM, 64, LATENT_DIM, rng);
     this.perceptor = makeSubnet(LATENT_DIM, 32, 4, rng);
@@ -139,6 +140,7 @@ export class GlyphBrain {
     this.affect = makeSubnet(SENSORY_DIM, 16, 3, rng);
     this.motor = makeSubnet(LATENT_DIM, 16, 4, rng);
     this.meta = makeSubnet(LATENT_DIM + 3 + 4, 16, 4, rng);
+    this.memory = makeSubnet(LATENT_DIM, 32, 16, rng);
     this.plastic = new Float32Array(LATENT_DIM * LATENT_DIM);
 
     this.paramCount =
@@ -151,6 +153,7 @@ export class GlyphBrain {
       this.affect.params +
       this.motor.params +
       this.meta.params +
+      this.memory.params +
       this.plastic.length;
 
     // Initialize latent deterministically
@@ -181,7 +184,7 @@ export class GlyphBrain {
 
     // 3) IMAGINE — Creativity Machine (latent ⊕ noise → imagined)
     for (let i = 0; i < NOISE_DIM; i++) {
-      this.noise[i] = (Math.sin(this.beat * 0.13 + i * 1.7) * 0.5);
+      this.noise[i] = Math.sin(this.beat * 0.13 + i * 1.7) * 0.5;
     }
     const imgIn = new Float32Array(LATENT_DIM + NOISE_DIM);
     imgIn.set(newLatent);
@@ -197,6 +200,7 @@ export class GlyphBrain {
 
     // 6) PREDICT — world model (error → surprise, but we don't use it for world state)
     const _predicted = forwardSubnet(this.predictor, this.latent, this.scratch);
+    void forwardSubnet(this.memory, reasoned, this.scratch);
     void _predicted;
 
     // 7) AFFECT — emotion from senses

@@ -7,11 +7,11 @@
   "type": "module",
   "scripts": {
     "prepare": "git config core.hooksPath .githooks && git config core.autocrlf input || true",
-    "predev": "bun scripts/sync-local.ts && bun scripts/gen-alife-embed.ts && bun scripts/build.ts",
+    "predev": "bun scripts/sync-local.ts && bun scripts/gen-alife-embed.ts && bun scripts/gen-bible-corpus.ts && bun scripts/build.ts",
     "dev": "bun scripts/harvest-tsotchke-corpus.ts && bun --hot server.ts",
     "pull": "bun scripts/sync-local.ts",
     "start": "bun server.ts",
-    "build": "bun scripts/gen-alife-embed.ts && bun scripts/build.ts",
+    "build": "bun scripts/gen-alife-embed.ts && bun scripts/gen-bible-corpus.ts && bun scripts/build.ts",
     "pages": "bun run build && bun scripts/build-pages.ts",
     "typecheck": "tsc --noEmit",
     "lint": "oxlint src server.ts tests bench scripts",
@@ -28,6 +28,8 @@
     "verify:receipts": "bun scripts/verify-receipts.ts",
     "sync": "bun scripts/sync-surfaces.ts",
     "sync:check": "bun scripts/sync-surfaces.ts --check",
+    "gen:bible": "bun scripts/gen-bible-corpus.ts",
+    "smoke": "bun run build && bun scripts/smoke.ts",
     "harvest:tsotchke": "bun scripts/harvest-tsotchke-corpus.ts"
   },
   "dependencies": {

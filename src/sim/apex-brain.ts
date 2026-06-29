@@ -1472,6 +1472,9 @@ export const APEX_BRAIN_START_PARAMS = 100_000;
 /** Near-term APEX scaling target (before the full native 1B backend). */
 export const APEX_BRAIN_ROADMAP_PARAMS = 5_000_000;
 
+/** Mechalogodrom center fusion — designed parameter roadmap (matches APEX 5M tier). */
+export const MECHALOGODROM_BRAIN_DESIGNED_PARAMS = APEX_BRAIN_ROADMAP_PARAMS;
+
 // ════════════════════════════════════════════════════════════════════════════════════════════════
 // SCALING SCAFFOLDING — the architecture that scales from the live engine toward 1 BILLION neurons
 // ════════════════════════════════════════════════════════════════════════════════════════════════
@@ -1557,6 +1560,96 @@ export const SCALE_MEDIUM: ApexScale = {
   qubits: 10,
 };
 
+/** Designed ~250k-parameter APEX scale (first expansion tier). */
+export const SCALE_APEX_250K: ApexScale = {
+  name: 'APEX-250K',
+  loom: 30_000,
+  acoustic: 30_000,
+  necro: 20_000,
+  kleinW: 120,
+  kleinH: 120,
+  pendulum: 20_000,
+  slime: 30_000,
+  chronoD1: 20,
+  chronoD2: 200,
+  tunnel: 37_500,
+  thermo: 25_000,
+  ouroboros: 25_000,
+  qubits: 9,
+};
+
+/** Designed ~500k-parameter APEX scale (second expansion tier). */
+export const SCALE_APEX_500K: ApexScale = {
+  name: 'APEX-500K',
+  loom: 60_000,
+  acoustic: 60_000,
+  necro: 40_000,
+  kleinW: 160,
+  kleinH: 160,
+  pendulum: 40_000,
+  slime: 60_000,
+  chronoD1: 30,
+  chronoD2: 300,
+  tunnel: 75_000,
+  thermo: 50_000,
+  ouroboros: 50_000,
+  qubits: 10,
+};
+
+/** Designed ~1M-parameter APEX scale (third expansion tier). */
+export const SCALE_APEX_1M: ApexScale = {
+  name: 'APEX-1M',
+  loom: 120_000,
+  acoustic: 120_000,
+  necro: 80_000,
+  kleinW: 240,
+  kleinH: 240,
+  pendulum: 80_000,
+  slime: 120_000,
+  chronoD1: 50,
+  chronoD2: 500,
+  tunnel: 150_000,
+  thermo: 100_000,
+  ouroboros: 100_000,
+  qubits: 11,
+};
+
+/** Designed ~2.5M-parameter APEX scale (fourth expansion tier). */
+export const SCALE_APEX_2_5M: ApexScale = {
+  name: 'APEX-2.5M',
+  loom: 300_000,
+  acoustic: 300_000,
+  necro: 200_000,
+  kleinW: 400,
+  kleinH: 400,
+  pendulum: 200_000,
+  slime: 300_000,
+  chronoD1: 80,
+  chronoD2: 800,
+  tunnel: 375_000,
+  thermo: 250_000,
+  ouroboros: 250_000,
+  qubits: 12,
+};
+
+/** Designed ~5M-parameter APEX scale (near-term roadmap target). */
+export const SCALE_APEX_5M: ApexScale = {
+  name: 'APEX-5M',
+  loom: 600_000,
+  acoustic: 600_000,
+  necro: 400_000,
+  kleinW: 600,
+  kleinH: 600,
+  pendulum: 400_000,
+  slime: 600_000,
+  chronoD1: 120,
+  chronoD2: 1200,
+  tunnel: 750_000,
+  thermo: 500_000,
+  ouroboros: 500_000,
+  qubits: 12,
+};
+
 /**
  * The MASSIVE design scale — the brief's per-organ node targets. `apexDesignedNeurons(SCALE_MASSIVE)`
  * exceeds **one billion**, which is the apex's stated scaling target. The live engine still caps
@@ -1596,6 +1689,24 @@ export function apexDesignedNeurons(s: ApexScale): number {
     s.ouroboros +
     (1 << Math.min(30, s.qubits))
   );
+}
+
+/** All APEX scaling tiers in order, from starting to roadmap target. */
+export const APEX_SCALE_TIERS: readonly ApexScale[] = [
+  SCALE_LIVE,
+  SCALE_APEX_START,
+  SCALE_APEX_250K,
+  SCALE_APEX_500K,
+  SCALE_APEX_1M,
+  SCALE_APEX_2_5M,
+  SCALE_APEX_5M,
+  SCALE_MEDIUM,
+  SCALE_MASSIVE,
+];
+
+/** Get the designed parameter count for a given scale (approximate). */
+export function apexScaleParams(s: ApexScale): number {
+  return Math.round(apexDesignedNeurons(s) * 2.5);
 }
 
 /** Clamp a designed organ size down to what the live runtime will actually allocate. */
@@ -1681,7 +1792,7 @@ export class ApexBrain {
 
   constructor(seed: number, opts?: { scale?: ApexScale }) {
     this.seed = seed >>> 0 || 1;
-    const s = opts?.scale ?? SCALE_LIVE;
+    const s = opts?.scale ?? SCALE_APEX_START;
     this.scale = s;
     // Each organ allocates the CAPPED live size; the designed scale can be far larger (up to 1B).
     const loomN = liveSize(s.loom);
@@ -1865,6 +1976,9 @@ export class ApexBrain {
  * pantheon and the brain agree on the apex's identity. A clean one-way dependency
  * (apex-brain → pantheon-breeding); pantheon-breeding never imports this module.
  */
-export function createApexBrain(seed: number = LINEAGE[100]!.seed): ApexBrain {
-  return new ApexBrain(seed);
+export function createApexBrain(
+  seed: number = LINEAGE[100]!.seed,
+  scale: ApexScale = SCALE_APEX_START,
+): ApexBrain {
+  return new ApexBrain(seed, { scale });
 }

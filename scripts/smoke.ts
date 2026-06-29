@@ -5,10 +5,12 @@
  */
 import { spawn } from 'node:child_process';
 import { existsSync } from 'node:fs';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const PORT = Number(process.env.CQM_SMOKE_PORT ?? 3099);
-const ROOT = new URL('..', import.meta.url).pathname.replace(/^\/([A-Z]:)/, '$1');
-const DIST = `${ROOT}/dist`;
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
+const DIST = join(ROOT, 'dist');
 
 function fail(msg: string): never {
   console.error(`smoke: FAIL — ${msg}`);
@@ -34,11 +36,12 @@ async function fetchOk(path: string, expectJson = false): Promise<void> {
   console.log(`smoke: OK ${path}`);
 }
 
-if (!existsSync(`${DIST}/index.html`)) fail('dist/index.html missing — run bun run build first');
+if (!existsSync(join(DIST, 'index.html')))
+  fail('dist/index.html missing — run bun run build first');
 
 const proc = spawn('bun', ['server.ts'], {
   cwd: ROOT,
-  env: { ...process.env, PORT: String(PORT), CQM_DIST: 'dist' },
+  env: { ...process.env, PORT: String(PORT) },
   stdio: ['ignore', 'pipe', 'pipe'],
 });
 
@@ -62,6 +65,7 @@ try {
   }
 
   await fetchOk('/api/health', true);
+  await fetchOk('/api/ventures', true);
   await fetchOk('/');
   await fetchOk('/bible');
   await fetchOk('/docs');
