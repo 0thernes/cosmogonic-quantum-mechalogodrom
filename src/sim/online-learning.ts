@@ -110,14 +110,21 @@ export class EligibilityLearner {
    */
   step(weights: number[], input: readonly number[], reward: number, cfg: LearnConfig): number {
     const n = weights.length < this.trace.length ? weights.length : this.trace.length;
-    const step = cfg.rate * reward;
+    const r = Number.isFinite(reward) ? reward : 0;
+    const step = cfg.rate * r;
+    const decay = Number.isFinite(cfg.decay) ? cfg.decay : 0;
     let traceNorm = 0;
     for (let i = 0; i < n; i++) {
-      const e = (this.trace[i] ?? 0) * this.lambda + (input[i] ?? 0);
+      const prev = this.trace[i] ?? 0;
+      const prevSafe = Number.isFinite(prev) ? prev : 0;
+      const x = input[i] ?? 0;
+      const xSafe = Number.isFinite(x) ? x : 0;
+      let e = prevSafe * this.lambda + xSafe;
+      if (!Number.isFinite(e)) e = 0;
       this.trace[i] = e;
       traceNorm += e < 0 ? -e : e;
       const w = weights[i] ?? 0;
-      weights[i] = bound(w * (1 - cfg.decay) + step * e, cfg.clamp);
+      weights[i] = bound((Number.isFinite(w) ? w : 0) * (1 - decay) + step * e, cfg.clamp);
     }
     return traceNorm;
   }
