@@ -24,16 +24,16 @@
     <link rel="stylesheet" href="./src/styles/app.css" />
     <!-- V86 critical shell: correct panel columns + hide orphan chrome before module JS runs -->
     <style id="cqm-critical-shell">
-      @media (min-width: 769px) and (pointer: fine) and (orientation: landscape) {
+      @media (min-width: 769px) and (pointer: fine) {
         #ui:not(:has(.ui-col-left)) > #sP,
         #ui:not(:has(.ui-col-left)) > #algoP,
         #ui:not(:has(.ui-col-left)) > #perf-slot {
           grid-column: 1;
         }
         #ui:not(:has(.ui-col-right)) > #oP,
-        #ui:not(:has(.ui-col-right)) > #cP,
         #ui:not(:has(.ui-col-right)) > #alg,
-        #ui:not(:has(.ui-col-right)) > #hud-vsr {
+        #ui:not(:has(.ui-col-right)) > #hud-vsr,
+        #ui:not(:has(.ui-col-right)) > .cqm-brain-slot {
           grid-column: 3;
         }
       }
@@ -545,203 +545,164 @@
         </div>
       </section>
 
-      <!-- Control panel (small/portrait fine-pointer: left edge-docked sheet, lower; on coarse
-           pointers this panel is display:none — the joystick + look pad + wheel replace it). -->
-      <section
-        id="cP"
-        class="panel sheet sheet-l sheet-lower overflow-hidden rounded-panel border border-cyan-300/15 bg-void/90 shadow-panel backdrop-blur-xl backdrop-saturate-150"
-        aria-label="Control"
-      >
-        <button
-          type="button"
-          data-sheet-handle="cP"
-          class="sheet-handle"
-          aria-controls="cP"
-          aria-expanded="false"
-          aria-label="Open or close control sheet"
-          title="Control"
-        >
-          <span class="sheet-handle-label">CTL</span>
-        </button>
-        <div
-          data-panel-toggle
-          class="flex min-h-7.5 cursor-pointer items-center justify-between border-b border-white/5 px-2.5 py-1.5 select-none"
-        >
-          <span class="sheet-grip" aria-hidden="true"></span>
-          <h2
-            class="font-ui text-2xs font-semibold tracking-widest text-accent uppercase text-shadow-glow-accent"
-          >
-            Control
-          </h2>
+      <!-- Offscreen control pad: [data-a] buttons for InputSystem; keyboard legend lives in SET → Settings. -->
+      <div id="cqm-ctrl-pad-offscreen" class="cqm-offscreen-pad" aria-hidden="true">
+        <div id="pad-move" class="mb-1 grid grid-cols-3 gap-0.5">
+          <span></span>
           <button
             type="button"
-            class="chev flex h-5 w-5 shrink-0 items-center justify-center rounded border-0 bg-white/5 text-xs text-sky-300"
-            aria-label="Collapse or expand control panel"
-            title="Collapse or expand control panel"
+            data-a="fwd"
+            aria-label="Move forward (W)"
+            title="Move forward (W)"
+            class="ctrl-pad-btn"
           >
-            &#9662;
+            <kbd>W</kbd> &#8593;
+          </button>
+          <span></span>
+          <button
+            type="button"
+            data-a="left"
+            aria-label="Strafe left (A)"
+            title="Strafe left (A)"
+            class="ctrl-pad-btn"
+          >
+            <kbd>A</kbd> &#8592;
+          </button>
+          <button
+            type="button"
+            data-a="back"
+            aria-label="Move backward (S)"
+            title="Move backward (S)"
+            class="ctrl-pad-btn"
+          >
+            <kbd>S</kbd> &#8595;
+          </button>
+          <button
+            type="button"
+            data-a="right"
+            aria-label="Strafe right (D)"
+            title="Strafe right (D)"
+            class="ctrl-pad-btn"
+          >
+            <kbd>D</kbd> &#8594;
+          </button>
+          <button
+            type="button"
+            data-a="up"
+            aria-label="Ascend (Q)"
+            title="Ascend (Q)"
+            class="ctrl-pad-btn"
+          >
+            <kbd>Q</kbd> Up
+          </button>
+          <span></span>
+          <button
+            type="button"
+            data-a="down"
+            aria-label="Descend (E)"
+            title="Descend (E)"
+            class="ctrl-pad-btn"
+          >
+            <kbd>E</kbd> Dn
           </button>
         </div>
-        <div class="panel-body max-h-[calc(65vh-40px)] overflow-y-auto p-2">
-          <!-- V3.4: #pad-move/#pad-rot/#pad-sim are hidden on coarse pointers — the
-               joystick + look pad + action wheel replace them (app.css). -->
-          <div id="pad-move" class="mb-1 grid grid-cols-3 gap-0.5">
-            <span></span>
-            <button
-              type="button"
-              data-a="fwd"
-              aria-label="Move forward (W)"
-              title="Move forward (W)"
-              class="ctrl-pad-btn"
-            >
-              <kbd>W</kbd> &#8593;
-            </button>
-            <span></span>
-            <button
-              type="button"
-              data-a="left"
-              aria-label="Strafe left (A)"
-              title="Strafe left (A)"
-              class="ctrl-pad-btn"
-            >
-              <kbd>A</kbd> &#8592;
-            </button>
-            <button
-              type="button"
-              data-a="back"
-              aria-label="Move backward (S)"
-              title="Move backward (S)"
-              class="ctrl-pad-btn"
-            >
-              <kbd>S</kbd> &#8595;
-            </button>
-            <button
-              type="button"
-              data-a="right"
-              aria-label="Strafe right (D)"
-              title="Strafe right (D)"
-              class="ctrl-pad-btn"
-            >
-              <kbd>D</kbd> &#8594;
-            </button>
-            <button
-              type="button"
-              data-a="up"
-              aria-label="Ascend (Q)"
-              title="Ascend (Q)"
-              class="ctrl-pad-btn"
-            >
-              <kbd>Q</kbd> Up
-            </button>
-            <span></span>
-            <button
-              type="button"
-              data-a="down"
-              aria-label="Descend (E)"
-              title="Descend (E)"
-              class="ctrl-pad-btn"
-            >
-              <kbd>E</kbd> Dn
-            </button>
-          </div>
-          <div id="pad-rot" class="flex flex-wrap justify-center gap-0.5">
-            <button
-              type="button"
-              data-a="rleft"
-              aria-label="Roll left (Z)"
-              title="Roll left (Z)"
-              class="ctrl-pad-btn"
-            >
-              <kbd>Z</kbd> Rl
-            </button>
-            <button
-              type="button"
-              data-a="rright"
-              aria-label="Roll right (X)"
-              title="Roll right (X)"
-              class="ctrl-pad-btn"
-            >
-              <kbd>X</kbd> Rr
-            </button>
-            <button
-              type="button"
-              data-a="tup"
-              aria-label="Tilt up (R)"
-              title="Tilt up (R)"
-              class="ctrl-pad-btn"
-            >
-              <kbd>R</kbd> Tu
-            </button>
-            <button
-              type="button"
-              data-a="tdown"
-              aria-label="Tilt down (F)"
-              title="Tilt down (F)"
-              class="ctrl-pad-btn"
-            >
-              <kbd>F</kbd> Td
-            </button>
-            <button
-              type="button"
-              data-a="yleft"
-              aria-label="Yaw left (C)"
-              title="Yaw left (C)"
-              class="ctrl-pad-btn"
-            >
-              <kbd>C</kbd> Yl
-            </button>
-            <button
-              type="button"
-              data-a="yright"
-              aria-label="Yaw right (V)"
-              title="Yaw right (V)"
-              class="ctrl-pad-btn"
-            >
-              <kbd>V</kbd> Yr
-            </button>
-          </div>
-          <div id="pad-sim" class="mt-1.5 grid grid-cols-2 gap-0.5">
-            <button
-              type="button"
-              data-a="split"
-              aria-label="Split mature entities (hold Shift)"
-              title="Split mature entities (hold Shift)"
-              class="ctrl-pad-sim"
-            >
-              <kbd>&#8679;</kbd> Split
-            </button>
-            <button
-              type="button"
-              data-a="burst"
-              aria-label="Burst-spawn entities (hold Space)"
-              title="Burst-spawn entities (hold Space)"
-              class="ctrl-pad-sim"
-            >
-              <kbd>&#9251;</kbd> Burst
-            </button>
-            <button
-              type="button"
-              data-a="mutate"
-              aria-label="Mutate all entities (hold M)"
-              title="Mutate all entities (hold M)"
-              class="ctrl-pad-sim"
-            >
-              <kbd>M</kbd> Mutate
-            </button>
-            <button
-              type="button"
-              data-a="chaos"
-              aria-label="Boost chaos (hold Tab)"
-              title="Boost chaos (hold Tab)"
-              class="ctrl-pad-sim"
-            >
-              <kbd>&#8677;</kbd> Chaos+
-            </button>
-          </div>
+        <div id="pad-rot" class="flex flex-wrap justify-center gap-0.5">
+          <button
+            type="button"
+            data-a="rleft"
+            aria-label="Roll left (Z)"
+            title="Roll left (Z)"
+            class="ctrl-pad-btn"
+          >
+            <kbd>Z</kbd> Rl
+          </button>
+          <button
+            type="button"
+            data-a="rright"
+            aria-label="Roll right (X)"
+            title="Roll right (X)"
+            class="ctrl-pad-btn"
+          >
+            <kbd>X</kbd> Rr
+          </button>
+          <button
+            type="button"
+            data-a="tup"
+            aria-label="Tilt up (R)"
+            title="Tilt up (R)"
+            class="ctrl-pad-btn"
+          >
+            <kbd>R</kbd> Tu
+          </button>
+          <button
+            type="button"
+            data-a="tdown"
+            aria-label="Tilt down (F)"
+            title="Tilt down (F)"
+            class="ctrl-pad-btn"
+          >
+            <kbd>F</kbd> Td
+          </button>
+          <button
+            type="button"
+            data-a="yleft"
+            aria-label="Yaw left (C)"
+            title="Yaw left (C)"
+            class="ctrl-pad-btn"
+          >
+            <kbd>C</kbd> Yl
+          </button>
+          <button
+            type="button"
+            data-a="yright"
+            aria-label="Yaw right (V)"
+            title="Yaw right (V)"
+            class="ctrl-pad-btn"
+          >
+            <kbd>V</kbd> Yr
+          </button>
         </div>
-      </section>
+        <div id="pad-sim" class="mt-1.5 grid grid-cols-2 gap-0.5">
+          <button
+            type="button"
+            data-a="split"
+            aria-label="Split mature entities (hold Shift)"
+            title="Split mature entities (hold Shift)"
+            class="ctrl-pad-sim"
+          >
+            <kbd>&#8679;</kbd> Split
+          </button>
+          <button
+            type="button"
+            data-a="burst"
+            aria-label="Burst-spawn entities (hold Space)"
+            title="Burst-spawn entities (hold Space)"
+            class="ctrl-pad-sim"
+          >
+            <kbd>&#9251;</kbd> Burst
+          </button>
+          <button
+            type="button"
+            data-a="mutate"
+            aria-label="Mutate all entities (hold M)"
+            title="Mutate all entities (hold M)"
+            class="ctrl-pad-sim"
+          >
+            <kbd>M</kbd> Mutate
+          </button>
+          <button
+            type="button"
+            data-a="chaos"
+            aria-label="Boost chaos (hold Tab)"
+            title="Boost chaos (hold Tab)"
+            class="ctrl-pad-sim"
+          >
+            <kbd>&#8677;</kbd> Chaos+
+          </button>
+        </div>
+      </div>
 
-      <!-- Algorithm picker (CONTRACTS V6.2b). A peer of #cP: same glass/rounded/backdrop
+      <!-- Algorithm picker (CONTRACTS V6.2b). Same glass/rounded/backdrop
            treatment; on small/portrait/coarse viewports it is a LEFT edge-docked slide-out
            sheet (.sheet sheet-l) with an always-visible [data-sheet-handle="algoP"] "ALG" tab.
            The body holds a header "Sorting Fields", a SCROLLABLE #algo-list (max-height ~40vh,
@@ -1292,7 +1253,6 @@
           var algoP = document.getElementById('algoP');
           var perf = document.getElementById('perf-slot');
           var oP = document.getElementById('oP');
-          var cP = document.getElementById('cP');
           var alg = document.getElementById('alg');
           var vsr = document.getElementById('hud-vsr');
           if (sP && algoP && perf && !document.getElementById('ui-col-left')) {
@@ -1302,13 +1262,30 @@
             ui.insertBefore(left, ui.firstChild);
             left.append(sP, algoP, perf);
           }
-          if (oP && cP && alg && vsr && !document.getElementById('ui-col-right')) {
+          if (oP && alg && vsr && !document.getElementById('ui-col-right')) {
             var right = document.createElement('div');
             right.id = 'ui-col-right';
             right.className = 'ui-col-right';
             var audit = document.getElementById('aP');
             ui.insertBefore(right, audit || null);
-            right.append(oP, cP, alg, vsr);
+            right.append(oP, alg, vsr);
+            var brains = [
+              ['brain-apex-slot', 'Apex · Brain', 'ARCHITECT → ⊞ NEURAL · Tab IV MEGA 4D'],
+              ['brain-mecha-slot', 'Mechalogodrom · Brain', '⟁ ARCHITECTURE pantheon cycler'],
+              ['brain-glyph-slot', 'Glyph · Brain', '100-letter pantheon · brain-driven motion'],
+            ];
+            for (var b = 0; b < brains.length; b++) {
+              var slot = document.createElement('div');
+              slot.id = brains[b][0];
+              slot.className = 'cqm-brain-slot ui-readout-card ui-readout-card--purple';
+              slot.innerHTML =
+                '<div class="ui-readout-card__head">' +
+                brains[b][1] +
+                '</div><div class="cqm-brain-slot__hint">' +
+                brains[b][2] +
+                '</div>';
+              right.appendChild(slot);
+            }
           }
         }
         initColumns();

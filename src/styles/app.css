@@ -17,16 +17,16 @@
 /* ── V86 first-paint shell (FOUC guard) ───────────────────────────
    Panels + chrome must land in final columns before module JS runs.
    Duplicates index.html #cqm-critical-shell for stylesheet-only loads. */
-@media (min-width: 769px) and (pointer: fine) and (orientation: landscape) {
+@media (min-width: 769px) and (pointer: fine) {
   #ui:not(:has(.ui-col-left)) > #sP,
   #ui:not(:has(.ui-col-left)) > #algoP,
   #ui:not(:has(.ui-col-left)) > #perf-slot {
     grid-column: 1;
   }
   #ui:not(:has(.ui-col-right)) > #oP,
-  #ui:not(:has(.ui-col-right)) > #cP,
   #ui:not(:has(.ui-col-right)) > #alg,
-  #ui:not(:has(.ui-col-right)) > #hud-vsr {
+  #ui:not(:has(.ui-col-right)) > #hud-vsr,
+  #ui:not(:has(.ui-col-right)) > .cqm-brain-slot {
     grid-column: 3;
   }
 }
@@ -45,6 +45,20 @@ body > a[data-nav] {
 /* V105: sim actions live in Settings + persist nav — hide duplicate pad on desktop too. */
 #pad-sim {
   display: none !important;
+}
+/* V107: offscreen pad keeps [data-a] for InputSystem — no visible Control panel. */
+.cqm-offscreen-pad {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+  pointer-events: none !important;
+  opacity: 0 !important;
 }
 body > #bar {
   opacity: 0;
@@ -342,6 +356,18 @@ a:focus-visible {
 #cqm-bottom-stack #bar-shell {
   width: max-content;
   max-width: calc(100vw - 8px);
+}
+/* V107: center HUD launcher row is mobile-only — desktop uses persist-nav ⊞ PANELS + toolbar. */
+#cqm-persist-nav .cqm-persist-panels {
+  display: none;
+}
+@media (min-width: 769px) and (pointer: fine) {
+  #cqm-hud-nav {
+    display: none !important;
+  }
+  #cqm-persist-nav .cqm-persist-panels {
+    display: inline-flex !important;
+  }
 }
 
 /* ── Bottom toolbar scroll shell (src/ui/toolbar.ts) ────────────
@@ -898,7 +924,10 @@ html.cqm-shell-ready .algo-list:empty::after {
   min-height: 0;
   min-width: 0;
   pointer-events: none;
-  align-self: stretch;
+  align-self: end;
+  height: calc(100dvh - var(--cqm-bottom-h, 108px) - 12px);
+  max-height: calc(100dvh - var(--cqm-bottom-h, 108px) - 12px);
+  justify-content: flex-end;
 }
 .ui-col-left {
   grid-area: left;
@@ -911,7 +940,7 @@ html.cqm-shell-ready .algo-list:empty::after {
   pointer-events: auto;
   min-width: 0;
 }
-@media (min-width: 769px) and (pointer: fine) and (orientation: landscape) {
+@media (min-width: 769px) and (pointer: fine) {
   .ui-col-left #sP,
   .ui-col-left #algoP {
     flex: 1 1 0;
@@ -921,6 +950,9 @@ html.cqm-shell-ready .algo-list:empty::after {
     overflow: hidden;
     display: flex;
     flex-direction: column;
+    opacity: 1 !important;
+    background: rgba(3, 6, 18, 0.94) !important;
+    backdrop-filter: blur(14px) saturate(150%);
   }
   .ui-col-left #sP > .panel-body,
   .ui-col-left #algoP > .panel-body {
@@ -931,14 +963,18 @@ html.cqm-shell-ready .algo-list:empty::after {
   }
   .ui-col-left #perf-slot {
     flex: 0 0 auto;
+    margin-top: 0;
   }
   .ui-col-right #oP {
-    flex: 1 1 55%;
+    flex: 1 1 0;
     min-height: 0;
     max-height: none;
     overflow: hidden;
     display: flex;
     flex-direction: column;
+    opacity: 1 !important;
+    background: rgba(3, 6, 18, 0.94) !important;
+    backdrop-filter: blur(14px) saturate(150%);
   }
   .ui-col-right #oP > .obs-body,
   .ui-col-right #oP .panel-body {
@@ -947,24 +983,25 @@ html.cqm-shell-ready .algo-list:empty::after {
     overflow-y: auto;
     overflow-x: hidden;
   }
-  .ui-col-right #cP {
-    flex: 0 0 auto;
-    max-height: min(26vh, 220px);
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-  }
-  .ui-col-right #cP > .panel-body {
-    overflow-y: auto;
-    flex: 1 1 auto;
-    min-height: 0;
-  }
-  .ui-col-right #alg {
+  .ui-col-right #alg,
+  .ui-col-right #hud-vsr,
+  .ui-col-right .cqm-brain-slot {
     flex: 0 0 auto;
   }
-  .ui-col-right #hud-vsr {
-    flex: 0 0 auto;
-    max-height: none;
+  .ui-col-left > section,
+  .ui-col-right > section {
+    max-height: none !important;
+  }
+  /* Portrait desktop: keep panels in-column — no edge slide-off overlap. */
+  @media (orientation: portrait) {
+    .ui-col-left .sheet-l:not(.open),
+    .ui-col-right .sheet-r:not(.open) {
+      transform: none !important;
+    }
+    .ui-col-left .sheet-l > .sheet-handle,
+    .ui-col-right .sheet-r > .sheet-handle {
+      display: none !important;
+    }
   }
   #perf-slot #perf-hud {
     position: static;
@@ -1019,14 +1056,9 @@ html.cqm-shell-ready .algo-list:empty::after {
 #aP > .sheet-handle {
   display: none;
 }
-/* Control pad — right flex column, directly under Observatory. */
+/* V107: Control panel retired — keyboard legend in SET → Settings; pads live offscreen. */
 #cP {
-  position: static;
-  width: auto;
-  max-width: 100%;
-  align-self: stretch;
-  z-index: auto;
-  text-align: center;
+  display: none !important;
 }
 /* Algorithm picker — lower half of the left flex column (even split with telemetry). */
 #algoP {
@@ -1115,6 +1147,18 @@ html.cqm-shell-ready .algo-list:empty::after {
   letter-spacing: 0.08em;
   margin-top: 3px;
 }
+.cqm-brain-slot {
+  pointer-events: none;
+  min-height: 0;
+  padding: 6px 10px;
+  opacity: 0.92;
+}
+.cqm-brain-slot__hint {
+  font: 400 var(--text-4xs) var(--font-ui);
+  color: rgba(180, 160, 220, 0.78);
+  line-height: 1.35;
+  margin-top: 2px;
+}
 
 /* Short desktop windows: keep the right column stack from overlapping the bottom bars or itself. */
 @media (max-height: 780px) and (min-width: 769px) and (pointer: fine) and (orientation: landscape) {
@@ -1125,13 +1169,6 @@ html.cqm-shell-ready .algo-list:empty::after {
   #oP > .obs-body {
     overflow-y: auto;
     max-height: min(38vh, calc(100vh - 340px));
-  }
-  #cP {
-    max-height: 28vh;
-    overflow: hidden;
-  }
-  #cP > .panel-body {
-    overflow-y: auto;
   }
 }
 /* Panels are flex shells so a viewport clamp squeezes the scrolling body. Each is
@@ -1144,8 +1181,7 @@ html.cqm-shell-ready .algo-list:empty::after {
   max-height: clamp(180px, 50vh, 60vh);
   container-type: inline-size;
 }
-#ui > section > .panel-body,
-#cP > .panel-body {
+#ui > section > .panel-body {
   flex: 1 1 auto;
   font-size: var(--text-3xs);
   line-height: 1.55;
@@ -1180,8 +1216,7 @@ html.cqm-shell-ready .algo-list:empty::after {
 }
 #sP .panel-header,
 #oP .panel-header,
-#algoP .panel-header,
-#cP .panel-header {
+#algoP .panel-header {
   font-size: calc(var(--text-2xs) + 1px);
 }
 /* The observatory holds four tall charts per page — give it more vertical room than the
@@ -1380,15 +1415,7 @@ html.cqm-shell-ready .algo-list:empty::after {
     top: calc(50% + 4px);
   }
 
-  /* THREE left sheets now share the left edge (telemetry upper, control + algo-picker
-     lower). On coarse pointers #cP is display:none, so only #sP + #algoP coexist there.
-     But on a FINE-pointer portrait/narrow viewport (e.g. the user's portrait QHD monitor)
-     all three are visible — give #cP and #algoP distinct vertical bands so their handles
-     never stack on top of each other (CONTRACTS V6.2b). Each band is ≥64px apart (handle
-     is 56px tall + gap). */
-  #cP.sheet-lower {
-    top: calc(50% - 60px);
-  }
+  /* TWO left sheets share the left edge (telemetry upper, algo-picker lower). */
   #algoP.sheet-lower {
     top: calc(50% + 8px);
   }
@@ -1506,31 +1533,22 @@ html.cqm-shell-ready .algo-list:empty::after {
   #hud-vsr .ui-readout-card__val {
     font-size: 9px !important;
   }
-  /* Stagger left sheet handles so TEL / CTL / ALG tabs never overlap on phones. */
+  /* Stagger left sheet handles so TEL / ALG tabs never overlap on phones. */
   #sP > .sheet-handle {
     top: calc(10px + env(safe-area-inset-top, 0px));
     bottom: auto;
     transform: translateY(0);
   }
-  #cP > .sheet-handle {
-    top: calc(74px + env(safe-area-inset-top, 0px));
-    bottom: auto;
-    transform: translateY(0);
-  }
   #algoP > .sheet-handle {
-    top: calc(138px + env(safe-area-inset-top, 0px));
+    top: calc(74px + env(safe-area-inset-top, 0px));
     bottom: auto;
     transform: translateY(0);
   }
   #oP > .sheet-handle {
     top: calc(10px + env(safe-area-inset-top, 0px));
   }
-  /* Touch phones: wheel = split/burst/mutate/chaos; hide redundant CTL + ALG picker sheets. */
+  /* Touch phones: wheel = split/burst/mutate/chaos; hide redundant ALG picker sheet. */
   @media (pointer: coarse) {
-    #cP,
-    #cP > .sheet-handle {
-      display: none !important;
-    }
     #algoP,
     #algoP > .sheet-handle {
       display: none !important;
@@ -1638,9 +1656,6 @@ html.cqm-shell-ready .algo-list:empty::after {
   }
   #ui > * {
     pointer-events: auto;
-  }
-  #cP {
-    max-width: 100%;
   }
   /* Sheets become ordinary grid panels again; handles disappear. */
   .sheet {
@@ -1795,9 +1810,8 @@ html.cqm-shell-ready .algo-list:empty::after {
   #pad-sim {
     display: none;
   }
-  #cP {
-    display: none; /* nothing left inside on touch — the overlays ARE control (its CTL
-                      handle is a child, so it hides with it: no dead tab) */
+  #cqm-ctrl-pad-offscreen {
+    display: none;
   }
   #bar button,
   #bar a {
@@ -1924,10 +1938,6 @@ html.cqm-shell-ready .algo-list:empty::after {
   #hud-vsr .ui-readout-card__head {
     font-size: 10px !important;
   }
-  #cP {
-    max-height: clamp(60px, 10vh, 100px) !important;
-    flex: 0 0 auto !important;
-  }
   #alg {
     min-height: 88px;
     max-height: clamp(96px, 14vh, 120px) !important;
@@ -2002,10 +2012,6 @@ html.cqm-shell-ready .algo-list:empty::after {
   }
   #hud-vsr .ui-readout-card__head {
     font-size: 10px !important;
-  }
-  #cP {
-    max-height: clamp(60px, 10vh, 100px) !important;
-    flex: 0 0 auto !important;
   }
   #alg {
     min-height: 88px;
@@ -2132,17 +2138,13 @@ html.cqm-shell-ready .algo-list:empty::after {
     border-top-right-radius: 0;
     border-bottom-right-radius: 0;
   }
-  /* Stagger handles by panel so they never overlap. Telemetry/Control on left, Observatory/Algo on right. */
+  /* Stagger handles by panel so they never overlap. Telemetry on left, Observatory on right. */
   #sP > .sheet-handle,
   #oP > .sheet-handle {
     top: 14%;
   }
-  #cP > .sheet-handle,
   #algoP > .sheet-handle {
     top: 42%;
-  }
-  #algoP > .sheet-handle {
-    top: 70%;
   }
   .ui-col-left .sheet-l:not(.open) {
     transform: translateX(calc(-100% + 24px));
@@ -2152,8 +2154,8 @@ html.cqm-shell-ready .algo-list:empty::after {
   }
 }
 
-/* ── Compact bottom readout row (phones + narrow windows): three even boxes above dock ── */
-@media (max-width: 900px), (pointer: coarse) and (max-width: 1024px) and (orientation: portrait) {
+/* ── Compact bottom readout row (phones only): three even boxes above dock ── */
+@media (max-width: 768px), (pointer: coarse) and (max-width: 1024px) and (orientation: portrait) {
   #perf-hud,
   #ui #alg,
   #ui #hud-vsr {
@@ -2270,11 +2272,8 @@ html.cqm-shell-ready .algo-list:empty::after {
   #sP > .sheet-handle {
     top: calc(8px + env(safe-area-inset-top, 0px)) !important;
   }
-  #cP > .sheet-handle {
-    top: calc(72px + env(safe-area-inset-top, 0px)) !important;
-  }
   #algoP > .sheet-handle {
-    top: calc(136px + env(safe-area-inset-top, 0px)) !important;
+    top: calc(72px + env(safe-area-inset-top, 0px)) !important;
   }
   #oP > .sheet-handle {
     top: calc(8px + env(safe-area-inset-top, 0px)) !important;

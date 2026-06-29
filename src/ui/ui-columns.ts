@@ -1,10 +1,41 @@
 /**
- * UI column layout (V86): groups side panels into flex stacks so boxes stay stacked,
+ * UI column layout (V87): groups side panels into flex stacks so boxes stay stacked,
  * evenly sized, and never overlap when the opposite column is taller.
  *
- * Left:  Telemetry → Sorting Fields → perf HUD
- * Right: Observatory → Control → sorting readout → Sim Settings (compact)
+ * Left:  Telemetry (50%) → Sorting Fields (50%) → perf HUD (anchored above dock)
+ * Right: Observatory → Sorting readout → Sim Settings → brain viz slots (future)
+ * Control pad removed from the right column — keyboard legend lives in SET → Settings.
  */
+
+const BRAIN_SLOTS: readonly { id: string; title: string; hint: string }[] = [
+  {
+    id: 'brain-apex-slot',
+    title: 'Apex · Brain',
+    hint: 'ARCHITECT → ⊞ NEURAL · Tab IV MEGA 4D',
+  },
+  {
+    id: 'brain-mecha-slot',
+    title: 'Mechalogodrom · Brain',
+    hint: '⟁ ARCHITECTURE pantheon cycler',
+  },
+  {
+    id: 'brain-glyph-slot',
+    title: 'Glyph · Brain',
+    hint: '100-letter pantheon · brain-driven motion',
+  },
+];
+
+function ensureBrainSlots(right: HTMLElement, doc: Document): void {
+  for (const { id, title, hint } of BRAIN_SLOTS) {
+    if (doc.getElementById(id)) continue;
+    const slot = doc.createElement('div');
+    slot.id = id;
+    slot.className = 'cqm-brain-slot ui-readout-card ui-readout-card--purple';
+    slot.innerHTML = `<div class="ui-readout-card__head">${title}</div><div class="cqm-brain-slot__hint">${hint}</div>`;
+    right.appendChild(slot);
+  }
+}
+
 export function initUiColumns(doc: Document = document): void {
   const ui = doc.getElementById('ui');
   if (!ui) return;
@@ -13,7 +44,6 @@ export function initUiColumns(doc: Document = document): void {
   const algoP = doc.getElementById('algoP');
   const perfSlot = doc.getElementById('perf-slot');
   const oP = doc.getElementById('oP');
-  const cP = doc.getElementById('cP');
   const alg = doc.getElementById('alg');
   const hudVsr = doc.getElementById('hud-vsr');
 
@@ -28,7 +58,7 @@ export function initUiColumns(doc: Document = document): void {
     left.append(sP, algoP, perfSlot);
   }
 
-  if (oP && cP && alg && hudVsr) {
+  if (oP && alg && hudVsr) {
     let right = doc.getElementById('ui-col-right');
     if (!right) {
       right = doc.createElement('div');
@@ -36,7 +66,8 @@ export function initUiColumns(doc: Document = document): void {
       right.className = 'ui-col-right';
       ui.appendChild(right);
     }
-    right.append(oP, cP, alg, hudVsr);
+    right.append(oP, alg, hudVsr);
+    ensureBrainSlots(right, doc);
   }
 }
 

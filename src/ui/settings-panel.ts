@@ -31,6 +31,14 @@ const STYLE = `
 .cqm-set-btn[data-action="chaosmode"]:hover{border-color:rgba(255,160,40,.6);background:rgba(100,60,20,.5)}
 .cqm-set-btn[data-action="entropy"]{border-color:rgba(255,100,60,.35);color:#ffaa88}
 .cqm-set-btn[data-action="entropy"]:hover{border-color:rgba(255,100,60,.6);background:rgba(100,40,20,.5)}
+#cqm-settings-modal .glass-box{width:min(88vw,320px)}
+.cqm-set-legend{margin-top:6px;padding-top:6px;border-top:1px solid rgba(120,160,255,.2)}
+.cqm-set-hint{margin:0 0 6px;font:400 8px var(--font-ui,ui-monospace,monospace);color:rgba(180,190,220,.75);line-height:1.4}
+.cqm-set-kbd{width:100%;border-collapse:collapse;font:400 8px var(--font-mono,ui-monospace,monospace)}
+.cqm-set-kbd td{padding:2px 4px;vertical-align:top}
+.cqm-set-kbd kbd{display:inline-block;min-width:2.2em;padding:1px 4px;border-radius:4px;border:1px solid rgba(0,120,220,.35);
+  background:rgba(0,80,160,.2);color:#88bbff;font:inherit;text-align:center}
+.cqm-set-kbd .cqm-set-kbd-act{color:rgba(210,220,240,.9)}
 `;
 
 const GROUPS = [
@@ -89,6 +97,38 @@ const GROUPS = [
   },
 ];
 
+const MOVEMENT_KEYS: readonly [string, string][] = [
+  ['W / ↑', 'Move forward'],
+  ['S / ↓', 'Move backward'],
+  ['A / ←', 'Strafe left'],
+  ['D / →', 'Strafe right'],
+  ['Q', 'Ascend'],
+  ['E', 'Descend'],
+  ['Z', 'Roll left'],
+  ['X', 'Roll right'],
+  ['R', 'Tilt up'],
+  ['F', 'Tilt down'],
+  ['C', 'Yaw left'],
+  ['V', 'Yaw right'],
+];
+
+const SIM_HOLD_KEYS: readonly [string, string][] = [
+  ['Shift (hold)', 'Split mature entities'],
+  ['Space (hold)', 'Burst-spawn'],
+  ['M (hold)', 'Mutate all'],
+  ['Tab (hold)', 'Boost chaos'],
+];
+
+function renderKbdTable(rows: readonly [string, string][]): string {
+  return (
+    `<table class="cqm-set-kbd"><tbody>` +
+    rows
+      .map(([k, act]) => `<tr><td><kbd>${k}</kbd></td><td class="cqm-set-kbd-act">${act}</td></tr>`)
+      .join('') +
+    `</tbody></table>`
+  );
+}
+
 class SettingsPanel {
   private readonly modal: HTMLElement;
 
@@ -110,7 +150,7 @@ class SettingsPanel {
 
     const { root, box } = glassPanel({
       id: 'cqm-settings-modal',
-      width: 'min(82vw,260px)',
+      width: 'min(88vw,320px)',
       zIndex: 200,
       doc,
     });
@@ -131,6 +171,15 @@ class SettingsPanel {
         `</div>`;
       box.appendChild(gr);
     }
+    const legend = doc.createElement('div');
+    legend.className = 'cqm-set-gr cqm-set-legend';
+    legend.innerHTML =
+      `<h3>Movement &amp; camera</h3>` +
+      `<p class="cqm-set-hint">Drag to orbit · scroll to zoom. Keys work while this window is closed.</p>` +
+      renderKbdTable(MOVEMENT_KEYS) +
+      `<h3 style="margin-top:8px">Sim actions (hold key)</h3>` +
+      renderKbdTable(SIM_HOLD_KEYS);
+    box.appendChild(legend);
     wireClose(this.modal, () => this.close());
   }
 

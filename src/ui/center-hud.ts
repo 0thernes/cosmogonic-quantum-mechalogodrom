@@ -650,6 +650,17 @@ function buildPersistentNav(doc: Document): void {
   if (settingsToggle) {
     strip.appendChild(mkBtn('⚙ SET', 'Simulation settings', () => settingsToggle.click()));
   }
+  strip.appendChild(
+    mkBtn(
+      '⊞ PANELS',
+      'Center HUD — Neural, Architect, AI, Help, Audit…',
+      () => {
+        if (active < 0) showOnly(0);
+        else cycle(1);
+      },
+      'cqm-persist-panels',
+    ),
+  );
   if (!strip.parentElement) doc.body.appendChild(strip);
   dockBottomBar(strip, doc);
 }
