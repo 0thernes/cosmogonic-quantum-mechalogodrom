@@ -1101,20 +1101,24 @@ const BRAIN_NODES = [
   'DRIVE',
   'SELF',
 ] as const;
+const BRAIN_HUES = [200, 280, 45, 120, 330, 170, 260, 15, 300];
 const drawBrain: Drawer = (ctx, w, h, s, t) => {
-  ctx.fillStyle = PAL.bg;
+  ctx.fillStyle = '#03010a';
   ctx.fillRect(0, 0, w, h);
-  ctx.fillStyle = PAL.violet;
+  ctx.fillStyle = '#00ffd5';
   lab(ctx, w, 9, '600 ');
   ctx.textBaseline = 'top';
   ctx.textAlign = 'left';
-  ctx.fillText('IV · BRAIN — composite-mind connectome', 8, 6);
+  ctx.fillText(
+    `IV · BRAIN — composite connectome · ${s.paramCount}p · ${s.organs} organs`,
+    8,
+    6,
+  );
   const cx = w / 2;
   const cy = h / 2 + 8;
   const scale = Math.min(w, h) * 0.34;
   const ang = t * 0.25;
   const k = s.consciousness;
-  // node activity (bound to real signals)
   const act = [
     avg(s.latent.length ? Array.from(s.latent, (v) => Math.abs(v)) : [0.5]),
     clamp01(k.dreaming ?? 0),
@@ -1143,41 +1147,64 @@ const drawBrain: Drawer = (ctx, w, h, s, t) => {
       ),
     );
   }
-  // edges — every pair, brightness = product of activities + a travelling signal pulse
   const pulse = frac(t * 0.4);
+  const glob =
+    0.3 * (k.selfAware ?? 0) + 0.25 * (k.reasoning ?? 0) + 0.2 * (k.novelty ?? 0);
+  if (glob > 0.35) {
+    const wave = frac(t * 0.65);
+    const r = scale * (0.15 + wave * 0.8);
+    ctx.strokeStyle = `hsla(170,100%,55%,${(glob * (1 - wave) * 0.45).toFixed(2)})`;
+    ctx.lineWidth = 1 + glob * 2;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.stroke();
+  }
   for (let i = 0; i < n; i++)
     for (let j = i + 1; j < n; j++) {
       const strength = (act[i]! + act[j]!) * 0.5;
-      if (strength < 0.12) continue;
+      if (strength < 0.08) continue;
       const near = ((pts[i]!.d + pts[j]!.d) / 2 + 1) / 2;
-      ctx.strokeStyle = `rgba(185,140,255,${(strength * 0.5 * near).toFixed(2)})`;
-      ctx.lineWidth = 0.6 + strength * 1.6 * near;
+      const hue = (BRAIN_HUES[i]! + BRAIN_HUES[j]!) / 2;
+      ctx.strokeStyle = `hsla(${hue},100%,${(48 + strength * 32).toFixed(0)}%,${(strength * 0.55 * near).toFixed(2)})`;
+      ctx.lineWidth = 0.7 + strength * 2.2 * near;
       ctx.beginPath();
       ctx.moveTo(pts[i]!.x, pts[i]!.y);
       ctx.lineTo(pts[j]!.x, pts[j]!.y);
       ctx.stroke();
-      // travelling pulse along this edge
       const pp = (pulse + (i + j) * 0.11) % 1;
       const px = pts[i]!.x + (pts[j]!.x - pts[i]!.x) * pp;
       const py = pts[i]!.y + (pts[j]!.y - pts[i]!.y) * pp;
-      spark(ctx, px, py, 1 + strength * 2.5, '141,255,158', strength * 0.5 * near);
+      spark(ctx, px, py, 1.5 + strength * 3, `${hue},255,200`, strength * 0.65 * near);
     }
-  // nodes
   for (let i = 0; i < n; i++) {
     const p = pts[i]!;
     const v = clamp01(act[i] ?? 0);
     const near = (p.d + 1) / 2;
-    spark(ctx, p.x, p.y, 4 + v * 10 * near, '185,140,255', 0.2 + v * 0.5);
-    ctx.fillStyle = `rgba(216,184,255,${(0.5 + v * 0.5).toFixed(2)})`;
+    const hue = (BRAIN_HUES[i]! + v * 40 + t * 12) % 360;
+    for (let m = 0; m < 4; m++) {
+      const ma = t * (1.2 + m * 0.3) + i * 0.9;
+      const mr = 8 + m * 5 + v * 6;
+      const sx = p.x + Math.cos(ma) * mr * near;
+      const sy = p.y + Math.sin(ma) * mr * near * 0.7;
+      ctx.fillStyle = `hsla(${hue},95%,${(55 + v * 25).toFixed(0)}%,${(0.25 + v * 0.35).toFixed(2)})`;
+      ctx.beginPath();
+      ctx.arc(sx, sy, 0.8 + v * 1.2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    spark(ctx, p.x, p.y, 6 + v * 14 * near, `${hue},255,180`, 0.3 + v * 0.45);
+    ctx.fillStyle = `hsla(${hue},100%,${(42 + v * 38).toFixed(0)}%,${(0.65 + v * 0.35).toFixed(2)})`;
     ctx.beginPath();
-    ctx.arc(p.x, p.y, 2.4 + v * 2, 0, Math.PI * 2);
+    ctx.arc(p.x, p.y, 2.8 + v * 3.2, 0, Math.PI * 2);
     ctx.fill();
+    if (v > 0.45 && near > 0.3) {
+      spark(ctx, p.x, p.y, 10 + v * 18 * near, `${hue},255,160`, 0.35 + v * 0.4);
+    }
     if (near > 0.36) {
-      ctx.fillStyle = PAL.text;
+      ctx.fillStyle = `hsla(${hue},90%,80%,0.9)`;
       lab(ctx, w, 7);
       ctx.textAlign = 'center';
       ctx.textBaseline = 'bottom';
-      ctx.fillText(BRAIN_NODES[i] ?? '', p.x, p.y - 6);
+      ctx.fillText(BRAIN_NODES[i] ?? '', p.x, p.y - 8);
       ctx.textBaseline = 'top';
     }
   }
@@ -1185,7 +1212,18 @@ const drawBrain: Drawer = (ctx, w, h, s, t) => {
 };
 
 /** 4D hyper-grid neuron projected through a rotating w-axis slice — MEGA GODLIKE mode. */
-const MEGA_N = 160;
+const MEGA_N = 240;
+/** Per-neuron spike-train history (ring buffer of binary spikes). */
+const SPIKE_HIST = 24;
+const spikeBuf: Float32Array[] = Array.from({ length: MEGA_N }, () => new Float32Array(SPIKE_HIST));
+let spikeHead = 0;
+/** Cortical layers — neurons assigned to frequency bands by index range. */
+const LAYERS = 5; // delta, theta, alpha, beta, gamma
+const LAYER_HUES = [220, 260, 30, 0, 330]; // blue, purple, amber, red, magenta
+const LAYER_NAMES = ['δ delta', 'θ theta', 'α alpha', 'β beta', 'γ gamma'];
+function layerOf(i: number): number {
+  return Math.floor((i / MEGA_N) * LAYERS);
+}
 /** 4D→3D stereographic-style projection: rotate in the x-w and y-w planes, then project. */
 function project4(
   x: number,
@@ -1223,16 +1261,56 @@ function project4(
   return project(rx, ry, rz, 0, cx, cy, scale);
 }
 const TESS_VERTS: readonly (readonly [number, number, number, number])[] = [
-  [-1, -1, -1, -1], [1, -1, -1, -1], [-1, 1, -1, -1], [1, 1, -1, -1],
-  [-1, -1, 1, -1], [1, -1, 1, -1], [-1, 1, 1, -1], [1, 1, 1, -1],
-  [-1, -1, -1, 1], [1, -1, -1, 1], [-1, 1, -1, 1], [1, 1, -1, 1],
-  [-1, -1, 1, 1], [1, -1, 1, 1], [-1, 1, 1, 1], [1, 1, 1, 1],
+  [-1, -1, -1, -1],
+  [1, -1, -1, -1],
+  [-1, 1, -1, -1],
+  [1, 1, -1, -1],
+  [-1, -1, 1, -1],
+  [1, -1, 1, -1],
+  [-1, 1, 1, -1],
+  [1, 1, 1, -1],
+  [-1, -1, -1, 1],
+  [1, -1, -1, 1],
+  [-1, 1, -1, 1],
+  [1, 1, -1, 1],
+  [-1, -1, 1, 1],
+  [1, -1, 1, 1],
+  [-1, 1, 1, 1],
+  [1, 1, 1, 1],
 ];
 const TESS_EDGES: readonly (readonly [number, number])[] = [
-  [0, 1], [0, 2], [1, 3], [2, 3], [0, 4], [1, 5], [2, 6], [3, 7],
-  [4, 5], [4, 6], [5, 7], [6, 7], [8, 9], [8, 10], [9, 11], [10, 11],
-  [8, 12], [9, 13], [10, 14], [11, 15], [12, 13], [12, 14], [13, 15], [14, 15],
-  [0, 8], [1, 9], [2, 10], [3, 11], [4, 12], [5, 13], [6, 14], [7, 15],
+  [0, 1],
+  [0, 2],
+  [1, 3],
+  [2, 3],
+  [0, 4],
+  [1, 5],
+  [2, 6],
+  [3, 7],
+  [4, 5],
+  [4, 6],
+  [5, 7],
+  [6, 7],
+  [8, 9],
+  [8, 10],
+  [9, 11],
+  [10, 11],
+  [8, 12],
+  [9, 13],
+  [10, 14],
+  [11, 15],
+  [12, 13],
+  [12, 14],
+  [13, 15],
+  [14, 15],
+  [0, 8],
+  [1, 9],
+  [2, 10],
+  [3, 11],
+  [4, 12],
+  [5, 13],
+  [6, 14],
+  [7, 15],
 ];
 const drawMegaBrain: Drawer = (ctx, w, h, s, t) => {
   ctx.fillStyle = '#03010a';
@@ -1242,7 +1320,7 @@ const drawMegaBrain: Drawer = (ctx, w, h, s, t) => {
   ctx.textBaseline = 'top';
   ctx.textAlign = 'left';
   ctx.fillText(
-    `IV · MEGA GODLIKE BRAIN — 4D tesseract connectome · ${s.paramCount}p · ${s.organs} organs`,
+    `IV · MEGA GODLIKE BRAIN — 4D tesseract · ${s.paramCount}p · ${s.organs} organs · ${LAYERS} layers`,
     8,
     6,
   );
@@ -1266,21 +1344,10 @@ const drawMegaBrain: Drawer = (ctx, w, h, s, t) => {
   const tpts: P3[] = [];
   for (const v of TESS_VERTS) {
     tpts.push(
-      project4(
-        v[0] * 0.78,
-        v[1] * 0.78,
-        v[2] * 0.78,
-        v[3] * 0.78,
-        axw,
-        ayw,
-        axy,
-        cx,
-        cy,
-        scale,
-      ),
+      project4(v[0] * 0.78, v[1] * 0.78, v[2] * 0.78, v[3] * 0.78, axw, ayw, axy, cx, cy, scale),
     );
   }
-  ctx.strokeStyle = 'hsla(220,90%,55%,0.28)';
+  ctx.strokeStyle = 'hsla(220,90%,55%,0.22)';
   ctx.lineWidth = 1;
   for (const [i, j] of TESS_EDGES) {
     const a = tpts[i]!;
@@ -1292,10 +1359,11 @@ const drawMegaBrain: Drawer = (ctx, w, h, s, t) => {
     ctx.stroke();
   }
 
-  // 2) 160 neural somas distributed on a 4D hypersphere, split into organ regions.
+  // 2) Neural somas on a 4D hypersphere, assigned to cortical frequency layers.
   const pts: P3[] = [];
   const act: number[] = [];
   const organ: number[] = [];
+  const layer: number[] = [];
   for (let i = 0; i < MEGA_N; i++) {
     const u = (i + 0.5) / MEGA_N;
     const v = frac(i * 0.6180339887);
@@ -1309,20 +1377,22 @@ const drawMegaBrain: Drawer = (ctx, w, h, s, t) => {
     pts.push(project4(x4, y4, z4, w4, axw, ayw, axy, cx, cy, scale));
     const lv = Math.abs(latent[i % latent.length] ?? 0);
     const qv = Math.abs(quantum[i % quantum.length] ?? 0);
-    const region =
-      0.22 * (k.dreaming ?? 0) +
-      0.18 * (k.reasoning ?? 0) +
-      0.16 * (k.selfAware ?? 0) +
-      0.14 * (k.novelty ?? 0) +
-      0.12 * (s.emotion.dominance ?? 0.5);
-    const spike = Math.max(0, Math.sin(t * 6 + i * 0.37) * 0.5 + 0.5) * (lv + qv + glob);
-    act.push(clamp01(lv * 0.45 + qv * 0.35 + region + spike * 0.35));
+    const li = layerOf(i);
+    layer.push(li);
+    // layer-specific frequency coupling: gamma fires faster, delta slower
+    const freqMul = 0.5 + li * 0.35;
+    const spike = Math.max(0, Math.sin(t * 6 * freqMul + i * 0.37) * 0.5 + 0.5) * (lv + qv + glob);
+    const a = clamp01(lv * 0.45 + qv * 0.35 + glob * 0.3 + spike * 0.35);
+    act.push(a);
     organ.push(i % s.organs);
+    // write spike-train: 1 if firing, 0 if quiescent
+    const buf = spikeBuf[i]!;
+    buf[spikeHead] = a > 0.5 ? 1 : 0;
   }
+  spikeHead = (spikeHead + 1) % SPIKE_HIST;
 
   // 3) Axonal connections: small-world by 4D Hamming distance, with traveling spikes.
   const pulse = frac(t * 0.55);
-  const conns: [number, number, number, number][] = []; // i,j,strength,hue
   for (let i = 0; i < MEGA_N; i++) {
     for (let j = i + 1; j < MEGA_N; j++) {
       const d4 = Math.abs((i ^ j) & 15);
@@ -1330,9 +1400,13 @@ const drawMegaBrain: Drawer = (ctx, w, h, s, t) => {
       const strength = (act[i]! + act[j]!) * 0.5;
       if (strength < 0.12) continue;
       const near = ((pts[i]!.d + pts[j]!.d) / 2 + 1) / 2;
-      const hue = (organ[i]! * 37 + organ[j]! * 19 + t * 40) % 360;
-      ctx.strokeStyle = `hsla(${hue},100%,${(46 + strength * 38).toFixed(0)}%,${(strength * 0.45 * near).toFixed(2)})`;
-      ctx.lineWidth = 0.35 + strength * 1.8 * near;
+      const li = layer[i]!;
+      const lj = layer[j]!;
+      const lhue = LAYER_HUES[li]!;
+      const lhue2 = LAYER_HUES[lj]!;
+      const hue = (lhue + lhue2) / 2 + (t * 20) % 360;
+      ctx.strokeStyle = `hsla(${hue},100%,${(46 + strength * 38).toFixed(0)}%,${(strength * 0.4 * near).toFixed(2)})`;
+      ctx.lineWidth = 0.3 + strength * 1.6 * near;
       ctx.beginPath();
       ctx.moveTo(pts[i]!.x, pts[i]!.y);
       ctx.lineTo(pts[j]!.x, pts[j]!.y);
@@ -1342,18 +1416,39 @@ const drawMegaBrain: Drawer = (ctx, w, h, s, t) => {
       const px = pts[i]!.x + (pts[j]!.x - pts[i]!.x) * pp;
       const py = pts[i]!.y + (pts[j]!.y - pts[i]!.y) * pp;
       spark(ctx, px, py, 1.5 + strength * 3.5, `${(hue + 60) % 360},255,200`, strength * 0.7 * near);
-      conns.push([i, j, strength, hue]);
     }
   }
 
-  // 4) Dendritic halo + soma core for each neuron.
+  // 4) Dendritic halo + soma core + spike-train trace for each neuron.
   for (let i = 0; i < MEGA_N; i++) {
     const p = pts[i]!;
     const v = act[i]!;
     const near = (p.d + 1) / 2;
-    const ohue = (organ[i]! * 53 + v * 120 + t * 28) % 360;
-    const sat = 88 + v * 12;
-    const lit = 38 + v * 42;
+    const li = layer[i]!;
+    const baseHue = LAYER_HUES[li]!;
+    const ohue = (baseHue + organ[i]! * 6 + v * 80 + t * 15) % 360;
+    const sat = 85 + v * 15;
+    const lit = 35 + v * 45;
+    // spike-train trace: draw recent spikes as a tiny vertical bar to the right of the soma
+    const buf = spikeBuf[i]!;
+    if (v > 0.3) {
+      const traceX = p.x + 4 + near * 3;
+      ctx.strokeStyle = `hsla(${ohue},90%,60%,0.4)`;
+      ctx.lineWidth = 0.5;
+      ctx.beginPath();
+      ctx.moveTo(traceX, p.y - 6);
+      ctx.lineTo(traceX, p.y + 6);
+      ctx.stroke();
+      for (let b = 0; b < SPIKE_HIST; b++) {
+        const idx = (spikeHead + b) % SPIKE_HIST;
+        const sv = buf[idx]!;
+        if (sv > 0) {
+          const by = p.y - 6 + (b / SPIKE_HIST) * 12;
+          ctx.fillStyle = `hsla(${ohue},100%,70%,${(sv * (1 - b / SPIKE_HIST) * 0.8).toFixed(2)})`;
+          ctx.fillRect(traceX - 1, by - 0.5, 2, 1.5);
+        }
+      }
+    }
     // dendritic shimmer ring
     spark(ctx, p.x, p.y, 5 + v * 14 * near, `${ohue},255,180`, 0.25 + v * 0.35);
     // soma core
@@ -1377,6 +1472,19 @@ const drawMegaBrain: Drawer = (ctx, w, h, s, t) => {
     ctx.arc(cx, cy, r, 0, Math.PI * 2);
     ctx.stroke();
   }
+
+  // 6) Frequency band legend (bottom-left).
+  ctx.font = '8px ui-monospace, monospace';
+  ctx.textBaseline = 'bottom';
+  for (let l = 0; l < LAYERS; l++) {
+    const lh = LAYER_HUES[l]!;
+    const ly = h - 4 - (LAYERS - l) * 10;
+    ctx.fillStyle = `hsl(${lh},90%,60%)`;
+    ctx.fillRect(8, ly, 6, 6);
+    ctx.fillStyle = `hsla(${lh},80%,70%,0.85)`;
+    ctx.fillText(LAYER_NAMES[l] ?? '', 18, ly + 6);
+  }
+  ctx.textBaseline = 'top';
   ctx.textAlign = 'left';
 };
 
@@ -1385,6 +1493,15 @@ const drawBrainRouted: Drawer = (ctx, w, h, s, t, H) => {
   if (megaBrainMode) drawMegaBrain(ctx, w, h, s, t, H);
   else drawBrain(ctx, w, h, s, t, H);
 };
+
+/** Set MEGA 4D brain mode for the neural observatory (instance-safe via setter). */
+export function setMegaBrainMode(v: boolean): void {
+  megaBrainMode = v;
+}
+
+export function getMegaBrainMode(): boolean {
+  return megaBrainMode;
+}
 
 // ── tab → drawer assignment ──────────────────────────────────────────────────────────────────
 const TABS: readonly Drawer[][] = [
@@ -1479,9 +1596,9 @@ export class SuperNeural {
     this.brainCycleBtn.title = 'Cycle brain view: composite connectome ↔ MEGA GODLIKE 4D tesseract';
     this.brainCycleBtn.hidden = true;
     this.brainCycleBtn.addEventListener('click', () => {
-      megaBrainMode = !megaBrainMode;
-      this.brainCycleBtn.textContent = megaBrainMode ? '⬡ MEGA 4D' : '⟁ COMPOSITE';
-      this.brainCycleBtn.classList.toggle('mega', megaBrainMode);
+      setMegaBrainMode(!getMegaBrainMode());
+      this.brainCycleBtn.textContent = getMegaBrainMode() ? '⬡ MEGA 4D' : '⟁ COMPOSITE';
+      this.brainCycleBtn.classList.toggle('mega', getMegaBrainMode());
     });
     this.tabsEl.appendChild(this.brainCycleBtn);
     this.buildGrid(doc);

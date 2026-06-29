@@ -78,7 +78,22 @@ interface StoredAuditEntry {
   detailJson?: string;
 }
 
-/** Circular audit buffer. `auditHead` is the next write slot; `auditCount` ≤ AUDIT_CAP. O(1) push. */
+/** In-memory waitlist (Ventures scaffold — not persisted; export via logs only). */
+const WAITLIST_CAP = 500;
+const waitlistRing: { email: string; ts: number; tier?: string }[] = [];
+const waitlistLimiter = makeRateLimiter(8, 1);
+
+/** Parse POST /api/waitlist body — email required, optional tier tag. */
+export function parseWaitlistBody(body: unknown): { email: string; tier?: string } | null {
+  if (!body || typeof body !== 'object') return null;
+  const b = body as { email?: unknown; tier?: unknown };
+  if (typeof b.email !== 'string') return null;
+  const email = b.email.trim().toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 120) return null;
+  const tier = typeof b.tier === 'string' ? b.tier.trim().slice(0, 32) : undefined;
+  return { email, tier };
+}
+
 const auditRing: (StoredAuditEntry | undefined)[] = Array.from({ length: AUDIT_CAP });
 let auditHead = 0;
 let auditCount = 0;

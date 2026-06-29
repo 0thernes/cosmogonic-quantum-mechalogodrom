@@ -1,0 +1,114 @@
+#!/usr/bin/env bun
+/**
+ * gen-bible-corpus.ts — inject the BOOK-derived doc index into bible.html between markers.
+ * Run: bun scripts/gen-bible-corpus.ts
+ * Wired into predev/build via package scripts.
+ */
+import { readFileSync, writeFileSync } from 'node:fs';
+
+const BOOK = 'docs/BOOK-2026-06-26.md';
+const BIBLE = 'bible.html';
+const START = '<!-- CQM-BIBLE-CORPUS-START -->';
+const END = '<!-- CQM-BIBLE-CORPUS-END -->';
+
+type Entry = { title: string; href: string; blurb: string; tier: string };
+
+/** Parse markdown table rows `[title](path) | blurb` from BOOK sections. */
+function parseBook(md: string): Entry[] {
+  const out: Entry[] = [];
+  let tier = 'Core';
+  for (const line of md.split('\n')) {
+    const h = line.match(/^## (\d+)\.\s+(.+)/);
+    if (h) {
+      const n = Number(h[1]);
+      if (n <= 1) tier = 'Start';
+      else if (n <= 3) tier = 'Architecture';
+      else if (n <= 5) tier = 'World';
+      else tier = 'Research';
+      continue;
+    }
+    const row = line.match(/^\|\s*\[([^\]]+)\]\(([^)]+)\)\s*\|\s*(.+?)\s*\|/);
+    if (!row) continue;
+    const [, title, rawPath, blurb] = row;
+    if (!title || !rawPath) continue;
+    let href = rawPath.replace(/^\.\//, 'docs/');
+    if (href.startsWith('docs/')) href = '/' + href.replace(/^docs\//, 'docs/');
+    else if (!href.startsWith('http') && !href.startsWith('/')) href = `/docs/${href}`;
+    out.push({ title: title.trim(), href, blurb: (blurb ?? '').trim(), tier });
+  }
+  return out;
+}
+
+/** Extra corpus entries not in BOOK tables. */
+const EXTRA: Entry[] = [
+  {
+    title: 'BOOK — master RAG index',
+    href: '/docs/BOOK-2026-06-26.md',
+    blurb: 'Superset index over every doc and module.',
+    tier: 'Start',
+  },
+  {
+    title: 'FILE-MAP — auto module map',
+    href: '/docs/FILE-MAP.md',
+    blurb: 'All src modules summarised from headers.',
+    tier: 'Architecture',
+  },
+  {
+    title: 'AUDIT-LOG — living audit trail',
+    href: '/docs/AUDIT-LOG.md',
+    blurb: 'Newest-first audit entries.',
+    tier: 'Research',
+  },
+  {
+    title: 'KANBAN — in-flight work',
+    href: '/docs/KANBAN-2026-06-26.md',
+    blurb: 'Live task board.',
+    tier: 'Research',
+  },
+  {
+    title: 'RUNBOOK — ops & smoke',
+    href: '/docs/RUNBOOK-2026-06-26.md',
+    blurb: 'Bootstrap, gate, deploy.',
+    tier: 'Start',
+  },
+  {
+    title: 'VENTURES — product horizon',
+    href: '/docs/VENTURES-2026-06-26.md',
+    blurb: 'Multiplayer, accounts, outreach (aspirational).',
+    tier: 'Research',
+  },
+];
+
+function render(entries: Entry[]): string {
+  const byTier = new Map<string, Entry[]>();
+  for (const e of [...EXTRA, ...entries]) {
+    const list = byTier.get(e.tier) ?? [];
+    if (!list.some((x) => x.href === e.href)) list.push(e);
+    byTier.set(e.tier, list);
+  }
+  const order = ['Start', 'Architecture', 'World', 'Research'];
+  const parts: string[] = [];
+  for (const tier of order) {
+    const list = byTier.get(tier);
+    if (!list?.length) continue;
+    parts.push(`<h3>${tier}</h3><dl>`);
+    for (const e of list) {
+      parts.push(
+        `<dt><a href="${e.href}">${e.title}</a></dt><dd>${e.blurb.replace(/</g, '&lt;')}</dd>`,
+      );
+    }
+    parts.push('</dl>');
+  }
+  return parts.join('\n');
+}
+
+const book = readFileSync(BOOK, 'utf8');
+const html = render(parseBook(book));
+let bible = readFileSync(BIBLE, 'utf8');
+if (!bible.includes(START) || !bible.includes(END)) {
+  throw new Error(`gen-bible-corpus: markers missing in ${BIBLE}`);
+}
+const before = bible.slice(0, bible.indexOf(START) + START.length);
+const after = bible.slice(bible.indexOf(END));
+writeFileSync(BIBLE, `${before}\n${html}\n${after}`);
+console.log(`gen-bible-corpus: injected ${html.split('<dt>').length - 1} entries into ${BIBLE}`);

@@ -405,10 +405,11 @@ function fitHud(): void {
     if (r.height > 4) barsTop = Math.min(barsTop, r.top);
   }
   syncBottomDockHeight();
-  const topInset = 52;
-  const available = barsTop - topInset - 8;
-  if (available > 120) root.style.setProperty('--cqm-hud-max-height', `${Math.round(available)}px`);
-  else root.style.removeProperty('--cqm-hud-max-height');
+  const fs = typeof document !== 'undefined' && !!document.fullscreenElement;
+  const topInset = fs ? 8 : 52;
+  const bottomPx = barsTop < vh ? Math.round(vh - barsTop + 10) : 130;
+  const maxH = Math.max(120, Math.min(barsTop - topInset - 8, vh - bottomPx - topInset - 4));
+  root.style.setProperty('--cqm-hud-max-height', `${Math.round(maxH)}px`);
   if (barsTop < vh)
     root.style.setProperty('--cqm-hud-bottom', `${Math.round(vh - barsTop + 10)}px`);
   else root.style.removeProperty('--cqm-hud-bottom');
@@ -693,8 +694,10 @@ export function initCenterHud(doc: Document = document): void {
   if (typeof window !== 'undefined') {
     window.removeEventListener('resize', scheduleFit);
     window.removeEventListener('orientationchange', scheduleFit);
+    document.removeEventListener('fullscreenchange', scheduleFit);
     window.addEventListener('resize', scheduleFit);
     window.addEventListener('orientationchange', scheduleFit);
+    document.addEventListener('fullscreenchange', scheduleFit);
   }
   render();
   // V74: fit SYNCHRONOUSLY here (not only via the rAF-debounced scheduleFit) so the centre-column vars

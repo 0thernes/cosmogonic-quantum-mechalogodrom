@@ -1967,6 +1967,11 @@ export class World {
     this.hud.showSector('PILOT · ' + m.toUpperCase());
   }
 
+  /** When the super creature owns WASD/arrows (assist/manual), free-cam must not steal them. */
+  private heroOwnsKeyboardNav(): boolean {
+    return this.superheroState.active && this.superheroState.controlMode !== 'autopilot';
+  }
+
   /**
    * V41: route the player's navigation — keyboard (WASD/QE + arrows) and the on-screen D-pad / touch —
    * into the avatar's flight as a CAMERA-RELATIVE steer. AUTOPILOT ignores it (the mind flies itself);
@@ -2080,28 +2085,33 @@ export class World {
       const k = this.input.keys;
       const cv = this.input.camVel;
       const touch = this.input.touch;
-      if (k['w'] || k['arrowup']) cam.translateZ(-spd);
-      if (k['s'] || k['arrowdown']) cam.translateZ(spd);
-      if (k['a']) cam.translateX(-spd);
-      if (k['d']) cam.translateX(spd);
-      if (k['q']) cam.position.y += spd;
-      if (k['e']) cam.position.y -= spd;
+      const heroNav = this.heroOwnsKeyboardNav();
+      if (!heroNav) {
+        if (k['w'] || k['arrowup']) cam.translateZ(-spd);
+        if (k['s'] || k['arrowdown']) cam.translateZ(spd);
+        if (k['a']) cam.translateX(-spd);
+        if (k['d']) cam.translateX(spd);
+        if (k['q']) cam.position.y += spd;
+        if (k['e']) cam.position.y -= spd;
+        if (k['c'] || k['arrowleft']) cam.rotation.y += rs;
+        if (k['v'] || k['arrowright']) cam.rotation.y -= rs;
+        if (touch.active) {
+          cam.translateX(touch.x * spd);
+          cam.translateZ(touch.y * spd);
+        }
+        if (cv.x) cam.translateX(cv.x * spd * 2);
+        if (cv.y) cam.position.y += cv.y * spd * 2;
+        if (cv.z) cam.translateZ(cv.z * spd * 2);
+      }
       if (k['z']) cam.rotation.z += rs;
       if (k['x']) cam.rotation.z -= rs;
       if (k['r']) cam.rotation.x += rs;
       if (k['f']) cam.rotation.x -= rs;
-      if (k['c'] || k['arrowleft']) cam.rotation.y += rs;
-      if (k['v'] || k['arrowright']) cam.rotation.y -= rs;
-      if (touch.active) {
-        cam.translateX(touch.x * spd);
-        cam.translateZ(touch.y * spd);
+      if (!heroNav) {
+        if (cv.rx) cam.rotation.x += cv.rx * rs;
+        if (cv.ry) cam.rotation.y += cv.ry * rs;
+        if (cv.rz) cam.rotation.z += cv.rz * rs;
       }
-      if (cv.x) cam.translateX(cv.x * spd * 2);
-      if (cv.y) cam.position.y += cv.y * spd * 2;
-      if (cv.z) cam.translateZ(cv.z * spd * 2);
-      if (cv.rx) cam.rotation.x += cv.rx * rs;
-      if (cv.ry) cam.rotation.y += cv.ry * rs;
-      if (cv.rz) cam.rotation.z += cv.rz * rs;
       // Mouse-look + wheel zoom (InputSystem contract amendment, 0.2.1).
       const lk = this.input.look;
       if (lk.dx !== 0 || lk.dy !== 0) {

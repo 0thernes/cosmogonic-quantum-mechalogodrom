@@ -38,7 +38,7 @@ import { mulberry32, type Rng } from '../math/rng';
 import { mountToggle } from './panel-dock';
 
 type View = 'lineage' | 'brood';
-type VizMode = 'attractor' | 'loop' | 'blaschke';
+type VizMode = 'attractor' | 'loop' | 'blaschke' | 'brain4d';
 
 const RANK_COLOR: Record<string, string> = {
   COMMON: '#7d8aa0',
@@ -235,7 +235,13 @@ export class PantheonArchitecturePanel {
     this.modeBtns.attractor = this.makeToggle(doc, 'ATTRACTOR', () => this.setMode('attractor'));
     this.modeBtns.loop = this.makeToggle(doc, 'WINDING', () => this.setMode('loop'));
     this.modeBtns.blaschke = this.makeToggle(doc, 'BLASCHKE', () => this.setMode('blaschke'));
-    modeRow.append(this.modeBtns.attractor, this.modeBtns.loop, this.modeBtns.blaschke);
+    this.modeBtns.brain4d = this.makeToggle(doc, '⬡ MEGA 4D', () => this.setMode('brain4d'));
+    modeRow.append(
+      this.modeBtns.attractor,
+      this.modeBtns.loop,
+      this.modeBtns.blaschke,
+      this.modeBtns.brain4d,
+    );
     viz.appendChild(modeRow);
 
     // Data grid
@@ -281,7 +287,7 @@ export class PantheonArchitecturePanel {
     this.viewBtns.lineage.classList.toggle('on', this.view === 'lineage');
     this.viewBtns.brood.classList.toggle('on', this.view === 'brood');
     this.viewBtns.brood.textContent = `BROOD ${this.brood.length}`;
-    for (const m of ['attractor', 'loop', 'blaschke'] as VizMode[]) {
+    for (const m of ['attractor', 'loop', 'blaschke', 'brain4d'] as VizMode[]) {
       this.modeBtns[m].classList.toggle('on', this.mode === m);
     }
   }
@@ -484,6 +490,7 @@ export class PantheonArchitecturePanel {
     const col = `hsl(${(this.hue * 360).toFixed(0)},90%,62%)`;
     if (this.mode === 'attractor') this.drawAttractor(ctx, w, h, col);
     else if (this.mode === 'loop') this.drawLoop(ctx, w, h, col);
+    else if (this.mode === 'brain4d') this.drawBrain4d(ctx, w, h);
     else this.drawBlaschke(ctx, w, h, col);
   }
 
@@ -584,12 +591,94 @@ export class PantheonArchitecturePanel {
     else this.reveal = 0;
   }
 
+  /** 4D spiking tesseract — bound to apex brain vitality / chaos when warmed, else genome chaos. */
+  private drawBrain4d(ctx: CanvasRenderingContext2D, w: number, h: number): void {
+    ctx.fillStyle = 'rgba(2,1,8,0.35)';
+    ctx.fillRect(0, 0, w, h);
+    const t = this.reveal * 0.02;
+    const cx = w / 2;
+    const cy = h / 2;
+    const scale = Math.min(w, h) * 0.36;
+    const snap = this.apexSnap;
+    const drive = snap
+      ? clamp01(
+          snap.thought.vitality * 0.4 + snap.thought.agony * 0.3 + snap.quantum.coherence * 0.3,
+        )
+      : clamp01(this.hue);
+    const N = 96;
+    const pts: { x: number; y: number; d: number; a: number; hue: number }[] = [];
+    for (let i = 0; i < N; i++) {
+      const u = (i + 0.5) / N;
+      const th = 2 * Math.PI * u;
+      const ph = Math.acos(2 * ((i * 0.618) % 1) - 1);
+      const r = 0.55 + 0.45 * Math.sin(i * 0.19 + t * 1.4);
+      const x4 = r * Math.sin(ph) * Math.cos(th);
+      const y4 = r * Math.sin(ph) * Math.sin(th);
+      const z4 = r * Math.cos(ph);
+      const w4 = r * Math.sin(t * 0.47 + i * 0.11);
+      const cw = Math.cos(t * 0.36);
+      const sw = Math.sin(t * 0.36);
+      const x3 = x4 + w4 * cw * 0.5;
+      const y3 = y4 + w4 * sw * 0.44;
+      const z3 = z4 + w4 * 0.25;
+      const ang = t * 0.28 + w4 * 0.4;
+      const cosA = Math.cos(ang);
+      const sinA = Math.sin(ang);
+      const x2 = x3 * cosA - z3 * sinA;
+      const z2 = x3 * sinA + z3 * cosA;
+      const d = 1 / (2.8 + z2);
+      const px = cx + x2 * scale * d;
+      const py = cy + y3 * scale * d;
+      const spike = Math.max(0, Math.sin(t * 7 + i * 0.41) * 0.5 + 0.5);
+      const a = clamp01(drive * 0.5 + spike * 0.45 + Math.abs(Math.sin(i * 0.31 + t)) * 0.2);
+      pts.push({ x: px, y: py, d, a, hue: (i * 47 + t * 80) % 360 });
+    }
+    for (let i = 0; i < N; i++) {
+      for (let j = i + 1; j < N; j++) {
+        if (((i ^ j) & 15) > 3) continue;
+        const s = (pts[i]!.a + pts[j]!.a) * 0.5;
+        if (s < 0.1) continue;
+        const near = (pts[i]!.d + pts[j]!.d) * 0.5;
+        ctx.strokeStyle = `hsla(${pts[i]!.hue},100%,55%,${(s * 0.45 * near).toFixed(2)})`;
+        ctx.lineWidth = 0.5 + s * 1.8 * near;
+        ctx.beginPath();
+        ctx.moveTo(pts[i]!.x, pts[i]!.y);
+        ctx.lineTo(pts[j]!.x, pts[j]!.y);
+        ctx.stroke();
+      }
+    }
+    for (const p of pts) {
+      const near = Math.min(1, p.d * 1.2);
+      if (p.a > 0.5 && near > 0.25) {
+        const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, 4 + p.a * 12 * near);
+        g.addColorStop(0, `hsla(${p.hue},100%,75%,${(0.35 + p.a * 0.5).toFixed(2)})`);
+        g.addColorStop(1, `hsla(${p.hue},100%,50%,0)`);
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 4 + p.a * 12 * near, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.fillStyle = `hsla(${p.hue},100%,${(42 + p.a * 38).toFixed(0)}%,${(0.6 + p.a * 0.4).toFixed(2)})`;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 1.2 + p.a * 2.5 * near, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.fillStyle = 'rgba(0,255,220,0.85)';
+    ctx.font = '600 9px ui-monospace,monospace';
+    ctx.fillText('MEGA GODLIKE BRAIN · 4D tesseract · live spikes', 8, 8);
+    this.reveal = (this.reveal + 1) % 10000;
+  }
+
   dispose(): void {
     this.stopAnim();
     this.panel.remove();
     this.styleEl.remove();
     document.getElementById('cqm-arch-toggle')?.remove();
   }
+}
+
+function clamp01(v: number): number {
+  return v < 0 ? 0 : v > 1 ? 1 : v;
 }
 
 /** Format a signed integer with an explicit + sign for readability. */

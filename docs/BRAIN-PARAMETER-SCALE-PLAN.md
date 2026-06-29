@@ -10,10 +10,10 @@ Targets the directive in the V95/V96 session: 25k parameters per 100 letter crea
 
 ## Targets
 
-| Entity | Count | Params each | Total params | Notes |
-|--------|-------|-------------|--------------|-------|
-| Letter creatures | 100 | 25,000 | 2.5M | Visual-only autonomous behavior layer, no economy/physics backend |
-| APEX capstone | 1 | 100k → 5M | 100k → 5M | Scales through incremental brain growth milestones |
+| Entity           | Count | Params each | Total params | Notes                                                             |
+| ---------------- | ----- | ----------- | ------------ | ----------------------------------------------------------------- |
+| Letter creatures | 100   | 25,000      | 2.5M         | Visual-only autonomous behavior layer, no economy/physics backend |
+| APEX capstone    | 1     | 100k → 5M   | 100k → 5M    | Scales through incremental brain growth milestones                |
 
 ## Why visual-only for the 100 and APEX
 
@@ -70,14 +70,14 @@ This keeps the 100 creatures purely visual, deterministic, GPU-bound, and scalab
 
 APEX starts as a single shader-driven brain with 100k parameters. Growth milestones:
 
-| Milestone | Params | Visual upgrade |
-|-----------|--------|----------------|
-| Stage 0 | 100k | Current APEX capstone mesh + enhanced shader |
-| Stage 1 | 250k | Multi-layer shader displacement, more tendrils |
-| Stage 2 | 500k | Procedural neuron-like geometry instances |
-| Stage 3 | 1M | Multiple synchronized brain lobes |
-| Stage 4 | 2.5M | Full 4D hyper-dimensional deformation |
-| Stage 5 | 5M | Mega godlike composite brain visible across the dome |
+| Milestone | Params | Visual upgrade                                       |
+| --------- | ------ | ---------------------------------------------------- |
+| Stage 0   | 100k   | Current APEX capstone mesh + enhanced shader         |
+| Stage 1   | 250k   | Multi-layer shader displacement, more tendrils       |
+| Stage 2   | 500k   | Procedural neuron-like geometry instances            |
+| Stage 3   | 1M     | Multiple synchronized brain lobes                    |
+| Stage 4   | 2.5M   | Full 4D hyper-dimensional deformation                |
+| Stage 5   | 5M     | Mega godlike composite brain visible across the dome |
 
 Each stage uses a larger GPU DataTexture. The jump from 100k to 5M is still a single GPU texture (~20 MB f32), which is fine.
 

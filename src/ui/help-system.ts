@@ -197,10 +197,10 @@ const STYLE = `
 @media (max-width:560px){
   #cqm-help-panel.open{touch-action:pan-y;overscroll-behavior:contain}
   #cqm-help-panel{left:6px;right:6px;width:auto;height:min(72dvh,560px);max-height:calc(100dvh - var(--cqm-bottom-h,108px) - 88px);bottom:calc(var(--cqm-bottom-h,108px) + 88px)}
-  .cqm-help-body{flex-direction:column;flex:1;min-height:0}
-  .cqm-help-left,.cqm-help-right{flex:1 1 0;max-height:none;min-height:100px;overflow:hidden}
+  .cqm-help-body{flex-direction:column;flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;touch-action:pan-y}
+  .cqm-help-left,.cqm-help-right{flex:0 0 auto;min-height:auto;max-height:none;overflow:visible}
   .cqm-help-right{border-left:none;border-top:1px solid rgba(120,220,160,.2)}
-  .cqm-help-ans,.cqm-help-right-main{overflow-y:scroll;-webkit-overflow-scrolling:touch;touch-action:pan-y}
+  .cqm-help-ans,.cqm-help-right-main{overflow:visible;flex:0 0 auto;min-height:auto}
 }
 `;
 
