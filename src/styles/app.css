@@ -1407,9 +1407,9 @@ html.cqm-shell-ready .algo-list:empty::after {
     width: calc((100vw - 12px - 2 * var(--cqm-readout-gap, 6px)) / 3) !important;
     min-width: 0 !important;
     max-width: none !important;
-    height: var(--cqm-readout-strip-h, 92px) !important;
-    max-height: var(--cqm-readout-strip-h, 92px) !important;
-    min-height: var(--cqm-readout-strip-h, 92px) !important;
+    height: var(--cqm-readout-strip-h, 112px) !important;
+    max-height: var(--cqm-readout-strip-h, 112px) !important;
+    min-height: var(--cqm-readout-strip-h, 112px) !important;
     align-self: auto !important;
     flex: none !important;
     overflow: hidden;
@@ -1876,26 +1876,34 @@ html.cqm-shell-ready .algo-list:empty::after {
   #algoP {
     max-height: clamp(140px, 22vh, 28vh);
   }
-  /* V101: ultra-compact Sim·Settings readout on tablets — single-line strip, tiny font */
+  /* V102: full Sim·Settings readout on tablets — all 7 rows (View…Resets), matched to Sorting box */
   #hud-vsr {
-    max-height: 42px !important;
-    padding: 1px 3px !important;
-    font-size: 0.65em !important;
+    min-height: 118px !important;
+    max-height: 140px !important;
+    padding: 6px 8px !important;
+    font-size: var(--text-3xs) !important;
     flex: 0 0 auto !important;
+    overflow-y: auto;
+    overflow-x: hidden;
   }
   #hud-vsr .ui-readout-card__row {
-    line-height: 1 !important;
+    line-height: 1.2 !important;
+    font-size: 10px !important;
   }
   #hud-vsr .ui-readout-card__head {
-    font-size: 7px !important;
+    font-size: 10px !important;
   }
   #cP {
     max-height: clamp(60px, 10vh, 100px) !important;
     flex: 0 0 auto !important;
   }
   #alg {
-    max-height: clamp(50px, 8vh, 80px) !important;
+    min-height: 88px;
+    max-height: clamp(96px, 14vh, 120px) !important;
     flex: 0 0 auto !important;
+  }
+  #perf-slot #perf-hud {
+    min-height: 88px;
   }
 }
 
@@ -1949,28 +1957,37 @@ html.cqm-shell-ready .algo-list:empty::after {
     max-height: clamp(120px, 20vh, 26vh);
   }
   #hud-vsr {
-    max-height: 42px !important;
-    padding: 1px 3px !important;
-    font-size: 0.65em !important;
+    min-height: 118px !important;
+    max-height: 140px !important;
+    padding: 6px 8px !important;
+    font-size: var(--text-3xs) !important;
     flex: 0 0 auto !important;
+    overflow-y: auto;
+    overflow-x: hidden;
   }
   #hud-vsr .ui-readout-card__row {
-    line-height: 1 !important;
+    line-height: 1.2 !important;
+    font-size: 10px !important;
   }
   #hud-vsr .ui-readout-card__head {
-    font-size: 7px !important;
+    font-size: 10px !important;
   }
   #cP {
     max-height: clamp(60px, 10vh, 100px) !important;
     flex: 0 0 auto !important;
   }
   #alg {
-    max-height: clamp(50px, 8vh, 80px) !important;
+    min-height: 88px;
+    max-height: clamp(96px, 14vh, 120px) !important;
     flex: 0 0 auto !important;
   }
 }
 
 /* ── Sim Settings readout (#hud-vsr): 2-col grid — all 7 rows (View…Resets) always visible ── */
+:root {
+  --cqm-readout-strip-h: 112px;
+  --cqm-readout-gap: 6px;
+}
 #ui #hud-vsr {
   padding: 6px 8px !important;
   overflow: visible;
@@ -2022,6 +2039,7 @@ html.cqm-shell-ready .algo-list:empty::after {
   flex: 1 1 auto;
   color: rgba(210, 245, 255, 0.98);
 }
+#hud-vsr #v7,
 #hud-vsr #hud-song {
   max-width: 6em !important;
 }
@@ -2117,8 +2135,8 @@ html.cqm-shell-ready .algo-list:empty::after {
     width: calc((100vw - 12px - 2 * var(--cqm-readout-gap, 6px)) / 3) !important;
     min-width: 0 !important;
     max-width: none !important;
-    height: var(--cqm-readout-strip-h, 92px) !important;
-    max-height: var(--cqm-readout-strip-h, 92px) !important;
+    height: var(--cqm-readout-strip-h, 112px) !important;
+    max-height: var(--cqm-readout-strip-h, 112px) !important;
     align-self: auto !important;
     flex: none !important;
     overflow: hidden;
@@ -2175,8 +2193,8 @@ html.cqm-shell-ready .algo-list:empty::after {
     width: calc((100vw - 12px - 2 * var(--cqm-readout-gap, 6px)) / 3) !important;
     min-width: 0 !important;
     max-width: none !important;
-    height: var(--cqm-readout-strip-h, 92px) !important;
-    max-height: var(--cqm-readout-strip-h, 92px) !important;
+    height: var(--cqm-readout-strip-h, 112px) !important;
+    max-height: var(--cqm-readout-strip-h, 112px) !important;
     align-self: auto !important;
     flex: none !important;
     top: auto !important;

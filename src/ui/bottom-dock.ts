@@ -56,7 +56,7 @@ export function syncBottomDockHeight(doc: Document = document): void {
   doc.documentElement.style.setProperty('--cqm-dock-h', `${dockH}px`);
   doc.documentElement.style.setProperty(
     '--cqm-readout-strip-h',
-    `${Math.ceil(readoutStrip || 92)}px`,
+    `${Math.ceil(readoutStrip || 112)}px`,
   );
   doc.documentElement.style.setProperty('--cqm-bottom-h', `${dockH + stripGap}px`);
 }
