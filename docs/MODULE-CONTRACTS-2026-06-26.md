@@ -1015,7 +1015,13 @@ wfmdqlias output) land FIRST in the same wave.
   aggressor's phylum palette). Global ledger + war matrix exposed for
   telemetry/data-viz; every act audited with lore epithets. Game-theory depth:
   strategy mutation on bankruptcy (replicator over the 5 strategies), payoffs
-  coupled to actual resource flows, not constants.
+  coupled to actual resource flows, not constants. **Body shader (V-TITAN-VITALS):**
+  the freak-geometry body patch reads the titan's REAL economy via `uMenace`
+  (war + clash-heat entropy → 4D writhe + void-glow + iris) plus two distinct lanes
+  from exported pure `titanVitalLanes(energy, entropy)` → `uEnergy` (stellar-core
+  forge — a fed titan burns a pulsing star-core) and `uEntropy` (waste-rot ashen
+  fissures — a wasteful titan cracks, embers glowing in the rot). All `f(state)`, no
+  rng; lanes clamped [0,1] + finite-guarded.
 
 ## V3.4 Responsive UI + touch (writer: responsive)
 
@@ -1584,7 +1590,7 @@ Copilot are constructed boot-stream-neutral and never write sim state, so the go
 
 ### V9 acceptance
 
-Full `bun run check` green: prettier → tsc strict → oxlint → 1477 tests (0 fail, 300-frame golden
+Full `bun run check` green: prettier → tsc strict → oxlint → 1771 tests (0 fail, 300-frame golden
 included) → build. The Copilot sandbox verified live (allow: `git log`, file reads; deny:
 path-escape, `git push`, `legacy/`, shell redirection).
 

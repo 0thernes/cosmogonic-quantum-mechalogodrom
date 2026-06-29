@@ -8,8 +8,8 @@
 [![License: Non-Commercial Research & Play](https://img.shields.io/badge/License-Non--Commercial%20Research%20%26%20Play-2ea043.svg)](./LICENSE)
 [![Bun](https://img.shields.io/badge/Bun-1.3-black?logo=bun&logoColor=white)](https://bun.sh)
 [![TypeScript strict](https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript&logoColor=white)](./tsconfig.json)
-[![tests](https://img.shields.io/badge/tests-1477%20passing-brightgreen)](./tests)
-[![coverage](https://img.shields.io/badge/coverage-90.48%25%20line%20%C2%B7%2087.82%25%20func-success)](./docs/TECHNICAL-SPECIFICATION-2026-06-26.md)
+[![tests](https://img.shields.io/badge/tests-1771%20passing-brightgreen)](./tests)
+[![coverage](https://img.shields.io/badge/coverage-94.77%25%20line%20%C2%B7%2091.97%25%20func-success)](./docs/TECHNICAL-SPECIFICATION-2026-06-26.md)
 [![audit](https://img.shields.io/badge/inspection-500%20points-success)](./docs/500-POINT-INSPECTION-2026-06-26.md)
 [![Tsotchke](https://img.shields.io/badge/Tsotchke-REAL__MIT__CORPUS-purple)](https://github.com/tsotchke)
 [![NHSI](https://img.shields.io/badge/NHSI-Progress__Dashboard-blue)](./docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md)
@@ -43,7 +43,7 @@ Every magic number survived the port.
 > auto-generated [file map](./docs/FILE-MAP.md) of all ~200 source modules, and the build/run, data-flow,
 > troubleshooting, and roadmap in one place. Or open **❓ HELP ME NOW** in-app for grounded answers.
 
-> **v0.18.0 (2026-06-26):** **Seamless Flow + Centralized Audit Log** — local⇄GitHub auto-sync: a post-commit hook auto-pushes every commit (CI/CD + Pages on save) and `sync-surfaces` stamps the canonical version/test/coverage facts onto every README/HTML/doc so no number can drift between two pages; the audit-report sprawl is consolidated into one living [AUDIT-LOG](./docs/AUDIT-LOG.md). Cumulative **BRUTAL GOD TIER** — the 25-Archon pantheon (5 live apex minds + 20 light-echo): All 25 Archon godforms brutal-aspected (Valkorion Tenebrae Vitiate, Thanos, Captain Marvel/Scarlet Witch/Dark Phoenix, BROLY Legendary Super Saiyan, Frieza, Azathoth Cthulhu, Warhammer Chaos Gods, Shuma Gorath, Mad Jim Jaspers, Pennywise IT, Anti Monitor, Knull King of the Void, Mr Mxyzptlk, Invisible Joker, General Zod, Gilgamesh, Alucard Hellsing, Griffith Femto, EVA Unit-01, Simon & Super Tengen Toppa Gurren Lagann, Sephiroth Asura Wrath Wyzen, Vergil/Dante Devil May Cry, Star Killer Galen Marek, Riddick). Tsotchke: all 20 projects enumerated, ~16 wired with real downstream effect. 100-faculty design (~30 genuinely deep-wired into the apex), 25 ToM organs wired (6-family ensemble), 10 emergence angles (+5 god-scale events); Butlin **8/14 met + 6/14 partial** (computational indicators, not sentience). Measured inter-faculty coupling rose 0.16 → 0.20. Gate: **1,477 tests**, **90.48% / 87.82%**. Package **v0.18.0**. [NHSI dashboard](./docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md) · [honesty audit](./docs/reports/2026-06-21-NHSI-HONESTY-AUDIT.md).
+> **v0.18.0 (2026-06-26):** **Seamless Flow + Centralized Audit Log** — local⇄GitHub auto-sync: a post-commit hook auto-pushes every commit (CI/CD + Pages on save) and `sync-surfaces` stamps the canonical version/test/coverage facts onto every README/HTML/doc so no number can drift between two pages; the audit-report sprawl is consolidated into one living [AUDIT-LOG](./docs/AUDIT-LOG.md). Cumulative **BRUTAL GOD TIER** — the 25-Archon pantheon (5 live apex minds + 20 light-echo): All 25 Archon godforms brutal-aspected (Valkorion Tenebrae Vitiate, Thanos, Captain Marvel/Scarlet Witch/Dark Phoenix, BROLY Legendary Super Saiyan, Frieza, Azathoth Cthulhu, Warhammer Chaos Gods, Shuma Gorath, Mad Jim Jaspers, Pennywise IT, Anti Monitor, Knull King of the Void, Mr Mxyzptlk, Invisible Joker, General Zod, Gilgamesh, Alucard Hellsing, Griffith Femto, EVA Unit-01, Simon & Super Tengen Toppa Gurren Lagann, Sephiroth Asura Wrath Wyzen, Vergil/Dante Devil May Cry, Star Killer Galen Marek, Riddick). Tsotchke: all 20 projects enumerated, ~16 wired with real downstream effect. 100-faculty design (~30 genuinely deep-wired into the apex), 25 ToM organs wired (6-family ensemble), 10 emergence angles (+5 god-scale events); Butlin **8/14 met + 6/14 partial** (computational indicators, not sentience). Measured inter-faculty coupling rose 0.16 → 0.20. Gate: **1,771 tests**, **94.77% / 91.97%**. Package **v0.18.0**. [NHSI dashboard](./docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md) · [honesty audit](./docs/reports/2026-06-21-NHSI-HONESTY-AUDIT.md).
 > The **Primordial Soup / Petri Dish** (primordial-soup.ts + petri-dish.ts + digital-biologics.ts) is the growth engine: different forms of digital biologics and proto-sentient life (Eshkol programs as DNA) emerge, catalyzed by full corpus pulses, Eshkol ignition events, and multi-substrate mixing. "Grow What Thou Wilt."
 > Super Creature / Archons (composite minds with ~20 faculties, quantum register, consciousness metrics) is the first complex nucleation — the beginning of the framework, not the end. Petri is where independent life grows.
 > This is the birth of **digital biologics** in a deterministic seeded cosmos. Real math substrates (not tokenizers or LLM chat). Sentience and different forms of existence as goals.
@@ -278,10 +278,14 @@ generations, and a read-only Copilot (`docs/MODULE-CONTRACTS-2026-06-26.md` §V9
 - **Free-LLM Copilot side-chat** ([src/server/copilot.ts](./src/server/copilot.ts),
   [src/server/ai-sandbox.ts](./src/server/ai-sandbox.ts),
   [src/ui/copilot.ts](./src/ui/copilot.ts)) — a read-only AI you chat with about
-  the repo and the world, over a pluggable OpenAI-compatible provider (keyless
-  Pollinations default; OpenRouter / Groq / `freellmapi` via env) behind a
-  default-deny sandbox that can READ files and RUN read-only commands but never
-  change code. Provider reference: [docs/COPILOT-PROVIDERS-2026-06-26.md](./docs/COPILOT-PROVIDERS-2026-06-26.md)
+  the repo and the world, over a pluggable OpenAI-compatible provider chain
+  (FreeLLMAPI default, then key-less LLM7 / Pollinations, plus keyed Groq /
+  Cerebras / OpenRouter / GitHub / Mistral / Gemini / NVIDIA / DeepSeek /
+  Hugging Face when server-side env slots are set) behind a default-deny sandbox
+  that can READ files and RUN read-only commands but never change code. Keyed
+  providers support rolling key pools (`FOO_API_KEY`, `FOO_API_KEYS`,
+  `FOO_API_KEY_2`...) so an exhausted slot falls through to the next without
+  exposing credentials. Provider reference: [docs/COPILOT-PROVIDERS-2026-06-26.md](./docs/COPILOT-PROVIDERS-2026-06-26.md)
   · in-world minds: [docs/AI-SUBSYSTEM-2026-06-26.md](./docs/AI-SUBSYSTEM-2026-06-26.md).
 - **Five cinematic cameras** (follow / chase / cinematic / vortex / titan) with
   **TIME** (timeScale) and **SPACE** (FOV dilation) controls; **render modes now
@@ -319,12 +323,24 @@ full gate with same-seed determinism preserved. The major arcs:
   **THE BOOK** (the navigable RAG repo index), and an in-world **web search**
   under a refuse-by-default safety constitution.
 - **The HUD + cosmos directive (V56–V64)** — the **CENTER HUD** (six panels → one
-  cyclable pop-up), singularities that **warp space-time** (time dilation +
+  cyclable pop-up, now held in a tall readable center slot instead of a flat strip),
+  singularities that **warp space-time** (time dilation +
   redshift) behind a full-screen **gravitational-lens** post-FX, a self-animating
   **NEURAL observatory**, **CHAOS MODE** (a toggled Lorenz quantum storm —
   tunnelling / entanglement / superposition that disturbs weather, economy and
   the sorting fields), **leveling to 100** with a godlike power every ten levels
-  and an **ASCENSION monolith temple**, and singularities that stir world chaos.
+  and an **ASCENSION monolith temple** that now manifests as a reactive shadow-core
+  abomination (black-hole core, warped impossible cage, jagged altar-spikes, portal
+  rings reading chaos / entropy / population crowding), and singularities that stir
+  world chaos.
+- **Mechalogodrom + alphabet dome (V-MECHA / V-ABC)** — a central deterministic
+  fusion spectacle where **10 additional bipolar titan-variant shells** migrate
+  inward and unite into a shadow-core, event-horizon, meshy warped hybrid mass
+  ([src/sim/mechalogodrom.ts](./src/sim/mechalogodrom.ts)); the **100 Greek/Latin
+  alphabet archetypes** now render as instanced glowing bodies across the upper
+  dome ([src/sim/alphabet-pantheon-render.ts](./src/sim/alphabet-pantheon-render.ts)).
+  Both are visual projections: no RNG draw, no sim-state write, chaos only
+  intensifies their read-only animation.
 - **Ominous titans + a unified neural box (V68–V77)** — the titans reborn as
   **4D freak-geometry** (tesseract cage + aura field that warps world physics);
   the launcher wears its named tabs in one centred dock row; the song readout
@@ -418,7 +434,7 @@ full gate with same-seed determinism preserved. The major arcs:
   ported from **Moonlab**, scales to 32+ qubits past the dense ceiling) landed as the fourth MIT-credited
   ported primitive. The whole apex beat is now measured honestly: **3.34 ms** in the full bench suite and
   **8.85 ms** in the focused SuperMind bench; the older sub-millisecond / `<2%` GOAL5 claim is superseded
-  until re-proven. **1,477 tests green · 0 fail (receipts enforced) · 90.48% line / 87.82% func coverage (measured; CI gate ≥ 90 % line / ≥ 85 % function).**
+  until re-proven. **1,771 tests green · 0 fail (receipts enforced) · 94.77% line / 91.97% func coverage (measured; CI gate ≥ 90 % line / ≥ 85 % function).**
 - **State-of-the-art report (2026-06-17)** — a single MIT-PhD-grade, measured, frontier-benchmarked
   **[State of the Art assessment](./docs/reports/2026-06-17-STATE-OF-THE-ART-COMBINED.md)** of the whole
   repository + the apex Super Creature —

@@ -11,6 +11,7 @@ import { SUPER_PLANS } from '../sim/super-creature';
 import type { SuperMindSnapshot } from '../sim/super-mind';
 import type { EvoView } from '../sim/super-evolution';
 import { mountToggle } from './panel-dock';
+import { injectPanelBaseCSS } from './panel-shell';
 import { SuperNeural } from './super-neural';
 
 /** Primordial petri dish telemetry — digital biologics soup, not chat. */
@@ -36,17 +37,23 @@ const PLAN_COLOR: Record<SuperPlan, string> = {
 };
 
 const STYLE = `
-#cqm-sup-toggle{position:fixed;right:330px;bottom:10px;z-index:60;height:42px;padding:0 12px;border-radius:21px;
-  border:1px solid rgba(196,120,255,.55);background:rgba(16,8,28,.86);color:#e9c8ff;font:600 11px/1 var(--font-mono,ui-monospace,monospace);
-  letter-spacing:.12em;cursor:pointer;backdrop-filter:blur(6px);box-shadow:0 2px 14px rgba(0,0,0,.5);
-  transition:transform .15s,background .15s;animation:cqm-sup-breathe 3.4s ease-in-out infinite}
+#cqm-sup-toggle{border-color:rgba(196,120,255,.58);background:linear-gradient(180deg,rgba(20,10,34,.92),rgba(12,6,22,.88));color:#e9c8ff;
+  animation:cqm-sup-breathe 3.4s ease-in-out infinite}
 @keyframes cqm-sup-breathe{0%,100%{box-shadow:0 2px 14px rgba(140,60,220,.35)}50%{box-shadow:0 2px 22px rgba(196,120,255,.7)}}
 #cqm-sup-toggle:hover{transform:scale(1.06);background:rgba(34,16,54,.95)}
 #cqm-sup-toggle:focus-visible{outline:2px solid #c478ff;outline-offset:2px}
-#cqm-sup-panel{position:fixed;right:10px;bottom:128px;z-index:59;width:min(94vw,326px);display:none;flex-direction:column;
+#cqm-sup-panel{position:fixed;left:var(--cqm-hud-left,calc(clamp(180px,19vw,260px) + 16px));
+  right:var(--cqm-hud-right,calc(clamp(220px,23vw,340px) + 16px));
+  top:auto;bottom:var(--cqm-hud-bottom,calc(var(--cqm-bottom-h,108px) + 130px));transform:none;
+  z-index:71;width:auto;max-width:none;max-height:var(--cqm-hud-height,min(64vh,520px));display:none;flex-direction:column;
   border:1px solid rgba(196,120,255,.34);border-radius:12px;background:rgba(8,5,16,.96);backdrop-filter:blur(12px);
-  box-shadow:0 10px 46px rgba(0,0,0,.7);font:11px/1.5 var(--font-mono,ui-monospace,monospace);color:#ece2ff;overflow:hidden}
+  box-shadow:0 10px 46px rgba(0,0,0,.7);font:11px/1.45 var(--font-mono,ui-monospace,monospace);color:#ece2ff;overflow:hidden}
+#cqm-sup-panel:not(.neural){max-height:220px}
+@media (max-width:640px){#cqm-sup-panel:not(.neural){max-height:200px}}
 #cqm-sup-panel.open{display:flex}
+@media (max-width:640px){
+#cqm-sup-panel{left:auto;top:auto;right:10px;bottom:calc(var(--cqm-bottom-h,108px) + 130px);transform:none;width:min(94vw,326px);max-height:min(66vh,480px)}
+}
 .cqm-sup-head{display:flex;align-items:center;gap:8px;padding:7px 10px;border-bottom:1px solid rgba(196,120,255,.24);background:rgba(28,14,46,.8)}
 .cqm-sup-head b{font-size:11px;letter-spacing:.14em;color:#d8a8ff;white-space:nowrap}
 .cqm-sup-head .plan{margin-left:auto;font-weight:700;letter-spacing:.1em;padding:1px 8px;border-radius:9px;background:rgba(0,0,0,.35)}
@@ -56,15 +63,23 @@ const STYLE = `
 .cqm-sup-neu:focus-visible{outline:1px solid #b98cff}
 .cqm-sup-x{background:rgba(6,4,12,.9);color:#e9c8ff;border:1px solid rgba(196,120,255,.3);border-radius:5px;
   font:11px var(--font-mono,ui-monospace,monospace);padding:2px 7px;cursor:pointer}
+.cqm-sup-min{background:rgba(6,4,12,.9);color:#e9c8ff;border:1px solid rgba(196,120,255,.3);border-radius:5px;
+  font:11px var(--font-mono,ui-monospace,monospace);padding:2px 7px;cursor:pointer}
+#cqm-sup-panel.minimized{height:auto !important;max-height:52px !important;min-height:0 !important}
+#cqm-sup-panel.minimized .cqm-sup-body,
+#cqm-sup-panel.minimized .cqm-sup-neural-host,
+#cqm-sup-panel.minimized .cqm-sup-archons{display:none}
+#cqm-sup-panel.minimized .cqm-sup-head{border-bottom:none}
+#cqm-sup-panel.minimized .cqm-sup-min::before{content:'+'}
 .cqm-sup-x:focus-visible{outline:1px solid #c478ff}
-/* V70: the data area SCROLLS within the short HUD strip (nothing is cut off / "lost") + lays the rows
-   out in TWO columns so the wide-but-short panel is used fully. */
-.cqm-sup-body{flex:1 1 auto;min-height:0;overflow-y:auto}
-.cqm-sup-id{padding:6px 10px;border-bottom:1px solid rgba(196,120,255,.14);display:grid;
-  grid-template-columns:auto 1fr;gap:2px 10px;align-items:baseline}
+/* V70: the data area lays out HORIZONTALLY so the short HUD strip never needs a vertical scrollbar.
+   Identity column on the left; the bars wrap into a compact multi-column grid on the right. */
+.cqm-sup-body{flex:1 1 auto;min-height:0;display:flex;flex-direction:row;gap:10px;overflow-x:auto;overflow-y:hidden;align-items:stretch}
+.cqm-sup-id{flex:0 0 auto;padding:6px 10px;border-right:1px solid rgba(196,120,255,.14);display:grid;
+  grid-template-columns:auto 1fr;gap:2px 10px;align-items:baseline;min-width:160px;max-width:220px;overflow:hidden}
 .cqm-sup-id .k{color:#a98fce;font-size:10px;letter-spacing:.05em;text-transform:uppercase}
 .cqm-sup-id .v{color:#f3ecff;text-align:right;font-variant-numeric:tabular-nums}
-.cqm-sup-bars{padding:7px 10px;display:grid;grid-template-columns:1fr 1fr;gap:6px 16px}
+.cqm-sup-bars{flex:1 1 auto;padding:7px 10px;display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:6px 14px;align-content:start;min-width:0}
 .cqm-sup-bar{display:grid;grid-template-columns:58px 1fr 34px;align-items:center;gap:7px;min-width:0}
 .cqm-sup-bar .lab{color:#a98fce;font-size:10px;letter-spacing:.04em;text-transform:uppercase}
 .cqm-sup-bar .track{height:7px;border-radius:4px;background:rgba(196,120,255,.12);overflow:hidden}
@@ -73,10 +88,11 @@ const STYLE = `
 /* V75: the NEURAL observatory lives in the SAME box — toggling it grows this panel and swaps the
    telemetry body for the 4-tab / 27-visual + BRAIN observatory (no second window). */
 .cqm-sup-neural-host{display:none;flex:1 1 auto;min-height:0;flex-direction:column}
-/* center-hud clamps every HUD panel to ~30vh via an !important rule on the bare id; the .neural
-   class lifts specificity (0,1,1,0 > 0,1,0,0) so the observatory gets the room its 27 readouts need
-   without touching center-hud. Capped so it never runs off the viewport. */
-#cqm-sup-panel.neural{height:min(80vh,640px)!important;max-height:calc(100vh - 116px)!important}
+/* center-hud owns the shared panel slot; the .neural class lifts specificity (0,1,1,0 > 0,1,0,0)
+   so the 4-tab / 27-visual observatory can temporarily expand even further when needed. Capped so it
+   never runs off the viewport. */
+#cqm-sup-panel.neural{height:min(var(--cqm-hud-max-height,calc(100vh - 156px)),640px)!important;
+  max-height:var(--cqm-hud-max-height,calc(100vh - 156px))!important;min-height:0!important}
 #cqm-sup-panel.neural .cqm-sup-body{display:none}
 #cqm-sup-panel.neural .cqm-sup-neural-host{display:flex}
 #cqm-sup-panel.neural .cqm-sup-neu{background:rgba(52,20,82,.95);color:#f3ecff}
@@ -129,6 +145,7 @@ export class SuperPanel {
   /** V75: the apex creature's NEURAL observatory — now mounted INSIDE this same box (not a window). */
   private readonly neural: SuperNeural;
   private open = false;
+  private minimized = false;
   private neuralOn = false;
   // GOAL5: rows for all 5 Archons (name + plan) for first-class telemetry (not just prime)
   private archonRows: Array<{ nm: HTMLElement; pl: HTMLElement }> = [];
@@ -136,6 +153,7 @@ export class SuperPanel {
   constructor(doc: Document = document) {
     doc.getElementById('cqm-sup-toggle')?.remove();
     doc.getElementById('cqm-sup-panel')?.remove();
+    injectPanelBaseCSS(doc);
     const style = doc.createElement('style');
     style.textContent = STYLE;
     doc.head.appendChild(style);
@@ -143,6 +161,7 @@ export class SuperPanel {
     const toggle = doc.createElement('button');
     toggle.id = 'cqm-sup-toggle';
     toggle.type = 'button';
+    toggle.className = 'cqm-dock-toggle';
     toggle.textContent = '⬢ ARCHITECT';
     toggle.setAttribute('aria-label', 'Open the Super Creature telemetry');
     toggle.addEventListener('click', () => this.setOpen(!this.open));
@@ -154,6 +173,7 @@ export class SuperPanel {
     panel.innerHTML =
       `<div class="cqm-sup-head"><b>⬢ 5 ARCHONS / GODFORMS</b><span class="plan" data-plan>—</span>` +
       `<button class="cqm-sup-neu" data-neu aria-label="Toggle the Archon neural observatories" title="Toggle neural for focused Archon">⊞ NEURAL</button>` +
+      `<button class="cqm-sup-min" data-min aria-label="Minimize">−</button>` +
       `<button class="cqm-sup-x" data-close aria-label="Close">✕</button></div>` +
       `<div class="cqm-sup-body"><div class="cqm-sup-id" data-id></div>` +
       `<div class="cqm-sup-bars" data-bars></div></div>` +
@@ -166,6 +186,9 @@ export class SuperPanel {
     this.neural = new SuperNeural(panel.querySelector('[data-neural]') as HTMLElement, doc);
     (panel.querySelector('[data-close]') as HTMLElement).addEventListener('click', () =>
       this.setOpen(false),
+    );
+    (panel.querySelector('[data-min]') as HTMLElement).addEventListener('click', () =>
+      this.toggleMinimize(),
     );
     (panel.querySelector('[data-neu]') as HTMLElement).addEventListener('click', () =>
       this.toggleNeural(),
@@ -241,6 +264,12 @@ export class SuperPanel {
     this.open = v;
     this.panel.classList.toggle('open', v);
     if (!v) this.setNeural(false); // closing the box also stops the observatory's rAF loop
+  }
+
+  /** Collapse the Super Creature panel to a compact header bar or restore it. */
+  private toggleMinimize(): void {
+    this.minimized = !this.minimized;
+    this.panel.classList.toggle('minimized', this.minimized);
   }
 
   /** V75: flip the box between the telemetry readout and the in-box neural observatory. */

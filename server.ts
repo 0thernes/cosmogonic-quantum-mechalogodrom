@@ -18,8 +18,6 @@
  * Tailwind is applied to the HTML bundles via `bun-plugin-tailwind` (see bunfig.toml).
  */
 import index from './index.html';
-import docs from './docs.html';
-import spec from './specs.html';
 import { createLogger } from './src/logging/logger';
 import {
   runAgent,
@@ -80,7 +78,22 @@ interface StoredAuditEntry {
   detailJson?: string;
 }
 
-/** Circular audit buffer. `auditHead` is the next write slot; `auditCount` ≤ AUDIT_CAP. O(1) push. */
+/** In-memory waitlist (Ventures scaffold — not persisted; export via logs only). */
+const WAITLIST_CAP = 500;
+const waitlistRing: { email: string; ts: number; tier?: string }[] = [];
+const waitlistLimiter = makeRateLimiter(8, 1);
+
+/** Parse POST /api/waitlist body — email required, optional tier tag. */
+export function parseWaitlistBody(body: unknown): { email: string; tier?: string } | null {
+  if (!body || typeof body !== 'object') return null;
+  const b = body as { email?: unknown; tier?: unknown };
+  if (typeof b.email !== 'string') return null;
+  const email = b.email.trim().toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 120) return null;
+  const tier = typeof b.tier === 'string' ? b.tier.trim().slice(0, 32) : undefined;
+  return { email, tier };
+}
+
 const auditRing: (StoredAuditEntry | undefined)[] = Array.from({ length: AUDIT_CAP });
 let auditHead = 0;
 let auditCount = 0;
@@ -275,6 +288,21 @@ export function withSecurityHeaders(res: Response): Response {
 }
 
 /**
+ * Same-origin guard for POST /api/audit. Allows missing Origin (same-origin fetch from the app)
+ * and rejects cross-origin POST floods. O(1).
+ */
+export function auditPostOriginAllowed(req: Request): boolean {
+  const origin = req.headers.get('Origin');
+  if (origin === null || origin === 'null') return true;
+  try {
+    const url = new URL(req.url);
+    return origin === `${url.protocol}//${url.host}`;
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Wrap a Bun route handler-map so EVERY response it returns passes through {@link withSecurityHeaders}
  * exactly once — sync or async, every status code, with no per-return edits. Static HTML-bundle routes
  * (`/`, `/docs`, `/spec`) are served by Bun's bundler and keep their own headers; their CSP is the
@@ -294,14 +322,29 @@ function secured<T extends Record<string, (req: Request) => Response | Promise<R
 // Start the HTTP server only when this file is run directly (`bun server.ts` / `bun --hot server.ts`).
 // When imported — e.g. by unit tests of the pure body-parsers above — `import.meta.main` is false, so
 // no socket is opened and the test process exits cleanly.
+const HTML_ROOT = new URL('./dist/', import.meta.url);
+
+function serveHtml(path: string): (req: Request) => Promise<Response> {
+  return async (req) => {
+    const file = Bun.file(new URL(path, HTML_ROOT));
+    if (!(await file.exists())) {
+      log.warn(`${path} not found in dist/ — run \`bun run build\` first`);
+      return new Response('Not built yet — run `bun run build` first', { status: 503 });
+    }
+    logRequest(req, 200);
+    return new Response(file, { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+  };
+}
+
 if (import.meta.main) {
   const server = Bun.serve({
     port: Number(process.env.PORT) || 3000,
     development: process.env.NODE_ENV !== 'production',
     routes: {
       '/': index,
-      '/docs': docs,
-      '/spec': spec,
+      '/docs': serveHtml('docs.html'),
+      '/spec': serveHtml('specs.html'),
+      '/bible': serveHtml('bible.html'),
       '/lab': secured({
         GET(req) {
           logRequest(req, 200);
@@ -316,6 +359,73 @@ if (import.meta.main) {
           return Response.json({ ok: true, uptime: process.uptime(), version: VERSION });
         },
       }),
+      '/api/ventures': secured({
+        GET(req) {
+          logRequest(req, 200);
+          return Response.json({
+            ok: true,
+            version: VERSION,
+            horizon: 'ventures',
+            doc: '/docs/VENTURES-2026-06-26.md',
+            milestones: [
+              'hosted-deploy',
+              'waitlist',
+              'cloud-profiles',
+              'multiplayer-10',
+              'monetization',
+              'peer-review-study',
+              'institution-outreach',
+            ],
+            waitlistSize: waitlistRing.length,
+          });
+        },
+      }),
+      '/api/waitlist': secured({
+        async POST(req) {
+          if (!auditPostOriginAllowed(req)) {
+            logRequest(req, 403);
+            return Response.json({ ok: false, error: 'forbidden origin' }, { status: 403 });
+          }
+          if (!waitlistLimiter.tryRemove(Date.now())) {
+            logRequest(req, 429);
+            return Response.json({ ok: false, error: 'rate limited' }, { status: 429 });
+          }
+          let text: string;
+          try {
+            text = await req.text();
+          } catch {
+            logRequest(req, 400);
+            return Response.json({ ok: false, error: 'unreadable body' }, { status: 400 });
+          }
+          if (text.length > 512) {
+            logRequest(req, 413);
+            return Response.json({ ok: false, error: 'body too large' }, { status: 413 });
+          }
+          let body: unknown;
+          try {
+            body = JSON.parse(text);
+          } catch {
+            logRequest(req, 400);
+            return Response.json({ ok: false, error: 'invalid JSON' }, { status: 400 });
+          }
+          const entry = parseWaitlistBody(body);
+          if (!entry) {
+            logRequest(req, 400);
+            return Response.json(
+              { ok: false, error: 'expected { email: string, tier?: string }' },
+              { status: 400 },
+            );
+          }
+          if (waitlistRing.length >= WAITLIST_CAP) waitlistRing.shift();
+          waitlistRing.push({ ...entry, ts: Date.now() });
+          log.info(`waitlist +1 ${entry.email}${entry.tier ? ` (${entry.tier})` : ''}`);
+          logRequest(req, 202);
+          return Response.json(
+            { ok: true, accepted: true, queue: waitlistRing.length },
+            { status: 202 },
+          );
+        },
+      }),
       '/api/audit': secured({
         GET(req) {
           logRequest(req, 200);
@@ -324,6 +434,10 @@ if (import.meta.main) {
           });
         },
         async POST(req) {
+          if (!auditPostOriginAllowed(req)) {
+            logRequest(req, 403);
+            return Response.json({ ok: false, error: 'forbidden origin' }, { status: 403 });
+          }
           // Shed floods BEFORE any work: a tight unauthenticated POST loop would otherwise evict
           // the whole 200-entry ring and burn parse CPU. The bucket is generous enough that real
           // user-action audit posts never reach it — see auditPostLimiter.
@@ -473,7 +587,61 @@ if (import.meta.main) {
         },
       }),
     },
-    fetch(req) {
+    fetch: async (req) => {
+      const url = new URL(req.url);
+      const p = url.pathname;
+      if (p.startsWith('/docs/reports/assets/') && p.endsWith('.svg')) {
+        const file = Bun.file(new URL(`.${p}`, import.meta.url));
+        logRequest(req, 200);
+        return withSecurityHeaders(
+          new Response(file, { headers: { 'Content-Type': 'image/svg+xml; charset=utf-8' } }),
+        );
+      }
+      if (p.startsWith('/assets/alife/') && p.endsWith('.svg')) {
+        const rel = p.replace('/assets/alife/', 'docs/reports/assets/');
+        const file = Bun.file(new URL(`./${rel}`, import.meta.url));
+        logRequest(req, 200);
+        return withSecurityHeaders(
+          new Response(file, { headers: { 'Content-Type': 'image/svg+xml; charset=utf-8' } }),
+        );
+      }
+      if (p === '/satellite-music.js') {
+        const dist = Bun.file(new URL('./dist/satellite-music.js', import.meta.url));
+        if (await dist.exists()) {
+          logRequest(req, 200);
+          return withSecurityHeaders(
+            new Response(dist, {
+              headers: { 'Content-Type': 'application/javascript; charset=utf-8' },
+            }),
+          );
+        }
+        // Dev fallback: transpile the TS source on the fly so the lab page still gets the music
+        // widget without a manual `bun run build`.
+        const srcPath = new URL('./src/satellite-music.ts', import.meta.url);
+        const src = Bun.file(srcPath);
+        if (await src.exists()) {
+          const transpiler = new Bun.Transpiler();
+          const source = await src.text();
+          const out = await transpiler.transform(source, 'ts' as 'ts');
+          logRequest(req, 200);
+          return withSecurityHeaders(
+            new Response(out, {
+              headers: { 'Content-Type': 'application/javascript; charset=utf-8' },
+            }),
+          );
+        }
+      }
+      if (p === '/alife-gallery.js') {
+        const file = Bun.file(new URL('./dist/alife-gallery.js', import.meta.url));
+        if (await file.exists()) {
+          logRequest(req, 200);
+          return withSecurityHeaders(
+            new Response(file, {
+              headers: { 'Content-Type': 'application/javascript; charset=utf-8' },
+            }),
+          );
+        }
+      }
       logRequest(req, 404);
       return withSecurityHeaders(new Response('Not Found', { status: 404 }));
     },

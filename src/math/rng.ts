@@ -41,3 +41,15 @@ export function hashSeed(s: string): number {
   }
   return h >>> 0;
 }
+
+/**
+ * Bug 9 fix: Provide exactly 3 isolated streams to prevent cross-contamination
+ * between physics, AI, and UI events.
+ */
+export function createIsolatedStreams(seed: number) {
+  return {
+    physicsRng: mulberry32(seed),
+    aiRng: mulberry32((seed ^ 0x12345678) >>> 0),
+    uiRng: mulberry32((seed ^ 0x87654321) >>> 0),
+  };
+}

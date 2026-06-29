@@ -65,6 +65,7 @@ const SURFACES = [
   'docs/KANBAN-2026-06-26.md',
   // Binding contract whose present-tense "...ERA (vX)" header stamps the current version (synced below).
   'docs/MODULE-CONTRACTS-2026-06-26.md',
+  'bible.html',
 ];
 
 /** Apply receipts (test count + coverage) propagation. */

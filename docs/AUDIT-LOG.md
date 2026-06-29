@@ -11,6 +11,103 @@ dated / historical / "superseded snapshot" copies (per the binding "Living docs,
 
 ---
 
+## 2026-06-27 — V-HUD-READABILITY: center panels stop being flat strips
+
+Raised the shared CENTER HUD slot and rebuilt the Architecture pop-up body so Architect/Architecture
+views present as readable working panels, not cramped 30vh ribbons.
+
+- **Shared panel slot:** `src/ui/center-hud.ts` now uses `clamp(300px, 56vh, 660px)` on desktop and
+  `clamp(320px, 64vh, 720px)` on touch, with a viewport max-height guard.
+- **Architecture body:** `src/ui/pantheon-architecture-panel.ts` now splits into a responsive dynamics
+  canvas and data well, gives the canvas `clamp(170px, 30vh, 280px)`, keeps the data well at a
+  180px floor, contains both children inside the shared panel box, and resizes the canvas backing
+  store to its real CSS box before drawing.
+- **Architect/Neural comment synced:** `src/ui/super-panel.ts` no longer advertises the old 30vh
+  center slot contract.
+- **Falsifiable:** `tests/ui-ergonomics.test.ts` pins the readability constants so this regression is
+  caught as a unit-level UI ergonomics failure.
+
+## 2026-06-27 — V-TEMPLE-ABOMINATION: ascension temple now reacts to chaos, entropy, and crowding
+
+Upgraded the LV100 ascension temple from a simple trilithon/portal into a deterministic reactive
+shadow-core abomination (`src/sim/monolith-temple.ts`), matching the user mandate that the temple
+should read as monstrous, weird, ominous, mathematical, and alive rather than decorative.
+
+- **New visual rig:** black-hole shadow core, singularity ring, warped impossible line cage, jagged
+  altar-spikes, portal disc/rings, and halo. The rig now has 25+ visual nodes and remains hidden until
+  ascension reveal.
+- **Real-bound reactivity:** `world.ts` feeds chaos, entropy, population, and capacity through a
+  read-only `setEnvironment()` call. The temple uses those scalars to intensify shimmer, shadow-core
+  scale/opacity, cage warp, spike emissive power, and ring motion. No RNG draws; no sim-state writes.
+- **Falsifiable (`tests/viz-systems.test.ts`):** pins construction size, silent reveal settling,
+  chaos/entropy/crowding response, deterministic snapshots for identical update streams, and finite
+  guards for bad inputs.
+- **HELP surfaced:** added a dedicated `Temple` chip/card so `shadow core temple` questions route to
+  the specific abomination/portal explanation instead of only the broader Super Creature card.
+- **Docs synced:** README, `TECHNICAL-SPECIFICATION-2026-06-26.md`, and
+  `ARCHITECTURE-2026-06-26.md` now describe the temple as a reactive shadow-core system.
+
+## 2026-06-27 — V-MECHA/V-ABC surfaced + Copilot rolling key recovery
+
+Fast-forwarded local `ship` to `origin/main` before editing, bringing the public GitHub state into
+this workspace first: `src/sim/mechalogodrom.ts`, `src/sim/alphabet-pantheon-render.ts`, world wiring,
+and their tests were already present upstream and now local.
+
+- **Mechalogodrom and alphabet dome surfaced:** HELP now exposes `Mechalogodrom` and `Alphabet dome`
+  chips/cards, describing the deterministic center fusion abomination and the 100 Greek/Latin
+  archetype dome without claiming gameplay or sentience beyond visual/runtime proof.
+- **Copilot recovery hardened:** keyed providers can now use rolling slots from `FOO_API_KEY`,
+  `FOO_API_KEYS`, and `FOO_API_KEY_2..9`; provider chains dedupe by endpoint + model + key, so a
+  provider with multiple valid keys can exhaust one slot and continue to the next without leaking key
+  values in diagnostics.
+- **Docs synced:** README, `COPILOT-PROVIDERS-2026-06-26.md`, `AI-SUBSYSTEM-2026-06-26.md`, and
+  `TECHNICAL-SPECIFICATION-2026-06-26.md` now describe the current default provider chain,
+  multi-key failover, and V-MECHA/V-ABC render subsystems.
+- **Verified:** targeted provider/help/visual tests passed; `tsc --noEmit` passed before this log
+  entry, with full check still to be run after formatting.
+
+## 2026-06-27 — Wingman drones de-decorated: size now reads REAL per-drone speed (3rd body class)
+
+Carried the "real, not decorative" mandate to a THIRD body class — the 100-drone escort swarm
+(`src/sim/super-wingmen-render.ts`). The drone size pulse was a pure clock decoration
+(`0.55 + 0.25·sin(t·4 + i)`); it now reads each drone's REAL per-frame speed, so a hard-maneuvering
+escort drone visibly swells while an idle one stays small (its glow already read the escort's real
+assist/dominance).
+
+- **New exported pure `droneSpeed(prev, cur, j)`** — frame-to-frame displacement magnitude from the
+  flat XYZ buffers; 0 on the first frame, `?? 0` short-buffer fallback. The renderer keeps a
+  `prevPositions` buffer (resized on swarm-size change) and maps speed → a `[0.45, 1.0]` size swell.
+- **Falsifiable (`tests/super-wingmen-render.test.ts`, +2 tests):** `droneSpeed` pure (3-4-5
+  displacement, no-prev → 0, short-buffer → 0) + an integration test that a moved drone swells while a
+  still one stays at the 0.45 base. Existing position/glow-clamp/fallback tests untouched + green.
+- **Determinism preserved:** pure `f(positions)`, no rng, no clock-driven size.
+- **3 body classes now carry real-bound visuals** (masses · titans · wingmen); 21 named GPU effects
+  plus this de-decoration.
+
+## 2026-06-27 — V-TITAN-VITALS: the spectacle spreads to the titans (energy + entropy body lanes)
+
+Diversified the real-bound effect campaign to a SECOND body class — the 10 god-scale titans — instead
+of piling more onto the masses. The titan body already read the blended `uMenace` (war + entropy); now
+two DISTINCT real economy lanes drive distinct effects, so a titan's fortunes are legible on its body.
+
+- **New lanes (`src/sim/titans.ts`):** exported pure `titanVitalLanes(energy, entropy)` →
+  `{energyN: energy/RESOURCE_CAP, entropyN: entropy/ENTROPY_WASTE_THRESHOLD}`, both clamped [0,1] +
+  finite-guarded. Wired into the per-frame titan update as new `uEnergy`/`uEntropy` uniforms (the
+  freak-geometry body patch links + declares them).
+- **Two new effects, each a falsifiable readout:** STELLAR CORE FORGE (`uEnergy`) — a well-fed titan
+  burns a pulsing star-core (energy-scaled core glow); WASTE-ROT ASHEN FISSURES (`uEntropy`) — a
+  wasteful titan cracks, embers glowing in the rot (entropy-scaled fissure darkening + ember emissive).
+  Complements the existing `uMenace` writhe/void-glow/iris (war + clash-heat).
+- **Determinism preserved:** pure `f(state)`, no rng — titan economy already deterministic; the lanes
+  are read-only normalizations.
+- **Verified:** `tsc` clean; **tests/titan-vitals.test.ts** (5 tests, property-based so they survive
+  the RESOURCE_CAP/THRESHOLD constants) pin bounds [0,1], monotonicity, zero/huge/negative/NaN guards,
+  and genuine mid-range variation; existing `tests/titans.test.ts` green. New titan-body GLSL compiled
+  **directly in the live WebGL2 context** (`COMPILE_STATUS` true, empty log).
+- **Catalog progress: 21 named real-bound body effects across two body classes** (19 on the masses +
+  2 on the titans), each a readout of real vital / social / quantum / world / economy state.
+- **Contract synced:** the `sim/titans.ts` bullet in `MODULE-CONTRACTS-2026-06-26.md`.
+
 ## 2026-06-27 — V-VITALS3: kinetic + environmental body-effect suite (6 more, reusing the lanes + real audio/chaos)
 
 Third catalog batch — pure shader additions, **no new plumbing**: the six new named effects reuse the

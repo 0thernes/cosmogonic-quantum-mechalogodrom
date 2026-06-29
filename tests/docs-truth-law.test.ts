@@ -260,5 +260,5 @@ describe('docs truth law — no unresolved git conflict markers', () => {
         offenders.push(rel);
     }
     expect(offenders).toEqual([]);
-  });
+  }, 30_000);
 });

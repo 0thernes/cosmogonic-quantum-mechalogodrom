@@ -20,9 +20,9 @@ Rewritten in place when the facts change (per the binding "Living docs, no archi
 | Fact                | Canonical value           | Source of truth                                                                      | Propagated by           |
 | ------------------- | ------------------------- | ------------------------------------------------------------------------------------ | ----------------------- |
 | Package version     | `0.18.0`                  | `package.json` `version`                                                             | `sync-surfaces.ts`      |
-| Test count (floor)  | `1477`                    | `scripts/canonical-receipts.ts`                                                      | `sync-surfaces.ts`      |
-| Line coverage       | `95.03%`                  | `scripts/canonical-receipts.ts`                                                      | `sync-surfaces.ts`      |
-| Function coverage   | `92.03%`                  | `scripts/canonical-receipts.ts`                                                      | `sync-surfaces.ts`      |
+| Test count (floor)  | `1771`                    | `scripts/canonical-receipts.ts`                                                      | `sync-surfaces.ts`      |
+| Line coverage       | `91.97%`                  | `scripts/canonical-receipts.ts`                                                      | `sync-surfaces.ts`      |
+| Function coverage   | `94.85%`                  | `scripts/canonical-receipts.ts`                                                      | `sync-surfaces.ts`      |
 | Faculties (design)  | `100` (~30 deep-wired)    | `CANONICAL_FACULTIES`                                                                | `sync-surfaces.ts`      |
 | Archon pantheon     | `25` (5 apex + 20 light)  | `CANONICAL_ARCHONS`                                                                  | `sync-surfaces.ts`      |
 | Theory-of-mind orgs | `25`                      | `CANONICAL_TOM_ORGANS`                                                               | `sync-surfaces.ts`      |
@@ -66,7 +66,7 @@ Rewritten in place when the facts change (per the binding "Living docs, no archi
 | #   | Severity                   | Where                                        | Issue                                                                                                                                                                                          | Resolution                                                                                               |
 | --- | -------------------------- | -------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
 | A   | **P0 gate-RED**            | `.github/copilot-instructions-2026-06-26.md` | markdown tables collapsed by the external `hacklm-memory` tool → fails `prettier --check` (first gate stage) in the working tree                                                               | `prettier --write` (re-pad tables)                                                                       |
-| B   | reconciled (not a bug)     | `scripts/canonical-receipts.ts`              | `CANONICAL_TEST_COUNT = 1477` vs measured 2924                                                                                                                                                 | floor semantics confirmed correct; 1477 is the published headline floor                                  |
+| B   | reconciled (not a bug)     | `scripts/canonical-receipts.ts`              | `CANONICAL_TEST_COUNT = 1771` (was 1477 at audit time) vs measured 2924                                                                                                                        | floor semantics confirmed correct; 1771 is the published headline floor                                  |
 | C   | **P0 gate-RED**            | `CHANGELOG.md`, `docs/KANBAN-2026-06-26.md`  | 3 dead relative links into the deleted `docs/audit-2026-06-15/` folder (consolidated into AUDIT-LOG by `e51a376`)                                                                              | repoint to `docs/AUDIT-LOG.md`                                                                           |
 | C2  | P1 test-hygiene            | `tests/doc-links.test.ts`                    | `SKIP` set omitted `.claude/` → the test scanned nested worktree copies and false-failed                                                                                                       | add `.claude`, `legacy`, `site`, `coverage` to `SKIP`                                                    |
 | D   | P1 doc-rot                 | `docs/KANBAN-2026-06-26.md`                  | mojibake: `×11/`×7/``×1 (orphaned-emoji fragments), `—`×34 used as `—`, plus `¦`/`–`/`©º`— slipped the encoding gate (orphaned fragments aren't double-encoding;`U+201D` is a legit codepoint) | byte-precise normalize: drop corrupted emoji prefixes, restore `—`/`–` separators                        |
@@ -295,8 +295,8 @@ HTML and the native engine (`native/src/` — 5 files, no unsafe C calls).
 - **`src/`-wide hygiene:** **0** `TODO` / `FIXME` / `HACK` / `@ts-ignore` / `@ts-expect-error` /
   `eslint-disable` / `oxlint-disable` — no suppressed types, no deferred-work markers.
 - **Doc-vs-code re-verified on the current tip:** FILE-MAP "195 modules" = 195 actual `src/**/*.ts`;
-  `package.json` `0.18.0`; `bun run sync:check` green (all surfaces match `v0.18.0 · 1477 tests ·
-95.03/92.03`); 0 broken relative links; all 90 md/xml/html surfaces codepoint-clean.
+  `package.json` `0.18.0`; `bun run sync:check` green (all surfaces match `v0.18.0 · 1771 tests ·
+91.97/94.85`); 0 broken relative links; all 90 md/xml/html surfaces codepoint-clean.
 
 Net: the repo is **true, accurate, current, and defensible**. Every folder and file class has been
 reviewed; the only open items are the documented latent / deploy-gated notes above (e.g. per-IP audit

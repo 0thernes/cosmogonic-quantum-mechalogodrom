@@ -8,6 +8,10 @@ docs/FILE-MAP.md
 # breaks the LOCAL gate (CI is unaffected — it runs on a clean checkout). See the multi-context note.
 .claude
 coverage
+# Built standalone gallery bundle (minified; copied from dist/ by scripts/build.ts).
+alife-gallery.js
+# Generated TS embed (scripts/gen-alife-embed.ts — huge string literals).
+src/generated/
 # Generated A-Life comparison assets (SVG charts + stats JSON emitted by
 # scripts/alife-comparison-stats.ts). Re-running the generator must never trip the formatter.
 docs/reports/assets

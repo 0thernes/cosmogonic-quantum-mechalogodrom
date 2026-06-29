@@ -25,6 +25,7 @@
  */
 import * as THREE from 'three';
 import { TAU, clamp, lerp } from '../math/scalar';
+import { applyVizBenchmarks } from './viz-benchmarks';
 import { ARENA_RADIUS } from './constants';
 import type { SimContext } from '../types';
 
@@ -275,6 +276,10 @@ export class Viz3DSystem {
         opacity: 0.5,
         depthWrite: false,
       });
+
+      // Apply mega-report visual benchmark (25-suite) — obelisk i maps to benchmark i mod 25
+      applyVizBenchmarks(mat, i);
+
       const a = (i / TITANS) * TAU + 0.31; // offset so obelisks interleave with the inner towers
       const x = Math.cos(a) * OBELISK_RING_R;
       const z = Math.sin(a) * OBELISK_RING_R;

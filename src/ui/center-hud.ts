@@ -2,14 +2,15 @@
  * CENTER HUD (V56) — unifies the six inspector panels (✦ AI · ❓ HELP · 🗒 AUDIT · ⊞ NEURAL · ⊙ MARKET ·
  * ⬢ ARCHITECT) into ONE same-size, fit-to-window pop-up CENTERED on screen that you CYCLE through (the
  * ‹ › arrows or the tab strip) instead of tap-close-tap-open. A ◐ button fades it transparent so you can
- * see the simulation behind it; ✕ closes. It fits any aspect ratio + works on touch — the slot is
- * `min(94vw,760px) × min(82vh,780px)`, always centered. This also permanently fixes "NEURAL overlaps the
- * menu bars": nothing opens at the bottom anymore.
+ * see the simulation behind it; ✕ closes. It fits any aspect ratio + works on touch — the slot is a
+ * tall readable centre column, not the old shallow strip. This also permanently fixes "NEURAL overlaps
+ * the menu bars": nothing opens at the bottom anymore.
  *
  * It does NOT rewrite the six panels — it drives each one's EXISTING dock toggle (so the panel's own
  * open/close + repaint logic runs), re-homes them to a centered `!important` slot, and enforces
  * one-open-at-a-time. UI shell only; no sim coupling, no rng.
  */
+import { dockBottomBar, syncBottomDockHeight, reorderBottomDock } from './bottom-dock';
 
 interface Slot {
   name: string;
@@ -41,6 +42,11 @@ const PANEL_SEL = SLOTS.map((s) => '#' + s.panel).join(',');
 /** The open+visible panel selectors — the base (solid) opacity rule. */
 const VIS_SEL = SLOTS.map((s) => '#' + s.panel + '.cqm-hud-vis').join(',');
 
+/** Desktop/fine-pointer center HUD height: tall enough for Architecture/Architect data, still bounded. */
+export const CENTER_HUD_DESKTOP_HEIGHT = 'clamp(300px, 56vh, 660px)';
+/** Touch/sheet-mode center HUD height: lets popups breathe without covering the full world. */
+export const CENTER_HUD_TOUCH_HEIGHT = 'clamp(320px, 64vh, 720px)';
+
 const STYLE = `
 /* V69: the HUD fits the grid's CENTRE column — between the side panels (Telemetry/Sorting on the left,
    Observatory/Control on the right) and ABOVE both bottom bars, so NOTHING overlaps and the ecosystem
@@ -55,11 +61,17 @@ ${PANEL_SEL} {
   width: auto !important;
   max-width: none !important;
   transform: none !important;
-  bottom: var(--cqm-hud-bottom, 96px) !important;
-  top: auto !important;
-  height: var(--cqm-hud-height, clamp(176px, 30vh, 380px)) !important;
-  max-height: calc(100vh - 210px) !important;
+  bottom: var(--cqm-hud-bottom, calc(var(--cqm-bottom-h, 108px) + 130px)) !important;
+  top: var(--cqm-hud-top, auto) !important;
+  height: min(var(--cqm-hud-height, ${CENTER_HUD_DESKTOP_HEIGHT}), var(--cqm-hud-max-height, calc(100vh - 156px))) !important;
+  max-height: var(--cqm-hud-max-height, calc(100vh - 156px)) !important;
   z-index: 71 !important;
+}
+/* Desktop / landscape grid: anchor panels from the TOP so fullscreen never clips above the viewport. */
+html[data-cqm-hud-anchor='top'] ${PANEL_SEL} {
+  top: var(--cqm-hud-top, 52px) !important;
+  bottom: auto !important;
+  height: var(--cqm-hud-max-height, calc(100vh - 156px)) !important;
 }
 /* TRANSPARENCY (◐): the open panel is SOLID by default. The see-through state is applied as an INLINE
    opacity !important on the active panel (see applyGhost) — inline !important beats ANY panel's own
@@ -70,8 +82,21 @@ ${PANEL_SEL} {
 ${VIS_SEL} {
   opacity: 1 !important;
 }
-/* The old 2nd dock bar is REDUNDANT — the always-on nav launcher below replaces it. Hide it. */
-#cqm-dock {
+/* V84: panel toggles cycle through the center HUD — hide them from the legacy dock bar (settings +
+   access live in the HUD launcher instead). The dock itself stays hidden when the HUD nav is active. */
+#cqm-dock > #cqm-cop-toggle,
+#cqm-dock > #cqm-help-toggle,
+#cqm-dock > #cqm-aud-toggle,
+#cqm-dock > #cqm-nhi-toggle,
+#cqm-dock > #cqm-mkt-toggle,
+#cqm-dock > #cqm-sup-toggle,
+#cqm-dock > #cqm-arch-toggle,
+#cqm-dock > #cqm-settings-toggle,
+#cqm-dock > #cqm-acc-toggle,
+#cqm-dock > a.cqm-dock-nav {
+  display: none !important;
+}
+body:has(#cqm-hud-nav) #cqm-dock {
   display: none !important;
 }
 /* The nav LAUNCHER: anchored to the SAME gap fitHud measures between the side panels
@@ -81,16 +106,11 @@ ${VIS_SEL} {
    chooseNavMode() measures the content against the live gap width and shows the named tabs only when
    they fit, else the clean ‹ CURRENT › cycler — so it never clips. */
 #cqm-hud-nav {
-  position: fixed;
-  left: var(--cqm-hud-left, 8px);
-  right: var(--cqm-hud-right, 8px);
+  position: static;
   width: max-content;
   max-width: calc(100vw - 16px);
   margin-inline: auto;
-  /* V79: 66px clears the #bar toolbar (bottom:6 + ~56px tall ⇒ its top sits ~62px off the bottom);
-     the old 50px let the launcher pill sink ~12px INTO the toolbar on a short landscape window (the
-     1920×1080 deploy) — the two glass bars overlapped. They now stack with a 4px gap. */
-  bottom: var(--cqm-nav-bottom, 66px);
+  bottom: auto;
   z-index: 73;
   display: flex;
   align-items: center;
@@ -182,6 +202,73 @@ ${VIS_SEL} {
 #cqm-hud-nav.cqm-hud-tabs .cqm-hud-label {
   display: none;
 }
+/* V85: persistent Docs/Spec/Lab/Access/Set — lives in #cqm-bottom-stack (app.css), never hidden. */
+#cqm-persist-nav {
+  position: static;
+  transform: none;
+  bottom: auto;
+  left: auto;
+  z-index: auto;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  max-width: calc(100vw - 12px);
+  padding: 4px 10px;
+  border-radius: 18px;
+  border: 1px solid rgba(120, 160, 220, 0.38);
+  background: rgba(6, 10, 22, 0.94);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.55);
+  pointer-events: auto;
+}
+#cqm-persist-nav .cqm-persist-btn {
+  position: static;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 14px;
+  border: 1px solid rgba(120, 160, 220, 0.32);
+  background: rgba(14, 22, 42, 0.88);
+  color: #cfe0fb;
+  font: 600 11px/1 var(--font-mono, ui-monospace, monospace);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    transform 0.12s,
+    background 0.12s,
+    border-color 0.12s;
+}
+#cqm-persist-nav .cqm-persist-btn:hover {
+  transform: scale(1.05);
+  background: rgba(28, 40, 72, 0.95);
+  border-color: rgba(150, 190, 255, 0.55);
+}
+#cqm-persist-nav .cqm-persist-btn[data-nav='spec'] {
+  border-color: rgba(220, 120, 255, 0.35);
+  color: #f0c8ff;
+}
+#cqm-persist-nav .cqm-persist-btn.cqm-persist-sim {
+  border-color: rgba(255, 160, 80, 0.42);
+  color: #ffd4a8;
+  padding: 0 7px;
+  font-size: 10px;
+}
+#cqm-persist-nav .cqm-persist-btn.cqm-persist-transport {
+  border-color: rgba(100, 220, 180, 0.38);
+  color: #b8f5dc;
+  padding: 0 8px;
+}
+#cqm-persist-nav .cqm-persist-btn:focus-visible {
+  outline: 2px solid rgba(120, 180, 255, 0.75);
+  outline-offset: 1px;
+}
 /* The secondary Docs/Spec/Lab links drop the moment the launcher would otherwise overflow its centre-
    column band — chooseNavMode() adds .cqm-hud-nolinks after MEASURING (covers the narrow-desktop band
    ~769-840px the fixed breakpoint missed), with a ≤520px fallback for the pre-JS frame. */
@@ -225,8 +312,9 @@ ${VIS_SEL} {
   ${PANEL_SEL} {
     left: 8px !important;
     right: 8px !important;
-    bottom: var(--cqm-hud-bottom, 104px) !important;
-    height: var(--cqm-hud-height, clamp(190px, 40vh, 540px)) !important;
+    top: auto !important;
+    bottom: var(--cqm-hud-bottom, calc(var(--cqm-bottom-h, 108px) + 130px)) !important;
+    height: var(--cqm-hud-height, ${CENTER_HUD_TOUCH_HEIGHT}) !important;
     border-radius: 14px 14px 0 0 !important;
   }
   #cqm-hud-nav {
@@ -290,8 +378,19 @@ function fitHud(): void {
     const mid = vw / 2;
     let leftR = 0; // right edge of the left column (Telemetry / Sorting Fields)
     let rightL = vw; // left edge of the right column (Observatory / Control)
+    const leftCol = document.getElementById('ui-col-left');
+    const rightCol = document.getElementById('ui-col-right');
+    if (leftCol) {
+      const r = leftCol.getBoundingClientRect();
+      if (r.width > 8) leftR = Math.max(leftR, r.right);
+    }
+    if (rightCol) {
+      const r = rightCol.getBoundingClientRect();
+      if (r.width > 8) rightL = Math.min(rightL, r.left);
+    }
     for (const el of Array.from(ui.children)) {
       if (!(el instanceof HTMLElement) || HUD_IDS.has(el.id)) continue;
+      if (el.id === 'ui-col-left' || el.id === 'ui-col-right') continue;
       const r = el.getBoundingClientRect();
       if (r.width < 8 || r.height < 8) continue; // hidden / zero-box
       if (r.right <= mid) leftR = Math.max(leftR, r.right);
@@ -303,14 +402,27 @@ function fitHud(): void {
       `${Math.round((rightL < vw ? vw - rightL : 0) + GUTTER)}px`,
     );
   }
-  // Vertical: sit the HUD just above the HIGHEST bar (nav launcher / toolbar) — adapts if a bar grows.
+  // Vertical: sit the HUD just above the HIGHEST bar (nav launcher / toolbar / readout strip).
   const vh = window.innerHeight;
   let barsTop = vh;
-  for (const id of ['cqm-hud-nav', 'bar']) {
+  for (const id of ['perf-hud', 'hud-vsr', 'alg', 'cqm-bottom-stack']) {
     const el = document.getElementById(id);
     if (!el) continue;
     const r = el.getBoundingClientRect();
     if (r.height > 4) barsTop = Math.min(barsTop, r.top);
+  }
+  syncBottomDockHeight();
+  const fs = typeof document !== 'undefined' && !!document.fullscreenElement;
+  const topInset = fs ? 10 : 52;
+  const bottomPx = barsTop < vh ? Math.round(vh - barsTop + 10) : 130;
+  const maxH = Math.max(120, Math.min(barsTop - topInset - 14, vh - topInset - bottomPx - 8));
+  root.style.setProperty('--cqm-hud-max-height', `${Math.round(maxH)}px`);
+  if (sheetMode) {
+    root.dataset.cqmHudAnchor = 'bottom';
+    root.style.removeProperty('--cqm-hud-top');
+  } else {
+    root.dataset.cqmHudAnchor = 'top';
+    root.style.setProperty('--cqm-hud-top', `${topInset}px`);
   }
   if (barsTop < vh)
     root.style.setProperty('--cqm-hud-bottom', `${Math.round(vh - barsTop + 10)}px`);
@@ -465,41 +577,92 @@ function buildNav(doc: Document): void {
   ghostBtn.setAttribute('aria-pressed', String(ghostOn));
   nav.appendChild(ghostBtn);
   nav.appendChild(mk('✕', 'Close', 'cqm-hud-close', () => showOnly(-1)));
-  // V80c: DOCS / SPEC / LAB as flat in-flow buttons at the end of the centred launcher — the user's
-  // "just stick them in the dock, in the centre, like before". CSS forces them position:static so they
-  // can NEVER float back to their source bottom-right corner (their `fixed` utility otherwise wins).
-  const lsep = doc.createElement('span');
-  lsep.className = 'cqm-hud-sep';
-  nav.appendChild(lsep);
-  // Adopt by `data-nav` (NOT href): build-pages.ts rewrites the absolute /docs /spec /lab hrefs to
-  // subpath-relative for the GitHub Pages deploy, so the old href query matched NOTHING there — the links
-  // were never pulled into the launcher and stayed stranded in their source bottom-right corner (the bug
-  // the user kept reporting). The data-nav attribute survives the rewrite, so the dock gets them on Pages
-  // too. center-hud is now their single owner (panel-dock.ts no longer competes for these nodes).
-  for (const key of ['docs', 'spec', 'lab']) {
+  doc.body.appendChild(nav);
+  dockBottomBar(nav, doc);
+}
+
+/** V85: always-visible Docs / Spec / Bible / Lab + sim + transport + Access / Set. */
+function buildPersistentNav(doc: Document): void {
+  let strip = doc.getElementById('cqm-persist-nav');
+  if (!strip) {
+    strip = doc.createElement('nav');
+    strip.id = 'cqm-persist-nav';
+    strip.setAttribute('aria-label', 'Documentation, lab, simulation controls, and settings');
+  } else {
+    strip.replaceChildren();
+  }
+  strip.removeAttribute('hidden');
+
+  const mkBtn = (label: string, title: string, fn: () => void, extra = ''): HTMLButtonElement => {
+    const b = doc.createElement('button');
+    b.type = 'button';
+    b.className = 'cqm-persist-btn' + (extra ? ' ' + extra : '');
+    b.textContent = label;
+    b.title = title;
+    b.setAttribute('aria-label', title);
+    b.addEventListener('click', fn);
+    return b;
+  };
+
+  for (const key of ['docs', 'spec', 'bible', 'lab']) {
     const a = doc.querySelector<HTMLAnchorElement>(`a[data-nav="${key}"]`);
     if (a) {
-      a.classList.add('cqm-hud-btn', 'cqm-hud-link');
-      nav.appendChild(a);
+      a.classList.add('cqm-persist-btn');
+      strip.appendChild(a);
     }
   }
-  // ⛓ ACCESS — the cryptographic terminal (access-puzzle.ts: "only the Romans know" 3455456754) that
-  // unlocks the playable 2nd super creature. Its self-mounted toggle is buried in the hidden #cqm-dock
-  // (display:none), so it was invisible (the owner's "secret password isn't showing up" report). We add
-  // a FRESH launcher button here that opens it — created anew each buildNav, so it survives HMR re-init
-  // (moving the dock node would lose it when the old nav is removed). The modal lives outside the HUD.
+
+  const mkAct = (label: string, title: string, action: string, extra = ''): HTMLButtonElement => {
+    const b = doc.createElement('button');
+    b.type = 'button';
+    b.className = 'cqm-persist-btn' + (extra ? ' ' + extra : '');
+    b.dataset.action = action;
+    b.textContent = label;
+    b.title = title;
+    b.setAttribute('aria-label', title);
+    return b;
+  };
+
+  strip.appendChild(mkAct('⏸', 'Pause / resume simulation', 'pause', 'cqm-persist-transport'));
+  strip.appendChild(mkAct('↻', 'Reset world', 'reset', 'cqm-persist-transport'));
+  strip.appendChild(mkAct('⏱', 'Cycle simulation speed', 'time', 'cqm-persist-transport'));
+  strip.appendChild(mkAct('👁', 'Cycle camera view', 'view', 'cqm-persist-transport'));
+  strip.appendChild(mkAct('⬡', 'Cycle space / FOV', 'space', 'cqm-persist-transport'));
+
+  for (const [action, label, title] of [
+    ['split', '⇄', 'Split mature entities'],
+    ['burst', '✦', 'Burst-spawn entities'],
+    ['mutate', '☢', 'Mutate all entities'],
+    ['chaos', '⚡', 'Boost chaos'],
+  ] as const) {
+    strip.appendChild(mkAct(label, title, action, 'cqm-persist-sim'));
+  }
+
   const accToggle = doc.getElementById('cqm-acc-toggle');
   if (accToggle) {
-    nav.appendChild(
-      mk(
-        '⛓ ACCESS',
-        'Cryptographic access terminal — unlock the playable super creature ("only the Romans know")',
-        'cqm-hud-link',
-        () => accToggle.click(),
+    strip.appendChild(
+      mkBtn('⛓ ACCESS', 'Cryptographic access terminal — unlock the playable super creature', () =>
+        accToggle.click(),
       ),
     );
   }
-  doc.body.appendChild(nav);
+  const settingsToggle = doc.getElementById('cqm-settings-toggle');
+  if (settingsToggle) {
+    strip.appendChild(mkBtn('⚙ SET', 'Simulation settings', () => settingsToggle.click()));
+  }
+  strip.appendChild(
+    mkBtn(
+      '⊞ PANELS',
+      'Center HUD — Neural, Architect, AI, Help, Audit…',
+      () => {
+        if (active < 0) showOnly(0);
+        else cycle(1);
+      },
+      'cqm-persist-panels',
+    ),
+  );
+  if (!strip.parentElement) doc.body.appendChild(strip);
+  dockBottomBar(strip, doc);
 }
 
 /** Each dock toggle still opens "its" panel — but centered, and closing the others (single-open). */
@@ -545,8 +708,10 @@ export function initCenterHud(doc: Document = document): void {
   style.id = 'cqm-hud-style';
   style.textContent = STYLE;
   doc.head.appendChild(style);
-  buildNav(doc); // removes the old nav + rebuilds with the current code
-  wireDockToggles(); // dataset-guarded: binds each toggle once
+  buildNav(doc);
+  buildPersistentNav(doc);
+  reorderBottomDock(doc);
+  wireDockToggles();
   doc.removeEventListener('keydown', onKeydown);
   doc.addEventListener('keydown', onKeydown);
   // V69: keep the centre-column fit live — re-measure on resize / orientation change (re-bound cleanly
@@ -554,8 +719,10 @@ export function initCenterHud(doc: Document = document): void {
   if (typeof window !== 'undefined') {
     window.removeEventListener('resize', scheduleFit);
     window.removeEventListener('orientationchange', scheduleFit);
+    document.removeEventListener('fullscreenchange', scheduleFit);
     window.addEventListener('resize', scheduleFit);
     window.addEventListener('orientationchange', scheduleFit);
+    document.addEventListener('fullscreenchange', scheduleFit);
   }
   render();
   // V74: fit SYNCHRONOUSLY here (not only via the rAF-debounced scheduleFit) so the centre-column vars
@@ -564,6 +731,7 @@ export function initCenterHud(doc: Document = document): void {
   // on the ‹ CURRENT › cycler until the next animation frame — and under heavy HMR churn (a co-editor
   // saving repeatedly) that frame can be starved by back-to-back reboots, leaving it stuck on the cycler.
   fitHud();
+  syncBottomDockHeight();
 }
 
 // HMR — hot-replace the HUD IN PLACE (re-inject the new CSS + rebuild the nav) without a full page

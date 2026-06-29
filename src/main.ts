@@ -6,7 +6,7 @@ import 'htmx.org';
 import * as THREE from 'three';
 import { detectQuality } from './core/quality';
 import { Engine } from './core/engine';
-import { RenderGovernor } from './core/frame-governor';
+import { RenderGovernor, Level } from './core/frame-governor';
 import { mountPerfHud } from './ui/perf-hud';
 import { MemoryStore } from './memory/store';
 import { AuditTrail } from './logging/audit';
@@ -21,14 +21,34 @@ import './ui/help-system';
 // Audit dock (V51): self-mounting 🗒 AUDIT toggle that moves the audit trail off the left column into
 // the bottom dock (frees SORTING FIELDS); toggles the existing #aP overlay, HTMX polling untouched.
 import './ui/audit-dock';
-// Center HUD (V56): unifies the six inspector panels into one centered, cyclable, fit-to-window pop-up.
+// Center HUD (V56/V84): cyclable center popup for AI · HELP · AUDIT · NEURAL · MARKET · ARCHITECT · ARCHITECTURE.
 import { initCenterHud } from './ui/center-hud';
+import { initUiColumns } from './ui/ui-columns';
+import { syncBottomDockHeight } from './ui/bottom-dock';
+import { mountAlgoPickerShell } from './ui/algo-picker-shell';
+// Toolbar keyboard navigation: roving tabindex + arrow keys for #bar buttons.
+import { initToolbarKeyboard } from './ui/toolbar';
+// Onboarding overlay (V81): one-time, dismissible first-run hint.
+import './ui/onboarding';
+// Settings panel (V81): centralized simulation controls.
+import './ui/settings-panel';
+// Panel edge toggles (V98): side hide/show buttons for desktop/tablet panel columns.
+import './ui/panel-edge-toggles';
 
 // Legacy r128 color fidelity: the original rendered without color management;
 // disable it BEFORE any THREE.Color is constructed (audit finding, 0.2.1).
 THREE.ColorManagement.enabled = false;
 
 const log = createLogger('main');
+
+/** Shell layout before WebGL boot — panels must paint in final positions on first frame. */
+function initAppShell(): void {
+  initUiColumns();
+  mountAlgoPickerShell();
+  initCenterHud();
+  syncBottomDockHeight();
+  document.documentElement.classList.add('cqm-shell-ready');
+}
 
 const canvas = document.getElementById('c');
 if (!(canvas instanceof HTMLCanvasElement)) {
@@ -84,7 +104,13 @@ function boot(): void {
   }
 
   const store = new MemoryStore();
-  const persisted = store.load() ?? store.defaults();
+  const loaded = store.load() ?? store.defaults();
+  // V95: every browser reload starts a fresh cosmos — new seed, new creatures, new economy.
+  // Preferences (audio, view, render, etc.) are kept; only the deterministic seed is reset.
+  const persisted = {
+    ...loaded,
+    seed: (0xc05a06 ^ ((performance.now() * 1000) | 0)) >>> 0,
+  };
   persisted.sessions += 1;
   store.save(persisted);
 
@@ -107,9 +133,8 @@ function boot(): void {
     maxEntities: quality.maxEntities,
   });
 
-  // V56: now that all six inspector panels have mounted (copilot/help/audit on import; nhi/market/super
-  // during World construction), unify them into the centered, cyclable CENTER HUD.
-  initCenterHud();
+  // V-toolbar: enable arrow-key / Home / End navigation inside the bottom toolbar.
+  initToolbarKeyboard();
 
   // Dev-only inspection hook (localhost / 127.0.0.1 ONLY — never on the deployed static site). Exposes
   // the live world/engine so the preview + automation harness can DRIVE frames and introspect a
@@ -136,6 +161,7 @@ function boot(): void {
   const perfHud = mountPerfHud(quality.tier);
   let fpsEma = 60;
   let perfFrame = 0;
+  let lastGovernorLevel: Level | null = null;
   // rAF-timestamp delta; world.step clamps to 50ms so tab-switch gaps are safe. dt floored at 0.
   let last = performance.now();
   function frame(now: number): void {
@@ -149,10 +175,16 @@ function boot(): void {
     const fps = dt > 0 ? Math.min(1 / dt, 240) : fpsEma;
     fpsEma += (fps - fpsEma) * 0.1;
     if (++perfFrame % 12 === 0) perfHud.update(fpsEma, governor.level);
+    // Surface quality changes to the user so the world getting blurrier is not a mystery.
+    if (lastGovernorLevel !== null && lastGovernorLevel !== governor.level) {
+      world?.showQualityNotice(governor.level);
+    }
+    lastGovernorLevel = governor.level;
   }
   rafId = requestAnimationFrame(frame);
 }
 
+initAppShell();
 boot();
 
 // HMR teardown — THE fix for the dev WebGL-context leak. Before a hot-replaced module re-boots, stop the

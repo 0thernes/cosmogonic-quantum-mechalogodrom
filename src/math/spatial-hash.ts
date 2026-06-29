@@ -42,6 +42,7 @@ export class SpatialHash<T extends { position: { x: number; z: number } }> {
       this.pool.push(cell);
     }
     this.cells.clear();
+    this.result.length = 0;
   }
 
   /**

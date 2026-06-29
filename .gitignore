@@ -24,7 +24,12 @@ agent-tools/
 agent-tools/
 terminals/
 law_error.txt
+law.log
 receipts_print.txt
 tscout.txt
+tsc.log
+.gate.log
+.gate.baseline.log
+.audit-gate.log
 verify-mind.ts
 *.bmp

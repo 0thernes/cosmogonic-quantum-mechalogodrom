@@ -13,23 +13,23 @@
 
 ### Foundational Indicator Ledger
 
-| Indicator | Theory                        | Status     | Mechanism                                       | Receipt                     |
-| --------- | ----------------------------- | ---------- | ----------------------------------------------- | --------------------------- |
-| GWT-1     | Global Neuronal Workspace     | ✅ Present | 30 organ-nets + 11 cognitive faculties          | `super-mind.ts`             |
-| GWT-2     | Global Neuronal Workspace     | ✅ Partial | meta-network integrates 69-vector → 12 drives   | `super-mind.ts`             |
-| GWT-3     | Global Neuronal Workspace     | ✅ Present | ignition gates memory consolidation             | `super-mind.ts`             |
-| PP-1      | Predictive Processing         | ✅ Present | predictor recurses 5 deep; error → surprise     | `active-inference.ts`       |
-| HOT-2     | Higher-Order Thought          | ✅ Present | metacognition reads decision margin + Φ         | `metacognition.ts`          |
-| HOT-3     | Higher-Order Thought          | ✅ Partial | empowerment + successor + active inference vote | `super-mind.ts`             |
-| AE-1      | Agency                        | ✅ Present | GOAP plans toward dominance; closed loop        | `super-mind.ts`             |
-| AE-2      | Agency                        | ✅ Partial | body morphology/locomotion read back            | `super-body.ts`             |
-| IIT-1     | Integrated Information Theory | ✅ Present | classical Φ proxy + quantum register Φ          | `integrated-information.ts` |
-| IIT-2     | Integrated Information Theory | ✅ Partial | min-cut entanglement for quantum register       | `super-qubits.ts`           |
-| AST-1     | Adaptive Self-Model           | ✅ Present | self-awareness scalar + self-model read         | `super-mind.ts`             |
+| Indicator | Theory                        | Status     | Mechanism                                                                                     | Receipt                                                         |
+| --------- | ----------------------------- | ---------- | --------------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
+| GWT-1     | Global Neuronal Workspace     | ✅ Present | 30 organ-nets + 11 cognitive faculties                                                        | `super-mind.ts`                                                 |
+| GWT-2     | Global Neuronal Workspace     | ✅ Partial | meta-network integrates 69-vector → 12 drives                                                 | `super-mind.ts`                                                 |
+| GWT-3     | Global Neuronal Workspace     | ✅ Present | ignition gates memory consolidation                                                           | `super-mind.ts`                                                 |
+| PP-1      | Predictive Processing         | ✅ Present | predictor recurses 5 deep; error → surprise                                                   | `active-inference.ts`                                           |
+| HOT-2     | Higher-Order Thought          | ✅ Present | metacognition reads decision margin + Φ                                                       | `metacognition.ts`                                              |
+| HOT-3     | Higher-Order Thought          | ✅ Partial | empowerment + successor + active inference vote                                               | `super-mind.ts`                                                 |
+| AE-1      | Agency                        | ✅ Present | GOAP plans toward dominance; closed loop                                                      | `super-mind.ts`                                                 |
+| AE-2      | Agency                        | ✅ Partial | body morphology/locomotion read back; SuperMind move now steers SuperBodySystem flight target | `super-body.ts`, `world.ts`, `tests/super-body-control.test.ts` |
+| IIT-1     | Integrated Information Theory | ✅ Present | classical Φ proxy + quantum register Φ                                                        | `integrated-information.ts`                                     |
+| IIT-2     | Integrated Information Theory | ✅ Partial | min-cut entanglement for quantum register                                                     | `super-qubits.ts`                                               |
+| AST-1     | Adaptive Self-Model           | ✅ Present | self-awareness scalar + self-model read                                                       | `super-mind.ts`                                                 |
 
 ### All 14 Indicators — 8/14 met + 6/14 partial (all 14 structurally addressed)
 
-8 of the 14 Butlin indicators are genuinely wired and 6 are partially present, via Tsotchke substrates + the ~30 deep-wired faculties (of the 100-faculty design) + 25 ToM organs + 10 emergence angles + proxies. Remaining work to promote the 6 partials: a real capacity-limited workspace competition (GWT-2), an internal body-model predicting sensory consequences (AE-2), a load-bearing qualia code (HOT-4), an organized scene model (RPT-2), a deeper generative belief model (HOT-3). Receipts in `super-mind.ts`, `attention-controller.ts`, `faculties-pantheon.ts`, `tom-pantheon.ts`, `emergence-angles.ts`, `eshkol-cognition.ts`, and `integrated-information.ts`. 8/14 met + 6/14 partial — on the path to 14/14, not complete.
+8 of the 14 Butlin indicators are genuinely wired and 6 are partially present, via Tsotchke substrates + the ~30 deep-wired faculties (of the 100-faculty design) + 25 ToM organs + 10 emergence angles + proxies. Recent progress: the AE-1/HOT-3 belief→action loop was tightened by wiring the apex `SuperMind` move vector into `SuperBodySystem.setSuperMindMove` in `world.ts`, so the composite mind's chosen action directly steers the avatar's flight target (tested in `tests/super-body-control.test.ts`). Remaining work to promote the 6 partials: a real capacity-limited workspace competition (GWT-2), a fuller internal body-model predicting sensory consequences (AE-2), a load-bearing qualia code (HOT-4), an organized scene model (RPT-2), a deeper generative belief model (HOT-3). Receipts in `super-mind.ts`, `super-body.ts`, `attention-controller.ts`, `faculties-pantheon.ts`, `tom-pantheon.ts`, `emergence-angles.ts`, `eshkol-cognition.ts`, and `integrated-information.ts`. 8/14 met + 6/14 partial — on the path to 14/14, not complete.
 
 ---
 
@@ -83,7 +83,7 @@
    - Measure convergence speed and stability
    - Ensure determinism (seeded learning)
 
-**Receipt:** `src/sim/reservoir.ts` exists but recurrence is architected, not learned
+**Receipt:** `src/sim/learned-recurrence.ts` provides online learned recurrence (seeded BPTT each beat, weights adapt within a life). `src/sim/nqs-vmc-learning.ts` provides NQS/VMC quantum-state learning (Carleo & Troyer 2017 RBM ansatz + Metropolis sampling + energy-variance surprise coupling). Both are wired into `super-mind.ts:think()` — `LearnedRecurrence.step()` blends into the latent, `NQSLearningController.step()` feeds energy variance into surprise. Telemetry surfaced in `SuperMindSnapshot.nqs`. Covered by `tests/learned-recurrence.test.ts` and `tests/self-evolution-loop.test.ts`.
 
 ---
 
@@ -149,17 +149,17 @@
 4. Document any missing or partial indicators
 5. Create test suite for each indicator
 
-**Receipt:** Current audit is partial; full audit needed
+**Receipt:** COMPLETE. `tests/butlin-indicators.test.ts` now contains 15 explicit receipt tests — one per Butlin indicator plus an integration test — covering GWT-1/2/3/4, PP-1, HOT-2/3, AE-1/2, RPT-1/2, IIT-1/2, AST-1/2, and a SuperMind snapshot that exposes all substrates in one telemetry surface. The scorecard remains **8/14 met + 6/14 partial** (computational indicators, NOT phenomenal sentience); the audit is now fully mapped and continuously verified on every `bun test` run.
 
 ---
 
 ## Priority Order
 
 1. **Phase 1: Explicit Attention Controller (GWT-4)** — DONE — deterministic drive gate wired into `SuperMind`
-2. **Phase 2: Learned Recurrence (RPT-1/2)** — DONE structurally — fast weights / learned recurrence substrates present; deepen online learning next
+2. **Phase 2: Learned Recurrence (RPT-1/2)** — DONE — `LearnedRecurrence` (online BPTT) + `NQSLearningController` (NQS/VMC quantum-state learning) wired into `think()`
 3. **Phase 3: Full Irreducibility (IIT-2)** — DONE structurally — classical participation + quantum/mincut proxies present; deepen ablation proofs next
 4. **Phase 4: Self-Model Accuracy (AST-2)** — DONE structurally — metacognitive self-model update present; deepen calibration tests next
-5. **Phase 5: Complete Butlin Audit** — ONGOING — verification and documentation stay live with every build wave
+5. **Phase 5: Complete Butlin Audit** — DONE — all 14 indicators mapped to code receipts and covered by `tests/butlin-indicators.test.ts`
 
 ---
 
@@ -206,6 +206,8 @@ This is a serious research instrument for testing consciousness theories in non-
 - Butlin et al. (2023) — "Consciousness in Artificial Intelligence" (arXiv:2308.08708)
 - `docs/reports/2026-06-21-NHSI-MANIFESTO-0THERNES-CORP.md` — Current consciousness indicator scorecard
 - `src/sim/super-mind.ts` — Apex mind implementation
+- `src/sim/super-body.ts` — Apex body / embodiment output↔input loop
+- `src/world.ts` — World drive loop that wires mind output into body movement (`World.driveSuper`)
 - `src/sim/metacognition.ts` — Metacognitive monitoring
 - `src/sim/integrated-information.ts` — IIT Φ computation
 - `src/sim/active-inference.ts` — Predictive processing

@@ -51,9 +51,9 @@ are overclaims resting on name-list modules and partial scaffolding. The single
 thing standing between "a strong pile of faculties" and "emergence" is
 **coupling**, not count.
 
-**Where the project stands today (`bun run check` green):** v0.18.0 · 1477 tests
-pass / 0 fail (1,744,891 `expect()` calls across 151 files) · ~95% line / ~92%
-function coverage (canonical 95.03 / 92.03, ±6pp gate tolerance). The SuperMind
+**Where the project stands today (`bun run check` green):** v0.18.0 · 1771 tests
+pass / 0 fail (2,047,523 `expect()` calls across 175 files) · ~92% line / ~95%
+function coverage (canonical 91.97 / 94.85, ±6pp gate tolerance). The SuperMind
 `think()` costs ~3.34 ms in the full bench suite (~8.85 ms focused) — this is a
 real, non-trivial per-call cost, not a sub-millisecond freebie (see §8). World
 ceiling: 50,000 agents (10,000 @ 60 fps on an iGPU), ~3.5M params (~14 MB
@@ -173,11 +173,12 @@ quantum-Φ, FEP, predictive coding, higher-order metacognition, attention schema
 empowerment, VSA/HRR, successor rep, Lindblad deliberation, criticality, quantum
 reservoir, Kuramoto resonance, neuromodulation, Izhikevich, PAD affect, ToM, fast
 weights, Clifford tableau, QGT/QNG, stabilizer-Rényi magic, Born-rule collapse,
-CG/Wigner, coherence, spin-NN). A small number of "applied" labels are actually
-**unwired primitives** (`schrodinger.ts`, `so3.ts`, and one more — real tested
-modules with zero importers), and a handful of STUDIED citations are forward-dated
-and read as speculative but are framing-only. The ledger is unusually honest by
-repo standards; the remaining overclaims should be reclassified APPLIED →
+CG/Wigner, coherence, spin-NN). Previously, a small number of "applied" labels were
+**unwired primitives** (`schrodinger.ts`, `so3.ts`, and `causal-graph.ts` — real tested
+modules with zero importers). **Resolved:** all three are now wired via
+`src/sim/latent-substrates.ts` (imported by `super-mind.ts`), turning each into a
+deterministic per-beat probe that feeds real super-mind signals. The ledger is unusually
+honest by repo standards; the remaining overclaims should be reclassified APPLIED →
 primitive/queued.
 
 ## 7. Consciousness / sentience — honestly 8/14 Butlin, and that is not sentience
@@ -224,14 +225,18 @@ Frame the contribution as **"novel by integration"** — never "world-first".
 
 1. **Faculty-to-faculty coupling matrix** driven by resonance phase coherence
    (§5) — the keystone; the one change most likely to move measured coupling and,
-   with it, genuine emergence. (The measured program so far is in the addendum.)
+   with it, genuine emergence. **IMPLEMENTED:** the GWT broadcast re-entry in
+   `super-mind.ts` now uses per-faculty Kuramoto coherence weights
+   (`lastResWeights` from `resonanceField.step()`) — faculties in phase with the
+   collective get amplified, out-of-phase damped. The coupling audit measures
+   whether this lifts `meanAbsCoupling` + `density` above the weak-coupling threshold.
 2. **Wire `faculties-pantheon.ts` into the apex** (or stop counting it) — make the
    faculty number honest: either give faculties 31–100 distinct mechanisms and
    integrate them, or reclassify the count.
 3. **De-inflate the Tsotchke registry metrics** (don't count fenced/meta as
    wired) and keep the wiring map honest about the ~16 / 20 split.
-4. **Reclassify the paper overclaims** (schrodinger / so3 / +1) APPLIED →
-   primitive; wire them if they should be applied.
+4. **Reclassify the paper overclaims** (schrodinger / so3 / causal-graph) APPLIED →
+   primitive — **RESOLVED:** all three are now wired via `latent-substrates.ts` → `super-mind.ts`.
 5. **Promote partial Butlin indicators** — give GWT-2 a real capacity-limited
    competition for the workspace slot; give AE-2 an internal body-model predicting
    the sensory consequences of action.

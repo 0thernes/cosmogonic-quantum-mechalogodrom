@@ -2,10 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta
-      name="viewport"
-      content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"
-    />
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
     <!-- V81: revalidate the app shell each load so returning visitors pick up new deploys (and the new
          ?v=-cache-busted Docs/Spec/Lab nav links) instead of a stale cached index. -->
     <meta http-equiv="Cache-Control" content="no-cache, must-revalidate" />
@@ -17,7 +14,7 @@
     <meta property="og:title" content="COSMOGONIC QUANTUM MECHALOGODROM — 0thernes NHSI" />
     <meta
       property="og:description"
-      content="Petri-dish universe for digital biologics and Archon minds — real Tsotchke math, 1,477 tests, seed-reproducible. 0thernes Corp > Weyland Corp."
+      content="Petri-dish universe for digital biologics and Archon minds — real Tsotchke math, 1,771 tests, seed-reproducible. 0thernes Corp > Weyland Corp."
     />
     <meta name="theme-color" content="#030612" />
     <link
@@ -25,6 +22,45 @@
       href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='15' fill='%23030612'/%3E%3Cellipse cx='16' cy='16' rx='13' ry='5' fill='none' stroke='%230ef' stroke-width='1.6' transform='rotate(28 16 16)'/%3E%3Cellipse cx='16' cy='16' rx='13' ry='5' fill='none' stroke='%23fa0' stroke-width='1.6' transform='rotate(-28 16 16)'/%3E%3Ccircle cx='16' cy='16' r='4.5' fill='%230ef'/%3E%3C/svg%3E"
     />
     <link rel="stylesheet" href="./src/styles/app.css" />
+    <!-- V86 critical shell: correct panel columns + hide orphan chrome before module JS runs -->
+    <style id="cqm-critical-shell">
+      @media (min-width: 769px) and (pointer: fine) {
+        #ui:not(:has(.ui-col-left)) > #sP,
+        #ui:not(:has(.ui-col-left)) > #algoP,
+        #ui:not(:has(.ui-col-left)) > #perf-slot {
+          grid-column: 1;
+        }
+        #ui:not(:has(.ui-col-right)) > #oP,
+        #ui:not(:has(.ui-col-right)) > #alg,
+        #ui:not(:has(.ui-col-right)) > #hud-vsr,
+        #ui:not(:has(.ui-col-right)) > .cqm-brain-slot {
+          grid-column: 3;
+        }
+      }
+      body > a[data-nav] {
+        position: fixed !important;
+        left: -100vw !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+      }
+      #cqm-persist-nav a[data-nav] {
+        position: static !important;
+        left: auto !important;
+        opacity: 1 !important;
+        pointer-events: auto !important;
+      }
+      #cqm-dock {
+        display: none !important;
+      }
+      body > #bar {
+        opacity: 0;
+        pointer-events: none;
+      }
+      #bar-shell #bar {
+        opacity: 1;
+        pointer-events: auto;
+      }
+    </style>
   </head>
   <body class="touch-none overflow-hidden bg-black font-mono text-slate-300">
     <!-- Drag = mouse-look, wheel = zoom (ui/input.ts pointer capture; world consumes) -->
@@ -509,203 +545,164 @@
         </div>
       </section>
 
-      <!-- Control panel (small/portrait fine-pointer: left edge-docked sheet, lower; on coarse
-           pointers this panel is display:none — the joystick + look pad + wheel replace it). -->
-      <section
-        id="cP"
-        class="panel sheet sheet-l sheet-lower overflow-hidden rounded-panel border border-cyan-300/15 bg-void/90 shadow-panel backdrop-blur-xl backdrop-saturate-150"
-        aria-label="Control"
-      >
-        <button
-          type="button"
-          data-sheet-handle="cP"
-          class="sheet-handle"
-          aria-controls="cP"
-          aria-expanded="false"
-          aria-label="Open or close control sheet"
-          title="Control"
-        >
-          <span class="sheet-handle-label">CTL</span>
-        </button>
-        <div
-          data-panel-toggle
-          class="flex min-h-7.5 cursor-pointer items-center justify-between border-b border-white/5 px-2.5 py-1.5 select-none"
-        >
-          <span class="sheet-grip" aria-hidden="true"></span>
-          <h2
-            class="font-ui text-2xs font-semibold tracking-widest text-accent uppercase text-shadow-glow-accent"
-          >
-            Control
-          </h2>
+      <!-- Offscreen control pad: [data-a] buttons for InputSystem; keyboard legend lives in SET → Settings. -->
+      <div id="cqm-ctrl-pad-offscreen" class="cqm-offscreen-pad" aria-hidden="true">
+        <div id="pad-move" class="mb-1 grid grid-cols-3 gap-0.5">
+          <span></span>
           <button
             type="button"
-            class="chev flex h-5 w-5 shrink-0 items-center justify-center rounded border-0 bg-white/5 text-xs text-sky-300"
-            aria-label="Collapse or expand control panel"
-            title="Collapse or expand control panel"
+            data-a="fwd"
+            aria-label="Move forward (W)"
+            title="Move forward (W)"
+            class="ctrl-pad-btn"
           >
-            &#9662;
+            <kbd>W</kbd> &#8593;
+          </button>
+          <span></span>
+          <button
+            type="button"
+            data-a="left"
+            aria-label="Strafe left (A)"
+            title="Strafe left (A)"
+            class="ctrl-pad-btn"
+          >
+            <kbd>A</kbd> &#8592;
+          </button>
+          <button
+            type="button"
+            data-a="back"
+            aria-label="Move backward (S)"
+            title="Move backward (S)"
+            class="ctrl-pad-btn"
+          >
+            <kbd>S</kbd> &#8595;
+          </button>
+          <button
+            type="button"
+            data-a="right"
+            aria-label="Strafe right (D)"
+            title="Strafe right (D)"
+            class="ctrl-pad-btn"
+          >
+            <kbd>D</kbd> &#8594;
+          </button>
+          <button
+            type="button"
+            data-a="up"
+            aria-label="Ascend (Q)"
+            title="Ascend (Q)"
+            class="ctrl-pad-btn"
+          >
+            <kbd>Q</kbd> Up
+          </button>
+          <span></span>
+          <button
+            type="button"
+            data-a="down"
+            aria-label="Descend (E)"
+            title="Descend (E)"
+            class="ctrl-pad-btn"
+          >
+            <kbd>E</kbd> Dn
           </button>
         </div>
-        <div class="panel-body max-h-[calc(65vh-40px)] overflow-y-auto p-2">
-          <!-- V3.4: #pad-move/#pad-rot/#pad-sim are hidden on coarse pointers — the
-               joystick + look pad + action wheel replace them (app.css). -->
-          <div id="pad-move" class="mb-1 grid grid-cols-3 gap-0.5">
-            <span></span>
-            <button
-              type="button"
-              data-a="fwd"
-              aria-label="Move forward (W)"
-              title="Move forward (W)"
-              class="inline-flex h-8 items-center justify-center rounded-btn border border-ctrl-line/30 bg-ctrl-bg/15 px-1 font-ui text-4xs whitespace-nowrap text-ctrl-ink transition-all duration-100 select-none hover:border-ctrl-glow/45 hover:bg-ctrl-hot/20 hover:text-white active:border-ctrl-glow/50 active:bg-ctrl-hot/30 active:text-white"
-            >
-              <kbd>W</kbd> &#8593;
-            </button>
-            <span></span>
-            <button
-              type="button"
-              data-a="left"
-              aria-label="Strafe left (A)"
-              title="Strafe left (A)"
-              class="inline-flex h-8 items-center justify-center rounded-btn border border-ctrl-line/30 bg-ctrl-bg/15 px-1 font-ui text-4xs whitespace-nowrap text-ctrl-ink transition-all duration-100 select-none hover:border-ctrl-glow/45 hover:bg-ctrl-hot/20 hover:text-white active:border-ctrl-glow/50 active:bg-ctrl-hot/30 active:text-white"
-            >
-              <kbd>A</kbd> &#8592;
-            </button>
-            <button
-              type="button"
-              data-a="back"
-              aria-label="Move backward (S)"
-              title="Move backward (S)"
-              class="inline-flex h-8 items-center justify-center rounded-btn border border-ctrl-line/30 bg-ctrl-bg/15 px-1 font-ui text-4xs whitespace-nowrap text-ctrl-ink transition-all duration-100 select-none hover:border-ctrl-glow/45 hover:bg-ctrl-hot/20 hover:text-white active:border-ctrl-glow/50 active:bg-ctrl-hot/30 active:text-white"
-            >
-              <kbd>S</kbd> &#8595;
-            </button>
-            <button
-              type="button"
-              data-a="right"
-              aria-label="Strafe right (D)"
-              title="Strafe right (D)"
-              class="inline-flex h-8 items-center justify-center rounded-btn border border-ctrl-line/30 bg-ctrl-bg/15 px-1 font-ui text-4xs whitespace-nowrap text-ctrl-ink transition-all duration-100 select-none hover:border-ctrl-glow/45 hover:bg-ctrl-hot/20 hover:text-white active:border-ctrl-glow/50 active:bg-ctrl-hot/30 active:text-white"
-            >
-              <kbd>D</kbd> &#8594;
-            </button>
-            <button
-              type="button"
-              data-a="up"
-              aria-label="Ascend (Q)"
-              title="Ascend (Q)"
-              class="inline-flex h-8 items-center justify-center rounded-btn border border-ctrl-line/30 bg-ctrl-bg/15 px-1 font-ui text-4xs whitespace-nowrap text-ctrl-ink transition-all duration-100 select-none hover:border-ctrl-glow/45 hover:bg-ctrl-hot/20 hover:text-white active:border-ctrl-glow/50 active:bg-ctrl-hot/30 active:text-white"
-            >
-              <kbd>Q</kbd> Up
-            </button>
-            <span></span>
-            <button
-              type="button"
-              data-a="down"
-              aria-label="Descend (E)"
-              title="Descend (E)"
-              class="inline-flex h-8 items-center justify-center rounded-btn border border-ctrl-line/30 bg-ctrl-bg/15 px-1 font-ui text-4xs whitespace-nowrap text-ctrl-ink transition-all duration-100 select-none hover:border-ctrl-glow/45 hover:bg-ctrl-hot/20 hover:text-white active:border-ctrl-glow/50 active:bg-ctrl-hot/30 active:text-white"
-            >
-              <kbd>E</kbd> Dn
-            </button>
-          </div>
-          <div id="pad-rot" class="flex flex-wrap justify-center gap-0.5">
-            <button
-              type="button"
-              data-a="rleft"
-              aria-label="Roll left (Z)"
-              title="Roll left (Z)"
-              class="inline-flex h-8 items-center justify-center rounded-btn border border-ctrl-line/30 bg-ctrl-bg/15 px-1 font-ui text-4xs whitespace-nowrap text-ctrl-ink transition-all duration-100 select-none hover:border-ctrl-glow/45 hover:bg-ctrl-hot/20 hover:text-white active:border-ctrl-glow/50 active:bg-ctrl-hot/30 active:text-white"
-            >
-              <kbd>Z</kbd> Rl
-            </button>
-            <button
-              type="button"
-              data-a="rright"
-              aria-label="Roll right (X)"
-              title="Roll right (X)"
-              class="inline-flex h-8 items-center justify-center rounded-btn border border-ctrl-line/30 bg-ctrl-bg/15 px-1 font-ui text-4xs whitespace-nowrap text-ctrl-ink transition-all duration-100 select-none hover:border-ctrl-glow/45 hover:bg-ctrl-hot/20 hover:text-white active:border-ctrl-glow/50 active:bg-ctrl-hot/30 active:text-white"
-            >
-              <kbd>X</kbd> Rr
-            </button>
-            <button
-              type="button"
-              data-a="tup"
-              aria-label="Tilt up (R)"
-              title="Tilt up (R)"
-              class="inline-flex h-8 items-center justify-center rounded-btn border border-ctrl-line/30 bg-ctrl-bg/15 px-1 font-ui text-4xs whitespace-nowrap text-ctrl-ink transition-all duration-100 select-none hover:border-ctrl-glow/45 hover:bg-ctrl-hot/20 hover:text-white active:border-ctrl-glow/50 active:bg-ctrl-hot/30 active:text-white"
-            >
-              <kbd>R</kbd> Tu
-            </button>
-            <button
-              type="button"
-              data-a="tdown"
-              aria-label="Tilt down (F)"
-              title="Tilt down (F)"
-              class="inline-flex h-8 items-center justify-center rounded-btn border border-ctrl-line/30 bg-ctrl-bg/15 px-1 font-ui text-4xs whitespace-nowrap text-ctrl-ink transition-all duration-100 select-none hover:border-ctrl-glow/45 hover:bg-ctrl-hot/20 hover:text-white active:border-ctrl-glow/50 active:bg-ctrl-hot/30 active:text-white"
-            >
-              <kbd>F</kbd> Td
-            </button>
-            <button
-              type="button"
-              data-a="yleft"
-              aria-label="Yaw left (C)"
-              title="Yaw left (C)"
-              class="inline-flex h-8 items-center justify-center rounded-btn border border-ctrl-line/30 bg-ctrl-bg/15 px-1 font-ui text-4xs whitespace-nowrap text-ctrl-ink transition-all duration-100 select-none hover:border-ctrl-glow/45 hover:bg-ctrl-hot/20 hover:text-white active:border-ctrl-glow/50 active:bg-ctrl-hot/30 active:text-white"
-            >
-              <kbd>C</kbd> Yl
-            </button>
-            <button
-              type="button"
-              data-a="yright"
-              aria-label="Yaw right (V)"
-              title="Yaw right (V)"
-              class="inline-flex h-8 items-center justify-center rounded-btn border border-ctrl-line/30 bg-ctrl-bg/15 px-1 font-ui text-4xs whitespace-nowrap text-ctrl-ink transition-all duration-100 select-none hover:border-ctrl-glow/45 hover:bg-ctrl-hot/20 hover:text-white active:border-ctrl-glow/50 active:bg-ctrl-hot/30 active:text-white"
-            >
-              <kbd>V</kbd> Yr
-            </button>
-          </div>
-          <div id="pad-sim" class="mt-1.5 grid grid-cols-2 gap-0.5">
-            <button
-              type="button"
-              data-a="split"
-              aria-label="Split mature entities (hold Shift)"
-              title="Split mature entities (hold Shift)"
-              class="inline-flex h-8 items-center justify-center rounded-btn border border-sim-line/30 bg-sim-bg/15 px-1 font-ui text-4xs whitespace-nowrap text-sim-ink transition-all duration-100 select-none hover:border-sim-glow/45 hover:bg-sim-line/20 hover:text-white active:border-sim-glow/55 active:bg-sim-line/30 active:text-white"
-            >
-              <kbd>&#8679;</kbd> Split
-            </button>
-            <button
-              type="button"
-              data-a="burst"
-              aria-label="Burst-spawn entities (hold Space)"
-              title="Burst-spawn entities (hold Space)"
-              class="inline-flex h-8 items-center justify-center rounded-btn border border-sim-line/30 bg-sim-bg/15 px-1 font-ui text-4xs whitespace-nowrap text-sim-ink transition-all duration-100 select-none hover:border-sim-glow/45 hover:bg-sim-line/20 hover:text-white active:border-sim-glow/55 active:bg-sim-line/30 active:text-white"
-            >
-              <kbd>&#9251;</kbd> Burst
-            </button>
-            <button
-              type="button"
-              data-a="mutate"
-              aria-label="Mutate all entities (hold M)"
-              title="Mutate all entities (hold M)"
-              class="inline-flex h-8 items-center justify-center rounded-btn border border-sim-line/30 bg-sim-bg/15 px-1 font-ui text-4xs whitespace-nowrap text-sim-ink transition-all duration-100 select-none hover:border-sim-glow/45 hover:bg-sim-line/20 hover:text-white active:border-sim-glow/55 active:bg-sim-line/30 active:text-white"
-            >
-              <kbd>M</kbd> Mutate
-            </button>
-            <button
-              type="button"
-              data-a="chaos"
-              aria-label="Boost chaos (hold Tab)"
-              title="Boost chaos (hold Tab)"
-              class="inline-flex h-8 items-center justify-center rounded-btn border border-sim-line/30 bg-sim-bg/15 px-1 font-ui text-4xs whitespace-nowrap text-sim-ink transition-all duration-100 select-none hover:border-sim-glow/45 hover:bg-sim-line/20 hover:text-white active:border-sim-glow/55 active:bg-sim-line/30 active:text-white"
-            >
-              <kbd>&#8677;</kbd> Chaos+
-            </button>
-          </div>
+        <div id="pad-rot" class="flex flex-wrap justify-center gap-0.5">
+          <button
+            type="button"
+            data-a="rleft"
+            aria-label="Roll left (Z)"
+            title="Roll left (Z)"
+            class="ctrl-pad-btn"
+          >
+            <kbd>Z</kbd> Rl
+          </button>
+          <button
+            type="button"
+            data-a="rright"
+            aria-label="Roll right (X)"
+            title="Roll right (X)"
+            class="ctrl-pad-btn"
+          >
+            <kbd>X</kbd> Rr
+          </button>
+          <button
+            type="button"
+            data-a="tup"
+            aria-label="Tilt up (R)"
+            title="Tilt up (R)"
+            class="ctrl-pad-btn"
+          >
+            <kbd>R</kbd> Tu
+          </button>
+          <button
+            type="button"
+            data-a="tdown"
+            aria-label="Tilt down (F)"
+            title="Tilt down (F)"
+            class="ctrl-pad-btn"
+          >
+            <kbd>F</kbd> Td
+          </button>
+          <button
+            type="button"
+            data-a="yleft"
+            aria-label="Yaw left (C)"
+            title="Yaw left (C)"
+            class="ctrl-pad-btn"
+          >
+            <kbd>C</kbd> Yl
+          </button>
+          <button
+            type="button"
+            data-a="yright"
+            aria-label="Yaw right (V)"
+            title="Yaw right (V)"
+            class="ctrl-pad-btn"
+          >
+            <kbd>V</kbd> Yr
+          </button>
         </div>
-      </section>
+        <div id="pad-sim" class="mt-1.5 grid grid-cols-2 gap-0.5">
+          <button
+            type="button"
+            data-a="split"
+            aria-label="Split mature entities (hold Shift)"
+            title="Split mature entities (hold Shift)"
+            class="ctrl-pad-sim"
+          >
+            <kbd>&#8679;</kbd> Split
+          </button>
+          <button
+            type="button"
+            data-a="burst"
+            aria-label="Burst-spawn entities (hold Space)"
+            title="Burst-spawn entities (hold Space)"
+            class="ctrl-pad-sim"
+          >
+            <kbd>&#9251;</kbd> Burst
+          </button>
+          <button
+            type="button"
+            data-a="mutate"
+            aria-label="Mutate all entities (hold M)"
+            title="Mutate all entities (hold M)"
+            class="ctrl-pad-sim"
+          >
+            <kbd>M</kbd> Mutate
+          </button>
+          <button
+            type="button"
+            data-a="chaos"
+            aria-label="Boost chaos (hold Tab)"
+            title="Boost chaos (hold Tab)"
+            class="ctrl-pad-sim"
+          >
+            <kbd>&#8677;</kbd> Chaos+
+          </button>
+        </div>
+      </div>
 
-      <!-- Algorithm picker (CONTRACTS V6.2b). A peer of #cP: same glass/rounded/backdrop
+      <!-- Algorithm picker (CONTRACTS V6.2b). Same glass/rounded/backdrop
            treatment; on small/portrait/coarse viewports it is a LEFT edge-docked slide-out
            sheet (.sheet sheet-l) with an always-visible [data-sheet-handle="algoP"] "ALG" tab.
            The body holds a header "Sorting Fields", a SCROLLABLE #algo-list (max-height ~40vh,
@@ -843,208 +840,257 @@
         </div>
       </section>
 
-      <!-- Sorting-field readout (grid area `alg`; phone portrait: bottom-cluster strip) -->
+      <!-- Sorting-field readout (grid area `ralg`; phone portrait: bottom-left strip) -->
+      <div id="alg" class="ui-readout-card ui-readout-card--purple pointer-events-none">
+        <div class="ui-readout-card__head">Sorting · Field</div>
+        <div id="a-name" class="overflow-hidden text-ellipsis whitespace-nowrap">BUBBLE FIELD</div>
+        <div id="a-step" class="overflow-hidden text-ellipsis whitespace-nowrap tabular-nums">
+          ---
+        </div>
+        <canvas id="g-alg" class="mt-0.5 block w-full opacity-85"></canvas>
+        <div id="lore" class="overflow-hidden text-ellipsis whitespace-nowrap uppercase">---</div>
+      </div>
+
+      <!-- Simulation settings readout (grid area `rset`) -->
       <div
-        id="alg"
-        class="pointer-events-none rounded-panel border border-purple-300/15 bg-void/90 px-2.5 py-1.25 backdrop-blur-lg"
+        id="hud-vsr"
+        class="ui-readout-card ui-readout-card--cyan pointer-events-none"
+        aria-label="Simulation settings — view, speed, render, audio"
       >
-        <div
-          id="a-name"
-          class="overflow-hidden font-ui text-3xs font-semibold tracking-wide text-ellipsis whitespace-nowrap text-white"
-        >
-          BUBBLE FIELD
+        <div class="ui-readout-card__head">Sim · Settings</div>
+        <div class="ui-readout-card__row">
+          <span class="ui-readout-card__key">View</span>
+          <span id="hud-view" class="ui-readout-card__val normal-case">free</span>
         </div>
-        <div
-          id="a-step"
-          class="overflow-hidden font-mono text-4xs font-light text-ellipsis whitespace-nowrap text-purple-200 tabular-nums"
-        >
-          ---
+        <div class="ui-readout-card__row">
+          <span class="ui-readout-card__key">Speed</span>
+          <span id="hud-speed" class="ui-readout-card__val normal-case">1×</span>
         </div>
-        <!-- V75: live swap-activity sparkline — the sorting field's variance over time, so the box
-             shows MORE than a counter (a real data-visual of how hard the algorithm is working). -->
-        <canvas id="g-alg" class="mt-0.5 block h-3.5 w-full opacity-80"></canvas>
-        <!-- V2: lore name of the camera's Voronoi sub-sector (ui/hud.ts setLore) -->
-        <div
-          id="lore"
-          class="overflow-hidden font-ui text-4xs font-light tracking-widest text-ellipsis whitespace-nowrap text-purple-300/80 uppercase"
-        >
-          ---
+        <div class="ui-readout-card__row">
+          <span class="ui-readout-card__key">Render</span>
+          <span id="hud-render" class="ui-readout-card__val normal-case">solid</span>
+        </div>
+        <div class="ui-readout-card__row">
+          <span class="ui-readout-card__key">Music</span>
+          <span id="hud-music" class="ui-readout-card__val normal-case">OFF</span>
+        </div>
+        <div class="ui-readout-card__row">
+          <span class="ui-readout-card__key">SFX</span>
+          <span id="hud-sfx" class="ui-readout-card__val normal-case">OFF</span>
+        </div>
+        <div class="ui-readout-card__row">
+          <span class="ui-readout-card__key">Song</span>
+          <span
+            id="v7"
+            class="ui-readout-card__val max-w-[140px] overflow-hidden text-ellipsis whitespace-nowrap normal-case"
+            >—</span
+          >
+        </div>
+        <div class="ui-readout-card__row">
+          <span class="ui-readout-card__key">Resets</span>
+          <span id="hud-resets" class="ui-readout-card__val normal-case">0</span>
         </div>
       </div>
+
+      <div id="perf-slot" aria-hidden="true"></div>
     </div>
 
-    <!-- Bottom toolbar -->
-    <div
-      id="bar"
-      role="toolbar"
-      aria-label="Simulation toolbar"
-      class="fixed bottom-1.5 left-1/2 z-20 flex max-w-[calc(100vw-16px)] -translate-x-1/2 [scrollbar-width:thin] flex-nowrap items-center justify-start gap-1 overflow-x-auto rounded-panel border border-bar-line/15 bg-void/90 px-2 py-1.25 backdrop-blur-xl md:max-w-[calc(100vw-220px)]"
-    >
-      <button
-        type="button"
-        data-action="music"
-        aria-label="Toggle music"
-        title="Toggle music"
-        class="flex min-h-7 items-center gap-1 rounded-btn border border-bar-line/20 bg-bar-bg/10 px-2.5 py-1 font-ui text-3xs whitespace-nowrap text-bar-ink transition-all duration-100 select-none hover:border-bar-line/40 hover:bg-bar-hot/15 hover:text-white active:bg-bar-hot/25 active:text-white"
-      >
-        &#9835;
-      </button>
-      <button
-        type="button"
-        data-action="song"
-        aria-label="Next song"
-        title="Next song"
-        class="flex min-h-7 items-center gap-1 rounded-btn border border-bar-line/20 bg-bar-bg/10 px-2.5 py-1 font-ui text-3xs whitespace-nowrap text-bar-ink transition-all duration-100 select-none hover:border-bar-line/40 hover:bg-bar-hot/15 hover:text-white active:bg-bar-hot/25 active:text-white"
-      >
-        Song
-      </button>
-      <button
-        type="button"
-        data-action="sfx"
-        aria-label="Toggle sound effects"
-        title="Toggle sound effects"
-        class="flex min-h-7 items-center gap-1 rounded-btn border border-bar-line/20 bg-bar-bg/10 px-2.5 py-1 font-ui text-3xs whitespace-nowrap text-bar-ink transition-all duration-100 select-none hover:border-bar-line/40 hover:bg-bar-hot/15 hover:text-white active:bg-bar-hot/25 active:text-white"
-      >
-        SFX
-      </button>
-      <button
-        type="button"
-        data-action="sfxcycle"
-        aria-label="Preview next sound effect"
-        title="Preview next sound effect"
-        class="flex min-h-7 items-center gap-1 rounded-btn border border-bar-line/20 bg-bar-bg/10 px-2.5 py-1 font-ui text-3xs whitespace-nowrap text-bar-ink transition-all duration-100 select-none hover:border-bar-line/40 hover:bg-bar-hot/15 hover:text-white active:bg-bar-hot/25 active:text-white"
-      >
-        Fx
-      </button>
-      <button
-        type="button"
-        data-action="reset"
-        aria-label="Reset simulation"
-        title="Reset simulation"
-        class="flex min-h-7 items-center gap-1 rounded-btn border border-bar-line/20 bg-bar-bg/10 px-2.5 py-1 font-ui text-3xs whitespace-nowrap text-bar-ink transition-all duration-100 select-none hover:border-bar-line/40 hover:bg-bar-hot/15 hover:text-white active:bg-bar-hot/25 active:text-white"
-      >
-        &#8635;
-      </button>
-      <button
-        type="button"
-        data-action="time"
-        aria-label="Cycle time scale"
-        title="Cycle time scale"
-        class="flex min-h-7 items-center gap-1 rounded-btn border border-bar-line/20 bg-bar-bg/10 px-2.5 py-1 font-ui text-3xs whitespace-nowrap text-bar-ink transition-all duration-100 select-none hover:border-bar-line/40 hover:bg-bar-hot/15 hover:text-white active:bg-bar-hot/25 active:text-white"
-      >
-        &#9201;
-      </button>
-      <button
-        type="button"
-        data-action="wire"
-        aria-label="Cycle render mode (solid, wire, ghost, neon, chrome, hologram, iridescent)"
-        title="Cycle render mode: solid → wire → ghost → neon → chrome → hologram → iridescent"
-        class="flex min-h-7 items-center gap-1 rounded-btn border border-bar-line/20 bg-bar-bg/10 px-2.5 py-1 font-ui text-3xs whitespace-nowrap text-bar-ink transition-all duration-100 select-none hover:border-bar-line/40 hover:bg-bar-hot/15 hover:text-white active:bg-bar-hot/25 active:text-white"
-      >
-        Render
-      </button>
-      <button
-        type="button"
-        data-action="view"
-        aria-label="Cycle camera view"
-        title="Cycle camera view"
-        class="flex min-h-7 items-center gap-1 rounded-btn border border-bar-line/20 bg-bar-bg/10 px-2.5 py-1 font-ui text-3xs whitespace-nowrap text-bar-ink transition-all duration-100 select-none hover:border-bar-line/40 hover:bg-bar-hot/15 hover:text-white active:bg-bar-hot/25 active:text-white"
-      >
-        View
-      </button>
-      <button
-        type="button"
-        data-action="algo"
-        aria-label="Cycle sorting algorithm"
-        title="Cycle sorting algorithm"
-        class="flex min-h-7 items-center gap-1 rounded-btn border border-bar-line/20 bg-bar-bg/10 px-2.5 py-1 font-ui text-3xs whitespace-nowrap text-bar-ink transition-all duration-100 select-none hover:border-bar-line/40 hover:bg-bar-hot/15 hover:text-white active:bg-bar-hot/25 active:text-white"
-      >
-        Algo
-      </button>
-      <button
-        type="button"
-        data-action="weather"
-        aria-label="Cycle weather"
-        title="Cycle weather"
-        class="flex min-h-7 items-center gap-1 rounded-btn border border-bar-line/20 bg-bar-bg/10 px-2.5 py-1 font-ui text-3xs whitespace-nowrap text-bar-ink transition-all duration-100 select-none hover:border-bar-line/40 hover:bg-bar-hot/15 hover:text-white active:bg-bar-hot/25 active:text-white"
-      >
-        &#9729;
-      </button>
-      <button
-        type="button"
-        data-action="sim"
-        aria-label="Toggle simulation variant: N(1) Genesis or N(2) Break Free (nightmare)"
-        title="Toggle SIMULATION N(1) Genesis ↔ N(2) Break Free"
-        class="flex min-h-7 items-center gap-1 rounded-btn border border-bar-line/20 bg-bar-bg/10 px-2.5 py-1 font-ui text-3xs whitespace-nowrap text-bar-ink transition-all duration-100 select-none hover:border-bar-line/40 hover:bg-bar-hot/15 hover:text-white active:bg-bar-hot/25 active:text-white"
-      >
-        N(1/2)
-      </button>
-      <button
-        type="button"
-        data-action="cosmo"
-        aria-label="Summon cosmological singularity (entropy, black hole, white hole, grey hole, strange star)"
-        title="Summon singularity: entropy → black hole → white hole → grey hole → strange star"
-        class="flex min-h-7 items-center gap-1 rounded-btn border border-bar-line/20 bg-bar-bg/10 px-2.5 py-1 font-ui text-3xs whitespace-nowrap text-bar-ink transition-all duration-100 select-none hover:border-bar-line/40 hover:bg-bar-hot/15 hover:text-white active:bg-bar-hot/25 active:text-white"
-      >
-        &#9899;
-      </button>
-      <button
-        type="button"
-        data-action="space"
-        aria-label="Dilate space: cycle the camera field of view (fish-eye to telephoto)"
-        title="SPACE — dilate the camera field of view (also: H key)"
-        class="flex min-h-7 items-center gap-1 rounded-btn border border-bar-line/20 bg-bar-bg/10 px-2.5 py-1 font-ui text-3xs whitespace-nowrap text-bar-ink transition-all duration-100 select-none hover:border-bar-line/40 hover:bg-bar-hot/15 hover:text-white active:bg-bar-hot/25 active:text-white"
-      >
-        SPACE
-      </button>
-      <button
-        type="button"
-        data-action="entropy"
-        aria-label="Raise entropy: the order / heat-death axis, bipolar opposite of chaos"
-        title="ENTROPY — order / heat-death, the opposite of chaos (also: G key)"
-        class="flex min-h-7 items-center gap-1 rounded-btn border border-bar-line/20 bg-bar-bg/10 px-2.5 py-1 font-ui text-3xs whitespace-nowrap text-bar-ink transition-all duration-100 select-none hover:border-bar-line/40 hover:bg-bar-hot/15 hover:text-white active:bg-bar-hot/25 active:text-white"
-      >
-        ENTROPY
-      </button>
-      <button
-        type="button"
-        data-action="chaosmode"
-        aria-label="Toggle CHAOS MODE: a Lorenz-driven quantum storm that tunnels, entangles and superposes the creatures and shakes weather, economy and the algorithms"
-        title="CHAOS MODE — a Lorenz quantum storm (tunnelling / entanglement / superposition); shakes weather + economy + algorithms (also: K key)"
-        class="flex min-h-7 items-center gap-1 rounded-btn border border-bar-hot/30 bg-bar-hot/10 px-2.5 py-1 font-ui text-3xs whitespace-nowrap text-bar-hot transition-all duration-100 select-none hover:border-bar-hot/50 hover:bg-bar-hot/20 hover:text-white active:bg-bar-hot/30 active:text-white"
-      >
-        ⚡ CHAOS MODE
-      </button>
-      <button
-        type="button"
-        data-action="brutal"
-        aria-label="Toggle BRUTALISM: crossfade the Super Creatures from the iridescent god-jewel skin to a raw poured-concrete monolith, and back"
-        title="BRUTALISM — raw poured-concrete monolith skin for the Super Creatures (also: B key)"
-        class="flex min-h-7 items-center gap-1 rounded-btn border border-bar-line/20 bg-bar-bg/10 px-2.5 py-1 font-ui text-3xs whitespace-nowrap text-bar-ink transition-all duration-100 select-none hover:border-bar-line/40 hover:bg-bar-hot/15 hover:text-white active:bg-bar-hot/25 active:text-white"
-      >
-        ▦ BRUTAL
-      </button>
-      <button
-        type="button"
-        data-action="nhi"
-        aria-label="Launch an NHI being into the world with Matrix powers"
-        title="LAUNCH NHI — a non-human intelligence with Matrix powers (also: N key)"
-        class="flex min-h-7 items-center gap-1 rounded-btn border border-accent/20 bg-accent/5 px-2.5 py-1 font-ui text-3xs whitespace-nowrap text-accent/90 transition-all duration-100 select-none hover:border-accent/40 hover:bg-accent/15 hover:text-white active:bg-accent/25 active:text-white"
-      >
-        ⟁ NHI
-      </button>
-      <button
-        type="button"
-        data-action="apoc"
-        aria-label="Trigger apocalypse"
-        title="Trigger apocalypse"
-        class="flex min-h-7 items-center gap-1 rounded-btn border border-danger-line/30 bg-danger/5 px-2.5 py-1 font-ui text-3xs whitespace-nowrap text-danger-ink transition-all duration-100 select-none hover:border-danger-line/60 hover:bg-danger/15 hover:text-white active:bg-danger/25 active:text-white"
-      >
-        &#9760;
-      </button>
-      <!-- V51: Lab + Spec nav links removed from the toolbar — they were duplicated in the bottom dock
+    <!-- Bottom dock stack (V86): persist nav + toolbar — shell exists in HTML so first paint never
+         shows a stray #bar or corner DOCS links. center-hud.ts fills #cqm-persist-nav; toolbar.ts
+         wires scroll buttons on #bar-shell. -->
+    <div id="cqm-bottom-stack" aria-label="Bottom navigation and toolbar">
+      <nav id="cqm-persist-nav" aria-label="Documentation, lab, access, and settings" hidden></nav>
+      <div id="bar-shell" aria-label="Simulation toolbar scroll">
+        <button
+          type="button"
+          class="bar-scroll-btn"
+          aria-label="Scroll toolbar left"
+          title="Scroll toolbar left"
+        >
+          ‹
+        </button>
+        <div
+          id="bar"
+          role="toolbar"
+          aria-label="Simulation toolbar"
+          class="flex max-w-[calc(100vw-16px)] [scrollbar-width:none] flex-nowrap items-center justify-start gap-1 overflow-x-auto rounded-panel border border-bar-line/15 bg-void/90 px-2 py-1.25 backdrop-blur-xl md:max-w-[calc(100vw-220px)] [&::-webkit-scrollbar]:hidden"
+        >
+          <div class="toolbar-group" role="group" aria-label="Audio">
+            <button
+              type="button"
+              data-action="music"
+              aria-label="Toggle music"
+              title="Toggle music"
+              class="toolbar-btn"
+            >
+              &#9835;
+            </button>
+            <button
+              type="button"
+              data-action="song"
+              aria-label="Next song"
+              title="Next song"
+              class="toolbar-btn"
+            >
+              Song
+            </button>
+            <button
+              type="button"
+              data-action="sfx"
+              aria-label="Toggle sound effects"
+              title="Toggle sound effects"
+              class="toolbar-btn"
+            >
+              SFX
+            </button>
+            <button
+              type="button"
+              data-action="sfxcycle"
+              aria-label="Preview next sound effect"
+              title="Preview next sound effect"
+              class="toolbar-btn"
+            >
+              Fx
+            </button>
+          </div>
+          <div class="toolbar-group" role="group" aria-label="World">
+            <button
+              type="button"
+              data-action="reset"
+              aria-label="Reset simulation"
+              title="Reset simulation"
+              class="toolbar-btn"
+            >
+              &#8635;
+            </button>
+            <button
+              type="button"
+              data-action="time"
+              aria-label="Cycle time scale"
+              title="Cycle time scale"
+              class="toolbar-btn"
+            >
+              &#9201;
+            </button>
+            <button
+              type="button"
+              data-action="weather"
+              aria-label="Cycle weather"
+              title="Cycle weather"
+              class="toolbar-btn"
+            >
+              &#9729;
+            </button>
+            <button
+              type="button"
+              data-action="sim"
+              aria-label="Toggle simulation variant"
+              title="Toggle SIMULATION N(1) Genesis ↔ N(2) Break Free"
+              class="toolbar-btn"
+            >
+              N(1/2)
+            </button>
+          </div>
+          <div class="toolbar-group" role="group" aria-label="Visual">
+            <button
+              type="button"
+              data-action="wire"
+              aria-label="Cycle render mode"
+              title="Cycle render mode: solid → wire → ghost → neon → chrome → hologram → iridescent"
+              class="toolbar-btn"
+            >
+              Render
+            </button>
+            <button
+              type="button"
+              data-action="view"
+              aria-label="Cycle camera view"
+              title="Cycle camera view"
+              class="toolbar-btn"
+            >
+              View
+            </button>
+            <button
+              type="button"
+              data-action="algo"
+              aria-label="Cycle sorting algorithm"
+              title="Cycle sorting algorithm"
+              class="toolbar-btn"
+            >
+              Algo
+            </button>
+          </div>
+          <div class="toolbar-group" role="group" aria-label="Creative">
+            <button
+              type="button"
+              data-action="cosmo"
+              aria-label="Summon cosmological singularity"
+              title="Summon singularity: entropy → black hole → white hole → grey hole → strange star"
+              class="toolbar-btn"
+            >
+              &#9899;
+            </button>
+            <button
+              type="button"
+              data-action="space"
+              aria-label="Dilate space"
+              title="SPACE — dilate the camera field of view (also: H key)"
+              class="toolbar-btn"
+            >
+              SPACE
+            </button>
+            <button
+              type="button"
+              data-action="entropy"
+              aria-label="Raise entropy"
+              title="ENTROPY — order / heat-death, the opposite of chaos (also: G key)"
+              class="toolbar-btn"
+            >
+              ENTROPY
+            </button>
+          </div>
+          <div class="toolbar-group" role="group" aria-label="Special">
+            <button
+              type="button"
+              data-action="chaosmode"
+              aria-label="Toggle CHAOS MODE"
+              title="CHAOS MODE — a Lorenz quantum storm (also: K key)"
+              class="toolbar-btn"
+            >
+              &#9889; CHAOS
+            </button>
+            <button
+              type="button"
+              data-action="nhi"
+              aria-label="Launch an NHI being"
+              title="LAUNCH NHI — a non-human intelligence (also: N key)"
+              class="toolbar-btn"
+            >
+              &#x27C1; NHI
+            </button>
+            <button
+              type="button"
+              data-action="apoc"
+              aria-label="Trigger apocalypse"
+              title="Trigger apocalypse"
+              class="toolbar-btn"
+            >
+              &#9760;
+            </button>
+          </div>
+          <!-- V51: Lab + Spec nav links removed from the toolbar — they were duplicated in the bottom dock
            (DOCS · SPEC · LAB now live there). The toolbar is purely world CONTROLS; the dock is panels
            + nav. -->
+        </div>
+        <button
+          type="button"
+          class="bar-scroll-btn"
+          aria-label="Scroll toolbar right"
+          title="Scroll toolbar right"
+        >
+          ›
+        </button>
+      </div>
     </div>
 
     <!-- Touch joystick — MOVE (left thumb; shown on coarse pointers via app.css;
@@ -1132,54 +1178,16 @@
       >Lab</a
     >
 
-    <!-- V13: View / Speed / Render readout box. V51: moved to the bottom edge, flanking the centered
-         menu bars on the RIGHT (the algo readout flanks the left). pointer-events-none so it never
-         blocks clicks. Written every telemetry tick by ui/panels.ts. -->
-    <div
-      id="hud-vsr"
-      class="pointer-events-none fixed right-2 bottom-1.5 z-20 rounded-panel border border-cyan-300/15 bg-void/90 px-3 py-2 font-ui text-3xs tracking-widest text-cyan-300/80 uppercase backdrop-blur-md"
-      aria-label="Simulation settings — view, speed, render, audio"
+    <a
+      href="/bible"
+      data-nav="bible"
+      class="fixed right-52 bottom-2 z-20 rounded-btn border border-amber-300/20 bg-void/90 px-2 py-1 font-ui text-3xs tracking-widest text-amber-200/85 uppercase backdrop-blur-md transition-all duration-100 hover:border-amber-200/45 hover:bg-amber-200/10 hover:text-amber-100"
+      aria-label="Open the Mechalogodrom Bible manual"
+      title="Open the Mechalogodrom Bible — deep manual and glossary"
+      >Bible</a
     >
-      <!-- V75: a small header so the readout reads as an organized 'Simulation Settings' card. -->
-      <div class="mb-1 border-b border-cyan-300/15 pb-0.5 text-3xs font-semibold text-cyan-200/70">
-        SIM · SETTINGS
-      </div>
-      <div class="flex items-baseline justify-between gap-3">
-        <span class="text-slate-400">View</span>
-        <span id="hud-view" class="font-mono text-cyan-100 normal-case tabular-nums">free</span>
-      </div>
-      <div class="flex items-baseline justify-between gap-3">
-        <span class="text-slate-400">Speed</span>
-        <span id="hud-speed" class="font-mono text-cyan-100 normal-case tabular-nums">1×</span>
-      </div>
-      <div class="flex items-baseline justify-between gap-3">
-        <span class="text-slate-400">Render</span>
-        <span id="hud-render" class="font-mono text-cyan-100 normal-case tabular-nums">solid</span>
-      </div>
-      <!-- V57: audio toggles (on/off) + a running reset counter. -->
-      <div class="flex items-baseline justify-between gap-3">
-        <span class="text-slate-400">Music</span>
-        <span id="hud-music" class="font-mono text-cyan-100 normal-case tabular-nums">OFF</span>
-      </div>
-      <div class="flex items-baseline justify-between gap-3">
-        <span class="text-slate-400">SFX</span>
-        <span id="hud-sfx" class="font-mono text-cyan-100 normal-case tabular-nums">OFF</span>
-      </div>
-      <!-- V75: now-playing song name, relocated here from the telemetry listing (keeps id #v7). -->
-      <div class="flex items-baseline justify-between gap-3">
-        <span class="text-slate-400">Song</span>
-        <span
-          id="v7"
-          class="max-w-[120px] overflow-hidden font-mono text-ellipsis whitespace-nowrap text-cyan-100 normal-case tabular-nums"
-          >—</span
-        >
-      </div>
-      <div class="flex items-baseline justify-between gap-3">
-        <span class="text-slate-400">Resets</span>
-        <span id="hud-resets" class="font-mono text-cyan-100 normal-case tabular-nums">0</span>
-      </div>
-    </div>
 
+    <!-- V13 hud-vsr moved into #ui grid (right column `rset`). -->
     <!-- V5.5 edge-docked sheet toggler (CLASS-ONLY; no module imports, no sim/state access).
          Each [data-sheet-handle="<panelId>"] tab toggles `.open` on its panel. CSS owns ALL
          geometry (transform/translate, handle placement) and gates the whole mechanism behind
@@ -1224,6 +1232,63 @@
           var open = document.querySelectorAll('.sheet.open');
           for (var j = 0; j < open.length; j++) setOpen(open[j], false);
         });
+        // Desktop/tablet ≥600px: panels start expanded; handles collapse to the edge.
+        if (window.matchMedia('(min-width: 600px)').matches) {
+          for (var k = 0; k < handles.length; k++) {
+            var p = handles[k].parentElement;
+            if (p) setOpen(p, true);
+          }
+        }
+      })();
+    </script>
+
+    <!-- V86: synchronous column layout before the module bundle (avoids FOUC on refresh) -->
+    <script>
+      (function () {
+        'use strict';
+        function initColumns() {
+          var ui = document.getElementById('ui');
+          if (!ui) return;
+          var sP = document.getElementById('sP');
+          var algoP = document.getElementById('algoP');
+          var perf = document.getElementById('perf-slot');
+          var oP = document.getElementById('oP');
+          var alg = document.getElementById('alg');
+          var vsr = document.getElementById('hud-vsr');
+          if (sP && algoP && perf && !document.getElementById('ui-col-left')) {
+            var left = document.createElement('div');
+            left.id = 'ui-col-left';
+            left.className = 'ui-col-left';
+            ui.insertBefore(left, ui.firstChild);
+            left.append(sP, algoP, perf);
+          }
+          if (oP && alg && vsr && !document.getElementById('ui-col-right')) {
+            var right = document.createElement('div');
+            right.id = 'ui-col-right';
+            right.className = 'ui-col-right';
+            var audit = document.getElementById('aP');
+            ui.insertBefore(right, audit || null);
+            right.append(oP, alg, vsr);
+            var brains = [
+              ['brain-apex-slot', 'Apex · Brain', 'ARCHITECT → ⊞ NEURAL · Tab IV MEGA 4D'],
+              ['brain-mecha-slot', 'Mechalogodrom · Brain', '⟁ ARCHITECTURE pantheon cycler'],
+              ['brain-glyph-slot', 'Glyph · Brain', '100-letter pantheon · brain-driven motion'],
+            ];
+            for (var b = 0; b < brains.length; b++) {
+              var slot = document.createElement('div');
+              slot.id = brains[b][0];
+              slot.className = 'cqm-brain-slot ui-readout-card ui-readout-card--purple';
+              slot.innerHTML =
+                '<div class="ui-readout-card__head">' +
+                brains[b][1] +
+                '</div><div class="cqm-brain-slot__hint">' +
+                brains[b][2] +
+                '</div>';
+              right.appendChild(slot);
+            }
+          }
+        }
+        initColumns();
       })();
     </script>
 

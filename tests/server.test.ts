@@ -5,7 +5,14 @@
  * `import.meta.main`, so importing it here opens no socket and the suite stays hermetic.
  */
 import { describe, expect, test } from 'bun:test';
-import { makeRateLimiter, parseAuditBody, parseChatMessages, withSecurityHeaders } from '../server';
+import {
+  auditPostOriginAllowed,
+  makeRateLimiter,
+  parseAuditBody,
+  parseChatMessages,
+  parseWaitlistBody,
+  withSecurityHeaders,
+} from '../server';
 
 describe('parseAuditBody — audit POST body narrowing', () => {
   test('accepts a minimal valid body and stamps a finite ts', () => {
@@ -56,6 +63,24 @@ describe('parseAuditBody — audit POST body narrowing', () => {
   test('a valid in-range ts is preserved', () => {
     const e = parseAuditBody({ action: 'a', ts: 1700000000000 });
     expect(e?.ts).toBe(1700000000000);
+  });
+});
+
+describe('parseWaitlistBody — ventures waitlist POST narrowing', () => {
+  test('accepts a valid email and normalizes case', () => {
+    const e = parseWaitlistBody({ email: ' Player@Example.COM ' });
+    expect(e?.email).toBe('player@example.com');
+  });
+
+  test('accepts optional tier tag', () => {
+    const e = parseWaitlistBody({ email: 'a@b.co', tier: ' edu ' });
+    expect(e?.tier).toBe('edu');
+  });
+
+  test('rejects invalid email shapes', () => {
+    expect(parseWaitlistBody(null)).toBeNull();
+    expect(parseWaitlistBody({ email: 'not-an-email' })).toBeNull();
+    expect(parseWaitlistBody({ email: 'x'.repeat(200) + '@y.co' })).toBeNull();
   });
 });
 
@@ -130,6 +155,36 @@ describe('makeRateLimiter — POST /api/audit flood seal (SERVER-RL)', () => {
     // long session must always be admitted — the seal only sheds machine-speed floods.
     const rl = makeRateLimiter(60, 30);
     for (let i = 0; i < 50; i++) expect(rl.tryRemove(i * 2000)).toBe(true);
+  });
+});
+
+describe('auditPostOriginAllowed — same-origin POST guard', () => {
+  test('allows missing Origin (same-origin fetch)', () => {
+    expect(
+      auditPostOriginAllowed(new Request('http://localhost:3000/api/audit', { method: 'POST' })),
+    ).toBe(true);
+  });
+
+  test('allows matching Origin header', () => {
+    expect(
+      auditPostOriginAllowed(
+        new Request('http://localhost:3000/api/audit', {
+          method: 'POST',
+          headers: { Origin: 'http://localhost:3000' },
+        }),
+      ),
+    ).toBe(true);
+  });
+
+  test('rejects cross-origin Origin', () => {
+    expect(
+      auditPostOriginAllowed(
+        new Request('http://localhost:3000/api/audit', {
+          method: 'POST',
+          headers: { Origin: 'https://evil.example' },
+        }),
+      ),
+    ).toBe(false);
   });
 });
 

@@ -102,6 +102,7 @@ export interface LoomView {
 class PrimeSieveLoom {
   private readonly n: number;
   private readonly state: Float64Array;
+  private readonly next: Float64Array; // pre-allocated scratch for step()
   /** Active edges as packed (i*n+j) keys; every edge has a twin-prime |i−j| (the membership law). */
   private readonly edges: Array<[number, number]> = [];
   private readonly twin: boolean[];
@@ -113,6 +114,7 @@ class PrimeSieveLoom {
   constructor(n = 96) {
     this.n = n;
     this.state = new Float64Array(n);
+    this.next = new Float64Array(n);
     this.twin = twinPrimeDistances(n);
     for (let i = 0; i < n; i++) {
       for (let j = i + 1; j < n; j++) {
@@ -147,7 +149,8 @@ class PrimeSieveLoom {
    * longest-distance live edges are purged (monotone removal). Returns the loom's scalar output.
    */
   step(drive: number, rng: Rng): number {
-    const next = new Float64Array(this.n);
+    const next = this.next;
+    next.fill(0);
     for (let e = 0; e < this.edges.length; e++) {
       if (!this.alive[e]) continue;
       const [i, j] = this.edges[e]!;
@@ -220,6 +223,7 @@ class AcousticMeatDrum {
   private readonly m: number;
   private readonly u: Float64Array; // displacement
   private readonly v: Float64Array; // velocity
+  private readonly accel: Float64Array; // pre-allocated scratch for step()
   private readonly c2: number;
   private readonly dt: number;
   private readonly damping: number;
@@ -228,6 +232,7 @@ class AcousticMeatDrum {
     this.m = m;
     this.u = new Float64Array(m);
     this.v = new Float64Array(m);
+    this.accel = new Float64Array(m);
     this.c2 = 1; // wave speed²
     this.dt = 0.2; // c·dt = 0.2 < 1 → below the CFL stability limit
     this.damping = opts?.damping ?? 0;
@@ -255,7 +260,7 @@ class AcousticMeatDrum {
    */
   step(drive: number, screamAt = 0): number {
     if (drive !== 0) this.v[screamAt % this.m]! += drive;
-    const a = new Float64Array(this.m);
+    const a = this.accel;
     for (let i = 0; i < this.m; i++) {
       const lap = this.u[(i + 1) % this.m]! - 2 * this.u[i]! + this.u[(i - 1 + this.m) % this.m]!;
       a[i] = this.c2 * lap - this.damping * this.v[i]!;
@@ -876,6 +881,7 @@ export interface ThermoView {
 class ThermodynamicEngine {
   private readonly n: number;
   private heat: Float64Array;
+  private readonly nextHeat: Float64Array; // pre-allocated scratch for step()
   private dead: Uint8Array;
   private readonly D = 0.2; // diffusion coeff (≤0.5 for explicit 1-D stability)
   private readonly tMelt = 6;
@@ -885,6 +891,7 @@ class ThermodynamicEngine {
   constructor(n = 64) {
     this.n = n;
     this.heat = new Float64Array(n);
+    this.nextHeat = new Float64Array(n);
     this.dead = new Uint8Array(n);
   }
 
@@ -907,7 +914,7 @@ class ThermodynamicEngine {
       if (this.dead[i]) continue;
       this.heat[i]! += 0.9 * clamp01(firing(i));
     }
-    const next = new Float64Array(this.n);
+    const next = this.nextHeat;
     for (let i = 0; i < this.n; i++) {
       const lap =
         this.heat[(i + 1) % this.n]! - 2 * this.heat[i]! + this.heat[(i - 1 + this.n) % this.n]!;
@@ -916,7 +923,8 @@ class ThermodynamicEngine {
       if (h < 0) h = 0;
       next[i] = h;
     }
-    this.heat = next;
+    // Copy back (no per-step allocation — swap content into the persistent heat array)
+    this.heat.set(next);
     for (let i = 0; i < this.n; i++) {
       if (!this.dead[i] && this.heat[i]! > this.tMelt) {
         this.dead[i] = 1;
@@ -1455,6 +1463,18 @@ export {
 /** Roadmap target neuron count for the apex (HONEST aspiration, not instantiated). */
 export const APEX_BRAIN_TARGET_NEURONS = 1_000_000_000;
 
+/** Pantheon glyph creatures (#0–#99) — designed brain parameter budget each. */
+export const PANTHEON_GLYPH_BRAIN_PARAMS = 25_000;
+
+/** APEX #101 starting designed parameter count; scales toward {@link APEX_BRAIN_ROADMAP_PARAMS}. */
+export const APEX_BRAIN_START_PARAMS = 100_000;
+
+/** Near-term APEX scaling target (before the full native 1B backend). */
+export const APEX_BRAIN_ROADMAP_PARAMS = 5_000_000;
+
+/** Mechalogodrom center fusion — designed parameter roadmap (matches APEX 5M tier). */
+export const MECHALOGODROM_BRAIN_DESIGNED_PARAMS = APEX_BRAIN_ROADMAP_PARAMS;
+
 // ════════════════════════════════════════════════════════════════════════════════════════════════
 // SCALING SCAFFOLDING — the architecture that scales from the live engine toward 1 BILLION neurons
 // ════════════════════════════════════════════════════════════════════════════════════════════════
@@ -1504,6 +1524,24 @@ export const SCALE_LIVE: ApexScale = {
   qubits: 6,
 };
 
+/** Designed ~100k-parameter APEX scale (playable roadmap tier; live allocation still capped). */
+export const SCALE_APEX_START: ApexScale = {
+  name: 'APEX-100K',
+  loom: 12_000,
+  acoustic: 12_000,
+  necro: 8000,
+  kleinW: 80,
+  kleinH: 80,
+  pendulum: 8000,
+  slime: 12_000,
+  chronoD1: 12,
+  chronoD2: 120,
+  tunnel: 15_000,
+  thermo: 10_000,
+  ouroboros: 10_000,
+  qubits: 8,
+};
+
 /** A mid-tier scale (still browser-safe; organs at the cap). */
 export const SCALE_MEDIUM: ApexScale = {
   name: 'MEDIUM',
@@ -1520,6 +1558,96 @@ export const SCALE_MEDIUM: ApexScale = {
   thermo: 2048,
   ouroboros: 2048,
   qubits: 10,
+};
+
+/** Designed ~250k-parameter APEX scale (first expansion tier). */
+export const SCALE_APEX_250K: ApexScale = {
+  name: 'APEX-250K',
+  loom: 30_000,
+  acoustic: 30_000,
+  necro: 20_000,
+  kleinW: 120,
+  kleinH: 120,
+  pendulum: 20_000,
+  slime: 30_000,
+  chronoD1: 20,
+  chronoD2: 200,
+  tunnel: 37_500,
+  thermo: 25_000,
+  ouroboros: 25_000,
+  qubits: 9,
+};
+
+/** Designed ~500k-parameter APEX scale (second expansion tier). */
+export const SCALE_APEX_500K: ApexScale = {
+  name: 'APEX-500K',
+  loom: 60_000,
+  acoustic: 60_000,
+  necro: 40_000,
+  kleinW: 160,
+  kleinH: 160,
+  pendulum: 40_000,
+  slime: 60_000,
+  chronoD1: 30,
+  chronoD2: 300,
+  tunnel: 75_000,
+  thermo: 50_000,
+  ouroboros: 50_000,
+  qubits: 10,
+};
+
+/** Designed ~1M-parameter APEX scale (third expansion tier). */
+export const SCALE_APEX_1M: ApexScale = {
+  name: 'APEX-1M',
+  loom: 120_000,
+  acoustic: 120_000,
+  necro: 80_000,
+  kleinW: 240,
+  kleinH: 240,
+  pendulum: 80_000,
+  slime: 120_000,
+  chronoD1: 50,
+  chronoD2: 500,
+  tunnel: 150_000,
+  thermo: 100_000,
+  ouroboros: 100_000,
+  qubits: 11,
+};
+
+/** Designed ~2.5M-parameter APEX scale (fourth expansion tier). */
+export const SCALE_APEX_2_5M: ApexScale = {
+  name: 'APEX-2.5M',
+  loom: 300_000,
+  acoustic: 300_000,
+  necro: 200_000,
+  kleinW: 400,
+  kleinH: 400,
+  pendulum: 200_000,
+  slime: 300_000,
+  chronoD1: 80,
+  chronoD2: 800,
+  tunnel: 375_000,
+  thermo: 250_000,
+  ouroboros: 250_000,
+  qubits: 12,
+};
+
+/** Designed ~5M-parameter APEX scale (near-term roadmap target). */
+export const SCALE_APEX_5M: ApexScale = {
+  name: 'APEX-5M',
+  loom: 600_000,
+  acoustic: 600_000,
+  necro: 400_000,
+  kleinW: 600,
+  kleinH: 600,
+  pendulum: 400_000,
+  slime: 600_000,
+  chronoD1: 120,
+  chronoD2: 1200,
+  tunnel: 750_000,
+  thermo: 500_000,
+  ouroboros: 500_000,
+  qubits: 12,
 };
 
 /**
@@ -1561,6 +1689,24 @@ export function apexDesignedNeurons(s: ApexScale): number {
     s.ouroboros +
     (1 << Math.min(30, s.qubits))
   );
+}
+
+/** All APEX scaling tiers in order, from starting to roadmap target. */
+export const APEX_SCALE_TIERS: readonly ApexScale[] = [
+  SCALE_LIVE,
+  SCALE_APEX_START,
+  SCALE_APEX_250K,
+  SCALE_APEX_500K,
+  SCALE_APEX_1M,
+  SCALE_APEX_2_5M,
+  SCALE_APEX_5M,
+  SCALE_MEDIUM,
+  SCALE_MASSIVE,
+];
+
+/** Get the designed parameter count for a given scale (approximate). */
+export function apexScaleParams(s: ApexScale): number {
+  return Math.round(apexDesignedNeurons(s) * 2.5);
 }
 
 /** Clamp a designed organ size down to what the live runtime will actually allocate. */

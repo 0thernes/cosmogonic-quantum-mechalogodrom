@@ -88,7 +88,8 @@ export interface EmpowermentSnapshot {
   /** Per-action steering D_KL(q(·|a) ‖ uniform marginal) in nats (≥ 0); higher = that plan shapes the
    *  future more. */
   contributions: number[];
-  /** argmax_a cₐ — the most empowering plan index, or −1 before the first update. */
+  /** Index of the most empowering plan = argmax of the per-action KL steering (`contributions`), i.e. the
+   *  plan that most shapes the future — NOT the Blahut–Arimoto cₐ. −1 before the first update. */
   bestAction: number;
   /** The coarse cell the current latent hashed to this beat (0 .. M−1, or −1 before the first update). */
   bin: number;
@@ -274,7 +275,8 @@ export class EmpowermentDrive {
     return this.contrib;
   }
 
-  /** Index of the most empowering plan (argmax_a cₐ), or −1 before the first {@link update}. */
+  /** Index of the most empowering plan = argmax of the per-action KL steering (not the BA cₐ), or −1
+   *  before the first {@link update}. */
   bestAction(): number {
     return this.best;
   }

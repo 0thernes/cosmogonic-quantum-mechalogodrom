@@ -93,11 +93,16 @@ const SIM_MAP: Readonly<Record<string, keyof UiActions>> = {
 
 /** `[data-action]` toolbar buttons → UiActions methods (legacy lines 124-129 inline onclicks). */
 const TOOLBAR_MAP: Readonly<Record<string, keyof UiActions>> = {
+  split: 'split',
+  burst: 'burst',
+  mutate: 'mutate',
+  chaos: 'chaosBoost',
   music: 'toggleMusic',
   song: 'cycleSong',
   sfx: 'toggleSfx',
   sfxcycle: 'cycleSfxPreview',
   reset: 'reset',
+  pause: 'togglePause',
   time: 'cycleTimeScale',
   wire: 'cycleRenderMode',
   view: 'cycleView',
@@ -121,6 +126,12 @@ const TOOLBAR_MAP: Readonly<Record<string, keyof UiActions>> = {
  * to the render loop. `look` and `zoom` are accumulators the world consumes-and-zeroes.
  */
 export class InputSystem {
+  private readonly ac = new AbortController();
+
+  dispose(): void {
+    this.ac.abort();
+  }
+
   /** Live lowercase key-name → held map (legacy `keys`). Mutated only by this system. */
   readonly keys: Readonly<Record<string, boolean>>;
   /** Button-driven camera velocity (legacy `camVel`); the frame loop reads it every frame. */
@@ -190,16 +201,24 @@ export class InputSystem {
       const tag = el.tagName;
       return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || el.isContentEditable;
     };
-    window.addEventListener('keydown', (e) => {
-      if (inField(e.target)) return;
-      this.keyState[e.key.toLowerCase()] = true;
-      if (e.key === 'Tab' || e.key === ' ') e.preventDefault();
-    });
-    window.addEventListener('keyup', (e) => {
-      this.keyState[e.key.toLowerCase()] = false;
-    });
+    window.addEventListener(
+      'keydown',
+      (e) => {
+        if (inField(e.target)) return;
+        this.keyState[e.key.toLowerCase()] = true;
+        if (e.key === 'Tab' || e.key === ' ') e.preventDefault();
+      },
+      { signal: this.ac.signal },
+    );
+    window.addEventListener(
+      'keyup',
+      (e) => {
+        this.keyState[e.key.toLowerCase()] = false;
+      },
+      { signal: this.ac.signal },
+    );
     // Known Bug 11: held keys (and held buttons) must not survive losing window focus.
-    window.addEventListener('blur', () => this.clearHeldInput());
+    window.addEventListener('blur', () => this.clearHeldInput(), { signal: this.ac.signal });
   }
 
   /**
@@ -234,14 +253,14 @@ export class InputSystem {
 
   /** Toolbar `[data-action]` buttons dispatch straight to UiActions (returns are ignored). */
   private bindToolbar(): void {
-    document.querySelectorAll<HTMLElement>('[data-action]').forEach((btn) => {
+    document.body.addEventListener('click', (e) => {
+      const btn = (e.target as HTMLElement).closest<HTMLElement>('[data-action]');
+      if (!btn) return;
       const name = btn.dataset['action'];
       if (!name) return;
       const method = TOOLBAR_MAP[name];
       if (!method) return;
-      btn.addEventListener('click', () => {
-        this.actions[method]();
-      });
+      this.actions[method]();
     });
   }
 

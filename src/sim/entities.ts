@@ -29,6 +29,48 @@ import type { BehaviorEnv } from './behaviors';
 import type { Entity, SimContext, UpdateStats } from '../types';
 import type { Rng } from '../math/rng';
 
+/** Push morph colours toward SATURATED, VIBRANT read (render-only — morph tables unchanged).
+ * The base diffuse is held in the peak-chroma lightness zone (~0.06..0.22) so saturated hues read
+ * STRONG rather than washing to white; a quint-prime per-morph hash fans the 250 morphs into
+ * a ~2000+ variation palette without touching the seeded morph tables. The per-instance GPU
+ * suites (tribe hue, quantum shimmer, payoff iridescence, vital glow) then layer dynamic variety on top.
+ * V103: MUCH darker base lightness (max 0.10) for deep jewel tones that survive ACES tone mapping,
+ * 5th hash prime for 2000+ colors, reduced emissive intensity to prevent white blowout,
+ * colored (non-white) emissive additions, slight metallic sheen for depth. */
+function paintVibrant(mat: THREE.MeshStandardMaterial, m: PhylumMorphType, mi: number): void {
+  const hsl = { h: 0, s: 0, l: 0 };
+  // Quint-prime hash → a well-spread, deterministic per-morph value in [0,1).
+  // Five independent hashes give ~2000+ distinct color slots across the population.
+  const j1 = (mi * 0.6180339887) % 1;
+  const j2 = (mi * 0.4142135624) % 1;
+  const j3 = (mi * 0.7320508076) % 1;
+  const j4 = (mi * 0.2360679775) % 1;
+  const j5 = (mi * 0.8541019662) % 1;
+  const slot =
+    mi +
+    Math.floor(j1 * 9973) +
+    Math.floor(j2 * 449) +
+    Math.floor(j4 * 2683) +
+    Math.floor(j5 * 1597);
+  m.col.getHSL(hsl);
+  mat.color.setHSL(
+    // wider gradient spin + quint-prime jitter fans the palette into ~2000+ distinct variations.
+    (hsl.h + slot * 0.008 + j1 * 0.39 + j2 * 0.25 + j4 * 0.18 + j5 * 0.12 - 0.06 + 1) % 1,
+    1.0, // S = 1.0 — MAXIMUM chroma, never wash out
+    Math.min(0.18, 0.06 + hsl.l * 0.05 + j3 * 0.07 + j4 * 0.03), // dark jewel but visible (was 0.1 max — too dark, emissive blew it out)
+  );
+  m.em.getHSL(hsl);
+  mat.emissive.setHSL(
+    (hsl.h + 0.14 + j1 * 0.33 + j3 * 0.21 + j4 * 0.12 + j5 * 0.09 + slot * 0.005) % 1,
+    1.0, // S = 1.0 — max emissive saturation
+    Math.min(0.32, 0.12 + hsl.l * 0.1 + j2 * 0.06), // colored glow, not blown-out white
+  );
+  mat.emissiveIntensity = Math.min(1.8, m.emI * 0.7 + 0.4); // capped lower — ACES rolls >1 to white
+  // Slight metallic sheen for depth and sparkle — catches light as entities move
+  mat.metalness = Math.min(0.85, mat.metalness * 0.65 + j5 * 0.35);
+  mat.roughness = Math.max(0.06, mat.roughness * 0.45 + j3 * 0.12);
+}
+
 /** Base material parameters a {@link RenderMode} is layered on top of. */
 interface RenderModeBase {
   met: number;
@@ -242,6 +284,7 @@ export class EntityManager {
     // Layer the active render style on top of the morphotype base (CONTRACTS V7.3).
     // For SOLID this re-sets identical values, so the legacy look is byte-identical.
     applyRenderModeTo(mat, ctx.state.renderMode, m);
+    paintVibrant(mat, m, (mi % morphCount) + this.list.length);
     const mesh = new THREE.Mesh(geo, mat) as Entity;
     mesh.scale.setScalar(s);
     const phylum = m.phylum ?? -1;
@@ -301,6 +344,7 @@ export class EntityManager {
     };
     if (!ctx.quality.instanced) ctx.scene.add(mesh);
     this.list.push(mesh);
+    ctx.creatureSfx?.(mi % morphCount);
     return mesh;
   }
 
@@ -325,6 +369,20 @@ export class EntityManager {
     const list = this.list;
     const e = list[index];
     if (!e) return;
+
+    // Fix Bug 14: Extinction-triggered decrement of genetic diversity (mutations)
+    let isExtinct = true;
+    for (let k = 0; k < list.length; k++) {
+      const other = list[k];
+      if (k !== index && other && other.userData.mi === e.userData.mi) {
+        isExtinct = false;
+        break;
+      }
+    }
+    if (isExtinct && this.ctx.state.mutations > 0) {
+      this.ctx.state.mutations--;
+    }
+
     this.dispose(e);
     for (let j = index + 1; j < list.length; j++) {
       const next = list[j];
@@ -494,7 +552,7 @@ export class EntityManager {
           e.material.emissiveIntensity = lerp(
             e.material.emissiveIntensity,
             m.emI * emiBoost * metabolicLuminance(u.energy, u.age, u.life),
-            dt * 2,
+            clamp01(dt * 2),
           );
       }
 
@@ -520,11 +578,19 @@ export class EntityManager {
       // Belly pulse — post-split digestion visual (legacy line 779).
       if (u.belly > 0) {
         u.belly -= dt * 30;
-        e.material.emissiveIntensity = 1.5 + Math.sin(t * 8) * 0.5;
+        e.material.emissiveIntensity = Math.min(1.5 + Math.sin(t * 8) * 0.5, 3.0);
         e.scale.x = u.sc * (1 + Math.sin(t * 6) * 0.4);
         e.scale.y = u.sc * (1 + Math.cos(t * 5) * 0.3);
         e.scale.z = u.sc;
         if (u.belly <= 0) e.scale.setScalar(u.sc);
+      }
+
+      // Finite seal (NaN guard)
+      if (
+        !Number.isFinite(e.position.x + e.position.y + e.position.z + u.vel.x + u.vel.y + u.vel.z)
+      ) {
+        e.position.set(0, 5, 0);
+        u.vel.set(0, 0, 0);
       }
 
       // Containment — squared distance, no sqrt (legacy 4225 × ARENA²; V3.1, V38 density-scaled).
@@ -600,6 +666,7 @@ export class EntityManager {
     const mat = e.material;
     mat.color.copy(m.col);
     mat.emissive.copy(m.em);
+    paintVibrant(mat, m, (mi % morphCount) + this.list.length);
     // metalness/roughness/transparent/opacity/side/wireframe/emissive + depthWrite are all set
     // by applyRenderModeTo on top of the morphotype base (CONTRACTS V7.3).
     applyRenderModeTo(mat, ctx.state.renderMode, m);

@@ -26,7 +26,18 @@ mermaid.initialize({
   },
 });
 
-await mermaid.run({ querySelector: 'pre.mermaid' });
+import { mountAlifeMetricsGallery } from './alife-metrics-gallery';
+import './satellite-music';
+
+// Mount the gallery FIRST — never let mermaid issues block it.
+mountAlifeMetricsGallery(document.getElementById('alife-metrics'));
+
+// Mermaid is non-blocking — if it fails, the gallery is already up.
+try {
+  await mermaid.run({ querySelector: 'pre.mermaid' });
+} catch (e) {
+  console.warn('[docs] mermaid render skipped:', e);
+}
 
 // ── Interactive diagrams: pan (drag) + zoom (wheel) + fullscreen on every rendered mermaid SVG,
 // so the architecture / ERD / sequence diagrams are actually viewable and explorable (the user
@@ -45,8 +56,8 @@ function makeZoomable(pre: HTMLElement, svg: SVGSVGElement): void {
   // Intrinsic diagram size (mermaid always emits a viewBox); pin it so our transform owns scaling.
   const vb = svg.viewBox.baseVal;
   const measured = svg.getBoundingClientRect();
-  const w = vb && vb.width ? vb.width : measured.width || 800;
-  const h = vb && vb.height ? vb.height : measured.height || 400;
+  const w = (vb && vb.width > 0 ? vb.width : measured.width) || 800;
+  const h = (vb && vb.height > 0 ? vb.height : measured.height) || 400;
   svg.removeAttribute('width');
   svg.removeAttribute('height');
   svg.style.width = `${w}px`;
@@ -68,11 +79,21 @@ function makeZoomable(pre: HTMLElement, svg: SVGSVGElement): void {
   };
   const fit = (): void => {
     const vp = viewport.getBoundingClientRect();
-    if (!vp.width || !vp.height) return;
+    if (!vp.width || !vp.height) {
+      requestAnimationFrame(fit);
+      return;
+    }
     scale = clamp(Math.min(vp.width / w, vp.height / h) * 0.94);
     tx = (vp.width - w * scale) / 2;
     ty = (vp.height - h * scale) / 2;
     apply();
+  };
+  const fitSoon = (): void => {
+    fit();
+    setTimeout(fit, 60);
+    setTimeout(fit, 250);
+    setTimeout(fit, 600);
+    setTimeout(fit, 1200);
   };
   const zoomAt = (px: number, py: number, factor: number): void => {
     const ns = clamp(scale * factor);
@@ -144,7 +165,7 @@ function makeZoomable(pre: HTMLElement, svg: SVGSVGElement): void {
   ctrls.append(
     mkBtn('+', 'Zoom in', () => center(1.25)),
     mkBtn('−', 'Zoom out', () => center(1 / 1.25)),
-    mkBtn('⟳', 'Reset / fit', fit),
+    mkBtn('⟳', 'Reset / fit', fitSoon),
     mkBtn('⛶', 'Fullscreen', () => {
       if (document.fullscreenElement === viewport) {
         void document.exitFullscreen();
@@ -165,6 +186,10 @@ function makeZoomable(pre: HTMLElement, svg: SVGSVGElement): void {
 
   viewport.append(stage, ctrls, hint);
   pre.replaceWith(viewport);
-  requestAnimationFrame(fit);
-  document.addEventListener('fullscreenchange', () => requestAnimationFrame(fit));
+  fitSoon();
+  document.addEventListener('fullscreenchange', () => fitSoon());
+  if (typeof ResizeObserver !== 'undefined') {
+    const ro = new ResizeObserver(() => fitSoon());
+    ro.observe(viewport);
+  }
 }

@@ -127,9 +127,28 @@ export class AudioEngine {
     this.palette = createSfxPalette(rng);
   }
 
-  /** Music enabled? Read-only outside; flip via {@link toggleMusic}. */
+  /** Music enabled? Read-only outside; flip via {@link toggleMusic} or {@link setMusicOn}. */
   get musicOn(): boolean {
     return this._musicOn;
+  }
+
+  /**
+   * Set the music state from persisted preference (no-op if already in target state).
+   * Called during first-gesture unlock so a persisted `musicOn=true` starts playing
+   * without requiring a manual toggle. Does NOT create the AudioContext itself — the
+   * caller must `init()` first.
+   */
+  setMusicOn(on: boolean): void {
+    if (this._musicOn === on) return;
+    this._musicOn = on;
+    if (this._musicOn) {
+      this.startScheduler();
+    } else {
+      this.stopScheduler();
+      if (this.musicGain && this.ctx) {
+        this.musicGain.gain.setTargetAtTime(0, this.ctx.currentTime, 0.3);
+      }
+    }
   }
 
   /** SFX enabled? Read-only outside; flip via {@link toggleSfx}. */

@@ -39,9 +39,11 @@ import type { Entity, SimContext } from '../types';
 /** Capacity headroom multiplier over the uniform per-pool share. */
 const HEADROOM = 4;
 
-/** Pool-material base metalness/roughness (per-instance PBR is not representable — V3.1). */
-const POOL_METALNESS = 0.5;
-const POOL_ROUGHNESS = 0.5;
+/** Pool-material base metalness/roughness (per-instance PBR is not representable — V3.1).
+ *  Low metalness so the per-instance COLOR reads as pigment, not grey metal; moderate roughness
+ *  for a glossy, saturated read. The reliquary shader overrides per material-class anyway. */
+const POOL_METALNESS = 0.15;
+const POOL_ROUGHNESS = 0.35;
 
 /** Fixed translucent-pool blending opacity is carried per instance — this is the floor. */
 const MIN_ALPHA = 0.05;
@@ -308,24 +310,24 @@ float rqFbm(vec3 p){ float a = 0.5, s = 0.0; for (int i = 0; i < RQ_OCTAVES; i++
   #define RQ_RELIEF 0.30
   #define RQ_ROUGH 0.42
   #define RQ_METAL 0.10
-  #define RQ_SSS vec3(1.5, 1.4, 1.5)
-  #define RQ_SSSAMT 0.45
+  #define RQ_SSS vec3(0.85, 0.80, 0.90)
+  #define RQ_SSSAMT 0.28
   #define RQ_FILM 0.55
 #elif RQ_MAT == 1 // CRYSTAL — sharp faceted ribs, prismatic, glossy
   #define RQ_FREQ 9.0
   #define RQ_RELIEF 0.62
   #define RQ_ROUGH 0.14
   #define RQ_METAL 0.12
-  #define RQ_SSS vec3(1.3, 1.4, 1.7)
-  #define RQ_SSSAMT 0.22
+  #define RQ_SSS vec3(0.75, 0.82, 0.95)
+  #define RQ_SSSAMT 0.15
   #define RQ_FILM 0.95
 #elif RQ_MAT == 2 // GLASS — transmissive, cool, razor rim
   #define RQ_FREQ 6.0
   #define RQ_RELIEF 0.35
   #define RQ_ROUGH 0.07
   #define RQ_METAL 0.0
-  #define RQ_SSS vec3(1.2, 1.5, 1.75)
-  #define RQ_SSSAMT 0.32
+  #define RQ_SSS vec3(0.70, 0.85, 0.95)
+  #define RQ_SSSAMT 0.20
   #define RQ_FILM 0.75
 #elif RQ_MAT == 4 // METAL — machined, sharp specular, ridged
   #define RQ_FREQ 7.0
@@ -340,16 +342,16 @@ float rqFbm(vec3 p){ float a = 0.5, s = 0.0; for (int i = 0; i < RQ_OCTAVES; i++
   #define RQ_RELIEF 0.65
   #define RQ_ROUGH 0.70
   #define RQ_METAL 0.15
-  #define RQ_SSS vec3(1.25, 1.15, 0.95)
-  #define RQ_SSSAMT 0.15
+  #define RQ_SSS vec3(0.72, 0.65, 0.55)
+  #define RQ_SSSAMT 0.10
   #define RQ_FILM 0.06
 #else // RQ_MAT == 3 — AMBER, the warm default jewel
   #define RQ_FREQ 6.0
   #define RQ_RELIEF 0.50
   #define RQ_ROUGH 0.55
   #define RQ_METAL 0.06
-  #define RQ_SSS vec3(1.7, 1.0, 0.5)
-  #define RQ_SSSAMT 0.50
+  #define RQ_SSS vec3(0.95, 0.55, 0.28)
+  #define RQ_SSSAMT 0.32
   #define RQ_FILM 0.40
 #endif
 `;
@@ -393,7 +395,7 @@ const RELIQUARY_FRAG_BODY = /* glsl */ `#include <emissivemap_fragment>
 	// Pull metalness toward this material class (glass→dielectric, metal→conductor).
 	metalnessFactor = mix(metalnessFactor, RQ_METAL, 0.8);
 	// Groove self-shadow + the class subsurface tint settling into the recesses.
-	float rqAO = mix(0.45, 1.05, smoothstep(0.12, 0.85, rqDetail));
+	float rqAO = mix(0.55, 1.15, smoothstep(0.12, 0.85, rqDetail));
 	diffuseColor.rgb *= rqAO;
 	float rqValley = 1.0 - smoothstep(0.3, 0.7, rqN0);
 	diffuseColor.rgb = mix(diffuseColor.rgb, diffuseColor.rgb * RQ_SSS, rqValley * 0.3);
@@ -407,9 +409,9 @@ const RELIQUARY_FRAG_BODY = /* glsl */ `#include <emissivemap_fragment>
 	// Thin-film interference riding the rim + ridge crests, phase drifting with time + chaos.
 	vec3 rqFilm = 0.5 + 0.5 * cos(6.2831853 * (vec3(1.0, 0.85, 0.7) * rqFres * 2.2
 		+ vec3(0.0, 0.18, 0.36) + rqDetail * 1.5 + uTime * 0.04 + uChaos * 0.015));
-	totalEmissiveRadiance += rqFilm * (rqFres * 0.38 + rqRidge * 0.26) * RQ_FILM;
-	// Wet-glass rim glint.
-	totalEmissiveRadiance += vec3(0.95, 0.98, 1.0) * pow(rqFres, 1.4) * 0.14;
+	totalEmissiveRadiance += rqFilm * (rqFres * 0.38 + rqRidge * 0.26) * RQ_FILM * 0.6;
+	// Wet-glass rim glint — colored, not white, to prevent ACES washout.
+	totalEmissiveRadiance += vec3(0.40, 0.55, 0.75) * pow(rqFres, 1.4) * 0.08;
 
 	// ══ V-VITALS REAL-BOUND EFFECT SUITE ══════════════════════════════════════════════════════
 	// Every term's strength is a FALSIFIABLE readout of one packed per-entity signal (vVitals:
@@ -419,22 +421,22 @@ const RELIQUARY_FRAG_BODY = /* glsl */ `#include <emissivemap_fragment>
 	float vWealth = vVitals.x, vSen = vVitals.y, vNeu = vVitals.z, vExe = vVitals.w;
 	// PHOSPHOR GASEOUSNESS (wealth) — a slow roiling luminous gas wreathes the well-fed body.
 	float rqGas = fract(rqDetail * 1.9 + uTime * 0.12); rqGas = rqGas * (1.0 - rqGas) * 4.0;
-	totalEmissiveRadiance += vec3(0.30, 0.95, 0.72) * rqGas * vWealth * 0.5;
+	totalEmissiveRadiance += vec3(0.30, 0.95, 0.72) * rqGas * vWealth * 0.3;
 	// LASER-DANCE SYNAPSE ARCS (neural firing) — thin electric filaments race across the shell.
 	float rqArc = pow(0.5 + 0.5 * sin(vObjPos.y * 24.0 + vObjPos.x * 15.0 + uTime * 9.0), 20.0);
-	totalEmissiveRadiance += vec3(0.45, 0.85, 1.0) * rqArc * vNeu * 2.4;
+	totalEmissiveRadiance += vec3(0.45, 0.85, 1.0) * rqArc * vNeu * 1.6;
 	// ASHEN CATARACT (senescence) — pigment greys and a cold frost rim creeps in; the body ages on screen.
 	float rqLum = dot(diffuseColor.rgb, vec3(0.299, 0.587, 0.114));
-	diffuseColor.rgb = mix(diffuseColor.rgb, vec3(rqLum * 0.82), vSen * 0.7);
+	diffuseColor.rgb = mix(diffuseColor.rgb, vec3(rqLum * 0.72), vSen * 0.04);
 	totalEmissiveRadiance += vec3(0.55, 0.62, 0.80) * pow(rqFres, 2.0) * vSen * 0.5;
 	// HYPERSPACE IONIZING FLUTTER (exertion) — ion streaks band along the engraved normal as it sprints.
 	float rqStreak = pow(0.5 + 0.5 * sin(rqN.y * 28.0 - uTime * 15.0), 7.0);
 	totalEmissiveRadiance += vec3(0.30, 0.60, 1.0) * rqStreak * vExe * 1.4;
 	// GILDED BUFFER SHIMMER (wealth) — a high-frequency sparkle gilds the fresnel rim of the rich.
 	float rqSpk = step(0.85, rqFbm(vObjPos * 21.0 + uTime * 0.6)) * pow(rqFres, 1.5);
-	totalEmissiveRadiance += vec3(1.0, 0.85, 0.45) * rqSpk * vWealth * 1.4;
+	totalEmissiveRadiance += vec3(1.0, 0.85, 0.45) * rqSpk * vWealth * 0.9;
 	// SINGULROSITY BLOOM (vitality = wealth × firing) — the most alive bodies bloom a hot core halo.
-	totalEmissiveRadiance += vec3(1.0, 0.70, 1.0) * pow(rqFres, 0.6) * (vWealth * vNeu) * 1.5;
+	totalEmissiveRadiance += vec3(1.0, 0.70, 1.0) * pow(rqFres, 0.6) * (vWealth * vNeu) * 1.0;
 	// BIT-GLITCH CHAOS CORE (global chaos × senescence) — the shell quantizes into flickering data blocks,
 	// scrambling harder on stressed, aged bodies; ties the body to the real world-chaos system.
 	float rqGlitch = floor((rqN0 + sin(uTime * 11.0) * 0.25) * 6.0) / 6.0;
@@ -448,10 +450,10 @@ const RELIQUARY_FRAG_BODY = /* glsl */ `#include <emissivemap_fragment>
 	vec3 sAlleg = mix(vec3(0.25, 1.0, 0.55), vec3(1.0, 0.30, 0.20), sStrat); // green coop ↔ red defect
 	float sHalo = pow(rqFres, 2.2) * (1.0 - sStrat); // cooperators wear a soft broad halo
 	float sBarb = pow(0.5 + 0.5 * sin(atan(rqN.z, rqN.x) * 16.0 + uTime * 3.0), 18.0) * pow(rqFres, 1.3) * sStrat; // defectors a spiked corona
-	totalEmissiveRadiance += sAlleg * (sHalo * 0.45 + sBarb * 1.8);
+	totalEmissiveRadiance += sAlleg * (sHalo * 0.30 + sBarb * 1.2);
 	// PAYOFF-SWING IRIDESCENCE (payoff, phase-drifted by the quantum lane) — winners flare iridescent.
 	vec3 sIris = 0.5 + 0.5 * cos(vec3(0.0, 2.094, 4.188) + rqFres * 8.0 + sQ * 6.2831853);
-	totalEmissiveRadiance += sIris * sPay * pow(rqFres, 1.5) * 1.2;
+	totalEmissiveRadiance += sIris * sPay * pow(rqFres, 1.5) * 0.8;
 	// FACTION WAR-PAINT (community hue) — same louvain tribe ⇒ same hue + banded sigil.
 	vec3 sTribe = 0.5 + 0.5 * cos(6.2831853 * (sComm + vec3(0.0, 0.33, 0.67)));
 	float sSigil = step(0.62, fract(rqDetail * 3.0 + sComm * 7.0));

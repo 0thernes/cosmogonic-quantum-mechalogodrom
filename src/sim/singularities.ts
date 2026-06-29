@@ -31,7 +31,7 @@
 import * as THREE from 'three';
 import { TAU } from '../math/scalar';
 import { ARENA_MID } from './constants';
-import type { Entity, SimContext } from '../types';
+import type { Entity, QualityTier, SimContext } from '../types';
 import type { EntityManager } from './entities';
 
 /** The five summonable singularity kinds, in chaos-control cycle order. */
@@ -55,6 +55,178 @@ const REACH2 = REACH * REACH;
 const HORIZON = 9 * ARENA_MID;
 /** Accretion-disk radius. */
 const DISK_R = 17 * ARENA_MID;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// V99 SUPER-REALISTIC SHADER MATERIALS — plasma accretion disk + volumetric glow
+// Replaces the flat MeshBasicMaterial torus with a custom shader that renders a
+// temperature-graded, turbulent, Doppler-beamed accretion disk — the iconic
+// Interstellar/EHT look. Per-vertex radial coordinate drives the colour ramp;
+// a noise term adds plasma turbulence; a side-asymmetry term fakes relativistic
+// Doppler beaming (the approaching side is brighter).
+// ─────────────────────────────────────────────────────────────────────────────
+const ACCRETION_DISK_VERT = /* glsl */ `
+  varying vec2 vDiskUv;
+  varying float vRadius;
+  uniform float uTime;
+  void main() {
+    vDiskUv = uv;
+    vec3 pos = position;
+    float r = length(pos.xy);
+    vRadius = r / ${DISK_R.toFixed(1)};
+    // Vertical warp: inner edge curves UP and OVER the black hole (Interstellar effect).
+    // The disk wraps around the shadow sphere — the back of the disk appears above the hole.
+    float warpAmt = smoothstep(1.0, 0.0, vRadius) * ${HORIZON.toFixed(1)} * 0.9;
+    float angle = atan(pos.y, pos.x);
+    // Asymmetric warp: the "back" half (angle near PI) rises higher, the front dips below
+    pos.z += warpAmt * (0.5 + 0.5 * sin(angle)) * (1.0 + 0.15 * sin(uTime * 0.8));
+    pos.z -= warpAmt * 0.3 * (1.0 - 0.5 * sin(angle));
+    // Slight radial breathing
+    float breathe = 1.0 + 0.02 * sin(uTime * 1.5 + vRadius * 6.0);
+    pos.xy *= breathe;
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
+  }
+`;
+
+const ACCRETION_DISK_FRAG = /* glsl */ `
+  uniform float uTime;
+  uniform float uFade;
+  uniform vec3 uHotColor;
+  uniform vec3 uCoolColor;
+  uniform float uDoppler;
+  varying vec2 vDiskUv;
+  varying float vRadius;
+
+  // High-quality hash-based noise for plasma turbulence
+  float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+  float noise(vec2 p) {
+    vec2 i = floor(p), f = fract(p);
+    float a = hash(i), b = hash(i + vec2(1.0, 0.0));
+    float c = hash(i + vec2(0.0, 1.0)), d = hash(i + vec2(1.0, 1.0));
+    vec2 u = f * f * (3.0 - 2.0 * f);
+    return mix(mix(a, b, u.x), mix(c, d, u.x), u.y);
+  }
+  // 6-octave fBm for richer plasma detail
+  float fbm(vec2 p) {
+    float v = 0.0, a = 0.5;
+    for (int i = 0; i < 6; i++) { v += a * noise(p); p *= 2.07; a *= 0.5; }
+    return v;
+  }
+
+  void main() {
+    // Radial temperature gradient: blue-white inner ISCO → white-hot → yellow → orange → deep red outer
+    float t = 1.0 - clamp(vRadius, 0.0, 1.0);
+    // Multi-stop temperature ramp for a realistic blackbody spectrum
+    vec3 blueWhite = vec3(0.7, 0.85, 1.0);
+    vec3 whiteHot = uHotColor;
+    vec3 yellow = vec3(1.0, 0.85, 0.3);
+    vec3 orange = vec3(1.0, 0.45, 0.08);
+    vec3 deepRed = uCoolColor;
+    vec3 temp;
+    if (t > 0.85) temp = mix(whiteHot, blueWhite, (t - 0.85) / 0.15);
+    else if (t > 0.6) temp = mix(yellow, whiteHot, (t - 0.6) / 0.25);
+    else if (t > 0.3) temp = mix(orange, yellow, (t - 0.3) / 0.3);
+    else temp = mix(deepRed, orange, t / 0.3);
+
+    // Relativistic frame-dragging swirl — inner regions rotate faster (Lense-Thirring effect)
+    float angle = atan(vDiskUv.y - 0.5, vDiskUv.x - 0.5);
+    float frameDrag = 1.0 + (1.0 - vRadius) * 2.5; // inner = faster swirl
+    vec2 swirlUv = vec2(vRadius * 12.0, angle * frameDrag + uTime * 1.2 * frameDrag);
+    float turb = fbm(swirlUv);
+    // Secondary turbulence layer for fine plasma filaments
+    vec2 fineUv = vec2(vRadius * 30.0, angle * 8.0 + uTime * 2.5);
+    float fineTurb = fbm(fineUv);
+    temp *= 0.45 + 1.8 * turb + 0.3 * fineTurb;
+
+    // Doppler beaming: the approaching side (angle ~ 0) is significantly brighter
+    // Relativistic beaming is asymmetric — the approaching side can be 3-4× brighter
+    float doppler = 1.0 + uDoppler * cos(angle) * 0.8;
+    doppler *= doppler; // square for stronger contrast
+    temp *= doppler;
+
+    // Inner edge brightness boost (the ISCO — innermost stable circular orbit)
+    // A bright ring at the ISCO with a sharp falloff
+    float innerGlow = smoothstep(0.0, 0.08, vRadius) * smoothstep(1.0, 0.65, vRadius);
+    float iscoRing = smoothstep(0.06, 0.0, abs(vRadius - 0.08)) * 2.0;
+    temp *= 0.4 + 1.8 * innerGlow + iscoRing;
+
+    // Relativistic redshift near the horizon — light climbing out of the gravity well
+    float redshift = 1.0 - 0.3 * smoothstep(0.15, 0.0, vRadius);
+    temp.r *= 1.0 / redshift;
+    temp.gb *= redshift;
+
+    // Alpha falls off at the edges with a soft plasma edge
+    float alpha = (innerGlow + iscoRing * 0.5) * uFade * 0.95;
+
+    gl_FragColor = vec4(temp, alpha);
+  }
+`;
+
+// Gravitational lensing shader for the black hole event horizon — the shadow sphere
+// with a bright Einstein ring where light bends around the singularity.
+const LENSING_VERT = /* glsl */ `
+  varying vec3 vNormal;
+  varying vec3 vViewDir;
+  void main() {
+    vec4 mvPos = modelViewMatrix * vec4(position, 1.0);
+    vNormal = normalize(normalMatrix * normal);
+    vViewDir = normalize(-mvPos.xyz);
+    gl_Position = projectionMatrix * mvPos;
+  }
+`;
+const LENSING_FRAG = /* glsl */ `
+  uniform float uTime;
+  uniform float uFade;
+  uniform vec3 uRingColor;
+  varying vec3 vNormal;
+  varying vec3 vViewDir;
+  void main() {
+    float ndv = max(dot(vNormal, vViewDir), 0.0);
+    // Einstein ring: a sharp bright ring at the rim (ndv near 0 = grazing angle)
+    float ring = pow(1.0 - ndv, 6.0);
+    // Inner shadow: deep black with a subtle blue-shifted edge
+    float inner = pow(ndv, 0.5);
+    // Photon sphere shimmer — the ring isn't uniform, it shimmers with quantum fluctuations
+    float shimmer = 0.85 + 0.15 * sin(uTime * 8.0 + vNormal.x * 12.0 + vNormal.y * 7.0);
+    // Secondary fainter ring outside the Einstein ring (the relativistic light echo)
+    float echoRing = pow(1.0 - ndv, 12.0) * 0.3;
+    vec3 col = uRingColor * ring * shimmer * 3.0;
+    col += uRingColor * echoRing * 1.5;
+    col += vec3(0.01, 0.005, 0.02) * (1.0 - inner); // faint dark blue inside the shadow
+    float alpha = (ring * shimmer + echoRing + (1.0 - inner) * 0.85) * uFade;
+    gl_FragColor = vec4(col, alpha);
+  }
+`;
+
+// Volumetric glow shell shader — a soft, breathing aura around the event horizon
+const GLOW_SHELL_VERT = /* glsl */ `
+  varying vec3 vNormal;
+  varying vec3 vViewDir;
+  void main() {
+    vec4 mvPos = modelViewMatrix * vec4(position, 1.0);
+    vNormal = normalize(normalMatrix * normal);
+    vViewDir = normalize(-mvPos.xyz);
+    gl_Position = projectionMatrix * mvPos;
+  }
+`;
+
+const GLOW_SHELL_FRAG = /* glsl */ `
+  uniform vec3 uColor;
+  uniform float uFade;
+  uniform float uTime;
+  uniform float uIntensity;
+  varying vec3 vNormal;
+  varying vec3 vViewDir;
+  void main() {
+    // Stronger Fresnel with a sharper falloff for a more dramatic rim glow
+    float fres = pow(1.0 - max(dot(vNormal, vViewDir), 0.0), 3.0);
+    // Dual-frequency pulse: slow breathing + fast shimmer
+    float pulse = 0.8 + 0.12 * sin(uTime * 2.5) + 0.08 * sin(uTime * 7.3);
+    // Color shift: subtle hue rotation over time for a "living" energy feel
+    vec3 col = uColor * fres * uIntensity * pulse;
+    col += vec3(0.1, 0.05, 0.15) * fres * sin(uTime * 1.7) * uIntensity;
+    gl_FragColor = vec4(col, fres * uFade * 0.7);
+  }
+`;
 /** Strange-matter conversion radius. */
 const CONV_R = 32 * ARENA_MID;
 const CONV_R2 = CONV_R * CONV_R;
@@ -65,16 +237,46 @@ const ACCEL_MAX = 6;
 const BODY_GAIN = 0.4;
 /** Max organisms a black hole consumes per frame (keeps mass die-off off the budget cliff). */
 const MAX_CONSUME = 25;
-/** Accretion/fountain particle count by tier (instanced = laptop+). Independent of population. */
-const PARTICLES_HI = 1400;
-const PARTICLES_LO = 350;
+/** YOLO: full particle budget regardless of tier — no quality guardrails on singularities. */
+const PARTICLES_BUDGET = 6200;
+function particleBudget(_tier: QualityTier): number {
+  return PARTICLES_BUDGET;
+}
+
+/** YOLO: maximum sphere detail on every tier. */
+function sphereSegs(_tier: QualityTier): number {
+  return 64;
+}
+
+/** YOLO: maximum torus detail on every tier. */
+function torusSegs(_tier: QualityTier): number {
+  return 160;
+}
+
+/** YOLO: maximum icosahedron detail on every tier. */
+function icoDetail(_tier: QualityTier): number {
+  return 3;
+}
+
+function particleSizeMul(tier: QualityTier): number {
+  switch (tier) {
+    case 'mega':
+      return 2.35;
+    case 'ultra':
+      return 1.85;
+    case 'desktop':
+      return 1.4;
+    default:
+      return 1;
+  }
+}
 /** Per-particle radial drift speed (infall for black holes, fountain for white). */
 const PARTICLE_DRIFT = 14 * ARENA_MID;
 /** Keplerian angular-rate gain (inner particles orbit faster: ω ∝ √(G/ρ³)). */
 const PARTICLE_OMEGA_K = 3;
 /** Additive particle tint per kind. */
 const PARTICLE_COLOR: Readonly<Record<SingularityKind, number>> = {
-  entropy: 0xb0b4b8,
+  entropy: 0x4a3a30,
   blackhole: 0xffaa33,
   whitehole: 0x9fdcff,
   greyhole: 0xa0a8b8,
@@ -96,8 +298,8 @@ const CONSUME: Entity[] = [];
  * Set lookup also IS the liveness guard: a victim no longer in `list` (a stale grid or a same-frame
  * cross-system disposal) is simply never encountered, so it can never be double-disposed. */
 const CONSUME_SET = new Set<Entity>();
-/** Heat-death grey target for the ENTROPY colour fade. */
-const GREY = new THREE.Color(0.5, 0.5, 0.5);
+/** Heat-death dark target for the ENTROPY colour fade — a deep ash, not washed grey. */
+const GREY = new THREE.Color(0.12, 0.1, 0.08);
 /** V59 gravitational redshift/blueshift targets — infalling light reddens, ejected light blueshifts. */
 const REDSHIFT = new THREE.Color(1.0, 0.18, 0.05);
 const BLUESHIFT = new THREE.Color(0.35, 0.66, 1.0);
@@ -358,7 +560,7 @@ export class SingularitySystem {
       u.vel.y += (rng() - 0.5) * mag * 0.6;
       u.vel.z += (rng() - 0.5) * mag;
       // Fade emissive toward a uniform heat-death grey (colour persists; update() manages emI).
-      e.material.color.lerp(GREY, 0.02);
+      e.material.color.lerp(GREY, 0.01);
     }
     // The world heats: nudge chaos up toward its ceiling (the integrator clamps it).
     const s = this.ctx.state;
@@ -481,24 +683,31 @@ export class SingularitySystem {
   private animateRig(dt: number, t: number, fade: number): void {
     const rig = this.rig;
     if (!rig) return;
-    const pulse = 1 + Math.sin(t * 4) * 0.06;
+    const pulse = 1 + Math.sin(t * 5.2) * 0.11 + Math.sin(t * 13.7) * 0.04;
     rig.group.scale.setScalar(fade);
     this.animateParticles(dt, fade);
+    // V99: update shader uniforms for the super-realistic look
+    const updateShaderTime = (mat: THREE.Material, key: string): void => {
+      const u = (mat as unknown as { uniforms?: Record<string, { value: unknown }> }).uniforms;
+      if (u && u[key]) (u[key] as { value: number }).value = t;
+      if (u && u.uFade) (u.uFade as { value: number }).value = fade;
+    };
     if (this._kind === 'entropy') {
       // The heat-death shell grows and thins as it expires.
       const grow = 1 + (DURATION - this.life) * 0.5;
       rig.primary.scale.setScalar(grow);
-      rig.primaryMat.opacity = 0.18 * fade;
+      updateShaderTime(rig.primaryMat, 'uTime');
     } else {
       rig.primary.scale.setScalar(pulse);
+      if (this._kind === 'strangestar') updateShaderTime(rig.primaryMat, 'uTime');
     }
     if (rig.ring) {
-      rig.ring.rotation.z += 0.04;
+      // V99: the accretion disk rotates with differential Keplerian speed
+      rig.ring.rotation.z += 0.06;
       rig.ring.rotation.x = Math.PI * 0.42;
-      if (rig.ringMat) rig.ringMat.opacity = 0.9 * fade;
+      if (rig.ringMat) updateShaderTime(rig.ringMat, 'uTime');
     }
-    // V59: shimmer the photon ring + breathe the glow halo. The ring (index 0 for holes) spins on
-    // its own axis for a lensed shimmer; every extra pulses its base opacity and rides the fade.
+    // V59: shimmer the photon ring + breathe the glow halo.
     if (rig.extras.length) {
       const shimmer = 0.85 + Math.sin(t * 6) * 0.15;
       const breathe = 0.8 + Math.sin(t * 2.3) * 0.2;
@@ -506,6 +715,14 @@ export class SingularitySystem {
       if (ph) ph.rotation.z += 0.03;
       for (let i = 0; i < rig.extraMats.length; i++) {
         const m = rig.extraMats[i];
+        // V99: update shader-based extras (volumetric glow shells)
+        const u = (m as unknown as { uniforms?: Record<string, { value: unknown }> }).uniforms;
+        if (u) {
+          if (u.uTime) (u.uTime as { value: number }).value = t;
+          if (u.uFade) (u.uFade as { value: number }).value = fade * (i === 0 ? shimmer : breathe);
+          continue;
+        }
+        // Legacy MeshBasicMaterial extras (photon ring)
         if (!(m instanceof THREE.MeshBasicMaterial)) continue;
         const base = (m.userData.baseOpacity as number | undefined) ?? m.opacity;
         m.opacity = base * fade * (i === 0 ? shimmer : breathe);
@@ -556,6 +773,10 @@ export class SingularitySystem {
 
   /** Build the visual rig for `kind`. Allocates (user event); freed by {@link disposeRig}. */
   private buildRig(kind: SingularityKind): Rig {
+    const tier = this.ctx.quality.tier;
+    const ss = sphereSegs(tier);
+    const ts = torusSegs(tier);
+    const id = icoDetail(tier);
     const group = new THREE.Group();
     let primary: THREE.Mesh;
     let primaryMat: THREE.MeshBasicMaterial | THREE.MeshStandardMaterial;
@@ -566,79 +787,176 @@ export class SingularitySystem {
     const extraMats: THREE.Material[] = [];
 
     if (kind === 'blackhole') {
-      // The shadow: a pure-black sphere. Everything bright sits OUTSIDE it (additive), so the
-      // horizon reads as the dark disc real images show — the EHT "ring of fire" silhouette.
-      primaryMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
-      primary = new THREE.Mesh(new THREE.SphereGeometry(HORIZON, 32, 32), primaryMat);
-      // Hot accretion disk — additive so the infalling plasma GLOWS rather than paints flat.
-      ringMat = new THREE.MeshBasicMaterial({
-        color: 0xffb24a,
+      // V102: Gravitational lensing shadow — a dark sphere with a bright Einstein ring
+      // at the rim where light bends around the singularity (replaces flat black sphere).
+      const lensingUniforms = {
+        uTime: { value: 0 },
+        uFade: { value: 1 },
+        uRingColor: { value: new THREE.Color(0xffcc66) },
+      };
+      primaryMat = new THREE.ShaderMaterial({
+        uniforms: lensingUniforms,
+        vertexShader: LENSING_VERT,
+        fragmentShader: LENSING_FRAG,
         transparent: true,
-        opacity: 0.9,
+        side: THREE.FrontSide,
+        blending: THREE.NormalBlending,
+        depthWrite: true,
+      }) as unknown as THREE.MeshBasicMaterial;
+      (primaryMat as unknown as { uniforms: typeof lensingUniforms }).uniforms = lensingUniforms;
+      primary = new THREE.Mesh(new THREE.SphereGeometry(HORIZON, ss, ss), primaryMat);
+      // V99: Super-realistic plasma accretion disk with temperature gradient,
+      // Doppler beaming, and turbulent plasma swirl — the Interstellar/EHT look.
+      const diskGeo = new THREE.RingGeometry(HORIZON * 1.15, DISK_R * 1.5, ts, 24);
+      const diskUniforms = {
+        uTime: { value: 0 },
+        uFade: { value: 1 },
+        uHotColor: { value: new THREE.Color(0xfff5e0) },
+        uCoolColor: { value: new THREE.Color(0xff3a0a) },
+        uDoppler: { value: 0.8 },
+      };
+      ringMat = new THREE.ShaderMaterial({
+        uniforms: diskUniforms,
+        vertexShader: ACCRETION_DISK_VERT,
+        fragmentShader: ACCRETION_DISK_FRAG,
+        transparent: true,
         side: THREE.DoubleSide,
         blending: THREE.AdditiveBlending,
         depthWrite: false,
-      });
-      ring = new THREE.Mesh(new THREE.TorusGeometry(DISK_R, HORIZON * 0.5, 20, 64), ringMat);
+      }) as unknown as THREE.MeshBasicMaterial;
+      (ringMat as unknown as { uniforms: typeof diskUniforms }).uniforms = diskUniforms;
+      ring = new THREE.Mesh(diskGeo, ringMat);
       this.addHoleHalo(0xffe1a0, 0xff6a1e, extras, extraMats);
     } else if (kind === 'whitehole') {
-      primaryMat = new THREE.MeshBasicMaterial({ color: 0xeaf4ff });
-      primary = new THREE.Mesh(new THREE.SphereGeometry(HORIZON, 32, 32), primaryMat);
-      ringMat = new THREE.MeshBasicMaterial({
-        color: 0x8fd6ff,
+      // V102: Blinding white core with a blue-white Einstein ring — the time-reversed hole
+      const lensingUniforms = {
+        uTime: { value: 0 },
+        uFade: { value: 1 },
+        uRingColor: { value: new THREE.Color(0xb0d8ff) },
+      };
+      primaryMat = new THREE.ShaderMaterial({
+        uniforms: lensingUniforms,
+        vertexShader: LENSING_VERT,
+        fragmentShader: LENSING_FRAG,
         transparent: true,
-        opacity: 0.85,
+        side: THREE.FrontSide,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+      }) as unknown as THREE.MeshBasicMaterial;
+      (primaryMat as unknown as { uniforms: typeof lensingUniforms }).uniforms = lensingUniforms;
+      primary = new THREE.Mesh(new THREE.SphereGeometry(HORIZON, ss, ss), primaryMat);
+      // V99: Plasma ejection disk with blue-white temperature gradient
+      const diskGeo = new THREE.RingGeometry(HORIZON * 1.15, DISK_R * 1.5, ts, 24);
+      const diskUniforms = {
+        uTime: { value: 0 },
+        uFade: { value: 1 },
+        uHotColor: { value: new THREE.Color(0xeaf6ff) },
+        uCoolColor: { value: new THREE.Color(0x2a7aff) },
+        uDoppler: { value: 0.6 },
+      };
+      ringMat = new THREE.ShaderMaterial({
+        uniforms: diskUniforms,
+        vertexShader: ACCRETION_DISK_VERT,
+        fragmentShader: ACCRETION_DISK_FRAG,
+        transparent: true,
         side: THREE.DoubleSide,
         blending: THREE.AdditiveBlending,
         depthWrite: false,
-      });
-      ring = new THREE.Mesh(new THREE.TorusGeometry(DISK_R, HORIZON * 0.32, 20, 64), ringMat);
+      }) as unknown as THREE.MeshBasicMaterial;
+      (ringMat as unknown as { uniforms: typeof diskUniforms }).uniforms = diskUniforms;
+      ring = new THREE.Mesh(diskGeo, ringMat);
       this.addHoleHalo(0xdff0ff, 0x4aa8ff, extras, extraMats);
     } else if (kind === 'greyhole') {
-      primaryMat = new THREE.MeshBasicMaterial({ color: 0x3a3f4a });
-      primary = new THREE.Mesh(new THREE.SphereGeometry(HORIZON, 32, 32), primaryMat);
-      ringMat = new THREE.MeshBasicMaterial({
-        color: 0xb6bccc,
+      // The evaporating hole — a murky, shifting grey sphere
+      primaryMat = new THREE.MeshStandardMaterial({
+        color: 0x3a3f4a,
+        emissive: 0x2a2e38,
+        emissiveIntensity: 0.5,
+        metalness: 0.6,
+        roughness: 0.35,
+      });
+      primary = new THREE.Mesh(new THREE.SphereGeometry(HORIZON, ss, ss), primaryMat);
+      // V99: Plasma disk with muted grey-violet temperature gradient
+      const diskGeo = new THREE.RingGeometry(HORIZON * 1.15, DISK_R * 1.3, ts, 24);
+      const diskUniforms = {
+        uTime: { value: 0 },
+        uFade: { value: 1 },
+        uHotColor: { value: new THREE.Color(0xd0d4e0) },
+        uCoolColor: { value: new THREE.Color(0x50555f) },
+        uDoppler: { value: 0.3 },
+      };
+      ringMat = new THREE.ShaderMaterial({
+        uniforms: diskUniforms,
+        vertexShader: ACCRETION_DISK_VERT,
+        fragmentShader: ACCRETION_DISK_FRAG,
         transparent: true,
-        opacity: 0.7,
         side: THREE.DoubleSide,
         blending: THREE.AdditiveBlending,
         depthWrite: false,
-      });
-      ring = new THREE.Mesh(new THREE.TorusGeometry(DISK_R, HORIZON * 0.38, 20, 64), ringMat);
+      }) as unknown as THREE.MeshBasicMaterial;
+      (ringMat as unknown as { uniforms: typeof diskUniforms }).uniforms = diskUniforms;
+      ring = new THREE.Mesh(diskGeo, ringMat);
       this.addHoleHalo(0xc8cedb, 0x8088a0, extras, extraMats);
     } else if (kind === 'strangestar') {
-      primaryMat = new THREE.MeshStandardMaterial({
-        color: 0x2a5418,
-        emissive: 0x66109a,
-        emissiveIntensity: 2,
-        metalness: 0.3,
-        roughness: 0.4,
-      });
-      primary = new THREE.Mesh(new THREE.IcosahedronGeometry(HORIZON * 0.9, 1), primaryMat);
-      // A violet strangelet aura — the conversion front made visible.
-      const auraMat = new THREE.MeshBasicMaterial({
-        color: 0x9a2cff,
+      // V99: Strange matter core — a faceted, shifting icosahedron with custom glow
+      const glowUniforms = {
+        uColor: { value: new THREE.Color(0x9a2cff) },
+        uFade: { value: 1 },
+        uTime: { value: 0 },
+        uIntensity: { value: 2.5 },
+      };
+      primaryMat = new THREE.ShaderMaterial({
+        uniforms: glowUniforms,
+        vertexShader: GLOW_SHELL_VERT,
+        fragmentShader: GLOW_SHELL_FRAG,
         transparent: true,
-        opacity: 0.22,
+        side: THREE.FrontSide,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+      }) as unknown as THREE.MeshStandardMaterial;
+      (primaryMat as unknown as { uniforms: typeof glowUniforms }).uniforms = glowUniforms;
+      primary = new THREE.Mesh(new THREE.IcosahedronGeometry(HORIZON * 0.9, id), primaryMat);
+      // A violet strangelet aura — the conversion front made visible. V99: volumetric glow
+      const auraUniforms = {
+        uColor: { value: new THREE.Color(0x7cff5a) },
+        uFade: { value: 1 },
+        uTime: { value: 0 },
+        uIntensity: { value: 1.8 },
+      };
+      const auraMat = new THREE.ShaderMaterial({
+        uniforms: auraUniforms,
+        vertexShader: GLOW_SHELL_VERT,
+        fragmentShader: GLOW_SHELL_FRAG,
+        transparent: true,
         side: THREE.BackSide,
         blending: THREE.AdditiveBlending,
         depthWrite: false,
       });
       auraMat.userData.baseOpacity = 0.22;
-      const aura = new THREE.Mesh(new THREE.SphereGeometry(HORIZON * 1.5, 20, 20), auraMat);
+      (auraMat as unknown as { uniforms: typeof auraUniforms }).uniforms = auraUniforms;
+      const aura = new THREE.Mesh(new THREE.SphereGeometry(HORIZON * 1.5, ss, ss), auraMat);
       aura.frustumCulled = false;
       extras.push(aura);
       extraMats.push(auraMat);
     } else {
-      // entropy — an inverted translucent shell that expands as disorder spreads.
-      primaryMat = new THREE.MeshBasicMaterial({
-        color: 0xb0b4b8,
+      // entropy — V99: a volumetric heat-death shell with a breathing glow shader
+      const entropyUniforms = {
+        uColor: { value: new THREE.Color(0x4a3a30) },
+        uFade: { value: 1 },
+        uTime: { value: 0 },
+        uIntensity: { value: 1.2 },
+      };
+      primaryMat = new THREE.ShaderMaterial({
+        uniforms: entropyUniforms,
+        vertexShader: GLOW_SHELL_VERT,
+        fragmentShader: GLOW_SHELL_FRAG,
         transparent: true,
-        opacity: 0.18,
         side: THREE.BackSide,
-      });
-      primary = new THREE.Mesh(new THREE.SphereGeometry(REACH * 0.4, 20, 20), primaryMat);
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+      }) as unknown as THREE.MeshBasicMaterial;
+      (primaryMat as unknown as { uniforms: typeof entropyUniforms }).uniforms = entropyUniforms;
+      primary = new THREE.Mesh(new THREE.SphereGeometry(REACH * 0.4, ss, ss), primaryMat);
     }
 
     primary.frustumCulled = false;
@@ -683,31 +1001,52 @@ export class SingularitySystem {
     extras: THREE.Mesh[],
     extraMats: THREE.Material[],
   ): void {
-    const photonMat = new THREE.MeshBasicMaterial({
-      color: ringHex,
+    const tier = this.ctx.quality.tier;
+    const ss = sphereSegs(tier);
+    const ts = torusSegs(tier);
+    // V101: photon ring with shader-based pulsing glow
+    const photonUniforms = {
+      uColor: { value: new THREE.Color(ringHex) },
+      uFade: { value: 1 },
+      uTime: { value: 0 },
+      uIntensity: { value: 3.0 },
+    };
+    const photonMat = new THREE.ShaderMaterial({
+      uniforms: photonUniforms,
+      vertexShader: GLOW_SHELL_VERT,
+      fragmentShader: GLOW_SHELL_FRAG,
       transparent: true,
-      opacity: 0.95,
       side: THREE.DoubleSide,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
-    });
+    }) as unknown as THREE.MeshBasicMaterial;
+    (photonMat as unknown as { uniforms: typeof photonUniforms }).uniforms = photonUniforms;
     photonMat.userData.baseOpacity = 0.95;
     const photon = new THREE.Mesh(
-      new THREE.TorusGeometry(HORIZON * 1.18, HORIZON * 0.06, 12, 80),
+      new THREE.TorusGeometry(HORIZON * 1.18, HORIZON * 0.06, 12, ts),
       photonMat,
     );
     photon.frustumCulled = false;
     photon.rotation.x = Math.PI * 0.5;
-    const glowMat = new THREE.MeshBasicMaterial({
-      color: glowHex,
+    // V101: glow halo with shader-based volumetric glow
+    const glowUniforms = {
+      uColor: { value: new THREE.Color(glowHex) },
+      uFade: { value: 1 },
+      uTime: { value: 0 },
+      uIntensity: { value: 1.5 },
+    };
+    const glowMat = new THREE.ShaderMaterial({
+      uniforms: glowUniforms,
+      vertexShader: GLOW_SHELL_VERT,
+      fragmentShader: GLOW_SHELL_FRAG,
       transparent: true,
-      opacity: 0.28,
       side: THREE.BackSide,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
-    });
+    }) as unknown as THREE.MeshBasicMaterial;
+    (glowMat as unknown as { uniforms: typeof glowUniforms }).uniforms = glowUniforms;
     glowMat.userData.baseOpacity = 0.28;
-    const glow = new THREE.Mesh(new THREE.SphereGeometry(HORIZON * 1.75, 24, 24), glowMat);
+    const glow = new THREE.Mesh(new THREE.SphereGeometry(HORIZON * 1.75, ss, ss), glowMat);
     glow.frustumCulled = false;
     extras.push(photon, glow);
     extraMats.push(photonMat, glowMat);
@@ -723,7 +1062,9 @@ export class SingularitySystem {
     kind: SingularityKind,
   ): { points: THREE.Points; pointsMat: THREE.PointsMaterial; pState: Float32Array } | null {
     const rng = this.ctx.rng;
-    const n = this.ctx.quality.instanced ? PARTICLES_HI : PARTICLES_LO;
+    const tier = this.ctx.quality.tier;
+    const n = particleBudget(tier);
+    const sizeMul = particleSizeMul(tier);
     const pos = new Float32Array(n * 3);
     const st = new Float32Array(n * 3);
     // Per-kind initial radial band + vertical spread (disk for holes, cloud for strange/entropy).
@@ -747,9 +1088,9 @@ export class SingularitySystem {
     geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
     const pointsMat = new THREE.PointsMaterial({
       color: PARTICLE_COLOR[kind],
-      size: 1.6 * ARENA_MID,
+      size: 1.6 * ARENA_MID * sizeMul,
       transparent: true,
-      opacity: 0.85,
+      opacity: tier === 'mega' || tier === 'ultra' ? 0.96 : 0.85,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
       sizeAttenuation: true,
@@ -775,4 +1116,7 @@ export class SingularitySystem {
     for (const m of rig.extraMats) m.dispose();
     this.rig = null;
   }
+
+  // V99: Track the Rig interface needs to know about ShaderMaterial uniforms
+  // The Rig interface already uses union types that accommodate ShaderMaterial.
 }

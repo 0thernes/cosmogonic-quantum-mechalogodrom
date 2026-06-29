@@ -39,6 +39,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#faf9f5" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='15' fill='%23030612'/%3E%3Cellipse cx='16' cy='16' rx='13' ry='5' fill='none' stroke='%230ef' stroke-width='1.6' transform='rotate(28 16 16)'/%3E%3Cellipse cx='16' cy='16' rx='13' ry='5' fill='none' stroke='%23fa0' stroke-width='1.6' transform='rotate(-28 16 16)'/%3E%3Ccircle cx='16' cy='16' r='4.5' fill='%230ef'/%3E%3C/svg%3E"
+    />
     <title>Quantum Wildbeyond — Observatory Lab</title>
     <script
       src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"
@@ -52,6 +56,92 @@
       rel="stylesheet"
     />
     <style>
+      /* SHARED SATELLITE CHROME (V81) — inlined so the lab page needs no external stylesheet. */
+      .sat-header {
+        border-bottom: 1px solid rgba(120, 160, 220, 0.18);
+        background: rgba(8, 14, 30, 0.88);
+        backdrop-filter: blur(12px);
+        position: sticky;
+        top: 0;
+        z-index: 50;
+      }
+      .sat-header-inner {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 12px 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+      }
+      .sat-logo {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: #cfe0fb;
+        text-decoration: none;
+        font-size: 13px;
+        letter-spacing: 0.04em;
+        font-weight: 600;
+      }
+      .sat-logo:hover {
+        color: #0ef;
+      }
+      .sat-logo svg {
+        width: 24px;
+        height: 24px;
+        display: block;
+      }
+      .sat-nav {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex-wrap: wrap;
+      }
+      .sat-nav a {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 10px;
+        border-radius: 6px;
+        border: 1px solid transparent;
+        color: #7f93b8;
+        text-decoration: none;
+        font-size: 11px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        transition:
+          background 0.12s,
+          border-color 0.12s,
+          color 0.12s;
+      }
+      .sat-nav a:hover,
+      .sat-nav a:focus-visible {
+        background: rgba(120, 160, 220, 0.1);
+        border-color: rgba(120, 160, 220, 0.18);
+        color: #cfe0fb;
+        outline: none;
+      }
+      .sat-nav a:focus-visible {
+        outline: 2px solid #0ef;
+        outline-offset: 2px;
+      }
+      .sat-nav a[aria-current='page'] {
+        border-color: rgba(0, 238, 255, 0.45);
+        color: #0ef;
+      }
+      @media (max-width: 640px) {
+        .sat-header-inner {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 10px;
+        }
+        .sat-nav {
+          width: 100%;
+          justify-content: flex-start;
+        }
+      }
+
       /* Anthropic Brand Colors */
       :root {
         --anthropic-dark: #141413;
@@ -237,10 +327,12 @@
         border-radius: 2px;
         outline: none;
         -webkit-appearance: none;
+        appearance: none;
       }
 
       .slider-container input[type='range']::-webkit-slider-thumb {
         -webkit-appearance: none;
+        appearance: none;
         width: 16px;
         height: 16px;
         background: var(--anthropic-orange);
@@ -459,15 +551,51 @@
         position: relative;
         cursor: pointer;
         transition:
-          box-shadow 0.18s ease,
-          transform 0.18s ease;
+          box-shadow 0.22s cubic-bezier(0.2, 0.8, 0.3, 1),
+          transform 0.22s cubic-bezier(0.2, 0.8, 0.3, 1);
+      }
+      .viz-tile::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        border-radius: 12px;
+        pointer-events: none;
+        box-shadow: inset 0 0 0 2px rgba(0, 238, 255, 0);
+        transition: box-shadow 0.3s ease;
       }
 
       .viz-tile:hover {
-        transform: translateY(-2px);
+        transform: translateY(-3px) scale(1.01);
         box-shadow:
-          0 16px 34px rgba(20, 20, 19, 0.22),
-          0 0 0 1px rgba(217, 119, 87, 0.35);
+          0 18px 40px rgba(20, 20, 19, 0.28),
+          0 0 0 1px rgba(217, 119, 87, 0.35),
+          0 0 24px rgba(0, 238, 255, 0.12);
+      }
+      .viz-tile:hover::after {
+        box-shadow: inset 0 0 0 2px rgba(0, 238, 255, 0.25);
+      }
+      .viz-tile--live::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: linear-gradient(90deg, transparent, rgba(0, 238, 255, 0.4), transparent);
+        z-index: 3;
+        pointer-events: none;
+        animation: viz-scan 3.5s ease-in-out infinite;
+      }
+      @keyframes viz-scan {
+        0%,
+        100% {
+          transform: translateX(-100%);
+          opacity: 0;
+        }
+        50% {
+          transform: translateX(100%);
+          opacity: 1;
+        }
       }
 
       .viz-tile:focus-visible {
@@ -481,24 +609,29 @@
         left: 0;
         right: 0;
         padding: 10px 12px 18px;
-        background: linear-gradient(180deg, rgba(4, 7, 17, 0.92) 0%, rgba(4, 7, 17, 0) 100%);
+        background: linear-gradient(180deg, rgba(4, 7, 17, 0.88) 0%, rgba(4, 7, 17, 0) 100%);
         z-index: 2;
         pointer-events: none;
+        transition: background 0.2s ease;
+      }
+      .viz-tile:hover .viz-titlebar {
+        background: linear-gradient(180deg, rgba(4, 7, 17, 0.94) 0%, rgba(4, 7, 17, 0) 100%);
       }
 
       .viz-tile .viz-name {
-        font-size: 12.5px;
-        font-weight: 600;
-        letter-spacing: 0.03em;
-        color: #cfe6ff;
+        font-size: 14px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        color: #e2f0ff;
         text-transform: uppercase;
+        text-shadow: 0 1px 8px rgba(0, 0, 0, 0.65);
       }
 
       .viz-tile .viz-legend {
-        font-size: 10.5px;
-        color: #8aa3bd;
-        line-height: 1.35;
-        margin-top: 2px;
+        font-size: 12px;
+        color: #9eb8d4;
+        line-height: 1.4;
+        margin-top: 3px;
         font-family: 'Courier New', monospace;
       }
 
@@ -552,6 +685,44 @@
     </style>
   </head>
   <body>
+    <div class="sat-header">
+      <div class="sat-header-inner">
+        <a class="sat-logo" href="/" aria-label="Return to the simulation">
+          <svg viewBox="0 0 32 32" aria-hidden="true">
+            <circle cx="16" cy="16" r="15" fill="#030612" />
+            <ellipse
+              cx="16"
+              cy="16"
+              rx="13"
+              ry="5"
+              fill="none"
+              stroke="#0ef"
+              stroke-width="1.6"
+              transform="rotate(28 16 16)"
+            />
+            <ellipse
+              cx="16"
+              cy="16"
+              rx="13"
+              ry="5"
+              fill="none"
+              stroke="#fa0"
+              stroke-width="1.6"
+              transform="rotate(-28 16 16)"
+            />
+            <circle cx="16" cy="16" r="4.5" fill="#0ef" />
+          </svg>
+          <span>COSMOGONIC</span>
+        </a>
+        <nav class="sat-nav" aria-label="Satellite pages">
+          <a href="/">Dome</a>
+          <a href="/docs">Docs</a>
+          <a href="/spec">Spec</a>
+          <a href="/lab" aria-current="page">Lab</a>
+        </nav>
+      </div>
+    </div>
+
     <div class="container">
       <!-- Control Sidebar (present on every page) -->
       <div class="sidebar">
@@ -616,10 +787,10 @@
                 min="500"
                 max="4000"
                 step="50"
-                value="2600"
+                value="3200"
                 oninput="updateParam('particles', this.value)"
               />
-              <span class="value-display" id="particles-value">2600</span>
+              <span class="value-display" id="particles-value">3200</span>
             </div>
           </div>
 
@@ -633,10 +804,10 @@
                 min="0"
                 max="2"
                 step="0.05"
-                value="0.6"
+                value="0.8"
                 oninput="updateParam('collapseRate', this.value)"
               />
-              <span class="value-display" id="collapseRate-value">0.60</span>
+              <span class="value-display" id="collapseRate-value">0.80</span>
             </div>
           </div>
 
@@ -784,8 +955,8 @@
 
       let params = {
         seed: 12345,
-        particles: 2600, // 500..4000 — denser default field, still inside the 60fps budget
-        collapseRate: 0.6, // measurement events per second, 0..2
+        particles: 3200, // 500..4000 — denser, more dynamic default field
+        collapseRate: 0.8, // measurement events per second, 0..2
         fieldBlend: 0.45, // 0 = pure Lorenz-XZ, 1 = pure curl noise
         trailFade: 8, // background-alpha fade per frame (255 scale), 2..40 — longer trails
         paletteShift: 0, // global hue rotation, degrees
@@ -873,24 +1044,20 @@
       const MIN_NOISE_BLEND = 0.06; // floor keeps pure-Lorenz mode from stalling at fixed points
       const NOISE_SCALE = 0.0042; // Perlin potential frequency (canvas px → noise space)
       const NOISE_EPS = 2.0; // finite-difference half-step for the curl, in px
-      const BASE_SPEED = 2.1; // px per frame after direction normalization
-      const RING_SPEED = 3.4; // wavefront expansion, px per frame
+      const BASE_SPEED = 3.4; // px per frame after direction normalization
+      const RING_SPEED = 5.6; // wavefront expansion, px per frame
       const RING_MAX_R = 480; // ring dies past this radius
       const RING_BAND = 26; // half-width of the wavefront's particle-kick band, px
 
       // ─── HUD overlay layout (canvas-space px, sized against the 1200² field) ───
-      const HUD_PAD = 22;
-      const HUD_W = 300;
-      const HUD_CARD_H = 224;
-      const HUD_MATH_H = 198;
+      const HUD_PAD = 8;
+      const HUD_W = 220;
+      const HUD_CARD_H = 146;
+      const HUD_MATH_H = 88;
       const HUD_MATH_LINES = [
-        ['v = (1−f)·L̂ + f·N̂   (then renormalized)', 0],
-        ['blend f = 0.06 + 0.94·fieldBlend', 1],
-        ['L: Lorenz σρβ flow on the X–Z plane;', 1],
-        ['   Ẏ = X(ρ−Z) − Y  (hidden Y per particle)', 0],
-        ['N: curl noise  (∂n/∂y, −∂n/∂x) → div-free', 0],
-        ['collapse: P(cell) = occupancy / Σ  (Born)', 0],
-        ['→ amplitudes localize; ring kicks the flow', 1],
+        ['v = (1−f)·L̂ + f·N̂', 0],
+        ['f = 0.06+0.94·blend', 1],
+        ['L: Lorenz σρβ · N: curl', 1],
       ];
 
       const px = new Float32Array(MAXP);
@@ -1255,7 +1422,7 @@
         fill(valueColor[0], valueColor[1], valueColor[2]);
         textStyle(BOLD);
         textAlign(RIGHT, TOP);
-        text(value, x + HUD_W - 28, y);
+        text(value, x + HUD_W - 22, y);
         textStyle(NORMAL);
       }
 
@@ -1274,62 +1441,59 @@
         const cx = HUD_PAD;
         let cy = HUD_PAD;
         noStroke();
-        fill(6, 10, 22, 205);
-        rect(cx, cy, HUD_W, HUD_CARD_H, 10);
-        stroke(120, 200, 255, 70);
+        fill(6, 10, 22, 140);
+        rect(cx, cy, HUD_W, HUD_CARD_H, 8);
+        stroke(120, 200, 255, 50);
         strokeWeight(1);
         noFill();
-        rect(cx + 0.5, cy + 0.5, HUD_W - 1, HUD_CARD_H - 1, 10);
+        rect(cx + 0.5, cy + 0.5, HUD_W - 1, HUD_CARD_H - 1, 8);
 
-        const ix = cx + 18;
-        let iy = cy + 16;
+        const ix = cx + 12;
+        let iy = cy + 10;
         noStroke();
         fill(cyan[0], cyan[1], cyan[2]);
         textStyle(BOLD);
         textAlign(LEFT, TOP);
-        textSize(15);
+        textSize(13);
         text('QUANTUM WILDBEYOND', ix, iy);
         textStyle(NORMAL);
         fill(130, 150, 170);
         textSize(10);
-        text('COLLAPSE FIELD · LIVE TELEMETRY', ix, iy + 19);
+        text('COLLAPSE FIELD · LIVE TELEMETRY', ix, iy + 15);
 
-        iy += 42;
-        textSize(13);
-        const lineH = 21;
+        iy += 32;
+        textSize(12);
+        const lineH = 17;
         hudRow('seed', String(params.seed), ix, iy, cyan);
         iy += lineH;
         hudRow('particles', n.toLocaleString('en-US'), ix, iy, [225, 230, 235]);
         iy += lineH;
-        hudRow('collapse events', String(collapseCount), ix, iy, orange);
+        hudRow('collapses', String(collapseCount), ix, iy, orange);
         iy += lineH;
-        const lastCellStr =
-          lastChosenCell < 0 ? '—' : 'cell ' + lastChosenCell + '  p=' + lastBornP.toFixed(3);
-        hudRow('last measurement', lastCellStr, ix, iy, [200, 175, 255]);
+        hudRow(
+          'blend',
+          Math.round((1 - effectiveBlend) * 100) + '/' + Math.round(effectiveBlend * 100),
+          ix,
+          iy,
+          [225, 230, 235],
+        );
         iy += lineH;
-        const blendStr =
-          'L ' +
-          Math.round((1 - effectiveBlend) * 100) +
-          '% · N ' +
-          Math.round(effectiveBlend * 100) +
-          '%';
-        hudRow('field blend', blendStr, ix, iy, [225, 230, 235]);
-        iy += lineH;
-        hudRow('collapse rate', params.collapseRate.toFixed(2) + '/s', ix, iy, [225, 230, 235]);
+        hudRow('rate', params.collapseRate.toFixed(2) + '/s', ix, iy, [225, 230, 235]);
         iy += lineH;
         hudRow('fps', fps.toFixed(1), ix, iy, fpsColor);
 
         const ly0 = H - HUD_PAD - HUD_MATH_H;
+        const lx0 = HUD_PAD;
         noStroke();
-        fill(6, 10, 22, 205);
-        rect(cx, ly0, HUD_W, HUD_MATH_H, 10);
-        stroke(120, 200, 255, 70);
+        fill(6, 10, 22, 140);
+        rect(lx0, ly0, HUD_W, HUD_MATH_H, 8);
+        stroke(120, 200, 255, 50);
         strokeWeight(1);
         noFill();
-        rect(cx + 0.5, ly0 + 0.5, HUD_W - 1, HUD_MATH_H - 1, 10);
+        rect(lx0 + 0.5, ly0 + 0.5, HUD_W - 1, HUD_MATH_H - 1, 8);
 
-        const mx = cx + 18;
-        let my = ly0 + 14;
+        const mx = lx0 + 14;
+        let my = ly0 + 10;
         noStroke();
         fill(cyan[0], cyan[1], cyan[2]);
         textStyle(BOLD);
@@ -1337,18 +1501,20 @@
         textSize(12);
         text('THE MATH', mx, my);
         textStyle(NORMAL);
-        my += 22;
+        my += 20;
 
-        textSize(11.5);
-        const mlH = 17;
+        textSize(12);
+        const mlH = 16;
+        const mathBottom = ly0 + HUD_MATH_H - 8;
         for (let k = 0; k < HUD_MATH_LINES.length; k++) {
           const seg = HUD_MATH_LINES[k];
+          if (my + mlH > mathBottom) break;
           if (seg[1] === 1) {
             fill(140, 158, 176);
           } else {
             fill(165, 215, 255);
           }
-          text(seg[0], mx, my);
+          text(seg[0], mx, my, HUD_W - 24);
           my += mlH;
         }
 
@@ -1371,6 +1537,25 @@
       // ═══════════════════════════════════════════════════════════════════════
 
       const TILE_RES = 300; // backing px per tile (12 live WEBGL canvases; CSS scales to cell)
+      /** Compact tiles (mobile / coarse pointer) need a pulled-back camera + smaller world scale. */
+      function tileIsCompact() {
+        return (
+          window.innerWidth < 768 ||
+          window.innerHeight < 520 ||
+          window.matchMedia('(pointer: coarse)').matches
+        );
+      }
+      function attractorCamZ(S) {
+        return S * (tileIsCompact() ? 1.5 : 0.78);
+      }
+      function attractorDrawScale(k) {
+        const base = tileIsCompact() ? 0.6 : 0.78;
+        return base + k * 0.08;
+      }
+      function attractorVertexScale(S, desktopDenom) {
+        const denom = tileIsCompact() ? desktopDenom * 1.6 : desktopDenom;
+        return S / denom;
+      }
       const VOID = [4, 7, 17];
       const activeTiles = []; // { instance, spec } — ONLY the visible board's sketches
       let activeBoardPage = 0; // 0 = no board built (page 1 showing)
@@ -1380,29 +1565,73 @@
       let audioCtx = null;
 
       /**
-       * Short synthesized blip for a tile click. Pitch is deterministic in the
-       * tile id — 220·2^((hash % 24)/12) Hz, two octaves of semitones — triangle
-       * wave with a fast exponential decay, peak gain 0.13, ~0.25s. The context
-       * is created lazily inside the click gesture (autoplay-policy safe) and
-       * shared by every tile on every board.
+       * Per-tile synthesized SFX — 36 unique bizarre voices (waveform + pitch + noise + FM chosen
+       * deterministically from tile id). Shared AudioContext, autoplay-safe inside click gesture.
        */
       function tileBlip(tileId) {
         const AC = window.AudioContext || window.webkitAudioContext;
         if (!AC) return;
         if (!audioCtx) audioCtx = new AC();
         if (audioCtx.state === 'suspended') audioCtx.resume();
-        const freq = 220 * Math.pow(2, (derivedSeed(0, tileId) % 24) / 12);
+        const h = derivedSeed(0, tileId);
+        const slot = h % 36;
         const t0 = audioCtx.currentTime;
+        const dur = 0.18 + (slot % 7) * 0.04;
+        const waves = ['triangle', 'square', 'sawtooth', 'sine'];
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(freq, t0);
-        gain.gain.setValueAtTime(0.13, t0);
-        gain.gain.exponentialRampToValueAtTime(0.0008, t0 + 0.25);
-        osc.connect(gain);
+        const filter = audioCtx.createBiquadFilter();
+        osc.type = waves[slot % waves.length];
+        const baseHz = 55 * Math.pow(2, (slot % 24) / 12);
+        osc.frequency.setValueAtTime(baseHz * (1 + (slot % 5) * 0.31), t0);
+        osc.frequency.exponentialRampToValueAtTime(Math.max(28, baseHz * 0.35), t0 + dur);
+        filter.type = slot % 3 === 0 ? 'bandpass' : slot % 3 === 1 ? 'lowpass' : 'highpass';
+        filter.frequency.setValueAtTime(180 + ((slot * 97) % 4200), t0);
+        filter.Q.setValueAtTime(1.2 + (slot % 8), t0);
+        gain.gain.setValueAtTime(0.11 + (slot % 4) * 0.02, t0);
+        gain.gain.exponentialRampToValueAtTime(0.0006, t0 + dur);
+        osc.connect(filter);
+        filter.connect(gain);
+        if (slot % 5 === 0 || slot % 7 === 2) {
+          const noise = audioCtx.createBufferSource();
+          const nb = audioCtx.createBuffer(1, audioCtx.sampleRate * 0.12, audioCtx.sampleRate);
+          const nd = nb.getChannelData(0);
+          for (let i = 0; i < nd.length; i++) nd[i] = (Math.random() * 2 - 1) * 0.35;
+          noise.buffer = nb;
+          const ng = audioCtx.createGain();
+          ng.gain.setValueAtTime(0.06 + (slot % 3) * 0.03, t0);
+          ng.gain.exponentialRampToValueAtTime(0.0005, t0 + dur * 0.7);
+          noise.connect(ng);
+          ng.connect(gain);
+          noise.start(t0);
+          noise.stop(t0 + dur);
+        }
+        if (slot % 4 === 1) {
+          const fm = audioCtx.createOscillator();
+          const fmG = audioCtx.createGain();
+          fm.type = 'square';
+          fm.frequency.setValueAtTime(3 + (slot % 11), t0);
+          fmG.gain.setValueAtTime(40 + slot * 3, t0);
+          fm.connect(fmG);
+          fmG.connect(osc.frequency);
+          fm.start(t0);
+          fm.stop(t0 + dur);
+        }
+        if (slot % 6 === 0) {
+          const sub = audioCtx.createOscillator();
+          const subG = audioCtx.createGain();
+          sub.type = 'sawtooth';
+          sub.frequency.setValueAtTime(28 + (slot % 9) * 3, t0);
+          subG.gain.setValueAtTime(0.07 + (slot % 4) * 0.02, t0);
+          subG.gain.exponentialRampToValueAtTime(0.0004, t0 + dur * 1.1);
+          sub.connect(subG);
+          subG.connect(gain);
+          sub.start(t0);
+          sub.stop(t0 + dur + 0.03);
+        }
         gain.connect(audioCtx.destination);
         osc.start(t0);
-        osc.stop(t0 + 0.26);
+        osc.stop(t0 + dur + 0.02);
       }
 
       // ─── Per-tile reaction state (click pulse + hover heat) ───
@@ -1421,9 +1650,9 @@
           r.kick = 1;
         };
         r.tick = () => {
-          r.kick *= 0.94;
+          r.kick *= 0.95;
           if (r.kick < 0.004) r.kick = 0;
-          r.orbit += (p.hot ? 0.016 : 0.006) * (1 + r.kick * 2.6);
+          r.orbit += (p.hot ? 0.022 : 0.009) * (1 + r.kick * 3.2);
           return r.kick;
         };
         return r;
@@ -1475,6 +1704,7 @@
           p.pixelDensity(1);
           for (let i = 0; i < PTS; i++) step(); // pre-fill the ribbon
           p.colorMode(p.HSB, 360, 100, 100, 100);
+          p.camera(0, 0, attractorCamZ(S), 0, 0, 0, 0, 1, 0);
         };
         p.draw = () => {
           const k = rx.tick();
@@ -1483,8 +1713,8 @@
           p.background(VOID[0], VOID[1], VOID[2]);
           p.rotateX(0.5 + Math.sin(rx.orbit * 0.6) * 0.2);
           p.rotateY(rx.orbit);
-          p.scale(1 + k * 0.16);
-          const sc = S / 64;
+          p.scale(attractorDrawScale(k));
+          const sc = attractorVertexScale(S, 110);
           const al = p.hot ? 86 : 64;
           p.noFill();
           p.strokeWeight(1.3 + k);
@@ -1532,6 +1762,7 @@
           p.pixelDensity(1);
           for (let i = 0; i < PTS; i++) step();
           p.colorMode(p.HSB, 360, 100, 100, 100);
+          p.camera(0, 0, attractorCamZ(S), 0, 0, 0, 0, 1, 0);
         };
         p.draw = () => {
           const k = rx.tick();
@@ -1540,8 +1771,8 @@
           p.background(VOID[0], VOID[1], VOID[2]);
           p.rotateX(0.55 + Math.sin(rx.orbit * 0.5) * 0.18);
           p.rotateY(rx.orbit);
-          p.scale(1 + k * 0.16);
-          const sc = S / 32;
+          p.scale(attractorDrawScale(k));
+          const sc = attractorVertexScale(S, 58);
           const al = p.hot ? 86 : 64;
           p.noFill();
           p.strokeWeight(1.3 + k);
@@ -3601,6 +3832,26 @@
       };
 
       /**
+       * Guarantee every tile sketch gets pulse/hot interaction — even legacy 2D makers that
+       * omitted makeReact(). Wraps draw to honor kick bursts and hover heat.
+       */
+      function installUniversalReact(p) {
+        if (p.__cqmReactInstalled) return p.__cqmReact;
+        p.__cqmReactInstalled = true;
+        if (typeof p.pulse === 'function') return null;
+        const rx = makeReact(p);
+        p.__cqmReact = rx;
+        const origDraw = p.draw;
+        if (typeof origDraw !== 'function') return rx;
+        p.draw = function () {
+          const k = rx.tick();
+          const burst = 1 + ((k * 5) | 0) + (p.hot ? 2 : 0);
+          for (let s = 0; s < burst; s++) origDraw.call(this);
+        };
+        return rx;
+      }
+
+      /**
        * Destroy the currently-built board: remove every p5 instance (freeing its
        * WebGL context) and clear the grid DOM. After this, ZERO board contexts are
        * live. The whole reason boards are built lazily: 3 boards × 12 WEBGL tiles =
@@ -3640,7 +3891,7 @@
         for (let k = 0; k < specs.length; k++) {
           const spec = specs[k];
           const tile = document.createElement('div');
-          tile.className = 'viz-tile';
+          tile.className = 'viz-tile viz-tile--live';
           tile.tabIndex = 0; // keyboard-focusable
           tile.setAttribute('role', 'button');
           tile.setAttribute(
@@ -3667,15 +3918,16 @@
           const sketch = (pp) => {
             const rng = makeRng(derivedSeed(params.seed, spec.id));
             spec.make(pp, rng, TILE_RES);
+            installUniversalReact(pp);
           };
           const inst = new p5(sketch, host);
           activeTiles.push({ instance: inst, spec, tile });
 
-          // Interaction: click/Enter → blip + pulse; hover → hot. p.pulse/p.hot are
-          // installed by makeReact inside make(); guard in case a sketch omits them.
+          // Interaction: click/Enter → blip + pulse; hover → hot.
           const fire = () => {
             tileBlip(spec.id);
             if (typeof inst.pulse === 'function') inst.pulse();
+            else if (inst.__cqmReact) inst.__cqmReact.kick = 1;
           };
           tile.addEventListener('click', fire);
           tile.addEventListener('keydown', (e) => {
@@ -3690,7 +3942,39 @@
           tile.addEventListener('pointerleave', () => {
             inst.hot = false;
           });
+          tile.classList.add('viz-tile--live');
         }
+
+        // V81: keyboard roving focus across the 12 tiles so arrow keys move between visuals.
+        // Assigned via onkeydown so rebuilding a board never accumulates duplicate listeners.
+        grid.onkeydown = (e) => {
+          const tiles = Array.from(grid.querySelectorAll('.viz-tile'));
+          const idx = tiles.indexOf(document.activeElement);
+          if (idx === -1) return;
+          let next = idx;
+          switch (e.key) {
+            case 'ArrowRight':
+            case 'ArrowDown':
+              e.preventDefault();
+              next = (idx + 1) % tiles.length;
+              break;
+            case 'ArrowLeft':
+            case 'ArrowUp':
+              e.preventDefault();
+              next = (idx - 1 + tiles.length) % tiles.length;
+              break;
+            case 'Home':
+              e.preventDefault();
+              next = 0;
+              break;
+            case 'End':
+              e.preventDefault();
+              next = tiles.length - 1;
+              break;
+          }
+          if (next !== idx) tiles[next].focus();
+        };
+
         activeBoardPage = page;
       }
 
@@ -3859,5 +4143,6 @@
         setPage(1); // page 1 only — no board contexts until a board page is opened
       });
     </script>
+    <script type="module" src="../satellite-music.js"></script>
   </body>
 </html>

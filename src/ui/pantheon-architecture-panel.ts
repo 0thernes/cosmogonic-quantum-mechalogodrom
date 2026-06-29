@@ -27,12 +27,19 @@ import {
   type BabyGenome,
   type LineageGlyph,
 } from '../sim/pantheon-breeding';
-import { createApexBrain, type ApexBrainSnapshot } from '../sim/apex-brain';
+import {
+  createApexBrain,
+  type ApexBrainSnapshot,
+  APEX_BRAIN_ROADMAP_PARAMS,
+  APEX_BRAIN_START_PARAMS,
+  APEX_BRAIN_TARGET_NEURONS,
+  PANTHEON_GLYPH_BRAIN_PARAMS,
+} from '../sim/apex-brain';
 import { mulberry32, type Rng } from '../math/rng';
 import { mountToggle } from './panel-dock';
 
 type View = 'lineage' | 'brood';
-type VizMode = 'attractor' | 'loop' | 'blaschke';
+type VizMode = 'attractor' | 'loop' | 'blaschke' | 'brain4d';
 
 const RANK_COLOR: Record<string, string> = {
   COMMON: '#7d8aa0',
@@ -40,6 +47,15 @@ const RANK_COLOR: Record<string, string> = {
   MYTHIC: '#a04bff',
   FORBIDDEN: '#ff3b4e',
 };
+
+/** Responsive canvas height for the Architecture dynamics viewport. */
+export const ARCHITECTURE_PANEL_CANVAS_HEIGHT = 'clamp(200px, 42vh, 420px)';
+/** Minimum usable data well; prevents the table from becoming the old thin strip. */
+export const ARCHITECTURE_PANEL_DATA_MIN_HEIGHT = '180px';
+/** Keep the canvas inside the panel box; the clamp controls its height. */
+export const ARCHITECTURE_PANEL_CANVAS_FLEX = '0 0 auto';
+/** Let the data well consume the bounded panel body and scroll internally. */
+export const ARCHITECTURE_PANEL_DATA_HEIGHT = '100%';
 
 const STYLE = `
 #cqm-arch-toggle{height:42px;padding:0 12px;border-radius:21px;border:1px solid rgba(255,59,78,.5);
@@ -49,10 +65,10 @@ const STYLE = `
 @keyframes cqm-arch-pulse{0%,100%{box-shadow:0 2px 14px rgba(160,40,80,.3)}50%{box-shadow:0 2px 22px rgba(255,59,78,.6)}}
 #cqm-arch-toggle:hover{transform:scale(1.06);background:rgba(26,6,14,.96)}
 #cqm-arch-toggle:focus-visible{outline:2px solid #ff3b4e;outline-offset:2px}
-#cqm-arch-panel{position:fixed;right:10px;bottom:128px;z-index:59;width:min(95vw,372px);display:none;
+#cqm-arch-panel{position:fixed;right:10px;bottom:calc(var(--cqm-bottom-h,108px) + 130px);z-index:71;width:min(95vw,720px);display:none;
   flex-direction:column;border:1px solid rgba(255,59,78,.32);border-radius:12px;background:rgba(4,3,7,.97);
   backdrop-filter:blur(12px);box-shadow:0 10px 48px rgba(0,0,0,.78);color:#d8cce6;overflow:hidden;
-  font:11px/1.5 var(--font-mono,ui-monospace,monospace)}
+  font:12px/1.5 var(--font-mono,ui-monospace,monospace)}
 #cqm-arch-panel.open{display:flex}
 /* center-hud owns this panel's geometry (it's a launcher SLOT): it re-homes the panel into the centred
    HUD slot with !important left/right/bottom/height. We deliberately DON'T fight that height here (an
@@ -76,14 +92,24 @@ const STYLE = `
 .cqm-arch-btn:focus-visible{outline:1px solid #ff5a6b}
 .cqm-arch-btn.on{background:rgba(80,16,40,.96);color:#fff}
 .cqm-arch-bar{display:flex;gap:4px;padding:6px 10px;flex-wrap:wrap;border-bottom:1px solid rgba(255,59,78,.12)}
-.cqm-arch-canvas{display:block;width:100%;height:160px;background:radial-gradient(120% 90% at 50% 0%,rgba(30,4,18,.6),rgba(2,2,5,1));border-bottom:1px solid rgba(255,59,78,.14)}
-.cqm-arch-mode{display:flex;gap:4px;padding:6px 10px;border-bottom:1px solid rgba(255,59,78,.12)}
-.cqm-arch-data{flex:1 1 auto;min-height:0;overflow-y:auto;padding:6px 10px 10px;display:grid;
-  grid-template-columns:auto 1fr;gap:2px 10px;align-items:baseline}
+.cqm-arch-main{flex:1 1 0;min-height:0;display:flex;flex-wrap:wrap;align-items:stretch;overflow:auto}
+.cqm-arch-viz{flex:1 1 320px;min-width:min(100%,280px);min-height:0;display:flex;flex-direction:column;overflow:hidden;
+  border-right:1px solid rgba(255,59,78,.12);background:rgba(10,3,12,.45)}
+.cqm-arch-canvas{display:block;width:100%;height:${ARCHITECTURE_PANEL_CANVAS_HEIGHT};max-height:${ARCHITECTURE_PANEL_CANVAS_HEIGHT};min-height:170px;
+  flex:${ARCHITECTURE_PANEL_CANVAS_FLEX};background:radial-gradient(120% 90% at 50% 0%,rgba(30,4,18,.6),rgba(2,2,5,1));border-bottom:1px solid rgba(255,59,78,.14)}
+.cqm-arch-mode{display:flex;gap:4px;padding:6px 10px;border-bottom:1px solid rgba(255,59,78,.12);flex:0 0 auto}
+.cqm-arch-data{flex:1 1 270px;min-width:min(100%,250px);min-height:${ARCHITECTURE_PANEL_DATA_MIN_HEIGHT};height:${ARCHITECTURE_PANEL_DATA_HEIGHT};max-height:100%;overflow-y:auto;
+  padding:8px 12px 12px;display:grid;grid-template-columns:auto minmax(90px,1fr);gap:3px 12px;align-items:baseline}
 .cqm-arch-data .k{color:#9b7fb4;font-size:9.5px;letter-spacing:.04em;text-transform:uppercase}
 .cqm-arch-data .v{color:#ece2ff;text-align:right;font-variant-numeric:tabular-nums;font-size:10px}
 .cqm-arch-data .sec{grid-column:1/-1;margin-top:5px;color:#ff8a98;font-size:9px;letter-spacing:.18em;
   border-bottom:1px dotted rgba(255,90,107,.25);padding-bottom:2px}
+@media (max-width:900px){
+  .cqm-arch-main{overflow-y:auto;display:block;align-items:initial}
+  .cqm-arch-viz{border-right:0;border-bottom:1px solid rgba(255,59,78,.12)}
+  .cqm-arch-canvas{height:clamp(150px,28vh,220px);max-height:none;flex:none}
+  .cqm-arch-data{height:auto;max-height:none;min-height:220px;overflow:visible}
+}
 `;
 
 /** Make an element with optional class + text. */
@@ -106,6 +132,7 @@ function el<K extends keyof HTMLElementTagNameMap>(
 export class PantheonArchitecturePanel {
   private readonly panel: HTMLElement;
   private readonly canvas: HTMLCanvasElement;
+  private readonly styleEl: HTMLStyleElement;
   private readonly ctx: CanvasRenderingContext2D | null;
   private readonly glyphEl: HTMLElement;
   private readonly nameEl: HTMLElement;
@@ -121,7 +148,7 @@ export class PantheonArchitecturePanel {
   private view: View = 'lineage';
   private lineageIdx = 100; // open on the APEX ς
   private broodIdx = 0;
-  private mode: VizMode = 'attractor';
+  private mode: VizMode = 'brain4d';
   /** When the apex ς is selected, its warmed Entropic-Tesseract-Hydra brain snapshot (else null). */
   private apexSnap: ApexBrainSnapshot | null = null;
 
@@ -140,6 +167,7 @@ export class PantheonArchitecturePanel {
     const style = doc.createElement('style');
     style.textContent = STYLE;
     doc.head.appendChild(style);
+    this.styleEl = style;
 
     const toggle = el(doc, 'button', undefined, '⟁ ARCHITECTURE');
     toggle.id = 'cqm-arch-toggle';
@@ -192,27 +220,39 @@ export class PantheonArchitecturePanel {
     bar.append(this.viewBtns.lineage, this.viewBtns.brood, mate, storm);
     panel.appendChild(bar);
 
+    // Main body: dynamics viewport + readable data well.
+    const main = el(doc, 'div', 'cqm-arch-main');
+    const viz = el(doc, 'div', 'cqm-arch-viz');
+
     // Dynamics canvas
     this.canvas = el(doc, 'canvas', 'cqm-arch-canvas');
     this.canvas.width = 372;
-    this.canvas.height = 160;
+    this.canvas.height = 300;
     this.ctx = this.canvas.getContext('2d');
-    panel.appendChild(this.canvas);
+    viz.appendChild(this.canvas);
 
     // Viz-mode switch
     const modeRow = el(doc, 'div', 'cqm-arch-mode');
     this.modeBtns.attractor = this.makeToggle(doc, 'ATTRACTOR', () => this.setMode('attractor'));
     this.modeBtns.loop = this.makeToggle(doc, 'WINDING', () => this.setMode('loop'));
     this.modeBtns.blaschke = this.makeToggle(doc, 'BLASCHKE', () => this.setMode('blaschke'));
-    modeRow.append(this.modeBtns.attractor, this.modeBtns.loop, this.modeBtns.blaschke);
-    panel.appendChild(modeRow);
+    this.modeBtns.brain4d = this.makeToggle(doc, '⬡ MEGA 4D', () => this.setMode('brain4d'));
+    modeRow.append(
+      this.modeBtns.attractor,
+      this.modeBtns.loop,
+      this.modeBtns.blaschke,
+      this.modeBtns.brain4d,
+    );
+    viz.appendChild(modeRow);
 
     // Data grid
     this.data = el(doc, 'div', 'cqm-arch-data');
-    panel.appendChild(this.data);
+    main.append(viz, this.data);
+    panel.appendChild(main);
 
     doc.body.appendChild(panel);
     this.syncToggles();
+    this.setMode('brain4d');
     this.select();
   }
 
@@ -249,7 +289,7 @@ export class PantheonArchitecturePanel {
     this.viewBtns.lineage.classList.toggle('on', this.view === 'lineage');
     this.viewBtns.brood.classList.toggle('on', this.view === 'brood');
     this.viewBtns.brood.textContent = `BROOD ${this.brood.length}`;
-    for (const m of ['attractor', 'loop', 'blaschke'] as VizMode[]) {
+    for (const m of ['attractor', 'loop', 'blaschke', 'brain4d'] as VizMode[]) {
       this.modeBtns[m].classList.toggle('on', this.mode === m);
     }
   }
@@ -402,6 +442,13 @@ export class PantheonArchitecturePanel {
       'BLASEAN — BLASCHKE PRODUCT',
       ['degree d', String(g.blaschke.degree)],
       ['|B|=1 err', g.blaschke.boundaryError.toExponential(1)],
+      'BRAIN — PARAMETER BUDGET',
+      [
+        'designed',
+        this.lineageIdx >= 100
+          ? `${bigNum(APEX_BRAIN_START_PARAMS)} start · →${bigNum(APEX_BRAIN_ROADMAP_PARAMS)} roadmap`
+          : `${bigNum(PANTHEON_GLYPH_BRAIN_PARAMS)} · visual dome swarm`,
+      ],
       'VERDICT',
       ['rarity', (g.rarity * 100).toFixed(0) + '%'],
       ['rank', g.rank],
@@ -436,6 +483,7 @@ export class PantheonArchitecturePanel {
   private frame(): void {
     const ctx = this.ctx;
     if (!ctx) return;
+    this.resizeCanvas();
     const w = this.canvas.width;
     const h = this.canvas.height;
     // Ominous fade trail.
@@ -444,7 +492,17 @@ export class PantheonArchitecturePanel {
     const col = `hsl(${(this.hue * 360).toFixed(0)},90%,62%)`;
     if (this.mode === 'attractor') this.drawAttractor(ctx, w, h, col);
     else if (this.mode === 'loop') this.drawLoop(ctx, w, h, col);
+    else if (this.mode === 'brain4d') this.drawBrain4d(ctx, w, h);
     else this.drawBlaschke(ctx, w, h, col);
+  }
+
+  /** Match the backing canvas to the readable CSS box whenever the HUD grants more space. */
+  private resizeCanvas(): void {
+    const w = Math.max(260, Math.floor(this.canvas.clientWidth || this.canvas.width));
+    const h = Math.max(150, Math.floor(this.canvas.clientHeight || this.canvas.height));
+    if (this.canvas.width === w && this.canvas.height === h) return;
+    this.canvas.width = w;
+    this.canvas.height = h;
   }
 
   private drawAttractor(ctx: CanvasRenderingContext2D, w: number, h: number, col: string): void {
@@ -534,6 +592,131 @@ export class PantheonArchitecturePanel {
     if (upto < n) this.reveal += 6;
     else this.reveal = 0;
   }
+
+  /** 4D spiking tesseract — bound to apex brain vitality / chaos when warmed, else genome chaos. */
+  private drawBrain4d(ctx: CanvasRenderingContext2D, w: number, h: number): void {
+    ctx.fillStyle = 'rgba(2,1,8,0.35)';
+    ctx.fillRect(0, 0, w, h);
+    const t = this.reveal * 0.02;
+    const cx = w / 2;
+    const cy = h / 2;
+    const scale = Math.min(w, h) * 0.42;
+    const snap = this.apexSnap;
+    const drive = snap
+      ? clamp01(
+          snap.thought.vitality * 0.4 + snap.thought.agony * 0.3 + snap.quantum.coherence * 0.3,
+        )
+      : clamp01(this.hue);
+    const N = 320;
+    const pts: { x: number; y: number; d: number; a: number; hue: number; layer: number }[] = [];
+    for (let i = 0; i < N; i++) {
+      const u = (i + 0.5) / N;
+      const th = 2 * Math.PI * u;
+      const ph = Math.acos(2 * ((i * 0.618) % 1) - 1);
+      const r = 0.55 + 0.45 * Math.sin(i * 0.19 + t * 1.4);
+      const x4 = r * Math.sin(ph) * Math.cos(th);
+      const y4 = r * Math.sin(ph) * Math.sin(th);
+      const z4 = r * Math.cos(ph);
+      const w4 = r * Math.sin(t * 0.47 + i * 0.11);
+      const cw = Math.cos(t * 0.36);
+      const sw = Math.sin(t * 0.36);
+      const x3 = x4 + w4 * cw * 0.5;
+      const y3 = y4 + w4 * sw * 0.44;
+      const z3 = z4 + w4 * 0.25;
+      const ang = t * 0.28 + w4 * 0.4;
+      const cosA = Math.cos(ang);
+      const sinA = Math.sin(ang);
+      const x2 = x3 * cosA - z3 * sinA;
+      const z2 = x3 * sinA + z3 * cosA;
+      const d = 1 / (2.8 + z2);
+      const px = cx + x2 * scale * d;
+      const py = cy + y3 * scale * d;
+      const layer = Math.floor((i / N) * 5); // 5 cortical layers: delta, theta, alpha, beta, gamma
+      const layerHues = [220, 260, 30, 0, 330];
+      const spike = Math.max(0, Math.sin(t * (3 + layer * 2.5) + i * 0.41) * 0.5 + 0.5);
+      const a = clamp01(drive * 0.5 + spike * 0.45 + Math.abs(Math.sin(i * 0.31 + t)) * 0.2);
+      const hue = (layerHues[layer]! + ((i * 47 + t * 80) % 60)) % 360;
+      pts.push({ x: px, y: py, d, a, hue, layer });
+    }
+    for (let i = 0; i < N; i++) {
+      for (let j = i + 1; j < N; j++) {
+        if (((i ^ j) & 15) > 3) continue;
+        const s = (pts[i]!.a + pts[j]!.a) * 0.5;
+        if (s < 0.1) continue;
+        const near = (pts[i]!.d + pts[j]!.d) * 0.5;
+        ctx.strokeStyle = `hsla(${pts[i]!.hue},100%,55%,${(s * 0.45 * near).toFixed(2)})`;
+        ctx.lineWidth = 0.5 + s * 1.8 * near;
+        ctx.beginPath();
+        ctx.moveTo(pts[i]!.x, pts[i]!.y);
+        ctx.lineTo(pts[j]!.x, pts[j]!.y);
+        ctx.stroke();
+      }
+    }
+    // Dendritic halos + soma cores + spike traces
+    for (const p of pts) {
+      const near = Math.min(1, p.d * 1.2);
+      // Dendritic halo — larger soft glow for active neurons
+      if (p.a > 0.4 && near > 0.2) {
+        const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, 6 + p.a * 18 * near);
+        g.addColorStop(0, `hsla(${p.hue},100%,72%,${(0.4 + p.a * 0.5).toFixed(2)})`);
+        g.addColorStop(0.4, `hsla(${p.hue},90%,55%,${(0.15 + p.a * 0.2).toFixed(2)})`);
+        g.addColorStop(1, `hsla(${p.hue},100%,40%,0)`);
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 6 + p.a * 18 * near, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      // Soma core — bright dot
+      ctx.fillStyle = `hsla(${p.hue},100%,${(45 + p.a * 40).toFixed(0)}%,${(0.65 + p.a * 0.35).toFixed(2)})`;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 1.5 + p.a * 3 * near, 0, Math.PI * 2);
+      ctx.fill();
+      // Spike ring — expanding circle on spike peaks
+      if (p.a > 0.75) {
+        const sr = (p.a - 0.75) * 24 * near;
+        ctx.strokeStyle = `hsla(${p.hue},100%,80%,${((p.a - 0.75) * 0.6).toFixed(2)})`;
+        ctx.lineWidth = 0.8;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 3 + sr, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+    }
+    // Frequency band legend
+    const LAYER_NAMES = [
+      '\u03b4 delta',
+      '\u03b8 theta',
+      '\u03b1 alpha',
+      '\u03b2 beta',
+      '\u03b3 gamma',
+    ];
+    const LAYER_HUES_ARR = [220, 260, 30, 0, 330];
+    ctx.font = '600 8px ui-monospace,monospace';
+    ctx.textBaseline = 'bottom';
+    for (let l = 0; l < 5; l++) {
+      const lh = LAYER_HUES_ARR[l]!;
+      const ly = h - 4 - (5 - l) * 10;
+      ctx.fillStyle = `hsl(${lh},90%,60%)`;
+      ctx.fillRect(8, ly, 6, 6);
+      ctx.fillStyle = `hsla(${lh},80%,70%,0.85)`;
+      ctx.fillText(LAYER_NAMES[l] ?? '', 18, ly + 6);
+    }
+    ctx.textBaseline = 'top';
+    ctx.fillStyle = 'rgba(0,255,220,0.85)';
+    ctx.font = '600 9px ui-monospace,monospace';
+    ctx.fillText('MEGA GODLIKE BRAIN · 4D tesseract · 320 neurons · 5 layers · live spikes', 8, 8);
+    this.reveal = (this.reveal + 1) % 10000;
+  }
+
+  dispose(): void {
+    this.stopAnim();
+    this.panel.remove();
+    this.styleEl.remove();
+    document.getElementById('cqm-arch-toggle')?.remove();
+  }
+}
+
+function clamp01(v: number): number {
+  return v < 0 ? 0 : v > 1 ? 1 : v;
 }
 
 /** Format a signed integer with an explicit + sign for readability. */
@@ -559,7 +742,11 @@ function apexRows(s: ApexBrainSnapshot): Array<[string, string] | string> {
     ['vitality / agony', `${(t.vitality * 100).toFixed(0)}% / ${(t.agony * 100).toFixed(0)}%`],
     [
       'neurons',
-      `${bigNum(s.designedNeurons)} designed · ${bigNum(s.liveNeurons)} live · →${bigNum(s.targetNeurons)} (${s.scaleName})`,
+      `${bigNum(APEX_BRAIN_START_PARAMS)} start · ${bigNum(s.designedNeurons)} designed · ${bigNum(s.liveNeurons)} live · →${bigNum(APEX_BRAIN_ROADMAP_PARAMS)} · ultimate ${bigNum(APEX_BRAIN_TARGET_NEURONS)} (${s.scaleName})`,
+    ],
+    [
+      'roadmap',
+      `100k→5M params · 1B neuron architecture · 100 thought-variation substrates (computational indicators only)`,
     ],
     [
       '0 quantum brain',

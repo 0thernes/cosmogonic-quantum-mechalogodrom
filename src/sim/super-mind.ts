@@ -132,7 +132,7 @@ import { QuantumDeliberation, type DeliberationSnapshot } from './quantum-delibe
 import { ResonanceField, type ResonanceSnapshot } from './resonance';
 import { FastWeights, type PlasticSnapshot } from './plastic-weights';
 import type { SuperPercept, SuperPlan } from './super-creature';
-import { SUPER_PLANS } from './super-creature';
+import { SUPER_PLANS, SUPER_MAX_OFFSPRING } from './super-creature';
 // GOAL5 leaves (per MODULE-CONTRACTS contract: super-mind owns wiring of AST-1/HOT-1/HOT-4/memory-orchestra/narrative)
 import { AttentionSchema } from './attention-schema';
 import {
@@ -146,6 +146,7 @@ import {
   classicalParticipationRatio,
 } from './integrated-information';
 import { LearnedRecurrence, type LearnedRecurrenceSnapshot } from './learned-recurrence';
+import { NQSLearningController, type NQSTelemetry } from './nqs-vmc-learning';
 import { grayScottResidual, pinnLoss } from './pinn-residual';
 import { pathWeight } from './pimc-paths';
 import { qrngApiDrawFrom } from './quantum-rng-api';
@@ -268,6 +269,8 @@ export interface SuperMindSnapshot {
   reservoir: ReservoirSnapshot;
   /** RPT-1/2: learned recurrence telemetry. */
   learnedRecurrence: LearnedRecurrenceSnapshot;
+  /** RPT-1/2 enhancement: NQS/VMC quantum-state learning telemetry. */
+  nqs: NQSTelemetry | null;
   /** V1.1: the active-inference free-energy core (Friston FEP) — belief, free energy, expected free energy. */
   aif: ActiveInferenceSnapshot;
   /** V1.1 (V92): the metacognitive executive — a Higher-Order confidence in the decision + cognitive control. */
@@ -508,6 +511,9 @@ export class SuperMind {
   private readonly reservoir: Reservoir;
   /** RPT-1/2: online learned recurrence — weights adapt within a life, seeded deterministic. */
   private readonly learnedRecurrence: LearnedRecurrence;
+  /** RPT-1/2 enhancement: NQS/VMC quantum-state learning — energy-based learned recurrence (Carleo & Troyer 2017). */
+  private readonly nqsController: NQSLearningController;
+  private lastNqsTelemetry: NQSTelemetry | null = null;
   /** PIMC path-integral trace (Tsotchke mirrors/PIMC) — "soul" weight for EXPLORE bias. */
   private readonly pimcPath: Float32Array;
   /** Ring adjacency for classical IIT-2 bipartition (8 modules). */
@@ -594,7 +600,9 @@ export class SuperMind {
   private readonly metaIn = new Float32Array(LATENT * 3 + 4 + SUPER_QUANTUM + 3 + 4); // 69
   private readonly affIn = new Float32Array(12);
   private readonly quantumOut: number[] = Array.from({ length: SUPER_QUANTUM }, () => 0);
-  private readonly latent = new Float32Array(LATENT);
+  private readonly sab: SharedArrayBuffer | null = null;
+  private readonly latent: Float32Array;
+  private readonly worker: Worker | null = null;
   private readonly imagined = new Float32Array(LATENT);
   private readonly spinField = new Float32Array(SPIN_SIZE); // situational drive into the instinct lattice
   /** Bipolar probe buffer for Hopfield recall (no per-beat allocation). */
@@ -628,6 +636,11 @@ export class SuperMind {
    *  workspace gate on the access-faculties next beat (the documented "bound assembly modulates the
    *  modules" mechanism, applied directly so it isn't washed out by the latent bottleneck). */
   private lastResOrder = 0.5;
+  /** #9/#37 COUPLING>COUNT — per-faculty coherence weights from the resonance field (Kuramoto).
+   *  Faculties in phase with the collective → weight ~1 (amplified in broadcast re-entry);
+   *  out of phase → weight ~0 (damped). This turns the uniform broadcast gain into faculty-specific
+   *  coupling edges — the #1 highest-leverage finding from the honesty audit. */
+  private lastResWeights: number[] = [];
   /** How strongly the broadcast re-enters cognition (0 = the write-back is disabled — a clean baseline). */
   private readonly broadcastGain: number;
   private ignition = 0; // V89: persisted Global-Workspace broadcast (EMA) — gates next-beat consolidation
@@ -649,6 +662,11 @@ export class SuperMind {
     workspace: 0, // Eshkol GWT from corpus
   };
   private plan: SuperPlan = 'REST';
+  /** P1 quantum-ablation gate: 1 = quantum-substrate faculties contribute, 0 = ablated (a parameter-matched
+   *  control arm for the quantum-vs-classical experiment). Gates the quantum-reservoir + Schrödinger-spread
+   *  curiosity terms AND the quantum Lindblad-decider's influence on the EXPLORE drive — the substrate's
+   *  contribution to the actual plan, not just to a scalar. Default ON — existing behaviour unchanged. */
+  private qGate = 1;
 
   constructor(
     rng: Rng,
@@ -678,6 +696,34 @@ export class SuperMind {
     this.affect = new Subnet(12, 16, 3, rng);
     this.quantum = new Subnet(LATENT, 20, SUPER_QUANTUM, rng);
     this.meta = new Subnet(this.metaIn.length, 26, 12, rng);
+
+    const isTest =
+      typeof process !== 'undefined' &&
+      (process.env.NODE_ENV === 'test' || process.env.BUN_ENV === 'test');
+
+    if (!isTest && typeof SharedArrayBuffer !== 'undefined') {
+      this.sab = new SharedArrayBuffer(LATENT * 4);
+      this.latent = new Float32Array(this.sab);
+      // Construct worker using URL to bundle correctly
+      this.worker = new Worker(new URL('./metacognition-worker.ts', import.meta.url), {
+        type: 'module',
+      });
+      this.worker.postMessage({
+        type: 'INIT',
+        buffer: this.sab,
+        program: this._eshkolProgram,
+        surprise: 0, // Initial surprise
+        LATENT,
+      });
+      this.worker.onmessage = (e) => {
+        if (e.data.type === 'DIVINE') {
+          this.cons.workspace = clamp01(this.cons.workspace + e.data.divine * 0.012);
+        }
+      };
+    } else {
+      this.latent = new Float32Array(LATENT);
+    }
+
     this.paramCount =
       this.cortex.params +
       this.organs.reduce((s, o) => s + o.params, 0) +
@@ -716,6 +762,19 @@ export class SuperMind {
       (childSeed ^ 0xe3b0c442) >>> 0 || 1,
     );
     this.learnedRecurrence = new LearnedRecurrence(mulberry32((childSeed ^ 0x3c6ef372) >>> 0 || 1));
+    // NQS/VMC: quantum-state learned recurrence on its own seed (determinism-safe, no main-stream draw).
+    // 6 visible units (matching QMIND_QUBITS), 8 hidden, small VMC config for per-beat online learning.
+    this.nqsController = new NQSLearningController(
+      6,
+      8,
+      {
+        sampleCount: 16,
+        thermalizationSteps: 20,
+        learningRate: 0.005,
+        regularization: 0.001,
+      },
+      (childSeed ^ 0x5eed1234) >>> 0 || 1,
+    );
     this.pimcPath = new Float32Array(8);
     for (let i = 0; i < 8; i++) this.pimcPath[i] = 0.5 + i * 0.05;
     this.phiAdjacency = new Float32Array(64);
@@ -798,7 +857,7 @@ export class SuperMind {
     s[12] = this.dominance;
     s[13] = this.memory.mean();
     s[14] = this.cons.surprise;
-    s[15] = this.offspring / 3;
+    s[15] = this.offspring / SUPER_MAX_OFFSPRING;
     s[16] = Math.sin(wp.phase * Math.PI * 2);
     s[17] = Math.cos(wp.phase * Math.PI * 2);
     // #10/#58 — broadcast re-entry into arousal (the documented read-half: bound assembly → shared feel).
@@ -825,10 +884,23 @@ export class SuperMind {
     // through it instead of each running input-independently (the read-half of the read+write coupling
     // loop the audit enforces, #10). A bounded MODULATION (not a takeover); uses last beat's value, so it
     // is deterministic recurrence (#58), never a within-beat circular dependency.
+    //
+    // #9/#37 COUPLING>COUNT — FACULTY-SPECIFIC RE-ENTRY (the #1 honesty audit finding):
+    // The re-entry weight per latent dimension is now driven by the resonance field's per-faculty
+    // coherence weights (Kuramoto). Faculties in phase with the collective → amplified; out of phase →
+    // damped. This replaces the uniform scalar gain with explicit faculty-to-faculty coupling edges,
+    // turning phase-locking into structured information flow. The coupling audit measures whether this
+    // lifts meanAbsCoupling + density above the weak-coupling threshold.
     if (this.broadcastGain > 0 && this.broadcast > 0) {
       const b = this.broadcastGain * this.broadcast;
+      const rw = this.lastResWeights;
       for (let i = 0; i < this.latent.length; i++) {
-        this.latent[i] = (this.latent[i] ?? 0) + b * (0.5 + 0.5 * Math.sin((i + 1) * 0.618));
+        // Faculty-specific weight: map latent index to resonance faculty index (cyclic),
+        // then use the coherence weight as the re-entry gain. The 0.5 baseline preserves the
+        // pre-coupling behavior when weights are uniform (all ~0.5 at initialization).
+        const wIdx = i % Math.max(1, rw.length);
+        const w = rw[wIdx] ?? 0.5;
+        this.latent[i] = (this.latent[i] ?? 0) + b * w * (0.5 + 0.5 * Math.sin((i + 1) * 0.618));
       }
     }
     // ── #87/#91 · PLASTIC FAST-WEIGHTS ── within-life Hebbian self-modification: recall the self-written
@@ -843,19 +915,23 @@ export class SuperMind {
     }
     // Deep Tsotchke: Eshkol compiler VM + Moonlab MPO on cadence (real MIT ports, not decorative).
     if (this.cliffordBeat % 17 === 0) {
-      const bc = eshkolCompile(eshkolParse(this._eshkolProgram));
-      const divine = eshkolExecute(bc, this.cons.surprise);
-      this.cons.workspace = clamp01(this.cons.workspace + divine * 0.012);
-      const mpoOut = moonlabMPOApply(
-        {
-          matrices: [this.latent.slice(0, 4)],
-          bondDimension: 1,
-          physicalDimension: LATENT,
-        },
-        this.latent,
-      );
-      for (let i = 0; i < Math.min(LATENT, mpoOut.length); i++) {
-        this.latent[i] = clamp((this.latent[i] ?? 0) + (mpoOut[i] ?? 0) * 0.008, -4, 4);
+      if (this.worker) {
+        this.worker.postMessage({ type: 'THINK', cliffordBeat: this.cliffordBeat });
+      } else {
+        const bc = eshkolCompile(eshkolParse(this._eshkolProgram));
+        const divine = eshkolExecute(bc, this.cons.surprise);
+        this.cons.workspace = clamp01(this.cons.workspace + divine * 0.012);
+        const mpoOut = moonlabMPOApply(
+          {
+            matrices: [this.latent.subarray(0, 4)],
+            bondDimension: 1,
+            physicalDimension: LATENT,
+          },
+          this.latent,
+        );
+        for (let i = 0; i < Math.min(LATENT, mpoOut.length); i++) {
+          this.latent[i] = clamp((this.latent[i] ?? 0) + (mpoOut[i] ?? 0) * 0.008, -4, 4);
+        }
       }
     }
     // V1.1: step the echo-state reservoir on the fresh latent — a fading nonlinear echo of the mind's
@@ -937,11 +1013,7 @@ export class SuperMind {
       (x) => Math.abs(x - (this.imagined[0] ?? 0.5)),
       this.pred[0] ?? 0,
     );
-    const tPred = moonlabTensorContract(
-      this.pred.slice(0, 4) as any,
-      this.imagined.slice(0, 4) as any,
-      4,
-    );
+    const tPred = moonlabTensorContract(this.pred.slice(0, 4), this.imagined.slice(0, 4), 4);
     // Wire Moonlab VQE energy proxy for quantum parameter optimization
     const vqeEnergy = vqeEnergyProxy(this.pred[0] ?? 0, this.imagined[0] ?? 0, 1);
     this.cons.surprise = clamp01(
@@ -986,6 +1058,10 @@ export class SuperMind {
     this.predictedSalience = unit(this.pred[0] ?? 0);
     const lrErr = this.learnedRecurrence.step(this.latent, this.pred);
     this.learnedRecurrence.blendIntoLatent(this.imagined, clamp01(0.1 * (1 - lrErr)));
+    // NQS/VMC: step the quantum-state learner each beat. The energy variance (convergence metric)
+    // feeds surprise: high variance = the quantum state hasn't converged = more prediction uncertainty.
+    this.lastNqsTelemetry = this.nqsController.step();
+    this.cons.surprise = clamp01(this.cons.surprise + this.lastNqsTelemetry.energyVariance * 0.02);
 
     // Ralph 10x corpus wiring for Eshkol/Moonlab already applied via AD/dual/tensor/qualia/apply/perturb (facade) in this think + affect/quantum.
     // (Previous deep GWT block removed for type/contract clean; symbols centralized in facade. 5 Archons still benefit.)
@@ -1065,7 +1141,7 @@ export class SuperMind {
     this.cons.qualiaTone = clamp01(0.5 + 0.5 * qualTensor); // qualia from tensor (Tsotchke Moonlab)
     // Ralph heartbeat re-audit 10x continue: more GWT + MPO from corpus in mind cons/qualia
     const gwtRes = gwtBroadcast([surprise, peakNovelty], [this.eshkolEngine.workspace || 0.6, 0.5]);
-    const mpoRes = moonlabMpoStep(this.imagined as any as Float32Array, 2);
+    const mpoRes = moonlabMpoStep(this.imagined, 2);
     this.cons.qualiaTone = clamp01(
       this.cons.qualiaTone + ((gwtRes[0] || 0) + Math.abs(mpoRes)) * 0.01,
     );
@@ -1077,11 +1153,7 @@ export class SuperMind {
     const q = this.quantum.forward(this.latent);
     for (let i = 0; i < SUPER_QUANTUM; i++) this.quantumOut[i] = unit(q[i] ?? 0);
     // Ralph continue 10x more: Moonlab tensor contract on quantum aspects (VQE-like optimization proxy from corpus tensor/MPO) for 5 Archons
-    const tQ = moonlabTensorContract(
-      (this.quantumOut ?? []).slice(0, 4) as any,
-      (this.quantumOut ?? []).slice(4, 8) as any,
-      4,
-    );
+    const tQ = moonlabTensorContract(this.quantumOut.slice(0, 4), this.quantumOut.slice(4, 8), 4);
     if (tQ > 0) {
       const q0 = this.quantumOut[0] ?? 0;
       this.quantumOut[0] = clamp01(q0 + tQ * 0.01);
@@ -1093,11 +1165,7 @@ export class SuperMind {
     const ulgQ = ulgHandoff(this.quantumOut[8] ?? 0.5, this.quantumOut[9] ?? 0.5);
     this.quantumOut[8] = clamp01((this.quantumOut[8] ?? 0) + ulgQ * 0.01);
     // Ralph loop continue 10x more: additional Moonlab tensor on quantum aspects + Eshkol AD for "tape" in delib (more corpus everywhere in mind)
-    const tQ2 = moonlabTensorContract(
-      this.quantumOut.slice(2, 6) as any,
-      this.quantumOut.slice(6, 10) as any,
-      3,
-    );
+    const tQ2 = moonlabTensorContract(this.quantumOut.slice(2, 6), this.quantumOut.slice(6, 10), 3);
     const adQ2 = eshkolADGradient((x) => Math.abs(x), this.quantumOut[5] ?? 0.5);
     this.quantumOut[5] = clamp01((this.quantumOut[5] ?? 0) + tQ2 * 0.005 + adQ2 * 0.01);
     let mi = 0;
@@ -1256,8 +1324,8 @@ export class SuperMind {
         0.15 * this.reservoir.novelty +
         0.12 * (1 - this.criticality.proximity) + // off-criticality ⇒ explore to recover the edge of chaos
         EMP_CURIOSITY_GAIN * this.empowerment.empowerment + // agency hunger ⇒ seek regions it can steer
-        QRC_CURIOSITY_GAIN * this.qreservoir.quantumFlux + // a churning quantum state ⇒ restless exploration
-        LATENT_CURIOSITY_GAIN * ls.quantumUncertainty + // V1.3: real Schrödinger positional spread ⇒ explore
+        QRC_CURIOSITY_GAIN * this.qreservoir.quantumFlux * this.qGate + // quantum reservoir (P1-ablatable)
+        LATENT_CURIOSITY_GAIN * ls.quantumUncertainty * this.qGate + // Schrödinger spread (P1-ablatable)
         GWT_CAPACITY_REENTRY_GAIN * this.lastGwtCapacity.pressure, // V1.3 GWT-2: overloaded workspace ⇒ explore
     );
 
@@ -1379,11 +1447,7 @@ export class SuperMind {
     }
     this.successor.lookahead(this.srReward, this.srValue);
     // Ralph continue 10x: more tensor/AD in successor for Tsotchke (Moonlab/Eshkol)
-    const srT = moonlabTensorContract(
-      this.srValue.slice(0, 4) as any,
-      this.quantumOut.slice(0, 4) as any,
-      3,
-    );
+    const srT = moonlabTensorContract(this.srValue.slice(0, 4), this.quantumOut.slice(0, 4), 3);
     const srAd = eshkolADGradient((x) => x, this.srValue[0] ?? 0);
     // blend lightly
     this.srValue[0] = clamp01((this.srValue[0] ?? 0) + srT * 0.005 + srAd * 0.01);
@@ -1409,7 +1473,7 @@ export class SuperMind {
       if (empPlan) {
         // Ralph heartbeat re-audit 10x continue: use moonlabTensorContract (Tsotchke Moonlab) + eshkolAD for more tensor/AD in empowerment vote (deeper wiring into mind)
         const empT = moonlabTensorContract(
-          this.quantumOut.slice(0, 3) as any,
+          this.quantumOut.slice(0, 3),
           [this.empowerment.empowerment, 0.5, 0.3],
           2,
         );
@@ -1433,7 +1497,7 @@ export class SuperMind {
     // Ralph continue 10x more: Moonlab tensor + AD on holographic for more corpus in recall (Tsotchke wiring deeper)
     const hrrT = moonlabTensorContract(
       [this.holographic.confidence, 0.5],
-      this.quantumOut.slice(0, 2) as any,
+      this.quantumOut.slice(0, 2),
       2,
     );
     const hrrAd = eshkolADGradient((x) => x, this.holographic.confidence);
@@ -1451,7 +1515,10 @@ export class SuperMind {
       clamp(2 * this.dominance - 1, -1, 1),
       clamp01(this.arousal * (1 - DELIB_COUPLE * this.lastResOrder)),
     );
-    drives.EXPLORE += DELIB_GAIN * this.deliberation.coherence;
+    // P1-ablatable: the quantum DECIDER's influence on the plan (the qubit still evolves + reports its
+    // coherence on the snapshot; only its drive contribution is gated, so the ablation is observable but
+    // the classical arm's deliberation telemetry is unchanged).
+    drives.EXPLORE += DELIB_GAIN * this.deliberation.coherence * this.qGate;
 
     // ── V92 · METACOGNITIVE EXECUTIVE ── before committing, the mind estimates its CONFIDENCE in the
     // decision from four reliability cues — the provisional decision margin, integration (Φ, last beat),
@@ -1541,6 +1608,7 @@ export class SuperMind {
       this.qreservoir.quantumFlux,
     ]);
     this.lastResOrder = resonance.order; // #9/#37 — carry the binding coherence to next beat's GWT gate
+    this.lastResWeights = resonance.weights; // #9/#37 — per-faculty coupling edges for broadcast re-entry
     if (resonance.ignited) {
       let driveMean = 0;
       for (const k of SUPER_PLANS) driveMean += drives[k];
@@ -1688,7 +1756,7 @@ export class SuperMind {
       dominance: domProject,
       spawn: spawnDesire,
       curiosity,
-      wantsSpawn: spawnDesire > 0.8 && this.offspring < 3 && s[0] > 0.5,
+      wantsSpawn: spawnDesire > 0.8 && this.offspring < SUPER_MAX_OFFSPRING && s[0] > 0.5,
       plan: best,
       consciousness: this.cons,
       quantum: this.quantumOut.slice(),
@@ -1729,6 +1797,12 @@ export class SuperMind {
     causalGrad: 0,
   };
 
+  /** P1: ablate (true) or restore (false) the quantum-substrate contributions to the decision — the
+   *  parameter-matched control arm for the quantum-vs-classical advantage experiment. Default = ON. */
+  setQuantumAblated(on: boolean): void {
+    this.qGate = on ? 0 : 1;
+  }
+
   snapshot(): SuperMindSnapshot {
     return {
       paramCount: this.paramCount,
@@ -1747,9 +1821,8 @@ export class SuperMind {
       spin: this.spin.snapshot(),
       reservoir: this.reservoir.snapshot(),
       learnedRecurrence: this.learnedRecurrence.snapshot(),
+      nqs: this.lastNqsTelemetry,
       aif: this.aif.snapshot(),
-      // Heartbeat wiring: Moonlab tensor contract from corpus (demo call, det, no alloc hot)
-      // tensorContract2(q, q, 2, scratch); // for Archon quantum
       metacog: this.metacog.snapshot(),
       criticality: this.criticality.snapshot(),
       successor: this.successor.snapshot(),

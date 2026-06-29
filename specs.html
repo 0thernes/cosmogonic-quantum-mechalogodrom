@@ -17,7 +17,7 @@
     />
     <meta
       property="og:description"
-      content="Up to 50,000 agents (10,000 at 60 fps on integrated graphics). 1,477 tests, 90.48% line / 87.82% func coverage. Tsotchke fully wired for digital biologics + Eshkol consciousness. Different forms of life in the Petri. Not LLM."
+      content="Up to 50,000 agents (10,000 at 60 fps on integrated graphics). 1,771 tests, 94.77% line / 91.97% func coverage. Tsotchke fully wired for digital biologics + Eshkol consciousness. Different forms of life in the Petri. Not LLM."
     />
     <meta name="theme-color" content="#030612" />
     <link
@@ -25,6 +25,94 @@
       href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='15' fill='%23030612'/%3E%3Cellipse cx='16' cy='16' rx='13' ry='5' fill='none' stroke='%230ef' stroke-width='1.6' transform='rotate(28 16 16)'/%3E%3Cellipse cx='16' cy='16' rx='13' ry='5' fill='none' stroke='%23fa0' stroke-width='1.6' transform='rotate(-28 16 16)'/%3E%3Ccircle cx='16' cy='16' r='4.5' fill='%230ef'/%3E%3C/svg%3E"
     />
     <style>
+      /* SHARED SATELLITE CHROME (V81) — also in shared.css, inlined here so the
+         static page needs no external stylesheet and Bun.build stays happy. */
+      .sat-header {
+        border-bottom: 1px solid rgba(120, 160, 220, 0.18);
+        background: rgba(8, 14, 30, 0.72);
+        backdrop-filter: blur(12px);
+        position: sticky;
+        top: 0;
+        z-index: 50;
+      }
+      .sat-header-inner {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 12px 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+      }
+      .sat-logo {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: #cfe0fb;
+        text-decoration: none;
+        font-size: 13px;
+        letter-spacing: 0.04em;
+        font-weight: 600;
+      }
+      .sat-logo:hover {
+        color: #0ef;
+      }
+      .sat-logo svg {
+        width: 24px;
+        height: 24px;
+        display: block;
+      }
+      .sat-nav {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex-wrap: wrap;
+      }
+      .sat-nav a {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 10px;
+        border-radius: 6px;
+        border: 1px solid transparent;
+        color: #7f93b8;
+        text-decoration: none;
+        font-size: 11px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        transition:
+          background 0.12s,
+          border-color 0.12s,
+          color 0.12s;
+      }
+      .sat-nav a:hover,
+      .sat-nav a:focus-visible {
+        background: rgba(120, 160, 220, 0.1);
+        border-color: rgba(120, 160, 220, 0.18);
+        color: #cfe0fb;
+        outline: none;
+      }
+      .sat-nav a:focus-visible {
+        outline: 2px solid #0ef;
+        outline-offset: 2px;
+      }
+      .sat-nav a[aria-current='page'] {
+        border-color: rgba(0, 238, 255, 0.45);
+        color: #0ef;
+      }
+      @media (max-width: 640px) {
+        .sat-header-inner {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 10px;
+        }
+        .sat-nav {
+          width: 100%;
+          justify-content: flex-start;
+        }
+      }
+
+      /* Page-specific tokens below. */
       :root {
         --void: #030612;
         --panel: rgba(8, 14, 30, 0.66);
@@ -303,6 +391,45 @@
     </style>
   </head>
   <body>
+    <div class="sat-header">
+      <div class="sat-header-inner">
+        <a class="sat-logo" href="/" aria-label="Return to the simulation">
+          <svg viewBox="0 0 32 32" aria-hidden="true">
+            <circle cx="16" cy="16" r="15" fill="#030612" />
+            <ellipse
+              cx="16"
+              cy="16"
+              rx="13"
+              ry="5"
+              fill="none"
+              stroke="#0ef"
+              stroke-width="1.6"
+              transform="rotate(28 16 16)"
+            />
+            <ellipse
+              cx="16"
+              cy="16"
+              rx="13"
+              ry="5"
+              fill="none"
+              stroke="#fa0"
+              stroke-width="1.6"
+              transform="rotate(-28 16 16)"
+            />
+            <circle cx="16" cy="16" r="4.5" fill="#0ef" />
+          </svg>
+          <span>COSMOGONIC</span>
+        </a>
+        <nav class="sat-nav" aria-label="Satellite pages">
+          <a href="/">Dome</a>
+          <a href="/docs">Docs</a>
+          <a href="/spec" aria-current="page">Spec</a>
+          <a href="/bible">Bible</a>
+          <a href="/lab">Lab</a>
+        </nav>
+      </div>
+    </div>
+
     <header class="hero">
       <div class="wrap">
         <div class="eyebrow">Technical Specification · v0.18.0 · measured 2026-06-26</div>
@@ -341,7 +468,7 @@
           </div>
           <div class="stat">
             <div class="n gd">1,477</div>
-            <div class="l">tests · 90.48% line / 87.82% func cov</div>
+            <div class="l">tests · 94.77% line / 91.97% func cov</div>
           </div>
           <div class="stat">
             <div class="n am">50,000</div>
@@ -603,7 +730,7 @@ server.ts ──serves──▶  /  (app)   /docs   /spec   /lab</pre
           >
           ·
           <a href="./docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md">Tsotchke depth ledger</a>
-          · gate <b>1,477 tests</b>
+          · gate <b>1,771 tests</b>
         </p>
         <p class="muted" style="margin-top: 10px">
           <b>Frontier report (2026-06-17):</b>
@@ -743,8 +870,8 @@ server.ts ──serves──▶  /  (app)   /docs   /spec   /lab</pre
         <h2><span class="tag">09</span> Build, CI/CD &amp; quality</h2>
         <p>
           <b>Gate (every commit):</b>
-          <code>prettier → tsc strict → oxlint → 1,477 tests → bun build</code>. Coverage ≥ 90% line
-          / ≥ 85% function (measured 90.48% line / 87.82% func, `bun test --coverage`).
+          <code>prettier → tsc strict → oxlint → 1,771 tests → bun build</code>. Coverage ≥ 90% line
+          / ≥ 85% function (measured 94.77% line / 91.97% func, `bun test --coverage`).
           <b>Build:</b> Bun bundles 3 HTML entrypoints (<code>index.html</code>,
           <code>docs.html</code>, <code>specs.html</code>) → <code>dist/</code>.
           <b>CI/CD:</b> GitHub Actions runs the gate + builds and deploys the real app to GitHub
@@ -1007,6 +1134,8 @@ server.ts ──serves──▶  /  (app)   /docs   /spec   /lab</pre
         </div>
       </section>
 
+      <section id="alife-metrics"></section>
+
       <footer>
         Cosmogonic Quantum Mechalogodrom &middot; &copy; 2026 0thernes &middot; non-commercial
         research &amp; play (no for-profit, keep credit) &middot; Patent Pending. Full per-file line
@@ -1018,5 +1147,6 @@ server.ts ──serves──▶  /  (app)   /docs   /spec   /lab</pre
         <a href="https://0thernes.github.io/cosmogonic-quantum-mechalogodrom/">GitHub Pages</a>
       </footer>
     </main>
+    <script type="module" src="./src/specs-page.ts"></script>
   </body>
 </html>

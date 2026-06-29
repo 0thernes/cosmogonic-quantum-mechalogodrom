@@ -6,7 +6,12 @@
  * restoring the provider env vars around each case. Pure (PRESETS + process.env) — no network.
  */
 import { afterEach, beforeEach, describe, expect, test } from 'bun:test';
-import { availableProviders, providerLabel, resolveProvider } from '../src/server/copilot';
+import {
+  availableProviders,
+  providerLabel,
+  providerRecoveryPlan,
+  resolveProvider,
+} from '../src/server/copilot';
 
 const KEY_ENVS = [
   'GROQ_API_KEY',
@@ -20,6 +25,27 @@ const KEY_ENVS = [
   'CQM_LLM_ENDPOINT',
   'CQM_LLM_MODEL',
   'CQM_LLM_KEY',
+  'CQM_LLM_KEYS',
+  'CQM_LLM_KEY_2',
+  'FREELLMAPI_KEY',
+  'FREELLMAPI_KEYS',
+  'FREELLMAPI_KEY_2',
+  'FREELLMAPI_BASE',
+  'FREELLMAPI_MODEL',
+  'GROQ_API_KEYS',
+  'GROQ_API_KEY_2',
+  'HF_TOKEN',
+  'HF_TOKENS',
+  'HF_TOKEN_2',
+  'POLLINATIONS_API_KEY',
+  'POLLINATIONS_API_KEYS',
+  'POLLINATIONS_API_KEY_2',
+  'SAMBANOVA_API_KEY',
+  'SAMBANOVA_API_KEYS',
+  'SAMBANOVA_API_KEY_2',
+  'TOGETHER_API_KEY',
+  'TOGETHER_API_KEYS',
+  'TOGETHER_API_KEY_2',
 ];
 const saved = new Map<string, string | undefined>();
 
@@ -50,6 +76,12 @@ describe('availableProviders — env-gated free-LLM list', () => {
     }
     // A keyed provider must NOT be offered when its key is absent.
     expect(list.some((p) => p.id === 'groq')).toBe(false);
+    expect(list.some((p) => p.id === 'pollinations')).toBe(false); // now keyed
+    // Both keyless LLM7 models should appear as separate entries.
+    expect(list.some((p) => p.id === 'llm7')).toBe(true);
+    expect(list.some((p) => p.id === 'llm7-devstral')).toBe(true);
+    expect(list.filter((p) => p.id.startsWith('llm7')).length).toBeGreaterThanOrEqual(7);
+    expect(list.some((p) => p.id === 'freellmapi')).toBe(false);
   });
 
   test('setting a provider key surfaces exactly that provider (still one default)', () => {
@@ -58,6 +90,31 @@ describe('availableProviders — env-gated free-LLM list', () => {
     const list = availableProviders();
     expect(list.some((p) => p.id === 'groq')).toBe(true);
     expect(list.filter((p) => p.def).length).toBe(1); // invariant survives the new entry
+  });
+
+  test('a keyed provider can expose a rolling multi-key pool without leaking key values', () => {
+    process.env['GROQ_API_KEYS'] = 'slot-a, slot-b';
+    process.env['GROQ_API_KEY_2'] = 'slot-c';
+    const list = availableProviders();
+    const groq = list.find((p) => p.id === 'groq');
+    expect(groq).toBeDefined();
+    expect(groq!.label).toContain('3 key slots');
+    expect(groq!.label).not.toContain('slot-a');
+    expect(groq!.label).not.toContain('slot-b');
+    expect(groq!.label).not.toContain('slot-c');
+
+    const resolved = resolveProvider('groq');
+    expect(resolved.id).toBe('groq');
+    expect(resolved.key).toBe('slot-a');
+
+    const plan = providerRecoveryPlan().filter((p) => p.id === 'groq');
+    expect(plan.length).toBe(3);
+    expect(plan.map((p) => p.label)).toEqual([
+      'Groq · Llama-3.3-70B · key 1/3',
+      'Groq · Llama-3.3-70B · key 2/3',
+      'Groq · Llama-3.3-70B · key 3/3',
+    ]);
+    expect(plan.every((p) => p.keyed)).toBe(true);
   });
 
   test('every offered id is unique (no duplicate picker rows)', () => {
@@ -97,26 +154,46 @@ describe('customProvider env override (CQM_LLM_ENDPOINT)', () => {
 });
 
 describe('resolveProvider — default-deny resolution (security)', () => {
-  test('no id, or the primary id, resolves to FreeLLMAPI (the default chain head)', () => {
-    expect(resolveProvider(undefined).id).toBe('freellmapi');
+  test('no id resolves to the first key-less LLM7 provider (default chain head)', () => {
+    expect(resolveProvider(undefined).id).toBe('llm7');
+  });
+
+  test('freellmapi resolves only when FREELLMAPI_BASE is configured', () => {
+    expect(resolveProvider('freellmapi').id).toBe('llm7');
+    process.env['FREELLMAPI_BASE'] = 'http://localhost:3001/v1';
     expect(resolveProvider('freellmapi').id).toBe('freellmapi');
   });
 
   test('an UNKNOWN provider id falls back to the default (never honored)', () => {
-    expect(resolveProvider('totally-made-up-provider').id).toBe('freellmapi');
-    expect(resolveProvider('').id).toBe('freellmapi');
+    expect(resolveProvider('totally-made-up-provider').id).toBe('llm7');
+    expect(resolveProvider('').id).toBe('llm7');
   });
 
   test('a keyed preset is denied without its key, and resolves once the key is present', () => {
-    expect(resolveProvider('groq').id).toBe('freellmapi'); // no GROQ_API_KEY → default-deny
+    expect(resolveProvider('groq').id).toBe('llm7'); // no GROQ_API_KEY → default-deny
     process.env['GROQ_API_KEY'] = 'a-key';
     const got = resolveProvider('groq');
     expect(got.id).toBe('groq');
     expect(got.endpoint).toContain('groq');
   });
 
+  test('Pollinations is now keyed: denied without POLLINATIONS_API_KEY, resolves with it', () => {
+    expect(resolveProvider('pollinations').id).toBe('llm7'); // no key → default-deny
+    process.env['POLLINATIONS_API_KEY'] = 'pk_test';
+    const got = resolveProvider('pollinations');
+    expect(got.id).toBe('pollinations');
+    expect(got.endpoint).toContain('gen.pollinations.ai');
+  });
+
+  test('llm7-devstral resolves to the devstral model (keyless, separate from llm7)', () => {
+    const got = resolveProvider('llm7-devstral');
+    expect(got.id).toBe('llm7-devstral');
+    expect(got.model).toBe('devstral-small-2:24b');
+    expect(got.endpoint).toContain('api.llm7.io');
+  });
+
   test('the custom id resolves only when its endpoint env is set, else the default', () => {
-    expect(resolveProvider('custom').id).toBe('freellmapi'); // no CQM_LLM_ENDPOINT → default
+    expect(resolveProvider('custom').id).toBe('llm7'); // no CQM_LLM_ENDPOINT → default
     process.env['CQM_LLM_ENDPOINT'] = 'https://c.example/v1/chat/completions';
     expect(resolveProvider('custom').id).toBe('custom');
   });

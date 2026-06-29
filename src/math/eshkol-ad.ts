@@ -124,7 +124,19 @@ function adTapePush(
   saved = 0.0,
 ): number {
   if (tape.len >= tape.cap) {
-    return -1; // tape full (caller should recreate with larger capacity)
+    // Auto-resize: double the capacity and allocate new nodes
+    const newCap = tape.cap * 2;
+    for (let i = tape.cap; i < newCap; i++) {
+      tape.nodes.push({
+        op: AdOpType.AD_CONST,
+        value: 0,
+        gradient: 0,
+        left: -1,
+        right: -1,
+        saved: 0,
+      });
+    }
+    tape.cap = newCap;
   }
   const idx = tape.len++;
   const node = tape.nodes[idx]!;

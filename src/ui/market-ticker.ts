@@ -16,19 +16,18 @@
 import type { MarketSummary } from '../sim/economy';
 import { CURRENCY_GLYPH, COMMODITY_GLYPH } from '../sim/economy';
 import { mountToggle } from './panel-dock';
+import { injectPanelBaseCSS } from './panel-shell';
 
 const HISTORY = 120; // sparkline ring length
 
 const STYLE = `
-#cqm-mkt-toggle{position:fixed;right:204px;bottom:10px;z-index:60;height:42px;padding:0 12px;border-radius:21px;
-  border:1px solid rgba(255,196,90,.5);background:rgba(20,14,4,.84);color:#ffd98a;font:600 11px/1 var(--font-mono,ui-monospace,monospace);
-  letter-spacing:.12em;cursor:pointer;backdrop-filter:blur(6px);box-shadow:0 2px 14px rgba(0,0,0,.5);transition:transform .15s,background .15s}
+#cqm-mkt-toggle{border-color:rgba(255,196,90,.55);background:linear-gradient(180deg,rgba(24,16,4,.92),rgba(14,10,2,.88));color:#ffd98a}
 #cqm-mkt-toggle:hover{transform:scale(1.06);background:rgba(40,28,8,.94)}
 #cqm-mkt-toggle:focus-visible{outline:2px solid #ffb648;outline-offset:2px}
 /* V71: taller + a touch wider so the three sections each get room; the body scrolls. */
-#cqm-mkt-panel{position:fixed;right:10px;bottom:128px;z-index:59;width:min(94vw,360px);max-height:min(78vh,640px);display:none;flex-direction:column;
+#cqm-mkt-panel{position:fixed;right:10px;bottom:calc(var(--cqm-bottom-h,108px) + 130px);z-index:71;width:min(94vw,360px);max-height:min(70vh,560px);display:none;flex-direction:column;
   border:1px solid rgba(255,196,90,.32);border-radius:12px;background:rgba(10,8,4,.95);backdrop-filter:blur(12px);
-  box-shadow:0 10px 46px rgba(0,0,0,.65);font:11px/1.5 var(--font-mono,ui-monospace,monospace);color:#f0e2c8;overflow:hidden}
+  box-shadow:0 10px 46px rgba(0,0,0,.65);font:12px/1.5 var(--font-mono,ui-monospace,monospace);color:#f0e2c8;overflow:hidden}
 #cqm-mkt-panel.open{display:flex}
 .cqm-mkt-head{display:flex;align-items:center;gap:8px;padding:7px 10px;border-bottom:1px solid rgba(255,196,90,.22);background:rgba(26,18,6,.75);flex:0 0 auto}
 .cqm-mkt-head b{font-size:11px;letter-spacing:.14em;color:#ffcf7a;white-space:nowrap}
@@ -109,6 +108,7 @@ export class MarketTicker {
   constructor(doc: Document = document) {
     doc.getElementById('cqm-mkt-toggle')?.remove();
     doc.getElementById('cqm-mkt-panel')?.remove();
+    injectPanelBaseCSS(doc);
     const style = doc.createElement('style');
     style.textContent = STYLE;
     doc.head.appendChild(style);
@@ -116,6 +116,7 @@ export class MarketTicker {
     const toggle = doc.createElement('button');
     toggle.id = 'cqm-mkt-toggle';
     toggle.type = 'button';
+    toggle.className = 'cqm-dock-toggle';
     toggle.textContent = '⊙ MARKET';
     toggle.setAttribute('aria-label', 'Open the market ticker');
     toggle.addEventListener('click', () => this.setOpen(!this.open));

@@ -212,6 +212,8 @@ export interface SimContext {
   state: SimState;
   audit: AuditTrail;
   sfx: (type: SfxType) => void;
+  /** Rare per-morph creature voice (palette index); optional — wired by world.ts. */
+  creatureSfx?: (morphIndex: number) => void;
 }
 
 /** Returned by EntityManager.update each frame. */
@@ -274,6 +276,18 @@ export interface PersistedStateV1 {
    * with `sim = 1`, the GENESIS default). `1` = GENESIS, `2` = BREAK FREE (nightmare).
    */
   sim: 1 | 2;
+  /**
+   * Audio/music toggle (additive — defaults to false when absent).
+   */
+  musicOn?: boolean;
+  /**
+   * Active render mode index (additive — defaults to 0 when absent).
+   */
+  renderIdx?: number;
+  /**
+   * Quality tier string (additive — defaults to detected tier when absent).
+   */
+  tier?: string;
 }
 export type PersistedState = PersistedStateV1;
 
@@ -386,6 +400,8 @@ export interface UiActions {
   summonSingularity(): string;
   apocalypse(): void;
   reset(): void;
+  /** Toggle pause (timeScale 0 ↔ last non-zero speed). */
+  togglePause(): boolean;
   toggleMusic(): boolean;
   toggleSfx(): boolean;
   cycleSong(): string;

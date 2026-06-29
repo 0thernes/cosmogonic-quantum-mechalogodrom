@@ -60,21 +60,11 @@ const DEFAULT_CONFIG: CurvatureAwareConfig = {
 };
 
 /**
- * Compute Christoffel symbols Γ^k_ij from the metric g_ij.
- * Γ^k_ij = ½ g^kl (∂_i g_jl + ∂_j g_il - ∂_l g_ij)
- *
- * For efficiency, we compute the Levi-Civita connection in the coordinate basis.
- * Returns a 3D array Γ[k][i][j] (upper index first).
+ * Compute inverse metric g^ij via Gauss-Jordan elimination.
  */
-export function computeChristoffelSymbols(
-  metric: ReadonlyArray<ReadonlyArray<number>>,
-  epsilon: number = 1e-4,
-): number[][][] {
-  void epsilon; // used in finite-diff approx in full impl; kept for signature fidelity to Tsotchke QGT corpus
+export function invertMetric(metric: ReadonlyArray<ReadonlyArray<number>>): number[][] {
   const n = metric.length;
   const g = metric.map((row) => row.slice());
-
-  // Compute inverse metric g^ij via Gauss-Jordan
   const gInv: number[][] = [];
   for (let i = 0; i < n; i++) {
     gInv.push(Array.from({ length: n }, () => 0));
@@ -91,7 +81,7 @@ export function computeChristoffelSymbols(
   }
 
   // Gauss-Jordan elimination
-  for (let col = 0; col < n; col++) {
+  for (let col = 0; col < col + 1 && col < n; col++) {
     let piv = col;
     let best = Math.abs(aug[col]?.[col] ?? 0);
     for (let r = col + 1; r < n; r++) {
@@ -127,6 +117,24 @@ export function computeChristoffelSymbols(
       gInv[i]![j] = aug[i]![n + j] ?? 0;
     }
   }
+
+  return gInv;
+}
+
+/**
+ * Compute Christoffel symbols Γ^k_ij from the metric g_ij.
+ * Γ^k_ij = ½ g^kl (∂_i g_jl + ∂_j g_il - ∂_l g_ij)
+ *
+ * For efficiency, we compute the Levi-Civita connection in the coordinate basis.
+ * Returns a 3D array Γ[k][i][j] (upper index first).
+ */
+export function computeChristoffelSymbols(
+  metric: ReadonlyArray<ReadonlyArray<number>>,
+  epsilon: number = 1e-4,
+): number[][][] {
+  void epsilon; // used in finite-diff approx in full impl; kept for signature fidelity to Tsotchke QGT corpus
+  const n = metric.length;
+  const gInv = invertMetric(metric);
 
   // Compute metric derivatives via finite difference
   const dg: number[][][] = [];
@@ -177,6 +185,7 @@ export function computeRicciScalar(
 ): number {
   const n = metric.length;
   const R: number[][] = [];
+  const gInv = invertMetric(metric);
 
   // Compute Riemann tensor R^k_lij
   const Riemann: number[][][][] = [];
@@ -219,7 +228,7 @@ export function computeRicciScalar(
   let R_scalar = 0;
   for (let i = 0; i < n; i++) {
     for (let j = 0; j < n; j++) {
-      R_scalar += metric[i]![j]! * R[i]![j]!;
+      R_scalar += gInv[i]![j]! * R[i]![j]!;
     }
   }
 

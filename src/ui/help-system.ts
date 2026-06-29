@@ -6,6 +6,7 @@
  * hands off to the ✦ Copilot for freeform / web questions. UI shell only; pure presentation.
  */
 import { HELP_KB, findHelp, type HelpEntry } from './help-knowledge';
+import { dockToggle, injectPanelBaseCSS, panelHeader, wireClose } from './panel-shell';
 import { mountToggle } from './panel-dock';
 
 /** The quick chips — the directive's named entry points + a few common topics → seed queries. */
@@ -13,35 +14,165 @@ const CHIPS: { label: string; q: string }[] = [
   { label: 'Explain this', q: 'overview what is this explain' },
   { label: 'What is that?', q: 'what are these creatures entities' },
   { label: "I'm confused", q: 'how to play controls confused start' },
+  { label: 'Controls', q: 'keyboard controls movement camera how to play' },
+  { label: 'Observatory', q: 'what do the observatory charts graphs show' },
+  { label: 'Sorting field', q: 'how does sorting algorithm bubble field work' },
   { label: 'Super creature', q: 'what is the super creature' },
   { label: 'Access puzzle', q: 'how do I solve the access puzzle' },
   { label: 'Economy', q: 'how does the economy and money work' },
-  { label: 'The math', q: 'what math science powers this' },
+  { label: 'Mechalogodrom', q: 'what is the mechalogodrom center monster' },
+  { label: 'Alphabet dome', q: 'what are the 100 alphabet creatures' },
+  { label: 'Temple', q: 'what is the ascension shadow core temple' },
+  { label: 'NHSI / Neural', q: 'what is NHSI neural hierarchy observatory' },
+  { label: 'Archons', q: 'what are archon pantheons minds' },
+  { label: 'Architecture', q: '101 super creatures architecture pantheon brood' },
+  { label: 'Dock panels', q: 'AI help audit neural market architect panels dock' },
+  { label: 'Performance', q: 'fps quality render tiers phone laptop desktop' },
+  { label: 'Reset & seed', q: 'deterministic seed rng reset sessions' },
+  { label: 'Docs & specs', q: 'where are docs module contracts specifications' },
+  { label: 'The math', q: 'what math science powers this quantum tsotchke' },
+  { label: 'Weather', q: 'weather wind temperature shoggoths environment' },
+  { label: 'War & conflict', q: 'war alliance truce titan conflict' },
+  { label: 'Tribes', q: 'tribes communities graph mind social' },
+  { label: 'Mutations', q: 'mutations morphs evolution genetic' },
+  { label: 'Singularity', q: 'cosmological singularity black hole white hole' },
+  { label: 'Apocalypse', q: 'apocalypse end world destruction event' },
+  { label: 'CHAOS mode', q: 'chaos mode lorenz quantum storm' },
+  { label: 'Music & SFX', q: 'music song sfx audio sound' },
+  { label: 'Tsotchke', q: 'tsotchke quantum substrate eshkol moonlab qgtl' },
+  { label: 'Self-evolution', q: 'self evolution loop emergence complexity' },
+  { label: '✦ AI Copilot', q: 'AI copilot free LLM chat read repo' },
+  { label: 'Quantum WildBeyond', q: 'quantum wildbeyond lab boards tiles' },
+  { label: 'Center HUD', q: 'center HUD panels architecture audit neural market' },
+  { label: 'Market ticker', q: 'market ticker economy aurum umbra prices' },
+  { label: 'Singularities', q: 'black hole white hole grey hole entropy strangestar summon' },
+  { label: 'N(2) Break Free', q: 'simulation N2 break free nightmare chaos' },
+  { label: 'Apex brain', q: 'apex brain abomination million parameters super creature' },
+  { label: 'Render modes', q: 'render mode wireframe ghost neon solid visual' },
+  { label: 'Lab & dome', q: 'lab quantum wildbeyond link dome broadcast' },
+  { label: 'God events', q: 'god scale release emergence pantheon events' },
+  { label: 'Gravitational lens', q: 'gravitational lens post processing singularity warp' },
+  { label: 'Butlin indicators', q: 'butlin consciousness indicators sentience audit' },
+  { label: 'GPU / instancing', q: 'instanced rendering quality tier mega ultra desktop' },
+  { label: 'WildBeyond lab', q: 'quantum wildbeyond lab four boards thirty six tiles' },
+  { label: 'Shoggoths', q: 'shoggoth tendrils weather environment creatures' },
+  { label: 'Sim settings', q: 'sim settings view speed render quality hud' },
+  { label: 'Post-FX / bloom', q: 'post processing bloom lens cinematic fx' },
+  { label: 'Faculties', q: '100 faculties pantheon cognitive modules NHSI' },
+  { label: 'Titans', q: 'titans roaming economy energy matter entropy war' },
+  { label: 'Moonlab / QGT', q: 'moonlab tensor entanglement quantum geometry tsotchke' },
+  { label: 'Eshkol QRNG', q: 'eshkol qrng quantum random archon collapse' },
+  { label: 'Puppet master', q: 'puppet master events creatures actions' },
+  { label: 'Memory orchestra', q: 'memory orchestra recall lattice graph' },
+  { label: 'Settings ⚙', q: 'settings panel audio render sim chaos apocalypse' },
+  { label: 'Bottom dock', q: 'bottom dock toolbar panels AI help audit' },
+  { label: 'Entity colors', q: 'entity colors morph phylum vibrant saturated render' },
+  { label: 'Cartel / Gini', q: 'market cartel gini wealth inequality economy balance' },
+  { label: 'Game theory', q: 'game theory regulation tobin tax sanction antitrust balance' },
+  { label: 'SFX & audio', q: 'sfx sound effect audio music bizarre demonic creature sound' },
+  { label: 'Entity colors', q: 'entity colors morph phylum vibrant saturated render white grey' },
+  { label: 'WildBeyond lab', q: 'quantum wildbeyond lab four boards thirty six tiles interactive' },
+  { label: 'SVG reports', q: 'svg reports visuals metrics dendrogram heatmap pca pareto' },
+  { label: 'Singularity YOLO', q: 'singularity ultra mega tier geometry detail yolo guardrail' },
+  { label: 'N(2) Break Free', q: 'n2 break free nightmare warp transdimensional chaos demonic' },
+  { label: 'Tablet fix', q: 'observatory tablet 12 inch coarse pointer landscape disappear' },
+  { label: 'Copilot failover', q: 'ai copilot free llm provider failover chain guardrails' },
+  { label: 'Primordial soup', q: 'tsotchke petri dish digital biologics eshkol genesis sentience' },
+  { label: 'Native engine', q: 'native c++ engine jolt physics ray marching build' },
+  { label: 'Tribes graph', q: 'tribes communities graph mind social louvain' },
+  { label: 'Sanctions war', q: 'sanction embargo black market war alliance truce titan' },
+  { label: 'Vickrey auction', q: 'auction vickrey second price windfall commodity' },
+  { label: 'Currency game', q: 'currency aurum umbra fx adoption softmax gresham' },
+  { label: 'Connectome', q: 'connectome neural network brain firing topology nhi' },
+  { label: 'Reaction-diffusion', q: 'reaction diffusion gray scott turing pattern ground' },
+  { label: 'Lorenz chaos', q: 'lorenz attractor chaos weather storm rossler' },
+  { label: 'Quality tiers', q: 'quality tier mega ultra desktop laptop phone instanced pooled' },
+  { label: 'Onboarding', q: 'onboarding first run hint tutorial start' },
+  { label: 'Access puzzle', q: 'access puzzle cryptographic superhero mode solve' },
+  { label: 'Shoggoths', q: 'shoggoth tendrils weather environment creatures eldritch' },
+  { label: 'Puppet master', q: 'puppet master events creatures actions unseen hand' },
+  { label: 'Leviathans', q: 'leviathan titan colossus roaming economy energy' },
+  { label: 'Memory orchestra', q: 'memory orchestra recall lattice graph' },
+  { label: 'Spin glass', q: 'spin glass tsotchke ising coulomb avalanche' },
+  { label: 'Moonlab / QGT', q: 'moonlab tensor entanglement quantum geometry tsotchke' },
+  { label: 'Eshkol QRNG', q: 'eshkol qrng quantum random archon collapse' },
+  { label: 'Libirrep', q: 'libirrep symmetry irrep clebsch representation tsotchke' },
+  { label: 'Quake QGE', q: 'quake qge quantum gravity estimator tsotchke' },
+  { label: 'ULG / GWT', q: 'ulg gwt global workspace theory consciousness handoff' },
+  { label: 'Post-FX / bloom', q: 'post processing bloom lens cinematic fx' },
+  {
+    label: 'Render modes',
+    q: 'render mode wireframe ghost neon solid visual chrome hologram iridescent',
+  },
+  { label: 'Sim settings', q: 'sim settings view speed render quality hud' },
+  { label: 'Bottom dock', q: 'bottom dock toolbar panels AI help audit' },
+  { label: 'Center HUD', q: 'center HUD panels architecture audit neural market' },
+  { label: 'God events', q: 'god scale release emergence pantheon events' },
+  { label: 'Faculties', q: '100 faculties pantheon cognitive modules NHSI' },
+  { label: 'Self-evolution', q: 'self evolution loop emergence complexity' },
+  { label: 'Apocalypse', q: 'apocalypse end world destruction event' },
+  { label: 'CHAOS mode', q: 'chaos mode lorenz quantum storm' },
+  { label: 'Reset & seed', q: 'deterministic seed rng reset sessions' },
+  { label: 'Docs & specs', q: 'where are docs module contracts specifications' },
+  { label: 'The math', q: 'what math science powers this quantum tsotchke' },
+  { label: 'Weather', q: 'weather wind temperature shoggoths environment' },
+  { label: 'War & conflict', q: 'war alliance truce titan conflict' },
+  { label: 'Mutations', q: 'mutations morphs evolution genetic' },
+  { label: 'Singularity', q: 'cosmological singularity black hole white hole' },
+  { label: 'Music & SFX', q: 'music song sfx audio sound' },
+  { label: 'Tsotchke', q: 'tsotchke quantum substrate eshkol moonlab qgtl' },
+  { label: '✦ AI Copilot', q: 'AI copilot free LLM chat read repo' },
+  { label: 'Quantum WildBeyond', q: 'quantum wildbeyond lab boards tiles' },
+  { label: 'Market ticker', q: 'market ticker economy aurum umbra prices' },
+  { label: 'Singularities', q: 'black hole white hole grey hole entropy strangestar summon' },
+  { label: 'N(2) Break Free', q: 'simulation N2 break free nightmare chaos' },
+  { label: 'Apex brain', q: 'apex brain abomination million parameters super creature' },
+  { label: 'GPU / instancing', q: 'instanced rendering quality tier mega ultra desktop' },
+  { label: 'Gravitational lens', q: 'gravitational lens post processing singularity warp' },
+  { label: 'Butlin indicators', q: 'butlin consciousness indicators sentience audit' },
+  { label: 'Lab & dome', q: 'lab quantum wildbeyond link dome broadcast' },
+  { label: 'Titans', q: 'titans roaming economy energy matter entropy war' },
+  { label: 'Settings ⚙', q: 'settings panel audio render sim chaos apocalypse' },
+  { label: 'Architecture', q: '101 super creatures architecture pantheon brood' },
+  { label: 'Dock panels', q: 'AI help audit neural market architect panels dock' },
+  { label: 'Explain this', q: 'overview what is this explain' },
+  { label: "I'm confused", q: 'how to play controls confused start' },
+  { label: 'Controls', q: 'keyboard controls movement camera how to play' },
+  { label: 'Observatory', q: 'what do the observatory charts graphs show' },
+  { label: 'Sorting field', q: 'how does sorting algorithm bubble field work' },
+  { label: 'Super creature', q: 'what is the super creature' },
+  { label: 'Economy', q: 'how does the economy and money work' },
+  { label: 'Mechalogodrom', q: 'what is the mechalogodrom center monster' },
+  { label: 'Alphabet dome', q: 'what are the 100 alphabet creatures' },
+  { label: 'Temple', q: 'what is the ascension shadow core temple' },
+  { label: 'NHSI / Neural', q: 'what is NHSI neural hierarchy observatory' },
+  { label: 'Archons', q: 'what are archon pantheons minds' },
+  { label: 'What is that?', q: 'what are these creatures entities' },
 ];
 
 const STYLE = `
-#cqm-help-toggle{border:1px solid rgba(120,220,160,.5);background:rgba(6,18,12,.86);color:#9bffce;
-  font:600 11px/1 var(--font-mono,ui-monospace,monospace);letter-spacing:.1em;height:42px;padding:0 12px;
-  border-radius:21px;cursor:pointer;backdrop-filter:blur(6px);box-shadow:0 2px 14px rgba(0,0,0,.5);
-  transition:transform .15s,background .15s}
-#cqm-help-toggle:hover{transform:scale(1.06);background:rgba(12,34,22,.95)}
-#cqm-help-toggle:focus-visible{outline:2px solid #66e0a0;outline-offset:2px}
 /* V71: "down the middle 50/50" — the answer fills the LEFT half, the topic chips + search box + AI
    hand-off live on the RIGHT half. Wider so both halves breathe; stacks on narrow screens. */
-#cqm-help-panel{position:fixed;right:10px;bottom:128px;z-index:59;width:min(94vw,720px);height:min(74vh,560px);display:none;
+#cqm-help-panel{position:fixed;right:10px;bottom:calc(var(--cqm-bottom-h,108px) + 118px);z-index:71;width:min(94vw,720px);height:min(62vh,520px);max-height:calc(100vh - var(--cqm-bottom-h,108px) - 130px);display:none;
   flex-direction:column;border:1px solid rgba(120,220,160,.32);border-radius:12px;background:rgba(6,12,10,.96);
-  backdrop-filter:blur(12px);box-shadow:0 10px 46px rgba(0,0,0,.66);font:12px/1.55 var(--font-ui,system-ui,sans-serif);
+  backdrop-filter:blur(12px);box-shadow:0 10px 46px rgba(0,0,0,.66);font:13px/1.55 var(--font-ui,system-ui,sans-serif);
   color:#e6f6ec;overflow:hidden}
 #cqm-help-panel.open{display:flex}
-.cqm-help-head{display:flex;align-items:center;gap:8px;padding:8px 11px;border-bottom:1px solid rgba(120,220,160,.22);background:rgba(10,26,18,.8);flex:0 0 auto}
+.cqm-help-head{margin-bottom:0 !important;padding:8px 11px;border-bottom:1px solid rgba(120,220,160,.22);background:rgba(10,26,18,.8);flex:0 0 auto}
 .cqm-help-head b{font-size:11px;letter-spacing:.14em;color:#aaffd2;font-family:var(--font-mono,monospace)}
-.cqm-help-x{margin-left:auto;background:rgba(4,10,8,.9);color:#9bffce;border:1px solid rgba(120,220,160,.3);border-radius:5px;
-  font:11px var(--font-mono,monospace);padding:2px 7px;cursor:pointer}
-.cqm-help-body{flex:1 1 auto;min-height:0;display:flex}
-.cqm-help-left{flex:1 1 50%;min-width:0;display:flex;flex-direction:column}
-.cqm-help-right{flex:1 1 50%;min-width:0;display:flex;flex-direction:column;border-left:1px solid rgba(120,220,160,.2);background:rgba(8,18,13,.45)}
-.cqm-help-colhead{font:600 9px var(--font-mono,monospace);letter-spacing:.14em;color:#7fcea6;text-transform:uppercase;padding:7px 11px 3px;opacity:.85}
-.cqm-help-chips{display:flex;flex-wrap:wrap;gap:5px;padding:3px 11px 9px}
+.cqm-help-head .cqm-panel-x{color:#9bffce}
+.cqm-help-body{flex:1 1 auto;min-height:0;display:flex;overflow:hidden;touch-action:manipulation}
+.cqm-help-left{flex:1 1 50%;min-width:0;display:flex;flex-direction:column;min-height:0;overflow:hidden}
+.cqm-help-right{flex:1 1 50%;min-width:0;display:flex;flex-direction:column;border-left:1px solid rgba(120,220,160,.2);background:rgba(8,18,13,.45);min-height:0;overflow:hidden}
+.cqm-help-right-main{flex:1 1 auto;min-height:0;overflow-y:scroll;overflow-x:hidden;overscroll-behavior:contain;scrollbar-width:thin;-webkit-overflow-scrolling:touch;touch-action:pan-y;
+  display:flex;flex-direction:column;padding-bottom:4px}
+.cqm-help-right-main::-webkit-scrollbar,.cqm-help-ans::-webkit-scrollbar{width:6px}
+.cqm-help-right-main::-webkit-scrollbar-thumb,.cqm-help-ans::-webkit-scrollbar-thumb{background:rgba(120,220,160,.45);border-radius:3px}
+.cqm-help-right-main::-webkit-scrollbar-track,.cqm-help-ans::-webkit-scrollbar-track{background:rgba(0,0,0,.25)}
+.cqm-help-ans{flex:1 1 auto;min-height:0;padding:4px 11px 10px;overflow-y:scroll;overscroll-behavior:contain;scrollbar-width:thin;-webkit-overflow-scrolling:touch;touch-action:pan-y}
+.cqm-help-left,.cqm-help-right{max-height:100%}
+.cqm-help-colhead{font:600 9px var(--font-mono,monospace);letter-spacing:.14em;color:#7fcea6;text-transform:uppercase;padding:7px 11px 3px;opacity:.85;flex:0 0 auto}
+.cqm-help-chips{display:flex;flex-wrap:wrap;gap:5px;padding:3px 11px 9px;flex:0 0 auto}
 .cqm-help-chip{border:1px solid rgba(120,220,160,.35);background:rgba(16,40,28,.5);color:#cdfce0;border-radius:14px;
   font:11px var(--font-ui,system-ui,sans-serif);padding:4px 10px;cursor:pointer;transition:background .12s}
 .cqm-help-chip:hover{background:rgba(30,70,48,.75)}
@@ -52,7 +183,7 @@ const STYLE = `
 .cqm-help-go{background:rgba(40,200,130,.16);border:1px solid rgba(120,220,160,.5);border-radius:7px;color:#cdfce0;
   font:600 11px var(--font-mono,monospace);padding:7px 11px;cursor:pointer}
 .cqm-help-go:hover{background:rgba(40,200,130,.3)}
-.cqm-help-ans{flex:1 1 auto;min-height:0;padding:4px 11px 10px;overflow-y:auto}
+.cqm-help-search{flex:0 0 auto}
 .cqm-help-card{border:1px solid rgba(120,220,160,.18);border-radius:9px;background:rgba(10,22,16,.6);padding:9px 11px;margin-top:8px}
 .cqm-help-card h4{margin:0 0 4px;font:600 12px var(--font-mono,monospace);letter-spacing:.04em;color:#aaffd2}
 .cqm-help-card p{margin:0;color:#d6ecdd}
@@ -63,7 +194,14 @@ const STYLE = `
 .cqm-help-ai{border:1px solid rgba(120,160,220,.5);background:rgba(20,28,52,.6);color:#cfe0ff;border-radius:7px;
   font:600 10px var(--font-mono,monospace);padding:5px 9px;cursor:pointer}
 .cqm-help-ai:hover{background:rgba(34,46,86,.8)}
-@media (max-width:560px){.cqm-help-body{flex-direction:column}.cqm-help-right{border-left:none;border-top:1px solid rgba(120,220,160,.2)}}
+@media (max-width:560px){
+  #cqm-help-panel.open{touch-action:pan-y;overscroll-behavior:contain}
+  #cqm-help-panel{left:6px;right:6px;width:auto;height:min(72dvh,560px);max-height:calc(100dvh - var(--cqm-bottom-h,108px) - 88px);bottom:calc(var(--cqm-bottom-h,108px) + 88px)}
+  .cqm-help-body{flex-direction:column;flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;touch-action:pan-y}
+  .cqm-help-left,.cqm-help-right{flex:0 0 auto;min-height:auto;max-height:none;overflow:visible}
+  .cqm-help-right{border-left:none;border-top:1px solid rgba(120,220,160,.2)}
+  .cqm-help-ans,.cqm-help-right-main{overflow:visible;flex:0 0 auto;min-height:auto}
+}
 `;
 
 export class HelpSystem {
@@ -75,39 +213,45 @@ export class HelpSystem {
   constructor(doc: Document = document) {
     doc.getElementById('cqm-help-toggle')?.remove();
     doc.getElementById('cqm-help-panel')?.remove();
+    injectPanelBaseCSS(doc);
     const style = doc.createElement('style');
     style.textContent = STYLE;
     doc.head.appendChild(style);
 
-    const toggle = doc.createElement('button');
-    toggle.id = 'cqm-help-toggle';
-    toggle.type = 'button';
-    toggle.textContent = '❓ HELP ME NOW';
-    toggle.title = 'Repo-grounded help — ask anything about this world';
-    toggle.setAttribute('aria-label', 'Open help');
-    toggle.addEventListener('click', () => this.setOpen(!this.open));
+    const toggle = dockToggle({
+      id: 'cqm-help-toggle',
+      label: '❓ HELP ME NOW',
+      title: 'Repo-grounded help — ask anything about this world',
+      ariaLabel: 'Open help',
+      onClick: () => this.setOpen(!this.open),
+      doc,
+    });
     mountToggle(toggle, doc);
 
     this.panel = doc.createElement('section');
     this.panel.id = 'cqm-help-panel';
     this.panel.setAttribute('aria-label', 'Help me now');
-    this.panel.innerHTML =
-      `<div class="cqm-help-head"><b>❓ HELP ME NOW</b><button class="cqm-help-x" data-x aria-label="Close">✕</button></div>` +
-      `<div class="cqm-help-body">` +
+    const head = panelHeader({ title: '❓ HELP ME NOW', onClose: () => this.setOpen(false), doc });
+    head.classList.add('cqm-help-head');
+    this.panel.appendChild(head);
+    const body = doc.createElement('div');
+    body.className = 'cqm-help-body';
+    body.innerHTML =
       `<div class="cqm-help-left"><div class="cqm-help-colhead">Answer</div><div class="cqm-help-ans" data-ans></div></div>` +
       `<div class="cqm-help-right">` +
+      `<div class="cqm-help-right-main">` +
       `<div class="cqm-help-colhead">Topics</div><div class="cqm-help-chips" data-chips></div>` +
       `<div class="cqm-help-colhead">Ask anything</div>` +
       `<div class="cqm-help-search"><input class="cqm-help-in" data-in placeholder="e.g. how does the economy work?" autocomplete="off" /><button class="cqm-help-go" data-go>ASK</button></div>` +
-      `<div class="cqm-help-foot"><span class="note">Grounded in public project knowledge only — no secrets or private data. For freeform / web questions:</span><button class="cqm-help-ai" data-ai>Ask the ✦ AI</button></div>` +
-      `</div></div>`;
+      `</div>` +
+      `<div class="cqm-help-foot"><span class="note">Repo-grounded instant answers. For freeform / web / full corpus RAG:</span><button class="cqm-help-ai" data-ai>Ask the ✦ AI</button></div>` +
+      `</div>`;
+    this.panel.appendChild(body);
     doc.body.appendChild(this.panel);
 
     this.ansEl = this.panel.querySelector('[data-ans]') as HTMLElement;
     this.input = this.panel.querySelector('[data-in]') as HTMLInputElement;
-    (this.panel.querySelector('[data-x]') as HTMLElement).addEventListener('click', () =>
-      this.setOpen(false),
-    );
+    wireClose(this.panel, () => this.setOpen(false));
     (this.panel.querySelector('[data-go]') as HTMLElement).addEventListener('click', () =>
       this.ask(this.input.value),
     );
