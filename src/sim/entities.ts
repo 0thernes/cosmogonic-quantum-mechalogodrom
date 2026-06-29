@@ -57,7 +57,7 @@ function paintVibrant(mat: THREE.MeshStandardMaterial, m: PhylumMorphType, mi: n
     // wider gradient spin + quint-prime jitter fans the palette into ~2000+ distinct variations.
     (hsl.h + slot * 0.008 + j1 * 0.39 + j2 * 0.25 + j4 * 0.18 + j5 * 0.12 - 0.06 + 1) % 1,
     1.0, // S = 1.0 — MAXIMUM chroma, never wash out
-    Math.min(0.1, 0.03 + hsl.l * 0.03 + j3 * 0.05 + j4 * 0.02), // VERY dark jewel — survives ACES
+    Math.min(0.18, 0.06 + hsl.l * 0.05 + j3 * 0.07 + j4 * 0.03), // dark jewel but visible (was 0.1 max — too dark, emissive blew it out)
   );
   m.em.getHSL(hsl);
   mat.emissive.setHSL(
@@ -65,7 +65,7 @@ function paintVibrant(mat: THREE.MeshStandardMaterial, m: PhylumMorphType, mi: n
     1.0, // S = 1.0 — max emissive saturation
     Math.min(0.32, 0.12 + hsl.l * 0.1 + j2 * 0.06), // colored glow, not blown-out white
   );
-  mat.emissiveIntensity = Math.min(2.8, m.emI * 1.0 + 0.8); // capped low — ACES rolls >1 to white
+  mat.emissiveIntensity = Math.min(1.8, m.emI * 0.7 + 0.4); // capped lower — ACES rolls >1 to white
   // Slight metallic sheen for depth and sparkle — catches light as entities move
   mat.metalness = Math.min(0.85, mat.metalness * 0.65 + j5 * 0.35);
   mat.roughness = Math.max(0.06, mat.roughness * 0.45 + j3 * 0.12);

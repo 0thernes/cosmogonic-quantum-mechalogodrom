@@ -5,6 +5,7 @@
  * Wired into predev/build via package scripts.
  */
 import { readFileSync, writeFileSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
 
 const BOOK = 'docs/BOOK-2026-06-26.md';
 const BIBLE = 'bible.html';
@@ -129,4 +130,5 @@ if (!bible.includes(START) || !bible.includes(END)) {
 const before = bible.slice(0, bible.indexOf(START) + START.length);
 const after = bible.slice(bible.indexOf(END));
 writeFileSync(BIBLE, `${before}\n${html}\n${after}`);
+spawnSync('bunx', ['prettier', '--write', BIBLE], { stdio: 'inherit' });
 console.log(`gen-bible-corpus: injected ${html.split('<dt>').length - 1} entries into ${BIBLE}`);

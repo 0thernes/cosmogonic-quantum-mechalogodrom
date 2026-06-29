@@ -2418,7 +2418,7 @@ export class World {
       mode === 'all'
         ? Math.min(48, Math.max(25, n >> 7))
         : mode === 'auto'
-          ? Math.min(40, Math.max(12, n >> 7))
+          ? Math.min(120, Math.max(40, n >> 5))
           : Math.min(28, Math.max(6, n >> 8));
     // Treble = sparkle: the per-swap emissive flash brightens with the highs (4..8). Emissive is
     // purely visual (entities.update never feeds it back into positions/rng), so the swarm

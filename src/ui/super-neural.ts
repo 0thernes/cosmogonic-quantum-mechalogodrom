@@ -59,7 +59,7 @@ const STYLE = `
 .cqm-sneu-brain-cycle.mega{border-color:rgba(0,255,220,.55);color:#9fffe8}
 .cqm-sneu-grid{display:grid;grid-template-columns:repeat(3,1fr);grid-auto-rows:1fr;gap:5px;padding:7px;overflow:hidden;
   flex:1 1 auto;min-height:160px;border-top:1px solid rgba(180,120,255,.28)}
-.cqm-sneu-grid.brain{grid-template-columns:1fr;grid-template-rows:1fr;min-height:min(48vh,380px)}
+.cqm-sneu-grid.brain{grid-template-columns:1fr;grid-template-rows:min(48vh,380px);min-height:min(48vh,380px)}
 .cqm-sneu-cell{position:relative;border:1px solid rgba(180,120,255,.14);border-radius:6px;background:rgba(5,3,12,.66);
   overflow:hidden;display:flex;min-height:0}
 .cqm-sneu-cell canvas{display:block;width:100%;height:100%}
