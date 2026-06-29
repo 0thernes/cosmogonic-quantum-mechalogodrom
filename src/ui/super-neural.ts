@@ -53,6 +53,10 @@ const STYLE = `
 .cqm-sneu-tab:hover{color:#d8b8ff;background:rgba(28,14,46,.8)}
 .cqm-sneu-tab.on{color:#f3ecff;background:rgba(36,16,60,.95);border-color:rgba(180,120,255,.5)}
 .cqm-sneu-tab:focus-visible{outline:1px solid #b98cff}
+.cqm-sneu-brain-cycle{flex:0 0 auto;background:rgba(40,12,52,.85);color:#ffb8e8;border:1px solid rgba(255,120,200,.45);
+  border-radius:6px;font:600 9px/1 var(--font-mono,ui-monospace,monospace);letter-spacing:.06em;padding:6px 8px;cursor:pointer;white-space:nowrap}
+.cqm-sneu-brain-cycle:hover{color:#ffe0f8;background:rgba(70,20,60,.9)}
+.cqm-sneu-brain-cycle.mega{border-color:rgba(0,255,220,.55);color:#9fffe8}
 .cqm-sneu-grid{display:grid;grid-template-columns:repeat(3,1fr);grid-auto-rows:1fr;gap:5px;padding:7px;overflow:hidden;
   flex:1 1 auto;min-height:0;border-top:1px solid rgba(180,120,255,.28)}
 .cqm-sneu-grid.brain{grid-template-columns:1fr;grid-template-rows:1fr}
@@ -1180,6 +1184,97 @@ const drawBrain: Drawer = (ctx, w, h, s, t) => {
   ctx.textAlign = 'left';
 };
 
+/** 4D hyper-grid neuron projected through a rotating w-axis slice — MEGA GODLIKE mode. */
+const MEGA_N = 160;
+const drawMegaBrain: Drawer = (ctx, w, h, s, t) => {
+  ctx.fillStyle = '#03010a';
+  ctx.fillRect(0, 0, w, h);
+  ctx.fillStyle = '#00ffd5';
+  lab(ctx, w, 9, '600 ');
+  ctx.textBaseline = 'top';
+  ctx.textAlign = 'left';
+  ctx.fillText(`IV · MEGA GODLIKE BRAIN — 4D spiking tesseract · ${s.paramCount}p`, 8, 6);
+  const cx = w / 2;
+  const cy = h / 2 + 6;
+  const scale = Math.min(w, h) * 0.38;
+  const ang = t * 0.22;
+  const latent = s.latent.length ? s.latent : new Float32Array([0.5]);
+  const quantum = s.quantum.length ? s.quantum : new Float32Array([0.5]);
+  const k = s.consciousness;
+  const pts: P3[] = [];
+  const act: number[] = [];
+  for (let i = 0; i < MEGA_N; i++) {
+    const u = (i + 0.5) / MEGA_N;
+    const v = (i * 0.6180339887) % 1;
+    const th = 2 * Math.PI * u;
+    const ph = Math.acos(2 * v - 1);
+    const r4 = 0.55 + 0.45 * Math.sin(i * 0.17 + t * 1.3);
+    const x4 = r4 * Math.sin(ph) * Math.cos(th);
+    const y4 = r4 * Math.sin(ph) * Math.sin(th);
+    const z4 = r4 * Math.cos(ph);
+    const w4 = r4 * Math.sin(t * 0.41 + i * 0.08);
+    const cw = Math.cos(t * 0.33);
+    const sw = Math.sin(t * 0.33);
+    const x3 = x4 + w4 * cw * 0.42;
+    const y3 = y4 + w4 * sw * 0.38;
+    const z3 = z4 + w4 * 0.22;
+    pts.push(project(x3, y3, z3, ang + w4 * 0.5, cx, cy, scale));
+    const lv = Math.abs(latent[i % latent.length] ?? 0);
+    const qv = Math.abs(quantum[i % quantum.length] ?? 0);
+    const cv =
+      0.22 * (k.dreaming ?? 0) +
+      0.18 * (k.reasoning ?? 0) +
+      0.16 * (k.selfAware ?? 0) +
+      0.14 * (k.novelty ?? 0) +
+      0.12 * (s.emotion.dominance ?? 0.5);
+    const spike = Math.max(0, Math.sin(t * 6 + i * 0.37) * 0.5 + 0.5) * (lv + qv);
+    act.push(clamp01(lv * 0.45 + qv * 0.35 + cv + spike * 0.35));
+  }
+  const pulse = frac(t * 0.55);
+  for (let i = 0; i < MEGA_N; i++) {
+    for (let j = i + 1; j < MEGA_N; j++) {
+      const d4 = Math.abs((i ^ j) & 7);
+      if (d4 > 2) continue;
+      const strength = (act[i]! + act[j]!) * 0.5;
+      if (strength < 0.08) continue;
+      const near = ((pts[i]!.d + pts[j]!.d) / 2 + 1) / 2;
+      const hue = (i * 37 + j * 19 + t * 40) % 360;
+      ctx.strokeStyle = `hsla(${hue},100%,${(42 + strength * 38).toFixed(0)}%,${(strength * 0.55 * near).toFixed(2)})`;
+      ctx.lineWidth = 0.4 + strength * 2.2 * near;
+      ctx.beginPath();
+      ctx.moveTo(pts[i]!.x, pts[i]!.y);
+      ctx.lineTo(pts[j]!.x, pts[j]!.y);
+      ctx.stroke();
+      const pp = (pulse + (i + j) * 0.013) % 1;
+      const px = pts[i]!.x + (pts[j]!.x - pts[i]!.x) * pp;
+      const py = pts[i]!.y + (pts[j]!.y - pts[i]!.y) * pp;
+      spark(ctx, px, py, 1.5 + strength * 3, `${(hue + 60) % 360},255,200`, strength * 0.65 * near);
+    }
+  }
+  for (let i = 0; i < MEGA_N; i++) {
+    const p = pts[i]!;
+    const v = act[i]!;
+    const near = (p.d + 1) / 2;
+    const hue = (i * 53 + v * 120 + t * 28) % 360;
+    const sat = 88 + v * 12;
+    const lit = 38 + v * 42;
+    if (v > 0.55 && near > 0.3) {
+      spark(ctx, p.x, p.y, 6 + v * 16 * near, `${hue},255,180`, 0.35 + v * 0.45);
+    }
+    ctx.fillStyle = `hsla(${hue},${sat}%,${lit}%,${(0.55 + v * 0.45).toFixed(2)})`;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, 1.2 + v * 2.8 * near, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.textAlign = 'left';
+};
+
+let megaBrainMode = false;
+const drawBrainRouted: Drawer = (ctx, w, h, s, t, H) => {
+  if (megaBrainMode) drawMegaBrain(ctx, w, h, s, t, H);
+  else drawBrain(ctx, w, h, s, t, H);
+};
+
 // ── tab → drawer assignment ──────────────────────────────────────────────────────────────────
 const TABS: readonly Drawer[][] = [
   [
@@ -1215,7 +1310,7 @@ const TABS: readonly Drawer[][] = [
     drawCollapse,
     drawBloch,
   ],
-  [drawBrain],
+  [drawBrainRouted],
 ];
 
 /**
@@ -1228,6 +1323,7 @@ export class SuperNeural {
   private readonly gridEl: HTMLElement;
   private readonly footEl: HTMLElement;
   private readonly tabBtns: HTMLElement[] = [];
+  private readonly brainCycleBtn: HTMLButtonElement;
   private cells: HTMLElement[] = [];
   private ctxs: CanvasRenderingContext2D[] = [];
   private tab = 0;
@@ -1265,6 +1361,18 @@ export class SuperNeural {
       this.tabsEl.appendChild(b);
       this.tabBtns.push(b);
     }
+    this.brainCycleBtn = doc.createElement('button');
+    this.brainCycleBtn.type = 'button';
+    this.brainCycleBtn.className = 'cqm-sneu-brain-cycle';
+    this.brainCycleBtn.textContent = '⟁ COMPOSITE';
+    this.brainCycleBtn.title = 'Cycle brain view: composite connectome ↔ MEGA GODLIKE 4D tesseract';
+    this.brainCycleBtn.hidden = true;
+    this.brainCycleBtn.addEventListener('click', () => {
+      megaBrainMode = !megaBrainMode;
+      this.brainCycleBtn.textContent = megaBrainMode ? '⬡ MEGA 4D' : '⟁ COMPOSITE';
+      this.brainCycleBtn.classList.toggle('mega', megaBrainMode);
+    });
+    this.tabsEl.appendChild(this.brainCycleBtn);
     this.buildGrid(doc);
     this.setTab(0);
   }
@@ -1290,6 +1398,7 @@ export class SuperNeural {
   setTab(i: number): void {
     this.tab = Math.max(0, Math.min(TABS.length - 1, i));
     this.tabBtns.forEach((b, k) => b.classList.toggle('on', k === this.tab));
+    this.brainCycleBtn.hidden = this.tab !== 3;
     this.buildGrid(this.host.ownerDocument ?? document);
   }
 

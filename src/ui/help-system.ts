@@ -195,6 +195,7 @@ const STYLE = `
   font:600 10px var(--font-mono,monospace);padding:5px 9px;cursor:pointer}
 .cqm-help-ai:hover{background:rgba(34,46,86,.8)}
 @media (max-width:560px){
+  #cqm-help-panel.open{touch-action:pan-y;overscroll-behavior:contain}
   #cqm-help-panel{left:6px;right:6px;width:auto;height:min(72dvh,560px);max-height:calc(100dvh - var(--cqm-bottom-h,108px) - 88px);bottom:calc(var(--cqm-bottom-h,108px) + 88px)}
   .cqm-help-body{flex-direction:column;flex:1;min-height:0}
   .cqm-help-left,.cqm-help-right{flex:1 1 0;max-height:none;min-height:100px;overflow:hidden}

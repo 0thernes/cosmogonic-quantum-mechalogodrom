@@ -1463,6 +1463,15 @@ export {
 /** Roadmap target neuron count for the apex (HONEST aspiration, not instantiated). */
 export const APEX_BRAIN_TARGET_NEURONS = 1_000_000_000;
 
+/** Pantheon glyph creatures (#0–#99) — designed brain parameter budget each. */
+export const PANTHEON_GLYPH_BRAIN_PARAMS = 25_000;
+
+/** APEX #101 starting designed parameter count; scales toward {@link APEX_BRAIN_ROADMAP_PARAMS}. */
+export const APEX_BRAIN_START_PARAMS = 100_000;
+
+/** Near-term APEX scaling target (before the full native 1B backend). */
+export const APEX_BRAIN_ROADMAP_PARAMS = 5_000_000;
+
 // ════════════════════════════════════════════════════════════════════════════════════════════════
 // SCALING SCAFFOLDING — the architecture that scales from the live engine toward 1 BILLION neurons
 // ════════════════════════════════════════════════════════════════════════════════════════════════
@@ -1510,6 +1519,24 @@ export const SCALE_LIVE: ApexScale = {
   thermo: 64,
   ouroboros: 48,
   qubits: 6,
+};
+
+/** Designed ~100k-parameter APEX scale (playable roadmap tier; live allocation still capped). */
+export const SCALE_APEX_START: ApexScale = {
+  name: 'APEX-100K',
+  loom: 12_000,
+  acoustic: 12_000,
+  necro: 8000,
+  kleinW: 80,
+  kleinH: 80,
+  pendulum: 8000,
+  slime: 12_000,
+  chronoD1: 12,
+  chronoD2: 120,
+  tunnel: 15_000,
+  thermo: 10_000,
+  ouroboros: 10_000,
+  qubits: 8,
 };
 
 /** A mid-tier scale (still browser-safe; organs at the cap). */

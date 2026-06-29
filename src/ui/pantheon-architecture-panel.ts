@@ -27,7 +27,13 @@ import {
   type BabyGenome,
   type LineageGlyph,
 } from '../sim/pantheon-breeding';
-import { createApexBrain, type ApexBrainSnapshot } from '../sim/apex-brain';
+import {
+  createApexBrain,
+  type ApexBrainSnapshot,
+  APEX_BRAIN_ROADMAP_PARAMS,
+  APEX_BRAIN_START_PARAMS,
+  PANTHEON_GLYPH_BRAIN_PARAMS,
+} from '../sim/apex-brain';
 import { mulberry32, type Rng } from '../math/rng';
 import { mountToggle } from './panel-dock';
 
@@ -428,6 +434,13 @@ export class PantheonArchitecturePanel {
       'BLASEAN — BLASCHKE PRODUCT',
       ['degree d', String(g.blaschke.degree)],
       ['|B|=1 err', g.blaschke.boundaryError.toExponential(1)],
+      'BRAIN — PARAMETER BUDGET',
+      [
+        'designed',
+        this.lineageIdx >= 100
+          ? `${bigNum(APEX_BRAIN_START_PARAMS)} start · →${bigNum(APEX_BRAIN_ROADMAP_PARAMS)} roadmap`
+          : `${bigNum(PANTHEON_GLYPH_BRAIN_PARAMS)} · visual dome swarm`,
+      ],
       'VERDICT',
       ['rarity', (g.rarity * 100).toFixed(0) + '%'],
       ['rank', g.rank],
@@ -602,7 +615,7 @@ function apexRows(s: ApexBrainSnapshot): Array<[string, string] | string> {
     ['vitality / agony', `${(t.vitality * 100).toFixed(0)}% / ${(t.agony * 100).toFixed(0)}%`],
     [
       'neurons',
-      `${bigNum(s.designedNeurons)} designed · ${bigNum(s.liveNeurons)} live · →${bigNum(s.targetNeurons)} (${s.scaleName})`,
+      `${bigNum(APEX_BRAIN_START_PARAMS)} start · ${bigNum(s.designedNeurons)} designed · ${bigNum(s.liveNeurons)} live · →${bigNum(APEX_BRAIN_ROADMAP_PARAMS)} (${s.scaleName})`,
     ],
     [
       '0 quantum brain',
