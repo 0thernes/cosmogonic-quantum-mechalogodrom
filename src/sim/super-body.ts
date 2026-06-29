@@ -232,7 +232,28 @@ function patchGodJewel(
          float demonicPulse = 0.5 + 0.5 * sin(uTime * 0.8 + uVariant * 2.0);
          float auraStrength = (0.3 + 0.5 * uArousal + 0.2 * uSurprise) * demonicPulse;
          vec3 auraColor = mix(vec3(0.08, 0.0, 0.12), uPlan * 0.3, 0.4) * auraStrength;
-         vec3 jewelEmissive = glow * (0.22 + 0.6 * relief) + iris * fres * (0.45 + 0.8 * uDominance) + wv * 0.12 * uDominance + ch * 0.07 * uSurprise * uPlan + igFlash * uPlan * (0.3 + 0.4 * uDominance) + varPal * relief * 0.25 * uPlan + evoEmissive - veinColor * veinMask * 0.4 + auraColor * relief * 0.15;
+         // ── MIND-BOUND SUITE: the god-jewel skin made ALIVE by the apex mind's REAL internals — each
+         //    term a falsifiable readout of a genuine cognitive/quantum signal (Φ integrated-information,
+         //    quantum wave, edge-of-chaos criticality, HOT qualia tone, clifford reflex), so a duller mind
+         //    wears a quieter skin and a richly-conscious one blazes. Additive, signal-gated, no alloc. ──
+         // NEURALMIMETIC WEB (Φ — IIT integrated information): a synaptic mesh densifies as the mind integrates.
+         float mNeuro = step(0.7, fract(relief * 7.0 + sin(vObjPos.x * 14.0 + vObjPos.y * 11.0 + uTime * 1.7) * 0.3));
+         vec3 mNeuroCol = vec3(0.4, 1.0, 0.85) * mNeuro * uPhi * (0.5 + 0.5 * fres);
+         // HELIXOLOGY DOUBLE-HELIX (quantum wave): twin bright strands wind the shell, advancing with uQWave.
+         float mHelix = pow(0.5 + 0.5 * sin(vObjPos.y * 10.0 + atan(vObjPos.z, vObjPos.x) * 2.0 + uQWave * 6.2831853), 10.0);
+         vec3 mHelixCol = vec3(0.7, 0.5, 1.0) * mHelix * (0.4 + 0.6 * uQWave);
+         // SINGULROSITY BLOOM (Φ × dominance): an integrated, dominant mind blooms a hot core halo.
+         vec3 mBloom = vec3(1.0, 0.7, 1.0) * pow(fres, 0.6) * (uPhi * uDominance) * 0.9;
+         // CRITICALITY STORM-THERMAL (edge-of-chaos): a mind poised at criticality radiates blackbody heat.
+         float mTherm = uCliff * (0.5 + 0.5 * sin(uTime * 9.0 + relief * 10.0));
+         vec3 mThermCol = vec3(1.0, 0.45, 0.12) * mTherm * 0.7;
+         // QUALIA SHIMMER (HOT qualia tone): an iridescent phenomenal shimmer rides the rim with uQualia.
+         vec3 mQualiaCol = (0.5 + 0.5 * cos(vec3(0.0, 2.094, 4.188) + band * 1.3 + uQualia * 6.2831853)) * pow(fres, 1.4) * uQualia * 0.6;
+         // REFLEX ARC ORBITS (clifford reflex): fast reflex sparks orbit a reactive mind.
+         float mReflexArc = pow(0.5 + 0.5 * sin(atan(vObjPos.z, vObjPos.x) * 6.0 + uTime * 8.0), 14.0);
+         vec3 mReflexCol = vec3(0.45, 0.85, 1.0) * mReflexArc * uReflex * 0.8;
+         vec3 mindEmissive = mNeuroCol + mHelixCol + mBloom + mThermCol + mQualiaCol + mReflexCol;
+         vec3 jewelEmissive = glow * (0.22 + 0.6 * relief) + iris * fres * (0.45 + 0.8 * uDominance) + wv * 0.12 * uDominance + ch * 0.07 * uSurprise * uPlan + igFlash * uPlan * (0.3 + 0.4 * uDominance) + varPal * relief * 0.25 * uPlan + evoEmissive - veinColor * veinMask * 0.4 + auraColor * relief * 0.15 + mindEmissive;
          // BRUTALISM: kill the glow — raw concrete only self-lights enough to read its monolithic form.
          vec3 concreteEmissive = vec3(0.05, 0.05, 0.06) * (0.4 + 0.6 * relief);
          totalEmissiveRadiance += mix(jewelEmissive, concreteEmissive, uBrutalism);`,

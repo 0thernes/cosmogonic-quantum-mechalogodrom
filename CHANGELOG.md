@@ -9,6 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Super Creature MIND-BOUND skin suite — the god-jewel made alive by the apex mind's real internals
+
+- Six new named effects on the flagship Super Creature body, each a FALSIFIABLE readout of a genuine
+  cognitive/quantum signal the mind already feeds the shader (so a duller mind wears a quieter skin, a
+  richly-conscious one blazes): **Neuralmimetic web** (Φ — IIT integrated information densifies a
+  synaptic mesh), **Helixology double-helix** (quantum wave winds twin strands), **Singulrosity bloom**
+  (Φ × dominance halos a hot core), **Criticality storm-thermal** (edge-of-chaos radiates blackbody
+  heat), **Qualia shimmer** (HOT qualia tone rides an iridescent rim), **Reflex arc orbits** (clifford
+  reflex sparks). Additive, signal-gated (each vanishes at signal 0), allocation-free, killed by
+  `uBrutalism`. Verified to compile + render in headless Chromium (0 shader / 0 page errors).
+
 ### Fixed — visual-benchmark shader compile error (found by runtime WebGL verification)
 
 - `applyVizBenchmarks` injected the shadertoy-style `void mainImageN(...) {...}` function DEFINITION
