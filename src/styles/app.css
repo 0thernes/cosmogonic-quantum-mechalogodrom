@@ -368,6 +368,12 @@ a:focus-visible {
   #cqm-persist-nav .cqm-persist-panels {
     display: inline-flex !important;
   }
+  #cqm-persist-nav .cqm-persist-btn {
+    height: 34px;
+    padding: 0 12px;
+    font-size: 12px;
+    border-radius: 17px;
+  }
 }
 
 /* ── Bottom toolbar scroll shell (src/ui/toolbar.ts) ────────────
@@ -927,7 +933,7 @@ html.cqm-shell-ready .algo-list:empty::after {
   align-self: end;
   height: calc(100dvh - var(--cqm-bottom-h, 108px) - 12px);
   max-height: calc(100dvh - var(--cqm-bottom-h, 108px) - 12px);
-  justify-content: flex-end;
+  justify-content: flex-start;
 }
 .ui-col-left {
   grid-area: left;
@@ -958,6 +964,7 @@ html.cqm-shell-ready .algo-list:empty::after {
   .ui-col-left #algoP > .panel-body {
     flex: 1 1 auto;
     min-height: 0;
+    max-height: none !important;
     overflow-y: auto;
     overflow-x: hidden;
   }
@@ -980,6 +987,7 @@ html.cqm-shell-ready .algo-list:empty::after {
   .ui-col-right #oP .panel-body {
     flex: 1 1 auto;
     min-height: 0;
+    max-height: none !important;
     overflow-y: auto;
     overflow-x: hidden;
   }
