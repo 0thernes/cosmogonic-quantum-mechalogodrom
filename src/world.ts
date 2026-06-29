@@ -1272,6 +1272,17 @@ export class World {
     if (s.frame % (600 * gmScale) === 300) this.graphMind.updateRank();
 
     this.constellations.update(t, bands);
+    // ── BRUTALISM: smooth the toggle into a 0..1 factor and crossfade the WHOLE cosmos to raw poured
+    //    concrete — apex bodies, every organism, the ground + light rig, the sky dome, and the fog. The
+    //    factor is computed HERE, BEFORE atmosphere.update, so the sky dome re-bakes with THIS frame's
+    //    factor (not last frame's) and stays frame-coherent with the bodies/ground/organisms/fog. The
+    //    ease is snapped to its exact 0/1 target so OFF is byte-identical (full restore). No alloc. ──
+    const bTarget = s.brutalism ? 1 : 0;
+    this.brutalismFactor += (bTarget - this.brutalismFactor) * Math.min(1, dt * 2.5);
+    if (!s.brutalism && this.brutalismFactor < 0.02) this.brutalismFactor = 0;
+    else if (s.brutalism && this.brutalismFactor > 0.98) this.brutalismFactor = 1;
+    const bf = this.brutalismFactor;
+    this.atmosphere.setBrutalism(bf);
     // Alien sky + air: dome recolors with weather/chaos, haze advects with wind
     // and breathes with bass, aurora brightens with quantum entropy (V4.1).
     this.atmosphere.update(dt, t, bands, this.qc.entropy);
@@ -1279,18 +1290,14 @@ export class World {
     // (phylumCounts/titanLedger/warMatrix), always current; internally cadenced.
     this.viz3d.update(this.viz3dSnap);
     this.environment.update(dt, t);
-    // ── BRUTALISM: smooth the toggle into a 0..1 factor and crossfade the WHOLE cosmos to raw
-    //    poured concrete — the apex bodies, every instanced organism, the ground + light rig, the
-    //    sky dome, and the fog. Driven each frame (after environment.update, so it rides this
-    //    frame's animated rig); f=0 is a no-op so the cosmos is byte-identical when OFF. No alloc. ──
-    const bTarget = s.brutalism ? 1 : 0;
-    this.brutalismFactor += (bTarget - this.brutalismFactor) * Math.min(1, dt * 2.5);
-    if (!s.brutalism && this.brutalismFactor < 0.02) this.brutalismFactor = 0;
-    else if (s.brutalism && this.brutalismFactor > 0.98) this.brutalismFactor = 1;
-    const bf = this.brutalismFactor;
+    // Crossfade the rest of the cosmos — apex bodies, instanced/per-mesh organisms, ground + light rig
+    // (AFTER environment.update, so it rides this frame's animated rig).
     for (let i = 0; i < this.superBodies.length; i++) this.superBodies[i]!.setBrutalism(bf);
+    // Unlocked superhero avatar + forked twins are SuperBodySystems too — desaturate them with the five
+    // Archons, else BRUTALISM turns the world + Archons concrete while the player creature/twins keep
+    // the god-jewel skin. No-op until any hero body is revealed (the array is empty).
+    for (let i = 0; i < this.heroBodies.length; i++) this.heroBodies[i]!.body.setBrutalism(bf);
     this.environment.applyBrutalism(bf);
-    this.atmosphere.setBrutalism(bf);
     if (this.instanced) this.instanced.setBrutalism(bf);
     else this.entities.applyBrutalism(bf); // phone tier: organisms are real meshes → desaturate them too
     if (bf > 0) {

@@ -461,6 +461,9 @@ export class EnvironmentSystem {
   /** Live restore baseline for the ground's emissiveIntensity (0.3 at build; lifted to 0.85 once the
    *  reaction-diffusion emissiveMap attaches). BRUTALISM lerps FROM this so OFF restores the RD glow. */
   private groundBaseEmissiveIntensity = 0.3;
+  /** BRUTALISM applied last call? Lets the OFF edge run one exact g=0 restore pass (static materials
+   *  don't re-animate themselves), then idle — see {@link applyBrutalism}. */
+  private brutalApplied = false;
   /** Ambient + key (sun) lights — captured so BRUTALISM can desaturate/dim them per frame. */
   private readonly ambient: THREE.AmbientLight;
   private readonly sun: THREE.DirectionalLight;
@@ -721,7 +724,12 @@ export class EnvironmentSystem {
    * intensity scaling rides this frame's already-animated values without compounding. O(1).
    */
   applyBrutalism(f: number): void {
-    if (f <= 0) return; // OFF — leave the animated rig + ground untouched (byte-identical)
+    if (f <= 0) {
+      if (!this.brutalApplied) return; // steady OFF — already byte-identical, nothing to restore
+      f = 0; // OFF edge: fall through with g=0 so every STATIC material (ground/ambient/sun/architecture)
+      //         lerps EXACTLY back to its captured base. The animated rig restores via update() on its
+      //         own, but the static ground glow (post-RD 0.85) would otherwise stay parked ~2% concrete.
+    }
     const g = f > 1 ? 1 : f;
     // Ground: static material → lerp from its known base toward poured concrete (no compounding).
     this.groundMaterial.color.copy(GROUND_BASE).lerp(BRUTAL_GROUND, g);
@@ -758,6 +766,7 @@ export class EnvironmentSystem {
     }
     for (const mono of this.monoliths) mono.crown.intensity *= 1 - 0.7 * g;
     for (const dio of this.dioramas) dio.glow.intensity *= 1 - 0.7 * g;
+    this.brutalApplied = g > 0; // track so the OFF edge runs exactly one g=0 restore pass, then idles
   }
 
   /** BRUTALISM: gather every reachable architecture material (halo rings, diorama shells + orbiters,

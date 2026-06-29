@@ -163,7 +163,13 @@ describe('EnvironmentSystem — BRUTALISM restores the reaction-diffusion ground
       env.applyBrutalism(f);
     }
     expect(ground.emissiveIntensity).toBeGreaterThan(0.8);
-    expect(ground.emissiveIntensity).toBeLessThanOrEqual(0.85 + 1e-9);
+    // The world snaps the eased factor to EXACTLY 0; the OFF-edge restore pass must return the static
+    // ground glow to its exact post-RD baseline (not park ~2% concrete) — a second PR-review fix.
+    env.applyBrutalism(0);
+    expect(ground.emissiveIntensity).toBeCloseTo(0.85, 9);
+    // Idle OFF keeps it there (steady-state early-return leaves it untouched).
+    env.applyBrutalism(0);
+    expect(ground.emissiveIntensity).toBeCloseTo(0.85, 9);
   });
 
   test('without the RD map, brutalism off still restores the build-time 0.3 baseline', () => {

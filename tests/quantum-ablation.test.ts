@@ -46,7 +46,10 @@ describe('P1 quantum ablation — a real, parameter-matched control', () => {
       if (JSON.stringify(off.snapshot()) !== onSnap) diverged = true;
     }
     expect(diverged).toBe(true);
-  });
+    // 30s timeout: 3 minds × 80 full think() beats + a JSON snapshot per beat is genuinely heavy and
+    // brushes bun's 5s default ONLY under --coverage instrumentation + full-suite parallel contention.
+    // The run is deterministic — this guards the scheduler flake, not any logic.
+  }, 30_000);
 
   test('default SuperMind is quantum-ON — setQuantumAblated(false) is a no-op vs the untouched default', () => {
     const def = new SuperMind(mulberry32(3));

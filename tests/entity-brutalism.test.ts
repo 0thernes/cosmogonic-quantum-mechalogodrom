@@ -86,11 +86,13 @@ function sat(c: THREE.Color): number {
   return hsl.s;
 }
 
-/** The exact shader formula, in CPU, for one base colour at factor f. */
+/** The exact shader formula, in CPU, for one base colour at factor f. The implementation captures the
+ *  base as a PACKED HEX (zero-alloc), so mirror that 8-bit round-trip here for an exact comparison. */
 function expectConcrete(base: THREE.Color, f: number): THREE.Color {
-  const lum = base.r * 0.299 + base.g * 0.587 + base.b * 0.114;
+  const b = new THREE.Color().setHex(base.getHex()); // match the impl's packed-hex base capture
+  const lum = b.r * 0.299 + b.g * 0.587 + b.b * 0.114;
   const tgt = new THREE.Color(lum, lum, lum).lerp(new THREE.Color(0.42, 0.42, 0.45), 0.55);
-  return base.clone().lerp(tgt, f);
+  return b.lerp(tgt, f);
 }
 
 describe('EntityManager.applyBrutalism — phone-tier per-mesh parity', () => {

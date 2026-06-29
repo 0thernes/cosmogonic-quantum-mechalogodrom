@@ -133,6 +133,7 @@ export function metabolicLuminance(energy: number, age: number, life: number): n
  *  scratch colour — module consts ⇒ zero per-frame allocation in {@link EntityManager.applyBrutalism}. */
 const ENT_BRUTAL_CONCRETE = new THREE.Color(0.42, 0.42, 0.45);
 const ENT_BRUTAL_SCRATCH = new THREE.Color();
+const ENT_BRUTAL_BASE = new THREE.Color();
 
 /** Scratch vector for velocity integration / containment impulses (no per-frame allocation). */
 const MOVE = new THREE.Vector3();
@@ -179,7 +180,7 @@ export class EntityManager {
   private readonly ctx: SimContext;
   /** BRUTALISM (phone tier): per-material captured TRUE colour, so {@link applyBrutalism} lerps FROM
    *  it and never compounds; keyed by the per-entity material (GC'd with it on disposal). */
-  private readonly brutalBase = new WeakMap<THREE.MeshStandardMaterial, THREE.Color>();
+  private readonly brutalBase = new WeakMap<THREE.MeshStandardMaterial, number>();
   /** BRUTALISM previous applied factor — drives the on/off edge logic in {@link applyBrutalism}. */
   private brutalPrevG = 0;
   /** Single long-lived behavior env; per-entity fields are rewritten in `update()` (no alloc). */
@@ -667,6 +668,11 @@ export class EntityManager {
     mat.color.copy(m.col);
     mat.emissive.copy(m.em);
     paintVibrant(mat, m, (mi % morphCount) + this.list.length);
+    // BRUTALISM (phone tier): the material's TRUE colour just changed — drop its captured base so the
+    // next applyBrutalism re-captures the new morph colour. Without this, a remorph WHILE concrete
+    // (mutation / puppet-master / titan effects) would desaturate from — and restore to — the OLD
+    // colour, silently losing the remorph. WeakMap delete is a no-op when no base was captured.
+    this.brutalBase.delete(mat);
     // metalness/roughness/transparent/opacity/side/wireframe/emissive + depthWrite are all set
     // by applyRenderModeTo on top of the morphotype base (CONTRACTS V7.3).
     applyRenderModeTo(mat, ctx.state.renderMode, m);
@@ -721,12 +727,12 @@ export class EntityManager {
     const list = this.list;
     if (g <= 0) {
       if (this.brutalPrevG > 0) {
-        // OFF edge — restore each organism's true colour from its captured base.
+        // OFF edge — restore each organism's true colour from its captured (packed-hex) base.
         for (let i = 0; i < list.length; i++) {
           const e = list[i];
           if (!e) continue;
-          const base = this.brutalBase.get(e.material);
-          if (base) e.material.color.copy(base);
+          const baseHex = this.brutalBase.get(e.material);
+          if (baseHex !== undefined) e.material.color.setHex(baseHex);
         }
       }
       this.brutalPrevG = 0;
@@ -735,17 +741,20 @@ export class EntityManager {
     const onEdge = this.brutalPrevG <= 0;
     const concrete = ENT_BRUTAL_CONCRETE;
     const tgt = ENT_BRUTAL_SCRATCH;
+    const base = ENT_BRUTAL_BASE;
     for (let i = 0; i < list.length; i++) {
       const e = list[i];
       if (!e) continue;
       const mat = e.material;
-      let base = this.brutalBase.get(mat);
-      if (!base) {
-        base = new THREE.Color().copy(mat.color); // first sight (incl. mid-mode spawns)
-        this.brutalBase.set(mat, base);
-      } else if (onEdge) {
-        base.copy(mat.color); // re-capture the live true colour the moment brutalism engages
+      let baseHex = this.brutalBase.get(mat);
+      if (baseHex === undefined || onEdge) {
+        // First sight (incl. mid-mode spawns) OR the moment brutalism engages: capture the live TRUE
+        // colour as a packed hex — at the on-edge the rendered colour IS the true colour (steady-OFF
+        // never touched it, and the prior OFF edge restored it). No allocation.
+        baseHex = mat.color.getHex();
+        this.brutalBase.set(mat, baseHex);
       }
+      base.setHex(baseHex);
       const lum = base.r * 0.299 + base.g * 0.587 + base.b * 0.114; // Rec.601 luma (matches shader)
       tgt.setRGB(lum, lum, lum).lerp(concrete, 0.55);
       mat.color.copy(base).lerp(tgt, g);

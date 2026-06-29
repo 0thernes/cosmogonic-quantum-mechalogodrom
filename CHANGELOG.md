@@ -9,6 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### BRUTALISM frame-coherence + completeness (post-merge review follow-up)
+
+- **Sky frame-coherence (`world.ts`).** The eased brutalism factor is now computed BEFORE
+  `atmosphere.update`, so the sky dome re-bakes with THIS frame's factor instead of last frame's —
+  the dome no longer drifts a frame behind the bodies/ground/organisms/fog during toggles/easing.
+- **Environment full restore (`environment.ts`).** `applyBrutalism` runs one exact `g=0` restore pass
+  on the OFF edge for the STATIC ground/ambient/sun/architecture materials; the early-return used to
+  leave them parked at the last ~2% concrete lerp (the RD ground glow stuck below its 0.85 baseline).
+- **Hero/twin bodies (`world.ts`).** The unlocked superhero avatar + forked twins are now desaturated
+  with the five Archons (were left god-jewel while the rest of the cosmos went concrete).
+- **Per-mesh allocation + remorph (`entities.ts`).** The phone-tier brutalism base is captured as a
+  packed HEX (zero allocation on the ON edge — no GC hitch), and `remorph()` invalidates it so a morph
+  WHILE concrete re-captures the new colour instead of restoring the stale pre-morph one.
+
 ### BRUTALISM state-restoration fixes — the OFF toggle now fully restores the cosmos (PR review)
 
 - **Sky dome (`atmosphere.ts`).** The OFF toggle eases `brutalismF` toward 0 but never lands exactly
