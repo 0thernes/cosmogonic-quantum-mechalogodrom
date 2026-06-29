@@ -407,8 +407,7 @@ function fitHud(): void {
   syncBottomDockHeight();
   const topInset = 52;
   const available = barsTop - topInset - 8;
-  if (available > 120)
-    root.style.setProperty('--cqm-hud-max-height', `${Math.round(available)}px`);
+  if (available > 120) root.style.setProperty('--cqm-hud-max-height', `${Math.round(available)}px`);
   else root.style.removeProperty('--cqm-hud-max-height');
   if (barsTop < vh)
     root.style.setProperty('--cqm-hud-bottom', `${Math.round(vh - barsTop + 10)}px`);
@@ -579,12 +578,7 @@ function buildPersistentNav(doc: Document): void {
   }
   strip.removeAttribute('hidden');
 
-  const mkBtn = (
-    label: string,
-    title: string,
-    fn: () => void,
-    extra = '',
-  ): HTMLButtonElement => {
+  const mkBtn = (label: string, title: string, fn: () => void, extra = ''): HTMLButtonElement => {
     const b = doc.createElement('button');
     b.type = 'button';
     b.className = 'cqm-persist-btn' + (extra ? ' ' + extra : '');
@@ -603,12 +597,7 @@ function buildPersistentNav(doc: Document): void {
     }
   }
 
-  const mkAct = (
-    label: string,
-    title: string,
-    action: string,
-    extra = '',
-  ): HTMLButtonElement => {
+  const mkAct = (label: string, title: string, action: string, extra = ''): HTMLButtonElement => {
     const b = doc.createElement('button');
     b.type = 'button';
     b.className = 'cqm-persist-btn' + (extra ? ' ' + extra : '');

@@ -1,0 +1,372 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta http-equiv="Cache-Control" content="no-cache, must-revalidate" />
+    <title>Bible — Cosmogonic Quantum Mechalogodrom</title>
+    <meta
+      name="description"
+      content="The Mechalogodrom Bible: deep manual, glossary, and guide to playing, simulating, and understanding every system in the Cosmogonic Quantum Mechalogodrom."
+    />
+    <meta name="theme-color" content="#030612" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='15' fill='%23030612'/%3E%3Cellipse cx='16' cy='16' rx='13' ry='5' fill='none' stroke='%230ef' stroke-width='1.6' transform='rotate(28 16 16)'/%3E%3Cellipse cx='16' cy='16' rx='13' ry='5' fill='none' stroke='%23fa0' stroke-width='1.6' transform='rotate(-28 16 16)'/%3E%3Ccircle cx='16' cy='16' r='4.5' fill='%230ef'/%3E%3C/svg%3E"
+    />
+    <style>
+      .sat-header {
+        border-bottom: 1px solid rgba(255, 200, 80, 0.18);
+        background: rgba(12, 10, 6, 0.82);
+        backdrop-filter: blur(12px);
+        position: sticky;
+        top: 0;
+        z-index: 50;
+      }
+      .sat-header-inner {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 12px 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+      }
+      .sat-logo {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: #ffe8b8;
+        text-decoration: none;
+        font-size: 13px;
+        letter-spacing: 0.04em;
+        font-weight: 600;
+      }
+      .sat-logo:hover {
+        color: #ffc857;
+      }
+      .sat-nav {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex-wrap: wrap;
+      }
+      .sat-nav a {
+        display: inline-flex;
+        padding: 6px 10px;
+        border-radius: 6px;
+        border: 1px solid transparent;
+        color: rgba(255, 220, 160, 0.75);
+        text-decoration: none;
+        font-size: 11px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      .sat-nav a:hover {
+        background: rgba(255, 200, 80, 0.12);
+        border-color: rgba(255, 200, 80, 0.25);
+        color: #ffe8b8;
+      }
+      .sat-nav a[aria-current='page'] {
+        border-color: rgba(255, 200, 80, 0.5);
+        color: #ffc857;
+      }
+      body {
+        margin: 0;
+        background: #030612;
+        color: #e8eef8;
+        font:
+          15px/1.65 system-ui,
+          sans-serif;
+      }
+      main {
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 24px 16px 80px;
+      }
+      h1 {
+        font-size: 1.75rem;
+        letter-spacing: 0.02em;
+        color: #ffc857;
+        margin: 0 0 0.5rem;
+      }
+      h2 {
+        font-size: 1.2rem;
+        color: #0ef;
+        margin: 2.5rem 0 0.75rem;
+        scroll-margin-top: 72px;
+      }
+      h3 {
+        font-size: 1rem;
+        color: #c9d8f0;
+        margin: 1.5rem 0 0.5rem;
+      }
+      .lede {
+        color: #b8c8e8;
+        max-width: 72ch;
+      }
+      .index {
+        columns: 2;
+        gap: 2rem;
+        margin: 1.5rem 0 2rem;
+        padding: 1rem 1.25rem;
+        border: 1px solid rgba(255, 200, 80, 0.2);
+        border-radius: 10px;
+        background: rgba(255, 200, 80, 0.04);
+      }
+      .index a {
+        color: #7fd4ff;
+        text-decoration: none;
+        display: block;
+        padding: 2px 0;
+        font-size: 13px;
+      }
+      .index a:hover {
+        text-decoration: underline;
+      }
+      dl {
+        margin: 0;
+      }
+      dt {
+        font-weight: 700;
+        color: #ffc857;
+        margin-top: 1rem;
+      }
+      dd {
+        margin: 0.25rem 0 0 0;
+        color: #c8d4ec;
+      }
+      code {
+        font-family: ui-monospace, monospace;
+        font-size: 0.9em;
+        background: rgba(0, 238, 255, 0.08);
+        padding: 0.1em 0.35em;
+        border-radius: 4px;
+      }
+      ul {
+        padding-left: 1.25rem;
+      }
+      li {
+        margin: 0.35rem 0;
+      }
+      footer {
+        margin-top: 3rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid rgba(120, 160, 220, 0.15);
+        font-size: 13px;
+        color: #8fa8c8;
+      }
+      footer a {
+        color: #0ef;
+      }
+      @media (max-width: 640px) {
+        .index {
+          columns: 1;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="sat-header">
+      <div class="sat-header-inner">
+        <a class="sat-logo" href="/">
+          <span>COSMOGONIC · BIBLE</span>
+        </a>
+        <nav class="sat-nav" aria-label="Satellite pages">
+          <a href="/">Dome</a>
+          <a href="/docs">Docs</a>
+          <a href="/spec">Spec</a>
+          <a href="/bible" aria-current="page">Bible</a>
+          <a href="/lab">Lab</a>
+        </nav>
+      </div>
+    </div>
+
+    <main>
+      <header>
+        <h1>Mechalogodrom Bible</h1>
+        <p class="lede">
+          The deep manual for the <strong>Cosmogonic Quantum Mechalogodrom</strong> — how to play,
+          simulate, read the HUD, and understand what every system is doing. This page complements
+          <a href="/docs">Docs</a> (architecture) and <a href="/spec">Spec</a> (technical sheet).
+          Philosophy and contracts live in the repo under
+          <code>docs/PHILOSOPHY-2026-06-26.md</code> and
+          <code>docs/MODULE-CONTRACTS-2026-06-26.md</code>.
+        </p>
+      </header>
+
+      <nav class="index" aria-label="Table of contents">
+        <a href="#start">1. Getting started</a>
+        <a href="#controls">2. Controls &amp; dock</a>
+        <a href="#world">3. The living world</a>
+        <a href="#super">4. Super creature &amp; ACCESS</a>
+        <a href="#alphabet">5. 100-letter dome &amp; APEX</a>
+        <a href="#sorting">6. Sorting fields</a>
+        <a href="#neural">7. Neural / Architect / NHSI</a>
+        <a href="#wildbeyond">8. Quantum WildBeyond lab</a>
+        <a href="#glossary">9. Glossary</a>
+        <a href="#future">10. Mission &amp; roadmap</a>
+      </nav>
+
+      <section id="start">
+        <h2>1. Getting started</h2>
+        <p>
+          Open the dome at <a href="/">/</a>. The simulation runs in your browser via Bun + WebGL.
+          Every run is <strong>seeded and deterministic</strong>: the same seed reproduces the same
+          population trajectory. Reloading the page starts a <strong>fresh session</strong> for
+          super-creature evolution, levels, and economy — nothing carries over from the last visit.
+        </p>
+        <h3>First five minutes</h3>
+        <ul>
+          <li>Watch entities move, trade, split, and mutate in the arena.</li>
+          <li>Open <strong>Telemetry</strong> (left) for population and chaos readouts.</li>
+          <li>
+            Try <strong>Sorting Fields</strong> — pick a field or hit <strong>AUTO</strong> to cycle
+            every 6 seconds.
+          </li>
+          <li>
+            Tap dock buttons: <strong>AI</strong>, <strong>HELP</strong>, <strong>NEURAL</strong>,
+            <strong>ARCHITECT</strong>.
+          </li>
+          <li>
+            Use <strong>⛓ ACCESS</strong> when ready to unlock the playable super creature twin.
+          </li>
+        </ul>
+      </section>
+
+      <section id="controls">
+        <h2>2. Controls &amp; dock</h2>
+        <p>
+          The bottom persist bar holds <strong>DOCS · SPEC · BIBLE · LAB</strong>, transport
+          (<strong>⏸ ↻ ⏱ 👁 ⬡</strong>), sim actions (<strong>⇄ ✦ ☢ ⚡</strong>),
+          <strong>ACCESS</strong>, and <strong>SET</strong>. Camera movement pads live in
+          <strong>Settings</strong> and on touch overlays (joystick + look pad). Keyboard: WASD
+          move, QE vertical, arrows rotate, Space burst, Shift split, M mutate, Tab chaos boost.
+        </p>
+        <h3>Settings (⚙ SET)</h3>
+        <p>
+          Audio, render mode, view, weather, pause, time scale, reset, apocalypse, singularity, NHI
+          launch, and chaos mode. Split / Burst / Mutate / Chaos moved here from the old control
+          panel to save HUD space.
+        </p>
+      </section>
+
+      <section id="world">
+        <h2>3. The living world</h2>
+        <p>
+          Up to 50,000 organisms across phyla morphotypes, titans, economy agents, weather, and
+          chaos fields. Entities use real seeded math — colors are quint-prime hashed for thousands
+          of saturated variations. The Mechalogodrom center monster, Archon pantheons, and NHSI
+          faculties read and write shared world state.
+        </p>
+      </section>
+
+      <section id="super">
+        <h2>4. Super creature &amp; ACCESS</h2>
+        <p>
+          Solving the access puzzle unlocks <strong>superhero mode</strong>: you become the second
+          super creature. The twin HUD shows life, energy, XP, wallet, neural emotion, powers, and
+          pilot/camera modes. Brains: letter creatures ~25,000 parameters each;
+          <strong>APEX #101</strong> starts at 100,000 parameters scaling toward millions — alien,
+          non-earth morphologies documented in the repo MD corpus.
+        </p>
+      </section>
+
+      <section id="alphabet">
+        <h2>5. 100-letter dome &amp; APEX</h2>
+        <p>
+          The Latin/Greek/Roman alphabet pantheon (100 glyphs + APEX #101) orbits the dome as a
+          <strong>visual swarm</strong>. Breeding rites no longer wire into petri growth — they
+          exist, glow, and evolve visually until backend coupling returns. The APEX abomination is
+          the capstone visual entity.
+        </p>
+      </section>
+
+      <section id="sorting">
+        <h2>6. Sorting fields</h2>
+        <p>
+          Twenty-five algorithms sort entities by different keys (energy, age, hue, etc.). Modes:
+        </p>
+        <ul>
+          <li><strong>Single</strong> — one field at a time; click rows to switch.</li>
+          <li><strong>ALL</strong> — every field active; progress bars pulse together.</li>
+          <li>
+            <strong>AUTO</strong> — advances to the next field every 6 sim-seconds; readout shows
+            countdown.
+          </li>
+        </ul>
+      </section>
+
+      <section id="neural">
+        <h2>7. Neural / Architect / NHSI</h2>
+        <p>
+          The center HUD cycles AI copilot, HELP, audit log, NHSI neural observatory, market,
+          architect panels, and the 101-creature architecture pantheon cycler. Connectome and brain
+          composites are functional correlates — scaffolding for measurement, not claims of
+          sentience. A richer 4D spiking brain visualization is planned inside Architect as a cycle
+          mode.
+        </p>
+      </section>
+
+      <section id="wildbeyond">
+        <h2>8. Quantum WildBeyond lab</h2>
+        <p>
+          The <a href="/lab">Lab</a> artifact runs 36 WEBGL tiles across three boards: collapse
+          fields, attractors (Lorenz, Rössler, Thomas, …), reaction–diffusion, Voronoi, and
+          curl-noise flows. Tap tiles to pulse; page keys switch boards. Mobile tiles use
+          pulled-back cameras so attractors stay framed.
+        </p>
+      </section>
+
+      <section id="glossary">
+        <h2>9. Glossary</h2>
+        <dl>
+          <dt>Mechalogodrom</dt>
+          <dd>The central arena organism and namesake simulation dome.</dd>
+          <dt>NHSI</dt>
+          <dd>
+            Neural Hierarchy Super-Intelligence — faculty ensemble + theory-of-mind organs wired to
+            world telemetry.
+          </dd>
+          <dt>Tsotchke</dt>
+          <dd>
+            Real MIT quantum corpus integration; correctness without QPU is speed-only, not fake
+            math.
+          </dd>
+          <dt>Chaos mode</dt>
+          <dd>Lorenz-driven quantum storm engaged via settings or hotkey K.</dd>
+          <dt>Determinism / Rng</dt>
+          <dd>
+            All sim randomness uses seeded <code>Rng</code>; no <code>Math.random</code> in sim
+            logic.
+          </dd>
+          <dt>WildBeyond</dt>
+          <dd>
+            Standalone p5 lab blending Lorenz collapse, Born-rule measurement, and 36 mathematical
+            tiles.
+          </dd>
+          <dt>APEX</dt>
+          <dd>Entity #101 — hyper-chromatic capstone; 100k-parameter brain baseline.</dd>
+          <dt>ACCESS</dt>
+          <dd>Cryptographic puzzle terminal; unlocks playable super creature + twin HUD.</dd>
+        </dl>
+      </section>
+
+      <section id="future">
+        <h2>10. Mission &amp; roadmap</h2>
+        <p>
+          Solo indie A-Life research dome by 0thernes Corp. Goals: full-stack browser + mobile play,
+          multiplayer sessions, ethical monetization, free AI resource links for players,
+          peer-reviewed meta-analysis of the simulation, and outreach to labs and institutions. See
+          <code>docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md</code> for measured progress receipts.
+        </p>
+      </section>
+
+      <footer>
+        Cosmogonic Quantum Mechalogodrom &mdash; &copy; 2026 0thernes &middot;
+        <a href="/">return to the dome</a> &middot; <a href="/docs">architecture docs</a> &middot;
+        <a href="/spec">technical spec</a>
+      </footer>
+    </main>
+  </body>
+</html>

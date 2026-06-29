@@ -82,6 +82,7 @@ const navFromLab: ReadonlyArray<readonly [string, string]> = base
   ? [
       ['href="/docs"', `href="${base}/docs.html${q}"`],
       ['href="/spec"', `href="${base}/specs.html${q}"`],
+      ['href="/bible"', `href="${base}/bible.html${q}"`],
       ['href="/lab"', `href="${base}/lab/${q}"`],
       ['href="/lab/"', `href="${base}/lab/${q}"`],
       ['href="/"', `href="${base}/index.html${q}"`],
@@ -89,6 +90,7 @@ const navFromLab: ReadonlyArray<readonly [string, string]> = base
   : [
       ['href="/docs"', `href="../docs.html${q}"`],
       ['href="/spec"', `href="../specs.html${q}"`],
+      ['href="/bible"', `href="../bible.html${q}"`],
       ['href="/lab"', `href="./${q}"`],
       ['href="/lab/"', `href="./${q}"`],
       ['href="/"', `href="../index.html${q}"`],
@@ -99,12 +101,14 @@ const navRoot: ReadonlyArray<readonly [string, string]> = base
   ? [
       ['href="/docs"', `href="${base}/docs.html${q}"`],
       ['href="/spec"', `href="${base}/specs.html${q}"`],
+      ['href="/bible"', `href="${base}/bible.html${q}"`],
       ['href="/lab"', `href="${base}/lab/${q}"`],
       ['href="/"', `href="${base}/index.html${q}"`],
     ]
   : [
       ['href="/docs"', `href="docs.html${q}"`],
       ['href="/spec"', `href="specs.html${q}"`],
+      ['href="/bible"', `href="bible.html${q}"`],
       ['href="/lab"', `href="lab/${q}"`],
       ['href="/"', `href="index.html${q}"`],
     ];
@@ -121,6 +125,7 @@ await rewrite('specs.html', [
   ...navRoot,
   ['</body>', '    <script type="module" src="./alife-gallery.js"></script>\n  </body>'],
 ]);
+await rewrite('bible.html', navRoot);
 await rewrite('lab/index.html', navFromLab);
 
 // 4. Drop a 404.html so GitHub Pages shows a branded fallback (not the raw GitHub 404).

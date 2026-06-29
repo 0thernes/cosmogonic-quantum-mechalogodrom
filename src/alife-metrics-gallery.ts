@@ -15,7 +15,7 @@ export interface AlifeMetric {
 function siteBasePrefix(): string {
   if (typeof location === 'undefined') return '';
   const p = location.pathname;
-  if (p === '/' || p === '/docs' || p === '/spec' || p === '/lab') return '';
+  if (p === '/' || p === '/docs' || p === '/spec' || p === '/bible' || p === '/lab') return '';
   const repoHtml = p.match(/^(\/[^/]+)\/(?:specs|docs|index)\.html$/i);
   if (repoHtml) return repoHtml[1]!;
   const repoLab = p.match(/^(\/[^/]+)\/lab(?:\/index\.html?)?\/?$/i);
@@ -304,7 +304,10 @@ function mountZoomView(stage: HTMLElement, onTap?: () => void): ZoomView {
   };
 
   img.addEventListener('load', () => {
-    void img.decode?.().then(() => scheduleZoomFit(view)).catch(() => scheduleZoomFit(view));
+    void img
+      .decode?.()
+      .then(() => scheduleZoomFit(view))
+      .catch(() => scheduleZoomFit(view));
   });
   if (typeof ResizeObserver !== 'undefined') {
     const ro = new ResizeObserver(() => scheduleZoomFit(view));

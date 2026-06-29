@@ -405,8 +405,6 @@ export interface UiActions {
   cycleSong(): string;
   cycleSfxPreview(): string;
   cycleTimeScale(): number;
-  /** Toggle pause/resume: set timeScale to 0 or restore previous realtime. */
-  togglePause(): boolean;
   /** Dilate SPACE: step the camera field-of-view through discrete levels (F-SPACE); returns the new FOV. */
   cycleSpace(): number;
   /** Cycle the entity render style (CONTRACTS V7.3); returns the new mode. */

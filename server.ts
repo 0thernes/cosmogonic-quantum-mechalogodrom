@@ -329,6 +329,7 @@ if (import.meta.main) {
       '/': index,
       '/docs': serveHtml('docs.html'),
       '/spec': serveHtml('specs.html'),
+      '/bible': serveHtml('bible.html'),
       '/lab': secured({
         GET(req) {
           logRequest(req, 200);

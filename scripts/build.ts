@@ -16,6 +16,7 @@ const result = await Bun.build({
     './index.html',
     './docs.html',
     './specs.html',
+    './bible.html',
     './src/satellite-music.ts',
     './src/alife-gallery-boot.ts',
   ],
