@@ -1546,14 +1546,14 @@
         );
       }
       function attractorCamZ(S) {
-        return S * (tileIsCompact() ? 2.55 : 0.78);
+        return S * (tileIsCompact() ? 1.5 : 0.78);
       }
       function attractorDrawScale(k) {
-        const base = tileIsCompact() ? 0.4 : 0.78;
+        const base = tileIsCompact() ? 0.6 : 0.78;
         return base + k * 0.08;
       }
       function attractorVertexScale(S, desktopDenom) {
-        const denom = tileIsCompact() ? desktopDenom * 2.55 : desktopDenom;
+        const denom = tileIsCompact() ? desktopDenom * 1.6 : desktopDenom;
         return S / denom;
       }
       const VOID = [4, 7, 17];
