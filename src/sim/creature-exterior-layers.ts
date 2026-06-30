@@ -538,6 +538,10 @@ export class MechaExteriorAbomination {
   // live (already-decaying) scale — which would shrink the instances to zero over time.
   private readonly coreR: number;
   private readonly cubeBase: Float32Array;
+  // Per-instance base z, captured at construction so the per-frame z wobble is set as
+  // base + sin(...) instead of accumulating (+=) every frame — which drifts the cubes
+  // away in z without bound.
+  private readonly cubeBaseZ: Float32Array;
   private readonly goldBase: Float32Array;
 
   constructor(parent: THREE.Object3D, coreR: number) {
@@ -581,6 +585,7 @@ export class MechaExteriorAbomination {
     }
     const swarmN = 48;
     this.cubeBase = new Float32Array(swarmN);
+    this.cubeBaseZ = new Float32Array(swarmN);
     const cubeG = new THREE.BoxGeometry(coreR * 0.08, coreR * 0.08, coreR * 0.08);
     this.cubeSwarm = new THREE.InstancedMesh(
       cubeG,
@@ -602,6 +607,7 @@ export class MechaExteriorAbomination {
         ((i / 8) | 0) * coreR * 0.1 - coreR * 0.28,
         coreR * 0.6 + (i % 5) * 0.15,
       );
+      this.cubeBaseZ[i] = P.z;
       Q.setFromEuler(new THREE.Euler(i * 0.31, i * 0.47, i * 0.19));
       const cb = 0.4 + (i % 7) * 0.12;
       this.cubeBase[i] = cb;
@@ -808,7 +814,9 @@ export class MechaExteriorAbomination {
       // oscillates around the base instead of decaying geometrically toward zero.
       const sc = this.cubeBase[i]! * (1 + 0.08 * Math.sin(st * 0.25 + i));
       S.set(sc, sc, sc);
-      P.z += Math.sin(st * 0.11 + i) * 0.15 * fusion;
+      // Set z from the constant base (NOT +=) so the wobble oscillates around the base
+      // instead of accumulating and drifting the cubes away in z without bound.
+      P.z = this.cubeBaseZ[i]! + Math.sin(st * 0.11 + i) * 0.15 * fusion;
       M.compose(P, Q, S);
       this.cubeSwarm.setMatrixAt(i, M);
     }
