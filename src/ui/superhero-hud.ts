@@ -25,11 +25,11 @@ export interface HeroHudView extends SuperheroView {
 const INVENTORY = ['◈', '❄', '⚛', '✶', '☍', '⬡'];
 
 const STYLE = `
-#cqm-hero{position:fixed;top:calc(38px + env(safe-area-inset-top,0px));left:var(--cqm-hud-left,calc(clamp(200px,20vw,280px) + 12px));
-  right:var(--cqm-hud-right,calc(clamp(260px,26vw,400px) + 12px));
-  width:auto;max-width:none;max-height:min(50vh,420px);overflow:visible;
+#cqm-hero{position:fixed;top:calc(42px + env(safe-area-inset-top,0px));left:var(--cqm-hud-left,calc(clamp(200px,20vw,280px) + 10px));
+  right:var(--cqm-hud-right,calc(clamp(260px,26vw,400px) + 10px));
+  width:auto;max-width:none;max-height:min(72vh,540px);overflow:visible;
   transform:translateY(-150%);z-index:150;
-  transition:transform .55s cubic-bezier(.2,.9,.3,1);font-size:14px;line-height:1.4;font-family:var(--font-mono,ui-monospace,monospace);
+  transition:transform .55s cubic-bezier(.2,.9,.3,1);font-size:15px;line-height:1.45;font-family:var(--font-mono,ui-monospace,monospace);
   color:#e9e3ff;pointer-events:none;
   display:flex;justify-content:center;align-items:flex-start}
 #cqm-hero.on{transform:translateY(0)}
@@ -43,9 +43,10 @@ const STYLE = `
   box-shadow:0 4px 18px rgba(0,0,0,.55),0 0 12px rgba(150,120,255,0.3);
   transition:transform .12s,background .12s,border-color .12s}
 .cqm-hero-fab:hover{background:rgba(60,36,110,.85);transform:scale(1.05);border-color:#39d6ff}
-.cqm-hero-chrome{position:absolute;top:10px;right:14px;z-index:100;display:flex;align-items:center;gap:6px}
+.cqm-hero-chrome{position:absolute;top:8px;right:10px;z-index:100;display:flex;align-items:center;gap:6px;
+  padding:4px 6px;border-radius:10px;background:rgba(20,10,42,.92);border:1px solid rgba(150,120,255,.35);box-shadow:0 2px 10px rgba(0,0,0,.4)}
 .cqm-hero-min,.cqm-hero-close{pointer-events:auto;border:1px solid rgba(150,120,255,.4);border-radius:8px;
-  background:rgba(30,18,60,.82);color:#f1e9ff;font:700 12px/1 var(--font-mono,ui-monospace,monospace);padding:4px 10px;min-width:28px;cursor:pointer;
+  background:rgba(40,24,80,.92);color:#f1e9ff;font:700 12px/1 var(--font-mono,ui-monospace,monospace);padding:5px 11px;min-width:30px;cursor:pointer;
   transition:background .15s,color .15s,border-color .15s}
 .cqm-hero-min:hover,.cqm-hero-close:hover{background:rgba(50,32,95,.75);color:#fff;border-color:rgba(150,120,255,.75)}
 .cqm-hero-head{display:flex;align-items:center;gap:8px;width:100%;flex-wrap:wrap}
@@ -83,33 +84,33 @@ const STYLE = `
 }
 .cqm-hero-box{pointer-events:auto;border:1px solid rgba(150,120,255,.4);border-radius:14px;
   background:linear-gradient(180deg,rgba(14,9,28,.95),rgba(8,6,18,.92));backdrop-filter:blur(12px);
-  box-shadow:0 10px 40px rgba(0,0,0,.6),inset 0 0 30px rgba(80,40,160,.18);padding:14px 18px;
-  display:flex;flex-flow:column nowrap;align-items:stretch;gap:12px;max-height:inherit;position:relative;
-  transform-origin:top center;will-change:transform;width:100%;max-width:920px}
-@media (max-width:599px){.cqm-hero-box{padding:10px 12px;border-radius:10px}}
-.cqm-hero-content{display:flex;flex-flow:column nowrap;gap:12px;overflow-y:auto;max-height:min(38vh,280px);scrollbar-width:thin}
-.cqm-hero-r{display:flex;align-items:center;gap:10px;flex-wrap:nowrap;flex:0 0 auto}
+  box-shadow:0 10px 40px rgba(0,0,0,.6),inset 0 0 30px rgba(80,40,160,.18);padding:18px 20px;
+  display:flex;flex-flow:column nowrap;align-items:stretch;gap:14px;max-height:inherit;position:relative;
+  transform-origin:top center;will-change:transform;width:100%;min-width:300px;max-width:min(100%,1080px)}
+@media (max-width:599px){.cqm-hero-box{padding:12px 14px;border-radius:10px}}
+.cqm-hero-content{display:flex;flex-flow:column nowrap;gap:14px;overflow-y:auto;max-height:min(58vh,420px);padding-right:6px;scrollbar-width:thin}
+.cqm-hero-r{display:flex;align-items:center;gap:12px;flex-wrap:wrap;flex:0 0 auto}
 .cqm-hero-av{display:flex;align-items:center;gap:10px;white-space:nowrap}
 .cqm-hero-glyph{font-size:22px;color:#c79bff;text-shadow:0 0 12px rgba(170,110,255,.8);animation:cqm-hero-pulse 2.4s ease-in-out infinite}
 @keyframes cqm-hero-pulse{0%,100%{text-shadow:0 0 10px rgba(170,110,255,.55)}50%{text-shadow:0 0 22px rgba(200,150,255,.95)}}
 @media (prefers-reduced-motion:reduce){.cqm-hero-glyph{animation:none}}
 .cqm-hero-name{font-weight:700;letter-spacing:.12em;color:#f0e8ff}
 .cqm-hero-lvl{font-size:10px;letter-spacing:.1em;color:#bda4ff;border:1px solid rgba(150,120,255,.4);border-radius:8px;padding:1px 6px}
-.cqm-hero-bar{display:flex;align-items:center;gap:8px;min-width:140px;flex:1}
-.cqm-hero-bar .lab{font-size:10px;letter-spacing:.08em;width:50px;text-transform:uppercase;color:#a99fce}
-.cqm-hero-bar .trk{flex:1;height:10px;border-radius:5px;background:rgba(150,120,255,.14);overflow:hidden;min-width:70px}
-.cqm-hero-bar .fil{height:100%;width:0;border-radius:5px;transition:width .3s ease}
-.cqm-hero-bar .num{font-size:10px;color:#d8ccff;width:46px;text-align:right;font-variant-numeric:tabular-nums}
-.cqm-hero-sec{display:flex;align-items:center;gap:8px;padding:4px 10px;border-radius:8px;background:rgba(80,50,140,.16);white-space:nowrap}
-.cqm-hero-sec .t{font-size:9px;letter-spacing:.1em;color:#a99fce;text-transform:uppercase}
-.cqm-hero-sec .v{font-size:12px;color:#f0e8ff;font-variant-numeric:tabular-nums}
+.cqm-hero-bar{display:flex;align-items:center;gap:8px;min-width:160px;flex:1 1 180px}
+.cqm-hero-bar .lab{font-size:11px;letter-spacing:.08em;width:52px;text-transform:uppercase;color:#a99fce}
+.cqm-hero-bar .trk{flex:1;height:12px;border-radius:6px;background:rgba(150,120,255,.14);overflow:hidden;min-width:80px}
+.cqm-hero-bar .fil{height:100%;width:0;border-radius:6px;transition:width .3s ease}
+.cqm-hero-bar .num{font-size:11px;color:#d8ccff;width:50px;text-align:right;font-variant-numeric:tabular-nums}
+.cqm-hero-sec{display:flex;align-items:center;gap:8px;padding:6px 12px;border-radius:8px;background:rgba(80,50,140,.16);white-space:nowrap}
+.cqm-hero-sec .t{font-size:10px;letter-spacing:.1em;color:#a99fce;text-transform:uppercase}
+.cqm-hero-sec .v{font-size:14px;color:#f0e8ff;font-variant-numeric:tabular-nums}
 .cqm-hero-dot{display:inline-block;width:34px;height:5px;border-radius:3px;background:rgba(150,120,255,.16);overflow:hidden;vertical-align:middle}
 .cqm-hero-dot i{display:block;height:100%;width:0}
 .cqm-hero-inv{display:flex;gap:4px}
 .cqm-hero-slot{width:22px;height:22px;display:grid;place-items:center;border:1px solid rgba(150,120,255,.28);border-radius:5px;background:rgba(0,0,0,.3);font-size:13px;color:#c9b6ff}
 .cqm-hero-pw{display:flex;gap:6px;flex-wrap:wrap}
 .cqm-hero-btn{pointer-events:auto;border:1px solid rgba(150,120,255,.45);border-radius:7px;background:rgba(40,24,80,.5);
-  color:#e6dcff;font:600 10px/1 var(--font-mono,ui-monospace,monospace);letter-spacing:.06em;padding:6px 10px;cursor:pointer;
+  color:#e6dcff;font:600 11px/1 var(--font-mono,ui-monospace,monospace);letter-spacing:.06em;padding:8px 12px;cursor:pointer;
   transition:transform .1s,background .12s,opacity .12s;white-space:nowrap}
 .cqm-hero-btn:hover{background:rgba(70,42,130,.7);transform:translateY(-1px)}
 .cqm-hero-btn:active{transform:translateY(0)}
@@ -117,17 +118,17 @@ const STYLE = `
 .cqm-hero-btn.flash{background:rgba(150,110,255,.85);color:#fff}
 .cqm-hero-btn.alt{border-color:rgba(110,200,255,.45);color:#cdecff}
 .cqm-hero-btn:disabled,.cqm-hero-btn-disabled{opacity:.45;cursor:not-allowed;transform:none;pointer-events:none}
-.cqm-hero-dpad{display:grid;grid-template-columns:repeat(3,44px);gap:3px}
-.cqm-hero-pad{pointer-events:auto;width:44px;height:44px;display:grid;place-items:center;border:1px solid rgba(110,200,255,.4);
-  border-radius:5px;background:rgba(30,40,70,.55);color:#cdecff;font-size:14px;cursor:pointer;user-select:none;touch-action:none}
+.cqm-hero-dpad{display:grid;grid-template-columns:repeat(3,48px);gap:4px}
+.cqm-hero-pad{pointer-events:auto;width:48px;height:48px;display:grid;place-items:center;border:1px solid rgba(110,200,255,.4);
+  border-radius:6px;background:rgba(30,40,70,.55);color:#cdecff;font-size:16px;cursor:pointer;user-select:none;touch-action:none}
 .cqm-hero-pad:hover{background:rgba(50,70,120,.8)}
 .cqm-hero-pad:focus-visible{outline:2px solid rgba(140,200,255,.85);outline-offset:2px;background:rgba(50,70,120,.8)}
 .cqm-hero-pad:active{background:rgba(120,110,255,.85);color:#fff}
 .cqm-hero-pad.action{background:rgba(180,40,120,.45);border-color:rgba(255,120,200,.55);color:#ffd8f0}
 .cqm-hero-pad.action:active{background:rgba(255,80,160,.85);color:#fff}
 @media (pointer:coarse),(max-width:640px){
-  .cqm-hero-dpad{grid-template-columns:repeat(3,48px);gap:3px}
-  .cqm-hero-pad{width:48px;height:48px;font-size:16px}
+  .cqm-hero-dpad{grid-template-columns:repeat(3,52px);gap:4px}
+  .cqm-hero-pad{width:52px;height:52px;font-size:18px}
 }
 .cqm-hero-inv[title]{cursor:help}
 `;
@@ -150,13 +151,12 @@ function syncHeroHudGutters(doc: Document): void {
   }
 }
 
-/** Scale the hero band to fit its column — no horizontal scrollbar. */
+/** Scale the hero band only as a last resort — never shrink below 0.85 so text stays legible. */
 function fitHeroBox(box: HTMLElement): void {
   box.style.transform = '';
   const host = box.parentElement;
   if (!host) return;
   const budget = host.clientWidth - 12;
-  // Find the widest row — the box is column layout, so scrollWidth is the max row width.
   let need = 0;
   for (const child of box.children) {
     if (child instanceof HTMLElement) {
@@ -164,7 +164,7 @@ function fitHeroBox(box: HTMLElement): void {
     }
   }
   if (need > budget && need > 0) {
-    box.style.transform = `scale(${Math.max(0.45, budget / need)})`;
+    box.style.transform = `scale(${Math.max(0.85, budget / need)})`;
   }
 }
 
@@ -237,6 +237,7 @@ export class SuperheroHud {
     this.root.id = 'cqm-hero';
     this.root.setAttribute('role', 'region');
     this.root.setAttribute('aria-label', 'Superhero player HUD');
+    this.root.tabIndex = -1; // focusable for keyboard Escape handling
     const box = doc.createElement('div');
     box.className = 'cqm-hero-box';
 
@@ -371,6 +372,16 @@ export class SuperheroHud {
 
     doc.body.appendChild(this.root);
 
+    // V114: Escape minimizes the hero HUD; Shift+Escape closes it entirely.
+    doc.addEventListener('keydown', (e) => {
+      if (!this.active || this.root.classList.contains('closed')) return;
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        if (e.shiftKey) this.close();
+        else this.minimize();
+      }
+    });
+
     const sync = (): void => {
       syncHeroHudGutters(doc);
       fitHeroBox(box);
@@ -411,6 +422,7 @@ export class SuperheroHud {
     this.root.classList.remove('closed');
     const box = this.root.querySelector('.cqm-hero-box');
     if (box instanceof HTMLElement) fitHeroBox(box);
+    this.root.focus({ preventScroll: true });
   }
 
   /** Collapse to the compact open button; the simulation keeps running. */
@@ -432,6 +444,7 @@ export class SuperheroHud {
     if (this.root.classList.contains('closed') || this.root.classList.contains('min')) {
       this.root.classList.add('on');
       this.root.classList.remove('closed', 'min');
+      this.root.focus({ preventScroll: true });
     } else {
       this.minimize();
     }
