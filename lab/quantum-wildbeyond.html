@@ -1692,6 +1692,13 @@
           montecarlo: { freqMul: 1.1 },
           lsystem: { freqMul: 1.02 },
           apollonian: { freqMul: 1.08 },
+          blochsphere: { freqMul: 1.45 },
+          wavefunction: { freqMul: 1.4 },
+          galaxy: { freqMul: 0.95 },
+          walk3d: { freqMul: 1.1 },
+          helix: { freqMul: 1.25 },
+          ribbon3d: { freqMul: 1.15 },
+          curlcloud: { freqMul: 0.9 },
         };
         const h = derivedSeed(0, tileId);
         const slot = h % 36;
@@ -1832,11 +1839,10 @@
         };
         p.setup = () => {
           p.createCanvas(S, S, p.WEBGL);
-          fitWebglTile(p, S, 1.0);
+          fitWebglTile(p, S, 0.75);
           p.pixelDensity(1);
           for (let i = 0; i < PTS; i++) step(); // pre-fill the ribbon
           p.colorMode(p.HSB, 360, 100, 100, 100);
-          p.camera(0, 0, attractorCamZ(S), 0, 0, 0, 0, 1, 0);
         };
         p.draw = () => {
           const k = rx.tick();
@@ -1891,11 +1897,10 @@
         };
         p.setup = () => {
           p.createCanvas(S, S, p.WEBGL);
-          fitWebglTile(p, S, 1.0);
+          fitWebglTile(p, S, 0.85);
           p.pixelDensity(1);
           for (let i = 0; i < PTS; i++) step();
           p.colorMode(p.HSB, 360, 100, 100, 100);
-          p.camera(0, 0, attractorCamZ(S), 0, 0, 0, 0, 1, 0);
         };
         p.draw = () => {
           const k = rx.tick();
@@ -1965,7 +1970,7 @@
           b.fill(0);
           for (let s = 0; s < 18; s++) blob();
           p.colorMode(p.HSB, 360, 100, 100, 100);
-          fitWebglTile(p, S, 1.18);
+          fitWebglTile(p, S, 0.95);
         };
         p.draw = () => {
           const k = rx.tick();
@@ -2080,7 +2085,7 @@
           for (let i = 0; i < M; i++) if (area[i] > peak) peak = area[i];
           for (let i = 0; i < M; i++) area[i] /= peak; // normalize to tallest cell
           p.colorMode(p.HSB, 360, 100, 100, 100);
-          fitWebglTile(p, S, 1.08);
+          fitWebglTile(p, S, 1.0);
         };
         p.draw = () => {
           const k = rx.tick();
@@ -2155,7 +2160,7 @@
           p.pixelDensity(1);
           accrete(500); // first visible flush
           p.colorMode(p.HSB, 360, 100, 100, 100);
-          fitWebglTile(p, S, 1.16);
+          fitWebglTile(p, S, 0.9);
         };
         p.draw = () => {
           const k = rx.tick();
@@ -2828,7 +2833,7 @@
         let rot = 0;
         p.setup = () => {
           p.createCanvas(S, S, p.WEBGL);
-          fitWebglTile(p, S, 1.0);
+          fitWebglTile(p, S, 0.85);
           p.pixelDensity(1);
           let x = rng.range(0.1, 0.6);
           let y = rng.range(0, 0.4);
@@ -2853,7 +2858,7 @@
             zs[i] = z;
           }
           p.colorMode(p.HSB, 360, 100, 100, 100);
-          fitWebglTile(p, S, 1.14);
+          fitWebglTile(p, S, 0.9);
         };
         p.draw = () => {
           p.background(VOID[0], VOID[1], VOID[2]);
@@ -3141,7 +3146,7 @@
           p.pixelDensity(1);
           for (let i = 0; i < PTS; i++) step();
           p.colorMode(p.HSB, 360, 100, 100, 100);
-          fitWebglTile(p, S, 1.18);
+          fitWebglTile(p, S, 0.85);
         };
         p.draw = () => {
           const k = rx.tick();
@@ -3228,7 +3233,7 @@
           p.createCanvas(S, S, p.WEBGL);
           p.pixelDensity(1);
           p.colorMode(p.HSB, 360, 100, 100, 100);
-          fitWebglTile(p, S, 1.05);
+          fitWebglTile(p, S, 0.95);
         };
         p.draw = () => {
           const k = rx.tick();
@@ -3273,7 +3278,7 @@
           p.noiseSeed(rng.int(1e9));
           for (let i = 0; i < N; i++) respawn(i);
           p.colorMode(p.HSB, 360, 100, 100, 100);
-          fitWebglTile(p, S, 1.1);
+          fitWebglTile(p, S, 0.95);
         };
         p.draw = () => {
           const k = rx.tick();
@@ -3316,7 +3321,7 @@
           p.createCanvas(S, S, p.WEBGL);
           p.pixelDensity(1);
           p.colorMode(p.HSB, 360, 100, 100, 100);
-          fitWebglTile(p, S, 1.05);
+          fitWebglTile(p, S, 0.9);
         };
         p.draw = () => {
           const k = rx.tick();
@@ -3368,7 +3373,7 @@
         };
         p.setup = () => {
           p.createCanvas(S, S, p.WEBGL);
-          fitWebglTile(p, S, 1.1);
+          fitWebglTile(p, S, 0.95);
           p.pixelDensity(1);
           p.colorMode(p.HSB, 360, 100, 100, 100);
         };
@@ -3537,7 +3542,7 @@
         const rx = makeReact(p);
         p.setup = () => {
           p.createCanvas(S, S, p.WEBGL);
-          fitWebglTile(p, S, 1.0);
+          fitWebglTile(p, S, 0.9);
           p.pixelDensity(1);
           for (let i = 0; i < N; i++) {
             const r = Math.pow(rng.next(), 0.6);
@@ -3547,7 +3552,7 @@
             hgt[i] = rng.gauss() * 0.05 * (1 - r);
           }
           p.colorMode(p.HSB, 360, 100, 100, 100);
-          fitWebglTile(p, S, 1.12);
+          fitWebglTile(p, S, 0.95);
         };
         p.draw = () => {
           const k = rx.tick();
@@ -3586,7 +3591,7 @@
         const rx = makeReact(p);
         p.setup = () => {
           p.createCanvas(S, S, p.WEBGL);
-          fitWebglTile(p, S, 1.0);
+          fitWebglTile(p, S, 0.85);
           p.pixelDensity(1);
           for (let w = 0; w < W; w++) {
             wx[w] = rng.range(-0.3, 0.3);
@@ -3594,7 +3599,7 @@
             wz[w] = rng.range(-0.3, 0.3);
           }
           p.colorMode(p.HSB, 360, 100, 100, 100);
-          fitWebglTile(p, S, 1.12);
+          fitWebglTile(p, S, 0.95);
         };
         p.draw = () => {
           const k = rx.tick();
@@ -3638,7 +3643,7 @@
           p.createCanvas(S, S, p.WEBGL);
           p.pixelDensity(1);
           p.colorMode(p.HSB, 360, 100, 100, 100);
-          fitWebglTile(p, S, 1.08);
+          fitWebglTile(p, S, 0.95);
         };
         p.draw = () => {
           const k = rx.tick();
@@ -3773,7 +3778,7 @@
         const rx = makeReact(p);
         p.setup = () => {
           p.createCanvas(S, S, p.WEBGL);
-          fitWebglTile(p, S, 1.0);
+          fitWebglTile(p, S, 0.9);
           p.pixelDensity(1);
           p.colorMode(p.HSB, 360, 100, 100, 100);
           let x = rng.range(-0.5, 0.5),
@@ -3790,7 +3795,7 @@
             ys[i] = y;
             zs[i] = t;
           }
-          fitWebglTile(p, S, 1.14);
+          fitWebglTile(p, S, 0.95);
         };
         p.draw = () => {
           const k = rx.tick();
@@ -3819,7 +3824,7 @@
         const rx = makeReact(p);
         p.setup = () => {
           p.createCanvas(S, S, p.WEBGL);
-          fitWebglTile(p, S, 1.0);
+          fitWebglTile(p, S, 0.85);
           p.pixelDensity(1);
           p.colorMode(p.HSB, 360, 100, 100, 100);
           let x = 0.1,
@@ -3837,7 +3842,7 @@
             ys[i] = y;
             zs[i] = z;
           }
-          fitWebglTile(p, S, 1.14);
+          fitWebglTile(p, S, 0.95);
         };
         p.draw = () => {
           const k = rx.tick();
@@ -4772,21 +4777,35 @@
                 const t0 = audioCtx.currentTime;
                 const h = derivedSeed(0, spec.id);
                 const slot = h % 36;
+                // Cinematic palette: 12-tone base with tile-unique intervals, waveforms, and filter.
                 const baseHz = 55 * Math.pow(2, (slot % 24) / 12);
-                const f1 = baseHz / 2;
-                const f2 = (baseHz * 1.5) / 2;
+                const intervals = [1, 1.2, 1.25, 1.5, 1.666, 2, 2.5];
+                const waveforms = ['sine', 'triangle', 'sawtooth', 'square'];
+                const filterTypes = ['lowpass', 'bandpass', 'highpass'];
+                const f1 = baseHz * intervals[slot % intervals.length];
+                const f2 = baseHz * intervals[(slot + 3) % intervals.length];
                 const osc1 = audioCtx.createOscillator();
                 const osc2 = audioCtx.createOscillator();
                 const gain = audioCtx.createGain();
                 const filter = audioCtx.createBiquadFilter();
-                osc1.type = 'sine';
-                osc2.type = 'triangle';
+                osc1.type = waveforms[slot % waveforms.length];
+                osc2.type = waveforms[(slot + 1) % waveforms.length];
                 osc1.frequency.setValueAtTime(f1, t0);
                 osc2.frequency.setValueAtTime(f2, t0);
-                filter.type = 'lowpass';
-                filter.frequency.setValueAtTime(150 + (slot % 4) * 40, t0);
+                osc1.detune.setValueAtTime((slot % 5) * 7 - 14, t0);
+                osc2.detune.setValueAtTime((slot % 7) * 5 - 15, t0);
+                filter.type = filterTypes[slot % filterTypes.length];
+                const filterFreq = 120 + (slot % 12) * 180;
+                filter.frequency.setValueAtTime(filterFreq, t0);
+                filter.Q.setValueAtTime(0.5 + (slot % 8) * 0.25, t0);
                 gain.gain.setValueAtTime(0.001, t0);
-                gain.gain.linearRampToValueAtTime(0.02, t0 + 0.15);
+                gain.gain.linearRampToValueAtTime(0.015, t0 + 0.08);
+                gain.gain.exponentialRampToValueAtTime(0.008, t0 + 0.55);
+                // Slow filter sweep for living, dynamic timbre.
+                filter.frequency.exponentialRampToValueAtTime(
+                  filterFreq * (0.6 + (slot % 3) * 0.5),
+                  t0 + 0.5,
+                );
                 osc1.connect(filter);
                 osc2.connect(filter);
                 filter.connect(gain);

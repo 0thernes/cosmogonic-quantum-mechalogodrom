@@ -386,14 +386,14 @@ a:focus-visible {
   max-width: calc(100vw - 8px);
 }
 /* V107: center HUD launcher row is mobile-only — desktop uses persist-nav ⊞ PANELS + toolbar. */
-#cqm-persist-nav .cqm-persist-panels {
+#cqm-persist-nav .cqm-persist-row--panels {
   display: none;
 }
 @media (min-width: 769px) and (pointer: fine) {
   #cqm-hud-nav {
     display: none !important;
   }
-  #cqm-persist-nav .cqm-persist-panels {
+  #cqm-persist-nav .cqm-persist-row--panels {
     display: inline-flex !important;
   }
   #cqm-persist-nav .cqm-persist-btn {

@@ -9,37 +9,37 @@
 import { dockToggle, glassPanel, injectPanelBaseCSS, panelHeader, wireClose } from './panel-shell';
 import { mountToggle } from './panel-dock';
 
-const STYLE = `
-#cqm-settings-modal{pointer-events:auto;align-items:flex-end;justify-content:center;padding:12px 8px calc(var(--cqm-bottom-h,108px) + 12px)}
+const STYLE = #cqm-settings-modal{pointer-events:auto;align-items:flex-end;justify-content:center;padding:12px 8px calc(var(--cqm-bottom-h,108px) + 12px)}
 #cqm-settings-modal::before{content:'';position:absolute;inset:0;pointer-events:none;opacity:.12;
   background:repeating-linear-gradient(0deg,transparent 0 2px,rgba(120,160,255,.5) 2px 3px)}
-#cqm-settings-modal .cqm-panel-box{max-height:min(62vh,calc(100vh - var(--cqm-bottom-h,108px) - 28px));overflow-y:auto;scrollbar-width:thin;
-  scrollbar-color:rgba(120,160,255,.4) transparent;padding:10px 12px}
-.cqm-set-gr{margin-bottom:8px}
-.cqm-set-gr h3{margin:0 0 4px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#c79bff;font-weight:600;font-family:var(--font-sans,system-ui,sans-serif)}
-.cqm-set-row{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}
-.cqm-set-btn{pointer-events:auto;border:1px solid rgba(120,160,255,.35);border-radius:6px;background:rgba(30,40,80,.45);
-  color:#e6dcff;padding:4px 6px;cursor:pointer;font:600 11px/1.2 var(--font-sans,system-ui,sans-serif);text-align:center;
-  transition:background .12s,border-color .12s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.cqm-set-btn:hover{border-color:rgba(120,160,255,.6);background:rgba(50,70,130,.6)}
-.cqm-set-btn[data-action="apoc"]{border-color:rgba(255,80,80,.35);color:#ffb3b3}
-.cqm-set-btn[data-action="apoc"]:hover{border-color:rgba(255,80,80,.6);background:rgba(120,30,30,.5)}
-.cqm-set-btn[data-action="cosmo"]{border-color:rgba(255,200,80,.35);color:#ffd9a0}
-.cqm-set-btn[data-action="cosmo"]:hover{border-color:rgba(255,200,80,.6);background:rgba(80,60,20,.5)}
-.cqm-set-btn[data-action="nhi"]{border-color:rgba(180,100,255,.35);color:#d4b0ff}
-.cqm-set-btn[data-action="nhi"]:hover{border-color:rgba(180,100,255,.6);background:rgba(60,30,90,.5)}
-.cqm-set-btn[data-action="chaosmode"]{border-color:rgba(255,160,40,.35);color:#ffcc88}
-.cqm-set-btn[data-action="chaosmode"]:hover{border-color:rgba(255,160,40,.6);background:rgba(100,60,20,.5)}
-.cqm-set-btn[data-action="entropy"]{border-color:rgba(255,100,60,.35);color:#ffaa88}
-.cqm-set-btn[data-action="entropy"]:hover{border-color:rgba(255,100,60,.6);background:rgba(100,40,20,.5)}
+#cqm-settings-modal .cqm-panel-box{max-height:min(48vh,calc(100vh - var(--cqm-bottom-h,108px) - 28px));overflow-y:auto;scrollbar-width:thin;
+  scrollbar-color:rgba(120,160,255,.4) transparent;padding:12px 14px;border:1px solid rgba(199,155,255,.4);background:linear-gradient(180deg,rgba(18,14,36,.98),rgba(8,6,20,.98))}
+.cqm-set-gr{margin-bottom:10px}
+.cqm-set-gr h3{margin:0 0 6px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#d4b0ff;font-weight:700;font-family:var(--font-sans,system-ui,sans-serif);text-shadow:0 0 8px rgba(199,155,255,.3)}
+.cqm-set-row{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.cqm-set-btn{pointer-events:auto;border:1px solid rgba(199,155,255,.25);border-radius:6px;background:rgba(30,24,60,.4);
+  color:#f0ebff;padding:6px 8px;cursor:pointer;font:700 12px/1.3 var(--font-sans,system-ui,sans-serif);text-align:center;
+  transition:background .15s,border-color .15s,transform .1s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:0.02em}
+.cqm-set-btn:hover{border-color:rgba(199,155,255,.6);background:rgba(50,38,100,.65);transform:translateY(-1px)}
+.cqm-set-btn:active{transform:translateY(0)}
+.cqm-set-btn[data-action="apoc"]{border-color:rgba(255,80,80,.4);color:#ffd9d9;background:rgba(80,20,20,.35)}
+.cqm-set-btn[data-action="apoc"]:hover{border-color:rgba(255,80,80,.7);background:rgba(140,30,30,.5)}
+.cqm-set-btn[data-action="cosmo"]{border-color:rgba(255,200,80,.4);color:#ffe3b3;background:rgba(60,40,10,.35)}
+.cqm-set-btn[data-action="cosmo"]:hover{border-color:rgba(255,200,80,.7);background:rgba(110,80,20,.5)}
+.cqm-set-btn[data-action="nhi"]{border-color:rgba(180,100,255,.4);color:#ebd6ff;background:rgba(45,20,80,.35)}
+.cqm-set-btn[data-action="nhi"]:hover{border-color:rgba(180,100,255,.7);background:rgba(85,35,135,.5)}
+.cqm-set-btn[data-action="chaosmode"]{border-color:rgba(255,160,40,.4);color:#ffe5cc;background:rgba(70,40,10,.35)}
+.cqm-set-btn[data-action="chaosmode"]:hover{border-color:rgba(255,160,40,.7);background:rgba(120,70,20,.5)}
+.cqm-set-btn[data-action="entropy"]{border-color:rgba(255,100,60,.4);color:#ffd2cc;background:rgba(70,25,15,.35)}
+.cqm-set-btn[data-action="entropy"]:hover{border-color:rgba(255,100,60,.7);background:rgba(120,45,25,.5)}
 #cqm-settings-modal .cqm-panel-box{width:min(88vw,360px)}
-.cqm-set-legend{margin-top:10px;padding-top:10px;border-top:1px solid rgba(120,160,255,.2)}
-.cqm-set-hint{margin:0 0 8px;font:400 11px/1.4 var(--font-sans,system-ui,sans-serif);color:rgba(180,190,220,.75)}
-.cqm-set-kbd{width:100%;border-collapse:collapse;font:400 10px var(--font-mono,ui-monospace,monospace)}
-.cqm-set-kbd td{padding:3px 4px;vertical-align:top}
-.cqm-set-kbd kbd{display:inline-block;min-width:2.2em;padding:2px 5px;border-radius:4px;border:1px solid rgba(0,120,220,.35);
-  background:rgba(0,80,160,.2);color:#88bbff;font:inherit;text-align:center}
-.cqm-set-kbd .cqm-set-kbd-act{color:rgba(210,220,240,.9);font-family:var(--font-sans,system-ui,sans-serif);font-size:11px}
+.cqm-set-legend{margin-top:12px;padding-top:12px;border-top:1px solid rgba(199,155,255,.25)}
+.cqm-set-hint{margin:0 0 10px;font:500 12px/1.45 var(--font-sans,system-ui,sans-serif);color:rgba(220,210,250,.8);letter-spacing:0.01em}
+.cqm-set-kbd{width:100%;border-collapse:collapse;font:600 11px var(--font-mono,ui-monospace,monospace)}
+.cqm-set-kbd td{padding:4px 6px;vertical-align:middle}
+.cqm-set-kbd kbd{display:inline-block;min-width:2.4em;padding:3px 6px;border-radius:4px;border:1px solid rgba(199,155,255,.4);
+  background:rgba(50,30,100,.3);color:#e2c5ff;font:inherit;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,.25)}
+.cqm-set-kbd .cqm-set-kbd-act{color:rgba(230,225,255,.9);font-family:var(--font-sans,system-ui,sans-serif);font-size:12px;letter-spacing:0.01em}
 `;
 
 const GROUPS = [
@@ -153,7 +153,7 @@ class SettingsPanel {
     const { root, box } = glassPanel({
       id: 'cqm-settings-modal',
       width: 'min(88vw,320px)',
-      zIndex: 200,
+      zIndex: 250,
       doc,
     });
     this.modal = root;
@@ -184,6 +184,10 @@ class SettingsPanel {
       renderKbdTable(SIM_HOLD_KEYS);
     box.appendChild(legend);
     wireClose(this.modal, () => this.close());
+
+    if (typeof window !== 'undefined' && doc === document) {
+      (window as any).cqmToggleSettings = () => this.toggle();
+    }
   }
 
   toggle(): void {

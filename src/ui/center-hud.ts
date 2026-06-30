@@ -579,8 +579,8 @@ function ensurePanelChrome(el: HTMLElement, index: number): void {
   chrome.append(
     mk('‹', 'Previous panel', () => showOnly((index - 1 + SLOTS.length) % SLOTS.length)),
     mk('›', 'Next panel', () => showOnly((index + 1) % SLOTS.length)),
-    mk('−', 'Minimize panel', () => showOnly(-1)),
-    mk('×', 'Close panel', () => showOnly(-1)),
+    mk('_', 'Minimize panel', () => showOnly(-1)),
+    mk('✕', 'Close panel', () => showOnly(-1)),
   );
   el.appendChild(chrome);
 }
