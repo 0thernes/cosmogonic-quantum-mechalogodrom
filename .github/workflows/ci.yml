@@ -60,14 +60,9 @@ jobs:
       - name: Lint (oxlint)
         run: bun run lint
 
-      - name: Unit tests + coverage threshold (bunfig.toml — 500-point §17.339)
-        # Single run: `bun test --coverage` is a strict superset of the bare suite AND enforces the
-        # coverage gate — running plain `bun test` first only doubled the suite's wall-clock per OS leg.
-        run: bun run test:coverage
-
-      - name: Receipts law (published numbers == measured gate)
-        # Fails the build if any doc/HTML surface claims a test-count or coverage figure that disagrees
-        # with the live gate. Closes GOV-DOC: "if it is not measured, it is not real."
+      - name: Unit tests + coverage + receipts law
+        # Single run: coverage threshold (bunfig.toml) + receipts parse share one transcript.
+        # Direct spawn (not stdin pipe) — reliable on Windows where pipe deadlocks are common.
         run: bun run verify:receipts
 
       - name: Surface sync check (version + receipts propagated to every MD/HTML)

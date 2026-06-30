@@ -112,7 +112,7 @@ import { PantheonSociety, FIELD_DIM, ARCHON_CHANNELS } from './sim/pantheon';
 import { FacultiesPantheon } from './sim/faculties-pantheon';
 import { TomPantheon } from './sim/tom-pantheon';
 import { applyBrutalGodEvent } from './sim/petri-dish';
-import { triggerBrutalRelease, getBrutalLore } from './sim/brutal-god-releases';
+import { triggerBrutalRelease, applyBrutalRelease, getBrutalLore } from './sim/brutal-god-releases';
 import { EmergenceAnglesController } from './sim/emergence-angles';
 import { Mortality } from './sim/mortality';
 import { Stigmergy } from './sim/stigmergy';
@@ -1846,7 +1846,20 @@ export class World {
                 s.frame + a,
               );
               if (release) {
-                pd.godPower = Math.min(1, (pd.godPower || 0) + release.power * 0.1);
+                const ents = pd.biologics as Array<{
+                  vitality: number;
+                  form: string;
+                  brutalGodPower?: number;
+                }>;
+                for (const b of ents) {
+                  if (b.vitality === undefined) b.vitality = 1;
+                  if (b.form === undefined) b.form = 'BASE';
+                }
+                const outcome = applyBrutalRelease(release, ents, pd.aliveness, s.frame + a);
+                pd.godPower = Math.min(
+                  1,
+                  (pd.godPower || 0) + release.power * 0.1 + outcome.warp * 0.02,
+                );
                 this.audit.record('brutal-god-release', {
                   archon: a,
                   archetype: release.archetype,

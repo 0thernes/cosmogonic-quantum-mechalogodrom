@@ -42,10 +42,14 @@ if (!existsSync(join(DIST, 'index.html')))
 const proc = spawn('bun', ['server.ts'], {
   cwd: ROOT,
   env: { ...process.env, PORT: String(PORT) },
-  stdio: ['ignore', 'pipe', 'pipe'],
+  stdio: ['ignore', 'ignore', 'pipe'],
 });
 
 let stderr = '';
+let exited = false;
+proc.on('exit', () => {
+  exited = true;
+});
 proc.stderr?.on('data', (c: Buffer) => {
   stderr += c.toString();
 });
@@ -72,6 +76,7 @@ try {
   await fetchOk('/spec');
   console.log('smoke: all checks passed');
 } finally {
-  proc.kill('SIGTERM');
-  await wait(300);
+  if (!exited) proc.kill('SIGTERM');
+  for (let i = 0; i < 10 && !exited; i++) await wait(100);
+  if (!exited) proc.kill('SIGKILL');
 }

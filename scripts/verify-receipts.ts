@@ -16,6 +16,7 @@
  * Together they make it impossible to ship a test-count or coverage figure that was not measured.
  */
 import { spawnSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
 import { CANONICAL_TEST_COUNT, CANONICAL_LINE_COV, CANONICAL_FUNC_COV } from './canonical-receipts';
 
 function run(args: string[]): string {
@@ -35,6 +36,12 @@ function run(args: string[]): string {
 }
 
 async function coverageOutput(): Promise<string> {
+  const fromFileIdx = process.argv.indexOf('--from-file');
+  if (fromFileIdx >= 0) {
+    const path = process.argv[fromFileIdx + 1];
+    if (!path) throw new Error('verify-receipts: --from-file requires a path');
+    return readFileSync(path, 'utf8');
+  }
   if (process.argv.includes('--stdin')) {
     const text = await Bun.stdin.text();
     // Preserve the actual test transcript for humans/CI logs; parsing still happens below.
