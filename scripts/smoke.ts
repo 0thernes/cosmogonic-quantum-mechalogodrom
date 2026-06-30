@@ -3,7 +3,7 @@
  * smoke.ts — post-build HTTP smoke: health + satellite pages respond.
  * CI runs this after `bun run build` with a short-lived server.
  */
-import { spawn } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -19,6 +19,24 @@ function fail(msg: string): never {
 
 async function wait(ms: number): Promise<void> {
   await new Promise((r) => setTimeout(r, ms));
+}
+
+function stopProcessTree(pid: number | undefined): void {
+  if (!pid) return;
+  if (process.platform === 'win32') {
+    spawnSync('taskkill', ['/PID', String(pid), '/T', '/F'], { stdio: 'ignore' });
+    return;
+  }
+  process.kill(pid, 'SIGTERM');
+}
+
+function killProcess(pid: number | undefined): void {
+  if (!pid) return;
+  if (process.platform === 'win32') {
+    spawnSync('taskkill', ['/PID', String(pid), '/T', '/F'], { stdio: 'ignore' });
+    return;
+  }
+  process.kill(pid, 'SIGKILL');
 }
 
 async function fetchOk(path: string, expectJson = false): Promise<void> {
@@ -76,7 +94,7 @@ try {
   await fetchOk('/spec');
   console.log('smoke: all checks passed');
 } finally {
-  if (!exited) proc.kill('SIGTERM');
-  for (let i = 0; i < 10 && !exited; i++) await wait(100);
-  if (!exited) proc.kill('SIGKILL');
+  if (!exited) stopProcessTree(proc.pid);
+  for (let i = 0; i < 20 && !exited; i++) await wait(100);
+  if (!exited) killProcess(proc.pid);
 }
