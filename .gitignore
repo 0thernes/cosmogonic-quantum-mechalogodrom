@@ -19,8 +19,6 @@ mcps/
 # (the tracked dated snapshots stay tracked — gitignore only affects untracked files).
 .memory/*.md
 # Agent harness terminal snapshots (never part of the app).
-terminals/
-agent-tools/
 agent-tools/
 terminals/
 law_error.txt

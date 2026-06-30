@@ -24,10 +24,6 @@ __*
 *.log
 # MCP tool descriptors (harness state, not product source).
 mcps
-# MCP server tool descriptors (harness state, not product source).
-mcps
-# Cursor MCP tool descriptors (not part of the app; break local format:check if scanned).
-mcps
 mcps/**
 **/mcps/**
 # hacklm-memory tool state (per-session decisions/instructions/preferences/quirks/security notes).
