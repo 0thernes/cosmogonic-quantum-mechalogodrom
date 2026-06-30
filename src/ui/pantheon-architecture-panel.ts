@@ -162,6 +162,9 @@ export class PantheonArchitecturePanel {
   private raf = 0;
 
   constructor(doc: Document = document) {
+    if (typeof window !== 'undefined') {
+      (window as any).pantheonArchitecturePanel = this;
+    }
     doc.getElementById('cqm-arch-toggle')?.remove();
     doc.getElementById('cqm-arch-panel')?.remove();
     doc.getElementById('cqm-arch-style')?.remove(); // replace, don't accumulate, on re-mount
@@ -263,6 +266,11 @@ export class PantheonArchitecturePanel {
     b.type = 'button';
     b.addEventListener('click', on);
     return b;
+  }
+
+  public selectApex(): void {
+    this.lineageIdx = 100;
+    this.setView('lineage');
   }
 
   get isOpen(): boolean {

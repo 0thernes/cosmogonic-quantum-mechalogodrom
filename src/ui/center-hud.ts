@@ -86,26 +86,33 @@ ${VIS_SEL} {
   position: absolute;
   top: 8px;
   right: 10px;
-  z-index: 9;
+  z-index: 100;
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 5px;
   pointer-events: auto;
+  padding: 4px 6px;
+  border-radius: 10px;
+  background: rgba(10, 8, 24, 0.92);
+  border: 1px solid rgba(160, 190, 255, 0.28);
+  box-shadow: 0 2px 12px rgba(0,0,0,.5);
 }
 .cqm-hud-panel-chrome button {
-  width: 26px;
-  height: 24px;
+  width: 28px;
+  height: 26px;
   border-radius: 7px;
   border: 1px solid rgba(160, 190, 255, 0.34);
   background: rgba(6, 10, 24, 0.82);
   color: #e9f1ff;
-  font: 800 11px/1 var(--font-mono, ui-monospace, monospace);
+  font: 800 12px/1 var(--font-mono, ui-monospace, monospace);
   cursor: pointer;
   box-shadow: 0 2px 10px rgba(0,0,0,.45);
+  transition: background .12s, border-color .12s, transform .12s;
 }
 .cqm-hud-panel-chrome button:hover {
-  background: rgba(35, 50, 92, 0.95);
-  border-color: rgba(160, 210, 255, 0.7);
+  background: rgba(45, 65, 120, 0.95);
+  border-color: rgba(160, 210, 255, 0.85);
+  transform: translateY(-1px);
 }
 /* V84: panel toggles cycle through the center HUD — hide them from the legacy dock bar (settings +
    access live in the HUD launcher instead). The dock itself stays hidden when the HUD nav is active. */
@@ -784,7 +791,16 @@ function buildPersistentNav(doc: Document): void {
     mkBtn(
       'APEX',
       'Open APEX architecture brain view',
-      () => showOnly(active === SLOTS.length - 1 ? -1 : SLOTS.length - 1),
+      () => {
+        const isApexOpen = active === SLOTS.length - 1;
+        if (!isApexOpen) {
+          const p = (window as any).pantheonArchitecturePanel;
+          if (p && typeof p.selectApex === 'function') {
+            p.selectApex();
+          }
+        }
+        showOnly(isApexOpen ? -1 : SLOTS.length - 1);
+      },
       'cqm-persist-panel',
     ),
   );

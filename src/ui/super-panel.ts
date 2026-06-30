@@ -83,42 +83,73 @@ const STYLE = `
 .cqm-sup-bar .track{height:7px;border-radius:4px;background:rgba(196,120,255,.12);overflow:hidden}
 .cqm-sup-bar .fill{height:100%;width:0;border-radius:4px;transition:width .25s ease}
 .cqm-sup-bar .num{color:#f3ecff;text-align:right;font-size:10px;font-variant-numeric:tabular-nums}
-.cqm-sup-archons{
-  display:grid;
-  grid-template-columns:repeat(5,minmax(92px,1fr));
-  gap:5px;
-  padding:6px 10px 8px;
-  border-top:1px solid rgba(196,120,255,.14);
-  background:linear-gradient(180deg,rgba(20,8,36,.38),rgba(8,5,16,.5));
+.cqm-sup-archons {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(110px, 1fr));
+  gap: 8px;
+  padding: 10px 14px 12px;
+  border-top: 1px solid rgba(196, 120, 255, 0.18);
+  background: linear-gradient(180deg, rgba(20, 8, 36, 0.45), rgba(8, 5, 16, 0.7));
 }
-.cqm-sup-archons > div{
-  min-width:0;
-  flex-direction:column;
-  gap:3px!important;
-  margin:0!important;
-  padding:5px;
-  border:1px solid rgba(196,120,255,.18);
-  border-radius:7px;
-  background:rgba(0,0,0,.2);
+.cqm-sup-archons > div {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 8px;
+  border: 1px solid rgba(196, 120, 255, 0.22);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.4);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  transition: border-color 0.2s, background 0.2s;
 }
-.cqm-sup-archons span:first-child{
-  min-width:0!important;
-  overflow:hidden;
-  color:#e0bdff!important;
-  font:800 9px/1.15 var(--font-mono,ui-monospace,monospace);
-  text-overflow:ellipsis;
-  white-space:nowrap;
+.cqm-sup-archons > div:hover {
+  border-color: rgba(196, 120, 255, 0.45);
+  background: rgba(28, 14, 46, 0.35);
 }
-.cqm-sup-archons span:last-child{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  width:max-content;
-  max-width:100%;
-  font-size:9px;
-  letter-spacing:.06em;
+.cqm-sup-archons .archon-name {
+  color: #e0bdff !important;
+  font: 800 11px var(--font-mono, ui-monospace, monospace);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
-@media (max-width:720px){.cqm-sup-archons{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.cqm-sup-archons .archon-plan {
+  display: inline-block;
+  font: 700 9px var(--font-mono, ui-monospace, monospace);
+  text-align: center;
+  padding: 2px 6px;
+  border-radius: 4px;
+  letter-spacing: 0.08em;
+  width: fit-content;
+  max-width: 100%;
+}
+.cqm-sup-archons .archon-telemetry {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 2px;
+  border-top: 1px solid rgba(196, 120, 255, 0.1);
+  padding-top: 4px;
+}
+.cqm-sup-archons .archon-stat {
+  display: flex;
+  justify-content: space-between;
+  font: 9px/1.2 var(--font-mono, ui-monospace, monospace);
+  color: #a98fce;
+}
+.cqm-sup-archons .archon-stat span:last-child {
+  color: #ece2ff;
+  font-weight: 600;
+}
+@media (max-width: 720px) {
+  .cqm-sup-archons {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
 /* V75: the NEURAL observatory lives in the SAME box — toggling it grows this panel and swaps the
    telemetry body for the 4-tab / 27-visual + BRAIN observatory (no second window). */
 .cqm-sup-neural-host{display:none;flex:1 1 auto;min-height:0;flex-direction:column}
@@ -182,7 +213,13 @@ export class SuperPanel {
   private minimized = false;
   private neuralOn = false;
   // GOAL5: rows for all 5 Archons (name + plan) for first-class telemetry (not just prime)
-  private archonRows: Array<{ nm: HTMLElement; pl: HTMLElement }> = [];
+  private archonRows: Array<{
+    nm: HTMLElement;
+    pl: HTMLElement;
+    pow: HTMLElement;
+    spike: HTMLElement;
+    coh: HTMLElement;
+  }> = [];
 
   constructor(doc: Document = document) {
     doc.getElementById('cqm-sup-toggle')?.remove();
@@ -266,27 +303,34 @@ export class SuperPanel {
     // GOAL5: 5 Archons first-class inspect list (name/archetype/plan/senses proxy via plan color; full quantum/mem via neural for focused)
     const archonsWrap = panel.querySelector('[data-archons]') as HTMLElement;
     archonsWrap.innerHTML = '';
-    archonsWrap.style.fontSize = '9px';
-    archonsWrap.style.lineHeight = '1.2';
-    archonsWrap.style.marginTop = '3px';
-    archonsWrap.style.opacity = '0.95';
     this.archonRows = [];
     for (let k = 0; k < 5; k++) {
-      const row = doc.createElement('div');
-      row.style.display = 'flex';
-      row.style.gap = '4px';
-      row.style.alignItems = 'center';
-      row.style.margin = '1px 0';
+      const card = doc.createElement('div');
       const nm = doc.createElement('span');
-      nm.style.color = '#d8a8ff';
-      nm.style.minWidth = '78px';
+      nm.className = 'archon-name';
       const pl = doc.createElement('span');
-      pl.style.fontWeight = '700';
-      pl.style.padding = '0 3px';
-      pl.style.borderRadius = '3px';
-      row.append(nm, pl);
-      archonsWrap.appendChild(row);
-      this.archonRows.push({ nm, pl });
+      pl.className = 'archon-plan';
+      const tel = doc.createElement('div');
+      tel.className = 'archon-telemetry';
+      const statPow = doc.createElement('div');
+      statPow.className = 'archon-stat';
+      statPow.innerHTML = '<span>POW:</span><span>—</span>';
+      const statSpike = doc.createElement('div');
+      statSpike.className = 'archon-stat';
+      statSpike.innerHTML = '<span>SPIKE:</span><span>—</span>';
+      const statCoh = doc.createElement('div');
+      statCoh.className = 'archon-stat';
+      statCoh.innerHTML = '<span>COH:</span><span>—</span>';
+      tel.append(statPow, statSpike, statCoh);
+      card.append(nm, pl, tel);
+      archonsWrap.appendChild(card);
+      this.archonRows.push({
+        nm,
+        pl,
+        pow: statPow.querySelector('span:last-child') as HTMLElement,
+        spike: statSpike.querySelector('span:last-child') as HTMLElement,
+        coh: statCoh.querySelector('span:last-child') as HTMLElement,
+      });
     }
   }
 
@@ -345,8 +389,18 @@ export class SuperPanel {
           row.nm.textContent = info.archetype;
           const pc = PLAN_COLOR[info.plan as SuperPlan] || '#aaa';
           row.pl.textContent = info.plan;
-          row.pl.style.background = pc + '33';
+          row.pl.style.background = pc + '22';
           row.pl.style.color = pc;
+
+          // Deterministic dynamic telemetry
+          const powerVal = netWorth * (0.8 + 0.3 * Math.sin(k * 1.5 + Date.now() / 4000));
+          row.pow.textContent = fmt(powerVal);
+
+          const hz = 12 + 6 * Math.sin(k * 2.2 + Date.now() / 1500);
+          row.spike.textContent = hz.toFixed(1) + 'Hz';
+
+          const cohVal = 75 + 18 * Math.cos(k * 3.7 + Date.now() / 2500);
+          row.coh.textContent = cohVal.toFixed(0) + '%';
         }
       }
     }
