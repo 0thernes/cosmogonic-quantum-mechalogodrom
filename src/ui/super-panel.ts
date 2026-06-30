@@ -48,8 +48,8 @@ const STYLE = `
   z-index:71;width:auto;max-width:none;max-height:var(--cqm-hud-height,min(64vh,520px));display:none;flex-direction:column;
   border:1px solid rgba(196,120,255,.34);border-radius:12px;background:rgba(8,5,16,.96);backdrop-filter:blur(12px);
   box-shadow:0 10px 46px rgba(0,0,0,.7);font:11px/1.45 var(--font-mono,ui-monospace,monospace);color:#ece2ff;overflow:hidden}
-#cqm-sup-panel:not(.neural){max-height:220px}
-@media (max-width:640px){#cqm-sup-panel:not(.neural){max-height:200px}}
+#cqm-sup-panel:not(.neural){max-height:min(70vh,520px)}
+@media (max-width:640px){#cqm-sup-panel:not(.neural){max-height:min(68vh,460px)}}
 #cqm-sup-panel.open{display:flex}
 @media (max-width:640px){
 #cqm-sup-panel{left:auto;top:auto;right:10px;bottom:calc(var(--cqm-bottom-h,108px) + 130px);transform:none;width:min(94vw,326px);max-height:min(66vh,480px)}
@@ -71,9 +71,8 @@ const STYLE = `
 #cqm-sup-panel.minimized .cqm-sup-archons{display:none}
 #cqm-sup-panel.minimized .cqm-sup-head{border-bottom:none}
 .cqm-sup-x:focus-visible{outline:1px solid #c478ff}
-/* V70: the data area lays out HORIZONTALLY so the short HUD strip never needs a vertical scrollbar.
-   Identity column on the left; the bars wrap into a compact multi-column grid on the right. */
-.cqm-sup-body{flex:1 1 auto;min-height:0;display:flex;flex-direction:row;gap:10px;overflow-x:auto;overflow-y:hidden;align-items:stretch}
+/* V112: use the available panel height. Identity column on the left; meters wrap into a dense grid. */
+.cqm-sup-body{flex:1 1 auto;min-height:0;display:flex;flex-direction:row;gap:10px;overflow:auto;align-items:stretch}
 .cqm-sup-id{flex:0 0 auto;padding:6px 10px;border-right:1px solid rgba(196,120,255,.14);display:grid;
   grid-template-columns:auto 1fr;gap:2px 10px;align-items:baseline;min-width:160px;max-width:220px;overflow:hidden}
 .cqm-sup-id .k{color:#a98fce;font-size:10px;letter-spacing:.05em;text-transform:uppercase}
@@ -84,6 +83,42 @@ const STYLE = `
 .cqm-sup-bar .track{height:7px;border-radius:4px;background:rgba(196,120,255,.12);overflow:hidden}
 .cqm-sup-bar .fill{height:100%;width:0;border-radius:4px;transition:width .25s ease}
 .cqm-sup-bar .num{color:#f3ecff;text-align:right;font-size:10px;font-variant-numeric:tabular-nums}
+.cqm-sup-archons{
+  display:grid;
+  grid-template-columns:repeat(5,minmax(92px,1fr));
+  gap:5px;
+  padding:6px 10px 8px;
+  border-top:1px solid rgba(196,120,255,.14);
+  background:linear-gradient(180deg,rgba(20,8,36,.38),rgba(8,5,16,.5));
+}
+.cqm-sup-archons > div{
+  min-width:0;
+  flex-direction:column;
+  gap:3px!important;
+  margin:0!important;
+  padding:5px;
+  border:1px solid rgba(196,120,255,.18);
+  border-radius:7px;
+  background:rgba(0,0,0,.2);
+}
+.cqm-sup-archons span:first-child{
+  min-width:0!important;
+  overflow:hidden;
+  color:#e0bdff!important;
+  font:800 9px/1.15 var(--font-mono,ui-monospace,monospace);
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.cqm-sup-archons span:last-child{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:max-content;
+  max-width:100%;
+  font-size:9px;
+  letter-spacing:.06em;
+}
+@media (max-width:720px){.cqm-sup-archons{grid-template-columns:repeat(2,minmax(0,1fr))}}
 /* V75: the NEURAL observatory lives in the SAME box — toggling it grows this panel and swaps the
    telemetry body for the 4-tab / 27-visual + BRAIN observatory (no second window). */
 .cqm-sup-neural-host{display:none;flex:1 1 auto;min-height:0;flex-direction:column}

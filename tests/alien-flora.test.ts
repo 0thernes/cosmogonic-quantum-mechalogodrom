@@ -121,6 +121,20 @@ describe('AlienFlora — the vegetal ground ecology', () => {
     f.dispose();
   });
 
+  test('contact response is visual-only and decays through update', () => {
+    const ctx = makeCtx();
+    const f = new AlienFlora(ctx);
+    const mat = (f as unknown as { material: THREE.ShaderMaterial }).material;
+    f.setContact(12, -34, 0.8);
+    expect(mat.uniforms['uContact']!.value as number).toBeCloseTo(0.8);
+    const pos = mat.uniforms['uContactPos']!.value as THREE.Vector2;
+    expect(pos.x).toBe(12);
+    expect(pos.y).toBe(-34);
+    f.update(1 / 60, 1, 0.3);
+    expect(mat.uniforms['uContact']!.value as number).toBeLessThan(0.8);
+    f.dispose();
+  });
+
   test('mobile builds a lighter field than desktop', () => {
     const desktop = new AlienFlora(makeCtx(false));
     const mobile = new AlienFlora(makeCtx(true));

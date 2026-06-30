@@ -27,9 +27,9 @@ const INVENTORY = ['◈', '❄', '⚛', '✶', '☍', '⬡'];
 const STYLE = `
 #cqm-hero{position:fixed;top:calc(38px + env(safe-area-inset-top,0px));left:var(--cqm-hud-left,calc(clamp(200px,20vw,280px) + 12px));
   right:var(--cqm-hud-right,calc(clamp(260px,26vw,400px) + 12px));
-  width:auto;max-width:none;max-height:min(40vh,300px);overflow:visible;
+  width:auto;max-width:none;max-height:min(50vh,420px);overflow:visible;
   transform:translateY(-150%);z-index:150;
-  transition:transform .55s cubic-bezier(.2,.9,.3,1);font-size:13px;line-height:1.4;font-family:var(--font-mono,ui-monospace,monospace);
+  transition:transform .55s cubic-bezier(.2,.9,.3,1);font-size:14px;line-height:1.4;font-family:var(--font-mono,ui-monospace,monospace);
   color:#e9e3ff;pointer-events:none;
   display:flex;justify-content:center;align-items:flex-start}
 #cqm-hero.on{transform:translateY(0)}
@@ -43,30 +43,31 @@ const STYLE = `
   box-shadow:0 4px 18px rgba(0,0,0,.55),0 0 12px rgba(150,120,255,0.3);
   transition:transform .12s,background .12s,border-color .12s}
 .cqm-hero-fab:hover{background:rgba(60,36,110,.85);transform:scale(1.05);border-color:#39d6ff}
-.cqm-hero-chrome{display:flex;align-items:center;gap:5px;margin-left:auto;order:99;position:sticky;top:0;z-index:4}
-.cqm-hero-min,.cqm-hero-close{pointer-events:auto;border:1px solid rgba(150,120,255,.4);border-radius:7px;
-  background:rgba(30,18,60,.82);color:#f1e9ff;font:700 14px/1 var(--font-mono,ui-monospace,monospace);padding:6px 12px;min-width:32px;cursor:pointer}
-.cqm-hero-min:hover,.cqm-hero-close:hover{background:rgba(50,32,95,.75);color:#fff}
+.cqm-hero-chrome{position:absolute;top:10px;right:14px;z-index:100;display:flex;align-items:center;gap:6px}
+.cqm-hero-min,.cqm-hero-close{pointer-events:auto;border:1px solid rgba(150,120,255,.4);border-radius:8px;
+  background:rgba(30,18,60,.82);color:#f1e9ff;font:700 12px/1 var(--font-mono,ui-monospace,monospace);padding:4px 10px;min-width:28px;cursor:pointer;
+  transition:background .15s,color .15s,border-color .15s}
+.cqm-hero-min:hover,.cqm-hero-close:hover{background:rgba(50,32,95,.75);color:#fff;border-color:rgba(150,120,255,.75)}
 .cqm-hero-head{display:flex;align-items:center;gap:8px;width:100%;flex-wrap:wrap}
-@media (max-width:599px){#cqm-hero{left:6px;right:6px;top:calc(52px + env(safe-area-inset-top,0px));font-size:10px;max-height:58vh}}
-@media (max-width:640px){#cqm-hero{left:4px;right:4px;top:calc(48px + env(safe-area-inset-top,0px));font-size:10px}}
+@media (max-width:599px){#cqm-hero{left:6px;right:6px;top:calc(52px + env(safe-area-inset-top,0px));font-size:11px;max-height:58vh}}
+@media (max-width:640px){#cqm-hero{left:4px;right:4px;top:calc(48px + env(safe-area-inset-top,0px));font-size:11px}}
 @media (min-width:769px) and (max-width:1400px){
   #cqm-hero{left:calc(clamp(120px,20vw,190px) + 10px);right:calc(clamp(120px,22vw,210px) + 10px);
-    top:calc(42px + env(safe-area-inset-top,0px));max-height:min(38vh,280px);font-size:10px}
-  .cqm-hero-box{padding:6px 8px;gap:5px;max-width:100%}
-  .cqm-hero-r{gap:5px}
-  .cqm-hero-bar{min-width:90px}
-  .cqm-hero-bar .lab{width:40px;font-size:8px}
-  .cqm-hero-bar .trk{min-width:54px;height:8px}
-  .cqm-hero-bar .num{width:36px;font-size:8px}
-  .cqm-hero-sec{padding:2px 5px;gap:3px}
-  .cqm-hero-sec .v{font-size:9px}
-  .cqm-hero-pw{gap:3px}
-  .cqm-hero-btn{padding:3px 6px;font-size:7px}
-  .cqm-hero-glyph{font-size:16px}
-  .cqm-hero-slot{width:16px;height:16px;font-size:10px}
-  .cqm-hero-dpad{grid-template-columns:repeat(3,38px);gap:2px}
-  .cqm-hero-pad{width:38px;height:38px;font-size:12px}
+    top:calc(42px + env(safe-area-inset-top,0px));max-height:min(45vh,350px);font-size:12px}
+  .cqm-hero-box{padding:10px 14px;gap:10px;max-width:100%}
+  .cqm-hero-r{gap:8px}
+  .cqm-hero-bar{min-width:100px}
+  .cqm-hero-bar .lab{width:42px;font-size:10px}
+  .cqm-hero-bar .trk{min-width:60px;height:10px}
+  .cqm-hero-bar .num{width:40px;font-size:10px}
+  .cqm-hero-sec{padding:4px 8px;gap:4px}
+  .cqm-hero-sec .v{font-size:11px}
+  .cqm-hero-pw{gap:5px}
+  .cqm-hero-btn{padding:4px 8px;font-size:9px}
+  .cqm-hero-glyph{font-size:18px}
+  .cqm-hero-slot{width:18px;height:18px;font-size:11px}
+  .cqm-hero-dpad{grid-template-columns:repeat(3,40px);gap:3px}
+  .cqm-hero-pad{width:40px;height:40px;font-size:13px}
 }
 /* V101: tablet landscape 600-1400px — same column values as app.css (already set above for 769-1400).
    For 600-768px tablets, match the same clamp values so the HUD sits between the grid columns. */
@@ -76,38 +77,39 @@ const STYLE = `
 }
 /* V100: very narrow landscape (rotated phone / small tablet) — stack vertically, don't overlap */
 @media (max-height:520px) and (orientation:landscape){
-  #cqm-hero{left:6px;right:6px;top:3px;font-size:9px;max-height:none;overflow:hidden}
-  .cqm-hero-box{padding:5px 7px;gap:4px}
-  .cqm-hero-r{gap:4px}
+  #cqm-hero{left:6px;right:6px;top:3px;font-size:10px;max-height:none;overflow:hidden}
+  .cqm-hero-box{padding:8px 10px;gap:8px}
+  .cqm-hero-r{gap:6px}
 }
 .cqm-hero-box{pointer-events:auto;border:1px solid rgba(150,120,255,.4);border-radius:14px;
   background:linear-gradient(180deg,rgba(14,9,28,.95),rgba(8,6,18,.92));backdrop-filter:blur(12px);
-  box-shadow:0 10px 40px rgba(0,0,0,.6),inset 0 0 30px rgba(80,40,160,.18);padding:4px 7px;
-  display:flex;flex-flow:column nowrap;align-items:stretch;gap:4px;max-height:inherit;overflow:auto;
-  transform-origin:top center;will-change:transform;width:100%;max-width:820px;scrollbar-width:thin}
-@media (max-width:599px){.cqm-hero-box{padding:5px 7px;border-radius:10px}}
-.cqm-hero-r{display:flex;align-items:center;gap:6px;flex-wrap:nowrap;flex:0 0 auto}
-.cqm-hero-av{display:flex;align-items:center;gap:8px;white-space:nowrap}
-.cqm-hero-glyph{font-size:20px;color:#c79bff;text-shadow:0 0 12px rgba(170,110,255,.8);animation:cqm-hero-pulse 2.4s ease-in-out infinite}
+  box-shadow:0 10px 40px rgba(0,0,0,.6),inset 0 0 30px rgba(80,40,160,.18);padding:14px 18px;
+  display:flex;flex-flow:column nowrap;align-items:stretch;gap:12px;max-height:inherit;position:relative;
+  transform-origin:top center;will-change:transform;width:100%;max-width:920px}
+@media (max-width:599px){.cqm-hero-box{padding:10px 12px;border-radius:10px}}
+.cqm-hero-content{display:flex;flex-flow:column nowrap;gap:12px;overflow-y:auto;max-height:min(38vh,280px);scrollbar-width:thin}
+.cqm-hero-r{display:flex;align-items:center;gap:10px;flex-wrap:nowrap;flex:0 0 auto}
+.cqm-hero-av{display:flex;align-items:center;gap:10px;white-space:nowrap}
+.cqm-hero-glyph{font-size:22px;color:#c79bff;text-shadow:0 0 12px rgba(170,110,255,.8);animation:cqm-hero-pulse 2.4s ease-in-out infinite}
 @keyframes cqm-hero-pulse{0%,100%{text-shadow:0 0 10px rgba(170,110,255,.55)}50%{text-shadow:0 0 22px rgba(200,150,255,.95)}}
 @media (prefers-reduced-motion:reduce){.cqm-hero-glyph{animation:none}}
 .cqm-hero-name{font-weight:700;letter-spacing:.12em;color:#f0e8ff}
-.cqm-hero-lvl{font-size:9px;letter-spacing:.1em;color:#bda4ff;border:1px solid rgba(150,120,255,.4);border-radius:8px;padding:1px 6px}
-.cqm-hero-bar{display:flex;align-items:center;gap:6px;min-width:120px;flex:1}
-.cqm-hero-bar .lab{font-size:9px;letter-spacing:.08em;width:46px;text-transform:uppercase;color:#a99fce}
-.cqm-hero-bar .trk{flex:1;height:9px;border-radius:5px;background:rgba(150,120,255,.14);overflow:hidden;min-width:60px}
+.cqm-hero-lvl{font-size:10px;letter-spacing:.1em;color:#bda4ff;border:1px solid rgba(150,120,255,.4);border-radius:8px;padding:1px 6px}
+.cqm-hero-bar{display:flex;align-items:center;gap:8px;min-width:140px;flex:1}
+.cqm-hero-bar .lab{font-size:10px;letter-spacing:.08em;width:50px;text-transform:uppercase;color:#a99fce}
+.cqm-hero-bar .trk{flex:1;height:10px;border-radius:5px;background:rgba(150,120,255,.14);overflow:hidden;min-width:70px}
 .cqm-hero-bar .fil{height:100%;width:0;border-radius:5px;transition:width .3s ease}
-.cqm-hero-bar .num{font-size:9px;color:#d8ccff;width:42px;text-align:right;font-variant-numeric:tabular-nums}
-.cqm-hero-sec{display:flex;align-items:center;gap:6px;padding:2px 8px;border-radius:8px;background:rgba(80,50,140,.16);white-space:nowrap}
-.cqm-hero-sec .t{font-size:8px;letter-spacing:.1em;color:#a99fce;text-transform:uppercase}
-.cqm-hero-sec .v{font-size:11px;color:#f0e8ff;font-variant-numeric:tabular-nums}
+.cqm-hero-bar .num{font-size:10px;color:#d8ccff;width:46px;text-align:right;font-variant-numeric:tabular-nums}
+.cqm-hero-sec{display:flex;align-items:center;gap:8px;padding:4px 10px;border-radius:8px;background:rgba(80,50,140,.16);white-space:nowrap}
+.cqm-hero-sec .t{font-size:9px;letter-spacing:.1em;color:#a99fce;text-transform:uppercase}
+.cqm-hero-sec .v{font-size:12px;color:#f0e8ff;font-variant-numeric:tabular-nums}
 .cqm-hero-dot{display:inline-block;width:34px;height:5px;border-radius:3px;background:rgba(150,120,255,.16);overflow:hidden;vertical-align:middle}
 .cqm-hero-dot i{display:block;height:100%;width:0}
-.cqm-hero-inv{display:flex;gap:3px}
-.cqm-hero-slot{width:20px;height:20px;display:grid;place-items:center;border:1px solid rgba(150,120,255,.28);border-radius:5px;background:rgba(0,0,0,.3);font-size:12px;color:#c9b6ff}
-.cqm-hero-pw{display:flex;gap:5px;flex-wrap:wrap}
+.cqm-hero-inv{display:flex;gap:4px}
+.cqm-hero-slot{width:22px;height:22px;display:grid;place-items:center;border:1px solid rgba(150,120,255,.28);border-radius:5px;background:rgba(0,0,0,.3);font-size:13px;color:#c9b6ff}
+.cqm-hero-pw{display:flex;gap:6px;flex-wrap:wrap}
 .cqm-hero-btn{pointer-events:auto;border:1px solid rgba(150,120,255,.45);border-radius:7px;background:rgba(40,24,80,.5);
-  color:#e6dcff;font:600 9px/1 var(--font-mono,ui-monospace,monospace);letter-spacing:.06em;padding:5px 8px;cursor:pointer;
+  color:#e6dcff;font:600 10px/1 var(--font-mono,ui-monospace,monospace);letter-spacing:.06em;padding:6px 10px;cursor:pointer;
   transition:transform .1s,background .12s,opacity .12s;white-space:nowrap}
 .cqm-hero-btn:hover{background:rgba(70,42,130,.7);transform:translateY(-1px)}
 .cqm-hero-btn:active{transform:translateY(0)}
@@ -115,9 +117,9 @@ const STYLE = `
 .cqm-hero-btn.flash{background:rgba(150,110,255,.85);color:#fff}
 .cqm-hero-btn.alt{border-color:rgba(110,200,255,.45);color:#cdecff}
 .cqm-hero-btn:disabled,.cqm-hero-btn-disabled{opacity:.45;cursor:not-allowed;transform:none;pointer-events:none}
-.cqm-hero-dpad{display:grid;grid-template-columns:repeat(3,40px);gap:2px}
-.cqm-hero-pad{pointer-events:auto;width:40px;height:40px;display:grid;place-items:center;border:1px solid rgba(110,200,255,.4);
-  border-radius:5px;background:rgba(30,40,70,.55);color:#cdecff;font-size:13px;cursor:pointer;user-select:none;touch-action:none}
+.cqm-hero-dpad{display:grid;grid-template-columns:repeat(3,44px);gap:3px}
+.cqm-hero-pad{pointer-events:auto;width:44px;height:44px;display:grid;place-items:center;border:1px solid rgba(110,200,255,.4);
+  border-radius:5px;background:rgba(30,40,70,.55);color:#cdecff;font-size:14px;cursor:pointer;user-select:none;touch-action:none}
 .cqm-hero-pad:hover{background:rgba(50,70,120,.8)}
 .cqm-hero-pad:focus-visible{outline:2px solid rgba(140,200,255,.85);outline-offset:2px;background:rgba(50,70,120,.8)}
 .cqm-hero-pad:active{background:rgba(120,110,255,.85);color:#fff}
@@ -269,6 +271,14 @@ export class SuperheroHud {
 
     this.root.appendChild(box);
 
+    // Direct absolute chrome inside box
+    box.appendChild(chrome);
+
+    // Scrolling content area inside box
+    const content = doc.createElement('div');
+    content.className = 'cqm-hero-content';
+    box.appendChild(content);
+
     // Row A — identity + vitals
     const rowA = doc.createElement('div');
     rowA.className = 'cqm-hero-r cqm-hero-head';
@@ -286,8 +296,7 @@ export class SuperheroHud {
     this.bars.life = bar(rowA, 'Life', '#ff5a6b', doc);
     this.bars.energy = bar(rowA, 'Energy', '#39d6ff', doc);
     this.bars.xp = bar(rowA, 'XP', '#c79bff', doc);
-    rowA.appendChild(chrome);
-    box.appendChild(rowA);
+    content.appendChild(rowA);
 
     // Row B — kit: stats · wallet · neural · inventory · powers · vision/cam
     const rowB = doc.createElement('div');
@@ -328,7 +337,7 @@ export class SuperheroHud {
       inv.appendChild(s);
     }
     rowB.appendChild(inv);
-    box.appendChild(rowB);
+    content.appendChild(rowB);
 
     // Row C — powers + vision/camera + world data
     const rowC = doc.createElement('div');
@@ -358,7 +367,7 @@ export class SuperheroHud {
     // V41 — on-screen D-pad for touch / click navigation (keyboard WASD/QE + arrows also fly the avatar).
     buildDpad(rowC, doc);
     this.stats.world = stat(rowC, 'WORLD', doc);
-    box.appendChild(rowC);
+    content.appendChild(rowC);
 
     doc.body.appendChild(this.root);
 

@@ -91,6 +91,7 @@ export class AudioEngine {
   private ctx: AudioContext | null = null;
   private musicGain: GainNode | null = null;
   private sfxGain: GainNode | null = null;
+  private masterGain: GainNode | null = null;
   private musicInterval: ReturnType<typeof setInterval> | null = null;
   /** Ambient auto-SFX timer + its visibilitychange handler — retained so {@link dispose} can clear
    *  them (the renderer side already tears down via Engine.dispose; the audio side must match). */
@@ -98,6 +99,7 @@ export class AudioEngine {
   private visibilityHandler: (() => void) | null = null;
   private _musicOn = false;
   private _sfxOn = false;
+  private _muted = false;
   /** Preview cursor for {@link cycleSfxPreview} (legacy `sfxIdx`). */
   private sfxIdx = 0;
   /** Shared analysis tap (V2); created lazily by {@link tapAnalyser}, once per engine. */
@@ -157,6 +159,11 @@ export class AudioEngine {
     return this._sfxOn;
   }
 
+  /** Master mute state? Read-only outside; flip via {@link toggleMute}. */
+  get muted(): boolean {
+    return this._muted;
+  }
+
   /**
    * Lazy AudioContext init (legacy `initA`, lines 543-549). Safe to call repeatedly:
    * re-entry just resumes a suspended context. Call from the first user gesture.
@@ -168,33 +175,41 @@ export class AudioEngine {
       if (this.ctx.state === 'suspended') void this.ctx.resume();
       return;
     }
+    if (typeof window === 'undefined') return; // No browser context (e.g. unit tests): keep inert.
     const w = window as typeof window & { webkitAudioContext?: typeof AudioContext };
     const Ctor = w.AudioContext ?? w.webkitAudioContext;
     if (!Ctor) return; // No Web Audio support: engine stays inert, toggles still track state.
     this.ctx = new Ctor();
+    this.masterGain = this.ctx.createGain();
+    this.masterGain.gain.value = 1;
+    this.masterGain.connect(this.ctx.destination);
     this.musicGain = this.ctx.createGain();
     this.musicGain.gain.value = 0;
-    this.musicGain.connect(this.ctx.destination);
+    this.musicGain.connect(this.masterGain);
     this.sfxGain = this.ctx.createGain();
     this.sfxGain.gain.value = 0;
-    this.sfxGain.connect(this.ctx.destination);
+    this.sfxGain.connect(this.masterGain);
     // Ambient auto-SFX (legacy 548): only ticks while SFX are on AND the tab is visible.
     this.ambientInterval = setInterval(
       () => {
-        if (this._sfxOn && !document.hidden) this.play('ambient');
+        if (this._sfxOn && typeof document !== 'undefined' && !document.hidden) {
+          this.play('ambient');
+        }
       },
       3500 + this.rng() * 3500,
     );
     // Known Bug 3: park the whole context while hidden; wake it only if audio is enabled.
-    this.visibilityHandler = () => {
-      if (!this.ctx) return;
-      if (document.hidden) {
-        if (this._musicOn || this._sfxOn) void this.ctx.suspend();
-      } else if (this._musicOn || this._sfxOn) {
-        void this.ctx.resume();
-      }
-    };
-    document.addEventListener('visibilitychange', this.visibilityHandler);
+    if (typeof document !== 'undefined') {
+      this.visibilityHandler = () => {
+        if (!this.ctx) return;
+        if (document.hidden) {
+          if (this._musicOn || this._sfxOn) void this.ctx.suspend();
+        } else if (this._musicOn || this._sfxOn) {
+          void this.ctx.resume();
+        }
+      };
+      document.addEventListener('visibilitychange', this.visibilityHandler);
+    }
   }
 
   /**
@@ -217,9 +232,11 @@ export class AudioEngine {
     this.ctx = null;
     this.musicGain = null;
     this.sfxGain = null;
+    this.masterGain = null;
     this.analyser = null;
     this._musicOn = false;
     this._sfxOn = false;
+    this._muted = false;
     if (ctx && ctx.state !== 'closed') void ctx.close();
   }
 
@@ -275,6 +292,19 @@ export class AudioEngine {
       this.sfxGain.gain.setTargetAtTime(this._sfxOn ? 0.3 : 0, this.ctx.currentTime, 0.1);
     }
     return this._sfxOn;
+  }
+
+  /**
+   * Master mute/unmute: silences both music and SFX buses without changing their individual
+   * toggle states, so unmuting restores exactly what was playing. Ramps to avoid clicks.
+   */
+  toggleMute(): boolean {
+    this.init();
+    this._muted = !this._muted;
+    if (this.ctx && this.masterGain) {
+      this.masterGain.gain.setTargetAtTime(this._muted ? 0 : 1, this.ctx.currentTime, 0.1);
+    }
+    return this._muted;
   }
 
   /**

@@ -100,6 +100,7 @@ const TOOLBAR_MAP: Readonly<Record<string, keyof UiActions>> = {
   music: 'toggleMusic',
   song: 'cycleSong',
   sfx: 'toggleSfx',
+  mute: 'toggleMute',
   sfxcycle: 'cycleSfxPreview',
   reset: 'reset',
   pause: 'togglePause',

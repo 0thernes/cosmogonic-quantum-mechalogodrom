@@ -135,6 +135,17 @@ export class NhiBodySystem {
         this.bodies.delete(id);
         continue;
       }
+      let social = 0;
+      for (const [otherId] of this.bodies) {
+        if (otherId === id) continue;
+        const op = posOf(otherId);
+        if (!op) continue;
+        const dx = p.x - op.x;
+        const dy = p.y - op.y;
+        const dz = p.z - op.z;
+        const d2 = dx * dx + dy * dy + dz * dz;
+        if (d2 < 55 * 55) social = Math.max(social, 1 - Math.sqrt(d2) / 55);
+      }
       const g = b.group;
       g.position.copy(p);
       // V109: more dynamic, restless alien motion — faster spin + irregular multi-frequency wobble.
@@ -144,22 +155,36 @@ export class NhiBodySystem {
         Math.sin(t * 0.41 + b.phase * 1.7) * 0.35 + Math.sin(t * 0.93 + b.phase) * 0.14;
       // Morph: a writhing, non-uniform breathing scale — reads as a living, shifting body.
       g.scale.set(
-        1.12 + Math.sin(t * 1.17 + b.phase) * 0.26 + Math.sin(t * 2.7 + b.phase) * 0.08,
-        1.18 + Math.sin(t * 1.61 + b.phase * 1.3) * 0.32 + Math.sin(t * 3.1 + b.phase * 0.8) * 0.1,
-        1.08 + Math.sin(t * 1.39 + b.phase * 0.7) * 0.24 + Math.sin(t * 2.4 + b.phase * 1.2) * 0.07,
+        1.12 +
+          social * 0.18 +
+          Math.sin(t * 1.17 + b.phase) * 0.26 +
+          Math.sin(t * 2.7 + b.phase) * 0.08,
+        1.18 +
+          social * 0.25 +
+          Math.sin(t * 1.61 + b.phase * 1.3) * 0.32 +
+          Math.sin(t * 3.1 + b.phase * 0.8) * 0.1,
+        1.08 +
+          social * 0.16 +
+          Math.sin(t * 1.39 + b.phase * 0.7) * 0.24 +
+          Math.sin(t * 2.4 + b.phase * 1.2) * 0.07,
       );
       b.coreMat.emissiveIntensity =
         1.55 +
         Math.sin(t * 1.23 + b.phase) * 0.55 +
         Math.sin(t * 0.37 + b.phase) * 0.25 +
-        Math.sin(t * 4.1 + b.phase) * 0.15;
+        Math.sin(t * 4.1 + b.phase) * 0.15 +
+        social * 1.25;
       b.ringMat.emissiveIntensity =
         1.05 +
         Math.sin(t * 2.17 + b.phase) * 0.45 +
         Math.sin(t * 0.53 + b.phase) * 0.25 +
-        Math.sin(t * 3.7 + b.phase) * 0.2;
+        Math.sin(t * 3.7 + b.phase) * 0.2 +
+        social * 1.65;
       b.eyeMat.emissiveIntensity =
-        6.4 + Math.sin(t * 2.5 + b.phase) * 1.1 + Math.sin(t * 6.0 + b.phase * 3.0) * 0.7;
+        6.4 +
+        Math.sin(t * 2.5 + b.phase) * 1.1 +
+        Math.sin(t * 6.0 + b.phase * 3.0) * 0.7 +
+        social * 2.2;
     }
   }
 

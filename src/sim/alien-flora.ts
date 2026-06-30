@@ -104,6 +104,8 @@ const flora_vert = /* glsl */ `
   uniform float uTime;
   uniform float uWind;
   uniform float uChaos;
+  uniform vec2 uContactPos;
+  uniform float uContact;
   varying vec3 vColor;
   varying float vGlow;
   varying float vUp;
@@ -136,6 +138,12 @@ const flora_vert = /* glsl */ `
       sin(worldPosition.x * 0.071 + sin(worldPosition.z * 0.019 + uTime * 0.2) * 2.0) *
       sin(worldPosition.z * 0.067 - cos(worldPosition.x * 0.017 - uTime * 0.17) * 2.0);
     float ridge = pow(abs(cellular), 1.6) * sign(cellular);
+    vec2 away = worldPosition.xz - uContactPos;
+    float contactD2 = max(dot(away, away), 1.0);
+    float contact = uContact * smoothstep(5200.0, 0.0, contactD2);
+    vec2 contactDir = away * inversesqrt(contactD2);
+    worldPosition.xz += contactDir * contact * up * up * (4.0 + uChaos * 5.0);
+    worldPosition.y += contact * up * (1.2 + uChaos * 1.8);
     worldPosition.y += wave * (1.1 + uChaos * 3.1) + tectonic * (0.5 + uChaos * 2.3) + ridge * (0.75 + uChaos * 1.7);
     vec4 mvPosition = modelViewMatrix * worldPosition;
     vNormalV = normalize(normalMatrix * mat3(instanceMatrix) * normal);
@@ -209,6 +217,8 @@ export class AlienFlora {
         uTime: { value: 0 },
         uWind: { value: 0.4 },
         uChaos: { value: 0 },
+        uContactPos: { value: new THREE.Vector2(99999, 99999) },
+        uContact: { value: 0 },
       },
       vertexShader: flora_vert,
       fragmentShader: flora_frag,
@@ -496,6 +506,19 @@ export class AlienFlora {
     u['uTime']!.value = t;
     u['uWind']!.value = 0.32 + 0.7 * c + 0.08 * Math.sin(t * 0.31);
     u['uChaos']!.value = c;
+    u['uContact']!.value = (u['uContact']!.value as number) * 0.88;
+  }
+
+  /**
+   * Visual contact response: plants near the supplied world XZ position bend away and lift.
+   * Render-only and decaying; it never writes back into entity or terrain simulation state.
+   */
+  setContact(x: number, z: number, strength: number): void {
+    if (!Number.isFinite(x) || !Number.isFinite(z)) return;
+    const s = strength < 0 ? 0 : strength > 1 ? 1 : strength;
+    const u = this.material.uniforms;
+    (u['uContactPos']!.value as THREE.Vector2).set(x, z);
+    u['uContact']!.value = Math.max(u['uContact']!.value as number, s);
   }
 
   /** Free every owned geometry + the shared material (HMR / world-reset safe). */

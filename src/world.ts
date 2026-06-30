@@ -972,6 +972,7 @@ export class World {
       econ: this.economy.summary(),
       musicOn: false,
       sfxOn: false,
+      muteOn: false,
       resetCount: 0,
       sim: this.state.sim,
       singularity: '',
@@ -1078,6 +1079,7 @@ export class World {
       this.sfxRestored = true;
       if (this.persisted.sfxOn && !this.audio.sfxOn) this.audio.toggleSfx();
       if (this.persisted.musicOn && !this.audio.musicOn) this.audio.setMusicOn(true);
+      if (this.persisted.muteOn && !this.audio.muted) this.audio.toggleMute();
     }
   }
 
@@ -1391,6 +1393,7 @@ export class World {
     // (phylumCounts/titanLedger/warMatrix), always current; internally cadenced.
     this.viz3d.update(this.viz3dSnap);
     this.environment.update(dt, t);
+    this.driveFloraContact(n);
     this.alienFlora.update(dt, t, this.state.chaos / CHAOS_MAX); // flora leans + luminesces with chaos
     // Crossfade the rest of the cosmos — apex bodies, instanced/per-mesh organisms, ground + light rig
     // (AFTER environment.update, so it rides this frame's animated rig).
@@ -1543,6 +1546,36 @@ export class World {
     // V60: aim the gravitational-lens post-FX at the active singularity (identity when none).
     this.updateLens();
     this.engine.render();
+  }
+
+  /**
+   * Render-only plant contact: sample a bounded set of live organisms and drive the flora shader's
+   * contact bend near the weighted activity centroid. O(min(n,96)); no rng, no sim feedback.
+   */
+  private driveFloraContact(n: number): void {
+    if (n <= 0) return;
+    const list = this.entities.list;
+    const stride = Math.max(1, Math.floor(n / 96));
+    const start = this.state.frame % stride;
+    let wx = 0;
+    let wz = 0;
+    let weight = 0;
+    for (let i = start; i < n; i += stride) {
+      const e = list[i];
+      if (!e) continue;
+      const u = e.userData;
+      const v2 = u.vel.lengthSq();
+      const motion = v2 > 0 ? Math.min(1, Math.sqrt(v2) * 0.16) : 0;
+      const neural = Math.min(1, Math.abs(u.act) * 0.18);
+      const body = (u.belly > 0 ? 0.24 : 0) + (u.isNhi ? 0.45 : 0);
+      const w = motion + neural + body;
+      if (w <= 0.02) continue;
+      wx += e.position.x * w;
+      wz += e.position.z * w;
+      weight += w;
+    }
+    if (weight <= 0) return;
+    this.alienFlora.setContact(wx / weight, wz / weight, Math.min(1, weight / 18));
   }
 
   /**
@@ -2668,6 +2701,7 @@ export class World {
     // V57: audio on/off + reset count (HUD box), sim variant + active singularity (telemetry box).
     sn.musicOn = this.audio.musicOn;
     sn.sfxOn = this.audio.sfxOn;
+    sn.muteOn = this.audio.muted;
     sn.resetCount = this.resetCount;
     sn.sim = s.sim;
     const sk = this.singularities.kind;
@@ -3538,6 +3572,14 @@ export class World {
         this.persisted.sfxOn = on;
         this.save();
         this.audit.record('sfx', { on });
+        return on;
+      },
+      toggleMute: () => {
+        this.unlock();
+        const on = this.audio.toggleMute();
+        this.persisted.muteOn = on;
+        this.save();
+        this.audit.record('mute', { on });
         return on;
       },
       cycleSong: () => {

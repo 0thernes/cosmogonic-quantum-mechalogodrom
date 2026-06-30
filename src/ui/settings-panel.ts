@@ -59,6 +59,7 @@ const GROUPS = [
     buttons: [
       { action: 'music', label: '♪ Music' },
       { action: 'sfx', label: '♫ SFX' },
+      { action: 'mute', label: '🔇 Mute' },
       { action: 'song', label: '▶ Next Song' },
       { action: 'sfxcycle', label: '🔔 Preview SFX' },
     ],

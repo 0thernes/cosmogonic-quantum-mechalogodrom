@@ -281,6 +281,10 @@ export interface PersistedStateV1 {
    */
   musicOn?: boolean;
   /**
+   * Master mute toggle (additive — defaults to false when absent).
+   */
+  muteOn?: boolean;
+  /**
    * Active render mode index (additive — defaults to 0 when absent).
    */
   renderIdx?: number;
@@ -364,6 +368,8 @@ export interface TelemetrySnapshot {
   musicOn: boolean;
   /** V57: audio SFX on/off (HUD box). */
   sfxOn: boolean;
+  /** Master mute state (HUD box). */
+  muteOn: boolean;
   /** V57: total RESET/REGENERATE actions this session — kept count (HUD box). */
   resetCount: number;
   /** Simulation variant: 1 = GENESIS N(1), 2 = BREAK FREE N(2) (telemetry box). */
@@ -404,6 +410,8 @@ export interface UiActions {
   togglePause(): boolean;
   toggleMusic(): boolean;
   toggleSfx(): boolean;
+  /** Master mute/unmute music + SFX without changing their individual toggle states. */
+  toggleMute(): boolean;
   cycleSong(): string;
   cycleSfxPreview(): string;
   cycleTimeScale(): number;

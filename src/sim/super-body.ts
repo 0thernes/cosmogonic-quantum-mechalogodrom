@@ -870,16 +870,19 @@ export class SuperBodySystem {
     // Arm-writhe ∝ aggression + quantum (amped counts reactivity)
     // Ralph 10x: finalEffArm (libirrep+quake) influences effective splay count proxy for arms
     const armCountFactor = 0.7 + (finalEffArm % 8) * 0.04;
+    const brutalStyleMorph = this.brutalism * (0.08 + this.brutalStyle * 0.035);
     const splay =
       1 +
       this.aggression * 0.4 +
       Math.sin(t * 3.0) * 0.05 * this.aggression +
       this.evoSpike * 0.18 +
-      (armCountFactor - 1) * 0.1;
+      (armCountFactor - 1) * 0.1 +
+      brutalStyleMorph * (1.0 + Math.sin(t * (0.8 + this.brutalStyle * 0.17)) * 0.35);
     this.arms.scale.setScalar(splay);
-    this.arms.rotation.y = -t * spin * 0.5;
+    this.arms.rotation.y = -t * spin * (0.5 + this.brutalism * (0.08 + this.brutalStyle * 0.035));
+    this.arms.rotation.z = Math.sin(t * (0.33 + this.brutalStyle * 0.07)) * brutalStyleMorph;
 
-    this.eyes.scale.setScalar(beat);
+    this.eyes.scale.setScalar(beat * (1 + brutalStyleMorph * 0.65));
     this.cage.rotation.y = -t * (spin * 0.6);
     this.cage.rotation.z = t * 0.05;
 

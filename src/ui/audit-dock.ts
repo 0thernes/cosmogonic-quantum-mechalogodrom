@@ -71,6 +71,45 @@ const STYLE = `
   color: #e6f7ff;
   text-shadow: 0 0 4px rgba(120, 200, 230, 0.6);
 }
+.cqm-audit-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+  margin: 0 0 8px;
+}
+.cqm-audit-card {
+  min-width: 0;
+  border: 1px solid rgba(120, 200, 230, 0.18);
+  border-radius: 6px;
+  background: linear-gradient(180deg, rgba(10, 22, 32, 0.68), rgba(4, 8, 16, 0.7));
+  padding: 5px 6px;
+  box-shadow: inset 0 0 12px rgba(80, 180, 220, 0.06);
+}
+.cqm-audit-card b {
+  display: block;
+  font: 800 8px/1 var(--font-mono, ui-monospace, monospace);
+  letter-spacing: 0.12em;
+  color: #e6f7ff;
+}
+.cqm-audit-card .num {
+  display: block;
+  margin-top: 3px;
+  color: #5fd8ff;
+  font: 800 15px/1 var(--font-mono, ui-monospace, monospace);
+  font-variant-numeric: tabular-nums;
+}
+.cqm-audit-card .last {
+  display: block;
+  margin-top: 3px;
+  overflow: hidden;
+  color: #7fa8b8;
+  font: 500 8px/1.2 var(--font-mono, ui-monospace, monospace);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+@media (max-width:600px){
+  .cqm-audit-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
 
 /* Prepend scope tags to list items */
 .cqm-aud-scope {
@@ -175,10 +214,55 @@ function ensureTabs(doc: Document): void {
     }
   }
 
+  let dashboard = doc.getElementById('cqm-audit-dashboard');
+  if (!dashboard) {
+    dashboard = doc.createElement('div');
+    dashboard.id = 'cqm-audit-dashboard';
+    dashboard.className = 'cqm-audit-grid';
+    const listDiv = doc.getElementById('audit-list');
+    if (listDiv) body.insertBefore(dashboard, listDiv);
+    else body.appendChild(dashboard);
+  }
+
   // Update active state
   tabContainer.querySelectorAll('.cqm-audit-tab').forEach((b) => {
     b.classList.toggle('active', (b as HTMLElement).dataset['tab'] === activeTab);
   });
+}
+
+function renderDashboard(doc: Document, list: unknown[]): void {
+  const dash = doc.getElementById('cqm-audit-dashboard');
+  if (!dash) return;
+  const stats: Record<'Dev' | 'Bio' | 'Neuro' | 'Substrate', { count: number; last: string }> = {
+    Dev: { count: 0, last: '—' },
+    Bio: { count: 0, last: '—' },
+    Neuro: { count: 0, last: '—' },
+    Substrate: { count: 0, last: '—' },
+  };
+  for (const e of list) {
+    if (!e || typeof e !== 'object') continue;
+    const rec = e as { action?: unknown };
+    if (typeof rec.action !== 'string') continue;
+    const scope = getActionScope(rec.action);
+    const s = stats[scope];
+    s.count++;
+    s.last = rec.action;
+  }
+  dash.replaceChildren();
+  for (const [scope, s] of Object.entries(stats)) {
+    const card = doc.createElement('div');
+    card.className = 'cqm-audit-card';
+    const title = doc.createElement('b');
+    title.textContent = scope;
+    const count = doc.createElement('span');
+    count.className = 'num';
+    count.textContent = String(s.count);
+    const last = doc.createElement('span');
+    last.className = 'last';
+    last.textContent = s.last;
+    card.append(title, count, last);
+    dash.appendChild(card);
+  }
 }
 
 /** Human relative age, e.g. "now", "3s", "5m", "2h". `ms` is the age in milliseconds. */
@@ -227,6 +311,7 @@ function renderClientAudit(doc: Document): void {
     }
   }
   const list = Array.isArray(arr) ? arr : [];
+  renderDashboard(doc, list);
 
   // Filter the list based on active tab
   const filteredList = list.filter((e: unknown) => {
