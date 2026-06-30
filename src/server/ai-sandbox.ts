@@ -20,6 +20,7 @@
  * the model still cannot escape these gates because the gates run in this process, not the model's.
  */
 import { resolve, relative, isAbsolute, sep } from 'node:path';
+import { readdir } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { webSearch } from './web-search';
 
@@ -32,6 +33,9 @@ const ROOT = resolve(fileURLToPath(new URL('../../', import.meta.url)));
 
 /** Largest file/`stdout` slice returned to the model, in bytes/chars. Keeps prompts bounded. */
 const MAX_OUTPUT = 16 * 1024;
+
+/** Largest single file the built-in literal grep fallback will scan. */
+const MAX_GREP_FILE_BYTES = 1024 * 1024;
 
 /** Command wall-clock budget; a read-only query that runs longer is killed. */
 const RUN_TIMEOUT_MS = 15_000;
@@ -101,7 +105,6 @@ export async function readFileSafe(rel: string): Promise<SandboxResult> {
 export async function listDir(rel: string): Promise<SandboxResult> {
   const c = confine(rel === '' ? '.' : rel);
   if (!c.ok) return c;
-  const { readdir } = await import('node:fs/promises');
   try {
     const entries = await readdir(c.abs, { withFileTypes: true });
     const lines = entries
@@ -348,6 +351,79 @@ function validateCommand(raw: string): { ok: true; argv: string[] } | { ok: fals
   return { ok: true, argv };
 }
 
+function repoRelative(abs: string): string {
+  return relative(ROOT, abs).split(sep).join('/');
+}
+
+async function grepLiteral(pattern: string, roots: string[] = ['.']): Promise<SandboxResult> {
+  const out: string[] = [];
+  let outLen = 0;
+  let truncated = false;
+
+  async function addLine(abs: string, lineNo: number, text: string): Promise<boolean> {
+    const line = `${repoRelative(abs)}:${lineNo}:${text}`;
+    out.push(line);
+    outLen += line.length + 1;
+    if (outLen > MAX_OUTPUT) {
+      truncated = true;
+      return true;
+    }
+    return false;
+  }
+
+  async function scanFile(abs: string): Promise<boolean> {
+    const file = Bun.file(abs);
+    if (file.size > MAX_GREP_FILE_BYTES) return false;
+    try {
+      const text = await file.text();
+      const lines = text.split(/\r?\n/);
+      for (let i = 0; i < lines.length; i++) {
+        if (lines[i]?.includes(pattern) && (await addLine(abs, i + 1, lines[i] ?? ''))) {
+          return true;
+        }
+      }
+    } catch {
+      // Binary/unreadable files are equivalent to `git grep -I`: silently skip them.
+    }
+    return false;
+  }
+
+  async function walk(abs: string): Promise<boolean> {
+    try {
+      const entries = await readdir(abs, { withFileTypes: true });
+      entries.sort((a, b) => a.name.localeCompare(b.name));
+      for (const entry of entries) {
+        if (isBlockedTop(entry.name)) continue;
+        const child = resolve(abs, entry.name);
+        if (entry.isDirectory()) {
+          if (await walk(child)) return true;
+        } else if (entry.isFile() && (await scanFile(child))) {
+          return true;
+        }
+      }
+    } catch {
+      return scanFile(abs);
+    }
+    return false;
+  }
+
+  for (const root of roots) {
+    const c = confine(root);
+    if (!c.ok) return c;
+    if (await walk(c.abs)) break;
+  }
+
+  const output = out.join('\n');
+  return { ok: true, output: truncated ? output.slice(0, MAX_OUTPUT) : output, truncated };
+}
+
+function gitGrepRequest(argv: string[]): { pattern: string; roots: string[] } | null {
+  if (argv[0] !== 'git' || argv[1] !== 'grep') return null;
+  const positional = argv.slice(2).filter((a) => !isFlag(a));
+  const pattern = positional[0];
+  if (pattern === undefined) return null;
+  return { pattern, roots: positional.slice(1).length > 0 ? positional.slice(1) : ['.'] };
+}
 /**
  * The minimal, secret-free environment handed to sandboxed subprocesses. Deliberately EXCLUDES
  * `process.env` (which holds every LLM provider key) — only the system vars git/bun need to run.
@@ -380,6 +456,12 @@ function minimalEnv(): Record<string, string> {
 export async function runReadOnly(raw: string): Promise<SandboxResult> {
   const v = validateCommand(raw);
   if (!v.ok) return v;
+  if (v.argv[0] === 'echo') {
+    const output = `${v.argv.slice(1).join(' ')}\n`;
+    return { ok: true, output, truncated: false };
+  }
+  const grep = gitGrepRequest(v.argv);
+  if (grep) return grepLiteral(grep.pattern, grep.roots);
   try {
     const proc = Bun.spawn(v.argv, {
       cwd: ROOT,

@@ -14,6 +14,8 @@
  * Companion: scripts/normalize-docs.ts, tests/docs-receipts-law.test.ts.
  */
 import { describe, expect, test } from 'bun:test';
+import { readdir } from 'node:fs/promises';
+import { relative, resolve, sep } from 'node:path';
 
 /** Living, authoritative surfaces that must state the wiring truthfully. */
 const LIVING = [
@@ -243,15 +245,57 @@ const CONFLICT_OPEN = '<'.repeat(7) + ' ';
 const CONFLICT_CLOSE = '>'.repeat(7) + ' ';
 const BINARY_EXT =
   /\.(png|jpe?g|gif|ico|webp|svg|woff2?|ttf|otf|eot|mp[34]|wav|bmp|pdf|zip|gz|lock|wasm)$/i;
+const ROOT = process.cwd();
+const FALLBACK_SKIP_DIRS = new Set([
+  '.agents',
+  '.codex',
+  '.git',
+  'coverage',
+  'dist',
+  'legacy',
+  'node_modules',
+]);
+
+function repoRel(abs: string): string {
+  return relative(ROOT, abs).split(sep).join('/');
+}
+
+async function listRepoFilesFallback(dir = ROOT): Promise<string[]> {
+  const files: string[] = [];
+  const entries = await readdir(dir, { withFileTypes: true });
+  entries.sort((a, b) => a.name.localeCompare(b.name));
+  for (const entry of entries) {
+    const abs = resolve(dir, entry.name);
+    const rel = repoRel(abs);
+    const top = rel.split('/')[0] ?? rel;
+    if (FALLBACK_SKIP_DIRS.has(entry.name) || FALLBACK_SKIP_DIRS.has(top)) continue;
+    if (entry.isDirectory()) {
+      files.push(...(await listRepoFilesFallback(abs)));
+    } else if (entry.isFile()) {
+      files.push(rel);
+    }
+  }
+  return files;
+}
+
+async function conflictScanFiles(): Promise<string[]> {
+  try {
+    const stdout = Bun.spawnSync(['git', 'ls-files']).stdout.toString();
+    const tracked = stdout
+      .split('\n')
+      .map((s) => s.trim())
+      .filter(Boolean);
+    if (tracked.length > 0) return tracked;
+  } catch {
+    // Managed Windows sandboxes may deny nested child processes; fall through to the in-process walk.
+  }
+  return listRepoFilesFallback();
+}
 
 describe('docs truth law — no unresolved git conflict markers', () => {
   test('no tracked text file contains a git conflict marker', async () => {
-    const ls = Bun.spawnSync(['git', 'ls-files']).stdout.toString();
     const offenders: string[] = [];
-    for (const rel of ls
-      .split('\n')
-      .map((s) => s.trim())
-      .filter(Boolean)) {
+    for (const rel of await conflictScanFiles()) {
       if (rel.startsWith('legacy/') || BINARY_EXT.test(rel)) continue;
       const file = Bun.file(rel);
       if (!(await file.exists())) continue;
