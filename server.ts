@@ -622,7 +622,7 @@ if (import.meta.main) {
         if (await src.exists()) {
           const transpiler = new Bun.Transpiler();
           const source = await src.text();
-          const out = await transpiler.transform(source, 'ts' as 'ts');
+          const out = await transpiler.transform(source, 'ts' as const);
           logRequest(req, 200);
           return withSecurityHeaders(
             new Response(out, {

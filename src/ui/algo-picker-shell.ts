@@ -34,5 +34,3 @@ export function mountAlgoPickerShell(doc: Document = document): void {
   }
   listEl.appendChild(frag);
 }
-
-export {};

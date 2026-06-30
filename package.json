@@ -25,7 +25,7 @@
     "metrics": "bun scripts/codebase-metrics.ts",
     "verify:facts": "bun scripts/verify-canonical-facts.ts",
     "check": "bun run format:check && bun run typecheck && bun run lint && bun run verify:receipts && bun run sync:check && bun run verify:facts && bun run build",
-    "verify:receipts": "bun scripts/verify-receipts.ts",
+    "verify:receipts": "bun --shell=system run verify:receipts:pipe",
     "verify:receipts:pipe": "bun test --coverage 2>&1 | bun scripts/verify-receipts.ts --stdin",
     "sync": "bun scripts/sync-surfaces.ts",
     "sync:check": "bun scripts/sync-surfaces.ts --check",
