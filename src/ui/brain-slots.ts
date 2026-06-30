@@ -25,6 +25,9 @@ interface Slot {
 }
 
 const MAX_HISTORY = 48;
+const CANVAS_W = 120;
+const CANVAS_H = 36;
+const BRAIN_SLOTS_WIRED = 'cqmBrainSlotsWired';
 
 function createCanvas(doc: Document, slotId: string): Slot | null {
   const wrap = doc.getElementById(slotId);
@@ -32,9 +35,13 @@ function createCanvas(doc: Document, slotId: string): Slot | null {
   wrap.replaceChildren();
   const canvas = doc.createElement('canvas');
   canvas.className = 'cqm-brain-canvas';
-  canvas.width = 120;
-  canvas.height = 36;
+  const dpr = Math.max(1, Math.min(2, doc.defaultView?.devicePixelRatio ?? 1));
+  canvas.width = Math.round(CANVAS_W * dpr);
+  canvas.height = Math.round(CANVAS_H * dpr);
+  canvas.style.width = `${CANVAS_W}px`;
+  canvas.style.height = `${CANVAS_H}px`;
   canvas.setAttribute('role', 'img');
+  canvas.setAttribute('aria-label', 'Brain visualizer booting');
   const ctx = canvas.getContext('2d');
   if (!ctx) return null;
   wrap.appendChild(canvas);
@@ -150,6 +157,7 @@ function updateApex(slot: Slot, apex: ApexBrainSnapshot | null): void {
   const h = slot.canvas.height;
   drawBackground(ctx, w, h);
   if (!apex) {
+    slot.canvas.setAttribute('aria-label', 'Apex brain visualizer booting');
     ctx.fillStyle = 'rgba(200, 180, 255, 0.4)';
     ctx.font = '10px JetBrains Mono, monospace';
     ctx.fillText('Apex booting…', 6, 23);
@@ -170,6 +178,10 @@ function updateApex(slot: Slot, apex: ApexBrainSnapshot | null): void {
   ctx.fillStyle = '#e6dcff';
   ctx.font = '9px JetBrains Mono, monospace';
   ctx.fillText(`Apex · ${t.plan}`, 4, 10);
+  slot.canvas.setAttribute(
+    'aria-label',
+    `Apex brain plan ${t.plan}, vitality ${Math.round(t.vitality * 100)} percent`,
+  );
 }
 
 function updateMecha(slot: Slot, mecha: MechalogodromBrainSnapshot | null): void {
@@ -178,6 +190,7 @@ function updateMecha(slot: Slot, mecha: MechalogodromBrainSnapshot | null): void
   const h = slot.canvas.height;
   drawBackground(ctx, w, h);
   if (!mecha) {
+    slot.canvas.setAttribute('aria-label', 'Mechalogodrom brain visualizer booting');
     ctx.fillStyle = 'rgba(200, 180, 255, 0.4)';
     ctx.font = '10px JetBrains Mono, monospace';
     ctx.fillText('Mecha booting…', 6, 23);
@@ -189,6 +202,12 @@ function updateMecha(slot: Slot, mecha: MechalogodromBrainSnapshot | null): void
   ctx.fillStyle = '#b8f5ff';
   ctx.font = '9px JetBrains Mono, monospace';
   ctx.fillText(`Mecha · ${Math.round((mecha.liveParams / 1e6) * 10) / 10}M`, 4, 10);
+  slot.canvas.setAttribute(
+    'aria-label',
+    `Mechalogodrom brain activity ${Math.round((mecha.activity ?? 0.5) * 100)} percent, ${
+      Math.round((mecha.liveParams / 1e6) * 10) / 10
+    } million live parameters`,
+  );
 }
 
 function updateGlyph(slot: Slot, glyphs: GlyphBrainSnapshot[] | null): void {
@@ -197,6 +216,7 @@ function updateGlyph(slot: Slot, glyphs: GlyphBrainSnapshot[] | null): void {
   const h = slot.canvas.height;
   drawBackground(ctx, w, h);
   if (!glyphs || glyphs.length === 0) {
+    slot.canvas.setAttribute('aria-label', 'Glyph brain visualizer booting');
     ctx.fillStyle = 'rgba(200, 180, 255, 0.4)';
     ctx.font = '10px JetBrains Mono, monospace';
     ctx.fillText('Glyph booting…', 6, 23);
@@ -208,6 +228,7 @@ function updateGlyph(slot: Slot, glyphs: GlyphBrainSnapshot[] | null): void {
   ctx.fillStyle = '#e6dcff';
   ctx.font = '9px JetBrains Mono, monospace';
   ctx.fillText(`Glyph · ${glyphs.length} minds`, 4, 10);
+  slot.canvas.setAttribute('aria-label', `Glyph brain swarm visualizer, ${glyphs.length} minds`);
 }
 
 function updateSlots(slots: Slot[], payload: BrainSlotPayload): void {
@@ -219,12 +240,14 @@ function updateSlots(slots: Slot[], payload: BrainSlotPayload): void {
 }
 
 export function initBrainSlotVisualizers(doc: Document = document): void {
+  if (doc.documentElement.dataset[BRAIN_SLOTS_WIRED] === '1') return;
   const slots: Slot[] = [];
   for (const id of ['brain-apex-slot', 'brain-mecha-slot', 'brain-glyph-slot'] as const) {
     const s = createCanvas(doc, id);
     if (s) slots.push(s);
   }
   if (slots.length === 0) return;
+  doc.documentElement.dataset[BRAIN_SLOTS_WIRED] = '1';
   window.addEventListener('cqm:brain-snapshots', (e) => {
     const payload = (e as CustomEvent).detail as BrainSlotPayload | undefined;
     if (!payload) return;

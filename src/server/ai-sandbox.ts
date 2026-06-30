@@ -34,6 +34,9 @@ const ROOT = resolve(fileURLToPath(new URL('../../', import.meta.url)));
 /** Largest file/`stdout` slice returned to the model, in bytes/chars. Keeps prompts bounded. */
 const MAX_OUTPUT = 16 * 1024;
 
+/** Largest file the sandbox will read into memory before slicing output. */
+const MAX_READ_FILE_BYTES = 1024 * 1024;
+
 /** Largest single file the built-in literal grep fallback will scan. */
 const MAX_GREP_FILE_BYTES = 1024 * 1024;
 
@@ -100,6 +103,7 @@ export async function readFileSafe(rel: string): Promise<SandboxResult> {
   if (!c.ok) return c;
   const file = Bun.file(c.abs);
   if (!(await file.exists())) return { ok: false, error: 'not found' };
+  if (file.size > MAX_READ_FILE_BYTES) return { ok: false, error: 'file too large' };
   const text = await file.text();
   const truncated = text.length > MAX_OUTPUT;
   return { ok: true, output: truncated ? text.slice(0, MAX_OUTPUT) : text, truncated };
@@ -160,7 +164,6 @@ const GIT_READ_SUB = new Set([
   'grep',
   'reflog',
   'diff-tree',
-  'cat-file',
   'branch',
   'tag',
   'remote',
@@ -302,6 +305,12 @@ function validateCommand(raw: string): { ok: true; argv: string[] } | { ok: fals
     const sub = argv[1] ?? '';
     if (!GIT_READ_SUB.has(sub))
       return { ok: false, error: `git "${sub}" is not a read-only subcommand` };
+    if (sub === 'show') {
+      const positionals = argv.slice(2).filter((a) => !isFlag(a));
+      if (positionals.some((a) => !a.includes(':'))) {
+        return { ok: false, error: 'git show is allowed only for confined <rev>:<path> reads' };
+      }
+    }
     // branch/tag/remote can MUTATE with a positional arg; permit only the listing forms (flags only).
     if (
       (sub === 'branch' || sub === 'tag' || sub === 'remote') &&

@@ -155,6 +155,7 @@ class SettingsPanel {
     });
     this.modal = root;
     this.modal.setAttribute('aria-label', 'Simulation settings');
+    this.modal.tabIndex = -1;
     box.appendChild(panelHeader({ title: '⚙ SETTINGS', onClose: () => this.close(), doc }));
     for (const g of GROUPS) {
       const gr = doc.createElement('div');
@@ -184,6 +185,7 @@ class SettingsPanel {
 
   open(): void {
     this.modal.style.display = 'flex';
+    this.modal.focus();
   }
 
   close(): void {

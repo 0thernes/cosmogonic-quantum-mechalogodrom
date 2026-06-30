@@ -92,6 +92,8 @@ describe('ai-sandbox: command gate is default-deny and write-free', () => {
     'cat .env', // `run` read of a blocked secret file (read_file blocks it; run did not — MEDIUM)
     'cat legacy/anything', // `run` read of a blocked legacy file
     'git show HEAD:.env', // read a blocked file via git <rev>:<path>
+    'git cat-file -p HEAD', // raw object reads bypass path confinement entirely
+    'git show HEAD', // bare rev can disclose historical/deleted file contents
   ];
   for (const cmd of denied) {
     test(`denies: ${cmd}`, async () => {

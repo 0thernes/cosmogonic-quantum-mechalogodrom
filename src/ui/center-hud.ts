@@ -778,6 +778,7 @@ if (import.meta.hot) {
     if (typeof window !== 'undefined') {
       window.removeEventListener('resize', scheduleFit);
       window.removeEventListener('orientationchange', scheduleFit);
+      document.removeEventListener('fullscreenchange', scheduleFit);
     }
     if (typeof document !== 'undefined') document.removeEventListener('keydown', onKeydown);
   });

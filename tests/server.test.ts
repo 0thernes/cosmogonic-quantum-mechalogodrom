@@ -11,6 +11,8 @@ import {
   parseAuditBody,
   parseChatMessages,
   parseWaitlistBody,
+  readJsonBody,
+  redactEmailForLog,
   withSecurityHeaders,
 } from '../server';
 
@@ -81,6 +83,12 @@ describe('parseWaitlistBody — ventures waitlist POST narrowing', () => {
     expect(parseWaitlistBody(null)).toBeNull();
     expect(parseWaitlistBody({ email: 'not-an-email' })).toBeNull();
     expect(parseWaitlistBody({ email: 'x'.repeat(200) + '@y.co' })).toBeNull();
+  });
+
+  test('redacts waitlist emails before they enter logs', () => {
+    expect(redactEmailForLog('player@example.com')).toBe('p***@example.com');
+    expect(redactEmailForLog('ab@example.com')).toBe('a***@example.com');
+    expect(redactEmailForLog('bad-shape')).toBe('[redacted-email]');
   });
 });
 
@@ -185,6 +193,31 @@ describe('auditPostOriginAllowed — same-origin POST guard', () => {
         }),
       ),
     ).toBe(false);
+  });
+
+  test('rejects null Origin from sandboxed or opaque-origin contexts', () => {
+    expect(
+      auditPostOriginAllowed(
+        new Request('http://localhost:3000/api/audit', {
+          method: 'POST',
+          headers: { Origin: 'null' },
+        }),
+      ),
+    ).toBe(false);
+  });
+});
+
+describe('readJsonBody — size guard before buffering', () => {
+  test('rejects declared oversized JSON bodies before reading', async () => {
+    const r = await readJsonBody(
+      new Request('http://localhost:3000/api/waitlist', {
+        method: 'POST',
+        headers: { 'Content-Length': '999999' },
+        body: '{"email":"player@example.com"}',
+      }),
+      512,
+    );
+    expect(r).toEqual({ ok: false, status: 413, error: 'body too large' });
   });
 });
 

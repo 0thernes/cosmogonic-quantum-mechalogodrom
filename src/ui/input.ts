@@ -244,24 +244,28 @@ export class InputSystem {
         btn.classList.remove('on');
         if (move) this.camVel[move[0]] = 0;
       };
-      btn.addEventListener('pointerdown', down);
-      btn.addEventListener('pointerup', up);
-      btn.addEventListener('pointerleave', up);
-      btn.addEventListener('pointercancel', up);
+      btn.addEventListener('pointerdown', down, { signal: this.ac.signal });
+      btn.addEventListener('pointerup', up, { signal: this.ac.signal });
+      btn.addEventListener('pointerleave', up, { signal: this.ac.signal });
+      btn.addEventListener('pointercancel', up, { signal: this.ac.signal });
     });
   }
 
   /** Toolbar `[data-action]` buttons dispatch straight to UiActions (returns are ignored). */
   private bindToolbar(): void {
-    document.body.addEventListener('click', (e) => {
-      const btn = (e.target as HTMLElement).closest<HTMLElement>('[data-action]');
-      if (!btn) return;
-      const name = btn.dataset['action'];
-      if (!name) return;
-      const method = TOOLBAR_MAP[name];
-      if (!method) return;
-      this.actions[method]();
-    });
+    document.body.addEventListener(
+      'click',
+      (e) => {
+        const btn = (e.target as HTMLElement).closest<HTMLElement>('[data-action]');
+        if (!btn) return;
+        const name = btn.dataset['action'];
+        if (!name) return;
+        const method = TOOLBAR_MAP[name];
+        if (!method) return;
+        this.actions[method]();
+      },
+      { signal: this.ac.signal },
+    );
   }
 
   /**
@@ -305,7 +309,7 @@ export class InputSystem {
         this.touch.active = true;
         apply(t);
       },
-      { passive: true },
+      { passive: true, signal: this.ac.signal },
     );
     pad.addEventListener(
       'touchmove',
@@ -320,7 +324,7 @@ export class InputSystem {
           }
         }
       },
-      { passive: false },
+      { passive: false, signal: this.ac.signal },
     );
     const end = (e: TouchEvent): void => {
       if (this.joyId === null) return;
@@ -332,8 +336,8 @@ export class InputSystem {
         }
       }
     };
-    pad.addEventListener('touchend', end, { passive: true });
-    pad.addEventListener('touchcancel', end, { passive: true }); // iOS interrupt fix (legacy 635)
+    pad.addEventListener('touchend', end, { passive: true, signal: this.ac.signal });
+    pad.addEventListener('touchcancel', end, { passive: true, signal: this.ac.signal }); // iOS interrupt fix (legacy 635)
   }
 
   /**
@@ -366,7 +370,7 @@ export class InputSystem {
         lastX = t.clientX;
         lastY = t.clientY;
       },
-      { passive: true },
+      { passive: true, signal: this.ac.signal },
     );
     pad.addEventListener(
       'touchmove',
@@ -388,7 +392,7 @@ export class InputSystem {
           return;
         }
       },
-      { passive: false },
+      { passive: false, signal: this.ac.signal },
     );
     const end = (e: TouchEvent): void => {
       if (id === null) return;
@@ -400,8 +404,8 @@ export class InputSystem {
         }
       }
     };
-    pad.addEventListener('touchend', end, { passive: true });
-    pad.addEventListener('touchcancel', end, { passive: true });
+    pad.addEventListener('touchend', end, { passive: true, signal: this.ac.signal });
+    pad.addEventListener('touchcancel', end, { passive: true, signal: this.ac.signal });
   }
 
   /**
@@ -422,20 +426,24 @@ export class InputSystem {
       core.classList.remove('arming');
     };
     this.disarmApoc = disarm;
-    core.addEventListener('pointerdown', () => {
-      disarm();
-      core.classList.add('arming');
-      buzz(HAPTIC_MS);
-      this.apocTimer = setTimeout(() => {
-        this.apocTimer = null;
-        core.classList.remove('arming');
-        this.actions.apocalypse();
-        buzz(30); // the one full-strength pulse — still ≤ 30 ms
-      }, APOC_HOLD_MS) as unknown as number;
-    });
-    core.addEventListener('pointerup', disarm);
-    core.addEventListener('pointerleave', disarm);
-    core.addEventListener('pointercancel', disarm);
+    core.addEventListener(
+      'pointerdown',
+      () => {
+        disarm();
+        core.classList.add('arming');
+        buzz(HAPTIC_MS);
+        this.apocTimer = setTimeout(() => {
+          this.apocTimer = null;
+          core.classList.remove('arming');
+          this.actions.apocalypse();
+          buzz(30); // the one full-strength pulse — still ≤ 30 ms
+        }, APOC_HOLD_MS) as unknown as number;
+      },
+      { signal: this.ac.signal },
+    );
+    core.addEventListener('pointerup', disarm, { signal: this.ac.signal });
+    core.addEventListener('pointerleave', disarm, { signal: this.ac.signal });
+    core.addEventListener('pointercancel', disarm, { signal: this.ac.signal });
   }
 
   /**
@@ -453,30 +461,38 @@ export class InputSystem {
       console.warn('InputSystem: canvas #c not found — pointer look disabled');
       return;
     }
-    canvas.addEventListener('pointerdown', (e) => {
-      if (this.lookId !== null || e.button !== 0) return;
-      this.lookId = e.pointerId;
-      this.lookLastX = e.clientX;
-      this.lookLastY = e.clientY;
-      try {
-        canvas.setPointerCapture(e.pointerId);
-      } catch {
-        // NotFoundError when the pointer is already gone (released mid-dispatch, or a
-        // synthetic test event). The drag still works uncaptured; pointerup ends it.
-      }
-    });
-    canvas.addEventListener('pointermove', (e) => {
-      if (e.pointerId !== this.lookId) return;
-      this.look.dx += e.clientX - this.lookLastX;
-      this.look.dy += e.clientY - this.lookLastY;
-      this.lookLastX = e.clientX;
-      this.lookLastY = e.clientY;
-    });
+    canvas.addEventListener(
+      'pointerdown',
+      (e) => {
+        if (this.lookId !== null || e.button !== 0) return;
+        this.lookId = e.pointerId;
+        this.lookLastX = e.clientX;
+        this.lookLastY = e.clientY;
+        try {
+          canvas.setPointerCapture(e.pointerId);
+        } catch {
+          // NotFoundError when the pointer is already gone (released mid-dispatch, or a
+          // synthetic test event). The drag still works uncaptured; pointerup ends it.
+        }
+      },
+      { signal: this.ac.signal },
+    );
+    canvas.addEventListener(
+      'pointermove',
+      (e) => {
+        if (e.pointerId !== this.lookId) return;
+        this.look.dx += e.clientX - this.lookLastX;
+        this.look.dy += e.clientY - this.lookLastY;
+        this.lookLastX = e.clientX;
+        this.lookLastY = e.clientY;
+      },
+      { signal: this.ac.signal },
+    );
     const end = (e: PointerEvent): void => {
       if (e.pointerId === this.lookId) this.lookId = null;
     };
-    canvas.addEventListener('pointerup', end);
-    canvas.addEventListener('pointercancel', end);
+    canvas.addEventListener('pointerup', end, { signal: this.ac.signal });
+    canvas.addEventListener('pointercancel', end, { signal: this.ac.signal });
     // Wheel zoom: normalize the rare line/page delta modes to ~pixels, accumulate for world.
     canvas.addEventListener(
       'wheel',
@@ -484,7 +500,7 @@ export class InputSystem {
         e.preventDefault(); // page never scrolls; keep browser zoom gestures off the canvas
         this.zoom += e.deltaY * (e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? 100 : 1);
       },
-      { passive: false },
+      { passive: false, signal: this.ac.signal },
     );
     // Two-finger pinch zoom: the change in finger spread feeds the same `zoom`
     // accumulator as the wheel. Spreading fingers apart pulls the camera in
@@ -505,7 +521,7 @@ export class InputSystem {
           this.pinchDist = spread(e);
         }
       },
-      { passive: true },
+      { passive: true, signal: this.ac.signal },
     );
     canvas.addEventListener(
       'touchmove',
@@ -516,7 +532,7 @@ export class InputSystem {
         if (d > 0 && this.pinchDist > 0) this.zoom += (this.pinchDist - d) * PINCH_ZOOM_GAIN;
         this.pinchDist = d;
       },
-      { passive: false },
+      { passive: false, signal: this.ac.signal },
     );
     const endPinch = (e: TouchEvent): void => {
       if (e.touches.length < 2) {
@@ -524,8 +540,8 @@ export class InputSystem {
         this.pinchDist = 0;
       }
     };
-    canvas.addEventListener('touchend', endPinch, { passive: true });
-    canvas.addEventListener('touchcancel', endPinch, { passive: true });
+    canvas.addEventListener('touchend', endPinch, { passive: true, signal: this.ac.signal });
+    canvas.addEventListener('touchcancel', endPinch, { passive: true, signal: this.ac.signal });
   }
 
   /**

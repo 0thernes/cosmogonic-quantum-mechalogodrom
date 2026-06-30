@@ -64,6 +64,8 @@ export function syncBottomDockHeight(doc: Document = document): void {
 if (typeof document !== 'undefined') {
   const run = (): void => {
     syncBottomDockHeight();
+    if (document.documentElement.dataset['cqmDockResizeWired'] === '1') return;
+    document.documentElement.dataset['cqmDockResizeWired'] = '1';
     window.addEventListener('resize', () => syncBottomDockHeight(), { passive: true });
   };
   if (document.readyState === 'loading') {

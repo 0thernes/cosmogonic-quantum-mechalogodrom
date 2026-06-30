@@ -1032,6 +1032,7 @@ export class World {
     this.rd.dispose(); // the Gray–Scott GPU DataTexture
     for (const b of this.superBodies) b.dispose();
     for (const h of this.heroBodies) h.body.dispose();
+    this.superheroHud.dispose();
     this.pantheonArchitecturePanel.dispose();
     this.input.dispose();
   }
@@ -1872,8 +1873,6 @@ export class World {
       }
 
       if (s.frame % 120 === 0) {
-        this.symbiosis.step();
-        this.mythRitual.step();
         if (s.frame % 480 === 0) {
           for (let i = 0; i < 5; i++) {
             for (let j = i + 1; j < 5; j++) {

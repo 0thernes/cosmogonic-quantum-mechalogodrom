@@ -206,6 +206,10 @@ function stat(parent: HTMLElement, title: string, doc: Document): HTMLElement {
 /** The player HUD. Self-mounts hidden; the world calls {@link activate} on unlock + {@link update} each cadence. */
 export class SuperheroHud {
   private readonly root: HTMLElement;
+  private readonly styleEl: HTMLStyleElement;
+  private readonly resizeTarget: Window | null;
+  private readonly resizeHandler: () => void;
+  private readonly resizeObservers: ResizeObserver[] = [];
   private readonly bars: Record<string, { fil: HTMLElement; num: HTMLElement }> = {};
   private readonly stats: Record<string, HTMLElement> = {};
   private readonly dots: Record<string, HTMLElement> = {};
@@ -218,9 +222,12 @@ export class SuperheroHud {
 
   constructor(doc: Document = document) {
     doc.getElementById('cqm-hero')?.remove();
+    doc.getElementById('cqm-hero-style')?.remove();
     const style = doc.createElement('style');
+    style.id = 'cqm-hero-style';
     style.textContent = STYLE;
     doc.head.appendChild(style);
+    this.styleEl = style;
 
     this.root = doc.createElement('div');
     this.root.id = 'cqm-hero';
@@ -357,17 +364,33 @@ export class SuperheroHud {
       syncHeroHudGutters(doc);
       fitHeroBox(box);
     };
+    this.resizeTarget = doc.defaultView;
+    this.resizeHandler = sync;
     sync();
-    doc.defaultView?.addEventListener('resize', sync, { passive: true });
+    this.resizeTarget?.addEventListener('resize', this.resizeHandler, { passive: true });
     const ui = doc.getElementById('ui');
     if (ui && typeof ResizeObserver !== 'undefined') {
-      new ResizeObserver(sync).observe(ui);
+      const uiObserver = new ResizeObserver(sync);
+      uiObserver.observe(ui);
+      this.resizeObservers.push(uiObserver);
     }
-    new ResizeObserver(() => fitHeroBox(box)).observe(box);
+    if (typeof ResizeObserver !== 'undefined') {
+      const boxObserver = new ResizeObserver(() => fitHeroBox(box));
+      boxObserver.observe(box);
+      this.resizeObservers.push(boxObserver);
+    }
   }
 
   get isActive(): boolean {
     return this.active;
+  }
+
+  dispose(): void {
+    this.resizeTarget?.removeEventListener('resize', this.resizeHandler);
+    for (const observer of this.resizeObservers) observer.disconnect();
+    this.resizeObservers.length = 0;
+    this.root.remove();
+    this.styleEl.remove();
   }
 
   /** Reveal the HUD (the player has become the 2nd super creature). */

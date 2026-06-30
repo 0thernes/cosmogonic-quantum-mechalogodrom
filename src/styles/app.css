@@ -329,6 +329,33 @@ a:focus-visible {
   background: --alpha(var(--color-danger) / 25%);
 }
 
+/* ── Entropy button spinning animation and styling ── */
+.cqm-entropy-btn {
+  border-color: --alpha(var(--color-warn) / 30%) !important;
+  background: --alpha(var(--color-warn) / 5%) !important;
+  color: var(--color-warn) !important;
+}
+.cqm-entropy-btn:hover {
+  border-color: --alpha(var(--color-warn) / 60%) !important;
+  background: --alpha(var(--color-warn) / 15%) !important;
+  color: var(--color-white) !important;
+}
+.cqm-entropy-btn:active {
+  background: --alpha(var(--color-warn) / 25%) !important;
+}
+.cqm-spin-emoji {
+  display: inline-block;
+  animation: cqm-entropy-spin 4s linear infinite;
+}
+@keyframes cqm-entropy-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 /* ── Unified bottom dock stack (V86) ───────────────────────────── */
 #cqm-bottom-stack {
   position: fixed;

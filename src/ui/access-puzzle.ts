@@ -12,7 +12,7 @@
  */
 import { mulberry32 } from '../math/rng';
 import { ACCESS_SEED, seedRomans, checkAccessCode } from './access-code';
-import { injectPanelBaseCSS } from './panel-shell';
+import { injectPanelBaseCSS, wireClose } from './panel-shell';
 import { mountToggle } from './panel-dock';
 
 /** "ACCESS DENIED" in 100 tongues (the last few are cipher/alien, fitting the terminal's vibe). */
@@ -207,7 +207,9 @@ class AccessPuzzle {
     this.modal = doc.createElement('div');
     this.modal.id = 'cqm-acc-modal';
     this.modal.setAttribute('role', 'dialog');
+    this.modal.setAttribute('aria-modal', 'true');
     this.modal.setAttribute('aria-label', 'Cryptographic access terminal');
+    this.modal.tabIndex = -1;
     this.modal.innerHTML =
       `<div class="cqm-acc-box">` +
       `<div class="cqm-acc-top"><b>⌖ COSMOGONIC ACCESS TERMINAL · LEVEL Ω</b>` +
@@ -236,9 +238,7 @@ class AccessPuzzle {
     this.input.addEventListener('keydown', (e) => {
       if ((e as KeyboardEvent).key === 'Enter') this.submit();
     });
-    this.modal.addEventListener('click', (e) => {
-      if (e.target === this.modal) this.close();
-    });
+    wireClose(this.modal, () => this.close());
 
     this.buildCipher(this.modal.querySelector('[data-cipher]') as HTMLElement, doc);
   }
@@ -298,6 +298,7 @@ class AccessPuzzle {
     if (this.langTimer) clearInterval(this.langTimer);
     if (this.scrambleTimer) clearInterval(this.scrambleTimer);
     this.langTimer = this.scrambleTimer = null;
+    this.toggle.focus();
   }
 
   private submit(): void {

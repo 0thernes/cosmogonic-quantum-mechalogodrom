@@ -42,7 +42,7 @@ Snapshot: **2026-06-27**. (Coverage + passing-test counts ARE SSOT-synced — se
 | Tests (`tests/`)                        | 20,928 lines · 160 files                                              |
 | Native C++ engine (`native/`, ADR-0007) | 1,535 lines · 9 files                                                 |
 | Test : source ratio                     | 0.34 → **94.77% line / 91.97% func** coverage (`bun test --coverage`) |
-| Passing tests                           | **1,477** (0 failing)                                                 |
+| Passing tests                           | **1,771** (0 failing)                                                 |
 
 (Excludes the vendored `node_modules/`, generated `dist/` · `coverage/` · `native/build/`, and nested
 `.claude/worktrees/` checkouts.)
@@ -110,7 +110,7 @@ facade-isolated tree (each dependency is behind an owned module with a documente
 
 A strict acyclic layering (verified across 50+ modules — no runtime import cycles):
 
-```
+```text
 math / constants  (leaves: rng, scalar, spatial-hash, quantum, heap, games)
         ▲
 sim/*  (30+ behavioural systems: entities, titans, shoggoths, nhi, factions, ·)

@@ -28,6 +28,7 @@ import {
   type ChatMessage,
 } from './src/server/copilot';
 import { dispatchTool } from './src/server/ai-sandbox';
+import type { BunFile } from 'bun';
 
 const log = createLogger('server');
 
@@ -81,7 +82,37 @@ interface StoredAuditEntry {
 /** In-memory waitlist (Ventures scaffold — not persisted; export via logs only). */
 const WAITLIST_CAP = 500;
 const waitlistRing: { email: string; ts: number; tier?: string }[] = [];
-const waitlistLimiter = makeRateLimiter(8, 1);
+
+interface RateLimiter {
+  tryRemove(now: number): boolean;
+}
+
+const waitlistLimiters = new Map<string, RateLimiter>();
+const auditPostLimiters = new Map<string, RateLimiter>();
+const chatLimiters = new Map<string, RateLimiter>();
+const toolLimiters = new Map<string, RateLimiter>();
+const healthLimiters = new Map<string, RateLimiter>();
+const MAX_LIMITER_KEYS = 1024;
+
+function tryRemoveForClient(
+  buckets: Map<string, RateLimiter>,
+  key: string,
+  capacity: number,
+  refillPerSec: number,
+  now = Date.now(),
+): boolean {
+  if (!buckets.has(key)) {
+    if (buckets.size >= MAX_LIMITER_KEYS) buckets.delete(buckets.keys().next().value ?? '');
+    buckets.set(key, makeRateLimiter(capacity, refillPerSec));
+  }
+  return buckets.get(key)?.tryRemove(now) ?? false;
+}
+
+export function redactEmailForLog(email: string): string {
+  const at = email.indexOf('@');
+  if (at <= 0 || at === email.length - 1) return '[redacted-email]';
+  return `${email[0] ?? '*'}***${email.slice(at)}`;
+}
 
 /** Parse POST /api/waitlist body — email required, optional tier tag. */
 export function parseWaitlistBody(body: unknown): { email: string; tier?: string } | null {
@@ -111,10 +142,7 @@ function pushAudit(entry: StoredAuditEntry): void {
  * `capacity`, then consumes one token if any remain — returning false (deny) when the bucket is
  * empty. The first call seeds the clock, so a fresh bucket starts full. O(1).
  */
-export function makeRateLimiter(
-  capacity: number,
-  refillPerSec: number,
-): { tryRemove(now: number): boolean } {
+export function makeRateLimiter(capacity: number, refillPerSec: number): RateLimiter {
   let tokens = capacity;
   let last = Number.NaN;
   return {
@@ -139,10 +167,19 @@ export function makeRateLimiter(
  * legitimate audit cadence (entries are user-action-driven — a human never posts dozens per
  * second), so the operator is never throttled, yet it caps the ring-eviction flood: an
  * unauthenticated client can no longer evict all 200 real entries (and burn parse CPU) with a tight
- * POST loop. A public/multi-tenant deploy should ALSO key this per client IP (`server.requestIP`)
- * and/or require auth — see SECURITY.md; this global bucket is the single-tenant DoS seal.
+ * POST loop. Buckets are keyed per client IP in the server route, so one noisy caller no longer drains
+ * every user's allowance.
  */
-const auditPostLimiter = makeRateLimiter(60, 30);
+const AUDIT_POST_BURST = 60;
+const AUDIT_POST_REFILL_PER_SEC = 30;
+const WAITLIST_BURST = 8;
+const WAITLIST_REFILL_PER_SEC = 1;
+const CHAT_BURST = 12;
+const CHAT_REFILL_PER_SEC = 0.25;
+const TOOL_BURST = 8;
+const TOOL_REFILL_PER_SEC = 0.2;
+const HEALTH_BURST = 10;
+const HEALTH_REFILL_PER_SEC = 0.2;
 
 const HTML_ESCAPES: Record<string, string> = {
   '&': '&amp;',
@@ -225,7 +262,7 @@ function logRequest(req: Request, status: number): void {
 const MAX_CHAT_BODY = 256 * 1024;
 
 /** Read, size-guard, and JSON-parse a POST body. Returns a tagged result (never throws). */
-async function readJsonBody(
+export async function readJsonBody(
   req: Request,
   cap: number,
 ): Promise<{ ok: true; value: unknown } | { ok: false; status: number; error: string }> {
@@ -293,7 +330,8 @@ export function withSecurityHeaders(res: Response): Response {
  */
 export function auditPostOriginAllowed(req: Request): boolean {
   const origin = req.headers.get('Origin');
-  if (origin === null || origin === 'null') return true;
+  if (origin === null) return true;
+  if (origin === 'null') return false;
   try {
     const url = new URL(req.url);
     return origin === `${url.protocol}//${url.host}`;
@@ -323,6 +361,25 @@ function secured<T extends Record<string, (req: Request) => Response | Promise<R
 // When imported — e.g. by unit tests of the pure body-parsers above — `import.meta.main` is false, so
 // no socket is opened and the test process exits cleanly.
 const HTML_ROOT = new URL('./dist/', import.meta.url);
+const REPORT_ASSETS_ROOT = new URL('./docs/reports/assets/', import.meta.url);
+
+function svgAssetFromPath(pathname: string, prefix: string): BunFile | null {
+  if (!pathname.startsWith(prefix) || !pathname.endsWith('.svg')) return null;
+  let rel: string;
+  try {
+    rel = decodeURIComponent(pathname.slice(prefix.length));
+  } catch {
+    return null;
+  }
+  if (
+    rel.length === 0 ||
+    rel.includes('\\') ||
+    rel.split('/').some((part) => part.length === 0 || part === '..')
+  ) {
+    return null;
+  }
+  return Bun.file(new URL(rel, REPORT_ASSETS_ROOT));
+}
 
 function serveHtml(path: string): (req: Request) => Promise<Response> {
   return async (req) => {
@@ -382,33 +439,23 @@ if (import.meta.main) {
       }),
       '/api/waitlist': secured({
         async POST(req) {
+          const client = server.requestIP(req)?.address ?? 'unknown';
           if (!auditPostOriginAllowed(req)) {
             logRequest(req, 403);
             return Response.json({ ok: false, error: 'forbidden origin' }, { status: 403 });
           }
-          if (!waitlistLimiter.tryRemove(Date.now())) {
+          if (
+            !tryRemoveForClient(waitlistLimiters, client, WAITLIST_BURST, WAITLIST_REFILL_PER_SEC)
+          ) {
             logRequest(req, 429);
             return Response.json({ ok: false, error: 'rate limited' }, { status: 429 });
           }
-          let text: string;
-          try {
-            text = await req.text();
-          } catch {
-            logRequest(req, 400);
-            return Response.json({ ok: false, error: 'unreadable body' }, { status: 400 });
+          const body = await readJsonBody(req, 512);
+          if (!body.ok) {
+            logRequest(req, body.status);
+            return Response.json({ ok: false, error: body.error }, { status: body.status });
           }
-          if (text.length > 512) {
-            logRequest(req, 413);
-            return Response.json({ ok: false, error: 'body too large' }, { status: 413 });
-          }
-          let body: unknown;
-          try {
-            body = JSON.parse(text);
-          } catch {
-            logRequest(req, 400);
-            return Response.json({ ok: false, error: 'invalid JSON' }, { status: 400 });
-          }
-          const entry = parseWaitlistBody(body);
+          const entry = parseWaitlistBody(body.value);
           if (!entry) {
             logRequest(req, 400);
             return Response.json(
@@ -418,7 +465,9 @@ if (import.meta.main) {
           }
           if (waitlistRing.length >= WAITLIST_CAP) waitlistRing.shift();
           waitlistRing.push({ ...entry, ts: Date.now() });
-          log.info(`waitlist +1 ${entry.email}${entry.tier ? ` (${entry.tier})` : ''}`);
+          log.info(
+            `waitlist +1 ${redactEmailForLog(entry.email)}${entry.tier ? ` (${entry.tier})` : ''}`,
+          );
           logRequest(req, 202);
           return Response.json(
             { ok: true, accepted: true, queue: waitlistRing.length },
@@ -428,12 +477,17 @@ if (import.meta.main) {
       }),
       '/api/audit': secured({
         GET(req) {
+          if (!auditPostOriginAllowed(req)) {
+            logRequest(req, 403);
+            return new Response('Forbidden', { status: 403 });
+          }
           logRequest(req, 200);
           return new Response(renderAuditFragment(), {
             headers: { 'Content-Type': 'text/html; charset=utf-8' },
           });
         },
         async POST(req) {
+          const client = server.requestIP(req)?.address ?? 'unknown';
           if (!auditPostOriginAllowed(req)) {
             logRequest(req, 403);
             return Response.json({ ok: false, error: 'forbidden origin' }, { status: 403 });
@@ -441,7 +495,14 @@ if (import.meta.main) {
           // Shed floods BEFORE any work: a tight unauthenticated POST loop would otherwise evict
           // the whole 200-entry ring and burn parse CPU. The bucket is generous enough that real
           // user-action audit posts never reach it — see auditPostLimiter.
-          if (!auditPostLimiter.tryRemove(Date.now())) {
+          if (
+            !tryRemoveForClient(
+              auditPostLimiters,
+              client,
+              AUDIT_POST_BURST,
+              AUDIT_POST_REFILL_PER_SEC,
+            )
+          ) {
             logRequest(req, 429);
             return Response.json(
               { ok: false, error: 'rate limited' },
@@ -507,6 +568,11 @@ if (import.meta.main) {
       // can show WHY the AI is silent (rate-limited? auth? all down?) and offer a restart/re-probe.
       '/api/copilot/health': secured({
         async GET(req) {
+          const client = server.requestIP(req)?.address ?? 'unknown';
+          if (!tryRemoveForClient(healthLimiters, client, HEALTH_BURST, HEALTH_REFILL_PER_SEC)) {
+            logRequest(req, 429);
+            return Response.json({ ok: false, error: 'rate limited' }, { status: 429 });
+          }
           if (!COPILOT_ENABLED) {
             logRequest(req, 200);
             return Response.json({
@@ -535,9 +601,14 @@ if (import.meta.main) {
         // Run one Copilot turn: the model may call read-only tools (read/list/grep/run) via the
         // ai-sandbox gate, then answers. Never writes to the repo or the sim.
         async POST(req) {
+          const client = server.requestIP(req)?.address ?? 'unknown';
           if (!COPILOT_ENABLED) {
             logRequest(req, 403);
             return Response.json({ ok: false, error: 'copilot disabled' }, { status: 403 });
+          }
+          if (!tryRemoveForClient(chatLimiters, client, CHAT_BURST, CHAT_REFILL_PER_SEC)) {
+            logRequest(req, 429);
+            return Response.json({ ok: false, error: 'rate limited' }, { status: 429 });
           }
           // Same-origin guard (mirrors /api/audit + /api/waitlist): a cross-site page in the same
           // browser must not be able to drive the model or its read-only sandbox tools via a forged
@@ -571,9 +642,14 @@ if (import.meta.main) {
         // Direct read-only tool call for the chat panel's manual terminal (/read /ls /grep /run).
         // Every call passes through the same default-deny ai-sandbox gate.
         async POST(req) {
+          const client = server.requestIP(req)?.address ?? 'unknown';
           if (!COPILOT_ENABLED) {
             logRequest(req, 403);
             return Response.json({ ok: false, error: 'copilot disabled' }, { status: 403 });
+          }
+          if (!tryRemoveForClient(toolLimiters, client, TOOL_BURST, TOOL_REFILL_PER_SEC)) {
+            logRequest(req, 429);
+            return Response.json({ ok: false, error: 'rate limited' }, { status: 429 });
           }
           // Same-origin guard (mirrors /api/audit): block cross-site CSRF POSTs to the read-only
           // tool endpoint.
@@ -604,15 +680,22 @@ if (import.meta.main) {
       const url = new URL(req.url);
       const p = url.pathname;
       if (p.startsWith('/docs/reports/assets/') && p.endsWith('.svg')) {
-        const file = Bun.file(new URL(`.${p}`, import.meta.url));
+        const file = svgAssetFromPath(p, '/docs/reports/assets/');
+        if (!file || !(await file.exists())) {
+          logRequest(req, 404);
+          return withSecurityHeaders(new Response('Not Found', { status: 404 }));
+        }
         logRequest(req, 200);
         return withSecurityHeaders(
           new Response(file, { headers: { 'Content-Type': 'image/svg+xml; charset=utf-8' } }),
         );
       }
       if (p.startsWith('/assets/alife/') && p.endsWith('.svg')) {
-        const rel = p.replace('/assets/alife/', 'docs/reports/assets/');
-        const file = Bun.file(new URL(`./${rel}`, import.meta.url));
+        const file = svgAssetFromPath(p, '/assets/alife/');
+        if (!file || !(await file.exists())) {
+          logRequest(req, 404);
+          return withSecurityHeaders(new Response('Not Found', { status: 404 }));
+        }
         logRequest(req, 200);
         return withSecurityHeaders(
           new Response(file, { headers: { 'Content-Type': 'image/svg+xml; charset=utf-8' } }),
