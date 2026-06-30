@@ -54,9 +54,9 @@ const CORE_R = 30;
 /** Spawn-ring radius for the ten variants (mid-far, framing the centre). */
 const RING_R = ARENA_RADIUS * 0.72;
 /** Intrinsic churn rate of the god's body, DOME-INDEPENDENT (localT advances at this × real time).
- *  Owner calibration: the old look only read as "normal" at Dome ×5 and should be the creature's OWN
- *  ×0.1; pass 5 overdrives that calibrated baseline a little so normal motion is unmistakably alive. */
-const MECHA_TIME_SCALE = 60;
+ *  V109: calibrated down from 60 to 38 so the orbiting satellites and body writhe read as stately,
+ *  god-tier motion rather than a frantic buzz, while still staying unmistakably alive. */
+const MECHA_TIME_SCALE = 38;
 const MECHA_EXTERIOR_TIME_SCALE = 0.15;
 const MECHA_SATELLITE_COUNT = 400;
 const MECHA_CORE_SEGMENTS = 128;

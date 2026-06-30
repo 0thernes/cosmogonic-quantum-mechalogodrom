@@ -79,7 +79,7 @@ export class MechalogodromSatellites {
         // Kleinian/IFS-style surface folding for the dark-star body.
         vec3 p = vPos * 1.8;
         for(int i = 0; i < 4; i++) {
-          p = abs(p) / dot(p, p) - vec3(0.4 + 0.05 * sin(uTime * 0.5 + float(i)));
+          p = abs(p) / dot(p, p) - vec3(0.4 + 0.05 * sin(uTime * 0.25 + float(i)));
         }
         float d = length(p);
 
@@ -87,26 +87,26 @@ export class MechalogodromSatellites {
         vec3 v = normalize(-vPos);
         float fresnel = pow(1.0 - clamp(dot(n, v), 0.0, 1.0), 2.5);
 
-        // Base color from the instance hue, then plasma bands.
+        // Base color from the instance hue, then slower plasma bands.
         vec3 baseColor = mix(vec3(0.02, 0.0, 0.05), vColor, 0.7);
-        vec3 starFire = baseColor * (sin(d * 8.0 - uTime * 4.0) * 0.5 + 0.5);
-        starFire += vColor * fresnel * 0.9;
+        vec3 starFire = baseColor * (sin(d * 8.0 - uTime * 2.0) * 0.5 + 0.5);
+        starFire += vColor * fresnel * 0.95;
 
         // Bioluminescent ridges.
-        float ridges = sin(vPos.y * 18.0 + uTime * 3.0) * sin(vPos.x * 14.0 - uTime * 2.0);
+        float ridges = sin(vPos.y * 18.0 + uTime * 1.5) * sin(vPos.x * 14.0 - uTime * 1.0);
         ridges = smoothstep(0.2, 0.9, ridges);
-        vec3 ridgeColor = vColor * 1.4 + vec3(0.1, 0.25, 0.35);
-        starFire = mix(starFire, ridgeColor, ridges * 0.45);
+        vec3 ridgeColor = vColor * 1.5 + vec3(0.1, 0.3, 0.45);
+        starFire = mix(starFire, ridgeColor, ridges * 0.5);
 
         // Glitch sparks.
-        float n0 = noise(vUv * 40.0 + uTime * 6.0);
-        float n1 = noise(vUv * 60.0 - uTime * 4.0);
+        float n0 = noise(vUv * 40.0 + uTime * 3.0);
+        float n1 = noise(vUv * 60.0 - uTime * 2.0);
         float spark = step(0.94, n0) * step(0.85, n1);
         vec3 glitch = vec3(0.3, 0.85, 1.0) * spark;
-        glitch += vec3(1.0, 0.2, 0.5) * step(0.96, n1) * (0.5 + 0.5 * sin(uTime * 8.0));
+        glitch += vec3(1.0, 0.2, 0.5) * step(0.96, n1) * (0.5 + 0.5 * sin(uTime * 4.0));
 
         // Chromatic spill at the rim.
-        vec3 aberration = vec3(0.25, 0.08, -0.12) * fresnel * (0.5 + 0.5 * sin(uTime * 5.0));
+        vec3 aberration = vec3(0.25, 0.08, -0.12) * fresnel * (0.5 + 0.5 * sin(uTime * 2.5));
 
         vec3 finalColor = starFire + glitch + aberration;
         // Darken the center: a tiny black heart inside each artifact.
