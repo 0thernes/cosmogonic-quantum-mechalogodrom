@@ -1158,14 +1158,23 @@ html.cqm-shell-ready .algo-list:empty::after {
 .cqm-brain-slot {
   pointer-events: none;
   min-height: 0;
-  padding: 6px 10px;
+  padding: 4px 6px;
   opacity: 0.92;
 }
-.cqm-brain-slot__hint {
-  font: 400 var(--text-4xs) var(--font-ui);
-  color: rgba(180, 160, 220, 0.78);
-  line-height: 1.35;
-  margin-top: 2px;
+.cqm-brain-slot__head {
+  margin-bottom: 2px;
+  padding-bottom: 2px;
+  font-size: var(--text-4xs);
+}
+.cqm-brain-slot__viz {
+  width: 100%;
+  min-height: 36px;
+}
+.cqm-brain-canvas {
+  display: block;
+  width: 100%;
+  height: 36px;
+  border-radius: 4px;
 }
 
 /* Short desktop windows: keep the right column stack from overlapping the bottom bars or itself. */

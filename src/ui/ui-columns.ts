@@ -3,35 +3,25 @@
  * evenly sized, and never overlap when the opposite column is taller.
  *
  * Left:  Telemetry (50%) → Sorting Fields (50%) → perf HUD (anchored above dock)
- * Right: Observatory → Sorting readout → Sim Settings → brain viz slots (future)
+ * Right: Observatory → Sorting readout → Sim Settings → brain viz slots (V108)
  * Control pad removed from the right column — keyboard legend lives in SET → Settings.
  */
 
-const BRAIN_SLOTS: readonly { id: string; title: string; hint: string }[] = [
-  {
-    id: 'brain-apex-slot',
-    title: 'Apex · Brain',
-    hint: 'ARCHITECT → ⊞ NEURAL · Tab IV MEGA 4D',
-  },
-  {
-    id: 'brain-mecha-slot',
-    title: 'Mechalogodrom · Brain',
-    hint: '⟁ ARCHITECTURE pantheon cycler',
-  },
-  {
-    id: 'brain-glyph-slot',
-    title: 'Glyph · Brain',
-    hint: '100-letter pantheon · brain-driven motion',
-  },
+import { initBrainSlotVisualizers } from './brain-slots';
+
+const BRAIN_SLOTS: readonly { id: string; title: string }[] = [
+  { id: 'brain-apex-slot', title: 'Apex · Brain' },
+  { id: 'brain-mecha-slot', title: 'Mechalogodrom · Brain' },
+  { id: 'brain-glyph-slot', title: 'Glyph · Brain' },
 ];
 
 function ensureBrainSlots(right: HTMLElement, doc: Document): void {
-  for (const { id, title, hint } of BRAIN_SLOTS) {
+  for (const { id, title } of BRAIN_SLOTS) {
     if (doc.getElementById(id)) continue;
     const slot = doc.createElement('div');
     slot.id = id;
     slot.className = 'cqm-brain-slot ui-readout-card ui-readout-card--purple';
-    slot.innerHTML = `<div class="ui-readout-card__head">${title}</div><div class="cqm-brain-slot__hint">${hint}</div>`;
+    slot.innerHTML = `<div class="ui-readout-card__head cqm-brain-slot__head">${title}</div><div class="cqm-brain-slot__viz"></div>`;
     right.appendChild(slot);
   }
 }
@@ -68,6 +58,7 @@ export function initUiColumns(doc: Document = document): void {
     }
     right.append(oP, alg, hudVsr);
     ensureBrainSlots(right, doc);
+    initBrainSlotVisualizers(doc);
   }
 }
 

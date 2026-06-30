@@ -1,7 +1,7 @@
 /**
  * ALIEN FLORA — the vegetal ground ecology. Falsifiable claims:
  * - construction draws NO rng + needs no WebGL (boot-stream-neutral; headless Scene only);
- * - it places a substantial population (≤ target) across ≥1 family InstancedMesh, all transforms finite;
+ * - it places a substantial 15k desktop population across ≥1 family InstancedMesh, all transforms finite;
  * - placement is DETERMINISTIC: two builds from identical context ⇒ bit-identical instance matrices;
  * - `comfortAt` returns a finite world position + a 0..1 cover strength (the fauna's cover readout);
  * - `update` is a pure uniform write (no throw, drives uTime/uWind/uChaos) and never allocates a mesh;
@@ -39,8 +39,8 @@ describe('AlienFlora — the vegetal ground ecology', () => {
     const ctx = makeCtx();
     const f = new AlienFlora(ctx);
     expect(f.speciesCount).toBe(50);
-    expect(f.instanceCount).toBeGreaterThan(2000);
-    expect(f.instanceCount).toBeLessThanOrEqual(10000);
+    expect(f.instanceCount).toBeGreaterThan(10000);
+    expect(f.instanceCount).toBeLessThanOrEqual(15000);
     let meshes = 0;
     let total = 0;
     ctx.scene.traverse((o) => {
@@ -125,6 +125,7 @@ describe('AlienFlora — the vegetal ground ecology', () => {
     const desktop = new AlienFlora(makeCtx(false));
     const mobile = new AlienFlora(makeCtx(true));
     expect(mobile.instanceCount).toBeLessThan(desktop.instanceCount);
+    expect(mobile.instanceCount).toBeLessThanOrEqual(5200);
     desktop.dispose();
     mobile.dispose();
   });

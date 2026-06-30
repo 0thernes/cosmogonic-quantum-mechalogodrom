@@ -80,10 +80,10 @@ import { FloatingMonoliths } from './sim/floating-monoliths';
 import { QuantumLattice } from './sim/quantum-lattice';
 import { AbominationArchitecture } from './sim/abomination-architecture';
 import { Mechalogodrom } from './sim/mechalogodrom';
-import { MechalogodromBrain } from './sim/mechalogodrom-brain';
+import { MechalogodromBrain, type MechalogodromBrainSnapshot } from './sim/mechalogodrom-brain';
 import { AlphabetPantheonRender } from './sim/alphabet-pantheon-render';
 import { corpusPulse } from './sim/tsotchke-facade';
-import { GlyphBrainBatch } from './sim/glyph-brain';
+import { GlyphBrainBatch, type GlyphBrainSnapshot } from './sim/glyph-brain';
 import { Foundationals, type FoundationalsSnapshot } from './sim/foundationals';
 import { apexGrowthStage, type ApexGrowthStage } from './sim/apex-consciousness-scaffold';
 import { LoreEngine } from './sim/lore';
@@ -390,6 +390,8 @@ export class World {
   /** V-MECHA: the central fusion abomination — 10 bipolar titan shells converge + fuse into one monster (additive; no rng). */
   private readonly mechalogodrom: Mechalogodrom;
   private readonly mechalogodromBrain: MechalogodromBrain;
+  private lastMechaBrainSnap: MechalogodromBrainSnapshot | null = null;
+  private lastGlyphSnaps: GlyphBrainSnapshot[] = [];
   /** V-MECHA brain snapshot getter (for architect panel telemetry). */
   get mechaBrain(): MechalogodromBrain {
     return this.mechalogodromBrain;
@@ -1187,7 +1189,7 @@ export class World {
     this.mechalogodrom.setTimeScale(s.timeScale);
     if (apex) this.mechalogodrom.setApex(apex.transcendence, apex.vitality, apex.agony);
     const mechaSnapPre = this.mechalogodrom.snapshot();
-    const mechaBrainSnap = this.mechalogodromBrain.tick({
+    this.lastMechaBrainSnap = this.mechalogodromBrain.tick({
       fusion: mechaSnapPre.fusion,
       dimension: mechaSnapPre.dimension,
       power: mechaSnapPre.power,
@@ -1197,6 +1199,7 @@ export class World {
       apexTranscendence: apex?.transcendence ?? 0,
       apexAgony: apex?.agony ?? 0,
     });
+    const mechaBrainSnap = this.lastMechaBrainSnap;
     const mechaFormIdx = ((this.persisted.seed ^ 0x8e4ac471) >>> 3) % 25;
     const glyphFormIdx = (this.persisted.seed >>> 3) % 25;
     this.mechalogodrom.setExteriorMind(mechaBrainSnap.beat, mechaBrainSnap.activity);
@@ -1219,7 +1222,8 @@ export class World {
       percept[5] = 0.5; // hue placeholder
       percept[6] = 0.5; // sat placeholder
       percept[7] = 0.5; // lit placeholder
-      const snaps = this.glyphBrains.thinkAll(percept);
+      this.lastGlyphSnaps = this.glyphBrains.thinkAll(percept);
+      const snaps = this.lastGlyphSnaps;
       const act = this.glyphActivity;
       const nov = this.glyphNovelty;
       const val = this.glyphValence;
@@ -1457,6 +1461,18 @@ export class World {
           },
           world: { entities: n, frame: s.frame },
         });
+      }
+      // V108: push live brain snapshots to the right-column mini visualizers.
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(
+          new CustomEvent('cqm:brain-snapshots', {
+            detail: {
+              apex: this.apexBrain.snapshot(),
+              mecha: this.lastMechaBrainSnap,
+              glyphs: this.lastGlyphSnaps,
+            },
+          }),
+        );
       }
     }
 
