@@ -36,6 +36,32 @@ const ACT_MAX = 4;
 const TMP_COLOR = new THREE.Color();
 
 /**
+ * V110 — living axons. A link is no longer a flat straight 2-vertex segment (the "1980s vector" look);
+ * it is a {@link LINK_SEG}-segment polyline that BOWS + WAVES between its two endpoints. The endpoints
+ * stay pinned to the two real creatures (the `sin(πu)` envelope is 0 at both ends), so the graph still
+ * reads true; only the body bends. Amplitude breathes with the V109 `retract` term + link intensity.
+ * Purely geometric + deterministic (per-link phase is a hash of the pair → no rng); the V109 colour
+ * (one hue/sat/firing-brightness per link) is carried unchanged onto every vertex.
+ */
+const LINK_SEG = 6;
+/** Floats per link in the position/color buffers: LINK_SEG segments × 2 verts × 3 components. */
+const LINK_FLOATS = LINK_SEG * 6;
+/** Per-point parametric tables (constant across links) — filled once so the hot loop stays cheap. */
+const LINK_U = new Float32Array(LINK_SEG + 1);
+const LINK_ENV = new Float32Array(LINK_SEG + 1); // sin(πu): 0 at the ends, 1 mid → endpoints pinned
+const LINK_ANG1 = new Float32Array(LINK_SEG + 1);
+const LINK_ANG2 = new Float32Array(LINK_SEG + 1);
+for (let k = 0; k <= LINK_SEG; k++) {
+  const u = k / LINK_SEG;
+  LINK_U[k] = u;
+  LINK_ENV[k] = Math.sin(u * Math.PI);
+  LINK_ANG1[k] = u * Math.PI * 2.0;
+  LINK_ANG2[k] = u * Math.PI * 3.0;
+}
+/** Scratch for the LINK_SEG+1 polyline points (reused → update() stays allocation-free). */
+const TMP_PT = new Float32Array((LINK_SEG + 1) * 3);
+
+/**
  * Owns the connectome LineSegments. The caller decides rebuild cadence (legacy gated by
  * entity count: every 1/2/3 frames); each `update()` call performs one full rebuild.
  */
@@ -74,8 +100,8 @@ export class Connectome {
     this.ctx = ctx;
     this.entities = entities;
     this.maxLinks = ctx.quality.maxLinks;
-    this.positions = new Float32Array(this.maxLinks * 6);
-    this.colors = new Float32Array(this.maxLinks * 6);
+    this.positions = new Float32Array(this.maxLinks * LINK_FLOATS);
+    this.colors = new Float32Array(this.maxLinks * LINK_FLOATS);
     this.pairs = new Uint32Array(this.maxLinks * 2);
     let cap = 64;
     while (cap < ctx.quality.maxEntities * 4) cap *= 2;
@@ -204,13 +230,6 @@ export class Connectome {
         const nd2 = dx * dx + dy * dy + dz * dz;
         if (nd2 < LINK_REACH2) {
           const nd = Math.sqrt(nd2);
-          const idx = wI * 6;
-          pos[idx] = ap.x;
-          pos[idx + 1] = ap.y;
-          pos[idx + 2] = ap.z;
-          pos[idx + 3] = bp.x;
-          pos[idx + 4] = bp.y;
-          pos[idx + 5] = bp.z;
           const bi = this.idxFind(eb.id);
           if (bi >= 0) {
             pairs[pc * 2] = ni;
@@ -223,7 +242,7 @@ export class Connectome {
           // the cap, the symmetric branch floors the (rare) negative side. O(1), no allocation.
           const act = eb.userData.act + ea.userData.act * nw * 0.01;
           eb.userData.act = !(act < ACT_MAX) ? ACT_MAX : act > -ACT_MAX ? act : -ACT_MAX;
-          // V109: dynamic, colorful, firing/retracting neural links.
+          // V109 colour: one dynamic hue/saturation + firing/retracting brightness per link.
           const actPulse = (ea.userData.act + eb.userData.act) * 0.5;
           const fire = 0.5 + 0.5 * Math.sin(t * 2.5 + nw * 12.0 + ni * 0.7); // per-link firing pulse
           const retract = 0.4 + 0.6 * Math.sin(t * 0.8 + nd * 0.4); // distance breathing
@@ -233,12 +252,60 @@ export class Connectome {
           const sat = 0.85 + 0.15 * Math.sin(t * 1.4 + nw * 8.0);
           const lit = 0.2 + nI * 0.35 + nw * 0.25 + actPulse * 0.15 * fire * retract;
           TMP_COLOR.setHSL(hue, sat, Math.min(0.75, lit));
-          col[idx] = TMP_COLOR.r;
-          col[idx + 1] = TMP_COLOR.g;
-          col[idx + 2] = TMP_COLOR.b;
-          col[idx + 3] = TMP_COLOR.r;
-          col[idx + 4] = TMP_COLOR.g;
-          col[idx + 5] = TMP_COLOR.b;
+          const cr = TMP_COLOR.r;
+          const cg = TMP_COLOR.g;
+          const cb = TMP_COLOR.b;
+          // V110 GEOMETRY: bow the link into a LINK_SEG waving axon. Endpoints pin to the two creatures
+          // (sin(πu) envelope = 0 at both ends); the body waves on two perpendicular axes, amplitude
+          // breathing with the V109 `retract` term + link intensity. Per-link phase = deterministic hash.
+          const inv = nd > 1e-4 ? 1 / nd : 0;
+          const dxn = (bp.x - ap.x) * inv;
+          const dyn = (bp.y - ap.y) * inv;
+          const dzn = (bp.z - ap.z) * inv;
+          let p1x = -dzn;
+          const p1y = 0;
+          let p1z = dxn;
+          let p1l = Math.sqrt(p1x * p1x + p1z * p1z);
+          if (p1l < 1e-4) {
+            p1x = 1;
+            p1z = 0;
+            p1l = 1;
+          }
+          p1x /= p1l;
+          p1z /= p1l;
+          const p2x = dyn * p1z - dzn * p1y;
+          const p2y = dzn * p1x - dxn * p1z;
+          const p2z = dxn * p1y - dyn * p1x;
+          const phase = ap.x * 0.13 + bp.z * 0.17 + ea.id * 7e-4 + eb.id * 1.1e-3;
+          const amp = (nd < 11.25 ? nd * 0.16 : 1.8) * (0.3 + 0.7 * retract) * (0.6 + 0.4 * nI);
+          for (let k = 0; k <= LINK_SEG; k++) {
+            const u = LINK_U[k]!;
+            const envAmp = amp * LINK_ENV[k]!;
+            const w1 = Math.sin(LINK_ANG1[k]! + t * 2.3 + phase) * envAmp;
+            const w2 = Math.cos(LINK_ANG2[k]! + t * 1.8 + phase * 1.3) * envAmp * 0.6;
+            const o = k * 3;
+            TMP_PT[o] = ap.x + (bp.x - ap.x) * u + p1x * w1 + p2x * w2;
+            TMP_PT[o + 1] = ap.y + (bp.y - ap.y) * u + p1y * w1 + p2y * w2;
+            TMP_PT[o + 2] = ap.z + (bp.z - ap.z) * u + p1z * w1 + p2z * w2;
+          }
+          let w = wI * LINK_FLOATS;
+          for (let k = 0; k < LINK_SEG; k++) {
+            const a3 = k * 3;
+            const b3 = a3 + 3;
+            pos[w] = TMP_PT[a3]!;
+            pos[w + 1] = TMP_PT[a3 + 1]!;
+            pos[w + 2] = TMP_PT[a3 + 2]!;
+            pos[w + 3] = TMP_PT[b3]!;
+            pos[w + 4] = TMP_PT[b3 + 1]!;
+            pos[w + 5] = TMP_PT[b3 + 2]!;
+            col[w] = cr;
+            col[w + 1] = cg;
+            col[w + 2] = cb;
+            col[w + 3] = cr;
+            col[w + 4] = cg;
+            col[w + 5] = cb;
+            w += 6;
+          }
           wI++;
         }
       }
@@ -246,14 +313,15 @@ export class Connectome {
     this.linkCount = wI;
     this.pairTotal = pc;
     if (wI > 0) {
-      // Known Bug 13 fix: upload only the populated segment range, not all maxLinks*6 floats.
+      // Known Bug 13 fix: upload only the populated range, not all maxLinks*LINK_FLOATS floats.
       this.posAttr.clearUpdateRanges();
-      this.posAttr.addUpdateRange(0, wI * 6);
+      this.posAttr.addUpdateRange(0, wI * LINK_FLOATS);
       this.posAttr.needsUpdate = true;
       this.colAttr.clearUpdateRanges();
-      this.colAttr.addUpdateRange(0, wI * 6);
+      this.colAttr.addUpdateRange(0, wI * LINK_FLOATS);
       this.colAttr.needsUpdate = true;
     }
-    this.geo.setDrawRange(0, wI * 2);
+    // Each link draws LINK_SEG segments → LINK_SEG·2 vertices.
+    this.geo.setDrawRange(0, wI * LINK_SEG * 2);
   }
 }
