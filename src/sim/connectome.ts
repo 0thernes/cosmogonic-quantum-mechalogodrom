@@ -226,7 +226,7 @@ export class Connectome {
           // V109: dynamic, colorful, firing/retracting neural links.
           const actPulse = (ea.userData.act + eb.userData.act) * 0.5;
           const fire = 0.5 + 0.5 * Math.sin(t * 2.5 + nw * 12.0 + ni * 0.7); // per-link firing pulse
-          const retract = 0.4 + 0.6 * Math.sin(t * 0.8 + nd * 0.4);            // distance breathing
+          const retract = 0.4 + 0.6 * Math.sin(t * 0.8 + nd * 0.4); // distance breathing
           const hue = communityOf
             ? ((communityOf(ni) & 7) * TRIBE_HUE_STEP + nw * TRIBE_NW_JITTER + t * 0.02) % 1
             : (t * 0.06 + nw * 0.6 + actPulse * 0.15) % 1;

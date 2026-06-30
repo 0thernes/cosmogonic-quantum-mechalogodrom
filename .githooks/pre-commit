@@ -15,4 +15,16 @@ bun scripts/sync-surfaces.ts >/dev/null 2>&1 || true
 # surfaces + package.json. The old explicit list missed masters/ and the root MDs, so a mojibake fix
 # there shipped uncommitted (then CI's docs-truth-law went RED). legacy/ is preserved verbatim — exclude it.
 git add -- '*.md' '*.xml' '*.html' package.json ':(exclude)legacy/**' 2>/dev/null || true
+# 3. prettier : auto-format every staged source/surface so NO writer (incl. an autonomous loop) can
+#    ship format-dirty code. This is the root-cause fix for the recurring "origin/main fails
+#    `prettier --check`" regression that turns CI red and blocks a fresh `bun run check`. Batched over
+#    the STAGED set only (fast — not the whole repo), then re-staged. Fully non-blocking: any prettier
+#    hiccup falls through to the status-quo commit and never rejects it.
+STAGED_FMT=$(git diff --cached --name-only --diff-filter=ACM 2>/dev/null \
+  | grep -Ei '\.(ts|tsx|js|jsx|mjs|cjs|css|json|md|html)$' \
+  | grep -v '^legacy/' || true)
+if [ -n "$STAGED_FMT" ]; then
+  printf '%s\n' "$STAGED_FMT" | tr '\n' '\0' | xargs -0 bunx prettier --write >/dev/null 2>&1 || true
+  printf '%s\n' "$STAGED_FMT" | tr '\n' '\0' | xargs -0 git add -- 2>/dev/null || true
+fi
 exit 0

@@ -484,8 +484,7 @@ export class AlphabetPantheonRender {
     }
     // V109: pantheon is stately — slower base drift, but still quickens with chaos and apex presence.
     const slowT = t * CREATURE_EXTERIOR_TIME_SCALE * 0.55;
-    const quick =
-      0.5 + 0.6 * this.chaos + 0.25 * this.apexTranscendence + 0.15 * this.apexVitality;
+    const quick = 0.5 + 0.6 * this.chaos + 0.25 * this.apexTranscendence + 0.15 * this.apexVitality;
     for (let pool = 0; pool < this.meshes.length; pool++) {
       const mesh = this.meshes[pool]!;
       const halo = this.wireHalos[pool];

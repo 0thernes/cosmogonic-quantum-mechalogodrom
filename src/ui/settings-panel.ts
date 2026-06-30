@@ -72,10 +72,9 @@ const GROUPS = [
     ],
   },
   {
+    // Pause + time-scale live in the Controls group above — not duplicated here (V110 de-dup).
     title: 'World',
     buttons: [
-      { action: 'pause', label: '⏸ Pause' },
-      { action: 'time', label: '⏱ Time' },
       { action: 'sim', label: '⇄ Sim N1/N2' },
       { action: 'reset', label: '↻ Reset' },
       { action: 'apoc', label: '☠ Apocalypse' },

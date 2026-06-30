@@ -213,28 +213,25 @@ describe('Connectome.setCommunityOf (V2 amendment)', () => {
     const seg = at(ctx.scene.children, 0) as THREE.LineSegments;
     const colors = seg.geometry.getAttribute('color');
 
-    // nd = 2 ⇒ nI = 0.75 ⇒ L = 0.25 + 0.75·0.45; nW = 0 and t = 0 ⇒ V1 hue = 0.
-    const lum = 0.25 + 0.75 * 0.45;
-    const v1 = new THREE.Color().setHSL(0, 0.75, lum);
-    const tribe = new THREE.Color().setHSL((4 & 7) / 8, 0.75, lum);
+    // V109 recolours each link (additive glow + firing/retracting brightness + per-vertex saturation),
+    // so the exact RGB is no longer fixed — but the HUE is the invariant the palette switch drives:
+    // nW = 0, t = 0 ⇒ the time-hue palette = 0; installing the community lookup must switch it to the
+    // tribe palette hue (4 & 7)/8 = 0.5. Read the link colour back to HSL and assert the hue.
+    const hsl = { h: 0, s: 0, l: 0 };
+    const hueAt = (v: number): number =>
+      new THREE.Color(colors.getX(v), colors.getY(v), colors.getZ(v)).getHSL(hsl).h;
 
     conn.update(0.016, 0);
     expect(conn.links).toBe(1);
-    expect(Math.abs(colors.getX(0) - v1.r)).toBeLessThan(1e-6);
-    expect(Math.abs(colors.getY(0) - v1.g)).toBeLessThan(1e-6);
-    expect(Math.abs(colors.getZ(0) - v1.b)).toBeLessThan(1e-6);
+    expect(hueAt(0)).toBeCloseTo(0, 2); // time-hue palette
 
     conn.setCommunityOf(() => 4);
     conn.update(0.016, 0);
-    expect(Math.abs(colors.getX(0) - tribe.r)).toBeLessThan(1e-6);
-    expect(Math.abs(colors.getY(0) - tribe.g)).toBeLessThan(1e-6);
-    expect(Math.abs(colors.getZ(0) - tribe.b)).toBeLessThan(1e-6);
+    expect(hueAt(0)).toBeCloseTo((4 & 7) / 8, 2); // tribe palette hue = 0.5
 
-    conn.setCommunityOf(null); // back to bit-for-bit V1 behavior
+    conn.setCommunityOf(null); // back to the time-hue palette
     conn.update(0.016, 0);
-    expect(Math.abs(colors.getX(0) - v1.r)).toBeLessThan(1e-6);
-    expect(Math.abs(colors.getY(0) - v1.g)).toBeLessThan(1e-6);
-    expect(Math.abs(colors.getZ(0) - v1.b)).toBeLessThan(1e-6);
+    expect(hueAt(0)).toBeCloseTo(0, 2);
   });
 });
 
