@@ -16,7 +16,7 @@ is and where Cosmogonic (v0.18.0, gate green) actually sits on it.
 
 > **What this report is grounded against (measured on `origin/main`, Bun 1.3.14):**
 > v0.18.0 · `bun run check` green · 1771 tests pass / 0 fail / 2,047,523 `expect()` calls
-> across 175 files · ~92% line / ~95% function coverage (canonical 91.97 / 94.85, ±6pp
+> across 175 files · 94.77% line / 91.97% function coverage (canonical; ±6pp
 > gate tolerance). Consciousness scorecard: **8/14 met + 6/14 partial** on the Butlin et
 > al. 2023 indicators — _computational indicators, not sentience._ No quantum advantage is
 > claimed anywhere: the quantum substrate is an exact classical simulation; it lacks only a

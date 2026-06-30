@@ -24,7 +24,7 @@ well-known Artificial-Life / open-ended-evolution / digital-organism systems.
 > [Sensitivity](#sensitivity-how-much-the-conclusion-moves-under-honest-re-scoring) sections quantify
 > exactly how much. Read every claim against
 > [`2026-06-26-CURRENT-TRUTH-BASELINE.md`](./2026-06-26-CURRENT-TRUTH-BASELINE.md); the baseline wins on
-> any conflict. Current receipts: `1771` tests, `0` failures, `91.97%` line / `94.85%` function coverage,
+> any conflict. Current receipts: `1771` tests, `0` failures, `94.77%` line / `91.97%` function coverage,
 > sync clean, build clean.
 
 ---
@@ -177,7 +177,7 @@ those are **computational indicators, not subjective experience.** The hard prob
 | Check               | Live result (2026-06-26, Bun 1.3.14, cold shell)                                                                 |
 | ------------------- | ---------------------------------------------------------------------------------------------------------------- |
 | `bun test`          | **`1771 pass`, `0 fail`, `2,047,523 expect() calls`, `175` files**                                               |
-| Coverage receipt    | **`91.97%` line, `94.85%` function** (canonical, `±6 pp` gate-enforced)                                          |
+| Coverage receipt    | **`94.77%` line, `91.97%` function** (canonical, `±6 pp` gate-enforced)                                          |
 | `bun run check`     | full gate green: format, typecheck, lint, tests, receipts, sync, build                                           |
 | `SuperMind.think()` | `3.34 ms` full-suite / `8.85 ms` focused — **not** any sub-millisecond / `<2%`-frame claim (those are stale)     |
 | `5× think()` batch  | `14.47 ms` / `25.40 ms` focused                                                                                  |
@@ -587,7 +587,7 @@ bun scripts/alife-codeground-sensitivity.ts
 #   all three read docs/reports/2026-06-26-alife-comparison-matrix.csv (deterministic; identical CSV -> identical bytes)
 
 # Re-confirm the live gate receipts:
-bun test --coverage        # -> 1771 pass / 0 fail ; 91.97% line / 94.85% func
+bun test --coverage        # -> 1771 pass / 0 fail ; 94.77% line / 91.97% func
 bun run check              # full gate
 ```
 

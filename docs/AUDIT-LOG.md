@@ -11,6 +11,16 @@ dated / historical / "superseded snapshot" copies (per the binding "Living docs,
 
 ---
 
+## 2026-06-30 — QA audit pass 2: emergence brutal releases + Windows receipts + petri routing tests
+
+Full-repo paranoid audit. Fixed verified wiring bugs and gate reliability:
+
+- **P1 world.ts:** emergence `triggerBrutalRelease` now calls `applyBrutalRelease` on live `pd.biologics` (mirrors `petri-dish.ts` — vitality effects were previously audit-only).
+- **P0 verify:receipts:** default is direct `bun scripts/verify-receipts.ts` spawn (no stdin pipe — fixes Windows deadlock); CI collapsed to one test+coverage+receipts step; `--from-file` for optional transcript reuse.
+- **P1 tests:** `tests/petri-brutal-god-event.test.ts` — `applyBrutalGodEvent` routing for REWRITE/FATE/IGNITION/VOID/SPIRAL + in-dish brutal release vitality mutation.
+- **P2 docs:** reports README + ALIFE/NHSI/RESEARCH-BEDROCK coverage corrected to canonical 94.77 / 91.97.
+- **build.ts:** tolerate EACCES/EPERM when pruning dist/ on locked Windows checkouts.
+
 ## 2026-06-28 — QA audit pass: petri emergence wiring, truth ledger, exterior tests
 
 Full-repo audit (`bun run check` green). Fixed verified wiring and documentation drift:
