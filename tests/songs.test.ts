@@ -129,6 +129,19 @@ describe('SONGS catalog', () => {
       expect(song!.mel.length).toBeGreaterThanOrEqual(16);
     }
   });
+
+  test('Phase 6 expansion songs are present and well-formed', () => {
+    const expansion = SONGS.filter((s) => s.name === 'CROWN OF ASH' || s.name === 'DEEP MERIDIAN');
+    expect(expansion.length).toBe(2);
+    for (const song of expansion) {
+      expect(song.bpm).toBeGreaterThan(0);
+      expect(song.fBase).toBeGreaterThan(0);
+      expect(song.chords.length).toBeGreaterThan(0);
+      expect(song.mel.length).toBeGreaterThanOrEqual(16);
+      expect(['sine', 'square', 'sawtooth', 'triangle']).toContain(song.wave);
+      expect(['sine', 'square', 'sawtooth', 'triangle']).toContain(song.bass);
+    }
+  });
 });
 
 describe('SFX_TYPES catalog', () => {

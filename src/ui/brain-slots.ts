@@ -25,8 +25,8 @@ interface Slot {
 }
 
 const MAX_HISTORY = 48;
-const CANVAS_W = 112;
-const CANVAS_H = 112;
+const CANVAS_W = 240;
+const CANVAS_H = 240;
 const BRAIN_SLOTS_WIRED = 'cqmBrainSlotsWired';
 
 function createCanvas(doc: Document, slotId: string): Slot | null {
@@ -90,30 +90,124 @@ function drawGrid(ctx: CanvasRenderingContext2D, w: number, h: number): void {
   ctx.stroke();
 }
 
+/** A deterministic global pulse so the brain slots keep animating even between snapshots. */
+function nowPulse(): number {
+  return typeof performance !== 'undefined' ? performance.now() / 1000 : 0;
+}
+
 function drawSynapses(
   ctx: CanvasRenderingContext2D,
   values: number[],
   w: number,
   h: number,
   hue: number,
+  pulse: number,
 ): void {
   const cx = w * 0.5;
   const cy = h * 0.52;
   const radius = Math.min(w, h) * 0.34;
+
+  // 1. Dense background synapse network: decorative inter-node connections with very low opacity
+  ctx.strokeStyle = `hsla(${hue}, 80%, 40%, 0.12)`;
+  ctx.lineWidth = 0.6;
+  ctx.beginPath();
+  for (let i = 0; i < values.length; i++) {
+    const a1 = (i / values.length) * Math.PI * 2;
+    const v1 = clamp01(values[i] ?? 0);
+    const r1 = radius * (0.65 + v1 * 0.35);
+    const x1 = cx + Math.cos(a1) * r1;
+    const y1 = cy + Math.sin(a1) * r1 * (0.5 + v1 * 0.25);
+    for (let j = i + 1; j < values.length; j++) {
+      const a2 = (j / values.length) * Math.PI * 2;
+      const v2 = clamp01(values[j] ?? 0);
+      const r2 = radius * (0.65 + v2 * 0.35);
+      const x2 = cx + Math.cos(a2) * r2;
+      const y2 = cy + Math.sin(a2) * r2 * (0.5 + v2 * 0.25);
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+    }
+  }
+  ctx.stroke();
+
   ctx.lineWidth = 1.2;
+
+  // Central firing node — expands and contracts with the pulse.
+  const coreR = 2.5 + Math.sin(pulse * 2) * 0.8;
+  const coreGlow = ctx.createRadialGradient(cx, cy, 1, cx, cy, coreR * 3);
+  coreGlow.addColorStop(0, `hsla(${hue}, 90%, 80%, 0.85)`);
+  coreGlow.addColorStop(0.5, `hsla(${hue}, 90%, 60%, 0.35)`);
+  coreGlow.addColorStop(1, 'hsla(0, 0%, 0%, 0)');
+  ctx.fillStyle = coreGlow;
+  ctx.beginPath();
+  ctx.arc(cx, cy, coreR * 3, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#fff';
+  ctx.beginPath();
+  ctx.arc(cx, cy, coreR * 0.6, 0, Math.PI * 2);
+  ctx.fill();
+
   for (let i = 0; i < values.length; i++) {
     const a = (i / values.length) * Math.PI * 2;
     const v = clamp01(values[i] ?? 0);
-    const x = cx + Math.cos(a) * radius * (0.65 + v * 0.35);
+    const reach = 0.65 + v * 0.35 + Math.sin(pulse * 1.5 + i) * 0.04;
+    const x = cx + Math.cos(a) * radius * reach;
     const y = cy + Math.sin(a) * radius * (0.5 + v * 0.25);
-    ctx.strokeStyle = `hsla(${hue + i * 18}, 95%, ${55 + v * 25}%, ${0.18 + v * 0.45})`;
+    const cpX = cx + Math.sin(a) * radius * 0.35;
+    const cpY = cy - Math.cos(a) * radius * 0.25;
+
+    // Connection gradient: deep at centre, bright at node.
+    const grad = ctx.createLinearGradient(cx, cy, x, y);
+    grad.addColorStop(0, `hsla(${hue + i * 18}, 95%, 55%, ${0.12 + v * 0.2})`);
+    grad.addColorStop(1, `hsla(${hue + i * 18}, 95%, ${60 + v * 25}%, ${0.35 + v * 0.5})`);
+    ctx.strokeStyle = grad;
     ctx.beginPath();
     ctx.moveTo(cx, cy);
-    ctx.quadraticCurveTo(cx + Math.sin(a) * radius * 0.35, cy - Math.cos(a) * radius * 0.25, x, y);
+    ctx.quadraticCurveTo(cpX, cpY, x, y);
     ctx.stroke();
+
+    // Peripheral node: expands and contracts as if "breathing".
+    const nodeR = Math.max(1.5, 2 + v * 3 + Math.sin(pulse * 2.2 + i * 1.3) * 1.2);
     ctx.fillStyle = `hsla(${hue + i * 18}, 95%, 70%, ${0.5 + v * 0.5})`;
     ctx.beginPath();
-    ctx.arc(x, y, 2 + v * 3, 0, Math.PI * 2);
+    ctx.arc(x, y, nodeR, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Traveling synaptic pulse: a bright dot moving along the curve.
+    const travel = (pulse * (0.6 + v * 0.8) + i * 0.37) % 1;
+    const t = travel;
+    const oneMinusT = 1 - t;
+    const px = oneMinusT * oneMinusT * cx + 2 * oneMinusT * t * cpX + t * t * x;
+    const py = oneMinusT * oneMinusT * cy + 2 * oneMinusT * t * cpY + t * t * y;
+    ctx.fillStyle = `hsla(${hue + i * 18 + 40}, 100%, 80%, ${0.6 + v * 0.4})`;
+    ctx.beginPath();
+    ctx.arc(px, py, 1.4 + v * 1.2, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Real-time animated glowing voltage spike moving along the curves utilizing window.performance.now()
+    const ms = typeof performance !== 'undefined' ? performance.now() : Date.now();
+    const spikeTravel = (ms * 0.001 * (0.7 + v * 0.6) + i * 0.37) % 1.0;
+    const tSpike = spikeTravel;
+    const oneMinusTSpike = 1 - tSpike;
+    const spX =
+      oneMinusTSpike * oneMinusTSpike * cx +
+      2 * oneMinusTSpike * tSpike * cpX +
+      tSpike * tSpike * x;
+    const spY =
+      oneMinusTSpike * oneMinusTSpike * cy +
+      2 * oneMinusTSpike * tSpike * cpY +
+      tSpike * tSpike * y;
+
+    // Radial glow overlay for the voltage spike
+    const spikeGlowR = 6 + v * 8;
+    const spikeGlow = ctx.createRadialGradient(spX, spY, 1, spX, spY, spikeGlowR);
+    spikeGlow.addColorStop(0, '#ffffff');
+    spikeGlow.addColorStop(0.35, `hsla(${hue + i * 18 + 60}, 100%, 75%, 0.9)`);
+    spikeGlow.addColorStop(0.7, `hsla(${hue + i * 18}, 95%, 55%, 0.3)`);
+    spikeGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
+
+    ctx.fillStyle = spikeGlow;
+    ctx.beginPath();
+    ctx.arc(spX, spY, spikeGlowR, 0, Math.PI * 2);
     ctx.fill();
   }
 }
@@ -166,7 +260,13 @@ function drawBars(
   }
 }
 
-function drawDots(ctx: CanvasRenderingContext2D, values: number[], w: number, h: number): void {
+function drawDots(
+  ctx: CanvasRenderingContext2D,
+  values: number[],
+  w: number,
+  h: number,
+  pulse: number,
+): void {
   const cols = 10;
   const rows = 10;
   const cellW = w / cols;
@@ -175,12 +275,21 @@ function drawDots(ctx: CanvasRenderingContext2D, values: number[], w: number, h:
     const v = values[i] ?? 0;
     const cx = (i % cols) * cellW + cellW / 2;
     const cy = Math.floor(i / cols) * cellH + cellH / 2;
-    const r = Math.max(1, cellW * 0.35 * (0.3 + v * 0.7));
-    const hue = 260 + v * 90;
-    ctx.fillStyle = `hsla(${hue}, 90%, 65%, ${0.35 + v * 0.65})`;
+    const breath = 0.85 + 0.15 * Math.sin(pulse * 2.4 + i * 0.7);
+    const r = Math.max(1, cellW * 0.35 * (0.3 + v * 0.7) * breath);
+    const hue = 260 + v * 90 + Math.sin(pulse + i) * 10;
+    const shimmer = 0.35 + v * 0.65 + 0.15 * Math.sin(pulse * 4 + i * 1.1);
+    ctx.fillStyle = `hsla(${hue}, 90%, 65%, ${Math.min(1, shimmer)})`;
     ctx.beginPath();
     ctx.arc(cx, cy, r, 0, Math.PI * 2);
     ctx.fill();
+    // Electrode flash: small bright core when the value peaks.
+    if (v > 0.75) {
+      ctx.fillStyle = `hsla(${hue + 30}, 100%, 85%, ${0.4 + 0.6 * Math.sin(pulse * 6 + i)})`;
+      ctx.beginPath();
+      ctx.arc(cx, cy, r * 0.45, 0, Math.PI * 2);
+      ctx.fill();
+    }
   }
 }
 
@@ -206,7 +315,7 @@ function updateApex(slot: Slot, apex: ApexBrainSnapshot | null): void {
     clamp01(motor),
   ];
   const colors = ['#9f6bff', '#6bff9e', '#ff5a6b', '#39d6ff', '#ff9f43'];
-  drawSynapses(ctx, values, w, h, 265);
+  drawSynapses(ctx, values, w, h, 265, nowPulse());
   drawBars(ctx, values, w, h, colors);
   drawGrid(ctx, w, h);
   ctx.fillStyle = '#e6dcff';
@@ -231,7 +340,7 @@ function updateMecha(slot: Slot, mecha: MechalogodromBrainSnapshot | null): void
     return;
   }
   pushHistory(slot, mecha.activity ?? 0.5);
-  drawSynapses(ctx, slot.history.slice(-9), w, h, 190);
+  drawSynapses(ctx, slot.history.slice(-9), w, h, 190, nowPulse());
   drawSparkline(ctx, slot.history, w, h, '#39d6ff');
   drawGrid(ctx, w, h);
   ctx.fillStyle = '#b8f5ff';
@@ -258,8 +367,8 @@ function updateGlyph(slot: Slot, glyphs: GlyphBrainSnapshot[] | null): void {
     return;
   }
   const values = glyphs.map((g) => (g.activity + g.novelty + g.valence) / 3);
-  drawSynapses(ctx, values.slice(0, 12), w, h, 305);
-  drawDots(ctx, values, w, h);
+  drawSynapses(ctx, values.slice(0, 12), w, h, 305, nowPulse());
+  drawDots(ctx, values, w, h, nowPulse());
   drawGrid(ctx, w, h);
   ctx.fillStyle = '#e6dcff';
   ctx.font = '9px JetBrains Mono, monospace';

@@ -304,8 +304,19 @@ body:has(#cqm-hud-nav) #cqm-dock {
   align-items: center;
   justify-content: center;
   gap: 4px;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   width: 100%;
+}
+#cqm-persist-nav .cqm-persist-row--sim,
+#cqm-persist-nav .cqm-persist-row--panels {
+  max-width: min(100%, 760px);
+}
+#cqm-persist-nav .cqm-persist-row--sim .cqm-persist-btn,
+#cqm-persist-nav .cqm-persist-row--panels .cqm-persist-btn {
+  height: 26px;
+  padding-inline: 7px;
+  font-size: 9px;
+  letter-spacing: 0.05em;
 }
 #cqm-persist-nav .cqm-persist-row--docs .cqm-persist-btn {
   border-color: rgba(120, 160, 220, 0.32);

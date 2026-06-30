@@ -158,6 +158,40 @@ export const SONGS: readonly Song[] = [
     mel: [0, 5, 9, 14, 12, 9, 5, 0, 3, 8, 12, 17, 15, 12, 8, 3, 7, 11, 15, 19, 16, 11, 7, 2],
     fBase: 440,
   },
+  {
+    // Cathedral of ash — a sorrowful, wide processional in the low strings. Tolling
+    // minor-ninth bells answer a lone horn-like melody that rises, breaks, and falls.
+    // Semis: {0,3,7,10} {0,3,8,14} {0,5,10,12} {0,2,7,15}.
+    name: 'CROWN OF ASH',
+    bpm: 54,
+    chords: [
+      [0, 3, 7, 10],
+      [0, 3, 8, 14],
+      [0, 5, 10, 12],
+      [0, 2, 7, 15],
+    ],
+    wave: 'triangle',
+    bass: 'sawtooth',
+    mel: [0, 3, 7, 10, 14, 10, 7, 3, 0, 3, 8, 12, 15, 12, 8, 3, 2, 7, 11, 14, 11, 7, 2, 0],
+    fBase: 480,
+  },
+  {
+    // Deep Meridian — a slow, fatal chase beneath the ice. Square-saw ostinato under a
+    // descending chromatic melody, like a star dying in real time. Dark, cold, inevitable.
+    // Semis: {0,3,8,12} {0,3,10,15} {0,5,8,14} {0,2,8,13}.
+    name: 'DEEP MERIDIAN',
+    bpm: 72,
+    chords: [
+      [0, 3, 8, 12],
+      [0, 3, 10, 15],
+      [0, 5, 8, 14],
+      [0, 2, 8, 13],
+    ],
+    wave: 'sawtooth',
+    bass: 'square',
+    mel: [0, 5, 3, 8, 6, 10, 8, 13, 10, 6, 3, 1, 0, 3, 5, 8, 10, 13, 10, 5, 3, 0],
+    fBase: 560,
+  },
 ];
 
 /** The eight synthesized SFX types (legacy line 204), in preview-cycle order. */

@@ -25,6 +25,9 @@ export interface PanelHeaderOptions {
   title: string;
   closeLabel?: string;
   onClose: () => void;
+  /** Optional minimize button. If omitted, no minimize control is shown. */
+  onMinimize?: () => void;
+  minLabel?: string;
   doc?: Document;
 }
 
@@ -45,8 +48,8 @@ const BASE_CSS = `
   padding:22px 26px;color:#e9e3ff;font:13px/1.55 var(--font-sans,system-ui,sans-serif);pointer-events:auto}
 .cqm-panel-top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
 .cqm-panel-top b{font-size:16px;letter-spacing:.04em;color:#c79bff}
-.cqm-panel-x{background:rgba(0,0,0,.4);color:#a99fce;border:1px solid rgba(150,120,255,.3);border-radius:6px;padding:4px 10px;cursor:pointer;font:12px var(--font-mono,ui-monospace,monospace)}
-.cqm-panel-x:hover{background:rgba(70,42,130,.5);color:#fff}
+.cqm-panel-x,.cqm-panel-min{background:rgba(0,0,0,.4);color:#a99fce;border:1px solid rgba(150,120,255,.3);border-radius:6px;padding:4px 10px;cursor:pointer;font:12px var(--font-mono,ui-monospace,monospace)}
+.cqm-panel-x:hover,.cqm-panel-min:hover{background:rgba(70,42,130,.5);color:#fff}
 .cqm-dock-toggle{display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;
   border:1px solid rgba(120,160,220,.42);background:linear-gradient(180deg,rgba(14,22,42,.92),rgba(8,12,24,.88));
   color:#dfeaff;font:600 11px/1 var(--font-mono,ui-monospace,monospace);letter-spacing:.08em;height:42px;
@@ -101,13 +104,22 @@ export function panelHeader(opts: PanelHeaderOptions): HTMLElement {
   header.className = 'cqm-panel-top';
   const title = doc.createElement('b');
   title.textContent = opts.title;
+  header.appendChild(title);
+  if (opts.onMinimize) {
+    const min = doc.createElement('button');
+    min.type = 'button';
+    min.className = 'cqm-panel-min';
+    min.textContent = '−';
+    min.setAttribute('aria-label', opts.minLabel ?? 'Minimize');
+    min.addEventListener('click', opts.onMinimize);
+    header.appendChild(min);
+  }
   const close = doc.createElement('button');
   close.type = 'button';
   close.className = 'cqm-panel-x';
   close.textContent = '✕';
   close.setAttribute('aria-label', opts.closeLabel ?? 'Close');
   close.addEventListener('click', opts.onClose);
-  header.appendChild(title);
   header.appendChild(close);
   return header;
 }

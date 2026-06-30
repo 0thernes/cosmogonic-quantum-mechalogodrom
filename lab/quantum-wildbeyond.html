@@ -1562,8 +1562,98 @@
         p.camera(0, 0, attractorCamZ(S) * cameraMul, 0, 0, 0, 0, 1, 0);
       }
       const VOID = [4, 7, 17];
-      const activeTiles = []; // { instance, spec } — ONLY the visible board's sketches
+      const activeTiles = []; // { instance|null, spec, tile, host, visible, hot, seq } — the visible board's tiles
       let activeBoardPage = 0; // 0 = no board built (page 1 showing)
+      let boardObserver = null; // IntersectionObserver virtualizing the live board's WebGL tiles
+      let tileSeq = 0; // monotonic mount stamp → least-recently-mounted eviction order
+      let _webglCtxCap = 0; // memoized device WebGL-context ceiling (probed once)
+
+      /**
+       * Probe — ONCE — how many live WebGL contexts THIS device keeps before the
+       * browser force-loses the OLDEST (Chrome desktop = 16; some mobile GPUs = 8).
+       * A board of 28+ tiles each grabbing its own context is exactly why the
+       * first-created tiles (Lorenz, Rössler, …) went blank: contexts 1..N-16 were
+       * silently lost. We measure the real ceiling instead of guessing a number.
+       */
+      function webglContextCap() {
+        if (_webglCtxCap) return _webglCtxCap;
+        let live = 0;
+        try {
+          const ctxs = [];
+          for (let i = 0; i < 24; i++) {
+            const c = document.createElement('canvas');
+            c.width = c.height = 32;
+            ctxs.push(c.getContext('webgl2') || c.getContext('webgl'));
+          }
+          for (const g of ctxs) if (g && !g.isContextLost()) live++;
+          for (const g of ctxs) {
+            const lose = g && g.getExtension('WEBGL_lose_context');
+            if (lose) lose.loseContext();
+          }
+        } catch (e) {
+          live = 0;
+        }
+        _webglCtxCap = live > 0 ? live : 16;
+        return _webglCtxCap;
+      }
+      /** Max board tiles mounted at once: under the device ceiling, with 2 of headroom. */
+      function maxLiveTiles() {
+        return Math.max(6, Math.min(15, webglContextCap() - 1));
+      }
+      function liveTileCount() {
+        let n = 0;
+        for (let i = 0; i < activeTiles.length; i++) if (activeTiles[i].instance) n++;
+        return n;
+      }
+      /** Free a tile's WebGL context — it re-mounts (re-seeded, identical) when scrolled back. */
+      function unmountTile(rec) {
+        if (!rec.instance) return;
+        try {
+          rec.instance.remove();
+        } catch (e) {
+          /* already gone */
+        }
+        rec.instance = null;
+      }
+      /** Unmount mounted tiles (off-screen first, least-recently-mounted first) until under `cap`. */
+      function evictFarTiles(cap) {
+        let guard = activeTiles.length + 1;
+        while (liveTileCount() > cap && guard-- > 0) {
+          let victim = null;
+          for (let i = 0; i < activeTiles.length; i++) {
+            const r = activeTiles[i];
+            if (!r.instance || r.visible) continue;
+            if (!victim || r.seq < victim.seq) victim = r;
+          }
+          if (!victim) {
+            // Everything mounted is on-screen (huge viewport) — drop the oldest as a last resort.
+            for (let i = 0; i < activeTiles.length; i++) {
+              const r = activeTiles[i];
+              if (!r.instance) continue;
+              if (!victim || r.seq < victim.seq) victim = r;
+            }
+          }
+          if (!victim) break;
+          unmountTile(victim);
+        }
+      }
+      /** Mount a tile's seeded p5 sketch on demand, evicting the furthest tile if over budget. */
+      function mountTile(rec) {
+        if (rec.instance) {
+          rec.seq = ++tileSeq;
+          return;
+        }
+        const cap = maxLiveTiles();
+        if (liveTileCount() >= cap) evictFarTiles(cap - 1);
+        const sketch = (pp) => {
+          const rng = makeRng(derivedSeed(params.seed, rec.spec.id));
+          rec.spec.make(pp, rng, TILE_RES);
+          installUniversalReact(pp);
+        };
+        rec.instance = new p5(sketch, rec.host);
+        rec.instance.hot = rec.hot;
+        rec.seq = ++tileSeq;
+      }
 
       // ─── Click audio: ONE shared AudioContext, lazily created on first click ───
 
@@ -1578,6 +1668,31 @@
         if (!AC) return;
         if (!audioCtx) audioCtx = new AC();
         if (audioCtx.state === 'suspended') audioCtx.resume();
+        const attractorConstants = {
+          lorenz: { sigma: 10, rho: 28, beta: 8 / 3, freqMul: 1.12 },
+          rossler: { a: 0.2, b: 0.2, c: 5.7, freqMul: 0.98 },
+          thomas: { b: 0.2, freqMul: 1.05 },
+          halvorsen: { a: 1.4, freqMul: 0.85 },
+          chenlee: { a: 5, b: -10, c: -0.38, freqMul: 1.25 },
+          duffing: { alpha: -1, omega: 1.2, gamma: 0.3, freqMul: 1.15 },
+          nosehoover: { a: 1.5, freqMul: 0.92 },
+          grayscott: { feed: 0.0545, kill: 0.062, freqMul: 0.75 },
+          voronoi: { sites: 18, freqMul: 1.1 },
+          fern: { maps: 4, freqMul: 1.3 },
+          clifford: { freqMul: 1.22 },
+          flow: { freqMul: 0.9 },
+          lissajous: { freqMul: 1.05 },
+          wavefunction: { freqMul: 1.4 },
+          sphharmonic: { freqMul: 1.35 },
+          quantumwalk: { freqMul: 1.18 },
+          torusknot: { freqMul: 1.08 },
+          superformula: { freqMul: 1.2 },
+          hopf: { freqMul: 1.25 },
+          bellpair: { freqMul: 1.5 },
+          montecarlo: { freqMul: 1.1 },
+          lsystem: { freqMul: 1.02 },
+          apollonian: { freqMul: 1.08 },
+        };
         const h = derivedSeed(0, tileId);
         const slot = h % 36;
         const t0 = audioCtx.currentTime;
@@ -1587,8 +1702,18 @@
         const gain = audioCtx.createGain();
         const filter = audioCtx.createBiquadFilter();
         osc.type = waves[slot % waves.length];
-        const baseHz = 55 * Math.pow(2, (slot % 24) / 12);
-        osc.frequency.setValueAtTime(baseHz * (1 + (slot % 5) * 0.31), t0);
+        const consts = attractorConstants[tileId] || { freqMul: 1.0 };
+        const baseHz = 55 * Math.pow(2, (slot % 24) / 12) * consts.freqMul;
+        let ratio = 1.0;
+        if (tileId === 'lorenz') ratio = consts.rho / consts.sigma;
+        else if (tileId === 'rossler') ratio = consts.c / 2;
+        else if (tileId === 'thomas') ratio = 1.0 + consts.b;
+        else if (tileId === 'halvorsen') ratio = consts.a;
+        else if (tileId === 'chenlee') ratio = Math.abs(consts.b / consts.a);
+        else if (tileId === 'duffing') ratio = consts.omega;
+        else if (tileId === 'nosehoover') ratio = consts.a;
+        else ratio = 1 + (slot % 5) * 0.31;
+        osc.frequency.setValueAtTime(baseHz * ratio, t0);
         osc.frequency.exponentialRampToValueAtTime(Math.max(28, baseHz * 0.35), t0 + dur);
         filter.type = slot % 3 === 0 ? 'bandpass' : slot % 3 === 1 ? 'lowpass' : 'highpass';
         filter.frequency.setValueAtTime(180 + ((slot * 97) % 4200), t0);
@@ -1707,6 +1832,7 @@
         };
         p.setup = () => {
           p.createCanvas(S, S, p.WEBGL);
+          fitWebglTile(p, S, 1.0);
           p.pixelDensity(1);
           for (let i = 0; i < PTS; i++) step(); // pre-fill the ribbon
           p.colorMode(p.HSB, 360, 100, 100, 100);
@@ -1720,7 +1846,7 @@
           p.rotateX(0.5 + Math.sin(rx.orbit * 0.6) * 0.2);
           p.rotateY(rx.orbit);
           p.scale(attractorDrawScale(k));
-          const sc = attractorVertexScale(S, 110);
+          const sc = attractorVertexScale(S, 22);
           const al = p.hot ? 86 : 64;
           p.noFill();
           p.strokeWeight(1.3 + k);
@@ -1765,6 +1891,7 @@
         };
         p.setup = () => {
           p.createCanvas(S, S, p.WEBGL);
+          fitWebglTile(p, S, 1.0);
           p.pixelDensity(1);
           for (let i = 0; i < PTS; i++) step();
           p.colorMode(p.HSB, 360, 100, 100, 100);
@@ -1778,7 +1905,7 @@
           p.rotateX(0.55 + Math.sin(rx.orbit * 0.5) * 0.18);
           p.rotateY(rx.orbit);
           p.scale(attractorDrawScale(k));
-          const sc = attractorVertexScale(S, 58);
+          const sc = attractorVertexScale(S, 12);
           const al = p.hot ? 86 : 64;
           p.noFill();
           p.strokeWeight(1.3 + k);
@@ -1832,6 +1959,7 @@
         };
         p.setup = () => {
           p.createCanvas(S, S, p.WEBGL);
+          fitWebglTile(p, S, 1.0);
           p.pixelDensity(1);
           a.fill(1);
           b.fill(0);
@@ -1905,6 +2033,7 @@
         const rx = makeReact(p);
         p.setup = () => {
           p.createCanvas(S, S, p.WEBGL);
+          fitWebglTile(p, S, 1.0);
           p.pixelDensity(1);
           for (let i = 0; i < M; i++) {
             sx[i] = rng.range(0.08, 0.92);
@@ -2699,6 +2828,7 @@
         let rot = 0;
         p.setup = () => {
           p.createCanvas(S, S, p.WEBGL);
+          fitWebglTile(p, S, 1.0);
           p.pixelDensity(1);
           let x = rng.range(0.1, 0.6);
           let y = rng.range(0, 0.4);
@@ -2986,7 +3116,7 @@
       /** Generic 3D attractor ribbon: integrate `f(x,y,z)->[dx,dy,dz]` and draw a
        *  ring-buffered line strip with a rotating camera. Powers Thomas/Halvorsen/
        *  Chen-Lee with different vector fields + scales. */
-      function attractorRibbon(p, S, init, f, dt, sc, hueBase) {
+      function attractorRibbon(p, S, init, f, dt, sc, hueBase, zShift = 0) {
         const PTS = 1100;
         const xs = new Float32Array(PTS),
           ys = new Float32Array(PTS),
@@ -3029,7 +3159,7 @@
             const j = (head + i) % PTS;
             const fade = 0.25 + (0.75 * i) / PTS;
             p.stroke((hueBase + zs[j] * 6 + k * 60) % 360, 82, 100, al * fade);
-            p.vertex(xs[j] * sc, ys[j] * sc, zs[j] * sc);
+            p.vertex(xs[j] * sc, ys[j] * sc, (zs[j] - zShift) * sc);
           }
           p.endShape();
         };
@@ -3044,7 +3174,7 @@
           [rng.range(-2, 2), rng.range(-2, 2), rng.range(-2, 2)],
           (x, y, z) => [Math.sin(y) - b * x, Math.sin(z) - b * y, Math.sin(x) - b * z],
           0.09,
-          S / 13,
+          S / 3.8,
           150,
         );
       }
@@ -3062,7 +3192,7 @@
             -a * z - 4 * x - 4 * y - x * x,
           ],
           0.0045,
-          S / 28,
+          S / 5.5,
           18,
         );
       }
@@ -3078,8 +3208,9 @@
           [rng.range(1, 4), rng.range(1, 4), rng.range(8, 14)],
           (x, y, z) => [a * x - y * z, b * y + x * z, c * z + (x * y) / 3],
           0.0016,
-          S / 90,
+          S / 30,
           44,
+          15,
         );
       }
 
@@ -3237,6 +3368,7 @@
         };
         p.setup = () => {
           p.createCanvas(S, S, p.WEBGL);
+          fitWebglTile(p, S, 1.1);
           p.pixelDensity(1);
           p.colorMode(p.HSB, 360, 100, 100, 100);
         };
@@ -3280,6 +3412,7 @@
         const rx = makeReact(p);
         p.setup = () => {
           p.createCanvas(S, S, p.WEBGL);
+          fitWebglTile(p, S, 1.15);
           p.pixelDensity(1);
           p.colorMode(p.HSB, 360, 100, 100, 100);
         };
@@ -3338,6 +3471,7 @@
           p.pixelDensity(1);
           for (let i = 0; i < PTS; i++) step(0);
           p.colorMode(p.HSB, 360, 100, 100, 100);
+          fitWebglTile(p, S, 1.15);
         };
         p.draw = () => {
           const k = rx.tick();
@@ -3368,6 +3502,7 @@
         const rx = makeReact(p);
         p.setup = () => {
           p.createCanvas(S, S, p.WEBGL);
+          fitWebglTile(p, S, 1.1);
           p.pixelDensity(1);
           p.colorMode(p.HSB, 360, 100, 100, 100);
         };
@@ -3402,6 +3537,7 @@
         const rx = makeReact(p);
         p.setup = () => {
           p.createCanvas(S, S, p.WEBGL);
+          fitWebglTile(p, S, 1.0);
           p.pixelDensity(1);
           for (let i = 0; i < N; i++) {
             const r = Math.pow(rng.next(), 0.6);
@@ -3450,6 +3586,7 @@
         const rx = makeReact(p);
         p.setup = () => {
           p.createCanvas(S, S, p.WEBGL);
+          fitWebglTile(p, S, 1.0);
           p.pixelDensity(1);
           for (let w = 0; w < W; w++) {
             wx[w] = rng.range(-0.3, 0.3);
@@ -3548,6 +3685,7 @@
         };
         p.setup = () => {
           p.createCanvas(S, S, p.WEBGL);
+          fitWebglTile(p, S, 1.15);
           p.pixelDensity(1);
           p.colorMode(p.HSB, 360, 100, 100, 100);
         };
@@ -3587,6 +3725,7 @@
         const rx = makeReact(p);
         p.setup = () => {
           p.createCanvas(S, S, p.WEBGL);
+          fitWebglTile(p, S, 1.15);
           p.pixelDensity(1);
           p.colorMode(p.HSB, 360, 100, 100, 100);
         };
@@ -3634,6 +3773,7 @@
         const rx = makeReact(p);
         p.setup = () => {
           p.createCanvas(S, S, p.WEBGL);
+          fitWebglTile(p, S, 1.0);
           p.pixelDensity(1);
           p.colorMode(p.HSB, 360, 100, 100, 100);
           let x = rng.range(-0.5, 0.5),
@@ -3657,7 +3797,7 @@
           p.background(VOID[0], VOID[1], VOID[2]);
           p.rotateY(rx.orbit);
           p.rotateX(0.4 + Math.sin(rx.orbit * 0.3) * 0.2);
-          const sc = S * 0.22;
+          const sc = S * 0.48;
           p.noFill();
           p.strokeWeight(1.3 + k);
           p.beginShape();
@@ -3679,6 +3819,7 @@
         const rx = makeReact(p);
         p.setup = () => {
           p.createCanvas(S, S, p.WEBGL);
+          fitWebglTile(p, S, 1.0);
           p.pixelDensity(1);
           p.colorMode(p.HSB, 360, 100, 100, 100);
           let x = 0.1,
@@ -3703,7 +3844,7 @@
           p.background(VOID[0], VOID[1], VOID[2]);
           p.rotateY(rx.orbit);
           p.rotateX(0.5 + Math.sin(rx.orbit * 0.4) * 0.2);
-          const sc = S * 0.24;
+          const sc = S * 0.18;
           p.noFill();
           p.strokeWeight(1.4 + k);
           p.beginShape();
@@ -3729,6 +3870,7 @@
         const rx = makeReact(p);
         p.setup = () => {
           p.createCanvas(S, S, p.WEBGL);
+          fitWebglTile(p, S, 1.0);
           p.pixelDensity(1);
           p.colorMode(p.HSB, 360, 100, 100, 100);
           for (let i = 0; i < PTS; i++) {
@@ -3761,6 +3903,7 @@
         const rx = makeReact(p);
         p.setup = () => {
           p.createCanvas(S, S, p.WEBGL);
+          fitWebglTile(p, S, 1.0);
           p.pixelDensity(1);
           p.colorMode(p.HSB, 360, 100, 100, 100);
         };
@@ -3794,6 +3937,7 @@
         const rx = makeReact(p);
         p.setup = () => {
           p.createCanvas(S, S, p.WEBGL);
+          fitWebglTile(p, S, 1.0);
           p.pixelDensity(1);
           p.colorMode(p.HSB, 360, 100, 100, 100);
           for (let i = 0; i < DIM; i++) amp[i] = 1 / DIM;
@@ -3832,6 +3976,7 @@
         const rx = makeReact(p);
         p.setup = () => {
           p.createCanvas(S, S, p.WEBGL);
+          fitWebglTile(p, S, 1.0);
           p.pixelDensity(1);
           p.colorMode(p.HSB, 360, 100, 100, 100);
           for (let i = 0; i < DIM; i++) {
@@ -3872,6 +4017,7 @@
         const rx = makeReact(p);
         p.setup = () => {
           p.createCanvas(S, S, p.WEBGL);
+          fitWebglTile(p, S, 1.1);
           p.pixelDensity(1);
           p.colorMode(p.HSB, 360, 100, 100, 100);
         };
@@ -3926,6 +4072,7 @@
         const rx = makeReact(p);
         p.setup = () => {
           p.createCanvas(S, S, p.WEBGL);
+          fitWebglTile(p, S, 1.15);
           p.pixelDensity(1);
           p.colorMode(p.HSB, 360, 100, 100, 100);
         };
@@ -3974,6 +4121,7 @@
         let branches = [];
         p.setup = () => {
           p.createCanvas(S, S, p.WEBGL);
+          fitWebglTile(p, S, 1.0);
           p.pixelDensity(1);
           p.colorMode(p.HSB, 360, 100, 100, 100);
           // Build branch list deterministically
@@ -3988,6 +4136,7 @@
             if (rng.next() < 0.3) build(nx, ny, nz, len * 0.5, ang, d - 1);
           };
           build(0, -S * 0.3, 0, S * 0.12, 0, depth);
+          fitWebglTile(p, S, 1.15);
         };
         p.draw = () => {
           const k = rx.tick();
@@ -4010,6 +4159,7 @@
         const rx = makeReact(p);
         p.setup = () => {
           p.createCanvas(S, S, p.WEBGL);
+          fitWebglTile(p, S, 1.0);
           p.pixelDensity(1);
           p.colorMode(p.HSB, 360, 100, 100, 100);
           // Seed: three mutually tangent circles + recursive fill
@@ -4024,6 +4174,7 @@
             pack(cx, cy + r * 0.5, nr, d - 1);
           };
           pack(0, 0, R, 5);
+          fitWebglTile(p, S, 1.15);
         };
         p.draw = () => {
           const k = rx.tick();
@@ -4052,6 +4203,7 @@
         let pts = [];
         p.setup = () => {
           p.createCanvas(S, S, p.WEBGL);
+          fitWebglTile(p, S, 1.0);
           p.pixelDensity(1);
           p.colorMode(p.HSB, 360, 100, 100, 100);
           // Build dragon by folding
@@ -4114,6 +4266,7 @@
         const edges = [];
         p.setup = () => {
           p.createCanvas(S, S, p.WEBGL);
+          fitWebglTile(p, S, 1.0);
           p.pixelDensity(1);
           p.colorMode(p.HSB, 360, 100, 100, 100);
           for (let n = 1; n <= maxN; n++) {
@@ -4504,9 +4657,17 @@
        * is ever alive at a time. O(active tiles).
        */
       function destroyActiveBoard() {
+        if (boardObserver) {
+          try {
+            boardObserver.disconnect();
+          } catch (e) {
+            /* noop */
+          }
+          boardObserver = null;
+        }
         for (let i = 0; i < activeTiles.length; i++) {
           try {
-            activeTiles[i].instance.remove();
+            if (activeTiles[i].instance) activeTiles[i].instance.remove();
           } catch (e) {
             /* already gone */
           }
@@ -4531,8 +4692,25 @@
         if (page < 2 || page > 4) return;
         const grid = document.getElementById('board-' + page);
         if (!grid) return;
-        grid.innerHTML = ''; // HARD GUARD: a board is exactly its 24 tiles, never accumulates ghosts
+        grid.innerHTML = ''; // HARD GUARD: a board is exactly its tiles, never accumulates ghosts
         const specs = BOARDS[page];
+        webglContextCap(); // probe the device's WebGL-context ceiling ONCE before mounting any tile
+        const recByEl = new Map();
+        // Virtualize: each tile's WebGL sketch mounts only while near the viewport and is
+        // freed when far, so live contexts stay under the device ceiling no matter how many
+        // tiles the board holds. (Mounting all 28+ at once force-lost the first 12 → blank.)
+        boardObserver = new IntersectionObserver(
+          (entries) => {
+            for (const e of entries) {
+              const rec = recByEl.get(e.target);
+              if (!rec) continue;
+              rec.visible = e.isIntersecting;
+              if (e.isIntersecting) mountTile(rec);
+            }
+            evictFarTiles(maxLiveTiles());
+          },
+          { root: null, rootMargin: '40px 0px', threshold: 0.01 },
+        );
         for (let k = 0; k < specs.length; k++) {
           const spec = specs[k];
           const tile = document.createElement('div');
@@ -4560,19 +4738,18 @@
           tile.appendChild(host);
           grid.appendChild(tile);
 
-          const sketch = (pp) => {
-            const rng = makeRng(derivedSeed(params.seed, spec.id));
-            spec.make(pp, rng, TILE_RES);
-            installUniversalReact(pp);
-          };
-          const inst = new p5(sketch, host);
-          activeTiles.push({ instance: inst, spec, tile });
+          const rec = { instance: null, spec, tile, host, visible: false, hot: false, seq: 0 };
+          activeTiles.push(rec);
+          recByEl.set(tile, rec);
 
-          // Interaction: click/Enter → blip + pulse; hover → hot.
+          // Interaction: click/Enter → blip + pulse (mounting on demand if off-screen);
+          // hover → hot. Handlers read rec.instance live, since tiles mount/unmount.
           const fire = () => {
+            if (!rec.instance) mountTile(rec);
             tileBlip(spec.id);
-            if (typeof inst.pulse === 'function') inst.pulse();
-            else if (inst.__cqmReact) inst.__cqmReact.kick = 1;
+            const inst = rec.instance;
+            if (inst && typeof inst.pulse === 'function') inst.pulse();
+            else if (inst && inst.__cqmReact) inst.__cqmReact.kick = 1;
           };
           tile.addEventListener('click', fire);
           tile.addEventListener('keydown', (e) => {
@@ -4581,13 +4758,74 @@
               fire();
             }
           });
+          tile.addEventListener('focus', () => {
+            if (!rec.instance) mountTile(rec);
+          });
           tile.addEventListener('pointerenter', () => {
-            inst.hot = true;
+            rec.hot = true;
+            if (rec.instance) rec.instance.hot = true;
+            try {
+              const AC = window.AudioContext || window.webkitAudioContext;
+              if (AC) {
+                if (!audioCtx) audioCtx = new AC();
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                const t0 = audioCtx.currentTime;
+                const h = derivedSeed(0, spec.id);
+                const slot = h % 36;
+                const baseHz = 55 * Math.pow(2, (slot % 24) / 12);
+                const f1 = baseHz / 2;
+                const f2 = (baseHz * 1.5) / 2;
+                const osc1 = audioCtx.createOscillator();
+                const osc2 = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                const filter = audioCtx.createBiquadFilter();
+                osc1.type = 'sine';
+                osc2.type = 'triangle';
+                osc1.frequency.setValueAtTime(f1, t0);
+                osc2.frequency.setValueAtTime(f2, t0);
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(150 + (slot % 4) * 40, t0);
+                gain.gain.setValueAtTime(0.001, t0);
+                gain.gain.linearRampToValueAtTime(0.02, t0 + 0.15);
+                osc1.connect(filter);
+                osc2.connect(filter);
+                filter.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc1.start(t0);
+                osc2.start(t0);
+                rec.drone = { osc1, osc2, gain };
+              }
+            } catch (e) {
+              console.error(e);
+            }
           });
           tile.addEventListener('pointerleave', () => {
-            inst.hot = false;
+            rec.hot = false;
+            if (rec.instance) rec.instance.hot = false;
+            if (rec.drone) {
+              try {
+                const drone = rec.drone;
+                rec.drone = null;
+                if (audioCtx && audioCtx.state !== 'closed') {
+                  const t0 = audioCtx.currentTime;
+                  drone.gain.gain.setValueAtTime(drone.gain.gain.value, t0);
+                  drone.gain.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.35);
+                  setTimeout(() => {
+                    try {
+                      drone.osc1.stop();
+                      drone.osc2.stop();
+                      drone.osc1.disconnect();
+                      drone.osc2.disconnect();
+                      drone.gain.disconnect();
+                    } catch (err) {}
+                  }, 400);
+                }
+              } catch (e) {
+                console.error(e);
+              }
+            }
           });
-          tile.classList.add('viz-tile--live');
+          boardObserver.observe(tile);
         }
 
         // V81: keyboard roving focus across the 24 tiles so arrow keys move between visuals.
