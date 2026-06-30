@@ -94,8 +94,9 @@ export class Connectome {
         new THREE.LineBasicMaterial({
           vertexColors: true,
           transparent: true,
-          opacity: 0.25,
+          opacity: 0.38,
           depthWrite: false,
+          blending: THREE.AdditiveBlending,
         }),
       ),
     );
@@ -222,10 +223,16 @@ export class Connectome {
           // the cap, the symmetric branch floors the (rare) negative side. O(1), no allocation.
           const act = eb.userData.act + ea.userData.act * nw * 0.01;
           eb.userData.act = !(act < ACT_MAX) ? ACT_MAX : act > -ACT_MAX ? act : -ACT_MAX;
+          // V109: dynamic, colorful, firing/retracting neural links.
+          const actPulse = (ea.userData.act + eb.userData.act) * 0.5;
+          const fire = 0.5 + 0.5 * Math.sin(t * 2.5 + nw * 12.0 + ni * 0.7); // per-link firing pulse
+          const retract = 0.4 + 0.6 * Math.sin(t * 0.8 + nd * 0.4);            // distance breathing
           const hue = communityOf
-            ? ((communityOf(ni) & 7) * TRIBE_HUE_STEP + nw * TRIBE_NW_JITTER) % 1
-            : (t * 0.04 + nw * 0.5) % 1;
-          TMP_COLOR.setHSL(hue, 0.75, 0.25 + nI * 0.45);
+            ? ((communityOf(ni) & 7) * TRIBE_HUE_STEP + nw * TRIBE_NW_JITTER + t * 0.02) % 1
+            : (t * 0.06 + nw * 0.6 + actPulse * 0.15) % 1;
+          const sat = 0.85 + 0.15 * Math.sin(t * 1.4 + nw * 8.0);
+          const lit = 0.2 + nI * 0.35 + nw * 0.25 + actPulse * 0.15 * fire * retract;
+          TMP_COLOR.setHSL(hue, sat, Math.min(0.75, lit));
           col[idx] = TMP_COLOR.r;
           col[idx + 1] = TMP_COLOR.g;
           col[idx + 2] = TMP_COLOR.b;
