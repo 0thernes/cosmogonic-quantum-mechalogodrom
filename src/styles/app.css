@@ -362,7 +362,7 @@ a:focus-visible {
   left: 50%;
   transform: translateX(-50%);
   bottom: calc(4px + env(safe-area-inset-bottom, 0px));
-  z-index: 80;
+  z-index: 300;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1196,7 +1196,10 @@ html.cqm-shell-ready .algo-list:empty::after {
 }
 .cqm-brain-slot__viz {
   width: 100%;
-  min-height: 94px;
+  min-height: 110px;
+  gap: 7px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 .cqm-brain-mini {
   position: relative;
@@ -1204,24 +1207,44 @@ html.cqm-shell-ready .algo-list:empty::after {
   aspect-ratio: 1 / 1;
   overflow: hidden;
   border-radius: 10px;
-  border: 1px solid rgba(180, 140, 255, 0.24);
+  border: 1px solid rgba(180, 140, 255, 0.32);
   background:
-    radial-gradient(circle at 50% 42%, rgba(170, 120, 255, 0.18), transparent 54%),
+    radial-gradient(circle at 50% 42%, rgba(170, 120, 255, 0.22), transparent 54%),
     rgba(2, 4, 14, 0.82);
   box-shadow:
-    inset 0 0 18px rgba(130, 90, 255, 0.12),
-    0 0 14px rgba(50, 180, 255, 0.08);
+    inset 0 0 22px rgba(130, 90, 255, 0.16),
+    0 0 18px rgba(50, 180, 255, 0.12);
+  transition:
+    transform 0.15s,
+    box-shadow 0.15s,
+    border-color 0.15s;
+}
+.cqm-brain-mini:hover {
+  transform: translateY(-2px) scale(1.02);
+  border-color: rgba(180, 140, 255, 0.55);
+  box-shadow:
+    inset 0 0 28px rgba(150, 110, 255, 0.22),
+    0 0 24px rgba(50, 180, 255, 0.18);
+}
+.cqm-brain-mini--apex {
+  border-color: rgba(170, 110, 255, 0.38);
+}
+.cqm-brain-mini--mecha {
+  border-color: rgba(80, 200, 255, 0.38);
+}
+.cqm-brain-mini--glyph {
+  border-color: rgba(255, 110, 200, 0.38);
 }
 .cqm-brain-mini::after {
   content: attr(data-label);
   position: absolute;
-  left: 5px;
-  bottom: 4px;
+  left: 6px;
+  bottom: 5px;
   z-index: 2;
-  color: rgba(235, 242, 255, 0.78);
-  font: 700 8px/1 var(--font-mono, ui-monospace, monospace);
-  letter-spacing: 0.08em;
-  text-shadow: 0 1px 5px rgba(0, 0, 0, 0.8);
+  color: rgba(255, 250, 255, 0.88);
+  font: 800 9px/1 var(--font-mono, ui-monospace, monospace);
+  letter-spacing: 0.1em;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.9);
 }
 .cqm-brain-canvas {
   display: block;

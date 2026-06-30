@@ -25,8 +25,8 @@ interface Slot {
 }
 
 const MAX_HISTORY = 48;
-const CANVAS_W = 240;
-const CANVAS_H = 240;
+const CANVAS_W = 320;
+const CANVAS_H = 320;
 const BRAIN_SLOTS_WIRED = 'cqmBrainSlotsWired';
 
 function createCanvas(doc: Document, slotId: string): Slot | null {
@@ -67,11 +67,18 @@ function pushHistory(slot: Slot, value: number): void {
 
 function drawBackground(ctx: CanvasRenderingContext2D, w: number, h: number): void {
   ctx.clearRect(0, 0, w, h);
-  const bg = ctx.createRadialGradient(w * 0.5, h * 0.45, 2, w * 0.5, h * 0.5, h * 0.72);
-  bg.addColorStop(0, 'rgba(95, 70, 180, 0.42)');
-  bg.addColorStop(0.45, 'rgba(12, 14, 36, 0.9)');
-  bg.addColorStop(1, 'rgba(2, 3, 12, 0.98)');
+  const bg = ctx.createRadialGradient(w * 0.5, h * 0.45, 2, w * 0.5, h * 0.5, h * 0.78);
+  bg.addColorStop(0, 'rgba(110, 70, 210, 0.55)');
+  bg.addColorStop(0.4, 'rgba(20, 14, 48, 0.92)');
+  bg.addColorStop(0.85, 'rgba(6, 5, 18, 0.98)');
+  bg.addColorStop(1, 'rgba(2, 3, 12, 1)');
   ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, w, h);
+  // Soft vignette to focus the eye on the neural center.
+  const vig = ctx.createRadialGradient(w * 0.5, h * 0.5, h * 0.25, w * 0.5, h * 0.5, h * 0.72);
+  vig.addColorStop(0, 'rgba(0,0,0,0)');
+  vig.addColorStop(1, 'rgba(0,0,0,0.45)');
+  ctx.fillStyle = vig;
   ctx.fillRect(0, 0, w, h);
 }
 
@@ -315,12 +322,12 @@ function updateApex(slot: Slot, apex: ApexBrainSnapshot | null): void {
     clamp01(motor),
   ];
   const colors = ['#9f6bff', '#6bff9e', '#ff5a6b', '#39d6ff', '#ff9f43'];
-  drawSynapses(ctx, values, w, h, 265, nowPulse());
+  drawSynapses(ctx, values, w, h, 275, nowPulse());
   drawBars(ctx, values, w, h, colors);
   drawGrid(ctx, w, h);
-  ctx.fillStyle = '#e6dcff';
-  ctx.font = '9px JetBrains Mono, monospace';
-  ctx.fillText(`Apex · ${t.plan}`, 4, 10);
+  ctx.fillStyle = '#f3e9ff';
+  ctx.font = 'bold 11px JetBrains Mono, monospace';
+  ctx.fillText(`APEX · ${t.plan}`, 6, 14);
   slot.canvas.setAttribute(
     'aria-label',
     `Apex brain plan ${t.plan}, vitality ${Math.round(t.vitality * 100)} percent`,
@@ -340,12 +347,12 @@ function updateMecha(slot: Slot, mecha: MechalogodromBrainSnapshot | null): void
     return;
   }
   pushHistory(slot, mecha.activity ?? 0.5);
-  drawSynapses(ctx, slot.history.slice(-9), w, h, 190, nowPulse());
-  drawSparkline(ctx, slot.history, w, h, '#39d6ff');
+  drawSynapses(ctx, slot.history.slice(-9), w, h, 195, nowPulse());
+  drawSparkline(ctx, slot.history, w, h, '#5cf0ff');
   drawGrid(ctx, w, h);
-  ctx.fillStyle = '#b8f5ff';
-  ctx.font = '9px JetBrains Mono, monospace';
-  ctx.fillText(`Mecha · ${Math.round((mecha.liveParams / 1e6) * 10) / 10}M`, 4, 10);
+  ctx.fillStyle = '#e0fbff';
+  ctx.font = 'bold 11px JetBrains Mono, monospace';
+  ctx.fillText(`MECHA · ${Math.round((mecha.liveParams / 1e6) * 10) / 10}M`, 6, 14);
   slot.canvas.setAttribute(
     'aria-label',
     `Mechalogodrom brain activity ${Math.round((mecha.activity ?? 0.5) * 100)} percent, ${
@@ -367,12 +374,12 @@ function updateGlyph(slot: Slot, glyphs: GlyphBrainSnapshot[] | null): void {
     return;
   }
   const values = glyphs.map((g) => (g.activity + g.novelty + g.valence) / 3);
-  drawSynapses(ctx, values.slice(0, 12), w, h, 305, nowPulse());
+  drawSynapses(ctx, values.slice(0, 12), w, h, 315, nowPulse());
   drawDots(ctx, values, w, h, nowPulse());
   drawGrid(ctx, w, h);
-  ctx.fillStyle = '#e6dcff';
-  ctx.font = '9px JetBrains Mono, monospace';
-  ctx.fillText(`Glyph · ${glyphs.length} minds`, 4, 10);
+  ctx.fillStyle = '#ffe8fb';
+  ctx.font = 'bold 11px JetBrains Mono, monospace';
+  ctx.fillText(`GLYPH · ${glyphs.length} minds`, 6, 14);
   slot.canvas.setAttribute('aria-label', `Glyph brain swarm visualizer, ${glyphs.length} minds`);
 }
 

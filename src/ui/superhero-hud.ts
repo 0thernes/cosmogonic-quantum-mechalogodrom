@@ -43,13 +43,13 @@ const STYLE = `
   box-shadow:0 4px 18px rgba(0,0,0,.55),0 0 12px rgba(150,120,255,0.3);
   transition:transform .12s,background .12s,border-color .12s}
 .cqm-hero-fab:hover{background:rgba(60,36,110,.85);transform:scale(1.05);border-color:#39d6ff}
-.cqm-hero-chrome{position:absolute;top:8px;right:10px;z-index:100;display:flex;align-items:center;gap:6px;
-  padding:4px 6px;border-radius:10px;background:rgba(20,10,42,.92);border:1px solid rgba(150,120,255,.35);box-shadow:0 2px 10px rgba(0,0,0,.4)}
+.cqm-hero-header{display:flex;align-items:center;justify-content:space-between;width:100%;padding-bottom:10px;border-bottom:1px solid rgba(150,120,255,0.22);gap:12px;flex:0 0 auto}
+.cqm-hero-chrome{display:flex;align-items:center;gap:6px;pointer-events:auto}
 .cqm-hero-min,.cqm-hero-close{pointer-events:auto;border:1px solid rgba(150,120,255,.4);border-radius:8px;
   background:rgba(40,24,80,.92);color:#f1e9ff;font:700 12px/1 var(--font-mono,ui-monospace,monospace);padding:5px 11px;min-width:30px;cursor:pointer;
   transition:background .15s,color .15s,border-color .15s}
 .cqm-hero-min:hover,.cqm-hero-close:hover{background:rgba(50,32,95,.75);color:#fff;border-color:rgba(150,120,255,.75)}
-.cqm-hero-head{display:flex;align-items:center;gap:8px;width:100%;flex-wrap:wrap}
+.cqm-hero-vitals{display:flex;align-items:center;gap:12px;width:100%;flex-wrap:wrap;flex:0 0 auto}
 @media (max-width:599px){#cqm-hero{left:6px;right:6px;top:calc(52px + env(safe-area-inset-top,0px));font-size:11px;max-height:58vh}}
 @media (max-width:640px){#cqm-hero{left:4px;right:4px;top:calc(48px + env(safe-area-inset-top,0px));font-size:11px}}
 @media (min-width:769px) and (max-width:1400px){
@@ -272,17 +272,10 @@ export class SuperheroHud {
 
     this.root.appendChild(box);
 
-    // Direct absolute chrome inside box
-    box.appendChild(chrome);
+    // V86 Dedicated non-absolute top header row containing identity on left and chrome on right
+    const header = doc.createElement('div');
+    header.className = 'cqm-hero-header';
 
-    // Scrolling content area inside box
-    const content = doc.createElement('div');
-    content.className = 'cqm-hero-content';
-    box.appendChild(content);
-
-    // Row A — identity + vitals
-    const rowA = doc.createElement('div');
-    rowA.className = 'cqm-hero-r cqm-hero-head';
     const av = doc.createElement('div');
     av.className = 'cqm-hero-av';
     av.innerHTML = `<span class="cqm-hero-glyph">⬢</span>`;
@@ -293,11 +286,22 @@ export class SuperheroHud {
     this.lvlEl.className = 'cqm-hero-lvl';
     this.lvlEl.textContent = 'LV 1';
     av.append(this.nameEl, this.lvlEl);
-    rowA.appendChild(av);
-    this.bars.life = bar(rowA, 'Life', '#ff5a6b', doc);
-    this.bars.energy = bar(rowA, 'Energy', '#39d6ff', doc);
-    this.bars.xp = bar(rowA, 'XP', '#c79bff', doc);
-    content.appendChild(rowA);
+    header.appendChild(av);
+    header.appendChild(chrome);
+    box.appendChild(header);
+
+    // Scrolling content area inside box
+    const content = doc.createElement('div');
+    content.className = 'cqm-hero-content';
+    box.appendChild(content);
+
+    // Vitals Row — Dedicated layout for LIFE + ENERGY + XP bars
+    const vitalsRow = doc.createElement('div');
+    vitalsRow.className = 'cqm-hero-vitals';
+    this.bars.life = bar(vitalsRow, 'Life', '#ff5a6b', doc);
+    this.bars.energy = bar(vitalsRow, 'Energy', '#39d6ff', doc);
+    this.bars.xp = bar(vitalsRow, 'XP', '#c79bff', doc);
+    content.appendChild(vitalsRow);
 
     // Row B — kit: stats · wallet · neural · inventory · powers · vision/cam
     const rowB = doc.createElement('div');
