@@ -19,3 +19,4 @@ import './eshkol-ad.bench';
 import { run } from 'mitata';
 
 await run();
+process.exit(0);
