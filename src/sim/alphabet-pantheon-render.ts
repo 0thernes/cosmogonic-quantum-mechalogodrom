@@ -480,13 +480,14 @@ export class AlphabetPantheonRender {
   /** Bob / spin / pulse every body on its own cadence. Pure trig, allocation-free, no rng. */
   update(t: number, dt?: number): void {
     const clock = dt === undefined ? t : (this.localT += Math.max(0, dt));
-    if (dt !== undefined && dt <= 0) return;
+    if (dt !== undefined && dt <= 0) return; // frozen when paused
     if (this.mat instanceof THREE.ShaderMaterial) {
       const uTime = this.mat.uniforms.uTime;
       if (uTime) uTime.value = clock;
     }
     // V109: pantheon is stately — slower base drift, but still quickens with chaos and apex presence.
-    const slowT = clock * CREATURE_EXTERIOR_TIME_SCALE * 0.55;
+    // Reduced by another 50% as requested so they can be easily inspected.
+    const slowT = clock * CREATURE_EXTERIOR_TIME_SCALE * 0.275;
     const quick = 0.5 + 0.6 * this.chaos + 0.25 * this.apexTranscendence + 0.15 * this.apexVitality;
     for (let pool = 0; pool < this.meshes.length; pool++) {
       const mesh = this.meshes[pool]!;

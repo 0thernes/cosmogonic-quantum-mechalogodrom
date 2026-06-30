@@ -365,6 +365,7 @@ export class SuperBodySystem {
   private evoTier = 0;
   private evoHue = 0;
   private evoAscended = false;
+  private plan: SuperPlan = 'REST';
   // BRUTALISM: 0 = god-jewel iridescence, 1 = raw poured-concrete monolith (set via setBrutalism).
   private brutalism = 0;
   private brutalStyle = 0;
@@ -612,7 +613,8 @@ export class SuperBodySystem {
    * variance + pulse drive if passed; defaults 0 preserve compat. Updates u* + stored for live mask/anim.
    */
   setMind(snap: SuperSnapshot, reflex = 0, qualia = 0): void {
-    const c = PLAN_RGB[snap.plan];
+    this.plan = snap.plan;
+    const c = PLAN_RGB[this.plan];
     (this.u.uPlan.value as THREE.Color).setRGB(c[0], c[1], c[2]);
     this.dominance = snap.emotion.dominance;
     this.arousal = snap.emotion.arousal;
@@ -626,19 +628,9 @@ export class SuperBodySystem {
     this.qualia = clampf(qualia, 0, 1);
     this.u.uReflex.value = this.reflex;
     this.u.uQualia.value = this.qualia;
-    this.eyeMat.color.setRGB(c[0] * 0.16, c[1] * 0.16, c[2] * 0.16);
-    (this.eyeMat.emissive as THREE.Color).setRGB(c[0], c[1], c[2]);
-    this.cageMat.color.setRGB(0.4 + c[0] * 0.5, 0.4 + c[1] * 0.5, 0.5 + c[2] * 0.4);
-    // BRUTALISM: the eyes + cage are PLAN-coloured (just set above), so crossfade them to concrete
-    // HERE — non-compounding because setMind re-sets them from the plan each cadence before this runs.
-    // (The static appendages are handled per-frame in update(); the core is the shader uniform.)
-    if (this.brutalism > 0) {
-      const target = SB_STYLE_COLORS[this.brutalStyle] ?? SB_CONCRETE;
-      const targetEmissive = SB_STYLE_EMISSIVE[this.brutalStyle] ?? SB_CONCRETE_DARK;
-      this.eyeMat.color.lerp(target, this.brutalism);
-      (this.eyeMat.emissive as THREE.Color).lerp(targetEmissive, this.brutalism);
-      this.cageMat.color.lerp(target, this.brutalism);
-    }
+
+    this.updateMindColors();
+
     // the mind's own movement output (act[0..2]) becomes a slow drift target
     this.move.set(snap.act[0] ?? 0, (snap.act[1] ?? 0) * 0.5, snap.act[2] ?? 0);
   }
@@ -999,6 +991,27 @@ export class SuperBodySystem {
    * killed to a stark form-light, and the vertex morph quantized into hard slabs. `level` 0 = full jewel
    * (default, byte-identical to before), 1 = full brutalist. Folds into the shared shader uniform. O(1).
    */
+  private updateMindColors(): void {
+    const c = PLAN_RGB[this.plan];
+    this.eyeMat.color.setRGB(c[0] * 0.16, c[1] * 0.16, c[2] * 0.16);
+    (this.eyeMat.emissive as THREE.Color).setRGB(c[0], c[1], c[2]);
+    this.cageMat.color.setRGB(0.4 + c[0] * 0.5, 0.4 + c[1] * 0.5, 0.5 + c[2] * 0.4);
+    const b = this.brutalism;
+    if (b > 0) {
+      const target = SB_STYLE_COLORS[this.brutalStyle] ?? SB_CONCRETE;
+      const targetEmissive = SB_STYLE_EMISSIVE[this.brutalStyle] ?? SB_CONCRETE_DARK;
+      this.eyeMat.color.lerp(target, b);
+      (this.eyeMat.emissive as THREE.Color).lerp(targetEmissive, b);
+      this.cageMat.color.lerp(target, b);
+    }
+  }
+
+  /**
+   * BRUTALISM: crossfade the entire god-jewel skin toward a raw poured-concrete monolith — matte
+   * (roughness→0.93), non-metallic, a board-formed + exposed-aggregate base colour, the iridescent glow
+   * killed to a stark form-light, and the vertex morph quantized into hard slabs. `level` 0 = full jewel
+   * (default, byte-identical to before), 1 = full brutalist. Folds into the shared shader uniform. O(1).
+   */
   setBrutalism(level: number): void {
     this.brutalism = clampf(level, 0, 1);
     this.u.uBrutalism.value = this.brutalism;
@@ -1015,9 +1028,7 @@ export class SuperBodySystem {
       e.mat.color.copy(e.base).lerp(target, b);
       e.mat.emissive.copy(e.baseEmissive).lerp(targetEmissive, b);
     }
-    this.eyeMat.color.lerp(target, b);
-    (this.eyeMat.emissive as THREE.Color).lerp(targetEmissive, b);
-    this.cageMat.color.lerp(target, b);
+    this.updateMindColors();
   }
 
   /** BRUTALISM: the current concrete crossfade applied to the skin (for tests / inspection). */
@@ -1030,8 +1041,12 @@ export class SuperBodySystem {
    * poured-concrete palette into NOUVEAUNESS/ROCOCOGOLOGY/COSMICMORPHISM/REPRESSIONISM looks.
    */
   setBrutalStyle(idx: number): void {
-    this.brutalStyle = Math.max(0, Math.min(4, Math.floor(idx)));
-    this.u.uBrutalStyle.value = this.brutalStyle;
+    const val = Math.max(0, Math.min(4, Math.floor(idx)));
+    if (this.brutalStyle !== val) {
+      this.brutalStyle = val;
+      this.u.uBrutalStyle.value = val;
+      (this.core.material as THREE.Material).needsUpdate = true;
+    }
     this.setBrutalism(this.brutalism);
   }
 
