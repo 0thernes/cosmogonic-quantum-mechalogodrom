@@ -76,9 +76,7 @@ import { NhiAction, type NhiIntent, type NhiPercept } from './sim/nhi';
 import { NhiBodySystem } from './sim/nhi-body';
 import { CosmicWeb } from './sim/cosmic-web';
 import { GoldLattice } from './sim/gold-lattice';
-import { FloatingMonoliths } from './sim/floating-monoliths';
 import { QuantumLattice } from './sim/quantum-lattice';
-import { AbominationArchitecture } from './sim/abomination-architecture';
 import { Mechalogodrom } from './sim/mechalogodrom';
 import { MechalogodromBrain } from './sim/mechalogodrom-brain';
 import { AlphabetPantheonRender } from './sim/alphabet-pantheon-render';
@@ -96,7 +94,7 @@ import { NhiObservatory } from './ui/nhi-observatory';
 import { MarketTicker } from './ui/market-ticker';
 import { PantheonArchitecturePanel } from './ui/pantheon-architecture-panel';
 import { SuperCreature, type SuperPercept } from './sim/super-creature';
-import { ApexBrain, SCALE_APEX_START, type ApexPercept, type ApexThought } from './sim/apex-brain';
+import { ApexBrain, type ApexPercept, type ApexThought } from './sim/apex-brain';
 import { breedAt, type BabyGenome, PANTHEON_TOTAL } from './sim/pantheon-breeding';
 import { SelfEvolutionLoop, type EvolutionMetrics } from './sim/self-evolution-loop';
 import { bedauPackardActivity, shannonDiversity } from './sim/open-endedness';
@@ -143,6 +141,7 @@ import { WingmanSwarm, WINGMAN_COUNT } from './sim/super-wingmen';
 import { WingmanRenderer } from './sim/super-wingmen-render';
 import { SuperEvolution } from './sim/super-evolution';
 import { MonolithTemple } from './sim/monolith-temple';
+import { Vegetation } from './sim/vegetation';
 import { SuperBodySystem } from './sim/super-body';
 import { SuperPanel } from './ui/super-panel';
 import { SuperheroState, HERO_POWERS } from './ui/superhero-state';
@@ -285,6 +284,7 @@ export class World {
   private readonly emptyQ = new Float32Array(10);
   private readonly superEvo: SuperEvolution;
   private readonly monolithTemple: MonolithTemple;
+  private readonly vegetation: Vegetation;
   private superAscended = false;
   private readonly evoRng: Rng;
   private static readonly EVO_DAY_FRAMES = 21600;
@@ -372,12 +372,8 @@ export class World {
   private readonly cosmicWeb: CosmicWeb;
   /** Floating gold wireframe forms — architectural depth (additive; assigned in the constructor). */
   private readonly goldLattice: GoldLattice;
-  /** Sparse suspended abomination-architecture megaliths drifting through the dome (additive, no rng). */
-  private readonly floatingMonoliths: FloatingMonoliths;
   /** Floating neon sacred-geometry shells — the quantum heart (additive; assigned in the constructor). */
   private readonly quantumLattice: QuantumLattice;
-  /** Sparse suspended circuit architecture — materialism around the dome without clutter. */
-  private readonly abominationArchitecture: AbominationArchitecture;
   /** V-MECHA: the central fusion abomination — 10 bipolar titan shells converge + fuse into one monster (additive; no rng). */
   private readonly mechalogodrom: Mechalogodrom;
   private readonly mechalogodromBrain: MechalogodromBrain;
@@ -610,7 +606,6 @@ export class World {
     this.environment = new EnvironmentSystem(ctx);
     this.alienFlora = new AlienFlora(ctx); // alien vegetal ground ecology (10k plants, 50 species, GPU sway)
     this.entities = new EntityManager(ctx);
-    this.entities.attachFloraComfort((x, z) => this.alienFlora.comfortAt(x, z));
     this.instanced = this.quality.instanced ? new InstancedEntityRenderer(ctx) : null;
     this.entities.reset(this.bootPopulation());
     this.shoggoths = new ShoggothSystem(ctx, this.entities);
@@ -721,10 +716,8 @@ export class World {
     this.cosmicWeb = new CosmicWeb(ctx.scene);
     // V11: floating gold wireframe architecture for designed-space depth (additive; draws no rng).
     this.goldLattice = new GoldLattice(ctx.scene);
-    this.floatingMonoliths = new FloatingMonoliths(ctx.scene); // 16 drifting greebled megaliths
     // V11: floating neon sacred-geometry quantum lattice (additive; draws no rng).
     this.quantumLattice = new QuantumLattice(ctx.scene);
-    this.abominationArchitecture = new AbominationArchitecture(ctx.scene);
     // V-MECHA: the central fusion abomination — boot-stream-neutral (no rng), reacts to world chaos.
     this.mechalogodrom = new Mechalogodrom(ctx.scene);
     this.mechalogodromBrain = new MechalogodromBrain((this.persisted.seed ^ 0x8e4ac471) >>> 0 || 1);
@@ -747,10 +740,7 @@ export class World {
     this.superRng = mulberry32((this.persisted.seed ^ 0x5e1f9d3b) >>> 0 || 1);
     // V-APEX: the Entropic Tesseract Hydra brain on its OWN seeded sub-stream (determinism-safe).
     // 10 incompatible neuron architectures + quantum brain + meta-paradox layer. Wired into the apex beat.
-    // Pass 3: boot at APEX-100K designed scale (live allocation stays capped for performance).
-    this.apexBrain = new ApexBrain((this.persisted.seed ^ 0xa1e8b6a4) >>> 0 || 1, {
-      scale: SCALE_APEX_START,
-    });
+    this.apexBrain = new ApexBrain((this.persisted.seed ^ 0xa1e8b6a4) >>> 0 || 1);
     // legacy single kept EXCLUSIVELY for player hero/twin paths (maybeSpawn + its snapshot in UI)
     this.superCreature = new SuperCreature(this.superRng);
     // V47: the wingman swarm (logic on its own rng sub-stream) + its single-draw-call instanced render.
@@ -766,6 +756,7 @@ export class World {
     // V63: the LV100 ascension monument. If the persisted creature is ALREADY at the summit, raise
     // the temple silently on boot (it's just THERE); a fresh live ascension plays the full fanfare.
     this.monolithTemple = new MonolithTemple(ctx.scene);
+    this.vegetation = new Vegetation(ctx.scene);
     if (this.superEvo.ascended) {
       this.monolithTemple.reveal(0, 0, -40 * ARENA_MID, true);
       this.superAscended = true;
@@ -1003,9 +994,8 @@ export class World {
     this.singularities.dispose();
     this.wingRender.dispose();
     this.monolithTemple.dispose();
-    this.abominationArchitecture.dispose();
+    this.vegetation.dispose(); // V-VEG: free the 10k alien plant instanced pools
     this.mechalogodrom.dispose(); // V-MECHA: free the fusion abomination's geometries + materials
-    this.floatingMonoliths.dispose(); // free the 16 drifting megaliths' geometries + materials
     this.alienFlora.dispose(); // free the 10k-plant alien-flora field
     this.alphabetPantheon.dispose(); // V-ABC: free the 100-archetype instanced pools
     this.artifacts.dispose(this.engine.scene);
@@ -1153,14 +1143,7 @@ export class World {
     for (const hb of this.heroBodies) hb.body.update(t, dt); // V34/35: revealed hero/twin bodies
     this.cosmicWeb.update(t); // V11: far-field cosmic-web shimmer (additive backdrop, no rng)
     this.goldLattice.update(t); // V11: floating gold architecture tumble (additive, no rng)
-    this.floatingMonoliths.update(t, this.state.chaos / CHAOS_MAX); // drifting megaliths kindle with chaos
     this.quantumLattice.update(t); // V11: neon sacred-geometry shells (additive, no rng)
-    this.abominationArchitecture.setReactivity(
-      s.chaos / CHAOS_MAX,
-      (s.entropy ?? 0) / ENTROPY_MAX,
-      this.entities.list.length / this.quality.maxEntities,
-    );
-    this.abominationArchitecture.update(t);
     // V-MECHA / V-ABC: chaos + apex-brain vitality/transcendence drive the visual intensity (read-only).
     const baseChaos = this.state.chaos / CHAOS_MAX;
     const apex = this.lastApexThought;
@@ -1359,6 +1342,9 @@ export class World {
       capacity: this.quality.maxEntities,
     });
     this.monolithTemple.update(dt, t); // V63: rise + shimmer the ascension portal (no-op until revealed)
+    this.vegetation.setChaos(s.chaos / CHAOS_MAX);
+    this.vegetation.setWindStrength(0.35 + 0.65 * (s.chaos / CHAOS_MAX));
+    this.vegetation.update(t, dt);
 
     if (s.frame % 60 === 30) {
       // RD pattern energy: strided mean of the V field (offset 30 — never

@@ -283,35 +283,19 @@ export class AlphabetPantheonRender {
       varying vec2 vUv;
       varying vec3 vPos;
       varying vec3 vNormal;
-      varying vec3 vViewPos;
       uniform float uTime;
-
-      float hash(vec2 p) { return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
-      float noise(vec2 p) {
-        vec2 i = floor(p);
-        vec2 f = fract(p);
-        f = f * f * (3.0 - 2.0 * f);
-        return mix(mix(hash(i), hash(i + vec2(1.0, 0.0)), f.x),
-                   mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), f.x), f.y);
-      }
 
       void main() {
         vUv = uv;
+        vPos = position;
         vNormal = normal;
 
-        // Tesseract / cage-like spatial warping: the apex is a folding 4D shadow.
+        // Bizarre quantum tunneling physics / spatial warping
         vec3 displaced = position;
-        float t = uTime;
-        float n1 = noise(position.xy * 1.5 + t * 0.2);
-        float n2 = noise(position.yz * 1.5 - t * 0.15);
-        float warp = sin(position.x * 8.0 + t * 3.0) * cos(position.y * 8.0 - t * 2.0) * 0.25;
-        float cage = sin(position.x * 5.0 + position.y * 5.0 + position.z * 5.0 + t * 1.5) * 0.18;
-        displaced += normal * (warp + cage + (n1 + n2) * 0.25);
-
-        vPos = displaced;
-        vec4 mvPosition = modelViewMatrix * vec4(displaced, 1.0);
-        vViewPos = mvPosition.xyz;
-        gl_Position = projectionMatrix * mvPosition;
+        float warp = sin(position.x * 8.0 + uTime * 3.0) * cos(position.y * 8.0 - uTime * 2.0) * 0.2;
+        displaced += normal * warp;
+        
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(displaced, 1.0);
       }
     `;
 
@@ -319,58 +303,27 @@ export class AlphabetPantheonRender {
       varying vec2 vUv;
       varying vec3 vPos;
       varying vec3 vNormal;
-      varying vec3 vViewPos;
       uniform float uTime;
 
-      float hash(vec2 p) { return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
-      float noise(vec2 p) {
-        vec2 i = floor(p);
-        vec2 f = fract(p);
-        f = f * f * (3.0 - 2.0 * f);
-        return mix(mix(hash(i), hash(i + vec2(1.0, 0.0)), f.x),
-                   mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), f.x), f.y);
-      }
-
-      vec3 hsv2rgb(vec3 c) {
-        vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
-        vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);
-        return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
-      }
-
       void main() {
-        float t = uTime;
+        // "deflectixive lava shimmering shining sparkling" skin
+        float noise = fract(sin(dot(vPos.xy, vec2(12.9898, 78.233)) + uTime) * 43758.5453);
+        
+        // Lava flow
+        float flow = sin(vPos.y * 15.0 + uTime * 4.0) * sin(vPos.x * 15.0 - uTime * 3.0);
+        vec3 lavaColor = mix(vec3(0.8, 0.0, 0.2), vec3(1.0, 0.5, 0.0), flow * 0.5 + 0.5);
+        
+        // Deflectixive shimmering
+        float fresnel = pow(1.0 - max(dot(normalize(vNormal), vec3(0.0, 0.0, 1.0)), 0.0), 2.0);
+        vec3 shimmer = vec3(0.4, 0.8, 1.0) * fresnel * step(0.8, noise);
+        
+        // Indrogenous sprouts / waste products (sparks)
+        float spark = step(0.98, fract(noise * uTime * 10.0));
+        vec3 sparks = vec3(1.0, 1.0, 1.0) * spark;
 
-        // Deep lava flow with multiple frequencies.
-        float flow1 = sin(vPos.y * 15.0 + t * 4.0) * sin(vPos.x * 15.0 - t * 3.0);
-        float flow2 = cos(vPos.z * 12.0 + t * 2.5) * sin(vPos.x * 10.0 + t * 2.0);
-        vec3 lavaA = vec3(0.9, 0.0, 0.25);
-        vec3 lavaB = vec3(1.0, 0.55, 0.0);
-        vec3 lavaC = vec3(0.6, 0.0, 0.45);
-        vec3 lavaColor = mix(mix(lavaA, lavaB, flow1 * 0.5 + 0.5), lavaC, flow2 * 0.3 + 0.3);
-
-        // Deflectixive oil-spill fresnel rim.
-        vec3 n = normalize(vNormal);
-        vec3 v = normalize(-vViewPos);
-        float fresnel = pow(1.0 - clamp(dot(n, v), 0.0, 1.0), 2.5);
-        vec3 oil = hsv2rgb(vec3(fract(t * 0.04 + vPos.z * 0.2), 0.85, 0.55)) * fresnel;
-
-        // Noise grain shimmer.
-        float n0 = noise(vUv * 40.0 + t * 3.0);
-        float n1 = noise(vUv * 60.0 - t * 2.0);
-        vec3 shimmer = vec3(0.4, 0.8, 1.0) * (n0 + n1) * 0.5;
-
-        // Spark cataracts / waste products.
-        float spark = step(0.95, n0) * step(0.88, n1);
-        float spark2 = step(0.97, fract(n1 * t * 8.0));
-        vec3 sparks = vec3(1.0, 0.9, 0.7) * spark + vec3(1.0, 0.2, 0.5) * spark2;
-
-        // Dark dimensional cracks.
-        float crack = smoothstep(0.35, 0.0, sin(vPos.x * 25.0 + t) * cos(vPos.y * 25.0 - t * 1.3));
-
-        vec3 finalColor = lavaColor + oil * 0.9 + shimmer + sparks;
-        finalColor *= 1.0 - crack * 0.45;
-
-        gl_FragColor = vec4(finalColor, 0.96);
+        vec3 finalColor = lavaColor + shimmer + sparks;
+        
+        gl_FragColor = vec4(finalColor, 0.95);
       }
     `;
 

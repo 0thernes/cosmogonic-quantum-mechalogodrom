@@ -139,8 +139,6 @@ const ENT_BRUTAL_BASE = new THREE.Color();
 const MOVE = new THREE.Vector3();
 /** Scratch vector for spawn positions — `spawn()` copies it, so reuse is safe. */
 const SPAWN_AT = new THREE.Vector3();
-/** Scratch colour for flora-camouflage tinting; shared by the hot loop. */
-const FLORA_CAMO = new THREE.Color(0x7ea88a);
 
 /**
  * Max NEW organisms an auto-split surge may create per frame at the ultra tier (>5,000). A
@@ -155,14 +153,6 @@ export const SPAWN_BUDGET_ULTRA = 64;
 const MORPHS_SEEN = new Set<number>();
 /** Reused stats instance returned by `update()` — copy the fields if you need to retain them. */
 const STATS: UpdateStats = { energy: 0, morphCount: 0 };
-
-/** Structural readout from AlienFlora.comfortAt; kept local to avoid a runtime module dependency. */
-interface FloraComfortReadout {
-  readonly x: number;
-  readonly y: number;
-  readonly z: number;
-  readonly strength: number;
-}
 
 /**
  * Owns the organism population: spawning, true morphogenesis, per-frame behavior + physics,
@@ -195,8 +185,6 @@ export class EntityManager {
   private brutalPrevG = 0;
   /** Single long-lived behavior env; per-entity fields are rewritten in `update()` (no alloc). */
   private readonly env: BehaviorEnv;
-  /** Optional ecological cover field: plants are not neural, but animals can sense/use their cover. */
-  private floraComfort: ((x: number, z: number) => FloraComfortReadout) | null = null;
   /**
    * V38 density scale: the spawn radius + containment radius grow as √(maxEntities / 10000), clamped
    * to ≥ 1. The arena is a wide, thin DISK, so AREAL density ∝ N / radius²; scaling the radius by √N
@@ -226,11 +214,6 @@ export class EntityManager {
       doTheory: false,
       doFlock: true,
     };
-  }
-
-  /** Wire a deterministic flora-cover query into organism behavior; null detaches the ecology. */
-  attachFloraComfort(query: ((x: number, z: number) => FloraComfortReadout) | null): void {
-    this.floraComfort = query;
   }
 
   /**
@@ -553,7 +536,6 @@ export class EntityManager {
       } else {
         applyBehavior(e, env);
       }
-      this.applyFloraComfort(e, i, frame, dt);
 
       // Neural activation decay (legacy lines 766-768).
       u.act *= 0.95;
@@ -778,46 +760,6 @@ export class EntityManager {
       mat.color.copy(base).lerp(tgt, g);
     }
     this.brutalPrevG = g;
-  }
-
-  /**
-   * Plants become ecology, not decoration: exhausted, mating-ready, old or hurt organisms seek
-   * nearby grove cover, slow down inside it (rest/camouflage), and split a little faster there
-   * (mating/gathering). Deterministic, no rng, strided to bound the 10k tier.
-   */
-  private applyFloraComfort(e: Entity, index: number, frame: number, dt: number): void {
-    const query = this.floraComfort;
-    if (!query || ((frame + index) & 3) !== 0) return;
-    const u = e.userData;
-    const hunger = 1 - clamp01(u.energy / 100);
-    const mating = u.sT < 180 ? 1 : 0;
-    const old = u.life > 0 ? clamp01(u.age / u.life) : 0;
-    const hurt = u.payoff < 0 ? Math.min(1, -u.payoff * 0.25) : 0;
-    const desire = clamp01(hunger * 0.35 + mating * 0.35 + old * 0.2 + hurt * 0.2);
-    if (desire <= 0.02) return;
-
-    const cover = query(e.position.x, e.position.z);
-    const strength = clamp01(cover.strength);
-    if (strength <= 0.01) return;
-
-    const dx = cover.x - e.position.x;
-    const dz = cover.z - e.position.z;
-    const d2 = dx * dx + dz * dz;
-    const reach = 92;
-    if (d2 > reach * reach) return;
-    const inv = d2 > 1e-6 ? 1 / Math.sqrt(d2) : 0;
-    const pull = strength * desire * dt * 0.9;
-    u.vel.x += dx * inv * pull;
-    u.vel.z += dz * inv * pull;
-    if (d2 < 28 * 28) {
-      const rest = 1 - strength * desire * 0.08;
-      u.vel.x *= rest;
-      u.vel.y *= 1 - strength * desire * 0.04;
-      u.vel.z *= rest;
-      u.act += strength * desire * 0.012;
-      u.sT -= strength * desire * 0.35;
-      e.material.color.lerp(FLORA_CAMO, strength * desire * 0.012);
-    }
   }
 
   /**

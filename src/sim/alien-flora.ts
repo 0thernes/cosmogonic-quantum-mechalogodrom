@@ -5,9 +5,9 @@
  * six structural FAMILIES (spire, whip, pod, blade, coral, shard), distributed in biome PATCHES
  * with bare PATHS, open GLADES, and a clear CENTER so the temple/cosmic-crown stay framed — the
  * spacing of a real world, not a uniform lawn. Plants are NOT neural (no brain, no rng draws) —
- * they are a substrate the fauna reads through {@link EntityManager.attachFloraComfort}: creatures
- * find dense cover for rest / camouflage / mating / gathering using this module's {@link comfortAt}
- * spatial readout.
+ * they are a substrate the fauna will read: this module exposes {@link comfortAt} so creatures can
+ * find dense cover for rest / camouflage / mating / gathering (wiring those behaviors is a later
+ * pass; the spatial readout is real now).
  *
  * RENDER: each family is ONE `InstancedMesh` (≤6 draw calls for 10k plants) sharing one
  * `ShaderMaterial`. The wind sway, the up-the-stalk bioluminescent pulse, and the fresnel rim are

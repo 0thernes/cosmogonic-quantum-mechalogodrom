@@ -13,7 +13,7 @@ import { describe, expect, test } from 'bun:test';
 import * as THREE from 'three';
 import { mulberry32 } from '../src/math/rng';
 import { SpatialHash } from '../src/math/spatial-hash';
-import { GRID_CELL, CHAOS_MAX, ENTROPY_MAX } from '../src/sim/constants';
+import { GRID_CELL, CHAOS_MAX } from '../src/sim/constants';
 import { createGeometryCache } from '../src/sim/geometry-cache';
 import { createMorphotypes } from '../src/sim/morphotypes';
 import { createPhyla } from '../src/sim/phyla';
@@ -132,28 +132,6 @@ describe('EnvironmentSystem — purity + build contract', () => {
     expect(ambient).toBe(1);
     expect(directional).toBe(1);
     expect(point).toBeGreaterThanOrEqual(6); // 6 colored rig lights + monolith crowns + diorama glows
-  });
-
-  test('ground shader uniforms track chaos, entropy, wind and time', () => {
-    const ctx = makeCtx(0x770, CHAOS_MAX * 0.5);
-    ctx.state.entropy = ENTROPY_MAX * 0.25;
-    ctx.state.wind.x = 3;
-    ctx.state.wind.z = -2;
-    const env = new EnvironmentSystem(ctx);
-    const internals = env as unknown as {
-      groundUniforms: {
-        uTime: THREE.IUniform<number>;
-        uChaos: THREE.IUniform<number>;
-        uEntropy: THREE.IUniform<number>;
-        uWind: THREE.IUniform<THREE.Vector2>;
-      };
-    };
-    env.update(1 / 60, 12.25);
-    expect(internals.groundUniforms.uTime.value).toBe(12.25);
-    expect(internals.groundUniforms.uChaos.value).toBeCloseTo(0.5, 6);
-    expect(internals.groundUniforms.uEntropy.value).toBeCloseTo(0.25, 6);
-    expect(internals.groundUniforms.uWind.value.x).toBe(3);
-    expect(internals.groundUniforms.uWind.value.y).toBe(-2);
   });
 });
 

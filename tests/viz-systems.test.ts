@@ -11,7 +11,6 @@ import * as THREE from 'three';
 import { CosmicWeb } from '../src/sim/cosmic-web';
 import { GoldLattice } from '../src/sim/gold-lattice';
 import { QuantumLattice } from '../src/sim/quantum-lattice';
-import { AbominationArchitecture } from '../src/sim/abomination-architecture';
 import { NhiBodySystem } from '../src/sim/nhi-body';
 import { MonolithTemple } from '../src/sim/monolith-temple';
 
@@ -44,20 +43,6 @@ describe('environment viz systems construct + update without throwing', () => {
     expect(() => {
       q.update(0);
       q.update(99);
-    }).not.toThrow();
-  });
-
-  test('AbominationArchitecture adds sparse suspended structures and reacts safely', () => {
-    const scene = new THREE.Scene();
-    const arch = new AbominationArchitecture(scene);
-    expect(arch.count).toBeGreaterThan(0);
-    expect(scene.children.length).toBeGreaterThan(0);
-    expect(() => {
-      arch.setReactivity(0.8, 0.4, 0.6);
-      arch.update(12);
-      arch.setReactivity(Number.NaN, Number.POSITIVE_INFINITY, -1);
-      arch.update(Number.NaN);
-      arch.dispose();
     }).not.toThrow();
   });
 });

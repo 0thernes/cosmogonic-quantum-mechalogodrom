@@ -123,7 +123,7 @@ function buildSpecies(seed: number, maxCount: number): PlantSpecies {
       float pulse = sin(uTime * 2.0 + vWorldPos.x * 0.1 + vWorldPos.z * 0.1) * 0.1;
       transformed.x += sin(transformed.y * 3.0 + uTime) * pulse;
       transformed.z += cos(transformed.y * 3.0 + uTime) * pulse;
-      `,
+      `
     );
     shader.fragmentShader = `
       uniform float uTime;
@@ -136,7 +136,7 @@ function buildSpecies(seed: number, maxCount: number): PlantSpecies {
       // Alien bioluminescence waves
       float bioWave = sin(uTime * 3.0 - vWorldPos.y * 0.5 + vWorldPos.x * 0.2) * 0.5 + 0.5;
       totalEmissiveRadiance *= (0.5 + bioWave * 2.5);
-      `,
+      `
     );
   };
   const mesh = new THREE.InstancedMesh(geo, mat, maxCount);
@@ -193,8 +193,7 @@ export class Vegetation {
         if (path && gap < 0.5) continue;
         const x = gx + (rng() - 0.5) * CELL_SIZE * 0.75;
         const z = gz + (rng() - 0.5) * CELL_SIZE * 0.75;
-        const speciesIdx =
-          Math.floor(hash12(i * 3 + j * 7, i * 11 + j * 13) * SPECIES_COUNT) % SPECIES_COUNT;
+        const speciesIdx = Math.floor(hash12(i * 3 + j * 7, i * 11 + j * 13) * SPECIES_COUNT) % SPECIES_COUNT;
         const s = this.species[speciesIdx]!;
         const slot = this.speciesSlots[speciesIdx]!;
         if (slot >= PLANT_COUNT) continue;
@@ -250,10 +249,7 @@ export class Vegetation {
       const wind =
         Math.sin(this.windTime + p.x * 0.018 + p.z * 0.012) * 0.5 +
         Math.sin(this.windTime * 1.7 + p.x * 0.041 - p.z * 0.027) * 0.3;
-      const lean =
-        (wind * this.windStrength * (1 - s.stiffness * 0.6) +
-          Math.sin(p.phase + this.windTime * 0.5) * 0.08) *
-        (1 + this.chaos * 0.6);
+      const lean = (wind * this.windStrength * (1 - s.stiffness * 0.6) + Math.sin(p.phase + this.windTime * 0.5) * 0.08) * (1 + this.chaos * 0.6);
       const leanX = clamp(lean * Math.cos(p.yaw + 0.7), -MAX_LEAN, MAX_LEAN);
       const leanZ = clamp(lean * Math.sin(p.yaw + 0.7), -MAX_LEAN, MAX_LEAN);
       this.E.set(leanX, p.yaw, leanZ);

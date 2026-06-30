@@ -149,25 +149,4 @@ describe('Entity dynamism — diverse, moving, spread, finite', () => {
     };
     expect(checksum(driveWorld(0x1234, 240).em)).toBe(checksum(driveWorld(0x1234, 240).em));
   });
-
-  test('flora comfort steers vulnerable organisms into cover and accelerates mating readiness', () => {
-    const ctx = makeCtx(0xf10a);
-    ctx.quality.maxEntities = 1;
-    ctx.quality.targetEntities = 1;
-    ctx.state.frame = 4; // frame+index stride gate opens for index 0
-    ctx.state.chaos = 0;
-    const em = new EntityManager(ctx);
-    em.attachFloraComfort(() => ({ x: 12, y: 0, z: 0, strength: 1 }));
-    em.reset(1);
-    const e = em.list[0]!;
-    e.position.set(0, 0, 0);
-    e.userData.vel.set(0, 0, 0);
-    e.userData.energy = 0;
-    e.userData.sT = 170;
-    e.userData.payoff = -1;
-    const beforeSplit = e.userData.sT;
-    em.update(1 / 60, 1);
-    expect(e.userData.vel.x).toBeGreaterThan(0);
-    expect(e.userData.sT).toBeLessThan(beforeSplit);
-  });
 });
