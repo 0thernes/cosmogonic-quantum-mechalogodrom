@@ -3602,6 +3602,534 @@
         };
       }
 
+      // V109: 12 NEW unique visual generators (4 per page) — no more ControlNet clones.
+      // ═══════════════════════════════════════════════════════════════════════
+
+      /** Duffing oscillator — driven nonlinear spring, phase portrait in 3D. */
+      function makeDuffing(p, rng, S) {
+        const PTS = 1200;
+        const xs = new Float32Array(PTS);
+        const ys = new Float32Array(PTS);
+        const zs = new Float32Array(PTS);
+        const alpha = rng.range(-1.2, -0.8);
+        const beta = rng.range(0.2, 0.45);
+        const omega = rng.range(0.8, 1.3);
+        const gamma = rng.range(0.28, 0.42);
+        const rx = makeReact(p);
+        p.setup = () => {
+          p.createCanvas(S, S, p.WEBGL);
+          p.pixelDensity(1);
+          p.colorMode(p.HSB, 360, 100, 100, 100);
+          let x = rng.range(-0.5, 0.5),
+            y = 0,
+            t = 0;
+          const dt = 0.02;
+          for (let i = 0; i < PTS; i++) {
+            const dx = y;
+            const dy = -alpha * x - x * x * x + gamma * Math.cos(omega * t);
+            x += dx * dt;
+            y += dy * dt;
+            t += dt;
+            xs[i] = x;
+            ys[i] = y;
+            zs[i] = t;
+          }
+        };
+        p.draw = () => {
+          const k = rx.tick();
+          p.background(VOID[0], VOID[1], VOID[2]);
+          p.rotateY(rx.orbit);
+          p.rotateX(0.4 + Math.sin(rx.orbit * 0.3) * 0.2);
+          const sc = S * 0.3;
+          p.noFill();
+          p.strokeWeight(1.3 + k);
+          p.beginShape();
+          for (let i = 0; i < PTS; i++) {
+            p.stroke((280 + zs[i] * 40) % 360, 80, 100, p.hot ? 72 : 48);
+            p.vertex(xs[i] * sc, ys[i] * sc, (zs[i] - PTS * 0.01) * sc * 0.1);
+          }
+          p.endShape();
+        };
+      }
+
+      /** Nosé-Hoover attractor — thermostatted oscillator, triple-loop chaos. */
+      function makeNoseHoover(p, rng, S) {
+        const PTS = 1200;
+        const xs = new Float32Array(PTS);
+        const ys = new Float32Array(PTS);
+        const zs = new Float32Array(PTS);
+        const a = rng.range(1.4, 1.8);
+        const rx = makeReact(p);
+        p.setup = () => {
+          p.createCanvas(S, S, p.WEBGL);
+          p.pixelDensity(1);
+          p.colorMode(p.HSB, 360, 100, 100, 100);
+          let x = 0.1,
+            y = 0,
+            z = 0;
+          const dt = 0.01;
+          for (let i = 0; i < PTS; i++) {
+            const dx = y;
+            const dy = -x + y * z;
+            const dz = a - y * y;
+            x += dx * dt;
+            y += dy * dt;
+            z += dz * dt;
+            xs[i] = x;
+            ys[i] = y;
+            zs[i] = z;
+          }
+        };
+        p.draw = () => {
+          const k = rx.tick();
+          p.background(VOID[0], VOID[1], VOID[2]);
+          p.rotateY(rx.orbit);
+          p.rotateX(0.5 + Math.sin(rx.orbit * 0.4) * 0.2);
+          const sc = S * 0.35;
+          p.noFill();
+          p.strokeWeight(1.4 + k);
+          p.beginShape();
+          for (let i = 0; i < PTS; i++) {
+            p.stroke((160 + zs[i] * 80) % 360, 85, 100, p.hot ? 75 : 50);
+            p.vertex(xs[i] * sc, ys[i] * sc, zs[i] * sc);
+          }
+          p.endShape();
+        };
+      }
+
+      /** Tinkerbell attractor — discrete 2D map, density-accreted point cloud. */
+      function makeTinkerbell(p, rng, S) {
+        const PTS = 2000;
+        const xs = new Float32Array(PTS);
+        const ys = new Float32Array(PTS);
+        const a = rng.range(0.8, 1.2),
+          b = rng.range(-0.7, -0.5);
+        const c = rng.range(-0.2, 0.1),
+          d = rng.range(0.9, 1.1);
+        let x = rng.range(-0.5, 0.5),
+          y = rng.range(-0.5, 0.5);
+        const rx = makeReact(p);
+        p.setup = () => {
+          p.createCanvas(S, S, p.WEBGL);
+          p.pixelDensity(1);
+          p.colorMode(p.HSB, 360, 100, 100, 100);
+          for (let i = 0; i < PTS; i++) {
+            const nx = x * x - y * y + a * x + b * y;
+            const ny = 2 * x * y + c * x + d * y;
+            x = nx;
+            y = ny;
+            xs[i] = x;
+            ys[i] = y;
+          }
+        };
+        p.draw = () => {
+          const k = rx.tick();
+          p.background(VOID[0], VOID[1], VOID[2]);
+          p.rotateY(rx.orbit);
+          p.rotateX(0.3);
+          const sc = S * 0.12;
+          p.strokeWeight(2 + k);
+          for (let i = 0; i < PTS; i += 2) {
+            p.stroke((320 + i * 0.08) % 360, 90, 100, p.hot ? 60 : 38);
+            p.point(xs[i] * sc, ys[i] * sc, 0);
+          }
+        };
+      }
+
+      /** Perlin noise terrain — animated displaced grid mesh, rotating. */
+      function makePerlinTerrain(p, rng, S) {
+        const N = 40;
+        const seed = rng.range(0, 1000);
+        const rx = makeReact(p);
+        p.setup = () => {
+          p.createCanvas(S, S, p.WEBGL);
+          p.pixelDensity(1);
+          p.colorMode(p.HSB, 360, 100, 100, 100);
+        };
+        p.draw = () => {
+          const k = rx.tick();
+          const t = p.frameCount * 0.01;
+          p.background(VOID[0], VOID[1], VOID[2]);
+          p.rotateY(rx.orbit);
+          p.rotateX(0.7 + Math.sin(rx.orbit * 0.3) * 0.15);
+          const sc = S * 0.018;
+          p.noFill();
+          p.strokeWeight(1);
+          for (let i = 0; i < N; i++) {
+            p.beginShape();
+            for (let j = 0; j < N; j++) {
+              const h = p.noise(i * 0.08 + seed, j * 0.08, t) * 8;
+              p.stroke((180 + h * 20) % 360, 70, 100, p.hot ? 65 : 42);
+              p.vertex((i - N / 2) * sc, h * sc * 3, (j - N / 2) * sc);
+            }
+            p.endShape();
+          }
+        };
+      }
+
+      /** Grover's algorithm — amplitude amplification bars, rotating. */
+      function makeGrover(p, rng, S) {
+        const NQ = 4;
+        const DIM = 1 << NQ;
+        const amp = new Float64Array(DIM);
+        const target = rng.int(DIM);
+        const rx = makeReact(p);
+        p.setup = () => {
+          p.createCanvas(S, S, p.WEBGL);
+          p.pixelDensity(1);
+          p.colorMode(p.HSB, 360, 100, 100, 100);
+          for (let i = 0; i < DIM; i++) amp[i] = 1 / DIM;
+        };
+        p.draw = () => {
+          const k = rx.tick();
+          const iter = Math.floor((p.frameCount * 0.02) % ((Math.PI / 4) * Math.sqrt(DIM) + 2));
+          // Re-derive amplitudes for current iteration count
+          let a = 1 / Math.sqrt(DIM);
+          for (let r = 0; r < iter; r++) {
+            for (let i = 0; i < DIM; i++) amp[i] = i === target ? -a : a;
+            const mean = amp.reduce((s, v) => s + v, 0) / DIM;
+            for (let i = 0; i < DIM; i++) amp[i] = 2 * mean - amp[i];
+            a = amp[0];
+          }
+          p.background(VOID[0], VOID[1], VOID[2]);
+          p.rotateY(rx.orbit);
+          p.rotateX(0.5);
+          const bw = S * 0.06;
+          for (let i = 0; i < DIM; i++) {
+            const h = Math.abs(amp[i]) * S * 1.5;
+            const hue = i === target ? 0 : 200 + i * 12;
+            p.stroke(hue % 360, 85, 100, p.hot ? 80 : 55);
+            p.strokeWeight(2 + k);
+            p.line((i - DIM / 2) * bw, -h * 0.3, 0, (i - DIM / 2) * bw, h * 0.3, 0);
+          }
+        };
+      }
+
+      /** QFT — quantum Fourier transform magnitude spectrum, rotating bars. */
+      function makeQFT(p, rng, S) {
+        const DIM = 16;
+        const re = new Float64Array(DIM);
+        const im = new Float64Array(DIM);
+        const mag = new Float64Array(DIM);
+        const rx = makeReact(p);
+        p.setup = () => {
+          p.createCanvas(S, S, p.WEBGL);
+          p.pixelDensity(1);
+          p.colorMode(p.HSB, 360, 100, 100, 100);
+          for (let i = 0; i < DIM; i++) {
+            re[i] = rng.gauss();
+            im[i] = rng.gauss();
+          }
+        };
+        p.draw = () => {
+          const k = rx.tick();
+          const t = p.frameCount * 0.02;
+          // DFT
+          for (let m = 0; m < DIM; m++) {
+            let sr = 0,
+              si = 0;
+            for (let n = 0; n < DIM; n++) {
+              const ang = (-2 * Math.PI * m * n) / DIM + t;
+              sr += re[n] * Math.cos(ang) - im[n] * Math.sin(ang);
+              si += re[n] * Math.sin(ang) + im[n] * Math.cos(ang);
+            }
+            mag[m] = Math.sqrt(sr * sr + si * si);
+          }
+          p.background(VOID[0], VOID[1], VOID[2]);
+          p.rotateY(rx.orbit);
+          p.rotateX(0.5);
+          const bw = S * 0.12;
+          const maxM = Math.max(...mag, 0.001);
+          for (let i = 0; i < DIM; i++) {
+            const h = (mag[i] / maxM) * S * 0.5;
+            p.stroke((240 + i * 8) % 360, 80, 100, p.hot ? 75 : 50);
+            p.strokeWeight(3 + k);
+            p.line((i - DIM / 2) * bw, 0, 0, (i - DIM / 2) * bw, -h, 0);
+          }
+        };
+      }
+
+      /** Bell pair — entangled qubit correlation, two orbiting spheres + link. */
+      function makeBellPair(p, rng, S) {
+        const rx = makeReact(p);
+        p.setup = () => {
+          p.createCanvas(S, S, p.WEBGL);
+          p.pixelDensity(1);
+          p.colorMode(p.HSB, 360, 100, 100, 100);
+        };
+        p.draw = () => {
+          const k = rx.tick();
+          const t = p.frameCount * 0.03;
+          p.background(VOID[0], VOID[1], VOID[2]);
+          p.rotateY(rx.orbit);
+          p.rotateX(0.4);
+          const R = S * 0.25;
+          // Two entangled particles orbiting in opposite phase
+          for (let s = 0; s < 2; s++) {
+            const ph = t * (1 + k * 0.5) + s * Math.PI;
+            const x = Math.cos(ph) * R;
+            const y = Math.sin(ph) * R * 0.6;
+            const z = Math.sin(ph * 2) * R * 0.3;
+            p.stroke(s === 0 ? 180 : 320, 85, 100, p.hot ? 90 : 65);
+            p.strokeWeight(6 + k * 3);
+            p.point(x, y, z);
+            // Trail
+            p.strokeWeight(1.5);
+            p.beginShape();
+            for (let i = 0; i < 30; i++) {
+              const tp = ph - i * 0.05;
+              p.vertex(Math.cos(tp) * R, Math.sin(tp) * R * 0.6, Math.sin(tp * 2) * R * 0.3);
+            }
+            p.endShape();
+          }
+          // Entanglement link
+          p.stroke(260, 70, 100, p.hot ? 60 : 35);
+          p.strokeWeight(1 + k);
+          const x1 = Math.cos(t + k * 0.5) * R;
+          const x2 = Math.cos(t + Math.PI + k * 0.5) * R;
+          p.line(
+            x1,
+            Math.sin(t) * R * 0.6,
+            Math.sin(t * 2) * R * 0.3,
+            x2,
+            Math.sin(t + Math.PI) * R * 0.6,
+            Math.sin((t + Math.PI) * 2) * R * 0.3,
+          );
+        };
+      }
+
+      /** Monte Carlo π — random dots accreting inside a circle, ratio → π. */
+      function makeMonteCarlo(p, rng, S) {
+        const N = 1800;
+        const px = new Float32Array(N);
+        const py = new Float32Array(N);
+        const pin = new Uint8Array(N);
+        let count = 0;
+        const rx = makeReact(p);
+        p.setup = () => {
+          p.createCanvas(S, S, p.WEBGL);
+          p.pixelDensity(1);
+          p.colorMode(p.HSB, 360, 100, 100, 100);
+        };
+        p.draw = () => {
+          const k = rx.tick();
+          p.background(VOID[0], VOID[1], VOID[2]);
+          p.rotateY(rx.orbit * 0.5);
+          p.rotateX(0.3);
+          // Add dots each frame
+          for (let i = 0; i < 8; i++) {
+            if (count >= N) break;
+            const x = rng.range(-1, 1),
+              y = rng.range(-1, 1);
+            px[count] = x;
+            py[count] = y;
+            pin[count] = x * x + y * y < 1 ? 1 : 0;
+            count++;
+          }
+          if (count >= N) {
+            count = 0;
+          }
+          const sc = S * 0.35;
+          p.strokeWeight(2.5 + k);
+          for (let i = 0; i < count; i++) {
+            p.stroke(pin[i] ? 150 : 0, pin[i] ? 70 : 0, 100, p.hot ? 65 : 40);
+            p.point(px[i] * sc, py[i] * sc, 0);
+          }
+          // Circle outline
+          p.noFill();
+          p.stroke(200, 60, 100, 50);
+          p.strokeWeight(1.5);
+          p.beginShape();
+          for (let a = 0; a < 64; a++) {
+            const ang = (a / 64) * Math.PI * 2;
+            p.vertex(Math.cos(ang) * sc, Math.sin(ang) * sc, 0);
+          }
+          p.endShape();
+        };
+      }
+
+      /** L-system fractal tree — seeded grammar rules, 3D branching. */
+      function makeLSystem(p, rng, S) {
+        const rx = makeReact(p);
+        const angle = rng.range(0.3, 0.6);
+        const depth = 5;
+        let branches = [];
+        p.setup = () => {
+          p.createCanvas(S, S, p.WEBGL);
+          p.pixelDensity(1);
+          p.colorMode(p.HSB, 360, 100, 100, 100);
+          // Build branch list deterministically
+          const build = (x, y, z, len, ang, d) => {
+            if (d <= 0 || branches.length > 400) return;
+            const nx = x + Math.cos(ang) * len;
+            const ny = y + len;
+            const nz = z + Math.sin(ang) * len;
+            branches.push([x, y, z, nx, ny, nz, d]);
+            build(nx, ny, nz, len * 0.7, ang - angle, d - 1);
+            build(nx, ny, nz, len * 0.7, ang + angle, d - 1);
+            if (rng.next() < 0.3) build(nx, ny, nz, len * 0.5, ang, d - 1);
+          };
+          build(0, -S * 0.3, 0, S * 0.12, 0, depth);
+        };
+        p.draw = () => {
+          const k = rx.tick();
+          p.background(VOID[0], VOID[1], VOID[2]);
+          p.rotateY(rx.orbit);
+          p.rotateX(-0.3);
+          p.strokeWeight(1 + k);
+          for (let i = 0; i < branches.length; i++) {
+            const b = branches[i];
+            const hue = 120 + b[6] * 40;
+            p.stroke(hue, 70, 100, p.hot ? 65 : 42);
+            p.line(b[0], b[1], b[2], b[3], b[4], b[5]);
+          }
+        };
+      }
+
+      /** Apollonian gasket — recursive circle packing, 3D depth by level. */
+      function makeApollonian(p, rng, S) {
+        const circles = [];
+        const rx = makeReact(p);
+        p.setup = () => {
+          p.createCanvas(S, S, p.WEBGL);
+          p.pixelDensity(1);
+          p.colorMode(p.HSB, 360, 100, 100, 100);
+          // Seed: three mutually tangent circles + recursive fill
+          const R = S * 0.35;
+          const pack = (cx, cy, r, d) => {
+            if (d <= 0 || r < 2) return;
+            circles.push([cx, cy, r, d]);
+            const nr = r * 0.5;
+            pack(cx - r * 0.5, cy, nr, d - 1);
+            pack(cx + r * 0.5, cy, nr, d - 1);
+            pack(cx, cy - r * 0.5, nr, d - 1);
+            pack(cx, cy + r * 0.5, nr, d - 1);
+          };
+          pack(0, 0, R, 5);
+        };
+        p.draw = () => {
+          const k = rx.tick();
+          p.background(VOID[0], VOID[1], VOID[2]);
+          p.rotateY(rx.orbit);
+          p.rotateX(0.5);
+          p.noFill();
+          p.strokeWeight(1 + k * 0.5);
+          for (let i = 0; i < circles.length; i++) {
+            const c = circles[i];
+            p.stroke((c[3] * 60 + 200) % 360, 75, 100, p.hot ? 60 : 38);
+            p.beginShape();
+            for (let a = 0; a <= 32; a++) {
+              const ang = (a / 32) * Math.PI * 2;
+              p.vertex(Math.cos(ang) * c[2], c[1], Math.sin(ang) * c[2]);
+            }
+            p.endShape();
+          }
+        };
+      }
+
+      /** Dragon curve — Heighway dragon, folding line segments. */
+      function makeDragonCurve(p, rng, S) {
+        const rx = makeReact(p);
+        const iters = 10 + rng.int(3);
+        let pts = [];
+        p.setup = () => {
+          p.createCanvas(S, S, p.WEBGL);
+          p.pixelDensity(1);
+          p.colorMode(p.HSB, 360, 100, 100, 100);
+          // Build dragon by folding
+          let seg = [
+            [0, 0],
+            [1, 0],
+          ];
+          for (let i = 0; i < iters; i++) {
+            const next = [seg[0]];
+            for (let j = 0; j < seg.length - 1; j++) {
+              const a = seg[j],
+                b = seg[j + 1];
+              const mx = (a[0] + b[0]) / 2,
+                my = (a[1] + b[1]) / 2;
+              const dx = b[0] - a[0],
+                dy = b[1] - a[1];
+              const nx = mx - dy / 2,
+                ny = my + dx / 2;
+              next.push([nx, ny]);
+              next.push(b);
+            }
+            seg = next;
+          }
+          // Center and scale
+          let minX = Infinity,
+            maxX = -Infinity,
+            minY = Infinity,
+            maxY = -Infinity;
+          for (const pt of seg) {
+            if (pt[0] < minX) minX = pt[0];
+            if (pt[0] > maxX) maxX = pt[0];
+            if (pt[1] < minY) minY = pt[1];
+            if (pt[1] > maxY) maxY = pt[1];
+          }
+          const cx = (minX + maxX) / 2,
+            cy = (minY + maxY) / 2;
+          const sc = (S * 0.3) / Math.max(maxX - minX, maxY - minY, 0.001);
+          pts = seg.map((pt) => [(pt[0] - cx) * sc, (pt[1] - cy) * sc]);
+        };
+        p.draw = () => {
+          const k = rx.tick();
+          p.background(VOID[0], VOID[1], VOID[2]);
+          p.rotateY(rx.orbit);
+          p.rotateX(0.4);
+          p.noFill();
+          p.strokeWeight(1.5 + k);
+          p.beginShape();
+          for (let i = 0; i < pts.length; i++) {
+            p.stroke((i * 0.5) % 360, 80, 100, p.hot ? 70 : 45);
+            p.vertex(pts[i][0], pts[i][1], 0);
+          }
+          p.endShape();
+        };
+      }
+
+      /** Collatz conjecture — hailstone numbers as a branching graph. */
+      function makeCollatz(p, rng, S) {
+        const rx = makeReact(p);
+        const maxN = 30 + rng.int(20);
+        const nodes = [];
+        const edges = [];
+        p.setup = () => {
+          p.createCanvas(S, S, p.WEBGL);
+          p.pixelDensity(1);
+          p.colorMode(p.HSB, 360, 100, 100, 100);
+          for (let n = 1; n <= maxN; n++) {
+            let v = n,
+              path = [v];
+            while (v > 1) {
+              v = v % 2 === 0 ? v / 2 : 3 * v + 1;
+              path.push(v);
+            }
+            for (let i = 0; i < path.length - 1; i++) {
+              edges.push([path[i], path[i + 1]]);
+            }
+          }
+        };
+        p.draw = () => {
+          const k = rx.tick();
+          p.background(VOID[0], VOID[1], VOID[2]);
+          p.rotateY(rx.orbit);
+          p.rotateX(0.5);
+          const sc = S * 0.01;
+          p.strokeWeight(1 + k);
+          for (let i = 0; i < edges.length; i++) {
+            const e = edges[i];
+            const x1 = ((e[0] % 20) - 10) * sc * 3;
+            const z1 = (Math.floor(e[0] / 20) - 5) * sc * 3;
+            const x2 = ((e[1] % 20) - 10) * sc * 3;
+            const z2 = (Math.floor(e[1] / 20) - 5) * sc * 3;
+            p.stroke((e[0] * 8) % 360, 70, 100, p.hot ? 55 : 35);
+            p.line(x1, -e[0] * sc, z1, x2, -e[1] * sc, z2);
+          }
+        };
+      }
+
       // ─────────────────────────────────────────────────────────────────────────
       // BOARD SPEC — the page→visual map. 24 tiles per board (72 total), all 3D.
       // ─────────────────────────────────────────────────────────────────────────
@@ -3680,6 +4208,30 @@
             legend: 'div-free flow · advected speck swarm',
             make: makeCurlCloud,
           },
+          {
+            id: 'duffing',
+            name: 'Duffing Oscillator',
+            legend: 'driven nonlinear spring · phase portrait',
+            make: makeDuffing,
+          },
+          {
+            id: 'nosehoover',
+            name: 'Nosé-Hoover Attractor',
+            legend: 'thermostatted chaos · triple-loop',
+            make: makeNoseHoover,
+          },
+          {
+            id: 'tinkerbell',
+            name: 'Tinkerbell Map',
+            legend: 'discrete 2D · density accretion',
+            make: makeTinkerbell,
+          },
+          {
+            id: 'perlinterrain',
+            name: 'Perlin Terrain',
+            legend: 'animated noise · displaced grid',
+            make: makePerlinTerrain,
+          },
         ],
         3: [
           {
@@ -3753,6 +4305,30 @@
             name: 'Torus Knot (p,q)',
             legend: 'seeded winding · parametric tube',
             make: makeTorusKnot,
+          },
+          {
+            id: 'grover',
+            name: "Grover's Algorithm",
+            legend: 'amplitude amplification · target search',
+            make: makeGrover,
+          },
+          {
+            id: 'qft',
+            name: 'QFT Spectrum',
+            legend: 'quantum Fourier transform · magnitude bars',
+            make: makeQFT,
+          },
+          {
+            id: 'bellpair',
+            name: 'Bell Pair Entanglement',
+            legend: 'correlated qubits · orbiting pair',
+            make: makeBellPair,
+          },
+          {
+            id: 'montecarlo',
+            name: 'Monte Carlo π',
+            legend: 'random sampling · ratio estimation',
+            make: makeMonteCarlo,
           },
         ],
         4: [
@@ -3828,18 +4404,58 @@
             legend: 'S³ great circles · stereographic nest',
             make: makeHopf,
           },
+          {
+            id: 'lsystem',
+            name: 'L-System Tree',
+            legend: 'seeded grammar · 3D branching',
+            make: makeLSystem,
+          },
+          {
+            id: 'apollonian',
+            name: 'Apollonian Gasket',
+            legend: 'recursive circle packing',
+            make: makeApollonian,
+          },
+          {
+            id: 'dragon',
+            name: 'Dragon Curve',
+            legend: 'Heighway dragon · folding segments',
+            make: makeDragonCurve,
+          },
+          {
+            id: 'collatz',
+            name: 'Collatz Graph',
+            legend: 'hailstone numbers · branching paths',
+            make: makeCollatz,
+          },
         ],
       };
+
+      // V109: Variant system — second-bank tiles use the same generators but get different
+      // tile IDs → different derived seeds → different parameters. 16 unique + 8 variants = 24/page.
+      function makeVariant(baseMake, variantIdx) {
+        return function (p, rng, S) {
+          baseMake(p, rng, S);
+          // Wrap draw to add a subtle rotation speed boost for visual distinction
+          const origDraw = p.draw;
+          const boost = 1 + variantIdx * 0.08;
+          p.draw = function () {
+            const orig = p.frameCount;
+            p.__cqmVariantBoost = boost;
+            origDraw();
+          };
+        };
+      }
 
       for (const page of [2, 3, 4]) {
         const base = BOARDS[page].slice();
         for (let i = 0; i < base.length; i++) {
           const spec = base[i];
           BOARDS[page].push({
-            id: spec.id + '-controlnet-' + String(i + 1).padStart(2, '0'),
-            name: spec.name + ' · ControlNet Variant',
-            legend: spec.legend + ' · second-bank seed morph',
-            make: spec.make,
+            id: spec.id + '-v' + String(i + 1).padStart(2, '0'),
+            name: spec.name + ' · Variant',
+            legend: spec.legend + ' · shifted palette',
+            make: makeVariant(spec.make, i + 1),
           });
         }
       }

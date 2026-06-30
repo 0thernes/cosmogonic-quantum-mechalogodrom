@@ -1229,9 +1229,22 @@ export class World {
       percept[2] = s.chaos; // chaos
       percept[3] = s.entropy ?? 0; // novelty (entropy as novelty proxy)
       percept[4] = s.temperature; // level (temperature as arousal)
-      percept[5] = 0.5; // hue placeholder
-      percept[6] = 0.5; // sat placeholder
-      percept[7] = 0.5; // lit placeholder
+      const weatherHue = s.weatherIdx / Math.max(1, WEATHERS.length - 1);
+      const windEnergy = clamp(Math.hypot(s.wind.x, s.wind.z) / 24, 0, 1);
+      const thermal = clamp((s.temperature + 20) / 80, 0, 1);
+      const qEntropy = clamp(this.qc.entropy, 0, 1);
+      const rdPulse = clamp(this.rdEnergy, 0, 1);
+      percept[5] = (weatherHue * 0.5 + qEntropy * 0.24 + rdPulse * 0.18 + bands.treble * 0.08) % 1;
+      percept[6] = clamp(
+        0.32 + visChaos * 0.22 + windEnergy * 0.18 + bands.mid * 0.18 + rdPulse * 0.1,
+        0,
+        1,
+      );
+      percept[7] = clamp(
+        0.28 + qEntropy * 0.2 + bands.level * 0.2 + thermal * 0.16 + (apex?.vitality ?? 0) * 0.16,
+        0,
+        1,
+      );
       this.lastGlyphSnaps = this.glyphBrains.thinkAll(percept);
       const snaps = this.lastGlyphSnaps;
       const act = this.glyphActivity;

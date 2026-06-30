@@ -9,12 +9,6 @@
 
 import { initBrainSlotVisualizers } from './brain-slots';
 
-const BRAIN_SLOTS: readonly { id: string; title: string }[] = [
-  { id: 'brain-apex-slot', title: 'Apex · Brain' },
-  { id: 'brain-mecha-slot', title: 'Mechalogodrom · Brain' },
-  { id: 'brain-glyph-slot', title: 'Glyph · Brain' },
-];
-
 function ensureBrainSlots(right: HTMLElement, doc: Document): void {
   if (doc.getElementById('brain-all-slot')) return;
   const slot = doc.createElement('div');
