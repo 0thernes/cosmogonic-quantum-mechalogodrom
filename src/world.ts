@@ -3375,19 +3375,30 @@ export class World {
    */
   private toggleBrutalism(): boolean {
     this.unlock();
-    this.brutalStyleIdx = (this.brutalStyleIdx + 1) % BRUTAL_STYLES.length;
-    const style = BRUTAL_STYLES[this.brutalStyleIdx]!;
-    const on = true;
+    // V110: include an OFF (god-jewel) state so the BRUTAL button can RETURN to the default skin instead
+    // of being stuck permanently on. Cycle: OFF → BRUTALISM → NOUVEAUNESS → ROCOCOGOLOGY → COSMICMORPHISM
+    // → REPRESSIONISM → OFF. `brutalStyleIdx` ∈ [-1, 4]; -1 = off.
+    this.brutalStyleIdx += 1;
+    if (this.brutalStyleIdx >= BRUTAL_STYLES.length) this.brutalStyleIdx = -1;
+    const on = this.brutalStyleIdx >= 0;
     this.state.brutalism = on;
     // The per-frame step() driver eases brutalismFactor toward this state and applies it to the
     // bodies + the whole cosmos (organisms, ground, lights, sky, fog) — so no direct apply here.
+    const styleForBodies = this.brutalStyleIdx < 0 ? 0 : this.brutalStyleIdx;
     for (let i = 0; i < this.superBodies.length; i++)
-      this.superBodies[i]!.setBrutalStyle(this.brutalStyleIdx);
+      this.superBodies[i]!.setBrutalStyle(styleForBodies);
     for (let i = 0; i < this.heroBodies.length; i++)
-      this.heroBodies[i]!.body.setBrutalStyle(this.brutalStyleIdx);
-    this.syncBrutalButton(style.glyph, style.name, style.title);
-    this.hud.showSector(`${style.name} ${style.glyph} · ${style.title.toUpperCase()}`);
-    this.audit.record('brutalism', { on, style: style.name });
+      this.heroBodies[i]!.body.setBrutalStyle(styleForBodies);
+    if (on) {
+      const style = BRUTAL_STYLES[this.brutalStyleIdx]!;
+      this.syncBrutalButton(style.glyph, style.name, style.title);
+      this.hud.showSector(`${style.name} ${style.glyph} · ${style.title.toUpperCase()}`);
+      this.audit.record('brutalism', { on, style: style.name });
+    } else {
+      this.syncBrutalButton('▦', 'BRUTAL', 'cycle super-creature rendering');
+      this.hud.showSector('GOD-JEWEL ✦ · DEFAULT SKIN');
+      this.audit.record('brutalism', { on, style: 'off' });
+    }
     return on;
   }
 

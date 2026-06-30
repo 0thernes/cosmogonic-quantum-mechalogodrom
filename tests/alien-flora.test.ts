@@ -50,7 +50,7 @@ describe('AlienFlora — the vegetal ground ecology', () => {
       }
     });
     expect(meshes).toBeGreaterThanOrEqual(1);
-    expect(meshes).toBeLessThanOrEqual(6);
+    expect(meshes).toBeLessThanOrEqual(9); // V109: expanded to 9 structural family silhouettes
     expect(total).toBe(f.instanceCount); // every placed plant is in some family mesh
     f.dispose();
   });
