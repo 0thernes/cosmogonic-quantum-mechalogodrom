@@ -109,7 +109,7 @@ export function decide(s: SyncState, f: SyncFlags): SyncPlan {
     return {
       ...base,
       preserve: true,
-      status: `stuck ${s.op} in progress — preserved pre-op tip to a recovery ref; resolve it, or re-run with --force`,
+      status: `stuck ${s.op} in progress — left untouched (pre-op tip safe in git's reflog/ORIG_HEAD); resolve it, or re-run with --force`,
     };
   }
   const clean = s.dirty === 0;
@@ -120,7 +120,7 @@ export function decide(s: SyncState, f: SyncFlags): SyncPlan {
       return {
         ...base,
         preserve: true,
-        status: `DIVERGED (+${s.ahead}/-${s.behind}) with a dirty tree — preserved; commit (or --commit), then --rebase`,
+        status: `DIVERGED (+${s.ahead}/-${s.behind}) with a dirty tree — left untouched; commit (or --commit), then --rebase`,
       };
     }
     if (f.force) {
@@ -143,7 +143,7 @@ export function decide(s: SyncState, f: SyncFlags): SyncPlan {
     return {
       ...base,
       preserve: true,
-      status: `DIVERGED (+${s.ahead}/-${s.behind}) — preserved; reconcile with --rebase (replay local on main) or --force (reset to main)`,
+      status: `DIVERGED (+${s.ahead}/-${s.behind}) — local commits safe at HEAD; reconcile with --rebase (replay local on main) or --force (reset to main)`,
     };
   }
 
@@ -299,8 +299,11 @@ function run(): void {
   // 2. Preserve the AT-RISK tip before any history-rewrite/reset — FAIL-CLOSED. For a stuck op the
   //    pre-op tip is ORIG_HEAD; otherwise the work at risk is HEAD (a diverged branch's local-ahead
   //    commits live at HEAD, never a stale ORIG_HEAD).
+  // Create a recovery ref ONLY when about to act destructively (force-reset / rebase-rewrite). The
+  // report-only paths (stuck-no-force, diverged-no-flags) touch nothing, so git's own reflog/ORIG_HEAD
+  // already hold the state — this avoids ref litter on the frequently-run (predev) path.
   let recovery: string | null = null;
-  if (plan.preserve || plan.forceReset || plan.rebasePush) {
+  if (plan.forceReset || plan.rebasePush) {
     const stuck = state.op !== 'none';
     const tip = stuck
       ? (tryGit(['rev-parse', '-q', '--verify', 'ORIG_HEAD']) ?? tryGit(['rev-parse', 'HEAD']))
@@ -310,19 +313,18 @@ function run(): void {
       tip !== null &&
       gitOk(['branch', '-f', ref, tip]) &&
       tryGit(['rev-parse', '--verify', ref]) === tip;
-    if (saved) {
-      recovery = ref;
-      log(`preserved ${tip!.slice(0, 8)} -> ${ref}`);
-      // For a stuck op, also save the (possibly different) current HEAD belt-and-suspenders.
-      const headNow = tryGit(['rev-parse', 'HEAD']);
-      if (stuck && headNow !== null && headNow !== tip) {
-        gitOk(['branch', '-f', `${ref}-head`, headNow]);
-      }
-    } else if (plan.forceReset || plan.rebasePush) {
+    if (!saved) {
       log(
         'FAILED to create a recovery ref — refusing the destructive/rewrite step; nothing changed',
       );
       process.exit(1);
+    }
+    recovery = ref;
+    log(`preserved ${tip!.slice(0, 8)} -> ${ref}`);
+    // For a stuck op, also save the (possibly different) current HEAD belt-and-suspenders.
+    const headNow = tryGit(['rev-parse', 'HEAD']);
+    if (stuck && headNow !== null && headNow !== tip) {
+      gitOk(['branch', '-f', `${ref}-head`, headNow]);
     }
   }
 
