@@ -1236,7 +1236,7 @@ export class World {
       this.alphabetPantheon.setBrainActivity(act, nov, val);
       this.alphabetPantheon.setBrainMotors(snaps);
     }
-    this.alphabetPantheon.update(t * 0.12); // V109: much slower, inspectable pantheon drift; still scales with pause/time
+    this.alphabetPantheon.update(t, dt); // V110: Pantheon obeys pause + time scale through scaled dt
     // F-NHI V10: alien bodies follow + morph their NHI every frame (guarded; additive viz only).
     if (this.nhiBody.count > 0) {
       try {

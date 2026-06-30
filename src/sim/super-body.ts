@@ -71,6 +71,20 @@ const PLAN_RGB: Record<SuperPlan, [number, number, number]> = {
  *  toward at full concrete (matches the instanced/entity concrete grey). Module consts → no alloc. */
 const SB_CONCRETE = new THREE.Color(0.34, 0.335, 0.32);
 const SB_CONCRETE_DARK = new THREE.Color(0.05, 0.05, 0.06);
+const SB_STYLE_COLORS: readonly THREE.Color[] = [
+  SB_CONCRETE,
+  new THREE.Color(0.15, 0.42, 0.25),
+  new THREE.Color(0.95, 0.82, 0.55),
+  new THREE.Color(0.25, 0.08, 0.52),
+  new THREE.Color(0.16, 0.16, 0.18),
+];
+const SB_STYLE_EMISSIVE: readonly THREE.Color[] = [
+  SB_CONCRETE_DARK,
+  new THREE.Color(0.02, 0.18, 0.09),
+  new THREE.Color(0.45, 0.28, 0.07),
+  new THREE.Color(0.07, 0.02, 0.22),
+  new THREE.Color(0.015, 0.015, 0.02),
+];
 
 /** Silhouette radius of the core — ½-a-Titan-class colossus (NHI bodies are R≈3.4). */
 const R = 7.4;
@@ -140,17 +154,21 @@ function patchGodJewel(
          // DEMONIC WARP: stronger displacement + larger amplitude as arousal/surprise rise
          float warpAmp = 0.09 + 0.22 * uArousal + 0.18 * uSurprise + 0.1 * qfac;
          float ext = (beat*0.18 + morph*(0.34 + 0.28*uSurprise) + curv*uArousal*1.3 + fhb*(0.12 + 0.14*uSurprise) + curvD*(1.0 + 0.7*qfac) + nm*0.22*uSurprise*(0.5+0.5*uQualia) + qgtGeo) * ${R.toFixed(1)} * warpAmp;
-         // BRUTALISM: quantize the morph into hard monolithic slabs
-         ext = mix(ext, floor(ext * 7.0) / 7.0, uBrutalism * 0.8);
+         float style = floor(uBrutalStyle + 0.5);
+         float styleHardness = style < 0.5 ? 0.8 : style < 1.5 ? 0.18 : style < 2.5 ? 0.38 : style < 3.5 ? 0.55 : 0.9;
+         // BRUTAL style geometry: concrete/repression slabs harden; nouveau stays sinuous.
+         float slabSteps = 5.0 + 5.0 * styleHardness;
+         ext = mix(ext, floor(ext * slabSteps) / slabSteps, uBrutalism * styleHardness);
          // DEMONIC TWIST: spiral deformation around the Y axis — the body warps like flesh being torqued
          float twistAng = t * 0.45 * (0.5 + uArousal) + py * 0.55 * (0.4 + uSurprise);
          float ctw = cos(twistAng), stw = sin(twistAng);
          vec3 twisted = vec3(ctw * transformed.x - stw * transformed.z, transformed.y, stw * transformed.x + ctw * transformed.z);
-         float twistMix = (0.25 + 0.35 * uSurprise + 0.2 * uArousal) * (1.0 - uBrutalism); // BRUTALISM: suppress twist
+         float twistKeep = 1.0 - uBrutalism * (style < 1.5 ? 0.2 : style < 3.5 ? 0.55 : 0.85);
+         float twistMix = (0.25 + 0.35 * uSurprise + 0.2 * uArousal) * twistKeep;
          transformed = mix(transformed, twisted, twistMix);
          // DIMENSIONAL WARP: radial pulsing bulges that make the creature feel like it is folding through space
          float radialPulse = sin(t*1.9 + py*5.0) * cos(t*2.7 + px*4.0) * sin(pz*3.0 + t*3.3);
-         transformed += normal * (ext + radialPulse * 0.12 * (0.5 + uSurprise) * ${R.toFixed(1)} * (1.0 - uBrutalism)); // BRUTALISM: suppress radial pulse
+         transformed += normal * (ext + radialPulse * 0.12 * (0.5 + uSurprise) * ${R.toFixed(1)} * twistKeep);
          transformed += vec3(chaos*0.055*uSurprise, sin(t*3.1 + v)*0.038 + nm*0.028*uSurprise, fhb*0.022*qfac);`,
       );
     shader.fragmentShader = shader.fragmentShader
@@ -198,7 +216,8 @@ function patchGodJewel(
          float morphR = (uSurprise * 0.4 + uQWave * 0.25 + uQualia * 0.2 + uReflex * 0.15);
          roughnessFactor = clamp(mix(0.65, 0.03, smoothstep(0.32 + uVariant*0.05, 0.95, rqD + morphR*0.3)), 0.02, 1.0);
          roughnessFactor = clamp(roughnessFactor - uEvoTier * 0.012 - uEvoAura * 0.04, 0.02, 1.0); // V64: evolution polishes the jewel over time
-         roughnessFactor = mix(roughnessFactor, 0.93, uBrutalism); // BRUTALISM: matte poured concrete`,
+         float brutalRough = uBrutalStyle < 0.5 ? 0.93 : uBrutalStyle < 1.5 ? 0.48 : uBrutalStyle < 2.5 ? 0.2 : uBrutalStyle < 3.5 ? 0.34 : 0.98;
+         roughnessFactor = mix(roughnessFactor, brutalRough, uBrutalism);`,
       )
       .replace(
         '#include <metalnessmap_fragment>',
@@ -206,7 +225,8 @@ function patchGodJewel(
          // metalness micro-variance — MUST run after the include declares metalnessFactor; reuses rqD +
          // morphR from the roughness block (same main() scope), + V64 evolution boost + BRUTALISM mix.
          float metalVar = 0.85 + 0.12 * sin(rqD*9.1 + uTime*0.7 + uVariant) * (0.5 + 0.5*morphR) + uEvoAura * 0.08;
-         metalnessFactor = mix(clamp(metalVar, 0.4, 1.0), 0.02, uBrutalism); // BRUTALISM: concrete is non-metallic`,
+         float brutalMetal = uBrutalStyle < 0.5 ? 0.02 : uBrutalStyle < 1.5 ? 0.38 : uBrutalStyle < 2.5 ? 0.92 : uBrutalStyle < 3.5 ? 0.72 : 0.08;
+         metalnessFactor = mix(clamp(metalVar, 0.4, 1.0), brutalMetal, uBrutalism);`,
       )
       .replace(
         '#include <emissivemap_fragment>',
@@ -986,11 +1006,16 @@ export class SuperBodySystem {
     // materials carry no other animation on their colour). The plan-coloured eyes/cage are crossfaded
     // in setMind (re-set from the plan each cadence). Called every frame by world.ts. O(appendages).
     const b = this.brutalism;
+    const target = SB_STYLE_COLORS[this.brutalStyle] ?? SB_CONCRETE;
+    const targetEmissive = SB_STYLE_EMISSIVE[this.brutalStyle] ?? SB_CONCRETE_DARK;
     for (let i = 0; i < this.brutalStatic.length; i++) {
       const e = this.brutalStatic[i]!;
-      e.mat.color.copy(e.base).lerp(SB_CONCRETE, b);
-      e.mat.emissive.copy(e.baseEmissive).lerp(SB_CONCRETE_DARK, b);
+      e.mat.color.copy(e.base).lerp(target, b);
+      e.mat.emissive.copy(e.baseEmissive).lerp(targetEmissive, b);
     }
+    this.eyeMat.color.lerp(target, b);
+    (this.eyeMat.emissive as THREE.Color).lerp(targetEmissive, b);
+    this.cageMat.color.lerp(target, b);
   }
 
   /** BRUTALISM: the current concrete crossfade applied to the skin (for tests / inspection). */
@@ -1005,6 +1030,7 @@ export class SuperBodySystem {
   setBrutalStyle(idx: number): void {
     this.brutalStyle = Math.max(0, Math.min(4, Math.floor(idx)));
     this.u.uBrutalStyle.value = this.brutalStyle;
+    this.setBrutalism(this.brutalism);
   }
 
   /** V109: current BRUTAL style variant (for tests / inspection). */

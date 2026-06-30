@@ -562,7 +562,8 @@ export class EnvironmentSystem {
     // ── Ground + grid (legacy 449-456; V3.1: 240→1200 edge, SAME 60×60 segments —
     //    displacement frequencies ÷ ARENA so the dunes stretch instead of alias,
     //    amplitude × ARENA_Y so the swell still reads at distance) ──
-    const groundGeo = new THREE.PlaneGeometry(GROUND_EXTENT, GROUND_EXTENT, 60, 60);
+    // V109: higher-res ground plane for richer terrain detail.
+    const groundGeo = new THREE.PlaneGeometry(GROUND_EXTENT, GROUND_EXTENT, 120, 120);
     const groundPos = groundGeo.getAttribute('position');
     for (let i = 0; i < groundPos.count; i++) {
       const gx = groundPos.getX(i);
@@ -599,7 +600,7 @@ export class EnvironmentSystem {
         `
         #include <begin_vertex>
         vWorldPos = (modelMatrix * vec4(position, 1.0)).xyz;
-        // Real terrain: wind advects the dune wave, chaos raises tectonic swell, entropy flattens.
+        // V109: richer alive terrain — fbm-like multi-frequency dunes + tectonic swell + chaos ridges.
         float heatDeath = clamp(uEntropy, 0.0, 1.0);
         float liveAmp = 1.0 - 0.72 * heatDeath;
         float wave =
@@ -612,10 +613,22 @@ export class EnvironmentSystem {
           sin(vWorldPos.x * 0.071 + sin(vWorldPos.z * 0.019 + uTime * 0.2) * 2.0) *
           sin(vWorldPos.z * 0.067 - cos(vWorldPos.x * 0.017 - uTime * 0.17) * 2.0);
         float ridge = pow(abs(cellular), 1.6) * sign(cellular);
+        // Detail fbm: layered dunes, ripples, and micro-terrain for a mathematical living surface.
+        float detail = 0.0;
+        float amp = 1.0, freq = 0.11;
+        for (int i = 0; i < 4; i++) {
+          detail += amp * sin(vWorldPos.x * freq + uTime * 0.13 * float(i + 1) + uWind.x * 0.05) *
+                          cos(vWorldPos.z * freq * 0.87 - uTime * 0.11 * float(i + 1) + uWind.y * 0.05);
+          amp *= 0.5;
+          freq *= 2.03;
+        }
+        float ripple = sin(vWorldPos.x * 0.23 + vWorldPos.z * 0.19 + uTime * 0.55) * 0.5 + 0.5;
         transformed.z +=
           (wave * (2.2 + uChaos * 6.2) +
             tectonic * (1.0 + uChaos * 4.6) +
-            ridge * (1.5 + uChaos * 3.4)) *
+            ridge * (1.5 + uChaos * 3.4) +
+            detail * (1.2 + uChaos * 2.0) +
+            ripple * (0.4 + uChaos * 0.8)) *
           liveAmp;
         `,
       );
