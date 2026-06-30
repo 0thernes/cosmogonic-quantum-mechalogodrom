@@ -20,6 +20,8 @@ const abs = Math.abs;
 const PI = Math.PI;
 /** Non-negative floor for chaos-driven intensity/opacity waves (also seals NaN → 0). O(1). */
 const nn = (v: number): number => (v > 0 ? v : 0);
+// V109: shared monolith shader time uniform — drives curvy, breathing god-tier architecture.
+const MONOLITH_TIME = { value: 0 };
 
 // ── BRUTALISM: concrete targets + base colours (module consts → zero per-frame allocation). The
 //    rig + ground are lerped from these bases toward concrete by the 0..1 factor, so the f=0 path
@@ -171,6 +173,42 @@ function buildMonolith(
     transparent: true,
     opacity: 0.82,
   });
+  // V109: curvy, wild, breathing monolith skin — vertex displacement driven by world position + time.
+  mat.onBeforeCompile = (shader) => {
+    shader.uniforms.uMonoTime = MONOLITH_TIME;
+    shader.vertexShader = `
+      uniform float uMonoTime;
+      varying float vMonoBreath;
+      ${shader.vertexShader}
+    `.replace(
+      '#include <begin_vertex>',
+      `
+      #include <begin_vertex>
+      vec4 wp = modelMatrix * vec4(position, 1.0);
+      float t = uMonoTime + hue * 6.2831;
+      float twist = sin(wp.y * 0.08 + t * 0.3) * 0.12;
+      float bulge = sin(wp.x * 0.11 + t * 0.4) * cos(wp.z * 0.09 + t * 0.35);
+      float breathe = sin(t * 0.55 + wp.y * 0.05) * 0.5 + 0.5;
+      float c = cos(twist), s = sin(twist);
+      mat2 rot = mat2(c, -s, s, c);
+      transformed.xz = rot * transformed.xz;
+      transformed += normal * bulge * (0.18 + 0.12 * breathe);
+      vMonoBreath = breathe;
+      `,
+    );
+    shader.fragmentShader = `
+      uniform float uMonoTime;
+      varying float vMonoBreath;
+      ${shader.fragmentShader}
+    `.replace(
+      '#include <color_fragment>',
+      `
+      #include <color_fragment>
+      float pulse = 0.5 + 0.5 * sin(uMonoTime * 2.0 + hue * 10.0 + vMonoBreath * 3.0);
+      diffuseColor.rgb += diffuseColor.rgb * pulse * 0.15;
+      `,
+    );
+  };
 
   const slab = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
   slab.position.y = h / 2;
@@ -740,6 +778,7 @@ export class EnvironmentSystem {
    */
   update(dt: number, t: number): void {
     this.groundUniforms.uTime.value = t;
+    MONOLITH_TIME.value = t;
     this.groundUniforms.uChaos.value = clamp(this.state.chaos / CHAOS_MAX, 0, 1);
     this.groundUniforms.uEntropy.value = clamp((this.state.entropy ?? 0) / ENTROPY_MAX, 0, 1);
     this.groundUniforms.uWind.value.set(this.state.wind.x, this.state.wind.z);

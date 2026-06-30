@@ -633,9 +633,11 @@ export class SuperBodySystem {
     // HERE — non-compounding because setMind re-sets them from the plan each cadence before this runs.
     // (The static appendages are handled per-frame in update(); the core is the shader uniform.)
     if (this.brutalism > 0) {
-      this.eyeMat.color.lerp(SB_CONCRETE, this.brutalism);
-      (this.eyeMat.emissive as THREE.Color).lerp(SB_CONCRETE_DARK, this.brutalism);
-      this.cageMat.color.lerp(SB_CONCRETE, this.brutalism);
+      const target = SB_STYLE_COLORS[this.brutalStyle] ?? SB_CONCRETE;
+      const targetEmissive = SB_STYLE_EMISSIVE[this.brutalStyle] ?? SB_CONCRETE_DARK;
+      this.eyeMat.color.lerp(target, this.brutalism);
+      (this.eyeMat.emissive as THREE.Color).lerp(targetEmissive, this.brutalism);
+      this.cageMat.color.lerp(target, this.brutalism);
     }
     // the mind's own movement output (act[0..2]) becomes a slow drift target
     this.move.set(snap.act[0] ?? 0, (snap.act[1] ?? 0) * 0.5, snap.act[2] ?? 0);

@@ -172,6 +172,31 @@ describe('SuperBodySystem flight + control (V41)', () => {
     reg.forEach((e, i) => expect(e.mat.color.getHex()).toBe(bases[i]!));
   });
 
+  test('BRUTAL style index retargets appendage materials beyond concrete', () => {
+    const body = new SuperBodySystem(new THREE.Scene());
+    const reg = (
+      body as unknown as { brutalStatic: { mat: THREE.MeshStandardMaterial; base: THREE.Color }[] }
+    ).brutalStatic;
+
+    body.setBrutalStyle(2);
+    body.setBrutalism(1);
+    expect(body.brutalStyleIdx()).toBe(2);
+    expect(reg[0]!.mat.color.r).toBeCloseTo(0.95, 5);
+    expect(reg[0]!.mat.color.g).toBeCloseTo(0.82, 5);
+    expect(reg[0]!.mat.color.b).toBeCloseTo(0.55, 5);
+
+    body.setBrutalStyle(3);
+    expect(body.brutalStyleIdx()).toBe(3);
+    expect(reg[0]!.mat.color.r).toBeCloseTo(0.25, 5);
+    expect(reg[0]!.mat.color.g).toBeCloseTo(0.08, 5);
+    expect(reg[0]!.mat.color.b).toBeCloseTo(0.52, 5);
+
+    body.setBrutalStyle(99);
+    expect(body.brutalStyleIdx()).toBe(4);
+    body.setBrutalStyle(-4);
+    expect(body.brutalStyleIdx()).toBe(0);
+  });
+
   test('BRUTALISM coexists with evolution + flight (no NaN, both factors independent)', () => {
     const body = new SuperBodySystem(new THREE.Scene());
     body.setBrutalism(1);

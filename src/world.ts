@@ -1352,16 +1352,17 @@ export class World {
     this.alienFlora.update(dt, t, this.state.chaos / CHAOS_MAX); // flora leans + luminesces with chaos
     // Crossfade the rest of the cosmos — apex bodies, instanced/per-mesh organisms, ground + light rig
     // (AFTER environment.update, so it rides this frame's animated rig).
+    const brutalStyle = this.brutalStyleIdx < 0 ? 0 : this.brutalStyleIdx;
     for (let i = 0; i < this.superBodies.length; i++) {
+      this.superBodies[i]!.setBrutalStyle(brutalStyle);
       this.superBodies[i]!.setBrutalism(bf);
-      this.superBodies[i]!.setBrutalStyle(this.brutalStyleIdx);
     }
     // Unlocked superhero avatar + forked twins are SuperBodySystems too — desaturate them with the five
     // Archons, else BRUTALISM turns the world + Archons concrete while the player creature/twins keep
     // the god-jewel skin. No-op until any hero body is revealed (the array is empty).
     for (let i = 0; i < this.heroBodies.length; i++) {
+      this.heroBodies[i]!.body.setBrutalStyle(brutalStyle);
       this.heroBodies[i]!.body.setBrutalism(bf);
-      this.heroBodies[i]!.body.setBrutalStyle(this.brutalStyleIdx);
     }
     this.environment.applyBrutalism(bf);
     if (this.instanced) this.instanced.setBrutalism(bf);
@@ -3379,6 +3380,10 @@ export class World {
     this.state.brutalism = on;
     // The per-frame step() driver eases brutalismFactor toward this state and applies it to the
     // bodies + the whole cosmos (organisms, ground, lights, sky, fog) — so no direct apply here.
+    for (let i = 0; i < this.superBodies.length; i++)
+      this.superBodies[i]!.setBrutalStyle(this.brutalStyleIdx);
+    for (let i = 0; i < this.heroBodies.length; i++)
+      this.heroBodies[i]!.body.setBrutalStyle(this.brutalStyleIdx);
     this.syncBrutalButton(style.glyph, style.name, style.title);
     this.hud.showSector(`${style.name} ${style.glyph} · ${style.title.toUpperCase()}`);
     this.audit.record('brutalism', { on, style: style.name });

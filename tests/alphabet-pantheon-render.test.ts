@@ -27,6 +27,13 @@ function coreBodyMeshes(scene: THREE.Scene): THREE.InstancedMesh[] {
   );
 }
 
+function firstCoreMatrix(scene: THREE.Scene): number[] {
+  const mesh = coreBodyMeshes(scene)[0]!;
+  const m = new THREE.Matrix4();
+  mesh.getMatrixAt(0, m);
+  return [...m.elements];
+}
+
 describe('AlphabetPantheonRender — 100 archetypes alive in the dome', () => {
   test('renders all 100 archetypes across unique geometry buckets', () => {
     const scene = new THREE.Scene();
@@ -101,6 +108,22 @@ describe('AlphabetPantheonRender — 100 archetypes alive in the dome', () => {
     }
     a.dispose();
     b.dispose();
+  });
+
+  test('dt-driven update freezes while paused and resumes when dt advances', () => {
+    const scene = new THREE.Scene();
+    const r = new AlphabetPantheonRender(scene);
+    r.update(0, 1 / 60);
+    const frozen = firstCoreMatrix(scene);
+
+    r.setChaos(1);
+    r.update(999, 0);
+    expect(firstCoreMatrix(scene)).toEqual(frozen);
+
+    r.update(999, 1 / 60);
+    const resumed = firstCoreMatrix(scene);
+    expect(resumed.some((v, i) => v !== frozen[i])).toBe(true);
+    r.dispose();
   });
 
   test('dispose() is safe', () => {
