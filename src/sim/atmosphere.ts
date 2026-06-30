@@ -118,6 +118,10 @@ export class AtmosphereSystem {
   private readonly auroraMesh: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshBasicMaterial>;
   private readonly auroraPhase: number;
 
+  // V109: dome wireframe circuit overlay — thin lat/long wireframe that pulses with chaos
+  private readonly wireMat: THREE.MeshBasicMaterial;
+  private readonly wireMesh: THREE.Mesh;
+
   /**
    * Build the whole atmosphere and add every object to `ctx.scene`. Draws exactly
    * `RNG_DRAW_COUNT_FIXED + RNG_DRAWS_PER_PARTICLE · floor(maxEntities/4)` samples from
@@ -149,6 +153,23 @@ export class AtmosphereSystem {
       depthWrite: false,
     });
     ctx.scene.add(new THREE.Mesh(domeGeo, domeMat));
+
+    // V109: dome wireframe circuit overlay — thin lat/long wireframe that pulses with chaos.
+    // Gives the dome a wired/circuit-like infrastructure feel instead of a bare gradient sphere.
+    const wireGeo = new THREE.SphereGeometry(DOME_RADIUS * 1.001, 24, 16);
+    this.wireMat = new THREE.MeshBasicMaterial({
+      color: 0x2a4a6a,
+      wireframe: true,
+      transparent: true,
+      opacity: 0.06,
+      side: THREE.BackSide,
+      fog: false,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+    });
+    this.wireMesh = new THREE.Mesh(wireGeo, this.wireMat);
+    this.wireMesh.frustumCulled = false;
+    ctx.scene.add(this.wireMesh);
 
     // ── Haze ribbons: 3 large translucent planes at high altitude. ──────────────
     // 4 rng draws per band (phase, altitude jitter, hue jitter, opacity jitter) = 12.
@@ -466,5 +487,10 @@ export class AtmosphereSystem {
     } else {
       this.auroraMesh.visible = false;
     }
+
+    // V109: dome wireframe circuit — pulse opacity with chaos, slow rotation for circuit feel.
+    this.wireMat.opacity = 0.04 + chaosNorm * 0.12;
+    this.wireMesh.rotation.y = t * 0.008;
+    this.wireMesh.rotation.x = t * 0.005;
   }
 }

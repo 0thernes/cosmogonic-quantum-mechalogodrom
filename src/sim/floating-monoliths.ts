@@ -67,6 +67,10 @@ export class FloatingMonoliths {
   private readonly boxGeo = new THREE.BoxGeometry(1, 1, 1);
   private readonly panelMat: THREE.MeshStandardMaterial;
   private readonly coreMat: THREE.MeshStandardMaterial;
+  // V109: energy beam materials — one shared cylinder geo + additive material per beam
+  private readonly beamGeo: THREE.CylinderGeometry;
+  private readonly beamMat: THREE.MeshBasicMaterial;
+  private readonly beams: THREE.Mesh[] = [];
   /** Total instanced greeble panels placed (telemetry/tests). */
   readonly panelCount: number;
 
@@ -95,6 +99,17 @@ export class FloatingMonoliths {
       metalness: 0.5,
       emissive: 0x120a1e,
       emissiveIntensity: 0.45,
+    });
+    // V109: energy beam — thin additive cylinder from each monolith to ground (scanning/energizing)
+    this.beamGeo = new THREE.CylinderGeometry(0.12, 0.06, 1, 6, 1, true);
+    this.beamMat = new THREE.MeshBasicMaterial({
+      color: 0x4f8cff,
+      transparent: true,
+      opacity: 0.18,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      side: THREE.DoubleSide,
+      fog: false,
     });
 
     const m = new THREE.Matrix4();
@@ -177,6 +192,15 @@ export class FloatingMonoliths {
         group.add(panelMesh);
       }
 
+      // V109: energy beam from monolith to ground — gives floating megaliths PURPOSE
+      // as scanning/energizing nodes, not just decoration.
+      const beam = new THREE.Mesh(this.beamGeo, this.beamMat);
+      beam.frustumCulled = false;
+      beam.position.set(baseX, baseY * 0.5, baseZ);
+      beam.scale.y = baseY;
+      this.scene.add(beam);
+      this.beams.push(beam);
+
       this.scene.add(group);
       this.megaliths.push({
         group,
@@ -205,7 +229,8 @@ export class FloatingMonoliths {
   /** Drift + tumble each megalith; kindle the shared emissive with world chaos. O(COUNT). */
   update(t: number, chaos: number): void {
     const c = chaos < 0 ? 0 : chaos > 1 ? 1 : chaos;
-    for (const mg of this.megaliths) {
+    for (let i = 0; i < this.megaliths.length; i++) {
+      const mg = this.megaliths[i]!;
       const g = mg.group;
       g.position.y = mg.baseY + Math.sin(t * mg.bobFreq + mg.phase) * mg.bobAmp;
       g.position.x = mg.baseX + Math.sin(t * mg.bobFreq * 0.7 + mg.phase * 1.3) * mg.swayAmp;
@@ -213,9 +238,19 @@ export class FloatingMonoliths {
       g.rotation.x += mg.spinX * (0.5 + c);
       g.rotation.y += mg.spinY * (0.5 + c);
       g.rotation.z += mg.spinZ * (0.5 + c);
+      // V109: sync beam to monolith position + pulse opacity with chaos
+      const beam = this.beams[i];
+      if (beam) {
+        beam.position.x = g.position.x;
+        beam.position.z = g.position.z;
+        beam.position.y = g.position.y * 0.5;
+        beam.scale.y = g.position.y;
+      }
     }
     this.panelMat.emissiveIntensity = 0.24 + c * 0.85;
     this.coreMat.emissiveIntensity = 0.35 + c * 0.7;
+    // V109: pulse beam opacity with chaos — more energy when world is agitated
+    this.beamMat.opacity = 0.08 + c * 0.22;
   }
 
   /** Free every owned geometry + material and detach all megaliths. */
@@ -224,10 +259,14 @@ export class FloatingMonoliths {
       this.scene.remove(mg.group);
       mg.panels?.dispose();
     }
+    for (const b of this.beams) this.scene.remove(b);
+    this.beams.length = 0;
     this.megaliths.length = 0;
     for (const a of this.archetypes) a.geo.dispose();
     this.boxGeo.dispose();
+    this.beamGeo.dispose();
     this.panelMat.dispose();
     this.coreMat.dispose();
+    this.beamMat.dispose();
   }
 }
