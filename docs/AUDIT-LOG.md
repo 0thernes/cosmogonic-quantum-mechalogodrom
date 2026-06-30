@@ -11,6 +11,56 @@ dated / historical / "superseded snapshot" copies (per the binding "Living docs,
 
 ---
 
+## 2026-06-30 — Director-level paranoid full-repo audit (62 confirmed findings, adversarially verified)
+
+Exhaustive multi-agent audit: every source file (~230 src + 30 math + 30 ui + server + scripts) assigned
+to a deep-read finder across all dimensions (correctness · numerical · determinism · GPU/resource ·
+TS-soundness · security · dead-code · contract · docs-truth), each finding adversarially re-verified by
+two refute-by-default skeptics. **63 raw → 62 confirmed** (2 critical · 3 high · 14 medium · 43 low).
+Every fix below was independently re-read against the live code before applying; all are determinism-safe.
+
+**FIXED + SHIPPED (`9a8b85a2`, `8ae2fc9a`, `6647041`):**
+
+- **CRITICAL — determinism (#1 law):** `super-mind.ts` spawned a production-only Web Worker that aliased
+  `latent` via a `SharedArrayBuffer` and wrote it off-thread, racing the synchronous `think()` loop. The
+  _shipped_ path was non-deterministic while single-threaded tests stayed green (a verifier that falsely
+  passed). Removed the worker — every runtime now runs the one proven-deterministic path; deleted the
+  orphaned `metacognition-worker.ts`.
+- **CRITICAL — security:** the `run` sandbox let recursive native commands (`grep -r`, `find`, `du`,
+  `tree`, `rg`, `ls -R`) spawn at the repo root and recurse into `legacy/.git/node_modules/.env`, leaking
+  contents/paths the read tools forbid. `confine()` now blocks a private segment at any depth; recursive
+  tools are denied; bare directory tokens are confined. Added a hermetic regression suite.
+- **HIGH — data loss:** `normalize-docs.ts` `fixMojibake` destroyed standalone accented prose (`café…—`)
+  by mis-reading `é` as a UTF-8 lead. Restricted the lead set to real CP1252-misdecode bytes; genuine
+  mojibake repair preserved (verified 5/5).
+- **Correctness:** `moonlabTensorQualia` returned 0 for every length-<4 input (all 5 call sites pass
+  length-3 → qualia coupling was inert); apex stellated-swarm Z drift (read-modify-write accumulator →
+  base-anchor); `gwtSoftmax` all-NaN on `-Infinity` salience → uniform; `gwtCapacityCompete` NaN-capacity
+  admitted nobody → top-1; `eshkol-ad` AD_POW NaN gradient for non-positive base → guarded; toolbar
+  double-bound arrow nav → idempotent; `/api/chat`+`/api/tool` CSRF same-origin guard; alife-metrics
+  blob-URL leak → revoked; engine exposure JSDoc 1.15→0.95.
+
+**DEFERRED (with rationale — not cheating, a judgment call):**
+
+- **Dead-code findings** (`tsotchke-deep-wire` exports, `dual`/`eshkol-ad`/`hyperdual` AD helpers,
+  `ui/ulg-bridge`, 12 sim/math modules): NOT deleted. The AD helpers are a complete math-primitive
+  library (unused exports are normal); the tsotchke/sim modules are deliberately-staged integration work
+  per the corpus-wiring mandate; and the live loop just added tests for several previously-"dead" exports.
+  Deleting would contradict project direction and race the loop. The docs-truth aspect (FILE-MAP listing
+  unwired modules as live) is the loop's SSOT domain.
+- **docs-truth / SSOT findings** (stale `1,477` test count on TECHNICAL-SPEC/specs.html/MEGA-MASTER/
+  HANDOFF/RUNBOOK; `sync-surfaces` suffix-anchored regex gap; build.ts tracked-file overwrite): the live
+  autonomous loop is actively hardening receipt/sync/facts tooling — colliding risks corruption, so these
+  are left to it. Root cause is the sync-regex gap (a synced surface writing a bare number drifts while
+  `sync:check` passes); recommend the loop tighten `scripts/sync-surfaces.ts`.
+- **Ambiguous-intent low findings:** `valence-steering` identical pain/pleasure bias branches MATCH the
+  inline comments (both "toward higher values"); `attention-controller` `mean` could be pre- or
+  post-normalization by design; `myth-ritual` `interface Symbol` shadow is a wide rename. Logged, not
+  guessed.
+
+Remaining low-severity items (HMR/double-mount `<style>`/interval leaks, smoke-server orphan on failure,
+minor numerical edges) are real but dev-only/low-impact; tracked here for a future pass.
+
 ## 2026-06-30 — QA audit pass 2: emergence brutal releases + Windows receipts + petri routing tests
 
 Full-repo paranoid audit. Fixed verified wiring bugs and gate reliability:
