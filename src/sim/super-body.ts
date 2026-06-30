@@ -319,6 +319,8 @@ export class SuperBodySystem {
   private readonly legs: THREE.Group = new THREE.Group();
   private readonly rings: THREE.Mesh[] = [];
   private readonly eyeMat: THREE.MeshStandardMaterial;
+  private readonly scleraMat: THREE.MeshStandardMaterial;
+  private readonly pupils: THREE.Mesh[] = [];
   private readonly armMat: THREE.MeshStandardMaterial;
   private readonly cageMat: THREE.LineBasicMaterial;
   /** BRUTALISM: the STATIC (non-plan-driven) appendage materials + their captured base colour/emissive,
@@ -463,31 +465,53 @@ export class SuperBodySystem {
     );
     this.root.add(this.cage);
 
-    // ── EYE CORONA: many ocular points on a fibonacci sphere — iris (glow) + pupil (void) ──
-    // AMPED: 24 eyes; pupil focus reactivity (scale) + quantum-driven in update. Prebuilt; mask live.
+    // ── EYE CORONA: many ocular points on a fibonacci sphere — layered sclera, iris, pupil, highlight ──
+    // V115: more realistic eye model with a white sclera, a coloured iris, a reactive pupil, and a
+    // specular highlight. All prebuilt; per-frame updates only touch scales and emissive intensity.
     this.eyes = new THREE.Group();
     this.eyeMat = new THREE.MeshStandardMaterial({
       color: 0x0f0307,
       emissive: 0xff2a3c,
       emissiveIntensity: 4.2,
+      roughness: 0.4,
+      metalness: 0.2,
     });
-    const irisGeo = new THREE.SphereGeometry(R * 0.12, 14, 14);
-    const pupilGeo = new THREE.SphereGeometry(R * 0.06, 10, 10);
+    this.scleraMat = new THREE.MeshStandardMaterial({
+      color: 0xeae5ff,
+      roughness: 0.35,
+      metalness: 0.1,
+      emissive: 0x101018,
+      emissiveIntensity: 0.2,
+    });
+    const scleraGeo = new THREE.SphereGeometry(R * 0.13, 18, 18);
+    const irisGeo = new THREE.SphereGeometry(R * 0.1, 18, 18);
+    const pupilGeo = new THREE.SphereGeometry(R * 0.045, 14, 14);
+    const highlightGeo = new THREE.SphereGeometry(R * 0.018, 8, 8);
     const pupilMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
+    const highlightMat = new THREE.MeshBasicMaterial({
+      color: 0xffffff,
+      transparent: true,
+      opacity: 0.7,
+    });
     for (let i = 0; i < EYES; i++) {
       const y = 1 - (i / (EYES - 1)) * 2; // −1..1
       const r = Math.sqrt(Math.max(0, 1 - y * y));
-      // Ralph heartbeat re-audit 10x continue: use libirrepWigner (Tsotchke libirrep) for eye angle in ctor for equivariant placement (more corpus in body geo)
       const wAng = libirrepWigner(2, i, 0.05);
       const th = i * GOLDEN + wAng;
       const dir = new THREE.Vector3(Math.cos(th) * r, y, Math.sin(th) * r);
       const eye = new THREE.Group();
       eye.position.copy(dir).multiplyScalar(R * 1.02);
+      eye.lookAt(eye.position.clone().add(dir));
+      const sclera = new THREE.Mesh(scleraGeo, this.scleraMat);
       const iris = new THREE.Mesh(irisGeo, this.eyeMat);
+      iris.position.z = R * 0.03;
       const pupil = new THREE.Mesh(pupilGeo, pupilMat);
-      pupil.position.copy(dir).multiplyScalar(R * 0.1); // pupil sits proud, facing out
-      eye.add(iris, pupil);
+      pupil.position.z = R * 0.055;
+      const highlight = new THREE.Mesh(highlightGeo, highlightMat);
+      highlight.position.set(R * 0.025, R * 0.035, R * 0.075);
+      eye.add(sclera, iris, pupil, highlight);
       this.eyes.add(eye);
+      this.pupils.push(pupil);
     }
     this.root.add(this.eyes);
 
@@ -802,7 +826,7 @@ export class SuperBodySystem {
     const qp = quakePerturb(this.quakeFactor, this.seed || 1); // actual call, Ralph 10x live wire from quantum-quake corpus
     const hybridPulse = qp * (1 + (ulgMix - 0.5) * 0.1);
 
-    // EYES: amp reactivity — global scale + per-eye pupil "focus" (scale pupils) + light jitter orient
+    // EYES: amp reactivity — global scale + per-eye pupil "focus" + iris shimmer + highlight glint
     this.eyes.scale.setScalar(beat);
     this.eyes.children.forEach((e, i) => {
       const on = i < effMaskEye ? 1.0 : 0.0;
@@ -810,9 +834,9 @@ export class SuperBodySystem {
       const wAng = libirrepWigner(sym, i, 0.1 * Math.sin(t * 3 + i));
       const eyeScale = on * (0.9 + 0.05 * wAng + (hybridPulse - 1) * 0.02);
       e.scale.setScalar(eyeScale);
-      // focus pupils...
+      // focus pupils (children[2] in the new layered eye: sclera, iris, pupil, highlight)
       const grp = e as THREE.Group;
-      const pup = grp.children[1] as THREE.Object3D | undefined;
+      const pup = grp.children[2] as THREE.Object3D | undefined;
       if (pup) {
         const f =
           0.55 +
@@ -820,6 +844,13 @@ export class SuperBodySystem {
             (0.5 + 0.5 * Math.sin(t * 5.3 + this.arousal * 2.7 + qWaveU * 2 + this.surprise * 3));
         pup.scale.setScalar(f * on);
         pup.rotation.y = Math.sin(t * 1.9 + i) * 0.11 * (0.3 + 0.7 * qs) * on + wAng * 0.05 * on;
+      }
+      // subtle highlight shimmer
+      const hi = grp.children[3] as THREE.Object3D | undefined;
+      if (hi) {
+        hi.position.x = R * 0.025 + Math.sin(t * 2 + i) * 0.015 * on;
+        hi.position.y = R * 0.035 + Math.cos(t * 1.7 + i) * 0.015 * on;
+        hi.scale.setScalar(0.9 + 0.2 * Math.sin(t * 4 + i) * on);
       }
     });
 
@@ -1076,6 +1107,7 @@ export class SuperBodySystem {
       else mat?.dispose();
     });
     this.eyeMat.dispose();
+    this.scleraMat.dispose();
     this.armMat.dispose();
     this.cageMat.dispose();
   }

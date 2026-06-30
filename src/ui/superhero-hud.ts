@@ -25,15 +25,14 @@ export interface HeroHudView extends SuperheroView {
 const INVENTORY = ['◈', '❄', '⚛', '✶', '☍', '⬡'];
 
 const STYLE = `
-#cqm-hero{position:fixed;top:calc(42px + env(safe-area-inset-top,0px));left:var(--cqm-hud-left,calc(clamp(200px,20vw,280px) + 10px));
-  right:var(--cqm-hud-right,calc(clamp(260px,26vw,400px) + 10px));
-  width:auto;max-width:none;max-height:min(72vh,540px);overflow:visible;
-  transform:translateY(-150%);z-index:150;
-  transition:transform .55s cubic-bezier(.2,.9,.3,1);font-size:15px;line-height:1.45;font-family:var(--font-mono,ui-monospace,monospace);
+#cqm-hero{position:fixed;top:calc(42px + env(safe-area-inset-top,0px));left:50%;
+  width:min(94vw,760px);max-height:min(78vh,580px);overflow:visible;
+  transform:translate(-50%,-150%);z-index:150;
+  transition:transform .55s cubic-bezier(.2,.9,.3,1);font-size:13px;line-height:1.45;font-family:var(--font-mono,ui-monospace,monospace);
   color:#e9e3ff;pointer-events:none;
   display:flex;justify-content:center;align-items:flex-start}
-#cqm-hero.on{transform:translateY(0)}
-#cqm-hero.on.closed{transform:translateY(-150%)}
+#cqm-hero.on{transform:translate(-50%,0)}
+#cqm-hero.on.closed{transform:translate(-50%,-150%)}
 #cqm-hero.on.min .cqm-hero-box{display:none}
 #cqm-hero.on.min .cqm-hero-fab{display:grid}
 #cqm-hero:not(.min) .cqm-hero-fab{display:none}
@@ -73,12 +72,11 @@ const STYLE = `
 /* V101: tablet landscape 600-1400px — same column values as app.css (already set above for 769-1400).
    For 600-768px tablets, match the same clamp values so the HUD sits between the grid columns. */
 @media (min-width:600px) and (max-width:768px) and (orientation:landscape){
-  #cqm-hero{left:calc(clamp(120px,20vw,190px) + 10px);right:calc(clamp(120px,22vw,210px) + 10px);
-    top:4px;max-height:none;overflow:hidden}
+  #cqm-hero{left:50%;top:4px;max-height:none;overflow:hidden}
 }
 /* V100: very narrow landscape (rotated phone / small tablet) — stack vertically, don't overlap */
 @media (max-height:520px) and (orientation:landscape){
-  #cqm-hero{left:6px;right:6px;top:3px;font-size:10px;max-height:none;overflow:hidden}
+  #cqm-hero{left:50%;top:3px;font-size:10px;max-height:none;overflow:hidden}
   .cqm-hero-box{padding:8px 10px;gap:8px}
   .cqm-hero-r{gap:6px}
 }
