@@ -260,14 +260,14 @@ body:has(#cqm-hud-nav) #cqm-dock {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  height: 28px;
-  padding: 0 10px;
-  border-radius: 14px;
+  height: 30px;
+  padding: 0 11px;
+  border-radius: 15px;
   border: 1px solid rgba(120, 160, 220, 0.32);
   background: rgba(14, 22, 42, 0.88);
   color: #cfe0fb;
-  font: 600 11px/1 var(--font-mono, ui-monospace, monospace);
-  letter-spacing: 0.08em;
+  font: 600 12px/1 var(--font-mono, ui-monospace, monospace);
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   text-decoration: none;
   white-space: nowrap;
@@ -289,8 +289,8 @@ body:has(#cqm-hud-nav) #cqm-dock {
 #cqm-persist-nav .cqm-persist-btn.cqm-persist-sim {
   border-color: rgba(255, 160, 80, 0.42);
   color: #ffd4a8;
-  padding: 0 7px;
-  font-size: 10px;
+  padding: 0 8px;
+  font-size: 11px;
 }
 #cqm-persist-nav .cqm-persist-btn.cqm-persist-transport {
   border-color: rgba(100, 220, 180, 0.38);
@@ -320,10 +320,10 @@ body:has(#cqm-hud-nav) #cqm-dock {
 }
 #cqm-persist-nav .cqm-persist-row--sim .cqm-persist-btn,
 #cqm-persist-nav .cqm-persist-row--panels .cqm-persist-btn {
-  height: 26px;
-  padding-inline: 7px;
-  font-size: 9px;
-  letter-spacing: 0.05em;
+  height: 28px;
+  padding-inline: 8px;
+  font-size: 11px;
+  letter-spacing: 0.04em;
 }
 #cqm-persist-nav .cqm-persist-row--docs .cqm-persist-btn {
   border-color: rgba(120, 160, 220, 0.32);
@@ -739,10 +739,17 @@ function buildPersistentNav(doc: Document): void {
       ),
     );
   }
-  const settingsToggle = doc.getElementById('cqm-settings-toggle');
-  if (settingsToggle) {
-    rowDocs.appendChild(mkBtn('⚙ SET', 'Simulation settings', () => settingsToggle.click()));
-  }
+  rowDocs.appendChild(
+    mkBtn('⚙ SET', 'Simulation settings', () => {
+      const w = doc.defaultView as typeof window & { cqmToggleSettings?: () => void };
+      if (typeof w?.cqmToggleSettings === 'function') {
+        w.cqmToggleSettings();
+      } else {
+        const toggleBtn = doc.getElementById('cqm-settings-toggle');
+        toggleBtn?.click();
+      }
+    }),
+  );
   rowDocs.appendChild(mkAct('🔇 MUTE', 'Mute all audio (toggle)', 'mute', 'cqm-persist-audio'));
   strip.appendChild(rowDocs);
 

@@ -999,6 +999,9 @@ export class World {
       geometries: geos.length,
       sim: this.state.sim,
     });
+    if (typeof window !== 'undefined') {
+      (window as any).world = this;
+    }
   }
 
   /** V66: the world BOOTS at ~500 organisms so the first frame loads instantly, then ramps. */
