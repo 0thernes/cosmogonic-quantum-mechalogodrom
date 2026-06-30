@@ -62,7 +62,7 @@ export class MonolithTemple {
   private readonly greeble: TempleGreeble;
   private readonly geos: THREE.BufferGeometry[] = [];
   private readonly mats: THREE.Material[] = [];
-  private readonly portalMat: THREE.MeshBasicMaterial;
+  private readonly portalMat: THREE.ShaderMaterial;
   private readonly haloMat: THREE.MeshBasicMaterial;
   private readonly shadowMat: THREE.MeshBasicMaterial;
   private readonly singularityMat: THREE.MeshBasicMaterial;
@@ -278,15 +278,55 @@ export class MonolithTemple {
     this.singularityRing.frustumCulled = false;
     this.group.add(this.singularityRing);
 
-    const discGeo = new THREE.CircleGeometry(7.5 * U, 48);
+    const discGeo = new THREE.CircleGeometry(7.5 * U, 96);
     this.geos.push(discGeo);
-    this.portalMat = new THREE.MeshBasicMaterial({
-      color: PORTAL_A.clone(),
+    // V109: hyper-graphic wormhole portal shader — swirling vortex, event-horizon ring, chromatic spill.
+    this.portalMat = new THREE.ShaderMaterial({
       transparent: true,
-      opacity: 0.0,
       side: THREE.DoubleSide,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
+      uniforms: {
+        uTime: { value: 0 },
+        uOpacity: { value: 0 },
+        uColor: { value: new THREE.Vector3(PORTAL_A.r, PORTAL_A.g, PORTAL_A.b) },
+        uReactivity: { value: 0 },
+      },
+      vertexShader: `
+        varying vec2 vUv;
+        void main() {
+          vUv = uv;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+      `,
+      fragmentShader: `
+        uniform float uTime;
+        uniform float uOpacity;
+        uniform vec3 uColor;
+        uniform float uReactivity;
+        varying vec2 vUv;
+        void main() {
+          vec2 c = vUv - 0.5;
+          float r = length(c);
+          float a = atan(c.y, c.x);
+          // Wormhole spiral: twist angle with depth falloff.
+          float spiral = sin(a * 5.0 - uTime * 3.0 + r * 14.0) * 0.5 + 0.5;
+          float tunnel = smoothstep(0.48, 0.0, r);
+          float horizon = smoothstep(0.12, 0.0, r);
+          float edge = smoothstep(0.5, 0.42, r) * smoothstep(0.34, 0.42, r);
+          float swirl = spiral * tunnel * (0.7 + 0.6 * uReactivity);
+          vec3 core = vec3(0.0, 0.02, 0.05) * horizon * 4.0;
+          vec3 rim = uColor * (swirl + edge * 1.4) * (1.0 + uReactivity);
+          // Chromatic aberration near the spin center.
+          vec3 chroma = vec3(
+            0.5 + 0.5 * sin(a * 3.0 - uTime * 2.1),
+            0.5 + 0.5 * sin(a * 3.0 - uTime * 2.1 + 2.094),
+            0.5 + 0.5 * sin(a * 3.0 - uTime * 2.1 + 4.188)
+          ) * tunnel * 0.35 * uReactivity;
+          float alpha = clamp(tunnel * (0.45 + uReactivity * 0.35) + horizon * 0.6 + edge * 0.5, 0.0, 1.0) * uOpacity;
+          gl_FragColor = vec4(core + rim + chroma, alpha);
+        }
+      `,
     });
     this.mats.push(this.portalMat);
     const disc = new THREE.Mesh(discGeo, this.portalMat);
@@ -463,8 +503,15 @@ export class MonolithTemple {
     this.shadow = ease * (0.12 + 0.88 * (0.4 * this.entropy + 0.35 * this.chaos + 0.25 * flicker));
     this.cageWarp = ARENA_MID * ease * (0.7 + 5.6 * this.reactivity);
     this.portalColor.copy(PORTAL_A).lerp(PORTAL_B, pulse);
-    this.portalMat.color.copy(this.portalColor);
-    this.portalMat.opacity = (0.28 + pulse * 0.26 + this.reactivity * 0.22) * ease;
+    const u = this.portalMat.uniforms;
+    (u.uColor!.value as THREE.Vector3).set(
+      this.portalColor.r,
+      this.portalColor.g,
+      this.portalColor.b,
+    );
+    (u.uOpacity!.value as number) = (0.28 + pulse * 0.26 + this.reactivity * 0.22) * ease;
+    (u.uTime!.value as number) = safeT;
+    (u.uReactivity!.value as number) = this.reactivity;
     this.haloMat.opacity = (0.08 + pulse * 0.1 + this.reactivity * 0.18) * ease;
     this.shadowMat.opacity = Math.min(0.85, 0.22 + this.shadow * 0.55);
     this.shadowCore.scale.setScalar(0.75 + ease * 0.2 + this.shadow * 0.38);
