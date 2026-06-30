@@ -95,14 +95,15 @@ WEATHERS.forEach((w, i) => {
 });
 
 describe('construction', () => {
-  test('builds headless and adds dome + 3 ribbons + particulate + aurora to the scene', () => {
+  test('builds headless and adds dome + ribbons + particulate + aurora + wireframe overlay', () => {
     const ctx = makeCtx(1, 800);
     const atmos = new AtmosphereSystem(ctx);
     expect(atmos).toBeInstanceOf(AtmosphereSystem);
-    // dome (Mesh) + 3 ribbon Meshes + 1 Points + aurora Mesh = 5 Meshes + 1 Points.
+    // dome (Mesh) + 3 ribbon Meshes + aurora Mesh + V109 dome-wireframe circuit overlay (Mesh)
+    // = 6 Meshes + 1 Points (particulate).
     const meshes = ctx.scene.children.filter((c) => c instanceof THREE.Mesh);
     const points = ctx.scene.children.filter((c) => c instanceof THREE.Points);
-    expect(meshes.length).toBe(5);
+    expect(meshes.length).toBe(6);
     expect(points.length).toBe(1);
   });
 
