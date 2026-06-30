@@ -53,7 +53,10 @@ const WARP_DETAIL = 4;
 const CORE_R = 30;
 /** Spawn-ring radius for the ten variants (mid-far, framing the centre). */
 const RING_R = ARENA_RADIUS * 0.72;
-const MECHA_TIME_SCALE = 10;
+/** Intrinsic churn rate of the god's body, DOME-INDEPENDENT (localT advances at this × real time).
+ *  Owner calibration: the old look only read as "normal" at Dome ×5 and should be the creature's OWN
+ *  ×0.1 — i.e. the body needed ~50× the old shared exterior rate (0.12), so its 1× = 6.0 rad/s. */
+const MECHA_TIME_SCALE = 50;
 const MECHA_EXTERIOR_TIME_SCALE = 0.12;
 const MECHA_SATELLITE_COUNT = 400;
 const MECHA_CORE_SEGMENTS = 128;
@@ -373,7 +376,9 @@ export class Mechalogodrom {
     const scale = MECHA_TIME_SCALE / Math.max(this.worldTimeScale, 0.05);
     this.localT += dt * scale;
     const lt = this.localT;
-    this.fusion = clamp(this.fusion + (dt * scale) / CONVERGE_SECONDS, 0, 1);
+    // Fusion is the ONE-TIME genesis intro — keep it on dome-real time (~CONVERGE_SECONDS), NOT the
+    // 50× body churn, so the ten titans visibly fly in and fuse instead of snapping whole instantly.
+    this.fusion = clamp(this.fusion + dt / CONVERGE_SECONDS, 0, 1);
     const f = this.fusion;
     const ease = f * f * f * (f * (f * 6 - 15) + 10);
 
