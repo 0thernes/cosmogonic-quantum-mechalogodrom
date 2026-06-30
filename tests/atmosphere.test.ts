@@ -100,11 +100,11 @@ describe('construction', () => {
     const atmos = new AtmosphereSystem(ctx);
     expect(atmos).toBeInstanceOf(AtmosphereSystem);
     // dome (Mesh) + 3 ribbon Meshes + aurora Mesh + V109 dome-wireframe circuit overlay (Mesh)
-    // = 6 Meshes + 1 Points (particulate).
+    // = 6 Meshes + 2 Points (particulate + rain).
     const meshes = ctx.scene.children.filter((c) => c instanceof THREE.Mesh);
     const points = ctx.scene.children.filter((c) => c instanceof THREE.Points);
     expect(meshes.length).toBe(6);
-    expect(points.length).toBe(1);
+    expect(points.length).toBe(2);
   });
 
   test('particulate count is floor(maxEntities / 4)', () => {

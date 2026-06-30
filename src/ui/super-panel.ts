@@ -70,7 +70,6 @@ const STYLE = `
 #cqm-sup-panel.minimized .cqm-sup-neural-host,
 #cqm-sup-panel.minimized .cqm-sup-archons{display:none}
 #cqm-sup-panel.minimized .cqm-sup-head{border-bottom:none}
-#cqm-sup-panel.minimized .cqm-sup-min::before{content:'+'}
 .cqm-sup-x:focus-visible{outline:1px solid #c478ff}
 /* V70: the data area lays out HORIZONTALLY so the short HUD strip never needs a vertical scrollbar.
    Identity column on the left; the bars wrap into a compact multi-column grid on the right. */

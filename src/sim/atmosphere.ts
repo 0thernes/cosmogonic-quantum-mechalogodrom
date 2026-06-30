@@ -122,6 +122,13 @@ export class AtmosphereSystem {
   private readonly wireMat: THREE.MeshBasicMaterial;
   private readonly wireMesh: THREE.Mesh;
 
+  // V109: rain particles (visible only during RAIN weather) + lightning flash
+  private readonly rainPos: Float32Array;
+  private readonly rainPosAttr: THREE.BufferAttribute;
+  private readonly rainMat: THREE.PointsMaterial;
+  private readonly rainMesh: THREE.Points;
+  private lightningFlash = 0;
+
   /**
    * Build the whole atmosphere and add every object to `ctx.scene`. Draws exactly
    * `RNG_DRAW_COUNT_FIXED + RNG_DRAWS_PER_PARTICLE · floor(maxEntities/4)` samples from
@@ -170,6 +177,36 @@ export class AtmosphereSystem {
     this.wireMesh = new THREE.Mesh(wireGeo, this.wireMat);
     this.wireMesh.frustumCulled = false;
     ctx.scene.add(this.wireMesh);
+
+    // V109: rain particles — deterministic positional hash, no rng draws.
+    // Only visible during RAIN weather; falls straight down with wind drift.
+    const RAIN_COUNT = 600;
+    this.rainPos = new Float32Array(RAIN_COUNT * 3);
+    for (let i = 0; i < RAIN_COUNT; i++) {
+      const i3 = i * 3;
+      const s = Math.sin(i * 41.17 + 13.91) * 24634.6345;
+      const h = s - Math.floor(s);
+      this.rainPos[i3] = (h - 0.5) * GROUND_EXTENT;
+      this.rainPos[i3 + 1] = h * 140 * ARENA_Y;
+      this.rainPos[i3 + 2] = (((Math.sin(i * 17.13 + 7.7) * 4131.7) % 1) - 0.5) * GROUND_EXTENT;
+    }
+    const rainGeo = new THREE.BufferGeometry();
+    this.rainPosAttr = new THREE.BufferAttribute(this.rainPos, 3);
+    rainGeo.setAttribute('position', this.rainPosAttr);
+    this.rainMat = new THREE.PointsMaterial({
+      color: 0x6a8aaa,
+      size: 2 * ARENA_Y,
+      transparent: true,
+      opacity: 0,
+      blending: THREE.AdditiveBlending,
+      sizeAttenuation: true,
+      depthWrite: false,
+      fog: false,
+    });
+    this.rainMesh = new THREE.Points(rainGeo, this.rainMat);
+    this.rainMesh.frustumCulled = false;
+    this.rainMesh.visible = false;
+    ctx.scene.add(this.rainMesh);
 
     // ── Haze ribbons: 3 large translucent planes at high altitude. ──────────────
     // 4 rng draws per band (phase, altitude jitter, hue jitter, opacity jitter) = 12.
@@ -492,5 +529,55 @@ export class AtmosphereSystem {
     this.wireMat.opacity = 0.04 + chaosNorm * 0.12;
     this.wireMesh.rotation.y = t * 0.008;
     this.wireMesh.rotation.x = t * 0.005;
+
+    // V109: rain particles — only visible during RAIN weather.
+    if (weather === 'RAIN') {
+      this.rainMesh.visible = true;
+      const targetOp = 0.35 + chaosNorm * 0.2;
+      this.rainMat.opacity = lerp(this.rainMat.opacity, targetOp, clamp(dt * 3, 0, 1));
+      // Fall + wind drift + wrap
+      const fallSpeed = (30 + chaosNorm * 20) * ARENA_Y;
+      const windDrift = s.wind.x * 0.01;
+      const halfR = GROUND_EXTENT * 0.5;
+      const topY = 140 * ARENA_Y;
+      for (let i = 0; i < this.rainPos.length; i += 3) {
+        const px = this.rainPos[i];
+        const py = this.rainPos[i + 1];
+        const pz = this.rainPos[i + 2];
+        if (px !== undefined && py !== undefined && pz !== undefined) {
+          let nx = px + windDrift * dt * 60;
+          let ny = py - fallSpeed * dt;
+          const nz = pz + s.wind.z * 0.005 * dt * 60;
+          if (ny < 0) ny = topY;
+          if (nx > halfR) nx -= GROUND_EXTENT;
+          else if (nx < -halfR) nx += GROUND_EXTENT;
+          this.rainPos[i] = nx;
+          this.rainPos[i + 1] = ny;
+          this.rainPos[i + 2] = nz;
+        }
+      }
+      this.rainPosAttr.needsUpdate = true;
+    } else {
+      this.rainMat.opacity = lerp(this.rainMat.opacity, 0, clamp(dt * 2, 0, 1));
+      if (this.rainMat.opacity <= 0.001) this.rainMesh.visible = false;
+    }
+
+    // V109: lightning flash during STORM — random brief brightness pulse on the dome.
+    if (weather === 'STORM') {
+      if (this.lightningFlash <= 0 && Math.random() < 0.003 + chaosNorm * 0.005) {
+        this.lightningFlash = 0.15; // 150ms flash
+      }
+      if (this.lightningFlash > 0) {
+        this.lightningFlash -= dt;
+        const flash = Math.max(0, this.lightningFlash / 0.15);
+        this.wireMat.color.setRGB(0.6 + flash * 0.4, 0.7 + flash * 0.3, 1.0);
+        this.wireMat.opacity = 0.04 + chaosNorm * 0.12 + flash * 0.3;
+      } else {
+        this.wireMat.color.setHex(0x2a4a6a);
+      }
+    } else {
+      this.lightningFlash = 0;
+      this.wireMat.color.setHex(0x2a4a6a);
+    }
   }
 }
