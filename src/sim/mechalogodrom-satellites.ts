@@ -35,20 +35,25 @@ export class MechalogodromSatellites {
     const vertexShader = `
       varying vec2 vUv;
       varying vec3 vPos;
+      varying vec3 vNormal;
       varying vec3 vColor;
       attribute vec3 instanceColor;
       uniform float uTime;
 
       void main() {
         vUv = uv;
-        vPos = position;
         vColor = instanceColor;
-        
-        // Crazy localized vertex displacement
+
+        // Multi-layered displacement: each artifact is a writhing, non-uniform knot.
         vec3 displaced = position;
-        float warp = sin(position.x * 5.0 + uTime) * cos(position.y * 5.0 - uTime) * 0.2;
-        displaced += normal * warp;
-        
+        float w1 = sin(position.x * 6.0 + uTime * 1.7) * cos(position.y * 6.0 - uTime * 1.3) * 0.35;
+        float w2 = sin(position.z * 9.0 + uTime * 2.1) * cos(position.x * 7.0 + uTime * 0.9) * 0.22;
+        float w3 = sin(position.y * 11.0 + position.x * 5.0 - uTime * 1.5) * 0.15;
+        displaced += normal * (w1 + w2 + w3);
+
+        vPos = displaced;
+        vNormal = normalize(normalMatrix * mat3(instanceMatrix) * normal);
+
         vec4 mvPosition = instanceMatrix * vec4(displaced, 1.0);
         gl_Position = projectionMatrix * modelViewMatrix * mvPosition;
       }
@@ -57,28 +62,55 @@ export class MechalogodromSatellites {
     const fragmentShader = `
       varying vec2 vUv;
       varying vec3 vPos;
+      varying vec3 vNormal;
       varying vec3 vColor;
       uniform float uTime;
 
+      float hash(vec2 p) { return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
+      float noise(vec2 p) {
+        vec2 i = floor(p);
+        vec2 f = fract(p);
+        f = f * f * (3.0 - 2.0 * f);
+        return mix(mix(hash(i), hash(i + vec2(1.0, 0.0)), f.x),
+                   mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), f.x), f.y);
+      }
+
       void main() {
-        // Insane geometric fractal math for the 'dark star' effect
-        vec3 p = vPos * 1.5;
-        for(int i=0; i<4; i++) {
-            p = abs(p) / dot(p, p) - vec3(0.4);
+        // Kleinian/IFS-style surface folding for the dark-star body.
+        vec3 p = vPos * 1.8;
+        for(int i = 0; i < 4; i++) {
+          p = abs(p) / dot(p, p) - vec3(0.4 + 0.05 * sin(uTime * 0.5 + float(i)));
         }
         float d = length(p);
-        
-        // Core dark star look: black holes and glitching neon
-        vec3 baseColor = mix(vec3(0.02, 0.0, 0.05), vColor, 0.6);
-        vec3 starFire = baseColor * (sin(d * 8.0 - uTime * 3.0) * 0.5 + 0.5);
-        
-        // Glitch artifacts
-        float noise = fract(sin(dot(vPos.xy, vec2(12.9898, 78.233)) + uTime) * 43758.5453);
-        vec3 glitch = vec3(0.2, 0.8, 1.0) * step(0.95, noise);
-        
-        vec3 finalColor = starFire + glitch;
-        // Dark center
-        finalColor *= smoothstep(0.2, 1.0, length(vPos));
+
+        vec3 n = normalize(vNormal);
+        vec3 v = normalize(-vPos);
+        float fresnel = pow(1.0 - clamp(dot(n, v), 0.0, 1.0), 2.5);
+
+        // Base color from the instance hue, then plasma bands.
+        vec3 baseColor = mix(vec3(0.02, 0.0, 0.05), vColor, 0.7);
+        vec3 starFire = baseColor * (sin(d * 8.0 - uTime * 4.0) * 0.5 + 0.5);
+        starFire += vColor * fresnel * 0.9;
+
+        // Bioluminescent ridges.
+        float ridges = sin(vPos.y * 18.0 + uTime * 3.0) * sin(vPos.x * 14.0 - uTime * 2.0);
+        ridges = smoothstep(0.2, 0.9, ridges);
+        vec3 ridgeColor = vColor * 1.4 + vec3(0.1, 0.25, 0.35);
+        starFire = mix(starFire, ridgeColor, ridges * 0.45);
+
+        // Glitch sparks.
+        float n0 = noise(vUv * 40.0 + uTime * 6.0);
+        float n1 = noise(vUv * 60.0 - uTime * 4.0);
+        float spark = step(0.94, n0) * step(0.85, n1);
+        vec3 glitch = vec3(0.3, 0.85, 1.0) * spark;
+        glitch += vec3(1.0, 0.2, 0.5) * step(0.96, n1) * (0.5 + 0.5 * sin(uTime * 8.0));
+
+        // Chromatic spill at the rim.
+        vec3 aberration = vec3(0.25, 0.08, -0.12) * fresnel * (0.5 + 0.5 * sin(uTime * 5.0));
+
+        vec3 finalColor = starFire + glitch + aberration;
+        // Darken the center: a tiny black heart inside each artifact.
+        finalColor *= smoothstep(0.15, 0.85, length(vPos));
 
         gl_FragColor = vec4(finalColor, 0.95);
       }
@@ -119,43 +151,55 @@ export class MechalogodromSatellites {
   }
 
   update(t: number, power: number, warp: number, drive: number): void {
-    const st = t * 25.0; // MASSIVE SPEED INCREASE
+    const st = t * 60.0; // keep tempo with the accelerated Mechalogodrom
     if (this.mesh.material instanceof THREE.ShaderMaterial) {
       const uTime = this.mesh.material.uniforms.uTime;
-      if (uTime) uTime.value = t * 15.0;
+      if (uTime) uTime.value = t * 35.0;
     }
 
-    const pScale = 1 + drive * 0.4 + power * 0.0001;
-    const wScale = 1 + warp * 0.3;
+    const pScale = 1 + drive * 0.6 + Math.min(power * 0.0002, 1.5);
+    const wScale = 1 + warp * 0.5;
     for (let i = 0; i < this.count; i++) {
       const sd = this.seeds[i]!;
+      // Base spherical orbit.
       const th = sd.a + st * sd.freqTheta;
       const ph = sd.phiOffset + st * sd.freqPhi;
       const wb = Math.sin(st * sd.freqWobble + i);
-      const r = sd.r0 + sd.r1 * Math.sin(th * 3 + st) + sd.r2 * wb;
+      // Lissajous/chaotic radial breathe: the swarm is alive, not clockwork.
+      const r =
+        sd.r0 +
+        sd.r1 * Math.sin(th * 3.0 + st * 1.2) +
+        sd.r2 * wb +
+        sd.r2 * 0.5 * Math.cos(ph * 2.7 + st * 0.7);
       const x = Math.cos(th) * Math.cos(ph) * r;
-      const y = Math.sin(ph) * r + Math.sin(th * 2 + st) * sd.r1 * 0.4;
+      const y = Math.sin(ph) * r + Math.sin(th * 2.0 + st) * sd.r1 * 0.6;
       const z = Math.sin(th) * Math.cos(ph) * r;
       this.p.set(x, y, z);
-      const strangeX = Math.sin(th * 2.7 + st * 0.6) * sd.r2 * 1.5;
-      const strangeY = Math.cos(ph * 1.9 - st * 0.4) * sd.r2 * 1.5;
-      const strangeZ = Math.sin(th * 1.3 + ph * 2.1) * sd.r2 * 1.5;
+      // Strange-attractor-like wander: each satellite follows its own local manifold.
+      const strangeX = Math.sin(th * 2.7 + st * 0.9) * Math.cos(ph * 1.3) * sd.r2 * 2.2;
+      const strangeY = Math.cos(ph * 1.9 - st * 0.6) * Math.sin(th * 0.8) * sd.r2 * 2.2;
+      const strangeZ = Math.sin(th * 1.3 + ph * 2.1 + st * 0.5) * sd.r2 * 2.2;
       this.p.x += strangeX * wScale;
       this.p.y += strangeY * wScale;
       this.p.z += strangeZ * wScale;
-      this.e.set(st * sd.spin + sd.tilt, st * sd.spin * 0.7 + ph, st * sd.spin * 0.4 + th);
-      this.q.setFromEuler(this.e);
-      const baseSize = sd.size * pScale;
-      this.s.set(
-        baseSize * (1 + 0.3 * Math.sin(st + i)),
-        baseSize * (1 + 0.3 * Math.cos(st + i * 1.3)),
-        baseSize * (1 + 0.3 * Math.sin(st * 0.7 + i * 0.7)),
+      // Gyroscopic tumble with precession.
+      this.e.set(
+        st * sd.spin + sd.tilt + Math.sin(st * 0.3 + i) * 0.8,
+        st * sd.spin * 0.7 + ph + Math.cos(st * 0.4 + i) * 0.6,
+        st * sd.spin * 0.4 + th + Math.sin(st * 0.5 + i * 1.1) * 0.7,
       );
+      this.q.setFromEuler(this.e);
+      // Non-uniform "grown" scales: shards, lenses, writhing knots.
+      const baseSize = sd.size * pScale;
+      const sx = baseSize * (1.0 + 0.4 * Math.sin(st * 0.8 + i) + 0.2 * drive);
+      const sy = baseSize * (1.0 + 0.4 * Math.cos(st * 1.1 + i * 1.3));
+      const sz = baseSize * (1.0 + 0.4 * Math.sin(st * 0.6 + i * 0.7));
+      this.s.set(sx, sy, sz);
       this.m.compose(this.p, this.q, this.s);
       this.mesh.setMatrixAt(i, this.m);
-      const hue = (sd.hue + 0.05 * st + 0.1 * drive + 0.05 * wb) % 1;
-      const lit = 0.5 + 0.3 * drive + 0.2 * Math.sin(st + i);
-      this.c.setHSL(hue < 0 ? hue + 1 : hue, 1.0, Math.min(lit, 1.0));
+      const hue = (sd.hue + 0.08 * st + 0.15 * drive + 0.08 * wb) % 1;
+      const lit = 0.42 + 0.35 * drive + 0.25 * Math.sin(st + i);
+      this.c.setHSL(hue < 0 ? hue + 1 : hue, 0.92, Math.min(lit, 0.95));
       this.mesh.setColorAt(i, this.c);
     }
     this.mesh.instanceMatrix.needsUpdate = true;

@@ -6,7 +6,9 @@ import {
   ARENA,
   ARENA_MID,
   ARENA_Y,
+  CHAOS_MAX,
   DIORAMA_CONFIG,
+  ENTROPY_MAX,
   GROUND_EXTENT,
   MONOLITH_CONFIG,
   PIPE_LINKS,
@@ -120,6 +122,13 @@ interface PipeRig {
   tube: THREE.Mesh<THREE.TubeGeometry, THREE.MeshStandardMaterial>;
   curve: THREE.CatmullRomCurve3;
   packets: PacketRig[];
+}
+
+interface GroundShaderUniforms {
+  uTime: THREE.IUniform<number>;
+  uChaos: THREE.IUniform<number>;
+  uEntropy: THREE.IUniform<number>;
+  uWind: THREE.IUniform<THREE.Vector2>;
 }
 
 /** Pick the mini-orbiter geometry by index (legacy geometry array, line 411). */
@@ -461,6 +470,13 @@ export class EnvironmentSystem {
   >();
   /** Ground material handle for the V2 reaction-diffusion emissiveMap coupling. */
   private readonly groundMaterial: THREE.MeshStandardMaterial;
+  /** Terrain shader uniforms: real world-state lanes, updated once/frame. */
+  private readonly groundUniforms: GroundShaderUniforms = {
+    uTime: { value: 0 },
+    uChaos: { value: 0 },
+    uEntropy: { value: 0 },
+    uWind: { value: new THREE.Vector2() },
+  };
   /** Live restore baseline for the ground's emissiveIntensity (0.3 at build; lifted to 0.85 once the
    *  reaction-diffusion emissiveMap attaches). BRUTALISM lerps FROM this so OFF restores the RD glow. */
   private groundBaseEmissiveIntensity = 0.3;
@@ -566,12 +582,16 @@ export class EnvironmentSystem {
       emissive: 0x040410,
       emissiveIntensity: 0.3,
     });
-    // Abomination Terrain Shader
-    (this.groundMaterial as any).userData = { uniforms: { uTime: { value: 0 } } };
     this.groundMaterial.onBeforeCompile = (shader) => {
-      shader.uniforms.uTime = (this.groundMaterial as any).userData.uniforms.uTime;
+      shader.uniforms.uTime = this.groundUniforms.uTime;
+      shader.uniforms.uChaos = this.groundUniforms.uChaos;
+      shader.uniforms.uEntropy = this.groundUniforms.uEntropy;
+      shader.uniforms.uWind = this.groundUniforms.uWind;
       shader.vertexShader = `
         uniform float uTime;
+        uniform float uChaos;
+        uniform float uEntropy;
+        uniform vec2 uWind;
         varying vec3 vWorldPos;
         ${shader.vertexShader}
       `.replace(
@@ -579,22 +599,37 @@ export class EnvironmentSystem {
         `
         #include <begin_vertex>
         vWorldPos = (modelMatrix * vec4(position, 1.0)).xyz;
-        // Landscape reactive rippling
-        float wave = sin(vWorldPos.x * 0.05 + uTime * 0.5) * cos(vWorldPos.z * 0.05 - uTime * 0.4) * 2.0;
-        transformed.z += wave; // transformed.z is up because rotation.x = -PI/2
-        `
+        // Real terrain: wind advects the dune wave, chaos raises tectonic swell, entropy flattens.
+        float heatDeath = clamp(uEntropy, 0.0, 1.0);
+        float liveAmp = 1.0 - 0.72 * heatDeath;
+        float wave =
+          sin(vWorldPos.x * 0.035 + uTime * (0.25 + uChaos * 0.35) + uWind.x * 0.15) *
+          cos(vWorldPos.z * 0.031 - uTime * (0.22 + uChaos * 0.28) + uWind.y * 0.15);
+        float tectonic =
+          sin((vWorldPos.x + vWorldPos.z) * 0.011 + uTime * 0.11) *
+          cos((vWorldPos.x - vWorldPos.z) * 0.009 - uTime * 0.13);
+        transformed.z += (wave * (1.4 + uChaos * 4.8) + tectonic * uChaos * 3.2) * liveAmp;
+        `,
       );
       shader.fragmentShader = `
         uniform float uTime;
+        uniform float uChaos;
+        uniform float uEntropy;
+        uniform vec2 uWind;
         varying vec3 vWorldPos;
         ${shader.fragmentShader}
       `.replace(
         '#include <map_fragment>',
         `
         #include <map_fragment>
-        float bioPulse = sin(vWorldPos.x * 0.2 + uTime) * cos(vWorldPos.z * 0.2 + uTime) * 0.5 + 0.5;
-        diffuseColor.rgb += vec3(0.05, 0.15, 0.1) * bioPulse;
-        `
+        float bioPulse = sin(vWorldPos.x * 0.08 + uTime + uWind.x * 0.2) * cos(vWorldPos.z * 0.07 + uTime + uWind.y * 0.2) * 0.5 + 0.5;
+        float vein = smoothstep(0.72, 1.0, bioPulse + uChaos * 0.18);
+        vec3 fungal = vec3(0.04, 0.16, 0.11) * bioPulse * (1.0 - uEntropy * 0.55);
+        vec3 bruise = vec3(0.15, 0.04, 0.18) * vein * (0.25 + uChaos * 0.85);
+        vec3 ash = vec3(0.12, 0.12, 0.13) * uEntropy * 0.45;
+        diffuseColor.rgb += fungal + bruise;
+        diffuseColor.rgb = mix(diffuseColor.rgb, ash, uEntropy * 0.32);
+        `,
       );
     };
     const ground = new THREE.Mesh(groundGeo, this.groundMaterial);
@@ -679,9 +714,10 @@ export class EnvironmentSystem {
    * 8 dioramas × 12 minis), so effectively O(1) per frame.
    */
   update(dt: number, t: number): void {
-    if ((this.groundMaterial as any).userData?.uniforms) {
-      (this.groundMaterial as any).userData.uniforms.uTime.value = t;
-    }
+    this.groundUniforms.uTime.value = t;
+    this.groundUniforms.uChaos.value = clamp(this.state.chaos / CHAOS_MAX, 0, 1);
+    this.groundUniforms.uEntropy.value = clamp((this.state.entropy ?? 0) / ENTROPY_MAX, 0, 1);
+    this.groundUniforms.uWind.value.set(this.state.wind.x, this.state.wind.z);
     const cm = Math.min(this.state.chaos / 2, 3);
 
     // Pipelines (legacy 841)

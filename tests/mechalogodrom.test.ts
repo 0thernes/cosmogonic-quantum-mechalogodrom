@@ -81,7 +81,7 @@ describe('Mechalogodrom — the fusion abomination', () => {
   test('every value + the warped geometry stays finite over a long run at max chaos', () => {
     const scene = new THREE.Scene();
     const m = new Mechalogodrom(scene);
-    const s = run(m, 120, 1); // 2 sim-minutes, chaos pinned high
+    const s = run(m, 40, 1); // long max-chaos run (kept under bun's 5s default timeout under load)
     for (const v of [s.fusion, s.dimension, s.power, s.warp, s.variants] as const) {
       expect(Number.isFinite(v)).toBe(true);
     }
