@@ -139,7 +139,6 @@ export class AlphabetPantheonRender {
       varying vec3 vPos;
       varying vec3 vColor;
       varying vec3 vNormal;
-      attribute vec3 instanceColor;
       uniform float uTime;
 
       // Noise function for vertex displacement

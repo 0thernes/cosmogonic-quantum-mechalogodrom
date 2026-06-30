@@ -37,7 +37,6 @@ export class MechalogodromSatellites {
       varying vec3 vPos;
       varying vec3 vNormal;
       varying vec3 vColor;
-      attribute vec3 instanceColor;
       uniform float uTime;
 
       void main() {

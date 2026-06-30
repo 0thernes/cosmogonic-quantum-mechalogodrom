@@ -185,7 +185,7 @@ function buildMonolith(
       `
       #include <begin_vertex>
       vec4 wp = modelMatrix * vec4(position, 1.0);
-      float t = uMonoTime + hue * 6.2831;
+      float t = uMonoTime + ${hue.toFixed(5)} * 6.2831;
       float twist = sin(wp.y * 0.08 + t * 0.3) * 0.12;
       float bulge = sin(wp.x * 0.11 + t * 0.4) * cos(wp.z * 0.09 + t * 0.35);
       float breathe = sin(t * 0.55 + wp.y * 0.05) * 0.5 + 0.5;
@@ -204,7 +204,7 @@ function buildMonolith(
       '#include <color_fragment>',
       `
       #include <color_fragment>
-      float pulse = 0.5 + 0.5 * sin(uMonoTime * 2.0 + hue * 10.0 + vMonoBreath * 3.0);
+      float pulse = 0.5 + 0.5 * sin(uMonoTime * 2.0 + ${hue.toFixed(5)} * 10.0 + vMonoBreath * 3.0);
       diffuseColor.rgb += diffuseColor.rgb * pulse * 0.15;
       `,
     );
