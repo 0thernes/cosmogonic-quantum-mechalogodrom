@@ -29,18 +29,13 @@ import type { BehaviorEnv } from './behaviors';
 import type { Entity, SimContext, UpdateStats } from '../types';
 import type { Rng } from '../math/rng';
 
-/** Push morph colours toward SATURATED, VIBRANT read (render-only — morph tables unchanged).
- * The base diffuse is held in the peak-chroma lightness zone (~0.06..0.22) so saturated hues read
- * STRONG rather than washing to white; a quint-prime per-morph hash fans the 250 morphs into
- * a ~2000+ variation palette without touching the seeded morph tables. The per-instance GPU
- * suites (tribe hue, quantum shimmer, payoff iridescence, vital glow) then layer dynamic variety on top.
- * V103: MUCH darker base lightness (max 0.10) for deep jewel tones that survive ACES tone mapping,
- * 5th hash prime for 2000+ colors, crystal-water lift without white blowout,
- * colored (non-white) emissive additions, slight metallic sheen for depth. */
+/** Push morph colours toward a BRIGHT, CRYSTAL-WATERY, DREAMY read (render-only — morph tables unchanged).
+ * V109: lifted base diffuse into the white-crystal zone (~0.35..0.55 lightness), softened
+ * saturation to pastel-watery hues, stronger colored emissive core, high metallic + low roughness
+ * for a glassy, liquid-gem shimmer that catches light as entities drift. */
 function paintVibrant(mat: THREE.MeshStandardMaterial, m: PhylumMorphType, mi: number): void {
   const hsl = { h: 0, s: 0, l: 0 };
   // Quint-prime hash → a well-spread, deterministic per-morph value in [0,1).
-  // Five independent hashes give ~2000+ distinct color slots across the population.
   const j1 = (mi * 0.6180339887) % 1;
   const j2 = (mi * 0.4142135624) % 1;
   const j3 = (mi * 0.7320508076) % 1;
@@ -53,22 +48,24 @@ function paintVibrant(mat: THREE.MeshStandardMaterial, m: PhylumMorphType, mi: n
     Math.floor(j4 * 2683) +
     Math.floor(j5 * 1597);
   m.col.getHSL(hsl);
+  const baseHue = (hsl.h + slot * 0.008 + j1 * 0.39 + j2 * 0.25 + j4 * 0.18 + j5 * 0.12 - 0.06 + 1) % 1;
+  // Pastel-watery base: high lightness, slightly reduced saturation so it reads as crystal not neon.
   mat.color.setHSL(
-    // wider gradient spin + quint-prime jitter fans the palette into ~2000+ distinct variations.
-    (hsl.h + slot * 0.008 + j1 * 0.39 + j2 * 0.25 + j4 * 0.18 + j5 * 0.12 - 0.06 + 1) % 1,
-    1.0, // S = 1.0 — MAXIMUM chroma, never wash out
-    Math.min(0.32, 0.12 + hsl.l * 0.08 + j3 * 0.1 + j4 * 0.05), // crystal-water middle: bright enough, not white
+    baseHue,
+    0.78, // softer saturation for watery/crystal look
+    Math.min(0.52, 0.28 + hsl.l * 0.12 + j3 * 0.12 + j4 * 0.08), // bright, dreamy, not blown-out
   );
   m.em.getHSL(hsl);
+  // Colored inner glow: saturated core, bright enough to shimmer.
   mat.emissive.setHSL(
-    (hsl.h + 0.14 + j1 * 0.33 + j3 * 0.21 + j4 * 0.12 + j5 * 0.09 + slot * 0.005) % 1,
-    1.0, // S = 1.0 — max emissive saturation
-    Math.min(0.46, 0.18 + hsl.l * 0.12 + j2 * 0.1), // colored glow, not blown-out white
+    (baseHue + 0.08 + j3 * 0.18 + j5 * 0.12) % 1,
+    0.92,
+    Math.min(0.62, 0.32 + hsl.l * 0.15 + j2 * 0.14),
   );
-  mat.emissiveIntensity = Math.min(2.15, m.emI * 0.72 + 0.55); // capped — ACES rolls extreme values to white
-  // Slight metallic sheen for depth and sparkle — catches light as entities move
-  mat.metalness = Math.min(0.85, mat.metalness * 0.65 + j5 * 0.35);
-  mat.roughness = Math.max(0.06, mat.roughness * 0.45 + j3 * 0.12);
+  mat.emissiveIntensity = Math.min(2.6, m.emI * 0.85 + 0.75);
+  // Glassy/crystal surface: high metal, low roughness for a liquid-gem shimmer.
+  mat.metalness = Math.min(0.95, mat.metalness * 0.6 + j5 * 0.4 + 0.2);
+  mat.roughness = Math.max(0.04, mat.roughness * 0.4 + j3 * 0.08);
 }
 
 /** Base material parameters a {@link RenderMode} is layered on top of. */

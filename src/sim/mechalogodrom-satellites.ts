@@ -44,11 +44,11 @@ export class MechalogodromSatellites {
         vUv = uv;
         vColor = instanceColor;
 
-        // Multi-layered displacement: each artifact is a writhing, non-uniform knot.
+        // Multi-layered displacement: each artifact is a slow, breathing, non-uniform knot.
         vec3 displaced = position;
-        float w1 = sin(position.x * 6.0 + uTime * 1.7) * cos(position.y * 6.0 - uTime * 1.3) * 0.35;
-        float w2 = sin(position.z * 9.0 + uTime * 2.1) * cos(position.x * 7.0 + uTime * 0.9) * 0.22;
-        float w3 = sin(position.y * 11.0 + position.x * 5.0 - uTime * 1.5) * 0.15;
+        float w1 = sin(position.x * 6.0 + uTime * 0.85) * cos(position.y * 6.0 - uTime * 0.65) * 0.35;
+        float w2 = sin(position.z * 9.0 + uTime * 1.05) * cos(position.x * 7.0 + uTime * 0.45) * 0.22;
+        float w3 = sin(position.y * 11.0 + position.x * 5.0 - uTime * 0.75) * 0.15;
         displaced += normal * (w1 + w2 + w3);
 
         vPos = displaced;
