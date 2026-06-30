@@ -39,10 +39,12 @@ substantive change; they are personas of one discipline and they outrank vibes:
   `origin/main`** (NOT the local branch — per the no-PR/work-on-main law, every commit from any
   worktree lands on `main`, with rebase-autostash + retry on non-ff). Opt out: `git config
 hooks.autopush false`. A local commit ships to GitHub `main` with no manual push, from any worktree.
-  The REVERSE direction is automatic too: `predev` runs `bun run pull` (`scripts/sync-local.ts`) before
-  `bun dev`, fast-forwarding the checkout up to `origin/main` so **Local always matches GitHub** when you
-  start the app. It ONLY fast-forwards (never rebases/resets/discards): a checkout with local-only commits
-  or a blocking dirty tree is left untouched with a note. Opt out: `CQM_NO_SYNC=1 bun dev`. (Without this,
+  The REVERSE direction is automatic too: `predev` runs `bun run guard` (`scripts/sync-guard.ts`) before
+  `bun dev`, reconciling the checkout with `origin/main` so **Local always matches GitHub** when you
+  start the app. It is SAFE BY DEFAULT — it fast-forwards DOWN, pushes any local-ahead commits UP, and
+  NEVER rebases/resets/discards on its own: a diverged / detached / stuck-rebase / dirty tree is preserved
+  to a `recovery/guard-*` ref and reported untouched (opt-in repair: `--rebase` / `--force` / `--commit`;
+  `bun run pull` is the ff-only-down variant). Opt out: `CQM_NO_SYNC=1 bun dev`. (Without this,
   a primary checkout silently drifts BEHIND while the fleet pushes from worktrees — the recurring
   "GitHub and Local don't match / renamed docs missing in Local" symptom.) The `prepare` script also sets
   `core.autocrlf=input` (with `.gitattributes` `* text=auto eol=lf`) so a Windows checkout never acquires

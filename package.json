@@ -7,9 +7,10 @@
   "type": "module",
   "scripts": {
     "prepare": "git config core.hooksPath .githooks && git config core.autocrlf input || true",
-    "predev": "bun scripts/sync-local.ts && bun scripts/gen-alife-embed.ts && bun scripts/gen-bible-corpus.ts && bun scripts/build.ts",
+    "predev": "bun scripts/sync-guard.ts && bun scripts/gen-alife-embed.ts && bun scripts/gen-bible-corpus.ts && bun scripts/build.ts",
     "dev": "bun scripts/harvest-tsotchke-corpus.ts && bun --hot server.ts",
     "pull": "bun scripts/sync-local.ts",
+    "guard": "bun scripts/sync-guard.ts",
     "start": "bun server.ts",
     "build": "bun scripts/gen-alife-embed.ts && bun scripts/gen-bible-corpus.ts && bun scripts/build.ts",
     "pages": "bun run build && bun scripts/build-pages.ts",
