@@ -95,6 +95,10 @@ export class AudioEngine {
   private musicGain: GainNode | null = null;
   private sfxGain: GainNode | null = null;
   private masterGain: GainNode | null = null;
+  /** V112 cinematic reverb (music bus only): a long cathedral tail turning the oscillator voices
+   *  into Horner/Annihilation space. Parallel send to masterGain so mute/sleep govern it; dry intact. */
+  private reverb: ConvolverNode | null = null;
+  private reverbWet: GainNode | null = null;
   private musicInterval: ReturnType<typeof setInterval> | null = null;
   /** Sleep timer that auto-mutes after a period of continuous playback. */
   private sleepTimer: ReturnType<typeof setTimeout> | null = null;
@@ -193,6 +197,19 @@ export class AudioEngine {
     this.musicGain = this.ctx.createGain();
     this.musicGain.gain.value = 0;
     this.musicGain.connect(this.masterGain);
+    // V112: parallel cinematic reverb send off the music bus -> masterGain (so mute/sleep govern it
+    // too); SFX stay dry + punchy. Highpassed at 300 Hz so sub-bass never muddies the long tail.
+    this.reverb = this.ctx.createConvolver();
+    this.reverb.buffer = this.buildReverbIR(this.ctx);
+    const reverbHP = this.ctx.createBiquadFilter();
+    reverbHP.type = 'highpass';
+    reverbHP.frequency.value = 300;
+    this.reverbWet = this.ctx.createGain();
+    this.reverbWet.gain.value = 0.34;
+    this.musicGain.connect(reverbHP);
+    reverbHP.connect(this.reverb);
+    this.reverb.connect(this.reverbWet);
+    this.reverbWet.connect(this.masterGain);
     this.sfxGain = this.ctx.createGain();
     this.sfxGain.gain.value = 0;
     this.sfxGain.connect(this.masterGain);
@@ -240,6 +257,8 @@ export class AudioEngine {
     this.musicGain = null;
     this.sfxGain = null;
     this.masterGain = null;
+    this.reverb = null;
+    this.reverbWet = null;
     this.analyser = null;
     this._musicOn = false;
     this._sfxOn = false;
@@ -410,6 +429,32 @@ export class AudioEngine {
    * avoids draining ~½s·sampleRate draws from the audio stream; not the banned global RNG
    * either). 0.5 s mono. O(sampleRate) once.
    */
+  /**
+   * Procedural reverb impulse response (V112): a ~3.6 s stereo exponential-decay noise tail.
+   * Filled ONCE with a local xorshift (like noiseBuffer below — reverb content needs no
+   * seed-reproducibility and must not drain the audio rng stream), channels decorrelated for a
+   * wide cathedral image; a short onset ramp avoids a click. Determinism-safe: this bus is
+   * forked-rng + wall-clock and never touches sim state. O(sampleRate) once.
+   */
+  private buildReverbIR(ctx: AudioContext): AudioBuffer {
+    const len = Math.floor(ctx.sampleRate * 3.6);
+    const ir = ctx.createBuffer(2, len, ctx.sampleRate);
+    let x = 0x6d2b79f5 >>> 0;
+    for (let c = 0; c < 2; c++) {
+      const d = ir.getChannelData(c);
+      for (let i = 0; i < len; i++) {
+        x ^= x << 13;
+        x ^= x >>> 17;
+        x ^= x << 5;
+        x >>>= 0;
+        const onset = i < 480 ? i / 480 : 1;
+        const decay = Math.pow(1 - i / len, 2.4);
+        d[i] = ((x / 0xffffffff) * 2 - 1) * decay * onset;
+      }
+    }
+    return ir;
+  }
+
   private noiseBuffer(ctx: AudioContext): AudioBuffer {
     if (this.noiseBuf) return this.noiseBuf;
     const len = Math.floor(ctx.sampleRate * 0.5);
