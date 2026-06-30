@@ -138,6 +138,26 @@ export const SONGS: readonly Song[] = [
     mel: [0, 3, 8, 12, 15, 18, 20, 18, 15, 12, 9, 6, 3, 0, 6, 10, 15, 19, 15, 8],
     fBase: 620,
   },
+  {
+    // V109: cinematic widescreen hymn — Malick pastures, Horner cathedral, Annihilation shimmer.
+    // Soft triangle pads, deep sine sub-bass, wide suspended 9th/11th voicings, and a melody that
+    // floats in slow arcs across octaves. Haunting, sacred, and vast.
+    // Semis: {0,5,10,14} {0,3,8,12} {0,7,11,15} {0,2,8,13}.
+    name: 'HORIZON HYMN',
+    bpm: 52,
+    chords: [
+      [0, 5, 9, 14],
+      [0, 3, 8, 12],
+      [0, 7, 11, 15],
+      [0, 2, 8, 13],
+    ],
+    wave: 'triangle',
+    bass: 'sine',
+    // Slow, hovering arcs — rise through a suspended 9th, drift, then descend into a lower octave
+    // like a question that never resolves. Sparse, sacred, deeply cinematic.
+    mel: [0, 5, 9, 14, 12, 9, 5, 0, 3, 8, 12, 17, 15, 12, 8, 3, 7, 11, 15, 19, 16, 11, 7, 2],
+    fBase: 440,
+  },
 ];
 
 /** The eight synthesized SFX types (legacy line 204), in preview-cycle order. */
