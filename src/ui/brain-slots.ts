@@ -47,7 +47,7 @@ function createCanvas(doc: Document, slotId: string): Slot | null {
     id: idMap[slotId] ?? 'apex',
     canvas,
     ctx,
-    history: new Array(MAX_HISTORY).fill(0),
+    history: Array.from({ length: MAX_HISTORY }, () => 0),
     color: '#c79bff',
   };
 }

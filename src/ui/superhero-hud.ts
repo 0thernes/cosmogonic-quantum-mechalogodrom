@@ -30,17 +30,19 @@ const STYLE = `
   width:auto;max-width:none;max-height:min(32vh,210px);overflow:hidden;
   transform:translateY(-150%);z-index:150;
   transition:transform .55s cubic-bezier(.2,.9,.3,1);font-size:11px;line-height:1.4;font-family:var(--font-mono,ui-monospace,monospace);
-  color:#e9e3ff;pointer-events:none}
+  color:#e9e3ff;pointer-events:none;
+  display:flex;justify-content:center;align-items:flex-start}
 #cqm-hero.on{transform:translateY(0)}
 #cqm-hero.on.closed{transform:translateY(-150%)}
 #cqm-hero.on.min .cqm-hero-box{display:none}
 #cqm-hero.on.min .cqm-hero-fab{display:grid}
 #cqm-hero:not(.min) .cqm-hero-fab{display:none}
-.cqm-hero-fab{pointer-events:auto;display:none;position:absolute;top:0;right:0;width:36px;height:36px;border-radius:50%;
+.cqm-hero-fab{pointer-events:auto;display:none;width:150px;height:30px;border-radius:15px;
   border:1px solid rgba(150,120,255,.55);background:linear-gradient(180deg,rgba(24,14,48,.95),rgba(10,8,22,.92));
-  color:#d4b8ff;font-size:16px;cursor:pointer;place-items:center;box-shadow:0 4px 18px rgba(0,0,0,.55);
-  transition:transform .12s,background .12s}
-.cqm-hero-fab:hover{background:rgba(60,36,110,.85);transform:scale(1.06)}
+  color:#d4b8ff;font-size:10px;font-weight:600;letter-spacing:0.08em;cursor:pointer;place-items:center;
+  box-shadow:0 4px 18px rgba(0,0,0,.55),0 0 12px rgba(150,120,255,0.3);
+  transition:transform .12s,background .12s,border-color .12s}
+.cqm-hero-fab:hover{background:rgba(60,36,110,.85);transform:scale(1.05);border-color:#39d6ff}
 .cqm-hero-chrome{display:flex;align-items:center;gap:4px;margin-left:auto}
 .cqm-hero-min,.cqm-hero-close{pointer-events:auto;border:1px solid rgba(150,120,255,.35);border-radius:6px;
   background:rgba(30,18,60,.55);color:#cbb0ff;font:600 10px/1 var(--font-mono,ui-monospace,monospace);padding:2px 7px;cursor:pointer}
@@ -80,7 +82,7 @@ const STYLE = `
   background:linear-gradient(180deg,rgba(14,9,28,.95),rgba(8,6,18,.92));backdrop-filter:blur(12px);
   box-shadow:0 10px 40px rgba(0,0,0,.6),inset 0 0 30px rgba(80,40,160,.18);padding:5px 8px;
   display:flex;flex-flow:column nowrap;align-items:stretch;gap:3px;max-height:inherit;overflow:hidden;
-  transform-origin:top center;will-change:transform}
+  transform-origin:top center;will-change:transform;width:100%;max-width:760px}
 @media (max-width:599px){.cqm-hero-box{padding:5px 7px;border-radius:10px}}
 .cqm-hero-r{display:flex;align-items:center;gap:8px;flex-wrap:nowrap;flex:0 0 auto}
 .cqm-hero-av{display:flex;align-items:center;gap:8px;white-space:nowrap}
@@ -232,7 +234,7 @@ export class SuperheroHud {
     fab.className = 'cqm-hero-fab';
     fab.setAttribute('aria-label', 'Expand superhero HUD');
     fab.title = 'Show hero HUD';
-    fab.textContent = '⬢';
+    fab.textContent = '▲ SHOW HERO HUD ▲';
     fab.addEventListener('click', () => this.root.classList.remove('min'));
     this.root.appendChild(fab);
 
