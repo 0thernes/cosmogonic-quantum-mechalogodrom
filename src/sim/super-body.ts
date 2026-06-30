@@ -169,6 +169,10 @@ function patchGodJewel(
       .replace(
         '#include <color_fragment>',
         `#include <color_fragment>
+         // V109: darker organic skin patch texture — less white, more weird unique flesh.
+         float skinPatch = fbm3(vObjPos * 3.2 + uVariant * 4.0 + uTime * 0.02);
+         vec3 skinTint = mix(vec3(0.035, 0.02, 0.055), vec3(0.09, 0.06, 0.12), skinPatch);
+         diffuseColor.rgb = mix(diffuseColor.rgb, skinTint, 0.32 * (1.0 - uBrutalism));
          // BRUTALISM: collapse the jewel's base colour into raw board-formed, exposed-aggregate concrete.
          float bForm = smoothstep(0.46, 0.5, abs(fract(vObjPos.y * 3.5) - 0.5)); // board-form seams
          float bAgg = fbm3(vObjPos * 22.0);                                       // exposed aggregate speckle
@@ -254,6 +258,7 @@ function patchGodJewel(
          vec3 mReflexCol = vec3(0.45, 0.85, 1.0) * mReflexArc * uReflex * 0.8;
          vec3 mindEmissive = mNeuroCol + mHelixCol + mBloom + mThermCol + mQualiaCol + mReflexCol;
          vec3 jewelEmissive = glow * (0.22 + 0.6 * relief) + iris * fres * (0.45 + 0.8 * uDominance) + wv * 0.12 * uDominance + ch * 0.07 * uSurprise * uPlan + igFlash * uPlan * (0.3 + 0.4 * uDominance) + varPal * relief * 0.25 * uPlan + evoEmissive - veinColor * veinMask * 0.4 + auraColor * relief * 0.15 + mindEmissive;
+         jewelEmissive *= 0.78; // V109: darker, less white, more organic
          // BRUTALISM: kill the glow — raw concrete only self-lights enough to read its monolithic form.
          vec3 concreteEmissive = vec3(0.05, 0.05, 0.06) * (0.4 + 0.6 * relief);
          totalEmissiveRadiance += mix(jewelEmissive, concreteEmissive, uBrutalism);`,
@@ -391,11 +396,11 @@ export class SuperBodySystem {
     // ── CORE: a faceted crystalline jewel (detail 3 → smooth enough for relief, faceted read) ──
     const coreGeo = new THREE.IcosahedronGeometry(R, 3);
     const coreMat = new THREE.MeshStandardMaterial({
-      color: 0x05030a,
-      metalness: 0.75,
-      roughness: 0.22,
-      emissive: 0x0a0418,
-      emissiveIntensity: 1.4,
+      color: 0x040208,
+      metalness: 0.78,
+      roughness: 0.28,
+      emissive: 0x080314,
+      emissiveIntensity: 1.1,
     });
     patchGodJewel(coreMat, this.u, this.variant);
     this.core = new THREE.Mesh(coreGeo, coreMat);
@@ -418,9 +423,9 @@ export class SuperBodySystem {
     // AMPED: 24 eyes; pupil focus reactivity (scale) + quantum-driven in update. Prebuilt; mask live.
     this.eyes = new THREE.Group();
     this.eyeMat = new THREE.MeshStandardMaterial({
-      color: 0x100408,
+      color: 0x0f0307,
       emissive: 0xff2a3c,
-      emissiveIntensity: 5.5,
+      emissiveIntensity: 4.2,
     });
     const irisGeo = new THREE.SphereGeometry(R * 0.12, 14, 14);
     const pupilGeo = new THREE.SphereGeometry(R * 0.06, 10, 10);

@@ -48,7 +48,8 @@ function paintVibrant(mat: THREE.MeshStandardMaterial, m: PhylumMorphType, mi: n
     Math.floor(j4 * 2683) +
     Math.floor(j5 * 1597);
   m.col.getHSL(hsl);
-  const baseHue = (hsl.h + slot * 0.008 + j1 * 0.39 + j2 * 0.25 + j4 * 0.18 + j5 * 0.12 - 0.06 + 1) % 1;
+  const baseHue =
+    (hsl.h + slot * 0.008 + j1 * 0.39 + j2 * 0.25 + j4 * 0.18 + j5 * 0.12 - 0.06 + 1) % 1;
   // Pastel-watery base: high lightness, slightly reduced saturation so it reads as crystal not neon.
   mat.color.setHSL(
     baseHue,
