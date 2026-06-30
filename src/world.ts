@@ -2111,6 +2111,7 @@ export class World {
     this.superAscended = true;
     this.monolithTemple.reveal(0, 0, -40 * ARENA_MID);
     this.audio.playId(SFX_SUBBOOM);
+    this.audio.playExtra('demonic'); // V109: ominous temple-rise underlayer
     this.hud.showSector('⚡ ASCENSION — STAGE 2 · THE MONOLITH TEMPLE RISES');
     this.audit.record('ascension', { level: 100, stage: 2 });
     if (typeof window !== 'undefined') {
