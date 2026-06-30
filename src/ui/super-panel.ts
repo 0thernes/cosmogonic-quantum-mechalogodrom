@@ -172,8 +172,8 @@ export class SuperPanel {
     panel.innerHTML =
       `<div class="cqm-sup-head"><b>⬢ 5 ARCHONS / GODFORMS</b><span class="plan" data-plan>—</span>` +
       `<button class="cqm-sup-neu" data-neu aria-label="Toggle the Archon neural observatories" title="Toggle neural for focused Archon">⊞ NEURAL</button>` +
-      `<button class="cqm-sup-min" data-min aria-label="Minimize">−</button>` +
-      `<button class="cqm-sup-x" data-close aria-label="Close">✕</button></div>` +
+      `<button class="cqm-sup-min" data-min aria-label="Minimize">MINIMIZE</button>` +
+      `<button class="cqm-sup-x" data-close aria-label="Close">EXIT</button></div>` +
       `<div class="cqm-sup-body"><div class="cqm-sup-id" data-id></div>` +
       `<div class="cqm-sup-bars" data-bars></div></div>` +
       `<div class="cqm-sup-neural-host" data-neural></div>` +
@@ -269,6 +269,10 @@ export class SuperPanel {
   private toggleMinimize(): void {
     this.minimized = !this.minimized;
     this.panel.classList.toggle('minimized', this.minimized);
+    const minBtn = this.panel.querySelector('[data-min]');
+    if (minBtn) {
+      minBtn.textContent = this.minimized ? 'RESTORE' : 'MINIMIZE';
+    }
   }
 
   /** V75: flip the box between the telemetry readout and the in-box neural observatory. */

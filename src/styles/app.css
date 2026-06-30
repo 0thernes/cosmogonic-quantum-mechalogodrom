@@ -343,6 +343,7 @@ a:focus-visible {
   gap: 3px;
   max-width: calc(100vw - 8px);
   pointer-events: none;
+  flex-wrap: wrap;
 }
 #cqm-bottom-stack > * {
   pointer-events: auto;
