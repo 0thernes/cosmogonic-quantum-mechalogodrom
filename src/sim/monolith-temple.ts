@@ -67,9 +67,9 @@ export class MonolithTemple {
   private readonly shadowMat: THREE.MeshBasicMaterial;
   private readonly singularityMat: THREE.MeshBasicMaterial;
   private readonly cageMat: THREE.LineBasicMaterial;
-  private readonly shardMat: THREE.MeshStandardMaterial;
   private readonly rings: THREE.Mesh[] = [];
   private readonly shards: THREE.Mesh[] = [];
+  private readonly greebles: THREE.Mesh[] = [];
   private readonly cage: THREE.LineSegments;
   private readonly cageGeo: THREE.BufferGeometry;
   private readonly cageBase: Float32Array;
@@ -93,109 +93,159 @@ export class MonolithTemple {
     this.scene = scene;
     const U = ARENA_MID;
 
-    const stoneMat = new THREE.MeshStandardMaterial({
-      color: 0x111115,
-      roughness: 0.6,
-      metalness: 0.4,
-      emissive: 0x0a0d14,
-      emissiveIntensity: 0.4,
-    });
-
-    this.mats.push(stoneMat);
-    // We will save the shader uniforms reference to update uTime in render
-    (stoneMat as any).userData = { uniforms: { uTime: { value: 0 } } };
-    stoneMat.onBeforeCompile = (shader) => {
-      shader.uniforms.uTime = (stoneMat as any).userData.uniforms.uTime;
-      // Re-apply the vertex and fragment shader modifications from above
-      shader.vertexShader = `
+    const raymarchMat = new THREE.ShaderMaterial({
+      uniforms: {
+        uTime: { value: 0 },
+        uResolution: {
+          value: new THREE.Vector2(
+            typeof window === 'undefined' ? 1920 : window.innerWidth,
+            typeof window === 'undefined' ? 1080 : window.innerHeight,
+          ),
+        },
+      },
+      vertexShader: `
+        varying vec3 vWorldPos;
+        void main() {
+          vec4 worldPos = modelMatrix * vec4(position, 1.0);
+          vWorldPos = worldPos.xyz;
+          gl_Position = projectionMatrix * viewMatrix * worldPos;
+        }
+      `,
+      fragmentShader: `
         uniform float uTime;
         varying vec3 vWorldPos;
-        ${shader.vertexShader}`.replace(
-        '#include <begin_vertex>',
-        `#include <begin_vertex>
-        vWorldPos = (modelMatrix * vec4(position, 1.0)).xyz;
-        float disp = sin(vWorldPos.x * 2.0 + uTime * 0.5) * cos(vWorldPos.z * 2.0 - uTime * 0.3) * 0.5;
-        disp += sin(vWorldPos.y * 5.0) * 0.2;
-        transformed += normal * disp;`,
-      );
-      shader.fragmentShader = `
-        uniform float uTime;
-        varying vec3 vWorldPos;
-        float hash(vec3 p) { p = fract(p * 0.3183099 + 0.1); p *= 17.0; return fract(p.x * p.y * p.z * (p.x + p.y + p.z)); }
-        float noise(vec3 x) { vec3 p = floor(x); vec3 f = fract(x); f = f * f * (3.0 - 2.0 * f); return mix(mix(mix(hash(p + vec3(0,0,0)), hash(p + vec3(1,0,0)), f.x), mix(hash(p + vec3(0,1,0)), hash(p + vec3(1,1,0)), f.x), f.y), mix(mix(hash(p + vec3(0,0,1)), hash(p + vec3(1,0,1)), f.x), mix(hash(p + vec3(0,1,1)), hash(p + vec3(1,1,1)), f.x), f.y), f.z); }
-        float fbm(vec3 p) { float f = 0.0; f += 0.5 * noise(p); p *= 2.02; f += 0.25 * noise(p); p *= 2.03; f += 0.125 * noise(p); p *= 2.01; f += 0.0625 * noise(p); return f; }
-        ${shader.fragmentShader}`
-        .replace(
-          '#include <map_fragment>',
-          `#include <map_fragment>
-        float n = fbm(vWorldPos * 3.0 + uTime * 0.1);
-        float n2 = fbm(vWorldPos * 15.0);
-        vec3 abominationColor = mix(vec3(0.05, 0.05, 0.08), vec3(0.4, 0.1, 0.2), n);
-        abominationColor += vec3(0.1, 0.3, 0.3) * n2 * 0.5;
-        diffuseColor.rgb *= abominationColor;`,
-        )
-        .replace(
-          '#include <roughnessmap_fragment>',
-          `#include <roughnessmap_fragment>\nroughnessFactor = mix(0.2, 0.9, n);`,
-        );
-    };
 
-    const stone = (
-      w: number,
-      h: number,
-      d: number,
-      x: number,
-      y: number,
-      z: number,
-    ): THREE.Mesh => {
-      // Increase geometry segments for displacement
-      const g = new THREE.BoxGeometry(w, h, d, 32, 8, 32);
-      this.geos.push(g);
-      const m = new THREE.Mesh(g, stoneMat);
-      m.position.set(x, y, z);
-      m.frustumCulled = false;
-      this.group.add(m);
-      return m;
-    };
+        mat2 rot(float a) {
+            float s = sin(a), c = cos(a);
+            return mat2(c, -s, s, c);
+        }
 
-    // Stepped plinth — three shrinking slabs.
-    stone(46 * U, 3 * U, 30 * U, 0, 1.5 * U, 0);
-    stone(38 * U, 2.4 * U, 24 * U, 0, 4.2 * U, 0);
-    stone(30 * U, 1.8 * U, 18 * U, 0, 6.3 * U, 0);
+        float sdBox(vec3 p, vec3 b) {
+            vec3 q = abs(p) - b;
+            return length(max(q,0.0)) + min(max(q.x,max(q.y,q.z)),0.0);
+        }
 
-    // Two colossal pillars (slightly tapered via a cylinder with unequal radii) + the lintel.
-    const pillarGeo = new THREE.CylinderGeometry(3.4 * U, 4.6 * U, 34 * U, 32, 64);
-    this.geos.push(pillarGeo);
-    for (const sx of [-1, 1]) {
-      const p = new THREE.Mesh(pillarGeo, stoneMat);
-      p.position.set(sx * 9 * U, 7.2 * U + 17 * U, 0);
-      p.frustumCulled = false;
-      this.group.add(p);
-    }
-    stone(28 * U, 4 * U, 7 * U, 0, 7.2 * U + 34 * U + 2 * U, 0); // the great lintel
+        float map(vec3 p) {
+            // Localize to the temple center. The bounds box is at y=25
+            vec3 q = p - vec3(0.0, 15.0, 0.0);
+            
+            // Base bounding volume
+            float baseStructure = sdBox(q, vec3(22.0, 22.0, 16.0));
 
-    // Jagged altar-spikes around the plinth: the temple no longer reads as a clean civic gate.
-    this.shardMat = new THREE.MeshStandardMaterial({
-      color: 0x16101d,
-      roughness: 0.45,
-      metalness: 0.55,
-      emissive: 0x260018,
-      emissiveIntensity: 0.75,
+            // Kaleidoscopic Iterated Function System (KIFS)
+            vec3 z = q;
+            float s = 1.0;
+            for(int i=0; i<5; i++) {
+                z = abs(z) - vec3(4.0, 5.0, 4.0) / s;
+                z.xy *= rot(0.3 + uTime * 0.1);
+                z.xz *= rot(0.15 - uTime * 0.08);
+                float k = 1.35;
+                z *= k;
+                s *= k;
+            }
+            float fractal = sdBox(z, vec3(2.5, 8.0, 2.5)) / s;
+
+            // Subtractive greebles
+            float detailedStructure = max(baseStructure, -fractal);
+            
+            // Additive neural/cybernetic veins
+            float additiveFractal = sdBox(z, vec3(0.2, 15.0, 0.2)) / s;
+            
+            return min(detailedStructure, max(baseStructure - 1.5, additiveFractal));
+        }
+
+        vec3 calcNormal(vec3 p) {
+            const vec2 e = vec2(0.05, 0.0);
+            return normalize(vec3(
+                map(p + e.xyy) - map(p - e.xyy),
+                map(p + e.yxy) - map(p - e.yxy),
+                map(p + e.yyx) - map(p - e.yyx)
+            ));
+        }
+
+        void main() {
+            vec3 ro = cameraPosition;
+            vec3 rd = normalize(vWorldPos - ro);
+            
+            float t = 0.0;
+            float maxD = 150.0;
+            float d = 0.0;
+            vec3 p = ro;
+            
+            // Raymarching loop (optimized maxSteps for performance)
+            for(int i=0; i<60; i++) {
+                p = ro + rd * t;
+                d = map(p);
+                if(d < 0.01 || t > maxD) break;
+                t += d;
+            }
+
+            if(t > maxD) {
+                discard; // Let the background show through holes in the fractal
+            }
+
+            vec3 n = calcNormal(p);
+            
+            // Alien metallic lighting
+            vec3 lightDir = normalize(vec3(0.5, 1.0, 0.2));
+            float diff = max(dot(n, lightDir), 0.0);
+            float amb = 0.1 + 0.1 * n.y;
+            vec3 col = vec3(0.04, 0.05, 0.08) * amb + vec3(0.15, 0.2, 0.25) * diff;
+
+            // Deep crimson and cyan bioluminescence mapping
+            float bio = sin(p.y * 0.4 + uTime) * cos(p.x * 0.4) * sin(p.z * 0.4);
+            if(bio > 0.7) {
+                col += vec3(0.8, 0.1, 0.3) * (bio - 0.7) * 4.0;
+            }
+            float bio2 = cos(p.y * 0.3 - uTime) * sin(p.x * 0.3 + uTime) * cos(p.z * 0.3);
+            if(bio2 > 0.8) {
+                col += vec3(0.1, 0.8, 0.9) * (bio2 - 0.8) * 5.0;
+            }
+
+            gl_FragColor = vec4(col, 1.0);
+        }
+      `,
+      transparent: true,
+      side: THREE.DoubleSide,
     });
-    this.mats.push(this.shardMat);
-    const shardGeo = new THREE.ConeGeometry(1.8 * U, 11 * U, 5);
-    this.geos.push(shardGeo);
-    for (let i = 0; i < 12; i++) {
-      const th = (Math.PI * 2 * i) / 12;
-      const sx = Math.cos(th) * 20 * U;
-      const sz = Math.sin(th) * 12 * U;
-      const sh = new THREE.Mesh(shardGeo, this.shardMat);
-      sh.position.set(sx, 9 * U, sz);
-      sh.rotation.z = Math.sin(th) * 0.45;
-      sh.rotation.x = -Math.cos(th) * 0.32;
-      sh.frustumCulled = false;
-      this.group.add(sh);
-      this.shards.push(sh);
+
+    this.mats.push(raymarchMat);
+    // Bounding box scaled roughly to the previous temple's U size
+    const boundsGeo = new THREE.BoxGeometry(50 * U, 50 * U, 36 * U);
+    this.geos.push(boundsGeo);
+    const boundsMesh = new THREE.Mesh(boundsGeo, raymarchMat);
+    boundsMesh.position.set(0, 25 * U, 0);
+    boundsMesh.frustumCulled = false;
+    this.group.add(boundsMesh);
+
+    // Reference-image architectural mass: suspended circuit-ribs and vertical light pylons around
+    // the raymarched core. These are deterministic physical meshes, so the temple reads as built
+    // alien infrastructure instead of only a shader volume.
+    const greebleGeo = new THREE.BoxGeometry(1.1 * U, 12 * U, 0.42 * U, 2, 8, 1);
+    this.geos.push(greebleGeo);
+    const greebleMat = new THREE.MeshBasicMaterial({
+      color: 0x8fdcff,
+      transparent: true,
+      opacity: 0.34,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+    this.mats.push(greebleMat);
+    for (let i = 0; i < 28; i++) {
+      const side = i % 4;
+      const row = (i / 4) | 0;
+      const span = 21 * U + ((i * 7) % 5) * U;
+      const offset = (-3 + row) * 4.2 * U;
+      const g = new THREE.Mesh(greebleGeo, greebleMat);
+      if (side === 0) g.position.set(-span, 10 * U + row * 3.2 * U, offset);
+      else if (side === 1) g.position.set(span, 10 * U + row * 3.2 * U, -offset);
+      else if (side === 2) g.position.set(offset, 10 * U + row * 3.2 * U, -span);
+      else g.position.set(-offset, 10 * U + row * 3.2 * U, span);
+      g.rotation.y = side * (Math.PI / 2) + ((i * 13) % 9) * 0.035;
+      g.scale.y = 0.55 + ((i * 5) % 11) * 0.07;
+      g.frustumCulled = false;
+      this.group.add(g);
+      this.greebles.push(g);
     }
 
     // The PORTAL — a glowing disc framed by a bright ring, between the pillars.
@@ -423,7 +473,6 @@ export class MonolithTemple {
     this.singularityRing.rotation.z = -safeT * (0.32 + this.reactivity * 0.9);
     this.singularityRing.rotation.x = Math.sin(safeT * 0.31) * 0.35;
     this.singularityRing.scale.setScalar(0.84 + this.shadow * 0.35);
-    this.shardMat.emissiveIntensity = 0.35 + this.shimmer * 2.4;
     for (let i = 0; i < this.rings.length; i++) {
       const r = this.rings[i];
       if (!r) continue;
@@ -431,12 +480,23 @@ export class MonolithTemple {
       const m = r.material as THREE.MeshBasicMaterial;
       m.opacity = (0.4 + pulse * 0.22 + this.reactivity * 0.28) * ease;
     }
-    for (let i = 0; i < this.shards.length; i++) {
-      const sh = this.shards[i];
-      if (!sh) continue;
-      const s = 1 + this.shimmer * 0.22 + Math.sin(safeT * 1.4 + i) * this.reactivity * 0.12;
-      sh.scale.set(0.78 + this.entropy * 0.24, s, 0.78 + this.chaos * 0.3);
-      sh.rotation.y = safeT * (0.05 + this.chaos * 0.1) + i;
+    for (let i = 0; i < this.greebles.length; i++) {
+      const g = this.greebles[i]!;
+      const breathe = 1 + Math.sin(safeT * 1.1 + i * 0.37) * this.reactivity * 0.12;
+      g.scale.x = 0.8 + this.entropy * 0.35 + breathe * 0.08;
+      g.scale.z = 0.8 + this.chaos * 0.42;
+      g.rotation.x = Math.sin(safeT * 0.19 + i) * this.chaos * 0.08;
+      g.rotation.z = Math.cos(safeT * 0.23 + i) * this.entropy * 0.08;
+      (g.material as THREE.MeshBasicMaterial).opacity = (0.16 + this.shimmer * 0.32) * ease;
+    }
+    if (this.shards && this.shards.length > 0) {
+      for (let i = 0; i < this.shards.length; i++) {
+        const sh = this.shards[i];
+        if (!sh) continue;
+        const s = 1 + this.shimmer * 0.22 + Math.sin(safeT * 1.4 + i) * this.reactivity * 0.12;
+        sh.scale.set(0.78 + this.entropy * 0.24, s, 0.78 + this.chaos * 0.3);
+        sh.rotation.y = safeT * (0.05 + this.chaos * 0.1) + i;
+      }
     }
     this.warpCage(safeT, ease);
     this.greeble.update(safeT, this.reactivity, this.chaos);
@@ -449,9 +509,11 @@ export class MonolithTemple {
     const base = this.cageBase;
     const amp = this.cageWarp;
     // V63: Update time uniforms for the Abomination Temple shaders
-    if (this.mats[0] && (this.mats[0] as any).userData?.uniforms) {
-      (this.mats[0] as any).userData.uniforms.uTime.value = t;
-    }
+    const mat0 = this.mats[0];
+    const uniforms = (mat0 as THREE.Material | undefined)?.userData?.uniforms as
+      | { uTime?: THREE.IUniform<number> }
+      | undefined;
+    if (uniforms?.uTime) uniforms.uTime.value = t;
 
     for (let i = 0; i < arr.length; i += 3) {
       const bx = base[i] ?? 0;
