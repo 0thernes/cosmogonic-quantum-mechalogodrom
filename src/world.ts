@@ -59,6 +59,7 @@ import { WeatherSystem } from './sim/weather';
 import { QuantumCloud } from './sim/quantum';
 import { Connectome } from './sim/connectome';
 import { EnvironmentSystem } from './sim/environment';
+import { AlienFlora } from './sim/alien-flora';
 import { QuantumCircuitSystem } from './sim/qcircuit';
 import { ReactionDiffusionSystem } from './sim/reaction-diffusion';
 import { GraphMind } from './sim/graph-mind';
@@ -225,6 +226,8 @@ export class World {
   private readonly quantum: QuantumCloud;
   private readonly connectome: Connectome;
   private readonly environment: EnvironmentSystem;
+  /** Alien vegetal ground ecology — 10k plants / 50 species seated on the dunes (read-only coupling). */
+  private readonly alienFlora: AlienFlora;
   private readonly hud: Hud;
   private readonly panel: TelemetryPanel;
   private readonly input: InputSystem;
@@ -599,6 +602,7 @@ export class World {
     this.audit.setSimClock(() => this.state.frame);
 
     this.environment = new EnvironmentSystem(ctx);
+    this.alienFlora = new AlienFlora(ctx); // alien vegetal ground ecology (10k plants, 50 species, GPU sway)
     this.entities = new EntityManager(ctx);
     this.instanced = this.quality.instanced ? new InstancedEntityRenderer(ctx) : null;
     this.entities.reset(this.bootPopulation());
@@ -985,6 +989,7 @@ export class World {
     this.wingRender.dispose();
     this.monolithTemple.dispose();
     this.mechalogodrom.dispose(); // V-MECHA: free the fusion abomination's geometries + materials
+    this.alienFlora.dispose(); // free the 10k-plant alien-flora field
     this.alphabetPantheon.dispose(); // V-ABC: free the 100-archetype instanced pools
     this.artifacts.dispose(this.engine.scene);
     this.nhiBody.dispose(); // 3 shared geometries + live body materials
@@ -1303,6 +1308,7 @@ export class World {
     // (phylumCounts/titanLedger/warMatrix), always current; internally cadenced.
     this.viz3d.update(this.viz3dSnap);
     this.environment.update(dt, t);
+    this.alienFlora.update(dt, t, this.state.chaos / CHAOS_MAX); // flora leans + luminesces with chaos
     // Crossfade the rest of the cosmos — apex bodies, instanced/per-mesh organisms, ground + light rig
     // (AFTER environment.update, so it rides this frame's animated rig).
     for (let i = 0; i < this.superBodies.length; i++) this.superBodies[i]!.setBrutalism(bf);
