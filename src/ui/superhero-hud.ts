@@ -383,9 +383,10 @@ export class SuperheroHud {
     this.pilotBtn.textContent = 'PILOT · ' + v.controlMode.toUpperCase();
     this.camBtn.textContent =
       'CAM · ' + (v.camMode === 'orbit' ? 'ORBIT' : v.camMode === 'third' ? '3RD' : '1ST');
-    this.dots.valence!.style.width = `${((v.emotion.valence + 1) / 2) * 100}%`;
-    this.dots.arousal!.style.width = `${v.emotion.arousal * 100}%`;
-    this.dots.dominance!.style.width = `${v.emotion.dominance * 100}%`;
+    // Clamp to [0,1] so an out-of-range emotion value can't blow the dot width past the track.
+    this.dots.valence!.style.width = `${Math.max(0, Math.min(1, (v.emotion.valence + 1) / 2)) * 100}%`;
+    this.dots.arousal!.style.width = `${Math.max(0, Math.min(1, v.emotion.arousal)) * 100}%`;
+    this.dots.dominance!.style.width = `${Math.max(0, Math.min(1, v.emotion.dominance)) * 100}%`;
   }
 
   private setBar(key: string, frac: number, label: string): void {

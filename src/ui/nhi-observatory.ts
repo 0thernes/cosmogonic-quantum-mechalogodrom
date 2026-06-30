@@ -1017,7 +1017,10 @@ export class NhiObservatory {
   }
 
   private cycle(d: number): void {
-    this.focus = Math.max(0, this.focus + d);
+    // Wrap within the known item count so the focus index stays valid between renders (it was
+    // growing unbounded as the user cycled, then only clamped at read time).
+    const c = this.metaC.count;
+    this.focus = c > 0 ? (((this.focus + d) % c) + c) % c : 0;
   }
 
   /**
