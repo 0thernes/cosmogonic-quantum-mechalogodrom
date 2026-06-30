@@ -289,6 +289,10 @@ function patchGodJewel(
          vec3 mindEmissive = mNeuroCol + mHelixCol + mBloom + mThermCol + mQualiaCol + mReflexCol;
          vec3 jewelEmissive = glow * (0.22 + 0.6 * relief) + iris * fres * (0.45 + 0.8 * uDominance) + wv * 0.12 * uDominance + ch * 0.07 * uSurprise * uPlan + igFlash * uPlan * (0.3 + 0.4 * uDominance) + varPal * relief * 0.25 * uPlan + evoEmissive - veinColor * veinMask * 0.4 + auraColor * relief * 0.15 + mindEmissive;
          jewelEmissive *= 0.78; // V109: darker, less white, more organic
+         // V112: HDR soft-knee so peak mind-activity (dominance/plan/surprise all maxed) can no longer
+         // stack the 15 additive terms into a flat blinding white sear. Reinhard rolloff caps each
+         // channel near ~2.0 while passing low values nearly linearly — colour stays vivid, never blinds.
+         jewelEmissive = jewelEmissive / (1.0 + jewelEmissive * 0.5);
          // V109: style-dependent BRUTAL glow — concrete grey, organic green, gold, nebula purple, repressed ash.
          vec3 brutalGlow;
          if (uBrutalStyle < 0.5) brutalGlow = vec3(0.05, 0.05, 0.06);
