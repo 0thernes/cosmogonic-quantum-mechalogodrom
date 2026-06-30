@@ -5,6 +5,8 @@
  * `import.meta.main`, so importing it here opens no socket and the suite stays hermetic.
  */
 import { describe, expect, test } from 'bun:test';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import {
   auditPostOriginAllowed,
   makeRateLimiter,
@@ -15,6 +17,8 @@ import {
   redactEmailForLog,
   withSecurityHeaders,
 } from '../server';
+
+const serverSource = readFileSync(resolve(import.meta.dir, '..', 'server.ts'), 'utf8');
 
 describe('parseAuditBody — audit POST body narrowing', () => {
   test('accepts a minimal valid body and stamps a finite ts', () => {
@@ -218,6 +222,30 @@ describe('readJsonBody — size guard before buffering', () => {
       512,
     );
     expect(r).toEqual({ ok: false, status: 413, error: 'body too large' });
+  });
+});
+
+describe('Copilot route guards — origin before quota', () => {
+  function routeBlock(route: string): string {
+    const start = serverSource.indexOf(`'${route}'`);
+    const end = serverSource.indexOf('}),', start);
+    expect(start).toBeGreaterThan(0);
+    expect(end).toBeGreaterThan(start);
+    return serverSource.slice(start, end);
+  }
+
+  test('/api/chat rejects hostile origins before spending rate-limit tokens', () => {
+    const block = routeBlock('/api/chat');
+    expect(block.indexOf('if (!auditPostOriginAllowed(req))')).toBeLessThan(
+      block.indexOf('tryRemoveForClient(chatLimiters'),
+    );
+  });
+
+  test('/api/tool rejects hostile origins before spending rate-limit tokens', () => {
+    const block = routeBlock('/api/tool');
+    expect(block.indexOf('if (!auditPostOriginAllowed(req))')).toBeLessThan(
+      block.indexOf('tryRemoveForClient(toolLimiters'),
+    );
   });
 });
 

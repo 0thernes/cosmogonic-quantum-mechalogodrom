@@ -606,16 +606,16 @@ if (import.meta.main) {
             logRequest(req, 403);
             return Response.json({ ok: false, error: 'copilot disabled' }, { status: 403 });
           }
-          if (!tryRemoveForClient(chatLimiters, client, CHAT_BURST, CHAT_REFILL_PER_SEC)) {
-            logRequest(req, 429);
-            return Response.json({ ok: false, error: 'rate limited' }, { status: 429 });
-          }
           // Same-origin guard (mirrors /api/audit + /api/waitlist): a cross-site page in the same
           // browser must not be able to drive the model or its read-only sandbox tools via a forged
           // POST. Missing Origin (same-origin app fetch) is allowed; a foreign Origin is rejected.
           if (!auditPostOriginAllowed(req)) {
             logRequest(req, 403);
             return Response.json({ ok: false, error: 'cross-origin POST denied' }, { status: 403 });
+          }
+          if (!tryRemoveForClient(chatLimiters, client, CHAT_BURST, CHAT_REFILL_PER_SEC)) {
+            logRequest(req, 429);
+            return Response.json({ ok: false, error: 'rate limited' }, { status: 429 });
           }
           const body = await readJsonBody(req, MAX_CHAT_BODY);
           if (!body.ok) {
@@ -647,15 +647,15 @@ if (import.meta.main) {
             logRequest(req, 403);
             return Response.json({ ok: false, error: 'copilot disabled' }, { status: 403 });
           }
-          if (!tryRemoveForClient(toolLimiters, client, TOOL_BURST, TOOL_REFILL_PER_SEC)) {
-            logRequest(req, 429);
-            return Response.json({ ok: false, error: 'rate limited' }, { status: 429 });
-          }
           // Same-origin guard (mirrors /api/audit): block cross-site CSRF POSTs to the read-only
           // tool endpoint.
           if (!auditPostOriginAllowed(req)) {
             logRequest(req, 403);
             return Response.json({ ok: false, error: 'cross-origin POST denied' }, { status: 403 });
+          }
+          if (!tryRemoveForClient(toolLimiters, client, TOOL_BURST, TOOL_REFILL_PER_SEC)) {
+            logRequest(req, 429);
+            return Response.json({ ok: false, error: 'rate limited' }, { status: 429 });
           }
           const body = await readJsonBody(req, MAX_BODY_LEN);
           if (!body.ok) {

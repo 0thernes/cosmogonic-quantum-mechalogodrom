@@ -94,6 +94,8 @@ describe('ai-sandbox: command gate is default-deny and write-free', () => {
     'git show HEAD:.env', // read a blocked file via git <rev>:<path>
     'git cat-file -p HEAD', // raw object reads bypass path confinement entirely
     'git show HEAD', // bare rev can disclose historical/deleted file contents
+    'git log -p -1 --stat', // patch history can disclose deleted blocked files
+    'git diff HEAD~1 HEAD', // revision diffs are history reads, not confined file reads
   ];
   for (const cmd of denied) {
     test(`denies: ${cmd}`, async () => {

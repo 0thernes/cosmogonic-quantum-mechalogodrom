@@ -111,8 +111,9 @@ function patchGodJewel(
   mat: THREE.MeshStandardMaterial,
   u: Record<string, THREE.IUniform>,
   variant = 0,
+  seed = 0,
 ): void {
-  void variant; // GOAL5 multi-creature variant hook (extreme geo now live via uVariant + q)
+  mat.customProgramCacheKey = () => 'godjewel_' + variant + '_' + seed;
   mat.onBeforeCompile = (shader) => {
     for (const k in u) shader.uniforms[k] = u[k] as THREE.IUniform;
     shader.vertexShader = shader.vertexShader
@@ -441,7 +442,7 @@ export class SuperBodySystem {
       emissive: 0x080314,
       emissiveIntensity: 1.1,
     });
-    patchGodJewel(coreMat, this.u, this.variant);
+    patchGodJewel(coreMat, this.u, this.variant, this.seed);
     this.core = new THREE.Mesh(coreGeo, coreMat);
     this.root.add(this.core);
 
@@ -1045,7 +1046,6 @@ export class SuperBodySystem {
     if (this.brutalStyle !== val) {
       this.brutalStyle = val;
       this.u.uBrutalStyle.value = val;
-      (this.core.material as THREE.Material).needsUpdate = true;
     }
     this.setBrutalism(this.brutalism);
   }

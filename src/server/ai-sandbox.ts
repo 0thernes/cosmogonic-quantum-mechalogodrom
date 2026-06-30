@@ -275,6 +275,8 @@ const BIN_FORBIDDEN_FLAG: Record<string, RegExp> = {
   sort: /^-o|^--output(=|$)/,
 };
 
+const GIT_PATCH_HISTORY_FLAG = /^-p$|^--patch$/;
+
 /**
  * Validate (default-deny) a raw command string. Returns the parsed argv on success. The check is:
  * no metacharacters; first token on ALLOW; no token on DENY; `git`/`bun` subcommand-gated; every
@@ -309,6 +311,21 @@ function validateCommand(raw: string): { ok: true; argv: string[] } | { ok: fals
       const positionals = argv.slice(2).filter((a) => !isFlag(a));
       if (positionals.some((a) => !a.includes(':'))) {
         return { ok: false, error: 'git show is allowed only for confined <rev>:<path> reads' };
+      }
+    }
+    if (sub === 'log' && argv.slice(2).some((a) => GIT_PATCH_HISTORY_FLAG.test(a))) {
+      return {
+        ok: false,
+        error: 'git log patch output is denied (history contents are not confined)',
+      };
+    }
+    if (sub === 'diff' || sub === 'diff-tree') {
+      const positionals = argv.slice(2).filter((a) => !isFlag(a) && a !== '--');
+      const revisionLike = positionals.some(
+        (a) => !a.includes('/') && !a.includes('\\') && !a.includes('.') && !a.includes(':'),
+      );
+      if (revisionLike) {
+        return { ok: false, error: `git ${sub} revision diffs are denied` };
       }
     }
     // branch/tag/remote can MUTATE with a positional arg; permit only the listing forms (flags only).
