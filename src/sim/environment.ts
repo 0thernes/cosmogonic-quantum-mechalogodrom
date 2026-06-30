@@ -582,7 +582,7 @@ export class EnvironmentSystem {
         // Landscape reactive rippling
         float wave = sin(vWorldPos.x * 0.05 + uTime * 0.5) * cos(vWorldPos.z * 0.05 - uTime * 0.4) * 2.0;
         transformed.z += wave; // transformed.z is up because rotation.x = -PI/2
-        `
+        `,
       );
       shader.fragmentShader = `
         uniform float uTime;
@@ -594,7 +594,7 @@ export class EnvironmentSystem {
         #include <map_fragment>
         float bioPulse = sin(vWorldPos.x * 0.2 + uTime) * cos(vWorldPos.z * 0.2 + uTime) * 0.5 + 0.5;
         diffuseColor.rgb += vec3(0.05, 0.15, 0.1) * bioPulse;
-        `
+        `,
       );
     };
     const ground = new THREE.Mesh(groundGeo, this.groundMaterial);

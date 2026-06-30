@@ -15,6 +15,7 @@
 import * as THREE from 'three';
 import { clamp } from '../math/scalar';
 import { ARENA_MID } from './constants';
+import { TempleGreeble } from './temple-greeble';
 
 /** Seconds the temple takes to rise into place once revealed. */
 const RISE_TIME = 2.4;
@@ -57,6 +58,8 @@ export interface MonolithTempleSnapshot {
 export class MonolithTemple {
   private readonly scene: THREE.Scene;
   private readonly group = new THREE.Group();
+  /** Abomination-architecture detail shell: mirror-symmetric greebled towers + data-rain strips. */
+  private readonly greeble: TempleGreeble;
   private readonly geos: THREE.BufferGeometry[] = [];
   private readonly mats: THREE.Material[] = [];
   private readonly portalMat: THREE.MeshBasicMaterial;
@@ -113,7 +116,7 @@ export class MonolithTemple {
         vWorldPos = (modelMatrix * vec4(position, 1.0)).xyz;
         float disp = sin(vWorldPos.x * 2.0 + uTime * 0.5) * cos(vWorldPos.z * 2.0 - uTime * 0.3) * 0.5;
         disp += sin(vWorldPos.y * 5.0) * 0.2;
-        transformed += normal * disp;`
+        transformed += normal * disp;`,
       );
       shader.fragmentShader = `
         uniform float uTime;
@@ -121,15 +124,20 @@ export class MonolithTemple {
         float hash(vec3 p) { p = fract(p * 0.3183099 + 0.1); p *= 17.0; return fract(p.x * p.y * p.z * (p.x + p.y + p.z)); }
         float noise(vec3 x) { vec3 p = floor(x); vec3 f = fract(x); f = f * f * (3.0 - 2.0 * f); return mix(mix(mix(hash(p + vec3(0,0,0)), hash(p + vec3(1,0,0)), f.x), mix(hash(p + vec3(0,1,0)), hash(p + vec3(1,1,0)), f.x), f.y), mix(mix(hash(p + vec3(0,0,1)), hash(p + vec3(1,0,1)), f.x), mix(hash(p + vec3(0,1,1)), hash(p + vec3(1,1,1)), f.x), f.y), f.z); }
         float fbm(vec3 p) { float f = 0.0; f += 0.5 * noise(p); p *= 2.02; f += 0.25 * noise(p); p *= 2.03; f += 0.125 * noise(p); p *= 2.01; f += 0.0625 * noise(p); return f; }
-        ${shader.fragmentShader}`.replace(
-        '#include <map_fragment>',
-        `#include <map_fragment>
+        ${shader.fragmentShader}`
+        .replace(
+          '#include <map_fragment>',
+          `#include <map_fragment>
         float n = fbm(vWorldPos * 3.0 + uTime * 0.1);
         float n2 = fbm(vWorldPos * 15.0);
         vec3 abominationColor = mix(vec3(0.05, 0.05, 0.08), vec3(0.4, 0.1, 0.2), n);
         abominationColor += vec3(0.1, 0.3, 0.3) * n2 * 0.5;
-        diffuseColor.rgb *= abominationColor;`
-      ).replace('#include <roughnessmap_fragment>', `#include <roughnessmap_fragment>\nroughnessFactor = mix(0.2, 0.9, n);`);
+        diffuseColor.rgb *= abominationColor;`,
+        )
+        .replace(
+          '#include <roughnessmap_fragment>',
+          `#include <roughnessmap_fragment>\nroughnessFactor = mix(0.2, 0.9, n);`,
+        );
     };
 
     const stone = (
@@ -308,6 +316,9 @@ export class MonolithTemple {
     this.cage.frustumCulled = false;
     this.group.add(this.cage);
 
+    // Wrap the bare trilithon in the colossal greebled megastructure + data-rain curtain.
+    this.greeble = new TempleGreeble(this.group, ARENA_MID);
+
     this.group.visible = false;
     this.scene.add(this.group);
   }
@@ -428,6 +439,7 @@ export class MonolithTemple {
       sh.rotation.y = safeT * (0.05 + this.chaos * 0.1) + i;
     }
     this.warpCage(safeT, ease);
+    this.greeble.update(safeT, this.reactivity, this.chaos);
   }
 
   /** Warp the impossible cage in-place; fixed vertex count, no allocations. */
@@ -440,7 +452,7 @@ export class MonolithTemple {
     if (this.mats[0] && (this.mats[0] as any).userData?.uniforms) {
       (this.mats[0] as any).userData.uniforms.uTime.value = t;
     }
-    
+
     for (let i = 0; i < arr.length; i += 3) {
       const bx = base[i] ?? 0;
       const by = base[i + 1] ?? 0;
@@ -477,6 +489,7 @@ export class MonolithTemple {
 
   /** Remove + free all GPU resources. */
   dispose(): void {
+    this.greeble.dispose();
     this.scene.remove(this.group);
     for (const g of this.geos) g.dispose();
     for (const m of this.mats) m.dispose();
