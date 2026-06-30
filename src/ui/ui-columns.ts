@@ -16,14 +16,12 @@ const BRAIN_SLOTS: readonly { id: string; title: string }[] = [
 ];
 
 function ensureBrainSlots(right: HTMLElement, doc: Document): void {
-  for (const { id, title } of BRAIN_SLOTS) {
-    if (doc.getElementById(id)) continue;
-    const slot = doc.createElement('div');
-    slot.id = id;
-    slot.className = 'cqm-brain-slot ui-readout-card ui-readout-card--purple';
-    slot.innerHTML = `<div class="ui-readout-card__head cqm-brain-slot__head">${title}</div><div class="cqm-brain-slot__viz"></div>`;
-    right.appendChild(slot);
-  }
+  if (doc.getElementById('brain-all-slot')) return;
+  const slot = doc.createElement('div');
+  slot.id = 'brain-all-slot';
+  slot.className = 'cqm-brain-slot ui-readout-card ui-readout-card--purple';
+  slot.innerHTML = `<div class="cqm-brain-slot__viz" id="brain-all-viz"></div>`;
+  right.appendChild(slot);
 }
 
 export function initUiColumns(doc: Document = document): void {

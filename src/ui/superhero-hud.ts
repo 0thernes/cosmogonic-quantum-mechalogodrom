@@ -28,7 +28,7 @@ const STYLE = `
 #cqm-hero{position:fixed;top:calc(38px + env(safe-area-inset-top,0px));left:var(--cqm-hud-left,calc(clamp(200px,20vw,280px) + 12px));
   right:var(--cqm-hud-right,calc(clamp(260px,26vw,400px) + 12px));
   width:auto;max-width:none;max-height:min(32vh,210px);overflow:hidden;
-  transform:translateY(-150%);z-index:96;
+  transform:translateY(-150%);z-index:150;
   transition:transform .55s cubic-bezier(.2,.9,.3,1);font-size:11px;line-height:1.4;font-family:var(--font-mono,ui-monospace,monospace);
   color:#e9e3ff;pointer-events:none}
 #cqm-hero.on{transform:translateY(0)}
