@@ -50,4 +50,25 @@ describe('AudioEngine', () => {
     for (let i = 0; i < SONGS.length; i++) current = engine.cycleSong();
     expect(current).toBe(first);
   });
+
+  test('sleep timer auto-mutes after the configured delay', async () => {
+    const engine = new AudioEngine(state(), mulberry32(5));
+    engine.setSleepDelay(1);
+    engine.toggleMusic();
+    expect(engine.musicOn).toBe(true);
+    expect(engine.muted).toBe(false);
+    await new Promise((r) => setTimeout(r, 20));
+    expect(engine.muted).toBe(true);
+    expect(engine.musicOn).toBe(true); // toggle state preserved
+  });
+
+  test('dispose clears the sleep timer', () => {
+    const engine = new AudioEngine(state(), mulberry32(6));
+    engine.setSleepDelay(1);
+    engine.toggleMusic();
+    engine.dispose();
+    // After dispose, music flags are reset and no crash occurs.
+    expect(engine.musicOn).toBe(false);
+    expect(engine.muted).toBe(false);
+  });
 });

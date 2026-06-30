@@ -78,6 +78,9 @@ function intensityAt(st: number): number {
  */
 const MUSIC_BUS_GAIN = 0.2;
 
+/** Sleep timer: auto-mute music after this many minutes of continuous playback. */
+const SLEEP_MS = 20 * 60 * 1000;
+
 /**
  * Lazily initialized Web Audio engine. Construct once in world.ts, call {@link init}
  * from the first user gesture (autoplay policy), then drive it through the toggle/cycle
@@ -93,6 +96,9 @@ export class AudioEngine {
   private sfxGain: GainNode | null = null;
   private masterGain: GainNode | null = null;
   private musicInterval: ReturnType<typeof setInterval> | null = null;
+  /** Sleep timer that auto-mutes after a period of continuous playback. */
+  private sleepTimer: ReturnType<typeof setTimeout> | null = null;
+  private sleepMs = SLEEP_MS;
   /** Ambient auto-SFX timer + its visibilitychange handler — retained so {@link dispose} can clear
    *  them (the renderer side already tears down via Engine.dispose; the audio side must match). */
   private ambientInterval: ReturnType<typeof setInterval> | null = null;
@@ -146,6 +152,7 @@ export class AudioEngine {
     this._musicOn = on;
     if (this._musicOn) {
       this.startScheduler();
+      this.resetSleepTimer();
     } else {
       this.stopScheduler();
       if (this.musicGain && this.ctx) {
@@ -237,6 +244,10 @@ export class AudioEngine {
     this._musicOn = false;
     this._sfxOn = false;
     this._muted = false;
+    if (this.sleepTimer !== null) {
+      clearTimeout(this.sleepTimer);
+      this.sleepTimer = null;
+    }
     if (ctx && ctx.state !== 'closed') void ctx.close();
   }
 
@@ -272,6 +283,7 @@ export class AudioEngine {
     this._musicOn = !this._musicOn;
     if (this._musicOn) {
       this.startScheduler();
+      this.resetSleepTimer();
     } else {
       this.stopScheduler(); // Known Bug 2 fix: legacy only ramped the gain down.
       if (this.ctx && this.musicGain) {
@@ -297,12 +309,18 @@ export class AudioEngine {
   /**
    * Master mute/unmute: silences both music and SFX buses without changing their individual
    * toggle states, so unmuting restores exactly what was playing. Ramps to avoid clicks.
+   * Resets/clears the sleep timer so user intent is respected.
    */
   toggleMute(): boolean {
     this.init();
     this._muted = !this._muted;
     if (this.ctx && this.masterGain) {
       this.masterGain.gain.setTargetAtTime(this._muted ? 0 : 1, this.ctx.currentTime, 0.1);
+    }
+    if (this._muted) {
+      this.clearSleepTimer();
+    } else if (this._musicOn) {
+      this.resetSleepTimer();
     }
     return this._muted;
   }
@@ -325,7 +343,10 @@ export class AudioEngine {
     this.state.songIdx = (this.state.songIdx + 1) % SONGS.length;
     // songIdx ∈ [0, SONGS.length) by the modulo above and SONGS is non-empty.
     const song = SONGS[this.state.songIdx]!;
-    if (this._musicOn) this.startScheduler(); // startScheduler clears the old interval first.
+    if (this._musicOn) {
+      this.startScheduler(); // startScheduler clears the old interval first.
+      this.resetSleepTimer();
+    }
     return song.name;
   }
 
@@ -767,6 +788,29 @@ export class AudioEngine {
     if (this.musicInterval !== null) {
       clearInterval(this.musicInterval);
       this.musicInterval = null;
+    }
+    this.clearSleepTimer();
+  }
+
+  /** Reset the sleep timer so music keeps playing until sleepMs of continuous playback. */
+  private resetSleepTimer(): void {
+    this.clearSleepTimer();
+    this.sleepTimer = setTimeout(() => {
+      this.sleepTimer = null;
+      if (this._musicOn && !this._muted) this.toggleMute();
+    }, this.sleepMs);
+  }
+
+  /** Test hook: override the auto-mute sleep delay. */
+  setSleepDelay(ms: number): void {
+    this.sleepMs = Math.max(0, ms);
+    if (this._musicOn && !this._muted) this.resetSleepTimer();
+  }
+
+  private clearSleepTimer(): void {
+    if (this.sleepTimer !== null) {
+      clearTimeout(this.sleepTimer);
+      this.sleepTimer = null;
     }
   }
 }
