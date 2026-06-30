@@ -2691,7 +2691,8 @@ export class World {
     // titan's ~8). Uses econRng so the launch's main-stream draws above stay reproducible.
     this.economy.register(World.ECON_NHI_BASE + nid, 'NHI super-mind', 14, this.econRng);
     this.nhiBody.spawn(nid, e.position.x, e.position.y, e.position.z);
-    this.audio.play('warp');
+    // V109: varied alien vocalization on NHI arrival (round-robin from the alien chitter band).
+    this.audio.playExtra('alienchitter');
     this.hud.showSector(
       source === 'titan-procreation'
         ? 'NHI BIRTH · TITAN MATRIX OFFSPRING'

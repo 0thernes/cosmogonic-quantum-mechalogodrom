@@ -49,12 +49,16 @@ export class NhiBodySystem {
     const group = new THREE.Group();
     group.position.set(x, y, z);
 
+    // V109: wider alien skin palette — each NHI gets a unique biomechanical "species" hue/texture.
+    const speciesHue = (0.52 + this.spawnIndex * 0.137) % 1;
+    const skinSat = 0.62 + 0.25 * Math.sin(this.spawnIndex * 1.7);
+    const skinLit = 0.35 + 0.14 * Math.sin(this.spawnIndex * 2.3);
     const coreMat = new THREE.MeshStandardMaterial({
-      color: new THREE.Color().setHSL((0.52 + this.spawnIndex * 0.137) % 1, 0.78, 0.44),
+      color: new THREE.Color().setHSL(speciesHue, skinSat, skinLit),
       emissive: new THREE.Color().setHSL((0.72 + this.spawnIndex * 0.091) % 1, 0.86, 0.28),
       emissiveIntensity: 1.9,
-      metalness: 0.85,
-      roughness: 0.18,
+      metalness: 0.75 + 0.2 * Math.sin(this.spawnIndex * 3.1),
+      roughness: 0.12 + 0.18 * Math.abs(Math.sin(this.spawnIndex * 2.7)),
       flatShading: true,
     });
     group.add(new THREE.Mesh(this.coreGeo, coreMat));
@@ -71,13 +75,14 @@ export class NhiBodySystem {
     group.add(ring);
     const ring2 = new THREE.Mesh(this.ringGeo, ringMat);
     ring2.rotation.set(Math.PI / 2.05, 0.4 + this.spawnIndex * 0.31, 0.75);
-    ring2.scale.set(0.72, 1.18, 0.72);
+    ring2.scale.set(0.72 + 0.14 * Math.sin(this.spawnIndex), 1.18, 0.72 + 0.14 * Math.cos(this.spawnIndex));
     group.add(ring2);
 
     // Ocular crown on the "face" (front +z) — weird but readable at distance.
+    const eyeHue = (0.9 + this.spawnIndex * 0.071) % 1;
     const eyeMat = new THREE.MeshStandardMaterial({
       color: 0xf8ffff,
-      emissive: new THREE.Color().setHSL((0.9 + this.spawnIndex * 0.071) % 1, 0.95, 0.62),
+      emissive: new THREE.Color().setHSL(eyeHue, 0.95, 0.62),
       emissiveIntensity: 5.4,
     });
     for (let i = 0; i < 7; i++) {
@@ -114,19 +119,22 @@ export class NhiBodySystem {
       }
       const g = b.group;
       g.position.copy(p);
-      g.rotation.y = t * (0.18 + 0.05 * Math.sin(b.phase)) + b.phase;
-      g.rotation.x = Math.sin(t * 0.34 + b.phase) * 0.52;
-      g.rotation.z = Math.sin(t * 0.21 + b.phase * 1.7) * 0.24;
+      // V109: more dynamic, restless alien motion — faster spin + irregular multi-frequency wobble.
+      g.rotation.y = t * (0.32 + 0.12 * Math.sin(b.phase)) + b.phase;
+      g.rotation.x = Math.sin(t * 0.58 + b.phase) * 0.62 + Math.sin(t * 1.3 + b.phase * 2.1) * 0.18;
+      g.rotation.z = Math.sin(t * 0.41 + b.phase * 1.7) * 0.35 + Math.sin(t * 0.93 + b.phase) * 0.14;
       // Morph: a writhing, non-uniform breathing scale — reads as a living, shifting body.
       g.scale.set(
-        1.12 + Math.sin(t * 1.17 + b.phase) * 0.26,
-        1.18 + Math.sin(t * 1.61 + b.phase * 1.3) * 0.32,
-        1.08 + Math.sin(t * 1.39 + b.phase * 0.7) * 0.24,
+        1.12 + Math.sin(t * 1.17 + b.phase) * 0.26 + Math.sin(t * 2.7 + b.phase) * 0.08,
+        1.18 + Math.sin(t * 1.61 + b.phase * 1.3) * 0.32 + Math.sin(t * 3.1 + b.phase * 0.8) * 0.1,
+        1.08 + Math.sin(t * 1.39 + b.phase * 0.7) * 0.24 + Math.sin(t * 2.4 + b.phase * 1.2) * 0.07,
       );
       b.coreMat.emissiveIntensity =
-        1.55 + Math.sin(t * 1.23 + b.phase) * 0.55 + Math.sin(t * 0.37 + b.phase) * 0.25;
+        1.55 + Math.sin(t * 1.23 + b.phase) * 0.55 + Math.sin(t * 0.37 + b.phase) * 0.25 + Math.sin(t * 4.1 + b.phase) * 0.15;
       b.ringMat.emissiveIntensity =
-        1.05 + Math.sin(t * 2.17 + b.phase) * 0.45 + Math.sin(t * 0.53 + b.phase) * 0.25;
+        1.05 + Math.sin(t * 2.17 + b.phase) * 0.45 + Math.sin(t * 0.53 + b.phase) * 0.25 + Math.sin(t * 3.7 + b.phase) * 0.2;
+      b.eyeMat.emissiveIntensity =
+        5.4 + Math.sin(t * 2.5 + b.phase) * 0.8 + Math.sin(t * 6.0 + b.phase * 3.0) * 0.4;
     }
   }
 

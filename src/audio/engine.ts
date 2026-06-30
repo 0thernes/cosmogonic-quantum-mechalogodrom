@@ -33,6 +33,7 @@ import type { Rng } from '../math/rng';
 import type { SfxType, SimState } from '../types';
 import {
   SFX_CUE_BAND,
+  SFX_EXTRA_BANDS,
   SFX_FAMILY_BANDS,
   SFX_TYPES,
   SONGS,
@@ -335,6 +336,20 @@ export class AudioEngine {
     if (!this.ctx || !this.sfxGain || !this._sfxOn) return;
     const i = ((Math.floor(n) % this.palette.length) + this.palette.length) % this.palette.length;
     const spec = this.palette[i];
+    if (spec) this.synth(spec, this.rng());
+  }
+
+  /**
+   * V109: fire a sound from a named extra band (alienchitter, demonic, howl, etc.).
+   * Round-robin within the band + per-trigger jitter, like {@link play}.
+   */
+  playExtra(name: string): void {
+    if (!this.ctx || !this.sfxGain || !this._sfxOn) return;
+    const band = SFX_EXTRA_BANDS[name];
+    if (!band) return;
+    const cursor = this.bandCursor.get(band.start) ?? Math.floor(this.rng() * band.count);
+    this.bandCursor.set(band.start, cursor + 1);
+    const spec = this.palette[band.start + (cursor % band.count)];
     if (spec) this.synth(spec, this.rng());
   }
 
