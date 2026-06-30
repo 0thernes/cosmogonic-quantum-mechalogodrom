@@ -77,6 +77,7 @@ import { NhiBodySystem } from './sim/nhi-body';
 import { CosmicWeb } from './sim/cosmic-web';
 import { GoldLattice } from './sim/gold-lattice';
 import { FloatingMonoliths } from './sim/floating-monoliths';
+import { GodColossus } from './sim/god-colossus';
 import { QuantumLattice } from './sim/quantum-lattice';
 import { AbominationArchitecture } from './sim/abomination-architecture';
 import { Mechalogodrom } from './sim/mechalogodrom';
@@ -383,6 +384,8 @@ export class World {
   private readonly goldLattice: GoldLattice;
   /** Sparse suspended abomination-architecture megaliths drifting through the dome (additive, no rng). */
   private readonly floatingMonoliths: FloatingMonoliths;
+  /** V110: the ONE colossal god-tier monument looming over the skyline (item 18). */
+  private readonly godColossus: GodColossus;
   /** Floating neon sacred-geometry shells — the quantum heart (additive; assigned in the constructor). */
   private readonly quantumLattice: QuantumLattice;
   /** Sparse suspended circuit architecture — materialism around the dome without clutter. */
@@ -733,6 +736,7 @@ export class World {
     // V11: floating gold wireframe architecture for designed-space depth (additive; draws no rng).
     this.goldLattice = new GoldLattice(ctx.scene);
     this.floatingMonoliths = new FloatingMonoliths(ctx.scene); // 16 drifting greebled megaliths
+    this.godColossus = new GodColossus(ctx.scene); // V110: the colossal god-tier monument (item 18)
     // V11: floating neon sacred-geometry quantum lattice (additive; draws no rng).
     this.quantumLattice = new QuantumLattice(ctx.scene);
     this.abominationArchitecture = new AbominationArchitecture(ctx.scene);
@@ -1020,6 +1024,7 @@ export class World {
     this.abominationArchitecture.dispose();
     this.mechalogodrom.dispose(); // V-MECHA: free the fusion abomination's geometries + materials
     this.floatingMonoliths.dispose(); // free the 16 drifting megaliths' geometries + materials
+    this.godColossus.dispose(); // free the colossal god monument
     this.alienFlora.dispose(); // free the 10k-plant alien-flora field
     this.alphabetPantheon.dispose(); // V-ABC: free the 100-archetype instanced pools
     this.artifacts.dispose(this.engine.scene);
@@ -1168,6 +1173,11 @@ export class World {
     this.cosmicWeb.update(t); // V11: far-field cosmic-web shimmer (additive backdrop, no rng)
     this.goldLattice.update(t); // V11: floating gold architecture tumble (additive, no rng)
     this.floatingMonoliths.update(t, this.state.chaos / CHAOS_MAX); // drifting megaliths kindle with chaos
+    this.godColossus.update(
+      t,
+      this.state.chaos / CHAOS_MAX,
+      (this.state.entropy ?? 0) / ENTROPY_MAX,
+    ); // the god monument blazes + writhes with chaos/entropy
     this.quantumLattice.update(t); // V11: neon sacred-geometry shells (additive, no rng)
     this.abominationArchitecture.setReactivity(
       s.chaos / CHAOS_MAX,
