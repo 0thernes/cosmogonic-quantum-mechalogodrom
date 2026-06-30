@@ -10,7 +10,8 @@
         sites, and Born-rule measurement-collapse events that ring the void with interference.
     - Pages 2-4  DATA-VISUAL BOARDS — responsive grids of TWENTY-FOUR live, seeded 3D mini-visuals
         per page (72 total). Every tile is a WEBGL canvas with an orbiting camera or
-        depth-projected geometry. Boards are built LAZILY: only the visible page's 12
+        depth-projected geometry. Each page has 16 UNIQUE generators + 8 seeded variants = 24.
+        Boards are built LAZILY: only the visible page's 12
         instances exist at any moment (browsers cap ~16 live WebGL contexts); leaving a
         board removes every instance, explicitly loses its GL context, and clears its DOM.
 
@@ -3612,7 +3613,6 @@
         const ys = new Float32Array(PTS);
         const zs = new Float32Array(PTS);
         const alpha = rng.range(-1.2, -0.8);
-        const beta = rng.range(0.2, 0.45);
         const omega = rng.range(0.8, 1.3);
         const gamma = rng.range(0.28, 0.42);
         const rx = makeReact(p);
@@ -4093,7 +4093,6 @@
       function makeCollatz(p, rng, S) {
         const rx = makeReact(p);
         const maxN = 30 + rng.int(20);
-        const nodes = [];
         const edges = [];
         p.setup = () => {
           p.createCanvas(S, S, p.WEBGL);
@@ -4440,7 +4439,6 @@
           const origDraw = p.draw;
           const boost = 1 + variantIdx * 0.08;
           p.draw = function () {
-            const orig = p.frameCount;
             p.__cqmVariantBoost = boost;
             origDraw();
           };
