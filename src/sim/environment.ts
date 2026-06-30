@@ -566,6 +566,37 @@ export class EnvironmentSystem {
       emissive: 0x040410,
       emissiveIntensity: 0.3,
     });
+    // Abomination Terrain Shader
+    (this.groundMaterial as any).userData = { uniforms: { uTime: { value: 0 } } };
+    this.groundMaterial.onBeforeCompile = (shader) => {
+      shader.uniforms.uTime = (this.groundMaterial as any).userData.uniforms.uTime;
+      shader.vertexShader = `
+        uniform float uTime;
+        varying vec3 vWorldPos;
+        ${shader.vertexShader}
+      `.replace(
+        '#include <begin_vertex>',
+        `
+        #include <begin_vertex>
+        vWorldPos = (modelMatrix * vec4(position, 1.0)).xyz;
+        // Landscape reactive rippling
+        float wave = sin(vWorldPos.x * 0.05 + uTime * 0.5) * cos(vWorldPos.z * 0.05 - uTime * 0.4) * 2.0;
+        transformed.z += wave; // transformed.z is up because rotation.x = -PI/2
+        `
+      );
+      shader.fragmentShader = `
+        uniform float uTime;
+        varying vec3 vWorldPos;
+        ${shader.fragmentShader}
+      `.replace(
+        '#include <map_fragment>',
+        `
+        #include <map_fragment>
+        float bioPulse = sin(vWorldPos.x * 0.2 + uTime) * cos(vWorldPos.z * 0.2 + uTime) * 0.5 + 0.5;
+        diffuseColor.rgb += vec3(0.05, 0.15, 0.1) * bioPulse;
+        `
+      );
+    };
     const ground = new THREE.Mesh(groundGeo, this.groundMaterial);
     ground.rotation.x = -PI / 2;
     ground.position.y = -10;
@@ -648,6 +679,9 @@ export class EnvironmentSystem {
    * 8 dioramas × 12 minis), so effectively O(1) per frame.
    */
   update(dt: number, t: number): void {
+    if ((this.groundMaterial as any).userData?.uniforms) {
+      (this.groundMaterial as any).userData.uniforms.uTime.value = t;
+    }
     const cm = Math.min(this.state.chaos / 2, 3);
 
     // Pipelines (legacy 841)

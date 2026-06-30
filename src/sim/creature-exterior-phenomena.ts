@@ -119,8 +119,15 @@ export const CREATURE_EXTERIOR_PHENOMENA = buildCreatureExteriorPhenomena();
 
 export const CREATURE_EXTERIOR_PHENOMENA_COUNT = CREATURE_EXTERIOR_PHENOMENA.length;
 
-/** Global exterior animation scale — slow, living, adaptive (glacial; no racing loops). */
-export const CREATURE_EXTERIOR_TIME_SCALE = 0.12;
+/**
+ * Global exterior animation scale.
+ *
+ * Calibration: the prior 5× dome speed merely made the Mechalogodrom feel "normal"; by owner
+ * instruction that old 5× read is now the new 0.1× creature baseline, so the physical exterior
+ * clock is 50× the old scalar (0.12 → 6.0). Every consumer stays deterministic because this is a
+ * pure elapsed-time multiplier, not an injected random or frame-rate dependency.
+ */
+export const CREATURE_EXTERIOR_TIME_SCALE = 6.0;
 
 /** Pick active exterior phenomenon indices from beat + activity (deterministic). */
 export function activeExteriorPhenomena(beat: number, activity: number, count = 8): number[] {

@@ -53,7 +53,6 @@ import {
 } from './glyph-exterior-signature';
 import type { TsotchkeQuantumPulse } from './tsotchke-facade';
 
-/** One body-shape family per unique geometry bucket — wild parametric solids per letter seed. */
 /** Dome shell radius the pantheon hangs on (just inside the far sky). */
 const DOME_R = ARENA_RADIUS * 0.95;
 
@@ -95,7 +94,7 @@ export class AlphabetPantheonRender {
   private readonly meshes: THREE.InstancedMesh[] = [];
   /** Per pool: the bodies it draws, in instance-slot order. */
   private readonly bodies: Body[][] = [];
-  private readonly mat: THREE.MeshBasicMaterial;
+  private readonly mat: THREE.ShaderMaterial;
   /** #101 — APEX ABOMINATION capstone (ς): warped dimensional horror above the 100-letter pantheon. */
   private readonly apexGroup = new THREE.Group();
   private readonly apexCore: THREE.Mesh;
@@ -134,10 +133,68 @@ export class AlphabetPantheonRender {
   private apexVitality = 0;
 
   constructor(scene: THREE.Scene) {
-    this.mat = new THREE.MeshBasicMaterial({
-      color: 0xffffff, // white base so instanceColor shows the true hue
+    const pantheonVert = `
+      varying vec2 vUv;
+      varying vec3 vPos;
+      varying vec3 vColor;
+      varying vec3 vNormal;
+      attribute vec3 instanceColor;
+      uniform float uTime;
+
+      // Noise function for vertex displacement
+      float hash(vec2 p) { return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
+
+      void main() {
+        vUv = uv;
+        vColor = instanceColor;
+        vNormal = normal;
+
+        // Fleshy pulsating displacement
+        vec3 displaced = position;
+        float pulse = sin(position.y * 10.0 + uTime * 2.0) * cos(position.x * 10.0 - uTime * 1.5) * 0.15;
+        displaced += normal * pulse;
+        
+        vPos = displaced;
+
+        vec4 mvPosition = instanceMatrix * vec4(displaced, 1.0);
+        gl_Position = projectionMatrix * modelViewMatrix * mvPosition;
+      }
+    `;
+
+    const pantheonFrag = `
+      varying vec2 vUv;
+      varying vec3 vPos;
+      varying vec3 vColor;
+      varying vec3 vNormal;
+      uniform float uTime;
+
+      void main() {
+        // "Annihilation/Hellraiser" shifting skin
+        vec3 color = vColor;
+        
+        // Organic muscle/sinew bands
+        float bands = sin(vPos.y * 30.0 + uTime * 3.0) * sin(vPos.x * 20.0 - uTime * 2.0);
+        bands = smoothstep(0.1, 0.9, bands);
+        
+        // Iridescent beetle/oil spill shimmer based on normals
+        float fresnel = pow(1.0 - max(dot(normalize(vNormal), vec3(0.0, 0.0, 1.0)), 0.0), 3.0);
+        vec3 shimmer = vec3(0.5, 1.0, 0.8) * fresnel * sin(uTime * 5.0 + vPos.z * 10.0);
+        
+        vec3 finalColor = mix(color * 0.3, color + vec3(0.3, 0.1, 0.2), bands) + shimmer;
+        
+        // Darkened crevices
+        float crevice = smoothstep(0.0, 0.4, length(vPos));
+        finalColor *= crevice;
+
+        gl_FragColor = vec4(finalColor, 0.9);
+      }
+    `;
+
+    this.mat = new THREE.ShaderMaterial({
+      vertexShader: pantheonVert,
+      fragmentShader: pantheonFrag,
+      uniforms: { uTime: { value: 0 } },
       transparent: true,
-      opacity: 0.88,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
     });
@@ -175,9 +232,9 @@ export class AlphabetPantheonRender {
         const ay = y * DOME_R * 0.66 + 24;
         const baseScale =
           (6 + 14 * (0.5 * b.empowerment + 0.3 * b.order + 0.2 * b.generative)) * 1.25;
-        const freq = (0.18 + ((a.seed % 600) / 600) * 0.6) * CREATURE_EXTERIOR_TIME_SCALE;
+        const freq = 0.18 + ((a.seed % 600) / 600) * 0.6;
         const phase = ((a.seed >>> 7) % 6283) / 1000;
-        const spin = (0.15 + b.chaos * 0.8) * CREATURE_EXTERIOR_TIME_SCALE;
+        const spin = 0.15 + b.chaos * 0.8;
         const pulse = 0.15 + b.curiosity * 0.35;
         const sig = glyphExteriorSignature(a);
         const pal = glyphExteriorPalette(a);
@@ -222,13 +279,64 @@ export class AlphabetPantheonRender {
     this.glyphSpores = new GlyphSporeAura(this.group, 100);
 
     // #101 APEX ABOMINATION — physical exterior: tesseract cage + nebula + filaments.
-    const apexMat = new THREE.MeshBasicMaterial({
-      color: 0xff1a6e,
+    const apexVert = `
+      varying vec2 vUv;
+      varying vec3 vPos;
+      varying vec3 vNormal;
+      uniform float uTime;
+
+      void main() {
+        vUv = uv;
+        vPos = position;
+        vNormal = normal;
+
+        // Bizarre quantum tunneling physics / spatial warping
+        vec3 displaced = position;
+        float warp = sin(position.x * 8.0 + uTime * 3.0) * cos(position.y * 8.0 - uTime * 2.0) * 0.2;
+        displaced += normal * warp;
+        
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(displaced, 1.0);
+      }
+    `;
+
+    const apexFrag = `
+      varying vec2 vUv;
+      varying vec3 vPos;
+      varying vec3 vNormal;
+      uniform float uTime;
+
+      void main() {
+        // "deflectixive lava shimmering shining sparkling" skin
+        float noise = fract(sin(dot(vPos.xy, vec2(12.9898, 78.233)) + uTime) * 43758.5453);
+        
+        // Lava flow
+        float flow = sin(vPos.y * 15.0 + uTime * 4.0) * sin(vPos.x * 15.0 - uTime * 3.0);
+        vec3 lavaColor = mix(vec3(0.8, 0.0, 0.2), vec3(1.0, 0.5, 0.0), flow * 0.5 + 0.5);
+        
+        // Deflectixive shimmering
+        float fresnel = pow(1.0 - max(dot(normalize(vNormal), vec3(0.0, 0.0, 1.0)), 0.0), 2.0);
+        vec3 shimmer = vec3(0.4, 0.8, 1.0) * fresnel * step(0.8, noise);
+        
+        // Indrogenous sprouts / waste products (sparks)
+        float spark = step(0.98, fract(noise * uTime * 10.0));
+        vec3 sparks = vec3(1.0, 1.0, 1.0) * spark;
+
+        vec3 finalColor = lavaColor + shimmer + sparks;
+        
+        gl_FragColor = vec4(finalColor, 0.95);
+      }
+    `;
+
+    const apexMat = new THREE.ShaderMaterial({
+      vertexShader: apexVert,
+      fragmentShader: apexFrag,
+      uniforms: { uTime: { value: 0 } },
       transparent: true,
-      opacity: 0.94,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
     });
+
+    // Fallbacks for secondary elements
     const apexHaloMat = new THREE.MeshBasicMaterial({
       color: 0x6a00ff,
       transparent: true,
@@ -243,9 +351,11 @@ export class AlphabetPantheonRender {
       blending: THREE.AdditiveBlending,
       depthWrite: false,
     });
-    this.apexCore = new THREE.Mesh(new THREE.TorusKnotGeometry(1.4, 0.42, 128, 16, 2, 5), apexMat);
-    this.apexHalo = new THREE.Mesh(new THREE.IcosahedronGeometry(2.8, 2), apexHaloMat);
-    this.apexSpikes = new THREE.Mesh(new THREE.OctahedronGeometry(1.9, 1), spikeMat);
+
+    // Hyper-detailed geometries for the Apex
+    this.apexCore = new THREE.Mesh(new THREE.TorusKnotGeometry(1.4, 0.42, 512, 64, 2, 5), apexMat);
+    this.apexHalo = new THREE.Mesh(new THREE.IcosahedronGeometry(2.8, 8), apexHaloMat);
+    this.apexSpikes = new THREE.Mesh(new THREE.OctahedronGeometry(1.9, 4), spikeMat);
     // V104: additional alien geometry — warped inner core + dimensional shell
     const innerMat = new THREE.MeshBasicMaterial({
       color: 0xff00aa,
@@ -321,44 +431,52 @@ export class AlphabetPantheonRender {
 
   /** Bob / spin / pulse every body on its own cadence. Pure trig, allocation-free, no rng. */
   update(t: number): void {
+    if (this.mat instanceof THREE.ShaderMaterial) {
+      const uTime = this.mat.uniforms.uTime;
+      if (uTime) uTime.value = t;
+    }
     const slowT = t * CREATURE_EXTERIOR_TIME_SCALE;
-    const quick = 1 + 0.08 * this.chaos;
+    const quick = 1 + 1.8 * this.chaos;
     for (let pool = 0; pool < this.meshes.length; pool++) {
       const mesh = this.meshes[pool]!;
       const halo = this.wireHalos[pool];
       const list = this.bodies[pool]!;
       for (let s = 0; s < list.length; s++) {
         const b = list[s]!;
-        const ph = slowT * b.freq * quick + b.phase;
+        const ph =
+          slowT * b.freq * quick * (1 + (this.brainActivity?.[b.gIdx] ?? 0) * 0.35) + b.phase;
         const ba = this.brainActivity?.[b.gIdx] ?? 0;
         const bn = this.brainNovelty?.[b.gIdx] ?? 0;
         const bv = this.brainValence?.[b.gIdx] ?? 0;
-        const brainPulse = 1 + ba * 0.45;
+        const brainPulse = 1 + ba * 0.95 + bn * 0.35;
         const mx = this.motorX[b.gIdx] ?? 0;
         const my = this.motorY[b.gIdx] ?? 0;
         const mz = this.motorZ[b.gIdx] ?? 0;
         const wander = glyphWanderOffset(WANDER, ph, b.sig, mx, my, mz, this.chaos, ba);
         P.set(b.ax + wander.x, b.ay + wander.y, b.az + wander.z);
         E.set(
-          Math.sin(ph * 0.42 + mx + b.sig.rotBias) * 0.55,
-          slowT * b.spin * quick * (1 + ba * 0.25) + b.phase + mz * 0.25,
-          Math.cos(ph * 0.38 + mz + b.sig.rotBias * 0.5) * 0.48,
+          Math.sin(ph * 0.42 + mx + b.sig.rotBias) * (0.7 + ba * 0.75),
+          slowT * b.spin * quick * (1 + ba * 1.15) + b.phase + mz * 0.8,
+          Math.cos(ph * 0.38 + mz + b.sig.rotBias * 0.5) * (0.62 + bn * 0.9),
         );
         Q.setFromEuler(E);
-        const sx = b.sig.scaleX * (1 + b.pulse * Math.sin(ph * 1.2) * brainPulse * 0.08);
-        const sy = b.sig.scaleY * (1 + b.pulse * Math.sin(ph * 1.4) * brainPulse * 0.08);
-        const sz = b.sig.scaleZ * (1 + b.pulse * Math.cos(ph * 1.1) * brainPulse * 0.08);
+        const warpSpike = ba > 0.72 && Math.sin(ph * 7.0 + b.sig.rotBias) > 0.55 ? 1.22 : 1;
+        const sx =
+          b.sig.scaleX * (1 + b.pulse * Math.sin(ph * 1.2) * brainPulse * 0.18) * warpSpike;
+        const sy = b.sig.scaleY * (1 + b.pulse * Math.sin(ph * 1.4) * brainPulse * 0.18);
+        const sz =
+          (b.sig.scaleZ * (1 + b.pulse * Math.cos(ph * 1.1) * brainPulse * 0.18)) / warpSpike;
         S.set(b.baseScale * sx, b.baseScale * sy, b.baseScale * sz);
         M.compose(P, Q, S);
         mesh.setMatrixAt(s, M);
         const hueShift =
-          Math.sin(ph * 0.22) * 0.05 +
-          slowT * 0.0004 * b.spin +
-          bn * 0.04 * bv +
+          Math.sin(ph * 0.22) * 0.12 +
+          slowT * 0.0012 * b.spin +
+          bn * 0.14 * bv +
           b.sig.hueOffset * 0.5;
-        const hue = (b.pal.bodyHue + hueShift + b.pal.diagramHue * bn * 0.08) % 1;
-        const litBoost = ba * 0.12 + bn * 0.06 + b.pal.filamentLit * 0.08 * ba;
-        const lit = b.pal.bodyLit + 0.08 * Math.sin(ph * 1.8) + litBoost;
+        const hue = (b.pal.bodyHue + hueShift + b.pal.diagramHue * bn * 0.22) % 1;
+        const litBoost = ba * 0.24 + bn * 0.12 + b.pal.filamentLit * 0.16 * ba;
+        const lit = b.pal.bodyLit + 0.16 * Math.sin(ph * 1.8) + litBoost;
         C.setHSL(
           hue < 0 ? hue + 1 : hue,
           Math.min(1, b.pal.bodySat + bn * 0.1),
@@ -376,18 +494,31 @@ export class AlphabetPantheonRender {
       this.glyphSpores.finish();
       if (halo) syncGlyphWireHalos(mesh, halo, this.brainActivity, list);
     }
-    const w = 1 + 0.28 * this.chaos;
+    const w =
+      1 +
+      0.9 * this.chaos +
+      0.45 * this.apexTranscendence +
+      0.28 * this.apexVitality +
+      0.25 * this.tsotchkePulse.quakeAliveness;
     const ph = slowT * 0.09 * w;
-    const apexR = DOME_R * (0.22 + 0.06 * Math.sin(slowT * 0.05));
+    const apexR =
+      DOME_R *
+      (0.26 +
+        0.1 * Math.sin(slowT * 0.05) +
+        0.04 * Math.sin(ph * 1.7 + this.tsotchkePulse.qgtVolume * Math.PI));
     this.apexGroup.position.set(
-      Math.sin(slowT * 0.07 + ph * 0.12) * apexR,
-      DOME_R * 0.52 + Math.sin(slowT * 0.04 + ph * 0.1) * 22,
-      Math.cos(slowT * 0.06 + ph * 0.11) * apexR,
+      Math.sin(slowT * 0.07 + ph * 0.12) * apexR + Math.sin(ph * 2.3) * DOME_R * 0.035,
+      DOME_R * 0.52 + Math.sin(slowT * 0.04 + ph * 0.1) * 34 + Math.sin(ph * 1.9) * 18,
+      Math.cos(slowT * 0.06 + ph * 0.11) * apexR + Math.cos(ph * 2.1) * DOME_R * 0.035,
     );
     this.apexCore.rotation.set(ph * 0.45, ph * 0.32, ph * 0.58);
     this.apexHalo.rotation.set(-ph * 0.22, ph * 0.38, ph * 0.16);
     this.apexSpikes.rotation.set(ph * 0.72, -ph * 0.48, ph * 0.28);
     this.apexInner.rotation.set(ph * 0.95, -ph * 0.65, ph * 1.1);
+    if (this.apexCore.material instanceof THREE.ShaderMaterial) {
+      const uTime = this.apexCore.material.uniforms.uTime;
+      if (uTime) uTime.value = t;
+    }
     this.apexInner.scale.setScalar(10 * (1 + 0.22 * Math.sin(ph * 4.5)));
     this.apexShell.rotation.set(-ph * 0.14, ph * 0.24, -ph * 0.1);
     this.apexShell.scale.setScalar(20 * (1 + 0.1 * Math.cos(ph * 2.2)));
@@ -400,7 +531,7 @@ export class AlphabetPantheonRender {
     this.apexHalo.scale.setScalar(14 * (1 + 0.12 * Math.sin(ph * 2.9)));
     this.apexSpikes.scale.setScalar(18 * (1 + 0.15 * Math.cos(ph * 5.1)));
     C.setHSL((0.92 + Math.sin(ph * 0.7) * 0.08) % 1, 1, 0.52);
-    (this.apexCore.material as THREE.MeshBasicMaterial).color.copy(C);
+    // apexCore is now a ShaderMaterial so we don't copy color directly
     C.setHSL((0.72 + Math.cos(ph * 0.5) * 0.12) % 1, 1, 0.48);
     (this.apexHalo.material as THREE.MeshBasicMaterial).color.copy(C);
     C.setHSL((0.55 + Math.sin(ph * 1.2) * 0.15) % 1, 1, 0.55);

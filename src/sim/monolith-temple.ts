@@ -21,8 +21,7 @@ const RISE_TIME = 2.4;
 /** How far below its resting height the temple starts when it rises. */
 const RISE_DROP = 60 * ARENA_MID;
 
-/** Stone palette + the portal's two shimmer colours (absorb-cyan ↔ ascension-violet). */
-const STONE = 0x2a2f3a;
+/** Portal shimmer colours (absorb-cyan ↔ ascension-violet). */
 const PORTAL_A = new THREE.Color(0.3, 0.85, 1.0);
 const PORTAL_B = new THREE.Color(0.75, 0.4, 1.0);
 
@@ -92,13 +91,47 @@ export class MonolithTemple {
     const U = ARENA_MID;
 
     const stoneMat = new THREE.MeshStandardMaterial({
-      color: STONE,
-      roughness: 0.82,
-      metalness: 0.15,
+      color: 0x111115,
+      roughness: 0.6,
+      metalness: 0.4,
       emissive: 0x0a0d14,
       emissiveIntensity: 0.4,
     });
+
     this.mats.push(stoneMat);
+    // We will save the shader uniforms reference to update uTime in render
+    (stoneMat as any).userData = { uniforms: { uTime: { value: 0 } } };
+    stoneMat.onBeforeCompile = (shader) => {
+      shader.uniforms.uTime = (stoneMat as any).userData.uniforms.uTime;
+      // Re-apply the vertex and fragment shader modifications from above
+      shader.vertexShader = `
+        uniform float uTime;
+        varying vec3 vWorldPos;
+        ${shader.vertexShader}`.replace(
+        '#include <begin_vertex>',
+        `#include <begin_vertex>
+        vWorldPos = (modelMatrix * vec4(position, 1.0)).xyz;
+        float disp = sin(vWorldPos.x * 2.0 + uTime * 0.5) * cos(vWorldPos.z * 2.0 - uTime * 0.3) * 0.5;
+        disp += sin(vWorldPos.y * 5.0) * 0.2;
+        transformed += normal * disp;`
+      );
+      shader.fragmentShader = `
+        uniform float uTime;
+        varying vec3 vWorldPos;
+        float hash(vec3 p) { p = fract(p * 0.3183099 + 0.1); p *= 17.0; return fract(p.x * p.y * p.z * (p.x + p.y + p.z)); }
+        float noise(vec3 x) { vec3 p = floor(x); vec3 f = fract(x); f = f * f * (3.0 - 2.0 * f); return mix(mix(mix(hash(p + vec3(0,0,0)), hash(p + vec3(1,0,0)), f.x), mix(hash(p + vec3(0,1,0)), hash(p + vec3(1,1,0)), f.x), f.y), mix(mix(hash(p + vec3(0,0,1)), hash(p + vec3(1,0,1)), f.x), mix(hash(p + vec3(0,1,1)), hash(p + vec3(1,1,1)), f.x), f.y), f.z); }
+        float fbm(vec3 p) { float f = 0.0; f += 0.5 * noise(p); p *= 2.02; f += 0.25 * noise(p); p *= 2.03; f += 0.125 * noise(p); p *= 2.01; f += 0.0625 * noise(p); return f; }
+        ${shader.fragmentShader}`.replace(
+        '#include <map_fragment>',
+        `#include <map_fragment>
+        float n = fbm(vWorldPos * 3.0 + uTime * 0.1);
+        float n2 = fbm(vWorldPos * 15.0);
+        vec3 abominationColor = mix(vec3(0.05, 0.05, 0.08), vec3(0.4, 0.1, 0.2), n);
+        abominationColor += vec3(0.1, 0.3, 0.3) * n2 * 0.5;
+        diffuseColor.rgb *= abominationColor;`
+      ).replace('#include <roughnessmap_fragment>', `#include <roughnessmap_fragment>\nroughnessFactor = mix(0.2, 0.9, n);`);
+    };
+
     const stone = (
       w: number,
       h: number,
@@ -107,7 +140,8 @@ export class MonolithTemple {
       y: number,
       z: number,
     ): THREE.Mesh => {
-      const g = new THREE.BoxGeometry(w, h, d);
+      // Increase geometry segments for displacement
+      const g = new THREE.BoxGeometry(w, h, d, 32, 8, 32);
       this.geos.push(g);
       const m = new THREE.Mesh(g, stoneMat);
       m.position.set(x, y, z);
@@ -122,7 +156,7 @@ export class MonolithTemple {
     stone(30 * U, 1.8 * U, 18 * U, 0, 6.3 * U, 0);
 
     // Two colossal pillars (slightly tapered via a cylinder with unequal radii) + the lintel.
-    const pillarGeo = new THREE.CylinderGeometry(3.4 * U, 4.6 * U, 34 * U, 6);
+    const pillarGeo = new THREE.CylinderGeometry(3.4 * U, 4.6 * U, 34 * U, 32, 64);
     this.geos.push(pillarGeo);
     for (const sx of [-1, 1]) {
       const p = new THREE.Mesh(pillarGeo, stoneMat);
@@ -402,6 +436,11 @@ export class MonolithTemple {
     const arr = pos.array as Float32Array;
     const base = this.cageBase;
     const amp = this.cageWarp;
+    // V63: Update time uniforms for the Abomination Temple shaders
+    if (this.mats[0] && (this.mats[0] as any).userData?.uniforms) {
+      (this.mats[0] as any).userData.uniforms.uTime.value = t;
+    }
+    
     for (let i = 0; i < arr.length; i += 3) {
       const bx = base[i] ?? 0;
       const by = base[i + 1] ?? 0;

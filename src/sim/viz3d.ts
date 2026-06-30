@@ -8,7 +8,7 @@
  * - **Phylum population towers** — 10 emissive bars in an inner ring. Each bar's height tracks
  *   the smoothed live count of its phylum (log-compressed so a 10000-entity ultra run and a
  *   650-entity phone run both read). Additive blending makes them glow as holograms.
- * - **Titan economy obelisks** — 10 translucent six-sided prisms in an outer ring. Height tracks
+ * - **Titan economy obelisks** — 20 translucent six-sided prisms in an outer ring. Height tracks
  *   smoothed `matter`, emissive glow tracks `energy`, and hue shifts toward war-red as the
  *   titan's `war` count rises (peaceful titans keep their identity hue).
  * - **War network** — up to C(10,2)=45 line segments between obelisk tops, colored and faded by
@@ -31,8 +31,8 @@ import type { SimContext } from '../types';
 
 /** Phylum count — fixed at 10 (CONTRACTS V3.2); the tower ring is sized for exactly this. */
 const PHYLA = 10;
-/** Titan count — fixed at 10 (CONTRACTS V3.3); obelisk ring + war matrix are sized for this. */
-const TITANS = 10;
+/** Titan count — fixed at 20; obelisk ring + war matrix are sized for this. */
+const TITANS = 20;
 /** Unordered titan pairs: C(10, 2) = 45 — the war-network segment budget. */
 const PAIR_COUNT = (TITANS * (TITANS - 1)) / 2;
 
@@ -116,7 +116,7 @@ export interface Viz3DSnapshot {
   phylumCounts: ArrayLike<number>;
   /** Titan economy rows (length ≥ {@link TITANS}; extra entries ignored). */
   ledger: ArrayLike<Viz3DLedgerRow>;
-  /** 10×10 row-major titan relation matrix: 0 truce, 1 alliance, 2 war. */
+  /** 20×20 row-major titan relation matrix: 0 truce, 1 alliance, 2 war. */
   warMatrix: ArrayLike<number>;
 }
 

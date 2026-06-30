@@ -1654,28 +1654,30 @@ export const SCALE_APEX_5M: ApexScale = {
 };
 
 /**
- * The MASSIVE design scale — the brief's per-organ node targets. `apexDesignedNeurons(SCALE_MASSIVE)`
- * exceeds **one billion**, which is the apex's stated scaling target. The live engine still caps
- * actual allocation at {@link LIVE_NODE_CAP}; reaching the designed scale is the C/C++/GPU backend's
- * job (roadmap, see docs/APEX-BRAIN-ABOMINATION-2026-06-26.md). Numbers mirror the source brief: prime loom
- * 100M, acoustic ~100M, necro 50M, Klein-bottle centipede 30000², pendulum 10M, slime 30M, etc.
+ * The APEX-1B "OCTOPUS" scale — 1 Billion parameters via tiered architecture.
+ * - 500M core (distributed across prime/acoustic/necro/slime)
+ * - 9 x 50M brains (distributed across pendulum/tunnel/thermo/ouroboros)
+ * - 100 x 50,000 parameter tentacles (Klein bottle & delay rings)
  */
-export const SCALE_MASSIVE: ApexScale = {
-  name: 'MASSIVE',
-  loom: 100_000_000,
-  acoustic: 100_000_000,
-  necro: 50_000_000,
-  kleinW: 30_000,
-  kleinH: 30_000,
-  pendulum: 10_000_000,
-  slime: 30_000_000,
-  chronoD1: 150,
-  chronoD2: 900,
-  tunnel: 120_000_000,
-  thermo: 50_000_000,
-  ouroboros: 50_000_000,
+export const SCALE_APEX_1B: ApexScale = {
+  name: 'APEX-1B-OCTOPUS',
+  loom: 200_000_000,
+  acoustic: 150_000_000,
+  necro: 100_000_000,
+  kleinW: 50_000,
+  kleinH: 50_000, // Part of the 100x50k tentacle tier
+  pendulum: 100_000_000,
+  slime: 50_000_000,
+  chronoD1: 5_000,
+  chronoD2: 45_000,
+  tunnel: 150_000_000, // 3x 50M
+  thermo: 100_000_000, // 2x 50M
+  ouroboros: 100_000_000, // 2x 50M
   qubits: 12,
 };
+
+/** Back-compat alias for existing scaffold/tests; same 1B design, old visible scale name. */
+export const SCALE_MASSIVE: ApexScale = { ...SCALE_APEX_1B, name: 'MASSIVE' };
 
 /** The DESIGNED neuron count of a scale (the architecture target; ≥1e9 at {@link SCALE_MASSIVE}). */
 export function apexDesignedNeurons(s: ApexScale): number {
@@ -1704,7 +1706,7 @@ export const APEX_SCALE_TIERS: readonly ApexScale[] = [
   SCALE_APEX_2_5M,
   SCALE_APEX_5M,
   SCALE_MEDIUM,
-  SCALE_MASSIVE,
+  SCALE_APEX_1B,
 ];
 
 /** Get the designed parameter count for a given scale (approximate). */

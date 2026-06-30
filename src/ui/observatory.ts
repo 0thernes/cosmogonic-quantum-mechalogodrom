@@ -17,7 +17,7 @@
  * ≥2-column chart shows real content from boot instead of a blank panel — see {@link primed}.
  *
  * - Page 0 (V3.5, unchanged): stacked phylum-population area, titan economy ledger,
- *   10×10 war-matrix heat grid, environment triple-line (rdEnergy/qEntropy/trend).
+ *   20×20 war-matrix heat grid, environment triple-line (rdEnergy/qEntropy/trend).
  * - Page 1 VARIANCE: rolling mean±σ bands for population/energy/links; population histogram;
  *   phylum Shannon-diversity (H) timeline; qEntropy-vs-trend phase scatter.
  * - Page 2 ECOLOGY: 10 per-phylum mini-sparklines (small multiples); birth/death flux
@@ -30,9 +30,9 @@
  * 2×-CSS-pixel HiDPI backing store refreshed only when stale, the same dark backing fill, and
  * allocation-free `push()`/`draw()` bodies. Every page's rings, scratch buffers and palette
  * strings are pre-allocated at construction:
- * - page 0: phylumRing (10×180), ledgerRing (10×180), envRing (3×180) and `stackScratch`
- *   (10×180), `wealthScratch`/`warsLatest` (Float32Array 10), `envScratch` (Float32Array 3),
- *   `warScratch` (Uint8Array 100), `names` (string[10]);
+ * - page 0: phylumRing (20×180; first 10 carry phyla), ledgerRing (20×180), envRing (3×180)
+ *   and `stackScratch` (20×180), `wealthScratch`/`warsLatest` (Float32Array 20),
+ *   `envScratch` (Float32Array 3), `warScratch` (Uint8Array 400), `names` (string[20]);
  * - page 1: statRing (3×180: population/energy/links) and `statScratch` (Float32Array 3),
  *   diversityRing (1×180: Shannon H) and `histScratch` (Float32Array {@link OBS_HIST_BINS});
  * - page 2: fluxRing (2×180: births/deaths proxy) and `fluxScratch` (Float32Array 2),
@@ -55,14 +55,14 @@
  */
 import { mean, sampleStandardDeviation } from 'simple-statistics';
 
-/** Number of chart series on the stacked/ledger charts (10 phyla, 10 titans). */
-export const OBS_SERIES = 10;
+/** Number of chart series on stacked/ledger charts (10 phyla plus room for 20 titans). */
+export const OBS_SERIES = 20;
 /** Rolling-window capacity of every observatory ring, in samples (CONTRACTS V3.5). */
 export const OBS_RING_CAPACITY = 180;
 /** Series on the environment timeline chart: rdEnergy, qEntropy, trend. */
 export const OBS_ENV_SERIES = 3;
-/** Cells in the titan war matrix (10 × 10, row-major). */
-export const WAR_CELLS = 100;
+/** Cells in the titan war matrix (20 × 20, row-major). */
+export const WAR_CELLS = 400;
 /** Series on the page-1 variance chart: population, energy, links. */
 export const OBS_STAT_SERIES = 3;
 /** Bins in the page-1 population histogram. */
@@ -95,7 +95,7 @@ export interface ObservatorySnapshot {
   phylumCounts: ArrayLike<number>;
   /** Per-titan economy rows (up to {@link OBS_SERIES} consumed; missing → zero row). */
   titanLedger: ArrayLike<TitanLedgerEntry>;
-  /** 10×10 row-major war matrix, values 0 truce/none, 1 war, 2 alliance. */
+  /** 20×20 row-major war matrix, values 0 truce/none, 1 war, 2 alliance. */
   warMatrix: ArrayLike<number>;
   /** Reaction-diffusion pattern energy (auto-scaled timeline). */
   rdEnergy: number;
@@ -1215,8 +1215,8 @@ export class Observatory {
   }
 
   /**
-   * `#obs-c2`: 10×10 war-matrix heat grid. Cell color/alpha by {@link warPaletteIndex}:
-   * dim slate truce, danger war, accent alliance. O(C) = O(100).
+   * `#obs-c2`: titan war-matrix heat grid. Cell color/alpha by {@link warPaletteIndex}:
+   * dim slate truce, danger war, accent alliance. O(C) = O(WAR_CELLS).
    */
   private drawWarGrid(): void {
     const { c, x } = this.slot(2);
@@ -1227,14 +1227,15 @@ export class Observatory {
     const legendH = 18;
     const gridTop = top + 2;
     const gridH = h - gridTop - legendH;
-    const cw = w / 10;
-    const ch = gridH / 10;
+    const side = Math.sqrt(WAR_CELLS);
+    const cw = w / side;
+    const ch = gridH / side;
     const pad = Math.min(2, cw * 0.08);
     let wars = 0;
     let allies = 0;
-    for (let r = 0; r < 10; r++) {
-      for (let q = 0; q < 10; q++) {
-        const idx = warPaletteIndex(this.warScratch[r * 10 + q] ?? 0);
+    for (let r = 0; r < side; r++) {
+      for (let q = 0; q < side; q++) {
+        const idx = warPaletteIndex(this.warScratch[r * side + q] ?? 0);
         if (idx === 1) wars++;
         else if (idx === 2) allies++;
         x.fillStyle = this.warColors[idx] ?? DIM;
@@ -1243,7 +1244,7 @@ export class Observatory {
       }
     }
     x.globalAlpha = 1;
-    this.title(x, 'war matrix 10×10', w);
+    this.title(x, `war matrix ${side}×${side}`, w);
     this.readout(x, `${wars}⚔ ${allies}∞`, w);
     this.legend(x, ['truce', 'war', 'ally'], this.warColors, 3, w, h, null);
   }

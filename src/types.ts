@@ -326,7 +326,7 @@ export interface TelemetrySnapshot {
   phylumCounts: ArrayLike<number>;
   /** Titan economy rows (V3.5). REUSED array of REUSED rows — copy to retain. */
   titanLedger: ArrayLike<TitanLedger>;
-  /** 10×10 row-major titan relation matrix: 0 truce, 1 alliance, 2 war (V3.5). REUSED. */
+  /** 20×20 row-major titan relation matrix: 0 truce, 1 alliance, 2 war (V3.5). REUSED. */
   warMatrix: ArrayLike<number>;
   /** Reaction-diffusion pattern energy: strided mean of the V field (V3.5). */
   rdEnergy: number;

@@ -46,10 +46,10 @@ import type { SimContext } from '../types';
 import type { EntityManager } from './entities';
 import type { SingularitySystem } from './singularities';
 
-/** Number of titans (fixed — the war matrix and pair tables are sized for exactly 10). */
-const TITAN_COUNT = 10;
-/** Unordered titan pairs: C(10, 2). */
-const PAIR_COUNT = 45;
+/** Number of titans: 10 territorial colossi + 10 central social/procreative colossi. */
+const TITAN_COUNT = 20;
+/** Unordered titan pairs: C(TITAN_COUNT, 2). */
+const PAIR_COUNT = (TITAN_COUNT * (TITAN_COUNT - 1)) / 2;
 
 /** Roam containment radius (±300 per the V3.3 spec; ARENA_RADIUS keeps a 25u margin). */
 const ROAM_RADIUS = ARENA_RADIUS - 25;
@@ -67,12 +67,12 @@ const COLOSSAL = 3;
  */
 const TITAN_LIGHT_GAIN = 6;
 
-/** Frames between economy ticks per titan; titan `i` ticks at `frame % 90 === i * 9`. */
-const ECON_PERIOD = 90;
+/** Frames between economy ticks per titan; one titan ticks per stagger inside the period. */
+const ECON_PERIOD = 120;
 const ECON_STAGGER = ECON_PERIOD / TITAN_COUNT;
-/** Diplomacy cycle length; pair `p` plays at `frame % 600 === p * 13` (45·13 = 585 < 600). */
-const DIPLO_PERIOD = 600;
-const DIPLO_STRIDE = 13;
+/** Diplomacy cycle length; pair `p` plays at `frame % 1200 === p * 6` (190·6 = 1140 < 1200). */
+const DIPLO_PERIOD = 1200;
+const DIPLO_STRIDE = 6;
 
 /** Hard cap on every economy resource (overflow seal). */
 const RESOURCE_CAP = 1000;
@@ -147,13 +147,11 @@ const HOLE_F = new THREE.Vector3();
 // ── V67 OMINOUS REDESIGN (freak-geometry titans) ───────────────────────────────
 /** Subdivisions of the writhing fractal CORE icosahedron (enough verts for smooth 4D writhe). */
 const CORE_DETAIL = 4;
-/** Aura field: organisms within this reach are dragged + hue-stained (titan↔organism interaction). */
-const AURA_R = 48;
+/** Aura field: organisms within this reach are eddied + hue-stained (titan↔organism interaction). */
+const AURA_R = 36;
 const AURA_R2 = AURA_R * AURA_R;
-const AURA_G = 700; // r⁻² pull gain (capped) — a spacetime drag, not a hard collision. Softened
-// (was 1100) so passing organisms SWIRL around + slingshot past a colossus instead of being yanked
-// straight into it and clotting — paired with a stronger tangential wake below (orbital, dynamic).
-const AURA_CAP = 6;
+const AURA_G = 120; // r⁻² eddy gain (capped) — social/electromagnetic wake, not a gravity well.
+const AURA_CAP = 1.4;
 /** Titan↔titan soft collision: they REPEL (no more silent pass-through) + flare on contact. */
 const TITAN_TOUCH_K = 3.0; // touch distance = TITAN_TOUCH_K · (sizeA + sizeB)
 const TITAN_CLASH_HEAT = 0.6; // entropy bump on contact → blazes the emissive + writhe
@@ -163,6 +161,13 @@ const WAR_CHAOS = 0.0016; // chaos added per active war (summed warCount) per fr
 /** Titans destabilise the world strongly but never PEG it — they raise chaos only up to this ceiling,
  *  leaving headroom for the dedicated storm controls (Chaos Mode, singularities) to push higher. */
 const TITAN_CHAOS_CEIL = 6.5;
+/** Extra breeder titans must gather inside this center radius before procreation fires. */
+const BREED_CENTER_R = 92;
+const BREED_CENTER_R2 = BREED_CENTER_R * BREED_CENTER_R;
+/** Frames between center procreation checks. */
+const BREED_PERIOD = 180;
+/** Minimum central breeder count for a NHI matrix birth event. */
+const BREED_QUORUM = 7;
 const AURA_SHOCK_R2_FRAC = 0.16; // inner-well fraction of AURA_R² where organisms RECOIL (a stun)
 const AURA_SHOCK_DAMP = 0.9; // velocity retained per visit inside the shock zone
 
@@ -448,6 +453,8 @@ interface Titan {
   epithet: string;
   /** Preferred morphotype base: titan i champions morphs [10i, 10i+5) (phyla alignment). */
   mi: number;
+  /** The extra 10 titans are socially center-seeking breeders, not territorial gravity wells. */
+  breeder: boolean;
   homeX: number;
   homeZ: number;
   energy: number;
@@ -486,7 +493,7 @@ export class TitanSystem {
    */
   readonly wantsPerturb: PerturbRequest = { u: 0.5, v: 0.5, r: WASTE_SCAR_RADIUS, pending: false };
   /**
-   * 10×10 relation matrix, row-major `[i * 10 + j]`: 0 truce, 1 alliance, 2 war. Symmetric,
+   * 20×20 relation matrix, row-major `[i * 20 + j]`: 0 truce, 1 alliance, 2 war. Symmetric,
    * diagonal 0. Mutated in place on diplomacy cadences — treat as read-only outside.
    */
   readonly warMatrix = new Uint8Array(TITAN_COUNT * TITAN_COUNT);
@@ -509,6 +516,8 @@ export class TitanSystem {
   private readonly stratFitness = new Float64Array(STRATEGIES.length).fill(1);
   /** Last RD pattern density fed by the integrator (0..1). */
   private lastRd = 0;
+  /** World-owned NHI birth hook; null in tests/headless sims. */
+  private procreationSink: ((x: number, y: number, z: number) => void) | null = null;
 
   /** Builds the 10 colossi (boot-time allocation; ctx.rng draws are boot cadence). */
   constructor(ctx: SimContext, entities: EntityManager, lore: TitanLore, rd: TitanRd) {
@@ -551,6 +560,11 @@ export class TitanSystem {
    */
   attachEconomy(wealthByIndex: ((titanIndex: number) => number) | null): void {
     this.econWealth = wealthByIndex;
+  }
+
+  /** Wire the center-breeder titan event into the world-owned NHI birth pipeline. */
+  attachProcreation(sink: ((x: number, y: number, z: number) => void) | null): void {
+    this.procreationSink = sink;
   }
 
   /**
@@ -636,6 +650,7 @@ export class TitanSystem {
     // (no more passing through "like nothing"). Both are pure vector/colour math, no rng.
     this.titanClash();
     this.applyAura(dt);
+    if (frame % BREED_PERIOD === 0) this.procreateAtCenter(frame);
     const econPh = frame % ECON_PERIOD;
     if (econPh % ECON_STAGGER === 0) {
       const k = econPh / ECON_STAGGER;
@@ -654,6 +669,39 @@ export class TitanSystem {
     this.refreshLedger();
   }
 
+  /** Center social biology: the extra 10 titans periodically birth real NHIs when enough gather. */
+  private procreateAtCenter(frame: number): void {
+    if (!this.procreationSink) return;
+    let breeders = 0;
+    let cx = 0;
+    let cy = 0;
+    let cz = 0;
+    for (let i = 0; i < this.titans.length; i++) {
+      const ti = this.titans[i];
+      if (!ti?.breeder) continue;
+      const p = ti.group.position;
+      const r2 = p.x * p.x + p.z * p.z;
+      if (r2 > BREED_CENTER_R2) continue;
+      breeders++;
+      cx += p.x;
+      cy += p.y;
+      cz += p.z;
+    }
+    if (breeders < BREED_QUORUM) return;
+    const births = 1 + ((frame / BREED_PERIOD) % 3);
+    const inv = 1 / breeders;
+    for (let b = 0; b < births; b++) {
+      const a = this.ctx.rng() * TAU;
+      const r = 5 + this.ctx.rng() * 18;
+      this.procreationSink(
+        cx * inv + Math.cos(a) * r,
+        cy * inv + 8 + b * 3,
+        cz * inv + Math.sin(a) * r,
+      );
+    }
+    this.ctx.audit.record('titan-procreation', { breeders, births });
+  }
+
   /** Boot-time titan factory: silhouette, light, lore identity, seeded economy. */
   private buildTitan(i: number, lore: TitanLore): Titan {
     const ctx = this.ctx;
@@ -661,7 +709,8 @@ export class TitanSystem {
     const group = new THREE.Group();
     const rig = new THREE.Group();
     const limbSpin = new THREE.Group();
-    const size = (i < 5 ? 1 : 1.45) * (1 + 0.12 * (i % 3)) * COLOSSAL;
+    const breeder = i >= 10;
+    const size = (i < 5 ? 1 : i < 10 ? 1.45 : 1.22) * (1 + 0.12 * (i % 3)) * COLOSSAL;
     const hue = i / TITAN_COUNT;
 
     const bodyMat = new THREE.MeshStandardMaterial({
@@ -714,10 +763,10 @@ export class TitanSystem {
     light.position.y = 9 * size;
     group.add(light);
 
-    // Patrol post: titan i hovers over phylum i's home wedge (entities.ts spawn
-    // bias uses the same angular slice), mid-field of the 5× arena.
+    // Patrol post: the original 10 hover over phylum home wedges; the extra 10 prefer a
+    // small central social ring where they can meet/procreate without attracting all life.
     const angle = (i / TITAN_COUNT) * TAU + 0.31;
-    const radius = 130 + (i % 3) * 45;
+    const radius = breeder ? 38 + (i % 5) * 9 : 130 + (i % 3) * 45;
     const homeX = Math.cos(angle) * radius;
     const homeZ = Math.sin(angle) * radius;
     group.position.set(homeX, 25 + (i % 4) * 8, homeZ);
@@ -742,6 +791,7 @@ export class TitanSystem {
       // champions phylum i's morphs exactly; legacy 100-morph mode degrades to
       // stride-10 blocks. Derived from the LIVE morph table, never a constant.
       mi: i * Math.max(1, Math.floor(this.ctx.morphs.length / TITAN_COUNT)),
+      breeder,
       homeX,
       homeZ,
       energy: 60 + rng() * 20,
@@ -862,14 +912,21 @@ export class TitanSystem {
     vel.x += Math.sin(t * 0.23 + ti.ph) * (10 * (ay - ax)) * dt * 0.00045;
     vel.y += Math.cos(t * 0.17 + ti.ph * 1.7) * (ax * (28 - az) - ay) * dt * 0.00012;
     vel.z += Math.sin(t * 0.19 + ti.ph * 0.6) * (ax * ay - 2.667 * az) * dt * 0.00045;
-    // TERRITORY pull — a gentle spring toward THIS titan's OWN distributed home wedge (homeX/homeZ,
-    // one per phylum around the arena ring), NOT the global origin. The old origin-seeking pull made
-    // all 10 titans collapse onto the centre, and their AURA wells then dragged the whole population
-    // into one central clot (the owner's "everything clusters in the middle / sucked into titan
-    // gravity" bug). Home-springing spreads the colossi across the world so each roams + harvests its
-    // own region — a far more dynamic, realistic ecology, while their roams still cross + clash (war).
-    vel.x -= (p.x - ti.homeX) * 0.00003 * dt * 60;
-    vel.z -= (p.z - ti.homeZ) * 0.00003 * dt * 60;
+    if (ti.breeder) {
+      // SOCIAL centre attraction for the extra 10: they orbit toward each other because they are
+      // mating/coalition-seeking, not because they exert a world gravity well. This force touches
+      // ONLY the titan's own velocity; organisms are not pulled inward by it.
+      vel.x -= p.x * 0.00008 * dt * 60;
+      vel.z -= p.z * 0.00008 * dt * 60;
+      vel.x += -p.z * 0.000018 * dt * 60;
+      vel.z += p.x * 0.000018 * dt * 60;
+      vel.y += (48 + Math.sin(t * 0.41 + ti.ph) * 18 - p.y) * 0.00005 * dt * 60;
+    } else {
+      // TERRITORY pull — a gentle spring toward THIS titan's OWN distributed home wedge (homeX/homeZ),
+      // NOT the global origin. This keeps the original 10 from collapsing to the centre.
+      vel.x -= (p.x - ti.homeX) * 0.00003 * dt * 60;
+      vel.z -= (p.z - ti.homeZ) * 0.00003 * dt * 60;
+    }
     vel.multiplyScalar(0.985);
     VA.copy(vel).multiplyScalar(dt * 60);
     p.add(VA);
@@ -910,9 +967,9 @@ export class TitanSystem {
   }
 
   /**
-   * V67 AURA: organisms drifting within {@link AURA_R} of a colossus are DRAGGED into its spacetime
-   * well (an r⁻² pull, capped at {@link AURA_CAP}) + caught in a tangential wake, and HUE-STAINED
-   * toward the titan's freak-geometry colour — so they no longer pass through it "like nothing". The
+   * V67 AURA: organisms drifting within {@link AURA_R} of a colossus are caught in a tangential
+   * wake and HUE-STAINED toward the titan's freak-geometry colour — so they no longer pass through
+   * it "like nothing", but they are not dragged into a central gravity well. The
    * scan is strided (each organism visited every 3rd frame) to bound the O(n·titans) cost at the mega
    * tier. Pure vector + colour math, NO rng (determinism-neutral). O(n/3 · titans) with an early-out.
    */
@@ -936,13 +993,12 @@ export class TitanSystem {
         const r2 = dx * dx + dy * dy + dz * dz;
         if (r2 > AURA_R2 || r2 < 1e-3) continue;
         const r = Math.sqrt(r2);
-        const inv = (Math.min(AURA_G / r2, AURA_CAP) * dt) / r; // capped r⁻² pull → unit·accel·dt
-        // Radial drag + a STRONG tangential swirl (≈ radial) so organisms ORBIT the colossus's wake
-        // and slingshot past it rather than falling straight in — a dynamic, reactive flow, not a sink
-        // (the inner shock zone below still catches the few that stray deep, feeding the economy).
-        v.x += dx * inv - dz * inv * 0.95;
-        v.y += dy * inv * 0.5;
-        v.z += dz * inv + dx * inv * 0.95;
+        const inv = (Math.min(AURA_G / r2, AURA_CAP) * dt) / r; // capped r⁻² eddy → unit·accel·dt
+        // Tangential wake only: organisms swirl, stain, recoil, and leave. This deliberately avoids
+        // the previous "everything sucked into titan gravity" failure mode.
+        v.x += -dz * inv;
+        v.y += Math.sin(this.ctx.state.frame * 0.03 + k) * inv * 0.28;
+        v.z += dx * inv;
         e.material.color.lerp(tk.tu.uColor.value, 0.02 * (1 - r / AURA_R)); // ontological hue-stain
         // V69 SHOCK: an organism that strays into the inner well RECOILS — a brief speed-sap (stun), so
         // it no longer drifts through "like nothing"; the colossus's freak-geometry physically rebukes

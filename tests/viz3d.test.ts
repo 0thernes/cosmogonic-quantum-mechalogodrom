@@ -15,7 +15,7 @@ import type { AuditTrail } from '../src/logging/audit';
 import type { Entity, QualityTier, SimContext } from '../src/types';
 
 const PHYLA = 10;
-const TITANS = 10;
+const TITANS = 20;
 const PAIR_COUNT = (TITANS * (TITANS - 1)) / 2;
 const NET_CADENCE = 6;
 
@@ -72,7 +72,7 @@ function makeLedger(n: number, energy: number, matter: number, war = 0): Viz3DLe
   return rows;
 }
 
-/** A fresh all-truce 10×10 war matrix (every cell 0). */
+/** A fresh all-truce titan war matrix (every cell 0). */
 function truceMatrix(): number[] {
   return Array.from({ length: TITANS * TITANS }, () => 0);
 }
@@ -159,7 +159,7 @@ describe('height + finite invariants', () => {
       viz.update(makeSnap(counts, ledger, wm));
     }
     const ys = allMeshScaleYs(ctx.scene);
-    expect(ys.length).toBe(PHYLA + TITANS); // 10 towers + 10 obelisks
+    expect(ys.length).toBe(PHYLA + TITANS); // 10 towers + 20 obelisks
     for (const y of ys) {
       expect(Number.isFinite(y)).toBeTrue();
       expect(y).toBeGreaterThan(0);
@@ -272,7 +272,7 @@ describe('war network draw range', () => {
     expect(netDrawCount(ctx.scene)).toBe(2);
   });
 
-  test('a fully embattled matrix draws all 45 pairs (90 vertices)', () => {
+  test('a fully embattled matrix draws every titan pair', () => {
     const ctx = makeCtx('ultra', 10000);
     const viz = new Viz3DSystem(ctx);
     const wm = truceMatrix();

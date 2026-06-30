@@ -528,6 +528,9 @@ export class MechaExteriorAbomination {
   private readonly nebulaMeat: THREE.Points;
   private readonly fractalGold: THREE.InstancedMesh;
   private readonly crystalField: THREE.Points;
+  private readonly senseOrgans: THREE.InstancedMesh;
+  private readonly senseBaseR: Float32Array;
+  private readonly sensePhase: Float32Array;
   private readonly shardMat = new THREE.LineBasicMaterial({
     color: 0xffffff,
     transparent: true,
@@ -606,6 +609,7 @@ export class MechaExteriorAbomination {
     const P = new THREE.Vector3();
     const Q = new THREE.Quaternion();
     const S = new THREE.Vector3();
+    const C = new THREE.Color();
     for (let i = 0; i < swarmN; i++) {
       P.set(
         (i % 8) * coreR * 0.12 - coreR * 0.42,
@@ -770,6 +774,37 @@ export class MechaExteriorAbomination {
       }),
     );
     this.group.add(this.crystalField);
+    const senseN = 72;
+    this.senseBaseR = new Float32Array(senseN);
+    this.sensePhase = new Float32Array(senseN);
+    this.senseOrgans = new THREE.InstancedMesh(
+      new THREE.OctahedronGeometry(coreR * 0.055, 1),
+      new THREE.MeshBasicMaterial({
+        color: 0xffffff,
+        transparent: true,
+        opacity: 0.78,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+      }),
+      senseN,
+    );
+    for (let i = 0; i < senseN; i++) {
+      const ph = i * 2.399963229728653;
+      const ring = i % 6;
+      const baseR = coreR * (0.65 + ring * 0.1);
+      this.senseBaseR[i] = baseR;
+      this.sensePhase[i] = ph;
+      P.set(Math.cos(ph) * baseR, Math.sin(ph * 1.7) * coreR * 0.34, Math.sin(ph) * baseR);
+      Q.setFromEuler(new THREE.Euler(ph * 0.31, ph * 0.47, ph * 0.19));
+      S.setScalar(0.65 + (i % 5) * 0.12);
+      M.compose(P, Q, S);
+      this.senseOrgans.setMatrixAt(i, M);
+      C.setHSL((0.58 + i * 0.013) % 1, 1, 0.58);
+      this.senseOrgans.setColorAt(i, C);
+    }
+    this.senseOrgans.instanceMatrix.needsUpdate = true;
+    if (this.senseOrgans.instanceColor) this.senseOrgans.instanceColor.needsUpdate = true;
+    this.group.add(this.senseOrgans);
   }
 
   setMind(beat: number, activity: number): void {
@@ -807,6 +842,7 @@ export class MechaExteriorAbomination {
     const Q = new THREE.Quaternion();
     const S = new THREE.Vector3();
     const E = new THREE.Euler();
+    const C = new THREE.Color();
     for (let i = 0; i < this.cubeSwarm.count; i++) {
       this.cubeSwarm.getMatrixAt(i, M);
       M.decompose(P, Q, S);
@@ -867,6 +903,27 @@ export class MechaExteriorAbomination {
     this.crystalField.rotation.x = st * 0.025;
     (this.crystalField.material as THREE.PointsMaterial).opacity =
       0.2 + 0.3 * this.activity + pulse.adGradient * 0.15;
+    for (let i = 0; i < this.senseOrgans.count; i++) {
+      const ph = this.sensePhase[i]!;
+      const baseR = this.senseBaseR[i]!;
+      const tempo = 0.42 + (i % 7) * 0.055 + phen.speed * 0.8;
+      const th = ph + st * tempo * (i % 2 === 0 ? 1 : -1);
+      const twitch = 1 + 0.35 * this.activity + 0.22 * Math.sin(st * 2.7 + ph);
+      P.set(
+        Math.cos(th) * baseR * (0.8 + 0.2 * Math.sin(st * 0.61 + ph)),
+        Math.sin(th * 1.7 + st * 0.33) * this.coreR * (0.34 + 0.22 * drive),
+        Math.sin(th) * baseR * (0.82 + 0.18 * Math.cos(st * 0.49 + ph)),
+      );
+      E.set(st * (0.9 + (i % 5) * 0.08) + ph, -st * (0.7 + (i % 3) * 0.11), th);
+      Q.setFromEuler(E);
+      S.setScalar((0.72 + (i % 5) * 0.16) * twitch);
+      M.compose(P, Q, S);
+      this.senseOrgans.setMatrixAt(i, M);
+      C.setHSL((hue + ph * 0.03 + pulse.qgtVolume * 0.12) % 1, 1, 0.5 + drive * 0.18);
+      this.senseOrgans.setColorAt(i, C);
+    }
+    this.senseOrgans.instanceMatrix.needsUpdate = true;
+    if (this.senseOrgans.instanceColor) this.senseOrgans.instanceColor.needsUpdate = true;
     this.group.rotation.y = st * 0.015 * (1 + drive * 0.4 + this.activity * 0.12);
   }
 
@@ -913,6 +970,8 @@ export class MechaExteriorAbomination {
     (this.fractalGold.material as THREE.Material).dispose();
     this.crystalField.geometry.dispose();
     (this.crystalField.material as THREE.Material).dispose();
+    this.senseOrgans.geometry.dispose();
+    (this.senseOrgans.material as THREE.Material).dispose();
     this.shardMat.dispose();
   }
 }

@@ -37,11 +37,11 @@ import type { MeanStd, ObservatorySnapshot, PlotRect } from '../src/ui/observato
 import { mean, sampleStandardDeviation } from 'simple-statistics';
 
 describe('observatory contract constants', () => {
-  test('match CONTRACTS V3.5 (10 series, 180-sample rings, 3 env lines, 10×10 war grid)', () => {
-    expect(OBS_SERIES).toBe(10);
+  test('match CONTRACTS V3.5 (20 series, 180-sample rings, 3 env lines, 20×20 war grid)', () => {
+    expect(OBS_SERIES).toBe(20);
     expect(OBS_RING_CAPACITY).toBe(180);
     expect(OBS_ENV_SERIES).toBe(3);
-    expect(WAR_CELLS).toBe(100);
+    expect(WAR_CELLS).toBe(400);
   });
 
   test('match CONTRACTS V4.3 (4 pages × 4 canvases, variance page shape)', () => {
@@ -433,25 +433,25 @@ describe('plotRect (V6.1 title-band + padding scheme)', () => {
 });
 
 describe('rosterLayout (V6.1 c11 roster / c14 resource-bar rows)', () => {
-  const tall: PlotRect = plotRect(300, 460); // 10 rows fit single-file with room to spare
-  const short: PlotRect = plotRect(300, 120); // 10 rows would be too short → 2 columns
+  const tall: PlotRect = plotRect(300, 460); // 20 rows now require 2 columns to preserve row height
+  const short: PlotRect = plotRect(300, 120); // very short regions still stay compact
 
-  test('a tall region keeps a single column with one cell per titan', () => {
+  test('a tall region uses two columns so all 20 titan rows remain legible', () => {
     const lay = rosterLayout(tall, OBS_SERIES, 34, 6);
-    expect(lay.cols).toBe(1);
-    expect(lay.rows).toBe(OBS_SERIES);
-    expect(lay.cellW).toBeCloseTo(tall.width, 10);
-    expect(lay.cellH).toBeCloseTo(tall.height / OBS_SERIES, 10);
+    expect(lay.cols).toBe(2);
+    expect(lay.rows).toBe(Math.ceil(OBS_SERIES / 2));
+    expect(lay.cellW).toBeCloseTo(tall.width / 2, 10);
+    expect(lay.cellH).toBeCloseTo(tall.height / Math.ceil(OBS_SERIES / 2), 10);
     // Every row clears the minimum height so a name + value never have to overlap.
     expect(lay.cellH).toBeGreaterThanOrEqual(34);
     expect(lay.innerH).toBeCloseTo(lay.cellH - 6, 10);
     expect(lay.innerH).toBeGreaterThan(0);
   });
 
-  test('a short region falls back to a compact 2-column grid so 10 rows still fit', () => {
+  test('a short region stays in a compact 2-column grid so 20 rows still fit', () => {
     const lay = rosterLayout(short, OBS_SERIES, 34, 6);
     expect(lay.cols).toBe(2);
-    expect(lay.rows).toBe(Math.ceil(OBS_SERIES / 2)); // 5 rows per column
+    expect(lay.rows).toBe(Math.ceil(OBS_SERIES / 2)); // 10 rows per column
     expect(lay.cellW).toBeCloseTo(short.width / 2, 10);
     // Two columns double the per-row height vs. the single-column attempt.
     const single = short.height / OBS_SERIES;

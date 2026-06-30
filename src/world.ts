@@ -141,6 +141,7 @@ import { WingmanSwarm, WINGMAN_COUNT } from './sim/super-wingmen';
 import { WingmanRenderer } from './sim/super-wingmen-render';
 import { SuperEvolution } from './sim/super-evolution';
 import { MonolithTemple } from './sim/monolith-temple';
+import { Vegetation } from './sim/vegetation';
 import { SuperBodySystem } from './sim/super-body';
 import { SuperPanel } from './ui/super-panel';
 import { SuperheroState, HERO_POWERS } from './ui/superhero-state';
@@ -283,6 +284,7 @@ export class World {
   private readonly emptyQ = new Float32Array(10);
   private readonly superEvo: SuperEvolution;
   private readonly monolithTemple: MonolithTemple;
+  private readonly vegetation: Vegetation;
   private superAscended = false;
   private readonly evoRng: Rng;
   private static readonly EVO_DAY_FRAMES = 21600;
@@ -681,6 +683,9 @@ export class World {
     this.titans.attachEconomy(
       (idx) => this.economy.wealthOf(World.ECON_TITAN_BASE + idx)?.netWorth ?? 0,
     );
+    this.titans.attachProcreation((x, y, z) => {
+      this.launchNhiBeing(x, y, z, 'titan-procreation');
+    });
     this.graphMind = new GraphMind(ctx, this.entities, this.connectome);
     this.constellations = new ConstellationSystem(ctx, this.lore);
     this.audioAnalysis = new AudioAnalysis(this.audio);
@@ -751,6 +756,7 @@ export class World {
     // V63: the LV100 ascension monument. If the persisted creature is ALREADY at the summit, raise
     // the temple silently on boot (it's just THERE); a fresh live ascension plays the full fanfare.
     this.monolithTemple = new MonolithTemple(ctx.scene);
+    this.vegetation = new Vegetation(ctx.scene);
     if (this.superEvo.ascended) {
       this.monolithTemple.reveal(0, 0, -40 * ARENA_MID, true);
       this.superAscended = true;
@@ -988,6 +994,7 @@ export class World {
     this.singularities.dispose();
     this.wingRender.dispose();
     this.monolithTemple.dispose();
+    this.vegetation.dispose(); // V-VEG: free the 10k alien plant instanced pools
     this.mechalogodrom.dispose(); // V-MECHA: free the fusion abomination's geometries + materials
     this.alienFlora.dispose(); // free the 10k-plant alien-flora field
     this.alphabetPantheon.dispose(); // V-ABC: free the 100-archetype instanced pools
@@ -1148,6 +1155,7 @@ export class World {
         )
       : baseChaos;
     this.mechalogodrom.setChaos(baseChaos);
+    this.mechalogodrom.setTimeScale(s.timeScale);
     if (apex) this.mechalogodrom.setApex(apex.transcendence, apex.vitality, apex.agony);
     const mechaSnapPre = this.mechalogodrom.snapshot();
     const mechaBrainSnap = this.mechalogodromBrain.tick({
@@ -1195,7 +1203,7 @@ export class World {
       this.alphabetPantheon.setBrainActivity(act, nov, val);
       this.alphabetPantheon.setBrainMotors(snaps);
     }
-    this.alphabetPantheon.update(t);
+    this.alphabetPantheon.update(t * 2.5); // V-ABC: Pantheon runs at 2.5x world speed for more active flight
     // F-NHI V10: alien bodies follow + morph their NHI every frame (guarded; additive viz only).
     if (this.nhiBody.count > 0) {
       try {
@@ -1334,6 +1342,9 @@ export class World {
       capacity: this.quality.maxEntities,
     });
     this.monolithTemple.update(dt, t); // V63: rise + shimmer the ascension portal (no-op until revealed)
+    this.vegetation.setChaos(s.chaos / CHAOS_MAX);
+    this.vegetation.setWindStrength(0.35 + 0.65 * (s.chaos / CHAOS_MAX));
+    this.vegetation.update(t, dt);
 
     if (s.frame % 60 === 30) {
       // RD pattern energy: strided mean of the V field (offset 30 — never
@@ -2602,10 +2613,21 @@ export class World {
    * with "Matrix" powers. Returns 1 on success, 0 at the population cap. Draws rng (a user event,
    * recorded in the audit so replays reproduce); a never-launched world draws none and is unchanged.
    */
-  private launchNhiBeing(): number {
-    const cam = this.engine.camera;
-    cam.getWorldDirection(this.sv2);
-    this.sv1.copy(cam.position).addScaledVector(this.sv2, 45);
+  private launchNhiBeing(x?: number, y?: number, z?: number, source = 'user'): number {
+    if (
+      typeof x === 'number' &&
+      typeof y === 'number' &&
+      typeof z === 'number' &&
+      Number.isFinite(x) &&
+      Number.isFinite(y) &&
+      Number.isFinite(z)
+    ) {
+      this.sv1.set(x, y, z);
+    } else {
+      const cam = this.engine.camera;
+      cam.getWorldDirection(this.sv2);
+      this.sv1.copy(cam.position).addScaledVector(this.sv2, 45);
+    }
     const mi = Math.floor(this.uiRng() * this.morphTotal);
     const e = this.entities.spawn(this.sv1, mi, 2.2);
     if (!e) return 0;
@@ -2628,8 +2650,12 @@ export class World {
     this.economy.register(World.ECON_NHI_BASE + nid, 'NHI super-mind', 14, this.econRng);
     this.nhiBody.spawn(nid, e.position.x, e.position.y, e.position.z);
     this.audio.play('warp');
-    this.hud.showSector('NHI LAUNCHED · MATRIX BEING');
-    this.audit.record('nhi-launch', { mi });
+    this.hud.showSector(
+      source === 'titan-procreation'
+        ? 'NHI BIRTH · TITAN MATRIX OFFSPRING'
+        : 'NHI LAUNCHED · MATRIX BEING',
+    );
+    this.audit.record('nhi-launch', { mi, source });
     return 1;
   }
 

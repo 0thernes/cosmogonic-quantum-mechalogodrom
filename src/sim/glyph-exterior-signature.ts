@@ -102,7 +102,7 @@ export function glyphExteriorSignature(a: AlphabetArchetype): GlyphExteriorSigna
 }
 
 /**
- * Bounded wander offset — anchor stays near the dome slot; NO wide racing loops.
+ * Bounded wander offset — anchor stays in the dome biome while allowing free-looking flight.
  *
  * Each axis is a sum of two INCOMMENSURATE harmonics (base freq + golden-ratio·freq). Because φ is
  * irrational the path never closes into a visible repeating circle — the body drifts dynamically,
@@ -122,43 +122,50 @@ export function glyphWanderOffset(
   activity: number,
 ): { x: number; y: number; z: number } {
   // Writes into `out` and returns it — zero allocation in the per-body render hot loop.
-  // Small radius — breathe around the slot, never sprint across the sky.
-  const r = 6 + activity * 12 + chaos * 8;
+  // 10x Pantheon Flight Mode: Creatures are no longer tethered. They use motor output
+  // to fly completely freely across the entire massive dome scale (DOME_R ≈ 1800).
+  const r = 22 + activity * 38 + chaos * 30;
   const p = sig.wanderPhase;
-  // Quasi-periodic oscillator: base + golden-ratio harmonic ⇒ no closed loop.
   const q = (f: number, ph0: number): number =>
     Math.sin(ph * f + ph0) * 0.68 + Math.sin(ph * f * WANDER_PHI + ph0 * 1.7) * 0.32;
   const ax = sig.wanderAx;
   const ay = sig.wanderAy;
   const az = sig.wanderAz;
+
+  // motor outputs scale up to massive free-flight vectors
+  const flightRange = 1500.0; // The creatures can now cross the entire dome
+
   switch (sig.motionStyle) {
     case 'hover':
-      out.x = q(ax, p) * r * 0.35 + mx * 16;
-      out.y = q(ay, p * 1.3) * (4 + activity * 7) + my * 11;
-      out.z = q(az, p * 0.7 + 1.1) * r * 0.35 + mz * 16;
+      out.x = q(ax, p) * r * 0.52 + mx * flightRange;
+      out.y = q(ay, p * 1.3) * (12 + activity * 22) + my * flightRange * 0.5;
+      out.z = q(az, p * 0.7 + 1.1) * r * 0.52 + mz * flightRange;
       return out;
     case 'lissajous':
-      out.x = q(ax, p) * r + mx * 20;
-      out.y = q(ay * 1.7, p) * (6 + activity * 9) + my * 13;
-      out.z = q(az * 1.3, p + 2.0) * r * 0.85 + mz * 20;
+      out.x = q(ax, p) * r + mx * flightRange;
+      out.y = q(ay * 1.7, p) * (14 + activity * 26) + my * flightRange * 0.6;
+      out.z = q(az * 1.3, p + 2.0) * r * 0.95 + mz * flightRange;
       return out;
     case 'breathe':
-      out.x = q(0.21, p) * r * 0.25 + mx * 9;
-      out.y = q(0.17, p) * (8 + activity * 11) + my * 9;
-      out.z = q(0.19, p + 1.6) * r * 0.25 + mz * 9;
+      out.x = q(0.21, p) * r * 0.38 + mx * flightRange;
+      out.y = q(0.17, p) * (16 + activity * 34) + my * flightRange * 0.5;
+      out.z = q(0.19, p + 1.6) * r * 0.38 + mz * flightRange;
       return out;
     case 'drift':
-      out.x = q(ax * 0.4, p) * r * 0.5 + Math.cos(ph * 0.09 * WANDER_PHI + p) * r * 0.18 + mx * 14;
-      out.y = q(0.13, my) * (5 + activity * 8) + my * 10;
+      out.x =
+        q(ax * 0.4, p) * r * 0.72 +
+        Math.cos(ph * 0.09 * WANDER_PHI + p) * r * 0.32 +
+        mx * flightRange;
+      out.y = q(0.13, my) * (12 + activity * 24) + my * flightRange * 0.5;
       out.z =
-        q(az * 0.45, p + 0.8) * r * 0.46 +
-        Math.sin(ph * 0.11 * WANDER_PHI + p) * r * 0.14 +
-        mz * 14;
+        q(az * 0.45, p + 0.8) * r * 0.66 +
+        Math.sin(ph * 0.11 * WANDER_PHI + p) * r * 0.28 +
+        mz * flightRange;
       return out;
     default:
-      out.x = Math.sin(ph * 0.13 * WANDER_PHI + p) * r * 0.12 + mx * 8;
-      out.y = q(0.25, p) * (3 + activity * 6) + my * 8;
-      out.z = Math.cos(ph * 0.12 * WANDER_PHI + p) * r * 0.12 + mz * 8;
+      out.x = Math.sin(ph * 0.13 * WANDER_PHI + p) * r * 0.24 + mx * flightRange;
+      out.y = q(0.25, p) * (8 + activity * 20) + my * flightRange * 0.5;
+      out.z = Math.cos(ph * 0.12 * WANDER_PHI + p) * r * 0.24 + mz * flightRange;
       return out;
   }
 }

@@ -36,19 +36,27 @@ import * as THREE from 'three';
 import { TAU, clamp, lerp } from '../math/scalar';
 import { ARENA_RADIUS } from './constants';
 import { MechaExteriorAbomination } from './creature-exterior-layers';
-import { CREATURE_EXTERIOR_TIME_SCALE } from './creature-exterior-phenomena';
+import {
+  createMechalogodromDarkStarMaterial,
+  updateDarkStarUniforms,
+} from './mechalogodrom-dark-star';
+import { MechalogodromSatellites } from './mechalogodrom-satellites';
 import type { TsotchkeQuantumPulse } from './tsotchke-facade';
 
 /** The ten bipolar variant shells that converge and fuse. Fixed — the corona is sized for 10. */
 const VARIANT_COUNT = 10;
 /** Seconds the variants take to migrate from the spawn ring to the fused centre. */
-const CONVERGE_SECONDS = 24;
+const CONVERGE_SECONDS = 8;
 /** Warp icosahedron subdivision (detail 4 ⇒ 2562 vertices ⇒ a rich, cheap mandelbulb writhe). */
 const WARP_DETAIL = 4;
 /** Radius of the fused mass at the world centre. */
 const CORE_R = 30;
 /** Spawn-ring radius for the ten variants (mid-far, framing the centre). */
 const RING_R = ARENA_RADIUS * 0.72;
+const MECHA_TIME_SCALE = 10;
+const MECHA_EXTERIOR_TIME_SCALE = 0.12;
+const MECHA_SATELLITE_COUNT = 400;
+const MECHA_CORE_SEGMENTS = 128;
 /** Elevation of the whole abomination above the arena floor. Raised so its LOWEST extent (rings/halos)
  *  clears the LV100 MONOLITH TEMPLE's lintel top (~Y 113) with margin — it floats ABOVE the temple, a
  *  structurally-sensible cosmic crown rather than a ground prop. */
@@ -93,7 +101,8 @@ export class Mechalogodrom {
   private readonly variants: Variant[] = [];
 
   // The fused centre rig.
-  private readonly core: THREE.Mesh; // black shadow core (absorbs light → reads as a hole)
+  private readonly core: THREE.Mesh; // dark star shader core
+  private readonly coreMat: THREE.ShaderMaterial;
   private readonly rim: THREE.Mesh; // glowing event-horizon shell (additive, back-side)
   private readonly mass: THREE.Mesh; // warped emissive solid
   private readonly wire: THREE.Mesh; // additive wireframe (material.wireframe) over the SAME warped geometry
@@ -101,16 +110,14 @@ export class Mechalogodrom {
   private readonly rings: THREE.Mesh[] = []; // counter-rotating torus halos
   /** Quantum BEYOND Lab mesh: nested wire shells + orbiting nodes inside the fusion core. */
   private readonly labShells: THREE.LineSegments[] = [];
-  private readonly labNodes: THREE.Mesh[] = [];
+  private readonly satellites: MechalogodromSatellites;
   private readonly labMat: THREE.LineBasicMaterial;
-  private readonly labNodeMat: THREE.MeshBasicMaterial;
   /** Outer EXO-CAGE: a large counter-rotating wireframe shell enclosing the whole abomination. */
   private readonly exoCage: THREE.LineSegments;
   private readonly exoMat: THREE.LineBasicMaterial;
 
   private readonly warpGeo: THREE.IcosahedronGeometry;
   private readonly basePos: Float32Array; // pristine icosa vertices (warp source of truth)
-  private readonly coreMat: THREE.MeshBasicMaterial;
   private readonly rimMat: THREE.MeshBasicMaterial;
   private readonly massMat: THREE.MeshStandardMaterial;
   private readonly wireMat: THREE.MeshBasicMaterial;
@@ -130,6 +137,8 @@ export class Mechalogodrom {
   private apexAgony = 0;
   /** Combined chaos+apex arousal, recomputed each update; with no apex feed it equals `chaos`. */
   private drive = 0;
+  private localT = 0;
+  private worldTimeScale = 1;
   private normalsTick = 0;
   /** CRT canyon + tesseract tunnel — physical exterior shell (1000-phenomenon vocabulary). */
   private readonly mechaExterior: MechaExteriorAbomination;
@@ -144,10 +153,11 @@ export class Mechalogodrom {
   constructor(scene: THREE.Scene) {
     this.group.position.set(0, ALTITUDE, 0);
 
-    // ── Shadow core: a matte-black sphere. With additive siblings around it, the black reads as a
-    //    light-swallowing singularity rather than a lit ball. ───────────────────────────────────
-    this.coreMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
-    this.core = new THREE.Mesh(new THREE.SphereGeometry(CORE_R * 0.62, 32, 24), this.coreMat);
+    this.coreMat = createMechalogodromDarkStarMaterial();
+    this.core = new THREE.Mesh(
+      new THREE.SphereGeometry(CORE_R * 0.62, MECHA_CORE_SEGMENTS, MECHA_CORE_SEGMENTS * 0.75),
+      this.coreMat,
+    );
     this.group.add(this.core);
 
     // ── Event-horizon rim: a back-side additive shell hugging the core → a thin bright halo. ────
@@ -230,13 +240,6 @@ export class Mechalogodrom {
       blending: THREE.AdditiveBlending,
       depthWrite: false,
     });
-    this.labNodeMat = new THREE.MeshBasicMaterial({
-      color: 0xff44aa,
-      transparent: true,
-      opacity: 0.75,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false,
-    });
     for (let layer = 0; layer < 5; layer++) {
       const geo = new THREE.IcosahedronGeometry(CORE_R * (0.28 + layer * 0.11), 1);
       const wire = new THREE.WireframeGeometry(geo);
@@ -246,21 +249,7 @@ export class Mechalogodrom {
       this.group.add(shell);
       this.labShells.push(shell);
     }
-    const NODE_N = 40;
-    for (let n = 0; n < NODE_N; n++) {
-      const th = (n / NODE_N) * TAU;
-      const node = new THREE.Mesh(
-        new THREE.OctahedronGeometry(1.4 + (n % 3) * 0.35, 0),
-        this.labNodeMat,
-      );
-      node.position.set(
-        Math.cos(th) * CORE_R * 0.55,
-        Math.sin(th * 1.7) * CORE_R * 0.35,
-        Math.sin(th) * CORE_R * 0.55,
-      );
-      this.group.add(node);
-      this.labNodes.push(node);
-    }
+    this.satellites = new MechalogodromSatellites(this.group, MECHA_SATELLITE_COUNT, CORE_R);
 
     // ── Outer EXO-CAGE: a colossal counter-rotating wireframe icosphere enclosing the whole monster,
     //    adding a fractal "sections" layer that tumbles against the inner rig (more parts, bizarro). ──
@@ -372,18 +361,22 @@ export class Mechalogodrom {
     this.tsotchkePulse = pulse;
   }
 
+  setTimeScale(timeScale: number): void {
+    this.worldTimeScale = timeScale;
+  }
+
   /**
    * Advance the migration + fusion + writhe. Pure function of (t, dt, chaos); draws no rng.
    * @param t elapsed seconds (s.elapsed) · @param dt clamped frame delta
    */
-  update(t: number, dt: number): void {
-    // Fusion ramps monotonically to 1 over CONVERGE_SECONDS, then holds (the monster is whole).
-    this.fusion = clamp(this.fusion + dt / CONVERGE_SECONDS, 0, 1);
+  update(_t: number, dt: number): void {
+    const scale = MECHA_TIME_SCALE / Math.max(this.worldTimeScale, 0.05);
+    this.localT += dt * scale;
+    const lt = this.localT;
+    this.fusion = clamp(this.fusion + (dt * scale) / CONVERGE_SECONDS, 0, 1);
     const f = this.fusion;
-    // Smootherstep ease so the convergence accelerates into the centre.
     const ease = f * f * f * (f * (f * 6 - 15) + 10);
 
-    // Combined arousal: chaos + apex transcendence (quickens) − agony (dampens), vitality adds glow.
     this.drive = clamp(
       this.chaos + this.apexTranscend * 0.42 + this.apexVitality * 0.28 - this.apexAgony * 0.12,
       0,
@@ -391,8 +384,7 @@ export class Mechalogodrom {
     );
     const d = this.drive;
 
-    // Strange vast power: a geometric climb that only ignites once mostly fused (past 9000 at full).
-    const surge = 0.5 + 0.5 * Math.sin(t * 0.37) * Math.sin(t * 0.11); // bipolar power breathing
+    const surge = 0.5 + 0.5 * Math.sin(lt * 0.37) * Math.sin(lt * 0.11);
     this.power =
       ease *
       (1200 + 8200 * ease) *
@@ -400,17 +392,16 @@ export class Mechalogodrom {
       (1 + 0.8 * d) *
       (1 + 0.5 * this.apexVitality);
 
-    // Warp amplitude: the mass writhes harder as it fuses and as the world/apex-mind grows chaotic.
     this.warp = (0.08 + 0.5 * ease) * (0.6 + 0.9 * d);
 
-    this.warpMass(t);
-    this.driveCentre(t, ease);
-    this.driveVariants(t, ease);
+    this.warpMass(lt);
+    this.driveCentre(lt, ease);
+    this.driveVariants(lt, ease);
   }
 
   /** Per-frame CPU vertex displacement of the shared mass geometry (writhing alien morph, no GLSL). */
   private warpMass(t: number): void {
-    const st = t * CREATURE_EXTERIOR_TIME_SCALE;
+    const st = t * MECHA_EXTERIOR_TIME_SCALE;
     const pos = this.warpGeo.getAttribute('position') as THREE.BufferAttribute;
     const arr = pos.array as Float32Array;
     const base = this.basePos;
@@ -420,13 +411,23 @@ export class Mechalogodrom {
       const bx = base[i] ?? 0;
       const by = base[i + 1] ?? 0;
       const bz = base[i + 2] ?? 0;
-      // Layered trig of the direction → a de-Jong-flavoured non-uniform writhe (deterministic).
+      // Layered trig of the direction → a de-Jong/implicit-field non-uniform writhe (deterministic).
       const d =
         Math.sin(bx * 0.22 + st * 1.3) +
         Math.sin(by * 0.19 - st * 0.9) +
         Math.sin(bz * 0.25 + st * 1.7) +
         0.6 * Math.sin((bx + by + bz) * 0.13 + st * 2.1) +
         0.45 * Math.sin(bx * by * 0.11 + bz * 0.09 + st * 1.1);
+      // Triply-periodic minimal-surface terms (gyroid + Neovius proxy) make the surface look grown
+      // from an alien spatial sense rather than smoothed noise. Pure f(position,time), bounded.
+      const gx = bx * 0.105 + st * 0.43;
+      const gy = by * 0.097 - st * 0.37;
+      const gz = bz * 0.113 + st * 0.31;
+      const gyroid =
+        Math.sin(gx) * Math.cos(gy) + Math.sin(gy) * Math.cos(gz) + Math.sin(gz) * Math.cos(gx);
+      const neovius =
+        3 * (Math.cos(gx) + Math.cos(gy) + Math.cos(gz)) +
+        4 * Math.cos(gx) * Math.cos(gy) * Math.cos(gz);
       // 3D MANDELBULB escape field (power-8, deterministic, NaN-guarded). The base vertex direction
       // (a point on the CORE_R sphere) seeds `c`; a slow `t` breathe drifts the set so the lobes
       // crawl. Vertices that stay BOUNDED (deep in the bulb) bulge OUT into fractal lobes; those that
@@ -457,10 +458,11 @@ export class Mechalogodrom {
         zzb = zr * Math.cos(theta) + cbz;
       }
       const mb = escB * 0.55 * w;
-      const s = 1 + w * 0.32 * d + mb;
-      arr[i] = bx * s + Math.sin(by * 3.1 + st) * mb * 9;
-      arr[i + 1] = by * s + Math.cos(bx * 2.7 - st * 1.2) * mb * 7;
-      arr[i + 2] = bz * s + Math.sin(bx * bz * 0.08 + st * 0.8) * mb * 9;
+      const implicit = (gyroid * 0.19 + neovius * 0.025) * w;
+      const s = 1 + w * 0.32 * d + mb + implicit;
+      arr[i] = bx * s + Math.sin(by * 3.1 + st) * mb * 12 + gyroid * w * 5;
+      arr[i + 1] = by * s + Math.cos(bx * 2.7 - st * 1.2) * mb * 10 + neovius * w * 0.7;
+      arr[i + 2] = bz * s + Math.sin(bx * bz * 0.08 + st * 0.8) * mb * 12 - gyroid * w * 5;
     }
     pos.needsUpdate = true;
     // Recompute normals on a cadence so the emissive solid still catches a little scene light.
@@ -469,22 +471,36 @@ export class Mechalogodrom {
 
   /** Spin/colour/flash the fused centre rig (core, rim, mass, wire, spikes, rings). */
   private driveCentre(t: number, ease: number): void {
-    const st = t * CREATURE_EXTERIOR_TIME_SCALE;
-    // Hue cycles through the palette: blood-red → sigma-gold → cyan → violet.
-    const hue = (st * 0.05) % 1;
-    this.massMat.emissive.setHSL(hue, 0.85, 0.18 + 0.22 * ease + 0.08 * this.apexVitality);
-    this.massMat.emissiveIntensity = 1.2 + 2.4 * ease + 1.2 * this.drive + 0.8 * this.apexVitality;
-    this.wireMat.color.setHSL((hue + 0.5) % 1, 1, 0.6);
+    const st = t * MECHA_EXTERIOR_TIME_SCALE;
+    // Neutral dark-star skin: mostly black/ultraviolet, with poisonous chroma bursts from Tsotchke
+    // pulse and apex vitality. The black core remains true absence; the body around it bleeds color.
+    const hue =
+      (0.72 +
+        st * 0.025 +
+        this.tsotchkePulse.qgtVolume * 0.18 +
+        this.tsotchkePulse.cliffordEnt * 0.11) %
+      1;
+    this.massMat.color.setHSL((hue + 0.55) % 1, 0.55, 0.035 + 0.025 * this.drive);
+    this.massMat.emissive.setHSL(hue, 0.95, 0.12 + 0.28 * ease + 0.14 * this.apexVitality);
+    this.massMat.emissiveIntensity =
+      1.8 +
+      3.8 * ease +
+      2.2 * this.drive +
+      1.4 * this.apexVitality +
+      this.tsotchkePulse.quakeAliveness;
+    this.wireMat.color.setHSL((hue + 0.42 + this.tsotchkePulse.adGradient * 0.16) % 1, 1, 0.64);
     // Flash envelope: sharp sparkle on a fast beat, stronger once fused + chaotic.
     const flash = 0.5 + 0.5 * Math.sin(st * 6.3) * Math.sin(st * 2.1);
     this.wireMat.opacity = 0.18 + 0.4 * flash * (0.4 + 0.6 * ease);
-    this.mass.rotation.y = st * 0.21;
-    this.mass.rotation.x = Math.sin(st * 0.13) * 0.5;
+    this.mass.rotation.y = st * (0.28 + this.drive * 0.15);
+    this.mass.rotation.x = Math.sin(st * 0.13) * (0.55 + this.drive * 0.35);
+    this.mass.rotation.z = Math.sin(st * 0.071 + this.apexTranscend * Math.PI) * 0.42;
     this.wire.rotation.copy(this.mass.rotation);
 
     // Event horizon breathes; the shadow core stays black (a true absence).
-    this.rim.scale.setScalar(1 + 0.06 * Math.sin(st * 1.7) + 0.1 * ease);
-    this.rimMat.opacity = 0.25 + 0.4 * ease + 0.2 * flash;
+    this.rim.scale.setScalar(1 + 0.1 * Math.sin(st * 1.7) + 0.16 * ease + 0.04 * this.drive);
+    this.rimMat.color.setHSL((hue + 0.86) % 1, 1, 0.42 + 0.1 * flash);
+    this.rimMat.opacity = 0.28 + 0.46 * ease + 0.24 * flash;
     this.core.scale.setScalar(0.85 + 0.18 * ease); // the hole widens as it powers up
 
     // Spike-arms splay outward with power; counter-rotate; flash.
@@ -500,9 +516,9 @@ export class Mechalogodrom {
       const r = this.rings[i];
       if (!r) continue;
       const dir = i % 2 === 0 ? 1 : -1;
-      r.rotation.z = dir * st * (0.12 + i * 0.05);
+      r.rotation.z = dir * st * (0.2 + i * 0.08 + this.drive * 0.08);
       r.rotation.x = (i * TAU) / 5 + Math.sin(st * 0.2 + i) * 0.3;
-      r.scale.setScalar(0.6 + 0.5 * ease + 0.06 * Math.sin(st * 1.3 + i));
+      r.scale.setScalar(0.6 + 0.56 * ease + 0.12 * Math.sin(st * 1.3 + i));
     }
     this.ringMat.opacity = 0.12 + 0.28 * ease;
     this.ringMat.color.setHSL((hue + 0.66) % 1, 0.9, 0.6);
@@ -519,20 +535,8 @@ export class Mechalogodrom {
     }
     this.labMat.opacity = 0.2 + 0.35 * ease + 0.15 * flash;
     this.labMat.color.setHSL((hue + 0.33) % 1, 1, 0.55);
-    for (let n = 0; n < this.labNodes.length; n++) {
-      const node = this.labNodes[n];
-      if (!node) continue;
-      const th = (n / this.labNodes.length) * TAU + st * (0.35 + (n % 5) * 0.04);
-      const r = CORE_R * (0.42 + 0.12 * ease + 0.06 * Math.sin(st * 0.9 + n));
-      node.position.set(
-        Math.cos(th) * r,
-        Math.sin(th * 1.9 + st * 0.5) * r * 0.55,
-        Math.sin(th) * r,
-      );
-      node.rotation.set(st * 0.7 + n, st * 0.5, st * 0.3);
-      node.scale.setScalar(0.8 + 0.5 * ease + 0.2 * Math.sin(st * 2.2 + n));
-    }
-    this.labNodeMat.color.setHSL((hue + 0.15) % 1, 1, 0.62);
+    this.satellites.update(t, this.power, this.warp, this.drive);
+    updateDarkStarUniforms(this.coreMat, t, this.power, this.warp, this.drive, 0.5 + 0.5 * flash);
 
     // Outer exo-cage: a slow counter-tumble against the inner rig, breathing wider as power climbs.
     this.exoCage.rotation.x = -st * 0.05;
@@ -546,7 +550,7 @@ export class Mechalogodrom {
 
   /** Migrate + bipolar-oscillate the ten variant shells; melt them into the corona as fusion completes. */
   private driveVariants(t: number, ease: number): void {
-    const st = t * CREATURE_EXTERIOR_TIME_SCALE;
+    const st = t * MECHA_EXTERIOR_TIME_SCALE;
     for (let i = 0; i < this.variants.length; i++) {
       const v = this.variants[i];
       if (!v) continue;
@@ -604,8 +608,8 @@ export class Mechalogodrom {
     this.spikes.geometry.dispose();
     for (const r of this.rings) r.geometry.dispose();
     for (const sh of this.labShells) sh.geometry.dispose();
-    for (const n of this.labNodes) n.geometry.dispose();
     this.exoCage.geometry.dispose();
+    this.satellites.dispose();
     for (const v of this.variants) v.mesh.geometry.dispose();
     this.coreMat.dispose();
     this.rimMat.dispose();
@@ -615,7 +619,6 @@ export class Mechalogodrom {
     this.spikeMat.dispose();
     this.ringMat.dispose();
     this.labMat.dispose();
-    this.labNodeMat.dispose();
     this.exoMat.dispose();
     this.mechaExterior.dispose();
     this.group.removeFromParent();

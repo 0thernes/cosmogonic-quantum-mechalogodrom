@@ -27,8 +27,7 @@ describe('creature-exterior-phenomena', () => {
     }
   });
 
-  test('exterior time scale slows motion', () => {
-    expect(CREATURE_EXTERIOR_TIME_SCALE).toBeGreaterThan(0);
-    expect(CREATURE_EXTERIOR_TIME_SCALE).toBeLessThanOrEqual(0.15);
+  test('exterior time scale is calibrated to the fast creature baseline', () => {
+    expect(CREATURE_EXTERIOR_TIME_SCALE).toBe(6);
   });
 });

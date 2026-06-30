@@ -153,13 +153,13 @@ describe('TitanSystem — determinism law (golden)', () => {
 });
 
 describe('TitanSystem — structural invariants', () => {
-  test('builds exactly 10 titans with a ledger row each', () => {
+  test('builds exactly 20 titans with a ledger row each', () => {
     const ctx = makeCtx(1);
     const entities = new EntityManager(ctx);
     entities.reset(POP);
     const titans = new TitanSystem(ctx, entities, LORE, { perturb: () => undefined });
-    expect(titans.count).toBe(10);
-    expect(titans.ledger.length).toBe(10);
+    expect(titans.count).toBe(20);
+    expect(titans.ledger.length).toBe(20);
   });
 
   test('economy state stays finite + clamped after a long run (NaN/overflow seal)', () => {
@@ -171,19 +171,19 @@ describe('TitanSystem — structural invariants', () => {
       expect(e.energy).toBeGreaterThanOrEqual(0);
       expect(e.energy).toBeLessThanOrEqual(RESOURCE_CAP);
       expect(e.war).toBeGreaterThanOrEqual(0);
-      expect(e.war).toBeLessThanOrEqual(9);
+      expect(e.war).toBeLessThanOrEqual(19);
     }
   });
 
   test('the war matrix is symmetric with a zero diagonal and only {truce, alliance, war}', () => {
     const { war } = run(0xfeed, 1300);
-    expect(war.length).toBe(100); // 10 × 10
-    for (let i = 0; i < 10; i++) {
-      expect(war[i * 10 + i]).toBe(0); // a titan is never at war with itself
-      for (let j = 0; j < 10; j++) {
-        const v = war[i * 10 + j]!;
+    expect(war.length).toBe(400); // 20 × 20
+    for (let i = 0; i < 20; i++) {
+      expect(war[i * 20 + i]).toBe(0); // a titan is never at war with itself
+      for (let j = 0; j < 20; j++) {
+        const v = war[i * 20 + j]!;
         expect(v).toBeLessThanOrEqual(2); // 0 truce, 1 alliance, 2 war
-        expect(war[j * 10 + i]).toBe(v); // symmetric
+        expect(war[j * 20 + i]).toBe(v); // symmetric
       }
     }
   });
@@ -222,6 +222,7 @@ interface TitanRoamView {
   group: { position: { x: number; z: number } };
   homeX: number;
   homeZ: number;
+  breeder: boolean;
 }
 
 describe('TitanSystem — roam stays in home territory (anti-clustering regression)', () => {
@@ -241,25 +242,36 @@ describe('TitanSystem — roam stays in home territory (anti-clustering regressi
       titans.update(dt, f * dt);
     }
     const arr = (titans as unknown as { titans: TitanRoamView[] }).titans;
-    expect(arr.length).toBe(10);
+    expect(arr.length).toBe(20);
     let nearHome = 0;
-    let meanOriginR = 0;
+    let territorialOriginR = 0;
+    let breederOriginR = 0;
+    let territorialCount = 0;
+    let breederCount = 0;
     const xs: number[] = [];
     for (const t of arr) {
       const p = t.group.position;
       const dHome = Math.hypot(p.x - t.homeX, p.z - t.homeZ);
       const dOrigin = Math.hypot(p.x, p.z);
-      meanOriginR += dOrigin;
+      if (t.breeder) {
+        breederOriginR += dOrigin;
+        breederCount++;
+      } else {
+        territorialOriginR += dOrigin;
+        territorialCount++;
+      }
       xs.push(p.x);
-      // each titan should still be roaming the neighbourhood of its OWN home wedge, not the centre.
-      if (dHome < 90) nearHome++;
+      // Territorial titans should still roam their own home wedges; breeder titans intentionally
+      // keep a smaller central social orbit.
+      if (!t.breeder && dHome < 90) nearHome++;
       expect(Number.isFinite(p.x + p.z)).toBe(true);
     }
-    meanOriginR /= arr.length;
-    // NOT collapsed to the centre: homes sit on a ring at radius 130-220, so the mean distance from
-    // the origin must stay well off zero (origin-seeking would crush this toward 0).
-    expect(meanOriginR).toBeGreaterThan(90);
-    // Most titans hover near their distributed homes (territorial roaming, not a central pile).
+    territorialOriginR /= territorialCount;
+    breederOriginR /= breederCount;
+    // The original 10 remain spread off-centre; the extra 10 are allowed to socialize near centre.
+    expect(territorialOriginR).toBeGreaterThan(90);
+    expect(breederOriginR).toBeLessThan(95);
+    // Most territorial titans hover near their distributed homes (not a central pile).
     expect(nearHome).toBeGreaterThanOrEqual(8);
     // The colossi remain SPREAD across the arena — the x-extent spans a wide band, not a point.
     expect(Math.max(...xs) - Math.min(...xs)).toBeGreaterThan(180);
