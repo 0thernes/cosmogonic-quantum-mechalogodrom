@@ -42,8 +42,8 @@ import type { SimContext } from '../types';
 const TAU = Math.PI * 2;
 const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5));
 
-/** Six structural families — distinct alien silhouettes built from single primitives. */
-const FAMILY_COUNT = 6;
+/** Nine structural families — distinct alien silhouettes built from single primitives. */
+const FAMILY_COUNT = 9;
 /** 50 deterministic species spread across the families + biomes. */
 const SPECIES_COUNT = 50;
 /** Smooth biome field resolution: how many edaphic zones the palette/species cluster into. */
@@ -117,11 +117,12 @@ const flora_vert = /* glsl */ `
 
     float phase = aParams.x;
     float freq = aParams.y;
-    float bend = up * up * uWind;
+    float bend = up * up * (uWind + uChaos * 0.8);
+    float turb = up * up * uChaos * 0.6;
     vec3 p = position;
-    p.x += sin(uTime * freq + phase) * bend * 2.6;
-    p.z += cos(uTime * freq * 0.8 + phase * 1.3) * bend * 2.1;
-    p.y += sin(uTime * freq * 0.5 + phase) * up * 0.18 * uWind;
+    p.x += sin(uTime * freq + phase) * bend * 2.6 + sin(uTime * freq * 3.7 + phase * 2.1) * turb * 1.2;
+    p.z += cos(uTime * freq * 0.8 + phase * 1.3) * bend * 2.1 + cos(uTime * freq * 2.9 + phase * 1.7) * turb * 1.0;
+    p.y += sin(uTime * freq * 0.5 + phase) * up * 0.18 * (uWind + uChaos) + sin(uTime * freq * 4.3 + phase) * up * 0.05 * uChaos;
 
     vec4 mvPosition = modelViewMatrix * instanceMatrix * vec4(p, 1.0);
     vNormalV = normalize(normalMatrix * mat3(instanceMatrix) * normal);
@@ -383,6 +384,32 @@ export class AlienFlora {
       g.scale(0.85, 2.0, 0.85);
       g.translate(0, 3.4, 0);
       fams.push({ geo: g, height: 6.8 });
+    }
+    // V109: 6 helix — twisted shell stalk
+    {
+      const pts: THREE.Vector3[] = [];
+      for (let i = 0; i <= 32; i++) {
+        const y = (i / 32) * 5.5;
+        const a = i * 0.55;
+        const r = 0.35 * (1 - i / 32);
+        pts.push(new THREE.Vector3(Math.cos(a) * r, y, Math.sin(a) * r));
+      }
+      const g = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 24, 0.16, 5, false);
+      fams.push({ geo: g, height: 5.5 });
+    }
+    // V109: 7 bubble — clustered ground orbs
+    {
+      const g = new THREE.SphereGeometry(0.7, 8, 6);
+      g.scale(1, 0.85, 1);
+      g.translate(0, 0.75, 0);
+      fams.push({ geo: g, height: 1.5 });
+    }
+    // V109: 8 fan — broad curved sail
+    {
+      const g = new THREE.CylinderGeometry(0.02, 1.6, 4.5, 3, 1, true);
+      g.scale(1, 1, 0.25);
+      g.translate(0, 2.25, 0);
+      fams.push({ geo: g, height: 4.5 });
     }
     return fams;
   }
