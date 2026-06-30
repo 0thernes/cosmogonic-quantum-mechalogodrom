@@ -51,6 +51,19 @@ function isMojibakeChar(cp: number): boolean {
   return cp in CP1252_HIGH; // remapped high-range char
 }
 
+/**
+ * True only for bytes that ACTUALLY begin a CP1252-misdecoded UTF-8 run in practice: Â(0xC2)/Ã(0xC3)
+ * for 2–3-byte accents, â(0xE2) for the dash/quote/ellipsis punctuation, ð(0xF0) for emoji. A
+ * precomposed accented PROSE letter used standalone (é=0xE9, à=0xE0, è=0xE8, ï=0xEF, ñ=0xF1, ü=0xFC…)
+ * is NOT a plausible lead, so excluding it stops `café…—` / `résumé†•` being eaten as a fake 3-byte
+ * sequence (audit HIGH) while still repairing genuine `Ã©`→é and `â€"`→— mojibake. The CONTINUATION
+ * test still uses {@link isMojibakeChar} (0x80–0xBF latin1 bytes are legitimately expected there).
+ */
+function isMojibakeLead(cp: number): boolean {
+  if (cp in CP1252_HIGH) return false; // a remapped char is never itself a UTF-8 lead
+  return cp === 0xc2 || cp === 0xc3 || cp === 0xe2 || cp === 0xf0;
+}
+
 /** The byte a mojibake char stands for (latin1 direct, or the CP1252 remap). */
 function toByte(cp: number): number {
   return cp <= 0xff ? cp : CP1252_HIGH[cp]!;
@@ -66,7 +79,7 @@ export function fixMojibake(input: string): string {
   let out = '';
   for (let i = 0; i < chars.length; ) {
     const cp = chars[i]!.codePointAt(0)!;
-    const lead = isMojibakeChar(cp) ? toByte(cp) : -1;
+    const lead = isMojibakeLead(cp) ? toByte(cp) : -1;
     // UTF-8 multibyte lead bytes: 110xxxxx (C2-DF), 1110xxxx (E0-EF), 11110xxx (F0-F4)
     let need = 0;
     if (lead >= 0xc2 && lead <= 0xdf) need = 1;

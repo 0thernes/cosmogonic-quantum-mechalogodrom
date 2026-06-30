@@ -91,8 +91,12 @@ async function loadMetricImg(
   if (embedded) {
     const blob = new Blob([embedded], { type: 'image/svg+xml;charset=utf-8' });
     const url = URL.createObjectURL(blob);
-    if (await imgFromUrl(img, url)) {
-      img.classList.remove('error');
+    try {
+      if (await imgFromUrl(img, url)) {
+        img.classList.remove('error');
+      }
+    } finally {
+      URL.revokeObjectURL(url); // the image is decoded once loaded; free the blob URL (was leaked per chart switch)
     }
     return;
   }
@@ -103,9 +107,13 @@ async function loadMetricImg(
       if (res.ok) {
         const blob = await res.blob();
         const blobUrl = URL.createObjectURL(blob);
-        if (await imgFromUrl(img, blobUrl)) {
-          img.classList.remove('error');
-          return;
+        try {
+          if (await imgFromUrl(img, blobUrl)) {
+            img.classList.remove('error');
+            return;
+          }
+        } finally {
+          URL.revokeObjectURL(blobUrl); // free the blob URL whether the load succeeded or fell through
         }
       }
     } catch {

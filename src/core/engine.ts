@@ -8,7 +8,7 @@ import { PostFx, postFxMode } from './postfx';
  * (legacy lines 182-194).
  *
  * Faithful constants: antialias on, `high-performance` power preference,
- * ACES filmic tone mapping at exposure 1.15, `FogExp2(0x020310, 0.003 · FOG_SCALE)`,
+ * ACES filmic tone mapping at exposure 0.95, `FogExp2(0x020310, 0.003 · FOG_SCALE)`,
  * 68° FOV camera with near/far 0.1..CAMERA_FAR parked at (0, 50, 140). The far
  * plane and fog density carry the V3.1 ARENA scale (legacy 900 / 0.003 at 1×).
  *
@@ -17,7 +17,7 @@ import { PostFx, postFxMode } from './postfx';
  * (no sRGB output encode), so every emissive/HSL color value was authored
  * against a linear-out pipeline. Modern three defaults to `SRGBColorSpace`,
  * which double-encodes those already-tuned values and shifts the whole palette
- * brighter/desaturated. Keeping ACES tone mapping + exposure 1.15 on top of a
+ * brighter/desaturated. Keeping ACES tone mapping + exposure 0.95 on top of a
  * linear output buffer reproduces the legacy look exactly. NOTE: this pairs
  * with `THREE.ColorManagement.enabled = false`, which the integrator sets in
  * main.ts BEFORE constructing this Engine (ordering matters — see notes).
