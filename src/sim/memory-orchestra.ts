@@ -106,7 +106,10 @@ export class MemoryOrchestra {
       }
     }
     // collect top into prealloc buffer (no new/push/slice in hot path)
-    const cap = Math.min(4, this.recallOut.length);
+    // cap MUST come from a constant, not this.recallOut.length: that field is mutated below to the
+    // actual fill count, so deriving cap from it would permanently shrink-lock every future call to
+    // whatever the smallest past result size was.
+    const cap = Math.min(max, 4);
     let n = 0;
     for (let i = 0; i < numScored && n < cap; i++) {
       const e = this.events[this.scored[i]!.i];

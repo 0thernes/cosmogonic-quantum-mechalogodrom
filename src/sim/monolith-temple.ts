@@ -62,6 +62,8 @@ export class MonolithTemple {
   private readonly greeble: TempleGreeble;
   private readonly geos: THREE.BufferGeometry[] = [];
   private readonly mats: THREE.Material[] = [];
+  /** The raymarched KIFS fractal core's shader material — kept directly so warpCage() can drive its uTime uniform. */
+  private readonly raymarchMat: THREE.ShaderMaterial;
   private readonly portalMat: THREE.ShaderMaterial;
   private readonly haloMat: THREE.MeshBasicMaterial;
   private readonly shadowMat: THREE.MeshBasicMaterial;
@@ -93,7 +95,7 @@ export class MonolithTemple {
     this.scene = scene;
     const U = ARENA_MID;
 
-    const raymarchMat = new THREE.ShaderMaterial({
+    this.raymarchMat = new THREE.ShaderMaterial({
       uniforms: {
         uTime: { value: 0 },
         uResolution: {
@@ -209,11 +211,11 @@ export class MonolithTemple {
       side: THREE.DoubleSide,
     });
 
-    this.mats.push(raymarchMat);
+    this.mats.push(this.raymarchMat);
     // Bounding box scaled roughly to the previous temple's U size
     const boundsGeo = new THREE.BoxGeometry(50 * U, 50 * U, 36 * U);
     this.geos.push(boundsGeo);
-    const boundsMesh = new THREE.Mesh(boundsGeo, raymarchMat);
+    const boundsMesh = new THREE.Mesh(boundsGeo, this.raymarchMat);
     boundsMesh.position.set(0, 25 * U, 0);
     boundsMesh.frustumCulled = false;
     this.group.add(boundsMesh);
@@ -555,12 +557,10 @@ export class MonolithTemple {
     const arr = pos.array as Float32Array;
     const base = this.cageBase;
     const amp = this.cageWarp;
-    // V63: Update time uniforms for the Abomination Temple shaders
-    const mat0 = this.mats[0];
-    const uniforms = (mat0 as THREE.Material | undefined)?.userData?.uniforms as
-      | { uTime?: THREE.IUniform<number> }
-      | undefined;
-    if (uniforms?.uTime) uniforms.uTime.value = t;
+    // V63: Update time uniform for the Abomination Temple raymarch shader (drives the KIFS
+    // fractal core's rotation + bioluminescence pulse). Must write the material's own uniform
+    // directly — it was never stashed in userData.
+    this.raymarchMat.uniforms.uTime!.value = t;
 
     for (let i = 0; i < arr.length; i += 3) {
       const bx = base[i] ?? 0;
