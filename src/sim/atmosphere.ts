@@ -562,9 +562,11 @@ export class AtmosphereSystem {
       if (this.rainMat.opacity <= 0.001) this.rainMesh.visible = false;
     }
 
-    // V109: lightning flash during STORM — random brief brightness pulse on the dome.
+    // V109: lightning flash during STORM — deterministic time-based brief brightness pulse on the dome.
     if (weather === 'STORM') {
-      if (this.lightningFlash <= 0 && Math.random() < 0.003 + chaosNorm * 0.005) {
+      // Deterministic pseudo-random from sin hash (no Math.random — determinism law).
+      const strike = sin(t * 137.0 + 41.17) * 0.5 + 0.5;
+      if (this.lightningFlash <= 0 && strike > 0.997 - chaosNorm * 0.005) {
         this.lightningFlash = 0.15; // 150ms flash
       }
       if (this.lightningFlash > 0) {
