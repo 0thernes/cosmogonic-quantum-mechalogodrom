@@ -76,6 +76,7 @@ import { NhiAction, type NhiIntent, type NhiPercept } from './sim/nhi';
 import { NhiBodySystem } from './sim/nhi-body';
 import { CosmicWeb } from './sim/cosmic-web';
 import { GoldLattice } from './sim/gold-lattice';
+import { FloatingMonoliths } from './sim/floating-monoliths';
 import { QuantumLattice } from './sim/quantum-lattice';
 import { Mechalogodrom } from './sim/mechalogodrom';
 import { MechalogodromBrain } from './sim/mechalogodrom-brain';
@@ -372,6 +373,8 @@ export class World {
   private readonly cosmicWeb: CosmicWeb;
   /** Floating gold wireframe forms — architectural depth (additive; assigned in the constructor). */
   private readonly goldLattice: GoldLattice;
+  /** Sparse suspended abomination-architecture megaliths drifting through the dome (additive, no rng). */
+  private readonly floatingMonoliths: FloatingMonoliths;
   /** Floating neon sacred-geometry shells — the quantum heart (additive; assigned in the constructor). */
   private readonly quantumLattice: QuantumLattice;
   /** V-MECHA: the central fusion abomination — 10 bipolar titan shells converge + fuse into one monster (additive; no rng). */
@@ -716,6 +719,7 @@ export class World {
     this.cosmicWeb = new CosmicWeb(ctx.scene);
     // V11: floating gold wireframe architecture for designed-space depth (additive; draws no rng).
     this.goldLattice = new GoldLattice(ctx.scene);
+    this.floatingMonoliths = new FloatingMonoliths(ctx.scene); // 16 drifting greebled megaliths
     // V11: floating neon sacred-geometry quantum lattice (additive; draws no rng).
     this.quantumLattice = new QuantumLattice(ctx.scene);
     // V-MECHA: the central fusion abomination — boot-stream-neutral (no rng), reacts to world chaos.
@@ -996,6 +1000,7 @@ export class World {
     this.monolithTemple.dispose();
     this.vegetation.dispose(); // V-VEG: free the 10k alien plant instanced pools
     this.mechalogodrom.dispose(); // V-MECHA: free the fusion abomination's geometries + materials
+    this.floatingMonoliths.dispose(); // free the 16 drifting megaliths' geometries + materials
     this.alienFlora.dispose(); // free the 10k-plant alien-flora field
     this.alphabetPantheon.dispose(); // V-ABC: free the 100-archetype instanced pools
     this.artifacts.dispose(this.engine.scene);
@@ -1143,6 +1148,7 @@ export class World {
     for (const hb of this.heroBodies) hb.body.update(t, dt); // V34/35: revealed hero/twin bodies
     this.cosmicWeb.update(t); // V11: far-field cosmic-web shimmer (additive backdrop, no rng)
     this.goldLattice.update(t); // V11: floating gold architecture tumble (additive, no rng)
+    this.floatingMonoliths.update(t, this.state.chaos / CHAOS_MAX); // drifting megaliths kindle with chaos
     this.quantumLattice.update(t); // V11: neon sacred-geometry shells (additive, no rng)
     // V-MECHA / V-ABC: chaos + apex-brain vitality/transcendence drive the visual intensity (read-only).
     const baseChaos = this.state.chaos / CHAOS_MAX;
