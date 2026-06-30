@@ -83,9 +83,13 @@ function confine(rel: string): { ok: true; abs: string } | { ok: false; error: s
   // Case-insensitive + `.env*` / `.git*` prefix match: closes the `.env.local` / `.ENV`
   // secret-leak bypass (audit CRITICAL) and blocks every gitignore/.git variant the user
   // flagged as exposed. The exact-match BLOCKED_PREFIXES list still covers legacy/dist/etc.
-  const top = rl.split(sep)[0] ?? '';
-  if (isBlockedTop(top)) {
-    return { ok: false, error: `path "${top}" is blocked (private/build/vcs)` };
+  // Block a private/build/vcs segment at ANY depth, not just the top: `config/.env`,
+  // `deploy/.env.production`, `a/node_modules/b`, `x/.git/config` are all refused — matching the
+  // docstring's ".env files are blocked outright" claim (previously only the root-level top segment
+  // was checked, so a nested secret slipped through — audit MEDIUM).
+  const blockedSeg = rl.split(sep).find((s) => isBlockedTop(s));
+  if (blockedSeg) {
+    return { ok: false, error: `path "${blockedSeg}" is blocked (private/build/vcs)` };
   }
   return { ok: true, abs };
 }
@@ -329,24 +333,60 @@ function validateCommand(raw: string): { ok: true; argv: string[] } | { ok: fals
   // `run cat legacy/x` read exactly the files read_file forbids (audit MEDIUM: the `run` tool
   // bypassed the .env/.git/legacy block); routing through confine() closes that. git accepts
   // `<rev>:<path>` (e.g. `HEAD:.env`), so the path portion after the colon is confined too.
-  for (let i = 1; i < argv.length; i++) {
+  // Inherently-recursive native traversal re-enters private dirs (legacy/.git/node_modules/.env/dist)
+  // because the native binary ignores our per-entry isBlockedTop walk — so `grep -r KEY .`, `find .`,
+  // `du .`, `ls -R .`, `rg KEY .` leak the file CONTENTS/paths the file tools forbid (audit CRITICAL:
+  // `grep -r KEY .` returned root `.env` keys and `legacy/…PERSONAL…` contents). Deny them; recursive
+  // content search must go through `git grep` (routed below to the blocked-area-aware walker) and
+  // recursive file listing through `git ls-files`.
+  // `find`/`du`/`tree`/`rg` are recursive BY DEFAULT (no flag) — `rg KEY` alone searches the whole cwd
+  // tree — so they cannot be made safe via flag inspection; deny outright.
+  if (bin === 'find' || bin === 'du' || bin === 'tree' || bin === 'rg') {
+    return {
+      ok: false,
+      error: `"${bin}" is denied (recursive-by-default traversal can leak private dirs); use \`git grep\` / \`git ls-files\``,
+    };
+  }
+  if (bin === 'grep' || bin === 'ls') {
+    const recursive = argv.slice(1).some(
+      (a) =>
+        isFlag(a) &&
+        (a === '--recursive' ||
+          // `ls -R` is recursive (its `-r` is reverse-sort); grep `-r` and `-R` both recurse.
+          (bin === 'ls' ? /^-[a-zA-Z]*R[a-zA-Z]*$/.test(a) : /^-[a-zA-Z]*[rR][a-zA-Z]*$/.test(a))),
+    );
+    if (recursive) {
+      return {
+        ok: false,
+        error: `recursive ${bin} is denied (can leak private dirs); use \`git grep\` for recursive content search`,
+      };
+    }
+  }
+  // Confine every positional path argument to the repo root AND the private-area block. For grep/rg the
+  // FIRST non-flag positional is the search PATTERN (passed through); every OTHER non-flag positional is
+  // a path — INCLUDING bare directory tokens like `legacy`/`dist` that carry no separator (the old
+  // `/ \ . isAbsolute` gate skipped them, so `ls legacy` / `grep KEY legacy` enumerated/searched a
+  // private dir — audit). echo/pwd take no paths; git keeps `<rev>:<path>` handling and is confined only
+  // for path-shaped tokens so a literal like `git grep legacy` is not false-denied.
+  const skipPaths = bin === 'echo' || bin === 'pwd';
+  const patternTool = bin === 'grep';
+  let sawPattern = false;
+  for (let i = 1; i < argv.length && !skipPaths; i++) {
     const a = argv[i] ?? '';
     if (isFlag(a)) continue; // write/exec flags are denied above; remaining flags are read-only
+    if (patternTool && !sawPattern) {
+      sawPattern = true; // the search regex/literal, not a path
+      continue;
+    }
     const pathPart = bin === 'git' && a.includes(':') ? (a.split(':').pop() ?? a) : a;
-    // Confine anything path-shaped. The old gate (`/` or `.` only) missed Windows ABSOLUTE paths with
-    // BACKSLASHES and no dot — `C:\Windows`, `C:\Users` contain neither `/` nor `.`, so confine() was
-    // skipped and `run` enumerated/read the host filesystem OUTSIDE the repo root (audit BLOCKER, demoed
-    // live). Add `\` and a platform-aware isAbsolute() so every separator-bearing or absolute token is
-    // sealed in, while a bare search pattern (no separators) is still passed through to grep/find.
-    if (
+    const pathShaped =
       pathPart.includes('/') ||
       pathPart.includes('\\') ||
       pathPart.includes('.') ||
-      isAbsolute(pathPart)
-    ) {
-      const c = confine(pathPart);
-      if (!c.ok) return { ok: false, error: `argument "${a}" denied: ${c.error}` };
-    }
+      isAbsolute(pathPart);
+    if (bin === 'git' && !pathShaped) continue; // git revs/pathspecs/patterns are not paths
+    const c = confine(pathPart);
+    if (!c.ok) return { ok: false, error: `argument "${a}" denied: ${c.error}` };
   }
   return { ok: true, argv };
 }

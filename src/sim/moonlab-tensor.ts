@@ -78,8 +78,12 @@ export function moonlabTensorContract(
  * pₖ = σₖ²/Σσ² — 0 for a product (rank-1) state, 1 for a maximally entangled one.
  */
 export function moonlabTensorQualia(v: number[], chi: number): number {
-  const d = squareSide(v.length);
-  if (d < 2) return 0;
+  // Pack into at least a 2x2 (packMatrix zero-pads) so length-3 inputs form a real [[v0,v1],[v2,0]]
+  // and yield genuine entropy. The old `if (d < 2) return 0` made every length-<4 call return 0 — and
+  // all 5 production call sites pass length-3 arrays, so the 'qualia tensor' coupling was inert (always
+  // 0), violating "real math under every effect" (audit). The all-zero case is still caught by the
+  // `total <= 1e-12` guard below.
+  const d = Math.max(2, squareSide(v.length));
   const k = Math.max(2, Math.min(chi || 4, d));
   const { S } = svd(packMatrix(v, d, d));
   let total = 0;

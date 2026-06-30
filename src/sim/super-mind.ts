@@ -600,9 +600,7 @@ export class SuperMind {
   private readonly metaIn = new Float32Array(LATENT * 3 + 4 + SUPER_QUANTUM + 3 + 4); // 69
   private readonly affIn = new Float32Array(12);
   private readonly quantumOut: number[] = Array.from({ length: SUPER_QUANTUM }, () => 0);
-  private readonly sab: SharedArrayBuffer | null = null;
   private readonly latent: Float32Array;
-  private readonly worker: Worker | null = null;
   private readonly imagined = new Float32Array(LATENT);
   private readonly spinField = new Float32Array(SPIN_SIZE); // situational drive into the instinct lattice
   /** Bipolar probe buffer for Hopfield recall (no per-beat allocation). */
@@ -697,32 +695,12 @@ export class SuperMind {
     this.quantum = new Subnet(LATENT, 20, SUPER_QUANTUM, rng);
     this.meta = new Subnet(this.metaIn.length, 26, 12, rng);
 
-    const isTest =
-      typeof process !== 'undefined' &&
-      (process.env.NODE_ENV === 'test' || process.env.BUN_ENV === 'test');
-
-    if (!isTest && typeof SharedArrayBuffer !== 'undefined') {
-      this.sab = new SharedArrayBuffer(LATENT * 4);
-      this.latent = new Float32Array(this.sab);
-      // Construct worker using URL to bundle correctly
-      this.worker = new Worker(new URL('./metacognition-worker.ts', import.meta.url), {
-        type: 'module',
-      });
-      this.worker.postMessage({
-        type: 'INIT',
-        buffer: this.sab,
-        program: this._eshkolProgram,
-        surprise: 0, // Initial surprise
-        LATENT,
-      });
-      this.worker.onmessage = (e) => {
-        if (e.data.type === 'DIVINE') {
-          this.cons.workspace = clamp01(this.cons.workspace + e.data.divine * 0.012);
-        }
-      };
-    } else {
-      this.latent = new Float32Array(LATENT);
-    }
+    // Metacognition (Eshkol VM + Moonlab MPO) runs SYNCHRONOUSLY in-beat on every runtime — see think().
+    // A prior production-only Web Worker aliased `latent` through a SharedArrayBuffer and wrote it
+    // off-thread, racing the main thread and making the SHIPPED path non-deterministic while the
+    // single-threaded tests stayed green (a verifier that falsely passed). Determinism is the #1 law,
+    // so the worker is gone: one proven-deterministic path in every runtime (browser, test, bench).
+    this.latent = new Float32Array(LATENT);
 
     this.paramCount =
       this.cortex.params +
@@ -915,23 +893,19 @@ export class SuperMind {
     }
     // Deep Tsotchke: Eshkol compiler VM + Moonlab MPO on cadence (real MIT ports, not decorative).
     if (this.cliffordBeat % 17 === 0) {
-      if (this.worker) {
-        this.worker.postMessage({ type: 'THINK', cliffordBeat: this.cliffordBeat });
-      } else {
-        const bc = eshkolCompile(eshkolParse(this._eshkolProgram));
-        const divine = eshkolExecute(bc, this.cons.surprise);
-        this.cons.workspace = clamp01(this.cons.workspace + divine * 0.012);
-        const mpoOut = moonlabMPOApply(
-          {
-            matrices: [this.latent.subarray(0, 4)],
-            bondDimension: 1,
-            physicalDimension: LATENT,
-          },
-          this.latent,
-        );
-        for (let i = 0; i < Math.min(LATENT, mpoOut.length); i++) {
-          this.latent[i] = clamp((this.latent[i] ?? 0) + (mpoOut[i] ?? 0) * 0.008, -4, 4);
-        }
+      const bc = eshkolCompile(eshkolParse(this._eshkolProgram));
+      const divine = eshkolExecute(bc, this.cons.surprise);
+      this.cons.workspace = clamp01(this.cons.workspace + divine * 0.012);
+      const mpoOut = moonlabMPOApply(
+        {
+          matrices: [this.latent.subarray(0, 4)],
+          bondDimension: 1,
+          physicalDimension: LATENT,
+        },
+        this.latent,
+      );
+      for (let i = 0; i < Math.min(LATENT, mpoOut.length); i++) {
+        this.latent[i] = clamp((this.latent[i] ?? 0) + (mpoOut[i] ?? 0) * 0.008, -4, 4);
       }
     }
     // V1.1: step the echo-state reservoir on the fresh latent — a fading nonlinear echo of the mind's

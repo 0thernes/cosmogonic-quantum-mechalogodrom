@@ -141,6 +141,9 @@ export class ApexExteriorAbomination {
   private readonly vortexSpiral: THREE.LineSegments;
   private readonly godRays: THREE.LineSegments;
   private readonly stellatedSwarm: THREE.InstancedMesh;
+  // Per-instance Z anchors — update() recomputes Z from these constants instead of accumulating into
+  // the live matrix (a read-modify-write `sP.z += …` slowly drifts the swarm off its shell). See update().
+  private readonly swarmBaseZ: Float32Array;
   private readonly neuralTethers: THREE.LineSegments;
   private readonly zigguratStack: THREE.LineSegments;
   // Per-frame scratch — reused across update() calls (zero-alloc hot path).
@@ -334,6 +337,7 @@ export class ApexExteriorAbomination {
     );
     this.group.add(this.godRays);
     const swarmN = 20;
+    this.swarmBaseZ = new Float32Array(swarmN);
     const swarmGeo = new THREE.IcosahedronGeometry(0.28, 0);
     this.stellatedSwarm = new THREE.InstancedMesh(
       swarmGeo,
@@ -355,6 +359,7 @@ export class ApexExteriorAbomination {
       const th = (i / swarmN) * TAU;
       const r = 1.2 + (i % 4) * 0.45;
       sP.set(Math.cos(th) * r, Math.sin(th * 1.3) * r * 0.6, Math.sin(th) * r * 0.5);
+      this.swarmBaseZ[i] = sP.z;
       sQ.setFromEuler(new THREE.Euler(i * 0.4, i * 0.55, i * 0.31));
       sS.setScalar(0.5 + (i % 5) * 0.18);
       sM.compose(sP, sQ, sS);
@@ -463,7 +468,7 @@ export class ApexExteriorAbomination {
       sE.setFromQuaternion(sQ);
       sE.y += st * (0.015 + (i % 3) * 0.004);
       sQ.setFromEuler(sE);
-      sP.z += Math.sin(st * 0.2 + i) * 0.04 * vitality;
+      sP.z = this.swarmBaseZ[i]! + Math.sin(st * 0.2 + i) * 0.04 * vitality;
       sM.compose(sP, sQ, sS);
       this.stellatedSwarm.setMatrixAt(i, sM);
     }

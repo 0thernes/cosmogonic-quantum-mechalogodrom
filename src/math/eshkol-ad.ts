@@ -451,8 +451,10 @@ export function adBackward(tape: AdTape, output: number): void {
           const ev = n.saved;
           const lv = tape.nodes[L]!.value;
           tape.nodes[L]!.gradient += g * ev * Math.pow(lv, ev - 1.0);
-          // d/dR (L^R) = L^R * ln(L) — for variable exponent
-          if (R >= 0) {
+          // d/dR (L^R) = L^R * ln(L) — for variable exponent. ln(L) is undefined for L<=0, so guard
+          // against a NaN gradient poisoning the whole reverse sweep (the exponent-derivative simply
+          // does not exist for a non-positive base; contribute 0 rather than NaN).
+          if (R >= 0 && lv > 0) {
             tape.nodes[R]!.gradient += g * n.value * Math.log(lv);
           }
         }

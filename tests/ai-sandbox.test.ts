@@ -157,3 +157,50 @@ describe('ai-sandbox: success paths (the gate ALLOWS + executes valid read-only 
     expect((await dispatchTool('run', {})).ok).toBe(false); // empty command
   });
 });
+
+describe('ai-sandbox: recursive traversal cannot leak private dirs (audit CRITICAL)', () => {
+  // `grep -r KEY .` / `find .` / `du .` / `rg KEY .` / `ls -R .` would spawn a native binary at the repo
+  // root and recurse INTO legacy/.git/node_modules/.env, returning the file contents/paths the read tools
+  // forbid. All must be denied at validation (ok:false) BEFORE any subprocess spawns.
+  test('inherently-recursive binaries are denied outright', async () => {
+    for (const cmd of [
+      'find .',
+      'find legacy',
+      'du -a .',
+      'du legacy',
+      'tree .',
+      'rg secret .',
+      'rg secret',
+    ]) {
+      expect((await runReadOnly(cmd)).ok).toBe(false);
+    }
+  });
+
+  test('recursive grep / ls flags are denied (non-recursive forms still allowed by validation)', async () => {
+    for (const cmd of [
+      'grep -r KEY .',
+      'grep -rn KEY .',
+      'grep -R KEY .',
+      'grep --recursive KEY .',
+      'ls -R .',
+      'ls --recursive .',
+    ]) {
+      expect((await runReadOnly(cmd)).ok).toBe(false);
+    }
+  });
+
+  test('bare private-dir tokens are confined for native tools', async () => {
+    // `ls legacy` / `cat legacy` / `grep KEY legacy` previously skipped confine (no separator) and
+    // enumerated/searched a blocked dir; now the bare token is sealed in.
+    expect((await runReadOnly('ls legacy')).ok).toBe(false);
+    expect((await runReadOnly('ls node_modules')).ok).toBe(false);
+    expect((await runReadOnly('grep KEY legacy')).ok).toBe(false);
+  });
+
+  test('nested .env / .git are blocked at any depth, not just the top segment', async () => {
+    expect((await readFileSafe('config/.env')).ok).toBe(false);
+    expect((await readFileSafe('deploy/.env.production')).ok).toBe(false);
+    expect((await readFileSafe('a/b/.git/config')).ok).toBe(false);
+    expect((await runReadOnly('cat config/.env')).ok).toBe(false);
+  });
+});

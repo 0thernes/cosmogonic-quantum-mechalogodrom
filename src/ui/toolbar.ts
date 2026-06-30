@@ -73,6 +73,11 @@ export function initToolbarKeyboard(doc: Document = document): void {
 
   const buttons = Array.from(bar.querySelectorAll('button'));
   if (buttons.length === 0) return;
+  // Idempotency guard (mirrors initToolbarScroll's `kbWired` pattern): this runs both at module
+  // import (toolbar.ts) AND from main.ts, so without a guard two identical keydown listeners attach
+  // and every arrow press moves focus TWICE (skips a button). Bind exactly once.
+  if (bar.dataset['kbWired'] === '1') return;
+  bar.dataset['kbWired'] = '1';
 
   buttons.forEach((b, i) => b.setAttribute('tabindex', i === 0 ? '0' : '-1'));
 

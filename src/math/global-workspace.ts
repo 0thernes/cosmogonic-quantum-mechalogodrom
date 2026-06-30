@@ -77,6 +77,13 @@ export function gwtSoftmax(
     const s = saliences[i] ?? 0;
     if (s > max) max = s;
   }
+  // All saliences -Infinity (or NaN) leaves max non-finite, so `exp((s - max)/t)` = exp(NaN) = NaN and
+  // every weight becomes NaN. Degrade to a uniform distribution instead of poisoning the workspace.
+  if (!Number.isFinite(max)) {
+    const u = 1 / n;
+    for (let i = 0; i < n; i++) out[i] = u;
+    return;
+  }
   let sum = 0;
   for (let i = 0; i < n; i++) {
     const e = Math.exp(((saliences[i] ?? 0) - max) / t);
@@ -221,7 +228,9 @@ export function gwtCapacityCompete(
   ignitionThreshold = 0.5,
   temperature = 1,
 ): GwtCapacityResult {
-  const cap = capacity < 1 ? 1 : capacity > n ? n : capacity;
+  // `capacity >= 1` is false for NaN, so a non-finite capacity degrades to admitting the top 1 rather
+  // than `slice(0, NaN) === []` admitting nobody (audit). Floors floats and clamps to [1, n].
+  const cap = capacity >= 1 ? Math.min(Math.floor(capacity), n) : 1;
   if (n <= 0) {
     return { admitted: [], occupancy: 0, capacity: cap, access: 0, pressure: 0, ignited: false };
   }
