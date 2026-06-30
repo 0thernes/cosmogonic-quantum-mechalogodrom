@@ -482,8 +482,10 @@ export class AlphabetPantheonRender {
       const uTime = this.mat.uniforms.uTime;
       if (uTime) uTime.value = t;
     }
-    const slowT = t * CREATURE_EXTERIOR_TIME_SCALE;
-    const quick = 0.55 + 0.75 * this.chaos;
+    // V109: pantheon is stately — slower base drift, but still quickens with chaos and apex presence.
+    const slowT = t * CREATURE_EXTERIOR_TIME_SCALE * 0.55;
+    const quick =
+      0.5 + 0.6 * this.chaos + 0.25 * this.apexTranscendence + 0.15 * this.apexVitality;
     for (let pool = 0; pool < this.meshes.length; pool++) {
       const mesh = this.meshes[pool]!;
       const halo = this.wireHalos[pool];
@@ -517,13 +519,14 @@ export class AlphabetPantheonRender {
         M.compose(P, Q, S);
         mesh.setMatrixAt(s, M);
         const hueShift =
-          Math.sin(ph * 0.22) * 0.12 +
+          Math.sin(ph * 0.22) * 0.14 +
           slowT * 0.0012 * b.spin +
-          bn * 0.14 * bv +
-          b.sig.hueOffset * 0.5;
-        const hue = (b.pal.bodyHue + hueShift + b.pal.diagramHue * bn * 0.22) % 1;
-        const litBoost = ba * 0.24 + bn * 0.12 + b.pal.filamentLit * 0.16 * ba;
-        const lit = b.pal.bodyLit + 0.16 * Math.sin(ph * 1.8) + litBoost;
+          bn * 0.18 * bv +
+          b.sig.hueOffset * 0.5 +
+          this.apexTranscendence * 0.06 * Math.sin(ph * 0.11 + b.gIdx * 0.1);
+        const hue = (b.pal.bodyHue + hueShift + b.pal.diagramHue * bn * 0.26) % 1;
+        const litBoost = ba * 0.32 + bn * 0.18 + b.pal.filamentLit * 0.22 * ba + this.chaos * 0.08;
+        const lit = b.pal.bodyLit + 0.18 * Math.sin(ph * 1.8) + litBoost;
         C.setHSL(
           hue < 0 ? hue + 1 : hue,
           Math.min(1, b.pal.bodySat + bn * 0.1),
