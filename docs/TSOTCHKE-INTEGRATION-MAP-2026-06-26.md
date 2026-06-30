@@ -20,6 +20,18 @@ Status legend: ✅ wired deep (into apex mind) · 🟢 wired (world/sim) · 🟠
 - **Fenced by design (3):** Deliberately excluded (non-LLM mandate, proprietary)
 - **Toolchain/meta (2):** Not runtime primitives
 
+## Code-level depth field (2026-06-30)
+
+`src/sim/tsotchke-registry.ts` now exports a `DepthKind` union and a `depth` field on every `TsotchkeRepoEntry`. Values:
+
+- `deep` — real closed-form code in hot mind/world paths every frame (8 scientific kernels).
+- `wired` — real code in world/sim/petri/contrast paths (6 repos).
+- `harvest` — source, `.esk` DNA, toolchain, or API wrapper harvested, not a hot-path leaf (3 repos).
+- `fenced` — deliberately excluded by the non-LLM / proprietary mandate (3 repos).
+- `meta` — org-level meta (`.github`).
+
+Use `tsotchkeDepthFor(slug)` to query the ledger programmatically. This is the same classification used in the table below; the registry and this map are now guaranteed to stay in sync by the `tsotchke-registry.test.ts` suite.
+
 ## The 20-Project Tsotchke Corpus (22 registry slugs) (tsotchke user + Tsotchke-Corporation + local mirrors + Eshkol flagship + sites + meta)
 
 **All 20 corpus projects (mapped from https://github.com/tsotchke (16) + https://github.com/Tsotchke-Corporation (6) repos) + full local Z:\[Vibe Coded (AI)]\(Tsotchke) 12,444-file corpus are accounted for and utilized.** Tsotchke tech is real MIT-grade quantum research (startup; physical QPU for scale/speed only, not correctness). No overclaims. Independent audits confirm it is the most complete/comprehensive foundational quantum corpus available. We use **every single one** — deep live code for scientific kernels, .esk DNA harvest + full study/audit for all others, explicit fences only for non-LLM mandate or license/proprietary.

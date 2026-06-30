@@ -16,6 +16,8 @@ import {
   primaryRepoForArchon,
   tsotchkeSimWiringFraction,
   wiredSimRepoCount,
+  tsotchkeDepthFor,
+  type DepthKind,
 } from '../src/sim/tsotchke-registry';
 import {
   createPetriDish,
@@ -83,6 +85,43 @@ describe('Tsotchke registry — ALL repos mapped (22 with classical-contrast for
     const f = tsotchkeSimWiringFraction(0.7);
     expect(f).toBeGreaterThan(0.7);
     expect(f).toBeLessThanOrEqual(1);
+  });
+
+  test('every repo has a valid depth classification', () => {
+    const valid = new Set<DepthKind>(['deep', 'wired', 'harvest', 'fenced', 'meta']);
+    for (const slug of [...TSOTCHKE_USER_REPOS, ...TSOTCHKE_ORG_REPOS]) {
+      const depth = tsotchkeDepthFor(slug);
+      expect(depth).toBeDefined();
+      expect(valid.has(depth!)).toBe(true);
+    }
+  });
+
+  test('fenced repos are the only ones with depth fenced', () => {
+    for (const slug of FENCED_REPO_SLUGS) {
+      expect(tsotchkeDepthFor(slug)).toBe('fenced');
+    }
+    expect(
+      [...TSOTCHKE_USER_REPOS, ...TSOTCHKE_ORG_REPOS].filter(
+        (s) => tsotchkeDepthFor(s) === 'fenced',
+      ).length,
+    ).toBe(FENCED_REPO_SLUGS.length);
+  });
+
+  test('deep scientific substrates are wired at full strength', () => {
+    const deep = [
+      'eshkol',
+      'moonlab',
+      'quantum_geometric_tensor',
+      'spin_based_neural_network',
+      'libirrep',
+      'tensorcore',
+      'quantum_rng',
+      'classical-contrast',
+    ] as const;
+    for (const slug of deep) {
+      expect(tsotchkeDepthFor(slug)).toBe('deep');
+      expect(getTsotchkeRepo(slug)!.wiring).toBe(1.0);
+    }
   });
 });
 

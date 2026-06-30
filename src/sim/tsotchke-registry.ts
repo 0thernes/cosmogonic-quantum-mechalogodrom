@@ -45,6 +45,14 @@ export type TsotchkeUserRepo = (typeof TSOTCHKE_USER_REPOS)[number];
 export type TsotchkeOrgRepo = (typeof TSOTCHKE_ORG_REPOS)[number];
 export type TsotchkeRepoSlug = TsotchkeUserRepo | TsotchkeOrgRepo;
 
+/** Depth of integration for the public integration map. */
+export type DepthKind =
+  | 'deep' // real closed-form code in hot mind/world paths every frame
+  | 'wired' // real code in world/sim/petri or contrast paths
+  | 'harvest' // source / .esk DNA / toolchain / API wrapper harvested, not hot-path
+  | 'fenced' // deliberately excluded by project mandate
+  | 'meta'; // org-level meta (e.g., .github)
+
 /** Substrate roles for digital biologics (primordial soup evolution). */
 export type SubstrateKind =
   | 'consciousness-engine' // Eshkol: AD, GWT, active inference, programs as life code
@@ -81,6 +89,8 @@ export interface TsotchkeRepoEntry {
    * our wiring intent for each upstream repo; it says nothing about the upstream tech, which is real.
    */
   wiring: number;
+  /** Public depth classification for the integration map. */
+  depth: DepthKind;
   hue: number;
 }
 
@@ -91,6 +101,7 @@ const ENTRIES: TsotchkeRepoEntry[] = [
     substrate: 'consciousness-engine',
     cosmogonicLeaf: 'sim/eshkol-bridge.ts',
     wiring: 1.0,
+    depth: 'deep',
     hue: 0.72,
   },
   // Local corpus Z:\[Vibe Coded (AI)]\(Tsotchke)\Eshkol\eshkol_repo used as build source for .esk programs as heritable digital biologic DNA.
@@ -100,6 +111,7 @@ const ENTRIES: TsotchkeRepoEntry[] = [
     substrate: 'clifford-tensor',
     cosmogonicLeaf: 'sim/moonlab-tensor.ts',
     wiring: 1.0,
+    depth: 'deep',
     hue: 0.41,
   },
   {
@@ -108,6 +120,7 @@ const ENTRIES: TsotchkeRepoEntry[] = [
     substrate: 'metal-sim',
     cosmogonicLeaf: 'sim/tensorcore-facade.ts',
     wiring: 1.0,
+    depth: 'deep',
     hue: 0.05,
   },
   {
@@ -116,6 +129,7 @@ const ENTRIES: TsotchkeRepoEntry[] = [
     substrate: 'equivariant-sym',
     cosmogonicLeaf: 'sim/irrep-symmetry.ts',
     wiring: 1.0,
+    depth: 'deep',
     hue: 0.18,
   },
   {
@@ -124,6 +138,7 @@ const ENTRIES: TsotchkeRepoEntry[] = [
     substrate: 'hopfield-spin',
     cosmogonicLeaf: 'math/hopfield + spin-glass',
     wiring: 1.0,
+    depth: 'deep',
     hue: 0.55,
   },
   {
@@ -132,6 +147,7 @@ const ENTRIES: TsotchkeRepoEntry[] = [
     substrate: 'quantum-geometry',
     cosmogonicLeaf: 'quantum-geometry',
     wiring: 1.0,
+    depth: 'deep',
     hue: 0.88,
   },
   {
@@ -140,6 +156,7 @@ const ENTRIES: TsotchkeRepoEntry[] = [
     substrate: 'qrng-entropy',
     cosmogonicLeaf: 'eshkol-qrng',
     wiring: 1.0,
+    depth: 'deep',
     hue: 0.62,
   },
   {
@@ -148,6 +165,7 @@ const ENTRIES: TsotchkeRepoEntry[] = [
     substrate: 'fenced-llm',
     cosmogonicLeaf: '',
     wiring: 0,
+    depth: 'fenced',
     hue: 0,
   },
   {
@@ -156,6 +174,7 @@ const ENTRIES: TsotchkeRepoEntry[] = [
     substrate: 'toolchain',
     cosmogonicLeaf: 'sim/homebrew-eshkol.ts',
     wiring: 1.0,
+    depth: 'harvest',
     hue: 0.33,
   },
   {
@@ -164,6 +183,7 @@ const ENTRIES: TsotchkeRepoEntry[] = [
     substrate: 'fenced-arbitrator',
     cosmogonicLeaf: '',
     wiring: 0,
+    depth: 'fenced',
     hue: 0,
   },
   {
@@ -172,6 +192,7 @@ const ENTRIES: TsotchkeRepoEntry[] = [
     substrate: 'classical-baseline',
     cosmogonicLeaf: 'sim/perceptron-baseline.ts',
     wiring: 1.0,
+    depth: 'wired',
     hue: 0.27,
   },
   {
@@ -180,6 +201,7 @@ const ENTRIES: TsotchkeRepoEntry[] = [
     substrate: 'game-physics',
     cosmogonicLeaf: 'sim/asteroids-physics.ts',
     wiring: 1.0,
+    depth: 'wired',
     hue: 0.48,
   },
   {
@@ -188,6 +210,7 @@ const ENTRIES: TsotchkeRepoEntry[] = [
     substrate: 'classical-rng',
     cosmogonicLeaf: 'sim/classical-contrast.ts',
     wiring: 1.0,
+    depth: 'deep',
     hue: 0.71,
   },
   {
@@ -196,6 +219,7 @@ const ENTRIES: TsotchkeRepoEntry[] = [
     substrate: 'classical-baseline',
     cosmogonicLeaf: 'sim/classical-contrast.ts',
     wiring: 1.0,
+    depth: 'deep',
     hue: 0.65,
   },
   {
@@ -204,6 +228,7 @@ const ENTRIES: TsotchkeRepoEntry[] = [
     substrate: 'pinn-physics',
     cosmogonicLeaf: 'sim/pinn-residual.ts',
     wiring: 1.0,
+    depth: 'wired',
     hue: 0.39,
   },
   {
@@ -212,6 +237,7 @@ const ENTRIES: TsotchkeRepoEntry[] = [
     substrate: 'path-integral',
     cosmogonicLeaf: 'sim/pimc-paths.ts',
     wiring: 1.0,
+    depth: 'wired',
     hue: 0.44,
   },
   {
@@ -220,6 +246,7 @@ const ENTRIES: TsotchkeRepoEntry[] = [
     substrate: 'browser-hybrid',
     cosmogonicLeaf: 'sim/ulg-bridge.ts',
     wiring: 1.0,
+    depth: 'wired',
     hue: 0.25,
   },
   {
@@ -228,6 +255,7 @@ const ENTRIES: TsotchkeRepoEntry[] = [
     substrate: 'logo-turtle',
     cosmogonicLeaf: 'sim/logo-turtle.ts',
     wiring: 1.0,
+    depth: 'wired',
     hue: 0.52,
   },
   {
@@ -236,6 +264,7 @@ const ENTRIES: TsotchkeRepoEntry[] = [
     substrate: 'quake-aliveness',
     cosmogonicLeaf: 'sim/qge-aliveness.ts',
     wiring: 1.0,
+    depth: 'wired',
     hue: 0.58,
   },
   {
@@ -244,6 +273,7 @@ const ENTRIES: TsotchkeRepoEntry[] = [
     substrate: 'fenced-chain',
     cosmogonicLeaf: '',
     wiring: 0,
+    depth: 'fenced',
     hue: 0,
   },
   {
@@ -252,6 +282,7 @@ const ENTRIES: TsotchkeRepoEntry[] = [
     substrate: 'qrng-api',
     cosmogonicLeaf: 'sim/quantum-rng-api.ts',
     wiring: 1.0,
+    depth: 'harvest',
     hue: 0.68,
   },
   {
@@ -260,6 +291,7 @@ const ENTRIES: TsotchkeRepoEntry[] = [
     substrate: 'meta',
     cosmogonicLeaf: 'tsotchke-registry',
     wiring: 1.0,
+    depth: 'meta',
     hue: 0.15,
   },
 ];
@@ -277,6 +309,11 @@ export function getTsotchkeRepoByIndex(i: number): TsotchkeRepoEntry {
   const n = ENTRIES.length;
   const idx = ((i % n) + n) % n;
   return ENTRIES[idx]!;
+}
+
+/** Public depth of integration for a repo (deep / wired / harvest / fenced / meta). */
+export function tsotchkeDepthFor(slug: TsotchkeRepoSlug): DepthKind | undefined {
+  return getTsotchkeRepo(slug)?.depth;
 }
 
 /** Mean wiring WEIGHT of the already-wired substrates (averages only entries with wiring>0, so it

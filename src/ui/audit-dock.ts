@@ -35,12 +35,151 @@ const STYLE = `
 }
 /* Client-rendered trail rows (host-independent — no server needed). */
 #audit-list ol{list-style:none;margin:0;padding:0;font:10px/1.5 var(--font-mono,ui-monospace,monospace)}
-#audit-list li{color:#d6ecf5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#audit-list li{color:#d6ecf5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center}
 #audit-list .cqm-aud-t{color:#5fb8d6;font-variant-numeric:tabular-nums}
 #audit-list .cqm-aud-a{color:#e6f7ff;font-weight:700;margin:0 4px}
 #audit-list .cqm-aud-d{color:#7fa8b8;opacity:.85}
 #audit-list .cqm-aud-empty{color:#6b8a96;opacity:.7;padding:6px 2px}
+
+/* Scoped audit terminal tabs */
+.cqm-audit-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 6px;
+}
+.cqm-audit-tab {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  color: #7fa8b8;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 8px;
+  padding: 2px 5px;
+  cursor: pointer;
+  text-transform: uppercase;
+  transition: all 0.15s ease;
+}
+.cqm-audit-tab:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+}
+.cqm-audit-tab.active {
+  background: rgba(120, 200, 230, 0.2);
+  border-color: rgba(120, 200, 230, 0.5);
+  color: #e6f7ff;
+  text-shadow: 0 0 4px rgba(120, 200, 230, 0.6);
+}
+
+/* Prepend scope tags to list items */
+.cqm-aud-scope {
+  display: inline-block;
+  font-weight: bold;
+  margin-right: 6px;
+  width: 38px;
+  text-align: center;
+  border-radius: 2px;
+  font-size: 8px;
+  padding: 1px 2px;
+  line-height: 1;
+}
+.cqm-aud-scope-dev {
+  color: #ffd700; /* Yellow for DEV */
+  background: rgba(255, 215, 0, 0.15);
+}
+.cqm-aud-scope-bio {
+  color: #39d6ff; /* Cyan/Blue for BIO */
+  background: rgba(57, 214, 255, 0.15);
+}
+.cqm-aud-scope-neuro {
+  color: #c79bff; /* Purple/Violet for NEURO */
+  background: rgba(199, 155, 255, 0.15);
+}
+.cqm-aud-scope-substrate {
+  color: #ff5f5f; /* Red/Coral for SUBSTRATE */
+  background: rgba(255, 95, 95, 0.15);
+}
 `;
+
+let activeTab: 'ALL' | 'DEV' | 'BIO' | 'NEURO' | 'SUBSTRATE' = 'ALL';
+
+function getActionScope(action: string): 'Dev' | 'Bio' | 'Neuro' | 'Substrate' {
+  const act = action.toLowerCase();
+  if (act.includes('nhi') || act.includes('neuro') || act.includes('brain') || act === 'omen') {
+    return 'Neuro';
+  }
+  if (
+    act.includes('titan') ||
+    act.includes('god') ||
+    act.includes('evo') ||
+    act.includes('breed') ||
+    act === 'split' ||
+    act === 'burst' ||
+    act === 'mutate' ||
+    act === 'ascension' ||
+    act === 'primordial-emergent'
+  ) {
+    return 'Bio';
+  }
+  if (
+    act.includes('chaos') ||
+    act === 'entropy' ||
+    act === 'singularity' ||
+    act === 'collapse' ||
+    act === 'reset' ||
+    act === 'apocalypse'
+  ) {
+    return 'Substrate';
+  }
+  return 'Dev';
+}
+
+function ensureTabs(doc: Document): void {
+  const panel = doc.getElementById('aP');
+  if (!panel) return;
+  const body = panel.querySelector('.panel-body');
+  if (!body) return;
+
+  let tabContainer = doc.getElementById('cqm-audit-tabs');
+  if (!tabContainer) {
+    tabContainer = doc.createElement('div');
+    tabContainer.id = 'cqm-audit-tabs';
+    tabContainer.className = 'cqm-audit-tabs';
+
+    const tabs: ('ALL' | 'DEV' | 'BIO' | 'NEURO' | 'SUBSTRATE')[] = [
+      'ALL',
+      'DEV',
+      'BIO',
+      'NEURO',
+      'SUBSTRATE',
+    ];
+    tabs.forEach((tab) => {
+      const btn = doc.createElement('button');
+      btn.type = 'button';
+      btn.className = 'cqm-audit-tab';
+      btn.textContent = tab;
+      btn.dataset['tab'] = tab;
+      btn.addEventListener('click', () => {
+        activeTab = tab;
+        renderClientAudit(doc);
+      });
+      tabContainer!.appendChild(btn);
+    });
+
+    const listDiv = doc.getElementById('audit-list');
+    if (listDiv) {
+      body.insertBefore(tabContainer, listDiv);
+    } else {
+      body.appendChild(tabContainer);
+    }
+  }
+
+  // Update active state
+  tabContainer.querySelectorAll('.cqm-audit-tab').forEach((b) => {
+    b.classList.toggle('active', (b as HTMLElement).dataset['tab'] === activeTab);
+  });
+}
 
 /** Human relative age, e.g. "now", "3s", "5m", "2h". `ms` is the age in milliseconds. */
 function rel(ms: number): string {
@@ -69,6 +208,8 @@ function compactDetail(detail: Record<string, unknown>): string {
 
 /** Read + render the localStorage audit ring into `#audit-list`, newest first. Guarded; never throws. */
 function renderClientAudit(doc: Document): void {
+  ensureTabs(doc);
+
   const host = doc.getElementById('audit-list');
   if (!host) return;
   let raw: string | null;
@@ -86,20 +227,46 @@ function renderClientAudit(doc: Document): void {
     }
   }
   const list = Array.isArray(arr) ? arr : [];
+
+  // Filter the list based on active tab
+  const filteredList = list.filter((e: unknown) => {
+    if (!e || typeof e !== 'object') return false;
+    const rec = e as { action?: unknown };
+    if (typeof rec.action !== 'string') return false;
+    if (activeTab === 'ALL') return true;
+    const scope = getActionScope(rec.action);
+    return scope.toUpperCase() === activeTab;
+  });
+
   const ol = doc.createElement('ol');
   const now = Date.now();
-  if (list.length === 0) {
+  if (filteredList.length === 0) {
     const empty = doc.createElement('div');
     empty.className = 'cqm-aud-empty';
-    empty.textContent = 'no audit events yet — interact with the sim to populate the trail.';
+    empty.textContent =
+      activeTab === 'ALL'
+        ? 'no audit events yet — interact with the sim to populate the trail.'
+        : `no events matching category: ${activeTab}`;
     host.replaceChildren(empty);
     return;
   }
-  for (let i = list.length - 1; i >= 0; i--) {
-    const e = list[i];
+  for (let i = filteredList.length - 1; i >= 0; i--) {
+    const e = filteredList[i];
     if (!e || typeof e !== 'object') continue;
     const rec = e as { ts?: unknown; action?: unknown; detail?: unknown };
     if (typeof rec.action !== 'string') continue;
+
+    const scope = getActionScope(rec.action);
+    const scopeSpan = doc.createElement('span');
+    scopeSpan.className = `cqm-aud-scope cqm-aud-scope-${scope.toLowerCase()}`;
+    const tagMap: Record<string, string> = {
+      Dev: '[DEV]',
+      Bio: '[BIO]',
+      Neuro: '[NEU]',
+      Substrate: '[SUB]',
+    };
+    scopeSpan.textContent = tagMap[scope] || '[???]';
+
     const li = doc.createElement('li');
     const t = doc.createElement('span');
     t.className = 'cqm-aud-t';
@@ -107,7 +274,7 @@ function renderClientAudit(doc: Document): void {
     const a = doc.createElement('span');
     a.className = 'cqm-aud-a';
     a.textContent = rec.action;
-    li.append(t, a);
+    li.append(scopeSpan, t, a);
     if (rec.detail && typeof rec.detail === 'object') {
       const d = doc.createElement('span');
       d.className = 'cqm-aud-d';
