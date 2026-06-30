@@ -9,7 +9,7 @@
 import { dockToggle, glassPanel, injectPanelBaseCSS, panelHeader, wireClose } from './panel-shell';
 import { mountToggle } from './panel-dock';
 
-const STYLE = #cqm-settings-modal{pointer-events:auto;align-items:flex-end;justify-content:center;padding:12px 8px calc(var(--cqm-bottom-h,108px) + 12px)}
+const STYLE = `#cqm-settings-modal{pointer-events:auto;align-items:flex-end;justify-content:center;padding:12px 8px calc(var(--cqm-bottom-h,108px) + 12px)}
 #cqm-settings-modal::before{content:'';position:absolute;inset:0;pointer-events:none;opacity:.12;
   background:repeating-linear-gradient(0deg,transparent 0 2px,rgba(120,160,255,.5) 2px 3px)}
 #cqm-settings-modal .cqm-panel-box{max-height:min(48vh,calc(100vh - var(--cqm-bottom-h,108px) - 28px));overflow-y:auto;scrollbar-width:thin;
