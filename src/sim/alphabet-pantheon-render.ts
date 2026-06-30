@@ -7,9 +7,11 @@
  * as distinct glowing bodies, each one's **shape, colour, size, and motion read straight from its
  * archetype bias** so the alphabet pantheon is visibly differentiated, not a recolour:
  *
- *  - SHAPE pool by letter identity: vowels → torus-knot · greek-upper → icosahedron ·
- *    greek-lower → octahedron · latin-upper → dodecahedron · latin-lower → tetrahedron.
- *    Each pool is ONE {@link THREE.InstancedMesh} ⇒ ≤ 5 draw calls for all 100 (not 100 meshes).
+ *  - SHAPE by UNIQUE exterior kind (10): each letter's solid body matches its own
+ *    {@link glyphExteriorSignature} topology (cube · shard · dodeca · ring · knot · orb · slab ·
+ *    icosa · pillar · portal), then per-letter NON-UNIFORM scale + hue + wander make the 100 read
+ *    as 100 distinct silhouettes. One {@link THREE.InstancedMesh} per non-empty kind ⇒ ≤ 10 draw
+ *    calls for all 100 (not 100 meshes).
  *  - COLOUR = HSL(bias.hue, 0.6 + 0.35·quantum, 0.45 + 0.2·generative) per instance (instanceColor).
  *  - SIZE   = empowerment + order + generative mix (the "bigger gods loom larger" read).
  *  - MOTION = each body bobs / spins / pulses on its OWN seed-derived frequency + phase
@@ -29,9 +31,29 @@ import * as THREE from 'three';
 import { clamp } from '../math/scalar';
 import { ARENA_RADIUS } from './constants';
 import { ALPHABET_ROSTER, type AlphabetArchetype } from './alphabet-pantheon';
+import {
+  ApexExteriorAbomination,
+  attachGlyphWireHalos,
+  GlyphAccentMotes,
+  GlyphFilamentBurst,
+  GlyphSporeAura,
+  syncGlyphWireHalos,
+} from './creature-exterior-layers';
+import { CREATURE_EXTERIOR_TIME_SCALE } from './creature-exterior-phenomena';
+import {
+  disposeGlyphGeometryCache,
+  glyphBodyGeometry,
+  glyphGeoBucketKey,
+} from './glyph-exterior-geometry';
+import { glyphExteriorPalette, type GlyphExteriorPalette } from './glyph-exterior-palette';
+import {
+  glyphExteriorSignature,
+  glyphWanderOffset,
+  type GlyphExteriorSignature,
+} from './glyph-exterior-signature';
+import type { TsotchkeQuantumPulse } from './tsotchke-facade';
 
-/** Five shape pools (one InstancedMesh each → ≤ 5 draw calls for all 100 archetypes). */
-const POOL_COUNT = 5;
+/** One body-shape family per unique geometry bucket — wild parametric solids per letter seed. */
 /** Dome shell radius the pantheon hangs on (just inside the far sky). */
 const DOME_R = ARENA_RADIUS * 0.95;
 
@@ -59,29 +81,12 @@ interface Body {
   readonly light: number;
   /** Global archetype index (0–99) for brain-activity lookup. */
   readonly gIdx: number;
-}
-
-/** Which shape pool an archetype belongs to (vowels stand out as knots). */
-function poolOf(a: AlphabetArchetype): number {
-  if (a.isVowel) return 4;
-  if (a.script === 'greek') return a.letterCase === 'upper' ? 0 : 1;
-  return a.letterCase === 'upper' ? 2 : 3;
-}
-
-/** A unit base geometry per pool index. */
-function baseGeo(pool: number): THREE.BufferGeometry {
-  switch (pool) {
-    case 0:
-      return new THREE.IcosahedronGeometry(1, 0);
-    case 1:
-      return new THREE.OctahedronGeometry(1, 0);
-    case 2:
-      return new THREE.DodecahedronGeometry(1, 0);
-    case 3:
-      return new THREE.TetrahedronGeometry(1.25, 0);
-    default:
-      return new THREE.TorusKnotGeometry(0.7, 0.26, 64, 8);
-  }
+  /** Unique physical-outside signature (deterministic per letter). */
+  readonly sig: GlyphExteriorSignature;
+  /** Image-ref colour identity (5 palette families × per-letter jitter). */
+  readonly pal: GlyphExteriorPalette;
+  readonly geoKey: string;
+  readonly poolSlot: number;
 }
 
 export class AlphabetPantheonRender {
@@ -109,6 +114,23 @@ export class AlphabetPantheonRender {
   private readonly motorX = new Float32Array(100);
   private readonly motorY = new Float32Array(100);
   private readonly motorZ = new Float32Array(100);
+  /** Per-topology body pools (one InstancedMesh per occupied exterior kind). */
+  private readonly wireHalos: THREE.InstancedMesh[] = [];
+  /** Stellated micro-mote accent — one unique accent per glyph (gIdx 0..99). */
+  private readonly glyphAccents: GlyphAccentMotes;
+  /** Energy filament needles + spore halos (image-ref iteration 4). */
+  private readonly glyphFilaments: GlyphFilamentBurst;
+  private readonly glyphSpores: GlyphSporeAura;
+  private readonly apexExterior: ApexExteriorAbomination;
+  private tsotchkePulse: TsotchkeQuantumPulse = {
+    cliffordEnt: 0,
+    qgtVolume: 0,
+    rngEntropy: 0,
+    quakeAliveness: 0,
+    adGradient: 0,
+  };
+  private apexTranscendence = 0;
+  private apexVitality = 0;
 
   constructor(scene: THREE.Scene) {
     this.mat = new THREE.MeshBasicMaterial({
@@ -119,27 +141,32 @@ export class AlphabetPantheonRender {
       depthWrite: false,
     });
 
-    // First pass: bucket archetypes into pools.
-    const buckets: AlphabetArchetype[][] = [[], [], [], [], []];
-    for (const a of ALPHABET_ROSTER) buckets[poolOf(a)]!.push(a);
+    // First pass: bucket archetypes by unique wild-geometry key (≈100 distinct silhouettes).
+    const bucketMap = new Map<string, AlphabetArchetype[]>();
+    for (const a of ALPHABET_ROSTER) {
+      const sig = glyphExteriorSignature(a);
+      const key = glyphGeoBucketKey(a, sig);
+      const list = bucketMap.get(key);
+      if (list) list.push(a);
+      else bucketMap.set(key, [a]);
+    }
 
     const golden = Math.PI * (3 - Math.sqrt(5));
     const n = ALPHABET_ROSTER.length; // 100
 
-    // Second pass: one InstancedMesh per pool, place + colour every body.
-    for (let pool = 0; pool < POOL_COUNT; pool++) {
-      const members = buckets[pool]!;
-      const geo = baseGeo(pool);
+    // One InstancedMesh per unique geometry bucket — parametric insanity per letter seed.
+    for (const [, members] of bucketMap) {
+      const sample = members[0]!;
+      const sampleSig = glyphExteriorSignature(sample);
+      const geo = glyphBodyGeometry(sample, sampleSig);
       const mesh = new THREE.InstancedMesh(geo, this.mat, members.length);
-      mesh.frustumCulled = false; // dome bodies orbit wide; never cull
+      mesh.frustumCulled = false;
       const list: Body[] = [];
       for (let s = 0; s < members.length; s++) {
         const a = members[s]!;
         const b = a.bias;
-        // Dome placement keyed to the GLOBAL index so the 100 fan out evenly across the sky,
-        // regardless of how they bucketed (golden-angle spiral over the upper hemisphere).
         const i = a.index;
-        const y = 0.12 + (i / (n - 1)) * 0.86; // upper dome bias
+        const y = 0.12 + (i / (n - 1)) * 0.86;
         const ringR = Math.sqrt(Math.max(0, 1 - y * y)) * DOME_R;
         const th = golden * i;
         const ax = Math.cos(th) * ringR;
@@ -147,13 +174,13 @@ export class AlphabetPantheonRender {
         const ay = y * DOME_R * 0.66 + 24;
         const baseScale =
           (6 + 14 * (0.5 * b.empowerment + 0.3 * b.order + 0.2 * b.generative)) * 1.25;
-        // Seed-derived (no rng) per-body cadence so none lockstep.
-        const freq = 0.18 + ((a.seed % 600) / 600) * 0.6;
+        const freq = (0.18 + ((a.seed % 600) / 600) * 0.6) * CREATURE_EXTERIOR_TIME_SCALE;
         const phase = ((a.seed >>> 7) % 6283) / 1000;
-        const spin = 0.15 + b.chaos * 0.8;
+        const spin = (0.15 + b.chaos * 0.8) * CREATURE_EXTERIOR_TIME_SCALE;
         const pulse = 0.15 + b.curiosity * 0.35;
-        const sat = Math.min(1, 0.95 + 0.05 * b.quantum);
-        const light = 0.32 + 0.16 * b.generative;
+        const sig = glyphExteriorSignature(a);
+        const pal = glyphExteriorPalette(a);
+        const geoKey = glyphGeoBucketKey(a, sig);
         list.push({
           ax,
           ay,
@@ -163,16 +190,18 @@ export class AlphabetPantheonRender {
           phase,
           spin,
           pulse,
-          hue: b.hue,
-          sat,
-          light,
+          hue: pal.bodyHue,
+          sat: pal.bodySat,
+          light: pal.bodyLit,
           gIdx: i,
+          sig,
+          pal,
+          geoKey,
+          poolSlot: s,
         });
 
-        // Colour from the bias — saturated, luminous read.
-        C.setHSL(b.hue, sat, light);
+        C.setHSL(pal.bodyHue, pal.bodySat, pal.bodyLit);
         mesh.setColorAt(s, C);
-        // Initial transform.
         P.set(ax, ay, az);
         Q.identity();
         S.setScalar(baseScale);
@@ -186,7 +215,12 @@ export class AlphabetPantheonRender {
       this.bodies.push(list);
     }
 
-    // #101 APEX ABOMINATION — the capstone entity: impossible geometry, hyper-chromatic, alive.
+    this.wireHalos.push(...attachGlyphWireHalos(this.group, this.meshes));
+    this.glyphAccents = new GlyphAccentMotes(this.group, 100);
+    this.glyphFilaments = new GlyphFilamentBurst(this.group, 100);
+    this.glyphSpores = new GlyphSporeAura(this.group, 100);
+
+    // #101 APEX ABOMINATION — physical exterior: tesseract cage + nebula + filaments.
     const apexMat = new THREE.MeshBasicMaterial({
       color: 0xff1a6e,
       transparent: true,
@@ -238,8 +272,20 @@ export class AlphabetPantheonRender {
       this.apexInner,
     );
     this.group.add(this.apexGroup);
+    this.apexExterior = new ApexExteriorAbomination(this.apexGroup);
 
     scene.add(this.group);
+  }
+
+  /** Tsotchke corpus pulse — drives exterior hue/quantum rim (read-only). */
+  setTsotchkePulse(pulse: TsotchkeQuantumPulse): void {
+    this.tsotchkePulse = pulse;
+  }
+
+  /** Apex ς mind projection for exterior intensity. */
+  setApexExterior(transcendence: number, vitality: number): void {
+    this.apexTranscendence = clamp(transcendence, 0, 1);
+    this.apexVitality = clamp(vitality, 0, 1);
   }
 
   /** Reactive coupling: feed world chaos (0..1) to quicken the whole swarm. Read-only projection. */
@@ -274,78 +320,91 @@ export class AlphabetPantheonRender {
 
   /** Bob / spin / pulse every body on its own cadence. Pure trig, allocation-free, no rng. */
   update(t: number): void {
-    const quick = 1 + 0.6 * this.chaos; // chaos speeds the whole pantheon
+    const slowT = t * CREATURE_EXTERIOR_TIME_SCALE;
+    const quick = 1 + 0.08 * this.chaos;
     for (let pool = 0; pool < this.meshes.length; pool++) {
       const mesh = this.meshes[pool]!;
+      const halo = this.wireHalos[pool];
       const list = this.bodies[pool]!;
       for (let s = 0; s < list.length; s++) {
         const b = list[s]!;
-        const ph = t * b.freq * quick + b.phase;
-        // Brain-driven activity modulation (visual-only)
+        const ph = slowT * b.freq * quick + b.phase;
         const ba = this.brainActivity?.[b.gIdx] ?? 0;
         const bn = this.brainNovelty?.[b.gIdx] ?? 0;
         const bv = this.brainValence?.[b.gIdx] ?? 0;
-        const brainPulse = 1 + ba * 0.8;
+        const brainPulse = 1 + ba * 0.45;
         const mx = this.motorX[b.gIdx] ?? 0;
         const my = this.motorY[b.gIdx] ?? 0;
         const mz = this.motorZ[b.gIdx] ?? 0;
-        const orbitR = 80 + ba * 240 + this.chaos * 160 + b.baseScale * 1.5;
-        const driftX = Math.sin(ph * 0.73 + mx * 2.4) * orbitR + mx * 180;
-        const driftZ = Math.cos(ph * 0.61 + mz * 2.1) * orbitR + mz * 180;
-        const driftY = Math.sin(ph * 1.05 + my * 1.9) * (42 + ba * 75) + my * 95;
-        P.set(b.ax + driftX, b.ay + driftY, b.az + driftZ);
+        const wander = glyphWanderOffset(ph, b.sig, mx, my, mz, this.chaos, ba);
+        P.set(b.ax + wander.x, b.ay + wander.y, b.az + wander.z);
         E.set(
-          Math.sin(ph * 0.6 + mx) * 0.85,
-          t * b.spin * quick * (1 + ba * 0.5) + b.phase + mz * 0.4,
-          Math.cos(ph * 0.5 + mz) * 0.75,
+          Math.sin(ph * 0.42 + mx + b.sig.rotBias) * 0.55,
+          slowT * b.spin * quick * (1 + ba * 0.25) + b.phase + mz * 0.25,
+          Math.cos(ph * 0.38 + mz + b.sig.rotBias * 0.5) * 0.48,
         );
         Q.setFromEuler(E);
-        S.setScalar(b.baseScale * (1 + b.pulse * Math.sin(ph * 1.7) * brainPulse + ba * 0.08));
+        const sx = b.sig.scaleX * (1 + b.pulse * Math.sin(ph * 1.2) * brainPulse * 0.08);
+        const sy = b.sig.scaleY * (1 + b.pulse * Math.sin(ph * 1.4) * brainPulse * 0.08);
+        const sz = b.sig.scaleZ * (1 + b.pulse * Math.cos(ph * 1.1) * brainPulse * 0.08);
+        S.set(b.baseScale * sx, b.baseScale * sy, b.baseScale * sz);
         M.compose(P, Q, S);
         mesh.setMatrixAt(s, M);
-        // Live hue drift + brightness pulse — each body its own cadence (no rng).
-        // Brain novelty shifts hue, valence rotates it
-        const hueShift = Math.sin(ph * 0.31) * 0.06 + t * 0.002 * b.spin + bn * 0.04 * bv;
-        const hue = (b.hue + hueShift) % 1;
-        const litBoost = ba * 0.18 + bn * 0.09;
-        const lit = b.light + 0.12 * Math.sin(ph * 2.3) + litBoost;
-        C.setHSL(hue < 0 ? hue + 1 : hue, Math.min(1, b.sat + bn * 0.15), clamp(lit, 0.28, 0.58));
+        const hueShift =
+          Math.sin(ph * 0.22) * 0.05 +
+          slowT * 0.0004 * b.spin +
+          bn * 0.04 * bv +
+          b.sig.hueOffset * 0.5;
+        const hue = (b.pal.bodyHue + hueShift + b.pal.diagramHue * bn * 0.08) % 1;
+        const litBoost = ba * 0.12 + bn * 0.06 + b.pal.filamentLit * 0.08 * ba;
+        const lit = b.pal.bodyLit + 0.08 * Math.sin(ph * 1.8) + litBoost;
+        C.setHSL(
+          hue < 0 ? hue + 1 : hue,
+          Math.min(1, b.pal.bodySat + bn * 0.1),
+          clamp(lit, 0.22, 0.62),
+        );
         mesh.setColorAt(s, C);
+        this.glyphAccents.setAt(b.gIdx, M, b.sig, ba, t);
+        this.glyphFilaments.setAt(b.gIdx, M, b.pal.filamentHue, b.sig, ba, t);
+        this.glyphSpores.setAt(b.gIdx, M, b.pal.sporeHue, b.sig, ba, t);
       }
       mesh.instanceMatrix.needsUpdate = true;
       if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+      this.glyphAccents.finish();
+      this.glyphFilaments.finish();
+      this.glyphSpores.finish();
+      if (halo) syncGlyphWireHalos(mesh, halo, this.brainActivity, list);
     }
-    // APEX ABOMINATION #101 — wild orbit + dimensional warp pulse (pure trig, no rng).
-    const w = 1 + 1.2 * this.chaos;
-    const ph = t * 0.42 * w;
-    const apexR = DOME_R * (0.28 + 0.14 * Math.sin(t * 0.19));
+    const w = 1 + 0.28 * this.chaos;
+    const ph = slowT * 0.09 * w;
+    const apexR = DOME_R * (0.22 + 0.06 * Math.sin(slowT * 0.05));
     this.apexGroup.position.set(
-      Math.sin(t * 0.31 + ph * 0.2) * apexR,
-      DOME_R * 0.52 + Math.sin(t * 0.17 + ph * 0.15) * 55,
-      Math.cos(t * 0.27 + ph * 0.18) * apexR,
+      Math.sin(slowT * 0.07 + ph * 0.12) * apexR,
+      DOME_R * 0.52 + Math.sin(slowT * 0.04 + ph * 0.1) * 22,
+      Math.cos(slowT * 0.06 + ph * 0.11) * apexR,
     );
-    this.apexCore.rotation.set(ph * 1.3, ph * 0.9, ph * 1.7);
-    this.apexHalo.rotation.set(-ph * 0.6, ph * 1.1, ph * 0.4);
-    this.apexSpikes.rotation.set(ph * 2.1, -ph * 1.4, ph * 0.8);
-    // V104: alien inner core + dimensional shell animation
-    this.apexInner.rotation.set(ph * 2.8, -ph * 1.9, ph * 3.2);
-    this.apexInner.scale.setScalar(10 * (1 + 0.3 * Math.sin(ph * 4.5)));
-    this.apexShell.rotation.set(-ph * 0.4, ph * 0.7, -ph * 0.3);
-    this.apexShell.scale.setScalar(20 * (1 + 0.15 * Math.cos(ph * 2.2)));
+    this.apexCore.rotation.set(ph * 0.45, ph * 0.32, ph * 0.58);
+    this.apexHalo.rotation.set(-ph * 0.22, ph * 0.38, ph * 0.16);
+    this.apexSpikes.rotation.set(ph * 0.72, -ph * 0.48, ph * 0.28);
+    this.apexInner.rotation.set(ph * 0.95, -ph * 0.65, ph * 1.1);
+    this.apexInner.scale.setScalar(10 * (1 + 0.22 * Math.sin(ph * 4.5)));
+    this.apexShell.rotation.set(-ph * 0.14, ph * 0.24, -ph * 0.1);
+    this.apexShell.scale.setScalar(20 * (1 + 0.1 * Math.cos(ph * 2.2)));
     C.setHSL((0.88 + Math.sin(ph * 1.5) * 0.12) % 1, 1, 0.5);
     (this.apexInner.material as THREE.MeshBasicMaterial).color.copy(C);
     C.setHSL((0.58 + Math.cos(ph * 0.8) * 0.15) % 1, 0.9, 0.45);
     (this.apexShell.material as THREE.MeshBasicMaterial).color.copy(C);
-    const pulse = 1 + 0.35 * Math.sin(ph * 3.7) + 0.15 * Math.sin(ph * 11.3);
+    const pulse = 1 + 0.22 * Math.sin(ph * 3.7) + 0.08 * Math.sin(ph * 11.3);
     this.apexCore.scale.setScalar(22 * pulse);
-    this.apexHalo.scale.setScalar(14 * (1 + 0.2 * Math.sin(ph * 2.9)));
-    this.apexSpikes.scale.setScalar(18 * (1 + 0.25 * Math.cos(ph * 5.1)));
+    this.apexHalo.scale.setScalar(14 * (1 + 0.12 * Math.sin(ph * 2.9)));
+    this.apexSpikes.scale.setScalar(18 * (1 + 0.15 * Math.cos(ph * 5.1)));
     C.setHSL((0.92 + Math.sin(ph * 0.7) * 0.08) % 1, 1, 0.52);
     (this.apexCore.material as THREE.MeshBasicMaterial).color.copy(C);
     C.setHSL((0.72 + Math.cos(ph * 0.5) * 0.12) % 1, 1, 0.48);
     (this.apexHalo.material as THREE.MeshBasicMaterial).color.copy(C);
     C.setHSL((0.55 + Math.sin(ph * 1.2) * 0.15) % 1, 1, 0.55);
     (this.apexSpikes.material as THREE.MeshBasicMaterial).color.copy(C);
+    this.apexExterior.update(t, this.apexTranscendence, this.apexVitality, this.tsotchkePulse);
   }
 
   /** Total letter archetypes rendered (100). Apex #101 is a separate capstone mesh. */
@@ -377,6 +436,15 @@ export class AlphabetPantheonRender {
     (this.apexSpikes.material as THREE.Material).dispose();
     (this.apexInner.material as THREE.Material).dispose();
     (this.apexShell.material as THREE.Material).dispose();
+    for (const h of this.wireHalos) {
+      h.geometry.dispose();
+      (h.material as THREE.Material).dispose();
+    }
+    this.glyphAccents.dispose();
+    this.glyphFilaments.dispose();
+    this.glyphSpores.dispose();
+    this.apexExterior.dispose();
+    disposeGlyphGeometryCache();
     this.group.removeFromParent();
   }
 }

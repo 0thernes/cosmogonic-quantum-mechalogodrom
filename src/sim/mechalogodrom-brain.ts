@@ -12,7 +12,10 @@
  * @see docs/BRAIN-PARAMETER-SCALE-PLAN.md
  */
 import { mulberry32, type Rng } from '../math/rng';
-import { MECHALOGODROM_BRAIN_DESIGNED_PARAMS } from './apex-brain';
+import {
+  MECHALOGODROM_BRAIN_DESIGNED_PARAMS,
+  MECHALOGODROM_BRAIN_START_PARAMS,
+} from './apex-brain';
 
 const VARIANT_COUNT = 10;
 const PERCEPT_DIM = 8;
@@ -173,7 +176,7 @@ export class MechalogodromBrain {
         p.fusion * 0.15,
     );
 
-    const roadmapProgress = clamp01(this.liveParams / this.designedParams);
+    const roadmapProgress = clamp01(this.liveParams / MECHALOGODROM_BRAIN_START_PARAMS);
 
     const indicators: MechalogodromIndicator[] = [
       {

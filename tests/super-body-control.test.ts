@@ -201,4 +201,37 @@ describe('SuperBodySystem flight + control (V41)', () => {
     expect(to.x).toBeGreaterThan(from.x + 5); // net drift in +X from the mind's will
     expect(Number.isFinite(to.x + to.y + to.z)).toBe(true);
   });
+
+  test('BRUTALISM: setBrutalism crossfades the skin and clamps to [0,1]', () => {
+    const body = new SuperBodySystem(new THREE.Scene());
+    expect(body.brutalismFactor()).toBe(0);
+    body.setBrutalism(0.5);
+    expect(body.brutalismFactor()).toBeCloseTo(0.5, 5);
+    body.setBrutalism(1);
+    expect(body.brutalismFactor()).toBe(1);
+    body.setBrutalism(5);
+    expect(body.brutalismFactor()).toBe(1);
+    body.setBrutalism(-3);
+    expect(body.brutalismFactor()).toBe(0);
+  });
+
+  test('BRUTALISM coexists with evolution + flight (no NaN, both factors independent)', () => {
+    const body = new SuperBodySystem(new THREE.Scene());
+    body.setBrutalism(1);
+    body.setEvolution({
+      sizeMul: 4,
+      hueShift: 0.3,
+      glowMul: 2,
+      spikeBoost: 4,
+      aura: 0.8,
+      tier: 8,
+      ascended: false,
+    });
+    body.setControl(2, 1, 0.2, -0.5, true);
+    for (let i = 0; i < 120; i++) body.update(i / 60, 1 / 60);
+    const p = body.worldPosition(new THREE.Vector3());
+    expect(Number.isFinite(p.x + p.y + p.z)).toBe(true);
+    expect(body.brutalismFactor()).toBe(1);
+    expect(body.evolutionScale()).toBeCloseTo(4, 5);
+  });
 });

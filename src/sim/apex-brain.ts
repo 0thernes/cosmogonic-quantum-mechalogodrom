@@ -1475,6 +1475,9 @@ export const APEX_BRAIN_ROADMAP_PARAMS = 5_000_000;
 /** Mechalogodrom center fusion — designed parameter roadmap (matches APEX 5M tier). */
 export const MECHALOGODROM_BRAIN_DESIGNED_PARAMS = APEX_BRAIN_ROADMAP_PARAMS;
 
+/** Mechalogodrom live scaling starts at 250k designed params (grows toward {@link MECHALOGODROM_BRAIN_DESIGNED_PARAMS}). */
+export const MECHALOGODROM_BRAIN_START_PARAMS = 250_000;
+
 // ════════════════════════════════════════════════════════════════════════════════════════════════
 // SCALING SCAFFOLDING — the architecture that scales from the live engine toward 1 BILLION neurons
 // ════════════════════════════════════════════════════════════════════════════════════════════════

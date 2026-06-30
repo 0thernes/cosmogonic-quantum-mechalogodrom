@@ -79,6 +79,7 @@ import { QuantumLattice } from './sim/quantum-lattice';
 import { Mechalogodrom } from './sim/mechalogodrom';
 import { MechalogodromBrain } from './sim/mechalogodrom-brain';
 import { AlphabetPantheonRender } from './sim/alphabet-pantheon-render';
+import { corpusPulse } from './sim/tsotchke-facade';
 import { GlyphBrainBatch } from './sim/glyph-brain';
 import { Foundationals, type FoundationalsSnapshot } from './sim/foundationals';
 import { apexGrowthStage, type ApexGrowthStage } from './sim/apex-consciousness-scaffold';
@@ -1143,20 +1144,28 @@ export class World {
       : baseChaos;
     this.mechalogodrom.setChaos(baseChaos);
     if (apex) this.mechalogodrom.setApex(apex.transcendence, apex.vitality, apex.agony);
-    this.mechalogodrom.update(t, dt);
-    const mechaSnap = this.mechalogodrom.snapshot();
-    void this.mechalogodromBrain.tick({
-      fusion: mechaSnap.fusion,
-      dimension: mechaSnap.dimension,
-      power: mechaSnap.power,
+    const mechaSnapPre = this.mechalogodrom.snapshot();
+    const mechaBrainSnap = this.mechalogodromBrain.tick({
+      fusion: mechaSnapPre.fusion,
+      dimension: mechaSnapPre.dimension,
+      power: mechaSnapPre.power,
       chaos: baseChaos,
-      warp: mechaSnap.warp,
+      warp: mechaSnapPre.warp,
       apexVitality: apex?.vitality ?? 0,
       apexTranscendence: apex?.transcendence ?? 0,
       apexAgony: apex?.agony ?? 0,
     });
+    const mechaFormIdx = ((this.persisted.seed ^ 0x8e4ac471) >>> 3) % 25;
+    const glyphFormIdx = (this.persisted.seed >>> 3) % 25;
+    this.mechalogodrom.setExteriorMind(mechaBrainSnap.beat, mechaBrainSnap.activity);
+    this.mechalogodrom.setTsotchkePulse(
+      corpusPulse(this.persisted.seed ^ 0x8e4ac471, mechaFormIdx),
+    );
+    this.mechalogodrom.update(t, dt);
     // V-ABC: the 100 alphabet archetypes bob/spin/pulse across the dome (chaos quickens them).
     this.alphabetPantheon.setChaos(visChaos);
+    this.alphabetPantheon.setTsotchkePulse(corpusPulse(this.persisted.seed, glyphFormIdx));
+    if (apex) this.alphabetPantheon.setApexExterior(apex.transcendence, apex.vitality);
     // V-GLYPH: tick the 100 × 25k-parameter brains every frame (visual-only; drives appearance + travel).
     {
       const percept = this.glyphPercept;

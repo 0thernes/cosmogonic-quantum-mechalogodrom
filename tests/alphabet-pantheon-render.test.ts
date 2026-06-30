@@ -1,7 +1,7 @@
 /**
  * ALPHABET PANTHEON RENDER (V-ABC). Falsifiable claims:
- * - all 100 archetypes get a body (count === ALPHABET_PANTHEON_SIZE) across ≤ 5 InstancedMeshes;
- * - the 24 vowels (7 greek + 5 latin, both cases) bucket into the distinctive knot pool;
+ * - all 100 archetypes get a body (count === ALPHABET_PANTHEON_SIZE);
+ * - one solid InstancedMesh per unique wild-geometry bucket (≥80) + wire halos + accent/filament/spore layers;
  * - construction + ticking draw NO rng and need no WebGL (headless Scene only);
  * - every instance transform stays FINITE over a long run at max chaos;
  * - deterministic: two independent renders, same (t) sequence ⇒ bit-identical instance matrices;
@@ -20,28 +20,33 @@ function instancedMeshes(scene: THREE.Scene): THREE.InstancedMesh[] {
   return out;
 }
 
+/** Solid letter bodies (wild-geometry pools — each pool < 100 instances). */
+function coreBodyMeshes(scene: THREE.Scene): THREE.InstancedMesh[] {
+  return instancedMeshes(scene).filter(
+    (m) => !(m.material as THREE.MeshBasicMaterial).wireframe && m.count < 100,
+  );
+}
+
 describe('AlphabetPantheonRender — 100 archetypes alive in the dome', () => {
-  test('renders all 100 archetypes across ≤ 5 instanced pools', () => {
+  test('renders all 100 archetypes across unique geometry buckets', () => {
     const scene = new THREE.Scene();
     const r = new AlphabetPantheonRender(scene);
     expect(r.count).toBe(ALPHABET_PANTHEON_SIZE);
-    expect(ALPHABET_PANTHEON_SIZE).toBe(100);
-    const meshes = instancedMeshes(scene);
-    expect(meshes.length).toBeLessThanOrEqual(5);
-    let total = 0;
-    for (const m of meshes) total += m.count;
-    expect(total).toBe(100);
+    const cores = coreBodyMeshes(scene);
+    expect(cores.length).toBeGreaterThanOrEqual(80);
+    expect(cores.length).toBeLessThanOrEqual(100);
+    let coreTotal = 0;
+    for (const m of cores) coreTotal += m.count;
+    expect(coreTotal).toBe(100);
+    const accents = instancedMeshes(scene).filter((m) => m.count === 100);
+    expect(accents.length).toBeGreaterThanOrEqual(3);
     r.dispose();
   });
 
-  test('the 24 vowels bucket into one distinctive pool', () => {
+  test('geometry buckets spread — not one recoloured bucket', () => {
     const scene = new THREE.Scene();
     const r = new AlphabetPantheonRender(scene);
-    const counts = instancedMeshes(scene)
-      .map((m) => m.count)
-      .sort((a, b) => a - b);
-    // greek vowels 7×2 (upper+lower) + latin vowels 5×2 = 24 in the knot pool.
-    expect(counts).toContain(24);
+    expect(coreBodyMeshes(scene).length).toBeGreaterThanOrEqual(80);
     r.dispose();
   });
 

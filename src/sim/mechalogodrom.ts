@@ -35,6 +35,9 @@
 import * as THREE from 'three';
 import { TAU, clamp, lerp } from '../math/scalar';
 import { ARENA_RADIUS } from './constants';
+import { MechaExteriorAbomination } from './creature-exterior-layers';
+import { CREATURE_EXTERIOR_TIME_SCALE } from './creature-exterior-phenomena';
+import type { TsotchkeQuantumPulse } from './tsotchke-facade';
 
 /** The ten bipolar variant shells that converge and fuse. Fixed — the corona is sized for 10. */
 const VARIANT_COUNT = 10;
@@ -128,6 +131,15 @@ export class Mechalogodrom {
   /** Combined chaos+apex arousal, recomputed each update; with no apex feed it equals `chaos`. */
   private drive = 0;
   private normalsTick = 0;
+  /** CRT canyon + tesseract tunnel — physical exterior shell (1000-phenomenon vocabulary). */
+  private readonly mechaExterior: MechaExteriorAbomination;
+  private tsotchkePulse: TsotchkeQuantumPulse = {
+    cliffordEnt: 0,
+    qgtVolume: 0,
+    rngEntropy: 0,
+    quakeAliveness: 0,
+    adGradient: 0,
+  };
 
   constructor(scene: THREE.Scene) {
     this.group.position.set(0, ALTITUDE, 0);
@@ -305,6 +317,7 @@ export class Mechalogodrom {
       });
     }
 
+    this.mechaExterior = new MechaExteriorAbomination(this.group, CORE_R);
     scene.add(this.group);
   }
 
@@ -349,6 +362,16 @@ export class Mechalogodrom {
     this.apexAgony = clamp(agony, 0, 1);
   }
 
+  /** Fusion-brain beat + activity — selects active exterior phenomena (read-only). */
+  setExteriorMind(beat: number, activity: number): void {
+    this.mechaExterior.setMind(beat, activity);
+  }
+
+  /** Tsotchke corpus pulse — exterior hue + quantum rim intensity. */
+  setTsotchkePulse(pulse: TsotchkeQuantumPulse): void {
+    this.tsotchkePulse = pulse;
+  }
+
   /**
    * Advance the migration + fusion + writhe. Pure function of (t, dt, chaos); draws no rng.
    * @param t elapsed seconds (s.elapsed) · @param dt clamped frame delta
@@ -387,6 +410,7 @@ export class Mechalogodrom {
 
   /** Per-frame CPU vertex displacement of the shared mass geometry (writhing alien morph, no GLSL). */
   private warpMass(t: number): void {
+    const st = t * CREATURE_EXTERIOR_TIME_SCALE;
     const pos = this.warpGeo.getAttribute('position') as THREE.BufferAttribute;
     const arr = pos.array as Float32Array;
     const base = this.basePos;
@@ -398,20 +422,20 @@ export class Mechalogodrom {
       const bz = base[i + 2] ?? 0;
       // Layered trig of the direction → a de-Jong-flavoured non-uniform writhe (deterministic).
       const d =
-        Math.sin(bx * 0.22 + t * 1.3) +
-        Math.sin(by * 0.19 - t * 0.9) +
-        Math.sin(bz * 0.25 + t * 1.7) +
-        0.6 * Math.sin((bx + by + bz) * 0.13 + t * 2.1) +
-        0.45 * Math.sin(bx * by * 0.11 + bz * 0.09 + t * 1.1);
+        Math.sin(bx * 0.22 + st * 1.3) +
+        Math.sin(by * 0.19 - st * 0.9) +
+        Math.sin(bz * 0.25 + st * 1.7) +
+        0.6 * Math.sin((bx + by + bz) * 0.13 + st * 2.1) +
+        0.45 * Math.sin(bx * by * 0.11 + bz * 0.09 + st * 1.1);
       // 3D MANDELBULB escape field (power-8, deterministic, NaN-guarded). The base vertex direction
       // (a point on the CORE_R sphere) seeds `c`; a slow `t` breathe drifts the set so the lobes
       // crawl. Vertices that stay BOUNDED (deep in the bulb) bulge OUT into fractal lobes; those that
       // escape recede — neighbouring verts land on opposite sides of the fractal boundary, creasing
       // the mass into the iconic bulbous mandelbulb freakshow. Iterations capped at BULB_ITERS.
       const inv = 1 / CORE_R;
-      const sc = 1.05 + 0.18 * Math.sin(t * 0.06);
+      const sc = 1.05 + 0.18 * Math.sin(st * 0.06);
       const cbx = bx * inv * sc;
-      const cby = by * inv * sc + 0.22 * Math.sin(t * 0.05);
+      const cby = by * inv * sc + 0.22 * Math.sin(st * 0.05);
       const cbz = bz * inv * sc;
       let zxb = cbx;
       let zyb = cby;
@@ -434,9 +458,9 @@ export class Mechalogodrom {
       }
       const mb = escB * 0.55 * w;
       const s = 1 + w * 0.32 * d + mb;
-      arr[i] = bx * s + Math.sin(by * 3.1 + t) * mb * 9;
-      arr[i + 1] = by * s + Math.cos(bx * 2.7 - t * 1.2) * mb * 7;
-      arr[i + 2] = bz * s + Math.sin(bx * bz * 0.08 + t * 0.8) * mb * 9;
+      arr[i] = bx * s + Math.sin(by * 3.1 + st) * mb * 9;
+      arr[i + 1] = by * s + Math.cos(bx * 2.7 - st * 1.2) * mb * 7;
+      arr[i + 2] = bz * s + Math.sin(bx * bz * 0.08 + st * 0.8) * mb * 9;
     }
     pos.needsUpdate = true;
     // Recompute normals on a cadence so the emissive solid still catches a little scene light.
@@ -445,27 +469,28 @@ export class Mechalogodrom {
 
   /** Spin/colour/flash the fused centre rig (core, rim, mass, wire, spikes, rings). */
   private driveCentre(t: number, ease: number): void {
+    const st = t * CREATURE_EXTERIOR_TIME_SCALE;
     // Hue cycles through the palette: blood-red → sigma-gold → cyan → violet.
-    const hue = (t * 0.05) % 1;
+    const hue = (st * 0.05) % 1;
     this.massMat.emissive.setHSL(hue, 0.85, 0.18 + 0.22 * ease + 0.08 * this.apexVitality);
     this.massMat.emissiveIntensity = 1.2 + 2.4 * ease + 1.2 * this.drive + 0.8 * this.apexVitality;
     this.wireMat.color.setHSL((hue + 0.5) % 1, 1, 0.6);
     // Flash envelope: sharp sparkle on a fast beat, stronger once fused + chaotic.
-    const flash = 0.5 + 0.5 * Math.sin(t * 6.3) * Math.sin(t * 2.1);
+    const flash = 0.5 + 0.5 * Math.sin(st * 6.3) * Math.sin(st * 2.1);
     this.wireMat.opacity = 0.18 + 0.4 * flash * (0.4 + 0.6 * ease);
-    this.mass.rotation.y = t * 0.21;
-    this.mass.rotation.x = Math.sin(t * 0.13) * 0.5;
+    this.mass.rotation.y = st * 0.21;
+    this.mass.rotation.x = Math.sin(st * 0.13) * 0.5;
     this.wire.rotation.copy(this.mass.rotation);
 
     // Event horizon breathes; the shadow core stays black (a true absence).
-    this.rim.scale.setScalar(1 + 0.06 * Math.sin(t * 1.7) + 0.1 * ease);
+    this.rim.scale.setScalar(1 + 0.06 * Math.sin(st * 1.7) + 0.1 * ease);
     this.rimMat.opacity = 0.25 + 0.4 * ease + 0.2 * flash;
     this.core.scale.setScalar(0.85 + 0.18 * ease); // the hole widens as it powers up
 
     // Spike-arms splay outward with power; counter-rotate; flash.
     this.spikes.scale.setScalar(0.5 + 1.1 * ease);
-    this.spikes.rotation.y = -t * 0.33;
-    this.spikes.rotation.z = Math.sin(t * 0.27) * 0.6;
+    this.spikes.rotation.y = -st * 0.33;
+    this.spikes.rotation.z = Math.sin(st * 0.27) * 0.6;
     this.spikeMat.opacity = (0.2 + 0.5 * ease) * flash;
     this.tmpColor.setHSL((hue + 0.12) % 1, 1, 0.6);
     this.spikeMat.color.copy(this.tmpColor);
@@ -475,9 +500,9 @@ export class Mechalogodrom {
       const r = this.rings[i];
       if (!r) continue;
       const dir = i % 2 === 0 ? 1 : -1;
-      r.rotation.z = dir * t * (0.12 + i * 0.05);
-      r.rotation.x = (i * TAU) / 5 + Math.sin(t * 0.2 + i) * 0.3;
-      r.scale.setScalar(0.6 + 0.5 * ease + 0.06 * Math.sin(t * 1.3 + i));
+      r.rotation.z = dir * st * (0.12 + i * 0.05);
+      r.rotation.x = (i * TAU) / 5 + Math.sin(st * 0.2 + i) * 0.3;
+      r.scale.setScalar(0.6 + 0.5 * ease + 0.06 * Math.sin(st * 1.3 + i));
     }
     this.ringMat.opacity = 0.12 + 0.28 * ease;
     this.ringMat.color.setHSL((hue + 0.66) % 1, 0.9, 0.6);
@@ -490,55 +515,56 @@ export class Mechalogodrom {
       sh.rotation.x += dir * 0.004 * (1 + ease);
       sh.rotation.y += dir * 0.006 * (1 + 0.5 * this.chaos);
       sh.rotation.z += dir * 0.003;
-      sh.scale.setScalar(0.85 + 0.22 * ease + 0.04 * Math.sin(t * 1.1 + i));
+      sh.scale.setScalar(0.85 + 0.22 * ease + 0.04 * Math.sin(st * 1.1 + i));
     }
     this.labMat.opacity = 0.2 + 0.35 * ease + 0.15 * flash;
     this.labMat.color.setHSL((hue + 0.33) % 1, 1, 0.55);
     for (let n = 0; n < this.labNodes.length; n++) {
       const node = this.labNodes[n];
       if (!node) continue;
-      const th = (n / this.labNodes.length) * TAU + t * (0.35 + (n % 5) * 0.04);
-      const r = CORE_R * (0.42 + 0.12 * ease + 0.06 * Math.sin(t * 0.9 + n));
+      const th = (n / this.labNodes.length) * TAU + st * (0.35 + (n % 5) * 0.04);
+      const r = CORE_R * (0.42 + 0.12 * ease + 0.06 * Math.sin(st * 0.9 + n));
       node.position.set(
         Math.cos(th) * r,
-        Math.sin(th * 1.9 + t * 0.5) * r * 0.55,
+        Math.sin(th * 1.9 + st * 0.5) * r * 0.55,
         Math.sin(th) * r,
       );
-      node.rotation.set(t * 0.7 + n, t * 0.5, t * 0.3);
-      node.scale.setScalar(0.8 + 0.5 * ease + 0.2 * Math.sin(t * 2.2 + n));
+      node.rotation.set(st * 0.7 + n, st * 0.5, st * 0.3);
+      node.scale.setScalar(0.8 + 0.5 * ease + 0.2 * Math.sin(st * 2.2 + n));
     }
     this.labNodeMat.color.setHSL((hue + 0.15) % 1, 1, 0.62);
 
     // Outer exo-cage: a slow counter-tumble against the inner rig, breathing wider as power climbs.
-    this.exoCage.rotation.x = -t * 0.05;
-    this.exoCage.rotation.y = t * 0.07 + Math.sin(t * 0.13) * 0.4;
-    this.exoCage.rotation.z = Math.cos(t * 0.09) * 0.3;
-    this.exoCage.scale.setScalar(0.9 + 0.18 * ease + 0.05 * Math.sin(t * 0.8));
+    this.exoCage.rotation.x = -st * 0.05;
+    this.exoCage.rotation.y = st * 0.07 + Math.sin(st * 0.13) * 0.4;
+    this.exoCage.rotation.z = Math.cos(st * 0.09) * 0.3;
+    this.exoCage.scale.setScalar(0.9 + 0.18 * ease + 0.05 * Math.sin(st * 0.8));
     this.exoMat.color.setHSL((hue + 0.78) % 1, 0.9, 0.6);
     this.exoMat.opacity = 0.1 + 0.22 * ease + 0.08 * flash;
+    this.mechaExterior.update(t, ease, this.drive, this.tsotchkePulse);
   }
 
   /** Migrate + bipolar-oscillate the ten variant shells; melt them into the corona as fusion completes. */
   private driveVariants(t: number, ease: number): void {
+    const st = t * CREATURE_EXTERIOR_TIME_SCALE;
     for (let i = 0; i < this.variants.length; i++) {
       const v = this.variants[i];
       if (!v) continue;
-      // Bipolar swing: -1 (depressive pole) .. +1 (manic pole) on this shell's own frequency.
-      const bip = Math.sin(t * v.freq + v.phase);
+      const bip = Math.sin(st * v.freq + v.phase);
       // Migration: from the spawn anchor toward a tight corona orbit at the centre.
       const orbitR = CORE_R * (1.15 + 0.12 * i);
-      const oth = v.phase + t * (0.15 + 0.03 * i);
+      const oth = v.phase + st * (0.15 + 0.03 * i);
       const cx = Math.cos(oth) * orbitR;
       const cz = Math.sin(oth) * orbitR;
-      const cy = Math.sin(t * 0.4 + v.phase) * CORE_R * 0.5;
+      const cy = Math.sin(st * 0.4 + v.phase) * CORE_R * 0.5;
       const k = ease; // 0 → at ring anchor, 1 → in the corona
       v.mesh.position.set(lerp(v.ax, cx, k), lerp(v.ay, cy, k), lerp(v.az, cz, k));
       // Manic pole → swells + brightens; depressive pole → shrinks + dims (the "bipolar variant").
       const manic = 0.5 + 0.5 * bip;
       const baseScale = lerp(10 + (i % 5) * 3, 4 + (i % 3) * 2, k); // shells shrink as they fuse in
       v.mesh.scale.setScalar(baseScale * (0.6 + 0.8 * manic));
-      v.mesh.rotation.x = t * (0.3 + 0.1 * i) + bip;
-      v.mesh.rotation.y = t * (0.2 + 0.07 * i);
+      v.mesh.rotation.x = st * (0.3 + 0.1 * i) + bip;
+      v.mesh.rotation.y = st * (0.2 + 0.07 * i);
       // Hue swings between the two poles; opacity flares with the manic phase and fades as it melts in.
       const hue = lerp(v.hueA, v.hueB, manic);
       this.tmpColor.setHSL(hue, 0.9, 0.55 + 0.2 * manic);
@@ -591,6 +617,7 @@ export class Mechalogodrom {
     this.labMat.dispose();
     this.labNodeMat.dispose();
     this.exoMat.dispose();
+    this.mechaExterior.dispose();
     this.group.removeFromParent();
   }
 }
