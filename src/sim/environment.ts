@@ -608,7 +608,15 @@ export class EnvironmentSystem {
         float tectonic =
           sin((vWorldPos.x + vWorldPos.z) * 0.011 + uTime * 0.11) *
           cos((vWorldPos.x - vWorldPos.z) * 0.009 - uTime * 0.13);
-        transformed.z += (wave * (1.4 + uChaos * 4.8) + tectonic * uChaos * 3.2) * liveAmp;
+        float cellular =
+          sin(vWorldPos.x * 0.071 + sin(vWorldPos.z * 0.019 + uTime * 0.2) * 2.0) *
+          sin(vWorldPos.z * 0.067 - cos(vWorldPos.x * 0.017 - uTime * 0.17) * 2.0);
+        float ridge = pow(abs(cellular), 1.6) * sign(cellular);
+        transformed.z +=
+          (wave * (2.2 + uChaos * 6.2) +
+            tectonic * (1.0 + uChaos * 4.6) +
+            ridge * (1.5 + uChaos * 3.4)) *
+          liveAmp;
         `,
       );
       shader.fragmentShader = `
@@ -623,11 +631,15 @@ export class EnvironmentSystem {
         `
         #include <map_fragment>
         float bioPulse = sin(vWorldPos.x * 0.08 + uTime + uWind.x * 0.2) * cos(vWorldPos.z * 0.07 + uTime + uWind.y * 0.2) * 0.5 + 0.5;
+        float skin = sin(vWorldPos.x * 0.021 + sin(vWorldPos.z * 0.017 + uTime * 0.11) * 3.0) * 0.5 + 0.5;
+        float mycelium = smoothstep(0.54, 0.96, sin(vWorldPos.x * 0.15 + vWorldPos.z * 0.13 + uTime * 0.6) * 0.5 + 0.5);
         float vein = smoothstep(0.72, 1.0, bioPulse + uChaos * 0.18);
-        vec3 fungal = vec3(0.04, 0.16, 0.11) * bioPulse * (1.0 - uEntropy * 0.55);
-        vec3 bruise = vec3(0.15, 0.04, 0.18) * vein * (0.25 + uChaos * 0.85);
+        vec3 fungal = vec3(0.04, 0.22, 0.15) * bioPulse * (1.0 - uEntropy * 0.55);
+        vec3 bruise = vec3(0.22, 0.05, 0.2) * vein * (0.25 + uChaos * 0.85);
+        vec3 mineral = mix(vec3(0.04, 0.06, 0.16), vec3(0.16, 0.08, 0.025), skin) * 0.55;
+        vec3 nerve = vec3(0.02, 0.5, 0.72) * mycelium * (0.1 + uChaos * 0.5);
         vec3 ash = vec3(0.12, 0.12, 0.13) * uEntropy * 0.45;
-        diffuseColor.rgb += fungal + bruise;
+        diffuseColor.rgb += fungal + bruise + mineral + nerve;
         diffuseColor.rgb = mix(diffuseColor.rgb, ash, uEntropy * 0.32);
         `,
       );

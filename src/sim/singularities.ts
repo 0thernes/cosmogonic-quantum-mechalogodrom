@@ -237,25 +237,75 @@ const ACCEL_MAX = 6;
 const BODY_GAIN = 0.4;
 /** Max organisms a black hole consumes per frame (keeps mass die-off off the budget cliff). */
 const MAX_CONSUME = 25;
-/** YOLO: full particle budget regardless of tier — no quality guardrails on singularities. */
-const PARTICLES_BUDGET = 6200;
-function particleBudget(_tier: QualityTier): number {
-  return PARTICLES_BUDGET;
+function particleBudget(tier: QualityTier): number {
+  switch (tier) {
+    case 'phone':
+      return 1800;
+    case 'laptop':
+      return 3200;
+    case 'desktop':
+      return 4600;
+    case 'ultra':
+      return 6200;
+    case 'mega':
+      return 7600;
+    default: {
+      const _exhaustive: never = tier;
+      return _exhaustive;
+    }
+  }
 }
 
-/** YOLO: maximum sphere detail on every tier. */
-function sphereSegs(_tier: QualityTier): number {
-  return 64;
+function sphereSegs(tier: QualityTier): number {
+  switch (tier) {
+    case 'phone':
+      return 32;
+    case 'laptop':
+      return 48;
+    case 'desktop':
+    case 'ultra':
+    case 'mega':
+      return 64;
+    default: {
+      const _exhaustive: never = tier;
+      return _exhaustive;
+    }
+  }
 }
 
-/** YOLO: maximum torus detail on every tier. */
-function torusSegs(_tier: QualityTier): number {
-  return 160;
+function torusSegs(tier: QualityTier): number {
+  switch (tier) {
+    case 'phone':
+      return 72;
+    case 'laptop':
+      return 112;
+    case 'desktop':
+      return 144;
+    case 'ultra':
+    case 'mega':
+      return 160;
+    default: {
+      const _exhaustive: never = tier;
+      return _exhaustive;
+    }
+  }
 }
 
-/** YOLO: maximum icosahedron detail on every tier. */
-function icoDetail(_tier: QualityTier): number {
-  return 3;
+function icoDetail(tier: QualityTier): number {
+  switch (tier) {
+    case 'phone':
+      return 1;
+    case 'laptop':
+      return 2;
+    case 'desktop':
+    case 'ultra':
+    case 'mega':
+      return 3;
+    default: {
+      const _exhaustive: never = tier;
+      return _exhaustive;
+    }
+  }
 }
 
 function particleSizeMul(tier: QualityTier): number {

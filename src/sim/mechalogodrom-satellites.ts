@@ -151,10 +151,10 @@ export class MechalogodromSatellites {
   }
 
   update(t: number, power: number, warp: number, drive: number): void {
-    const st = t * 60.0; // keep tempo with the accelerated Mechalogodrom
+    const st = t * 9.0; // slow orbital manifold; shader still supplies surface motion
     if (this.mesh.material instanceof THREE.ShaderMaterial) {
       const uTime = this.mesh.material.uniforms.uTime;
-      if (uTime) uTime.value = t * 35.0;
+      if (uTime) uTime.value = t * 8.0;
     }
 
     const pScale = 1 + drive * 0.6 + Math.min(power * 0.0002, 1.5);

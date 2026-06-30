@@ -278,7 +278,10 @@ class AccessPuzzle {
   }
 
   private open(): void {
-    if (this.solved) return; // already unlocked — stays granted
+    if (this.solved) {
+      window.dispatchEvent(new CustomEvent('cqm:hero-hud-toggle'));
+      return; // already unlocked — ACCESS now controls the playable HUD
+    }
     if (this.modal.classList.contains('open')) return; // re-entry guard — a 2nd open() would leak a 2nd timer pair
     this.modal.classList.add('open');
     this.input.focus();
@@ -315,8 +318,8 @@ class AccessPuzzle {
     this.solved = true;
     this.toggle.classList.add('solved');
     this.toggle.textContent = '✓ ACCESS GRANTED';
-    this.toggle.title = 'Access already granted — the 2nd super creature is active';
-    this.toggle.setAttribute('aria-label', 'Access already granted');
+    this.toggle.title = 'Access granted — open or minimize the playable twin-creature HUD';
+    this.toggle.setAttribute('aria-label', 'Open or minimize playable twin-creature HUD');
     if (this.langTimer) clearInterval(this.langTimer);
     if (this.scrambleTimer) clearInterval(this.scrambleTimer);
     this.deniedEl.textContent = 'ACCESS GRANTED';

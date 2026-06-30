@@ -231,11 +231,11 @@ export class AlphabetPantheonRender {
         const az = Math.sin(th) * ringR;
         const ay = y * DOME_R * 0.66 + 24;
         const baseScale =
-          (6 + 14 * (0.5 * b.empowerment + 0.3 * b.order + 0.2 * b.generative)) * 1.25;
-        const freq = 0.18 + ((a.seed % 600) / 600) * 0.6;
+          (6 + 14 * (0.5 * b.empowerment + 0.3 * b.order + 0.2 * b.generative)) * 1.55;
+        const freq = 0.07 + ((a.seed % 600) / 600) * 0.22;
         const phase = ((a.seed >>> 7) % 6283) / 1000;
-        const spin = 0.15 + b.chaos * 0.8;
-        const pulse = 0.15 + b.curiosity * 0.35;
+        const spin = 0.045 + b.chaos * 0.22;
+        const pulse = 0.09 + b.curiosity * 0.22;
         const sig = glyphExteriorSignature(a);
         const pal = glyphExteriorPalette(a);
         const geoKey = glyphGeoBucketKey(a, sig);
@@ -483,7 +483,7 @@ export class AlphabetPantheonRender {
       if (uTime) uTime.value = t;
     }
     const slowT = t * CREATURE_EXTERIOR_TIME_SCALE;
-    const quick = 1 + 1.8 * this.chaos;
+    const quick = 0.55 + 0.75 * this.chaos;
     for (let pool = 0; pool < this.meshes.length; pool++) {
       const mesh = this.meshes[pool]!;
       const halo = this.wireHalos[pool];
@@ -502,9 +502,9 @@ export class AlphabetPantheonRender {
         const wander = glyphWanderOffset(WANDER, ph, b.sig, mx, my, mz, this.chaos, ba);
         P.set(b.ax + wander.x, b.ay + wander.y, b.az + wander.z);
         E.set(
-          Math.sin(ph * 0.42 + mx + b.sig.rotBias) * (0.7 + ba * 0.75),
-          slowT * b.spin * quick * (1 + ba * 1.15) + b.phase + mz * 0.8,
-          Math.cos(ph * 0.38 + mz + b.sig.rotBias * 0.5) * (0.62 + bn * 0.9),
+          Math.sin(ph * 0.42 + mx + b.sig.rotBias) * (0.42 + ba * 0.45),
+          slowT * b.spin * quick * (1 + ba * 0.62) + b.phase + mz * 0.36,
+          Math.cos(ph * 0.38 + mz + b.sig.rotBias * 0.5) * (0.38 + bn * 0.5),
         );
         Q.setFromEuler(E);
         const warpSpike = ba > 0.72 && Math.sin(ph * 7.0 + b.sig.rotBias) > 0.55 ? 1.22 : 1;

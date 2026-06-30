@@ -8,8 +8,8 @@
     - Page 1  COLLAPSE FIELD — the original live field (kept verbatim):
         A blended Lorenz-XZ × curl-noise flow, a geometric Voronoi shatter over 24 seeded
         sites, and Born-rule measurement-collapse events that ring the void with interference.
-    - Pages 2-4  DATA-VISUAL BOARDS — responsive grids of TWELVE live, seeded 3D mini-visuals
-        per page (36 total). Every tile is a WEBGL canvas with an orbiting camera or
+    - Pages 2-4  DATA-VISUAL BOARDS — responsive grids of TWENTY-FOUR live, seeded 3D mini-visuals
+        per page (72 total). Every tile is a WEBGL canvas with an orbiting camera or
         depth-projected geometry. Boards are built LAZILY: only the visible page's 12
         instances exist at any moment (browsers cap ~16 live WebGL contexts); leaving a
         board removes every instance, explicitly loses its GL context, and clears its DOM.
@@ -530,7 +530,7 @@
         line-height: 1.45;
       }
 
-      /* Responsive grid of mini-visual tiles — 12 per board. auto-fill plus a
+      /* Responsive grid of mini-visual tiles — 24 per board. auto-fill plus a
          clamped minmax track lets the squares reflow into 2/3/4/6 columns at
          any viewport size or shape. */
       .board-grid {
@@ -730,8 +730,8 @@
         <div class="subtitle">
           A four-page observatory of the Cosmogonic Quantum Mechalogodrom — the same seeded math the
           live world runs: a Lorenz-driven collapse field (the engine's V62 Chaos-Mode attractor),
-          Born-rule measurement, a Voronoi cosmos, and three boards of twelve 3D data-visuals each.
-          One seed drives every page. Click any tile to hear it ring and pulse.
+          Born-rule measurement, a Voronoi cosmos, and three boards of twenty-four 3D data-visuals
+          each. One seed drives every page. Click any tile to hear it ring and pulse.
         </div>
 
         <!-- Page navigation (ALWAYS KEEP THE SEED; nav never re-rolls it) -->
@@ -968,9 +968,9 @@
       let currentPage = 1; // 1..4
       const PAGE_DESCS = {
         1: 'Page 1 — Collapse Field: the live Lorenz × curl-noise flow with Born-rule measurement collapse.',
-        2: 'Page 2 — Phase & Flow: 3D attractor ribbons, reaction–diffusion terrain, knots, and flows (12 visuals — click for sound).',
-        3: 'Page 3 — Quantum & Spectrum: the Bloch sphere, statevector forest, spectra, and wavefunctions (12 visuals — click for sound).',
-        4: 'Page 4 — Network & Depth: 3D graphs, gravity, galaxies, bifurcation sheets, and deep zooms (12 visuals — click for sound).',
+        2: 'Page 2 — Phase & Flow: 3D attractor ribbons, reaction–diffusion terrain, knots, and flows (24 visuals — click for sound).',
+        3: 'Page 3 — Quantum & Spectrum: the Bloch sphere, statevector forest, spectra, and wavefunctions (24 visuals — click for sound).',
+        4: 'Page 4 — Network & Depth: 3D graphs, gravity, galaxies, bifurcation sheets, and deep zooms (24 visuals — click for sound).',
       };
 
       // ═══════════════════════════════════════════════════════════════════════
@@ -3603,7 +3603,7 @@
       }
 
       // ─────────────────────────────────────────────────────────────────────────
-      // BOARD SPEC — the page→visual map. 12 tiles per board (36 total), all 3D.
+      // BOARD SPEC — the page→visual map. 24 tiles per board (72 total), all 3D.
       // ─────────────────────────────────────────────────────────────────────────
 
       const BOARDS = {
@@ -3831,6 +3831,19 @@
         ],
       };
 
+      for (const page of [2, 3, 4]) {
+        const base = BOARDS[page].slice();
+        for (let i = 0; i < base.length; i++) {
+          const spec = base[i];
+          BOARDS[page].push({
+            id: spec.id + '-controlnet-' + String(i + 1).padStart(2, '0'),
+            name: spec.name + ' · ControlNet Variant',
+            legend: spec.legend + ' · second-bank seed morph',
+            make: spec.make,
+          });
+        }
+      }
+
       /**
        * Guarantee every tile sketch gets pulse/hot interaction — even legacy 2D makers that
        * omitted makeReact(). Wraps draw to honor kick bursts and hover heat.
@@ -3854,9 +3867,9 @@
       /**
        * Destroy the currently-built board: remove every p5 instance (freeing its
        * WebGL context) and clear the grid DOM. After this, ZERO board contexts are
-       * live. The whole reason boards are built lazily: 3 boards × 12 WEBGL tiles =
-       * 36 contexts, far over the browser's ~16-context cap — so only ONE board
-       * (≤12 contexts) ever exists at a time. O(active tiles).
+       * live. The whole reason boards are built lazily: 3 boards × 24 WEBGL tiles =
+       * 72 contexts, far over the browser's cap if all pages mounted together — so only ONE board
+       * is ever alive at a time. O(active tiles).
        */
       function destroyActiveBoard() {
         for (let i = 0; i < activeTiles.length; i++) {
@@ -3875,7 +3888,7 @@
       }
 
       /**
-       * Build ONE board (page 2..4): its 12 tiles, each a DOM card + an instance-
+       * Build ONE board (page 2..4): its 24 tiles, each a DOM card + an instance-
        * mode WEBGL p5 sketch seeded from (masterSeed, tileId), fully wired for
        * interaction — click/Enter fires a per-tile blip + the sketch's pulse()
        * reaction, hover toggles its `hot` flag. No-op for page 1. O(12).
@@ -3886,7 +3899,7 @@
         if (page < 2 || page > 4) return;
         const grid = document.getElementById('board-' + page);
         if (!grid) return;
-        grid.innerHTML = ''; // HARD GUARD: a board is exactly its 12 tiles, never accumulates ghosts
+        grid.innerHTML = ''; // HARD GUARD: a board is exactly its 24 tiles, never accumulates ghosts
         const specs = BOARDS[page];
         for (let k = 0; k < specs.length; k++) {
           const spec = specs[k];
@@ -3945,7 +3958,7 @@
           tile.classList.add('viz-tile--live');
         }
 
-        // V81: keyboard roving focus across the 12 tiles so arrow keys move between visuals.
+        // V81: keyboard roving focus across the 24 tiles so arrow keys move between visuals.
         // Assigned via onkeydown so rebuilding a board never accumulates duplicate listeners.
         grid.onkeydown = (e) => {
           const tiles = Array.from(grid.querySelectorAll('.viz-tile'));
@@ -3989,7 +4002,7 @@
           // BUGFIX: destroy FIRST — while activeBoardPage is still the real page, so destroyActiveBoard()
           // clears the right grid's DOM — THEN rebuild. The old code set `activeBoardPage = -1` to force a
           // rebuild, which made destroyActiveBoard skip its `activeBoardPage >= 2` DOM-clear: the old 12
-          // tiles stayed (their p5 canvases removed → BLACK boxes) while 12 fresh tiles appended on top,
+          // tiles stayed (their p5 canvases removed → BLACK boxes) while 24 fresh tiles appended on top,
           // so every Regenerate/Random/Jump/Reset click grew +12 ghost boxes, unbounded.
           destroyActiveBoard();
           buildBoard(page);
@@ -4055,7 +4068,7 @@
 
       function regenerateArt() {
         // Roll a NEW master seed so every press yields a fresh, chaotically-different variation of
-        // every form — the page-1 collapse field AND all 12 board tiles re-derive from the new seed.
+        // every form — the page-1 collapse field AND all 24 board tiles re-derive from the new seed.
         // (Previously it re-ran the SAME seed, so "Regenerate" produced identical output — the
         // "nothing happens" / "empty" symptom.) Same seed-roll the ↻ Random button uses; the
         // generative paths downstream stay fully seeded (mulberry32 / p5 randomSeed), so each

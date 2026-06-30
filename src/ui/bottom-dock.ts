@@ -23,7 +23,7 @@ export function dockBottomBar(el: HTMLElement | null, doc: Document = document):
   reorderBottomDock(doc);
 }
 
-const BOTTOM_DOCK_ORDER = ['cqm-persist-nav', 'cqm-hud-nav', 'bar-shell'] as const;
+const BOTTOM_DOCK_ORDER = ['cqm-hud-nav', 'cqm-persist-nav', 'bar-shell'] as const;
 
 /** Keep persist → launcher → toolbar top-to-bottom in one centered column. */
 export function reorderBottomDock(doc: Document = document): void {

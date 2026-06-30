@@ -1046,7 +1046,7 @@
               title="ENTROPY — order / heat-death, the opposite of chaos (also: G key)"
               class="toolbar-btn"
             >
-              ENTROPY
+              &#x1F300; ENTROPY
             </button>
           </div>
           <div class="toolbar-group" role="group" aria-label="Special">
@@ -1062,11 +1062,11 @@
             <button
               type="button"
               data-action="brutal"
-              aria-label="Toggle BRUTALISM concrete mode"
-              title="BRUTALISM — crossfade Super Creatures to poured concrete (also: B key)"
+              aria-label="Cycle brutal super-creature rendering"
+              title="BRUTALISM / NOUVEAUNESS / ROCOCOGOLOGY / COSMICMORPHISM / REPRESSIONISM (also: B key)"
               class="toolbar-btn"
             >
-              &#x25A6; BRUTAL
+              &#x25A6; BRUTALISM
             </button>
             <button
               type="button"
@@ -1278,23 +1278,6 @@
             var audit = document.getElementById('aP');
             ui.insertBefore(right, audit || null);
             right.append(oP, alg, vsr);
-            var brains = [
-              ['brain-apex-slot', 'Apex · Brain', 'ARCHITECT → ⊞ NEURAL · Tab IV MEGA 4D'],
-              ['brain-mecha-slot', 'Mechalogodrom · Brain', '⟁ ARCHITECTURE pantheon cycler'],
-              ['brain-glyph-slot', 'Glyph · Brain', '100-letter pantheon · brain-driven motion'],
-            ];
-            for (var b = 0; b < brains.length; b++) {
-              var slot = document.createElement('div');
-              slot.id = brains[b][0];
-              slot.className = 'cqm-brain-slot ui-readout-card ui-readout-card--purple';
-              slot.innerHTML =
-                '<div class="ui-readout-card__head">' +
-                brains[b][1] +
-                '</div><div class="cqm-brain-slot__hint">' +
-                brains[b][2] +
-                '</div>';
-              right.appendChild(slot);
-            }
           }
         }
         initColumns();

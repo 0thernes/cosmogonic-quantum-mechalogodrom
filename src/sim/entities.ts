@@ -35,7 +35,7 @@ import type { Rng } from '../math/rng';
  * a ~2000+ variation palette without touching the seeded morph tables. The per-instance GPU
  * suites (tribe hue, quantum shimmer, payoff iridescence, vital glow) then layer dynamic variety on top.
  * V103: MUCH darker base lightness (max 0.10) for deep jewel tones that survive ACES tone mapping,
- * 5th hash prime for 2000+ colors, reduced emissive intensity to prevent white blowout,
+ * 5th hash prime for 2000+ colors, crystal-water lift without white blowout,
  * colored (non-white) emissive additions, slight metallic sheen for depth. */
 function paintVibrant(mat: THREE.MeshStandardMaterial, m: PhylumMorphType, mi: number): void {
   const hsl = { h: 0, s: 0, l: 0 };
@@ -57,15 +57,15 @@ function paintVibrant(mat: THREE.MeshStandardMaterial, m: PhylumMorphType, mi: n
     // wider gradient spin + quint-prime jitter fans the palette into ~2000+ distinct variations.
     (hsl.h + slot * 0.008 + j1 * 0.39 + j2 * 0.25 + j4 * 0.18 + j5 * 0.12 - 0.06 + 1) % 1,
     1.0, // S = 1.0 — MAXIMUM chroma, never wash out
-    Math.min(0.18, 0.06 + hsl.l * 0.05 + j3 * 0.07 + j4 * 0.03), // dark jewel but visible (was 0.1 max — too dark, emissive blew it out)
+    Math.min(0.32, 0.12 + hsl.l * 0.08 + j3 * 0.1 + j4 * 0.05), // crystal-water middle: bright enough, not white
   );
   m.em.getHSL(hsl);
   mat.emissive.setHSL(
     (hsl.h + 0.14 + j1 * 0.33 + j3 * 0.21 + j4 * 0.12 + j5 * 0.09 + slot * 0.005) % 1,
     1.0, // S = 1.0 — max emissive saturation
-    Math.min(0.32, 0.12 + hsl.l * 0.1 + j2 * 0.06), // colored glow, not blown-out white
+    Math.min(0.46, 0.18 + hsl.l * 0.12 + j2 * 0.1), // colored glow, not blown-out white
   );
-  mat.emissiveIntensity = Math.min(1.8, m.emI * 0.7 + 0.4); // capped lower — ACES rolls >1 to white
+  mat.emissiveIntensity = Math.min(2.15, m.emI * 0.72 + 0.55); // capped — ACES rolls extreme values to white
   // Slight metallic sheen for depth and sparkle — catches light as entities move
   mat.metalness = Math.min(0.85, mat.metalness * 0.65 + j5 * 0.35);
   mat.roughness = Math.max(0.06, mat.roughness * 0.45 + j3 * 0.12);

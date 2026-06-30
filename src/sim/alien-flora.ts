@@ -1,7 +1,7 @@
 /**
  * ALIEN FLORA — a living vegetal ecology for the dead arena floor.
  *
- * The ground was barren. This grows ~10,000 plants drawn from 50 deterministic SPECIES across
+ * The ground was barren. This grows ~15,000 plants drawn from 50 deterministic SPECIES across
  * six structural FAMILIES (spire, whip, pod, blade, coral, shard), distributed in biome PATCHES
  * with bare PATHS, open GLADES, and a clear CENTER so the temple/cosmic-crown stay framed — the
  * spacing of a real world, not a uniform lawn. Plants are NOT neural (no brain, no rng draws) —
@@ -48,9 +48,9 @@ const FAMILY_COUNT = 6;
 const SPECIES_COUNT = 50;
 /** Smooth biome field resolution: how many edaphic zones the palette/species cluster into. */
 const BIOME_COUNT = 7;
-/** Target plant population (the owner's "50 plants at 10,000 total"). */
-const TARGET_DESKTOP = 10000;
-const TARGET_MOBILE = 3600;
+/** Target plant population (dense alien forest; still six instanced draw calls). */
+const TARGET_DESKTOP = 15000;
+const TARGET_MOBILE = 5200;
 /** Plant field radius — frames the populated arena without flooding the far void. */
 const FIELD_R = ARENA_RADIUS * 1.32;
 /** Keep a clear circle at the centre (temple base + cosmic crown column). */
@@ -260,9 +260,10 @@ export class AlienFlora {
       const biome = biomeAt(x, z);
       const sp = AlienFlora.pickSpecies(biome, k);
       const s = species[sp]!;
-      const scale = s.size * (0.62 + hash(k * 5 + 11) * 1.05);
+      const giant = hash(k * 23 + 29) > 0.965 ? 2.4 + hash(k * 23 + 31) * 2.8 : 1;
+      const scale = s.size * (0.44 + hash(k * 5 + 11) * 1.45) * giant;
       const yaw = hash(k * 5 + 13) * TAU;
-      const tilt = (hash(k * 5 + 17) - 0.5) * 0.34;
+      const tilt = (hash(k * 5 + 17) - 0.5) * (0.28 + hash(k * 5 + 19) * 0.42);
       perFamily[s.family]!.push({ x, z, sp, scale, yaw, tilt });
       placed++;
 
@@ -304,12 +305,21 @@ export class AlienFlora {
         m.compose(pos, q, scl);
         mesh.setMatrixAt(i, m);
         // per-instance shader params + colour (hue jittered within the species band).
-        const hueJit = (s.hue + (hash(pl.sp * 31 + i) - 0.5) * 0.04 + 1) % 1;
-        col.setHSL(hueJit, s.sat, s.light);
+        const hueJit =
+          (s.hue +
+            (hash(pl.sp * 31 + i) - 0.5) * 0.16 +
+            0.035 * Math.sin(pl.x * 0.009 + pl.z * 0.011) +
+            1) %
+          1;
+        col.setHSL(
+          hueJit,
+          Math.min(0.98, s.sat + (hash(i * 97 + pl.sp) - 0.5) * 0.18),
+          Math.min(0.72, s.light + hash(i * 101 + pl.sp) * 0.18),
+        );
         const o4 = i * 4;
         params[o4] = hash(pl.sp * 13 + i * 7) * TAU; // phase
-        params[o4 + 1] = s.swayFreq;
-        params[o4 + 2] = s.glow;
+        params[o4 + 1] = s.swayFreq * (0.55 + hash(i * 73 + pl.sp) * 1.55);
+        params[o4 + 2] = Math.min(1, s.glow + hash(i * 79 + pl.sp) * 0.38);
         params[o4 + 3] = fmly.height;
         const o3 = i * 3;
         colors[o3] = col.r;
@@ -390,10 +400,10 @@ export class AlienFlora {
         family,
         biome,
         hue,
-        sat: 0.55 + hash(i * 23 + 3) * 0.4,
-        light: 0.32 + hash(i * 29 + 5) * 0.22,
-        size: 0.7 + hash(i * 31 + 7) * 1.5,
-        swayFreq: 0.5 + hash(i * 37 + 11) * 1.4,
+        sat: 0.62 + hash(i * 23 + 3) * 0.36,
+        light: 0.34 + hash(i * 29 + 5) * 0.28,
+        size: 0.45 + hash(i * 31 + 7) * 2.4,
+        swayFreq: 0.22 + hash(i * 37 + 11) * 2.2,
         glow: 0.25 + hash(i * 41 + 13) * 0.7,
       });
     }

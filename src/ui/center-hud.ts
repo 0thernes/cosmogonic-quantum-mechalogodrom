@@ -269,6 +269,31 @@ body:has(#cqm-hud-nav) #cqm-dock {
   outline: 2px solid rgba(120, 180, 255, 0.75);
   outline-offset: 1px;
 }
+/* V108: 3-row dock layout. Rows stack vertically; each row is a centred horizontal band. */
+#cqm-persist-nav.cqm-persist-rows {
+  flex-direction: column;
+  gap: 3px;
+}
+#cqm-persist-nav .cqm-persist-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  flex-wrap: nowrap;
+  width: 100%;
+}
+#cqm-persist-nav .cqm-persist-row--docs .cqm-persist-btn {
+  border-color: rgba(120, 160, 220, 0.32);
+}
+#cqm-persist-nav .cqm-persist-row--panels .cqm-persist-btn {
+  border-color: rgba(180, 120, 255, 0.42);
+}
+#cqm-persist-nav .cqm-persist-row--sim .cqm-persist-btn {
+  border-color: rgba(255, 160, 80, 0.38);
+}
+#cqm-persist-nav .cqm-persist-row--sim .cqm-persist-transport {
+  border-color: rgba(100, 220, 180, 0.38);
+}
 /* The secondary Docs/Spec/Lab links drop the moment the launcher would otherwise overflow its centre-
    column band — chooseNavMode() adds .cqm-hud-nolinks after MEASURING (covers the narrow-desktop band
    ~769-840px the fixed breakpoint missed), with a ≤520px fallback for the pre-JS frame. */
@@ -576,12 +601,14 @@ function buildNav(doc: Document): void {
   ghostBtn.classList.toggle('active', ghostOn); // reflect state across HMR rebuilds
   ghostBtn.setAttribute('aria-pressed', String(ghostOn));
   nav.appendChild(ghostBtn);
+  nav.appendChild(mk('−', 'Minimize current panel', 'cqm-hud-min', () => showOnly(-1)));
   nav.appendChild(mk('✕', 'Close', 'cqm-hud-close', () => showOnly(-1)));
   doc.body.appendChild(nav);
   dockBottomBar(nav, doc);
 }
 
-/** V85: always-visible Docs / Spec / Bible / Lab + sim + transport + Access / Set. */
+/** V85: always-visible 3-row dock. Row 1: docs/spec/bible/lab. Row 2: PANELS + access + settings.
+ *  Row 3: pause + sim actions. Reset/time/view/space live in the top toolbar only. */
 function buildPersistentNav(doc: Document): void {
   let strip = doc.getElementById('cqm-persist-nav');
   if (!strip) {
@@ -592,6 +619,7 @@ function buildPersistentNav(doc: Document): void {
     strip.replaceChildren();
   }
   strip.removeAttribute('hidden');
+  strip.classList.add('cqm-persist-rows');
 
   const mkBtn = (label: string, title: string, fn: () => void, extra = ''): HTMLButtonElement => {
     const b = doc.createElement('button');
@@ -604,14 +632,6 @@ function buildPersistentNav(doc: Document): void {
     return b;
   };
 
-  for (const key of ['docs', 'spec', 'bible', 'lab']) {
-    const a = doc.querySelector<HTMLAnchorElement>(`a[data-nav="${key}"]`);
-    if (a) {
-      a.classList.add('cqm-persist-btn');
-      strip.appendChild(a);
-    }
-  }
-
   const mkAct = (label: string, title: string, action: string, extra = ''): HTMLButtonElement => {
     const b = doc.createElement('button');
     b.type = 'button';
@@ -623,24 +643,26 @@ function buildPersistentNav(doc: Document): void {
     return b;
   };
 
-  strip.appendChild(mkAct('⏸', 'Pause / resume simulation', 'pause', 'cqm-persist-transport'));
-  strip.appendChild(mkAct('↻', 'Reset world', 'reset', 'cqm-persist-transport'));
-  strip.appendChild(mkAct('⏱', 'Cycle simulation speed', 'time', 'cqm-persist-transport'));
-  strip.appendChild(mkAct('👁', 'Cycle camera view', 'view', 'cqm-persist-transport'));
-  strip.appendChild(mkAct('⬡', 'Cycle space / FOV', 'space', 'cqm-persist-transport'));
+  const mkRow = (cls = ''): HTMLElement => {
+    const row = doc.createElement('div');
+    row.className = 'cqm-persist-row' + (cls ? ' ' + cls : '');
+    return row;
+  };
 
-  for (const [action, label, title] of [
-    ['split', '⇄', 'Split mature entities'],
-    ['burst', '✦', 'Burst-spawn entities'],
-    ['mutate', '☢', 'Mutate all entities'],
-    ['chaos', '⚡', 'Boost chaos'],
-  ] as const) {
-    strip.appendChild(mkAct(label, title, action, 'cqm-persist-sim'));
+  const rowDocs = mkRow('cqm-persist-row--docs');
+  for (const key of ['docs', 'spec', 'bible', 'lab']) {
+    const a = doc.querySelector<HTMLAnchorElement>(`a[data-nav="${key}"]`);
+    if (a) {
+      a.classList.add('cqm-persist-btn');
+      rowDocs.appendChild(a);
+    }
   }
+  strip.appendChild(rowDocs);
 
+  const rowPanels = mkRow('cqm-persist-row--panels');
   const accToggle = doc.getElementById('cqm-acc-toggle');
   if (accToggle) {
-    strip.appendChild(
+    rowPanels.appendChild(
       mkBtn('⛓ ACCESS', 'Cryptographic access terminal — unlock the playable super creature', () =>
         accToggle.click(),
       ),
@@ -648,9 +670,9 @@ function buildPersistentNav(doc: Document): void {
   }
   const settingsToggle = doc.getElementById('cqm-settings-toggle');
   if (settingsToggle) {
-    strip.appendChild(mkBtn('⚙ SET', 'Simulation settings', () => settingsToggle.click()));
+    rowPanels.appendChild(mkBtn('⚙ SET', 'Simulation settings', () => settingsToggle.click()));
   }
-  strip.appendChild(
+  rowPanels.appendChild(
     mkBtn(
       '⊞ PANELS',
       'Center HUD — Neural, Architect, AI, Help, Audit…',
@@ -661,6 +683,20 @@ function buildPersistentNav(doc: Document): void {
       'cqm-persist-panels',
     ),
   );
+  strip.appendChild(rowPanels);
+
+  const rowSim = mkRow('cqm-persist-row--sim');
+  rowSim.appendChild(mkAct('⏸', 'Pause / resume simulation', 'pause', 'cqm-persist-transport'));
+  for (const [action, label, title] of [
+    ['split', '⇄', 'Split mature entities'],
+    ['burst', '✦', 'Burst-spawn entities'],
+    ['mutate', '☢', 'Mutate all entities'],
+    ['chaos', '⚡', 'Boost chaos'],
+  ] as const) {
+    rowSim.appendChild(mkAct(label, title, action, 'cqm-persist-sim'));
+  }
+  strip.appendChild(rowSim);
+
   if (!strip.parentElement) doc.body.appendChild(strip);
   dockBottomBar(strip, doc);
 }

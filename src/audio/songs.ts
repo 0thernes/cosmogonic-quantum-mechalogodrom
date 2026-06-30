@@ -35,19 +35,19 @@ export const SONGS: readonly Song[] = [
     // voids that bloom into a grieving minor-9th, a subterranean sine bass beneath.
     // A cathedral of bone. Semis: {0,3,7,10} {0,3,8,14} {0,5,10,12} {0,3,7,15}.
     name: 'VOIDCROWN',
-    bpm: 56,
+    bpm: 48,
     chords: [
-      [0, 2, 4, 6],
-      [0, 2, 5, 8],
-      [0, 3, 6, 7],
-      [0, 2, 4, 9],
+      [0, 4, 7, 11],
+      [0, 3, 8, 12],
+      [0, 5, 9, 14],
+      [0, 2, 7, 15],
     ],
     wave: 'sawtooth',
-    bass: 'sine',
+    bass: 'triangle',
     // A slow descending procession that keeps falling back to the tonic, then lifts
     // a tragic minor-third before sinking again — a dirge that refuses to resolve.
-    mel: [9, 7, 6, 4, 6, 2, 4, 1, 2, 0, 4, 2, 1, 0, 4, 6],
-    fBase: 360,
+    mel: [0, 2, 4, 7, 11, 14, 16, 14, 11, 9, 7, 4, 2, 0, 4, 7, 11, 9, 7, 2],
+    fBase: 520,
   },
   {
     // Relentless pursuit — minor-b6 engine at full sprint, square-on-square;
@@ -71,38 +71,38 @@ export const SONGS: readonly Song[] = [
     // and tritone clusters in the high register, double sawtooth. The sound of a vast
     // mechanism worshipping itself. Semis: {0,7,8,10} {0,3,8,14} {0,5,7,8} {0,6,8,15}.
     name: 'ELDER ENGINE',
-    bpm: 96,
+    bpm: 84,
     chords: [
-      [0, 4, 5, 6],
-      [0, 2, 5, 8],
-      [0, 3, 4, 5],
-      [0, 5, 5, 9],
+      [0, 5, 8, 13],
+      [0, 3, 7, 12],
+      [0, 6, 10, 15],
+      [0, 2, 9, 14],
     ],
     wave: 'sawtooth',
     bass: 'sawtooth',
     // Hammering ostinato that hangs on the tonic, then ratchets up a flat-five and
     // wrenches back — a machine cycling through its liturgy, never quite the same.
-    mel: [0, 0, 4, 0, 5, 0, 6, 4, 0, 0, 5, 4, 8, 6, 5, 4],
-    fBase: 420,
+    mel: [0, 5, 0, 8, 5, 10, 8, 13, 10, 8, 6, 3, 6, 9, 13, 15, 13, 9, 5, 0],
+    fBase: 680,
   },
   {
     // Tragic endgame aria — noble minor-octave voicings torn by a flat-10th, wide
     // soaring leaps over a swelling string-saw bass; grief with a sword in its hand.
     // The hero's last stand. Semis: {0,3,7,12} {0,5,8,15} {0,3,10,14} {0,7,12,15}.
     name: 'LAST THEOREM',
-    bpm: 112,
+    bpm: 104,
     chords: [
-      [0, 2, 4, 7],
-      [0, 3, 5, 9],
-      [0, 2, 6, 8],
-      [0, 4, 7, 9],
+      [0, 4, 8, 12],
+      [0, 5, 9, 15],
+      [0, 3, 10, 16],
+      [0, 7, 11, 17],
     ],
     wave: 'triangle',
     bass: 'sawtooth',
     // A soaring, weeping line: it climbs to a high suspended peak, breaks, and falls
     // a full octave to the depths before gathering to climb again.
-    mel: [4, 7, 9, 11, 13, 11, 9, 12, 9, 7, 4, 2, 0, 2, 4, 7],
-    fBase: 900,
+    mel: [4, 7, 11, 14, 17, 19, 17, 14, 12, 9, 7, 4, 2, 0, 2, 7, 11, 16, 14, 9],
+    fBase: 1040,
   },
   {
     name: 'QUANTUM',
@@ -124,19 +124,19 @@ export const SONGS: readonly Song[] = [
     // architecture, slow and immense. The last song before the end of the world.
     // Semis: {0,3,7,14} {0,5,8,15} {0,6,10,12} {0,3,8,17}.
     name: 'STARKILLER REQUIEM',
-    bpm: 72,
+    bpm: 64,
     chords: [
-      [0, 2, 4, 8],
-      [0, 3, 5, 9],
-      [0, 5, 6, 7],
-      [0, 2, 5, 11],
+      [0, 3, 8, 15],
+      [0, 6, 10, 17],
+      [0, 5, 11, 18],
+      [0, 2, 9, 16],
     ],
     wave: 'sawtooth',
     bass: 'triangle',
     // Vast, deliberate strokes — a slow rising sweep to a screaming apex, then a long
     // catastrophic descent through two octaves into silence.
-    mel: [0, 2, 5, 8, 11, 14, 11, 8, 14, 11, 8, 5, 2, 0, 5, 2],
-    fBase: 500,
+    mel: [0, 3, 8, 12, 15, 18, 20, 18, 15, 12, 9, 6, 3, 0, 6, 10, 15, 19, 15, 8],
+    fBase: 620,
   },
 ];
 
@@ -481,7 +481,7 @@ export function createSfxPalette(rng: Rng): SfxSpec[] {
             : kind === 3
               ? R(200, 900)
               : R(55, 180),
-      kind === 1 ? R(0.08, 0.22) : kind === 3 ? R(0.4, 1.4) : R(0.6, 2.1),
+      kind === 1 ? R(0.18, 0.46) : kind === 3 ? R(0.9, 2.4) : R(1.05, 3.4),
       R(0.04, 0.14),
     );
     if (kind === 0) {
@@ -491,22 +491,28 @@ export function createSfxPalette(rng: Rng): SfxSpec[] {
       s.filterType = 'lowpass';
       s.filterFreq = R(180, 520);
       s.fmRatio = 0.5;
-      s.fmDepth = R(40, 120);
+      s.fmDepth = R(90, 260);
+      s.lfoRate = R(0.7, 2.8);
+      s.lfoDepth = R(18, 75);
+      s.attack = R(0.035, 0.14);
     } else if (kind === 1) {
       // Alien chitter — ultra-short high burst
       s.f1 = R(40, 120);
       s.noise = R(0.35, 0.75);
-      s.attack = 0.001;
+      s.attack = R(0.002, 0.018);
+      s.lfoRate = R(9, 31);
+      s.lfoDepth = R(120, 460);
     } else if (kind === 2) {
       // Void howl — wailing mid-range with vibrato
       s.f1 = R(680, 1400);
       s.f2 = R(90, 220);
-      s.lfoRate = R(3, 9);
-      s.lfoDepth = R(40, 180);
+      s.lfoRate = R(1.4, 6.8);
+      s.lfoDepth = R(80, 300);
+      s.attack = R(0.06, 0.22);
     } else if (kind === 3) {
       // Transdimensional gurgle — FM chaos + noise sweep
-      s.lfoRate = R(6, 22);
-      s.lfoDepth = R(60, 280);
+      s.lfoRate = R(3, 18);
+      s.lfoDepth = R(120, 420);
       s.fmRatio = [1.61, 2.71, 3.33, 4.17, 5.43][i % 5] ?? 1.61;
       s.fmDepth = R(80, 420);
       s.noise = R(0.12, 0.55);
@@ -524,7 +530,7 @@ export function createSfxPalette(rng: Rng): SfxSpec[] {
       s.lfoDepth = R(10, 40);
       s.attack = R(0.03, 0.12);
     }
-    s.jitter = 0.32;
+    s.jitter = 0.46;
     out.push(s);
   }
   // CUE — 25 ascending engineered voices, one per sorting field (~3 octaves over the list).

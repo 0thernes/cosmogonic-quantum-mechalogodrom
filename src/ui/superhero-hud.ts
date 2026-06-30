@@ -25,13 +25,14 @@ export interface HeroHudView extends SuperheroView {
 const INVENTORY = ['◈', '❄', '⚛', '✶', '☍', '⬡'];
 
 const STYLE = `
-#cqm-hero{position:fixed;top:calc(38px + env(safe-area-inset-top,0px));left:var(--cqm-hud-left,calc(clamp(220px,21vw,300px) + 14px));
-  right:var(--cqm-hud-right,calc(clamp(280px,27vw,420px) + 14px));
-  width:auto;max-width:none;max-height:min(28vh,180px);overflow:hidden;
-  transform:translateY(-150%);z-index:24;
+#cqm-hero{position:fixed;top:calc(38px + env(safe-area-inset-top,0px));left:var(--cqm-hud-left,calc(clamp(200px,20vw,280px) + 12px));
+  right:var(--cqm-hud-right,calc(clamp(260px,26vw,400px) + 12px));
+  width:auto;max-width:none;max-height:min(32vh,210px);overflow:hidden;
+  transform:translateY(-150%);z-index:96;
   transition:transform .55s cubic-bezier(.2,.9,.3,1);font-size:11px;line-height:1.4;font-family:var(--font-mono,ui-monospace,monospace);
   color:#e9e3ff;pointer-events:none}
 #cqm-hero.on{transform:translateY(0)}
+#cqm-hero.on.closed{transform:translateY(-150%)}
 #cqm-hero.on.min .cqm-hero-box{display:none}
 #cqm-hero.on.min .cqm-hero-fab{display:grid}
 #cqm-hero:not(.min) .cqm-hero-fab{display:none}
@@ -40,9 +41,10 @@ const STYLE = `
   color:#d4b8ff;font-size:16px;cursor:pointer;place-items:center;box-shadow:0 4px 18px rgba(0,0,0,.55);
   transition:transform .12s,background .12s}
 .cqm-hero-fab:hover{background:rgba(60,36,110,.85);transform:scale(1.06)}
-.cqm-hero-min{pointer-events:auto;margin-left:auto;border:1px solid rgba(150,120,255,.35);border-radius:6px;
+.cqm-hero-chrome{display:flex;align-items:center;gap:4px;margin-left:auto}
+.cqm-hero-min,.cqm-hero-close{pointer-events:auto;border:1px solid rgba(150,120,255,.35);border-radius:6px;
   background:rgba(30,18,60,.55);color:#cbb0ff;font:600 10px/1 var(--font-mono,ui-monospace,monospace);padding:2px 7px;cursor:pointer}
-.cqm-hero-min:hover{background:rgba(50,32,95,.75)}
+.cqm-hero-min:hover,.cqm-hero-close:hover{background:rgba(50,32,95,.75);color:#fff}
 .cqm-hero-head{display:flex;align-items:center;gap:6px;width:100%}
 @media (max-width:599px){#cqm-hero{left:6px;right:6px;top:calc(52px + env(safe-area-inset-top,0px));font-size:10px;max-height:34vh}}
 @media (max-width:640px){#cqm-hero{left:4px;right:4px;top:calc(48px + env(safe-area-inset-top,0px));font-size:9px}}
@@ -115,6 +117,12 @@ const STYLE = `
 .cqm-hero-pad:hover{background:rgba(50,70,120,.8)}
 .cqm-hero-pad:focus-visible{outline:2px solid rgba(140,200,255,.85);outline-offset:2px;background:rgba(50,70,120,.8)}
 .cqm-hero-pad:active{background:rgba(120,110,255,.85);color:#fff}
+.cqm-hero-pad.action{background:rgba(180,40,120,.45);border-color:rgba(255,120,200,.55);color:#ffd8f0}
+.cqm-hero-pad.action:active{background:rgba(255,80,160,.85);color:#fff}
+@media (pointer:coarse),(max-width:640px){
+  .cqm-hero-dpad{grid-template-columns:repeat(3,54px);gap:3px}
+  .cqm-hero-pad{width:54px;height:54px;font-size:18px}
+}
 .cqm-hero-inv[title]{cursor:help}
 `;
 
@@ -234,7 +242,19 @@ export class SuperheroHud {
     minBtn.setAttribute('aria-label', 'Minimize superhero HUD');
     minBtn.title = 'Minimize hero HUD';
     minBtn.textContent = '−';
-    minBtn.addEventListener('click', () => this.root.classList.add('min'));
+    minBtn.addEventListener('click', () => this.minimize());
+
+    const closeBtn = doc.createElement('button');
+    closeBtn.type = 'button';
+    closeBtn.className = 'cqm-hero-close';
+    closeBtn.setAttribute('aria-label', 'Close superhero HUD');
+    closeBtn.title = 'Close hero HUD; press ACCESS to reopen';
+    closeBtn.textContent = '×';
+    closeBtn.addEventListener('click', () => this.close());
+
+    const chrome = doc.createElement('div');
+    chrome.className = 'cqm-hero-chrome';
+    chrome.append(minBtn, closeBtn);
 
     this.root.appendChild(box);
 
@@ -252,7 +272,7 @@ export class SuperheroHud {
     this.lvlEl.textContent = 'LV 1';
     av.append(this.nameEl, this.lvlEl);
     rowA.appendChild(av);
-    rowA.appendChild(minBtn);
+    rowA.appendChild(chrome);
     this.bars.life = bar(rowA, 'Life', '#ff5a6b', doc);
     this.bars.energy = bar(rowA, 'Energy', '#39d6ff', doc);
     this.bars.xp = bar(rowA, 'XP', '#c79bff', doc);
@@ -351,7 +371,34 @@ export class SuperheroHud {
   /** Reveal the HUD (the player has become the 2nd super creature). */
   activate(): void {
     this.active = true;
-    this.root.classList.add('on');
+    this.root.classList.add('on', 'min');
+    this.root.classList.remove('closed');
+    const box = this.root.querySelector('.cqm-hero-box');
+    if (box instanceof HTMLElement) fitHeroBox(box);
+  }
+
+  /** Collapse to the compact open button; the simulation keeps running. */
+  minimize(): void {
+    if (!this.active) return;
+    this.root.classList.add('min');
+    this.root.classList.remove('closed');
+  }
+
+  /** Hide the HUD band entirely until ACCESS toggles it back. */
+  close(): void {
+    if (!this.active) return;
+    this.root.classList.add('closed', 'min');
+  }
+
+  /** ACCESS-button behavior after unlock: closed/minimized ↔ open full HUD. */
+  toggleOpen(): void {
+    if (!this.active) return;
+    if (this.root.classList.contains('closed') || this.root.classList.contains('min')) {
+      this.root.classList.add('on');
+      this.root.classList.remove('closed', 'min');
+    } else {
+      this.minimize();
+    }
     const box = this.root.querySelector('.cqm-hero-box');
     if (box instanceof HTMLElement) fitHeroBox(box);
   }
@@ -409,30 +456,51 @@ function actionBtn(parent: HTMLElement, label: string, event: string, doc: Docum
   return b;
 }
 
-/** V41 — a 6-way on-screen D-pad; press dispatches a held `cqm:hero-move` steer, release zeroes it. */
+/** V41 — a 7-way on-screen D-pad; 6 held movement buttons + 1 center action tap. */
 function buildDpad(parent: HTMLElement, doc: Document): void {
   const pad = doc.createElement('div');
   pad.className = 'cqm-hero-dpad';
   pad.setAttribute('role', 'group');
   pad.setAttribute('aria-label', 'Hero movement pad');
-  // row 1: strafe-left · forward · strafe-right   row 2: descend · back · ascend
-  const dirs: readonly [string, number, number, number, string][] = [
-    ['◀', -1, 0, 0, 'Strafe left'],
-    ['▲', 0, 0, 1, 'Forward'],
-    ['▶', 1, 0, 0, 'Strafe right'],
-    ['⤓', 0, -1, 0, 'Descend'],
-    ['▼', 0, 0, -1, 'Back'],
-    ['⤒', 0, 1, 0, 'Ascend'],
+  // Grid order (3 columns): ◀ ▲ ▶ / ⤓ ✦ ⤒ / ▼ · ·
+  const dirs: readonly [string, number, number, number, string, boolean][] = [
+    ['◀', -1, 0, 0, 'Strafe left', false],
+    ['▲', 0, 0, 1, 'Forward', false],
+    ['▶', 1, 0, 0, 'Strafe right', false],
+    ['⤓', 0, -1, 0, 'Descend', false],
+    ['✦', 0, 0, 0, 'Phase action', true],
+    ['⤒', 0, 1, 0, 'Ascend', false],
+    ['▼', 0, 0, -1, 'Back', false],
   ];
   const move = (x: number, y: number, z: number): void =>
     void window.dispatchEvent(new CustomEvent('cqm:hero-move', { detail: { x, y, z } }));
-  for (const [glyph, x, y, z, title] of dirs) {
+  const fire = (id: string): void => {
+    window.dispatchEvent(new CustomEvent('cqm:hero-power', { detail: { id } }));
+  };
+  for (const [glyph, x, y, z, title, isAction] of dirs) {
     const b = doc.createElement('button');
     b.type = 'button';
-    b.className = 'cqm-hero-pad';
+    b.className = 'cqm-hero-pad' + (isAction ? ' action' : '');
     b.textContent = glyph;
     b.title = title;
     b.setAttribute('aria-label', title);
+    if (isAction) {
+      // Action buttons are one-shot taps, not held movement.
+      b.addEventListener('pointerdown', (e) => {
+        e.preventDefault();
+        b.classList.add('flash');
+        setTimeout(() => b.classList.remove('flash'), 180);
+        fire('phase');
+      });
+      b.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ' || e.code === 'Space') {
+          e.preventDefault();
+          fire('phase');
+        }
+      });
+      pad.appendChild(b);
+      continue;
+    }
     let active = false;
     const start = (): void => {
       active = true;

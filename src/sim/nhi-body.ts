@@ -50,37 +50,44 @@ export class NhiBodySystem {
     group.position.set(x, y, z);
 
     const coreMat = new THREE.MeshStandardMaterial({
-      color: 0x140509,
-      emissive: 0x4a0014,
-      emissiveIntensity: 1.4,
+      color: new THREE.Color().setHSL((0.52 + this.spawnIndex * 0.137) % 1, 0.78, 0.44),
+      emissive: new THREE.Color().setHSL((0.72 + this.spawnIndex * 0.091) % 1, 0.86, 0.28),
+      emissiveIntensity: 1.9,
       metalness: 0.85,
-      roughness: 0.32,
+      roughness: 0.18,
       flatShading: true,
     });
     group.add(new THREE.Mesh(this.coreGeo, coreMat));
 
     const ringMat = new THREE.MeshStandardMaterial({
-      color: 0x1a0d04,
-      emissive: 0x6a3a08,
-      emissiveIntensity: 1.1,
+      color: new THREE.Color().setHSL((0.08 + this.spawnIndex * 0.173) % 1, 0.72, 0.5),
+      emissive: new THREE.Color().setHSL((0.13 + this.spawnIndex * 0.113) % 1, 0.9, 0.34),
+      emissiveIntensity: 1.45,
       metalness: 0.95,
-      roughness: 0.2,
+      roughness: 0.14,
     });
     const ring = new THREE.Mesh(this.ringGeo, ringMat);
     ring.rotation.x = Math.PI / 2.4;
     group.add(ring);
+    const ring2 = new THREE.Mesh(this.ringGeo, ringMat);
+    ring2.rotation.set(Math.PI / 2.05, 0.4 + this.spawnIndex * 0.31, 0.75);
+    ring2.scale.set(0.72, 1.18, 0.72);
+    group.add(ring2);
 
-    // Two red ocular points on the "face" (front +z) — the uncanny stare.
+    // Ocular crown on the "face" (front +z) — weird but readable at distance.
     const eyeMat = new THREE.MeshStandardMaterial({
-      color: 0x300000,
-      emissive: 0xff1212,
-      emissiveIntensity: 4.5,
+      color: 0xf8ffff,
+      emissive: new THREE.Color().setHSL((0.9 + this.spawnIndex * 0.071) % 1, 0.95, 0.62),
+      emissiveIntensity: 5.4,
     });
-    const eyeL = new THREE.Mesh(this.eyeGeo, eyeMat);
-    eyeL.position.set(R * 0.32, R * 0.18, R * 0.86);
-    const eyeR = new THREE.Mesh(this.eyeGeo, eyeMat);
-    eyeR.position.set(-R * 0.32, R * 0.18, R * 0.86);
-    group.add(eyeL, eyeR);
+    for (let i = 0; i < 7; i++) {
+      const a = -0.95 + i * 0.32;
+      const eye = new THREE.Mesh(this.eyeGeo, eyeMat);
+      eye.position.set(Math.sin(a) * R * 0.42, Math.cos(a * 1.7) * R * 0.22, R * 0.86);
+      const sc = 0.65 + 0.35 * Math.sin(i * 2.1 + this.spawnIndex);
+      eye.scale.setScalar(sc);
+      group.add(eye);
+    }
 
     this.root.add(group);
     this.bodies.set(id, {
@@ -107,16 +114,19 @@ export class NhiBodySystem {
       }
       const g = b.group;
       g.position.copy(p);
-      g.rotation.y = t * 0.35 + b.phase;
-      g.rotation.x = Math.sin(t * 0.5 + b.phase) * 0.4;
+      g.rotation.y = t * (0.18 + 0.05 * Math.sin(b.phase)) + b.phase;
+      g.rotation.x = Math.sin(t * 0.34 + b.phase) * 0.52;
+      g.rotation.z = Math.sin(t * 0.21 + b.phase * 1.7) * 0.24;
       // Morph: a writhing, non-uniform breathing scale — reads as a living, shifting body.
       g.scale.set(
-        1 + Math.sin(t * 1.7 + b.phase) * 0.18,
-        1 + Math.sin(t * 2.1 + b.phase * 1.3) * 0.22,
-        1 + Math.sin(t * 1.9 + b.phase * 0.7) * 0.18,
+        1.12 + Math.sin(t * 1.17 + b.phase) * 0.26,
+        1.18 + Math.sin(t * 1.61 + b.phase * 1.3) * 0.32,
+        1.08 + Math.sin(t * 1.39 + b.phase * 0.7) * 0.24,
       );
-      b.coreMat.emissiveIntensity = 1.2 + Math.sin(t * 1.6 + b.phase) * 0.7;
-      b.ringMat.emissiveIntensity = 0.9 + Math.sin(t * 3.1 + b.phase) * 0.5;
+      b.coreMat.emissiveIntensity =
+        1.55 + Math.sin(t * 1.23 + b.phase) * 0.55 + Math.sin(t * 0.37 + b.phase) * 0.25;
+      b.ringMat.emissiveIntensity =
+        1.05 + Math.sin(t * 2.17 + b.phase) * 0.45 + Math.sin(t * 0.53 + b.phase) * 0.25;
     }
   }
 

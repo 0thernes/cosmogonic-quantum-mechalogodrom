@@ -195,6 +195,14 @@ const SINGULARITY_LABEL: Record<string, string> = {
   entropy: 'ENTROPY FIELD',
 };
 
+const BRUTAL_STYLES = [
+  { name: 'BRUTALISM', glyph: '▦', title: 'poured concrete monolith skin' },
+  { name: 'NOUVEAUNESS', glyph: '❧', title: 'organic art-nouveau tendril skin' },
+  { name: 'ROCOCOGOLOGY', glyph: '✾', title: 'ornate pearl-gold overload skin' },
+  { name: 'COSMICMORPHISM', glyph: '☄', title: 'cosmic metamaterial nebula skin' },
+  { name: 'REPRESSIONISM', glyph: '▣', title: 'suppressed monochrome pressure skin' },
+] as const;
+
 export interface WorldOptions {
   engine: Engine;
   quality: QualityProfile;
@@ -328,6 +336,7 @@ export class World {
   private readonly atmosphere: AtmosphereSystem;
   /** BRUTALISM: smoothed 0..1 concrete-crossfade factor (eases toward state.brutalism each frame). */
   private brutalismFactor = 0;
+  private brutalStyleIdx = -1;
   private readonly viz3d: Viz3DSystem;
   /** Cosmological chaos effects (CONTRACTS V7.4) — at most one active at a time. */
   private readonly singularities: SingularitySystem;
@@ -883,6 +892,9 @@ export class World {
       window.addEventListener('cqm:hero-vision', () => this.heroCycleRender(), { signal });
       window.addEventListener('cqm:hero-cam', () => this.heroCycleCam(), { signal }); // V41: orbit/3rd/1st
       window.addEventListener('cqm:hero-mode', () => this.heroCycleControl(), { signal }); // V41: autopilot/assist/manual
+      window.addEventListener('cqm:hero-hud-toggle', () => this.superheroHud.toggleOpen(), {
+        signal,
+      });
       window.addEventListener(
         'cqm:hero-move',
         (e) => {
@@ -1220,7 +1232,7 @@ export class World {
       this.alphabetPantheon.setBrainActivity(act, nov, val);
       this.alphabetPantheon.setBrainMotors(snaps);
     }
-    this.alphabetPantheon.update(t * 2.5); // V-ABC: Pantheon runs at 2.5x world speed for more active flight
+    this.alphabetPantheon.update(t * 0.45); // V-ABC: slower god-creature drift, pause/time-scale faithful
     // F-NHI V10: alien bodies follow + morph their NHI every frame (guarded; additive viz only).
     if (this.nhiBody.count > 0) {
       try {
@@ -3338,13 +3350,25 @@ export class World {
    */
   private toggleBrutalism(): boolean {
     this.unlock();
-    const on = !this.state.brutalism;
+    this.brutalStyleIdx = (this.brutalStyleIdx + 1) % BRUTAL_STYLES.length;
+    const style = BRUTAL_STYLES[this.brutalStyleIdx]!;
+    const on = true;
     this.state.brutalism = on;
     // The per-frame step() driver eases brutalismFactor toward this state and applies it to the
     // bodies + the whole cosmos (organisms, ground, lights, sky, fog) — so no direct apply here.
-    this.hud.showSector(on ? 'BRUTALISM ▦ CONCRETE' : 'BRUTALISM · OFF');
-    this.audit.record('brutalism', { on });
+    this.syncBrutalButton(style.glyph, style.name, style.title);
+    this.hud.showSector(`${style.name} ${style.glyph} · ${style.title.toUpperCase()}`);
+    this.audit.record('brutalism', { on, style: style.name });
     return on;
+  }
+
+  private syncBrutalButton(glyph: string, name: string, title: string): void {
+    if (typeof document === 'undefined') return;
+    for (const btn of document.querySelectorAll<HTMLButtonElement>('[data-action="brutal"]')) {
+      btn.textContent = `${glyph} ${name}`;
+      btn.title = `${name} — ${title} (also: B key)`;
+      btn.setAttribute('aria-label', `Cycle brutal super-creature rendering: ${name}`);
+    }
   }
 
   private buildActions(): UiActions {
