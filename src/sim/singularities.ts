@@ -149,13 +149,17 @@ const ACCRETION_DISK_FRAG = /* glsl */ `
     float iscoRing = smoothstep(0.06, 0.0, abs(vRadius - 0.08)) * 2.0;
     temp *= 0.4 + 1.8 * innerGlow + iscoRing;
 
-    // Relativistic redshift near the horizon — light climbing out of the gravity well
-    float redshift = 1.0 - 0.3 * smoothstep(0.15, 0.0, vRadius);
+    // V109: stronger relativistic redshift near the horizon — photons lose energy climbing out.
+    float redshift = 1.0 - 0.55 * smoothstep(0.18, 0.0, vRadius);
     temp.r *= 1.0 / redshift;
     temp.gb *= redshift;
 
+    // Photon ring: a thin, bright gravitational-lensing echo just outside the shadow.
+    float photonRing = smoothstep(0.035, 0.0, abs(vRadius - 0.045)) * 1.6;
+    temp += vec3(1.0, 0.75, 0.45) * photonRing * (0.5 + 0.5 * turb);
+
     // Alpha falls off at the edges with a soft plasma edge
-    float alpha = (innerGlow + iscoRing * 0.5) * uFade * 0.95;
+    float alpha = (innerGlow + iscoRing * 0.5 + photonRing * 0.3) * uFade * 0.95;
 
     gl_FragColor = vec4(temp, alpha);
   }
