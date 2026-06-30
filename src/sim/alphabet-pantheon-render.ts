@@ -479,7 +479,9 @@ export class AlphabetPantheonRender {
 
   /** Bob / spin / pulse every body on its own cadence. Pure trig, allocation-free, no rng. */
   update(t: number, dt?: number): void {
-    const clock = dt === undefined ? t : (this.localT += Math.max(0, dt));
+    // V109: Cut base movement and shader animation speed by 50% so they can be easily inspected
+    const scaledDt = dt !== undefined ? dt * 0.5 : undefined;
+    const clock = scaledDt === undefined ? t * 0.5 : (this.localT += Math.max(0, scaledDt));
     if (dt !== undefined && dt <= 0) return; // frozen when paused
     if (this.mat instanceof THREE.ShaderMaterial) {
       const uTime = this.mat.uniforms.uTime;

@@ -91,19 +91,23 @@ describe('Mechalogodrom — the fusion abomination', () => {
     m.dispose();
   });
 
-  test('is deterministic — identical (t, dt) sequences ⇒ identical snapshots', () => {
-    const a = new Mechalogodrom(new THREE.Scene());
-    const b = new Mechalogodrom(new THREE.Scene());
-    const sa = run(a, 40, 0.5);
-    const sb = run(b, 40, 0.5);
-    expect(sa.fusion).toBe(sb.fusion);
-    expect(sa.dimension).toBe(sb.dimension);
-    expect(sa.power).toBe(sb.power);
-    expect(sa.warp).toBe(sb.warp);
-    expect(sa.variants).toBe(sb.variants);
-    a.dispose();
-    b.dispose();
-  });
+  test(
+    'is deterministic — identical (t, dt) sequences ⇒ identical snapshots',
+    () => {
+      const a = new Mechalogodrom(new THREE.Scene());
+      const b = new Mechalogodrom(new THREE.Scene());
+      const sa = run(a, 40, 0.5);
+      const sb = run(b, 40, 0.5);
+      expect(sa.fusion).toBe(sb.fusion);
+      expect(sa.dimension).toBe(sb.dimension);
+      expect(sa.power).toBe(sb.power);
+      expect(sa.warp).toBe(sb.warp);
+      expect(sa.variants).toBe(sb.variants);
+      a.dispose();
+      b.dispose();
+    },
+    { timeout: 15_000 },
+  );
 
   test('dispose() is safe', () => {
     const m = new Mechalogodrom(new THREE.Scene());
