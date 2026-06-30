@@ -108,7 +108,8 @@ function patchGodJewel(
          varying vec3 vObjPos; varying vec3 vObjN;
          uniform float uTime; uniform float uArousal; uniform float uSurprise; uniform float uVariant; uniform float uWave;
          uniform float uQWave; uniform float uPhi; uniform float uReflex; uniform float uQualia; uniform float uCliff;
-         uniform float uBrutalism; // BRUTALISM: chisel the morph into hard monolithic slabs`,
+         uniform float uBrutalism; // BRUTALISM: chisel the morph into hard monolithic slabs
+         uniform float uBrutalStyle; // V109: 0-4 style variant`,
       )
       .replace(
         '#include <begin_vertex>',
@@ -160,6 +161,7 @@ function patchGodJewel(
          uniform float uTime; uniform vec3 uPlan; uniform float uDominance; uniform float uVariant; uniform float uSurprise; uniform float uWave; uniform float uArousal; uniform float uQWave; uniform float uPhi; uniform float uReflex; uniform float uQualia; uniform float uCliff;
          uniform float uEvoAura; uniform float uEvoTier; uniform float uEvoHue; uniform float uAscended; // V64 evolution-driven living skin
          uniform float uBrutalism; // BRUTALISM: crossfade the god-jewel skin to raw poured concrete
+         uniform float uBrutalStyle; // V109: 0-4 style variant
          float h31(vec3 p){ return fract(sin(dot(p, vec3(27.17,61.31,11.71))) * 43758.5453); }
          float n3(vec3 p){ vec3 i=floor(p), f=fract(p); f=f*f*(3.0-2.0*f);
            return mix(mix(mix(h31(i),h31(i+vec3(1,0,0)),f.x),mix(h31(i+vec3(0,1,0)),h31(i+vec3(1,1,0)),f.x),f.y),
@@ -173,11 +175,18 @@ function patchGodJewel(
          float skinPatch = fbm3(vObjPos * 3.2 + uVariant * 4.0 + uTime * 0.02);
          vec3 skinTint = mix(vec3(0.035, 0.02, 0.055), vec3(0.09, 0.06, 0.12), skinPatch);
          diffuseColor.rgb = mix(diffuseColor.rgb, skinTint, 0.32 * (1.0 - uBrutalism));
+         // V109: BRUTAL style palette selection — 5 distinct super-creature looks.
+         vec3 brutalCol;
+         if (uBrutalStyle < 0.5) brutalCol = vec3(0.34, 0.335, 0.32);                         // BRUTALISM — poured concrete
+         else if (uBrutalStyle < 1.5) brutalCol = vec3(0.15, 0.42, 0.25);                     // NOUVEAUNESS — art-nouveau vine
+         else if (uBrutalStyle < 2.5) brutalCol = vec3(0.95, 0.82, 0.55);                     // ROCOCOGOLOGY — pearl-gold
+         else if (uBrutalStyle < 3.5) brutalCol = vec3(0.25, 0.08, 0.52);                     // COSMICMORPHISM — nebula purple
+         else brutalCol = vec3(0.16, 0.16, 0.18);                                            // REPRESSIONISM — repressed grey
          // BRUTALISM: collapse the jewel's base colour into raw board-formed, exposed-aggregate concrete.
          float bForm = smoothstep(0.46, 0.5, abs(fract(vObjPos.y * 3.5) - 0.5)); // board-form seams
          float bAgg = fbm3(vObjPos * 22.0);                                       // exposed aggregate speckle
          float concreteTex = clamp(0.72 + 0.32 * bAgg - 0.22 * bForm, 0.0, 1.0);
-         diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.34, 0.335, 0.32) * concreteTex, uBrutalism);`,
+         diffuseColor.rgb = mix(diffuseColor.rgb, brutalCol * concreteTex, uBrutalism);`,
       )
       .replace(
         '#include <roughnessmap_fragment>',
@@ -259,8 +268,15 @@ function patchGodJewel(
          vec3 mindEmissive = mNeuroCol + mHelixCol + mBloom + mThermCol + mQualiaCol + mReflexCol;
          vec3 jewelEmissive = glow * (0.22 + 0.6 * relief) + iris * fres * (0.45 + 0.8 * uDominance) + wv * 0.12 * uDominance + ch * 0.07 * uSurprise * uPlan + igFlash * uPlan * (0.3 + 0.4 * uDominance) + varPal * relief * 0.25 * uPlan + evoEmissive - veinColor * veinMask * 0.4 + auraColor * relief * 0.15 + mindEmissive;
          jewelEmissive *= 0.78; // V109: darker, less white, more organic
-         // BRUTALISM: kill the glow — raw concrete only self-lights enough to read its monolithic form.
-         vec3 concreteEmissive = vec3(0.05, 0.05, 0.06) * (0.4 + 0.6 * relief);
+         // V109: style-dependent BRUTAL glow — concrete grey, organic green, gold, nebula purple, repressed ash.
+         vec3 brutalGlow;
+         if (uBrutalStyle < 0.5) brutalGlow = vec3(0.05, 0.05, 0.06);
+         else if (uBrutalStyle < 1.5) brutalGlow = vec3(0.08, 0.35, 0.12);
+         else if (uBrutalStyle < 2.5) brutalGlow = vec3(0.55, 0.42, 0.18);
+         else if (uBrutalStyle < 3.5) brutalGlow = vec3(0.35, 0.08, 0.65);
+         else brutalGlow = vec3(0.03, 0.03, 0.03);
+         // BRUTALISM: kill the glow — raw material only self-lights enough to read its form.
+         vec3 concreteEmissive = brutalGlow * (0.4 + 0.6 * relief);
          totalEmissiveRadiance += mix(jewelEmissive, concreteEmissive, uBrutalism);`,
       );
   };
@@ -310,6 +326,7 @@ export class SuperBodySystem {
     uEvoHue: { value: 0 }, // 0..1 evolution hue rotation — a unique palette that shifts over time
     uAscended: { value: 0 }, // 1 at the LV100 summit — the skin fully blazes + shimmers
     uBrutalism: { value: 0 }, // BRUTALISM: 0 = god-jewel, 1 = raw poured-concrete monolith
+    uBrutalStyle: { value: 0 }, // V109: 0=BRUTALISM 1=NOUVEAUNESS 2=ROCOCOGOLOGY 3=COSMICMORPHISM 4=REPRESSIONISM
   };
   private dominance = 0.5;
   private arousal = 0;
@@ -330,6 +347,7 @@ export class SuperBodySystem {
   private evoAscended = false;
   // BRUTALISM: 0 = god-jewel iridescence, 1 = raw poured-concrete monolith (set via setBrutalism).
   private brutalism = 0;
+  private brutalStyle = 0;
   private readonly move = new THREE.Vector3(); // the mind's movement output (its will)
   private readonly anchor = new THREE.Vector3(0, 12, 0); // birth locus / fallback
   // V39 FLIGHT: the apex roams the world instead of hovering — a wander-seek boid that banks toward
@@ -978,6 +996,20 @@ export class SuperBodySystem {
   /** BRUTALISM: the current concrete crossfade applied to the skin (for tests / inspection). */
   brutalismFactor(): number {
     return this.brutalism;
+  }
+
+  /**
+   * V109: set the active BRUTAL style variant (0-4). Super-creature shaders use this to swap the
+   * poured-concrete palette into NOUVEAUNESS/ROCOCOGOLOGY/COSMICMORPHISM/REPRESSIONISM looks.
+   */
+  setBrutalStyle(idx: number): void {
+    this.brutalStyle = Math.max(0, Math.min(4, Math.floor(idx)));
+    this.u.uBrutalStyle.value = this.brutalStyle;
+  }
+
+  /** V109: current BRUTAL style variant (for tests / inspection). */
+  brutalStyleIdx(): number {
+    return this.brutalStyle;
   }
 
   /** Free GPU resources (world reset). */

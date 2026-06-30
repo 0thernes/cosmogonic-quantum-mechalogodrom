@@ -1236,7 +1236,7 @@ export class World {
       this.alphabetPantheon.setBrainActivity(act, nov, val);
       this.alphabetPantheon.setBrainMotors(snaps);
     }
-    this.alphabetPantheon.update(t * 0.45); // V-ABC: slower god-creature drift, pause/time-scale faithful
+    this.alphabetPantheon.update(t * 0.12); // V109: much slower, inspectable pantheon drift; still scales with pause/time
     // F-NHI V10: alien bodies follow + morph their NHI every frame (guarded; additive viz only).
     if (this.nhiBody.count > 0) {
       try {
@@ -1352,11 +1352,17 @@ export class World {
     this.alienFlora.update(dt, t, this.state.chaos / CHAOS_MAX); // flora leans + luminesces with chaos
     // Crossfade the rest of the cosmos — apex bodies, instanced/per-mesh organisms, ground + light rig
     // (AFTER environment.update, so it rides this frame's animated rig).
-    for (let i = 0; i < this.superBodies.length; i++) this.superBodies[i]!.setBrutalism(bf);
+    for (let i = 0; i < this.superBodies.length; i++) {
+      this.superBodies[i]!.setBrutalism(bf);
+      this.superBodies[i]!.setBrutalStyle(this.brutalStyleIdx);
+    }
     // Unlocked superhero avatar + forked twins are SuperBodySystems too — desaturate them with the five
     // Archons, else BRUTALISM turns the world + Archons concrete while the player creature/twins keep
     // the god-jewel skin. No-op until any hero body is revealed (the array is empty).
-    for (let i = 0; i < this.heroBodies.length; i++) this.heroBodies[i]!.body.setBrutalism(bf);
+    for (let i = 0; i < this.heroBodies.length; i++) {
+      this.heroBodies[i]!.body.setBrutalism(bf);
+      this.heroBodies[i]!.body.setBrutalStyle(this.brutalStyleIdx);
+    }
     this.environment.applyBrutalism(bf);
     if (this.instanced) this.instanced.setBrutalism(bf);
     else this.entities.applyBrutalism(bf); // phone tier: organisms are real meshes → desaturate them too

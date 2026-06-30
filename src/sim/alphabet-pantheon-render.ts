@@ -131,6 +131,7 @@ export class AlphabetPantheonRender {
   };
   private apexTranscendence = 0;
   private apexVitality = 0;
+  private localT = 0;
 
   constructor(scene: THREE.Scene) {
     const pantheonVert = `
@@ -477,13 +478,15 @@ export class AlphabetPantheonRender {
   }
 
   /** Bob / spin / pulse every body on its own cadence. Pure trig, allocation-free, no rng. */
-  update(t: number): void {
+  update(t: number, dt?: number): void {
+    const clock = dt === undefined ? t : (this.localT += Math.max(0, dt));
+    if (dt !== undefined && dt <= 0) return;
     if (this.mat instanceof THREE.ShaderMaterial) {
       const uTime = this.mat.uniforms.uTime;
-      if (uTime) uTime.value = t;
+      if (uTime) uTime.value = clock;
     }
     // V109: pantheon is stately — slower base drift, but still quickens with chaos and apex presence.
-    const slowT = t * CREATURE_EXTERIOR_TIME_SCALE * 0.55;
+    const slowT = clock * CREATURE_EXTERIOR_TIME_SCALE * 0.55;
     const quick = 0.5 + 0.6 * this.chaos + 0.25 * this.apexTranscendence + 0.15 * this.apexVitality;
     for (let pool = 0; pool < this.meshes.length; pool++) {
       const mesh = this.meshes[pool]!;
@@ -532,9 +535,9 @@ export class AlphabetPantheonRender {
           clamp(lit, 0.22, 0.62),
         );
         mesh.setColorAt(s, C);
-        this.glyphAccents.setAt(b.gIdx, M, b.sig, ba, t);
-        this.glyphFilaments.setAt(b.gIdx, M, b.pal.filamentHue, b.sig, ba, t);
-        this.glyphSpores.setAt(b.gIdx, M, b.pal.sporeHue, b.sig, ba, t);
+        this.glyphAccents.setAt(b.gIdx, M, b.sig, ba, clock);
+        this.glyphFilaments.setAt(b.gIdx, M, b.pal.filamentHue, b.sig, ba, clock);
+        this.glyphSpores.setAt(b.gIdx, M, b.pal.sporeHue, b.sig, ba, clock);
       }
       mesh.instanceMatrix.needsUpdate = true;
       if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
@@ -566,7 +569,7 @@ export class AlphabetPantheonRender {
     this.apexInner.rotation.set(ph * 0.95, -ph * 0.65, ph * 1.1);
     if (this.apexCore.material instanceof THREE.ShaderMaterial) {
       const uTime = this.apexCore.material.uniforms.uTime;
-      if (uTime) uTime.value = t;
+      if (uTime) uTime.value = clock;
     }
     this.apexInner.scale.setScalar(10 * (1 + 0.22 * Math.sin(ph * 4.5)));
     this.apexShell.rotation.set(-ph * 0.14, ph * 0.24, -ph * 0.1);
@@ -585,7 +588,7 @@ export class AlphabetPantheonRender {
     (this.apexHalo.material as THREE.MeshBasicMaterial).color.copy(C);
     C.setHSL((0.55 + Math.sin(ph * 1.2) * 0.15) % 1, 1, 0.55);
     (this.apexSpikes.material as THREE.MeshBasicMaterial).color.copy(C);
-    this.apexExterior.update(t, this.apexTranscendence, this.apexVitality, this.tsotchkePulse);
+    this.apexExterior.update(clock, this.apexTranscendence, this.apexVitality, this.tsotchkePulse);
   }
 
   /** Total letter archetypes rendered (100). Apex #101 is a separate capstone mesh. */
