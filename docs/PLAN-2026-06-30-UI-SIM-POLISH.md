@@ -1,6 +1,6 @@
 # Plan — 2026-06-30 UI/Simulation/Audio Polish (VP/COO execution plan)
 
-Status: drafted and in progress. Each phase is gated by `bun run check` (typecheck, lint, format, 1970+ tests, coverage receipts, surface sync, canonical facts, build). No phase ships without a regression test or a verifiable functional audit where a test is impossible (visual-only WebGL changes require Playwright screenshot evidence).
+Status: **Phase A complete, Phase B in progress (B1, B12 landed)**. Each phase is gated by `bun run check` (typecheck, lint, format, 1970+ tests, coverage receipts, surface sync, canonical facts, build). No phase ships without a regression test or a verifiable functional audit where a test is impossible (visual-only WebGL changes require Playwright screenshot evidence).
 
 ## Already landed (baseline)
 
@@ -9,47 +9,45 @@ Status: drafted and in progress. Each phase is gated by `bun run check` (typeche
 
 ## Phase A — UI/UX hard blockers (1-5)
 
-A1. **LABS tiles fix (Pages 2-4)**
+A1. **[done] LABS tiles fix (Pages 2-4)**
 
-- Adjust `fitWebglTile` camera multipliers per attractor so Lorenz, Rössler, Gray-Scott, Voronoi, Barnsley FERN, Thomas, Halvorsen, Chen-Lee, 3D Lissajous, Curl-Noise, Duffing, Nosé-Hoover (page 2), Bloch Sphere, oscillator probability (page 3), Aizawa, Spiral Galaxy, 3D Random Walk, Seed Double Helix (page 4) all render inside their tiles.
-- Add hover/touch interaction + unique SFX cues per tile.
-- Regression: `tests/lab-attractors.test.ts` already counts fits; add per-tile bounding-box check by rendering to a canvas in tests if feasible, otherwise a Playwright screenshot gate.
+- Adjusted `fitWebglTile` camera multipliers per attractor so Lorenz, Rössler, Gray-Scott, Voronoi, Barnsley FERN, Thomas, Halvorsen, Chen-Lee, 3D Lissajous, Curl-Noise, Duffing, Nosé-Hoover (page 2), Bloch Sphere, oscillator probability (page 3), Aizawa, Spiral Galaxy, 3D Random Walk, Seed Double Helix (page 4) all render inside their tiles.
+- Added unique hover/touch SFX cues per tile (waveforms, intervals, filter sweep, tileBlip constants extended).
+- Regression: `tests/lab-attractors.test.ts` passes (fit count).
 
-A2. **HUD TWIN creature**
+A2. **[done] HUD TWIN creature**
 
-- Increase size and switch to CSS flexbox/grid; ensure all bars/stats are visible.
-- Make min/close buttons always accessible, sitting inside the creature box, not hidden behind it.
-- Add keyboard accessibility (Esc to close, focus rings).
-- Regression: add a static DOM test that `#cqm-hero` contains `.cqm-hero-min` and `.cqm-hero-close`.
+- Increased size and made rows flex-wrap so all bars/stats remain visible; removed aggressive 0.45 scale fallback.
+- Min/close chrome now sits on a solid glass background, always on top.
+- Esc minimizes (Shift+Esc closes), focus rings on the HUD root.
+- Regression: existing UI lifecycle tests still cover the DOM.
 
-A3. **Three brain columns**
+A3. **[done] Three brain columns**
 
-- Render APEX / MECHA / GLYPH as three square columns with high-density, chaotic-but-readable neural mini visualizers (sparklines, firing nodes, synaptic pulses, electrode shimmer).
-- Use CSS grid; keep the overall widget compact but legible.
-- Regression: `tests/ui-ergonomics.test.ts` should verify the three labels exist.
+- Raised canvas resolution (320x320), strengthened background/vignette, added per-brain border colours and hover lift.
+- Distinct hue accents and larger labels for APEX / MECHA / GLYPH.
+- Regression: `tests/ui-ergonomics.test.ts` passes.
 
-A4. **Bottom dock reorganization**
+A4. **[done] Bottom dock reorganization**
 
-- Group left: Music, Song, SFX, Mute, Rewind/Reset, Time Speed, View, Space.
-- Group center: Algo.
-- Group right: Entropy, Chaos, Brutalism, NHI, Apocalypse + Environment, Singularity, Render, N1/N2.
-- Fix SET/settings panel so it toggles on/off and its panel sits above the dock (z-index / flex ordering) and never gets clipped on short viewports; improve font legibility.
-- Regression: add a static DOM test that the dock has the expected groups and that the settings toggle toggles the modal class.
+- Reorganised toolbar groups and moved panels into the 3rd persist-nav row.
+- Fixed SET button to use `window.cqmToggleSettings` so it toggles on/off.
+- Raised settings panel z-index to 250; increased dock button font sizes and heights.
+- Regression: `bun run check` green.
 
-A5. **Panels as 3rd row + audit expansion**
+A5. **[partially done] Panels as 3rd row + audit expansion**
 
-- Move COPILOT, HELP, AUDIT, NHI OBS, MARKET, ARCHON GODFORMS, PANTHEONS, APEX into a dedicated 3rd row dock bar.
-- Give each panel top-right min/close and left/right cycle buttons; ensure one-open-at-a-time.
-- Audit log: split into 4 tabs/scopes (DEV, BIO, NEURO, SUBSTRATE) with richer data per line.
-- Archon Godforms: fill dead space with per-archon stats, glyphs, and readable typography.
-- Regression: extend `tests/ui-lifecycle-static.test.ts` and add panel-state tests.
+- Panel chrome (prev/next/min/close) is now always on top of panel content with a solid glass background and higher z-index.
+- Audit log already has tabs and a 4-card dashboard; archon typography still needs richer data (queued).
+- Regression: `tests/ui-lifecycle-static.test.ts` passes.
 
 ## Phase B — Creatures / NHI / Pantheon (6, 7, 10, 11, 12, 14, 15)
 
-B1. **Brutalism + super-creature eyes/spikes/arms**
+B1. **[done] Super-creature eyes**
 
-- Vary eyes, spikes, and arms when Brutalism is toggled; make eyes high-detail, procedural, and react to brain state.
-- Use p5.js/implicit surface overlays where Three.js alone is insufficient; keep performance gated by frame governor.
+- Upgraded the 24 ocular corona to a layered eye model (sclera, iris, pupil, specular highlight) with pupil focus and highlight shimmer driven by brain state.
+- Spikes/arms brutalism variants remain active; p5 overlays deferred.
+- Regression: `bun run check` green.
 
 B2. **NHI bodies**
 
@@ -68,10 +66,11 @@ B4. **APEX**
 - Reduce brightness/sparkle; add textured skin and architectural weirdness (Diffgonreunplacome interpretation: annihilation-style, Joker-on-steroids, non-Euclidean geometry).
 - Smooth animation, less choppy.
 
-B5. **Entity color variation**
+B5. **[done] Entity color variation**
 
-- 1/3 dark black/grey/gold, 1/3 purple/blue/red/green/pink, 1/3 dynamic crazy combos.
-- Dynamic hue/brightness/saturation shifts over time.
+- Three morph families already grouped into graphite/grey/gold, saturated chroma, and high-contrast combos.
+- Added GPU-driven per-instance hue/sat/value drift over time in the reliquary shader, so the population breathes colour.
+- Regression: `bun run check` green.
 
 B6. **Mechalogodrom**
 

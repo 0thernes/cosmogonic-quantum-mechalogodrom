@@ -15,10 +15,10 @@ const STYLE = `#cqm-settings-modal{pointer-events:auto;align-items:flex-end;just
 #cqm-settings-modal .cqm-panel-box{max-height:min(48vh,calc(100vh - var(--cqm-bottom-h,108px) - 28px));overflow-y:auto;scrollbar-width:thin;
   scrollbar-color:rgba(120,160,255,.4) transparent;padding:12px 14px;border:1px solid rgba(199,155,255,.4);background:linear-gradient(180deg,rgba(18,14,36,.98),rgba(8,6,20,.98))}
 .cqm-set-gr{margin-bottom:10px}
-.cqm-set-gr h3{margin:0 0 6px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#d4b0ff;font-weight:700;font-family:var(--font-sans,system-ui,sans-serif);text-shadow:0 0 8px rgba(199,155,255,.3)}
+.cqm-set-gr h3{margin:0 0 6px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#d4b0ff;font-weight:700;font-family:var(--font-ui,system-ui,sans-serif);text-shadow:0 0 8px rgba(199,155,255,.3)}
 .cqm-set-row{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
 .cqm-set-btn{pointer-events:auto;border:1px solid rgba(199,155,255,.25);border-radius:6px;background:rgba(30,24,60,.4);
-  color:#f0ebff;padding:6px 8px;cursor:pointer;font:700 12px/1.3 var(--font-sans,system-ui,sans-serif);text-align:center;
+  color:#f0ebff;padding:6px 8px;cursor:pointer;font:700 12px/1.3 var(--font-ui,system-ui,sans-serif);text-align:center;
   transition:background .15s,border-color .15s,transform .1s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:0.02em}
 .cqm-set-btn:hover{border-color:rgba(199,155,255,.6);background:rgba(50,38,100,.65);transform:translateY(-1px)}
 .cqm-set-btn:active{transform:translateY(0)}
@@ -34,12 +34,12 @@ const STYLE = `#cqm-settings-modal{pointer-events:auto;align-items:flex-end;just
 .cqm-set-btn[data-action="entropy"]:hover{border-color:rgba(255,100,60,.7);background:rgba(120,45,25,.5)}
 #cqm-settings-modal .cqm-panel-box{width:min(88vw,360px)}
 .cqm-set-legend{margin-top:12px;padding-top:12px;border-top:1px solid rgba(199,155,255,.25)}
-.cqm-set-hint{margin:0 0 10px;font:500 12px/1.45 var(--font-sans,system-ui,sans-serif);color:rgba(220,210,250,.8);letter-spacing:0.01em}
+.cqm-set-hint{margin:0 0 10px;font:500 12px/1.45 var(--font-ui,system-ui,sans-serif);color:rgba(220,210,250,.8);letter-spacing:0.01em}
 .cqm-set-kbd{width:100%;border-collapse:collapse;font:600 11px var(--font-mono,ui-monospace,monospace)}
 .cqm-set-kbd td{padding:4px 6px;vertical-align:middle}
 .cqm-set-kbd kbd{display:inline-block;min-width:2.4em;padding:3px 6px;border-radius:4px;border:1px solid rgba(199,155,255,.4);
   background:rgba(50,30,100,.3);color:#e2c5ff;font:inherit;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,.25)}
-.cqm-set-kbd .cqm-set-kbd-act{color:rgba(230,225,255,.9);font-family:var(--font-sans,system-ui,sans-serif);font-size:12px;letter-spacing:0.01em}
+.cqm-set-kbd .cqm-set-kbd-act{color:rgba(230,225,255,.9);font-family:var(--font-ui,system-ui,sans-serif);font-size:12px;letter-spacing:0.01em}
 `;
 
 const GROUPS = [
@@ -132,7 +132,6 @@ function renderKbdTable(rows: readonly [string, string][]): string {
 
 class SettingsPanel {
   private readonly modal: HTMLElement;
-  private openState = false;
 
   constructor(doc: Document = document) {
     injectPanelBaseCSS(doc);
@@ -191,19 +190,20 @@ class SettingsPanel {
   }
 
   toggle(): void {
-    if (this.openState) this.close();
-    else this.open();
+    if (this.modal.style.display === 'flex') {
+      this.close();
+    } else {
+      this.open();
+    }
   }
 
   open(): void {
     this.modal.style.display = 'flex';
-    this.openState = true;
     this.modal.focus();
   }
 
   close(): void {
     this.modal.style.display = 'none';
-    this.openState = false;
   }
 }
 
