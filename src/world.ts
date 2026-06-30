@@ -3201,7 +3201,14 @@ export class World {
     this.selectAlgo(s.algoIdx + 1, false); // fromUser=false keeps AUTO mode engaged
     if (prev !== s.algoIdx) {
       this.algoActiveEl?.classList.add('algo-auto-flash');
-      setTimeout(() => this.algoActiveEl?.classList.remove('algo-auto-flash'), 420);
+      // Clear/guard the flash-off timer on dispose so it can't fire against a torn-down panel.
+      const flashId = setTimeout(() => {
+        if (!this.disposeAbort.signal.aborted)
+          this.algoActiveEl?.classList.remove('algo-auto-flash');
+      }, 420);
+      this.disposeAbort.signal.addEventListener('abort', () => clearTimeout(flashId), {
+        once: true,
+      });
       const name = cyc(ALGOS, s.algoIdx).name;
       this.hud.showSector(`AUTO ▸ ${name}`);
     }

@@ -279,6 +279,7 @@ class AccessPuzzle {
 
   private open(): void {
     if (this.solved) return; // already unlocked — stays granted
+    if (this.modal.classList.contains('open')) return; // re-entry guard — a 2nd open() would leak a 2nd timer pair
     this.modal.classList.add('open');
     this.input.focus();
     this.deniedIdx = 0;

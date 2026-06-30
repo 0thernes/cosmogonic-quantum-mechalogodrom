@@ -297,8 +297,10 @@ export class ResonanceIntegrator {
    * This is faculty #71: valence-steers-behaviour.
    */
   applyValence(valence: number): void {
-    // Valence in [-1, 1]; map to tolerance modulation
-    const modulation = 1 - valence * 0.3; // ±30% tolerance shift
+    // Clamp valence to its documented [-1, 1] range so an out-of-range input cannot drive
+    // phaseTolerance negative/oversized — which silently empties the conscious coalition (audit).
+    const v = valence < -1 ? -1 : valence > 1 ? 1 : valence;
+    const modulation = 1 - v * 0.3; // ±30% tolerance shift, bounded since v ∈ [-1, 1]
     this.config.phaseTolerance = DEFAULT_CONFIG.phaseTolerance * modulation;
     this.snapshotCache = null; // invalidate cache
   }

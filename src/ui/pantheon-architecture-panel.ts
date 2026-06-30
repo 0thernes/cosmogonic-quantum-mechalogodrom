@@ -164,7 +164,9 @@ export class PantheonArchitecturePanel {
   constructor(doc: Document = document) {
     doc.getElementById('cqm-arch-toggle')?.remove();
     doc.getElementById('cqm-arch-panel')?.remove();
+    doc.getElementById('cqm-arch-style')?.remove(); // replace, don't accumulate, on re-mount
     const style = doc.createElement('style');
+    style.id = 'cqm-arch-style';
     style.textContent = STYLE;
     doc.head.appendChild(style);
     this.styleEl = style;

@@ -913,8 +913,10 @@ export class NhiObservatory {
     // single live toggle/panel exists and the click handler always targets THIS instance.
     doc.getElementById('cqm-nhi-toggle')?.remove();
     doc.getElementById('cqm-nhi-panel')?.remove();
+    doc.getElementById('cqm-nhi-style')?.remove(); // drop a prior <style> too, else it accumulates per re-mount
     injectPanelBaseCSS(doc);
     const style = doc.createElement('style');
+    style.id = 'cqm-nhi-style';
     style.textContent = STYLE;
     doc.head.appendChild(style);
 

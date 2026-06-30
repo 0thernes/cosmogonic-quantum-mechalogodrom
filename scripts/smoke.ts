@@ -71,6 +71,11 @@ proc.on('exit', () => {
 proc.stderr?.on('data', (c: Buffer) => {
   stderr += c.toString();
 });
+// fail() calls process.exit(1), which bypasses the finally below — so reap the server on ANY exit
+// (process.exit included) to avoid orphaning the spawned dev server when a smoke check fails.
+process.on('exit', () => {
+  if (!exited) killProcess(proc.pid);
+});
 
 try {
   for (let i = 0; i < 40; i++) {
