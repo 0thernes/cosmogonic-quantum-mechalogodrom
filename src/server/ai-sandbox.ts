@@ -44,16 +44,29 @@ const MAX_GREP_FILE_BYTES = 1024 * 1024;
 const RUN_TIMEOUT_MS = 15_000;
 
 /** Path prefixes that are never readable, even via an otherwise-valid relative path. */
-const BLOCKED_PREFIXES = ['legacy', '.git', 'node_modules', '.env', 'dist'] as const;
+const BLOCKED_PREFIXES = [
+  'legacy',
+  '.git',
+  'node_modules',
+  '.env',
+  'dist',
+  // `.claude/worktrees/**` holds full sibling git checkouts (their own `.git`, `.github`, `.memory`
+  // notes); only the outermost `.claude` segment ever reached this check before corpus-index.ts and
+  // this file's own confine() started walking every path segment, so it must be blocked explicitly —
+  // a per-worktree `.memory/*.md` was independently readable via read_file and listed in the RAG
+  // corpus manifest fed straight into the chat system prompt (audit MEDIUM).
+  '.claude',
+  '.memory',
+] as const;
 
 /**
  * Is `name` a blocked top-level segment? Case-insensitive `.env*` / `.git*` prefix match (closes the
  * `.env.local` / `.ENV` secret-leak and every `.git*` variant) plus the exact {@link BLOCKED_PREFIXES}.
- * The SINGLE source of truth shared by {@link confine} and {@link listDir}, so the read tools and the
- * directory listing can never disagree about what is private (audit: `list_dir` leaked `.gitignore`,
- * `.github/`, `.env.local` filenames that `confine()` refuses to read).
+ * The SINGLE source of truth shared by {@link confine}, {@link listDir}, and corpus-index.ts's RAG
+ * manifest builder, so no tool can disagree about what is private (audit: `list_dir` leaked
+ * `.gitignore`, `.github/`, `.env.local` filenames that `confine()` refuses to read).
  */
-function isBlockedTop(name: string): boolean {
+export function isBlockedTop(name: string): boolean {
   const t = name.toLowerCase();
   return (
     t.startsWith('.env') ||
@@ -275,7 +288,10 @@ const BIN_FORBIDDEN_FLAG: Record<string, RegExp> = {
   sort: /^-o|^--output(=|$)/,
 };
 
-const GIT_PATCH_HISTORY_FLAG = /^-p$|^--patch$/;
+// `-u` is a documented alias for `-p`/`--patch`, and `--patch-with-stat`/`--patch-with-raw` both still
+// emit full patch content alongside the requested extra info — all four must be denied identically to
+// `-p`/`--patch`, or `git log -u` trivially bypasses the "no unconfined history content" invariant below.
+const GIT_PATCH_HISTORY_FLAG = /^-p$|^-u$|^--patch$|^--patch-with-stat$|^--patch-with-raw$/;
 
 /**
  * Validate (default-deny) a raw command string. Returns the parsed argv on success. The check is:

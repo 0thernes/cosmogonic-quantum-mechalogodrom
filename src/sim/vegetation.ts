@@ -92,6 +92,13 @@ function buildSpeciesGeometry(seed: number): {
   const merged = mergeGeometries([stemGeo, topGeo]);
   const geo = (merged ?? stem) as THREE.BufferGeometry;
   geo.translate(0, stemH * 0.5, 0);
+  // toNonIndexed() always returns a NEW BufferGeometry distinct from its source when indexed, and
+  // mergeGeometries() does not dispose its inputs — without this, every species build orphaned up to
+  // 4 GPU geometries (stem/top + their toNonIndexed copies) that Vegetation.dispose() can never reach,
+  // since only the final `geo` is kept on the species record.
+  for (const g of new Set([stem, top, stemGeo, topGeo])) {
+    if (g !== geo) g.dispose();
+  }
 
   const box = new THREE.Box3().setFromObject(new THREE.Mesh(geo));
   const maxHeight = box.max.y - box.min.y;

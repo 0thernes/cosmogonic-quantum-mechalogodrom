@@ -103,6 +103,7 @@ export class AtmosphereSystem {
   /** Normalized vertical position of each dome vertex, −1 (nadir) .. +1 (zenith). */
   private readonly domeLat: Float32Array;
   private readonly domeVertCount: number;
+  private readonly domeMesh: THREE.Mesh<THREE.SphereGeometry, THREE.MeshBasicMaterial>;
 
   // ── Haze ribbons ─────────────────────────────────────────────────────────────
   private readonly ribbons: HazeRibbon[] = [];
@@ -113,6 +114,7 @@ export class AtmosphereSystem {
   private readonly dustVel: Float32Array;
   private readonly dustPosAttr: THREE.BufferAttribute;
   private readonly dustMaterial: THREE.PointsMaterial;
+  private readonly dustMesh: THREE.Points<THREE.BufferGeometry, THREE.PointsMaterial>;
 
   // ── Aurora curtain ───────────────────────────────────────────────────────────
   private readonly auroraMesh: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshBasicMaterial>;
@@ -159,7 +161,8 @@ export class AtmosphereSystem {
       fog: false,
       depthWrite: false,
     });
-    ctx.scene.add(new THREE.Mesh(domeGeo, domeMat));
+    this.domeMesh = new THREE.Mesh(domeGeo, domeMat);
+    ctx.scene.add(this.domeMesh);
 
     // V109: dome wireframe circuit overlay — thin lat/long wireframe that pulses with chaos.
     // Gives the dome a wired/circuit-like infrastructure feel instead of a bare gradient sphere.
@@ -273,7 +276,8 @@ export class AtmosphereSystem {
       sizeAttenuation: true,
       depthWrite: false,
     });
-    ctx.scene.add(new THREE.Points(dustGeo, this.dustMaterial));
+    this.dustMesh = new THREE.Points(dustGeo, this.dustMaterial);
+    ctx.scene.add(this.dustMesh);
 
     // ── Aurora curtain: tall emissive ribbon, lit only under AURORA. ─────────────
     this.auroraPhase = rng() * TAU; // 1 rng draw
@@ -290,6 +294,31 @@ export class AtmosphereSystem {
     this.auroraMesh = new THREE.Mesh(auroraGeo, auroraMat);
     this.auroraMesh.position.set(0, 120 * ARENA_Y, -90 * ARENA);
     ctx.scene.add(this.auroraMesh);
+  }
+
+  /** Remove every object this system added to the scene and free their GPU resources (e.g. dev HMR). */
+  dispose(): void {
+    const scene = this.ctx.scene;
+    scene.remove(this.domeMesh);
+    this.domeMesh.geometry.dispose();
+    this.domeMesh.material.dispose();
+    scene.remove(this.wireMesh);
+    this.wireMesh.geometry.dispose();
+    this.wireMat.dispose();
+    scene.remove(this.rainMesh);
+    this.rainMesh.geometry.dispose();
+    this.rainMat.dispose();
+    scene.remove(this.dustMesh);
+    this.dustMesh.geometry.dispose();
+    this.dustMaterial.dispose();
+    scene.remove(this.auroraMesh);
+    this.auroraMesh.geometry.dispose();
+    this.auroraMesh.material.dispose();
+    for (const r of this.ribbons) {
+      scene.remove(r.mesh);
+      r.mesh.geometry.dispose();
+      r.mesh.material.dispose();
+    }
   }
 
   /**

@@ -95,6 +95,8 @@ describe('ai-sandbox: command gate is default-deny and write-free', () => {
     'git cat-file -p HEAD', // raw object reads bypass path confinement entirely
     'git show HEAD', // bare rev can disclose historical/deleted file contents
     'git log -p -1 --stat', // patch history can disclose deleted blocked files
+    'git log -u -3', // `-u` is a documented alias for `-p` — same disclosure, must be denied identically
+    'git log --patch-with-stat -1', // combines stat + full patch content, same disclosure as `-p`
     'git diff HEAD~1 HEAD', // revision diffs are history reads, not confined file reads
   ];
   for (const cmd of denied) {
@@ -206,5 +208,11 @@ describe('ai-sandbox: recursive traversal cannot leak private dirs (audit CRITIC
     expect((await readFileSafe('deploy/.env.production')).ok).toBe(false);
     expect((await readFileSafe('a/b/.git/config')).ok).toBe(false);
     expect((await runReadOnly('cat config/.env')).ok).toBe(false);
+  });
+
+  test('.claude worktree checkouts are blocked — they hold sibling .git/.memory content (audit MEDIUM)', async () => {
+    expect((await readFileSafe('.claude/worktrees/x/.memory/notes.md')).ok).toBe(false);
+    expect((await listDir('.claude')).ok).toBe(false);
+    expect((await runReadOnly('cat .claude/worktrees/x/.git/config')).ok).toBe(false);
   });
 });

@@ -45,6 +45,15 @@ describe('UI lifecycle static contracts', () => {
     expect(superheroHud).toContain('dispose(): void');
     expect(world).toContain('this.superheroHud.dispose()');
   });
+
+  test('onboarding overlay clears the inline display:none/opacity:0 before adding .on', () => {
+    const code = src('src/ui/onboarding.ts');
+    // glassPanel()/overlayPanel() set `display:none; opacity:0` inline; an inline style always
+    // beats the `.on` class rule (it carries no !important), so toggling the class alone can
+    // never show the element. Pin that the open path sets these inline properties directly.
+    expect(code).toMatch(/this\.root\.style\.display\s*=\s*['"]flex['"]/);
+    expect(code).toMatch(/this\.root\.style\.opacity\s*=\s*['"]1['"]/);
+  });
 });
 
 describe('world integration cadence static contracts', () => {

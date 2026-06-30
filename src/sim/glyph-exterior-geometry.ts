@@ -97,6 +97,12 @@ function buildWildGlyphGeometry(
     case 8:
       geo = new THREE.BoxGeometry(0.35 + j * 0.25, 1.2 + j2 * 0.9, 0.4 + j3 * 0.3, 20, 60, 20);
       break;
+    case 9:
+      // portal_ring: a large, thin hoop — distinct from mandala_ring (case 3) and gear_disc (case 12),
+      // which are both smaller-radius/thicker-tube tori. This was missing entirely (fell through to
+      // `default`, reusing its torus shape) — audit LOW.
+      geo = new THREE.TorusGeometry(0.9 + j3 * 0.5, 0.04 + j * 0.08, 48 + (t % 16), 200 + w * 10);
+      break;
     case 10:
       geo = new THREE.IcosahedronGeometry(0.6 + j * 0.55, 14);
       break;

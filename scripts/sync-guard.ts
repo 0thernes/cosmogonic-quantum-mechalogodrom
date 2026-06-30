@@ -10,6 +10,9 @@
  * SAFE BY CONSTRUCTION — it NEVER destroys work. Every destructive/rewrite step is FAIL-CLOSED: it
  * preserves the at-risk tip to a `recovery/guard-<ts>` ref and VERIFIES that ref resolves before it
  * proceeds, and it reports honestly (non-zero exit) on any failure rather than logging false success.
+ * A `--force` reset additionally snapshots any uncommitted working-tree content (via a non-destructive
+ * `git stash create`) to `recovery/guard-<ts>-dirty` before aborting/resetting — `rebase --abort` and
+ * `reset --hard` discard the worktree, and a commit-pointing ref alone cannot recover that.
  *  - clean + local-ahead          → `push HEAD:main`; on a non-ff race, reconcile by rebase ONLY if the
  *                                    tree is clean (a dirty tree is never autostashed out of sight).
  *  - clean + behind, no local      → `merge --ff-only origin/main` (advances even a detached HEAD).
@@ -336,6 +339,31 @@ function run(): void {
 
   // 4. Force-reset to origin/main (preserved above; fail-closed). Report honestly if the reset fails.
   if (plan.forceReset) {
+    // `rebase --abort` / `merge --abort` (and the reset --hard below) restore tracked files to their
+    // pre-op committed state, discarding ANY uncommitted working-tree content — not just conflict-marker
+    // edits. The recovery ref above only captures committed history (a branch ref can't hold worktree
+    // state), so a dirty tree here would otherwise be silently and irrecoverably lost, contradicting this
+    // script's own "discarded state is always saved first" guarantee. `git stash create` does not modify
+    // the index/worktree (unlike `stash push`), so it is safe to attempt unconditionally; if it fails for
+    // any reason (including an unresolvable conflict shape), fail closed rather than risk silent loss.
+    if (!isClean()) {
+      const stashSha = tryGit([
+        'stash',
+        'create',
+        'sync-guard: pre-force-reset working-tree snapshot',
+      ]);
+      const dirtyRef = `${recovery}-dirty`;
+      const dirtySaved = stashSha !== null && gitOk(['branch', '-f', dirtyRef, stashSha]);
+      if (!dirtySaved) {
+        log(
+          'FAILED to snapshot uncommitted working-tree changes — refusing the force-reset; nothing changed',
+        );
+        process.exit(1);
+      }
+      log(
+        `preserved uncommitted changes -> ${dirtyRef} (recover with: git stash apply ${dirtyRef})`,
+      );
+    }
     if (state.op === 'rebase' && inProgressRebase()) gitOk(['rebase', '--abort']);
     if (state.op === 'merge') gitOk(['merge', '--abort']);
     const ok = gitOk(['reset', '--hard', 'origin/main']);

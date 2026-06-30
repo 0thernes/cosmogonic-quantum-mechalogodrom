@@ -107,6 +107,27 @@ describe('construction', () => {
     expect(points.length).toBe(2);
   });
 
+  test('dispose() removes every added object from the scene and frees its geometry/material', () => {
+    const ctx = makeCtx(1, 800);
+    const atmos = new AtmosphereSystem(ctx);
+    expect(ctx.scene.children.length).toBe(8); // 6 Meshes + 2 Points, per the construction test above
+
+    const disposed: THREE.BufferGeometry[] = [];
+    for (const child of ctx.scene.children) {
+      const obj = child as THREE.Mesh | THREE.Points;
+      const geo = obj.geometry;
+      const origDispose = geo.dispose.bind(geo);
+      geo.dispose = () => {
+        disposed.push(geo);
+        origDispose();
+      };
+    }
+
+    atmos.dispose();
+    expect(ctx.scene.children.length).toBe(0); // World.dispose() relies on this for an HMR-clean scene
+    expect(disposed.length).toBe(8); // every object's geometry was actually disposed, not just removed
+  });
+
   test('particulate count is floor(maxEntities / 4)', () => {
     const a = new AtmosphereSystem(makeCtx(1, 800)) as unknown as AtmosInternals;
     expect(a.dustCount).toBe(200);

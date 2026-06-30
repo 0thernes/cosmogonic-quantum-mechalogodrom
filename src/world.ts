@@ -167,6 +167,18 @@ const ALGO_AUTO_PERIOD = 2.5;
 /** V105: 101-glyph pantheon breeding is visual-only — no petri coupling until re-enabled. */
 const PANTHEON_BREEDING_LIVE = false;
 
+/**
+ * Derive the (i, j) pantheon-breeding pair for a given nonce, with the self-fertilization guard
+ * (i===j at nonce=65 otherwise). Exported as a pure, testable unit so a regression in the guard
+ * expression actually fails a test, instead of a test re-deriving the same formula independently.
+ */
+export function nextBreedingPair(nonce: number): [number, number] {
+  const i = (nonce * 7 + 3) % PANTHEON_TOTAL;
+  let j = (nonce * 13 + 17) % PANTHEON_TOTAL;
+  if (j === i) j = (j + 1) % PANTHEON_TOTAL;
+  return [i, j];
+}
+
 /** Cosmology SFX palette entries (V7.4) — band starts from the 110-voice palette. */
 const SFX_SUBBOOM = SFX_EXTRA_BANDS['subboom']?.start ?? 0;
 const SFX_FMCLANG = SFX_EXTRA_BANDS['fmclang']?.start ?? 0;
@@ -1018,6 +1030,7 @@ export class World {
     // forceContextLoss() reclaims the context's VRAM, but these JS-side geometry/material
     // dispose paths were skipped entirely — each HMR reload built a fresh World whose
     // subsystems were never torn down. Only subsystems that actually have a dispose() are called.
+    this.atmosphere.dispose(); // free the sky dome/wireframe/rain/dust/aurora/haze-ribbon geometries+materials
     this.singularities.dispose();
     this.wingRender.dispose();
     this.monolithTemple.dispose();
@@ -1975,9 +1988,7 @@ export class World {
       this.primordialSoup.update(0, s.frame, this.petriRng);
       // V-BREED: pantheon breeding rite (disabled V105 — visual dome only, no petri coupling).
       if (PANTHEON_BREEDING_LIVE && s.frame % 600 === 0 && s.frame > 0) {
-        const i = (this.breedNonce * 7 + 3) % PANTHEON_TOTAL;
-        let j = (this.breedNonce * 13 + 17) % PANTHEON_TOTAL;
-        if (j === i) j = (j + 1) % PANTHEON_TOTAL; // avoid self-fertilization (i===j at nonce=65)
+        const [i, j] = nextBreedingPair(this.breedNonce);
         this.lastBaby = breedAt(i, j, this.breedNonce);
         this.breedNonce++;
         const dish = this.petriDishes[i % this.petriDishes.length];

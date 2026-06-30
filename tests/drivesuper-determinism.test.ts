@@ -11,10 +11,11 @@
  */
 import { describe, expect, test } from 'bun:test';
 import { ApexBrain, type ApexPercept } from '../src/sim/apex-brain';
-import { breedAt, PANTHEON_TOTAL } from '../src/sim/pantheon-breeding';
+import { breedAt } from '../src/sim/pantheon-breeding';
 import { SelfEvolutionLoop, type EvolutionMetrics } from '../src/sim/self-evolution-loop';
 import { shannonDiversity, bedauPackardActivity } from '../src/sim/open-endedness';
 import { mulberry32 } from '../src/math/rng';
+import { nextBreedingPair } from '../src/world';
 
 const PERCEPT: ApexPercept = {
   threat: 0.3,
@@ -75,9 +76,7 @@ describe('V-APEX: ApexBrain.tick determinism', () => {
 describe('V-BREED: breedAt determinism', () => {
   test('same (i, j, nonce) → identical BabyGenome', () => {
     for (let nonce = 0; nonce < 20; nonce++) {
-      const i = (nonce * 7 + 3) % PANTHEON_TOTAL;
-      let j = (nonce * 13 + 17) % PANTHEON_TOTAL;
-      if (j === i) j = (j + 1) % PANTHEON_TOTAL;
+      const [i, j] = nextBreedingPair(nonce);
       const a = breedAt(i, j, nonce);
       const b = breedAt(i, j, nonce);
       expect(JSON.stringify(a)).toBe(JSON.stringify(b));
@@ -91,11 +90,12 @@ describe('V-BREED: breedAt determinism', () => {
   });
 
   test('self-fertilization guard: i===j never occurs with the guard', () => {
-    // Simulate the exact driveSuper breeding logic for 200 nonces
+    // Calls the REAL driveSuper pairing function (world.ts's nextBreedingPair), not a hand-copied
+    // duplicate of its formula — a regression in the guard expression (deleted, inverted, or a
+    // typo'd modulus/offset) now actually fails this test instead of silently passing (audit
+    // test-integrity MEDIUM).
     for (let nonce = 0; nonce < 200; nonce++) {
-      const i = (nonce * 7 + 3) % PANTHEON_TOTAL;
-      let j = (nonce * 13 + 17) % PANTHEON_TOTAL;
-      if (j === i) j = (j + 1) % PANTHEON_TOTAL;
+      const [i, j] = nextBreedingPair(nonce);
       expect(i).not.toBe(j);
     }
   });

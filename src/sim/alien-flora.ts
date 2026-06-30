@@ -103,6 +103,7 @@ const flora_vert = /* glsl */ `
   attribute vec3 aColor;
   uniform float uTime;
   uniform float uWind;
+  uniform float uChaos;
   varying vec3 vColor;
   varying float vGlow;
   varying float vUp;

@@ -5,6 +5,7 @@
 import { readdir } from 'node:fs/promises';
 import { join, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { isBlockedTop } from './ai-sandbox';
 
 const ROOT = resolveRoot();
 
@@ -13,22 +14,18 @@ function resolveRoot(): string {
 }
 
 const CORPUS_EXT = new Set(['.md', '.html', '.htm', '.xml', '.txt']);
-const SKIP_DIRS = new Set([
-  'node_modules',
-  'dist',
-  '.git',
-  'legacy',
-  'output',
-  '.cursor',
-  '.githooks',
-]);
-const SKIP_FILE_PREFIX = ['.env', '.git'];
+/** Corpus-specific noise (build output / editor state) not covered by ai-sandbox's private-area list. */
+const SKIP_DIRS = new Set(['output', '.cursor']);
 
+/**
+ * Block a path if ANY segment — not just the outermost — is a private/build/vcs area. Reuses
+ * {@link isBlockedTop}, the single source of truth ai-sandbox.ts's read/list tools use, so the RAG
+ * corpus manifest and the read tools can never disagree about what is private. Previously this only
+ * checked the path's first segment plus the final filename's prefix, so a nested private directory
+ * (e.g. `.claude/worktrees/*\/.git`, `.../.memory`) walked straight through (audit MEDIUM).
+ */
 function blocked(rel: string): boolean {
-  const top = rel.split(/[/\\]/)[0] ?? '';
-  if (SKIP_DIRS.has(top)) return true;
-  const base = rel.split(/[/\\]/).pop() ?? '';
-  return SKIP_FILE_PREFIX.some((p) => base.toLowerCase().startsWith(p));
+  return rel.split(/[/\\]/).some((s) => SKIP_DIRS.has(s) || isBlockedTop(s));
 }
 
 async function walk(dir: string, out: string[]): Promise<void> {

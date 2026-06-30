@@ -96,9 +96,17 @@ export class OnboardingOverlay {
     wireClose(this.root, close);
 
     if (this.visible) {
-      // One frame delay so the opacity transition fires after append (class-only — no inline
-      // display, which would beat the aria-hidden dismiss rule and leave a click-blocking ghost).
-      requestAnimationFrame(() => this.root.classList.add('on'));
+      // glassPanel()/overlayPanel() set `display:none; opacity:0` inline; an inline style always
+      // beats the `.on` class rule (no !important on it), so toggling the class alone can never
+      // show this element — the inline overrides must be cleared/set directly. This does not
+      // conflict with the dismiss path: `[aria-hidden="true"]` uses `!important`, so close()
+      // still wins over whatever inline display/opacity is set here.
+      this.root.style.display = 'flex';
+      void this.root.offsetWidth; // flush layout — opacity can't transition while display:none
+      requestAnimationFrame(() => {
+        this.root.style.opacity = '1';
+        this.root.classList.add('on');
+      });
     }
   }
 
