@@ -16,15 +16,25 @@ import { NhiBodySystem } from '../src/sim/nhi-body';
 import { MonolithTemple } from '../src/sim/monolith-temple';
 
 describe('environment viz systems construct + update without throwing', () => {
-  test('CosmicWeb adds to the scene and shimmers', () => {
+  test('CosmicWeb adds to the scene and reads the dome vitality (alive blazes brighter than dead)', () => {
     const scene = new THREE.Scene();
     const web = new CosmicWeb(scene);
     expect(scene.children.length).toBeGreaterThan(0);
+    const group = scene.children[0] as THREE.Group;
+    const pMat = (group.children[0] as THREE.Points).material as THREE.PointsMaterial;
     expect(() => {
-      web.update(0);
-      web.update(3.5);
-      web.update(120);
+      web.update(0, 0.9, 0.2, 0.0);
+      web.update(3.5, 0.5, 0.5, 0.3);
+      web.update(120, 0.0, 0.0, 1.0);
     }).not.toThrow();
+    // The coupling is REAL + falsifiable: a thriving, calm cosmos blazes brighter + larger than a
+    // collapsed, heat-dead one (same t + chaos ⇒ only the vitality differs).
+    web.update(10, 1.0, 0.1, 0.0); // thriving population, no heat-death
+    const aliveOpacity = pMat.opacity;
+    const aliveSize = pMat.size;
+    web.update(10, 0.0, 0.1, 1.0); // collapsed population + full heat-death
+    expect(pMat.opacity).toBeLessThan(aliveOpacity);
+    expect(pMat.size).toBeLessThan(aliveSize);
   });
 
   test('GoldLattice adds to the scene and tumbles', () => {

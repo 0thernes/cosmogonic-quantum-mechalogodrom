@@ -1170,7 +1170,12 @@ export class World {
     );
     this.wingRender.sync(this.wingSwarm.positions, t, 0.4 + 0.6 * this.wingSwarm.assist);
     for (const hb of this.heroBodies) hb.body.update(t, dt); // V34/35: revealed hero/twin bodies
-    this.cosmicWeb.update(t); // V11: far-field cosmic-web shimmer (additive backdrop, no rng)
+    this.cosmicWeb.update(
+      t,
+      this.entities.list.length / this.quality.maxEntities,
+      this.state.chaos / CHAOS_MAX,
+      (this.state.entropy ?? 0) / ENTROPY_MAX,
+    ); // V110: the far-field void now READS + reflects the dome's vitality (item 15 — purpose)
     this.goldLattice.update(t); // V11: floating gold architecture tumble (additive, no rng)
     this.floatingMonoliths.update(t, this.state.chaos / CHAOS_MAX); // drifting megaliths kindle with chaos
     this.godColossus.update(
