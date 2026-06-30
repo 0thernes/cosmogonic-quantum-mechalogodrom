@@ -112,6 +112,7 @@ export function glyphExteriorSignature(a: AlphabetArchetype): GlyphExteriorSigna
 const WANDER_PHI = 1.6180339887;
 
 export function glyphWanderOffset(
+  out: { x: number; y: number; z: number },
   ph: number,
   sig: GlyphExteriorSignature,
   mx: number,
@@ -120,6 +121,7 @@ export function glyphWanderOffset(
   chaos: number,
   activity: number,
 ): { x: number; y: number; z: number } {
+  // Writes into `out` and returns it — zero allocation in the per-body render hot loop.
   // Small radius — breathe around the slot, never sprint across the sky.
   const r = 6 + activity * 12 + chaos * 8;
   const p = sig.wanderPhase;
@@ -131,37 +133,32 @@ export function glyphWanderOffset(
   const az = sig.wanderAz;
   switch (sig.motionStyle) {
     case 'hover':
-      return {
-        x: q(ax, p) * r * 0.35 + mx * 16,
-        y: q(ay, p * 1.3) * (4 + activity * 7) + my * 11,
-        z: q(az, p * 0.7 + 1.1) * r * 0.35 + mz * 16,
-      };
+      out.x = q(ax, p) * r * 0.35 + mx * 16;
+      out.y = q(ay, p * 1.3) * (4 + activity * 7) + my * 11;
+      out.z = q(az, p * 0.7 + 1.1) * r * 0.35 + mz * 16;
+      return out;
     case 'lissajous':
-      return {
-        x: q(ax, p) * r + mx * 20,
-        y: q(ay * 1.7, p) * (6 + activity * 9) + my * 13,
-        z: q(az * 1.3, p + 2.0) * r * 0.85 + mz * 20,
-      };
+      out.x = q(ax, p) * r + mx * 20;
+      out.y = q(ay * 1.7, p) * (6 + activity * 9) + my * 13;
+      out.z = q(az * 1.3, p + 2.0) * r * 0.85 + mz * 20;
+      return out;
     case 'breathe':
-      return {
-        x: q(0.21, p) * r * 0.25 + mx * 9,
-        y: q(0.17, p) * (8 + activity * 11) + my * 9,
-        z: q(0.19, p + 1.6) * r * 0.25 + mz * 9,
-      };
+      out.x = q(0.21, p) * r * 0.25 + mx * 9;
+      out.y = q(0.17, p) * (8 + activity * 11) + my * 9;
+      out.z = q(0.19, p + 1.6) * r * 0.25 + mz * 9;
+      return out;
     case 'drift':
-      return {
-        x: q(ax * 0.4, p) * r * 0.5 + Math.cos(ph * 0.09 * WANDER_PHI + p) * r * 0.18 + mx * 14,
-        y: q(0.13, my) * (5 + activity * 8) + my * 10,
-        z:
-          q(az * 0.45, p + 0.8) * r * 0.46 +
-          Math.sin(ph * 0.11 * WANDER_PHI + p) * r * 0.14 +
-          mz * 14,
-      };
+      out.x = q(ax * 0.4, p) * r * 0.5 + Math.cos(ph * 0.09 * WANDER_PHI + p) * r * 0.18 + mx * 14;
+      out.y = q(0.13, my) * (5 + activity * 8) + my * 10;
+      out.z =
+        q(az * 0.45, p + 0.8) * r * 0.46 +
+        Math.sin(ph * 0.11 * WANDER_PHI + p) * r * 0.14 +
+        mz * 14;
+      return out;
     default:
-      return {
-        x: Math.sin(ph * 0.13 * WANDER_PHI + p) * r * 0.12 + mx * 8,
-        y: q(0.25, p) * (3 + activity * 6) + my * 8,
-        z: Math.cos(ph * 0.12 * WANDER_PHI + p) * r * 0.12 + mz * 8,
-      };
+      out.x = Math.sin(ph * 0.13 * WANDER_PHI + p) * r * 0.12 + mx * 8;
+      out.y = q(0.25, p) * (3 + activity * 6) + my * 8;
+      out.z = Math.cos(ph * 0.12 * WANDER_PHI + p) * r * 0.12 + mz * 8;
+      return out;
   }
 }

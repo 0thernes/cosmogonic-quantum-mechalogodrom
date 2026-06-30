@@ -213,6 +213,10 @@ describe('EnvironmentSystem — BRUTALISM restores the reaction-diffusion ground
       env.applyBrutalism(f);
     }
     expect(ground.emissiveIntensity).toBeGreaterThan(0.29);
-    expect(ground.emissiveIntensity).toBeLessThanOrEqual(0.3 + 1e-9);
+    // World snaps brutalismFactor to exactly 0; OFF-edge restore must return build-time 0.3.
+    env.applyBrutalism(0);
+    expect(ground.emissiveIntensity).toBeCloseTo(0.3, 9);
+    env.applyBrutalism(0);
+    expect(ground.emissiveIntensity).toBeCloseTo(0.3, 9);
   });
 });

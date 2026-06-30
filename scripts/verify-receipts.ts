@@ -2,12 +2,15 @@
 /**
  * verify-receipts.ts — the MEASUREMENT half of the receipts law (Dr. Manhattan's law in a script).
  *
- * Runs the real gate (`bun test`, `bun test --coverage`), parses the true numbers, and compares them to
- * the CANONICAL constants committed in `tests/docs-receipts-law.test.ts`. If they have drifted, it fails
- * with a precise diff so the truth-sync can update the constant — never the other way around.
+ * Parses the real `bun test --coverage` output, compares it to the CANONICAL constants committed in
+ * `scripts/canonical-receipts.ts`, and fails on drift. In normal package-script use, coverage output is
+ * piped in via `--stdin` so the verifier does not need to spawn a nested process (some managed Windows
+ * hosts deny that). Direct mode still runs `bun test --coverage` itself when child process spawning is
+ * available.
  *
- *   bun scripts/verify-receipts.ts          # verify canon == reality (used by `bun run check` + CI)
- *   bun scripts/verify-receipts.ts --print   # just measure + print the canonical triple to paste
+ *   bun --shell=system run verify:receipts:pipe
+ *   bun scripts/verify-receipts.ts          # direct mode, if nested spawn is allowed
+ *   bun scripts/verify-receipts.ts --print  # measure + print the canonical triple to paste
  *
  * The companion fast test (`docs-receipts-law.test.ts`) then propagates the canon to every public surface.
  * Together they make it impossible to ship a test-count or coverage figure that was not measured.
@@ -22,12 +25,32 @@ function run(args: string[]): string {
     // Sentinel kept for compatibility; the fast test no longer spawns, but harmless to set.
     env: { ...process.env, RECEIPTS_LAW_CHILD: '1' },
   });
+  if (r.error) {
+    throw new Error(
+      `verify-receipts: could not spawn \`bun ${args.join(' ')}\` (${r.error.message}). ` +
+        'Use `bun --shell=system run verify:receipts:pipe` on hosts that deny nested spawn.',
+    );
+  }
   return `${r.stdout ?? ''}\n${r.stderr ?? ''}`;
 }
 
-/** One cold `bun test --coverage` run — count and coverage must share the same measurement. */
-function measureGate(): { count: number; line: string; func: string } {
-  const out = run(['test', '--coverage']);
+async function coverageOutput(): Promise<string> {
+  if (process.argv.includes('--stdin')) {
+    const text = await Bun.stdin.text();
+    // Preserve the actual test transcript for humans/CI logs; parsing still happens below.
+    process.stdout.write(text);
+    return text;
+  }
+  return run(['test', '--coverage']);
+}
+
+/** One cold `bun test --coverage` transcript — count and coverage must share the same measurement. */
+function measureGate(out: string): { count: number; line: string; func: string } {
+  const failed = out.match(/(^|\n)\s*([0-9]+)\s+fail\b/);
+  if (failed && Number(failed[2]) > 0) {
+    throw new Error(`verify-receipts: coverage test run reported ${failed[2]} failing test(s)`);
+  }
+
   const ran = out.match(/Ran\s+([0-9]+)\s+tests?\b/);
   const pass = out.match(/^\s*([0-9]+)\s+pass\s*$/m);
   let count = ran ? Number(ran[1]) : pass ? Number(pass[1]) : NaN;
@@ -48,11 +71,11 @@ function measureGate(): { count: number; line: string; func: string } {
 
 const printOnly = process.argv.includes('--print');
 
-const { count, line: lineCov, func: funcCov } = measureGate();
+const { count, line: lineCov, func: funcCov } = measureGate(await coverageOutput());
 const cov = { line: lineCov, func: funcCov };
 
 if (printOnly) {
-  console.log('Canonical receipts (paste into tests/docs-receipts-law.test.ts):');
+  console.log('Canonical receipts (paste into scripts/canonical-receipts.ts):');
   // CANONICAL_TEST_COUNT is a FLOOR (min across environments), not an exact pin — parameterized
   // doc/determinism tests count per-file, so the total differs by env (clean CI < a file-rich local
   // tree). Never RAISE the floor automatically (that would red a leaner env); only lower it if a clean
@@ -101,9 +124,7 @@ if (problems.length > 0) {
   console.error('✗ receipts law: canonical constants have drifted from the measured gate:');
   for (const p of problems) console.error(`   - ${p}`);
   console.error('\n   Fix: run `bun scripts/verify-receipts.ts --print`, update the constants in');
-  console.error(
-    '   tests/docs-receipts-law.test.ts, then re-sync the surfaces. Never the reverse.',
-  );
+  console.error('   scripts/canonical-receipts.ts, then re-sync the surfaces. Never the reverse.');
   process.exit(1);
 }
 

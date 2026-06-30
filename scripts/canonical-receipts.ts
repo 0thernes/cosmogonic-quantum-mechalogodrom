@@ -1,7 +1,7 @@
 /**
  * CANONICAL RECEIPTS -- the single source of truth for the repo's measured gate figures.
  *
- * Measured 2026-06-26 (Bun 1.3.14, cold shell) and verified to match reality by
+ * Measured 2026-06-26 (Bun 1.3.14, cold shell); re-verified 2026-06-30 in the managed Windows shell by
  * `scripts/verify-receipts.ts` (run in `bun run check` + CI). Propagated to every public surface and
  * policed by `tests/docs-receipts-law.test.ts`. Dr. Manhattan's law: if it is not measured, it is not real.
  *

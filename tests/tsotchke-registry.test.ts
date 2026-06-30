@@ -121,6 +121,15 @@ describe('Petri dish — primordial digital biologics', () => {
     expect(high).toBeGreaterThan(low);
   });
 
+  test('emergence scalar updates each beat from live dish telemetry', () => {
+    const dish = createPetriDish(42);
+    expect(dish.emergence).toBe(0);
+    const rng = mulberry32(99);
+    for (let i = 0; i < 40; i++) petriDishBeat(dish, 0, i, rng);
+    expect(dish.emergence).toBeGreaterThan(0);
+    expect(dish.emergence).toBeLessThanOrEqual(1);
+  });
+
   test('colony speciates deterministically under biomass and complexity pressure', () => {
     const dish = createPetriDish(19);
     dish.biomass = 0.75;

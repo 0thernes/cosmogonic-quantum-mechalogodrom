@@ -64,6 +64,7 @@ const E = new THREE.Euler();
 const P = new THREE.Vector3();
 const S = new THREE.Vector3();
 const C = new THREE.Color();
+const WANDER = { x: 0, y: 0, z: 0 };
 
 /** Per-instance animation constants, derived from the archetype with NO rng. */
 interface Body {
@@ -336,7 +337,7 @@ export class AlphabetPantheonRender {
         const mx = this.motorX[b.gIdx] ?? 0;
         const my = this.motorY[b.gIdx] ?? 0;
         const mz = this.motorZ[b.gIdx] ?? 0;
-        const wander = glyphWanderOffset(ph, b.sig, mx, my, mz, this.chaos, ba);
+        const wander = glyphWanderOffset(WANDER, ph, b.sig, mx, my, mz, this.chaos, ba);
         P.set(b.ax + wander.x, b.ay + wander.y, b.az + wander.z);
         E.set(
           Math.sin(ph * 0.42 + mx + b.sig.rotBias) * 0.55,

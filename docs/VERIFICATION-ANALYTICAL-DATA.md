@@ -21,8 +21,8 @@ Rewritten in place when the facts change (per the binding "Living docs, no archi
 | ------------------- | ------------------------- | ------------------------------------------------------------------------------------ | ----------------------- |
 | Package version     | `0.18.0`                  | `package.json` `version`                                                             | `sync-surfaces.ts`      |
 | Test count (floor)  | `1771`                    | `scripts/canonical-receipts.ts`                                                      | `sync-surfaces.ts`      |
-| Line coverage       | `91.97%`                  | `scripts/canonical-receipts.ts`                                                      | `sync-surfaces.ts`      |
-| Function coverage   | `94.85%`                  | `scripts/canonical-receipts.ts`                                                      | `sync-surfaces.ts`      |
+| Line coverage       | `94.77%`                  | `scripts/canonical-receipts.ts`                                                      | `sync-surfaces.ts`      |
+| Function coverage   | `91.97%`                  | `scripts/canonical-receipts.ts`                                                      | `sync-surfaces.ts`      |
 | Faculties (design)  | `100` (~30 deep-wired)    | `CANONICAL_FACULTIES`                                                                | `sync-surfaces.ts`      |
 | Archon pantheon     | `25` (5 apex + 20 light)  | `CANONICAL_ARCHONS`                                                                  | `sync-surfaces.ts`      |
 | Theory-of-mind orgs | `25`                      | `CANONICAL_TOM_ORGANS`                                                               | `sync-surfaces.ts`      |
@@ -35,15 +35,14 @@ Rewritten in place when the facts change (per the binding "Living docs, no archi
 | Apex composite mind | `~10,081` weights         | `src/sim/super-mind.ts`                                                              | prose (NOT auto-synced) |
 | Legacy spine        | `~1,444` params           | `src/sim/super-mind.ts` / ADR-0008                                                   | prose (NOT auto-synced) |
 
-### Measured reality (this audit, 2026-06-26, Bun 1.3.14)
+### Measured reality (this audit, 2026-06-30, Bun 1.3.14)
 
-- `bun test --coverage` → **2924 pass / 4 fail** before this pass · coverage **95.03% line / 92.03% func**
-  (matches canonical exactly). The 2924 vs 1477 gap is **expected**: `CANONICAL_TEST_COUNT` is a
-  documented **floor** (PORTABLE_TEST_FLOOR = 1400); `bun test` runs every `*.test.ts` in the working
-  tree, and a file-rich local checkout (with nested `.claude/worktrees/` copies) measures far more than
-  a clean CI checkout. The receipts law floors against 1400, so any count ≥ 1400 is green.
-- The **4 failures** were `documentation link integrity` doc-link checks (see §3, Finding C) — fixed in
-  this pass.
+- `bun test --coverage` → **1880 pass / 0 fail** · **2,068,488 expect() calls** · **191 test files** · coverage
+  **94.72% line / 92.13% func** (measured; canonical synced floor is **1771** tests · **94.77% line / 91.97% func**
+  from `canonical-receipts.ts`). The 1880 vs 1771 gap is expected: `CANONICAL_TEST_COUNT` is a documented
+  **floor**; a file-rich checkout measures every `*.test.ts` in the working tree. Gate-enforced
+  `verify:receipts` floors against the canonical ledger — any count ≥ floor with matching canon is green.
+- `bun run check` → green (prettier · tsc · oxlint · verify:receipts/test+coverage · sync:check · verify:facts · build).
 
 ---
 

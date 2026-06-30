@@ -33,3 +33,4 @@ tsc.log
 .audit-gate.log
 verify-mind.ts
 *.bmp
+.tmp-build-rm-test/

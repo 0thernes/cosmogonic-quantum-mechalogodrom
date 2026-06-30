@@ -11,15 +11,15 @@ when the numbers change it is rewritten in place.
 
 ## Measured gate
 
-| Fact          | Value                                                                                     |
-| ------------- | ----------------------------------------------------------------------------------------- |
-| Repo package  | `v0.18.0`                                                                                 |
-| Full gate     | `bun run check` green (2026-06-26)                                                        |
-| Gate stages   | `format:check`, `typecheck`, `lint`, `bun test`, `verify:receipts`, `sync:check`, `build` |
-| Tests         | `1771 pass`, `0 fail`, `2,047,523 expect() calls`, `175` test files                       |
-| Coverage      | `~92%` line / `~95%` function (canonical 91.97 / 94.85; ±6 pp env-jitter, gate-enforced)  |
-| Build         | `7` artifacts emitted to `dist/`                                                          |
-| Single source | `scripts/canonical-receipts.ts` + `package.json`                                          |
+| Fact          | Value                                                                                                         |
+| ------------- | ------------------------------------------------------------------------------------------------------------- |
+| Repo package  | `v0.18.0`                                                                                                     |
+| Full gate     | `bun run check` green (2026-06-30)                                                                            |
+| Gate stages   | `format:check`, `typecheck`, `lint`, `verify:receipts` (test+coverage), `sync:check`, `verify:facts`, `build` |
+| Tests         | `1880 pass`, `0 fail`, `2,068,488 expect() calls`, `191` test files                                           |
+| Coverage      | `94.72%` line / `92.13%` function (measured; canonical floor/tolerance `94.77%` / `91.97%`)                   |
+| Build         | `7` artifacts emitted to `dist/`                                                                              |
+| Single source | `scripts/canonical-receipts.ts` + `package.json`                                                              |
 
 ## Claim baseline
 

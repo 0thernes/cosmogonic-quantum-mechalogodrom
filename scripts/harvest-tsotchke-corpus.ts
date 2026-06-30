@@ -65,6 +65,11 @@ function harvest(): Harvest {
       };
       walk(base);
     } catch {}
+    // The first existing candidate (Eshkol/eshkol_repo) already contains every .esk file;
+    // its parent (Eshkol) recursively re-enters eshkol_repo, so walking both double-counts
+    // every file. Stop after the first existing base. (break outside the try so a partial
+    // throw inside walk still stops the second walk.)
+    break;
   }
 
   return {

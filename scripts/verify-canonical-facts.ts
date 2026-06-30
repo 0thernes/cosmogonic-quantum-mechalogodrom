@@ -13,7 +13,8 @@
  * their historical numbers by policy and are excluded. Deterministic: sorted `git ls-files`.
  */
 import { execSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
+import { join, relative, sep } from 'node:path';
 import { CANONICAL_FACULTIES, CANONICAL_ARCHONS, CANONICAL_TOM_ORGANS } from './canonical-receipts';
 
 interface Fact {
@@ -83,16 +84,57 @@ const FACTS: Fact[] = [
 ];
 
 const EXCLUDE =
-  /^(legacy|node_modules|dist|coverage)\/|^\.claude\/worktrees\/|^CHANGELOG\.md$|^docs\/(AUDIT-LOG\.md|ln\/|DAILY_RUNS\/|reports\/20)/;
+  /^(legacy|node_modules|dist|coverage)\/|^\.claude\/worktrees\/|^CHANGELOG\.md$|^docs\/(AUDIT-LOG\.md|ln\/|DAILY_RUNS\/|reports\/20|MEGA-MASTER-)/;
+
+const FALLBACK_SKIP_DIRS = new Set([
+  '.agents',
+  '.claude',
+  '.codex',
+  '.git',
+  'coverage',
+  'dist',
+  'legacy',
+  'node_modules',
+  'site',
+]);
+
+function toRepoPath(path: string): string {
+  return relative(process.cwd(), path).split(sep).join('/');
+}
+
+function fallbackSurfaceWalk(dir: string, out: string[]): void {
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    if (entry.isDirectory()) {
+      if (FALLBACK_SKIP_DIRS.has(entry.name)) continue;
+      fallbackSurfaceWalk(join(dir, entry.name), out);
+      continue;
+    }
+    if (!entry.isFile()) continue;
+    const rel = toRepoPath(join(dir, entry.name));
+    if (/\.(md|html|xml)$/i.test(rel) && !EXCLUDE.test(rel)) out.push(rel);
+  }
+}
+
+function fallbackSurfaces(): string[] {
+  const out: string[] = [];
+  fallbackSurfaceWalk(process.cwd(), out);
+  return out.sort();
+}
 
 function surfaces(): string[] {
-  return execSync('git ls-files', { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 })
-    .split('\n')
-    .map((s) => s.trim())
-    .filter(Boolean)
-    .filter((p) => /\.(md|html|xml)$/i.test(p))
-    .filter((p) => !EXCLUDE.test(p))
-    .sort();
+  try {
+    return execSync('git ls-files', { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 })
+      .split('\n')
+      .map((s) => s.trim())
+      .filter(Boolean)
+      .filter((p) => /\.(md|html|xml)$/i.test(p))
+      .filter((p) => !EXCLUDE.test(p))
+      .sort();
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.warn(`verify:facts — git ls-files unavailable (${message}); using repo-walk fallback.`);
+    return fallbackSurfaces();
+  }
 }
 
 interface Hit {
@@ -104,8 +146,9 @@ interface Hit {
   drift: boolean;
 }
 
+const surfaceFiles = surfaces();
 const hits: Hit[] = [];
-for (const file of surfaces()) {
+for (const file of surfaceFiles) {
   let text: string;
   try {
     text = readFileSync(file, 'utf8');
@@ -138,7 +181,7 @@ for (const file of surfaces()) {
 const drifts = hits.filter((h) => h.drift);
 if (drifts.length === 0) {
   console.log(
-    `verify:facts — no drift across ${surfaces().length} MD/HTML/XML surfaces. All canonical facts consistent.`,
+    `verify:facts — no drift across ${surfaceFiles.length} MD/HTML/XML surfaces. All canonical facts consistent.`,
   );
 } else {
   console.log(`verify:facts — ${drifts.length} potential drift(s) flagged for review:\n`);

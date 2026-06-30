@@ -154,6 +154,23 @@ describe('EntityManager.applyBrutalism — phone-tier per-mesh parity', () => {
     }
   });
 
+  test('remorph during brutalism re-captures the new morph colour on restore', () => {
+    const ctx = makeCtx(0xbeef00, false);
+    const ents = new EntityManager(ctx);
+    ents.reset(16);
+    const e = live(ents)[0]!;
+    const mi0 = e.userData.mi;
+    ents.applyBrutalism(1);
+    ents.remorph(e, (mi0 + 1) % ctx.morphs.length);
+    ents.applyBrutalism(0);
+    const restored = e.material.color.getHex();
+    ents.applyBrutalism(0);
+    const baseAfterRemorph = e.material.color.getHex();
+    expect(restored).toBe(baseAfterRemorph);
+    ents.applyBrutalism(1);
+    expect(e.material.color.getHex()).not.toBe(baseAfterRemorph);
+  });
+
   test('instanced tier is a guarded no-op (the shader owns the look)', () => {
     const ents = new EntityManager(makeCtx(0xdec0de, true));
     ents.reset(48);

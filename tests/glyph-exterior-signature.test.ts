@@ -27,8 +27,9 @@ describe('glyph-exterior-signature', () => {
   test('wander offset stays bounded (no racing loops)', () => {
     const sig = glyphExteriorSignature(ALPHABET_ROSTER[42]!);
     let maxR = 0;
+    const out = { x: 0, y: 0, z: 0 };
     for (let i = 0; i < 200; i++) {
-      const w = glyphWanderOffset(i * 0.1, sig, 0.5, 0.3, 0.4, 0.8, 0.7);
+      const w = glyphWanderOffset(out, i * 0.1, sig, 0.5, 0.3, 0.4, 0.8, 0.7);
       maxR = Math.max(maxR, Math.abs(w.x), Math.abs(w.y), Math.abs(w.z));
     }
     expect(maxR).toBeLessThan(80);

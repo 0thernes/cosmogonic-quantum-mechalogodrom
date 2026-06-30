@@ -309,12 +309,24 @@ export function petriDishBeat(
     }
   }
 
-  // BRUTAL GOD UNLEASH — use wired emergence + petri applicator (full character list via triggerBrutalGodEvent)
-  const em = (state as any).emergence || 0.5;
-  const pwr = state.aliveness || 0.5;
+  // Emergence strength — composite of φ surrogate, aliveness, complexity tier, sentience proxy.
+  // World drives brutal-god events via EmergenceAnglesController separately; this field gates the
+  // in-dish biomass/complexity amplifier below (previously never written — always stuck at 0).
+  state.emergence = Math.min(
+    1,
+    Math.max(
+      0,
+      (state.phiSurrogate ?? 0) * 0.35 +
+        state.aliveness * 0.25 +
+        Math.min(1, (state.complexity ?? 0) / 20) * 0.25 +
+        (state.sentienceProxy ?? 0) * 0.15,
+    ),
+  );
+
+  // BRUTAL GOD UNLEASH — emergence + aliveness gate in-dish biomass/complexity amplification.
+  const em = state.emergence;
+  const pwr = state.aliveness;
   if (em > 0.5 || pwr > 0.6) {
-    // For demo, call our emergence if available on global or skip (world drives it)
-    // Here just amp for brutality feel
     state.biomass = Math.min(1, state.biomass + 0.02);
     // Monotone floor-fill toward this tier's cap (15) — gated so it NEVER regresses
     // complexity the godPower branch (cap 20) already raised higher. See e67eacb.

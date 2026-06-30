@@ -11,6 +11,16 @@ dated / historical / "superseded snapshot" copies (per the binding "Living docs,
 
 ---
 
+## 2026-06-28 — QA audit pass: petri emergence wiring, truth ledger, exterior tests
+
+Full-repo audit (`bun run check` green). Fixed verified wiring and documentation drift:
+
+- **Petri emergence dead field:** `petriDishBeat` now writes `state.emergence` each beat from φ/aliveness/complexity/sentience proxy; removed dishonest `(state as any).emergence || 0.5` fallback that masked the bug (`src/sim/petri-dish.ts`).
+- **Truth ledger:** `docs/VERIFICATION-ANALYTICAL-DATA.md` line/function coverage swapped to match `canonical-receipts.ts` (94.77 / 91.97); measured reality updated to 2026-06-28 gate run (1874 tests).
+- **CURRENT-TRUTH-BASELINE:** coverage row corrected to canonical 94.77 / 91.97.
+- **AI sandbox:** built-in `echo` + repo-confined `git grep` literal fallback (no subprocess for common read-only paths); top-level `readdir` import.
+- **Tests:** `creature-exterior-layers.test.ts` (attach/update/dispose), petri emergence scalar, environment `applyBrutalism(0)` non-RD restore, entity remorph-during-brutalism round-trip.
+
 ## 2026-06-27 — V-HUD-READABILITY: center panels stop being flat strips
 
 Raised the shared CENTER HUD slot and rebuilt the Architecture pop-up body so Architect/Architecture

@@ -143,6 +143,13 @@ export class ApexExteriorAbomination {
   private readonly stellatedSwarm: THREE.InstancedMesh;
   private readonly neuralTethers: THREE.LineSegments;
   private readonly zigguratStack: THREE.LineSegments;
+  // Per-frame scratch — reused across update() calls (zero-alloc hot path).
+  private readonly _c = new THREE.Color();
+  private readonly _sM = new THREE.Matrix4();
+  private readonly _sP = new THREE.Vector3();
+  private readonly _sQ = new THREE.Quaternion();
+  private readonly _sS = new THREE.Vector3();
+  private readonly _sE = new THREE.Euler();
   private readonly matWire = new THREE.LineBasicMaterial({
     color: 0xaaccff,
     transparent: true,
@@ -411,7 +418,7 @@ export class ApexExteriorAbomination {
   update(t: number, transcendence: number, vitality: number, pulse: TsotchkeQuantumPulse): void {
     const st = t * CREATURE_EXTERIOR_TIME_SCALE;
     const hue = tsotchkeExteriorHue(pulse, 0.55 + transcendence * 0.2);
-    const c = new THREE.Color().setHSL(hue, 0.85, 0.5 + vitality * 0.2);
+    const c = this._c.setHSL(hue, 0.85, 0.5 + vitality * 0.2);
     for (let i = 0; i < this.tesseract.length; i++) {
       const box = this.tesseract[i]!;
       box.rotation.x = st * (0.08 + i * 0.02) + Math.sin(st * 0.3 + i) * 0.15;
@@ -445,11 +452,11 @@ export class ApexExteriorAbomination {
     this.godRays.rotation.z = st * 0.018;
     (this.godRays.material as THREE.LineBasicMaterial).opacity =
       (0.04 + 0.1 * vitality) * (0.7 + 0.3 * Math.sin(st * 0.5));
-    const sM = new THREE.Matrix4();
-    const sP = new THREE.Vector3();
-    const sQ = new THREE.Quaternion();
-    const sS = new THREE.Vector3();
-    const sE = new THREE.Euler();
+    const sM = this._sM;
+    const sP = this._sP;
+    const sQ = this._sQ;
+    const sS = this._sS;
+    const sE = this._sE;
     for (let i = 0; i < this.stellatedSwarm.count; i++) {
       this.stellatedSwarm.getMatrixAt(i, sM);
       sM.decompose(sP, sQ, sS);
@@ -526,9 +533,16 @@ export class MechaExteriorAbomination {
   private beat = 0;
   private activity = 0;
   private phenIndices: number[] = [0, 137, 274, 411];
+  // Constant core radius + per-instance base scales, captured at construction so the
+  // per-frame animation recomputes scale from a fixed base instead of multiplying the
+  // live (already-decaying) scale — which would shrink the instances to zero over time.
+  private readonly coreR: number;
+  private readonly cubeBase: Float32Array;
+  private readonly goldBase: Float32Array;
 
   constructor(parent: THREE.Object3D, coreR: number) {
     parent.add(this.group);
+    this.coreR = coreR;
     const cols = 6;
     const rows = 8;
     const boxGeo = new THREE.BoxGeometry(coreR * 0.14, coreR * 0.1, coreR * 0.06);
@@ -566,6 +580,7 @@ export class MechaExteriorAbomination {
       this.group.add(ln);
     }
     const swarmN = 48;
+    this.cubeBase = new Float32Array(swarmN);
     const cubeG = new THREE.BoxGeometry(coreR * 0.08, coreR * 0.08, coreR * 0.08);
     this.cubeSwarm = new THREE.InstancedMesh(
       cubeG,
@@ -588,7 +603,9 @@ export class MechaExteriorAbomination {
         coreR * 0.6 + (i % 5) * 0.15,
       );
       Q.setFromEuler(new THREE.Euler(i * 0.31, i * 0.47, i * 0.19));
-      S.setScalar(0.4 + (i % 7) * 0.12);
+      const cb = 0.4 + (i % 7) * 0.12;
+      this.cubeBase[i] = cb;
+      S.setScalar(cb);
       M.compose(P, Q, S);
       this.cubeSwarm.setMatrixAt(i, M);
     }
@@ -691,6 +708,7 @@ export class MechaExteriorAbomination {
     );
     this.group.add(this.nebulaMeat);
     const goldN = 32;
+    this.goldBase = new Float32Array(goldN);
     const goldG = new THREE.BoxGeometry(coreR * 0.06, coreR * 0.06, coreR * 0.06);
     this.fractalGold = new THREE.InstancedMesh(
       goldG,
@@ -710,7 +728,9 @@ export class MechaExteriorAbomination {
         coreR * 0.45 + (i % 4) * 0.12,
       );
       Q.setFromEuler(new THREE.Euler(i * 0.5, i * 0.35, i * 0.28));
-      S.setScalar(0.3 + (i % 5) * 0.15);
+      const gb = 0.3 + (i % 5) * 0.15;
+      this.goldBase[i] = gb;
+      S.setScalar(gb);
       M.compose(P, Q, S);
       this.fractalGold.setMatrixAt(i, M);
     }
@@ -756,8 +776,11 @@ export class MechaExteriorAbomination {
     for (let i = 0; i < this.crtColumns.length; i++) {
       const col = this.crtColumns[i]!;
       const flick = 0.5 + 0.5 * Math.sin(st * 2.1 + i * 0.7 + this.beat * 0.02);
+      // EMA toward a coreR-scaled standoff (~coreR*1.8). The target MUST carry the coreR
+      // factor; without it the column wall collapsed from z≈coreR*1.8 toward the core plane.
       col.position.z =
-        col.position.z * 0.98 + 0.02 * (1.6 + fusion * 0.8 + Math.sin(st * 0.4 + i) * 0.3);
+        col.position.z * 0.98 +
+        0.02 * this.coreR * (1.8 + fusion * 0.1 + Math.sin(st * 0.4 + i) * 0.04);
       (col.material as THREE.LineBasicMaterial).opacity =
         (0.08 + 0.35 * flick * drive * (0.65 + this.activity * 0.35)) * fusion;
       col.rotation.y = Math.sin(st * 0.15 + i) * 0.08;
@@ -781,7 +804,9 @@ export class MechaExteriorAbomination {
       E.y += st * 0.012 + i * 0.003;
       E.z += Math.cos(st * 0.06 + i * 0.35) * 0.002;
       Q.setFromEuler(E);
-      const sc = S.x * (0.95 + 0.08 * Math.sin(st * 0.25 + i));
+      // Recompute scale from the constant base (NOT the live decomposed scale) so it
+      // oscillates around the base instead of decaying geometrically toward zero.
+      const sc = this.cubeBase[i]! * (1 + 0.08 * Math.sin(st * 0.25 + i));
       S.set(sc, sc, sc);
       P.z += Math.sin(st * 0.11 + i) * 0.15 * fusion;
       M.compose(P, Q, S);
@@ -819,7 +844,8 @@ export class MechaExteriorAbomination {
       E.setFromQuaternion(Q);
       E.y += st * 0.008 + i * 0.002;
       Q.setFromEuler(E);
-      S.multiplyScalar(0.98 + 0.04 * Math.sin(st * 0.2 + i));
+      // Recompute from the constant base — multiplyScalar on the live scale decayed it to zero.
+      S.setScalar(this.goldBase[i]! * (1 + 0.04 * Math.sin(st * 0.2 + i)));
       M.compose(P, Q, S);
       this.fractalGold.setMatrixAt(i, M);
     }
@@ -837,9 +863,9 @@ export class MechaExteriorAbomination {
     fusion: number,
     drive: number,
   ): void {
-    const c = new THREE.Color().setHSL(phen.hue * 0.3 + hue * 0.7, 0.9, 0.45 + drive * 0.2);
-    this.shardMat.color.copy(c);
-    for (const col of this.crtColumns) (col.material as THREE.LineBasicMaterial).color.copy(c);
+    this.shardMat.color.setHSL(phen.hue * 0.3 + hue * 0.7, 0.9, 0.45 + drive * 0.2);
+    for (const col of this.crtColumns)
+      (col.material as THREE.LineBasicMaterial).color.copy(this.shardMat.color);
     for (const ln of this.tunnel) {
       (ln.material as THREE.LineBasicMaterial).color.setHSL(
         (hue + phen.hue) * 0.5,
