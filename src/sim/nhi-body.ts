@@ -32,6 +32,7 @@ export class NhiBodySystem {
   private readonly coreGeo: THREE.IcosahedronGeometry;
   private readonly ringGeo: THREE.TorusGeometry;
   private readonly eyeGeo: THREE.SphereGeometry;
+  private readonly spikeGeo: THREE.ConeGeometry;
   private spawnIndex = 0;
 
   constructor(scene: THREE.Scene) {
@@ -41,6 +42,7 @@ export class NhiBodySystem {
     this.coreGeo = new THREE.IcosahedronGeometry(R, 1);
     this.ringGeo = new THREE.TorusGeometry(R * 1.35, R * 0.12, 8, 28);
     this.eyeGeo = new THREE.SphereGeometry(R * 0.16, 12, 12);
+    this.spikeGeo = new THREE.ConeGeometry(R * 0.13, R * 1.15, 7, 1);
   }
 
   /** Birth an alien body for NHI `id` at (x,y,z). Idempotent per id. */
@@ -50,25 +52,25 @@ export class NhiBodySystem {
     group.position.set(x, y, z);
 
     // V109: wider alien skin palette — each NHI gets a unique biomechanical "species" hue/texture.
-    const speciesHue = (0.52 + this.spawnIndex * 0.137) % 1;
-    const skinSat = 0.62 + 0.25 * Math.sin(this.spawnIndex * 1.7);
-    const skinLit = 0.35 + 0.14 * Math.sin(this.spawnIndex * 2.3);
+    const speciesHue = (0.58 + this.spawnIndex * 0.137) % 1;
+    const skinSat = 0.72 + 0.18 * Math.sin(this.spawnIndex * 1.7);
+    const skinLit = 0.08 + 0.06 * Math.sin(this.spawnIndex * 2.3);
     const coreMat = new THREE.MeshStandardMaterial({
       color: new THREE.Color().setHSL(speciesHue, skinSat, skinLit),
-      emissive: new THREE.Color().setHSL((0.72 + this.spawnIndex * 0.091) % 1, 0.86, 0.28),
-      emissiveIntensity: 1.9,
+      emissive: new THREE.Color().setHSL((0.78 + this.spawnIndex * 0.091) % 1, 0.96, 0.34),
+      emissiveIntensity: 2.35,
       metalness: 0.75 + 0.2 * Math.sin(this.spawnIndex * 3.1),
-      roughness: 0.12 + 0.18 * Math.abs(Math.sin(this.spawnIndex * 2.7)),
+      roughness: 0.22 + 0.24 * Math.abs(Math.sin(this.spawnIndex * 2.7)),
       flatShading: true,
     });
     group.add(new THREE.Mesh(this.coreGeo, coreMat));
 
     const ringMat = new THREE.MeshStandardMaterial({
-      color: new THREE.Color().setHSL((0.08 + this.spawnIndex * 0.173) % 1, 0.72, 0.5),
-      emissive: new THREE.Color().setHSL((0.13 + this.spawnIndex * 0.113) % 1, 0.9, 0.34),
-      emissiveIntensity: 1.45,
+      color: new THREE.Color().setHSL((0.08 + this.spawnIndex * 0.173) % 1, 0.82, 0.18),
+      emissive: new THREE.Color().setHSL((0.13 + this.spawnIndex * 0.113) % 1, 0.98, 0.42),
+      emissiveIntensity: 2.05,
       metalness: 0.95,
-      roughness: 0.14,
+      roughness: 0.2,
     });
     const ring = new THREE.Mesh(this.ringGeo, ringMat);
     ring.rotation.x = Math.PI / 2.4;
@@ -81,13 +83,25 @@ export class NhiBodySystem {
       0.72 + 0.14 * Math.cos(this.spawnIndex),
     );
     group.add(ring2);
+    for (let i = 0; i < 9; i++) {
+      const a = i * 2.399963229728653 + this.spawnIndex * 0.41;
+      const spike = new THREE.Mesh(this.spikeGeo, ringMat);
+      spike.position.set(
+        Math.cos(a) * R * 0.78,
+        Math.sin(a * 1.7) * R * 0.34,
+        Math.sin(a) * R * 0.78,
+      );
+      spike.rotation.set(Math.sin(a) * 1.2, a, Math.cos(a) * 1.2);
+      spike.scale.setScalar(0.55 + 0.35 * Math.sin(i * 1.9 + this.spawnIndex));
+      group.add(spike);
+    }
 
     // Ocular crown on the "face" (front +z) — weird but readable at distance.
     const eyeHue = (0.9 + this.spawnIndex * 0.071) % 1;
     const eyeMat = new THREE.MeshStandardMaterial({
-      color: 0xf8ffff,
+      color: 0x05070c,
       emissive: new THREE.Color().setHSL(eyeHue, 0.95, 0.62),
-      emissiveIntensity: 5.4,
+      emissiveIntensity: 7.2,
     });
     for (let i = 0; i < 7; i++) {
       const a = -0.95 + i * 0.32;
@@ -145,7 +159,7 @@ export class NhiBodySystem {
         Math.sin(t * 0.53 + b.phase) * 0.25 +
         Math.sin(t * 3.7 + b.phase) * 0.2;
       b.eyeMat.emissiveIntensity =
-        5.4 + Math.sin(t * 2.5 + b.phase) * 0.8 + Math.sin(t * 6.0 + b.phase * 3.0) * 0.4;
+        6.4 + Math.sin(t * 2.5 + b.phase) * 1.1 + Math.sin(t * 6.0 + b.phase * 3.0) * 0.7;
     }
   }
 
@@ -167,6 +181,7 @@ export class NhiBodySystem {
     this.coreGeo.dispose();
     this.ringGeo.dispose();
     this.eyeGeo.dispose();
+    this.spikeGeo.dispose();
     this.root.removeFromParent();
   }
 

@@ -1547,15 +1547,19 @@
         );
       }
       function attractorCamZ(S) {
-        return S * (tileIsCompact() ? 1.5 : 0.78);
+        return S * (tileIsCompact() ? 2.35 : 1.7);
       }
       function attractorDrawScale(k) {
-        const base = tileIsCompact() ? 0.6 : 0.78;
-        return base + k * 0.08;
+        const base = tileIsCompact() ? 0.46 : 0.54;
+        return base + k * 0.06;
       }
       function attractorVertexScale(S, desktopDenom) {
-        const denom = tileIsCompact() ? desktopDenom * 1.6 : desktopDenom;
+        const denom = desktopDenom * (tileIsCompact() ? 2.35 : 1.55);
         return S / denom;
+      }
+      function fitWebglTile(p, S, cameraMul = 1) {
+        p.perspective(Math.PI / 3.25, 1, 1, S * 14);
+        p.camera(0, 0, attractorCamZ(S) * cameraMul, 0, 0, 0, 0, 1, 0);
       }
       const VOID = [4, 7, 17];
       const activeTiles = []; // { instance, spec } — ONLY the visible board's sketches
@@ -1594,10 +1598,11 @@
         osc.connect(filter);
         filter.connect(gain);
         if (slot % 5 === 0 || slot % 7 === 2) {
+          const noiseRng = makeRng(derivedSeed(params.seed, `${tileId}:noise`));
           const noise = audioCtx.createBufferSource();
           const nb = audioCtx.createBuffer(1, audioCtx.sampleRate * 0.12, audioCtx.sampleRate);
           const nd = nb.getChannelData(0);
-          for (let i = 0; i < nd.length; i++) nd[i] = (Math.random() * 2 - 1) * 0.35;
+          for (let i = 0; i < nd.length; i++) nd[i] = (noiseRng.next() * 2 - 1) * 0.35;
           noise.buffer = nb;
           const ng = audioCtx.createGain();
           ng.gain.setValueAtTime(0.06 + (slot % 3) * 0.03, t0);
@@ -1832,6 +1837,7 @@
           b.fill(0);
           for (let s = 0; s < 18; s++) blob();
           p.colorMode(p.HSB, 360, 100, 100, 100);
+          fitWebglTile(p, S, 1.18);
         };
         p.draw = () => {
           const k = rx.tick();
@@ -1864,8 +1870,8 @@
           p.background(VOID[0], VOID[1], VOID[2]);
           p.rotateX(-0.9);
           p.rotateZ(rx.orbit * 0.7);
-          const ext = S * 0.78;
-          const amp = S * 0.16 * (1 + k * 0.9);
+          const ext = S * (tileIsCompact() ? 0.48 : 0.56);
+          const amp = S * 0.11 * (1 + k * 0.65);
           const al = p.hot ? 92 : 72;
           const stride = (N / D) | 0;
           p.noFill();
@@ -1945,13 +1951,14 @@
           for (let i = 0; i < M; i++) if (area[i] > peak) peak = area[i];
           for (let i = 0; i < M; i++) area[i] /= peak; // normalize to tallest cell
           p.colorMode(p.HSB, 360, 100, 100, 100);
+          fitWebglTile(p, S, 1.08);
         };
         p.draw = () => {
           const k = rx.tick();
           p.background(VOID[0], VOID[1], VOID[2]);
           p.rotateX(-0.62);
           p.rotateY(rx.orbit);
-          const ext = S * 0.72;
+          const ext = S * (tileIsCompact() ? 0.48 : 0.56);
           // Floor: the baked Voronoi shading laid flat.
           p.push();
           p.rotateX(p.HALF_PI);
@@ -1960,7 +1967,7 @@
           p.plane(ext, ext);
           p.pop();
           // Prisms: one per site, height ∝ measured cell area (kick = surge).
-          const hMax = S * 0.26 * (1 + k * 0.8);
+          const hMax = S * 0.18 * (1 + k * 0.55);
           for (let i = 0; i < M; i++) {
             const h = 6 + area[i] * hMax;
             const w = ext * 0.052 * (0.7 + area[i] * 0.6);
@@ -2019,13 +2026,14 @@
           p.pixelDensity(1);
           accrete(500); // first visible flush
           p.colorMode(p.HSB, 360, 100, 100, 100);
+          fitWebglTile(p, S, 1.16);
         };
         p.draw = () => {
           const k = rx.tick();
           accrete((p.hot ? 90 : 45) + ((k * 320) | 0));
           p.background(VOID[0], VOID[1], VOID[2]);
           p.rotateY(rx.orbit);
-          p.scale(1 + k * 0.14);
+          p.scale((tileIsCompact() ? 0.66 : 0.76) + k * 0.1);
           const al = (p.hot ? 75 : 55) + k * 25;
           p.strokeWeight(1.4 + k * 0.8);
           p.beginShape(p.LINES);
@@ -2715,13 +2723,14 @@
             zs[i] = z;
           }
           p.colorMode(p.HSB, 360, 100, 100, 100);
+          fitWebglTile(p, S, 1.14);
         };
         p.draw = () => {
           p.background(VOID[0], VOID[1], VOID[2]);
           rot += 0.006;
           p.rotateY(rot);
           p.rotateX(0.5 + Math.sin(rot * 0.5) * 0.2);
-          const sc = S * 0.32;
+          const sc = S * (tileIsCompact() ? 0.2 : 0.24);
           p.noFill();
           p.strokeWeight(1.4);
           p.beginShape();
@@ -3002,6 +3011,7 @@
           p.pixelDensity(1);
           for (let i = 0; i < PTS; i++) step();
           p.colorMode(p.HSB, 360, 100, 100, 100);
+          fitWebglTile(p, S, 1.18);
         };
         p.draw = () => {
           const k = rx.tick();
@@ -3010,7 +3020,7 @@
           p.background(VOID[0], VOID[1], VOID[2]);
           p.rotateX(0.45 + Math.sin(rx.orbit * 0.6) * 0.22);
           p.rotateY(rx.orbit);
-          p.scale(1 + k * 0.16);
+          p.scale((tileIsCompact() ? 0.58 : 0.7) + k * 0.12);
           const al = p.hot ? 88 : 64;
           p.noFill();
           p.strokeWeight(1.2 + k);
@@ -3087,6 +3097,7 @@
           p.createCanvas(S, S, p.WEBGL);
           p.pixelDensity(1);
           p.colorMode(p.HSB, 360, 100, 100, 100);
+          fitWebglTile(p, S, 1.05);
         };
         p.draw = () => {
           const k = rx.tick();
@@ -3094,8 +3105,8 @@
           p.rotateX(0.5 + Math.sin(rx.orbit * 0.5) * 0.3);
           p.rotateY(rx.orbit);
           p.rotateZ(rx.orbit * 0.3);
-          p.scale(1 + k * 0.2);
-          const R = S * 0.36;
+          p.scale((tileIsCompact() ? 0.68 : 0.78) + k * 0.14);
+          const R = S * 0.3;
           const al = p.hot ? 90 : 66;
           p.noFill();
           p.strokeWeight(1.4 + k * 1.5);
@@ -3131,6 +3142,7 @@
           p.noiseSeed(rng.int(1e9));
           for (let i = 0; i < N; i++) respawn(i);
           p.colorMode(p.HSB, 360, 100, 100, 100);
+          fitWebglTile(p, S, 1.1);
         };
         p.draw = () => {
           const k = rx.tick();
@@ -3138,7 +3150,7 @@
           p.rotateY(rx.orbit);
           p.rotateX(0.4);
           const sp = (0.006 + (p.hot ? 0.004 : 0)) * (1 + k * 4);
-          const R = S * 0.42;
+          const R = S * 0.32;
           p.strokeWeight(1.6 + k);
           p.stroke(190 + k * 80, 70, 100, p.hot ? 80 : 58);
           p.beginShape(p.LINES);
@@ -3173,12 +3185,13 @@
           p.createCanvas(S, S, p.WEBGL);
           p.pixelDensity(1);
           p.colorMode(p.HSB, 360, 100, 100, 100);
+          fitWebglTile(p, S, 1.05);
         };
         p.draw = () => {
           const k = rx.tick();
           th += w1 * (1 + k * 3);
           ph += w2;
-          const R = S * 0.36;
+          const R = S * 0.3;
           const sx = Math.sin(ph) * Math.cos(th),
             sy = Math.cos(ph),
             sz = Math.sin(ph) * Math.sin(th);
@@ -3398,6 +3411,7 @@
             hgt[i] = rng.gauss() * 0.05 * (1 - r);
           }
           p.colorMode(p.HSB, 360, 100, 100, 100);
+          fitWebglTile(p, S, 1.12);
         };
         p.draw = () => {
           const k = rx.tick();
@@ -3405,7 +3419,7 @@
           p.background(VOID[0], VOID[1], VOID[2]);
           p.rotateX(1.05 + Math.sin(rx.orbit * 0.2) * 0.1);
           p.rotateZ(spin * 0.5);
-          const R = S * 0.46;
+          const R = S * 0.34;
           p.strokeWeight(1.6 + k * 1.4);
           p.beginShape(p.LINES);
           for (let i = 0; i < N; i++) {
@@ -3443,6 +3457,7 @@
             wz[w] = rng.range(-0.3, 0.3);
           }
           p.colorMode(p.HSB, 360, 100, 100, 100);
+          fitWebglTile(p, S, 1.12);
         };
         p.draw = () => {
           const k = rx.tick();
@@ -3459,7 +3474,7 @@
           p.background(VOID[0], VOID[1], VOID[2]);
           p.rotateY(rx.orbit);
           p.rotateX(0.5);
-          const R = S * 0.44;
+          const R = S * 0.34;
           p.noFill();
           p.strokeWeight(1.5 + k);
           for (let w = 0; w < W; w++) {
@@ -3486,14 +3501,15 @@
           p.createCanvas(S, S, p.WEBGL);
           p.pixelDensity(1);
           p.colorMode(p.HSB, 360, 100, 100, 100);
+          fitWebglTile(p, S, 1.08);
         };
         p.draw = () => {
           const k = rx.tick();
           p.background(VOID[0], VOID[1], VOID[2]);
           p.rotateZ(0.2);
           p.rotateY(rx.orbit);
-          const R = S * (0.16 + k * 0.05),
-            H = S * 0.66,
+          const R = S * (0.12 + k * 0.04),
+            H = S * 0.5,
             turns = 3.2;
           for (let strand = 0; strand < 2; strand++) {
             p.noFill();
@@ -3634,13 +3650,14 @@
             ys[i] = y;
             zs[i] = t;
           }
+          fitWebglTile(p, S, 1.14);
         };
         p.draw = () => {
           const k = rx.tick();
           p.background(VOID[0], VOID[1], VOID[2]);
           p.rotateY(rx.orbit);
           p.rotateX(0.4 + Math.sin(rx.orbit * 0.3) * 0.2);
-          const sc = S * 0.3;
+          const sc = S * 0.22;
           p.noFill();
           p.strokeWeight(1.3 + k);
           p.beginShape();
@@ -3679,13 +3696,14 @@
             ys[i] = y;
             zs[i] = z;
           }
+          fitWebglTile(p, S, 1.14);
         };
         p.draw = () => {
           const k = rx.tick();
           p.background(VOID[0], VOID[1], VOID[2]);
           p.rotateY(rx.orbit);
           p.rotateX(0.5 + Math.sin(rx.orbit * 0.4) * 0.2);
-          const sc = S * 0.35;
+          const sc = S * 0.24;
           p.noFill();
           p.strokeWeight(1.4 + k);
           p.beginShape();

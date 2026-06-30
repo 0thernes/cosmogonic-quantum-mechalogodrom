@@ -50,20 +50,25 @@ function paintVibrant(mat: THREE.MeshStandardMaterial, m: PhylumMorphType, mi: n
   m.col.getHSL(hsl);
   const baseHue =
     (hsl.h + slot * 0.008 + j1 * 0.39 + j2 * 0.25 + j4 * 0.18 + j5 * 0.12 - 0.06 + 1) % 1;
-  // Pastel-watery base: high lightness, slightly reduced saturation so it reads as crystal not neon.
-  mat.color.setHSL(
-    baseHue,
-    0.78, // softer saturation for watery/crystal look
-    Math.min(0.52, 0.28 + hsl.l * 0.12 + j3 * 0.12 + j4 * 0.08), // bright, dreamy, not blown-out
-  );
+  const family = mi % 3;
+  if (family === 0) {
+    // Dark graphite / grey / gold: black bodies with metallic biological glints.
+    mat.color.setHSL((0.09 + j2 * 0.08) % 1, 0.45 + j3 * 0.25, 0.08 + j4 * 0.08);
+  } else if (family === 1) {
+    // Saturated living chroma: purple, blue, red, green, pink distributed by hash.
+    mat.color.setHSL(baseHue, 0.88 + j5 * 0.1, 0.26 + j3 * 0.18);
+  } else {
+    // Strange high-contrast morphic combos: not pastel, not plain neon.
+    mat.color.setHSL((baseHue + 0.27 + j4 * 0.19) % 1, 0.96, 0.14 + j2 * 0.22);
+  }
   m.em.getHSL(hsl);
   // Colored inner glow: saturated core, bright enough to shimmer.
   mat.emissive.setHSL(
-    (baseHue + 0.08 + j3 * 0.18 + j5 * 0.12) % 1,
-    0.92,
-    Math.min(0.62, 0.32 + hsl.l * 0.15 + j2 * 0.14),
+    family === 0 ? (0.1 + j1 * 0.08) % 1 : (baseHue + 0.18 + j3 * 0.22 + j5 * 0.12) % 1,
+    family === 0 ? 0.82 : 0.96,
+    family === 0 ? 0.34 + j2 * 0.16 : Math.min(0.58, 0.28 + hsl.l * 0.12 + j2 * 0.12),
   );
-  mat.emissiveIntensity = Math.min(2.6, m.emI * 0.85 + 0.75);
+  mat.emissiveIntensity = Math.min(2.8, m.emI * 0.9 + 0.85 + family * 0.12);
   // Glassy/crystal surface: high metal, low roughness for a liquid-gem shimmer.
   mat.metalness = Math.min(0.95, mat.metalness * 0.6 + j5 * 0.4 + 0.2);
   mat.roughness = Math.max(0.04, mat.roughness * 0.4 + j3 * 0.08);

@@ -25,8 +25,8 @@ interface Slot {
 }
 
 const MAX_HISTORY = 48;
-const CANVAS_W = 120;
-const CANVAS_H = 36;
+const CANVAS_W = 112;
+const CANVAS_H = 112;
 const BRAIN_SLOTS_WIRED = 'cqmBrainSlotsWired';
 
 function createCanvas(doc: Document, slotId: string): Slot | null {
@@ -38,8 +38,9 @@ function createCanvas(doc: Document, slotId: string): Slot | null {
   const dpr = Math.max(1, Math.min(2, doc.defaultView?.devicePixelRatio ?? 1));
   canvas.width = Math.round(CANVAS_W * dpr);
   canvas.height = Math.round(CANVAS_H * dpr);
-  canvas.style.width = `${CANVAS_W}px`;
-  canvas.style.height = `${CANVAS_H}px`;
+  canvas.style.width = '100%';
+  canvas.style.height = '100%';
+  canvas.style.aspectRatio = '1 / 1';
   canvas.setAttribute('role', 'img');
   canvas.setAttribute('aria-label', 'Brain visualizer booting');
   const ctx = canvas.getContext('2d');
@@ -66,23 +67,55 @@ function pushHistory(slot: Slot, value: number): void {
 
 function drawBackground(ctx: CanvasRenderingContext2D, w: number, h: number): void {
   ctx.clearRect(0, 0, w, h);
-  ctx.fillStyle = 'rgba(10, 8, 24, 0.55)';
+  const bg = ctx.createRadialGradient(w * 0.5, h * 0.45, 2, w * 0.5, h * 0.5, h * 0.72);
+  bg.addColorStop(0, 'rgba(95, 70, 180, 0.42)');
+  bg.addColorStop(0.45, 'rgba(12, 14, 36, 0.9)');
+  bg.addColorStop(1, 'rgba(2, 3, 12, 0.98)');
+  ctx.fillStyle = bg;
   ctx.fillRect(0, 0, w, h);
 }
 
 function drawGrid(ctx: CanvasRenderingContext2D, w: number, h: number): void {
-  ctx.strokeStyle = 'rgba(150, 120, 255, 0.12)';
+  ctx.strokeStyle = 'rgba(150, 120, 255, 0.16)';
   ctx.lineWidth = 1;
   ctx.beginPath();
-  for (let x = 10; x < w; x += 10) {
+  for (let x = 14; x < w; x += 14) {
     ctx.moveTo(x, 0);
     ctx.lineTo(x, h);
   }
-  for (let y = 9; y < h; y += 9) {
+  for (let y = 14; y < h; y += 14) {
     ctx.moveTo(0, y);
     ctx.lineTo(w, y);
   }
   ctx.stroke();
+}
+
+function drawSynapses(
+  ctx: CanvasRenderingContext2D,
+  values: number[],
+  w: number,
+  h: number,
+  hue: number,
+): void {
+  const cx = w * 0.5;
+  const cy = h * 0.52;
+  const radius = Math.min(w, h) * 0.34;
+  ctx.lineWidth = 1.2;
+  for (let i = 0; i < values.length; i++) {
+    const a = (i / values.length) * Math.PI * 2;
+    const v = clamp01(values[i] ?? 0);
+    const x = cx + Math.cos(a) * radius * (0.65 + v * 0.35);
+    const y = cy + Math.sin(a) * radius * (0.5 + v * 0.25);
+    ctx.strokeStyle = `hsla(${hue + i * 18}, 95%, ${55 + v * 25}%, ${0.18 + v * 0.45})`;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.quadraticCurveTo(cx + Math.sin(a) * radius * 0.35, cy - Math.cos(a) * radius * 0.25, x, y);
+    ctx.stroke();
+    ctx.fillStyle = `hsla(${hue + i * 18}, 95%, 70%, ${0.5 + v * 0.5})`;
+    ctx.beginPath();
+    ctx.arc(x, y, 2 + v * 3, 0, Math.PI * 2);
+    ctx.fill();
+  }
 }
 
 function drawSparkline(
@@ -173,6 +206,7 @@ function updateApex(slot: Slot, apex: ApexBrainSnapshot | null): void {
     clamp01(motor),
   ];
   const colors = ['#9f6bff', '#6bff9e', '#ff5a6b', '#39d6ff', '#ff9f43'];
+  drawSynapses(ctx, values, w, h, 265);
   drawBars(ctx, values, w, h, colors);
   drawGrid(ctx, w, h);
   ctx.fillStyle = '#e6dcff';
@@ -197,6 +231,7 @@ function updateMecha(slot: Slot, mecha: MechalogodromBrainSnapshot | null): void
     return;
   }
   pushHistory(slot, mecha.activity ?? 0.5);
+  drawSynapses(ctx, slot.history.slice(-9), w, h, 190);
   drawSparkline(ctx, slot.history, w, h, '#39d6ff');
   drawGrid(ctx, w, h);
   ctx.fillStyle = '#b8f5ff';
@@ -223,6 +258,7 @@ function updateGlyph(slot: Slot, glyphs: GlyphBrainSnapshot[] | null): void {
     return;
   }
   const values = glyphs.map((g) => (g.activity + g.novelty + g.valence) / 3);
+  drawSynapses(ctx, values.slice(0, 12), w, h, 305);
   drawDots(ctx, values, w, h);
   drawGrid(ctx, w, h);
   ctx.fillStyle = '#e6dcff';

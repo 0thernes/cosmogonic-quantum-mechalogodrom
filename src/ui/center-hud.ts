@@ -82,6 +82,31 @@ html[data-cqm-hud-anchor='top'] ${PANEL_SEL} {
 ${VIS_SEL} {
   opacity: 1 !important;
 }
+.cqm-hud-panel-chrome {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  z-index: 9;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  pointer-events: auto;
+}
+.cqm-hud-panel-chrome button {
+  width: 26px;
+  height: 24px;
+  border-radius: 7px;
+  border: 1px solid rgba(160, 190, 255, 0.34);
+  background: rgba(6, 10, 24, 0.82);
+  color: #e9f1ff;
+  font: 800 11px/1 var(--font-mono, ui-monospace, monospace);
+  cursor: pointer;
+  box-shadow: 0 2px 10px rgba(0,0,0,.45);
+}
+.cqm-hud-panel-chrome button:hover {
+  background: rgba(35, 50, 92, 0.95);
+  border-color: rgba(160, 210, 255, 0.7);
+}
 /* V84: panel toggles cycle through the center HUD — hide them from the legacy dock bar (settings +
    access live in the HUD launcher instead). The dock itself stays hidden when the HUD nav is active. */
 #cqm-dock > #cqm-cop-toggle,
@@ -520,14 +545,41 @@ function drive(s: Slot, want: boolean): void {
   document.getElementById(s.toggle)?.click();
 }
 
+function ensurePanelChrome(el: HTMLElement, index: number): void {
+  if (el.querySelector('.cqm-hud-panel-chrome')) return;
+  const chrome = document.createElement('div');
+  chrome.className = 'cqm-hud-panel-chrome';
+  const mk = (label: string, title: string, fn: () => void): HTMLButtonElement => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = label;
+    b.title = title;
+    b.setAttribute('aria-label', title);
+    b.addEventListener('click', (e) => {
+      e.stopPropagation();
+      fn();
+    });
+    return b;
+  };
+  chrome.append(
+    mk('‹', 'Previous panel', () => showOnly((index - 1 + SLOTS.length) % SLOTS.length)),
+    mk('›', 'Next panel', () => showOnly((index + 1) % SLOTS.length)),
+    mk('−', 'Minimize panel', () => showOnly(-1)),
+    mk('×', 'Close panel', () => showOnly(-1)),
+  );
+  el.appendChild(chrome);
+}
+
 /** Make exactly panel `i` visible (or i<0 → close all). Marks the visible one for the ghost rule. */
 function showOnly(i: number): void {
   busy = true;
   for (let j = 0; j < SLOTS.length; j++) {
     const sj = SLOTS[j];
     if (!sj) continue;
+    const el = panelEl(sj);
+    if (el) ensurePanelChrome(el, j);
     drive(sj, j === i);
-    panelEl(sj)?.classList.toggle('cqm-hud-vis', j === i);
+    el?.classList.toggle('cqm-hud-vis', j === i);
   }
   busy = false;
   const si = i >= 0 ? SLOTS[i] : undefined;
@@ -607,8 +659,8 @@ function buildNav(doc: Document): void {
   dockBottomBar(nav, doc);
 }
 
-/** V85: always-visible 3-row dock. Row 1: docs/spec/bible/lab. Row 2: PANELS + access + settings.
- *  Row 3: pause + sim actions. Reset/time/view/space live in the top toolbar only. */
+/** V85/V111: always-visible dock. Row 1: docs/access/settings. Row 2: sim/gameplay.
+ *  Row 3: direct panel launchers. Toolbar still carries transport/audio/view controls. */
 function buildPersistentNav(doc: Document): void {
   let strip = doc.getElementById('cqm-persist-nav');
   if (!strip) {
@@ -657,12 +709,9 @@ function buildPersistentNav(doc: Document): void {
       rowDocs.appendChild(a);
     }
   }
-  strip.appendChild(rowDocs);
-
-  const rowPanels = mkRow('cqm-persist-row--panels');
   const accToggle = doc.getElementById('cqm-acc-toggle');
   if (accToggle) {
-    rowPanels.appendChild(
+    rowDocs.appendChild(
       mkBtn('⛓ ACCESS', 'Cryptographic access terminal — unlock the playable super creature', () =>
         accToggle.click(),
       ),
@@ -670,32 +719,60 @@ function buildPersistentNav(doc: Document): void {
   }
   const settingsToggle = doc.getElementById('cqm-settings-toggle');
   if (settingsToggle) {
-    rowPanels.appendChild(mkBtn('⚙ SET', 'Simulation settings', () => settingsToggle.click()));
+    rowDocs.appendChild(mkBtn('⚙ SET', 'Simulation settings', () => settingsToggle.click()));
+  }
+  strip.appendChild(rowDocs);
+
+  const rowPanels = mkRow('cqm-persist-row--panels');
+  const rowSim = mkRow('cqm-persist-row--sim');
+  for (const [action, label, title, extra] of [
+    ['weather', '☁ ENV', 'Cycle environment cloud/weather', 'cqm-persist-world'],
+    ['cosmo', '★ SING', 'Summon singularity', 'cqm-persist-world'],
+    ['wire', '◐ RENDER', 'Cycle render mode', 'cqm-persist-world'],
+    ['sim', 'N1/N2', 'Switch simulation layer', 'cqm-persist-world'],
+    ['entropy', '🔥 ENT', 'Toggle entropy pressure', 'cqm-persist-sim'],
+    ['chaosmode', '⚡ CHAOS', 'Toggle chaos mode', 'cqm-persist-sim'],
+    ['apoc', '☠ APOC', 'Trigger apocalypse', 'cqm-persist-sim'],
+    ['nhi', '◈ NHI', 'Launch NHI', 'cqm-persist-sim'],
+    ['split', '⇄', 'Split mature entities', 'cqm-persist-sim'],
+    ['burst', '✦', 'Burst-spawn entities', 'cqm-persist-sim'],
+    ['mutate', '☢', 'Mutate all entities', 'cqm-persist-sim'],
+    ['chaos', '⚡', 'Boost chaos', 'cqm-persist-sim'],
+  ] as const) {
+    rowSim.appendChild(mkAct(label, title, action, extra));
+  }
+  strip.appendChild(rowSim);
+
+  const panelLabels = [
+    'COPILOT AI LLM',
+    'HELP ME NOW',
+    'AUDIT',
+    'NHI OBS',
+    'MARKET',
+    'ARCHON GODFORMS',
+    'PANTHEONS',
+  ] as const;
+  for (let i = 0; i < SLOTS.length; i++) {
+    const s = SLOTS[i];
+    if (!s) continue;
+    rowPanels.appendChild(
+      mkBtn(
+        panelLabels[i] ?? s.name,
+        `Open ${panelLabels[i] ?? s.name}`,
+        () => showOnly(active === i ? -1 : i),
+        'cqm-persist-panel',
+      ),
+    );
   }
   rowPanels.appendChild(
     mkBtn(
-      '⊞ PANELS',
-      'Center HUD — Neural, Architect, AI, Help, Audit…',
-      () => {
-        if (active < 0) showOnly(0);
-        else cycle(1);
-      },
-      'cqm-persist-panels',
+      'APEX',
+      'Open APEX architecture brain view',
+      () => showOnly(active === SLOTS.length - 1 ? -1 : SLOTS.length - 1),
+      'cqm-persist-panel',
     ),
   );
   strip.appendChild(rowPanels);
-
-  const rowSim = mkRow('cqm-persist-row--sim');
-  rowSim.appendChild(mkAct('⏸', 'Pause / resume simulation', 'pause', 'cqm-persist-transport'));
-  for (const [action, label, title] of [
-    ['split', '⇄', 'Split mature entities'],
-    ['burst', '✦', 'Burst-spawn entities'],
-    ['mutate', '☢', 'Mutate all entities'],
-    ['chaos', '⚡', 'Boost chaos'],
-  ] as const) {
-    rowSim.appendChild(mkAct(label, title, action, 'cqm-persist-sim'));
-  }
-  strip.appendChild(rowSim);
 
   if (!strip.parentElement) doc.body.appendChild(strip);
   dockBottomBar(strip, doc);
@@ -717,7 +794,9 @@ function wireDockToggles(): void {
         const sj = SLOTS[j];
         if (!sj) continue;
         if (j !== i) drive(sj, false);
-        panelEl(sj)?.classList.toggle('cqm-hud-vis', j === i && nowOpen);
+        const el = panelEl(sj);
+        if (el) ensurePanelChrome(el, j);
+        el?.classList.toggle('cqm-hud-vis', j === i && nowOpen);
       }
       busy = false;
       active = nowOpen ? i : -1;

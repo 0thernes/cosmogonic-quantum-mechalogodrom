@@ -53,8 +53,8 @@ import {
 } from './glyph-exterior-signature';
 import type { TsotchkeQuantumPulse } from './tsotchke-facade';
 
-/** Dome shell radius the pantheon hangs on (just inside the far sky). */
-const DOME_R = ARENA_RADIUS * 0.95;
+/** Dome shell radius the pantheon hangs on; pulled inward so godforms read as beings, not far stars. */
+const DOME_R = ARENA_RADIUS * 0.72;
 
 /** Module scratch — reused every frame so the hot path allocates nothing. */
 const M = new THREE.Matrix4();
@@ -230,7 +230,7 @@ export class AlphabetPantheonRender {
         const th = golden * i;
         const ax = Math.cos(th) * ringR;
         const az = Math.sin(th) * ringR;
-        const ay = y * DOME_R * 0.66 + 24;
+        const ay = y * DOME_R * 0.54 + 18;
         const baseScale =
           (6 + 14 * (0.5 * b.empowerment + 0.3 * b.order + 0.2 * b.generative)) * 1.55;
         const freq = 0.07 + ((a.seed % 600) / 600) * 0.22;
@@ -479,9 +479,9 @@ export class AlphabetPantheonRender {
 
   /** Bob / spin / pulse every body on its own cadence. Pure trig, allocation-free, no rng. */
   update(t: number, dt?: number): void {
-    // V109: Cut base movement and shader animation speed by 50% so they can be easily inspected
-    const scaledDt = dt !== undefined ? dt * 0.5 : undefined;
-    const clock = scaledDt === undefined ? t * 0.5 : (this.localT += Math.max(0, scaledDt));
+    // V111: slow pantheon travel to creature-scale motion; they should read as living bodies.
+    const scaledDt = dt !== undefined ? dt * 0.22 : undefined;
+    const clock = scaledDt === undefined ? t * 0.22 : (this.localT += Math.max(0, scaledDt));
     if (dt !== undefined && dt <= 0) return; // frozen when paused
     if (this.mat instanceof THREE.ShaderMaterial) {
       const uTime = this.mat.uniforms.uTime;
@@ -589,7 +589,7 @@ export class AlphabetPantheonRender {
     // apexCore is now a ShaderMaterial so we don't copy color directly
     C.setHSL((0.72 + Math.cos(ph * 0.5) * 0.12) % 1, 1, 0.48);
     (this.apexHalo.material as THREE.MeshBasicMaterial).color.copy(C);
-    C.setHSL((0.55 + Math.sin(ph * 1.2) * 0.15) % 1, 1, 0.55);
+    C.setHSL((0.55 + Math.sin(ph * 1.2) * 0.15) % 1, 0.92, 0.42);
     (this.apexSpikes.material as THREE.MeshBasicMaterial).color.copy(C);
     this.apexExterior.update(clock, this.apexTranscendence, this.apexVitality, this.tsotchkePulse);
   }

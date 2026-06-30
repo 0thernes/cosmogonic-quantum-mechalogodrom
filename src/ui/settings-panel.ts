@@ -10,9 +10,10 @@ import { dockToggle, glassPanel, injectPanelBaseCSS, panelHeader, wireClose } fr
 import { mountToggle } from './panel-dock';
 
 const STYLE = `
+#cqm-settings-modal{align-items:flex-end;justify-content:center;padding:12px 8px calc(var(--cqm-bottom-h,108px) + 12px)}
 #cqm-settings-modal::before{content:'';position:absolute;inset:0;pointer-events:none;opacity:.12;
   background:repeating-linear-gradient(0deg,transparent 0 2px,rgba(120,160,255,.5) 2px 3px)}
-#cqm-settings-modal .glass-box{max-height:62vh;overflow-y:auto;scrollbar-width:thin;
+#cqm-settings-modal .cqm-panel-box{max-height:min(62vh,calc(100vh - var(--cqm-bottom-h,108px) - 28px));overflow-y:auto;scrollbar-width:thin;
   scrollbar-color:rgba(120,160,255,.4) transparent;padding:6px 8px}
 .cqm-set-gr{margin-bottom:4px}
 .cqm-set-gr h3{margin:0 0 2px;font-size:7px;letter-spacing:.1em;text-transform:uppercase;color:#a99fce;font-weight:600}
@@ -31,7 +32,7 @@ const STYLE = `
 .cqm-set-btn[data-action="chaosmode"]:hover{border-color:rgba(255,160,40,.6);background:rgba(100,60,20,.5)}
 .cqm-set-btn[data-action="entropy"]{border-color:rgba(255,100,60,.35);color:#ffaa88}
 .cqm-set-btn[data-action="entropy"]:hover{border-color:rgba(255,100,60,.6);background:rgba(100,40,20,.5)}
-#cqm-settings-modal .glass-box{width:min(88vw,320px)}
+#cqm-settings-modal .cqm-panel-box{width:min(88vw,360px)}
 .cqm-set-legend{margin-top:6px;padding-top:6px;border-top:1px solid rgba(120,160,255,.2)}
 .cqm-set-hint{margin:0 0 6px;font:400 8px var(--font-ui,ui-monospace,monospace);color:rgba(180,190,220,.75);line-height:1.4}
 .cqm-set-kbd{width:100%;border-collapse:collapse;font:400 8px var(--font-mono,ui-monospace,monospace)}
@@ -130,6 +131,7 @@ function renderKbdTable(rows: readonly [string, string][]): string {
 
 class SettingsPanel {
   private readonly modal: HTMLElement;
+  private openState = false;
 
   constructor(doc: Document = document) {
     injectPanelBaseCSS(doc);
@@ -142,7 +144,7 @@ class SettingsPanel {
       label: '⚙',
       title: 'Settings',
       ariaLabel: 'Open settings',
-      onClick: () => this.open(),
+      onClick: () => this.toggle(),
       doc,
     });
     mountToggle(toggle, doc);
@@ -183,13 +185,20 @@ class SettingsPanel {
     wireClose(this.modal, () => this.close());
   }
 
+  toggle(): void {
+    if (this.openState) this.close();
+    else this.open();
+  }
+
   open(): void {
     this.modal.style.display = 'flex';
+    this.openState = true;
     this.modal.focus();
   }
 
   close(): void {
     this.modal.style.display = 'none';
+    this.openState = false;
   }
 }
 

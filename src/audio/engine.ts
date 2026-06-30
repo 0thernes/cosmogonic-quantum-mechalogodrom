@@ -639,6 +639,56 @@ export class AudioEngine {
             cutoff,
           );
         });
+        if (st % 8 === 0) {
+          const root = ch[0];
+          const crown = ch[ch.length - 1];
+          if (root !== undefined && crown !== undefined) {
+            const padCutoff = Math.max(260, cutoff * 0.72);
+            this.voice(
+              t,
+              noteFreq(root) * octave * 0.5,
+              'triangle',
+              0.025 * intensity,
+              1.2,
+              7.6,
+              -14,
+              padCutoff,
+            );
+            this.voice(
+              t + 0.18,
+              noteFreq(crown) * octave,
+              'sine',
+              0.018 * intensity,
+              1.6,
+              7.2,
+              11,
+              padCutoff,
+            );
+          }
+        }
+        if (st % 4 === 2) {
+          const bell = song.mel[(st + 5) % song.mel.length] ?? 0;
+          this.voice(
+            t + 0.03,
+            noteFreq(bell) * octave * 3,
+            'sine',
+            0.018 * intensity,
+            0.006,
+            2.8,
+            (this.rng() - 0.5) * 16,
+            0,
+          );
+          this.voice(
+            t + 0.07,
+            noteFreq(bell + 5) * octave * 2,
+            'triangle',
+            0.012 * intensity,
+            0.02,
+            2.2,
+            (this.rng() - 0.5) * 12,
+            0,
+          );
+        }
         // Chord-tone arpeggiation: on the off-beat, pluck one rising chord tone an octave
         // up — a glinting filigree over the held chord that walks the voicing across beats.
         if (st % 2 === 1) {

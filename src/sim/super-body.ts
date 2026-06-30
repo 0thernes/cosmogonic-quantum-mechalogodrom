@@ -885,13 +885,13 @@ export class SuperBodySystem {
 
     // Eye-blink: a global emissive flicker, brighter with dominance (the many-eyed stare).
     this.eyeMat.emissiveIntensity =
-      2.5 +
-      this.dominance * 4.0 +
-      Math.sin(t * 6.0) * 0.8 +
-      this.dreamGlow * 2.2 +
-      (this.evoGlow - 1) * 2.0 +
-      phiU * 1.8 +
-      qWaveU * 0.6; // live quantum phi ignition
+      1.8 +
+      this.dominance * 2.8 +
+      Math.sin(t * 6.0) * 0.55 +
+      this.dreamGlow * 1.55 +
+      (this.evoGlow - 1) * 1.15 +
+      phiU * 1.2 +
+      qWaveU * 0.42; // live quantum phi ignition
 
     this.root.scale.setScalar(this.evoSize); // V48: evolution scales the whole colossus
 
@@ -960,7 +960,7 @@ export class SuperBodySystem {
   /** V48: fold the creature's EVOLUTION into its look — it grows, brightens, and grows spikes. */
   setEvolution(a: EvoAppearance): void {
     this.evoSize = clampf(a.sizeMul, 1, 6);
-    this.evoGlow = clampf(a.glowMul, 1, 4);
+    this.evoGlow = clampf(a.glowMul, 1, 2.75);
     this.evoSpike = a.spikeBoost < 0 ? 0 : a.spikeBoost;
     // V64: the SKIN itself evolves. SuperEvolution.appearance() already computes a hue rotation, an
     // ascension aura and a milestone tier — previously dropped here — so the god-jewel surface now grows

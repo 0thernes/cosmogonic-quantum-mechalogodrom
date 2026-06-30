@@ -489,15 +489,15 @@ export class Mechalogodrom {
     this.massMat.color.setHSL((hue + 0.55) % 1, 0.55, 0.035 + 0.025 * this.drive);
     this.massMat.emissive.setHSL(hue, 0.95, 0.12 + 0.28 * ease + 0.14 * this.apexVitality);
     this.massMat.emissiveIntensity =
-      1.8 +
-      3.8 * ease +
-      2.2 * this.drive +
-      1.4 * this.apexVitality +
-      this.tsotchkePulse.quakeAliveness;
+      1.05 +
+      2.35 * ease +
+      1.35 * this.drive +
+      0.85 * this.apexVitality +
+      this.tsotchkePulse.quakeAliveness * 0.55;
     this.wireMat.color.setHSL((hue + 0.42 + this.tsotchkePulse.adGradient * 0.16) % 1, 1, 0.64);
     // Flash envelope: sharp sparkle on a fast beat, stronger once fused + chaotic.
     const flash = 0.5 + 0.5 * Math.sin(st * 6.3) * Math.sin(st * 2.1);
-    this.wireMat.opacity = 0.18 + 0.4 * flash * (0.4 + 0.6 * ease);
+    this.wireMat.opacity = 0.12 + 0.28 * flash * (0.4 + 0.6 * ease);
     this.mass.rotation.y = st * (0.28 + this.drive * 0.15);
     this.mass.rotation.x = Math.sin(st * 0.13) * (0.55 + this.drive * 0.35);
     this.mass.rotation.z = Math.sin(st * 0.071 + this.apexTranscend * Math.PI) * 0.42;
@@ -506,14 +506,14 @@ export class Mechalogodrom {
     // Event horizon breathes; the shadow core stays black (a true absence).
     this.rim.scale.setScalar(1 + 0.1 * Math.sin(st * 1.7) + 0.16 * ease + 0.04 * this.drive);
     this.rimMat.color.setHSL((hue + 0.86) % 1, 1, 0.42 + 0.1 * flash);
-    this.rimMat.opacity = 0.28 + 0.46 * ease + 0.24 * flash;
+    this.rimMat.opacity = 0.2 + 0.34 * ease + 0.16 * flash;
     this.core.scale.setScalar(0.85 + 0.18 * ease); // the hole widens as it powers up
 
     // Spike-arms splay outward with power; counter-rotate; flash.
     this.spikes.scale.setScalar(0.5 + 1.1 * ease);
     this.spikes.rotation.y = -st * 0.33;
     this.spikes.rotation.z = Math.sin(st * 0.27) * 0.6;
-    this.spikeMat.opacity = (0.2 + 0.5 * ease) * flash;
+    this.spikeMat.opacity = (0.16 + 0.42 * ease) * flash;
     this.tmpColor.setHSL((hue + 0.12) % 1, 1, 0.6);
     this.spikeMat.color.copy(this.tmpColor);
 

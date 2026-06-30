@@ -155,7 +155,7 @@ const ACCRETION_DISK_FRAG = /* glsl */ `
     temp.gb *= redshift;
 
     // Photon ring: a thin, bright gravitational-lensing echo just outside the shadow.
-    float photonRing = smoothstep(0.035, 0.0, abs(vRadius - 0.045)) * 1.6;
+    float photonRing = smoothstep(0.03, 0.0, abs(vRadius - 0.045)) * 2.15;
     temp += vec3(1.0, 0.75, 0.45) * photonRing * (0.5 + 0.5 * turb);
 
     // Alpha falls off at the edges with a soft plasma edge
@@ -392,11 +392,11 @@ export const SINGULARITY_FIELD = {
  * black hole reads as a strong well and the white hole as a bright bulge without nausea.
  */
 const LENS_BASE: Readonly<Record<SingularityKind, number>> = {
-  entropy: -0.1,
-  blackhole: 0.34,
-  whitehole: -0.3,
-  greyhole: 0.24,
-  strangestar: 0.16,
+  entropy: -0.14,
+  blackhole: 0.42,
+  whitehole: -0.36,
+  greyhole: 0.28,
+  strangestar: 0.18,
 };
 
 /**

@@ -1424,6 +1424,9 @@ export class World {
       capacity: this.quality.maxEntities,
     });
     this.monolithTemple.update(dt, t); // V63: rise + shimmer the ascension portal (no-op until revealed)
+    if (this.superAscended && s.frame % 240 === 0) {
+      this.audio.playExtra(s.frame % 480 === 0 ? 'abyssal' : 'demonicgrowl');
+    }
 
     if (s.frame % 60 === 30) {
       // RD pattern energy: strided mean of the V field (offset 30 — never
@@ -2739,6 +2742,7 @@ export class World {
     this.nhiBody.spawn(nid, e.position.x, e.position.y, e.position.z);
     // V109: varied alien vocalization on NHI arrival (round-robin from the alien chitter band).
     this.audio.playExtra('alienchitter');
+    this.audio.playExtra(source === 'titan-procreation' ? 'phantomscale' : 'voidgurgle');
     this.hud.showSector(
       source === 'titan-procreation'
         ? 'NHI BIRTH · TITAN MATRIX OFFSPRING'
@@ -2819,6 +2823,7 @@ export class World {
         if (child) child.material.emissive.setRGB(0.6, 0.2, 0.85); // swarmling glow
       }
       this.audio.play('warp');
+      this.audio.playExtra('chitter');
     } else if (intent.action === NhiAction.DOMINATE || intent.action === NhiAction.MANIPULATE) {
       // Game theory made physical: a DEFECTING NHI turns hostile (scatters organisms AWAY); a
       // cooperating one gathers them IN. MANIPULATE also gaslights — it bends each nearby organism's
@@ -2841,12 +2846,15 @@ export class World {
           if (intent.action === NhiAction.MANIPULATE) o.userData.strategy = flip;
         }
       }
+      this.audio.playExtra(intent.action === NhiAction.DOMINATE ? 'demonicgrowl' : 'phantomscale');
     } else if (intent.action === NhiAction.BROADCAST) {
       this.hud.showToast(text, 'NHI');
       this.audio.play('warp');
+      this.audio.playExtra(text.length % 2 === 0 ? 'alienchitter' : 'voidgurgle');
     } else if (intent.action === NhiAction.RETREAT) {
       // V57: retreat = pull back toward the home field (any direction), NOT ascend forever.
       e.userData.vel.addScaledVector(this.sv1.copy(p).normalize(), -0.06 * intent.magnitude);
+      this.audio.playExtra('abyssal');
     }
   }
 

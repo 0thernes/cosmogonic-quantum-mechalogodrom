@@ -27,9 +27,9 @@ const INVENTORY = ['◈', '❄', '⚛', '✶', '☍', '⬡'];
 const STYLE = `
 #cqm-hero{position:fixed;top:calc(38px + env(safe-area-inset-top,0px));left:var(--cqm-hud-left,calc(clamp(200px,20vw,280px) + 12px));
   right:var(--cqm-hud-right,calc(clamp(260px,26vw,400px) + 12px));
-  width:auto;max-width:none;max-height:min(32vh,210px);overflow:hidden;
+  width:auto;max-width:none;max-height:min(52vh,380px);overflow:visible;
   transform:translateY(-150%);z-index:150;
-  transition:transform .55s cubic-bezier(.2,.9,.3,1);font-size:11px;line-height:1.4;font-family:var(--font-mono,ui-monospace,monospace);
+  transition:transform .55s cubic-bezier(.2,.9,.3,1);font-size:12px;line-height:1.45;font-family:var(--font-mono,ui-monospace,monospace);
   color:#e9e3ff;pointer-events:none;
   display:flex;justify-content:center;align-items:flex-start}
 #cqm-hero.on{transform:translateY(0)}
@@ -43,28 +43,28 @@ const STYLE = `
   box-shadow:0 4px 18px rgba(0,0,0,.55),0 0 12px rgba(150,120,255,0.3);
   transition:transform .12s,background .12s,border-color .12s}
 .cqm-hero-fab:hover{background:rgba(60,36,110,.85);transform:scale(1.05);border-color:#39d6ff}
-.cqm-hero-chrome{display:flex;align-items:center;gap:4px;margin-left:auto}
+.cqm-hero-chrome{display:flex;align-items:center;gap:5px;margin-left:auto;order:99;position:sticky;top:0;z-index:4}
 .cqm-hero-min,.cqm-hero-close{pointer-events:auto;border:1px solid rgba(150,120,255,.35);border-radius:6px;
-  background:rgba(30,18,60,.55);color:#cbb0ff;font:600 10px/1 var(--font-mono,ui-monospace,monospace);padding:2px 7px;cursor:pointer}
+  background:rgba(30,18,60,.82);color:#f1e9ff;font:700 12px/1 var(--font-mono,ui-monospace,monospace);padding:5px 10px;cursor:pointer}
 .cqm-hero-min:hover,.cqm-hero-close:hover{background:rgba(50,32,95,.75);color:#fff}
-.cqm-hero-head{display:flex;align-items:center;gap:6px;width:100%}
-@media (max-width:599px){#cqm-hero{left:6px;right:6px;top:calc(52px + env(safe-area-inset-top,0px));font-size:10px;max-height:34vh}}
-@media (max-width:640px){#cqm-hero{left:4px;right:4px;top:calc(48px + env(safe-area-inset-top,0px));font-size:9px}}
+.cqm-hero-head{display:flex;align-items:center;gap:8px;width:100%;flex-wrap:wrap}
+@media (max-width:599px){#cqm-hero{left:6px;right:6px;top:calc(52px + env(safe-area-inset-top,0px));font-size:10px;max-height:58vh}}
+@media (max-width:640px){#cqm-hero{left:4px;right:4px;top:calc(48px + env(safe-area-inset-top,0px));font-size:10px}}
 @media (min-width:769px) and (max-width:1400px){
   #cqm-hero{left:calc(clamp(120px,20vw,190px) + 10px);right:calc(clamp(120px,22vw,210px) + 10px);
-    top:calc(42px + env(safe-area-inset-top,0px));max-height:min(18vh,108px);font-size:8px}
-  .cqm-hero-box{padding:4px 7px;gap:3px;max-width:100%}
-  .cqm-hero-r{gap:4px}
-  .cqm-hero-bar{min-width:60px}
-  .cqm-hero-bar .lab{width:28px;font-size:7px}
-  .cqm-hero-bar .trk{min-width:42px;height:6px}
-  .cqm-hero-bar .num{width:26px;font-size:7px}
-  .cqm-hero-sec{padding:1px 3px;gap:3px}
-  .cqm-hero-sec .v{font-size:8px}
-  .cqm-hero-pw{gap:2px}
-  .cqm-hero-btn{padding:2px 4px;font-size:6px}
-  .cqm-hero-glyph{font-size:14px}
-  .cqm-hero-slot{width:14px;height:14px;font-size:9px}
+    top:calc(42px + env(safe-area-inset-top,0px));max-height:min(44vh,320px);font-size:10px}
+  .cqm-hero-box{padding:8px 10px;gap:6px;max-width:100%}
+  .cqm-hero-r{gap:6px}
+  .cqm-hero-bar{min-width:96px}
+  .cqm-hero-bar .lab{width:42px;font-size:8px}
+  .cqm-hero-bar .trk{min-width:58px;height:8px}
+  .cqm-hero-bar .num{width:38px;font-size:8px}
+  .cqm-hero-sec{padding:2px 6px;gap:4px}
+  .cqm-hero-sec .v{font-size:10px}
+  .cqm-hero-pw{gap:4px}
+  .cqm-hero-btn{padding:4px 7px;font-size:8px}
+  .cqm-hero-glyph{font-size:18px}
+  .cqm-hero-slot{width:18px;height:18px;font-size:11px}
 }
 /* V101: tablet landscape 600-1400px — same column values as app.css (already set above for 769-1400).
    For 600-768px tablets, match the same clamp values so the HUD sits between the grid columns. */
@@ -81,8 +81,8 @@ const STYLE = `
 .cqm-hero-box{pointer-events:auto;border:1px solid rgba(150,120,255,.4);border-radius:14px;
   background:linear-gradient(180deg,rgba(14,9,28,.95),rgba(8,6,18,.92));backdrop-filter:blur(12px);
   box-shadow:0 10px 40px rgba(0,0,0,.6),inset 0 0 30px rgba(80,40,160,.18);padding:5px 8px;
-  display:flex;flex-flow:column nowrap;align-items:stretch;gap:3px;max-height:inherit;overflow:hidden;
-  transform-origin:top center;will-change:transform;width:100%;max-width:760px}
+  display:flex;flex-flow:column nowrap;align-items:stretch;gap:5px;max-height:inherit;overflow:auto;
+  transform-origin:top center;will-change:transform;width:100%;max-width:980px;scrollbar-width:thin}
 @media (max-width:599px){.cqm-hero-box{padding:5px 7px;border-radius:10px}}
 .cqm-hero-r{display:flex;align-items:center;gap:8px;flex-wrap:nowrap;flex:0 0 auto}
 .cqm-hero-av{display:flex;align-items:center;gap:8px;white-space:nowrap}
@@ -281,10 +281,10 @@ export class SuperheroHud {
     this.lvlEl.textContent = 'LV 1';
     av.append(this.nameEl, this.lvlEl);
     rowA.appendChild(av);
-    rowA.appendChild(chrome);
     this.bars.life = bar(rowA, 'Life', '#ff5a6b', doc);
     this.bars.energy = bar(rowA, 'Energy', '#39d6ff', doc);
     this.bars.xp = bar(rowA, 'XP', '#c79bff', doc);
+    rowA.appendChild(chrome);
     box.appendChild(rowA);
 
     // Row B — kit: stats · wallet · neural · inventory · powers · vision/cam

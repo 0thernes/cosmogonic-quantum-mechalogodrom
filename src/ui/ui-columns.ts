@@ -129,7 +129,7 @@ function ensureBrainSlots(right: HTMLElement, doc: Document): void {
 
   const head = doc.createElement('div');
   head.className = 'cqm-brain-slot__head';
-  head.textContent = 'Brains in Labs';
+  head.textContent = '3 Live Brains';
   head.style.position = 'relative';
   head.style.zIndex = '2';
 
@@ -138,16 +138,23 @@ function ensureBrainSlots(right: HTMLElement, doc: Document): void {
   viz.id = 'brain-all-viz';
   viz.style.position = 'relative';
   viz.style.zIndex = '2';
-  viz.style.display = 'flex';
-  viz.style.flexDirection = 'column';
-  viz.style.gap = '4px';
+  viz.style.display = 'grid';
+  viz.style.gridTemplateColumns = 'repeat(3, minmax(0, 1fr))';
+  viz.style.gap = '6px';
+  viz.style.minHeight = '94px';
 
   const apexSlot = doc.createElement('div');
   apexSlot.id = 'brain-apex-slot';
+  apexSlot.className = 'cqm-brain-mini cqm-brain-mini--apex';
+  apexSlot.dataset['label'] = 'APEX';
   const mechaSlot = doc.createElement('div');
   mechaSlot.id = 'brain-mecha-slot';
+  mechaSlot.className = 'cqm-brain-mini cqm-brain-mini--mecha';
+  mechaSlot.dataset['label'] = 'MECHA';
   const glyphSlot = doc.createElement('div');
   glyphSlot.id = 'brain-glyph-slot';
+  glyphSlot.className = 'cqm-brain-mini cqm-brain-mini--glyph';
+  glyphSlot.dataset['label'] = 'GLYPH';
 
   viz.append(apexSlot, mechaSlot, glyphSlot);
   slot.append(canvas, head, viz);

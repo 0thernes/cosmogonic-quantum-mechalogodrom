@@ -317,15 +317,15 @@ export class MonolithTemple {
           float horizon = smoothstep(0.12, 0.0, r);
           float edge = smoothstep(0.5, 0.42, r) * smoothstep(0.34, 0.42, r);
           float swirl = spiral * tunnel * (0.7 + 0.6 * uReactivity);
-          vec3 core = vec3(0.0, 0.02, 0.05) * horizon * 4.0;
-          vec3 rim = uColor * (swirl + edge * 1.4) * (1.0 + uReactivity);
+          vec3 core = vec3(0.0, 0.004, 0.014) * horizon * 5.2;
+          vec3 rim = uColor * (swirl + edge * 1.65) * (0.75 + uReactivity);
           // Chromatic aberration near the spin center.
           vec3 chroma = vec3(
             0.5 + 0.5 * sin(a * 3.0 - uTime * 2.1),
             0.5 + 0.5 * sin(a * 3.0 - uTime * 2.1 + 2.094),
             0.5 + 0.5 * sin(a * 3.0 - uTime * 2.1 + 4.188)
           ) * tunnel * 0.35 * uReactivity;
-          float alpha = clamp(tunnel * (0.45 + uReactivity * 0.35) + horizon * 0.6 + edge * 0.5, 0.0, 1.0) * uOpacity;
+          float alpha = clamp(tunnel * (0.38 + uReactivity * 0.32) + horizon * 0.82 + edge * 0.58, 0.0, 1.0) * uOpacity;
           gl_FragColor = vec4(core + rim + chroma, alpha);
         }
       `,
@@ -511,14 +511,14 @@ export class MonolithTemple {
       this.portalColor.g,
       this.portalColor.b,
     );
-    (u.uOpacity!.value as number) = (0.28 + pulse * 0.26 + this.reactivity * 0.22) * ease;
+    (u.uOpacity!.value as number) = (0.34 + pulse * 0.22 + this.reactivity * 0.28) * ease;
     (u.uTime!.value as number) = safeT;
     (u.uReactivity!.value as number) = this.reactivity;
     this.haloMat.opacity = (0.08 + pulse * 0.1 + this.reactivity * 0.18) * ease;
-    this.shadowMat.opacity = Math.min(0.85, 0.22 + this.shadow * 0.55);
-    this.shadowCore.scale.setScalar(0.75 + ease * 0.2 + this.shadow * 0.38);
-    this.singularityMat.opacity = (0.18 + this.shimmer * 0.46) * ease;
-    this.singularityMat.color.setHSL(0.77 + this.entropy * 0.08, 0.95, 0.18 + this.chaos * 0.22);
+    this.shadowMat.opacity = Math.min(0.94, 0.34 + this.shadow * 0.58);
+    this.shadowCore.scale.setScalar(0.88 + ease * 0.28 + this.shadow * 0.44);
+    this.singularityMat.opacity = (0.24 + this.shimmer * 0.5) * ease;
+    this.singularityMat.color.setHSL(0.77 + this.entropy * 0.08, 0.98, 0.12 + this.chaos * 0.2);
     this.singularityRing.rotation.z = -safeT * (0.32 + this.reactivity * 0.9);
     this.singularityRing.rotation.x = Math.sin(safeT * 0.31) * 0.35;
     this.singularityRing.scale.setScalar(0.84 + this.shadow * 0.35);

@@ -249,9 +249,9 @@ export class Connectome {
           const hue = communityOf
             ? ((communityOf(ni) & 7) * TRIBE_HUE_STEP + nw * TRIBE_NW_JITTER + t * 0.02) % 1
             : (t * 0.06 + nw * 0.6 + actPulse * 0.15) % 1;
-          const sat = 0.85 + 0.15 * Math.sin(t * 1.4 + nw * 8.0);
-          const lit = 0.2 + nI * 0.35 + nw * 0.25 + actPulse * 0.15 * fire * retract;
-          TMP_COLOR.setHSL(hue, sat, Math.min(0.75, lit));
+          const sat = 0.9 + 0.1 * Math.sin(t * 1.4 + nw * 8.0);
+          const lit = 0.28 + nI * 0.38 + nw * 0.28 + actPulse * 0.22 * fire * retract;
+          TMP_COLOR.setHSL(hue, sat, Math.min(0.88, lit));
           const cr = TMP_COLOR.r;
           const cg = TMP_COLOR.g;
           const cb = TMP_COLOR.b;
@@ -277,7 +277,11 @@ export class Connectome {
           const p2y = dzn * p1x - dxn * p1z;
           const p2z = dxn * p1y - dyn * p1x;
           const phase = ap.x * 0.13 + bp.z * 0.17 + ea.id * 7e-4 + eb.id * 1.1e-3;
-          const amp = (nd < 11.25 ? nd * 0.16 : 1.8) * (0.3 + 0.7 * retract) * (0.6 + 0.4 * nI);
+          const amp =
+            (nd < 11.25 ? nd * 0.22 : 2.35) *
+            (0.26 + 0.74 * retract) *
+            (0.55 + 0.45 * nI) *
+            (0.85 + 0.35 * fire);
           for (let k = 0; k <= LINK_SEG; k++) {
             const u = LINK_U[k]!;
             const envAmp = amp * LINK_ENV[k]!;

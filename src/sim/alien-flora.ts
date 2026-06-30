@@ -125,7 +125,19 @@ const flora_vert = /* glsl */ `
     p.z += cos(uTime * freq * 0.8 + phase * 1.3) * bend * 2.1 + cos(uTime * freq * 2.9 + phase * 1.7) * turb * 1.0;
     p.y += sin(uTime * freq * 0.5 + phase) * up * 0.18 * (uWind + uChaos) + sin(uTime * freq * 4.3 + phase) * up * 0.05 * uChaos;
 
-    vec4 mvPosition = modelViewMatrix * instanceMatrix * vec4(p, 1.0);
+    vec4 worldPosition = instanceMatrix * vec4(p, 1.0);
+    float wave =
+      sin(worldPosition.x * 0.035 + uTime * (0.25 + uChaos * 0.35)) *
+      cos(worldPosition.z * 0.031 - uTime * (0.22 + uChaos * 0.28));
+    float tectonic =
+      sin((worldPosition.x + worldPosition.z) * 0.011 + uTime * 0.11) *
+      cos((worldPosition.x - worldPosition.z) * 0.009 - uTime * 0.13);
+    float cellular =
+      sin(worldPosition.x * 0.071 + sin(worldPosition.z * 0.019 + uTime * 0.2) * 2.0) *
+      sin(worldPosition.z * 0.067 - cos(worldPosition.x * 0.017 - uTime * 0.17) * 2.0);
+    float ridge = pow(abs(cellular), 1.6) * sign(cellular);
+    worldPosition.y += wave * (1.1 + uChaos * 3.1) + tectonic * (0.5 + uChaos * 2.3) + ridge * (0.75 + uChaos * 1.7);
+    vec4 mvPosition = modelViewMatrix * worldPosition;
     vNormalV = normalize(normalMatrix * mat3(instanceMatrix) * normal);
     vViewDir = normalize(-mvPosition.xyz);
     gl_Position = projectionMatrix * mvPosition;
