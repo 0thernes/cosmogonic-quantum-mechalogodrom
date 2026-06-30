@@ -9,7 +9,13 @@ import tailwind from 'bun-plugin-tailwind';
 // historical hashed chunk-*.js/css from prior builds, and `bun run pages` then copies the whole pile into
 // site/ (the deployed index references only the live chunks; the rest is dead weight). Mirrors the rm()
 // that build-pages.ts already does for site/. CI is unaffected (fresh checkout); this fixes local rot.
-await rm('./dist', { recursive: true, force: true });
+try {
+  await rm('./dist', { recursive: true, force: true });
+} catch (error) {
+  const code = error && typeof error === 'object' && 'code' in error ? String(error.code) : '';
+  if (code !== 'EACCES' && code !== 'EPERM') throw error;
+  console.warn(`build: could not prune dist/ (${code}); continuing with existing outdir.`);
+}
 
 const result = await Bun.build({
   entrypoints: [
