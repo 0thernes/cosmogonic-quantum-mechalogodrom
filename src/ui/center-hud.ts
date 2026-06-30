@@ -330,6 +330,10 @@ body:has(#cqm-hud-nav) #cqm-dock {
 #cqm-persist-nav .cqm-persist-row--sim .cqm-persist-transport {
   border-color: rgba(100, 220, 180, 0.38);
 }
+#cqm-persist-nav .cqm-persist-audio {
+  border-color: rgba(255, 100, 120, 0.38);
+  color: #ff9aa5;
+}
 /* The secondary Docs/Spec/Lab links drop the moment the launcher would otherwise overflow its centre-
    column band — chooseNavMode() adds .cqm-hud-nolinks after MEASURING (covers the narrow-desktop band
    ~769-840px the fixed breakpoint missed), with a ≤520px fallback for the pre-JS frame. */
@@ -732,6 +736,7 @@ function buildPersistentNav(doc: Document): void {
   if (settingsToggle) {
     rowDocs.appendChild(mkBtn('⚙ SET', 'Simulation settings', () => settingsToggle.click()));
   }
+  rowDocs.appendChild(mkAct('🔇 MUTE', 'Mute all audio (toggle)', 'mute', 'cqm-persist-audio'));
   strip.appendChild(rowDocs);
 
   const rowPanels = mkRow('cqm-persist-row--panels');
