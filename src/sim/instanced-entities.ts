@@ -344,6 +344,10 @@ float rqNoise(vec3 x){
 }
 float rqFbm(vec3 p){ float a = 0.5, s = 0.0; for (int i = 0; i < RQ_OCTAVES; i++){ s += a * rqNoise(p); p *= 2.02; a *= 0.5; } return s; }
 
+// Dynamic HSV helpers for living colour drift (V115): small, cheap per-instance hue/sat/value shifts.
+vec3 rqHsv2rgb(vec3 c){ vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0); vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www); return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y); }
+vec3 rqRgb2hsv(vec3 c){ vec4 K = vec4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0); vec4 p = mix(vec4(c.bg, K.wz), vec4(c.gb, K.xy), step(c.b, c.g)); vec4 q = mix(vec4(p.xyw, c.r), vec4(c.r, p.yzx), step(p.x, c.r)); float d = q.x - min(q.w, q.y); float e = 1.0e-10; return vec3(abs(q.z + (q.w - q.y) / (6.0 * d + e)), d / (q.x + e), q.x); }
+
 // Per-MATERIAL-CLASS surface profile (V27), a compile-time constant per pool so each of the six
 // archetypes compiles its own specialised shader — distinct material LANGUAGE per silhouette family.
 // RQ_FREQ relief frequency · RQ_RELIEF normal-engrave strength · RQ_ROUGH recess roughness ·
@@ -589,6 +593,14 @@ const RELIQUARY_FRAG_BODY = /* glsl */ `#include <emissivemap_fragment>
 		totalEmissiveRadiance = (totalEmissiveRadiance + vec3(0.1, 0.45, 0.6)) * fres * scan * (1.0 + uBass);
 		diffuseColor.a *= clamp(fres + 0.2, 0.0, 1.0);
 	}
+	// LIVING HUE DRIFT (V115): each organism breathes its hue/sat/value slightly over time, driven by
+	// its instance id and the world clock. Keeps the population chromatic and alive without per-entity CPU.
+	vec3 hsv = rqRgb2hsv(diffuseColor.rgb);
+	float idPh = float(gl_InstanceID) * 0.073;
+	hsv.x = fract(hsv.x + sin(uTime * 0.25 + idPh) * 0.03);
+	hsv.y = clamp(hsv.y * (1.0 + 0.06 * sin(uTime * 0.17 + idPh * 1.3)), 0.0, 1.0);
+	hsv.z = clamp(hsv.z * (1.0 + 0.04 * sin(uTime * 0.21 + idPh * 1.7)), 0.0, 1.0);
+	diffuseColor.rgb = rqHsv2rgb(hsv);
 	// BRUTALISM: collapse ALL self-glow (the vital / social / quantum / render-mode emissive accumulated
 	// above) toward zero so a concrete organism stops emitting neon and reads as a raw, scene-lit grey
 	// form — the diffuse is already greyed in <color_fragment>. At uBrutalism=0 this is an exact ×1.
