@@ -43,10 +43,17 @@ export const dExp = (a: Dual): Dual => {
   const e = Math.exp(a.x);
   return dUnary(a, e, e);
 };
-export const dLog = (a: Dual): Dual => dUnary(a, Math.log(a.x), 1 / a.x);
+// Domain-guarded: log/sqrt of a non-positive value (e.g. a value that rounds negative) would return
+// NaN/±Infinity and POISON the derivative for the rest of the tape. Clamp the domain to a tiny epsilon
+// so an out-of-range input yields a finite (saturated) value + gradient instead of NaN.
+const AD_EPS = 1e-12;
+export const dLog = (a: Dual): Dual => {
+  const x = a.x > AD_EPS ? a.x : AD_EPS;
+  return dUnary(a, Math.log(x), 1 / x);
+};
 export const dSqrt = (a: Dual): Dual => {
-  const s = Math.sqrt(a.x);
-  return dUnary(a, s, 0.5 / s);
+  const s = Math.sqrt(a.x > 0 ? a.x : 0);
+  return dUnary(a, s, 0.5 / (s > AD_EPS ? s : AD_EPS));
 };
 export const dPow = (a: Dual, n: number): Dual =>
   dUnary(a, Math.pow(a.x, n), n * Math.pow(a.x, n - 1));

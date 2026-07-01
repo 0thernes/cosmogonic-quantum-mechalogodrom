@@ -470,7 +470,11 @@ async function grepLiteral(pattern: string, roots: string[] = ['.']): Promise<Sa
     return false;
   }
 
-  async function walk(abs: string): Promise<boolean> {
+  // Bound the recursion: a symlink loop or a pathologically deep tree would otherwise recurse until the
+  // call stack overflows (a DoS on the grep sandbox). 40 levels is far beyond any real source layout.
+  const MAX_WALK_DEPTH = 40;
+  async function walk(abs: string, depth: number): Promise<boolean> {
+    if (depth > MAX_WALK_DEPTH) return false;
     try {
       const entries = await readdir(abs, { withFileTypes: true });
       entries.sort((a, b) => a.name.localeCompare(b.name));
@@ -478,7 +482,7 @@ async function grepLiteral(pattern: string, roots: string[] = ['.']): Promise<Sa
         if (isBlockedTop(entry.name)) continue;
         const child = resolve(abs, entry.name);
         if (entry.isDirectory()) {
-          if (await walk(child)) return true;
+          if (await walk(child, depth + 1)) return true;
         } else if (entry.isFile() && (await scanFile(child))) {
           return true;
         }
@@ -492,7 +496,7 @@ async function grepLiteral(pattern: string, roots: string[] = ['.']): Promise<Sa
   for (const root of roots) {
     const c = confine(root);
     if (!c.ok) return c;
-    if (await walk(c.abs)) break;
+    if (await walk(c.abs, 0)) break;
   }
 
   const output = out.join('\n');

@@ -91,12 +91,22 @@ export const hdExp = (a: HyperDual): HyperDual => {
   return hdUnary(a, e, e, e);
 };
 
-export const hdLog = (a: HyperDual): HyperDual =>
-  hdUnary(a, Math.log(a.x), 1 / a.x, -1 / (a.x * a.x));
+// Domain-guarded: log/sqrt of a non-positive value would return NaN/±Infinity and poison the first- AND
+// second-order derivatives for the rest of the tape. Clamp the domain to a tiny epsilon so an
+// out-of-range input yields finite (saturated) values + gradients instead of NaN.
+const HD_EPS = 1e-12;
+export const hdLog = (a: HyperDual): HyperDual => {
+  const x = a.x > HD_EPS ? a.x : HD_EPS;
+  return hdUnary(a, Math.log(x), 1 / x, -1 / (x * x));
+};
 
 export const hdSqrt = (a: HyperDual): HyperDual => {
-  const s = Math.sqrt(a.x);
-  return hdUnary(a, s, 0.5 / s, -0.25 / (s * a.x));
+  const x = a.x > 0 ? a.x : 0;
+  const s = Math.sqrt(x);
+  const sg = s > HD_EPS ? s : HD_EPS;
+  const xg = x > HD_EPS ? x : HD_EPS;
+  // f=√x, f'=1/(2√x), f''=−1/(4·x·√x) — keep the exact formula, only guard the denominators.
+  return hdUnary(a, s, 0.5 / sg, -0.25 / (sg * xg));
 };
 
 /** Power with a constant real exponent n:  f=xⁿ, f'=n·xⁿ⁻¹, f''=n(n-1)·xⁿ⁻². */

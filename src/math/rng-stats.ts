@@ -111,7 +111,11 @@ export function serialCorrelation(values: ArrayLike<number>): number {
   const cov = m * sxy - sx * sy;
   const vx = m * sxx - sx * sx;
   const vy = m * syy - sy * sy;
-  const denom = Math.sqrt(vx * vy);
+  // vx / vy are variances but can round slightly NEGATIVE (catastrophic cancellation on near-constant
+  // input); then vx*vy < 0 → Math.sqrt = NaN, and `NaN <= 0` is FALSE, so the guard below would return
+  // cov/NaN = NaN. Guard the product's sign first so a degenerate window yields 0, never NaN.
+  const prod = vx * vy;
+  const denom = prod > 0 ? Math.sqrt(prod) : 0;
   return denom <= 0 ? 0 : cov / denom;
 }
 
