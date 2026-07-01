@@ -75,6 +75,14 @@ function syncReceipts(s: string): string {
       .replace(/tests-[0-9]{3,4}/g, `tests-${TEST}`)
       .replace(/\b[0-9],[0-9]{3}\s+tests\b/g, `${TEST_COMMA} tests`)
       .replace(/(?<![,0-9])\b[0-9]{3,4}\s+tests\b/g, `${TEST} tests`)
+      // specs.html stat block splits the number and its "tests" label across two divs
+      // (`<div class="n gd">1,477</div><div class="l">tests ...`), so the \s+ variants above
+      // never match it and it drifted unseen. Scoped to that exact markup — the `class="l">tests`
+      // anchor is unique to the stat card, so no other number can be caught.
+      .replace(
+        /(<div class="n[^"]*">)[0-9][0-9,]*(<\/div>\s*<div class="l">tests\b)/g,
+        `$1${TEST_COMMA}$2`,
+      )
       .replace(/\b[0-9],[0-9]{3}\s+pass\b/g, `${TEST_COMMA} pass`)
       .replace(/\b[0-9],[0-9]{3}\s+tests\s*\/\s*0\s+fail\b/g, `${TEST_COMMA} tests / 0 fail`)
       .replace(/(?<![,0-9])\b[0-9]{3,4}\s+tests\s*\/\s*0\s+fail\b/g, `${TEST} tests / 0 fail`)
