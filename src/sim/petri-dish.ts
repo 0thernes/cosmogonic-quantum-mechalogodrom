@@ -253,7 +253,14 @@ export function petriDishBeat(
     irrep * 0.002 +
     qualia * 0.003 +
     classical * 0.001 +
-    state.spinPolarization * 0.002;
+    state.spinPolarization * 0.002 +
+    // Eshkol GWT IGNITION → growth: when the workspace competition actually ignites (a specialist wins
+    // global access this beat) the colony gets a consciousness-driven boost weighted by how DECISIVE the
+    // ignition was — the winner's access × sharpness (1 − competition entropy). The rich eshkolWorkspaceTick
+    // already reported ignited/access/entropy and the petri dish threw them away (it read only broadcastGain
+    // + phiCoupling); this wires the real GWT ignition event causally into digital-biologic growth. Pure —
+    // no rng draw, so the seeded stream is unchanged — and bounded.
+    (ws.ignited ? ws.access * (1 - ws.entropy) : 0) * 0.004;
 
   const noise = (rng() - 0.5) * 0.002;
   state.biomass = Math.min(1, state.biomass + growth + noise);
