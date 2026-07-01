@@ -170,11 +170,13 @@ export class AlphabetPantheonRender {
     this.refAtlas = createPantheonFallbackAtlas();
     const pantheonVert = `
       attribute float refBand;
+      attribute vec4 instPersona; // per-archetype PERSONALITY: x=chaos y=curiosity z=empowerment w=order
       varying vec2 vUv;
       varying vec3 vPos;
       varying vec3 vColor;
       varying vec3 vNormal;
       varying float vRefBand;
+      varying vec4 vPersona;
       uniform float uTime;
 
       // Noise function for vertex displacement
@@ -185,6 +187,7 @@ export class AlphabetPantheonRender {
         vColor = instanceColor;
         vNormal = normal;
         vRefBand = refBand;
+        vPersona = instPersona;
 
         // USER: structured multi-frequency BREATHING (like the god-jewel's layered beat) — reads as alive
         // + mathematical, not a formless swell or a spasm. Gentle amplitude so the shapely solid survives.
@@ -206,6 +209,7 @@ export class AlphabetPantheonRender {
       varying vec3 vColor;
       varying vec3 vNormal;
       varying float vRefBand;
+      varying vec4 vPersona;
       uniform float uTime;
       uniform sampler2D uRefAtlas;
 
@@ -264,6 +268,21 @@ export class AlphabetPantheonRender {
         float crevice = smoothstep(0.0, 0.4, length(vPos));
         finalColor *= crevice * 0.82;
 
+        // ── PERSONALITY SUITE: read each archetype's REAL cognitive bias off its skin, so the 100 gods
+        //    are legible as MINDS, not just palettes — chaos/curiosity/empowerment/order made visible.
+        float pChaos = vPersona.x, pCuriosity = vPersona.y, pEmpower = vPersona.z, pOrder = vPersona.w;
+        // CHAOS STORM (chaos): a chaotic god's skin churns with turbulent glitch-storm flecks.
+        float pStorm = floor((relief2 + sin(uTime * 7.0) * 0.25) * 6.0) / 6.0;
+        finalColor += vec3(0.9, 0.3, 1.0) * pStorm * pChaos * 0.5;
+        // CURIOSITY PROBE-TENDRILS (curiosity): a curious god sprouts probing light-tendrils reaching out.
+        float pProbe = pow(0.5 + 0.5 * sin(atan(vPos.z, vPos.x) * 9.0 + uTime * 2.5), 12.0);
+        finalColor += vec3(0.3, 1.0, 0.8) * pProbe * pCuriosity * fres * 0.8;
+        // EMPOWERMENT CORONA (empowerment): a dominant god wears a commanding radiant corona.
+        finalColor += color * pow(fres, 0.5) * pEmpower * 0.6;
+        // ORDER LATTICE (order): an orderly mind crystallizes a rigid geometric lattice; disorder stays fluid.
+        float pLat = step(0.75, max(abs(sin(vPos.x * 9.0)), max(abs(sin(vPos.y * 9.0)), abs(sin(vPos.z * 9.0)))));
+        finalColor = mix(finalColor, finalColor + vec3(0.7, 0.85, 1.0) * 0.5, pLat * pOrder * 0.5);
+
         gl_FragColor = vec4(finalColor, 1.0);
       }
     `;
@@ -317,6 +336,9 @@ export class AlphabetPantheonRender {
       mesh.frustumCulled = false;
       const list: Body[] = [];
       const refBands = new Float32Array(members.length);
+      // Per-archetype PERSONALITY lane (x=chaos y=curiosity z=empowerment w=order) — the real bias
+      // profile packed to the GPU so the skin reads out each god's MIND, not just its palette.
+      const persona = new Float32Array(members.length * 4);
       for (let s = 0; s < members.length; s++) {
         const a = members[s]!;
         const b = a.bias;
@@ -338,6 +360,10 @@ export class AlphabetPantheonRender {
         const sig = glyphExteriorSignature(a);
         const pal = glyphExteriorPalette(a);
         refBands[s] = GLYPH_PALETTE_IDS.indexOf(pal.id);
+        persona[s * 4] = b.chaos;
+        persona[s * 4 + 1] = b.curiosity;
+        persona[s * 4 + 2] = b.empowerment;
+        persona[s * 4 + 3] = b.order;
         const geoKey = glyphGeoBucketKey(a, sig);
         list.push({
           ax,
@@ -367,6 +393,7 @@ export class AlphabetPantheonRender {
         mesh.setMatrixAt(s, M);
       }
       mesh.geometry.setAttribute('refBand', new THREE.InstancedBufferAttribute(refBands, 1));
+      mesh.geometry.setAttribute('instPersona', new THREE.InstancedBufferAttribute(persona, 4));
       mesh.instanceMatrix.needsUpdate = true;
       if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
       this.group.add(mesh);

@@ -79,6 +79,31 @@ describe('AlphabetPantheonRender — 100 archetypes alive in the dome', () => {
     r.dispose();
   });
 
+  test('every body carries an instPersona lane (chaos/curiosity/empowerment/order) — the god’s MIND on its skin', () => {
+    const scene = new THREE.Scene();
+    const r = new AlphabetPantheonRender(scene);
+    let total = 0;
+    let anyNonZero = false;
+    for (const mesh of coreBodyMeshes(scene)) {
+      const attr = mesh.geometry.getAttribute('instPersona');
+      expect(attr).toBeInstanceOf(THREE.InstancedBufferAttribute);
+      expect(attr.itemSize).toBe(4); // x=chaos y=curiosity z=empowerment w=order
+      const arr = attr.array as Float32Array;
+      for (let i = 0; i < arr.length; i++) {
+        // Each packed personality trait is a bounded, falsifiable readout — finite and in [0,1], never NaN.
+        expect(Number.isFinite(arr[i]!)).toBe(true);
+        expect(arr[i]!).toBeGreaterThanOrEqual(0);
+        expect(arr[i]!).toBeLessThanOrEqual(1);
+        if (arr[i]! > 0) anyNonZero = true;
+      }
+      total += attr.count;
+    }
+    // All 100 archetypes are packed, and their real bias actually reached the GPU (not all-zero decor).
+    expect(total).toBe(ALPHABET_PANTHEON_SIZE);
+    expect(anyNonZero).toBe(true);
+    r.dispose();
+  });
+
   test('user #10 — wire halos hidden by default; VISION·wire toggles them', () => {
     const scene = new THREE.Scene();
     const r = new AlphabetPantheonRender(scene);

@@ -9,6 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### PANTHEON personality skin — the 100 archetypes' minds made legible
+
+- The alphabet pantheon's 100 archetypes already read shape/colour/size/motion from their bias, but the
+  SKIN showed only structure (facets/relief/iridescence), not each god's cognitive PERSONALITY. A new
+  per-instance `instPersona` attribute now packs the archetype's REAL bias profile — **chaos ·
+  curiosity · empowerment · order** — to the GPU, driving 4 named personality effects so the 100 gods
+  read as MINDS, not palettes: a **chaos storm** (turbulent glitch flecks) on a chaotic god, **curiosity
+  probe-tendrils** (probing light reaching outward) on a curious one, an **empowerment corona**
+  (commanding radiance) on a dominant one, and an **order lattice** (rigid crystalline geometry) on an
+  orderly one — a disorderly mind stays fluid. Deterministic, ≤10 draw calls (one InstancedMesh per
+  geometry kind), signal-gated. Verified to compile + render in headless Chromium (0 shader / 0 page
+  errors); a test pins that all 100 archetypes' real bias reaches the GPU, finite + in [0,1].
+
 ### APEX consciousness skin — DREAM STATE + HALLUCINATION now visible on the god-jewel
 
 - The Super Creature's REM **dreaming** and **hallucinating** signals (from `SuperMind.setConsciousness`)
