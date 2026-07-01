@@ -168,8 +168,43 @@ const BREED_QUORUM = 7;
 const AURA_SHOCK_R2_FRAC = 0.16; // inner-well fraction of AURA_R² where organisms RECOIL (a stun)
 const AURA_SHOCK_DAMP = 0.9; // velocity retained per visit inside the shock zone
 
-/** Shared, never-disposed geometry for the writhing core (unit radius; per-titan mesh.scale). */
-const TITAN_CORE_GEO = new THREE.IcosahedronGeometry(1, CORE_DETAIL);
+/** USER: titan bodies were smooth "blobs". Fractal CPU displacement → sharp crystalline ridges +
+ *  occasional long spikes along the normal, turning any smooth primitive into a WILD faceted
+ *  mathematical solid. Clones the base (never mutates the shared entity cache); deterministic (hash +
+ *  trig of the vertex — no rng). Built once per geo-type at boot. */
+function displaceTitanGeo(base: THREE.BufferGeometry, seed: number): THREE.BufferGeometry {
+  const g = base.clone();
+  const pos = g.getAttribute('position') as THREE.BufferAttribute;
+  const nrm = g.getAttribute('normal') as THREE.BufferAttribute | null;
+  const arr = pos.array as Float32Array;
+  const nr = nrm ? (nrm.array as Float32Array) : null;
+  const hsh = (x: number, y: number, z: number): number => {
+    const v = Math.sin(x * 12.9898 + y * 78.233 + z * 37.719 + seed * 0.618) * 43758.5453;
+    return v - Math.floor(v);
+  };
+  for (let i = 0; i < arr.length; i += 3) {
+    const x = arr[i] ?? 0;
+    const y = arr[i + 1] ?? 0;
+    const z = arr[i + 2] ?? 0;
+    const len = Math.hypot(x, y, z) || 1;
+    const nx = nr ? (nr[i] ?? x / len) : x / len;
+    const ny = nr ? (nr[i + 1] ?? y / len) : y / len;
+    const nz = nr ? (nr[i + 2] ?? z / len) : z / len;
+    const ridge =
+      0.5 + 0.5 * Math.sin(x * 3.1 + seed) * Math.cos(y * 2.7 + seed * 0.5) * Math.sin(z * 2.9);
+    const spike = hsh(Math.round(nx * 5), Math.round(ny * 5), Math.round(nz * 5)) > 0.85 ? 0.55 : 0;
+    const d = ridge * 0.18 + spike; // ridges everywhere + occasional long crystalline spikes
+    arr[i] = x + nx * d;
+    arr[i + 1] = y + ny * d;
+    arr[i + 2] = z + nz * d;
+  }
+  pos.needsUpdate = true;
+  g.computeVertexNormals();
+  return g;
+}
+
+/** Shared writhing core — a WILD spiky crystalline fractal (was a smooth icosahedron); per-titan mesh.scale. */
+const TITAN_CORE_GEO = displaceTitanGeo(new THREE.IcosahedronGeometry(1, CORE_DETAIL), 7);
 
 /** Per-titan shader uniforms — ONE object reused by the body patch + cage + aura (drive once/frame). */
 interface TitanUniforms {
@@ -516,6 +551,8 @@ export class TitanSystem {
   private econWealth: ((titanIndex: number) => number) | null = null;
   private readonly rd: TitanRd;
   private readonly titans: Titan[] = [];
+  /** Titan-specific fractal-displaced geometries (spiky crystalline bodies), cached per shared geo-type. */
+  private readonly titanGeoCache = new Map<number, THREE.BufferGeometry>();
   /** 45 pair histories, indexed by the PAIR_A/PAIR_B tables. */
   private readonly histories: PairHistory[] = [];
   /** REUSED ledger rows backing the public `ledger` view. */
@@ -829,8 +866,16 @@ export class TitanSystem {
     rx = 0,
   ): void {
     const geos = this.ctx.geos;
-    const geo = geos[geoIdx % geos.length];
-    if (!geo) return; // invariant: cache has 40 entries — defensive only
+    const gi = geoIdx % geos.length;
+    // Titan-specific FRACTAL-DISPLACED geometry (spiky crystalline, not a smooth blob), cached per geo-type
+    // so it's built once and shared across titans. Never touches the shared entity cache (we clone it).
+    let geo = this.titanGeoCache.get(gi);
+    if (!geo) {
+      const base = geos[gi];
+      if (!base) return; // invariant: cache has 40 entries — defensive only
+      geo = displaceTitanGeo(base, gi + 3);
+      this.titanGeoCache.set(gi, geo);
+    }
     const mesh = new THREE.Mesh(geo, mat);
     mesh.position.set(x, y, z);
     mesh.scale.set(sx, sy, sz);
