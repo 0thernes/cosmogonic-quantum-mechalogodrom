@@ -163,6 +163,12 @@ export const RENDER_MODES = [
   'chrome',
   'hologram',
   'iridescent',
+  // USER: 10 total entity renders. plasma/obsidian/prismatic are GPU-shader modes (indices 7/8/9),
+  // layered by the instanced pool fragment (see instanced-entities uMode block); the FX flags below
+  // are the per-mesh (phone) fallback + pool base. Append-only so existing mode indices are stable.
+  'plasma',
+  'obsidian',
+  'prismatic',
 ] as const;
 
 /** One of the five entity render styles. */
@@ -254,6 +260,36 @@ export const RENDER_MODE_FX: Readonly<Record<RenderMode, RenderModeFx>> = {
     depthWrite: null,
     emissiveBoost: 1.2,
   },
+  // USER 10-renders: PLASMA — molten self-luminous body (fiery emissive; the shader adds turbulent core glow).
+  plasma: {
+    wireframe: false,
+    metalness: 0,
+    roughness: 0.6,
+    opacity: null,
+    transparent: null,
+    depthWrite: null,
+    emissiveBoost: 2.4,
+  },
+  // OBSIDIAN — dark rim-lit volcanic glass (high metalness, low glow; the shader adds a cool fresnel rim).
+  obsidian: {
+    wireframe: false,
+    metalness: 0.9,
+    roughness: 0.15,
+    opacity: null,
+    transparent: null,
+    depthWrite: null,
+    emissiveBoost: 0.5,
+  },
+  // PRISMATIC — rainbow refraction shell (thin-film dispersion; the shader adds the angular spectrum).
+  prismatic: {
+    wireframe: false,
+    metalness: 0.3,
+    roughness: 0.25,
+    opacity: null,
+    transparent: null,
+    depthWrite: null,
+    emissiveBoost: 1.4,
+  },
 };
 
 /**
@@ -284,6 +320,9 @@ export const RENDER_MODE_DYN: Readonly<Record<RenderMode, RenderModeDyn>> = {
   chrome: { speed: 1.0, vision: 1.0, social: 1.35, jitter: 0.85 }, // social beacon, orderly
   hologram: { speed: 1.2, vision: 1.15, social: 0.85, jitter: 1.15 }, // flickery, quick
   iridescent: { speed: 1.05, vision: 1.1, social: 1.1, jitter: 1.05 }, // shimmering, lively
+  plasma: { speed: 1.25, vision: 1.1, social: 0.9, jitter: 1.3 }, // volatile, hot
+  obsidian: { speed: 0.9, vision: 0.95, social: 1.25, jitter: 0.8 }, // dense, deliberate
+  prismatic: { speed: 1.1, vision: 1.2, social: 1.15, jitter: 1.1 }, // shimmering, refractive
 };
 
 /** Lower clamp for the chaos parameter, legacy line 168. */

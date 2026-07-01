@@ -114,18 +114,28 @@ export class Connectome {
     this.geo.setAttribute('position', this.posAttr);
     this.geo.setAttribute('color', this.colAttr);
     this.geo.setDrawRange(0, 0);
-    ctx.scene.add(
-      new THREE.LineSegments(
-        this.geo,
-        new THREE.LineBasicMaterial({
-          vertexColors: true,
-          transparent: true,
-          opacity: 0.38,
-          depthWrite: false,
-          blending: THREE.AdditiveBlending,
-        }),
-      ),
+    const lines = new THREE.LineSegments(
+      this.geo,
+      new THREE.LineBasicMaterial({
+        vertexColors: true,
+        transparent: true,
+        opacity: 0.55,
+        depthWrite: false,
+        depthTest: false,
+        blending: THREE.AdditiveBlending,
+      }),
     );
+    // USER (always-visible connectome): the axon web spans the WHOLE dome and its vertices are
+    // rebuilt every frame, but three computes the geometry bounding sphere ONCE (lazily) and never
+    // again — so as creatures roam, the stale sphere drifts out of the frustum and the ENTIRE web
+    // flickers out at certain camera angles/distances (the "sometimes I can't see it close or far"
+    // trigger). Disable frustum culling so it is drawn unconditionally at every angle + distance;
+    // `depthTest: false` above also keeps the additive lines from being occluded/washed out when the
+    // camera is right on top of a bright body. Rendered on top of a big transparent render order so
+    // the neural net always reads over the population.
+    lines.frustumCulled = false;
+    lines.renderOrder = 3;
+    ctx.scene.add(lines);
   }
 
   /** Links built by the last update (legacy `connLinks`, telemetry #v3 + sparkline #g3). */

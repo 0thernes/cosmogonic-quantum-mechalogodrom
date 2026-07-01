@@ -180,7 +180,8 @@ Allocation-free in steady state (pre-allocated typed-array scratch); event-drive
   `instanceColor`, and a custom `vec4 instEmissive` (rgb = emissive·intensity, a = opacity) patched
   into the standard shader via `onBeforeCompile`.
 - **Owned shader effects (GPU, no textures):** a baseline glass-jewel fresnel + thin-film sheen on
-  every organism; 7 render modes (solid → wire → ghost → neon → chrome → hologram → iridescent); a
+  every organism; 10 render modes (solid → wire → ghost → neon → chrome → hologram → iridescent →
+  plasma → obsidian → prismatic); a
   SIMULATION N(2) vertex-melt gated on a `uNightmare` uniform.
 - **Optional cinematic post-FX (`?fx=1`):** a procedural cosmic PMREM environment map (glass
   reflections) + an `EffectComposer` UnrealBloom pass — guarded (any failure falls back to the plain

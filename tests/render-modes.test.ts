@@ -6,16 +6,16 @@ import { applyRenderModeTo } from '../src/sim/entities';
 /**
  * Render-mode facade (CONTRACTS V7.3). `applyRenderModeTo` layers a {@link RenderMode} onto a
  * MeshStandardMaterial built from a morphotype base — pure material-flag changes, headless
- * (THREE runs without a WebGL context). These pin the five-mode contract and the SOLID
+ * (THREE runs without a WebGL context). These pin the ten-mode contract and the SOLID
  * round-trip that keeps the legacy look byte-identical.
  */
 const OPAQUE_BASE = { met: 0.4, rou: 0.6, op: 1.0, emI: 0.8 };
 const TRANSLUCENT_BASE = { met: 0.2, rou: 0.7, op: 0.4, emI: 0.5 };
 
 describe('RENDER_MODES table', () => {
-  test('is the seven-mode cycle, all distinct, SOLID first', () => {
-    expect(RENDER_MODES.length).toBe(7);
-    expect(new Set(RENDER_MODES).size).toBe(7);
+  test('is the ten-mode cycle, all distinct, SOLID first', () => {
+    expect(RENDER_MODES.length).toBe(10);
+    expect(new Set(RENDER_MODES).size).toBe(10);
     expect(RENDER_MODES[0]).toBe('solid');
     expect([...RENDER_MODES]).toEqual([
       'solid',
@@ -25,6 +25,9 @@ describe('RENDER_MODES table', () => {
       'chrome',
       'hologram',
       'iridescent',
+      'plasma',
+      'obsidian',
+      'prismatic',
     ]);
   });
 

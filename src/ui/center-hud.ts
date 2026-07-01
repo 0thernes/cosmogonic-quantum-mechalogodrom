@@ -792,23 +792,9 @@ function buildPersistentNav(doc: Document): void {
       ),
     );
   }
-  rowDocs.appendChild(
-    mkBtn(
-      'APEX',
-      'Open APEX architecture brain view',
-      () => {
-        const isApexOpen = active === SLOTS.length - 1;
-        if (!isApexOpen) {
-          const p = (window as any).pantheonArchitecturePanel;
-          if (p && typeof p.selectApex === 'function') {
-            p.selectApex();
-          }
-        }
-        showOnly(isApexOpen ? -1 : SLOTS.length - 1);
-      },
-      'cqm-persist-panel',
-    ),
-  );
+  // USER: the standalone APEX button was REMOVED — it was redundant with the PANTHEONS (⟁ ARCHITECTURE)
+  // panel, which already cycles the apex ς Quantum Brain through its own in-panel tabs. One launcher per
+  // panel; APEX is reached via PANTHEONS.
   strip.appendChild(rowDocs);
 
   if (!strip.parentElement) doc.body.appendChild(strip);

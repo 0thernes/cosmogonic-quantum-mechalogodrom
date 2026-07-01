@@ -585,8 +585,24 @@ const RELIQUARY_FRAG_BODY = /* glsl */ `#include <emissivemap_fragment>
 	float vIris = pow(rqFres, 0.5) * (0.5 + 0.5 * sin(length(vObjPos) * 7.0 - uTime * 1.2));
 	totalEmissiveRadiance += vLinCol * vIris * 0.18;
 
-	// Exotic render modes layer on top (V7-beyond, unchanged).
-	if (uMode > 5.5) {
+	// Exotic render modes layer on top (V7-beyond). Higher indices (7/8/9 = plasma/obsidian/prismatic,
+	// USER 10-renders) are checked first so the ladder stays a single else-if chain.
+	if (uMode > 8.5) {
+		// PRISMATIC — angular rainbow dispersion: the spectrum sweeps with the viewing angle + clock.
+		float pct = abs(dot(normalize(vNormal), rqV));
+		vec3 disp = 0.5 + 0.5 * cos(6.28318 * (pct * 3.0 + vec3(0.0, 0.33, 0.67) + uTime * 0.2));
+		totalEmissiveRadiance += disp * 0.6;
+		diffuseColor.rgb = mix(diffuseColor.rgb, disp, 0.8);
+	} else if (uMode > 7.5) {
+		// OBSIDIAN — dark volcanic glass: the body darkens, a cool fresnel rim rides the silhouette.
+		diffuseColor.rgb *= 0.22;
+		float ofr = pow(1.0 - clamp(abs(dot(normalize(vNormal), rqV)), 0.0, 1.0), 2.0);
+		totalEmissiveRadiance += vec3(0.25, 0.5, 0.85) * ofr * 0.7;
+	} else if (uMode > 6.5) {
+		// PLASMA — molten core: a turbulent fiery glow pumps from the body interior outward.
+		float pl = 0.55 + 0.45 * sin(uTime * 3.0 + length(vObjPos) * 8.0);
+		totalEmissiveRadiance += vec3(1.0, 0.42, 0.12) * pl * (0.5 + 0.5 * rqFres);
+	} else if (uMode > 5.5) {
 		float ct = abs(dot(normalize(vNormal), rqV));
 		vec3 irid = 0.5 + 0.5 * cos(6.28318 * (vec3(1.0,0.9,0.8) * ct + vec3(0.0,0.33,0.67) + uTime * 0.1));
 		totalEmissiveRadiance += irid * 0.4;

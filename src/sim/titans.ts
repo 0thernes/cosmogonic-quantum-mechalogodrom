@@ -1043,6 +1043,37 @@ export class TitanSystem {
   }
 
   /**
+   * SUSPENDED-ANIMATION visual tick (USER pause redesign): keep every colossus ALIVE IN PLACE while
+   * the world is paused — the bob, aura light, body emissive, and freak-geometry shader uniforms all
+   * animate on the advancing visual clock `t`, but NOTHING travels and NO rng is drawn. It is a
+   * render-only subset of {@link roamAndAnimate}: it deliberately omits the velocity accumulation +
+   * position/spin integration (which would drift the seeded golden on resume) and the cadence-driven
+   * economy/diplomacy/warfare in {@link update} (which DO draw rng). Reads only frozen titan state +
+   * `t`; writes only render objects (rig offset, light, material, shader uniforms). O(titans), no alloc.
+   */
+  animateInPlace(t: number): void {
+    for (let i = 0; i < this.titans.length; i++) {
+      const ti = this.titans[i];
+      if (!ti) continue; // invariant: dense array
+      const flick = Math.sin(t * 2.1 + ti.ph);
+      const warHot = ti.warCount > 0;
+      ti.rig.position.y = Math.sin(t * ti.bobF + ti.ph) * ti.bobA;
+      ti.light.intensity =
+        TITAN_LIGHT_GAIN * (0.55 + 0.45 * (ti.energy / RESOURCE_CAP)) * (1 + 0.12 * flick);
+      ti.light.color.setHSL(warHot ? 0.015 : ti.hue, 0.7, 0.5);
+      ti.bodyMat.emissive.setHSL(warHot ? 0.015 : ti.hue, 0.75, 0.09 + 0.04 * flick);
+      const entropyN = ti.entropy / ENTROPY_WASTE_THRESHOLD;
+      ti.bodyMat.emissiveIntensity = 0.7 + 1.1 * (entropyN > 1 ? 1 : entropyN);
+      ti.tu.uTime.value = t;
+      ti.tu.uColor.value.setHSL(warHot ? 0.015 : ti.hue, 0.85, 0.5);
+      ti.tu.uMenace.value = Math.min(1, 0.18 * ti.warCount + 0.7 * (entropyN > 1 ? 1 : entropyN));
+      const tvl = titanVitalLanes(ti.energy, ti.entropy);
+      ti.tu.uEnergy.value = tvl.energyN;
+      ti.tu.uEntropy.value = tvl.entropyN;
+    }
+  }
+
+  /**
    * V67 AURA: organisms drifting within {@link AURA_R} of a colossus are caught in a tangential
    * wake and HUE-STAINED toward the titan's freak-geometry colour — so they no longer pass through
    * it "like nothing", but they are not dragged into a central gravity well. The

@@ -104,18 +104,24 @@ describe('persistent dock controls (owner-critical)', () => {
     const world = src('src/world.ts');
     // Delegated [data-action="pause"] resolves to UiActions.togglePause.
     expect(input).toMatch(/pause:\s*'togglePause'/);
-    // togglePause performs a real freeze (timeScale set to 0), matching the "everything holds
-    // position, then drifts slowly" intent — not merely a slow-motion multiplier.
-    expect(world).toMatch(/togglePause:[\s\S]{0,600}timeScale\s*=\s*0/);
-    // And it surfaces the paused state so the owner has unambiguous feedback.
-    expect(world).toMatch(/togglePause:[\s\S]{0,600}'PAUSED'/);
-    // Inspect mode must freeze sim bodies but still let the free camera consume real UI delta.
-    expect(world).toMatch(/if \(isPaused\)[\s\S]{0,600}this\.updateCamera\(0,\s*uiDt,\s*t\)/);
-    // …yet creatures stay ALIVE IN PLACE (owner #4): the paused branch advances a visual-only clock
+    // togglePause performs a real freeze (timeScale set to 0) as the first step of the three-state
+    // cycle RUNNING → SUSPENDED → FROZEN → RUNNING — not merely a slow-motion multiplier.
+    expect(world).toMatch(/togglePause:[\s\S]{0,800}timeScale\s*=\s*0/);
+    // And it surfaces EACH paused state so the owner has unambiguous feedback.
+    expect(world).toMatch(/togglePause:[\s\S]{0,900}'SUSPENDED/);
+    expect(world).toMatch(/togglePause:[\s\S]{0,900}'FROZEN/);
+    // SUSPENDED mode must freeze sim bodies but still let the free camera consume real UI delta.
+    expect(world).toMatch(
+      /stepSuspended\(uiDt: number, vt: number\)[\s\S]{0,600}this\.updateCamera\(0,\s*uiDt,\s*vt\)/,
+    );
+    // …yet creatures stay ALIVE IN PLACE (owner #4): the suspended branch advances a visual-only clock
     // and feeds it to the instanced shader time, so bodies writhe/shimmer where they stand while their
     // TRAVEL (position) is frozen — not a stiff, wholly-dead freeze.
-    expect(world).toMatch(/if \(isPaused\)[\s\S]{0,400}this\.pauseVisualClock\s*\+=\s*uiDt/);
-    expect(world).toMatch(/fr\.t\s*=\s*this\.pauseVisualClock/);
+    expect(world).toMatch(
+      /if \(s\.timeScale === 0\)[\s\S]{0,700}this\.pauseVisualClock\s*\+=\s*uiDt/,
+    );
+    // The suspended/frozen frame feeds that visual clock (vt) into the instanced shader's uTime.
+    expect(world).toMatch(/fr\.t\s*=\s*vt/);
   });
 
   test('Archon panel five-card telemetry is live, not clock-fabricated', () => {

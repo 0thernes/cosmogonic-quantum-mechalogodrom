@@ -236,6 +236,12 @@ export class World {
   private readonly uiRng: Rng;
   private readonly state: SimState;
   private prePauseTimeScale = 1;
+  /**
+   * USER three-state pause: the ⏸ PAUSE button cycles RUNNING → SUSPENDED (`timeScale===0`, bodies alive
+   * in place) → FROZEN (`frozenAll`, the whole world a static tableau) → RUNNING. Only ever true while
+   * `timeScale===0`; cleared whenever time resumes (togglePause / cycleTimeScale).
+   */
+  private frozenAll = false;
   /** Master exposure ladder (ACES filmic); index 1 = boot default 0.62 (USER #11 dimmed). */
   private readonly exposureLevels = [0.52, 0.62, 0.72, 0.82, 0.92] as const;
   private exposureIdx = 1;
@@ -1131,47 +1137,33 @@ export class World {
     const dt = uiDt * s.timeScale;
     s.elapsed += dt;
 
-    // STRICT PAUSE (user #4): when timeScale===0 for inspection/roam, freeze ALL motion.
-    // Prior scaled-dt alone allowed drift/animation in some subsystems. Gate here + downstream.
-    const isPaused = s.timeScale === 0;
-    if (isPaused) {
-      // Still allow UI/camera roam + minimal HUD, but zero sim body motion.
-      // Individual systems must also early-return on isPaused or dt<=0.
-    }
     s.frame++;
     const t = s.elapsed;
-    if (isPaused) {
-      // PAUSED (user #4): sim TRAVEL freezes (no position step, no rng), but creatures stay ALIVE IN
-      // PLACE — the free camera still roams, and the visual clock keeps advancing so the instanced
-      // shader's uTime (vertex writhe + shimmer/breath/plasma) animates every body where it stands.
-      this.pauseVisualClock += uiDt;
-      this.updateCamera(0, uiDt, t);
-      this.hud.update(0, s);
-      // USER: on PAUSE, creatures stay ALIVE IN PLACE (suspended animation) — spin/pulse/morph/shader keep
-      // animating while their TRAVEL freezes. Pantheons+apex: visualOnly advances only the animation clock.
-      // Super-creatures animate on absolute `t` (the visual clock) with dt=0 ⇒ travel frozen, body alive.
-      // Mechalogodrom is fixed (never travels), so its internal dt-clock just keeps it animating. All three
-      // draw NO rng, so the seeded trajectory is untouched.
-      this.alphabetPantheon.update(t, uiDt, true);
-      for (const hb of this.heroBodies) hb.body.update(this.pauseVisualClock, 0);
-      this.mechalogodrom.update(t, uiDt);
-      // KEEP compositing the held frame each tick (sync the frozen instances + render) so roaming a
-      // paused scene shows the world instead of a blank/stale buffer (the loop clears each frame).
-      // Render-only: positions are the frozen sim state, only the shader time advances — no rng, no
-      // body travel, so the seeded trajectory is untouched.
-      if (this.instanced) {
-        const fr = this.instFrame;
-        fr.t = this.pauseVisualClock; // living-in-place time (NOT the frozen sim `t`)
-        fr.chaos = s.chaos;
-        fr.bass = 0;
-        fr.nightmare = s.sim === 2 ? 1 : 0;
-        this.instanced.sync(this.entities.list, s.renderMode, fr);
-      }
-      this.updateLens();
-      this.engine.render();
+
+    // ── THREE-STATE PAUSE (USER pause redesign) ──────────────────────────────────────────────────────
+    // The ⏸ PAUSE button cycles RUNNING → SUSPENDED → FROZEN → RUNNING (see togglePause / cycleTimeScale).
+    // `s.timeScale === 0` = paused; `this.frozenAll` selects the FROZEN sub-state. In BOTH paused states
+    // the PLAYER is God Mode — never frozen or slowed: the free-cam + superhero avatar always move on the
+    // real frame delta (handled in updateCamera + the branch bodies), never the scaled sim dt.
+    if (s.timeScale === 0 && this.frozenAll) {
+      // FROZEN (2nd click): the whole world is a static tableau for inspection — no sim step, no body
+      // animation, no visual-clock advance, no rng. Only the player roams. The visual clock is HELD so
+      // resuming to SUSPENDED continues each body's animation seamlessly (no phase jump).
+      this.stepFrozen(uiDt);
       return;
     }
-    // Unpaused: keep the pause clock tracking sim time so the next pause starts seamlessly (no phase jump).
+    if (s.timeScale === 0) {
+      // SUSPENDED (1st click / any timeScale-0): "suspended animation of the DOME only". Every creature —
+      // entities, titans, shoggoths, puppeteers, leviathans, NHIs, APEX / super creatures, mechalogodrom,
+      // pantheons — stays ALIVE IN PLACE (spin/pulse/morph/shader on the advancing visual clock) while its
+      // TRAVEL freezes and NO autonomous rng is drawn (idling never perturbs the seeded golden). EVERYTHING
+      // ELSE stays fully LIVE: telemetry, observatory, sim-settings, sorting, weather, brutalism, and every
+      // interactive button (apocalypse/split/burst/mutate/chaos) take effect + refresh the panels here.
+      this.pauseVisualClock += uiDt;
+      this.stepSuspended(uiDt, this.pauseVisualClock);
+      return;
+    }
+    // RUNNING: keep the pause clock tracking sim time so the next pause starts seamlessly (no phase jump).
     this.pauseVisualClock = t;
     this.updateGrowthTarget(); // V66: ramp the live population target 500 → ceiling, then breathe
 
@@ -1448,14 +1440,10 @@ export class World {
     //    factor is computed HERE, BEFORE atmosphere.update, so the sky dome re-bakes with THIS frame's
     //    factor (not last frame's) and stays frame-coherent with the bodies/ground/organisms/fog. The
     //    ease is snapped to its exact 0/1 target so OFF is byte-identical (full restore). No alloc. ──
-    const bTarget = s.brutalism ? 1 : 0;
-    // Ease on the UNSCALED frame delta: BRUTALISM is a visual/UI toggle, so it must crossfade even
-    // while the sim is PAUSED (timeScale === 0) — otherwise pressing B / ▦ on a paused scene flips the
-    // state + audit text but the concrete never appears until you unpause.
-    this.brutalismFactor += (bTarget - this.brutalismFactor) * Math.min(1, uiDt * 2.5);
-    if (!s.brutalism && this.brutalismFactor < 0.02) this.brutalismFactor = 0;
-    else if (s.brutalism && this.brutalismFactor > 0.98) this.brutalismFactor = 1;
-    const bf = this.brutalismFactor;
+    // Ease on the UNSCALED frame delta (uiDt): BRUTALISM is a visual/UI toggle, so it must crossfade even
+    // while the sim is PAUSED — otherwise pressing B / ▦ on a paused scene flips the state + audit text
+    // but the concrete never appears until you unpause. Shared with the SUSPENDED-pause loop.
+    const bf = this.easeBrutalism(uiDt);
     this.atmosphere.setBrutalism(bf);
     // Alien sky + air: dome recolors with weather/chaos, haze advects with wind
     // and breathes with bass, aurora brightens with quantum entropy (V4.1).
@@ -1526,6 +1514,201 @@ export class World {
       this.titans.feedEntropy(this.rdEnergy * 2);
     }
 
+    // Telemetry (8f) · analyze (60f) · Observatory + ARCHON GODFORMS + market + superhero HUD + brain
+    // snapshots (obsCadence). Extracted into pushPanels so the SUSPENDED-pause loop refreshes the SAME
+    // readouts — the owner's law that data stays LIVE while paused (telemetry / observatory / sim-settings
+    // / ARCHON GODFORMS all react to every interactive button press). Pure reads + DOM writes; no rng.
+    this.pushPanels(n);
+
+    // Pool mirror runs LAST — after every system that mutates entity visuals
+    // (sort flash, graph rank floor, belly pulse, conscription tints). The reused frame block
+    // carries the N(2) nightmare scalar (inverted palette) + t/chaos/bass for the GPU effects.
+    if (this.instanced) {
+      const fr = this.instFrame;
+      fr.t = t;
+      fr.chaos = s.chaos;
+      fr.bass = bands.bass;
+      fr.nightmare = s.sim === 2 ? 1 : 0;
+      this.instanced.sync(this.entities.list, s.renderMode, fr);
+    }
+
+    // V60: aim the gravitational-lens post-FX at the active singularity (identity when none).
+    this.updateLens();
+    this.engine.render();
+  }
+
+  /**
+   * FROZEN pause (2nd PAUSE click): the world is a completely static tableau — no sim, no body
+   * animation, no visual-clock advance, no rng. Only the PLAYER stays free (God Mode): control input,
+   * free-cam roam, chase-cam, and the avatar body all advance on the REAL frame delta so the owner can
+   * inspect the frozen world from any angle. The instanced pool is re-synced with the HELD visual clock
+   * so a camera move still composites the world instead of a cleared buffer.
+   */
+  private stepFrozen(uiDt: number): void {
+    const s = this.state;
+    const vt = this.pauseVisualClock; // HELD — animation is frozen, resuming continues from here
+    this.updateHeroControl();
+    this.updateCamera(0, uiDt, vt);
+    this.updateHeroCamera();
+    for (const hb of this.heroBodies) hb.body.update(vt, uiDt); // player can still move (travel on uiDt)
+    this.hud.update(0, s);
+    if (this.instanced) {
+      const fr = this.instFrame;
+      fr.t = vt;
+      fr.chaos = s.chaos;
+      fr.bass = 0;
+      fr.nightmare = s.sim === 2 ? 1 : 0;
+      this.instanced.sync(this.entities.list, s.renderMode, fr);
+    }
+    this.updateLens();
+    this.engine.render();
+  }
+
+  /**
+   * SUSPENDED pause (1st PAUSE click / any timeScale-0): "suspended animation of the DOME only". Every
+   * creature stays ALIVE IN PLACE while its TRAVEL freezes and NO autonomous rng is drawn, so idling
+   * never perturbs the seeded golden. Only NO-RNG visual updates run here, on the advancing visual clock
+   * `vt` with travel dt=0; the rng-drawing autonomous systems (entity/chaos roam, titan/shoggoth economy,
+   * NHI cognition) are NOT stepped — entities stay lively through the instanced pool's uTime, and titans /
+   * shoggoths through their render-only `animateInPlace` ticks. EVERYTHING interactive stays LIVE:
+   * telemetry, observatory, sim-settings, sorting (incl. AUTO), weather, brutalism, and every button.
+   */
+  private stepSuspended(uiDt: number, vt: number): void {
+    const s = this.state;
+    const n = this.entities.list.length;
+    const chaosN = s.chaos / CHAOS_MAX;
+    const entropyN = (s.entropy ?? 0) / ENTROPY_MAX;
+    // Player is NEVER slowed/frozen: control + free-cam + chase-cam all on real time; avatar bodies below.
+    this.updateHeroControl();
+    this.updateCamera(0, uiDt, vt);
+    this.updateHeroCamera();
+    this.hud.update(0, s);
+
+    // Audio bands still poll live so the sort flash + audio-reactive visuals breathe while paused.
+    const bands = this.audioAnalysis.update();
+
+    // Weather + sorting stay INTERACTIVE (USER): a weather cycle or SORT ALL / AUTO the owner triggers
+    // takes visible effect immediately. All three draw NO rng (population / clock only) → golden intact.
+    this.weather.apply(uiDt, vt);
+    this.tickAlgoAuto(uiDt);
+    this.sortStep(bands);
+
+    // ── Every creature ALIVE IN PLACE (travel frozen, body animating on vt; all rng-free here) ──
+    for (let i = 0; i < this.superBodies.length; i++) this.superBodies[i]!.update(vt, 0); // APEX + 5 super creatures
+    this.superBody.worldPosition(this.sv1);
+    this.wingSwarm.update(
+      this.sv1.x,
+      this.sv1.y,
+      this.sv1.z,
+      this.superMindSnap?.emotion.dominance ?? 0.5,
+      this.superMindSnap?.quantum ?? this.emptyQ,
+      vt,
+      0, // dt=0 freezes the orbit; the drones keep spinning on the visual clock via wingRender.sync
+    );
+    this.wingRender.sync(this.wingSwarm.positions, vt, 0.4 + 0.6 * this.wingSwarm.assist);
+    for (const hb of this.heroBodies) hb.body.update(vt, uiDt); // player + twins: alive AND mobile (God Mode)
+    this.leviathans.update(0, vt);
+    if (this.nhiBody.count > 0) {
+      try {
+        this.nhiBody.update(vt, (id) => this.nhiEntities.get(id)?.position ?? null);
+      } catch {
+        /* an NHI body update misbehaved — skip it, keep the paused world composing */
+      }
+    }
+    this.titans.animateInPlace(vt); // render-only tick (full update draws rng → not stepped while paused)
+    this.shoggoths.animateInPlace(vt);
+    this.puppets.update(0, vt); // rng is dt-gated → dt=0 draws none; glow/ring animate on vt
+    this.alphabetPantheon.setChaos(chaosN);
+    this.alphabetPantheon.update(vt, uiDt, true); // visualOnly
+    this.mechalogodrom.setChaos(chaosN);
+    this.mechalogodrom.setTimeScale(0);
+    this.mechalogodrom.update(vt, uiDt);
+
+    // ── The whole DOME stays alive: far-field void, structures, ground, sky, haze, flora ──
+    this.cosmicWeb.update(vt, n / this.quality.maxEntities, chaosN, entropyN);
+    this.goldLattice.update(vt);
+    this.floatingMonoliths.update(vt, chaosN);
+    this.godColossus.update(vt, chaosN, entropyN);
+    this.quantumLattice.update(vt);
+    this.abominationArchitecture.setReactivity(chaosN, entropyN, n / this.quality.maxEntities);
+    this.abominationArchitecture.update(vt);
+    this.constellations.update(vt, bands);
+    this.artifacts.update(uiDt, vt);
+    this.monolithTemple.setEnvironment({
+      chaos: chaosN,
+      entropy: entropyN,
+      population: n,
+      capacity: this.quality.maxEntities,
+    });
+    this.monolithTemple.update(uiDt, vt);
+    this.alienFlora.update(uiDt, vt, chaosN); // flora leans + luminesces with chaos (additive, no rng)
+    this.viz3d.update(this.viz3dSnap);
+
+    // ── BRUTALISM stays live so the BRUTAL button reskins the super creatures + cosmos DURING pause ──
+    const bf = this.easeBrutalism(uiDt);
+    const brutalStyle = this.brutalStyleIdx < 0 ? 0 : this.brutalStyleIdx;
+    for (let i = 0; i < this.superBodies.length; i++) {
+      this.superBodies[i]!.setBrutalStyle(brutalStyle);
+      this.superBodies[i]!.setBrutalism(bf);
+    }
+    for (let i = 0; i < this.heroBodies.length; i++) {
+      this.heroBodies[i]!.body.setBrutalStyle(brutalStyle);
+      this.heroBodies[i]!.body.setBrutalism(bf);
+    }
+    this.atmosphere.setBrutalism(bf);
+    this.environment.setCreatureDensity(n / Math.max(1, this.quality.maxEntities));
+    this.environment.update(uiDt, vt);
+    this.environment.applyBrutalism(bf);
+    if (this.instanced) this.instanced.setBrutalism(bf);
+    else this.entities.applyBrutalism(bf);
+    this.atmosphere.update(uiDt, vt, bands, this.qc.entropy);
+    if (bf > 0) {
+      const fog = this.engine.scene.fog;
+      if (fog instanceof THREE.FogExp2) {
+        fog.color.lerp(BRUTAL_FOG, bf);
+        fog.density += (BRUTAL_FOG_DENSITY - fog.density) * bf;
+      }
+    }
+
+    // Telemetry / Observatory / sim-settings / ARCHON GODFORMS refresh LIVE every relevant frame (USER):
+    // s.frame keeps advancing while paused, so the same cadences fire and the data reacts to every button.
+    this.pushPanels(n);
+
+    // Render the paused world: entities stay lively through the instanced pool's advancing uTime.
+    if (this.instanced) {
+      const fr = this.instFrame;
+      fr.t = vt;
+      fr.chaos = s.chaos;
+      fr.bass = bands.bass;
+      fr.nightmare = s.sim === 2 ? 1 : 0;
+      this.instanced.sync(this.entities.list, s.renderMode, fr);
+    }
+    this.updateLens();
+    this.engine.render();
+  }
+
+  /**
+   * Ease the smoothed BRUTALISM concrete-crossfade factor toward its 0/1 target on the UNSCALED frame
+   * delta and return it. Shared by the running loop + the SUSPENDED-pause loop so the BRUTAL button
+   * crossfades even while paused. Snaps to the exact 0/1 target so OFF is byte-identical (full restore).
+   */
+  private easeBrutalism(uiDt: number): number {
+    const s = this.state;
+    const bTarget = s.brutalism ? 1 : 0;
+    this.brutalismFactor += (bTarget - this.brutalismFactor) * Math.min(1, uiDt * 2.5);
+    if (!s.brutalism && this.brutalismFactor < 0.02) this.brutalismFactor = 0;
+    else if (s.brutalism && this.brutalismFactor > 0.98) this.brutalismFactor = 1;
+    return this.brutalismFactor;
+  }
+
+  /**
+   * Push the live telemetry, Observatory, market ticker, ARCHON GODFORMS (⬢ ARCHITECT panel), superhero
+   * HUD, and brain-snapshot readouts on their frame cadences. Extracted from step() so the SUSPENDED-pause
+   * loop refreshes the SAME readouts — the owner's law that data stays LIVE while paused (react to every
+   * interactive button press). All reads + DOM writes; draws no rng and mutates no sim state.
+   */
+  private pushPanels(n: number): void {
+    const s = this.state;
     if (s.frame % 8 === 0) {
       this.analytics.push(n, this.energy, this.connectome.links);
       this.panel.update(this.snapshot());
@@ -1657,22 +1840,6 @@ export class World {
         );
       }
     }
-
-    // Pool mirror runs LAST — after every system that mutates entity visuals
-    // (sort flash, graph rank floor, belly pulse, conscription tints). The reused frame block
-    // carries the N(2) nightmare scalar (inverted palette) + t/chaos/bass for the GPU effects.
-    if (this.instanced) {
-      const fr = this.instFrame;
-      fr.t = t;
-      fr.chaos = s.chaos;
-      fr.bass = bands.bass;
-      fr.nightmare = s.sim === 2 ? 1 : 0;
-      this.instanced.sync(this.entities.list, s.renderMode, fr);
-    }
-
-    // V60: aim the gravitational-lens post-FX at the active singularity (identity when none).
-    this.updateLens();
-    this.engine.render();
   }
 
   /**
@@ -2508,9 +2675,12 @@ export class World {
   private updateCamera(dt: number, uiDt: number, t: number): void {
     const cam = this.engine.camera;
     const mode: ViewMode = cyc(VIEW_MODES, this.state.viewIdx);
-    // V116 inspect-pause: when timeScale is 0 the sim freezes (dt=0) but free-cam still roams on
-    // the real frame delta so the owner can walk around and inspect frozen specimens.
-    const camDt = mode === 'free' && this.state.timeScale === 0 ? uiDt : dt;
+    // USER (player is God Mode — NEVER slowed or frozen): the FREE camera is the player, so it ALWAYS
+    // roams on the real frame delta (uiDt), regardless of timeScale or pause. Previously it only used
+    // uiDt when fully paused (timeScale===0), so a SLOW time scale (0.1–0.5×) dragged the player's own
+    // movement down with the sim — the "speed settings slow down the player" bug. Only the automated
+    // cinematic cams (orbit/fly/tracking) ride the scaled sim delta.
+    const camDt = mode === 'free' ? uiDt : dt;
     const spd = 14 * ARENA_MID * camDt;
     const rs = 1.5 * camDt;
     if (mode === 'free') {
@@ -3748,19 +3918,36 @@ export class World {
         // A value not in the table (e.g. a legacy persisted scale) resumes at realtime.
         s.timeScale = i < 0 ? 1 : (scales[(i + 1) % scales.length] ?? 1);
         this.prePauseTimeScale = s.timeScale === 0 ? 1 : s.timeScale;
+        // Stepping the time scale to 0 means SUSPENDED (bodies alive in place), never FROZEN — the total
+        // freeze is reachable only via the PAUSE button's 2nd click, so clear the flag here.
+        this.frozenAll = false;
         this.audit.record('time-scale', { value: s.timeScale });
         return s.timeScale;
       },
       togglePause: () => {
         this.unlock();
-        if (s.timeScale === 0) {
-          s.timeScale = this.prePauseTimeScale || 1;
-        } else {
+        // USER three-state cycle: RUNNING → SUSPENDED (bodies alive in place, all data/UI live) → FROZEN
+        // (total world stop) → RUNNING. The player is never frozen or slowed in ANY state (God Mode).
+        // See step() / stepSuspended / stepFrozen.
+        let label: string;
+        if (s.timeScale !== 0) {
+          // RUNNING → SUSPENDED
           this.prePauseTimeScale = s.timeScale;
           s.timeScale = 0;
+          this.frozenAll = false;
+          label = 'SUSPENDED · alive in place';
+        } else if (!this.frozenAll) {
+          // SUSPENDED → FROZEN
+          this.frozenAll = true;
+          label = 'FROZEN · total stop';
+        } else {
+          // FROZEN → RUNNING
+          this.frozenAll = false;
+          s.timeScale = this.prePauseTimeScale || 1;
+          label = 'RESUME · ' + s.timeScale + '×';
         }
-        this.hud.showSector(s.timeScale === 0 ? 'PAUSED' : 'RESUME · ' + s.timeScale + '×');
-        this.audit.record('pause', { paused: s.timeScale === 0 });
+        this.hud.showSector(label);
+        this.audit.record('pause', { timeScale: s.timeScale, frozen: this.frozenAll });
         return s.timeScale === 0;
       },
       // USER #4: explicit master PANEL launcher next to ACCESS. Opens aggregated view for copilot/help/audit/nhi/market/archons etc.

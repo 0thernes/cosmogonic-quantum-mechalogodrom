@@ -265,6 +265,35 @@ export class ShoggothSystem {
   }
 
   /**
+   * SUSPENDED-ANIMATION visual tick (USER pause redesign): keep every shoggoth ALIVE IN PLACE while
+   * the world is paused. Core glow, breathing scale, blinking eyes, and aura lights all pulse on the
+   * advancing visual clock `t`; nothing drifts, no entity is consumed, and NO rng is drawn. It is a
+   * render-only subset of {@link update} — it omits drift/tendril grabs and the consumption block
+   * (which spawns corrupted children + draws rng), using neutral boldness/deception so the pulse still
+   * reads lively without touching sim state. Writes only render objects. O(shoggoths), no allocation.
+   */
+  animateInPlace(t: number): void {
+    for (let si = 0; si < this.shogs.length; si++) {
+      const sg = this.shogs[si];
+      if (!sg) continue; // noUncheckedIndexedAccess: si < length
+      const hue = (((t * 0.05 + sg.ph) % 1) + 1) % 1;
+      sg.coreMat.emissive.setHSL(hue, 0.6, 0.04 + Math.sin(t * 2 + sg.ph) * 0.02);
+      sg.coreMat.emissiveIntensity = (1 + Math.sin(t * 3 + sg.ph) * 0.8) * 0.9;
+      sg.core.scale.setScalar((1 + Math.sin(t * 1.5 + sg.ph) * 0.15) * 0.94);
+      for (let ei = 0; ei < sg.eyeMats.length; ei++) {
+        const eyeMat = sg.eyeMats[ei];
+        if (!eyeMat) continue; // noUncheckedIndexedAccess: ei < length
+        eyeMat.opacity = 0.3 + Math.abs(Math.sin(t * 2 + (sg.eyePhases[ei] ?? 0))) * 0.7;
+      }
+      if (sg.aura) {
+        sg.aura.intensity = (3 + Math.sin(t * 2 + sg.ph) * 2) * POINT_LIGHT_GAIN;
+        sg.aura.color.setHSL(hue, 0.7, 0.3);
+      }
+      if (sg.aura2) sg.aura2.intensity = (1.5 + Math.cos(t * 3 + sg.ph) * 1) * POINT_LIGHT_GAIN;
+    }
+  }
+
+  /**
    * Advance drift, glow, tendrils, and consumption for all shoggoths (legacy 519-539).
    * O(s·k) per frame — s = shoggoth count, k = grid neighbors; consumption uses the same spatial hash (O(k)), not a full population scan.
    * Allocation-free: module scratch vectors only; the grid query reuses its shared buffer.
