@@ -3170,6 +3170,25 @@ export class World {
         }
       }
     }
+    // USER #7a — the SOCIAL field: how many OTHER NHIs are near, and their mean mood. Fed into think()
+    // as mood contagion + social action modulation, so nearby alien minds genuinely shape each other.
+    let kinMood = 0;
+    let kinN = 0;
+    if (e) {
+      const p = e.position;
+      const KIN_R2 = 90 * 90;
+      for (const [oid, oe] of this.nhiEntities) {
+        if (oid === id || !oe) continue;
+        const op = oe.position;
+        const dx = p.x - op.x;
+        const dy = p.y - op.y;
+        const dz = p.z - op.z;
+        if (dx * dx + dy * dy + dz * dz < KIN_R2) {
+          kinN++;
+          kinMood += this.nhi.snapshot(oid)?.mood ?? 0;
+        }
+      }
+    }
     return {
       energy: u ? c01(u.energy / 100) : 0.5,
       crowding: c01(this.entities.list.length / Math.max(1, this.quality.maxEntities)),
@@ -3177,6 +3196,8 @@ export class World {
       threat: c01(chaos * 0.5),
       rivalFaction,
       rivalLastMove,
+      kinPresence: c01(kinN / 4), // 4+ nearby kin ⇒ full social field
+      kinMood: kinN > 0 ? kinMood / kinN : 0,
     };
   }
 

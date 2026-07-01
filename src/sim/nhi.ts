@@ -88,6 +88,14 @@ export interface NhiPercept {
   rivalFaction: number;
   /** That rival's last move toward the NHI: 0 = cooperated, 1 = betrayed, -1 = unknown. */
   rivalLastMove: number;
+  /**
+   * USER #7a — NHIs are SOCIAL with each other. `kinPresence` 0..1 = density of OTHER NHIs nearby;
+   * `kinMood` −1..+1 = their mean mood. `think()` uses them for real mood CONTAGION + social action
+   * modulation (kin near → breed/broadcast/hold; isolated → scheme/hunt), so nearby minds genuinely
+   * influence one another. Optional (default 0 = asocial) so any percept without them behaves as before.
+   */
+  kinPresence?: number;
+  kinMood?: number;
 }
 
 /** The NHI's decision for this beat — pure data the integrator executes. */
@@ -253,9 +261,15 @@ export class NhiMind {
    */
   think(p: NhiPercept, rng: Rng): NhiIntent {
     // 1. Remember + drift mood (narcissism resists fear; chaos/threat tilt toward mania/brooding).
-    this.memory.push(p.energy - p.threat + p.chaos * 0.5);
+    // USER #7a social: MOOD CONTAGION — nearby kin pull this NHI's mood toward theirs (scaled by how
+    // many are near), so a panicked cluster spirals together and a manic one feeds each other's frenzy.
+    const kinPresence = p.kinPresence ?? 0;
+    const kinMood = p.kinMood ?? 0;
     this.mood = clamp(
-      this.mood * 0.85 + (p.energy - p.threat) * 0.3 + this.memory.mean() * 0.1,
+      this.mood * 0.85 +
+        (p.energy - p.threat) * 0.3 +
+        this.memory.mean() * 0.1 +
+        (kinMood - this.mood) * kinPresence * 0.18,
       -1,
       1,
     );
@@ -297,6 +311,16 @@ export class NhiMind {
     s[NhiAction.HUNT] =
       (1 - p.energy) * 1.1 + this.aggression * 0.5 + (g[NhiAction.HUNT] ?? 0) * 0.5;
     s[NhiAction.RETREAT] = p.threat * 1.4 - p.energy * 0.6 + (g[NhiAction.RETREAT] ?? 0) * 0.5;
+
+    // 3a-social (USER #7a): kin nearby → the NHI BREEDS + BROADCASTS to the pack and holds ground
+    // (safety in numbers); ISOLATED → it turns inward and schemes/hunts alone. Deterministic utility
+    // nudges (no rng), so nearby minds shape each other's choices — the social layer is WIRED, not audio-only.
+    const isolation = 1 - kinPresence;
+    s[NhiAction.SPAWN_SWARM] = (s[NhiAction.SPAWN_SWARM] ?? 0) + kinPresence * 0.5;
+    s[NhiAction.BROADCAST] = (s[NhiAction.BROADCAST] ?? 0) + kinPresence * 0.4;
+    s[NhiAction.RETREAT] = (s[NhiAction.RETREAT] ?? 0) - kinPresence * 0.4;
+    s[NhiAction.MANIPULATE] = (s[NhiAction.MANIPULATE] ?? 0) + isolation * 0.3;
+    s[NhiAction.HUNT] = (s[NhiAction.HUNT] ?? 0) + isolation * 0.25;
 
     // 3b. GOAP: plan the cheapest path to dominion and nudge the planned NEXT step's utility up, so
     //     the NHI runs a coherent multi-step scheme across beats rather than only reacting.
