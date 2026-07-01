@@ -8,7 +8,7 @@
  * - monotonic non-decreasing in speed; finite + within [0,1]; non-finite/negative → 0.
  */
 import { describe, expect, test } from 'bun:test';
-import { leviathanSurge } from '../src/sim/leviathans';
+import { leviathanSurge, leviathanDepth } from '../src/sim/leviathans';
 
 describe('leviathanSurge (pure)', () => {
   test('zero speed → zero; linear until saturation; clamps at 1', () => {
@@ -36,5 +36,34 @@ describe('leviathanSurge (pure)', () => {
       expect(Number.isFinite(v)).toBe(true);
       expect(v).toBe(0);
     }
+  });
+});
+
+describe('leviathanDepth (pure)', () => {
+  test('surface → 0, floor → 1, mid → 0.5; clamps beyond the column', () => {
+    expect(leviathanDepth(28)).toBeCloseTo(0, 6); // top of the roam column
+    expect(leviathanDepth(0)).toBeCloseTo(1, 6); // deepest
+    expect(leviathanDepth(14)).toBeCloseTo(0.5, 6); // mid
+    expect(leviathanDepth(-100)).toBe(1); // below the floor → clamp
+    expect(leviathanDepth(1000)).toBe(0); // high above → clamp
+  });
+
+  test('monotonic DECREASING in height; always within [0,1]', () => {
+    let prev = Infinity;
+    for (let y = -10; y <= 40; y += 2) {
+      const v = leviathanDepth(y);
+      expect(v).toBeLessThanOrEqual(prev);
+      expect(v).toBeGreaterThanOrEqual(0);
+      expect(v).toBeLessThanOrEqual(1);
+      prev = v;
+    }
+  });
+
+  test('non-finite height → 0 (treated as surface), never NaN', () => {
+    for (const bad of [NaN, Infinity, -Infinity]) {
+      const v = leviathanDepth(bad);
+      expect(Number.isFinite(v)).toBe(true);
+    }
+    expect(leviathanDepth(NaN)).toBe(0);
   });
 });

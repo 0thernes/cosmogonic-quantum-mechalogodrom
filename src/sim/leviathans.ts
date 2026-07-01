@@ -50,6 +50,84 @@ export function leviathanSurge(speed: number): number {
   return v < 0 ? 0 : v > 1 ? 1 : v;
 }
 
+/** Depth span (world Y) over which a leviathan reads from surface (0) to deepest (1) — its roam column. */
+const LEVIATHAN_DEPTH_SPAN = 28;
+
+/**
+ * Map a leviathan's REAL height (world Y) to a `[0,1]` descent signal — high in the column → 0, deep
+ * near the floor → 1 — driving the helix + phosphor-gas deep-sea effects. Finite-guarded, clamped.
+ * Pure, no rng. O(1). See tests/leviathan-surge.test.ts.
+ */
+export function leviathanDepth(y: number): number {
+  const d =
+    (LEVIATHAN_DEPTH_SPAN - (Number.isFinite(y) ? y : LEVIATHAN_DEPTH_SPAN)) / LEVIATHAN_DEPTH_SPAN;
+  return d < 0 ? 0 : d > 1 ? 1 : d;
+}
+
+/** Per-leviathan shader uniforms driven from real state each frame (surge = speed, depth = height). */
+interface LeviathanUniforms {
+  uTime: THREE.IUniform<number>;
+  uSurge: THREE.IUniform<number>;
+  uDepth: THREE.IUniform<number>;
+}
+
+/** GLSL header injected after the leviathan body's fragment `<common>` — varyings, uniforms, fBm. */
+const LEVIATHAN_FRAG_HEADER = /* glsl */ `
+varying vec3 vLObjP;
+uniform float uTime; uniform float uSurge; uniform float uDepth;
+float lHash(vec3 p){ return fract(sin(dot(p, vec3(27.17, 61.31, 11.71))) * 43758.5453); }
+float lNoise(vec3 x){ vec3 i = floor(x), f = fract(x); f = f * f * (3.0 - 2.0 * f);
+  return mix(mix(mix(lHash(i), lHash(i + vec3(1,0,0)), f.x), mix(lHash(i + vec3(0,1,0)), lHash(i + vec3(1,1,0)), f.x), f.y),
+             mix(mix(lHash(i + vec3(0,0,1)), lHash(i + vec3(1,0,1)), f.x), mix(lHash(i + vec3(0,1,1)), lHash(i + vec3(1,1,1)), f.x), f.y), f.z); }
+float lFbm(vec3 p){ float a = 0.5, s = 0.0; for (int k = 0; k < 4; k++){ s += a * lNoise(p); p = p * 2.03 + 7.1; a *= 0.5; } return s; }
+`;
+
+/**
+ * Patch a leviathan body material with the V-LEVIATHAN-EXPANDED named-effect suite: 7 GPU effects,
+ * each a FALSIFIABLE readout of the colossus's REAL motion — surge (speed) drives plasma / storm-thermal
+ * / vortexical-wake / singulrosity-bloom, depth (height) drives helixology + phosphor-gas, and a
+ * milky-brushed nacre sheen rides the fresnel always. GPU-only, no per-frame CPU, no rng: a gliding
+ * leviathan is calm, a diving one blazes.
+ */
+function patchLeviathanBody(mat: THREE.MeshStandardMaterial, u: LeviathanUniforms): void {
+  mat.onBeforeCompile = (shader) => {
+    shader.uniforms['uTime'] = u.uTime;
+    shader.uniforms['uSurge'] = u.uSurge;
+    shader.uniforms['uDepth'] = u.uDepth;
+    shader.vertexShader = shader.vertexShader
+      .replace('#include <common>', '#include <common>\nvarying vec3 vLObjP;')
+      .replace('#include <begin_vertex>', '#include <begin_vertex>\nvLObjP = position;');
+    shader.fragmentShader = shader.fragmentShader
+      .replace('#include <common>', `#include <common>${LEVIATHAN_FRAG_HEADER}`)
+      .replace(
+        '#include <emissivemap_fragment>',
+        /* glsl */ `#include <emissivemap_fragment>
+        float lFres = pow(1.0 - max(dot(normalize(vViewPosition), normalize(normal)), 0.0), 3.0);
+        float lF = lFbm(vLObjP * 0.5);
+        // PLASMA EXPANDED (surge) — plasma discharge veins race a fast-diving colossus.
+        float lPlasma = pow(0.5 + 0.5 * sin(vLObjP.x * 8.0 + vLObjP.y * 5.0 + uTime * 6.0 + lF * 6.2831), 6.0);
+        totalEmissiveRadiance += vec3(0.5, 0.7, 1.0) * lPlasma * uSurge * 1.6;
+        // STORM THERMAL RADIANCE (surge) — a thermal bloom rims an accelerating body.
+        totalEmissiveRadiance += vec3(1.0, 0.5, 0.2) * pow(lFres, 2.0) * uSurge * 0.8;
+        // HELIXOLOGY COSMOS (depth) — bioluminescent helix strands wind the serpent in the deep.
+        float lHelix = pow(0.5 + 0.5 * sin(vLObjP.x * 3.0 + atan(vLObjP.z, vLObjP.y) * 2.0 + uTime * 1.5), 10.0);
+        totalEmissiveRadiance += vec3(0.3, 1.0, 0.8) * lHelix * (0.3 + 0.7 * uDepth) * 0.9;
+        // MILKY BRUSHED NACRE — an iridescent pearl sheen brushes the whale-hide (always on the rim).
+        vec3 lNacre = 0.5 + 0.5 * cos(vec3(0.0, 2.094, 4.188) + lF * 6.2831 + lFres * 6.0);
+        totalEmissiveRadiance += lNacre * pow(lFres, 1.5) * 0.35;
+        // PHOSPHOR GASEOUSNESS (depth) — deep-sea phosphor gas clings to a diving colossus.
+        float lGas = fract(lF * 1.8 + uTime * 0.1); lGas = lGas * (1.0 - lGas) * 4.0;
+        totalEmissiveRadiance += vec3(0.2, 0.9, 0.7) * lGas * uDepth * 0.6;
+        // VORTEXICAL WAKE (surge) — a swirling wake winds off a fast leviathan.
+        float lVort = pow(0.5 + 0.5 * sin(atan(vLObjP.z, vLObjP.x) * 4.0 + length(vLObjP) * 2.0 - uTime * 3.0), 6.0);
+        totalEmissiveRadiance += vec3(0.4, 0.6, 1.0) * lVort * uSurge * 0.7;
+        // SINGULROSITY BLOOM (surge) — a hot core halo blooms on a surging colossus.
+        totalEmissiveRadiance += vec3(0.8, 0.9, 1.0) * pow(1.0 - lFres, 3.0) * uSurge * 1.0;`,
+      );
+  };
+  mat.customProgramCacheKey = () => 'leviathanExpandedV1';
+}
+
 interface Leviathan {
   group: THREE.Group;
   body: THREE.Mesh;
@@ -59,6 +137,8 @@ interface Leviathan {
   /** Phase offset, derived from the index (golden-angle spread) — not rng. */
   ph: number;
   hue: number;
+  /** Per-leviathan shader uniforms for the V-LEVIATHAN-EXPANDED suite (driven from real state). */
+  u: LeviathanUniforms;
 }
 
 /**
@@ -95,6 +175,13 @@ export class LeviathanSystem {
         transparent: true,
         opacity: 0.9,
       });
+      // V-LEVIATHAN-EXPANDED: patch the body with the named-effect suite, driven from real state.
+      const u: LeviathanUniforms = {
+        uTime: { value: 0 },
+        uSurge: { value: 0 },
+        uDepth: { value: 0 },
+      };
+      patchLeviathanBody(mat, u);
       const body = new THREE.Mesh(geo, mat);
       body.rotation.z = Math.PI / 2; // lie the capsule horizontal so it swims, not stands
       group.add(body);
@@ -110,6 +197,7 @@ export class LeviathanSystem {
         vel: new THREE.Vector3(),
         ph: i * 2.399963229728653, // golden angle in radians — even, rng-free spread
         hue,
+        u,
       });
     }
   }
@@ -179,6 +267,10 @@ export class LeviathanSystem {
       const surge = leviathanSurge(lv.vel.length());
       lv.mat.emissiveIntensity = 1.2 * (0.6 + 0.8 * surge);
       lv.aura.intensity = (1.6 + 2.0 * surge) * POINT_LIGHT_GAIN;
+      // V-LEVIATHAN-EXPANDED: feed the real signals to the named-effect suite (surge = speed, depth = height).
+      lv.u.uTime.value = t;
+      lv.u.uSurge.value = surge;
+      lv.u.uDepth.value = leviathanDepth(p.y);
     }
   }
 }

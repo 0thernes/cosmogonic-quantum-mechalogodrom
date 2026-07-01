@@ -67,7 +67,10 @@ leviathans — 21 named GPU effects + 2 de-decorations, each bound to a real sig
 - **Wingmen (`super-wingmen-render.ts`):** `droneSpeed` — drone size reads real per-frame speed (was a
   `sin(t)` pulse). Test: `super-wingmen-render.test.ts`.
 - **Leviathans (`leviathans.ts`):** `leviathanSurge(speed)` — glow + aura read the colossus's real
-  speed (was a `sin(t)` pulse). Test: `leviathan-surge.test.ts`.
+  speed (was a `sin(t)` pulse). **V-LEVIATHAN-EXPANDED**: the bare body now wears a 7-effect GPU suite
+  patched via `onBeforeCompile`, each driven by a real signal — surge (speed) → plasma-expanded /
+  storm-thermal / vortexical-wake / singulrosity-bloom, depth (`leviathanDepth(y)`) → helixology +
+  phosphor-gas, milky-brushed nacre on the fresnel rim. Test: `leviathan-surge.test.ts`.
 
 All pure `f(state)`, **no rng** → seeded trajectory byte-identical; every new GLSL suite compiled
 directly in the live WebGL2 context (stale-preview-bundle workaround). This entry consolidates the
