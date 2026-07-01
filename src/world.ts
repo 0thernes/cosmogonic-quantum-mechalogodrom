@@ -100,7 +100,12 @@ import { SuperCreature, type SuperPercept, type SuperPlan } from './sim/super-cr
 import { ApexBrain, SCALE_APEX_START, type ApexPercept, type ApexThought } from './sim/apex-brain';
 import { breedAt, type BabyGenome, PANTHEON_TOTAL } from './sim/pantheon-breeding';
 import { SelfEvolutionLoop, type EvolutionMetrics } from './sim/self-evolution-loop';
-import { bedauPackardActivity, shannonDiversity } from './sim/open-endedness';
+import {
+  bedauPackardActivity,
+  shannonDiversity,
+  openEndednessVerdict,
+  type OpenEndednessClass,
+} from './sim/open-endedness';
 import {
   GODFORMS,
   getArchonForm,
@@ -523,6 +528,11 @@ export class World {
   get foundationalsSnapshot(): FoundationalsSnapshot | null {
     return this.lastFoundationals;
   }
+  /** V-OEE: the live Bedau-Packard open-endedness verdict over the morphotype-diversity window —
+   *  'unbounded' (still innovating), 'bounded' (plateaued), or 'inactive' (no innovation yet). */
+  get openEndedness(): OpenEndednessClass {
+    return this.lastOeeVerdict;
+  }
   private readonly apexPercept: ApexPercept = {
     threat: 0,
     energy: 0,
@@ -541,6 +551,8 @@ export class World {
   /** V-BEDAU: Bedau-Packard evolutionary activity tracking. Diversity snapshots feed the activity metric. */
   private readonly diversitySnapshots: number[] = [];
   private lastBedauActivity = 0;
+  /** V-OEE: the bounded/unbounded/inactive open-endedness verdict over the diversity window (Bedau-Packard). */
+  private lastOeeVerdict: OpenEndednessClass = 'inactive';
 
   /** Reused telemetry snapshot (panel reads synchronously). */
   private readonly snap: TelemetrySnapshot;
@@ -2390,9 +2402,16 @@ export class World {
         this.diversitySnapshots.push(div);
         if (this.diversitySnapshots.length > 32) this.diversitySnapshots.shift();
         this.lastBedauActivity = bedauPackardActivity(this.diversitySnapshots, 8);
+        // V-OEE: the canonical open-endedness verdict — is the NEW-activity rate sustaining (unbounded)
+        // or decaying onto a plateau (bounded)? Read from the SAME diversity window, so it costs nothing
+        // extra and is genuinely surfaced (audit-recorded ⇒ observable + replayable), not decorative.
+        const oee = openEndednessVerdict(this.diversitySnapshots, 8);
+        this.lastOeeVerdict = oee.verdict;
         this.audit.record('bedau-packard-activity', {
           activity: this.lastBedauActivity,
           diversity: div,
+          oee: oee.verdict,
+          oeeRatio: oee.ratio,
         });
       }
       if (s.frame % 120 === 0 && n < target) {

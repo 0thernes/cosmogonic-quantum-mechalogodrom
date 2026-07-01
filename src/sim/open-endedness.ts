@@ -103,6 +103,28 @@ export function evolutionaryActivity(
 }
 
 /**
+ * NEW-ACTIVITY SERIES — the core Bedau-Packard quantity. For each step `i ≥ window`, the "new
+ * activity" is how far the current snapshot rises ABOVE the best it had reached in the trailing
+ * `window` (`A_new[i] = max(0, snap[i] − max(snap[i−window … i−1]))`). A step that merely matches or
+ * revisits recent ground contributes 0; only genuinely-new high-water marks count. Returns one value
+ * per post-warmup step (empty when the series is too short). Pure — the shared basis of both the
+ * activity fraction and the bounded/unbounded verdict below.
+ */
+export function newActivitySeries(snapshots: readonly number[], window = 8): number[] {
+  const out: number[] = [];
+  if (snapshots.length < window + 1) return out;
+  for (let i = window; i < snapshots.length; i++) {
+    let prevMax = 0;
+    for (let j = i - window; j < i; j++) {
+      const prev = snapshots[j] || 0;
+      if (prev > prevMax) prevMax = prev;
+    }
+    out.push(Math.max(0, (snapshots[i] || 0) - prevMax));
+  }
+  return out;
+}
+
+/**
  * Bedau-Packard EVOLUTIONARY ACTIVITY (per ROADMAP P2).
  * Measures persistent adaptive novelty: the fraction of "new" structure that is maintained over time.
  * High + non-plateauing = open-ended (the substrate is doing real work, not just cycling).
@@ -115,20 +137,66 @@ export function bedauPackardActivity(
 ): number {
   if (snapshots.length < window + 1) return 0;
   let persistingNew = 0;
+  for (const a of newActivitySeries(snapshots, window)) persistingNew += a;
   let total = 0;
-  for (let i = window; i < snapshots.length; i++) {
-    const curr = snapshots[i] || 0;
-    let prevMax = 0;
-    for (let j = i - window; j < i; j++) {
-      const prev = snapshots[j] || 0;
-      if (prev > prevMax) prevMax = prev;
-    }
-    const newThisStep = Math.max(0, curr - prevMax);
-    persistingNew += newThisStep;
-    total += curr;
-  }
+  for (let i = window; i < snapshots.length; i++) total += snapshots[i] || 0;
   // A = (new persisting) / total — a proper [0,1] fraction (matches the docstring). The previous
   // divisor `total / snapshots.length` (per-snapshot mean) over-scaled by snapshots.length and
   // saturated to 1 for any rising series. Instrumentation-only (not sim-coupled).
   return total > 0 ? Math.min(1, persistingNew / total) : 0;
+}
+
+/** The three long-term dynamics classes Bedau-Packard distinguish, plus a no-innovation floor. */
+export type OpenEndednessClass = 'unbounded' | 'bounded' | 'inactive';
+
+export interface OpenEndednessVerdict {
+  /** Mean new-activity over the FIRST half of the post-warmup series (early innovation rate). */
+  readonly newEarly: number;
+  /** Mean new-activity over the SECOND half (late innovation rate — the tell). */
+  readonly newLate: number;
+  /** newLate / newEarly (0 when there was no early innovation). */
+  readonly ratio: number;
+  /** The verdict — the actual open-endedness signature, not a vibe. */
+  readonly verdict: OpenEndednessClass;
+}
+
+/** Below this, an innovation rate is treated as effectively zero (guards ratio + inactive floor). */
+const OEE_EPS = 1e-9;
+/** Late innovation must be at least this fraction of the early rate to count as still-open-ended. */
+const OEE_SUSTAIN = 0.5;
+
+/**
+ * BOUNDED vs UNBOUNDED evolutionary activity — the canonical open-endedness verdict (Bedau, Snyder &
+ * Packard 1998, "A classification of long-term evolutionary dynamics"). The signature of a genuinely
+ * open-ended system is that its rate of NEW adaptive activity does NOT decay to zero: it keeps minting
+ * new high-water marks forever ("unbounded"), rather than saturating onto a plateau ("bounded") or
+ * never innovating at all ("inactive"). We read that off {@link newActivitySeries} by comparing the
+ * mean new-activity in the early half of the run against the late half:
+ *   • both halves ≈ 0            → `inactive` (no innovation — a frozen/monoculture soup)
+ *   • late ≥ {@link OEE_SUSTAIN} × early → `unbounded` (innovation persists — open-ended)
+ *   • otherwise                   → `bounded` (innovation decayed — the run plateaued)
+ * Pure, deterministic, headless — the honest "is it still evolving?" instrument for long runs. Note
+ * this is the intrinsic-trend form; the fully rigorous Bedau-Packard test additionally subtracts a
+ * neutral-shadow baseline to prove the activity is ADAPTIVE, not drift — see RESEARCH-BEDROCK.
+ */
+export function openEndednessVerdict(
+  snapshots: readonly number[],
+  window = 8,
+): OpenEndednessVerdict {
+  const series = newActivitySeries(snapshots, window);
+  if (series.length < 2) return { newEarly: 0, newLate: 0, ratio: 0, verdict: 'inactive' };
+  const mid = Math.floor(series.length / 2);
+  const meanOf = (from: number, to: number): number => {
+    let s = 0;
+    for (let i = from; i < to; i++) s += series[i] ?? 0;
+    return to > from ? s / (to - from) : 0;
+  };
+  const newEarly = meanOf(0, mid);
+  const newLate = meanOf(mid, series.length);
+  const ratio = newEarly > OEE_EPS ? newLate / newEarly : 0;
+  let verdict: OpenEndednessClass;
+  if (newEarly <= OEE_EPS && newLate <= OEE_EPS) verdict = 'inactive';
+  else if (newLate > OEE_EPS && ratio >= OEE_SUSTAIN) verdict = 'unbounded';
+  else verdict = 'bounded';
+  return { newEarly, newLate, ratio, verdict };
 }
