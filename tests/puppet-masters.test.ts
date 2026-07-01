@@ -121,4 +121,36 @@ describe('PuppetMasterSystem — deterministic schemers that perturb the world w
     expect(a.ctx.state.mutations).toBe(b.ctx.state.mutations);
     expect(a.events.length).toBe(b.events.length);
   });
+
+  test('the manipulator shader uniforms are driven from the REAL per-puppet signals (bounded readouts)', () => {
+    const { pm } = makeWorld(0x9a11);
+    // Reach the private per-puppet uniforms (sibling-test cast pattern).
+    const pms = (
+      pm as unknown as {
+        pms: {
+          satiation: number;
+          u: {
+            uTime: { value: number };
+            uSatiation: { value: number };
+            uBoldness: { value: number };
+            uAgitation: { value: number };
+            uHunt: { value: number };
+          };
+        }[];
+      }
+    ).pms;
+    expect(pms.length).toBeGreaterThan(0);
+    for (let f = 0; f < 120; f++) pm.update(1 / 60, f / 60);
+    for (const p of pms) {
+      // uSatiation mirrors the puppet's live satiation exactly (the shader reads the real feeding memory).
+      expect(p.u.uSatiation.value).toBeCloseTo(p.satiation, 6);
+      // Every driven lane is finite and clamped to [0,1] — a bounded, falsifiable readout, never NaN.
+      for (const lane of [p.u.uSatiation, p.u.uBoldness, p.u.uAgitation, p.u.uHunt]) {
+        expect(Number.isFinite(lane.value)).toBe(true);
+        expect(lane.value).toBeGreaterThanOrEqual(0);
+        expect(lane.value).toBeLessThanOrEqual(1);
+      }
+      expect(Number.isFinite(p.u.uTime.value)).toBe(true);
+    }
+  });
 });

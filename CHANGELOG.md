@@ -9,6 +9,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### TITAN + PUPPETEER body suites — colossi and schemers made alive by their real state
+
+- **Titans** (`titans.ts`): 8 new named effects on the colossus body, each a FALSIFIABLE readout of a
+  real titan signal (`uMenace` aggression · `uEnergy` resource · `uEntropy` waste) — **Vortexical
+  maelstrom**, **Helixology void-strands**, **Neuralmimetic fracture-web**, **Singulrosity event-horizon**
+  (a menacing titan bends light around itself), **Bit-glitch reality-tear**, **Centrifuge rocaille
+  cuboids** (rotating cuboid shards — the one still-missing named effect), **Ionizing flutter**, and a
+  **Plasma storm-thermal**. Signal-gated + additive on top of the existing void-glow / stellar-core /
+  waste-rot suite.
+- **Puppeteers** (`puppet-masters.ts`): the three named hands' tetra-cores get a NEW custom manipulator
+  shader (`patchPuppetBody`) driven by their REAL state — **satiation** (feeding memory), **boldness**
+  (wealth), **agitation** + **hunt** (opportunism drives) — with 8 named effects: **Vision-Expanded
+  all-seeing eye**, **Neuralmimetic puppet-strings**, **Singulrosity gorge-bloom**, **Vortexical
+  control-swirl**, **Phosphor gaseousness**, **Bit-glitch meddle-core**, **Ionizing flutter**, and a
+  **Lapse-Collapse pulse**. A spent/poor/idle hand stays quiet; a gorged/rich/scheming one blazes.
+- Both suites are deterministic, allocation-free, signal-gated (0 signal ⇒ baseline unchanged), and
+  **verified to compile + render in headless Chromium** (0 shader / 0 page errors). A test pins the
+  puppeteer real-signal→uniform wiring (uSatiation mirrors satiation; every lane finite + in [0,1]).
+
 ### Super Creature MIND-BOUND skin suite — the god-jewel made alive by the apex mind's real internals
 
 - Six new named effects on the flagship Super Creature body, each a FALSIFIABLE readout of a genuine

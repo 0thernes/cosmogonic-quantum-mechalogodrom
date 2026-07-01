@@ -110,6 +110,76 @@ function lesserConfig(i: number): PuppetConfig {
   };
 }
 
+/** Per-puppet shader uniforms — ONE object reused by the body patch, driven once per frame. */
+interface PuppetUniforms {
+  uTime: { value: number };
+  uColor: { value: THREE.Color };
+  /** Real manipulator signals (all 0..1): feeding memory · wealth-boldness · scheming agitation · hunt. */
+  uSatiation: { value: number };
+  uBoldness: { value: number };
+  uAgitation: { value: number };
+  uHunt: { value: number };
+}
+
+/**
+ * Patch a puppeteer's tetra-core {@link THREE.MeshStandardMaterial} into a LIVE readout of its real
+ * manipulator state — each named effect gated by a genuine signal (satiation feeding · boldness wealth ·
+ * agitation + hunt opportunism drives), so a spent, poor, idle hand stays quiet and a gorged, rich,
+ * scheming one blazes. Mirrors the titan/super-body onBeforeCompile idiom so the real scene lights still
+ * carve the relief. Additive, signal-gated (0 signal ⇒ baseline unchanged), GPU-only, no alloc.
+ */
+function patchPuppetBody(mat: THREE.MeshStandardMaterial, u: PuppetUniforms): void {
+  mat.onBeforeCompile = (shader) => {
+    shader.uniforms.uTime = u.uTime;
+    shader.uniforms.uColor = u.uColor;
+    shader.uniforms.uSatiation = u.uSatiation;
+    shader.uniforms.uBoldness = u.uBoldness;
+    shader.uniforms.uAgitation = u.uAgitation;
+    shader.uniforms.uHunt = u.uHunt;
+    shader.vertexShader = shader.vertexShader
+      .replace('#include <common>', '#include <common>\nvarying vec3 vPupP;')
+      .replace('#include <begin_vertex>', '#include <begin_vertex>\nvPupP = position;');
+    shader.fragmentShader = shader.fragmentShader
+      .replace(
+        '#include <common>',
+        `#include <common>
+        varying vec3 vPupP;
+        uniform float uTime; uniform vec3 uColor; uniform float uSatiation; uniform float uBoldness; uniform float uAgitation; uniform float uHunt;
+        float ph31(vec3 p){return fract(sin(dot(p, vec3(27.17, 61.31, 11.71))) * 43758.5453);}`,
+      )
+      .replace(
+        '#include <emissivemap_fragment>',
+        `#include <emissivemap_fragment>
+        float pfres = pow(1.0 - max(dot(normalize(vViewPosition), normalize(normal)), 0.0), 3.0);
+        float pang = atan(vPupP.z, vPupP.x);
+        // VISION-EXPANDED ALL-SEEING EYE (hunt): an oculus dilates as the hand hunts for a target.
+        float pEye = pow(pfres, 0.5) * (0.5 + 0.5 * sin(length(vPupP) * 6.0 - uTime * 1.5));
+        totalEmissiveRadiance += uColor * pEye * uHunt * 0.9;
+        // NEURALMIMETIC PUPPET-STRINGS (agitation): mimetic control strings radiate when it schemes.
+        float pStr = pow(0.5 + 0.5 * sin(pang * 12.0 + uTime * 3.0), 16.0);
+        totalEmissiveRadiance += vec3(0.7, 0.9, 1.0) * pStr * uAgitation * 1.2;
+        // SINGULROSITY GORGE-BLOOM (satiation): a gorged, well-fed hand blooms a hot core halo.
+        totalEmissiveRadiance += uColor * pow(pfres, 0.6) * uSatiation * 1.1;
+        // VORTEXICAL CONTROL-SWIRL (boldness/wealth): a swirl of influence winds a rich hand.
+        float pVort = pow(0.5 + 0.5 * sin(pang * 4.0 + length(vPupP) * 4.0 - uTime * 2.5), 6.0);
+        totalEmissiveRadiance += vec3(1.0, 0.8, 0.4) * pVort * uBoldness * 0.8;
+        // PHOSPHOR GASEOUSNESS (satiation): a luminous gas wreathes a sated puppeteer.
+        float pGas = fract(ph31(floor(vPupP * 6.0)) + uTime * 0.1); pGas = pGas * (1.0 - pGas) * 4.0;
+        totalEmissiveRadiance += vec3(0.4, 1.0, 0.7) * pGas * uSatiation * 0.5;
+        // BIT-GLITCH MEDDLE-CORE (hunt): glitch blocks flicker as it readies a meddle.
+        float pGlitch = floor((pfres + sin(uTime * 9.0) * 0.2) * 5.0) / 5.0;
+        totalEmissiveRadiance += vec3(0.2, 1.0, 0.5) * pGlitch * uHunt * 0.4;
+        // IONIZING FLUTTER (boldness): ion streaks band a bold hand.
+        float pIon = pow(0.5 + 0.5 * sin(vPupP.y * 20.0 - uTime * 13.0), 8.0);
+        totalEmissiveRadiance += vec3(0.3, 0.6, 1.0) * pIon * uBoldness * 0.6;
+        // LAPSE-COLLAPSE PULSE (satiation): the aura expands/contracts with the meddle memory.
+        float pPulse = 0.5 + 0.5 * sin(uTime * 1.2 + length(vPupP) * 5.0);
+        totalEmissiveRadiance += uColor * pPulse * uSatiation * 0.3;`,
+      );
+  };
+  mat.customProgramCacheKey = () => 'puppetBodyV1-manipulator';
+}
+
 /** Live per-puppet state. */
 interface Puppet {
   readonly cfg: PuppetConfig;
@@ -118,6 +188,8 @@ interface Puppet {
   readonly ring: THREE.Mesh;
   /** Point light — present only on the first {@link LIT_PUPPETS} (the rest glow emissive). */
   readonly light?: THREE.PointLight;
+  /** Per-puppet shader uniforms driven from the real manipulator signals each frame. */
+  readonly u: PuppetUniforms;
   /** Action tick accumulator (legacy `ti`). */
   ti: number;
   /** F-COGNITION V25: memory of recent meddling 0 (itching to act) .. 1 (spent). */
@@ -174,6 +246,16 @@ export class PuppetMasterSystem {
       opacity: 0.6,
       side: THREE.DoubleSide,
     });
+    // Live manipulator shader — the tetra-core reads out satiation / boldness / agitation / hunt.
+    const u: PuppetUniforms = {
+      uTime: { value: 0 },
+      uColor: { value: new THREE.Color().setHSL(cfg.hue, 0.9, 0.5) },
+      uSatiation: { value: 0 },
+      uBoldness: { value: 0 },
+      uAgitation: { value: 0 },
+      uHunt: { value: 0 },
+    };
+    patchPuppetBody(mat, u);
     const mesh = new THREE.Mesh(new THREE.TetrahedronGeometry(1.5, 1), mat);
     const ring = new THREE.Mesh(
       new THREE.TorusGeometry(2.5, 0.08, 6, 32),
@@ -196,7 +278,7 @@ export class PuppetMasterSystem {
       mesh.add(light);
     }
     ctx.scene.add(mesh);
-    this.pms.push({ cfg, mesh, mat, ring, light, ti: 0, satiation: 0.5 });
+    this.pms.push({ cfg, mesh, mat, ring, light, u, ti: 0, satiation: 0.5 });
   }
 
   /** Total puppet masters: the 3 named hands + tier-scaled lesser puppeteers (V14). Feeds the telemetry `puppeteers` field. */
@@ -264,6 +346,15 @@ export class PuppetMasterSystem {
         (1.5 + Math.sin(t * 2 + cfg.hue * 15) * 0.8) *
         (0.65 + 0.4 * boldness) *
         (0.8 + 0.4 * drive.agitation);
+      // Drive the manipulator shader from the REAL per-puppet signals (each clamped to [0,1] so every
+      // named effect is a bounded, falsifiable readout): feeding memory, wealth-boldness, scheming
+      // agitation, and the hunt drive. A spent/poor/idle hand goes quiet; a gorged/rich/scheming one blazes.
+      const pu = pm.u;
+      pu.uTime.value = t;
+      pu.uSatiation.value = pm.satiation;
+      pu.uBoldness.value = clamp(boldness, 0, 1);
+      pu.uAgitation.value = clamp(drive.agitation, 0, 1);
+      pu.uHunt.value = clamp(drive.hunt, 0, 1);
       pm.ti += dt * 30;
       // Meddle cadence: WEALTH (V19 boldness) × the V25 opportunism HUNT drive — a rich hand over a
       // disordered, target-rich sector that hasn't acted lately strikes soonest; a spent one waits.

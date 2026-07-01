@@ -354,10 +354,38 @@ function patchTitanBody(mat: THREE.MeshStandardMaterial, u: TitanUniforms): void
         // WASTE-ROT ASHEN FISSURES (uEntropy = entropy/threshold) — a wasteful titan cracks; embers glow in the rot.
         float rot = smoothstep(0.62, 0.78, fbm3(vObjP * 4.0 + uTime * 0.02));
         diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.04, 0.03, 0.03), rot * uEntropy * 0.85);
-        totalEmissiveRadiance += vec3(1.0, 0.32, 0.06) * rot * uEntropy * 1.3;`,
+        totalEmissiveRadiance += vec3(1.0, 0.32, 0.06) * rot * uEntropy * 1.3;
+        // ── TITAN COLOSSAL SUITE: more named effects, each a FALSIFIABLE readout of a real titan signal
+        //    (uMenace aggression · uEnergy resource · uEntropy waste). Additive, gated, no alloc. ──
+        // VORTEXICAL MAELSTROM (menace): a swirling vortex winds a menacing colossus.
+        float tVort = pow(0.5 + 0.5 * sin(atan(vObjP.z, vObjP.x) * 4.0 + length(vObjP) * 3.0 - uTime * 2.0), 6.0);
+        totalEmissiveRadiance += uColor * tVort * uMenace * 0.7;
+        // HELIXOLOGY VOID-STRANDS (energy): stellar helix strands wind a well-fed titan.
+        float tHelix = pow(0.5 + 0.5 * sin(vObjP.y * 9.0 + atan(vObjP.z, vObjP.x) * 2.0 + uTime * 1.5), 12.0);
+        totalEmissiveRadiance += vec3(0.6, 0.8, 1.0) * tHelix * uEnergy * 0.9;
+        // NEURALMIMETIC FRACTURE-WEB (entropy): a cracked mimetic web spreads with waste.
+        float tWeb = step(0.72, fbm3(vObjP * 9.0 + uTime * 0.03));
+        totalEmissiveRadiance += vec3(1.0, 0.5, 0.2) * tWeb * uEntropy * (0.5 + 0.5 * fres) * 1.1;
+        // SINGULROSITY EVENT-HORIZON (menace): a dark lensing ring blooms — a titan bends light around itself.
+        float tHorizon = smoothstep(0.35, 0.5, fres) * (1.0 - smoothstep(0.5, 0.7, fres));
+        diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.0), tHorizon * uMenace * 0.5);
+        totalEmissiveRadiance += uColor * tHorizon * uMenace * 1.4;
+        // BIT-GLITCH REALITY-TEAR (entropy): reality quantizes into glitch blocks as the titan decays.
+        float tGlitch = floor((relief + sin(uTime * 8.0) * 0.2) * 5.0) / 5.0;
+        totalEmissiveRadiance += vec3(0.2, 1.0, 0.5) * tGlitch * uEntropy * 0.5;
+        // CENTRIFUGE ROCAILLE CUBOIDS (menace): rotating cuboid shards centrifuge around the colossus.
+        vec3 tCell = floor(vObjP * 4.0 + vec3(uTime * 0.5, 0.0, uTime * 0.3));
+        float tCube = step(0.6, h31(tCell)) * pow(fres, 1.5);
+        totalEmissiveRadiance += iris * tCube * uMenace * 0.8;
+        // IONIZING FLUTTER (energy): ion streaks band along the body as it charges.
+        float tIon = pow(0.5 + 0.5 * sin(vObjP.y * 22.0 - uTime * 14.0), 8.0);
+        totalEmissiveRadiance += vec3(0.3, 0.6, 1.0) * tIon * uEnergy * 0.8;
+        // PLASMA STORM-THERMAL (menace × energy): plasma storm radiance on an angry, charged titan.
+        float tPlasma = pow(0.5 + 0.5 * sin(fbm3(vObjP * 5.0 + uTime * 0.5) * 10.0 + uTime * 3.0), 6.0);
+        totalEmissiveRadiance += vec3(1.0, 0.4, 0.9) * tPlasma * (uMenace * uEnergy) * 1.0;`,
       );
   };
-  mat.customProgramCacheKey = () => 'titanBodyV68';
+  mat.customProgramCacheKey = () => 'titanBodyV68-colossal';
 }
 
 /** The 4D tesseract cage — additive {@link THREE.LineSegments} that rotates pos4 in 4D + projects. */
