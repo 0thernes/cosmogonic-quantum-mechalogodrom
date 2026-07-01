@@ -637,14 +637,15 @@ export class AlphabetPantheonRender {
         // USER: the last pass made them travel TOO FAST/choppy — slow it right down for a GRACEFUL, fluid
         // glide (~half speed, crossing the platform in ~35-45s), while the rich body dynamism below spins/
         // corkscrews/vibrates them. Travel is a smooth curved Lissajous, brain-steered.
-        const rt = this.travelClock * 2.0; // travel clock: frozen on pause (suspended animation)
-        const roamDrift = rt * (0.18 + 0.09 * this.chaos) + b.phase * 1.7;
+        const rt = this.travelClock * 1.25; // travel clock (frozen on pause). USER: slower still — graceful glide
+        const roamDrift = rt * (0.16 + 0.08 * this.chaos) + b.phase * 1.7;
         const roamRad = 210 + (b.gIdx % 7) * 48; // 210..498 — sweeps to the platform rim
         // Curved travel: a slow secondary drift bends the path so it never reads as a plain circle.
         const bend = Math.sin(rt * 0.11 + b.phase * 0.7) * 0.55;
-        const aTx = Math.cos(roamDrift + bend) * roamRad + mx * 300; // brain motor STEERS the travel goal (±300)
-        const aTz = Math.sin(roamDrift * 1.21 + b.phase - bend) * roamRad + mz * 300;
-        const aTy = 120 + Math.sin(roamDrift * 0.63) * 92 + my * 70; // roams the full 6..240 column
+        // Brain motor steers the goal, but GENTLY (±120, was ±300 which made the travel jumpy/choppy).
+        const aTx = Math.cos(roamDrift + bend) * roamRad + mx * 120;
+        const aTz = Math.sin(roamDrift * 1.21 + b.phase - bend) * roamRad + mz * 120;
+        const aTy = 120 + Math.sin(roamDrift * 0.63) * 92 + my * 42; // roams the full 6..240 column
         const wander = glyphWanderOffset(WANDER, ph, b.sig, mx, my, mz, this.chaos, ba);
         P.set(aTx + wander.x, aTy + wander.y, aTz + wander.z);
 
