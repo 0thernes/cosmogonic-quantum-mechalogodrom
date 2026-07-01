@@ -215,6 +215,27 @@ export class ShoggothSystem {
     return this.shogs.length;
   }
 
+  /**
+   * Free every shoggoth's GPU resources on World teardown / HMR so VRAM never leaks across dev reloads
+   * (without this, ~100 core + ~1000 eye + ~100 tendril geometries and their materials leak per reload).
+   * Every geometry here is allocated PER-SHOGGOTH (icosahedron core, per-eye spheres, tendril buffer —
+   * none from the shared geometry cache), so a full group traversal that disposes each mesh's geometry
+   * AND material is safe; the aura point-lights detach with the group. O(shoggoths × parts).
+   */
+  dispose(): void {
+    for (const sg of this.shogs) {
+      sg.group.traverse((o) => {
+        const mesh = o as THREE.Mesh;
+        if (mesh.geometry) mesh.geometry.dispose();
+        const m = mesh.material as THREE.Material | THREE.Material[] | undefined;
+        if (Array.isArray(m)) m.forEach((mm) => mm.dispose());
+        else if (m) m.dispose();
+      });
+      sg.group.removeFromParent();
+    }
+    this.shogs.length = 0;
+  }
+
   /** F-HOLES: wire in the singularity system so an active hole tugs the shoggoths (or null to detach). */
   attachSingularity(singularity: SingularitySystem | null): void {
     this.singularity = singularity;

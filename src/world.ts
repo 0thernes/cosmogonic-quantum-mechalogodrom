@@ -1093,6 +1093,13 @@ export class World {
     // dispose paths were skipped entirely — each HMR reload built a fresh World whose
     // subsystems were never torn down. Only subsystems that actually have a dispose() are called.
     this.atmosphere.dispose(); // free the sky dome/wireframe/rain/dust/aurora/haze-ribbon geometries+materials
+    // The four colossal-creature systems own per-instance geometries/materials/lights outside the shared
+    // cache; without these the shoggoth/puppeteer/titan/leviathan bodies leaked ~hundreds of GPU objects
+    // per dev hot-reload (each new World rebuilt them while the dead World's never freed).
+    this.shoggoths.dispose();
+    this.puppets.dispose();
+    this.titans.dispose();
+    this.leviathans.dispose();
     this.singularities.dispose();
     this.wingRender.dispose();
     this.monolithTemple.dispose();

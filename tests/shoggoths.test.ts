@@ -7,7 +7,7 @@
  *
  * Headless (fake-ctx pattern) — drives the real `update` over a real EntityManager + populated grid.
  */
-import { describe, expect, test } from 'bun:test';
+import { describe, expect, test, spyOn } from 'bun:test';
 import * as THREE from 'three';
 import { mulberry32 } from '../src/math/rng';
 import { SpatialHash } from '../src/math/spatial-hash';
@@ -91,6 +91,20 @@ describe('ShoggothSystem — deterministic predators that never NaN the populati
     const c = makeWorld(1).shog.count;
     expect(Number.isInteger(c)).toBe(true);
     expect(c).toBeGreaterThanOrEqual(1);
+  });
+
+  test('dispose() frees per-shoggoth geometries + materials and clears the count (idempotent)', () => {
+    const { shog } = makeWorld(1);
+    expect(shog.count).toBeGreaterThan(0);
+    const matSpy = spyOn(THREE.Material.prototype, 'dispose');
+    const geoSpy = spyOn(THREE.BufferGeometry.prototype, 'dispose');
+    shog.dispose();
+    expect(matSpy).toHaveBeenCalled(); // core + eye + tendril materials freed
+    expect(geoSpy).toHaveBeenCalled(); // core + per-eye + tendril geometries freed
+    expect(shog.count).toBe(0);
+    matSpy.mockRestore();
+    geoSpy.mockRestore();
+    expect(() => shog.dispose()).not.toThrow(); // idempotent — safe on an already-freed system
   });
 
   test('300 frames of tendril consumption keep every organism finite', () => {

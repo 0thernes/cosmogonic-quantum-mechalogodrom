@@ -655,6 +655,28 @@ export class TitanSystem {
     return this.titans.length;
   }
 
+  /**
+   * Free every titan's GPU resources on World teardown / HMR so VRAM never leaks across dev reloads.
+   * Each titan owns per-instance MATERIALS (bodyMat, accentMat, cage + aura ShaderMaterials) — freed by a
+   * material-only group traversal — plus a point light. The silhouette GEOMETRIES come from the
+   * per-instance {@link titanGeoCache} (freed once via the map) and the MODULE-shared `TITAN_CORE_GEO` /
+   * `TITAN_TESSERACT_GEO` (NEVER disposed — a fresh HMR World reuses them, and disposing them would break
+   * the next boot). O(titans × parts). */
+  dispose(): void {
+    for (const ti of this.titans) {
+      ti.group.traverse((o) => {
+        const m = (o as THREE.Mesh).material as THREE.Material | THREE.Material[] | undefined;
+        if (Array.isArray(m)) m.forEach((mm) => mm.dispose());
+        else if (m) m.dispose();
+      });
+      ti.light.removeFromParent();
+      ti.group.removeFromParent();
+    }
+    for (const geo of this.titanGeoCache.values()) geo.dispose();
+    this.titanGeoCache.clear();
+    this.titans.length = 0;
+  }
+
   /** F-HOLES: wire in the singularity system so an active hole tugs the titans (or null to detach). */
   attachSingularity(singularity: SingularitySystem | null): void {
     this.singularity = singularity;

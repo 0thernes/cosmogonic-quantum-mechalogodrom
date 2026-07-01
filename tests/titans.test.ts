@@ -10,7 +10,7 @@
  * documented structural invariants: 10 titans, finite + clamped economy state, and a symmetric
  * zero-diagonal relation matrix. Headless fake-ctx pattern — no WebGL, no DOM.
  */
-import { describe, expect, test } from 'bun:test';
+import { describe, expect, test, spyOn } from 'bun:test';
 import * as THREE from 'three';
 import { mulberry32 } from '../src/math/rng';
 import { SpatialHash } from '../src/math/spatial-hash';
@@ -160,6 +160,22 @@ describe('TitanSystem — structural invariants', () => {
     const titans = new TitanSystem(ctx, entities, LORE, { perturb: () => undefined });
     expect(titans.count).toBe(20);
     expect(titans.ledger.length).toBe(20);
+  });
+
+  test('dispose() frees per-titan materials + the geometry cache and clears the count (idempotent)', () => {
+    const ctx = makeCtx(1);
+    const entities = new EntityManager(ctx);
+    entities.reset(POP);
+    const titans = new TitanSystem(ctx, entities, LORE, { perturb: () => undefined });
+    expect(titans.count).toBe(20);
+    const matSpy = spyOn(THREE.Material.prototype, 'dispose');
+    titans.dispose();
+    // Per-titan materials (bodyMat/accentMat/cage + aura ShaderMaterials) are freed; the module-shared
+    // TITAN_CORE_GEO / TITAN_TESSERACT_GEO are intentionally NOT disposed (reused by the next HMR World).
+    expect(matSpy).toHaveBeenCalled();
+    expect(titans.count).toBe(0);
+    matSpy.mockRestore();
+    expect(() => titans.dispose()).not.toThrow(); // idempotent — safe on an already-freed system
   });
 
   test('economy state stays finite + clamped after a long run (NaN/overflow seal)', () => {

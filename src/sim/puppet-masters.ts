@@ -287,6 +287,25 @@ export class PuppetMasterSystem {
   }
 
   /**
+   * Free every puppeteer's GPU resources on World teardown / HMR so VRAM never leaks across dev reloads.
+   * Each puppet owns a per-instance body (Tetrahedron geometry + MeshStandardMaterial) and ring (Torus
+   * geometry + MeshBasicMaterial) — none shared/cached — plus an optional point light. Detach + dispose
+   * all of them. O(puppets).
+   */
+  dispose(): void {
+    for (const pm of this.pms) {
+      pm.mesh.geometry.dispose();
+      pm.mat.dispose();
+      pm.ring.geometry.dispose();
+      (pm.ring.material as THREE.Material).dispose();
+      pm.mesh.removeFromParent();
+      pm.ring.removeFromParent();
+      pm.light?.removeFromParent();
+    }
+    this.pms.length = 0;
+  }
+
+  /**
    * Orbit, pulse, and fire interval actions (legacy 492-503).
    * O(1) per frame (3 puppets); action ticks are O(1) except 'mutate' which is O(30).
    * Allocation-free: precomputed messages + module scratch event object.

@@ -11,6 +11,33 @@ dated / historical / "superseded snapshot" copies (per the binding "Living docs,
 
 ---
 
+## 2026-07-01 — GPU-leak sweep: 4 colossal-creature systems now dispose() (shoggoths · puppeteers · titans · leviathans)
+
+A 6-finder adversarial audit (correctness · wiring-gaps · determinism · gpu-leaks · robustness · integration,
+each candidate put through a refute-by-default verifier — **8 confirmed / 8 refuted**) surfaced a consistent
+real bug class: four creature systems allocate per-instance geometries/materials/lights **outside** the shared
+cache but had **no `dispose()`** and were **absent from `World.dispose()`**, so every dev HMR reload leaked
+hundreds of GPU objects to VRAM (each new `World` rebuilt them while the dead `World`'s set was never freed).
+
+- **`ShoggothSystem`** (~100 bodies) + **`PuppetMasterSystem`** (~100) — CRITICAL; **`TitanSystem`** (20) +
+  **`LeviathanSystem`** (4) — HIGH. Added a `dispose()` to each and wired all four into `World.dispose()`.
+- **Correct disposal (shared-vs-per-instance):** shoggoths use a full group traversal (every geometry is
+  per-shoggoth — icosahedron core, per-eye spheres, tendril buffer — none cached); puppeteers dispose their
+  per-puppet body/ring geometries + materials explicitly; leviathans free the ONE shared capsule geometry
+  once + each per-leviathan material; **titans dispose per-titan MATERIALS only + the per-instance
+  `titanGeoCache`, and deliberately NEVER touch the module-shared `TITAN_CORE_GEO` / `TITAN_TESSERACT_GEO`**
+  (disposing those would break the next HMR boot that reuses them).
+- **Falsifiable:** each system's existing test (`shoggoths`/`puppet-masters`/`titans`/`leviathans.test.ts`)
+  grew a `dispose()` test that spies on `THREE.Material.prototype.dispose` (and geometry) to prove resources
+  are actually freed, asserts `count → 0`, and calls `dispose()` twice to prove idempotency (no double-free
+  throw). tsc + full gate green.
+- **Refuted (no slop):** the "night-mode emissive channel inversion" is an INTENTIONAL glitch permutation
+  (comment-documented); `apexOffworldScore` is an offline experiment harness by design, not dead telemetry;
+  flora's no-entity-write-back is a deliberate determinism choice; `MorphicField` is honestly labelled
+  NOT-WIRED. **Left tracked, not fixed here:** the titan economy is READ-only (titans read wealth to steer
+  diplomacy but never write their production back — a real one-way coupling, mirrors the shoggoth
+  `attachTrade` gap) and two honest dead exports (`TsotchkeDeepWireController`, the `mlp*` baseline).
+
 ## 2026-07-01 — Super Creature apex audit: pantheon double-beat fixed + comment-theater slop sweep
 
 Adversarially-structured multi-agent audit of the apex stack (6 subsystem auditors; the verify pass was

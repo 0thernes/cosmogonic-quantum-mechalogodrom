@@ -210,6 +210,24 @@ export class LeviathanSystem {
     return this.levs.length;
   }
 
+  /**
+   * Free the leviathans' GPU resources on World teardown / HMR so VRAM never leaks across dev reloads.
+   * The capsule GEOMETRY is shared by all four bodies (dispose ONCE); each leviathan owns its OWN
+   * MeshStandardMaterial (the V-LEVIATHAN-EXPANDED patch) — dispose each — plus a point-light aura. O(4).
+   */
+  dispose(): void {
+    let geoDisposed = false;
+    for (const lv of this.levs) {
+      if (!geoDisposed) {
+        lv.body.geometry.dispose(); // the CapsuleGeometry is shared across all leviathans — free it once
+        geoDisposed = true;
+      }
+      lv.mat.dispose();
+      lv.group.removeFromParent();
+    }
+    this.levs.length = 0;
+  }
+
   /** F-HOLES: wire in the singularity system so an active hole tugs the leviathans (or null to detach). */
   attachSingularity(singularity: SingularitySystem | null): void {
     this.singularity = singularity;

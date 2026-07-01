@@ -7,7 +7,7 @@
  *
  * Headless: three's Scene/Mesh/Material/CapsuleGeometry need no DOM.
  */
-import { describe, expect, test } from 'bun:test';
+import { describe, expect, test, spyOn } from 'bun:test';
 import * as THREE from 'three';
 import { mulberry32 } from '../src/math/rng';
 import { SpatialHash } from '../src/math/spatial-hash';
@@ -69,6 +69,20 @@ function makeCtx(seed: number): SimContext {
 describe('LeviathanSystem', () => {
   test('builds exactly 4 leviathans', () => {
     expect(new LeviathanSystem(makeCtx(1)).count).toBe(4);
+  });
+
+  test('dispose() frees the shared geometry + per-leviathan materials and clears the count (idempotent)', () => {
+    const sys = new LeviathanSystem(makeCtx(1));
+    expect(sys.count).toBe(4);
+    const matSpy = spyOn(THREE.Material.prototype, 'dispose');
+    const geoSpy = spyOn(THREE.BufferGeometry.prototype, 'dispose');
+    sys.dispose();
+    expect(matSpy).toHaveBeenCalled(); // the 4 per-leviathan materials are freed
+    expect(geoSpy).toHaveBeenCalled(); // the shared CapsuleGeometry is freed once
+    expect(sys.count).toBe(0);
+    matSpy.mockRestore();
+    geoSpy.mockRestore();
+    expect(() => sys.dispose()).not.toThrow(); // idempotent — safe on an already-freed system
   });
 
   test('construction draws no rng (boot-stream-neutral)', () => {

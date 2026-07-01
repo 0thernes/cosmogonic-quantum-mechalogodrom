@@ -7,7 +7,7 @@
  *
  * Headless (fake-ctx pattern) — drives the real `update`/`act` over a real EntityManager + grid.
  */
-import { describe, expect, test } from 'bun:test';
+import { describe, expect, test, spyOn } from 'bun:test';
 import * as THREE from 'three';
 import { mulberry32 } from '../src/math/rng';
 import { SpatialHash } from '../src/math/spatial-hash';
@@ -87,6 +87,20 @@ describe('PuppetMasterSystem — deterministic schemers that perturb the world w
     const c = makeWorld(1).pm.count;
     expect(Number.isInteger(c)).toBe(true);
     expect(c).toBeGreaterThanOrEqual(3); // AETHON, SELENE, KRONOS are always present
+  }, 15_000);
+
+  test('dispose() frees per-puppet geometries + materials and clears the count (idempotent)', () => {
+    const { pm } = makeWorld(1);
+    expect(pm.count).toBeGreaterThan(0);
+    const matSpy = spyOn(THREE.Material.prototype, 'dispose');
+    const geoSpy = spyOn(THREE.BufferGeometry.prototype, 'dispose');
+    pm.dispose();
+    expect(matSpy).toHaveBeenCalled(); // body + ring materials freed
+    expect(geoSpy).toHaveBeenCalled(); // body + ring geometries freed
+    expect(pm.count).toBe(0);
+    matSpy.mockRestore();
+    geoSpy.mockRestore();
+    expect(() => pm.dispose()).not.toThrow(); // idempotent — safe on an already-freed system
   }, 15_000);
 
   test('6000 frames keep world state finite + in bounds and fire valid interventions', () => {
