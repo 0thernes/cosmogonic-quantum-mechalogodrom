@@ -1133,10 +1133,22 @@ export class World {
     s.frame++;
     const t = s.elapsed;
     if (isPaused) {
-      // PAUSED: all simulation bodies freeze, but free-camera input still consumes real UI time so
-      // the owner can roam around the held scene and inspect specimens.
+      // PAUSED (user #4): sim bodies freeze; the free camera still consumes real UI delta to roam.
       this.updateCamera(0, uiDt, t);
       this.hud.update(0, s);
+      // KEEP compositing the held frame each tick (sync the frozen instances + render) so roaming a
+      // paused scene shows the world instead of a blank/stale buffer (the loop clears each frame).
+      // Render-only: no sim step, no rng, no body motion, so the seeded trajectory is untouched.
+      if (this.instanced) {
+        const fr = this.instFrame;
+        fr.t = t;
+        fr.chaos = s.chaos;
+        fr.bass = 0;
+        fr.nightmare = s.sim === 2 ? 1 : 0;
+        this.instanced.sync(this.entities.list, s.renderMode, fr);
+      }
+      this.updateLens();
+      this.engine.render();
       return;
     }
     this.updateGrowthTarget(); // V66: ramp the live population target 500 → ceiling, then breathe

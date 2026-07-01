@@ -446,7 +446,7 @@ export class SuperBodySystem {
       metalness: 0.78,
       roughness: 0.28,
       emissive: 0x080314,
-      emissiveIntensity: 1.1,
+      emissiveIntensity: 0.7, // USER #11: was 1.1 — the soft-knee'd jewel needn't be re-amplified.
     });
     patchGodJewel(coreMat, this.u, this.variant, this.seed);
     this.core = new THREE.Mesh(coreGeo, coreMat);
@@ -472,13 +472,15 @@ export class SuperBodySystem {
     this.eyes = new THREE.Group();
     this.eyeMat = new THREE.MeshStandardMaterial({
       color: 0x0f0307,
-      emissive: 0xff2a3c,
+      // USER #11: deeper, non-saturating iris red (was 0xff2a3c) so 24 eyes stay below the ACES white
+      // knee even at peak ignition — the APEX reads as a dark body with bright RED rim-eyes (IMG5).
+      emissive: 0xa01824,
       emissiveIntensity: 1.35,
       roughness: 0.4,
       metalness: 0.2,
     });
     this.scleraMat = new THREE.MeshStandardMaterial({
-      color: 0xeae5ff,
+      color: 0x6a6480, // USER #11: was near-white 0xeae5ff — darkened so 24 sclera don't read as white.
       roughness: 0.35,
       metalness: 0.1,
       emissive: 0x101018,
@@ -954,15 +956,18 @@ export class SuperBodySystem {
     this.cage.rotation.y = -t * (spin * 0.6);
     this.cage.rotation.z = t * 0.05;
 
-    // Eye-blink: a global emissive flicker, brighter with dominance (the many-eyed stare).
+    // Eye-blink: a global emissive flicker, brighter with dominance (the many-eyed stare). USER #11:
+    // coefficients cut so 24 eyes at max state peak near ~3 (was ~10.7) — ACES no longer saturates
+    // them to a blinding-white blob; with the deeper iris red the APEX reads as a dark body + bright
+    // rim-eyes. Still a pure function of the deterministic sim signals (no rng), so replay is stable.
     this.eyeMat.emissiveIntensity =
-      1.8 +
-      this.dominance * 2.8 +
-      Math.sin(t * 6.0) * 0.55 +
-      this.dreamGlow * 1.55 +
-      (this.evoGlow - 1) * 1.15 +
-      phiU * 1.2 +
-      qWaveU * 0.42; // live quantum phi ignition
+      0.9 +
+      this.dominance * 1.1 +
+      Math.sin(t * 6.0) * 0.25 +
+      this.dreamGlow * 0.6 +
+      (this.evoGlow - 1) * 0.45 +
+      phiU * 0.5 +
+      qWaveU * 0.2; // live quantum phi ignition
 
     this.root.scale.setScalar(this.evoSize); // V48: evolution scales the whole colossus
 

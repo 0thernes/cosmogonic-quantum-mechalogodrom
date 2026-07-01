@@ -51,8 +51,9 @@ const BIOME_COUNT = 7;
 /** Target plant population (dense alien forest; still six instanced draw calls). */
 const TARGET_DESKTOP = 15000;
 const TARGET_MOBILE = 5200;
-/** Plant field radius — frames the populated arena without flooding the far void. */
-const FIELD_R = ARENA_RADIUS * 1.32;
+/** Plant field radius — USER #15: widened to ~98% of the ground half-extent (was ARENA_RADIUS·1.32,
+ *  which covered only ~40% of the ground and left a bare outer ring) so flora fills the WHOLE land. */
+const FIELD_R = ARENA_RADIUS * 1.81;
 /** Keep a clear circle at the centre (temple base + cosmic crown column). */
 const CENTER_CLEAR = 78;
 /** Fixed layout seed — flora is the same world every replay (decor, not heritable state). */
@@ -276,9 +277,15 @@ export class AlienFlora {
       }
       if (inGlade) continue;
 
-      // Density acceptance: clumpier near patch cores, thinner at the field edge.
-      const clump = 0.45 + 0.55 * Math.sin(x * 0.02) * Math.sin(z * 0.022);
-      const accept = (0.55 + 0.45 * clump) * (1 - 0.45 * rr);
+      // Density: patchy alien jungle — multi-octave positional noise makes dense groves and sparse
+      // clearings spread across the WHOLE ground. USER #15: the old `(1 - 0.45*rr)` factor thinned the
+      // edge and biased plants to the centre — REMOVED, so the outer land is as alive as the core.
+      const patch =
+        Math.sin(x * 0.006) * Math.cos(z * 0.0065) +
+        0.6 * Math.sin((x + z) * 0.011 + 2.1) +
+        0.4 * Math.sin(x * 0.021 - z * 0.017);
+      const clump = 0.5 + 0.5 * Math.max(-1, Math.min(1, patch));
+      const accept = 0.3 + 0.7 * clump;
       if (hash(k * 3) > accept) continue;
 
       // Species: drawn from this position's biome so patches read as one palette.

@@ -123,7 +123,6 @@ describe('AlphabetPantheonRender — 100 archetypes alive in the dome', () => {
     // contained AND above the floor, even under maximum chaos drive over a long run.
     const scene = new THREE.Scene();
     const r = new AlphabetPantheonRender(scene);
-    const DOME_R = ARENA_RADIUS * 0.72;
     const dt = 1 / 60;
     let t = 0;
     const worldM = new THREE.Matrix4();
@@ -147,9 +146,13 @@ describe('AlphabetPantheonRender — 100 archetypes alive in the dome', () => {
         }
       }
     }
-    // Contained within the dome shell (broken ring-clamp reached ~1.24·DOME_R).
-    expect(maxDist).toBeLessThanOrEqual(DOME_R * 1.12);
-    // Never underneath the ground plane (broken clamp allowed y down to -20).
+    // USER #10 (box-arena diorama): godforms roam the large arena box but never escape it. Horizontal
+    // reach is capped at ARENA_HALF (0.95·ARENA_RADIUS) and height at ARENA_CEIL (0.68·ARENA_RADIUS),
+    // so the max distance from origin is the box diagonal ≈ 1.17·ARENA_RADIUS.
+    expect(maxDist).toBeLessThanOrEqual(ARENA_RADIUS * 1.17);
+    // ...and they must SPREAD across the arena (fill it), not cluster centrally — reach well past centre.
+    expect(maxDist).toBeGreaterThan(ARENA_RADIUS * 0.5);
+    // Never underneath the ground plane.
     expect(minY).toBeGreaterThanOrEqual(-1);
     r.dispose();
   });

@@ -60,9 +60,11 @@ import type { TsotchkeQuantumPulse } from './tsotchke-facade';
 /** Dome shell radius the pantheon hangs on; pulled inward so godforms read as beings, not far stars. */
 const DOME_R = ARENA_RADIUS * 0.72;
 
-/** STRICT BOUNDS (user #10): Pantheon NEVER leaves the dome/Mechalogodrom. */
-const DOME_INNER = DOME_R * 0.92;
-const DOME_MAX = DOME_R * 0.98;
+/** USER #10 (box-arena diorama): godforms roam a LARGE box — out to the land edge and up to monolith
+ *  height — instead of a thin overhead dome tether. Invisible walls only at the arena bounds. */
+const ARENA_HALF = ARENA_RADIUS * 0.95; // ~309 horizontal roam half-extent (just inside the land rim)
+const ARENA_CEIL = ARENA_RADIUS * 0.68; // ~221 vertical ceiling ≈ tallest monolith height
+const ARENA_FLOOR = 6; // never below the ground plane
 const PANTHEON_REF_ATLAS_URL = '/textures/pantheon_equirect_refs_atlas.png';
 
 function createPantheonFallbackAtlas(): THREE.DataTexture {
@@ -282,11 +284,13 @@ export class AlphabetPantheonRender {
         const b = a.bias;
         const i = a.index;
         const y = 0.12 + (i / (n - 1)) * 0.86;
-        const ringR = Math.sqrt(Math.max(0, 1 - y * y)) * DOME_R;
+        // USER #10: spread anchors across the FULL box arena (25%..100% of the land radius, ground..
+        // monolith height) instead of a narrow overhead hemisphere, so godforms fill the whole diorama.
+        const ringR = (0.25 + 0.75 * ((i * 0.61803) % 1)) * ARENA_HALF;
         const th = golden * i;
         const ax = Math.cos(th) * ringR;
         const az = Math.sin(th) * ringR;
-        const ay = y * DOME_R * 0.54 + 18;
+        const ay = ARENA_FLOOR + y * (ARENA_CEIL - ARENA_FLOOR);
         const baseScale =
           (6 + 14 * (0.5 * b.empowerment + 0.3 * b.order + 0.2 * b.generative)) * 1.55;
         const freq = 0.07 + ((a.seed % 600) / 600) * 0.22;
@@ -559,8 +563,6 @@ export class AlphabetPantheonRender {
     // below the ground plane. Because every anchor already lies inside the dome shell, a bounded
     // tether GUARANTEES no godform ever leaves the dome or sinks underneath it — and the small cap
     // also reads as slow, inspectable, creature-scale motion instead of fast cross-dome travel.
-    const tetherMax = DOME_R * 0.05;
-    const groundFloor = 6;
     for (let pool = 0; pool < this.meshes.length; pool++) {
       const mesh = this.meshes[pool]!;
       const halo = this.wireHalos[pool];
@@ -584,23 +586,17 @@ export class AlphabetPantheonRender {
         // shoved the inner/upper anchors (horiz as low as ~0.2·DOME_R) OUTWARD onto that ring —
         // flinging them past the dome sphere — and let y sink to -20 (under the ground). Bounding
         // the displacement from the anchor keeps them contained AND slow/inspectable.
-        const dax = P.x - b.ax;
-        const day = P.y - b.ay;
-        const daz = P.z - b.az;
-        const drift = Math.hypot(dax, day, daz);
-        if (drift > tetherMax) {
-          const k = tetherMax / drift;
-          P.set(b.ax + dax * k, b.ay + day * k, b.az + daz * k);
-        }
-        if (P.y < groundFloor) P.y = groundFloor; // never underneath the ground plane
-        // Clamp to strict global dome shell (user #10): every godform stays between DOME_INNER and DOME_MAX.
-        const r = Math.hypot(P.x, P.y, P.z);
-        if (r > DOME_MAX) {
-          const k = DOME_MAX / r;
-          P.set(P.x * k, P.y * k, P.z * k);
-        } else if (r < DOME_INNER && r > 0.001) {
-          const k = DOME_INNER / r;
-          P.set(P.x * k, P.y * k, P.z * k);
+        // USER #10 (box-arena diorama): clamp to the large invisible-wall box — horizontal to the land
+        // edge (ARENA_HALF), vertical ground..monolith height (ARENA_FLOOR..ARENA_CEIL) — so godforms
+        // roam the WHOLE arena but never escape it. Replaces the old ~12-unit dome tether + thin-shell
+        // clamp that pinned them into a narrow overhead cluster near the vertical axis.
+        if (P.y < ARENA_FLOOR) P.y = ARENA_FLOOR;
+        else if (P.y > ARENA_CEIL) P.y = ARENA_CEIL;
+        const rXZ = Math.hypot(P.x, P.z);
+        if (rXZ > ARENA_HALF) {
+          const k = ARENA_HALF / rXZ;
+          P.x *= k;
+          P.z *= k;
         }
         E.set(
           Math.sin(ph * 0.42 + mx + b.sig.rotBias) * (0.42 + ba * 0.45),
