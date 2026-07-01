@@ -108,6 +108,7 @@ import {
 } from './sim/open-endedness';
 import { rngContrast } from './sim/classical-contrast';
 import { apexOffworldScore } from './sim/apex-offworld-score';
+import { bellTestWithRng } from './math/quantum-qrng-full';
 import {
   GODFORMS,
   APEX_INDIVIDUATED,
@@ -551,6 +552,15 @@ export class World {
   get offworldUmwelt(): number {
     return this.lastOffworldUmwelt;
   }
+  /** V-CHSH: the CHSH Bell parameter S of the quantum substrate — the one witness a classical RNG cannot
+   *  fake (classical ≤ 2; the entangled Eshkol state reaches the Tsirelson bound 2√2 ≈ 2.828). −1 until
+   *  measured. `chshViolation` is true once S > 2 (a genuine quantum-only signature). */
+  get chshBellS(): number {
+    return this.lastBellS;
+  }
+  get chshViolation(): boolean {
+    return this.lastBellS > 2;
+  }
   /** V-MORPH: live shared morphic-resonance field snapshot (fieldNorm / resonanceStrength / imprints /
    *  bias) — the apex-imprinted cross-creature correlation field; null until the first apex beat. */
   get morphicSnapshot(): MorphicSnapshot | null {
@@ -582,6 +592,9 @@ export class World {
    *  (quantum/field/procedural) vs mundane reach/resident signals. −1 until measured once (a static
    *  characterisation of the fixed apex scale, so it is computed a single time off the hot path). */
   private lastOffworldUmwelt = -1;
+  /** V-CHSH: the quantum substrate's CHSH Bell parameter S (≈2√2 for the entangled state; classical ≤ 2).
+   *  −1 until measured once — S is analytic (Born-rule correlations), so a single measurement characterises it. */
+  private lastBellS = -1;
 
   /** Reused telemetry snapshot (panel reads synchronously). */
   private readonly snap: TelemetrySnapshot;
@@ -2509,6 +2522,16 @@ export class World {
             earthLikeness: um.earthLikeness,
             samples: um.samples,
           });
+        }
+        // V-CHSH: surface the quantum substrate's CHSH Bell parameter S — the ONE witness a classical RNG
+        // structurally cannot reproduce (classical ≤ 2; the entangled Eshkol state reaches the Tsirelson
+        // bound 2√2 ≈ 2.828). S is analytic (Born-rule correlations, no rng draw ⇒ boot-stream-neutral), so
+        // measure it once and surface it — closes the "where does the running sim show a genuine quantum
+        // signature (S>2)?" gap: the CHSH witness was tested but reachable from no runtime code path.
+        if (this.lastBellS < 0) {
+          const bell = bellTestWithRng(mulberry32((s.frame ^ 0xb311_5e11) >>> 0 || 1));
+          this.lastBellS = bell.S;
+          this.audit.record('chsh-bell-witness', { S: bell.S, violation: bell.violation });
         }
       }
       if (s.frame % 120 === 0 && n < target) {
