@@ -393,16 +393,17 @@ export class ShoggothSystem {
       const wdx = wtx - p.x;
       const wdy = wty - p.y;
       const wdz = wtz - p.z;
-      const wInv = 0.04 / (Math.sqrt(wdx * wdx + wdy * wdy + wdz * wdz) + 1e-6);
-      sg.vel.x += wdx * wInv + Math.sin(t * 0.7 + si * 1.3) * 0.03;
-      sg.vel.y += wdy * wInv + Math.sin(t * 0.53 + si * 2.1) * 0.02;
-      sg.vel.z += wdz * wInv + Math.cos(t * 0.61 + si * 0.7) * 0.03;
+      // USER: faster, more kinetic roaming — seek accel 0.04→0.11, weave amps ~2.3× (+ damping 0.985→0.97).
+      const wInv = 0.11 / (Math.sqrt(wdx * wdx + wdy * wdy + wdz * wdz) + 1e-6);
+      sg.vel.x += wdx * wInv + Math.sin(t * 0.7 + si * 1.3) * 0.07;
+      sg.vel.y += wdy * wInv + Math.sin(t * 0.53 + si * 2.1) * 0.05;
+      sg.vel.z += wdz * wInv + Math.cos(t * 0.61 + si * 0.7) * 0.07;
       sg.vel.y += (120 - p.y) * 0.003; // height restore — no sky-float, no floor-crawl
       if (p.x > PLATFORM_HALF) sg.vel.x -= 0.1;
       else if (p.x < -PLATFORM_HALF) sg.vel.x += 0.1;
       if (p.z > PLATFORM_HALF) sg.vel.z -= 0.1;
       else if (p.z < -PLATFORM_HALF) sg.vel.z += 0.1;
-      sg.vel.multiplyScalar(0.985);
+      sg.vel.multiplyScalar(0.97);
       // F-HOLES: an active singularity drags the shoggoth toward/away from its centre (force already
       // computed once in the perception step above; reused here so we never query the hole twice).
       if (singActive) sg.vel.add(HOLE_F);

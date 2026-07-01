@@ -47,8 +47,9 @@ const DOME_HSEG = 32;
 /** Particulate point size (additive, tiny — contract: "fine particulate layer"). */
 const DUST_SIZE = 0.5 * ARENA_Y;
 
-/** Max bass contribution to haze opacity (contract: ≤ 0.3). */
-const HAZE_BASS_GAIN = 0.3;
+/** Max bass contribution to haze opacity. USER: cut hard (0.3→0.06) — the 3 big haze planes pulsed to
+ *  ~0.35 opacity and read as translucent "filter" rectangles washing the scene. */
+const HAZE_BASS_GAIN = 0.06;
 
 /**
  * Exact number of `ctx.rng()` calls the constructor makes, so the integrator can advance
@@ -218,7 +219,7 @@ export class AtmosphereSystem {
       const phase = rng() * TAU;
       const baseY = (70 + b * 22 + (rng() - 0.5) * 16) * ARENA_Y;
       const hue = 0.74 + (rng() - 0.5) * 0.16; // violet/magenta band, away from sky-blue
-      const baseOpacity = 0.05 + rng() * 0.05;
+      const baseOpacity = (0.05 + rng() * 0.05) * 0.3; // USER: fainter — was a washy filter overlay
       const geo = new THREE.PlaneGeometry(ribbonSpan, ribbonSpan * 0.32);
       const mat = new THREE.MeshBasicMaterial({
         color: TMP_A.setHSL(((hue % 1) + 1) % 1, 0.55, 0.45).getHex(),

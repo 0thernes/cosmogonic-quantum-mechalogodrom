@@ -33,13 +33,18 @@ function displaceGlyphGeometry(geo: THREE.BufferGeometry, seed: number, intensit
     // agate-contour form) plus a faint higher-frequency ripple (surface striation / facet detail) —
     // displaced NORMAL-dominant so the base solid's silhouette survives. Result: structured, layered,
     // shapely (marbled-agate / faceted-crystal), still organic + trait-driven. Same simplex seed → no rng.
+    // USER: the last pass over-flattened these into "dumb blobs". Restore STRUCTURE — three octaves:
+    // a smooth low-freq swell (wavy form) + a medium ripple + a SHARP faceted crest octave (abs→ridges =
+    // crisp mathematical creases, the "sharp/structured" read), at ~1.5× the blob amplitude but still well
+    // below the old formless-wild level. Normal-dominant so the base solid's silhouette survives.
     const nLow = glyphNoise(x * 0.5 + ox, y * 0.5 + oy, z * 0.5 + oz);
-    const nHi = glyphNoise(x * 1.8 + ox, y * 1.8 + oy, z * 1.8 + oz);
-    const d = (nLow * 0.8 + nHi * 0.3) * intensity;
-    const s = 1 + d * 0.4; // gentle radial swell (was a full ±intensity scale)
-    arr[i] = x * s + nx * d * 0.8;
-    arr[i + 1] = y * s + ny * d * 0.8;
-    arr[i + 2] = z * s + nz * d * 0.8;
+    const nHi = glyphNoise(x * 1.7 + ox, y * 1.7 + oy, z * 1.7 + oz);
+    const crisp = Math.abs(glyphNoise(x * 3.4 + ox, y * 3.4 + oy, z * 3.4 + oz)) * 2 - 1; // faceted ridges
+    const d = (nLow * 0.62 + nHi * 0.26 + crisp * 0.2) * intensity;
+    const s = 1 + d * 0.45; // gentle radial swell
+    arr[i] = x * s + nx * d * 0.85;
+    arr[i + 1] = y * s + ny * d * 0.85;
+    arr[i + 2] = z * s + nz * d * 0.85;
   }
   pos.needsUpdate = true;
   if (nrm) nrm.needsUpdate = true;
@@ -134,7 +139,7 @@ function buildWildGlyphGeometry(
   // Structured surface detail keyed to chaos/generative traits — amplitude cut ~2.7× (was 0.15 + 0.25·
   // chaos + 0.15·gen, max ~0.55) so the shapely base solid stays readable; the two-octave normal-dominant
   // warp above turns this into agate-contour striation, not a lumpy blob.
-  displaceGlyphGeometry(geo, s, 0.06 + a.bias.chaos * 0.09 + a.bias.generative * 0.05);
+  displaceGlyphGeometry(geo, s, 0.11 + a.bias.chaos * 0.13 + a.bias.generative * 0.07);
   return geo;
 }
 

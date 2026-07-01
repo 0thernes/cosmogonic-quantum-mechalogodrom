@@ -3049,9 +3049,10 @@ export class World {
       const dy = ty - p.y;
       const dz = tz - p.z;
       const d = Math.sqrt(dx * dx + dy * dy + dz * dz) + 1e-6;
-      v.x += (dx / d) * 0.05;
-      v.y += (dy / d) * 0.05;
-      v.z += (dz / d) * 0.05;
+      // USER: faster individual motion — seek accel 0.05→0.12 (+ damping 0.985→0.97 below) ≈ 2.5× terminal speed.
+      v.x += (dx / d) * 0.12;
+      v.y += (dy / d) * 0.12;
+      v.z += (dz / d) * 0.12;
       // Gentle weave on top so the motion never reads as a straight line.
       v.x += Math.sin(t * 0.7 + id * 1.3) * 0.04;
       v.y += Math.sin(t * 0.53 + id * 2.1) * 0.03;
@@ -3064,7 +3065,7 @@ export class World {
       else if (p.x < -HALF) v.x += 0.12;
       if (p.z > HALF) v.z -= 0.12;
       else if (p.z < -HALF) v.z += 0.12;
-      v.multiplyScalar(0.985); // damp so a roamer never accelerates away
+      v.multiplyScalar(0.97); // damp so a roamer never accelerates away (0.985→0.97: livelier)
       // Hard containment guarantee — snap back inside the SQUARE platform + [floor,ceil] this frame.
       if (p.y > Y_HI) {
         p.y = Y_HI;

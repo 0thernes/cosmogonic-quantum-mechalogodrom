@@ -184,10 +184,11 @@ export class AlphabetPantheonRender {
         vNormal = normal;
         vRefBand = refBand;
 
-        // USER: gentle BREATHING, not a formless muscle spasm — slow low-frequency swell along the
-        // normal (was a high-freq sin(·*10)·cos(·*10)·0.15 that made the body writhe shapelessly).
+        // USER: structured multi-frequency BREATHING (like the god-jewel's layered beat) — reads as alive
+        // + mathematical, not a formless swell or a spasm. Gentle amplitude so the shapely solid survives.
         vec3 displaced = position;
-        float pulse = 0.05 * sin(uTime * 0.5 + position.y * 2.0) * (1.0 + 0.3 * cos(position.x * 1.5));
+        float beat = 0.4 + 0.3 * sin(uTime * 0.8) + 0.2 * sin(uTime * 1.6 + position.z * 0.5) + 0.1 * sin(uTime * 3.1 + position.x * 0.8);
+        float pulse = 0.07 * beat * sin(uTime * 0.5 + position.y * 2.0);
         displaced += normal * pulse;
         
         vPos = displaced;
@@ -206,28 +207,60 @@ export class AlphabetPantheonRender {
       uniform float uTime;
       uniform sampler2D uRefAtlas;
 
-      void main() {
-        // "Annihilation/Hellraiser" shifting skin
-        vec3 color = vColor;
-        
-        // USER: MARBLED-AGATE striation — low-frequency layered contour bands (was a high-freq 30/20
-        // muscle-sinew chaos that read as formless). Three slow octaves → structured, shapely layering.
-        float bands = sin(vPos.y * 6.0 + uTime * 0.6) * 0.5 + sin(vPos.x * 4.0) * 0.3 + sin(vPos.z * 5.0) * 0.2;
-        bands = smoothstep(0.15, 0.85, bands);
+      // USER: give the pantheons SUPER-CREATURE-class skin — rich, structured, mathematical, unique per
+      // kind — instead of a flat blob. Value-noise fBm (engraved relief) + per-archetype crystalline facet
+      // ridges + thin-film iridescence on crests/rim + subsurface groove glow, over the reference-atlas skin.
+      float hash3(vec3 p){ return fract(sin(dot(p, vec3(12.9898,78.233,37.719))) * 43758.5453); }
+      float vnoise(vec3 p){
+        vec3 i = floor(p); vec3 f = fract(p); f = f*f*(3.0-2.0*f);
+        float a=hash3(i), b=hash3(i+vec3(1.,0.,0.)), c=hash3(i+vec3(0.,1.,0.)), d=hash3(i+vec3(1.,1.,0.));
+        float e=hash3(i+vec3(0.,0.,1.)), g=hash3(i+vec3(1.,0.,1.)), h=hash3(i+vec3(0.,1.,1.)), q=hash3(i+vec3(1.,1.,1.));
+        return mix(mix(mix(a,b,f.x),mix(c,d,f.x),f.y), mix(mix(e,g,f.x),mix(h,q,f.x),f.y), f.z);
+      }
+      float fbm(vec3 p){ float amp=0.5, sum=0.0; for(int i=0;i<4;i++){ sum+=amp*vnoise(p); p*=2.03; amp*=0.5; } return sum; }
 
-        // Crystalline rim light (sharper fresnel for a faceted, rim-lit edge) + a calm iridescent shimmer.
-        float fresnel = pow(1.0 - max(dot(normalize(vNormal), vec3(0.0, 0.0, 1.0)), 0.0), 4.0);
-        vec3 shimmer = vec3(0.5, 1.0, 0.8) * fresnel * sin(uTime * 1.5 + vPos.z * 3.0);
-        
-        vec3 finalColor = mix(color * 0.3, color + vec3(0.3, 0.1, 0.2), bands) + shimmer;
+      void main() {
+        vec3 color = vColor;
+        vec3 n = normalize(vNormal);
+        float fres = pow(1.0 - max(dot(n, vec3(0.0,0.0,1.0)), 0.0), 4.0);
+
+        // Per-archetype crystalline FACETS — sharp abs(sin) ridge network, frequency keyed to the palette
+        // band so each pantheon KIND carries a distinct mathematical signature (a rare/unique structure).
+        float kf = 5.0 + vRefBand * 3.0;
+        float facet = abs(sin(vPos.x*kf)) * abs(sin(vPos.y*(kf*0.8))) * abs(sin(vPos.z*(kf*1.2)));
+        facet = pow(facet, 0.35); // sharpen into crisp creases
+
+        // fBm RELIEF engraving — multi-octave detail carved into the surface (structured, not smooth).
+        float relief  = fbm(vPos * 2.6 + vec3(0.0, uTime*0.05, 0.0));
+        float relief2 = fbm(vPos * 6.1 - uTime*0.03);
+
+        // Marbled-agate striation, modulated by the relief for organic layering.
+        float bands = sin(vPos.y*6.0 + relief*4.0 + uTime*0.5)*0.5 + sin(vPos.x*4.0 + relief2*3.0)*0.3 + sin(vPos.z*5.0)*0.2;
+        bands = smoothstep(0.1, 0.9, bands);
+
+        // THIN-FILM IRIDESCENCE — phase drifts with relief + fresnel + uTime + per-archetype offset.
+        float irPhase = relief*2.4 + fres*3.0 + uTime*0.35 + vRefBand*1.3;
+        vec3 iris = 0.5 + 0.5*cos(6.2831853*(vec3(1.0,0.85,0.7)*irPhase + vec3(0.0,0.33,0.67)));
+
+        // Build the skin: dark body → coloured striation, faceted crests lifted, iridescent rim/crests.
+        vec3 body = mix(color*0.22, color*1.15 + vec3(0.25,0.1,0.2), bands);
+        body += color * facet * 0.4;                                 // crystalline crest highlight
+        body = mix(body, body + iris*0.5, fres*0.6 + facet*0.25);    // iridescence on crests + rim
+
+        // SUBSURFACE warm glow deep in the grooves (inverse fresnel × low relief) — translucent depth.
+        float groove = (1.0 - fres) * (1.0 - relief);
+        body += vec3(0.5, 0.22, 0.12) * groove * 0.28;
+
+        // Reference-image skin (the 5 owner refs) blended in — keeps the art-direction tie.
         float band = clamp(floor(vRefBand + 0.5), 0.0, 4.0);
-        vec2 refUv = vec2((band + fract(vUv.x * 1.65 + uTime * 0.018)) / 5.0, fract(vUv.y * 0.85 + uTime * 0.011));
+        vec2 refUv = vec2((band + fract(vUv.x*1.65 + uTime*0.018)) / 5.0, fract(vUv.y*0.85 + uTime*0.011));
         vec3 refSkin = texture2D(uRefAtlas, refUv).rgb;
-        finalColor = mix(finalColor, refSkin * (0.55 + fresnel * 0.65) + color * 0.25, 0.42);
-        
-        // Darkened crevices — deeper contrast sharpens the silhouette (rim-lit, structured look).
+        vec3 finalColor = mix(body, refSkin*(0.5 + fres*0.7) + color*0.3, 0.34);
+
+        // Rim shimmer + deepened crevices for silhouette contrast (structured, rim-lit read).
+        finalColor += iris * fres * 0.35 * (0.6 + 0.4*sin(uTime*1.2 + vPos.z*3.0));
         float crevice = smoothstep(0.0, 0.4, length(vPos));
-        finalColor *= crevice * 0.8;
+        finalColor *= crevice * 0.82;
 
         gl_FragColor = vec4(finalColor, 1.0);
       }
@@ -581,8 +614,18 @@ export class AlphabetPantheonRender {
         const mx = this.motorX[b.gIdx] ?? 0;
         const my = this.motorY[b.gIdx] ?? 0;
         const mz = this.motorZ[b.gIdx] ?? 0;
+        // USER: godforms were PINNED to a fixed anchor (b.ax/ay/az) + a small bounded wander → they hovered
+        // in place doing the same loop. Now each seeks its OWN slowly-drifting Lissajous waypoint that ROAMS
+        // the full ±ARENA_HALF square (height centred on its original band b.ay so the vertical spread is
+        // kept), with the bounded wander riding on top. Pure trig of (slowT, phase, gIdx) — no rng. The hard
+        // clamp below still guarantees each stays on the platform + below the mechalogodrom.
+        const aDrift = slowT * (0.13 + 0.06 * this.chaos) + b.phase * 1.7;
+        const aRad = 200 + (b.gIdx % 7) * 55; // 200..530 — reaches the platform rim
+        const aTx = Math.cos(aDrift) * aRad + b.ax * 0.12; // small per-body bias so the 100 don't converge
+        const aTz = Math.sin(aDrift * 1.18 + b.phase) * aRad + b.az * 0.12;
+        const aTy = b.ay + Math.sin(aDrift * 0.7) * 70; // roam around its own height band
         const wander = glyphWanderOffset(WANDER, ph, b.sig, mx, my, mz, this.chaos, ba);
-        P.set(b.ax + wander.x, b.ay + wander.y, b.az + wander.z);
+        P.set(aTx + wander.x, aTy + wander.y, aTz + wander.z);
 
         // USER #10 (corrected V115): tether every godform to ITS OWN dome anchor so it can never
         // leave the shell. The prior ring-clamp forced horiz into a fixed outer ring, which

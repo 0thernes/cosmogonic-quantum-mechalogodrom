@@ -919,7 +919,7 @@ export class TitanSystem {
     const tdx = Math.cos(t * 0.11 + tph) * trad - p.x;
     const tdy = T_HOME_Y + Math.sin(t * 0.17 + tph) * 96 - p.y; // sweeps ~24..216 of the column
     const tdz = Math.sin(t * 0.13 + tph * 1.3) * trad - p.z;
-    const tInv = 0.02 / (Math.sqrt(tdx * tdx + tdy * tdy + tdz * tdz) + 1e-6); // gentle (huge, slow beast)
+    const tInv = 0.055 / (Math.sqrt(tdx * tdx + tdy * tdy + tdz * tdz) + 1e-6); // USER: faster (0.02→0.055) — visibly roams
     vel.x += tdx * tInv + Math.sin(t * 0.5 + ti.mi * 1.3) * 0.012;
     vel.y += tdy * tInv + Math.sin(t * 0.37 + ti.mi * 2.1) * 0.008;
     vel.z += tdz * tInv + Math.cos(t * 0.43 + ti.mi * 0.7) * 0.012;
@@ -928,7 +928,7 @@ export class TitanSystem {
     else if (p.x < -PLATFORM_HALF) vel.x += 0.06;
     if (p.z > PLATFORM_HALF) vel.z -= 0.06;
     else if (p.z < -PLATFORM_HALF) vel.z += 0.06;
-    vel.multiplyScalar(0.985);
+    vel.multiplyScalar(0.97); // USER: livelier (0.985→0.97)
     VA.copy(vel).multiplyScalar(dt * 60);
     p.add(VA);
     // USER: square platform + up to the mechalogodrom (was a ROAM_RADIUS 300 circle capped at y90).

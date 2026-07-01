@@ -119,9 +119,16 @@ export class AbominationArchitecture {
     for (let i = 0; i < this.seeds.length; i++) {
       const s = this.seeds[i]!;
       const wobble = Math.sin(safeT * (0.17 + (i % 5) * 0.025) + s.phase);
-      const a = s.a + Math.sin(safeT * 0.033 + s.phase) * 0.05 * drive;
-      const r = s.r * (1 + wobble * 0.025 * drive);
-      TMP_P.set(Math.cos(a) * r, s.y + wobble * 9 * drive, Math.sin(a) * r);
+      // USER: the abomination brain was PINNED to a fixed ring doing the same wobble → add a slow DRIFT
+      // so the whole structure migrates: a continuous ring-rotation, a ±28% radial breathe, and a vertical
+      // bob. Reads as a living, roaming colossus instead of a static installation. Pure trig — no rng.
+      const angleDrift =
+        safeT * 0.014 * (i % 2 === 0 ? 1 : -1) + Math.sin(safeT * 0.035 + s.phase * 0.7) * 0.5;
+      const radiusDrift = 1 + Math.sin(safeT * 0.04 + s.phase) * 0.28;
+      const a = s.a + angleDrift + Math.sin(safeT * 0.033 + s.phase) * 0.05 * drive;
+      const r = s.r * radiusDrift * (1 + wobble * 0.025 * drive);
+      const yDrift = Math.sin(safeT * 0.05 + s.phase * 1.3) * 34;
+      TMP_P.set(Math.cos(a) * r, s.y + yDrift + wobble * 9 * drive, Math.sin(a) * r);
       TMP_E.set(
         Math.sin(safeT * 0.07 + s.phase) * 0.22,
         -a + Math.PI / 2 + safeT * 0.025 * (i % 2 === 0 ? 1 : -1),

@@ -147,7 +147,6 @@ export class ApexExteriorAbomination {
   private readonly neuralTethers: THREE.LineSegments;
   private readonly zigguratStack: THREE.LineSegments;
   // Per-frame scratch — reused across update() calls (zero-alloc hot path).
-  private readonly _c = new THREE.Color();
   private readonly _sM = new THREE.Matrix4();
   private readonly _sP = new THREE.Vector3();
   private readonly _sQ = new THREE.Quaternion();
@@ -423,14 +422,41 @@ export class ApexExteriorAbomination {
   update(t: number, transcendence: number, vitality: number, pulse: TsotchkeQuantumPulse): void {
     const st = t * CREATURE_EXTERIOR_TIME_SCALE;
     const hue = tsotchkeExteriorHue(pulse, 0.55 + transcendence * 0.2);
-    const c = this._c.setHSL(hue, 0.85, 0.5 + vitality * 0.2);
     for (let i = 0; i < this.tesseract.length; i++) {
       const box = this.tesseract[i]!;
-      box.rotation.x = st * (0.08 + i * 0.02) + Math.sin(st * 0.3 + i) * 0.15;
-      box.rotation.y = st * (0.11 + i * 0.015);
-      box.scale.setScalar(1 + 0.08 * Math.sin(st * 0.5 + i) + transcendence * 0.12);
-      (box.material as THREE.LineBasicMaterial).color.copy(c);
-      (box.material as THREE.LineBasicMaterial).opacity = 0.15 + 0.25 * vitality;
+      // USER: make the wire cage a LIVING 4D structure — colour-cycling, rotating/contracting/expanding/
+      // spinning/orbital. 4D TUMBLE: rotate on all three axes at incommensurate rates (a hypercube's
+      // projected silhouette never repeats), each shell offset + counter-spinning.
+      box.rotation.x = st * (0.13 + i * 0.05) + Math.sin(st * 0.37 + i) * 0.4;
+      box.rotation.y = st * (0.17 + i * 0.037) + Math.cos(st * 0.29 + i * 1.3) * 0.35;
+      box.rotation.z = st * (0.09 + i * 0.028) * (i % 2 === 0 ? 1 : -1);
+      // 4D W-AXIS PROJECTION: a tesseract rotating through the 4th dimension casts a 3D shadow whose
+      // faces swell + shrink OUT OF PHASE (anisotropic per-axis) while the whole cell contracts/expands —
+      // the "impossible" breathing the eye can't resolve. Pure trig of a virtual w-angle.
+      const w = st * (0.4 + i * 0.06);
+      const contract = 1.0 + 0.28 * Math.sin(st * 0.35 + i * 0.9) + transcendence * 0.18;
+      this._sS.set(
+        contract * (1.0 + 0.35 * Math.sin(w)),
+        contract * (1.0 + 0.35 * Math.sin(w + 2.094)),
+        contract * (1.0 + 0.35 * Math.sin(w + 4.188)),
+      );
+      box.scale.copy(this._sS);
+      // Orbital drift of each shell around the core (outer shells orbit wider).
+      const oi = 0.4 * i;
+      box.position.set(
+        Math.sin(st * 0.2 + i) * oi,
+        Math.cos(st * 0.24 + i * 1.7) * oi * 0.75,
+        Math.cos(st * 0.18 + i) * oi,
+      );
+      // COLOUR-CYCLE per shell — a drifting rainbow, each layer its own hue offset (dynamic, alive).
+      const lh = (hue + i * 0.14 + st * 0.03) % 1;
+      (box.material as THREE.LineBasicMaterial).color.setHSL(
+        lh < 0 ? lh + 1 : lh,
+        0.95,
+        0.55 + vitality * 0.15,
+      );
+      (box.material as THREE.LineBasicMaterial).opacity =
+        0.2 + 0.3 * vitality + 0.14 * Math.abs(Math.sin(w));
     }
     this.mandala.rotation.z = st * 0.04;
     this.matMandala.color.setHSL((hue + 0.15) % 1, 0.9, 0.55);

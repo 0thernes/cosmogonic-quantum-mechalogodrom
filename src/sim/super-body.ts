@@ -272,23 +272,23 @@ function patchGodJewel(
          //    wears a quieter skin and a richly-conscious one blazes. Additive, signal-gated, no alloc. ──
          // NEURALMIMETIC WEB (Φ — IIT integrated information): a synaptic mesh densifies as the mind integrates.
          float mNeuro = step(0.7, fract(relief * 7.0 + sin(vObjPos.x * 14.0 + vObjPos.y * 11.0 + uTime * 1.7) * 0.3));
-         vec3 mNeuroCol = vec3(0.4, 1.0, 0.85) * mNeuro * uPhi * (0.5 + 0.5 * fres);
+         vec3 mNeuroCol = vec3(0.2, 0.7, 0.62) * mNeuro * uPhi * (0.3 + 0.4 * fres); // USER: deeper teal, less white
          // HELIXOLOGY DOUBLE-HELIX (quantum wave): twin bright strands wind the shell, advancing with uQWave.
          float mHelix = pow(0.5 + 0.5 * sin(vObjPos.y * 10.0 + atan(vObjPos.z, vObjPos.x) * 2.0 + uQWave * 6.2831853), 10.0);
-         vec3 mHelixCol = vec3(0.7, 0.5, 1.0) * mHelix * (0.4 + 0.6 * uQWave);
+         vec3 mHelixCol = vec3(0.5, 0.2, 0.8) * mHelix * (0.25 + 0.4 * uQWave); // USER: deep indigo, less white
          // SINGULROSITY BLOOM (Φ × dominance): an integrated, dominant mind blooms a hot core halo.
-         vec3 mBloom = vec3(1.0, 0.7, 1.0) * pow(fres, 0.6) * (uPhi * uDominance) * 0.9;
+         vec3 mBloom = vec3(0.8, 0.3, 0.85) * pow(fres, 0.6) * (uPhi * uDominance) * 0.6; // USER: saturated magenta, NOT white (was the #1 white contributor)
          // CRITICALITY STORM-THERMAL (edge-of-chaos): a mind poised at criticality radiates blackbody heat.
          float mTherm = uCliff * (0.5 + 0.5 * sin(uTime * 9.0 + relief * 10.0));
-         vec3 mThermCol = vec3(1.0, 0.45, 0.12) * mTherm * 0.7;
+         vec3 mThermCol = vec3(0.9, 0.35, 0.1) * mTherm * 0.5; // USER: deep red-orange, less bright
          // QUALIA SHIMMER (HOT qualia tone): an iridescent phenomenal shimmer rides the rim with uQualia.
          vec3 mQualiaCol = (0.5 + 0.5 * cos(vec3(0.0, 2.094, 4.188) + band * 1.3 + uQualia * 6.2831853)) * pow(fres, 1.4) * uQualia * 0.6;
          // REFLEX ARC ORBITS (clifford reflex): fast reflex sparks orbit a reactive mind.
          float mReflexArc = pow(0.5 + 0.5 * sin(atan(vObjPos.z, vObjPos.x) * 6.0 + uTime * 8.0), 14.0);
-         vec3 mReflexCol = vec3(0.45, 0.85, 1.0) * mReflexArc * uReflex * 0.8;
+         vec3 mReflexCol = vec3(0.25, 0.6, 0.9) * mReflexArc * uReflex * 0.5; // USER: deep blue, less bright
          vec3 mindEmissive = mNeuroCol + mHelixCol + mBloom + mThermCol + mQualiaCol + mReflexCol;
          vec3 jewelEmissive = glow * (0.22 + 0.6 * relief) + iris * fres * (0.45 + 0.8 * uDominance) + wv * 0.12 * uDominance + ch * 0.07 * uSurprise * uPlan + igFlash * uPlan * (0.3 + 0.4 * uDominance) + varPal * relief * 0.25 * uPlan + evoEmissive - veinColor * veinMask * 0.4 + auraColor * relief * 0.15 + mindEmissive;
-         jewelEmissive *= 0.78; // V109: darker, less white, more organic
+         jewelEmissive *= 0.6; // USER: darker still (0.78→0.6), less white/bright, more organic + colorful
          // V112: HDR soft-knee so peak mind-activity (dominance/plan/surprise all maxed) can no longer
          // stack the 15 additive terms into a flat blinding white sear. Reinhard rolloff caps each
          // channel near ~2.0 while passing low values nearly linearly — colour stays vivid, never blinds.
@@ -743,7 +743,7 @@ export class SuperBodySystem {
         FLOOR + (CEIL - FLOOR) * frac(this.seed * 0.317),
         Math.sin(a) * rr,
       );
-      this.wanderClock = 5 + 5 * frac(this.seed * 0.123);
+      this.wanderClock = 2.5 + 3 * frac(this.seed * 0.123); // USER: retarget ~2× more often — livelier roam
     }
     // Desired heading = seek the wander locus + the mind's own will; veer inward near the rim.
     this.aim.copy(this.wander).sub(this.pos);
@@ -762,7 +762,7 @@ export class SuperBodySystem {
       this.aim.addScaledVector(this.ctrl, 1.6); // ASSIST nudge toward the player's will
     }
     if (this.aim.lengthSq() > 1e-6) this.aim.normalize();
-    const speed = manual ? (this.ctrlActive ? 26 : 0) : 7 + 16 * this.arousal; // frantic when aroused
+    const speed = manual ? (this.ctrlActive ? 34 : 0) : 20 + 28 * this.arousal; // USER: faster (was 7+16) — the apex glides, not crawls
     this.vel.lerp(this.aim.multiplyScalar(speed), Math.min(1, dt * (manual ? 3 : 1.4)));
 
     // QUANTUM TELEPORT: phase to a new locus on a timer (faster under surprise) — the "weird shit".

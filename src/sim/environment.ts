@@ -742,22 +742,31 @@ export class EnvironmentSystem {
       ),
     );
 
-    // ── Nebula planes (legacy 464; sizes/positions × ARENA_MID/ARENA_Y) ──
+    // ── Nebula planes (legacy 464). USER: these were big DoubleSide translucent rectangles at EYE LEVEL
+    //    over the platform, randomly rotated → they sliced across the view as "filter" overlays that
+    //    washed out colours/clarity. Now: pushed FAR out (×4.2, beyond the ±540 platform) + high, and
+    //    made much fainter, so they read as distant BACKDROP nebulae behind the world, not a filter over
+    //    it. Same rng draw sequence (2 size · 1 hue · 1 opacity · 3 position · 3 rotation) ⇒ boot stream
+    //    unchanged; only the OUTPUTS are transformed. ──
     for (let i = 0; i < 6; i++) {
       const nebula = new THREE.Mesh(
-        new THREE.PlaneGeometry((100 + rng() * 80) * ARENA_MID, (50 + rng() * 40) * ARENA_MID),
+        new THREE.PlaneGeometry(
+          (100 + rng() * 80) * ARENA_MID * 1.7,
+          (50 + rng() * 40) * ARENA_MID * 1.7,
+        ),
         new THREE.MeshBasicMaterial({
-          color: new THREE.Color().setHSL(rng(), 0.4, 0.06),
+          color: new THREE.Color().setHSL(rng(), 0.45, 0.09),
           transparent: true,
-          opacity: 0.03 + rng() * 0.03,
+          opacity: (0.03 + rng() * 0.03) * 0.35, // ~0.01-0.02, a whisper of distant haze
           side: THREE.DoubleSide,
           depthWrite: false,
+          fog: false,
         }),
       );
       nebula.position.set(
-        (rng() - 0.5) * 130 * ARENA_MID,
-        (15 + rng() * 70) * ARENA_Y,
-        ((rng() - 0.5) * 130 - 50) * ARENA_MID,
+        (rng() - 0.5) * 130 * ARENA_MID * 4.2, // ±680 — out past the platform rim
+        (15 + rng() * 70) * ARENA_Y + 220, // lifted into the background sky band
+        ((rng() - 0.5) * 130 - 50) * ARENA_MID * 4.2, // mostly behind (−z)
       );
       nebula.rotation.set(rng() * PI, rng() * PI, rng() * PI);
       scene.add(nebula);
