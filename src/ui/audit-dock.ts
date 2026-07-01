@@ -478,6 +478,10 @@ function renderClientAudit(doc: Document): void {
 }
 
 /** Build the 🗒 AUDIT toggle into the dock and wire the client-side audit renderer. Idempotent (HMR). */
+/** The audit-render heartbeat interval — held at module scope so an HMR re-mount (which may reset the
+ *  DOM and bypass the idempotency guard) can CLEAR the prior interval instead of stacking a new one. */
+let auditHeartbeat: ReturnType<typeof setInterval> | null = null;
+
 function mountAuditToggle(doc: Document = document): void {
   if (doc.getElementById('cqm-aud-toggle')) return;
   const panel = doc.getElementById('aP');
@@ -509,9 +513,12 @@ function mountAuditToggle(doc: Document = document): void {
   toggle.setAttribute('aria-expanded', 'false');
   mountToggle(toggle, doc);
 
-  // Real-time client render (server-free). `setInterval` is a UI heartbeat, not sim logic.
+  // Real-time client render (server-free). `setInterval` is a UI heartbeat, not sim logic. Clear any
+  // prior heartbeat first so a hot-reload can never stack duplicate intervals all re-rendering the dock.
   renderClientAudit(doc);
-  if (typeof setInterval === 'function') setInterval(() => renderClientAudit(doc), RENDER_MS);
+  if (auditHeartbeat !== null) clearInterval(auditHeartbeat);
+  auditHeartbeat =
+    typeof setInterval === 'function' ? setInterval(() => renderClientAudit(doc), RENDER_MS) : null;
 }
 
 mountAuditToggle();
