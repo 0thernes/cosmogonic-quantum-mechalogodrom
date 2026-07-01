@@ -80,6 +80,7 @@ export {
   vecNorm,
   vecDot,
 } from '../math/quantum-natural-gradient';
+export { curvatureAwareNaturalGradient2x2 } from '../math/curvature-aware-qng';
 export { quantumCoherence, type CoherenceSnapshot } from '../math/quantum-coherence';
 export { quantumMagic, type MagicSnapshot } from '../math/quantum-magic';
 export {

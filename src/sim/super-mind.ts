@@ -96,7 +96,7 @@ import {
   dualMul,
   libirrepSymmetry,
   ulgHandoff,
-  naturalGradient2x2,
+  curvatureAwareNaturalGradient2x2,
   vecNorm,
   storeHebbian,
   recall,
@@ -437,6 +437,9 @@ const QRC_CURIOSITY_GAIN = 0.1;
 /** How strongly the quantum reservoir's LEARNED linear readout (the 4-D feature vector — the actual point
  *  of reservoir computing) biases the plan drives (bounded, P1-ablatable via qGate). */
 const QRC_FEATURE_GAIN = 0.05;
+/** How strongly the CP¹ manifold curvature (Christoffel trace) corrects the flat QGT natural gradient in the
+ *  apex's self-optimization step (0 = flat Fisher QNG; small = a bounded Riemannian curvature correction). */
+const QNG_CURVATURE_WEIGHT = 0.15;
 /** How strongly the MemoryOrchestra regime-shift sentinel lifts exploration (classical faculty, ungated). */
 const MEMORY_REGIME_GAIN = 0.05;
 /** How strongly the NarrativeMemory recalled-narrative trust votes for continuing the recent plan. */
@@ -1028,8 +1031,20 @@ export class SuperMind {
     const g00 = 1 + this.cons.surprise * 0.5;
     const g01 = this.cons.workspace * 0.3;
     const g11 = 1 + this.eshkolEngine.inference * 0.5;
-    // Precondition the gradient: (g + λI)⁻¹·∇L
-    naturalGradient2x2(g00, g01, g11, tapeGrad, predErr, qngRidge, qngOut);
+    // Precondition the gradient with the CURVATURE-AWARE natural gradient: (g + λI + κ·Γ)⁻¹·∇L, where the
+    // Christoffel trace Γ of the CP¹ cognitive manifold corrects the flat QGT metric so the step respects
+    // the manifold's curvature (Riemannian, not just Fisher-flat). Wires the previously-unwired
+    // curvature-aware-qng kernel; κ=0 recovers the old flat QNG, so this is a bounded, deterministic upgrade.
+    curvatureAwareNaturalGradient2x2(
+      g00,
+      g01,
+      g11,
+      tapeGrad,
+      predErr,
+      QNG_CURVATURE_WEIGHT,
+      qngRidge,
+      qngOut,
+    );
     const qngNorm = vecNorm(qngOut);
     // P1-ablatable: the QGT / Quantum-Natural-Gradient contribution to surprise (the QGT still preconditions
     // above; only its influence on the uncertainty signal is gated in the ablated arm).
