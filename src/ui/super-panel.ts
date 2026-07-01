@@ -149,6 +149,13 @@ const STYLE = `
   width: fit-content;
   max-width: 100%;
 }
+.cqm-sup-archons .archon-radar {
+  float: right;
+  width: 58px;
+  height: 58px;
+  margin: 0 0 2px 8px;
+  opacity: 0.92;
+}
 .cqm-sup-archons .archon-telemetry {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -262,6 +269,8 @@ export class SuperPanel {
     integrity: HTMLElement;
     integration: HTMLElement;
     conf: HTMLElement;
+    /** USER #5: per-Archon 16-spoke radar chart — a live visual signature of each godform's mind. */
+    radar: CanvasRenderingContext2D | null;
   }> = [];
 
   constructor(doc: Document = document) {
@@ -386,11 +395,19 @@ export class SuperPanel {
         sVal, sAro, sDom, sSur, sAgg, sDec, sCur, sDre,
         sHal, sRea, sSAw, sNov, sIgn, sInt, sIgr, sCnf,
       );
-      card.append(nm, pl, tel);
+      // USER #5: a live radar chart per Archon — fills the card's dead space with a real per-godform
+      // affect/cognition signature (16 spokes), so the 5 Archons read as visually DISTINCT at a glance.
+      const radarCanvas = doc.createElement('canvas');
+      radarCanvas.className = 'archon-radar';
+      radarCanvas.width = 128;
+      radarCanvas.height = 128;
+      radarCanvas.setAttribute('aria-hidden', 'true');
+      card.append(nm, pl, radarCanvas, tel);
       archonsWrap.appendChild(card);
       this.archonRows.push({
         nm,
         pl,
+        radar: radarCanvas.getContext('2d'),
         val: sVal.querySelector('span:last-child') as HTMLElement,
         aro: sAro.querySelector('span:last-child') as HTMLElement,
         dom: sDom.querySelector('span:last-child') as HTMLElement,
@@ -492,6 +509,29 @@ export class SuperPanel {
           row.integrity.textContent = integrity.toFixed(2);
           row.integration.textContent = c.phi.toFixed(2);
           row.conf.textContent = info.confidence.toFixed(2);
+          // USER #5: paint the live 16-spoke signature (valence bipolar → 0..1; the rest already 0..1).
+          this.drawArchonRadar(
+            row.radar,
+            [
+              (v + 1) / 2,
+              a,
+              d,
+              info.surprise,
+              info.intent.aggression,
+              info.intent.deception,
+              info.intent.curiosity,
+              c.dreaming,
+              c.hallucinating,
+              c.reasoning,
+              c.selfAware,
+              c.novelty,
+              c.ignition,
+              integrity,
+              c.phi,
+              info.confidence,
+            ],
+            pc,
+          );
         }
       }
     }
@@ -592,6 +632,67 @@ export class SuperPanel {
       const god = `${evo.powers.length}/10⚡`;
       const cap = evo.ascended ? 'ASCENDED ✦' : `${evo.stageName} ${god}`;
       this.id.power!.textContent = `LV${evo.level}/${evo.maxLevel} ${cap} · ${fmt(evo.power)} · d${evo.day}`;
+    }
+  }
+
+  /**
+   * USER #5: paint a live 16-spoke radar of one Archon's affect/cognition vector (all values 0..1).
+   * Concentric grid rings + a filled polygon in the Archon's plan colour give each of the 5 godforms a
+   * distinct, at-a-glance visual signature. Allocation-light (numbers only), no rng. O(spokes).
+   */
+  private drawArchonRadar(
+    ctx: CanvasRenderingContext2D | null,
+    vals: readonly number[],
+    color: string,
+  ): void {
+    if (!ctx) return;
+    const w = ctx.canvas.width;
+    const h = ctx.canvas.height;
+    const cx = w / 2;
+    const cy = h / 2;
+    const rad = Math.min(cx, cy) - 8;
+    const n = vals.length;
+    ctx.clearRect(0, 0, w, h);
+    // Concentric grid rings (3 levels).
+    ctx.strokeStyle = 'rgba(120,160,220,0.16)';
+    ctx.lineWidth = 1;
+    for (let ring = 1; ring <= 3; ring++) {
+      const rr = (rad * ring) / 3;
+      ctx.beginPath();
+      for (let i = 0; i <= n; i++) {
+        const ang = (i / n) * Math.PI * 2 - Math.PI / 2;
+        const x = cx + Math.cos(ang) * rr;
+        const y = cy + Math.sin(ang) * rr;
+        if (i) ctx.lineTo(x, y);
+        else ctx.moveTo(x, y);
+      }
+      ctx.stroke();
+    }
+    // Data polygon.
+    ctx.beginPath();
+    for (let i = 0; i <= n; i++) {
+      const j = i % n;
+      const ang = (j / n) * Math.PI * 2 - Math.PI / 2;
+      const rr = rad * clamp01(vals[j] ?? 0);
+      const x = cx + Math.cos(ang) * rr;
+      const y = cy + Math.sin(ang) * rr;
+      if (i) ctx.lineTo(x, y);
+      else ctx.moveTo(x, y);
+    }
+    ctx.closePath();
+    ctx.fillStyle = color + '33';
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1.4;
+    ctx.fill();
+    ctx.stroke();
+    // Vertex dots.
+    ctx.fillStyle = color;
+    for (let i = 0; i < n; i++) {
+      const ang = (i / n) * Math.PI * 2 - Math.PI / 2;
+      const rr = rad * clamp01(vals[i] ?? 0);
+      ctx.beginPath();
+      ctx.arc(cx + Math.cos(ang) * rr, cy + Math.sin(ang) * rr, 1.5, 0, Math.PI * 2);
+      ctx.fill();
     }
   }
 
