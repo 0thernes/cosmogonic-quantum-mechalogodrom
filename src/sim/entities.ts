@@ -50,55 +50,25 @@ function paintVibrant(mat: THREE.MeshStandardMaterial, m: PhylumMorphType, mi: n
   m.col.getHSL(hsl);
   const baseHue =
     (hsl.h + slot * 0.008 + j1 * 0.39 + j2 * 0.25 + j4 * 0.18 + j5 * 0.12 - 0.06 + 1) % 1;
-  const family = mi % 3;
-  if (family === 0) {
-    // Dark graphite / grey / gold: black bodies with metallic biological glints.
-    mat.color.setHSL((0.09 + j2 * 0.08) % 1, 0.45 + j3 * 0.25, 0.08 + j4 * 0.08);
-  } else if (family === 1) {
-    // Saturated living chroma: purple, blue, red, green, pink distributed by hash.
-    mat.color.setHSL(baseHue, 0.88 + j5 * 0.1, 0.26 + j3 * 0.18);
-  } else {
-    // Strange high-contrast morphic combos: not pastel, not plain neon.
-    mat.color.setHSL((baseHue + 0.27 + j4 * 0.19) % 1, 0.96, 0.14 + j2 * 0.22);
-  }
+  // REVERTED (owner request): the item-12 "1/3 · 1/3 · 1/3" family split set 1/3 of entities to HSL
+  // lightness ~0.08 (near-black), so a third read as "vanished" on the dark scene. Restore the ORIGINAL
+  // single BRIGHT crystal-watery colouring this function's docstring describes (lightness up to ~0.52).
+  mat.color.setHSL(
+    baseHue,
+    0.78, // softer saturation for a watery/crystal look
+    Math.min(0.52, 0.28 + hsl.l * 0.12 + j3 * 0.12 + j4 * 0.08), // bright, dreamy, not blown-out
+  );
   m.em.getHSL(hsl);
   // Colored inner glow: saturated core, bright enough to shimmer.
   mat.emissive.setHSL(
-    family === 0 ? (0.1 + j1 * 0.08) % 1 : (baseHue + 0.18 + j3 * 0.22 + j5 * 0.12) % 1,
-    family === 0 ? 0.82 : 0.96,
-    family === 0 ? 0.34 + j2 * 0.16 : Math.min(0.58, 0.28 + hsl.l * 0.12 + j2 * 0.12),
+    (baseHue + 0.08 + j3 * 0.18 + j5 * 0.12) % 1,
+    0.92,
+    Math.min(0.62, 0.32 + hsl.l * 0.15 + j2 * 0.14),
   );
-  mat.emissiveIntensity = Math.min(2.8, m.emI * 0.9 + 0.85 + family * 0.12);
+  mat.emissiveIntensity = Math.min(2.6, m.emI * 0.85 + 0.75);
   // Glassy/crystal surface: high metal, low roughness for a liquid-gem shimmer.
   mat.metalness = Math.min(0.95, mat.metalness * 0.6 + j5 * 0.4 + 0.2);
   mat.roughness = Math.max(0.04, mat.roughness * 0.4 + j3 * 0.08);
-}
-
-/** Slow deterministic hue drift — entities shift colour family over time from vitals + clock. */
-function tickColorDrift(
-  mat: THREE.MeshStandardMaterial,
-  act: number,
-  frame: number,
-  entityIndex: number,
-): void {
-  if ((frame + entityIndex) % 4 !== 0) return;
-  const t = frame * 0.016 + entityIndex * 0.073;
-  const dh = Math.sin(t * 0.41 + act * 1.7) * 0.014 + Math.sin(t * 0.19) * 0.006;
-  const ds = Math.sin(t * 0.27 + entityIndex * 0.11) * 0.018;
-  const dl = Math.sin(t * 0.33 + act) * 0.012;
-  const hsl = { h: 0, s: 0, l: 0 };
-  mat.color.getHSL(hsl);
-  mat.color.setHSL(
-    (hsl.h + dh + 1) % 1,
-    Math.max(0.35, Math.min(1, hsl.s + ds)),
-    Math.max(0.06, Math.min(0.42, hsl.l + dl)),
-  );
-  mat.emissive.getHSL(hsl);
-  mat.emissive.setHSL(
-    (hsl.h + dh * 0.6 + 1) % 1,
-    Math.max(0.7, Math.min(1, hsl.s + ds * 0.5)),
-    Math.max(0.2, Math.min(0.58, hsl.l + dl * 0.8)),
-  );
 }
 
 /** Base material parameters a {@link RenderMode} is layered on top of. */
@@ -584,7 +554,6 @@ export class EntityManager {
         applyBehavior(e, env);
       }
       this.applyFloraComfort(e, i, frame, dt);
-      tickColorDrift(e.material, u.act, frame, i);
 
       // Neural activation decay (legacy lines 766-768).
       u.act *= 0.95;
