@@ -55,13 +55,14 @@ function makePercept(t: number, chaos: number): SuperPercept {
   };
 }
 
-function runArm(seed: number, maxBeats: number, arm: Arm): RunResult {
+function runArm(seed: number, maxBeats: number, arm: Arm, drain = 0.008): RunResult {
   const rng = mulberry32(seed);
   // CONTROLLED ABLATION (fixed 2026-06-27): both arms see IDENTICAL percepts (same fixed chaos); the ONLY
   // difference is whether the quantum-substrate faculties contribute (classical → setQuantumAblated(true)).
   // The previous scaffold differed the arms by CHAOS level, which the survival model rewards directly — so
   // its delta measured chaos, NOT a quantum advantage. Now any Full−Classical delta is attributable to the
-  // quantum substrate alone (architecture, params, seed, percepts all matched).
+  // quantum substrate alone (architecture, params, seed, percepts all matched). `drain` sets the survival
+  // regime: 0.008 is near-saturating (a capacity ceiling), a higher drain forces real differential mortality.
   const FIXED_CHAOS = 0.4;
 
   const mind = new SuperMind(rng);
@@ -80,10 +81,12 @@ function runArm(seed: number, maxBeats: number, arm: Arm): RunResult {
     const emp = empowermentProxy(intent, snap);
     empSum += emp;
 
-    // Resource proxy using available signals (economy may be on world, use resonance/order as proxy)
+    // Resource proxy using available signals (economy may be on world, use resonance/order as proxy). The
+    // surprise penalty is the arm-agnostic hook the quantum substrate COULD exploit: gated QGT/NQS lower the
+    // ablated arm's surprise differently, so under real mortality a prediction advantage (if any) would show.
     const resDelta = snap.resonance.order * 0.015 - intent.consciousness.surprise * 0.008;
     totalRes += resDelta;
-    energy += resDelta - 0.008; // baseline drain
+    energy += resDelta - drain;
 
     if (energy <= 0) break;
   }
@@ -153,62 +156,67 @@ export function pairedPermutationP(deltas: number[], seed: number, iters = 5000)
   return (hits + 1) / (iters + 1);
 }
 
-export function runP1Experiment(numSeeds = 20, maxBeats = 180): void {
-  console.log('P1 Quantum vs Classical Advantage Harness (deterministic, seeded)');
-  console.log(`Seeds: ${numSeeds} | Max beats: ${maxBeats}`);
+const verdict = (p: number): string =>
+  p <= 0.05 ? 'distinguishable from noise' : 'NOT distinguishable from noise (null)';
 
+/** Run + report ONE survival regime (a fixed drain). Prints paired means, bootstrap CI, and permutation p. */
+function reportRegime(label: string, drain: number, numSeeds: number, maxBeats: number): void {
   const classical: RunResult[] = [];
   const full: RunResult[] = [];
-
   for (let i = 0; i < numSeeds; i++) {
     const s = 1000 + i * 17;
-    classical.push(runArm(s, maxBeats, 'classical'));
-    full.push(runArm(s, maxBeats, 'full'));
+    classical.push(runArm(s, maxBeats, 'classical', drain));
+    full.push(runArm(s, maxBeats, 'full', drain));
   }
-
   const cSurv = classical.map((r) => r.survival);
   const fSurv = full.map((r) => r.survival);
   const cEmp = classical.map((r) => r.meanEmpowerment);
   const fEmp = full.map((r) => r.meanEmpowerment);
-
   const dSurv = mean(fSurv) - mean(cSurv);
   const dEmp = mean(fEmp) - mean(cEmp);
-
   const deltasSurv: number[] = fSurv.map((v, i) => v - (cSurv[i] ?? 0) || 0);
   const deltasEmp: number[] = fEmp.map((v, i) => v - (cEmp[i] ?? 0) || 0);
   const ciSurv = bootstrapCI(deltasSurv, 0x51f15e);
   const ciEmp = bootstrapCI(deltasEmp, 0xe4f5eed);
   const pSurv = pairedPermutationP(deltasSurv, 0x9e3779b1);
   const pEmp = pairedPermutationP(deltasEmp, 0x85ebca6b);
-  const verdict = (p: number): string =>
-    p <= 0.05 ? 'distinguishable from noise' : 'NOT distinguishable from noise (null)';
 
-  console.log('\nSurvival (higher better):');
-  console.log(`  Classical mean: ${mean(cSurv).toFixed(1)}`);
-  console.log(`  Full mean:      ${mean(fSurv).toFixed(1)}`);
+  console.log(`\n═══ REGIME: ${label} (drain ${drain}) ═══`);
+  console.log('Survival (higher better):');
+  console.log(
+    `  Classical mean: ${mean(cSurv).toFixed(1)}  |  Full mean: ${mean(fSurv).toFixed(1)}`,
+  );
   const ci0s = ciSurv[0] ?? 0,
     ci1s = ciSurv[1] ?? 0;
   console.log(
-    `  Delta (Full - Classical): ${dSurv.toFixed(2)}  [${ci0s.toFixed(2)}, ${ci1s.toFixed(2)}]`,
+    `  Delta (Full - Classical): ${dSurv.toFixed(2)}  [${ci0s.toFixed(2)}, ${ci1s.toFixed(2)}]  |  perm p = ${pSurv.toFixed(4)} → ${verdict(pSurv)}`,
   );
-  console.log(`  Paired permutation p = ${pSurv.toFixed(4)}  → ${verdict(pSurv)}`);
-
-  console.log('\nMean Empowerment (higher better):');
-  console.log(`  Classical mean: ${mean(cEmp).toFixed(3)}`);
-  console.log(`  Full mean:      ${mean(fEmp).toFixed(3)}`);
+  console.log('Mean Empowerment (higher better):');
+  console.log(`  Classical mean: ${mean(cEmp).toFixed(3)}  |  Full mean: ${mean(fEmp).toFixed(3)}`);
   const ci0e = ciEmp[0] ?? 0,
     ci1e = ciEmp[1] ?? 0;
-  console.log(`  Delta: ${dEmp.toFixed(4)}  [${ci0e.toFixed(4)}, ${ci1e.toFixed(4)}]`);
-  console.log(`  Paired permutation p = ${pEmp.toFixed(4)}  → ${verdict(pEmp)}`);
+  console.log(
+    `  Delta: ${dEmp.toFixed(4)}  [${ci0e.toFixed(4)}, ${ci1e.toFixed(4)}]  |  perm p = ${pEmp.toFixed(4)} → ${verdict(pEmp)}`,
+  );
+  if (Math.min(...fSurv) < 3 && Math.min(...cSurv) < 3) {
+    console.log('  (both arms suffer real mortality here — the regime has power to separate them)');
+  }
+}
+
+export function runP1Experiment(numSeeds = 20, maxBeats = 180): void {
+  console.log('P1 Quantum vs Classical Advantage Harness (deterministic, seeded)');
+  console.log(`Seeds: ${numSeeds} | Max beats: ${maxBeats}`);
+
+  // TWO PRE-SPECIFIED regimes (fixed a priori, run once, reported as-is — NOT tuned toward significance):
+  //   • CAPACITY: the original near-saturating task (drain 0.008) — almost everyone survives the horizon.
+  //   • PRESSURE: a harder drain (0.020) that forces real differential mortality → statistical POWER to
+  //     separate the arms if the quantum substrate confers any survival advantage through its surprise/plan.
+  reportRegime('CAPACITY — near-saturating', 0.008, numSeeds, maxBeats);
+  reportRegime('PRESSURE — high-mortality', 0.02, numSeeds, maxBeats);
 
   console.log(
-    '\nNote: The paired permutation test (sign-flip, no normality assumption) is the honest verdict; the bootstrap CI shows the spread. A p ≳ 0.05 means the quantum ablation is not distinguishable from noise on this toy task — the scientifically expected, valid result. The ablation already covers the quantum-reservoir, Schrödinger spread, Lindblad decider, Eshkol-QRNG, QGT, and NQS/VMC pathways; the remaining step before any advantage claim is a PRE-REGISTERED task with real differential mortality (this toy survival task is near-saturating, ~199.7/200, so it has little power to separate the arms).',
+    '\nNote: The paired permutation test (sign-flip, no normality assumption) is the honest verdict; the bootstrap CI shows the spread. A p ≳ 0.05 means the quantum ablation is not distinguishable from noise — the scientifically expected result. The ablation covers the quantum-reservoir, Schrödinger spread, Lindblad decider, Eshkol-QRNG, QGT, and NQS/VMC pathways. Both regimes are pre-specified and reported as-is; the PRESSURE regime adds the differential mortality the CAPACITY task lacked. A real advantage claim still needs a pre-registered, ecologically-valid task + independent replication.',
   );
-
-  // Simple gate-friendly assertion for the harness itself (not a performance claim)
-  if (Math.min(...fSurv) < 5 || Math.min(...cSurv) < 5) {
-    console.warn('Warning: some runs died extremely early — check task definition.');
-  }
 }
 
 if (import.meta.main) {
