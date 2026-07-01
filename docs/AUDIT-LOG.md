@@ -38,6 +38,18 @@ per cut).
   process comment annotations across `super-mind`, `super-body`, `quality-space`, `godform`,
   `topdown-perception` and `clifford-tableau` — pure comments, apex bit-identical, full gate green.
 
+- **Manifold resident-count bug (`4d0380bb`).** `buildManifold()` accounted the exact dense core as
+  `2^min(30, scale.qubits)` while the substrate is actually built with `min(8, scale.qubits)` at both
+  construction sites (`APEX_DENSE_QUBITS_CAP`), over-reporting the "actually held" statevector up to 16×
+  for q=12 scales (APEX-1B-OCTOPUS). Capped to 8 to match reality; `residentParams`/`residentFraction`
+  (the honesty gap) are now truthful. The `residentParams <= budget` test never caught it (8192 << 67M).
+
+**Round-2 pass — 5-agent, self-verified, all unaudited subsystems** (math primitives, cognitive faculties,
+world/economy, newest body suites, apex remainder): **0 findings.** Independently hand-verified
+`quantum-magic` (M2 formula + Pauli butterfly), `naturalGradient2x2`, the field-substrate PDE stencils
+(heat conservation on a reflecting boundary), and the native-backend oracle — all correct. The apex code
+is high-quality; the real defects were the two fixed above (double-beat, manifold resident count).
+
 **Catalogued (non-blocking backlog):** decorative micro-coefficient Tsotchke-facade calls (the ports are
 real MIT math; their application onto already-clamped scalars is largely cosmetic) in the HOT-4/quality
 and `cons.surprise` chains; per-beat allocations off the per-entity hot path (`latentSubstrateStep`
