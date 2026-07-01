@@ -164,6 +164,9 @@ Every claim is a test, not rhetoric (`tests/apex-parameter-manifold.test.ts`,
 - **load-bearing behaviour**: `ApexSubstrateDriver.modulate({ tier: true })` changes the emitted
   `ApexModulation` for EVERY tier (`tests/apex-substrate-ablation.test.ts` — the doctrine's Experiment 1
   as an automated harness).
+- **offworld umwelt (Experiment 2, quantified)**: `apexOffworldScore(SCALE_MASSIVE)` measures **0.975** —
+  97.5 % of substrate-driven behaviour is attributable to the alien channels (quantum + field +
+  procedural), not the mundane reach/resident magnitude (`tests/apex-offworld-score.test.ts`).
 
 Ablation target: remove the stabilizer reflex → `quantumReachesBillion` drops; remove the procedural
 tier → addressable falls below a billion; remove a field organ → resident-field parameters fall AND the
@@ -184,8 +187,12 @@ was decoration, not substrate — and the harness fails, by design.
 - `src/sim/apex-substrate-driver.ts` — fuses manifold + quantum reach + field sensorium into an
   `ApexModulation` (motor gain, exploration, thermal stress, transcendence push, plan bias) the apex
   consumes; `AblationFlags` prove each tier is load-bearing.
+- `src/sim/apex-offworld-score.ts` — `apexOffworldScore` (doctrine Experiment 2): the fraction of
+  behaviour attributable to the alien substrate, as a continuous 0..1 measurement.
 - `src/sim/apex-native-backend.ts` — the reference oracle, golden vectors, reproduction gate (ADR-0007).
 - `src/sim/apex-substrate-visual.ts` — pure telemetry → shader-uniform mapping for the apex body.
+- `scripts/apex-substrate-demo.ts` — `bun scripts/apex-substrate-demo.ts` drives the whole substrate for
+  ς end-to-end and prints reach / sensorium / modulation / ablation / offworld score / body uniforms.
 - `src/sim/apex-consciousness-scaffold.ts` — `apexSubstrateTelemetry(scale, seed, device)` composes the
   manifold + quantum reach for the Architecture panel (one-way dependency; `apex-brain.ts` untouched).
 - `native/apex/` — the C/C++ side of the reproduction contract (header-only kernels + golden printer).
