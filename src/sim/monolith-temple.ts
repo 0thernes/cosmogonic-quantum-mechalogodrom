@@ -233,6 +233,7 @@ export class MonolithTemple {
       side: THREE.DoubleSide,
     });
     this.mats.push(godMat);
+    this.geos.push(godGeo); // register for disposal — every sibling geometry is tracked; this one was leaked
     const colossus = new THREE.Mesh(godGeo, godMat);
     colossus.position.set(0, 30 * U, 0);
     colossus.frustumCulled = false;

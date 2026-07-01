@@ -174,7 +174,7 @@ export class ApexQuantumSubstrate {
   planBias(nPlans: number): number[] {
     const n = Math.max(1, Math.floor(nPlans));
     const probs = this.dense.probabilities();
-    const bias = new Array<number>(n).fill(0);
+    const bias = Array.from({ length: n }, () => 0);
     for (let i = 0; i < probs.length; i++) bias[i % n] = (bias[i % n] ?? 0) + (probs[i] ?? 0);
     let sum = 0;
     for (let i = 0; i < n; i++) sum += bias[i] ?? 0;

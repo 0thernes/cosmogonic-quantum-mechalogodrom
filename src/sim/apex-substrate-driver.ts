@@ -129,7 +129,7 @@ export class ApexSubstrateDriver {
 
     // Plan bias: the Quantum Brain's Born distribution, blended with uniform (or uniform if ablated).
     const uniform = 1 / n;
-    const planBias = new Array<number>(n);
+    const planBias = Array.from({ length: n }, () => 0);
     if (ablate.quantum) {
       planBias.fill(uniform);
     } else {
