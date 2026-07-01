@@ -86,6 +86,11 @@ leviathans — 21 named GPU effects + 2 de-decorations, each bound to a real sig
   patched via `onBeforeCompile`, each driven by a real signal — surge (speed) → plasma-expanded /
   storm-thermal / vortexical-wake / singulrosity-bloom, depth (`leviathanDepth(y)`) → helixology +
   phosphor-gas, milky-brushed nacre on the fresnel rim. Test: `leviathan-surge.test.ts`.
+- **NHI-body (`nhi-body.ts`):** **V-NHI-EXPANDED** — the launched being's bare CORE now wears a
+  6-effect GPU suite (`onBeforeCompile`) driven by real state — social proximity (`uSocial`, flares
+  when two beings meet) → vision-bloom / neuralmimetic-web / plasma / singulrosity / bit-glitch, and
+  ascension height (`nhiAscension(y)` → `uAsc`) → hyperspace-dimensionality tesseract lattice. Test:
+  `nhi-body-ascension.test.ts`.
 
 All pure `f(state)`, **no rng** → seeded trajectory byte-identical; every new GLSL suite compiled
 directly in the live WebGL2 context (stale-preview-bundle workaround). This entry consolidates the

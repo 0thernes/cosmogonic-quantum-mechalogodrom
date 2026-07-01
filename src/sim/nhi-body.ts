@@ -22,10 +22,86 @@ interface Body {
   readonly tendrilGeos: THREE.BufferGeometry[];
   /** Golden-angle phase from the spawn index — even, rng-free variation between bodies. */
   phase: number;
+  /** Per-being CORE shader uniforms for the V-NHI-EXPANDED suite (driven from real state each frame). */
+  u: NhiUniforms;
 }
 
 /** Silhouette radius of an NHI body — large enough to read as a colossus, not an organism. */
 const R = 3.4;
+
+/** World-Y over which a launched being reads from ground (0) to fully ascended (1) — the roam column. */
+const NHI_ASCEND_SPAN = 240;
+
+/**
+ * Map a launched being's REAL height (world Y) to a `[0,1]` ascension signal — drives the hyperspace
+ * dimensionality lattice (a being flying high shimmers with tesseract light). Finite-guarded, clamped.
+ * Pure, no rng. O(1). See tests/nhi-body-ascension.test.ts.
+ */
+export function nhiAscension(y: number): number {
+  const a = (Number.isFinite(y) ? y : 0) / NHI_ASCEND_SPAN;
+  return a < 0 ? 0 : a > 1 ? 1 : a;
+}
+
+/** Per-being CORE shader uniforms driven from real state (uSocial = proximity, uAsc = height). */
+interface NhiUniforms {
+  uTime: THREE.IUniform<number>;
+  uSocial: THREE.IUniform<number>;
+  uAsc: THREE.IUniform<number>;
+}
+
+/** GLSL header injected after the NHI core body's fragment `<common>` — varyings, uniforms, fBm. */
+const NHI_FRAG_HEADER = /* glsl */ `
+varying vec3 vNObjP;
+uniform float uTime; uniform float uSocial; uniform float uAsc;
+float nHash(vec3 p){ return fract(sin(dot(p, vec3(27.17, 61.31, 11.71))) * 43758.5453); }
+float nNoise(vec3 x){ vec3 i = floor(x), f = fract(x); f = f * f * (3.0 - 2.0 * f);
+  return mix(mix(mix(nHash(i), nHash(i + vec3(1,0,0)), f.x), mix(nHash(i + vec3(0,1,0)), nHash(i + vec3(1,1,0)), f.x), f.y),
+             mix(mix(nHash(i + vec3(0,0,1)), nHash(i + vec3(1,0,1)), f.x), mix(nHash(i + vec3(0,1,1)), nHash(i + vec3(1,1,1)), f.x), f.y), f.z); }
+float nFbm(vec3 p){ float a = 0.5, s = 0.0; for (int k = 0; k < 4; k++){ s += a * nNoise(p); p = p * 2.03 + 7.1; a *= 0.5; } return s; }
+`;
+
+/**
+ * Patch a launched being's CORE body with the V-NHI-EXPANDED named-effect suite: 6 GPU effects, each a
+ * FALSIFIABLE readout of the being's REAL state — social proximity (`uSocial`, flares when two beings
+ * meet) drives vision-bloom / neuralmimetic-web / plasma / singulrosity / bit-glitch, and ascension
+ * height (`uAsc`) drives the hyperspace-dimensionality tesseract lattice. GPU-only, no rng: a solitary
+ * grounded being is dark, a high-flying being amid a congregation blazes with alien light.
+ */
+function patchNhiCore(mat: THREE.MeshStandardMaterial, u: NhiUniforms): void {
+  mat.onBeforeCompile = (shader) => {
+    shader.uniforms['uTime'] = u.uTime;
+    shader.uniforms['uSocial'] = u.uSocial;
+    shader.uniforms['uAsc'] = u.uAsc;
+    shader.vertexShader = shader.vertexShader
+      .replace('#include <common>', '#include <common>\nvarying vec3 vNObjP;')
+      .replace('#include <begin_vertex>', '#include <begin_vertex>\nvNObjP = position;');
+    shader.fragmentShader = shader.fragmentShader
+      .replace('#include <common>', `#include <common>${NHI_FRAG_HEADER}`)
+      .replace(
+        '#include <emissivemap_fragment>',
+        /* glsl */ `#include <emissivemap_fragment>
+        float nFres = pow(1.0 - max(dot(normalize(vViewPosition), normalize(normal)), 0.0), 3.0);
+        float nF = nFbm(vNObjP * 0.4);
+        // VISION EXPANDED (social) — ocular bloom flares when the being meets another.
+        totalEmissiveRadiance += vec3(1.0, 0.2, 0.5) * pow(nFres, 1.5) * uSocial * 1.6;
+        // NEURALMIMETIC WEB (social) — a mimetic neural web crawls the skin.
+        float nWeb = step(0.7, nFbm(vNObjP * 6.0 + uTime * 0.05));
+        totalEmissiveRadiance += vec3(0.6, 0.3, 1.0) * nWeb * uSocial * 1.2;
+        // PLASMA EXPANDED (social) — plasma discharge veins race the being.
+        float nPlasma = pow(0.5 + 0.5 * sin(vNObjP.y * 10.0 + uTime * 6.0 + nF * 6.2831), 8.0);
+        totalEmissiveRadiance += vec3(0.9, 0.4, 1.0) * nPlasma * uSocial * 1.5;
+        // HYPERSPACE DIMENSIONALITY (ascension) — a tesseract lattice shimmers at altitude.
+        float nLat = pow(0.5 + 0.5 * sin(vNObjP.x * 14.0) * sin(vNObjP.y * 14.0) * sin(vNObjP.z * 14.0 + uTime * 2.0), 4.0);
+        totalEmissiveRadiance += vec3(0.3, 0.9, 1.0) * nLat * uAsc * 0.9;
+        // SINGULROSITY BLOOM (social) — a hot core halo blooms on a congregating being.
+        totalEmissiveRadiance += vec3(1.0, 0.6, 0.9) * pow(1.0 - nFres, 3.0) * uSocial * 1.0;
+        // BIT-GLITCH (social) — reality quantizes into glitch blocks around a social being.
+        float nGlitch = floor((nF + sin(uTime * 9.0) * 0.2) * 5.0) / 5.0;
+        totalEmissiveRadiance += vec3(0.2, 1.0, 0.6) * nGlitch * uSocial * 0.4;`,
+      );
+  };
+  mat.customProgramCacheKey = () => 'nhiExpandedV1';
+}
 
 /** A morphing, red-eyed, biomechanical body per launched NHI. */
 export class NhiBodySystem {
@@ -86,6 +162,13 @@ export class NhiBodySystem {
       roughness: 0.15,
       flatShading: false, // smoother for bio look
     });
+    // V-NHI-EXPANDED: patch the core with the named-effect suite, driven from real social + height.
+    const u: NhiUniforms = {
+      uTime: { value: 0 },
+      uSocial: { value: 0 },
+      uAsc: { value: 0 },
+    };
+    patchNhiCore(coreMat, u);
     group.add(new THREE.Mesh(coreGeo, coreMat));
 
     const ringMat = new THREE.MeshStandardMaterial({
@@ -170,6 +253,7 @@ export class NhiBodySystem {
       eyeMat,
       tendrilGeos,
       phase: this.spawnIndex++ * 2.399963229728653,
+      u,
     });
   }
 
@@ -208,6 +292,11 @@ export class NhiBodySystem {
       if (social > 0.4 && onSocial) onSocial(id, social);
       const g = b.group;
       g.position.copy(p);
+      // V-NHI-EXPANDED: feed the real signals to the core named-effect suite (social = proximity,
+      // asc = height). A solitary grounded being is dark; a high-flying, congregating one blazes.
+      b.u.uTime.value = t;
+      b.u.uSocial.value = social;
+      b.u.uAsc.value = nhiAscension(p.y);
       // V109: more dynamic, restless alien motion — faster spin + irregular multi-frequency wobble.
       g.rotation.y = t * (0.32 + 0.12 * Math.sin(b.phase)) + b.phase;
       g.rotation.x = Math.sin(t * 0.58 + b.phase) * 0.62 + Math.sin(t * 1.3 + b.phase * 2.1) * 0.18;
