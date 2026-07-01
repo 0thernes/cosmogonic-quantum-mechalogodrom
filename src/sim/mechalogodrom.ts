@@ -141,6 +141,18 @@ export class Mechalogodrom {
   private apexTranscend = 0;
   private apexVitality = 0;
   private apexAgony = 0;
+  /** Fusion-BRAIN → body (V-MECHA-MIND). This god's OWN 10-variant fusion mind ({@link MechalogodromBrain})
+   *  drives its OWN body — a falsifiable readout, never decor:
+   *  · `mindDominant` (0..9): which variant sub-brain WON the fusion workspace this beat — the physical
+   *    variant shell of that index BLAZES (Global-Workspace "winning coalition lights up", made literal);
+   *  · `mindConscious` (0..1): the consciousness-indicator proxy → the fused core's coherence glow;
+   *  · `mindStrangeness` (0..1): dimensional alien-novelty → extra mandelbulb warp on the mass. */
+  private mindDominant = 0;
+  private mindConscious = 0;
+  private mindStrangeness = 0;
+  /** Per-shell workspace blaze (0..1), eased toward 1 for the dominant sub-brain's physical shell so the
+   *  winner glides between shells as the mind's dominant coalition switches, instead of hard-flickering. */
+  private readonly variantBlaze = new Float32Array(VARIANT_COUNT);
   /** Combined chaos+apex arousal, recomputed each update; with no apex feed it equals `chaos`. */
   private drive = 0;
   private localT = 0;
@@ -421,6 +433,25 @@ export class Mechalogodrom {
     this.mechaExterior.setMind(beat, activity);
   }
 
+  /**
+   * MECHALOGODROM-BRAIN → BODY (V-MECHA-MIND). Feed this god's OWN fusion mind's live cognition so its
+   * body reads out its thoughts, not decoration:
+   * - `dominantVariant` (0..9): the variant sub-brain that WON the fusion workspace this beat. The
+   *   PHYSICAL variant shell of that index ignites (brighter · larger · more saturated) — Global
+   *   Workspace Theory's "winning coalition broadcast" made literally visible; when the mind switches
+   *   its dominant coalition, the blaze migrates to the new shell.
+   * - `consciousnessProxy` (0..1): the fusion mind's consciousness-indicator proxy (NOT sentience) →
+   *   the fused core's coherence glow (emissive + rim).
+   * - `strangeness` (0..1): dimensional alien-novelty → extra mandelbulb warp amplitude on the mass.
+   * All READ-only, one-way (mind → body); clamped; draws no rng — determinism (ADR 0004) preserved.
+   */
+  setMind(dominantVariant: number, consciousnessProxy: number, strangeness: number): void {
+    const d = Math.round(dominantVariant);
+    this.mindDominant = d < 0 ? 0 : d > VARIANT_COUNT - 1 ? VARIANT_COUNT - 1 : d;
+    this.mindConscious = clamp(consciousnessProxy, 0, 1);
+    this.mindStrangeness = clamp(strangeness, 0, 1);
+  }
+
   /** Tsotchke corpus pulse — exterior hue + quantum rim intensity. */
   setTsotchkePulse(pulse: TsotchkeQuantumPulse): void {
     this.tsotchkePulse = pulse;
@@ -460,7 +491,18 @@ export class Mechalogodrom {
       (1 + 0.8 * d) *
       (1 + 0.5 * this.apexVitality);
 
-    this.warp = (0.08 + 0.5 * ease) * (0.6 + 0.9 * d);
+    // Dimensional STRANGENESS (the fusion mind's alien-novelty readout) genuinely writhes the mass
+    // harder — the reported `warp` rises with it, so the telemetry stays an honest readout of the body.
+    this.warp = (0.08 + 0.5 * ease) * (0.6 + 0.9 * d) * (1 + 0.35 * this.mindStrangeness);
+
+    // Ease each shell's workspace blaze toward 1 for the dominant sub-brain, 0 for the rest. A
+    // frame-rate-independent smoothing (~250 ms time-constant) so the winning coalition glides between
+    // shells; a pure function of the (dominant, dt) stream, so determinism holds (no rng, no clock).
+    const blazeRate = 1 - Math.exp(-dt * 4);
+    for (let i = 0; i < VARIANT_COUNT; i++) {
+      const target = i === this.mindDominant ? 1 : 0;
+      this.variantBlaze[i] = this.variantBlaze[i]! + (target - this.variantBlaze[i]!) * blazeRate;
+    }
 
     this.warpMass(lt);
     this.driveCentre(lt, ease);
@@ -557,7 +599,10 @@ export class Mechalogodrom {
       1.1 * ease +
       0.6 * this.drive +
       0.4 * this.apexVitality +
-      this.tsotchkePulse.quakeAliveness * 0.25;
+      this.tsotchkePulse.quakeAliveness * 0.25 +
+      // Consciousness-proxy coherence glow: the more the fusion mind lights up its indicators, the more
+      // its body blazes from within (bounded ≤ 0.5, so it never joins the old white-blowout problem).
+      0.5 * this.mindConscious;
     // USER: the 6 ADDITIVE core layers summed to a blinding WHITE core. Fix = keep each a DIM, saturated,
     // DISTINCT hue (low lightness) at a FRACTION of the old opacity, so the additive sum reads as a tiny
     // coloured SPARKLE — never a white blowout. The flash envelope still shimmers, just gently.
@@ -573,7 +618,8 @@ export class Mechalogodrom {
     // Event horizon breathes; the shadow core stays black (a true absence).
     this.rim.scale.setScalar(1 + 0.1 * Math.sin(st * 1.7) + 0.16 * ease + 0.04 * this.drive);
     this.rimMat.color.setHSL((hue + 0.86) % 1, 1, 0.26 + 0.06 * flash);
-    this.rimMat.opacity = 0.08 + 0.12 * ease + 0.06 * flash;
+    // The event-horizon rim brightens with the mind's consciousness-proxy — the halo of an awake god.
+    this.rimMat.opacity = 0.08 + 0.12 * ease + 0.06 * flash + 0.05 * this.mindConscious;
     this.core.scale.setScalar(0.85 + 0.18 * ease); // the hole widens as it powers up
 
     // Spike-arms splay outward with power; counter-rotate; flash.
@@ -638,18 +684,29 @@ export class Mechalogodrom {
       v.mesh.position.set(lerp(v.ax, cx, k), lerp(v.ay, cy, k), lerp(v.az, cz, k));
       // Manic pole → swells + brightens; depressive pole → shrinks + dims (the "bipolar variant").
       const manic = 0.5 + 0.5 * bip;
+      // V-MECHA-MIND: this shell's Global-Workspace blaze — 1 when its sub-brain won the fusion mind's
+      // workspace this beat. The winning thought's PHYSICAL shell swells + ignites; losers stay dim.
+      const blaze = this.variantBlaze[i] ?? 0;
       const baseScale = lerp(10 + (i % 5) * 3, 4 + (i % 3) * 2, k); // shells shrink as they fuse in
-      v.mesh.scale.setScalar(baseScale * (0.6 + 0.8 * manic));
+      v.mesh.scale.setScalar(baseScale * (0.6 + 0.8 * manic) * (1 + 0.35 * blaze));
       v.mesh.rotation.x = st * (0.3 + 0.1 * i) + bip;
       v.mesh.rotation.y = st * (0.2 + 0.07 * i);
       // Hue swings between the two poles; opacity flares with the manic phase and fades as it melts in.
       const hue = lerp(v.hueA, v.hueB, manic);
       // USER #14: keep the lightness low so the additive shell never blows out.
       // Each shell drives its OWN material, so all 10 read as distinct, defined colours (was: only
-      // variant 0's hue reached the shared material and every shell looked identical).
-      v.mat.color.setHSL(hue, 0.9, 0.28 + 0.12 * manic);
-      v.mat.opacity = 0.18 + 0.22 * manic * (1 - 0.5 * k);
+      // variant 0's hue reached the shared material and every shell looked identical). The dominant
+      // shell's blaze lifts its lightness + opacity (capped) so the mind's active coalition is legible.
+      v.mat.color.setHSL(hue, 0.9, 0.28 + 0.1 * manic + 0.16 * blaze);
+      v.mat.opacity = Math.min(0.6, (0.18 + 0.22 * manic * (1 - 0.5 * k)) * (1 + 1.1 * blaze));
     }
+  }
+
+  /** Read-only per-shell Global-Workspace blaze (index = variant shell 0..9): 1 ⇒ that sub-brain's
+   *  coalition currently dominates the fusion mind's workspace and its physical shell is ignited.
+   *  Exposed for telemetry + falsification (proves the mind's dominant thought reaches the body). */
+  get workspaceBlaze(): readonly number[] {
+    return Array.from(this.variantBlaze);
   }
 
   /** Build the read-only telemetry snapshot (call at UI cadence — allocates one object). */

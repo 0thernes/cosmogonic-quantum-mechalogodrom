@@ -1306,6 +1306,14 @@ export class World {
     const mechaFormIdx = ((this.persisted.seed ^ 0x8e4ac471) >>> 3) % 25;
     const glyphFormIdx = (this.persisted.seed >>> 3) % 25;
     this.mechalogodrom.setExteriorMind(mechaBrainSnap.beat, mechaBrainSnap.activity);
+    // V-MECHA-MIND: the fusion brain's live cognition drives its OWN body — the variant sub-brain that
+    // won the workspace this beat ignites its physical shell (Global Workspace), consciousness-proxy
+    // glows the core, dimensional strangeness warps the mass. Read-only mind → body projection.
+    this.mechalogodrom.setMind(
+      mechaBrainSnap.dominantVariant,
+      mechaBrainSnap.consciousnessProxy,
+      mechaBrainSnap.strangeness,
+    );
     this.mechalogodrom.setTsotchkePulse(
       corpusPulse(this.persisted.seed ^ 0x8e4ac471, mechaFormIdx),
     );

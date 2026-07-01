@@ -109,6 +109,88 @@ describe('Mechalogodrom — the fusion abomination', () => {
     { timeout: 15_000 },
   );
 
+  test('FUSION-MIND → BODY: the winning sub-brain blazes its shell, consciousness glows the core, strangeness warps the mass', () => {
+    // The Mechalogodrom's OWN 10-variant fusion brain drives its OWN body — a falsifiable readout, not
+    // decoration. We prove three independent mind→body couplings actually reach the geometry/materials.
+    const scene = new THREE.Scene();
+    const m = new Mechalogodrom(scene);
+    // Fuse fully first so ease≈1 and the effects are at their operating point.
+    run(m, 20);
+
+    // The mass is the ONLY MeshStandardMaterial in the rig — locate it to read its coherence glow.
+    let massMat: THREE.MeshStandardMaterial | null = null;
+    scene.traverse((o) => {
+      const mat = (o as THREE.Mesh).material as THREE.Material | undefined;
+      if (mat && (mat as THREE.MeshStandardMaterial).isMeshStandardMaterial) {
+        massMat = mat as THREE.MeshStandardMaterial;
+      }
+    });
+    expect(massMat).not.toBeNull();
+    const mass = massMat as unknown as THREE.MeshStandardMaterial;
+
+    const dt = 1 / 60;
+    let t = 20;
+
+    // Coalition #3 wins the workspace; the mind is highly conscious + dimensionally strange.
+    for (let i = 0; i < 180; i++) {
+      t += dt;
+      m.setMind(3, 0.95, 0.6);
+      m.update(t, dt);
+    }
+    const blazeHot = m.workspaceBlaze;
+    // Global Workspace: the winning coalition's PHYSICAL shell (index 3) is the brightest of all ten.
+    for (let i = 0; i < 10; i++) {
+      if (i !== 3) expect(blazeHot[3]!).toBeGreaterThan(blazeHot[i]!);
+    }
+    const warpHot = m.snapshot().warp;
+    const emisHot = mass.emissiveIntensity;
+
+    // The mind switches its dominant coalition to shell #7 and goes quiet (no consciousness/strangeness).
+    for (let i = 0; i < 180; i++) {
+      t += dt;
+      m.setMind(7, 0, 0);
+      m.update(t, dt);
+    }
+    const blazeCold = m.workspaceBlaze;
+    // The blaze MIGRATED: #7 now leads, and #3 (the old winner) has visibly dimmed.
+    for (let i = 0; i < 10; i++) {
+      if (i !== 7) expect(blazeCold[7]!).toBeGreaterThan(blazeCold[i]!);
+    }
+    expect(blazeCold[3]!).toBeLessThan(blazeHot[3]!);
+    // Strangeness genuinely warps the mass harder (reported warp rises), and consciousness genuinely
+    // brightens the core — both are real readouts, so removing them measurably drops both quantities.
+    expect(warpHot).toBeGreaterThan(m.snapshot().warp);
+    expect(emisHot).toBeGreaterThan(mass.emissiveIntensity);
+    m.dispose();
+  });
+
+  test('setMind clamps out-of-range cognition (no NaN, dominant index bounded, blaze stays finite)', () => {
+    const scene = new THREE.Scene();
+    const m = new Mechalogodrom(scene);
+    run(m, 5);
+    const dt = 1 / 60;
+    let t = 5;
+    // Feed garbage: an out-of-range dominant, and consciousness/strangeness outside [0,1].
+    for (let i = 0; i < 60; i++) {
+      t += dt;
+      m.setMind(99, 5, -3);
+      m.update(t, dt);
+    }
+    const blaze = m.workspaceBlaze;
+    expect(blaze.length).toBe(10);
+    let sum = 0;
+    for (const b of blaze) {
+      expect(Number.isFinite(b)).toBe(true);
+      expect(b).toBeGreaterThanOrEqual(0);
+      expect(b).toBeLessThanOrEqual(1);
+      sum += b;
+    }
+    // A clamped dominant (99 → 9) means the LAST shell should have taken the blaze.
+    expect(blaze[9]!).toBeGreaterThan(0.5);
+    expect(Number.isFinite(sum)).toBe(true);
+    m.dispose();
+  });
+
   test('dispose() is safe', () => {
     const m = new Mechalogodrom(new THREE.Scene());
     run(m, 5);

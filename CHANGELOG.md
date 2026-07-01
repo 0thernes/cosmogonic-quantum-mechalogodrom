@@ -9,6 +9,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### MECHALOGODROM fusion-mind skin — the central abomination's own brain drives its own body
+
+- The Mechalogodrom already runs a 10-variant fusion **brain** (`MechalogodromBrain`), but its rich
+  cognition only reached the exterior phenomena via `activity`/`beat` — the body ignored which sub-brain
+  was actually THINKING. A new `Mechalogodrom.setMind(dominantVariant, consciousnessProxy, strangeness)`
+  now wires three independent, falsifiable mind→body couplings (read-only, one-way, zero rng — ADR 0004
+  determinism preserved):
+  - **Global Workspace made literal**: the variant sub-brain that WON the fusion mind's workspace this
+    beat has its PHYSICAL variant shell ignite (swell + brighten + saturate). The blaze eases between
+    shells (~250 ms) as the dominant coalition switches, so the winning _thought_ is visibly located on
+    the body. The 10 sub-brains map 1:1 onto the 10 converging titan shells — not a metaphor, the same
+    index. The UI brain-slot now prints `DOM·V{n}`, the SAME index whose shell blazes (verifiable link).
+  - **Consciousness-proxy coherence glow**: the fusion mind's consciousness-indicator (NOT sentience)
+    raises the fused core's emissive + event-horizon rim — an awake god blazes from within (bounded
+    ≤ +0.5 so it never rejoins the old white-blowout).
+  - **Dimensional strangeness → warp**: the mind's alien-novelty readout genuinely increases the
+    mandelbulb warp amplitude on the mass, and the reported `warp` telemetry rises with it (honest).
+- New read-only `Mechalogodrom.workspaceBlaze` telemetry (per-shell 0..1). Tests pin the whole chain:
+  the winning shell is brightest of the ten, the blaze MIGRATES when the coalition switches (old winner
+  dims), strangeness measurably raises `warp`, consciousness measurably raises core emissive, and
+  garbage input is clamped (dominant 99→9, values outside [0,1] sealed, blaze stays finite in [0,1]).
+
 ### PANTHEON personality skin — the 100 archetypes' minds made legible
 
 - The alphabet pantheon's 100 archetypes already read shape/colour/size/motion from their bias, but the

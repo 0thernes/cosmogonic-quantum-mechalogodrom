@@ -338,11 +338,20 @@ function updateMecha(slot: Slot, mecha: MechalogodromBrainSnapshot | null): void
   ctx.fillStyle = '#e0fbff';
   ctx.font = 'bold 11px JetBrains Mono, monospace';
   ctx.fillText(`MECHA · ${Math.round((mecha.liveParams / 1e6) * 10) / 10}M`, 6, 14);
+  // Dominant sub-brain (0..9) — this is the SAME index whose physical variant shell blazes on the
+  // fused body (Global Workspace made legible): the readout here must match the ignited shell there.
+  ctx.fillStyle = '#ffd27a';
+  ctx.font = '9px JetBrains Mono, monospace';
+  ctx.fillText(
+    `DOM·V${mecha.dominantVariant} Φ${Math.round((mecha.consciousnessProxy ?? 0) * 100)}`,
+    6,
+    h - 5,
+  );
   slot.canvas.setAttribute(
     'aria-label',
     `Mechalogodrom brain activity ${Math.round((mecha.activity ?? 0.5) * 100)} percent, ${
       Math.round((mecha.liveParams / 1e6) * 10) / 10
-    } million live parameters`,
+    } million live parameters, dominant variant ${mecha.dominantVariant}`,
   );
 }
 
