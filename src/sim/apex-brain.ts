@@ -1766,6 +1766,23 @@ export interface ApexBrainSnapshot {
   ouroboros: OuroborosView;
 }
 
+/** Stable keys for the eleven ablatable organs — the unit the scientific harness kill-tests. */
+export const APEX_ORGAN_KEYS = [
+  'loom',
+  'drum',
+  'necro',
+  'klein',
+  'hive',
+  'hydra',
+  'wraith',
+  'tunnel',
+  'thermo',
+  'ouroboros',
+  'quantum',
+] as const;
+export type ApexOrganKey = (typeof APEX_ORGAN_KEYS)[number];
+const NO_ABLATION: ReadonlySet<ApexOrganKey> = new Set<ApexOrganKey>();
+
 export class ApexBrain {
   readonly seed: number;
   readonly targetNeurons = APEX_BRAIN_TARGET_NEURONS;
@@ -1775,6 +1792,8 @@ export class ApexBrain {
   /** Neurons actually allocated in the live runtime (capped at {@link LIVE_NODE_CAP}). */
   readonly liveNeurons: number;
   private beat = 0;
+  /** Organs suppressed this run (the harness kill-test set). Empty ⇒ full-brain baseline. */
+  private readonly ablated: ReadonlySet<ApexOrganKey>;
 
   private readonly loom: PrimeSieveLoom;
   private readonly drum: AcousticMeatDrum;
@@ -1795,8 +1814,9 @@ export class ApexBrain {
   private readonly rTunnel: Rng;
   private readonly rOuro: Rng;
 
-  constructor(seed: number, opts?: { scale?: ApexScale }) {
+  constructor(seed: number, opts?: { scale?: ApexScale; ablations?: ReadonlySet<ApexOrganKey> }) {
     this.seed = seed >>> 0 || 1;
+    this.ablated = opts?.ablations ?? NO_ABLATION;
     const s = opts?.scale ?? SCALE_LIVE;
     this.scale = s;
     // Each organ allocates the CAPPED live size; the designed scale can be far larger (up to 1B).
@@ -1853,6 +1873,16 @@ export class ApexBrain {
     return this.designedNeurons;
   }
 
+  /** True ⇔ organ `k` is ablated this run (its `.step()` is skipped in {@link tick}). */
+  private off(k: ApexOrganKey): boolean {
+    return this.ablated.has(k);
+  }
+
+  /** The organs suppressed this run (empty ⇒ full-brain baseline). Read-only. */
+  ablatedOrgans(): ReadonlySet<ApexOrganKey> {
+    return this.ablated;
+  }
+
   /**
    * Live state parameters actually held (floats across organ buffers + the 2·2^q statevector). This
    * is the honest "running parameter count" — far below {@link neuronCount} at large scales, because
@@ -1869,36 +1899,47 @@ export class ApexBrain {
     this.lastLevel = p.level;
     const drive = clamp01(0.4 * p.threat + 0.3 * p.chaos + 0.3 * p.novelty);
 
+    // Each organ is ABLATABLE — when off, its `.step()` is skipped and a neutral value substituted.
+    // With NO ablations every branch takes the live path in the original order → byte-identical
+    // determinism (the harness "empty ablation ≡ baseline" law).
     // 1 Loom — sieve the drive through twin-prime connectivity.
-    const loomOut = this.loom.step(drive * 4, this.rLoom);
+    const loomOut = this.off('loom') ? 0 : this.loom.step(drive * 4, this.rLoom);
     // 2 Drum — the loom output screams into the acoustic chamber.
-    const drumMotor = this.drum.step(loomOut * 0.5, (this.beat * 7) % 128);
+    const drumMotor = this.off('drum') ? 0.5 : this.drum.step(loomOut * 0.5, (this.beat * 7) % 128);
     // 7 Wraith — the present drive enters the delay rings; the core answers from the past.
-    const dissonance = this.wraith.step(drive);
-    const corePast = this.wraith.coreValue();
+    const dissonance = this.off('wraith') ? 0 : this.wraith.step(drive);
+    const corePast = this.off('wraith') ? 0 : this.wraith.coreValue();
     // 4 Klein — tail-inject the dissonance; read the head/tail fold coupling.
-    const fold = this.klein.step(dissonance);
+    const fold = this.off('klein') ? 0 : this.klein.step(dissonance);
     // 5 Hive — chaotic kicked rotors driven by the fold.
-    const hiveMotor = this.hive.step(fold);
+    const hiveMotor = this.off('hive') ? 0 : this.hive.step(fold);
     // 6 Hydra — split into heads sized by chaos, compute, fuse.
     const heads = 1 + Math.floor(clamp01(p.chaos) * 3);
-    const conflict = this.hydra.step(heads, drive, this.rHydra);
+    const conflict = this.off('hydra') ? 0 : this.hydra.step(heads, drive, this.rHydra);
     // 8 Tunnel — manifest probabilistic edges; teleport density.
-    const tunnelDisp = this.tunnel.step(drive, this.rTunnel);
+    const tunnelDisp = this.off('tunnel') ? 0 : this.tunnel.step(drive, this.rTunnel);
     // 9 Thermo — every organ's activity deposits heat; diffuse + vent + necrotise.
     const fireLevel = clamp01(loomOut + Math.abs(hiveMotor) + conflict + tunnelDisp) * 0.5;
-    this.thermo.step((i) => ((i + this.beat) % 5 === 0 ? fireLevel : fireLevel * 0.2));
+    if (!this.off('thermo'))
+      this.thermo.step((i) => ((i + this.beat) % 5 === 0 ? fireLevel : fireLevel * 0.2));
     // 3 Necro — think a thought along live edges; it burns out the path.
     const src = (this.beat * 13) % 64;
     const dst = (this.beat * 29 + 7) % 64;
-    const necroVit = this.necro.step(src, dst);
+    const necroVit = this.off('necro') ? 1 : this.necro.step(src, dst);
     // 10 Ouroboros — grow limbs vs immune cull, pressure from heat + agony.
     const thermoView = this.thermo.view();
     const immune = clamp01(thermoView.paralysis + dissonance * 0.2);
-    const limbFrac = this.ouroboros.step(1 + Math.floor(p.novelty * 3), immune, this.rOuro);
+    const limbFrac = this.off('ouroboros')
+      ? 0
+      : this.ouroboros.step(1 + Math.floor(p.novelty * 3), immune, this.rOuro);
     // 11 QUANTUM BRAIN — evolve the exact statevector (Tsotchke-coupled) and read its plan-bias.
-    this.quantum.step(drive, (this.seed ^ (this.beat * 0x9e3779b1)) >>> 0);
-    const qBias = this.quantum.planBias(APEX_PLANS.length);
+    let qBias: readonly number[];
+    if (this.off('quantum')) {
+      qBias = APEX_PLANS.map(() => 1 / APEX_PLANS.length); // uniform ⇒ no quantum steer
+    } else {
+      this.quantum.step(drive, (this.seed ^ (this.beat * 0x9e3779b1)) >>> 0);
+      qBias = this.quantum.planBias(APEX_PLANS.length);
+    }
 
     // Aggregate per-plan signal for the meta layer (six plans); the quantum Born plan-bias is folded
     // in (≈30%), so the quantum register genuinely steers the committed plan — ablation-meaningful.
@@ -1912,16 +1953,27 @@ export class ApexBrain {
     ].map((v, i) => clamp01(0.7 * v + 0.3 * (qBias[i] ?? 0) * APEX_PLANS.length));
     this.meta.step(signal);
 
-    return this.assemble(p, { drumMotor, hiveMotor, fold, necroVit, limbFrac });
+    return this.assemble(p, { drumMotor, hiveMotor, fold, necroVit, limbFrac, conflict });
   }
 
   private assemble(
     p: ApexPercept,
-    m: { drumMotor: number; hiveMotor: number; fold: number; necroVit: number; limbFrac: number },
+    m: {
+      drumMotor: number;
+      hiveMotor: number;
+      fold: number;
+      necroVit: number;
+      limbFrac: number;
+      conflict: number;
+    },
   ): ApexThought {
     const thermo = this.thermo.view();
     const vitality = clamp01(m.necroVit * (1 - thermo.paralysis));
-    const agony = clamp01(this.ouroboros.view().deaths / 8 + this.loom.view().allergy);
+    // Agony = self-consumption (ouroboros culls) + prime-allergy + the hydra's internal civil-war
+    // disagreement, so SlimeMoldHydra is load-bearing on a quantised output (the harness kill test).
+    const agony = clamp01(
+      this.ouroboros.view().deaths / 8 + this.loom.view().allergy + 0.25 * m.conflict,
+    );
     const transcendence = clamp01(p.level / 1000);
     const simulation: 1 | 2 | 3 = transcendence >= 1 ? 3 : transcendence >= 0.5 ? 2 : 1;
     return {
@@ -1948,6 +2000,7 @@ export class ApexBrain {
         fold: this.klein.view().headTailCorr,
         necroVit: this.necro.view().vitality,
         limbFrac: this.ouroboros.view().limbs / this.ouroboros.capacity(),
+        conflict: this.hydra.view().conflict,
       },
     );
     return {
