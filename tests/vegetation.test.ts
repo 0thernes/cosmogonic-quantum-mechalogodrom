@@ -20,6 +20,34 @@ describe('Vegetation', () => {
     veg.dispose();
   });
 
+  it('attaches plants to a moving ground sampler and accepts slope normals', () => {
+    const scene = new THREE.Scene();
+    const veg = new Vegetation(scene);
+    veg.attachGround(
+      (x, z) => 12 + Math.sin(x * 0.01) * 2 + Math.cos(z * 0.01) * 2,
+      () => ({ nx: 0.18, ny: 0.96, nz: 0.08 }),
+    );
+    veg.applyContact(80, 80, 1);
+    veg.update(2, 0.016);
+    let mesh: THREE.InstancedMesh | null = null;
+    scene.traverse((o) => {
+      if (
+        !mesh &&
+        (o as THREE.InstancedMesh).isInstancedMesh &&
+        (o as THREE.InstancedMesh).count > 0
+      ) {
+        mesh = o as THREE.InstancedMesh;
+      }
+    });
+    expect(mesh).not.toBeNull();
+    const m = new THREE.Matrix4();
+    const pos = new THREE.Vector3();
+    mesh!.getMatrixAt(0, m);
+    pos.setFromMatrixPosition(m);
+    expect(pos.y).toBeGreaterThan(10);
+    veg.dispose();
+  });
+
   it('disposes intermediate stem/top geometries during construction, before dispose() is ever called', () => {
     // buildSpeciesGeometry merges a stem + a top primitive into one BufferGeometry per species, via
     // toNonIndexed() copies that mergeGeometries() never frees. Only the final merged geometry was kept

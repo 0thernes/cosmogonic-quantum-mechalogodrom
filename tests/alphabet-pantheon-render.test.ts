@@ -8,9 +8,14 @@
  * - dispose() frees the rig without throwing.
  */
 import { describe, expect, test } from 'bun:test';
+import { existsSync, statSync } from 'node:fs';
+import { resolve } from 'node:path';
 import * as THREE from 'three';
 import { AlphabetPantheonRender } from '../src/sim/alphabet-pantheon-render';
 import { ALPHABET_PANTHEON_SIZE } from '../src/sim/alphabet-pantheon';
+import { ARENA_RADIUS } from '../src/sim/constants';
+
+const root = resolve(import.meta.dir, '..');
 
 function instancedMeshes(scene: THREE.Scene): THREE.InstancedMesh[] {
   const out: THREE.InstancedMesh[] = [];
@@ -57,6 +62,39 @@ describe('AlphabetPantheonRender — 100 archetypes alive in the dome', () => {
     r.dispose();
   });
 
+  test('user #10 — core bodies use the provided equirect atlas as opaque skins', () => {
+    const atlas = resolve(root, 'public/textures/pantheon_equirect_refs_atlas.png');
+    expect(existsSync(atlas)).toBe(true);
+    expect(statSync(atlas).size).toBeGreaterThan(500_000);
+
+    const scene = new THREE.Scene();
+    const r = new AlphabetPantheonRender(scene);
+    const core = coreBodyMeshes(scene)[0]!;
+    const mat = core.material as THREE.ShaderMaterial;
+    expect(mat.transparent).toBe(false);
+    expect(mat.blending).toBe(THREE.NormalBlending);
+    expect(mat.depthWrite).toBe(true);
+    expect(mat.uniforms.uRefAtlas?.value).toBeInstanceOf(THREE.Texture);
+    expect(core.geometry.getAttribute('refBand')).toBeInstanceOf(THREE.InstancedBufferAttribute);
+    r.dispose();
+  });
+
+  test('user #10 — wire halos hidden by default; VISION·wire toggles them', () => {
+    const scene = new THREE.Scene();
+    const r = new AlphabetPantheonRender(scene);
+    const halos = instancedMeshes(scene).filter((m) => {
+      const mat = m.material as THREE.MeshBasicMaterial;
+      return mat.wireframe && mat.opacity <= 0.05;
+    });
+    expect(halos.length).toBeGreaterThan(0);
+    for (const h of halos) expect(h.visible).toBe(false);
+    r.setWireHalosVisible(true);
+    for (const h of halos) expect(h.visible).toBe(true);
+    r.setWireHalosVisible(false);
+    for (const h of halos) expect(h.visible).toBe(false);
+    r.dispose();
+  });
+
   test('every instance transform stays finite over a long run at max chaos', () => {
     const scene = new THREE.Scene();
     const r = new AlphabetPantheonRender(scene);
@@ -74,6 +112,45 @@ describe('AlphabetPantheonRender — 100 archetypes alive in the dome', () => {
         for (const e of m.elements) expect(Number.isFinite(e)).toBe(true);
       }
     }
+    r.dispose();
+  });
+
+  test('user #10 — every godform body stays inside the dome and above the floor (max chaos, long run)', () => {
+    // Regression seal for the owner's "biggest incomplete problem": pantheon creatures escaping the
+    // dome and sinking underneath it. The prior ring-clamp forced each body's horizontal radius into
+    // a fixed outer ring and allowed y down to -20, which flung the inner/upper anchors OUT to
+    // ~1.24·DOME_R and let them drop under the ground. The anchor-tether fix must keep every body
+    // contained AND above the floor, even under maximum chaos drive over a long run.
+    const scene = new THREE.Scene();
+    const r = new AlphabetPantheonRender(scene);
+    const DOME_R = ARENA_RADIUS * 0.72;
+    const dt = 1 / 60;
+    let t = 0;
+    const worldM = new THREE.Matrix4();
+    const instM = new THREE.Matrix4();
+    const pos = new THREE.Vector3();
+    let maxDist = 0;
+    let minY = Infinity;
+    for (let i = 0; i < 60 * 60; i++) {
+      t += dt;
+      r.setChaos(1); // worst case — maximum wander drive
+      r.update(t);
+      for (const mesh of coreBodyMeshes(scene)) {
+        mesh.updateWorldMatrix(true, false);
+        for (let s = 0; s < mesh.count; s++) {
+          mesh.getMatrixAt(s, instM);
+          worldM.multiplyMatrices(mesh.matrixWorld, instM);
+          pos.setFromMatrixPosition(worldM);
+          const dist = Math.hypot(pos.x, pos.y, pos.z);
+          if (dist > maxDist) maxDist = dist;
+          if (pos.y < minY) minY = pos.y;
+        }
+      }
+    }
+    // Contained within the dome shell (broken ring-clamp reached ~1.24·DOME_R).
+    expect(maxDist).toBeLessThanOrEqual(DOME_R * 1.12);
+    // Never underneath the ground plane (broken clamp allowed y down to -20).
+    expect(minY).toBeGreaterThanOrEqual(-1);
     r.dispose();
   });
 

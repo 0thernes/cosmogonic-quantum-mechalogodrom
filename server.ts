@@ -738,6 +738,27 @@ if (import.meta.main) {
           );
         }
       }
+      if (p.startsWith('/textures/')) {
+        const rel = p.slice('/textures/'.length);
+        if (rel.includes('..') || rel.includes('\\') || rel.includes('\0')) {
+          logRequest(req, 404);
+          return withSecurityHeaders(new Response('Not Found', { status: 404 }));
+        }
+        const file = Bun.file(new URL(`./public/textures/${rel}`, import.meta.url));
+        if (await file.exists()) {
+          const ext = rel.split('.').pop()?.toLowerCase() ?? '';
+          const ct =
+            ext === 'png'
+              ? 'image/png'
+              : ext === 'jpg' || ext === 'jpeg'
+                ? 'image/jpeg'
+                : ext === 'webp'
+                  ? 'image/webp'
+                  : 'application/octet-stream';
+          logRequest(req, 200);
+          return withSecurityHeaders(new Response(file, { headers: { 'Content-Type': ct } }));
+        }
+      }
       logRequest(req, 404);
       return withSecurityHeaders(new Response('Not Found', { status: 404 }));
     },

@@ -70,4 +70,12 @@ if (galSrc) {
   await cp('./dist/alife-gallery.js', './alife-gallery.js');
 }
 
+// Copy public textures (pantheon equirect atlas + portal sampling) into dist for production.
+try {
+  await mkdir('./dist/textures', { recursive: true });
+  await cp('./public/textures', './dist/textures', { recursive: true });
+} catch {
+  /* public/textures optional in minimal checkouts — pantheon falls back to data texture */
+}
+
 console.log(`built ${result.outputs.length} artifacts -> dist/`);

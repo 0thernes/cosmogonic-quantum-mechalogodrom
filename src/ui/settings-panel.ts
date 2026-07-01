@@ -71,6 +71,7 @@ const GROUPS = [
       { action: 'view', label: '👁 View' },
       { action: 'space', label: '⬡ Space' },
       { action: 'weather', label: '☁ Weather' },
+      { action: 'exposure', label: '◑ Bright' },
     ],
   },
   {

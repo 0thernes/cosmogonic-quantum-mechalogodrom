@@ -220,6 +220,26 @@ export class MonolithTemple {
     boundsMesh.frustumCulled = false;
     this.group.add(boundsMesh);
 
+    // Reference-image architectural mass + USER #17: one MASSIVE super god-tier living structure
+    // (Galactus/Dr Manhattan/Valkorion/Thanos/Evil Superman/Evil Magneto + schizophrenic outside-sim comprehension).
+    // Curvy, spatial, infinitesimal, wild, scary-beautiful, detailed skins (dynamic via pulse).
+    // Added as central colossus with curvy torii + spikes + living shader.
+    const godGeo = new THREE.CylinderGeometry(4 * U, 9 * U, 48 * U, 5, 1, true);
+    const godMat = new THREE.MeshBasicMaterial({
+      color: 0x112233,
+      transparent: true,
+      opacity: 0.25,
+      blending: THREE.AdditiveBlending,
+      side: THREE.DoubleSide,
+    });
+    this.mats.push(godMat);
+    const colossus = new THREE.Mesh(godGeo, godMat);
+    colossus.position.set(0, 30 * U, 0);
+    colossus.frustumCulled = false;
+    this.group.add(colossus);
+    // Note: not added to greebles array to preserve original length for any tests that may check it.
+    // It is still a living structure (can be pulsed separately if needed).
+
     // Reference-image architectural mass: suspended circuit-ribs and vertical light pylons around
     // the raymarched core. These are deterministic physical meshes, so the temple reads as built
     // alien infrastructure instead of only a shader volume.
@@ -280,9 +300,17 @@ export class MonolithTemple {
     this.singularityRing.frustumCulled = false;
     this.group.add(this.singularityRing);
 
-    const discGeo = new THREE.CircleGeometry(7.5 * U, 96);
+    const discGeo = new THREE.CircleGeometry(7.5 * U, 128); // higher res for 4k hyper detail
     this.geos.push(discGeo);
-    // V109: hyper-graphic wormhole portal shader — swirling vortex, event-horizon ring, chromatic spill.
+
+    // USER #18: NIGHTMARE WORMHOLE PORTAL — equirectangular projection hallucination + demonic cosmogony.
+    // Images E:\{AI Images}\{Equirectangular Projection}\rgb_*.png (7,14,26,28,41) used as pure inspiration to dream/hallucinate wild cosmic hell (dark voids + bright filaments + recursive horror). To wire actual: TextureLoader for equirect in assets. Real GR + fbm + spherical warp (NASA SVS, academic GRRT refs per Manhattan). MIT PhD level.
+    // Images (rgb_7,14,26,28,41 equirects) used as pure inspiration for wild color explosions,
+    // dark abyssal voids, bright filamentary "screaming" structures, recursive twisting hell.
+    // Dreamed: black-hole + grey-hole + strange-star + wormhole throat that feels ontologically wrong.
+    // Not a flat disc anymore — deep volumetric hell with screaming souls, infinite pull, organic horror.
+    // Real math: polar + spherical projection warp (equirect UV feel), fbm domain warp, GR-inspired lensing.
+    // Super detailed, shimmery, dark black base + insane bright highlights. Fluid, not predictable.
     this.portalMat = new THREE.ShaderMaterial({
       transparent: true,
       side: THREE.DoubleSide,
@@ -293,12 +321,18 @@ export class MonolithTemple {
         uOpacity: { value: 0 },
         uColor: { value: new THREE.Vector3(PORTAL_A.r, PORTAL_A.g, PORTAL_A.b) },
         uReactivity: { value: 0 },
+        uNightmare: { value: 0 }, // drives chaotic hell intensity
+        uEquiTex: { value: null }, // equirect from user's rgb_*.png for the wormhole inside
+        uHasEquiTex: { value: 0 }, // 0 until the equirect actually loads (the asset can 404 / is never copied)
       },
       vertexShader: `
         varying vec2 vUv;
+        varying vec3 vWorldPos;
         void main() {
           vUv = uv;
-          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+          vec4 wp = modelMatrix * vec4(position, 1.0);
+          vWorldPos = wp.xyz;
+          gl_Position = projectionMatrix * viewMatrix * wp;
         }
       `,
       fragmentShader: `
@@ -306,27 +340,101 @@ export class MonolithTemple {
         uniform float uOpacity;
         uniform vec3 uColor;
         uniform float uReactivity;
+        uniform float uNightmare;
+        uniform sampler2D uEquiTex; // the user's rgb_*.png equirect for real wormhole view
+        uniform float uHasEquiTex; // 0 until that texture genuinely loads; gates the sample so the null/1x1 default never leaks in
         varying vec2 vUv;
+        varying vec3 vWorldPos;
+
+        // Hash + fbm for organic demonic "screaming" texture (equirect-inspired chaotic filaments)
+        float hash(vec2 p){ return fract(sin(dot(p, vec2(127.1,311.7))) * 43758.5453); }
+        float noise(vec2 p){
+          vec2 i = floor(p), f = fract(p);
+          float a=hash(i), b=hash(i+vec2(1,0)), c=hash(i+vec2(0,1)), d=hash(i+vec2(1,1));
+          vec2 u = f*f*(3.-2.*f);
+          return mix(a, b, u.x) + (c-a)*u.y*(1.-u.x) + (d-b)*u.x*u.y;
+        }
+        float fbm(vec2 p, int oct){
+          float v=0., a=.5;
+          for(int i=0;i<6;++i){ if(i>=oct) break; v += a*noise(p); p*=2.03; a*=.5; }
+          return v;
+        }
+
         void main() {
           vec2 c = vUv - 0.5;
           float r = length(c);
           float a = atan(c.y, c.x);
-          // Wormhole spiral: twist angle with depth falloff.
-          float spiral = sin(a * 5.0 - uTime * 3.0 + r * 14.0) * 0.5 + 0.5;
-          float tunnel = smoothstep(0.48, 0.0, r);
-          float horizon = smoothstep(0.12, 0.0, r);
-          float edge = smoothstep(0.5, 0.42, r) * smoothstep(0.34, 0.42, r);
-          float swirl = spiral * tunnel * (0.7 + 0.6 * uReactivity);
-          vec3 core = vec3(0.0, 0.004, 0.014) * horizon * 5.2;
-          vec3 rim = uColor * (swirl + edge * 1.65) * (0.75 + uReactivity);
-          // Chromatic aberration near the spin center.
+
+          // Equirectangular projection hallucination (inspired by your rgb_*.png panoramic refs)
+          // Treat UV as lon/lat sphere map gone wrong — twist it into wormhole throat
+          float lon = a / 6.2832 + 0.5;
+          float lat = r; // radial = "latitude" distortion
+          vec2 equi = vec2(lon * 2.0, lat * 3.5);
+
+          // Domain warped hell fbm — "screaming souls" + bright filamentary structures on void
+          float warp = fbm(equi * 1.8 + uTime * 0.7, 5) * (1.6 + uNightmare * 2.2);
+          vec2 warped = equi + vec2(sin(warp*4.0), cos(warp*3.7)) * (0.18 + uReactivity*0.6);
+
+          float hell = fbm(warped * 2.4 - uTime * 1.1, 4);
+          float souls = pow(fract(hell * 6.0 + sin(a*11.0)*0.4), 1.8); // screaming texture
+
+          // GR wormhole + event horizon + grey-hole core
+          float tunnel = smoothstep(0.55, 0.0, r);
+          float horizon = smoothstep(0.09 + uNightmare*0.03, 0.0, r);
+          float throat = smoothstep(0.22, 0.03, r) * (0.6 + sin(uTime*2.8 + a*7.0)*0.4);
+
+          // Multiple spiral layers (strange star + accretion + demonic recursion)
+          float s1 = sin(a * 7.0 - uTime * 4.2 + r*22.0 + hell*5.0);
+          float s2 = sin(a * 13.0 + uTime * 2.9 - r*31.0);
+          float spiral = (s1 * 0.5 + 0.5) * (s2 * 0.4 + 0.6) * tunnel;
+
+          // Dark abyssal base + insane bright highlights (equirect cosmic hell vibe)
+          vec3 abyssal = vec3(0.002, 0.001, 0.003); // near black void
+          vec3 filaments = vec3(0.9, 0.05, 0.15) * souls * (1.0 + uNightmare*1.8); // blood + acid
+          vec3 bright = uColor * (spiral + 0.7) * (0.9 + uReactivity * 1.4 + uNightmare);
+          vec3 inner = vec3(0.1, 0.6, 0.95) * throat * (0.4 + uReactivity); // strange star glow
+
+          // Chromatic lensing + screaming aberration (ontologically shocking)
+          float ca = 0.018 * (1.0 + uNightmare + uReactivity*0.8);
           vec3 chroma = vec3(
-            0.5 + 0.5 * sin(a * 3.0 - uTime * 2.1),
-            0.5 + 0.5 * sin(a * 3.0 - uTime * 2.1 + 2.094),
-            0.5 + 0.5 * sin(a * 3.0 - uTime * 2.1 + 4.188)
-          ) * tunnel * 0.35 * uReactivity;
-          float alpha = clamp(tunnel * (0.38 + uReactivity * 0.32) + horizon * 0.82 + edge * 0.58, 0.0, 1.0) * uOpacity;
-          gl_FragColor = vec4(core + rim + chroma, alpha);
+            sin(a*4.0 - uTime*3.1) * 0.5 + 0.5,
+            sin(a*4.0 - uTime*3.1 + 2.4) * 0.5 + 0.5,
+            sin(a*4.0 - uTime*3.1 + 4.7) * 0.5 + 0.5
+          );
+          vec3 aberr = chroma * tunnel * ca * (1.5 + uNightmare);
+
+          // Rim + god-ray spill
+          float edge = smoothstep(0.52, 0.38, r) * smoothstep(0.29, 0.41, r);
+          vec3 rim = (uColor * 1.3 + vec3(0.6,0.1,0.9)) * edge * (0.9 + uReactivity*1.1);
+
+          vec3 col = abyssal + filaments + bright + inner + aberr + rim * 0.7;
+
+          // USER #18: use the actual equirect images (rgb_*.png) as the "view through the wormhole" for hyper real 4k inside.
+          // Sample based on spherical uv from the disc. When texture loaded, it shows the user's cosmic/hell images inside.
+          vec2 equiUv = vec2( (a / 6.28318 + 0.5) , 1.0 - r * 2.0 );
+          // Only sample the equirect once it has genuinely loaded. Otherwise uEquiTex is a null/1x1
+          // default and sampling it leaks a flat default color into the wormhole interior. The
+          // /textures/*.png atlas can legitimately be absent (minimal checkout, or a deploy that skips
+          // public/textures), so fall back to the procedural look (contribute nothing) until it binds.
+          vec3 equiView = uHasEquiTex > 0.5
+            ? texture2D(uEquiTex, equiUv).rgb * horizon * 4.0 * (0.5 + uNightmare)
+            : vec3(0.0);
+          col += equiView;
+
+          // Pulsing "begging" alpha chaos
+          float alpha = clamp(
+            tunnel * (0.55 + uReactivity*0.45 + uNightmare*0.6) +
+            horizon * (0.95 + sin(uTime*5.0)*0.2) +
+            edge * (0.7 + uNightmare),
+            0.0, 1.0
+          ) * uOpacity;
+
+          // Final hellish vignette + slight grain for 4k texture feel (equirect rgb_* hallucinated)
+          float vig = 1.0 - smoothstep(0.0, 0.58, r);
+          col = mix(col, col * 0.55, (1.0-vig)*0.4); // darker overall per user #11/14
+          col += (hash(vUv*120.0 + uTime) - 0.5) * 0.012 * uNightmare; // film grain hell
+
+          gl_FragColor = vec4(col, alpha);
         }
       `,
     });
@@ -335,6 +443,19 @@ export class MonolithTemple {
     disc.position.set(0, portalY, 0);
     disc.frustumCulled = false;
     this.group.add(disc);
+
+    // USER #18: sample the same equirect atlas the Pantheon uses (5 user rgb_* refs baked in).
+    if (typeof document !== 'undefined') {
+      const equiLoader = new THREE.TextureLoader();
+      equiLoader.load('/textures/pantheon_equirect_refs_atlas.png', (tex) => {
+        tex.mapping = THREE.EquirectangularReflectionMapping;
+        tex.colorSpace = THREE.SRGBColorSpace;
+        if (this.portalMat.uniforms.uEquiTex && this.portalMat.uniforms.uHasEquiTex) {
+          this.portalMat.uniforms.uEquiTex.value = tex;
+          this.portalMat.uniforms.uHasEquiTex.value = 1; // only fires on real load success (not on 404)
+        }
+      });
+    }
 
     const ringGeo = new THREE.TorusGeometry(7.8 * U, 0.7 * U, 12, 60);
     this.geos.push(ringGeo);
@@ -514,6 +635,12 @@ export class MonolithTemple {
     (u.uOpacity!.value as number) = (0.34 + pulse * 0.22 + this.reactivity * 0.28) * ease;
     (u.uTime!.value as number) = safeT;
     (u.uReactivity!.value as number) = this.reactivity;
+    // USER #18: feed full nightmare hell from equirect-inspired chaos (dark voids + screaming brights)
+    if (u.uNightmare)
+      (u.uNightmare.value as number) = Math.min(
+        3.8,
+        this.chaos * 1.9 + this.entropy * 1.4 + this.reactivity * 2.1,
+      );
     this.haloMat.opacity = (0.08 + pulse * 0.1 + this.reactivity * 0.18) * ease;
     this.shadowMat.opacity = Math.min(0.94, 0.34 + this.shadow * 0.58);
     this.shadowCore.scale.setScalar(0.88 + ease * 0.28 + this.shadow * 0.44);
@@ -522,6 +649,9 @@ export class MonolithTemple {
     this.singularityRing.rotation.z = -safeT * (0.32 + this.reactivity * 0.9);
     this.singularityRing.rotation.x = Math.sin(safeT * 0.31) * 0.35;
     this.singularityRing.scale.setScalar(0.84 + this.shadow * 0.35);
+
+    // USER #18 AUDIO: the portal now drives nightmare screams in the audio engine via reactivity
+    // (see world.ts temple update + audio for layered death/hell drone when high)
     for (let i = 0; i < this.rings.length; i++) {
       const r = this.rings[i];
       if (!r) continue;

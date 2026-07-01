@@ -244,14 +244,14 @@ export class Connectome {
           eb.userData.act = !(act < ACT_MAX) ? ACT_MAX : act > -ACT_MAX ? act : -ACT_MAX;
           // V109 colour: one dynamic hue/saturation + firing/retracting brightness per link.
           const actPulse = (ea.userData.act + eb.userData.act) * 0.5;
-          const fire = 0.5 + 0.5 * Math.sin(t * 2.5 + nw * 12.0 + ni * 0.7); // per-link firing pulse
-          const retract = 0.4 + 0.6 * Math.sin(t * 0.8 + nd * 0.4); // distance breathing
+          const fire = 0.5 + 0.5 * Math.sin(t * 3.2 + nw * 12.0 + ni * 0.7);
+          const retract = 0.25 + 0.75 * Math.sin(t * 1.1 + nd * 0.55 + ni * 0.3);
           const hue = communityOf
-            ? ((communityOf(ni) & 7) * TRIBE_HUE_STEP + nw * TRIBE_NW_JITTER + t * 0.02) % 1
-            : (t * 0.06 + nw * 0.6 + actPulse * 0.15) % 1;
-          const sat = 0.9 + 0.1 * Math.sin(t * 1.4 + nw * 8.0);
-          const lit = 0.28 + nI * 0.38 + nw * 0.28 + actPulse * 0.22 * fire * retract;
-          TMP_COLOR.setHSL(hue, sat, Math.min(0.88, lit));
+            ? ((communityOf(ni) & 7) * TRIBE_HUE_STEP + nw * TRIBE_NW_JITTER + t * 0.04) % 1
+            : (t * 0.09 + nw * 0.6 + actPulse * 0.22) % 1;
+          const sat = 0.92 + 0.08 * Math.sin(t * 1.8 + nw * 8.0);
+          const lit = 0.22 + nI * 0.42 + nw * 0.32 + actPulse * 0.35 * fire * retract;
+          TMP_COLOR.setHSL(hue, sat, Math.min(0.78, lit));
           const cr = TMP_COLOR.r;
           const cg = TMP_COLOR.g;
           const cb = TMP_COLOR.b;

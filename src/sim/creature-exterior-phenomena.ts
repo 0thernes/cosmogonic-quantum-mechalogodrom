@@ -122,12 +122,11 @@ export const CREATURE_EXTERIOR_PHENOMENA_COUNT = CREATURE_EXTERIOR_PHENOMENA.len
 /**
  * Global exterior animation scale.
  *
- * Calibration: the prior 5× dome speed merely made the Mechalogodrom feel "normal"; by owner
- * instruction that old 5× read is now the new 0.1× creature baseline, so the physical exterior
- * clock is 50× the old scalar (0.12 → 6.0). Every consumer stays deterministic because this is a
- * pure elapsed-time multiplier, not an injected random or frame-rate dependency.
+ * Calibration: owner V116 slow-down — pantheon / mecha / apex exterior clocks run at ~1.75×
+ * (down from the prior 6.0 fast baseline) so the 100 creatures read as stately, not flies.
+ * Pure elapsed-time multiplier — deterministic, no rng.
  */
-export const CREATURE_EXTERIOR_TIME_SCALE = 6.0;
+export const CREATURE_EXTERIOR_TIME_SCALE = 1.75;
 
 /** Pick active exterior phenomenon indices from beat + activity (deterministic). */
 export function activeExteriorPhenomena(beat: number, activity: number, count = 8): number[] {

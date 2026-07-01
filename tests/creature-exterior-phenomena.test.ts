@@ -27,7 +27,7 @@ describe('creature-exterior-phenomena', () => {
     }
   });
 
-  test('exterior time scale is calibrated to the fast creature baseline', () => {
-    expect(CREATURE_EXTERIOR_TIME_SCALE).toBe(6);
+  test('exterior time scale is calibrated to the slow owner baseline (V116)', () => {
+    expect(CREATURE_EXTERIOR_TIME_SCALE).toBe(1.75);
   });
 });

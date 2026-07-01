@@ -455,8 +455,9 @@ export class ApexExteriorAbomination {
     this.vortexSpiral.scale.setScalar(1 + 0.08 * Math.sin(st * 0.35) + transcendence * 0.1);
     (this.vortexSpiral.material as THREE.LineBasicMaterial).opacity = 0.12 + 0.2 * transcendence;
     this.godRays.rotation.z = st * 0.018;
+    // USER #11/14: less blinding white — normal sat, darker baseline
     (this.godRays.material as THREE.LineBasicMaterial).opacity =
-      (0.04 + 0.1 * vitality) * (0.7 + 0.3 * Math.sin(st * 0.5));
+      (0.025 + 0.06 * vitality) * (0.55 + 0.2 * Math.sin(st * 0.5));
     const sM = this._sM;
     const sP = this._sP;
     const sQ = this._sQ;
@@ -1271,10 +1272,10 @@ export function attachGlyphWireHalos(
 ): THREE.InstancedMesh[] {
   const halos: THREE.InstancedMesh[] = [];
   const haloMat = new THREE.MeshBasicMaterial({
-    color: 0x66aaff,
+    color: 0x223344,
     wireframe: true,
     transparent: true,
-    opacity: 0.14,
+    opacity: 0.045,
     blending: THREE.AdditiveBlending,
     depthWrite: false,
   });
@@ -1283,6 +1284,7 @@ export function attachGlyphWireHalos(
     halo.frustumCulled = false;
     halo.renderOrder = src.renderOrder + 1;
     parent.add(halo);
+    halo.visible = false;
     halos.push(halo);
   }
   return halos;

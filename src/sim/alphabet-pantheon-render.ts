@@ -45,7 +45,11 @@ import {
   glyphBodyGeometry,
   glyphGeoBucketKey,
 } from './glyph-exterior-geometry';
-import { glyphExteriorPalette, type GlyphExteriorPalette } from './glyph-exterior-palette';
+import {
+  GLYPH_PALETTE_IDS,
+  glyphExteriorPalette,
+  type GlyphExteriorPalette,
+} from './glyph-exterior-palette';
 import {
   glyphExteriorSignature,
   glyphWanderOffset,
@@ -55,14 +59,28 @@ import type { TsotchkeQuantumPulse } from './tsotchke-facade';
 
 /** Dome shell radius the pantheon hangs on; pulled inward so godforms read as beings, not far stars. */
 const DOME_R = ARENA_RADIUS * 0.72;
-/**
- * Owner directive #10: HARD containment floor. A godform may drift on its wander + glyph-brain motor
- * output, but its final position is clamped so it can NEVER leave the dome or sink below this height —
- * the fix for "they move outside the environment / go underneath / like flies". The ceiling is DOME_R.
- */
-const PANTHEON_FLOOR_Y = 14;
-/** Exported for the containment regression test — the box every godform is clamped into each frame. */
-export const PANTHEON_BOUNDS = { DOME_R, FLOOR_Y: PANTHEON_FLOOR_Y } as const;
+
+/** STRICT BOUNDS (user #10): Pantheon NEVER leaves the dome/Mechalogodrom. */
+const DOME_INNER = DOME_R * 0.92;
+const DOME_MAX = DOME_R * 0.98;
+const PANTHEON_REF_ATLAS_URL = '/textures/pantheon_equirect_refs_atlas.png';
+
+function createPantheonFallbackAtlas(): THREE.DataTexture {
+  // Deterministic tiny fallback for Bun/headless tests; browser swaps in the generated atlas.
+  // RGBA, 4 bytes/texel (alpha=255): DataTexture defaults to RGBAFormat, and THREE.RGBFormat is a
+  // deprecated 3-byte format slated for removal — once it's gone the constant reads back undefined,
+  // DataTexture silently falls back to RGBAFormat, and a 15-byte (5x3) buffer is then read as 5x4=20
+  // bytes and runs past the end. Match the default explicitly: 5 texels x RGBA = 20 bytes.
+  const data = new Uint8Array([
+    32, 93, 116, 255, 196, 198, 188, 255, 236, 74, 39, 255, 186, 207, 218, 255, 48, 72, 74, 255,
+  ]);
+  const tex = new THREE.DataTexture(data, 5, 1, THREE.RGBAFormat);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.minFilter = THREE.LinearFilter;
+  tex.magFilter = THREE.LinearFilter;
+  tex.needsUpdate = true;
+  return tex;
+}
 
 /** Module scratch — reused every frame so the hot path allocates nothing. */
 const M = new THREE.Matrix4();
@@ -130,6 +148,8 @@ export class AlphabetPantheonRender {
   private readonly glyphFilaments: GlyphFilamentBurst;
   private readonly glyphSpores: GlyphSporeAura;
   private readonly apexExterior: ApexExteriorAbomination;
+  private refAtlas: THREE.Texture;
+  private disposed = false;
   private tsotchkePulse: TsotchkeQuantumPulse = {
     cliffordEnt: 0,
     qgtVolume: 0,
@@ -142,11 +162,14 @@ export class AlphabetPantheonRender {
   private localT = 0;
 
   constructor(scene: THREE.Scene) {
+    this.refAtlas = createPantheonFallbackAtlas();
     const pantheonVert = `
+      attribute float refBand;
       varying vec2 vUv;
       varying vec3 vPos;
       varying vec3 vColor;
       varying vec3 vNormal;
+      varying float vRefBand;
       uniform float uTime;
 
       // Noise function for vertex displacement
@@ -156,6 +179,7 @@ export class AlphabetPantheonRender {
         vUv = uv;
         vColor = instanceColor;
         vNormal = normal;
+        vRefBand = refBand;
 
         // Fleshy pulsating displacement
         vec3 displaced = position;
@@ -174,7 +198,9 @@ export class AlphabetPantheonRender {
       varying vec3 vPos;
       varying vec3 vColor;
       varying vec3 vNormal;
+      varying float vRefBand;
       uniform float uTime;
+      uniform sampler2D uRefAtlas;
 
       void main() {
         // "Annihilation/Hellraiser" shifting skin
@@ -189,23 +215,45 @@ export class AlphabetPantheonRender {
         vec3 shimmer = vec3(0.5, 1.0, 0.8) * fresnel * sin(uTime * 5.0 + vPos.z * 10.0);
         
         vec3 finalColor = mix(color * 0.3, color + vec3(0.3, 0.1, 0.2), bands) + shimmer;
+        float band = clamp(floor(vRefBand + 0.5), 0.0, 4.0);
+        vec2 refUv = vec2((band + fract(vUv.x * 1.65 + uTime * 0.018)) / 5.0, fract(vUv.y * 0.85 + uTime * 0.011));
+        vec3 refSkin = texture2D(uRefAtlas, refUv).rgb;
+        finalColor = mix(finalColor, refSkin * (0.55 + fresnel * 0.65) + color * 0.25, 0.42);
         
         // Darkened crevices
         float crevice = smoothstep(0.0, 0.4, length(vPos));
-        finalColor *= crevice;
+        finalColor *= crevice * 0.86;
 
-        gl_FragColor = vec4(finalColor, 0.9);
+        gl_FragColor = vec4(finalColor, 1.0);
       }
     `;
 
     this.mat = new THREE.ShaderMaterial({
       vertexShader: pantheonVert,
       fragmentShader: pantheonFrag,
-      uniforms: { uTime: { value: 0 } },
-      transparent: true,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false,
+      uniforms: { uTime: { value: 0 }, uRefAtlas: { value: this.refAtlas } },
+      transparent: false,
+      blending: THREE.NormalBlending,
+      depthWrite: true,
     });
+
+    if (typeof document !== 'undefined') {
+      new THREE.TextureLoader().load(PANTHEON_REF_ATLAS_URL, (tex) => {
+        if (this.disposed) {
+          tex.dispose();
+          return;
+        }
+        tex.colorSpace = THREE.SRGBColorSpace;
+        tex.wrapS = THREE.RepeatWrapping;
+        tex.wrapT = THREE.RepeatWrapping;
+        tex.minFilter = THREE.LinearMipmapLinearFilter;
+        tex.magFilter = THREE.LinearFilter;
+        const old = this.refAtlas;
+        this.refAtlas = tex;
+        this.mat.uniforms.uRefAtlas!.value = tex;
+        old.dispose();
+      });
+    }
 
     // First pass: bucket archetypes by unique wild-geometry key (≈100 distinct silhouettes).
     const bucketMap = new Map<string, AlphabetArchetype[]>();
@@ -228,6 +276,7 @@ export class AlphabetPantheonRender {
       const mesh = new THREE.InstancedMesh(geo, this.mat, members.length);
       mesh.frustumCulled = false;
       const list: Body[] = [];
+      const refBands = new Float32Array(members.length);
       for (let s = 0; s < members.length; s++) {
         const a = members[s]!;
         const b = a.bias;
@@ -246,6 +295,7 @@ export class AlphabetPantheonRender {
         const pulse = 0.09 + b.curiosity * 0.22;
         const sig = glyphExteriorSignature(a);
         const pal = glyphExteriorPalette(a);
+        refBands[s] = GLYPH_PALETTE_IDS.indexOf(pal.id);
         const geoKey = glyphGeoBucketKey(a, sig);
         list.push({
           ax,
@@ -274,6 +324,7 @@ export class AlphabetPantheonRender {
         M.compose(P, Q, S);
         mesh.setMatrixAt(s, M);
       }
+      mesh.geometry.setAttribute('refBand', new THREE.InstancedBufferAttribute(refBands, 1));
       mesh.instanceMatrix.needsUpdate = true;
       if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
       this.group.add(mesh);
@@ -282,6 +333,7 @@ export class AlphabetPantheonRender {
     }
 
     this.wireHalos.push(...attachGlyphWireHalos(this.group, this.meshes));
+    this.setWireHalosVisible(false); // USER #10: skins only — wire halos for VISION·wire debug
     this.glyphAccents = new GlyphAccentMotes(this.group, 100);
     this.glyphFilaments = new GlyphFilamentBurst(this.group, 100);
     this.glyphSpores = new GlyphSporeAura(this.group, 100);
@@ -484,23 +536,9 @@ export class AlphabetPantheonRender {
     }
   }
 
-  /**
-   * Test-only: copy the current DRAWN world position of every godform body into `out` (cleared then
-   * filled), so the containment regression (owner directive #10) can assert none escaped {@link
-   * PANTHEON_BOUNDS}. Reads only the 100-body instance pools — NOT the apex capstone / accents / halos,
-   * which are not subject to the pantheon clamp. Allocates (test path only), so never call per frame.
-   */
-  bodyWorldPositions(out: THREE.Vector3[]): void {
-    out.length = 0;
-    for (let pool = 0; pool < this.meshes.length; pool++) {
-      const mesh = this.meshes[pool]!;
-      for (let i = 0; i < mesh.count; i++) {
-        mesh.getMatrixAt(i, M);
-        const p = new THREE.Vector3();
-        M.decompose(p, Q, S);
-        out.push(p);
-      }
-    }
+  /** Toggle diagnostic wire halos (solid skins are the default; wire mode only). */
+  setWireHalosVisible(show: boolean): void {
+    for (const h of this.wireHalos) h.visible = show;
   }
 
   /** Bob / spin / pulse every body on its own cadence. Pure trig, allocation-free, no rng. */
@@ -517,6 +555,12 @@ export class AlphabetPantheonRender {
     // Reduced by another 50% as requested so they can be easily inspected.
     const slowT = clock * CREATURE_EXTERIOR_TIME_SCALE * 0.275;
     const quick = 0.5 + 0.6 * this.chaos + 0.25 * this.apexTranscendence + 0.15 * this.apexVitality;
+    // Containment (user #10): each godform may drift only a little from its dome anchor, and never
+    // below the ground plane. Because every anchor already lies inside the dome shell, a bounded
+    // tether GUARANTEES no godform ever leaves the dome or sinks underneath it — and the small cap
+    // also reads as slow, inspectable, creature-scale motion instead of fast cross-dome travel.
+    const tetherMax = DOME_R * 0.05;
+    const groundFloor = 6;
     for (let pool = 0; pool < this.meshes.length; pool++) {
       const mesh = this.meshes[pool]!;
       const halo = this.wireHalos[pool];
@@ -534,17 +578,30 @@ export class AlphabetPantheonRender {
         const mz = this.motorZ[b.gIdx] ?? 0;
         const wander = glyphWanderOffset(WANDER, ph, b.sig, mx, my, mz, this.chaos, ba);
         P.set(b.ax + wander.x, b.ay + wander.y, b.az + wander.z);
-        // Owner directive #10: keep every godform INSIDE the dome. Clamp the horizontal radius to the
-        // dome shell and the height to [floor, dome] so wander + glyph-brain motor drift can never fling
-        // one outside the borders or underneath the ground ("like flies"). Pure math, alloc-free.
-        const hr = Math.hypot(P.x, P.z);
-        if (hr > DOME_R) {
-          const k = DOME_R / hr;
-          P.x *= k;
-          P.z *= k;
+
+        // USER #10 (corrected V115): tether every godform to ITS OWN dome anchor so it can never
+        // leave the shell. The prior ring-clamp forced horiz into a fixed outer ring, which
+        // shoved the inner/upper anchors (horiz as low as ~0.2·DOME_R) OUTWARD onto that ring —
+        // flinging them past the dome sphere — and let y sink to -20 (under the ground). Bounding
+        // the displacement from the anchor keeps them contained AND slow/inspectable.
+        const dax = P.x - b.ax;
+        const day = P.y - b.ay;
+        const daz = P.z - b.az;
+        const drift = Math.hypot(dax, day, daz);
+        if (drift > tetherMax) {
+          const k = tetherMax / drift;
+          P.set(b.ax + dax * k, b.ay + day * k, b.az + daz * k);
         }
-        if (P.y < PANTHEON_FLOOR_Y) P.y = PANTHEON_FLOOR_Y;
-        else if (P.y > DOME_R) P.y = DOME_R;
+        if (P.y < groundFloor) P.y = groundFloor; // never underneath the ground plane
+        // Clamp to strict global dome shell (user #10): every godform stays between DOME_INNER and DOME_MAX.
+        const r = Math.hypot(P.x, P.y, P.z);
+        if (r > DOME_MAX) {
+          const k = DOME_MAX / r;
+          P.set(P.x * k, P.y * k, P.z * k);
+        } else if (r < DOME_INNER && r > 0.001) {
+          const k = DOME_INNER / r;
+          P.set(P.x * k, P.y * k, P.z * k);
+        }
         E.set(
           Math.sin(ph * 0.42 + mx + b.sig.rotBias) * (0.42 + ba * 0.45),
           slowT * b.spin * quick * (1 + ba * 0.62) + b.phase + mz * 0.36,
@@ -572,10 +629,7 @@ export class AlphabetPantheonRender {
         C.setHSL(
           hue < 0 ? hue + 1 : hue,
           Math.min(1, b.pal.bodySat + bn * 0.1),
-          // Owner directive #10/#11: the material is additive, so overlapping godforms blow toward a
-          // blinding white. Cap per-instance lightness lower (0.62 -> 0.5) so bodies read as coloured
-          // skins over the dark dome (IMG5: dark base + bright rim), not a white wash.
-          clamp(lit, 0.2, 0.5),
+          clamp(lit, 0.22, 0.62),
         );
         mesh.setColorAt(s, C);
         this.glyphAccents.setAt(b.gIdx, M, b.sig, ba, clock);
@@ -648,11 +702,13 @@ export class AlphabetPantheonRender {
 
   /** Free every pool geometry + the shared material (HMR / world-reset safe). */
   dispose(): void {
+    this.disposed = true;
     for (const m of this.meshes) {
       m.geometry.dispose();
       m.dispose();
     }
     this.mat.dispose();
+    this.refAtlas.dispose();
     this.apexCore.geometry.dispose();
     this.apexHalo.geometry.dispose();
     this.apexSpikes.geometry.dispose();

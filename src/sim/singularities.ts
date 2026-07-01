@@ -193,8 +193,9 @@ const LENSING_FRAG = /* glsl */ `
     float shimmer = 0.85 + 0.15 * sin(uTime * 8.0 + vNormal.x * 12.0 + vNormal.y * 7.0);
     // Secondary fainter ring outside the Einstein ring (the relativistic light echo)
     float echoRing = pow(1.0 - ndv, 12.0) * 0.3;
-    vec3 col = uRingColor * ring * shimmer * 3.0;
-    col += uRingColor * echoRing * 1.5;
+    // USER #11: lowered ring multipliers so singularities stay dramatic but not blinding.
+    vec3 col = uRingColor * ring * shimmer * 1.4;
+    col += uRingColor * echoRing * 0.6;
     col += vec3(0.01, 0.005, 0.02) * (1.0 - inner); // faint dark blue inside the shadow
     float alpha = (ring * shimmer + echoRing + (1.0 - inner) * 0.85) * uFade;
     gl_FragColor = vec4(col, alpha);
@@ -903,7 +904,8 @@ export class SingularitySystem {
         uColor: { value: new THREE.Color(0x9a2cff) },
         uFade: { value: 1 },
         uTime: { value: 0 },
-        uIntensity: { value: 2.5 },
+        // USER #11: intensity pulled down to fit the global brightness clamp.
+        uIntensity: { value: 1.4 },
       };
       primaryMat = new THREE.ShaderMaterial({
         uniforms: glowUniforms,
@@ -921,7 +923,8 @@ export class SingularitySystem {
         uColor: { value: new THREE.Color(0x7cff5a) },
         uFade: { value: 1 },
         uTime: { value: 0 },
-        uIntensity: { value: 1.8 },
+        // USER #11: aura dimmed to match the global brightness clamp.
+        uIntensity: { value: 1.0 },
       };
       const auraMat = new THREE.ShaderMaterial({
         uniforms: auraUniforms,

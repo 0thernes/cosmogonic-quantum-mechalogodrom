@@ -98,6 +98,18 @@ export class AudioEngine {
   /** V112 cinematic reverb (music bus only): a long cathedral tail turning the oscillator voices
    *  into Horner/Annihilation space. Parallel send to masterGain so mute/sleep govern it; dry intact. */
   private reverb: ConvolverNode | null = null;
+
+  // USER #18: PORTAL NIGHTMARE HORROR DRONE — sustained "1M dying slowly" screams + putrid warped begging.
+  // Dark black low drones + bright high screaming layers + back-and-forth quiet/horror dynamics.
+  // Equirect hell visual inspiration translated to sound: chaotic, ontologically shocking, demonic.
+  private _portalHorror: {
+    drone: OscillatorNode | null;
+    scream: OscillatorNode | null;
+    noise: AudioBufferSourceNode | null;
+    filter: BiquadFilterNode | null;
+    gain: GainNode | null;
+    level: number;
+  } | null = null;
   private reverbWet: GainNode | null = null;
   private musicInterval: ReturnType<typeof setInterval> | null = null;
   /** Sleep timer that auto-mutes after a period of continuous playback. */
@@ -138,6 +150,74 @@ export class AudioEngine {
     this.state = state;
     this.rng = rng;
     this.palette = createSfxPalette(rng);
+  }
+
+  /** Safe driver for portal nightmare horror (item 18). Rich bus layers drone+scream when built. */
+  setPortalNightmare(level: number = 0): void {
+    const h = this._portalHorror;
+    if (!h) return;
+    h.level = Math.max(0, Math.min(5.5, level));
+    const g = h.level > 0.05 ? Math.min(0.92, 0.1 + h.level * 0.16) : 0;
+    if (h.gain && this.ctx) {
+      h.gain.gain.setTargetAtTime(g, this.ctx.currentTime, 0.12);
+    }
+    if (h.drone && this.ctx) {
+      h.drone.frequency.setTargetAtTime(32 + h.level * 11, this.ctx.currentTime, 0.2);
+    }
+    if (h.scream && this.ctx) {
+      h.scream.frequency.setTargetAtTime(360 + h.level * 220, this.ctx.currentTime, 0.15);
+    }
+    if (h.filter && this.ctx) {
+      h.filter.frequency.setTargetAtTime(600 + h.level * 2800, this.ctx.currentTime, 0.18);
+      h.filter.Q.setTargetAtTime(2.4 + h.level * 0.35, this.ctx.currentTime, 0.2);
+    }
+  }
+
+  /** Layered portal horror bus: low drone + band-passed scream + noise wash (item 18). */
+  private buildPortalHorrorBus(): void {
+    const ctx = this.ctx;
+    if (!ctx || !this.masterGain || this._portalHorror) return;
+    const gain = ctx.createGain();
+    gain.gain.value = 0;
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.value = 1200;
+    filter.Q.value = 2.4;
+    const drone = ctx.createOscillator();
+    drone.type = 'sawtooth';
+    drone.frequency.value = 42;
+    const scream = ctx.createOscillator();
+    scream.type = 'square';
+    scream.frequency.value = 520;
+    const droneGain = ctx.createGain();
+    droneGain.gain.value = 0.34;
+    const screamGain = ctx.createGain();
+    screamGain.gain.value = 0.2;
+    drone.connect(droneGain);
+    scream.connect(screamGain);
+    droneGain.connect(filter);
+    screamGain.connect(filter);
+    if (!this.noiseBuf) this.noiseBuf = this.noiseBuffer(ctx);
+    const noise = ctx.createBufferSource();
+    noise.buffer = this.noiseBuf;
+    noise.loop = true;
+    const noiseGain = ctx.createGain();
+    noiseGain.gain.value = 0.14;
+    noise.connect(noiseGain);
+    noiseGain.connect(filter);
+    filter.connect(gain);
+    gain.connect(this.masterGain);
+    drone.start();
+    scream.start();
+    noise.start();
+    this._portalHorror = {
+      drone,
+      scream,
+      noise,
+      filter,
+      gain,
+      level: 0,
+    };
   }
 
   /** Music enabled? Read-only outside; flip via {@link toggleMusic} or {@link setMusicOn}. */
@@ -213,6 +293,7 @@ export class AudioEngine {
     this.sfxGain = this.ctx.createGain();
     this.sfxGain.gain.value = 0;
     this.sfxGain.connect(this.masterGain);
+    this.buildPortalHorrorBus();
     // Ambient auto-SFX (legacy 548): only ticks while SFX are on AND the tab is visible.
     this.ambientInterval = setInterval(
       () => {
@@ -251,6 +332,17 @@ export class AudioEngine {
     if (this.visibilityHandler) {
       document.removeEventListener('visibilitychange', this.visibilityHandler);
       this.visibilityHandler = null;
+    }
+    const horror = this._portalHorror;
+    if (horror) {
+      try {
+        horror.drone?.stop();
+        horror.scream?.stop();
+        horror.noise?.stop();
+      } catch {
+        /* already stopped */
+      }
+      this._portalHorror = null;
     }
     const ctx = this.ctx;
     this.ctx = null;
@@ -421,6 +513,35 @@ export class AudioEngine {
     this.bandCursor.set(band.start, cursor + 1);
     const spec = this.palette[band.start + (cursor % band.count)];
     if (spec) this.synth(spec, this.rng());
+  }
+
+  /**
+   * USER #7a: NHI launch sound — bright, inhuman, short, shimmery. Marks a new alien colossus
+   * appearing in the dome. Deterministic (uses the audio fork-rng), no per-frame cost.
+   */
+  playNhiLaunch(): void {
+    this.playExtra('alienchitter');
+  }
+
+  /**
+   * USER #7a: NHI social chorus — called when nearby NHIs are detected by nhi-body.ts. The social
+   * level (0..1) scales the volume via the SFX bus gain, so a mob of NHIs sounds denser than a
+   * lone wanderer.
+   */
+  playNhiSocial(socialLevel: number = 0.5): void {
+    if (!this.ctx || !this.sfxGain || !this._sfxOn) return;
+    const gain = this.sfxGain.gain.value;
+    // Temporarily boost the SFX bus for this chorus, then restore.
+    const t = this.ctx.currentTime;
+    this.sfxGain.gain.setValueAtTime(gain, t);
+    this.sfxGain.gain.linearRampToValueAtTime(Math.min(0.55, gain + socialLevel * 0.25), t + 0.08);
+    this.sfxGain.gain.linearRampToValueAtTime(gain, t + 0.45);
+    this.playExtra('howl');
+  }
+
+  /** USER #7a: NHI death/despawn — low sub-boom as the alien body collapses. */
+  playNhiDeath(): void {
+    this.playExtra('subboom');
   }
 
   /**

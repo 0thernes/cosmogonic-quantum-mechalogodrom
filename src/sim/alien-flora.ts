@@ -142,8 +142,9 @@ const flora_vert = /* glsl */ `
     float contactD2 = max(dot(away, away), 1.0);
     float contact = uContact * smoothstep(5200.0, 0.0, contactD2);
     vec2 contactDir = away * inversesqrt(contactD2);
-    worldPosition.xz += contactDir * contact * up * up * (4.0 + uChaos * 5.0);
-    worldPosition.y += contact * up * (1.2 + uChaos * 1.8);
+    worldPosition.xz += contactDir * contact * up * up * (9.0 + uChaos * 8.0);
+    worldPosition.y += contact * up * (2.4 + uChaos * 3.2);
+    worldPosition.y += sin(contact * 8.0 + uTime * 2.1) * contact * (1.5 + uChaos * 2.0);
     worldPosition.y += wave * (1.1 + uChaos * 3.1) + tectonic * (0.5 + uChaos * 2.3) + ridge * (0.75 + uChaos * 1.7);
     vec4 mvPosition = modelViewMatrix * worldPosition;
     vNormalV = normalize(normalMatrix * mat3(instanceMatrix) * normal);
@@ -323,7 +324,17 @@ export class AlienFlora {
         const s = species[pl.sp]!;
         const gy = groundHeight(pl.x, pl.z) - 0.5; // sink the base slightly into the soil
         pos.set(pl.x, gy, pl.z);
-        e.set(Math.sin(pl.yaw) * pl.tilt, pl.yaw, Math.cos(pl.yaw) * pl.tilt);
+        // USER #15: vary based on the angle (ground slope) for accurate attachment to the terrain.
+        // Finite difference approx of normal → additional tilt so plants follow the ground "dunes" slope.
+        const dhx = groundHeight(pl.x + 1, pl.z) - groundHeight(pl.x - 1, pl.z);
+        const dhz = groundHeight(pl.x, pl.z + 1) - groundHeight(pl.x, pl.z - 1);
+        const groundTiltX = -dhz * 0.45;
+        const groundTiltZ = dhx * 0.45;
+        e.set(
+          groundTiltX + Math.sin(pl.yaw) * pl.tilt,
+          pl.yaw,
+          groundTiltZ + Math.cos(pl.yaw) * pl.tilt,
+        );
         q.setFromEuler(e);
         scl.setScalar(pl.scale);
         m.compose(pos, q, scl);

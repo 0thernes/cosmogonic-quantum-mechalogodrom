@@ -108,4 +108,13 @@ export class Hud {
     this.loreName = name;
     this.lore.textContent = name;
   }
+
+  /**
+   * Paused-frame HUD heartbeat (V112). The detailed readouts (sector, lore, algorithm) are
+   * updated by their own callers; this is the minimal top-level hook world.ts needs when
+   * the simulation is paused so the type contract holds.
+   */
+  update(_dt: number, _snap: unknown): void {
+    // No-op: individual HUD elements are driven by dedicated systems.
+  }
 }

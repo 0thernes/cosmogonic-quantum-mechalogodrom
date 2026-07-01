@@ -56,7 +56,7 @@ const RING_R = ARENA_RADIUS * 0.72;
 /** Intrinsic churn rate of the god's body, DOME-INDEPENDENT (localT advances at this × real time).
  *  V109: calibrated down from 60 to 38 so the orbiting satellites and body writhe read as stately,
  *  god-tier motion rather than a frantic buzz, while still staying unmistakably alive. */
-const MECHA_TIME_SCALE = 38;
+const MECHA_TIME_SCALE = 16;
 const MECHA_EXTERIOR_TIME_SCALE = 0.15;
 const MECHA_SATELLITE_COUNT = 400;
 const MECHA_CORE_SEGMENTS = 128;
@@ -207,7 +207,8 @@ export class Mechalogodrom {
     this.spikeMat = new THREE.LineBasicMaterial({
       color: 0xffcc33,
       transparent: true,
-      opacity: 0.6,
+      // USER #14: less blinding additive lines.
+      opacity: 0.32,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
     });
@@ -239,7 +240,8 @@ export class Mechalogodrom {
     this.labMat = new THREE.LineBasicMaterial({
       color: 0x00ffcc,
       transparent: true,
-      opacity: 0.42,
+      // USER #14: dimmed multi-color lines.
+      opacity: 0.24,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
     });
@@ -271,9 +273,10 @@ export class Mechalogodrom {
 
     // ── The ten bipolar variant shells (golden-angle ring placement; varied platonic solids). ───
     this.shellMat = new THREE.LineBasicMaterial({
-      color: 0xffffff,
+      // USER #14: no pure white additive lines; dark violet shell with per-instance hue drift below.
+      color: 0x4a00a0,
       transparent: true,
-      opacity: 0.45,
+      opacity: 0.28,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
     });
@@ -287,7 +290,7 @@ export class Mechalogodrom {
             : i % 4 === 2
               ? new THREE.TetrahedronGeometry(1.3)
               : new THREE.DodecahedronGeometry(1);
-      const wire = new THREE.WireframeGeometry(base);
+      const wire = this.buildCurvedWireGeo(base, 0.22 + (i % 5) * 0.04);
       base.dispose();
       const seg = new THREE.LineSegments(wire, this.shellMat);
       const th = golden * i;
@@ -313,29 +316,77 @@ export class Mechalogodrom {
     scene.add(this.group);
   }
 
-  /** A fixed radial burst of N spike segments (centre → outward), reused; scaled live by power. */
+  /** Curved wire segments from a polyhedron — USER #14: less blocky 1980s straight edges. */
+  private buildCurvedWireGeo(
+    source: THREE.BufferGeometry,
+    bendScale: number,
+  ): THREE.BufferGeometry {
+    const wire = new THREE.WireframeGeometry(source);
+    const pos = wire.getAttribute('position') as THREE.BufferAttribute;
+    const arr: number[] = [];
+    const a = new THREE.Vector3();
+    const b = new THREE.Vector3();
+    const mid = new THREE.Vector3();
+    const bend = new THREE.Vector3();
+    for (let i = 0; i < pos.count; i += 2) {
+      a.fromBufferAttribute(pos, i);
+      b.fromBufferAttribute(pos, i + 1);
+      mid.copy(a).add(b).multiplyScalar(0.5);
+      bend
+        .set(b.y - a.y, a.z - b.z, a.x - b.x)
+        .normalize()
+        .multiplyScalar(bendScale);
+      const curve = new THREE.CatmullRomCurve3([
+        a.clone(),
+        a.clone().lerp(mid, 0.5).add(bend),
+        b.clone().lerp(mid, 0.5).addScaledVector(bend, 0.65),
+        b.clone(),
+      ]);
+      const pts = curve.getPoints(6);
+      for (let j = 0; j < pts.length - 1; j++) {
+        const p0 = pts[j]!;
+        const p1 = pts[j + 1]!;
+        arr.push(p0.x, p0.y, p0.z, p1.x, p1.y, p1.z);
+      }
+    }
+    wire.dispose();
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(arr), 3));
+    return g;
+  }
+
+  /** A fixed radial burst of curved spike segments (Catmull-Rom splines), reused; scaled live by power. */
   private buildSpikeGeo(): THREE.BufferGeometry {
-    const N = 60;
-    const arr = new Float32Array(N * 6);
+    const N = 48;
+    const SEG = 10;
+    const arr: number[] = [];
     const golden = Math.PI * (3 - Math.sqrt(5));
+    const dir = new THREE.Vector3();
+    const bend = new THREE.Vector3();
+    const p0 = new THREE.Vector3();
+    const p1 = new THREE.Vector3();
+    const p2 = new THREE.Vector3();
+    const p3 = new THREE.Vector3();
     for (let i = 0; i < N; i++) {
-      // Fibonacci sphere directions → an even spiky shell.
       const y = 1 - (i / (N - 1)) * 2;
       const r = Math.sqrt(Math.max(0, 1 - y * y));
       const th = golden * i;
-      const dx = Math.cos(th) * r;
-      const dz = Math.sin(th) * r;
-      const o = i * 6;
-      // start at the rim, end out at 2.2× core
-      arr[o] = dx * CORE_R * 0.7;
-      arr[o + 1] = y * CORE_R * 0.7;
-      arr[o + 2] = dz * CORE_R * 0.7;
-      arr[o + 3] = dx * CORE_R * 2.2;
-      arr[o + 4] = y * CORE_R * 2.2;
-      arr[o + 5] = dz * CORE_R * 2.2;
+      dir.set(Math.cos(th) * r, y, Math.sin(th) * r).normalize();
+      p0.copy(dir).multiplyScalar(CORE_R * 0.7);
+      p3.copy(dir).multiplyScalar(CORE_R * 2.35);
+      bend.set(-dir.z, dir.y * 0.35, dir.x).multiplyScalar(CORE_R * (0.12 + (i % 7) * 0.035));
+      p1.copy(p0).add(bend);
+      p2.copy(p3).addScaledVector(bend, 0.55 + 0.1 * Math.sin(i * 0.73));
+      const curve = new THREE.CatmullRomCurve3([p0.clone(), p1.clone(), p2.clone(), p3.clone()]);
+      const pts = curve.getPoints(SEG);
+      for (let j = 0; j < pts.length - 1; j++) {
+        const a = pts[j]!;
+        const b = pts[j + 1]!;
+        arr.push(a.x, a.y, a.z, b.x, b.y, b.z);
+      }
     }
     const g = new THREE.BufferGeometry();
-    g.setAttribute('position', new THREE.BufferAttribute(arr, 3));
+    g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(arr), 3));
     return g;
   }
 
@@ -494,10 +545,11 @@ export class Mechalogodrom {
       1.35 * this.drive +
       0.85 * this.apexVitality +
       this.tsotchkePulse.quakeAliveness * 0.55;
-    this.wireMat.color.setHSL((hue + 0.42 + this.tsotchkePulse.adGradient * 0.16) % 1, 1, 0.64);
+    // USER #14: lowered wire lightness and capped opacity so the core is visible, not blinding.
+    this.wireMat.color.setHSL((hue + 0.42 + this.tsotchkePulse.adGradient * 0.16) % 1, 1, 0.36);
     // Flash envelope: sharp sparkle on a fast beat, stronger once fused + chaotic.
     const flash = 0.5 + 0.5 * Math.sin(st * 6.3) * Math.sin(st * 2.1);
-    this.wireMat.opacity = 0.12 + 0.28 * flash * (0.4 + 0.6 * ease);
+    this.wireMat.opacity = 0.08 + 0.18 * flash * (0.4 + 0.6 * ease);
     this.mass.rotation.y = st * (0.28 + this.drive * 0.15);
     this.mass.rotation.x = Math.sin(st * 0.13) * (0.55 + this.drive * 0.35);
     this.mass.rotation.z = Math.sin(st * 0.071 + this.apexTranscend * Math.PI) * 0.42;
@@ -577,12 +629,13 @@ export class Mechalogodrom {
       v.mesh.rotation.y = st * (0.2 + 0.07 * i);
       // Hue swings between the two poles; opacity flares with the manic phase and fades as it melts in.
       const hue = lerp(v.hueA, v.hueB, manic);
-      this.tmpColor.setHSL(hue, 0.9, 0.55 + 0.2 * manic);
+      // USER #14: keep the lightness low so the additive shell never blows out.
+      this.tmpColor.setHSL(hue, 0.9, 0.28 + 0.12 * manic);
       // shellMat is shared → set per-mesh tint is not possible without per-mesh materials; instead
       // drive the SHARED material toward the loudest variant (variant 0) for a coherent corona pulse.
       if (i === 0) {
         this.shellMat.color.copy(this.tmpColor);
-        this.shellMat.opacity = 0.25 + 0.4 * manic * (1 - 0.5 * k);
+        this.shellMat.opacity = 0.18 + 0.22 * manic * (1 - 0.5 * k);
       }
     }
   }

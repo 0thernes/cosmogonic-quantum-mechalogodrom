@@ -456,7 +456,8 @@ export class SuperBodySystem {
     this.cageMat = new THREE.LineBasicMaterial({
       color: 0x8a40ff,
       transparent: true,
-      opacity: 0.42,
+      // USER #13: APEX cage dimmed so it doesn't compete with the emissive core.
+      opacity: 0.22,
       blending: THREE.AdditiveBlending,
     });
     this.cage = new THREE.LineSegments(
@@ -472,7 +473,7 @@ export class SuperBodySystem {
     this.eyeMat = new THREE.MeshStandardMaterial({
       color: 0x0f0307,
       emissive: 0xff2a3c,
-      emissiveIntensity: 4.2,
+      emissiveIntensity: 1.35,
       roughness: 0.4,
       metalness: 0.2,
     });
@@ -491,7 +492,8 @@ export class SuperBodySystem {
     const highlightMat = new THREE.MeshBasicMaterial({
       color: 0xffffff,
       transparent: true,
-      opacity: 0.7,
+      // USER #13: subtle highlight, not a blinding white pinprick.
+      opacity: 0.28,
     });
     for (let i = 0; i < EYES; i++) {
       const y = 1 - (i / (EYES - 1)) * 2; // −1..1
@@ -635,6 +637,37 @@ export class SuperBodySystem {
       this.rings.push(ring);
       this.root.add(ring);
     }
+
+    // ── MATH SPINE CROWN: non-Euclidean curved spines ringing the upper body —
+    // USER #11: more weird structural protrusions, fluid, not blocky.
+    const spineMat = new THREE.MeshStandardMaterial({
+      color: 0x120a1a,
+      metalness: 0.9,
+      roughness: 0.22,
+      emissive: 0x3a1c50,
+      emissiveIntensity: 0.45,
+    });
+    this.brutalStatic.push({
+      mat: spineMat,
+      base: spineMat.color.clone(),
+      baseEmissive: spineMat.emissive.clone(),
+    });
+    const spineGroup = new THREE.Group();
+    for (let i = 0; i < 12; i++) {
+      const a = (i / 12) * Math.PI * 2 + this.variant * 0.4;
+      const r = R * 0.78;
+      const pts = [
+        new THREE.Vector3(Math.cos(a) * r, R * 0.55, Math.sin(a) * r),
+        new THREE.Vector3(Math.cos(a) * r * 1.3, R * 1.05, Math.sin(a) * r * 1.3),
+        new THREE.Vector3(Math.cos(a + 0.35) * r * 1.6, R * 1.45, Math.sin(a + 0.35) * r * 1.6),
+      ];
+      const spine = new THREE.Mesh(
+        new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 8, R * 0.035, 5, false),
+        spineMat,
+      );
+      spineGroup.add(spine);
+    }
+    this.root.add(spineGroup);
   }
 
   /** Fold the latest mind snapshot into the body's targets + shader uniforms. Cheap; cadence-driven. O(1).

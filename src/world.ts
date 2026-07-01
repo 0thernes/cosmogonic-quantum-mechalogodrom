@@ -96,7 +96,7 @@ import { Observatory } from './ui/observatory';
 import { NhiObservatory } from './ui/nhi-observatory';
 import { MarketTicker } from './ui/market-ticker';
 import { PantheonArchitecturePanel } from './ui/pantheon-architecture-panel';
-import { SuperCreature, type SuperPercept } from './sim/super-creature';
+import { SuperCreature, type SuperPercept, type SuperPlan } from './sim/super-creature';
 import { ApexBrain, SCALE_APEX_START, type ApexPercept, type ApexThought } from './sim/apex-brain';
 import { breedAt, type BabyGenome, PANTHEON_TOTAL } from './sim/pantheon-breeding';
 import { SelfEvolutionLoop, type EvolutionMetrics } from './sim/self-evolution-loop';
@@ -236,6 +236,9 @@ export class World {
   private readonly uiRng: Rng;
   private readonly state: SimState;
   private prePauseTimeScale = 1;
+  /** Master exposure ladder (ACES filmic); index 1 = boot default 0.62 (USER #11 dimmed). */
+  private readonly exposureLevels = [0.52, 0.62, 0.72, 0.82, 0.92] as const;
+  private exposureIdx = 1;
   private readonly grid: SpatialHash<Entity>;
   private readonly audio: AudioEngine;
   /** Aborts the global (window) hero-event listeners on {@link dispose} — without this they leaked
@@ -390,6 +393,8 @@ export class World {
   };
   /** Alien biomechanical bodies for launched NHIs (additive viz; assigned in the constructor). */
   private readonly nhiBody: NhiBodySystem;
+  /** USER #7a: cooldown (frames) so NHI social choruses don't fire every frame. */
+  private nhiSocialCooldown = 0;
   /** Far-field cosmic web — depth + context backdrop (additive; assigned in the constructor). */
   private readonly cosmicWeb: CosmicWeb;
   /** Floating gold wireframe forms — architectural depth (additive; assigned in the constructor). */
@@ -760,6 +765,7 @@ export class World {
     this.mechalogodromBrain = new MechalogodromBrain((this.persisted.seed ^ 0x8e4ac471) >>> 0 || 1);
     // V-ABC: the 100 Greek+Latin alphabet archetypes, alive across the dome (instanced; no rng).
     this.alphabetPantheon = new AlphabetPantheonRender(ctx.scene);
+    this.alphabetPantheon.setWireHalosVisible(this.state.renderMode === 'wire');
     // V-GLYPH: 100 × 25k-parameter brains (visual-only; drives pantheon appearance, not world state).
     this.glyphBrains = new GlyphBrainBatch(this.persisted.seed);
     // V-FND: Foundationals — deep interconnect for the APEX 1B self-awareness path.
@@ -1116,12 +1122,27 @@ export class World {
     const uiDt = Math.min(Math.max(rawDt, 0), 0.05); // real frame delta, UNSCALED by timeScale
     const dt = uiDt * s.timeScale;
     s.elapsed += dt;
+
+    // STRICT PAUSE (user #4): when timeScale===0 for inspection/roam, freeze ALL motion.
+    // Prior scaled-dt alone allowed drift/animation in some subsystems. Gate here + downstream.
+    const isPaused = s.timeScale === 0;
+    if (isPaused) {
+      // Still allow UI/camera roam + minimal HUD, but zero sim body motion.
+      // Individual systems must also early-return on isPaused or dt<=0.
+    }
     s.frame++;
     const t = s.elapsed;
+    if (isPaused) {
+      // PAUSED: all simulation bodies freeze, but free-camera input still consumes real UI time so
+      // the owner can roam around the held scene and inspect specimens.
+      this.updateCamera(0, uiDt, t);
+      this.hud.update(0, s);
+      return;
+    }
     this.updateGrowthTarget(); // V66: ramp the live population target 500 → ceiling, then breathe
 
     this.updateHeroControl(); // V41: route player nav input to the avatar (assist / manual)
-    this.updateCamera(dt, t);
+    this.updateCamera(dt, uiDt, t);
     this.updateHeroCamera(); // V41: chase / first-person follow overrides the cam when engaged
     this.handleHotkeys(dt);
     // Chaos decays toward its floor — raised in SIMULATION N(2) so the nightmare stays
@@ -1290,10 +1311,20 @@ export class World {
     // F-NHI V10: alien bodies follow + morph their NHI every frame (guarded; additive viz only).
     if (this.nhiBody.count > 0) {
       try {
-        this.nhiBody.update(t, (id) => this.nhiEntities.get(id)?.position ?? null);
+        this.nhiBody.update(
+          t,
+          (id) => this.nhiEntities.get(id)?.position ?? null,
+          (_id, level) => {
+            if (this.nhiSocialCooldown <= 0) {
+              this.audio.playNhiSocial(level);
+              this.nhiSocialCooldown = 24;
+            }
+          },
+        );
       } catch {
         /* an NHI body update misbehaved — skip it, keep the world running */
       }
+      if (this.nhiSocialCooldown > 0) this.nhiSocialCooldown--;
     }
     // Cosmological chaos (V7.4): apply the active singularity's force field to entity
     // velocities BEFORE entities.update integrates them this frame. No-op when none active.
@@ -1433,8 +1464,19 @@ export class World {
       capacity: this.quality.maxEntities,
     });
     this.monolithTemple.update(dt, t); // V63: rise + shimmer the ascension portal (no-op until revealed)
-    if (this.superAscended && s.frame % 240 === 0) {
-      this.audio.playExtra(s.frame % 480 === 0 ? 'abyssal' : 'demonicgrowl');
+
+    // USER #18: drive the nightmare portal audio (screams, death, warped horror) from temple state
+    const templeReact = (this.monolithTemple as any).reactivity || 0;
+    const templeChaos = (this.monolithTemple as any).chaos || 0;
+    const nmLevel = templeReact * 2.8 + templeChaos * 1.6;
+    this.audio.setPortalNightmare?.(nmLevel);
+    if (this.superAscended && this.monolithTemple.revealed) {
+      const portalPulse = 1.6 + 0.9 * Math.sin(t * 0.31) + 0.4 * Math.sin(t * 1.7);
+      this.audio.setPortalNightmare(portalPulse);
+      if (s.frame % 180 === 0) {
+        this.audio.playExtra(s.frame % 360 === 0 ? 'abyssal' : 'demonicgrowl');
+      }
+      if (s.frame % 420 === 90) this.audio.playExtra('demonic');
     }
 
     if (s.frame % 60 === 30) {
@@ -1466,10 +1508,50 @@ export class World {
       this.marketTicker.update(this.economy.summary());
       // F-SUPER V31 + GOAL5: feed the ⬢ ARCHITECT panel the apex (prime of 5) + live wallet + all 5 for first-class UI.
       const primeSnap = this.superCreatures[0]?.snapshot() ?? this.superCreature.snapshot();
-      const archonInfos: Array<{ archetype: string; plan: string }> = [];
+      const archonInfos: Array<{
+        archetype: string;
+        plan: SuperPlan;
+        emotion: { valence: number; arousal: number; dominance: number };
+        surprise: number;
+        intent: { aggression: number; deception: number; curiosity: number };
+        consciousness: {
+          dreaming: number;
+          hallucinating: number;
+          reasoning: number;
+          selfAware: number;
+          novelty: number;
+          ignition: number;
+          phi: number;
+          workspace: number;
+        };
+        confidence: number;
+      }> = [];
       for (let i = 0; i < 5; i++) {
-        const s = this.superCreatures[i]?.snapshot();
-        archonInfos.push({ archetype: GODFORMS[i] ?? 'ARCHON', plan: s?.plan ?? 'REST' });
+        const archonSnap = this.superCreatures[i]?.snapshot();
+        const mindSnap = this.superMinds[i]?.snapshot?.() ?? null;
+        archonInfos.push({
+          archetype: GODFORMS[i] ?? 'ARCHON',
+          plan: archonSnap?.plan ?? mindSnap?.plan ?? 'REST',
+          emotion: archonSnap?.emotion ??
+            mindSnap?.emotion ?? { valence: 0, arousal: 0, dominance: 0 },
+          surprise: archonSnap?.surprise ?? mindSnap?.consciousness.surprise ?? 0,
+          intent: {
+            aggression: archonSnap?.intent.aggression ?? 0,
+            deception: archonSnap?.intent.deception ?? 0,
+            curiosity: archonSnap?.intent.curiosity ?? mindSnap?.consciousness.novelty ?? 0,
+          },
+          consciousness: {
+            dreaming: mindSnap?.consciousness.dreaming ?? 0,
+            hallucinating: mindSnap?.consciousness.hallucinating ?? 0,
+            reasoning: mindSnap?.consciousness.reasoning ?? 0,
+            selfAware: mindSnap?.consciousness.selfAware ?? 0,
+            novelty: mindSnap?.consciousness.novelty ?? 0,
+            ignition: mindSnap?.consciousness.ignition ?? 0,
+            phi: mindSnap?.consciousness.phi ?? 0,
+            workspace: mindSnap?.consciousness.workspace ?? 0,
+          },
+          confidence: mindSnap?.metacog?.confidence ?? 0,
+        });
       }
       const soupSnap = this.primordialSoup.snapshot();
       let petriBiomass = 0;
@@ -2190,8 +2272,11 @@ export class World {
     if (this.superAscended) return;
     this.superAscended = true;
     this.monolithTemple.reveal(0, 0, -40 * ARENA_MID);
+    this.audio.setPortalNightmare(2.8);
     this.audio.playId(SFX_SUBBOOM);
-    this.audio.playExtra('demonic'); // V109: ominous temple-rise underlayer
+    this.audio.playExtra('demonic');
+    this.audio.playExtra('abyssal');
+    this.audio.playExtra('demonicgrowl');
     this.hud.showSector('⚡ ASCENSION — STAGE 2 · THE MONOLITH TEMPLE RISES');
     this.audit.record('ascension', { level: 100, stage: 2 });
     if (typeof window !== 'undefined') {
@@ -2255,6 +2340,7 @@ export class World {
     this.persisted.renderIdx = RENDER_MODES.indexOf(mode);
     this.save();
     this.entities.setRenderMode(mode);
+    this.alphabetPantheon.setWireHalosVisible(mode === 'wire');
     this.hud.showSector('VISION · ' + mode.toUpperCase());
   }
 
@@ -2380,11 +2466,14 @@ export class World {
   }
 
   /** Camera modes free/orbit/fly/top — legacy motion constants × ARENA_MID (V3.1). */
-  private updateCamera(dt: number, t: number): void {
+  private updateCamera(dt: number, uiDt: number, t: number): void {
     const cam = this.engine.camera;
-    const spd = 14 * ARENA_MID * dt;
-    const rs = 1.5 * dt;
     const mode: ViewMode = cyc(VIEW_MODES, this.state.viewIdx);
+    // V116 inspect-pause: when timeScale is 0 the sim freezes (dt=0) but free-cam still roams on
+    // the real frame delta so the owner can walk around and inspect frozen specimens.
+    const camDt = mode === 'free' && this.state.timeScale === 0 ? uiDt : dt;
+    const spd = 14 * ARENA_MID * camDt;
+    const rs = 1.5 * camDt;
     if (mode === 'free') {
       const k = this.input.keys;
       const cv = this.input.camVel;
@@ -2780,8 +2869,8 @@ export class World {
     // titan's ~8). Uses econRng so the launch's main-stream draws above stay reproducible.
     this.economy.register(World.ECON_NHI_BASE + nid, 'NHI super-mind', 14, this.econRng);
     this.nhiBody.spawn(nid, e.position.x, e.position.y, e.position.z);
-    // V109: varied alien vocalization on NHI arrival (round-robin from the alien chitter band).
-    this.audio.playExtra('alienchitter');
+    // USER #7a: varied alien vocalization on NHI arrival (round-robin from the alien chitter band).
+    this.audio.playNhiLaunch();
     this.audio.playExtra(source === 'titan-procreation' ? 'phantomscale' : 'voidgurgle');
     this.hud.showSector(
       source === 'titan-procreation'
@@ -3627,6 +3716,20 @@ export class World {
         this.audit.record('pause', { paused: s.timeScale === 0 });
         return s.timeScale === 0;
       },
+      // USER #4: explicit master PANEL launcher next to ACCESS. Opens aggregated view for copilot/help/audit/nhi/market/archons etc.
+      openMasterPanel: () => {
+        this.unlock();
+        // Leverage existing copilot + panels infrastructure. Broadcast for UI to expand relevant docks.
+        try {
+          (window as any).dispatchEvent?.(new CustomEvent('cqm:open-master-panel'));
+        } catch {}
+        // Fallback: focus observatory + show sector + open copilot if available
+        this.hud.showSector('PANEL: COPILOT | AUDIT | ARCHON | APEX | NHI | MARKET');
+        const cop = (window as any).cqmCopilot;
+        if (cop && typeof cop.toggle === 'function') cop.toggle(true);
+        this.audit.record('master-panel-open', {});
+        return true;
+      },
       cycleSpace: () => {
         this.unlock();
         return this.dilateSpace();
@@ -3639,6 +3742,7 @@ export class World {
         this.persisted.renderIdx = RENDER_MODES.indexOf(mode);
         this.save();
         this.entities.setRenderMode(mode);
+        this.alphabetPantheon.setWireHalosVisible(mode === 'wire');
         this.hud.showSector('RENDER: ' + mode.toUpperCase());
         this.audit.record('render-mode', { mode });
         return mode;
@@ -3665,6 +3769,15 @@ export class World {
         this.hud.showSector(w);
         this.audit.record('weather', { weather: w });
         return w;
+      },
+      cycleExposure: (): number => {
+        this.unlock();
+        this.exposureIdx = (this.exposureIdx + 1) % this.exposureLevels.length;
+        const exp = this.exposureLevels[this.exposureIdx] ?? 0.72;
+        this.engine.setExposure(exp);
+        this.hud.showSector('EXPOSURE · ' + exp.toFixed(2));
+        this.audit.record('exposure', { value: exp });
+        return exp;
       },
     };
   }

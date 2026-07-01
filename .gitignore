@@ -34,3 +34,13 @@ tsc.log
 verify-mind.ts
 *.bmp
 .tmp-build-rm-test/
+# Session debug dumps (never commit).
+checkfinal*.txt
+cov.txt
+fmt.txt
+testout.txt
+get-fails.ps1
+coverage-current.txt
+fails.txt
+receipts_print*.txt
+smokeout.txt

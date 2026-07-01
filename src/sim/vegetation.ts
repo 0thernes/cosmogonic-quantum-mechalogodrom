@@ -44,6 +44,25 @@ interface Plant {
   readonly yaw: number;
   readonly scale: number;
   readonly phase: number;
+  leanX: number; // for touch physics response (user #16)
+  leanZ: number;
+}
+
+/** Ground height sampler for attaching plants to moving/ deformed ground (user #15). */
+export type GroundSampler = (x: number, z: number) => number;
+/** Normal for slope angle accurate orientation. */
+export type GroundNormalSampler = (x: number, z: number) => { nx: number; ny: number; nz: number };
+
+/** Alien corkscrew vine top — a curved TubeGeometry around a rising helix. */
+function corkscrewGeo(stemR: number, stemH: number): THREE.BufferGeometry {
+  const pts: THREE.Vector3[] = [];
+  for (let i = 0; i <= 24; i++) {
+    const t = i / 24;
+    const ang = t * Math.PI * 6;
+    const r = stemR * (1.5 - 0.8 * t);
+    pts.push(new THREE.Vector3(Math.cos(ang) * r, t * stemH * 0.65, Math.sin(ang) * r));
+  }
+  return new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 24, stemR * 0.45, 6, false);
 }
 
 function buildSpeciesGeometry(seed: number): {
@@ -53,7 +72,7 @@ function buildSpeciesGeometry(seed: number): {
   baseColor: THREE.Color;
 } {
   const rng = mulberry32(seed);
-  const kind = Math.floor(rng() * 7);
+  const kind = Math.floor(rng() * 10);
   const hue = rng();
   const sat = 0.5 + rng() * 0.5;
   const lit = 0.25 + rng() * 0.45;
@@ -83,8 +102,27 @@ function buildSpeciesGeometry(seed: number): {
     case 5:
       top = new THREE.OctahedronGeometry(stemR * 2.8, 1);
       break;
-    default:
+    case 6:
       top = new THREE.DodecahedronGeometry(stemR * 2.6, 0);
+      break;
+    // USER #15/16: freakier alien flora shapes.
+    case 7:
+      top = corkscrewGeo(stemR, stemH);
+      break;
+    case 8:
+      top = new THREE.TorusKnotGeometry(stemR * 2.2, stemR * 0.45, 48, 8, 2, 3);
+      break;
+    default: {
+      // Bell / urn lathe profile.
+      const profile: THREE.Vector2[] = [];
+      for (let i = 0; i <= 10; i++) {
+        const t = i / 10;
+        const x = stemR * (0.5 + 3.5 * Math.sin(t * Math.PI));
+        const y = t * stemH * 0.55;
+        profile.push(new THREE.Vector2(x, y));
+      }
+      top = new THREE.LatheGeometry(profile, 12);
+    }
   }
   top.translate(0, stemH * 0.5, 0);
   const stemGeo = stem.index ? stem.toNonIndexed() : stem;
@@ -169,9 +207,14 @@ export class Vegetation {
   private readonly tmpColor = new THREE.Color();
   private readonly M = new THREE.Matrix4();
   private readonly Q = new THREE.Quaternion();
+  private readonly slopeQ = new THREE.Quaternion();
+  private readonly slopeN = new THREE.Vector3(0, 1, 0);
+  private readonly up = new THREE.Vector3(0, 1, 0);
   private readonly E = new THREE.Euler();
   private readonly P = new THREE.Vector3();
   private readonly S = new THREE.Vector3();
+  private groundSampler: GroundSampler | null = null;
+  private groundNormalSampler: GroundNormalSampler | null = null;
   private windTime = 0;
   private windStrength = 0.3;
   private chaos = 0;
@@ -208,7 +251,17 @@ export class Vegetation {
         const scale = 0.55 + (rng() * 0.7 + hash12(i + j, j)) * 0.75;
         const yaw = rng() * TAU;
         const phase = rng() * TAU;
-        const plant: Plant = { species: speciesIdx, slot, x, z, yaw, scale, phase };
+        const plant: Plant = {
+          species: speciesIdx,
+          slot,
+          x,
+          z,
+          yaw,
+          scale,
+          phase,
+          leanX: 0,
+          leanZ: 0,
+        };
         this.plants.push(plant);
         this.speciesSlots[speciesIdx] = slot + 1;
         s.count = slot + 1;
@@ -261,14 +314,29 @@ export class Vegetation {
         (wind * this.windStrength * (1 - s.stiffness * 0.6) +
           Math.sin(p.phase + this.windTime * 0.5) * 0.08) *
         (1 + this.chaos * 0.6);
-      const leanX = clamp(lean * Math.cos(p.yaw + 0.7), -MAX_LEAN, MAX_LEAN);
-      const leanZ = clamp(lean * Math.sin(p.yaw + 0.7), -MAX_LEAN, MAX_LEAN);
-      this.E.set(leanX, p.yaw, leanZ);
+      // USER #15/#16: combine wind lean with contact physics lean, and use ground sampler for height
+      const contactX = p.leanX || 0;
+      const contactZ = p.leanZ || 0;
+      const totalLeanX = clamp(lean * Math.cos(p.yaw + 0.7) + contactX, -MAX_LEAN, MAX_LEAN);
+      const totalLeanZ = clamp(lean * Math.sin(p.yaw + 0.7) + contactZ, -MAX_LEAN, MAX_LEAN);
+      this.E.set(totalLeanX, p.yaw, totalLeanZ);
       this.Q.setFromEuler(this.E);
-      this.P.set(p.x, GROUND_Y + s.maxHeight * 0.02 * p.scale, p.z);
+      let gy = GROUND_Y;
+      if (this.groundSampler) gy = this.groundSampler(p.x, p.z);
+      if (this.groundNormalSampler) {
+        const n = this.groundNormalSampler(p.x, p.z);
+        this.slopeN.set(n.nx, n.ny, n.nz).normalize();
+        this.slopeQ.setFromUnitVectors(this.up, this.slopeN);
+        this.Q.premultiply(this.slopeQ);
+      }
+      this.P.set(p.x, gy + s.maxHeight * 0.02 * p.scale, p.z);
       this.S.set(p.scale, p.scale, p.scale);
       this.M.compose(this.P, this.Q, this.S);
       s.mesh.setMatrixAt(p.slot, this.M);
+      // damp contact lean (ragdoll spring back — stiffness-aware)
+      const stiff = s.stiffness;
+      p.leanX = contactX * (0.9 + stiff * 0.05);
+      p.leanZ = contactZ * (0.9 + stiff * 0.05);
     }
     for (const s of this.species) {
       s.mesh.instanceMatrix.needsUpdate = true;
@@ -282,5 +350,26 @@ export class Vegetation {
       s.mesh.dispose();
     }
     this.group.removeFromParent();
+  }
+
+  // USER #15/#16: ground attachment + touch response (ragdoll-ish, angle accurate, alien flora)
+  // Called from world after construction. Plants now move with ground deformation and react to entity contact.
+  attachGround(sampler: GroundSampler, normal?: GroundNormalSampler): void {
+    this.groundSampler = sampler;
+    this.groundNormalSampler = normal ?? null;
+  }
+
+  applyContact(x: number, z: number, strength: number): void {
+    // simple impulse on lean for nearby plants (wired in update)
+    for (const p of this.plants) {
+      const dx = p.x - x,
+        dz = p.z - z;
+      const d2 = dx * dx + dz * dz;
+      if (d2 < 144 && d2 > 0.01) {
+        const f = strength * (1 - d2 / 144);
+        p.leanX = (p.leanX || 0) + dx * f * 0.07;
+        p.leanZ = (p.leanZ || 0) + dz * f * 0.07;
+      }
+    }
   }
 }

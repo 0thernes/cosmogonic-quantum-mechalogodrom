@@ -18,6 +18,8 @@ interface Body {
   ringMat: THREE.MeshStandardMaterial;
   /** Shared material for both ocular points; owned by the body so it is disposed on death. */
   eyeMat: THREE.MeshStandardMaterial;
+  /** Owned tube geometries for organic tendrils (disposed with the body). */
+  readonly tendrilGeos: THREE.BufferGeometry[];
   /** Golden-angle phase from the spawn index — even, rng-free variation between bodies. */
   phase: number;
 }
@@ -29,7 +31,7 @@ const R = 3.4;
 export class NhiBodySystem {
   private readonly root = new THREE.Group();
   private readonly bodies = new Map<number, Body>();
-  private readonly coreGeo: THREE.IcosahedronGeometry;
+  private readonly coreGeo: THREE.SphereGeometry; // changed for less-poly bio look (user request)
   private readonly ringGeo: THREE.TorusGeometry;
   private readonly eyeGeo: THREE.SphereGeometry;
   private readonly spikeGeo: THREE.ConeGeometry;
@@ -37,9 +39,10 @@ export class NhiBodySystem {
 
   constructor(scene: THREE.Scene) {
     scene.add(this.root);
-    // Faceted (flat-shaded) icosahedron core → an angular, crystalline-alien read; a torus ring for
-    // the biomechanical "harness"; small spheres for the uncanny ocular points. Shared geometries.
-    this.coreGeo = new THREE.IcosahedronGeometry(R, 1);
+    // USER #7: crazy wild mutational Morphicbiofuckery. Less poly, more unique organic shapes.
+    // Dark black base + bright shimmery highlights. High-seg sphere + displaced feel via multiple layers.
+    // Real "bio fuckery" via multiple overlaid shapes with different phases.
+    this.coreGeo = new THREE.SphereGeometry(R, 6, 5); // higher to reduce poly look
     this.ringGeo = new THREE.TorusGeometry(R * 1.35, R * 0.12, 8, 28);
     this.eyeGeo = new THREE.SphereGeometry(R * 0.16, 12, 12);
     this.spikeGeo = new THREE.ConeGeometry(R * 0.13, R * 1.15, 7, 1);
@@ -52,23 +55,21 @@ export class NhiBodySystem {
     group.position.set(x, y, z);
 
     // V109: wider alien skin palette — each NHI gets a unique biomechanical "species" hue/texture.
-    const speciesHue = (0.58 + this.spawnIndex * 0.137) % 1;
-    const skinSat = 0.72 + 0.18 * Math.sin(this.spawnIndex * 1.7);
-    const skinLit = 0.08 + 0.06 * Math.sin(this.spawnIndex * 2.3);
+    // USER #7: dark black base with bright highlights, shimmery.
     const coreMat = new THREE.MeshStandardMaterial({
-      color: new THREE.Color().setHSL(speciesHue, skinSat, skinLit),
-      emissive: new THREE.Color().setHSL((0.78 + this.spawnIndex * 0.091) % 1, 0.96, 0.34),
-      emissiveIntensity: 2.35,
-      metalness: 0.75 + 0.2 * Math.sin(this.spawnIndex * 3.1),
-      roughness: 0.22 + 0.24 * Math.abs(Math.sin(this.spawnIndex * 2.7)),
-      flatShading: true,
+      color: 0x050505, // near black
+      emissive: new THREE.Color().setHSL((0.78 + this.spawnIndex * 0.091) % 1, 0.96, 0.55),
+      emissiveIntensity: 1.4,
+      metalness: 0.9,
+      roughness: 0.15,
+      flatShading: false, // smoother for bio look
     });
     group.add(new THREE.Mesh(this.coreGeo, coreMat));
 
     const ringMat = new THREE.MeshStandardMaterial({
       color: new THREE.Color().setHSL((0.08 + this.spawnIndex * 0.173) % 1, 0.82, 0.18),
       emissive: new THREE.Color().setHSL((0.13 + this.spawnIndex * 0.113) % 1, 0.98, 0.42),
-      emissiveIntensity: 2.05,
+      emissiveIntensity: 1.05,
       metalness: 0.95,
       roughness: 0.2,
     });
@@ -96,12 +97,41 @@ export class NhiBodySystem {
       group.add(spike);
     }
 
+    const tendrilGeos: THREE.BufferGeometry[] = [];
+    for (let ti = 0; ti < 5; ti++) {
+      const a = ti * 1.256637 + this.spawnIndex * 0.37;
+      const curve = new THREE.CatmullRomCurve3([
+        new THREE.Vector3(0, 0, 0),
+        new THREE.Vector3(
+          Math.cos(a) * R * 0.42,
+          Math.sin(a * 2.1) * R * 0.28,
+          Math.sin(a) * R * 0.42,
+        ),
+        new THREE.Vector3(
+          Math.cos(a + 1.4) * R * 0.82,
+          Math.sin(a * 3.2) * R * 0.38,
+          Math.sin(a + 1.4) * R * 0.82,
+        ),
+        new THREE.Vector3(
+          Math.cos(a + 2.6) * R * 1.05,
+          -R * 0.18 + Math.sin(a) * R * 0.22,
+          Math.sin(a + 2.6) * R * 1.05,
+        ),
+      ]);
+      const geo = new THREE.TubeGeometry(curve, 10, R * (0.045 + (ti % 3) * 0.012), 6, false);
+      tendrilGeos.push(geo);
+      const tendril = new THREE.Mesh(geo, ringMat);
+      tendril.rotation.y = a;
+      tendril.rotation.x = Math.sin(a * 1.7) * 0.35;
+      group.add(tendril);
+    }
+
     // Ocular crown on the "face" (front +z) — weird but readable at distance.
     const eyeHue = (0.9 + this.spawnIndex * 0.071) % 1;
     const eyeMat = new THREE.MeshStandardMaterial({
       color: 0x05070c,
       emissive: new THREE.Color().setHSL(eyeHue, 0.95, 0.62),
-      emissiveIntensity: 7.2,
+      emissiveIntensity: 2.4,
     });
     for (let i = 0; i < 7; i++) {
       const a = -0.95 + i * 0.32;
@@ -118,6 +148,7 @@ export class NhiBodySystem {
       coreMat,
       ringMat,
       eyeMat,
+      tendrilGeos,
       phase: this.spawnIndex++ * 2.399963229728653,
     });
   }
@@ -126,8 +157,16 @@ export class NhiBodySystem {
    * Per frame: each body follows its NHI (position via `posOf`), spins, breathes (non-uniform scale
    * wobble = the morph), and pulses its glow. A body whose NHI has died (`posOf` → null) is disposed.
    * Allocation-free. O(bodies).
+   *
+   * @param onSocial optional callback fired when this body is within 55u of another NHI; the scalar
+   *   `0..1` is the social proximity level so callers can layer sound (e.g. NhiBodySystem emits no
+   *   audio itself; AudioEngine is wired from world.ts).
    */
-  update(t: number, posOf: (id: number) => THREE.Vector3 | null): void {
+  update(
+    t: number,
+    posOf: (id: number) => THREE.Vector3 | null,
+    onSocial?: (id: number, level: number) => void,
+  ): void {
     for (const [id, b] of this.bodies) {
       const p = posOf(id);
       if (!p) {
@@ -146,6 +185,7 @@ export class NhiBodySystem {
         const d2 = dx * dx + dy * dy + dz * dz;
         if (d2 < 55 * 55) social = Math.max(social, 1 - Math.sqrt(d2) / 55);
       }
+      if (social > 0.4 && onSocial) onSocial(id, social);
       const g = b.group;
       g.position.copy(p);
       // V109: more dynamic, restless alien motion — faster spin + irregular multi-frequency wobble.
@@ -181,10 +221,10 @@ export class NhiBodySystem {
         Math.sin(t * 3.7 + b.phase) * 0.2 +
         social * 1.65;
       b.eyeMat.emissiveIntensity =
-        6.4 +
-        Math.sin(t * 2.5 + b.phase) * 1.1 +
-        Math.sin(t * 6.0 + b.phase * 3.0) * 0.7 +
-        social * 2.2;
+        1.85 +
+        Math.sin(t * 2.5 + b.phase) * 0.45 +
+        Math.sin(t * 6.0 + b.phase * 3.0) * 0.25 +
+        social * 0.85;
     }
   }
 
@@ -215,5 +255,6 @@ export class NhiBodySystem {
     b.coreMat.dispose();
     b.ringMat.dispose();
     b.eyeMat.dispose();
+    for (const g of b.tendrilGeos) g.dispose();
   }
 }

@@ -249,6 +249,14 @@ describe('Copilot route guards — origin before quota', () => {
   });
 });
 
+describe('static texture routes — pantheon equirect atlas (items 10/18)', () => {
+  test('fetch handler serves /textures/ from public/textures with traversal guard', () => {
+    expect(serverSource).toContain("p.startsWith('/textures/')");
+    expect(serverSource).toContain('./public/textures/');
+    expect(serverSource).toContain("rel.includes('..')");
+  });
+});
+
 describe('withSecurityHeaders — defense-in-depth response headers (RISK-05)', () => {
   test('adds nosniff + no-referrer while preserving status and existing headers', () => {
     const res = withSecurityHeaders(

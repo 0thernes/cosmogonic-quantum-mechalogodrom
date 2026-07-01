@@ -104,6 +104,7 @@ const TOOLBAR_MAP: Readonly<Record<string, keyof UiActions>> = {
   sfxcycle: 'cycleSfxPreview',
   reset: 'reset',
   pause: 'togglePause',
+  panel: 'openMasterPanel',
   time: 'cycleTimeScale',
   wire: 'cycleRenderMode',
   view: 'cycleView',
@@ -118,6 +119,7 @@ const TOOLBAR_MAP: Readonly<Record<string, keyof UiActions>> = {
   entropy: 'entropyBoost', // F-CHAOS-ENTROPY: raise the order/heat-death axis
   nhi: 'launchNhi', // F-NHI: launch an NHI being in front of the camera
   space: 'cycleSpace', // F-SPACE: dilate the camera field-of-view
+  exposure: 'cycleExposure', // V116: master scene brightness
 };
 
 /**

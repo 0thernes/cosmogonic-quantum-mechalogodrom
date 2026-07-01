@@ -1184,10 +1184,35 @@ html.cqm-shell-ready .algo-list:empty::after {
   margin-top: 3px;
 }
 .cqm-brain-slot {
-  pointer-events: none;
+  pointer-events: auto;
   min-height: 0;
   padding: 6px 7px;
   opacity: 0.96;
+  transition:
+    max-height 0.25s ease,
+    padding 0.2s ease;
+}
+.cqm-brain-slot__min {
+  pointer-events: auto;
+  border: 1px solid rgba(180, 140, 255, 0.35);
+  border-radius: 4px;
+  background: rgba(12, 8, 28, 0.85);
+  color: #d8c4ff;
+  font: 700 12px/1 var(--font-mono, ui-monospace, monospace);
+  padding: 1px 6px;
+  cursor: pointer;
+}
+.cqm-brain-slot__min:hover {
+  border-color: rgba(200, 160, 255, 0.65);
+  background: rgba(28, 16, 48, 0.92);
+}
+.cqm-brain-slot--collapsed {
+  max-height: 36px;
+  overflow: hidden;
+  padding-bottom: 4px;
+}
+.cqm-brain-slot--collapsed .cqm-brain-slot__viz {
+  display: none !important;
 }
 .cqm-brain-slot__head {
   margin-bottom: 5px;

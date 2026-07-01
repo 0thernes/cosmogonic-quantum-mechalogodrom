@@ -83,14 +83,17 @@ function drawBackground(ctx: CanvasRenderingContext2D, w: number, h: number): vo
 }
 
 function drawGrid(ctx: CanvasRenderingContext2D, w: number, h: number): void {
-  ctx.strokeStyle = 'rgba(150, 120, 255, 0.16)';
-  ctx.lineWidth = 1;
+  // USER #3: Very subtle grid for brains. Focus is on firing neurons and wavy connections, not bars.
+  // For APEX especially, keep minimal so only the live graphs/lines of real neural firing are prominent.
+  ctx.strokeStyle = 'rgba(100, 160, 255, 0.06)';
+  ctx.lineWidth = 0.5;
   ctx.beginPath();
-  for (let x = 14; x < w; x += 14) {
+  for (let x = 32; x < w; x += 32) {
+    // sparser
     ctx.moveTo(x, 0);
     ctx.lineTo(x, h);
   }
-  for (let y = 14; y < h; y += 14) {
+  for (let y = 32; y < h; y += 32) {
     ctx.moveTo(0, y);
     ctx.lineTo(w, y);
   }
@@ -114,9 +117,9 @@ function drawSynapses(
   const cy = h * 0.52;
   const radius = Math.min(w, h) * 0.34;
 
-  // 1. Dense background synapse network: decorative inter-node connections with very low opacity
-  ctx.strokeStyle = `hsla(${hue}, 80%, 40%, 0.12)`;
-  ctx.lineWidth = 0.6;
+  // USER #3: wavy connected firing neurons (real activity drives waves, no heavy bars for APEX)
+  ctx.strokeStyle = `hsla(${hue}, 80%, 45%, 0.15)`;
+  ctx.lineWidth = 0.8;
   ctx.beginPath();
   for (let i = 0; i < values.length; i++) {
     const a1 = (i / values.length) * Math.PI * 2;
@@ -130,8 +133,11 @@ function drawSynapses(
       const r2 = radius * (0.65 + v2 * 0.35);
       const x2 = cx + Math.cos(a2) * r2;
       const y2 = cy + Math.sin(a2) * r2 * (0.5 + v2 * 0.25);
+      const mx = (x1 + x2) / 2;
+      const my = (y1 + y2) / 2;
+      const wave = Math.sin((i + j) * 0.8 + pulse * 4) * (6 + (v1 + v2) * 4);
       ctx.moveTo(x1, y1);
-      ctx.lineTo(x2, y2);
+      ctx.quadraticCurveTo(mx + wave, my - wave * 0.4, x2, y2);
     }
   }
   ctx.stroke();
@@ -190,9 +196,8 @@ function drawSynapses(
     ctx.arc(px, py, 1.4 + v * 1.2, 0, Math.PI * 2);
     ctx.fill();
 
-    // Real-time animated glowing voltage spike moving along the curves utilizing window.performance.now()
-    const ms = typeof performance !== 'undefined' ? performance.now() : Date.now();
-    const spikeTravel = (ms * 0.001 * (0.7 + v * 0.6) + i * 0.37) % 1.0;
+    // Real-time animated glowing voltage spike moving along the curve from the shared UI pulse.
+    const spikeTravel = (pulse * (0.7 + v * 0.6) + i * 0.37) % 1.0;
     const tSpike = spikeTravel;
     const oneMinusTSpike = 1 - tSpike;
     const spX =
@@ -245,28 +250,6 @@ function drawSparkline(
   ctx.stroke();
 }
 
-function drawBars(
-  ctx: CanvasRenderingContext2D,
-  values: number[],
-  w: number,
-  h: number,
-  colors: string[],
-): void {
-  const n = values.length;
-  const gap = 2;
-  const barW = (w - gap * (n + 1)) / n;
-  for (let i = 0; i < n; i++) {
-    const v = values[i] ?? 0;
-    const x = gap + i * (barW + gap);
-    const bh = Math.max(2, v * (h - 6));
-    const y = h - bh - 2;
-    ctx.fillStyle = colors[i % colors.length] ?? colors[0]!;
-    ctx.fillRect(x, y, barW, bh);
-    ctx.fillStyle = 'rgba(255,255,255,0.18)';
-    ctx.fillRect(x, y, barW, 1);
-  }
-}
-
 function drawDots(
   ctx: CanvasRenderingContext2D,
   values: number[],
@@ -314,17 +297,19 @@ function updateApex(slot: Slot, apex: ApexBrainSnapshot | null): void {
   }
   const t = apex.thought;
   const motor = Math.hypot(t.motor.x, t.motor.y, t.motor.z);
+  // USER #4: richer authentic firing signature from the APEX organ telemetry (not clock-fabricated).
   const values = [
     t.transcendence,
     t.vitality,
     clamp01(1 - t.agony),
     t.superposed ? 1 : 0,
     clamp01(motor),
+    apex.quantum.coherence,
+    apex.meta.godelResidual,
+    apex.thermo.paralysis,
   ];
-  const colors = ['#9f6bff', '#6bff9e', '#ff5a6b', '#39d6ff', '#ff9f43'];
-  drawSynapses(ctx, values, w, h, 275, nowPulse());
-  drawBars(ctx, values, w, h, colors);
   drawGrid(ctx, w, h);
+  drawSynapses(ctx, values, w, h, 275, nowPulse());
   ctx.fillStyle = '#f3e9ff';
   ctx.font = 'bold 11px JetBrains Mono, monospace';
   ctx.fillText(`APEX · ${t.plan}`, 6, 14);
@@ -347,9 +332,9 @@ function updateMecha(slot: Slot, mecha: MechalogodromBrainSnapshot | null): void
     return;
   }
   pushHistory(slot, mecha.activity ?? 0.5);
+  drawGrid(ctx, w, h);
   drawSynapses(ctx, slot.history.slice(-9), w, h, 195, nowPulse());
   drawSparkline(ctx, slot.history, w, h, '#5cf0ff');
-  drawGrid(ctx, w, h);
   ctx.fillStyle = '#e0fbff';
   ctx.font = 'bold 11px JetBrains Mono, monospace';
   ctx.fillText(`MECHA · ${Math.round((mecha.liveParams / 1e6) * 10) / 10}M`, 6, 14);
@@ -374,9 +359,9 @@ function updateGlyph(slot: Slot, glyphs: GlyphBrainSnapshot[] | null): void {
     return;
   }
   const values = glyphs.map((g) => (g.activity + g.novelty + g.valence) / 3);
+  drawGrid(ctx, w, h);
   drawSynapses(ctx, values.slice(0, 12), w, h, 315, nowPulse());
   drawDots(ctx, values, w, h, nowPulse());
-  drawGrid(ctx, w, h);
   ctx.fillStyle = '#ffe8fb';
   ctx.font = 'bold 11px JetBrains Mono, monospace';
   ctx.fillText(`GLYPH · ${glyphs.length} minds`, 6, 14);

@@ -74,6 +74,33 @@ function paintVibrant(mat: THREE.MeshStandardMaterial, m: PhylumMorphType, mi: n
   mat.roughness = Math.max(0.04, mat.roughness * 0.4 + j3 * 0.08);
 }
 
+/** Slow deterministic hue drift — entities shift colour family over time from vitals + clock. */
+function tickColorDrift(
+  mat: THREE.MeshStandardMaterial,
+  act: number,
+  frame: number,
+  entityIndex: number,
+): void {
+  if ((frame + entityIndex) % 4 !== 0) return;
+  const t = frame * 0.016 + entityIndex * 0.073;
+  const dh = Math.sin(t * 0.41 + act * 1.7) * 0.014 + Math.sin(t * 0.19) * 0.006;
+  const ds = Math.sin(t * 0.27 + entityIndex * 0.11) * 0.018;
+  const dl = Math.sin(t * 0.33 + act) * 0.012;
+  const hsl = { h: 0, s: 0, l: 0 };
+  mat.color.getHSL(hsl);
+  mat.color.setHSL(
+    (hsl.h + dh + 1) % 1,
+    Math.max(0.35, Math.min(1, hsl.s + ds)),
+    Math.max(0.06, Math.min(0.42, hsl.l + dl)),
+  );
+  mat.emissive.getHSL(hsl);
+  mat.emissive.setHSL(
+    (hsl.h + dh * 0.6 + 1) % 1,
+    Math.max(0.7, Math.min(1, hsl.s + ds * 0.5)),
+    Math.max(0.2, Math.min(0.58, hsl.l + dl * 0.8)),
+  );
+}
+
 /** Base material parameters a {@link RenderMode} is layered on top of. */
 interface RenderModeBase {
   met: number;
@@ -557,6 +584,7 @@ export class EntityManager {
         applyBehavior(e, env);
       }
       this.applyFloraComfort(e, i, frame, dt);
+      tickColorDrift(e.material, u.act, frame, i);
 
       // Neural activation decay (legacy lines 766-768).
       u.act *= 0.95;

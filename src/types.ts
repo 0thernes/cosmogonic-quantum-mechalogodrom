@@ -425,5 +425,10 @@ export interface UiActions {
   cycleSim(): 1 | 2;
   cycleView(): ViewMode;
   cycleAlgo(): string;
+  /** Cycle master scene exposure darker ↔ brighter; returns the new value. */
+  cycleExposure(): number;
+  /** Cycle the environment weather state. */
   cycleWeather(): Weather;
+  /** USER #4: explicit master PANEL launcher next to ACCESS (copilot/help/audit/nhi/market/archons/apex). */
+  openMasterPanel(): boolean;
 }

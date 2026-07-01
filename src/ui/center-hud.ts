@@ -319,7 +319,8 @@ body:has(#cqm-hud-nav) #cqm-dock {
   max-width: min(100%, 760px);
 }
 #cqm-persist-nav .cqm-persist-row--sim .cqm-persist-btn,
-#cqm-persist-nav .cqm-persist-row--panels .cqm-persist-btn {
+#cqm-persist-nav .cqm-persist-row--panels .cqm-persist-btn,
+#cqm-persist-nav .cqm-persist-panel {
   height: 28px;
   padding-inline: 8px;
   font-size: 11px;
@@ -328,7 +329,9 @@ body:has(#cqm-hud-nav) #cqm-dock {
 #cqm-persist-nav .cqm-persist-row--docs .cqm-persist-btn {
   border-color: rgba(120, 160, 220, 0.32);
 }
-#cqm-persist-nav .cqm-persist-row--panels .cqm-persist-btn {
+#cqm-persist-nav .cqm-persist-row--panels .cqm-persist-btn,
+#cqm-persist-nav .cqm-persist-row--docs .cqm-persist-panel,
+#cqm-persist-nav .cqm-persist-panel {
   border-color: rgba(180, 120, 255, 0.42);
 }
 #cqm-persist-nav .cqm-persist-row--sim .cqm-persist-btn {
@@ -739,18 +742,6 @@ function buildPersistentNav(doc: Document): void {
       ),
     );
   }
-  // Owner directive #4: a single PANELS entry point sits next to ACCESS and opens the inspector HUD
-  // (COPILOT · HELP · AUDIT · NHI OBS · MARKET · ARCHON GODFORMS · PANTHEONS · APEX). It toggles the
-  // panel cycler open on the first panel (showOnly(0)) ↔ closed (showOnly(-1)); the per-panel launcher
-  // row still lists each one individually.
-  rowDocs.appendChild(
-    mkBtn(
-      '⊞ PANELS',
-      'Open the inspector panels — COPILOT · HELP · AUDIT · NHI OBS · MARKET · ARCHON GODFORMS · PANTHEONS · APEX',
-      () => showOnly(active < 0 ? 0 : -1),
-      'cqm-persist-panel',
-    ),
-  );
   rowDocs.appendChild(
     mkBtn('⚙ SET', 'Simulation settings', () => {
       const w = doc.defaultView as typeof window & { cqmToggleSettings?: () => void };
@@ -763,21 +754,20 @@ function buildPersistentNav(doc: Document): void {
     }),
   );
   rowDocs.appendChild(mkAct('🔇 MUTE', 'Mute all audio (toggle)', 'mute', 'cqm-persist-audio'));
-  // Owner directive #4: restore the PAUSE button next to MUTE. It was relocated out of the dock and the
-  // owner relies on it to FREEZE all motion for free-roam inspection. `data-action="pause"` is dispatched
-  // by InputSystem.bindToolbar (delegated on document.body) → UiActions.togglePause, which sets
-  // state.timeScale to 0 ↔ prePauseTimeScale, freezing the whole sim while the camera stays free.
+  // V115: PAUSE restored next to MUTE. It was relocated into SETTINGS at V103, but the owner relies on
+  // it to freeze all motion and roam/inspect. `pause` → UiActions.togglePause via the delegated
+  // [data-action] handler (input.ts); state reflects through the shared hudSpeed readout (timeScale
+  // 0 renders as "PAUSE"). Same `cqm-persist-audio` grouping so it sits immediately beside MUTE.
   rowDocs.appendChild(
     mkAct(
       '⏸ PAUSE',
-      'Pause / resume the simulation — freeze everything in place so you can roam and inspect (toggle)',
+      'Pause / resume — freeze motion so you can roam and inspect (everything holds position, then drifts slowly)',
       'pause',
       'cqm-persist-audio',
     ),
   );
-  strip.appendChild(rowDocs);
-
-  const rowPanels = mkRow('cqm-persist-row--panels');
+  // V112: panel launchers are direct children of the docs/access row so each button sits
+  // next to ACCESS. They wrap naturally; the row's max-width keeps them centred.
   const rowSim = mkRow('cqm-persist-row--sim');
   for (const [action, label, title, extra] of [
     ['weather', '☁ ENV', 'Cycle environment cloud/weather', 'cqm-persist-world'],
@@ -809,7 +799,7 @@ function buildPersistentNav(doc: Document): void {
   for (let i = 0; i < SLOTS.length; i++) {
     const s = SLOTS[i];
     if (!s) continue;
-    rowPanels.appendChild(
+    rowDocs.appendChild(
       mkBtn(
         panelLabels[i] ?? s.name,
         `Open ${panelLabels[i] ?? s.name}`,
@@ -818,7 +808,7 @@ function buildPersistentNav(doc: Document): void {
       ),
     );
   }
-  rowPanels.appendChild(
+  rowDocs.appendChild(
     mkBtn(
       'APEX',
       'Open APEX architecture brain view',
@@ -835,7 +825,7 @@ function buildPersistentNav(doc: Document): void {
       'cqm-persist-panel',
     ),
   );
-  strip.appendChild(rowPanels);
+  strip.appendChild(rowDocs);
 
   if (!strip.parentElement) doc.body.appendChild(strip);
   dockBottomBar(strip, doc);

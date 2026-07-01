@@ -8,7 +8,7 @@
 > `/spec` · **Architecture docs:** `/docs`
 
 **Version:** v0.18.0 · **Generated:** 2026-06-26 · **License:** Non-commercial research & play (© 0thernes; study / run / modify / share non-commercially, keep attribution, no for-profit use).
-**Gate:** 1,771 tests · 94.77% line / 91.97% func (canonical synced via verify-receipts 2026-06-26, receipts law enforced).  
+**Gate:** 1,984 tests · 91.86% line / 89.06% func (canonical synced via verify-receipts 2026-06-26, receipts law enforced).  
 **NHSI scorecard:** [NHSI-PROGRESS-DASHBOARD-2026-06-26.md](./NHSI-PROGRESS-DASHBOARD-2026-06-26.md) · **Tsotchke depth:** [TSOTCHKE-INTEGRATION-MAP-2026-06-26.md](./TSOTCHKE-INTEGRATION-MAP-2026-06-26.md)
 
 **Full Tsotchke wiring:** 20 Tsotchke corpus projects integrated (~16 wired). Eshkol as consciousness language. Primordial soup / petri as growth engine for digital biologics and sentience. 25 Archons (5 individuated apex minds + 20 live light-echo) with brutal god aspects (Valkorion, Thanos, Dark Phoenix, Galactus, Broly, Azathoth, Chaos Gods, Shuma Gorath, Mad Jim Jaspers, Pennywise, Anti-Monitor, Knull, Mr Mxyzptlk, Joker, Zod, Gilgamesh, Alucard, Griffith, EVA-01, Gurren Lagann, Sephiroth, Vergil, Dante, Starkiller, Riddick). Super Creature beginning only. All docs (README/ARCH/ER\*/PHILOSOPHY/CONTRACTS/SPECS/LABS/masters) + GH match local exactly. Accurate, truthful, current. Not LLM. "Grow What Thou Wilt."
@@ -41,7 +41,7 @@ Snapshot: **2026-06-27**. (Coverage + passing-test counts ARE SSOT-synced — se
 | App source (`src/`)                     | 61,790 lines · 201 files                                              |
 | Tests (`tests/`)                        | 20,928 lines · 160 files                                              |
 | Native C++ engine (`native/`, ADR-0007) | 1,535 lines · 9 files                                                 |
-| Test : source ratio                     | 0.34 → **94.77% line / 91.97% func** coverage (`bun test --coverage`) |
+| Test : source ratio                     | 0.34 → **91.86% line / 89.06% func** coverage (`bun test --coverage`) |
 | Passing tests                           | **1,771** (0 failing)                                                 |
 
 (Excludes the vendored `node_modules/`, generated `dist/` · `coverage/` · `native/build/`, and nested
@@ -338,8 +338,8 @@ Complexity classes are catalogued in [COMPLEXITY-2026-06-26.md](COMPLEXITY-2026-
 
 The single gate — `bun run check` — must pass before every commit:
 
-`prettier --check` → `tsc --noEmit` (strict) → `oxlint` → `bun test` (**1,771 tests, 0 fail**) →
-`bun scripts/build.ts`. Coverage gate: line ≥ 0.90, function ≥ 0.85 (measured 94.77% line / 91.97% func, `bun test --coverage`).
+`prettier --check` → `tsc --noEmit` (strict) → `oxlint` → `bun test` (**1,984 tests, 0 fail**) →
+`bun scripts/build.ts`. Coverage gate: line ≥ 0.90, function ≥ 0.85 (measured 91.86% line / 89.06% func, `bun test --coverage`).
 Three governing "master" personas (`masters/*.xml`) encode the discipline: **the Executor** (finish
 everything, full gates), **the Architect** (contracts before code, exclusive ownership), **the
 Physicist** (determinism, measurement, frame budgets, provenance).
@@ -381,7 +381,7 @@ atmosphere 276 · reaction-diffusion 273 · phyla 264 · analytics 252 · econom
 
 This is a ~69k-line TypeScript (+ optional C++/Jolt native engine) browser-native simulation that
 renders **up to 50,000 agents** (10,000 at 60 fps on a laptop iGPU with zero AI accelerator), is
-**bit-reproducible from one seed**, ships through a **full CI/CD gate** (1,771 tests, 94.77% line / 91.97% func coverage),
+**bit-reproducible from one seed**, ships through a **full CI/CD gate** (1,984 tests, 91.86% line / 89.06% func coverage),
 and whose entire emergent intelligence weighs **≈ 14 MB — 1/50,000th of GPT-3** at the mega ceiling. It
 demonstrates that depth comes from **architecture,
 determinism, and engineering discipline**, not parameter count or hardware.

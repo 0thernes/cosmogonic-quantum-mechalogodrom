@@ -7,6 +7,16 @@
  * Visual-only; intelligence remains in GlyphBrain + Tsotchke.
  */
 import type { AlphabetArchetype } from './alphabet-pantheon';
+import { ARENA_RADIUS } from './constants';
+
+/** Dome shell radius where pantheon creatures anchor (matches alphabet-pantheon-render). */
+export const PANTHEON_DOME_R = ARENA_RADIUS * 0.72;
+
+/** Max radial wander from anchor — keeps bodies inside the Mechalogodrom dome. */
+export const PANTHEON_FLIGHT_MAX = PANTHEON_DOME_R * 0.34;
+
+/** Motor-output scale — small enough that brain motors nudge, not teleport across the void. */
+const PANTHEON_MOTOR_SCALE = PANTHEON_FLIGHT_MAX * 0.55;
 
 /** Fifteen distinct exterior shell topologies (each instanced by kind for draw-call budget). */
 export const GLYPH_EXTERIOR_KINDS = [
@@ -122,50 +132,67 @@ export function glyphWanderOffset(
   activity: number,
 ): { x: number; y: number; z: number } {
   // Writes into `out` and returns it — zero allocation in the per-body render hot loop.
-  // 10x Pantheon Flight Mode: Creatures are no longer tethered. They use motor output
-  // to fly completely freely across the entire massive dome scale (DOME_R ≈ 1800).
-  const r = 22 + activity * 38 + chaos * 30;
+  // V116: bounded dome flight — incommensurate harmonics for organic drift, motor nudge from
+  // glyph brains, hard clamp so nothing escapes the Mechalogodrom shell or dives under the ground.
+  const r = 14 + activity * 22 + chaos * 16;
   const p = sig.wanderPhase;
   const q = (f: number, ph0: number): number =>
     Math.sin(ph * f + ph0) * 0.68 + Math.sin(ph * f * WANDER_PHI + ph0 * 1.7) * 0.32;
   const ax = sig.wanderAx;
   const ay = sig.wanderAy;
   const az = sig.wanderAz;
-
-  // motor outputs scale up to massive free-flight vectors
-  const flightRange = 1500.0; // The creatures can now cross the entire dome
+  const motor = PANTHEON_MOTOR_SCALE;
 
   switch (sig.motionStyle) {
     case 'hover':
-      out.x = q(ax, p) * r * 0.52 + mx * flightRange;
-      out.y = q(ay, p * 1.3) * (12 + activity * 22) + my * flightRange * 0.5;
-      out.z = q(az, p * 0.7 + 1.1) * r * 0.52 + mz * flightRange;
-      return out;
+      out.x = q(ax, p) * r * 0.52 + mx * motor;
+      out.y = q(ay, p * 1.3) * (8 + activity * 14) + my * motor * 0.45;
+      out.z = q(az, p * 0.7 + 1.1) * r * 0.52 + mz * motor;
+      break;
     case 'lissajous':
-      out.x = q(ax, p) * r + mx * flightRange;
-      out.y = q(ay * 1.7, p) * (14 + activity * 26) + my * flightRange * 0.6;
-      out.z = q(az * 1.3, p + 2.0) * r * 0.95 + mz * flightRange;
-      return out;
+      out.x = q(ax, p) * r * 0.85 + mx * motor;
+      out.y = q(ay * 1.7, p) * (10 + activity * 18) + my * motor * 0.5;
+      out.z = q(az * 1.3, p + 2.0) * r * 0.8 + mz * motor;
+      break;
     case 'breathe':
-      out.x = q(0.21, p) * r * 0.38 + mx * flightRange;
-      out.y = q(0.17, p) * (16 + activity * 34) + my * flightRange * 0.5;
-      out.z = q(0.19, p + 1.6) * r * 0.38 + mz * flightRange;
-      return out;
+      out.x = q(0.21, p) * r * 0.38 + mx * motor;
+      out.y = q(0.17, p) * (10 + activity * 22) + my * motor * 0.45;
+      out.z = q(0.19, p + 1.6) * r * 0.38 + mz * motor;
+      break;
     case 'drift':
       out.x =
-        q(ax * 0.4, p) * r * 0.72 +
-        Math.cos(ph * 0.09 * WANDER_PHI + p) * r * 0.32 +
-        mx * flightRange;
-      out.y = q(0.13, my) * (12 + activity * 24) + my * flightRange * 0.5;
+        q(ax * 0.4, p) * r * 0.72 + Math.cos(ph * 0.09 * WANDER_PHI + p) * r * 0.28 + mx * motor;
+      out.y = q(0.13, my) * (8 + activity * 16) + my * motor * 0.45;
       out.z =
-        q(az * 0.45, p + 0.8) * r * 0.66 +
-        Math.sin(ph * 0.11 * WANDER_PHI + p) * r * 0.28 +
-        mz * flightRange;
-      return out;
+        q(az * 0.45, p + 0.8) * r * 0.58 +
+        Math.sin(ph * 0.11 * WANDER_PHI + p) * r * 0.22 +
+        mz * motor;
+      break;
     default:
-      out.x = Math.sin(ph * 0.13 * WANDER_PHI + p) * r * 0.24 + mx * flightRange;
-      out.y = q(0.25, p) * (8 + activity * 20) + my * flightRange * 0.5;
-      out.z = Math.cos(ph * 0.12 * WANDER_PHI + p) * r * 0.24 + mz * flightRange;
-      return out;
+      out.x = Math.sin(ph * 0.13 * WANDER_PHI + p) * r * 0.24 + mx * motor;
+      out.y = q(0.25, p) * (6 + activity * 14) + my * motor * 0.45;
+      out.z = Math.cos(ph * 0.12 * WANDER_PHI + p) * r * 0.24 + mz * motor;
+      break;
   }
+  return clampPantheonWander(out);
+}
+
+/** Hard clamp wander offset inside the dome biome (XZ radial + Y band). */
+export function clampPantheonWander(out: { x: number; y: number; z: number }): {
+  x: number;
+  y: number;
+  z: number;
+} {
+  const maxR = PANTHEON_FLIGHT_MAX;
+  const minY = 6;
+  const maxY = PANTHEON_DOME_R * 0.42;
+  const r2 = out.x * out.x + out.z * out.z;
+  if (r2 > maxR * maxR) {
+    const s = maxR / Math.sqrt(r2);
+    out.x *= s;
+    out.z *= s;
+  }
+  if (out.y < minY) out.y = minY;
+  else if (out.y > maxY) out.y = maxY;
+  return out;
 }

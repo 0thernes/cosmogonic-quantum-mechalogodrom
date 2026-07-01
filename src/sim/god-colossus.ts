@@ -233,9 +233,9 @@ export class GodColossus {
           vec3 dir = normalize(vP);
           float veins = fbm(dir * 6.0 + uTime * 0.15);
           veins = pow(abs(veins - 0.5) * 2.0, 1.6);
-          float energy = fbm(dir * 3.0 - uTime * 0.25) * (0.45 + 0.9 * uChaos);
-          vec3 col = uHue * (energy * 1.3 + veins * 0.9) + vec3(0.12, 0.05, 0.22) * uEntropy * 0.5;
-          float a = clamp(energy * 0.55 + veins * 0.45, 0.0, 0.82);
+          float energy = fbm(dir * 3.0 - uTime * 0.25) * (0.35 + 0.6 * uChaos);
+          vec3 col = uHue * (energy * 0.7 + veins * 0.5) + vec3(0.08, 0.04, 0.16) * uEntropy * 0.35;
+          float a = clamp(energy * 0.35 + veins * 0.28, 0.0, 0.62);
           gl_FragColor = vec4(col, a);
         }`,
     });
@@ -262,14 +262,15 @@ export class GodColossus {
     // Schizophrenic hue drift — the god never wears the same face twice.
     const h = (this.hue + t * 0.012 + c * 0.18) % 1;
     this.emissiveColor.setHSL(h, 0.7, 0.32 + 0.18 * c);
-    const blaze = 0.4 + 2.4 * c + 0.8 * en;
+    // USER #11: intensities capped so the colossus stays a silhouette against the dome, not a flare.
+    const blaze = 0.35 + 1.2 * c + 0.4 * en;
     this.coreMat.emissive.copy(this.emissiveColor);
     this.coreMat.emissiveIntensity = blaze;
     this.panelMat.emissive.copy(this.emissiveColor);
-    this.panelMat.emissiveIntensity = 0.35 + 1.9 * c;
+    this.panelMat.emissiveIntensity = 0.28 + 0.95 * c;
     this.crownMat.emissive.setHSL((h + 0.5) % 1, 0.85, 0.4 + 0.2 * c);
-    this.crownMat.emissiveIntensity = 0.7 + 2.6 * c + 0.6 * en;
-    this.ringMat.emissiveIntensity = 0.9 + 3.0 * c;
+    this.crownMat.emissiveIntensity = 0.5 + 1.3 * c + 0.4 * en;
+    this.ringMat.emissiveIntensity = 0.6 + 1.5 * c;
 
     // Crown + halos counter-rotate; faster as the world agitates.
     this.crown.rotation.y += 0.0009 + 0.004 * c;

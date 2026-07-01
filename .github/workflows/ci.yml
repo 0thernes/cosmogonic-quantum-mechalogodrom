@@ -83,6 +83,36 @@ jobs:
           if-no-files-found: ignore
           retention-days: 14
 
+      # Owner-critical feature regression gate. This step makes NO unverifiable claims: it runs the
+      # actual behavioral/contract test files that back each owner-requested feature. If any feature
+      # regresses (or a seal file is renamed/deleted), this step FAILS LOUDLY — it is falsifiable by
+      # construction. The full suite already ran in the gate above; naming these here documents the
+      # exact test→item mapping and fast-fails on the surfaces the owner explicitly tracks.
+      #   item 4        dock PAUSE/MUTE + true-freeze wiring ....... tests/ui-lifecycle-static.test.ts
+      #   items 3 & 13  live brains / firing neural readouts ....... tests/{brains,apex-brain,entity-brain,glyph-brain,mechalogodrom-brain}.test.ts
+      #   item 7a       NHI bodies + social system ................. tests/{nhi,nhi-system}.test.ts
+      #   item 7b       singularities (GR accretion/lensing) ....... tests/singularities.test.ts
+      #   item 10       pantheon dome containment (no escape) ...... tests/alphabet-pantheon-render.test.ts
+      #   items 15 & 16 plants ground-attach + touch response ...... tests/{vegetation,alien-flora}.test.ts
+      #   item 18       temple/portal wormhole-horror .............. tests/monolith-temple.test.ts
+      #   viz systems   shared render-system contracts ............. tests/viz-systems.test.ts
+      - name: Owner-critical feature regression (real seals, no claims)
+        run: >
+          bun test
+          tests/ui-lifecycle-static.test.ts
+          tests/brains.test.ts tests/apex-brain.test.ts tests/entity-brain.test.ts
+          tests/glyph-brain.test.ts tests/mechalogodrom-brain.test.ts
+          tests/nhi.test.ts tests/nhi-system.test.ts
+          tests/singularities.test.ts
+          tests/alphabet-pantheon-render.test.ts
+          tests/vegetation.test.ts tests/alien-flora.test.ts
+          tests/monolith-temple.test.ts
+          tests/viz-systems.test.ts
+
+      # Build + headless smoke. No `|| echo` mask: if the build or smoke check fails, this step fails.
+      - name: Build + headless smoke
+        run: bun run smoke
+
   bench:
     name: Benchmarks (informational)
     runs-on: ubuntu-latest

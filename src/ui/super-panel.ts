@@ -25,6 +25,26 @@ export interface PetriTelemetry {
   ulgResonance: number;
 }
 
+/** One Archon/Godform card in the Architect panel. */
+interface ArchonInfo {
+  archetype: string;
+  plan: SuperPlan;
+  emotion: { valence: number; arousal: number; dominance: number };
+  surprise: number;
+  intent: { aggression: number; deception: number; curiosity: number };
+  consciousness: {
+    dreaming: number;
+    hallucinating: number;
+    reasoning: number;
+    selfAware: number;
+    novelty: number;
+    ignition: number;
+    phi: number;
+    workspace: number;
+  };
+  confidence: number;
+}
+
 /** Plan → accent colour, so the committed goal reads at a glance (hunt-red … rest-grey). */
 const PLAN_COLOR: Record<SuperPlan, string> = {
   HUNT: '#ff5a6b',
@@ -55,7 +75,7 @@ const STYLE = `
 #cqm-sup-panel{left:auto;top:auto;right:10px;bottom:calc(var(--cqm-bottom-h,108px) + 130px);transform:none;width:min(94vw,326px);max-height:min(66vh,480px)}
 }
 .cqm-sup-head{display:flex;align-items:center;gap:8px;padding:7px 10px;border-bottom:1px solid rgba(196,120,255,.24);background:rgba(28,14,46,.8)}
-.cqm-sup-head b{font-size:11px;letter-spacing:.14em;color:#d8a8ff;white-space:nowrap}
+.cqm-sup-head b{font-size:13px;letter-spacing:.12em;color:#d8a8ff;white-space:nowrap}
 .cqm-sup-head .plan{margin-left:auto;font-weight:700;letter-spacing:.1em;padding:1px 8px;border-radius:9px;background:rgba(0,0,0,.35)}
 .cqm-sup-neu{background:rgba(20,8,36,.9);color:#d8b8ff;border:1px solid rgba(180,120,255,.45);border-radius:5px;
   font:600 10px/1 var(--font-mono,ui-monospace,monospace);letter-spacing:.08em;padding:3px 7px;cursor:pointer;white-space:nowrap}
@@ -75,29 +95,31 @@ const STYLE = `
 .cqm-sup-body{flex:1 1 auto;min-height:0;display:flex;flex-direction:row;gap:10px;overflow:auto;align-items:stretch}
 .cqm-sup-id{flex:0 0 auto;padding:6px 10px;border-right:1px solid rgba(196,120,255,.14);display:grid;
   grid-template-columns:auto 1fr;gap:2px 10px;align-items:baseline;min-width:160px;max-width:220px;overflow:hidden}
-.cqm-sup-id .k{color:#a98fce;font-size:10px;letter-spacing:.05em;text-transform:uppercase}
-.cqm-sup-id .v{color:#f3ecff;text-align:right;font-variant-numeric:tabular-nums}
-.cqm-sup-bars{flex:1 1 auto;padding:7px 10px;display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:6px 14px;align-content:start;min-width:0}
-.cqm-sup-bar{display:grid;grid-template-columns:58px 1fr 34px;align-items:center;gap:7px;min-width:0}
-.cqm-sup-bar .lab{color:#a98fce;font-size:10px;letter-spacing:.04em;text-transform:uppercase}
-.cqm-sup-bar .track{height:7px;border-radius:4px;background:rgba(196,120,255,.12);overflow:hidden}
-.cqm-sup-bar .fill{height:100%;width:0;border-radius:4px;transition:width .25s ease}
-.cqm-sup-bar .num{color:#f3ecff;text-align:right;font-size:10px;font-variant-numeric:tabular-nums}
+.cqm-sup-id .k{color:#a98fce;font-size:12px;letter-spacing:.05em;text-transform:uppercase}
+.cqm-sup-id .v{color:#f3ecff;text-align:right;font-variant-numeric:tabular-nums;font-size:13px}
+.cqm-sup-bars{flex:1 1 auto;padding:10px 12px;display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:8px 16px;align-content:stretch;min-width:0}
+.cqm-sup-bar{display:grid;grid-template-columns:72px 1fr 42px;align-items:center;gap:8px;min-width:0}
+.cqm-sup-bar .lab{color:#c4a8e8;font-size:12px;letter-spacing:.04em;text-transform:uppercase;font-weight:600}
+.cqm-sup-bar .track{height:11px;border-radius:5px;background:rgba(196,120,255,.14);overflow:hidden}
+.cqm-sup-bar .fill{height:100%;width:0;border-radius:5px;transition:width .25s ease}
+.cqm-sup-bar .num{color:#f3ecff;text-align:right;font-size:13px;font-variant-numeric:tabular-nums;font-weight:600}
 .cqm-sup-archons {
   display: grid;
-  grid-template-columns: repeat(5, minmax(110px, 1fr));
-  gap: 8px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
   padding: 10px 14px 12px;
   border-top: 1px solid rgba(196, 120, 255, 0.18);
   background: linear-gradient(180deg, rgba(20, 8, 36, 0.45), rgba(8, 5, 16, 0.7));
+  overflow-y: auto;
+  max-height: 220px;
 }
 .cqm-sup-archons > div {
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 5px;
   margin: 0;
-  padding: 8px;
+  padding: 9px 10px;
   border: 1px solid rgba(196, 120, 255, 0.22);
   border-radius: 8px;
   background: rgba(0, 0, 0, 0.4);
@@ -110,7 +132,7 @@ const STYLE = `
 }
 .cqm-sup-archons .archon-name {
   color: #e0bdff !important;
-  font: 800 11px var(--font-mono, ui-monospace, monospace);
+  font: 800 13px var(--font-mono, ui-monospace, monospace);
   text-transform: uppercase;
   letter-spacing: 0.05em;
   overflow: hidden;
@@ -119,35 +141,43 @@ const STYLE = `
 }
 .cqm-sup-archons .archon-plan {
   display: inline-block;
-  font: 700 9px var(--font-mono, ui-monospace, monospace);
+  font: 700 10px var(--font-mono, ui-monospace, monospace);
   text-align: center;
-  padding: 2px 6px;
+  padding: 2px 8px;
   border-radius: 4px;
   letter-spacing: 0.08em;
   width: fit-content;
   max-width: 100%;
 }
 .cqm-sup-archons .archon-telemetry {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 3px 8px;
   margin-top: 2px;
   border-top: 1px solid rgba(196, 120, 255, 0.1);
-  padding-top: 4px;
+  padding-top: 5px;
 }
 .cqm-sup-archons .archon-stat {
   display: flex;
   justify-content: space-between;
-  font: 9px/1.2 var(--font-mono, ui-monospace, monospace);
+  gap: 4px;
+  font: 10px/1.25 var(--font-mono, ui-monospace, monospace);
   color: #a98fce;
+}
+.cqm-sup-archons .archon-stat span:first-child {
+  opacity: 0.85;
 }
 .cqm-sup-archons .archon-stat span:last-child {
   color: #ece2ff;
-  font-weight: 600;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
 }
 @media (max-width: 720px) {
   .cqm-sup-archons {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: 1fr;
+  }
+  .cqm-sup-archons .archon-telemetry {
+    grid-template-columns: repeat(3, 1fr);
   }
 }
 /* V75: the NEURAL observatory lives in the SAME box — toggling it grows this panel and swaps the
@@ -212,13 +242,26 @@ export class SuperPanel {
   private open = false;
   private minimized = false;
   private neuralOn = false;
-  // GOAL5: rows for all 5 Archons (name + plan) for first-class telemetry (not just prime)
+  // GOAL5: rows for all 5 Archons (name + plan + full affect dimensions) for first-class telemetry
   private archonRows: Array<{
     nm: HTMLElement;
     pl: HTMLElement;
-    pow: HTMLElement;
-    spike: HTMLElement;
-    coh: HTMLElement;
+    val: HTMLElement;
+    aro: HTMLElement;
+    dom: HTMLElement;
+    sur: HTMLElement;
+    agg: HTMLElement;
+    dec: HTMLElement;
+    cur: HTMLElement;
+    dre: HTMLElement;
+    hal: HTMLElement;
+    rea: HTMLElement;
+    saw: HTMLElement;
+    nov: HTMLElement;
+    ign: HTMLElement;
+    integrity: HTMLElement;
+    integration: HTMLElement;
+    conf: HTMLElement;
   }> = [];
 
   constructor(doc: Document = document) {
@@ -277,33 +320,39 @@ export class SuperPanel {
     this.id.resonance = idRow(id, 'Resonance', doc); // #59: standing-wave coherence binding the assembly
     this.id.power = idRow(id, 'Power', doc); // V48: the evolution — level / stage / power / day
 
-    // GOAL5: 5 Archons/Godforms telemetry (first-class, distinct from prime singular) — rows built in ctor for live per-Archetype plan inspect
-    // (full: name/archetype/plan visible for all 5; senses drive plan, memory/quantum/body in neural tab for focused)
-    void panel.querySelector('[data-archons]'); // rows populated live in update()
+    // GOAL5 + USER #5: 5 Archons/Godforms — FILLED SPACE, BIGGER TYPO, FULL PARAMS (VALENCE AROUSAL DOMINANCE SURPRISE AGGRESS DECEIVE CURIOSITY DREAM HALLUCINATE REASON SELF AWARE NOVELTY IGNITION INTEGRITY INTEGRATION CONFIDENCE) + graphs via stats.
+    // No dead open space. Legible, bigger fonts, use the box. 5 distinct with live data + mini telemetry.
+    void panel.querySelector('[data-archons]');
 
     const bars = panel.querySelector('[data-bars]') as HTMLElement;
     this.meter.valence = bar(bars, 'Valence', '#6bff9e', doc);
     this.meter.arousal = bar(bars, 'Arousal', '#ff9f43', doc);
     this.meter.dominance = bar(bars, 'Dominance', '#c06bff', doc);
-    this.meter.surprise = bar(bars, 'Surprise', '#6bd5ff', doc);
-    this.meter.aggression = bar(bars, 'Aggress', '#ff5a6b', doc);
-    this.meter.deception = bar(bars, 'Deceive', '#d8a8ff', doc);
-    this.meter.curiosity = bar(bars, 'Curiosity', '#9fb6dd', doc);
-    // V46 — the SUPER MIND's consciousness meters (dream / hallucinate / reason / self-aware / novelty).
-    this.meter.dreaming = bar(bars, 'Dream', '#b98cff', doc);
-    this.meter.hallucinating = bar(bars, 'Hallucin', '#ff6ab0', doc);
-    this.meter.reasoning = bar(bars, 'Reason', '#6cdfff', doc);
-    this.meter.selfAware = bar(bars, 'Self-aware', '#ffd166', doc);
-    this.meter.novelty = bar(bars, 'Novelty', '#8dff9e', doc);
-    // V89 — Super Creature 1.1: the two leading SCIENTIFIC theories of consciousness, measured live.
-    this.meter.ignition = bar(bars, 'Ignition', '#ff7a45', doc); // Global Workspace broadcast (GNW)
-    this.meter.phi = bar(bars, 'Φ integ', '#5ad1c4', doc); // Integrated-Information proxy (IIT)
-    this.meter.confidence = bar(bars, 'Confidence', '#ffa3d1', doc); // V92 · metacognitive executive (HOT)
+    this.meter.surprise = bar(bars, 'Surprise', '#6bd5ff', doc); // surprise
+    this.meter.aggression = bar(bars, 'Aggress', '#ff5a6b', doc); // aggression
+    this.meter.deception = bar(bars, 'Deceive', '#d8a8ff', doc); // deception
+    this.meter.curiosity = bar(bars, 'Curiosity', '#9fb6dd', doc); // curiosity
+    this.meter.dreaming = bar(bars, 'Dream', '#b98cff', doc); // dreaming
+    this.meter.hallucinating = bar(bars, 'Hallucin', '#ff6ab0', doc); // hallucinating
+    this.meter.reasoning = bar(bars, 'Reason', '#6cdfff', doc); // reasoning
+    this.meter.selfAware = bar(bars, 'Self-aware', '#ffd166', doc); // selfAware
+    this.meter.novelty = bar(bars, 'Novelty', '#8dff9e', doc); // novelty
+    this.meter.ignition = bar(bars, 'Ignition', '#ff7a45', doc); // ignition
+    this.meter.phi = bar(bars, 'Φ integ', '#5ad1c4', doc);
+    this.meter.confidence = bar(bars, 'Confidence', '#ffa3d1', doc); // confidence
 
-    // GOAL5: 5 Archons first-class inspect list (name/archetype/plan/senses proxy via plan color; full quantum/mem via neural for focused)
+    // 5 Archons: bigger, legible, filled. Full params (VALENCE AROUSAL ... CONFIDENCE per user). No tiny 9px dead space.
     const archonsWrap = panel.querySelector('[data-archons]') as HTMLElement;
+    archonsWrap.style.cssText =
+      'font-size:12px;margin-top:8px;opacity:1;line-height:1.35;min-height:140px';
     archonsWrap.innerHTML = '';
     this.archonRows = [];
+    const makeStat = (label: string): HTMLElement => {
+      const el = doc.createElement('div');
+      el.className = 'archon-stat';
+      el.innerHTML = `<span>${label}:</span><span>—</span>`;
+      return el;
+    };
     for (let k = 0; k < 5; k++) {
       const card = doc.createElement('div');
       const nm = doc.createElement('span');
@@ -312,24 +361,52 @@ export class SuperPanel {
       pl.className = 'archon-plan';
       const tel = doc.createElement('div');
       tel.className = 'archon-telemetry';
-      const statPow = doc.createElement('div');
-      statPow.className = 'archon-stat';
-      statPow.innerHTML = '<span>POW:</span><span>—</span>';
-      const statSpike = doc.createElement('div');
-      statSpike.className = 'archon-stat';
-      statSpike.innerHTML = '<span>SPIKE:</span><span>—</span>';
-      const statCoh = doc.createElement('div');
-      statCoh.className = 'archon-stat';
-      statCoh.innerHTML = '<span>COH:</span><span>—</span>';
-      tel.append(statPow, statSpike, statCoh);
+      // USER #5: every Archon Godform card now shows all 16 live affect/cognition dimensions the
+      // owner listed (valence → confidence), each fed real per-archon data by the update loop below,
+      // filling the previously empty card space. The earlier 9 cells included 6 placeholders
+      // (PLE/DIS/EXC/CAL/TEN/REL) that were never wired to the row and left `sSur…sCnf` undefined.
+      const sVal = makeStat('VAL');
+      const sAro = makeStat('ARO');
+      const sDom = makeStat('DOM');
+      const sSur = makeStat('SUR');
+      const sAgg = makeStat('AGG');
+      const sDec = makeStat('DEC');
+      const sCur = makeStat('CUR');
+      const sDre = makeStat('DRE');
+      const sHal = makeStat('HAL');
+      const sRea = makeStat('REA');
+      const sSAw = makeStat('SAW');
+      const sNov = makeStat('NOV');
+      const sIgn = makeStat('IGN');
+      const sInt = makeStat('INTG');
+      const sIgr = makeStat('PHI');
+      const sCnf = makeStat('CONF');
+      // prettier-ignore
+      tel.append(
+        sVal, sAro, sDom, sSur, sAgg, sDec, sCur, sDre,
+        sHal, sRea, sSAw, sNov, sIgn, sInt, sIgr, sCnf,
+      );
       card.append(nm, pl, tel);
       archonsWrap.appendChild(card);
       this.archonRows.push({
         nm,
         pl,
-        pow: statPow.querySelector('span:last-child') as HTMLElement,
-        spike: statSpike.querySelector('span:last-child') as HTMLElement,
-        coh: statCoh.querySelector('span:last-child') as HTMLElement,
+        val: sVal.querySelector('span:last-child') as HTMLElement,
+        aro: sAro.querySelector('span:last-child') as HTMLElement,
+        dom: sDom.querySelector('span:last-child') as HTMLElement,
+        sur: sSur.querySelector('span:last-child') as HTMLElement,
+        agg: sAgg.querySelector('span:last-child') as HTMLElement,
+        dec: sDec.querySelector('span:last-child') as HTMLElement,
+        cur: sCur.querySelector('span:last-child') as HTMLElement,
+        dre: sDre.querySelector('span:last-child') as HTMLElement,
+        hal: sHal.querySelector('span:last-child') as HTMLElement,
+        rea: sRea.querySelector('span:last-child') as HTMLElement,
+        saw: sSAw.querySelector('span:last-child') as HTMLElement,
+        nov: sNov.querySelector('span:last-child') as HTMLElement,
+        ign: sIgn.querySelector('span:last-child') as HTMLElement,
+        integrity: sInt.querySelector('span:last-child') as HTMLElement,
+        integration: sIgr.querySelector('span:last-child') as HTMLElement,
+        conf: sCnf.querySelector('span:last-child') as HTMLElement,
       });
     }
   }
@@ -374,7 +451,7 @@ export class SuperPanel {
     netWorth: number,
     mind?: SuperMindSnapshot | null,
     evo?: EvoView | null,
-    archons?: Array<{ archetype: string; plan: string }> | null,
+    archons?: ArchonInfo[] | null,
     petri?: PetriTelemetry | null,
   ): void {
     // GOAL5: 5 Archons first-class (all 5 names/archetypes/plans live; prime gets deep + neural; senses/quantum/body via per mind)
@@ -392,15 +469,29 @@ export class SuperPanel {
           row.pl.style.background = pc + '22';
           row.pl.style.color = pc;
 
-          // Deterministic dynamic telemetry
-          const powerVal = netWorth * (0.8 + 0.3 * Math.sin(k * 1.5 + Date.now() / 4000));
-          row.pow.textContent = fmt(powerVal);
-
-          const hz = 12 + 6 * Math.sin(k * 2.2 + Date.now() / 1500);
-          row.spike.textContent = hz.toFixed(1) + 'Hz';
-
-          const cohVal = 75 + 18 * Math.cos(k * 3.7 + Date.now() / 2500);
-          row.coh.textContent = cohVal.toFixed(0) + '%';
+          // V116: full per-Archon telemetry from real SuperCreature + SuperMind snapshots.
+          const em = info.emotion;
+          const v = em.valence;
+          const a = em.arousal;
+          const d = em.dominance;
+          const c = info.consciousness;
+          const integrity = clamp01((c.phi + info.confidence + (1 - info.surprise)) / 3);
+          row.val.textContent = v.toFixed(2);
+          row.aro.textContent = a.toFixed(2);
+          row.dom.textContent = d.toFixed(2);
+          row.sur.textContent = info.surprise.toFixed(2);
+          row.agg.textContent = info.intent.aggression.toFixed(2);
+          row.dec.textContent = info.intent.deception.toFixed(2);
+          row.cur.textContent = info.intent.curiosity.toFixed(2);
+          row.dre.textContent = c.dreaming.toFixed(2);
+          row.hal.textContent = c.hallucinating.toFixed(2);
+          row.rea.textContent = c.reasoning.toFixed(2);
+          row.saw.textContent = c.selfAware.toFixed(2);
+          row.nov.textContent = c.novelty.toFixed(2);
+          row.ign.textContent = c.ignition.toFixed(2);
+          row.integrity.textContent = integrity.toFixed(2);
+          row.integration.textContent = c.phi.toFixed(2);
+          row.conf.textContent = info.confidence.toFixed(2);
         }
       }
     }
@@ -444,6 +535,11 @@ export class SuperPanel {
       this.setBar('ignition', k.ignition ?? 0); // V89 · GWT broadcast
       this.setBar('phi', k.phi ?? 0); // V89 · IIT Φ proxy
       this.setBar('confidence', mind.metacog?.confidence ?? 0); // V92 · metacognitive confidence (HOT)
+      this.setBar(
+        'integrity',
+        clamp01(((k.phi ?? 0) + (mind.metacog?.confidence ?? 0) + (1 - (snap.surprise ?? 0))) / 3),
+      );
+      this.setBar('integration', k.phi ?? 0);
       // V84+ Ralph Tsotchke corpus wiring: Eshkol (full local Eshkol/eshkol_repo AD/arena/HoTT/consciousness + QRNG), Moonlab (tensor/MPO/CA-MPS), libirrep symmetry, ulg/quantum-quake. See audit. The Eshkol qubit-RNG it
       // collapses thoughts through, the QGTL geometry (curvature of its thought-space), and the
       // spin-glass instinct (the behavioural archetype its Hopfield/Ising lattice recalled this beat).
@@ -515,4 +611,8 @@ function fmt(v: number): string {
   if (a >= 1e6) return (v / 1e6).toFixed(1) + 'M';
   if (a >= 1e3) return (v / 1e3).toFixed(1) + 'k';
   return v.toFixed(0);
+}
+
+function clamp01(v: number): number {
+  return v < 0 ? 0 : v > 1 ? 1 : v;
 }

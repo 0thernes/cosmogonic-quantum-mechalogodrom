@@ -61,10 +61,8 @@ export class Engine {
     this.renderer.setSize(window.innerWidth, window.innerHeight, false);
     this.renderer.shadowMap.enabled = quality.shadows;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    // Owner directive #11/#14: the scene reads too bright/blinding-white. Pull global exposure down
-    // (0.95 → 0.82) so highlights roll off into a normal white instead of clipping. ACES already
-    // compresses the top end; this darkens the whole frame ~14% while staying fully visible.
-    this.renderer.toneMappingExposure = 0.82;
+    // USER #11: default exposure lowered so whites stop blowing out; ACES still handles HDR.
+    this.renderer.toneMappingExposure = 0.62;
     this.renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
 
     this.scene = new THREE.Scene();
@@ -167,6 +165,16 @@ export class Engine {
    */
   setLens(cx: number, cy: number, strength: number, radius: number): void {
     this.fx?.setLens(cx, cy, strength, radius);
+  }
+
+  /** Master scene exposure (ACES filmic). O(1); does not touch sim state. */
+  setExposure(exposure: number): void {
+    // USER #11: clamped upper bound lowered so the scene never re-blows out at high exposure.
+    this.renderer.toneMappingExposure = Math.max(0.35, Math.min(0.95, exposure));
+  }
+
+  getExposure(): number {
+    return this.renderer.toneMappingExposure;
   }
 
   /**
