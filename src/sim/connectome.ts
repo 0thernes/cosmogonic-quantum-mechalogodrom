@@ -83,6 +83,8 @@ export class Connectome {
   private readonly posAttr: THREE.BufferAttribute;
   private readonly colAttr: THREE.BufferAttribute;
   private readonly geo: THREE.BufferGeometry;
+  /** The scene LineSegments (retained so {@link dispose} can remove it + free its material). */
+  private readonly lines: THREE.LineSegments;
   private linkCount = 0;
   private pairTotal = 0;
   /** Community lookup installed by GraphMind (null ⇒ V1 time-hue coloring). */
@@ -114,7 +116,7 @@ export class Connectome {
     this.geo.setAttribute('position', this.posAttr);
     this.geo.setAttribute('color', this.colAttr);
     this.geo.setDrawRange(0, 0);
-    const lines = new THREE.LineSegments(
+    this.lines = new THREE.LineSegments(
       this.geo,
       new THREE.LineBasicMaterial({
         vertexColors: true,
@@ -125,6 +127,7 @@ export class Connectome {
         blending: THREE.AdditiveBlending,
       }),
     );
+    const lines = this.lines;
     // USER (always-visible connectome): the axon web spans the WHOLE dome and its vertices are
     // rebuilt every frame, but three computes the geometry bounding sphere ONCE (lazily) and never
     // again — so as creatures roam, the stale sphere drifts out of the frustum and the ENTIRE web
@@ -146,6 +149,14 @@ export class Connectome {
   /** Index pairs recorded in {@link pairs} by the last update (`pairCount <= links`). */
   get pairCount(): number {
     return this.pairTotal;
+  }
+
+  /** Free the owned geometry + material and remove the axon-web from the scene (HMR / world-reset safe;
+   *  idempotent per three.js). Without this each hot reload orphaned a Connectome geometry + material. */
+  dispose(): void {
+    this.ctx.scene.remove(this.lines);
+    this.geo.dispose();
+    (this.lines.material as THREE.Material).dispose();
   }
 
   /**

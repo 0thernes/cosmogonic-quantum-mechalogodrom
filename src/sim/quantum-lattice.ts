@@ -56,4 +56,12 @@ export class QuantumLattice {
     this.group.scale.setScalar(1 + Math.sin(t * 0.8) * 0.12);
     this.mat.opacity = 0.15 + 0.1 * (0.5 + 0.5 * Math.sin(t * 1.1));
   }
+
+  /** Free the 3 owned WireframeGeometry shells + the shared material and remove the lattice from the scene
+   *  (HMR / world-reset safe; idempotent). The base platonic geometries were already freed at build time. */
+  dispose(): void {
+    for (const s of this.shells) s.seg.geometry.dispose();
+    this.mat.dispose();
+    this.group.removeFromParent();
+  }
 }

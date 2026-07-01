@@ -921,6 +921,23 @@ export class InstancedEntityRenderer {
     (pool.mesh.material as THREE.MeshStandardMaterial).dispose();
     this.pools[k] = this.buildPool(k, need);
   }
+
+  /** Free every live instance pool — each pool's InstancedMesh, its cloned BufferGeometry (which owns the
+   *  per-instance attribute containers), and its patched MeshStandardMaterial — and remove them from the
+   *  scene (HMR / world-reset safe; idempotent). Mirrors {@link growPool}'s per-pool disposal. Does NOT
+   *  touch the SHARED `geos` cache (owned by SimContext, disposed elsewhere). Without this, every hot
+   *  reload orphaned a whole generation of instance pools → the known WebGL context-exhaustion leak. */
+  dispose(): void {
+    for (let k = 0; k < this.pools.length; k++) {
+      const pool = this.pools[k];
+      if (!pool) continue;
+      this.scene.remove(pool.mesh);
+      pool.mesh.geometry.dispose(); // per-pool clone (NOT the shared geos cache entry)
+      pool.mesh.dispose();
+      (pool.mesh.material as THREE.MeshStandardMaterial).dispose();
+      this.pools[k] = null;
+    }
+  }
 }
 
 /** Scratch color for the instanceColor warm-up write. */

@@ -1136,6 +1136,10 @@ export class World {
     this.artifacts.dispose(this.engine.scene);
     this.nhiBody.dispose(); // 3 shared geometries + live body materials
     this.rd.dispose(); // the Gray–Scott GPU DataTexture
+    this.instanced?.dispose(); // free every live instance pool — clones + materials (null in per-mesh mode)
+    this.connectome.dispose(); // free the axon-web BufferGeometry + LineBasicMaterial
+    this.cosmicWeb.dispose(); // free the cosmic-web points/lines geometries + PointsMaterial/LineBasicMaterial
+    this.quantumLattice.dispose(); // free the 3 WireframeGeometry shells + shared LineBasicMaterial
     for (const b of this.superBodies) b.dispose();
     for (const h of this.heroBodies) h.body.dispose();
     this.superheroHud.dispose();

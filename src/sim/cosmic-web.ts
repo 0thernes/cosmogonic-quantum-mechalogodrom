@@ -118,4 +118,16 @@ export class CosmicWeb {
     this.group.rotation.y = t * (0.003 + 0.012 * c);
     this.group.rotation.z = Math.sin(t * 0.02) * 0.05 * c;
   }
+
+  /** Free the two owned geometries + both materials and remove the web from the scene (HMR / world-reset
+   *  safe; idempotent). Without this each hot reload orphaned two BufferGeometries + the point/line materials. */
+  dispose(): void {
+    this.group.traverse((o) => {
+      const g = (o as THREE.Points | THREE.LineSegments).geometry;
+      if (g) g.dispose();
+    });
+    this.pMat.dispose();
+    this.lMat.dispose();
+    this.group.removeFromParent();
+  }
 }
