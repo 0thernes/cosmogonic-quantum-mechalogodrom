@@ -74,11 +74,20 @@ export function eshkolWorkspaceTick(
   const eInfer = engine?.inference ?? w1;
   const eWork = engine?.workspace ?? w0;
 
-  const ignitionThreshold = clamp01(0.28 + (engine?.broadcastWinner ?? 0) * 0.1 + w2 * 0.35);
+  // Ignition threshold is expressed RELATIVE TO UNIFORM (1/WS_MODULES): a specialist "ignites" when its
+  // softmax access exceeds ~1.85× the uniform baseline (plus a small substrate/engine modulation). The old
+  // absolute 0.28..0.63 threshold could NEVER be cleared by a winner competing against 8 near-uniform
+  // specialists (peak access caps well below 0.28 at the diffuse temperature), so the workspace ignited on
+  // 0/1600 real archon beats — a Global Workspace that never achieves global access is broken. This makes
+  // ignition a SELECTIVE, real event again (fixing the dead mechanism — not removing/weakening any faculty).
+  const ignitionThreshold = clamp01(
+    (2.15 + (engine?.broadcastWinner ?? 0) * 0.4) / WS_MODULES + w2 * 0.05,
+  );
 
-  // REAL Global-Workspace competition: softmax over saliences → winner → ignition.
+  // REAL Global-Workspace competition: softmax over saliences → winner → ignition. The temperature is
+  // sharpened (0.6 → 0.25) so a genuine winner can emerge from the field rather than a permanent near-tie.
   const sal = workspaceSaliences(substrate, beat, engine);
-  const comp = gwtCompeteScalar(sal, WS_MODULES, ignitionThreshold, 0.6);
+  const comp = gwtCompeteScalar(sal, WS_MODULES, ignitionThreshold, 0.25);
 
   const broadcastGain = clamp01(0.18 + comp.access * 0.62 + eWork * 0.2);
   const phiCoupling = clamp01(eUnified * 0.7 + w2 * 0.25);
