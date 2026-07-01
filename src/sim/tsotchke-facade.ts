@@ -5,6 +5,7 @@
  */
 
 import { getTsotchkeRepoByIndex } from './tsotchke-registry';
+import { corpusBrainScalar } from './tsotchke-brain-intake';
 
 export {
   TSOTCHKE_CORPUS_ROOT,
@@ -216,9 +217,13 @@ export function corpusPulse(seed: number, formIdx: number): TsotchkeQuantumPulse
   const s = (seed % 10000) / 10000;
   const scale = repo.wiring > 0 ? 0.5 + repo.wiring * 0.5 : 0.05;
   const c01 = (v: number) => (v < 0 ? 0 : v > 1 ? 1 : v);
+  // Fold the FULL wired Tsotchke corpus into the mind's thought-geometry (qgtVolume) — every scientific
+  // substrate now moves a brain's plan bias, not just the 8 archetypes. Scaled by `scale`, so fenced
+  // repos stay negligible (preserving the wired>fenced ordering invariant). See tsotchke-brain-intake.ts.
+  const brain = corpusBrainScalar(seed, formIdx);
   return {
     cliffordEnt: c01((b.cliffordWeight + s * 0.1) * scale),
-    qgtVolume: c01((b.generative + b.chaos * 0.5) * scale),
+    qgtVolume: c01((b.generative + b.chaos * 0.5 + brain * 0.6) * scale),
     rngEntropy: c01((b.narrative * 0.7 + s) * scale),
     quakeAliveness: c01(b.quakeFactor * (0.6 + repo.hue * 0.4)),
     adGradient: c01((b.adDepth / 8) * (0.5 + s * 0.5) * scale),
@@ -234,3 +239,17 @@ export {
   eshkolCompile,
   eshkolExecute,
 } from './tsotchke-deep-wire';
+
+/** Full-corpus BRAIN intake — every wired scientific substrate feeds a mind (ablation-proven). */
+export {
+  corpusBrainVector,
+  corpusBrainScalar,
+  corpusBrainAblation,
+  corpusBrainDistance,
+  isBrainWired,
+} from './tsotchke-brain-intake';
+export type {
+  CorpusBrainVector,
+  CorpusBrainReport,
+  RepoBrainAblation,
+} from './tsotchke-brain-intake';
