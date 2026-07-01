@@ -190,6 +190,13 @@ export class EntityManager {
    */
   readonly phylumCounts = new Float32Array(PHYLUM_COUNT);
   /**
+   * Live population per morphotype, indexed by `userData.mi`. Maintained incrementally by
+   * spawn / disposeAt / remorph / reset so {@link disposeAt} can detect a morphotype's extinction in
+   * O(1) instead of rescanning the whole list — the rescan made a mass die-off / black-hole consume
+   * O(deaths·n) ≈ O(n²) at 50k entities. Sized to the (fixed) taxonomy; values track `list` exactly.
+   */
+  private readonly morphLive: Int32Array;
+  /**
    * Death→ground feedback hook (CONTRACTS V2 frame pipeline): invoked with the dying
    * entity's world x/z exactly once per disposal routed through `disposeAt()` — which
    * covers BOTH the age-death branch of `update()` and external consumers like shoggoth
@@ -217,6 +224,7 @@ export class EntityManager {
 
   constructor(ctx: SimContext) {
     this.ctx = ctx;
+    this.morphLive = new Int32Array(Math.max(1, ctx.morphs.length));
     this.env = {
       ctx,
       spawn: (pos, mi, scale) => this.spawn(pos, mi, scale),
@@ -385,6 +393,9 @@ export class EntityManager {
     };
     if (!ctx.quality.instanced) ctx.scene.add(mesh);
     this.list.push(mesh);
+    const spawnMi = mi % morphCount;
+    if (spawnMi >= 0 && spawnMi < this.morphLive.length)
+      this.morphLive[spawnMi] = (this.morphLive[spawnMi] ?? 0) + 1;
     ctx.creatureSfx?.(mi % morphCount);
     return mesh;
   }
@@ -411,15 +422,17 @@ export class EntityManager {
     const e = list[index];
     if (!e) return;
 
-    // Fix Bug 14: Extinction-triggered decrement of genetic diversity (mutations)
-    let isExtinct = true;
-    for (let k = 0; k < list.length; k++) {
-      const other = list[k];
-      if (k !== index && other && other.userData.mi === e.userData.mi) {
-        isExtinct = false;
-        break;
-      }
+    // Fix Bug 14: extinction-triggered decrement of genetic diversity (mutations). O(1) via the live
+    // per-morphotype counter — the previous whole-list rescan made a mass die-off / black-hole consume
+    // O(deaths·n) ≈ O(n²). Post-decrement count === 0 ⇔ no other live entity shares this morphotype
+    // (exactly what the rescan tested), so the `mutations` behaviour is byte-identical.
+    const dmi = e.userData.mi;
+    const inRange = dmi >= 0 && dmi < this.morphLive.length;
+    if (inRange) {
+      const cur = this.morphLive[dmi] ?? 0;
+      if (cur > 0) this.morphLive[dmi] = cur - 1;
     }
+    const isExtinct = inRange ? (this.morphLive[dmi] ?? 0) === 0 : true;
     if (isExtinct && this.ctx.state.mutations > 0) {
       this.ctx.state.mutations--;
     }
@@ -446,6 +459,7 @@ export class EntityManager {
       if (e) this.dispose(e);
     }
     list.length = 0;
+    this.morphLive.fill(0); // whole-population reset; spawn() below re-counts as it repopulates
     const rng = this.ctx.rng;
     const morphCount = Math.max(1, this.ctx.morphs.length);
     for (let i = 0; i < count; i++) this.spawn(null, Math.floor(rng() * morphCount));
@@ -752,7 +766,15 @@ export class EntityManager {
     // by applyRenderModeTo on top of the morphotype base (CONTRACTS V7.3).
     applyRenderModeTo(mat, ctx.state.renderMode, m);
     const u = e.userData;
-    u.mi = mi % morphCount;
+    // Remorph in place: move the morphotype live-count from the old mi to the new one.
+    const remorphMi = mi % morphCount;
+    if (u.mi >= 0 && u.mi < this.morphLive.length) {
+      const cur = this.morphLive[u.mi] ?? 0;
+      if (cur > 0) this.morphLive[u.mi] = cur - 1;
+    }
+    if (remorphMi >= 0 && remorphMi < this.morphLive.length)
+      this.morphLive[remorphMi] = (this.morphLive[remorphMi] ?? 0) + 1;
+    u.mi = remorphMi;
     u.beh = m.beh;
     u.spd = m.spd;
     u.wf = 0.3 + ctx.rng() * 6;
