@@ -37,7 +37,7 @@ import * as THREE from 'three';
 import type { SuperSnapshot, SuperPlan } from './super-creature';
 import type { EvoAppearance } from './super-evolution';
 import type { ArchonForm } from './godform';
-import { getCorpusPulseForArchon, getArchonSymmetry } from './godform'; // pulse + sym from Tsotchke (ralph 10x)
+import { getCorpusPulseForArchon, getArchonSymmetry } from './godform'; // pulse + sym from Tsotchke
 import {
   quakePerturb,
   libirrepWigner,
@@ -45,11 +45,11 @@ import {
   libirrepSymmetry,
   ulgHandoff,
   gwtBroadcast,
-} from './tsotchke-facade'; // Ralph continue 10x: + gwtBroadcast for more Eshkol GWT in body
+} from './tsotchke-facade'; // + gwtBroadcast for more Eshkol GWT in body
 import { qgeAlivenessProxy } from './quantum-quake-physics';
 import { moonlabTensorContract } from './moonlab-tensor';
 import { qecDecodingProxy } from './libirrep-qec';
-void libirrepSymmetry; // ensure for 10x wiring
+void libirrepSymmetry; // keep the import referenced
 
 /** Fractional part — a cheap deterministic pseudo-random in [0,1) when fed `seed * irrational`. */
 const frac = (x: number): number => x - Math.floor(x);
@@ -414,15 +414,15 @@ export class SuperBodySystem {
     this._form = form || null;
     if (this._form) {
       /* GOAL5: per-Archon extreme counts/pulses/combin (eyes/arms/wings etc) wired via world spawn */
-      // TSOTCHKE CORPUS (ralph): pull full Eshkol/Moonlab/Quake/irrep pulse for extra aliveness/morph
+      // TSOTCHKE CORPUS: pull full Eshkol/Moonlab/Quake/irrep pulse for extra aliveness/morph
       const p = getCorpusPulseForArchon(this.variant, this.seed);
       this.morphBoost = Math.max(this.morphBoost, p.quakeAliveness * 0.6);
       this.quakeFactor = p.quakeAliveness;
       void p; // pulse drives future shader uCorpus + tensor/AD factors (full corpus at (Tsotchke))
-      // ulg + quantum-quake hybrid aliveness from corpus (ralph): more waves from QGE + ulg runtime
+      // ulg + quantum-quake hybrid aliveness from corpus: more waves from QGE + ulg runtime
       this.morphBoost += p.quakeAliveness * 0.1; // from ulg/quantum-quake for extreme morph
       // QGE AI from quantum-quake/qge_ai for "alive" decision pulses in 5 Archons.
-      // libirrep symmetry (from corpus mirrors/libirrep) used in update for mask (Ralph 10x)
+      // libirrep symmetry (from corpus mirrors/libirrep) used in update for mask
     }
     if (anchor) this.anchor.set(anchor.x, anchor.y, anchor.z);
     void this.quantum;
@@ -538,7 +538,7 @@ export class SuperBodySystem {
     for (let i = 0; i < ARMS; i++) {
       const y = 1 - (i / (ARMS - 1)) * 2;
       const r = Math.sqrt(Math.max(0, 1 - y * y));
-      // Ralph loop continue 10x: more libirrepWigner (Tsotchke) for arm placement angles in ctor (equivariant body geo)
+      // more libirrepWigner (Tsotchke) for arm placement angles in ctor (equivariant body geo)
       const w = libirrepWigner(3, i, 0.08);
       const th = i * GOLDEN + 1.0 + w;
       const dir = new THREE.Vector3(Math.cos(th) * r, y, Math.sin(th) * r).normalize();
@@ -630,7 +630,7 @@ export class SuperBodySystem {
       base: ringMat.color.clone(),
       baseEmissive: ringMat.emissive.clone(),
     });
-    // Ralph heartbeat re-audit 10x continue: use libirrepSymmetry (Tsotchke libirrep) to modulate ring geo for symmetry per Archon (more wiring into body)
+    // use libirrepSymmetry (Tsotchke libirrep) to modulate ring geo for symmetry per Archon (more wiring into body)
     const ringSym = libirrepSymmetry(this.variant + 1, 3);
     for (let i = 0; i < 3; i++) {
       const rad = R * (1.7 + i * 0.22) * (1 + (ringSym % 3) * 0.02);
@@ -843,14 +843,14 @@ export class SuperBodySystem {
     const qe = this.quantum[1] ?? 0; // entangle -> wings/legs
     const qf = this.quantum[8] ?? 0;
     const maskEye = clampf(14 + v * 1.5 + qm * 5 + qs * 3 + reflU * 2, 8, 24);
-    // Ralph 10x: libirrep symmetry from Tsotchke corpus (mirrors/libirrep + clebsch_gordan.h) via godform for multi-part equivariance in 5 Archons
+    // libirrep symmetry from Tsotchke corpus (mirrors/libirrep + clebsch_gordan.h) via godform for multi-part equivariance in 5 Archons
     const sym = getArchonSymmetry(this.variant);
     const effMaskEye = Math.floor(maskEye * (0.85 + (sym % 5) * 0.03));
 
     const maskWing = clampf(4 + (v % 3) + qe * 2.5 + qualU * 1.5 + this.surprise, 3, 8);
     const maskMouth = clampf(2 + (v % 2) + qm * 1.8 + qf * 0.8, 1, 5);
     const maskLeg = clampf(3 + (v % 3) + qm * 2 + qe * 1.2 + this.surprise * 1.2, 2, 6);
-    // Ralph continue 10x more: ulgHandoff (Tsotchke) for hybrid aliveness mix in body pulse
+    // ulgHandoff (Tsotchke) for hybrid aliveness mix in body pulse
     const ulgMix = ulgHandoff(this.quakeFactor, 0.5);
     // Wire QGE aliveness proxy for enhanced aliveness metric
     const qgeAlive = qgeAlivenessProxy(this.quakeFactor, this.arousal, 1);
@@ -864,9 +864,9 @@ export class SuperBodySystem {
     const qecStability = qecDecodingProxy(Math.floor(this.surprise * 10), 5);
     // Apply new math to morph masks
     const qgeMod = qgeAlive * 0.2 + tensorPulse * 0.1 + qecStability * 0.1;
-    // Ralph continue 10x: gwtBroadcast for more GWT in morph masks
+    // gwtBroadcast for more GWT in morph masks
     const gwtM = gwtBroadcast([maskEye, maskMouth, maskLeg], [0.5, 0.6, 0.4]);
-    // Ralph re-audit 10x continue: use libirrepSymmetry + quakeQgeFactor (Tsotchke libirrep + quake) + wigner for more morph distinctness in body
+    // use libirrepSymmetry + quakeQgeFactor (Tsotchke libirrep + quake) + wigner for more morph distinctness in body
     const effMaskArm = Math.floor(
       maskLeg * (1 + libirrepSymmetry(sym, 1) * 0.03 + qgeMod) + (gwtM[1] || 0) * 0.5,
     );
@@ -877,14 +877,14 @@ export class SuperBodySystem {
     const qkMod = 1 + this.quakeFactor * 0.3 + qge * 0.1 + (ulgMix - 0.5) * 0.2 + qgeMod; // QGE/tensor/QEC corpus mix
     const finalEffArm = Math.floor(effMaskArm * qkMod);
     const finalEffLeg = Math.floor(maskLeg * (0.85 + (sym % 4) * 0.05) * qkMod);
-    const qp = quakePerturb(this.quakeFactor, this.seed || 1); // actual call, Ralph 10x live wire from quantum-quake corpus
+    const qp = quakePerturb(this.quakeFactor, this.seed || 1); // actual call
     const hybridPulse = qp * (1 + (ulgMix - 0.5) * 0.1);
 
     // EYES: amp reactivity — global scale + per-eye pupil "focus" + iris shimmer + highlight glint
     this.eyes.scale.setScalar(beat);
     this.eyes.children.forEach((e, i) => {
       const on = i < effMaskEye ? 1.0 : 0.0;
-      // Ralph 10x: actual libirrepWigner call + qge (Tsotchke mirrors/libirrep + quantum-quake) for eye jitter + scale
+      // actual libirrepWigner call + qge (Tsotchke mirrors/libirrep + quantum-quake) for eye jitter + scale
       const wAng = libirrepWigner(sym, i, 0.1 * Math.sin(t * 3 + i));
       const eyeScale = on * (0.9 + 0.05 * wAng + (hybridPulse - 1) * 0.02);
       e.scale.setScalar(eyeScale);
@@ -936,10 +936,10 @@ export class SuperBodySystem {
     });
 
     // LEGS: downward 4-6 tentacle lines/thin meshes that "step" via phase (deterministic)
-    // Ralph 10x re-audit: quantum-quake + libirrep sym modulated final counts (Eshkol/Quake corpus into body morph)
+    // quantum-quake + libirrep sym modulated final counts (Eshkol/Quake corpus into body morph)
     this.legs.children.forEach((leg, li) => {
       const on = li < finalEffLeg ? 1 : 0;
-      // Ralph 10x live wire: libirrepWigner + quakePerturb (Tsotchke corpus) for leg phase/rot + quake aliveness
+      // libirrepWigner + quakePerturb (Tsotchke corpus) for leg phase/rot + quake aliveness
       const wLeg = libirrepWigner(sym, li, 0.2);
       const qPert =
         hybridPulse * (1 + (quakePerturb(this.quakeFactor, this.seed + li, 0.12) - 1) * 0.5); // use hybrid for more
@@ -957,7 +957,7 @@ export class SuperBodySystem {
     });
 
     // Arm-writhe ∝ aggression + quantum (amped counts reactivity)
-    // Ralph 10x: finalEffArm (libirrep+quake) influences effective splay count proxy for arms
+    // finalEffArm (libirrep+quake) influences effective splay count proxy for arms
     const armCountFactor = 0.7 + (finalEffArm % 8) * 0.04;
     const brutalStyleMorph = this.brutalism * (0.08 + this.brutalStyle * 0.035);
     const splay =

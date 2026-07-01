@@ -157,7 +157,7 @@ import { MemoryOrchestra } from './memory-orchestra';
 import { NarrativeMemory } from './narrative-memory';
 import { vqeEnergyProxy } from './moonlab-vqe';
 // TSOTCHKE CORPUS (Z:\[Vibe Coded (AI)]\(Tsotchke)): full 20 repos + sites wired. Eshkol consciousness engine (logic+active inference factor graphs + GWT workspace) as explicit layer (matches C++/LLVM tagged_value + 6 heap subtypes from docs/breakdown/CONSCIOUSNESS_ENGINE.md). Moonlab Clifford/QEC/QRNG enhancements. QGTL geo tensors. Used for 5 Archons "super" (distinct dialects, mind substrates, morph geo, memory graphs). See docs/TSOTCHKE_CORPUS_INTEGRATION_AUDIT.md for every file study + strict logs.
-// Wired deeper per Ralph: AD primitive for HOT-1, arena discipline, symmetry, tensor. See audit + receipts.
+// AD primitive for HOT-1, arena discipline, symmetry, tensor. See audit + receipts.
 
 const SENSE = 18; // perception inputs
 const LATENT = 16; // world-model embedding width
@@ -227,7 +227,7 @@ export interface Consciousness {
   surprise: number; // 0..1 — predictor error (world-model)
   ignition: number; // 0..1 — V89: Global-Workspace broadcast (GNW) — winning coalition crossing access
   phi: number; // 0..1 — V89: Integrated-Information proxy (IIT) — module participation/coherence (Φ*)
-  workspace: number; // Eshkol GWT workspace broadcast from Tsotchke corpus (CONSCIOUSNESS_ENGINE.md) - Ralph 10x wire
+  workspace: number; // Eshkol GWT workspace broadcast from Tsotchke corpus (CONSCIOUSNESS_ENGINE.md)
   qualiaTone: number; // HOT-4: sparse-smooth quality manifold scalar (proxy)
 }
 
@@ -581,12 +581,12 @@ export class SuperMind {
   private readonly memOrch = new MemoryOrchestra();
   private readonly narrMem!: NarrativeMemory;
   private cliffordScale = 1.0;
-  // Eshkol consciousness + libirrep sym from corpus (ralph 10x) - wired via facade
+  // Eshkol consciousness + libirrep sym from corpus - wired via facade
   private tsotchkeModule = 'EshkolConsciousness'; // from godform, for per-Archon specialization from Tsotchke corpus
-  private _eshkolProgram = '(define (think state) state)'; // Eshkol .esk program from corpus for this Archon - prefixed for noUnused, Ralph wire
+  private _eshkolProgram = '(define (think state) state)'; // Eshkol .esk program from corpus for this Archon - prefixed for noUnused
   get tsotchkeModuleRef() {
     return this.tsotchkeModule;
-  } // used to satisfy noUnused, Ralph wire
+  } // used to satisfy noUnused
   readonly paramCount: number;
 
   // ── Reusable scratch (no per-beat allocation) ──
@@ -968,7 +968,7 @@ export class SuperMind {
     this.imagined.set(this.cur);
 
     // ── STAGE 3 · REASON · distil the winner + a 5-deep recursive world model (predictor) ────────
-    // WIRED Eshkol AD tape (from full Tsotchke corpus AUTODIFF/vm_ad + vm_symbolic_ad.c, reverse mode for multi-var error, 32-level tape, dual numbers) for better predictor/surprise in 10x+ iters. Det, prealloc. Moonlab tensor for quantum scaling.
+    // WIRED Eshkol AD tape (from full Tsotchke corpus AUTODIFF/vm_ad + vm_symbolic_ad.c, reverse mode for multi-var error, 32-level tape, dual numbers) for better predictor/surprise. Det, prealloc. Moonlab tensor for quantum scaling.
     const reason = this.reasoner.forward(this.imagined);
     this.pred.set(this.latent);
     for (let d = 0; d < SUPER_DEPTHS; d++) this.pred.set(this.predictor.forward(this.pred));
@@ -982,7 +982,7 @@ export class SuperMind {
     const ad = eshkolDual((x: number) => Math.abs(x - (this.pred[0] ?? 0)), surprise);
     const adDual = { primal: surprise, tangent: ad.derivative };
     this.cons.surprise = adDual.primal; // use for qualia etc.
-    // Ralph re-audit 10x: deeper Eshkol AD/tape + Moonlab tensor for predictor error + surprise in deliberation (quantum delib affected)
+    // deeper Eshkol AD/tape + Moonlab tensor for predictor error + surprise in deliberation (quantum delib affected)
     const adTapeGrad = eshkolADGradient(
       (x) => Math.abs(x - (this.imagined[0] ?? 0.5)),
       this.pred[0] ?? 0,
@@ -993,11 +993,11 @@ export class SuperMind {
     this.cons.surprise = clamp01(
       adDual.primal + Math.abs(adTapeGrad) * 0.05 + Math.abs(tPred) * 0.02 + vqeEnergy * 0.03,
     );
-    // Ralph 10x continue: active Eshkol dual arith (makeEshkolDual + dualAdd/Mul from AUTODIFF.md + tape.esk) + gwtBroadcast (GWT from workspace.cpp) for predictor surprise
+    // active Eshkol dual arith (makeEshkolDual + dualAdd/Mul from AUTODIFF.md + tape.esk) + gwtBroadcast (GWT from workspace.cpp) for predictor surprise
     const dSurp = makeEshkolDual(this.cons.surprise, ad.derivative);
     const dPred = makeEshkolDual((this.pred[0] ?? 0) * 0.1, 0.5);
     const dComb = dualAdd(dSurp, dualMul(dPred, makeEshkolDual(0.8)));
-    // Ralph 10x continue: re-wire gwtBroadcast for Eshkol GWT workspace effect in surprise (from CONSCIOUSNESS_ENGINE.md + workspace.cpp)
+    // re-wire gwtBroadcast for Eshkol GWT workspace effect in surprise (from CONSCIOUSNESS_ENGINE.md + workspace.cpp)
     const gwtS = gwtBroadcast([surprise, peakNovelty], [0.6, 0.5]);
     this.cons.surprise = clamp01(dComb.value + (gwtS[0] || 0) * 0.05 + Math.abs(tPred) * 0.02);
     // Eshkol full reverse-mode tape: d/dpred of (pred - imagined)^2 for exact surprise sensitivity
@@ -1037,7 +1037,6 @@ export class SuperMind {
     this.lastNqsTelemetry = this.nqsController.step();
     this.cons.surprise = clamp01(this.cons.surprise + this.lastNqsTelemetry.energyVariance * 0.02);
 
-    // Ralph 10x corpus wiring for Eshkol/Moonlab already applied via AD/dual/tensor/qualia/apply/perturb (facade) in this think + affect/quantum.
     // (Previous deep GWT block removed for type/contract clean; symbols centralized in facade. 5 Archons still benefit.)
     this.memory.push(salience);
 
@@ -1109,11 +1108,11 @@ export class SuperMind {
     this.valence += EMOTION_TAU * (clamp(aff[0] ?? 0, -1, 1) - this.valence);
     this.arousal += EMOTION_TAU * (clamp01(unit(aff[1] ?? 0) + 0.4 * peakNovelty) - this.arousal);
     this.dominance += EMOTION_TAU * (clamp01(unit(aff[2] ?? 0) + 0.4 * s[4]) - this.dominance);
-    // Ralph 10x continue: Eshkol AD apply on dominance from corpus tape (for Archon affect diff); Moonlab qualia tensor on valence feel
+    // Eshkol AD apply on dominance from corpus tape (for Archon affect diff); Moonlab qualia tensor on valence feel
     this.dominance = eshkolApplyAD(this.dominance, adTapeGrad || 0, 0.03);
     const qualTensor = moonlabTensorQualia([this.valence, this.arousal, peakNovelty], 5);
     this.cons.qualiaTone = clamp01(0.5 + 0.5 * qualTensor); // qualia from tensor (Tsotchke Moonlab)
-    // Ralph heartbeat re-audit 10x continue: more GWT + MPO from corpus in mind cons/qualia
+    // more GWT + MPO from corpus in mind cons/qualia
     const gwtRes = gwtBroadcast([surprise, peakNovelty], [this.eshkolEngine.workspace || 0.6, 0.5]);
     const mpoRes = moonlabMpoStep(this.imagined, 2);
     this.cons.qualiaTone = clamp01(
@@ -1126,19 +1125,19 @@ export class SuperMind {
     // ── STAGE 5 · ACT · quantum aspects + meta-controller integration → drives ───────────────────
     const q = this.quantum.forward(this.latent);
     for (let i = 0; i < SUPER_QUANTUM; i++) this.quantumOut[i] = unit(q[i] ?? 0);
-    // Ralph continue 10x more: Moonlab tensor contract on quantum aspects (VQE-like optimization proxy from corpus tensor/MPO) for 5 Archons
+    // Moonlab tensor contract on quantum aspects (VQE-like optimization proxy from corpus tensor/MPO) for 5 Archons
     const tQ = moonlabTensorContract(this.quantumOut.slice(0, 4), this.quantumOut.slice(4, 8), 4);
     if (tQ > 0) {
       const q0 = this.quantumOut[0] ?? 0;
       this.quantumOut[0] = clamp01(q0 + tQ * 0.01);
     }
-    // Ralph heartbeat re-audit 10x continue: libirrepSymmetry (Tsotchke corpus) for Archon quantum aspect symmetry (e.g. modulate aspect for multi-part equivariance)
+    // libirrepSymmetry (Tsotchke corpus) for Archon quantum aspect symmetry (e.g. modulate aspect for multi-part equivariance)
     const ir = libirrepSymmetry(3, 4);
     this.quantumOut[4] = clamp01((this.quantumOut[4] ?? 0) + (ir % 3) * 0.02);
-    // Ralph continue 10x more: ulgHandoff (Tsotchke ulg) for hybrid aliveness in quantum aspects
+    // ulgHandoff (Tsotchke ulg) for hybrid aliveness in quantum aspects
     const ulgQ = ulgHandoff(this.quantumOut[8] ?? 0.5, this.quantumOut[9] ?? 0.5);
     this.quantumOut[8] = clamp01((this.quantumOut[8] ?? 0) + ulgQ * 0.01);
-    // Ralph loop continue 10x more: additional Moonlab tensor on quantum aspects + Eshkol AD for "tape" in delib (more corpus everywhere in mind)
+    // additional Moonlab tensor on quantum aspects + Eshkol AD for "tape" in delib (more corpus everywhere in mind)
     const tQ2 = moonlabTensorContract(this.quantumOut.slice(2, 6), this.quantumOut.slice(6, 10), 3);
     const adQ2 = eshkolADGradient((x) => Math.abs(x), this.quantumOut[5] ?? 0.5);
     this.quantumOut[5] = clamp01((this.quantumOut[5] ?? 0) + tQ2 * 0.005 + adQ2 * 0.01);
@@ -1177,7 +1176,7 @@ export class SuperMind {
       17 + ((this.eshkolEngine.logic * 10) | 0),
       0.1,
     );
-    this.quantumOut[9] = clamp01((this.quantumOut[9] ?? 0) * qkP); // adaptive aspect perturbed by quake aliveness (Tsotchke quantum-quake Ralph 10x)
+    this.quantumOut[9] = clamp01((this.quantumOut[9] ?? 0) * qkP); // adaptive aspect perturbed by quake aliveness (Tsotchke quantum-quake)
 
     // consciousness state. #9/#37 — the GWT binding gate: last beat's resonance coherence (the bound-
     // assembly signal) modulates the access-faculties so they co-vary through the shared bound state — the
@@ -1196,7 +1195,7 @@ export class SuperMind {
       surprise,
       ignition: this.ignition, // carried; finalised after the plan argmax below
       phi: this.phi, // carried; finalised after the plan argmax below
-      workspace: this.eshkolEngine.workspace || 0.5, // Eshkol GWT from corpus (Ralph 10x)
+      workspace: this.eshkolEngine.workspace || 0.5, // Eshkol GWT from corpus
       qualiaTone: this.cons.qualiaTone || 0,
     };
 
@@ -1213,7 +1212,7 @@ export class SuperMind {
       REST: clamp01(1 - this.arousal),
     };
     biasPlanSalience(sal, this.attnSchema.snapshot(), surprise, SUPER_PLANS);
-    // Ralph continue 10x more: gwtBroadcast (Tsotchke Eshkol GWT) for more workspace effect on sal drives
+    // gwtBroadcast (Tsotchke Eshkol GWT) for more workspace effect on sal drives
     const gwtSal = gwtBroadcast([sal.HUNT, sal.EXPLORE, sal.DOMINATE], [0.5, 0.6, 0.4]);
     sal.HUNT = clamp01(sal.HUNT + (gwtSal[0] || 0) * 0.05);
     for (let i = 0; i < SPIN_SIZE; i++) {
@@ -1420,7 +1419,7 @@ export class SuperMind {
       this.srReward[i] = plan ? drives[plan] : 0;
     }
     this.successor.lookahead(this.srReward, this.srValue);
-    // Ralph continue 10x: more tensor/AD in successor for Tsotchke (Moonlab/Eshkol)
+    // more tensor/AD in successor for Tsotchke (Moonlab/Eshkol)
     const srT = moonlabTensorContract(this.srValue.slice(0, 4), this.quantumOut.slice(0, 4), 3);
     const srAd = eshkolADGradient((x) => x, this.srValue[0] ?? 0);
     // blend lightly
@@ -1445,7 +1444,7 @@ export class SuperMind {
     if (empBest >= 0) {
       const empPlan = SUPER_PLANS[empBest];
       if (empPlan) {
-        // Ralph heartbeat re-audit 10x continue: use moonlabTensorContract (Tsotchke Moonlab) + eshkolAD for more tensor/AD in empowerment vote (deeper wiring into mind)
+        // use moonlabTensorContract (Tsotchke Moonlab) + eshkolAD for more tensor/AD in empowerment vote (deeper wiring into mind)
         const empT = moonlabTensorContract(
           this.quantumOut.slice(0, 3),
           [this.empowerment.empowerment, 0.5, 0.3],
@@ -1468,7 +1467,7 @@ export class SuperMind {
       const hp = SUPER_PLANS[hrrPlan];
       if (hp) drives[hp] += HRR_GAIN * this.holographic.confidence;
     }
-    // Ralph continue 10x more: Moonlab tensor + AD on holographic for more corpus in recall (Tsotchke wiring deeper)
+    // Moonlab tensor + AD on holographic for more corpus in recall (Tsotchke wiring deeper)
     const hrrT = moonlabTensorContract(
       [this.holographic.confidence, 0.5],
       this.quantumOut.slice(0, 2),
@@ -1670,7 +1669,7 @@ export class SuperMind {
     this.ignition += IGNITION_TAU * (access * margin - this.ignition);
     this.cons.ignition = this.ignition;
     // Eshkol GWT workspace broadcast (corpus CONSCIOUSNESS_ENGINE.md: workspace_t + GWT broadcast, logic vars, factor graphs, active inference free energy): the ignition is "broadcast" with workspace strength for 5 Archons.
-    // Ralph 10x continue: modulates next consolidation. Workspace "step" like in Eshkol.
+    // modulates next consolidation. Workspace "step" like in Eshkol.
     for (let si = 0; si < 6; si++) {
       this.eshkolSalience[si] = clamp01(
         (this.organSum[si % 4] ?? 0) * 0.5 + (this.quantumOut[si] ?? 0) * 0.5,

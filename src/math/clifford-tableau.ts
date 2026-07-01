@@ -10,9 +10,9 @@
  *
  * Reimplemented in deterministic TypeScript (seeded {@link Rng} for the random measurement branch — NOT
  * `Math.random`) from the canonical algorithm, with the API surface and large-n intent of the **Moonlab**
- * + libirrep QEC from corpus (mirrors/libirrep) for symmetry/QEC extension in 5 Archons. Ralph continue.
+ * + libirrep QEC from corpus (mirrors/libirrep) for symmetry/QEC extension in 5 Archons.
  * CA-MPS hybrid: Clifford tableau + MPS for low bond in entangled Archons (from Moonlab ca_mps.h: create with max_bond, D=tableau, phi=MPS, Clifford gates O(n), measure).
- * Ralph 10x: wire more CA-MPS bond update stub for 5 Archons.
+ * wire more CA-MPS bond update stub for 5 Archons.
  * simulator's `src/backends/clifford/clifford.{c,h}` backend (MIT © 2024–2026 tsotchke; see
  * THIRD-PARTY-NOTICES.md). The tableau holds n destabiliser rows + n stabiliser rows + 1 scratch row; each
  * row is (x | z | r): n X-bits, n Z-bits, and a sign bit r ∈ {0,1} for ±1. {@link entanglementEntropy}
@@ -62,7 +62,7 @@ export class CliffordTableau {
   private readonly z: Uint8Array; // rows · n
   private readonly r: Uint8Array; // rows (sign bit)
   private lastSample = 0n;
-  private _caMpsBond = 4; // Moonlab CA-MPS max_bond_dim from ca_mps.h for hybrid (Clifford D + MPS phi). Ralph 10x wire for Archons.
+  private _caMpsBond = 4; // Moonlab CA-MPS max_bond_dim from ca_mps.h for hybrid (Clifford D + MPS phi).
   private _caMpsCurrentBond = 1; // current bond from tn_mps in CA-MPS create.
 
   constructor(n: number) {

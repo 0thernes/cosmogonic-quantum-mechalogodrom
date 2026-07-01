@@ -187,7 +187,7 @@ function clampBias(v: number): number {
 /** GOAL5: 5 distinct ArchonForm archetypes applied to body geometry/pulse (research: moonlab for tensor eyes, eshkol mouths/tendrils, moonquake lattice, ulg wings, chaos full wild).
  * + libirrep (mirrors/libirrep) rep theory (SO(3)/SU(2) symmetry) for Archon forms/phyla — Wigner/Clebsch for multi-appendage groups.
  * Full corpus study: Z:\[Vibe Coded (AI)]\(Tsotchke)\mirrors\libirrep + Eshkol etc.
- * Ralph 10x re-audit: Eshkol AD/tape, Moonlab tensor, libirrep, quantum-quake continue wired into super-mind/body/world/topdown/quality/godform.
+ * Eshkol AD/tape, Moonlab tensor, libirrep, quantum-quake continue wired into super-mind/body/world/topdown/quality/godform.
  */
 export const ARCHON_FORMS = ['TENSOR', 'ESHKOL', 'MOONQUAKE', 'ULG', 'CHAOS'] as const;
 export type ArchonForm = (typeof ARCHON_FORMS)[number];
@@ -199,7 +199,7 @@ export function getArchonForm(i: number): ArchonForm {
   return ARCHON_FORMS[idx]!;
 }
 
-// === TSOTCHKE FULL CORPUS WIRING (ralph loop) ===
+// === TSOTCHKE FULL CORPUS WIRING ===
 // From Z:\[Vibe Coded (AI)]\(Tsotchke) — Eshkol + Moonlab + quake + irrep + ...
 // Use facade for extended biases/pulses in body/mind/world. Deterministic.
 import {
@@ -215,7 +215,7 @@ import {
   libirrepSymmetry,
   quakeQgeFactor,
   eshkolDual,
-} from './tsotchke-facade'; // Ralph loop continue 10x: + eshkolDual for more AD/tape in godform
+} from './tsotchke-facade'; // + eshkolDual for more AD/tape in godform
 import {
   alphabetArchetypeByGlyph,
   alphabetArchetypeAt,
@@ -229,19 +229,19 @@ export function getFullTsotchkeBias(i: number): GodformBias & {
 } {
   const base = getGodformBias(i);
   const extra = getCorpusBias(i);
-  // Ralph 10x: use ulg + gwt + ad from corpus (Eshkol GWT + ulg + quake + Moonlab)
+  // use ulg + gwt + ad from corpus (Eshkol GWT + ulg + quake + Moonlab)
   const adG = eshkolApplyAD(extra.adDepth / 8, extra.eshkolWorkspace * 0.1);
-  // Ralph continue 10x more: eshkolDual (Eshkol tape) for more AD in godform bias
+  // eshkolDual (Eshkol tape) for more AD in godform bias
   const adDual = eshkolDual((x) => x, extra.adDepth / 8);
   const adG2 = adG + adDual.derivative * 0.05;
   const qPert = quakePerturb(extra.quakeFactor, i * 13);
   const ulg = ulgHandoff(extra.quakeFactor, extra.eshkolLogic);
   const gwt = gwtBroadcast([extra.eshkolInference, extra.tensorChi / 10], [0.7, 0.5]);
-  // Ralph re-audit 10x continue: mpo (Moonlab from Tsotchke) in godform for tensor net bias
+  // mpo (Moonlab from Tsotchke) in godform for tensor net bias
   const mpo = moonlabMpoStep(new Float32Array([extra.adDepth, extra.quakeFactor]), 2);
-  // Ralph heartbeat re-audit 10x continue: use libirrepSymmetry (Tsotchke) for more symmetry modulation in godform bias
+  // use libirrepSymmetry (Tsotchke) for more symmetry modulation in godform bias
   const irBias = libirrepSymmetry(extra.irrepDegree, 2);
-  // Ralph continue 10x more: quakeQgeFactor for more quantum-quake in godform
+  // quakeQgeFactor for more quantum-quake in godform
   const qgeB = quakeQgeFactor(extra.quakeFactor, 0.2);
   return {
     ...base,
@@ -254,7 +254,7 @@ export function getFullTsotchkeBias(i: number): GodformBias & {
   };
 }
 
-/** Ralph continue 10x: expose quake perturb + AD apply from corpus via godform for world/super use. */
+/** expose quake perturb + AD apply from corpus via godform for world/super use. */
 export function getQuakePerturbForArchon(i: number, seed: number): number {
   const b = getCorpusBias(i);
   return quakePerturb(b.quakeFactor, seed);
@@ -266,7 +266,7 @@ export function getCorpusPulseForArchon(i: number, seed: number): TsotchkeQuantu
 }
 
 /** Libirrep symmetry for multi-part (from corpus mirrors/libirrep). Modulates eye/arm counts per form for equivariant geometry.
- * Ralph 10x: wired to forms for wilder distinct Archons.
+ * wired to forms for wilder distinct Archons.
  */
 export function getArchonSymmetry(i: number): number {
   const extra = getCorpusBias(i);
