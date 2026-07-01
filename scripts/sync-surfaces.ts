@@ -74,7 +74,14 @@ function syncReceipts(s: string): string {
     s
       .replace(/tests-[0-9]{3,4}/g, `tests-${TEST}`)
       .replace(/\b[0-9],[0-9]{3}\s+tests\b/g, `${TEST_COMMA} tests`)
-      .replace(/(?<![,0-9])\b[0-9]{3,4}\s+tests\b/g, `${TEST} tests`)
+      // Anchored to a RECEIPT marker after "tests" so it never rewrites ordinary prose like
+      // "we ran 500 tests of X" into the canonical count — a silent, unrecoverable corruption of the
+      // owner's factual numbers on commit (data-loss audit 2026-07-01). A novel receipt form that
+      // drifts fails sync:check loudly (safe) rather than corrupting prose (unsafe).
+      .replace(
+        /(?<![,0-9])\b[0-9]{3,4}\s+tests\b(?=\s+green\b|,\s*[0-9]|\s*\(0\s+fail\b|\s*·|\s+pass(?:ing)?\b|\s*\/\s*0\s+fail\b)/g,
+        `${TEST} tests`,
+      )
       // specs.html stat block splits the number and its "tests" label across two divs
       // (`<div class="n gd">1,477</div><div class="l">tests ...`), so the \s+ variants above
       // never match it and it drifted unseen. Scoped to that exact markup — the `class="l">tests`
@@ -96,7 +103,13 @@ function syncReceipts(s: string): string {
       )
       // Bare "LINE% / FUNC%" gate shorthand (e.g. "90.80% / 87.88%") in README/ERD/KANBAN "Gate:" lines.
       // Runs AFTER the worded variants above, so it never touches "NN% line / NN% func".
-      .replace(/\b[0-9]{2}\.[0-9]{2}%\s*\/\s*[0-9]{2}\.[0-9]{2}%/g, `${LINE}% / ${FUNC}%`)
+      // Tied to the preceding "tests" receipt (e.g. "1,984 tests · 91.86% / 89.06%") so it can NEVER
+      // clobber an unrelated two-decimal ratio (a benchmark "95.00% / 12.00%") elsewhere in a surface
+      // (data-loss audit 2026-07-01). Runs AFTER the worded variants above.
+      .replace(
+        /(tests[^0-9\n]{0,8})[0-9]{2}\.[0-9]{2}%\s*\/\s*[0-9]{2}\.[0-9]{2}%/g,
+        `$1${LINE}% / ${FUNC}%`,
+      )
       .replace(
         /coverage-[0-9]{2}\.[0-9]{2}%25%20line%20%C2%B7%20[0-9]{2}\.[0-9]{2}%25%20func/g,
         `coverage-${LINE}%25%20line%20%C2%B7%20${FUNC}%25%20func`,
