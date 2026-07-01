@@ -110,7 +110,12 @@ describe('persistent dock controls (owner-critical)', () => {
     // And it surfaces the paused state so the owner has unambiguous feedback.
     expect(world).toMatch(/togglePause:[\s\S]{0,600}'PAUSED'/);
     // Inspect mode must freeze sim bodies but still let the free camera consume real UI delta.
-    expect(world).toMatch(/if \(isPaused\)[\s\S]{0,260}this\.updateCamera\(0,\s*uiDt,\s*t\)/);
+    expect(world).toMatch(/if \(isPaused\)[\s\S]{0,600}this\.updateCamera\(0,\s*uiDt,\s*t\)/);
+    // …yet creatures stay ALIVE IN PLACE (owner #4): the paused branch advances a visual-only clock
+    // and feeds it to the instanced shader time, so bodies writhe/shimmer where they stand while their
+    // TRAVEL (position) is frozen — not a stiff, wholly-dead freeze.
+    expect(world).toMatch(/if \(isPaused\)[\s\S]{0,400}this\.pauseVisualClock\s*\+=\s*uiDt/);
+    expect(world).toMatch(/fr\.t\s*=\s*this\.pauseVisualClock/);
   });
 
   test('Archon panel five-card telemetry is live, not clock-fabricated', () => {

@@ -332,6 +332,14 @@ export class World {
   private readonly morphTotal: number;
   /** Strided mean of the RD V field, refreshed every 60 frames (V3.5). */
   private rdEnergy = 0;
+  /**
+   * Visual-only clock (seconds) that keeps advancing while the sim is PAUSED, so paused creatures stay
+   * ALIVE IN PLACE — travel/position is frozen, but the instanced shader's uTime (vertex writhe +
+   * shimmer/breath/plasma) keeps running (owner #4: "keep them moving alive spinning... just keep them
+   * in a spot in space... not stop their whole movements"). Tracks `s.elapsed` while unpaused, then
+   * free-runs on real UI delta during pause. Purely a shader uniform — no rng, no state, determinism-neutral.
+   */
+  private pauseVisualClock = 0;
   // F-CAM5 subject cache: the tracked organism's position + XZ heading for the motion camera
   // modes. Written by resolveSubject(), read by updateCamera(). Presentation-only scratch — the
   // camera never writes sim state, so these never affect determinism.
@@ -1133,15 +1141,19 @@ export class World {
     s.frame++;
     const t = s.elapsed;
     if (isPaused) {
-      // PAUSED (user #4): sim bodies freeze; the free camera still consumes real UI delta to roam.
+      // PAUSED (user #4): sim TRAVEL freezes (no position step, no rng), but creatures stay ALIVE IN
+      // PLACE — the free camera still roams, and the visual clock keeps advancing so the instanced
+      // shader's uTime (vertex writhe + shimmer/breath/plasma) animates every body where it stands.
+      this.pauseVisualClock += uiDt;
       this.updateCamera(0, uiDt, t);
       this.hud.update(0, s);
       // KEEP compositing the held frame each tick (sync the frozen instances + render) so roaming a
       // paused scene shows the world instead of a blank/stale buffer (the loop clears each frame).
-      // Render-only: no sim step, no rng, no body motion, so the seeded trajectory is untouched.
+      // Render-only: positions are the frozen sim state, only the shader time advances — no rng, no
+      // body travel, so the seeded trajectory is untouched.
       if (this.instanced) {
         const fr = this.instFrame;
-        fr.t = t;
+        fr.t = this.pauseVisualClock; // living-in-place time (NOT the frozen sim `t`)
         fr.chaos = s.chaos;
         fr.bass = 0;
         fr.nightmare = s.sim === 2 ? 1 : 0;
@@ -1151,6 +1163,8 @@ export class World {
       this.engine.render();
       return;
     }
+    // Unpaused: keep the pause clock tracking sim time so the next pause starts seamlessly (no phase jump).
+    this.pauseVisualClock = t;
     this.updateGrowthTarget(); // V66: ramp the live population target 500 → ceiling, then breathe
 
     this.updateHeroControl(); // V41: route player nav input to the avatar (assist / manual)
