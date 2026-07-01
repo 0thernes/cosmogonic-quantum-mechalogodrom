@@ -20,7 +20,7 @@ substantive change; they are personas of one discipline and they outrank vibes:
 - Aesthetic constitution: [docs/PHILOSOPHY-2026-06-26.md](docs/PHILOSOPHY-2026-06-26.md) — real math
   under every effect; every system reads AND writes another system.
 - Full gate before any commit: `bun run check`
-  (prettier → tsc strict → oxlint → bun test → verify:receipts → sync:check → build).
+  (prettier → tsc strict → oxlint → verify:receipts [test + coverage] → sync:check → verify:facts → build).
 - **Single source of truth + auto-sync:** the version (`package.json`) and the receipts
   (`scripts/canonical-receipts.ts`) are the ONLY places those facts are edited; never hand-edit a
   version / test-count / coverage number in any MD or HTML. `scripts/sync-surfaces.ts` propagates
