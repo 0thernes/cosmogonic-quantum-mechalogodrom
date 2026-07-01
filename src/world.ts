@@ -106,6 +106,7 @@ import {
   openEndednessVerdict,
   type OpenEndednessClass,
 } from './sim/open-endedness';
+import { rngContrast } from './sim/classical-contrast';
 import {
   GODFORMS,
   getArchonForm,
@@ -533,6 +534,10 @@ export class World {
   get openEndedness(): OpenEndednessClass {
     return this.lastOeeVerdict;
   }
+  /** V-QRC: live classical-LCG vs Eshkol-QRNG randomness-quality contrast ∈ [0,1] (0 until first sample). */
+  get rngQuantumContrast(): number {
+    return this.lastRngContrast;
+  }
   private readonly apexPercept: ApexPercept = {
     threat: 0,
     energy: 0,
@@ -553,6 +558,8 @@ export class World {
   private lastBedauActivity = 0;
   /** V-OEE: the bounded/unbounded/inactive open-endedness verdict over the diversity window (Bedau-Packard). */
   private lastOeeVerdict: OpenEndednessClass = 'inactive';
+  /** V-QRC: classical-LCG vs Eshkol-QRNG randomness-quality contrast ∈ [0,1] (0=indistinguishable, →1 different). */
+  private lastRngContrast = 0;
 
   /** Reused telemetry snapshot (panel reads synchronously). */
   private readonly snap: TelemetrySnapshot;
@@ -2412,6 +2419,16 @@ export class World {
           diversity: div,
           oee: oee.verdict,
           oeeRatio: oee.ratio,
+        });
+        // V-QRC: live classical-vs-quantum randomness-quality contrast (Knuth serial-corr + χ²). Runs on
+        // a FRESH Eshkol child stream from a frame-derived seed, so it never perturbs the seeded sim
+        // stream (boot-stream-neutral). Wires a real, tested-but-previously-unwired kernel + surfaces it.
+        const rc = rngContrast(s.frame + 1, 256);
+        this.lastRngContrast = rc.contrast;
+        this.audit.record('rng-quantum-contrast', {
+          contrast: rc.contrast,
+          serialGap: rc.serialGap,
+          uniformityGap: rc.uniformityGap,
         });
       }
       if (s.frame % 120 === 0 && n < target) {
