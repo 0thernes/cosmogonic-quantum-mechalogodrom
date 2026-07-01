@@ -13,7 +13,7 @@ import { MemoryOrchestra } from '../src/sim/memory-orchestra';
 describe('MemoryOrchestra.recall', () => {
   test('a smaller-result call does not shrink-lock the cap for later, larger-result calls', () => {
     const mem = new MemoryOrchestra();
-    const ctx = new Array(8).fill(0.5);
+    const ctx = Array.from({ length: 8 }, () => 0.5);
 
     mem.write('obs', 1, 0.9, 0, [1, 0, 0, 0, 0, 0, 0, 0]);
     mem.write('obs', 2, 0.9, 0, [1, 0, 0, 0, 0, 0, 0, 0]);
@@ -28,7 +28,7 @@ describe('MemoryOrchestra.recall', () => {
 
   test('recall respects a smaller explicit max even when more records are available', () => {
     const mem = new MemoryOrchestra();
-    const ctx = new Array(8).fill(0.5);
+    const ctx = Array.from({ length: 8 }, () => 0.5);
     for (let i = 0; i < 6; i++) {
       mem.write('obs', i, 0.9, 0, [1, 0, 0, 0, 0, 0, 0, 0]);
     }

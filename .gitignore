@@ -27,6 +27,7 @@ law_error.txt
 law.log
 receipts_print.txt
 tscout.txt
+tsc-out.txt
 tsc.log
 .gate.log
 .gate.baseline.log
