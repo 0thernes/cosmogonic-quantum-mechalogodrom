@@ -55,6 +55,14 @@ import type { TsotchkeQuantumPulse } from './tsotchke-facade';
 
 /** Dome shell radius the pantheon hangs on; pulled inward so godforms read as beings, not far stars. */
 const DOME_R = ARENA_RADIUS * 0.72;
+/**
+ * Owner directive #10: HARD containment floor. A godform may drift on its wander + glyph-brain motor
+ * output, but its final position is clamped so it can NEVER leave the dome or sink below this height —
+ * the fix for "they move outside the environment / go underneath / like flies". The ceiling is DOME_R.
+ */
+const PANTHEON_FLOOR_Y = 14;
+/** Exported for the containment regression test — the box every godform is clamped into each frame. */
+export const PANTHEON_BOUNDS = { DOME_R, FLOOR_Y: PANTHEON_FLOOR_Y } as const;
 
 /** Module scratch — reused every frame so the hot path allocates nothing. */
 const M = new THREE.Matrix4();
@@ -476,6 +484,25 @@ export class AlphabetPantheonRender {
     }
   }
 
+  /**
+   * Test-only: copy the current DRAWN world position of every godform body into `out` (cleared then
+   * filled), so the containment regression (owner directive #10) can assert none escaped {@link
+   * PANTHEON_BOUNDS}. Reads only the 100-body instance pools — NOT the apex capstone / accents / halos,
+   * which are not subject to the pantheon clamp. Allocates (test path only), so never call per frame.
+   */
+  bodyWorldPositions(out: THREE.Vector3[]): void {
+    out.length = 0;
+    for (let pool = 0; pool < this.meshes.length; pool++) {
+      const mesh = this.meshes[pool]!;
+      for (let i = 0; i < mesh.count; i++) {
+        mesh.getMatrixAt(i, M);
+        const p = new THREE.Vector3();
+        M.decompose(p, Q, S);
+        out.push(p);
+      }
+    }
+  }
+
   /** Bob / spin / pulse every body on its own cadence. Pure trig, allocation-free, no rng. */
   update(t: number, dt?: number): void {
     // V111: slow pantheon travel to creature-scale motion; they should read as living bodies.
@@ -507,6 +534,17 @@ export class AlphabetPantheonRender {
         const mz = this.motorZ[b.gIdx] ?? 0;
         const wander = glyphWanderOffset(WANDER, ph, b.sig, mx, my, mz, this.chaos, ba);
         P.set(b.ax + wander.x, b.ay + wander.y, b.az + wander.z);
+        // Owner directive #10: keep every godform INSIDE the dome. Clamp the horizontal radius to the
+        // dome shell and the height to [floor, dome] so wander + glyph-brain motor drift can never fling
+        // one outside the borders or underneath the ground ("like flies"). Pure math, alloc-free.
+        const hr = Math.hypot(P.x, P.z);
+        if (hr > DOME_R) {
+          const k = DOME_R / hr;
+          P.x *= k;
+          P.z *= k;
+        }
+        if (P.y < PANTHEON_FLOOR_Y) P.y = PANTHEON_FLOOR_Y;
+        else if (P.y > DOME_R) P.y = DOME_R;
         E.set(
           Math.sin(ph * 0.42 + mx + b.sig.rotBias) * (0.42 + ba * 0.45),
           slowT * b.spin * quick * (1 + ba * 0.62) + b.phase + mz * 0.36,
@@ -534,7 +572,10 @@ export class AlphabetPantheonRender {
         C.setHSL(
           hue < 0 ? hue + 1 : hue,
           Math.min(1, b.pal.bodySat + bn * 0.1),
-          clamp(lit, 0.22, 0.62),
+          // Owner directive #10/#11: the material is additive, so overlapping godforms blow toward a
+          // blinding white. Cap per-instance lightness lower (0.62 -> 0.5) so bodies read as coloured
+          // skins over the dark dome (IMG5: dark base + bright rim), not a white wash.
+          clamp(lit, 0.2, 0.5),
         );
         mesh.setColorAt(s, C);
         this.glyphAccents.setAt(b.gIdx, M, b.sig, ba, clock);
