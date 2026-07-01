@@ -50,22 +50,31 @@ function paintVibrant(mat: THREE.MeshStandardMaterial, m: PhylumMorphType, mi: n
   m.col.getHSL(hsl);
   const baseHue =
     (hsl.h + slot * 0.008 + j1 * 0.39 + j2 * 0.25 + j4 * 0.18 + j5 * 0.12 - 0.06 + 1) % 1;
-  // REVERTED (owner request): the item-12 "1/3 · 1/3 · 1/3" family split set 1/3 of entities to HSL
-  // lightness ~0.08 (near-black), so a third read as "vanished" on the dark scene. Restore the ORIGINAL
-  // single BRIGHT crystal-watery colouring this function's docstring describes (lightness up to ~0.52).
-  mat.color.setHSL(
-    baseHue,
-    0.78, // softer saturation for a watery/crystal look
-    Math.min(0.52, 0.28 + hsl.l * 0.12 + j3 * 0.12 + j4 * 0.08), // bright, dreamy, not blown-out
-  );
+  // USER #12: the 1/3 · 1/3 · 1/3 tonal families are back as the finishing colour touch — but every
+  // family is kept VISIBLE (a lightness floor + a bright coloured emissive glow) so none disappears on
+  // the dark scene. (The earlier version vanished because family-0 lightness was ~0.08 AND the instanced
+  // shader crashed on gl_InstanceID; the shader is fixed now, and these floors keep even the dark family
+  // readable as "dark body with bright glints".) The per-instance GPU hue drift in instanced-entities.ts
+  // (V115) adds the dynamic hue/sat/value breathing on top of these three base palettes.
+  const family = mi % 3;
+  if (family === 0) {
+    // 1/3 — DARK graphite / grey / GOLD tones: deep bodies with metallic biological glints (visible).
+    mat.color.setHSL((0.1 + j2 * 0.06) % 1, 0.4 + j3 * 0.28, 0.17 + j4 * 0.1);
+  } else if (family === 1) {
+    // 1/3 — saturated living CHROMA: purple / blue / red / green / pink, distributed by hash.
+    mat.color.setHSL(baseHue, 0.86 + j5 * 0.12, 0.34 + j3 * 0.16);
+  } else {
+    // 1/3 — WILD high-contrast morphic combos: shifted hue, very saturated, mid lightness.
+    mat.color.setHSL((baseHue + 0.27 + j4 * 0.19) % 1, 0.95, 0.28 + j2 * 0.18);
+  }
   m.em.getHSL(hsl);
-  // Colored inner glow: saturated core, bright enough to shimmer.
+  // Coloured inner glow — bright enough to shimmer AND to keep the dark family clearly visible.
   mat.emissive.setHSL(
-    (baseHue + 0.08 + j3 * 0.18 + j5 * 0.12) % 1,
-    0.92,
-    Math.min(0.62, 0.32 + hsl.l * 0.15 + j2 * 0.14),
+    family === 0 ? (0.11 + j1 * 0.06) % 1 : (baseHue + 0.16 + j3 * 0.2 + j5 * 0.12) % 1,
+    family === 0 ? 0.85 : 0.95,
+    family === 0 ? 0.4 + j2 * 0.16 : Math.min(0.6, 0.3 + hsl.l * 0.14 + j2 * 0.12),
   );
-  mat.emissiveIntensity = Math.min(2.6, m.emI * 0.85 + 0.75);
+  mat.emissiveIntensity = Math.min(2.8, m.emI * 0.88 + 0.9 + family * 0.1);
   // Glassy/crystal surface: high metal, low roughness for a liquid-gem shimmer.
   mat.metalness = Math.min(0.95, mat.metalness * 0.6 + j5 * 0.4 + 0.2);
   mat.roughness = Math.max(0.04, mat.roughness * 0.4 + j3 * 0.08);
