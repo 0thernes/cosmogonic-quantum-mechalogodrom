@@ -65,7 +65,10 @@ leviathans — 21 named GPU effects + 2 de-decorations, each bound to a real sig
   diplomacy signals on the god-scale body (alongside the menace-driven colossal suite). Test:
   `titan-vitals.test.ts`.
 - **Wingmen (`super-wingmen-render.ts`):** `droneSpeed` — drone size reads real per-frame speed (was a
-  `sin(t)` pulse). Test: `super-wingmen-render.test.ts`.
+  `sin(t)` pulse). **WINGMAN-EXPANDED**: the bare drone material now wears a 5-effect GPU suite
+  (`onBeforeCompile`) whose strength reads the escort's real dominance (`uGlow`, the same clamped
+  signal that lifts the base emissive) with per-drone variety from `gl_InstanceID` — orbs-plasmoids,
+  laser-dance, buffer shimmer, ionizing flutter, bit-glitch. Test: `super-wingmen-render.test.ts`.
 - **Leviathans (`leviathans.ts`):** `leviathanSurge(speed)` — glow + aura read the colossus's real
   speed (was a `sin(t)` pulse). **V-LEVIATHAN-EXPANDED**: the bare body now wears a 7-effect GPU suite
   patched via `onBeforeCompile`, each driven by a real signal — surge (speed) → plasma-expanded /
