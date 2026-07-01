@@ -222,7 +222,7 @@ export class ApexExteriorAbomination {
       this.group.add(sq);
     }
     const orbMat = new THREE.MeshBasicMaterial({
-      color: 0xccddee,
+      color: 0x4a3a7a, // USER: was near-white 0xccddee → coloured (apex de-white)
       transparent: true,
       opacity: 0.35,
       blending: THREE.AdditiveBlending,
@@ -280,9 +280,9 @@ export class ApexExteriorAbomination {
     this.portalFrame = new THREE.LineSegments(
       pfE,
       new THREE.LineBasicMaterial({
-        color: 0xdddddd,
+        color: 0x3a5a7a, // USER: was near-white 0xdddddd → coloured (apex de-white)
         transparent: true,
-        opacity: 0.22,
+        opacity: 0.18,
         blending: THREE.AdditiveBlending,
         depthWrite: false,
       }),
@@ -302,9 +302,9 @@ export class ApexExteriorAbomination {
     this.vortexSpiral = new THREE.LineSegments(
       spGeo,
       new THREE.LineBasicMaterial({
-        color: 0xcccccc,
+        color: 0x6a3a5a, // USER: was near-white 0xcccccc → coloured (apex de-white)
         transparent: true,
-        opacity: 0.28,
+        opacity: 0.2,
         blending: THREE.AdditiveBlending,
         depthWrite: false,
       }),

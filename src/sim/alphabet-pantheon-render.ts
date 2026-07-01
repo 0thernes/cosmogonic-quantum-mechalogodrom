@@ -483,18 +483,20 @@ export class AlphabetPantheonRender {
       depthWrite: false,
     });
 
-    // Fallbacks for secondary elements
+    // Fallbacks for secondary elements. USER: the 101st APEX ABOMINATION was a blinding WHITE blob — its
+    // 4 big additive layers summed white. Opacities cut hard (per-frame colours also darkened below) so it
+    // reads as a COLOURED, dynamic structure, not a white sear.
     const apexHaloMat = new THREE.MeshBasicMaterial({
       color: 0x6a00ff,
       transparent: true,
-      opacity: 0.55,
+      opacity: 0.28,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
     });
     const spikeMat = new THREE.MeshBasicMaterial({
       color: 0x00ffd5,
       transparent: true,
-      opacity: 0.72,
+      opacity: 0.3,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
     });
@@ -507,14 +509,14 @@ export class AlphabetPantheonRender {
     const innerMat = new THREE.MeshBasicMaterial({
       color: 0xff00aa,
       transparent: true,
-      opacity: 0.82,
+      opacity: 0.4,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
     });
     const shellMat = new THREE.MeshBasicMaterial({
       color: 0x00aaff,
       transparent: true,
-      opacity: 0.38,
+      opacity: 0.2,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
       wireframe: true,
@@ -614,16 +616,19 @@ export class AlphabetPantheonRender {
         const mx = this.motorX[b.gIdx] ?? 0;
         const my = this.motorY[b.gIdx] ?? 0;
         const mz = this.motorZ[b.gIdx] ?? 0;
-        // USER: godforms were PINNED to a fixed anchor (b.ax/ay/az) + a small bounded wander → they hovered
-        // in place doing the same loop. Now each seeks its OWN slowly-drifting Lissajous waypoint that ROAMS
-        // the full ±ARENA_HALF square (height centred on its original band b.ay so the vertical spread is
-        // kept), with the bounded wander riding on top. Pure trig of (slowT, phase, gIdx) — no rng. The hard
-        // clamp below still guarantees each stays on the platform + below the mechalogodrom.
-        const aDrift = slowT * (0.34 + 0.14 * this.chaos) + b.phase * 1.7; // ~2.6× faster: a visible roam, not a crawl
-        const aRad = 200 + (b.gIdx % 7) * 55; // 200..530 — reaches the platform rim
-        const aTx = Math.cos(aDrift) * aRad + b.ax * 0.12; // small per-body bias so the 100 don't converge
-        const aTz = Math.sin(aDrift * 1.18 + b.phase) * aRad + b.az * 0.12;
-        const aTy = b.ay + Math.sin(aDrift * 0.7) * 70; // roam around its own height band
+        // USER: the pantheons were "stuck in a bubble doing a loop". ROOT CAUSE: their travel was slowed to
+        // ~6% (the 0.22× travel scale × 0.275 slowT "inspectability" cuts), so a full roam orbited only
+        // every ~5 MINUTES. Now they TRAVEL like the entities/NHI — each crosses the whole ±ARENA_HALF
+        // platform in ~20-25s along a non-repeating Lissajous, and its GlyphBRAIN motor output (mx/my/mz)
+        // STEERS the waypoint (goal-seeking locomotion, not decoration) — so where it goes is driven by its
+        // mind. The stately body spin/pulse still uses the slowed slowT below. Pure trig of (clock, brain,
+        // phase, gIdx) — no rng. The hard clamp further down keeps each on the platform + below the mecha.
+        const rt = clock * 4.545; // ≈ real sim seconds (undo the 0.22 travel slowdown for LOCOMOTION only)
+        const roamDrift = rt * (0.26 + 0.12 * this.chaos) + b.phase * 1.7;
+        const roamRad = 210 + (b.gIdx % 7) * 48; // 210..498 — sweeps to the platform rim
+        const aTx = Math.cos(roamDrift) * roamRad + mx * 300; // brain motor STEERS the travel goal (±300)
+        const aTz = Math.sin(roamDrift * 1.21 + b.phase) * roamRad + mz * 300;
+        const aTy = 120 + Math.sin(roamDrift * 0.63) * 92 + my * 70; // roams the full 6..240 column
         const wander = glyphWanderOffset(WANDER, ph, b.sig, mx, my, mz, this.chaos, ba);
         P.set(aTx + wander.x, aTy + wander.y, aTz + wander.z);
 
@@ -690,16 +695,22 @@ export class AlphabetPantheonRender {
       0.28 * this.apexVitality +
       0.25 * this.tsotchkePulse.quakeAliveness;
     const ph = slowT * 0.09 * w;
-    const apexR =
-      DOME_R *
-      (0.26 +
-        0.1 * Math.sin(slowT * 0.05) +
-        0.04 * Math.sin(ph * 1.7 + this.tsotchkePulse.qgtVolume * Math.PI));
-    this.apexGroup.position.set(
-      Math.sin(slowT * 0.07 + ph * 0.12) * apexR + Math.sin(ph * 2.3) * DOME_R * 0.035,
-      DOME_R * 0.52 + Math.sin(slowT * 0.04 + ph * 0.1) * 34 + Math.sin(ph * 1.9) * 18,
-      Math.cos(slowT * 0.06 + ph * 0.11) * apexR + Math.cos(ph * 2.1) * DOME_R * 0.035,
-    );
+    // USER: the 101st apex was PINNED near centre (a tiny ~70u wobble) → "stuck in a bubble". Now it ROAMS
+    // the full ±ARENA_HALF platform like the other creatures, at near real sim time (not the 6% slowdown)
+    // so it visibly TRAVELS, hard-clamped to the platform + below the mechalogodrom. Pure trig — no rng.
+    const rtA = clock * 4.545; // ≈ real sim seconds
+    const roamDriftA = rtA * 0.22 + this.tsotchkePulse.qgtVolume * 2.0;
+    const roamRadA = 260 + 130 * Math.sin(rtA * 0.045); // 130..390 from centre
+    let apX = Math.cos(roamDriftA) * roamRadA;
+    let apY = 132 + Math.sin(roamDriftA * 0.63) * 82; // ~50..214 of the column
+    let apZ = Math.sin(roamDriftA * 1.19) * roamRadA;
+    if (apX > ARENA_HALF) apX = ARENA_HALF;
+    else if (apX < -ARENA_HALF) apX = -ARENA_HALF;
+    if (apZ > ARENA_HALF) apZ = ARENA_HALF;
+    else if (apZ < -ARENA_HALF) apZ = -ARENA_HALF;
+    if (apY > ARENA_CEIL) apY = ARENA_CEIL;
+    else if (apY < ARENA_FLOOR) apY = ARENA_FLOOR;
+    this.apexGroup.position.set(apX, apY, apZ);
     this.apexCore.rotation.set(ph * 0.45, ph * 0.32, ph * 0.58);
     this.apexHalo.rotation.set(-ph * 0.22, ph * 0.38, ph * 0.16);
     this.apexSpikes.rotation.set(ph * 0.72, -ph * 0.48, ph * 0.28);
@@ -711,9 +722,9 @@ export class AlphabetPantheonRender {
     this.apexInner.scale.setScalar(10 * (1 + 0.22 * Math.sin(ph * 4.5)));
     this.apexShell.rotation.set(-ph * 0.14, ph * 0.24, -ph * 0.1);
     this.apexShell.scale.setScalar(20 * (1 + 0.1 * Math.cos(ph * 2.2)));
-    C.setHSL((0.88 + Math.sin(ph * 1.5) * 0.12) % 1, 1, 0.5);
+    C.setHSL((0.88 + Math.sin(ph * 1.5) * 0.12) % 1, 1, 0.34); // USER: darker (was 0.5) — less white sum
     (this.apexInner.material as THREE.MeshBasicMaterial).color.copy(C);
-    C.setHSL((0.58 + Math.cos(ph * 0.8) * 0.15) % 1, 0.9, 0.45);
+    C.setHSL((0.58 + Math.cos(ph * 0.8) * 0.15) % 1, 0.9, 0.32);
     (this.apexShell.material as THREE.MeshBasicMaterial).color.copy(C);
     const pulse = 1 + 0.22 * Math.sin(ph * 3.7) + 0.08 * Math.sin(ph * 11.3);
     this.apexCore.scale.setScalar(22 * pulse);
@@ -721,9 +732,9 @@ export class AlphabetPantheonRender {
     this.apexSpikes.scale.setScalar(18 * (1 + 0.15 * Math.cos(ph * 5.1)));
     C.setHSL((0.92 + Math.sin(ph * 0.7) * 0.08) % 1, 1, 0.52);
     // apexCore is now a ShaderMaterial so we don't copy color directly
-    C.setHSL((0.72 + Math.cos(ph * 0.5) * 0.12) % 1, 1, 0.48);
+    C.setHSL((0.72 + Math.cos(ph * 0.5) * 0.12) % 1, 1, 0.34);
     (this.apexHalo.material as THREE.MeshBasicMaterial).color.copy(C);
-    C.setHSL((0.55 + Math.sin(ph * 1.2) * 0.15) % 1, 0.92, 0.42);
+    C.setHSL((0.55 + Math.sin(ph * 1.2) * 0.15) % 1, 0.92, 0.3);
     (this.apexSpikes.material as THREE.MeshBasicMaterial).color.copy(C);
     this.apexExterior.update(clock, this.apexTranscendence, this.apexVitality, this.tsotchkePulse);
   }
