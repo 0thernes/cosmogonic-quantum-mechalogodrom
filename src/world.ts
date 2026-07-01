@@ -1147,6 +1147,10 @@ export class World {
       this.pauseVisualClock += uiDt;
       this.updateCamera(0, uiDt, t);
       this.hud.update(0, s);
+      // USER: on PAUSE the pantheons + apex stay ALIVE IN PLACE (suspended animation) — spin/pulse/morph/
+      // shader keep animating while their TRAVEL freezes. visualOnly=true advances only the pantheon's
+      // animation clock, not its travel clock; draws no rng, so the seeded trajectory is untouched.
+      this.alphabetPantheon.update(t, uiDt, true);
       // KEEP compositing the held frame each tick (sync the frozen instances + render) so roaming a
       // paused scene shows the world instead of a blank/stale buffer (the loop clears each frame).
       // Render-only: positions are the frozen sim state, only the shader time advances — no rng, no

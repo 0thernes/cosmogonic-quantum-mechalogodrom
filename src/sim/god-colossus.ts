@@ -186,7 +186,36 @@ export class GodColossus {
     // ── Godhead crown (USER: the plain "orb + ring" read as a sex-toy — now a WILDER mathematical crown):
     //    a higher-detail faceted godhead + a tall crystalline SPIRE needling into the sky, ringed by
     //    counter-rotating KNOTTED torus-knots (complex (p,q) math loops) instead of flat hoops. ──
-    this.crownGeo = new THREE.IcosahedronGeometry(topHalf * 2.9, 2);
+    // USER: the smooth "ball" is out — the godhead is now a SPIKY CRYSTALLINE FRACTAL. Displace each vertex
+    // along its normal by a hash-driven ridge field + occasional long spikes → sharp mathematical corona,
+    // not a featureless orb. Deterministic (hash + trig of the vertex), no rng. Built once at boot.
+    this.crownGeo = new THREE.IcosahedronGeometry(topHalf * 2.9, 3);
+    {
+      const cp = this.crownGeo.getAttribute('position') as THREE.BufferAttribute;
+      const ca = cp.array as Float32Array;
+      const chash = (x: number, y: number, z: number): number => {
+        const v = Math.sin(x * 12.9898 + y * 78.233 + z * 37.719) * 43758.5453;
+        return v - Math.floor(v);
+      };
+      for (let i = 0; i < ca.length; i += 3) {
+        const x = ca[i] ?? 0;
+        const y = ca[i + 1] ?? 0;
+        const z = ca[i + 2] ?? 0;
+        const len = Math.hypot(x, y, z) || 1;
+        const ridge = 0.5 + 0.5 * Math.sin(x * 2.1 + y * 1.7) * Math.cos(z * 1.9 + x * 0.6);
+        const spike =
+          chash(Math.round((x / len) * 6), Math.round((y / len) * 6), Math.round((z / len) * 6)) >
+          0.82
+            ? 0.85
+            : 0;
+        const d = 1 + ridge * 0.24 + spike; // ridges everywhere + occasional long crystalline spikes
+        ca[i] = x * d;
+        ca[i + 1] = y * d;
+        ca[i + 2] = z * d;
+      }
+      cp.needsUpdate = true;
+      this.crownGeo.computeVertexNormals();
+    }
     this.crown = new THREE.Mesh(this.crownGeo, this.crownMat);
     this.crown.position.y = crownBaseY + topHalf * 2.6;
     this.crown.frustumCulled = false;

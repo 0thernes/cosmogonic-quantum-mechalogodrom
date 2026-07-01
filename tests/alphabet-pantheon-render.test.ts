@@ -192,19 +192,31 @@ describe('AlphabetPantheonRender — 100 archetypes alive in the dome', () => {
     b.dispose();
   });
 
-  test('dt-driven update freezes while paused and resumes when dt advances', () => {
+  test('paused = SUSPENDED ANIMATION: bodies keep animating in place, TRAVEL frozen, resumes on dt', () => {
     const scene = new THREE.Scene();
     const r = new AlphabetPantheonRender(scene);
     r.update(0, 1 / 60);
-    const frozen = firstCoreMatrix(scene);
+    const start = firstCoreMatrix(scene);
+    const px = start[12] ?? 0;
+    const py = start[13] ?? 0;
+    const pz = start[14] ?? 0;
 
-    r.setChaos(1);
-    r.update(999, 0);
-    expect(firstCoreMatrix(scene)).toEqual(frozen);
+    // Pause (visualOnly): advance 2 s of frames. The body must keep ANIMATING (spin/pulse/morph → the
+    // matrix changes — it is NOT frozen stiff), but its ROAM must be FROZEN so it does not TRAVEL across
+    // the platform — only a small local wander around its spot ("suspended animation").
+    for (let i = 0; i < 120; i++) r.update(i, 1 / 60, true);
+    const paused = firstCoreMatrix(scene);
+    expect(paused.some((v, i) => v !== start[i])).toBe(true); // still alive (animated)
+    const travel = Math.hypot(
+      (paused[12] ?? 0) - px,
+      (paused[13] ?? 0) - py,
+      (paused[14] ?? 0) - pz,
+    );
+    expect(travel).toBeLessThan(160); // roam frozen — only local wander, not cross-platform travel
 
-    r.update(999, 1 / 60);
-    const resumed = firstCoreMatrix(scene);
-    expect(resumed.some((v, i) => v !== frozen[i])).toBe(true);
+    // Resumes: a normal dt frame keeps it alive.
+    r.update(200, 1 / 60);
+    expect(firstCoreMatrix(scene).some((v, i) => v !== paused[i])).toBe(true);
     r.dispose();
   });
 

@@ -163,6 +163,8 @@ export class AlphabetPantheonRender {
   private apexTranscendence = 0;
   private apexVitality = 0;
   private localT = 0;
+  /** Travel clock — advances only when NOT paused, so roam freezes on pause (suspended animation). */
+  private travelClock = 0;
 
   constructor(scene: THREE.Scene) {
     this.refAtlas = createPantheonFallbackAtlas();
@@ -587,12 +589,17 @@ export class AlphabetPantheonRender {
     for (const h of this.wireHalos) h.visible = show;
   }
 
-  /** Bob / spin / pulse every body on its own cadence. Pure trig, allocation-free, no rng. */
-  update(t: number, dt?: number): void {
+  /** Bob / spin / pulse every body on its own cadence. Pure trig, allocation-free, no rng.
+   *  `visualOnly` (PAUSE): the ANIMATION clock keeps advancing (spin/pulse/morph/shader) but the TRAVEL
+   *  clock freezes, so bodies stay ALIVE in a frozen spot — "suspended animation". */
+  update(t: number, dt?: number, visualOnly = false): void {
     // V111: slow pantheon travel to creature-scale motion; they should read as living bodies.
     const scaledDt = dt !== undefined ? dt * 0.22 : undefined;
+    if (dt !== undefined && dt < 0) return; // guard: negative dt is an error (pause passes uiDt + visualOnly)
     const clock = scaledDt === undefined ? t * 0.22 : (this.localT += Math.max(0, scaledDt));
-    if (dt !== undefined && dt <= 0) return; // frozen when paused
+    // Travel clock advances ONLY when not paused → roam freezes on pause while `clock` (below) keeps animating.
+    if (scaledDt === undefined) this.travelClock = t * 0.22;
+    else if (!visualOnly) this.travelClock += Math.max(0, scaledDt);
     if (this.mat instanceof THREE.ShaderMaterial) {
       const uTime = this.mat.uniforms.uTime;
       if (uTime) uTime.value = clock;
@@ -630,7 +637,7 @@ export class AlphabetPantheonRender {
         // USER: the last pass made them travel TOO FAST/choppy — slow it right down for a GRACEFUL, fluid
         // glide (~half speed, crossing the platform in ~35-45s), while the rich body dynamism below spins/
         // corkscrews/vibrates them. Travel is a smooth curved Lissajous, brain-steered.
-        const rt = clock * 2.0; // gentler locomotion clock (was 4.545)
+        const rt = this.travelClock * 2.0; // travel clock: frozen on pause (suspended animation)
         const roamDrift = rt * (0.18 + 0.09 * this.chaos) + b.phase * 1.7;
         const roamRad = 210 + (b.gIdx % 7) * 48; // 210..498 — sweeps to the platform rim
         // Curved travel: a slow secondary drift bends the path so it never reads as a plain circle.
@@ -718,7 +725,7 @@ export class AlphabetPantheonRender {
     // USER: the 101st apex was PINNED near centre (a tiny ~70u wobble) → "stuck in a bubble". Now it ROAMS
     // the full ±ARENA_HALF platform like the other creatures, at near real sim time (not the 6% slowdown)
     // so it visibly TRAVELS, hard-clamped to the platform + below the mechalogodrom. Pure trig — no rng.
-    const rtA = clock * 4.545; // ≈ real sim seconds
+    const rtA = this.travelClock * 4.545; // apex travel: frozen on pause (body still animates via ph below)
     const roamDriftA = rtA * 0.22 + this.tsotchkePulse.qgtVolume * 2.0;
     const roamRadA = 260 + 130 * Math.sin(rtA * 0.045); // 130..390 from centre
     let apX = Math.cos(roamDriftA) * roamRadA;
