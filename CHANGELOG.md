@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### MECHALOGODROM brain-slot now surfaces live STDP learning (`LRN`)
+
+- The fusion brain's `plasticity` readout (its Bi–Poo STDP adapting the variant→fusion synapses this
+  beat) was computed but shown nowhere. The MECHA brain-slot now prints `LRN{n}` beside `DOM·V` / `Φ`
+  (and announces it in the aria-label), so the mind's within-life learning is legible on screen instead
+  of buried in internal telemetry — a real signal made visible, not decoration.
+
 ### MECHALOGODROM fusion-mind skin — the central abomination's own brain drives its own body
 
 - The Mechalogodrom already runs a 10-variant fusion **brain** (`MechalogodromBrain`), but its rich

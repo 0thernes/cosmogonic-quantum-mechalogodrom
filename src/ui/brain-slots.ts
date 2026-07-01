@@ -342,8 +342,11 @@ function updateMecha(slot: Slot, mecha: MechalogodromBrainSnapshot | null): void
   // fused body (Global Workspace made legible): the readout here must match the ignited shell there.
   ctx.fillStyle = '#ffd27a';
   ctx.font = '9px JetBrains Mono, monospace';
+  // DOM·V{n} = dominant sub-brain (matches the blazing body shell); Φ = consciousness proxy; LRN = live
+  // STDP plasticity — the mind adapting its variant→fusion synapses this beat (FUSE-8), made legible.
+  const lrn = Math.round((mecha.plasticity ?? 0) * 100);
   ctx.fillText(
-    `DOM·V${mecha.dominantVariant} Φ${Math.round((mecha.consciousnessProxy ?? 0) * 100)}`,
+    `DOM·V${mecha.dominantVariant} Φ${Math.round((mecha.consciousnessProxy ?? 0) * 100)} LRN${lrn}`,
     6,
     h - 5,
   );
@@ -351,7 +354,7 @@ function updateMecha(slot: Slot, mecha: MechalogodromBrainSnapshot | null): void
     'aria-label',
     `Mechalogodrom brain activity ${Math.round((mecha.activity ?? 0.5) * 100)} percent, ${
       Math.round((mecha.liveParams / 1e6) * 10) / 10
-    } million live parameters, dominant variant ${mecha.dominantVariant}`,
+    } million live parameters, dominant variant ${mecha.dominantVariant}, STDP learning ${lrn} percent`,
   );
 }
 
