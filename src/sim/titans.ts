@@ -289,7 +289,7 @@ function patchTitanBody(mat: THREE.MeshStandardMaterial, u: TitanUniforms): void
         float n31(vec3 p){vec3 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);
           return mix(mix(mix(h31(i),h31(i+vec3(1,0,0)),f.x),mix(h31(i+vec3(0,1,0)),h31(i+vec3(1,1,0)),f.x),f.y),
                      mix(mix(h31(i+vec3(0,0,1)),h31(i+vec3(1,0,1)),f.x),mix(h31(i+vec3(0,1,1)),h31(i+vec3(1,1,1)),f.x),f.y),f.z);}
-        float fbm3(vec3 p){float a=.5,s=0.;for(int k=0;k<5;k++){s+=a*n31(p);p=p*2.03+7.1;a*=.5;}return s;}`,
+        float fbm3(vec3 p){float a=.5,s=0.;for(int k=0;k<7;k++){s+=a*n31(p);p=p*2.03+7.1;a*=.5;}return s;}`,
       )
       .replace(
         '#include <roughnessmap_fragment>',
@@ -307,6 +307,12 @@ function patchTitanBody(mat: THREE.MeshStandardMaterial, u: TitanUniforms): void
         vec3 voidGlow = uColor * (0.4 + 3.0 * uMenace);               // HOT (>1) — ACES rolls it off
         totalEmissiveRadiance += voidGlow * pow(1.0 - fres, 3.0) * (0.3 + 0.7 * relief)
                                + iris * fres * (0.6 + 1.2 * uMenace);
+        // USER: richer, sharper, WILDER skin — crystalline FACET ridges (abs-sin creases = sharp
+        // mathematical structure) + subsurface groove glow (translucent depth), super-creature-class.
+        float facets = pow(abs(sin(relief * 11.0) * sin(relief * 7.3 + uTime * 0.3)), 0.4);
+        totalEmissiveRadiance += iris * facets * (0.22 + 0.5 * uMenace);
+        vec3 subsurf = vec3(0.55, 0.22, 0.12) * (1.0 - fres) * (1.0 - relief) * (0.32 + 0.4 * uEnergy);
+        totalEmissiveRadiance += subsurf;
         // STELLAR CORE FORGE (uEnergy = energy/RESOURCE_CAP) — a well-fed titan burns a pulsing star-core.
         float core = pow(1.0 - fres, 4.0) * (0.6 + 0.4 * sin(uTime * 3.0 + relief * 6.2831));
         totalEmissiveRadiance += uColor * core * uEnergy * 1.6;
@@ -316,7 +322,7 @@ function patchTitanBody(mat: THREE.MeshStandardMaterial, u: TitanUniforms): void
         totalEmissiveRadiance += vec3(1.0, 0.32, 0.06) * rot * uEntropy * 1.3;`,
       );
   };
-  mat.customProgramCacheKey = () => 'titanBodyV67';
+  mat.customProgramCacheKey = () => 'titanBodyV68';
 }
 
 /** The 4D tesseract cage — additive {@link THREE.LineSegments} that rotates pos4 in 4D + projects. */

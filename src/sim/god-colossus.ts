@@ -51,8 +51,10 @@ export class GodColossus {
   private readonly crownGeo: THREE.BufferGeometry;
   private readonly ringGeos: THREE.BufferGeometry[] = [];
   private readonly shellGeo: THREE.BufferGeometry;
+  private readonly spireGeo: THREE.BufferGeometry;
   private readonly panels: THREE.InstancedMesh;
   private readonly crown: THREE.Mesh;
+  private readonly spire: THREE.Mesh;
   private readonly rings: THREE.Mesh[] = [];
   private readonly shell: THREE.Mesh;
   /** Total greeble panels placed (telemetry/tests). */
@@ -181,15 +183,32 @@ export class GodColossus {
       this.root.add(arm);
     }
 
-    // ── Godhead crown: a faceted icosahedron + three orbiting halo rings. ──
-    this.crownGeo = new THREE.IcosahedronGeometry(topHalf * 2.4, 1);
+    // ── Godhead crown (USER: the plain "orb + ring" read as a sex-toy — now a WILDER mathematical crown):
+    //    a higher-detail faceted godhead + a tall crystalline SPIRE needling into the sky, ringed by
+    //    counter-rotating KNOTTED torus-knots (complex (p,q) math loops) instead of flat hoops. ──
+    this.crownGeo = new THREE.IcosahedronGeometry(topHalf * 2.9, 2);
     this.crown = new THREE.Mesh(this.crownGeo, this.crownMat);
     this.crown.position.y = crownBaseY + topHalf * 2.6;
     this.crown.frustumCulled = false;
     this.root.add(this.crown);
 
+    // A tall crystalline spire above the crown — the monument needles far up into space.
+    this.spireGeo = new THREE.ConeGeometry(topHalf * 0.7, topHalf * 9, 6, 1);
+    this.spire = new THREE.Mesh(this.spireGeo, this.crownMat);
+    this.spire.position.y = this.crown.position.y + topHalf * 5.2;
+    this.spire.frustumCulled = false;
+    this.root.add(this.spire);
+
     for (let r = 0; r < RINGS; r++) {
-      const rg = new THREE.TorusGeometry(topHalf * (3.2 + r * 1.5), topHalf * 0.16, 8, 48);
+      // Knotted mathematical loop (p,q vary per ring) — reads as a wild orbital lattice, not a flat hoop.
+      const rg = new THREE.TorusKnotGeometry(
+        topHalf * (3.0 + r * 1.4),
+        topHalf * 0.11,
+        140,
+        10,
+        2 + r,
+        3 + r,
+      );
       this.ringGeos.push(rg);
       const ring = new THREE.Mesh(rg, this.ringMat);
       ring.position.y = this.crown.position.y;
@@ -275,6 +294,7 @@ export class GodColossus {
     // Crown + halos counter-rotate; faster as the world agitates.
     this.crown.rotation.y += 0.0009 + 0.004 * c;
     this.crown.rotation.x += 0.0004;
+    this.spire.rotation.y -= 0.0012 + 0.003 * c; // the needle counter-spins into the sky
     for (let i = 0; i < this.rings.length; i++) {
       const ring = this.rings[i]!;
       const dir = i % 2 === 0 ? 1 : -1;
@@ -300,6 +320,7 @@ export class GodColossus {
     this.panels.dispose();
     this.unitBox.dispose();
     this.crownGeo.dispose();
+    this.spireGeo.dispose();
     for (const g of this.ringGeos) g.dispose();
     this.shellGeo.dispose();
     this.coreMat.dispose();
