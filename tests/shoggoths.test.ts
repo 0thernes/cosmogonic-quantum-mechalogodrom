@@ -117,4 +117,42 @@ describe('ShoggothSystem — deterministic predators that never NaN the populati
     expect(tb.length).toBe(ta.length);
     expect(tb).toEqual(ta);
   });
+
+  test('the MIND shader uniforms are driven from the real cognition drives (bounded readouts)', () => {
+    const { shog } = makeWorld(0x5ec7);
+    const shogs = (
+      shog as unknown as {
+        shogs: {
+          satiation: number;
+          u: {
+            uTime: { value: number };
+            uSatiation: { value: number };
+            uThreat: { value: number };
+            uHunt: { value: number };
+            uAgitation: { value: number };
+            uColor: { value: THREE.Color };
+          };
+        }[];
+      }
+    ).shogs;
+    expect(shogs.length).toBeGreaterThan(0);
+    for (let f = 0; f < 200; f++) shog.update(1 / 60, f / 60);
+    for (const s of shogs) {
+      // uSatiation mirrors the shoggoth's live satiation exactly (the skin reads the real feeding memory).
+      expect(s.u.uSatiation.value).toBeCloseTo(s.satiation, 6);
+      // Every driven cognition lane is finite + clamped to [0,1] — a bounded, falsifiable readout, never NaN.
+      for (const lane of [s.u.uSatiation, s.u.uThreat, s.u.uHunt, s.u.uAgitation]) {
+        expect(Number.isFinite(lane.value)).toBe(true);
+        expect(lane.value).toBeGreaterThanOrEqual(0);
+        expect(lane.value).toBeLessThanOrEqual(1);
+      }
+      expect(Number.isFinite(s.u.uTime.value)).toBe(true);
+      // The living hue is a valid colour (finite channels in [0,1]).
+      for (const ch of [s.u.uColor.value.r, s.u.uColor.value.g, s.u.uColor.value.b]) {
+        expect(Number.isFinite(ch)).toBe(true);
+        expect(ch).toBeGreaterThanOrEqual(0);
+        expect(ch).toBeLessThanOrEqual(1);
+      }
+    }
+  });
 });

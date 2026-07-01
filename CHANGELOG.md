@@ -9,6 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### SHOGGOTH MIND skin — the horde's cognition made visible (hallucination + dream state)
+
+- The shoggoth core material gets a NEW custom shader (`patchShoggothBody`) driven by the creature's
+  REAL F-COGNITION V24 drives — the same `creatureDrive` outputs that govern its behaviour now govern
+  its skin, so the inner state is legible on the outside. 8 named effects, each a falsifiable readout:
+  **Neuralmimetic hunger-web** (hunt), **Hallucination fractal-bloom** (threat/fear — a cornered
+  shoggoth's terror blooms a writhing fractal), **Dream-state drift** (satiation × calm — a gorged,
+  unthreatened one sinks into a dreamy plasma haze), **Vortexical maw-swirl** (agitation), **Singulrosity
+  gorge-bloom** (feeding), **Bit-glitch madness-core** (threat × agitation), **Ionizing hunger-flutter**
+  (hunt), **Phosphor ectoplasm** (satiation). A fed, calm shoggoth drifts quiet; a starving, cornered,
+  hunting one erupts in hallucination + madness. Deterministic, allocation-free, signal-gated,
+  **verified to compile + render in headless Chromium** (0 shader / 0 page errors). A test pins the
+  cognition→uniform wiring (uSatiation mirrors satiation; every lane finite + in [0,1]).
+
 ### TITAN + PUPPETEER body suites — colossi and schemers made alive by their real state
 
 - **Titans** (`titans.ts`): 8 new named effects on the colossus body, each a FALSIFIABLE readout of a

@@ -63,11 +63,89 @@ const HOLE_F = new THREE.Vector3();
 /** F-COGNITION V24: scratch for the away-from-rivals flee direction (never retained). */
 const TV = new THREE.Vector3();
 
+/** Per-shoggoth shader uniforms — the tetra core reads out the creature's real MIND (its cognition
+ *  drives), driven once per frame. All 0..1: feeding memory · fear · predatory hunger · restless agitation. */
+interface ShoggothUniforms {
+  uTime: { value: number };
+  uColor: { value: THREE.Color };
+  uSatiation: { value: number };
+  uThreat: { value: number };
+  uHunt: { value: number };
+  uAgitation: { value: number };
+}
+
+/**
+ * Patch a shoggoth's core {@link THREE.MeshStandardMaterial} into a LIVE readout of its MIND — the
+ * F-COGNITION V24 drives that already govern its behaviour now govern its skin, so the horde's inner
+ * state is legible on the outside: a fed, calm, unthreatened shoggoth drifts dreamy and quiet; a
+ * starving, cornered, hunting one erupts in hallucination + madness. Mirrors the titan/puppeteer
+ * onBeforeCompile idiom. Every named effect is signal-gated (0 ⇒ baseline), additive, GPU-only, no alloc.
+ */
+function patchShoggothBody(mat: THREE.MeshStandardMaterial, u: ShoggothUniforms): void {
+  mat.onBeforeCompile = (shader) => {
+    shader.uniforms.uTime = u.uTime;
+    shader.uniforms.uColor = u.uColor;
+    shader.uniforms.uSatiation = u.uSatiation;
+    shader.uniforms.uThreat = u.uThreat;
+    shader.uniforms.uHunt = u.uHunt;
+    shader.uniforms.uAgitation = u.uAgitation;
+    shader.vertexShader = shader.vertexShader
+      .replace('#include <common>', '#include <common>\nvarying vec3 vShogP;')
+      .replace('#include <begin_vertex>', '#include <begin_vertex>\nvShogP = position;');
+    shader.fragmentShader = shader.fragmentShader
+      .replace(
+        '#include <common>',
+        `#include <common>
+        varying vec3 vShogP;
+        uniform float uTime; uniform vec3 uColor; uniform float uSatiation; uniform float uThreat; uniform float uHunt; uniform float uAgitation;
+        float sh31(vec3 p){return fract(sin(dot(p, vec3(27.17, 61.31, 11.71))) * 43758.5453);}
+        float sn31(vec3 p){vec3 i=floor(p),f=fract(p);f=f*f*(3.0-2.0*f);
+          return mix(mix(mix(sh31(i),sh31(i+vec3(1,0,0)),f.x),mix(sh31(i+vec3(0,1,0)),sh31(i+vec3(1,1,0)),f.x),f.y),
+                     mix(mix(sh31(i+vec3(0,0,1)),sh31(i+vec3(1,0,1)),f.x),mix(sh31(i+vec3(0,1,1)),sh31(i+vec3(1,1,1)),f.x),f.y),f.z);}`,
+      )
+      .replace(
+        '#include <emissivemap_fragment>',
+        `#include <emissivemap_fragment>
+        float sfres = pow(1.0 - max(dot(normalize(vViewPosition), normalize(normal)), 0.0), 3.0);
+        float sang = atan(vShogP.z, vShogP.x);
+        // NEURALMIMETIC HUNGER-WEB (hunt): a predatory neural web tightens as it stalks prey.
+        float sWeb = step(0.72, sn31(vShogP * 8.0 + uTime * 0.2));
+        totalEmissiveRadiance += vec3(0.4, 1.0, 0.7) * sWeb * uHunt * (0.5 + 0.5 * sfres) * 1.1;
+        // HALLUCINATION FRACTAL-BLOOM (threat/fear): cornered, the shoggoth's fear-madness blooms a
+        // writhing fractal — a real readout of its perceived threat, the mind's terror made visible.
+        float sHall = 0.0; vec3 sq = vShogP * 1.4; float samp = 1.0;
+        for (int k = 0; k < 3; k++) { sHall += samp * abs(sin(sq.x * 4.0 + uTime) * cos(sq.y * 4.0 - uTime * 1.3)); sq *= 1.9; samp *= 0.6; }
+        vec3 sHallCol = 0.5 + 0.5 * cos(vec3(0.0, 2.094, 4.188) + sHall * 3.0 + uTime);
+        totalEmissiveRadiance += sHallCol * pow(sHall, 2.0) * uThreat * 0.5;
+        // DREAM-STATE DRIFT (satiation): a gorged, calm shoggoth sinks into a slow dreamy plasma haze.
+        float sDream = 0.5 + 0.5 * sin(length(vShogP) * 3.0 - uTime * 0.6 + sn31(vShogP * 2.0) * 6.2831);
+        totalEmissiveRadiance += vec3(0.5, 0.4, 0.9) * sDream * uSatiation * (1.0 - uThreat) * 0.6;
+        // VORTEXICAL MAW-SWIRL (agitation): a restless shoggoth winds a devouring vortex.
+        float sVort = pow(0.5 + 0.5 * sin(sang * 5.0 + length(vShogP) * 4.0 - uTime * 3.0), 6.0);
+        totalEmissiveRadiance += uColor * sVort * uAgitation * 0.7;
+        // SINGULROSITY GORGE-BLOOM (satiation): feeding blooms a hot core halo.
+        totalEmissiveRadiance += uColor * pow(sfres, 0.6) * uSatiation * 0.9;
+        // BIT-GLITCH MADNESS-CORE (threat × agitation): stress quantizes the shell into flickering madness.
+        float sGlitch = floor((sn31(vShogP * 3.0) + sin(uTime * 10.0) * 0.2) * 5.0) / 5.0;
+        totalEmissiveRadiance += vec3(0.2, 1.0, 0.5) * sGlitch * (uThreat * uAgitation) * 0.8;
+        // IONIZING HUNGER-FLUTTER (hunt): ion streaks band the body as it charges to feed.
+        float sIon = pow(0.5 + 0.5 * sin(vShogP.y * 20.0 - uTime * 13.0), 8.0);
+        totalEmissiveRadiance += vec3(0.3, 0.6, 1.0) * sIon * uHunt * 0.6;
+        // PHOSPHOR ECTOPLASM (satiation): luminous ectoplasmic gas wreathes a fed shoggoth.
+        float sGas = fract(sh31(floor(vShogP * 6.0)) + uTime * 0.1); sGas = sGas * (1.0 - sGas) * 4.0;
+        totalEmissiveRadiance += vec3(0.3, 0.95, 0.72) * sGas * uSatiation * 0.4;`,
+      );
+  };
+  mat.customProgramCacheKey = () => 'shoggothBodyV1-mind';
+}
+
 /** Internal per-shoggoth record (the legacy stuffed this into `group.userData`). */
 interface Shoggoth {
   group: THREE.Group;
   core: THREE.Mesh;
   coreMat: THREE.MeshStandardMaterial;
+  /** Per-shoggoth shader uniforms driven from its real cognition drives each frame. */
+  u: ShoggothUniforms;
   eyeMats: THREE.MeshBasicMaterial[];
   /** Per-eye blink phase (legacy `eye.userData.bp`). */
   eyePhases: Float32Array;
@@ -192,6 +270,16 @@ export class ShoggothSystem {
       opacity: 0.85,
       side: THREE.DoubleSide,
     });
+    // Live MIND shader — the core reads out the shoggoth's real cognition (feeding / fear / hunt / agitation).
+    const shogU: ShoggothUniforms = {
+      uTime: { value: 0 },
+      uColor: { value: new THREE.Color().setHSL(0.75, 0.7, 0.4) },
+      uSatiation: { value: 0 },
+      uThreat: { value: 0 },
+      uHunt: { value: 0 },
+      uAgitation: { value: 0 },
+    };
+    patchShoggothBody(coreMat, shogU);
     const core = new THREE.Mesh(coreGeo, coreMat);
     group.add(core);
 
@@ -248,6 +336,7 @@ export class ShoggothSystem {
       group,
       core,
       coreMat,
+      u: shogU,
       eyeMats,
       eyePhases,
       tendrilGeo,
@@ -384,6 +473,16 @@ export class ShoggothSystem {
         partner,
         peer,
       });
+      // Drive the MIND shader from the real F-COGNITION drives (each already/now clamped to [0,1]) so
+      // the shoggoth's inner state — how fed, how threatened, how hungry, how agitated — reads out on
+      // its skin: a fed, calm one drifts dreamy; a starving, cornered, hunting one erupts in hallucination.
+      const su = sg.u;
+      su.uTime.value = t;
+      su.uColor.value.setHSL((((t * 0.05 + sg.ph) % 1) + 1) % 1, 0.7, 0.4);
+      su.uSatiation.value = sg.satiation;
+      su.uThreat.value = threat;
+      su.uHunt.value = clamp(drive.hunt, 0, 1);
+      su.uAgitation.value = clamp(drive.agitation, 0, 1);
       // ACT on the social-economic drives — staggered so only ~1/TRADE_EVERY of the horde deals each
       // frame. BARGAIN moves worth toward the BOLDER party (power ∝ wealth → widens the spread); ALLY
       // moves it toward the POORER peer (solidarity → narrows it). Conservation-exact via the provider;
