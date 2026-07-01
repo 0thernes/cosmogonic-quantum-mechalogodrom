@@ -1463,6 +1463,9 @@ export class World {
     // Holographic 3D analytics panel reads the LIVE reused snapshot views
     // (phylumCounts/titanLedger/warMatrix), always current; internally cadenced.
     this.viz3d.update(this.viz3dSnap);
+    // USER: the ground reacts to the ecosystem — feed it the live creature density so it glows/breathes
+    // brighter as the world teems and dims as it empties.
+    this.environment.setCreatureDensity(n / Math.max(1, this.quality.maxEntities));
     this.environment.update(dt, t);
     this.driveFloraContact(n);
     this.alienFlora.update(dt, t, this.state.chaos / CHAOS_MAX); // flora leans + luminesces with chaos

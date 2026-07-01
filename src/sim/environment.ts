@@ -131,6 +131,9 @@ interface GroundShaderUniforms {
   uChaos: THREE.IUniform<number>;
   uEntropy: THREE.IUniform<number>;
   uWind: THREE.IUniform<THREE.Vector2>;
+  /** USER: live creature density 0..1 (population / capacity) — the ground BREATHES + glows brighter where
+   *  the world teems with life, and dims when it empties. Smoothed each frame so it swells, not flickers. */
+  uDensity: THREE.IUniform<number>;
 }
 
 /** Pick the mini-orbiter geometry by index (legacy geometry array, line 411). */
@@ -514,7 +517,10 @@ export class EnvironmentSystem {
     uChaos: { value: 0 },
     uEntropy: { value: 0 },
     uWind: { value: new THREE.Vector2() },
+    uDensity: { value: 0 },
   };
+  /** Smoothed live creature density (0..1), fed by {@link setCreatureDensity}; the ground reacts to it. */
+  private creatureDensity = 0;
   /** Live restore baseline for the ground's emissiveIntensity (0.3 at build; lifted to 0.85 once the
    *  reaction-diffusion emissiveMap attaches). BRUTALISM lerps FROM this so OFF restores the RD glow. */
   private groundBaseEmissiveIntensity = 0.3;
@@ -628,6 +634,7 @@ export class EnvironmentSystem {
       shader.uniforms.uChaos = this.groundUniforms.uChaos;
       shader.uniforms.uEntropy = this.groundUniforms.uEntropy;
       shader.uniforms.uWind = this.groundUniforms.uWind;
+      shader.uniforms.uDensity = this.groundUniforms.uDensity;
       shader.vertexShader = `
         uniform float uTime;
         uniform float uChaos;
@@ -677,6 +684,7 @@ export class EnvironmentSystem {
         uniform float uChaos;
         uniform float uEntropy;
         uniform vec2 uWind;
+        uniform float uDensity;
         varying vec3 vWorldPos;
         ${shader.fragmentShader}
       `.replace(
@@ -698,7 +706,12 @@ export class EnvironmentSystem {
         vec3 nerve = vec3(0.02, 0.5, 0.72) * mycelium * (0.1 + uChaos * 0.5) * heartbeat;
         vec3 glowVein = vec3(0.15, 0.85, 0.95) * livingVein * (0.35 + 0.9 * uChaos) * heartbeat; // flowing bioluminescence
         vec3 ash = vec3(0.12, 0.12, 0.13) * uEntropy * 0.45;
-        diffuseColor.rgb += fungal + bruise + mineral + nerve + glowVein;
+        // USER: the ground REACTS to the ecosystem — its bioluminescence swells with live creature density
+        // (the world teeming makes it glow, emptying dims it), plus a density-driven breathing pulse.
+        float lifeGlow = 0.55 + 1.0 * uDensity;
+        float lifePulse = 0.85 + 0.15 * uDensity * heartbeat;
+        diffuseColor.rgb += fungal + bruise + mineral + (nerve + glowVein) * lifeGlow * lifePulse;
+        diffuseColor.rgb += vec3(0.06, 0.14, 0.18) * uDensity * heartbeat; // a soft living wash where life teems
         diffuseColor.rgb = mix(diffuseColor.rgb, ash, uEntropy * 0.32);
         `,
       );
@@ -793,12 +806,21 @@ export class EnvironmentSystem {
    * the config tables (~21 pipes × ≤6 packets, 16 monoliths × 3 halos,
    * 8 dioramas × 12 minis), so effectively O(1) per frame.
    */
+  /** USER: feed live creature density 0..1 (population / capacity) so the GROUND reacts to the ecosystem —
+   *  it glows/breathes brighter as the world teems and dims as it empties. Smoothed here so it swells, not
+   *  flickers. One-way read of a world scalar; no rng, no sim-state write. */
+  setCreatureDensity(d: number): void {
+    const c = d < 0 ? 0 : d > 1 ? 1 : d;
+    this.creatureDensity += (c - this.creatureDensity) * 0.05;
+  }
+
   update(dt: number, t: number): void {
     this.groundUniforms.uTime.value = t;
     MONOLITH_TIME.value = t;
     this.groundUniforms.uChaos.value = clamp(this.state.chaos / CHAOS_MAX, 0, 1);
     this.groundUniforms.uEntropy.value = clamp((this.state.entropy ?? 0) / ENTROPY_MAX, 0, 1);
     this.groundUniforms.uWind.value.set(this.state.wind.x, this.state.wind.z);
+    this.groundUniforms.uDensity.value = this.creatureDensity; // live, smoothed (set by world each frame)
     const cm = Math.min(this.state.chaos / 2, 3);
 
     // Pipelines (legacy 841)
