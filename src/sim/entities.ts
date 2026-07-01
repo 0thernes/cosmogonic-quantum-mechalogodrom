@@ -208,20 +208,11 @@ export class EntityManager {
   private readonly env: BehaviorEnv;
   /** Optional ecological cover field: plants are not neural, but animals can sense/use their cover. */
   private floraComfort: ((x: number, z: number) => FloraComfortReadout) | null = null;
-  /**
-   * V38 density scale: the spawn radius + containment radius grow as √(maxEntities / 10000), clamped
-   * to ≥ 1. The arena is a wide, thin DISK, so AREAL density ∝ N / radius²; scaling the radius by √N
-   * holds that density (and thus the per-entity neighbour count, and the O(n·k) grid-query cost)
-   * constant as the population climbs toward 50k. Exactly 1.0 at ≤ 10k, so every existing tier (and
-   * the determinism golden) is byte-identical; only the new mega tier spreads the field out.
-   */
-  private readonly densityScale: number;
   /** New organisms created so far THIS frame (auto-split), reset each {@link update}. See {@link SPAWN_BUDGET_ULTRA}. */
   private spawnsThisFrame = 0;
 
   constructor(ctx: SimContext) {
     this.ctx = ctx;
-    this.densityScale = Math.max(1, Math.sqrt(ctx.quality.maxEntities / 10000));
     this.env = {
       ctx,
       spawn: (pos, mi, scale) => this.spawn(pos, mi, scale),
@@ -321,7 +312,8 @@ export class EntityManager {
       // arena (matching titan p's patrol angle), radius 12%..67% of the rim.
       const ang = (phylum / PHYLUM_COUNT) * TAU + (rng() - 0.5) * 0.9;
       // Reach out across the platform + spread up the full height (same 3 rng draws → stream-safe).
-      const rad = (0.12 + rng() * 0.75) * PLATFORM_HALF * this.densityScale;
+      // Inset to 0.94·rim so no founder spawns exactly on the hard edge that the containment clamps.
+      const rad = (0.12 + rng() * 0.75) * PLATFORM_HALF * 0.94;
       mesh.position.set(
         Math.cos(ang) * rad,
         PLATFORM_FLOOR + rng() * (PLATFORM_CEIL - PLATFORM_FLOOR),
@@ -329,7 +321,8 @@ export class EntityManager {
       );
     } else {
       // Founders spawn across the FULL square platform + full height (same 3 rng draws → stream-safe).
-      const xz = 2 * PLATFORM_HALF * this.densityScale;
+      // 0.94·rim inset keeps every founder just inside the hard containment edge.
+      const xz = 2 * PLATFORM_HALF * 0.94;
       mesh.position.set(
         (rng() - 0.5) * xz,
         PLATFORM_FLOOR + rng() * (PLATFORM_CEIL - PLATFORM_FLOOR),
@@ -629,16 +622,47 @@ export class EntityManager {
         u.vel.set(0, 0, 0);
       }
 
-      // Containment (owner: fill the WHOLE square platform + full height, NOT a central circle):
-      // per-axis SQUARE box (±PLATFORM_HALF, density-scaled) + a ground..mechalogodrom vertical band.
-      // Pure post-integration impulse — draws no rng, so the seeded stream is byte-identical.
-      const H = PLATFORM_HALF * this.densityScale;
-      if (e.position.x > H) u.vel.x -= 0.005;
-      else if (e.position.x < -H) u.vel.x += 0.005;
-      if (e.position.z > H) u.vel.z -= 0.005;
-      else if (e.position.z < -H) u.vel.z += 0.005;
-      if (e.position.y < PLATFORM_FLOOR) u.vel.y += 0.01;
-      else if (e.position.y > PLATFORM_CEIL) u.vel.y -= 0.005;
+      // Containment — HARD platform box (owner law: fill the WHOLE ±PLATFORM_HALF square + the full
+      // PLATFORM_FLOOR..PLATFORM_CEIL column, but NEVER leave the platform and NEVER rise above the
+      // mechalogodrom). A storm-driven / flocking body cannot cross the rim: a proportional brake over
+      // the last 50u decelerates the approach, then a hard position clamp + outward-velocity kill
+      // guarantees ZERO leakage (the old ±0.005 nudge leaked ~half the swarm downwind). Pure
+      // post-integration geometry — draws no rng, so the seeded stream stays byte-identical.
+      const H = PLATFORM_HALF;
+      const edge = H - 50;
+      if (e.position.x > edge) {
+        u.vel.x -= (e.position.x - edge) * 0.0025;
+        if (e.position.x > H) {
+          e.position.x = H;
+          if (u.vel.x > 0) u.vel.x = 0;
+        }
+      } else if (e.position.x < -edge) {
+        u.vel.x += (-edge - e.position.x) * 0.0025;
+        if (e.position.x < -H) {
+          e.position.x = -H;
+          if (u.vel.x < 0) u.vel.x = 0;
+        }
+      }
+      if (e.position.z > edge) {
+        u.vel.z -= (e.position.z - edge) * 0.0025;
+        if (e.position.z > H) {
+          e.position.z = H;
+          if (u.vel.z > 0) u.vel.z = 0;
+        }
+      } else if (e.position.z < -edge) {
+        u.vel.z += (-edge - e.position.z) * 0.0025;
+        if (e.position.z < -H) {
+          e.position.z = -H;
+          if (u.vel.z < 0) u.vel.z = 0;
+        }
+      }
+      if (e.position.y < PLATFORM_FLOOR) {
+        e.position.y = PLATFORM_FLOOR;
+        if (u.vel.y < 0) u.vel.y = 0;
+      } else if (e.position.y > PLATFORM_CEIL) {
+        e.position.y = PLATFORM_CEIL;
+        if (u.vel.y > 0) u.vel.y = 0;
+      }
       energy += u.vel.length();
 
       // Auto-split (legacy lines 787-788). sT re-arms only on a successful roll, like legacy.

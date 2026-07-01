@@ -929,12 +929,28 @@ export class TitanSystem {
     VA.copy(vel).multiplyScalar(dt * 60);
     p.add(VA);
     // USER: square platform + up to the mechalogodrom (was a ROAM_RADIUS 300 circle capped at y90).
-    if (p.x > PLATFORM_HALF) vel.x -= 0.02;
-    else if (p.x < -PLATFORM_HALF) vel.x += 0.02;
-    if (p.z > PLATFORM_HALF) vel.z -= 0.02;
-    else if (p.z < -PLATFORM_HALF) vel.z += 0.02;
-    if (p.y < 12) vel.y += 0.004;
-    else if (p.y > PLATFORM_CEIL) vel.y -= 0.004;
+    // HARD clamp so a roaming/homing titan can never overshoot the rim (owner law: never off-platform).
+    if (p.x > PLATFORM_HALF) {
+      p.x = PLATFORM_HALF;
+      if (vel.x > 0) vel.x = 0;
+    } else if (p.x < -PLATFORM_HALF) {
+      p.x = -PLATFORM_HALF;
+      if (vel.x < 0) vel.x = 0;
+    }
+    if (p.z > PLATFORM_HALF) {
+      p.z = PLATFORM_HALF;
+      if (vel.z > 0) vel.z = 0;
+    } else if (p.z < -PLATFORM_HALF) {
+      p.z = -PLATFORM_HALF;
+      if (vel.z < 0) vel.z = 0;
+    }
+    if (p.y < 12) {
+      p.y = 12;
+      if (vel.y < 0) vel.y = 0;
+    } else if (p.y > PLATFORM_CEIL) {
+      p.y = PLATFORM_CEIL;
+      if (vel.y > 0) vel.y = 0;
+    }
     // Finite seal: a diverged titan re-anchors home instead of spreading NaN.
     if (!Number.isFinite(p.x + p.y + p.z + vel.x + vel.y + vel.z)) {
       p.set(ti.homeX, 30, ti.homeZ);

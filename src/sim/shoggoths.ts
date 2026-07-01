@@ -403,12 +403,28 @@ export class ShoggothSystem {
         sg.vel.set(0, 0, 0);
       }
       // USER: square platform + full height (was a MID_RADIUS 150 central circle capped at y30).
-      if (p.x > PLATFORM_HALF) sg.vel.x -= 0.01;
-      else if (p.x < -PLATFORM_HALF) sg.vel.x += 0.01;
-      if (p.z > PLATFORM_HALF) sg.vel.z -= 0.01;
-      else if (p.z < -PLATFORM_HALF) sg.vel.z += 0.01;
-      if (p.y < PLATFORM_FLOOR) sg.vel.y += 0.005;
-      else if (p.y > PLATFORM_CEIL) sg.vel.y -= 0.003;
+      // HARD clamp — soft nudge alone can leak the rim; owner law = NEVER outside the platform.
+      if (p.x > PLATFORM_HALF) {
+        p.x = PLATFORM_HALF;
+        if (sg.vel.x > 0) sg.vel.x = 0;
+      } else if (p.x < -PLATFORM_HALF) {
+        p.x = -PLATFORM_HALF;
+        if (sg.vel.x < 0) sg.vel.x = 0;
+      }
+      if (p.z > PLATFORM_HALF) {
+        p.z = PLATFORM_HALF;
+        if (sg.vel.z > 0) sg.vel.z = 0;
+      } else if (p.z < -PLATFORM_HALF) {
+        p.z = -PLATFORM_HALF;
+        if (sg.vel.z < 0) sg.vel.z = 0;
+      }
+      if (p.y < PLATFORM_FLOOR) {
+        p.y = PLATFORM_FLOOR;
+        if (sg.vel.y < 0) sg.vel.y = 0;
+      } else if (p.y > PLATFORM_CEIL) {
+        p.y = PLATFORM_CEIL;
+        if (sg.vel.y > 0) sg.vel.y = 0;
+      }
 
       // Roiling rotation + pulsing core glow (legacy 527-530).
       g.rotation.x += Math.sin(t * 0.4 + sg.ph) * 0.008;
