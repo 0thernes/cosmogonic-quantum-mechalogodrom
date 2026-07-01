@@ -48,10 +48,15 @@ The dev server is meant for `localhost`. If you expose it:
 4. **`nosniff` + `Referrer-Policy: no-referrer` are now built in** on every
    response the server constructs (the JSON API + the `GET /api/audit` HTML
    fragment). Still **add a CSP** for a public deploy — the app needs
-   `script-src 'self'`, `style-src 'self'`, and `connect-src 'self'`; it loads
-   no third-party origins at runtime (fonts are self-hosted via Fontsource).
-   CSP + `X-Frame-Options` are left to the deploy layer because they can break
-   the bundled shell / an embedding iframe and need testing against your host.
+   `script-src 'self'`, `style-src 'self'`, and `connect-src 'self'
+https://api.llm7.io` (the keyless default the optional ✦ AI side-chat calls
+   from the browser; add any other free-LLM origins you enable in the picker).
+   Scripts, styles, and fonts are self-hosted (fonts via Fontsource), so that
+   LLM endpoint is the **only** third-party origin the app reaches at runtime.
+   Treat the side-chat as public — it sends the user's prompt to that
+   third-party model, so do not paste secrets into it. CSP + `X-Frame-Options`
+   are left to the deploy layer because they can break the bundled shell / an
+   embedding iframe and need testing against your host.
 5. **Pin dependencies** with the committed `bun.lock` and run `bun run check`
    before deploying.
 
