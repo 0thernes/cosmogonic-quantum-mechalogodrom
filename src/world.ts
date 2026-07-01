@@ -1147,10 +1147,14 @@ export class World {
       this.pauseVisualClock += uiDt;
       this.updateCamera(0, uiDt, t);
       this.hud.update(0, s);
-      // USER: on PAUSE the pantheons + apex stay ALIVE IN PLACE (suspended animation) — spin/pulse/morph/
-      // shader keep animating while their TRAVEL freezes. visualOnly=true advances only the pantheon's
-      // animation clock, not its travel clock; draws no rng, so the seeded trajectory is untouched.
+      // USER: on PAUSE, creatures stay ALIVE IN PLACE (suspended animation) — spin/pulse/morph/shader keep
+      // animating while their TRAVEL freezes. Pantheons+apex: visualOnly advances only the animation clock.
+      // Super-creatures animate on absolute `t` (the visual clock) with dt=0 ⇒ travel frozen, body alive.
+      // Mechalogodrom is fixed (never travels), so its internal dt-clock just keeps it animating. All three
+      // draw NO rng, so the seeded trajectory is untouched.
       this.alphabetPantheon.update(t, uiDt, true);
+      for (const hb of this.heroBodies) hb.body.update(this.pauseVisualClock, 0);
+      this.mechalogodrom.update(t, uiDt);
       // KEEP compositing the held frame each tick (sync the frozen instances + render) so roaming a
       // paused scene shows the world instead of a blank/stale buffer (the loop clears each frame).
       // Render-only: positions are the frozen sim state, only the shader time advances — no rng, no
