@@ -1,14 +1,15 @@
 /**
- * MORPHIC FIELD — NOT WIRED (standalone morphogenetic-resonance math model; no sim consumer yet) (BRUTALISM 2/9)
+ * MORPHIC FIELD — WIRED (V-MORPH: the apex morphic-resonance beat in world.ts).
  *
  * Inspired by Rupert Sheldrake's morphic resonance hypothesis (treated here as a
  * mathematical model of cross-creature state correlation, NOT as empirical science).
  *
- * Maintains a shared field tensor F ∈ R^{FIELD_DIM} designed so that — ONCE WIRED into
- * the loop — it would accumulate resonance contributions from every creature each beat,
- * and each creature would read the field and receive a morphic bias that subtly aligns its
- * cognition toward past successful patterns imprinted by ALL creatures. No sim consumer
- * instantiates it yet (0 import/call sites); the class is correct and test-ready, dormant.
+ * Maintains a shared field tensor F ∈ R^{FIELD_DIM}. Each apex beat the world imprints the apex
+ * mind's consciousness latent (weighted by its transcendence) via {@link imprint}, then reads back a
+ * morphic bias via {@link readBias}; when the field RESONATES strongly with the present latent (past
+ * successful patterns align with now) the world adds a small bounded boost to collective chaos — a
+ * genuine apex→field→world loop beside the noosphere + stigmergy collective fields. Deterministic
+ * (draws no rng), so imprinting/reading never perturbs the seeded stream.
  *
  * Implementation:
  *   • EMA decay field (slow timescale: τ=0.03)
@@ -61,9 +62,8 @@ export class MorphicField {
   }
 
   /**
-   * Imprint a creature's consciousness latent into the morphic field.
-   * Intended to be called once per creature per beat once wired into the simulation loop
-   * (no caller yet — see the NOT-WIRED note in the file header).
+   * Imprint a creature's consciousness latent into the morphic field. Called once per apex beat by
+   * world.ts (V-MORPH) with the apex mind's latent + its transcendence as the success weight.
    */
   imprint(latent: ArrayLike<number>, successScore: number): void {
     this.imprints++;

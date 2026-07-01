@@ -129,6 +129,7 @@ import { EmergenceAnglesController } from './sim/emergence-angles';
 import { Mortality } from './sim/mortality';
 import { Stigmergy } from './sim/stigmergy';
 import { Noosphere } from './sim/noosphere';
+import { MorphicField, type MorphicSnapshot } from './sim/morphic-field';
 import { Symbiosis } from './sim/symbiosis';
 import { MythRitual } from './sim/myth-ritual';
 import { SuperMind, type SuperMindSnapshot, type SuperMindIntent } from './sim/super-mind';
@@ -303,6 +304,11 @@ export class World {
   private readonly emergenceAngles: EmergenceAnglesController;
   private readonly stigmergy = new Stigmergy();
   private readonly noosphere = new Noosphere();
+  /** V-MORPH: shared morphic-resonance field — the apex imprints its latent + reads a morphic bias
+   * (cross-creature correlation model), a third collective field beside the noosphere + stigmergy. */
+  private readonly morphicField = new MorphicField();
+  /** Last morphic-field snapshot (telemetry); null until the first apex beat imprints. */
+  private morphicSnap: MorphicSnapshot | null = null;
   private readonly symbiosis: Symbiosis;
   private readonly mythRitual: MythRitual;
   private readonly archonMortality: Mortality[];
@@ -544,6 +550,11 @@ export class World {
    *  (doctrine Experiment 2). −1 until measured. High ⇒ an umwelt no Earth animal would recognise. */
   get offworldUmwelt(): number {
     return this.lastOffworldUmwelt;
+  }
+  /** V-MORPH: live shared morphic-resonance field snapshot (fieldNorm / resonanceStrength / imprints /
+   *  bias) — the apex-imprinted cross-creature correlation field; null until the first apex beat. */
+  get morphicSnapshot(): MorphicSnapshot | null {
+    return this.morphicSnap;
   }
   private readonly apexPercept: ApexPercept = {
     threat: 0,
@@ -2271,6 +2282,22 @@ export class World {
       const nooSnap = this.noosphere.snapshot();
       if (nooSnap.collectiveInsight) {
         s.chaos = Math.min(CHAOS_MAX, s.chaos + 0.08);
+      }
+      // V-MORPH: shared MORPHIC FIELD (Sheldrake-inspired cross-creature correlation model, NOT an
+      // empirical claim). The apex imprints its consciousness latent (weighted by its transcendence)
+      // into the field, then reads back a morphic bias; when the field RESONATES strongly with the
+      // present latent (past successful patterns align with now), it contributes a small bounded boost
+      // to collective chaos — a genuine apex→field→world loop mirroring the noosphere's collectiveInsight
+      // coupling above. Deterministic (the field draws no rng), bounded + clamped. Runs on the apex beat.
+      const apexLatent = this.superMindSnap?.latent;
+      if (apexLatent && apexLatent.length > 0) {
+        this.morphicField.imprint(apexLatent, this.lastApexThought.transcendence);
+        const morphic = this.morphicField.readBias(apexLatent);
+        this.morphicField.decay();
+        this.morphicSnap = this.morphicField.snapshot();
+        if (morphic.strength > 0.66) {
+          s.chaos = Math.min(CHAOS_MAX, s.chaos + 0.03 * morphic.strength);
+        }
       }
       // Light Archons (5–24): deposit pantheon field into emergence angles 8–10 each apex beat.
       for (let a = 5; a < ARCHON_CHANNELS; a++) {
