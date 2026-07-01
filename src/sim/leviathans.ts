@@ -36,6 +36,20 @@ const HOLE_F = new THREE.Vector3();
 const V1 = new THREE.Vector3();
 
 /** Internal per-leviathan record. */
+/** Speed→surge gain: a leviathan velocity magnitude of ~1.25 world-units/frame saturates the surge. */
+const LEVIATHAN_SURGE_SCALE = 0.8;
+
+/**
+ * Map a leviathan's REAL speed (velocity magnitude) to a `[0,1]` surge — a diving/accelerating colossus
+ * blazes, a gliding one dims. Replaces the old clock-driven `sin(t)` glow pulse so the body reads its
+ * actual motion, not a metronome. Finite-guarded, clamped. Pure, no rng. O(1). See
+ * tests/leviathan-surge.test.ts.
+ */
+export function leviathanSurge(speed: number): number {
+  const v = (Number.isFinite(speed) ? speed : 0) * LEVIATHAN_SURGE_SCALE;
+  return v < 0 ? 0 : v > 1 ? 1 : v;
+}
+
 interface Leviathan {
   group: THREE.Group;
   body: THREE.Mesh;
@@ -160,10 +174,11 @@ export class LeviathanSystem {
       }
       lv.body.rotation.x = Math.sin(t * 1.2 + lv.ph) * 0.25; // tail undulation
 
-      // Inner glow + aura pulse.
-      const pulse = 1 + Math.sin(t * 1.5 + lv.ph) * 0.4;
-      lv.mat.emissiveIntensity = 1.2 * pulse;
-      lv.aura.intensity = (2 + Math.sin(t * 1.5 + lv.ph) * 1.2) * POINT_LIGHT_GAIN;
+      // Inner glow + aura now read the colossus's REAL speed (was a clock-driven sin pulse): a
+      // diving/accelerating leviathan blazes, a gliding one dims. Falsifiable, deterministic.
+      const surge = leviathanSurge(lv.vel.length());
+      lv.mat.emissiveIntensity = 1.2 * (0.6 + 0.8 * surge);
+      lv.aura.intensity = (1.6 + 2.0 * surge) * POINT_LIGHT_GAIN;
     }
   }
 }

@@ -11,6 +11,30 @@ dated / historical / "superseded snapshot" copies (per the binding "Living docs,
 
 ---
 
+## 2026-07-01 — Real-bound body-visual campaign: 4 body classes de-decorated / driven by real state
+
+A multi-batch campaign making creature-body visuals FALSIFIABLE readouts of real state, never
+decoration (PHILOSOPHY "Real math or no math"). Shipped across the masses, titans, wingmen, and
+leviathans — 21 named GPU effects + 2 de-decorations, each bound to a real signal with a test:
+
+- **Masses (`instanced-entities.ts`):** two per-instance vec4 lanes — `instVitals` (wealth/senescence/
+  neural/exertion via `packVitals`) + `instVitals2` (strategy/payoff/community/quantum-phase via
+  `packVitals2`) — drive 19 named reliquary-shader effects (phosphor gas, laser-dance synapse arcs,
+  ashen cataract, hyperspace ionizing flutter, gilded shimmer, singulrosity bloom, bit-glitch core,
+  shardwarp, cooperator-halo/defector-corona, payoff iridescence, faction war-paint, hive-resonance,
+  superposition shimmer, vortexical swirl, helixology, orbital plasmoids, lapse-collapse breath,
+  storm-thermal radiance, cymatic ripples). Tests: `entity-vitals*.test.ts`.
+- **Titans (`titans.ts`):** `titanVitalLanes(energy, entropy)` → `uEnergy` (stellar-core forge) +
+  `uEntropy` (waste-rot fissures). Test: `titan-vitals.test.ts`.
+- **Wingmen (`super-wingmen-render.ts`):** `droneSpeed` — drone size reads real per-frame speed (was a
+  `sin(t)` pulse). Test: `super-wingmen-render.test.ts`.
+- **Leviathans (`leviathans.ts`):** `leviathanSurge(speed)` — glow + aura read the colossus's real
+  speed (was a `sin(t)` pulse). Test: `leviathan-surge.test.ts`.
+
+All pure `f(state)`, **no rng** → seeded trajectory byte-identical; every new GLSL suite compiled
+directly in the live WebGL2 context (stale-preview-bundle workaround). This entry consolidates the
+2026-06-27 V-VITALS / V-VITALS2 / V-VITALS3 / V-TITAN-VITALS / de-decoration entries below.
+
 ## 2026-06-30 — QA/QC audit pass 3: neon neural animation UI + complete codebase review + verification
 
 Exhaustive Director-level audit, verification gate and smoke-testing of the entire repository. Verified 100% correctness, reliability, performance alignment, and design consistency across all 198 test suites.
