@@ -351,10 +351,17 @@ function buildCageMaterial(u: TitanUniforms): THREE.ShaderMaterial {
     fragmentShader: `
       uniform vec3 uColor;
       uniform float uMenace;
+      uniform float uTime;
       varying float vW;
+      vec3 hsv2rgb(vec3 c){ vec4 K=vec4(1.,2./3.,1./3.,3.); vec3 p=abs(fract(c.xxx+K.xyz)*6.-K.www); return c.z*mix(K.xxx,clamp(p-K.xxx,0.,1.),c.y); }
       void main() {
         float glow = 0.45 + 0.55 * (vW * 0.5 + 0.5);
-        gl_FragColor = vec4(uColor * (0.5 + 1.5 * uMenace) * glow, 0.8);
+        // USER: the cage was a static single-hue orange wireframe. Now the 4D tesseract COLOUR-CYCLES — hue
+        // drifts with time + the 4th-dimension coordinate (vW), so it shimmers a living rainbow as the
+        // hypercube rotates in 4D. Reads as an intentional dynamic mathematical lattice, not a noob wireframe.
+        float hue = fract(uTime * 0.07 + vW * 0.33);
+        vec3 col = hsv2rgb(vec3(hue, 0.88, 0.62)) * (0.55 + 1.3 * uMenace);
+        gl_FragColor = vec4(col * glow, 0.72);
       }
     `,
   });
