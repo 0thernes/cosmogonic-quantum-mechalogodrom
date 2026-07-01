@@ -18,6 +18,7 @@ import {
   type ApexPercept,
   type ApexScale,
 } from './apex-brain';
+import { rarityReport, type RarityReport } from './apex-rarity';
 
 /** The "alien / offworld" organs (number-theory, topology, multi-time, quantum) — non-Earth channels. */
 export const ALIEN_ORGANS: readonly ApexOrganKey[] = [
@@ -146,6 +147,8 @@ export interface HarnessReport {
   allLoadBearing: boolean;
   /** Offworld dependence proxy in [0,1]: behaviour's reliance on alien vs earthly organs. */
   offworldDependence: number;
+  /** The 1-of-1-by-combination rarity matrix (design-comparison claim, doctrine Level 3). */
+  rarity: RarityReport;
 }
 
 /** Distance tolerance above which an organ counts as load-bearing (quantised channels ⇒ tiny floor). */
@@ -194,6 +197,7 @@ export function ablationStudy(
     loadBearingCount,
     allLoadBearing: loadBearingCount === APEX_ORGAN_KEYS.length,
     offworldDependence: Math.round(offworldDependence * 1e4) / 1e4,
+    rarity: rarityReport(),
   };
 }
 

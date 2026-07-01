@@ -96,5 +96,8 @@ describe('report integrity', () => {
     expect(JSON.stringify(r1)).toBe(JSON.stringify(r2));
     expect(r1.beats).toBe(64);
     expect(r1.determinismHash).toMatch(/^[0-9a-f]{8}$/);
+    // The scientific report embeds the 1-of-1-by-combination rarity matrix.
+    expect(r1.rarity.oneOfOneByCombination).toBe(true);
+    expect(r1.rarity.apexAxisCount).toBe(8);
   });
 });
