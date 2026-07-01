@@ -387,9 +387,17 @@ the sim writes into (puppet-master gate sequences, chaos drift) and reads out of
 collapse) — an honest substrate, not decoration. Partial peers: **Quantum Artificial Life** (real qubits, but no
 agent decision loop); **Projective Simulation** and **VQC quantum-RL** (quantum substrate in an action loop, but in
 abstract RL benchmarks, not an A-Life ecology). **Caveat: no QPU and no demonstrated behavioral advantage over a
-classical baseline — the P1 quantum-vs-classical benchmark is the missing receipt.** Until P1 ships a
-pre-registered, ablation-controlled effect, the quantum novelty is integration/aesthetic, not a physics result.
-**No quantum advantage is demonstrated; the Tsotchke math is an exact classical simulation.**
+classical baseline.** The P1 quantum-vs-classical benchmark is **no longer missing** — it now runs a real
+parameter-matched ablation (`SuperMind.setQuantumAblated` gates the whole quantum-substrate→decision pathway:
+quantum-reservoir + Schrödinger-spread curiosity, the Lindblad deliberation qubit, the Eshkol-QRNG draw, and the
+QGT + NQS/VMC contributions to surprise), over two pre-specified survival regimes (a near-saturating _capacity_
+task and a high-mortality _pressure_ task), scored with a paired sign-flip **permutation test**
+(`scripts/p1-quantum-classical-experiment.ts`, gate-guarded by `tests/p1-experiment.test.ts`). The measured
+result is a **robust null** (survival _p_ ≈ 0.51 / 0.61, empowerment _p_ ≈ 0.18 / 0.46): even with real
+differential mortality, the quantum substrate confers **no distinguishable behavioral advantage** on this toy
+task. So the quantum novelty is integration/aesthetic, not a physics result — now **measured, not merely
+asserted**. A real advantage claim still needs a pre-registered, ecologically-valid task + independent
+replication. **No quantum advantage is demonstrated; the Tsotchke math is an exact classical simulation.**
 
 ### Angle 2 — instrumenting _multiple_ consciousness theories as measured mechanisms wired to behavior
 
@@ -506,13 +514,18 @@ bodies/brains (Sims/Framsticks/EvoGym), open-endedness (Picbreeder/POET/ASAL), c
 ## Scientific weak points (the gates between "impressive artifact" and "serious contribution")
 
 1. **Peer validation is missing.** No external paper, reproducible public experiment suite, or independent replication.
-2. **Ablations are missing.** If removing Eshkol AD/GWT/QGT/spin/irrep does **not** measurably change speciation,
-   survival, diversity, or coupling, the substrate stack is decorative. **Highest-leverage experiment**, and exactly
-   what converts the breadth outlier into a depth result.
+2. **Ablations are partially done.** The quantum-substrate→*decision* ablation now exists (`setQuantumAblated`,
+   permutation-tested → robust null; see Angle 1). Still missing: the _speciation-level_ substrate ablations — if
+   removing Eshkol AD/GWT/QGT/spin/irrep does **not** measurably change speciation, survival, diversity, or coupling,
+   the substrate stack is decorative there. **Highest-leverage remaining experiment**, and exactly what converts the
+   breadth outlier into a depth result.
 3. **Open-endedness is not proven** — and the statistics confirm it is the _weak_ axis (`+0.21σ` self / `−0.83σ`
-   code-grounded, out-led by POET/Picbreeder/ASAL). Needs multi-seed long runs, novelty/diversity metrics,
-   non-stationarity checks, plateau tests.
-4. **The quantum advantage is unmeasured.** The P1 quantum-vs-classical benchmark is the missing receipt.
+   code-grounded, out-led by POET/Picbreeder/ASAL). The **instrument** now exists — `openEndednessVerdict`
+   (Bedau-Packard bounded/unbounded classification) is wired live into `world.ts` and audit-recorded — but the
+   long-run _result_ (multi-seed, non-stationarity, plateau tests) still has to be collected and reported.
+4. **The quantum advantage is measured — and null.** The P1 quantum-vs-classical benchmark now ships (ablation-
+   controlled, two regimes, permutation-tested; robust null). The remaining gap is an ecologically-valid,
+   pre-registered task + independent replication, not the benchmark itself.
 5. **Dead code inflates the self-scores.** `schrodinger.ts`, `causal-graph.ts`, `predictive-coding.ts` are real math
    with zero live wiring; instantiating them (or removing them from the instrumentation count) is the cleanest way to
    make the consciousness/substrate scores match the code.
