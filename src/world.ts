@@ -107,6 +107,7 @@ import {
   type OpenEndednessClass,
 } from './sim/open-endedness';
 import { rngContrast } from './sim/classical-contrast';
+import { apexOffworldScore } from './sim/apex-offworld-score';
 import {
   GODFORMS,
   APEX_INDIVIDUATED,
@@ -539,6 +540,11 @@ export class World {
   get rngQuantumContrast(): number {
     return this.lastRngContrast;
   }
+  /** V-UMWELT: Offworld Umwelt Score ∈ [0,1] — how much apex behaviour leans on the alien substrate
+   *  (doctrine Experiment 2). −1 until measured. High ⇒ an umwelt no Earth animal would recognise. */
+  get offworldUmwelt(): number {
+    return this.lastOffworldUmwelt;
+  }
   private readonly apexPercept: ApexPercept = {
     threat: 0,
     energy: 0,
@@ -561,6 +567,10 @@ export class World {
   private lastOeeVerdict: OpenEndednessClass = 'inactive';
   /** V-QRC: classical-LCG vs Eshkol-QRNG randomness-quality contrast ∈ [0,1] (0=indistinguishable, →1 different). */
   private lastRngContrast = 0;
+  /** V-UMWELT: Offworld Umwelt Score ∈ [0,1] — fraction of apex behaviour driven by the ALIEN substrate
+   *  (quantum/field/procedural) vs mundane reach/resident signals. −1 until measured once (a static
+   *  characterisation of the fixed apex scale, so it is computed a single time off the hot path). */
+  private lastOffworldUmwelt = -1;
 
   /** Reused telemetry snapshot (panel reads synchronously). */
   private readonly snap: TelemetrySnapshot;
@@ -2453,6 +2463,19 @@ export class World {
           serialGap: rc.serialGap,
           uniformityGap: rc.uniformityGap,
         });
+        // V-UMWELT: measure the Offworld Umwelt Score ONCE (doctrine Experiment 2) — the fraction of apex
+        // behaviour driven by the ALIEN substrate. It is a static characterisation of the fixed apex scale
+        // (its own seeded child streams, reads no evolving state ⇒ boot-stream-neutral), so it runs a single
+        // time here (deferred off boot) with a light ensemble, then is surfaced. Was a tested-but-unwired module.
+        if (this.lastOffworldUmwelt < 0) {
+          const um = apexOffworldScore(SCALE_APEX_START, { seeds: [1, 7, 42], warmBeats: 12 });
+          this.lastOffworldUmwelt = um.score;
+          this.audit.record('offworld-umwelt-score', {
+            score: um.score,
+            earthLikeness: um.earthLikeness,
+            samples: um.samples,
+          });
+        }
       }
       if (s.frame % 120 === 0 && n < target) {
         const snap = this.primordialSoup.snapshot();
