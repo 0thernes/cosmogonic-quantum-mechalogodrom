@@ -208,6 +208,10 @@ export class EntityManager {
   private readonly env: BehaviorEnv;
   /** Optional ecological cover field: plants are not neural, but animals can sense/use their cover. */
   private floraComfort: ((x: number, z: number) => FloraComfortReadout) | null = null;
+  /** USER ecology: optional flora GRAZING sink — a hungry animal eats the plants at (x,z) and the
+   *  callback returns the FOOD energy yielded (the flora depletes its own biomass). Null detaches it. */
+  private floraGraze: ((x: number, z: number, pressure: number, dt: number) => number) | null =
+    null;
   /** New organisms created so far THIS frame (auto-split), reset each {@link update}. See {@link SPAWN_BUDGET_ULTRA}. */
   private spawnsThisFrame = 0;
 
@@ -230,6 +234,15 @@ export class EntityManager {
   /** Wire a deterministic flora-cover query into organism behavior; null detaches the ecology. */
   attachFloraComfort(query: ((x: number, z: number) => FloraComfortReadout) | null): void {
     this.floraComfort = query;
+  }
+
+  /** USER ecology: wire the flora GRAZING sink so hungry animals can EAT the plants for energy (the
+   *  plants deplete + regrow on their side). Deterministic; null (the default, e.g. in tests) detaches
+   *  it so the seeded golden is byte-identical without a live flora field. */
+  attachFloraGraze(
+    sink: ((x: number, z: number, pressure: number, dt: number) => number) | null,
+  ): void {
+    this.floraGraze = sink;
   }
 
   /**
@@ -861,6 +874,16 @@ export class EntityManager {
       u.act += strength * desire * 0.012;
       u.sT -= strength * desire * 0.35;
       e.material.color.lerp(FLORA_CAMO, strength * desire * 0.012);
+      // USER ecology: a HUNGRY animal resting in the plants GRAZES them — it eats the biomass down (the
+      // flora depletes + regrows on its side) and gains the returned FOOD as energy. Gated behind the
+      // injected sink (null in tests ⇒ the seeded golden is untouched); deterministic (no rng).
+      if (this.floraGraze && hunger > 0.15) {
+        const food = this.floraGraze(cover.x, cover.z, hunger, dt);
+        if (food > 0) {
+          const ne = u.energy + food;
+          u.energy = ne > 100 ? 100 : ne;
+        }
+      }
     }
   }
 

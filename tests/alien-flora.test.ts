@@ -144,6 +144,37 @@ describe('AlienFlora — the vegetal ground ecology', () => {
     f.dispose();
   });
 
+  test('grazing offers food + eats plants down to stubs, and biomass regrows (life-cycle)', () => {
+    const ctx = makeCtx();
+    const f = new AlienFlora(ctx);
+    // Find a cell that actually has plants (the centre is cleared) via the cover query.
+    let gx = 0;
+    let gz = 0;
+    let found = false;
+    for (let a = 60; a < 540 && !found; a += 30) {
+      for (let ang = 0; ang < 6.28 && !found; ang += 0.4) {
+        const c = f.comfortAt(Math.cos(ang) * a, Math.sin(ang) * a);
+        if (c.strength > 0.05) {
+          gx = c.x;
+          gz = c.z;
+          found = true;
+        }
+      }
+    }
+    expect(found).toBe(true);
+    // Graze it hard → it yields food (energy) while depleting; once eaten out, further grazes yield ~0.
+    let totalFood = 0;
+    for (let i = 0; i < 250; i++) totalFood += f.grazeAt(gx, gz, 1, 1 / 60);
+    expect(totalFood).toBeGreaterThan(0); // plants offered food
+    expect(f.grazeAt(gx, gz, 1, 1 / 60)).toBeCloseTo(0, 3); // eaten to a stub → no more food
+    // With no grazing, the cell REGROWS and becomes edible again (regenerate from death).
+    for (let i = 0; i < 1400; i++) f.update(1 / 60, 1, 0.3);
+    expect(f.grazeAt(gx, gz, 1, 1 / 60)).toBeGreaterThan(0);
+    // A location off the field yields nothing (no plants there).
+    expect(f.grazeAt(1e6, 1e6, 1, 1 / 60)).toBe(0);
+    f.dispose();
+  });
+
   test('mobile builds a lighter field than desktop', () => {
     const desktop = new AlienFlora(makeCtx(false));
     const mobile = new AlienFlora(makeCtx(true));

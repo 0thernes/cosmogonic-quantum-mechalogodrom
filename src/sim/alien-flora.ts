@@ -57,6 +57,16 @@ const CENTER_CLEAR = 78;
 /** Fixed layout seed — flora is the same world every replay (decor, not heritable state). */
 const FLORA_SEED = 0x5eedf10a;
 
+// ── USER ecology tuning: plants offer FOOD, get grazed to nibbled stubs, and REGROW. All deterministic. ──
+/** Biomass eaten per second by a full-pressure graze on one cell. */
+const GRAZE_RATE = 0.9;
+/** Energy (on the 0..100 creature scale) yielded per unit of biomass eaten. */
+const GRAZE_YIELD = 22;
+/** Logistic regrowth speed toward a cell's carrying capacity. */
+const REGROW_RATE = 0.22;
+/** Reseed floor so a fully-eaten (dead) cell slowly regenerates from nothing. */
+const REGROW_SEED = 0.015;
+
 /** Deterministic positional hash → [0,1). No bitwise, no rng stream. */
 function hash(n: number): number {
   const s = Math.sin(n * 127.1 + 311.7 + FLORA_SEED * 0.000113) * 43758.5453;
@@ -105,6 +115,8 @@ const flora_vert = /* glsl */ `
   uniform float uChaos;
   uniform vec2 uContactPos;
   uniform float uContact;
+  uniform sampler2D uBiomass;
+  uniform float uGridExtent;
   varying vec3 vColor;
   varying float vGlow;
   varying float vUp;
@@ -125,6 +137,14 @@ const flora_vert = /* glsl */ `
     p.x += sin(uTime * freq + phase) * bend * 2.6 + sin(uTime * freq * 3.7 + phase * 2.1) * turb * 1.2;
     p.z += cos(uTime * freq * 0.8 + phase * 1.3) * bend * 2.1 + cos(uTime * freq * 2.9 + phase * 1.7) * turb * 1.0;
     p.y += sin(uTime * freq * 0.5 + phase) * up * 0.18 * (uWind + uChaos) + sin(uTime * freq * 4.3 + phase) * up * 0.05 * uChaos;
+
+    // USER ecology: shrink the whole plant toward its base by its cell BIOMASS — a grazed-down plant is
+    // a nibbled stub (grow≈0.12), a regrown one swells back to full. Instance origin (world XZ) → biomass uv.
+    vec2 bmBase = (instanceMatrix * vec4(0.0, 0.0, 0.0, 1.0)).xz;
+    float biomass = texture2D(uBiomass, (bmBase + 0.5 * uGridExtent) / uGridExtent).r;
+    float grow = 0.12 + 0.88 * biomass;
+    p *= grow;
+    vGlow *= 0.3 + 0.7 * biomass;
 
     vec4 worldPosition = instanceMatrix * vec4(p, 1.0);
     float wave =
@@ -207,6 +227,11 @@ export class AlienFlora {
   private readonly gridHalf: number;
   private readonly density: Float32Array;
   private readonly maxDensity: number;
+  // ── USER ecology: the LIVE, mutable biomass life-cycle (grazed → eaten stub; regrows → full). ──
+  private readonly biomass: Float32Array;
+  private readonly biomassTex: THREE.DataTexture;
+  private biomassDirty = true;
+  private texAccum = 0;
 
   constructor(ctx: SimContext) {
     this.scene = ctx.scene;
@@ -219,6 +244,10 @@ export class AlienFlora {
         uChaos: { value: 0 },
         uContactPos: { value: new THREE.Vector2(99999, 99999) },
         uContact: { value: 0 },
+        // USER ecology: live biomass field (grazed down when eaten, regrows over time) → plants shrink
+        // to nibbled stubs where creatures feed and pop back up as they regenerate. Set post-grid below.
+        uBiomass: { value: null as THREE.Texture | null },
+        uGridExtent: { value: 1 },
       },
       vertexShader: flora_vert,
       fragmentShader: flora_frag,
@@ -313,6 +342,25 @@ export class AlienFlora {
     }
     this.instanceCount = placed;
     this.maxDensity = maxD;
+
+    // ── USER ecology: the live BIOMASS field starts FULL (1.0) wherever plants were placed; its per-cell
+    //    carrying capacity mirrors placement density. Creatures graze it down (→ eaten stubs) and it
+    //    regrows toward capacity over time. Uploaded as a small linear-filtered R8 texture the vertex
+    //    shader samples to shrink/regrow each plant. All deterministic — no rng, no entity write-back. ──
+    this.biomass = new Float32Array(this.gridN * this.gridN);
+    for (let i = 0; i < this.biomass.length; i++) {
+      this.biomass[i] = (this.density[i] ?? 0) > 0 ? 1 : 0;
+    }
+    const texData = new Uint8Array(this.gridN * this.gridN * 4);
+    for (let i = 0; i < this.biomass.length; i++) {
+      texData[i * 4] = Math.round((this.biomass[i] ?? 0) * 255);
+    }
+    this.biomassTex = new THREE.DataTexture(texData, this.gridN, this.gridN, THREE.RGBAFormat);
+    this.biomassTex.minFilter = THREE.LinearFilter;
+    this.biomassTex.magFilter = THREE.LinearFilter;
+    this.biomassTex.needsUpdate = true;
+    this.material.uniforms['uBiomass']!.value = this.biomassTex;
+    this.material.uniforms['uGridExtent']!.value = this.gridN * this.cell;
 
     // ── Realize one InstancedMesh per non-empty family. ──
     const m = new THREE.Matrix4();
@@ -556,6 +604,60 @@ export class AlienFlora {
     this.contactDisp =
       this.contactDisp < -1.5 ? -1.5 : this.contactDisp > 1.8 ? 1.8 : this.contactDisp;
     u['uContact']!.value = this.contactDisp;
+
+    // USER ecology: regrow the grazed biomass, then re-upload the tiny biomass texture on a light cadence
+    // (it evolves slowly; the shader reads it every frame). Deterministic — no rng.
+    this.regrow(dt);
+    if (this.biomassDirty) {
+      this.texAccum += dt > 0 ? dt : 0;
+      if (this.texAccum >= 0.1) {
+        this.texAccum = 0;
+        this.biomassDirty = false;
+        const data = this.biomassTex.image.data as Uint8Array;
+        const bm = this.biomass;
+        for (let i = 0; i < bm.length; i++) data[i * 4] = Math.round((bm[i] ?? 0) * 255);
+        this.biomassTex.needsUpdate = true;
+      }
+    }
+  }
+
+  /**
+   * USER ecology — a creature GRAZES the plants at world (x,z): the cell's biomass is eaten down (it
+   * becomes a nibbled stub in the shader) and the amount consumed is returned as FOOD (energy on the
+   * 0..100 creature scale) for the grazer. `pressure` 0..1 scales appetite. Deterministic (no rng);
+   * a no-op (returns 0) outside the field or on an already-eaten cell. O(1).
+   */
+  grazeAt(x: number, z: number, pressure: number, dt: number): number {
+    const gi = this.gridIndex(x, z);
+    if (gi < 0) return 0;
+    const have = this.biomass[gi] ?? 0;
+    if (have <= 0.001) return 0;
+    const p = pressure < 0 ? 0 : pressure > 1 ? 1 : pressure;
+    const h = dt > 0.05 ? 0.05 : dt > 0 ? dt : 0;
+    const eaten = Math.min(have, p * GRAZE_RATE * h);
+    this.biomass[gi] = have - eaten;
+    this.biomassDirty = true;
+    return eaten * GRAZE_YIELD;
+  }
+
+  /**
+   * USER ecology — regrow biomass toward each populated cell's capacity: logistic growth plus a small
+   * reseed floor so a fully-eaten (dead) cell slowly regenerates from nothing, like real wildflora.
+   * Deterministic, allocation-free. O(cells) — the grid is tiny (~27²). Called once per {@link update}.
+   */
+  private regrow(dt: number): void {
+    const h = dt > 0.05 ? 0.05 : dt > 0 ? dt : 0;
+    if (h <= 0) return;
+    const bm = this.biomass;
+    const den = this.density;
+    for (let i = 0; i < bm.length; i++) {
+      if ((den[i] ?? 0) <= 0) continue; // no plants ever seeded here
+      const b = bm[i]!;
+      if (b >= 1) continue;
+      const nb = b + (REGROW_SEED + REGROW_RATE * b * (1 - b)) * h;
+      bm[i] = nb > 1 ? 1 : nb;
+      this.biomassDirty = true;
+    }
   }
 
   /**
@@ -584,6 +686,7 @@ export class AlienFlora {
     }
     this.meshes.length = 0;
     for (const f of this.families) f.geo.dispose();
+    this.biomassTex.dispose();
     this.material.dispose();
   }
 }

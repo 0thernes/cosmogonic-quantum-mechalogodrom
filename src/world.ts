@@ -679,6 +679,11 @@ export class World {
     this.alienFlora = new AlienFlora(ctx); // alien vegetal ground ecology (10k plants, 50 species, GPU sway)
     this.entities = new EntityManager(ctx);
     this.entities.attachFloraComfort((x, z) => this.alienFlora.comfortAt(x, z));
+    // USER ecology: hungry organisms EAT the plants (energy), and the flora depletes + regrows its own
+    // biomass. Deterministic sink (the flora draws no rng); only wired here, so tests stay golden-clean.
+    this.entities.attachFloraGraze((x, z, pressure, dt) =>
+      this.alienFlora.grazeAt(x, z, pressure, dt),
+    );
     this.instanced = this.quality.instanced ? new InstancedEntityRenderer(ctx) : null;
     this.entities.reset(this.bootPopulation());
     this.shoggoths = new ShoggothSystem(ctx, this.entities);
@@ -1899,6 +1904,15 @@ export class World {
       wx += e.position.x * w;
       wz += e.position.z * w;
       weight += w;
+    }
+    // USER ecology: the BIG living things bend the flora too, not only the organism swarm — fold in the
+    // super creature when it roams LOW over the field, so plants visibly react as the colossus passes.
+    this.superBody.worldPosition(this.sv1);
+    if (this.sv1.y < 24) {
+      const sw = 1.2;
+      wx += this.sv1.x * sw;
+      wz += this.sv1.z * sw;
+      weight += sw;
     }
     if (weight <= 0) return;
     this.alienFlora.setContact(wx / weight, wz / weight, Math.min(1, weight / 18));
