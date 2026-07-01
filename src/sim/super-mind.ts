@@ -434,6 +434,9 @@ const DELIB_COUPLE = 0.5;
 // ── V1.2 · QUANTUM RESERVOIR COMPUTING (Fujii & Nakajima 2017 — the qubit register IS the reservoir) ──
 /** How strongly the quantum-state velocity (qFlux) drives curiosity (bounded, on par with the others). */
 const QRC_CURIOSITY_GAIN = 0.1;
+/** How strongly the quantum reservoir's LEARNED linear readout (the 4-D feature vector — the actual point
+ *  of reservoir computing) biases the plan drives (bounded, P1-ablatable via qGate). */
+const QRC_FEATURE_GAIN = 0.05;
 /** V1.3: how strongly the evolved-wavepacket positional uncertainty (Schrödinger) lifts curiosity. */
 const LATENT_CURIOSITY_GAIN = 0.1;
 /** V1.3 · GWT-2: the limited-capacity workspace size (Cowan's ~4 ± 1 conscious slots). */
@@ -1514,6 +1517,15 @@ export class SuperMind {
     drives.EXPLORE += 0.08 * this.eshkolEngine.workspace;
     drives.REST += 0.05 * this.eshkolEngine.logic;
     drives.DOMINATE += 0.04 * this.eshkolEngine.inference;
+    // P1-ablatable: the quantum reservoir's LEARNED linear readout (the 4-D feature vector — the whole
+    // point of reservoir computing) biases the plan. Previously only the scalar quantumFlux was wired
+    // (into curiosity); the feature vector was computed every beat and dropped. Each feature ∈ [−1,1] is
+    // unit-mapped to [0,1] and gated by qGate, so the learned quantum-temporal readout finally votes on the
+    // decision while staying part of the P1 quantum-ablation control.
+    drives.EXPLORE += QRC_FEATURE_GAIN * unit(this.qreservoir.feature(0)) * this.qGate;
+    drives.HUNT += QRC_FEATURE_GAIN * unit(this.qreservoir.feature(1)) * this.qGate;
+    drives.DOMINATE += QRC_FEATURE_GAIN * unit(this.qreservoir.feature(2)) * this.qGate;
+    drives.REST += QRC_FEATURE_GAIN * unit(this.qreservoir.feature(3)) * this.qGate;
     // Eshkol logic: simple "unification" for belief consistency (corpus logic engine) - affects narrative conf.
     if (this.eshkolEngine.logic > 0.6) {
       this.cons.novelty = clamp01(this.cons.novelty * 0.9); // "unify" reduces novelty noise
