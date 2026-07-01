@@ -23,6 +23,14 @@ import {
   activeThoughtVariation,
   type ApexThoughtVariation,
 } from './apex-thought-variations';
+import {
+  DEVICE_BROWSER,
+  buildManifold,
+  stabilizerQubitsForScale,
+  type DeviceProfile,
+  type ManifoldSnapshot,
+} from './apex-parameter-manifold';
+import { ApexQuantumSubstrate, type QuantumReach } from './apex-quantum-substrate';
 
 /** Mechalogodrom center fusion brain — same 5M designed roadmap as APEX near-term target. */
 export { MECHALOGODROM_BRAIN_DESIGNED_PARAMS } from './apex-brain';
@@ -163,3 +171,35 @@ export function consciousnessFromThought(
 }
 
 export { APEX_THOUGHT_VARIATIONS };
+
+/** The 1-billion-parameter substrate read-out for a scale + apex identity (manifold + quantum reach). */
+export interface ApexSubstrateTelemetry {
+  readonly manifold: ManifoldSnapshot;
+  readonly quantum: QuantumReach;
+  /** True when EITHER the addressable manifold or the quantum stabilizer reaches a billion. */
+  readonly billionReached: boolean;
+}
+
+/**
+ * Deterministic 1B-substrate telemetry for a scale + apex seed on a device: the tiered parameter
+ * manifold ({@link buildManifold}) plus the Quantum Brain's warmed-up stabilizer reach. This is what
+ * the Architecture panel surfaces when it wants the honest designed/addressable/resident split and the
+ * billion-dimensional quantum anchor — NOT a sentience claim. O(bounded).
+ *
+ * @see docs/APEX-1B-SUBSTRATE-ARCHITECTURE-2026-07-01.md
+ */
+export function apexSubstrateTelemetry(
+  scale: ApexScale,
+  seed: number,
+  device: DeviceProfile = DEVICE_BROWSER,
+  warmBeats = 8,
+): ApexSubstrateTelemetry {
+  const manifold = buildManifold(scale, device);
+  const q = new ApexQuantumSubstrate(seed, {
+    denseQubits: Math.min(8, scale.qubits),
+    stabilizerQubits: stabilizerQubitsForScale(scale, device),
+  });
+  for (let i = 0; i < Math.max(0, warmBeats); i++) q.step(0.5);
+  const quantum = q.reach();
+  return { manifold, quantum, billionReached: manifold.reachesBillion || quantum.reachesBillion };
+}

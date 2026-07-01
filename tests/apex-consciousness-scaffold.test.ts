@@ -5,10 +5,34 @@ import {
   APEX_ULTIMATE_NEURON_TARGET,
   MECHALOGODROM_BRAIN_DESIGNED_PARAMS,
   apexGrowthStage,
+  apexSubstrateTelemetry,
   resolveApexDesignedScale,
   consciousnessFromThought,
 } from '../src/sim/apex-consciousness-scaffold';
-import { SCALE_APEX_5M, SCALE_APEX_START, SCALE_MASSIVE } from '../src/sim/apex-brain';
+import { SCALE_APEX_5M, SCALE_APEX_START, SCALE_LIVE, SCALE_MASSIVE } from '../src/sim/apex-brain';
+
+describe('APEX consciousness scaffold — 1B substrate telemetry', () => {
+  test('MASSIVE reaches a billion via the manifold AND the quantum stabilizer', () => {
+    const t = apexSubstrateTelemetry(SCALE_MASSIVE, 12345);
+    expect(t.billionReached).toBe(true);
+    expect(t.manifold.reachesBillion).toBe(true);
+    expect(t.quantum.reachesBillion).toBe(true);
+    expect(t.quantum.stabilizerDim).toBeGreaterThanOrEqual(1_000_000_000);
+    expect(t.manifold.residentParams).toBeLessThanOrEqual(t.manifold.deviceBudgetParams);
+  });
+
+  test('LIVE scale does not reach a billion (honest)', () => {
+    const t = apexSubstrateTelemetry(SCALE_LIVE, 12345);
+    expect(t.billionReached).toBe(false);
+  });
+
+  test('telemetry is deterministic for a seed', () => {
+    const a = apexSubstrateTelemetry(SCALE_MASSIVE, 777);
+    const b = apexSubstrateTelemetry(SCALE_MASSIVE, 777);
+    expect(a.quantum.bornEntropy).toBe(b.quantum.bornEntropy);
+    expect(a.manifold.designedParams).toBe(b.manifold.designedParams);
+  });
+});
 
 describe('APEX consciousness scaffold — growth tiers', () => {
   test('roadmap constants: 100k start, 5M near-term, 1B ultimate', () => {
