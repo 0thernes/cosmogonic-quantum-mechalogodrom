@@ -31,21 +31,34 @@ const R = 3.4;
 export class NhiBodySystem {
   private readonly root = new THREE.Group();
   private readonly bodies = new Map<number, Body>();
-  private readonly coreGeo: THREE.SphereGeometry; // changed for less-poly bio look (user request)
+  /** Per-NHI CORE morphology set — the index picks a genuinely different alien "species" body. */
+  private readonly coreGeos: THREE.BufferGeometry[];
   private readonly ringGeo: THREE.TorusGeometry;
   private readonly eyeGeo: THREE.SphereGeometry;
-  private readonly spikeGeo: THREE.ConeGeometry;
+  /** Per-NHI SPIKE/blade/barb morphology set — the index picks a different protrusion form. */
+  private readonly spikeGeos: THREE.BufferGeometry[];
   private spawnIndex = 0;
 
   constructor(scene: THREE.Scene) {
     scene.add(this.root);
-    // USER #7: crazy wild mutational Morphicbiofuckery. Less poly, more unique organic shapes.
-    // Dark black base + bright shimmery highlights. High-seg sphere + displaced feel via multiple layers.
-    // Real "bio fuckery" via multiple overlaid shapes with different phases.
-    this.coreGeo = new THREE.SphereGeometry(R, 6, 5); // higher to reduce poly look
+    // USER #7 morphicbiofuckery: each NHI is a genuinely DIFFERENT alien species — the CORE morphology,
+    // the spike/blade form, and the appendage COUNTS all vary by spawn index (deterministic, rng-free),
+    // instead of every body being the same sphere+rings+spikes just phase-shifted. The geometries are a
+    // small SHARED set (memory-flat); only the assembly + the per-body tendril tubes are unique.
+    this.coreGeos = [
+      new THREE.SphereGeometry(R, 6, 5), // low-poly orb
+      new THREE.IcosahedronGeometry(R, 1), // faceted crystal skull
+      new THREE.OctahedronGeometry(R * 1.06, 0), // sharp diamond
+      new THREE.DodecahedronGeometry(R * 0.98, 0), // brutal dodeca
+      new THREE.TorusKnotGeometry(R * 0.6, R * 0.27, 72, 9, 2, 3), // knotted wormform
+    ];
     this.ringGeo = new THREE.TorusGeometry(R * 1.35, R * 0.12, 8, 28);
     this.eyeGeo = new THREE.SphereGeometry(R * 0.16, 12, 12);
-    this.spikeGeo = new THREE.ConeGeometry(R * 0.13, R * 1.15, 7, 1);
+    this.spikeGeos = [
+      new THREE.ConeGeometry(R * 0.13, R * 1.15, 7, 1), // needle
+      new THREE.ConeGeometry(R * 0.22, R * 0.72, 4, 1), // blade
+      new THREE.CylinderGeometry(R * 0.04, R * 0.15, R * 1.3, 6), // barb
+    ];
   }
 
   /** Birth an alien body for NHI `id` at (x,y,z). Idempotent per id. */
@@ -53,6 +66,15 @@ export class NhiBodySystem {
     if (this.bodies.has(id)) return;
     const group = new THREE.Group();
     group.position.set(x, y, z);
+
+    // USER #7: this NHI's SPECIES — a distinct core body, spike form, and appendage counts per index.
+    const si = this.spawnIndex;
+    const coreGeo = this.coreGeos[si % this.coreGeos.length]!;
+    const spikeGeo = this.spikeGeos[si % this.spikeGeos.length]!;
+    const ringCount = 1 + (si % 2); // 1..2 orbital rings
+    const spikeCount = 6 + (si % 4) * 2; // 6/8/10/12 protrusions
+    const tendrilCount = 3 + (si % 4); // 3..6 tendrils
+    const eyeCount = 5 + (si % 4); // 5..8 ocular crown
 
     // V109: wider alien skin palette — each NHI gets a unique biomechanical "species" hue/texture.
     // USER #7: dark black base with bright highlights, shimmery.
@@ -64,7 +86,7 @@ export class NhiBodySystem {
       roughness: 0.15,
       flatShading: false, // smoother for bio look
     });
-    group.add(new THREE.Mesh(this.coreGeo, coreMat));
+    group.add(new THREE.Mesh(coreGeo, coreMat));
 
     const ringMat = new THREE.MeshStandardMaterial({
       color: new THREE.Color().setHSL((0.08 + this.spawnIndex * 0.173) % 1, 0.82, 0.18),
@@ -76,17 +98,15 @@ export class NhiBodySystem {
     const ring = new THREE.Mesh(this.ringGeo, ringMat);
     ring.rotation.x = Math.PI / 2.4;
     group.add(ring);
-    const ring2 = new THREE.Mesh(this.ringGeo, ringMat);
-    ring2.rotation.set(Math.PI / 2.05, 0.4 + this.spawnIndex * 0.31, 0.75);
-    ring2.scale.set(
-      0.72 + 0.14 * Math.sin(this.spawnIndex),
-      1.18,
-      0.72 + 0.14 * Math.cos(this.spawnIndex),
-    );
-    group.add(ring2);
-    for (let i = 0; i < 9; i++) {
-      const a = i * 2.399963229728653 + this.spawnIndex * 0.41;
-      const spike = new THREE.Mesh(this.spikeGeo, ringMat);
+    if (ringCount > 1) {
+      const ring2 = new THREE.Mesh(this.ringGeo, ringMat);
+      ring2.rotation.set(Math.PI / 2.05, 0.4 + si * 0.31, 0.75);
+      ring2.scale.set(0.72 + 0.14 * Math.sin(si), 1.18, 0.72 + 0.14 * Math.cos(si));
+      group.add(ring2);
+    }
+    for (let i = 0; i < spikeCount; i++) {
+      const a = i * 2.399963229728653 + si * 0.41;
+      const spike = new THREE.Mesh(spikeGeo, ringMat);
       spike.position.set(
         Math.cos(a) * R * 0.78,
         Math.sin(a * 1.7) * R * 0.34,
@@ -98,8 +118,8 @@ export class NhiBodySystem {
     }
 
     const tendrilGeos: THREE.BufferGeometry[] = [];
-    for (let ti = 0; ti < 5; ti++) {
-      const a = ti * 1.256637 + this.spawnIndex * 0.37;
+    for (let ti = 0; ti < tendrilCount; ti++) {
+      const a = ti * 1.256637 + si * 0.37;
       const curve = new THREE.CatmullRomCurve3([
         new THREE.Vector3(0, 0, 0),
         new THREE.Vector3(
@@ -133,11 +153,11 @@ export class NhiBodySystem {
       emissive: new THREE.Color().setHSL(eyeHue, 0.95, 0.62),
       emissiveIntensity: 2.4,
     });
-    for (let i = 0; i < 7; i++) {
-      const a = -0.95 + i * 0.32;
+    for (let i = 0; i < eyeCount; i++) {
+      const a = -0.95 + i * (1.9 / Math.max(1, eyeCount - 1));
       const eye = new THREE.Mesh(this.eyeGeo, eyeMat);
       eye.position.set(Math.sin(a) * R * 0.42, Math.cos(a * 1.7) * R * 0.22, R * 0.86);
-      const sc = 0.65 + 0.35 * Math.sin(i * 2.1 + this.spawnIndex);
+      const sc = 0.65 + 0.35 * Math.sin(i * 2.1 + si);
       eye.scale.setScalar(sc);
       group.add(eye);
     }
@@ -243,10 +263,10 @@ export class NhiBodySystem {
    * teardown / HMR reload. Idempotent — geometry.dispose() is safe to call twice. */
   dispose(): void {
     this.clear();
-    this.coreGeo.dispose();
+    for (const g of this.coreGeos) g.dispose();
     this.ringGeo.dispose();
     this.eyeGeo.dispose();
-    this.spikeGeo.dispose();
+    for (const g of this.spikeGeos) g.dispose();
     this.root.removeFromParent();
   }
 
