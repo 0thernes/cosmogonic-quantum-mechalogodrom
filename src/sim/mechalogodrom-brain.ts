@@ -6,6 +6,8 @@
  * LIVE allocation is tractable in JS (~120k floats); the gap is reported honestly.
  *
  * Visual + telemetry only today — does NOT write sim RNG, economy, or entity physics.
+ * Carries real internal plasticity: pair-based STDP (Bi–Poo window) on the variant→fusion gains, so the
+ * cortex learns which variant sub-brains to trust from spike-timing — still deterministic + side-effect-free.
  * Deterministic: seeded mulberry32, no Math.random / Date.now.
  *
  * @see src/sim/mechalogodrom.ts (visual fusion spectacle)
@@ -24,6 +26,37 @@ const FUSION_DIM = 64;
 
 function clamp01(v: number): number {
   return v < 0 ? 0 : v > 1 ? 1 : v;
+}
+
+// ── Pair-based spike-timing-dependent plasticity (STDP) on the variant→fusion gains ──
+// Bi & Poo (1998) exponential window: a PRE spike leading a POST spike (Δt>0) POTENTIATES the synapse;
+// a POST leading a PRE (Δt<0) DEPRESSES it. A_minus > A_plus gives the classic net-LTD bias that keeps
+// the weights from running away. This is real internal plasticity, still deterministic + side-effect-free.
+const STDP_A_PLUS = 0.02;
+const STDP_A_MINUS = 0.021;
+const STDP_TAU = 6; // beats — the exponential time constant
+const STDP_WINDOW = 24; // beats — beyond this the kernel is negligible; skip the pairing
+const STDP_GAIN_MIN = 0.25;
+const STDP_GAIN_MAX = 2.5;
+const STDP_PRE_REL = 1.15; // a variant "fires" (pre) when its activity exceeds 1.15× the population mean
+const STDP_POST_THRESH = 0.5; // the fusion mind "fires" (post) when its activity ignites past this
+
+/**
+ * STDP weight change for a pre→post beat gap `dt = t_post − t_pre`. Δt>0 (pre before post) → LTP (+);
+ * Δt<0 (post before pre) → LTD (−); Δt=0 (no causal order) → 0. Exponential Bi–Poo window. Pure.
+ */
+export function stdpWeightDelta(
+  dt: number,
+  aPlus = STDP_A_PLUS,
+  aMinus = STDP_A_MINUS,
+  tau = STDP_TAU,
+): number {
+  if (dt === 0 || tau <= 0) return 0;
+  return dt > 0 ? aPlus * Math.exp(-dt / tau) : -aMinus * Math.exp(dt / tau);
+}
+
+function clampRange(v: number, lo: number, hi: number): number {
+  return v < lo ? lo : v > hi ? hi : v;
 }
 
 interface Subnet {
@@ -88,6 +121,8 @@ export interface MechalogodromBrainSnapshot {
   consciousnessProxy: number;
   /** Which variant sub-brain is dominant this beat (0..9). */
   dominantVariant: number;
+  /** 0..1 STDP plasticity — mean |gain−1| across the variant→fusion synapses (0 = unlearned). */
+  plasticity: number;
   latent: Float32Array;
   /** 5M parameter roadmap target (matches APEX). */
   roadmapParams: number;
@@ -120,6 +155,11 @@ export class MechalogodromBrain {
   private readonly latent = new Float32Array(FUSION_DIM);
   private readonly senses = new Float32Array(PERCEPT_DIM);
   private beat = 0;
+  // STDP state: a plastic gain per variant→fusion synapse, + nearest-neighbour spike times (beats).
+  private readonly gain = new Float32Array(VARIANT_COUNT).fill(1);
+  private readonly lastPreBeat = new Int32Array(VARIANT_COUNT).fill(-1_000_000);
+  private lastPostBeat = -1_000_000;
+  private plasticity = 0;
 
   constructor(seed: number) {
     const rng = mulberry32(seed >>> 0 || 1);
@@ -143,21 +183,32 @@ export class MechalogodromBrain {
     this.senses[7] = p.apexAgony;
 
     const variantOuts: Float32Array[] = [];
+    const variantAct = new Float32Array(VARIANT_COUNT);
     let dom = 0;
     let domAct = -1;
+    let actMean = 0;
     for (let v = 0; v < VARIANT_COUNT; v++) {
       const out = forward(this.variants[v]!, this.senses, this.scratch);
       variantOuts.push(out);
       let act = 0;
       for (let i = 0; i < out.length; i++) act += Math.abs(out[i]!);
+      variantAct[v] = act;
+      actMean += act;
       if (act > domAct) {
         domAct = act;
         dom = v;
       }
     }
+    actMean /= VARIANT_COUNT;
 
+    // Gate each variant's contribution to the cortex by its STDP-learned gain (previous beats' plasticity).
     const fusionIn = new Float32Array(LATENT_DIM * VARIANT_COUNT);
-    for (let v = 0; v < VARIANT_COUNT; v++) fusionIn.set(variantOuts[v]!, v * LATENT_DIM);
+    for (let v = 0; v < VARIANT_COUNT; v++) {
+      const g = this.gain[v]!;
+      const o = variantOuts[v]!;
+      const base = v * LATENT_DIM;
+      for (let i = 0; i < LATENT_DIM; i++) fusionIn[base + i] = o[i]! * g;
+    }
 
     const fused = forward(this.fusion, fusionIn, this.scratch);
     for (let i = 0; i < FUSION_DIM; i++) {
@@ -167,6 +218,41 @@ export class MechalogodromBrain {
     let actSum = 0;
     for (let i = 0; i < FUSION_DIM; i++) actSum += Math.abs(this.latent[i]!);
     const activity = clamp01(actSum / FUSION_DIM + p.fusion * 0.3);
+
+    // ── STDP UPDATE (variant→fusion gains) ── pre = a variant firing above the population mean; post =
+    // the fusion mind igniting. Nearest-neighbour pairing against the last opposite spike, exponential
+    // Bi–Poo window, gains clamped. Deterministic (no rng) → same seed + percepts ⇒ identical gains.
+    const beat = this.beat;
+    for (let v = 0; v < VARIANT_COUNT; v++) {
+      if (variantAct[v]! > actMean * STDP_PRE_REL) {
+        // a variant fires NOW (pre): depress vs the most recent post (post-before-pre, Δt<0)
+        if (beat - this.lastPostBeat <= STDP_WINDOW) {
+          this.gain[v] = clampRange(
+            this.gain[v]! + stdpWeightDelta(this.lastPostBeat - beat),
+            STDP_GAIN_MIN,
+            STDP_GAIN_MAX,
+          );
+        }
+        this.lastPreBeat[v] = beat;
+      }
+    }
+    if (activity > STDP_POST_THRESH) {
+      // the cortex fires NOW (post): potentiate variants that led it (pre-before-post, Δt>0)
+      for (let v = 0; v < VARIANT_COUNT; v++) {
+        if (beat - this.lastPreBeat[v]! <= STDP_WINDOW) {
+          this.gain[v] = clampRange(
+            this.gain[v]! + stdpWeightDelta(beat - this.lastPreBeat[v]!),
+            STDP_GAIN_MIN,
+            STDP_GAIN_MAX,
+          );
+        }
+      }
+      this.lastPostBeat = beat;
+    }
+    let gainDivergence = 0;
+    for (let v = 0; v < VARIANT_COUNT; v++) gainDivergence += Math.abs(this.gain[v]! - 1);
+    this.plasticity = clamp01(gainDivergence / VARIANT_COUNT);
+
     const strangeness = clamp01(Math.abs(p.dimension) / 99 + p.warp * 0.2);
     const consciousnessProxy = clamp01(
       activity * 0.35 +
@@ -223,9 +309,10 @@ export class MechalogodromBrain {
       },
       {
         id: 'FUSE-8',
-        status: 'scaffolded',
-        confidence: 0.2,
-        mechanism: 'STDP not yet wired on variant weights',
+        status: this.plasticity > 0.02 ? 'met' : 'partial',
+        confidence: clamp01(0.4 + this.plasticity * 2.5),
+        mechanism:
+          'STDP wired: pair-based spike-timing plasticity (Bi–Poo window) on the variant→fusion gains',
       },
       {
         id: 'FUSE-9',
@@ -250,6 +337,7 @@ export class MechalogodromBrain {
       strangeness,
       consciousnessProxy,
       dominantVariant: dom,
+      plasticity: this.plasticity,
       latent: this.latent.slice(),
       roadmapParams: this.designedParams,
       roadmapProgress,
