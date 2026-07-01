@@ -210,9 +210,9 @@ export class ApexExteriorAbomination {
       const sq = new THREE.LineSegments(
         e,
         new THREE.LineBasicMaterial({
-          color: 0xffffff,
+          color: 0x3a2a6a, // USER: was white → coloured (per-frame hue-animated in update)
           transparent: true,
-          opacity: 0.12,
+          opacity: 0.09,
           blending: THREE.AdditiveBlending,
           depthWrite: false,
         }),
@@ -327,7 +327,7 @@ export class ApexExteriorAbomination {
     this.godRays = new THREE.LineSegments(
       rayGeo,
       new THREE.LineBasicMaterial({
-        color: 0xffffff,
+        color: 0x2a4a7a, // USER: was white → coloured (per-frame hue-animated in update); less white glare
         transparent: true,
         opacity: 0.08,
         blending: THREE.AdditiveBlending,
@@ -465,6 +465,12 @@ export class ApexExteriorAbomination {
       const sq = this.voidSquares[i]!;
       sq.rotation.z = st * (0.03 + i * 0.008) + Math.sin(st * 0.2 + i) * 0.12;
       sq.scale.setScalar(1 + 0.06 * Math.sin(st * 0.35 + i) + vitality * 0.08);
+      // USER: colour-cycle (was static white) — dynamic, less white glare.
+      (sq.material as THREE.LineBasicMaterial).color.setHSL(
+        (hue + i * 0.12 + 0.3 + st * 0.02) % 1,
+        0.75,
+        0.45,
+      );
     }
     for (let i = 0; i < this.cornerOrbs.length; i++) {
       const orb = this.cornerOrbs[i]!;
@@ -481,7 +487,8 @@ export class ApexExteriorAbomination {
     this.vortexSpiral.scale.setScalar(1 + 0.08 * Math.sin(st * 0.35) + transcendence * 0.1);
     (this.vortexSpiral.material as THREE.LineBasicMaterial).opacity = 0.12 + 0.2 * transcendence;
     this.godRays.rotation.z = st * 0.018;
-    // USER #11/14: less blinding white — normal sat, darker baseline
+    // USER: colour-cycle the rays (was white) + keep the dimmed baseline — coloured, not blinding.
+    (this.godRays.material as THREE.LineBasicMaterial).color.setHSL((hue + 0.5) % 1, 0.7, 0.48);
     (this.godRays.material as THREE.LineBasicMaterial).opacity =
       (0.025 + 0.06 * vitality) * (0.55 + 0.2 * Math.sin(st * 0.5));
     const sM = this._sM;

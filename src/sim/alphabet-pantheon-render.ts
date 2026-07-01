@@ -619,7 +619,7 @@ export class AlphabetPantheonRender {
         // the full ±ARENA_HALF square (height centred on its original band b.ay so the vertical spread is
         // kept), with the bounded wander riding on top. Pure trig of (slowT, phase, gIdx) — no rng. The hard
         // clamp below still guarantees each stays on the platform + below the mechalogodrom.
-        const aDrift = slowT * (0.13 + 0.06 * this.chaos) + b.phase * 1.7;
+        const aDrift = slowT * (0.34 + 0.14 * this.chaos) + b.phase * 1.7; // ~2.6× faster: a visible roam, not a crawl
         const aRad = 200 + (b.gIdx % 7) * 55; // 200..530 — reaches the platform rim
         const aTx = Math.cos(aDrift) * aRad + b.ax * 0.12; // small per-body bias so the 100 don't converge
         const aTz = Math.sin(aDrift * 1.18 + b.phase) * aRad + b.az * 0.12;
