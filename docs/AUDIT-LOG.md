@@ -25,7 +25,10 @@ leviathans — 21 named GPU effects + 2 de-decorations, each bound to a real sig
   superposition shimmer, vortexical swirl, helixology, orbital plasmoids, lapse-collapse breath,
   storm-thermal radiance, cymatic ripples). Tests: `entity-vitals*.test.ts`.
 - **Titans (`titans.ts`):** `titanVitalLanes(energy, entropy)` → `uEnergy` (stellar-core forge) +
-  `uEntropy` (waste-rot fissures). Test: `titan-vitals.test.ts`.
+  `uEntropy` (waste-rot fissures), and `titanCombatLanes(matter, warCount)` → `uMatter` (accretion
+  mass-hoard molten-metal veins) + `uWar` (battle-scar rage plasma) — four distinct real economy/
+  diplomacy signals on the god-scale body (alongside the menace-driven colossal suite). Test:
+  `titan-vitals.test.ts`.
 - **Wingmen (`super-wingmen-render.ts`):** `droneSpeed` — drone size reads real per-frame speed (was a
   `sin(t)` pulse). Test: `super-wingmen-render.test.ts`.
 - **Leviathans (`leviathans.ts`):** `leviathanSurge(speed)` — glow + aura read the colossus's real

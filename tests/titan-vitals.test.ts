@@ -10,7 +10,7 @@
  * - non-finite and negative inputs pack 0 (never NaN).
  */
 import { describe, expect, test } from 'bun:test';
-import { titanVitalLanes } from '../src/sim/titans';
+import { titanVitalLanes, titanCombatLanes } from '../src/sim/titans';
 
 describe('titanVitalLanes (pure)', () => {
   test('zero economy → zero lanes; huge economy → clamped to 1', () => {
@@ -67,5 +67,50 @@ describe('titanVitalLanes (pure)', () => {
     const neg = titanVitalLanes(-100, -100);
     expect(neg.energyN).toBe(0);
     expect(neg.entropyN).toBe(0);
+  });
+});
+
+describe('titanCombatLanes (pure)', () => {
+  test('zero → zero; full economy/war → 1; clamps above', () => {
+    expect(titanCombatLanes(0, 0)).toEqual({ matterN: 0, warN: 0 });
+    const big = titanCombatLanes(1e9, 1e9);
+    expect(big.matterN).toBe(1);
+    expect(big.warN).toBe(1);
+  });
+
+  test('both lanes finite + within [0,1]; monotonic non-decreasing', () => {
+    let pm = -1;
+    for (let m = 0; m <= 2000; m += 100) {
+      const v = titanCombatLanes(m, 0).matterN;
+      expect(v).toBeGreaterThanOrEqual(pm);
+      expect(v).toBeGreaterThanOrEqual(0);
+      expect(v).toBeLessThanOrEqual(1);
+      pm = v;
+    }
+    let pw = -1;
+    for (let w = 0; w <= 12; w += 1) {
+      const v = titanCombatLanes(0, w).warN;
+      expect(v).toBeGreaterThanOrEqual(pw);
+      expect(v).toBeLessThanOrEqual(1);
+      pw = v;
+    }
+  });
+
+  test('the lanes genuinely vary below saturation (spawn matter ~15-25, a few wars)', () => {
+    const mid = titanCombatLanes(500, 2);
+    expect(mid.matterN).toBeGreaterThan(0);
+    expect(mid.matterN).toBeLessThan(1);
+    expect(mid.warN).toBeGreaterThan(0);
+    expect(mid.warN).toBeLessThan(1);
+  });
+
+  test('non-finite and negative inputs pack 0, never NaN', () => {
+    for (const bad of [NaN, Infinity, -Infinity, -5]) {
+      const v = titanCombatLanes(bad, bad);
+      expect(Number.isFinite(v.matterN)).toBe(true);
+      expect(Number.isFinite(v.warN)).toBe(true);
+      expect(v.matterN).toBe(0);
+      expect(v.warN).toBe(0);
+    }
   });
 });

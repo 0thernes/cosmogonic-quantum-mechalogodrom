@@ -215,6 +215,10 @@ interface TitanUniforms {
   uEnergy: THREE.IUniform<number>;
   /** entropy/ENTROPY_WASTE_THRESHOLD ∈ [0,1] — drives the waste-rot ashen fissures (a wasteful titan cracks). */
   uEntropy: THREE.IUniform<number>;
+  /** matter/RESOURCE_CAP ∈ [0,1] — drives the accretion mass-hoard molten-metal veins (a heavy titan). */
+  uMatter: THREE.IUniform<number>;
+  /** warCount/WAR_RAGE_CAP ∈ [0,1] — drives the battle-scar rage plasma (a warring titan erupts red). */
+  uWar: THREE.IUniform<number>;
 }
 function makeTitanUniforms(): TitanUniforms {
   return {
@@ -223,8 +227,13 @@ function makeTitanUniforms(): TitanUniforms {
     uColor: { value: new THREE.Color() },
     uEnergy: { value: 0 },
     uEntropy: { value: 0 },
+    uMatter: { value: 0 },
+    uWar: { value: 0 },
   };
 }
+
+/** This many simultaneous wars ⇒ full battle-rage plasma (a titan can war at most TITAN_COUNT−1 rivals). */
+const WAR_RAGE_CAP = 5;
 
 /**
  * Normalize a titan's raw economy into the two shader vitality lanes, both clamped to `[0,1]` and
@@ -239,6 +248,22 @@ export function titanVitalLanes(
   return {
     energyN: clamp((Number.isFinite(energy) ? energy : 0) / RESOURCE_CAP, 0, 1),
     entropyN: clamp((Number.isFinite(entropy) ? entropy : 0) / ENTROPY_WASTE_THRESHOLD, 0, 1),
+  };
+}
+
+/**
+ * Normalize a titan's raw diplomacy/economy into the two shader COMBAT lanes, both clamped to `[0,1]`
+ * and non-finite-guarded: `matterN = matter/RESOURCE_CAP` (accretion mass-hoard molten veins),
+ * `warN = warCount/WAR_RAGE_CAP` (battle-scar rage plasma). Pure, no rng. O(1). See
+ * tests/titan-vitals.test.ts.
+ */
+export function titanCombatLanes(
+  matter: number,
+  warCount: number,
+): { matterN: number; warN: number } {
+  return {
+    matterN: clamp((Number.isFinite(matter) ? matter : 0) / RESOURCE_CAP, 0, 1),
+    warN: clamp((Number.isFinite(warCount) ? warCount : 0) / WAR_RAGE_CAP, 0, 1),
   };
 }
 
@@ -290,6 +315,8 @@ function patchTitanBody(mat: THREE.MeshStandardMaterial, u: TitanUniforms): void
     shader.uniforms['uColor'] = u.uColor;
     shader.uniforms['uEnergy'] = u.uEnergy;
     shader.uniforms['uEntropy'] = u.uEntropy;
+    shader.uniforms['uMatter'] = u.uMatter;
+    shader.uniforms['uWar'] = u.uWar;
     shader.vertexShader = shader.vertexShader
       .replace(
         '#include <common>',
@@ -319,7 +346,7 @@ function patchTitanBody(mat: THREE.MeshStandardMaterial, u: TitanUniforms): void
         '#include <common>',
         `#include <common>
         varying vec3 vObjP; uniform float uTime; uniform float uMenace; uniform vec3 uColor;
-        uniform float uEnergy; uniform float uEntropy;
+        uniform float uEnergy; uniform float uEntropy; uniform float uMatter; uniform float uWar;
         float h31(vec3 p){return fract(sin(dot(p, vec3(27.17, 61.31, 11.71))) * 43758.5453);}
         float n31(vec3 p){vec3 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);
           return mix(mix(mix(h31(i),h31(i+vec3(1,0,0)),f.x),mix(h31(i+vec3(0,1,0)),h31(i+vec3(1,1,0)),f.x),f.y),
@@ -382,10 +409,17 @@ function patchTitanBody(mat: THREE.MeshStandardMaterial, u: TitanUniforms): void
         totalEmissiveRadiance += vec3(0.3, 0.6, 1.0) * tIon * uEnergy * 0.8;
         // PLASMA STORM-THERMAL (menace × energy): plasma storm radiance on an angry, charged titan.
         float tPlasma = pow(0.5 + 0.5 * sin(fbm3(vObjP * 5.0 + uTime * 0.5) * 10.0 + uTime * 3.0), 6.0);
-        totalEmissiveRadiance += vec3(1.0, 0.4, 0.9) * tPlasma * (uMenace * uEnergy) * 1.0;`,
+        totalEmissiveRadiance += vec3(1.0, 0.4, 0.9) * tPlasma * (uMenace * uEnergy) * 1.0;
+        // ── COMBAT LANES (matter hoard · war rage) — new REAL signals, each a falsifiable readout. ──
+        // ACCRETION MASS-HOARD (uMatter = matter/RESOURCE_CAP): a heavy titan accretes molten-metal veins.
+        float tAccret = smoothstep(0.45, 0.9, fbm3(vObjP * 3.0 - uTime * 0.03));
+        totalEmissiveRadiance += vec3(0.85, 0.6, 0.22) * tAccret * uMatter * 0.9;
+        // BATTLE-SCAR RAGE PLASMA (uWar = warCount/WAR_RAGE_CAP): a warring titan erupts red rage-plasma spikes.
+        float tRage = pow(0.5 + 0.5 * sin(vObjP.y * 17.0 + atan(vObjP.z, vObjP.x) * 3.0 + uTime * 7.0), 8.0);
+        totalEmissiveRadiance += vec3(1.0, 0.10, 0.05) * tRage * uWar * 2.2;`,
       );
   };
-  mat.customProgramCacheKey = () => 'titanBodyV68-colossal';
+  mat.customProgramCacheKey = () => 'titanBodyV69-combat';
 }
 
 /** The 4D tesseract cage — additive {@link THREE.LineSegments} that rotates pos4 in 4D + projects. */
@@ -1068,6 +1102,10 @@ export class TitanSystem {
     const tvl = titanVitalLanes(ti.energy, ti.entropy);
     ti.tu.uEnergy.value = tvl.energyN;
     ti.tu.uEntropy.value = tvl.entropyN;
+    // V-TITAN-COMBAT: matter → accretion mass-hoard veins, warCount → battle-scar rage plasma.
+    const tcl = titanCombatLanes(ti.matter, ti.warCount);
+    ti.tu.uMatter.value = tcl.matterN;
+    ti.tu.uWar.value = tcl.warN;
   }
 
   /**
@@ -1098,6 +1136,9 @@ export class TitanSystem {
       const tvl = titanVitalLanes(ti.energy, ti.entropy);
       ti.tu.uEnergy.value = tvl.energyN;
       ti.tu.uEntropy.value = tvl.entropyN;
+      const tcl = titanCombatLanes(ti.matter, ti.warCount);
+      ti.tu.uMatter.value = tcl.matterN;
+      ti.tu.uWar.value = tcl.warN;
     }
   }
 
