@@ -1,7 +1,9 @@
 /**
  * EMERGENCE ANGLES — 10 canonical + extended brutal-god mechanisms for NHSI (1-7 elsewhere; 8-10 + gods here). Canonical target: 10.
  *
- * Deterministic, bounded [0,1], allocation-free in steady state. Seeded hashes replace Math.random.
+ * Deterministic, bounded [0,1]. Seeded hashes replace Math.random. The per-frame hot path allocates
+ * nothing; the reduced-cadence emergence methods DO allocate small per-call buffers (aggregate on the
+ * frame%4 apex beat clones each contribution; recombine on the frame%120 gate builds two child genomes).
  * NOT sentient — functional emergence substrates.
  * BRUTALISM: God-scale emergence for Valkorion/Broly/Knull/Phoenix/Gurren/Azathoth pantheon.
  */
