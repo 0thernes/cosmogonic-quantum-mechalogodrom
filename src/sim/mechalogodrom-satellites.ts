@@ -89,12 +89,12 @@ export class MechalogodromSatellites {
         // Base color from the instance hue, then slower plasma bands.
         vec3 baseColor = mix(vec3(0.02, 0.0, 0.05), vColor, 0.7);
         vec3 starFire = baseColor * (sin(d * 8.0 - uTime * 2.0) * 0.5 + 0.5);
-        starFire += vColor * fresnel * 0.95;
+        starFire += vColor * fresnel * 0.45; // USER: dimmer rim (was 0.95)
 
         // Bioluminescent ridges.
         float ridges = sin(vPos.y * 18.0 + uTime * 1.5) * sin(vPos.x * 14.0 - uTime * 1.0);
         ridges = smoothstep(0.2, 0.9, ridges);
-        vec3 ridgeColor = vColor * 1.5 + vec3(0.1, 0.3, 0.45);
+        vec3 ridgeColor = vColor * 0.85 + vec3(0.06, 0.16, 0.24); // USER: dimmer ridges (was 1.5 + brighter)
         starFire = mix(starFire, ridgeColor, ridges * 0.5);
 
         // Glitch sparks.
@@ -111,7 +111,9 @@ export class MechalogodromSatellites {
         // Darken the center: a tiny black heart inside each artifact.
         finalColor *= smoothstep(0.15, 0.85, length(vPos));
 
-        gl_FragColor = vec4(finalColor, 0.95);
+        // USER: 400 additive knots summed to a blinding WHITE apex halo. Halve the colour AND the additive
+        // alpha (~4× dimmer overall) so the swarm reads as a TINY sparkle/shimmer, not an overbearing wash.
+        gl_FragColor = vec4(finalColor * 0.5, 0.45);
       }
     `;
 

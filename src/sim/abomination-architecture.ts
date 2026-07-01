@@ -135,12 +135,13 @@ export class AbominationArchitecture {
       );
       TMP_M.compose(TMP_P, TMP_Q, TMP_S);
       this.slabs.setMatrixAt(i, TMP_M);
-      TMP_C.setHSL((s.hue + this.chaos * 0.08 + wobble * 0.02 + 1) % 1, 0.92, 0.48 + drive * 0.14);
+      // USER: dimmer, darker slabs so the apex brain no longer sums to a blinding white halo.
+      TMP_C.setHSL((s.hue + this.chaos * 0.08 + wobble * 0.02 + 1) % 1, 0.92, 0.28 + drive * 0.1);
       this.slabs.setColorAt(i, TMP_C);
     }
     this.slabs.instanceMatrix.needsUpdate = true;
     if (this.slabs.instanceColor) this.slabs.instanceColor.needsUpdate = true;
-    this.slabMat.opacity = 0.22 + drive * 0.32;
+    this.slabMat.opacity = 0.09 + drive * 0.13;
 
     for (let i = 0; i < BRIDGE_COUNT; i++) {
       const a = this.seeds[(i * 5) % ARCH_COUNT]!;
@@ -155,7 +156,7 @@ export class AbominationArchitecture {
       this.bridgePos[o + 3] = Math.cos(bo) * b.r;
       this.bridgePos[o + 4] = b.y - w * 9;
       this.bridgePos[o + 5] = Math.sin(bo) * b.r;
-      TMP_C.setHSL((a.hue + b.hue + this.entropy * 0.12) % 1, 1, 0.42 + drive * 0.16);
+      TMP_C.setHSL((a.hue + b.hue + this.entropy * 0.12) % 1, 1, 0.26 + drive * 0.1);
       this.bridgeColor[o] = TMP_C.r;
       this.bridgeColor[o + 1] = TMP_C.g;
       this.bridgeColor[o + 2] = TMP_C.b;
@@ -165,7 +166,7 @@ export class AbominationArchitecture {
     }
     this.bridgePosAttr.needsUpdate = true;
     this.bridgeColorAttr.needsUpdate = true;
-    this.bridgeMat.opacity = 0.14 + drive * 0.34;
+    this.bridgeMat.opacity = 0.05 + drive * 0.12;
   }
 
   get count(): number {
