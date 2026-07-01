@@ -395,7 +395,13 @@ function validateCommand(raw: string): { ok: true; argv: string[] } | { ok: fals
         isFlag(a) &&
         (a === '--recursive' ||
           // `ls -R` is recursive (its `-r` is reverse-sort); grep `-r` and `-R` both recurse.
-          (bin === 'ls' ? /^-[a-zA-Z]*R[a-zA-Z]*$/.test(a) : /^-[a-zA-Z]*[rR][a-zA-Z]*$/.test(a))),
+          (bin === 'ls' ? /^-[a-zA-Z]*R[a-zA-Z]*$/.test(a) : /^-[a-zA-Z]*[rR][a-zA-Z]*$/.test(a)) ||
+          // grep ALSO recurses via `--directories=recurse` / `--directories recurse` / `-d recurse` /
+          // `-drecurse` (GNU). The r/R regex above misses the `=`- and space-separated spellings, so deny
+          // grep's directory-handling option OUTRIGHT: its safe default (`-d read`, skip dirs) needs no
+          // flag and no read-only search needs `-d`. Closes the reopened audit-CRITICAL secret leak
+          // (`grep -d recurse KEY .` recursed root, exposing .env/.git/legacy past the sandbox).
+          (bin === 'grep' && (/^--directories(=|$)/.test(a) || /^-d/.test(a)))),
     );
     if (recursive) {
       return {

@@ -98,6 +98,13 @@ describe('ai-sandbox: command gate is default-deny and write-free', () => {
     'git log -u -3', // `-u` is a documented alias for `-p` — same disclosure, must be denied identically
     'git log --patch-with-stat -1', // combines stat + full patch content, same disclosure as `-p`
     'git diff HEAD~1 HEAD', // revision diffs are history reads, not confined file reads
+    // GNU grep recurses via `-d recurse` / `--directories=recurse` too, not just `-r`/`-R` — these
+    // reopened the audit-CRITICAL secret leak (native grep recursed root → .env/.git/legacy) past the
+    // `-r`/`-R` block (audit 2026-07-01). All directory-handling spellings must be denied.
+    'grep -d recurse KEY .', // space-separated value
+    'grep -drecurse KEY .', // attached value
+    'grep --directories=recurse KEY .', // long form
+    'grep --directories recurse KEY .', // long form, space-separated value
   ];
   for (const cmd of denied) {
     test(`denies: ${cmd}`, async () => {
