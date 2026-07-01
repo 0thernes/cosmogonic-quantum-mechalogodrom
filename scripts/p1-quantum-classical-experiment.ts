@@ -10,12 +10,13 @@
  *
  * 2026-06-27 — the arms are now a REAL parameter-matched ablation (classical = setQuantumAblated(true),
  * identical percepts). The earlier scaffold differed the arms only by chaos level, which the survival
- * model rewards directly, so that delta measured CHAOS, not a quantum advantage. The ablation gates the
- * quantum-substrate contributions to the DECISION: the quantum-reservoir + Schrödinger-spread curiosity
- * terms AND the open-system Lindblad deliberation qubit's influence on the EXPLORE drive (the plan, not
- * just a scalar). The honest expectation is still a SMALL or NULL effect — and a null is a valid result:
- * the substrate is not yet shown to buy a behavioural advantage. Pre-register the task + widen the
- * ablation further (QGT off, spin off, Eshkol QRNG off) before any advantage claim.
+ * model rewards directly, so that delta measured CHAOS, not a quantum advantage. The ablation now gates
+ * the WHOLE quantum-substrate contribution to the DECISION: the quantum-reservoir + Schrödinger-spread
+ * curiosity terms, the open-system Lindblad deliberation qubit's push on EXPLORE, the Eshkol-QRNG draw
+ * into HUNT, and the QGT (quantum-natural-gradient) + NQS/VMC contributions to the surprise signal. Every
+ * gated faculty still evolves + reports on the snapshot; only its influence on the plan is removed. The
+ * honest expectation is still a SMALL or NULL effect — and a null is a valid result: the substrate is not
+ * yet shown to buy a behavioural advantage on this toy task. Pre-register a real task before any claim.
  *
  * Usage (manual or CI probe):
  *   bun scripts/p1-quantum-classical-experiment.ts --seeds 30 --beats 200
@@ -201,7 +202,7 @@ export function runP1Experiment(numSeeds = 20, maxBeats = 180): void {
   console.log(`  Paired permutation p = ${pEmp.toFixed(4)}  → ${verdict(pEmp)}`);
 
   console.log(
-    '\nNote: This is the P1 scaffold. The paired permutation test (sign-flip, no normality assumption) is the honest verdict; the bootstrap CI shows the spread. A p ≳ 0.05 means the quantum ablation is not distinguishable from noise on this toy task — the scientifically expected, valid result. Extend with a pre-registered real task + wider ablations (QGT off, spin off, Eshkol QRNG off) before any advantage claim.',
+    '\nNote: The paired permutation test (sign-flip, no normality assumption) is the honest verdict; the bootstrap CI shows the spread. A p ≳ 0.05 means the quantum ablation is not distinguishable from noise on this toy task — the scientifically expected, valid result. The ablation already covers the quantum-reservoir, Schrödinger spread, Lindblad decider, Eshkol-QRNG, QGT, and NQS/VMC pathways; the remaining step before any advantage claim is a PRE-REGISTERED task with real differential mortality (this toy survival task is near-saturating, ~199.7/200, so it has little power to separate the arms).',
   );
 
   // Simple gate-friendly assertion for the harness itself (not a performance claim)

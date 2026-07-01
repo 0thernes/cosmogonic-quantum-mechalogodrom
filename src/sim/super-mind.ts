@@ -661,9 +661,12 @@ export class SuperMind {
   };
   private plan: SuperPlan = 'REST';
   /** P1 quantum-ablation gate: 1 = quantum-substrate faculties contribute, 0 = ablated (a parameter-matched
-   *  control arm for the quantum-vs-classical experiment). Gates the quantum-reservoir + Schrödinger-spread
-   *  curiosity terms AND the quantum Lindblad-decider's influence on the EXPLORE drive — the substrate's
-   *  contribution to the actual plan, not just to a scalar. Default ON — existing behaviour unchanged. */
+   *  control arm for the quantum-vs-classical experiment). Gates the WHOLE quantum-substrate contribution to
+   *  the decision: the quantum-reservoir + Schrödinger-spread curiosity terms, the Lindblad-decider's push on
+   *  EXPLORE, the Eshkol-QRNG draw into HUNT, and the QGT (quantum-natural-gradient) + NQS/VMC contributions
+   *  to the surprise signal. Every gated faculty still EVOLVES + reports on the snapshot; only its influence
+   *  on the decision is removed, so the ablation is observable but telemetry is intact. Default ON — the live
+   *  sim + every reproducibility/bounds golden are byte-identical; only the experiment's classical arm sets 0. */
   private qGate = 1;
 
   constructor(
@@ -1021,7 +1024,11 @@ export class SuperMind {
     // Precondition the gradient: (g + λI)⁻¹·∇L
     naturalGradient2x2(g00, g01, g11, tapeGrad, predErr, qngRidge, qngOut);
     const qngNorm = vecNorm(qngOut);
-    this.cons.surprise = clamp01(this.cons.surprise + qngNorm * 0.02 * this.eshkolEngine.logic);
+    // P1-ablatable: the QGT / Quantum-Natural-Gradient contribution to surprise (the QGT still preconditions
+    // above; only its influence on the uncertainty signal is gated in the ablated arm).
+    this.cons.surprise = clamp01(
+      this.cons.surprise + qngNorm * 0.02 * this.eshkolEngine.logic * this.qGate,
+    );
     // Consciousness-engine triple (Eshkol CONSCIOUSNESS_ENGINE.md): logic/inference/workspace modulate workspace scalar
     const cTriple = consciousnessTriple(Math.floor(this.eshkolEngine.logic * 5) % 5);
     this.cons.workspace = clamp01(
@@ -1035,7 +1042,11 @@ export class SuperMind {
     // NQS/VMC: step the quantum-state learner each beat. The energy variance (convergence metric)
     // feeds surprise: high variance = the quantum state hasn't converged = more prediction uncertainty.
     this.lastNqsTelemetry = this.nqsController.step();
-    this.cons.surprise = clamp01(this.cons.surprise + this.lastNqsTelemetry.energyVariance * 0.02);
+    // P1-ablatable: the NQS/VMC (neural-quantum-state) energy-variance contribution to surprise (the learner
+    // still steps + reports telemetry; only its influence on the uncertainty signal is gated).
+    this.cons.surprise = clamp01(
+      this.cons.surprise + this.lastNqsTelemetry.energyVariance * 0.02 * this.qGate,
+    );
 
     // (Previous deep GWT block removed for type/contract clean; symbols centralized in facade. 5 Archons still benefit.)
     this.memory.push(salience);
@@ -1407,7 +1418,7 @@ export class SuperMind {
     drives.REST += 0.06 * pinnHealth * (1 - s[1]);
     drives.EXPLORE += 0.08 * pimcW * (1 - (s[1] ?? 0));
     drives.SPAWN += 0.04 * hb.vitality * s[0];
-    drives.HUNT += 0.03 * apiDraw.draw * s[5];
+    drives.HUNT += 0.03 * apiDraw.draw * s[5] * this.qGate; // Eshkol-QRNG draw (P1-ablatable)
     void hb.fingerprint;
 
     // ── V1.1 · SUCCESSOR REPRESENTATION ── model-based look-ahead: bias each plan by the discounted FUTURE
