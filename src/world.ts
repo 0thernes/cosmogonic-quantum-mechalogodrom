@@ -3176,12 +3176,16 @@ export class World {
     return 1;
   }
 
-  /** NHI ids whose entity is still alive (still in entities.list); prunes the dead. O(nhi·n). */
+  /**
+   * NHI ids whose entity is still alive (still in entities.list); prunes the dead. Builds a membership
+   * Set once (O(n)) instead of an O(n) `list.includes` PER NHI, so this is O(n + nhi) not O(nhi·n) —
+   * matters when the owner has launched many NHIs against the 50k-entity list.
+   */
   private nhiLiveIds(): number[] {
     const out: number[] = [];
-    const list = this.entities.list;
+    const live = new Set<Entity>(this.entities.list);
     for (const [id, e] of this.nhiEntities) {
-      if (list.includes(e)) out.push(id);
+      if (live.has(e)) out.push(id);
       else this.nhiEntities.delete(id);
     }
     return out;
