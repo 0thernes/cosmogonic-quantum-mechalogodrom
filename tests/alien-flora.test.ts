@@ -121,17 +121,26 @@ describe('AlienFlora — the vegetal ground ecology', () => {
     f.dispose();
   });
 
-  test('contact response is visual-only and decays through update', () => {
+  test('contact response is a visual-only ragdoll spring that settles to rest', () => {
     const ctx = makeCtx();
     const f = new AlienFlora(ctx);
     const mat = (f as unknown as { material: THREE.ShaderMaterial }).material;
     f.setContact(12, -34, 0.8);
-    expect(mat.uniforms['uContact']!.value as number).toBeCloseTo(0.8);
+    // The touch point is recorded immediately (visual uniform)...
     const pos = mat.uniforms['uContactPos']!.value as THREE.Vector2;
     expect(pos.x).toBe(12);
     expect(pos.y).toBe(-34);
-    f.update(1 / 60, 1, 0.3);
-    expect(mat.uniforms['uContact']!.value as number).toBeLessThan(0.8);
+    // ...and the bend SPRINGS in through update() (a damped ragdoll, not an instant poke): it rises
+    // off rest and reaches a real deflection over the first frames.
+    let peak = 0;
+    for (let i = 0; i < 24; i++) {
+      f.update(1 / 60, 1, 0.3);
+      peak = Math.max(peak, Math.abs(mat.uniforms['uContact']!.value as number));
+    }
+    expect(peak).toBeGreaterThan(0.1);
+    // With no further contact the spring settles back toward rest — bounded, never a runaway.
+    for (let i = 0; i < 400; i++) f.update(1 / 60, 1, 0.3);
+    expect(Math.abs(mat.uniforms['uContact']!.value as number)).toBeLessThan(0.05);
     f.dispose();
   });
 

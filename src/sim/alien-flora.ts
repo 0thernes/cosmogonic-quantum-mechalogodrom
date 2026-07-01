@@ -522,14 +522,40 @@ export class AlienFlora {
     return { x: bx, y: groundHeight(bx, bz), z: bz, strength };
   }
 
-  /** Drive the wind/chaos uniforms — flora leans + luminesces with the world's agitation. O(1). */
-  update(_dt: number, t: number, chaos: number): void {
+  /**
+   * USER #16 RAGDOLL contact — the touch response is a damped SPRING, not an instant poke that fades:
+   * `contactTarget` is the strength of the most recent brush (itself fading as the creature moves on),
+   * and `contactDisp` springs toward it, OVERSHOOTS, and wobbles to rest (underdamped). So a creature
+   * grazing the field makes the plants bend past, spring back, and quiver — real physics feel, never a
+   * predictable static bend. Pure render-side (no rng, no entity/terrain write-back).
+   */
+  private contactDisp = 0;
+  private contactVel = 0;
+  private contactTarget = 0;
+
+  /** Drive the wind/chaos uniforms + integrate the ragdoll contact spring. O(1). */
+  update(dt: number, t: number, chaos: number): void {
     const c = chaos < 0 ? 0 : chaos > 1 ? 1 : chaos;
     const u = this.material.uniforms;
     u['uTime']!.value = t;
     u['uWind']!.value = 0.32 + 0.7 * c + 0.08 * Math.sin(t * 0.31);
     u['uChaos']!.value = c;
-    u['uContact']!.value = (u['uContact']!.value as number) * 0.88;
+    // Damped-spring ragdoll. Semi-implicit (symplectic) Euler on a clamped step so it stays stable at
+    // any frame rate; DAMP < 2·√K ⇒ underdamped (the overshoot + wobble that reads as "alive").
+    const h = dt > 0.05 ? 0.05 : dt > 0 ? dt : 0;
+    this.contactTarget *= 0.86; // the touch point moves on / fades
+    const K = 30;
+    const DAMP = 6;
+    this.contactVel += (this.contactTarget - this.contactDisp) * K * h - this.contactVel * DAMP * h;
+    this.contactDisp += this.contactVel * h;
+    if (!Number.isFinite(this.contactDisp) || !Number.isFinite(this.contactVel)) {
+      this.contactDisp = 0;
+      this.contactVel = 0;
+    }
+    // Guard the bend so a pathological spike can never blow the shader displacement out.
+    this.contactDisp =
+      this.contactDisp < -1.5 ? -1.5 : this.contactDisp > 1.8 ? 1.8 : this.contactDisp;
+    u['uContact']!.value = this.contactDisp;
   }
 
   /**
@@ -541,7 +567,12 @@ export class AlienFlora {
     const s = strength < 0 ? 0 : strength > 1 ? 1 : strength;
     const u = this.material.uniforms;
     (u['uContactPos']!.value as THREE.Vector2).set(x, z);
-    u['uContact']!.value = Math.max(u['uContact']!.value as number, s);
+    // Feed the ragdoll SPRING target (the {@link update} integrator does the overshoot/wobble); a
+    // firmer brush kicks the velocity a touch so the plants snap out with a bit of life on hard contact.
+    if (s > this.contactTarget) {
+      this.contactVel += (s - this.contactTarget) * 6;
+      this.contactTarget = s;
+    }
   }
 
   /** Free every owned geometry + the shared material (HMR / world-reset safe). */
