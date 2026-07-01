@@ -177,7 +177,11 @@ export function buildManifold(
   // ── Quantum-effective tier: dense high-fidelity core + stabilizer billion-dim reflex. ──────────
   const stabilizerQubits = stabilizerQubitsForScale(scale, device);
   const stabilizerDim = 2 ** stabilizerQubits;
-  const denseQubits = Math.min(30, scale.qubits);
+  // Exact dense core caps at 8 qubits — the SAME bound the substrate is actually built with
+  // (apex-quantum-substrate APEX_DENSE_QUBITS_CAP; apex-substrate-driver + -consciousness-scaffold both
+  // construct it as `Math.min(8, scale.qubits)`). Using 30 here over-reported the "actually held"
+  // statevector by up to 2^30/2^8 for high-qubit scales (e.g. APEX-1B-OCTOPUS q=12 → 8192 vs the real 512).
+  const denseQubits = Math.min(8, scale.qubits);
   const quantumDesigned = 2 ** denseQubits + stabilizerDim; // addressable state-space dimension
   const quantumResident = 2 ** denseQubits * 2; // the exact statevector actually held (re + im)
 
