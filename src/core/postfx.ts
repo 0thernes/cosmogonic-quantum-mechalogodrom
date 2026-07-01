@@ -113,6 +113,9 @@ const GRAVITATIONAL_LENS_SHADER: THREE.ShaderMaterialParameters & {
 export class PostFx {
   private readonly composer: EffectComposer;
   private readonly lens: ShaderPass;
+  /** The cinematic bloom pass (`?fx=1` only; null on the default 'lens' pipeline) — the one EXPENSIVE
+   * post-FX pass, shed by the render governor under load while the cheap lens keeps running. */
+  private readonly bloom: UnrealBloomPass | null;
   // Captured once from the lens pass's cloned uniform set so the per-frame setLens()/setSize() paths
   // mutate stable IUniform objects without index-signature `| undefined` noise (noUncheckedIndexedAccess).
   private readonly uCenter: THREE.IUniform<THREE.Vector2>;
@@ -133,20 +136,21 @@ export class PostFx {
     // The gravitational lens — first effect, so bloom (cinematic) blooms the already-bent light.
     this.lens = new ShaderPass(GRAVITATIONAL_LENS_SHADER);
     composer.addPass(this.lens);
+    let bloom: UnrealBloomPass | null = null;
     if (cinematic) {
       // strength, radius, threshold — tuned conservatively for the dark, emissive palette.
       // Owner directive #11/#14: the bloom was the main source of the "blinding white shimmer".
       // Softer strength (0.7 → 0.45) + higher threshold (0.85 → 0.9) so ONLY genuinely bright
       // emitters (holes, APEX cores) glow, not every mid-tone — the halo stops washing the frame out.
-      composer.addPass(
-        new UnrealBloomPass(
-          new THREE.Vector2(window.innerWidth, window.innerHeight),
-          0.45,
-          0.5,
-          0.9,
-        ),
+      bloom = new UnrealBloomPass(
+        new THREE.Vector2(window.innerWidth, window.innerHeight),
+        0.45,
+        0.5,
+        0.9,
       );
+      composer.addPass(bloom);
     }
+    this.bloom = bloom;
     composer.addPass(new OutputPass());
     this.composer = composer;
     // Invariant: these four uniforms are declared by GRAVITATIONAL_LENS_SHADER and cloned by ShaderPass.
@@ -169,6 +173,26 @@ export class PostFx {
     this.uStrength.value = strength;
     this.uRadius.value = radius;
     this.uAspect.value = this.aspect;
+  }
+
+  /**
+   * True while the gravitational lens is actually bending the screen — i.e. a singularity is summoned
+   * and on-screen (signed strength ≠ 0). The {@link Engine} keeps the composer running for this even
+   * when the render governor has otherwise suspended post-FX, so a singularity NEVER loses its
+   * signature warp under load (the lens is one cheap full-screen pass; the heavy {@link setHeavySuspended}
+   * bloom is shed instead). O(1).
+   */
+  get lensActive(): boolean {
+    return this.uStrength.value !== 0;
+  }
+
+  /**
+   * Render-governor hook: shed the EXPENSIVE post-FX (the cinematic UnrealBloom pass) under sustained
+   * slow frames, while the cheap, physics-critical gravitational lens keeps running. A no-op on the
+   * default 'lens' pipeline (no bloom built). Render-only — no sim state touched, determinism-safe. O(1).
+   */
+  setHeavySuspended(suspended: boolean): void {
+    if (this.bloom) this.bloom.enabled = !suspended;
   }
 
   /** Match the composer's render targets to the viewport. */

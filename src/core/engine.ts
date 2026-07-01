@@ -22,6 +22,18 @@ import { PostFx, postFxMode } from './postfx';
  * with `THREE.ColorManagement.enabled = false`, which the integrator sets in
  * main.ts BEFORE constructing this Engine (ordering matters — see notes).
  */
+/**
+ * Pure render-gating rule (exported for tests): with the post-FX composer present, should it render
+ * THIS frame? Yes when post-FX is NOT governor-suspended, OR a singularity's gravitational lens is
+ * active — the lens is one cheap full-screen pass and the singularity's signature visual, so it
+ * survives the render governor's FX shed while the heavy bloom (and DPR/shadows) are still dropped.
+ * Keeping this pure makes the "a singularity never loses its warp under load" contract falsifiable
+ * without a WebGL context. O(1).
+ */
+export function postFxShouldRender(fxSuspended: boolean, lensActive: boolean): boolean {
+  return !fxSuspended || lensActive;
+}
+
 export class Engine {
   /** WebGL renderer bound to the app canvas. */
   readonly renderer: THREE.WebGLRenderer;
@@ -35,7 +47,8 @@ export class Engine {
   private readonly bootShadows: boolean;
   /** True while the WebGL context is lost; `render()` no-ops until it returns. */
   private contextLost = false;
-  /** Optional cinematic post-FX chain (`?fx=1`); null in the default pipeline. */
+  /** Post-FX composer — built for the DEFAULT 'lens' pipeline AND 'cinematic' (`?fx=1`); null only on
+   * `?fx=0`/'off' or if construction threw (then {@link render} falls back to a plain render). */
   private fx: PostFx | null = null;
   /** Drops the canvas context-loss listeners on {@link dispose} (so old Engines don't pile up on HMR). */
   private readonly ac = new AbortController();
@@ -148,9 +161,14 @@ export class Engine {
    */
   render(): void {
     if (this.contextLost) return;
-    if (this.fx && !this.fxSuspended) {
+    // Run the post-FX composer when it is NOT governor-suspended OR a singularity's gravitational lens
+    // is active. The lens is one cheap full-screen pass and the singularity's signature visual, so it
+    // survives the FX shed (the heavy bloom is dropped via setPostFxSuspended → fx.setHeavySuspended);
+    // with no singularity active the suspended composer is fully skipped for the plain render below.
+    const fx = this.fx;
+    if (fx && postFxShouldRender(this.fxSuspended, fx.lensActive)) {
       try {
-        this.fx.render();
+        fx.render();
         return;
       } catch {
         this.fx = null; // effect graph failed at runtime — fall back to the plain pipeline for good
@@ -193,9 +211,14 @@ export class Engine {
     this.fx?.setSize(window.innerWidth, window.innerHeight);
   }
 
-  /** Suspend/restore the post-FX pass (honored in {@link render}). O(1). */
+  /**
+   * Suspend/restore the post-FX pass (honored in {@link render}). Also sheds the EXPENSIVE bloom pass
+   * inside the composer, so that when a singularity's lens keeps the composer alive under load (see
+   * {@link render}), only the cheap lens runs — never the heavy bloom. O(1).
+   */
   setPostFxSuspended(suspended: boolean): void {
     this.fxSuspended = suspended;
+    this.fx?.setHeavySuspended(suspended);
   }
 
   /** Enable/disable shadows at runtime — only re-enables if the boot tier had shadows at all. O(1). */
