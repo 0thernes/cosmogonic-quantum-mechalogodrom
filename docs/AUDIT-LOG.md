@@ -11,6 +11,31 @@ dated / historical / "superseded snapshot" copies (per the binding "Living docs,
 
 ---
 
+## 2026-07-01 — Continued audit: CRITICAL sandbox secret-leak closed + GPU leak + convergence
+
+Extended the multi-round audit (rounds 4–5 + a focused server-security pass). Fixes landed:
+
+- **CRITICAL security (`2229af34`).** The `ai-sandbox` recursion guard blocked `grep -r`/`-R`/
+  `--recursive` but MISSED GNU grep's other recursion switch — `-d recurse`, `--directories=recurse`,
+  `--directories recurse`. Those spellings passed `validateCommand`, so a prompt-injected model
+  tool-call (or a `/api/tool` POST) running `grep -d recurse KEY .` spawned NATIVE recursive grep at
+  ROOT, which ignores the blocked-area walker and leaked root `.env` (provider/API keys), `.git/`,
+  `legacy/`, `node_modules/`, `.claude/` up to the 16 KB cap — reopening the audit-CRITICAL leak the
+  `-r`/`-R` block was added to close. Fix: deny grep's `-d`/`--directories` option outright (the safe
+  default `-d read` needs no flag; recursive search still routes through `git grep`); +4 regression
+  cases. Adversarially verified — reproduced with GNU grep 3.0.
+- **GPU leak (`909d194c`).** `monolith-temple` colossus `godGeo` had its material registered in
+  `this.mats` but the geometry was never pushed to `this.geos`, so `dispose()` orphaned its VBO
+  (every sibling geometry was tracked). Registered it; also cleared 2 `no-new-array` lint warnings
+  (oxlint now clean).
+
+Clean results (no defects found): GPU create-without-dispose sweep across all 22 rendering modules (the
+monolith was the only instance of that bug class); determinism re-scan (0 banned `Math.random`/`Date.now`/
+`performance.now` calls in sim/math, incl. all new fleet code); UI render/lifecycle + sim systems/
+structures (round-4). The `morphic-field` NOT-WIRED gap was wired by the fleet concurrently — the
+collision was detected mid-rebase and their version adopted (nothing bad pushed). Five audit passes have
+converged: rounds 2 & 5 and the determinism/security scans came back clean.
+
 ## 2026-07-01 — GPU-leak sweep: 4 colossal-creature systems now dispose() (shoggoths · puppeteers · titans · leviathans)
 
 A 6-finder adversarial audit (correctness · wiring-gaps · determinism · gpu-leaks · robustness · integration,
