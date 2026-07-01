@@ -264,7 +264,7 @@ function patchPoolMaterial(
     shader.vertexShader = shader.vertexShader
       .replace(
         '#include <common>',
-        '#include <common>\nattribute vec4 instEmissive;\nattribute vec4 instVitals;\nattribute vec4 instVitals2;\nattribute vec4 instVitals3;\nvarying vec4 vInstEmissive;\nvarying vec4 vVitals;\nvarying vec4 vVit2;\nvarying vec4 vVit3;\nvarying vec3 vObjPos;\nuniform float uTime;\nuniform float uNightmare;',
+        '#include <common>\nattribute vec4 instEmissive;\nattribute vec4 instVitals;\nattribute vec4 instVitals2;\nattribute vec4 instVitals3;\nvarying vec4 vInstEmissive;\nvarying vec4 vVitals;\nvarying vec4 vVit2;\nvarying vec4 vVit3;\nvarying vec3 vObjPos;\nvarying float vInstId;\nuniform float uTime;\nuniform float uNightmare;',
       )
       .replace(
         '#include <begin_vertex>',
@@ -274,6 +274,9 @@ function patchPoolMaterial(
           'vVit2 = instVitals2;\n' +
           'vVit3 = instVitals3;\n' +
           'vObjPos = position;\n' +
+          // gl_InstanceID is a VERTEX-only built-in; hoist it to a varying so the fragment shader
+          // (LIVING HUE DRIFT) can read the per-instance id without an illegal fragment reference.
+          'vInstId = float(gl_InstanceID);\n' +
           'if (uNightmare > 0.0) {\n' +
           '  float ph = float(gl_InstanceID) * 0.6180339887;\n' +
           '  float warp = sin(position.y * 8.0 + uTime * 3.0 + ph) * 0.5 + sin(position.x * 6.0 - uTime * 2.0 + ph) * 0.5;\n' +
@@ -328,6 +331,7 @@ varying vec4 vVitals;
 varying vec4 vVit2;
 varying vec4 vVit3;
 varying vec3 vObjPos;
+varying float vInstId;
 uniform float uTime;
 uniform float uBass;
 uniform float uChaos;
@@ -596,7 +600,7 @@ const RELIQUARY_FRAG_BODY = /* glsl */ `#include <emissivemap_fragment>
 	// LIVING HUE DRIFT (V115): each organism breathes its hue/sat/value slightly over time, driven by
 	// its instance id and the world clock. Keeps the population chromatic and alive without per-entity CPU.
 	vec3 hsv = rqRgb2hsv(diffuseColor.rgb);
-	float idPh = float(gl_InstanceID) * 0.073;
+	float idPh = vInstId * 0.073;
 	hsv.x = fract(hsv.x + sin(uTime * 0.25 + idPh) * 0.03);
 	hsv.y = clamp(hsv.y * (1.0 + 0.06 * sin(uTime * 0.17 + idPh * 1.3)), 0.0, 1.0);
 	hsv.z = clamp(hsv.z * (1.0 + 0.04 * sin(uTime * 0.21 + idPh * 1.7)), 0.0, 1.0);
