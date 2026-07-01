@@ -25,12 +25,13 @@
  * - The curvature-aware metric is g_ij + λ Γ_ij (where λ is a curvature weighting factor)
  * - Solve (g + λΓ) x = ∇L for the natural gradient direction
  *
- * CURRENT STATUS (honest — code matches this, not the idealized math above): `computeChristoffelSymbols`
- * uses the local approximation ∂_k g_ij ≈ 0 (a full version needs the metric as a function of θ to
- * finite-difference). With dg = 0 every Christoffel symbol is 0, so the curvature term Γ vanishes and the
- * N×N path REDUCES TO STANDARD ridge-regularized QNG — the curvature-aware scaffolding is wired but the
- * curvature itself is not yet computed. It degrades safely (never a wrong-shaped or NaN result), it is
- * just not yet the full geodesic update; the `…2x2` helper uses a different `Γ_trace = g` approximation.
+ * STATUS (honest): TWO paths.
+ * (1) FIXED-MATRIX — `computeChristoffelSymbols(metric)` / `curvatureAwareNaturalGradient` have no way to
+ *     see how g varies, so they pin ∂_k g_ij ≈ 0 ⇒ Γ = 0 ⇒ the N×N path REDUCES to standard ridge QNG.
+ *     Degrades safely (never a wrong-shaped or NaN result); the `…2x2` helper uses a `Γ_trace = g` proxy.
+ * (2) FIELD — `computeChristoffelSymbolsField(metricFn, θ)` / `curvatureAwareNaturalGradientField` take the
+ *     metric as a FUNCTION of θ and finite-difference it, so the Christoffel symbols (and thus the geodesic
+ *     correction) are REAL and non-zero — verified against textbook geometry (polar coords ⇒ Γʳ_φφ=−r).
  *
  * REFERENCES:
  * - "Curvature-Aware QNG via Weighted Projective Line Geometry" (Dec 2025, hf.co/papers/2512.00681)
@@ -81,7 +82,7 @@ export function invertMetric(metric: ReadonlyArray<ReadonlyArray<number>>): numb
   }
 
   // Gauss-Jordan elimination
-  for (let col = 0; col < col + 1 && col < n; col++) {
+  for (let col = 0; col < n; col++) {
     let piv = col;
     let best = Math.abs(aug[col]?.[col] ?? 0);
     for (let r = col + 1; r < n; r++) {
@@ -172,6 +173,97 @@ export function computeChristoffelSymbols(
   }
 
   return Gamma;
+}
+
+/**
+ * REAL Christoffel symbols Γᵐᵢⱼ from a metric FIELD g(θ) — the curvature the fixed-matrix
+ * {@link computeChristoffelSymbols} cannot see (it pins ∂ₖg = 0). `metricFn(θ)` returns gᵢⱼ at θ;
+ * ∂ₖgᵢⱼ is taken by central finite difference, then Γᵐᵢⱼ = ½ gᵐˡ(∂ᵢgⱼˡ + ∂ⱼgᵢˡ − ∂ˡgᵢⱼ).
+ * Verified against textbook geometry (polar coords g=diag(1,r²) ⇒ Γʳ_φφ=−r, Γ^φ_rφ=1/r). Pure.
+ */
+export function computeChristoffelSymbolsField(
+  metricFn: (theta: ReadonlyArray<number>) => ReadonlyArray<ReadonlyArray<number>>,
+  theta: ReadonlyArray<number>,
+  epsilon = 1e-4,
+): number[][][] {
+  const n = theta.length;
+  const gInv = invertMetric(metricFn(theta));
+
+  // ∂_k g_ij via central differences of the metric field. dg[k][i][j] = ∂_k g_ij.
+  const dg: number[][][] = [];
+  const tp = theta.slice();
+  const tm = theta.slice();
+  for (let k = 0; k < n; k++) {
+    tp[k] = (theta[k] ?? 0) + epsilon;
+    tm[k] = (theta[k] ?? 0) - epsilon;
+    const gp = metricFn(tp);
+    const gm = metricFn(tm);
+    tp[k] = theta[k] ?? 0;
+    tm[k] = theta[k] ?? 0;
+    const layer: number[][] = [];
+    for (let i = 0; i < n; i++) {
+      const row: number[] = [];
+      for (let j = 0; j < n; j++) {
+        row.push(((gp[i]?.[j] ?? 0) - (gm[i]?.[j] ?? 0)) / (2 * epsilon));
+      }
+      layer.push(row);
+    }
+    dg.push(layer);
+  }
+
+  const Gamma: number[][][] = [];
+  for (let m = 0; m < n; m++) {
+    const plane: number[][] = [];
+    for (let i = 0; i < n; i++) {
+      const row: number[] = [];
+      for (let j = 0; j < n; j++) {
+        let sum = 0;
+        for (let l = 0; l < n; l++) {
+          // ½ gᵐˡ (∂ᵢgⱼˡ + ∂ⱼgᵢˡ − ∂ˡgᵢⱼ)
+          sum += (gInv[m]![l] ?? 0) * (dg[i]![j]![l]! + dg[j]![i]![l]! - dg[l]![i]![j]!);
+        }
+        row.push(0.5 * sum);
+      }
+      plane.push(row);
+    }
+    Gamma.push(plane);
+  }
+  return Gamma;
+}
+
+/**
+ * Curvature-aware QNG using the REAL Christoffel symbols from a metric field g(θ):
+ *   θ̇ = −(g + λ·Σₖ Γᵏ)⁺ ∇L.
+ * Unlike {@link curvatureAwareNaturalGradient} (fixed matrix ⇒ Γ=0 ⇒ plain QNG), this actually follows
+ * the curved geometry. λ adapts to the (Christoffel-only) Ricci scalar when `adaptive`. Deterministic.
+ */
+export function curvatureAwareNaturalGradientField(
+  metricFn: (theta: ReadonlyArray<number>) => ReadonlyArray<ReadonlyArray<number>>,
+  theta: ReadonlyArray<number>,
+  grad: ReadonlyArray<number>,
+  config: Partial<CurvatureAwareConfig> = {},
+): number[] {
+  const cfg = { ...DEFAULT_CONFIG, ...config };
+  const n = grad.length;
+  const g = metricFn(theta);
+  const Gamma = computeChristoffelSymbolsField(metricFn, theta);
+
+  let curvatureWeight = cfg.curvatureWeight;
+  if (cfg.adaptive) {
+    curvatureWeight = cfg.curvatureWeight * (1 + Math.abs(computeRicciScalar(g, Gamma)));
+  }
+
+  const corrected: number[][] = [];
+  for (let i = 0; i < n; i++) {
+    const row: number[] = [];
+    for (let j = 0; j < n; j++) {
+      let tr = 0;
+      for (let k = 0; k < n; k++) tr += Gamma[k]![i]![j] ?? 0;
+      row.push((g[i]?.[j] ?? 0) + curvatureWeight * tr);
+    }
+    corrected.push(row);
+  }
+  return solveSymmetric(corrected, grad, cfg.ridge);
 }
 
 /**
