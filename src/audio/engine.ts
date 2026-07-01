@@ -174,14 +174,64 @@ export class AudioEngine {
   }
 
   /**
-   * Layered portal horror bus (item 18) — DISABLED (USER). It was a continuous low drone + a HIGH SCREAM
-   * square-wave oscillator + a noise wash; even gated to silence, the oscillators ran forever, and the
-   * owner reports a constant whine. This is now a hard no-op: the bus is never built, so `_portalHorror`
-   * stays null and {@link setPortalNightmare} early-returns — zero oscillators, zero chance of noise. If
-   * the ascension-nightmare ambiance is ever wanted back, restore the node-graph body from git history.
+   * Layered portal horror bus (item 18) — the "1M dying slowly" demonic nightmare. A low detuned-saw
+   * DRONE bed + a high square-wave SCREAM + a putrid noise wash, all shaped by a resonant band-pass into
+   * an ontologically-shocking hell timbre, summed into a MASTER GAIN that STARTS AT SILENCE and is routed
+   * through {@link masterGain} (so global mute / sleep govern it).
+   *
+   * The old "constant whine" is designed out at BOTH ends: (1) world.ts only drives {@link
+   * setPortalNightmare} with `level>0` during an ACTUAL portal ascension (else `level=0`), and (2) the
+   * master gain here is `0` until a positive level ramps it up — so with no ascension the bus is dead
+   * silent. The back-and-forth demonic swell comes from world.ts feeding a pulsing `portalPulse` level,
+   * which sweeps the drone/scream/filter continuously. The oscillators run for the ctx's life (silent
+   * when idle) and are stopped in {@link dispose}.
    */
   private buildPortalHorrorBus(): void {
-    /* no-op: horror oscillators disabled */
+    const ctx = this.ctx;
+    if (!ctx || this._portalHorror) return;
+    // Master — SILENT at rest; setPortalNightmare ramps it only during ascension (no whine when idle).
+    const gain = ctx.createGain();
+    gain.gain.value = 0;
+    gain.connect(this.masterGain ?? ctx.destination);
+    // Resonant band-pass shaping the layers into a putrid, hollow hell resonance.
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.value = 600;
+    filter.Q.value = 2.4;
+    filter.connect(gain);
+    // Low drone bed — a detuned sawtooth pair beats a slow, sick dissonance.
+    const drone = ctx.createOscillator();
+    drone.type = 'sawtooth';
+    drone.frequency.value = 32;
+    drone.detune.value = -14;
+    const droneGain = ctx.createGain();
+    droneGain.gain.value = 0.62;
+    drone.connect(droneGain);
+    droneGain.connect(filter);
+    // High scream — a square wave shriek (the begging / screaming layer), swept by level.
+    const scream = ctx.createOscillator();
+    scream.type = 'square';
+    scream.frequency.value = 360;
+    const screamGain = ctx.createGain();
+    screamGain.gain.value = 0.2;
+    scream.connect(screamGain);
+    screamGain.connect(filter);
+    // Putrid noise wash (shared white-noise buffer, looped) — texture under the tones. Skipped if the
+    // buffer hasn't been lazily built yet; the drone+scream still carry the horror.
+    let noise: AudioBufferSourceNode | null = null;
+    if (this.noiseBuf) {
+      noise = ctx.createBufferSource();
+      noise.buffer = this.noiseBuf;
+      noise.loop = true;
+      const noiseGain = ctx.createGain();
+      noiseGain.gain.value = 0.13;
+      noise.connect(noiseGain);
+      noiseGain.connect(filter);
+    }
+    drone.start();
+    scream.start();
+    noise?.start();
+    this._portalHorror = { drone, scream, noise, filter, gain, level: 0 };
   }
 
   /** Music enabled? Read-only outside; flip via {@link toggleMusic} or {@link setMusicOn}. */
