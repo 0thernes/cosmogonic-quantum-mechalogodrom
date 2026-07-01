@@ -122,10 +122,13 @@ function patchLeviathanBody(mat: THREE.MeshStandardMaterial, u: LeviathanUniform
         float lVort = pow(0.5 + 0.5 * sin(atan(vLObjP.z, vLObjP.x) * 4.0 + length(vLObjP) * 2.0 - uTime * 3.0), 6.0);
         totalEmissiveRadiance += vec3(0.4, 0.6, 1.0) * lVort * uSurge * 0.7;
         // SINGULROSITY BLOOM (surge) — a hot core halo blooms on a surging colossus.
-        totalEmissiveRadiance += vec3(0.8, 0.9, 1.0) * pow(1.0 - lFres, 3.0) * uSurge * 1.0;`,
+        totalEmissiveRadiance += vec3(0.8, 0.9, 1.0) * pow(1.0 - lFres, 3.0) * uSurge * 1.0;
+        // SUNSET EXPANDED (depth) — a warm sunset rides the surface, cooling into the abyssal deep.
+        vec3 lSunset = mix(vec3(0.95, 0.4, 0.15), vec3(0.12, 0.08, 0.42), uDepth);
+        totalEmissiveRadiance += lSunset * pow(lFres, 2.5) * (0.25 + 0.35 * (1.0 - uDepth));`,
       );
   };
-  mat.customProgramCacheKey = () => 'leviathanExpandedV1';
+  mat.customProgramCacheKey = () => 'leviathanExpandedV2-sunset';
 }
 
 interface Leviathan {

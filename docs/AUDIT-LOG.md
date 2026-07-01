@@ -82,10 +82,11 @@ leviathans — 21 named GPU effects + 2 de-decorations, each bound to a real sig
   signal that lifts the base emissive) with per-drone variety from `gl_InstanceID` — orbs-plasmoids,
   laser-dance, buffer shimmer, ionizing flutter, bit-glitch. Test: `super-wingmen-render.test.ts`.
 - **Leviathans (`leviathans.ts`):** `leviathanSurge(speed)` — glow + aura read the colossus's real
-  speed (was a `sin(t)` pulse). **V-LEVIATHAN-EXPANDED**: the bare body now wears a 7-effect GPU suite
+  speed (was a `sin(t)` pulse). **V-LEVIATHAN-EXPANDED**: the bare body now wears an 8-effect GPU suite
   patched via `onBeforeCompile`, each driven by a real signal — surge (speed) → plasma-expanded /
   storm-thermal / vortexical-wake / singulrosity-bloom, depth (`leviathanDepth(y)`) → helixology +
-  phosphor-gas, milky-brushed nacre on the fresnel rim. Test: `leviathan-surge.test.ts`.
+  phosphor-gas + sunset-expanded (warm surface → cool abyss), milky-brushed nacre on the fresnel rim.
+  Test: `leviathan-surge.test.ts`.
 - **NHI-body (`nhi-body.ts`):** **V-NHI-EXPANDED** — the launched being's bare CORE now wears a
   6-effect GPU suite (`onBeforeCompile`) driven by real state — social proximity (`uSocial`, flares
   when two beings meet) → vision-bloom / neuralmimetic-web / plasma / singulrosity / bit-glitch, and
