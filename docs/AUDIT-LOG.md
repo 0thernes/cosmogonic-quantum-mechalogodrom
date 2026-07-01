@@ -11,6 +11,41 @@ dated / historical / "superseded snapshot" copies (per the binding "Living docs,
 
 ---
 
+## 2026-07-01 — Super Creature apex audit: pantheon double-beat fixed + comment-theater slop sweep
+
+Adversarially-structured multi-agent audit of the apex stack (6 subsystem auditors; the verify pass was
+rate-limited, so high/med findings were re-verified by hand against the code). The apex is sound and
+already feature-complete for the "5 super creatures + missing integrations" goal: 5 individuated apex
+minds + 20 light-echo Archons; the Clifford stabilizer reflex is wired as a live 16-qubit tableau in
+`think()`; AST-1 / HOT-1 / HOT-4 + narrative + multi-store memory leaves are stepped; symbol grounding
+is present as the VSA/HRR holographic memory. Determinism re-verified empirically (bit-identical
+same-seed run, no NaN); Clifford entanglement entropy property-checked (Bell = 1, product = 0, GHZ = 1
+per cut).
+
+**Fixed + landed:**
+
+- **Real determinism bug (`ba834eb`).** `Pantheon.beat()` is stateful (steps the stigmergic field +
+  advances the light-echo cycle) yet was called twice per frame — `World.update()` AND `driveSuper()`
+  on the `frame % 4` cadence, with the same `s.frame` — so the field double-stepped and the same light
+  Archon was deposited twice. `driveSuper()` now reads `pantheon.snapshot()`; exactly one beat per frame.
+- **Offspring-cap constant (`ba834eb`).** `super-mind.ts` used a hardcoded `/3` and `< 3`; now uses
+  `SUPER_MAX_OFFSPRING` like `super-creature.ts` (behavior-identical; removes a silent desync footgun).
+- **Honesty (`ba834eb`).** `empowerment.ts` `bestAction` doc corrected (argmax of the per-action KL
+  steering, not the Blahut–Arimoto cₐ); `memory-orchestra.ts` per-symbol confidence EMA relabeled (was
+  overstated as "factor graph / sum-product belief propagation").
+- **Dead code (`ba834eb`).** Removed the unused exported `tensorContract2()` in `quantum-geometry.ts`.
+- **Slop sweep (`4298fa5e`).** Stripped ~72 "Ralph 10x / heartbeat re-audit / continue 10x" authoring-
+  process comment annotations across `super-mind`, `super-body`, `quality-space`, `godform`,
+  `topdown-perception` and `clifford-tableau` — pure comments, apex bit-identical, full gate green.
+
+**Catalogued (non-blocking backlog):** decorative micro-coefficient Tsotchke-facade calls (the ports are
+real MIT math; their application onto already-clamped scalars is largely cosmetic) in the HOT-4/quality
+and `cons.surprise` chains; per-beat allocations off the per-entity hot path (`latentSubstrateStep`
+CausalGraph + wavepacket buffers, `resonance`/`driveSuper` scratch — cognitive cadence, minor GC);
+residual comment-theater prefixes in `economy`/`phyla`/`super-qubits`/`super-panel`/`world`. NB:
+`integrated-information.ts` and `quantum-deliberation.ts` mention "Ralph 10x" only inside HONEST notes
+recording that cosmetic grafts were removed — those are the honesty record, not slop; keep them.
+
 ## 2026-07-01 — Real-bound body-visual campaign: 4 body classes de-decorated / driven by real state
 
 A multi-batch campaign making creature-body visuals FALSIFIABLE readouts of real state, never
