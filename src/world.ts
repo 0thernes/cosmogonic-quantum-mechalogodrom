@@ -3015,21 +3015,21 @@ export class World {
     // climber simply hung at the ceiling (the "floating to the sky" the user still saw). The NHI's
     // intelligence (cognition + game theory + the world actions it takes each beat) lives in its mind;
     // this is just its body, now agile and leashed. Pure t/id trig — deterministic, allocation-free.
-    const HOME_Y = 24; // comfortable mid-height (ground ≈ 0, camera ≈ 50)
-    const LEASH = 130; // soft radial pull begins here (XZ)
-    const RMAX2 = 150 * 150; // hard radial cap
+    // USER: NHI beings roam the FULL square platform + up the whole column (was a 150-radius, y≤56 cage).
+    const HOME_Y = 120; // mid-column
+    const HALF = 540; // square platform half-extent (matches PLATFORM_HALF)
     const Y_LO = 6;
-    const Y_HI = 56; // hard ceiling — well below the old runaway height
+    const Y_HI = 240; // up to the mechalogodrom (PLATFORM_CEIL), never above
     for (const [id, e] of this.nhiEntities) {
       const v = e.userData.vel;
       const p = e.position;
       // Personal orbiting waypoint — a Lissajous path on all three axes (true omnidirectional roam,
       // each NHI on its own phase/radius so a swarm spreads through the volume instead of clumping).
       const ph = id * 1.7;
-      const rad = 45 + (id % 5) * 10;
+      const rad = 120 + (id % 5) * 80; // weave across the whole platform
       const tx = Math.cos(t * 0.19 + ph) * rad;
       const tz = Math.sin(t * 0.23 + ph * 1.3) * rad;
-      const ty = HOME_Y + Math.sin(t * 0.31 + ph) * 14;
+      const ty = HOME_Y + Math.sin(t * 0.31 + ph) * 90; // sweep the vertical column
       // Seek the waypoint with a capped, distance-independent accel (smooth intent-like pursuit).
       const dx = tx - p.x;
       const dy = ty - p.y;
@@ -3045,15 +3045,13 @@ export class World {
       // Continuous height restoring force — THIS is the real sky-float fix: an NHI is always pulled
       // back toward home height, so upward drift can never accumulate into a climb to the ceiling.
       v.y += (HOME_Y - p.y) * 0.004;
-      // Radial leash (XZ) toward the home column.
-      const r2 = p.x * p.x + p.z * p.z;
-      if (r2 > LEASH * LEASH) {
-        const inv = 0.12 / Math.sqrt(r2);
-        v.x -= p.x * inv;
-        v.z -= p.z * inv;
-      }
+      // Square leash — soft inward pull only past the platform edge (per-axis, not radial).
+      if (p.x > HALF) v.x -= 0.12;
+      else if (p.x < -HALF) v.x += 0.12;
+      if (p.z > HALF) v.z -= 0.12;
+      else if (p.z < -HALF) v.z += 0.12;
       v.multiplyScalar(0.985); // damp so a roamer never accelerates away
-      // Hard containment guarantee — even if a behavior pushes a body out, snap it back this frame.
+      // Hard containment guarantee — snap back inside the SQUARE platform + [floor,ceil] this frame.
       if (p.y > Y_HI) {
         p.y = Y_HI;
         if (v.y > 0) v.y = 0;
@@ -3061,10 +3059,19 @@ export class World {
         p.y = Y_LO;
         if (v.y < 0) v.y = 0;
       }
-      if (r2 > RMAX2) {
-        const s = 150 / Math.sqrt(r2);
-        p.x *= s;
-        p.z *= s;
+      if (p.x > HALF) {
+        p.x = HALF;
+        if (v.x > 0) v.x = 0;
+      } else if (p.x < -HALF) {
+        p.x = -HALF;
+        if (v.x < 0) v.x = 0;
+      }
+      if (p.z > HALF) {
+        p.z = HALF;
+        if (v.z > 0) v.z = 0;
+      } else if (p.z < -HALF) {
+        p.z = -HALF;
+        if (v.z < 0) v.z = 0;
       }
     }
   }

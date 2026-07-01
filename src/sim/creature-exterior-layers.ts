@@ -781,9 +781,11 @@ export class MechaExteriorAbomination {
     this.senseOrgans = new THREE.InstancedMesh(
       new THREE.OctahedronGeometry(coreR * 0.055, 1),
       new THREE.MeshBasicMaterial({
-        color: 0xffffff,
+        // USER: saturated cyan RIM instead of pure white — this 72-instance additive halo was the
+        // single densest blinding-white blob on the mechalogodrom.
+        color: 0x66ddff,
         transparent: true,
-        opacity: 0.78,
+        opacity: 0.42,
         blending: THREE.AdditiveBlending,
         depthWrite: false,
       }),
@@ -920,7 +922,7 @@ export class MechaExteriorAbomination {
       S.setScalar((0.72 + (i % 5) * 0.16) * twitch);
       M.compose(P, Q, S);
       this.senseOrgans.setMatrixAt(i, M);
-      C.setHSL((hue + ph * 0.03 + pulse.qgtVolume * 0.12) % 1, 1, 0.5 + drive * 0.18);
+      C.setHSL((hue + ph * 0.03 + pulse.qgtVolume * 0.12) % 1, 0.95, 0.34 + drive * 0.12);
       this.senseOrgans.setColorAt(i, C);
     }
     this.senseOrgans.instanceMatrix.needsUpdate = true;

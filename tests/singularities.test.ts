@@ -86,6 +86,39 @@ function rebuildGrid(ctx: SimContext, entities: EntityManager): void {
   for (const e of entities.list) if (e) ctx.grid.insert(e);
 }
 
+/**
+ * Deterministically re-scatter the population into a dense, uniform-in-ball cloud of radius `rMax`
+ * centred on `c` (skipping the first `skip` entities, e.g. hand-placed probes). The O(k) query
+ * stress tests below need a genuinely HEAVY in-REACH / in-CONV_R population near the summon point;
+ * the live sim now spreads entities across the full ±540 platform AND the full vertical column (owner
+ * directive — creatures must use the whole square + height, never huddle a central disc), so the raw
+ * `reset(N)` spawn is deliberately too diffuse for any single point to hold thousands. Restoring the
+ * density here keeps the test measuring the QUERY (exact-once coverage, un-doubled r⁻², out-of-reach
+ * untouched) rather than the spawn distribution — uniform-in-ball via a low-discrepancy sequence (no
+ * rng, fully deterministic): r = rMax·∛u spreads points evenly by volume, cosθ = 2v−1 evenly over the
+ * sphere, golden-angle azimuth. With rMax straddling REACH, both the in-set and the out-set are large.
+ */
+function packBall(
+  list: readonly (Entity | undefined)[],
+  c: THREE.Vector3,
+  rMax: number,
+  skip = 0,
+): void {
+  const G1 = 0.7548776662466927; // plastic-number R2 low-discrepancy constants (radius, cosθ)
+  const G2 = 0.5698402909980532;
+  const GA = 2.399963229728653; // golden angle (radians) for the azimuth
+  for (let i = skip; i < list.length; i++) {
+    const e = list[i];
+    if (!e) continue;
+    const k = i + 1;
+    const r = rMax * Math.cbrt((0.5 + G1 * k) % 1);
+    const ct = 2 * ((0.5 + G2 * k) % 1) - 1; // cosθ ∈ [−1, 1]
+    const st = Math.sqrt(Math.max(0, 1 - ct * ct));
+    const az = (i * GA) % (Math.PI * 2);
+    e.position.set(c.x + r * st * Math.cos(az), c.y + r * st * Math.sin(az), c.z + r * ct);
+  }
+}
+
 describe('SingularitySystem', () => {
   test('SINGULARITY_KINDS is the five-effect cycle, all distinct', () => {
     expect(SINGULARITY_KINDS.length).toBe(5);
@@ -312,6 +345,9 @@ describe('SingularitySystem', () => {
     const entities = new EntityManager(ctx);
     entities.reset(N);
     expect(entities.list.length).toBe(N);
+    // Restore a heavy density around the summon point (rMax = 320 straddles REACH = 237.5, so a large
+    // in-REACH set AND a large out set); the live spawn is now platform-wide. Skip the two probes.
+    packBall(entities.list, CENTER, 320, 2);
     const sys = new SingularitySystem(ctx, entities);
     const list = entities.list;
 
@@ -546,6 +582,9 @@ describe('SingularitySystem', () => {
     const ent = new EntityManager(ctx);
     ent.reset(N);
     const list = ent.list;
+    // Restore a heavy density around the summon point (see packBall): the live spawn now fills the
+    // whole platform + column, so > 100 bodies only land inside CONV_R = 80 when re-packed here.
+    packBall(list, CENTER, 320);
     const beforeR = new Float64Array(N);
     const beforeG = new Float64Array(N);
     const beforeB = new Float64Array(N);

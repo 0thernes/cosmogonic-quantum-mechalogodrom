@@ -36,11 +36,9 @@
  * @see src/sim/environment.ts (the ground these are seated on — height function mirrored here)
  */
 import * as THREE from 'three';
-import { ARENA_RADIUS } from './constants';
 import type { SimContext } from '../types';
 
 const TAU = Math.PI * 2;
-const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5));
 
 /** Nine structural families — distinct alien silhouettes built from single primitives. */
 const FAMILY_COUNT = 9;
@@ -51,9 +49,9 @@ const BIOME_COUNT = 7;
 /** Target plant population (dense alien forest; still six instanced draw calls). */
 const TARGET_DESKTOP = 15000;
 const TARGET_MOBILE = 5200;
-/** Plant field radius — USER #15: widened to ~98% of the ground half-extent (was ARENA_RADIUS·1.32,
- *  which covered only ~40% of the ground and left a bare outer ring) so flora fills the WHOLE land. */
-const FIELD_R = ARENA_RADIUS * 1.81;
+/** Plant SQUARE half-extent — USER: flora fills the WHOLE SQUARE platform (corners included), not a
+ *  central circle. 540 = (GROUND_EXTENT/2)*0.9, a small inset inside the ±600 ground edge. */
+const FIELD_HALF = 540;
 /** Keep a clear circle at the centre (temple base + cosmic crown column). */
 const CENTER_CLEAR = 78;
 /** Fixed layout seed — flora is the same world every replay (decor, not heritable state). */
@@ -230,7 +228,7 @@ export class AlienFlora {
     const species = AlienFlora.buildSpecies();
 
     // Density grid spans the field; +1 cell margin so edge plants land in-bounds.
-    this.gridN = Math.ceil((FIELD_R * 2) / this.cell) + 2;
+    this.gridN = Math.ceil((FIELD_HALF * 2) / this.cell) + 2;
     this.gridHalf = (this.gridN * this.cell) / 2;
     this.density = new Float32Array(this.gridN * this.gridN);
 
@@ -244,30 +242,34 @@ export class AlienFlora {
       tilt: number;
     }
     const perFamily: Placed[][] = Array.from({ length: FAMILY_COUNT }, () => []);
-    const candidates = Math.ceil(target * 2.6);
+    const candidates = Math.ceil(target * 3.2);
     // Three winding "bare paths" carved by low values of a smooth corridor field.
     let placed = 0;
     let maxD = 1;
     for (let k = 0; k < candidates && placed < target; k++) {
-      const rr = Math.sqrt((k + 0.5) / candidates);
-      const r = FIELD_R * rr;
-      if (r < CENTER_CLEAR) continue;
-      const th = k * GOLDEN_ANGLE;
-      let x = Math.cos(th) * r + (hash(k * 3 + 1) - 0.5) * this.cell * 1.3;
-      let z = Math.sin(th) * r + (hash(k * 3 + 2) - 0.5) * this.cell * 1.3;
+      // R2 plastic-constant low-discrepancy sequence → uniform SQUARE coverage incl. corners
+      // (deterministic, no rng). Reuses the same per-k hash() draws (order/count unchanged).
+      const u = (0.5 + 0.7548776662466927 * (k + 1)) % 1;
+      const v = (0.5 + 0.5698402909980532 * (k + 1)) % 1;
+      let x = (u * 2 - 1) * FIELD_HALF + (hash(k * 3 + 1) - 0.5) * this.cell * 1.3;
+      let z = (v * 2 - 1) * FIELD_HALF + (hash(k * 3 + 2) - 0.5) * this.cell * 1.3;
+      if (Math.hypot(x, z) < CENTER_CLEAR) continue; // keep the temple/crown centre clear
 
-      // Bare paths: corridors where a smooth field is near zero stay unplanted.
-      const corridor = Math.abs(
-        Math.sin(x * 0.011 + z * 0.006) + 0.6 * Math.sin(z * 0.018 - x * 0.005),
+      // Winding RAVINES / VALLEYS / TRAILS: a ridged, phase-warped multi-octave field — low values are
+      // bare meandering paths that wander corner-to-corner across the whole square.
+      const trail = Math.abs(
+        Math.sin(x * 0.009 + z * 0.005 + 1.3 * Math.sin(z * 0.004)) +
+          0.65 * Math.sin(z * 0.017 - x * 0.006 + 0.9 * Math.sin(x * 0.008)) +
+          0.35 * Math.sin((x - z) * 0.024),
       );
-      if (corridor < 0.16) continue;
+      if (trail < 0.22) continue;
 
       // Open glades: a few deterministic clearings.
       let inGlade = false;
-      for (let g = 0; g < 5; g++) {
-        const gx = (hash(g * 7 + 3) - 0.5) * FIELD_R * 1.5;
-        const gz = (hash(g * 7 + 5) - 0.5) * FIELD_R * 1.5;
-        const gr = 38 + hash(g * 7 + 9) * 46;
+      for (let g = 0; g < 7; g++) {
+        const gx = (hash(g * 7 + 3) - 0.5) * FIELD_HALF * 1.9;
+        const gz = (hash(g * 7 + 5) - 0.5) * FIELD_HALF * 1.9;
+        const gr = 40 + hash(g * 7 + 9) * 70;
         const dx = x - gx;
         const dz = z - gz;
         if (dx * dx + dz * dz < gr * gr) {
@@ -280,12 +282,15 @@ export class AlienFlora {
       // Density: patchy alien jungle — multi-octave positional noise makes dense groves and sparse
       // clearings spread across the WHOLE ground. USER #15: the old `(1 - 0.45*rr)` factor thinned the
       // edge and biased plants to the centre — REMOVED, so the outer land is as alive as the core.
-      const patch =
-        Math.sin(x * 0.006) * Math.cos(z * 0.0065) +
-        0.6 * Math.sin((x + z) * 0.011 + 2.1) +
-        0.4 * Math.sin(x * 0.021 - z * 0.017);
-      const clump = 0.5 + 0.5 * Math.max(-1, Math.min(1, patch));
-      const accept = 0.3 + 0.7 * clump;
+      // Multi-octave grove field: big groves (low freq) modulated by brush (mid) + fine speckle (high),
+      // with a LOW acceptance floor + gamma so brush zones genuinely thin and groves densify.
+      const grove =
+        Math.sin(x * 0.0055 + 0.7 * Math.sin(z * 0.003)) * Math.cos(z * 0.0061) +
+        0.55 * Math.sin((x + z) * 0.013 + 2.1) +
+        0.3 * Math.sin(x * 0.028 - z * 0.023) +
+        0.18 * Math.sin(x * 0.061 + z * 0.057);
+      const clump = 0.5 + 0.5 * Math.max(-1, Math.min(1, grove * 0.62));
+      const accept = 0.06 + 0.94 * Math.pow(clump, 1.8);
       if (hash(k * 3) > accept) continue;
 
       // Species: drawn from this position's biome so patches read as one palette.

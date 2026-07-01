@@ -6,7 +6,7 @@
 import * as THREE from 'three';
 import { TAU, clamp, dist2 } from '../math/scalar';
 import { creatureDrive } from './cognition';
-import { ARENA_MID, MID_RADIUS2 } from './constants';
+import { PLATFORM_HALF, PLATFORM_CEIL, PLATFORM_FLOOR } from './constants';
 import { POINT_LIGHT_GAIN } from './environment';
 import type { SimContext } from '../types';
 import type { EntityManager } from './entities';
@@ -125,10 +125,11 @@ export class ShoggothSystem {
     const count = ctx.quality.isMobile ? SHOG_COUNT_MOBILE : SHOG_COUNT_DESKTOP;
     for (let i = 0; i < count; i++) {
       const a = rng() * TAU;
-      const r = (16 + rng() * 54) * ARENA_MID;
+      // USER: spread across the platform + rise (same 3 rng draws: a, r, y — stream-neutral).
+      const r = (0.2 + rng() * 0.8) * PLATFORM_HALF;
       const x = Math.cos(a) * r;
       const z = Math.sin(a) * r;
-      const y = 4 + rng() * 22;
+      const y = PLATFORM_FLOOR + rng() * (PLATFORM_CEIL - PLATFORM_FLOOR);
       this.spawnShoggoth(root, x, y, z, i < LIT_SHOGGOTHS);
     }
   }
@@ -401,12 +402,13 @@ export class ShoggothSystem {
         p.set(0, 5, 0);
         sg.vel.set(0, 0, 0);
       }
-      if (p.lengthSq() > MID_RADIUS2) {
-        V1.copy(p).normalize().multiplyScalar(-0.01);
-        sg.vel.add(V1);
-      }
-      if (p.y < 2) sg.vel.y += 0.005;
-      if (p.y > 30) sg.vel.y -= 0.003;
+      // USER: square platform + full height (was a MID_RADIUS 150 central circle capped at y30).
+      if (p.x > PLATFORM_HALF) sg.vel.x -= 0.01;
+      else if (p.x < -PLATFORM_HALF) sg.vel.x += 0.01;
+      if (p.z > PLATFORM_HALF) sg.vel.z -= 0.01;
+      else if (p.z < -PLATFORM_HALF) sg.vel.z += 0.01;
+      if (p.y < PLATFORM_FLOOR) sg.vel.y += 0.005;
+      else if (p.y > PLATFORM_CEIL) sg.vel.y -= 0.003;
 
       // Roiling rotation + pulsing core glow (legacy 527-530).
       g.rotation.x += Math.sin(t * 0.4 + sg.ph) * 0.008;

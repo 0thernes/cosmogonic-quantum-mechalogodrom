@@ -29,7 +29,7 @@
  */
 import * as THREE from 'three';
 import { TAU, clamp, dist2XZ } from '../math/scalar';
-import { ARENA_RADIUS, GROUND_EXTENT } from './constants';
+import { GROUND_EXTENT, PLATFORM_HALF, PLATFORM_CEIL } from './constants';
 import {
   HISTORY_WINDOW,
   PRISONERS_DILEMMA,
@@ -51,9 +51,6 @@ const TITAN_COUNT = 20;
 /** Unordered titan pairs: C(TITAN_COUNT, 2). */
 const PAIR_COUNT = (TITAN_COUNT * (TITAN_COUNT - 1)) / 2;
 
-/** Roam containment radius (±300 per the V3.3 spec; ARENA_RADIUS keeps a 25u margin). */
-const ROAM_RADIUS = ARENA_RADIUS - 25;
-const ROAM_RADIUS2 = ROAM_RADIUS * ROAM_RADIUS;
 /**
  * Colossal-scale multiplier on the silhouette size (V3.6 integration): the drafted rigs
  * were authored against the 1× world; ×3 lifts them to 40-60u against 100-220u monoliths.
@@ -766,10 +763,11 @@ export class TitanSystem {
     // Patrol post: the original 10 hover over phylum home wedges; the extra 10 prefer a
     // small central social ring where they can meet/procreate without attracting all life.
     const angle = (i / TITAN_COUNT) * TAU + 0.31;
-    const radius = breeder ? 38 + (i % 5) * 9 : 130 + (i % 3) * 45;
+    // USER: distribute titan homes across the platform + up the column (breeders central, roamers wide).
+    const radius = breeder ? 60 + (i % 5) * 40 : PLATFORM_HALF * (0.45 + (i % 4) * 0.14);
     const homeX = Math.cos(angle) * radius;
     const homeZ = Math.sin(angle) * radius;
-    group.position.set(homeX, 25 + (i % 4) * 8, homeZ);
+    group.position.set(homeX, 40 + (i % 5) * 34, homeZ);
 
     const name = lore.name('tribe', 50 + i);
     return {
@@ -930,12 +928,13 @@ export class TitanSystem {
     vel.multiplyScalar(0.985);
     VA.copy(vel).multiplyScalar(dt * 60);
     p.add(VA);
-    if (p.lengthSq() > ROAM_RADIUS2) {
-      VA.copy(p).normalize().multiplyScalar(-0.02);
-      vel.add(VA);
-    }
+    // USER: square platform + up to the mechalogodrom (was a ROAM_RADIUS 300 circle capped at y90).
+    if (p.x > PLATFORM_HALF) vel.x -= 0.02;
+    else if (p.x < -PLATFORM_HALF) vel.x += 0.02;
+    if (p.z > PLATFORM_HALF) vel.z -= 0.02;
+    else if (p.z < -PLATFORM_HALF) vel.z += 0.02;
     if (p.y < 12) vel.y += 0.004;
-    if (p.y > 90) vel.y -= 0.004;
+    else if (p.y > PLATFORM_CEIL) vel.y -= 0.004;
     // Finite seal: a diverged titan re-anchors home instead of spreading NaN.
     if (!Number.isFinite(p.x + p.y + p.z + vel.x + vel.y + vel.z)) {
       p.set(ti.homeX, 30, ti.homeZ);

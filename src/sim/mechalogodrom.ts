@@ -538,13 +538,15 @@ export class Mechalogodrom {
         this.tsotchkePulse.cliffordEnt * 0.11) %
       1;
     this.massMat.color.setHSL((hue + 0.55) % 1, 0.55, 0.035 + 0.025 * this.drive);
-    this.massMat.emissive.setHSL(hue, 0.95, 0.12 + 0.28 * ease + 0.14 * this.apexVitality);
+    this.massMat.emissive.setHSL(hue, 0.95, 0.1 + 0.14 * ease + 0.07 * this.apexVitality);
+    // USER: the mecha CORE was the prime blinding-white blob — peak emissive cut from ~6.15 to ~2.6 so
+    // it reads as a vivid SATURATED hue under ACES, never a white sphere when the camera nears it.
     this.massMat.emissiveIntensity =
-      1.05 +
-      2.35 * ease +
-      1.35 * this.drive +
-      0.85 * this.apexVitality +
-      this.tsotchkePulse.quakeAliveness * 0.55;
+      0.6 +
+      1.1 * ease +
+      0.6 * this.drive +
+      0.4 * this.apexVitality +
+      this.tsotchkePulse.quakeAliveness * 0.25;
     // USER #14: lowered wire lightness and capped opacity so the core is visible, not blinding.
     this.wireMat.color.setHSL((hue + 0.42 + this.tsotchkePulse.adGradient * 0.16) % 1, 1, 0.36);
     // Flash envelope: sharp sparkle on a fast beat, stronger once fused + chaotic.

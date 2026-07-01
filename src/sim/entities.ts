@@ -13,11 +13,10 @@
 import * as THREE from 'three';
 import { TAU, lerp, clamp01 } from '../math/scalar';
 import {
-  ARENA,
-  ARENA_Y,
-  CONTAIN_RADIUS2,
-  ARENA_RADIUS,
   ENTROPY_MAX,
+  PLATFORM_HALF,
+  PLATFORM_CEIL,
+  PLATFORM_FLOOR,
   RENDER_MODE_FX,
   RENDER_MODE_DYN,
 } from './constants';
@@ -73,12 +72,14 @@ function paintVibrant(mat: THREE.MeshStandardMaterial, m: PhylumMorphType, mi: n
   mat.emissive.setHSL(
     family === 0 ? (0.11 + j1 * 0.06) % 1 : (baseHue + 0.16 + j3 * 0.2 + j5 * 0.12) % 1,
     family === 0 ? 0.85 : 0.95,
-    family === 0 ? 0.34 + j2 * 0.14 : Math.min(0.52, 0.26 + hsl.l * 0.14 + j2 * 0.12),
+    family === 0 ? 0.26 + j2 * 0.1 : Math.min(0.42, 0.22 + hsl.l * 0.12 + j2 * 0.1),
   );
-  mat.emissiveIntensity = Math.min(2.5, m.emI * 0.85 + 0.7 + family * 0.1);
+  // USER: dimmer so entities never blow to white near the camera (was min 2.5 / base 0.7).
+  mat.emissiveIntensity = Math.min(1.7, m.emI * 0.7 + 0.45 + family * 0.08);
   // Glassy/crystal surface: high metal, low roughness for a liquid-gem shimmer.
-  mat.metalness = Math.min(0.95, mat.metalness * 0.6 + j5 * 0.4 + 0.2);
-  mat.roughness = Math.max(0.04, mat.roughness * 0.4 + j3 * 0.08);
+  // USER: cap metalness + raise roughness floor so glassy bodies stop mirror-searing white near camera.
+  mat.metalness = Math.min(0.8, mat.metalness * 0.6 + j5 * 0.4 + 0.2);
+  mat.roughness = Math.max(0.12, mat.roughness * 0.4 + j3 * 0.08);
 }
 
 /** Base material parameters a {@link RenderMode} is layered on top of. */
@@ -215,15 +216,12 @@ export class EntityManager {
    * the determinism golden) is byte-identical; only the new mega tier spreads the field out.
    */
   private readonly densityScale: number;
-  /** Containment radius², pre-scaled by densityScale² (the squared spawn-volume growth). */
-  private readonly containR2: number;
   /** New organisms created so far THIS frame (auto-split), reset each {@link update}. See {@link SPAWN_BUDGET_ULTRA}. */
   private spawnsThisFrame = 0;
 
   constructor(ctx: SimContext) {
     this.ctx = ctx;
     this.densityScale = Math.max(1, Math.sqrt(ctx.quality.maxEntities / 10000));
-    this.containR2 = CONTAIN_RADIUS2 * this.densityScale * this.densityScale;
     this.env = {
       ctx,
       spawn: (pos, mi, scale) => this.spawn(pos, mi, scale),
@@ -322,12 +320,21 @@ export class EntityManager {
       // V3.2 home-sector bias: phylum p spawns in its angular wedge of the
       // arena (matching titan p's patrol angle), radius 12%..67% of the rim.
       const ang = (phylum / PHYLUM_COUNT) * TAU + (rng() - 0.5) * 0.9;
-      const rad = (0.12 + rng() * 0.55) * ARENA_RADIUS * this.densityScale;
-      mesh.position.set(Math.cos(ang) * rad, rng() * 30 - 8, Math.sin(ang) * rad);
+      // Reach out across the platform + spread up the full height (same 3 rng draws → stream-safe).
+      const rad = (0.12 + rng() * 0.75) * PLATFORM_HALF * this.densityScale;
+      mesh.position.set(
+        Math.cos(ang) * rad,
+        PLATFORM_FLOOR + rng() * (PLATFORM_CEIL - PLATFORM_FLOOR),
+        Math.sin(ang) * rad,
+      );
     } else {
-      // Legacy random volume × ARENA (V3.1 spawn-volume scale), spread by the V38 density scale.
-      const xz = 70 * ARENA * this.densityScale;
-      mesh.position.set((rng() - 0.5) * xz, rng() * 30 - 8, (rng() - 0.5) * xz);
+      // Founders spawn across the FULL square platform + full height (same 3 rng draws → stream-safe).
+      const xz = 2 * PLATFORM_HALF * this.densityScale;
+      mesh.position.set(
+        (rng() - 0.5) * xz,
+        PLATFORM_FLOOR + rng() * (PLATFORM_CEIL - PLATFORM_FLOOR),
+        (rng() - 0.5) * xz,
+      );
     }
     if (ctx.quality.instanced) {
       // V3.1: pooled rendering — the data mesh NEVER joins the scene graph; the
@@ -622,13 +629,16 @@ export class EntityManager {
         u.vel.set(0, 0, 0);
       }
 
-      // Containment — squared distance, no sqrt (legacy 4225 × ARENA²; V3.1, V38 density-scaled).
-      if (e.position.lengthSq() > this.containR2) {
-        MOVE.copy(e.position).normalize().multiplyScalar(-0.005);
-        u.vel.add(MOVE);
-      }
-      if (e.position.y < -9) u.vel.y += 0.01;
-      if (e.position.y > 40 * ARENA_Y) u.vel.y -= 0.005;
+      // Containment (owner: fill the WHOLE square platform + full height, NOT a central circle):
+      // per-axis SQUARE box (±PLATFORM_HALF, density-scaled) + a ground..mechalogodrom vertical band.
+      // Pure post-integration impulse — draws no rng, so the seeded stream is byte-identical.
+      const H = PLATFORM_HALF * this.densityScale;
+      if (e.position.x > H) u.vel.x -= 0.005;
+      else if (e.position.x < -H) u.vel.x += 0.005;
+      if (e.position.z > H) u.vel.z -= 0.005;
+      else if (e.position.z < -H) u.vel.z += 0.005;
+      if (e.position.y < PLATFORM_FLOOR) u.vel.y += 0.01;
+      else if (e.position.y > PLATFORM_CEIL) u.vel.y -= 0.005;
       energy += u.vel.length();
 
       // Auto-split (legacy lines 787-788). sT re-arms only on a successful roll, like legacy.
@@ -664,9 +674,9 @@ export class EntityManager {
         if (list.length < Math.max(100, target * 0.1)) {
           for (let r = 0; r < 3; r++) {
             SPAWN_AT.set(
-              (rng() - 0.5) * 40 * 2.5 + ex * 0.3,
-              rng() * 3,
-              (rng() - 0.5) * 40 * 2.5 + ez * 0.3,
+              (rng() - 0.5) * 2 * PLATFORM_HALF * 0.6 + ex * 0.3,
+              PLATFORM_FLOOR + rng() * (PLATFORM_CEIL - PLATFORM_FLOOR),
+              (rng() - 0.5) * 2 * PLATFORM_HALF * 0.6 + ez * 0.3,
             );
             this.spawn(SPAWN_AT, Math.floor(rng() * ctx.morphs.length));
           }

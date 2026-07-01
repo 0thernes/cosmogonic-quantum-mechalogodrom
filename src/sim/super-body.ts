@@ -492,10 +492,10 @@ export class SuperBodySystem {
     const highlightGeo = new THREE.SphereGeometry(R * 0.018, 8, 8);
     const pupilMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
     const highlightMat = new THREE.MeshBasicMaterial({
-      color: 0xffffff,
+      color: 0xbfd0ff,
       transparent: true,
-      // USER #13: subtle highlight, not a blinding white pinprick.
-      opacity: 0.28,
+      // USER: soft BLUE glint, not a blinding white pinprick.
+      opacity: 0.18,
     });
     for (let i = 0; i < EYES; i++) {
       const y = 1 - (i / (EYES - 1)) * 2; // −1..1
@@ -961,13 +961,13 @@ export class SuperBodySystem {
     // them to a blinding-white blob; with the deeper iris red the APEX reads as a dark body + bright
     // rim-eyes. Still a pure function of the deterministic sim signals (no rng), so replay is stable.
     this.eyeMat.emissiveIntensity =
-      0.9 +
-      this.dominance * 1.1 +
-      Math.sin(t * 6.0) * 0.25 +
-      this.dreamGlow * 0.6 +
+      0.6 +
+      this.dominance * 0.7 +
+      Math.sin(t * 6.0) * 0.18 +
+      this.dreamGlow * 0.4 +
       (this.evoGlow - 1) * 0.45 +
-      phiU * 0.5 +
-      qWaveU * 0.2; // live quantum phi ignition
+      phiU * 0.35 +
+      qWaveU * 0.2; // live quantum phi ignition (further trimmed so 24 eyes never white-blob)
 
     this.root.scale.setScalar(this.evoSize); // V48: evolution scales the whole colossus
 

@@ -29,6 +29,13 @@ export const CONTAIN_RADIUS2 = ARENA_RADIUS * ARENA_RADIUS;
 /** Ground plane edge length (legacy 240 × ARENA). Maps world XZ → RD texture UV. */
 export const GROUND_EXTENT = 240 * ARENA;
 
+/** USER: the SQUARE PLATFORM box that EVERYTHING roams — per-axis half-extent (just inside the ground
+ *  edge), a ground floor, and a ceiling at the mechalogodrom height (ALTITUDE 252). Creatures fill the
+ *  whole square + the full vertical column, never outside the square and never above the mechalogodrom. */
+export const PLATFORM_HALF = (GROUND_EXTENT / 2) * 0.9; // 540
+export const PLATFORM_CEIL = 240;
+export const PLATFORM_FLOOR = 6;
+
 /** Mid-field containment radius (legacy 60 × ARENA_MID): shoggoths, quantum cloud. */
 export const MID_RADIUS = 60 * ARENA_MID;
 

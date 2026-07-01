@@ -197,8 +197,8 @@ export class MechalogodromSatellites {
       this.m.compose(this.p, this.q, this.s);
       this.mesh.setMatrixAt(i, this.m);
       const hue = (sd.hue + 0.08 * st + 0.15 * drive + 0.08 * wb) % 1;
-      const lit = 0.42 + 0.35 * drive + 0.25 * Math.sin(st + i);
-      this.c.setHSL(hue < 0 ? hue + 1 : hue, 0.92, Math.min(lit, 0.95));
+      const lit = 0.32 + 0.22 * drive + 0.16 * Math.sin(st + i); // USER: dimmer so 400 knots don't wash white
+      this.c.setHSL(hue < 0 ? hue + 1 : hue, 0.92, Math.min(lit, 0.66));
       this.mesh.setColorAt(i, this.c);
     }
     this.mesh.instanceMatrix.needsUpdate = true;
