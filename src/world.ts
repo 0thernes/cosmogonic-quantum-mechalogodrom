@@ -1491,18 +1491,20 @@ export class World {
     });
     this.monolithTemple.update(dt, t); // V63: rise + shimmer the ascension portal (no-op until revealed)
 
-    // USER #18: drive the nightmare portal audio (screams, death, warped horror) from temple state
-    const templeReact = (this.monolithTemple as any).reactivity || 0;
-    const templeChaos = (this.monolithTemple as any).chaos || 0;
-    const nmLevel = templeReact * 2.8 + templeChaos * 1.6;
-    this.audio.setPortalNightmare?.(nmLevel);
+    // USER: the portal-nightmare horror bus (a low drone + a HIGH SCREAM square wave whose pitch ROSE
+    // with temple reactivity — `360 + level*220` Hz) was driven EVERY FRAME from templeReact/templeChaos,
+    // so it whined constantly and climbed higher and higher: the "fan/vibration that gets higher" noise.
+    // KILL the constant drive — sound the horror bus ONLY during an ACTUAL ascended portal nightmare, and
+    // hard-silence it (level 0 ⇒ gain 0) the rest of the time.
     if (this.superAscended && this.monolithTemple.revealed) {
       const portalPulse = 1.6 + 0.9 * Math.sin(t * 0.31) + 0.4 * Math.sin(t * 1.7);
-      this.audio.setPortalNightmare(portalPulse);
+      this.audio.setPortalNightmare?.(portalPulse);
       if (s.frame % 180 === 0) {
         this.audio.playExtra(s.frame % 360 === 0 ? 'abyssal' : 'demonicgrowl');
       }
       if (s.frame % 420 === 90) this.audio.playExtra('demonic');
+    } else {
+      this.audio.setPortalNightmare?.(0);
     }
 
     if (s.frame % 60 === 30) {
