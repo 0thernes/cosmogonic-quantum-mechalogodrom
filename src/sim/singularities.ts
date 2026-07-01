@@ -608,13 +608,15 @@ export class SingularitySystem {
           CONSUME[eaten++] = e;
           continue;
         }
-        if (consumeCap === 0 || e.userData.isNhi === true) {
-          // Non-consuming hole (or an immune NHI): nothing may enter — eject back past the horizon.
-          V.multiplyScalar(1 / r); // unit toward centre
-          e.position.copy(c).addScaledVector(V, -HORIZON * 1.05);
-          e.userData.vel.addScaledVector(V, -0.6);
-          continue;
-        }
+        // Otherwise nothing may enter — eject back past the horizon. This covers a non-consuming hole,
+        // an immune NHI, AND a consuming hole that has hit its PER-FRAME consume budget
+        // (eaten >= consumeCap): the overflow crosser is repelled and re-consumed next frame when the
+        // budget resets. Without this the full-hole case fell through to the gravity branch below and
+        // horizon-crossers piled up INSIDE the horizon — max-accel'd but never eaten (a stuck swarm).
+        V.multiplyScalar(1 / r); // unit toward centre
+        e.position.copy(c).addScaledVector(V, -HORIZON * 1.05);
+        e.userData.vel.addScaledVector(V, -0.6);
+        continue;
       }
       const accel = Math.min(G / r2, ACCEL_MAX) * sign;
       e.userData.vel.addScaledVector(V, (accel * dt) / r); // V/r = unit toward centre
