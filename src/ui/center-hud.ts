@@ -753,35 +753,19 @@ function buildPersistentNav(doc: Document): void {
       }
     }),
   );
-  rowDocs.appendChild(mkAct('🔇 MUTE', 'Mute all audio (toggle)', 'mute', 'cqm-persist-audio'));
-  // V115: PAUSE restored next to MUTE. It was relocated into SETTINGS at V103, but the owner relies on
-  // it to freeze all motion and roam/inspect. `pause` → UiActions.togglePause via the delegated
-  // [data-action] handler (input.ts); state reflects through the shared hudSpeed readout (timeScale
-  // 0 renders as "PAUSE"). Same `cqm-persist-audio` grouping so it sits immediately beside MUTE.
-  rowDocs.appendChild(
-    mkAct(
-      '⏸ PAUSE',
-      'Pause / resume — freeze motion so you can roam and inspect (everything holds position, then drifts slowly)',
-      'pause',
-      'cqm-persist-audio',
-    ),
-  );
+  // De-dup (owner UX): MUTE + PAUSE live in the green bottom toolbar (index.html #bar) ONLY — they were
+  // duplicated here. Removed from this row so each control appears exactly once (both docks showed them).
   // V112: panel launchers are direct children of the docs/access row so each button sits
   // next to ACCESS. They wrap naturally; the row's max-width keeps them centred.
   const rowSim = mkRow('cqm-persist-row--sim');
+  // De-dup (owner UX): ENV/SING/RENDER/N1-N2/ENT/CHAOS/APOC/NHI all live in the green bottom toolbar
+  // (index.html #bar) — removed from this row to kill the duplicate copies. Only the spawn/mutate
+  // actions that are NOT on the bottom toolbar remain here, so nothing becomes unreachable.
   for (const [action, label, title, extra] of [
-    ['weather', '☁ ENV', 'Cycle environment cloud/weather', 'cqm-persist-world'],
-    ['cosmo', '★ SING', 'Summon singularity', 'cqm-persist-world'],
-    ['wire', '◐ RENDER', 'Cycle render mode', 'cqm-persist-world'],
-    ['sim', 'N1/N2', 'Switch simulation layer', 'cqm-persist-world'],
-    ['entropy', '🔥 ENT', 'Toggle entropy pressure', 'cqm-persist-sim'],
-    ['chaosmode', '⚡ CHAOS', 'Toggle chaos mode', 'cqm-persist-sim'],
-    ['apoc', '☠ APOC', 'Trigger apocalypse', 'cqm-persist-sim'],
-    ['nhi', '◈ NHI', 'Launch NHI', 'cqm-persist-sim'],
-    ['split', '⇄', 'Split mature entities', 'cqm-persist-sim'],
-    ['burst', '✦', 'Burst-spawn entities', 'cqm-persist-sim'],
-    ['mutate', '☢', 'Mutate all entities', 'cqm-persist-sim'],
-    ['chaos', '⚡', 'Boost chaos', 'cqm-persist-sim'],
+    ['split', '⇄ SPLIT', 'Split mature entities', 'cqm-persist-sim'],
+    ['burst', '✦ BURST', 'Burst-spawn entities', 'cqm-persist-sim'],
+    ['mutate', '☢ MUTATE', 'Mutate all entities', 'cqm-persist-sim'],
+    ['chaos', '⚡ CHAOS+', 'Boost chaos', 'cqm-persist-sim'],
   ] as const) {
     rowSim.appendChild(mkAct(label, title, action, extra));
   }
@@ -863,6 +847,13 @@ function onKeydown(e: KeyboardEvent): void {
   if (e.key === 'Escape' && active >= 0) showOnly(-1);
 }
 
+/** The green-bottom PANEL button dispatches `cqm:open-master-panel` (world.ts → openMasterPanel), but
+ *  NOTHING listened for it, so the button did nothing. Wire it here: toggle the centre-HUD panel cycler
+ *  open on the first panel. Named so HMR can cleanly remove the OLD binding on hot-replace. */
+function onOpenMasterPanel(): void {
+  showOnly(active < 0 ? 0 : -1);
+}
+
 /**
  * Build (or REBUILD) the HUD chrome. Idempotent + hot-reload-safe: it ALWAYS replaces its stylesheet
  * and rebuilds the nav, and re-binds its listeners cleanly (remove-then-add) — so edits to this module
@@ -882,6 +873,11 @@ export function initCenterHud(doc: Document = document): void {
   wireDockToggles();
   doc.removeEventListener('keydown', onKeydown);
   doc.addEventListener('keydown', onKeydown);
+  if (typeof window !== 'undefined') {
+    // Make the green-bottom PANEL button actually work: open the panel cycler when openMasterPanel fires.
+    window.removeEventListener('cqm:open-master-panel', onOpenMasterPanel);
+    window.addEventListener('cqm:open-master-panel', onOpenMasterPanel);
+  }
   // V69: keep the centre-column fit live — re-measure on resize / orientation change (re-bound cleanly
   // so a hot-reload never stacks duplicate listeners).
   if (typeof window !== 'undefined') {

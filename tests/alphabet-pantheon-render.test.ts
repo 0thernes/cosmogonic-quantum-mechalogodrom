@@ -13,7 +13,7 @@ import { resolve } from 'node:path';
 import * as THREE from 'three';
 import { AlphabetPantheonRender } from '../src/sim/alphabet-pantheon-render';
 import { ALPHABET_PANTHEON_SIZE } from '../src/sim/alphabet-pantheon';
-import { ARENA_RADIUS } from '../src/sim/constants';
+import { ARENA_RADIUS, GROUND_EXTENT } from '../src/sim/constants';
 
 const root = resolve(import.meta.dir, '..');
 
@@ -146,11 +146,13 @@ describe('AlphabetPantheonRender — 100 archetypes alive in the dome', () => {
         }
       }
     }
-    // USER #10 (box-arena diorama): godforms roam the large arena box but never escape it. Horizontal
-    // reach is capped at ARENA_HALF (0.95·ARENA_RADIUS) and height at ARENA_CEIL (0.68·ARENA_RADIUS),
-    // so the max distance from origin is the box diagonal ≈ 1.17·ARENA_RADIUS.
-    expect(maxDist).toBeLessThanOrEqual(ARENA_RADIUS * 1.17);
-    // ...and they must SPREAD across the arena (fill it), not cluster centrally — reach well past centre.
+    // USER: godforms roam the full SQUARE platform (GROUND_EXTENT) up to the mechalogodrom height, but
+    // never escape it. Horizontal reach is capped per-axis at ARENA_HALF = (GROUND_EXTENT/2)*0.9 and
+    // height at 240, so the max distance from origin is the platform box diagonal.
+    const platformHalf = (GROUND_EXTENT / 2) * 0.9;
+    const boxDiag = Math.hypot(platformHalf, platformHalf, 240);
+    expect(maxDist).toBeLessThanOrEqual(boxDiag + 1);
+    // ...and they must SPREAD across the platform (fill it), not cluster centrally — reach well past centre.
     expect(maxDist).toBeGreaterThan(ARENA_RADIUS * 0.5);
     // Never underneath the ground plane.
     expect(minY).toBeGreaterThanOrEqual(-1);

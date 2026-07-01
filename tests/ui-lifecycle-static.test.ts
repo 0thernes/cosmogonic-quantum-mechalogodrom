@@ -74,23 +74,29 @@ describe('persistent dock controls (owner-critical)', () => {
   // The owner relies on a PAUSE control in the always-visible dock, immediately next to MUTE, to
   // freeze all motion and roam/inspect. It was silently removed once (relocated into SETTINGS at
   // V103). These seals keep it present AND correctly wired so it cannot regress unnoticed again.
-  test('PAUSE button is restored next to MUTE and dispatches the pause action', () => {
-    const centerHud = src('src/ui/center-hud.ts');
+  test('PAUSE + MUTE live ONCE in the green bottom toolbar (de-duplicated from the center HUD)', () => {
     const index = src('index.html');
-    expect(centerHud).toContain("'⏸ PAUSE'");
-    expect(centerHud).toMatch(/'⏸ PAUSE',[\s\S]{0,200}'pause',/);
-    expect(centerHud.indexOf("'🔇 MUTE'")).toBeLessThan(centerHud.indexOf("'⏸ PAUSE'"));
+    const centerHud = src('src/ui/center-hud.ts');
+    // The green bottom toolbar (index.html #bar) is the SINGLE home for these controls.
     expect(index).toContain('data-action="pause"');
+    expect(index).toContain('data-action="mute"');
+    // They must NOT be duplicated in the center-hud persist-nav (owner UX: no double buttons).
+    expect(centerHud).not.toContain("'⏸ PAUSE'");
+    expect(centerHud).not.toContain("mkAct('🔇 MUTE'");
   });
 
-  test('PANEL toolbar button dispatches openMasterPanel', () => {
+  test('PANEL toolbar button dispatches openMasterPanel AND the center HUD listens for it', () => {
     const input = src('src/ui/input.ts');
     const index = src('index.html');
     const world = src('src/world.ts');
+    const centerHud = src('src/ui/center-hud.ts');
     expect(index).toContain('data-action="panel"');
     expect(input).toMatch(/panel:\s*'openMasterPanel'/);
     expect(world).toContain('openMasterPanel:');
     expect(world).toContain("new CustomEvent('cqm:open-master-panel')");
+    // The button was DEAD because nothing handled the event — seal that the center HUD now listens.
+    expect(centerHud).toContain("'cqm:open-master-panel'");
+    expect(centerHud).toContain('onOpenMasterPanel');
   });
 
   test('pause action is wired to a true freeze (timeScale -> 0)', () => {

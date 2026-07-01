@@ -58,23 +58,24 @@ function paintVibrant(mat: THREE.MeshStandardMaterial, m: PhylumMorphType, mi: n
   // (V115) adds the dynamic hue/sat/value breathing on top of these three base palettes.
   const family = mi % 3;
   if (family === 0) {
-    // 1/3 — DARK graphite / grey / GOLD tones: deep bodies with metallic biological glints (visible).
-    mat.color.setHSL((0.1 + j2 * 0.06) % 1, 0.4 + j3 * 0.28, 0.17 + j4 * 0.1);
+    // 1/3 — DARK graphite / grey / GOLD tones: deep bodies with metallic glints. Owner likes them
+    // darker; lightness floor 0.14 (+ the emissive below) keeps them readable, not invisible.
+    mat.color.setHSL((0.1 + j2 * 0.06) % 1, 0.4 + j3 * 0.28, 0.14 + j4 * 0.08);
   } else if (family === 1) {
-    // 1/3 — saturated living CHROMA: purple / blue / red / green / pink, distributed by hash.
-    mat.color.setHSL(baseHue, 0.86 + j5 * 0.12, 0.34 + j3 * 0.16);
+    // 1/3 — saturated living CHROMA: purple / blue / red / green / pink, darker + moodier than neon.
+    mat.color.setHSL(baseHue, 0.86 + j5 * 0.12, 0.28 + j3 * 0.14);
   } else {
-    // 1/3 — WILD high-contrast morphic combos: shifted hue, very saturated, mid lightness.
-    mat.color.setHSL((baseHue + 0.27 + j4 * 0.19) % 1, 0.95, 0.28 + j2 * 0.18);
+    // 1/3 — WILD high-contrast morphic combos: shifted hue, very saturated, deeper mid lightness.
+    mat.color.setHSL((baseHue + 0.27 + j4 * 0.19) % 1, 0.95, 0.22 + j2 * 0.16);
   }
   m.em.getHSL(hsl);
-  // Coloured inner glow — bright enough to shimmer AND to keep the dark family clearly visible.
+  // Coloured inner glow — dimmed a touch (owner wants darker) but still keeps the dark family visible.
   mat.emissive.setHSL(
     family === 0 ? (0.11 + j1 * 0.06) % 1 : (baseHue + 0.16 + j3 * 0.2 + j5 * 0.12) % 1,
     family === 0 ? 0.85 : 0.95,
-    family === 0 ? 0.4 + j2 * 0.16 : Math.min(0.6, 0.3 + hsl.l * 0.14 + j2 * 0.12),
+    family === 0 ? 0.34 + j2 * 0.14 : Math.min(0.52, 0.26 + hsl.l * 0.14 + j2 * 0.12),
   );
-  mat.emissiveIntensity = Math.min(2.8, m.emI * 0.88 + 0.9 + family * 0.1);
+  mat.emissiveIntensity = Math.min(2.5, m.emI * 0.85 + 0.7 + family * 0.1);
   // Glassy/crystal surface: high metal, low roughness for a liquid-gem shimmer.
   mat.metalness = Math.min(0.95, mat.metalness * 0.6 + j5 * 0.4 + 0.2);
   mat.roughness = Math.max(0.04, mat.roughness * 0.4 + j3 * 0.08);

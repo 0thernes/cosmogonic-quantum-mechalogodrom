@@ -29,7 +29,7 @@
  */
 import * as THREE from 'three';
 import { clamp } from '../math/scalar';
-import { ARENA_RADIUS } from './constants';
+import { ARENA_RADIUS, GROUND_EXTENT } from './constants';
 import { ALPHABET_ROSTER, type AlphabetArchetype } from './alphabet-pantheon';
 import {
   ApexExteriorAbomination,
@@ -60,10 +60,11 @@ import type { TsotchkeQuantumPulse } from './tsotchke-facade';
 /** Dome shell radius the pantheon hangs on; pulled inward so godforms read as beings, not far stars. */
 const DOME_R = ARENA_RADIUS * 0.72;
 
-/** USER #10 (box-arena diorama): godforms roam a LARGE box — out to the land edge and up to monolith
- *  height — instead of a thin overhead dome tether. Invisible walls only at the arena bounds. */
-const ARENA_HALF = ARENA_RADIUS * 0.95; // ~309 horizontal roam half-extent (just inside the land rim)
-const ARENA_CEIL = ARENA_RADIUS * 0.68; // ~221 vertical ceiling ≈ tallest monolith height
+/** USER: godforms roam the FULL SQUARE PLATFORM (the visible ground, GROUND_EXTENT) — out to the edge —
+ *  and up to the MECHALOGODROM height, never outside the square and never above the mechalogodrom.
+ *  Invisible walls only at the platform bounds (square, per-axis — NOT a circle). */
+const ARENA_HALF = (GROUND_EXTENT / 2) * 0.9; // ~540 — square platform half-extent (just inside the edge)
+const ARENA_CEIL = 240; // vertical ceiling — up to the mechalogodrom (ALTITUDE 252), never above it
 const ARENA_FLOOR = 6; // never below the ground plane
 const PANTHEON_REF_ATLAS_URL = '/textures/pantheon_equirect_refs_atlas.png';
 
@@ -586,18 +587,16 @@ export class AlphabetPantheonRender {
         // shoved the inner/upper anchors (horiz as low as ~0.2·DOME_R) OUTWARD onto that ring —
         // flinging them past the dome sphere — and let y sink to -20 (under the ground). Bounding
         // the displacement from the anchor keeps them contained AND slow/inspectable.
-        // USER #10 (box-arena diorama): clamp to the large invisible-wall box — horizontal to the land
-        // edge (ARENA_HALF), vertical ground..monolith height (ARENA_FLOOR..ARENA_CEIL) — so godforms
-        // roam the WHOLE arena but never escape it. Replaces the old ~12-unit dome tether + thin-shell
-        // clamp that pinned them into a narrow overhead cluster near the vertical axis.
+        // USER: clamp to the SQUARE platform box — per-axis horizontal to the platform edge (ARENA_HALF)
+        // and vertical ground..mechalogodrom-height (ARENA_FLOOR..ARENA_CEIL). Per-axis (not radial) so
+        // godforms fill the whole SQUARE platform out to its edges/corners, never outside it and never
+        // above the mechalogodrom.
         if (P.y < ARENA_FLOOR) P.y = ARENA_FLOOR;
         else if (P.y > ARENA_CEIL) P.y = ARENA_CEIL;
-        const rXZ = Math.hypot(P.x, P.z);
-        if (rXZ > ARENA_HALF) {
-          const k = ARENA_HALF / rXZ;
-          P.x *= k;
-          P.z *= k;
-        }
+        if (P.x > ARENA_HALF) P.x = ARENA_HALF;
+        else if (P.x < -ARENA_HALF) P.x = -ARENA_HALF;
+        if (P.z > ARENA_HALF) P.z = ARENA_HALF;
+        else if (P.z < -ARENA_HALF) P.z = -ARENA_HALF;
         E.set(
           Math.sin(ph * 0.42 + mx + b.sig.rotBias) * (0.42 + ba * 0.45),
           slowT * b.spin * quick * (1 + ba * 0.62) + b.phase + mz * 0.36,
