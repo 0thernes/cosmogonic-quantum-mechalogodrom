@@ -683,16 +683,22 @@ export class EnvironmentSystem {
         '#include <map_fragment>',
         `
         #include <map_fragment>
+        // USER: make the ground ALIVE — a slow living HEARTBEAT pulse + travelling bioluminescent VEINS
+        // (light flows across the mycelium network), all reactive to chaos/entropy. Not a static 1980s floor.
         float bioPulse = sin(vWorldPos.x * 0.08 + uTime + uWind.x * 0.2) * cos(vWorldPos.z * 0.07 + uTime + uWind.y * 0.2) * 0.5 + 0.5;
+        float heartbeat = 0.6 + 0.4 * sin(uTime * (0.6 + uChaos * 1.2)); // the ground breathes, quicker under chaos
+        float flow = sin(vWorldPos.x * 0.05 - uTime * 1.6 + vWorldPos.z * 0.043) * 0.5 + 0.5; // light TRAVELS
         float skin = sin(vWorldPos.x * 0.021 + sin(vWorldPos.z * 0.017 + uTime * 0.11) * 3.0) * 0.5 + 0.5;
         float mycelium = smoothstep(0.54, 0.96, sin(vWorldPos.x * 0.15 + vWorldPos.z * 0.13 + uTime * 0.6) * 0.5 + 0.5);
         float vein = smoothstep(0.72, 1.0, bioPulse + uChaos * 0.18);
+        float livingVein = smoothstep(0.85, 1.0, mycelium * (0.6 + 0.4 * flow)) * flow; // travelling crest of light
         vec3 fungal = vec3(0.04, 0.22, 0.15) * bioPulse * (1.0 - uEntropy * 0.55);
         vec3 bruise = vec3(0.22, 0.05, 0.2) * vein * (0.25 + uChaos * 0.85);
         vec3 mineral = mix(vec3(0.04, 0.06, 0.16), vec3(0.16, 0.08, 0.025), skin) * 0.55;
-        vec3 nerve = vec3(0.02, 0.5, 0.72) * mycelium * (0.1 + uChaos * 0.5);
+        vec3 nerve = vec3(0.02, 0.5, 0.72) * mycelium * (0.1 + uChaos * 0.5) * heartbeat;
+        vec3 glowVein = vec3(0.15, 0.85, 0.95) * livingVein * (0.35 + 0.9 * uChaos) * heartbeat; // flowing bioluminescence
         vec3 ash = vec3(0.12, 0.12, 0.13) * uEntropy * 0.45;
-        diffuseColor.rgb += fungal + bruise + mineral + nerve;
+        diffuseColor.rgb += fungal + bruise + mineral + nerve + glowVein;
         diffuseColor.rgb = mix(diffuseColor.rgb, ash, uEntropy * 0.32);
         `,
       );
