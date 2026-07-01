@@ -739,6 +739,18 @@ function buildPersistentNav(doc: Document): void {
       ),
     );
   }
+  // Owner directive #4: a single PANELS entry point sits next to ACCESS and opens the inspector HUD
+  // (COPILOT · HELP · AUDIT · NHI OBS · MARKET · ARCHON GODFORMS · PANTHEONS · APEX). It toggles the
+  // panel cycler open on the first panel (showOnly(0)) ↔ closed (showOnly(-1)); the per-panel launcher
+  // row still lists each one individually.
+  rowDocs.appendChild(
+    mkBtn(
+      '⊞ PANELS',
+      'Open the inspector panels — COPILOT · HELP · AUDIT · NHI OBS · MARKET · ARCHON GODFORMS · PANTHEONS · APEX',
+      () => showOnly(active < 0 ? 0 : -1),
+      'cqm-persist-panel',
+    ),
+  );
   rowDocs.appendChild(
     mkBtn('⚙ SET', 'Simulation settings', () => {
       const w = doc.defaultView as typeof window & { cqmToggleSettings?: () => void };
@@ -751,6 +763,18 @@ function buildPersistentNav(doc: Document): void {
     }),
   );
   rowDocs.appendChild(mkAct('🔇 MUTE', 'Mute all audio (toggle)', 'mute', 'cqm-persist-audio'));
+  // Owner directive #4: restore the PAUSE button next to MUTE. It was relocated out of the dock and the
+  // owner relies on it to FREEZE all motion for free-roam inspection. `data-action="pause"` is dispatched
+  // by InputSystem.bindToolbar (delegated on document.body) → UiActions.togglePause, which sets
+  // state.timeScale to 0 ↔ prePauseTimeScale, freezing the whole sim while the camera stays free.
+  rowDocs.appendChild(
+    mkAct(
+      '⏸ PAUSE',
+      'Pause / resume the simulation — freeze everything in place so you can roam and inspect (toggle)',
+      'pause',
+      'cqm-persist-audio',
+    ),
+  );
   strip.appendChild(rowDocs);
 
   const rowPanels = mkRow('cqm-persist-row--panels');
