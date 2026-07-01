@@ -180,6 +180,7 @@ function patchGodJewel(
          uniform float uTime; uniform vec3 uPlan; uniform float uDominance; uniform float uVariant; uniform float uSurprise; uniform float uWave; uniform float uArousal; uniform float uQWave; uniform float uPhi; uniform float uReflex; uniform float uQualia; uniform float uCliff;
          uniform float uEvoAura; uniform float uEvoTier; uniform float uEvoHue; uniform float uAscended; // V64 evolution-driven living skin
          uniform float uBrutalism; // BRUTALISM: crossfade the god-jewel skin to raw poured concrete
+         uniform float uDream; uniform float uHallucinate; // apex CONSCIOUSNESS: REM dream-state + hallucination
          uniform float uBrutalStyle; // V109: 0-4 style variant
          float h31(vec3 p){ return fract(sin(dot(p, vec3(27.17,61.31,11.71))) * 43758.5453); }
          float n3(vec3 p){ vec3 i=floor(p), f=fract(p); f=f*f*(3.0-2.0*f);
@@ -286,7 +287,16 @@ function patchGodJewel(
          // REFLEX ARC ORBITS (clifford reflex): fast reflex sparks orbit a reactive mind.
          float mReflexArc = pow(0.5 + 0.5 * sin(atan(vObjPos.z, vObjPos.x) * 6.0 + uTime * 8.0), 14.0);
          vec3 mReflexCol = vec3(0.25, 0.6, 0.9) * mReflexArc * uReflex * 0.5; // USER: deep blue, less bright
-         vec3 mindEmissive = mNeuroCol + mHelixCol + mBloom + mThermCol + mQualiaCol + mReflexCol;
+         // DREAM-STATE ONEIRIC AURORA (uDream — the apex's REM dreaming): a slow, soft, undulating aurora
+         // washes the skin in shifting pastels while it dreams — a genuine readout of its sleep/REM state.
+         float mDreamWave = 0.5 + 0.5 * sin(vObjPos.y * 3.0 + uTime * 0.6 + relief * 4.0) * sin(vObjPos.x * 2.0 - uTime * 0.4);
+         vec3 mDreamCol = (0.5 + 0.5 * cos(vec3(0.0, 2.094, 4.188) + mDreamWave * 3.0 + uTime * 0.3)) * mDreamWave * uDream * 0.7;
+         // HALLUCINATION CHROMATIC WRITHE (uHallucinate): a writhing chromatic-aberration fractal crawls the
+         // skin when the mind hallucinates — RGB split by a churning fractal, the body "seeing things".
+         float mHallF = abs(sin(vObjPos.x * 5.0 + uTime * 1.7)) * abs(cos(vObjPos.y * 4.3 - uTime * 1.3)) + 0.5 * abs(sin(vObjPos.z * 7.0 + uTime));
+         vec3 mHallCol = vec3(sin(mHallF * 6.2831 + 0.0), sin(mHallF * 6.2831 + 2.094), sin(mHallF * 6.2831 + 4.188)) * 0.5 + 0.5;
+         mHallCol *= pow(fres, 0.8) * uHallucinate * 0.8;
+         vec3 mindEmissive = mNeuroCol + mHelixCol + mBloom + mThermCol + mQualiaCol + mReflexCol + mDreamCol + mHallCol;
          vec3 jewelEmissive = glow * (0.22 + 0.6 * relief) + iris * fres * (0.45 + 0.8 * uDominance) + wv * 0.12 * uDominance + ch * 0.07 * uSurprise * uPlan + igFlash * uPlan * (0.3 + 0.4 * uDominance) + varPal * relief * 0.25 * uPlan + evoEmissive - veinColor * veinMask * 0.4 + auraColor * relief * 0.15 + mindEmissive;
          jewelEmissive *= 0.6; // USER: darker still (0.78→0.6), less white/bright, more organic + colorful
          // V112: HDR soft-knee so peak mind-activity (dominance/plan/surprise all maxed) can no longer
@@ -354,6 +364,8 @@ export class SuperBodySystem {
     uAscended: { value: 0 }, // 1 at the LV100 summit — the skin fully blazes + shimmers
     uBrutalism: { value: 0 }, // BRUTALISM: 0 = god-jewel, 1 = raw poured-concrete monolith
     uBrutalStyle: { value: 0 }, // V109: 0=BRUTALISM 1=NOUVEAUNESS 2=ROCOCOGOLOGY 3=COSMICMORPHISM 4=REPRESSIONISM
+    uDream: { value: 0 }, // 0..1 REM dream-state (from SuperMind.dreaming) — a slow oneiric aurora
+    uHallucinate: { value: 0 }, // 0..1 hallucination (from SuperMind.hallucinating) — a chromatic fractal writhe
   };
   private dominance = 0.5;
   private arousal = 0;
@@ -1025,6 +1037,10 @@ export class SuperBodySystem {
     const morphology = this.quantum[5] ?? 0; // QUANTUM_ASPECTS index 5 = 'morphology'
     this.morphBoost = clampf(morphology * 0.6 + hallucinating * 0.4, 0, 1);
     this.dreamGlow = clampf(dreaming, 0, 1);
+    // The apex's REM dream-state + hallucination now drive DISTINCT skin phenomena (not just the
+    // morph/eye-glow): a slow oneiric aurora when dreaming, a chromatic fractal writhe when hallucinating.
+    this.u.uDream.value = clampf(dreaming, 0, 1);
+    this.u.uHallucinate.value = clampf(hallucinating, 0, 1);
     // GOAL5: quantum wave + morph drive alive pulses (reactive to superposition etc)
     const q0 = this.quantum[0] ?? 0,
       q1 = this.quantum[1] ?? 0,

@@ -68,6 +68,30 @@ describe('SuperBodySystem flight + control (V41)', () => {
     expect(wild.morphFactor()).toBeGreaterThan(calm.morphFactor()); // the monster writhes harder when active
   });
 
+  test('CONSCIOUSNESS: dreaming + hallucinating drive DISTINCT skin uniforms (oneiric aurora / chromatic writhe)', () => {
+    const body = new SuperBodySystem(new THREE.Scene());
+    const q = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    const u = (
+      body as unknown as { u: { uDream: { value: number }; uHallucinate: { value: number } } }
+    ).u;
+    // Awake, lucid: both distinct skin states are OFF (baseline).
+    body.setConsciousness(q, 0, 0);
+    expect(u.uDream.value).toBe(0);
+    expect(u.uHallucinate.value).toBe(0);
+    // Dreaming (REM) but not hallucinating: the oneiric aurora rises, the chromatic writhe stays quiet.
+    body.setConsciousness(q, 0.8, 0);
+    expect(u.uDream.value).toBeCloseTo(0.8, 6);
+    expect(u.uHallucinate.value).toBe(0);
+    // Hallucinating but awake: the writhe rises, the aurora stays quiet — the two mind-states are independent.
+    body.setConsciousness(q, 0, 0.6);
+    expect(u.uDream.value).toBe(0);
+    expect(u.uHallucinate.value).toBeCloseTo(0.6, 6);
+    // Both lanes clamp to [0,1] under over-range input (a bounded, falsifiable readout).
+    body.setConsciousness(q, 5, -3);
+    expect(u.uDream.value).toBe(1);
+    expect(u.uHallucinate.value).toBe(0);
+  });
+
   test('V48: evolution GROWS the body (setEvolution → a larger scale)', () => {
     const body = new SuperBodySystem(new THREE.Scene());
     body.update(0, 1 / 60);

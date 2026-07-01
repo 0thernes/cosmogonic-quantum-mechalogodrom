@@ -9,6 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### APEX consciousness skin — DREAM STATE + HALLUCINATION now visible on the god-jewel
+
+- The Super Creature's REM **dreaming** and **hallucinating** signals (from `SuperMind.setConsciousness`)
+  previously only nudged the vertex morph + eye-glow. They now drive two DISTINCT, falsifiable skin
+  phenomena via new `uDream` / `uHallucinate` uniforms: a **dream-state oneiric aurora** (a slow, soft,
+  undulating pastel wash while it dreams — a real readout of its sleep/REM state) and a **hallucination
+  chromatic writhe** (a churning RGB-split fractal crawling the skin when the mind hallucinates — the
+  body "seeing things"). Independent lanes (dreaming without hallucinating and vice-versa), clamped to
+  [0,1], signal-gated (0 ⇒ baseline). Verified to compile + render in headless Chromium (0 shader / 0
+  page errors); a test pins the consciousness→uniform wiring and lane independence.
+
 ### SHOGGOTH MIND skin — the horde's cognition made visible (hallucination + dream state)
 
 - The shoggoth core material gets a NEW custom shader (`patchShoggothBody`) driven by the creature's
