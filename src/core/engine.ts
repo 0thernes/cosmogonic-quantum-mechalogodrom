@@ -61,7 +61,10 @@ export class Engine {
     this.renderer.setSize(window.innerWidth, window.innerHeight, false);
     this.renderer.shadowMap.enabled = quality.shadows;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 0.95;
+    // Owner directive #11/#14: the scene reads too bright/blinding-white. Pull global exposure down
+    // (0.95 → 0.82) so highlights roll off into a normal white instead of clipping. ACES already
+    // compresses the top end; this darkens the whole frame ~14% while staying fully visible.
+    this.renderer.toneMappingExposure = 0.82;
     this.renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
 
     this.scene = new THREE.Scene();

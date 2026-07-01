@@ -554,7 +554,10 @@ export class World {
       chaos: 0.5,
       entropy: 0,
       mutations: 0,
-      timeScale: 1,
+      // Boot at a calmer 0.5× baseline (owner directive #14: "SLOW IT DOWN"). The whole sim's dt is
+      // `uiDt * timeScale` (see step()), so this halves ALL motion uniformly; the ▦ time cycler and the
+      // ⏸ PAUSE button (→ togglePause) move it through TIME_SCALES [0,0.1,0.2,0.5,1,2,3,5] from here.
+      timeScale: 0.5,
       renderMode: cyc(RENDER_MODES, this.persisted.renderIdx ?? 0),
       brutalism: false, // BRUTALISM: session-only Super Creature concrete-monolith mode (B hotkey)
       sim: this.persisted.sim === 2 ? 2 : 1,

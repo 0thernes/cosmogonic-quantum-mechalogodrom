@@ -241,88 +241,34 @@ const ACCEL_MAX = 6;
 const BODY_GAIN = 0.4;
 /** Max organisms a black hole consumes per frame (keeps mass die-off off the budget cliff). */
 const MAX_CONSUME = 25;
-function particleBudget(tier: QualityTier): number {
-  switch (tier) {
-    case 'phone':
-      return 1800;
-    case 'laptop':
-      return 3200;
-    case 'desktop':
-      return 4600;
-    case 'ultra':
-      return 6200;
-    case 'mega':
-      return 7600;
-    default: {
-      const _exhaustive: never = tier;
-      return _exhaustive;
-    }
-  }
+// ─────────────────────────────────────────────────────────────────────────────
+// Owner directive #7: singularities render at FULL fidelity on EVERY device tier — NO LOD
+// degradation. Real cosmology deserves real detail, and a summoned hole is a single transient
+// object (at most one at a time, ~9 s), so the former top-tier geometry + particle budget is
+// affordable on every device including phones. These five knobs were tier-graded (phone 1800/32/72/1
+// … mega 7600/64/160/3); they are now UNIFORM at the former ultra/mega ceiling for every tier.
+// `_tier` is retained (underscore = intentionally unused) so the call sites and the QualityTier
+// contract are untouched. `tests/singularities-fidelity.test.ts` pins that a phone- and a mega-tier
+// summon build the IDENTICAL particle count + sphere resolution.
+// ─────────────────────────────────────────────────────────────────────────────
+function particleBudget(_tier: QualityTier): number {
+  return 7600;
 }
 
-function sphereSegs(tier: QualityTier): number {
-  switch (tier) {
-    case 'phone':
-      return 32;
-    case 'laptop':
-      return 48;
-    case 'desktop':
-    case 'ultra':
-    case 'mega':
-      return 64;
-    default: {
-      const _exhaustive: never = tier;
-      return _exhaustive;
-    }
-  }
+function sphereSegs(_tier: QualityTier): number {
+  return 64;
 }
 
-function torusSegs(tier: QualityTier): number {
-  switch (tier) {
-    case 'phone':
-      return 72;
-    case 'laptop':
-      return 112;
-    case 'desktop':
-      return 144;
-    case 'ultra':
-    case 'mega':
-      return 160;
-    default: {
-      const _exhaustive: never = tier;
-      return _exhaustive;
-    }
-  }
+function torusSegs(_tier: QualityTier): number {
+  return 160;
 }
 
-function icoDetail(tier: QualityTier): number {
-  switch (tier) {
-    case 'phone':
-      return 1;
-    case 'laptop':
-      return 2;
-    case 'desktop':
-    case 'ultra':
-    case 'mega':
-      return 3;
-    default: {
-      const _exhaustive: never = tier;
-      return _exhaustive;
-    }
-  }
+function icoDetail(_tier: QualityTier): number {
+  return 3;
 }
 
-function particleSizeMul(tier: QualityTier): number {
-  switch (tier) {
-    case 'mega':
-      return 2.35;
-    case 'ultra':
-      return 1.85;
-    case 'desktop':
-      return 1.4;
-    default:
-      return 1;
-  }
+function particleSizeMul(_tier: QualityTier): number {
+  return 1.85;
 }
 /** Per-particle radial drift speed (infall for black holes, fountain for white). */
 const PARTICLE_DRIFT = 14 * ARENA_MID;

@@ -135,12 +135,15 @@ export class PostFx {
     composer.addPass(this.lens);
     if (cinematic) {
       // strength, radius, threshold — tuned conservatively for the dark, emissive palette.
+      // Owner directive #11/#14: the bloom was the main source of the "blinding white shimmer".
+      // Softer strength (0.7 → 0.45) + higher threshold (0.85 → 0.9) so ONLY genuinely bright
+      // emitters (holes, APEX cores) glow, not every mid-tone — the halo stops washing the frame out.
       composer.addPass(
         new UnrealBloomPass(
           new THREE.Vector2(window.innerWidth, window.innerHeight),
-          0.7,
+          0.45,
           0.5,
-          0.85,
+          0.9,
         ),
       );
     }
