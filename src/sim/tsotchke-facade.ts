@@ -4,7 +4,7 @@
  * Petri dish: primordial-soup.ts
  */
 
-import { getTsotchkeRepoByIndex } from './tsotchke-registry';
+import { getTsotchkeRepoByIndex, type TsotchkeRepoSlug } from './tsotchke-registry';
 import { corpusBrainScalar } from './tsotchke-brain-intake';
 
 export {
@@ -211,7 +211,11 @@ export interface TsotchkeQuantumPulse {
   adGradient: number;
 }
 
-export function corpusPulse(seed: number, formIdx: number): TsotchkeQuantumPulse {
+export function corpusPulse(
+  seed: number,
+  formIdx: number,
+  corpusAblated?: ReadonlySet<TsotchkeRepoSlug>,
+): TsotchkeQuantumPulse {
   const b = getTsotchkeBias(formIdx);
   const repo = getTsotchkeRepoByIndex(formIdx);
   const s = (seed % 10000) / 10000;
@@ -220,7 +224,9 @@ export function corpusPulse(seed: number, formIdx: number): TsotchkeQuantumPulse
   // Fold the FULL wired Tsotchke corpus into the mind's thought-geometry (qgtVolume) — every scientific
   // substrate now moves a brain's plan bias, not just the 8 archetypes. Scaled by `scale`, so fenced
   // repos stay negligible (preserving the wired>fenced ordering invariant). See tsotchke-brain-intake.ts.
-  const brain = corpusBrainScalar(seed, formIdx);
+  // `corpusAblated` (optional) suppresses named repos — used to PROVE each is load-bearing on the pulse
+  // the brains read; omitted (the default) reproduces the full-corpus behaviour exactly.
+  const brain = corpusBrainScalar(seed, formIdx, corpusAblated);
   return {
     cliffordEnt: c01((b.cliffordWeight + s * 0.1) * scale),
     qgtVolume: c01((b.generative + b.chaos * 0.5 + brain * 0.6) * scale),

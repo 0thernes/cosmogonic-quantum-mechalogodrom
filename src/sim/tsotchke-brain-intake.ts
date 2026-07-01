@@ -141,8 +141,12 @@ export function corpusBrainVector(
  * A single [0,1] scalar summarising the full-corpus brain drive — the value folded into
  * {@link ./tsotchke-facade}.corpusPulse so a mind's plan bias genuinely moves with the whole corpus.
  */
-export function corpusBrainScalar(seed: number, frame: number): number {
-  const v = corpusBrainVector(seed, frame);
+export function corpusBrainScalar(
+  seed: number,
+  frame: number,
+  ablated?: ReadonlySet<TsotchkeRepoSlug>,
+): number {
+  const v = corpusBrainVector(seed, frame, ablated);
   return clamp01((v.channels[0] + v.channels[1] + v.channels[2] + v.channels[3]) / 4);
 }
 
