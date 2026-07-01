@@ -1633,6 +1633,10 @@ export class World {
     this.abominationArchitecture.setReactivity(chaosN, entropyN, n / this.quality.maxEntities);
     this.abominationArchitecture.update(vt);
     this.constellations.update(vt, bands);
+    // Neural-net connectome keeps FIRING + WAVING in place (USER item 13): rebuilt read-only
+    // (mutateAct=false) from the frozen grid on the advancing visual clock — no rng, no neural-state
+    // decay, so the seeded golden is untouched while the axons stay alive for inspection.
+    this.connectome.update(0, vt, false);
     this.artifacts.update(uiDt, vt);
     this.monolithTemple.setEnvironment({
       chaos: chaosN,

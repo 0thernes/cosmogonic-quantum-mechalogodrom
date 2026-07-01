@@ -203,8 +203,14 @@ export class Connectome {
    * Each link is also recorded as an entity-list index pair in `pairs` for GraphMind.
    * O(n·k + n) where n = entities (stride 2; + an O(n) id→index refill) and k = neighbors per
    * query; allocation-free (the grid query's shared buffer is consumed before the next query).
+   *
+   * `mutateAct` (default true) gates the ONLY entity-state write in this method — the activation
+   * propagation into `eb.userData.act`. With it false the pass is purely read-only (geometry + colour
+   * only), so the SUSPENDED-pause loop can keep the axons WAVING on the advancing visual clock without
+   * decaying the seeded neural state (USER: the neural net stays alive-in-place while paused). At the
+   * default `true` the output is byte-identical to the pre-flag behaviour.
    */
-  update(_dt: number, t: number): void {
+  update(_dt: number, t: number, mutateAct = true): void {
     const grid = this.ctx.grid;
     const list = this.entities.list;
     const pos = this.positions;
@@ -251,7 +257,9 @@ export class Connectome {
           // Bounded activation propagation: `!(< ACT_MAX)` routes both overflow AND NaN to
           // the cap, the symmetric branch floors the (rare) negative side. O(1), no allocation.
           const act = eb.userData.act + ea.userData.act * nw * 0.01;
-          eb.userData.act = !(act < ACT_MAX) ? ACT_MAX : act > -ACT_MAX ? act : -ACT_MAX;
+          if (mutateAct) {
+            eb.userData.act = !(act < ACT_MAX) ? ACT_MAX : act > -ACT_MAX ? act : -ACT_MAX;
+          }
           // V109 colour: one dynamic hue/saturation + firing/retracting brightness per link.
           const actPulse = (ea.userData.act + eb.userData.act) * 0.5;
           const fire = 0.5 + 0.5 * Math.sin(t * 3.2 + nw * 12.0 + ni * 0.7);
