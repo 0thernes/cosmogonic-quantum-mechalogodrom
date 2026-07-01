@@ -243,38 +243,34 @@ describe('TitanSystem — roam stays in home territory (anti-clustering regressi
     }
     const arr = (titans as unknown as { titans: TitanRoamView[] }).titans;
     expect(arr.length).toBe(20);
-    let nearHome = 0;
-    let territorialOriginR = 0;
-    let breederOriginR = 0;
-    let territorialCount = 0;
-    let breederCount = 0;
+    // Owner: titans now ROAM the whole square platform freely — the old central breeder racetrack and
+    // home-tether are gone (they read as a race track / a huddle). The anti-clustering invariant is
+    // therefore STRONGER: every colossus stays ON the ±540 platform, the swarm SPREADS across a wide
+    // band on both axes, and it does NOT collapse to the centre.
     const xs: number[] = [];
+    const zs: number[] = [];
+    let meanOriginR = 0;
+    let offCentre = 0; // colossi genuinely out in the arena, not piled at the origin
     for (const t of arr) {
       const p = t.group.position;
-      const dHome = Math.hypot(p.x - t.homeX, p.z - t.homeZ);
-      const dOrigin = Math.hypot(p.x, p.z);
-      if (t.breeder) {
-        breederOriginR += dOrigin;
-        breederCount++;
-      } else {
-        territorialOriginR += dOrigin;
-        territorialCount++;
-      }
       xs.push(p.x);
-      // Territorial titans should still roam their own home wedges; breeder titans intentionally
-      // keep a smaller central social orbit.
-      if (!t.breeder && dHome < 90) nearHome++;
+      zs.push(p.z);
+      const dOrigin = Math.hypot(p.x, p.z);
+      meanOriginR += dOrigin;
+      if (dOrigin > 100) offCentre++;
       expect(Number.isFinite(p.x + p.z)).toBe(true);
+      // HARD platform containment (owner law: NEVER off the square platform).
+      expect(Math.abs(p.x)).toBeLessThanOrEqual(541);
+      expect(Math.abs(p.z)).toBeLessThanOrEqual(541);
     }
-    territorialOriginR /= territorialCount;
-    breederOriginR /= breederCount;
-    // The original 10 remain spread off-centre; the extra 10 are allowed to socialize near centre.
-    expect(territorialOriginR).toBeGreaterThan(90);
-    expect(breederOriginR).toBeLessThan(95);
-    // Most territorial titans hover near their distributed homes (not a central pile).
-    expect(nearHome).toBeGreaterThanOrEqual(8);
-    // The colossi remain SPREAD across the arena — the x-extent spans a wide band, not a point.
-    expect(Math.max(...xs) - Math.min(...xs)).toBeGreaterThan(180);
+    meanOriginR /= arr.length;
+    // SPREAD across the arena on BOTH axes — a wide band, not a point or a central pile.
+    expect(Math.max(...xs) - Math.min(...xs)).toBeGreaterThan(220);
+    expect(Math.max(...zs) - Math.min(...zs)).toBeGreaterThan(220);
+    // NOT collapsed to the centre: the swarm's mean radius sits well out in the platform and most
+    // colossi are genuinely off-centre (the anti-clustering guarantee, now via free roaming).
+    expect(meanOriginR).toBeGreaterThan(100);
+    expect(offCentre).toBeGreaterThanOrEqual(10);
   });
 
   test('the roam is deterministic — same seed reproduces identical titan positions', () => {

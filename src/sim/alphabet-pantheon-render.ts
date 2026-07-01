@@ -184,9 +184,10 @@ export class AlphabetPantheonRender {
         vNormal = normal;
         vRefBand = refBand;
 
-        // Fleshy pulsating displacement
+        // USER: gentle BREATHING, not a formless muscle spasm — slow low-frequency swell along the
+        // normal (was a high-freq sin(·*10)·cos(·*10)·0.15 that made the body writhe shapelessly).
         vec3 displaced = position;
-        float pulse = sin(position.y * 10.0 + uTime * 2.0) * cos(position.x * 10.0 - uTime * 1.5) * 0.15;
+        float pulse = 0.05 * sin(uTime * 0.5 + position.y * 2.0) * (1.0 + 0.3 * cos(position.x * 1.5));
         displaced += normal * pulse;
         
         vPos = displaced;
@@ -209,13 +210,14 @@ export class AlphabetPantheonRender {
         // "Annihilation/Hellraiser" shifting skin
         vec3 color = vColor;
         
-        // Organic muscle/sinew bands
-        float bands = sin(vPos.y * 30.0 + uTime * 3.0) * sin(vPos.x * 20.0 - uTime * 2.0);
-        bands = smoothstep(0.1, 0.9, bands);
-        
-        // Iridescent beetle/oil spill shimmer based on normals
-        float fresnel = pow(1.0 - max(dot(normalize(vNormal), vec3(0.0, 0.0, 1.0)), 0.0), 3.0);
-        vec3 shimmer = vec3(0.5, 1.0, 0.8) * fresnel * sin(uTime * 5.0 + vPos.z * 10.0);
+        // USER: MARBLED-AGATE striation — low-frequency layered contour bands (was a high-freq 30/20
+        // muscle-sinew chaos that read as formless). Three slow octaves → structured, shapely layering.
+        float bands = sin(vPos.y * 6.0 + uTime * 0.6) * 0.5 + sin(vPos.x * 4.0) * 0.3 + sin(vPos.z * 5.0) * 0.2;
+        bands = smoothstep(0.15, 0.85, bands);
+
+        // Crystalline rim light (sharper fresnel for a faceted, rim-lit edge) + a calm iridescent shimmer.
+        float fresnel = pow(1.0 - max(dot(normalize(vNormal), vec3(0.0, 0.0, 1.0)), 0.0), 4.0);
+        vec3 shimmer = vec3(0.5, 1.0, 0.8) * fresnel * sin(uTime * 1.5 + vPos.z * 3.0);
         
         vec3 finalColor = mix(color * 0.3, color + vec3(0.3, 0.1, 0.2), bands) + shimmer;
         float band = clamp(floor(vRefBand + 0.5), 0.0, 4.0);
@@ -223,9 +225,9 @@ export class AlphabetPantheonRender {
         vec3 refSkin = texture2D(uRefAtlas, refUv).rgb;
         finalColor = mix(finalColor, refSkin * (0.55 + fresnel * 0.65) + color * 0.25, 0.42);
         
-        // Darkened crevices
+        // Darkened crevices — deeper contrast sharpens the silhouette (rim-lit, structured look).
         float crevice = smoothstep(0.0, 0.4, length(vPos));
-        finalColor *= crevice * 0.86;
+        finalColor *= crevice * 0.8;
 
         gl_FragColor = vec4(finalColor, 1.0);
       }

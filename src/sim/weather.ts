@@ -99,27 +99,35 @@ export class WeatherSystem {
     // (÷ ARENA) keep the optical depth honest at 5× sightlines; faster onset (dt·0.6).
     this.fog.density = lerp(
       this.fog.density,
+      // USER: densities roughly HALVED so sightlines stay READABLE in every weather — the far platform
+      // used to vanish into a grey/black wash ("too dark/grey all the time"). Still graded: FOG is the
+      // thickest haze, CLEAR the crispest, but none swallow the scene now.
       (w === 'FOG'
-        ? 0.02
+        ? 0.0055
         : w === 'VOID'
-          ? 0.015
+          ? 0.005
           : w === 'STORM'
-            ? 0.011
+            ? 0.0045
             : w === 'RAIN'
-              ? 0.006
-              : 0.003) * FOG_SCALE,
+              ? 0.0035
+              : 0.0022) * FOG_SCALE,
       c01(dt * 0.6),
     );
     // Fog colour — vivid AURORA cycling, pale FOG whiteout, blue-grey RAIN, near-black storm/void.
-    if (w === 'AURORA') this.fog.color.setHSL((t * 0.04) % 1, 0.7, 0.12);
+    // USER: lift the darkest fog colours OFF near-black so distance fades to a deep, readable tone rather
+    // than a black/grey void — keeps the cool night mood without swallowing the scene into murk.
+    if (w === 'AURORA') this.fog.color.setHSL((t * 0.04) % 1, 0.7, 0.16);
     else if (w === 'FOG') this.fog.color.set(0x8890a8);
     else if (w === 'RAIN') this.fog.color.set(0x1a2233);
-    else if (w === 'STORM') this.fog.color.set(0x05060a);
-    else if (w === 'VOID') this.fog.color.set(0x000004);
-    else this.fog.color.set(0x020310);
+    else if (w === 'STORM') this.fog.color.set(0x10121c);
+    else if (w === 'VOID') this.fog.color.set(0x080814);
+    else this.fog.color.set(0x0a1428);
     // Exposure — luminous AURORA, near-lightless VOID, dim STORM, bright FOG whiteout.
+    // USER: lift the darkest exposure floors (VOID 0.35→0.52, STORM 0.6→0.78) so no weather reads as
+    // near-lightless — the scene stays clear regardless of state (VOID stays the DARKEST, just readable;
+    // the big fog-density cut above does most of the clarity work).
     const exTarget =
-      w === 'VOID' ? 0.35 : w === 'AURORA' ? 2.0 : w === 'STORM' ? 0.6 : w === 'FOG' ? 1.35 : 1.15;
+      w === 'VOID' ? 0.52 : w === 'AURORA' ? 2.0 : w === 'STORM' ? 0.78 : w === 'FOG' ? 1.35 : 1.15;
     this.exposureBase = lerp(this.exposureBase, exTarget, c01(dt * 0.3));
     // STORM lightning: two sharp, deterministic exposure spikes (sin raised to a high power is a
     // narrow flash near its peak) added INSTANTLY on top of the smoothed base — a stroke of light.

@@ -29,7 +29,7 @@
  */
 import * as THREE from 'three';
 import { TAU, clamp, dist2XZ } from '../math/scalar';
-import { GROUND_EXTENT, PLATFORM_HALF, PLATFORM_CEIL } from './constants';
+import { GROUND_EXTENT, PLATFORM_HALF, PLATFORM_CEIL, PLATFORM_FLOOR } from './constants';
 import {
   HISTORY_WINDOW,
   PRISONERS_DILEMMA,
@@ -763,11 +763,12 @@ export class TitanSystem {
     // Patrol post: the original 10 hover over phylum home wedges; the extra 10 prefer a
     // small central social ring where they can meet/procreate without attracting all life.
     const angle = (i / TITAN_COUNT) * TAU + 0.31;
-    // USER: distribute titan homes across the platform + up the column (breeders central, roamers wide).
-    const radius = breeder ? 60 + (i % 5) * 40 : PLATFORM_HALF * (0.45 + (i % 4) * 0.14);
+    // USER: distribute ALL titan homes across the WHOLE ±540 square (no central breeder ring — that read
+    // as a racetrack) + up the full column. Each titan roams freely around its own scattered home.
+    const radius = PLATFORM_HALF * (0.32 + ((i * 7) % 10) * 0.066); // 0.32..0.92 of the rim, well spread
     const homeX = Math.cos(angle) * radius;
     const homeZ = Math.sin(angle) * radius;
-    group.position.set(homeX, 40 + (i % 5) * 34, homeZ);
+    group.position.set(homeX, PLATFORM_FLOOR + 24 + (i % 10) * 20, homeZ); // vary the vertical start 30..210
 
     const name = lore.name('tribe', 50 + i);
     return {
@@ -904,27 +905,29 @@ export class TitanSystem {
     const p = g.position;
     const vel = ti.vel;
 
-    const ax = p.x * 0.013;
-    const ay = p.y * 0.05;
-    const az = p.z * 0.013;
-    vel.x += Math.sin(t * 0.23 + ti.ph) * (10 * (ay - ax)) * dt * 0.00045;
-    vel.y += Math.cos(t * 0.17 + ti.ph * 1.7) * (ax * (28 - az) - ay) * dt * 0.00012;
-    vel.z += Math.sin(t * 0.19 + ti.ph * 0.6) * (ax * ay - 2.667 * az) * dt * 0.00045;
-    if (ti.breeder) {
-      // SOCIAL centre attraction for the extra 10: they orbit toward each other because they are
-      // mating/coalition-seeking, not because they exert a world gravity well. This force touches
-      // ONLY the titan's own velocity; organisms are not pulled inward by it.
-      vel.x -= p.x * 0.00008 * dt * 60;
-      vel.z -= p.z * 0.00008 * dt * 60;
-      vel.x += -p.z * 0.000018 * dt * 60;
-      vel.z += p.x * 0.000018 * dt * 60;
-      vel.y += (48 + Math.sin(t * 0.41 + ti.ph) * 18 - p.y) * 0.00005 * dt * 60;
-    } else {
-      // TERRITORY pull — a gentle spring toward THIS titan's OWN distributed home wedge (homeX/homeZ),
-      // NOT the global origin. This keeps the original 10 from collapsing to the centre.
-      vel.x -= (p.x - ti.homeX) * 0.00003 * dt * 60;
-      vel.z -= (p.z - ti.homeZ) * 0.00003 * dt * 60;
-    }
+    // FREE ROAM (owner: titans must WANDER the whole ±540 square + full 6..240 column, NOT race a central
+    // ring — the old curl term `vel += (-p.z·k, +p.x·k)` was a pure orbit around origin = the 'racetrack',
+    // and the breeder centre-pull + territory spring pinned them to fixed spots). Each titan is a huge,
+    // SLOW beast pursuing its OWN drifting Lissajous waypoint (per-id phase ⇒ the 20 fan across the whole
+    // platform), with a gentle weave, a continuous height restore, and a soft square leash; the hard clamp
+    // below guards the rim. Low seek accel + heavy damping keeps them majestic, not zippy. Pure trig of
+    // (t, id, phase) — draws no rng, so the seeded stream is untouched. Applies to breeders AND roamers
+    // alike (breeder status still governs mating elsewhere, just not this racetrack motion).
+    const T_HOME_Y = 120;
+    const tph = ti.mi * 0.37 + ti.ph; // per-titan phase (mi is distinct per titan) → the 20 spread out
+    const trad = 180 + (ti.mi % 5) * 72; // 180..468 — its waypoint orbit sweeps most of the square
+    const tdx = Math.cos(t * 0.11 + tph) * trad - p.x;
+    const tdy = T_HOME_Y + Math.sin(t * 0.17 + tph) * 96 - p.y; // sweeps ~24..216 of the column
+    const tdz = Math.sin(t * 0.13 + tph * 1.3) * trad - p.z;
+    const tInv = 0.02 / (Math.sqrt(tdx * tdx + tdy * tdy + tdz * tdz) + 1e-6); // gentle (huge, slow beast)
+    vel.x += tdx * tInv + Math.sin(t * 0.5 + ti.mi * 1.3) * 0.012;
+    vel.y += tdy * tInv + Math.sin(t * 0.37 + ti.mi * 2.1) * 0.008;
+    vel.z += tdz * tInv + Math.cos(t * 0.43 + ti.mi * 0.7) * 0.012;
+    vel.y += (T_HOME_Y - p.y) * 0.0025; // height restore — no sky-float, no ground-crawl
+    if (p.x > PLATFORM_HALF) vel.x -= 0.06;
+    else if (p.x < -PLATFORM_HALF) vel.x += 0.06;
+    if (p.z > PLATFORM_HALF) vel.z -= 0.06;
+    else if (p.z < -PLATFORM_HALF) vel.z += 0.06;
     vel.multiplyScalar(0.985);
     VA.copy(vel).multiplyScalar(dt * 60);
     p.add(VA);

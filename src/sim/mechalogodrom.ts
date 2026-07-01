@@ -164,10 +164,13 @@ export class Mechalogodrom {
     this.group.add(this.core);
 
     // ── Event-horizon rim: a back-side additive shell hugging the core → a thin bright halo. ────
+    // USER: the 6 ADDITIVE core layers below summed to a blinding WHITE core. Fix = keep each a DIM,
+    // DISTINCT colour (so the centre reads as a tiny multi-hue shimmer, not white) at much lower opacity
+    // so the additive sum never blows out. Visual-only; no rng.
     this.rimMat = new THREE.MeshBasicMaterial({
       color: 0x3a0010,
       transparent: true,
-      opacity: 0.5,
+      opacity: 0.14,
       side: THREE.BackSide,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
@@ -193,10 +196,10 @@ export class Mechalogodrom {
     this.mass = new THREE.Mesh(this.warpGeo, this.massMat);
     this.group.add(this.mass);
     this.wireMat = new THREE.MeshBasicMaterial({
-      color: 0x00eeff,
+      color: 0x0e4a5a,
       wireframe: true,
       transparent: true,
-      opacity: 0.35,
+      opacity: 0.1,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
     });
@@ -205,10 +208,10 @@ export class Mechalogodrom {
 
     // ── Spike-arms: a radial burst of line segments from the centre (splay scales with power). ──
     this.spikeMat = new THREE.LineBasicMaterial({
-      color: 0xffcc33,
+      color: 0x5a4718,
       transparent: true,
-      // USER #14: less blinding additive lines.
-      opacity: 0.32,
+      // USER: dim gold — was 0xffcc33 @0.32, a prime white-sum contributor.
+      opacity: 0.09,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
     });
@@ -217,10 +220,10 @@ export class Mechalogodrom {
 
     // ── Three counter-rotating torus halos (additive, no GLSL). ─────────────────────────────────
     this.ringMat = new THREE.MeshBasicMaterial({
-      color: 0x9b30ff,
+      color: 0x3a1656,
       wireframe: true,
       transparent: true,
-      opacity: 0.3,
+      opacity: 0.08,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
     });
@@ -238,10 +241,10 @@ export class Mechalogodrom {
     // ── Quantum BEYOND Lab lattice: nested wire icosa shells + orbiting probe nodes (Mandelbrot-ish
     //    chaos read without GLSL — the inner cage writhes as the monster fuses). ────────────────
     this.labMat = new THREE.LineBasicMaterial({
-      color: 0x00ffcc,
+      color: 0x0e5248,
       transparent: true,
-      // USER #14: dimmed multi-color lines.
-      opacity: 0.24,
+      // USER: dim teal — was 0x00ffcc @0.24.
+      opacity: 0.07,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
     });
@@ -259,9 +262,9 @@ export class Mechalogodrom {
     // ── Outer EXO-CAGE: a colossal counter-rotating wireframe icosphere enclosing the whole monster,
     //    adding a fractal "sections" layer that tumbles against the inner rig (more parts, bizarro). ──
     this.exoMat = new THREE.LineBasicMaterial({
-      color: 0x6a00ff,
+      color: 0x260a4a,
       transparent: true,
-      opacity: 0.16,
+      opacity: 0.06,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
     });
@@ -547,11 +550,13 @@ export class Mechalogodrom {
       0.6 * this.drive +
       0.4 * this.apexVitality +
       this.tsotchkePulse.quakeAliveness * 0.25;
-    // USER #14: lowered wire lightness and capped opacity so the core is visible, not blinding.
-    this.wireMat.color.setHSL((hue + 0.42 + this.tsotchkePulse.adGradient * 0.16) % 1, 1, 0.36);
+    // USER: the 6 ADDITIVE core layers summed to a blinding WHITE core. Fix = keep each a DIM, saturated,
+    // DISTINCT hue (low lightness) at a FRACTION of the old opacity, so the additive sum reads as a tiny
+    // coloured SPARKLE — never a white blowout. The flash envelope still shimmers, just gently.
+    this.wireMat.color.setHSL((hue + 0.42 + this.tsotchkePulse.adGradient * 0.16) % 1, 1, 0.24);
     // Flash envelope: sharp sparkle on a fast beat, stronger once fused + chaotic.
     const flash = 0.5 + 0.5 * Math.sin(st * 6.3) * Math.sin(st * 2.1);
-    this.wireMat.opacity = 0.08 + 0.18 * flash * (0.4 + 0.6 * ease);
+    this.wireMat.opacity = 0.04 + 0.07 * flash * (0.4 + 0.6 * ease);
     this.mass.rotation.y = st * (0.28 + this.drive * 0.15);
     this.mass.rotation.x = Math.sin(st * 0.13) * (0.55 + this.drive * 0.35);
     this.mass.rotation.z = Math.sin(st * 0.071 + this.apexTranscend * Math.PI) * 0.42;
@@ -559,16 +564,16 @@ export class Mechalogodrom {
 
     // Event horizon breathes; the shadow core stays black (a true absence).
     this.rim.scale.setScalar(1 + 0.1 * Math.sin(st * 1.7) + 0.16 * ease + 0.04 * this.drive);
-    this.rimMat.color.setHSL((hue + 0.86) % 1, 1, 0.42 + 0.1 * flash);
-    this.rimMat.opacity = 0.2 + 0.34 * ease + 0.16 * flash;
+    this.rimMat.color.setHSL((hue + 0.86) % 1, 1, 0.26 + 0.06 * flash);
+    this.rimMat.opacity = 0.08 + 0.12 * ease + 0.06 * flash;
     this.core.scale.setScalar(0.85 + 0.18 * ease); // the hole widens as it powers up
 
     // Spike-arms splay outward with power; counter-rotate; flash.
     this.spikes.scale.setScalar(0.5 + 1.1 * ease);
     this.spikes.rotation.y = -st * 0.33;
     this.spikes.rotation.z = Math.sin(st * 0.27) * 0.6;
-    this.spikeMat.opacity = (0.16 + 0.42 * ease) * flash;
-    this.tmpColor.setHSL((hue + 0.12) % 1, 1, 0.6);
+    this.spikeMat.opacity = (0.05 + 0.12 * ease) * flash;
+    this.tmpColor.setHSL((hue + 0.12) % 1, 1, 0.3);
     this.spikeMat.color.copy(this.tmpColor);
 
     // Three counter-rotating halos.
@@ -580,8 +585,8 @@ export class Mechalogodrom {
       r.rotation.x = (i * TAU) / 5 + Math.sin(st * 0.2 + i) * 0.3;
       r.scale.setScalar(0.6 + 0.56 * ease + 0.12 * Math.sin(st * 1.3 + i));
     }
-    this.ringMat.opacity = 0.12 + 0.28 * ease;
-    this.ringMat.color.setHSL((hue + 0.66) % 1, 0.9, 0.6);
+    this.ringMat.opacity = 0.05 + 0.1 * ease;
+    this.ringMat.color.setHSL((hue + 0.66) % 1, 0.9, 0.28);
 
     // Lab lattice: counter-rotating nested shells + orbiting probe nodes.
     for (let i = 0; i < this.labShells.length; i++) {
@@ -593,8 +598,8 @@ export class Mechalogodrom {
       sh.rotation.z += dir * 0.003;
       sh.scale.setScalar(0.85 + 0.22 * ease + 0.04 * Math.sin(st * 1.1 + i));
     }
-    this.labMat.opacity = 0.2 + 0.35 * ease + 0.15 * flash;
-    this.labMat.color.setHSL((hue + 0.33) % 1, 1, 0.55);
+    this.labMat.opacity = 0.06 + 0.12 * ease + 0.05 * flash;
+    this.labMat.color.setHSL((hue + 0.33) % 1, 1, 0.28);
     this.satellites.update(t, this.power, this.warp, this.drive);
     updateDarkStarUniforms(this.coreMat, t, this.power, this.warp, this.drive, 0.5 + 0.5 * flash);
 
@@ -603,8 +608,8 @@ export class Mechalogodrom {
     this.exoCage.rotation.y = st * 0.07 + Math.sin(st * 0.13) * 0.4;
     this.exoCage.rotation.z = Math.cos(st * 0.09) * 0.3;
     this.exoCage.scale.setScalar(0.9 + 0.18 * ease + 0.05 * Math.sin(st * 0.8));
-    this.exoMat.color.setHSL((hue + 0.78) % 1, 0.9, 0.6);
-    this.exoMat.opacity = 0.1 + 0.22 * ease + 0.08 * flash;
+    this.exoMat.color.setHSL((hue + 0.78) % 1, 0.9, 0.28);
+    this.exoMat.opacity = 0.04 + 0.08 * ease + 0.03 * flash;
     this.mechaExterior.update(t, ease, this.drive, this.tsotchkePulse);
   }
 

@@ -22,8 +22,6 @@ const TENDRIL_REACH2 = 225;
 const CONSUME_REACH2 = 144;
 /** Grid query radius for consumption candidates (matches √CONSUME_REACH2). */
 const CONSUME_RADIUS = 12;
-/** Attractor-unit clamp for Lorenz drift samples (mirrors the entity 'lorenz' NaN seal). */
-const LORENZ_BOUND = 25;
 
 /** Population targets (CONTRACTS V14 — "100 Shoggoths"). Desktop+ gets the full century; the phone
  *  tier stays light for fill rate. Determinism is unaffected — no test constructs this system, and
@@ -380,19 +378,31 @@ export class ShoggothSystem {
         sg.vel.add(TV);
       }
 
-      // Lorenz-ish drift (legacy 522-526). Samples are clamped to ±LORENZ_BOUND (same seal as
-      // the entity 'lorenz' behavior): an escapee's raw position feeds the quadratic cross
-      // terms (lx·(28−lz), lx·ly), whose superexponential growth could outrun the 0.99 damp
-      // and the containment impulse into ±Infinity → NaN, which the tendril tug would then
-      // spread into entity velocities. Bounded samples keep the impulse finite for ANY
-      // position; the drift draws no rng, so the seeded stream is untouched.
-      const lx = clamp(p.x * 0.05, -LORENZ_BOUND, LORENZ_BOUND);
-      const ly = clamp(p.y * 0.05, -LORENZ_BOUND, LORENZ_BOUND);
-      const lz = clamp(p.z * 0.05, -LORENZ_BOUND, LORENZ_BOUND);
-      sg.vel.x += Math.sin(t * 0.7 + sg.ph) * (10 * (ly - lx)) * dt * 0.0003;
-      sg.vel.y += Math.cos(t * 0.5 + sg.ph) * (lx * (28 - lz) - ly) * dt * 0.0002;
-      sg.vel.z += Math.sin(t * 0.3 + sg.ph) * (lx * ly - 2.667 * lz) * dt * 0.0003;
-      sg.vel.multiplyScalar(0.99);
+      // FREE ROAM (owner: shoggoths must range the WHOLE ±540 square + 6..240 column like the entities,
+      // not huddle the centre). The old Lorenz drift had an implicit attractor at the origin — it kept
+      // the horde bunched. This mirrors world.ts steerNhiBeings: each shoggoth pursues its OWN slowly
+      // orbiting 3D Lissajous waypoint (per-index phase ⇒ the horde spreads instead of sharing one
+      // attractor), with a gentle weave, a continuous height-restoring pull, and a soft square leash;
+      // the hard clamp below is the guarantee. Pure trig of (t, index, spawn-phase) — draws no rng, so
+      // the seeded stream is untouched (a determinism-neutral swap of one rng-free field for another).
+      const wph = si * 1.7 + sg.ph;
+      const wrad = 150 + (si % 5) * 95; // 150..530 — reaches the rim and everything between
+      const wtx = Math.cos(t * 0.17 + wph) * wrad;
+      const wtz = Math.sin(t * 0.21 + wph * 1.3) * wrad;
+      const wty = 120 + Math.sin(t * 0.29 + wph) * 100; // sweeps ~20..220 of the column
+      const wdx = wtx - p.x;
+      const wdy = wty - p.y;
+      const wdz = wtz - p.z;
+      const wInv = 0.04 / (Math.sqrt(wdx * wdx + wdy * wdy + wdz * wdz) + 1e-6);
+      sg.vel.x += wdx * wInv + Math.sin(t * 0.7 + si * 1.3) * 0.03;
+      sg.vel.y += wdy * wInv + Math.sin(t * 0.53 + si * 2.1) * 0.02;
+      sg.vel.z += wdz * wInv + Math.cos(t * 0.61 + si * 0.7) * 0.03;
+      sg.vel.y += (120 - p.y) * 0.003; // height restore — no sky-float, no floor-crawl
+      if (p.x > PLATFORM_HALF) sg.vel.x -= 0.1;
+      else if (p.x < -PLATFORM_HALF) sg.vel.x += 0.1;
+      if (p.z > PLATFORM_HALF) sg.vel.z -= 0.1;
+      else if (p.z < -PLATFORM_HALF) sg.vel.z += 0.1;
+      sg.vel.multiplyScalar(0.985);
       // F-HOLES: an active singularity drags the shoggoth toward/away from its centre (force already
       // computed once in the perception step above; reused here so we never query the hole twice).
       if (singActive) sg.vel.add(HOLE_F);

@@ -61,8 +61,9 @@ export class Engine {
     this.renderer.setSize(window.innerWidth, window.innerHeight, false);
     this.renderer.shadowMap.enabled = quality.shadows;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    // USER #11: default exposure lowered so whites stop blowing out; ACES still handles HDR.
-    this.renderer.toneMappingExposure = 0.62;
+    // USER: base exposure lifted a touch (0.62→0.72) so the scene reads clearer, not murky; the weather
+    // system lerps this to its per-state target each frame (CLEAR 1.15, etc.), so this is the seed value.
+    this.renderer.toneMappingExposure = 0.72;
     this.renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
 
     this.scene = new THREE.Scene();

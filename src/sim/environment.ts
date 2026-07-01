@@ -534,7 +534,9 @@ export class EnvironmentSystem {
 
     // ── Lighting (legacy 369-382; intensities × LEGACY_LIGHT_GAIN for r0.184 units;
     //    rig spread/ranges × ARENA_MID so the core glow covers the 5× floor) ──
-    this.ambient = new THREE.AmbientLight(0x0a0a22, 0.55 * LEGACY_LIGHT_GAIN);
+    // USER: lift the fill so the scene isn't murky-dark — lighter, less-saturated cool fill (was a dark
+    // 0x0a0a22 @0.55 colour-cast) reads as true ambient illumination while keeping the cool night mood.
+    this.ambient = new THREE.AmbientLight(0x1c1c3c, 0.72 * LEGACY_LIGHT_GAIN);
     scene.add(this.ambient);
     const sun = new THREE.DirectionalLight(0xffeedd, 0.65 * LEGACY_LIGHT_GAIN);
     sun.position.set(35 * ARENA_MID, 65 * ARENA_Y, 25 * ARENA_MID);

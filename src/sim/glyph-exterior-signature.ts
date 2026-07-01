@@ -12,8 +12,10 @@ import { ARENA_RADIUS } from './constants';
 /** Dome shell radius where pantheon creatures anchor (matches alphabet-pantheon-render). */
 export const PANTHEON_DOME_R = ARENA_RADIUS * 0.72;
 
-/** Max radial wander from anchor — keeps bodies inside the Mechalogodrom dome. */
-export const PANTHEON_FLIGHT_MAX = PANTHEON_DOME_R * 0.34;
+/** Max radial wander from anchor. USER: widened 0.34→0.5 so the godforms ROAM more (dynamic, alive,
+ *  brain-steered) around their spread anchors instead of hovering nearly in place — the hard square +
+ *  ceiling clamps in the renderer still keep every body on the platform and below the mechalogodrom. */
+export const PANTHEON_FLIGHT_MAX = PANTHEON_DOME_R * 0.5;
 
 /** Motor-output scale — small enough that brain motors nudge, not teleport across the void. */
 const PANTHEON_MOTOR_SCALE = PANTHEON_FLIGHT_MAX * 0.55;

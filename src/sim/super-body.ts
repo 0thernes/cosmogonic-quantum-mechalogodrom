@@ -726,14 +726,18 @@ export class SuperBodySystem {
     //    boid steered by its own MIND (the move output), banking toward its heading and QUANTUM-BLINKING
     //    to a fresh locus on a timer (sooner when surprised). Deterministic — a monotonic seed + the sim
     //    clock, no rng. ARENA_R keeps it inside the dome; FLOOR/CEIL keep it aloft. ──
-    const ARENA_R = 190;
-    const FLOOR = 7;
-    const CEIL = 62;
+    // Owner: the apex super-creatures must ROAM THE WHOLE ±540 square + the full 6..240 column (they
+    // were pinned to a tiny 190-radius, y7..62 central dome). Per-variant phase offset so the 5 apexes
+    // fan out across the platform instead of overlapping. Deterministic — monotonic seed + clock, no rng.
+    const ARENA_R = 540; // PLATFORM_HALF — the square platform half-extent
+    const FLOOR = 6; // PLATFORM_FLOOR
+    const CEIL = 240; // PLATFORM_CEIL — up to the mechalogodrom
+    const vph = this.variant * 1.2566; // per-apex sector offset (2π/5)
     this.wanderClock -= dt;
     if (this.wanderClock <= 0) {
       this.seed++;
-      const a = this.seed * 2.399963; // golden-angle walk → visits every sector over time
-      const rr = (0.35 + 0.6 * frac(this.seed * 0.61803)) * ARENA_R;
+      const a = this.seed * 2.399963 + vph; // golden-angle walk → visits every sector over time
+      const rr = (0.25 + 0.72 * frac(this.seed * 0.61803)) * ARENA_R; // 135..540 across the platform
       this.wander.set(
         Math.cos(a) * rr,
         FLOOR + (CEIL - FLOOR) * frac(this.seed * 0.317),
@@ -766,8 +770,8 @@ export class SuperBodySystem {
     this.teleClock -= dt * (1 + 1.5 * this.surprise);
     if (!manual && this.teleClock <= 0) {
       this.seed++;
-      const a = this.seed * 1.99977;
-      const rr = (0.3 + 0.6 * frac(this.seed * 0.409)) * ARENA_R;
+      const a = this.seed * 1.99977 + vph;
+      const rr = (0.25 + 0.7 * frac(this.seed * 0.409)) * ARENA_R;
       this.pos.set(
         Math.cos(a) * rr,
         FLOOR + (CEIL - FLOOR) * frac(this.seed * 0.733),
@@ -778,6 +782,21 @@ export class SuperBodySystem {
       this.pos.addScaledVector(this.vel, dt);
     }
     this.pos.y = clampf(this.pos.y, FLOOR, CEIL);
+    // Hard square containment (owner law: never off the platform) — mirrors steerNhiBeings.
+    if (this.pos.x > ARENA_R) {
+      this.pos.x = ARENA_R;
+      if (this.vel.x > 0) this.vel.x = 0;
+    } else if (this.pos.x < -ARENA_R) {
+      this.pos.x = -ARENA_R;
+      if (this.vel.x < 0) this.vel.x = 0;
+    }
+    if (this.pos.z > ARENA_R) {
+      this.pos.z = ARENA_R;
+      if (this.vel.z > 0) this.vel.z = 0;
+    } else if (this.pos.z < -ARENA_R) {
+      this.pos.z = -ARENA_R;
+      if (this.vel.z < 0) this.vel.z = 0;
+    }
     this.root.position.copy(this.pos);
     this.root.position.y += Math.sin(t * 0.8) * 0.6; // flight bob
 

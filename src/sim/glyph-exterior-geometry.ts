@@ -27,11 +27,19 @@ function displaceGlyphGeometry(geo: THREE.BufferGeometry, seed: number, intensit
     const nx = nr ? (nr[i] ?? 0) : x;
     const ny = nr ? (nr[i + 1] ?? 0) : y;
     const nz = nr ? (nr[i + 2] ?? 0) : z;
-    const n = glyphNoise(x * 1.2 + ox, y * 1.2 + oy, z * 1.2 + oz);
-    const s = 1 + n * intensity;
-    arr[i] = x * s + nx * n * intensity;
-    arr[i + 1] = y * s + ny * n * intensity;
-    arr[i + 2] = z * s + nz * n * intensity;
+    // USER: pantheon bodies looked "too WILD" — the old warp (single high-freq 1.2 noise at ~0.55
+    // amplitude, applied as BOTH a radial scale AND a normal push) shredded the clean parametric solid
+    // into a lumpy formless blob. Now: TWO octaves — a smooth LOW-frequency swell (the shapely,
+    // agate-contour form) plus a faint higher-frequency ripple (surface striation / facet detail) —
+    // displaced NORMAL-dominant so the base solid's silhouette survives. Result: structured, layered,
+    // shapely (marbled-agate / faceted-crystal), still organic + trait-driven. Same simplex seed → no rng.
+    const nLow = glyphNoise(x * 0.5 + ox, y * 0.5 + oy, z * 0.5 + oz);
+    const nHi = glyphNoise(x * 1.8 + ox, y * 1.8 + oy, z * 1.8 + oz);
+    const d = (nLow * 0.8 + nHi * 0.3) * intensity;
+    const s = 1 + d * 0.4; // gentle radial swell (was a full ±intensity scale)
+    arr[i] = x * s + nx * d * 0.8;
+    arr[i + 1] = y * s + ny * d * 0.8;
+    arr[i + 2] = z * s + nz * d * 0.8;
   }
   pos.needsUpdate = true;
   if (nrm) nrm.needsUpdate = true;
@@ -123,8 +131,10 @@ function buildWildGlyphGeometry(
       break;
   }
 
-  // Apply heavy alien displacement noise using their chaos and generative traits
-  displaceGlyphGeometry(geo, s, 0.15 + a.bias.chaos * 0.25 + a.bias.generative * 0.15);
+  // Structured surface detail keyed to chaos/generative traits — amplitude cut ~2.7× (was 0.15 + 0.25·
+  // chaos + 0.15·gen, max ~0.55) so the shapely base solid stays readable; the two-octave normal-dominant
+  // warp above turns this into agate-contour striation, not a lumpy blob.
+  displaceGlyphGeometry(geo, s, 0.06 + a.bias.chaos * 0.09 + a.bias.generative * 0.05);
   return geo;
 }
 
