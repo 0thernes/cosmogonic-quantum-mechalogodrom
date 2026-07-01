@@ -19,6 +19,10 @@ describe('APEX consciousness scaffold — 1B substrate telemetry', () => {
     expect(t.quantum.reachesBillion).toBe(true);
     expect(t.quantum.stabilizerDim).toBeGreaterThanOrEqual(1_000_000_000);
     expect(t.manifold.residentParams).toBeLessThanOrEqual(t.manifold.deviceBudgetParams);
+    // the one call now carries the sensorium + the fused behavioural modulation too
+    expect(Number.isFinite(t.sensorium.richness)).toBe(true);
+    expect(t.modulation.billionReached).toBe(true);
+    expect(t.modulation.planBias.reduce((a, v) => a + v, 0)).toBeCloseTo(1, 6);
   });
 
   test('LIVE scale does not reach a billion (honest)', () => {

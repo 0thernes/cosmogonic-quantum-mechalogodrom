@@ -25,12 +25,12 @@ import {
 } from './apex-thought-variations';
 import {
   DEVICE_BROWSER,
-  buildManifold,
-  stabilizerQubitsForScale,
   type DeviceProfile,
   type ManifoldSnapshot,
 } from './apex-parameter-manifold';
-import { ApexQuantumSubstrate, type QuantumReach } from './apex-quantum-substrate';
+import type { QuantumReach } from './apex-quantum-substrate';
+import { ApexSubstrateDriver, type ApexModulation } from './apex-substrate-driver';
+import type { FieldSensorium } from './apex-field-organs';
 
 /** Mechalogodrom center fusion brain — same 5M designed roadmap as APEX near-term target. */
 export { MECHALOGODROM_BRAIN_DESIGNED_PARAMS } from './apex-brain';
@@ -172,19 +172,23 @@ export function consciousnessFromThought(
 
 export { APEX_THOUGHT_VARIATIONS };
 
-/** The 1-billion-parameter substrate read-out for a scale + apex identity (manifold + quantum reach). */
+/** The complete 1-billion-parameter substrate read-out for a scale + apex identity. */
 export interface ApexSubstrateTelemetry {
   readonly manifold: ManifoldSnapshot;
   readonly quantum: QuantumReach;
+  /** Live multi-physics sensorium (acoustic/heat/Klein/tunnel). */
+  readonly sensorium: FieldSensorium;
+  /** Behavioural modulation the apex consumes (motor/exploration/thermal/transcendence/plan bias). */
+  readonly modulation: ApexModulation;
   /** True when EITHER the addressable manifold or the quantum stabilizer reaches a billion. */
   readonly billionReached: boolean;
 }
 
 /**
- * Deterministic 1B-substrate telemetry for a scale + apex seed on a device: the tiered parameter
- * manifold ({@link buildManifold}) plus the Quantum Brain's warmed-up stabilizer reach. This is what
- * the Architecture panel surfaces when it wants the honest designed/addressable/resident split and the
- * billion-dimensional quantum anchor — NOT a sentience claim. O(bounded).
+ * Deterministic 1B-substrate telemetry for a scale + apex seed on a device — the ONE call the
+ * Architecture panel needs: the tiered parameter manifold, the warmed-up Quantum Brain reach, the live
+ * multi-physics sensorium, and the fused behavioural modulation. Driven by {@link ApexSubstrateDriver}
+ * so panel and world see the same numbers. NOT a sentience claim. O(bounded).
  *
  * @see docs/APEX-1B-SUBSTRATE-ARCHITECTURE-2026-07-01.md
  */
@@ -194,12 +198,9 @@ export function apexSubstrateTelemetry(
   device: DeviceProfile = DEVICE_BROWSER,
   warmBeats = 8,
 ): ApexSubstrateTelemetry {
-  const manifold = buildManifold(scale, device);
-  const q = new ApexQuantumSubstrate(seed, {
-    denseQubits: Math.min(8, scale.qubits),
-    stabilizerQubits: stabilizerQubitsForScale(scale, device),
-  });
-  for (let i = 0; i < Math.max(0, warmBeats); i++) q.step(0.5);
-  const quantum = q.reach();
-  return { manifold, quantum, billionReached: manifold.reachesBillion || quantum.reachesBillion };
+  const driver = new ApexSubstrateDriver(scale, seed, device);
+  for (let i = 0; i < Math.max(0, warmBeats); i++) driver.step(0.5);
+  const { manifold, quantum, sensorium } = driver.telemetry();
+  const modulation = driver.modulate(6);
+  return { manifold, quantum, sensorium, modulation, billionReached: modulation.billionReached };
 }

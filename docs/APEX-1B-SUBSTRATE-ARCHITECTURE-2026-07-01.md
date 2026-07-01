@@ -164,8 +164,8 @@ Every claim is a test, not rhetoric (`tests/apex-parameter-manifold.test.ts`,
 - **load-bearing behaviour**: `ApexSubstrateDriver.modulate({ tier: true })` changes the emitted
   `ApexModulation` for EVERY tier (`tests/apex-substrate-ablation.test.ts` — the doctrine's Experiment 1
   as an automated harness).
-- **offworld umwelt (Experiment 2, quantified)**: `apexOffworldScore(SCALE_MASSIVE)` measures **0.975** —
-  97.5 % of substrate-driven behaviour is attributable to the alien channels (quantum + field +
+- **offworld umwelt (Experiment 2, quantified)**: `apexOffworldScore(SCALE_MASSIVE)` measures **0.978** —
+  ~97.8 % of substrate-driven behaviour is attributable to the alien channels (quantum + field +
   procedural), not the mundane reach/resident magnitude (`tests/apex-offworld-score.test.ts`).
 
 Ablation target: remove the stabilizer reflex → `quantumReachesBillion` drops; remove the procedural

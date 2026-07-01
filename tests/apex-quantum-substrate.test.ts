@@ -36,6 +36,20 @@ describe('quantum substrate — billion-dimensional reach', () => {
     expect(q.denseQubits).toBe(APEX_DENSE_QUBITS_CAP);
     expect(q.stabilizerQubits).toBe(APEX_STABILIZER_QUBITS_MAX);
   });
+
+  test('cross-cut entanglement TRACKS the drive (the Quantum Brain is load-bearing, not decor)', () => {
+    const norm = (drive: number): number => {
+      const q = new ApexQuantumSubstrate(5);
+      for (let i = 0; i < 6; i++) q.step(drive);
+      return q.reach().stabilizerEntanglementNorm;
+    };
+    const lo = norm(0.1);
+    const mid = norm(0.5);
+    const hi = norm(0.9);
+    expect(mid).toBeGreaterThan(lo);
+    expect(hi).toBeGreaterThan(mid);
+    expect(hi).toBeGreaterThan(0.5); // genuinely high entanglement at high drive (regression guard)
+  });
 });
 
 describe('quantum substrate — determinism', () => {

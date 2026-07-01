@@ -133,14 +133,22 @@ export class ApexQuantumSubstrate {
         (this.beat % 16) * 0.19625 + d * 0.5 + this.phase0 * 0.25,
       );
 
-    // ── Stabilizer reflex: build/refresh entanglement across the billion-dim register. ─────────────
+    // ── Stabilizer reflex: entangle ACROSS the half-cut so the entanglement is REAL and drive-scaled.
+    //    Bell pairs (i, i+half) straddle the [0,half) bipartition, so each contributes ~1 ebit across
+    //    the cut → cross-cut entanglement ≈ #pairs ≈ drive·half (a confined chain reads ~0). The reflex
+    //    re-forms every beat from the CURRENT drive, so entanglementNorm tracks the drive and the
+    //    Quantum Brain is a first-class behavioural channel, not decoration (owner mandate).
     const s = this.stabilizerQubits;
-    if (this.beat % 8 === 1) this.stab.reset();
-    this.stab.h(this.beat % s);
-    for (let i = 0; i + 1 < s; i++) if ((i + this.beat) % 3 === 0) this.stab.cnot(i, i + 1);
+    const half = s >> 1;
+    this.stab.reset();
+    const pairs = half < 1 ? 0 : Math.max(1, Math.min(half, Math.round(d * half) || 1));
+    for (let i = 0; i < pairs && i + half < s; i++) {
+      this.stab.h(i);
+      this.stab.cnot(i, i + half);
+    }
+    // a beat-dependent phase for texture; a seeded stochastic collapse of one pair (entanglement dips).
     this.stab.s((this.beat * 7) % s);
-    // A single seeded measurement collapses one qubit — deterministic given the seed.
-    if (this.beat % 5 === 0) this.stab.measure((this.beat * 13) % s, this.rStab);
+    if (this.beat % 4 === 0 && pairs > 0) this.stab.measure((this.beat * 13) % pairs, this.rStab);
 
     // ── Tsotchke corpus coupling — refresh the QGT/clifford/AD pulse from the real corpus. ─────────
     this.pulse = corpusPulse((this.seed ^ (this.beat * 0x9e3779b1)) >>> 0, APEX_FORM_INDEX);
