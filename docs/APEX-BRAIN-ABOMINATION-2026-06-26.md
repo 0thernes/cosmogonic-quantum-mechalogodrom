@@ -93,6 +93,12 @@ tests. They map onto the wired code as follows (the conjunction is the rare thin
 
 ## Scaling architecture — toward 1,000,000,000 neurons
 
+> The **substrate** that makes the billion addressable/computable/renderable (the five-tier Parameter
+> Manifold, the Gottesman–Knill quantum anchor, the GPU field organs, the native reproduction contract)
+> has its own canonical spec: [`APEX-1B-SUBSTRATE-ARCHITECTURE-2026-07-01.md`](./APEX-1B-SUBSTRATE-ARCHITECTURE-2026-07-01.md).
+> This section covers the per-organ `ApexScale` accounting; that doc covers how a billion parameters are
+> actually reached (designed 17.13 B · addressable 2.27 B · quantum 2³⁰-dim, resident bounded by device).
+
 `ApexScale` declares a per-organ node budget; `apexDesignedNeurons(scale)` sums it. Three presets:
 
 | Preset          | Designed neurons    | Live allocation                   |

@@ -86,6 +86,9 @@ export interface MechalogodromSnapshot {
 /** One bipolar variant shell: a wireframe polyhedron that migrates inward and oscillates manic↔depressive. */
 interface Variant {
   readonly mesh: THREE.LineSegments;
+  /** USER #14: each shell owns its OWN line material so all 10 render in their OWN distinct colour
+   * (a shared material could only ever show one hue — "multi-color defined lines for readability"). */
+  readonly mat: THREE.LineBasicMaterial;
   /** Spawn anchor on the ring (golden-angle placement). */
   readonly ax: number;
   readonly ay: number;
@@ -295,7 +298,11 @@ export class Mechalogodrom {
               : new THREE.DodecahedronGeometry(1);
       const wire = this.buildCurvedWireGeo(base, 0.22 + (i % 5) * 0.04);
       base.dispose();
-      const seg = new THREE.LineSegments(wire, this.shellMat);
+      // USER #14: clone the shared template into a PER-shell material so each of the 10 renders its
+      // own bipolar hue (the shared material could only ever show one colour — the corona read as
+      // monochrome). shellMat stays the template + is disposed with the rest.
+      const mat = this.shellMat.clone();
+      const seg = new THREE.LineSegments(wire, mat);
       const th = golden * i;
       const ylift = (1 - (i / (VARIANT_COUNT - 1)) * 2) * 70;
       const ax = Math.cos(th) * RING_R;
@@ -305,6 +312,7 @@ export class Mechalogodrom {
       this.group.add(seg);
       this.variants.push({
         mesh: seg,
+        mat,
         ax,
         ay: ylift,
         az,
@@ -637,13 +645,10 @@ export class Mechalogodrom {
       // Hue swings between the two poles; opacity flares with the manic phase and fades as it melts in.
       const hue = lerp(v.hueA, v.hueB, manic);
       // USER #14: keep the lightness low so the additive shell never blows out.
-      this.tmpColor.setHSL(hue, 0.9, 0.28 + 0.12 * manic);
-      // shellMat is shared → set per-mesh tint is not possible without per-mesh materials; instead
-      // drive the SHARED material toward the loudest variant (variant 0) for a coherent corona pulse.
-      if (i === 0) {
-        this.shellMat.color.copy(this.tmpColor);
-        this.shellMat.opacity = 0.18 + 0.22 * manic * (1 - 0.5 * k);
-      }
+      // Each shell drives its OWN material, so all 10 read as distinct, defined colours (was: only
+      // variant 0's hue reached the shared material and every shell looked identical).
+      v.mat.color.setHSL(hue, 0.9, 0.28 + 0.12 * manic);
+      v.mat.opacity = 0.18 + 0.22 * manic * (1 - 0.5 * k);
     }
   }
 
@@ -676,7 +681,10 @@ export class Mechalogodrom {
     for (const sh of this.labShells) sh.geometry.dispose();
     this.exoCage.geometry.dispose();
     this.satellites.dispose();
-    for (const v of this.variants) v.mesh.geometry.dispose();
+    for (const v of this.variants) {
+      v.mesh.geometry.dispose();
+      v.mat.dispose(); // USER #14: dispose each shell's own line material
+    }
     this.coreMat.dispose();
     this.rimMat.dispose();
     this.massMat.dispose();
