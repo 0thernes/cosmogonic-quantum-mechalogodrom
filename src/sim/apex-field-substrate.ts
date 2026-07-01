@@ -175,6 +175,35 @@ export class ApexFieldGrid {
     for (let i = 0; i < f.length; i++) s += f[i] ?? 0;
     return s;
   }
+
+  /**
+   * Deposit `amount` into the field at its centre — the source term that closes the sensorimotor loop
+   * (the creature's drive excites the organ; the resulting interference/heat is what it then senses).
+   * Bounded input; O(1).
+   */
+  excite(amount: number): void {
+    const { w, h } = this.organ;
+    const f = this.field();
+    const cx = w >> 1;
+    const cy = h >> 1;
+    f[cy * w + cx] = (f[cy * w + cx] ?? 0) + amount;
+  }
+
+  /** Spatial variance of the field about its mean — the interference/structure strength. O(w·h). */
+  variance(): number {
+    const f = this.field();
+    const n = f.length;
+    if (n === 0) return 0;
+    let mean = 0;
+    for (let i = 0; i < n; i++) mean += f[i] ?? 0;
+    mean /= n;
+    let v = 0;
+    for (let i = 0; i < n; i++) {
+      const d = (f[i] ?? 0) - mean;
+      v += d * d;
+    }
+    return v / n;
+  }
 }
 
 /** GLSL fragment stencil for the diffusion organs (ping-pong DataTexture; reproduces heatDiffuseStep). */

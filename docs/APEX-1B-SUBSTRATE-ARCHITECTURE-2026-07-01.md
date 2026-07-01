@@ -161,10 +161,14 @@ Every claim is a test, not rhetoric (`tests/apex-parameter-manifold.test.ts`,
 - **deterministic**: same seed ⇒ identical manifold, identical quantum reach, identical shards.
 - **native reproduces the oracle** for the probe seeds (else the backend is wrong).
 - **load-bearing visual**: ablating the substrate changes `uBillionReach` / the look.
+- **load-bearing behaviour**: `ApexSubstrateDriver.modulate({ tier: true })` changes the emitted
+  `ApexModulation` for EVERY tier (`tests/apex-substrate-ablation.test.ts` — the doctrine's Experiment 1
+  as an automated harness).
 
 Ablation target: remove the stabilizer reflex → `quantumReachesBillion` drops; remove the procedural
-tier → addressable falls below a billion; remove a field organ → resident-field parameters fall. If any
-tier can be removed with no downstream effect, it was decoration, not substrate.
+tier → addressable falls below a billion; remove a field organ → resident-field parameters fall AND the
+driver's thermal/exploration channels change. If any tier can be removed with no downstream effect, it
+was decoration, not substrate — and the harness fails, by design.
 
 ## Wiring map
 
@@ -172,7 +176,14 @@ tier can be removed with no downstream effect, it was decoration, not substrate.
   streaming, `buildManifold` / `manifoldSummary`.
 - `src/sim/apex-quantum-substrate.ts` — dense core + 30-qubit stabilizer reflex + Tsotchke pulse;
   `reach()` / `planBias()`. The billion-dimensional Quantum Brain.
-- `src/sim/apex-field-substrate.ts` — GPU field organs, CPU reference stencils, GLSL, `fieldHash`.
+- `src/sim/apex-field-substrate.ts` — GPU field organs, CPU reference stencils, GLSL, `fieldHash`,
+  `ApexFieldGrid` (with `excite` / `variance` — the sensorimotor source term).
+- `src/sim/apex-field-organs.ts` — the live multi-physics sensorium: the four field organs stepped
+  together with drive excitation → `FieldSensorium` (acoustic energy/interference, heat load, Klein
+  fold, tunnel amplitude, richness). Makes the resident-field tier load-bearing.
+- `src/sim/apex-substrate-driver.ts` — fuses manifold + quantum reach + field sensorium into an
+  `ApexModulation` (motor gain, exploration, thermal stress, transcendence push, plan bias) the apex
+  consumes; `AblationFlags` prove each tier is load-bearing.
 - `src/sim/apex-native-backend.ts` — the reference oracle, golden vectors, reproduction gate (ADR-0007).
 - `src/sim/apex-substrate-visual.ts` — pure telemetry → shader-uniform mapping for the apex body.
 - `src/sim/apex-consciousness-scaffold.ts` — `apexSubstrateTelemetry(scale, seed, device)` composes the
