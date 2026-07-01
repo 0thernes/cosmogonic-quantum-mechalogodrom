@@ -95,9 +95,9 @@ export const APEX_AXES: readonly AxisSpec[] = [
     axis: 'validation',
     baseline: 'pretty emergence',
     apexTarget: 'ablations, determinism hashes, novelty archive, and safety gates',
-    organs: [], // methodological, not an organ: realised by the harness + honesty gates
-    caveat:
-      'ablation + determinism + safety gates shipped; a novelty archive remains on the roadmap',
+    organs: [], // methodological, not an organ: realised by the harness + novelty archive + gates
+    // fully realised: ablation + determinism ({@link ./apex-harness}), novelty archive
+    // ({@link ./apex-novelty}), and the honesty/determinism safety gates.
   },
 ];
 
