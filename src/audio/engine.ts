@@ -173,51 +173,15 @@ export class AudioEngine {
     }
   }
 
-  /** Layered portal horror bus: low drone + band-passed scream + noise wash (item 18). */
+  /**
+   * Layered portal horror bus (item 18) — DISABLED (USER). It was a continuous low drone + a HIGH SCREAM
+   * square-wave oscillator + a noise wash; even gated to silence, the oscillators ran forever, and the
+   * owner reports a constant whine. This is now a hard no-op: the bus is never built, so `_portalHorror`
+   * stays null and {@link setPortalNightmare} early-returns — zero oscillators, zero chance of noise. If
+   * the ascension-nightmare ambiance is ever wanted back, restore the node-graph body from git history.
+   */
   private buildPortalHorrorBus(): void {
-    const ctx = this.ctx;
-    if (!ctx || !this.masterGain || this._portalHorror) return;
-    const gain = ctx.createGain();
-    gain.gain.value = 0;
-    const filter = ctx.createBiquadFilter();
-    filter.type = 'bandpass';
-    filter.frequency.value = 1200;
-    filter.Q.value = 2.4;
-    const drone = ctx.createOscillator();
-    drone.type = 'sawtooth';
-    drone.frequency.value = 42;
-    const scream = ctx.createOscillator();
-    scream.type = 'square';
-    scream.frequency.value = 520;
-    const droneGain = ctx.createGain();
-    droneGain.gain.value = 0.34;
-    const screamGain = ctx.createGain();
-    screamGain.gain.value = 0.2;
-    drone.connect(droneGain);
-    scream.connect(screamGain);
-    droneGain.connect(filter);
-    screamGain.connect(filter);
-    if (!this.noiseBuf) this.noiseBuf = this.noiseBuffer(ctx);
-    const noise = ctx.createBufferSource();
-    noise.buffer = this.noiseBuf;
-    noise.loop = true;
-    const noiseGain = ctx.createGain();
-    noiseGain.gain.value = 0.14;
-    noise.connect(noiseGain);
-    noiseGain.connect(filter);
-    filter.connect(gain);
-    gain.connect(this.masterGain);
-    drone.start();
-    scream.start();
-    noise.start();
-    this._portalHorror = {
-      drone,
-      scream,
-      noise,
-      filter,
-      gain,
-      level: 0,
-    };
+    /* no-op: horror oscillators disabled */
   }
 
   /** Music enabled? Read-only outside; flip via {@link toggleMusic} or {@link setMusicOn}. */

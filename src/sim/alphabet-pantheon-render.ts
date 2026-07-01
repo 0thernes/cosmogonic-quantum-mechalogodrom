@@ -467,10 +467,14 @@ export class AlphabetPantheonRender {
         // Dark dimensional cracks.
         float crack = smoothstep(0.35, 0.0, sin(vPos.x * 25.0 + t) * cos(vPos.y * 25.0 - t * 1.3));
 
-        vec3 finalColor = lavaColor + oil * 0.9 + shimmer + sparks;
+        // USER: THIS is the "101st apex still white" — the lava core summed (lava + oil + bright-blue
+        // shimmer + white sparks), ADDITIVE at 0.96 alpha, on a mesh scaled 22× → a blinding white/yellow
+        // blob. Keep the coloured lava, but cut the whitest terms (shimmer/sparks) and scale the whole
+        // additive output + alpha down HARD → a rich coloured core, not a white sear.
+        vec3 finalColor = lavaColor + oil * 0.6 + shimmer * 0.3 + sparks * 0.4;
         finalColor *= 1.0 - crack * 0.45;
 
-        gl_FragColor = vec4(finalColor, 0.96);
+        gl_FragColor = vec4(finalColor * 0.5, 0.55);
       }
     `;
 
@@ -623,11 +627,16 @@ export class AlphabetPantheonRender {
         // STEERS the waypoint (goal-seeking locomotion, not decoration) — so where it goes is driven by its
         // mind. The stately body spin/pulse still uses the slowed slowT below. Pure trig of (clock, brain,
         // phase, gIdx) — no rng. The hard clamp further down keeps each on the platform + below the mecha.
-        const rt = clock * 4.545; // ≈ real sim seconds (undo the 0.22 travel slowdown for LOCOMOTION only)
-        const roamDrift = rt * (0.26 + 0.12 * this.chaos) + b.phase * 1.7;
+        // USER: the last pass made them travel TOO FAST/choppy — slow it right down for a GRACEFUL, fluid
+        // glide (~half speed, crossing the platform in ~35-45s), while the rich body dynamism below spins/
+        // corkscrews/vibrates them. Travel is a smooth curved Lissajous, brain-steered.
+        const rt = clock * 2.0; // gentler locomotion clock (was 4.545)
+        const roamDrift = rt * (0.18 + 0.09 * this.chaos) + b.phase * 1.7;
         const roamRad = 210 + (b.gIdx % 7) * 48; // 210..498 — sweeps to the platform rim
-        const aTx = Math.cos(roamDrift) * roamRad + mx * 300; // brain motor STEERS the travel goal (±300)
-        const aTz = Math.sin(roamDrift * 1.21 + b.phase) * roamRad + mz * 300;
+        // Curved travel: a slow secondary drift bends the path so it never reads as a plain circle.
+        const bend = Math.sin(rt * 0.11 + b.phase * 0.7) * 0.55;
+        const aTx = Math.cos(roamDrift + bend) * roamRad + mx * 300; // brain motor STEERS the travel goal (±300)
+        const aTz = Math.sin(roamDrift * 1.21 + b.phase - bend) * roamRad + mz * 300;
         const aTy = 120 + Math.sin(roamDrift * 0.63) * 92 + my * 70; // roams the full 6..240 column
         const wander = glyphWanderOffset(WANDER, ph, b.sig, mx, my, mz, this.chaos, ba);
         P.set(aTx + wander.x, aTy + wander.y, aTz + wander.z);
@@ -647,18 +656,27 @@ export class AlphabetPantheonRender {
         else if (P.x < -ARENA_HALF) P.x = -ARENA_HALF;
         if (P.z > ARENA_HALF) P.z = ARENA_HALF;
         else if (P.z < -ARENA_HALF) P.z = -ARENA_HALF;
+        // USER: ENDLESS DYNAMISM — each godform corkscrews on all 3 axes (per-body rate + direction),
+        // tumbles/curves/inverts, and vibrates, driven by its brain + rhythm. Not a gentle bob. Pure trig.
+        const cork = slowT * (0.55 + (b.gIdx % 5) * 0.22) * quick; // continuous corkscrew, per-body tempo
+        const cdir = b.gIdx % 2 === 0 ? 1 : -1; // half spin CW, half CCW
+        const vib = Math.sin(ph * 9.0 + b.gIdx) * 0.05 * (0.5 + ba); // high-freq vibration
         E.set(
-          Math.sin(ph * 0.42 + mx + b.sig.rotBias) * (0.42 + ba * 0.45),
-          slowT * b.spin * quick * (1 + ba * 0.62) + b.phase + mz * 0.36,
-          Math.cos(ph * 0.38 + mz + b.sig.rotBias * 0.5) * (0.38 + bn * 0.5),
+          cork * cdir + Math.sin(ph * 0.42 + mx + b.sig.rotBias) * (0.6 + ba * 0.6) + vib,
+          slowT * b.spin * quick * (1 + ba * 0.62) + b.phase + mz * 0.36 + cork * 0.7,
+          -cork * (b.gIdx % 3 === 0 ? 0.5 : cdir * 0.4) +
+            Math.cos(ph * 0.38 + mz + b.sig.rotBias * 0.5) * (0.55 + bn * 0.6) +
+            vib,
         );
         Q.setFromEuler(E);
         const warpSpike = ba > 0.72 && Math.sin(ph * 7.0 + b.sig.rotBias) > 0.55 ? 1.22 : 1;
+        // Richer MORPH — anisotropic non-uniform pulse per axis (each axis breathes on its own beat) so
+        // the body visibly mutates/warps, not just uniformly scales.
         const sx =
-          b.sig.scaleX * (1 + b.pulse * Math.sin(ph * 1.2) * brainPulse * 0.18) * warpSpike;
-        const sy = b.sig.scaleY * (1 + b.pulse * Math.sin(ph * 1.4) * brainPulse * 0.18);
+          b.sig.scaleX * (1 + b.pulse * Math.sin(ph * 1.2) * brainPulse * 0.26) * warpSpike;
+        const sy = b.sig.scaleY * (1 + b.pulse * Math.sin(ph * 1.4 + 2.1) * brainPulse * 0.26);
         const sz =
-          (b.sig.scaleZ * (1 + b.pulse * Math.cos(ph * 1.1) * brainPulse * 0.18)) / warpSpike;
+          (b.sig.scaleZ * (1 + b.pulse * Math.cos(ph * 1.1 + 4.2) * brainPulse * 0.26)) / warpSpike;
         S.set(b.baseScale * sx, b.baseScale * sy, b.baseScale * sz);
         M.compose(P, Q, S);
         mesh.setMatrixAt(s, M);
@@ -694,7 +712,9 @@ export class AlphabetPantheonRender {
       0.45 * this.apexTranscendence +
       0.28 * this.apexVitality +
       0.25 * this.tsotchkePulse.quakeAliveness;
-    const ph = slowT * 0.09 * w;
+    // USER: the apex BODY was glacially slow (rotation ~minutes) — it should be VERY MOBILE. ~26× faster
+    // so its core/halo/spikes spin + pulse lively (its travel roams separately below).
+    const ph = slowT * 2.4 * w;
     // USER: the 101st apex was PINNED near centre (a tiny ~70u wobble) → "stuck in a bubble". Now it ROAMS
     // the full ±ARENA_HALF platform like the other creatures, at near real sim time (not the 6% slowdown)
     // so it visibly TRAVELS, hard-clamped to the platform + below the mechalogodrom. Pure trig — no rng.
