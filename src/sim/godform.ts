@@ -43,10 +43,24 @@ export type ArchonTier = 'neo' | 'omega' | 'alpha';
 
 export const PANTHEON_SIZE = 25;
 
+/**
+ * The number of INDIVIDUATED apex minds at the head of the {@link PANTHEON_SIZE}-Archon pantheon. Each
+ * gets a full SuperMind + SuperBody + SuperCreature + mortality clock + symbiosis edges; the remaining
+ * `PANTHEON_SIZE - APEX_INDIVIDUATED` are lighter, field-driven "light echoes". THIS is the single knob
+ * for the apex-creature count — the spawn / telemetry / drive loops (world.ts), the mortality array, the
+ * symbiosis pairing, the light-echo boundary (pantheon `LIGHT_FIRST`), the tier split
+ * ({@link getArchonTier}: NEO = 0, OMEGA = 1..N-1, ALPHA = N..24) and the telemetry panel all derive from
+ * it. Raising it (e.g. to 10) ALSO requires updating the canonical fact ("N individuated apex +
+ * (25-N) light-echo") in scripts/canonical-receipts.ts + verify-canonical-facts.ts, and CURATING the
+ * published surfaces — note the dated handoffs/reports legitimately record the historical count and must
+ * NOT be blanket-rewritten (that is an owner doc-curation pass, not a mechanical find-replace).
+ */
+export const APEX_INDIVIDUATED = 5;
+
 export function getArchonTier(i: number): ArchonTier {
   const idx = ((i % PANTHEON_SIZE) + PANTHEON_SIZE) % PANTHEON_SIZE;
   if (idx === 0) return 'neo';
-  if (idx <= 4) return 'omega';
+  if (idx < APEX_INDIVIDUATED) return 'omega';
   return 'alpha';
 }
 
@@ -164,11 +178,11 @@ export function getGodformBias(i: number): GodformBias {
   const idx = ((i % n) + n) % n;
   const tier = getArchonTier(idx);
   const s = tierScale(tier);
-  const lightJitter = idx >= 5 ? ((idx * 0.6180339887) % 1) * 0.15 : 0;
+  const lightJitter = idx >= APEX_INDIVIDUATED ? ((idx * 0.6180339887) % 1) * 0.15 : 0;
   return {
     cliffordWeight: clampBias((APEX_CW[idx] ?? 0.5) * s + lightJitter),
     generative: clampBias((APEX_GEN[idx] ?? 0.5) * s + lightJitter * 0.5),
-    chaos: clampBias((APEX_CH[idx] ?? 0.5) * s + (idx >= 5 ? 0.1 : 0)),
+    chaos: clampBias((APEX_CH[idx] ?? 0.5) * s + (idx >= APEX_INDIVIDUATED ? 0.1 : 0)),
     narrative: clampBias((APEX_NAR[idx] ?? 0.5) * s),
     colorHue: ((APEX_HUE[idx] ?? 0) + idx * 0.04) % 1,
     eshkolLogic: clampBias((APEX_EL[idx] ?? 0.5) * s),

@@ -11,7 +11,7 @@
 import { substrateVectorForArchon } from './tsotchke-registry';
 import { archonThink } from './eshkol-cognition';
 import { MindField, ARCHON_CHANNELS, FIELD_DIM } from './mind-field';
-import { GODFORMS, getArchonTier, type ArchonTier } from './godform';
+import { GODFORMS, getArchonTier, APEX_INDIVIDUATED, type ArchonTier } from './godform';
 
 export { ARCHON_CHANNELS, FIELD_DIM };
 export { MindField };
@@ -32,7 +32,7 @@ export interface PantheonSnapshot {
   readonly lastLight: LightArchonSnapshot | null;
 }
 
-const LIGHT_FIRST = 5;
+const LIGHT_FIRST = APEX_INDIVIDUATED; // light echoes begin after the individuated apex minds
 const LIGHT_COUNT = ARCHON_CHANNELS - LIGHT_FIRST;
 /** V1.3: EMA rate of each light Archon's persistent identity memory (individuation, not stateless echo). */
 const LIGHT_MEM_TAU = 0.2;

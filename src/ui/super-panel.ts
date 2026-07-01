@@ -8,6 +8,7 @@
  */
 import type { SuperSnapshot, SuperPlan } from '../sim/super-creature';
 import { SUPER_PLANS } from '../sim/super-creature';
+import { APEX_INDIVIDUATED } from '../sim/godform';
 import type { SuperMindSnapshot } from '../sim/super-mind';
 import type { EvoView } from '../sim/super-evolution';
 import { mountToggle } from './panel-dock';
@@ -362,7 +363,7 @@ export class SuperPanel {
       el.innerHTML = `<span>${label}:</span><span>—</span>`;
       return el;
     };
-    for (let k = 0; k < 5; k++) {
+    for (let k = 0; k < APEX_INDIVIDUATED; k++) {
       const card = doc.createElement('div');
       const nm = doc.createElement('span');
       nm.className = 'archon-name';
@@ -474,9 +475,9 @@ export class SuperPanel {
     // GOAL5: 5 Archons first-class (all 5 names/archetypes/plans live; prime gets deep + neural; senses/quantum/body via per mind)
     // Feed the deeper neural box FIRST — it animates independently of whether this readout is open.
     this.neural.update(mind ?? null);
-    // populate live 5-archon mini-inspect (name/archetype/plan + color for full visibility)
-    if (this.archonRows.length && archons && archons.length === 5) {
-      for (let k = 0; k < 5; k++) {
+    // populate the live individuated-apex mini-inspect (name/archetype/plan + color for full visibility)
+    if (this.archonRows.length && archons && archons.length === APEX_INDIVIDUATED) {
+      for (let k = 0; k < APEX_INDIVIDUATED; k++) {
         const row = this.archonRows[k];
         const info = archons[k];
         if (row && info) {

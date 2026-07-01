@@ -109,6 +109,7 @@ import {
 import { rngContrast } from './sim/classical-contrast';
 import {
   GODFORMS,
+  APEX_INDIVIDUATED,
   getArchonForm,
   getFullTsotchkeBias,
   getCorpusPulseForArchon,
@@ -854,7 +855,7 @@ export class World {
     // WIRED FROM FULL TSOTCHKE CORPUS (Z:\[Vibe Coded (AI)]\(Tsotchke) 20 repos + sites; see docs/TSOTCHKE_FULL...AUDIT.md). Eshkol AD/HoTT/arena + Moonlab tensor/qgt/Bloch for per-Archon percepts/bias/pulses/entropy. 5 child seeds + getGodformBias + getArchonForm. Local grid + audio + bias. (Ralph-loop incorporation wave.)
     // Determinism: child seeds only (no consumption of main/super streams). Spaced + archetype bias.
     const master = (this.persisted.seed ^ 0x5e1f3d11) >>> 0 || 1;
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < APEX_INDIVIDUATED; i++) {
       // per-Archon bias from godform (research corpus applied: QGT geometry, Eshkol AD/consciousness, moonlab Clifford reflex) // bias available for mind/body distinction (5 unique)
       // child seed = master + archetype offset (golden prime mix for separation)
       const mindSeed = (master + i * 0x9e3779b1) >>> 0 || 1 + i;
@@ -921,7 +922,7 @@ export class World {
     this.symbiosis = new Symbiosis(this.superRng);
     this.mythRitual = new MythRitual(this.superRng);
     this.archonMortality = Array.from(
-      { length: 5 },
+      { length: APEX_INDIVIDUATED },
       (_, i) => new Mortality(this.superRng, { baseLifespan: 4000 + i * 500 }),
     );
     for (let i = 0; i < ARCHON_CHANNELS; i++) {
@@ -1779,7 +1780,7 @@ export class World {
         };
         confidence: number;
       }> = [];
-      for (let i = 0; i < 5; i++) {
+      for (let i = 0; i < APEX_INDIVIDUATED; i++) {
         const archonSnap = this.superCreatures[i]?.snapshot();
         const mindSnap = this.superMinds[i]?.snapshot?.() ?? null;
         archonInfos.push({
@@ -2053,7 +2054,7 @@ export class World {
       // GOAL5: drive EXACTLY 5 SUPER CREATURES (archetypes 0-4) with per-position percepts.
       // local crowding/threat from grid query at body pos; light/sound/chaos biased by godform.ts (exclusive).
       let primeMindOut: SuperMindIntent | null = null; // typed; avoid any per contract
-      for (let i = 0; i < 5; i++) {
+      for (let i = 0; i < APEX_INDIVIDUATED; i++) {
         const bias = getFullTsotchkeBias(i); // full corpus extension (Eshkol/Moonlab/Quake factors) // ARCHITECT rule: use the facade bias for differentiation
         this.superBodies[i]!.worldPosition(this.sv1);
         const lx = this.sv1.x,
@@ -2248,8 +2249,8 @@ export class World {
 
       if (s.frame % 120 === 0) {
         if (s.frame % 480 === 0) {
-          for (let i = 0; i < 5; i++) {
-            for (let j = i + 1; j < 5; j++) {
+          for (let i = 0; i < APEX_INDIVIDUATED; i++) {
+            for (let j = i + 1; j < APEX_INDIVIDUATED; j++) {
               this.symbiosis.formRelationship(i, j);
             }
           }
