@@ -33,8 +33,14 @@ import {
   APEX_BRAIN_ROADMAP_PARAMS,
   APEX_BRAIN_START_PARAMS,
   APEX_BRAIN_TARGET_NEURONS,
+  APEX_SCALE_TIERS,
   PANTHEON_GLYPH_BRAIN_PARAMS,
 } from '../sim/apex-brain';
+import {
+  apexSubstrateTelemetry,
+  type ApexSubstrateTelemetry,
+} from '../sim/apex-consciousness-scaffold';
+import { apexOffworldScore } from '../sim/apex-offworld-score';
 import { mulberry32, type Rng } from '../math/rng';
 import { mountToggle } from './panel-dock';
 
@@ -742,6 +748,47 @@ function bigNum(v: number): string {
   return String(v);
 }
 
+// ── 1-billion-parameter substrate rows (memoised per scale; recomputed only when the scale changes) ──
+let _apexSubSeed = 0;
+let _apexSubCache: { name: string; tel: ApexSubstrateTelemetry; offworld: number } | null = null;
+
+/** The 1B-substrate telemetry + offworld score for a scale name, memoised (heavy, static per scale). */
+function apexSubstratePanelData(
+  scaleName: string,
+): { tel: ApexSubstrateTelemetry; offworld: number } | null {
+  const scale = APEX_SCALE_TIERS.find((t) => t.name === scaleName);
+  if (!scale) return null;
+  if (_apexSubCache && _apexSubCache.name === scaleName) return _apexSubCache;
+  if (!_apexSubSeed) _apexSubSeed = createApexBrain().seed; // the ς lineage identity, once
+  const tel = apexSubstrateTelemetry(scale, _apexSubSeed);
+  const offworld = apexOffworldScore(scale).score;
+  _apexSubCache = { name: scaleName, tel, offworld };
+  return _apexSubCache;
+}
+
+/** The 1B-substrate rows (designed/addressable/resident · quantum reach · offworld) for the cycler. */
+function apexSubstrateRows(scaleName: string): Array<[string, string]> {
+  const sub = apexSubstratePanelData(scaleName);
+  if (!sub) return [];
+  const { tel, offworld } = sub;
+  const q = tel.quantum;
+  const m = tel.modulation;
+  return [
+    [
+      '  ·1B substrate',
+      `designed ${bigNum(tel.manifold.designedParams)} · addressable ${bigNum(tel.manifold.addressableParams)} · resident ${bigNum(tel.manifold.residentParams)}`,
+    ],
+    [
+      '  ·quantum reach',
+      `stabilizer ${q.stabilizerQubits}q → ${bigNum(q.stabilizerDim)}-dim${q.reachesBillion ? ' ✦1B' : ''} · ent ${(q.stabilizerEntanglementNorm * 100).toFixed(0)}%`,
+    ],
+    [
+      '  ·offworld',
+      `${(offworld * 100).toFixed(1)}% alien-driven · motor ${(m.motorGain * 100).toFixed(0)}% · explore ${(m.exploration * 100).toFixed(0)}%`,
+    ],
+  ];
+}
+
 /** Render the apex ς brain (Entropic Tesseract Hydra) snapshot as data rows for the cycler. */
 function apexRows(s: ApexBrainSnapshot): Array<[string, string] | string> {
   const t = s.thought;
@@ -758,6 +805,7 @@ function apexRows(s: ApexBrainSnapshot): Array<[string, string] | string> {
       'roadmap',
       `100k→5M params · 1B neuron architecture · 100 thought-variation substrates (computational indicators only)`,
     ],
+    ...apexSubstrateRows(s.scaleName),
     [
       '0 quantum brain',
       `${s.quantum.qubits}q · ‖ψ‖${s.quantum.norm.toFixed(2)} · coh ${s.quantum.coherence.toFixed(2)} · ent ${s.quantum.entanglement.toFixed(2)}`,
