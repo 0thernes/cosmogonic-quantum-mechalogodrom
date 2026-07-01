@@ -159,8 +159,28 @@ export function pairedPermutationP(deltas: number[], seed: number, iters = 5000)
 const verdict = (p: number): string =>
   p <= 0.05 ? 'distinguishable from noise' : 'NOT distinguishable from noise (null)';
 
-/** Run + report ONE survival regime (a fixed drain). Prints paired means, bootstrap CI, and permutation p. */
-function reportRegime(label: string, drain: number, numSeeds: number, maxBeats: number): void {
+/** The full paired statistics for one survival regime — the testable pure core of the experiment. */
+export interface RegimeResult {
+  readonly classicalSurvival: number;
+  readonly fullSurvival: number;
+  readonly survivalDelta: number;
+  readonly survivalCI: [number, number];
+  readonly survivalP: number;
+  readonly classicalEmpowerment: number;
+  readonly fullEmpowerment: number;
+  readonly empowermentDelta: number;
+  readonly empowermentCI: [number, number];
+  readonly empowermentP: number;
+  /** Min survival across all runs in either arm — <maxBeats proves the regime actually kills agents. */
+  readonly minSurvival: number;
+}
+
+/**
+ * Run ONE survival regime (a fixed drain) across `numSeeds` paired seeds and return its full statistics.
+ * PURE + deterministic (each seed drives both arms; only setQuantumAblated differs) — the testable core
+ * that gate-protects the keystone against a silent regression in runArm / the ablation wiring.
+ */
+export function runRegime(drain: number, numSeeds: number, maxBeats: number): RegimeResult {
   const classical: RunResult[] = [];
   const full: RunResult[] = [];
   for (let i = 0; i < numSeeds; i++) {
@@ -172,33 +192,42 @@ function reportRegime(label: string, drain: number, numSeeds: number, maxBeats: 
   const fSurv = full.map((r) => r.survival);
   const cEmp = classical.map((r) => r.meanEmpowerment);
   const fEmp = full.map((r) => r.meanEmpowerment);
-  const dSurv = mean(fSurv) - mean(cSurv);
-  const dEmp = mean(fEmp) - mean(cEmp);
   const deltasSurv: number[] = fSurv.map((v, i) => v - (cSurv[i] ?? 0) || 0);
   const deltasEmp: number[] = fEmp.map((v, i) => v - (cEmp[i] ?? 0) || 0);
-  const ciSurv = bootstrapCI(deltasSurv, 0x51f15e);
-  const ciEmp = bootstrapCI(deltasEmp, 0xe4f5eed);
-  const pSurv = pairedPermutationP(deltasSurv, 0x9e3779b1);
-  const pEmp = pairedPermutationP(deltasEmp, 0x85ebca6b);
+  return {
+    classicalSurvival: mean(cSurv),
+    fullSurvival: mean(fSurv),
+    survivalDelta: mean(fSurv) - mean(cSurv),
+    survivalCI: bootstrapCI(deltasSurv, 0x51f15e),
+    survivalP: pairedPermutationP(deltasSurv, 0x9e3779b1),
+    classicalEmpowerment: mean(cEmp),
+    fullEmpowerment: mean(fEmp),
+    empowermentDelta: mean(fEmp) - mean(cEmp),
+    empowermentCI: bootstrapCI(deltasEmp, 0xe4f5eed),
+    empowermentP: pairedPermutationP(deltasEmp, 0x85ebca6b),
+    minSurvival: Math.min(...fSurv, ...cSurv),
+  };
+}
 
+/** Run + report ONE survival regime. Prints paired means, bootstrap CI, and permutation p. */
+function reportRegime(label: string, drain: number, numSeeds: number, maxBeats: number): void {
+  const r = runRegime(drain, numSeeds, maxBeats);
   console.log(`\n═══ REGIME: ${label} (drain ${drain}) ═══`);
   console.log('Survival (higher better):');
   console.log(
-    `  Classical mean: ${mean(cSurv).toFixed(1)}  |  Full mean: ${mean(fSurv).toFixed(1)}`,
+    `  Classical mean: ${r.classicalSurvival.toFixed(1)}  |  Full mean: ${r.fullSurvival.toFixed(1)}`,
   );
-  const ci0s = ciSurv[0] ?? 0,
-    ci1s = ciSurv[1] ?? 0;
   console.log(
-    `  Delta (Full - Classical): ${dSurv.toFixed(2)}  [${ci0s.toFixed(2)}, ${ci1s.toFixed(2)}]  |  perm p = ${pSurv.toFixed(4)} → ${verdict(pSurv)}`,
+    `  Delta (Full - Classical): ${r.survivalDelta.toFixed(2)}  [${r.survivalCI[0].toFixed(2)}, ${r.survivalCI[1].toFixed(2)}]  |  perm p = ${r.survivalP.toFixed(4)} → ${verdict(r.survivalP)}`,
   );
   console.log('Mean Empowerment (higher better):');
-  console.log(`  Classical mean: ${mean(cEmp).toFixed(3)}  |  Full mean: ${mean(fEmp).toFixed(3)}`);
-  const ci0e = ciEmp[0] ?? 0,
-    ci1e = ciEmp[1] ?? 0;
   console.log(
-    `  Delta: ${dEmp.toFixed(4)}  [${ci0e.toFixed(4)}, ${ci1e.toFixed(4)}]  |  perm p = ${pEmp.toFixed(4)} → ${verdict(pEmp)}`,
+    `  Classical mean: ${r.classicalEmpowerment.toFixed(3)}  |  Full mean: ${r.fullEmpowerment.toFixed(3)}`,
   );
-  if (Math.min(...fSurv) < 3 && Math.min(...cSurv) < 3) {
+  console.log(
+    `  Delta: ${r.empowermentDelta.toFixed(4)}  [${r.empowermentCI[0].toFixed(4)}, ${r.empowermentCI[1].toFixed(4)}]  |  perm p = ${r.empowermentP.toFixed(4)} → ${verdict(r.empowermentP)}`,
+  );
+  if (r.minSurvival < 3) {
     console.log('  (both arms suffer real mortality here — the regime has power to separate them)');
   }
 }
