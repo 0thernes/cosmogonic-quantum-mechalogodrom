@@ -32,10 +32,14 @@ const STYLE = `
   color:#e9e3ff;pointer-events:none;
   display:flex;justify-content:center;align-items:flex-start}
 #cqm-hero.on{transform:translate(-50%,0)}
-#cqm-hero.on.closed{transform:translate(-50%,-150%)}
+/* V122 (USER #6): CLOSED no longer slides the whole band off-screen (which forced a trip to the
+   ACCESS button to get the HUD back) — closed/minimized both keep the small restore CHIP visible,
+   so the HUD toggles back and forth with one click, always. */
+#cqm-hero.on.closed .cqm-hero-box{display:none}
+#cqm-hero.on.closed .cqm-hero-fab{display:grid}
 #cqm-hero.on.min .cqm-hero-box{display:none}
 #cqm-hero.on.min .cqm-hero-fab{display:grid}
-#cqm-hero:not(.min) .cqm-hero-fab{display:none}
+#cqm-hero:not(.min):not(.closed) .cqm-hero-fab{display:none}
 .cqm-hero-fab{pointer-events:auto;display:none;width:150px;height:30px;border-radius:15px;
   border:1px solid rgba(150,120,255,.55);background:linear-gradient(180deg,rgba(24,14,48,.95),rgba(10,8,22,.92));
   color:#d4b8ff;font-size:10px;font-weight:600;letter-spacing:0.08em;cursor:pointer;place-items:center;
@@ -245,7 +249,8 @@ export class SuperheroHud {
     fab.setAttribute('aria-label', 'Expand superhero HUD');
     fab.title = 'Show hero HUD';
     fab.textContent = '▲ SHOW HERO HUD ▲';
-    fab.addEventListener('click', () => this.root.classList.remove('min'));
+    // V122 (USER #6): the chip restores from BOTH collapsed states — never a trip to ACCESS again.
+    fab.addEventListener('click', () => this.root.classList.remove('min', 'closed'));
     this.root.appendChild(fab);
 
     const minBtn = doc.createElement('button');
@@ -260,7 +265,7 @@ export class SuperheroHud {
     closeBtn.type = 'button';
     closeBtn.className = 'cqm-hero-close';
     closeBtn.setAttribute('aria-label', 'Close superhero HUD');
-    closeBtn.title = 'Close hero HUD; press ACCESS to reopen';
+    closeBtn.title = 'Collapse the hero HUD — the chip (or ACCESS) brings it back';
     closeBtn.textContent = '✕';
     closeBtn.addEventListener('click', () => this.close());
 
@@ -434,7 +439,7 @@ export class SuperheroHud {
     this.root.classList.remove('closed');
   }
 
-  /** Hide the HUD band entirely until ACCESS toggles it back. */
+  /** V122 (USER #6): collapse to the restore CHIP (never fully gone — one click brings it back). */
   close(): void {
     if (!this.active) return;
     this.root.classList.add('closed', 'min');

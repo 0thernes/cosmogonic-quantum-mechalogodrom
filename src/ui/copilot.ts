@@ -396,9 +396,11 @@ const STYLE = `
   border:1px solid rgba(120,160,220,.35);border-radius:6px;padding:6px 8px;font:inherit}
 .cqm-cop-foot textarea:focus-visible{outline:1px solid #6da8ff}
 .cqm-cop-send{flex:0 0 auto;background:rgba(50,90,170,.55);color:#dfeaff;border:1px solid rgba(120,160,220,.5);
-  border-radius:6px;padding:7px 12px;cursor:pointer;font:inherit}
+  border-radius:6px;padding:8px 12px;cursor:pointer;font:inherit;width:100%}
 .cqm-cop-send:disabled{opacity:.4;cursor:default}
-.cqm-cop-hint{font-size:9px;opacity:.5;padding:0 10px 8px;flex:0 0 auto}
+/* V122 (USER #2): the hint is a normal flow row above Send — never under it, wraps cleanly. */
+.cqm-cop-hint{font-size:9px;opacity:.55;padding:0 2px;flex:0 0 auto;line-height:1.5;word-break:break-word}
+@media (max-width:1730px){.cqm-cop-optlabel{font-size:9px;letter-spacing:.02em}.cqm-cop-hint{font-size:8.5px}}
 .cqm-cop-diagbtn{background:none;border:none;color:#9fc0ff;font-size:13px;cursor:pointer;padding:0 3px;line-height:1}
 .cqm-cop-diagbtn:hover{filter:brightness(1.25)}
 .cqm-cop-diagbtn:focus-visible{outline:1px solid #6da8ff;outline-offset:1px}
@@ -502,6 +504,9 @@ function mount(): void {
   send.className = 'cqm-cop-send';
   send.type = 'button';
   send.textContent = 'Send';
+  // V122 (USER #2): the hint lives IN the compose flow (textarea → hint → Send) — as a sibling
+  // AFTER the flexing foot it visually collided with the Send button on ≤16" screens (the foot
+  // shrank over it: "the button is all wacky"). In-flow order makes overlap impossible.
   foot.append(input, send);
 
   const hint = document.createElement('div');
@@ -535,7 +540,8 @@ function mount(): void {
     chips.appendChild(c);
   }
   opts.append(optRow, chips);
-  rightCol.append(askHead, opts, foot, hint);
+  foot.insertBefore(hint, send); // V122: hint above the button, inside the same flex column
+  rightCol.append(askHead, opts, foot);
 
   body.append(leftCol, rightCol);
   panel.append(head, body);

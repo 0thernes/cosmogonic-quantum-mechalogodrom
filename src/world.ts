@@ -2807,7 +2807,10 @@ export class World {
     } else {
       cam.position.copy(p).addScaledVector(h, -28); // trail behind
       cam.position.y += 13;
-      cam.lookAt(p);
+      // V122 (USER #6): aim ABOVE the creature so IT sits in the LOWER third of the frame —
+      // hero HUD strip on top, the twin fully visible between it and the two bottom dock rows
+      // (a rule-of-thirds stack instead of the twin hiding dead-center behind the HUD).
+      cam.lookAt(this.heroIntent.copy(p).setY(p.y + 9));
     }
   }
 

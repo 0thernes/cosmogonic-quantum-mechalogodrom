@@ -42,10 +42,12 @@ const PANEL_SEL = SLOTS.map((s) => '#' + s.panel).join(',');
 /** The open+visible panel selectors — the base (solid) opacity rule. */
 const VIS_SEL = SLOTS.map((s) => '#' + s.panel + '.cqm-hud-vis').join(',');
 
-/** Desktop/fine-pointer center HUD height: tall enough for Architecture/Architect data, still bounded. */
-export const CENTER_HUD_DESKTOP_HEIGHT = 'clamp(300px, 56vh, 660px)';
-/** Touch/sheet-mode center HUD height: lets popups breathe without covering the full world. */
-export const CENTER_HUD_TOUCH_HEIGHT = 'clamp(320px, 64vh, 720px)';
+/** Desktop/fine-pointer center HUD height. V122 (USER #1): DOUBLED — the panels were too short and
+ *  cut their info behind smashed scrollbars; they now run ~2× taller (capped by --cqm-hud-max-height
+ *  so they can never clip past the viewport or the top bar). */
+export const CENTER_HUD_DESKTOP_HEIGHT = 'clamp(560px, 84vh, 1200px)';
+/** Touch/sheet-mode center HUD height: V122 doubled with the same viewport-safe cap. */
+export const CENTER_HUD_TOUCH_HEIGHT = 'clamp(480px, 82vh, 1000px)';
 
 const STYLE = `
 /* V69: the HUD fits the grid's CENTRE column — between the side panels (Telemetry/Sorting on the left,
@@ -445,6 +447,10 @@ function fitHud(): void {
     matchMedia(
       '(max-width: 768px), (orientation: portrait) and (max-width: 1024px), (pointer: coarse)',
     ).matches;
+  // V122 (USER #1): the horizontal extent of the CENTER band the HUD panels occupy — measured below
+  // in the grid branch; bars that do not intersect it must not clamp the panels' height.
+  let bandL = 0;
+  let bandR = window.innerWidth;
   if (sheetMode || !ui || getComputedStyle(ui).display !== 'grid') {
     root.style.removeProperty('--cqm-hud-left');
     root.style.removeProperty('--cqm-hud-right');
@@ -476,15 +482,22 @@ function fitHud(): void {
       '--cqm-hud-right',
       `${Math.round((rightL < vw ? vw - rightL : 0) + GUTTER)}px`,
     );
+    bandL = leftR > 0 ? leftR + GUTTER : 0;
+    bandR = rightL < vw ? rightL - GUTTER : vw;
   }
-  // Vertical: sit the HUD just above the HIGHEST bar (nav launcher / toolbar / readout strip).
+  // Vertical: sit the HUD just above the highest bar THAT ACTUALLY CROSSES THE CENTER BAND.
+  // V122 (USER #1 root cause): #alg / #hud-vsr are SIDE-COLUMN boxes — on ≤16" screens their tops
+  // ride high and used to clamp the CENTER panels to a ~330px stub ("panels are too short") even
+  // though they never horizontally overlap the HUD band. Only intersecting bars count now.
   const vh = window.innerHeight;
   let barsTop = vh;
   for (const id of ['perf-hud', 'hud-vsr', 'alg', 'cqm-bottom-stack']) {
     const el = document.getElementById(id);
     if (!el) continue;
     const r = el.getBoundingClientRect();
-    if (r.height > 4) barsTop = Math.min(barsTop, r.top);
+    if (r.height <= 4) continue;
+    if (r.right <= bandL || r.left >= bandR) continue; // side-column box — no vertical claim here
+    barsTop = Math.min(barsTop, r.top);
   }
   syncBottomDockHeight();
   const fs = typeof document !== 'undefined' && !!document.fullscreenElement;

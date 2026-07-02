@@ -66,11 +66,11 @@ const STYLE = `
 #cqm-sup-panel{position:fixed;left:var(--cqm-hud-left,calc(clamp(180px,19vw,260px) + 16px));
   right:var(--cqm-hud-right,calc(clamp(220px,23vw,340px) + 16px));
   top:auto;bottom:var(--cqm-hud-bottom,calc(var(--cqm-bottom-h,108px) + 130px));transform:none;
-  z-index:71;width:auto;max-width:none;max-height:var(--cqm-hud-height,min(64vh,520px));display:none;flex-direction:column;
+  z-index:71;width:auto;max-width:none;max-height:var(--cqm-hud-height,min(84vh,1040px));display:none;flex-direction:column;
   border:1px solid rgba(196,120,255,.34);border-radius:12px;background:rgba(8,5,16,.96);backdrop-filter:blur(12px);
   box-shadow:0 10px 46px rgba(0,0,0,.7);font:11px/1.45 var(--font-mono,ui-monospace,monospace);color:#ece2ff;overflow:hidden}
-#cqm-sup-panel:not(.neural){max-height:min(70vh,520px)}
-@media (max-width:640px){#cqm-sup-panel:not(.neural){max-height:min(68vh,460px)}}
+#cqm-sup-panel:not(.neural){max-height:min(84vh,1040px)} /* V122 (USER #1): 2× taller */
+@media (max-width:640px){#cqm-sup-panel:not(.neural){max-height:min(80vh,900px)}}
 #cqm-sup-panel.open{display:flex}
 @media (max-width:640px){
 #cqm-sup-panel{left:auto;top:auto;right:10px;bottom:calc(var(--cqm-bottom-h,108px) + 130px);transform:none;width:min(94vw,326px);max-height:min(66vh,480px)}
@@ -107,10 +107,10 @@ const STYLE = `
 /* V121 (USER #4): the Archon grid FILLS the remaining panel height (flex, no fixed 220px cap) and
    the cards flow responsively — all info fits the window instead of hiding behind a scroll cut. */
 .cqm-sup-archons {
-  flex: 1 1 200px;
-  min-height: 200px;
+  flex: 1 1 300px;
+  min-height: 260px;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
   gap: 10px;
   padding: 10px 14px 12px;
   border-top: 1px solid rgba(196, 120, 255, 0.18);
@@ -118,24 +118,36 @@ const STYLE = `
   overflow-y: auto;
   align-content: start;
 }
+/* V122 (USER #5): the cards were "squished like sandwiches" — a floated radar overlapped the stat
+   grid and the name row. Proper wireframe now: explicit grid areas (name/plan left, radar right,
+   telemetry full-width below) — nothing can overlap at any width. */
 .cqm-sup-archons > div {
   min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 88px;
+  grid-template-areas:
+    'head radar'
+    'plan radar'
+    'tel  tel';
+  align-content: start;
+  gap: 5px 10px;
   margin: 0;
-  padding: 9px 10px;
+  padding: 10px 12px;
   border: 1px solid rgba(196, 120, 255, 0.22);
   border-radius: 8px;
   background: rgba(0, 0, 0, 0.4);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  transition: border-color 0.2s, background 0.2s;
+  transition:
+    border-color 0.2s,
+    background 0.2s;
 }
 .cqm-sup-archons > div:hover {
   border-color: rgba(196, 120, 255, 0.45);
   background: rgba(28, 14, 46, 0.35);
 }
 .cqm-sup-archons .archon-name {
+  grid-area: head;
+  align-self: end;
   color: #e0bdff !important;
   font: 800 13px var(--font-mono, ui-monospace, monospace);
   text-transform: uppercase;
@@ -145,6 +157,8 @@ const STYLE = `
   white-space: nowrap;
 }
 .cqm-sup-archons .archon-plan {
+  grid-area: plan;
+  align-self: start;
   display: inline-block;
   font: 700 10px var(--font-mono, ui-monospace, monospace);
   text-align: center;
@@ -155,19 +169,20 @@ const STYLE = `
   max-width: 100%;
 }
 .cqm-sup-archons .archon-radar {
-  float: right;
-  width: 74px;
-  height: 74px;
-  margin: 0 0 2px 8px;
+  grid-area: radar;
+  width: 88px;
+  height: 88px;
+  margin: 0;
   opacity: 0.95;
 }
 .cqm-sup-archons .archon-telemetry {
+  grid-area: tel;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 3px 8px;
+  gap: 4px 10px;
   margin-top: 2px;
   border-top: 1px solid rgba(196, 120, 255, 0.1);
-  padding-top: 5px;
+  padding-top: 6px;
 }
 .cqm-sup-archons .archon-stat {
   display: flex;

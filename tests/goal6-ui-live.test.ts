@@ -49,7 +49,7 @@ describe('GOAL6 — Archon Godforms panel liveness (USER #4)', () => {
 
   test('archon grid fills the panel (flex, no fixed 220px cap) and DOM writes gate on open', () => {
     const code = src('src/ui/super-panel.ts');
-    expect(code).toContain('flex: 1 1 200px');
+    expect(code).toContain('flex: 1 1 300px'); // V122: grew with the 2× taller panels
     expect(code).not.toContain('max-height: 220px');
     expect(code).toContain('this.open &&\n      !this.minimized &&\n      this.archonRows.length');
   });
