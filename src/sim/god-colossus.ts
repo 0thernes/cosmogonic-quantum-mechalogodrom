@@ -26,6 +26,86 @@ const TIERS = 16;
 const PANELS = 2400;
 /** Three orbiting halo rings around the godhead crown. */
 const RINGS = 3;
+/** V122 (USER #11): quasicrystal carve artifacts — hollow-shell blocks + window lamps. With PANELS
+ *  the TOWER carries ~12,000 individually-varied instanced artifacts across 3 draw calls. */
+const QC_CARVE = 7200;
+const QC_GLOW = 2400;
+/** 6D lattice search range (±) for the cut-and-project — 9^6 combos scanned once at boot. */
+const QC_RANGE = 4;
+/** Par-space ball radius kept (pre-normalisation) — bounds the projected point cloud. */
+const QC_PAR_BALL = 6.5;
+
+/** Golden ratio — the icosahedral quasicrystal's one true constant. */
+const PHI = (1 + Math.sqrt(5)) / 2;
+
+/**
+ * V122 (USER #11): ICOSAHEDRAL CUT-AND-PROJECT — the aperiodic bones of the tower.
+ *
+ * A 6D integer lattice Z⁶ is projected through the icosahedral basis into two 3-spaces: PAR
+ * (physical) and PERP (the phason / acceptance space). Sites whose PERP image sits nearest the
+ * origin are the true quasicrystal — a point set with perfect icosahedral long-range order and NO
+ * repeating unit cell (aperiodic forever: the structure literally never repeats, which is the
+ * "geometry only an AI would understand" ask made real math). The PERP norm is returned with each
+ * site so the caller can rank by acceptance (small = deep-lattice block, large = phason-excited
+ * lamp) — the SAME coordinate crystallographers use, driving which sites become windows.
+ * Deterministic, zero rng. O(QC_RANGE⁶) once at boot.
+ */
+export function icosaCutProject(): { x: number; y: number; z: number; perp: number }[] {
+  const c = 1 / Math.sqrt(1 + PHI * PHI);
+  const ip = 1 / PHI;
+  const cp = 1 / Math.sqrt(1 + ip * ip);
+  // The 6 icosahedron vertex directions (par) and their φ→−1/φ conjugates (perp).
+  const par: number[][] = [
+    [1, PHI, 0],
+    [-1, PHI, 0],
+    [0, 1, PHI],
+    [0, -1, PHI],
+    [PHI, 0, 1],
+    [-PHI, 0, 1],
+  ].map((v) => v.map((k) => k * c));
+  const perp: number[][] = [
+    [1, -ip, 0],
+    [-1, -ip, 0],
+    [0, 1, -ip],
+    [0, -1, -ip],
+    [-ip, 0, 1],
+    [ip, 0, 1],
+  ].map((v) => v.map((k) => k * cp));
+  const out: { x: number; y: number; z: number; perp: number }[] = [];
+  const R = QC_RANGE;
+  const n = [0, 0, 0, 0, 0, 0];
+  for (n[0] = -R; n[0]! <= R; n[0]!++)
+    for (n[1] = -R; n[1]! <= R; n[1]!++)
+      for (n[2] = -R; n[2]! <= R; n[2]!++)
+        for (n[3] = -R; n[3]! <= R; n[3]!++)
+          for (n[4] = -R; n[4]! <= R; n[4]!++)
+            for (n[5] = -R; n[5]! <= R; n[5]!++) {
+              let px = 0;
+              let py = 0;
+              let pz = 0;
+              let qx = 0;
+              let qy = 0;
+              let qz = 0;
+              for (let i = 0; i < 6; i++) {
+                const ni = n[i]!;
+                if (ni === 0) continue;
+                px += ni * par[i]![0]!;
+                py += ni * par[i]![1]!;
+                pz += ni * par[i]![2]!;
+                qx += ni * perp[i]![0]!;
+                qy += ni * perp[i]![1]!;
+                qz += ni * perp[i]![2]!;
+              }
+              if (px * px + py * py + pz * pz > QC_PAR_BALL * QC_PAR_BALL) continue;
+              out.push({
+                x: px / QC_PAR_BALL,
+                y: py / QC_PAR_BALL,
+                z: pz / QC_PAR_BALL,
+                perp: Math.hypot(qx, qy, qz),
+              });
+            }
+  return out;
+}
 
 /** Deterministic positional hash → [0,1). No bitwise, no rng (mirrors FloatingMonoliths). */
 function hash(n: number): number {
@@ -57,8 +137,19 @@ export class GodColossus {
   private readonly spire: THREE.Mesh;
   private readonly rings: THREE.Mesh[] = [];
   private readonly shell: THREE.Mesh;
+  /** V122: the quasicrystal hollow-shell pools (carve blocks + window lamps). */
+  private carve!: THREE.InstancedMesh;
+  private glow!: THREE.InstancedMesh;
+  private carveMat!: THREE.MeshStandardMaterial;
+  private glowMat!: THREE.MeshBasicMaterial;
+  /** V122: quasicrystal artifacts actually placed (telemetry/tests). */
+  qcCount = 0;
   /** Total greeble panels placed (telemetry/tests). */
   readonly panelCount = PANELS;
+  /** V122: every individually-varied artifact on the monument (panels + carve + lamps). */
+  get artifactCount(): number {
+    return PANELS + this.qcCount;
+  }
   /** Base/structural hue the schizophrenic shift rotates around. */
   private hue = 0.74;
   private readonly emissiveColor = new THREE.Color();
@@ -169,6 +260,114 @@ export class GodColossus {
     this.panels.instanceMatrix.needsUpdate = true;
     if (this.panels.instanceColor) this.panels.instanceColor.needsUpdate = true;
     this.root.add(this.panels);
+
+    // ── V122 (USER #11): the QUASICRYSTAL CARVE — a HOLLOW aperiodic shell wrapping the whole
+    //    spire. Sites come from the icosahedral cut-and-project (no repeating unit cell, perfect
+    //    long-range order); the shell keeps only sites in a radial band OUTSIDE the tiers, so the
+    //    gap between core and shell is a real carved hollow. Four arched doorways open the base.
+    //    THREE regimes stack by height — HINDU gopuram golds, KOREAN dancheong bands, CHIPLET
+    //    trace-glow substrate — and the site's PERP (phason) coordinate decides its role: deep
+    //    acceptance = a big carve block, shallow = a window lamp. ~9,600 artifacts, 2 draw calls. ──
+    this.carveMat = new THREE.MeshStandardMaterial({
+      color: 0xffffff, // per-instance
+      roughness: 0.58,
+      metalness: 0.42,
+      emissive: 0x0c0616,
+      emissiveIntensity: 0.5,
+    });
+    this.glowMat = new THREE.MeshBasicMaterial({ color: 0xffffff }); // per-instance × scalar blaze
+    const sites = icosaCutProject()
+      .filter((s) => {
+        const rad01 = Math.hypot(s.x, s.z);
+        if (rad01 < 0.5 || rad01 > 1.0) return false; // HOLLOW: only the shell band survives
+        const y01 = (s.y + 1) / 2;
+        if (y01 <= 0.02 || y01 >= 0.99) return false;
+        // Four arched doorways at the cardinal feet — the hollow interior is enterable, not sealed.
+        const door = Math.cos(2 * Math.atan2(s.z, s.x)) ** 2;
+        if (y01 < 0.14 && door > 0.9) return false;
+        return true;
+      })
+      .sort((a, b) => a.perp - b.perp || a.y - b.y || a.x - b.x); // acceptance-ranked, fully deterministic
+    const nCarve = Math.min(QC_CARVE, sites.length);
+    const nGlow = Math.min(QC_GLOW, Math.max(0, sites.length - nCarve));
+    this.carve = new THREE.InstancedMesh(this.unitBox, this.carveMat, nCarve);
+    this.glow = new THREE.InstancedMesh(this.unitBox, this.glowMat, nGlow);
+    this.carve.frustumCulled = false;
+    this.glow.frustumCulled = false;
+    this.qcCount = nCarve + nGlow;
+    const perpMax = sites.length ? sites[Math.min(sites.length, nCarve + nGlow) - 1]!.perp || 1 : 1;
+    const stepHalf = (y01: number): number => {
+      const f = Math.floor(y01 * TIERS) / TIERS; // gopuram staircase, not a smooth cone
+      return baseHalf * (1 - f) + topHalf * f;
+    };
+    for (let k = 0; k < nCarve + nGlow; k++) {
+      const s = sites[k]!;
+      const isGlow = k >= nCarve;
+      const y01 = (s.y + 1) / 2;
+      const ang = Math.atan2(s.z, s.x);
+      const rad01 = Math.hypot(s.x, s.z); // 0.5..1 in the shell band
+      const half = stepHalf(y01);
+      const worldR = half * (1.3 + (rad01 - 0.5) * 1.0); // 1.3×..1.8× the tier — a thick carved shell
+      pos.set(Math.cos(ang) * worldR, y01 * crownBaseY, Math.sin(ang) * worldR);
+      // Acceptance depth (0 = deepest lattice) drives SIZE — the crystallographic coordinate as form.
+      const depth = 1 - Math.min(1, s.perp / perpMax);
+      const regime = y01 < 1 / 3 ? 0 : y01 < 2 / 3 ? 1 : 2; // HINDU · DANCHEONG · CHIPLET
+      const hk = hash(k * 3.7 + 101);
+      if (isGlow) {
+        const g = 0.8 + depth * 1.6;
+        scl.set(g, g * (0.7 + hk * 0.8), g);
+      } else if (regime === 0) {
+        scl.set(1.4 + depth * 3.4, 2.2 + depth * 6.5 + hk * 2, 1.4 + depth * 3.4); // gopuram verticals
+      } else if (regime === 1) {
+        scl.set(2.6 + depth * 6.0, 1.1 + depth * 1.8, 2.0 + hk * 2.5); // dancheong cornice slabs
+      } else {
+        scl.set(1.8 + depth * 4.2, 0.7 + hk * 0.9, 1.8 + depth * 4.2); // chiplet pin-grid wafers
+      }
+      e.set((hk - 0.5) * 0.16, ang + (hash(k * 5 + 7) - 0.5) * 0.2, (hash(k * 7 + 3) - 0.5) * 0.16);
+      q.setFromEuler(e);
+      m.compose(pos, q, scl);
+      // Palette per regime — dark base + bright accents (the art-direction law), never flat TRON.
+      if (regime === 0) {
+        // HINDU gopuram: saffron / gold / vermillion, deep red accents.
+        const acc = hk > 0.78;
+        col.setHSL(
+          acc ? 0.015 : 0.06 + hash(k * 11 + 5) * 0.07,
+          0.88,
+          acc ? 0.42 : 0.3 + hk * 0.22,
+        );
+      } else if (regime === 1) {
+        // KOREAN dancheong: the five-colour obangsaek bands (green · cobalt · red · gold · white).
+        const p5 = Math.floor(hash(k * 13 + 17) * 5);
+        if (p5 === 0) col.setHSL(0.36, 0.75, 0.3);
+        else if (p5 === 1) col.setHSL(0.58, 0.8, 0.34);
+        else if (p5 === 2) col.setHSL(0.995, 0.82, 0.34);
+        else if (p5 === 3) col.setHSL(0.12, 0.85, 0.42);
+        else col.setHSL(0.12, 0.06, 0.8);
+      } else {
+        // CHIPLET: near-black substrate with cyan/magenta trace lights.
+        const trace = hk > 0.72;
+        col.setHSL(
+          trace ? (hash(k * 17 + 23) > 0.5 ? 0.5 : 0.87) : 0.62,
+          trace ? 0.95 : 0.15,
+          trace ? 0.5 : 0.07,
+        );
+      }
+      if (isGlow) {
+        // Lamps brighten their regime hue — the tower's thousands of lit windows.
+        col.offsetHSL(0, 0.05, 0.22);
+        this.glow.setMatrixAt(k - nCarve, m);
+        this.glow.setColorAt(k - nCarve, col);
+      } else {
+        this.carve.setMatrixAt(k, m);
+        this.carve.setColorAt(k, col);
+      }
+    }
+    this.carve.instanceMatrix.needsUpdate = true;
+    if (this.carve.instanceColor) this.carve.instanceColor.needsUpdate = true;
+    this.glow.instanceMatrix.needsUpdate = true;
+    if (this.glow.instanceColor) this.glow.instanceColor.needsUpdate = true;
+    this.root.add(this.carve);
+    this.root.add(this.glow);
 
     // ── Outstretched buttress-arms (a figure silhouette) at the shoulders. ──
     const armY = crownBaseY * 0.78;
@@ -331,6 +530,15 @@ export class GodColossus {
       ring.rotation.y += dir * 0.0015;
     }
 
+    // V122 (USER #11): the BIPOLAR blaze — a tanh-sharpened slow flip (the schizo switch): the
+    // window lamps linger BRIGHT, cross fast to a smoulder, linger, flip back; the carve shell's
+    // emissive counter-phases so the tower alternates between "ten thousand lit windows" and
+    // "dark megalith with burning bones". Chaos raises both poles — a real world coupling.
+    const flip = 0.5 + 0.5 * Math.tanh(3.0 * Math.sin(t * 0.09 + Math.sin(t * 0.031) * 1.3));
+    this.glowMat.color.setScalar(0.3 + 1.5 * flip + 0.8 * c);
+    this.carveMat.emissive.copy(this.emissiveColor);
+    this.carveMat.emissiveIntensity = 0.2 + 0.9 * (1 - flip) + 0.7 * c;
+
     // Energy shell breathes.
     this.shellMat.uniforms.uTime!.value = t;
     this.shellMat.uniforms.uChaos!.value = c;
@@ -347,6 +555,10 @@ export class GodColossus {
   dispose(): void {
     this.scene.remove(this.root);
     this.panels.dispose();
+    this.carve.dispose();
+    this.glow.dispose();
+    this.carveMat.dispose();
+    this.glowMat.dispose();
     this.unitBox.dispose();
     this.crownGeo.dispose();
     this.spireGeo.dispose();

@@ -11,6 +11,40 @@ dated / historical / "superseded snapshot" copies (per the binding "Living docs,
 
 ---
 
+## 2026-07-02 — GOAL7 eleven-item owner pass (V122): dead-pane root causes · audio doze · panel geometry · BRUTAL entity spectacle · market econometrics · the quasicrystal TOWER
+
+Second owner pass of the day (`f6bf2b58` → the tower commit), every defect root-caused live in the
+browser before fixing:
+
+1. **NHI observatory FIRING/MEMORY "show nothing" — two real bugs:** (a) titans HARVESTED and
+   shoggoths ATE launched NHI bodies (age-immortal but not predation-proof) — the mind unregistered
+   seconds after launch; both predation loops now skip `isNhi`. (b) the episodic MemoryRing was READ
+   (`mean()`, `recent()`) but NEVER WRITTEN — the documented "remember" step did not exist; one
+   valence sample per beat now (browser-verified memLen 0 → 16). Observatory VARIANCE/QH-TREND were
+   checked live and already paint (goal6 geometry work).
+2. **Music/SFX died permanently (~20 min):** the sleep timer engaged the MASTER mute, so audio
+   buttons flipped their own toggles under a silent bus. The doze is now recoverable — any audio
+   control wakes it; a manual mute stays put. Behavioral tests.
+3. **Panels too short (≤16″):** `fitHud` clamped the CENTER panels to the top of SIDE-column boxes
+   (#alg/#hud-vsr) that never horizontally overlap the HUD band — measured 329 px → 762 px after the
+   band-intersection fix + doubled height constants. Godform cards got explicit grid areas (radar
+   overlap now 0 px), copilot's hint joined the compose flow, the hero HUD close keeps a restore
+   chip, and the twin frames in the lower third (rule-of-thirds stack).
+4. **Spawn counts:** burst +25, apocalypse +250 (was tier-scaled ~500/~1500).
+5. **BRUTAL now morphs the ENTITIES every press:** a ~3 s GPU freakshow wave (per-instance rainbow
+   strobe seeded by the press counter + body spasm), a STAGGERED shape remorph (slice/frame ≈ 2.5 s
+   travelling mutation wave), and a real neurological mark — every organism brain jitters ±1.5%
+   (traits preserved) and all 5 apex minds ±0.8%, behavioural divergence proven by test. Ghost/neon/
+   chrome gained distinct GPU layers so all 10 RENDER modes are 1/1.
+6. **MARKET econometrics band:** FX candlesticks (20 OHLC buckets), log-returns + realized σ + max
+   drawdown + momentum, and a REAL Lorenz curve from new `MarketSummary.deciles` (live top-10% share
+   read 28.5%). All from the real fx ring + real wealth vector.
+7. **THE TOWER (bonus):** the god-colossus grew a 6D→3D **icosahedral cut-and-project quasicrystal**
+   hollow shell — aperiodic long-range order (no repeating unit cell, ℤ[φ] coordinates proven by
+   test), carved doorways, three height regimes (Hindu gopuram golds · Korean dancheong obangsaek ·
+   chiplet trace-glow) whose window lamps bipolar-flip against the carve emissive. **12,000
+   individually-varied artifacts across 3 draw calls** (browser-verified), dispose-clean.
+
 ## 2026-07-02 — GOAL6 six-item owner pass (V120/V121): reset scope · growth · pause · BRUTAL morphs · pantheon continuity · live panels · boot page
 
 Owner directive (6 items), shipped across `f56530ab` + `76577920` + the follow-up fix commit, all

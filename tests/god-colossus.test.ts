@@ -34,7 +34,7 @@ function countObjects(scene: THREE.Scene): number {
 }
 
 describe('GodColossus — the colossal god-tier monument', () => {
-  test('boots headless: one root group + ~2400 greeble panels', () => {
+  test('boots headless: one root group + ~2400 greeble panels + the V122 quasicrystal pools', () => {
     const scene = new THREE.Scene();
     const g = new GodColossus(scene);
     let groups = 0;
@@ -43,7 +43,8 @@ describe('GodColossus — the colossal god-tier monument', () => {
     });
     expect(groups).toBe(1);
     expect(g.panelCount).toBeGreaterThan(2000);
-    expect(instanceMeshes(scene).length).toBe(1);
+    // V122 (USER #11): panels + quasicrystal carve blocks + window lamps = 3 instanced pools.
+    expect(instanceMeshes(scene).length).toBe(3);
     g.dispose();
   });
 
