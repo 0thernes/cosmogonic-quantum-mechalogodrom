@@ -20,15 +20,23 @@ export function bootStage(name: string, value: string, doc: Document = document)
 
 /**
  * Yield to the compositor so the overlay paints the latest tile values BEFORE the next synchronous
- * boot block runs (double-rAF = one guaranteed presented frame).
+ * boot block runs (double-rAF = one guaranteed presented frame). RACED against a 350 ms timeout:
+ * a backgrounded / headless tab never fires rAF, and without the race the whole boot would HANG at
+ * the first yield until the tab was focused (found live in the preview harness).
  */
 export function bootPaint(): Promise<void> {
   return new Promise((resolve) => {
-    if (typeof requestAnimationFrame !== 'function') {
-      resolve();
-      return;
+    let settled = false;
+    const done = (): void => {
+      if (!settled) {
+        settled = true;
+        resolve();
+      }
+    };
+    if (typeof requestAnimationFrame === 'function') {
+      requestAnimationFrame(() => requestAnimationFrame(done));
     }
-    requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+    setTimeout(done, 350);
   });
 }
 

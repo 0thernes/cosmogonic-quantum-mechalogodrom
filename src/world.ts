@@ -1776,6 +1776,9 @@ export class World {
       // V121 SUSPENDED ANIMATION (USER): the organisms don't just shimmer — they SPIN, TWINE, BOB
       // and ORBIT their frozen loci like every other creature. The amplitude eases in over ~0.7 s
       // (never snaps) and the spin clock advances on the real frame delta. Render-only, no rng.
+      // Tier note: the effect rides the instanced pools' vertex shader, so the PHONE per-mesh
+      // fallback (instanced=null) keeps its plain frozen pause — the same effects-for-survival
+      // trade that tier already makes for shadows/post-FX.
       this.suspendClock += uiDt;
       this.suspendFx = Math.min(1, this.suspendFx + uiDt * 1.5);
       this.instanced.setSuspend(this.suspendFx, this.suspendClock);

@@ -11,6 +11,42 @@ dated / historical / "superseded snapshot" copies (per the binding "Living docs,
 
 ---
 
+## 2026-07-02 — GOAL6 six-item owner pass (V120/V121): reset scope · growth · pause · BRUTAL morphs · pantheon continuity · live panels · boot page
+
+Owner directive (6 items), shipped across `f56530ab` + `76577920` + the follow-up fix commit, all
+gate-green. Root causes were measured, not guessed:
+
+1. **"Reset resets the Pantheons"** — the reset button never touched pantheon state; the real defect
+   was that `resetSim`'s chaos snap re-scaled the pantheon's ACCUMULATED roam angles
+   (`roamDrift = clock × f(chaos)` in alphabet-pantheon-render.ts) — a chaos step teleported every
+   godform. Fixed by **rate-integrated motion clocks** (`driftClock`/`animClock`/`apexDrift`/
+   `apexAnim` + eased chaos for amplitude couplings): live signals now modulate SPEED, never
+   accumulated angles. This also killed the per-frame chaos-decay micro-stutter and the mind-cadence
+   jerk. Reset itself is now ENTITIES-ONLY → 1 progenitor, verified live in-browser (500 → 1).
+2. **Growth** — pure `src/sim/growth-ramp.ts` (630 s ramp, 3× gentler; ceiling untouched),
+   re-anchored at reset so the world regrows slowly from the lone progenitor.
+3. **Pause** — SUSPENDED now animates the instanced organisms IN PLACE (uSuspend GPU branch:
+   per-instance spin/twine/bob/orbit on the pause clock, eased in/out, held mid-orbit in FROZEN).
+   Render-only, rng-free, byte-identical at 0. Phone per-mesh fallback keeps the plain freeze
+   (documented tier trade).
+4. **BRUTAL morph transitions** (V120) — sin(π·x) 2.4 s envelope per press: spin-up/decel via an
+   accumulated phase (no snap-back), shader displacement surge + chromatic sweep, spike/tentacle
+   shake with exact rest-pose settle, ring gyroscope, eye flash + pupil spasm. NEW iris shader:
+   6 pupil SHAPES (round/slit/goat-bar/star/annular/pinpoint) + per-style iris hue + sclera costume —
+   REPRESSIONISM = white sclera + tiny black pinpoint pupils. Per-variant resting eyes (5 distinct).
+5. **Panels** — ingest/render split for the 3 BRAINS slots (autonomous ~30 fps eased rAF loop over
+   REAL 6f/12f snapshots) and the ARCHON GODFORMS radars (open-panel-only loop + activity sweep;
+   grid now fills the panel; ~80 DOM writes skipped while closed).
+6. **Boot page** — `#cqm-boot` overlay with 8 REAL metric tiles (shell/quality/engine/seed/world/
+   entities/pantheon/first-light), compositor-driven CSS that animates through the synchronous World
+   build, staged boot with paint yields in main.ts, retired on first rendered frame. Found + fixed
+   live: the paint yield must RACE a 350 ms timeout or a backgrounded tab hangs the whole boot.
+
+Receipts: 2141 tests (+6 files: growth-ramp, pantheon-motion-continuity, super-body-morph,
+goal6-ui-live), coverage 92.18/89.80. In-browser verification on the worktree build: boot tiles fill
+with real timings; reset → 1 entity; BRUTAL envelope opens + iris costume lerps. An adversarial
+multi-agent review of the full diff ran before the final push (findings folded into the fix commit).
+
 ## 2026-07-02 — Round 4: the coupling experiment (R1) — selfAware un-rail SHIPPED, two routings measured NULL
 
 The top research risk (R1, "coupling > count") attacked as a measured experiment, per the scorecard's
