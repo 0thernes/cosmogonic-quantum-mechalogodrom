@@ -3552,12 +3552,14 @@ export class World {
     }
   }
 
-  /** Legacy doBurst, tier-scaled: 30..100 spawns in the (×ARENA_MID) core volume. */
-  private doBurst(): void {
+  /** V122 (USER #8): burst is a FIXED +25 per press (apocalypse passes 250) — the old tier-scaled
+   *  form spawned maxEntities/100 (≈500 at the 50k tier) per press and the triple-burst apocalypse
+   *  dumped ~1,500 at once, spiking CPU/GPU. Room-clamped so the ceiling is never breached. */
+  private doBurst(count = 25): void {
     this.audio.play('burst');
     const room = this.quality.maxEntities - this.entities.list.length;
-    const count = Math.min(Math.max(30, Math.floor(this.quality.maxEntities / 100)), room);
-    for (let i = 0; i < count; i++) {
+    const n = Math.min(count, Math.max(0, room));
+    for (let i = 0; i < n; i++) {
       this.sv1.set(
         (this.uiRng() - 0.5) * 25 * ARENA_MID,
         this.uiRng() * 14 * ARENA_Y,
@@ -3596,9 +3598,7 @@ export class World {
       );
       e.userData.belly = 120;
     }
-    this.doBurst();
-    this.doBurst();
-    this.doBurst();
+    this.doBurst(250); // V122 (USER #8): apocalypse adds exactly +250 per press (was ~3×500)
     // The apocalypse brands the ground itself.
     for (let i = 0; i < 3; i++) this.rd.perturb(this.rng(), this.rng(), 9);
   }

@@ -1287,6 +1287,10 @@ export class TitanSystem {
       ) {
         const e = list[i];
         if (!e) continue; // invariant: list is dense
+        // V122 (USER #3 root cause): NHI MATRIX beings are NOT biomass. They are age-immortal by
+        // design, but a titan harvest silently disposed a launched NHI's body seconds after launch —
+        // unregistering its mind and blanking the NHI observatory (FIRING/MEMORY "show nothing").
+        if (e.userData.isNhi) continue;
         if (dist2XZ(p.x, p.z, e.position.x, e.position.z) < HARVEST_REACH2) {
           ti.matter += MATTER_PER_ENTITY * e.userData.sc;
           this.entities.disposeAt(i);

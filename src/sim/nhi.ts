@@ -265,6 +265,11 @@ export class NhiMind {
     // many are near), so a panicked cluster spirals together and a manic one feeds each other's frenzy.
     const kinPresence = p.kinPresence ?? 0;
     const kinMood = p.kinMood ?? 0;
+    // V122 (USER #3): the REMEMBER step was documented but never written — the MemoryRing was read
+    // (mean() below, recent() in snapshot) yet nothing ever pushed, so the MEMORY observatory pane
+    // sat at "filling memory…" forever and the mean() mood term was a dead 0. One valence sample per
+    // decision beat (energy − threat + a little chaos), exactly as the pane's legend describes.
+    this.memory.push(clamp(p.energy - p.threat + p.chaos * 0.2, -1, 1));
     this.mood = clamp(
       this.mood * 0.85 +
         (p.energy - p.threat) * 0.3 +

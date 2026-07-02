@@ -62,6 +62,36 @@ describe('AudioEngine', () => {
     expect(engine.musicOn).toBe(true); // toggle state preserved
   });
 
+  test('V122 (USER #7): the sleep doze is RECOVERABLE — any audio button wakes the master bus', async () => {
+    // Pre-fix the sleep timer set the STICKY master mute: MUSIC/SFX presses flipped their own
+    // toggles under a silent master bus, so audio "died until refresh". Any control must wake it.
+    const engine = new AudioEngine(state(), mulberry32(7));
+    engine.setSleepDelay(1);
+    engine.toggleMusic();
+    await new Promise((r) => setTimeout(r, 20));
+    expect(engine.muted).toBe(true); // dozed
+    engine.toggleSfx(); // user presses ANY audio button…
+    expect(engine.muted).toBe(false); // …and the master bus is awake again
+    expect(engine.sfxOn).toBe(true);
+    expect(engine.musicOn).toBe(true); // music kept playing state through the doze
+
+    // A dozed bus also wakes via the song cycler.
+    const e2 = new AudioEngine(state(), mulberry32(8));
+    e2.setSleepDelay(1);
+    e2.toggleMusic();
+    await new Promise((r) => setTimeout(r, 20));
+    expect(e2.muted).toBe(true);
+    e2.cycleSong();
+    expect(e2.muted).toBe(false);
+
+    // But a MANUAL mute stays exactly where the user put it (no auto-wake hijack).
+    const e3 = new AudioEngine(state(), mulberry32(9));
+    e3.toggleMusic();
+    e3.toggleMute(); // user muted on purpose
+    e3.toggleSfx();
+    expect(e3.muted).toBe(true); // buttons do NOT override an intentional mute
+  });
+
   test('dispose clears the sleep timer', () => {
     const engine = new AudioEngine(state(), mulberry32(6));
     engine.setSleepDelay(1);

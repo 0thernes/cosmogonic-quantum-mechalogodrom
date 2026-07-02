@@ -115,6 +115,10 @@ export class AudioEngine {
   /** Sleep timer that auto-mutes after a period of continuous playback. */
   private sleepTimer: ReturnType<typeof setTimeout> | null = null;
   private sleepMs = SLEEP_MS;
+  /** V122 (USER #7): true when the MASTER mute was engaged by the sleep timer, not the user — the
+   *  doze used to be STICKY (music/SFX buttons flipped their own toggles under a silent master bus,
+   *  so "audio died until refresh"); any audio control now wakes a dozed bus first. */
+  private sleptAuto = false;
   /** Ambient auto-SFX timer + its visibilitychange handler — retained so {@link dispose} can clear
    *  them (the renderer side already tears down via Engine.dispose; the audio side must match). */
   private ambientInterval: ReturnType<typeof setInterval> | null = null;
@@ -405,6 +409,7 @@ export class AudioEngine {
    */
   toggleMusic(): boolean {
     this.init();
+    this.wake(); // V122: a dozed master bus wakes on any audio button (USER #7)
     this._musicOn = !this._musicOn;
     if (this._musicOn) {
       this.startScheduler();
@@ -424,6 +429,7 @@ export class AudioEngine {
    */
   toggleSfx(): boolean {
     this.init();
+    this.wake(); // V122: a dozed master bus wakes on any audio button (USER #7)
     this._sfxOn = !this._sfxOn;
     if (this.ctx && this.sfxGain) {
       this.sfxGain.gain.setTargetAtTime(this._sfxOn ? 0.3 : 0, this.ctx.currentTime, 0.1);
@@ -438,6 +444,7 @@ export class AudioEngine {
    */
   toggleMute(): boolean {
     this.init();
+    this.sleptAuto = false; // a manual mute action takes ownership from the sleep doze
     this._muted = !this._muted;
     if (this.ctx && this.masterGain) {
       this.masterGain.gain.setTargetAtTime(this._muted ? 0 : 1, this.ctx.currentTime, 0.1);
@@ -465,6 +472,7 @@ export class AudioEngine {
    * If music is playing, the scheduler restarts on the new song immediately.
    */
   cycleSong(): string {
+    this.wake(); // V122: a dozed master bus wakes on any audio button (USER #7)
     this.state.songIdx = (this.state.songIdx + 1) % SONGS.length;
     // songIdx ∈ [0, SONGS.length) by the modulo above and SONGS is non-empty.
     const song = SONGS[this.state.songIdx]!;
@@ -481,6 +489,7 @@ export class AudioEngine {
    * SFX are toggled off, matching legacy `pS` gating.
    */
   cycleSfxPreview(): string {
+    this.wake(); // V122: a dozed master bus wakes on any audio button (USER #7)
     this.sfxIdx = (this.sfxIdx + 1) % SFX_TYPES.length;
     // sfxIdx ∈ [0, SFX_TYPES.length) by the modulo above and SFX_TYPES is non-empty.
     const type = SFX_TYPES[this.sfxIdx]!;
@@ -977,8 +986,19 @@ export class AudioEngine {
     this.clearSleepTimer();
     this.sleepTimer = setTimeout(() => {
       this.sleepTimer = null;
-      if (this._musicOn && !this._muted) this.toggleMute();
+      if (this._musicOn && !this._muted) {
+        this.toggleMute();
+        this.sleptAuto = true; // a recoverable DOZE, not a user mute — any audio button wakes it
+      }
     }, this.sleepMs);
+  }
+
+  /** V122 (USER #7): wake a sleep-dozed master bus. No-op unless the sleep timer muted it. */
+  private wake(): void {
+    if (this.sleptAuto) {
+      this.sleptAuto = false;
+      if (this._muted) this.toggleMute(); // restores the master gain + re-arms the sleep timer
+    }
   }
 
   /** Test hook: override the auto-mute sleep delay. */

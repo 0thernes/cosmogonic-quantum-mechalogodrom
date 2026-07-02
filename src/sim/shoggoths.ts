@@ -667,6 +667,9 @@ export class ShoggothSystem {
         for (let ci = 0; ci < consumeCandidates.length; ci++) {
           const e = consumeCandidates[ci];
           if (!e) continue;
+          // V122: NHI MATRIX beings are not prey (same guard as the titan harvest — predation was
+          // silently unregistering launched NHI minds and blanking the NHI observatory).
+          if (e.userData.isNhi) continue;
           const ep = e.position;
           const sd = dist2(p.x, p.y, p.z, ep.x, ep.y, ep.z);
           if (sd >= CONSUME_REACH2) continue;
