@@ -1,10 +1,14 @@
 <!-- reviewed: 2026-06-27 | repo-wide consistency audit | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
 
-# A-Life Comparative Audit — Cosmogonic Quantum Mechalogodrom vs 25 Known Systems
+# A-Life Comparative Audit — Cosmogonic Quantum Mechalogodrom vs 112 Known Systems
 
-**Date:** 2026-06-26 · **Edition:** v3 (code-grounded + extended-geometry upgrade) · **Repo:** `v0.18.0`
-**Scope:** the current repo (`origin/main`) plus a sourced, adversarially re-verified survey of 25
-well-known Artificial-Life / open-ended-evolution / digital-organism systems.
+**Date:** 2026-06-26 · **Edition:** v4 (113-system expansion, 2026-07-02) · **Repo:** `v0.18.0`
+**Scope:** the current repo (`origin/main`) plus a sourced, adversarially re-verified survey of **112**
+well-known Artificial-Life / open-ended-evolution / digital-organism / neuroevolution / agent-based
+systems — spanning cellular automata, digital evolution, evolutionary robotics, quality-diversity,
+agent-based societies, commercial games, indie particle-life, and the LLM/foundation-model frontier. The
+survey grew from 25 to 112 peers via an 8-bucket research fan-out, each system web-sourced and each score
+adversarially verified against the same 9-axis rubric.
 
 **Single source for every statistic + chart below:**
 [`2026-06-26-alife-comparison-matrix.csv`](./2026-06-26-alife-comparison-matrix.csv)
@@ -39,31 +43,37 @@ open-ended-search system, and **not evidence of sentience**.
 Its defensible novelty is narrower and stronger, and now measured **two ways** — once with the self-scored
 matrix, once after re-auditing that row against source:
 
-1. **Broadest integrated synthesis in the surveyed set.** Self-scored breadth `4.44/5`, rank **#1 of 26**,
-   `z = +3.01σ`. Re-scored against the actual source code, breadth falls to `3.68/5` — **still rank #1, still
-   `0` systems dominate it in 9-D**, but the population z drops to `+2.10σ` and its breadth lead over the
-   nearest peer (ALIEN) shrinks from `+0.94` to `+0.18`. **The conclusion survives the honest re-scoring;
-   the superlative does not.** This is a self-conducted comparative audit, not an external or peer-reviewed
-   ranking.
+1. **Broadest integrated synthesis in the surveyed set.** Self-scored breadth `4.44/5`, rank **#1 of 113**,
+   `z = +4.02σ` (population) / `+4.36σ` (vs peers only). Re-scored against the actual source code, breadth
+   falls to `3.68/5` — **still rank #1, still `0` systems dominate it in 9-D**, but the population z drops to
+   `+2.83σ` and its breadth lead over the nearest peer (ALIEN) shrinks from `+0.94` to `+0.18`. **The
+   conclusion survives the honest re-scoring AND the 4.3× larger field; the superlative does not.** This is a
+   self-conducted comparative audit, not an external or peer-reviewed ranking. (Note: widening the survey
+   from 25 to 112 peers _raised_ the z-score — the fuller field has a lower, tighter breadth mean of `2.11`,
+   so Cosmogonic's generalist profile stands out more, not less.)
 2. **The lead lives on the field's emptiest axes.** Even code-grounded, it is the sole field leader in
-   **consciousness-theory instrumentation (`+4.60σ`)** and **substrate pluralism (`+3.66σ`)** — two axes
-   where the survey mean is `0.27` and `1.44`. These are **instrumentation/breadth** measures, not evidence
-   of consciousness or capability.
+   **consciousness-theory instrumentation (`+9.73σ`)** and **substrate pluralism (`+7.57σ`)** — two axes
+   where the 113-system mean is `0.06` and `1.11` (almost no other A-Life system instruments consciousness
+   theories or runs multiple computational substrates). These are **instrumentation/breadth** measures, not
+   evidence of consciousness or capability.
 3. **Scientific maturity is low: peer-maturity `1.5/5`.** No peer-reviewed result yet proves the integrated
-   substrates produce robust long-run open-ended evolution; across the survey, **breadth and maturity are
-   negatively correlated (`r = −0.62`)**. Cosmogonic sits at the extreme corner — maximal breadth, near-minimal
-   maturity. Breadth does **not** offset this.
+   substrates produce robust long-run open-ended evolution; across the fuller survey, **breadth and maturity
+   are weakly negatively correlated (`r = −0.13`)** — weaker than the `−0.62` seen in the small 25-system
+   survey, because the 112-peer field contains many low-breadth low-maturity indie systems that flatten the
+   trend. Cosmogonic still sits at the extreme corner — maximal breadth, near-minimal maturity. Breadth does
+   **not** offset this.
 4. **Open-endedness — the axis that matters most for any "unbounded life" claim — is its weakest result.**
-   Self-scored it is only `+0.21σ` (at the field mean); **code-grounded it drops below the mean** (the only
-   genuine open-ended mechanism in the source is one cross-strain genetic algorithm; the rest is a handcrafted
-   progression arc).
+   Self-scored it is only `+0.67σ` (barely above the field mean); **code-grounded it drops below the mean
+   (`−0.33σ`)** (the only genuine open-ended mechanism in the source is one cross-strain genetic algorithm;
+   the rest is a handcrafted progression arc). The dedicated open-endedness leaders (Picbreeder, POET, ASAL,
+   Novelty Search, OMNI, MCC) all out-score it here.
 5. **An adversarial novelty hunt found `0` hard refutations** of the exact five-way conjunction — which means
    the claim **survived** the hunt, **not** that it is proven. The honest verdict is **"novel by integration,"**
    not a world-first.
 
 The cleanest single sentence: **a survey-rare, evidence-heavy synthesis whose novelty is in the conjunction
-— measured as a `+2.1σ`–`+3.0σ` breadth outlier carried by the field's emptiest axes — not a global
-world-first, not a proven breakthrough, not sentience.**
+— measured as a `+2.8σ`–`+4.0σ` breadth outlier (across 113 systems) carried by the field's emptiest axes —
+not a global world-first, not a proven breakthrough, not sentience.**
 
 ---
 
@@ -71,15 +81,15 @@ world-first, not a proven breakthrough, not sentience.**
 
 **Tier 1 — breadth + capability** (engine: `alife-comparison-stats.ts`):
 
-- Ranked breadth, all 26 systems — ![ranked breadth](./assets/alife-breadth-ranked.svg)
-- Capability heatmap, 26 × 9 — ![heatmap](./assets/alife-axis-heatmap.svg)
+- Ranked breadth, all 113 systems — ![ranked breadth](./assets/alife-breadth-ranked.svg)
+- Capability heatmap, 113 × 9 — ![heatmap](./assets/alife-axis-heatmap.svg)
 - Breadth vs peer maturity (the "broad but immature" map) — ![scatter](./assets/alife-breadth-vs-maturity.svg)
 - Nine-axis radar (Cosmogonic vs survey mean vs ALIEN) — ![radar](./assets/alife-radar-profile.svg)
 - Nearest neighbours (Euclidean, 9-axis) — ![nearest neighbours](./assets/alife-nearest-neighbors.svg)
 
 **Tier 2 — multivariate geometry** (engine: `alife-comparison-geometry.ts`):
 
-- PCA projection (26 systems in the 9-axis eigenbasis) — ![pca](./assets/alife-pca.svg)
+- PCA projection (113 systems in the 9-axis eigenbasis) — ![pca](./assets/alife-pca.svg)
 - Capability dendrogram (average-linkage) — ![dendrogram](./assets/alife-dendrogram.svg)
 - Pairwise distance matrix (clustered order) — ![distance matrix](./assets/alife-distance-matrix.svg)
 - Pareto frontier (breadth × maturity) — ![pareto](./assets/alife-pareto.svg)
@@ -90,9 +100,9 @@ world-first, not a proven breakthrough, not sentience.**
 
 ## Code-grounding of the self-scored row (the honesty correction)
 
-The 25 peer rows are literature judgments; the **Cosmogonic row is the only self-score**. A 9-agent pass read
-the actual TypeScript and reported a **code-defensible** score per axis with `file:line` evidence. The owner's
-binding rule is honesty — agents were told not to rubber-stamp, and they didn't.
+The 112 peer rows are literature/documentation judgments; the **Cosmogonic row is the only self-score**. A
+9-agent pass read the actual TypeScript and reported a **code-defensible** score per axis with `file:line`
+evidence. The owner's binding rule is honesty — agents were told not to rubber-stamp, and they didn't.
 
 | Axis                    | Self | Code-defensible | Verdict         | Strongest proof (`file:line`)                                                                                                                                                                                        |
 | ----------------------- | ---: | --------------: | --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -126,25 +136,27 @@ merely present is decorative until instantiated.**
 ### Sensitivity: how much the conclusion moves under honest re-scoring
 
 `alife-codeground-sensitivity.ts` recomputes every headline statistic with the code-grounded vector
-`[4.0, 2.2, 3.0, 3.8, 3.8, 4.5, 4.3, 3.5, 4.0]` against the same 25 peers:
+`[4.0, 2.2, 3.0, 3.8, 3.8, 4.5, 4.3, 3.5, 4.0]` against the same 112 peers:
 
 | Statistic                      | Self-scored | Code-grounded |       Δ |
 | ------------------------------ | ----------: | ------------: | ------: |
 | Breadth (mean of 9 axes)       |      `4.44` |      **3.68** | `−0.77` |
-| Rank among 26                  |        `#1` |      **`#1`** |       — |
-| z-score vs population          |    `+3.01σ` |    **+2.10σ** | `−0.91` |
-| z-score vs 25 peers            |    `+3.84σ` |    **+2.36σ** | `−1.49` |
-| Mahalanobis (covariance-aware) |     `10.27` |      **8.02** | `−2.25` |
+| Rank among 113                 |        `#1` |      **`#1`** |       — |
+| z-score vs population          |    `+4.02σ` |    **+2.83σ** | `−1.19` |
+| z-score vs 112 peers           |    `+4.36σ` |    **+2.95σ** | `−1.42` |
+| Mahalanobis (covariance-aware) |     `12.66` |     **10.25** | `−2.40` |
 | Systems that dominate it (9-D) |         `0` |       **`0`** |       — |
-| Breadth lead over nearest peer |     `+0.94` |     **+0.18** | `−0.76` |
+| Breadth lead over nearest peer |     `+0.94` |     **+0.18** | `−0.77` |
 
-**The robust conclusions** (survive the brutal re-scoring): still rank #1, still `0`-dominated in 9-D, still the
-sole leader in consciousness-instrumentation (`+4.60σ` code-grounded) and substrate pluralism (`+3.66σ`).
-**The fragile claims** (do not survive): the "+3σ extreme outlier" framing softens to "+2.1σ"; the comfortable
-breadth lead becomes razor-thin (`+0.18`); **ecology drops to the field mean (`+0.08σ`) and open-endedness drops
-below it (`−0.83σ`).** The most honest single statement the data supports: _under source-grounded scoring it is
-still the broadest system in the survey, but only just, and its breadth is concentrated in instrumentation and
-substrate diversity — not in the open-ended, ecological, or evolutionary depth that would prove the thesis._
+**The robust conclusions** (survive both the brutal re-scoring AND the 4.3× larger field): still rank #1 of 113,
+still `0`-dominated in 9-D, still the sole leader in consciousness-instrumentation (`+9.73σ` code-grounded) and
+substrate pluralism (`+7.57σ`) — the 112-system field is even emptier on those axes than the 25-system one was.
+**The fragile claims** (do not survive): the "+4σ extreme outlier" framing softens to "+2.8σ"; the comfortable
+breadth lead stays razor-thin (`+0.18`); **ecology falls to just above the field mean (`+0.59σ`) and
+open-endedness drops below it (`−0.33σ`).** The most honest single statement the data supports: _under
+source-grounded scoring it is still the broadest system in a 113-system survey, but its breadth is concentrated
+in instrumentation and substrate diversity — not in the open-ended, ecological, or evolutionary depth that would
+prove the thesis._
 
 ---
 
@@ -179,8 +191,8 @@ those are **computational indicators, not subjective experience.** The hard prob
 | `bun test`          | **`2104 pass`, `0 fail`, `2,912,102 expect() calls`, `231` files** (published floor `1,984`)                     |
 | Coverage receipt    | **`92.13%` line, `89.66%` function** (canonical, `±6 pp` gate-enforced)                                          |
 | `bun run check`     | full gate green: format, typecheck, lint, tests, receipts, sync, build                                           |
-| `SuperMind.think()` | `3.34 ms` full-suite / `8.85 ms` focused — **not** any sub-millisecond / `<2%`-frame claim (those are stale)     |
-| `5× think()` batch  | `14.47 ms` / `25.40 ms` focused                                                                                  |
+| `SuperMind.think()` | `1.99 ms` full-suite (2026-07-02) — **not** any sub-millisecond / `<2%`-frame claim (those are stale)            |
+| `5× think()` batch  | `9.77 ms` (staggered `driveSuper`; ~58% of a frame)                                                              |
 | Low-level kernels   | `mulberry32` `1.47 ns`; `selectTopK` `15.4×` faster than full sort; spatial hash `383 ns`; Gray-Scott RD `94 µs` |
 
 Interpretation: **the small math kernels are healthy; the multi-mind cognition stack needs fresh frame-budget
@@ -190,51 +202,56 @@ work.** Any `<2%`-frame 5-Archon figure is a remediation goal, not an achieved b
 
 ## Statistical analysis (self-scored basis)
 
-Emitted by `alife-comparison-stats.ts` into [`assets/alife-stats.json`](./assets/alife-stats.json). `N = 26`.
+Emitted by `alife-comparison-stats.ts` into [`assets/alife-stats.json`](./assets/alife-stats.json). `N = 113`.
 These figures use the self-scored Cosmogonic row (the basis for the Tier-1 charts); the
 [sensitivity table](#sensitivity-how-much-the-conclusion-moves-under-honest-re-scoring) above gives the
 code-grounded variant.
 
 ### Breadth distribution and the outlier signal
 
-| Statistic                             |           Value | Note                                                      |
-| ------------------------------------- | --------------: | --------------------------------------------------------- |
-| Cosmogonic breadth mean (self)        |      **`4.44`** | rank **#1 / 26**, **100th percentile**                    |
-| Cosmogonic breadth mean (code-ground) |          `3.68` | rank **#1 / 26**, lead over nearest peer `+0.18`          |
-| Survey breadth mean (all 26)          |          `2.54` | population mean                                           |
-| Survey breadth std (all 26)           |          `0.63` | population σ                                              |
-| **z (self / code-grounded)**          | `+3.01 / +2.10` | both are genuine outliers; `+3` is extreme, `+2.1` strong |
-| Median breadth / median peer-maturity |    `2.44` / `4` | Cosmogonic maturity `1.5` — far below the median          |
+| Statistic                             |           Value | Note                                                          |
+| ------------------------------------- | --------------: | ------------------------------------------------------------- |
+| Cosmogonic breadth mean (self)        |      **`4.44`** | rank **#1 / 113**, **100th percentile**                       |
+| Cosmogonic breadth mean (code-ground) |          `3.68` | rank **#1 / 113**, lead over nearest peer `+0.18`             |
+| Survey breadth mean (all 113)         |          `2.11` | population mean                                               |
+| Survey breadth std (all 113)          |          `0.58` | population σ                                                  |
+| **z (self / code-grounded)**          | `+4.02 / +2.83` | both are genuine outliers; the fuller field raised the signal |
+| Median breadth / median peer-maturity |  `2.11` / `3.5` | Cosmogonic maturity `1.5` — below the median                  |
 
 ### Per-axis σ-outlier analysis — where the breadth lives
 
-| Axis                     | Survey mean |      σ | Cosmo (self) | z (self) | z (code-ground) | Field leaders (max)                                                |
-| ------------------------ | ----------: | -----: | -----------: | -------: | --------------: | ------------------------------------------------------------------ |
-| **Consciousness-theory** |      `0.27` | `0.89` |        `4.5` | `+4.75σ` |      **+4.60σ** | **Cosmogonic (sole)**                                              |
-| **Substrate pluralism**  |      `1.44` | `0.91` |        `5.0` | `+3.91σ` |      **+3.66σ** | **Cosmogonic (sole)**                                              |
-| **Cognition / learning** |      `2.12` | `1.39` |        `4.5` | `+1.72σ` |      **+1.27σ** | **Cosmogonic (sole)**                                              |
-| Instrumentation          |      `3.40` | `0.83` |        `4.5` | `+1.32σ` |          +1.10σ | Game of Life, EvoGym                                               |
-| Visual scale             |      `3.35` | `1.33` |        `5.0` | `+1.24σ` |          +0.53σ | Karl Sims, Creatures, Picbreeder, Lenia, ALIEN                     |
-| Morphology / physics     |      `2.92` | `1.75` |        `4.0` | `+0.61σ` |          +0.51σ | Framsticks, Karl Sims, Gene Pool, breve, OpenWorm, EvoGym, ALIEN   |
-| Reproduction             |      `3.15` | `1.73` |        `4.0` | `+0.49σ` |          +0.49σ | Tierra, Avida, Framsticks, Creatures, Darwin Pond, Gene Pool, MABE |
-| Ecology                  |      `2.96` | `1.43` |        `5.0` | `+1.43σ` |      **+0.08σ** | (self) Cosmogonic, Polyworld, Sugarscape, Swarm                    |
-| **Open-endedness**       |      `3.25` | `1.19` |        `3.5` | `+0.21σ` |      **−0.83σ** | Picbreeder, POET, ASAL                                             |
+| Axis                     | Survey mean |      σ | Cosmo (self) |  z (self) | z (code-ground) | Field leaders (max = 5)                                           |
+| ------------------------ | ----------: | -----: | -----------: | --------: | --------------: | ----------------------------------------------------------------- |
+| **Consciousness-theory** |      `0.06` | `0.44` |        `4.5` | `+10.04σ` |      **+9.73σ** | **Cosmogonic (sole)**                                             |
+| **Substrate pluralism**  |      `1.11` | `0.48` |        `5.0` |  `+8.05σ` |      **+7.57σ** | **Cosmogonic (sole)**                                             |
+| Ecology                  |      `2.21` | `1.40` |        `5.0` |  `+1.99σ` |          +0.59σ | Cosmogonic, Polyworld, Sugarscape, Swarm                          |
+| Visual scale             |      `2.93` | `1.16` |        `5.0` |  `+1.79σ` |          +0.94σ | Karl Sims, Creatures, Lenia, ALIEN, Flow Lenia, Spore, Noita      |
+| Cognition / learning     |      `1.90` | `1.60` |        `4.5` |  `+1.62σ` |          +1.20σ | DERL, UNIMAL, Transform2Act, NerveNet (Cosmo now #5, not sole)    |
+| Instrumentation          |      `3.14` | `1.02` |        `4.5` |  `+1.34σ` |          +1.15σ | Game of Life, EvoGym, Aevol, Avida-ED, MAP-Elites, NetLogo        |
+| Morphology / physics     |      `2.34` | `1.66` |        `4.0` |  `+1.00σ` |          +0.88σ | Framsticks, Karl Sims, GOLEM, Voxelyze, soft-robots, 3DVCE        |
+| Reproduction             |      `2.63` | `1.75` |        `4.0` |  `+0.79σ` |          +0.79σ | Tierra, Avida, Framsticks, Aevol, Network Tierra, NEAT, HyperNEAT |
+| **Open-endedness**       |      `2.63` | `1.29` |        `3.5` |  `+0.67σ` |      **−0.33σ** | Picbreeder, POET, ASAL, Geb, Novelty Search, OMNI, MCC            |
 
-**The honest reading:** the outlier status is carried by **three axes the field has barely touched** —
-consciousness-theory instrumentation, substrate pluralism, and cognition — and those three survive even the
-code-grounded re-scoring. On **open-endedness — the axis that matters most for any "unbounded life" claim — it
-is at the field mean self-scored and below it code-grounded**, out-led by Picbreeder, Enhanced POET, and ASAL.
-On **ecology**, the self-score of `5.0` (`+1.43σ`) collapses to `3.0` (`+0.08σ`, i.e. average) once
-leviathans/connectome/noosphere are correctly counted as one-way or scenery. Breadth is not depth, and the axes
-where depth would prove the thesis are exactly where the system is ordinary.
+**The honest reading:** across the full 113-system field the outlier status is carried by **two axes almost
+nobody else touches** — consciousness-theory instrumentation (survey mean `0.06`) and substrate pluralism (mean
+`1.11`) — where Cosmogonic is the sole leader by `+9.73σ` / `+7.57σ` even code-grounded. Its former "sole leader
+in cognition" claim does **not** survive the widened field: DERL, UNIMAL, Transform2Act and NerveNet (deep
+evolutionary-RL animals) now score the `5.0` and Cosmogonic sits at `4.5`. On **open-endedness — the axis that
+matters most for any "unbounded life" claim — it is barely above the field mean self-scored and below it
+code-grounded (`−0.33σ`)**, out-led by Picbreeder, POET, ASAL, Novelty Search, OMNI and MCC. On **ecology**, the
+self-score of `5.0` (`+1.99σ`) falls to `3.0` (`+0.59σ`) once leviathans/connectome/noosphere are counted as
+one-way or scenery. Breadth is not depth, and the axes where depth would prove the thesis are exactly where the
+system is ordinary.
 
-### Correlation: breadth vs maturity (`r = −0.62`)
+### Correlation: breadth vs maturity (`r = −0.13`)
 
-Across all 26 systems, **breadth of synthesis and peer scientific maturity are moderately-to-strongly negatively
-correlated: Pearson `r = −0.618`.** Broad "everything" systems are, in this survey, the _least_ peer-validated;
-narrow classics (Game of Life, Avida, Tierra, Karl Sims) are the most. Cosmogonic sits at the extreme corner —
-maximal breadth, near-minimal maturity. The negative slope is the structural law of the field, and it scopes
-precisely what remains to be earned: **maturity via ablations and long-run open-endedness data, not more breadth.**
+Across all 113 systems, **breadth of synthesis and peer scientific maturity are weakly negatively correlated:
+Pearson `r = −0.133`** — weaker than the `−0.62` of the 25-system survey, because the 112-peer field adds many
+low-breadth, low-maturity indie/CA/particle-life systems that flatten the slope. The direction still holds — the
+broadest "everything" systems remain the _least_ peer-validated, and narrow classics (Game of Life, Avida,
+Tierra, Karl Sims) the most. Cosmogonic still sits at the extreme corner — maximal breadth, near-minimal
+maturity — which scopes precisely what remains to be earned: **maturity via ablations and long-run
+open-endedness data, not more breadth.**
 
 ---
 
@@ -244,67 +261,72 @@ Emitted by `alife-comparison-geometry.ts` into [`assets/alife-geometry.json`](./
 
 ### PCA — the "Cosmogonic dimension" (charts: `alife-pca.svg`)
 
-Eigendecomposition of the 9-axis **correlation** matrix (Jacobi rotation): **PC1 explains `31.9%`**, **PC2
-`23.6%`** (together `55.4%`). **PC1 loads on substrate pluralism (`0.54`), consciousness-theory (`0.49`),
-cognition (`0.43`), visual scale (`0.37`), morphology (`0.34`)** — it _is_ the deep-substrate/cognition axis.
-**PC2 loads on reproduction (`0.59`), open-endedness (`0.51`), −instrumentation (`0.42`), ecology (`0.42`)** —
-the classic digital-evolution axis. **Cosmogonic sits at `PC1 = 6.16`, vs the next-highest peer ALIEN `2.29`
-(then OpenWorm `2.02`, Creatures `1.82`)** — `2.7×` further out than any peer on the very dimension it defines.
-On PC2 it is near the centre (`0.28`): it is **not** extreme on the classic-evolution axis, only on the
+Eigendecomposition of the 9-axis **correlation** matrix (Jacobi rotation): **PC1 explains `26.6%`**, **PC2
+`21.4%`** (together `48.0%`). **PC1 loads on substrate pluralism (`0.55`), consciousness-theory (`0.53`),
+cognition (`0.35`), morphology (`0.29`), open-endedness (`0.26`)** — it _is_ the deep-substrate/cognition axis.
+**PC2 loads on visual scale (`0.53`), −open-endedness (`0.44`), −reproduction (`0.36`), −cognition (`0.36`)** —
+an embodiment-vs-evolution axis. **Cosmogonic sits at `PC1 = 11.86`, vs the next-highest peer at `4.40`
+(then `3.65`, `3.52`)** — `2.7×` further out than any of the 112 peers on the very dimension it defines. On PC2
+it is near the centre (`2.31`): it is **not** extreme on the embodiment/evolution axis, only on the
 deep-substrate one.
 
 ### Hierarchical clustering — the most distinct leaf (chart: `alife-dendrogram.svg`)
 
-Average-linkage agglomerative clustering (Euclidean, 9-axis) joins natural groups first — the digital-evolution
-cluster (Tierra/Core War/Avida), the embodied-creature cluster (Framsticks/Karl Sims/breve), the
-cellular-emergence cluster (Lenia/Growing NCA/Game of Life). **Cosmogonic is the very last leaf to merge, at
-height `7.93`** — i.e. it is the single most distinct system in the entire tree, attaching only after every other
-group has formed.
+Average-linkage agglomerative clustering (Euclidean, 9-axis) over all 113 systems joins natural groups first —
+the digital-evolution cluster (Tierra/Core War/Avida/Nanopond), the embodied-creature cluster
+(Framsticks/Karl Sims/breve/soft-robots), the cellular-emergence cluster (Lenia/Growing NCA/Game of Life), the
+agent-toolkit cluster (NetLogo/MASON/Repast/Mesa), and the LLM-frontier cluster (Voyager/ASAL/OMNI-EPIC).
+**Cosmogonic is the single most distinct leaf in the entire tree** — it heads the merge order, attaching only
+after every other group has formed, with OpenWorm and the deep-evolutionary-RL animals (NerveNet, DERL) as its
+faintest neighbours.
 
 ### Pareto frontier — optimal but extreme (chart: `alife-pareto.svg`)
 
 In `(breadth ↑, peer-maturity ↑)`, the non-dominated frontier is **{Cosmogonic, Polyworld, Karl Sims, Creatures,
-ALIEN}**. Cosmogonic **is Pareto-optimal** — it is the breadth-maximal vertex — but it buys that with minimal
-maturity, sitting at the extreme low-maturity corner of the front. In the full 9-D dominance test, **`0` peers
-dominate it** (none is ≥ on all 9 axes), while **it dominates `8`** outright (Boids, Biomorphs, Core War,
-Sugarscape, Echo, Swarm, Lenia, Growing NCA).
+ALIEN}** (unchanged by the widened field). Cosmogonic **is Pareto-optimal** — it is the breadth-maximal vertex —
+but it buys that with minimal maturity, sitting at the extreme low-maturity corner of the front. In the full 9-D
+dominance test, **`0` of the 112 peers dominate it** (none is ≥ on all 9 axes), while **it dominates `56`**
+outright (Boids, Sugarscape, Lenia, the entire CA/particle-life tail, most LLM-frontier and agent-toolkit
+systems) — nearly half the field.
 
 ### Capability evenness — the most extreme generalist (chart: `alife-entropy.svg`)
 
 Normalized Shannon evenness of each system's 9-axis profile (1 = perfectly balanced generalist, 0 = single-axis
-specialist): **Cosmogonic `0.997` (Gini `0.061`) — rank #1 of 26**, ahead of Creatures/ALIEN (`0.959`). The
-classic specialists sit at the opposite end: Boids `0.728`, Tierra `0.787`, Lenia `0.805`. The field's law in one
-number: classics are sharp specialists; Cosmogonic is the most balanced generalist ever surveyed here — which is
-the same fact as its `r = −0.62` breadth/maturity position, seen from the profile side.
+specialist): **Cosmogonic `0.997` (Gini `0.061`) — rank #1 of 113**, the most balanced 9-axis profile in the
+entire survey. The classic specialists sit at the opposite end (Boids, Tierra, Wireworld, the elementary CA). The
+field's law in one number: classics are sharp specialists; Cosmogonic is the most balanced generalist surveyed
+here — the same fact as its `r = −0.13` breadth/maturity position, seen from the profile side.
 
 ### Axis co-occurrence correlation (chart: `alife-axis-correlation.svg`)
 
-Pearson `r` between axis columns across all 26 systems reveals which capabilities travel together:
+Pearson `r` between axis columns across all 113 systems reveals which capabilities travel together:
 
-- **Substrate pluralism ↔ consciousness-theory `r = +0.90`** — the two near-empty axes co-occur almost perfectly
-  (essentially only Cosmogonic, with OpenWorm/ALIEN as faint partials carry both). This is _why_ the conjunction
-  is rare: nobody else even attempts both.
-- **Morphology ↔ visual scale `r = +0.74`** — embodied-creature systems look good (Framsticks/Karl Sims/ALIEN).
-- **Reproduction ↔ instrumentation `r = −0.51`** — purist digital-evolution trades against rich instrumentation.
-- **Cognition ↔ substrate `+0.58`**, **cognition ↔ consciousness `+0.47`**, **reproduction ↔ open-endedness
-  `+0.54`** — the expected functional families.
+- **Substrate pluralism ↔ consciousness-theory `r = +0.88`** — the two near-empty axes co-occur almost perfectly
+  (essentially only Cosmogonic carries both). This is _why_ the conjunction is rare: across 113 systems, nobody
+  else meaningfully attempts both.
+- **Morphology ↔ visual scale `r = +0.61`** — embodied-creature systems look good (Framsticks/Karl Sims/ALIEN).
+- **Reproduction ↔ open-endedness `r = +0.53`** — the classic digital-evolution family travels together.
+- **Cognition ↔ substrate `+0.25`**, **cognition ↔ consciousness `+0.21`** — weaker in the fuller field;
+  **reproduction ↔ instrumentation `≈ −0.01`** — the old strong anti-correlation washes out once the
+  instrumentation-heavy toolkits (NetLogo/MASON/MAP-Elites) enter the survey.
 
 ### Mahalanobis outlier distance
 
-Covariance-aware distance of Cosmogonic from the 25-peer centroid (ridge-regularized Σ⁻¹, λ = 0.15, because the
-consciousness-theory axis is near-singular): **`d = 10.27` self-scored / `8.02` code-grounded — roughly `4.1×`
+Covariance-aware distance of Cosmogonic from the 112-peer centroid (ridge-regularized Σ⁻¹, λ = 0.15, because the
+consciousness-theory axis is near-singular): **`d = 12.66` self-scored / `10.25` code-grounded — roughly `5.07×`
 the mean peer Mahalanobis.** This is the multivariate confirmation of the per-axis z-scores: it is a genuine
-outlier even after accounting for how the axes covary, and even after the honest re-scoring.
+outlier even after accounting for how the axes covary, after the honest re-scoring, and after quadrupling the
+size of the comparison field.
 
 ### Geometric / feature-space nearest neighbours (chart: `alife-nearest-neighbors.svg`)
 
-| Rank | Nearest peer |   Distance | Why close                                                   | Why still different                                               |
-| ---: | ------------ | ---------: | ----------------------------------------------------------- | ----------------------------------------------------------------- |
-|    1 | **ALIEN**    | **`5.17`** | GPU artificial ecosystems, organisms, physics, visual scale | Far less cognitive-theory / GWT / IIT instrumentation             |
-|    2 | Creatures    |     `5.57` | Genetics, neural brains, biochemistry, learning             | Commercial pets; consciousness instrumentation is ~0              |
-|    3 | Polyworld    |     `6.48` | Neural agents, vision, metabolism, ecology, predation       | Less substrate pluralism; 2D fixed body                           |
-|    4 | Framsticks   |     `6.56` | Body/brain co-evolution, genotype/phenotype, 3D embodiment  | Stronger evolved morphology, weaker cognition/consciousness stack |
-|    5 | breve        |     `7.00` | 3D A-Life simulation environment                            | A platform, not the same integrated specimen                      |
+| Rank | Nearest peer  |   Distance | Why close                                                   | Why still different                                               |
+| ---: | ------------- | ---------: | ----------------------------------------------------------- | ----------------------------------------------------------------- |
+|    1 | **ALIEN**     | **`5.17`** | GPU artificial ecosystems, organisms, physics, visual scale | Far less cognitive-theory / GWT / IIT instrumentation             |
+|    2 | Creatures     |     `5.57` | Genetics, neural brains, biochemistry, learning             | Commercial pets; consciousness instrumentation is ~0              |
+|    3 | Polyworld     |     `6.48` | Neural agents, vision, metabolism, ecology, predation       | Less substrate pluralism; 2D fixed body                           |
+|    4 | Framsticks    |     `6.56` | Body/brain co-evolution, genotype/phenotype, 3D embodiment  | Stronger evolved morphology, weaker cognition/consciousness stack |
+|    5 | Species: ALRE |     `6.93` | Real-time neural-evolution creature ecology, visual         | No substrate pluralism / consciousness instrumentation            |
 
 Even the **nearest** peer is `5.17` away — Cosmogonic has no close twin. The closest real conceptual neighbour is
 **ALIEN**, not Avida/Tierra (those are purer, more mature digital evolution).
@@ -463,7 +485,7 @@ cannot be fully excluded — confidence is moderate-high, not absolute.
 - **From performance:** low-level kernels are healthy; the multi-mind cognition stack needs fresh frame-budget work.
 - **From comparison:** classic systems specialize (Life/Lenia = cellular emergence; Tierra/Avida = digital organisms;
   Polyworld/Creatures = embodied neural ecology; Sims/Framsticks/EvoGym = morphology/control; Sugarscape/Echo/Swarm =
-  societies; Picbreeder/POET/ASAL = open-ended search). Cosmogonic fuses many at once — and the `r = −0.62`
+  societies; Picbreeder/POET/ASAL = open-ended search). Cosmogonic fuses many at once — and the `r = −0.13`
   breadth↔maturity correlation warns that breadth historically risks shallow "everything demos." The tests/contracts
   reduce that risk; the code-grounding shows they do not eliminate it.
 
@@ -497,10 +519,10 @@ Calibrated judgment bands over the **surveyed evidence**, not universal probabil
 
 **Rare (adversarially defended, code-grounded):**
 
-1. **Substrate pluralism (`+3.66σ` code-grounded, sole field leader):** quantum statevectors (`qcircuit.ts`),
-   tensor networks + irrep/Wigner (`tsotchke-deep-wire.ts`), spin/Hopfield, Eshkol AD/GWT, PINN/PIMC, procedural
-   biologics — a genuine plurality of distinct real substrates no surveyed peer approaches.
-2. **Functional consciousness scoreboard (`+4.60σ` code-grounded, survey mean `0.27`):** exact quantum Φ
+1. **Substrate pluralism (`+7.57σ` code-grounded, sole field leader across 113 systems):** quantum statevectors
+   (`qcircuit.ts`), tensor networks + irrep/Wigner (`tsotchke-deep-wire.ts`), spin/Hopfield, Eshkol AD/GWT,
+   PINN/PIMC, procedural biologics — a genuine plurality of distinct real substrates no surveyed peer approaches.
+2. **Functional consciousness scoreboard (`+9.73σ` code-grounded, survey mean `0.06`):** exact quantum Φ
    (`integrated-information.ts`), global-workspace ignition, attention schema as first-class tested mechanisms —
    a near-empty axis (closest peer AURA, a single mind not a population). _Honest caveat: two further theory modules
    are implemented but not yet instantiated._
@@ -611,8 +633,8 @@ bun run check              # full gate
 ## Final verdict
 
 **Defensible:** a serious, unusually broad, evidence-heavy A-Life / cognitive testbed — the **broadest integrated
-synthesis in the surveyed set** (`z = +3.01σ` self / `+2.10σ` code-grounded; rank #1, `0`-dominated in 9-D both
-ways), especially rare in **substrate pluralism + consciousness-theory instrumentation**, with **`0` hard
+synthesis in the surveyed set of 113 systems** (`z = +4.02σ` self / `+2.83σ` code-grounded; rank #1, `0`-dominated
+in 9-D both ways), especially rare in **substrate pluralism + consciousness-theory instrumentation**, with **`0` hard
 refutations** of the exact-conjunction novelty across an adversarial hunt. The code-grounding confirms the
 mechanisms behind those leads are real and mostly wired.
 

@@ -1,33 +1,33 @@
 {
   "generatedFrom": "docs/reports/2026-06-26-alife-comparison-matrix.csv",
   "method": "population statistics over all systems incl. Cosmogonic; breadth = mean of 9 axes",
-  "nSystems": 26,
-  "nPeers": 25,
+  "nSystems": 113,
+  "nPeers": 112,
   "cosmogonic": {
     "breadthMean": 4.44,
     "breadthRank": 1,
-    "zScorePopulation": 3.01,
-    "zScoreVsPeers": 3.84,
+    "zScorePopulation": 4.02,
+    "zScoreVsPeers": 4.36,
     "percentile": 100,
     "peerMaturity": 1.5
   },
   "survey": {
-    "breadthMeanAll": 2.54,
-    "breadthStdAll": 0.63,
-    "breadthMeanPeers": 2.46,
-    "breadthStdPeers": 0.52,
-    "medianBreadth": 2.44,
-    "medianPeerMaturity": 4,
-    "corrBreadthVsMaturity": -0.618
+    "breadthMeanAll": 2.11,
+    "breadthStdAll": 0.58,
+    "breadthMeanPeers": 2.08,
+    "breadthStdPeers": 0.54,
+    "medianBreadth": 2.11,
+    "medianPeerMaturity": 3.5,
+    "corrBreadthVsMaturity": -0.133
   },
   "perAxis": [
     {
       "axis": "Reproduction",
-      "mean": 3.15,
-      "std": 1.73,
+      "mean": 2.63,
+      "std": 1.75,
       "max": 5,
       "cosmo": 4,
-      "cosmoZ": 0.49,
+      "cosmoZ": 0.79,
       "leaders": [
         "Tierra",
         "Avida",
@@ -35,29 +35,42 @@
         "Creatures",
         "Darwin Pond",
         "Gene Pool",
-        "MABE"
+        "MABE",
+        "Aevol",
+        "Avida-ED",
+        "Nanopond",
+        "Network Tierra",
+        "NEAT (NeuroEvolution of Augmenting Topologies)",
+        "HyperNEAT",
+        "ES-HyperNEAT"
       ]
     },
     {
       "axis": "Open-endedness",
-      "mean": 3.25,
-      "std": 1.19,
+      "mean": 2.63,
+      "std": 1.29,
       "max": 5,
       "cosmo": 3.5,
-      "cosmoZ": 0.21,
+      "cosmoZ": 0.67,
       "leaders": [
         "Picbreeder",
         "POET",
-        "ASAL"
+        "ASAL",
+        "Geb",
+        "Novelty Search",
+        "OMNI (Open-endedness via Models of human Notions of Interestingness)",
+        "Minimal Criterion Coevolution (MCC)",
+        "OMNI-EPIC",
+        "Darwin Godel Machine (DGM)"
       ]
     },
     {
       "axis": "Ecology",
-      "mean": 2.96,
-      "std": 1.43,
+      "mean": 2.21,
+      "std": 1.4,
       "max": 5,
       "cosmo": 5,
-      "cosmoZ": 1.43,
+      "cosmoZ": 1.99,
       "leaders": [
         "COSMOGONIC",
         "Polyworld",
@@ -67,11 +80,11 @@
     },
     {
       "axis": "Morphology/Physics",
-      "mean": 2.92,
-      "std": 1.75,
+      "mean": 2.34,
+      "std": 1.66,
       "max": 5,
       "cosmo": 4,
-      "cosmoZ": 0.61,
+      "cosmoZ": 1,
       "leaders": [
         "Framsticks",
         "Karl Sims VC",
@@ -79,68 +92,94 @@
         "breve",
         "OpenWorm",
         "EvoGym",
-        "ALIEN"
+        "ALIEN",
+        "GOLEM (Genetically Organized Lifelike Electro Mechanics)",
+        "Voxelyze / VoxCAD",
+        "3D Virtual Creature Evolution (3DVCE)",
+        "DERL (Deep Evolutionary Reinforcement Learning)",
+        "UNIMAL (Universal Animal design space)",
+        "Evolving Soft Robots (Cheney / Unshackling Evolution)",
+        "RoboGrammar",
+        "Keiwan Evolution"
       ]
     },
     {
       "axis": "Cognition/Learning",
-      "mean": 2.12,
-      "std": 1.39,
-      "max": 4.5,
+      "mean": 1.9,
+      "std": 1.6,
+      "max": 5,
       "cosmo": 4.5,
-      "cosmoZ": 1.72,
+      "cosmoZ": 1.62,
       "leaders": [
-        "COSMOGONIC"
+        "DERL (Deep Evolutionary Reinforcement Learning)",
+        "UNIMAL (Universal Animal design space)",
+        "Transform2Act",
+        "NerveNet"
       ]
     },
     {
       "axis": "Substrate pluralism",
-      "mean": 1.44,
-      "std": 0.91,
+      "mean": 1.11,
+      "std": 0.48,
       "max": 5,
       "cosmo": 5,
-      "cosmoZ": 3.9,
+      "cosmoZ": 8.05,
       "leaders": [
         "COSMOGONIC"
       ]
     },
     {
       "axis": "Instrumentation",
-      "mean": 3.4,
-      "std": 0.83,
+      "mean": 3.14,
+      "std": 1.02,
       "max": 5,
       "cosmo": 4.5,
-      "cosmoZ": 1.32,
+      "cosmoZ": 1.34,
       "leaders": [
         "Game of Life",
-        "EvoGym"
+        "EvoGym",
+        "Aevol",
+        "Avida-ED",
+        "MAP-Elites",
+        "Quality-Diversity (illumination algorithms)",
+        "NetLogo",
+        "MASON",
+        "Repast",
+        "GAMA Platform",
+        "Mesa"
       ]
     },
     {
       "axis": "Consciousness-theory",
-      "mean": 0.27,
-      "std": 0.89,
+      "mean": 0.06,
+      "std": 0.44,
       "max": 4.5,
       "cosmo": 4.5,
-      "cosmoZ": 4.75,
+      "cosmoZ": 10.04,
       "leaders": [
         "COSMOGONIC"
       ]
     },
     {
       "axis": "Visual scale",
-      "mean": 3.35,
-      "std": 1.33,
+      "mean": 2.93,
+      "std": 1.16,
       "max": 5,
       "cosmo": 5,
-      "cosmoZ": 1.24,
+      "cosmoZ": 1.79,
       "leaders": [
         "COSMOGONIC",
         "Karl Sims VC",
         "Creatures",
         "Picbreeder",
         "Lenia",
-        "ALIEN"
+        "ALIEN",
+        "Flow Lenia",
+        "Particle Lenia",
+        "Spore",
+        "Noita",
+        "Clusters (Particle Life)",
+        "Sandspiel"
       ]
     }
   ],
@@ -166,8 +205,23 @@
       "d": 6.56
     },
     {
+      "name": "Species: Artificial Life, Real Evolution",
+      "full": "Species: Artificial Life, Real Evolution",
+      "d": 6.93
+    },
+    {
+      "name": "The Bibites",
+      "full": "The Bibites",
+      "d": 6.93
+    },
+    {
       "name": "breve",
       "full": "breve",
+      "d": 7
+    },
+    {
+      "name": "Division Blocks",
+      "full": "Division Blocks",
       "d": 7
     },
     {
@@ -176,24 +230,9 @@
       "d": 7.14
     },
     {
-      "name": "ASAL",
-      "full": "ASAL",
-      "d": 7.35
-    },
-    {
-      "name": "Picbreeder",
-      "full": "Picbreeder",
-      "d": 7.48
-    },
-    {
-      "name": "Gene Pool",
-      "full": "Gene Pool / Swimbots",
-      "d": 7.53
-    },
-    {
-      "name": "MABE",
-      "full": "MABE",
-      "d": 7.55
+      "name": "biosim4",
+      "full": "biosim4",
+      "d": 7.28
     }
   ]
 }

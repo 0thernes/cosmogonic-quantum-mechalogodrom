@@ -10,6 +10,8 @@ import {
   adGradient,
   adMul,
   adPow,
+  adLog,
+  adSqrt,
   adTapeNew,
   adTapeReset,
   adVar,
@@ -68,5 +70,22 @@ describe('Eshkol AD tape (Tsotchke vm_autodiff port)', () => {
       return adGradient(tape, x);
     };
     expect(run()).toBe(run());
+  });
+
+  test('domain guards: adLog(0) / adSqrt(<0) never poison the tape with NaN/Infinity', () => {
+    // Before the guard, log(0) forward = -Infinity and its gradient 1/0 = +Infinity would poison the
+    // whole reverse sweep; sqrt(-x) = NaN likewise. The guards clamp the domain (log→ε, sqrt→0) and
+    // skip the singular gradient, so every result stays finite.
+    const tape = adTapeNew(16);
+    const z = adVar(tape, 0);
+    const ly = adLog(tape, z);
+    adBackward(tape, ly);
+    expect(Number.isFinite(adGradient(tape, z))).toBe(true);
+
+    const tape2 = adTapeNew(16);
+    const neg = adVar(tape2, -4);
+    const sy = adSqrt(tape2, neg);
+    adBackward(tape2, sy);
+    expect(Number.isFinite(adGradient(tape2, neg))).toBe(true);
   });
 });

@@ -284,7 +284,10 @@ export function adExp(tape: AdTape, input: number): number {
  * @returns node index
  */
 export function adLog(tape: AdTape, input: number): number {
-  const v = Math.log(tape.nodes[input]!.value);
+  // log's domain is (0, ∞); clamp a non-positive base to a tiny epsilon so a mis-fed input can never
+  // poison the tape's forward value with -Infinity/NaN (same domain-guard discipline as AD_POW).
+  const x = tape.nodes[input]!.value;
+  const v = Math.log(x > 0 ? x : 1e-12);
   return adTapePush(tape, AdOpType.AD_LOG, v, input, -1, 0.0);
 }
 
@@ -296,7 +299,10 @@ export function adLog(tape: AdTape, input: number): number {
  * @returns node index
  */
 export function adSqrt(tape: AdTape, input: number): number {
-  const v = Math.sqrt(tape.nodes[input]!.value);
+  // sqrt's domain is [0, ∞); clamp a negative base to 0 so a mis-fed input can never poison the
+  // forward value with NaN (a rounding-error negative is the common case).
+  const x = tape.nodes[input]!.value;
+  const v = Math.sqrt(x > 0 ? x : 0);
   return adTapePush(tape, AdOpType.AD_SQRT, v, input, -1, 0.0);
 }
 
@@ -436,13 +442,18 @@ export function adBackward(tape: AdTape, output: number): void {
         break;
 
       case AdOpType.AD_LOG:
-        // d/dL log(L) = 1/L
-        tape.nodes[L]!.gradient += g / tape.nodes[L]!.value;
+        // d/dL log(L) = 1/L — L>0 on the log domain; guard L==0 so it contributes 0, not ±Infinity,
+        // rather than poisoning the whole reverse sweep (same discipline as AD_POW below).
+        {
+          const lv = tape.nodes[L]!.value;
+          if (lv > 0) tape.nodes[L]!.gradient += g / lv;
+        }
         break;
 
       case AdOpType.AD_SQRT:
-        // d/dL sqrt(L) = 1/(2*sqrt(L)) = 1/(2*output.value)
-        tape.nodes[L]!.gradient += g / (2.0 * n.value);
+        // d/dL sqrt(L) = 1/(2*sqrt(L)) = 1/(2*output.value) — guard output==0 (sqrt(0)) so it
+        // contributes 0 rather than ±Infinity.
+        if (n.value > 0) tape.nodes[L]!.gradient += g / (2.0 * n.value);
         break;
 
       case AdOpType.AD_POW:

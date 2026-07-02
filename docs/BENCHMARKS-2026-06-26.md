@@ -257,26 +257,29 @@ bounding the thermalization spatially would perturb determinism for every entrop
 Global+strided is the determinism-preserving correct state; the ~5 ms is a bounded, transient-effect
 tradeoff, not a scaling defect.
 
-## Apex mind (Super Creature) — per-beat cognitive budget (2026-06-17)
+## Apex mind (Super Creature) — per-beat cognitive budget (measured 2026-07-02)
 
-Bun 1.3.14 x64-win32, Intel Core Ultra 9 275HX (~4.14 GHz). The apex mind grew from one stacked MLP (V31)
-to a 20-plus-faculty stack (the SC 1.1 cognition layer + the Eshkol/Moonlab/QGTL quantum substrate). `bench/super-mind.bench.ts` measures its two cadences:
+Bun 1.3.x x64-win32, Intel Core Ultra 9 275HX. The apex mind is a 20-plus-faculty stack (the SC 1.1
+cognition layer + the Eshkol/Moonlab/QGTL quantum substrate). It is the largest single per-frame CPU cost
+and it is **millisecond-scale** — the old "≈ 298 µs / ~1.8% of a frame / effectively free" figures were
+FALSE and are retired; do not repeat them. `bench/super-mind.bench.ts` measures two cadences:
 
-- **`SuperMind.think()` — one full cognitive beat, PER SIMULATION FRAME: ≈ 298 µs/iter** (median 288 µs;
-  214 µs · 1.99 ms). That single call runs the entire 5-stage / 5-depth / 25-variant Tree of Thought, the
-  30 organ-nets, the 6-qubit `evolve()` + the per-beat quantum-natural-gradient + Grover amplification, the
-  spin-glass settle, active inference, theory-of-mind, neuromodulation, the successor-representation
-  look-ahead, empowerment, and holographic recall — for the LONE apex creature. At ≈ 0.30 ms it is **~1.8%
-  of a 60 fps (16.67 ms) frame**: the whole apex psyche remains effectively free beside the population render,
-  with healthy headroom for further faculties.
-- **`SuperMind.snapshot()` — UI-cadence telemetry: ≈ 1.33 ms/iter** (1.16 ms · 3.88 ms). The heavy readouts
+- **`SuperMind.think()` — one full cognitive beat, PER SIMULATION FRAME: ≈ 1.99 ms/iter** (median 2.07 ms;
+  1.41 ms · 5.62 ms range). That single call runs the entire 5-stage / 5-depth / 25-variant Tree of
+  Thought, the 30 organ-nets, the 6-qubit `evolve()` + per-beat quantum-natural-gradient + Grover, the
+  live 16-qubit Clifford reflex, spin-glass settle, active inference, theory-of-mind, neuromodulation,
+  successor-representation look-ahead, empowerment, and holographic recall — for the LONE apex. At ≈ 2 ms
+  it is **~12% of a 60 fps (16.67 ms) frame**: real, non-trivial, and the reason the world runs one primary
+  apex per frame plus staggered echoes rather than all 5 minds every frame.
+- **`SuperMind.snapshot()` — UI-cadence telemetry: ≈ 1.35 ms/iter** (0.95 ms · 4.02 ms). The heavy readouts
   — the full Quantum Geometric Tensor (re-applies the circuit ~5×), the quantum "magic" (4⁶ = 4096 Pauli
   expectations), integrated information + coherence — run ONLY when the BRAIN observatory is open, NEVER per
-  simulation beat, so the ~1.3 ms is paid at the observatory cadence (a few times a second), not at 60 fps.
+  simulation beat, so the ~1.35 ms is paid at the observatory cadence (a few times a second), not at 60 fps.
 
-**Finding:** the per-beat apex cost is negligible against the frame budget, and the expensive quantum
-geometry/magic is correctly gated to UI cadence. The 20-plus-faculty stack is **operationally sound** — the
-growth that drove the 1.1 expansion is the cost the GOAL5 budget below now tracks honestly.
+**Finding:** the per-beat apex cost is real (~12% of a frame for the lone apex), the expensive quantum
+geometry/magic is correctly gated to UI cadence, and the GOAL5 5-mind budget below is why the pantheon
+runs on a staggered cadence. `think()` improved from ~3.34 ms (2026-06-26) to ~1.99 ms after the
+memory-orchestra / QRC-readout / curvature-QNG wiring passes.
 
 ## GOAL5: 5 Super Minds (Archons / Godforms) frame budget (Dr Manhattan measurement)
 
@@ -284,15 +287,17 @@ Intel Core Ultra 9 275HX. The GOAL5 contract targets combined new per-frame work
 60 fps frame; determinism (distinct child seeds `master ^ (i * 0x9e3779b1)`, like `world.ts`) produces
 identical minds; provenance via Eshkol/Moonlab/QGT ports measured for fidelity.
 
-Current measured `bench/super-mind.bench.ts` (2026-06-26, Bun 1.3.14) — the older sub-millisecond figures
-are superseded:
+Current measured `bun run bench` (2026-07-02, Bun 1.3.x) — the older sub-millisecond figures are
+superseded:
 
-- Single `SuperMind.think()`: **~3.34 ms** (full bench suite) / **8.85 ms** (focused).
-- `SuperMind.snapshot()` (UI cadence): **~2.44 ms** / 6.89 ms focused — gated, not per-sim-frame.
-- `5× think()` batch: **~14.47 ms** / 25.40 ms focused.
-- **Frame-budget status:** the `<2%` GOAL5 target is **not currently met** — it is a remediation target
-  until a fresh optimization pass re-proves it. Treat the old `1.875% / <2%` claim as stale (see
-  `docs/reports/2026-06-26-CURRENT-TRUTH-BASELINE.md`).
+- Single `SuperMind.think()`: **~1.99 ms** (full bench suite).
+- `SuperMind.snapshot()` (UI cadence): **~1.35 ms** — gated, not per-sim-frame.
+- `5× think()` batch (amortized `driveSuper` every-4-frames cadence): **~9.77 ms**.
+- **Frame-budget status:** the `<2%` GOAL5 target is **still not met** — 5× `think()` at ~9.77 ms is ~58%
+  of a 16.67 ms frame, which is why the 5 minds run staggered (not all per frame) beside 20 cheaper
+  light-echoes. It remains a remediation target until a fresh optimization pass re-proves `<2%`. Treat the
+  old `1.875% / <2%` claim as stale (see `docs/reports/2026-06-26-CURRENT-TRUTH-BASELINE.md` and
+  `docs/PERFORMANCE-TARGETS-2026-07-02.md`).
 
 Bodies: per-frame O(1) updates (prebuilt geo, uniform drives) add negligible (<0.1% measured indirect).
 

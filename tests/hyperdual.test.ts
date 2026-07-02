@@ -15,6 +15,7 @@ import {
   hdSqrt,
   hdPow,
   hdDiv,
+  hdRecip,
   hdTanh,
   hdSigmoid,
   derivatives2,
@@ -131,5 +132,17 @@ describe('hyperdual — determinism', () => {
     expect(id.e1).toBe(1);
     expect(id.e2).toBe(1);
     expect(id.e12).toBe(0);
+  });
+
+  test('domain guard: hdRecip / hdDiv by zero stays finite across all three derivative orders', () => {
+    // Before the guard, 1/x, -1/x², 2/x³ at x=0 are all ±Infinity and poison the second-order tape.
+    // The sign-preserving HD_EPS clamp keeps every field finite.
+    const r = hdRecip(hdVar(0));
+    expect(Number.isFinite(r.x)).toBe(true);
+    expect(Number.isFinite(r.e1)).toBe(true);
+    expect(Number.isFinite(r.e12)).toBe(true);
+    const d = hdDiv(hdConst(1), hdVar(0));
+    expect(Number.isFinite(d.x)).toBe(true);
+    expect(Number.isFinite(d.e12)).toBe(true);
   });
 });

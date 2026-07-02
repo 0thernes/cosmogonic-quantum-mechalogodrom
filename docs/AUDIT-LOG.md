@@ -11,6 +11,50 @@ dated / historical / "superseded snapshot" copies (per the binding "Living docs,
 
 ---
 
+## 2026-07-02 — Ultracode round: 113-system A-Life matrix + AD/hyperdual domain guards + Tsotchke wire-more + 5 PM artifacts
+
+Two multi-agent workflows (a 16-agent research fan-out + a 105-agent refute-by-default bug hunt) plus a
+fresh benchmark run. Gate re-measured green.
+
+**Landed:**
+
+- **A-Life comparative matrix grew 26 → 113 systems.** An 8-bucket research workflow web-sourced and
+  adversarially score-verified **87 new** A-Life systems (cellular automata, digital evolution, evo-robotics,
+  quality-diversity, agent societies, commercial games, indie particle-life, LLM frontier) on the same
+  9-axis rubric; merged (0 dupes) into `2026-06-26-alife-comparison-matrix.csv`. Re-ran the three
+  deterministic engines → regenerated all 11 SVGs + 3 JSONs, and rewrote `2026-06-26-ALIFE-COMPARATIVE-AUDIT.md`
+  to N=113. **The outlier signal STRENGTHENED**: breadth `z = +3.01σ → +4.02σ` (population), still `#1/113`,
+  still `0`-dominated in 9-D, `+2.83σ` even code-grounded; sole leader in consciousness-theory (`+9.73σ`) and
+  substrate pluralism (`+7.57σ`). Honesty updates: it is **no longer sole leader in cognition** (DERL/UNIMAL/
+  Transform2Act/NerveNet now score the 5.0), and breadth↔maturity correlation weakened `−0.62 → −0.13`.
+- **AD/hyperdual domain guards (real, from the bug hunt).** `eshkol-ad.ts` guarded adPow's variable-exponent
+  log but left `adLog`/`adSqrt` forward + gradient unguarded (`log(0)=-∞`, `sqrt(<0)=NaN`, `g/0=∞` poison the
+  reverse sweep); `hyperdual.ts` guarded hdLog/hdSqrt but not `hdRecip` (`2/x³` diverges at 0, reachable via
+  `hdDiv`). Added guards matching each file's own convention + falsifiable finite-ness tests. (These primitives
+  are currently dead exports — guarded for correctness when wired, never removed, per the Eshkol binding.)
+- **Tsotchke wire-more: `simple_mnist` is now genuinely wired.** The registry claimed `simple_mnist: wired 1.0`
+  but `perceptronScore/Tag` had no live consumer (only a facade re-export) — a real honesty gap. Rather than
+  downgrade the claim, wired `perceptronTag` (salience-weighted linear classifier of the nutrient field, pure
+  - deterministic, ±0.5-centered, bounded) into the petri-dish growth blend (`petri-dish.ts`), making the
+    registry claim TRUE. Tsotchke deep-wired count 15 → **16**.
+- **NHI hot-loop O(n)→O(k) (perf, from the bug hunt).** `world.ts` `nhiApply` DOMINATE/MANIPULATE scanned all
+  ~50k entities per NHI action; converted to the frame's `this.grid.query(x,z,36)` radius query (mirrors the
+  existing pattern at world.ts:2121). The post-query 3D filter keeps the affected set identical; per-entity
+  writes are order-independent, so determinism holds.
+- **5 of 6 missing PM artifacts added:** `PRD`, `RISK-REGISTER`, `TEST-STRATEGY`, `PERFORMANCE-TARGETS`,
+  `SECURITY-ARCHITECTURE` (dated 2026-07-02, lean one-person-repo framing, linked from BOOK §10). Only a
+  `DEPENDENCY-MANIFEST`/SBOM policy remains.
+- **Benchmarks refreshed (2026-07-02).** `SuperMind.think()` improved `3.34 → 1.99 ms`, snapshot `2.44 → 1.35`,
+  5× batch `14.47 → 9.77`. Reconciled the internally-contradictory `BENCHMARKS` section (a stale "≈298 µs /
+  effectively free" claim survived beside the correction) + updated `CURRENT-TRUTH-BASELINE` + the scorecard.
+- **25-point scorecard → 8.2/10** (the "vs 100 codebases" point rose 7.0 → 8.5, now met).
+
+**Refuted (no slop — did NOT act):** of the bug hunt's 17 confirmed findings, the Clifford sign-bit
+(`clifford-tableau.ts:190`, `r=acc===0?0:1` is correct Aaronson–Gottesman — acc=2 ⇒ phase −1 ⇒ r=1; Bell/GHZ
+property tests pass), the petri "array-bounds" (`gwtBroadcast` caps length at 8 ≤ 12, always in-bounds), the
+`brutal-god-releases` `void` calls (intentional provenance invocations), and `birthBiologic` (known-dead) were
+all correctly left untouched. Reinforces the standing lesson: verify reachability + owner-intent before acting.
+
 ## 2026-07-01 — Mega-audit: SSOT receipt-drift fix + Clifford stale-claim correction + 25-point scrutiny scorecard
 
 Full-spectrum audit (four parallel code-grounded auditors — code-health · Tsotchke wiring · doc/PM ·

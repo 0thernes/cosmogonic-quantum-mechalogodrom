@@ -15,11 +15,12 @@ a scorecard is where it is red.
 
 ## Bottom line
 
-Overall **8.1 / 10** across 25 points. The project is engineering-strong and honesty-strong: determinism,
-type-safety, test rigor, reproducibility, and sentience discipline all score ≥ 9. It is **weakest on two
-axes that it already names itself** — **faculty coupling** (`~0.18` mean, "a pile is not a mind") and
-**external peer validation** (none yet). Those two, not any code defect, are the real gap between
-"impressive, honest artifact" and "serious scientific contribution."
+Overall **8.2 / 10** across 25 points (up from 8.1 as the "vs 100 codebases" gap closed — the matrix now
+holds 112 sourced peers). The project is engineering-strong and honesty-strong: determinism, type-safety,
+test rigor, reproducibility, and sentience discipline all score ≥ 9. It is **weakest on two axes that it
+already names itself** — **faculty coupling** (`~0.18` mean, "a pile is not a mind") and **external peer
+validation** (none yet). Those two, not any code defect, are the real gap between "impressive, honest
+artifact" and "serious scientific contribution."
 
 ![25-point scrutiny scorecard](./assets/scrutiny-25-scorecard.svg)
 
@@ -68,14 +69,14 @@ Grade key: **A** ≥ 9 · **A−** 8–9 · **B+** 7.5–8 · **B** 6.5–7.5 ·
 
 ### E · A-Life standing & scientific defensibility
 
-| #   | Scrutiny point             | Score | Grade | Criticism / evidence                                                                                                                                                                                                            |
-| --- | -------------------------- | ----- | ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 20  | Comparative breadth        | 8.5   | A−    | Breadth-of-synthesis `z = +3.01σ` (self-scored) / `+2.10σ` (source-audited) vs a 25-system survey; deterministic stats + 11 SVGs regenerable from CSV.                                                                          |
-| 21  | Novelty discipline         | 8.5   | A−    | "Novel **by integration**, not world-first"; a `0`-hard-refutation adversarial hunt tempered by real partial peers (ALIEN, ASAL, Quantum-ALife).                                                                                |
-| 22  | Peer maturity / validation | 4.0   | C     | **The weakest axis.** No peer review, no external replication, confidence `0.75`. The self-scored Cosmogonic row is the audit's biggest single uncertainty.                                                                     |
-| 23  | Reproducibility            | 9.5   | A     | Single-seed bit-identical runs; every stat/chart deterministic from `2026-06-26-alife-comparison-matrix.csv` (identical CSV → identical bytes).                                                                                 |
-| 24  | Comparative rigor vs "100" | 7.0   | B     | The matrix is a **26-row, source-cited representative sample** of the ~100+ known A-Life systems — not 100 fabricated rows. Honest sampling; expanding with per-system code-grounded rows is a tracked improvement (see §Gaps). |
-| 25  | Benchmark honesty          | 8.5   | A−    | `SuperMind.think()` ≈ 3.34 ms (full suite) — ms-scale, and the stale "sub-millisecond / <2% frame / 289 µs" claims were explicitly retired.                                                                                     |
+| #   | Scrutiny point             | Score | Grade | Criticism / evidence                                                                                                                                                                                                                                                                      |
+| --- | -------------------------- | ----- | ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 20  | Comparative breadth        | 8.5   | A−    | Breadth-of-synthesis `z = +4.02σ` (self-scored) / `+2.83σ` (source-audited) vs a **113-system** survey; deterministic stats + 11 SVGs regenerable from CSV. The signal strengthened when the field grew 25→113.                                                                           |
+| 21  | Novelty discipline         | 8.5   | A−    | "Novel **by integration**, not world-first"; a `0`-hard-refutation adversarial hunt tempered by real partial peers (ALIEN, ASAL, Quantum-ALife).                                                                                                                                          |
+| 22  | Peer maturity / validation | 4.0   | C     | **The weakest axis.** No peer review, no external replication, confidence `0.75`. The self-scored Cosmogonic row is the audit's biggest single uncertainty.                                                                                                                               |
+| 23  | Reproducibility            | 9.5   | A     | Single-seed bit-identical runs; every stat/chart deterministic from `2026-06-26-alife-comparison-matrix.csv` (identical CSV → identical bytes).                                                                                                                                           |
+| 24  | Comparative rigor vs "100" | 8.5   | A−    | **Now met:** the matrix holds Cosmogonic against **112 other systems** (113 total), each web-sourced and adversarially score-verified via an 8-bucket research fan-out — not fabricated rows. Only the Cosmogonic row is self-scored (+ code-grounded); all 112 peers carry a source URL. |
+| 25  | Benchmark honesty          | 8.5   | A−    | `SuperMind.think()` ≈ 1.99 ms (full suite, 2026-07-02) — ms-scale, and the stale "sub-millisecond / <2% frame / 289 µs" claims were explicitly retired.                                                                                                                                   |
 
 ## The two weak axes (where the real work is)
 
@@ -95,17 +96,20 @@ Grade key: **A** ≥ 9 · **A−** 8–9 · **B+** 7.5–8 · **B** 6.5–7.5 ·
 
 Drawn from the doc-organization + PM audit. None are release-blockers; all are hygiene/clarity.
 
-1. **PM artifacts (P2):** add `PRD`, `RISK-REGISTER`, `TEST-STRATEGY`, `PERFORMANCE-TARGETS`,
-   `DEPENDENCY-MANIFEST` (SBOM policy), `SECURITY-ARCHITECTURE`. Scope is currently implicit in
-   ROADMAP + PHILOSOPHY + MODULE-CONTRACTS.
+1. **PM artifacts — 5 of 6 ADDED 2026-07-02:** [`PRD`](../PRD-2026-07-02.md),
+   [`RISK-REGISTER`](../RISK-REGISTER-2026-07-02.md), [`TEST-STRATEGY`](../TEST-STRATEGY-2026-07-02.md),
+   [`PERFORMANCE-TARGETS`](../PERFORMANCE-TARGETS-2026-07-02.md),
+   [`SECURITY-ARCHITECTURE`](../SECURITY-ARCHITECTURE-2026-07-02.md) now exist and are linked from BOOK §10.
+   Remaining: a `DEPENDENCY-MANIFEST` (SBOM policy).
 2. **ADR-0011+ (P2):** record post-0.18.0 decisions (GPU-dispose contract, sandbox secret-leak
    hardening, memory-orchestra wiring) as ADRs — they exist only in `AUDIT-LOG` today.
 3. **CI gaps (P1):** e2e/WebGL smoke (Playwright), perf-regression time-series + threshold alerting,
    publish `bun sbom` output to release artifacts.
 4. **Snapshot ambiguity (P3):** clarify in `CLAUDE.md` whether root `HANDOFF-`, `AGENTS-`,
    `research_receipts-` and `docs/DAILY_RUNS/*` are living-in-place or archived point-in-time.
-5. **Comparative matrix (P2):** grow the A-Life matrix beyond 26 rows with **source-cited, code-grounded**
-   systems (e.g. NEAT/HyperNEAT, Geb, Chromaria, The Bibites, Species-ALRE) — never fabricated scores.
+5. **Comparative matrix — DONE 2026-07-02:** grew the A-Life matrix from 26 to **113 rows** (NEAT/HyperNEAT,
+   Geb, Chromaria, The Bibites, Species-ALRE, and ~80 more), each source-cited and adversarially
+   score-verified. Next: code-ground a sample of the peer rows (currently literature-scored).
 6. **Coupling instrumentation (P1):** promote `meanAbsCoupling` into a first-class gate metric with a
    regression floor, so the binding bottleneck is tracked like coverage is.
 

@@ -39,6 +39,7 @@ import { classicalEntropyGap, classicalSample } from './classical-contrast';
 import { logoMorphScalar, turtleNew, type TurtleState } from './logo-turtle';
 import { libirrepSymmetry, symmetryModes } from './irrep-symmetry';
 import { moonlabTensorQualia } from './moonlab-tensor';
+import { perceptronTag } from './perceptron-baseline';
 import { shannonDiversity, richness, historicalNovelty } from './open-endedness';
 const NUTRIENT_SLOTS = 12; // Expanded Petri for more digital biologics growth from full Tsotchke soup
 const SCRATCH_NUTRIENTS = new Float32Array(NUTRIENT_SLOTS);
@@ -230,6 +231,11 @@ export function petriDishBeat(
     primary.wiring * 16,
   );
   const classical = classicalSample(beat + archonIdx * 17).value;
+  // simple_mnist (Tsotchke) classical baseline: a salience-weighted linear classifier of the current
+  // nutrient field → a class probability in [0,1]. Centered to ±0.5 so it is a signed signal, not a
+  // constant offset. Pure (no rng), deterministic, bounded — wired into growth below so the registry's
+  // `simple_mnist: wired 1.0` is TRUE, not an export the loop threw away.
+  const percept = perceptronTag(SCRATCH_SALIENCE, state.nutrients, NUTRIENT_SLOTS);
   let spinM = 0;
   for (let i = 0; i < NUTRIENT_SLOTS; i++) {
     const sal = SCRATCH_SAL[i] ?? 0;
@@ -254,6 +260,8 @@ export function petriDishBeat(
     qualia * 0.003 +
     classical * 0.001 +
     state.spinPolarization * 0.002 +
+    // simple_mnist perceptron classification of the nutrient field (signed, ±0.5-centered) → growth.
+    (percept - 0.5) * 0.003 +
     // Eshkol GWT IGNITION → growth: when the workspace competition actually ignites (a specialist wins
     // global access this beat) the colony gets a consciousness-driven boost weighted by how DECISIVE the
     // ignition was — the winner's access × sharpness (1 − competition entropy). The rich eshkolWorkspaceTick

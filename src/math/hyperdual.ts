@@ -72,9 +72,17 @@ function hdUnary(a: HyperDual, f: number, df: number, ddf: number): HyperDual {
 
 export const hdNeg = (a: HyperDual): HyperDual => ({ x: -a.x, e1: -a.e1, e2: -a.e2, e12: -a.e12 });
 
+// Domain-guard epsilon: log/sqrt/reciprocal of a non-positive (or zero) value would return
+// NaN/±Infinity and poison the first- AND second-order derivatives for the rest of the tape. Clamp
+// out-of-range inputs to this tiny epsilon so they yield finite (saturated) values + gradients.
+const HD_EPS = 1e-12;
+
 /** Reciprocal 1/a:  f=1/x, f'=-1/x², f''=2/x³. */
 export const hdRecip = (a: HyperDual): HyperDual => {
-  const x = a.x;
+  // 1/x, -1/x², 2/x³ all diverge at x=0; clamp |x| to HD_EPS (sign-preserving) so a zero divisor
+  // (e.g. through hdDiv) yields large finite values + derivatives instead of Infinity/NaN — same
+  // domain-guard discipline as hdLog/hdSqrt below.
+  const x = Math.abs(a.x) > HD_EPS ? a.x : a.x < 0 ? -HD_EPS : HD_EPS;
   return hdUnary(a, 1 / x, -1 / (x * x), 2 / (x * x * x));
 };
 
@@ -91,10 +99,6 @@ export const hdExp = (a: HyperDual): HyperDual => {
   return hdUnary(a, e, e, e);
 };
 
-// Domain-guarded: log/sqrt of a non-positive value would return NaN/±Infinity and poison the first- AND
-// second-order derivatives for the rest of the tape. Clamp the domain to a tiny epsilon so an
-// out-of-range input yields finite (saturated) values + gradients instead of NaN.
-const HD_EPS = 1e-12;
 export const hdLog = (a: HyperDual): HyperDual => {
   const x = a.x > HD_EPS ? a.x : HD_EPS;
   return hdUnary(a, Math.log(x), 1 / x, -1 / (x * x));

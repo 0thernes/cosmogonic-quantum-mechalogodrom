@@ -22,8 +22,8 @@ gate-enforced (`bun run sync:check`). The one-glance reference is
   and A-Life standing (overall 8.1/10; weak axes = coupling + peer validation). SVG chart in
   [assets/scrutiny-25-scorecard.svg](./assets/scrutiny-25-scorecard.svg).
 - [2026-06-26-ALIFE-COMPARATIVE-AUDIT.md](./2026-06-26-ALIFE-COMPARATIVE-AUDIT.md) — A-Life comparative
-  audit vs 25 known systems (v3, code-grounded): measured statistics (breadth z = +3.01σ self / +2.10σ
-  source-audited), **11 SVG charts**, PCA + clustering + Pareto + Mahalanobis geometry, a 9-agent
+  audit vs **112 known systems** (v4, 113-system expansion, code-grounded): measured statistics (breadth
+  z = +4.02σ self / +2.83σ source-audited), **11 SVG charts**, PCA + clustering + Pareto + Mahalanobis geometry, a 9-agent
   code-grounding of the one self-scored row (`file:line`), and an adversarial novelty defense. Regenerable
   from the source CSV [2026-06-26-alife-comparison-matrix.csv](./2026-06-26-alife-comparison-matrix.csv) via
   three deterministic engines — [`scripts/alife-comparison-stats.ts`](../../scripts/alife-comparison-stats.ts),

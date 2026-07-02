@@ -3342,9 +3342,13 @@ export class World {
       const gain = (hostile ? -0.09 : 0.06) * intent.magnitude;
       const flip: 0 | 1 = hostile ? 1 : 0;
       const r2 = 36 * 36;
-      const list = this.entities.list;
-      for (let i = 0; i < list.length; i++) {
-        const o = list[i];
+      // O(k) via the frame's spatial grid instead of an O(n) scan of every entity (a per-frame NHI
+      // action over up to 50k entities). The 3D `d2 < r2` filter still runs, so the affected set is
+      // identical to the old full scan (XZ-radius query is a superset of the 3D-radius hits); the
+      // per-entity vel/strategy write is order-independent, so grid order preserves determinism.
+      const near = this.grid.query(p.x, p.z, 36);
+      for (let i = 0; i < near.length; i++) {
+        const o = near[i];
         if (!o || o === e) continue;
         const op = o.position;
         const dx = p.x - op.x;

@@ -38,13 +38,14 @@ when the numbers change it is rewritten in place.
 
 ## SuperMind benchmark
 
-Measured 2026-06-26, Bun 1.3.14, Intel Core Ultra 9 275HX:
+Measured 2026-07-02, Bun 1.3.x, Intel Core Ultra 9 275HX (`bun run bench`):
 
-| Operation              | Full bench suite | Focused `bench/super-mind.bench.ts` |
-| ---------------------- | ---------------: | ----------------------------------: |
-| `SuperMind.think()`    |    `3.34 ms` avg |                       `8.85 ms` avg |
-| `SuperMind.snapshot()` |    `2.44 ms` avg |                       `6.89 ms` avg |
-| `5× think()` batch     |   `14.47 ms` avg |                      `25.40 ms` avg |
+| Operation              | Full bench suite | Note                                    |
+| ---------------------- | ---------------: | --------------------------------------- |
+| `SuperMind.think()`    |    `1.99 ms` avg | ~12% of a 16.67 ms frame (lone apex)    |
+| `SuperMind.snapshot()` |    `1.35 ms` avg | UI cadence only (BRAIN board open)      |
+| `5× think()` batch     |    `9.77 ms` avg | staggered `driveSuper`; ~58% of a frame |
 
 This supports an engineering-readiness claim, not a solved frame-budget claim for every GOAL5 scenario; the
-`<2%` target is a remediation goal until a fresh benchmark proves it.
+`<2%` target is a remediation goal until a fresh benchmark proves it. `think()` improved from `3.34 ms`
+(2026-06-26) after the memory-orchestra / QRC / curvature-QNG wiring passes.

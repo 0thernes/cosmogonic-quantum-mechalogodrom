@@ -154,6 +154,7 @@ function scenario(rows: Row[], cosmoAxes: number[], peers: Row[]): Record<string
   return {
     breadth: round(cb, 3),
     rank,
+    total: rows.length,
     percentile: round(pct, 1),
     zPopulation: round((cb - popMean) / popStd, 3),
     zVsPeers: round((cb - peerMean) / peerStd, 3),
@@ -193,7 +194,7 @@ async function main(): Promise<void> {
   await Bun.write(`${OUT}/alife-codeground.json`, JSON.stringify(out, null, 2) + '\n');
 
   const fmt = (s: Record<string, unknown>): string =>
-    `breadth ${s.breadth} (rank #${s.rank}/26, pct ${s.percentile}) · z-pop ${s.zPopulation} · z-peers ${s.zVsPeers} · Mahalanobis ${s.mahalanobis} · dominated-by ${s.dominatedBy9d} · lead over nearest peer breadth +${s.leadOverNearestPeerBreadth}`;
+    `breadth ${s.breadth} (rank #${s.rank}/${s.total}, pct ${s.percentile}) · z-pop ${s.zPopulation} · z-peers ${s.zVsPeers} · Mahalanobis ${s.mahalanobis} · dominated-by ${s.dominatedBy9d} · lead over nearest peer breadth +${s.leadOverNearestPeerBreadth}`;
   console.log('A-LIFE CODE-GROUNDED SENSITIVITY (self-scored vs source-audited Cosmogonic row)\n');
   console.log('  SELF-SCORED : ' + fmt(self));
   console.log('  CODE-GROUND : ' + fmt(code));
