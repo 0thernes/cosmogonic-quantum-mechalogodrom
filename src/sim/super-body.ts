@@ -86,6 +86,21 @@ const SB_STYLE_EMISSIVE: readonly THREE.Color[] = [
   new THREE.Color(0.015, 0.015, 0.02),
 ];
 
+/** V120 MORPH-FX: per-BRUTAL-style EYE identity — pupil SHAPE id + iris hue rotation + sclera tint.
+ *  Every morph mutation re-costumes all 24 eyes (USER: each BRUTAL press gives different PUPIL and
+ *  IRIS shapes AND colors). Shape ids (iris shader): 0 round · 1 vertical slit · 2 goat bar ·
+ *  3 four-point star · 4 annular ring · 5 pinpoint. REPRESSIONISM is the shock look — near-WHITE
+ *  sclera with a tiny black pinpoint pupil. Module consts → no alloc. */
+const SB_EYE_STYLE: readonly { shape: number; irisShift: number; sclera: THREE.Color }[] = [
+  { shape: 2, irisShift: 0.06, sclera: new THREE.Color(0.52, 0.51, 0.49) }, // BRUTALISM — goat bar
+  { shape: 1, irisShift: 0.34, sclera: new THREE.Color(0.28, 0.42, 0.31) }, // NOUVEAUNESS — acid slit
+  { shape: 3, irisShift: 0.12, sclera: new THREE.Color(0.82, 0.74, 0.52) }, // ROCOCOGOLOGY — gold star
+  { shape: 4, irisShift: 0.76, sclera: new THREE.Color(0.3, 0.15, 0.45) }, // COSMICMORPHISM — void ring
+  { shape: 5, irisShift: 0.55, sclera: new THREE.Color(0.9, 0.89, 0.94) }, // REPRESSIONISM — white + pinpoint
+];
+/** Seconds a BRUTAL morph transition takes (accel → peak → decel via a sin(π·x) envelope). */
+const MORPH_FX_SECS = 2.4;
+
 /** Silhouette radius of the core — ½-a-Titan-class colossus (NHI bodies are R≈3.4). */
 const R = 7.4;
 const EYES = 24; // ocular corona count (amped for extreme multi-eye reactivity)
@@ -124,7 +139,8 @@ function patchGodJewel(
          uniform float uTime; uniform float uArousal; uniform float uSurprise; uniform float uVariant; uniform float uWave;
          uniform float uQWave; uniform float uPhi; uniform float uReflex; uniform float uQualia; uniform float uCliff;
          uniform float uBrutalism; // BRUTALISM: chisel the morph into hard monolithic slabs
-         uniform float uBrutalStyle; // V109: 0-4 style variant`,
+         uniform float uBrutalStyle; // V109: 0-4 style variant
+         uniform float uMorphFx; // V120: morph-transition displacement surge`,
       )
       .replace(
         '#include <begin_vertex>',
@@ -153,7 +169,7 @@ function patchGodJewel(
          // TSOTCHKE QGTL corpus: Fubini-Study like geo term for extreme edge (Berry curv proxy in displace).
          float qgtGeo = sin(px*41.3 + t*1.3)*cos(py*37.9 - t*0.9) * 0.007 * (0.5 + 0.5 * (uQWave + uCliff));
          // DEMONIC WARP: stronger displacement + larger amplitude as arousal/surprise rise
-         float warpAmp = 0.09 + 0.22 * uArousal + 0.18 * uSurprise + 0.1 * qfac;
+         float warpAmp = 0.09 + 0.22 * uArousal + 0.18 * uSurprise + 0.1 * qfac + 0.24 * uMorphFx;
          float ext = (beat*0.18 + morph*(0.34 + 0.28*uSurprise) + curv*uArousal*1.3 + fhb*(0.12 + 0.14*uSurprise) + curvD*(1.0 + 0.7*qfac) + nm*0.22*uSurprise*(0.5+0.5*uQualia) + qgtGeo) * ${R.toFixed(1)} * warpAmp;
          float style = floor(uBrutalStyle + 0.5);
          float styleHardness = style < 0.5 ? 0.8 : style < 1.5 ? 0.18 : style < 2.5 ? 0.38 : style < 3.5 ? 0.55 : 0.9;
@@ -182,6 +198,7 @@ function patchGodJewel(
          uniform float uBrutalism; // BRUTALISM: crossfade the god-jewel skin to raw poured concrete
          uniform float uDream; uniform float uHallucinate; // apex CONSCIOUSNESS: REM dream-state + hallucination
          uniform float uBrutalStyle; // V109: 0-4 style variant
+         uniform float uMorphFx; uniform float uBipolar; // V120: morph-transition sweep + darkness-lorecore flip
          float h31(vec3 p){ return fract(sin(dot(p, vec3(27.17,61.31,11.71))) * 43758.5453); }
          float n3(vec3 p){ vec3 i=floor(p), f=fract(p); f=f*f*(3.0-2.0*f);
            return mix(mix(mix(h31(i),h31(i+vec3(1,0,0)),f.x),mix(h31(i+vec3(0,1,0)),h31(i+vec3(1,1,0)),f.x),f.y),
@@ -299,6 +316,19 @@ function patchGodJewel(
          vec3 mindEmissive = mNeuroCol + mHelixCol + mBloom + mThermCol + mQualiaCol + mReflexCol + mDreamCol + mHallCol;
          vec3 jewelEmissive = glow * (0.22 + 0.6 * relief) + iris * fres * (0.45 + 0.8 * uDominance) + wv * 0.12 * uDominance + ch * 0.07 * uSurprise * uPlan + igFlash * uPlan * (0.3 + 0.4 * uDominance) + varPal * relief * 0.25 * uPlan + evoEmissive - veinColor * veinMask * 0.4 + auraColor * relief * 0.15 + mindEmissive;
          jewelEmissive *= 0.6; // USER: darker still (0.78→0.6), less white/bright, more organic + colorful
+         // V120 BIPOLAR DARKNESSLORECORE: a slow deterministic mode-flip — the bright iridescent jewel
+         // switches into a dark rim-lit lorecore phase (dark base + bright rim per the art direction),
+         // then back. tanh-squared sine → it LINGERS in each pole and crosses fast (bipolar switching).
+         float rimB = pow(fres, 1.6);
+         vec3 darkCore = jewelEmissive * 0.18 + iris * rimB * (0.9 + 0.6 * uDominance) + uPlan * rimB * 0.35;
+         jewelEmissive = mix(jewelEmissive, darkCore, uBipolar * 0.85);
+         // V120 SPARKLE: tiny deterministic micro-glints riding the relief — brighter in the dark phase
+         // and surging during a morph transition (the "sparkly shimmer shine" weirdness).
+         float sparkle = pow(max(0.0, sin(dot(vObjPos, vec3(12.9898, 78.233, 37.719)) * 3.1 + uTime * 6.0)), 36.0);
+         jewelEmissive += (iris + 0.4) * sparkle * (0.10 + 0.35 * uBipolar + 0.8 * uMorphFx);
+         // V120 MORPH SWEEP: a chromatic wave crosses the body while a BRUTAL morph transition runs.
+         float sweepM = 0.5 + 0.5 * sin(vObjPos.y * 2.2 + uTime * 9.0);
+         jewelEmissive += (0.5 + 0.5 * cos(vec3(0.0, 2.094, 4.188) + sweepM * 6.2831 + uTime * 3.0)) * uMorphFx * sweepM * 0.9;
          // V112: HDR soft-knee so peak mind-activity (dominance/plan/surprise all maxed) can no longer
          // stack the 15 additive terms into a flat blinding white sear. Reinhard rolloff caps each
          // channel near ~2.0 while passing low values nearly linearly — colour stays vivid, never blinds.
@@ -313,6 +343,74 @@ function patchGodJewel(
          // BRUTALISM: kill the glow — raw material only self-lights enough to read its form.
          vec3 concreteEmissive = brutalGlow * (0.4 + 0.6 * relief);
          totalEmissiveRadiance += mix(jewelEmissive, concreteEmissive, uBrutalism);`,
+      );
+  };
+}
+
+/** V120: the IRIS shader — a procedural pupil + iris fibre pattern on the front hemisphere of each
+ *  eye's iris sphere. `uPupilShape` (0-5) + `uIrisShift` re-costume the eye per BRUTAL style;
+ *  `uMorphFx` surges dilation + a chromatic sweep during a morph transition; the pupil itself is a
+ *  light-swallowing mask so every eye reads as a real pupil, not a flat sphere. Deterministic
+ *  (uTime only, no rng), O(1)/fragment, shares the body's reused uniform record (no alloc). */
+function patchIrisJewel(mat: THREE.MeshStandardMaterial, u: Record<string, THREE.IUniform>): void {
+  mat.customProgramCacheKey = () => 'irisjewel';
+  mat.onBeforeCompile = (shader) => {
+    for (const k of [
+      'uTime',
+      'uPupilShape',
+      'uIrisShift',
+      'uMorphFx',
+      'uArousal',
+      'uSurprise',
+      'uBrutalism',
+    ]) {
+      shader.uniforms[k] = u[k] as THREE.IUniform;
+    }
+    shader.vertexShader = shader.vertexShader
+      .replace('#include <common>', `#include <common>\nvarying vec3 vIrisPos;`)
+      .replace('#include <begin_vertex>', `#include <begin_vertex>\nvIrisPos = position;`);
+    shader.fragmentShader = shader.fragmentShader
+      .replace(
+        '#include <common>',
+        `#include <common>
+         varying vec3 vIrisPos;
+         uniform float uTime; uniform float uPupilShape; uniform float uIrisShift; uniform float uMorphFx;
+         uniform float uArousal; uniform float uSurprise; uniform float uBrutalism;`,
+      )
+      .replace(
+        '#include <emissivemap_fragment>',
+        `#include <emissivemap_fragment>
+         // Planar iris coordinates on the front (+z, outward) hemisphere of the iris sphere.
+         float irisR = ${(R * 0.1).toFixed(4)};
+         vec2 ip = vIrisPos.xy / irisR;
+         float rI = length(ip);
+         float thI = atan(ip.y, ip.x);
+         float front = smoothstep(0.0, 0.15, vIrisPos.z / irisR);
+         // Pupil dilation breathes with arousal/surprise and spasms during a morph transition.
+         float dil = 1.0 + 0.3 * sin(uTime * 1.3 + uArousal * 3.0) * (0.35 + 0.65 * uArousal)
+                   + 0.25 * uSurprise + uMorphFx * 0.9 * sin(uTime * 17.0);
+         dil = clamp(dil, 0.45, 2.2);
+         float shape = floor(uPupilShape + 0.5);
+         float dP;
+         if (shape < 0.5)      dP = rI / (0.40 * dil);                                          // round
+         else if (shape < 1.5) dP = max(abs(ip.x) / (0.13 * dil), abs(ip.y) / 0.72);            // vertical slit
+         else if (shape < 2.5) dP = max(abs(ip.x) / 0.68, abs(ip.y) / (0.15 * dil));            // goat bar
+         else if (shape < 3.5) dP = rI / ((0.16 + 0.34 * pow(abs(cos(thI * 2.0)), 2.5)) * dil); // 4-point star
+         else if (shape < 4.5) dP = abs(rI - 0.34) / (0.11 * dil);                              // annular ring
+         else                  dP = rI / (0.10 * dil);                                          // pinpoint
+         float pupil = (1.0 - smoothstep(0.85, 1.05, dP)) * front;
+         // Iris body: radial fibres + a hue band rotated per style and swept during morphs.
+         float fibre = 0.5 + 0.5 * sin(thI * 22.0 + rI * 9.0 - uTime * 0.7);
+         float irisBand = uIrisShift * 6.2831853 + rI * 4.0 + fibre * 1.4
+                        + uMorphFx * (6.2831853 * rI + uTime * 2.0);
+         vec3 irisCol = 0.5 + 0.5 * cos(vec3(0.0, 2.094, 4.188) + irisBand);
+         float irisMask = front * smoothstep(1.05, 0.9, rI) * (1.0 - pupil);
+         totalEmissiveRadiance = mix(
+           totalEmissiveRadiance,
+           irisCol * (0.5 + 0.8 * fibre) * (0.7 + 1.3 * uMorphFx),
+           irisMask * clamp(0.35 + 0.65 * uBrutalism + uMorphFx, 0.0, 1.0));
+         totalEmissiveRadiance *= (1.0 - pupil); // the pupil is a light-swallowing hole
+         diffuseColor.rgb *= (1.0 - 0.95 * pupil);`,
       );
   };
 }
@@ -366,7 +464,19 @@ export class SuperBodySystem {
     uBrutalStyle: { value: 0 }, // V109: 0=BRUTALISM 1=NOUVEAUNESS 2=ROCOCOGOLOGY 3=COSMICMORPHISM 4=REPRESSIONISM
     uDream: { value: 0 }, // 0..1 REM dream-state (from SuperMind.dreaming) — a slow oneiric aurora
     uHallucinate: { value: 0 }, // 0..1 hallucination (from SuperMind.hallucinating) — a chromatic fractal writhe
+    uMorphFx: { value: 0 }, // V120: BRUTAL morph-transition envelope sin(π·x) — displacement surge + sweep
+    uBipolar: { value: 0 }, // V120: darkness-lorecore mode flip — bright iridescent ↔ dark rim-lit body
+    uPupilShape: { value: 0 }, // V120: iris-shader pupil shape id 0-5 (per BRUTAL style / per variant)
+    uIrisShift: { value: 0 }, // V120: iris hue rotation 0..1 (per BRUTAL style / per variant)
   };
+  // V120 MORPH-FX: transition progress (1 = settled), its sin(π·x) envelope, and the accumulated
+  // transition spin phase — accumulated so the extra spin DECELERATES to rest instead of snapping back.
+  private morphFx = 1;
+  private morphFxEnv = 0;
+  private morphSpinPhase = 0;
+  private lastT = 0;
+  /** Sclera base colour captured at construction so the per-style costume lerp never compounds. */
+  private scleraBase = new THREE.Color();
   private dominance = 0.5;
   private arousal = 0;
   private aggression = 0;
@@ -498,6 +608,12 @@ export class SuperBodySystem {
       emissive: 0x101018,
       emissiveIntensity: 0.2,
     });
+    this.scleraBase.copy(this.scleraMat.color);
+    // V120: procedural pupil + iris pattern on every eye — each variant gets its own resting pupil
+    // shape/hue; BRUTAL styles re-costume it via setBrutalism (shape + hue + sclera per style).
+    patchIrisJewel(this.eyeMat, this.u);
+    this.u.uPupilShape.value = this.variant % 6;
+    this.u.uIrisShift.value = frac(this.variant * 0.61803);
     const scleraGeo = new THREE.SphereGeometry(R * 0.13, 18, 18);
     const irisGeo = new THREE.SphereGeometry(R * 0.1, 18, 18);
     const pupilGeo = new THREE.SphereGeometry(R * 0.045, 14, 14);
@@ -734,6 +850,29 @@ export class SuperBodySystem {
   update(t: number, dt: number): void {
     this.u.uTime.value = t;
 
+    // ── V120 MORPH-FX ENVELOPE: advance on the VISUAL clock delta (t keeps flowing in SUSPENDED
+    //    pause where dt=0, so a BRUTAL press mid-pause still plays its transition). sin(π·x) gives
+    //    the accel→peak→decel feel; the spin phase ACCUMULATES so the extra rotation decelerates to
+    //    rest instead of snapping back when the envelope closes. Deterministic, no rng. ──
+    const tDelta = clampf(t - this.lastT, 0, 0.1);
+    this.lastT = t;
+    if (this.morphFx < 1) {
+      this.morphFx = Math.min(1, this.morphFx + tDelta / MORPH_FX_SECS);
+      this.morphFxEnv = Math.sin(Math.PI * this.morphFx);
+      this.morphSpinPhase += tDelta * this.morphFxEnv * 7.0;
+    } else {
+      this.morphFxEnv = 0;
+    }
+    const mfx = this.morphFxEnv;
+    this.u.uMorphFx.value = mfx;
+    // V120 BIPOLAR DARKNESSLORECORE: slow deterministic mode oscillator — tanh sharpens the sine so
+    // the body LINGERS bright, flips fast to the dark rim-lit pole, lingers, flips back. Per-variant
+    // phase + a slow secondary drift so the 5 apexes never flip in sync.
+    const bipolar =
+      0.5 +
+      0.5 * Math.tanh(3.2 * Math.sin(t * 0.13 + this.variant * 1.31 + Math.sin(t * 0.043) * 1.7));
+    this.u.uBipolar.value = bipolar;
+
     // ── V39 FLIGHT: the apex ROAMS the whole world instead of hovering at the center. A wander-seek
     //    boid steered by its own MIND (the move output), banking toward its heading and QUANTUM-BLINKING
     //    to a fresh locus on a timer (sooner when surprised). Deterministic — a monotonic seed + the sim
@@ -819,18 +958,23 @@ export class SuperBodySystem {
     }
 
     // Spin ∝ arousal; heartbeat scale ∝ arousal; the cage counter-rotates (architecture in motion).
-    const spin = 0.06 + 0.5 * this.arousal;
-    this.core.rotation.y = t * spin;
-    this.core.rotation.x = Math.sin(t * 0.4) * 0.25;
+    // V120: BODY dynamics amped (USER: travel speed stays, the BODY gets faster/wilder) — 2× base
+    // spin, a third rotation axis, faster writhe frequencies, and the morph-transition spin phase.
+    const spin = (0.12 + 0.8 * this.arousal) * (1 + mfx * 1.4);
+    this.core.rotation.y = t * spin + this.morphSpinPhase;
+    this.core.rotation.x = Math.sin(t * 0.9) * 0.3 + mfx * Math.sin(t * 8.0) * 0.22;
+    this.core.rotation.z = Math.sin(t * 0.61 + this.variant) * 0.2 + mfx * Math.sin(t * 6.3) * 0.18;
     const beat = 1 + Math.sin(t * (1.4 + 2.0 * this.arousal)) * (0.04 + 0.06 * this.arousal);
     // V39 MORPH: a non-uniform WRITHE so the body visibly mutates shape (stronger with surprise +
-    // arousal) instead of staying a rigid pulsing ball.
-    const morph = 0.1 + 0.45 * this.surprise + 0.25 * this.arousal + 0.6 * this.morphBoost;
+    // arousal) instead of staying a rigid pulsing ball. V120: faster frequencies + transition surge.
+    const morph =
+      0.1 + 0.45 * this.surprise + 0.25 * this.arousal + 0.6 * this.morphBoost + 0.5 * mfx;
     this.lastMorph = morph;
+    const writheAmp = 0.35 + 0.1 * mfx;
     this.core.scale.set(
-      beat * (1 + Math.sin(t * 1.3) * morph * 0.35),
-      beat * (1 + Math.sin(t * 1.7 + 1.1) * morph * 0.35),
-      beat * (1 + Math.sin(t * 1.1 + 2.3) * morph * 0.35),
+      beat * (1 + Math.sin(t * 2.1) * morph * writheAmp),
+      beat * (1 + Math.sin(t * 2.6 + 1.1) * morph * writheAmp),
+      beat * (1 + Math.sin(t * 1.7 + 2.3) * morph * writheAmp),
     );
     this.eyes.rotation.copy(this.core.rotation); // eyes ride the core
 
@@ -898,7 +1042,11 @@ export class SuperBodySystem {
       const on = i < effMaskEye ? 1.0 : 0.0;
       // actual libirrepWigner call + qge (Tsotchke mirrors/libirrep + quantum-quake) for eye jitter + scale
       const wAng = libirrepWigner(sym, i, 0.1 * Math.sin(t * 3 + i));
-      const eyeScale = on * (0.9 + 0.05 * wAng + (hybridPulse - 1) * 0.02);
+      // V120: eyes go WEIRD during a morph transition — each eyeball wobbles on its own phase.
+      const eyeScale =
+        on *
+        (0.9 + 0.05 * wAng + (hybridPulse - 1) * 0.02) *
+        (1 + mfx * 0.35 * Math.sin(t * 23 + i));
       e.scale.setScalar(eyeScale);
       // focus pupils (children[2] in the new layered eye: sclera, iris, pupil, highlight)
       const grp = e as THREE.Group;
@@ -908,7 +1056,9 @@ export class SuperBodySystem {
           0.55 +
           0.45 *
             (0.5 + 0.5 * Math.sin(t * 5.3 + this.arousal * 2.7 + qWaveU * 2 + this.surprise * 3));
-        pup.scale.setScalar(f * on);
+        // V120: pupil spasm during a morph — erratic per-eye dilation (the "weird odd scary" beat).
+        const spasm = 1 + mfx * 0.8 * Math.sin(t * 19 + i * 2.6);
+        pup.scale.setScalar(f * spasm * on);
         pup.rotation.y = Math.sin(t * 1.9 + i) * 0.11 * (0.3 + 0.7 * qs) * on + wAng * 0.05 * on;
       }
       // subtle highlight shimmer
@@ -964,7 +1114,11 @@ export class SuperBodySystem {
       leg.scale.setScalar(on * (0.9 + 0.1 * Math.sin(t * 1.1 + li)));
       // step + wave tentacle
       leg.rotation.x = 1.48 + Math.sin(phase) * (0.38 + 0.22 * this.surprise) * on + wLeg * 0.1;
-      leg.rotation.z = Math.cos(phase * 0.65 + li) * 0.19 * on + ((li % 2) - 0.5) * 0.06;
+      // V120: tentacle-legs SHAKE during a morph transition (mfx term rests at 0 outside one).
+      leg.rotation.z =
+        Math.cos(phase * 0.65 + li) * 0.19 * on +
+        ((li % 2) - 0.5) * 0.06 +
+        mfx * Math.sin(t * 41 + li * 1.9) * 0.2 * on;
       leg.rotation.y = Math.sin(phase * 0.4) * 0.07 * on;
     });
 
@@ -979,9 +1133,15 @@ export class SuperBodySystem {
       this.evoSpike * 0.18 +
       (armCountFactor - 1) * 0.1 +
       brutalStyleMorph * (1.0 + Math.sin(t * (0.8 + this.brutalStyle * 0.17)) * 0.35);
-    this.arms.scale.setScalar(splay);
-    this.arms.rotation.y = -t * spin * (0.5 + this.brutalism * (0.08 + this.brutalStyle * 0.035));
-    this.arms.rotation.z = Math.sin(t * (0.33 + this.brutalStyle * 0.07)) * brutalStyleMorph;
+    this.arms.scale.setScalar(splay * (1 + mfx * 0.12 * Math.sin(t * 27)));
+    this.arms.rotation.y =
+      -t * spin * (0.5 + this.brutalism * (0.08 + this.brutalStyle * 0.035)) -
+      this.morphSpinPhase * 0.6;
+    this.arms.rotation.z =
+      Math.sin(t * (0.33 + this.brutalStyle * 0.07)) * brutalStyleMorph +
+      mfx * Math.sin(t * 31) * 0.14;
+    // V120: spikes SHAKE during a morph transition (rotation.x rests at 0 when the envelope closes).
+    this.arms.rotation.x = mfx * Math.sin(t * 37 + this.variant) * 0.12;
 
     this.eyes.scale.setScalar(beat * (1 + brutalStyleMorph * 0.65));
     this.cage.rotation.y = -t * (spin * 0.6);
@@ -998,15 +1158,41 @@ export class SuperBodySystem {
       this.dreamGlow * 0.4 +
       (this.evoGlow - 1) * 0.45 +
       phiU * 0.35 +
-      qWaveU * 0.2; // live quantum phi ignition (further trimmed so 24 eyes never white-blob)
+      qWaveU * 0.2 + // live quantum phi ignition (further trimmed so 24 eyes never white-blob)
+      mfx * 1.1; // V120: the eyes FLASH while a morph transition runs (rests at 0 outside one)
 
     this.root.scale.setScalar(this.evoSize); // V48: evolution scales the whole colossus
 
     // Rings orbit on their own axes — the chrome mechanism never rests.
+    // V120: during a morph transition the rings gyroscope wildly, then settle back to their exact
+    // constructed tilt ((i·π)/3) as the envelope closes — accel/decel, no snap.
     for (let i = 0; i < this.rings.length; i++) {
       const ring = this.rings[i];
-      if (ring) ring.rotation.z = t * (0.3 + i * 0.15) * (1 + this.arousal) + alivePulse * 0.05;
+      if (ring) {
+        ring.rotation.z = t * (0.3 + i * 0.15) * (1 + this.arousal + mfx * 2.2) + alivePulse * 0.05;
+        ring.rotation.x = (i * Math.PI) / 3 + mfx * Math.sin(t * 11 + i * 2.1) * 0.5;
+      }
     }
+  }
+
+  /** V120: play the BRUTAL morph-mutation transition — spin-up/decel, shader sweep, spike shake,
+   *  pupil spasm. Idempotent mid-flight (restarts the envelope). Called by world.toggleBrutalism. */
+  triggerMorphTransition(): void {
+    this.morphFx = 0;
+  }
+
+  /** V120: the live morph-transition envelope 0..1 (for tests / inspection). */
+  morphTransitionEnvelope(): number {
+    return this.morphFxEnv;
+  }
+
+  /** V120: the live eye costume — pupil shape id, iris hue shift, sclera hex (for tests / inspection). */
+  eyeCostume(): { pupilShape: number; irisShift: number; sclera: number } {
+    return {
+      pupilShape: this.u.uPupilShape.value as number,
+      irisShift: this.u.uIrisShift.value as number,
+      sclera: this.scleraMat.color.getHex(),
+    };
   }
 
   /** V41: feed the player's steer. mode 0 autopilot · 1 assist · 2 manual; (x,y,z) world dir; active = key/stick held. */
@@ -1140,6 +1326,14 @@ export class SuperBodySystem {
       e.mat.color.copy(e.base).lerp(target, b);
       e.mat.emissive.copy(e.baseEmissive).lerp(targetEmissive, b);
     }
+    // V120 EYE COSTUME: each BRUTAL style re-shapes + re-colors every eye — pupil SHAPE, iris hue,
+    // sclera tint (REPRESSIONISM = near-white sclera + tiny black pinpoint pupils). Lerped from the
+    // captured base by `b`, so OFF restores the variant's resting eye exactly (never compounds).
+    const eyeStyle = SB_EYE_STYLE[this.brutalStyle] ?? SB_EYE_STYLE[0]!;
+    this.u.uPupilShape.value = b > 0.5 ? eyeStyle.shape : this.variant % 6;
+    const restShift = frac(this.variant * 0.61803);
+    this.u.uIrisShift.value = restShift + (eyeStyle.irisShift - restShift) * b;
+    this.scleraMat.color.copy(this.scleraBase).lerp(eyeStyle.sclera, b);
     this.updateMindColors();
   }
 

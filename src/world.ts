@@ -50,6 +50,7 @@ import { createGeometryCache } from './sim/geometry-cache';
 import { createMorphotypes } from './sim/morphotypes';
 import { createPhyla } from './sim/phyla';
 import { EntityManager } from './sim/entities';
+import { growthTargetAt } from './sim/growth-ramp';
 import { EntityBrainField } from './sim/entity-brain';
 import { InstancedEntityRenderer, type InstanceFrame } from './sim/instanced-entities';
 import { ShoggothSystem } from './sim/shoggoths';
@@ -252,6 +253,16 @@ export class World {
    * `timeScale===0`; cleared whenever time resumes (togglePause / cycleTimeScale).
    */
   private frozenAll = false;
+  /** V121 SUSPENDED ANIMATION: eased amplitude + pause-clock for the instanced organisms' in-place
+   *  spin/orbit while SUSPENDED. Amplitude eases in while paused, holds in FROZEN (tableau,
+   *  mid-orbit), and eases back to 0 on resume so engage/release never snaps. Render-only. */
+  private suspendFx = 0;
+  private suspendClock = 0;
+  /** V121 GROWTH REBASE: elapsed at the last genesis (boot=0, or the GENESIS RESET moment) and the
+   *  population base the ramp climbs FROM — −1 = "boot base" (BOOT_POP, resolved lazily since the
+   *  static is declared later in the class), ONE progenitor after a reset (USER). */
+  private growthAnchor = 0;
+  private growthBase = -1;
   /** Master exposure ladder (ACES filmic); index 1 = boot default 0.62 (USER #11 dimmed). */
   private readonly exposureLevels = [0.52, 0.62, 0.72, 0.82, 0.92] as const;
   private exposureIdx = 1;
@@ -1088,8 +1099,6 @@ export class World {
 
   /** V66: the world BOOTS at ~500 organisms so the first frame loads instantly, then ramps. */
   private static readonly BOOT_POP = 500;
-  /** V66: seconds for the live target to ease from {@link BOOT_POP} up to the tier ceiling. */
-  private static readonly GROWTH_RAMP_SECS = 210;
 
   /**
    * Boot/reset population (V66): a fast-loading **~500** on every tier (the directive's "always start
@@ -1148,21 +1157,18 @@ export class World {
   }
 
   /**
-   * V66: drive the live population target — ease from {@link BOOT_POP} up to the tier ceiling over
-   * {@link GROWTH_RAMP_SECS}, then BREATHE (a slow ±8 % sine) so the population fluctuates dynamically
-   * instead of pinning flat at the cap. Pure function of `state.elapsed` (no rng) ⇒ deterministic: the
-   * EntityManager grows toward this each frame. The ceiling is the tier's real target, so the huge world
-   * is still reached — just not all at once on the first frame.
+   * V66→V121: drive the live population target via the pure {@link growthTargetAt} ramp — ease from
+   * the current growth BASE up to the tier ceiling over `GROWTH_RAMP_SECS` (630 s — 3× gentler than
+   * the original 210 s so devices absorb the climb; USER: growth ALWAYS slow, ceiling untouched),
+   * then BREATHE ±8 %. Re-anchored by {@link resetSim} so a GENESIS RESET regrows from ONE
+   * progenitor at the reset moment instead of snapping back to a high target. Pure function of
+   * `state.elapsed` (no rng) ⇒ deterministic: the EntityManager grows toward this each frame.
    */
   private updateGrowthTarget(): void {
     const s = this.state;
     const ceiling = Math.min(this.quality.targetEntities, this.quality.maxEntities);
-    const boot = Math.min(World.BOOT_POP, ceiling);
-    const el = s.elapsed;
-    const g = el >= World.GROWTH_RAMP_SECS ? 1 : el / World.GROWTH_RAMP_SECS;
-    const ease = g * g * (3 - 2 * g); // smoothstep ramp
-    const breathe = 1 - 0.08 * ease * (0.5 - 0.5 * Math.cos(el * 0.04)); // gentle ±8% once grown
-    s.growthTarget = Math.round((boot + (ceiling - boot) * ease) * breathe);
+    const base = this.growthBase > 0 ? this.growthBase : World.BOOT_POP;
+    s.growthTarget = growthTargetAt(s.elapsed - this.growthAnchor, base, ceiling);
   }
 
   /**
@@ -1602,6 +1608,12 @@ export class World {
     // (sort flash, graph rank floor, belly pulse, conscription tints). The reused frame block
     // carries the N(2) nightmare scalar (inverted palette) + t/chaos/bass for the GPU effects.
     if (this.instanced) {
+      // V121: RUNNING eases the suspended-animation amplitude back to 0 (~0.5 s) so releasing the
+      // pause unwinds smoothly; at 0 the shader branch is skipped and the scene is byte-identical.
+      if (this.suspendFx > 0) {
+        this.suspendFx = Math.max(0, this.suspendFx - uiDt * 2);
+        this.instanced.setSuspend(this.suspendFx, this.suspendClock);
+      }
       const fr = this.instFrame;
       fr.t = t;
       fr.chaos = s.chaos;
@@ -1631,6 +1643,9 @@ export class World {
     for (const hb of this.heroBodies) hb.body.update(vt, uiDt); // player can still move (travel on uiDt)
     this.hud.update(0, s);
     if (this.instanced) {
+      // V121 FROZEN: HOLD the suspended-animation amplitude + clock — the tableau freezes each
+      // organism mid-spin/mid-orbit (no unwind snap), and resuming continues seamlessly.
+      this.instanced.setSuspend(this.suspendFx, this.suspendClock);
       const fr = this.instFrame;
       fr.t = vt;
       fr.chaos = s.chaos;
@@ -1758,6 +1773,12 @@ export class World {
 
     // Render the paused world: entities stay lively through the instanced pool's advancing uTime.
     if (this.instanced) {
+      // V121 SUSPENDED ANIMATION (USER): the organisms don't just shimmer — they SPIN, TWINE, BOB
+      // and ORBIT their frozen loci like every other creature. The amplitude eases in over ~0.7 s
+      // (never snaps) and the spin clock advances on the real frame delta. Render-only, no rng.
+      this.suspendClock += uiDt;
+      this.suspendFx = Math.min(1, this.suspendFx + uiDt * 1.5);
+      this.instanced.setSuspend(this.suspendFx, this.suspendClock);
       const fr = this.instFrame;
       fr.t = vt;
       fr.chaos = s.chaos;
@@ -3620,11 +3641,20 @@ export class World {
     return s.sim;
   }
 
-  /** Legacy rSim: genesis reset (entities + counters; prefs untouched). */
+  /** Legacy rSim: genesis reset — ENTITIES ONLY (V121, USER law). The petri population collapses to
+   *  ONE progenitor and regrows on the re-anchored slow ramp; the Pantheons, super creatures, titans,
+   *  and every other being keep their positions and selves — a reset is a petri-dish event, not a
+   *  world event. (The old chaos snap-to-0.5 stays for the counters, and the pantheon drift is now
+   *  rate-integrated in alphabet-pantheon-render so a chaos step can no longer teleport them.) */
   private resetSim(): void {
     this.resetCount++; // V57: keep count for the HUD readout
     this.singularities.dispose(); // tear down any active cosmological effect
-    this.entities.reset(this.bootPopulation());
+    this.entities.reset(1); // USER: reset → ONE entity, never a 500-strong instant repopulation
+    // V121: re-anchor the growth ramp at THIS moment with a base of 1, so the target climbs slowly
+    // from the lone progenitor instead of yanking the manager straight back to a high target.
+    this.growthAnchor = this.state.elapsed;
+    this.growthBase = 1;
+    this.updateGrowthTarget();
     // Rebuild the spatial grid NOW (audit fix): the frame loop only rebuilds on even frames,
     // so for up to one frame every grid query would otherwise return the DISPOSED pre-reset
     // population — shoggoth tendrils/behaviors tugging on corpses.
@@ -3637,7 +3667,7 @@ export class World {
     this.state.chaos = 0.5;
     this.state.mutations = 0;
     this.state.algoStep = 0;
-    this.hud.showSector('GENESIS RESET');
+    this.hud.showSector('GENESIS RESET · 1 PROGENITOR');
   }
 
   /**
@@ -3979,10 +4009,16 @@ export class World {
     // The per-frame step() driver eases brutalismFactor toward this state and applies it to the
     // bodies + the whole cosmos (organisms, ground, lights, sky, fog) — so no direct apply here.
     const styleForBodies = this.brutalStyleIdx < 0 ? 0 : this.brutalStyleIdx;
-    for (let i = 0; i < this.superBodies.length; i++)
+    // V120: every BRUTAL press plays a full morph-mutation TRANSITION on each super creature —
+    // spin-up/decel, shader chromatic sweep, spike/tentacle shake, pupil spasm + eye re-costume.
+    for (let i = 0; i < this.superBodies.length; i++) {
       this.superBodies[i]!.setBrutalStyle(styleForBodies);
-    for (let i = 0; i < this.heroBodies.length; i++)
+      this.superBodies[i]!.triggerMorphTransition();
+    }
+    for (let i = 0; i < this.heroBodies.length; i++) {
       this.heroBodies[i]!.body.setBrutalStyle(styleForBodies);
+      this.heroBodies[i]!.body.triggerMorphTransition();
+    }
     if (on) {
       const style = BRUTAL_STYLES[this.brutalStyleIdx]!;
       this.syncBrutalButton(style.glyph, style.name, style.title);

@@ -114,6 +114,11 @@ interface ShaderUniforms {
   uMode: { value: number };
   /** BRUTALISM 0..1 — desaturate every organism toward raw concrete grey (0 = off, byte-identical). */
   uBrutalism: { value: number };
+  /** V121 SUSPENDED ANIMATION amplitude 0..1 — while the dome is paused (SUSPENDED state) every
+   *  organism keeps living IN PLACE: spinning + orbiting its frozen locus. 0 = off, byte-identical. */
+  uSuspend: { value: number };
+  /** V121: the pause visual clock driving the suspended spin/orbit (advances only while paused). */
+  uSuspendT: { value: number };
 }
 
 /** Speed→exertion normalizer: a damped-velocity magnitude of ~0.125 saturates the exertion lane. */
@@ -261,10 +266,12 @@ function patchPoolMaterial(
     shader.uniforms['uBass'] = uniforms.uBass;
     shader.uniforms['uMode'] = uniforms.uMode;
     shader.uniforms['uBrutalism'] = uniforms.uBrutalism;
+    shader.uniforms['uSuspend'] = uniforms.uSuspend;
+    shader.uniforms['uSuspendT'] = uniforms.uSuspendT;
     shader.vertexShader = shader.vertexShader
       .replace(
         '#include <common>',
-        '#include <common>\nattribute vec4 instEmissive;\nattribute vec4 instVitals;\nattribute vec4 instVitals2;\nattribute vec4 instVitals3;\nvarying vec4 vInstEmissive;\nvarying vec4 vVitals;\nvarying vec4 vVit2;\nvarying vec4 vVit3;\nvarying vec3 vObjPos;\nvarying float vInstId;\nuniform float uTime;\nuniform float uNightmare;',
+        '#include <common>\nattribute vec4 instEmissive;\nattribute vec4 instVitals;\nattribute vec4 instVitals2;\nattribute vec4 instVitals3;\nvarying vec4 vInstEmissive;\nvarying vec4 vVitals;\nvarying vec4 vVit2;\nvarying vec4 vVit3;\nvarying vec3 vObjPos;\nvarying float vInstId;\nuniform float uTime;\nuniform float uNightmare;\nuniform float uSuspend;\nuniform float uSuspendT;',
       )
       .replace(
         '#include <begin_vertex>',
@@ -284,7 +291,20 @@ function patchPoolMaterial(
           '}\n' +
           '// SHARDWARP (neural firing, vVitals.z): a firing body bristles with tiny shards along its\n' +
           '// normal; amplitude scales with real activation, so an idle organism is byte-identical.\n' +
-          'transformed += objectNormal * (instVitals.z * sin(position.x * 31.0 + position.y * 27.0 - uTime * 11.0) * 0.04);',
+          'transformed += objectNormal * (instVitals.z * sin(position.x * 31.0 + position.y * 27.0 - uTime * 11.0) * 0.04);\n' +
+          '// V121 SUSPENDED ANIMATION (USER): while the dome pauses, every organism keeps LIVING IN\n' +
+          '// PLACE — spinning on its own axis, twining/bobbing, and orbiting its frozen locus on the\n' +
+          '// pause clock. Render-only (entity state untouched, no rng ⇒ golden intact); uSuspend eases\n' +
+          '// 0→1 so engage/release never snaps, and at 0 the branch is skipped (byte-identical).\n' +
+          'if (uSuspend > 0.0) {\n' +
+          '  float sph = float(gl_InstanceID) * 0.6180339887;\n' +
+          '  float spinA = uSuspendT * (0.6 + fract(sph) * 1.3) * uSuspend;\n' +
+          '  float cS = cos(spinA), sS = sin(spinA);\n' +
+          '  transformed.xz = mat2(cS, -sS, sS, cS) * transformed.xz;\n' +
+          '  float orbA = uSuspendT * (0.25 + fract(sph * 3.7) * 0.45) + sph * 6.2831853;\n' +
+          '  float orbR = (0.3 + fract(sph * 7.13) * 0.9) * uSuspend;\n' +
+          '  transformed += vec3(cos(orbA) * orbR, sin(uSuspendT * (0.5 + fract(sph * 2.3)) + sph) * 0.4 * uSuspend, sin(orbA) * orbR);\n' +
+          '}',
       );
     shader.fragmentShader = shader.fragmentShader
       .replace(
@@ -653,6 +673,8 @@ export class InstancedEntityRenderer {
     uBass: { value: 0 },
     uMode: { value: 0 },
     uBrutalism: { value: 0 },
+    uSuspend: { value: 0 },
+    uSuspendT: { value: 0 },
   };
 
   /** Stores references and builds the geometry-id lookup. No pools yet. O(geos). */
@@ -672,6 +694,14 @@ export class InstancedEntityRenderer {
   /** BRUTALISM: desaturate every instanced organism toward raw concrete grey (0 = off, 1 = full). O(1). */
   setBrutalism(level: number): void {
     this.shaderUniforms.uBrutalism.value = level < 0 ? 0 : level > 1 ? 1 : level;
+  }
+
+  /** V121 SUSPENDED ANIMATION: amplitude 0..1 + the pause visual clock. While SUSPENDED the world
+   *  eases `level` to 1 and advances `clock`; FROZEN holds both (tableau, mid-orbit); RUNNING eases
+   *  `level` back to 0. Render-only — entity sim state and the seeded golden are untouched. O(1). */
+  setSuspend(level: number, clock: number): void {
+    this.shaderUniforms.uSuspend.value = level < 0 ? 0 : level > 1 ? 1 : level;
+    this.shaderUniforms.uSuspendT.value = Number.isFinite(clock) ? clock : 0;
   }
 
   /**

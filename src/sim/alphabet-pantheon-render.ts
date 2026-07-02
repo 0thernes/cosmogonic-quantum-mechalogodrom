@@ -94,6 +94,22 @@ const S = new THREE.Vector3();
 const C = new THREE.Color();
 const WANDER = { x: 0, y: 0, z: 0 };
 
+/** V121: travel-clock length of the boot speed-ramp — godforms START slow and ease up to full
+ *  roam speed (~35 s real time at the 0.22 travel scale) instead of launching at full tilt. */
+const TRAVEL_RAMP = 8;
+
+/** V121 SOFT WALL (USER "framing/fencing" fix): compress positions beyond 85% of the half-extent
+ *  with a tanh knee instead of hard-clamping at the wall — the old per-axis clamp made godforms
+ *  SLIDE flat along the platform edges ("fencing the path"). Interior (≤85%) passes through
+ *  exactly; the output is always strictly inside ±half. Pure, deterministic. O(1). */
+export function softLimit(v: number, half: number): number {
+  const m = half * 0.85;
+  const a = Math.abs(v);
+  if (a <= m) return v;
+  const k = half - m;
+  return Math.sign(v) * (m + k * Math.tanh((a - m) / k));
+}
+
 /** Per-instance animation constants, derived from the archetype with NO rng. */
 interface Body {
   /** Anchor position on the dome (fixed). */
@@ -165,6 +181,25 @@ export class AlphabetPantheonRender {
   private localT = 0;
   /** Travel clock — advances only when NOT paused, so roam freezes on pause (suspended animation). */
   private travelClock = 0;
+  // ── V121 RATE-INTEGRATED MOTION (USER: stutter + reset-teleport fix) ─────────────────────────────
+  // The old phases were PRODUCTS of an ever-growing clock and LIVE factors (chaos, apex signals,
+  // brain activity): ph = clock × quick(chaos…). Any change in those factors re-scaled the whole
+  // accumulated angle — chaos decays EVERY frame (micro-stutter), apex signals step every mind
+  // cadence (visible jerk), and a GENESIS RESET's chaos snap teleported every godform ("the reset
+  // button resets the pantheons"). These integrators accumulate rate × dt instead, so live signals
+  // modulate SPEED, never the accumulated angle — continuous under any signal change. No rng.
+  private lastClock = 0;
+  private lastTravelClock = 0;
+  /** Integrated roam-drift angle — chaos modulates its RATE (rad/s), never the absolute angle. */
+  private driftClock = 0;
+  /** Integrated body-animation clock — `quick` (chaos/apex/vitality) modulates its RATE only. */
+  private animClock = 0;
+  /** Integrated 101st-apex body-animation + roam-drift clocks (same continuity discipline). */
+  private apexAnim = 0;
+  private apexDrift = 0;
+  /** Eased chaos (~0.4 s time constant) — chaos also feeds AMPLITUDES (the glyph wander offset),
+   *  so a raw chaos SNAP (reset / chaos button) would still displace bodies; the ease glides it. */
+  private chaosEase = 0;
 
   constructor(scene: THREE.Scene) {
     this.refAtlas = createPantheonFallbackAtlas();
@@ -625,8 +660,14 @@ export class AlphabetPantheonRender {
     if (dt !== undefined && dt < 0) return; // guard: negative dt is an error (pause passes uiDt + visualOnly)
     const clock = scaledDt === undefined ? t * 0.22 : (this.localT += Math.max(0, scaledDt));
     // Travel clock advances ONLY when not paused → roam freezes on pause while `clock` (below) keeps animating.
+    // V121: the boot speed-ramp — godforms start at ~30% roam speed and ease up to full over
+    // TRAVEL_RAMP travel-units (~35 s real), so they never launch at full tilt (USER).
     if (scaledDt === undefined) this.travelClock = t * 0.22;
-    else if (!visualOnly) this.travelClock += Math.max(0, scaledDt);
+    else if (!visualOnly) {
+      const g = this.travelClock >= TRAVEL_RAMP ? 1 : this.travelClock / TRAVEL_RAMP;
+      const rampIn = g * g * (3 - 2 * g);
+      this.travelClock += Math.max(0, scaledDt) * (0.3 + 0.7 * rampIn);
+    }
     if (this.mat instanceof THREE.ShaderMaterial) {
       const uTime = this.mat.uniforms.uTime;
       if (uTime) uTime.value = clock;
@@ -634,7 +675,33 @@ export class AlphabetPantheonRender {
     // V109: pantheon is stately — slower base drift, but still quickens with chaos and apex presence.
     // Reduced by another 50% as requested so they can be easily inspected.
     const slowT = clock * CREATURE_EXTERIOR_TIME_SCALE * 0.275;
-    const quick = 0.5 + 0.6 * this.chaos + 0.25 * this.apexTranscendence + 0.15 * this.apexVitality;
+    // ── V121 INTEGRATORS: live signals (chaos / apex / Tsotchke pulse) modulate motion RATES via
+    //    these accumulated clocks — never re-scale an accumulated angle. This is what killed the
+    //    per-frame chaos-decay micro-stutter, the mind-cadence jerk, and the reset-button pantheon
+    //    teleport (chaos snapping 3→0.5 used to re-scale every roam angle at once). ──
+    const dClock = Math.max(0, clock - this.lastClock);
+    this.lastClock = clock;
+    const dTravel = Math.max(0, this.travelClock - this.lastTravelClock);
+    this.lastTravelClock = this.travelClock;
+    // Eased chaos for every AMPLITUDE coupling (wander offset, lighting): a snap glides in ~0.4 s.
+    this.chaosEase += (this.chaos - this.chaosEase) * Math.min(1, dClock * 12);
+    const chaosE = this.chaosEase;
+    const quick = 0.5 + 0.6 * chaosE + 0.25 * this.apexTranscendence + 0.15 * this.apexVitality;
+    this.animClock += dClock * CREATURE_EXTERIOR_TIME_SCALE * 0.275 * quick;
+    this.driftClock += dTravel * 1.25 * (0.16 + 0.08 * chaosE);
+    const w101 =
+      1 +
+      0.9 * chaosE +
+      0.45 * this.apexTranscendence +
+      0.28 * this.apexVitality +
+      0.25 * this.tsotchkePulse.quakeAliveness;
+    this.apexAnim += dClock * CREATURE_EXTERIOR_TIME_SCALE * 0.275 * 3.2 * w101;
+    this.apexDrift += dTravel * 4.545 * 0.22 * (1 + this.tsotchkePulse.qgtVolume * 1.5);
+    // V121 boot blend: bodies EASE OFF their construction anchors onto the roam curve over the same
+    // boot ramp — pre-fix the first frame snapped every godform from its anchor to a far curve point
+    // (the "too fast initially" dash). Convex blend of two in-bounds points ⇒ containment intact.
+    const gB = this.travelClock >= TRAVEL_RAMP ? 1 : this.travelClock / TRAVEL_RAMP;
+    const rampBlend = gB * gB * (3 - 2 * gB);
     // Containment (user #10): each godform may drift only a little from its dome anchor, and never
     // below the ground plane. Because every anchor already lies inside the dome shell, a bounded
     // tether GUARANTEES no godform ever leaves the dome or sinks underneath it — and the small cap
@@ -645,9 +712,10 @@ export class AlphabetPantheonRender {
       const list = this.bodies[pool]!;
       for (let s = 0; s < list.length; s++) {
         const b = list[s]!;
-        const ph =
-          slowT * b.freq * quick * (1 + (this.brainActivity?.[b.gIdx] ?? 0) * 0.35) + b.phase;
         const ba = this.brainActivity?.[b.gIdx] ?? 0;
+        // V121: brain activity is a BOUNDED phase shift (+ba·2.2 rad), not a multiplier on the whole
+        // accumulated clock — a changing activity used to re-scale the angle and jerk the body.
+        const ph = this.animClock * b.freq + b.phase + ba * 2.2;
         const bn = this.brainNovelty?.[b.gIdx] ?? 0;
         const bv = this.brainValence?.[b.gIdx] ?? 0;
         const brainPulse = 1 + ba * 0.95 + bn * 0.35;
@@ -665,15 +733,19 @@ export class AlphabetPantheonRender {
         // glide (~half speed, crossing the platform in ~35-45s), while the rich body dynamism below spins/
         // corkscrews/vibrates them. Travel is a smooth curved Lissajous, brain-steered.
         const rt = this.travelClock * 1.25; // travel clock (frozen on pause). USER: slower still — graceful glide
-        const roamDrift = rt * (0.16 + 0.08 * this.chaos) + b.phase * 1.7;
-        const roamRad = 210 + (b.gIdx % 7) * 48; // 210..498 — sweeps to the platform rim
+        // V121: the drift angle is the chaos-rate INTEGRATOR (continuous under any chaos change).
+        const roamDrift = this.driftClock + b.phase * 1.7;
+        // V121: the radius BREATHES slowly per body (156..518) so paths stop reading as fixed rings,
+        // and tops out below the wall so targets rarely need the soft edge at all.
+        const roamRad =
+          (190 + (b.gIdx % 7) * 42) * (0.82 + 0.18 * Math.sin(rt * 0.07 + b.phase * 1.3));
         // Curved travel: a slow secondary drift bends the path so it never reads as a plain circle.
         const bend = Math.sin(rt * 0.11 + b.phase * 0.7) * 0.55;
-        // Brain motor steers the goal, but GENTLY (±120, was ±300 which made the travel jumpy/choppy).
-        const aTx = Math.cos(roamDrift + bend) * roamRad + mx * 120;
-        const aTz = Math.sin(roamDrift * 1.21 + b.phase - bend) * roamRad + mz * 120;
+        // Brain motor steers the goal, but GENTLY (±90; ±300 made the travel jumpy/choppy).
+        const aTx = Math.cos(roamDrift + bend) * roamRad + mx * 90;
+        const aTz = Math.sin(roamDrift * 1.21 + b.phase - bend) * roamRad + mz * 90;
         const aTy = 120 + Math.sin(roamDrift * 0.63) * 92 + my * 42; // roams the full 6..240 column
-        const wander = glyphWanderOffset(WANDER, ph, b.sig, mx, my, mz, this.chaos, ba);
+        const wander = glyphWanderOffset(WANDER, ph, b.sig, mx, my, mz, chaosE, ba);
         P.set(aTx + wander.x, aTy + wander.y, aTz + wander.z);
 
         // USER #10 (corrected V115): tether every godform to ITS OWN dome anchor so it can never
@@ -685,20 +757,36 @@ export class AlphabetPantheonRender {
         // and vertical ground..mechalogodrom-height (ARENA_FLOOR..ARENA_CEIL). Per-axis (not radial) so
         // godforms fill the whole SQUARE platform out to its edges/corners, never outside it and never
         // above the mechalogodrom.
+        // V121 SOFT WALL: tanh-knee the last 15% so an over-shooting target CURVES back inside
+        // instead of sliding flat along the wall (the "framing/fencing" read). softLimit output is
+        // strictly inside ±half, so the containment guarantee is intact; the hard clamps below stay
+        // as a belt-and-braces invariant.
+        const yMid = (ARENA_FLOOR + ARENA_CEIL) / 2;
+        P.y = yMid + softLimit(P.y - yMid, (ARENA_CEIL - ARENA_FLOOR) / 2);
+        P.x = softLimit(P.x, ARENA_HALF);
+        P.z = softLimit(P.z, ARENA_HALF);
         if (P.y < ARENA_FLOOR) P.y = ARENA_FLOOR;
         else if (P.y > ARENA_CEIL) P.y = ARENA_CEIL;
         if (P.x > ARENA_HALF) P.x = ARENA_HALF;
         else if (P.x < -ARENA_HALF) P.x = -ARENA_HALF;
         if (P.z > ARENA_HALF) P.z = ARENA_HALF;
         else if (P.z < -ARENA_HALF) P.z = -ARENA_HALF;
+        // V121 boot blend: ease off the anchor onto the curve (no first-frame dash — see above).
+        if (rampBlend < 1) {
+          P.x = b.ax + (P.x - b.ax) * rampBlend;
+          P.y = b.ay + (P.y - b.ay) * rampBlend;
+          P.z = b.az + (P.z - b.az) * rampBlend;
+        }
         // USER: ENDLESS DYNAMISM — each godform corkscrews on all 3 axes (per-body rate + direction),
         // tumbles/curves/inverts, and vibrates, driven by its brain + rhythm. Not a gentle bob. Pure trig.
-        const cork = slowT * (0.55 + (b.gIdx % 5) * 0.22) * quick; // continuous corkscrew, per-body tempo
+        // V121: corkscrew + spin ride the RATE-integrated animClock (quick already folded into its
+        // rate), and brain activity shifts phase boundedly — no accumulated-angle re-scaling left.
+        const cork = this.animClock * (0.55 + (b.gIdx % 5) * 0.22); // continuous corkscrew, per-body tempo
         const cdir = b.gIdx % 2 === 0 ? 1 : -1; // half spin CW, half CCW
         const vib = Math.sin(ph * 9.0 + b.gIdx) * 0.05 * (0.5 + ba); // high-freq vibration
         E.set(
           cork * cdir + Math.sin(ph * 0.42 + mx + b.sig.rotBias) * (0.6 + ba * 0.6) + vib,
-          slowT * b.spin * quick * (1 + ba * 0.62) + b.phase + mz * 0.36 + cork * 0.7,
+          this.animClock * b.spin + ba * 1.4 + b.phase + mz * 0.36 + cork * 0.7,
           -cork * (b.gIdx % 3 === 0 ? 0.5 : cdir * 0.4) +
             Math.cos(ph * 0.38 + mz + b.sig.rotBias * 0.5) * (0.55 + bn * 0.6) +
             vib,
@@ -722,7 +810,7 @@ export class AlphabetPantheonRender {
           b.sig.hueOffset * 0.5 +
           this.apexTranscendence * 0.06 * Math.sin(ph * 0.11 + b.gIdx * 0.1);
         const hue = (b.pal.bodyHue + hueShift + b.pal.diagramHue * bn * 0.26) % 1;
-        const litBoost = ba * 0.32 + bn * 0.18 + b.pal.filamentLit * 0.22 * ba + this.chaos * 0.08;
+        const litBoost = ba * 0.32 + bn * 0.18 + b.pal.filamentLit * 0.22 * ba + chaosE * 0.08;
         const lit = b.pal.bodyLit + 0.18 * Math.sin(ph * 1.8) + litBoost;
         C.setHSL(
           hue < 0 ? hue + 1 : hue,
@@ -741,20 +829,17 @@ export class AlphabetPantheonRender {
       this.glyphSpores.finish();
       if (halo) syncGlyphWireHalos(mesh, halo, this.brainActivity, list);
     }
-    const w =
-      1 +
-      0.9 * this.chaos +
-      0.45 * this.apexTranscendence +
-      0.28 * this.apexVitality +
-      0.25 * this.tsotchkePulse.quakeAliveness;
-    // USER: the apex BODY was glacially slow (rotation ~minutes) — it should be VERY MOBILE. ~26× faster
-    // so its core/halo/spikes spin + pulse lively (its travel roams separately below).
-    const ph = slowT * 2.4 * w;
+    // USER: the apex BODY was glacially slow (rotation ~minutes) — it should be VERY MOBILE. V121:
+    // the body phase is the RATE-integrated apexAnim clock (chaos/apex/Tsotchke modulate its SPEED,
+    // 3.2× base — faster + more dynamic than the old 2.4×) so live-signal steps no longer jerk it.
+    const ph = this.apexAnim;
     // USER: the 101st apex was PINNED near centre (a tiny ~70u wobble) → "stuck in a bubble". Now it ROAMS
     // the full ±ARENA_HALF platform like the other creatures, at near real sim time (not the 6% slowdown)
     // so it visibly TRAVELS, hard-clamped to the platform + below the mechalogodrom. Pure trig — no rng.
+    // V121: qgtVolume modulates the drift RATE (apexDrift integrator) instead of adding ±2 rad to the
+    // angle — the old form teleported the apex ~2 radians every time the Tsotchke pulse updated.
     const rtA = this.travelClock * 4.545; // apex travel: frozen on pause (body still animates via ph below)
-    const roamDriftA = rtA * 0.22 + this.tsotchkePulse.qgtVolume * 2.0;
+    const roamDriftA = this.apexDrift;
     const roamRadA = 260 + 130 * Math.sin(rtA * 0.045); // 130..390 from centre
     let apX = Math.cos(roamDriftA) * roamRadA;
     let apY = 132 + Math.sin(roamDriftA * 0.63) * 82; // ~50..214 of the column
