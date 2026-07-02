@@ -470,6 +470,13 @@ const RESONANCE_EXPLORE_GAIN = 0.1;
  *  not a DC offset. Theory-motivated (GNW workspace access), so the resulting co-variation is a genuine
  *  byproduct of integration, not an injected correlation. Tuned by the coupling-audit. */
 const COUPLING_BIND_GAIN = 0.5;
+/** #9/#37 UN-RAIL (2026-07-02): scales the selfAware BASE below the 1.0 clamp rail so the bind-gate's
+ *  ± excursions transmit instead of being clipped away — the coupling audit measured selfAware ISOLATED
+ *  at 200 beats because the raw sum saturated to a constant 1.0 (a pinned instrument reads nothing).
+ *  Companion NULLs from the same experiment (reverted, do not retry blindly): coherence-gating the
+ *  reservoir INPUT (echo-state tanh normalises a scalar gain away) and coherence-scaling the holographic
+ *  IMPRINT (cleanup-cosine confidence is scale-robust; HRR_DECAY mixes too slowly). */
+const SELF_BASE_SCALE = 0.85;
 
 // ── #10/#58 · GWT BROADCAST + RE-ENTRY (the coupling write-back) ───────────────────────────────────────
 /** Smoothing of the workspace broadcast signal — how fast it tracks the assembly's ignition. */
@@ -923,6 +930,9 @@ export class SuperMind {
     }
     // V1.1: step the echo-state reservoir on the fresh latent — a fading nonlinear echo of the mind's
     // recent world-models that gives it temporal memory; its novelty (below) sharpens curiosity.
+    // (#9/#37 measured NULL, 2026-07-02: coherence-GATING this input washed out — the echo-state tanh
+    // normalises a scalar input gain away, so reservoir.novelty's coupling didn't move. Reverted; see
+    // AUDIT-LOG. Input-side gain is NOT a viable coupler for normalising nonlinear faculties.)
     this.reservoir.step(this.latent);
     // V1.1 (V93): measure the mind's own activation cascades and self-tune toward the critical point
     // (branching ratio σ̂ → 1) — the edge of chaos, where dynamic range + exploration are maximised.
@@ -1222,7 +1232,14 @@ export class SuperMind {
       reasoning: clamp01(reasoningGain / SUPER_DEPTHS + bindGate),
       feeling: this.valence,
       selfAware: clamp01(
-        selfAware + bindGate + EMBODIMENT_SELF_GAIN * this.lastEmbodimentContingency,
+        // #9/#37 UN-RAIL (2026-07-02): the raw sum sat pinned at the 1.0 clamp rail, where a constant
+        // series carries NO coupling signature — the audit measured selfAware ISOLATED at 200 beats
+        // despite being bind-gated (an instrument pinned at full scale is a broken instrument). Scaling
+        // the BASE below the rail restores headroom in both directions, so the bind-gate's ± excursions
+        // actually transmit. Semantics preserved: still the high reflexive signal, now varying.
+        selfAware * SELF_BASE_SCALE +
+          bindGate +
+          EMBODIMENT_SELF_GAIN * this.lastEmbodimentContingency,
       ), // 4th GWT access-faculty; V1.3 AE-2 body-contingency lifts self-awareness
       novelty,
       surprise,
@@ -1711,7 +1728,10 @@ export class SuperMind {
     // #9/#37 — collective incoherence ⇒ faster channel forgetting (shared-processing via the surprise input).
     const effSurprise = clamp01(surprise + INCOH_FORGET_GAIN * (1 - this.lastResOrder));
     this.empowerment.update(this.latent, bestIdx, effSurprise);
-    // V97: bind the committed (context ⊙ plan) into the holographic trace so next time a like context recalls it.
+    // V97: bind the committed (context ⊙ plan) into the holographic trace so next time a like context
+    // recalls it. (#9/#37 measured NULL, 2026-07-02: coherence-scaling the imprint strength washed out —
+    // the cleanup-cosine confidence is scale-robust and the HRR_DECAY mixture shifts too slowly to
+    // transmit per-beat coherence. Reverted to the plain fold-in; see AUDIT-LOG.)
     this.holographic.observe(bestIdx, s);
 
     // ── V89 · GWT IGNITION ── the winning plan-coalition is "broadcast" when it crosses the access

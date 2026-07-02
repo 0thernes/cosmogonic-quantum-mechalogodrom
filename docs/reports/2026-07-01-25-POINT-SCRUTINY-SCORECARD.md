@@ -21,7 +21,8 @@ stale self-criticisms were retracted in the repo's favor: the SBOM **is** releas
 and `meanAbsCoupling` **is** already a gate metric with a 0.188 regression floor). The project is
 engineering-strong and honesty-strong: determinism, type-safety, test rigor, reproducibility, and
 sentience discipline all score ≥ 9. It remains **weakest on the two axes it names itself** — **faculty
-coupling** (`~0.19` mean, "a pile is not a mind") and **external peer validation** (the replication
+coupling** (mean `~0.27` at the audit config after the 2026-07-02 selfAware un-rail — improving but
+still the weak regime; "a pile is not a mind") and **external peer validation** (the replication
 artifact now exists; a citable third-party run does not). Those two, not any code defect, are the real
 gap between "impressive, honest artifact" and "serious scientific contribution."
 
@@ -60,15 +61,15 @@ Grade key: **A** ≥ 9 · **A−** 8–9 · **B+** 7.5–8 · **B** 6.5–7.5 ·
 
 ### D · Consciousness / cognition claims
 
-| #   | Scrutiny point             | Score | Grade | Criticism / evidence                                                                                                                                                                                                                                                                                                       |
-| --- | -------------------------- | ----- | ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 13  | Butlin indicator scorecard | 8.0   | A−    | `8/14 met + 6/14 partial` (Butlin et al. 2023), explicitly **computational indicators, not sentience** — never inflated to 9/14 or 14/14.                                                                                                                                                                                  |
-| 14  | Faculty wiring honesty     | 7.5   | B+    | Honest that only **~30 of 100** faculties are deep-wired; `faculties-pantheon.ts` is a generic bias bank. The "100-faculty" headline is a _design_, not a live count — must always carry that caveat.                                                                                                                      |
-| 15  | Theories as mechanisms     | 8.5   | A−    | GWT ignition, IIT-Φ (participation ratio + min-cut entanglement), FEP/active-inference, HOT confidence, AST attention-schema, criticality, reservoir — all measured and fed back into behavior, not labels.                                                                                                                |
-| 16  | Coupling / binding         | 5.5   | C+    | **The real bottleneck** — `meanAbsCoupling ≈ 0.19` (weak regime; GWT bind-gate lifted baseline 0.158→0.197). It **is already a gate metric**: `coupling-audit.test.ts:170` enforces a `0.188` regression floor + a `0.6` anti-overclaim ceiling. Instrumented and honestly flagged; the coupling itself is not yet solved. |
-| 17  | Multi-substrate breadth    | 8.5   | A−    | Live: deterministic classical + 6-qubit statevector + **16-qubit Clifford reflex** (`super-mind.ts:741`) + STDP fast-weights + echo-state reservoir + spin-glass Hopfield. Wet/chemical remains aspirational.                                                                                                              |
-| 18  | Scale / size framing       | 7.5   | B+    | Apex ≈ 10,081 weights; world ≈ 3.5M params. The "1-billion substrate" is a 5-tier `ParameterManifold` + 30-qubit Clifford (2³⁰ state space) — **addressable, not stored**; that caveat must always ride the claim.                                                                                                         |
-| 19  | Sentience discipline       | 9.5   | A     | Every surface repeats: **not sentient, hard problem untouched, indicators are proxies.** Exemplary claim hygiene for a project in this space.                                                                                                                                                                              |
+| #   | Scrutiny point             | Score | Grade | Criticism / evidence                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| --- | -------------------------- | ----- | ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 13  | Butlin indicator scorecard | 8.0   | A−    | `8/14 met + 6/14 partial` (Butlin et al. 2023), explicitly **computational indicators, not sentience** — never inflated to 9/14 or 14/14.                                                                                                                                                                                                                                                                                                |
+| 14  | Faculty wiring honesty     | 7.5   | B+    | Honest that only **~30 of 100** faculties are deep-wired; `faculties-pantheon.ts` is a generic bias bank. The "100-faculty" headline is a _design_, not a live count — must always carry that caveat.                                                                                                                                                                                                                                    |
+| 15  | Theories as mechanisms     | 8.5   | A−    | GWT ignition, IIT-Φ (participation ratio + min-cut entanglement), FEP/active-inference, HOT confidence, AST attention-schema, criticality, reservoir — all measured and fed back into behavior, not labels.                                                                                                                                                                                                                              |
+| 16  | Coupling / binding         | 6.0   | C+    | **The real bottleneck**, incrementally improving: `meanAbsCoupling` lineage 0.167→0.183 (bind-gate)→0.197 (shared-processing)→**0.270** (2026-07-02 apex + selfAware un-rail; isolated faculties 5→3 across seeds). Gate-enforced floor + isolation receipt (`coupling-audit.test.ts`). Two routings measured NULL and reverted (reservoir input-gain, holographic imprint-scale). Still the weak regime — not a solved binding problem. |
+| 17  | Multi-substrate breadth    | 8.5   | A−    | Live: deterministic classical + 6-qubit statevector + **16-qubit Clifford reflex** (`super-mind.ts:741`) + STDP fast-weights + echo-state reservoir + spin-glass Hopfield. Wet/chemical remains aspirational.                                                                                                                                                                                                                            |
+| 18  | Scale / size framing       | 7.5   | B+    | Apex ≈ 10,081 weights; world ≈ 3.5M params. The "1-billion substrate" is a 5-tier `ParameterManifold` + 30-qubit Clifford (2³⁰ state space) — **addressable, not stored**; that caveat must always ride the claim.                                                                                                                                                                                                                       |
+| 19  | Sentience discipline       | 9.5   | A     | Every surface repeats: **not sentient, hard problem untouched, indicators are proxies.** Exemplary claim hygiene for a project in this space.                                                                                                                                                                                                                                                                                            |
 
 ### E · A-Life standing & scientific defensibility
 
@@ -83,13 +84,17 @@ Grade key: **A** ≥ 9 · **A−** 8–9 · **B+** 7.5–8 · **B** 6.5–7.5 ·
 
 ## The two weak axes (where the real work is)
 
-- **Coupling / binding (5.5).** The architecture has breadth (30 deep-wired faculties, 10 emergence
-  angles) but the faculties do not yet densely interact: `coupling-audit.ts` measures mean absolute
-  cross-faculty coupling at `~0.19` even after the GWT bind-gate lift, and the gate now locks that in
-  (`coupling-audit.test.ts:170`, floor `0.188`). This is the project's own stated thesis
-  (**coupling > count**) turned back on itself — and it is the highest-leverage research target.
-  Concrete next step: route the GWT-ignited signal into more than the current ~7 of 16 access-faculties
-  and re-measure, rather than adding an 8th theory.
+- **Coupling / binding (6.0).** The architecture has breadth (30 deep-wired faculties, 10 emergence
+  angles) but the faculties do not yet densely interact. The 2026-07-02 measured experiment moved it:
+  the audit's isolated-faculty diagnostic located the weak nodes (selfAware/holographic/reservoir), the
+  **selfAware un-rail** shipped (+2.7% mean coupling in all 6 seed×horizon cells; isolated faculties
+  5→3; the faculty was saturated at the 1.0 clamp rail where a constant series couples to nothing), and
+  two routings measured NULL and were reverted (reservoir input-gain — the echo-state tanh normalises a
+  scalar gain away; holographic imprint-scale — cleanup-cosine confidence is scale-robust). Lesson
+  encoded in the test + AUDIT-LOG: **target the measured isolated nodes, and prefer un-pinning saturated
+  instruments over adding input gains that nonlinearities wash out.** Remaining levers: holographic +
+  reservoir need _structural_ couplers (shared inputs, not scalar gains), and seed-42 selfAware is still
+  borderline.
 
 - **Peer maturity / external validation (5.0).** Every internal receipt is strong, and the mechanical
   replication path now ships ([`scripts/reproduce.ts`](../../scripts/reproduce.ts) +
@@ -111,8 +116,9 @@ Drawn from the doc-organization + PM audit. None are release-blockers; all are h
    registration, grid-first radius actions). Future decisions get their own ADRs.
 3. **CI gaps (P1, still open):** e2e/WebGL smoke (Playwright), perf-regression time-series + threshold
    alerting. (The SBOM item is retracted — release.yml already publishes it with SLSA provenance.)
-4. **Snapshot ambiguity (P3, still open):** clarify in `CLAUDE.md` whether root `HANDOFF-`, `AGENTS-`,
-   `research_receipts-` and `docs/DAILY_RUNS/*` are living-in-place or archived point-in-time.
+4. **Snapshot ambiguity — DONE (2026-07-02):** `CLAUDE.md` now enumerates the point-in-time exceptions
+   (exactly the `verify-canonical-facts.ts` EXCLUDE list); everything else — including the dated-name
+   root files — is living, with the filename date as a creation stamp.
 5. **Comparative matrix — DONE 2026-07-02:** grew from 26 to **113 rows**, each source-cited and
    adversarially score-verified. Next: code-ground a sample of the peer rows (currently literature-scored).
 6. **Coupling instrumentation — retracted (already existed):** `meanAbsCoupling` has been a first-class

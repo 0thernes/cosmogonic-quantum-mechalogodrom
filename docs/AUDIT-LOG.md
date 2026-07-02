@@ -11,6 +11,41 @@ dated / historical / "superseded snapshot" copies (per the binding "Living docs,
 
 ---
 
+## 2026-07-02 — Round 4: the coupling experiment (R1) — selfAware un-rail SHIPPED, two routings measured NULL
+
+The top research risk (R1, "coupling > count") attacked as a measured experiment, per the scorecard's
+own recommendation. Method: baseline `meanAbsCoupling` across 3 seeds × 2 horizons (deterministic, so
+every delta is exact), use the audit's **isolated-faculty** diagnostic to locate the weak nodes
+(selfAware · holographic · reservoir.novelty — consistent across all seeds), route the bound signal into
+exactly those, re-measure, keep only what moves the number.
+
+**Shipped — the selfAware UN-RAIL (`SELF_BASE_SCALE = 0.85`, super-mind.ts):** the audit showed
+selfAware ISOLATED at 200 beats _despite being bind-gated_ — the raw
+`clamp01(base + bindGate + embodiment)` sum sat pinned at the 1.0 clamp rail, where a constant series
+carries no coupling signature (a pinned instrument reads nothing). Scaling the base below the rail
+restores ± transmission. Result: **mean coupling +2.7% in ALL 6 seed×horizon cells** (0.2216 → 0.2275;
+test-config cell 0.2658 → 0.2703), **isolated faculties 5 → 3** across seeds, selfAware un-isolated at
+seeds 123 + 7. Locked in by a new falsifiable ISOLATION receipt test (`coupling-audit.test.ts` — index 3
+not isolated at 200 beats + embeddedness > 0.12), which is robust where a hair-width float floor would
+be brittle. First iteration of the fix (headroom-scaling the _extras_) measured WORSE (0.209) — the
+negative bind-gate excursions were the only variation channel and headroom-scaling killed them; reverted
+for the base-scale form.
+
+**Measured NULL — reverted, do not blindly retry (documented at the call sites):** (1) coherence-GATING
+the reservoir input — the echo-state tanh normalises a scalar input gain away, reservoir.novelty's
+coupling did not move; (2) coherence-SCALING the holographic imprint strength — the cleanup-cosine
+confidence is scale-robust and `HRR_DECAY` mixes too slowly to transmit per-beat coherence. Lesson: on
+normalising nonlinear faculties, **scalar input gains wash out — un-pin saturated instruments and build
+structural couplers (shared inputs) instead.**
+
+**Also this round:** src/ui coverage-hole audit (round 3's failed finder) — verdict MOSTLY CLEAN; three
+LOW findings triaged and deliberately not churned (access-puzzle grant() listener dies with its removed
+DOM element; onboarding rAF is a no-op on a hidden element; brain-slots duplicate listener is dev-HMR
+only). CLAUDE.md now enumerates the point-in-time doc exceptions (= the `verify-canonical-facts.ts`
+EXCLUDE list), closing the P3 snapshot-ambiguity gap. Scorecard #16 → 6.0 (overall 8.3). Remaining open
+CI gap: e2e/Playwright + perf-regression time-series (deliberately NOT built this round rather than
+built as cross-environment theater — needs a same-machine baseline design).
+
 ## 2026-07-02 — Round 3: reproducibility artifact + uncovered-regions sweep + scorecard self-corrections
 
 A 57-agent adversarial sweep over the regions no previous hunt covered (ui · server/scripts ·

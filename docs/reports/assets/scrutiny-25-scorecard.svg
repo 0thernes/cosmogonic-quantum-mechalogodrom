@@ -76,9 +76,9 @@
 <rect x="430" y="463" width="340" height="16" rx="3" fill="#22c55e" opacity="0.92"/>
 <text x="776" y="473" fill="#e5e7eb" font-size="11" font-weight="600">8.5</text>
 <circle cx="18" cy="495" r="4" fill="#f472b6"/>
-<text x="30" y="499" fill="#cbd5e1" font-size="11.5">16. Coupling / binding (~0.19, gate floor 0.188 — WEAK)</text>
-<rect x="430" y="489" width="220.00000000000003" height="16" rx="3" fill="#ef4444" opacity="0.92"/>
-<text x="656" y="499" fill="#e5e7eb" font-size="11" font-weight="600">5.5</text>
+<text x="30" y="499" fill="#cbd5e1" font-size="11.5">16. Coupling / binding (0.27 + un-rail; still weak regime)</text>
+<rect x="430" y="489" width="240" height="16" rx="3" fill="#f59e0b" opacity="0.92"/>
+<text x="676" y="499" fill="#e5e7eb" font-size="11" font-weight="600">6.0</text>
 <circle cx="18" cy="521" r="4" fill="#f472b6"/>
 <text x="30" y="525" fill="#cbd5e1" font-size="11.5">17. Multi-substrate breadth (6q+16q+STDP+reservoir)</text>
 <rect x="430" y="515" width="340" height="16" rx="3" fill="#22c55e" opacity="0.92"/>
@@ -115,7 +115,7 @@
 <text x="30" y="733" fill="#cbd5e1" font-size="11.5">25. Benchmark honesty (ms-scale; sub-ms retired)</text>
 <rect x="430" y="723" width="340" height="16" rx="3" fill="#22c55e" opacity="0.92"/>
 <text x="776" y="733" fill="#e5e7eb" font-size="11" font-weight="600">8.5</text>
-<line x1="762" y1="88" x2="762" y2="746" stroke="#e5e7eb" stroke-width="1.5" stroke-dasharray="4 3"/>
+<line x1="762.8" y1="88" x2="762.8" y2="746" stroke="#e5e7eb" stroke-width="1.5" stroke-dasharray="4 3"/>
 <circle cx="30" cy="770" r="4" fill="#38bdf8"/>
 <text x="40" y="774" fill="#9ca3af" font-size="11">Engineering</text>
 <circle cx="135.2" cy="770" r="4" fill="#a78bfa"/>

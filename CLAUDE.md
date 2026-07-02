@@ -33,7 +33,11 @@ substantive change; they are personas of one discipline and they outrank vibes:
   **rewriting the relevant report** or as a dated entry in the single
   [docs/AUDIT-LOG.md](docs/AUDIT-LOG.md) (one file, newest-first) — NOT as new standalone files. Stale
   numbers and "this is a historical snapshot, see the baseline" framing are tech debt: fix them at the
-  source, never by piling on another copy.
+  source, never by piling on another copy. **Point-in-time exceptions** (keep their historical numbers
+  by policy — exactly the `verify-canonical-facts.ts` EXCLUDE list): `CHANGELOG.md`, `docs/AUDIT-LOG.md`
+  entries, `docs/DAILY_RUNS/*` session logs, `docs/ln/*`, and `docs/MEGA-MASTER-*`. Everything else —
+  including the dated-name root files (`HANDOFF-`, `AGENTS-`, `research_receipts-2026-06-26`) and all of
+  `docs/reports/` — is LIVING: the date in a filename is a creation stamp, not an archive marker.
 - **Seamless local↔GitHub:** `core.hooksPath=.githooks` (wired by the `prepare` script on install).
   pre-commit auto-syncs surfaces + normalizes encoding; post-commit auto-pushes **HEAD to
   `origin/main`** (NOT the local branch — per the no-PR/work-on-main law, every commit from any

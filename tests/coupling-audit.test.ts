@@ -160,19 +160,31 @@ describe('coupling audit applied to the live SuperMind (the "coupling > count" r
     // of mutually-independent signals, and not every faculty is isolated.
     expect(rep.meanAbsCoupling).toBeGreaterThan(0);
     expect(rep.isolated.length).toBeLessThan(16);
-    // REGRESSION GUARD for the coupling mechanisms (super-mind.ts), all measured at THIS config:
-    //   no coupling 0.1666 → GWT bind-gate (COUPLING_BIND_GAIN, gates the 4 access-faculties) 0.1832 →
-    //   + shared-processing edges (DELIB_COUPLE, metacog coherence cue, INCOH_FORGET_GAIN — routing the
-    //   last-beat resonance coherence into deliberation/metacog/empowerment as real inputs) 0.1966.
-    // The 0.188 floor sits ABOVE bind-gate-only (0.1832) so it fails loudly if EITHER the bind-gate OR the
-    // shared-processing edges are removed — locking in the full +18% win. Coupling is fully deterministic
-    // (seeded, no rng/clock in the measured path), so this floor is not flaky.
+    // REGRESSION GUARD for the coupling mechanisms (super-mind.ts). Measured lineage at THIS config
+    // (the apex's own evolution moves the number too, so entries are dated):
+    //   no coupling 0.1666 → GWT bind-gate 0.1832 → + shared-processing edges 0.1966 (2026-06-21 apex)
+    //   → 0.2658 (2026-07-02 apex, pre-un-rail) → 0.2703 (+ the selfAware SELF_BASE_SCALE un-rail).
+    // The 0.188 floor sits ABOVE bind-gate-only so it fails loudly if the bind-gate OR the
+    // shared-processing edges are removed; the 2026-07-02 un-rail win is locked in by the ISOLATION
+    // test below (robust, unlike a hair-width float floor). Fully deterministic — not flaky.
     expect(rep.meanAbsCoupling).toBeGreaterThan(0.188);
     // HONEST: coupling is still MODEST — this is the #9/#37/#10 finding the audit exists to surface, only
     // partially closed by the bind-gate (it gates 4 of 16 faculties). NOT a solved binding problem; the
     // remaining lever is shared-processing for the other faculties. Upper bound guards against overclaim.
     expect(rep.meanAbsCoupling).toBeLessThan(0.6);
   });
+
+  test('#9/#37 UN-RAIL receipt: selfAware is no longer an ISOLATED faculty over a long horizon', () => {
+    // Before SELF_BASE_SCALE (2026-07-02), selfAware saturated at the 1.0 clamp rail — a near-constant
+    // series with NO coupling signature — and the audit flagged it ISOLATED at 200 beats (seeds 123 and
+    // 7) DESPITE being bind-gated: a pinned instrument reads nothing. Un-railing the base restores the
+    // bind-gate's ± transmission. This assertion fails if the un-rail (or the bind-gate feeding it) is
+    // reverted; index 3 = selfAware in the audit's faculty vector. Deterministic — not flaky.
+    const rep = couplingReport(record(123, 200), 0.3);
+    expect(rep.isolated).not.toContain(3);
+    // And the faculty is genuinely embedded, not just barely over the isolation threshold.
+    expect(rep.perFaculty[3]!).toBeGreaterThan(0.12);
+  }, 30000); // 200 apex think() beats
 
   test('the audit is deterministic on the real mind (same seed ⇒ identical correlation matrix)', () => {
     const a = couplingReport(record(77, 30)).correlation;
