@@ -310,6 +310,23 @@ export class SuperCreature {
     });
   }
 
+  /**
+   * V122 (USER #9): a BRUTAL morph mutation nudges the deep mind IN PLACE — a tiny seeded jitter on
+   * every cortex/actor weight (±amp uniform, clamped to the same ±1.5 band the twin mutation uses),
+   * so each morph press leaves a real, subtle neurological mark on the apex behaviour. Deterministic
+   * (injected user-gesture rng), allocation-free. O(paramCount).
+   */
+  perturbMind(rng: Rng, amp = 0.008): void {
+    const cw = this.cortex.weights;
+    for (let i = 0; i < cw.length; i++) {
+      cw[i] = clamp((cw[i] ?? 0) + (rng() * 2 - 1) * amp, -1.5, 1.5);
+    }
+    const aw = this.actor.weights;
+    for (let i = 0; i < aw.length; i++) {
+      aw[i] = clamp((aw[i] ?? 0) + (rng() * 2 - 1) * amp, -1.5, 1.5);
+    }
+  }
+
   /** Clone a weight array with per-weight mutation (two rng draws → an approx-normal nudge). */
   private static mutate(src: Float32Array, rng: Rng): Float32Array {
     const out = new Float32Array(src.length);

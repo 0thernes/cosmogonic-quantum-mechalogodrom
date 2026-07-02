@@ -263,6 +263,11 @@ export class World {
    *  static is declared later in the class), ONE progenitor after a reset (USER). */
   private growthAnchor = 0;
   private growthBase = -1;
+  /** V122 (USER #9): BRUTAL entity-morph state — the freakshow-wave envelope (1→0 over ~3 s), the
+   *  press counter seeding each wave's palette, and the staggered shape-remorph cursor (−1 idle). */
+  private brutalMorphWave = 0;
+  private brutalMorphSeed = 0;
+  private brutalMorphCursor = -1;
   /** Master exposure ladder (ACES filmic); index 1 = boot default 0.62 (USER #11 dimmed). */
   private readonly exposureLevels = [0.52, 0.62, 0.72, 0.82, 0.92] as const;
   private exposureIdx = 1;
@@ -1565,6 +1570,30 @@ export class World {
         fog.density += (BRUTAL_FOG_DENSITY - fog.density) * bf;
       }
     }
+    // ── V122 (USER #9): BRUTAL ENTITY MORPH — every press plays a ~3 s GPU freakshow wave
+    //    (per-instance rainbow strobe + body spasm, instanced pools) while a STAGGERED shape
+    //    remorph sweeps the population (a slice per frame ≈ 2.5 s — a travelling mutation wave,
+    //    never a one-frame hitch). uiRng = a user-gesture stream, same class as burst/mutate. ──
+    if (this.brutalMorphWave > 0) {
+      // Envelope state decays on EVERY tier; only the uniform write needs the instanced pools.
+      this.brutalMorphWave = Math.max(0, this.brutalMorphWave - uiDt / 3.0);
+      this.instanced?.setMorphWave(this.brutalMorphWave, this.brutalMorphSeed);
+    }
+    if (this.brutalMorphCursor >= 0) {
+      const list = this.entities.list;
+      const slice = Math.max(4, Math.ceil(list.length / 150));
+      const end = Math.min(list.length, this.brutalMorphCursor + slice);
+      for (let i = this.brutalMorphCursor; i < end; i++) {
+        const e = list[i];
+        if (!e || e.userData.isNhi) continue; // NHI bodies keep their form
+        this.entities.remorph(
+          e,
+          (e.userData.mi + 1 + Math.floor(this.uiRng() * 7)) % this.morphTotal,
+        );
+      }
+      this.state.mutations += end - this.brutalMorphCursor;
+      this.brutalMorphCursor = end >= list.length ? -1 : end;
+    }
     this.artifacts.update(dt, t); // F-ARTIFACTS (V9): animate + fade the relic pool (visual-only)
     this.monolithTemple.setEnvironment({
       chaos: s.chaos / CHAOS_MAX,
@@ -1758,6 +1787,12 @@ export class World {
     this.environment.applyBrutalism(bf);
     if (this.instanced) this.instanced.setBrutalism(bf);
     else this.entities.applyBrutalism(bf);
+    // V122 (USER #9): a BRUTAL press mid-pause still plays its freakshow WAVE (render-only, no
+    // rng); the staggered shape remorph waits for RUNNING (it draws the gesture stream).
+    if (this.brutalMorphWave > 0) {
+      this.brutalMorphWave = Math.max(0, this.brutalMorphWave - uiDt / 3.0);
+      this.instanced?.setMorphWave(this.brutalMorphWave, this.brutalMorphSeed);
+    }
     this.atmosphere.update(uiDt, vt, bands, this.qc.entropy);
     if (bf > 0) {
       const fog = this.engine.scene.fog;
@@ -4028,6 +4063,17 @@ export class World {
     for (let i = 0; i < this.heroBodies.length; i++) {
       this.heroBodies[i]!.body.setBrutalStyle(styleForBodies);
       this.heroBodies[i]!.body.triggerMorphTransition();
+    }
+    // V122 (USER #9): EVERY press also morphs the ENTITIES — arm the GPU freakshow wave + the
+    // staggered shape-remorph sweep (drained a slice per frame in step()), and leave a real,
+    // subtle NEUROLOGICAL mark: every organism brain jitters ±1.5% (genome stream) and all 5
+    // apex deep minds jitter ±0.8% (gesture stream) — behaviour measurably drifts per morph.
+    this.brutalMorphWave = 1;
+    this.brutalMorphSeed++;
+    this.brutalMorphCursor = 0;
+    this.entityBrains.perturbBrains(this.genomeRng);
+    for (let i = 0; i < this.superCreatures.length; i++) {
+      this.superCreatures[i]!.perturbMind(this.uiRng);
     }
     if (on) {
       const style = BRUTAL_STYLES[this.brutalStyleIdx]!;

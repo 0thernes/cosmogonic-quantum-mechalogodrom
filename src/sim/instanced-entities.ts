@@ -119,6 +119,11 @@ interface ShaderUniforms {
   uSuspend: { value: number };
   /** V121: the pause visual clock driving the suspended spin/orbit (advances only while paused). */
   uSuspendT: { value: number };
+  /** V122 (USER #9): BRUTAL morph-wave envelope 1→0 — every BRUTAL press plays a transitional
+   *  colour-freakshow + body spasm across the whole population. 0 = off, byte-identical. */
+  uMorphWave: { value: number };
+  /** V122: the press counter seeding each wave's palette so every press looks different. */
+  uMorphSeed: { value: number };
 }
 
 /** Speed→exertion normalizer: a damped-velocity magnitude of ~0.125 saturates the exertion lane. */
@@ -268,10 +273,12 @@ function patchPoolMaterial(
     shader.uniforms['uBrutalism'] = uniforms.uBrutalism;
     shader.uniforms['uSuspend'] = uniforms.uSuspend;
     shader.uniforms['uSuspendT'] = uniforms.uSuspendT;
+    shader.uniforms['uMorphWave'] = uniforms.uMorphWave;
+    shader.uniforms['uMorphSeed'] = uniforms.uMorphSeed;
     shader.vertexShader = shader.vertexShader
       .replace(
         '#include <common>',
-        '#include <common>\nattribute vec4 instEmissive;\nattribute vec4 instVitals;\nattribute vec4 instVitals2;\nattribute vec4 instVitals3;\nvarying vec4 vInstEmissive;\nvarying vec4 vVitals;\nvarying vec4 vVit2;\nvarying vec4 vVit3;\nvarying vec3 vObjPos;\nvarying float vInstId;\nuniform float uTime;\nuniform float uNightmare;\nuniform float uSuspend;\nuniform float uSuspendT;',
+        '#include <common>\nattribute vec4 instEmissive;\nattribute vec4 instVitals;\nattribute vec4 instVitals2;\nattribute vec4 instVitals3;\nvarying vec4 vInstEmissive;\nvarying vec4 vVitals;\nvarying vec4 vVit2;\nvarying vec4 vVit3;\nvarying vec3 vObjPos;\nvarying float vInstId;\nuniform float uTime;\nuniform float uNightmare;\nuniform float uSuspend;\nuniform float uSuspendT;\nuniform float uMorphWave;\nuniform float uMorphSeed;',
       )
       .replace(
         '#include <begin_vertex>',
@@ -304,6 +311,15 @@ function patchPoolMaterial(
           '  float orbA = uSuspendT * (0.25 + fract(sph * 3.7) * 0.45) + sph * 6.2831853;\n' +
           '  float orbR = (0.3 + fract(sph * 7.13) * 0.9) * uSuspend;\n' +
           '  transformed += vec3(cos(orbA) * orbR, sin(uSuspendT * (0.5 + fract(sph * 2.3)) + sph) * 0.4 * uSuspend, sin(orbA) * orbR);\n' +
+          '}\n' +
+          '// V122 (USER #9): BRUTAL MORPH WAVE — while a press-wave runs, every body SPASMS: a pulsing\n' +
+          '// whole-body scale beat + normal spikes, per-instance phase so the population ripples, not\n' +
+          '// lock-steps. Envelope-gated: at uMorphWave 0 the branch is skipped (byte-identical).\n' +
+          'if (uMorphWave > 0.0) {\n' +
+          '  float mph = fract(float(gl_InstanceID) * 0.1618 + uMorphSeed * 0.377);\n' +
+          '  float spasm = sin(uTime * 9.0 + mph * 6.2831853);\n' +
+          '  transformed *= 1.0 + uMorphWave * 0.22 * spasm;\n' +
+          '  transformed += objectNormal * (uMorphWave * 0.28 * sin(position.y * 14.0 + uTime * 11.0 + mph * 9.0));\n' +
           '}',
       );
     shader.fragmentShader = shader.fragmentShader
@@ -632,6 +648,27 @@ const RELIQUARY_FRAG_BODY = /* glsl */ `#include <emissivemap_fragment>
 		float scan = 0.5 + 0.5 * sin(gl_FragCoord.y * 0.15 - uTime * 4.0);
 		totalEmissiveRadiance = (totalEmissiveRadiance + vec3(0.1, 0.45, 0.6)) * fres * scan * (1.0 + uBass);
 		diffuseColor.a *= clamp(fres + 0.2, 0.0, 1.0);
+	} else if (uMode > 3.5) {
+		// V122 CHROME (USER #9, 1/1 renders) — a racing mirror-highlight streak sweeps the body so
+		// chrome reads as LIQUID metal, not just a shiny flag; plus a cool sky-tint on grazing angles.
+		float chS = pow(0.5 + 0.5 * sin(vObjPos.x * 4.0 + vObjPos.y * 6.0 - uTime * 5.0), 24.0);
+		totalEmissiveRadiance += vec3(0.95, 0.98, 1.0) * chS * 0.9;
+		float chF = pow(1.0 - clamp(abs(dot(normalize(vNormal), rqV)), 0.0, 1.0), 2.0);
+		totalEmissiveRadiance += vec3(0.30, 0.45, 0.70) * chF * 0.35;
+	} else if (uMode > 2.5) {
+		// V122 NEON (USER #9) — electric tube-flicker: the self-glow strobes per-instance like a gas
+		// discharge striking, with a hard outline bloom on the rim.
+		float neF = 0.75 + 0.25 * sin(uTime * 13.0 + vInstId * 1.7)
+		          * step(0.15, fract(uTime * 0.9 + vInstId * 0.211));
+		totalEmissiveRadiance *= neF * 1.35;
+		float neR = pow(1.0 - clamp(abs(dot(normalize(vNormal), rqV)), 0.0, 1.0), 4.0);
+		totalEmissiveRadiance += diffuseColor.rgb * neR * 2.2;
+	} else if (uMode > 1.5) {
+		// V122 GHOST (USER #9) — spectral updraft wisps: pale bands scroll UP through the translucent
+		// body and the silhouette breathes, so ghosts read as apparitions, not just faded solids.
+		float ghW = pow(0.5 + 0.5 * sin(vObjPos.y * 9.0 - uTime * 2.2 + vInstId * 0.7), 6.0);
+		totalEmissiveRadiance += vec3(0.65, 0.8, 1.0) * ghW * 0.5;
+		diffuseColor.a *= 0.85 + 0.15 * sin(uTime * 1.1 + vInstId * 0.9);
 	}
 	// LIVING HUE DRIFT (V115): each organism breathes its hue/sat/value slightly over time, driven by
 	// its instance id and the world clock. Keeps the population chromatic and alive without per-entity CPU.
@@ -644,7 +681,18 @@ const RELIQUARY_FRAG_BODY = /* glsl */ `#include <emissivemap_fragment>
 	// BRUTALISM: collapse ALL self-glow (the vital / social / quantum / render-mode emissive accumulated
 	// above) toward zero so a concrete organism stops emitting neon and reads as a raw, scene-lit grey
 	// form — the diffuse is already greyed in <color_fragment>. At uBrutalism=0 this is an exact ×1.
-	totalEmissiveRadiance *= (1.0 - uBrutalism);`;
+	totalEmissiveRadiance *= (1.0 - uBrutalism);
+	// V122 (USER #9): BRUTAL MORPH-WAVE FREAKSHOW — while a press-wave runs, every organism strobes
+	// through a per-instance rainbow keyed to the press seed (each press = a NEW palette), riding
+	// ABOVE the brutalism collapse so the spectacle shines through the concrete crossfade, then
+	// settles as the envelope closes. At uMorphWave 0 both terms vanish exactly.
+	if (uMorphWave > 0.0) {
+		float fkPh = fract(vInstId * 0.1618 + uMorphSeed * 0.377);
+		vec3 freak = 0.5 + 0.5 * cos(6.2831853 * (fkPh + uTime * 1.5 + vec3(0.0, 0.33, 0.67)));
+		float fkStrobe = 0.6 + 0.4 * sin(uTime * 17.0 + fkPh * 12.0);
+		diffuseColor.rgb = mix(diffuseColor.rgb, freak, uMorphWave * 0.75);
+		totalEmissiveRadiance += freak * uMorphWave * fkStrobe * 1.1;
+	}`;
 
 /**
  * Owns the InstancedMesh pools and the per-frame mirror pass. Construct once in
@@ -675,6 +723,8 @@ export class InstancedEntityRenderer {
     uBrutalism: { value: 0 },
     uSuspend: { value: 0 },
     uSuspendT: { value: 0 },
+    uMorphWave: { value: 0 },
+    uMorphSeed: { value: 0 },
   };
 
   /** Stores references and builds the geometry-id lookup. No pools yet. O(geos). */
@@ -702,6 +752,13 @@ export class InstancedEntityRenderer {
   setSuspend(level: number, clock: number): void {
     this.shaderUniforms.uSuspend.value = level < 0 ? 0 : level > 1 ? 1 : level;
     this.shaderUniforms.uSuspendT.value = Number.isFinite(clock) ? clock : 0;
+  }
+
+  /** V122 (USER #9): drive the BRUTAL morph-wave — `env` 1→0 transitional envelope, `seed` = the
+   *  press counter (each press strobes a different palette). Render-only, rng-free. O(1). */
+  setMorphWave(env: number, seed: number): void {
+    this.shaderUniforms.uMorphWave.value = env < 0 ? 0 : env > 1 ? 1 : env;
+    this.shaderUniforms.uMorphSeed.value = seed;
   }
 
   /**

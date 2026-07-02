@@ -57,6 +57,23 @@ export class EntityBrainField {
   }
 
   /**
+   * V122 (USER #9): a BRUTAL morph mutation nudges every organism's BRAIN WEIGHTS by a tiny seeded
+   * jitter (±amp, uniform) — a real, live neurological shift, not decoration: the 70-param policies
+   * measurably drift so post-morph steering behaviour differs. Trait genes (the personality region)
+   * are left untouched so identity survives the mutation; only cognition wobbles. Deterministic via
+   * the injected rng (a user-gesture stream, like burst/mutate). O(capacity × brainGenes).
+   */
+  perturbBrains(rng: Rng, amp = 0.015): void {
+    const g = this.genomes;
+    for (let slot = 0; slot < this.capacity; slot++) {
+      const base = slot * GENOME_LEN;
+      for (let k = base + TRAIT_GENES; k < base + GENOME_LEN; k++) {
+        g[k] = (g[k] ?? 0) + (rng() * 2 - 1) * amp;
+      }
+    }
+  }
+
+  /**
    * Drive one cohort of brains this frame: build each entity's senses, run its 70-param brain, and
    * apply the resulting bounded steering to its velocity. Returns how many entities thought. Pure
    * w.r.t. the world rng (touches only entity velocity); allocation-free. Launched NHIs are skipped
