@@ -1930,18 +1930,22 @@ export class World {
           world: { entities: n, frame: s.frame },
         });
       }
-      // V108: push live brain snapshots to the right-column mini visualizers.
-      if (typeof window !== 'undefined') {
-        window.dispatchEvent(
-          new CustomEvent('cqm:brain-snapshots', {
-            detail: {
-              apex: this.apexBrain.snapshot(),
-              mecha: this.lastMechaBrainSnap,
-              glyphs: this.lastGlyphSnaps,
-            },
-          }),
-        );
-      }
+    }
+    // V108→V121: brain snapshots dispatch on a FASTER cadence (6f / 12f mobile) than the heavy
+    // panels — the brain-slot visualizers ease toward these targets on their own rAF loop, so
+    // fresher REAL telemetry means livelier (never fabricated) motion. Cheap: one apex snapshot +
+    // two references already computed this frame.
+    const brainCadence = this.quality.isMobile ? 12 : 6;
+    if (s.frame % brainCadence === 0 && typeof window !== 'undefined') {
+      window.dispatchEvent(
+        new CustomEvent('cqm:brain-snapshots', {
+          detail: {
+            apex: this.apexBrain.snapshot(),
+            mecha: this.lastMechaBrainSnap,
+            glyphs: this.lastGlyphSnaps,
+          },
+        }),
+      );
     }
   }
 

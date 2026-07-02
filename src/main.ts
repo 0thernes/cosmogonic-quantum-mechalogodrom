@@ -34,6 +34,10 @@ import './ui/onboarding';
 import './ui/settings-panel';
 // Panel edge toggles (V98): side hide/show buttons for desktop/tablet panel columns.
 import './ui/panel-edge-toggles';
+// Boot loader (V121, USER #6): feeds the #cqm-boot overlay REAL stage timings, fades on first frame.
+import { bootStage, bootPaint, bootDone, bootAbort } from './ui/boot-loader';
+import { APEX_INDIVIDUATED } from './sim/godform';
+import { ALPHABET_PANTHEON_SIZE } from './sim/alphabet-pantheon';
 
 // Legacy r128 color fidelity: the original rendered without color management;
 // disable it BEFORE any THREE.Color is constructed (audit finding, 0.2.1).
@@ -93,15 +97,27 @@ let world: World | null = null;
 let rafId = 0;
 let resizeHandler: (() => void) | null = null;
 
-function boot(): void {
+async function boot(): Promise<void> {
+  // V121 BOOT LOADER: stage the boot with paint yields so the overlay's 8 tiles fill with REAL
+  // measured timings while the user watches — engine → seed → world → first light. Each `await
+  // bootPaint()` guarantees the compositor presents the latest tile values before the next
+  // synchronous block runs (World construction is one long block; the CSS animations are
+  // compositor-driven so they keep spinning through it).
+  bootStage(
+    'quality',
+    `${quality.tier.toUpperCase()} · ${quality.maxEntities.toLocaleString()} max`,
+  );
+  const tEngine = performance.now();
   try {
     engine = new Engine(canvas as HTMLCanvasElement, quality);
   } catch (err) {
     // The renderer (WebGLRenderer) failed to get a context — degrade gracefully instead of a hard crash.
     log.warn('WebGL boot failed', { error: err instanceof Error ? err.message : String(err) });
+    bootAbort(); // the recovery card must never sit underneath the loading page
     showWebglRecovery(err);
     return;
   }
+  bootStage('engine', `${Math.round(performance.now() - tEngine)} ms`);
 
   const store = new MemoryStore();
   const loaded = store.load() ?? store.defaults();
@@ -113,9 +129,16 @@ function boot(): void {
   };
   persisted.sessions += 1;
   store.save(persisted);
+  bootStage('seed', `0x${persisted.seed.toString(16).toUpperCase()}`);
+  await bootPaint();
 
   const audit = new AuditTrail();
+  const tWorld = performance.now();
   world = new World({ engine, quality, persisted, store, audit });
+  bootStage('world', `${Math.round(performance.now() - tWorld)} ms`);
+  bootStage('entities', `grows → ${quality.targetEntities.toLocaleString()}`);
+  bootStage('pantheon', `${APEX_INDIVIDUATED} apex · ${ALPHABET_PANTHEON_SIZE} glyphs`);
+  await bootPaint();
 
   resizeHandler = (): void => engine?.onResize();
   window.addEventListener('resize', resizeHandler);
@@ -164,6 +187,7 @@ function boot(): void {
   let lastGovernorLevel: Level | null = null;
   // rAF-timestamp delta; world.step clamps to 50ms so tab-switch gaps are safe. dt floored at 0.
   let last = performance.now();
+  let firstLight = false;
   function frame(now: number): void {
     rafId = requestAnimationFrame(frame);
     const dt = Math.max(0, now - last) / 1000;
@@ -171,6 +195,13 @@ function boot(): void {
     governor.observe(dt);
     if (engine) governor.apply(engine);
     world?.step(dt);
+    // V121: the first rendered world frame retires the boot loader (FIRST LIGHT = total ms from
+    // script start to a presented cosmos — the honest end-to-end boot figure).
+    if (!firstLight) {
+      firstLight = true;
+      bootStage('firstlight', `${Math.round(performance.now())} ms total`);
+      bootDone();
+    }
     // Render-layer FPS EMA (capped) → throttled HUD update (every 12 frames, no per-frame DOM thrash).
     const fps = dt > 0 ? Math.min(1 / dt, 240) : fpsEma;
     fpsEma += (fps - fpsEma) * 0.1;
@@ -184,8 +215,10 @@ function boot(): void {
   rafId = requestAnimationFrame(frame);
 }
 
+const tShell = performance.now();
 initAppShell();
-boot();
+bootStage('shell', `${Math.max(1, Math.round(performance.now() - tShell))} ms`);
+void boot();
 
 // HMR teardown — THE fix for the dev WebGL-context leak. Before a hot-replaced module re-boots, stop the
 // rAF loop, drop listeners, and FREE the renderer/context (Engine.dispose → forceContextLoss). Without

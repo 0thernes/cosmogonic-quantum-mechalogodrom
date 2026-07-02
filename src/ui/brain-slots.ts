@@ -1,9 +1,13 @@
 /**
- * Brain slot mini visualizers (V108) — live, compact previews of the three deep minds.
+ * Brain slot mini visualizers (V108, V121) — live, compact previews of the three deep minds.
  *
  * Replaces the static text hints in the right-column brain slots with lightweight 2D canvas
- * readouts. The world dispatches a `cqm:brain-snapshots` window event at UI cadence; each
- * slot receives the shared payload and draws only the slice it owns.
+ * readouts. V121 INGEST/RENDER SPLIT (USER: "too slow, not dynamic"): the world dispatches
+ * `cqm:brain-snapshots` at data cadence and each slot INGESTS the real values (targets, history,
+ * labels); an autonomous ~30 fps rAF loop then EASES the displayed values toward those targets and
+ * redraws continuously — so the synapse waves, travelling spikes and node breathing animate every
+ * frame instead of only on snapshot events (~3 Hz jerk). The DATA is still 100% the real brain
+ * telemetry — the loop is presentation only, never fabricates a value, and skips hidden tabs.
  */
 
 import type { ApexBrainSnapshot } from '../sim/apex-brain';
@@ -22,6 +26,15 @@ interface Slot {
   ctx: CanvasRenderingContext2D;
   history: number[];
   color: string;
+  /** Latest REAL snapshot values (ingest targets) — presentation eases toward these. */
+  values: number[];
+  /** Eased display values (presentation only; converge on `values` in ~0.25 s). */
+  shown: number[];
+  /** True once a real snapshot arrived (before that the slot shows its booting frame). */
+  booted: boolean;
+  /** Header / footer texts captured at ingest so render frames never recompute them. */
+  label: string;
+  sub: string;
 }
 
 const MAX_HISTORY = 48;
@@ -57,7 +70,24 @@ function createCanvas(doc: Document, slotId: string): Slot | null {
     ctx,
     history: Array.from({ length: MAX_HISTORY }, () => 0),
     color: '#c79bff',
+    values: [],
+    shown: [],
+    booted: false,
+    label: '',
+    sub: '',
   };
+}
+
+/** Ease the displayed values toward the real ingest targets (presentation only). O(values). */
+function easeShown(slot: Slot, k = 0.14): void {
+  if (slot.shown.length !== slot.values.length) {
+    slot.shown = slot.values.slice();
+    return;
+  }
+  for (let i = 0; i < slot.values.length; i++) {
+    const v = slot.values[i] ?? 0;
+    slot.shown[i] = (slot.shown[i] ?? v) + (v - (slot.shown[i] ?? v)) * k;
+  }
 }
 
 function pushHistory(slot: Slot, value: number): void {
@@ -283,22 +313,14 @@ function drawDots(
   }
 }
 
-function updateApex(slot: Slot, apex: ApexBrainSnapshot | null): void {
-  const ctx = slot.ctx;
-  const w = slot.canvas.width;
-  const h = slot.canvas.height;
-  drawBackground(ctx, w, h);
-  if (!apex) {
-    slot.canvas.setAttribute('aria-label', 'Apex brain visualizer booting');
-    ctx.fillStyle = 'rgba(200, 180, 255, 0.4)';
-    ctx.font = '10px JetBrains Mono, monospace';
-    ctx.fillText('Apex booting…', 6, 23);
-    return;
-  }
+// ── INGEST: fold the REAL snapshot values into each slot (targets + history + labels). ──────────
+
+function ingestApex(slot: Slot, apex: ApexBrainSnapshot | null): void {
+  if (!apex) return;
   const t = apex.thought;
   const motor = Math.hypot(t.motor.x, t.motor.y, t.motor.z);
   // USER #4: richer authentic firing signature from the APEX organ telemetry (not clock-fabricated).
-  const values = [
+  slot.values = [
     t.transcendence,
     t.vitality,
     clamp01(1 - t.agony),
@@ -308,48 +330,23 @@ function updateApex(slot: Slot, apex: ApexBrainSnapshot | null): void {
     apex.meta.godelResidual,
     apex.thermo.paralysis,
   ];
-  drawGrid(ctx, w, h);
-  drawSynapses(ctx, values, w, h, 275, nowPulse());
-  ctx.fillStyle = '#f3e9ff';
-  ctx.font = 'bold 11px JetBrains Mono, monospace';
-  ctx.fillText(`APEX · ${t.plan}`, 6, 14);
+  slot.booted = true;
+  slot.label = `APEX · ${t.plan}`;
   slot.canvas.setAttribute(
     'aria-label',
     `Apex brain plan ${t.plan}, vitality ${Math.round(t.vitality * 100)} percent`,
   );
 }
 
-function updateMecha(slot: Slot, mecha: MechalogodromBrainSnapshot | null): void {
-  const ctx = slot.ctx;
-  const w = slot.canvas.width;
-  const h = slot.canvas.height;
-  drawBackground(ctx, w, h);
-  if (!mecha) {
-    slot.canvas.setAttribute('aria-label', 'Mechalogodrom brain visualizer booting');
-    ctx.fillStyle = 'rgba(200, 180, 255, 0.4)';
-    ctx.font = '10px JetBrains Mono, monospace';
-    ctx.fillText('Mecha booting…', 6, 23);
-    return;
-  }
+function ingestMecha(slot: Slot, mecha: MechalogodromBrainSnapshot | null): void {
+  if (!mecha) return;
   pushHistory(slot, mecha.activity ?? 0.5);
-  drawGrid(ctx, w, h);
-  drawSynapses(ctx, slot.history.slice(-9), w, h, 195, nowPulse());
-  drawSparkline(ctx, slot.history, w, h, '#5cf0ff');
-  ctx.fillStyle = '#e0fbff';
-  ctx.font = 'bold 11px JetBrains Mono, monospace';
-  ctx.fillText(`MECHA · ${Math.round((mecha.liveParams / 1e6) * 10) / 10}M`, 6, 14);
-  // Dominant sub-brain (0..9) — this is the SAME index whose physical variant shell blazes on the
-  // fused body (Global Workspace made legible): the readout here must match the ignited shell there.
-  ctx.fillStyle = '#ffd27a';
-  ctx.font = '9px JetBrains Mono, monospace';
+  slot.booted = true;
+  slot.label = `MECHA · ${Math.round((mecha.liveParams / 1e6) * 10) / 10}M`;
   // DOM·V{n} = dominant sub-brain (matches the blazing body shell); Φ = consciousness proxy; LRN = live
   // STDP plasticity — the mind adapting its variant→fusion synapses this beat (FUSE-8), made legible.
   const lrn = Math.round((mecha.plasticity ?? 0) * 100);
-  ctx.fillText(
-    `DOM·V${mecha.dominantVariant} Φ${Math.round((mecha.consciousnessProxy ?? 0) * 100)} LRN${lrn}`,
-    6,
-    h - 5,
-  );
+  slot.sub = `DOM·V${mecha.dominantVariant} Φ${Math.round((mecha.consciousnessProxy ?? 0) * 100)} LRN${lrn}`;
   slot.canvas.setAttribute(
     'aria-label',
     `Mechalogodrom brain activity ${Math.round((mecha.activity ?? 0.5) * 100)} percent, ${
@@ -358,33 +355,57 @@ function updateMecha(slot: Slot, mecha: MechalogodromBrainSnapshot | null): void
   );
 }
 
-function updateGlyph(slot: Slot, glyphs: GlyphBrainSnapshot[] | null): void {
+function ingestGlyph(slot: Slot, glyphs: GlyphBrainSnapshot[] | null): void {
+  if (!glyphs || glyphs.length === 0) return;
+  slot.values = glyphs.map((g) => (g.activity + g.novelty + g.valence) / 3);
+  slot.booted = true;
+  slot.label = `GLYPH · ${glyphs.length} minds`;
+  slot.canvas.setAttribute('aria-label', `Glyph brain swarm visualizer, ${glyphs.length} minds`);
+}
+
+function ingestSlots(slots: Slot[], payload: BrainSlotPayload): void {
+  for (const slot of slots) {
+    if (slot.id === 'apex') ingestApex(slot, payload.apex);
+    else if (slot.id === 'mecha') ingestMecha(slot, payload.mecha);
+    else if (slot.id === 'glyph') ingestGlyph(slot, payload.glyphs);
+  }
+}
+
+// ── RENDER: redraw from the eased values on the autonomous rAF loop (presentation only). ────────
+
+function renderSlot(slot: Slot, pulse: number): void {
   const ctx = slot.ctx;
   const w = slot.canvas.width;
   const h = slot.canvas.height;
   drawBackground(ctx, w, h);
-  if (!glyphs || glyphs.length === 0) {
-    slot.canvas.setAttribute('aria-label', 'Glyph brain visualizer booting');
+  if (!slot.booted) {
+    slot.canvas.setAttribute('aria-label', `${slot.id} brain visualizer booting`);
     ctx.fillStyle = 'rgba(200, 180, 255, 0.4)';
     ctx.font = '10px JetBrains Mono, monospace';
-    ctx.fillText('Glyph booting…', 6, 23);
+    ctx.fillText(`${slot.id} booting…`, 6, 23);
     return;
   }
-  const values = glyphs.map((g) => (g.activity + g.novelty + g.valence) / 3);
   drawGrid(ctx, w, h);
-  drawSynapses(ctx, values.slice(0, 12), w, h, 315, nowPulse());
-  drawDots(ctx, values, w, h, nowPulse());
-  ctx.fillStyle = '#ffe8fb';
+  if (slot.id === 'apex') {
+    easeShown(slot);
+    drawSynapses(ctx, slot.shown, w, h, 275, pulse);
+    ctx.fillStyle = '#f3e9ff';
+  } else if (slot.id === 'mecha') {
+    drawSynapses(ctx, slot.history.slice(-9), w, h, 195, pulse);
+    drawSparkline(ctx, slot.history, w, h, '#5cf0ff');
+    ctx.fillStyle = '#e0fbff';
+  } else {
+    easeShown(slot);
+    drawSynapses(ctx, slot.shown.slice(0, 12), w, h, 315, pulse);
+    drawDots(ctx, slot.shown, w, h, pulse);
+    ctx.fillStyle = '#ffe8fb';
+  }
   ctx.font = 'bold 11px JetBrains Mono, monospace';
-  ctx.fillText(`GLYPH · ${glyphs.length} minds`, 6, 14);
-  slot.canvas.setAttribute('aria-label', `Glyph brain swarm visualizer, ${glyphs.length} minds`);
-}
-
-function updateSlots(slots: Slot[], payload: BrainSlotPayload): void {
-  for (const slot of slots) {
-    if (slot.id === 'apex') updateApex(slot, payload.apex);
-    else if (slot.id === 'mecha') updateMecha(slot, payload.mecha);
-    else if (slot.id === 'glyph') updateGlyph(slot, payload.glyphs);
+  ctx.fillText(slot.label, 6, 14);
+  if (slot.sub) {
+    ctx.fillStyle = '#ffd27a';
+    ctx.font = '9px JetBrains Mono, monospace';
+    ctx.fillText(slot.sub, 6, h - 5);
   }
 }
 
@@ -400,10 +421,21 @@ export function initBrainSlotVisualizers(doc: Document = document): void {
   window.addEventListener('cqm:brain-snapshots', (e) => {
     const payload = (e as CustomEvent).detail as BrainSlotPayload | undefined;
     if (!payload) return;
-    updateSlots(slots, payload);
+    ingestSlots(slots, payload);
   });
-  // Draw a placeholder frame immediately so the slots never look empty.
-  updateSlots(slots, { apex: null, mecha: null, glyphs: null });
+  // V121 autonomous render loop (~30 fps): the synapse waves / travelling spikes / node breathing
+  // animate continuously between real snapshots — no fabricated data, hidden tabs skipped, every
+  // 2nd rAF frame so the 3 canvases cost ≲1 ms. Draw one placeholder frame immediately.
+  for (const s of slots) renderSlot(s, nowPulse());
+  let tick = 0;
+  const loop = (): void => {
+    requestAnimationFrame(loop);
+    if (doc.hidden) return;
+    if (++tick % 2 !== 0) return;
+    const pulse = nowPulse();
+    for (const s of slots) renderSlot(s, pulse);
+  };
+  requestAnimationFrame(loop);
 }
 
 function clamp01(v: number): number {

@@ -63,6 +63,243 @@
     </style>
   </head>
   <body class="touch-none overflow-hidden bg-black font-mono text-slate-300">
+    <!-- V121 BOOT LOADER (USER #6): a full-screen loading page shown from the FIRST paint until the
+         first rendered world frame. Pure markup + compositor-driven CSS animations (transform /
+         opacity only) so everything keeps moving even while the synchronous World construction
+         blocks the main thread. The 8 metric tiles are fed REAL boot measurements (stage timings,
+         tier facts, population/pantheon counts) by src/ui/boot-loader.ts — labels, never decor. -->
+    <style id="cqm-boot-style">
+      #cqm-boot {
+        position: fixed;
+        inset: 0;
+        z-index: 9990;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 26px;
+        padding: 24px;
+        background: radial-gradient(circle at 50% 38%, #140b2e 0%, #0a0618 45%, #030208 100%);
+        font:
+          12px/1.5 ui-monospace,
+          monospace;
+        color: #e7dcff;
+        transition: opacity 0.6s ease;
+        overflow: hidden;
+      }
+      #cqm-boot.done {
+        opacity: 0;
+        pointer-events: none;
+      }
+      #cqm-boot .halo {
+        position: absolute;
+        width: 150vmax;
+        height: 150vmax;
+        border-radius: 50%;
+        background: conic-gradient(
+          from 0deg,
+          rgba(120, 60, 220, 0.1),
+          rgba(40, 180, 255, 0.06),
+          rgba(255, 80, 180, 0.08),
+          rgba(120, 60, 220, 0.1)
+        );
+        animation: cqm-boot-spin 24s linear infinite;
+        will-change: transform;
+      }
+      #cqm-boot .ring {
+        position: relative;
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        flex: 0 0 auto;
+        border: 2px solid rgba(150, 100, 255, 0.16);
+      }
+      #cqm-boot .ring i {
+        position: absolute;
+        inset: -2px;
+        border-radius: 50%;
+        border: 2px solid transparent;
+        border-top-color: #b98cff;
+        border-right-color: rgba(90, 220, 255, 0.85);
+        animation: cqm-boot-spin 1.3s linear infinite;
+        will-change: transform;
+      }
+      #cqm-boot .ring i:nth-child(2) {
+        inset: 8px;
+        border-top-color: #ff6ab0;
+        border-right-color: transparent;
+        animation: cqm-boot-spin 2.1s linear infinite reverse;
+      }
+      #cqm-boot .ring i:nth-child(3) {
+        inset: 18px;
+        border-top-color: #6bff9e;
+        border-right-color: transparent;
+        animation: cqm-boot-spin 3.4s linear infinite;
+      }
+      #cqm-boot .ring b {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        font-size: 26px;
+        color: #d8a8ff;
+        animation: cqm-boot-pulse 2.2s ease-in-out infinite;
+        will-change: transform;
+      }
+      #cqm-boot h1 {
+        font-size: clamp(14px, 2.4vw, 20px);
+        font-weight: 700;
+        letter-spacing: 0.34em;
+        color: #d8a8ff;
+        text-align: center;
+        margin: 0;
+      }
+      #cqm-boot .sub {
+        font-size: 10px;
+        letter-spacing: 0.5em;
+        color: #7fd7ff;
+        text-transform: uppercase;
+        animation: cqm-boot-pulse 3s ease-in-out infinite;
+      }
+      #cqm-boot .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+        gap: 10px;
+        width: min(94vw, 820px);
+        z-index: 1;
+      }
+      #cqm-boot .m {
+        border: 1px solid rgba(150, 100, 255, 0.22);
+        border-radius: 10px;
+        padding: 9px 12px;
+        background: rgba(14, 8, 30, 0.72);
+        backdrop-filter: blur(4px);
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      #cqm-boot .m .k {
+        font-size: 9.5px;
+        letter-spacing: 0.18em;
+        color: #9f8ecb;
+        text-transform: uppercase;
+      }
+      #cqm-boot .m .v {
+        font-size: 13px;
+        font-weight: 700;
+        color: #f3ecff;
+        font-variant-numeric: tabular-nums;
+        min-height: 16px;
+      }
+      #cqm-boot .m .bar {
+        position: relative;
+        height: 4px;
+        border-radius: 2px;
+        overflow: hidden;
+        background: rgba(150, 100, 255, 0.14);
+      }
+      #cqm-boot .m .bar i {
+        position: absolute;
+        inset: 0;
+        border-radius: 2px;
+        transform: translateX(-100%);
+        background: linear-gradient(90deg, transparent, var(--bc, #b98cff), transparent);
+        animation: cqm-boot-sweep 1.4s ease-in-out infinite;
+        will-change: transform;
+      }
+      #cqm-boot .m.done .bar i {
+        animation: none;
+        transform: none;
+        background: var(--bc, #b98cff);
+      }
+      #cqm-boot .m.done .k {
+        color: #c9b8ef;
+      }
+      #cqm-boot .hint {
+        font-size: 9px;
+        letter-spacing: 0.3em;
+        color: #6a5f96;
+        text-transform: uppercase;
+        z-index: 1;
+      }
+      @keyframes cqm-boot-spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      @keyframes cqm-boot-pulse {
+        0%,
+        100% {
+          transform: scale(1);
+          opacity: 0.85;
+        }
+        50% {
+          transform: scale(1.12);
+          opacity: 1;
+        }
+      }
+      @keyframes cqm-boot-sweep {
+        0% {
+          transform: translateX(-100%);
+        }
+        60% {
+          transform: translateX(100%);
+        }
+        100% {
+          transform: translateX(100%);
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        #cqm-boot .halo,
+        #cqm-boot .ring i,
+        #cqm-boot .ring b,
+        #cqm-boot .sub,
+        #cqm-boot .m .bar i {
+          animation: none;
+        }
+      }
+    </style>
+    <div id="cqm-boot" role="status" aria-label="Loading the Cosmogonic Quantum Mechalogodrom">
+      <div class="halo" aria-hidden="true"></div>
+      <div class="ring" aria-hidden="true"><i></i><i></i><i></i><b>⟁</b></div>
+      <h1>COSMOGONIC QUANTUM MECHALOGODROM</h1>
+      <div class="sub">Vibing Quantum Geometric Tensors</div>
+      <div class="grid">
+        <div class="m" data-boot="shell" style="--bc: #b98cff">
+          <span class="k">UI Shell</span><span class="v">—</span>
+          <span class="bar"><i></i></span>
+        </div>
+        <div class="m" data-boot="quality" style="--bc: #7fd7ff">
+          <span class="k">Quality Tier</span><span class="v">—</span>
+          <span class="bar"><i></i></span>
+        </div>
+        <div class="m" data-boot="engine" style="--bc: #5cf0ff">
+          <span class="k">WebGL Engine</span><span class="v">—</span>
+          <span class="bar"><i></i></span>
+        </div>
+        <div class="m" data-boot="seed" style="--bc: #ffd166">
+          <span class="k">Cosmos Seed</span><span class="v">—</span>
+          <span class="bar"><i></i></span>
+        </div>
+        <div class="m" data-boot="world" style="--bc: #ff6ab0">
+          <span class="k">World Systems</span><span class="v">—</span>
+          <span class="bar"><i></i></span>
+        </div>
+        <div class="m" data-boot="entities" style="--bc: #6bff9e">
+          <span class="k">Entity Pool</span><span class="v">—</span>
+          <span class="bar"><i></i></span>
+        </div>
+        <div class="m" data-boot="pantheon" style="--bc: #c06bff">
+          <span class="k">Pantheon Minds</span><span class="v">—</span>
+          <span class="bar"><i></i></span>
+        </div>
+        <div class="m" data-boot="firstlight" style="--bc: #ff9f43">
+          <span class="k">First Light</span><span class="v">—</span>
+          <span class="bar"><i></i></span>
+        </div>
+      </div>
+      <div class="hint">real boot telemetry · not a progress theater</div>
+    </div>
     <!-- Drag = mouse-look, wheel = zoom (ui/input.ts pointer capture; world consumes) -->
     <!-- V70: explicit w/h-screen so the canvas ALWAYS fills the whole window (a replaced element with
          only inset-0 would fall back to its intrinsic buffer size — the "encased in an aspect ratio" bug). -->

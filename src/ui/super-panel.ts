@@ -104,15 +104,19 @@ const STYLE = `
 .cqm-sup-bar .track{height:11px;border-radius:5px;background:rgba(196,120,255,.14);overflow:hidden}
 .cqm-sup-bar .fill{height:100%;width:0;border-radius:5px;transition:width .25s ease}
 .cqm-sup-bar .num{color:#f3ecff;text-align:right;font-size:13px;font-variant-numeric:tabular-nums;font-weight:600}
+/* V121 (USER #4): the Archon grid FILLS the remaining panel height (flex, no fixed 220px cap) and
+   the cards flow responsively — all info fits the window instead of hiding behind a scroll cut. */
 .cqm-sup-archons {
+  flex: 1 1 200px;
+  min-height: 200px;
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
   gap: 10px;
   padding: 10px 14px 12px;
   border-top: 1px solid rgba(196, 120, 255, 0.18);
   background: linear-gradient(180deg, rgba(20, 8, 36, 0.45), rgba(8, 5, 16, 0.7));
   overflow-y: auto;
-  max-height: 220px;
+  align-content: start;
 }
 .cqm-sup-archons > div {
   min-width: 0;
@@ -152,10 +156,10 @@ const STYLE = `
 }
 .cqm-sup-archons .archon-radar {
   float: right;
-  width: 58px;
-  height: 58px;
+  width: 74px;
+  height: 74px;
   margin: 0 0 2px 8px;
-  opacity: 0.92;
+  opacity: 0.95;
 }
 .cqm-sup-archons .archon-telemetry {
   display: grid;
@@ -169,8 +173,8 @@ const STYLE = `
   display: flex;
   justify-content: space-between;
   gap: 4px;
-  font: 10px/1.25 var(--font-mono, ui-monospace, monospace);
-  color: #a98fce;
+  font: 10.5px/1.3 var(--font-mono, ui-monospace, monospace);
+  color: #b9a2dd;
 }
 .cqm-sup-archons .archon-stat span:first-child {
   opacity: 0.85;
@@ -273,8 +277,15 @@ export class SuperPanel {
     /** USER #5: per-Archon 16-spoke radar chart — a live visual signature of each godform's mind. */
     radar: CanvasRenderingContext2D | null;
   }> = [];
+  // V121 (USER #4): the radars ANIMATE — real snapshot vectors are ingest TARGETS; an rAF loop (open
+  // panel only) eases the displayed polygon toward them and spins a sweep whose rate ∝ mean activity.
+  private readonly radarTargets: number[][] = [];
+  private readonly radarShown: number[][] = [];
+  private readonly radarColors: string[] = [];
+  private readonly doc: Document;
 
   constructor(doc: Document = document) {
+    this.doc = doc;
     doc.getElementById('cqm-sup-toggle')?.remove();
     doc.getElementById('cqm-sup-panel')?.remove();
     injectPanelBaseCSS(doc);
@@ -353,8 +364,7 @@ export class SuperPanel {
 
     // 5 Archons: bigger, legible, filled. Full params (VALENCE AROUSAL ... CONFIDENCE per user). No tiny 9px dead space.
     const archonsWrap = panel.querySelector('[data-archons]') as HTMLElement;
-    archonsWrap.style.cssText =
-      'font-size:12px;margin-top:8px;opacity:1;line-height:1.35;min-height:140px';
+    archonsWrap.style.cssText = 'font-size:12px;margin-top:8px;opacity:1;line-height:1.35';
     archonsWrap.innerHTML = '';
     this.archonRows = [];
     const makeStat = (label: string): HTMLElement => {
@@ -426,6 +436,43 @@ export class SuperPanel {
         integration: sIgr.querySelector('span:last-child') as HTMLElement,
         conf: sCnf.querySelector('span:last-child') as HTMLElement,
       });
+      this.radarTargets.push(Array.from({ length: 16 }, () => 0));
+      this.radarShown.push(Array.from({ length: 16 }, () => 0));
+      this.radarColors.push('#c478ff');
+    }
+
+    // V121 (USER #4): the radar loop — runs only while the panel is OPEN (not minimized / not in
+    // neural mode) and the tab visible; every 2nd rAF frame it eases each displayed 16-vector toward
+    // its REAL ingest target (~0.3 s) and spins a sweep whose rate ∝ that archon's mean activity.
+    // Presentation only: it never fabricates a value, it interpolates between real snapshots.
+    if (typeof requestAnimationFrame === 'function') {
+      let tick = 0;
+      const radarLoop = (): void => {
+        requestAnimationFrame(radarLoop);
+        if (!this.open || this.minimized || this.neuralOn || this.doc.hidden) return;
+        if (++tick % 2 !== 0) return;
+        const now = typeof performance !== 'undefined' ? performance.now() / 1000 : 0;
+        for (let k = 0; k < this.archonRows.length; k++) {
+          const tgt = this.radarTargets[k];
+          const shown = this.radarShown[k];
+          const row = this.archonRows[k];
+          if (!tgt || !shown || !row) continue;
+          let mean = 0;
+          for (let i = 0; i < tgt.length; i++) {
+            const t = tgt[i] ?? 0;
+            shown[i] = (shown[i] ?? 0) + (t - (shown[i] ?? 0)) * 0.14;
+            mean += shown[i] ?? 0;
+          }
+          mean /= Math.max(1, tgt.length);
+          this.drawArchonRadar(
+            row.radar,
+            shown,
+            this.radarColors[k] ?? '#c478ff',
+            now * (0.5 + mean * 1.8) + k * 1.3,
+          );
+        }
+      };
+      requestAnimationFrame(radarLoop);
     }
   }
 
@@ -476,7 +523,15 @@ export class SuperPanel {
     // Feed the deeper neural box FIRST — it animates independently of whether this readout is open.
     this.neural.update(mind ?? null);
     // populate the live individuated-apex mini-inspect (name/archetype/plan + color for full visibility)
-    if (this.archonRows.length && archons && archons.length === APEX_INDIVIDUATED) {
+    // V121 perf: skip the ~80 archon DOM writes + radar ingest while the panel is CLOSED or
+    // minimized — the next open refills them on the following cadence (≤0.3 s), nothing is lost.
+    if (
+      this.open &&
+      !this.minimized &&
+      this.archonRows.length &&
+      archons &&
+      archons.length === APEX_INDIVIDUATED
+    ) {
       for (let k = 0; k < APEX_INDIVIDUATED; k++) {
         const row = this.archonRows[k];
         const info = archons[k];
@@ -510,29 +565,27 @@ export class SuperPanel {
           row.integrity.textContent = integrity.toFixed(2);
           row.integration.textContent = c.phi.toFixed(2);
           row.conf.textContent = info.confidence.toFixed(2);
-          // USER #5: paint the live 16-spoke signature (valence bipolar → 0..1; the rest already 0..1).
-          this.drawArchonRadar(
-            row.radar,
-            [
-              (v + 1) / 2,
-              a,
-              d,
-              info.surprise,
-              info.intent.aggression,
-              info.intent.deception,
-              info.intent.curiosity,
-              c.dreaming,
-              c.hallucinating,
-              c.reasoning,
-              c.selfAware,
-              c.novelty,
-              c.ignition,
-              integrity,
-              c.phi,
-              info.confidence,
-            ],
-            pc,
-          );
+          // USER #5→V121: the live 16-spoke signature is now an INGEST TARGET — the constructor's
+          // rAF loop eases the drawn polygon toward it and spins the activity sweep (always moving).
+          this.radarTargets[k] = [
+            (v + 1) / 2,
+            a,
+            d,
+            info.surprise,
+            info.intent.aggression,
+            info.intent.deception,
+            info.intent.curiosity,
+            c.dreaming,
+            c.hallucinating,
+            c.reasoning,
+            c.selfAware,
+            c.novelty,
+            c.ignition,
+            integrity,
+            c.phi,
+            info.confidence,
+          ];
+          this.radarColors[k] = pc;
         }
       }
     }
@@ -639,12 +692,14 @@ export class SuperPanel {
   /**
    * USER #5: paint a live 16-spoke radar of one Archon's affect/cognition vector (all values 0..1).
    * Concentric grid rings + a filled polygon in the Archon's plan colour give each of the 5 godforms a
-   * distinct, at-a-glance visual signature. Allocation-light (numbers only), no rng. O(spokes).
+   * distinct, at-a-glance visual signature. V121: an optional SWEEP (rotating scan line + trail whose
+   * rate ∝ mean activity) keeps the chart visibly alive between snapshots. Allocation-light, no rng.
    */
   private drawArchonRadar(
     ctx: CanvasRenderingContext2D | null,
     vals: readonly number[],
     color: string,
+    sweep?: number,
   ): void {
     if (!ctx) return;
     const w = ctx.canvas.width;
@@ -694,6 +749,20 @@ export class SuperPanel {
       ctx.beginPath();
       ctx.arc(cx + Math.cos(ang) * rr, cy + Math.sin(ang) * rr, 1.5, 0, Math.PI * 2);
       ctx.fill();
+    }
+    // V121: rotating activity sweep — a bright scan line with a fading trail. Its rotation rate is
+    // driven by the archon's REAL mean activity (set by the caller), so a hot mind scans fast.
+    if (sweep !== undefined) {
+      const ang = (sweep % (Math.PI * 2)) - Math.PI / 2;
+      for (let trail = 0; trail < 4; trail++) {
+        const ta = ang - trail * 0.09;
+        ctx.strokeStyle = trail === 0 ? color : `rgba(196,140,255,${(0.28 * (4 - trail)) / 4})`;
+        ctx.lineWidth = trail === 0 ? 1.2 : 1;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.lineTo(cx + Math.cos(ta) * rad, cy + Math.sin(ta) * rad);
+        ctx.stroke();
+      }
     }
   }
 
