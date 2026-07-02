@@ -133,6 +133,44 @@ export interface MarketSummary {
   lastAuctionPrice: number;
   /** Commodity sold in the most recent auction, or null before the first. */
   lastAuctionCommodity: Commodity | null;
+  /** V122 (USER #4): cumulative wealth share at each population decile (10 ascending values ending
+   *  at 1) — the REAL Lorenz curve the ticker draws; a perfectly equal market is the diagonal. */
+  deciles: number[];
+  /** V122: share of total wealth held by the richest 10% of agents (the top of the Lorenz gap). */
+  topDecileShare: number;
+}
+
+/**
+ * Cumulative wealth share at each population decile (ascending, last = 1) + the top-10% share —
+ * the Lorenz-curve data econometricians pair with a Gini. Pure; O(n log n). Empty input → the
+ * perfectly-equal diagonal (so a boot-empty market draws sanely).
+ */
+export function lorenzDeciles(values: ArrayLike<number>): {
+  deciles: number[];
+  topDecileShare: number;
+} {
+  const n = values.length;
+  if (n === 0) {
+    return { deciles: [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1], topDecileShare: 0.1 };
+  }
+  const sorted: number[] = [];
+  for (let i = 0; i < n; i++) sorted.push(Math.max(0, values[i] ?? 0));
+  sorted.sort((a, b) => a - b);
+  let total = 0;
+  for (const v of sorted) total += v;
+  if (total <= 0) {
+    return { deciles: [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1], topDecileShare: 0.1 };
+  }
+  const deciles: number[] = [];
+  let cum = 0;
+  let k = 0;
+  for (let d = 1; d <= 10; d++) {
+    const upTo = Math.round((d / 10) * n);
+    for (; k < upTo; k++) cum += sorted[k] ?? 0;
+    deciles.push(cum / total);
+  }
+  deciles[9] = 1; // guard float drift — the full population owns everything by definition
+  return { deciles, topDecileShare: 1 - (deciles[8] ?? 0.9) };
 }
 
 /**
@@ -674,7 +712,10 @@ export class Economy {
     const aurumShare = totalMoney > 0 ? aurum / totalMoney : 0.5;
     let sanctioned = 0;
     for (let i = 0; i < n; i++) if (this.agents[i]!.sanctioned) sanctioned++;
+    const lorenz = lorenzDeciles(worths); // V122: real distribution data for the ticker's Lorenz curve
     return {
+      deciles: lorenz.deciles,
+      topDecileShare: lorenz.topDecileShare,
       aurum,
       umbra,
       fx: this.fx,
