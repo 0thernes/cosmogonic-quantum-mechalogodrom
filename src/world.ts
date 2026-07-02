@@ -3264,10 +3264,15 @@ export class World {
     let rivalLastMove = -1;
     if (e) {
       const p = e.position;
-      const list = this.entities.list;
+      // Nearest organism via the frame's spatial grid (O(k)) with an EXACT-fallback contract
+      // (ADR-0011 §4): if the best 3D hit lies within the XZ query radius R, the true global nearest
+      // must also be in the query set (3D distance bounds XZ distance) — so the grid result is exact.
+      // Only an isolated NHI with no organism within R pays the O(n) full-scan fallback.
+      const R = 48;
       let best = Infinity;
-      for (let i = 0; i < list.length; i++) {
-        const o = list[i];
+      const near = this.grid.query(p.x, p.z, R);
+      for (let i = 0; i < near.length; i++) {
+        const o = near[i];
         if (!o || o === e || o.userData.isNhi) continue;
         const op = o.position;
         const dx = p.x - op.x;
@@ -3278,6 +3283,27 @@ export class World {
           best = d2;
           rivalFaction = o.userData.setGroup;
           rivalLastMove = o.userData.strategy;
+        }
+      }
+      if (best > R * R) {
+        // No in-radius hit ⇒ exactness not guaranteed from the grid alone: full scan (rare).
+        best = Infinity;
+        rivalFaction = -1;
+        rivalLastMove = -1;
+        const list = this.entities.list;
+        for (let i = 0; i < list.length; i++) {
+          const o = list[i];
+          if (!o || o === e || o.userData.isNhi) continue;
+          const op = o.position;
+          const dx = p.x - op.x;
+          const dy = p.y - op.y;
+          const dz = p.z - op.z;
+          const d2 = dx * dx + dy * dy + dz * dz;
+          if (d2 < best) {
+            best = d2;
+            rivalFaction = o.userData.setGroup;
+            rivalLastMove = o.userData.strategy;
+          }
         }
       }
     }

@@ -15,7 +15,7 @@
  * The dev server (server.ts) is untouched: it keeps its absolute `/docs` `/lab` routes for local
  * use. Only the deployed copy is rewritten. Output: `./site` (the Pages artifact).
  */
-import { cp, mkdir, readFile, writeFile, rm } from 'node:fs/promises';
+import { cp, mkdir, readFile, writeFile, rename, rm } from 'node:fs/promises';
 
 const ROOT = new URL('../', import.meta.url);
 const DIST = new URL('dist/', ROOT);
@@ -28,7 +28,11 @@ async function rewrite(
   const target = new URL(file, SITE);
   let html = await readFile(target, 'utf8');
   for (const [from, to] of edits) html = html.split(from).join(to);
-  await writeFile(target, html);
+  // Atomic write (temp + rename): a direct writeFile() truncates first, so a crash mid-write
+  // (disk full, I/O error on a CI runner) would silently deploy a corrupted HTML artifact.
+  const tmp = new URL(file + '.tmp', SITE);
+  await writeFile(tmp, html);
+  await rename(tmp, target);
 }
 
 // 1. Fresh site/ from the production bundle.

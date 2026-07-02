@@ -11,6 +11,50 @@ dated / historical / "superseded snapshot" copies (per the binding "Living docs,
 
 ---
 
+## 2026-07-02 — Round 3: reproducibility artifact + uncovered-regions sweep + scorecard self-corrections
+
+A 57-agent adversarial sweep over the regions no previous hunt covered (ui · server/scripts ·
+bench/audio/memory/logging · githooks/CI · docs-claims · a regression-check of round 2's own changes),
+plus the tracked-gap closures. Two of the scorecard's own criticisms were found STALE and retracted in
+the repo's favor — honesty cuts both ways.
+
+**Landed:**
+
+- **Reproducibility artifact (scrutiny #22, the weakest axis).** `scripts/reproduce.ts` +
+  `docs/REPRODUCE-2026-07-02.md` + `tests/reproduce.test.ts`: one command runs the real apex `SuperMind`
+  under a fixed seed, records the 16 consciousness-faculty activations, and prints an FNV-1a
+  **fingerprint** (double-run asserted in-process) + the gate-band coupling metrics. Same commit + same
+  command ⇒ same hash on any machine. Deliberately no pinned golden (per-commit value). #22 4.0 → 5.0;
+  the remaining gap is a citable third-party run, which no code can produce.
+- **Sweep fixes (verified against live code before acting):** `build-pages.ts` rewrite() now writes
+  atomically (temp + rename — a mid-write crash could silently deploy truncated HTML);
+  `sync-guard.ts` rebasePush now FAILS CLOSED when the post-rebase push fails (was: exit 0 false
+  success, violating its own documented contract; the section-6 retry also gained a visible warning,
+  keeping its warn-and-continue semantics).
+- **Stale doc metrics refreshed from `bun run metrics` / `bun run filemap`:** TECHNICAL-SPECIFICATION §1
+  was a 2026-06-27 snapshot understating src/ by ~38% (201 files/61,790 lines vs measured **251/85,651**)
+  and self-contradicting at §heaviest-files (196/57,687); both sections now share one 2026-07-02
+  snapshot. FILE-MAP regenerated (209 → **250 modules**). ARCHITECTURE geometry-cache "~41" → exact 40.
+- **Gap closures:** `docs/DEPENDENCY-MANIFEST-2026-07-02.md` (6th and final PM artifact — inventory,
+  add-a-dep policy, the already-wired SBOM/SLSA release path) and **ADR-0011**
+  (post-0.18.0 hardening conventions: GPU ownership · numeric domain guards · SSOT surface registration ·
+  grid-first radius actions) — the decision log is live past 0010. Both linked from BOOK §10.
+- **`nhiPercept` nearest-organism scan O(n) → O(k)** via `grid.query` with an **exact-fallback contract**
+  (ADR-0011 §4): if the best 3D hit is within the XZ query radius the result is provably exact; only an
+  isolated NHI pays the full scan.
+- **Scorecard self-corrections (→ 8.3/10):** RETRACTED "SBOM not published to releases" (release.yml:113
+  has published it with SLSA provenance all along) and "promote meanAbsCoupling to a gate metric" (it has
+  been one since the bind-gate work — `coupling-audit.test.ts:170`, floor 0.188 + ceiling 0.6). #8 → 8.5
+  (all six PM artifacts exist), #9 → 8.0, #22 → 5.0.
+
+**Refuted (no slop — did NOT act):** `auto-tag.yml` "masked push failure" — GitHub Actions' default
+shell for unspecified `run:` steps is `bash -e {0}`, so a failed `git push` fails the step loudly (all
+three verifier votes missed this); `harvest-tsotchke-corpus` CLOBBER_GUARD "silent fallback" — the
+guard is deliberate dev-safety (exiting non-zero would break `bun dev` on any machine without the
+corpus drive) and it already `console.warn`s; `audit.ts` restore() splice — a once-per-boot micro-nit.
+The ui-layer finder returned no structured output (coverage note: src/ui got only the earlier
+lifecycle/HMR audits, not this sweep's pass).
+
 ## 2026-07-02 — Ultracode round: 113-system A-Life matrix + AD/hyperdual domain guards + Tsotchke wire-more + 5 PM artifacts
 
 Two multi-agent workflows (a 16-agent research fan-out + a 105-agent refute-by-default bug hunt) plus a

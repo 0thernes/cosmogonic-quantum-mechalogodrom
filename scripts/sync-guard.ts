@@ -378,7 +378,14 @@ function run(): void {
   // 5. Reconcile a diverged branch (committed work included) by rebasing onto main, then push.
   if (plan.rebasePush) {
     if (gitOk(['pull', '--rebase', '--autostash', 'origin', 'main'])) {
-      gitOk(['push', 'origin', 'HEAD:main']);
+      // Fail-closed contract: the rebase succeeded, so a failed push (network/permission) must NOT
+      // report false success — the local branch would sit ahead of origin/main undetected.
+      if (!gitOk(['push', 'origin', 'HEAD:main'])) {
+        log(
+          'rebase succeeded but the push FAILED (network/permission?) — local commits are safe and ahead of origin/main; re-run `bun run guard` when connectivity returns',
+        );
+        process.exit(1);
+      }
       log(plan.status);
       process.exit(0);
     }
@@ -395,7 +402,13 @@ function run(): void {
   if (plan.push) {
     if (!gitOk(['push', 'origin', 'HEAD:main'])) {
       if (isClean() && gitOk(['pull', '--rebase', 'origin', 'main'])) {
-        gitOk(['push', 'origin', 'HEAD:main']);
+        // Section 6 is warn-and-continue by design (predev must not block `bun dev` offline) — but a
+        // failed retry must still be VISIBLE, not silent (same class as the rebasePush fix above).
+        if (!gitOk(['push', 'origin', 'HEAD:main'])) {
+          log(
+            'push retry after rebase still failed — local commits are safe but NOT on origin/main; re-run `bun run guard`',
+          );
+        }
       } else {
         if (inProgressRebase()) gitOk(['rebase', '--abort']);
         log(

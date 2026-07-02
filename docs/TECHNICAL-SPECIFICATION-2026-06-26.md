@@ -32,15 +32,15 @@ seed**.
 These figures are **measured, not pinned** — line counts move every commit, so they are a dated
 snapshot rather than a gate-enforced receipt. Refresh them with `bun run metrics`
 ([`scripts/codebase-metrics.ts`](../scripts/codebase-metrics.ts), deterministic over `git ls-files`).
-Snapshot: **2026-06-27**. (Coverage + passing-test counts ARE SSOT-synced — see §1's last two rows.)
+Snapshot: **2026-07-02**. (Coverage + passing-test counts ARE SSOT-synced — see §1's last two rows.)
 
 | Metric                                  | Value                                                                 |
 | --------------------------------------- | --------------------------------------------------------------------- |
-| Total tracked authored files            | **548**                                                               |
-| Total tracked authored lines            | **123,790**                                                           |
-| App source (`src/`)                     | 61,790 lines · 201 files                                              |
-| Tests (`tests/`)                        | 20,928 lines · 160 files                                              |
-| Native C++ engine (`native/`, ADR-0007) | 1,535 lines · 9 files                                                 |
+| Total tracked authored files            | **702**                                                               |
+| Total tracked authored lines            | **179,521**                                                           |
+| App source (`src/`)                     | 85,651 lines · 251 files                                              |
+| Tests (`tests/`)                        | 29,319 lines · 231 files                                              |
+| Native C++ engine (`native/`, ADR-0007) | 1,769 lines · 12 files                                                |
 | Test : source ratio                     | 0.34 → **92.13% line / 89.66% func** coverage (`bun test --coverage`) |
 | Passing tests                           | **1,984** (floor; 0 failing)                                          |
 
@@ -49,40 +49,41 @@ Snapshot: **2026-06-27**. (Coverage + passing-test counts ARE SSOT-synced — se
 
 ### 1.1 By file type
 
-| Type                | Files | Lines  | Share   |
-| ------------------- | ----- | ------ | ------- |
-| TypeScript          | 391   | 85,561 | 69.12 % |
-| Markdown            | 90    | 22,520 | 18.19 % |
-| HTML                | 5     | 8,575  | 6.93 %  |
-| JSON                | 9     | 1,272  | 1.03 %  |
-| CSS (Tailwind)      | 1     | 1,230  | 0.99 %  |
-| C/C++ hdr (`.h`)    | 4     | 934    | 0.75 %  |
-| XML (masters)       | 4     | 708    | 0.57 %  |
-| C++ (`.cpp`)        | 2     | 368    | 0.30 %  |
-| YAML · lock · other | 42    | ~2,622 | ~2.1 %  |
+| Type                | Files | Lines   | Share   |
+| ------------------- | ----- | ------- | ------- |
+| TypeScript          | 518   | 118,159 | 65.82 % |
+| Markdown            | 107   | 30,007  | 16.72 % |
+| HTML                | 6     | 11,312  | 6.30 %  |
+| PNG (shots)         | 4     | 9,552   | 5.32 %  |
+| JSON                | 9     | 2,869   | 1.60 %  |
+| CSS (Tailwind)      | 1     | 2,419   | 1.35 %  |
+| C/C++ hdr (`.h`)    | 4     | 934     | 0.52 %  |
+| XML (masters)       | 4     | 708     | 0.39 %  |
+| C++ (`.cpp`)        | 3     | 393     | 0.22 %  |
+| YAML · lock · other | 46    | ~2,869  | ~1.6 %  |
 
-**Code (TS + C++ + HTML + CSS) ≈ 96,700 lines ≈ 78 %**; documentation + config ≈ 22 %.
+**Code (TS + C++ + HTML + CSS) ≈ 133,200 lines ≈ 74 %**; documentation + config + assets ≈ 26 %.
 
 ### 1.2 Lines by area
 
 | Area                                  | Files | Lines  |
 | ------------------------------------- | ----- | ------ |
-| `src/` (application)                  | 201   | 61,790 |
-| `tests/`                              | 160   | 20,928 |
-| `docs/`                               | 86    | 19,276 |
-| repo root (README, LICENSE, configs)  | 28    | 8,771  |
-| `lab/` (self-contained artifact)      | 1     | 3,862  |
-| `scripts/`                            | 18    | 3,355  |
+| `src/` (application)                  | 251   | 85,651 |
+| `tests/`                              | 231   | 29,319 |
+| `docs/`                               | 103   | 28,162 |
+| repo root (README, LICENSE, configs)  | 30    | 11,070 |
+| `lab/` (self-contained artifact)      | 1     | 5,050  |
+| `scripts/`                            | 24    | 4,546  |
 | `legacy/` (preserved origin)          | 7     | 2,100  |
-| `native/` (C++ engine, ADR-0007)      | 9     | 1,535  |
-| `bench/`                              | 13    | 723    |
-| `.github/`                            | 11    | 655    |
+| `native/` (C++ engine, ADR-0007)      | 12    | 1,769  |
+| `bench/`                              | 13    | 782    |
+| `.github/`                            | 12    | 713    |
 | `masters/` (3 governing XML personas) | 3     | 478    |
 
-`src/` subsystems: `sim/` 37,075 (131 files) · `ui/` 10,070 (22 files) · `math/` 6,001 (30 files) ·
-src-root composition (`world.ts` · `types.ts` · `main.ts` · `docs-page.ts`) 3,672 (4 files) ·
-`audio/` 1,305 (3) · `server/` 1,267 (3) · `styles/` 1,230 (1) · `core/` 777 (4) · `logging/` 219 (2) ·
-`memory/` 174 (1).
+`src/` subsystems: `sim/` 52,411 (166 files) · `ui/` 14,303 (31 files) · `math/` 6,135 (30 files) ·
+src-root composition (`world.ts` · `types.ts` · `main.ts` · `docs-page.ts` + 4 more) 5,717 (8 files) ·
+`styles/` 2,419 (1) · `audio/` 1,757 (3) · `server/` 1,637 (4) · `core/` 839 (4) · `logging/` 234 (2) ·
+`memory/` 185 (1) · `generated/` 14 (1).
 
 ---
 
@@ -352,9 +353,16 @@ Physicist** (determinism, measurement, frame budgets, provenance).
 A full per-file roster is generated, not hand-kept — run `bun run metrics`
 ([`scripts/codebase-metrics.ts`](../scripts/codebase-metrics.ts)) for the current per-area / per-type
 breakdown, or `bun run filemap` for the file tree. Below is a dated snapshot of the **heaviest files**
-(where the weight sits); refresh on demand. Snapshot: **2026-06-26**.
+(where the weight sits); refresh on demand. Snapshot: **2026-07-02** (matches §1 — the two snapshots
+were previously taken on different days and contradicted each other; they are now refreshed together).
 
-### `src/` — heaviest files (196 files · 57,687 lines total)
+### `src/` — heaviest files (251 files · 85,651 lines total; top of the list)
+
+Current top-12 by weight: `world.ts` 4,220 (composition root) · `styles/app.css` 2,419 ·
+`ui/observatory.ts` 2,319 · `sim/apex-brain.ts` 2,039 · `sim/super-mind.ts` 1,900 ·
+`ui/super-neural.ts` 1,727 · `sim/titans.ts` 1,492 · `sim/creature-exterior-layers.ts` 1,353 ·
+`sim/super-body.ts` 1,187 · `sim/singularities.ts` 1,127 · `ui/nhi-observatory.ts` 1,107 ·
+`sim/environment.ts` 1,014. The dated table below is the fuller (older) roster:
 
 | Lines | File                        | Lines | File                      |
 | ----: | --------------------------- | ----: | ------------------------- |

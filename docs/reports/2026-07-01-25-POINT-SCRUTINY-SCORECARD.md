@@ -15,12 +15,15 @@ a scorecard is where it is red.
 
 ## Bottom line
 
-Overall **8.2 / 10** across 25 points (up from 8.1 as the "vs 100 codebases" gap closed — the matrix now
-holds 112 sourced peers). The project is engineering-strong and honesty-strong: determinism, type-safety,
-test rigor, reproducibility, and sentience discipline all score ≥ 9. It is **weakest on two axes that it
-already names itself** — **faculty coupling** (`~0.18` mean, "a pile is not a mind") and **external peer
-validation** (none yet). Those two, not any code defect, are the real gap between "impressive, honest
-artifact" and "serious scientific contribution."
+Overall **8.3 / 10** across 25 points (8.1 → 8.2 → 8.3 across the three audit rounds as tracked gaps
+closed: the 113-system matrix, all six PM artifacts, ADR-0011, the reproducibility artifact — and two
+stale self-criticisms were retracted in the repo's favor: the SBOM **is** released with SLSA provenance,
+and `meanAbsCoupling` **is** already a gate metric with a 0.188 regression floor). The project is
+engineering-strong and honesty-strong: determinism, type-safety, test rigor, reproducibility, and
+sentience discipline all score ≥ 9. It remains **weakest on the two axes it names itself** — **faculty
+coupling** (`~0.19` mean, "a pile is not a mind") and **external peer validation** (the replication
+artifact now exists; a citable third-party run does not). Those two, not any code defect, are the real
+gap between "impressive, honest artifact" and "serious scientific contribution."
 
 ![25-point scrutiny scorecard](./assets/scrutiny-25-scorecard.svg)
 
@@ -40,12 +43,12 @@ Grade key: **A** ≥ 9 · **A−** 8–9 · **B+** 7.5–8 · **B** 6.5–7.5 ·
 
 ### B · Architecture & organization
 
-| #   | Scrutiny point                | Score | Grade | Criticism / evidence                                                                                                                                                                                                                                                                                                                          |
-| --- | ----------------------------- | ----- | ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 6   | Living-docs SSOT              | 8.5   | A−    | Strong single-source discipline — but this audit found a real **blind spot**: `docs/reports/*` advertised "live values" yet sat outside `sync-surfaces` and `verify:facts`, so receipts froze two canon-generations back (`1771·94.77`). Fixed: canon refreshed, drifted copies rewritten, the two current-truth reports added to `SURFACES`. |
-| 7   | Module contracts & boundaries | 8.5   | A−    | Binding `MODULE-CONTRACTS-2026-06-26.md` + 10 ADRs + dependency facades. Gap: ADRs frozen at 0010 — post-0.18.0 decisions (GPU dispose, sandbox hardening) live only in `AUDIT-LOG`.                                                                                                                                                          |
-| 8   | PM surface coverage           | 6.5   | B     | ERD/KANBAN/ROADMAP/CHANGELOG/500-point present + maintained. **Missing:** PRD, Risk Register, Test-Strategy, Perf-Targets, SBOM manifest, Security-Architecture. See §Gaps.                                                                                                                                                                   |
-| 9   | CI/CD & QA                    | 7.5   | B+    | Full `bun run check` mirrored in CI, cross-platform matrix, dependency-review + `bun audit`. Gaps: no e2e/Playwright, perf-regression is informational-only, SBOM not published to releases.                                                                                                                                                  |
+| #   | Scrutiny point                | Score | Grade | Criticism / evidence                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| --- | ----------------------------- | ----- | ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 6   | Living-docs SSOT              | 8.5   | A−    | Strong single-source discipline — but this audit found a real **blind spot**: `docs/reports/*` advertised "live values" yet sat outside `sync-surfaces` and `verify:facts`, so receipts froze two canon-generations back (`1771·94.77`). Fixed: canon refreshed, drifted copies rewritten, the two current-truth reports added to `SURFACES`.                                                                                               |
+| 7   | Module contracts & boundaries | 8.5   | A−    | Binding `MODULE-CONTRACTS-2026-06-26.md` + 11 ADRs + dependency facades. The "ADRs frozen at 0010" gap is closed: [ADR-0011](../adr/0011-post-018-hardening-conventions-2026-07-02.md) names the four post-0.18.0 hardening conventions (GPU ownership, numeric domain guards, SSOT surface registration, grid-first radius actions).                                                                                                       |
+| 8   | PM surface coverage           | 8.5   | A−    | **All six PM artifacts now exist** (2026-07-02): [PRD](../PRD-2026-07-02.md), [Risk Register](../RISK-REGISTER-2026-07-02.md), [Test Strategy](../TEST-STRATEGY-2026-07-02.md), [Perf Targets](../PERFORMANCE-TARGETS-2026-07-02.md), [Security Architecture](../SECURITY-ARCHITECTURE-2026-07-02.md), [Dependency Manifest](../DEPENDENCY-MANIFEST-2026-07-02.md) — plus ERD/KANBAN/ROADMAP/CHANGELOG/500-point, all linked from BOOK §10. |
+| 9   | CI/CD & QA                    | 8.0   | A−    | Full `bun run check` mirrored in CI, cross-platform matrix, `bun audit`, **SBOM published per release with SLSA provenance** (release.yml:113 — the earlier "not published" criticism was stale and is retracted). Remaining gaps: no e2e/Playwright, perf-regression is informational-only.                                                                                                                                                |
 
 ### C · Tsotchke integration depth
 
@@ -57,61 +60,65 @@ Grade key: **A** ≥ 9 · **A−** 8–9 · **B+** 7.5–8 · **B** 6.5–7.5 ·
 
 ### D · Consciousness / cognition claims
 
-| #   | Scrutiny point             | Score | Grade | Criticism / evidence                                                                                                                                                                                                                            |
-| --- | -------------------------- | ----- | ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 13  | Butlin indicator scorecard | 8.0   | A−    | `8/14 met + 6/14 partial` (Butlin et al. 2023), explicitly **computational indicators, not sentience** — never inflated to 9/14 or 14/14.                                                                                                       |
-| 14  | Faculty wiring honesty     | 7.5   | B+    | Honest that only **~30 of 100** faculties are deep-wired; `faculties-pantheon.ts` is a generic bias bank. The "100-faculty" headline is a _design_, not a live count — must always carry that caveat.                                           |
-| 15  | Theories as mechanisms     | 8.5   | A−    | GWT ignition, IIT-Φ (participation ratio + min-cut entanglement), FEP/active-inference, HOT confidence, AST attention-schema, criticality, reservoir — all measured and fed back into behavior, not labels.                                     |
-| 16  | Coupling / binding         | 5.5   | C+    | **The real bottleneck** — `coupling-audit.ts` measures `meanAbsCoupling ≈ 0.18` (weak regime; GWT bind-gate lifted baseline 0.158→0.197). "100 faculties that don't densely interact are a pile, not a mind." Honestly flagged, not yet solved. |
-| 17  | Multi-substrate breadth    | 8.5   | A−    | Live: deterministic classical + 6-qubit statevector + **16-qubit Clifford reflex** (`super-mind.ts:741`) + STDP fast-weights + echo-state reservoir + spin-glass Hopfield. Wet/chemical remains aspirational.                                   |
-| 18  | Scale / size framing       | 7.5   | B+    | Apex ≈ 10,081 weights; world ≈ 3.5M params. The "1-billion substrate" is a 5-tier `ParameterManifold` + 30-qubit Clifford (2³⁰ state space) — **addressable, not stored**; that caveat must always ride the claim.                              |
-| 19  | Sentience discipline       | 9.5   | A     | Every surface repeats: **not sentient, hard problem untouched, indicators are proxies.** Exemplary claim hygiene for a project in this space.                                                                                                   |
+| #   | Scrutiny point             | Score | Grade | Criticism / evidence                                                                                                                                                                                                                                                                                                       |
+| --- | -------------------------- | ----- | ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 13  | Butlin indicator scorecard | 8.0   | A−    | `8/14 met + 6/14 partial` (Butlin et al. 2023), explicitly **computational indicators, not sentience** — never inflated to 9/14 or 14/14.                                                                                                                                                                                  |
+| 14  | Faculty wiring honesty     | 7.5   | B+    | Honest that only **~30 of 100** faculties are deep-wired; `faculties-pantheon.ts` is a generic bias bank. The "100-faculty" headline is a _design_, not a live count — must always carry that caveat.                                                                                                                      |
+| 15  | Theories as mechanisms     | 8.5   | A−    | GWT ignition, IIT-Φ (participation ratio + min-cut entanglement), FEP/active-inference, HOT confidence, AST attention-schema, criticality, reservoir — all measured and fed back into behavior, not labels.                                                                                                                |
+| 16  | Coupling / binding         | 5.5   | C+    | **The real bottleneck** — `meanAbsCoupling ≈ 0.19` (weak regime; GWT bind-gate lifted baseline 0.158→0.197). It **is already a gate metric**: `coupling-audit.test.ts:170` enforces a `0.188` regression floor + a `0.6` anti-overclaim ceiling. Instrumented and honestly flagged; the coupling itself is not yet solved. |
+| 17  | Multi-substrate breadth    | 8.5   | A−    | Live: deterministic classical + 6-qubit statevector + **16-qubit Clifford reflex** (`super-mind.ts:741`) + STDP fast-weights + echo-state reservoir + spin-glass Hopfield. Wet/chemical remains aspirational.                                                                                                              |
+| 18  | Scale / size framing       | 7.5   | B+    | Apex ≈ 10,081 weights; world ≈ 3.5M params. The "1-billion substrate" is a 5-tier `ParameterManifold` + 30-qubit Clifford (2³⁰ state space) — **addressable, not stored**; that caveat must always ride the claim.                                                                                                         |
+| 19  | Sentience discipline       | 9.5   | A     | Every surface repeats: **not sentient, hard problem untouched, indicators are proxies.** Exemplary claim hygiene for a project in this space.                                                                                                                                                                              |
 
 ### E · A-Life standing & scientific defensibility
 
-| #   | Scrutiny point             | Score | Grade | Criticism / evidence                                                                                                                                                                                                                                                                      |
-| --- | -------------------------- | ----- | ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 20  | Comparative breadth        | 8.5   | A−    | Breadth-of-synthesis `z = +4.02σ` (self-scored) / `+2.83σ` (source-audited) vs a **113-system** survey; deterministic stats + 11 SVGs regenerable from CSV. The signal strengthened when the field grew 25→113.                                                                           |
-| 21  | Novelty discipline         | 8.5   | A−    | "Novel **by integration**, not world-first"; a `0`-hard-refutation adversarial hunt tempered by real partial peers (ALIEN, ASAL, Quantum-ALife).                                                                                                                                          |
-| 22  | Peer maturity / validation | 4.0   | C     | **The weakest axis.** No peer review, no external replication, confidence `0.75`. The self-scored Cosmogonic row is the audit's biggest single uncertainty.                                                                                                                               |
-| 23  | Reproducibility            | 9.5   | A     | Single-seed bit-identical runs; every stat/chart deterministic from `2026-06-26-alife-comparison-matrix.csv` (identical CSV → identical bytes).                                                                                                                                           |
-| 24  | Comparative rigor vs "100" | 8.5   | A−    | **Now met:** the matrix holds Cosmogonic against **112 other systems** (113 total), each web-sourced and adversarially score-verified via an 8-bucket research fan-out — not fabricated rows. Only the Cosmogonic row is self-scored (+ code-grounded); all 112 peers carry a source URL. |
-| 25  | Benchmark honesty          | 8.5   | A−    | `SuperMind.think()` ≈ 1.99 ms (full suite, 2026-07-02) — ms-scale, and the stale "sub-millisecond / <2% frame / 289 µs" claims were explicitly retired.                                                                                                                                   |
+| #   | Scrutiny point             | Score | Grade | Criticism / evidence                                                                                                                                                                                                                                                                                                                                                                      |
+| --- | -------------------------- | ----- | ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 20  | Comparative breadth        | 8.5   | A−    | Breadth-of-synthesis `z = +4.02σ` (self-scored) / `+2.83σ` (source-audited) vs a **113-system** survey; deterministic stats + 11 SVGs regenerable from CSV. The signal strengthened when the field grew 25→113.                                                                                                                                                                           |
+| 21  | Novelty discipline         | 8.5   | A−    | "Novel **by integration**, not world-first"; a `0`-hard-refutation adversarial hunt tempered by real partial peers (ALIEN, ASAL, Quantum-ALife).                                                                                                                                                                                                                                          |
+| 22  | Peer maturity / validation | 5.0   | C+    | **Still the weakest axis** — no peer review, no published external replication. The mechanical excuse is now removed: [`scripts/reproduce.ts`](../../scripts/reproduce.ts) + [REPRODUCE-2026-07-02.md](../REPRODUCE-2026-07-02.md) let anyone replicate the determinism fingerprint + gate-enforced coupling band in one command. The remaining gap is an actual citable third-party run. |
+| 23  | Reproducibility            | 9.5   | A     | Single-seed bit-identical runs; every stat/chart deterministic from `2026-06-26-alife-comparison-matrix.csv` (identical CSV → identical bytes).                                                                                                                                                                                                                                           |
+| 24  | Comparative rigor vs "100" | 8.5   | A−    | **Now met:** the matrix holds Cosmogonic against **112 other systems** (113 total), each web-sourced and adversarially score-verified via an 8-bucket research fan-out — not fabricated rows. Only the Cosmogonic row is self-scored (+ code-grounded); all 112 peers carry a source URL.                                                                                                 |
+| 25  | Benchmark honesty          | 8.5   | A−    | `SuperMind.think()` ≈ 1.99 ms (full suite, 2026-07-02) — ms-scale, and the stale "sub-millisecond / <2% frame / 289 µs" claims were explicitly retired.                                                                                                                                                                                                                                   |
 
 ## The two weak axes (where the real work is)
 
 - **Coupling / binding (5.5).** The architecture has breadth (30 deep-wired faculties, 10 emergence
   angles) but the faculties do not yet densely interact: `coupling-audit.ts` measures mean absolute
-  cross-faculty coupling at `~0.18` even after the GWT bind-gate lift. This is the project's own stated
-  thesis (**coupling > count**) turned back on itself — and it is the highest-leverage research target.
+  cross-faculty coupling at `~0.19` even after the GWT bind-gate lift, and the gate now locks that in
+  (`coupling-audit.test.ts:170`, floor `0.188`). This is the project's own stated thesis
+  (**coupling > count**) turned back on itself — and it is the highest-leverage research target.
   Concrete next step: route the GWT-ignited signal into more than the current ~7 of 16 access-faculties
   and re-measure, rather than adding an 8th theory.
 
-- **Peer maturity / external validation (4.0).** Every internal receipt is strong, but nothing has been
-  externally replicated or reviewed. The one self-scored row in the A-Life matrix is the single largest
-  uncertainty in the whole comparative claim. The fix is not more code — it is a minimal reproducible
-  artifact (fixed-seed run + the coupling/Butlin harness) that a third party can execute and confirm.
+- **Peer maturity / external validation (5.0).** Every internal receipt is strong, and the mechanical
+  replication path now ships ([`scripts/reproduce.ts`](../../scripts/reproduce.ts) +
+  [REPRODUCE-2026-07-02.md](../REPRODUCE-2026-07-02.md): one command → determinism fingerprint +
+  gate-band coupling on any machine). What remains is the part no code can do: an actual **citable
+  third-party replication or peer-reviewed treatment** of the coupling/open-endedness experiments.
 
-## Gaps & holes to add (prioritized)
+## Gaps & holes (status-tracked)
 
 Drawn from the doc-organization + PM audit. None are release-blockers; all are hygiene/clarity.
 
-1. **PM artifacts — 5 of 6 ADDED 2026-07-02:** [`PRD`](../PRD-2026-07-02.md),
+1. **PM artifacts — DONE, 6 of 6 (2026-07-02):** [`PRD`](../PRD-2026-07-02.md),
    [`RISK-REGISTER`](../RISK-REGISTER-2026-07-02.md), [`TEST-STRATEGY`](../TEST-STRATEGY-2026-07-02.md),
    [`PERFORMANCE-TARGETS`](../PERFORMANCE-TARGETS-2026-07-02.md),
-   [`SECURITY-ARCHITECTURE`](../SECURITY-ARCHITECTURE-2026-07-02.md) now exist and are linked from BOOK §10.
-   Remaining: a `DEPENDENCY-MANIFEST` (SBOM policy).
-2. **ADR-0011+ (P2):** record post-0.18.0 decisions (GPU-dispose contract, sandbox secret-leak
-   hardening, memory-orchestra wiring) as ADRs — they exist only in `AUDIT-LOG` today.
-3. **CI gaps (P1):** e2e/WebGL smoke (Playwright), perf-regression time-series + threshold alerting,
-   publish `bun sbom` output to release artifacts.
-4. **Snapshot ambiguity (P3):** clarify in `CLAUDE.md` whether root `HANDOFF-`, `AGENTS-`,
+   [`SECURITY-ARCHITECTURE`](../SECURITY-ARCHITECTURE-2026-07-02.md), and
+   [`DEPENDENCY-MANIFEST`](../DEPENDENCY-MANIFEST-2026-07-02.md) all exist, linked from BOOK §10.
+2. **ADR-0011 — DONE (2026-07-02):** [`0011-post-018-hardening-conventions`](../adr/0011-post-018-hardening-conventions-2026-07-02.md)
+   names the four recurring conventions (GPU ownership, numeric domain guards, SSOT surface
+   registration, grid-first radius actions). Future decisions get their own ADRs.
+3. **CI gaps (P1, still open):** e2e/WebGL smoke (Playwright), perf-regression time-series + threshold
+   alerting. (The SBOM item is retracted — release.yml already publishes it with SLSA provenance.)
+4. **Snapshot ambiguity (P3, still open):** clarify in `CLAUDE.md` whether root `HANDOFF-`, `AGENTS-`,
    `research_receipts-` and `docs/DAILY_RUNS/*` are living-in-place or archived point-in-time.
-5. **Comparative matrix — DONE 2026-07-02:** grew the A-Life matrix from 26 to **113 rows** (NEAT/HyperNEAT,
-   Geb, Chromaria, The Bibites, Species-ALRE, and ~80 more), each source-cited and adversarially
-   score-verified. Next: code-ground a sample of the peer rows (currently literature-scored).
-6. **Coupling instrumentation (P1):** promote `meanAbsCoupling` into a first-class gate metric with a
-   regression floor, so the binding bottleneck is tracked like coverage is.
+5. **Comparative matrix — DONE 2026-07-02:** grew from 26 to **113 rows**, each source-cited and
+   adversarially score-verified. Next: code-ground a sample of the peer rows (currently literature-scored).
+6. **Coupling instrumentation — retracted (already existed):** `meanAbsCoupling` has been a first-class
+   gate metric since the bind-gate work (`coupling-audit.test.ts:170`, floor `0.188` + ceiling `0.6`).
+   The open work is raising the _coupling itself_, not the instrumentation.
+7. **Reproducibility artifact — DONE (2026-07-02):** see point #22.
 
 ## Method
 

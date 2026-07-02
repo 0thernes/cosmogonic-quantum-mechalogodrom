@@ -54,7 +54,7 @@ graph TD
 
   subgraph siml["src/sim"]
     constants["constants.ts (leaf)<br/>WEATHERS · BEHAVIORS · VIEW_MODES<br/>MONOLITH_CONFIG · PIPE_LINKS · DIORAMA_CONFIG"]
-    geocache["geometry-cache.ts<br/>~41 shared BufferGeometries"]
+    geocache["geometry-cache.ts<br/>40 shared BufferGeometries"]
     morphotypes["morphotypes.ts<br/>250 MorphTypes (10 phyla × 25)"]
     algorithms["algorithms.ts<br/>ALGOS (25 sort fields)"]
     behaviors["behaviors.ts<br/>26 behavioral fields"]
