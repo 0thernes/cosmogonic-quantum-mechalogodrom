@@ -198,8 +198,10 @@ quantum substrate inside a living agent's decision loop and makes it causal.** S
   irreducibility — _not_ a proxy).
 - A ported **Aaronson–Gottesman Clifford stabilizer tableau** scales the quantum layer to **32/64+
   qubits** (Gottesman–Knill), with bipartite entanglement entropy read as a GF(2) rank — exactly the
-  regime the dense register can never reach. (Status caveat: this tableau is **present and tested but
-  not yet wired** into the apex mind — see Part II §II.8.)
+  regime the dense register can never reach. (Status: as of V101 a **live 16-qubit Clifford tableau is
+  wired into the apex** — stepped every beat in `think()` (`super-mind.ts:741` construct, `:1091–1094`
+  h/cnot, `:908` entanglement read) and surfaced on the snapshot — see Part II §II.8. The 32/64-qubit
+  regime remains a scale target, not the wired width.)
 
 These are reimplemented **gate-for-gate / equation-for-equation** from the MIT-licensed
 **Tsotchke / Eshkol / Moonlab** research codebases and credited in `../../THIRD-PARTY-NOTICES.md`. The
@@ -356,7 +358,7 @@ Every wired faculty is a pure leaf or inline module: deterministic, bounded, all
 (`quantum-coherence.ts`) · quantum magic / Stabilizer 2-Rényi (`quantum-magic.ts`) · register Φ / IIT
 min-cut (`super-qubits.ts`) · quantum deliberation / Lindblad-GKSL (`quantum-deliberation.ts`) · quantum
 reservoir (`quantum-reservoir.ts`). Plus the **spin-glass instinct** (`spin-glass.ts`) and the
-large-scale **Clifford tableau** (`clifford-tableau.ts`, present + tested but **not yet wired** — see
+**Clifford tableau** (`clifford-tableau.ts`, wired as a **live 16-qubit reflex** in `think()` since V101 — see
 §II.8). Together these named cognitive + quantum modules, the composite's ~12 sub-networks, and the
 spin-glass instinct sum to the **~30 distinct deep-wired mechanisms** counted in §II.1.
 
@@ -418,7 +420,8 @@ mechanism in code_, not a poetic gesture — the motifs **feed behavior**, not a
   not accidents of carbon.
 - **vs a physical quantum computer** — a real 6-qubit QPU needs cryogenics and error correction and still
   decoheres. This is a perfect, noiseless, **deterministic** 6-qubit simulation, exact because it is small
-  and honest because it obeys the true Born rule — _plus_ a 64-qubit Clifford substrate for the regime the
+  and honest because it obeys the true Born rule — _plus_ a Clifford stabilizer substrate (wired at 16
+  qubits, portable to 64+) for the regime the
   dense register cannot enter. **No quantum speedup is claimed** (the only thing missing is a physical
   QPU — a speed/scale limit, not a correctness limit).
 
@@ -438,9 +441,9 @@ Ranked by leverage toward the consciousness indicators, with the determinism law
 3. **A genuine top-down generative perception loop (HOT-1)** — promote the imagitron into a real
    predictive generative model whose priors shape perception.
 4. **A quality space (HOT-4)** — a sparse, smooth representational geometry for percepts.
-5. **Wire the Clifford "stabilizer reflex"** — scale the cognitively-used quantum register past 6 qubits
-   via the already-ported tableau (currently inert, §II.8) to test whether larger entangled structure
-   aids integration without breaking determinism.
+5. **Scale the Clifford "stabilizer reflex"** — the tableau is now wired as a live 16-qubit reflex in
+   `think()` (V101, §II.8); the remaining experiment is to scale it past 16 qubits and feed its
+   entanglement entropy into more of the integration path without breaking determinism.
 6. **A persistent lifelong narrative memory** atop the holographic trace, and a small **grounded symbol
    layer** so plans can name world entities — the largest leap, and the line that separates this from
    LLMs.
@@ -450,10 +453,11 @@ run.
 
 ## II.8 · Limitations, risks, and honest UNKNOWNs
 
-- **The Clifford tableau is present and tested but NOT wired** into the apex mind (`clifford-tableau.ts`
-  is imported only by its own tests). Any prose implying the Moonlab stabilizer backend is _fused into
-  cognition_ is corrected here: its ported artifact is currently inert. A "stabilizer reflex" is a clean,
-  tracked follow-up (§II.7 item 5).
+- **The Clifford tableau is wired as a live 16-qubit reflex** in the apex `think()` since V101
+  (`super-mind.ts:741` constructs `new CliffordTableau(16)`, `:1091–1094` applies h/cnot each beat,
+  `:908` reads its bipartite entanglement, and the snapshot exposes it). What is _not_ yet reached is the
+  **32/64-qubit** width the ported tableau supports — that scale-up is the tracked follow-up (§II.7 item 5),
+  not the wiring itself.
 - **The behaviors are narrow and not learned online** — weights are seeded-random and fixed. Every
   superlative in this report is scoped to that honest frame.
 - **"Quantum" is an algebra on amplitudes** in a deterministic simulation — exact and reproducible,
@@ -574,8 +578,8 @@ preserved (the module-mapped detail is in Part II §II.7):
 2. **An explicit attention schema (AST-1)** — the cheapest missing indicator.
 3. **A genuine top-down generative perception loop (HOT-1).**
 4. **A sparse-smooth quality space (HOT-4).**
-5. **Wire the Clifford "stabilizer reflex"** past 6 qubits via the already-ported tableau (currently
-   inert).
+5. **Scale the Clifford "stabilizer reflex"** past its live 16 qubits via the already-ported tableau (now
+   wired into `think()`; the open experiment is the 32/64-qubit width, not the wiring).
 6. **A persistent lifelong narrative memory + a grounded symbol layer** — the largest leap, and the line
    that separates this from LLMs.
 
@@ -603,9 +607,10 @@ ignition gate, two Φ measures — **not a subjective inner life.**
 - **Not vendored binaries.** The ported primitives (Eshkol qubit-RNG, QGT/Fubini–Study, spin-glass,
   Aaronson–Gottesman Clifford tableau) are credited, MIT-licensed, source-level reimplementations,
   credited in `../../THIRD-PARTY-NOTICES.md` — **not** linked third-party binaries.
-- **Not a fully-wired quantum cognition stack.** The large-scale **Clifford tableau is present and tested
-  but NOT wired** into the apex mind; any implication that the stabilizer backend is fused into cognition
-  is corrected — its ported artifact is currently inert (see Part II §II.8).
+- **Not the full 32/64-qubit quantum cognition stack.** The Clifford tableau **is wired** into the apex as
+  a live 16-qubit reflex (V101; see Part II §II.8) — but its ported 32/64-qubit width is not the wired
+  width, and the dense statevector register cognition uses is 6 qubits. No claim of large-scale entangled
+  cognition is made beyond those wired widths.
 - **Not a world-first.** The novelty is **by integration** (a rare synthesis / plausible exact
   conjunction; an 8-agent adversarial hunt found zero hard refutations) — **not** the first A-Life,
   digital-evolution, morphogenesis, or artificial-ecology system.
@@ -631,16 +636,16 @@ ignition gate, two Φ measures — **not a subjective inner life.**
 
 **Qualitative (engineering judgment, 1–10):**
 
-| Dimension                     | Score  | Note                                                                              |
-| ----------------------------- | ------ | --------------------------------------------------------------------------------- |
-| Architectural originality     | **10** | no open-source peer for the synthesis (novel by integration, not world-first)     |
-| Scientific honesty            | **10** | "models of, not is"; verified citations; proxies flagged                          |
-| Determinism / reproducibility | **10** | enforced by construction, not convention                                          |
-| Quantum integration depth     | **9**  | self-optimizing circuit inside an agent; 64-qubit stabilizer reflex still unwired |
-| Test / CI rigor               | **9**  | 1,477 tests, SHA-pinned CI, SBOM, SLSA provenance                                 |
-| Performance discipline        | **8**  | allocation-free hot paths; think() ~3.34 ms (full suite), within frame budget     |
-| Open-domain generality        | **3**  | narrow + embodied by design; cannot reason over arbitrary text                    |
-| Phenomenal consciousness      | **1**  | not claimed; see §III.2                                                           |
+| Dimension                     | Score  | Note                                                                                       |
+| ----------------------------- | ------ | ------------------------------------------------------------------------------------------ |
+| Architectural originality     | **10** | no open-source peer for the synthesis (novel by integration, not world-first)              |
+| Scientific honesty            | **10** | "models of, not is"; verified citations; proxies flagged                                   |
+| Determinism / reproducibility | **10** | enforced by construction, not convention                                                   |
+| Quantum integration depth     | **9**  | self-optimizing 6-qubit circuit + live 16-qubit Clifford reflex; 32/64-qubit scale pending |
+| Test / CI rigor               | **9**  | 1,984 tests (floor), SHA-pinned CI, SBOM, SLSA provenance                                  |
+| Performance discipline        | **8**  | allocation-free hot paths; think() ~3.34 ms (full suite), within frame budget              |
+| Open-domain generality        | **3**  | narrow + embodied by design; cannot reason over arbitrary text                             |
+| Phenomenal consciousness      | **1**  | not claimed; see §III.2                                                                    |
 
 ## III.6 · Verdict — the bottom line for the room
 
@@ -676,34 +681,34 @@ Every figure below is read from source or produced by the gate. Where two source
 same quantity differently, the canonical published value (README / `../TECHNICAL-SPECIFICATION-2026-06-26.md`) is
 used, and the equivalent phrasings are noted.
 
-| Metric                            | Canonical value                                                                                                           | Provenance / receipt                                                                    |
-| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
-| Build / version                   | **v0.18.0** · `main` @ `2233488` · 2026-06-26                                                                             | `package.json`                                                                          |
-| Tests / failures                  | **1,477 pass / 0 fail**                                                                                                   | `bun test`, 151 files, 1,744,891 `expect()` calls (Bun 1.3.14, origin/main @ `2233488`) |
-| Coverage (line / function)        | **~95 / ~92** (canonical 95.03 / 92.03; ±6 pp gate tolerance for env jitter)                                              | `scripts/canonical-receipts.ts`, `../AUDIT-LOG.md`                                      |
-| Population at 60 fps / ceiling    | 10,000 / **50,000** (mega tier)                                                                                           | `core/quality.ts`                                                                       |
-| Whole-world neural mass           | **≈ 3.5 M params ≈ 14 MB** Float32, one CPU thread                                                                        | `../TECHNICAL-SPECIFICATION-2026-06-26.md §7`                                           |
-| Per-organism brain                | **70-weight** TinyMLP (6→6→4), heritable                                                                                  | `sim/entities.ts`, `sim/genome.ts`                                                      |
-| Behavioral fields / morphotypes   | **26** fields / **250** morphotypes (10 phyla × 25)                                                                       | `sim/constants.ts`, `sim/phyla.ts`                                                      |
-| Macro-intelligences               | 10 Titans · 8 factions · 100 shoggoths · 4 leviathans · 100 puppet-masters (5-qubit) · 1 NHI apex                         | `sim/titans.ts`, `factions.ts`, …                                                       |
-| Apex composite mind               | **~10,081 weights** across ~12 sub-networks                                                                               | `super-mind.ts:382–393`                                                                 |
-| Apex total parameters             | **≈ 37,225** = 10,081 mind + 1,444 legacy spine + 100 × 257 wingmen                                                       | `super-mind.ts`, `super-creature.ts:36`, `super-wingmen.ts:24`                          |
-| Faculty count (honest definition) | **100-faculty design**; **~30 genuinely deep-wired** into the apex `think()`; remainder a generic-profile bias bank       | `../NHSI-PROGRESS-DASHBOARD-2026-06-26.md`, `faculties-pantheon.ts`                     |
-| Archon pantheon                   | **25-Archon** = 5 individuated apex SuperMinds + 20 live light-echo                                                       | `faculties-pantheon.ts`, `super-mind.ts`                                                |
-| Theory-of-Mind                    | **25 organs**, 6-family ensemble (additive/bayesian/recursive/temporal/deception/coalition)                               | `theory-of-mind.ts`                                                                     |
-| Emergence                         | **10 angles wired** (+ 5 god-scale release **events**, not additional angles)                                             | `open-endedness.ts`, `../NHSI-PROGRESS-DASHBOARD-2026-06-26.md`                         |
-| Cognitive pipeline                | 5 stages × 5 depths × 5 variants = **25 thought branches**                                                                | `super-mind.ts:71–73`                                                                   |
-| Quantum register (apex)           | **6 qubits / 64 complex amplitudes**, 3 circuit layers                                                                    | `super-qubits.ts:46,48,49`                                                              |
-| Large-scale quantum substrate     | Aaronson–Gottesman **Clifford tableau to 32/64+ qubits** (present, tested, **not yet wired**)                             | `clifford-tableau.ts`                                                                   |
-| Decision vocabulary               | **7 plans** (HUNT·FLEE·DOMINATE·DECEIVE·SPAWN·EXPLORE·REST)                                                               | `super-creature.ts`                                                                     |
-| Spin-glass instinct               | **56 spins**, 7 archetypes, Metropolis settle                                                                             | `spin-glass.ts`, `super-mind.ts:217`                                                    |
-| Tsotchke corpus integration       | **20 projects**, **~16 wired** with real downstream effect (8 deep in apex mind, 4 in petri growth engine); real MIT math | `../TSOTCHKE-INTEGRATION-MAP-2026-06-26.md`                                             |
-| Apex `think()` cost               | **~3.34 ms** (full bench suite) / **~8.85 ms** (focused); snapshot ~2.44 / 6.89 ms; 5× think ~14.47 / 25.40 ms            | `bench/super-mind.bench.ts`                                                             |
-| Consciousness metrics             | **2** live scalars (GWT ignition, IIT Φ proxy) + genuine register Φ                                                       | `super-mind.ts:43–46`, `super-qubits.ts`                                                |
-| Butlin indicator coverage         | **8 / 14 met + 6 / 14 partial** (computational indicators, NOT sentience)                                                 | Part III §III.2; Butlin et al. 2023, arXiv:2308.08708                                   |
-| Quantum laws proven               | unitarity 1e-12 · Born 1e-9 · PSD QGT · GHZ = 1 ebit · magic of T\|+⟩ = log₂(4/3)                                         | `tests/quantum.test.ts`                                                                 |
-| Determinism                       | bit-identical psyche from one 32-bit seed; collapse via seeded generator; `Math.random`/`Date.now` banned & GLOB-enforced | `math/rng.ts`, `tests/determinism-law.test.ts`, `super-qubits.test.ts:184`              |
-| Native engine                     | C++20 SDF ray-marcher, GLFW/GLM, Jolt rigid-body + volume-conserving fracture, RTX-class GPU, 4K offscreen                | `native/`                                                                               |
+| Metric                            | Canonical value                                                                                                                                                    | Provenance / receipt                                                                    |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------- |
+| Build / version                   | **v0.18.0** · `main` @ `2233488` · 2026-06-26                                                                                                                      | `package.json`                                                                          |
+| Tests / failures                  | **1,477 pass / 0 fail**                                                                                                                                            | `bun test`, 151 files, 1,744,891 `expect()` calls (Bun 1.3.14, origin/main @ `2233488`) |
+| Coverage (line / function)        | **~95 / ~92** (canonical 95.03 / 92.03; ±6 pp gate tolerance for env jitter)                                                                                       | `scripts/canonical-receipts.ts`, `../AUDIT-LOG.md`                                      |
+| Population at 60 fps / ceiling    | 10,000 / **50,000** (mega tier)                                                                                                                                    | `core/quality.ts`                                                                       |
+| Whole-world neural mass           | **≈ 3.5 M params ≈ 14 MB** Float32, one CPU thread                                                                                                                 | `../TECHNICAL-SPECIFICATION-2026-06-26.md §7`                                           |
+| Per-organism brain                | **70-weight** TinyMLP (6→6→4), heritable                                                                                                                           | `sim/entities.ts`, `sim/genome.ts`                                                      |
+| Behavioral fields / morphotypes   | **26** fields / **250** morphotypes (10 phyla × 25)                                                                                                                | `sim/constants.ts`, `sim/phyla.ts`                                                      |
+| Macro-intelligences               | 10 Titans · 8 factions · 100 shoggoths · 4 leviathans · 100 puppet-masters (5-qubit) · 1 NHI apex                                                                  | `sim/titans.ts`, `factions.ts`, …                                                       |
+| Apex composite mind               | **~10,081 weights** across ~12 sub-networks                                                                                                                        | `super-mind.ts:382–393`                                                                 |
+| Apex total parameters             | **≈ 37,225** = 10,081 mind + 1,444 legacy spine + 100 × 257 wingmen                                                                                                | `super-mind.ts`, `super-creature.ts:36`, `super-wingmen.ts:24`                          |
+| Faculty count (honest definition) | **100-faculty design**; **~30 genuinely deep-wired** into the apex `think()`; remainder a generic-profile bias bank                                                | `../NHSI-PROGRESS-DASHBOARD-2026-06-26.md`, `faculties-pantheon.ts`                     |
+| Archon pantheon                   | **25-Archon** = 5 individuated apex SuperMinds + 20 live light-echo                                                                                                | `faculties-pantheon.ts`, `super-mind.ts`                                                |
+| Theory-of-Mind                    | **25 organs**, 6-family ensemble (additive/bayesian/recursive/temporal/deception/coalition)                                                                        | `theory-of-mind.ts`                                                                     |
+| Emergence                         | **10 angles wired** (+ 5 god-scale release **events**, not additional angles)                                                                                      | `open-endedness.ts`, `../NHSI-PROGRESS-DASHBOARD-2026-06-26.md`                         |
+| Cognitive pipeline                | 5 stages × 5 depths × 5 variants = **25 thought branches**                                                                                                         | `super-mind.ts:71–73`                                                                   |
+| Quantum register (apex)           | **6 qubits / 64 complex amplitudes**, 3 circuit layers                                                                                                             | `super-qubits.ts:46,48,49`                                                              |
+| Large-scale quantum substrate     | Aaronson–Gottesman **Clifford tableau** — wired as a **live 16-qubit reflex** in `think()` (V101); ported to **32/64+ qubits**, that width not yet the wired width | `clifford-tableau.ts`, `super-mind.ts:741`                                              |
+| Decision vocabulary               | **7 plans** (HUNT·FLEE·DOMINATE·DECEIVE·SPAWN·EXPLORE·REST)                                                                                                        | `super-creature.ts`                                                                     |
+| Spin-glass instinct               | **56 spins**, 7 archetypes, Metropolis settle                                                                                                                      | `spin-glass.ts`, `super-mind.ts:217`                                                    |
+| Tsotchke corpus integration       | **20 projects**, **~16 wired** with real downstream effect (8 deep in apex mind, 4 in petri growth engine); real MIT math                                          | `../TSOTCHKE-INTEGRATION-MAP-2026-06-26.md`                                             |
+| Apex `think()` cost               | **~3.34 ms** (full bench suite) / **~8.85 ms** (focused); snapshot ~2.44 / 6.89 ms; 5× think ~14.47 / 25.40 ms                                                     | `bench/super-mind.bench.ts`                                                             |
+| Consciousness metrics             | **2** live scalars (GWT ignition, IIT Φ proxy) + genuine register Φ                                                                                                | `super-mind.ts:43–46`, `super-qubits.ts`                                                |
+| Butlin indicator coverage         | **8 / 14 met + 6 / 14 partial** (computational indicators, NOT sentience)                                                                                          | Part III §III.2; Butlin et al. 2023, arXiv:2308.08708                                   |
+| Quantum laws proven               | unitarity 1e-12 · Born 1e-9 · PSD QGT · GHZ = 1 ebit · magic of T\|+⟩ = log₂(4/3)                                                                                  | `tests/quantum.test.ts`                                                                 |
+| Determinism                       | bit-identical psyche from one 32-bit seed; collapse via seeded generator; `Math.random`/`Date.now` banned & GLOB-enforced                                          | `math/rng.ts`, `tests/determinism-law.test.ts`, `super-qubits.test.ts:184`              |
+| Native engine                     | C++20 SDF ray-marcher, GLFW/GLM, Jolt rigid-body + volume-conserving fracture, RTX-class GPU, 4K offscreen                                                         | `native/`                                                                               |
 
 **Number-discipline notes (for the record).**
 

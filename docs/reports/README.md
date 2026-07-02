@@ -1,4 +1,4 @@
-<!-- reviewed: 2026-06-27 | repo-wide consistency audit | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+<!-- reviewed: 2026-07-01 | mega-audit receipt-drift fix | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
 
 # Reports
 
@@ -7,7 +7,7 @@ current, continuously-rewritten document — not a dated snapshot and not an arc
 change, the report is **rewritten in place** to the current truth. No historical duplicates, no
 "superseded" copies, no per-version forks. One source per topic.
 
-Every load-bearing number is the live measured value: **v0.18.0 · 1771 tests · 94.77% line / 91.97% function ·
+Every load-bearing number is the live measured value: **v0.18.0 · 1,984 tests · 92.13 % line / 89.66 % function ·
 Butlin 8/14 met + 6/14 partial · not sentient**. The canonical numbers come from
 `scripts/canonical-receipts.ts` + `package.json`, propagated by `scripts/sync-surfaces.ts` and
 gate-enforced (`bun run sync:check`). The one-glance reference is
@@ -17,6 +17,10 @@ gate-enforced (`bun run sync:check`). The one-glance reference is
 
 - [2026-06-26-CURRENT-TRUTH-BASELINE.md](./2026-06-26-CURRENT-TRUTH-BASELINE.md) — canonical current facts,
   one-glance reference (gate receipts, claim baseline, SuperMind benchmark).
+- [2026-07-01-25-POINT-SCRUTINY-SCORECARD.md](./2026-07-01-25-POINT-SCRUTINY-SCORECARD.md) — 25-point
+  adversarial critical scrutiny across engineering, architecture, Tsotchke depth, consciousness claims,
+  and A-Life standing (overall 8.1/10; weak axes = coupling + peer validation). SVG chart in
+  [assets/scrutiny-25-scorecard.svg](./assets/scrutiny-25-scorecard.svg).
 - [2026-06-26-ALIFE-COMPARATIVE-AUDIT.md](./2026-06-26-ALIFE-COMPARATIVE-AUDIT.md) — A-Life comparative
   audit vs 25 known systems (v3, code-grounded): measured statistics (breadth z = +3.01σ self / +2.10σ
   source-audited), **11 SVG charts**, PCA + clustering + Pareto + Mahalanobis geometry, a 9-agent

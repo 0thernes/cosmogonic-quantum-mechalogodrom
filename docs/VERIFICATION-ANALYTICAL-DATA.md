@@ -20,9 +20,9 @@ Rewritten in place when the facts change (per the binding "Living docs, no archi
 | Fact                | Canonical value           | Source of truth                                                                      | Propagated by           |
 | ------------------- | ------------------------- | ------------------------------------------------------------------------------------ | ----------------------- |
 | Package version     | `0.18.0`                  | `package.json` `version`                                                             | `sync-surfaces.ts`      |
-| Test count (floor)  | `1771`                    | `scripts/canonical-receipts.ts`                                                      | `sync-surfaces.ts`      |
-| Line coverage       | `94.77%`                  | `scripts/canonical-receipts.ts`                                                      | `sync-surfaces.ts`      |
-| Function coverage   | `91.97%`                  | `scripts/canonical-receipts.ts`                                                      | `sync-surfaces.ts`      |
+| Test count (floor)  | `1984`                    | `scripts/canonical-receipts.ts`                                                      | `sync-surfaces.ts`      |
+| Line coverage       | `92.13%`                  | `scripts/canonical-receipts.ts`                                                      | `sync-surfaces.ts`      |
+| Function coverage   | `89.66%`                  | `scripts/canonical-receipts.ts`                                                      | `sync-surfaces.ts`      |
 | Faculties (design)  | `100` (~30 deep-wired)    | `CANONICAL_FACULTIES`                                                                | `sync-surfaces.ts`      |
 | Archon pantheon     | `25` (5 apex + 20 light)  | `CANONICAL_ARCHONS`                                                                  | `sync-surfaces.ts`      |
 | Theory-of-mind orgs | `25`                      | `CANONICAL_TOM_ORGANS`                                                               | `sync-surfaces.ts`      |
@@ -35,11 +35,11 @@ Rewritten in place when the facts change (per the binding "Living docs, no archi
 | Apex composite mind | `~10,081` weights         | `src/sim/super-mind.ts`                                                              | prose (NOT auto-synced) |
 | Legacy spine        | `~1,444` params           | `src/sim/super-mind.ts` / ADR-0008                                                   | prose (NOT auto-synced) |
 
-### Measured reality (this audit, 2026-06-30, Bun 1.3.14)
+### Measured reality (this audit, 2026-07-01, Bun 1.3.14)
 
-- `bun test --coverage` → **1880 pass / 0 fail** · **2,068,488 expect() calls** · **191 test files** · coverage
-  **94.72% line / 92.13% func** (measured; canonical synced floor is **1771** tests · **94.77% line / 91.97% func**
-  from `canonical-receipts.ts`). The 1880 vs 1771 gap is expected: `CANONICAL_TEST_COUNT` is a documented
+- `bun test --coverage` → **2104 pass / 0 fail** · **2,912,102 expect() calls** · **231 test files** · coverage
+  **92.13% line / 89.66% func** (measured; canonical synced floor is **1984** tests · **92.13% line / 89.66% func**
+  from `canonical-receipts.ts`). The 2104 vs 1984 gap is expected: `CANONICAL_TEST_COUNT` is a documented
   **floor**; a file-rich checkout measures every `*.test.ts` in the working tree. Gate-enforced
   `verify:receipts` floors against the canonical ledger — any count ≥ floor with matching canon is green.
 - `bun run check` → green (prettier · tsc · oxlint · verify:receipts/test+coverage · sync:check · verify:facts · build).
@@ -62,17 +62,17 @@ Rewritten in place when the facts change (per the binding "Living docs, no archi
 
 ## 3 · Audit findings (2026-06-26)
 
-| #   | Severity                   | Where                                        | Issue                                                                                                                                                                                          | Resolution                                                                                               |
-| --- | -------------------------- | -------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| A   | **P0 gate-RED**            | `.github/copilot-instructions-2026-06-26.md` | markdown tables collapsed by the external `hacklm-memory` tool → fails `prettier --check` (first gate stage) in the working tree                                                               | `prettier --write` (re-pad tables)                                                                       |
-| B   | reconciled (not a bug)     | `scripts/canonical-receipts.ts`              | `CANONICAL_TEST_COUNT = 1771` (was 1477 at audit time) vs measured 2924                                                                                                                        | floor semantics confirmed correct; 1771 is the published headline floor                                  |
-| C   | **P0 gate-RED**            | `CHANGELOG.md`, `docs/KANBAN-2026-06-26.md`  | 3 dead relative links into the deleted `docs/audit-2026-06-15/` folder (consolidated into AUDIT-LOG by `e51a376`)                                                                              | repoint to `docs/AUDIT-LOG.md`                                                                           |
-| C2  | P1 test-hygiene            | `tests/doc-links.test.ts`                    | `SKIP` set omitted `.claude/` → the test scanned nested worktree copies and false-failed                                                                                                       | add `.claude`, `legacy`, `site`, `coverage` to `SKIP`                                                    |
-| D   | P1 doc-rot                 | `docs/KANBAN-2026-06-26.md`                  | mojibake: `×11/`×7/``×1 (orphaned-emoji fragments), `—`×34 used as `—`, plus `¦`/`–`/`©º`— slipped the encoding gate (orphaned fragments aren't double-encoding;`U+201D` is a legit codepoint) | byte-precise normalize: drop corrupted emoji prefixes, restore `—`/`–` separators                        |
-| E   | P2 count-drift             | `docs/KANBAN-2026-06-26.md:17`               | "ALL **19** Tsotchke repos" — only outlier vs the canonical "20 corpus projects" everywhere                                                                                                    | `19 → 20`                                                                                                |
-| F   | flag (history)             | `HANDOFF-2026-06-26.md`                      | a dated **2026-06-19** daily-run report framed as "Current repo status" (942 tests / v0.10.4)                                                                                                  | left as historical snapshot (editing the numbers would falsify the 2026-06-19 record); not current truth |
-| G   | flag (cleanliness)         | repo root                                    | stray debug logs tracked at root (`.gate.log`, `.gate.baseline.log`, `.audit-gate.log`, `law.log`, `law_error.txt`, `tsc.log`, `tscout.txt`, `receipts_print.txt`)                             | noted for cleanup                                                                                        |
-| H   | flag (fidelity, not a bug) | `src/math/curvature-aware-qng.ts`            | `computeChristoffelSymbols` sets `dg=0`, so the general N×N "curvature-aware" path reduces to ordinary QNG                                                                                     | honestly documented as a simplification; no NaN / wrong shape; noted so the caveat is visible            |
+| #   | Severity                   | Where                                        | Issue                                                                                                                                                                                          | Resolution                                                                                                       |
+| --- | -------------------------- | -------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| A   | **P0 gate-RED**            | `.github/copilot-instructions-2026-06-26.md` | markdown tables collapsed by the external `hacklm-memory` tool → fails `prettier --check` (first gate stage) in the working tree                                                               | `prettier --write` (re-pad tables)                                                                               |
+| B   | reconciled (not a bug)     | `scripts/canonical-receipts.ts`              | `CANONICAL_TEST_COUNT` is a floor (1477→1771→1984 as suites grew) vs a file-rich measured count (2104 on 2026-07-01)                                                                           | floor semantics confirmed correct; the published headline floor is now **1984** (`--print` never auto-raises it) |
+| C   | **P0 gate-RED**            | `CHANGELOG.md`, `docs/KANBAN-2026-06-26.md`  | 3 dead relative links into the deleted `docs/audit-2026-06-15/` folder (consolidated into AUDIT-LOG by `e51a376`)                                                                              | repoint to `docs/AUDIT-LOG.md`                                                                                   |
+| C2  | P1 test-hygiene            | `tests/doc-links.test.ts`                    | `SKIP` set omitted `.claude/` → the test scanned nested worktree copies and false-failed                                                                                                       | add `.claude`, `legacy`, `site`, `coverage` to `SKIP`                                                            |
+| D   | P1 doc-rot                 | `docs/KANBAN-2026-06-26.md`                  | mojibake: `×11/`×7/``×1 (orphaned-emoji fragments), `—`×34 used as `—`, plus `¦`/`–`/`©º`— slipped the encoding gate (orphaned fragments aren't double-encoding;`U+201D` is a legit codepoint) | byte-precise normalize: drop corrupted emoji prefixes, restore `—`/`–` separators                                |
+| E   | P2 count-drift             | `docs/KANBAN-2026-06-26.md:17`               | "ALL **19** Tsotchke repos" — only outlier vs the canonical "20 corpus projects" everywhere                                                                                                    | `19 → 20`                                                                                                        |
+| F   | flag (history)             | `HANDOFF-2026-06-26.md`                      | a dated **2026-06-19** daily-run report framed as "Current repo status" (942 tests / v0.10.4)                                                                                                  | left as historical snapshot (editing the numbers would falsify the 2026-06-19 record); not current truth         |
+| G   | flag (cleanliness)         | repo root                                    | stray debug logs tracked at root (`.gate.log`, `.gate.baseline.log`, `.audit-gate.log`, `law.log`, `law_error.txt`, `tsc.log`, `tscout.txt`, `receipts_print.txt`)                             | noted for cleanup                                                                                                |
+| H   | flag (fidelity, not a bug) | `src/math/curvature-aware-qng.ts`            | `computeChristoffelSymbols` sets `dg=0`, so the general N×N "curvature-aware" path reduces to ordinary QNG                                                                                     | honestly documented as a simplification; no NaN / wrong shape; noted so the caveat is visible                    |
 
 **Finding D2 — master governance XML mojibake (root cause + fix).** All three `masters/*.xml` files
 (the EXECUTOR / ARCHITECT / PHYSICIST steering docs read before every change) each carried ~150
@@ -294,8 +294,8 @@ HTML and the native engine (`native/src/` — 5 files, no unsafe C calls).
 - **`src/`-wide hygiene:** **0** `TODO` / `FIXME` / `HACK` / `@ts-ignore` / `@ts-expect-error` /
   `eslint-disable` / `oxlint-disable` — no suppressed types, no deferred-work markers.
 - **Doc-vs-code re-verified on the current tip:** FILE-MAP "195 modules" = 195 actual `src/**/*.ts`;
-  `package.json` `0.18.0`; `bun run sync:check` green (all surfaces match `v0.18.0 · 1771 tests ·
-91.97/94.85`); 0 broken relative links; all 90 md/xml/html surfaces codepoint-clean.
+  `package.json` `0.18.0`; `bun run sync:check` green (all surfaces match `v0.18.0 · 1,984 tests ·
+92.13/89.66`); 0 broken relative links; all 90 md/xml/html surfaces codepoint-clean.
 
 Net: the repo is **true, accurate, current, and defensible**. Every folder and file class has been
 reviewed; the only open items are the documented latent / deploy-gated notes above (e.g. per-IP audit

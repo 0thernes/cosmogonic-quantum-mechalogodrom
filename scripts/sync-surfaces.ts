@@ -66,6 +66,14 @@ const SURFACES = [
   // Binding contract whose present-tense "...ERA (vX)" header stamps the current version (synced below).
   'docs/MODULE-CONTRACTS-2026-06-26.md',
   'bible.html',
+  // The two DESIGNATED current-truth reports. docs/reports/* is otherwise a living-but-unsynced zone
+  // (verify:facts deliberately excludes reports/20*, and these were NOT surfaces) — so their single
+  // headline receipt line silently froze two canon-generations back (1771 · 94.77/91.97) while the
+  // canon moved to 1984 · 92.13/89.66 (mega-audit 2026-07-01). Both carry exactly ONE current-receipt
+  // line in the sync-anchored phrasing ("N,NNN tests · LINE% line / FUNC% function"); their NHSI prose
+  // uses the hyphen/framing forms syncNHSI never touches. Adding them here makes the drift impossible.
+  'docs/reports/README.md',
+  'docs/reports/2026-06-26-CURRENT-TRUTH-BASELINE.md',
 ];
 
 /** Apply receipts (test count + coverage) propagation. */

@@ -11,6 +11,47 @@ dated / historical / "superseded snapshot" copies (per the binding "Living docs,
 
 ---
 
+## 2026-07-01 — Mega-audit: SSOT receipt-drift fix + Clifford stale-claim correction + 25-point scrutiny scorecard
+
+Full-spectrum audit (four parallel code-grounded auditors — code-health · Tsotchke wiring · doc/PM ·
+consciousness metrics — each finding adversarially verified against `file:line`). Gate re-measured green:
+**2104 pass / 0 fail · 2,912,102 expect() · 92.13% line / 89.66% func** (published floor 1,984).
+
+**Fixed + landed:**
+
+- **SSOT receipt blind spot (real).** `docs/reports/*` advertised "live measured values" but sat OUTSIDE
+  both guards — `sync-surfaces.ts` only rewrites an explicit `SURFACES` list, and `verify-canonical-facts.ts`
+  deliberately excludes `docs/reports/20*` (and never audited test-count/coverage at all). So the reports'
+  headline receipts froze two canon-generations back (`1771 tests · 94.77/91.97`) while canon moved on, and
+  both `sync:check` and `verify:facts` still passed. Fix: refreshed `canonical-receipts.ts` coverage to the
+  measured `92.13/89.66` (test floor stays `1984` per `--print`); rewrote the drifted receipts in
+  `reports/README`, `CURRENT-TRUTH-BASELINE`, `RESEARCH-BEDROCK`, `NHSI-HONESTY-AUDIT`, `NHSI-MANIFESTO`,
+  `ALIFE-COMPARATIVE-AUDIT`, `VERIFICATION-ANALYTICAL-DATA`, `DESIGN-SYSTEM`, `RUNBOOK`, and the
+  `TECHNICAL-SPECIFICATION` "Passing tests" cell (a table-layout phrasing the sync regex couldn't anchor
+  even though the file IS a surface); and added the two designated current-truth
+  reports (`reports/README`, `CURRENT-TRUTH-BASELINE`) to `sync-surfaces` `SURFACES` so the drift is now
+  impossible. ADRs 0007–0009 and dated audit narratives keep their point-in-time counts (immutable records).
+- **Clifford stale-claim correction (real, honesty).** `2026-06-17-STATE-OF-THE-ART-COMBINED.md` asserted in
+  ~7 places that the Clifford tableau was "present, tested, NOT wired / currently inert." Confirmed stale
+  against code: it is a **live 16-qubit reflex** in `think()` (`super-mind.ts:741` construct, `:1091–1094`
+  h/cnot each beat, `:908` entanglement read, snapshot-exposed) since V101. Corrected all references to the
+  wired 16-qubit status + reframed recommendation #5 from "wire it" to "scale past 16q"; refreshed the stale
+  `1,477`-test scorecard note to the `1,984` floor.
+- **25-point scrutiny scorecard (new living report).** `docs/reports/2026-07-01-25-POINT-SCRUTINY-SCORECARD.md`
+  - regenerable SVG `assets/scrutiny-25-scorecard.svg`: 25 adversarial points across engineering /
+    architecture / Tsotchke / consciousness / A-Life, overall **8.1/10**. Weakest axes: **coupling/binding
+    (5.5)** and **peer validation (4.0)** — both already named by the project; recommends promoting
+    `meanAbsCoupling` to a first-class gate metric and shipping a third-party-reproducible artifact.
+
+**Refuted (no slop — did NOT act):** the Tsotchke wiring auditor's two "computed-but-dropped" findings
+(PIMC `pimc-paths.ts`, logo-lab `logo-turtle.ts`) are **false positives** — both are consumed
+(`pathWeight` at `super-mind.ts:1437` + `petri-dish.ts:219`; `logoMorphScalar` at `brutal-god-releases.ts:108`
+
+- `petri-dish.ts:226`). Tsotchke is therefore **15 deep-wired · 0 dropped · 2 harvest · 3 fenced**, which
+  upholds the doc's "~16 wired" headline. Code-health auditor found **0 critical defects** (determinism clean,
+  `O(n·k)` scaling, guarded numerics, GPU dispose complete); only low-priority backlog (per-beat allocations,
+  comment-theater). Butlin `8/14 + 6/14`, `~30/100` faculties deep-wired, and the substrate breadth all hold.
+
 ## 2026-07-01 — Continued audit: CRITICAL sandbox secret-leak closed + GPU leak + convergence
 
 Extended the multi-round audit (rounds 4–5 + a focused server-security pass). Fixes landed:

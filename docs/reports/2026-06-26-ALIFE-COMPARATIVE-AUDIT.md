@@ -24,7 +24,7 @@ well-known Artificial-Life / open-ended-evolution / digital-organism systems.
 > [Sensitivity](#sensitivity-how-much-the-conclusion-moves-under-honest-re-scoring) sections quantify
 > exactly how much. Read every claim against
 > [`2026-06-26-CURRENT-TRUTH-BASELINE.md`](./2026-06-26-CURRENT-TRUTH-BASELINE.md); the baseline wins on
-> any conflict. Current receipts: `1771` tests, `0` failures, `94.77%` line / `91.97%` function coverage,
+> any conflict. Current receipts: `1,984` tests (published floor; `2104` measured), `0` failures, `92.13%` line / `89.66%` function coverage,
 > sync clean, build clean.
 
 ---
@@ -164,7 +164,7 @@ morphogenesis/self-organization, adaptation, emergent collective dynamics.
 | Morphogenesis          | `reaction-diffusion.ts` live PDE, morphotypes; `super-body.ts` is cosmetic shader displacement          | Real RD substrate; body morphology is rendering only                      |
 | Cognition              | `super-creature.ts` active-inference/GOAP loop, reservoir, empowerment, metacognition                   | Strong as functional models                                               |
 | Open-endedness         | one real GA (`emergence-angles.ts`); `super-evolution.ts` is a handcrafted arc                          | **Weak — below field mean code-grounded**                                 |
-| Scientific measurement | seeded RNG, 1771 tests, coverage, benchmarks, receipts, analytics regression                            | Strong                                                                    |
+| Scientific measurement | seeded RNG, 1,984 tests (floor), coverage, benchmarks, receipts, analytics regression                   | Strong                                                                    |
 
 Deductively: **this is a real A-Life testbed** — and a cognitive-theory sandbox — but **not** a conscious or
 sentient entity. The repo's own honesty audit grades the Butlin-style status at **`8/14 met + 6/14 partial`**;
@@ -176,8 +176,8 @@ those are **computational indicators, not subjective experience.** The hard prob
 
 | Check               | Live result (2026-06-26, Bun 1.3.14, cold shell)                                                                 |
 | ------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| `bun test`          | **`1771 pass`, `0 fail`, `2,047,523 expect() calls`, `175` files**                                               |
-| Coverage receipt    | **`94.77%` line, `91.97%` function** (canonical, `±6 pp` gate-enforced)                                          |
+| `bun test`          | **`2104 pass`, `0 fail`, `2,912,102 expect() calls`, `231` files** (published floor `1,984`)                     |
+| Coverage receipt    | **`92.13%` line, `89.66%` function** (canonical, `±6 pp` gate-enforced)                                          |
 | `bun run check`     | full gate green: format, typecheck, lint, tests, receipts, sync, build                                           |
 | `SuperMind.think()` | `3.34 ms` full-suite / `8.85 ms` focused — **not** any sub-millisecond / `<2%`-frame claim (those are stale)     |
 | `5× think()` batch  | `14.47 ms` / `25.40 ms` focused                                                                                  |
@@ -442,7 +442,7 @@ cannot be fully excluded — confidence is moderate-high, not absolute.
 
 1. **"This is Artificial Life."** Valid — synthetic ecology with populations, heredity, mutation, selection,
    morphogenesis, emergent telemetry, all code-grounded.
-2. **"This is not just an A-Life toy."** Mostly valid — strict TypeScript, deterministic seeded RNG, 1771 tests,
+2. **"This is not just an A-Life toy."** Mostly valid — strict TypeScript, deterministic seeded RNG, 1,984 tests (floor),
    coverage, benchmark harness, module contracts, adversarial honesty docs.
 3. **"This is world-first Artificial Life."** **False** — Conway's Life, Boids, Core War, Tierra, Avida, Polyworld,
    Framsticks, Sims, Creatures, Sugarscape predate it by decades.
@@ -455,9 +455,11 @@ cannot be fully excluded — confidence is moderate-high, not absolute.
 
 ## Inductive claims
 
-- **From code:** `195` src TS files / `56,418` LOC / `175` test files / `1771` passing tests → many mechanisms are
-  genuinely implemented, not only described. **But** the code-grounding pass found several real-but-unwired modules
-  (`schrodinger`, `causal-graph`, `predictive-coding`) — presence ≠ wiring.
+- **From code:** `250` src TS files / `83,179` LOC / `231` test files / `1,984`-test floor (`2104` measured) → many mechanisms are
+  genuinely implemented, not only described. **But** presence ≠ wiring: the code-grounding pass has repeatedly found
+  real-but-unwired or computed-but-dropped modules (historically `schrodinger`, `causal-graph`, `predictive-coding`;
+  several since wired — `morphic-field`, `nqs-vmc`, `curvature-aware-qng`, the memory orchestra), so the wired count is
+  re-measured, not assumed.
 - **From performance:** low-level kernels are healthy; the multi-mind cognition stack needs fresh frame-budget work.
 - **From comparison:** classic systems specialize (Life/Lenia = cellular emergence; Tierra/Avida = digital organisms;
   Polyworld/Creatures = embodied neural ecology; Sims/Framsticks/EvoGym = morphology/control; Sugarscape/Echo/Swarm =
@@ -600,7 +602,7 @@ bun scripts/alife-codeground-sensitivity.ts
 #   all three read docs/reports/2026-06-26-alife-comparison-matrix.csv (deterministic; identical CSV -> identical bytes)
 
 # Re-confirm the live gate receipts:
-bun test --coverage        # -> 1771 pass / 0 fail ; 94.77% line / 91.97% func
+bun test --coverage        # -> 2104 pass / 0 fail ; 92.13% line / 89.66% func (floor 1,984)
 bun run check              # full gate
 ```
 
