@@ -152,6 +152,18 @@ export class ApexExteriorAbomination {
   private readonly _sQ = new THREE.Quaternion();
   private readonly _sS = new THREE.Vector3();
   private readonly _sE = new THREE.Euler();
+  // PORTAL EVERY-ANGLE (USER "I love the portal mind image fuckery — make it that way from every angle
+  // viewed"): the flat portal planes (frame / god-rays / void squares) only Z-spin, so they collapse to
+  // an invisible edge when the camera is side-on. faceCamera() billboards each to the viewer EVERY render
+  // so the fuckery reads from ANY angle, keeping its animated spin as a roll about the facing axis. Scratch
+  // quats + per-element live roll angles (set in update(), consumed in the onBeforeRender billboard):
+  private readonly _bbCam = new THREE.Quaternion();
+  private readonly _bbPar = new THREE.Quaternion();
+  private readonly _bbRoll = new THREE.Quaternion();
+  private readonly _bbAxis = new THREE.Vector3(0, 0, 1);
+  private pfRoll = 0;
+  private grRoll = 0;
+  private readonly vsRoll: number[] = [];
   private readonly matWire = new THREE.LineBasicMaterial({
     color: 0xaaccff,
     transparent: true,
@@ -217,7 +229,10 @@ export class ApexExteriorAbomination {
           depthWrite: false,
         }),
       );
-      sq.rotation.set(z * 0.4, z * 0.55, z * 0.3);
+      // Billboarded to the camera each render (see faceCamera) — a nested camera-facing portal iris
+      // that reads from every angle; its animated roll rides in vsRoll[z].
+      sq.onBeforeRender = (_r, _s, cam): void => this.faceCamera(sq, cam, this.vsRoll[z] ?? 0);
+      this.vsRoll[z] = 0;
       this.voidSquares.push(sq);
       this.group.add(sq);
     }
@@ -287,6 +302,8 @@ export class ApexExteriorAbomination {
         depthWrite: false,
       }),
     );
+    this.portalFrame.onBeforeRender = (_r, _s, cam): void =>
+      this.faceCamera(this.portalFrame, cam, this.pfRoll);
     this.group.add(this.portalFrame);
     const spN = 64;
     const spArr = new Float32Array(spN * 3);
@@ -334,6 +351,8 @@ export class ApexExteriorAbomination {
         depthWrite: false,
       }),
     );
+    this.godRays.onBeforeRender = (_r, _s, cam): void =>
+      this.faceCamera(this.godRays, cam, this.grRoll);
     this.group.add(this.godRays);
     const swarmN = 20;
     this.swarmBaseZ = new Float32Array(swarmN);
@@ -419,6 +438,23 @@ export class ApexExteriorAbomination {
     this.group.add(this.zigguratStack);
   }
 
+  /**
+   * PORTAL EVERY-ANGLE billboard (USER): orient `obj` so its flat face squarely meets `camera` from ANY
+   * viewing angle — the portal "mind-fuckery" never collapses to an invisible edge — while keeping its
+   * animated spin as a `roll` about the facing (+Z) axis. Runs inside onBeforeRender with a FORCED
+   * world-matrix refresh so the new orientation renders THIS frame (scene matrices were already baked
+   * before onBeforeRender fired). The parent's world rotation is divided out, so it tracks correctly under
+   * the moving/spinning apex group. Zero-alloc (reuses scratch quats). O(1) per element per frame.
+   */
+  private faceCamera(obj: THREE.Object3D, camera: THREE.Camera, roll: number): void {
+    camera.getWorldQuaternion(this._bbCam);
+    if (obj.parent) obj.parent.getWorldQuaternion(this._bbPar).invert();
+    else this._bbPar.identity();
+    this._bbRoll.setFromAxisAngle(this._bbAxis, roll);
+    obj.quaternion.copy(this._bbPar).multiply(this._bbCam).multiply(this._bbRoll);
+    obj.updateMatrixWorld(true);
+  }
+
   update(t: number, transcendence: number, vitality: number, pulse: TsotchkeQuantumPulse): void {
     const st = t * CREATURE_EXTERIOR_TIME_SCALE;
     const hue = tsotchkeExteriorHue(pulse, 0.55 + transcendence * 0.2);
@@ -463,7 +499,8 @@ export class ApexExteriorAbomination {
     this.matMandala.opacity = 0.12 + 0.22 * transcendence;
     for (let i = 0; i < this.voidSquares.length; i++) {
       const sq = this.voidSquares[i]!;
-      sq.rotation.z = st * (0.03 + i * 0.008) + Math.sin(st * 0.2 + i) * 0.12;
+      // Billboarded to camera (faceCamera in onBeforeRender) — feed the spin as its roll, not rotation.z.
+      this.vsRoll[i] = st * (0.03 + i * 0.008) + Math.sin(st * 0.2 + i) * 0.12;
       sq.scale.setScalar(1 + 0.06 * Math.sin(st * 0.35 + i) + vitality * 0.08);
       // USER: colour-cycle (was static white) — dynamic, less white glare.
       (sq.material as THREE.LineBasicMaterial).color.setHSL(
@@ -481,12 +518,12 @@ export class ApexExteriorAbomination {
     (this.nebula.material as THREE.PointsMaterial).color.setHSL(hue + 0.08, 0.9, 0.55);
     this.filaments.rotation.z = st * 0.04;
     this.matFil.opacity = 0.1 + 0.2 * transcendence;
-    this.portalFrame.rotation.z = st * 0.025;
+    this.pfRoll = st * 0.025; // billboarded → feed the spin as roll (see faceCamera)
     (this.portalFrame.material as THREE.LineBasicMaterial).opacity = 0.1 + 0.18 * vitality;
     this.vortexSpiral.rotation.y = st * 0.06;
     this.vortexSpiral.scale.setScalar(1 + 0.08 * Math.sin(st * 0.35) + transcendence * 0.1);
     (this.vortexSpiral.material as THREE.LineBasicMaterial).opacity = 0.12 + 0.2 * transcendence;
-    this.godRays.rotation.z = st * 0.018;
+    this.grRoll = st * 0.018; // billboarded → feed the spin as roll (see faceCamera)
     // USER: colour-cycle the rays (was white) + keep the dimmed baseline — coloured, not blinding.
     (this.godRays.material as THREE.LineBasicMaterial).color.setHSL((hue + 0.5) % 1, 0.7, 0.48);
     (this.godRays.material as THREE.LineBasicMaterial).opacity =
