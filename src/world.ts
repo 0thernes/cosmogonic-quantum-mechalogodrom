@@ -1423,6 +1423,7 @@ export class World {
       (x, z, pressure, gdt) => this.alienFlora.grazeAt(x, z, pressure, gdt),
       t,
       dt,
+      (e, i) => this.gedankenOnDeath(e, i, t), // devoured mind measured too — every death vector now
     );
     // V47: the wingman swarm orbits + assists the prime each frame; one InstancedMesh draws all 100.
     this.superBody.worldPosition(this.sv1);

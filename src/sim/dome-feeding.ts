@@ -19,7 +19,7 @@
 import * as THREE from 'three';
 import { ARENA_MID } from './constants';
 import type { EntityManager } from './entities';
-import type { SimContext } from '../types';
+import type { Entity, SimContext } from '../types';
 
 /** A roaming body that grazes plants + eats organisms near it (titans / leviathans / puppeteers). */
 export interface DomeFeeder {
@@ -120,6 +120,8 @@ export class DomeFeeding {
    * Per-frame: (1) collect every feeder's position + GRAZE the flora under it; (2) eat any organism within
    * EAT_R of any feeder (ONE backwards scan); (3) fire due respawns ELSEWHERE; (4) fade the feed-puffs.
    * `graze` is flora.grazeAt (world XZ → nibble). Frozen dt=0 ⇒ no feeding (puffs hold). O(feeders·n + POOL).
+   * `onKill(e,i)` fires while the devoured organism's brain + senses are STILL LIVE (before disposal) — the
+   * world runs Thaler's gedanken neural-death on it, same as the portal / super-hunt / mecha-blaze vectors.
    */
   update(
     feeders: readonly DomeFeeder[],
@@ -127,6 +129,7 @@ export class DomeFeeding {
     graze: (x: number, z: number, pressure: number, dt: number) => void,
     t: number,
     dt: number,
+    onKill?: (e: Entity, index: number) => void,
   ): void {
     if (dt > 0) {
       // (1) collect feeder positions + graze the flora at each footprint.
@@ -158,6 +161,7 @@ export class DomeFeeding {
             if (dx * dx + dy * dy + dz * dz <= EAT_R2) {
               this.puff(p.x, p.y, p.z);
               const mi = e.userData.mi ?? 0;
+              onKill?.(e, i); // measure the devoured mind BEFORE disposal (weights + senses still live)
               entities.disposeAt(i); // O(1); backwards scan ⇒ index shift is safe
               this.respawns.push({ at: t + RESPAWN_DELAY, mi });
               this.eaten++;

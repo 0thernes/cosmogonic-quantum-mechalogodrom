@@ -98,6 +98,25 @@ describe('DomeFeeding', () => {
     feeding.dispose();
   });
 
+  test('onKill fires once per devoured organism, BEFORE disposal (mind still live)', () => {
+    const ctx = makeCtx(9, 50);
+    const entities = new EntityManager(ctx);
+    const feeding = new DomeFeeding(ctx);
+    const feeder = mockFeeder([0, 10, 0]);
+    const eaten = entities.spawn(new THREE.Vector3(0, 10, 0), 0) as Entity; // at the feeder → eaten
+    entities.spawn(new THREE.Vector3(300, 3, 300), 1); // far away → survives
+    const seen: { e: Entity; stillLive: boolean }[] = [];
+    feeding.update([feeder], entities, noGraze, 1, DT, (e) => {
+      // at callback time the organism must NOT yet be disposed (its brain + senses are still readable)
+      seen.push({ e, stillLive: entities.list.includes(e) });
+    });
+    expect(seen.length).toBe(1); // exactly one death measured
+    expect(seen[0]?.e).toBe(eaten);
+    expect(seen[0]?.stillLive).toBe(true); // fired BEFORE disposeAt
+    expect(feeding.eaten).toBe(1);
+    feeding.dispose();
+  });
+
   test('the flora is grazed at every feeder footprint', () => {
     const ctx = makeCtx(2, 50);
     const entities = new EntityManager(ctx);
