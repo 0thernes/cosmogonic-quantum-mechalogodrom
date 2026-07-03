@@ -14,13 +14,15 @@ import type { AuditTrail } from './logging/audit';
 import type { Behavior, RenderMode, ViewMode, Weather } from './sim/constants';
 import type { MarketSummary } from './sim/economy';
 
-/** Quality tier ladder (CONTRACTS V3.1): decided once at boot, never switched. `mega` is opt-in only
- * (`?tier=mega`) — the 50k ceiling for beefy GPUs, never auto-selected (V38). */
-export type QualityTier = 'phone' | 'laptop' | 'desktop' | 'ultra' | 'mega';
+/** Quality tier ladder (CONTRACTS V3.1 → V123, USER #6): decided once at boot, never switched.
+ * Six rungs — phone 1,000 · tablet 2,000 · laptop 5,000 · desktop 10,000 · ultra 25,000 ·
+ * mega 50,000. EVERYONE boots `phone` for a fast first load; the perf chip's tier switcher
+ * (`?tier=`) is the one-tap way up. */
+export type QualityTier = 'phone' | 'tablet' | 'laptop' | 'desktop' | 'ultra' | 'mega';
 
 /** Device-adaptive quality profile, resolved once at boot. */
 export interface QualityProfile {
-  /** Resolved tier (phone 650 / laptop 2000 / desktop 5000 / ultra 10000 entities). */
+  /** Resolved tier (phone 1k / tablet 2k / laptop 5k / desktop 10k / ultra 25k / mega 50k). */
   tier: QualityTier;
   isMobile: boolean;
   dprCap: number;

@@ -11,7 +11,9 @@
  */
 import { Level } from '../core/frame-governor';
 
-const TIERS = ['phone', 'laptop', 'desktop', 'ultra', 'mega'] as const;
+// V123 (USER #6): the six-rung ladder — everyone BOOTS phone (fast first load); this switcher is
+// the one-tap way UP (sets ?tier= and reloads).
+const TIERS = ['phone', 'tablet', 'laptop', 'desktop', 'ultra', 'mega'] as const;
 
 /** Governor level → short human label. Pure. */
 export function qualityLabel(level: Level): string {

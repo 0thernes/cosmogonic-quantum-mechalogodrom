@@ -29,18 +29,20 @@ import type { QualityProfile, QualityTier } from '../types';
 export const QUALITY_LADDER: Readonly<
   Record<QualityTier, Omit<QualityProfile, 'tier' | 'isMobile'>>
 > = {
+  // V123 (USER #6): the six-rung ladder — phone 1k · tablet 2k · laptop 5k · desktop 10k ·
+  // ultra 25k · mega 50k. Everyone BOOTS phone (fast first paint); the perf chip climbs.
   phone: {
     dprCap: 1.25,
-    maxEntities: 650,
-    targetEntities: 650,
+    maxEntities: 1000,
+    targetEntities: 1000,
     quantumCount: 3500,
     maxLinks: 2200,
     shadows: false,
     starCount: 2000,
     instanced: false,
   },
-  laptop: {
-    dprCap: 2,
+  tablet: {
+    dprCap: 1.75,
     maxEntities: 2000,
     targetEntities: 2000,
     quantumCount: 4500,
@@ -49,7 +51,7 @@ export const QUALITY_LADDER: Readonly<
     starCount: 3000,
     instanced: true,
   },
-  desktop: {
+  laptop: {
     dprCap: 2,
     maxEntities: 5000,
     targetEntities: 5000,
@@ -59,14 +61,12 @@ export const QUALITY_LADDER: Readonly<
     starCount: 4500,
     instanced: true,
   },
-  ultra: {
+  desktop: {
     dprCap: 2,
     maxEntities: 10000,
-    // The ultra tier fills its 10,000 ceiling — an ultra classification requires ≥16 cores,
-    // which implies a GPU that can carry it (the perf optimizations keep sim-CPU ≈ 18 ms at
-    // 10k; a discrete GPU absorbs the draw). `targetEntities === maxEntities` on every tier,
-    // so organic growth deterministically settles at the ceiling (same seed + same device →
-    // same cosmos). Per-frame neighbor-query throttles (docs/BENCHMARKS-2026-06-26.md) keep it smooth.
+    // `targetEntities === maxEntities` on every tier, so organic growth deterministically settles
+    // at the ceiling (same seed + same device → same cosmos). Per-frame neighbor-query throttles
+    // (docs/BENCHMARKS-2026-06-26.md) keep sim-CPU smooth at 10k.
     targetEntities: 10000,
     quantumCount: 8000,
     maxLinks: 6000,
@@ -74,13 +74,21 @@ export const QUALITY_LADDER: Readonly<
     starCount: 6000,
     instanced: true,
   },
+  ultra: {
+    // V123: the 25,000 rung between desktop and the full mega world (USER #6 ladder).
+    dprCap: 2,
+    maxEntities: 25000,
+    targetEntities: 25000,
+    quantumCount: 9000,
+    maxLinks: 7000,
+    shadows: true,
+    starCount: 7000,
+    instanced: true,
+  },
   mega: {
-    // V38 ceiling, V40 DEFAULT, V44 dropped to 25k, **V55 RESTORED to 50,000** — the earlier "50k
-    // crashes my machine" was actually the WebGL CONTEXT LEAK (the renderer failed at `new
-    // WebGLRenderer`, before a single creature spawned), fixed in V49/V50. The user's setup is beefy and
-    // wants the huge world, so the ceiling is the full 50,000 again. `resolveTier` AUTO-returns mega for
-    // capable machines (≥16 cores + ≥8 GB); `?tier=mega` forces it anywhere. The EntityManager's √N
-    // density scale (entities.ts) keeps neighbour-query cost bounded; `bun bench/scale.ts` profiles it.
+    // V38 ceiling, V44 dropped to 25k, **V55 RESTORED to 50,000** — the earlier "50k crashes my
+    // machine" was actually the WebGL CONTEXT LEAK (fixed V49/V50). `?tier=mega` selects it; the
+    // EntityManager's √N density scale (entities.ts) keeps neighbour-query cost bounded.
     dprCap: 2,
     maxEntities: 50000,
     targetEntities: 50000,
@@ -97,13 +105,15 @@ export const QUALITY_LADDER: Readonly<
  * testable without a DOM. `memGB` defaults to 8 when the platform hides it. O(1).
  */
 export function resolveTier(isMobile: boolean, cores: number, memGB: number): QualityTier {
+  // V123 (USER #6): this maps what the machine COULD run — the CAPABILITY rung. Boot no longer
+  // uses it for the default (everyone boots `phone` for a fast first load; see detectQuality);
+  // it stays the honest hardware ladder for `?tier=` guidance and tests.
   if (isMobile) return 'phone';
-  // V40 — the directive's 50,000-entity ceiling is now the DEFAULT for capable machines (no opt-in):
-  // a high-end box (≥16 cores AND ≥8 GB, which implies a GPU that can carry it) auto-fills `mega`.
-  // Weaker/mobile devices still get a battery-honest rung, and `?tier=` overrides both ways at boot.
   if (cores >= 16 && memGB >= 8) return 'mega';
+  if (cores >= 16) return 'ultra';
   if (cores >= 10) return 'desktop';
-  return 'laptop';
+  if (cores >= 8) return 'laptop';
+  return 'tablet';
 }
 
 /**
@@ -122,6 +132,7 @@ export function detectQuality(): QualityProfile {
   const forced = new URLSearchParams(window.location.search).get('tier');
   if (
     forced === 'phone' ||
+    forced === 'tablet' ||
     forced === 'laptop' ||
     forced === 'desktop' ||
     forced === 'ultra' ||
@@ -132,8 +143,8 @@ export function detectQuality(): QualityProfile {
   const isTouch = window.matchMedia('(hover:none),(pointer:coarse)').matches;
   const isSmall = window.innerWidth < 600 || window.innerHeight < 600;
   const isMobile = isTouch || isSmall;
-  const cores = navigator.hardwareConcurrency || 4;
-  const memGB = (navigator as Navigator & { deviceMemory?: number }).deviceMemory ?? 8;
-  const tier = resolveTier(isMobile, cores, memGB);
-  return { tier, isMobile, ...QUALITY_LADDER[tier] };
+  // V123 (USER #6): EVERYONE boots the phone rung — the world paints in a couple of seconds
+  // instead of a 5+ second 10k build, and the perf chip's tier switcher is one tap away for the
+  // full ladder. `?tier=` (above) remains the direct door to any rung.
+  return { tier: 'phone', isMobile, ...QUALITY_LADDER.phone };
 }
