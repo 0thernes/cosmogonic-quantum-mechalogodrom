@@ -1,80 +1,70 @@
 /**
- * GOD-COLOSSUS / THE MONOLITH MEGALITH (V110 → rebuilt V124) — the ONE colossal super-god-tier
+ * GOD-COLOSSUS / THE MONOLITH MEGALITH (V110 → re-architected V125) — the ONE colossal super-god-tier
  * TOWER that dominates the skyline. This is the tall skyscraper, distinct from the LV100 ascension
  * temple ({@link MonolithTemple}) and the drifting {@link FloatingMonoliths}.
  *
- * ─── ENGINEERING / ARCHITECTURE (rebuild, geometry-first, MONOCHROME) ───────────────────────────
- * Cut from the same six reference images as the temple (see docs/MONOLITH-MEGALITH-ART-DIRECTION.md).
- * The images are a GEOMETRY, not a colour scheme, and they are black / white / silver. So the tower
- * is rebuilt from their structural vocabulary — **CUBE + SPHERE + wireframe voxel LATTICE + a white
- * GENESIS core firing straight radial god-rays + a woven GEODESIC crown** — in strict grayscale (the
- * old build was a magenta/saffron/dancheong/cyan carnival; every hue is now gone):
+ * ─── ENGINEERING / ARCHITECTURE — a CHAOTIC BRUTALIST ACCRETION, not a tiered cone ───────────────
+ * The prior build was a smoothly tapering tier‑stack with a star crown + an ornament ring of identical
+ * wireframe spheres + a radial line‑burst — it read as a grey Christmas tree. GONE. Cut from reference
+ * image 4 (a dense chaotic tower of interpenetrating black cubes + varied gridded spheres, receding
+ * into fog) and image 2 (a cube‑lattice with a bright genesis core), the tower is now a **deterministic
+ * 3D ACCRETION** with NO taper function, NO tiers, NO crown, NO rays:
  *
- *   • TIER STACK    — 16 tapering stacked CUBES: the skyscraper silhouette (img 4 megastructure).
- *   • GREEBLE       — ~2400 instanced cube panels encrusting the tier faces (pool 1).
- *   • QUASICRYSTAL  — an aperiodic HOLLOW cube-shell from a real icosahedral cut-and-project (pool 2);
- *     bright "window" cubes vs dark carve blocks are chosen by the site's PERP (phason) acceptance —
- *     the crystallographic coordinate as form. No repeating unit cell, ever (imgs 1/2/4 recursion).
- *   • SPHERES       — instanced tessellated wireframe SPHERES embedded around the tower (pool 3, img4).
- *   • VOXEL LATTICE — a wireframe cubic grid enclosing the tower — the cubic spacetime (img 2).
- *   • GENESIS CORE  — a white incandescent cube at the tower's heart + straight radial GOD-RAY lines
- *     (img 2 central light + god-rays), blooming with world chaos.
- *   • GEODESIC CROWN— a spiky crystalline crown wrapped in a woven great-circle sphere cage (img 3,
- *     cube-in-sphere) + a needle spire; star-dust points through the volume (img 2).
- *   • ENERGY SHELL  — an fbm-veined additive shell, monochrome, breathing with chaos/entropy.
+ *   • CUBE ACCRETION — thousands of cubes placed by a DENSITY FIELD (dense vertical core, thinning with
+ *     radius + height), with a power‑law size spread (mostly small, a few colossal cantilevered blocks),
+ *     a slow twist up the shaft, and slab / column / cube proportions → a jagged, irregular, brutalist
+ *     silhouette that never smoothly tapers (pool 1, matte stone).
+ *   • QUASICRYSTAL — the real icosahedral cut‑and‑project point set mapped INTO the mass as GLOSSY metal
+ *     cubes (aperiodic bristle throughout, not a smooth shell); acceptance depth (PERP) drives size +
+ *     brightness (pool 2). No repeating unit cell, ever.
+ *   • SPHERES — solid GLOSSY dark spheres of widely varied sizes nestled AMONG the cubes (image 4's
+ *     black disco balls), catching specular highlights — embedded, not a tidy orbiting ring (pool 3).
+ *   • GENESIS CORE — a bright white cube + a soft additive glow SPHERE at the tower's heart (image 2's
+ *     central light) that blooms with world chaos. NO thin radial ray‑lines.
+ *   • VOXEL LATTICE — a faint wireframe cubic grid loosely enclosing the mass (image 2), kept subtle.
+ *   • STAR‑DUST + ENERGY SHELL — sparse points + an fbm shell, both monochrome.
  *
- * LIVING (defensible, not decoration): the emissive brightness + god-ray + lamp blaze are a monotone
- * readout of world chaos + entropy — pin both to 0 and the tower cools to dead grey stone; agitate
- * them and it blazes. A tanh "schizophrenic" flip alternates the tower between "ten thousand lit
- * windows" and "dark megalith with burning bones" (grayscale, no hue).
+ * MONOCHROME with FULL TONAL RANGE (black → silver → white): per‑instance brightness spans the whole
+ * 0..1 range and the pools mix matte vs glossy‑metal so the tower reads as image 4's rich silver/black,
+ * not "two greys". Zero hue.
  *
- * DETERMINISM (ADR 0004): every position + per-artifact param comes from a pure positional hash /
- * the deterministic cut-and-project — ZERO rng draws, no Date.now. It READS world chaos/entropy but
- * never writes sim state, so the population golden replay stays byte-identical.
+ * LIVING (defensible): the emissive brightness + genesis blaze are a monotone readout of world chaos +
+ * entropy — pin both to 0 and the tower cools to dead grey stone; agitate them and it blazes. A tanh
+ * flip counter‑phases the glossy quasicrystal cubes (the tower breathes light through its bones).
+ *
+ * DETERMINISM (ADR 0004): every position + per‑artifact param comes from a pure positional hash / the
+ * deterministic cut‑and‑project — ZERO rng, no Date.now. Reads world chaos/entropy, writes no sim state.
  */
 import * as THREE from 'three';
 import { ARENA_RADIUS } from './constants';
 
-/** Tapering stacked tiers forming the colossal spire. */
-const TIERS = 16;
-/** Instanced greeble cube panels encrusting the tier faces (telemetry-checked). */
-const PANELS = 2400;
-/** Instanced tessellated wireframe spheres embedded around the tower (img 4). */
-const SPHERES = 260;
-/** V122/V124: quasicrystal carve artifacts (hollow-shell cubes + bright window cubes). */
+/** Cubes in the main accretion body (pool 1) — the tower mass. panelCount = this. */
+const PANELS = 5200;
+/** Solid glossy spheres embedded in the mass (pool 3, img 4). */
+const SPHERES = 240;
+/** Quasicrystal aperiodic cubes cap (pool 2). */
 const QC_CARVE = 9600;
 /** 6D lattice search range (±) for the cut-and-project — 9^6 combos scanned once at boot. */
 const QC_RANGE = 4;
 /** Par-space ball radius kept (pre-normalisation) — bounds the projected point cloud. */
 const QC_PAR_BALL = 6.5;
-/** Straight radial god-ray line count from the genesis core (img 2). */
-const RAY_LINES = 260;
-/** Great-circle count for the woven geodesic crown cage (img 3). */
-const CROWN_CIRCLES = 14;
-const CROWN_SEG = 40;
 /** Star-dust point count through the tower volume (img 2). */
-const STAR_COUNT = 700;
+const STAR_COUNT = 520;
 
 /** Golden ratio — the icosahedral quasicrystal's one true constant. */
 const PHI = (1 + Math.sqrt(5)) / 2;
-/** Golden angle — Fibonacci spacing for spheres, rays, star-dust. */
-const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5));
+const TAU = Math.PI * 2;
 
 /**
- * V122 (USER #11): ICOSAHEDRAL CUT-AND-PROJECT — the aperiodic bones of the tower.
- *
- * A 6D integer lattice Z⁶ is projected through the icosahedral basis into two 3-spaces: PAR
- * (physical) and PERP (the phason / acceptance space). Sites whose PERP image sits nearest the
- * origin are the true quasicrystal — a point set with perfect icosahedral long-range order and NO
- * repeating unit cell (aperiodic forever). The PERP norm is returned with each site so the caller can
- * rank by acceptance (small = deep-lattice block, large = phason-excited lamp). Deterministic, zero
- * rng. O(QC_RANGE⁶) once at boot.
+ * ICOSAHEDRAL CUT-AND-PROJECT — the aperiodic bones of the tower. A 6D integer lattice Z⁶ projected
+ * through the icosahedral basis into PAR (physical) + PERP (phason / acceptance) 3-spaces. Sites are
+ * returned with their PERP norm so the caller can rank by acceptance (small = deep-lattice block).
+ * Perfect icosahedral long-range order, NO repeating unit cell. Deterministic, zero rng.
  */
 export function icosaCutProject(): { x: number; y: number; z: number; perp: number }[] {
   const c = 1 / Math.sqrt(1 + PHI * PHI);
   const ip = 1 / PHI;
   const cp = 1 / Math.sqrt(1 + ip * ip);
-  // The 6 icosahedron vertex directions (par) and their φ→−1/φ conjugates (perp).
   const par: number[][] = [
     [1, PHI, 0],
     [-1, PHI, 0],
@@ -133,46 +123,34 @@ function hash(n: number): number {
   return s - Math.floor(s);
 }
 
-interface Tier {
-  readonly y: number;
-  readonly halfW: number;
-  readonly halfH: number;
-}
-
 export class GodColossus {
   private readonly scene: THREE.Scene;
   private readonly root = new THREE.Group();
   private readonly unitBox = new THREE.BoxGeometry(1, 1, 1);
   private readonly geos: THREE.BufferGeometry[] = [];
   private readonly mats: THREE.Material[] = [];
-  private readonly coreMat: THREE.MeshStandardMaterial;
   private readonly panelMat: THREE.MeshStandardMaterial;
-  private readonly crownMat: THREE.MeshStandardMaterial;
-  private readonly latticeMat: THREE.LineBasicMaterial;
-  private readonly rayMat: THREE.LineBasicMaterial;
-  private readonly crownCageMat: THREE.LineBasicMaterial;
-  private readonly starMat: THREE.PointsMaterial;
-  private readonly sphereMat: THREE.MeshBasicMaterial;
-  private readonly genesisMat: THREE.MeshBasicMaterial;
-  private readonly shellMat: THREE.ShaderMaterial;
   private readonly carveMat: THREE.MeshStandardMaterial;
-  /** Exactly THREE instanced pools (the test asserts this): greeble cubes · quasicrystal shell · spheres. */
+  private readonly sphereMat: THREE.MeshStandardMaterial;
+  private readonly latticeMat: THREE.LineBasicMaterial;
+  private readonly starMat: THREE.PointsMaterial;
+  private readonly genesisMat: THREE.MeshBasicMaterial;
+  private readonly glowMat: THREE.MeshBasicMaterial;
+  private readonly shellMat: THREE.ShaderMaterial;
+  /** Exactly THREE instanced pools (the test asserts this): accretion cubes · quasicrystal · spheres. */
   private readonly panels: THREE.InstancedMesh;
   private carve!: THREE.InstancedMesh;
   private readonly spheres: THREE.InstancedMesh;
-  private readonly crown: THREE.Mesh;
-  private readonly spire: THREE.Mesh;
   private readonly genesis: THREE.Mesh;
-  private readonly rays: THREE.LineSegments;
-  private readonly crownCage: THREE.LineSegments;
+  private readonly glow: THREE.Mesh;
   private readonly shell: THREE.Mesh;
   /** Base scalar the white genesis cube is sized to (update() pulses around it). */
-  private readonly genesisBase = ARENA_RADIUS * 0.035 * 1.4;
-  /** V122: quasicrystal artifacts actually placed (telemetry/tests). */
+  private readonly genesisBase: number;
+  /** Quasicrystal artifacts actually placed (telemetry/tests). */
   qcCount = 0;
-  /** Total greeble panels placed (telemetry/tests). */
+  /** Cubes in the accretion body (telemetry/tests). */
   readonly panelCount = PANELS;
-  /** Every individually-varied artifact on the monument (panels + quasicrystal + spheres). */
+  /** Every individually-varied artifact on the tower. */
   get artifactCount(): number {
     return PANELS + this.qcCount + SPHERES;
   }
@@ -181,97 +159,78 @@ export class GodColossus {
   constructor(scene: THREE.Scene) {
     this.scene = scene;
 
-    // ── Materials — strict MONOCHROME. Dark stone bodies read by a white/grey emissive the update()
-    //    pulses (no hue). ──
-    this.coreMat = new THREE.MeshStandardMaterial({
-      color: 0x08080a,
-      roughness: 0.5,
-      metalness: 0.6,
-      emissive: 0x141414,
-      emissiveIntensity: 0.6,
-    });
+    // Tower envelope — a tall, WIDE-based irregular mass (no smooth cone). All heights/radii derive
+    // from ARENA_RADIUS so the tower towers over the dome.
+    const baseHalf = ARENA_RADIUS * 0.19;
+    const bodyH = ARENA_RADIUS * 1.5;
+    this.genesisBase = baseHalf * 0.42;
+
+    // Ragged radial envelope at a normalized height (0 base → 1 top): wide at the foot, thinning up,
+    // roughened by a per-column hash so the silhouette is jagged, not a clean cone.
+    const envAt = (y01: number, salt: number): number =>
+      baseHalf * (1.05 - y01 * 0.72) * (0.45 + 0.9 * hash(salt));
+
+    // ── Materials — MONOCHROME, full tonal range, mixed matte / glossy metal (image 4 silver+black). ──
     this.panelMat = new THREE.MeshStandardMaterial({
       color: 0xffffff, // per-instance grey via instanceColor
-      roughness: 0.66,
-      metalness: 0.4,
-      emissive: 0x111111,
-      emissiveIntensity: 0.4,
+      roughness: 0.72,
+      metalness: 0.3,
+      emissive: 0x101010,
+      emissiveIntensity: 0.35,
     });
-    this.crownMat = new THREE.MeshStandardMaterial({
-      color: 0x0c0c0e,
-      roughness: 0.26,
-      metalness: 0.9,
-      emissive: 0x2a2a2a,
-      emissiveIntensity: 0.85,
+    this.carveMat = new THREE.MeshStandardMaterial({
+      color: 0xffffff, // per-instance grey — GLOSSY metal so it catches specular highlights
+      roughness: 0.16,
+      metalness: 0.92,
+      emissive: 0x0c0c0c,
+      emissiveIntensity: 0.45,
     });
-    this.mats.push(this.coreMat, this.panelMat, this.crownMat);
+    this.sphereMat = new THREE.MeshStandardMaterial({
+      color: 0xffffff, // per-instance grey — glossy black disco balls
+      roughness: 0.12,
+      metalness: 0.96,
+      emissive: 0x0a0a0a,
+      emissiveIntensity: 0.2,
+    });
+    this.mats.push(this.panelMat, this.carveMat, this.sphereMat);
 
-    // ── Geometry: the tapering CUBE tiers. Base wide, crown narrow; total height >> ARENA_RADIUS. ──
-    const baseHalf = ARENA_RADIUS * 0.16;
-    const topHalf = ARENA_RADIUS * 0.035;
-    const tierH = ARENA_RADIUS * 0.085;
-    const tiers: Tier[] = [];
-    let y = 0;
-    for (let i = 0; i < TIERS; i++) {
-      const f = i / (TIERS - 1);
-      const halfW = baseHalf * (1 - f) + topHalf * f;
-      const half = tierH * 0.5;
-      const cy = y + half;
-      tiers.push({ y: cy, halfW, halfH: half });
-      const tier = new THREE.Mesh(this.unitBox, this.coreMat);
-      tier.position.y = cy;
-      tier.rotation.y = (hash(i * 7 + 3) - 0.5) * 0.5 + f * 1.1;
-      tier.scale.set(
-        halfW * 2,
-        tierH * (0.9 + hash(i * 5 + 1) * 0.2),
-        halfW * 2 * (0.7 + 0.3 * hash(i * 11 + 2)),
-      );
-      tier.frustumCulled = false;
-      this.root.add(tier);
-      y += tierH;
-    }
-    const crownBaseY = y;
-    const totalH = crownBaseY + topHalf * 8;
-
-    // ── POOL 1 — greeble CUBE panels scattered over every tier's four vertical faces (grayscale). ──
-    this.panels = new THREE.InstancedMesh(this.unitBox, this.panelMat, PANELS);
-    this.panels.frustumCulled = false;
     const m = new THREE.Matrix4();
     const q = new THREE.Quaternion();
     const e = new THREE.Euler();
     const pos = new THREE.Vector3();
     const scl = new THREE.Vector3();
     const col = new THREE.Color();
+
+    // ── POOL 1 — the CUBE ACCRETION. Density-field placement → a chaotic brutalist mass. ──
+    this.panels = new THREE.InstancedMesh(this.unitBox, this.panelMat, PANELS);
+    this.panels.frustumCulled = false;
     for (let p = 0; p < PANELS; p++) {
-      const ti = Math.floor(hash(p * 1.7 + 5) * TIERS);
-      const tier = tiers[ti < TIERS ? ti : TIERS - 1]!;
-      const face = Math.floor(hash(p * 2.3 + 11) * 4);
-      const pd = 0.6 + hash(p * 5 + 7) * 3.2;
-      const a = 1.0 + hash(p * 6 + 13) * 5.0;
-      const b = 1.0 + hash(p * 9 + 17) * tier.halfH * 0.8;
-      const vo = (hash(p * 4 + 29) - 0.5) * 1.7;
-      const uo = (hash(p * 3 + 23) - 0.5) * 1.7;
-      const yy = tier.y + vo * tier.halfH;
-      if (face === 0) {
-        pos.set(tier.halfW + pd * 0.5, yy, uo * tier.halfW);
-        scl.set(pd, b, a);
-      } else if (face === 1) {
-        pos.set(-tier.halfW - pd * 0.5, yy, uo * tier.halfW);
-        scl.set(pd, b, a);
-      } else if (face === 2) {
-        pos.set(uo * tier.halfW, yy, tier.halfW + pd * 0.5);
-        scl.set(a, b, pd);
+      const y01 = Math.pow(hash(p * 1.1 + 3), 1.35); // more mass low (dense sprawling base)
+      const height = y01 * bodyH;
+      const env = envAt(y01, p * 2.3 + 9);
+      let r = env * Math.pow(hash(p * 3.7 + 5), 0.55); // core-dense
+      if (hash(p * 5 + 7) > 0.9) r *= 1.8; // occasional cantilever spur → breaks the envelope
+      const ang = hash(p * 7 + 11) * TAU + y01 * 3.2; // slow twist up the shaft
+      const jx = (hash(p * 11 + 13) - 0.5) * baseHalf * 0.18;
+      const jz = (hash(p * 13 + 17) - 0.5) * baseHalf * 0.18;
+      pos.set(Math.cos(ang) * r + jx, height, Math.sin(ang) * r + jz);
+      // Power-law size: many small, a few colossal blocks. Slab / column / cube proportions.
+      const base = baseHalf * (0.03 + Math.pow(hash(p * 17 + 19), 3.0) * 0.52);
+      const ax = base * (0.55 + hash(p * 23 + 2) * 1.3);
+      const ay = base * (0.55 + hash(p * 29 + 4) * 1.9); // taller spread → columns + slabs
+      const az = base * (0.55 + hash(p * 31 + 6) * 1.3);
+      scl.set(ax, ay, az);
+      if (hash(p * 19 + 23) > 0.8) {
+        e.set((hash(p) - 0.5) * 0.5, hash(p + 1) * TAU, (hash(p + 2) - 0.5) * 0.5); // a few tumbled
       } else {
-        pos.set(uo * tier.halfW, yy, -tier.halfW - pd * 0.5);
-        scl.set(a, b, pd);
+        e.set(0, (Math.floor(hash(p * 2 + 1) * 4) * Math.PI) / 2, 0); // most axis-aligned (90° steps)
       }
-      e.set((hash(p) - 0.5) * 0.1, (hash(p + 1) - 0.5) * 0.1, (hash(p + 2) - 0.5) * 0.1);
       q.setFromEuler(e);
       m.compose(pos, q, scl);
       this.panels.setMatrixAt(p, m);
-      // Grayscale: mostly dark stone, a rare panel a brighter silver (the god's circuitry), zero hue.
-      const accent = hash(p * 7 + 31) > 0.88;
-      const lit = accent ? 0.62 : 0.09 + hash(p * 3) * 0.12;
+      // Full grayscale range: mostly dark stone, a spread of silver, rare near-white. Zero hue.
+      const shade = hash(p * 37 + 8);
+      const lit = shade > 0.94 ? 0.85 + hash(p * 3) * 0.1 : 0.03 + Math.pow(shade, 1.4) * 0.5;
       col.setRGB(lit, lit, lit);
       this.panels.setColorAt(p, col);
     }
@@ -279,63 +238,37 @@ export class GodColossus {
     if (this.panels.instanceColor) this.panels.instanceColor.needsUpdate = true;
     this.root.add(this.panels);
 
-    // ── POOL 2 — the QUASICRYSTAL hollow CUBE-shell (aperiodic), grayscale by acceptance depth. ──
-    this.carveMat = new THREE.MeshStandardMaterial({
-      color: 0xffffff, // per-instance grey
-      roughness: 0.58,
-      metalness: 0.42,
-      emissive: 0x0e0e0e,
-      emissiveIntensity: 0.5,
-    });
-    this.mats.push(this.carveMat);
-    const sites = icosaCutProject()
-      .filter((s) => {
-        const rad01 = Math.hypot(s.x, s.z);
-        if (rad01 < 0.5 || rad01 > 1.0) return false; // HOLLOW: only the shell band survives
-        const y01 = (s.y + 1) / 2;
-        if (y01 <= 0.02 || y01 >= 0.99) return false;
-        const door = Math.cos(2 * Math.atan2(s.z, s.x)) ** 2; // four arched doorways at the feet
-        if (y01 < 0.14 && door > 0.9) return false;
-        return true;
-      })
-      .sort((a, b) => a.perp - b.perp || a.y - b.y || a.x - b.x); // acceptance-ranked, deterministic
+    // ── POOL 2 — the QUASICRYSTAL aperiodic point set mapped INTO the mass as glossy metal cubes. ──
+    const sites = icosaCutProject().sort((a, b) => a.perp - b.perp || a.y - b.y || a.x - b.x);
     const nCarve = Math.min(QC_CARVE, sites.length);
     this.carve = new THREE.InstancedMesh(this.unitBox, this.carveMat, nCarve);
     this.carve.frustumCulled = false;
     this.qcCount = nCarve;
-    const perpMax = sites.length ? sites[Math.min(sites.length, nCarve) - 1]!.perp || 1 : 1;
-    const stepHalf = (y01: number): number => {
-      const f = Math.floor(y01 * TIERS) / TIERS; // stepped staircase, not a smooth cone
-      return baseHalf * (1 - f) + topHalf * f;
-    };
+    const perpMax = sites.length ? sites[nCarve - 1]!.perp || 1 : 1;
     for (let k = 0; k < nCarve; k++) {
       const s = sites[k]!;
-      const y01 = (s.y + 1) / 2;
-      const ang = Math.atan2(s.z, s.x);
-      const rad01 = Math.hypot(s.x, s.z);
-      const half = stepHalf(y01);
-      const worldR = half * (1.3 + (rad01 - 0.5) * 1.0); // a thick carved shell OUTSIDE the tiers
-      pos.set(Math.cos(ang) * worldR, y01 * crownBaseY, Math.sin(ang) * worldR);
+      const y01 = (s.y + 1) / 2; // -1..1 → 0..1 height
+      const height = y01 * bodyH;
+      const env = envAt(y01, k * 2.3 + 41);
+      // the site's (x,z) direction, radius scaled into the tower envelope → aperiodic bristle throughout
+      const rad = Math.hypot(s.x, s.z) || 1e-3;
+      const ux = s.x / rad;
+      const uz = s.z / rad;
+      const r = env * (0.35 + rad * 0.9);
+      pos.set(ux * r, height, uz * r);
       const depth = 1 - Math.min(1, s.perp / perpMax); // 1 = deepest-lattice block
       const hk = hash(k * 3.7 + 101);
-      // Deep-acceptance sites are big carve BLOCKS; shallow phason sites are bright WINDOW cubes.
-      const isWindow = depth < 0.28 && hk > 0.55;
-      if (isWindow) {
-        const gsz = 1.0 + hk * 1.6;
-        scl.set(gsz, gsz * (0.7 + hk * 0.8), gsz);
-      } else {
-        // Three vertical regimes by height differ in PROPORTION only (no colour): tall verticals →
-        // cornice slabs → flat wafers. Form encodes the crystallographic band, monochrome.
-        const regime = y01 < 1 / 3 ? 0 : y01 < 2 / 3 ? 1 : 2;
-        if (regime === 0) scl.set(1.4 + depth * 3.4, 2.2 + depth * 6.5 + hk * 2, 1.4 + depth * 3.4);
-        else if (regime === 1) scl.set(2.6 + depth * 6.0, 1.1 + depth * 1.8, 2.0 + hk * 2.5);
-        else scl.set(1.8 + depth * 4.2, 0.7 + hk * 0.9, 1.8 + depth * 4.2);
-      }
-      e.set((hk - 0.5) * 0.16, ang + (hash(k * 5 + 7) - 0.5) * 0.2, (hash(k * 7 + 3) - 0.5) * 0.16);
+      const g = baseHalf * (0.02 + depth * 0.08 + hk * 0.02);
+      scl.set(g, g * (0.6 + hk * 1.4), g);
+      e.set(
+        (hk - 0.5) * 0.25,
+        Math.atan2(s.z, s.x) + (hash(k * 5 + 7) - 0.5) * 0.4,
+        (hash(k * 7 + 3) - 0.5) * 0.25,
+      );
       q.setFromEuler(e);
       m.compose(pos, q, scl);
-      // Grayscale: windows are near-white lamps; carve blocks are graded dark stone. Zero hue.
-      const lit = isWindow ? 0.75 + hk * 0.2 : 0.08 + depth * 0.16 + hk * 0.05;
+      // Glossy metal in full grayscale: deep-lattice cubes darker, shallow phason cubes a bright chrome.
+      const lit = 0.06 + depth * 0.14 + (depth < 0.3 && hk > 0.6 ? 0.7 : 0) + hk * 0.06;
       col.setRGB(lit, lit, lit);
       this.carve.setMatrixAt(k, m);
       this.carve.setColorAt(k, col);
@@ -344,40 +277,67 @@ export class GodColossus {
     if (this.carve.instanceColor) this.carve.instanceColor.needsUpdate = true;
     this.root.add(this.carve);
 
-    // ── POOL 3 — tessellated wireframe SPHERES embedded around the tower (img 4). ──
-    const sphereGeo = new THREE.IcosahedronGeometry(1, 2);
+    // ── POOL 3 — solid GLOSSY spheres of varied sizes nestled among the cubes (img 4 disco balls). ──
+    const sphereGeo = new THREE.IcosahedronGeometry(1, 2); // tessellated so highlights read as facets
     this.geos.push(sphereGeo);
-    this.sphereMat = new THREE.MeshBasicMaterial({
-      color: 0x9a9a9a,
-      wireframe: true,
-      transparent: true,
-      opacity: 0.5,
-      depthWrite: false,
-    });
-    this.mats.push(this.sphereMat);
     this.spheres = new THREE.InstancedMesh(sphereGeo, this.sphereMat, SPHERES);
     this.spheres.frustumCulled = false;
     for (let i = 0; i < SPHERES; i++) {
-      const y01 = hash(i * 3 + 41);
-      const ang = i * GOLDEN_ANGLE;
-      const half = stepHalf(y01);
-      const band = half * (1.2 + hash(i * 5 + 43) * 1.4); // hug the shell, some drift out
-      pos.set(Math.cos(ang) * band, y01 * crownBaseY, Math.sin(ang) * band);
-      const r = baseHalf * 0.06 * (1 + hash(i * 7 + 47) * 3);
-      scl.setScalar(r);
+      const y01 = Math.pow(hash(i * 1.7 + 51), 1.2);
+      const height = y01 * bodyH;
+      const env = envAt(y01, i * 2.9 + 61);
+      let r = env * Math.pow(hash(i * 3.1 + 53), 0.5);
+      if (hash(i * 5 + 57) > 0.85) r *= 1.6; // a few drift out into the surrounding air
+      const ang = hash(i * 7 + 59) * TAU + y01 * 3.2;
+      pos.set(Math.cos(ang) * r, height, Math.sin(ang) * r);
+      // Power-law sizes: many small marbles, a few big disco balls.
+      const rr = baseHalf * (0.02 + Math.pow(hash(i * 11 + 63), 2.6) * 0.16);
+      scl.setScalar(rr);
       q.identity();
       m.compose(pos, q, scl);
       this.spheres.setMatrixAt(i, m);
+      const lit = 0.04 + Math.pow(hash(i * 13 + 67), 1.6) * 0.5;
+      col.setRGB(lit, lit, lit);
+      this.spheres.setColorAt(i, col);
     }
     this.spheres.instanceMatrix.needsUpdate = true;
+    if (this.spheres.instanceColor) this.spheres.instanceColor.needsUpdate = true;
     this.root.add(this.spheres);
 
-    // ── VOXEL LATTICE — a wireframe cubic grid enclosing the whole tower (img 2 cube-city). ──
+    // ── GENESIS CORE — a bright white cube + a soft additive glow sphere at the heart (img 2). ──
+    const coreY = bodyH * 0.58;
+    this.genesisMat = new THREE.MeshBasicMaterial({ color: 0xffffff, fog: false });
+    this.mats.push(this.genesisMat);
+    this.genesis = new THREE.Mesh(this.unitBox, this.genesisMat);
+    this.genesis.position.set(0, coreY, 0);
+    this.genesis.scale.setScalar(this.genesisBase);
+    this.genesis.frustumCulled = false;
+    this.root.add(this.genesis);
+
+    const glowGeo = new THREE.SphereGeometry(1, 24, 16);
+    this.geos.push(glowGeo);
+    this.glowMat = new THREE.MeshBasicMaterial({
+      color: 0xffffff,
+      transparent: true,
+      opacity: 0.14,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      side: THREE.BackSide,
+      fog: false,
+    });
+    this.mats.push(this.glowMat);
+    this.glow = new THREE.Mesh(glowGeo, this.glowMat);
+    this.glow.position.set(0, coreY, 0);
+    this.glow.scale.setScalar(this.genesisBase * 6);
+    this.glow.frustumCulled = false;
+    this.root.add(this.glow);
+
+    // ── VOXEL LATTICE — a faint wireframe cubic grid loosely enclosing the mass (img 2), subtle. ──
     {
       const pts: number[] = [];
-      const gx = 3;
-      const gy = 10;
-      const half = baseHalf * 1.9;
+      const gx = 2;
+      const gy = 7;
+      const half = baseHalf * 1.7;
       const line = (
         ax: number,
         ay: number,
@@ -388,15 +348,14 @@ export class GodColossus {
       ): void => {
         pts.push(ax, ay, az, bx, by, bz);
       };
-      for (let ix = 0; ix <= gx; ix++) {
+      for (let ix = 0; ix <= gx; ix++)
         for (let iz = 0; iz <= gx; iz++) {
           const px = -half + (ix / gx) * 2 * half;
           const pz = -half + (iz / gx) * 2 * half;
-          line(px, 0, pz, px, totalH, pz); // vertical struts
+          line(px, 0, pz, px, bodyH, pz);
         }
-      }
       for (let iy = 0; iy <= gy; iy++) {
-        const py = (iy / gy) * totalH;
+        const py = (iy / gy) * bodyH;
         for (let ix = 0; ix <= gx; ix++) {
           const px = -half + (ix / gx) * 2 * half;
           line(px, py, -half, px, py, half);
@@ -410,9 +369,9 @@ export class GodColossus {
       latGeo.setAttribute('position', new THREE.BufferAttribute(Float32Array.from(pts), 3));
       this.geos.push(latGeo);
       this.latticeMat = new THREE.LineBasicMaterial({
-        color: 0x8f8f8f,
+        color: 0x777777,
         transparent: true,
-        opacity: 0.16,
+        opacity: 0.08,
         blending: THREE.AdditiveBlending,
         depthWrite: false,
       });
@@ -422,158 +381,23 @@ export class GodColossus {
       this.root.add(lattice);
     }
 
-    // ── GENESIS CORE — a white incandescent cube at the tower's heart + straight radial god-rays. ──
-    const coreY = crownBaseY * 0.66;
-    this.genesisMat = new THREE.MeshBasicMaterial({
-      color: 0xffffff,
-      transparent: true,
-      opacity: 0.9,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false,
-      fog: false,
-    });
-    this.mats.push(this.genesisMat);
-    this.genesis = new THREE.Mesh(this.unitBox, this.genesisMat);
-    this.genesis.position.set(0, coreY, 0);
-    this.genesis.scale.setScalar(this.genesisBase);
-    this.genesis.frustumCulled = false;
-    this.root.add(this.genesis);
-    {
-      const arr = new Float32Array(RAY_LINES * 6);
-      for (let i = 0; i < RAY_LINES; i++) {
-        const yv = 1 - (i / (RAY_LINES - 1)) * 2;
-        const rr = Math.sqrt(Math.max(0, 1 - yv * yv));
-        const th = i * GOLDEN_ANGLE;
-        const dx = Math.cos(th) * rr;
-        const dz = Math.sin(th) * rr;
-        const len = topHalf * 3 + hash(i * 3 + 1) * baseHalf * 3;
-        arr[i * 6] = 0;
-        arr[i * 6 + 1] = coreY;
-        arr[i * 6 + 2] = 0;
-        arr[i * 6 + 3] = dx * len;
-        arr[i * 6 + 4] = coreY + yv * len;
-        arr[i * 6 + 5] = dz * len;
-      }
-      const rayGeo = new THREE.BufferGeometry();
-      rayGeo.setAttribute('position', new THREE.BufferAttribute(arr, 3));
-      this.geos.push(rayGeo);
-      this.rayMat = new THREE.LineBasicMaterial({
-        color: 0xffffff,
-        transparent: true,
-        opacity: 0.12,
-        blending: THREE.AdditiveBlending,
-        depthWrite: false,
-        fog: false,
-      });
-      this.mats.push(this.rayMat);
-      this.rays = new THREE.LineSegments(rayGeo, this.rayMat);
-      this.rays.position.set(0, 0, 0);
-      this.rays.frustumCulled = false;
-      this.root.add(this.rays);
-    }
-
-    // ── GEODESIC CROWN — a spiky crystalline crown wrapped in a woven great-circle sphere cage. ──
-    const crownGeo = new THREE.IcosahedronGeometry(topHalf * 2.9, 3);
-    this.geos.push(crownGeo);
-    {
-      const cp = crownGeo.getAttribute('position') as THREE.BufferAttribute;
-      const ca = cp.array as Float32Array;
-      const chash = (x: number, yy: number, z: number): number => {
-        const v = Math.sin(x * 12.9898 + yy * 78.233 + z * 37.719) * 43758.5453;
-        return v - Math.floor(v);
-      };
-      for (let i = 0; i < ca.length; i += 3) {
-        const x = ca[i] ?? 0;
-        const yy = ca[i + 1] ?? 0;
-        const z = ca[i + 2] ?? 0;
-        const len = Math.hypot(x, yy, z) || 1;
-        const ridge = 0.5 + 0.5 * Math.sin(x * 2.1 + yy * 1.7) * Math.cos(z * 1.9 + x * 0.6);
-        const spike =
-          chash(Math.round((x / len) * 6), Math.round((yy / len) * 6), Math.round((z / len) * 6)) >
-          0.82
-            ? 0.85
-            : 0;
-        const d = 1 + ridge * 0.24 + spike;
-        ca[i] = x * d;
-        ca[i + 1] = yy * d;
-        ca[i + 2] = z * d;
-      }
-      cp.needsUpdate = true;
-      crownGeo.computeVertexNormals();
-    }
-    this.crown = new THREE.Mesh(crownGeo, this.crownMat);
-    this.crown.position.y = crownBaseY + topHalf * 2.6;
-    this.crown.frustumCulled = false;
-    this.root.add(this.crown);
-
-    // A tall needle spire — a thin BOX (cube vocabulary), not a cone.
-    this.spire = new THREE.Mesh(this.unitBox, this.crownMat);
-    this.spire.position.y = this.crown.position.y + topHalf * 5.2;
-    this.spire.scale.set(topHalf * 0.5, topHalf * 9, topHalf * 0.5);
-    this.spire.frustumCulled = false;
-    this.root.add(this.spire);
-
-    // Woven great-circle cage around the crown (cube-in-sphere, img 3).
-    {
-      const pts: number[] = [];
-      const rad = topHalf * 3.6;
-      const cy = this.crown.position.y;
-      const u = new THREE.Vector3();
-      const w = new THREE.Vector3();
-      const axis = new THREE.Vector3();
-      const a = new THREE.Vector3();
-      const b = new THREE.Vector3();
-      for (let c = 0; c < CROWN_CIRCLES; c++) {
-        axis.set(hash(c * 7 + 1) - 0.5, hash(c * 7 + 2) - 0.5, hash(c * 7 + 3) - 0.5).normalize();
-        u.set(axis.z, 0, -axis.x);
-        if (u.lengthSq() < 1e-4) u.set(0, 1, 0);
-        u.normalize();
-        w.copy(axis).cross(u).normalize();
-        for (let sIdx = 0; sIdx < CROWN_SEG; sIdx++) {
-          const t0 = (sIdx / CROWN_SEG) * Math.PI * 2;
-          const t1 = ((sIdx + 1) / CROWN_SEG) * Math.PI * 2;
-          a.copy(u)
-            .multiplyScalar(Math.cos(t0) * rad)
-            .addScaledVector(w, Math.sin(t0) * rad);
-          b.copy(u)
-            .multiplyScalar(Math.cos(t1) * rad)
-            .addScaledVector(w, Math.sin(t1) * rad);
-          pts.push(a.x, cy + a.y, a.z, b.x, cy + b.y, b.z);
-        }
-      }
-      const cageGeo = new THREE.BufferGeometry();
-      cageGeo.setAttribute('position', new THREE.BufferAttribute(Float32Array.from(pts), 3));
-      this.geos.push(cageGeo);
-      this.crownCageMat = new THREE.LineBasicMaterial({
-        color: 0xd0d0d0,
-        transparent: true,
-        opacity: 0.35,
-        blending: THREE.AdditiveBlending,
-        depthWrite: false,
-      });
-      this.mats.push(this.crownCageMat);
-      this.crownCage = new THREE.LineSegments(cageGeo, this.crownCageMat);
-      this.crownCage.frustumCulled = false;
-      this.root.add(this.crownCage);
-    }
-
-    // ── STAR-DUST — points seeded through the tower volume (img 2). ──
+    // ── STAR-DUST — sparse points through the tower volume (img 2). ──
     {
       const arr = new Float32Array(STAR_COUNT * 3);
       for (let i = 0; i < STAR_COUNT; i++) {
-        arr[i * 3] = (hash(i * 3 + 11) - 0.5) * baseHalf * 4;
-        arr[i * 3 + 1] = hash(i * 3 + 12) * totalH;
-        arr[i * 3 + 2] = (hash(i * 3 + 13) - 0.5) * baseHalf * 4;
+        arr[i * 3] = (hash(i * 3 + 11) - 0.5) * baseHalf * 3.6;
+        arr[i * 3 + 1] = hash(i * 3 + 12) * bodyH;
+        arr[i * 3 + 2] = (hash(i * 3 + 13) - 0.5) * baseHalf * 3.6;
       }
       const starGeo = new THREE.BufferGeometry();
       starGeo.setAttribute('position', new THREE.BufferAttribute(arr, 3));
       this.geos.push(starGeo);
       this.starMat = new THREE.PointsMaterial({
         color: 0xffffff,
-        size: baseHalf * 0.02,
+        size: baseHalf * 0.015,
         sizeAttenuation: true,
         transparent: true,
-        opacity: 0.5,
+        opacity: 0.4,
         blending: THREE.AdditiveBlending,
         depthWrite: false,
         fog: false,
@@ -584,8 +408,8 @@ export class GodColossus {
       this.root.add(stars);
     }
 
-    // ── ENERGY SHELL — fbm-veined additive icosahedron, MONOCHROME (grey brightness only). ──
-    const shellGeo = new THREE.IcosahedronGeometry(Math.max(totalH, baseHalf * 2) * 0.62, 3);
+    // ── ENERGY SHELL — fbm-veined additive icosahedron, MONOCHROME grey. ──
+    const shellGeo = new THREE.IcosahedronGeometry(Math.max(bodyH, baseHalf * 2) * 0.6, 3);
     this.geos.push(shellGeo);
     this.shellMat = new THREE.ShaderMaterial({
       transparent: true,
@@ -617,16 +441,14 @@ export class GodColossus {
           float veins = fbm(dir * 6.0 + uTime * 0.15);
           veins = pow(abs(veins - 0.5) * 2.0, 1.6);
           float energy = fbm(dir * 3.0 - uTime * 0.25) * (0.35 + 0.6 * uChaos);
-          // MONOCHROME: grey brightness only, no hue. Entropy adds a faint cold lift.
-          float g = energy * 0.7 + veins * 0.5 + uEntropy * 0.12;
-          vec3 col = vec3(g);
-          float a = clamp(energy * 0.35 + veins * 0.28, 0.0, 0.62);
-          gl_FragColor = vec4(col, a);
+          float g = energy * 0.6 + veins * 0.45 + uEntropy * 0.1; // grey brightness only, no hue
+          float a = clamp(energy * 0.3 + veins * 0.24, 0.0, 0.55);
+          gl_FragColor = vec4(vec3(g), a);
         }`,
     });
     this.mats.push(this.shellMat);
     this.shell = new THREE.Mesh(shellGeo, this.shellMat);
-    this.shell.position.y = totalH * 0.5;
+    this.shell.position.y = bodyH * 0.5;
     this.shell.frustumCulled = false;
     this.root.add(this.shell);
 
@@ -636,58 +458,43 @@ export class GodColossus {
   }
 
   /**
-   * Animate the living tower: pulse the grey emissive (brightness only, no hue) + drive it from world
-   * chaos + entropy, bloom the genesis core + god-rays, spin the crown + woven cage + lattice, and let
-   * the tower sway with godlike slowness. No rng, no allocation, spawns no geometry.
+   * Animate the living tower: pulse the grey emissive (brightness only, no hue) from world chaos +
+   * entropy, bloom the genesis core + glow, counter-phase the glossy quasicrystal cubes, breathe the
+   * shell, and sway with godlike slowness. No rng, no allocation, spawns no geometry.
    * @param t scaled elapsed seconds · @param chaos 0..1 · @param entropy 0..1
    */
   update(t: number, chaos: number, entropy: number): void {
     const c = chaos < 0 ? 0 : chaos > 1 ? 1 : chaos;
     const en = entropy < 0 ? 0 : entropy > 1 ? 1 : entropy;
-    const g = 0.28 + 0.5 * c + 0.16 * en; // grey brightness readout of world state
+    const g = 0.26 + 0.5 * c + 0.16 * en;
     this.emissive.setRGB(g, g, g);
 
-    const blaze = 0.35 + 1.2 * c + 0.4 * en;
-    this.coreMat.emissive.copy(this.emissive);
-    this.coreMat.emissiveIntensity = blaze;
     this.panelMat.emissive.copy(this.emissive);
-    this.panelMat.emissiveIntensity = 0.28 + 0.95 * c;
-    const cg = 0.4 + 0.5 * c + 0.2 * en;
-    this.crownMat.emissive.setRGB(cg, cg, cg);
-    this.crownMat.emissiveIntensity = 0.5 + 1.3 * c + 0.4 * en;
+    this.panelMat.emissiveIntensity = 0.28 + 0.9 * c;
+    this.sphereMat.emissive.copy(this.emissive);
+    this.sphereMat.emissiveIntensity = 0.15 + 0.6 * c;
 
-    // Genesis core + god-rays bloom with chaos; the core throbs.
+    // Genesis core throbs; the glow blooms with chaos.
     const throb = 0.85 + 0.3 * Math.sin(t * 1.7);
-    this.genesisMat.opacity = Math.min(1, 0.5 + 0.5 * c) * throb;
     this.genesis.scale.setScalar(
-      (0.9 + 0.4 * c) * (1 + 0.1 * Math.sin(t * 2.1)) * this.genesisBase,
+      (0.85 + 0.4 * c) * (1 + 0.12 * Math.sin(t * 2.1)) * this.genesisBase,
     );
-    this.rayMat.opacity = 0.06 + 0.28 * c;
-    this.rays.rotation.y = t * (0.02 + 0.06 * c);
+    this.glowMat.opacity = (0.1 + 0.28 * c) * throb;
 
-    // Crown, woven cage, lattice spin; the cage + lattice brighten with chaos.
-    this.crown.rotation.y += 0.0009 + 0.004 * c;
-    this.crown.rotation.x += 0.0004;
-    this.spire.rotation.y -= 0.0012 + 0.003 * c;
-    this.crownCage.rotation.y -= 0.0016 + 0.005 * c;
-    this.crownCage.rotation.z += 0.0011;
-    this.crownCageMat.opacity = 0.22 + 0.4 * c;
-    this.latticeMat.opacity = 0.1 + 0.18 * c;
-    this.sphereMat.opacity = 0.35 + 0.35 * c;
-
-    // BIPOLAR blaze (grayscale): window lamps linger BRIGHT, flip to a smoulder, the carve shell
-    // counter-phases — the tower alternates "ten thousand lit windows" / "dark megalith, burning bones".
+    // BIPOLAR blaze (grayscale): the glossy quasicrystal cubes counter-phase — the tower breathes light
+    // through its bones (bright-bones ⇄ dark-megalith), chaos raising the pole.
     const flip = 0.5 + 0.5 * Math.tanh(3.0 * Math.sin(t * 0.09 + Math.sin(t * 0.031) * 1.3));
     this.carveMat.emissive.copy(this.emissive);
     this.carveMat.emissiveIntensity = 0.2 + 0.9 * flip + 0.7 * c;
 
-    // Energy shell breathes.
+    this.latticeMat.opacity = 0.05 + 0.1 * c;
+
     this.shellMat.uniforms.uTime!.value = t;
     this.shellMat.uniforms.uChaos!.value = c;
     this.shellMat.uniforms.uEntropy!.value = en;
 
     // Godlike, near-imperceptible sway + a slow turn of the whole tower.
-    this.root.rotation.y = Math.sin(t * 0.018) * 0.05 + t * 0.004;
+    this.root.rotation.y = Math.sin(t * 0.018) * 0.04 + t * 0.003;
     this.root.position.y = Math.sin(t * 0.05) * 4.0;
   }
 

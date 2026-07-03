@@ -1606,21 +1606,11 @@ export class World {
     });
     this.monolithTemple.update(dt, t); // V63: rise + shimmer the ascension portal (no-op until revealed)
 
-    // USER: the portal-nightmare horror bus (a low drone + a HIGH SCREAM square wave whose pitch ROSE
-    // with temple reactivity — `360 + level*220` Hz) was driven EVERY FRAME from templeReact/templeChaos,
-    // so it whined constantly and climbed higher and higher: the "fan/vibration that gets higher" noise.
-    // KILL the constant drive — sound the horror bus ONLY during an ACTUAL ascended portal nightmare, and
-    // hard-silence it (level 0 ⇒ gain 0) the rest of the time.
-    if (this.superAscended && this.monolithTemple.revealed) {
-      const portalPulse = 1.6 + 0.9 * Math.sin(t * 0.31) + 0.4 * Math.sin(t * 1.7);
-      this.audio.setPortalNightmare?.(portalPulse);
-      if (s.frame % 180 === 0) {
-        this.audio.playExtra(s.frame % 360 === 0 ? 'abyssal' : 'demonicgrowl');
-      }
-      if (s.frame % 420 === 90) this.audio.playExtra('demonic');
-    } else {
-      this.audio.setPortalNightmare?.(0);
-    }
+    // V124: the portal is a clean VOID now (the megalith redesign retired the "hell wormhole"), so the
+    // portal-nightmare bus — a HIGH SCREAM square wave (`360 + level*220` Hz) + a low drone + periodic
+    // demonic samples — is RETIRED. Forcing ascension (e.g. the UwU box) used to make that high-pitched
+    // electronic pulse play forever; hard-silence the bus every frame and never trigger the demonic loops.
+    this.audio.setPortalNightmare?.(0);
 
     if (s.frame % 60 === 30) {
       // RD pattern energy: strided mean of the V field (offset 30 — never
@@ -2691,11 +2681,9 @@ export class World {
     if (this.superAscended) return;
     this.superAscended = true;
     this.monolithTemple.reveal(0, 0, -40 * ARENA_MID);
-    this.audio.setPortalNightmare(2.8);
+    // V124: a single clean sub-boom marks the rise — the demonic "scream/abyssal/growl" nightmare bus
+    // is retired (the portal is a clean void now, not a hell wormhole). No infinite high-pitched pulse.
     this.audio.playId(SFX_SUBBOOM);
-    this.audio.playExtra('demonic');
-    this.audio.playExtra('abyssal');
-    this.audio.playExtra('demonicgrowl');
     this.hud.showSector('⚡ ASCENSION — STAGE 2 · THE MONOLITH TEMPLE RISES');
     this.audit.record('ascension', { level: 100, stage: 2 });
     if (typeof window !== 'undefined') {

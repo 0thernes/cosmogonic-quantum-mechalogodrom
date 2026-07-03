@@ -11,6 +11,29 @@ dated / historical / "superseded snapshot" copies (per the binding "Living docs,
 
 ---
 
+## 2026-07-02 — The TOWER re-architected to a chaotic ACCRETION + the portal-nightmare buzz KILLED (V125)
+
+Owner: the V124 tower "literally nothing changed in structure" — I'd only recoloured the same tapering
+cone + star crown + ornament ring + radial rays, and forcing ascension via the UwU box brought back the
+high-pitched electronic portal-nightmare pulse. Both fixed:
+
+- **Tower SILHOUETTE demolished (`src/sim/god-colossus.ts`).** The tiered cone / star crown / sphere
+  ring / god-ray lines are GONE. The tower is now a **deterministic 3D ACCRETION**: thousands of cubes
+  placed by a density field (dense core, thinning with radius + height), **power-law size spread** (a
+  few colossal cantilevered blocks among many small ones), a slow twist up the shaft, slab/column/cube
+  proportions → a jagged irregular brutalist mass. The real quasicrystal point set is mapped INTO the
+  mass as glossy-metal cubes (not a smooth shell); spheres are solid glossy disco balls of varied sizes
+  nestled among the cubes (not a ring); the genesis is a bright cube + additive glow (no ray-lines).
+  **Full black→silver→white tonal range** (matte vs glossy-metal pools, per-instance grey 0.03..0.95) —
+  no more "two greys". Headless profile proof: 15,040 instances, block sizes span 18.3×, and the
+  silhouette is NON-monotonic (7/23 height bands widen going up — a smooth cone would be 0). Contract
+  held: 1 group + exactly 3 instanced pools, `panelCount > 2000`, deterministic, `update` no-alloc.
+- **Portal-nightmare BUZZ killed (`src/world.ts`).** The `setPortalNightmare` square-wave scream
+  (`360 + level*220` Hz) + low drone + periodic demonic samples were driven EVERY FRAME while ascended;
+  the UwU force-ascension made it permanent. The portal is a clean void now, so the whole nightmare bus
+  is retired: `ascend()` drops the scream + demonic/abyssal/growl (keeps one clean sub-boom) and the
+  per-frame drive is a constant `setPortalNightmare(0)`. No infinite high-pitched electronic pulse.
+
 ## 2026-07-02 — GOAL8 ten-item owner pass (V123): the CRITICAL entities-invisible fix + tier ladder · pantheon nav rework · panel wireframe · glyph cortex · super-neural · Pages · colour regrade
 
 Third owner pass of the day, run alongside a DUAL Fable 5 (which owned the megalith #10; see the
