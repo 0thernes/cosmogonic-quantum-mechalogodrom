@@ -11,6 +11,40 @@ dated / historical / "superseded snapshot" copies (per the binding "Living docs,
 
 ---
 
+## 2026-07-02 — GOAL8 ten-item owner pass (V123): the CRITICAL entities-invisible fix + tier ladder · pantheon nav rework · panel wireframe · glyph cortex · super-neural · Pages · colour regrade
+
+Third owner pass of the day, run alongside a DUAL Fable 5 (which owned the megalith #10; see the
+V124 entry below). Every fix root-caused live in the browser first:
+
+- **CRITICAL (USER #6 "entities never show on laptop+"):** the V122 BRUTAL freakshow block referenced
+  `uMorphWave`/`uMorphSeed` in the FRAGMENT stage but the uniforms were declared only in the VERTEX
+  header → `undeclared identifier`, the fragment shader failed to COMPILE, and **every instanced pool
+  rendered nothing on laptop/desktop/ultra/mega** (the phone per-mesh path hid it from the phone-tier
+  preview). Browser-verified fixed on `?tier=desktop`. LESSON (recurring): the gate cannot compile
+  GLSL — runtime-verify on an INSTANCED tier after any pool-shader edit, not just phone.
+- **#6 tier ladder:** six rungs (phone 1k · tablet 2k · laptop 5k · desktop 10k · ultra 25k · mega
+  50k); EVERYONE boots the phone rung now (fast first paint) — the perf chip climbs.
+- **#8 pantheon movement (deep-dive):** the travel was position-ON-A-LISSAJOUS-CURVE
+  (`aTx=cos(drift)·R`) — a closed figure that visibly loops at any speed. Replaced with a real
+  pos+VELOCITY waypoint-seeking boid (like super-body): re-picked interior waypoints, banking,
+  deterministic, frozen on pause. An anti-loop test proves it fills a >200u span in both axes while
+  every frame-step stays <40u.
+- **#1/#2/#5 panels:** managed chrome (‹ › \_ ✕) is now the single window control (redundant per-panel
+  `[data-close]`/`[data-min]` hidden, header reserves 150px so nothing slides under it — 0px overlap);
+  the NEURAL tab no longer shortens the window (both tabs flex to full height); `fitHud` floor raised
+  120→~360 (panel measured 120→760px live); the left ID column widened + wraps (no more cutoff).
+- **#4 super-neural:** the 9-grid is squared (per-row floor) with 3D-depth cells; the box crossfades
+  toward the live BRUTAL style's accent (`cqm:brutal-style` event → eased `--sneu-tint`).
+- **#3 glyph cortex:** the empty pantheon pane now holds a live 100-mind neural field fed by the real
+  `cqm:brain-snapshots` broadcast (browser-verified: 100 minds, a frame paints 52% of the canvas).
+- **#9 Pages:** the market band IS live on Pages — the one failed deploy was a transient GitHub
+  "try again later" flake (redeployed by the next commit); the deploy step hardened with a timeout +
+  higher error tolerance. Local≠GitHub is the primary checkout sitting on `phase0-ui-shell` dirty.
+- **#7 colour regrade:** the entity swarm hue-warped onto ominous oil-slick anchors (oxblood/gold/
+  teal/gunmetal/amethyst/bruise, skipping the bright-green + hot-pink "girlie" zones) at ~0.6 sat; the
+  NHI Matrix-green shader flare retired for sickly moss (the dual's `nhiSpecies` material palette is
+  canonical — mine complements it on the shader).
+
 ## 2026-07-02 — The MONOLITH MEGALITH GEOMETRY rebuild (V124): cube · sphere · lattice · void
 
 The V123 pass (below) read the six reference images as a _colour scheme_ and barely touched the
