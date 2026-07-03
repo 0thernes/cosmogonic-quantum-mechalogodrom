@@ -181,9 +181,11 @@ export class FloatingMonoliths {
           q.setFromEuler(e);
           m.compose(pos, q, scl);
           panelMesh.setMatrixAt(p, m);
+          // Cold prismatic accents (redesign V123): a rare panel glints pale SPECTRAL silver over
+          // dark steel — the drifting megaliths match the black-crystal Monolith Megalith, no neon.
           const accent = hash(salt * 7 + 31) > 0.9;
-          if (accent) col.setHSL((hash(i * 13) + hash(salt) * 0.2) % 1, 0.9, 0.55);
-          else col.setHSL(0.6 + hash(salt * 2) * 0.12, 0.2, 0.12 + hash(salt * 3) * 0.16);
+          if (accent) col.setHSL(0.58 + hash(salt) * 0.12, 0.45, 0.66);
+          else col.setHSL(0.62 + hash(salt * 2) * 0.08, 0.16, 0.12 + hash(salt * 3) * 0.14);
           panelMesh.setColorAt(p, col);
           panels++;
         }

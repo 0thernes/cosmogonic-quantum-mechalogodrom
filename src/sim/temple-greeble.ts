@@ -195,10 +195,11 @@ export class TempleGreeble {
       q.setFromEuler(e);
       m.compose(pos, q, scl);
       this.greeble.setMatrixAt(gi, m);
-      // Mostly cold stone; a rare panel glows a poisonous accent (hashed).
+      // Mostly cold stone; a rare panel catches a pale SPECTRAL glint (hashed) — the austere key
+      // (redesign V123: the megalith is black-crystal-and-prismatic, no poisonous neon).
       const accent = hash(i * 11 + 31) > 0.93;
-      if (accent) col.setHSL((0.5 + hash(i) * 0.45) % 1, 0.9, 0.5);
-      else col.setHSL(0.6 + hash(i * 2) * 0.08, 0.22, 0.14 + hash(i * 3) * 0.16);
+      if (accent) col.setHSL(0.58 + hash(i) * 0.1, 0.4, 0.68);
+      else col.setHSL(0.62 + hash(i * 2) * 0.06, 0.16, 0.13 + hash(i * 3) * 0.14);
       this.greeble.setColorAt(gi, col);
       q.identity();
       gi++;
@@ -253,10 +254,11 @@ export class TempleGreeble {
       this.strips.setMatrixAt(si, m);
       rain[si * 2] = hash(i * 9 + 79); // phase
       rain[si * 2 + 1] = 0.4 + hash(i * 10 + 83) * 1.3; // speed
-      // Neon palette: cyan / magenta / amber bands (hashed).
+      // Cold prismatic palette: ice-white / steel / a pale violet whisper (hashed) — the redesign's
+      // austere data-rain (was neon cyan/magenta/amber; the megalith reads black-crystal + spectrum now).
       const hsh = hash(i * 11 + 89);
-      const hue = hsh < 0.4 ? 0.52 : hsh < 0.7 ? 0.86 : 0.08;
-      col.setHSL(hue, 0.95, 0.6);
+      const hue = hsh < 0.55 ? 0.58 : hsh < 0.85 ? 0.62 : 0.74;
+      col.setHSL(hue, hsh < 0.85 ? 0.25 : 0.5, 0.72);
       scol[si * 3] = col.r;
       scol[si * 3 + 1] = col.g;
       scol[si * 3 + 2] = col.b;

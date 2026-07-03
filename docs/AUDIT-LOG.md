@@ -11,6 +11,37 @@ dated / historical / "superseded snapshot" copies (per the binding "Living docs,
 
 ---
 
+## 2026-07-02 — The MONOLITH MEGALITH redesign (V123): hot‑hellish → cold‑sublime‑prismatic
+
+Total re‑architecture of the level‑100 ascension end‑state (`src/sim/monolith-temple.ts`,
+`MonolithTemple` / new alias `MonolithMegalith`), cut from six owner reference images (a kaleidoscope
+crystal cube, a cosmic wireframe cube‑city, a caged‑star megalith on a black sea, a grayscale
+sphere+cube data‑cathedral, a coral‑in‑a‑maze). Full art direction:
+[docs/MONOLITH-MEGALITH-ART-DIRECTION.md](./MONOLITH-MEGALITH-ART-DIRECTION.md).
+
+- **The reversal.** The prior temple was a "nightmare wormhole" of blood/acid/screaming‑souls in
+  crimson+cyan. The references are its inverse — austere, near‑monochrome: a **black crystal monolith
+  caging a newborn WHITE star** whose light shatters through the facets as **prism spectrum**. Palette
+  inverted hot→cold across the whole megalith family (crystal core, aperture, greeble data‑rain, and
+  the `FloatingMonoliths` accents all recoloured to ice/steel/spectral‑whisper; blood‑crimson +
+  "screaming souls" removed).
+- **Eight named subsystems, each real math + a real readout** (was one grab‑bag of meshes): (1) a
+  raymarched **KIFS‑faceted crystal** caging a volumetric white star — `chaos → ignition`,
+  `entropy → dispersion` (3‑tap chromatic rim split); (2) a Fibonacci‑sphere **ray‑burst**; (3) the
+  "impossible cage" reborn as a **nested wireframe box‑lattice** + struts (breathes with `cageWarp`);
+  (4) an **orbit shell** of dark spheres + wireframe cubes; (5) a **mote‑halo** spark sphere; (6) a
+  clean **prismatic aperture** (6‑fold kaleidoscopic iris, spectral rim) replacing the hell portal;
+  (7) a ring of **standing‑stone** obelisks; (8) **coral growth** — a deterministic L‑system dendrite
+  whose visible instance `.count = ⌊crowding·cap⌋`, a literal readout of the living population.
+- **Real bug fixed in passing:** the raymarch localised to a world‑fixed offset, so the crystal only
+  lined up at the origin; it now locks its SDF centre to the mesh's live world position each frame
+  (`uCenter`), staying welded to the megalith as it rises.
+- **Contract preserved:** same public surface (`reveal/update/setEnvironment/snapshot/dispose/
+revealed`), still determinism‑neutral (zero rng / `Date.now`), `visualNodes ≥ 25`, the raymarch
+  `uTime` regression still green, and storm > calm monotonicity intact. Snapshot gained `ignition`,
+  `dispersion`, `coralExtent` (observability); a new `viz-systems` test asserts they track
+  chaos/entropy/crowding and that an empty world leaves the coral at 0.
+
 ## 2026-07-02 — GOAL7 eleven-item owner pass (V122): dead-pane root causes · audio doze · panel geometry · BRUTAL entity spectacle · market econometrics · the quasicrystal TOWER
 
 Second owner pass of the day (`f6bf2b58` → the tower commit), every defect root-caused live in the

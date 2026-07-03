@@ -179,5 +179,32 @@ describe('MonolithTemple — the V63 ascension Stage-2 portal', () => {
     expect(Number.isFinite(snap.shimmer)).toBe(true);
     expect(Number.isFinite(snap.cageWarp)).toBe(true);
     expect(snap.crowding).toBe(0);
+    expect(Number.isFinite(snap.ignition)).toBe(true);
+    expect(Number.isFinite(snap.dispersion)).toBe(true);
+    expect(Number.isFinite(snap.coralExtent)).toBe(true);
+  });
+
+  test('the caged star + coral are real readouts of chaos, entropy, and crowding (redesign V123)', () => {
+    const dark = new MonolithTemple(new THREE.Scene());
+    dark.reveal(0, 0, 0, true);
+    dark.setEnvironment({ chaos: 0, entropy: 0, population: 0, capacity: 50000 });
+    dark.update(1 / 60, 9);
+    const d = dark.snapshot();
+
+    const bright = new MonolithTemple(new THREE.Scene());
+    bright.reveal(0, 0, 0, true);
+    bright.setEnvironment({ chaos: 1, entropy: 1, population: 50000, capacity: 50000 });
+    bright.update(1 / 60, 9);
+    const b = bright.snapshot();
+
+    // Chaos ignites the caged star; entropy spreads its light into spectrum; crowding grows the coral.
+    expect(b.ignition).toBeGreaterThan(d.ignition);
+    expect(b.dispersion).toBeGreaterThan(d.dispersion);
+    expect(b.coralExtent).toBeGreaterThan(d.coralExtent);
+    expect(d.coralExtent).toBe(0); // empty world ⇒ nothing colonized
+    for (const v of [b.ignition, b.dispersion, b.coralExtent]) {
+      expect(v).toBeGreaterThanOrEqual(0);
+      expect(v).toBeLessThanOrEqual(1);
+    }
   });
 });

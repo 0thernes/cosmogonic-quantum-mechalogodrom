@@ -1,11 +1,34 @@
 /**
- * THE MONOLITH TEMPLE (CONTRACTS V63) — the level-100 ascension end-state made physical. When the
- * super creature reaches the LEGENDARY apex (`SuperEvolution.ascended`), a **megalithic trilithon
- * temple** rises from the field: a stepped plinth, two colossal tapered pillars, a great lintel,
- * an impossible warped cage, a black-hole shadow core, spike altars, and — framed between the
- * pillars — a shimmering **portal** (the gateway to GAME STAGE 2, the "Eshkol Tsotchke" second
- * world, built later). It rises over a couple of seconds, then breathes + spins its glyph-rings
- * forever.
+ * THE MONOLITH MEGALITH (CONTRACTS V63 → redesigned V123) — the level-100 ascension end-state made
+ * physical. When the super creature reaches the LEGENDARY apex (`SuperEvolution.ascended`), a
+ * **black crystal megalith caging a newborn star** rises from the field.
+ *
+ * ─── ART DIRECTION (redesign) ────────────────────────────────────────────────────────────────────
+ * Rebuilt from six reference images (see docs/MONOLITH-MEGALITH-ART-DIRECTION.md). The prior temple
+ * was HOT + HELLISH — a "nightmare wormhole" of blood, acid, and screaming souls in crimson/cyan.
+ * The references are its exact inverse: austere, sublime, near-MONOCHROME — a faceted crystal
+ * monolith on a black void, holding a brilliant WHITE singularity whose light shatters outward
+ * through the facets as PRISMATIC (spectral) rays. So the whole megalith is recoloured from
+ * hot→cold and re-architected into named, image-mapped subsystems, every one backed by real math and
+ * driven by a real world signal:
+ *
+ *   1. CRYSTAL CORE   (img1 kaleidoscope-cube / img3 caged-star) — a raymarched KIFS-faceted diamond
+ *      shell around a white incandescent core. Ignition (chaos) brightens the caged star; dispersion
+ *      (entropy) spreads its light into spectral fringes on the facet rims.
+ *   2. RAY-BURST      (img1/2/3 light explosion)   — an instanced radial starburst of light shards
+ *      emanating from the core; its glow blooms with ignition.
+ *   3. BOX LATTICE    (img2/4 nested wireframe cosmos) — the "impossible cage" reborn as concentric
+ *      wireframe cubes + radial struts, a box-lattice to infinity that breathes with reactivity.
+ *   4. ORBIT SHELL    (img2/3/4 suspended primitives) — instanced dark spheres + wireframe cubes on a
+ *      Fibonacci sphere, slowly orbiting the core (a Dyson-shell of geometric primitives).
+ *   5. MOTE HALO      (img3 orbiting spark-sphere)  — an additive spherical swarm of white light-motes
+ *      whose radius pulses with shimmer.
+ *   6. PRISMATIC APERTURE (img1 central triangle)   — the portal to GAME STAGE 2, now a clean faceted
+ *      white aperture with spectral edges (the caged star's "face"), NOT a blood wormhole.
+ *   7. STANDING STONES (img5 brutalist maze / megalith ring) — a ring of black obelisk megaliths that
+ *      frame the crystal and kindle with reactivity.
+ *   8. CORAL GROWTH   (img5 fractal life in the grid) — a deterministic L-system dendrite climbing the
+ *      plinth; its extent is a DIRECT readout of population/crowding (real coupling, not decoration).
  *
  * Self-contained + GUARDED-friendly: it builds its own meshes, hides them until {@link reveal}, and
  * frees every geometry + material on {@link dispose}. Purely visual — no sim state, no rng, animated
@@ -17,14 +40,25 @@ import { clamp } from '../math/scalar';
 import { ARENA_MID } from './constants';
 import { TempleGreeble } from './temple-greeble';
 
-/** Seconds the temple takes to rise into place once revealed. */
+/** Seconds the megalith takes to rise into place once revealed. */
 const RISE_TIME = 2.4;
-/** How far below its resting height the temple starts when it rises. */
+/** How far below its resting height the megalith starts when it rises. */
 const RISE_DROP = 60 * ARENA_MID;
+/** World-space height of the caged star / crystal centre above the megalith's base. */
+const CORE_Y = 24 * ARENA_MID;
 
-/** Portal shimmer colours (absorb-cyan ↔ ascension-violet). */
-const PORTAL_A = new THREE.Color(0.3, 0.85, 1.0);
-const PORTAL_B = new THREE.Color(0.75, 0.4, 1.0);
+/** Prismatic aperture shimmer colours (ice-white ↔ pale spectral violet) — the austere new palette. */
+const PORTAL_A = new THREE.Color(0.72, 0.86, 1.0);
+const PORTAL_B = new THREE.Color(0.86, 0.8, 1.0);
+
+/** Golden angle — Fibonacci-sphere / spiral spacing for suspended primitives + motes. */
+const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5));
+
+/** Deterministic positional hash → [0,1). No bitwise, no rng, no Date.now (mirrors FloatingMonoliths). */
+function hash(n: number): number {
+  const s = Math.sin(n * 41.17 + 13.91) * 24634.6345;
+  return s - Math.floor(s);
+}
 
 export interface TempleEnvironment {
   /** Normalized chaos, 0..1 (world passes `state.chaos / CHAOS_MAX`). */
@@ -43,17 +77,35 @@ export interface MonolithTempleSnapshot {
   readonly rise: number;
   /** Real-bound drive from chaos + entropy + crowding, 0..1. */
   readonly reactivity: number;
-  /** Portal/cage shimmer scalar, 0..1-ish. */
+  /** Aperture/lattice shimmer scalar, 0..1-ish. */
   readonly shimmer: number;
   /** Shadow-core intensity scalar, 0..1-ish. */
   readonly shadow: number;
-  /** Warped-cage displacement amplitude in world units. */
+  /** Box-lattice displacement amplitude in world units. */
   readonly cageWarp: number;
   /** Population / capacity, guarded and clamped. */
   readonly crowding: number;
-  /** Number of direct children in the temple rig. */
+  /** Caged-star brightness (chaos-bound), 0..1 — the "ignition" of the newborn star. */
+  readonly ignition: number;
+  /** Spectral spread of the crystal's refracted light (entropy-bound), 0..1. */
+  readonly dispersion: number;
+  /** Fraction of the coral dendrite that has colonized the plinth (crowding-bound), 0..1. */
+  readonly coralExtent: number;
+  /** Number of direct children in the megalith rig. */
   readonly visualNodes: number;
 }
+
+/** Suspended-primitive orbit counts (instanced — cheap). */
+const ORBIT_CUBES = 96;
+const ORBIT_SPHERES = 84;
+/** Radial light-shard count for the ray-burst. */
+const RAY_SHARDS = 220;
+/** Light-mote count for the orbiting spark-halo. */
+const MOTE_COUNT = 720;
+/** Standing-stone megalith ring size (direct children — also guarantees visualNodes ≥ 25). */
+const STONES = 18;
+/** Coral dendrite node cap; visible count scales with crowding. */
+const CORAL_CAP = 300;
 
 export class MonolithTemple {
   private readonly scene: THREE.Scene;
@@ -62,22 +114,34 @@ export class MonolithTemple {
   private readonly greeble: TempleGreeble;
   private readonly geos: THREE.BufferGeometry[] = [];
   private readonly mats: THREE.Material[] = [];
-  /** The raymarched KIFS fractal core's shader material — kept directly so warpCage() can drive its uTime uniform. */
-  private readonly raymarchMat: THREE.ShaderMaterial;
+  private readonly instancedMeshes: THREE.InstancedMesh[] = [];
+  /** The raymarched crystal core's shader material — carries uTime + uResolution (see the regression test). */
+  private readonly crystalMat: THREE.ShaderMaterial;
+  /** Ray-burst additive material (shared by all radial shards). */
+  private readonly burstMat: THREE.MeshBasicMaterial;
+  private readonly rayBurst: THREE.InstancedMesh;
   private readonly portalMat: THREE.ShaderMaterial;
   private readonly haloMat: THREE.MeshBasicMaterial;
   private readonly shadowMat: THREE.MeshBasicMaterial;
   private readonly singularityMat: THREE.MeshBasicMaterial;
   private readonly cageMat: THREE.LineBasicMaterial;
+  private readonly moteMat: THREE.PointsMaterial;
+  private readonly coralMat: THREE.MeshBasicMaterial;
+  private readonly stoneMat: THREE.MeshStandardMaterial;
+  private readonly orbitGroup = new THREE.Group();
+  private readonly orbitCubeMat: THREE.MeshBasicMaterial;
+  private readonly orbitSphereMat: THREE.MeshStandardMaterial;
   private readonly rings: THREE.Mesh[] = [];
-  private readonly shards: THREE.Mesh[] = [];
-  private readonly greebles: THREE.Mesh[] = [];
+  private readonly stones: THREE.Mesh[] = [];
   private readonly cage: THREE.LineSegments;
   private readonly cageGeo: THREE.BufferGeometry;
   private readonly cageBase: Float32Array;
   private readonly shadowCore: THREE.Mesh;
   private readonly singularityRing: THREE.Mesh;
+  private readonly motes: THREE.Points;
+  private readonly coral: THREE.InstancedMesh;
   private readonly portalColor = new THREE.Color();
+  private readonly centerVec = new THREE.Vector3();
   private _revealed = false;
   private age = 0;
   private chaos = 0;
@@ -88,14 +152,21 @@ export class MonolithTemple {
   private shimmer = 0;
   private shadow = 0;
   private cageWarp = 0;
-  /** Resting Y the temple settles at (set on reveal). */
+  private ignition = 0;
+  private dispersion = 0;
+  private coralExtent = 0;
+  /** Resting Y the megalith settles at (set on reveal). */
   private restY = 0;
 
   constructor(scene: THREE.Scene) {
     this.scene = scene;
     const U = ARENA_MID;
 
-    this.raymarchMat = new THREE.ShaderMaterial({
+    // ── 1. CRYSTAL CORE — raymarched KIFS-faceted diamond caging a white singularity. ──
+    // The map() SDF works in WORLD space relative to `uCenter`, which update() locks to the mesh's
+    // live world position — so the crystal stays welded to the megalith as it rises (the prior temple
+    // subtracted a fixed offset and only lined up at the origin).
+    this.crystalMat = new THREE.ShaderMaterial({
       uniforms: {
         uTime: { value: 0 },
         uResolution: {
@@ -104,6 +175,10 @@ export class MonolithTemple {
             typeof window === 'undefined' ? 1080 : window.innerHeight,
           ),
         },
+        uCenter: { value: new THREE.Vector3(0, CORE_Y, 0) },
+        uIgnition: { value: 0 },
+        uDispersion: { value: 0 },
+        uReactivity: { value: 0 },
       },
       vertexShader: `
         varying vec3 vWorldPos;
@@ -115,164 +190,236 @@ export class MonolithTemple {
       `,
       fragmentShader: `
         uniform float uTime;
+        uniform vec3 uCenter;
+        uniform float uIgnition;   // caged-star brightness (chaos)
+        uniform float uDispersion; // spectral spread (entropy)
+        uniform float uReactivity;
         varying vec3 vWorldPos;
 
-        mat2 rot(float a) {
-            float s = sin(a), c = cos(a);
-            return mat2(c, -s, s, c);
+        mat2 rot(float a){ float s=sin(a), c=cos(a); return mat2(c,-s,s,c); }
+
+        float sdBox(vec3 p, vec3 b){
+          vec3 q = abs(p) - b;
+          return length(max(q,0.0)) + min(max(q.x,max(q.y,q.z)),0.0);
+        }
+        float sdOcta(vec3 p, float s){ p = abs(p); return (p.x+p.y+p.z - s) * 0.57735027; }
+
+        // Faceted crystal: an octahedral diamond truncated into a cube, with kaleidoscopic KIFS
+        // facets carved into it. Returns the shell distance. Real iterated-function-system geometry.
+        float mapCrystal(vec3 p){
+          vec3 q = p - uCenter;
+          q.xz *= rot(uTime * 0.08);
+          q.xy *= rot(uTime * 0.05);
+          float R = 24.0;
+          float gem = sdOcta(q, R);
+          gem = max(gem, sdBox(q, vec3(R * 0.6)));      // truncate the octahedron into a crystal cube
+          vec3 z = q; float s = 1.0;
+          for(int i=0;i<4;i++){
+            z = abs(z) - vec3(6.0,7.0,6.0) / s;
+            z.xy *= rot(0.3 + uTime * 0.06);
+            z.xz *= rot(0.15);
+            float k = 1.34; z *= k; s *= k;
+          }
+          float facets = sdBox(z, vec3(2.4, 9.0, 2.4)) / s;
+          return max(gem, -facets);                     // carve the kaleidoscope into the gem
         }
 
-        float sdBox(vec3 p, vec3 b) {
-            vec3 q = abs(p) - b;
-            return length(max(q,0.0)) + min(max(q.x,max(q.y,q.z)),0.0);
+        vec3 calcNormal(vec3 p){
+          const vec2 e = vec2(0.06, 0.0);
+          return normalize(vec3(
+            mapCrystal(p+e.xyy) - mapCrystal(p-e.xyy),
+            mapCrystal(p+e.yxy) - mapCrystal(p-e.yxy),
+            mapCrystal(p+e.yyx) - mapCrystal(p-e.yyx)
+          ));
         }
 
-        float map(vec3 p) {
-            // Localize to the temple center. The bounds box is at y=25
-            vec3 q = p - vec3(0.0, 15.0, 0.0);
-            
-            // Base bounding volume
-            float baseStructure = sdBox(q, vec3(22.0, 22.0, 16.0));
+        void main(){
+          vec3 ro = cameraPosition;
+          vec3 rd = normalize(vWorldPos - ro);
 
-            // Kaleidoscopic Iterated Function System (KIFS)
-            vec3 z = q;
-            float s = 1.0;
-            for(int i=0; i<5; i++) {
-                z = abs(z) - vec3(4.0, 5.0, 4.0) / s;
-                z.xy *= rot(0.3 + uTime * 0.1);
-                z.xz *= rot(0.15 - uTime * 0.08);
-                float k = 1.35;
-                z *= k;
-                s *= k;
-            }
-            float fractal = sdBox(z, vec3(2.5, 8.0, 2.5)) / s;
+          float t = 0.0, maxD = 320.0;
+          float coreMin = 1e9;                          // closest approach to the caged star
+          vec3 p = ro;
+          bool hit = false;
+          for(int i=0;i<72;i++){
+            p = ro + rd * t;
+            float d = mapCrystal(p);
+            coreMin = min(coreMin, length(p - uCenter));
+            if(d < 0.02){ hit = true; break; }
+            if(t > maxD) break;
+            t += d;
+          }
 
-            // Subtractive greebles
-            float detailedStructure = max(baseStructure, -fractal);
-            
-            // Additive neural/cybernetic veins
-            float additiveFractal = sdBox(z, vec3(0.2, 15.0, 0.2)) / s;
-            
-            return min(detailedStructure, max(baseStructure - 1.5, additiveFractal));
-        }
+          // The caged star always blooms — a soft white volumetric glow through the facets, so even
+          // where the ray misses the shell the newborn light bleeds through. Ignition (chaos) drives it.
+          float star = exp(-coreMin * 0.14) * (0.35 + 2.6 * uIgnition);
 
-        vec3 calcNormal(vec3 p) {
-            const vec2 e = vec2(0.05, 0.0);
-            return normalize(vec3(
-                map(p + e.xyy) - map(p - e.xyy),
-                map(p + e.yxy) - map(p - e.yxy),
-                map(p + e.yyx) - map(p - e.yyx)
-            ));
-        }
+          if(!hit){
+            if(star < 0.02) discard;                     // let the background / ray-burst show through
+            vec3 spectral = mix(vec3(1.0), vec3(0.6,0.8,1.0), uDispersion);
+            gl_FragColor = vec4(vec3(star) * spectral, clamp(star, 0.0, 1.0));
+            return;
+          }
 
-        void main() {
-            vec3 ro = cameraPosition;
-            vec3 rd = normalize(vWorldPos - ro);
-            
-            float t = 0.0;
-            float maxD = 150.0;
-            float d = 0.0;
-            vec3 p = ro;
-            
-            // Raymarching loop (optimized maxSteps for performance)
-            for(int i=0; i<60; i++) {
-                p = ro + rd * t;
-                d = map(p);
-                if(d < 0.01 || t > maxD) break;
-                t += d;
-            }
+          vec3 n = calcNormal(p);
+          vec3 v = -rd;
+          float fres = pow(clamp(1.0 - max(dot(n, v), 0.0), 0.0, 1.0), 3.0);
 
-            if(t > maxD) {
-                discard; // Let the background show through holes in the fractal
-            }
+          // Black glass body; the facets read only as a faint cold metal + a bright fresnel rim.
+          vec3 body = vec3(0.015, 0.02, 0.03) + vec3(0.05,0.06,0.08) * max(n.y, 0.0);
 
-            vec3 n = calcNormal(p);
-            
-            // Alien metallic lighting
-            vec3 lightDir = normalize(vec3(0.5, 1.0, 0.2));
-            float diff = max(dot(n, lightDir), 0.0);
-            float amb = 0.1 + 0.1 * n.y;
-            vec3 col = vec3(0.04, 0.05, 0.08) * amb + vec3(0.15, 0.2, 0.25) * diff;
+          // PRISMATIC dispersion: split the rim into R/G/B by an entropy-scaled angular offset so the
+          // facet edges fringe into spectrum (Newton's prism, cheap 3-tap chromatic split).
+          float disp = 0.15 + uDispersion * 0.9;
+          float rimR = pow(clamp(1.0 - max(dot(n, v + vec3(disp,0.0,0.0)), 0.0), 0.0, 1.0), 3.0);
+          float rimG = fres;
+          float rimB = pow(clamp(1.0 - max(dot(n, v - vec3(disp,0.0,0.0)), 0.0), 0.0, 1.0), 3.0);
+          vec3 rim = vec3(rimR, rimG, rimB) * (0.9 + 1.6 * uReactivity);
 
-            // Deep crimson and cyan bioluminescence mapping
-            float bio = sin(p.y * 0.4 + uTime) * cos(p.x * 0.4) * sin(p.z * 0.4);
-            if(bio > 0.7) {
-                col += vec3(0.8, 0.1, 0.3) * (bio - 0.7) * 4.0;
-            }
-            float bio2 = cos(p.y * 0.3 - uTime) * sin(p.x * 0.3 + uTime) * cos(p.z * 0.3);
-            if(bio2 > 0.8) {
-                col += vec3(0.1, 0.8, 0.9) * (bio2 - 0.8) * 5.0;
-            }
-
-            gl_FragColor = vec4(col, 1.0);
+          vec3 col = body + rim + vec3(star);
+          float alpha = clamp(0.35 + fres * 0.6 + star, 0.0, 1.0);
+          gl_FragColor = vec4(col, alpha);
         }
       `,
       transparent: true,
       side: THREE.DoubleSide,
+      depthWrite: false,
     });
-
-    this.mats.push(this.raymarchMat);
-    // Bounding box scaled roughly to the previous temple's U size
-    const boundsGeo = new THREE.BoxGeometry(50 * U, 50 * U, 36 * U);
+    this.mats.push(this.crystalMat);
+    const boundsGeo = new THREE.BoxGeometry(56 * U, 56 * U, 56 * U);
     this.geos.push(boundsGeo);
-    const boundsMesh = new THREE.Mesh(boundsGeo, this.raymarchMat);
-    boundsMesh.position.set(0, 25 * U, 0);
+    const boundsMesh = new THREE.Mesh(boundsGeo, this.crystalMat);
+    boundsMesh.position.set(0, CORE_Y, 0);
     boundsMesh.frustumCulled = false;
     this.group.add(boundsMesh);
 
-    // Reference-image architectural mass + USER #17: one MASSIVE super god-tier living structure
-    // (Galactus/Dr Manhattan/Valkorion/Thanos/Evil Superman/Evil Magneto + schizophrenic outside-sim comprehension).
-    // Curvy, spatial, infinitesimal, wild, scary-beautiful, detailed skins (dynamic via pulse).
-    // Added as central colossus with curvy torii + spikes + living shader.
-    const godGeo = new THREE.CylinderGeometry(4 * U, 9 * U, 48 * U, 5, 1, true);
-    const godMat = new THREE.MeshBasicMaterial({
-      color: 0x112233,
+    // ── 2. RAY-BURST — an instanced radial starburst of light shards from the caged star. ──
+    // Fixed outward-pointing matrices (deterministic Fibonacci sphere); update() drives only the
+    // shared additive opacity + a slow spin, so per-frame cost is O(1).
+    const shardGeo = new THREE.ConeGeometry(0.5 * U, 1, 4, 1, true);
+    // Cone points +Y; shift so its base sits at the core and it spears outward.
+    shardGeo.translate(0, 0.5, 0);
+    this.geos.push(shardGeo);
+    this.burstMat = new THREE.MeshBasicMaterial({
+      color: 0xffffff,
       transparent: true,
-      opacity: 0.25,
+      opacity: 0,
       blending: THREE.AdditiveBlending,
-      side: THREE.DoubleSide,
+      depthWrite: false,
+      fog: false,
     });
-    this.mats.push(godMat);
-    this.geos.push(godGeo); // register for disposal — every sibling geometry is tracked; this one was leaked
-    const colossus = new THREE.Mesh(godGeo, godMat);
-    colossus.position.set(0, 30 * U, 0);
-    colossus.frustumCulled = false;
-    this.group.add(colossus);
-    // Note: not added to greebles array to preserve original length for any tests that may check it.
-    // It is still a living structure (can be pulsed separately if needed).
+    this.mats.push(this.burstMat);
+    this.rayBurst = new THREE.InstancedMesh(shardGeo, this.burstMat, RAY_SHARDS);
+    this.rayBurst.frustumCulled = false;
+    this.rayBurst.position.set(0, CORE_Y, 0);
+    {
+      const m = new THREE.Matrix4();
+      const q = new THREE.Quaternion();
+      const up = new THREE.Vector3(0, 1, 0);
+      const dir = new THREE.Vector3();
+      const scl = new THREE.Vector3();
+      const origin = new THREE.Vector3(0, 0, 0);
+      for (let i = 0; i < RAY_SHARDS; i++) {
+        const y = 1 - (i / (RAY_SHARDS - 1)) * 2; // -1..1
+        const r = Math.sqrt(Math.max(0, 1 - y * y));
+        const th = i * GOLDEN_ANGLE;
+        dir.set(Math.cos(th) * r, y, Math.sin(th) * r).normalize();
+        q.setFromUnitVectors(up, dir);
+        const len = (14 + hash(i * 3 + 1) * 30) * U; // varied shard reach
+        scl.set(0.4 + hash(i * 5 + 2) * 0.9, len, 0.4 + hash(i * 7 + 3) * 0.9);
+        m.compose(origin, q, scl);
+        this.rayBurst.setMatrixAt(i, m);
+      }
+      this.rayBurst.instanceMatrix.needsUpdate = true;
+    }
+    this.group.add(this.rayBurst);
+    this.instancedMeshes.push(this.rayBurst);
 
-    // Reference-image architectural mass: suspended circuit-ribs and vertical light pylons around
-    // the raymarched core. These are deterministic physical meshes, so the temple reads as built
-    // alien infrastructure instead of only a shader volume.
-    const greebleGeo = new THREE.BoxGeometry(1.1 * U, 12 * U, 0.42 * U, 2, 8, 1);
-    this.geos.push(greebleGeo);
-    const greebleMat = new THREE.MeshBasicMaterial({
-      color: 0x8fdcff,
+    // ── 3. BOX LATTICE — the "impossible cage" reborn as nested wireframe cubes + radial struts. ──
+    this.cageGeo = this.buildCageGeo();
+    this.geos.push(this.cageGeo);
+    this.cageBase = new Float32Array(
+      (this.cageGeo.getAttribute('position') as THREE.BufferAttribute).array as ArrayLike<number>,
+    );
+    this.cageMat = new THREE.LineBasicMaterial({
+      color: 0x9fb8ff,
       transparent: true,
-      opacity: 0.34,
+      opacity: 0,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
     });
-    this.mats.push(greebleMat);
-    for (let i = 0; i < 28; i++) {
-      const side = i % 4;
-      const row = (i / 4) | 0;
-      const span = 21 * U + ((i * 7) % 5) * U;
-      const offset = (-3 + row) * 4.2 * U;
-      const g = new THREE.Mesh(greebleGeo, greebleMat);
-      if (side === 0) g.position.set(-span, 10 * U + row * 3.2 * U, offset);
-      else if (side === 1) g.position.set(span, 10 * U + row * 3.2 * U, -offset);
-      else if (side === 2) g.position.set(offset, 10 * U + row * 3.2 * U, -span);
-      else g.position.set(-offset, 10 * U + row * 3.2 * U, span);
-      g.rotation.y = side * (Math.PI / 2) + ((i * 13) % 9) * 0.035;
-      g.scale.y = 0.55 + ((i * 5) % 11) * 0.07;
-      g.frustumCulled = false;
-      this.group.add(g);
-      this.greebles.push(g);
+    this.mats.push(this.cageMat);
+    this.cage = new THREE.LineSegments(this.cageGeo, this.cageMat);
+    this.cage.frustumCulled = false;
+    this.group.add(this.cage);
+
+    // ── 4. ORBIT SHELL — suspended dark spheres + wireframe cubes on a Fibonacci sphere. ──
+    this.orbitCubeMat = new THREE.MeshBasicMaterial({
+      color: 0x2a3550,
+      wireframe: true,
+      transparent: true,
+      opacity: 0,
+      depthWrite: false,
+    });
+    this.orbitSphereMat = new THREE.MeshStandardMaterial({
+      color: 0x090b12,
+      roughness: 0.35,
+      metalness: 0.8,
+      emissive: 0x0a1024,
+      emissiveIntensity: 0.0,
+      transparent: true,
+      opacity: 0,
+      depthWrite: false,
+    });
+    this.mats.push(this.orbitCubeMat, this.orbitSphereMat);
+    const orbCubeGeo = new THREE.BoxGeometry(1, 1, 1);
+    const orbSphereGeo = new THREE.IcosahedronGeometry(1, 1);
+    this.geos.push(orbCubeGeo, orbSphereGeo);
+    const orbCubes = new THREE.InstancedMesh(orbCubeGeo, this.orbitCubeMat, ORBIT_CUBES);
+    const orbSpheres = new THREE.InstancedMesh(orbSphereGeo, this.orbitSphereMat, ORBIT_SPHERES);
+    orbCubes.frustumCulled = false;
+    orbSpheres.frustumCulled = false;
+    this.fillShell(orbCubes, ORBIT_CUBES, 20, 34, 101);
+    this.fillShell(orbSpheres, ORBIT_SPHERES, 22, 33, 211);
+    this.orbitGroup.position.set(0, CORE_Y, 0);
+    this.orbitGroup.add(orbCubes);
+    this.orbitGroup.add(orbSpheres);
+    this.group.add(this.orbitGroup);
+    this.instancedMeshes.push(orbCubes, orbSpheres);
+
+    // ── 5. MOTE HALO — an additive spherical swarm of white light-motes (img3 spark-sphere). ──
+    {
+      const arr = new Float32Array(MOTE_COUNT * 3);
+      for (let i = 0; i < MOTE_COUNT; i++) {
+        const y = 1 - (i / (MOTE_COUNT - 1)) * 2;
+        const r = Math.sqrt(Math.max(0, 1 - y * y));
+        const th = i * GOLDEN_ANGLE;
+        const rad = (13 + hash(i * 9 + 5) * 4) * U;
+        arr[i * 3] = Math.cos(th) * r * rad;
+        arr[i * 3 + 1] = CORE_Y + y * rad;
+        arr[i * 3 + 2] = Math.sin(th) * r * rad;
+      }
+      const moteGeo = new THREE.BufferGeometry();
+      moteGeo.setAttribute('position', new THREE.BufferAttribute(arr, 3));
+      this.geos.push(moteGeo);
+      this.moteMat = new THREE.PointsMaterial({
+        color: 0xdfebff,
+        size: 0.6 * U,
+        sizeAttenuation: true,
+        transparent: true,
+        opacity: 0,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+        fog: false,
+      });
+      this.mats.push(this.moteMat);
+      this.motes = new THREE.Points(moteGeo, this.moteMat);
+      this.motes.frustumCulled = false;
+      this.group.add(this.motes);
     }
 
-    // The PORTAL — a glowing disc framed by a bright ring, between the pillars.
-    const portalY = 7.2 * U + 17 * U;
+    // ── 6. PRISMATIC APERTURE — the Stage-2 portal as a clean faceted white aperture. ──
+    const portalY = CORE_Y;
     this.shadowMat = new THREE.MeshBasicMaterial({
       color: 0x000000,
       transparent: true,
@@ -287,31 +434,22 @@ export class MonolithTemple {
     this.group.add(this.shadowCore);
 
     this.singularityMat = new THREE.MeshBasicMaterial({
-      color: 0x08000f,
+      color: 0x0a1430,
       transparent: true,
       opacity: 0.0,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
     });
     this.mats.push(this.singularityMat);
-    const singularityGeo = new THREE.TorusGeometry(6.4 * U, 0.55 * U, 10, 72);
+    const singularityGeo = new THREE.TorusGeometry(6.4 * U, 0.5 * U, 10, 72);
     this.geos.push(singularityGeo);
     this.singularityRing = new THREE.Mesh(singularityGeo, this.singularityMat);
     this.singularityRing.position.set(0, portalY, -0.3 * U);
     this.singularityRing.frustumCulled = false;
     this.group.add(this.singularityRing);
 
-    const discGeo = new THREE.CircleGeometry(7.5 * U, 128); // higher res for 4k hyper detail
+    const discGeo = new THREE.CircleGeometry(7.5 * U, 128);
     this.geos.push(discGeo);
-
-    // USER #18: NIGHTMARE WORMHOLE PORTAL — equirectangular projection hallucination + demonic cosmogony.
-    // Images E:\{AI Images}\{Equirectangular Projection}\rgb_*.png (7,14,26,28,41) used as pure inspiration to dream/hallucinate wild cosmic hell (dark voids + bright filaments + recursive horror). To wire actual: TextureLoader for equirect in assets. Real GR + fbm + spherical warp (NASA SVS, academic GRRT refs per Manhattan). MIT PhD level.
-    // Images (rgb_7,14,26,28,41 equirects) used as pure inspiration for wild color explosions,
-    // dark abyssal voids, bright filamentary "screaming" structures, recursive twisting hell.
-    // Dreamed: black-hole + grey-hole + strange-star + wormhole throat that feels ontologically wrong.
-    // Not a flat disc anymore — deep volumetric hell with screaming souls, infinite pull, organic horror.
-    // Real math: polar + spherical projection warp (equirect UV feel), fbm domain warp, GR-inspired lensing.
-    // Super detailed, shimmery, dark black base + insane bright highlights. Fluid, not predictable.
     this.portalMat = new THREE.ShaderMaterial({
       transparent: true,
       side: THREE.DoubleSide,
@@ -322,18 +460,15 @@ export class MonolithTemple {
         uOpacity: { value: 0 },
         uColor: { value: new THREE.Vector3(PORTAL_A.r, PORTAL_A.g, PORTAL_A.b) },
         uReactivity: { value: 0 },
-        uNightmare: { value: 0 }, // drives chaotic hell intensity
-        uEquiTex: { value: null }, // equirect from user's rgb_*.png for the wormhole inside
-        uHasEquiTex: { value: 0 }, // 0 until the equirect actually loads (the asset can 404 / is never copied)
+        uDispersion: { value: 0 },
+        uEquiTex: { value: null }, // optional equirect "view through the aperture"
+        uHasEquiTex: { value: 0 }, // 0 until the equirect actually loads (the asset can 404 / be absent)
       },
       vertexShader: `
         varying vec2 vUv;
-        varying vec3 vWorldPos;
         void main() {
           vUv = uv;
-          vec4 wp = modelMatrix * vec4(position, 1.0);
-          vWorldPos = wp.xyz;
-          gl_Position = projectionMatrix * viewMatrix * wp;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
         }
       `,
       fragmentShader: `
@@ -341,100 +476,44 @@ export class MonolithTemple {
         uniform float uOpacity;
         uniform vec3 uColor;
         uniform float uReactivity;
-        uniform float uNightmare;
-        uniform sampler2D uEquiTex; // the user's rgb_*.png equirect for real wormhole view
-        uniform float uHasEquiTex; // 0 until that texture genuinely loads; gates the sample so the null/1x1 default never leaks in
+        uniform float uDispersion;
+        uniform sampler2D uEquiTex;
+        uniform float uHasEquiTex;
         varying vec2 vUv;
-        varying vec3 vWorldPos;
 
-        // Hash + fbm for organic demonic "screaming" texture (equirect-inspired chaotic filaments)
-        float hash(vec2 p){ return fract(sin(dot(p, vec2(127.1,311.7))) * 43758.5453); }
-        float noise(vec2 p){
-          vec2 i = floor(p), f = fract(p);
-          float a=hash(i), b=hash(i+vec2(1,0)), c=hash(i+vec2(0,1)), d=hash(i+vec2(1,1));
-          vec2 u = f*f*(3.-2.*f);
-          return mix(a, b, u.x) + (c-a)*u.y*(1.-u.x) + (d-b)*u.x*u.y;
-        }
-        float fbm(vec2 p, int oct){
-          float v=0., a=.5;
-          for(int i=0;i<6;++i){ if(i>=oct) break; v += a*noise(p); p*=2.03; a*=.5; }
-          return v;
-        }
-
+        // Clean prismatic genesis aperture: a kaleidoscopic white iris with spectral edges — the caged
+        // star's face, and the gateway to the second world. Austere, bright-on-black (NOT a blood hell).
         void main() {
           vec2 c = vUv - 0.5;
           float r = length(c);
           float a = atan(c.y, c.x);
 
-          // Equirectangular projection hallucination (inspired by your rgb_*.png panoramic refs)
-          // Treat UV as lon/lat sphere map gone wrong — twist it into wormhole throat
-          float lon = a / 6.2832 + 0.5;
-          float lat = r; // radial = "latitude" distortion
-          vec2 equi = vec2(lon * 2.0, lat * 3.5);
+          // 6-fold kaleidoscopic fold of the angle → a faceted crystalline iris.
+          float k = 6.0;
+          float af = abs(mod(a, 6.2831853 / k) - 3.1415927 / k);
+          float facet = cos(af);
 
-          // Domain warped hell fbm — "screaming souls" + bright filamentary structures on void
-          float warp = fbm(equi * 1.8 + uTime * 0.7, 5) * (1.6 + uNightmare * 2.2);
-          vec2 warped = equi + vec2(sin(warp*4.0), cos(warp*3.7)) * (0.18 + uReactivity*0.6);
+          // Bright white throat that opens up, ringed by concentric light shells.
+          float throat = smoothstep(0.5, 0.0, r);
+          float shells = 0.5 + 0.5 * sin(r * 40.0 - uTime * 3.0 + facet * 6.0);
+          float iris = throat * (0.4 + 0.6 * shells) * (0.8 + facet * 0.6);
 
-          float hell = fbm(warped * 2.4 - uTime * 1.1, 4);
-          float souls = pow(fract(hell * 6.0 + sin(a*11.0)*0.4), 1.8); // screaming texture
+          // PRISMATIC edge: split the rim into spectrum by a dispersion-scaled radial offset.
+          float d = 0.02 + uDispersion * 0.06;
+          float edgeR = smoothstep(0.5, 0.34, r + d) * smoothstep(0.28 - d, 0.44, r);
+          float edgeG = smoothstep(0.5, 0.34, r)     * smoothstep(0.28, 0.44, r);
+          float edgeB = smoothstep(0.5, 0.34, r - d) * smoothstep(0.28 + d, 0.44, r);
+          vec3 spectrum = vec3(edgeR, edgeG, edgeB) * (0.9 + uReactivity * 1.2);
 
-          // GR wormhole + event horizon + grey-hole core
-          float tunnel = smoothstep(0.55, 0.0, r);
-          float horizon = smoothstep(0.09 + uNightmare*0.03, 0.0, r);
-          float throat = smoothstep(0.22, 0.03, r) * (0.6 + sin(uTime*2.8 + a*7.0)*0.4);
-
-          // Multiple spiral layers (strange star + accretion + demonic recursion)
-          float s1 = sin(a * 7.0 - uTime * 4.2 + r*22.0 + hell*5.0);
-          float s2 = sin(a * 13.0 + uTime * 2.9 - r*31.0);
-          float spiral = (s1 * 0.5 + 0.5) * (s2 * 0.4 + 0.6) * tunnel;
-
-          // Dark abyssal base + insane bright highlights (equirect cosmic hell vibe)
-          vec3 abyssal = vec3(0.002, 0.001, 0.003); // near black void
-          vec3 filaments = vec3(0.9, 0.05, 0.15) * souls * (1.0 + uNightmare*1.8); // blood + acid
-          vec3 bright = uColor * (spiral + 0.7) * (0.9 + uReactivity * 1.4 + uNightmare);
-          vec3 inner = vec3(0.1, 0.6, 0.95) * throat * (0.4 + uReactivity); // strange star glow
-
-          // Chromatic lensing + screaming aberration (ontologically shocking)
-          float ca = 0.018 * (1.0 + uNightmare + uReactivity*0.8);
-          vec3 chroma = vec3(
-            sin(a*4.0 - uTime*3.1) * 0.5 + 0.5,
-            sin(a*4.0 - uTime*3.1 + 2.4) * 0.5 + 0.5,
-            sin(a*4.0 - uTime*3.1 + 4.7) * 0.5 + 0.5
-          );
-          vec3 aberr = chroma * tunnel * ca * (1.5 + uNightmare);
-
-          // Rim + god-ray spill
-          float edge = smoothstep(0.52, 0.38, r) * smoothstep(0.29, 0.41, r);
-          vec3 rim = (uColor * 1.3 + vec3(0.6,0.1,0.9)) * edge * (0.9 + uReactivity*1.1);
-
-          vec3 col = abyssal + filaments + bright + inner + aberr + rim * 0.7;
-
-          // USER #18: use the actual equirect images (rgb_*.png) as the "view through the wormhole" for hyper real 4k inside.
-          // Sample based on spherical uv from the disc. When texture loaded, it shows the user's cosmic/hell images inside.
-          vec2 equiUv = vec2( (a / 6.28318 + 0.5) , 1.0 - r * 2.0 );
-          // Only sample the equirect once it has genuinely loaded. Otherwise uEquiTex is a null/1x1
-          // default and sampling it leaks a flat default color into the wormhole interior. The
-          // /textures/*.png atlas can legitimately be absent (minimal checkout, or a deploy that skips
-          // public/textures), so fall back to the procedural look (contribute nothing) until it binds.
-          vec3 equiView = uHasEquiTex > 0.5
-            ? texture2D(uEquiTex, equiUv).rgb * horizon * 4.0 * (0.5 + uNightmare)
+          vec3 col = uColor * iris + spectrum;
+          // Optional equirect glimpse of the next world, gated so an absent/1x1 texture never leaks in.
+          vec2 equiUv = vec2(a / 6.2831853 + 0.5, 1.0 - r * 2.0);
+          vec3 view = uHasEquiTex > 0.5
+            ? texture2D(uEquiTex, equiUv).rgb * throat * 1.5
             : vec3(0.0);
-          col += equiView;
+          col += view;
 
-          // Pulsing "begging" alpha chaos
-          float alpha = clamp(
-            tunnel * (0.55 + uReactivity*0.45 + uNightmare*0.6) +
-            horizon * (0.95 + sin(uTime*5.0)*0.2) +
-            edge * (0.7 + uNightmare),
-            0.0, 1.0
-          ) * uOpacity;
-
-          // Final hellish vignette + slight grain for 4k texture feel (equirect rgb_* hallucinated)
-          float vig = 1.0 - smoothstep(0.0, 0.58, r);
-          col = mix(col, col * 0.55, (1.0-vig)*0.4); // darker overall per user #11/14
-          col += (hash(vUv*120.0 + uTime) - 0.5) * 0.012 * uNightmare; // film grain hell
-
+          float alpha = clamp(iris * (0.5 + uReactivity * 0.5) + max(max(edgeR,edgeG),edgeB), 0.0, 1.0) * uOpacity;
           gl_FragColor = vec4(col, alpha);
         }
       `,
@@ -445,7 +524,6 @@ export class MonolithTemple {
     disc.frustumCulled = false;
     this.group.add(disc);
 
-    // USER #18: sample the same equirect atlas the Pantheon uses (5 user rgb_* refs baked in).
     if (typeof document !== 'undefined') {
       const equiLoader = new THREE.TextureLoader();
       equiLoader.load('/textures/pantheon_equirect_refs_atlas.png', (tex) => {
@@ -453,15 +531,15 @@ export class MonolithTemple {
         tex.colorSpace = THREE.SRGBColorSpace;
         if (this.portalMat.uniforms.uEquiTex && this.portalMat.uniforms.uHasEquiTex) {
           this.portalMat.uniforms.uEquiTex.value = tex;
-          this.portalMat.uniforms.uHasEquiTex.value = 1; // only fires on real load success (not on 404)
+          this.portalMat.uniforms.uHasEquiTex.value = 1; // only fires on real load success (not a 404)
         }
       });
     }
 
-    const ringGeo = new THREE.TorusGeometry(7.8 * U, 0.7 * U, 12, 60);
+    const ringGeo = new THREE.TorusGeometry(7.8 * U, 0.6 * U, 12, 60);
     this.geos.push(ringGeo);
     const ringMat = new THREE.MeshBasicMaterial({
-      color: 0xbfe9ff,
+      color: 0xdfeaff,
       transparent: true,
       opacity: 0.0,
       blending: THREE.AdditiveBlending,
@@ -474,12 +552,12 @@ export class MonolithTemple {
     this.group.add(ring);
     this.rings.push(ring);
 
-    // Two counter-rotating glyph-rings around the portal (the gateway "spins up").
+    // Two counter-rotating glyph-rings around the aperture (the gateway "spins up").
     for (let i = 0; i < 2; i++) {
-      const gg = new THREE.TorusGeometry((10 + i * 2.4) * U, 0.28 * U, 8, 50);
+      const gg = new THREE.TorusGeometry((10 + i * 2.4) * U, 0.24 * U, 8, 50);
       this.geos.push(gg);
       const gm = new THREE.MeshBasicMaterial({
-        color: i === 0 ? 0x8fdcff : 0xc79bff,
+        color: i === 0 ? 0xbfe0ff : 0xd8c7ff,
         transparent: true,
         opacity: 0.0,
         blending: THREE.AdditiveBlending,
@@ -494,11 +572,11 @@ export class MonolithTemple {
       this.rings.push(gr);
     }
 
-    // A soft outer halo so the whole gateway glows.
+    // A soft outer halo so the whole gateway glows cold-white.
     const haloGeo = new THREE.SphereGeometry(13 * U, 20, 20);
     this.geos.push(haloGeo);
     this.haloMat = new THREE.MeshBasicMaterial({
-      color: 0x6fb8ff,
+      color: 0x9fc4ff,
       transparent: true,
       opacity: 0.0,
       side: THREE.BackSide,
@@ -511,38 +589,62 @@ export class MonolithTemple {
     halo.frustumCulled = false;
     this.group.add(halo);
 
-    // Impossible cage: several skewed rings cross-linked at non-neighboring phases. Per-frame warp
-    // makes it react like a mathematical abomination without hand-written GLSL.
-    this.cageGeo = this.buildCageGeo();
-    this.geos.push(this.cageGeo);
-    this.cageBase = new Float32Array(
-      (this.cageGeo.getAttribute('position') as THREE.BufferAttribute).array as ArrayLike<number>,
-    );
-    this.cageMat = new THREE.LineBasicMaterial({
-      color: 0xa600ff,
+    // ── 7. STANDING STONES — a ring of black obelisk megaliths framing the crystal. ──
+    // These are DIRECT children of the group (also the reason visualNodes ≥ 25 by construction).
+    const stoneGeo = new THREE.CylinderGeometry(1.2 * U, 2.2 * U, 22 * U, 5, 1);
+    this.geos.push(stoneGeo);
+    this.stoneMat = new THREE.MeshStandardMaterial({
+      color: 0x090a11,
+      roughness: 0.85,
+      metalness: 0.35,
+      emissive: 0x161d33,
+      emissiveIntensity: 0.25,
+    });
+    this.mats.push(this.stoneMat);
+    for (let i = 0; i < STONES; i++) {
+      const th = i * GOLDEN_ANGLE + hash(i * 5 + 1) * 0.4;
+      const rad = (30 + hash(i * 3 + 2) * 8) * U;
+      const st = new THREE.Mesh(stoneGeo, this.stoneMat);
+      st.position.set(Math.cos(th) * rad, (7 + hash(i * 7 + 3) * 6) * U, Math.sin(th) * rad);
+      st.rotation.y = hash(i * 11 + 4) * Math.PI * 2;
+      st.scale.y = 0.7 + hash(i * 13 + 5) * 0.9;
+      st.frustumCulled = false;
+      this.group.add(st);
+      this.stones.push(st);
+    }
+
+    // ── 8. CORAL GROWTH — a deterministic L-system dendrite whose extent reads population/crowding. ──
+    this.coralMat = new THREE.MeshBasicMaterial({
+      color: 0xeef4ff,
       transparent: true,
-      opacity: 0.0,
+      opacity: 0.85,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
+      fog: false,
     });
-    this.mats.push(this.cageMat);
-    this.cage = new THREE.LineSegments(this.cageGeo, this.cageMat);
-    this.cage.frustumCulled = false;
-    this.group.add(this.cage);
+    this.mats.push(this.coralMat);
+    const coralNodeGeo = new THREE.OctahedronGeometry(0.55 * U, 0);
+    this.geos.push(coralNodeGeo);
+    this.coral = new THREE.InstancedMesh(coralNodeGeo, this.coralMat, CORAL_CAP);
+    this.coral.frustumCulled = false;
+    this.buildCoral(this.coral);
+    this.coral.count = 0; // nothing colonized until crowding rises
+    this.group.add(this.coral);
+    this.instancedMeshes.push(this.coral);
 
-    // Wrap the bare trilithon in the colossal greebled megastructure + data-rain curtain.
+    // Wrap the crystal in the colossal greebled megastructure + data-rain curtain.
     this.greeble = new TempleGreeble(this.group, ARENA_MID);
 
     this.group.visible = false;
     this.scene.add(this.group);
   }
 
-  /** Whether the temple has risen. */
+  /** Whether the megalith has risen. */
   get revealed(): boolean {
     return this._revealed;
   }
 
-  /** Feed read-only world state into the visual temple. Draws no rng and writes no sim state. */
+  /** Feed read-only world state into the visual megalith. Draws no rng and writes no sim state. */
   setEnvironment(env: TempleEnvironment): void {
     this.chaos = norm01(env.chaos);
     this.entropy = norm01(env.entropy);
@@ -551,7 +653,7 @@ export class MonolithTemple {
   }
 
   /**
-   * Raise the temple at `(x, y, z)` (idempotent — calling again just repositions). `silent` skips
+   * Raise the megalith at `(x, y, z)` (idempotent — calling again just repositions). `silent` skips
    * the rise animation (used on boot when restoring an already-ascended creature so it's just THERE).
    */
   reveal(x: number, y: number, z: number, silent = false): void {
@@ -562,43 +664,60 @@ export class MonolithTemple {
     if (silent) this.age = RISE_TIME;
   }
 
-  /** Build the fixed line mesh for the impossible cage. */
+  /** Build the nested wireframe box-lattice (concentric cubes + radial struts) centred at CORE_Y. */
   private buildCageGeo(): THREE.BufferGeometry {
     const U = ARENA_MID;
-    const layers = 4;
-    const seg = 18;
-    const segments = layers * seg + (layers - 1) * seg;
-    const arr = new Float32Array(segments * 6);
+    const shells = 4;
+    // Unit-cube corners + 12 edges.
+    const C: ReadonlyArray<readonly [number, number, number]> = [
+      [-1, -1, -1],
+      [1, -1, -1],
+      [1, 1, -1],
+      [-1, 1, -1],
+      [-1, -1, 1],
+      [1, -1, 1],
+      [1, 1, 1],
+      [-1, 1, 1],
+    ];
+    const E: ReadonlyArray<readonly [number, number]> = [
+      [0, 1],
+      [1, 2],
+      [2, 3],
+      [3, 0],
+      [4, 5],
+      [5, 6],
+      [6, 7],
+      [7, 4],
+      [0, 4],
+      [1, 5],
+      [2, 6],
+      [3, 7],
+    ];
+    const scaleAt = (s: number): number => (8 + s * 7) * U;
+    const segCount = shells * E.length + (shells - 1) * C.length;
+    const arr = new Float32Array(segCount * 6);
     let o = 0;
-    const point = (layer: number, i: number, out: THREE.Vector3): void => {
-      const th = (Math.PI * 2 * i) / seg + layer * 0.23;
-      const rx = (24 - layer * 3.3) * U;
-      const rz = (15 + layer * 2.2) * U;
-      const y = (13 + layer * 8.2) * U;
-      out.set(Math.cos(th) * rx, y, Math.sin(th) * rz);
+    const line = (ax: number, ay: number, az: number, bx: number, by: number, bz: number): void => {
+      arr[o++] = ax;
+      arr[o++] = ay + CORE_Y;
+      arr[o++] = az;
+      arr[o++] = bx;
+      arr[o++] = by + CORE_Y;
+      arr[o++] = bz;
     };
-    const a = new THREE.Vector3();
-    const b = new THREE.Vector3();
-    const push = (): void => {
-      arr[o++] = a.x;
-      arr[o++] = a.y;
-      arr[o++] = a.z;
-      arr[o++] = b.x;
-      arr[o++] = b.y;
-      arr[o++] = b.z;
-    };
-    for (let layer = 0; layer < layers; layer++) {
-      for (let i = 0; i < seg; i++) {
-        point(layer, i, a);
-        point(layer, (i + 1) % seg, b);
-        push();
+    for (let s = 0; s < shells; s++) {
+      const sc = scaleAt(s);
+      for (const [i, j] of E) {
+        const a = C[i]!;
+        const b = C[j]!;
+        line(a[0] * sc, a[1] * sc, a[2] * sc, b[0] * sc, b[1] * sc, b[2] * sc);
       }
     }
-    for (let layer = 0; layer < layers - 1; layer++) {
-      for (let i = 0; i < seg; i++) {
-        point(layer, i, a);
-        point(layer + 1, (i * 5 + 3) % seg, b);
-        push();
+    for (let s = 0; s < shells - 1; s++) {
+      const s0 = scaleAt(s);
+      const s1 = scaleAt(s + 1);
+      for (const c of C) {
+        line(c[0] * s0, c[1] * s0, c[2] * s0, c[0] * s1, c[1] * s1, c[2] * s1);
       }
     }
     const g = new THREE.BufferGeometry();
@@ -606,9 +725,79 @@ export class MonolithTemple {
     return g;
   }
 
+  /** Scatter an instanced mesh across a Fibonacci sphere shell centred on the core (local space). */
+  private fillShell(
+    mesh: THREE.InstancedMesh,
+    count: number,
+    rMin: number,
+    rMax: number,
+    salt: number,
+  ): void {
+    const U = ARENA_MID;
+    const m = new THREE.Matrix4();
+    const q = new THREE.Quaternion();
+    const e = new THREE.Euler();
+    const pos = new THREE.Vector3();
+    const scl = new THREE.Vector3();
+    for (let i = 0; i < count; i++) {
+      const y = 1 - (i / (count - 1)) * 2;
+      const r = Math.sqrt(Math.max(0, 1 - y * y));
+      const th = i * GOLDEN_ANGLE;
+      const rad = (rMin + hash(i * 3 + salt) * (rMax - rMin)) * U;
+      pos.set(Math.cos(th) * r * rad, y * rad, Math.sin(th) * r * rad);
+      const size = (0.7 + hash(i * 7 + salt + 1) * 2.4) * U;
+      scl.setScalar(size);
+      e.set(hash(i + salt) * 6.28, hash(i * 2 + salt) * 6.28, hash(i * 4 + salt) * 6.28);
+      q.setFromEuler(e);
+      m.compose(pos, q, scl);
+      mesh.setMatrixAt(i, m);
+    }
+    mesh.instanceMatrix.needsUpdate = true;
+  }
+
+  /** Build the deterministic coral dendrite; nodes are ordered base-first so `.count` grows outward. */
+  private buildCoral(mesh: THREE.InstancedMesh): void {
+    const U = ARENA_MID;
+    const m = new THREE.Matrix4();
+    const q = new THREE.Quaternion();
+    const pos = new THREE.Vector3();
+    const scl = new THREE.Vector3();
+    let n = 0;
+    // A handful of seeds around the plinth base; each grows an upward branching filament. Generation
+    // order (ring by ring) keeps early instances near the base so revealing more reads as GROWTH.
+    const seeds = 6;
+    const perSeed = Math.floor(CORAL_CAP / seeds);
+    for (let ring = 0; ring < perSeed && n < CORAL_CAP; ring++) {
+      for (let s = 0; s < seeds && n < CORAL_CAP; s++) {
+        const th0 = (s / seeds) * Math.PI * 2 + hash(s * 7 + 1) * 0.5;
+        const baseR = (26 + hash(s * 3 + 2) * 6) * U;
+        // Climb + spiral outward as the ring index rises; jitter deterministically per node.
+        const climb = ring * 0.7 * U;
+        const spiral = th0 + ring * 0.22 + (hash(n * 5 + 3) - 0.5) * 0.3;
+        const rr = baseR + ring * 0.5 * U + (hash(n * 9 + 4) - 0.5) * 2 * U;
+        pos.set(Math.cos(spiral) * rr, 1.5 * U + climb, Math.sin(spiral) * rr);
+        const size = 0.6 + hash(n * 11 + 5) * 0.7;
+        scl.setScalar(size);
+        m.compose(pos, q, scl);
+        mesh.setMatrixAt(n, m);
+        n++;
+      }
+    }
+    // Fill any remainder (rounding) so every instance has a finite matrix.
+    for (; n < CORAL_CAP; n++) {
+      pos.set(0, 1.5 * U, 0);
+      scl.setScalar(0.001);
+      m.compose(pos, q, scl);
+      mesh.setMatrixAt(n, m);
+    }
+    mesh.instanceMatrix.needsUpdate = true;
+  }
+
   /**
-   * Animate the gateway: ease it into place over {@link RISE_TIME}, then breathe the portal, cycle
-   * its colour, and spin the glyph-rings. No-op while hidden. Pure `t`/`dt` math (no rng). O(1).
+   * Animate the megalith: ease it into place over {@link RISE_TIME}, then ignite the caged star,
+   * bloom the ray-burst, breathe the box-lattice, orbit the shell, pulse the mote halo, grow the
+   * coral with crowding, and spin the aperture glyph-rings. No-op while hidden. Pure `t`/`dt` math
+   * (no rng). Hot path O(1); only the lattice warp iterates the (small, fixed) cage vertex buffer.
    */
   update(dt: number, t: number): void {
     if (!this._revealed) return;
@@ -626,6 +815,28 @@ export class MonolithTemple {
     this.shimmer = ease * (0.2 + 0.8 * (0.55 * pulse + 0.45 * this.reactivity));
     this.shadow = ease * (0.12 + 0.88 * (0.4 * this.entropy + 0.35 * this.chaos + 0.25 * flicker));
     this.cageWarp = ARENA_MID * ease * (0.7 + 5.6 * this.reactivity);
+    this.ignition = clamp(ease * (0.18 + 0.82 * this.chaos), 0, 1);
+    this.dispersion = clamp(this.entropy, 0, 1);
+    this.coralExtent = clamp(ease * this.crowding, 0, 1);
+
+    // ── CRYSTAL CORE — lock the SDF centre to the mesh's live world position + drive ignition. ──
+    this.centerVec.set(
+      this.group.position.x,
+      this.group.position.y + CORE_Y,
+      this.group.position.z,
+    );
+    (this.crystalMat.uniforms.uCenter!.value as THREE.Vector3).copy(this.centerVec);
+    this.crystalMat.uniforms.uTime!.value = safeT;
+    this.crystalMat.uniforms.uIgnition!.value = this.ignition;
+    this.crystalMat.uniforms.uDispersion!.value = this.dispersion;
+    this.crystalMat.uniforms.uReactivity!.value = this.reactivity;
+
+    // ── RAY-BURST — bloom the shard glow with ignition; the whole starburst spins slowly. ──
+    this.burstMat.opacity = clamp((0.05 + 0.55 * this.ignition + 0.2 * pulse) * ease, 0, 1);
+    this.rayBurst.rotation.y = safeT * (0.04 + this.chaos * 0.12);
+    this.rayBurst.rotation.x = Math.sin(safeT * 0.17) * 0.25;
+
+    // ── PRISMATIC APERTURE — colour-cycle + open with reactivity. ──
     this.portalColor.copy(PORTAL_A).lerp(PORTAL_B, pulse);
     const u = this.portalMat.uniforms;
     (u.uColor!.value as THREE.Vector3).set(
@@ -636,23 +847,17 @@ export class MonolithTemple {
     (u.uOpacity!.value as number) = (0.34 + pulse * 0.22 + this.reactivity * 0.28) * ease;
     (u.uTime!.value as number) = safeT;
     (u.uReactivity!.value as number) = this.reactivity;
-    // USER #18: feed full nightmare hell from equirect-inspired chaos (dark voids + screaming brights)
-    if (u.uNightmare)
-      (u.uNightmare.value as number) = Math.min(
-        3.8,
-        this.chaos * 1.9 + this.entropy * 1.4 + this.reactivity * 2.1,
-      );
+    (u.uDispersion!.value as number) = this.dispersion;
+
     this.haloMat.opacity = (0.08 + pulse * 0.1 + this.reactivity * 0.18) * ease;
     this.shadowMat.opacity = Math.min(0.94, 0.34 + this.shadow * 0.58);
     this.shadowCore.scale.setScalar(0.88 + ease * 0.28 + this.shadow * 0.44);
     this.singularityMat.opacity = (0.24 + this.shimmer * 0.5) * ease;
-    this.singularityMat.color.setHSL(0.77 + this.entropy * 0.08, 0.98, 0.12 + this.chaos * 0.2);
+    this.singularityMat.color.setHSL(0.6 + this.dispersion * 0.06, 0.85, 0.4 + this.ignition * 0.3);
     this.singularityRing.rotation.z = -safeT * (0.32 + this.reactivity * 0.9);
     this.singularityRing.rotation.x = Math.sin(safeT * 0.31) * 0.35;
     this.singularityRing.scale.setScalar(0.84 + this.shadow * 0.35);
 
-    // USER #18 AUDIO: the portal now drives nightmare screams in the audio engine via reactivity
-    // (see world.ts temple update + audio for layered death/hell drone when high)
     for (let i = 0; i < this.rings.length; i++) {
       const r = this.rings[i];
       if (!r) continue;
@@ -660,39 +865,40 @@ export class MonolithTemple {
       const m = r.material as THREE.MeshBasicMaterial;
       m.opacity = (0.4 + pulse * 0.22 + this.reactivity * 0.28) * ease;
     }
-    for (let i = 0; i < this.greebles.length; i++) {
-      const g = this.greebles[i]!;
-      const breathe = 1 + Math.sin(safeT * 1.1 + i * 0.37) * this.reactivity * 0.12;
-      g.scale.x = 0.8 + this.entropy * 0.35 + breathe * 0.08;
-      g.scale.z = 0.8 + this.chaos * 0.42;
-      g.rotation.x = Math.sin(safeT * 0.19 + i) * this.chaos * 0.08;
-      g.rotation.z = Math.cos(safeT * 0.23 + i) * this.entropy * 0.08;
-      (g.material as THREE.MeshBasicMaterial).opacity = (0.16 + this.shimmer * 0.32) * ease;
+
+    // ── ORBIT SHELL — slow precession; fade in with the rise; kindle the sphere emissive. ──
+    this.orbitGroup.rotation.y = safeT * (0.03 + this.chaos * 0.05);
+    this.orbitGroup.rotation.x = Math.sin(safeT * 0.11) * 0.12;
+    this.orbitCubeMat.opacity = (0.1 + this.shimmer * 0.35) * ease;
+    this.orbitSphereMat.opacity = (0.35 + this.shimmer * 0.4) * ease;
+    this.orbitSphereMat.emissiveIntensity = 0.15 + this.ignition * 0.7;
+
+    // ── MOTE HALO — the spark-sphere breathes with shimmer. ──
+    this.moteMat.opacity = (0.15 + this.shimmer * 0.6) * ease;
+    this.moteMat.size = (0.4 + this.shimmer * 0.6) * ARENA_MID;
+    this.motes.rotation.y = -safeT * (0.05 + this.reactivity * 0.1);
+
+    // ── STANDING STONES — kindle with reactivity; subtle sway. ──
+    for (let i = 0; i < this.stones.length; i++) {
+      const st = this.stones[i]!;
+      st.rotation.z = Math.sin(safeT * 0.2 + i) * this.reactivity * 0.05;
     }
-    if (this.shards && this.shards.length > 0) {
-      for (let i = 0; i < this.shards.length; i++) {
-        const sh = this.shards[i];
-        if (!sh) continue;
-        const s = 1 + this.shimmer * 0.22 + Math.sin(safeT * 1.4 + i) * this.reactivity * 0.12;
-        sh.scale.set(0.78 + this.entropy * 0.24, s, 0.78 + this.chaos * 0.3);
-        sh.rotation.y = safeT * (0.05 + this.chaos * 0.1) + i;
-      }
-    }
+    this.stoneMat.emissiveIntensity = 0.2 + this.reactivity * 0.8;
+
+    // ── CORAL GROWTH — reveal more of the dendrite as population/crowding climbs (real coupling). ──
+    this.coral.count = Math.max(0, Math.min(CORAL_CAP, Math.floor(this.coralExtent * CORAL_CAP)));
+    this.coralMat.opacity = 0.5 + this.shimmer * 0.4;
+
     this.warpCage(safeT, ease);
     this.greeble.update(safeT, this.reactivity, this.chaos);
   }
 
-  /** Warp the impossible cage in-place; fixed vertex count, no allocations. */
+  /** Warp the box-lattice in-place; fixed vertex count, no allocations. */
   private warpCage(t: number, ease: number): void {
     const pos = this.cageGeo.getAttribute('position') as THREE.BufferAttribute;
     const arr = pos.array as Float32Array;
     const base = this.cageBase;
     const amp = this.cageWarp;
-    // V63: Update time uniform for the Abomination Temple raymarch shader (drives the KIFS
-    // fractal core's rotation + bioluminescence pulse). Must write the material's own uniform
-    // directly — it was never stashed in userData.
-    this.raymarchMat.uniforms.uTime!.value = t;
-
     for (let i = 0; i < arr.length; i += 3) {
       const bx = base[i] ?? 0;
       const by = base[i + 1] ?? 0;
@@ -710,7 +916,7 @@ export class MonolithTemple {
     this.cage.rotation.y = t * (0.02 + this.chaos * 0.08);
     this.cage.rotation.x = Math.sin(t * 0.13) * (0.08 + this.entropy * 0.18);
     this.cageMat.opacity = (0.12 + this.shimmer * 0.36) * ease;
-    this.cageMat.color.setHSL(0.78 + this.chaos * 0.16, 1, 0.45 + this.shimmer * 0.2);
+    this.cageMat.color.setHSL(0.58 + this.dispersion * 0.14, 0.7, 0.55 + this.shimmer * 0.2);
   }
 
   /** Read-only debug/test snapshot of the visual state. */
@@ -723,6 +929,9 @@ export class MonolithTemple {
       shadow: this.shadow,
       cageWarp: this.cageWarp,
       crowding: this.crowding,
+      ignition: this.ignition,
+      dispersion: this.dispersion,
+      coralExtent: this.coralExtent,
       visualNodes: this.group.children.length,
     };
   }
@@ -731,10 +940,14 @@ export class MonolithTemple {
   dispose(): void {
     this.greeble.dispose();
     this.scene.remove(this.group);
+    for (const mesh of this.instancedMeshes) mesh.dispose();
     for (const g of this.geos) g.dispose();
     for (const m of this.mats) m.dispose();
   }
 }
+
+/** Preferred name for the redesigned end-state; `MonolithTemple` is kept for the existing wiring/tests. */
+export const MonolithMegalith = MonolithTemple;
 
 function norm01(v: number): number {
   return Number.isFinite(v) ? clamp(v, 0, 1) : 0;
