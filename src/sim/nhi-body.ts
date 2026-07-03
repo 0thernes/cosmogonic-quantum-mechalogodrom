@@ -29,6 +29,60 @@ interface Body {
 /** Silhouette radius of an NHI body — large enough to read as a colossus, not an organism. */
 const R = 3.4;
 
+/**
+ * USER #7: NHI colour signatures — a curated DARK-ALIEN / OLD-MONEY / "Annihilation-shimmer" palette
+ * that RETIRES the old full-rainbow neon (every hue at S≈0.96–0.98 = the "cute/girlie neon" read the
+ * owner called out). Each entry is a deep, muted-but-RICH species tone — oxblood, aubergine, antique
+ * brass, petrol teal, bruised indigo, ember rust, sickly Annihilation-olive, cold slate — so a being
+ * reads as ominous, sophisticated, and OTHER: near-black bodies with a bright RIM glow (kept), never
+ * flat-TRON, never bland. Structure / metalness / geometry are untouched — ONLY the colours, exactly as
+ * the directive says. `[hue, sat]` per role; saturation is pulled from ~0.96 down to 0.30–0.58 and the
+ * lightness is set per role below (rich glow, not blown-out candy). The EYE hue is deliberately an
+ * eerie complement (an amber body wears a cold-cyan eye; an olive body an unsettling magenta eye).
+ */
+const NHI_SPECIES: ReadonlyArray<{
+  bodyH: number;
+  bodyS: number;
+  ringH: number;
+  ringS: number;
+  eyeH: number;
+  eyeS: number;
+  eyeL: number;
+}> = [
+  { bodyH: 0.99, bodyS: 0.56, ringH: 0.02, ringS: 0.5, eyeH: 0.06, eyeS: 0.48, eyeL: 0.56 }, // oxblood · amber eye
+  { bodyH: 0.8, bodyS: 0.46, ringH: 0.86, ringS: 0.42, eyeH: 0.52, eyeS: 0.32, eyeL: 0.6 }, // aubergine · cold-cyan eye
+  { bodyH: 0.11, bodyS: 0.52, ringH: 0.09, ringS: 0.46, eyeH: 0.55, eyeS: 0.3, eyeL: 0.56 }, // antique brass · steel eye
+  { bodyH: 0.52, bodyS: 0.44, ringH: 0.55, ringS: 0.4, eyeH: 0.03, eyeS: 0.5, eyeL: 0.54 }, // petrol teal · rust eye
+  { bodyH: 0.66, bodyS: 0.46, ringH: 0.7, ringS: 0.42, eyeH: 0.14, eyeS: 0.42, eyeL: 0.56 }, // bruised indigo · ochre eye
+  { bodyH: 0.045, bodyS: 0.56, ringH: 0.02, ringS: 0.5, eyeH: 0.55, eyeS: 0.32, eyeL: 0.56 }, // ember rust · cold eye
+  { bodyH: 0.19, bodyS: 0.4, ringH: 0.22, ringS: 0.36, eyeH: 0.85, eyeS: 0.4, eyeL: 0.56 }, // Annihilation-olive · eerie magenta eye
+  { bodyH: 0.55, bodyS: 0.32, ringH: 0.58, ringS: 0.32, eyeH: 0.09, eyeS: 0.44, eyeL: 0.55 }, // cold slate · amber eye
+];
+
+/**
+ * Resolve a being's four material colours from its spawn index — a deterministic pick from
+ * {@link NHI_SPECIES} plus a small, index-seeded hue/sat jitter so two beings of the same "species"
+ * still differ subtly (no rng — a `sin` hash of the index). Roles: core emissive glow (the bright
+ * dark-body rim), the dark ring/spike/tendril armour base, its brighter emissive, and the ocular glow.
+ */
+function nhiSpecies(idx: number): {
+  coreEm: THREE.Color;
+  ringCol: THREE.Color;
+  ringEm: THREE.Color;
+  eyeEm: THREE.Color;
+} {
+  const sp = NHI_SPECIES[idx % NHI_SPECIES.length]!;
+  const j = Math.sin(idx * 12.9898) * 0.5; // deterministic jitter in [-0.5, 0.5]
+  const H = (h: number): number => (((h + j * 0.03) % 1) + 1) % 1; // ±0.015 hue drift
+  const S = (s: number): number => Math.max(0, Math.min(1, s * (1 + j * 0.12))); // ±6% sat
+  return {
+    coreEm: new THREE.Color().setHSL(H(sp.bodyH), S(sp.bodyS), 0.46), // bright rim glow, muted hue
+    ringCol: new THREE.Color().setHSL(H(sp.ringH), S(sp.ringS * 0.8), 0.16), // near-black armour base
+    ringEm: new THREE.Color().setHSL(H(sp.ringH), S(sp.ringS), 0.38), // armour glow
+    eyeEm: new THREE.Color().setHSL(H(sp.eyeH), S(sp.eyeS), sp.eyeL), // eerie ocular glow
+  };
+}
+
 /** World-Y over which a launched being reads from ground (0) to fully ascended (1) — the roam column. */
 const NHI_ASCEND_SPAN = 240;
 
@@ -153,10 +207,12 @@ export class NhiBodySystem {
     const eyeCount = 5 + (si % 4); // 5..8 ocular crown
 
     // V109: wider alien skin palette — each NHI gets a unique biomechanical "species" hue/texture.
-    // USER #7: dark black base with bright highlights, shimmery.
+    // USER #7: near-black base + bright RIM glow, but the hue is now a curated dark-alien / old-money /
+    // Annihilation signature (nhiSpecies) instead of the old full-rainbow neon.
+    const skin = nhiSpecies(this.spawnIndex);
     const coreMat = new THREE.MeshStandardMaterial({
       color: 0x050505, // near black
-      emissive: new THREE.Color().setHSL((0.78 + this.spawnIndex * 0.091) % 1, 0.96, 0.55),
+      emissive: skin.coreEm,
       emissiveIntensity: 1.4,
       metalness: 0.9,
       roughness: 0.15,
@@ -172,8 +228,8 @@ export class NhiBodySystem {
     group.add(new THREE.Mesh(coreGeo, coreMat));
 
     const ringMat = new THREE.MeshStandardMaterial({
-      color: new THREE.Color().setHSL((0.08 + this.spawnIndex * 0.173) % 1, 0.82, 0.18),
-      emissive: new THREE.Color().setHSL((0.13 + this.spawnIndex * 0.113) % 1, 0.98, 0.42),
+      color: skin.ringCol,
+      emissive: skin.ringEm,
       emissiveIntensity: 1.05,
       metalness: 0.95,
       roughness: 0.2,
@@ -230,10 +286,9 @@ export class NhiBodySystem {
     }
 
     // Ocular crown on the "face" (front +z) — weird but readable at distance.
-    const eyeHue = (0.9 + this.spawnIndex * 0.071) % 1;
     const eyeMat = new THREE.MeshStandardMaterial({
       color: 0x05070c,
-      emissive: new THREE.Color().setHSL(eyeHue, 0.95, 0.62),
+      emissive: skin.eyeEm,
       emissiveIntensity: 2.4,
     });
     for (let i = 0; i < eyeCount; i++) {
