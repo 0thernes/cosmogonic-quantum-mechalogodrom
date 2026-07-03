@@ -265,6 +265,15 @@ initAppShell();
 bootStage('shell', `${Math.max(1, Math.round(performance.now() - tShell))} ms`);
 void boot();
 
+// ROBUSTNESS (USER: the "docs-row buttons are gone / AUDIT is wrecked" symptom, intermittently): the
+// deferred click-to-open panels (⛓ ACCESS / ◈ STAGE II / 🗒 AUDIT / SETTINGS / HELP / COPILOT) mount only
+// when loadDeferredUi() runs at FIRST LIGHT — inside the rAF loop. But rAF can be DELAYED or never fire: a
+// backgrounded tab pauses rAF entirely, and a WebGL init failure never reaches first light. In those cases
+// the panels would stay permanently unmounted and their toolbar buttons never appear. A timer fallback
+// mounts them regardless — setTimeout DOES fire in a backgrounded tab (unlike rAF) — and loadDeferredUi is
+// idempotent (the deferredUiLoaded flag), so on a normal load first-light still wins and this is a no-op.
+setTimeout(loadDeferredUi, 2500);
+
 // HMR teardown — THE fix for the dev WebGL-context leak. Before a hot-replaced module re-boots, stop the
 // rAF loop, drop listeners, and FREE the renderer/context (Engine.dispose → forceContextLoss). Without
 // this, every reload leaks a context until `new WebGLRenderer` fails for good. No-op in production
