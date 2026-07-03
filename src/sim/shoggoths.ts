@@ -11,6 +11,11 @@ import { POINT_LIGHT_GAIN } from './environment';
 import type { SimContext } from '../types';
 import type { EntityManager } from './entities';
 import type { SingularitySystem } from './singularities';
+import {
+  PORTAL_RESPAWN_DELAY,
+  portalReappearSpot,
+  type PortalCullable,
+} from './portal-death-fauna';
 
 /** Tendril line segments per shoggoth (legacy `tc`). */
 const TENDRIL_COUNT = 8;
@@ -171,8 +176,11 @@ interface Shoggoth {
  * tendril LineSegments fed by spatial-grid queries, and a consumption cycle that eats the
  * nearest organism and respawns two corrupted children.
  */
-export class ShoggothSystem {
+export class ShoggothSystem implements PortalCullable {
   private readonly ctx: SimContext;
+  /** PORTAL DEATH (USER): shoggoths blasted by the portal, awaiting their 5 s respawn ELSEWHERE. */
+  private readonly portalDowned: { sg: Shoggoth; at: number }[] = [];
+  private portalCullSeq = 0;
   private readonly entities: EntityManager;
   private readonly shogs: Shoggoth[] = [];
   /** F-HOLES: the singularity system, attached by the composition root after construction; the
@@ -222,6 +230,40 @@ export class ShoggothSystem {
    * none from the shared geometry cache), so a full group traversal that disposes each mesh's geometry
    * AND material is safe; the aura point-lights detach with the group. O(shoggoths × parts).
    */
+  /**
+   * PORTAL DEATH (USER "everything else DIES"): blast any shoggoth inside the portal kill-cylinder, hide
+   * it, and re-enter it ELSEWHERE {@link PORTAL_RESPAWN_DELAY} s later. Determinism-neutral (no rng,
+   * post-ascension only). See {@link PortalCullable}. O(shoggoths).
+   */
+  portalCull(
+    ax: number,
+    az: number,
+    r2: number,
+    t: number,
+    onDeath: (x: number, y: number, z: number) => void,
+  ): void {
+    for (let k = this.portalDowned.length - 1; k >= 0; k--) {
+      const d = this.portalDowned[k]!;
+      if (t < d.at) continue;
+      portalReappearSpot(this.portalCullSeq++, d.sg.group.position);
+      d.sg.vel.set(0, 0, 0);
+      d.sg.group.visible = true;
+      this.portalDowned.splice(k, 1);
+    }
+    for (let i = 0; i < this.shogs.length; i++) {
+      const sg = this.shogs[i];
+      if (!sg || !sg.group.visible) continue;
+      const p = sg.group.position;
+      const dx = p.x - ax;
+      const dz = p.z - az;
+      if (dx * dx + dz * dz <= r2) {
+        onDeath(p.x, p.y, p.z);
+        sg.group.visible = false;
+        this.portalDowned.push({ sg, at: t + PORTAL_RESPAWN_DELAY });
+      }
+    }
+  }
+
   dispose(): void {
     for (const sg of this.shogs) {
       sg.group.traverse((o) => {

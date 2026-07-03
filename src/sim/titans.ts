@@ -45,6 +45,11 @@ import type { PairHistory } from '../math/games';
 import type { SimContext } from '../types';
 import type { EntityManager } from './entities';
 import type { SingularitySystem } from './singularities';
+import {
+  PORTAL_RESPAWN_DELAY,
+  portalReappearSpot,
+  type PortalCullable,
+} from './portal-death-fauna';
 
 /** Number of titans: 10 territorial colossi + 10 central social/procreative colossi. */
 const TITAN_COUNT = 20;
@@ -613,6 +618,9 @@ export class TitanSystem {
   private econWealth: ((titanIndex: number) => number) | null = null;
   private readonly rd: TitanRd;
   private readonly titans: Titan[] = [];
+  /** PORTAL DEATH (USER): titans blasted by the portal, awaiting their 5 s respawn ELSEWHERE. */
+  private readonly portalDowned: { ti: Titan; at: number }[] = [];
+  private portalCullSeq = 0;
   /** Titan-specific fractal-displaced geometries (spiky crystalline bodies), cached per shared geo-type. */
   private readonly titanGeoCache = new Map<number, THREE.BufferGeometry>();
   /** 45 pair histories, indexed by the PAIR_A/PAIR_B tables. */
@@ -662,6 +670,42 @@ export class TitanSystem {
    * per-instance {@link titanGeoCache} (freed once via the map) and the MODULE-shared `TITAN_CORE_GEO` /
    * `TITAN_TESSERACT_GEO` (NEVER disposed — a fresh HMR World reuses them, and disposing them would break
    * the next boot). O(titans × parts). */
+  /**
+   * PORTAL DEATH (USER "everything else DIES"): blast any titan inside the portal kill-cylinder, hide it
+   * (body + its own point light), and re-enter it ELSEWHERE {@link PORTAL_RESPAWN_DELAY} s later.
+   * Determinism-neutral (no rng, post-ascension only). See {@link PortalCullable}. O(titans).
+   */
+  portalCull(
+    ax: number,
+    az: number,
+    r2: number,
+    t: number,
+    onDeath: (x: number, y: number, z: number) => void,
+  ): void {
+    for (let k = this.portalDowned.length - 1; k >= 0; k--) {
+      const d = this.portalDowned[k]!;
+      if (t < d.at) continue;
+      portalReappearSpot(this.portalCullSeq++, d.ti.group.position);
+      d.ti.vel.set(0, 0, 0);
+      d.ti.group.visible = true;
+      d.ti.light.visible = true;
+      this.portalDowned.splice(k, 1);
+    }
+    for (let i = 0; i < this.titans.length; i++) {
+      const ti = this.titans[i];
+      if (!ti || !ti.group.visible) continue;
+      const p = ti.group.position;
+      const dx = p.x - ax;
+      const dz = p.z - az;
+      if (dx * dx + dz * dz <= r2) {
+        onDeath(p.x, p.y, p.z);
+        ti.group.visible = false;
+        ti.light.visible = false;
+        this.portalDowned.push({ ti, at: t + PORTAL_RESPAWN_DELAY });
+      }
+    }
+  }
+
   dispose(): void {
     for (const ti of this.titans) {
       ti.group.traverse((o) => {

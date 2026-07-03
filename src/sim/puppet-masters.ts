@@ -10,6 +10,7 @@ import { ARENA_MID, ARENA_Y, CHAOS_MAX, CHAOS_MIN, WEATHERS } from './constants'
 import { POINT_LIGHT_GAIN } from './environment';
 import type { PuppetEvent, SimContext } from '../types';
 import type { EntityManager } from './entities';
+import { PORTAL_RESPAWN_DELAY, type PortalCullable } from './portal-death-fauna';
 
 type PuppetAction = 'chaos' | 'weather' | 'mutate';
 
@@ -201,11 +202,13 @@ interface Puppet {
  * meddling. Interventions are surfaced to the HUD via the injected `onEvent` callback
  * (legacy `showNM` toast).
  */
-export class PuppetMasterSystem {
+export class PuppetMasterSystem implements PortalCullable {
   private readonly ctx: SimContext;
   private readonly entities: EntityManager;
   private readonly onEvent: (e: PuppetEvent) => void;
   private readonly pms: Puppet[] = [];
+  /** PORTAL DEATH (USER): puppeteers blasted by the portal, awaiting their 5 s respawn ELSEWHERE. */
+  private readonly portalDowned: { pm: Puppet; at: number }[] = [];
   /** F-ECON-CREATURES V19: economic net-worth provider by puppeteer index (null ⇒ no coupling). */
   private econWealth: ((puppetIndex: number) => number) | null = null;
 
@@ -292,6 +295,39 @@ export class PuppetMasterSystem {
    * geometry + MeshBasicMaterial) — none shared/cached — plus an optional point light. Detach + dispose
    * all of them. O(puppets).
    */
+  /**
+   * PORTAL DEATH (USER "everything else DIES"): blast any puppeteer inside the portal kill-cylinder, hide
+   * it (mesh + its child ring/light), and re-enter it ELSEWHERE {@link PORTAL_RESPAWN_DELAY} s later —
+   * puppeteers are Lissajous-formula-driven, so simply un-hiding re-enters them at their swept-forward
+   * position (no teleport needed). Determinism-neutral (no rng, post-ascension only). O(puppets).
+   */
+  portalCull(
+    ax: number,
+    az: number,
+    r2: number,
+    t: number,
+    onDeath: (x: number, y: number, z: number) => void,
+  ): void {
+    for (let k = this.portalDowned.length - 1; k >= 0; k--) {
+      const d = this.portalDowned[k]!;
+      if (t < d.at) continue;
+      d.pm.mesh.visible = true;
+      this.portalDowned.splice(k, 1);
+    }
+    for (let i = 0; i < this.pms.length; i++) {
+      const pm = this.pms[i];
+      if (!pm || !pm.mesh.visible) continue;
+      const p = pm.mesh.position;
+      const dx = p.x - ax;
+      const dz = p.z - az;
+      if (dx * dx + dz * dz <= r2) {
+        onDeath(p.x, p.y, p.z);
+        pm.mesh.visible = false;
+        this.portalDowned.push({ pm, at: t + PORTAL_RESPAWN_DELAY });
+      }
+    }
+  }
+
   dispose(): void {
     for (const pm of this.pms) {
       pm.mesh.geometry.dispose();

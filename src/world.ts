@@ -156,6 +156,7 @@ import { WingmanRenderer } from './sim/super-wingmen-render';
 import { SuperEvolution } from './sim/super-evolution';
 import { MonolithTemple } from './sim/monolith-temple';
 import { PortalDeath } from './sim/portal-death';
+import { PortalDeathFauna } from './sim/portal-death-fauna';
 import { SuperBodySystem } from './sim/super-body';
 import { SuperPanel } from './ui/super-panel';
 import { SuperheroState, HERO_POWERS } from './ui/superhero-state';
@@ -349,6 +350,8 @@ export class World {
   private readonly monolithTemple: MonolithTemple;
   /** USER: the ascension Portal is DEATH — organisms touching the void throat explode + respawn. */
   private readonly portalDeath: PortalDeath;
+  /** USER: the Portal also kills the big FAUNA — shoggoths/puppeteers/titans/leviathans (outside the swarm). */
+  private readonly portalDeathFauna: PortalDeathFauna;
   private superAscended = false;
   private readonly evoRng: Rng;
   private static readonly EVO_DAY_FRAMES = 21600;
@@ -895,6 +898,7 @@ export class World {
     // the temple silently on boot (it's just THERE); a fresh live ascension plays the full fanfare.
     this.monolithTemple = new MonolithTemple(ctx.scene);
     this.portalDeath = new PortalDeath(ctx); // USER: the ascension portal kills what touches it
+    this.portalDeathFauna = new PortalDeathFauna(ctx); // USER: …and the big fauna too (non-swarm rosters)
     if (this.superEvo.ascended) {
       this.monolithTemple.reveal(0, 0, -40 * ARENA_MID, true);
       this.superAscended = true;
@@ -1149,6 +1153,7 @@ export class World {
     this.wingRender.dispose();
     this.monolithTemple.dispose();
     this.portalDeath.dispose();
+    this.portalDeathFauna.dispose();
     this.abominationArchitecture.dispose();
     this.mechalogodrom.dispose(); // V-MECHA: free the fusion abomination's geometries + materials
     this.floatingMonoliths.dispose(); // free the 16 drifting megaliths' geometries + materials
@@ -1615,6 +1620,15 @@ export class World {
     // immune by construction (this only scans the population). Armed only once the temple is revealed.
     this.portalDeath.setActive(this.monolithTemple.revealed);
     this.portalDeath.update(this.entities, t, dt);
+    // USER V126: the Portal also kills the big FAUNA — shoggoths/puppeteers/titans/leviathans (which live
+    // outside `entities`). They explode + re-enter ELSEWHERE 5s later; the 100 Pantheon + Super Creature /
+    // APEX / Mechalogodrom are IMMUNE (they never register here — their bounce is a separate pass).
+    this.portalDeathFauna.update(this.monolithTemple.revealed, t, dt, [
+      this.shoggoths,
+      this.puppets,
+      this.titans,
+      this.leviathans,
+    ]);
 
     // V124: the portal is a clean VOID now (the megalith redesign retired the "hell wormhole"), so the
     // portal-nightmare bus — a HIGH SCREAM square wave (`360 + level*220` Hz) + a low drone + periodic

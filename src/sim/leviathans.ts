@@ -19,6 +19,11 @@ import { POINT_LIGHT_GAIN } from './environment';
 import type { SimContext } from '../types';
 import type { SingularitySystem } from './singularities';
 import type { ReactionDiffusionSystem } from './reaction-diffusion';
+import {
+  PORTAL_RESPAWN_DELAY,
+  portalReappearSpot,
+  type PortalCullable,
+} from './portal-death-fauna';
 
 /** How many leviathans sail the world (fixed — telemetry-friendly, cheap). */
 const COUNT = 4;
@@ -149,8 +154,11 @@ interface Leviathan {
  * every frame. `attachSingularity` opts the colossi into the F-HOLES force field (no-op until
  * attached). `count` feeds optional telemetry.
  */
-export class LeviathanSystem {
+export class LeviathanSystem implements PortalCullable {
   private readonly levs: Leviathan[] = [];
+  /** PORTAL DEATH (USER): leviathans blasted by the portal, awaiting their 5 s respawn ELSEWHERE. */
+  private readonly portalDowned: { lv: Leviathan; at: number }[] = [];
+  private portalCullSeq = 0;
   private singularity: SingularitySystem | null = null;
   /** V1.3 ECOLOGY: the reaction-diffusion ground the colossi stir as they roam (opt-in, no-op until set). */
   private rd: ReactionDiffusionSystem | null = null;
@@ -215,6 +223,40 @@ export class LeviathanSystem {
    * The capsule GEOMETRY is shared by all four bodies (dispose ONCE); each leviathan owns its OWN
    * MeshStandardMaterial (the V-LEVIATHAN-EXPANDED patch) — dispose each — plus a point-light aura. O(4).
    */
+  /**
+   * PORTAL DEATH (USER "everything else DIES"): blast any leviathan inside the portal kill-cylinder,
+   * hide it, and re-enter it ELSEWHERE {@link PORTAL_RESPAWN_DELAY} s later. Determinism-neutral (no rng,
+   * post-ascension only). See {@link PortalCullable}. O(4).
+   */
+  portalCull(
+    ax: number,
+    az: number,
+    r2: number,
+    t: number,
+    onDeath: (x: number, y: number, z: number) => void,
+  ): void {
+    for (let k = this.portalDowned.length - 1; k >= 0; k--) {
+      const d = this.portalDowned[k]!;
+      if (t < d.at) continue;
+      portalReappearSpot(this.portalCullSeq++, d.lv.group.position);
+      d.lv.vel.set(0, 0, 0);
+      d.lv.group.visible = true;
+      this.portalDowned.splice(k, 1);
+    }
+    for (let i = 0; i < this.levs.length; i++) {
+      const lv = this.levs[i];
+      if (!lv || !lv.group.visible) continue;
+      const p = lv.group.position;
+      const dx = p.x - ax;
+      const dz = p.z - az;
+      if (dx * dx + dz * dz <= r2) {
+        onDeath(p.x, p.y, p.z);
+        lv.group.visible = false;
+        this.portalDowned.push({ lv, at: t + PORTAL_RESPAWN_DELAY });
+      }
+    }
+  }
+
   dispose(): void {
     let geoDisposed = false;
     for (const lv of this.levs) {
