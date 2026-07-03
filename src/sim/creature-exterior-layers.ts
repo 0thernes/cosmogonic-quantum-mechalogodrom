@@ -1152,10 +1152,12 @@ export class GlyphAccentMotes {
     this.mesh = new THREE.InstancedMesh(
       stellaOctangulaGeometry(),
       new THREE.MeshBasicMaterial({
-        color: 0xffffff,
-        wireframe: true,
+        // USER: NO more ugly white WIREFRAME on the 100 pantheons. A SOLID additive gleam — a tiny
+        // star-gem orbiting each glyph that reads as a soft highlight on the skin, not a newbie
+        // wire-outline overlay. (Smaller + fainter than the old wire star so it complements, not clutters.)
+        color: 0xeaf2ff,
         transparent: true,
-        opacity: 0.72,
+        opacity: 0.42,
         blending: THREE.AdditiveBlending,
         depthWrite: false,
       }),
@@ -1227,10 +1229,10 @@ export class GlyphFilamentBurst {
     this.mesh = new THREE.InstancedMesh(
       new THREE.ConeGeometry(0.04, 0.55, 4),
       new THREE.MeshBasicMaterial({
+        // USER: de-wireframed — solid additive filament needles (a soft glowing spine), not wire cones.
         color: 0xaaddff,
-        wireframe: true,
         transparent: true,
-        opacity: 0.28,
+        opacity: 0.24,
         blending: THREE.AdditiveBlending,
         depthWrite: false,
       }),
