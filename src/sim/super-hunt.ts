@@ -19,7 +19,7 @@ import * as THREE from 'three';
 import { ARENA_MID } from './constants';
 import type { EntityManager } from './entities';
 import type { SuperBodySystem } from './super-body';
-import type { SimContext } from '../types';
+import type { Entity, SimContext } from '../types';
 
 /** How far an apex SENSES prey (and turns to pursue). */
 const SENSES_R = 60 * ARENA_MID; // 150
@@ -128,7 +128,13 @@ export class SuperHunt {
    * Per-frame: while advancing, each apex hunts + eats the organisms; then fire due respawns ELSEWHERE
    * and advance + fade the feed-puffs. Frozen dt=0 ⇒ no hunting (puffs hold). O(apexes · n + POOL).
    */
-  update(bodies: readonly SuperBodySystem[], entities: EntityManager, t: number, dt: number): void {
+  update(
+    bodies: readonly SuperBodySystem[],
+    entities: EntityManager,
+    t: number,
+    dt: number,
+    onEat?: (e: Entity, index: number) => void,
+  ): void {
     const nb = bodies.length;
     if (dt > 0 && nb > 0) {
       this.ensureScratch(nb);
@@ -152,6 +158,9 @@ export class SuperHunt {
           if (d2 <= EAT_R2) {
             this.puff(p.x, p.y, p.z);
             const mi = e.userData.mi ?? 0;
+            // V127: the eaten organism's dying mind is MEASURED — the world runs Thaler's gedanken
+            // neural-death on its 70-param brain BEFORE disposal (its weights + senses are still live).
+            onEat?.(e, i);
             entities.disposeAt(i); // O(1); backwards scan ⇒ index shift is safe
             bodies[b]!.eat();
             this.respawns.push({ at: t + RESPAWN_DELAY, mi });
