@@ -12,17 +12,6 @@ import { MemoryStore } from './memory/store';
 import { AuditTrail } from './logging/audit';
 import { createLogger } from './logging/logger';
 import { World } from './world';
-// Copilot side-chat (CONTRACTS V9): self-mounting read-only AI panel. UI shell — never touches sim.
-import './ui/copilot';
-// Access terminal (V34): self-mounting cryptographic puzzle that gates the 2nd super creature.
-import './ui/access-puzzle';
-// Trans-dimensional temple access (V124): self-mounting UwU box that raises the Stage-2 temple early.
-import './ui/temple-access';
-// Help system (V36): self-mounting "HELP ME NOW" panel — repo-grounded answers, offline-safe.
-import './ui/help-system';
-// Audit dock (V51): self-mounting 🗒 AUDIT toggle that moves the audit trail off the left column into
-// the bottom dock (frees SORTING FIELDS); toggles the existing #aP overlay, HTMX polling untouched.
-import './ui/audit-dock';
 // Center HUD (V56/V84): cyclable center popup for AI · HELP · AUDIT · NEURAL · MARKET · ARCHITECT · ARCHITECTURE.
 import { initCenterHud } from './ui/center-hud';
 import { initUiColumns } from './ui/ui-columns';
@@ -30,12 +19,15 @@ import { syncBottomDockHeight } from './ui/bottom-dock';
 import { mountAlgoPickerShell } from './ui/algo-picker-shell';
 // Toolbar keyboard navigation: roving tabindex + arrow keys for #bar buttons.
 import { initToolbarKeyboard } from './ui/toolbar';
-// Onboarding overlay (V81): one-time, dismissible first-run hint.
-import './ui/onboarding';
-// Settings panel (V81): centralized simulation controls.
-import './ui/settings-panel';
-// Panel edge toggles (V98): side hide/show buttons for desktop/tablet panel columns.
-import './ui/panel-edge-toggles';
+// PERF/LOAD (v0.20.0): the self-mounting click-to-open panels — copilot (V9), access-puzzle (V34),
+// temple-access (V124), help-system (V36), audit-dock (V51), onboarding (V81), settings-panel (V81),
+// panel-edge-toggles (V98) — are DEFERRED (see loadDeferredUi() below): dynamically imported after
+// bootDone() so their ~131 KB of source (and copilot's import-time /api/copilot fetch) leave the
+// render-blocking entry chunk for a lazy chunk fetched after first light. Each module self-mounts on
+// import and guards document.readyState, so a late import Just Works; none is visible on frame 1 or
+// touches sim state / RNG (access-puzzle→cqm:superhero-unlock and temple-access→cqm:force-ascension
+// only fire on user interaction, long after World's {once:true} listeners are wired). Zero visual
+// change to the first frame — the shell columns + toolbar above stay EAGER because they must paint.
 // Boot loader (V121, USER #6): feeds the #cqm-boot overlay REAL stage timings, fades on first frame.
 import { bootStage, bootPaint, bootDone, bootAbort } from './ui/boot-loader';
 import { APEX_INDIVIDUATED } from './sim/godform';
@@ -54,6 +46,44 @@ function initAppShell(): void {
   initCenterHud();
   syncBottomDockHeight();
   document.documentElement.classList.add('cqm-shell-ready');
+}
+
+/**
+ * V0.20.0 PERF/LOAD: import the self-mounting click-to-open panels AFTER first light, at idle, off the
+ * boot critical path. Each module self-mounts on import (guarding document.readyState), so importing it
+ * late is equivalent to importing it eagerly — the only difference is these ~131 KB no longer sit in the
+ * render-blocking entry chunk (Bun splits each `import()` into its own lazily-fetched chunk). Runs once;
+ * a failed lazy fetch is logged and swallowed so a network hiccup on a non-critical panel never breaks
+ * the running cosmos. The literal specifiers are required for Bun's static import analysis.
+ */
+let deferredUiLoaded = false;
+function loadDeferredUi(): void {
+  if (deferredUiLoaded) return;
+  deferredUiLoaded = true;
+  const fail =
+    (name: string) =>
+    (err: unknown): void =>
+      log.warn('deferred UI import failed', {
+        module: name,
+        error: err instanceof Error ? err.message : String(err),
+      });
+  const run = (): void => {
+    void import('./ui/copilot').catch(fail('copilot'));
+    void import('./ui/access-puzzle').catch(fail('access-puzzle'));
+    void import('./ui/temple-access').catch(fail('temple-access'));
+    void import('./ui/help-system').catch(fail('help-system'));
+    void import('./ui/audit-dock').catch(fail('audit-dock'));
+    void import('./ui/onboarding').catch(fail('onboarding'));
+    void import('./ui/settings-panel').catch(fail('settings-panel'));
+    void import('./ui/panel-edge-toggles').catch(fail('panel-edge-toggles'));
+  };
+  const ric = (
+    window as unknown as {
+      requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => void;
+    }
+  ).requestIdleCallback;
+  if (typeof ric === 'function') ric(run, { timeout: 1500 });
+  else setTimeout(run, 0);
 }
 
 const canvas = document.getElementById('c');
@@ -203,6 +233,8 @@ async function boot(): Promise<void> {
       firstLight = true;
       bootStage('firstlight', `${Math.round(performance.now())} ms total`);
       bootDone();
+      // V0.20.0: the cosmos is on screen — pull the deferred click-to-open panels in at idle now.
+      loadDeferredUi();
     }
     // Render-layer FPS EMA (capped) → throttled HUD update (every 12 frames, no per-frame DOM thrash).
     const fps = dt > 0 ? Math.min(1 / dt, 240) : fpsEma;

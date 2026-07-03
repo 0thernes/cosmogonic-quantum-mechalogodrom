@@ -287,7 +287,14 @@ export class MonolithTemple {
     this.geos.push(boundsGeo);
     const boundsMesh = new THREE.Mesh(boundsGeo, this.coreMat);
     boundsMesh.position.set(0, CORE_Y, 0);
-    boundsMesh.frustumCulled = false;
+    // PERF (v0.20.0): frustum-cull the raymarch box. Its fragment shader runs a 96-step Menger SDF
+    // march (the heaviest shader in the whole megalith set), but the VERTEX shader does not displace —
+    // gl_Position is built from the raw box vertices — so the BoxGeometry's auto bounding sphere is
+    // EXACT and the effect is fully contained within the box. When the box is entirely outside the
+    // frustum nothing inside it can rasterize, so culling it away is byte-identical on screen while
+    // skipping the entire march on the (common) frames the temple sits behind the camera. Culling was
+    // previously force-disabled; re-enabling it is the single biggest zero-visual GPU win here.
+    boundsMesh.frustumCulled = true;
     this.group.add(boundsMesh);
 
     // ── 2. VOXEL LATTICE — nested wireframe cube shells + struts + inner cell-grid. ──

@@ -9,6 +9,65 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.20.0] — 2026-07-03
+
+Deep load + runtime performance pass — "loads slow / singularities · portal-temple ·
+entities are intensive." Every change is provably **zero visual / graphics / quality
+change** and determinism-neutral (no seeded-`Rng` draw reordered); verified by the full
+`bun test` suite (**2294 pass, 0 fail**) plus a headless in-browser frustum check.
+
+### Load-time: fonts lifted OFF the render-blocking critical path — CSS 210 KB → 14 KB gzip (−93%)
+
+- The v0.19.0 Latin-subset win shrank the font bytes but they were still **base64-inlined
+  into the ONE render-blocking stylesheet** (~257 KB / 210 KB gzip), so first paint still
+  waited on every woff2 to download **and** parse — even though each face already carries
+  `font-display: swap`. Bun's HTML bundler merges every in-page `<link rel=stylesheet>` into
+  that single chunk and inlines the fonts regardless of the `loader` map, and strips
+  `media`/`onload`, so the split can't be expressed in source HTML.
+- `scripts/build.ts` now **extracts** the `@font-face` blocks out of the merged chunk
+  post-build into a standalone, cache-busted `fonts-<hash>.css` and re-injects it
+  **non-render-blocking** (`media="print"` → `onload this.media='all'`, with a `<noscript>`
+  fallback). The face declarations moved to `src/styles/fonts.css` (dev bundles them inline —
+  localhost, no perf concern). Measured: **render-blocking CSS 333 KB → 78 KB (gzip 210 KB →
+  14 KB)**; the fonts stream in behind first light and swap without blocking it. **Same
+  Latin-subset fonts, weights, and swap behaviour — zero visual change.**
+- The eight self-mounting click-to-open panels (copilot, access-puzzle, temple-access,
+  help-system, audit-dock, onboarding, settings-panel, panel-edge-toggles) are now
+  `import()`-**deferred** to idle after `bootDone()`, moving each panel's self-mount DOM work
+  off the boot critical path (TTI win). None is on frame 1 or touches sim/RNG. (App-graph
+  `splitting` stays OFF — the same conclusion the v0.19.1 docs split reached for the app.)
+
+### Runtime: frustum-cull the heaviest fixed-position shader shells (the "intensive" fix)
+
+- The **Portal-Temple Menger raymarch** (a 96-step SDF march — the heaviest fragment shader
+  in the megalith set) and the **mecha fire-pillar** fbm cylinder were `frustumCulled = false`,
+  so their shaders ran **every frame even when behind the camera**. Both vertex shaders are
+  **non-displacing** (`gl_Position` from raw geometry verts; the cost is entirely fragment-side),
+  so each geometry's auto bounding sphere is exact and the effect is fully contained — culling
+  is **byte-identical on screen** and skips the whole shader when off-frustum. Verified
+  headlessly: renders when facing, culled when facing away. The god-colossus deity (raymarched
+  V131) is likewise culled when its bounds leave the frustum.
+- The pervasive `frustumCulled = false` elsewhere (InstancedMeshes spanning the arena,
+  arena-wide line/point fields) was **left untouched** — it is correct there and flipping it
+  would regress visuals.
+
+### Runtime: allocation / redundancy trims (bit-identical)
+
+- `world.ts`: the Tsotchke corpus pulses (`corpusPulse`) are a **pure function of the
+  boot-constant seed** — no time, no `Rng` — yet were re-folding the full wired corpus **twice
+  per frame** for a value that never changes. Now computed once and cached (same read-only
+  object downstream).
+- `singularities.ts`: hoisted the per-frame `updateShaderTime` closure to a method (no
+  per-frame allocation) and dropped a redundant per-frame `ring.rotation.x` write (the value
+  is set once at build and nothing else mutates it).
+
+### Notes
+
+- No sim determinism, entity counts, LOD, shader fidelity, or visual effect was reduced. The
+  intensive systems remain GPU-bound at full fidelity by design (owner directive #7); this
+  release removes work the user can never see (off-screen shading, font bytes on the critical
+  path, recomputed constants), not fidelity.
+
 ## [0.19.1] — 2026-07-03
 
 ### Load-time: docs page lazy-loads mermaid — initial JS 4.57 MB → ~608 KB (−87%)

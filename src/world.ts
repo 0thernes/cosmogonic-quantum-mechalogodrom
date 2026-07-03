@@ -507,6 +507,12 @@ export class World {
   private readonly mechalogodromBrain: MechalogodromBrain;
   private lastMechaBrainSnap: MechalogodromBrainSnapshot | null = null;
   private lastGlyphSnaps: GlyphBrainSnapshot[] = [];
+  // PERF (v0.20.0): the Tsotchke corpus pulses (mecha + glyph) are a pure function of the boot-constant
+  // seed — `corpusPulse` folds the full wired corpus (corpusBrainScalar) but draws no rng and reads no
+  // time, so it returns the SAME value every frame. Cache both once instead of re-folding the corpus
+  // twice per frame; bit-identical (same object, read-only downstream), zero visual change.
+  private cachedMechaPulse: ReturnType<typeof corpusPulse> | null = null;
+  private cachedGlyphPulse: ReturnType<typeof corpusPulse> | null = null;
   /** V-MECHA brain snapshot getter (for architect panel telemetry). */
   get mechaBrain(): MechalogodromBrain {
     return this.mechalogodromBrain;
@@ -1569,8 +1575,12 @@ export class World {
       apexAgony: apex?.agony ?? 0,
     });
     const mechaBrainSnap = this.lastMechaBrainSnap;
-    const mechaFormIdx = ((this.persisted.seed ^ 0x8e4ac471) >>> 3) % 25;
-    const glyphFormIdx = (this.persisted.seed >>> 3) % 25;
+    // Frame-invariant Tsotchke pulses — computed once, then reused every frame (see field decl).
+    this.cachedMechaPulse ??= corpusPulse(
+      this.persisted.seed ^ 0x8e4ac471,
+      ((this.persisted.seed ^ 0x8e4ac471) >>> 3) % 25,
+    );
+    this.cachedGlyphPulse ??= corpusPulse(this.persisted.seed, (this.persisted.seed >>> 3) % 25);
     this.mechalogodrom.setExteriorMind(mechaBrainSnap.beat, mechaBrainSnap.activity);
     // V-MECHA-MIND: the fusion brain's live cognition drives its OWN body — the variant sub-brain that
     // won the workspace this beat ignites its physical shell (Global Workspace), consciousness-proxy
@@ -1580,13 +1590,11 @@ export class World {
       mechaBrainSnap.consciousnessProxy,
       mechaBrainSnap.strangeness,
     );
-    this.mechalogodrom.setTsotchkePulse(
-      corpusPulse(this.persisted.seed ^ 0x8e4ac471, mechaFormIdx),
-    );
+    this.mechalogodrom.setTsotchkePulse(this.cachedMechaPulse);
     this.mechalogodrom.update(t, dt);
     // V-ABC: the 100 alphabet archetypes bob/spin/pulse across the dome (chaos quickens them).
     this.alphabetPantheon.setChaos(visChaos);
-    this.alphabetPantheon.setTsotchkePulse(corpusPulse(this.persisted.seed, glyphFormIdx));
+    this.alphabetPantheon.setTsotchkePulse(this.cachedGlyphPulse);
     if (apex) this.alphabetPantheon.setApexExterior(apex.transcendence, apex.vitality);
     // V-GLYPH: tick the 100 × 25k-parameter brains every frame (visual-only; drives appearance + travel).
     {

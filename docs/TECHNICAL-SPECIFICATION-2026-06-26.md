@@ -7,7 +7,7 @@
 > estimated. **Live:** <https://0thernes.github.io/cosmogonic-quantum-mechalogodrom/> · **Spec page:**
 > `/spec` · **Architecture docs:** `/docs`
 
-**Version:** v0.19.1 · **Generated:** 2026-06-26 · **License:** Non-commercial research & play (© 0thernes; study / run / modify / share non-commercially, keep attribution, no for-profit use).
+**Version:** v0.20.0 · **Generated:** 2026-06-26 · **License:** Non-commercial research & play (© 0thernes; study / run / modify / share non-commercially, keep attribution, no for-profit use).
 **Gate:** 1,984 tests · 92.13% line / 89.66% func (canonical synced via verify-receipts 2026-06-26, receipts law enforced).  
 **NHSI scorecard:** [NHSI-PROGRESS-DASHBOARD-2026-06-26.md](./NHSI-PROGRESS-DASHBOARD-2026-06-26.md) · **Tsotchke depth:** [TSOTCHKE-INTEGRATION-MAP-2026-06-26.md](./TSOTCHKE-INTEGRATION-MAP-2026-06-26.md)
 

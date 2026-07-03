@@ -11,6 +11,55 @@ dated / historical / "superseded snapshot" copies (per the binding "Living docs,
 
 ---
 
+## 2026-07-03 — Perf follow-through (v0.20.0): fonts off the critical path + off-screen shader culling
+
+Follow-on to the 2026-07-02 audit — same owner brief ("loads slow… singularities / portal-temple /
+entities intensive… without destroying it"). Four parallel deep-dive audits (singularities, entities,
+portal-temple + main loop, boot/load path) mapped the remaining safe levers; the high-ROI, zero-risk
+ones were implemented and verified. **Every change is provably zero visual/quality change and
+determinism-neutral** (no seeded-`Rng` draw reordered). Verified: full `bun test` = **2294 pass / 0
+fail**, `tsc` clean, plus a headless in-browser frustum check on the culled meshes.
+
+### SHIPPED — load path
+
+- **Fonts extracted off the render-blocking CSS (210 KB → 14 KB gzip on the critical path).** The
+  v0.19.0 subsetting shrank the font bytes but they were still base64-inlined **into the one
+  render-blocking chunk** (Bun's HTML bundler merges every stylesheet + inlines woff2 regardless of the
+  `loader` map, and strips `media`/`onload`). `scripts/build.ts` now extracts the `@font-face` blocks
+  post-build into a standalone cache-busted `fonts-<hash>.css` re-injected non-render-blocking
+  (`media=print` → `onload media='all'` + `<noscript>`); faces live in `src/styles/fonts.css` (dev
+  inlines them). Render-blocking CSS **333 KB → 78 KB**. Same fonts + `font-display:swap` — no visual
+  change. First-paint critical path ≈ 815 KB → 619 KB gzip. (Complements the v0.19.1 docs-page mermaid
+  split — that shrank the docs entry; this shrinks the app entry's CSS.)
+- **Eight click-to-open panels `import()`-deferred to idle after `bootDone()`** — moves their self-mount
+  DOM work off the boot path (TTI). App-graph `splitting` stays OFF (same rationale the v0.19.1 audit
+  gave for the app: no dynamic imports to split, and Bun emits no `modulepreload` → first-load waterfall).
+
+### SHIPPED — runtime
+
+- **Frustum-culled the heaviest fixed-position shader shells** — the Portal-Temple 96-step Menger
+  raymarch (`monolith-temple.ts`) and the mecha fire-pillar fbm cylinder (`mecha-fire-pillar.ts`) were
+  `frustumCulled = false`, shading every frame even behind the camera. Both vertex shaders are
+  **non-displacing** (cost is fragment-side only), so each geometry's auto bounding sphere is exact and
+  culling is byte-identical on screen. Headless proof: `renderedWhenFacing: true`,
+  `culledWhenFacingAway: true`, bounding spheres finite/valid. The V131 god-colossus raymarch deity's
+  bounding box is likewise culled off-frustum. The pervasive `frustumCulled=false` on InstancedMeshes /
+  arena-wide fields was **deliberately left** (correct there — base-geometry bounds can't cull spread
+  instances).
+- **Cached the frame-invariant Tsotchke `corpusPulse`** in `world.ts` (pure function of the boot-constant
+  seed; was re-folding the full corpus twice per frame) and trimmed a per-frame closure alloc + a
+  redundant `ring.rotation.x` write in `singularities.ts`.
+
+### Considered and DEFERRED (risk > reward, documented so it isn't re-litigated)
+
+- Entity hot-loop micro-wins (cache pool-key, dedupe `vel.length()`, incremental morph counter): the
+  audit found **no smoking gun — incremental only**, and the memory note binds "runtime already optimal —
+  don't micro-opt (golden tests)." Surgery on the tightest 10k-entity loop for ~µs gain risks the very
+  stability the owner asked to preserve. Skipped.
+- Idle-VFX empty-loop short-circuit (portal-shield 2400 iters/frame) and megalith update cadence/gating:
+  ~µs gains, and a mis-maintained alive-counter or an every-other-frame render cadence would be a visible
+  regression. The frustum culls already remove the expensive (fragment) half of these. Skipped.
+
 ## 2026-07-02 — Performance & load-time audit: whole-repo review, two shipped load wins, runtime confirmed already-optimal (V126)
 
 Owner brief: "loads slow with stuff… GitHub Pages IO… Singularities and N1/N2 and the Portal Temple and

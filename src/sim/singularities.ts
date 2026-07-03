@@ -689,26 +689,22 @@ export class SingularitySystem {
     const pulse = 1 + Math.sin(t * 5.2) * 0.11 + Math.sin(t * 13.7) * 0.04;
     rig.group.scale.setScalar(fade);
     this.animateParticles(dt, fade);
-    // V99: update shader uniforms for the super-realistic look
-    const updateShaderTime = (mat: THREE.Material, key: string): void => {
-      const u = (mat as unknown as { uniforms?: Record<string, { value: unknown }> }).uniforms;
-      if (u && u[key]) (u[key] as { value: number }).value = t;
-      if (u && u.uFade) (u.uFade as { value: number }).value = fade;
-    };
+    // V99: update shader uniforms for the super-realistic look (applyShaderTime is a method, not a
+    // freshly-allocated per-frame closure).
     if (this._kind === 'entropy') {
       // The heat-death shell grows and thins as it expires.
       const grow = 1 + (DURATION - this.life) * 0.5;
       rig.primary.scale.setScalar(grow);
-      updateShaderTime(rig.primaryMat, 'uTime');
+      this.applyShaderTime(rig.primaryMat, 'uTime', t, fade);
     } else {
       rig.primary.scale.setScalar(pulse);
-      if (this._kind === 'strangestar') updateShaderTime(rig.primaryMat, 'uTime');
+      if (this._kind === 'strangestar') this.applyShaderTime(rig.primaryMat, 'uTime', t, fade);
     }
     if (rig.ring) {
-      // V99: the accretion disk rotates with differential Keplerian speed
+      // V99: the accretion disk rotates with differential Keplerian speed. rotation.x is set once in
+      // buildRig (constant Math.PI*0.42) and nothing else mutates it, so it isn't re-written per frame.
       rig.ring.rotation.z += 0.06;
-      rig.ring.rotation.x = Math.PI * 0.42;
-      if (rig.ringMat) updateShaderTime(rig.ringMat, 'uTime');
+      if (rig.ringMat) this.applyShaderTime(rig.ringMat, 'uTime', t, fade);
     }
     // V59: shimmer the photon ring + breathe the glow halo.
     if (rig.extras.length) {
@@ -731,6 +727,14 @@ export class SingularitySystem {
         m.opacity = base * fade * (i === 0 ? shimmer : breathe);
       }
     }
+  }
+
+  /** Write `t` → the material's `key` uniform and `fade` → its `uFade` (if present). Hoisted out of
+   *  animateRig so it is not re-allocated as a closure every frame. Uniform-only — no rng, no visual change. */
+  private applyShaderTime(mat: THREE.Material, key: string, t: number, fade: number): void {
+    const u = (mat as unknown as { uniforms?: Record<string, { value: unknown }> }).uniforms;
+    if (u && u[key]) (u[key] as { value: number }).value = t;
+    if (u && u.uFade) (u.uFade as { value: number }).value = fade;
   }
 
   /**

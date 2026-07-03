@@ -75,7 +75,10 @@ export class MechaFirePillar {
     });
     this.mesh = new THREE.Mesh(this.geo, this.mat);
     this.mesh.position.set(0, (MECHA_Y + BLAZE_FLOOR) * 0.5, 0);
-    this.mesh.frustumCulled = false;
+    // PERF (v0.20.0): frustum-cull the fire column. Its 5-octave fbm runs per fragment, but the vertex
+    // shader does not displace (gl_Position from raw cylinder vertices), so the CylinderGeometry bounds
+    // are exact — when the column is off-frustum the fbm is skipped with zero visual change.
+    this.mesh.frustumCulled = true;
     this.mesh.renderOrder = 6;
     scene.add(this.mesh);
   }

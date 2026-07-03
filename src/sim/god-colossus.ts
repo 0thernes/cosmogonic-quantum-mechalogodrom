@@ -314,7 +314,14 @@ export class GodColossus {
     this.geo = new THREE.BoxGeometry(half * 2, half * 2, half * 2);
     this.mesh = new THREE.Mesh(this.geo, this.material);
     this.mesh.position.copy(center);
-    this.mesh.frustumCulled = false; // the raymarch fills the whole box; never cull it away
+    // PERF (v0.20.0): frustum-CULL the raymarch box. Culling triggers only when the box is ENTIRELY
+    // outside the camera frustum — not by "how full" it is — and the vertex shader is non-displacing
+    // (gl_Position from the raw box verts), so BoxGeometry's auto bounding sphere is exact and nothing
+    // inside the box can rasterize when it's off-screen. The deity sits at the far dome edge
+    // (z ≈ -0.92·ARENA_RADIUS); on the many orbit angles that face away it is fully off-frustum, and
+    // skipping it there avoids the whole 88-step Mandelbulb march with zero visual change. (BackSide
+    // keeps it drawn whenever the camera is inside the box, since the bounds then intersect the frustum.)
+    this.mesh.frustumCulled = true;
     this.root.add(this.mesh);
     scene.add(this.root);
   }

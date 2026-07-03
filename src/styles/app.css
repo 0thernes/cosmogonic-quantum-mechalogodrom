@@ -9,30 +9,13 @@
  * the server-rendered audit fragment.
  */
 @import 'tailwindcss';
-/* Latin-only font subsets. The UI is Latin + monospace only; the default
-   `@fontsource-variable/inter` and unscoped jetbrains-mono imports pulled in
-   Cyrillic / Greek / Greek-ext / Vietnamese / Latin-ext subsets too — ~450KB of
-   base64-inlined woff2 baked into the render-blocking CSS for glyphs that never
-   render. Pinning to the Latin subset is the SAME fonts, weights, and
-   `font-display: swap` — zero visual change, ~440KB off the render-blocking
-   stylesheet (784KB → 342KB). Inter has no language-scoped CSS entrypoint (only
-   axis files, each of which re-imports every subset), so its Latin face is
-   declared explicitly against the packaged variable woff2; JetBrains Mono ships
-   per-subset `latin-*.css` entrypoints. */
-@font-face {
-  font-family: 'Inter Variable';
-  font-style: normal;
-  font-display: swap;
-  font-weight: 100 900;
-  src: url('@fontsource-variable/inter/files/inter-latin-wght-normal.woff2')
-    format('woff2-variations');
-  unicode-range:
-    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
-    U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-}
-@import '@fontsource/jetbrains-mono/latin-300.css';
-@import '@fontsource/jetbrains-mono/latin-400.css';
-@import '@fontsource/jetbrains-mono/latin-600.css';
+/* PERF/LOAD (v0.20.0): the @font-face declarations moved to src/styles/fonts.css, which index.html
+   loads NON-render-blocking (media="print" → onload this.media='all'). Bun base64-inlines every
+   CSS-referenced woff2 as a data: URI (~257KB / 210KB gzip of Latin-subset fonts); keeping them in
+   THIS stylesheet forced the browser to download+parse all of them before first paint. Splitting
+   them out leaves only the ~70KB layout CSS on the critical path — the fonts stream in behind first
+   light and swap without blocking it. SAME Latin-subset fonts, weights, and `font-display: swap` as
+   the v0.19.0 subsetting win — zero visual change. See fonts.css for the face declarations. */
 
 /* ── V86 first-paint shell (FOUC guard) ───────────────────────────
    Panels + chrome must land in final columns before module JS runs.
