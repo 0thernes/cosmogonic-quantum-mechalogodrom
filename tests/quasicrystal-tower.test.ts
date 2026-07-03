@@ -1,13 +1,12 @@
 /**
- * V122 (USER #11) — the TOWER's quasicrystal carve. Falsifiable claims:
+ * V122 → V131 — the icosahedral cut-and-project set. Falsifiable claims:
  *  - icosaCutProject is a REAL cut-and-project set: deterministic, inside the unit ball, thousands
  *    of sites, and APERIODIC — no translation maps the set onto itself (checked statistically: the
  *    nearest-neighbour spacing spectrum carries multiple distinct gaps, impossible for a periodic
  *    lattice's single spacing under one shell);
- *  - golden-ratio signature: the two dominant nearest-neighbour spacings are related by ~φ (the
- *    icosahedral quasicrystal fingerprint);
- *  - the GodColossus places the carve band: ~9.6k quasicrystal artifacts + 2.4k panels ≈ 12k total,
- *    hollow (no carve site under 1.28× the tier half-width), two draw calls, dispose-clean.
+ *  - golden-ratio signature: every coordinate lives in ℤ[φ] (the icosahedral quasicrystal fingerprint);
+ *  - V131: the GodColossus is now a RAYMARCHED FRACTAL DEITY, and three sites of this set are wired in
+ *    as the shader's aperiodic orbit-trap anchors (the quasicrystal survives as the deity's bones).
  */
 import { describe, expect, test } from 'bun:test';
 import * as THREE from 'three';
@@ -58,19 +57,23 @@ describe('icosaCutProject — the aperiodic bones', () => {
   });
 });
 
-describe('GodColossus — the carved hollow trio-regime tower', () => {
-  test('~12k artifacts across 3 instanced pools; hollow shell; dispose-clean', () => {
+describe('GodColossus — the raymarched fractal deity (bones from the cut-and-project)', () => {
+  test('single raymarch shell wiring the aperiodic seeds; no instanced blocks; dispose-clean', () => {
     const scene = new THREE.Scene();
     const g = new GodColossus(scene);
-    expect(g.qcCount).toBeGreaterThan(9000); // carve + lamps landed
-    expect(g.artifactCount).toBeGreaterThan(11000); // + the 2400 tier panels ≈ 12k
-    // Instanced pools = bounded draw calls: exactly 3 InstancedMeshes on the monument.
+    expect(g.seedCount).toBe(3); // three cut-and-project sites feed the orbit traps
+    // NO instanced pools any more — the deity is a single distance-estimated fractal.
     let instanced = 0;
     scene.traverse((o) => {
       if ((o as THREE.InstancedMesh).isInstancedMesh) instanced++;
     });
-    expect(instanced).toBe(3);
-    // update() drives the bipolar blaze without touching matrices (cheap per frame).
+    expect(instanced).toBe(0);
+    // the three seeds are genuine cut-and-project sites: inside the unit ball.
+    for (const key of ['uSeedA', 'uSeedB', 'uSeedC']) {
+      const v = g.material.uniforms[key]!.value as THREE.Vector3;
+      expect(Math.hypot(v.x, v.y, v.z)).toBeLessThanOrEqual(1 + 1e-9);
+    }
+    // update() drives the morph without touching the scene graph (cheap per frame).
     for (let f = 0; f < 30; f++) g.update(f / 10, 0.5, 0.2);
     g.dispose();
     let remaining = 0;
@@ -78,10 +81,14 @@ describe('GodColossus — the carved hollow trio-regime tower', () => {
     expect(remaining).toBe(1); // only the scene itself
   });
 
-  test('deterministic: two colossi are built identical (no rng in construction)', () => {
+  test('deterministic: two deities wire bit-identical seeds (no rng in construction)', () => {
     const a = new GodColossus(new THREE.Scene());
     const b = new GodColossus(new THREE.Scene());
-    expect(a.qcCount).toBe(b.qcCount);
+    const va = a.material.uniforms.uSeedB!.value as THREE.Vector3;
+    const vb = b.material.uniforms.uSeedB!.value as THREE.Vector3;
+    expect(va.x).toBe(vb.x);
+    expect(va.y).toBe(vb.y);
+    expect(va.z).toBe(vb.z);
     a.dispose();
     b.dispose();
   });

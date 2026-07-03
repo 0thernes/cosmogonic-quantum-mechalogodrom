@@ -1,29 +1,22 @@
 /**
- * GOD-COLOSSUS — the one colossal god-tier monument. Falsifiable claims:
- * - construction draws NO rng + needs no WebGL (headless Scene only);
- * - it builds a single root group carrying ~2400 instanced greeble panels, all transforms finite;
- * - placement is DETERMINISTIC: two builds ⇒ bit-identical greeble instance matrices (positional hash);
- * - `update` blazes/rotates/sways with no throw and spawns NO new geometry (scene object count stable);
- * - `dispose()` detaches the monument from the scene.
+ * GOD-COLOSSUS (V131 FRACTAL DEITY) — the one colossal god-tier presence. Falsifiable claims:
+ * - construction draws NO rng + needs no WebGL (headless Scene only), building ONE root group carrying
+ *   ONE raymarch mesh with ONE ShaderMaterial (no instanced blocks — there are none, by design);
+ * - the shader exposes the reactive uniforms (uTime / uChaos / uEntropy) + the three aperiodic seeds;
+ * - construction is DETERMINISTIC: two builds ⇒ bit-identical orbit-trap seed vectors;
+ * - `update` writes uTime/uChaos/uEntropy with no throw and spawns NO geometry (scene object count stable);
+ * - `dispose()` detaches the deity from the scene.
  */
 import { describe, expect, test } from 'bun:test';
 import * as THREE from 'three';
 import { GodColossus } from '../src/sim/god-colossus';
 
-function instanceMeshes(scene: THREE.Scene): THREE.InstancedMesh[] {
-  const out: THREE.InstancedMesh[] = [];
+function shaderMats(scene: THREE.Scene): THREE.ShaderMaterial[] {
+  const out: THREE.ShaderMaterial[] = [];
   scene.traverse((o) => {
-    if (o instanceof THREE.InstancedMesh) out.push(o);
+    const m = (o as THREE.Mesh).material;
+    if (m instanceof THREE.ShaderMaterial) out.push(m);
   });
-  return out;
-}
-
-function panelFingerprint(scene: THREE.Scene): number[] {
-  const out: number[] = [];
-  for (const mesh of instanceMeshes(scene)) {
-    const arr = mesh.instanceMatrix.array as ArrayLike<number>;
-    for (let i = 0; i < arr.length; i++) out.push(arr[i]!);
-  }
   return out;
 }
 
@@ -33,59 +26,60 @@ function countObjects(scene: THREE.Scene): number {
   return n;
 }
 
-describe('GodColossus — the colossal god-tier monument', () => {
-  test('boots headless: one root group + ~2400 greeble panels + the V122 quasicrystal pools', () => {
+describe('GodColossus — the raymarched morphing fractal deity', () => {
+  test('boots headless: one root group + one raymarch shader (no instanced blocks)', () => {
     const scene = new THREE.Scene();
     const g = new GodColossus(scene);
     let groups = 0;
+    let instanced = 0;
     scene.traverse((o) => {
       if (o instanceof THREE.Group) groups++;
+      if (o instanceof THREE.InstancedMesh) instanced++;
     });
     expect(groups).toBe(1);
-    expect(g.panelCount).toBeGreaterThan(2000);
-    // V122 (USER #11): panels + quasicrystal carve blocks + window lamps = 3 instanced pools.
-    expect(instanceMeshes(scene).length).toBe(3);
+    expect(instanced).toBe(0); // V131: no more block-tower — a single raymarched fractal
+    const mats = shaderMats(scene);
+    expect(mats.length).toBe(1);
+    const u = mats[0]!.uniforms;
+    // reactive drivers + the aperiodic orbit-trap bones are all wired
+    for (const key of ['uTime', 'uChaos', 'uEntropy', 'uSeedA', 'uSeedB', 'uSeedC']) {
+      expect(u[key]).toBeDefined();
+    }
+    expect(g.seedCount).toBe(3);
     g.dispose();
   });
 
-  test('every greeble instance transform is finite', () => {
-    const scene = new THREE.Scene();
-    const g = new GodColossus(scene);
-    const fp = panelFingerprint(scene);
-    expect(fp.length).toBeGreaterThan(0);
-    for (const v of fp) expect(Number.isFinite(v)).toBe(true);
-    g.dispose();
-  });
-
-  test('placement is deterministic — two builds ⇒ bit-identical greeble matrices', () => {
+  test('construction is deterministic — two builds ⇒ bit-identical aperiodic seeds', () => {
     const a = new THREE.Scene();
     const b = new THREE.Scene();
     const ga = new GodColossus(a);
     const gb = new GodColossus(b);
-    expect(ga.panelCount).toBe(gb.panelCount);
-    const pa = panelFingerprint(a);
-    const pb = panelFingerprint(b);
-    expect(pa.length).toBe(pb.length);
-    for (let i = 0; i < pa.length; i++) expect(pa[i]).toBe(pb[i]!);
+    for (const key of ['uSeedA', 'uSeedB', 'uSeedC']) {
+      const va = ga.material.uniforms[key]!.value as THREE.Vector3;
+      const vb = gb.material.uniforms[key]!.value as THREE.Vector3;
+      expect(va.x).toBe(vb.x);
+      expect(va.y).toBe(vb.y);
+      expect(va.z).toBe(vb.z);
+      expect(Number.isFinite(va.x)).toBe(true);
+    }
     ga.dispose();
     gb.dispose();
   });
 
-  test('update blazes + rotates with finite transforms and spawns no geometry', () => {
+  test('update morphs from the clock + chaos/entropy and spawns no geometry', () => {
     const scene = new THREE.Scene();
     const g = new GodColossus(scene);
     const before = countObjects(scene);
     for (let f = 0; f < 240; f++) g.update(f / 60, (f % 60) / 60, ((f * 7) % 100) / 100);
     expect(countObjects(scene)).toBe(before); // no per-frame allocation into the scene graph
-    scene.traverse((o) => {
-      o.updateMatrix();
-      const a = o.matrix.elements;
-      for (let i = 0; i < a.length; i++) expect(Number.isFinite(a[i]!)).toBe(true);
-    });
+    const u = g.material.uniforms;
+    expect(u.uTime!.value).toBeCloseTo(239 / 60);
+    expect(Number.isFinite(u.uChaos!.value as number)).toBe(true);
+    expect(Number.isFinite(u.uEntropy!.value as number)).toBe(true);
     g.dispose();
   });
 
-  test('dispose() detaches the monument', () => {
+  test('dispose() detaches the deity', () => {
     const scene = new THREE.Scene();
     const g = new GodColossus(scene);
     expect(scene.children.length).toBeGreaterThan(0);
