@@ -776,6 +776,20 @@ function buildPersistentNav(doc: Document): void {
       ),
     );
   }
+  // USER: the SECOND access button, right next to ⛓ ACCESS — the ◈ STAGE II "UwU" trans-dimensional
+  // box (temple-access.ts). Its real toggle self-mounts into the legacy #cqm-dock, which the center HUD
+  // force-hides, so — exactly like ACCESS above — the HUD carries a proxy that clicks the hidden toggle.
+  // Without this the box exists but is invisible on every surface (the dock is display:none).
+  const tkaToggle = doc.getElementById('cqm-tka-toggle');
+  if (tkaToggle) {
+    rowDocs.appendChild(
+      mkBtn(
+        '◈ STAGE II',
+        'Trans-dimensional access — crack the UwU box to raise the Monolith Temple early',
+        () => tkaToggle.click(),
+      ),
+    );
+  }
   rowDocs.appendChild(
     mkBtn('⚙ SET', 'Simulation settings', () => {
       const w = doc.defaultView as typeof window & { cqmToggleSettings?: () => void };
