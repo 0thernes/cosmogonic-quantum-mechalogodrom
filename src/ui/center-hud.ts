@@ -41,6 +41,14 @@ const SLOTS: readonly Slot[] = [
 const PANEL_SEL = SLOTS.map((s) => '#' + s.panel).join(',');
 /** The open+visible panel selectors — the base (solid) opacity rule. */
 const VIS_SEL = SLOTS.map((s) => '#' + s.panel + '.cqm-hud-vis').join(',');
+/** V123 (USER #2): every HUD-managed panel gets ONE uniform managed chrome (‹ › _ ✕). Each panel
+ *  ALSO ships its OWN close/minimize button in its header — the two overlap in the top-right (the
+ *  "two sets of overlapping buttons" wireframe bug). Hide the REDUNDANT per-panel std controls (any
+ *  `[data-close]` / `[data-min]`) inside a managed panel; the managed chrome does that job. CUSTOM
+ *  buttons (e.g. the super-panel's NEURAL, which uses `[data-neu]`) are untouched. */
+const REDUNDANT_CHROME_SEL = SLOTS.map(
+  (s) => `#${s.panel} [data-close],#${s.panel} [data-min]`,
+).join(',');
 
 /** Desktop/fine-pointer center HUD height. V122 (USER #1): DOUBLED — the panels were too short and
  *  cut their info behind smashed scrollbars; they now run ~2× taller (capped by --cqm-hud-max-height
@@ -84,20 +92,28 @@ html[data-cqm-hud-anchor='top'] ${PANEL_SEL} {
 ${VIS_SEL} {
   opacity: 1 !important;
 }
+/* V123 (USER #2): hide every managed panel's OWN close/minimize control — the uniform managed
+   chrome below is the single, standard window control for all panels. */
+${REDUNDANT_CHROME_SEL} { display: none !important; }
+/* Reserve the top-right corner in EVERY managed panel so a header's title / custom buttons never
+   slide under the chrome pill (the overlap). Panels lay their header out as the first flow child. */
+${PANEL_SEL} { --cqm-chrome-w: 150px; }
+${SLOTS.map((s) => `#${s.panel} > *:first-child`).join(',')} { padding-right: var(--cqm-chrome-w) !important; }
 .cqm-hud-panel-chrome {
   position: absolute;
-  top: 8px;
-  right: 10px;
+  top: 6px;
+  right: 8px;
   z-index: 100;
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 4px;
   pointer-events: auto;
-  padding: 4px 6px;
-  border-radius: 10px;
-  background: rgba(10, 8, 24, 0.92);
-  border: 1px solid rgba(160, 190, 255, 0.28);
-  box-shadow: 0 2px 12px rgba(0,0,0,.5);
+  padding: 3px 5px;
+  border-radius: 9px;
+  /* V123: read as PART of the panel header (a flush control cluster), not a floating foreign pill. */
+  background: rgba(14, 12, 30, 0.72);
+  border: 1px solid rgba(160, 190, 255, 0.16);
+  box-shadow: none;
 }
 .cqm-hud-panel-chrome button {
   width: 28px;
@@ -503,7 +519,12 @@ function fitHud(): void {
   const fs = typeof document !== 'undefined' && !!document.fullscreenElement;
   const topInset = fs ? 10 : 52;
   const bottomPx = barsTop < vh ? Math.round(vh - barsTop + 10) : 130;
-  const maxH = Math.max(120, Math.min(barsTop - topInset - 14, vh - topInset - bottomPx - 8));
+  // V123 (USER #1): the floor was 120px — far too short for a data panel, so a mis-measured top bar
+  // (e.g. the coarse-pointer sheet path where the band test is bypassed) collapsed the panel to a
+  // useless stub. Floor at 60% of the usable column (min 360) so a panel is ALWAYS substantial.
+  const usable = vh - topInset - 20;
+  const floorH = Math.max(360, Math.round(usable * 0.6));
+  const maxH = Math.max(floorH, Math.min(barsTop - topInset - 14, vh - topInset - bottomPx - 8));
   root.style.setProperty('--cqm-hud-max-height', `${Math.round(maxH)}px`);
   if (sheetMode) {
     root.dataset.cqmHudAnchor = 'bottom';

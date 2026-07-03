@@ -94,10 +94,14 @@ const STYLE = `
 .cqm-sup-x:focus-visible{outline:1px solid #c478ff}
 /* V112: use the available panel height. Identity column on the left; meters wrap into a dense grid. */
 .cqm-sup-body{flex:1 1 auto;min-height:0;display:flex;flex-direction:row;gap:10px;overflow:auto;align-items:stretch}
-.cqm-sup-id{flex:0 0 auto;padding:6px 10px;border-right:1px solid rgba(196,120,255,.14);display:grid;
-  grid-template-columns:auto 1fr;gap:2px 10px;align-items:baseline;min-width:160px;max-width:220px;overflow:hidden}
-.cqm-sup-id .k{color:#a98fce;font-size:12px;letter-spacing:.05em;text-transform:uppercase}
-.cqm-sup-id .v{color:#f3ecff;text-align:right;font-variant-numeric:tabular-nums;font-size:13px}
+/* V123 (USER #5): the left ID column was clipped — a 160-220px box with overflow:hidden chopped the
+   long values ("ARCHITECT-Ω · g0", "10081p · 5st×5d×25v") mid-token. Widen it, let values wrap
+   cleanly on their own line under a full-width layout, and never clip. */
+.cqm-sup-id{flex:0 0 auto;padding:7px 12px;border-right:1px solid rgba(196,120,255,.14);display:grid;
+  grid-template-columns:auto minmax(0,1fr);gap:3px 12px;align-items:baseline;min-width:210px;max-width:320px}
+.cqm-sup-id .k{color:#a98fce;font-size:11.5px;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap}
+.cqm-sup-id .v{color:#f3ecff;text-align:right;font-variant-numeric:tabular-nums;font-size:12px;
+  line-height:1.35;overflow-wrap:anywhere;word-break:break-word}
 .cqm-sup-bars{flex:1 1 auto;padding:10px 12px;display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:8px 16px;align-content:stretch;min-width:0}
 .cqm-sup-bar{display:grid;grid-template-columns:72px 1fr 42px;align-items:center;gap:8px;min-width:0}
 .cqm-sup-bar .lab{color:#c4a8e8;font-size:12px;letter-spacing:.04em;text-transform:uppercase;font-weight:600}
@@ -213,9 +217,14 @@ const STYLE = `
 /* center-hud owns the shared panel slot; the .neural class lifts specificity (0,1,1,0 > 0,1,0,0)
    so the 4-tab / 27-visual observatory can temporarily expand even further when needed. Capped so it
    never runs off the viewport. */
-#cqm-sup-panel.neural{height:min(var(--cqm-hud-max-height,calc(100vh - 156px)),640px)!important;
+/* V123 (USER #1): the NEURAL tab used to cap at 640px while the telemetry tab ran to 1040px, so the
+   window visibly SHORTENED when you switched tabs. Both tabs now flex to the SAME full managed
+   height, so the panel stays the same size and MORE info shows in either view. */
+#cqm-sup-panel.neural{height:var(--cqm-hud-height,min(84vh,1040px))!important;
   max-height:var(--cqm-hud-max-height,calc(100vh - 156px))!important;min-height:0!important}
 #cqm-sup-panel.neural .cqm-sup-body{display:none}
+/* In neural mode the archon strip yields to the observatory so the 9 cells get the full height. */
+#cqm-sup-panel.neural .cqm-sup-archons{display:none}
 #cqm-sup-panel.neural .cqm-sup-neural-host{display:flex}
 #cqm-sup-panel.neural .cqm-sup-neu{background:rgba(52,20,82,.95);color:#f3ecff}
 `;
