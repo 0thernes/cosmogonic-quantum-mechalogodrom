@@ -2675,6 +2675,19 @@ export class World {
           s.chaos = Math.min(CHAOS_MAX, s.chaos + 0.03 * morphic.strength);
         }
       }
+      // V-GEDANKEN-COUPLE: the population's DYING minds feed back into the collective. The gedanken
+      // death-dream ledger (each organism's confabulation as it dies — Thaler's neural death) was measured
+      // but only DISPLAYED on the audit dock; now when the death-dreams run VIVID (the swarm hallucinating
+      // hard at the moment of death) the noosphere STIRS — a small bounded chaos nudge, the same class as the
+      // noosphere-insight and morphic-resonance couplings above. The dying minds now WRITE the world, not
+      // just read out to a panel (coupling>count). Deterministic (the ledger is deterministic); gated on
+      // enough deaths to be a real population signal; bounded to a hair of chaos.
+      if (this.gedankenLedger.deaths > 8) {
+        const dreamHeat = this.gedankenLedger.meanVividness; // ~0..1.3 across the population
+        if (dreamHeat > 0.6) {
+          s.chaos = Math.min(CHAOS_MAX, s.chaos + 0.02 * Math.min(1, dreamHeat - 0.6));
+        }
+      }
       // Light Archons (5–24): deposit pantheon field into emergence angles 8–10 each apex beat.
       for (let a = 5; a < ARCHON_CHANNELS; a++) {
         this.pantheon.field.sample(a, this.nhsiCollectiveScratch);
