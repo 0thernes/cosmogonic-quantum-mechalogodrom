@@ -506,6 +506,14 @@ export class SuperBodySystem {
   private readonly vel = new THREE.Vector3(); // flight velocity
   private readonly wander = new THREE.Vector3(0, 16, 0); // current place it's flying toward
   private readonly aim = new THREE.Vector3(); // scratch (desired heading / lookAt target)
+  // USER V127 (C): the apex HUNTS — when SuperHunt spots prey nearby it feeds a live target here and the
+  // flight aim bends hard toward it (a predator's pursuit), overriding the idle wander. `fuel` counts
+  // organisms eaten (food/fuel); cleared each frame SuperHunt finds no prey so the apex resumes roaming.
+  private readonly huntTarget = new THREE.Vector3();
+  private readonly _huntDir = new THREE.Vector3();
+  private hunting = false;
+  /** Organisms this apex has consumed (food/fuel) — read for telemetry / hunger. */
+  fuel = 0;
   private wanderClock = 0; // countdown to repick the wander target
   private teleClock = 9; // countdown to the next quantum blink
   private seed = 1; // deterministic counter driving wander + teleport variation
@@ -840,6 +848,23 @@ export class SuperBodySystem {
     );
   }
 
+  /** USER V127 (C): lock the flight aim onto prey at `(x,y,z)` — the apex pursues it this frame (the
+   *  wander is overridden while hunting). Cleared by {@link clearHunt} when no prey is in range. O(1). */
+  setHuntTarget(x: number, y: number, z: number): void {
+    this.huntTarget.set(x, y, z);
+    this.hunting = true;
+  }
+
+  /** USER V127 (C): drop the hunt lock — the apex resumes its idle wander-roam. O(1). */
+  clearHunt(): void {
+    this.hunting = false;
+  }
+
+  /** USER V127 (C): the apex consumed one organism — bank the food/fuel. O(1). */
+  eat(): void {
+    this.fuel++;
+  }
+
   /** Animate every frame from the sim clock + the stored mind targets. Allocation-free. O(1).
    * EXTREME + CHAOTIC: computes live feature masks from uVariant + stored quantum[] + reflex/qualia +
    * surprise/morph/arousal; drives prebuilt children scales (mask active count) + per-appendage anims.
@@ -903,6 +928,17 @@ export class SuperBodySystem {
     if (Math.hypot(this.pos.x, this.pos.z) > ARENA_R * 0.82)
       this.aim.addScaledVector(this.pos, -0.006);
     if (this.aim.lengthSq() > 1e-6) this.aim.normalize();
+    // USER V127 (C): HUNT — when SuperHunt has locked prey, bend the flight aim HARD toward it (a
+    // predator's pursuit), overriding the idle wander. Player control still wins (checked just below),
+    // so a manually-flown apex never lurches at prey. Deterministic (no rng); target set externally.
+    if (this.hunting) {
+      this._huntDir.copy(this.huntTarget).sub(this.pos);
+      if (this._huntDir.lengthSq() > 1e-4) {
+        this._huntDir.normalize();
+        this.aim.lerp(this._huntDir, 0.82);
+        if (this.aim.lengthSq() > 1e-6) this.aim.normalize();
+      }
+    }
     // ── V41 PLAYER CONTROL: MANUAL → the player's input IS the heading (no autonomous wander or
     //    teleport); ASSIST → it nudges the autonomous heading; AUTOPILOT (default) → the V39 roam. ──
     const manual = this.ctrlMode === 2;

@@ -163,6 +163,7 @@ import { PortalDeathFauna } from './sim/portal-death-fauna';
 import { PortalImmuneBounce } from './sim/portal-immune-bounce';
 import { PortalShield } from './sim/portal-shield';
 import { SuperBodySystem } from './sim/super-body';
+import { SuperHunt } from './sim/super-hunt';
 import { SuperPanel } from './ui/super-panel';
 import { SuperheroState, HERO_POWERS } from './ui/superhero-state';
 import { SuperheroHud } from './ui/superhero-hud';
@@ -352,6 +353,8 @@ export class World {
   private petriRng!: Rng;
   private readonly superPanel: SuperPanel;
   private readonly superBody: SuperBodySystem;
+  /** USER: the apex super-creatures HUNT + EAT organisms (food/fuel); prey respawns 5s later elsewhere. */
+  private readonly superHunt: SuperHunt;
   private readonly superRng: Rng;
   private readonly superScene: THREE.Scene;
   private readonly emptyQ = new Float32Array(10);
@@ -1040,6 +1043,7 @@ export class World {
     // Per-frame: think(percept) → snapshot → setMind/setConsciousness; bodies update wander from mind act[] + evo.
     // No learning (fixed seeded weights); all read/write shared systems (grid for local, econ per purse, audio etc).
     this.superBody = this.superBodies[0]!; // legacy alias for prime (compat paths + wing swarm)
+    this.superHunt = new SuperHunt(ctx); // USER: the apexes hunt + eat organisms as food/fuel
     this.superMindSnap = null;
     this.superheroHud = new SuperheroHud(); // V35: self-mounting player HUD, hidden until unlock
     // F-SUPER V34/35: the access puzzle fires `superhero-unlock` once when solved → reveal #2 + the
@@ -1212,6 +1216,7 @@ export class World {
     this.connectome.dispose(); // free the axon-web BufferGeometry + LineBasicMaterial
     this.cosmicWeb.dispose(); // free the cosmic-web points/lines geometries + PointsMaterial/LineBasicMaterial
     this.quantumLattice.dispose(); // free the 3 WireframeGeometry shells + shared LineBasicMaterial
+    this.superHunt.dispose();
     for (const b of this.superBodies) b.dispose();
     for (const h of this.heroBodies) h.body.dispose();
     this.superheroHud.dispose();
@@ -1365,6 +1370,11 @@ export class World {
     for (let i = 0; i < this.superBodies.length; i++) {
       this.superBodies[i]!.update(t, dt);
     }
+    // USER V127 (C): the apexes are PREDATORS — each hunts the nearest organism (bending its flight to
+    // pursue) and EATS it on contact (food/fuel); the prey bursts in a green feed-puff and re-enters the
+    // world ELSEWHERE 5s later. Runs AFTER the bodies moved so it steers off fresh positions; only scans
+    // `entities`, so the Pantheon / mecha / other apexes are never eaten.
+    this.superHunt.update(this.superBodies, this.entities, t, dt);
     // V47: the wingman swarm orbits + assists the prime each frame; one InstancedMesh draws all 100.
     this.superBody.worldPosition(this.sv1);
     this.wingSwarm.update(
