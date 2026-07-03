@@ -20,7 +20,7 @@
 import * as THREE from 'three';
 import { ARENA_MID } from './constants';
 import type { EntityManager } from './entities';
-import type { SimContext } from '../types';
+import type { Entity, SimContext } from '../types';
 
 /** Mechalogodrom fixed altitude — mirrors mechalogodrom.ts ALTITUDE (the group sits at (0, 252, 0)). */
 export const MECHA_Y = 252;
@@ -137,9 +137,15 @@ export class MechaBlaze {
   /**
    * Per-frame: (1) when armed, incinerate every organism inside the mecha's fiery cone (backwards scan)
    * and queue its respawn; (2) fire due respawns ELSEWHERE; (3) advance + fade the embers (buoyant rise +
-   * drag). Frozen dt=0 ⇒ no kills (embers hold). O(n + POOL).
+   * drag). Frozen dt=0 ⇒ no kills (embers hold). O(n + POOL). `onKill(e,i)` fires while the burning
+   * organism's brain + senses are STILL LIVE — the world runs Thaler's gedanken neural-death on it here.
    */
-  update(entities: EntityManager, t: number, dt: number): void {
+  update(
+    entities: EntityManager,
+    t: number,
+    dt: number,
+    onKill?: (e: Entity, index: number) => void,
+  ): void {
     const list = entities.list;
     if (this.active && dt > 0) {
       for (let i = list.length - 1; i >= 0; i--) {
@@ -156,6 +162,9 @@ export class MechaBlaze {
         if (dx * dx + dz * dz <= coneR * coneR) {
           this.ignite(p.x, p.y, p.z);
           const mi = e.userData.mi ?? 0;
+          // Measure the incinerated mind BEFORE disposal (weights + senses still live). Backwards scan
+          // ⇒ the disposeAt index shift never skips an unvisited organism.
+          onKill?.(e, i);
           entities.disposeAt(i); // O(1); fires onDeath exactly once
           this.respawns.push({ at: t + RESPAWN_DELAY, mi });
           this.kills++;

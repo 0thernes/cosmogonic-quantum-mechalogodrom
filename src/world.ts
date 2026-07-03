@@ -1749,8 +1749,9 @@ export class World {
     this.portalDeath.update(this.entities, t, dt, (e, i) => this.gedankenOnDeath(e, i, t));
     // USER V127: the Mechalogodrom is DEATH too — organisms that rise into its high kill sphere are
     // INCINERATED in a fiery blaze + re-enter ELSEWHERE 5s later. Scans only `entities`, so Super
-    // Creature / APEX / Pantheon (separate bodies) are immune to the fire, same as the portal.
-    this.mechaBlaze.update(this.entities, t, dt);
+    // Creature / APEX / Pantheon (separate bodies) are immune to the fire, same as the portal. The
+    // burning mind is MEASURED (Thaler gedanken-death) before it's disposed, like the portal + hunt.
+    this.mechaBlaze.update(this.entities, t, dt, (e, i) => this.gedankenOnDeath(e, i, t));
     // USER V126: the Portal also kills the big FAUNA — shoggoths/puppeteers/titans/leviathans (which live
     // outside `entities`). They explode + re-enter ELSEWHERE 5s later; the 100 Pantheon + Super Creature /
     // APEX / Mechalogodrom are IMMUNE (they never register here — their bounce is a separate pass).
