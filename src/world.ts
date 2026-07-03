@@ -165,6 +165,7 @@ import { CollisionBounce, type BounceCollider } from './sim/collision-bounce';
 import { PortalShield } from './sim/portal-shield';
 import { SuperBodySystem } from './sim/super-body';
 import { SuperHunt } from './sim/super-hunt';
+import { DomeFeeding } from './sim/dome-feeding';
 import { SuperPanel } from './ui/super-panel';
 import { SuperheroState, HERO_POWERS } from './ui/superhero-state';
 import { SuperheroHud } from './ui/superhero-hud';
@@ -356,6 +357,8 @@ export class World {
   private readonly superBody: SuperBodySystem;
   /** USER: the apex super-creatures HUNT + EAT organisms (food/fuel); prey respawns 5s later elsewhere. */
   private readonly superHunt: SuperHunt;
+  /** USER: dome-wide feeding — titans/leviathans/puppeteers graze plants + eat organisms; prey respawns 5s. */
+  private readonly domeFeeding: DomeFeeding;
   private readonly superRng: Rng;
   private readonly superScene: THREE.Scene;
   private readonly emptyQ = new Float32Array(10);
@@ -1072,6 +1075,7 @@ export class World {
     // No learning (fixed seeded weights); all read/write shared systems (grid for local, econ per purse, audio etc).
     this.superBody = this.superBodies[0]!; // legacy alias for prime (compat paths + wing swarm)
     this.superHunt = new SuperHunt(ctx); // USER: the apexes hunt + eat organisms as food/fuel
+    this.domeFeeding = new DomeFeeding(ctx); // USER: the rest of the dome fauna graze plants + eat organisms
     this.superMindSnap = null;
     this.superheroHud = new SuperheroHud(); // V35: self-mounting player HUD, hidden until unlock
     // F-SUPER V34/35: the access puzzle fires `superhero-unlock` once when solved → reveal #2 + the
@@ -1245,6 +1249,7 @@ export class World {
     this.cosmicWeb.dispose(); // free the cosmic-web points/lines geometries + PointsMaterial/LineBasicMaterial
     this.quantumLattice.dispose(); // free the 3 WireframeGeometry shells + shared LineBasicMaterial
     this.superHunt.dispose();
+    this.domeFeeding.dispose();
     for (const b of this.superBodies) b.dispose();
     for (const h of this.heroBodies) h.body.dispose();
     this.superheroHud.dispose();
@@ -1407,6 +1412,17 @@ export class World {
     // the portal maw runs, now on predation too.
     this.superHunt.update(this.superBodies, this.entities, t, dt, (e, i) =>
       this.gedankenOnDeath(e, i, t),
+    );
+    // USER V127 (D): DOME-WIDE FEEDING — the titans / leviathans / puppeteers graze the flora under them
+    // and EAT any organism that wanders within reach (prey bursts + re-enters ELSEWHERE 5s later). The
+    // apexes eat via superHunt above; the shoggoths run their own consumption cycle — so the whole dome
+    // fauna now feeds on the entities + plant biome. Only organisms are prey (the fauna are never eaten).
+    this.domeFeeding.update(
+      [this.titans, this.leviathans, this.puppets],
+      this.entities,
+      (x, z, pressure, gdt) => this.alienFlora.grazeAt(x, z, pressure, gdt),
+      t,
+      dt,
     );
     // V47: the wingman swarm orbits + assists the prime each frame; one InstancedMesh draws all 100.
     this.superBody.worldPosition(this.sv1);

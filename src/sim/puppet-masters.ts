@@ -11,6 +11,7 @@ import { POINT_LIGHT_GAIN } from './environment';
 import type { PuppetEvent, SimContext } from '../types';
 import type { EntityManager } from './entities';
 import { PORTAL_RESPAWN_DELAY, type PortalCullable } from './portal-death-fauna';
+import type { DomeFeeder } from './dome-feeding';
 
 type PuppetAction = 'chaos' | 'weather' | 'mutate';
 
@@ -202,7 +203,7 @@ interface Puppet {
  * meddling. Interventions are surfaced to the HUD via the injected `onEvent` callback
  * (legacy `showNM` toast).
  */
-export class PuppetMasterSystem implements PortalCullable {
+export class PuppetMasterSystem implements PortalCullable, DomeFeeder {
   private readonly ctx: SimContext;
   private readonly entities: EntityManager;
   private readonly onEvent: (e: PuppetEvent) => void;
@@ -325,6 +326,16 @@ export class PuppetMasterSystem implements PortalCullable {
         pm.mesh.visible = false;
         this.portalDowned.push({ pm, at: t + PORTAL_RESPAWN_DELAY });
       }
+    }
+  }
+
+  /** USER V127 (D): dome-wide feeding — visit each LIVE puppeteer's position (DomeFeeding grazes plants
+   *  + eats organisms there). Skips ones downed by the portal. See {@link DomeFeeder}. O(puppets). */
+  eachFeederPos(cb: (x: number, y: number, z: number) => void): void {
+    for (const pm of this.pms) {
+      if (!pm || !pm.mesh.visible) continue;
+      const p = pm.mesh.position;
+      cb(p.x, p.y, p.z);
     }
   }
 

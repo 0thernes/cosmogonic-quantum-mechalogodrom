@@ -50,6 +50,7 @@ import {
   portalReappearSpot,
   type PortalCullable,
 } from './portal-death-fauna';
+import type { DomeFeeder } from './dome-feeding';
 
 /** Number of titans: 10 territorial colossi + 10 central social/procreative colossi. */
 const TITAN_COUNT = 20;
@@ -597,7 +598,7 @@ function relationOf(h: PairHistory): number {
  * EntityManager; call `update(dt, t)` every frame AFTER `ctx.state.frame` is incremented
  * (all cadences key off it), and `drainPerturb()` once per frame after the RD step.
  */
-export class TitanSystem {
+export class TitanSystem implements DomeFeeder {
   /**
    * Latest waste-scar request (REUSED record). The integrator drains it to the rd facade via
    * {@link drainPerturb}; if two waste events land between drains the LATEST wins (scars are
@@ -703,6 +704,16 @@ export class TitanSystem {
         ti.light.visible = false;
         this.portalDowned.push({ ti, at: t + PORTAL_RESPAWN_DELAY });
       }
+    }
+  }
+
+  /** USER V127 (D): dome-wide feeding — visit each LIVE titan's position (DomeFeeding grazes plants +
+   *  eats organisms there). Skips ones downed by the portal. See {@link DomeFeeder}. O(titans). */
+  eachFeederPos(cb: (x: number, y: number, z: number) => void): void {
+    for (const ti of this.titans) {
+      if (!ti || !ti.group.visible) continue;
+      const p = ti.group.position;
+      cb(p.x, p.y, p.z);
     }
   }
 

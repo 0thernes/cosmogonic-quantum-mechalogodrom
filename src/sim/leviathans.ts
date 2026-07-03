@@ -24,6 +24,7 @@ import {
   portalReappearSpot,
   type PortalCullable,
 } from './portal-death-fauna';
+import type { DomeFeeder } from './dome-feeding';
 
 /** How many leviathans sail the world (fixed — telemetry-friendly, cheap). */
 const COUNT = 4;
@@ -154,7 +155,7 @@ interface Leviathan {
  * every frame. `attachSingularity` opts the colossi into the F-HOLES force field (no-op until
  * attached). `count` feeds optional telemetry.
  */
-export class LeviathanSystem implements PortalCullable {
+export class LeviathanSystem implements PortalCullable, DomeFeeder {
   private readonly levs: Leviathan[] = [];
   /** PORTAL DEATH (USER): leviathans blasted by the portal, awaiting their 5 s respawn ELSEWHERE. */
   private readonly portalDowned: { lv: Leviathan; at: number }[] = [];
@@ -254,6 +255,16 @@ export class LeviathanSystem implements PortalCullable {
         lv.group.visible = false;
         this.portalDowned.push({ lv, at: t + PORTAL_RESPAWN_DELAY });
       }
+    }
+  }
+
+  /** USER V127 (D): dome-wide feeding — visit each LIVE leviathan's position (DomeFeeding grazes plants
+   *  + eats organisms there). Skips ones downed by the portal. See {@link DomeFeeder}. O(4). */
+  eachFeederPos(cb: (x: number, y: number, z: number) => void): void {
+    for (const lv of this.levs) {
+      if (!lv || !lv.group.visible) continue;
+      const p = lv.group.position;
+      cb(p.x, p.y, p.z);
     }
   }
 
