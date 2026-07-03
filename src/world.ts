@@ -2603,6 +2603,16 @@ export class World {
       const apexLatent = this.superMindSnap?.latent;
       if (apexLatent && apexLatent.length > 0) {
         this.morphicField.imprint(apexLatent, this.lastApexThought.transcendence);
+        // V-MORPH-2: the Mechalogodrom fusion-mind is a SECOND author of the SAME shared field — its
+        // STDP-learned consciousness latent (weighted by its own consciousnessProxy) is imprinted too, so
+        // `readBias` now measures cross-mind alignment (apex ⇄ mechalogodrom) rather than the apex echoing
+        // itself. When the two deep minds CONVERGE on a pattern the field resonates harder → a bigger
+        // chaos boost: real coupling>count, not a solo loop. Deterministic (imprint draws no rng); the
+        // brain's latent is this frame's tick (world.ts V-MECHA-MIND, already computed above).
+        const mechaLatent = this.lastMechaBrainSnap?.latent;
+        if (mechaLatent && mechaLatent.length > 0) {
+          this.morphicField.imprint(mechaLatent, this.lastMechaBrainSnap!.consciousnessProxy);
+        }
         const morphic = this.morphicField.readBias(apexLatent);
         this.morphicField.decay();
         this.morphicSnap = this.morphicField.snapshot();
