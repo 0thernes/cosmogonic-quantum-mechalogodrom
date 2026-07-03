@@ -134,27 +134,31 @@ function patchNhiCore(mat: THREE.MeshStandardMaterial, u: NhiUniforms): void {
       .replace(
         '#include <emissivemap_fragment>',
         /* glsl */ `#include <emissivemap_fragment>
+        // V123 (USER #7): the social/ascension FLARES recoloured to the ALIEN OLD-MONEY / ANNIHILATION
+        // oil-slick spectrum (complements the nhiSpecies material palette) — tarnished teal / oxblood /
+        // bruise violet / patina gold, and the bright MATRIX-GREEN bit-glitch retired for a sickly
+        // gunmetal moss ('like Matrix but not Green'). Ominous, not neon-toy.
         float nFres = pow(1.0 - max(dot(normalize(vViewPosition), normalize(normal)), 0.0), 3.0);
         float nF = nFbm(vNObjP * 0.4);
-        // VISION EXPANDED (social) — ocular bloom flares when the being meets another.
-        totalEmissiveRadiance += vec3(1.0, 0.2, 0.5) * pow(nFres, 1.5) * uSocial * 1.6;
-        // NEURALMIMETIC WEB (social) — a mimetic neural web crawls the skin.
+        // VISION EXPANDED (social) — ocular bloom flares, deep oxblood, when the being meets another.
+        totalEmissiveRadiance += vec3(0.55, 0.12, 0.14) * pow(nFres, 1.5) * uSocial * 1.5;
+        // NEURALMIMETIC WEB (social) — a mimetic neural web crawls the skin in tarnished teal.
         float nWeb = step(0.7, nFbm(vNObjP * 6.0 + uTime * 0.05));
-        totalEmissiveRadiance += vec3(0.6, 0.3, 1.0) * nWeb * uSocial * 1.2;
-        // PLASMA EXPANDED (social) — plasma discharge veins race the being.
+        totalEmissiveRadiance += vec3(0.16, 0.42, 0.40) * nWeb * uSocial * 1.15;
+        // PLASMA EXPANDED (social) — plasma veins race the being in bruise violet.
         float nPlasma = pow(0.5 + 0.5 * sin(vNObjP.y * 10.0 + uTime * 6.0 + nF * 6.2831), 8.0);
-        totalEmissiveRadiance += vec3(0.9, 0.4, 1.0) * nPlasma * uSocial * 1.5;
-        // HYPERSPACE DIMENSIONALITY (ascension) — a tesseract lattice shimmers at altitude.
+        totalEmissiveRadiance += vec3(0.40, 0.18, 0.46) * nPlasma * uSocial * 1.4;
+        // HYPERSPACE DIMENSIONALITY (ascension) — a tesseract lattice shimmers cold gunmetal at altitude.
         float nLat = pow(0.5 + 0.5 * sin(vNObjP.x * 14.0) * sin(vNObjP.y * 14.0) * sin(vNObjP.z * 14.0 + uTime * 2.0), 4.0);
-        totalEmissiveRadiance += vec3(0.3, 0.9, 1.0) * nLat * uAsc * 0.9;
-        // SINGULROSITY BLOOM (social) — a hot core halo blooms on a congregating being.
-        totalEmissiveRadiance += vec3(1.0, 0.6, 0.9) * pow(1.0 - nFres, 3.0) * uSocial * 1.0;
-        // BIT-GLITCH (social) — reality quantizes into glitch blocks around a social being.
+        totalEmissiveRadiance += vec3(0.22, 0.44, 0.52) * nLat * uAsc * 0.85;
+        // SINGULROSITY BLOOM (social) — a smouldering patina-gold halo on a congregating being.
+        totalEmissiveRadiance += vec3(0.5, 0.36, 0.14) * pow(1.0 - nFres, 3.0) * uSocial * 0.95;
+        // BIT-GLITCH (social) — glitch blocks in a sickly desaturated moss, NOT matrix green.
         float nGlitch = floor((nF + sin(uTime * 9.0) * 0.2) * 5.0) / 5.0;
-        totalEmissiveRadiance += vec3(0.2, 1.0, 0.6) * nGlitch * uSocial * 0.4;`,
+        totalEmissiveRadiance += vec3(0.20, 0.30, 0.20) * nGlitch * uSocial * 0.35;`,
       );
   };
-  mat.customProgramCacheKey = () => 'nhiExpandedV1';
+  mat.customProgramCacheKey = () => 'nhiExpandedV2'; // V123: bumped for the oil-slick flare recolor
 }
 
 /** A morphing, red-eyed, biomechanical body per launched NHI. */
