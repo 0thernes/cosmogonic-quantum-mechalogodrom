@@ -792,25 +792,39 @@ function adoptFrontControls(doc: Document): boolean {
 }
 
 /**
- * The front-nav sources + the click-to-open panels' dock toggles can appear up to a couple seconds after
- * buildPersistentNav (static anchors parsed late; access-puzzle / temple-access / audit-dock deferred to
- * idle post-first-light in v0.20.0). Re-adopt the front controls + re-wire the dock toggles (so the
- * late-mounting 🗒 AUDIT and friends get their managed chrome) on a short bounded schedule, stopping as
- * soon as everything is present. Cheap DOM queries — no MutationObserver churning against the per-frame
- * HUD text updates.
+ * The front-nav sources + the click-to-open panels' dock toggles can appear at ANY time after
+ * buildPersistentNav: the static docs anchors parse late, and access-puzzle / temple-access / audit-dock
+ * are deferred to idle AFTER first light in v0.20.0 — and first light itself can be several seconds out on
+ * a slow machine or a throttled/backgrounded tab. So a fixed retry window is not enough (the ⛓ ACCESS /
+ * ◈ STAGE II proxies would silently never appear if their toggles mount after it closes). Re-adopt the
+ * front controls + re-wire the dock toggles via BOTH a short fast-path retry schedule (the common case)
+ * AND a MutationObserver that catches late arrivals whenever they mount, with NO time limit — then
+ * disconnects the instant everything is present, so it only ever churns during the brief startup window.
  */
 function scheduleNavHeal(doc: Document): void {
   if (typeof window === 'undefined') return;
+  // Adopt what's available + wire toggles; returns true once every front control AND slot toggle is in.
+  const heal = (): boolean => {
+    const frontDone = adoptFrontControls(doc);
+    wireDockToggles(); // idempotent (guards dataset.hudWired) — catches late-mounting slot toggles
+    return frontDone && SLOTS.every((s) => !!doc.getElementById(s.toggle));
+  };
+  if (heal()) return;
+  // Fast path: a few timed retries for the common case (sources appear within a couple seconds).
   const delays = [150, 400, 900, 1600, 2800, 4500];
   let i = 0;
   const tick = (): void => {
-    const frontDone = adoptFrontControls(doc);
-    wireDockToggles(); // idempotent (guards dataset.hudWired) — catches late-mounting slot toggles
-    const togglesReady = SLOTS.every((s) => !!doc.getElementById(s.toggle));
-    if ((frontDone && togglesReady) || i >= delays.length) return;
+    if (heal() || i >= delays.length) return;
     window.setTimeout(tick, delays[i++]);
   };
   window.setTimeout(tick, delays[i++]);
+  // Robust path: adopt the instant a late source mounts, however long that takes; disconnect once done.
+  if (typeof MutationObserver === 'undefined') return;
+  const obs = new MutationObserver(() => {
+    if (heal()) obs.disconnect();
+  });
+  obs.observe(doc.body, { childList: true, subtree: true });
+  window.setTimeout(() => obs.disconnect(), 30000); // hard safety cap — never linger
 }
 
 function buildPersistentNav(doc: Document): void {
