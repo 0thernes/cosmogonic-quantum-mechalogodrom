@@ -373,6 +373,13 @@ uniform float uBass;
 uniform float uChaos;
 uniform float uMode;
 uniform float uBrutalism;
+// V122 FIX (USER #6 "entities never show on laptop+"): these two were declared in the VERTEX header
+// only — the fragment FREAKSHOW block referenced them undeclared, the fragment failed to COMPILE,
+// and every instanced pool rendered nothing on every instanced tier (phone's per-mesh path hid the
+// break from the phone-tier preview). The gate can't compile GLSL: runtime-verify on an INSTANCED
+// tier after any pool-shader edit.
+uniform float uMorphWave;
+uniform float uMorphSeed;
 #define RQ_OCTAVES 3
 float rqHash(vec3 p){ p = fract(p * 0.3183099 + 0.1); p *= 17.0; return fract(p.x * p.y * p.z * (p.x + p.y + p.z)); }
 float rqNoise(vec3 x){
