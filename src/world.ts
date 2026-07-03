@@ -161,6 +161,7 @@ import { PortalDeath } from './sim/portal-death';
 import { MechaBlaze } from './sim/mecha-blaze';
 import { PortalDeathFauna } from './sim/portal-death-fauna';
 import { PortalImmuneBounce } from './sim/portal-immune-bounce';
+import { CollisionBounce, type BounceCollider } from './sim/collision-bounce';
 import { PortalShield } from './sim/portal-shield';
 import { SuperBodySystem } from './sim/super-body';
 import { SuperHunt } from './sim/super-hunt';
@@ -373,6 +374,11 @@ export class World {
    *  `immunePos` is a reused scratch — no per-frame alloc. */
   private readonly portalShield: PortalShield;
   private readonly immunePos: THREE.Vector3[] = [];
+  /** USER stage E: organisms RICOCHET off the big solid bodies (Super Creatures / APEX / Temple) instead
+   *  of ghosting through. `bounceColliders` is a reused scratch refilled each frame (no per-frame alloc). */
+  private readonly collisionBounce = new CollisionBounce();
+  private readonly bounceColliders: BounceCollider[] = [];
+  private readonly bounceTmp = new THREE.Vector3();
   private superAscended = false;
   private readonly evoRng: Rng;
   private static readonly EVO_DAY_FRAMES = 21600;
@@ -1554,6 +1560,29 @@ export class World {
     this.entityBrains.think(this.entities.list, this.state.chaos, t);
     const stats = this.entities.update(dt, t);
     this.energy = stats.energy; // stats object is reused — copy immediately
+    // USER stage E: RAGDOLL BOUNCE — organisms ricochet off the big solid bodies (Super Creatures /
+    // APEX / Temple) instead of ghosting through. Refill the collider scratch from their live positions
+    // (no per-frame alloc), then bounce. Runs AFTER entities.update so the deflection sticks this frame.
+    {
+      let nc = 0;
+      const add = (x: number, y: number, z: number, r: number): void => {
+        const col = (this.bounceColliders[nc] ??= { x: 0, y: 0, z: 0, r: 0 });
+        col.x = x;
+        col.y = y;
+        col.z = z;
+        col.r = r;
+        nc++;
+      };
+      for (let i = 0; i < this.superBodies.length; i++) {
+        this.superBodies[i]!.worldPosition(this.bounceTmp);
+        add(this.bounceTmp.x, this.bounceTmp.y, this.bounceTmp.z, 16);
+      }
+      this.alphabetPantheon.apexWorldPosition(this.bounceTmp);
+      add(this.bounceTmp.x, this.bounceTmp.y, this.bounceTmp.z, 14);
+      add(0, 24 * ARENA_MID, -40 * ARENA_MID - 0.5 * ARENA_MID, 14); // the fixed Monolith Temple void
+      if (this.bounceColliders.length > nc) this.bounceColliders.length = nc;
+      this.collisionBounce.update(this.bounceColliders, this.entities, dt);
+    }
     this.morphCount = stats.morphCount;
 
     // F-NHI V10: drive the launched super-minds on a slow beat (≈3/sec). GUARDED — a fault in an
