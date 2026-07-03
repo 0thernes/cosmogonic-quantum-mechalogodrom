@@ -54,6 +54,11 @@ const TARGET_MOBILE = 5200;
 const FIELD_HALF = 540;
 /** Keep a clear circle at the centre (temple base + cosmic crown column). */
 const CENTER_CLEAR = 78;
+/** USER: the ascension temple + its DEATH portal rise at (0, 0, -100) (= -40·ARENA_MID). Keep a clear
+ *  ring so no plant ever grows on the temple/portal — creatures may roam AROUND it, but the portal is
+ *  death and the temple footprint stays bare (mirrors {@link CENTER_CLEAR}, purely a placement filter). */
+const TEMPLE_Z = -100;
+const TEMPLE_CLEAR = 104;
 /** Fixed layout seed — flora is the same world every replay (decor, not heritable state). */
 const FLORA_SEED = 0x5eedf10a;
 
@@ -117,6 +122,8 @@ const flora_vert = /* glsl */ `
   uniform float uContact;
   uniform sampler2D uBiomass;
   uniform float uGridExtent;
+  uniform vec2 uScorchCenter;
+  uniform float uScorchRadius;
   varying vec3 vColor;
   varying float vGlow;
   varying float vUp;
@@ -143,6 +150,13 @@ const flora_vert = /* glsl */ `
     vec2 bmBase = (instanceMatrix * vec4(0.0, 0.0, 0.0, 1.0)).xz;
     float biomass = texture2D(uBiomass, (bmBase + 0.5 * uGridExtent) / uGridExtent).r;
     float grow = 0.12 + 0.88 * biomass;
+    // PORTAL DEATH (USER): plants inside the risen temple's footprint are SCORCHED to nothing — grow
+    // collapses to 0 so every vertex folds onto the instance origin (invisible), with a soft dying
+    // ring at the rim. uScorchRadius 0 ⇒ no-op everywhere (default), so pre-ascension is untouched.
+    if (uScorchRadius > 0.0) {
+      float scorchD = length(bmBase - uScorchCenter);
+      grow *= smoothstep(uScorchRadius * 0.82, uScorchRadius, scorchD);
+    }
     p *= grow;
     vGlow *= 0.3 + 0.7 * biomass;
 
@@ -248,6 +262,8 @@ export class AlienFlora {
         // to nibbled stubs where creatures feed and pop back up as they regenerate. Set post-grid below.
         uBiomass: { value: null as THREE.Texture | null },
         uGridExtent: { value: 1 },
+        uScorchCenter: { value: new THREE.Vector2(1e9, 1e9) },
+        uScorchRadius: { value: 0 },
       },
       vertexShader: flora_vert,
       fragmentShader: flora_frag,
@@ -283,6 +299,7 @@ export class AlienFlora {
       let x = (u * 2 - 1) * FIELD_HALF + (hash(k * 3 + 1) - 0.5) * this.cell * 1.3;
       let z = (v * 2 - 1) * FIELD_HALF + (hash(k * 3 + 2) - 0.5) * this.cell * 1.3;
       if (Math.hypot(x, z) < CENTER_CLEAR) continue; // keep the temple/crown centre clear
+      if (Math.hypot(x, z - TEMPLE_Z) < TEMPLE_CLEAR) continue; // USER: no flora on the ascension temple/portal
 
       // Winding RAVINES / VALLEYS / TRAILS: a ridged, phase-warped multi-octave field — low values are
       // bare meandering paths that wander corner-to-corner across the whole square.
@@ -675,6 +692,19 @@ export class AlienFlora {
       this.contactVel += (s - this.contactTarget) * 6;
       this.contactTarget = s;
     }
+  }
+
+  /**
+   * PORTAL DEATH (USER): when the ascension temple rises, every plant inside its footprint DIES and
+   * can never occupy the temple ground — the shader collapses scorched plants to nothing. Pass the
+   * temple's world XZ centre + a clearing radius; `radius <= 0` lifts the scorch (all plants live
+   * again). Ramp `radius` up over the rise for a die-off wave. Render-only + deterministic (no rng,
+   * no sim write-back): it only sets two uniforms. O(1).
+   */
+  setScorch(cx: number, cz: number, radius: number): void {
+    const u = this.material.uniforms;
+    (u['uScorchCenter']!.value as THREE.Vector2).set(cx, cz);
+    u['uScorchRadius']!.value = radius > 0 ? radius : 0;
   }
 
   /** Free every owned geometry + the shared material (HMR / world-reset safe). */

@@ -155,6 +155,7 @@ import { WingmanSwarm, WINGMAN_COUNT } from './sim/super-wingmen';
 import { WingmanRenderer } from './sim/super-wingmen-render';
 import { SuperEvolution } from './sim/super-evolution';
 import { MonolithTemple } from './sim/monolith-temple';
+import { PortalDeath } from './sim/portal-death';
 import { SuperBodySystem } from './sim/super-body';
 import { SuperPanel } from './ui/super-panel';
 import { SuperheroState, HERO_POWERS } from './ui/superhero-state';
@@ -346,6 +347,8 @@ export class World {
   private readonly emptyQ = new Float32Array(10);
   private readonly superEvo: SuperEvolution;
   private readonly monolithTemple: MonolithTemple;
+  /** USER: the ascension Portal is DEATH — organisms touching the void throat explode + respawn. */
+  private readonly portalDeath: PortalDeath;
   private superAscended = false;
   private readonly evoRng: Rng;
   private static readonly EVO_DAY_FRAMES = 21600;
@@ -891,6 +894,7 @@ export class World {
     // V63: the LV100 ascension monument. If the persisted creature is ALREADY at the summit, raise
     // the temple silently on boot (it's just THERE); a fresh live ascension plays the full fanfare.
     this.monolithTemple = new MonolithTemple(ctx.scene);
+    this.portalDeath = new PortalDeath(ctx); // USER: the ascension portal kills what touches it
     if (this.superEvo.ascended) {
       this.monolithTemple.reveal(0, 0, -40 * ARENA_MID, true);
       this.superAscended = true;
@@ -1144,6 +1148,7 @@ export class World {
     this.singularities.dispose();
     this.wingRender.dispose();
     this.monolithTemple.dispose();
+    this.portalDeath.dispose();
     this.abominationArchitecture.dispose();
     this.mechalogodrom.dispose(); // V-MECHA: free the fusion abomination's geometries + materials
     this.floatingMonoliths.dispose(); // free the 16 drifting megaliths' geometries + materials
@@ -1605,6 +1610,11 @@ export class World {
       capacity: this.quality.maxEntities,
     });
     this.monolithTemple.update(dt, t); // V63: rise + shimmer the ascension portal (no-op until revealed)
+    // USER V126: the risen Portal is DEATH — organisms that touch the void throat explode + respawn
+    // ELSEWHERE 5s later. Super Creature / APEX / Mechalogodrom live outside `entities`, so they are
+    // immune by construction (this only scans the population). Armed only once the temple is revealed.
+    this.portalDeath.setActive(this.monolithTemple.revealed);
+    this.portalDeath.update(this.entities, t, dt);
 
     // V124: the portal is a clean VOID now (the megalith redesign retired the "hell wormhole"), so the
     // portal-nightmare bus — a HIGH SCREAM square wave (`360 + level*220` Hz) + a low drone + periodic
