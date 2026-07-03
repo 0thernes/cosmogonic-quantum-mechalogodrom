@@ -163,6 +163,7 @@ import { MechaFirePillar } from './sim/mecha-fire-pillar';
 import { PortalDeathFauna } from './sim/portal-death-fauna';
 import { PortalImmuneBounce } from './sim/portal-immune-bounce';
 import { CollisionBounce, type BounceCollider } from './sim/collision-bounce';
+import { BounceImpactFX } from './sim/bounce-impact-fx';
 import { PortalShield } from './sim/portal-shield';
 import { SuperBodySystem } from './sim/super-body';
 import { SuperHunt } from './sim/super-hunt';
@@ -391,6 +392,8 @@ export class World {
    *  of ghosting through. `bounceColliders` is a reused scratch refilled each frame (no per-frame alloc). */
   private readonly collisionBounce = new CollisionBounce();
   private readonly bounceColliders: BounceCollider[] = [];
+  /** V128: bright spark shockwave at each ragdoll ricochet — makes the invisible bounce visibly POP. */
+  private readonly bounceImpactFx: BounceImpactFX;
   private readonly bounceTmp = new THREE.Vector3();
   private superAscended = false;
   private readonly evoRng: Rng;
@@ -1030,6 +1033,7 @@ export class World {
     this.monolithTemple = new MonolithTemple(ctx.scene);
     this.portalDeath = new PortalDeath(ctx); // USER: the ascension portal kills what touches it
     this.mechaBlaze = new MechaBlaze(ctx); // USER: the mecha incinerates organisms that fly into it
+    this.bounceImpactFx = new BounceImpactFX(ctx.scene); // V128: visible spark at every ragdoll ricochet
     this.mechaFirePillar = new MechaFirePillar(ctx.scene); // V128: make that death cone VISIBLE
     this.portalDeathFauna = new PortalDeathFauna(ctx); // USER: …and the big fauna too (non-swarm rosters)
     this.portalImmuneBounce = new PortalImmuneBounce(ctx); // USER: the immune Pantheon bounces off in sparks
@@ -1291,6 +1295,7 @@ export class World {
     this.monolithTemple.dispose();
     this.portalDeath.dispose();
     this.mechaBlaze.dispose();
+    this.bounceImpactFx.dispose(); // V128: free the bounce spark pool
     this.mechaFirePillar.dispose(); // V128: free the visible fire-column shader + geometry
     this.portalDeathFauna.dispose();
     this.portalImmuneBounce.dispose();
@@ -1658,6 +1663,8 @@ export class World {
       add(this.bounceTmp.x, this.bounceTmp.y, this.bounceTmp.z, 14);
       add(0, 24 * ARENA_MID, -40 * ARENA_MID - 0.5 * ARENA_MID, 14); // the fixed Monolith Temple void
       if (this.bounceColliders.length > nc) this.bounceColliders.length = nc;
+      // V128: spark the contact BEFORE the bounce ejects (same penetration test) so the ricochet POPS.
+      this.bounceImpactFx.update(this.bounceColliders, this.entities, dt);
       this.collisionBounce.update(this.bounceColliders, this.entities, dt);
     }
     this.morphCount = stats.morphCount;
