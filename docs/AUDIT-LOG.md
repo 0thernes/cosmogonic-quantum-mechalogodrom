@@ -11,7 +11,7 @@ dated / historical / "superseded snapshot" copies (per the binding "Living docs,
 
 ---
 
-## 2026-07-02 — Performance & load-time audit: whole-repo review, one shipped win, runtime confirmed already-optimal (V126)
+## 2026-07-02 — Performance & load-time audit: whole-repo review, two shipped load wins, runtime confirmed already-optimal (V126)
 
 Owner brief: "loads slow with stuff… GitHub Pages IO… Singularities and N1/N2 and the Portal Temple and
 the Entities are very intensive… make it run smoother faster load quicker… without destroying it." A
@@ -31,13 +31,25 @@ already well-optimized; the real, safe, high-ROI lever was load-time, and it has
   **CSS 784 KB → 342 KB**, `@font-face` 25 → 4, gzip ≈ 216 KB. **Same fonts, weights, and
   `font-display: swap` — zero visual change.**
 
+### SHIPPED (v0.19.1) — docs page lazy-loads mermaid (docs initial JS 4.57 MB → ~608 KB, −87%)
+
+- The `docs.html` entry eagerly bundled **mermaid (~800 KB)** into a single 4.57 MB chunk that had to
+  download before the page painted. Mermaid is now behind a **dynamic `import()`** (`src/docs-page.ts`),
+  and `scripts/build.ts` runs **two `Bun.build` passes**: index.html + the other static pages WITHOUT
+  splitting (the app has no dynamic imports → splitting would only shard its single 2.06 MB chunk into
+  dozens of statically-imported files for zero deferral), and docs.html alone WITH `splitting: true` so
+  mermaid resolves to its own on-demand chunk fetched AFTER first paint. Measured static-import closure:
+  docs eager path **4.57 MB → ~608 KB**, with **866 KB (mermaid) deferred**. Verified the app still ships
+  as ONE chunk and the `satellite-music` / `alife-gallery` stable-name copies are unchanged. Diagrams
+  render a moment later inside the existing `try/catch`; zero change to the app, the sim, or any output.
+
 ### Load-path map (the "loads slow" reframe)
 
 - `index.html` (the app) critical path is exactly **one JS chunk (2.06 MB min / 618 KB gz) + the CSS
-  above** — nothing else. The **4.57 MB chunk is the `docs.html` entry** (mermaid ~800 KB + the 1.5 MB
-  inlined `src/generated/alife-svg-embed.ts`), and `specs.html`/`bible.html` are their own chunks. The
-  bundler already isolates them; the big blob is **never** on the app path. So the raw 17 MB `dist/`
-  total is spread across five independent page entries, not one download.
+  above** — nothing else. The `docs.html` entry _was_ a single 4.57 MB chunk (mermaid ~800 KB + the
+  1.5 MB inlined `src/generated/alife-svg-embed.ts`); as of v0.19.1 its eager path is ~608 KB with mermaid
+  deferred (above). `specs.html`/`bible.html` are their own chunks. None of these were ever on the app
+  path — the raw 17 MB `dist/` total is spread across five independent page entries, not one download.
 - Duplicate-asset note (Pages weight only, not app path): `scripts/build.ts` copies
   `docs/reports/assets` into **both** `dist/docs/reports/assets` and `dist/assets/alife` (the 923 KB
   `alife-distance-matrix.svg` ships twice); `bible.html` emits a 0-byte JS chunk. Left as-is — both copies

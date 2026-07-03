@@ -7,43 +7,43 @@
  * bare `import 'mermaid'` inline would never resolve in the browser. The
  * diagram sources themselves stay inline in docs.html.
  */
-import mermaid from 'mermaid';
-
-mermaid.initialize({
-  startOnLoad: false,
-  theme: 'dark',
-  themeVariables: {
-    darkMode: true,
-    background: '#030612',
-    primaryColor: '#08243a',
-    primaryTextColor: '#cfe9ff',
-    primaryBorderColor: '#0ef',
-    lineColor: '#3da9c9',
-    secondaryColor: '#1a0f2e',
-    tertiaryColor: '#050a1c',
-    fontFamily: "'JetBrains Mono', ui-monospace, monospace",
-    fontSize: '12px',
-  },
-});
-
 import { mountAlifeMetricsGallery } from './alife-metrics-gallery';
 import './satellite-music';
 
-// Mount the gallery FIRST — never let mermaid issues block it.
+// Mount the page shell + ALife gallery FIRST — never let mermaid's load or render block it.
 mountAlifeMetricsGallery(document.getElementById('alife-metrics'));
 
-// Mermaid is non-blocking — if it fails, the gallery is already up.
+// Mermaid (~800KB) is LAZY-loaded: the docs entry builds with code splitting (scripts/build.ts), so this
+// dynamic import lands mermaid in its own chunk the browser fetches AFTER the docs shell + gallery have
+// painted, instead of baking it into the docs entry bundle where it blocked first paint. The diagrams
+// render a moment later; non-blocking — if the import or render fails, the gallery is already up.
 try {
+  const { default: mermaid } = await import('mermaid');
+  mermaid.initialize({
+    startOnLoad: false,
+    theme: 'dark',
+    themeVariables: {
+      darkMode: true,
+      background: '#030612',
+      primaryColor: '#08243a',
+      primaryTextColor: '#cfe9ff',
+      primaryBorderColor: '#0ef',
+      lineColor: '#3da9c9',
+      secondaryColor: '#1a0f2e',
+      tertiaryColor: '#050a1c',
+      fontFamily: "'JetBrains Mono', ui-monospace, monospace",
+      fontSize: '12px',
+    },
+  });
   await mermaid.run({ querySelector: 'pre.mermaid' });
+  // Interactive diagrams: pan (drag) + zoom (wheel) + fullscreen on every rendered mermaid SVG, so the
+  // architecture / ERD / sequence diagrams are viewable and explorable. Dependency-free (owned facade)
+  // per the project's lean-deps philosophy — no svg-pan-zoom added. Only meaningful once mermaid has
+  // rendered, so it runs inside the same guarded block.
+  enhanceDiagrams();
 } catch (e) {
   console.warn('[docs] mermaid render skipped:', e);
 }
-
-// ── Interactive diagrams: pan (drag) + zoom (wheel) + fullscreen on every rendered mermaid SVG,
-// so the architecture / ERD / sequence diagrams are actually viewable and explorable (the user
-// reported they could not be clicked, zoomed, or viewed). Dependency-free (owned facade) per the
-// project's lean-deps philosophy — no svg-pan-zoom added.
-enhanceDiagrams();
 
 function enhanceDiagrams(): void {
   document.querySelectorAll<HTMLElement>('pre.mermaid').forEach((pre) => {

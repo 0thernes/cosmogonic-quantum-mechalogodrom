@@ -9,6 +9,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.19.1] — 2026-07-03
+
+### Load-time: docs page lazy-loads mermaid — initial JS 4.57 MB → ~608 KB (−87%)
+
+- The `docs.html` entry eagerly bundled **mermaid (~800 KB minified)** into a single 4.57 MB chunk, all
+  of which had to download before the page could paint. The diagrams don't need to render before the
+  shell + ALife gallery are up, so mermaid is now behind a **dynamic `import()`** and the docs entry
+  builds with **code splitting** — mermaid (866 KB across its chunks) is fetched _after_ first paint,
+  and the docs eager critical path drops to **~608 KB** (measured static-import closure). Diagrams render
+  a moment later; the whole path stays wrapped in the existing `try/catch`, so a mermaid failure still
+  leaves the gallery up exactly as before.
+- Splitting is applied **only** to the docs build. `scripts/build.ts` now runs two `Bun.build` passes
+  into the same outdir: index.html + the other static pages **without** splitting (the app has no dynamic
+  imports, so splitting would only shatter its single 2.06 MB chunk into dozens of statically-imported
+  files — more requests, same bytes, zero deferral), and docs.html alone **with** splitting. Verified:
+  the app still ships as **one** chunk, and the `satellite-music` / `alife-gallery` stable-name copies are
+  unchanged. Zero change to the app, the sim, or any rendered output.
+
 ## [0.19.0] — 2026-07-02
 
 ### Load-time: Latin-only font subsets — render-blocking CSS 784 KB → 342 KB (−56%)

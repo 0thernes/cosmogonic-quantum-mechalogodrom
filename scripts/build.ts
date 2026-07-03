@@ -17,10 +17,21 @@ try {
   console.warn(`build: could not prune dist/ (${code}); continuing with existing outdir.`);
 }
 
-const result = await Bun.build({
+// Two builds into the same outdir, differing ONLY in `splitting`, because splitting is a per-build flag
+// and the entrypoints want opposite treatment:
+//
+//  • The APP (index.html → main.ts) and the other static pages have NO dynamic imports, so splitting
+//    would only shatter their single self-contained bundle into dozens of statically-imported chunks —
+//    more requests, the same bytes, a deeper import waterfall, ZERO deferral (everything is still needed
+//    at boot). One chunk per entry is the faster shape here, and it keeps the satellite-music /
+//    alife-gallery stable-name copy logic below unchanged.
+//  • docs.html DOES lazy-import mermaid (~800KB). It needs `splitting: true` so that import resolves to
+//    its own on-demand chunk fetched after first paint instead of being baked into the docs entry bundle.
+//
+// Bun.build does not prune the outdir, so the second call simply adds docs' chunks alongside the first's.
+const staticResult = await Bun.build({
   entrypoints: [
     './index.html',
-    './docs.html',
     './specs.html',
     './bible.html',
     './src/satellite-music.ts',
@@ -30,6 +41,20 @@ const result = await Bun.build({
   minify: true,
   plugins: [tailwind],
 });
+
+const docsResult = await Bun.build({
+  entrypoints: ['./docs.html'],
+  outdir: './dist',
+  minify: true,
+  splitting: true,
+  plugins: [tailwind],
+});
+
+const result = {
+  success: staticResult.success && docsResult.success,
+  logs: [...staticResult.logs, ...docsResult.logs],
+  outputs: [...staticResult.outputs, ...docsResult.outputs],
+};
 
 if (!result.success) {
   for (const message of result.logs) console.error(message);
