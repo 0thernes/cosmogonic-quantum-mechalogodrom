@@ -256,6 +256,11 @@ function renderDashboard(doc: Document, list: unknown[]): void {
   let dreamNovelty = 0.0;
   let gedankenDevours = 0;
   let dreamTransfer = 0.0;
+  // Thaler "prove consciousness his way" verdict — how many of his constitutive sentience markers a
+  // population of mini Creativity Machines reproduces (lazy + cached in world.ts).
+  let thalerMet = 0;
+  let thalerRobust = 0;
+  let thalerTotal = 0;
   let totalWealth = 0;
   let giniVal = 0.0;
   let dominantCurrency = 'AURUM';
@@ -306,6 +311,17 @@ function renderDashboard(doc: Document, list: unknown[]): void {
       gedankenDevours = ged.devours ?? 0;
       dreamTransfer = ged.meanTransfer ?? 0.0;
     }
+    // Thaler proof (lazy + cached in world.ts — the ~200 ms ensemble compute happens once, off the frame).
+    try {
+      const th = world.thaler;
+      if (th) {
+        thalerMet = th.markersMet ?? 0;
+        thalerRobust = th.markersRobust ?? 0;
+        thalerTotal = th.totalMarkers ?? 0;
+      }
+    } catch {
+      /* world without the proof (older bundle) — leave at 0 */
+    }
 
     // 4. [SUB] Substrate Material Ledger
     const econ = world.snap?.econ || (world.economy ? world.economy.summary() : null);
@@ -338,6 +354,7 @@ function renderDashboard(doc: Document, list: unknown[]): void {
       num: `${liveFps} FPS`,
       last: `Ticks: ${totalTicks} | Tier: ${qualityTier}`,
       sub: '',
+      sub2: '',
       labelClass: 'cqm-aud-scope-dev',
     },
     {
@@ -346,6 +363,7 @@ function renderDashboard(doc: Document, list: unknown[]): void {
       num: `${activeEntities} ORGS`,
       last: `Mass: ${biomass}kg | Mut: ${(mutationQuotient * 100).toFixed(1)}%`,
       sub: '',
+      sub2: '',
       labelClass: 'cqm-aud-scope-bio',
     },
     {
@@ -363,6 +381,12 @@ function renderDashboard(doc: Document, list: unknown[]): void {
               ? ` · ⇌${gedankenDevours} imprint ${dreamTransfer.toFixed(2)}`
               : '')
           : '',
+      // Thaler "prove it his way" verdict: how many of his 8 constitutive sentience markers a population of
+      // mini Creativity Machines reproduces (robust = held in ≥80% of the ensemble). His criteria, not IIT.
+      sub2:
+        thalerTotal > 0
+          ? `ψ Thaler ${thalerMet}/${thalerTotal} markers · ${thalerRobust} robust`
+          : '',
       labelClass: 'cqm-aud-scope-neuro',
     },
     {
@@ -371,6 +395,7 @@ function renderDashboard(doc: Document, list: unknown[]): void {
       num: `${Math.round(totalWealth)} AU`,
       last: `Gini: ${giniVal.toFixed(3)} | ${dominantCurrency}`,
       sub: '',
+      sub2: '',
       labelClass: 'cqm-aud-scope-substrate',
     },
   ];
@@ -396,13 +421,21 @@ function renderDashboard(doc: Document, list: unknown[]): void {
     last.textContent = q.last;
 
     card.append(title, count, last);
-    // Optional second detail line (e.g. the [NEU] card's live gedanken death-dream readout).
+    // Optional detail lines (e.g. the [NEU] card's live gedanken death-dream readout + Thaler verdict).
     if (q.sub) {
       const sub = doc.createElement('span');
       sub.className = 'last';
       sub.style.opacity = '0.82';
       sub.textContent = q.sub;
       card.appendChild(sub);
+    }
+    if (q.sub2) {
+      const sub2 = doc.createElement('span');
+      sub2.className = 'last';
+      sub2.style.opacity = '0.82';
+      sub2.style.color = '#c79bff'; // Thaler ψ — the neuro accent
+      sub2.textContent = q.sub2;
+      card.appendChild(sub2);
     }
     dash.appendChild(card);
   }

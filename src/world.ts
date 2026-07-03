@@ -53,6 +53,7 @@ import { EntityManager } from './sim/entities';
 import { growthTargetAt } from './sim/growth-ramp';
 import { EntityBrainField } from './sim/entity-brain';
 import { devour, gedankenDeath, GedankenLedger } from './sim/gedanken-death';
+import { runThalerProof, type ThalerVerdict } from './sim/thaler-sentience';
 import { TRAIT, TRAIT_GENES } from './sim/genome';
 import { InstancedEntityRenderer, type InstanceFrame } from './sim/instanced-entities';
 import { ShoggothSystem } from './sim/shoggoths';
@@ -530,6 +531,24 @@ export class World {
       meanNoveltyPeak: L.meanNoveltyPeak,
       meanTransfer: L.meanTransfer,
     };
+  }
+
+  private thalerVerdictCache: ThalerVerdict | null = null;
+  /** USER ("prove consciousness his way … with a mini hybrid brain"): the full Thaler proof — build a
+   *  population of mini Creativity Machines (imagination engine + AAC critic + hot-button affect, on nets
+   *  the SAME 6→6→4 scale Thaler used) and measure how many of his constitutive sentience markers they
+   *  reproduce (confabulation sweet-spot, near-death life-review, prosody, virtual input, synthetic feeling,
+   *  reentrant contemplation, fractal rhythm, bootstrapping) — NOT the mainstream IIT/GWT indicator way.
+   *  LAZY + CACHED: the ensemble proof trains many tiny nets (~200 ms), so it runs ONCE on first access
+   *  (never on the frame path), seeded from the world seed ⇒ deterministic. Meets Thaler's own criteria;
+   *  NOT a claim of phenomenal consciousness (see thaler-sentience.ts header). */
+  get thaler(): ThalerVerdict {
+    if (!this.thalerVerdictCache) {
+      this.thalerVerdictCache = runThalerProof(
+        mulberry32((this.persisted.seed ^ 0x7a1e2b3d) >>> 0 || 1),
+      );
+    }
+    return this.thalerVerdictCache;
   }
 
   /**
