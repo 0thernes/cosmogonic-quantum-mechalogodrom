@@ -126,24 +126,29 @@ The label remains: **consciousness-indicator convergence**, not proof of subject
 
 The report corpus directly supports the new implementation spine now present in this worktree:
 
-| Artifact                                                      | Status  | Verification                                                                          |
-| ------------------------------------------------------------- | ------- | ------------------------------------------------------------------------------------- |
-| `src/sim/consciousness-kernel.ts`                             | Present | Ten-framework metadata, coupling matrix, score statuses, indicator-only snapshots.    |
-| `src/sim/consciousness-lab.ts`                                | Present | Offline Kuramoto-style convergence runner, null shuffle, ablation, seed sweep.        |
-| `tests/consciousness-kernel.test.ts`                          | Present | Metadata, coupling, bounded scores, determinism, no absent-framework inflation.       |
-| `tests/consciousness-lab.test.ts`                             | Present | Determinism, emergence, singularity/null separation, ablation, cross-seed robustness. |
-| `docs/CONSCIOUSNESS-LAB-MASTER-2026-07-03.md`                 | Updated | Canonical doctrine and Pages plan.                                                    |
-| `docs/CONSCIOUSNESS-LAB-DEEP-RESEARCH-2026-07-03.md`          | Present | First-ten defensibility, falsifiers, visuals, source ledger.                          |
-| `docs/CONSCIOUSNESS-LAB-FRONTIER-OUTLIER-STACK-2026-07-03.md` | Present | Harder outlier stack and frontier visuals.                                            |
-| `docs/CONSCIOUSNESS-GLOSSARY-INDEX-2026-07-03.md`             | Updated | Claim words and receipt index.                                                        |
+| Artifact                                                      | Status  | Verification                                                                           |
+| ------------------------------------------------------------- | ------- | -------------------------------------------------------------------------------------- |
+| `src/sim/consciousness-kernel.ts`                             | Present | Ten-framework metadata, coupling matrix, score statuses, indicator-only snapshots.     |
+| `src/sim/consciousness-lab.ts`                                | Present | Offline Kuramoto-style convergence runner, null shuffle, ablation, seed sweep.         |
+| `src/sim/consciousness-adapters.ts`                           | Present | Entity-class adapters from plant through Archon into `FrameworkSignals`.               |
+| `scripts/gen-consciousness-lab-data.ts`                       | Present | Deterministic JSON feed generator for static Pages and local server use.               |
+| `lab/consciousness-data.json`                                 | Present | Tracked entity/lab/feed snapshot for GitHub Pages.                                     |
+| `lab/consciousness.html`                                      | Present | Static Consciousness Lab dashboard with metric braid, heatmap, ablation, falsifiers.   |
+| `tests/consciousness-kernel.test.ts`                          | Present | Metadata, coupling, bounded scores, determinism, no absent-framework inflation.        |
+| `tests/consciousness-lab.test.ts`                             | Present | Determinism, emergence, singularity/null separation, ablation, cross-seed robustness.  |
+| `tests/consciousness-adapters.test.ts`                        | Present | Entity coverage, plant low-bandwidth boundary, apex full contract, deterministic feed. |
+| `docs/CONSCIOUSNESS-LAB-MASTER-2026-07-03.md`                 | Updated | Canonical doctrine and Pages plan.                                                     |
+| `docs/CONSCIOUSNESS-LAB-DEEP-RESEARCH-2026-07-03.md`          | Present | First-ten defensibility, falsifiers, visuals, source ledger.                           |
+| `docs/CONSCIOUSNESS-LAB-FRONTIER-OUTLIER-STACK-2026-07-03.md` | Present | Harder outlier stack and frontier visuals.                                             |
+| `docs/CONSCIOUSNESS-GLOSSARY-INDEX-2026-07-03.md`             | Updated | Claim words and receipt index.                                                         |
 
 Targeted verification on 2026-07-03:
 
 ```text
-bun test tests\consciousness-kernel.test.ts tests\consciousness-lab.test.ts tests\butlin-indicators.test.ts tests\thaler-sentience.test.ts
-45 pass, 0 fail, 5139 expect() calls
+bun test tests\consciousness-adapters.test.ts tests\consciousness-kernel.test.ts tests\consciousness-lab.test.ts tests\butlin-indicators.test.ts tests\thaler-sentience.test.ts
+50 pass, 0 fail, 5369 expect() calls
 
-bunx prettier --check src\sim\consciousness-kernel.ts src\sim\consciousness-lab.ts tests\consciousness-kernel.test.ts tests\consciousness-lab.test.ts
+bunx prettier --check src\sim\consciousness-adapters.ts src\sim\consciousness-kernel.ts src\sim\consciousness-lab.ts tests\consciousness-adapters.test.ts tests\consciousness-kernel.test.ts tests\consciousness-lab.test.ts
 All matched files use Prettier code style.
 ```
 
@@ -163,13 +168,13 @@ The public page should be ordered like a lab, not a legend.
 
 ## Next Engineering Moves
 
-| Priority | Move                                                                                            | Why                                                                       |
-| -------- | ----------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
-| 1        | Add entity adapters feeding `FrameworkSignals` from plants, creatures, apex, pantheons, glyphs. | Converts offline lab into per-entity wiring.                              |
-| 2        | Add a JSON export route or static generation artifact for `LabReport` and entity snapshots.     | Enables GitHub Pages visuals without server secrets.                      |
-| 3        | Add a public Consciousness Lab page.                                                            | Makes the research program inspectable and falsifiable.                   |
-| 4        | Add preregistration and negative-result docs folders.                                           | Implements the report-corpus adversarial standard.                        |
-| 5        | Add OA/criticality/IWMT auxiliary assays as report-only panels before runtime promotion.        | Captures the strongest extra report ideas without inflating the core ten. |
+| Priority | Move                                                                                     | Why                                                                              |
+| -------- | ---------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| 1        | Wire live world entities into the existing adapter functions.                            | Converts representative static profiles into per-frame world telemetry.          |
+| 2        | Add preregistration and negative-result docs folders.                                    | Implements the report-corpus adversarial standard.                               |
+| 3        | Add OA/criticality/IWMT auxiliary assays as report-only panels before runtime promotion. | Captures the strongest extra report ideas without inflating the core ten.        |
+| 4        | Add event-window downloads and seed-sweep comparison artifacts.                          | Makes convergence claims easier to replay and independently inspect.             |
+| 5        | Add live Pages charts for null panels and causal spine as the JSON schema grows.         | Moves the page from first static dashboard toward full adversarial lab evidence. |
 
 ## Final Consolidated Doctrine
 

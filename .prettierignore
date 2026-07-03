@@ -7,6 +7,8 @@ docs/FILE-MAP.md
 # Without this, `prettier --check .` recurses into every worktree and a stray style issue there
 # breaks the LOCAL gate (CI is unaffected — it runs on a clean checkout). See the multi-context note.
 .claude
+.playwright-cli
+output/playwright
 coverage
 # Built standalone gallery bundle (minified; copied from dist/ by scripts/build.ts).
 alife-gallery.js

@@ -8,6 +8,7 @@
  * This script (run AFTER `bun run build`):
  *   1. copies `dist/` (bundled index.html + docs.html + chunks) into `site/`,
  *   2. drops the self-contained `/lab` artifact at `site/lab/index.html`,
+ *      plus the static consciousness-indicator dashboard at `site/lab/consciousness/index.html`,
  *   3. copies `docs/reports/assets/` for ALife SVG metrics (relative paths in the gallery),
  *   4. rewrites the absolute nav links to be subpath-relative, and neutralizes the server-only
  *      `/api/audit` poll (no server on Pages — leaving it would 404 every 5 s).
@@ -40,9 +41,19 @@ await rm(SITE, { recursive: true, force: true });
 await mkdir(SITE, { recursive: true });
 await cp(DIST, SITE, { recursive: true });
 
-// 2. The /lab artifact as a clean directory index.
+// 2. The /lab artifacts as clean directory indexes.
 await mkdir(new URL('lab/', SITE), { recursive: true });
 await cp(new URL('lab/quantum-wildbeyond.html', ROOT), new URL('lab/index.html', SITE));
+await cp(
+  new URL('lab/consciousness-data.json', ROOT),
+  new URL('lab/consciousness-data.json', SITE),
+);
+await mkdir(new URL('lab/consciousness/', SITE), { recursive: true });
+await cp(new URL('lab/consciousness.html', ROOT), new URL('lab/consciousness/index.html', SITE));
+await cp(
+  new URL('lab/consciousness-data.json', ROOT),
+  new URL('lab/consciousness/consciousness-data.json', SITE),
+);
 
 // 2b. ALife SVG assets for docs/specs gallery (repo-relative paths).
 await cp(new URL('docs/reports/assets/', ROOT), new URL('docs/reports/assets/', SITE), {
@@ -87,6 +98,7 @@ const navFromLab: ReadonlyArray<readonly [string, string]> = base
       ['href="/docs"', `href="${base}/docs.html${q}"`],
       ['href="/spec"', `href="${base}/specs.html${q}"`],
       ['href="/bible"', `href="${base}/bible.html${q}"`],
+      ['href="/lab/consciousness"', `href="${base}/lab/consciousness/${q}"`],
       ['href="/lab"', `href="${base}/lab/${q}"`],
       ['href="/lab/"', `href="${base}/lab/${q}"`],
       ['href="/"', `href="${base}/index.html${q}"`],
@@ -95,9 +107,30 @@ const navFromLab: ReadonlyArray<readonly [string, string]> = base
       ['href="/docs"', `href="../docs.html${q}"`],
       ['href="/spec"', `href="../specs.html${q}"`],
       ['href="/bible"', `href="../bible.html${q}"`],
+      ['href="/lab/consciousness"', `href="./consciousness/${q}"`],
       ['href="/lab"', `href="./${q}"`],
       ['href="/lab/"', `href="./${q}"`],
       ['href="/"', `href="../index.html${q}"`],
+    ];
+
+const navFromConsciousness: ReadonlyArray<readonly [string, string]> = base
+  ? [
+      ['href="/docs"', `href="${base}/docs.html${q}"`],
+      ['href="/spec"', `href="${base}/specs.html${q}"`],
+      ['href="/bible"', `href="${base}/bible.html${q}"`],
+      ['href="/lab/consciousness"', `href="${base}/lab/consciousness/${q}"`],
+      ['href="/lab"', `href="${base}/lab/${q}"`],
+      ['href="/lab/"', `href="${base}/lab/${q}"`],
+      ['href="/"', `href="${base}/index.html${q}"`],
+    ]
+  : [
+      ['href="/docs"', `href="../../docs.html${q}"`],
+      ['href="/spec"', `href="../../specs.html${q}"`],
+      ['href="/bible"', `href="../../bible.html${q}"`],
+      ['href="/lab/consciousness"', `href="./${q}"`],
+      ['href="/lab"', `href="../${q}"`],
+      ['href="/lab/"', `href="../${q}"`],
+      ['href="/"', `href="../../index.html${q}"`],
     ];
 
 // Root-level pages: use absolute paths on CI, relative locally.
@@ -106,6 +139,7 @@ const navRoot: ReadonlyArray<readonly [string, string]> = base
       ['href="/docs"', `href="${base}/docs.html${q}"`],
       ['href="/spec"', `href="${base}/specs.html${q}"`],
       ['href="/bible"', `href="${base}/bible.html${q}"`],
+      ['href="/lab/consciousness"', `href="${base}/lab/consciousness/${q}"`],
       ['href="/lab"', `href="${base}/lab/${q}"`],
       ['href="/"', `href="${base}/index.html${q}"`],
     ]
@@ -113,6 +147,7 @@ const navRoot: ReadonlyArray<readonly [string, string]> = base
       ['href="/docs"', `href="docs.html${q}"`],
       ['href="/spec"', `href="specs.html${q}"`],
       ['href="/bible"', `href="bible.html${q}"`],
+      ['href="/lab/consciousness"', `href="lab/consciousness/${q}"`],
       ['href="/lab"', `href="lab/${q}"`],
       ['href="/"', `href="index.html${q}"`],
     ];
@@ -131,6 +166,7 @@ await rewrite('specs.html', [
 ]);
 await rewrite('bible.html', navRoot);
 await rewrite('lab/index.html', navFromLab);
+await rewrite('lab/consciousness/index.html', navFromConsciousness);
 
 // 4. Drop a 404.html so GitHub Pages shows a branded fallback (not the raw GitHub 404).
 const notFound = `<!doctype html><html lang="en"><head><meta charset="utf-8">
@@ -149,5 +185,5 @@ await writeFile(new URL('404.html', SITE), notFound);
 await writeFile(new URL('.nojekyll', SITE), '');
 
 console.log(
-  `assembled Pages site -> site/ (index.html, docs.html, specs.html, lab/index.html, docs/reports/assets/) · cache-bust v=${V}`,
+  `assembled Pages site -> site/ (index.html, docs.html, specs.html, lab/index.html, lab/consciousness/index.html, docs/reports/assets/) · cache-bust v=${V}`,
 );

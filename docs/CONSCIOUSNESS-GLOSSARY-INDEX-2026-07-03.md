@@ -1,6 +1,6 @@
 # Consciousness Glossary Index
 
-**Date:** 2026-07-03  
+**Date:** 2026-07-03
 **Purpose:** term contract for Cosmogonic consciousness-lab reports, code comments, UI labels, and GitHub Pages copy.
 
 ## Claim Status Words
@@ -133,6 +133,8 @@
 | 12-report consolidation           | `docs/CONSCIOUSNESS-LAB-12-REPORT-CONSOLIDATION-2026-07-03.md`                   |
 | Ten-framework kernel              | `src/sim/consciousness-kernel.ts`, `tests/consciousness-kernel.test.ts`          |
 | Consciousness lab runner          | `src/sim/consciousness-lab.ts`, `tests/consciousness-lab.test.ts`                |
+| Entity adapters + feed            | `src/sim/consciousness-adapters.ts`, `tests/consciousness-adapters.test.ts`      |
+| Static lab dashboard              | `lab/consciousness.html`, `lab/consciousness-data.json`                          |
 | SuperMind consciousness telemetry | `src/sim/super-mind.ts`, `tests/super-mind.test.ts`                              |
 | Attention schema/controller       | `src/sim/attention-schema.ts`, `src/sim/attention-controller.ts`                 |
 | Active inference                  | `src/sim/active-inference.ts`, `src/math/predictive-coding.ts`                   |

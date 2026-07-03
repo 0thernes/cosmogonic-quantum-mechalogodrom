@@ -23,6 +23,8 @@ mcps/
 # Agent harness terminal snapshots (never part of the app).
 agent-tools/
 terminals/
+.playwright-cli/
+output/playwright/
 law_error.txt
 law.log
 receipts_print.txt

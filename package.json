@@ -35,7 +35,7 @@
     "pull": "bun scripts/sync-local.ts",
     "guard": "bun scripts/sync-guard.ts",
     "start": "bun server.ts",
-    "build": "bun scripts/gen-alife-embed.ts && bun scripts/gen-bible-corpus.ts && bun scripts/build.ts",
+    "build": "bun scripts/gen-alife-embed.ts && bun scripts/gen-bible-corpus.ts && bun scripts/gen-consciousness-lab-data.ts && bun scripts/build.ts",
     "pages": "bun run build && bun scripts/build-pages.ts",
     "typecheck": "tsc --noEmit",
     "lint": "oxlint src server.ts tests bench scripts",

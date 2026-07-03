@@ -1,0 +1,628 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#081017" />
+    <title>Consciousness Lab - Indicator Dashboard</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23071017'/%3E%3Cpath d='M4 20 C9 7 23 7 28 20' fill='none' stroke='%2336d7d4' stroke-width='2'/%3E%3Cpath d='M6 18 C12 26 20 26 26 18' fill='none' stroke='%23e2b55f' stroke-width='2'/%3E%3Ccircle cx='16' cy='17' r='4' fill='%23e06b84'/%3E%3C/svg%3E"
+    />
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #071017;
+        --panel: #0e1820;
+        --panel-2: #13222c;
+        --line: #2d4650;
+        --text: #e6f1f1;
+        --muted: #9bb3b4;
+        --cyan: #36d7d4;
+        --gold: #e2b55f;
+        --rose: #e06b84;
+        --leaf: #7dbf8e;
+        --violet: #a885e6;
+        --ink: #05090d;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background:
+          radial-gradient(circle at 18% 10%, rgba(54, 215, 212, 0.14), transparent 34rem),
+          radial-gradient(circle at 88% 16%, rgba(224, 107, 132, 0.12), transparent 30rem),
+          linear-gradient(145deg, #05090d 0%, var(--bg) 46%, #0b1118 100%);
+        color: var(--text);
+        font-family:
+          Inter,
+          ui-sans-serif,
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          'Segoe UI',
+          sans-serif;
+        letter-spacing: 0;
+      }
+
+      a {
+        color: var(--cyan);
+        text-decoration: none;
+      }
+
+      a:focus-visible,
+      button:focus-visible {
+        outline: 2px solid var(--gold);
+        outline-offset: 3px;
+      }
+
+      .shell {
+        width: min(1440px, calc(100vw - 28px));
+        margin: 0 auto;
+        padding: 18px 0 42px;
+      }
+
+      header {
+        position: sticky;
+        top: 0;
+        z-index: 4;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 16px;
+        align-items: center;
+        padding: 14px 0;
+        background: rgba(5, 9, 13, 0.78);
+        backdrop-filter: blur(16px);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-width: 0;
+      }
+
+      .mark {
+        width: 38px;
+        height: 38px;
+        border: 1px solid var(--line);
+        background:
+          linear-gradient(135deg, rgba(54, 215, 212, 0.32), transparent 48%),
+          linear-gradient(315deg, rgba(226, 181, 95, 0.3), transparent 52%), var(--panel);
+        box-shadow: inset 0 0 24px rgba(54, 215, 212, 0.12);
+      }
+
+      h1,
+      h2,
+      h3,
+      p {
+        margin: 0;
+      }
+
+      h1 {
+        font-size: clamp(1.25rem, 1.6vw + 0.8rem, 2.2rem);
+        line-height: 1.05;
+        letter-spacing: 0;
+      }
+
+      .subtitle,
+      .muted {
+        color: var(--muted);
+      }
+
+      .subtitle {
+        margin-top: 5px;
+        font-size: 0.92rem;
+      }
+
+      nav {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: 8px;
+      }
+
+      nav a {
+        border: 1px solid var(--line);
+        padding: 8px 10px;
+        background: rgba(14, 24, 32, 0.85);
+        color: var(--text);
+        font-size: 0.86rem;
+      }
+
+      nav a[aria-current='page'] {
+        border-color: var(--cyan);
+        color: var(--cyan);
+      }
+
+      main {
+        display: grid;
+        gap: 14px;
+        padding-top: 16px;
+      }
+
+      .band,
+      .tile,
+      .entity,
+      .source-row {
+        border: 1px solid var(--line);
+        background: rgba(14, 24, 32, 0.88);
+      }
+
+      .band {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 16px;
+        align-items: center;
+        padding: 14px;
+      }
+
+      .claim {
+        color: var(--gold);
+        font-weight: 700;
+      }
+
+      .kpis {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .tile {
+        min-height: 104px;
+        padding: 12px;
+      }
+
+      .metric {
+        color: var(--muted);
+        font-size: 0.76rem;
+        text-transform: uppercase;
+      }
+
+      .value {
+        margin-top: 8px;
+        font-size: clamp(1.25rem, 2vw, 2.1rem);
+        font-weight: 760;
+        line-height: 1;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.1fr) minmax(360px, 0.9fr);
+        gap: 14px;
+      }
+
+      .panel {
+        border: 1px solid var(--line);
+        background: rgba(8, 16, 23, 0.72);
+        padding: 14px;
+        min-width: 0;
+      }
+
+      .panel-head {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        align-items: baseline;
+        margin-bottom: 12px;
+      }
+
+      h2 {
+        font-size: 1rem;
+        text-transform: uppercase;
+      }
+
+      canvas {
+        display: block;
+        width: 100%;
+        height: 300px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: #071017;
+      }
+
+      .entity-list {
+        display: grid;
+        gap: 8px;
+      }
+
+      .entity {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 10px;
+        padding: 11px;
+      }
+
+      .entity h3 {
+        font-size: 0.95rem;
+      }
+
+      .entity-meta {
+        color: var(--muted);
+        font-size: 0.78rem;
+        margin-top: 4px;
+      }
+
+      .score {
+        min-width: 72px;
+        text-align: right;
+        font-weight: 780;
+        color: var(--cyan);
+      }
+
+      .bar {
+        width: 100%;
+        height: 7px;
+        margin-top: 8px;
+        background: #17252c;
+        overflow: hidden;
+      }
+
+      .bar > span {
+        display: block;
+        height: 100%;
+        background: linear-gradient(90deg, var(--leaf), var(--cyan), var(--gold));
+      }
+
+      .matrix {
+        display: grid;
+        grid-template-columns: 124px repeat(10, minmax(24px, 1fr));
+        gap: 3px;
+        overflow-x: auto;
+        padding-bottom: 3px;
+      }
+
+      .cell,
+      .label-cell {
+        min-height: 28px;
+        border: 1px solid rgba(255, 255, 255, 0.07);
+      }
+
+      .label-cell {
+        display: flex;
+        align-items: center;
+        padding: 0 8px;
+        color: var(--muted);
+        font-size: 0.75rem;
+        background: rgba(19, 34, 44, 0.84);
+        white-space: nowrap;
+      }
+
+      .cell {
+        position: relative;
+        background: var(--panel-2);
+      }
+
+      .cell[data-status='absent'] {
+        background: repeating-linear-gradient(
+          135deg,
+          #101820,
+          #101820 5px,
+          #182129 5px,
+          #182129 10px
+        );
+      }
+
+      .cell span {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        color: rgba(255, 255, 255, 0.86);
+        font-size: 0.68rem;
+      }
+
+      .sources {
+        display: grid;
+        gap: 8px;
+      }
+
+      .source-row {
+        display: grid;
+        grid-template-columns: 170px minmax(0, 1fr);
+        gap: 10px;
+        padding: 10px;
+        font-size: 0.85rem;
+      }
+
+      .error {
+        border: 1px solid var(--rose);
+        padding: 14px;
+        background: rgba(224, 107, 132, 0.12);
+      }
+
+      @media (max-width: 980px) {
+        header,
+        .band,
+        .grid {
+          grid-template-columns: 1fr;
+        }
+
+        nav {
+          justify-content: flex-start;
+        }
+
+        .kpis {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+
+      @media (max-width: 620px) {
+        .shell {
+          width: min(100vw - 18px, 1440px);
+        }
+
+        .kpis {
+          grid-template-columns: 1fr;
+        }
+
+        .entity,
+        .source-row {
+          grid-template-columns: 1fr;
+        }
+
+        .score {
+          text-align: left;
+        }
+
+        canvas {
+          height: 240px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <header>
+        <div class="brand">
+          <div class="mark" aria-hidden="true"></div>
+          <div>
+            <h1>Consciousness Lab</h1>
+            <p class="subtitle">Butlin 14 + Thaler 9 + ten-framework indicator kernel</p>
+          </div>
+        </div>
+        <nav aria-label="Satellite pages">
+          <a href="/">Dome</a>
+          <a href="/docs">Docs</a>
+          <a href="/spec">Spec</a>
+          <a href="/lab">Quantum Lab</a>
+          <a href="/lab/consciousness" aria-current="page">Consciousness</a>
+        </nav>
+      </header>
+
+      <main id="app">
+        <section class="band">
+          <div>
+            <p class="claim">computational indicators only</p>
+            <p class="muted">
+              Entity adapters, null separation, ablation receipts, and deterministic JSON feed.
+            </p>
+          </div>
+          <a href="./consciousness-data.json">download JSON</a>
+        </section>
+      </main>
+    </div>
+
+    <script>
+      const COLORS = [
+        '#36d7d4',
+        '#e2b55f',
+        '#e06b84',
+        '#7dbf8e',
+        '#a885e6',
+        '#f08d58',
+        '#82b6f0',
+        '#c6d76b',
+        '#d98ed7',
+        '#8cc6b0',
+      ];
+
+      const pct = (value) => `${Math.round(value * 100)}%`;
+      const num = (value) => Number(value || 0).toFixed(3);
+
+      async function loadData() {
+        const candidates = [
+          './consciousness-data.json',
+          '../consciousness-data.json',
+          '/lab/consciousness-data.json',
+          '/api/consciousness-lab',
+        ];
+        for (const url of candidates) {
+          try {
+            const res = await fetch(url, { cache: 'no-store' });
+            if (res.ok) return res.json();
+          } catch {
+            /* try next candidate */
+          }
+        }
+        throw new Error('consciousness-data.json unavailable');
+      }
+
+      function kpi(label, value, note) {
+        return `<article class="tile"><div class="metric">${label}</div><div class="value">${value}</div><p class="muted">${note}</p></article>`;
+      }
+
+      function renderKpis(data) {
+        const report = data.labReport;
+        return `<section class="kpis" aria-label="Consciousness lab summary">
+          ${kpi('claim', data.claim, 'hard-problem boundary')}
+          ${kpi('entities', String(data.entityRecords.length), 'adapter snapshots')}
+          ${kpi('structured', num(report.structured.meanConvergence), 'mean convergence')}
+          ${kpi('null', num(report.nullShuffled.meanConvergence), 'shuffled convergence')}
+          ${kpi('events', String(report.structured.eventCount), 'replayable convergence')}
+        </section>`;
+      }
+
+      function renderEntities(data) {
+        const rows = data.entityRecords
+          .map((record) => {
+            const s = record.snapshot;
+            return `<article class="entity">
+              <div>
+                <h3>${record.profile.label}</h3>
+                <div class="entity-meta">${record.profile.kind} · ${record.activeFrameworks}/10 active · dominant ${record.dominantFramework}</div>
+                <div class="bar" aria-hidden="true"><span style="width:${pct(s.index)}"></span></div>
+              </div>
+              <div class="score">${num(s.index)}</div>
+            </article>`;
+          })
+          .join('');
+        return `<section class="panel">
+          <div class="panel-head"><h2>Entity Adapter Index</h2><span class="muted">indicator score</span></div>
+          <div class="entity-list">${rows}</div>
+        </section>`;
+      }
+
+      function renderMatrix(data) {
+        const head = `<div class="label-cell">entity</div>${data.frameworks
+          .map((f) => `<div class="label-cell" title="${f.name}">${f.id.slice(0, 3)}</div>`)
+          .join('')}`;
+        const rows = data.entityRecords
+          .map((record) => {
+            const cells = record.snapshot.frameworks
+              .map((f, i) => {
+                const c = COLORS[i % COLORS.length];
+                const alpha = f.status === 'absent' ? 0 : Math.max(0.16, f.score);
+                return `<div class="cell" data-status="${f.status}" title="${f.id}: ${f.status} ${num(
+                  f.score,
+                )}" style="background-color: color-mix(in srgb, ${c} ${Math.round(
+                  alpha * 82,
+                )}%, #101820)">
+                  <span>${f.status === 'absent' ? '' : Math.round(f.score * 99)}</span>
+                </div>`;
+              })
+              .join('');
+            return `<div class="label-cell">${record.profile.kind}</div>${cells}`;
+          })
+          .join('');
+        return `<section class="panel">
+          <div class="panel-head"><h2>Framework Heatmap</h2><span class="muted">absent cells stay striped</span></div>
+          <div class="matrix">${head}${rows}</div>
+        </section>`;
+      }
+
+      function renderSources(data) {
+        const rows = data.frameworks
+          .map(
+            (f) => `<div class="source-row">
+              <strong>${f.id}</strong>
+              <span>${f.name} · grade ${f.grade} · ${f.falsifier}</span>
+            </div>`,
+          )
+          .join('');
+        return `<section class="panel">
+          <div class="panel-head"><h2>Falsifier Ledger</h2><span class="muted">${data.frameworks.length} frameworks</span></div>
+          <div class="sources">${rows}</div>
+        </section>`;
+      }
+
+      function drawBraid(canvas, data) {
+        const dpr = Math.min(2, window.devicePixelRatio || 1);
+        const w = canvas.clientWidth;
+        const h = canvas.clientHeight;
+        canvas.width = Math.floor(w * dpr);
+        canvas.height = Math.floor(h * dpr);
+        const ctx = canvas.getContext('2d');
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        ctx.clearRect(0, 0, w, h);
+        ctx.fillStyle = '#071017';
+        ctx.fillRect(0, 0, w, h);
+        ctx.strokeStyle = 'rgba(255,255,255,.08)';
+        ctx.lineWidth = 1;
+        for (let y = 40; y < h; y += 46) {
+          ctx.beginPath();
+          ctx.moveTo(0, y);
+          ctx.lineTo(w, y);
+          ctx.stroke();
+        }
+        data.frameworks.forEach((framework, fi) => {
+          ctx.strokeStyle = COLORS[fi % COLORS.length];
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          data.entityRecords.forEach((record, ei) => {
+            const f = record.snapshot.frameworks.find((x) => x.id === framework.id);
+            const x = 18 + (ei / Math.max(1, data.entityRecords.length - 1)) * (w - 36);
+            const y = h - 22 - (f ? f.score : 0) * (h - 50);
+            if (ei === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+          });
+          ctx.stroke();
+        });
+      }
+
+      function drawAblation(canvas, data) {
+        const dpr = Math.min(2, window.devicePixelRatio || 1);
+        const w = canvas.clientWidth;
+        const h = canvas.clientHeight;
+        canvas.width = Math.floor(w * dpr);
+        canvas.height = Math.floor(h * dpr);
+        const ctx = canvas.getContext('2d');
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        ctx.clearRect(0, 0, w, h);
+        ctx.fillStyle = '#071017';
+        ctx.fillRect(0, 0, w, h);
+        const stats = data.labReport.frameworks;
+        const maxLoss = Math.max(0.001, ...stats.map((f) => f.ablationLoss || 0));
+        const barW = Math.max(12, (w - 36) / stats.length - 7);
+        stats.forEach((f, i) => {
+          const x = 18 + i * (barW + 7);
+          const bh = (f.ablationLoss / maxLoss) * (h - 54);
+          ctx.fillStyle = COLORS[i % COLORS.length];
+          ctx.fillRect(x, h - 24 - bh, barW, bh);
+          ctx.fillStyle = '#9bb3b4';
+          ctx.font = '10px system-ui';
+          ctx.save();
+          ctx.translate(x + barW * 0.5, h - 8);
+          ctx.rotate(-Math.PI / 3.2);
+          ctx.fillText(f.id.slice(0, 4), 0, 0);
+          ctx.restore();
+        });
+      }
+
+      function renderCharts(data) {
+        return `<section class="grid">
+          <section class="panel">
+            <div class="panel-head"><h2>Metric Braid</h2><span class="muted">framework scores across entity classes</span></div>
+            <canvas id="braid" aria-label="Ten framework score traces across entity adapters"></canvas>
+          </section>
+          <section class="panel">
+            <div class="panel-head"><h2>Ablation Waterfall</h2><span class="muted">load-bearing loss</span></div>
+            <canvas id="ablation" aria-label="Per-framework ablation losses"></canvas>
+          </section>
+        </section>`;
+      }
+
+      function render(data) {
+        const app = document.getElementById('app');
+        app.insertAdjacentHTML(
+          'beforeend',
+          `${renderKpis(data)}
+          ${renderCharts(data)}
+          <section class="grid">${renderEntities(data)}${renderMatrix(data)}</section>
+          ${renderSources(data)}`,
+        );
+        const paint = () => {
+          drawBraid(document.getElementById('braid'), data);
+          drawAblation(document.getElementById('ablation'), data);
+        };
+        paint();
+        window.addEventListener('resize', paint, { passive: true });
+      }
+
+      loadData()
+        .then(render)
+        .catch((error) => {
+          document
+            .getElementById('app')
+            .insertAdjacentHTML(
+              'beforeend',
+              `<section class="error"><strong>Data feed unavailable.</strong><p>${error.message}</p></section>`,
+            );
+        });
+    </script>
+  </body>
+</html>

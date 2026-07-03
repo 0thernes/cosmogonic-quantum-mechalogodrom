@@ -135,9 +135,9 @@ Visual set:
 3. **Deep research source:** `docs/CONSCIOUSNESS-LAB-DEEP-RESEARCH-2026-07-03.md` becomes the defensibility, source, and falsifier dossier.
 4. **Frontier source:** `docs/CONSCIOUSNESS-LAB-FRONTIER-OUTLIER-STACK-2026-07-03.md` becomes the harder outlier-theory and "unknown unknowns" test dossier.
 5. **Report-corpus source:** `docs/CONSCIOUSNESS-LAB-12-REPORT-CONSOLIDATION-2026-07-03.md` becomes the ingestion ledger for the 12 external deep-research reports.
-6. **Page route:** create a GitHub Pages "Consciousness Lab" screen with the metric braid, framework table, source ledger, and live honesty banner.
-7. **Data feed:** expose deterministic JSON snapshots from the sim: `frameworkScores`, `ablationResults`, `eventWindows`, `sourceReceipts`.
-8. **Proof button:** every live visual links to code receipt, test receipt, source citation, and null-control result.
+6. **Page route:** `lab/consciousness.html` is the first static GitHub Pages screen with metric braid, framework heatmap, falsifier ledger, and honesty banner.
+7. **Data feed:** `lab/consciousness-data.json` exposes deterministic entity snapshots, framework scores, ablation results, event windows, seed, and source docs.
+8. **Proof route:** `/api/consciousness-lab` serves the same feed locally; Pages serves the tracked JSON without a live server.
 
 ## Source Ledger
 
@@ -161,10 +161,11 @@ These were checked live on 2026-07-03 and should be treated as source anchors, n
 1. **Present:** `src/sim/consciousness-kernel.ts` — shared interface for per-entity framework scores, coupling, claim status, and proof telemetry.
 2. **Present:** `src/sim/consciousness-lab.ts` — offline experiment runner for framework sweeps, null baselines, ablations, and seed sweeps.
 3. **Present:** `tests/consciousness-kernel.test.ts` and `tests/consciousness-lab.test.ts` — seed replay, ablation, null baseline, and no-sentience-claim tests.
-4. **Next:** add per-entity adapters: plants get low-bandwidth UAL/FEP/sensorimotor/field metrics; apex forms get full ten-framework telemetry.
-5. **Next:** add deterministic JSON output for `frameworkScores`, `ablationResults`, `eventWindows`, and `sourceReceipts`.
-6. **Next:** add a GitHub Pages Consciousness Lab with metric braid, causal spine graph, source ledger, null panel, and honesty banner.
-7. **Next:** add preregistration and negative-results docs so failed consciousness hypotheses remain visible.
+4. **Present:** `src/sim/consciousness-adapters.ts` — plant, creature, shoggoth, puppeteer, Mechalogodrom, apex, pantheon, glyph, and Archon profiles feed bandwidth-scaled `FrameworkSignals`.
+5. **Present:** `scripts/gen-consciousness-lab-data.ts` and `lab/consciousness-data.json` — deterministic JSON output for entity snapshots, framework scores, lab ablations, event windows, seed, and source docs.
+6. **Present:** `lab/consciousness.html` plus `/lab/consciousness` and Pages copy support — first public dashboard with metric braid, framework heatmap, ablation waterfall, falsifier ledger, and honesty banner.
+7. **Next:** wire live world entities into the same adapters instead of the deterministic representative profiles.
+8. **Next:** add preregistration and negative-results docs so failed consciousness hypotheses remain visible.
 
 ## Final Doctrine
 

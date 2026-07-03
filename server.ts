@@ -6,6 +6,8 @@
  * - `/docs`           → bundled architecture docs (`docs.html`, mermaid diagrams)
  * - `/lab`            → the self-contained p5.js lab artifact, served as a static
  *                       file (deliberately NOT bundled — it is CDN-only by design)
+ * - `/lab/consciousness` and `/api/consciousness-lab`
+ *                     → static consciousness-indicator dashboard + deterministic JSON feed
  * - `GET  /api/health`→ JSON `{ ok, uptime, version }`
  * - `GET  /api/audit` → HTML fragment (`<ol>` of recent audit entries, newest first)
  *                       polled by the HTMX audit panel every 5s
@@ -407,6 +409,30 @@ if (import.meta.main) {
           logRequest(req, 200);
           return new Response(Bun.file(new URL('./lab/quantum-wildbeyond.html', import.meta.url)), {
             headers: { 'Content-Type': 'text/html; charset=utf-8' },
+          });
+        },
+      }),
+      '/lab/consciousness': secured({
+        GET(req) {
+          logRequest(req, 200);
+          return new Response(Bun.file(new URL('./lab/consciousness.html', import.meta.url)), {
+            headers: { 'Content-Type': 'text/html; charset=utf-8' },
+          });
+        },
+      }),
+      '/lab/consciousness-data.json': secured({
+        GET(req) {
+          logRequest(req, 200);
+          return new Response(Bun.file(new URL('./lab/consciousness-data.json', import.meta.url)), {
+            headers: { 'Content-Type': 'application/json; charset=utf-8' },
+          });
+        },
+      }),
+      '/api/consciousness-lab': secured({
+        GET(req) {
+          logRequest(req, 200);
+          return new Response(Bun.file(new URL('./lab/consciousness-data.json', import.meta.url)), {
+            headers: { 'Content-Type': 'application/json; charset=utf-8' },
           });
         },
       }),
