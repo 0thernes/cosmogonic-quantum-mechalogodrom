@@ -266,6 +266,10 @@ export class GodColossus {
   private readonly mesh: THREE.Mesh;
   /** Aperiodic orbit-trap anchors actually wired into the shader (the cut-and-project bones). */
   readonly seedCount = 3;
+  /** World-space center of the deity — a camera can be flown here to frame it (see World.focusColossus). */
+  readonly center: THREE.Vector3;
+  /** Half-extent of the bounding volume — a good framing distance is ~2.2× this. */
+  readonly viewRadius: number;
 
   constructor(scene: THREE.Scene) {
     this.scene = scene;
@@ -273,6 +277,8 @@ export class GodColossus {
     // Colossal hovering mass at the far edge of the dome — big enough to loom over everything.
     const half = ARENA_RADIUS * 0.82;
     const center = new THREE.Vector3(0, ARENA_RADIUS * 0.42, -ARENA_RADIUS * 0.92);
+    this.center = center.clone();
+    this.viewRadius = half;
     const scale = half / 1.35; // fractal lives in local radius ~1.35 → fills the box
 
     // Three DETERMINISTIC aperiodic seeds from the real cut-and-project set (index-sampled, no rng).

@@ -1168,6 +1168,8 @@ export class World {
         once: true,
         signal,
       });
+      // ◎ GOD: a scriptable trigger to frame the God-Colossus deity (same as the toolbar button / hotkey).
+      window.addEventListener('cqm:focus-colossus', () => this.focusColossus(), { signal });
       // V124: the trans-dimensional UwU box (ui/temple-access) forces the LV100 ascension early so the
       // impatient can peek at Stage 2. ascend() is idempotent + visual-only, so forcing it is safe.
       window.addEventListener('cqm:force-ascension', () => this.ascend(), { once: true, signal });
@@ -3144,6 +3146,28 @@ export class World {
     this.audit.record('collapse', { basis, star: this.lore.name('star', basis) });
   }
 
+  /**
+   * ◎ GOD — snap the FREE camera to a cinematic 3/4 vantage that frames the God-Colossus fractal deity.
+   * It hovers at the far back of the dome (behind the swarm), so it is otherwise easy to miss. We switch
+   * to FREE view so the shot sticks — the auto-cams (orbit/fly/tracking) would otherwise re-drive the
+   * camera every frame — then the player can WASD / mouse-look around it freely. Presentation-only: reads
+   * the deity's exposed center/radius and writes only the camera transform + the view index.
+   */
+  private focusColossus(): void {
+    const freeIdx = VIEW_MODES.indexOf('free');
+    if (freeIdx >= 0) {
+      this.state.viewIdx = freeIdx;
+      this.persisted.viewIdx = freeIdx;
+    }
+    const cam = this.engine.camera;
+    const c = this.godColossus.center;
+    const r = this.godColossus.viewRadius;
+    cam.up.set(0, 1, 0);
+    cam.position.set(c.x + r * 0.7, c.y + r * 0.7, c.z + r * 2.0);
+    cam.lookAt(c.x, c.y, c.z);
+    this.hud.showSector('◎ GOD-COLOSSUS');
+  }
+
   /** Legacy chaos multiplier cMul(): min(chaos/2, 3). */
   private chaosMul(): number {
     return Math.min(this.state.chaos / 2, 3);
@@ -4408,6 +4432,7 @@ export class World {
       },
       toggleChaosMode: () => this.toggleChaosMode(), // V62: the Lorenz quantum storm
       toggleBrutalism: () => this.toggleBrutalism(), // BRUTALISM: god-jewel ↔ concrete monolith
+      focusColossus: () => this.focusColossus(), // ◎ GOD: fly the free cam to frame the fractal deity
       entropyBoost: () => {
         this.unlock();
         // F-CHAOS-ENTROPY: raise ENTROPY one step (the bipolar opposite of chaos — order/heat-death).

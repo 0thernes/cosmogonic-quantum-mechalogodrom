@@ -814,6 +814,12 @@ function buildPersistentNav(doc: Document): void {
     ['burst', '✦ BURST', 'Burst-spawn entities', 'cqm-persist-sim'],
     ['mutate', '☢ MUTATE', 'Mutate all entities', 'cqm-persist-sim'],
     ['chaos', '⚡ CHAOS+', 'Boost chaos', 'cqm-persist-sim'],
+    [
+      'focusColossus',
+      '◎ GOD',
+      'Fly the camera to the God-Colossus fractal deity',
+      'cqm-persist-sim',
+    ],
   ] as const) {
     rowSim.appendChild(mkAct(label, title, action, extra));
   }

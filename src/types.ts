@@ -426,6 +426,8 @@ export interface UiActions {
   /** Toggle the simulation variant N(1)↔N(2) (CONTRACTS V7.6); returns the new variant. */
   cycleSim(): 1 | 2;
   cycleView(): ViewMode;
+  /** Snap the free camera to frame the God-Colossus fractal deity at the back of the dome. */
+  focusColossus(): void;
   cycleAlgo(): string;
   /** Cycle master scene exposure darker ↔ brighter; returns the new value. */
   cycleExposure(): number;
