@@ -66,6 +66,14 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
+      # V123 (USER #9 "market didn't transfer to Pages"): the GitHub Pages deployment API
+      # intermittently 500s with "Deployment failed, try again later" (the market-band commit
+      # ac5f025f hit exactly this — the BUILD succeeded, only the deploy API flaked, so the band
+      # was published only when the NEXT commit redeployed). A bounded timeout + more tolerated
+      # status-poll errors turns that transient GitHub-side flake into a self-healing publish.
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@cd2ce8fcbc39b97be8ca5fce6e763baed58fa128 # v5.0.0
+        with:
+          timeout: 600000 # ms — wait up to 10 min for the Pages CDN to report ready
+          error_count: 15 # tolerate more transient status-poll errors before giving up
