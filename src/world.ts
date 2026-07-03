@@ -52,6 +52,8 @@ import { createPhyla } from './sim/phyla';
 import { EntityManager } from './sim/entities';
 import { growthTargetAt } from './sim/growth-ramp';
 import { EntityBrainField } from './sim/entity-brain';
+import { gedankenDeath, GedankenLedger } from './sim/gedanken-death';
+import { TRAIT, TRAIT_GENES } from './sim/genome';
 import { InstancedEntityRenderer, type InstanceFrame } from './sim/instanced-entities';
 import { ShoggothSystem } from './sim/shoggoths';
 import { PuppetMasterSystem } from './sim/puppet-masters';
@@ -283,6 +285,10 @@ export class World {
   private readonly disposeAbort = new AbortController();
   private readonly entities: EntityManager;
   private readonly entityBrains: EntityBrainField; // V42: per-organism 70-param neural controller
+  /** V127 (USER): Thaler "Death of a Gedanken Creature" — measured on every portal death (dying nets
+   *  confabulate; the ledger accumulates the population-scale evidence). `gedankenSenses` is reused. */
+  private readonly gedankenLedger = new GedankenLedger();
+  private readonly gedankenSenses = new Float32Array(6);
   private readonly shoggoths: ShoggothSystem;
   private readonly puppets: PuppetMasterSystem;
   private readonly weather: WeatherSystem;
@@ -478,6 +484,27 @@ export class World {
   /** V-MECHA brain snapshot getter (for architect panel telemetry). */
   get mechaBrain(): MechalogodromBrain {
     return this.mechalogodromBrain;
+  }
+
+  /** V127 (USER, Thaler): the live "Death of a Gedanken Creature" evidence — population-scale metrics of
+   *  dying-net confabulation (measured on portal deaths). A readable research snapshot; O(1). */
+  get gedanken(): {
+    deaths: number;
+    devours: number;
+    meanVividness: number;
+    meanLucidBand: number;
+    meanNoveltyPeak: number;
+    meanTransfer: number;
+  } {
+    const L = this.gedankenLedger;
+    return {
+      deaths: L.deaths,
+      devours: L.devours,
+      meanVividness: L.meanVividness,
+      meanLucidBand: L.meanLucidBand,
+      meanNoveltyPeak: L.meanNoveltyPeak,
+      meanTransfer: L.meanTransfer,
+    };
   }
   /** V-ABC: the 100 Greek+Latin alphabet archetypes alive across the dome (instanced; no rng). */
   private readonly alphabetPantheon: AlphabetPantheonRender;
@@ -1637,7 +1664,24 @@ export class World {
     // ELSEWHERE 5s later. Super Creature / APEX / Mechalogodrom live outside `entities`, so they are
     // immune by construction (this only scans the population). Armed only once the temple is revealed.
     this.portalDeath.setActive(this.monolithTemple.revealed);
-    this.portalDeath.update(this.entities, t, dt);
+    this.portalDeath.update(this.entities, t, dt, (e, i) => {
+      // V127 (USER, Thaler): run the REAL neural-death experiment on this dying being's brain before it
+      // is disposed — hold its live senses fixed and measure the confabulation as its 70-param policy
+      // dissolves. Senses mirror EntityBrainField.think exactly. Accumulates into the ledger (evidence).
+      const ud = e.userData;
+      const g = this.entityBrains.genomeAt(i);
+      const s = this.gedankenSenses;
+      const life = ud.life > 1 ? ud.life : 1;
+      const sp = Math.hypot(ud.vel.x, ud.vel.y, ud.vel.z);
+      const c01 = (x: number): number => (x < 0 ? 0 : x > 1 ? 1 : x);
+      s[0] = c01(ud.energy / 100);
+      s[1] = c01(ud.age / life);
+      s[2] = c01(sp / 6);
+      s[3] = c01(this.state.chaos / 10);
+      s[4] = g[TRAIT.curiosity] ?? 0.5;
+      s[5] = Math.sin(ud.ph + t * 0.6);
+      this.gedankenLedger.recordDeath(gedankenDeath(g.subarray(TRAIT_GENES), s, i));
+    });
     // USER V127: the Mechalogodrom is DEATH too — organisms that rise into its high kill sphere are
     // INCINERATED in a fiery blaze + re-enter ELSEWHERE 5s later. Scans only `entities`, so Super
     // Creature / APEX / Pantheon (separate bodies) are immune to the fire, same as the portal.

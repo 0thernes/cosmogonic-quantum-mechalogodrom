@@ -18,7 +18,7 @@
 import * as THREE from 'three';
 import { ARENA_MID } from './constants';
 import type { EntityManager } from './entities';
-import type { SimContext } from '../types';
+import type { Entity, SimContext } from '../types';
 
 /** Void-throat world centre (temple reveal z `-40·MID` + local void offset `-0.5·MID`; height `CORE_Y`). */
 const PORTAL_X = 0;
@@ -132,7 +132,12 @@ export class PortalDeath {
    * shift) and queue its respawn; (2) fire any due respawns ELSEWHERE; (3) advance + fade the burst.
    * `dt` is the sim delta (frozen dt = 0 ⇒ no kills/respawns, particles hold). O(n + POOL).
    */
-  update(entities: EntityManager, t: number, dt: number): void {
+  update(
+    entities: EntityManager,
+    t: number,
+    dt: number,
+    onKill?: (e: Entity, index: number) => void,
+  ): void {
     const list = entities.list;
     if (this.active && dt > 0) {
       for (let i = list.length - 1; i >= 0; i--) {
@@ -145,6 +150,9 @@ export class PortalDeath {
         if (dx * dx + dy * dy + dz * dz <= KILL_R2) {
           this.burst(p.x, p.y, p.z);
           const mi = e.userData.mi ?? 0;
+          // V127 (USER): the gedanken death — let the world run Thaler's neural-death experiment on this
+          // being's dying brain BEFORE it is disposed (its weights + senses are still live at index i).
+          onKill?.(e, i);
           entities.disposeAt(i); // O(1); fires onDeath exactly once
           this.respawns.push({ at: t + RESPAWN_DELAY, mi });
           this.kills++;
