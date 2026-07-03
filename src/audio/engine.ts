@@ -11,8 +11,10 @@
  * - Bug 2 (legacy 588): toggling music off left the scheduler interval running — now
  *   `clearInterval` on toggle-off.
  * - Bug 3 (legacy 556): the scheduler kept queueing oscillators while the tab was hidden
- *   (burst on resume) — the tick is now guarded with `document.hidden`, and the
- *   AudioContext is suspended/resumed on `visibilitychange` while audio is enabled.
+ *   (burst on resume) — the tick is now guarded with `document.hidden`, and the whole
+ *   AudioContext is UNCONDITIONALLY suspended on `visibilitychange`→hidden / `pagehide`
+ *   and resumed on visible (V126): the portal-horror bus runs on its own gain outside the
+ *   music/sfx flags, so a flag-gated suspend let its scream drone on in a backgrounded tab.
  *
  * The ambient auto-SFX interval (legacy 548) lives here too and only fires when SFX are
  * enabled AND the tab is visible.
