@@ -125,6 +125,9 @@ export class AudioEngine {
    *  them (the renderer side already tears down via Engine.dispose; the audio side must match). */
   private ambientInterval: ReturnType<typeof setInterval> | null = null;
   private visibilityHandler: (() => void) | null = null;
+  /** Hard-stop handler for tab close / navigation / minimize (pagehide fires where visibilitychange
+   *  sometimes doesn't); retained so {@link dispose} can drop it. */
+  private pagehideHandler: (() => void) | null = null;
   private _musicOn = false;
   private _sfxOn = false;
   private _muted = false;
@@ -323,17 +326,29 @@ export class AudioEngine {
       },
       3500 + this.rng() * 3500,
     );
-    // Known Bug 3: park the whole context while hidden; wake it only if audio is enabled.
+    // Known Bug 3 (hardened V126): park the ENTIRE context whenever the page is hidden — not merely
+    // when music/sfx are on. The portal-horror bus (a sustained square-wave scream) runs on its OWN
+    // gain, independent of _musicOn/_sfxOn, and the requestAnimationFrame loop that ramps its level
+    // back to 0 when an ascension ends is throttled to a STOP while the tab is hidden — so without an
+    // unconditional suspend the scream droned on forever in a backgrounded / minimized tab (the
+    // "endless reeeee that won't stop even when I look away / close the window" bug). Suspending
+    // silences ALL audio while hidden; a running-but-silent ctx after resume costs nothing.
     if (typeof document !== 'undefined') {
       this.visibilityHandler = () => {
         if (!this.ctx) return;
-        if (document.hidden) {
-          if (this._musicOn || this._sfxOn) void this.ctx.suspend();
-        } else if (this._musicOn || this._sfxOn) {
-          void this.ctx.resume();
-        }
+        if (document.hidden) void this.ctx.suspend();
+        else void this.ctx.resume();
       };
       document.addEventListener('visibilitychange', this.visibilityHandler);
+    }
+    // Hard stop on tab close / navigation / minimize: `pagehide` fires in cases visibilitychange can
+    // miss (bfcache eviction, iOS, some window-minimize paths). Suspend so nothing lingers past the
+    // page; a bfcache restore + the next user gesture re-inits/resumes.
+    if (typeof window !== 'undefined') {
+      this.pagehideHandler = () => {
+        if (this.ctx && this.ctx.state === 'running') void this.ctx.suspend();
+      };
+      window.addEventListener('pagehide', this.pagehideHandler);
     }
   }
 
@@ -352,6 +367,12 @@ export class AudioEngine {
     if (this.visibilityHandler) {
       document.removeEventListener('visibilitychange', this.visibilityHandler);
       this.visibilityHandler = null;
+    }
+    if (this.pagehideHandler) {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('pagehide', this.pagehideHandler);
+      }
+      this.pagehideHandler = null;
     }
     const horror = this._portalHorror;
     if (horror) {
