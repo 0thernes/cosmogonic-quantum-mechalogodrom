@@ -783,7 +783,11 @@ export function bootstrapping(
  *  LONGER than unlinked random cueing. HONEST CAVEAT: chaining is fundamentally a SWARM-scale construct
  *  (DABUS is "a swarm of many disconnected nets" that link/unlink) — a SINGLE 6→6→4 net reproduces it only
  *  WEAKLY (~5/8 seeds), which is itself a faithful finding: this phenomenon wants many nets, not one. So it
- *  tiers as 'present'/'marginal', not robust — reported honestly, not forced. Deterministic. */
+ *  tiers as 'present'/'marginal', not robust — reported honestly, not forced. (Measured 2026-07-03: even a
+ *  small 6-net swarm with associative net-hopping does NOT beat a single net on chain length OR idea
+ *  diversity — a single net's self-feedback fixates on a rich fixed point while a mini swarm's hops stay
+ *  short; DABUS's rich chains genuinely need TRUE swarm scale, dozens-to-hundreds of nets, not a handful.
+ *  A negative result kept as a caveat rather than shipping a demo that doesn't demonstrate.) Deterministic. */
 export interface ChainResult {
   /** Mean coherent-cascade length with associative feedback (output → next cue). */
   chainedLen: number;
