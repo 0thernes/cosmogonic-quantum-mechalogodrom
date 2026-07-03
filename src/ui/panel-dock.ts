@@ -60,10 +60,16 @@ export function getDock(doc: Document = document): HTMLElement {
   dock.id = DOCK_ID;
   dock.setAttribute('aria-label', 'Panel and navigation dock');
   doc.body.appendChild(dock);
-  // Adopt DOCS / SPEC / LAB / BIBLE by `data-nav` (rewrite-proof on GitHub Pages).
+  // Adopt DOCS / SPEC / LAB / BIBLE by `data-nav` (rewrite-proof on GitHub Pages) — but ONLY if the
+  // center-HUD persistent strip has not already claimed them. `#cqm-dock` is `display:none` whenever the
+  // HUD exists (see center-hud), so poaching the anchors back into it makes DOCS/SPEC/BIBLE/LAB VANISH from
+  // the visible bottom row. This `getDock()` runs on the first panel `mountToggle()`, which can fire AFTER
+  // `buildPersistentNav()` — the exact ordering that produced the "the dock buttons are gone" regression.
+  // Skipping anchors already inside `#cqm-persist-nav` makes the outcome order-independent: the visible
+  // strip keeps them, and the hidden dock only adopts them when it is genuinely the sole home.
   for (const key of ['docs', 'spec', 'lab', 'bible']) {
     const a = doc.querySelector<HTMLAnchorElement>(`a[data-nav="${key}"]`);
-    if (a) {
+    if (a && !a.closest('#cqm-persist-nav')) {
       a.classList.add('cqm-dock-nav');
       dock.appendChild(a);
     }

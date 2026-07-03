@@ -498,6 +498,15 @@ export class World {
   private readonly floatingMonoliths: FloatingMonoliths;
   /** V110: the ONE colossal god-tier monument looming over the skyline (item 18). */
   private readonly godColossus: GodColossus;
+  /**
+   * REAL-TIME wall clock for the God-Colossus ONLY (USER: "animated as it is ALWAYS — even on render speed
+   * and Pausing it stays constant"). Advanced by the true, unscaled frame delta (`uiDt`) every single frame
+   * in RUNNING, SUSPENDED *and* FROZEN, so the deity's morph runs at a fixed real-world rate that never
+   * changes with the ▦ time-scale (0.5×/1×/…) and never stops when the world is paused or frozen. Kept
+   * separate from `elapsed`/`pauseVisualClock` (both of which scale with time-scale / halt on pause) and
+   * fed only to a presentation-only shader uniform — no sim state reads it, so the golden is untouched.
+   */
+  private godClock = 0;
   /** Floating neon sacred-geometry shells — the quantum heart (additive; assigned in the constructor). */
   private readonly quantumLattice: QuantumLattice;
   /** Sparse suspended circuit architecture — materialism around the dome without clutter. */
@@ -1405,6 +1414,11 @@ export class World {
     const uiDt = Math.min(Math.max(rawDt, 0), 0.05); // real frame delta, UNSCALED by timeScale
     const dt = uiDt * s.timeScale;
     s.elapsed += dt;
+    // USER: the God-Colossus is the ONE always-alive structure. Advance its REAL-TIME clock here — BEFORE
+    // the three-state-pause branches below each `return` — so it accrues the true frame delta in RUNNING,
+    // SUSPENDED and FROZEN alike. Its morph therefore looks identical at any ▦ time-scale and keeps
+    // writhing through every pause state (fed to a presentation-only uniform; draws no rng).
+    this.godClock += uiDt;
 
     s.frame++;
     const t = s.elapsed;
@@ -1539,7 +1553,7 @@ export class World {
     this.goldLattice.update(t); // V11: floating gold architecture tumble (additive, no rng)
     this.floatingMonoliths.update(t, this.state.chaos / CHAOS_MAX); // drifting megaliths kindle with chaos
     this.godColossus.update(
-      t,
+      this.godClock, // REAL-TIME clock (not `t`): constant morph rate at any time-scale (USER)
       this.state.chaos / CHAOS_MAX,
       (this.state.entropy ?? 0) / ENTROPY_MAX,
     ); // the god monument blazes + writhes with chaos/entropy
@@ -1949,6 +1963,11 @@ export class World {
       fr.nightmare = s.sim === 2 ? 1 : 0;
       this.instanced.sync(this.entities.list, s.renderMode, fr);
     }
+    // USER: the God-Colossus is the ONE structure that stays ANIMATED even in the FROZEN tableau — its
+    // real-time clock (advanced every frame in step()) keeps the fractal morphing so the deity never turns
+    // into a dead still-frame. Presentation-only uniform write — no sim step, no rng — so the frozen world
+    // stays byte-golden while the god alone keeps breathing.
+    this.godColossus.update(this.godClock, s.chaos / CHAOS_MAX, (s.entropy ?? 0) / ENTROPY_MAX);
     this.updateLens();
     this.engine.render();
   }
@@ -2017,7 +2036,7 @@ export class World {
     this.cosmicWeb.update(vt, n / this.quality.maxEntities, chaosN, entropyN);
     this.goldLattice.update(vt);
     this.floatingMonoliths.update(vt, chaosN);
-    this.godColossus.update(vt, chaosN, entropyN);
+    this.godColossus.update(this.godClock, chaosN, entropyN); // REAL-TIME: keeps writhing while SUSPENDED
     this.quantumLattice.update(vt);
     this.abominationArchitecture.setReactivity(chaosN, entropyN, n / this.quality.maxEntities);
     this.abominationArchitecture.update(vt);

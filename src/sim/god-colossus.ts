@@ -145,10 +145,10 @@ const FRAG = /* glsl */ `
 
   // Non-linear domain warp: helical twist + bend + curved ripple — annihilates every straight line.
   vec3 warp(vec3 p) {
-    float tw = 0.22 * sin(uTime * 0.11) + 0.55 * uChaos;
+    float tw = 0.30 * sin(uTime * 0.11) + 0.80 * uChaos;   // WILDER helical shear (was 0.22 / 0.55)
     p.xz = rot(p.y * tw) * p.xz;
-    p.xy = rot(p.z * 0.15 * sin(uTime * 0.05)) * p.xy;
-    p += 0.10 * sin(p.yzx * 3.1 + uTime * 0.4);
+    p.xy = rot(p.z * 0.22 * sin(uTime * 0.05)) * p.xy;      // deeper vertical bend
+    p += 0.15 * sin(p.yzx * 3.4 + uTime * 0.5);             // stronger curved ripple
     return p;
   }
 
@@ -158,7 +158,7 @@ const FRAG = /* glsl */ `
     vec3 z = pos;
     float dr = 1.0;
     float r = 0.0;
-    float power = 5.0 + 3.0 * (0.5 + 0.5 * sin(uTime * 0.07)) + 2.0 * uChaos; // 5 .. 10
+    float power = 5.0 + 3.5 * (0.5 + 0.5 * sin(uTime * 0.07)) + 2.5 * uChaos; // 5 .. 11 (wilder breathing)
     trap = vec4(1e9);
     for (int i = 0; i < ITER; i++) {
       z.xz = rot(uTime * 0.05 + float(i) * 0.7) * z.xz;
@@ -235,12 +235,12 @@ const FRAG = /* glsl */ `
       float ci = trap.x * 1.6 + trap.z * 2.1 + uTime * 0.06 + length(qHit) * 0.4 + uEntropy * 0.6;
       col = palette(ci);
       col = mix(col, palette(ci * 1.7 + 0.25 + trap.w * 0.5), 0.5);       // second hue layer
-      col += 0.28 * palette(ci * 5.0 + dot(nrm, rd) * 2.0 + uTime * 0.2); // iridescent micro-texture
+      col += 0.36 * palette(ci * 5.0 + dot(nrm, rd) * 2.0 + uTime * 0.2); // iridescent micro-texture (wilder)
       vec3 lightDir = normalize(vec3(0.5, 0.85, 0.35));
       float diff = 0.42 + 0.58 * max(dot(nrm, lightDir), 0.0);
       float fres = pow(1.0 - max(dot(nrm, -rd), 0.0), 3.0);
       col *= diff;
-      col += fres * palette(uTime * 0.1 + ci) * (0.8 + 0.6 * uChaos);
+      col += fres * palette(uTime * 0.1 + ci) * (0.9 + 0.9 * uChaos);      // hotter rim-iridescence
       float ao = clamp(1.0 - march / float(STEPS) * 1.15, 0.15, 1.0);
       col *= ao;
       alpha = clamp(0.86 + fres, 0.0, 1.0);
@@ -276,7 +276,12 @@ export class GodColossus {
 
     // Colossal hovering mass at the far edge of the dome — big enough to loom over everything.
     const half = ARENA_RADIUS * 0.82;
-    const center = new THREE.Vector3(0, ARENA_RADIUS * 0.42, -ARENA_RADIUS * 0.92);
+    // USER: SUSPENDED, FULLY ABOVE GROUND. The box bottom (center.y − half) must clear the y=0 ground with
+    // a visible floating gap — the deity is a suspended structure, NOT one half-sunk into the terrain (the
+    // old center.y = 0.42·R put the bottom at −0.40·R, so the lower half rendered under the ground and was
+    // occluded). half + 0.10·R ⇒ bottom ≈ 0.10·R above ground, top ≈ 1.74·R: a dominating backdrop that
+    // hangs in place beyond the dome rim, never touching or sinking below the floor.
+    const center = new THREE.Vector3(0, half + ARENA_RADIUS * 0.1, -ARENA_RADIUS * 0.92);
     this.center = center.clone();
     this.viewRadius = half;
     const scale = half / 1.35; // fractal lives in local radius ~1.35 → fills the box
@@ -314,14 +319,15 @@ export class GodColossus {
     this.geo = new THREE.BoxGeometry(half * 2, half * 2, half * 2);
     this.mesh = new THREE.Mesh(this.geo, this.material);
     this.mesh.position.copy(center);
-    // PERF (v0.20.0): frustum-CULL the raymarch box. Culling triggers only when the box is ENTIRELY
-    // outside the camera frustum — not by "how full" it is — and the vertex shader is non-displacing
-    // (gl_Position from the raw box verts), so BoxGeometry's auto bounding sphere is exact and nothing
-    // inside the box can rasterize when it's off-screen. The deity sits at the far dome edge
-    // (z ≈ -0.92·ARENA_RADIUS); on the many orbit angles that face away it is fully off-frustum, and
-    // skipping it there avoids the whole 88-step Mandelbulb march with zero visual change. (BackSide
-    // keeps it drawn whenever the camera is inside the box, since the bounds then intersect the frustum.)
-    this.mesh.frustumCulled = true;
+    // USER (regression fix — "when you get close it vanishes / it's a hologram"): NEVER frustum-cull the
+    // raymarch box. It is drawn BackSide (the standard for a volume the camera can also enter), so the ray
+    // still enters correctly from every distance — BUT three's cull test is on the bounding SPHERE, and as
+    // the camera flies IN CLOSE the sphere centre crosses behind the near plane and intersectsSphere
+    // reports "outside", blinking the whole deity out. The v0.20.0 perf-cull traded that away; it is not
+    // worth it. The 88-step march only runs on the box's rasterised fragments anyway, so when the box is
+    // genuinely off-screen it already produces no fragments (near-zero cost) — leaving it always-drawn
+    // keeps the god ROCK-SOLID present at every distance and orbit angle, which is the whole point.
+    this.mesh.frustumCulled = false;
     this.root.add(this.mesh);
     scene.add(this.root);
   }
