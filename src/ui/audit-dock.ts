@@ -249,6 +249,11 @@ function renderDashboard(doc: Document, list: unknown[]): void {
   let synapsesCount = 0;
   let spikeRate = 0;
   let sentience = 0.0;
+  // Thaler gedanken death-dream telemetry — accumulated as organisms die on ANY vector.
+  let gedankenDeaths = 0;
+  let dreamVividness = 0.0;
+  let dreamLucid = 0.0;
+  let dreamNovelty = 0.0;
   let totalWealth = 0;
   let giniVal = 0.0;
   let dominantCurrency = 'AURUM';
@@ -290,6 +295,13 @@ function renderDashboard(doc: Document, list: unknown[]): void {
     synapsesCount = world.connectome?.links ?? 0;
     spikeRate = Math.round(synapsesCount * (0.1 + (world.state?.chaos ?? 0.5) * 0.9));
     sentience = world.snap?.sentience ?? 0.0;
+    const ged = world.gedanken;
+    if (ged) {
+      gedankenDeaths = ged.deaths ?? 0;
+      dreamVividness = ged.meanVividness ?? 0.0;
+      dreamLucid = ged.meanLucidBand ?? 0.0;
+      dreamNovelty = ged.meanNoveltyPeak ?? 0.0;
+    }
 
     // 4. [SUB] Substrate Material Ledger
     const econ = world.snap?.econ || (world.economy ? world.economy.summary() : null);
@@ -321,6 +333,7 @@ function renderDashboard(doc: Document, list: unknown[]): void {
       title: '[DEV] CORE KERNEL',
       num: `${liveFps} FPS`,
       last: `Ticks: ${totalTicks} | Tier: ${qualityTier}`,
+      sub: '',
       labelClass: 'cqm-aud-scope-dev',
     },
     {
@@ -328,6 +341,7 @@ function renderDashboard(doc: Document, list: unknown[]): void {
       title: '[BIO] METAMORPHICS',
       num: `${activeEntities} ORGS`,
       last: `Mass: ${biomass}kg | Mut: ${(mutationQuotient * 100).toFixed(1)}%`,
+      sub: '',
       labelClass: 'cqm-aud-scope-bio',
     },
     {
@@ -335,6 +349,12 @@ function renderDashboard(doc: Document, list: unknown[]): void {
       title: '[NEU] NEURO-SYNAPSE',
       num: `${synapsesCount} LINKS`,
       last: `Spikes: ${spikeRate}Hz | Sent: ${(sentience * 100).toFixed(1)}%`,
+      // Thaler death-dream: minds measured as they die on any vector — dream = final confabulation
+      // vividness, lucid = the moderate-damage band where hallucination peaks, novel = peak novelty.
+      sub:
+        gedankenDeaths > 0
+          ? `†${gedankenDeaths} died · dream ${(dreamVividness * 100).toFixed(0)}% · lucid ${(dreamLucid * 100).toFixed(0)}% · novel ${(dreamNovelty * 100).toFixed(0)}%`
+          : '',
       labelClass: 'cqm-aud-scope-neuro',
     },
     {
@@ -342,6 +362,7 @@ function renderDashboard(doc: Document, list: unknown[]): void {
       title: '[SUB] SUBSTRATE LEDGER',
       num: `${Math.round(totalWealth)} AU`,
       last: `Gini: ${giniVal.toFixed(3)} | ${dominantCurrency}`,
+      sub: '',
       labelClass: 'cqm-aud-scope-substrate',
     },
   ];
@@ -367,6 +388,14 @@ function renderDashboard(doc: Document, list: unknown[]): void {
     last.textContent = q.last;
 
     card.append(title, count, last);
+    // Optional second detail line (e.g. the [NEU] card's live gedanken death-dream readout).
+    if (q.sub) {
+      const sub = doc.createElement('span');
+      sub.className = 'last';
+      sub.style.opacity = '0.82';
+      sub.textContent = q.sub;
+      card.appendChild(sub);
+    }
     dash.appendChild(card);
   }
 }
