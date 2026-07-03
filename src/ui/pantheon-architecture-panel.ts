@@ -104,6 +104,13 @@ const STYLE = `
 .cqm-arch-canvas{display:block;width:100%;height:${ARCHITECTURE_PANEL_CANVAS_HEIGHT};max-height:${ARCHITECTURE_PANEL_CANVAS_HEIGHT};min-height:170px;
   flex:${ARCHITECTURE_PANEL_CANVAS_FLEX};background:radial-gradient(120% 90% at 50% 0%,rgba(30,4,18,.6),rgba(2,2,5,1));border-bottom:1px solid rgba(255,59,78,.14)}
 .cqm-arch-mode{display:flex;gap:4px;padding:6px 10px;border-bottom:1px solid rgba(255,59,78,.12);flex:0 0 auto}
+/* V123 (USER #3): the GLYPH CORTEX fills the space under the mode row — flexes to whatever height
+   the HUD grants, with a labelled live neural field (real 100-mind brain data). */
+.cqm-arch-cortex{flex:1 1 auto;min-height:120px;display:flex;flex-direction:column;overflow:hidden}
+.cqm-arch-cortex-lab{flex:0 0 auto;padding:4px 10px 2px;font:600 8.5px/1 var(--font-mono,ui-monospace,monospace);
+  letter-spacing:.16em;color:#ff8a98;text-transform:uppercase;opacity:.82}
+.cqm-arch-cortex-cv{display:block;width:100%;flex:1 1 auto;min-height:100px;
+  background:radial-gradient(130% 100% at 50% 100%,rgba(24,4,30,.55),rgba(2,2,6,.95) 68%)}
 .cqm-arch-data{flex:1 1 270px;min-width:min(100%,250px);min-height:${ARCHITECTURE_PANEL_DATA_MIN_HEIGHT};height:${ARCHITECTURE_PANEL_DATA_HEIGHT};max-height:100%;overflow-y:auto;
   padding:8px 12px 12px;display:grid;grid-template-columns:auto minmax(90px,1fr);gap:3px 12px;align-items:baseline}
 .cqm-arch-data .k{color:#9b7fb4;font-size:9.5px;letter-spacing:.04em;text-transform:uppercase}
@@ -166,6 +173,32 @@ export class PantheonArchitecturePanel {
   private hue = 0;
   private open = false;
   private raf = 0;
+  // V123 (USER #3): the GLYPH CORTEX — a live neural field of the 100 pantheon minds, fed by the
+  // world's real `cqm:brain-snapshots` broadcast (the same glyph-brain data the 3-brains slot uses),
+  // filling the previously-empty space under the viz-mode row. 1/1 per glyph (activity/novelty/valence).
+  private cortexCanvas: HTMLCanvasElement | null = null;
+  private cortexCtx: CanvasRenderingContext2D | null = null;
+  private glyphAct: Float32Array | null = null; // per-glyph mean drive (activity/novelty/valence), 0..1
+  private glyphNov: Float32Array | null = null;
+  private glyphVal: Float32Array | null = null;
+  private glyphCount = 0;
+  private readonly onBrainSnap = (e: Event): void => {
+    const g = ((e as CustomEvent).detail as { glyphs?: unknown[] } | undefined)?.glyphs;
+    if (!Array.isArray(g) || g.length === 0) return;
+    const n = Math.min(100, g.length);
+    if (!this.glyphAct || this.glyphAct.length !== n) {
+      this.glyphAct = new Float32Array(n);
+      this.glyphNov = new Float32Array(n);
+      this.glyphVal = new Float32Array(n);
+    }
+    this.glyphCount = n;
+    for (let i = 0; i < n; i++) {
+      const s = g[i] as { activity?: number; novelty?: number; valence?: number };
+      this.glyphAct![i] = Math.max(0, Math.min(1, s.activity ?? 0));
+      this.glyphNov![i] = Math.max(0, Math.min(1, s.novelty ?? 0));
+      this.glyphVal![i] = Math.max(-1, Math.min(1, s.valence ?? 0));
+    }
+  };
 
   constructor(doc: Document = document) {
     if (typeof window !== 'undefined') {
@@ -255,6 +288,21 @@ export class PantheonArchitecturePanel {
       this.modeBtns.brain4d,
     );
     viz.appendChild(modeRow);
+
+    // V123 (USER #3): GLYPH CORTEX — fills the empty space under the mode row with a live neural
+    // field of the 100 pantheon minds (fed by the world's cqm:brain-snapshots broadcast).
+    const cortexWrap = el(doc, 'div', 'cqm-arch-cortex');
+    cortexWrap.appendChild(
+      el(doc, 'div', 'cqm-arch-cortex-lab', 'GLYPH CORTEX · 100 pantheon minds'),
+    );
+    this.cortexCanvas = el(doc, 'canvas', 'cqm-arch-cortex-cv') as HTMLCanvasElement;
+    this.cortexCanvas.width = 372;
+    this.cortexCanvas.height = 150;
+    this.cortexCtx = this.cortexCanvas.getContext('2d');
+    cortexWrap.appendChild(this.cortexCanvas);
+    viz.appendChild(cortexWrap);
+    if (typeof window !== 'undefined')
+      window.addEventListener('cqm:brain-snapshots', this.onBrainSnap);
 
     // Data grid
     this.data = el(doc, 'div', 'cqm-arch-data');
@@ -510,6 +558,95 @@ export class PantheonArchitecturePanel {
     else if (this.mode === 'loop') this.drawLoop(ctx, w, h, col);
     else if (this.mode === 'brain4d') this.drawBrain4d(ctx, w, h);
     else this.drawBlaschke(ctx, w, h, col);
+    this.drawGlyphCortex();
+  }
+
+  /**
+   * V123 (USER #3): the GLYPH CORTEX — 100 pantheon minds as a live neural field. Each node's radius
+   * pulses with its real ACTIVITY, its hue rotates with VALENCE, and a bloom flares with NOVELTY; the
+   * strongest neighbours wire together with lit synapses, and the currently-SELECTED lineage glyph
+   * gets a ringed halo. Fed by the world's real `cqm:brain-snapshots` broadcast — not decoration.
+   * O(n + wired edges); a soft trail keeps it alive between the ~3 Hz data pushes.
+   */
+  private drawGlyphCortex(): void {
+    const ctx = this.cortexCtx;
+    const cv = this.cortexCanvas;
+    if (!ctx || !cv) return;
+    const cssW = Math.max(240, Math.floor(cv.clientWidth || cv.width));
+    const cssH = Math.max(90, Math.floor(cv.clientHeight || cv.height));
+    if (cv.width !== cssW || cv.height !== cssH) {
+      cv.width = cssW;
+      cv.height = cssH;
+    }
+    const w = cv.width;
+    const h = cv.height;
+    ctx.fillStyle = 'rgba(2,2,6,0.22)'; // ominous fade trail
+    ctx.fillRect(0, 0, w, h);
+    const n = this.glyphCount;
+    if (n === 0 || !this.glyphAct) {
+      ctx.fillStyle = 'rgba(255,138,152,0.4)';
+      ctx.font = '9px ui-monospace,monospace';
+      ctx.fillText('cortex warming…', 8, 16);
+      return;
+    }
+    const t = this.reveal * 0.03 + this.hue * 6.2831853;
+    const cols = 10;
+    const rows = Math.max(1, Math.ceil(n / cols));
+    const cw = w / cols;
+    const ch = h / rows;
+    const px = (i: number): number => (i % cols) * cw + cw / 2;
+    const py = (i: number): number => Math.floor(i / cols) * ch + ch / 2;
+    // Synapses: wire each node to its right + down neighbour, brightness = product of drives.
+    ctx.lineWidth = 1;
+    for (let i = 0; i < n; i++) {
+      const a = this.glyphAct[i] ?? 0;
+      for (const j of [i + 1, i + cols]) {
+        if (j >= n || (j === i + 1 && j % cols === 0)) continue;
+        const b = this.glyphAct[j] ?? 0;
+        const lit = a * b;
+        if (lit < 0.06) continue;
+        const wob = Math.sin(t * 2 + i * 0.7) * 3;
+        ctx.strokeStyle = `hsla(${(280 + (this.glyphVal?.[i] ?? 0) * 60).toFixed(0)},85%,62%,${(0.08 + lit * 0.5).toFixed(3)})`;
+        ctx.beginPath();
+        ctx.moveTo(px(i), py(i));
+        ctx.quadraticCurveTo((px(i) + px(j)) / 2 + wob, (py(i) + py(j)) / 2 - wob, px(j), py(j));
+        ctx.stroke();
+      }
+    }
+    // Nodes: radius ∝ activity, hue ∝ valence, bloom ∝ novelty, breathing on the panel clock.
+    for (let i = 0; i < n; i++) {
+      const a = this.glyphAct[i] ?? 0;
+      const nov = this.glyphNov?.[i] ?? 0;
+      const val = this.glyphVal?.[i] ?? 0;
+      const x = px(i);
+      const y = py(i);
+      const breath = 0.8 + 0.2 * Math.sin(t * 3 + i * 0.9);
+      const r = Math.max(1, (1.4 + a * 5.2) * breath);
+      const hue = (300 + val * 70 + nov * 40) % 360;
+      if (nov > 0.5 || a > 0.7) {
+        const g = ctx.createRadialGradient(x, y, 0.5, x, y, r * 3.2);
+        g.addColorStop(0, `hsla(${hue.toFixed(0)},95%,72%,${(0.5 + nov * 0.4).toFixed(2)})`);
+        g.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.arc(x, y, r * 3.2, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.fillStyle = `hsla(${hue.toFixed(0)},92%,${(52 + a * 26).toFixed(0)}%,${(0.55 + a * 0.45).toFixed(2)})`;
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    // Halo the currently-selected lineage glyph (0..99; the apex ς is index 100 → no node).
+    if (this.view === 'lineage' && this.lineageIdx >= 0 && this.lineageIdx < n) {
+      const x = px(this.lineageIdx);
+      const y = py(this.lineageIdx);
+      ctx.strokeStyle = `hsla(${(this.hue * 360).toFixed(0)},95%,70%,${(0.5 + 0.3 * Math.sin(t * 5)).toFixed(2)})`;
+      ctx.lineWidth = 1.6;
+      ctx.beginPath();
+      ctx.arc(x, y, 9 + Math.sin(t * 5) * 1.5, 0, Math.PI * 2);
+      ctx.stroke();
+    }
   }
 
   /** Match the backing canvas to the readable CSS box whenever the HUD grants more space. */
@@ -725,6 +862,8 @@ export class PantheonArchitecturePanel {
 
   dispose(): void {
     this.stopAnim();
+    if (typeof window !== 'undefined')
+      window.removeEventListener('cqm:brain-snapshots', this.onBrainSnap);
     this.panel.remove();
     this.styleEl.remove();
     document.getElementById('cqm-arch-toggle')?.remove();
