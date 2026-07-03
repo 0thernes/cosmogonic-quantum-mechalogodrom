@@ -32,6 +32,31 @@ import type { Rng } from '../math/rng';
  * V109: lifted base diffuse into the white-crystal zone (~0.35..0.55 lightness), softened
  * saturation to pastel-watery hues, stronger colored emissive core, high metallic + low roughness
  * for a glassy, liquid-gem shimmer that catches light as entities drift. */
+/** V123 (USER #7): the ALIEN OLD-MONEY / ANNIHILATION oil-slick hue anchors (0..1) — oxblood ·
+ *  patina gold · deep teal · gunmetal cyan · cold amethyst · bruise violet. Deliberately skips the
+ *  bright-green (~0.30-0.40) and hot-pink (~0.90-0.96) "girlie" zones. */
+const OMINOUS_ANCHORS = [0.02, 0.11, 0.5, 0.57, 0.74, 0.85] as const;
+/** Snap a free hue toward its nearest ominous anchor (65% pull) so the palette CLUSTERS on rich
+ *  ominous tones while keeping per-morph variety (the residual 35% + the jitter). Circular-safe. */
+function warpOminous(h: number, mi: number): number {
+  let best: number = OMINOUS_ANCHORS[0];
+  let bestD = 1;
+  for (const a of OMINOUS_ANCHORS) {
+    const d = Math.min(Math.abs(h - a), 1 - Math.abs(h - a));
+    if (d < bestD) {
+      bestD = d;
+      best = a;
+    }
+  }
+  // Blend toward the anchor along the shortest arc, + a tiny deterministic jitter for variety.
+  let diff = h - best;
+  if (diff > 0.5) diff -= 1;
+  else if (diff < -0.5) diff += 1;
+  const jit = ((mi * 0.381966) % 1) * 0.06 - 0.03;
+  const out = best + diff * 0.35 + jit;
+  return ((out % 1) + 1) % 1;
+}
+
 function paintVibrant(mat: THREE.MeshStandardMaterial, m: PhylumMorphType, mi: number): void {
   const hsl = { h: 0, s: 0, l: 0 };
   // Quint-prime hash → a well-spread, deterministic per-morph value in [0,1).
@@ -55,24 +80,31 @@ function paintVibrant(mat: THREE.MeshStandardMaterial, m: PhylumMorphType, mi: n
   // shader crashed on gl_InstanceID; the shader is fixed now, and these floors keep even the dark family
   // readable as "dark body with bright glints".) The per-instance GPU hue drift in instanced-entities.ts
   // (V115) adds the dynamic hue/sat/value breathing on top of these three base palettes.
+  // V123 (USER #7): the swarm was "very neon AI colorish… girlie" — families 1/2 spread full-spectrum
+  // at 0.86-0.95 saturation. Cluster their hues onto the ALIEN OLD-MONEY / ANNIHILATION oil-slick
+  // anchors (oxblood · patina gold · deep teal · gunmetal · cold amethyst · bruise violet) with a
+  // small per-morph jitter, and pull saturation down a notch — still vivid + varied, but ominous
+  // rich tones instead of bright cyan/lime/hot-pink. NOT a filter: the base hue itself is retuned.
+  // Anchors chosen to AVOID the girlie zones (bright green ~0.33, hot pink ~0.92). Deterministic.
+  const ominous = warpOminous(baseHue, mi);
   const family = mi % 3;
   if (family === 0) {
     // 1/3 — DARK graphite / grey / GOLD tones: deep bodies with metallic glints. Owner likes them
     // darker; lightness floor 0.14 (+ the emissive below) keeps them readable, not invisible.
     mat.color.setHSL((0.1 + j2 * 0.06) % 1, 0.4 + j3 * 0.28, 0.14 + j4 * 0.08);
   } else if (family === 1) {
-    // 1/3 — saturated living CHROMA: purple / blue / red / green / pink, darker + moodier than neon.
-    mat.color.setHSL(baseHue, 0.86 + j5 * 0.12, 0.28 + j3 * 0.14);
+    // 1/3 — ominous living CHROMA: oil-slick oxblood/teal/violet/gold, moody, not neon.
+    mat.color.setHSL(ominous, 0.6 + j5 * 0.14, 0.26 + j3 * 0.14);
   } else {
-    // 1/3 — WILD high-contrast morphic combos: shifted hue, very saturated, deeper mid lightness.
-    mat.color.setHSL((baseHue + 0.27 + j4 * 0.19) % 1, 0.95, 0.22 + j2 * 0.16);
+    // 1/3 — WILD high-contrast morphic combos: a partner ominous hue, deep, still rich.
+    mat.color.setHSL((ominous + 0.34) % 1, 0.68 + j2 * 0.12, 0.2 + j2 * 0.16);
   }
   m.em.getHSL(hsl);
-  // Coloured inner glow — dimmed a touch (owner wants darker) but still keeps the dark family visible.
+  // Coloured inner glow — an ominous partner tone, dimmed so the dark family stays readable.
   mat.emissive.setHSL(
-    family === 0 ? (0.11 + j1 * 0.06) % 1 : (baseHue + 0.16 + j3 * 0.2 + j5 * 0.12) % 1,
-    family === 0 ? 0.85 : 0.95,
-    family === 0 ? 0.26 + j2 * 0.1 : Math.min(0.42, 0.22 + hsl.l * 0.12 + j2 * 0.1),
+    family === 0 ? (0.11 + j1 * 0.06) % 1 : (ominous + 0.1 + j3 * 0.12) % 1,
+    family === 0 ? 0.85 : 0.78,
+    family === 0 ? 0.26 + j2 * 0.1 : Math.min(0.4, 0.2 + hsl.l * 0.12 + j2 * 0.1),
   );
   // USER: dimmer so entities never blow to white near the camera (was min 2.5 / base 0.7).
   mat.emissiveIntensity = Math.min(1.7, m.emI * 0.7 + 0.45 + family * 0.08);
