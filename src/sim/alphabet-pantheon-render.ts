@@ -94,9 +94,39 @@ const S = new THREE.Vector3();
 const C = new THREE.Color();
 const WANDER = { x: 0, y: 0, z: 0 };
 
-/** V121: travel-clock length of the boot speed-ramp — godforms START slow and ease up to full
- *  roam speed (~35 s real time at the 0.22 travel scale) instead of launching at full tilt. */
-const TRAVEL_RAMP = 8;
+/** V123: travel-clock length of the boot speed-ramp — godforms START slow and ease up to full
+ *  roam speed over ~15 s (was 8 travel-units ≈ a minute-long crawl) instead of launching at full tilt. */
+const TRAVEL_RAMP = 3;
+
+/** V123 NAV: cruise speed (world-units per travel-unit). At full ramp the travel clock advances
+ *  ~0.22·timeScale per second, so this ≈ 320·0.6·0.22 ≈ 42 u/s at 1× (crosses the ~1000 u platform in
+ *  ~24 s — a graceful glide, not a crawl); brain arousal scales it up to ~1.7×, the speed slider ×N. */
+const NAV_SPEED = 320;
+/** Fractional part in [0,1) — a deterministic pseudo-random when fed `counter · irrational`. */
+const nfrac = (x: number): number => x - Math.floor(x);
+
+/**
+ * V123 (USER #8): pick a fresh navigation waypoint for godform `i` — a golden-angle walk (so a body
+ * visits every sector of the platform over time, never a fixed ring) biased outward by its brain
+ * motor, written into the nav* waypoint arrays. Deterministic: the monotone `navSeed[i]` counter +
+ * the body's phase/gIdx seed it; NO rng. The waypoint sits inside the platform band + column.
+ */
+function pickWaypoint(
+  wx: Float32Array,
+  wy: Float32Array,
+  wz: Float32Array,
+  seed: Float32Array,
+  i: number,
+  phase: number,
+  gIdx: number,
+): void {
+  const s = (seed[i] = (seed[i] ?? 0) + 1);
+  const a = s * 2.399963 + phase * 6.2831853 + gIdx * 0.7; // golden-angle heading, per-body offset
+  const rr = (0.18 + 0.7 * nfrac(s * 0.61803 + gIdx * 0.013)) * ARENA_HALF; // ~97..475 from centre
+  wx[i] = Math.cos(a) * rr;
+  wz[i] = Math.sin(a) * rr;
+  wy[i] = ARENA_FLOOR + (ARENA_CEIL - ARENA_FLOOR) * nfrac(s * 0.317 + gIdx * 0.131 + 0.05);
+}
 
 /** V121 SOFT WALL (USER "framing/fencing" fix): compress positions beyond 85% of the half-extent
  *  with a tanh knee instead of hard-clamping at the wall — the old per-axis clamp made godforms
@@ -190,8 +220,6 @@ export class AlphabetPantheonRender {
   // modulate SPEED, never the accumulated angle — continuous under any signal change. No rng.
   private lastClock = 0;
   private lastTravelClock = 0;
-  /** Integrated roam-drift angle — chaos modulates its RATE (rad/s), never the absolute angle. */
-  private driftClock = 0;
   /** Integrated body-animation clock — `quick` (chaos/apex/vitality) modulates its RATE only. */
   private animClock = 0;
   /** Integrated 101st-apex body-animation + roam-drift clocks (same continuity discipline). */
@@ -200,6 +228,28 @@ export class AlphabetPantheonRender {
   /** Eased chaos (~0.4 s time constant) — chaos also feeds AMPLITUDES (the glyph wander offset),
    *  so a raw chaos SNAP (reset / chaos button) would still displace bodies; the ease glides it. */
   private chaosEase = 0;
+  // ── V123 VELOCITY-STATE NAVIGATION (USER #8 deep-dive) ────────────────────────────────────────────
+  // DIAGNOSIS: the V121 travel was position-ON-A-LISSAJOUS-CURVE — aTx=cos(drift)·R, aTz=sin(1.21·drift),
+  // aTy=sin(0.63·drift). A single monotone parameter tracing cos/sin is a CLOSED FIGURE: however smooth
+  // the parameter, the PATH is a fixed loop that visibly repeats ("perpetual motion loop cycle"), and at
+  // slow speed you WATCH it retrace the same ring — the exact complaint. At 5× it "moves better" only
+  // because the loop cycles faster. The Super Creature feels alive because it is a pos+VELOCITY boid that
+  // SEEKS re-picked waypoints (super-body.ts) — genuine open-ended navigation, never a curve.
+  // FIX: give every godform real position+velocity state that steers toward a fresh waypoint (brain-motor
+  // biased), banking into its heading. Deterministic (golden-angle waypoints from an integer counter +
+  // gIdx/phase — no rng); frozen while paused; boot-ramped; soft-contained to the platform.
+  private navInit = false;
+  private readonly navPX = new Float32Array(100);
+  private readonly navPY = new Float32Array(100);
+  private readonly navPZ = new Float32Array(100);
+  private readonly navVX = new Float32Array(100);
+  private readonly navVY = new Float32Array(100);
+  private readonly navVZ = new Float32Array(100);
+  private readonly navWX = new Float32Array(100); // current waypoint
+  private readonly navWY = new Float32Array(100);
+  private readonly navWZ = new Float32Array(100);
+  private readonly navClock = new Float32Array(100); // travel-units until the next waypoint repick
+  private readonly navSeed = new Float32Array(100); // monotone per-body counter driving waypoint variation
 
   constructor(scene: THREE.Scene) {
     this.refAtlas = createPantheonFallbackAtlas();
@@ -688,7 +738,6 @@ export class AlphabetPantheonRender {
     const chaosE = this.chaosEase;
     const quick = 0.5 + 0.6 * chaosE + 0.25 * this.apexTranscendence + 0.15 * this.apexVitality;
     this.animClock += dClock * CREATURE_EXTERIOR_TIME_SCALE * 0.275 * quick;
-    this.driftClock += dTravel * 1.25 * (0.16 + 0.08 * chaosE);
     const w101 =
       1 +
       0.9 * chaosE +
@@ -702,6 +751,24 @@ export class AlphabetPantheonRender {
     // (the "too fast initially" dash). Convex blend of two in-bounds points ⇒ containment intact.
     const gB = this.travelClock >= TRAVEL_RAMP ? 1 : this.travelClock / TRAVEL_RAMP;
     const rampBlend = gB * gB * (3 - 2 * gB);
+    // V123 (USER #8): one-time seed of the velocity-state navigator — each godform starts AT its
+    // construction anchor with a first waypoint, so there is no first-frame dash and no curve to loop.
+    if (!this.navInit) {
+      for (const pl of this.bodies) {
+        for (const bd of pl) {
+          const gi = bd.gIdx;
+          this.navPX[gi] = softLimit(bd.ax, ARENA_HALF);
+          this.navPY[gi] = Math.min(ARENA_CEIL, Math.max(ARENA_FLOOR, bd.ay));
+          this.navPZ[gi] = softLimit(bd.az, ARENA_HALF);
+          pickWaypoint(this.navWX, this.navWY, this.navWZ, this.navSeed, gi, bd.phase, gi);
+          this.navClock[gi] = 2 + 3 * nfrac(this.navSeed[gi]! * 0.123);
+        }
+      }
+      this.navInit = true;
+    }
+    // V123: the per-frame TRAVEL delta drives the boid integrator — it is 0 on pause (travelClock is
+    // frozen there), so navigation naturally suspends while the body keeps spinning (unchanged).
+    const dNav = dTravel;
     // Containment (user #10): each godform may drift only a little from its dome anchor, and never
     // below the ground plane. Because every anchor already lies inside the dome shell, a bounded
     // tether GUARANTEES no godform ever leaves the dome or sinks underneath it — and the small cap
@@ -732,21 +799,62 @@ export class AlphabetPantheonRender {
         // USER: the last pass made them travel TOO FAST/choppy — slow it right down for a GRACEFUL, fluid
         // glide (~half speed, crossing the platform in ~35-45s), while the rich body dynamism below spins/
         // corkscrews/vibrates them. Travel is a smooth curved Lissajous, brain-steered.
-        const rt = this.travelClock * 1.25; // travel clock (frozen on pause). USER: slower still — graceful glide
-        // V121: the drift angle is the chaos-rate INTEGRATOR (continuous under any chaos change).
-        const roamDrift = this.driftClock + b.phase * 1.7;
-        // V121: the radius BREATHES slowly per body (156..518) so paths stop reading as fixed rings,
-        // and tops out below the wall so targets rarely need the soft edge at all.
-        const roamRad =
-          (190 + (b.gIdx % 7) * 42) * (0.82 + 0.18 * Math.sin(rt * 0.07 + b.phase * 1.3));
-        // Curved travel: a slow secondary drift bends the path so it never reads as a plain circle.
-        const bend = Math.sin(rt * 0.11 + b.phase * 0.7) * 0.55;
-        // Brain motor steers the goal, but GENTLY (±90; ±300 made the travel jumpy/choppy).
-        const aTx = Math.cos(roamDrift + bend) * roamRad + mx * 90;
-        const aTz = Math.sin(roamDrift * 1.21 + b.phase - bend) * roamRad + mz * 90;
-        const aTy = 120 + Math.sin(roamDrift * 0.63) * 92 + my * 42; // roams the full 6..240 column
+        // ── V123 (USER #8) VELOCITY-STATE NAVIGATION — the loop is dead; this is a real boid. ──
+        // The body STEERS toward a re-picked interior waypoint (brain-motor biased), its velocity
+        // easing toward the desired heading, its position integrating that velocity. Because the
+        // waypoint always sits inside the platform and is re-picked on arrival, the path is genuine
+        // open-ended wandering — it never retraces a ring, at any speed. Frozen on pause (dNav 0).
+        const gi = b.gIdx;
+        if (dNav > 0) {
+          let wxi = this.navWX[gi]!;
+          let wyi = this.navWY[gi]!;
+          let wzi = this.navWZ[gi]!;
+          const distW = Math.hypot(
+            wxi - this.navPX[gi]!,
+            wyi - this.navPY[gi]!,
+            wzi - this.navPZ[gi]!,
+          );
+          this.navClock[gi]! -= dNav;
+          // Arrived (within a body-length) or the dwell timer elapsed → choose a fresh destination.
+          if (distW < 45 || this.navClock[gi]! <= 0) {
+            pickWaypoint(this.navWX, this.navWY, this.navWZ, this.navSeed, gi, b.phase, gi);
+            this.navClock[gi] = 3 + 3 * nfrac(this.navSeed[gi]! * 0.123);
+            wxi = this.navWX[gi]!;
+            wyi = this.navWY[gi]!;
+            wzi = this.navWZ[gi]!;
+          }
+          // Desired heading = toward the waypoint + a GENTLE brain-motor bias (the mind nudges where
+          // it goes without yanking it). Normalized so speed is set purely below.
+          let hx = wxi - this.navPX[gi]! + mx * 55;
+          let hy = wyi - this.navPY[gi]! + my * 40;
+          let hz = wzi - this.navPZ[gi]! + mz * 55;
+          const hlen = Math.hypot(hx, hy, hz) || 1;
+          hx /= hlen;
+          hy /= hlen;
+          hz /= hlen;
+          // Cruise speed ramps in at boot and rises with the body's live brain arousal.
+          const speed = NAV_SPEED * rampBlend * (0.6 + 0.7 * ba);
+          const turn = Math.min(1, dNav * 6); // heading responsiveness (a smooth bank, never a snap)
+          this.navVX[gi]! += (hx * speed - this.navVX[gi]!) * turn;
+          this.navVY[gi]! += (hy * speed - this.navVY[gi]!) * turn;
+          this.navVZ[gi]! += (hz * speed - this.navVZ[gi]!) * turn;
+          this.navPX[gi]! += this.navVX[gi]! * dNav;
+          this.navPY[gi]! += this.navVY[gi]! * dNav;
+          this.navPZ[gi]! += this.navVZ[gi]! * dNav;
+          // Soft platform containment (waypoints are interior, so this rarely bites); the vertical
+          // walls bounce the y-velocity so a body turns away instead of grinding the floor/ceiling.
+          this.navPX[gi] = softLimit(this.navPX[gi]!, ARENA_HALF);
+          this.navPZ[gi] = softLimit(this.navPZ[gi]!, ARENA_HALF);
+          if (this.navPY[gi]! < ARENA_FLOOR) {
+            this.navPY[gi] = ARENA_FLOOR;
+            this.navVY[gi] = Math.abs(this.navVY[gi]!);
+          } else if (this.navPY[gi]! > ARENA_CEIL) {
+            this.navPY[gi] = ARENA_CEIL;
+            this.navVY[gi] = -Math.abs(this.navVY[gi]!);
+          }
+        }
         const wander = glyphWanderOffset(WANDER, ph, b.sig, mx, my, mz, chaosE, ba);
-        P.set(aTx + wander.x, aTy + wander.y, aTz + wander.z);
+        P.set(this.navPX[gi]! + wander.x, this.navPY[gi]! + wander.y, this.navPZ[gi]! + wander.z);
 
         // USER #10 (corrected V115): tether every godform to ITS OWN dome anchor so it can never
         // leave the shell. The prior ring-clamp forced horiz into a fixed outer ring, which
@@ -771,12 +879,8 @@ export class AlphabetPantheonRender {
         else if (P.x < -ARENA_HALF) P.x = -ARENA_HALF;
         if (P.z > ARENA_HALF) P.z = ARENA_HALF;
         else if (P.z < -ARENA_HALF) P.z = -ARENA_HALF;
-        // V121 boot blend: ease off the anchor onto the curve (no first-frame dash — see above).
-        if (rampBlend < 1) {
-          P.x = b.ax + (P.x - b.ax) * rampBlend;
-          P.y = b.ay + (P.y - b.ay) * rampBlend;
-          P.z = b.az + (P.z - b.az) * rampBlend;
-        }
+        // V123: the old anchor-blend is retired — the velocity navigator is already seeded AT the
+        // anchor and ramps its own SPEED in, so there is no first-frame dash to blend away.
         // USER: ENDLESS DYNAMISM — each godform corkscrews on all 3 axes (per-body rate + direction),
         // tumbles/curves/inverts, and vibrates, driven by its brain + rhythm. Not a gentle bob. Pure trig.
         // V121: corkscrew + spin ride the RATE-integrated animClock (quick already folded into its

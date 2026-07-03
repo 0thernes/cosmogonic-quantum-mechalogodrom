@@ -70,29 +70,38 @@ describe('AlphabetPantheonRender — motion continuity under live-signal steps',
     r.dispose();
   });
 
-  test('boot travel ramp: less ground covered in the first 2 s than in a later 2 s window', () => {
+  test('V123 anti-loop: the boid EXPLORES a large volume (a Lissajous loop stays in a thin shell)', () => {
+    // The core of USER #8: the old model traced a closed cos/sin curve, so a godform orbited a fixed
+    // ring forever. The velocity navigator visits re-picked interior waypoints, so over a long run it
+    // fills a LARGE fraction of the platform box — the falsifiable signature of genuine wandering.
     const scene = new THREE.Scene();
     const r = new AlphabetPantheonRender(scene);
     r.setChaos(1);
-    const p0 = corePos(scene, new THREE.Vector3());
     let t = 0;
-    for (let i = 0; i < 120; i++) {
+    let minX = Infinity;
+    let maxX = -Infinity;
+    let minZ = Infinity;
+    let maxZ = -Infinity;
+    const cur = new THREE.Vector3();
+    let prev = corePos(scene, new THREE.Vector3());
+    let maxStep = 0;
+    for (let i = 0; i < 6000; i++) {
+      // ~100 s of wandering
       t += DT;
       r.update(t, DT);
+      corePos(scene, cur);
+      minX = Math.min(minX, cur.x);
+      maxX = Math.max(maxX, cur.x);
+      minZ = Math.min(minZ, cur.z);
+      maxZ = Math.max(maxZ, cur.z);
+      maxStep = Math.max(maxStep, cur.distanceTo(prev));
+      prev.copy(cur);
     }
-    const p1 = corePos(scene, new THREE.Vector3());
-    const early = p1.distanceTo(p0);
-    for (let i = 0; i < 3000; i++) {
-      t += DT;
-      r.update(t, DT);
-    }
-    const p2 = corePos(scene, new THREE.Vector3());
-    for (let i = 0; i < 120; i++) {
-      t += DT;
-      r.update(t, DT);
-    }
-    const late = corePos(scene, new THREE.Vector3()).distanceTo(p2);
-    expect(early).toBeLessThan(late + 1e-6); // the ramp starts them gentle (tolerate a curve cusp)
+    // Explores a wide span in BOTH horizontal axes (a thin-shell loop could not).
+    expect(maxX - minX).toBeGreaterThan(200);
+    expect(maxZ - minZ).toBeGreaterThan(200);
+    // …yet motion stays CONTINUOUS — no teleport (a single-frame jump would be the jerk we killed).
+    expect(maxStep).toBeLessThan(40);
     r.dispose();
   });
 
