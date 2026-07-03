@@ -720,6 +720,99 @@ function buildNav(doc: Document): void {
 
 /** V85/V111: always-visible dock. Row 1: docs/access/settings. Row 2: sim/gameplay.
  *  Row 3: direct panel launchers. Toolbar still carries transport/audio/view controls. */
+/** Module-level persistent-nav button factory (mirrors the local mkBtn inside buildPersistentNav) so the
+ *  self-healing adopter can create the ⛓ ACCESS / ◈ STAGE II proxies outside the initial build. */
+function mkPersistBtn(
+  doc: Document,
+  label: string,
+  title: string,
+  fn: () => void,
+  extra = '',
+): HTMLButtonElement {
+  const b = doc.createElement('button');
+  b.type = 'button';
+  b.className = 'cqm-persist-btn' + (extra ? ' ' + extra : '');
+  b.textContent = label;
+  b.title = title;
+  b.setAttribute('aria-label', title);
+  b.addEventListener('click', fn);
+  return b;
+}
+
+/**
+ * Idempotently adopt the docs/spec/bible/lab nav anchors + the ⛓ ACCESS / ◈ STAGE II toggle proxies into
+ * the persistent docs row, in FRONT of ⚙ SET. Their source elements — the static `<a data-nav>` anchors
+ * (low in the body) and the access-puzzle / temple-access toggles that v0.20.0 defers to idle after first
+ * light — can mount AFTER buildPersistentNav ran, which is why the eager build used to drop them. Safe to
+ * call repeatedly: it only adds what is both available and not already present. Returns true once every
+ * available source has been adopted.
+ */
+function adoptFrontControls(doc: Document): boolean {
+  const rowDocs = doc.querySelector<HTMLElement>('#cqm-persist-nav .cqm-persist-row--docs');
+  if (!rowDocs) return false;
+  const setBtn = rowDocs.querySelector('[data-hud-set]');
+  const insertFront = (el: HTMLElement): void => {
+    rowDocs.insertBefore(el, setBtn ?? rowDocs.firstChild);
+  };
+  for (const key of ['docs', 'spec', 'bible', 'lab']) {
+    const a = doc.querySelector<HTMLAnchorElement>(`a[data-nav="${key}"]`);
+    if (a && a.parentElement !== rowDocs) {
+      a.classList.add('cqm-persist-btn');
+      insertFront(a);
+    }
+  }
+  const accToggle = doc.getElementById('cqm-acc-toggle');
+  if (accToggle && !rowDocs.querySelector('[data-hud-proxy="acc"]')) {
+    const b = mkPersistBtn(
+      doc,
+      '⛓ ACCESS',
+      'Cryptographic access terminal — unlock the playable super creature',
+      () => accToggle.click(),
+    );
+    b.dataset['hudProxy'] = 'acc';
+    insertFront(b);
+  }
+  const tkaToggle = doc.getElementById('cqm-tka-toggle');
+  if (tkaToggle && !rowDocs.querySelector('[data-hud-proxy="tka"]')) {
+    const b = mkPersistBtn(
+      doc,
+      '◈ STAGE II',
+      'Trans-dimensional access — crack the UwU box to raise the Monolith Temple early',
+      () => tkaToggle.click(),
+    );
+    b.dataset['hudProxy'] = 'tka';
+    insertFront(b);
+  }
+  const docsReady = ['docs', 'spec', 'bible', 'lab'].every(
+    (k) => !!rowDocs.querySelector(`a[data-nav="${k}"]`),
+  );
+  const accReady = !accToggle || !!rowDocs.querySelector('[data-hud-proxy="acc"]');
+  const tkaReady = !tkaToggle || !!rowDocs.querySelector('[data-hud-proxy="tka"]');
+  return docsReady && accReady && tkaReady;
+}
+
+/**
+ * The front-nav sources + the click-to-open panels' dock toggles can appear up to a couple seconds after
+ * buildPersistentNav (static anchors parsed late; access-puzzle / temple-access / audit-dock deferred to
+ * idle post-first-light in v0.20.0). Re-adopt the front controls + re-wire the dock toggles (so the
+ * late-mounting 🗒 AUDIT and friends get their managed chrome) on a short bounded schedule, stopping as
+ * soon as everything is present. Cheap DOM queries — no MutationObserver churning against the per-frame
+ * HUD text updates.
+ */
+function scheduleNavHeal(doc: Document): void {
+  if (typeof window === 'undefined') return;
+  const delays = [150, 400, 900, 1600, 2800, 4500];
+  let i = 0;
+  const tick = (): void => {
+    const frontDone = adoptFrontControls(doc);
+    wireDockToggles(); // idempotent (guards dataset.hudWired) — catches late-mounting slot toggles
+    const togglesReady = SLOTS.every((s) => !!doc.getElementById(s.toggle));
+    if ((frontDone && togglesReady) || i >= delays.length) return;
+    window.setTimeout(tick, delays[i++]);
+  };
+  window.setTimeout(tick, delays[i++]);
+}
+
 function buildPersistentNav(doc: Document): void {
   let strip = doc.getElementById('cqm-persist-nav');
   if (!strip) {
@@ -761,46 +854,21 @@ function buildPersistentNav(doc: Document): void {
   };
 
   const rowDocs = mkRow('cqm-persist-row--docs');
-  for (const key of ['docs', 'spec', 'bible', 'lab']) {
-    const a = doc.querySelector<HTMLAnchorElement>(`a[data-nav="${key}"]`);
-    if (a) {
-      a.classList.add('cqm-persist-btn');
-      rowDocs.appendChild(a);
+  // ⚙ SET is always present. The docs/spec/bible/lab anchors + ⛓ ACCESS + ◈ STAGE II proxies are adopted
+  // in FRONT of it by adoptFrontControls() (called below + healed on a short schedule): their sources —
+  // the static <a data-nav> anchors low in the body, and the access-puzzle / temple-access toggles that
+  // v0.20.0 defers to idle after first light — can mount AFTER this eager builder runs.
+  const setBtn = mkBtn('⚙ SET', 'Simulation settings', () => {
+    const w = doc.defaultView as typeof window & { cqmToggleSettings?: () => void };
+    if (typeof w?.cqmToggleSettings === 'function') {
+      w.cqmToggleSettings();
+    } else {
+      const toggleBtn = doc.getElementById('cqm-settings-toggle');
+      toggleBtn?.click();
     }
-  }
-  const accToggle = doc.getElementById('cqm-acc-toggle');
-  if (accToggle) {
-    rowDocs.appendChild(
-      mkBtn('⛓ ACCESS', 'Cryptographic access terminal — unlock the playable super creature', () =>
-        accToggle.click(),
-      ),
-    );
-  }
-  // USER: the SECOND access button, right next to ⛓ ACCESS — the ◈ STAGE II "UwU" trans-dimensional
-  // box (temple-access.ts). Its real toggle self-mounts into the legacy #cqm-dock, which the center HUD
-  // force-hides, so — exactly like ACCESS above — the HUD carries a proxy that clicks the hidden toggle.
-  // Without this the box exists but is invisible on every surface (the dock is display:none).
-  const tkaToggle = doc.getElementById('cqm-tka-toggle');
-  if (tkaToggle) {
-    rowDocs.appendChild(
-      mkBtn(
-        '◈ STAGE II',
-        'Trans-dimensional access — crack the UwU box to raise the Monolith Temple early',
-        () => tkaToggle.click(),
-      ),
-    );
-  }
-  rowDocs.appendChild(
-    mkBtn('⚙ SET', 'Simulation settings', () => {
-      const w = doc.defaultView as typeof window & { cqmToggleSettings?: () => void };
-      if (typeof w?.cqmToggleSettings === 'function') {
-        w.cqmToggleSettings();
-      } else {
-        const toggleBtn = doc.getElementById('cqm-settings-toggle');
-        toggleBtn?.click();
-      }
-    }),
-  );
+  });
+  setBtn.dataset['hudSet'] = '1';
+  rowDocs.appendChild(setBtn);
   // De-dup (owner UX): MUTE + PAUSE live in the green bottom toolbar (index.html #bar) ONLY — they were
   // duplicated here. Removed from this row so each control appears exactly once (both docks showed them).
   // V112: panel launchers are direct children of the docs/access row so each button sits
@@ -853,6 +921,12 @@ function buildPersistentNav(doc: Document): void {
 
   if (!strip.parentElement) doc.body.appendChild(strip);
   dockBottomBar(strip, doc);
+
+  // Adopt the docs/ACCESS/STAGE-II front controls now (their sources may already be present), then heal
+  // for any that mount late (static anchors parsed after this, or v0.20.0-deferred toggles). Without this
+  // the DOCS/SPEC/BIBLE/LAB/ACCESS/STAGE-II buttons silently vanish and 🗒 AUDIT's toggle wires too late.
+  adoptFrontControls(doc);
+  scheduleNavHeal(doc);
 }
 
 /** Each dock toggle still opens "its" panel — but centered, and closing the others (single-open). */
