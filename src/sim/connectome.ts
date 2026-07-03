@@ -138,7 +138,21 @@ export class Connectome {
     // the neural net always reads over the population.
     lines.frustumCulled = false;
     lines.renderOrder = 3;
+    // USER (V127): "get rid of the wireframing nonsense now — you have skins and better framing." The
+    // axon-web draws with depthTest:false (always ON TOP of every solid body), so it read as an ugly
+    // white wireframe OUTLINE smeared over all 100 Pantheons (and the mecha / megaliths / everything the
+    // camera saw through it). It is the ENTITY neural net, not a per-creature element — so hiding the
+    // ONE web strips the wireframe off everything at once. The graph is still fully COMPUTED every frame
+    // (pairs + activation propagation feed GraphMind + the entities' `act`), so nothing downstream
+    // changes; only the eyesore render is switched off. Re-enable via {@link setWebVisible} for wire debug.
+    lines.visible = false;
     ctx.scene.add(lines);
+  }
+
+  /** Show/hide the axon-web render (default HIDDEN per USER V127 — skins only). The graph keeps computing
+   *  regardless; this only toggles the visual layer. O(1). */
+  setWebVisible(show: boolean): void {
+    this.lines.visible = show;
   }
 
   /** Links built by the last update (legacy `connLinks`, telemetry #v3 + sparkline #g3). */
@@ -345,7 +359,10 @@ export class Connectome {
     }
     this.linkCount = wI;
     this.pairTotal = pc;
-    if (wI > 0) {
+    if (wI > 0 && this.lines.visible) {
+      // Skip the GPU upload entirely while the web is HIDDEN (USER V127 default) — the graph still
+      // computes pairs + activation above; only the (unseen) vertex/colour upload is elided, saving
+      // ~200 KB/frame of pointless bandwidth. On re-show, the next update() uploads the current range.
       // Known Bug 13 fix: upload only the populated range, not all maxLinks*LINK_FLOATS floats.
       this.posAttr.clearUpdateRanges();
       this.posAttr.addUpdateRange(0, wI * LINK_FLOATS);
