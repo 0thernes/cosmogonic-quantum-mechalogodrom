@@ -213,14 +213,12 @@ const FRAG = /* glsl */ `
     vec4 trap = vec4(1e9);
     vec3 qHit = vec3(0.0);
     float march = 0.0;
-    float glow = 0.0;
     bool hit = false;
     for (int i = 0; i < STEPS; i++) {
       vec3 pw = ro + rd * t;
       vec3 q = (pw - uCenter) / uScale;
       vec4 tr;
       float d = de(q, tr) * uScale;
-      glow += 0.010 / (1.0 + d * d * 26.0);
       float eps = 0.0016 * t;
       if (d < eps) { trap = tr; qHit = q; hit = true; break; }
       t += d * 0.82;
@@ -228,29 +226,24 @@ const FRAG = /* glsl */ `
       if (t > tb.y) break;
     }
 
-    vec3 col;
-    float alpha;
-    if (hit) {
-      vec3 nrm = calcNormal(qHit);
-      float ci = trap.x * 1.6 + trap.z * 2.1 + uTime * 0.06 + length(qHit) * 0.4 + uEntropy * 0.6;
-      col = palette(ci);
-      col = mix(col, palette(ci * 1.7 + 0.25 + trap.w * 0.5), 0.5);       // second hue layer
-      col += 0.36 * palette(ci * 5.0 + dot(nrm, rd) * 2.0 + uTime * 0.2); // iridescent micro-texture (wilder)
-      vec3 lightDir = normalize(vec3(0.5, 0.85, 0.35));
-      float diff = 0.42 + 0.58 * max(dot(nrm, lightDir), 0.0);
-      float fres = pow(1.0 - max(dot(nrm, -rd), 0.0), 3.0);
-      col *= diff;
-      col += fres * palette(uTime * 0.1 + ci) * (0.9 + 0.9 * uChaos);      // hotter rim-iridescence
-      float ao = clamp(1.0 - march / float(STEPS) * 1.15, 0.15, 1.0);
-      col *= ao;
-      alpha = clamp(0.86 + fres, 0.0, 1.0);
-    } else {
-      if (glow < 0.02) discard;
-      col = glow * palette(uTime * 0.13 + 0.5) * 1.3;
-      alpha = clamp(glow * 1.4, 0.0, 0.6);
-    }
-    col += glow * palette(uTime * 0.09 + 0.2) * 0.6; // volumetric bloom halo
-    gl_FragColor = vec4(col, alpha);
+    // SOLID physical structure: a miss is empty space (discard) — NOT a translucent volumetric halo. With
+    // an opaque, depth-writing material (see below) the deity reads as a real carved thing that occludes,
+    // never a see-through hologram.
+    if (!hit) discard;
+
+    vec3 nrm = calcNormal(qHit);
+    float ci = trap.x * 1.6 + trap.z * 2.1 + uTime * 0.06 + length(qHit) * 0.4 + uEntropy * 0.6;
+    vec3 col = palette(ci);
+    col = mix(col, palette(ci * 1.7 + 0.25 + trap.w * 0.5), 0.5);       // second hue layer
+    col += 0.36 * palette(ci * 5.0 + dot(nrm, rd) * 2.0 + uTime * 0.2); // iridescent micro-texture (wilder)
+    vec3 lightDir = normalize(vec3(0.5, 0.85, 0.35));
+    float diff = 0.42 + 0.58 * max(dot(nrm, lightDir), 0.0);
+    float fres = pow(1.0 - max(dot(nrm, -rd), 0.0), 3.0);
+    col *= diff;
+    col += fres * palette(uTime * 0.1 + ci) * (0.9 + 0.9 * uChaos);     // hotter rim-iridescence
+    float ao = clamp(1.0 - march / float(STEPS) * 1.15, 0.15, 1.0);
+    col *= ao;
+    gl_FragColor = vec4(col, 1.0); // OPAQUE — a physical structure, not a hologram
   }
 `;
 
@@ -311,8 +304,11 @@ export class GodColossus {
       vertexShader: VERT,
       fragmentShader: FRAG,
       side: THREE.BackSide,
-      transparent: true,
-      depthWrite: false,
+      // USER ("it's a hologram"): render as a SOLID physical structure, not a translucent ghost. Opaque
+      // (no alpha blend) + depthWrite so it occludes what's behind it and reads as a real carved thing.
+      // The shader discards on a ray miss, so only the fractal's actual surface writes colour + depth.
+      transparent: false,
+      depthWrite: true,
       depthTest: true,
     });
 
