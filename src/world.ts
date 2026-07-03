@@ -158,6 +158,7 @@ import { MonolithTemple } from './sim/monolith-temple';
 import { PortalDeath } from './sim/portal-death';
 import { PortalDeathFauna } from './sim/portal-death-fauna';
 import { PortalImmuneBounce } from './sim/portal-immune-bounce';
+import { PortalShield } from './sim/portal-shield';
 import { SuperBodySystem } from './sim/super-body';
 import { SuperPanel } from './ui/super-panel';
 import { SuperheroState, HERO_POWERS } from './ui/superhero-state';
@@ -355,6 +356,11 @@ export class World {
   private readonly portalDeathFauna: PortalDeathFauna;
   /** USER: the IMMUNE Pantheon (super creatures) don't die — they RICOCHET off the portal in white sparks. */
   private readonly portalImmuneBounce: PortalImmuneBounce;
+  /** USER: the GOD-TIER immune bodies (the Super Creatures + the roaming APEX) shimmer in white
+   *  hyperspeed sparks when they brush the void (the bounce companion only covers the pantheon roster).
+   *  `immunePos` is a reused scratch — no per-frame alloc. */
+  private readonly portalShield: PortalShield;
+  private readonly immunePos: THREE.Vector3[] = [];
   private superAscended = false;
   private readonly evoRng: Rng;
   private static readonly EVO_DAY_FRAMES = 21600;
@@ -903,6 +909,7 @@ export class World {
     this.portalDeath = new PortalDeath(ctx); // USER: the ascension portal kills what touches it
     this.portalDeathFauna = new PortalDeathFauna(ctx); // USER: …and the big fauna too (non-swarm rosters)
     this.portalImmuneBounce = new PortalImmuneBounce(ctx); // USER: the immune Pantheon bounces off in sparks
+    this.portalShield = new PortalShield(ctx); // USER: the god-tier Super/APEX bodies shimmer at the void
     if (this.superEvo.ascended) {
       this.monolithTemple.reveal(0, 0, -40 * ARENA_MID, true);
       this.superAscended = true;
@@ -1159,6 +1166,7 @@ export class World {
     this.portalDeath.dispose();
     this.portalDeathFauna.dispose();
     this.portalImmuneBounce.dispose();
+    this.portalShield.dispose();
     this.abominationArchitecture.dispose();
     this.mechalogodrom.dispose(); // V-MECHA: free the fusion abomination's geometries + materials
     this.floatingMonoliths.dispose(); // free the 16 drifting megaliths' geometries + materials
@@ -1638,6 +1646,19 @@ export class World {
     // rim-vibrate) wreathed in a dazzling white spark shower that clears in ~2s. Immune ⇒ never in the
     // death rosters above; the god-tier Super Creature / Mechalogodrom sit far above the throat column.
     this.portalImmuneBounce.update(this.monolithTemple.revealed, t, dt, [this.alphabetPantheon]);
+    // USER V126: the GOD-TIER immune bodies react too — the Super Creatures + the roaming APEX shimmer in
+    // white hyperspeed sparks when they brush the void (the APEX's boid column dips to y≈50, right through
+    // the y=60 throat, so it is NOT "far above"). Gather their positions into the reused `immunePos`
+    // scratch (no per-frame alloc), then flash any inside the portal radius.
+    for (let i = 0; i < this.superBodies.length; i++) {
+      const v = (this.immunePos[i] ??= new THREE.Vector3());
+      this.superBodies[i]!.worldPosition(v);
+    }
+    const apexI = this.superBodies.length;
+    const apexV = (this.immunePos[apexI] ??= new THREE.Vector3());
+    this.alphabetPantheon.apexWorldPosition(apexV);
+    this.portalShield.setActive(this.monolithTemple.revealed);
+    this.portalShield.react(this.immunePos, t, dt);
 
     // V124: the portal is a clean VOID now (the megalith redesign retired the "hell wormhole"), so the
     // portal-nightmare bus — a HIGH SCREAM square wave (`360 + level*220` Hz) + a low drone + periodic

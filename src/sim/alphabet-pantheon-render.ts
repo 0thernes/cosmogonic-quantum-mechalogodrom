@@ -702,6 +702,13 @@ export class AlphabetPantheonRender implements PortalImmune {
     for (const h of this.wireHalos) h.visible = show;
   }
 
+  /** World position of the #101 APEX abomination (for the portal-shield immune shimmer). The APEX roams
+   *  its velocity-boid column down to y≈50, right through the y=60 void throat, so — unlike the fleet's
+   *  "far above the throat" assumption — it DOES reach the portal and must react. Copies into `out`. */
+  apexWorldPosition(out: THREE.Vector3): THREE.Vector3 {
+    return out.copy(this.apexGroup.position);
+  }
+
   /** Bob / spin / pulse every body on its own cadence. Pure trig, allocation-free, no rng.
    *  `visualOnly` (PAUSE): the ANIMATION clock keeps advancing (spin/pulse/morph/shader) but the TRAVEL
    *  clock freezes, so bodies stay ALIVE in a frozen spot — "suspended animation". */
