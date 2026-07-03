@@ -159,6 +159,7 @@ import { SuperEvolution } from './sim/super-evolution';
 import { MonolithTemple } from './sim/monolith-temple';
 import { PortalDeath } from './sim/portal-death';
 import { MechaBlaze } from './sim/mecha-blaze';
+import { SuperFeeding } from './sim/super-feeding';
 import { PortalDeathFauna } from './sim/portal-death-fauna';
 import { PortalImmuneBounce } from './sim/portal-immune-bounce';
 import { PortalShield } from './sim/portal-shield';
@@ -364,6 +365,10 @@ export class World {
   private readonly portalDeath: PortalDeath;
   /** USER: the Mechalogodrom INCINERATES organisms that rise into it — a fiery blaze + 5s respawn. */
   private readonly mechaBlaze: MechaBlaze;
+  /** USER stage C: the Super Creatures HUNT + EAT the swarm — devour organisms in their maw (gedanken
+   *  death) + respawn 5s. `feedingPos` is a reused scratch of the apex body positions (no per-frame alloc). */
+  private readonly superFeeding: SuperFeeding;
+  private readonly feedingPos: THREE.Vector3[] = [];
   /** USER: the Portal also kills the big FAUNA — shoggoths/puppeteers/titans/leviathans (outside the swarm). */
   private readonly portalDeathFauna: PortalDeathFauna;
   /** USER: the IMMUNE Pantheon (super creatures) don't die — they RICOCHET off the portal in white sparks. */
@@ -508,6 +513,28 @@ export class World {
       meanNoveltyPeak: L.meanNoveltyPeak,
       meanTransfer: L.meanTransfer,
     };
+  }
+
+  /**
+   * V127 (USER, Thaler): run the REAL "death of a gedanken creature" experiment on a dying organism at
+   * genome slot `i` — hold its live senses fixed (mirroring EntityBrainField.think) and measure the
+   * confabulation as its 70-param policy dissolves; accumulate the evidence. Called by the portal maw AND
+   * the Super-Creature maw the frame BEFORE the being is disposed (its brain + senses are still intact).
+   */
+  private gedankenOnDeath(e: Entity, i: number, t: number): void {
+    const ud = e.userData;
+    const g = this.entityBrains.genomeAt(i);
+    const s = this.gedankenSenses;
+    const life = ud.life > 1 ? ud.life : 1;
+    const sp = Math.hypot(ud.vel.x, ud.vel.y, ud.vel.z);
+    const c01 = (x: number): number => (x < 0 ? 0 : x > 1 ? 1 : x);
+    s[0] = c01(ud.energy / 100);
+    s[1] = c01(ud.age / life);
+    s[2] = c01(sp / 6);
+    s[3] = c01(this.state.chaos / 10);
+    s[4] = g[TRAIT.curiosity] ?? 0.5;
+    s[5] = Math.sin(ud.ph + t * 0.6);
+    this.gedankenLedger.recordDeath(gedankenDeath(g.subarray(TRAIT_GENES), s, i));
   }
   /** V-ABC: the 100 Greek+Latin alphabet archetypes alive across the dome (instanced; no rng). */
   private readonly alphabetPantheon: AlphabetPantheonRender;
@@ -941,6 +968,7 @@ export class World {
     this.monolithTemple = new MonolithTemple(ctx.scene);
     this.portalDeath = new PortalDeath(ctx); // USER: the ascension portal kills what touches it
     this.mechaBlaze = new MechaBlaze(ctx); // USER: the mecha incinerates organisms that fly into it
+    this.superFeeding = new SuperFeeding(ctx); // USER stage C: the Super Creatures eat the swarm
     this.portalDeathFauna = new PortalDeathFauna(ctx); // USER: …and the big fauna too (non-swarm rosters)
     this.portalImmuneBounce = new PortalImmuneBounce(ctx); // USER: the immune Pantheon bounces off in sparks
     this.portalShield = new PortalShield(ctx); // USER: the god-tier Super/APEX bodies shimmer at the void
@@ -1200,6 +1228,7 @@ export class World {
     this.monolithTemple.dispose();
     this.portalDeath.dispose();
     this.mechaBlaze.dispose();
+    this.superFeeding.dispose();
     this.portalDeathFauna.dispose();
     this.portalImmuneBounce.dispose();
     this.portalShield.dispose();
@@ -1674,28 +1703,25 @@ export class World {
     // ELSEWHERE 5s later. Super Creature / APEX / Mechalogodrom live outside `entities`, so they are
     // immune by construction (this only scans the population). Armed only once the temple is revealed.
     this.portalDeath.setActive(this.monolithTemple.revealed);
-    this.portalDeath.update(this.entities, t, dt, (e, i) => {
-      // V127 (USER, Thaler): run the REAL neural-death experiment on this dying being's brain before it
-      // is disposed — hold its live senses fixed and measure the confabulation as its 70-param policy
-      // dissolves. Senses mirror EntityBrainField.think exactly. Accumulates into the ledger (evidence).
-      const ud = e.userData;
-      const g = this.entityBrains.genomeAt(i);
-      const s = this.gedankenSenses;
-      const life = ud.life > 1 ? ud.life : 1;
-      const sp = Math.hypot(ud.vel.x, ud.vel.y, ud.vel.z);
-      const c01 = (x: number): number => (x < 0 ? 0 : x > 1 ? 1 : x);
-      s[0] = c01(ud.energy / 100);
-      s[1] = c01(ud.age / life);
-      s[2] = c01(sp / 6);
-      s[3] = c01(this.state.chaos / 10);
-      s[4] = g[TRAIT.curiosity] ?? 0.5;
-      s[5] = Math.sin(ud.ph + t * 0.6);
-      this.gedankenLedger.recordDeath(gedankenDeath(g.subarray(TRAIT_GENES), s, i));
-    });
+    this.portalDeath.update(this.entities, t, dt, (e, i) => this.gedankenOnDeath(e, i, t));
     // USER V127: the Mechalogodrom is DEATH too — organisms that rise into its high kill sphere are
     // INCINERATED in a fiery blaze + re-enter ELSEWHERE 5s later. Scans only `entities`, so Super
     // Creature / APEX / Pantheon (separate bodies) are immune to the fire, same as the portal.
     this.mechaBlaze.update(this.entities, t, dt);
+    // USER stage C: the Super Creatures HUNT + EAT the swarm as food/fuel. Their minds already SEEK prey
+    // (SuperCreature percept `preyClose` + HUNT plans); this consumes any organism in an apex body's maw —
+    // it undergoes the same gedanken neural-death, streams into the eater, and respawns 5s ELSEWHERE.
+    // Gather the apex body positions into the reused `feedingPos` scratch (no per-frame alloc).
+    for (let i = 0; i < this.superBodies.length; i++) {
+      const v = (this.feedingPos[i] ??= new THREE.Vector3());
+      this.superBodies[i]!.worldPosition(v);
+    }
+    if (this.feedingPos.length > this.superBodies.length) {
+      this.feedingPos.length = this.superBodies.length;
+    }
+    this.superFeeding.update(this.feedingPos, this.entities, t, dt, (e, i) =>
+      this.gedankenOnDeath(e, i, t),
+    );
     // USER V126: the Portal also kills the big FAUNA — shoggoths/puppeteers/titans/leviathans (which live
     // outside `entities`). They explode + re-enter ELSEWHERE 5s later; the 100 Pantheon + Super Creature /
     // APEX / Mechalogodrom are IMMUNE (they never register here — their bounce is a separate pass).
