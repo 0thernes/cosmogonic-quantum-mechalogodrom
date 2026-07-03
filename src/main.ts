@@ -247,6 +247,17 @@ async function boot(): Promise<void> {
     lastGovernorLevel = governor.level;
   }
   rafId = requestAnimationFrame(frame);
+  // ROBUSTNESS: the deferred click-to-open panels (⛓ ACCESS / ◈ STAGE II / 🗒 AUDIT toggles, copilot,
+  // settings, …) load at FIRST LIGHT above — but first light rides requestAnimationFrame, which the
+  // browser PAUSES ENTIRELY for a hidden/background tab (and can stall on a very slow boot). Without a
+  // fallback those controls never mount until the tab is focused, so the persistent-nav row is left
+  // missing ⛓ ACCESS / ◈ STAGE II and 🗒 AUDIT can't open. loadDeferredUi() is idempotent (guarded by
+  // `deferredUiLoaded`), so ALSO pull it in after a short timeout AND the instant the tab becomes visible
+  // — whichever fires first — so the full UI is always present regardless of tab visibility / cadence.
+  window.setTimeout(loadDeferredUi, 2500);
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') loadDeferredUi();
+  });
 }
 
 const tShell = performance.now();
