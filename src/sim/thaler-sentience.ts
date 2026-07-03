@@ -776,6 +776,81 @@ export function bootstrapping(
   return { scoreTrendOn, scoreTrendOff, bootstraps: scoreTrendOn > scoreTrendOff };
 }
 
+/** M9 — CHAINING (DABUS's defining construct). Thaler: "ideas are chains of nets that develop side chains
+ *  expressing the consequences of the underlying conceptual backbone"; the stream of consciousness IS chains
+ *  materializing and dematerializing. Mini-scale analog: feed each thought's OUTPUT back as the next
+ *  thought's cue, so one confabulation SEEDS the next — an associative cascade that should sustain coherence
+ *  LONGER than unlinked random cueing. HONEST CAVEAT: chaining is fundamentally a SWARM-scale construct
+ *  (DABUS is "a swarm of many disconnected nets" that link/unlink) — a SINGLE 6→6→4 net reproduces it only
+ *  WEAKLY (~5/8 seeds), which is itself a faithful finding: this phenomenon wants many nets, not one. So it
+ *  tiers as 'present'/'marginal', not robust — reported honestly, not forced. Deterministic. */
+export interface ChainResult {
+  /** Mean coherent-cascade length with associative feedback (output → next cue). */
+  chainedLen: number;
+  /** Mean coherent-cascade length with RANDOM cueing each step (no associative link — the null). */
+  randomLen: number;
+  /** Mean confabulations carried down a feedback chain (novel ideas that propagated). */
+  chainConfabs: number;
+  /** true iff associative feedback sustains a LONGER coherent chain than unlinked random cueing — one
+   *  thought genuinely seeds the next (a propagating cascade), not independent samples. */
+  chains: boolean;
+}
+export function chaining(
+  cm: CreativityMachine,
+  rng: Rng,
+  runs = 120,
+  maxLen = 24,
+  eta = 0.28,
+): ChainResult {
+  const pw = new Float32Array(cm.ie.w.length);
+  const hid = new Float32Array(cm.ie.nhid);
+  const out = new Float32Array(cm.ie.nout);
+  const cue = new Float32Array(cm.cfg.nin);
+  // one cascade from seed `s0`; `feedback` = the thought's output steers the next cue (associative link)
+  // vs a RANDOM cue each step (no link). Returns the coherent run length + confabulations propagated.
+  const cascade = (s0: number, feedback: boolean): { len: number; confabs: number } => {
+    const seed = cm.memories[s0]!.cue;
+    cue.set(seed);
+    let len = 0,
+      confabs = 0;
+    for (let s = 0; s < maxLen; s++) {
+      perturbWeights(pw, cm.ie, eta, rng, 0);
+      const net: MiniMLP = { ...cm.ie, w: pw };
+      mlpForward(net, cue, hid, out);
+      const { dist } = nearestMemoryDist(cm, out);
+      const sat = saturation(out, cm.cfg.nout);
+      const plaus = critique(cm, out);
+      const coherent = dist < 0.35 || (sat <= 0.9 && plaus >= 0.5);
+      if (!coherent) break; // the chain hit noise and dissolved
+      if (dist >= 0.35) confabs++;
+      len++;
+      if (feedback) {
+        // the output becomes the next cue (anchored to the seed so it drifts, not explodes) — the link.
+        for (let i = 0; i < cm.cfg.nin; i++)
+          cue[i] = Math.tanh((seed[i] ?? 0) * 0.5 + (out[i % cm.cfg.nout] ?? 0) * 0.7);
+      } else {
+        // null: an unrelated RANDOM cue each step — thoughts do not connect.
+        for (let i = 0; i < cm.cfg.nin; i++) cue[i] = rng() * 2 - 1;
+      }
+    }
+    return { len, confabs };
+  };
+  let cl = 0,
+    rl = 0,
+    cc = 0;
+  for (let r = 0; r < runs; r++) {
+    const s0 = r % cm.memories.length;
+    const c = cascade(s0, true);
+    const b = cascade(s0, false);
+    cl += c.len;
+    cc += c.confabs;
+    rl += b.len;
+  }
+  const chainedLen = cl / runs;
+  const randomLen = rl / runs;
+  return { chainedLen, randomLen, chainConfabs: cc / runs, chains: chainedLen > randomLen };
+}
+
 /** One constitutive marker's verdict, aggregated over an ENSEMBLE of mini brains (a single 70-param net is
  *  noisy; the phenomenon is a population regularity — and this world runs a whole population of them). */
 export interface ThalerMarker {
@@ -882,6 +957,16 @@ export function runThalerProof(rng: Rng, cfg: CMConfig = DEFAULT_CM, ensemble = 
       run: (cm: CreativityMachine, r: Rng) => {
         const x = bootstrapping(cm, r);
         return { met: x.bootstraps, value: x.scoreTrendOn - x.scoreTrendOff };
+      },
+    },
+    {
+      id: 'chaining',
+      name: 'Associative chaining (swarm-scale)',
+      criterion:
+        'a thought seeds the next — feedback sustains a longer coherent chain than random cueing (weak on a single net; Thaler’s swarm construct)',
+      run: (cm: CreativityMachine, r: Rng) => {
+        const x = chaining(cm, r);
+        return { met: x.chains, value: x.chainedLen - x.randomLen };
       },
     },
   ];

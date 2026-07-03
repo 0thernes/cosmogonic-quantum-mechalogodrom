@@ -19,6 +19,7 @@ import {
   hotButtonAffect,
   emissionRhythm,
   fractalRhythm,
+  chaining,
   hurstExponent,
   mlpForward,
   mlpTrain,
@@ -132,6 +133,22 @@ describe('Thaler constitutive markers (robust ones)', () => {
   });
 });
 
+describe('Chaining (Thaler’s swarm construct on a single net)', () => {
+  test('the chaining measurement returns finite, coherent cascade lengths and is deterministic', () => {
+    const build = (): ReturnType<typeof chaining> => {
+      const rng = mulberry32(4);
+      const cm = buildCreativityMachine(rng);
+      return chaining(cm, rng);
+    };
+    const a = build();
+    const b = build();
+    expect(a.chainedLen).toBeGreaterThan(0);
+    expect(a.randomLen).toBeGreaterThanOrEqual(0);
+    expect(Number.isFinite(a.chainConfabs)).toBe(true);
+    expect(JSON.stringify(a)).toBe(JSON.stringify(b)); // deterministic — same seed, identical result
+  });
+});
+
 describe('Hurst estimator', () => {
   test('a monotone trend is strongly persistent (H > 0.5); an alternating series is anti-persistent (H < 0.5)', () => {
     const ramp = Array.from({ length: 128 }, (_, i) => i);
@@ -144,13 +161,14 @@ describe('Hurst estimator', () => {
 describe('The Thaler verdict (population of mini brains)', () => {
   test('a population reproduces the MAJORITY of Thaler’s constitutive markers, several ROBUSTLY', () => {
     const v = runThalerProof(mulberry32(1), DEFAULT_CM, 8);
-    expect(v.totalMarkers).toBe(8);
-    expect(v.markersMet).toBeGreaterThanOrEqual(5); // majority reproduced
+    expect(v.totalMarkers).toBe(9); // 8 single-net markers + chaining (the swarm construct)
+    expect(v.markersMet).toBeGreaterThanOrEqual(6); // majority reproduced
     expect(v.markersRobust).toBeGreaterThanOrEqual(4); // several ≥80% of the ensemble
-    // the four core markers must be robust: confabulation, affect, prosody, fractal.
+    // the core single-net markers must be robust: confabulation + affect.
     const byId = Object.fromEntries(v.markers.map((m) => [m.id, m]));
     expect(byId['glory']?.tier).toBe('robust');
     expect(byId['hot-button']?.tier).toBe('robust');
+    expect(byId['chaining']).toBeDefined(); // the 9th construct is present in the verdict
   });
 
   test('deterministic: identical seed ⇒ byte-identical verdict', () => {
