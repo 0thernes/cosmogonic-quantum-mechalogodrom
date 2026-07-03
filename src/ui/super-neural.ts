@@ -45,7 +45,10 @@ const STAGE_LABELS = ['PERCEIVE', 'IMAGINE', 'REASON', 'FEEL', 'ACT'] as const;
 const TAB_LABELS = ['I · WORLD', 'II · COGNITION', 'III · QUANTUM', 'IV · BRAIN'] as const;
 
 const STYLE = `
-.cqm-sneu{display:flex;flex-direction:column;min-height:0;flex:1 1 auto}
+.cqm-sneu{display:flex;flex-direction:column;min-height:0;flex:1 1 auto;--sneu-tint:0;--sneu-rgb:150,148,142}
+/* V123 (USER #4): the whole box washes toward the live BRUTAL accent as --sneu-tint rises — a soft
+   header + rim + inner glow, gradual and legible (the text stays bright above it). */
+.cqm-sneu{background:linear-gradient(180deg, rgba(var(--sneu-rgb), calc(var(--sneu-tint) * 0.14)), rgba(var(--sneu-rgb), calc(var(--sneu-tint) * 0.05)))}
 .cqm-sneu-tabs{display:flex;gap:4px;padding:6px 8px 0;flex:0 0 auto}
 .cqm-sneu-tab{flex:1 1 0;min-width:0;background:rgba(14,8,28,.7);color:#a48fce;border:1px solid rgba(180,120,255,.2);
   border-bottom:none;border-radius:6px 6px 0 0;font:600 9.5px/1 var(--font-mono,ui-monospace,monospace);
@@ -57,11 +60,20 @@ const STYLE = `
   border-radius:6px;font:600 9px/1 var(--font-mono,ui-monospace,monospace);letter-spacing:.06em;padding:6px 8px;cursor:pointer;white-space:nowrap}
 .cqm-sneu-brain-cycle:hover{color:#ffe0f8;background:rgba(70,20,60,.9)}
 .cqm-sneu-brain-cycle.mega{border-color:rgba(0,255,220,.55);color:#9fffe8}
-.cqm-sneu-grid{display:grid;grid-template-columns:repeat(3,1fr);grid-auto-rows:1fr;gap:5px;padding:7px;overflow:hidden;
-  flex:1 1 auto;min-height:160px;border-top:1px solid rgba(180,120,255,.28)}
-.cqm-sneu-grid.brain{grid-template-columns:1fr;grid-template-rows:min(48vh,380px);min-height:min(48vh,380px)}
-.cqm-sneu-cell{position:relative;border:1px solid rgba(180,120,255,.14);border-radius:6px;background:rgba(5,3,12,.66);
-  overflow:hidden;display:flex;min-height:0}
+/* V123 (USER #4): the 9 cells were PANCAKED (wide + short) because the panel was height-capped.
+   With the panel now flexing to full height (super-panel V123) the 3×3 grid gets real vertical
+   room; a per-row floor keeps every cell a comfortable SQUARE-ish tile, never a thin strip. The
+   panel tints toward the live BRUTAL style via --sneu-tint (0 = off) driven by cqm:brutal-style. */
+.cqm-sneu-grid{display:grid;grid-template-columns:repeat(3,1fr);grid-auto-rows:minmax(150px,1fr);gap:7px;padding:8px;
+  overflow-y:auto;flex:1 1 auto;min-height:200px;border-top:1px solid rgba(180,120,255,.28);align-content:stretch}
+.cqm-sneu-grid.brain{grid-template-columns:1fr;grid-template-rows:min(56vh,520px);min-height:min(56vh,520px)}
+/* Depth: a radial floor-glow + an inset rim make each tile read as a lit 3D chamber, not a flat pane. */
+.cqm-sneu-cell{position:relative;border:1px solid rgba(180,120,255,.18);border-radius:8px;
+  background:
+    linear-gradient(rgba(var(--sneu-rgb), calc(var(--sneu-tint) * .16)), rgba(var(--sneu-rgb), calc(var(--sneu-tint) * .06))),
+    radial-gradient(120% 90% at 50% 8%, rgba(40,24,72,.5), rgba(5,3,12,.72) 62%, rgba(2,1,7,.85));
+  box-shadow:inset 0 1px 0 rgba(200,170,255,.12), inset 0 -10px 24px rgba(0,0,0,.5), 0 3px 10px rgba(0,0,0,.4);
+  overflow:hidden;display:flex;min-height:0;transition:box-shadow .4s ease}
 .cqm-sneu-cell canvas{display:block;width:100%;height:100%}
 .cqm-sneu-foot{flex:0 0 auto;display:flex;gap:8px;align-items:center;padding:5px 10px;border-top:1px solid rgba(180,120,255,.2);
   background:rgba(22,10,40,.7);font:9px/1.4 var(--font-mono,ui-monospace,monospace);color:#b9a3e0;min-height:0}
@@ -1561,8 +1573,19 @@ const TABS: readonly Drawer[][] = [
  * The Super Creature's neural observatory, rendered INTO a host element owned by {@link SuperPanel}
  * (so it is the SAME box). Owns a self-driven rAF loop while {@link setActive}(true).
  */
+/** V123 (USER #4): per-BRUTAL-style accent (r,g,b) the NEURAL box tints toward — concrete grey ·
+ *  nouveau green · rococo gold · cosmic purple · repression ash. Kept subtle so cells stay legible. */
+const SNEU_BRUTAL_RGB: readonly (readonly [number, number, number])[] = [
+  [150, 148, 142],
+  [96, 200, 128],
+  [232, 200, 112],
+  [150, 84, 232],
+  [116, 116, 128],
+];
+
 export class SuperNeural {
   private readonly host: HTMLElement;
+  private readonly root: HTMLElement;
   private readonly tabsEl: HTMLElement;
   private readonly gridEl: HTMLElement;
   private readonly footEl: HTMLElement;
@@ -1577,6 +1600,17 @@ export class SuperNeural {
   private dpr = Math.min(2, typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1);
   private raf = 0;
   private frameN = 0;
+  // V123: BRUTAL tint — target (from the toggle event) + eased current, applied to the box as it
+  // crossfades so the NEURAL skin shifts colour WITH the creature's brutal style, gradually.
+  private tintStyle = 0;
+  private tintTarget = 0;
+  private tintCur = 0;
+  private readonly onBrutalStyle = (e: Event): void => {
+    const d = (e as CustomEvent).detail as { styleIdx?: number; on?: boolean } | undefined;
+    if (!d) return;
+    if (typeof d.styleIdx === 'number') this.tintStyle = Math.max(0, Math.min(4, d.styleIdx));
+    this.tintTarget = d.on ? 1 : 0;
+  };
 
   constructor(host: HTMLElement, doc: Document = document) {
     this.host = host;
@@ -1592,6 +1626,10 @@ export class SuperNeural {
       `<div class="cqm-sneu-tabs" data-tabs></div><div class="cqm-sneu-grid" data-grid></div>` +
       `<div class="cqm-sneu-foot" data-foot></div>`;
     host.appendChild(root);
+    this.root = root;
+    // V123 (USER #4): the NEURAL box tints WITH the creature's BRUTAL style (world dispatches on toggle).
+    if (typeof window !== 'undefined')
+      window.addEventListener('cqm:brutal-style', this.onBrutalStyle);
     this.tabsEl = root.querySelector('[data-tabs]') as HTMLElement;
     this.gridEl = root.querySelector('[data-grid]') as HTMLElement;
     this.footEl = root.querySelector('[data-foot]') as HTMLElement;
@@ -1659,6 +1697,7 @@ export class SuperNeural {
    * hidden tab pauses rAF). Cheap — only when the box is in neural mode.
    */
   update(snap: Snap | null): void {
+    this.easeTint(); // V123: advance the BRUTAL tint on the data cadence too (works when rAF is throttled)
     this.snap = snap;
     if (!snap) return;
     // textContent (not innerHTML) for the dynamic plan label — matches the WebGL-card hardening.
@@ -1690,11 +1729,23 @@ export class SuperNeural {
     this.raf = 0;
     if (!this.active || !this.host.isConnected) return;
     this.raf = requestAnimationFrame(this.tick);
+    this.easeTint(); // V123: crossfade the BRUTAL skin tint every frame (cheap CSS-var write)
     // ~30 fps cap: repaint at most every 33 ms so 9 live canvases never fight the WebGL render loop.
     if (ts - this.lastPaint < 33) return;
     this.lastPaint = ts;
     this.paint(ts / 1000);
   };
+
+  /** V123 (USER #4): ease the box's BRUTAL tint toward its target and write it as CSS vars — a
+   *  gradual skin shift (rim + floor-glow hue) that keeps the cells legible. O(1). */
+  private easeTint(): void {
+    const target = this.tintTarget;
+    if (Math.abs(this.tintCur - target) < 0.002) this.tintCur = target;
+    else this.tintCur += (target - this.tintCur) * 0.06;
+    const rgb = SNEU_BRUTAL_RGB[this.tintStyle] ?? SNEU_BRUTAL_RGB[0]!;
+    this.root.style.setProperty('--sneu-tint', this.tintCur.toFixed(3));
+    this.root.style.setProperty('--sneu-rgb', `${rgb[0]},${rgb[1]},${rgb[2]}`);
+  }
 
   private paint(t: number): void {
     const snap = this.snap;

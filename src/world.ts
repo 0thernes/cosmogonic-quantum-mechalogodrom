@@ -4075,6 +4075,17 @@ export class World {
     for (let i = 0; i < this.superCreatures.length; i++) {
       this.superCreatures[i]!.perturbMind(this.uiRng);
     }
+    // V123 (USER #4): the NEURAL box tints WITH the creature's BRUTAL style — broadcast the style +
+    // on/off so the SuperNeural observatory crossfades its skin toward the same palette (UI-only).
+    if (typeof window !== 'undefined') {
+      try {
+        window.dispatchEvent(
+          new CustomEvent('cqm:brutal-style', { detail: { styleIdx: styleForBodies, on } }),
+        );
+      } catch {
+        /* CustomEvent unsupported (headless) — the tint is cosmetic, so skipping is fine */
+      }
+    }
     if (on) {
       const style = BRUTAL_STYLES[this.brutalStyleIdx]!;
       this.syncBrutalButton(style.glyph, style.name, style.title);
