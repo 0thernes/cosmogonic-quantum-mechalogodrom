@@ -16,6 +16,8 @@ import { World } from './world';
 import './ui/copilot';
 // Access terminal (V34): self-mounting cryptographic puzzle that gates the 2nd super creature.
 import './ui/access-puzzle';
+// Trans-dimensional temple access (V124): self-mounting UwU box that raises the Stage-2 temple early.
+import './ui/temple-access';
 // Help system (V36): self-mounting "HELP ME NOW" panel — repo-grounded answers, offline-safe.
 import './ui/help-system';
 // Audit dock (V51): self-mounting 🗒 AUDIT toggle that moves the audit trail off the left column into

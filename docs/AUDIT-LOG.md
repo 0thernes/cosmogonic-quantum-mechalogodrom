@@ -45,6 +45,28 @@ V124 entry below). Every fix root-caused live in the browser first:
   NHI Matrix-green shader flare retired for sickly moss (the dual's `nhiSpecies` material palette is
   canonical — mine complements it on the shader).
 
+## 2026-07-02 — The TOWER (GodColossus) GEOMETRY rebuild + the UwU trans-dimensional access box (V124)
+
+The prior "Monolith Megalith" passes rebuilt the ascension TEMPLE + FLOATING monoliths but missed the
+actual tall skyscraper the owner meant — `GodColossus` (`src/sim/god-colossus.ts`), the tower that
+dominates the skyline (the pink column + cyan crown + purple loops in the screenshot). Two changes:
+
+- **Tower demolition rebuild → monochrome cube/sphere/lattice megastructure.** Same geometry‑first,
+  strict‑grayscale language as the temple. The old build was a magenta base hue + HINDU saffron/gold +
+  KOREAN dancheong 5‑colour + CHIPLET cyan/magenta carnival with a schizophrenic hue‑shift; **every
+  hue is gone.** New form: 16 tapering CUBE tiers, ~2400 greeble cube panels, the real icosahedral
+  cut‑and‑project QUASICRYSTAL cube‑shell (kept — bright "window" cubes vs dark carve blocks chosen by
+  PERP/phason acceptance, now grayscale by depth not colour), embedded tessellated wireframe SPHERES,
+  an enclosing wireframe VOXEL LATTICE, a white GENESIS core firing straight radial GOD‑RAY lines, a
+  woven great‑circle GEODESIC crown cage + a box needle spire, star‑dust points, and a monochrome fbm
+  energy shell. Contract preserved: exactly 1 group + exactly 3 instanced pools (the test's assertion),
+  `panelCount > 2000`, deterministic matrices, `update` spawns no geometry, determinism‑neutral.
+- **Second ACCESS button — the trans-dimensional UwU box.** `src/ui/temple-access.ts` self‑mounts a
+  sparkly prismatic `◈ STAGE II` dock button + a shimmering "box window" whose password is the anime
+  sigil **UwU** (DOM‑free check in `src/ui/temple-code.ts`, unit‑tested). On success it dispatches
+  `cqm:force-ascension`; `world.ts` listens and calls its idempotent, visual‑only `ascend()`, raising
+  the Stage‑2 Monolith Temple immediately — so the impatient can peek without grinding to level 100.
+
 ## 2026-07-02 — The MONOLITH MEGALITH GEOMETRY rebuild (V124): cube · sphere · lattice · void
 
 The V123 pass (below) read the six reference images as a _colour scheme_ and barely touched the

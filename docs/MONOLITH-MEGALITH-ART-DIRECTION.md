@@ -2,10 +2,27 @@
 
 # The Monolith Megalith — Art Direction
 
-> The engineering contract lives in [`src/sim/monolith-temple.ts`](../src/sim/monolith-temple.ts)
-> (class `MonolithTemple`, alias `MonolithMegalith`). This is the **aesthetic + geometric** source of
-> truth: what the level‑100 ascension end‑state _is_, the shapes it is built from, and the six
-> reference images it is cut from. When the visuals change, rewrite this file — do not fork a snapshot.
+> The **aesthetic + geometric source of truth** for the megalith family: what each structure _is_, the
+> shapes it is built from, and the six reference images it is cut from. When the visuals change,
+> rewrite this file — do not fork a snapshot.
+
+## The three megaliths (don't confuse them)
+
+There are **three** distinct megalith structures, all cut from the same images, all strict monochrome:
+
+1. **The TOWER** — the tall skyscraper that dominates the skyline, always present.
+   [`src/sim/god-colossus.ts`](../src/sim/god-colossus.ts) (`GodColossus`). A colossal vertical
+   CUBE megastructure: tapering cube tiers, an aperiodic quasicrystal cube‑shell, embedded wireframe
+   spheres, an enclosing voxel lattice, a white genesis core firing god‑rays, a woven geodesic crown.
+2. **The TEMPLE** — the level‑100 ascension end‑state that rises only when a super creature ascends.
+   [`src/sim/monolith-temple.ts`](../src/sim/monolith-temple.ts) (`MonolithTemple` /
+   `MonolithMegalith`). A Menger‑sponge core caged in a voxel lattice, with a black void throat that
+   is the gateway to Stage 2. Openable early via the trans‑dimensional **UwU** box
+   ([`src/ui/temple-access.ts`](../src/ui/temple-access.ts)).
+3. **The FLOATING monoliths** — sparse greebled megaliths drifting in the dome air.
+   [`src/sim/floating-monoliths.ts`](../src/sim/floating-monoliths.ts) (`FloatingMonoliths`).
+
+Everything below applies to all three.
 
 ---
 

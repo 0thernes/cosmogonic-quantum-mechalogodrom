@@ -1000,6 +1000,9 @@ export class World {
         once: true,
         signal,
       });
+      // V124: the trans-dimensional UwU box (ui/temple-access) forces the LV100 ascension early so the
+      // impatient can peek at Stage 2. ascend() is idempotent + visual-only, so forcing it is safe.
+      window.addEventListener('cqm:force-ascension', () => this.ascend(), { once: true, signal });
       window.addEventListener(
         'cqm:hero-power',
         (e) => this.heroPower(((e as CustomEvent).detail?.id as string) ?? ''),
