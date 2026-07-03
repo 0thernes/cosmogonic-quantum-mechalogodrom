@@ -157,6 +157,7 @@ import { SuperEvolution } from './sim/super-evolution';
 import { MonolithTemple } from './sim/monolith-temple';
 import { PortalDeath } from './sim/portal-death';
 import { PortalDeathFauna } from './sim/portal-death-fauna';
+import { PortalImmuneBounce } from './sim/portal-immune-bounce';
 import { SuperBodySystem } from './sim/super-body';
 import { SuperPanel } from './ui/super-panel';
 import { SuperheroState, HERO_POWERS } from './ui/superhero-state';
@@ -352,6 +353,8 @@ export class World {
   private readonly portalDeath: PortalDeath;
   /** USER: the Portal also kills the big FAUNA — shoggoths/puppeteers/titans/leviathans (outside the swarm). */
   private readonly portalDeathFauna: PortalDeathFauna;
+  /** USER: the IMMUNE Pantheon (super creatures) don't die — they RICOCHET off the portal in white sparks. */
+  private readonly portalImmuneBounce: PortalImmuneBounce;
   private superAscended = false;
   private readonly evoRng: Rng;
   private static readonly EVO_DAY_FRAMES = 21600;
@@ -899,6 +902,7 @@ export class World {
     this.monolithTemple = new MonolithTemple(ctx.scene);
     this.portalDeath = new PortalDeath(ctx); // USER: the ascension portal kills what touches it
     this.portalDeathFauna = new PortalDeathFauna(ctx); // USER: …and the big fauna too (non-swarm rosters)
+    this.portalImmuneBounce = new PortalImmuneBounce(ctx); // USER: the immune Pantheon bounces off in sparks
     if (this.superEvo.ascended) {
       this.monolithTemple.reveal(0, 0, -40 * ARENA_MID, true);
       this.superAscended = true;
@@ -1154,6 +1158,7 @@ export class World {
     this.monolithTemple.dispose();
     this.portalDeath.dispose();
     this.portalDeathFauna.dispose();
+    this.portalImmuneBounce.dispose();
     this.abominationArchitecture.dispose();
     this.mechalogodrom.dispose(); // V-MECHA: free the fusion abomination's geometries + materials
     this.floatingMonoliths.dispose(); // free the 16 drifting megaliths' geometries + materials
@@ -1629,6 +1634,10 @@ export class World {
       this.titans,
       this.leviathans,
     ]);
+    // USER V126: the IMMUNE Pantheon (super creatures) do NOT die — they RICOCHET off the portal (bounce +
+    // rim-vibrate) wreathed in a dazzling white spark shower that clears in ~2s. Immune ⇒ never in the
+    // death rosters above; the god-tier Super Creature / Mechalogodrom sit far above the throat column.
+    this.portalImmuneBounce.update(this.monolithTemple.revealed, t, dt, [this.alphabetPantheon]);
 
     // V124: the portal is a clean VOID now (the megalith redesign retired the "hell wormhole"), so the
     // portal-nightmare bus — a HIGH SCREAM square wave (`360 + level*220` Hz) + a low drone + periodic

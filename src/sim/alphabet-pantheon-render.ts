@@ -56,6 +56,7 @@ import {
   type GlyphExteriorSignature,
 } from './glyph-exterior-signature';
 import type { TsotchkeQuantumPulse } from './tsotchke-facade';
+import type { PortalImmune } from './portal-immune-bounce';
 
 /** Dome shell radius the pantheon hangs on; pulled inward so godforms read as beings, not far stars. */
 const DOME_R = ARENA_RADIUS * 0.72;
@@ -164,7 +165,7 @@ interface Body {
   readonly poolSlot: number;
 }
 
-export class AlphabetPantheonRender {
+export class AlphabetPantheonRender implements PortalImmune {
   private readonly group = new THREE.Group();
   private readonly meshes: THREE.InstancedMesh[] = [];
   /** Per pool: the bodies it draws, in instance-slot order. */
@@ -996,6 +997,40 @@ export class AlphabetPantheonRender {
   }
 
   /** Free every pool geometry + the shared material (HMR / world-reset safe). */
+  /**
+   * PORTAL IMMUNE BOUNCE (USER "only Super Creatures and Pantheons bounce off it"): the 100 pantheon
+   * archetypes are IMMUNE to the portal — they cannot pass through, so any member that roams into the
+   * kill-cylinder is EJECTED just outside the rim with an outward velocity ricochet (a bounce + rim
+   * vibration), and `onBounce` fires at it so {@link PortalImmuneBounce} can wreathe it in the white
+   * spark shower. Pure geometry on the nav arrays — no rng, post-ascension only — so it can't perturb
+   * the population golden. See {@link PortalImmune}. O(100).
+   */
+  portalDeflect(
+    ax: number,
+    az: number,
+    r2: number,
+    onBounce: (x: number, y: number, z: number) => void,
+  ): void {
+    const R = Math.sqrt(r2);
+    for (let gi = 0; gi < 100; gi++) {
+      const dx = this.navPX[gi]! - ax;
+      const dz = this.navPZ[gi]! - az;
+      const d2 = dx * dx + dz * dz;
+      if (d2 > r2 || d2 < 1e-4) continue;
+      const d = Math.sqrt(d2);
+      const nx = dx / d;
+      const nz = dz / d;
+      // Eject to just outside the rim and reverse the inward velocity into an outward ricochet.
+      this.navPX[gi] = ax + nx * (R + 6);
+      this.navPZ[gi] = az + nz * (R + 6);
+      const vin = this.navVX[gi]! * nx + this.navVZ[gi]! * nz; // >0 outward, <0 inward
+      const kick = Math.abs(vin) + 40; // ricochet speed
+      this.navVX[gi] = nx * kick;
+      this.navVZ[gi] = nz * kick;
+      onBounce(this.navPX[gi]!, this.navPY[gi]!, this.navPZ[gi]!);
+    }
+  }
+
   dispose(): void {
     this.disposed = true;
     for (const m of this.meshes) {
