@@ -1,15 +1,16 @@
 /**
  * MECHA BLAZE (V127, USER: "Mechalogodrom also KILLS / DESTROYS Entities … like the portal but in a
  * FIERY BLAZE … respawn in 5 seconds randomly new place"). The Mechalogodrom hangs at a FIXED altitude
- * above the arena (0, {@link MECHA_Y}, 0); any organism that rises into its kill sphere is INCINERATED —
+ * above the arena (0, {@link MECHA_Y}, 0); any organism that rises into the fiery cone hanging beneath it
+ * is INCINERATED —
  * a fiery orange→red→gold eruption that streaks UPWARD (fire rises) — and re-enters the world ELSEWHERE
  * {@link RESPAWN_DELAY} seconds later at a fresh random spot.
  *
  * Structurally identical to {@link PortalDeath} (it too scans only `entities.list`), so the Super
  * Creature / APEX / Pantheon — separate bodies — are immune to the mecha's fire as well. UNLIKE the
- * portal it is ALWAYS armed (the mecha is always present, no ascension gate); but the sphere sits high
- * (y≈252, well above the y≤240 arena ceiling) so it only ever bites organisms that actually fly up to
- * the mecha — the golden replay (organisms spawned in the normal arena) rarely reaches it.
+ * portal it is ALWAYS armed (the mecha is always present, no ascension gate); the cone bottoms out at
+ * {@link BLAZE_FLOOR} (upper third of the column), so the ground swarm is safe and only genuine high-
+ * flyers in the middle of the dome burn.
  *
  * DETERMINISM (ADR 0004): the kill test is pure geometry; a respawn draws from the seeded `ctx.rng` via
  * {@link EntityManager.spawn} exactly as organic growth does (so same seed ⇒ same deaths + respawns),
@@ -25,9 +26,19 @@ import type { SimContext } from '../types';
 export const MECHA_Y = 252;
 const MECHA_X = 0;
 const MECHA_Z = 0;
-/** Kill radius — a touch beyond the mecha's exocage (CORE_R·2.7 ≈ 81) so touching the machine burns. */
-const KILL_R = 40 * ARENA_MID; // 100
-const KILL_R2 = KILL_R * KILL_R;
+// USER V127: the blaze REACHES DOWN — a widening fiery CONE hanging from the mecha into the central
+// column, so high-flyers that rise anywhere under it actually get incinerated (a bare sphere at y=252
+// almost never bit, since organisms cap at the y≤240 ceiling). The cone is narrow at the machine
+// (BASE_R, ≈ its exocage) and fans out as it falls, bottoming out at BLAZE_FLOOR — well above the
+// ground swarm, so only genuine high-flyers in the middle of the dome burn.
+/** Cone radius AT the mecha (a touch beyond the exocage CORE_R·2.7 ≈ 81). */
+const BASE_R = 36 * ARENA_MID; // 90
+/** Extra radius per world-unit of descent below the mecha — the cone fans out as the fire falls. */
+const CONE_SPREAD = 0.34;
+/** Lowest altitude the blaze reaches (≈ upper third of the y-column) — below this, organisms are safe. */
+const BLAZE_FLOOR = 150;
+/** A small cap above the mecha so an organism touching it from directly overhead still burns. */
+const BLAZE_CEIL = MECHA_Y + 24 * ARENA_MID;
 /** "respawn in 5 seconds randomly new place." */
 const RESPAWN_DELAY = 5;
 
@@ -124,7 +135,7 @@ export class MechaBlaze {
   }
 
   /**
-   * Per-frame: (1) when armed, incinerate every organism inside the mecha's kill sphere (backwards scan)
+   * Per-frame: (1) when armed, incinerate every organism inside the mecha's fiery cone (backwards scan)
    * and queue its respawn; (2) fire due respawns ELSEWHERE; (3) advance + fade the embers (buoyant rise +
    * drag). Frozen dt=0 ⇒ no kills (embers hold). O(n + POOL).
    */
@@ -135,10 +146,14 @@ export class MechaBlaze {
         const e = list[i];
         if (!e) continue;
         const p = e.position;
+        if (p.y < BLAZE_FLOOR || p.y > BLAZE_CEIL) continue; // outside the fiery column's vertical reach
         const dx = p.x - MECHA_X;
-        const dy = p.y - MECHA_Y;
         const dz = p.z - MECHA_Z;
-        if (dx * dx + dy * dy + dz * dz <= KILL_R2) {
+        // Downward-widening cone: the kill radius grows with how far the organism is BELOW the mecha,
+        // so the blaze fans out as it falls (narrow at the machine, wide near BLAZE_FLOOR).
+        const descent = MECHA_Y - p.y;
+        const coneR = BASE_R + (descent > 0 ? descent * CONE_SPREAD : 0);
+        if (dx * dx + dz * dz <= coneR * coneR) {
           this.ignite(p.x, p.y, p.z);
           const mi = e.userData.mi ?? 0;
           entities.disposeAt(i); // O(1); fires onDeath exactly once

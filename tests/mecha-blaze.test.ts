@@ -88,6 +88,20 @@ describe('MechaBlaze', () => {
     mb.dispose();
   });
 
+  test('the fiery cone REACHES DOWN — a high-flyer below the mecha burns; one below the floor is safe', () => {
+    const ctx = makeCtx(11, 50);
+    const entities = new EntityManager(ctx);
+    const mb = new MechaBlaze(ctx);
+    entities.spawn(new THREE.Vector3(0, 200, 0), 0); // high-flyer under the mecha, inside the cone
+    const lowSwarm = entities.spawn(new THREE.Vector3(0, 100, 0), 1); // below BLAZE_FLOOR → safe
+    const wideMiss = entities.spawn(new THREE.Vector3(240, 200, 240), 2); // in the y-band but far outside the cone
+    mb.update(entities, 1, DT);
+    expect(mb.kills).toBe(1); // only the high-flyer in the cone burned
+    expect(entities.list).toContain(lowSwarm as Entity);
+    expect(entities.list).toContain(wideMiss as Entity);
+    mb.dispose();
+  });
+
   test('the incinerated organism re-enters the world after ~5 s', () => {
     const ctx = makeCtx(2, 50);
     const entities = new EntityManager(ctx);
