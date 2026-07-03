@@ -156,6 +156,7 @@ import { WingmanRenderer } from './sim/super-wingmen-render';
 import { SuperEvolution } from './sim/super-evolution';
 import { MonolithTemple } from './sim/monolith-temple';
 import { PortalDeath } from './sim/portal-death';
+import { MechaBlaze } from './sim/mecha-blaze';
 import { PortalDeathFauna } from './sim/portal-death-fauna';
 import { PortalImmuneBounce } from './sim/portal-immune-bounce';
 import { PortalShield } from './sim/portal-shield';
@@ -352,6 +353,8 @@ export class World {
   private readonly monolithTemple: MonolithTemple;
   /** USER: the ascension Portal is DEATH — organisms touching the void throat explode + respawn. */
   private readonly portalDeath: PortalDeath;
+  /** USER: the Mechalogodrom INCINERATES organisms that rise into it — a fiery blaze + 5s respawn. */
+  private readonly mechaBlaze: MechaBlaze;
   /** USER: the Portal also kills the big FAUNA — shoggoths/puppeteers/titans/leviathans (outside the swarm). */
   private readonly portalDeathFauna: PortalDeathFauna;
   /** USER: the IMMUNE Pantheon (super creatures) don't die — they RICOCHET off the portal in white sparks. */
@@ -907,6 +910,7 @@ export class World {
     // the temple silently on boot (it's just THERE); a fresh live ascension plays the full fanfare.
     this.monolithTemple = new MonolithTemple(ctx.scene);
     this.portalDeath = new PortalDeath(ctx); // USER: the ascension portal kills what touches it
+    this.mechaBlaze = new MechaBlaze(ctx); // USER: the mecha incinerates organisms that fly into it
     this.portalDeathFauna = new PortalDeathFauna(ctx); // USER: …and the big fauna too (non-swarm rosters)
     this.portalImmuneBounce = new PortalImmuneBounce(ctx); // USER: the immune Pantheon bounces off in sparks
     this.portalShield = new PortalShield(ctx); // USER: the god-tier Super/APEX bodies shimmer at the void
@@ -1164,6 +1168,7 @@ export class World {
     this.wingRender.dispose();
     this.monolithTemple.dispose();
     this.portalDeath.dispose();
+    this.mechaBlaze.dispose();
     this.portalDeathFauna.dispose();
     this.portalImmuneBounce.dispose();
     this.portalShield.dispose();
@@ -1633,6 +1638,10 @@ export class World {
     // immune by construction (this only scans the population). Armed only once the temple is revealed.
     this.portalDeath.setActive(this.monolithTemple.revealed);
     this.portalDeath.update(this.entities, t, dt);
+    // USER V127: the Mechalogodrom is DEATH too — organisms that rise into its high kill sphere are
+    // INCINERATED in a fiery blaze + re-enter ELSEWHERE 5s later. Scans only `entities`, so Super
+    // Creature / APEX / Pantheon (separate bodies) are immune to the fire, same as the portal.
+    this.mechaBlaze.update(this.entities, t, dt);
     // USER V126: the Portal also kills the big FAUNA — shoggoths/puppeteers/titans/leviathans (which live
     // outside `entities`). They explode + re-enter ELSEWHERE 5s later; the 100 Pantheon + Super Creature /
     // APEX / Mechalogodrom are IMMUNE (they never register here — their bounce is a separate pass).

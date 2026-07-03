@@ -1,0 +1,188 @@
+/**
+ * MECHA BLAZE (V127, USER: "Mechalogodrom also KILLS / DESTROYS Entities … like the portal but in a
+ * FIERY BLAZE … respawn in 5 seconds randomly new place"). The Mechalogodrom hangs at a FIXED altitude
+ * above the arena (0, {@link MECHA_Y}, 0); any organism that rises into its kill sphere is INCINERATED —
+ * a fiery orange→red→gold eruption that streaks UPWARD (fire rises) — and re-enters the world ELSEWHERE
+ * {@link RESPAWN_DELAY} seconds later at a fresh random spot.
+ *
+ * Structurally identical to {@link PortalDeath} (it too scans only `entities.list`), so the Super
+ * Creature / APEX / Pantheon — separate bodies — are immune to the mecha's fire as well. UNLIKE the
+ * portal it is ALWAYS armed (the mecha is always present, no ascension gate); but the sphere sits high
+ * (y≈252, well above the y≤240 arena ceiling) so it only ever bites organisms that actually fly up to
+ * the mecha — the golden replay (organisms spawned in the normal arena) rarely reaches it.
+ *
+ * DETERMINISM (ADR 0004): the kill test is pure geometry; a respawn draws from the seeded `ctx.rng` via
+ * {@link EntityManager.spawn} exactly as organic growth does (so same seed ⇒ same deaths + respawns),
+ * and the VFX draws ZERO rng (a golden-angle/index hash seeds each ember). The 5-second timer is sim-time
+ * based (frame-deterministic), never Date.now. One additive `THREE.Points` ember pool, owned + disposed.
+ */
+import * as THREE from 'three';
+import { ARENA_MID } from './constants';
+import type { EntityManager } from './entities';
+import type { SimContext } from '../types';
+
+/** Mechalogodrom fixed altitude — mirrors mechalogodrom.ts ALTITUDE (the group sits at (0, 252, 0)). */
+export const MECHA_Y = 252;
+const MECHA_X = 0;
+const MECHA_Z = 0;
+/** Kill radius — a touch beyond the mecha's exocage (CORE_R·2.7 ≈ 81) so touching the machine burns. */
+const KILL_R = 40 * ARENA_MID; // 100
+const KILL_R2 = KILL_R * KILL_R;
+/** "respawn in 5 seconds randomly new place." */
+const RESPAWN_DELAY = 5;
+
+/** Ember pool: ~24 simultaneous deaths × PER_DEATH. Additive, always rendered when alive. */
+const POOL = 780;
+const PER_DEATH = 26;
+/** Seconds an ember lives before it burns out (additive ⇒ black = invisible). */
+const LIFE = 1.1;
+const TMP = new THREE.Color();
+
+/** Live stats for telemetry / tests. */
+export interface MechaBlazeStats {
+  /** Cumulative organisms incinerated by the mecha. */
+  kills: number;
+  /** Deaths awaiting their 5-second respawn. */
+  pending: number;
+  active: boolean;
+}
+
+export class MechaBlaze {
+  private readonly ctx: SimContext;
+  private readonly geo = new THREE.BufferGeometry();
+  private readonly posArr = new Float32Array(POOL * 3);
+  private readonly colArr = new Float32Array(POOL * 3);
+  private readonly baseCol = new Float32Array(POOL * 3);
+  private readonly vel = new Float32Array(POOL * 3);
+  private readonly life = new Float32Array(POOL);
+  private readonly points: THREE.Points;
+  private cursor = 0;
+  private active = true;
+  private readonly respawns: { at: number; mi: number }[] = [];
+  kills = 0;
+
+  constructor(ctx: SimContext) {
+    this.ctx = ctx;
+    this.geo.setAttribute('position', new THREE.BufferAttribute(this.posArr, 3));
+    this.geo.setAttribute('color', new THREE.BufferAttribute(this.colArr, 3));
+    const mat = new THREE.PointsMaterial({
+      size: 2.8 * ARENA_MID,
+      vertexColors: true,
+      transparent: true,
+      opacity: 0.96,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      sizeAttenuation: true,
+    });
+    this.points = new THREE.Points(this.geo, mat);
+    this.points.frustumCulled = false;
+    this.points.visible = false;
+    ctx.scene.add(this.points);
+  }
+
+  /** Arm/disarm the blaze (world.ts holds it armed except while paused). O(1). */
+  setActive(v: boolean): void {
+    this.active = v;
+  }
+
+  stats(): MechaBlazeStats {
+    return { kills: this.kills, pending: this.respawns.length, active: this.active };
+  }
+
+  /**
+   * Erupt {@link PER_DEATH} fire embers at `(x,y,z)` — a hot-white core throwing gold → orange → deep-red
+   * embers that shoot UPWARD (fire rises) and flicker out. Every value comes from the ring index (golden
+   * angle + hashes), NOT rng, so the VFX can never perturb the seeded stream. O(PER_DEATH).
+   */
+  private ignite(x: number, y: number, z: number): void {
+    for (let k = 0; k < PER_DEATH; k++) {
+      const i = this.cursor;
+      this.cursor = (this.cursor + 1) % POOL;
+      const a = i * 2.399963229728653; // golden angle
+      const rise = 0.35 + ((i * 7) % 9) / 9; // 0.35..1.24 upward bias
+      const sp = (0.4 + ((i * 13) % 11) / 11) * 22 * ARENA_MID;
+      const flare = 0.4 + ((i * 5) % 7) / 7; // lateral spread
+      const o = i * 3;
+      this.posArr[o] = x;
+      this.posArr[o + 1] = y;
+      this.posArr[o + 2] = z;
+      this.vel[o] = Math.cos(a) * sp * flare;
+      this.vel[o + 1] = sp * rise + 10 * ARENA_MID; // FIRE RISES
+      this.vel[o + 2] = Math.sin(a) * sp * flare;
+      // Flame palette: hot-white core → gold → orange → deep red (hue 0.02..0.14, high sat).
+      const hot = i % 5 === 0;
+      const hue = 0.02 + ((i % 7) / 7) * 0.11; // red→orange→gold
+      const c = TMP.setHSL(hue, hot ? 0.55 : 0.95, hot ? 0.95 : 0.55);
+      this.baseCol[o] = c.r;
+      this.baseCol[o + 1] = c.g;
+      this.baseCol[o + 2] = c.b;
+      this.colArr[o] = c.r;
+      this.colArr[o + 1] = c.g;
+      this.colArr[o + 2] = c.b;
+      this.life[i] = LIFE;
+    }
+  }
+
+  /**
+   * Per-frame: (1) when armed, incinerate every organism inside the mecha's kill sphere (backwards scan)
+   * and queue its respawn; (2) fire due respawns ELSEWHERE; (3) advance + fade the embers (buoyant rise +
+   * drag). Frozen dt=0 ⇒ no kills (embers hold). O(n + POOL).
+   */
+  update(entities: EntityManager, t: number, dt: number): void {
+    const list = entities.list;
+    if (this.active && dt > 0) {
+      for (let i = list.length - 1; i >= 0; i--) {
+        const e = list[i];
+        if (!e) continue;
+        const p = e.position;
+        const dx = p.x - MECHA_X;
+        const dy = p.y - MECHA_Y;
+        const dz = p.z - MECHA_Z;
+        if (dx * dx + dy * dy + dz * dz <= KILL_R2) {
+          this.ignite(p.x, p.y, p.z);
+          const mi = e.userData.mi ?? 0;
+          entities.disposeAt(i); // O(1); fires onDeath exactly once
+          this.respawns.push({ at: t + RESPAWN_DELAY, mi });
+          this.kills++;
+        }
+      }
+    }
+    while (this.respawns.length > 0 && (this.respawns[0]?.at ?? Infinity) <= t) {
+      const r = this.respawns.shift();
+      if (r) entities.spawn(null, r.mi); // fresh random platform spot (rng-seeded)
+    }
+    let anyAlive = false;
+    for (let i = 0; i < POOL; i++) {
+      const L = this.life[i] ?? 0;
+      if (L <= 0) continue;
+      anyAlive = true;
+      const nL = L - dt;
+      this.life[i] = nL > 0 ? nL : 0;
+      const f = nL > 0 ? nL / LIFE : 0;
+      const o = i * 3;
+      this.vel[o] = (this.vel[o] ?? 0) * (1 - 1.4 * dt); // drag
+      this.vel[o + 1] = (this.vel[o + 1] ?? 0) * (1 - 0.6 * dt) + 4 * ARENA_MID * dt; // buoyant (fire rises)
+      this.vel[o + 2] = (this.vel[o + 2] ?? 0) * (1 - 1.4 * dt);
+      this.posArr[o] = (this.posArr[o] ?? 0) + (this.vel[o] ?? 0) * dt;
+      this.posArr[o + 1] = (this.posArr[o + 1] ?? 0) + (this.vel[o + 1] ?? 0) * dt;
+      this.posArr[o + 2] = (this.posArr[o + 2] ?? 0) + (this.vel[o + 2] ?? 0) * dt;
+      // Fade from the STORED base colour by life fraction, with a fast flame flicker.
+      const fl = f * (0.6 + 0.4 * Math.sin(t * 30 + i * 2.1));
+      this.colArr[o] = (this.baseCol[o] ?? 0) * fl;
+      this.colArr[o + 1] = (this.baseCol[o + 1] ?? 0) * fl;
+      this.colArr[o + 2] = (this.baseCol[o + 2] ?? 0) * fl;
+    }
+    this.points.visible = anyAlive;
+    if (anyAlive) {
+      (this.geo.getAttribute('position') as THREE.BufferAttribute).needsUpdate = true;
+      (this.geo.getAttribute('color') as THREE.BufferAttribute).needsUpdate = true;
+    }
+  }
+
+  /** Remove the ember mesh + free its GPU resources (World.dispose / HMR safe). */
+  dispose(): void {
+    this.ctx.scene.remove(this.points);
+    this.geo.dispose();
+    (this.points.material as THREE.Material).dispose();
+  }
+}
