@@ -1,34 +1,34 @@
 /**
- * THE MONOLITH MEGALITH (CONTRACTS V63 → redesigned V123) — the level-100 ascension end-state made
+ * THE MONOLITH MEGALITH (CONTRACTS V63 → rebuilt V124) — the level-100 ascension end-state made
  * physical. When the super creature reaches the LEGENDARY apex (`SuperEvolution.ascended`), a
- * **black crystal megalith caging a newborn star** rises from the field.
+ * **recursive cube caged in a voxel lattice** rises from the field.
  *
- * ─── ART DIRECTION (redesign) ────────────────────────────────────────────────────────────────────
- * Rebuilt from six reference images (see docs/MONOLITH-MEGALITH-ART-DIRECTION.md). The prior temple
- * was HOT + HELLISH — a "nightmare wormhole" of blood, acid, and screaming souls in crimson/cyan.
- * The references are its exact inverse: austere, sublime, near-MONOCHROME — a faceted crystal
- * monolith on a black void, holding a brilliant WHITE singularity whose light shatters outward
- * through the facets as PRISMATIC (spectral) rays. So the whole megalith is recoloured from
- * hot→cold and re-architected into named, image-mapped subsystems, every one backed by real math and
- * driven by a real world signal:
+ * ─── ENGINEERING / ARCHITECTURE (rebuild, geometry-first) ───────────────────────────────────────
+ * Cut from six reference images (see docs/MONOLITH-MEGALITH-ART-DIRECTION.md). The images are NOT a
+ * colour scheme — they are a GEOMETRY. Their shared structural vocabulary is exactly two atomic
+ * primitives, **CUBE + SPHERE**, composed into a **wireframe voxel LATTICE**, a **radial line-burst**
+ * from a point-source, a **woven geodesic shell**, an **orthogonal maze**, and a **black void throat**.
+ * So the megalith is built entirely from that vocabulary, in strict MONOCHROME (black / white /
+ * silver — zero hue):
  *
- *   1. CRYSTAL CORE   (img1 kaleidoscope-cube / img3 caged-star) — a raymarched KIFS-faceted diamond
- *      shell around a white incandescent core. Ignition (chaos) brightens the caged star; dispersion
- *      (entropy) spreads its light into spectral fringes on the facet rims.
- *   2. RAY-BURST      (img1/2/3 light explosion)   — an instanced radial starburst of light shards
- *      emanating from the core; its glow blooms with ignition.
- *   3. BOX LATTICE    (img2/4 nested wireframe cosmos) — the "impossible cage" reborn as concentric
- *      wireframe cubes + radial struts, a box-lattice to infinity that breathes with reactivity.
- *   4. ORBIT SHELL    (img2/3/4 suspended primitives) — instanced dark spheres + wireframe cubes on a
- *      Fibonacci sphere, slowly orbiting the core (a Dyson-shell of geometric primitives).
- *   5. MOTE HALO      (img3 orbiting spark-sphere)  — an additive spherical swarm of white light-motes
- *      whose radius pulses with shimmer.
- *   6. PRISMATIC APERTURE (img1 central triangle)   — the portal to GAME STAGE 2, now a clean faceted
- *      white aperture with spectral edges (the caged star's "face"), NOT a blood wormhole.
- *   7. STANDING STONES (img5 brutalist maze / megalith ring) — a ring of black obelisk megaliths that
- *      frame the crystal and kindle with reactivity.
- *   8. CORAL GROWTH   (img5 fractal life in the grid) — a deterministic L-system dendrite climbing the
- *      plinth; its extent is a DIRECT readout of population/crowding (real coupling, not decoration).
+ *   1. MENGER CORE     (img1 cube-lens / img2,4 nested cubes) — a RAYMARCHED recursive-cube fractal
+ *      (Menger sponge): a cube carved with cubic cavities, self-similar, caging a white point whose
+ *      light bleeds out through the holes. Ignition (chaos) brightens the caged point.
+ *   2. VOXEL LATTICE   (img2 infinite cubic grid) — nested wireframe cube shells + radial struts + an
+ *      inner cell-grid: the cubic spacetime the megalith lives inside. Breathes with reactivity.
+ *   3. RAY-BURST       (img1 warp explosion)       — thousands of DEAD-STRAIGHT radial light filaments
+ *      (line segments, not cones) firing from the core point; glow blooms with ignition.
+ *   4. GEODESIC SHELL  (img3 cube-in-woven-sphere)  — great-circle arcs woven into a sphere caging the
+ *      core cube; a cube inside a sphere of light-thread. Breathes with shimmer.
+ *   5. SUSPENDED PRIMITIVES (img2,4 cubes + spheres) — instanced dark solid cubes + tessellated
+ *      wireframe spheres floating in the lattice cells; slowly precessing.
+ *   6. STARFIELD       (img2 star-dust in the grid) — a point field seeded through the lattice volume.
+ *   7. MAZE PLINTH     (img5 orthogonal labyrinth)  — a ring of axis-aligned cubic BLOCKS at the base
+ *      (also why visualNodes ≥ 25); kindle with reactivity.
+ *   8. VOID THROAT     (img5 black sink + filament web) — a black void with a thin bright rim and a
+ *      fan of filament-web lines: the gateway to GAME STAGE 2, an absence, not a glowing disc.
+ *   9. CORAL DENDRITE  (img5 growth colonizing the grid) — a deterministic dendrite of tiny cubes
+ *      threading the maze toward the void; its extent is a DIRECT readout of population/crowding.
  *
  * Self-contained + GUARDED-friendly: it builds its own meshes, hides them until {@link reveal}, and
  * frees every geometry + material on {@link dispose}. Purely visual — no sim state, no rng, animated
@@ -44,14 +44,10 @@ import { TempleGreeble } from './temple-greeble';
 const RISE_TIME = 2.4;
 /** How far below its resting height the megalith starts when it rises. */
 const RISE_DROP = 60 * ARENA_MID;
-/** World-space height of the caged star / crystal centre above the megalith's base. */
+/** World-space height of the caged point / cube centre above the megalith's base. */
 const CORE_Y = 24 * ARENA_MID;
 
-/** Prismatic aperture shimmer colours (ice-white ↔ pale spectral violet) — the austere new palette. */
-const PORTAL_A = new THREE.Color(0.72, 0.86, 1.0);
-const PORTAL_B = new THREE.Color(0.86, 0.8, 1.0);
-
-/** Golden angle — Fibonacci-sphere / spiral spacing for suspended primitives + motes. */
+/** Golden angle — Fibonacci-sphere / spiral spacing for suspended primitives, filaments + motes. */
 const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5));
 
 /** Deterministic positional hash → [0,1). No bitwise, no rng, no Date.now (mirrors FloatingMonoliths). */
@@ -77,70 +73,75 @@ export interface MonolithTempleSnapshot {
   readonly rise: number;
   /** Real-bound drive from chaos + entropy + crowding, 0..1. */
   readonly reactivity: number;
-  /** Aperture/lattice shimmer scalar, 0..1-ish. */
+  /** Shell/lattice shimmer scalar, 0..1-ish. */
   readonly shimmer: number;
-  /** Shadow-core intensity scalar, 0..1-ish. */
+  /** Void-throat intensity scalar, 0..1-ish. */
   readonly shadow: number;
-  /** Box-lattice displacement amplitude in world units. */
+  /** Voxel-lattice displacement amplitude in world units. */
   readonly cageWarp: number;
   /** Population / capacity, guarded and clamped. */
   readonly crowding: number;
-  /** Caged-star brightness (chaos-bound), 0..1 — the "ignition" of the newborn star. */
+  /** Caged-point brightness (chaos-bound), 0..1 — the "ignition" of the newborn light. */
   readonly ignition: number;
-  /** Spectral spread of the crystal's refracted light (entropy-bound), 0..1. */
+  /** Radial spread of the burst / edge sharpness (entropy-bound), 0..1. */
   readonly dispersion: number;
-  /** Fraction of the coral dendrite that has colonized the plinth (crowding-bound), 0..1. */
+  /** Fraction of the coral dendrite that has colonized the maze (crowding-bound), 0..1. */
   readonly coralExtent: number;
   /** Number of direct children in the megalith rig. */
   readonly visualNodes: number;
 }
 
-/** Suspended-primitive orbit counts (instanced — cheap). */
-const ORBIT_CUBES = 96;
-const ORBIT_SPHERES = 84;
-/** Radial light-shard count for the ray-burst. */
-const RAY_SHARDS = 220;
-/** Light-mote count for the orbiting spark-halo. */
-const MOTE_COUNT = 720;
-/** Standing-stone megalith ring size (direct children — also guarantees visualNodes ≥ 25). */
-const STONES = 18;
+/** Suspended-primitive counts (instanced — cheap). */
+const SUSP_CUBES = 110;
+const SUSP_SPHERES = 90;
+/** Radial light-filament count for the ray-burst. */
+const RAY_LINES = 320;
+/** Great-circle count for the woven geodesic shell. */
+const SHELL_CIRCLES = 16;
+const SHELL_SEG = 44;
+/** Star-dust point count seeded through the lattice volume. */
+const STAR_COUNT = 900;
+/** Maze-block count (direct children — also guarantees visualNodes ≥ 25). */
+const MAZE_BLOCKS = 24;
 /** Coral dendrite node cap; visible count scales with crowding. */
 const CORAL_CAP = 300;
+/** Filament-web line count fanning from the void throat. */
+const WEB_LINES = 72;
 
 export class MonolithTemple {
   private readonly scene: THREE.Scene;
   private readonly group = new THREE.Group();
-  /** Abomination-architecture detail shell: mirror-symmetric greebled towers + data-rain strips. */
+  /** Abomination-architecture detail shell: the brutalist cube base (img4). */
   private readonly greeble: TempleGreeble;
   private readonly geos: THREE.BufferGeometry[] = [];
   private readonly mats: THREE.Material[] = [];
   private readonly instancedMeshes: THREE.InstancedMesh[] = [];
-  /** The raymarched crystal core's shader material — carries uTime + uResolution (see the regression test). */
-  private readonly crystalMat: THREE.ShaderMaterial;
-  /** Ray-burst additive material (shared by all radial shards). */
-  private readonly burstMat: THREE.MeshBasicMaterial;
-  private readonly rayBurst: THREE.InstancedMesh;
-  private readonly portalMat: THREE.ShaderMaterial;
-  private readonly haloMat: THREE.MeshBasicMaterial;
-  private readonly shadowMat: THREE.MeshBasicMaterial;
-  private readonly singularityMat: THREE.MeshBasicMaterial;
-  private readonly cageMat: THREE.LineBasicMaterial;
-  private readonly moteMat: THREE.PointsMaterial;
-  private readonly coralMat: THREE.MeshBasicMaterial;
-  private readonly stoneMat: THREE.MeshStandardMaterial;
+  /** The raymarched Menger core's shader material — carries uTime + uResolution (see the regression test). */
+  private readonly coreMat: THREE.ShaderMaterial;
+  /** Radial ray-burst line material (shared). */
+  private readonly burstMat: THREE.LineBasicMaterial;
+  private readonly burst: THREE.LineSegments;
+  private readonly latticeMat: THREE.LineBasicMaterial;
+  private readonly lattice: THREE.LineSegments;
+  private readonly latticeGeo: THREE.BufferGeometry;
+  private readonly latticeBase: Float32Array;
+  private readonly shellMat: THREE.LineBasicMaterial;
+  private readonly shell: THREE.LineSegments;
+  private readonly starMat: THREE.PointsMaterial;
+  private readonly stars: THREE.Points;
   private readonly orbitGroup = new THREE.Group();
-  private readonly orbitCubeMat: THREE.MeshBasicMaterial;
-  private readonly orbitSphereMat: THREE.MeshStandardMaterial;
-  private readonly rings: THREE.Mesh[] = [];
-  private readonly stones: THREE.Mesh[] = [];
-  private readonly cage: THREE.LineSegments;
-  private readonly cageGeo: THREE.BufferGeometry;
-  private readonly cageBase: Float32Array;
-  private readonly shadowCore: THREE.Mesh;
-  private readonly singularityRing: THREE.Mesh;
-  private readonly motes: THREE.Points;
+  private readonly suspCubeMat: THREE.MeshStandardMaterial;
+  private readonly suspSphereMat: THREE.MeshBasicMaterial;
+  private readonly voidMat: THREE.MeshBasicMaterial;
+  private readonly voidCore: THREE.Mesh;
+  private readonly rimMat: THREE.MeshBasicMaterial;
+  private readonly rim: THREE.Mesh;
+  private readonly webMat: THREE.LineBasicMaterial;
+  private readonly web: THREE.LineSegments;
+  private readonly mazeMat: THREE.MeshStandardMaterial;
+  private readonly mazeBlocks: THREE.Mesh[] = [];
+  private readonly coralMat: THREE.MeshBasicMaterial;
   private readonly coral: THREE.InstancedMesh;
-  private readonly portalColor = new THREE.Color();
   private readonly centerVec = new THREE.Vector3();
   private _revealed = false;
   private age = 0;
@@ -162,11 +163,10 @@ export class MonolithTemple {
     this.scene = scene;
     const U = ARENA_MID;
 
-    // ── 1. CRYSTAL CORE — raymarched KIFS-faceted diamond caging a white singularity. ──
-    // The map() SDF works in WORLD space relative to `uCenter`, which update() locks to the mesh's
-    // live world position — so the crystal stays welded to the megalith as it rises (the prior temple
-    // subtracted a fixed offset and only lined up at the origin).
-    this.crystalMat = new THREE.ShaderMaterial({
+    // ── 1. MENGER CORE — a raymarched recursive-cube fractal caging a white point. ──
+    // The SDF works in WORLD space relative to `uCenter`, which update() locks to the mesh's live
+    // world position, so the cube stays welded to the megalith as it rises.
+    this.coreMat = new THREE.ShaderMaterial({
       uniforms: {
         uTime: { value: 0 },
         uResolution: {
@@ -191,45 +191,45 @@ export class MonolithTemple {
       fragmentShader: `
         uniform float uTime;
         uniform vec3 uCenter;
-        uniform float uIgnition;   // caged-star brightness (chaos)
-        uniform float uDispersion; // spectral spread (entropy)
+        uniform float uIgnition;   // caged-point brightness (chaos)
+        uniform float uDispersion; // edge sharpness / spectral whisper (entropy)
         uniform float uReactivity;
         varying vec3 vWorldPos;
 
         mat2 rot(float a){ float s=sin(a), c=cos(a); return mat2(c,-s,s,c); }
 
         float sdBox(vec3 p, vec3 b){
-          vec3 q = abs(p) - b;
-          return length(max(q,0.0)) + min(max(q.x,max(q.y,q.z)),0.0);
+          vec3 d = abs(p) - b;
+          return min(max(d.x,max(d.y,d.z)),0.0) + length(max(d,0.0));
         }
-        float sdOcta(vec3 p, float s){ p = abs(p); return (p.x+p.y+p.z - s) * 0.57735027; }
 
-        // Faceted crystal: an octahedral diamond truncated into a cube, with kaleidoscopic KIFS
-        // facets carved into it. Returns the shell distance. Real iterated-function-system geometry.
-        float mapCrystal(vec3 p){
-          vec3 q = p - uCenter;
-          q.xz *= rot(uTime * 0.08);
-          q.xy *= rot(uTime * 0.05);
-          float R = 24.0;
-          float gem = sdOcta(q, R);
-          gem = max(gem, sdBox(q, vec3(R * 0.6)));      // truncate the octahedron into a crystal cube
-          vec3 z = q; float s = 1.0;
-          for(int i=0;i<4;i++){
-            z = abs(z) - vec3(6.0,7.0,6.0) / s;
-            z.xy *= rot(0.3 + uTime * 0.06);
-            z.xz *= rot(0.15);
-            float k = 1.34; z *= k; s *= k;
+        // MENGER SPONGE (Iñigo Quílez): a cube recursively carved with cubic cavities — the exact
+        // nested-cube / faceted-cube geometry of the reference images, done as a real SDF fractal.
+        float mapCore(vec3 p){
+          vec3 q = (p - uCenter) / 26.0;
+          q.xz *= rot(uTime * 0.06);
+          q.xy *= rot(uTime * 0.045);
+          float d = sdBox(q, vec3(1.0));
+          float s = 1.0;
+          for(int m=0; m<4; m++){
+            vec3 a = mod(q * s, 2.0) - 1.0;
+            s *= 3.0;
+            vec3 r = abs(1.0 - 3.0 * abs(a));
+            float da = max(r.x, r.y);
+            float db = max(r.y, r.z);
+            float dc = max(r.z, r.x);
+            float c = (min(da, min(db, dc)) - 1.0) / s;
+            d = max(d, c);
           }
-          float facets = sdBox(z, vec3(2.4, 9.0, 2.4)) / s;
-          return max(gem, -facets);                     // carve the kaleidoscope into the gem
+          return d * 26.0;
         }
 
         vec3 calcNormal(vec3 p){
-          const vec2 e = vec2(0.06, 0.0);
+          const vec2 e = vec2(0.08, 0.0);
           return normalize(vec3(
-            mapCrystal(p+e.xyy) - mapCrystal(p-e.xyy),
-            mapCrystal(p+e.yxy) - mapCrystal(p-e.yxy),
-            mapCrystal(p+e.yyx) - mapCrystal(p-e.yyx)
+            mapCore(p+e.xyy) - mapCore(p-e.xyy),
+            mapCore(p+e.yxy) - mapCore(p-e.yxy),
+            mapCore(p+e.yyx) - mapCore(p-e.yyx)
           ));
         }
 
@@ -237,27 +237,25 @@ export class MonolithTemple {
           vec3 ro = cameraPosition;
           vec3 rd = normalize(vWorldPos - ro);
 
-          float t = 0.0, maxD = 320.0;
-          float coreMin = 1e9;                          // closest approach to the caged star
+          float t = 0.0, maxD = 360.0;
+          float coreMin = 1e9;                          // closest approach to the caged point
           vec3 p = ro;
           bool hit = false;
-          for(int i=0;i<72;i++){
+          for(int i=0;i<96;i++){
             p = ro + rd * t;
-            float d = mapCrystal(p);
+            float d = mapCore(p);
             coreMin = min(coreMin, length(p - uCenter));
             if(d < 0.02){ hit = true; break; }
             if(t > maxD) break;
             t += d;
           }
 
-          // The caged star always blooms — a soft white volumetric glow through the facets, so even
-          // where the ray misses the shell the newborn light bleeds through. Ignition (chaos) drives it.
-          float star = exp(-coreMin * 0.14) * (0.35 + 2.6 * uIgnition);
+          // The caged point always bleeds through the cubic cavities — a white volumetric glow.
+          float star = exp(-coreMin * 0.16) * (0.3 + 2.8 * uIgnition);
 
           if(!hit){
-            if(star < 0.02) discard;                     // let the background / ray-burst show through
-            vec3 spectral = mix(vec3(1.0), vec3(0.6,0.8,1.0), uDispersion);
-            gl_FragColor = vec4(vec3(star) * spectral, clamp(star, 0.0, 1.0));
+            if(star < 0.02) discard;                     // let the burst / background show through
+            gl_FragColor = vec4(vec3(star), clamp(star, 0.0, 1.0));
             return;
           }
 
@@ -265,19 +263,18 @@ export class MonolithTemple {
           vec3 v = -rd;
           float fres = pow(clamp(1.0 - max(dot(n, v), 0.0), 0.0, 1.0), 3.0);
 
-          // Black glass body; the facets read only as a faint cold metal + a bright fresnel rim.
-          vec3 body = vec3(0.015, 0.02, 0.03) + vec3(0.05,0.06,0.08) * max(n.y, 0.0);
-
-          // PRISMATIC dispersion: split the rim into R/G/B by an entropy-scaled angular offset so the
-          // facet edges fringe into spectrum (Newton's prism, cheap 3-tap chromatic split).
-          float disp = 0.15 + uDispersion * 0.9;
-          float rimR = pow(clamp(1.0 - max(dot(n, v + vec3(disp,0.0,0.0)), 0.0), 0.0, 1.0), 3.0);
-          float rimG = fres;
-          float rimB = pow(clamp(1.0 - max(dot(n, v - vec3(disp,0.0,0.0)), 0.0), 0.0, 1.0), 3.0);
-          vec3 rim = vec3(rimR, rimG, rimB) * (0.9 + 1.6 * uReactivity);
+          // MONOCHROME: near-black cube body, read only by a white fresnel rim + ambient occlusion of
+          // the recursion depth. A razor-thin, near-symmetric chromatic split at the very edge is the
+          // only concession to the prism (kept white-ish; NO neon).
+          float ao = clamp(mapCore(p + n * 4.0) / 4.0, 0.0, 1.0);
+          vec3 body = vec3(0.02) + vec3(0.06) * ao;
+          float chroma = uDispersion * 0.35;
+          float rimR = pow(clamp(1.0 - max(dot(n, v + vec3(chroma, 0.0, 0.0)), 0.0), 0.0, 1.0), 3.0);
+          float rimB = pow(clamp(1.0 - max(dot(n, v - vec3(chroma, 0.0, 0.0)), 0.0), 0.0, 1.0), 3.0);
+          vec3 rim = vec3(rimR, fres, rimB) * (0.85 + 1.4 * uReactivity);
 
           vec3 col = body + rim + vec3(star);
-          float alpha = clamp(0.35 + fres * 0.6 + star, 0.0, 1.0);
+          float alpha = clamp(0.4 + fres * 0.55 + star, 0.0, 1.0);
           gl_FragColor = vec4(col, alpha);
         }
       `,
@@ -285,126 +282,163 @@ export class MonolithTemple {
       side: THREE.DoubleSide,
       depthWrite: false,
     });
-    this.mats.push(this.crystalMat);
-    const boundsGeo = new THREE.BoxGeometry(56 * U, 56 * U, 56 * U);
+    this.mats.push(this.coreMat);
+    const boundsGeo = new THREE.BoxGeometry(60 * U, 60 * U, 60 * U);
     this.geos.push(boundsGeo);
-    const boundsMesh = new THREE.Mesh(boundsGeo, this.crystalMat);
+    const boundsMesh = new THREE.Mesh(boundsGeo, this.coreMat);
     boundsMesh.position.set(0, CORE_Y, 0);
     boundsMesh.frustumCulled = false;
     this.group.add(boundsMesh);
 
-    // ── 2. RAY-BURST — an instanced radial starburst of light shards from the caged star. ──
-    // Fixed outward-pointing matrices (deterministic Fibonacci sphere); update() drives only the
-    // shared additive opacity + a slow spin, so per-frame cost is O(1).
-    const shardGeo = new THREE.ConeGeometry(0.5 * U, 1, 4, 1, true);
-    // Cone points +Y; shift so its base sits at the core and it spears outward.
-    shardGeo.translate(0, 0.5, 0);
-    this.geos.push(shardGeo);
-    this.burstMat = new THREE.MeshBasicMaterial({
+    // ── 2. VOXEL LATTICE — nested wireframe cube shells + struts + inner cell-grid. ──
+    this.latticeGeo = this.buildLatticeGeo();
+    this.geos.push(this.latticeGeo);
+    this.latticeBase = new Float32Array(
+      (this.latticeGeo.getAttribute('position') as THREE.BufferAttribute)
+        .array as ArrayLike<number>,
+    );
+    this.latticeMat = new THREE.LineBasicMaterial({
       color: 0xffffff,
       transparent: true,
       opacity: 0,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
-      fog: false,
     });
-    this.mats.push(this.burstMat);
-    this.rayBurst = new THREE.InstancedMesh(shardGeo, this.burstMat, RAY_SHARDS);
-    this.rayBurst.frustumCulled = false;
-    this.rayBurst.position.set(0, CORE_Y, 0);
+    this.mats.push(this.latticeMat);
+    this.lattice = new THREE.LineSegments(this.latticeGeo, this.latticeMat);
+    this.lattice.frustumCulled = false;
+    this.group.add(this.lattice);
+
+    // ── 3. RAY-BURST — dead-straight radial light filaments from the core point (img1). ──
     {
-      const m = new THREE.Matrix4();
-      const q = new THREE.Quaternion();
-      const up = new THREE.Vector3(0, 1, 0);
-      const dir = new THREE.Vector3();
-      const scl = new THREE.Vector3();
-      const origin = new THREE.Vector3(0, 0, 0);
-      for (let i = 0; i < RAY_SHARDS; i++) {
-        const y = 1 - (i / (RAY_SHARDS - 1)) * 2; // -1..1
+      const arr = new Float32Array(RAY_LINES * 6);
+      for (let i = 0; i < RAY_LINES; i++) {
+        const y = 1 - (i / (RAY_LINES - 1)) * 2;
         const r = Math.sqrt(Math.max(0, 1 - y * y));
         const th = i * GOLDEN_ANGLE;
-        dir.set(Math.cos(th) * r, y, Math.sin(th) * r).normalize();
-        q.setFromUnitVectors(up, dir);
-        const len = (14 + hash(i * 3 + 1) * 30) * U; // varied shard reach
-        scl.set(0.4 + hash(i * 5 + 2) * 0.9, len, 0.4 + hash(i * 7 + 3) * 0.9);
-        m.compose(origin, q, scl);
-        this.rayBurst.setMatrixAt(i, m);
+        const dx = Math.cos(th) * r;
+        const dy = y;
+        const dz = Math.sin(th) * r;
+        const len = (16 + hash(i * 3 + 1) * 46) * U;
+        const inner = 2 * U; // start just outside the point
+        arr[i * 6] = dx * inner;
+        arr[i * 6 + 1] = CORE_Y + dy * inner;
+        arr[i * 6 + 2] = dz * inner;
+        arr[i * 6 + 3] = dx * len;
+        arr[i * 6 + 4] = CORE_Y + dy * len;
+        arr[i * 6 + 5] = dz * len;
       }
-      this.rayBurst.instanceMatrix.needsUpdate = true;
+      const burstGeo = new THREE.BufferGeometry();
+      burstGeo.setAttribute('position', new THREE.BufferAttribute(arr, 3));
+      this.geos.push(burstGeo);
+      this.burstMat = new THREE.LineBasicMaterial({
+        color: 0xffffff,
+        transparent: true,
+        opacity: 0,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+      });
+      this.mats.push(this.burstMat);
+      this.burst = new THREE.LineSegments(burstGeo, this.burstMat);
+      this.burst.frustumCulled = false;
+      this.group.add(this.burst);
     }
-    this.group.add(this.rayBurst);
-    this.instancedMeshes.push(this.rayBurst);
 
-    // ── 3. BOX LATTICE — the "impossible cage" reborn as nested wireframe cubes + radial struts. ──
-    this.cageGeo = this.buildCageGeo();
-    this.geos.push(this.cageGeo);
-    this.cageBase = new Float32Array(
-      (this.cageGeo.getAttribute('position') as THREE.BufferAttribute).array as ArrayLike<number>,
-    );
-    this.cageMat = new THREE.LineBasicMaterial({
-      color: 0x9fb8ff,
-      transparent: true,
-      opacity: 0,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false,
-    });
-    this.mats.push(this.cageMat);
-    this.cage = new THREE.LineSegments(this.cageGeo, this.cageMat);
-    this.cage.frustumCulled = false;
-    this.group.add(this.cage);
+    // ── 4. GEODESIC SHELL — great-circle arcs woven into a sphere caging the cube (img3). ──
+    {
+      const pts: number[] = [];
+      const rad = 15 * U;
+      const u = new THREE.Vector3();
+      const w = new THREE.Vector3();
+      const axis = new THREE.Vector3();
+      const a = new THREE.Vector3();
+      const b = new THREE.Vector3();
+      for (let c = 0; c < SHELL_CIRCLES; c++) {
+        // A deterministic great-circle: pick an axis, build an orthonormal basis (u, w) spanning it.
+        axis.set(hash(c * 7 + 1) - 0.5, hash(c * 7 + 2) - 0.5, hash(c * 7 + 3) - 0.5).normalize();
+        u.set(axis.z, 0, -axis.x);
+        if (u.lengthSq() < 1e-4) u.set(0, 1, 0);
+        u.normalize();
+        w.copy(axis).cross(u).normalize();
+        for (let sIdx = 0; sIdx < SHELL_SEG; sIdx++) {
+          const t0 = (sIdx / SHELL_SEG) * Math.PI * 2;
+          const t1 = ((sIdx + 1) / SHELL_SEG) * Math.PI * 2;
+          a.copy(u)
+            .multiplyScalar(Math.cos(t0) * rad)
+            .addScaledVector(w, Math.sin(t0) * rad);
+          b.copy(u)
+            .multiplyScalar(Math.cos(t1) * rad)
+            .addScaledVector(w, Math.sin(t1) * rad);
+          pts.push(a.x, CORE_Y + a.y, a.z, b.x, CORE_Y + b.y, b.z);
+        }
+      }
+      const shellGeo = new THREE.BufferGeometry();
+      shellGeo.setAttribute('position', new THREE.BufferAttribute(Float32Array.from(pts), 3));
+      this.geos.push(shellGeo);
+      this.shellMat = new THREE.LineBasicMaterial({
+        color: 0xcfcfcf,
+        transparent: true,
+        opacity: 0,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+      });
+      this.mats.push(this.shellMat);
+      this.shell = new THREE.LineSegments(shellGeo, this.shellMat);
+      this.shell.position.set(0, CORE_Y, 0); // rotate/scale about the core
+      this.shell.frustumCulled = false;
+      // geometry is authored in world-y; recentre so the group transform + local scale act about CORE_Y
+      shellGeo.translate(0, -CORE_Y, 0);
+      this.group.add(this.shell);
+    }
 
-    // ── 4. ORBIT SHELL — suspended dark spheres + wireframe cubes on a Fibonacci sphere. ──
-    this.orbitCubeMat = new THREE.MeshBasicMaterial({
-      color: 0x2a3550,
-      wireframe: true,
-      transparent: true,
-      opacity: 0,
-      depthWrite: false,
-    });
-    this.orbitSphereMat = new THREE.MeshStandardMaterial({
-      color: 0x090b12,
-      roughness: 0.35,
-      metalness: 0.8,
-      emissive: 0x0a1024,
+    // ── 5. SUSPENDED PRIMITIVES — dark solid cubes + tessellated wireframe spheres (img2, img4). ──
+    this.suspCubeMat = new THREE.MeshStandardMaterial({
+      color: 0x0a0a0a,
+      roughness: 0.4,
+      metalness: 0.6,
+      emissive: 0x000000,
       emissiveIntensity: 0.0,
       transparent: true,
       opacity: 0,
       depthWrite: false,
     });
-    this.mats.push(this.orbitCubeMat, this.orbitSphereMat);
-    const orbCubeGeo = new THREE.BoxGeometry(1, 1, 1);
-    const orbSphereGeo = new THREE.IcosahedronGeometry(1, 1);
-    this.geos.push(orbCubeGeo, orbSphereGeo);
-    const orbCubes = new THREE.InstancedMesh(orbCubeGeo, this.orbitCubeMat, ORBIT_CUBES);
-    const orbSpheres = new THREE.InstancedMesh(orbSphereGeo, this.orbitSphereMat, ORBIT_SPHERES);
-    orbCubes.frustumCulled = false;
-    orbSpheres.frustumCulled = false;
-    this.fillShell(orbCubes, ORBIT_CUBES, 20, 34, 101);
-    this.fillShell(orbSpheres, ORBIT_SPHERES, 22, 33, 211);
+    this.suspSphereMat = new THREE.MeshBasicMaterial({
+      color: 0x8a8a8a,
+      wireframe: true,
+      transparent: true,
+      opacity: 0,
+      depthWrite: false,
+    });
+    this.mats.push(this.suspCubeMat, this.suspSphereMat);
+    const suspCubeGeo = new THREE.BoxGeometry(1, 1, 1);
+    const suspSphereGeo = new THREE.IcosahedronGeometry(1, 2); // tessellated "gridded" sphere
+    this.geos.push(suspCubeGeo, suspSphereGeo);
+    const suspCubes = new THREE.InstancedMesh(suspCubeGeo, this.suspCubeMat, SUSP_CUBES);
+    const suspSpheres = new THREE.InstancedMesh(suspSphereGeo, this.suspSphereMat, SUSP_SPHERES);
+    suspCubes.frustumCulled = false;
+    suspSpheres.frustumCulled = false;
+    this.fillShell(suspCubes, SUSP_CUBES, 18, 40, 101, true);
+    this.fillShell(suspSpheres, SUSP_SPHERES, 20, 42, 211, false);
     this.orbitGroup.position.set(0, CORE_Y, 0);
-    this.orbitGroup.add(orbCubes);
-    this.orbitGroup.add(orbSpheres);
+    this.orbitGroup.add(suspCubes);
+    this.orbitGroup.add(suspSpheres);
     this.group.add(this.orbitGroup);
-    this.instancedMeshes.push(orbCubes, orbSpheres);
+    this.instancedMeshes.push(suspCubes, suspSpheres);
 
-    // ── 5. MOTE HALO — an additive spherical swarm of white light-motes (img3 spark-sphere). ──
+    // ── 6. STARFIELD — star-dust seeded through the lattice volume (img2). ──
     {
-      const arr = new Float32Array(MOTE_COUNT * 3);
-      for (let i = 0; i < MOTE_COUNT; i++) {
-        const y = 1 - (i / (MOTE_COUNT - 1)) * 2;
-        const r = Math.sqrt(Math.max(0, 1 - y * y));
-        const th = i * GOLDEN_ANGLE;
-        const rad = (13 + hash(i * 9 + 5) * 4) * U;
-        arr[i * 3] = Math.cos(th) * r * rad;
-        arr[i * 3 + 1] = CORE_Y + y * rad;
-        arr[i * 3 + 2] = Math.sin(th) * r * rad;
+      const arr = new Float32Array(STAR_COUNT * 3);
+      for (let i = 0; i < STAR_COUNT; i++) {
+        arr[i * 3] = (hash(i * 3 + 11) - 0.5) * 96 * U;
+        arr[i * 3 + 1] = CORE_Y + (hash(i * 3 + 12) - 0.5) * 96 * U;
+        arr[i * 3 + 2] = (hash(i * 3 + 13) - 0.5) * 96 * U;
       }
-      const moteGeo = new THREE.BufferGeometry();
-      moteGeo.setAttribute('position', new THREE.BufferAttribute(arr, 3));
-      this.geos.push(moteGeo);
-      this.moteMat = new THREE.PointsMaterial({
-        color: 0xdfebff,
-        size: 0.6 * U,
+      const starGeo = new THREE.BufferGeometry();
+      starGeo.setAttribute('position', new THREE.BufferAttribute(arr, 3));
+      this.geos.push(starGeo);
+      this.starMat = new THREE.PointsMaterial({
+        color: 0xffffff,
+        size: 0.4 * U,
         sizeAttenuation: true,
         transparent: true,
         opacity: 0,
@@ -412,227 +446,119 @@ export class MonolithTemple {
         depthWrite: false,
         fog: false,
       });
-      this.mats.push(this.moteMat);
-      this.motes = new THREE.Points(moteGeo, this.moteMat);
-      this.motes.frustumCulled = false;
-      this.group.add(this.motes);
+      this.mats.push(this.starMat);
+      this.stars = new THREE.Points(starGeo, this.starMat);
+      this.stars.frustumCulled = false;
+      this.group.add(this.stars);
     }
 
-    // ── 6. PRISMATIC APERTURE — the Stage-2 portal as a clean faceted white aperture. ──
-    const portalY = CORE_Y;
-    this.shadowMat = new THREE.MeshBasicMaterial({
+    // ── 8. VOID THROAT — a black void with a thin bright rim + a fan of filament-web lines (img5). ──
+    // (Built before the maze so the maze blocks are the last direct children, but order is irrelevant.)
+    const voidY = CORE_Y;
+    this.voidMat = new THREE.MeshBasicMaterial({
       color: 0x000000,
       transparent: true,
       opacity: 0.0,
       depthWrite: false,
     });
-    this.mats.push(this.shadowMat);
-    this.shadowCore = new THREE.Mesh(new THREE.SphereGeometry(5.6 * U, 24, 16), this.shadowMat);
-    this.geos.push(this.shadowCore.geometry);
-    this.shadowCore.position.set(0, portalY, -0.4 * U);
-    this.shadowCore.frustumCulled = false;
-    this.group.add(this.shadowCore);
+    this.mats.push(this.voidMat);
+    const voidGeo = new THREE.SphereGeometry(5.5 * U, 32, 20);
+    this.geos.push(voidGeo);
+    this.voidCore = new THREE.Mesh(voidGeo, this.voidMat);
+    this.voidCore.position.set(0, voidY, -0.5 * U);
+    this.voidCore.frustumCulled = false;
+    this.group.add(this.voidCore);
 
-    this.singularityMat = new THREE.MeshBasicMaterial({
-      color: 0x0a1430,
+    this.rimMat = new THREE.MeshBasicMaterial({
+      color: 0xffffff,
       transparent: true,
       opacity: 0.0,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
     });
-    this.mats.push(this.singularityMat);
-    const singularityGeo = new THREE.TorusGeometry(6.4 * U, 0.5 * U, 10, 72);
-    this.geos.push(singularityGeo);
-    this.singularityRing = new THREE.Mesh(singularityGeo, this.singularityMat);
-    this.singularityRing.position.set(0, portalY, -0.3 * U);
-    this.singularityRing.frustumCulled = false;
-    this.group.add(this.singularityRing);
+    this.mats.push(this.rimMat);
+    const rimGeo = new THREE.TorusGeometry(6.2 * U, 0.16 * U, 8, 96);
+    this.geos.push(rimGeo);
+    this.rim = new THREE.Mesh(rimGeo, this.rimMat);
+    this.rim.position.set(0, voidY, -0.3 * U);
+    this.rim.frustumCulled = false;
+    this.group.add(this.rim);
 
-    const discGeo = new THREE.CircleGeometry(7.5 * U, 128);
-    this.geos.push(discGeo);
-    this.portalMat = new THREE.ShaderMaterial({
-      transparent: true,
-      side: THREE.DoubleSide,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false,
-      uniforms: {
-        uTime: { value: 0 },
-        uOpacity: { value: 0 },
-        uColor: { value: new THREE.Vector3(PORTAL_A.r, PORTAL_A.g, PORTAL_A.b) },
-        uReactivity: { value: 0 },
-        uDispersion: { value: 0 },
-        uEquiTex: { value: null }, // optional equirect "view through the aperture"
-        uHasEquiTex: { value: 0 }, // 0 until the equirect actually loads (the asset can 404 / be absent)
-      },
-      vertexShader: `
-        varying vec2 vUv;
-        void main() {
-          vUv = uv;
-          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-        }
-      `,
-      fragmentShader: `
-        uniform float uTime;
-        uniform float uOpacity;
-        uniform vec3 uColor;
-        uniform float uReactivity;
-        uniform float uDispersion;
-        uniform sampler2D uEquiTex;
-        uniform float uHasEquiTex;
-        varying vec2 vUv;
-
-        // Clean prismatic genesis aperture: a kaleidoscopic white iris with spectral edges — the caged
-        // star's face, and the gateway to the second world. Austere, bright-on-black (NOT a blood hell).
-        void main() {
-          vec2 c = vUv - 0.5;
-          float r = length(c);
-          float a = atan(c.y, c.x);
-
-          // 6-fold kaleidoscopic fold of the angle → a faceted crystalline iris.
-          float k = 6.0;
-          float af = abs(mod(a, 6.2831853 / k) - 3.1415927 / k);
-          float facet = cos(af);
-
-          // Bright white throat that opens up, ringed by concentric light shells.
-          float throat = smoothstep(0.5, 0.0, r);
-          float shells = 0.5 + 0.5 * sin(r * 40.0 - uTime * 3.0 + facet * 6.0);
-          float iris = throat * (0.4 + 0.6 * shells) * (0.8 + facet * 0.6);
-
-          // PRISMATIC edge: split the rim into spectrum by a dispersion-scaled radial offset.
-          float d = 0.02 + uDispersion * 0.06;
-          float edgeR = smoothstep(0.5, 0.34, r + d) * smoothstep(0.28 - d, 0.44, r);
-          float edgeG = smoothstep(0.5, 0.34, r)     * smoothstep(0.28, 0.44, r);
-          float edgeB = smoothstep(0.5, 0.34, r - d) * smoothstep(0.28 + d, 0.44, r);
-          vec3 spectrum = vec3(edgeR, edgeG, edgeB) * (0.9 + uReactivity * 1.2);
-
-          vec3 col = uColor * iris + spectrum;
-          // Optional equirect glimpse of the next world, gated so an absent/1x1 texture never leaks in.
-          vec2 equiUv = vec2(a / 6.2831853 + 0.5, 1.0 - r * 2.0);
-          vec3 view = uHasEquiTex > 0.5
-            ? texture2D(uEquiTex, equiUv).rgb * throat * 1.5
-            : vec3(0.0);
-          col += view;
-
-          float alpha = clamp(iris * (0.5 + uReactivity * 0.5) + max(max(edgeR,edgeG),edgeB), 0.0, 1.0) * uOpacity;
-          gl_FragColor = vec4(col, alpha);
-        }
-      `,
-    });
-    this.mats.push(this.portalMat);
-    const disc = new THREE.Mesh(discGeo, this.portalMat);
-    disc.position.set(0, portalY, 0);
-    disc.frustumCulled = false;
-    this.group.add(disc);
-
-    if (typeof document !== 'undefined') {
-      const equiLoader = new THREE.TextureLoader();
-      equiLoader.load('/textures/pantheon_equirect_refs_atlas.png', (tex) => {
-        tex.mapping = THREE.EquirectangularReflectionMapping;
-        tex.colorSpace = THREE.SRGBColorSpace;
-        if (this.portalMat.uniforms.uEquiTex && this.portalMat.uniforms.uHasEquiTex) {
-          this.portalMat.uniforms.uEquiTex.value = tex;
-          this.portalMat.uniforms.uHasEquiTex.value = 1; // only fires on real load success (not a 404)
-        }
-      });
-    }
-
-    const ringGeo = new THREE.TorusGeometry(7.8 * U, 0.6 * U, 12, 60);
-    this.geos.push(ringGeo);
-    const ringMat = new THREE.MeshBasicMaterial({
-      color: 0xdfeaff,
-      transparent: true,
-      opacity: 0.0,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false,
-    });
-    this.mats.push(ringMat);
-    const ring = new THREE.Mesh(ringGeo, ringMat);
-    ring.position.set(0, portalY, 0);
-    ring.frustumCulled = false;
-    this.group.add(ring);
-    this.rings.push(ring);
-
-    // Two counter-rotating glyph-rings around the aperture (the gateway "spins up").
-    for (let i = 0; i < 2; i++) {
-      const gg = new THREE.TorusGeometry((10 + i * 2.4) * U, 0.24 * U, 8, 50);
-      this.geos.push(gg);
-      const gm = new THREE.MeshBasicMaterial({
-        color: i === 0 ? 0xbfe0ff : 0xd8c7ff,
+    {
+      const arr = new Float32Array(WEB_LINES * 6);
+      for (let i = 0; i < WEB_LINES; i++) {
+        const th = i * GOLDEN_ANGLE;
+        const r0 = 6.2 * U;
+        const r1 = (7 + hash(i * 5 + 1) * 20) * U;
+        const el = (hash(i * 7 + 2) - 0.5) * 1.2; // slight vertical fan
+        arr[i * 6] = Math.cos(th) * r0;
+        arr[i * 6 + 1] = voidY + Math.sin(th) * r0 * 0.4;
+        arr[i * 6 + 2] = -0.3 * U;
+        arr[i * 6 + 3] = Math.cos(th) * r1;
+        arr[i * 6 + 4] = voidY + Math.sin(th) * r1 * 0.4 + el * r1 * 0.3;
+        arr[i * 6 + 5] = -0.3 * U - hash(i * 9 + 3) * 6 * U;
+      }
+      const webGeo = new THREE.BufferGeometry();
+      webGeo.setAttribute('position', new THREE.BufferAttribute(arr, 3));
+      this.geos.push(webGeo);
+      this.webMat = new THREE.LineBasicMaterial({
+        color: 0x9a9a9a,
         transparent: true,
         opacity: 0.0,
         blending: THREE.AdditiveBlending,
         depthWrite: false,
       });
-      this.mats.push(gm);
-      const gr = new THREE.Mesh(gg, gm);
-      gr.position.set(0, portalY, 0);
-      gr.rotation.x = i === 0 ? 0.5 : -0.5;
-      gr.frustumCulled = false;
-      this.group.add(gr);
-      this.rings.push(gr);
+      this.mats.push(this.webMat);
+      this.web = new THREE.LineSegments(webGeo, this.webMat);
+      this.web.frustumCulled = false;
+      this.group.add(this.web);
     }
 
-    // A soft outer halo so the whole gateway glows cold-white.
-    const haloGeo = new THREE.SphereGeometry(13 * U, 20, 20);
-    this.geos.push(haloGeo);
-    this.haloMat = new THREE.MeshBasicMaterial({
-      color: 0x9fc4ff,
-      transparent: true,
-      opacity: 0.0,
-      side: THREE.BackSide,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false,
+    // ── 7. MAZE PLINTH — a ring of axis-aligned cubic blocks (img5); direct children ⇒ nodes ≥ 25. ──
+    const mazeGeo = new THREE.BoxGeometry(1, 1, 1);
+    this.geos.push(mazeGeo);
+    this.mazeMat = new THREE.MeshStandardMaterial({
+      color: 0xdedede,
+      roughness: 0.9,
+      metalness: 0.05,
+      emissive: 0x0a0a0a,
+      emissiveIntensity: 0.2,
     });
-    this.mats.push(this.haloMat);
-    const halo = new THREE.Mesh(haloGeo, this.haloMat);
-    halo.position.set(0, portalY, 0);
-    halo.frustumCulled = false;
-    this.group.add(halo);
-
-    // ── 7. STANDING STONES — a ring of black obelisk megaliths framing the crystal. ──
-    // These are DIRECT children of the group (also the reason visualNodes ≥ 25 by construction).
-    const stoneGeo = new THREE.CylinderGeometry(1.2 * U, 2.2 * U, 22 * U, 5, 1);
-    this.geos.push(stoneGeo);
-    this.stoneMat = new THREE.MeshStandardMaterial({
-      color: 0x090a11,
-      roughness: 0.85,
-      metalness: 0.35,
-      emissive: 0x161d33,
-      emissiveIntensity: 0.25,
-    });
-    this.mats.push(this.stoneMat);
-    for (let i = 0; i < STONES; i++) {
-      const th = i * GOLDEN_ANGLE + hash(i * 5 + 1) * 0.4;
-      const rad = (30 + hash(i * 3 + 2) * 8) * U;
-      const st = new THREE.Mesh(stoneGeo, this.stoneMat);
-      st.position.set(Math.cos(th) * rad, (7 + hash(i * 7 + 3) * 6) * U, Math.sin(th) * rad);
-      st.rotation.y = hash(i * 11 + 4) * Math.PI * 2;
-      st.scale.y = 0.7 + hash(i * 13 + 5) * 0.9;
-      st.frustumCulled = false;
-      this.group.add(st);
-      this.stones.push(st);
+    this.mats.push(this.mazeMat);
+    for (let i = 0; i < MAZE_BLOCKS; i++) {
+      const th = (i / MAZE_BLOCKS) * Math.PI * 2 + hash(i * 5 + 1) * 0.15;
+      const rad = (26 + hash(i * 3 + 2) * 12) * U;
+      const bw = (3 + hash(i * 7 + 3) * 4) * U;
+      const bd = (3 + hash(i * 11 + 4) * 4) * U;
+      const bh = (6 + hash(i * 13 + 5) * 18) * U;
+      const blk = new THREE.Mesh(mazeGeo, this.mazeMat);
+      blk.position.set(Math.cos(th) * rad, bh / 2, Math.sin(th) * rad);
+      blk.scale.set(bw, bh, bd); // axis-aligned — orthogonal maze, no tilt
+      blk.frustumCulled = false;
+      this.group.add(blk);
+      this.mazeBlocks.push(blk);
     }
 
-    // ── 8. CORAL GROWTH — a deterministic L-system dendrite whose extent reads population/crowding. ──
+    // ── 9. CORAL DENDRITE — tiny cubes threading the maze toward the void; extent = crowding. ──
     this.coralMat = new THREE.MeshBasicMaterial({
-      color: 0xeef4ff,
+      color: 0xffffff,
       transparent: true,
-      opacity: 0.85,
+      opacity: 0.9,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
       fog: false,
     });
     this.mats.push(this.coralMat);
-    const coralNodeGeo = new THREE.OctahedronGeometry(0.55 * U, 0);
-    this.geos.push(coralNodeGeo);
-    this.coral = new THREE.InstancedMesh(coralNodeGeo, this.coralMat, CORAL_CAP);
+    const coralGeo = new THREE.BoxGeometry(0.6 * U, 0.6 * U, 0.6 * U); // cubic vocabulary
+    this.geos.push(coralGeo);
+    this.coral = new THREE.InstancedMesh(coralGeo, this.coralMat, CORAL_CAP);
     this.coral.frustumCulled = false;
     this.buildCoral(this.coral);
     this.coral.count = 0; // nothing colonized until crowding rises
     this.group.add(this.coral);
     this.instancedMeshes.push(this.coral);
 
-    // Wrap the crystal in the colossal greebled megastructure + data-rain curtain.
+    // The brutalist cube base (img4 megastructure), recoloured pure grey.
     this.greeble = new TempleGreeble(this.group, ARENA_MID);
 
     this.group.visible = false;
@@ -664,11 +590,9 @@ export class MonolithTemple {
     if (silent) this.age = RISE_TIME;
   }
 
-  /** Build the nested wireframe box-lattice (concentric cubes + radial struts) centred at CORE_Y. */
-  private buildCageGeo(): THREE.BufferGeometry {
+  /** Build the voxel lattice: nested wireframe cube shells + radial struts + an inner cell-grid. */
+  private buildLatticeGeo(): THREE.BufferGeometry {
     const U = ARENA_MID;
-    const shells = 4;
-    // Unit-cube corners + 12 edges.
     const C: ReadonlyArray<readonly [number, number, number]> = [
       [-1, -1, -1],
       [1, -1, -1],
@@ -693,18 +617,13 @@ export class MonolithTemple {
       [2, 6],
       [3, 7],
     ];
-    const scaleAt = (s: number): number => (8 + s * 7) * U;
-    const segCount = shells * E.length + (shells - 1) * C.length;
-    const arr = new Float32Array(segCount * 6);
-    let o = 0;
+    const pts: number[] = [];
     const line = (ax: number, ay: number, az: number, bx: number, by: number, bz: number): void => {
-      arr[o++] = ax;
-      arr[o++] = ay + CORE_Y;
-      arr[o++] = az;
-      arr[o++] = bx;
-      arr[o++] = by + CORE_Y;
-      arr[o++] = bz;
+      pts.push(ax, ay + CORE_Y, az, bx, by + CORE_Y, bz);
     };
+    // Nested cube shells.
+    const shells = 5;
+    const scaleAt = (s: number): number => (7 + s * 6) * U;
     for (let s = 0; s < shells; s++) {
       const sc = scaleAt(s);
       for (const [i, j] of E) {
@@ -713,6 +632,7 @@ export class MonolithTemple {
         line(a[0] * sc, a[1] * sc, a[2] * sc, b[0] * sc, b[1] * sc, b[2] * sc);
       }
     }
+    // Radial struts connecting shell corners outward.
     for (let s = 0; s < shells - 1; s++) {
       const s0 = scaleAt(s);
       const s1 = scaleAt(s + 1);
@@ -720,9 +640,22 @@ export class MonolithTemple {
         line(c[0] * s0, c[1] * s0, c[2] * s0, c[0] * s1, c[1] * s1, c[2] * s1);
       }
     }
-    const g = new THREE.BufferGeometry();
-    g.setAttribute('position', new THREE.BufferAttribute(arr, 3));
-    return g;
+    // Inner cell-grid (voxel cells) inside shell 0 — the cubic spacetime reading of img2.
+    const g = 4;
+    const half = scaleAt(0);
+    const step = (2 * half) / g;
+    for (let a = 0; a <= g; a++) {
+      for (let b = 0; b <= g; b++) {
+        const pa = -half + a * step;
+        const pb = -half + b * step;
+        line(pa, pb, -half, pa, pb, half); // z-runs
+        line(pa, -half, pb, pa, half, pb); // y-runs
+        line(-half, pa, pb, half, pa, pb); // x-runs
+      }
+    }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(Float32Array.from(pts), 3));
+    return geo;
   }
 
   /** Scatter an instanced mesh across a Fibonacci sphere shell centred on the core (local space). */
@@ -732,6 +665,7 @@ export class MonolithTemple {
     rMin: number,
     rMax: number,
     salt: number,
+    axisAligned: boolean,
   ): void {
     const U = ARENA_MID;
     const m = new THREE.Matrix4();
@@ -745,9 +679,14 @@ export class MonolithTemple {
       const th = i * GOLDEN_ANGLE;
       const rad = (rMin + hash(i * 3 + salt) * (rMax - rMin)) * U;
       pos.set(Math.cos(th) * r * rad, y * rad, Math.sin(th) * r * rad);
-      const size = (0.7 + hash(i * 7 + salt + 1) * 2.4) * U;
+      const size = (0.9 + hash(i * 7 + salt + 1) * 3.2) * U;
       scl.setScalar(size);
-      e.set(hash(i + salt) * 6.28, hash(i * 2 + salt) * 6.28, hash(i * 4 + salt) * 6.28);
+      if (axisAligned) {
+        // Cubes read the cubic lattice — keep them axis-aligned (only 90° yaw steps).
+        e.set(0, (Math.floor(hash(i * 2 + salt) * 4) * Math.PI) / 2, 0);
+      } else {
+        e.set(hash(i + salt) * 6.28, hash(i * 2 + salt) * 6.28, hash(i * 4 + salt) * 6.28);
+      }
       q.setFromEuler(e);
       m.compose(pos, q, scl);
       mesh.setMatrixAt(i, m);
@@ -763,27 +702,26 @@ export class MonolithTemple {
     const pos = new THREE.Vector3();
     const scl = new THREE.Vector3();
     let n = 0;
-    // A handful of seeds around the plinth base; each grows an upward branching filament. Generation
-    // order (ring by ring) keeps early instances near the base so revealing more reads as GROWTH.
+    // Seeds around the maze ring; each grows a branching filament that CLIMBS + threads toward the
+    // void at the centre. Generation order (ring by ring) keeps early instances near the base.
     const seeds = 6;
     const perSeed = Math.floor(CORAL_CAP / seeds);
     for (let ring = 0; ring < perSeed && n < CORAL_CAP; ring++) {
       for (let s = 0; s < seeds && n < CORAL_CAP; s++) {
-        const th0 = (s / seeds) * Math.PI * 2 + hash(s * 7 + 1) * 0.5;
-        const baseR = (26 + hash(s * 3 + 2) * 6) * U;
-        // Climb + spiral outward as the ring index rises; jitter deterministically per node.
-        const climb = ring * 0.7 * U;
-        const spiral = th0 + ring * 0.22 + (hash(n * 5 + 3) - 0.5) * 0.3;
-        const rr = baseR + ring * 0.5 * U + (hash(n * 9 + 4) - 0.5) * 2 * U;
+        const th0 = (s / seeds) * Math.PI * 2 + hash(s * 7 + 1) * 0.4;
+        const baseR = (28 + hash(s * 3 + 2) * 8) * U;
+        const frac = ring / perSeed; // 0 at base ring → 1 near the void
+        const rr = baseR * (1 - frac * 0.7) + (hash(n * 9 + 4) - 0.5) * 2 * U; // spiral inward
+        const spiral = th0 + ring * 0.24 + (hash(n * 5 + 3) - 0.5) * 0.3;
+        const climb = frac * 14 * U;
         pos.set(Math.cos(spiral) * rr, 1.5 * U + climb, Math.sin(spiral) * rr);
-        const size = 0.6 + hash(n * 11 + 5) * 0.7;
+        const size = 0.7 + hash(n * 11 + 5) * 0.8;
         scl.setScalar(size);
         m.compose(pos, q, scl);
         mesh.setMatrixAt(n, m);
         n++;
       }
     }
-    // Fill any remainder (rounding) so every instance has a finite matrix.
     for (; n < CORAL_CAP; n++) {
       pos.set(0, 1.5 * U, 0);
       scl.setScalar(0.001);
@@ -794,10 +732,10 @@ export class MonolithTemple {
   }
 
   /**
-   * Animate the megalith: ease it into place over {@link RISE_TIME}, then ignite the caged star,
-   * bloom the ray-burst, breathe the box-lattice, orbit the shell, pulse the mote halo, grow the
-   * coral with crowding, and spin the aperture glyph-rings. No-op while hidden. Pure `t`/`dt` math
-   * (no rng). Hot path O(1); only the lattice warp iterates the (small, fixed) cage vertex buffer.
+   * Animate the megalith: ease it into place over {@link RISE_TIME}, then ignite the caged point,
+   * bloom the ray-burst, breathe the lattice + shell, precess the suspended primitives, grow the
+   * coral with crowding, and open the void. No-op while hidden. Pure `t`/`dt` math (no rng). Hot path
+   * O(1); only the lattice warp iterates the (small, fixed) lattice vertex buffer.
    */
   update(dt: number, t: number): void {
     if (!this._revealed) return;
@@ -819,85 +757,66 @@ export class MonolithTemple {
     this.dispersion = clamp(this.entropy, 0, 1);
     this.coralExtent = clamp(ease * this.crowding, 0, 1);
 
-    // ── CRYSTAL CORE — lock the SDF centre to the mesh's live world position + drive ignition. ──
+    // ── MENGER CORE — lock the SDF centre to the mesh's live world position + drive ignition. ──
     this.centerVec.set(
       this.group.position.x,
       this.group.position.y + CORE_Y,
       this.group.position.z,
     );
-    (this.crystalMat.uniforms.uCenter!.value as THREE.Vector3).copy(this.centerVec);
-    this.crystalMat.uniforms.uTime!.value = safeT;
-    this.crystalMat.uniforms.uIgnition!.value = this.ignition;
-    this.crystalMat.uniforms.uDispersion!.value = this.dispersion;
-    this.crystalMat.uniforms.uReactivity!.value = this.reactivity;
+    (this.coreMat.uniforms.uCenter!.value as THREE.Vector3).copy(this.centerVec);
+    this.coreMat.uniforms.uTime!.value = safeT;
+    this.coreMat.uniforms.uIgnition!.value = this.ignition;
+    this.coreMat.uniforms.uDispersion!.value = this.dispersion;
+    this.coreMat.uniforms.uReactivity!.value = this.reactivity;
 
-    // ── RAY-BURST — bloom the shard glow with ignition; the whole starburst spins slowly. ──
-    this.burstMat.opacity = clamp((0.05 + 0.55 * this.ignition + 0.2 * pulse) * ease, 0, 1);
-    this.rayBurst.rotation.y = safeT * (0.04 + this.chaos * 0.12);
-    this.rayBurst.rotation.x = Math.sin(safeT * 0.17) * 0.25;
+    // ── RAY-BURST — bloom the filament glow with ignition; the whole burst spins slowly. ──
+    this.burstMat.opacity = clamp((0.04 + 0.6 * this.ignition + 0.18 * pulse) * ease, 0, 1);
+    this.burst.rotation.y = safeT * (0.03 + this.chaos * 0.1);
+    this.burst.rotation.x = Math.sin(safeT * 0.15) * 0.2;
 
-    // ── PRISMATIC APERTURE — colour-cycle + open with reactivity. ──
-    this.portalColor.copy(PORTAL_A).lerp(PORTAL_B, pulse);
-    const u = this.portalMat.uniforms;
-    (u.uColor!.value as THREE.Vector3).set(
-      this.portalColor.r,
-      this.portalColor.g,
-      this.portalColor.b,
-    );
-    (u.uOpacity!.value as number) = (0.34 + pulse * 0.22 + this.reactivity * 0.28) * ease;
-    (u.uTime!.value as number) = safeT;
-    (u.uReactivity!.value as number) = this.reactivity;
-    (u.uDispersion!.value as number) = this.dispersion;
+    // ── GEODESIC SHELL — breathe radius with shimmer; slow counter-rotation. ──
+    this.shellMat.opacity = (0.12 + this.shimmer * 0.5) * ease;
+    this.shell.scale.setScalar(0.9 + this.shimmer * 0.2);
+    this.shell.rotation.y = -safeT * (0.05 + this.reactivity * 0.12);
+    this.shell.rotation.z = safeT * 0.03;
 
-    this.haloMat.opacity = (0.08 + pulse * 0.1 + this.reactivity * 0.18) * ease;
-    this.shadowMat.opacity = Math.min(0.94, 0.34 + this.shadow * 0.58);
-    this.shadowCore.scale.setScalar(0.88 + ease * 0.28 + this.shadow * 0.44);
-    this.singularityMat.opacity = (0.24 + this.shimmer * 0.5) * ease;
-    this.singularityMat.color.setHSL(0.6 + this.dispersion * 0.06, 0.85, 0.4 + this.ignition * 0.3);
-    this.singularityRing.rotation.z = -safeT * (0.32 + this.reactivity * 0.9);
-    this.singularityRing.rotation.x = Math.sin(safeT * 0.31) * 0.35;
-    this.singularityRing.scale.setScalar(0.84 + this.shadow * 0.35);
+    // ── VOXEL LATTICE — breathe with reactivity (warp) + fade in with the rise. ──
+    this.warpLattice(safeT, ease);
 
-    for (let i = 0; i < this.rings.length; i++) {
-      const r = this.rings[i];
-      if (!r) continue;
-      r.rotation.z += (i % 2 === 0 ? 0.012 : -0.018) * (0.5 + pulse + this.reactivity);
-      const m = r.material as THREE.MeshBasicMaterial;
-      m.opacity = (0.4 + pulse * 0.22 + this.reactivity * 0.28) * ease;
-    }
+    // ── SUSPENDED PRIMITIVES — slow precession; fade in; the cubes catch a faint light. ──
+    this.orbitGroup.rotation.y = safeT * (0.025 + this.chaos * 0.04);
+    this.orbitGroup.rotation.x = Math.sin(safeT * 0.09) * 0.1;
+    this.suspCubeMat.opacity = (0.55 + this.shimmer * 0.3) * ease;
+    this.suspCubeMat.emissiveIntensity = 0.05 + this.ignition * 0.35;
+    this.suspSphereMat.opacity = (0.12 + this.shimmer * 0.3) * ease;
 
-    // ── ORBIT SHELL — slow precession; fade in with the rise; kindle the sphere emissive. ──
-    this.orbitGroup.rotation.y = safeT * (0.03 + this.chaos * 0.05);
-    this.orbitGroup.rotation.x = Math.sin(safeT * 0.11) * 0.12;
-    this.orbitCubeMat.opacity = (0.1 + this.shimmer * 0.35) * ease;
-    this.orbitSphereMat.opacity = (0.35 + this.shimmer * 0.4) * ease;
-    this.orbitSphereMat.emissiveIntensity = 0.15 + this.ignition * 0.7;
+    // ── STARFIELD — twinkle with shimmer; drift slowly. ──
+    this.starMat.opacity = (0.2 + this.shimmer * 0.5) * ease;
+    this.stars.rotation.y = safeT * 0.006;
 
-    // ── MOTE HALO — the spark-sphere breathes with shimmer. ──
-    this.moteMat.opacity = (0.15 + this.shimmer * 0.6) * ease;
-    this.moteMat.size = (0.4 + this.shimmer * 0.6) * ARENA_MID;
-    this.motes.rotation.y = -safeT * (0.05 + this.reactivity * 0.1);
+    // ── VOID THROAT — open the sink + thin bright rim + fan the filament web. ──
+    this.voidMat.opacity = Math.min(0.96, 0.4 + this.shadow * 0.56);
+    this.voidCore.scale.setScalar(0.85 + ease * 0.3 + this.shadow * 0.4);
+    this.rimMat.opacity = (0.35 + this.shimmer * 0.5) * ease;
+    this.rim.rotation.z = safeT * (0.2 + this.reactivity * 0.6);
+    this.web.rotation.z = -safeT * (0.04 + this.reactivity * 0.08);
+    this.webMat.opacity = (0.08 + this.shimmer * 0.32) * ease;
 
-    // ── STANDING STONES — kindle with reactivity; subtle sway. ──
-    for (let i = 0; i < this.stones.length; i++) {
-      const st = this.stones[i]!;
-      st.rotation.z = Math.sin(safeT * 0.2 + i) * this.reactivity * 0.05;
-    }
-    this.stoneMat.emissiveIntensity = 0.2 + this.reactivity * 0.8;
+    // ── MAZE PLINTH — kindle with reactivity. ──
+    this.mazeMat.emissiveIntensity = 0.12 + this.reactivity * 0.5;
 
-    // ── CORAL GROWTH — reveal more of the dendrite as population/crowding climbs (real coupling). ──
+    // ── CORAL DENDRITE — reveal more as population/crowding climbs (real coupling). ──
     this.coral.count = Math.max(0, Math.min(CORAL_CAP, Math.floor(this.coralExtent * CORAL_CAP)));
     this.coralMat.opacity = 0.5 + this.shimmer * 0.4;
 
-    this.warpCage(safeT, ease);
     this.greeble.update(safeT, this.reactivity, this.chaos);
   }
 
-  /** Warp the box-lattice in-place; fixed vertex count, no allocations. */
-  private warpCage(t: number, ease: number): void {
-    const pos = this.cageGeo.getAttribute('position') as THREE.BufferAttribute;
+  /** Warp the voxel lattice in-place; fixed vertex count, no allocations. */
+  private warpLattice(t: number, ease: number): void {
+    const pos = this.latticeGeo.getAttribute('position') as THREE.BufferAttribute;
     const arr = pos.array as Float32Array;
-    const base = this.cageBase;
+    const base = this.latticeBase;
     const amp = this.cageWarp;
     for (let i = 0; i < arr.length; i += 3) {
       const bx = base[i] ?? 0;
@@ -907,16 +826,17 @@ export class MonolithTemple {
         Math.sin(bx * 0.024 + t * (0.9 + this.chaos)) +
         Math.sin(bz * 0.031 - t * (0.7 + this.entropy)) +
         0.5 * Math.sin((bx + by + bz) * 0.012 + t * 1.9);
-      const squeeze = 1 + ease * this.reactivity * 0.075 * wave;
+      const squeeze = 1 + ease * this.reactivity * 0.06 * wave;
       arr[i] = bx * squeeze;
-      arr[i + 1] = by + wave * amp;
-      arr[i + 2] = bz * (1 - ease * this.reactivity * 0.055 * wave);
+      arr[i + 1] = by + wave * amp * 0.5;
+      arr[i + 2] = bz * (1 - ease * this.reactivity * 0.045 * wave);
     }
     pos.needsUpdate = true;
-    this.cage.rotation.y = t * (0.02 + this.chaos * 0.08);
-    this.cage.rotation.x = Math.sin(t * 0.13) * (0.08 + this.entropy * 0.18);
-    this.cageMat.opacity = (0.12 + this.shimmer * 0.36) * ease;
-    this.cageMat.color.setHSL(0.58 + this.dispersion * 0.14, 0.7, 0.55 + this.shimmer * 0.2);
+    this.lattice.rotation.y = t * (0.015 + this.chaos * 0.05);
+    this.latticeMat.opacity = (0.14 + this.shimmer * 0.32) * ease;
+    // Monochrome: brightness tracks shimmer, never hue.
+    const g = 0.55 + this.shimmer * 0.35;
+    this.latticeMat.color.setRGB(g, g, g);
   }
 
   /** Read-only debug/test snapshot of the visual state. */
@@ -946,7 +866,7 @@ export class MonolithTemple {
   }
 }
 
-/** Preferred name for the redesigned end-state; `MonolithTemple` is kept for the existing wiring/tests. */
+/** Preferred name for the rebuilt end-state; `MonolithTemple` is kept for the existing wiring/tests. */
 export const MonolithMegalith = MonolithTemple;
 
 function norm01(v: number): number {

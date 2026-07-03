@@ -143,7 +143,7 @@ export class TempleGreeble {
       color: 0xffffff, // modulated per-instance via instanceColor
       roughness: 0.72,
       metalness: 0.35,
-      emissive: 0x0a0e1a,
+      emissive: 0x0a0a0a, // strict monochrome (rebuild V124) — grey, no blue tint
       emissiveIntensity: 0.3,
     });
     this.greeble = new THREE.InstancedMesh(geoBox, this.greebleMat, greebleTotal);
@@ -157,14 +157,14 @@ export class TempleGreeble {
     const col = new THREE.Color();
     let gi = 0;
 
-    // Macro masses — dark blue-grey brutalist stone.
+    // Macro masses — dark brutalist stone in strict MONOCHROME (rebuild V124), zero hue.
     for (const b of macros) {
       pos.set(b.cx, b.cy, b.cz);
       scl.set(b.w, b.h, b.d);
       m.compose(pos, q, scl); // q identity — axis-aligned masses
       this.greeble.setMatrixAt(gi, m);
       const lit = 0.18 + hash(gi * 7 + 3) * 0.12;
-      col.setHSL(0.6 + hash(gi) * 0.06, 0.25, lit);
+      col.setRGB(lit, lit, lit);
       this.greeble.setColorAt(gi, col);
       gi++;
     }
@@ -195,11 +195,11 @@ export class TempleGreeble {
       q.setFromEuler(e);
       m.compose(pos, q, scl);
       this.greeble.setMatrixAt(gi, m);
-      // Mostly cold stone; a rare panel catches a pale SPECTRAL glint (hashed) — the austere key
-      // (redesign V123: the megalith is black-crystal-and-prismatic, no poisonous neon).
+      // Strict MONOCHROME (rebuild V124): a rare panel catches a brighter white glint, the rest is
+      // graded grey. Zero hue — the megalith is black / white / silver, nothing else.
       const accent = hash(i * 11 + 31) > 0.93;
-      if (accent) col.setHSL(0.58 + hash(i) * 0.1, 0.4, 0.68);
-      else col.setHSL(0.62 + hash(i * 2) * 0.06, 0.16, 0.13 + hash(i * 3) * 0.14);
+      const lit = accent ? 0.7 : 0.13 + hash(i * 3) * 0.15;
+      col.setRGB(lit, lit, lit);
       this.greeble.setColorAt(gi, col);
       q.identity();
       gi++;
@@ -254,11 +254,9 @@ export class TempleGreeble {
       this.strips.setMatrixAt(si, m);
       rain[si * 2] = hash(i * 9 + 79); // phase
       rain[si * 2 + 1] = 0.4 + hash(i * 10 + 83) * 1.3; // speed
-      // Cold prismatic palette: ice-white / steel / a pale violet whisper (hashed) — the redesign's
-      // austere data-rain (was neon cyan/magenta/amber; the megalith reads black-crystal + spectrum now).
-      const hsh = hash(i * 11 + 89);
-      const hue = hsh < 0.55 ? 0.58 : hsh < 0.85 ? 0.62 : 0.74;
-      col.setHSL(hue, hsh < 0.85 ? 0.25 : 0.5, 0.72);
+      // Data-rain in strict MONOCHROME (rebuild V124): graded white / silver, zero hue.
+      const gl = 0.6 + hash(i * 11 + 89) * 0.4;
+      col.setRGB(gl, gl, gl);
       scol[si * 3] = col.r;
       scol[si * 3 + 1] = col.g;
       scol[si * 3 + 2] = col.b;

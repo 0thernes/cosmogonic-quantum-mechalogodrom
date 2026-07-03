@@ -11,6 +11,37 @@ dated / historical / "superseded snapshot" copies (per the binding "Living docs,
 
 ---
 
+## 2026-07-02 — The MONOLITH MEGALITH GEOMETRY rebuild (V124): cube · sphere · lattice · void
+
+The V123 pass (below) read the six reference images as a _colour scheme_ and barely touched the
+**geometry** — and worse, tinted the family cyan/violet. Owner (correctly) called it: the images are a
+GEOMETRY, and monochrome. This rebuild demolishes the shapes and rebuilds them from the images'
+actual structural vocabulary — **CUBE + SPHERE + wireframe LATTICE + radial LINE‑burst + woven
+GEODESIC shell + orthogonal MAZE + black VOID** — in strict grayscale (zero hue). Doc rewritten
+geometry‑first: [docs/MONOLITH-MEGALITH-ART-DIRECTION.md](./MONOLITH-MEGALITH-ART-DIRECTION.md).
+
+- **Core is now a raymarched MENGER SPONGE** (IQ SDF — a cube recursively carved with cubic cavities),
+  not a smooth octahedron gem: the exact nested‑cube geometry of imgs 1/2/4.
+- **The old "cage" is now a real VOXEL LATTICE** — nested wireframe cube shells + radial struts + an
+  inner 4×4×4 cell‑grid (img 2's cubic spacetime). It warps/breathes (keeps `cageWarp`).
+- **Ray‑burst is now dead‑straight radial LINE filaments** (LineSegments), not cones (img 1).
+- **New GEODESIC SHELL** — 16 great‑circle arcs woven into a sphere caging the cube (img 3,
+  cube‑in‑sphere). New STARFIELD point cloud through the lattice (img 2).
+- **Suspended primitives are CUBES (axis‑aligned) + tessellated wireframe SPHERES** (imgs 2/4), not
+  octahedra/icosahedra‑as‑gems.
+- **Standing‑stone cylinders → orthogonal cubic MAZE BLOCKS** (BoxGeometry, no tilt — img 5).
+- **The glowing hell/prismatic portal → a black VOID THROAT** — a void sphere + thin bright rim + a
+  fan of filament‑web lines (img 5), an absence not a disc.
+- **Coral dendrite is now tiny CUBES** threading the maze toward the void (cubic vocabulary); still a
+  literal `count = ⌊crowding·cap⌋` population readout.
+- **Strict MONOCHROME purge:** every `setHSL(hue,…)` in `monolith-temple`, `temple-greeble`, and
+  `floating-monoliths` replaced with grayscale `setRGB(g,g,g)`; blue/violet emissives + the blue
+  scan‑beam neutralised to grey. The only near‑colour left is a razor, near‑symmetric chromatic edge
+  split on the Menger crystal (physically real prism fire, kept white‑subtle).
+- **Contract preserved:** same public surface, determinism‑neutral (no rng/`Date.now`), `visualNodes
+≥ 25` (24 maze blocks + hero meshes), the raymarch `uTime` regression still green (Menger material
+  carries the sole `uTime`+`uResolution`), storm > calm monotonicity intact, snapshot unchanged.
+
 ## 2026-07-02 — The MONOLITH MEGALITH redesign (V123): hot‑hellish → cold‑sublime‑prismatic
 
 Total re‑architecture of the level‑100 ascension end‑state (`src/sim/monolith-temple.ts`,

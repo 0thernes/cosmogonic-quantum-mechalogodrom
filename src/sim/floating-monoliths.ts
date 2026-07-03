@@ -90,20 +90,20 @@ export class FloatingMonoliths {
       color: 0xffffff, // per-instance via instanceColor
       roughness: 0.74,
       metalness: 0.34,
-      emissive: 0x10131f,
+      emissive: 0x101010, // strict monochrome (rebuild V124) — grey, no blue/violet tint
       emissiveIntensity: 0.3,
     });
     this.coreMat = new THREE.MeshStandardMaterial({
-      color: 0x0c0e16,
+      color: 0x0d0d0d,
       roughness: 0.55,
       metalness: 0.5,
-      emissive: 0x120a1e,
+      emissive: 0x111111,
       emissiveIntensity: 0.45,
     });
     // V109: energy beam — thin additive cylinder from each monolith to ground (scanning/energizing)
     this.beamGeo = new THREE.CylinderGeometry(0.12, 0.06, 1, 6, 1, true);
     this.beamMat = new THREE.MeshBasicMaterial({
-      color: 0x4f8cff,
+      color: 0xb0b0b0, // strict monochrome (rebuild V124) — silver beam, no blue
       transparent: true,
       opacity: 0.18,
       blending: THREE.AdditiveBlending,
@@ -181,11 +181,11 @@ export class FloatingMonoliths {
           q.setFromEuler(e);
           m.compose(pos, q, scl);
           panelMesh.setMatrixAt(p, m);
-          // Cold prismatic accents (redesign V123): a rare panel glints pale SPECTRAL silver over
-          // dark steel — the drifting megaliths match the black-crystal Monolith Megalith, no neon.
+          // Strict MONOCHROME (rebuild V124): a rare panel glints brighter silver over dark grey —
+          // the drifting megaliths match the black/white/silver Monolith Megalith, zero hue.
           const accent = hash(salt * 7 + 31) > 0.9;
-          if (accent) col.setHSL(0.58 + hash(salt) * 0.12, 0.45, 0.66);
-          else col.setHSL(0.62 + hash(salt * 2) * 0.08, 0.16, 0.12 + hash(salt * 3) * 0.14);
+          const lit = accent ? 0.64 : 0.12 + hash(salt * 3) * 0.14;
+          col.setRGB(lit, lit, lit);
           panelMesh.setColorAt(p, col);
           panels++;
         }
