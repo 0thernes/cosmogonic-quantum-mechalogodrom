@@ -159,6 +159,7 @@ import { SuperEvolution } from './sim/super-evolution';
 import { MonolithTemple } from './sim/monolith-temple';
 import { PortalDeath } from './sim/portal-death';
 import { MechaBlaze } from './sim/mecha-blaze';
+import { MechaFirePillar } from './sim/mecha-fire-pillar';
 import { PortalDeathFauna } from './sim/portal-death-fauna';
 import { PortalImmuneBounce } from './sim/portal-immune-bounce';
 import { CollisionBounce, type BounceCollider } from './sim/collision-bounce';
@@ -368,6 +369,8 @@ export class World {
   private readonly portalDeath: PortalDeath;
   /** USER: the Mechalogodrom INCINERATES organisms that rise into it — a fiery blaze + 5s respawn. */
   private readonly mechaBlaze: MechaBlaze;
+  /** V128: the VISIBLE fire-column so the mecha's invisible ember-kill hazard reads as a threat. */
+  private readonly mechaFirePillar: MechaFirePillar;
   /** USER: the Portal also kills the big FAUNA — shoggoths/puppeteers/titans/leviathans (outside the swarm). */
   private readonly portalDeathFauna: PortalDeathFauna;
   /** USER: the IMMUNE Pantheon (super creatures) don't die — they RICOCHET off the portal in white sparks. */
@@ -972,6 +975,7 @@ export class World {
     this.monolithTemple = new MonolithTemple(ctx.scene);
     this.portalDeath = new PortalDeath(ctx); // USER: the ascension portal kills what touches it
     this.mechaBlaze = new MechaBlaze(ctx); // USER: the mecha incinerates organisms that fly into it
+    this.mechaFirePillar = new MechaFirePillar(ctx.scene); // V128: make that death cone VISIBLE
     this.portalDeathFauna = new PortalDeathFauna(ctx); // USER: …and the big fauna too (non-swarm rosters)
     this.portalImmuneBounce = new PortalImmuneBounce(ctx); // USER: the immune Pantheon bounces off in sparks
     this.portalShield = new PortalShield(ctx); // USER: the god-tier Super/APEX bodies shimmer at the void
@@ -1232,6 +1236,7 @@ export class World {
     this.monolithTemple.dispose();
     this.portalDeath.dispose();
     this.mechaBlaze.dispose();
+    this.mechaFirePillar.dispose(); // V128: free the visible fire-column shader + geometry
     this.portalDeathFauna.dispose();
     this.portalImmuneBounce.dispose();
     this.portalShield.dispose();
@@ -1753,6 +1758,10 @@ export class World {
     // Creature / APEX / Pantheon (separate bodies) are immune to the fire, same as the portal. The
     // burning mind is MEASURED (Thaler gedanken-death) before it's disposed, like the portal + hunt.
     this.mechaBlaze.update(this.entities, t, dt, (e, i) => this.gedankenOnDeath(e, i, t));
+    // V128: drive the VISIBLE fire-column (matches the blaze's burn cone) from the god's agitation, so
+    // the death zone reads as a roaring hazard between kills, not just an invisible sphere.
+    this.mechaFirePillar.setIntensity(0.3 + 0.6 * (this.state.chaos / CHAOS_MAX));
+    this.mechaFirePillar.update(t);
     // USER V126: the Portal also kills the big FAUNA — shoggoths/puppeteers/titans/leviathans (which live
     // outside `entities`). They explode + re-enter ELSEWHERE 5s later; the 100 Pantheon + Super Creature /
     // APEX / Mechalogodrom are IMMUNE (they never register here — their bounce is a separate pass).
