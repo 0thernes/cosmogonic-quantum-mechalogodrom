@@ -254,6 +254,8 @@ function renderDashboard(doc: Document, list: unknown[]): void {
   let dreamVividness = 0.0;
   let dreamLucid = 0.0;
   let dreamNovelty = 0.0;
+  let gedankenDevours = 0;
+  let dreamTransfer = 0.0;
   let totalWealth = 0;
   let giniVal = 0.0;
   let dominantCurrency = 'AURUM';
@@ -301,6 +303,8 @@ function renderDashboard(doc: Document, list: unknown[]): void {
       dreamVividness = ged.meanVividness ?? 0.0;
       dreamLucid = ged.meanLucidBand ?? 0.0;
       dreamNovelty = ged.meanNoveltyPeak ?? 0.0;
+      gedankenDevours = ged.devours ?? 0;
+      dreamTransfer = ged.meanTransfer ?? 0.0;
     }
 
     // 4. [SUB] Substrate Material Ledger
@@ -351,9 +355,13 @@ function renderDashboard(doc: Document, list: unknown[]): void {
       last: `Spikes: ${spikeRate}Hz | Sent: ${(sentience * 100).toFixed(1)}%`,
       // Thaler death-dream: minds measured as they die on any vector — dream = final confabulation
       // vividness, lucid = the moderate-damage band where hallucination peaks, novel = peak novelty.
+      // Devour: a devoured mind's policy imprints into a survivor — ⇌N with mean transfer magnitude.
       sub:
         gedankenDeaths > 0
-          ? `†${gedankenDeaths} died · dream ${(dreamVividness * 100).toFixed(0)}% · lucid ${(dreamLucid * 100).toFixed(0)}% · novel ${(dreamNovelty * 100).toFixed(0)}%`
+          ? `†${gedankenDeaths} died · dream ${(dreamVividness * 100).toFixed(0)}% · lucid ${(dreamLucid * 100).toFixed(0)}% · novel ${(dreamNovelty * 100).toFixed(0)}%` +
+            (gedankenDevours > 0
+              ? ` · ⇌${gedankenDevours} imprint ${dreamTransfer.toFixed(2)}`
+              : '')
           : '',
       labelClass: 'cqm-aud-scope-neuro',
     },

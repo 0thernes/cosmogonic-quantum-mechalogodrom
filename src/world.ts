@@ -52,7 +52,7 @@ import { createPhyla } from './sim/phyla';
 import { EntityManager } from './sim/entities';
 import { growthTargetAt } from './sim/growth-ramp';
 import { EntityBrainField } from './sim/entity-brain';
-import { gedankenDeath, GedankenLedger } from './sim/gedanken-death';
+import { devour, gedankenDeath, GedankenLedger } from './sim/gedanken-death';
 import { TRAIT, TRAIT_GENES } from './sim/genome';
 import { InstancedEntityRenderer, type InstanceFrame } from './sim/instanced-entities';
 import { ShoggothSystem } from './sim/shoggoths';
@@ -188,6 +188,13 @@ const ALGO_AUTO_PERIOD = 2.5;
 
 /** V105: 101-glyph pantheon breeding is visual-only — no petri coupling until re-enabled. */
 const PANTHEON_BREEDING_LIVE = false;
+
+/** Devour transfer strength: fraction the surviving neighbour's brain moves toward the devoured mind. */
+const GEDANKEN_DEVOUR_ALPHA = 0.2;
+/** Max distance a devoured mind can imprint into a neighbour (world units) — beyond this it just dies. */
+const GEDANKEN_DEVOUR_R = 90;
+/** Bounded neighbour-search window over the entity list (keeps a mass die-off O(deaths·window)). */
+const GEDANKEN_DEVOUR_WINDOW = 64;
 
 /**
  * Derive the (i, j) pantheon-breeding pair for a given nonce, with the self-fertilization guard
@@ -525,8 +532,17 @@ export class World {
   /**
    * V127 (USER, Thaler): run the REAL "death of a gedanken creature" experiment on a dying organism at
    * genome slot `i` — hold its live senses fixed (mirroring EntityBrainField.think) and measure the
-   * confabulation as its 70-param policy dissolves; accumulate the evidence. Called by the portal maw AND
-   * the Super-Creature maw the frame BEFORE the being is disposed (its brain + senses are still intact).
+   * confabulation as its 70-param policy dissolves; accumulate the evidence. Called the frame BEFORE the
+   * being is disposed (brain + senses still intact) by ALL organism-death vectors: the portal maw, the
+   * Super-Creature hunt, the mecha blaze, and the dome-wide feeding.
+   *
+   * Then the DEVOUR half (USER: 'what happens when a creature consumes and devours another's neural
+   * network in the moments they are firing off'): the eaters here (fauna / apex / mecha) have no
+   * comparable 70-param brain to inherit into, so the devoured mind's firing policy does not simply
+   * vanish — a fraction IMPRINTS into its nearest surviving neighbour (a real Lamarckian weight-space
+   * interpolation via {@link devour}; panic/policy contagion at the instant of consumption). Deterministic
+   * (bounded pure-geometry neighbour search + fixed alpha, no rng) — a world-level effect that never
+   * touches the bare-EntityManager golden trace, same class as {@link EntityBrainField.perturbBrains}.
    */
   private gedankenOnDeath(e: Entity, i: number, t: number): void {
     const ud = e.userData;
@@ -542,6 +558,45 @@ export class World {
     s[4] = g[TRAIT.curiosity] ?? 0.5;
     s[5] = Math.sin(ud.ph + t * 0.6);
     this.gedankenLedger.recordDeath(gedankenDeath(g.subarray(TRAIT_GENES), s, i));
+    // DEVOUR: imprint a fraction of the dying policy into the nearest surviving neighbour.
+    const j = this.nearestLivingNeighbour(e, i);
+    if (j >= 0) {
+      const predator = this.entityBrains.genomeAt(j).subarray(TRAIT_GENES); // MUTATED toward the prey
+      const prey = g.subarray(TRAIT_GENES);
+      this.gedankenLedger.recordDevour(devour(predator, prey, GEDANKEN_DEVOUR_ALPHA));
+    }
+  }
+
+  /**
+   * Nearest OTHER living organism to `e` (list index `i`), searched over a bounded deterministic window of
+   * the entity list (no rng, no allocation) so a mass die-off stays cheap. Returns its list index, or −1 if
+   * none is within {@link GEDANKEN_DEVOUR_R}. The window wraps the list so the search is position-agnostic.
+   */
+  private nearestLivingNeighbour(e: Entity, i: number): number {
+    const list = this.entities.list;
+    const n = list.length;
+    if (n < 2) return -1;
+    const px = e.position.x;
+    const py = e.position.y;
+    const pz = e.position.z;
+    let best = -1;
+    let bestD2 = GEDANKEN_DEVOUR_R * GEDANKEN_DEVOUR_R;
+    const span = n < GEDANKEN_DEVOUR_WINDOW ? n : GEDANKEN_DEVOUR_WINDOW;
+    for (let k = 1; k <= span; k++) {
+      const j = (i + k) % n;
+      if (j === i) continue;
+      const o = list[j];
+      if (!o) continue;
+      const dx = o.position.x - px;
+      const dy = o.position.y - py;
+      const dz = o.position.z - pz;
+      const d2 = dx * dx + dy * dy + dz * dz;
+      if (d2 < bestD2) {
+        bestD2 = d2;
+        best = j;
+      }
+    }
+    return best;
   }
   /** V-ABC: the 100 Greek+Latin alphabet archetypes alive across the dome (instanced; no rng). */
   private readonly alphabetPantheon: AlphabetPantheonRender;
