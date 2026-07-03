@@ -570,6 +570,9 @@ Full detail in docs/.
 
 - **[docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md](./docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md)** — **canonical NHSI scorecard**
   (100-faculty design ~30 deep-wired · 25 Archons = 5 live + 20 light-echo · 25 ToM organs wired · 10 emergence angles + 5 god-scale events · Tsotchke depth · Butlin 8/14 met + 6/14 partial path)
+- **[docs/CONSCIOUSNESS-LAB-MASTER-2026-07-03.md](./docs/CONSCIOUSNESS-LAB-MASTER-2026-07-03.md)** — consciousness-lab master report:
+  Butlin 14 + Thaler 9 + ten-framework indicator kernel, 12-report consolidation, frontier outlier stack,
+  falsifiers, nulls, ablations, live-data visual protocol, and explicit no-sentience-claim law.
 - [docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md](./docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md) — honest Tsotchke repo wiring ledger
 - [docs/CONTROLS-2026-06-26.md](./docs/CONTROLS-2026-06-26.md) — every control: mouse, keyboard hotkeys,
   touch, bottom-panel buttons, and the 10 camera views

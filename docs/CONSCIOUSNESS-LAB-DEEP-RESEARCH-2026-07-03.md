@@ -420,29 +420,31 @@ Minimum gate:
 
 ## Implementation Roadmap
 
-| Phase | Work              | Deliverable                                                                                |
-| ----- | ----------------- | ------------------------------------------------------------------------------------------ |
-| 0     | Doctrine          | Master scaffold, glossary, and this deep-research dossier.                                 |
-| 1     | Kernel            | `src/sim/consciousness-kernel.ts` with framework score interfaces and claim status.        |
-| 2     | Experiment runner | `src/sim/consciousness-lab.ts` with seed sweeps, nulls, and ablations.                     |
-| 3     | Entity adapters   | Plant, creature, shoggoth, puppeteer, Mechalogodrom, apex, pantheon, glyph adapters.       |
-| 4     | Data feed         | Deterministic JSON snapshots: framework scores, ablations, event windows, source receipts. |
-| 5     | GitHub Page       | Consciousness Lab page with metric braid, causal spine, source ledger, and honesty banner. |
-| 6     | Promotion gates   | A partial metric can become met only with ablation loss and null separation.               |
+| Phase | Work              | Status  | Deliverable                                                                                                               |
+| ----- | ----------------- | ------- | ------------------------------------------------------------------------------------------------------------------------- |
+| 0     | Doctrine          | Present | Master scaffold, glossary, deep-research dossier, frontier stack, and 12-report consolidation.                            |
+| 1     | Kernel            | Present | `src/sim/consciousness-kernel.ts` with framework score interfaces, coupling web, claim status, and proof telemetry.       |
+| 2     | Experiment runner | Present | `src/sim/consciousness-lab.ts` with seed sweeps, null shuffle, ablation loss, and singularity-event checks.               |
+| 3     | Entity adapters   | Next    | Plant, creature, shoggoth, puppeteer, Mechalogodrom, apex, pantheon, glyph adapters.                                      |
+| 4     | Data feed         | Next    | Deterministic JSON snapshots: framework scores, ablations, event windows, source receipts.                                |
+| 5     | GitHub Page       | Next    | Consciousness Lab page with metric braid, causal spine, source ledger, null panel, preregistration panel, honesty banner. |
+| 6     | Promotion gates   | Partial | Kernel/lab tests enforce null separation and ablation loss; per-entity promotion gates still need adapter-level receipts. |
 
 ## Current Repo Receipts To Preserve
 
-| Area                     | Receipt                                                          |
-| ------------------------ | ---------------------------------------------------------------- |
-| Butlin tests             | `tests/butlin-indicators.test.ts`                                |
-| Thaler tests             | `tests/thaler-sentience.test.ts`                                 |
-| Thaler engine            | `src/sim/thaler-sentience.ts`                                    |
-| SuperMind telemetry      | `src/sim/super-mind.ts`, `tests/super-mind.test.ts`              |
-| Active inference         | `src/sim/active-inference.ts`, `src/math/predictive-coding.ts`   |
-| Attention schema/control | `src/sim/attention-schema.ts`, `src/sim/attention-controller.ts` |
-| Integrated information   | `src/sim/integrated-information.ts`, `src/sim/super-qubits.ts`   |
-| Embodiment               | `src/sim/embodiment.ts`, `src/sim/super-body.ts`                 |
-| Honesty baseline         | `docs/PATH-TO-14-14-CONSCIOUSNESS-INDICATORS-2026-06-26.md`      |
+| Area                     | Receipt                                                                 |
+| ------------------------ | ----------------------------------------------------------------------- |
+| Butlin tests             | `tests/butlin-indicators.test.ts`                                       |
+| Thaler tests             | `tests/thaler-sentience.test.ts`                                        |
+| Thaler engine            | `src/sim/thaler-sentience.ts`                                           |
+| Ten-framework kernel     | `src/sim/consciousness-kernel.ts`, `tests/consciousness-kernel.test.ts` |
+| Consciousness lab runner | `src/sim/consciousness-lab.ts`, `tests/consciousness-lab.test.ts`       |
+| SuperMind telemetry      | `src/sim/super-mind.ts`, `tests/super-mind.test.ts`                     |
+| Active inference         | `src/sim/active-inference.ts`, `src/math/predictive-coding.ts`          |
+| Attention schema/control | `src/sim/attention-schema.ts`, `src/sim/attention-controller.ts`        |
+| Integrated information   | `src/sim/integrated-information.ts`, `src/sim/super-qubits.ts`          |
+| Embodiment               | `src/sim/embodiment.ts`, `src/sim/super-body.ts`                        |
+| Honesty baseline         | `docs/PATH-TO-14-14-CONSCIOUSNESS-INDICATORS-2026-06-26.md`             |
 
 ## Source Ledger
 

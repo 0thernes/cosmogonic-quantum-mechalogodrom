@@ -129,6 +129,10 @@
 | Butlin indicators                 | `tests/butlin-indicators.test.ts`                                                |
 | Thaler markers                    | `tests/thaler-sentience.test.ts`, `src/sim/thaler-sentience.ts`                  |
 | Ten-framework deep research       | `docs/CONSCIOUSNESS-LAB-DEEP-RESEARCH-2026-07-03.md`                             |
+| Frontier outlier stack            | `docs/CONSCIOUSNESS-LAB-FRONTIER-OUTLIER-STACK-2026-07-03.md`                    |
+| 12-report consolidation           | `docs/CONSCIOUSNESS-LAB-12-REPORT-CONSOLIDATION-2026-07-03.md`                   |
+| Ten-framework kernel              | `src/sim/consciousness-kernel.ts`, `tests/consciousness-kernel.test.ts`          |
+| Consciousness lab runner          | `src/sim/consciousness-lab.ts`, `tests/consciousness-lab.test.ts`                |
 | SuperMind consciousness telemetry | `src/sim/super-mind.ts`, `tests/super-mind.test.ts`                              |
 | Attention schema/controller       | `src/sim/attention-schema.ts`, `src/sim/attention-controller.ts`                 |
 | Active inference                  | `src/sim/active-inference.ts`, `src/math/predictive-coding.ts`                   |

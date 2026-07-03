@@ -1,11 +1,13 @@
 # Consciousness Lab Master Scaffold
 
-**Date:** 2026-07-03  
-**Scope:** Butlin 14 + Thaler 9 + eight additional consciousness frameworks for Cosmogonic creature/entity wiring.  
+**Date:** 2026-07-03
+**Scope:** Butlin 14 + Thaler 9 + eight additional consciousness frameworks for Cosmogonic creature/entity wiring.
 **Status:** research architecture and falsifiable instrumentation, not a sentience claim.
 
-**Companion sources:**  
-Deep research dossier: `docs/CONSCIOUSNESS-LAB-DEEP-RESEARCH-2026-07-03.md`  
+**Companion sources:**
+Deep research dossier: `docs/CONSCIOUSNESS-LAB-DEEP-RESEARCH-2026-07-03.md`
+Frontier outlier stack: `docs/CONSCIOUSNESS-LAB-FRONTIER-OUTLIER-STACK-2026-07-03.md`
+12-report consolidation: `docs/CONSCIOUSNESS-LAB-12-REPORT-CONSOLIDATION-2026-07-03.md`
 Glossary/claim contract: `docs/CONSCIOUSNESS-GLOSSARY-INDEX-2026-07-03.md`
 
 This document is the first hard scaffold for a Cosmogonic consciousness lab: a multi-theory, multi-metric, seed-replayable testbed for every creature, entity, shoggoth, puppeteer, Mechalogodrom, Super Creature, APEX Abomination, pantheon, connectome titan, NHI matrix, three-brain apex mecha, glyph, archon godform, and plant-form.
@@ -16,7 +18,8 @@ The binding rule is simple: no decorative consciousness. A framework counts only
 
 - **Not claimed:** phenomenal consciousness, subjective experience, AGI, ASI, moral patienthood, quantum advantage, or proof that an artifact "feels."
 - **Claimable today:** computational indicators, structural correlates, causal proxy mechanisms, and reproducible changes in behavior under intervention.
-- **Current local receipt:** `bun test tests\butlin-indicators.test.ts tests\thaler-sentience.test.ts` passed on 2026-07-03 with 28 tests, 0 failures, 121 expects.
+- **Anchor local receipt:** `bun test tests\butlin-indicators.test.ts tests\thaler-sentience.test.ts` passed on 2026-07-03 with 28 tests, 0 failures, 121 expects.
+- **Kernel/lab local receipt:** `bun test tests\consciousness-kernel.test.ts tests\consciousness-lab.test.ts tests\butlin-indicators.test.ts tests\thaler-sentience.test.ts` passed on 2026-07-03 with 45 tests, 0 failures, 5139 expects.
 - **Current repo honesty baseline:** the older canonical dashboard language remains `8/14 met + 6/14 partial` for Butlin depth, while the newer tests verify all 14 indicator names have explicit receipt surfaces. Treat "structurally addressed and test-covered" as a different claim from "fully met."
 
 ## The Ten Framework Stack
@@ -130,9 +133,11 @@ Visual set:
 1. **Markdown source:** this file becomes the canonical lab doctrine.
 2. **Glossary source:** `docs/CONSCIOUSNESS-GLOSSARY-INDEX-2026-07-03.md` becomes the term contract.
 3. **Deep research source:** `docs/CONSCIOUSNESS-LAB-DEEP-RESEARCH-2026-07-03.md` becomes the defensibility, source, and falsifier dossier.
-4. **Page route:** create a GitHub Pages "Consciousness Lab" screen with the metric braid, framework table, source ledger, and live honesty banner.
-5. **Data feed:** expose deterministic JSON snapshots from the sim: `frameworkScores`, `ablationResults`, `eventWindows`, `sourceReceipts`.
-6. **Proof button:** every live visual links to code receipt, test receipt, source citation, and null-control result.
+4. **Frontier source:** `docs/CONSCIOUSNESS-LAB-FRONTIER-OUTLIER-STACK-2026-07-03.md` becomes the harder outlier-theory and "unknown unknowns" test dossier.
+5. **Report-corpus source:** `docs/CONSCIOUSNESS-LAB-12-REPORT-CONSOLIDATION-2026-07-03.md` becomes the ingestion ledger for the 12 external deep-research reports.
+6. **Page route:** create a GitHub Pages "Consciousness Lab" screen with the metric braid, framework table, source ledger, and live honesty banner.
+7. **Data feed:** expose deterministic JSON snapshots from the sim: `frameworkScores`, `ablationResults`, `eventWindows`, `sourceReceipts`.
+8. **Proof button:** every live visual links to code receipt, test receipt, source citation, and null-control result.
 
 ## Source Ledger
 
@@ -153,11 +158,13 @@ These were checked live on 2026-07-03 and should be treated as source anchors, n
 
 ## Immediate Build Tasks
 
-1. Add `src/sim/consciousness-kernel.ts`: shared interface for per-entity framework scores and proof telemetry.
-2. Add `src/sim/consciousness-lab.ts`: offline experiment runner for framework sweeps, null baselines, and ablations.
-3. Add `tests/consciousness-lab.test.ts`: seed replay, ablation, null baseline, and no-sentience-claim tests.
-4. Add a UI panel or docs page with the metric braid, causal spine graph, and source ledger.
-5. Add per-entity adapters: plants get low-bandwidth UAL/FEP/sensorimotor/field metrics; apex forms get full ten-framework telemetry.
+1. **Present:** `src/sim/consciousness-kernel.ts` — shared interface for per-entity framework scores, coupling, claim status, and proof telemetry.
+2. **Present:** `src/sim/consciousness-lab.ts` — offline experiment runner for framework sweeps, null baselines, ablations, and seed sweeps.
+3. **Present:** `tests/consciousness-kernel.test.ts` and `tests/consciousness-lab.test.ts` — seed replay, ablation, null baseline, and no-sentience-claim tests.
+4. **Next:** add per-entity adapters: plants get low-bandwidth UAL/FEP/sensorimotor/field metrics; apex forms get full ten-framework telemetry.
+5. **Next:** add deterministic JSON output for `frameworkScores`, `ablationResults`, `eventWindows`, and `sourceReceipts`.
+6. **Next:** add a GitHub Pages Consciousness Lab with metric braid, causal spine graph, source ledger, null panel, and honesty banner.
+7. **Next:** add preregistration and negative-results docs so failed consciousness hypotheses remain visible.
 
 ## Final Doctrine
 
