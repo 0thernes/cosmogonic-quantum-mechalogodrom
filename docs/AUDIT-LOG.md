@@ -11,6 +11,57 @@ dated / historical / "superseded snapshot" copies (per the binding "Living docs,
 
 ---
 
+## 2026-07-02 — Performance & load-time audit: whole-repo review, one shipped win, runtime confirmed already-optimal (V126)
+
+Owner brief: "loads slow with stuff… GitHub Pages IO… Singularities and N1/N2 and the Portal Temple and
+the Entities are very intensive… make it run smoother faster load quicker… without destroying it." A
+full load-path + per-frame-cost audit followed. Method: measured the real deployed `dist/` payload,
+mapped the entire `world.step(dt)` call graph with cadences, and profiled the four named-intensive
+subsystems for time complexity, allocations, and GPU churn. Finding in one line: **the runtime is
+already well-optimized; the real, safe, high-ROI lever was load-time, and it has been pulled.**
+
+### SHIPPED — Latin-only font subsets (render-blocking CSS 784 KB → 342 KB, −56%)
+
+- `src/styles/app.css` was importing `@fontsource-variable/inter` (unscoped) + unscoped
+  `jetbrains-mono/{300,400,600}.css`, pulling **every language subset** (Cyrillic, Cyrillic-ext, Greek,
+  Greek-ext, Vietnamese, Latin-ext) as **43 base64-inlined woff2 faces inside the render-blocking
+  stylesheet** — ~450 KB of glyphs the Latin/monospace UI never renders, all of it blocking first paint.
+- Fix: explicit Latin `@font-face` for Inter Variable (no language-scoped CSS entrypoint exists — its
+  axis files each re-import every subset) + JetBrains Mono `latin-{300,400,600}.css`. Measured rebuild:
+  **CSS 784 KB → 342 KB**, `@font-face` 25 → 4, gzip ≈ 216 KB. **Same fonts, weights, and
+  `font-display: swap` — zero visual change.**
+
+### Load-path map (the "loads slow" reframe)
+
+- `index.html` (the app) critical path is exactly **one JS chunk (2.06 MB min / 618 KB gz) + the CSS
+  above** — nothing else. The **4.57 MB chunk is the `docs.html` entry** (mermaid ~800 KB + the 1.5 MB
+  inlined `src/generated/alife-svg-embed.ts`), and `specs.html`/`bible.html` are their own chunks. The
+  bundler already isolates them; the big blob is **never** on the app path. So the raw 17 MB `dist/`
+  total is spread across five independent page entries, not one download.
+- Duplicate-asset note (Pages weight only, not app path): `scripts/build.ts` copies
+  `docs/reports/assets` into **both** `dist/docs/reports/assets` and `dist/assets/alife` (the 923 KB
+  `alife-distance-matrix.svg` ships twice); `bible.html` emits a 0-byte JS chunk. Left as-is — both copies
+  are referenced by different pages and the empty chunk is harmless; flagged here, not "fixed" blindly.
+
+### Runtime confirmed already-optimal (why nothing in the hot loop was changed)
+
+- `world.step(dt)` is heavily **cadenced**: grid rebuild `%2`, `driveSuper` (5 Archons) `%4`, connectome
+  rebuild population-scaled `1–12`, economy/quantum `%30`, GraphMind Louvain `%240–600×scale`,
+  Bedau-Packard `%300`. Hot-path buffers are **pre-allocated and reused** (Vector3 scratch, Float32Array
+  percepts, object pools for bounce colliders / immune positions); no per-frame heap churn.
+- The four named-"intensive" systems are **GPU-bound at full fidelity by design**, not CPU bottlenecks:
+  singularities are max-one transient (~9 s) and render full-detail on **every** tier by **owner
+  directive #7** (LOD deliberately refused); the portal/temple only updates when revealed; entities are
+  **per-tier population-capped** (phone 1k → mega 50k) with strided behaviors + spawn budget; N1/N2
+  (Genesis/Break-Free) are O(n) identical to normal, differing only by per-instance colour + jitter gain.
+  Adaptive relief already exists render-side via `RenderGovernor` (sheds DPR → post-FX → shadows under
+  sustained slow frames, determinism-safe). **Touching any of this would risk the golden/determinism
+  tests and the owner's explicit "don't destroy quality" — so it was left intact.**
+- One latent (not current) item logged for later: `src/sim/nhi-body.ts` does an **O(M²)** all-pairs
+  social-proximity scan with no spatial cull. Negligible at the usual 1–3 NHI bodies (~9 ops/frame);
+  would only matter if NHI counts grow large. Not changed — the fix would alter an observable
+  social→shader/audio signal for no present gain.
+
 ## 2026-07-02 — The TOWER re-architected to a chaotic ACCRETION + the portal-nightmare buzz KILLED (V125)
 
 Owner: the V124 tower "literally nothing changed in structure" — I'd only recoloured the same tapering

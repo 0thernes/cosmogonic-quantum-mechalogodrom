@@ -9,6 +9,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.19.0] — 2026-07-02
+
+### Load-time: Latin-only font subsets — render-blocking CSS 784 KB → 342 KB (−56%)
+
+- **The single biggest first-paint win.** `src/styles/app.css` imported
+  `@fontsource-variable/inter` (unscoped) plus the unscoped `jetbrains-mono`
+  weights, which pull **every** language subset — Cyrillic, Cyrillic-ext, Greek,
+  Greek-ext, Vietnamese, Latin-ext — as **43 base64-inlined woff2 faces baked
+  into the render-blocking stylesheet**. The UI is Latin + monospace only, so
+  ~450 KB of that shipped for glyphs that never render, and the browser had to
+  download + parse all 784 KB before first paint on every visit.
+- Pinned to the **Latin subset**: an explicit `@font-face` for Inter Variable's
+  Latin woff2 (it ships no language-scoped CSS entrypoint, only axis files that
+  re-import every subset) + JetBrains Mono's `latin-300/400/600.css`. Measured
+  build: **CSS 784 KB → 342 KB** (`@font-face` 25 → 4, gzipped ≈ 216 KB). **Same
+  fonts, same weights, same `font-display: swap` — zero visual change.**
+- Comprehensive load + runtime audit recorded in
+  [docs/AUDIT-LOG.md](docs/AUDIT-LOG.md): the index.html critical path is one
+  ~2.06 MB (618 KB gz) JS chunk + the CSS above; the 4.57 MB chunk is the
+  **docs** entry (mermaid + the 1.5 MB inlined ALife SVG), correctly isolated
+  and never on the app path. The intensive systems the report calls out
+  (singularities, portal/temple, entities, N1/N2, NHI) are GPU-bound at full
+  fidelity **by design** (owner directive #7) and already governed by cadenced
+  updates, pooled scratch buffers, per-tier population caps, and the
+  render-only `RenderGovernor` (DPR → post-FX → shadow shedding). No sim
+  determinism or visual quality was touched.
+
 ### MECHALOGODROM brain-slot now surfaces live STDP learning (`LRN`)
 
 - The fusion brain's `plasticity` readout (its Bi–Poo STDP adapting the variant→fusion synapses this
