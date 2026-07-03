@@ -103,6 +103,17 @@ const TRAVEL_RAMP = 3;
  *  ~0.22·timeScale per second, so this ≈ 320·0.6·0.22 ≈ 42 u/s at 1× (crosses the ~1000 u platform in
  *  ~24 s — a graceful glide, not a crawl); brain arousal scales it up to ~1.7×, the speed slider ×N. */
 const NAV_SPEED = 320;
+/**
+ * USER V127 (A, world-interactivity): the dome's DEATH-OBJECTS the pantheon glides AROUND. When a body
+ * drifts within a hazard's radius, an outward repulsion is added to its heading so it veers gracefully
+ * around the danger instead of blundering through it (it still ricochets on true contact — that's the
+ * immune bounce). `ARENA_MID`=2.5, so these mirror the portal void-throat (0,60,-101.25) and the
+ * Mechalogodrom (0,252,0). Pure geometry, deterministic — object-aware, adaptive, responsive flight.
+ */
+const PANTHEON_HAZARDS: readonly { x: number; y: number; z: number; r: number; push: number }[] = [
+  { x: 0, y: 60, z: -101.25, r: 95, push: 48 }, // the ascension DEATH portal
+  { x: 0, y: 252, z: 0, r: 135, push: 42 }, // the fiery Mechalogodrom
+];
 /** Fractional part in [0,1) — a deterministic pseudo-random when fed `counter · irrational`. */
 const nfrac = (x: number): number => x - Math.floor(x);
 
@@ -837,6 +848,22 @@ export class AlphabetPantheonRender implements PortalImmune {
           let hx = wxi - this.navPX[gi]! + mx * 55;
           let hy = wyi - this.navPY[gi]! + my * 40;
           let hz = wzi - this.navPZ[gi]! + mz * 55;
+          // USER (A): OBJECT AWARENESS — veer AROUND the dome's death-objects. Near the portal or the
+          // mecha, add an outward repulsion to the heading so the body banks gracefully around the
+          // hazard instead of blundering through it (it still ricochets on contact — the immune bounce).
+          for (let hzi = 0; hzi < PANTHEON_HAZARDS.length; hzi++) {
+            const hazard = PANTHEON_HAZARDS[hzi]!;
+            const ddx = this.navPX[gi]! - hazard.x;
+            const ddy = this.navPY[gi]! - hazard.y;
+            const ddz = this.navPZ[gi]! - hazard.z;
+            const dd = Math.hypot(ddx, ddy, ddz);
+            if (dd < hazard.r && dd > 1e-3) {
+              const push = ((hazard.r - dd) / hazard.r) * hazard.push;
+              hx += (ddx / dd) * push;
+              hy += (ddy / dd) * push;
+              hz += (ddz / dd) * push;
+            }
+          }
           const hlen = Math.hypot(hx, hy, hz) || 1;
           hx /= hlen;
           hy /= hlen;
