@@ -823,8 +823,9 @@ export class AlphabetPantheonRender implements PortalImmune {
             wzi - this.navPZ[gi]!,
           );
           this.navClock[gi]! -= dNav;
-          // Arrived (within a body-length) or the dwell timer elapsed → choose a fresh destination.
-          if (distW < 45 || this.navClock[gi]! <= 0) {
+          // USER (A): re-target from a little further out (58 not 45) so a body eases into its next
+          // heading WHILE still gliding — no arrive-then-lurch, a continuous graceful flow.
+          if (distW < 58 || this.navClock[gi]! <= 0) {
             pickWaypoint(this.navWX, this.navWY, this.navWZ, this.navSeed, gi, b.phase, gi);
             this.navClock[gi] = 3 + 3 * nfrac(this.navSeed[gi]! * 0.123);
             wxi = this.navWX[gi]!;
@@ -842,7 +843,10 @@ export class AlphabetPantheonRender implements PortalImmune {
           hz /= hlen;
           // Cruise speed ramps in at boot and rises with the body's live brain arousal.
           const speed = NAV_SPEED * rampBlend * (0.6 + 0.7 * ba);
-          const turn = Math.min(1, dNav * 6); // heading responsiveness (a smooth bank, never a snap)
+          // USER (A): gentler heading-ease (×3.2, was ×6) — the body BANKS gracefully into its new
+          // heading like a gliding ray instead of pivoting quickly; the velocity turns smoothly so the
+          // whole roster reads as fluid, flowing, weightless flight.
+          const turn = Math.min(1, dNav * 3.2);
           this.navVX[gi]! += (hx * speed - this.navVX[gi]!) * turn;
           this.navVY[gi]! += (hy * speed - this.navVY[gi]!) * turn;
           this.navVZ[gi]! += (hz * speed - this.navVZ[gi]!) * turn;
@@ -861,8 +865,14 @@ export class AlphabetPantheonRender implements PortalImmune {
             this.navVY[gi] = -Math.abs(this.navVY[gi]!);
           }
         }
+        // USER (A): gentle the positional micro-jitter (×0.55) so the travel reads as a SMOOTH glide,
+        // not a vibration — the body's rich spin/pulse/corkscrew below still carries the liveliness.
         const wander = glyphWanderOffset(WANDER, ph, b.sig, mx, my, mz, chaosE, ba);
-        P.set(this.navPX[gi]! + wander.x, this.navPY[gi]! + wander.y, this.navPZ[gi]! + wander.z);
+        P.set(
+          this.navPX[gi]! + wander.x * 0.55,
+          this.navPY[gi]! + wander.y * 0.55,
+          this.navPZ[gi]! + wander.z * 0.55,
+        );
 
         // USER #10 (corrected V115): tether every godform to ITS OWN dome anchor so it can never
         // leave the shell. The prior ring-clamp forced horiz into a fixed outer ring, which
