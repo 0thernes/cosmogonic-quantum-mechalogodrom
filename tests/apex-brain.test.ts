@@ -34,6 +34,8 @@ import {
   MetaParadoxLayer,
   QuantumBrainOrgan,
   apexDesignedNeurons,
+  apexResearchScaleForScore,
+  apexScaleForTargetNeurons,
   SCALE_LIVE,
   SCALE_MEDIUM,
   SCALE_MASSIVE,
@@ -371,6 +373,16 @@ describe('scaling scaffolding — toward 1 billion neurons', () => {
     expect(apexDesignedNeurons(SCALE_LIVE)).toBeLessThan(10_000);
     expect(apexDesignedNeurons(SCALE_MEDIUM)).toBeGreaterThan(apexDesignedNeurons(SCALE_LIVE));
     expect(apexDesignedNeurons(SCALE_MASSIVE)).toBeGreaterThan(apexDesignedNeurons(SCALE_MEDIUM));
+  });
+  test('research scales synthesize beyond MASSIVE instead of stopping at the fixed ladder', () => {
+    const tenB = apexScaleForTargetNeurons(10_000_000_000);
+    expect(tenB.name).toContain('RESEARCH');
+    expect(apexDesignedNeurons(tenB)).toBeGreaterThan(apexDesignedNeurons(SCALE_MASSIVE));
+    expect(tenB.qubits).toBeGreaterThanOrEqual(SCALE_MASSIVE.qubits);
+
+    const fromScore = apexResearchScaleForScore(1600);
+    expect(fromScore.name).toContain('RESEARCH');
+    expect(apexDesignedNeurons(fromScore)).toBeGreaterThan(apexDesignedNeurons(SCALE_MASSIVE));
   });
   test('a MASSIVE-scale brain declares ≥1B designed neurons but allocates only capped live state', () => {
     const brain = new ApexBrain(0x5161, { scale: SCALE_MASSIVE });

@@ -1460,7 +1460,7 @@ export {
 // THE COMPOSITE — ApexBrain (The Entropic Tesseract Hydra)
 // ════════════════════════════════════════════════════════════════════════════════════════════════
 
-/** Roadmap target neuron count for the apex (HONEST aspiration, not instantiated). */
+/** First billion-neuron research milestone for the apex (HONEST aspiration, not instantiated). */
 export const APEX_BRAIN_TARGET_NEURONS = 1_000_000_000;
 
 /** Pantheon glyph creatures (#0–#99) — designed brain parameter budget each. */
@@ -1696,7 +1696,70 @@ export function apexDesignedNeurons(s: ApexScale): number {
   );
 }
 
-/** All APEX scaling tiers in order, from starting to roadmap target. */
+/** Get the designed parameter count for a given scale (approximate). */
+export function apexScaleParams(s: ApexScale): number {
+  return Math.round(apexDesignedNeurons(s) * 2.5);
+}
+
+const APEX_PARAMS_PER_NEURON = 2.5;
+const MAX_RESEARCH_NEURONS = Math.floor(Number.MAX_SAFE_INTEGER / APEX_PARAMS_PER_NEURON);
+
+function finiteNeuronTarget(v: number, fallback: number): number {
+  if (!Number.isFinite(v) || v <= 0) return fallback;
+  return Math.max(1, Math.min(MAX_RESEARCH_NEURONS, Math.floor(v)));
+}
+
+function scaleCount(v: number, factor: number): number {
+  return finiteNeuronTarget(Math.round(v * factor), v);
+}
+
+function researchScaleName(neurons: number): string {
+  if (neurons >= 1e12) return `APEX-${(neurons / 1e12).toFixed(2)}T-RESEARCH`;
+  if (neurons >= 1e9) return `APEX-${(neurons / 1e9).toFixed(2)}B-RESEARCH`;
+  if (neurons >= 1e6) return `APEX-${(neurons / 1e6).toFixed(1)}M-RESEARCH`;
+  return `APEX-${neurons}-RESEARCH`;
+}
+
+/**
+ * Synthesize an APEX scale for any finite research target beyond the fixed milestone ladder.
+ *
+ * This removes the old arbitrary "MASSIVE is the last rung" behaviour. The organ proportions follow
+ * the APEX-1B-OCTOPUS design, Klein fields scale by area, and qubit reach grows with log2(target).
+ * Live allocation still uses the runtime's deterministic per-organ caps; this is designed/addressable
+ * scale, not a fake attempt to allocate billions of JS objects.
+ */
+export function apexScaleForTargetNeurons(targetNeurons: number, name?: string): ApexScale {
+  const base = apexDesignedNeurons(SCALE_APEX_1B);
+  const target = Math.max(base, finiteNeuronTarget(targetNeurons, base));
+  const f = target / base;
+  const areaF = Math.sqrt(f);
+  return {
+    name: name ?? researchScaleName(target),
+    loom: scaleCount(SCALE_APEX_1B.loom, f),
+    acoustic: scaleCount(SCALE_APEX_1B.acoustic, f),
+    necro: scaleCount(SCALE_APEX_1B.necro, f),
+    kleinW: scaleCount(SCALE_APEX_1B.kleinW, areaF),
+    kleinH: scaleCount(SCALE_APEX_1B.kleinH, areaF),
+    pendulum: scaleCount(SCALE_APEX_1B.pendulum, f),
+    slime: scaleCount(SCALE_APEX_1B.slime, f),
+    chronoD1: scaleCount(SCALE_APEX_1B.chronoD1, areaF),
+    chronoD2: scaleCount(SCALE_APEX_1B.chronoD2, areaF),
+    tunnel: scaleCount(SCALE_APEX_1B.tunnel, f),
+    thermo: scaleCount(SCALE_APEX_1B.thermo, f),
+    ouroboros: scaleCount(SCALE_APEX_1B.ouroboros, f),
+    qubits: Math.max(SCALE_APEX_1B.qubits, Math.min(52, Math.ceil(Math.log2(target)))),
+  };
+}
+
+/** Convert an open-ended evolution score into a synthesized APEX research scale. */
+export function apexResearchScaleForScore(score: number): ApexScale {
+  const base = apexDesignedNeurons(SCALE_APEX_1B);
+  const over = Math.max(0, Number.isFinite(score) ? score - 950 : 0);
+  const target = base * 2 ** (over / 450);
+  return apexScaleForTargetNeurons(target);
+}
+
+/** All fixed APEX milestone tiers in order; research scales are synthesized beyond this ladder. */
 export const APEX_SCALE_TIERS: readonly ApexScale[] = [
   SCALE_LIVE,
   SCALE_APEX_START,
@@ -1708,11 +1771,6 @@ export const APEX_SCALE_TIERS: readonly ApexScale[] = [
   SCALE_MEDIUM,
   SCALE_APEX_1B,
 ];
-
-/** Get the designed parameter count for a given scale (approximate). */
-export function apexScaleParams(s: ApexScale): number {
-  return Math.round(apexDesignedNeurons(s) * 2.5);
-}
 
 /** Clamp a designed organ size down to what the live runtime will actually allocate. */
 function liveSize(designed: number): number {

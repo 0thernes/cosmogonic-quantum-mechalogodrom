@@ -704,12 +704,12 @@ export class SuperPanel {
         `${reso.coupled} faculties${homeo} · bcast ${(mind.broadcast * 100).toFixed(0)}%`;
     }
 
-    // V48 — the self-evolution: level · stage · power · day (it grows like Vegeta/Goku).
-    // V63 — show the LV/100 cap, the godlike-power tally (one per 10 levels), and the ascension mark.
+    // V48/V63+ — self-evolution: LV100 is the first ascension summit; levels keep climbing beyond it.
     if (evo) {
       const god = `${evo.powers.length}/10⚡`;
       const cap = evo.ascended ? 'ASCENDED ✦' : `${evo.stageName} ${god}`;
-      this.id.power!.textContent = `LV${evo.level}/${evo.maxLevel} ${cap} · ${fmt(evo.power)} · d${evo.day}`;
+      const summit = evo.ascended ? `${evo.maxLevel}+` : `${evo.maxLevel}`;
+      this.id.power!.textContent = `LV${evo.level}/${summit} ${cap} · ${fmt(evo.power)} · d${evo.day}`;
     }
   }
 

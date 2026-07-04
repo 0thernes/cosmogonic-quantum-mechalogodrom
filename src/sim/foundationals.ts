@@ -36,6 +36,7 @@ import {
   APEX_BRAIN_ROADMAP_PARAMS,
   APEX_BRAIN_TARGET_NEURONS,
   APEX_SCALE_TIERS,
+  apexScaleForTargetNeurons,
   apexScaleParams,
   type ApexScale,
 } from './apex-brain';
@@ -446,7 +447,7 @@ export class Foundationals {
     for (const s of APEX_SCALE_TIERS) {
       if (apexScaleParams(s) >= designedParams) return s;
     }
-    return APEX_SCALE_TIERS[APEX_SCALE_TIERS.length - 1]!;
+    return apexScaleForTargetNeurons(Math.ceil(designedParams / 2.5));
   }
 
   /** Compute all 19 indicator readings based on current state. */

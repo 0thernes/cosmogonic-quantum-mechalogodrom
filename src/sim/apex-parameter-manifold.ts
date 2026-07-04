@@ -93,6 +93,14 @@ export const DEVICE_NATIVE: DeviceProfile = {
   stabilizerQubitCap: 40,
 };
 
+/** Research cluster profile — large finite accounting for open-ended lab runs beyond the first 1B. */
+export const DEVICE_RESEARCH_CLUSTER: DeviceProfile = {
+  name: 'research-cluster',
+  residentFloatCap: 16_000_000_000,
+  fieldTexelCap: 65536 * 65536,
+  stabilizerQubitCap: 52,
+};
+
 /** Per-tier accounting: designed budget, what is addressable, and what is actually resident. */
 export interface TierBudget {
   readonly tier: ParamTier;
@@ -126,6 +134,14 @@ export interface ManifoldSnapshot {
   readonly reachesBillion: boolean;
   /** True when the Quantum Brain alone reaches a billion-dimensional state space (≥30 qubits). */
   readonly quantumReachesBillion: boolean;
+  /** Designed scale as a multiple of the first 1B milestone; non-saturating. */
+  readonly designedBillionMultiple: number;
+  /** Addressable scale as a multiple of the first 1B milestone; non-saturating. */
+  readonly addressableBillionMultiple: number;
+  /** Resident scale as a multiple of the first 1B milestone; non-saturating. */
+  readonly residentBillionMultiple: number;
+  /** log10(addressable params), so 1B/10B/1T remain visually distinct in telemetry. */
+  readonly addressableLog10: number;
   /** How many {@link SHARD_FLOATS}-sized shards the resident-dense tier streams through. */
   readonly denseShardCount: number;
   /** Fraction of the designed budget that is resident this run (0..1) — the honesty gap made visible. */
@@ -230,6 +246,7 @@ export function buildManifold(
   const addressableParams = tiers.reduce((a, t) => a + t.addressable, 0);
   const residentParams = tiers.reduce((a, t) => a + t.resident, 0);
   const denseShardCount = Math.max(1, Math.ceil(denseResident / SHARD_FLOATS));
+  const divB = (n: number): number => n / APEX_BILLION;
 
   return {
     scaleName: scale.name,
@@ -242,6 +259,10 @@ export function buildManifold(
     quantumStabilizerDim: stabilizerDim,
     reachesBillion: addressableParams >= APEX_BILLION,
     quantumReachesBillion: stabilizerDim >= APEX_BILLION,
+    designedBillionMultiple: divB(designedParams),
+    addressableBillionMultiple: divB(addressableParams),
+    residentBillionMultiple: divB(residentParams),
+    addressableLog10: addressableParams > 0 ? Math.log10(addressableParams) : 0,
     denseShardCount,
     residentFraction: designedParams > 0 ? residentParams / designedParams : 0,
     tiers,
@@ -301,6 +322,6 @@ export function manifoldSummary(m: ManifoldSnapshot): string {
     `${m.scaleName}@${m.deviceName}: designed ${b(m.designedParams)} · ` +
     `addressable ${b(m.addressableParams)} · resident ${b(m.residentParams)} · ` +
     `Q ${m.quantumStabilizerQubits}q→${b(m.quantumStabilizerDim)}dim` +
-    `${m.reachesBillion ? ' · ✦1B' : ''}`
+    `${m.reachesBillion ? ` · ✦${m.addressableBillionMultiple.toFixed(2)}×1B` : ''}`
   );
 }

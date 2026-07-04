@@ -35,9 +35,11 @@ import {
   APEX_BRAIN_TARGET_NEURONS,
   APEX_SCALE_TIERS,
   PANTHEON_GLYPH_BRAIN_PARAMS,
+  type ApexScale,
 } from '../sim/apex-brain';
 import {
   apexSubstrateTelemetry,
+  type ApexGrowthStage,
   type ApexSubstrateTelemetry,
 } from '../sim/apex-consciousness-scaffold';
 import { apexOffworldScore } from '../sim/apex-offworld-score';
@@ -164,6 +166,8 @@ export class PantheonArchitecturePanel {
   private mode: VizMode = 'brain4d';
   /** When the apex ς is selected, its warmed Entropic-Tesseract-Hydra brain snapshot (else null). */
   private apexSnap: ApexBrainSnapshot | null = null;
+  /** Designed/addressable growth telemetry from the live world (can be a synthesized research scale). */
+  private apexGrowth: ApexGrowthStage | null = null;
 
   // Animation buffers for the current subject (widened to ArrayBufferLike for the viz returns).
   private attractor: Float64Array = new Float64Array(0);
@@ -183,7 +187,11 @@ export class PantheonArchitecturePanel {
   private glyphVal: Float32Array | null = null;
   private glyphCount = 0;
   private readonly onBrainSnap = (e: Event): void => {
-    const g = ((e as CustomEvent).detail as { glyphs?: unknown[] } | undefined)?.glyphs;
+    const detail = (e as CustomEvent).detail as
+      | { glyphs?: unknown[]; apexGrowth?: ApexGrowthStage | null }
+      | undefined;
+    if (detail?.apexGrowth) this.apexGrowth = detail.apexGrowth;
+    const g = detail?.glyphs;
     if (!Array.isArray(g) || g.length === 0) return;
     const n = Math.min(100, g.length);
     if (!this.glyphAct || this.glyphAct.length !== n) {
@@ -517,7 +525,7 @@ export class PantheonArchitecturePanel {
       ['rarity', (g.rarity * 100).toFixed(0) + '%'],
       ['rank', g.rank],
     ];
-    if (this.apexSnap) for (const r of apexRows(this.apexSnap)) rows.push(r);
+    if (this.apexSnap) for (const r of apexRows(this.apexSnap, this.apexGrowth)) rows.push(r);
     const doc = this.data.ownerDocument;
     this.data.replaceChildren();
     for (const r of rows) {
@@ -891,23 +899,23 @@ function bigNum(v: number): string {
 let _apexSubSeed = 0;
 let _apexSubCache: { name: string; tel: ApexSubstrateTelemetry; offworld: number } | null = null;
 
-/** The 1B-substrate telemetry + offworld score for a scale name, memoised (heavy, static per scale). */
-function apexSubstratePanelData(
-  scaleName: string,
-): { tel: ApexSubstrateTelemetry; offworld: number } | null {
-  const scale = APEX_SCALE_TIERS.find((t) => t.name === scaleName);
+/** The 1B-substrate telemetry + offworld score for a scale, memoised (heavy, static per scale). */
+function apexSubstratePanelData(scale: ApexScale | null): {
+  tel: ApexSubstrateTelemetry;
+  offworld: number;
+} | null {
   if (!scale) return null;
-  if (_apexSubCache && _apexSubCache.name === scaleName) return _apexSubCache;
+  if (_apexSubCache && _apexSubCache.name === scale.name) return _apexSubCache;
   if (!_apexSubSeed) _apexSubSeed = createApexBrain().seed; // the ς lineage identity, once
   const tel = apexSubstrateTelemetry(scale, _apexSubSeed);
   const offworld = apexOffworldScore(scale).score;
-  _apexSubCache = { name: scaleName, tel, offworld };
+  _apexSubCache = { name: scale.name, tel, offworld };
   return _apexSubCache;
 }
 
 /** The 1B-substrate rows (designed/addressable/resident · quantum reach · offworld) for the cycler. */
-function apexSubstrateRows(scaleName: string): Array<[string, string]> {
-  const sub = apexSubstratePanelData(scaleName);
+function apexSubstrateRows(scale: ApexScale | null): Array<[string, string]> {
+  const sub = apexSubstratePanelData(scale);
   if (!sub) return [];
   const { tel, offworld } = sub;
   const q = tel.quantum;
@@ -915,7 +923,7 @@ function apexSubstrateRows(scaleName: string): Array<[string, string]> {
   return [
     [
       '  ·1B substrate',
-      `designed ${bigNum(tel.manifold.designedParams)} · addressable ${bigNum(tel.manifold.addressableParams)} · resident ${bigNum(tel.manifold.residentParams)}`,
+      `designed ${bigNum(tel.manifold.designedParams)} · addressable ${bigNum(tel.manifold.addressableParams)} (${tel.manifold.addressableBillionMultiple.toFixed(2)}×1B) · resident ${bigNum(tel.manifold.residentParams)}`,
     ],
     [
       '  ·quantum reach',
@@ -923,14 +931,24 @@ function apexSubstrateRows(scaleName: string): Array<[string, string]> {
     ],
     [
       '  ·offworld',
-      `${(offworld * 100).toFixed(1)}% alien-driven · motor ${(m.motorGain * 100).toFixed(0)}% · explore ${(m.exploration * 100).toFixed(0)}%`,
+      `${(offworld * 100).toFixed(1)}% alien-driven · motor ${(m.motorGain * 100).toFixed(0)}% · explore ${(m.exploration * 100).toFixed(0)}% · drive ${m.researchDrive.toFixed(2)}`,
     ],
   ];
 }
 
 /** Render the apex ς brain (Entropic Tesseract Hydra) snapshot as data rows for the cycler. */
-function apexRows(s: ApexBrainSnapshot): Array<[string, string] | string> {
+function apexRows(
+  s: ApexBrainSnapshot,
+  growth: ApexGrowthStage | null = null,
+): Array<[string, string] | string> {
   const t = s.thought;
+  const designedNeurons = growth?.designedNeurons ?? s.designedNeurons;
+  const designedParams = growth?.designedParams ?? Math.round(s.designedNeurons * 2.5);
+  const scaleName = growth?.name ?? s.scaleName;
+  const scale = growth?.scale ?? APEX_SCALE_TIERS.find((tier) => tier.name === s.scaleName) ?? null;
+  const research = growth?.researchScale
+    ? ` · ${growth.ultimateMultiple.toFixed(2)}×1B RESEARCH`
+    : '';
   return [
     'APEX BRAIN — ENTROPIC TESSERACT HYDRA',
     ['plan', `${t.plan}${t.superposed ? ' (superposed)' : ''}`],
@@ -938,13 +956,13 @@ function apexRows(s: ApexBrainSnapshot): Array<[string, string] | string> {
     ['vitality / agony', `${(t.vitality * 100).toFixed(0)}% / ${(t.agony * 100).toFixed(0)}%`],
     [
       'neurons',
-      `${bigNum(APEX_BRAIN_START_PARAMS)} start · ${bigNum(s.designedNeurons)} designed · ${bigNum(s.liveNeurons)} live · →${bigNum(APEX_BRAIN_ROADMAP_PARAMS)} · ultimate ${bigNum(APEX_BRAIN_TARGET_NEURONS)} (${s.scaleName})`,
+      `${bigNum(APEX_BRAIN_START_PARAMS)} start · ${bigNum(designedNeurons)} designed / ${bigNum(designedParams)} params · ${bigNum(s.liveNeurons)} live · first summit ${bigNum(APEX_BRAIN_TARGET_NEURONS)} (${scaleName}${research})`,
     ],
     [
       'roadmap',
       `100k→5M params · 1B neuron architecture · 100 thought-variation substrates (computational indicators only)`,
     ],
-    ...apexSubstrateRows(s.scaleName),
+    ...apexSubstrateRows(scale),
     [
       '0 quantum brain',
       `${s.quantum.qubits}q · ‖ψ‖${s.quantum.norm.toFixed(2)} · coh ${s.quantum.coherence.toFixed(2)} · ent ${s.quantum.entanglement.toFixed(2)}`,

@@ -32,8 +32,8 @@ describe('SuperEvolution (V48)', () => {
     const e = new SuperEvolution();
     expect(e.stageName()).toBe('BASE');
     const basePower = e.power();
-    e.gainXp(1e20); // pour in XP → climbs to the LV100 cap → fully ascends (the curve is steep by design)
-    expect(e.level).toBe(100); // V63: hard cap
+    e.gainXp(1e20); // pour in XP → crosses the LV100 summit → fully ascends
+    expect(e.level).toBeGreaterThanOrEqual(100);
     expect(e.stage).toBe(EVO_STAGES.length - 1); // LEGENDARY (now the LV100 summit)
     expect(e.stageName()).toBe('LEGENDARY');
     expect(e.power()).toBeGreaterThan(basePower * 1000);
@@ -100,14 +100,15 @@ describe('SuperEvolution (V48)', () => {
   });
 
   // ── V63: the 1–100 leveling spec ──────────────────────────────────────────────
-  test('the level is hard-capped at 100 (no overflow past the summit)', () => {
+  test('the level keeps growing past the LV100 summit (no arbitrary cap)', () => {
     const e = new SuperEvolution();
     expect(e.ascended).toBe(false);
     e.gainXp(1e30);
-    expect(e.level).toBe(100);
+    expect(e.level).toBeGreaterThan(100);
     expect(e.ascended).toBe(true);
-    e.gainXp(1e30); // already at the cap → no-op, no runaway
-    expect(e.level).toBe(100);
+    const afterSummit = e.level;
+    e.gainXp(e.xpForNext() * 3); // post-summit growth continues
+    expect(e.level).toBeGreaterThan(afterSummit);
     expect(e.view().maxLevel).toBe(100);
   });
 
@@ -123,8 +124,10 @@ describe('SuperEvolution (V48)', () => {
 
   test('crossing a 10-level milestone arms exactly one pending reaction, drained once', () => {
     const e = new SuperEvolution();
-    e.gainXp(1e20); // straight to the cap in one shot
-    expect(e.takeMilestone()).toBe(100); // the apex milestone is pending
+    e.gainXp(1e20); // straight beyond the first summit in one shot
+    const m = e.takeMilestone();
+    expect(m).toBeGreaterThanOrEqual(100);
+    expect(m % 10).toBe(0);
     expect(e.takeMilestone()).toBe(0); // drained — fires only once
   });
 
@@ -136,12 +139,13 @@ describe('SuperEvolution (V48)', () => {
     expect(e.takeMilestone()).toBe(10);
   });
 
-  test('restoring an already-capped creature never re-fires the ascension milestone', () => {
+  test('restoring a post-summit creature never re-fires the ascension milestone', () => {
     const a = new SuperEvolution();
     a.gainXp(1e20);
     a.takeMilestone(); // drain the live ascension
     const restored = SuperEvolution.fromJSON(a.serialize());
-    expect(restored.level).toBe(100);
+    expect(restored.level).toBe(a.level);
+    expect(restored.level).toBeGreaterThanOrEqual(100);
     expect(restored.ascended).toBe(true);
     expect(restored.takeMilestone()).toBe(0); // restore is silent — temple just IS
   });

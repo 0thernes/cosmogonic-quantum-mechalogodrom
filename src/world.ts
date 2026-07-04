@@ -2265,6 +2265,7 @@ export class World {
         new CustomEvent('cqm:brain-snapshots', {
           detail: {
             apex: this.apexBrain.snapshot(),
+            apexGrowth: this.lastApexGrowth,
             mecha: this.lastMechaBrainSnap,
             glyphs: this.lastGlyphSnaps,
           },

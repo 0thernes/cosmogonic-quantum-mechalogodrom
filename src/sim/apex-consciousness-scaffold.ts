@@ -13,6 +13,7 @@ import {
   SCALE_APEX_START,
   SCALE_MASSIVE,
   apexDesignedNeurons,
+  apexResearchScaleForScore,
   apexScaleParams,
   type ApexBrainSnapshot,
   type ApexScale,
@@ -53,6 +54,10 @@ export interface ApexGrowthStage {
   readonly roadmapProgress: number;
   /** 0..1 progress toward the 1B-neuron ultimate architecture. */
   readonly ultimateProgress: number;
+  /** Non-saturating multiple of the first 1B-neuron research milestone. */
+  readonly ultimateMultiple: number;
+  /** True when this stage is synthesized beyond the fixed milestone ladder. */
+  readonly researchScale: boolean;
 }
 
 /** Growth tiers in player-visible order (100k → 5M, then MASSIVE declares 1B+). */
@@ -63,8 +68,9 @@ const GROWTH_SCALES: readonly ApexScale[] = [
 ];
 
 /**
- * Resolve the DESIGNED scale tier from super-evolution level + apex transcendence.
- * Live organ allocation stays capped — only the architecture accounting grows.
+ * Resolve the DESIGNED scale tier from super-evolution level + apex transcendence. The fixed ladder
+ * reaches the first 1B milestone, then research mode synthesizes larger deterministic scales instead
+ * of pinning every future apex to MASSIVE. Live organ allocation remains separately reported.
  */
 export function resolveApexDesignedScale(level: number, transcendence: number): ApexScale {
   const score = level * 0.4 + transcendence * 800 + transcendence * level * 0.02;
@@ -76,7 +82,9 @@ export function resolveApexDesignedScale(level: number, transcendence: number): 
   if (score >= 500) idx = 5;
   if (score >= 700) idx = 6;
   if (score >= 950) idx = 7;
-  return GROWTH_SCALES[Math.min(idx, GROWTH_SCALES.length - 1)] ?? SCALE_APEX_START;
+  if (score <= 950)
+    return GROWTH_SCALES[Math.min(idx, GROWTH_SCALES.length - 1)] ?? SCALE_APEX_START;
+  return apexResearchScaleForScore(score);
 }
 
 /** Full growth stage telemetry for UI / Architecture panel / Bible. */
@@ -88,13 +96,18 @@ export function apexGrowthStage(
   const scale = resolveApexDesignedScale(level, transcendence);
   const designedNeurons = apexDesignedNeurons(scale);
   const designedParams = apexScaleParams(scale);
+  const fixedIndex = GROWTH_SCALES.findIndex((s) => s.name === scale.name);
+  const ultimateMultiple = designedNeurons / APEX_ULTIMATE_NEURON_TARGET;
   const roadmapProgress = clamp01(
     (designedParams - APEX_BRAIN_START_PARAMS) /
       (APEX_BRAIN_ROADMAP_PARAMS - APEX_BRAIN_START_PARAMS),
   );
-  const ultimateProgress = clamp01(designedNeurons / APEX_ULTIMATE_NEURON_TARGET);
+  const ultimateProgress = clamp01(ultimateMultiple);
   return {
-    index: GROWTH_SCALES.indexOf(scale),
+    index:
+      fixedIndex >= 0
+        ? fixedIndex
+        : GROWTH_SCALES.length + Math.max(0, Math.floor(Math.log2(Math.max(1, ultimateMultiple)))),
     name: scale.name,
     scale,
     designedNeurons,
@@ -104,6 +117,8 @@ export function apexGrowthStage(
     activeVariation: activeThoughtVariation(level, transcendence, beat),
     roadmapProgress,
     ultimateProgress,
+    ultimateMultiple,
+    researchScale: fixedIndex < 0,
   };
 }
 

@@ -62,6 +62,14 @@ describe('Foundationals — 1/1 novel alien consciousness architecture', () => {
     expect(snap5m.roadmapProgress).toBeCloseTo(1, 1);
   });
 
+  test('post-1B designed params resolve to an open research scale', () => {
+    const f = new Foundationals(1);
+    const act = new Float32Array(10).fill(0.5);
+    const snap = f.tickAndStore(act, 0.8, 0.1, 2400, 25_000_000_000, 0.016);
+    expect(snap.scaleName).toContain('RESEARCH');
+    expect(snap.ultimateProgress).toBe(1);
+  });
+
   test('OrganInterconnect starts sparse and grows with scale', () => {
     const ic = new OrganInterconnect(42);
     const initialDensity = ic.connectionDensity;

@@ -5,7 +5,7 @@
  * proven in apex-substrate-ablation.test.ts.
  */
 import { describe, expect, test } from 'bun:test';
-import { SCALE_MASSIVE } from '../src/sim/apex-brain';
+import { SCALE_MASSIVE, apexScaleForTargetNeurons } from '../src/sim/apex-brain';
 import { ApexSubstrateDriver } from '../src/sim/apex-substrate-driver';
 
 function drive(seed: number, steps = 24) {
@@ -32,6 +32,17 @@ describe('substrate driver — bounded, billion-reaching modulation', () => {
     expect(t.manifold.reachesBillion).toBe(true);
     expect(t.quantum.reachesBillion).toBe(true);
     expect(Number.isFinite(t.sensorium.richness)).toBe(true);
+  });
+
+  test('research-scale modulation carries non-saturating scale telemetry', () => {
+    const scale = apexScaleForTargetNeurons(10_000_000_000);
+    const d = new ApexSubstrateDriver(scale, 7);
+    for (let i = 0; i < 12; i++) d.step(0.6);
+    const m = d.modulate(6);
+    expect(m.billionReached).toBe(true);
+    expect(m.addressableBillionMultiple).toBeGreaterThan(1);
+    expect(m.designedBillionMultiple).toBeGreaterThan(1);
+    expect(m.researchDrive).toBeGreaterThan(0);
   });
 });
 

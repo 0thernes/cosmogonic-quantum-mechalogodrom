@@ -9,11 +9,17 @@
  *   - dense-shard materialisation is bit-for-bit deterministic and bounded — real streamed weights.
  */
 import { describe, expect, test } from 'bun:test';
-import { SCALE_LIVE, SCALE_MASSIVE, SCALE_APEX_1B } from '../src/sim/apex-brain';
+import {
+  SCALE_LIVE,
+  SCALE_MASSIVE,
+  SCALE_APEX_1B,
+  apexScaleForTargetNeurons,
+} from '../src/sim/apex-brain';
 import {
   APEX_BILLION,
   DEVICE_BROWSER,
   DEVICE_NATIVE,
+  DEVICE_RESEARCH_CLUSTER,
   DEVICE_WORKSTATION,
   SHARD_FLOATS,
   buildManifold,
@@ -75,6 +81,18 @@ describe('manifold — honest resident bounds', () => {
     // every tier is present exactly once
     expect(new Set(m.tiers.map((t) => t.tier)).size).toBe(5);
   });
+
+  test('research-cluster profile preserves non-saturating multiples beyond 1B', () => {
+    const scale = apexScaleForTargetNeurons(10_000_000_000);
+    const browser = buildManifold(scale, DEVICE_BROWSER);
+    const research = buildManifold(scale, DEVICE_RESEARCH_CLUSTER);
+    expect(browser.addressableBillionMultiple).toBeGreaterThan(1);
+    expect(browser.addressableLog10).toBeGreaterThan(9);
+    expect(research.residentParams).toBeGreaterThan(browser.residentParams);
+    expect(research.quantumStabilizerQubits).toBeGreaterThanOrEqual(
+      browser.quantumStabilizerQubits,
+    );
+  });
 });
 
 describe('manifold — stabilizer qubit scaling', () => {
@@ -135,6 +153,7 @@ describe('manifold — summary telemetry', () => {
     const s = manifoldSummary(buildManifold(SCALE_MASSIVE, DEVICE_BROWSER));
     expect(s).toContain('MASSIVE');
     expect(s).toContain('browser');
-    expect(s).toContain('✦1B');
+    expect(s).toContain('✦');
+    expect(s).toContain('×1B');
   });
 });

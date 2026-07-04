@@ -49,7 +49,9 @@ describe('APEX consciousness scaffold — growth tiers', () => {
   test('resolveApexDesignedScale climbs with level + transcendence', () => {
     expect(resolveApexDesignedScale(0, 0).name).toBe(SCALE_APEX_START.name);
     const high = resolveApexDesignedScale(1200, 1);
-    expect(high.name).toBe(SCALE_MASSIVE.name);
+    expect(high.name).toContain('RESEARCH');
+    expect(high.name).not.toBe(SCALE_MASSIVE.name);
+    expect(high.loom).toBeGreaterThan(SCALE_MASSIVE.loom);
   });
 
   test('apexGrowthStage reports roadmap progress toward 5M', () => {
@@ -59,6 +61,14 @@ describe('APEX consciousness scaffold — growth tiers', () => {
     expect(g.ultimateNeurons).toBe(1_000_000_000);
     expect(g.roadmapProgress).toBeGreaterThan(0);
     expect(g.activeVariation.id).toBeGreaterThanOrEqual(0);
+  });
+
+  test('apexGrowthStage reports post-1B research scaling without saturating the multiple', () => {
+    const g = apexGrowthStage(2400, 1, 99);
+    expect(g.researchScale).toBe(true);
+    expect(g.name).toContain('RESEARCH');
+    expect(g.ultimateProgress).toBe(1);
+    expect(g.ultimateMultiple).toBeGreaterThan(1);
   });
 
   test('consciousness indicators carry honesty tag', () => {

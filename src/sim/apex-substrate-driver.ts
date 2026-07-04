@@ -49,6 +49,12 @@ export interface ApexModulation {
   readonly planBias: readonly number[];
   /** True when the substrate reaches a billion (manifold or quantum). */
   readonly billionReached: boolean;
+  /** Non-saturating designed scale multiple over the first 1B milestone. */
+  readonly designedBillionMultiple: number;
+  /** Non-saturating addressable scale multiple over the first 1B milestone. */
+  readonly addressableBillionMultiple: number;
+  /** Extra research pressure above the first 1B milestone, log-scaled and non-saturating. */
+  readonly researchDrive: number;
 }
 
 const c01 = (v: number): number => (!Number.isFinite(v) ? 0 : v < 0 ? 0 : v > 1 ? 1 : v);
@@ -144,9 +150,17 @@ export class ApexSubstrateDriver {
       motorGain: c01(0.35 * base + 0.25 * fieldRich + 0.2 * qd + 0.15 * proc + 0.05 * res),
       exploration: c01(0.55 * qd + 0.35 * fieldRich + 0.1 * proc),
       thermalStress: c01(0.7 * thermal + 0.3 * magic),
-      transcendencePush: c01(0.5 * base + 0.3 * qd + 0.2 * interference),
+      transcendencePush: c01(
+        0.42 * base +
+          0.3 * qd +
+          0.18 * interference +
+          0.1 * Math.log10(Math.max(1, m.addressableBillionMultiple)),
+      ),
       planBias,
       billionReached: m.reachesBillion || q.reachesBillion,
+      designedBillionMultiple: m.designedBillionMultiple,
+      addressableBillionMultiple: m.addressableBillionMultiple,
+      researchDrive: Math.log10(Math.max(1, m.addressableBillionMultiple)),
     };
   }
 }
