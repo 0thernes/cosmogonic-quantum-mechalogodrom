@@ -135,6 +135,7 @@
 | Consciousness lab runner          | `src/sim/consciousness-lab.ts`, `tests/consciousness-lab.test.ts`                |
 | Entity adapters + feed            | `src/sim/consciousness-adapters.ts`, `tests/consciousness-adapters.test.ts`      |
 | Static lab dashboard              | `lab/consciousness.html`, `lab/consciousness-data.json`                          |
+| Headless sentience analytics      | `src/sim/sentience-lab.ts`, `lab/sentience.html`, `lab/sentience-data.json`      |
 | SuperMind consciousness telemetry | `src/sim/super-mind.ts`, `tests/super-mind.test.ts`                              |
 | Attention schema/controller       | `src/sim/attention-schema.ts`, `src/sim/attention-controller.ts`                 |
 | Active inference                  | `src/sim/active-inference.ts`, `src/math/predictive-coding.ts`                   |

@@ -257,6 +257,16 @@ describe('static texture routes — pantheon equirect atlas (items 10/18)', () =
   });
 });
 
+describe('static lab routes — consciousness and sentience feeds', () => {
+  test('server publishes the headless sentience lab HTML and JSON feed', () => {
+    expect(serverSource).toContain("'/lab/sentience'");
+    expect(serverSource).toContain("'/lab/sentience-data.json'");
+    expect(serverSource).toContain("'/api/sentience-lab'");
+    expect(serverSource).toContain('./lab/sentience.html');
+    expect(serverSource).toContain('./lab/sentience-data.json');
+  });
+});
+
 describe('withSecurityHeaders — defense-in-depth response headers (RISK-05)', () => {
   test('adds nosniff + no-referrer while preserving status and existing headers', () => {
     const res = withSecurityHeaders(

@@ -136,8 +136,9 @@ Visual set:
 4. **Frontier source:** `docs/CONSCIOUSNESS-LAB-FRONTIER-OUTLIER-STACK-2026-07-03.md` becomes the harder outlier-theory and "unknown unknowns" test dossier.
 5. **Report-corpus source:** `docs/CONSCIOUSNESS-LAB-12-REPORT-CONSOLIDATION-2026-07-03.md` becomes the ingestion ledger for the 12 external deep-research reports.
 6. **Page route:** `lab/consciousness.html` is the first static GitHub Pages screen with metric braid, framework heatmap, falsifier ledger, and honesty banner.
-7. **Data feed:** `lab/consciousness-data.json` exposes deterministic entity snapshots, framework scores, ablation results, event windows, seed, and source docs.
-8. **Proof route:** `/api/consciousness-lab` serves the same feed locally; Pages serves the tracked JSON without a live server.
+7. **Second page route:** `lab/sentience.html` is the headless mass-analytics screen: seed sweeps, convergence/reward null separation, ablation load, entity traces, and export buttons with no Dome renderer.
+8. **Data feeds:** `lab/consciousness-data.json` exposes deterministic entity snapshots, framework scores, ablation results, event windows, seed, and source docs; `lab/sentience-data.json` exposes deterministic multi-seed sweep summaries, framework aggregates, sampled entity telemetry, and entity-framework edges.
+9. **Proof routes:** `/api/consciousness-lab` and `/api/sentience-lab` serve the same feeds locally; Pages serves the tracked JSON without a live server.
 
 ## Source Ledger
 
@@ -162,10 +163,12 @@ These were checked live on 2026-07-03 and should be treated as source anchors, n
 2. **Present:** `src/sim/consciousness-lab.ts` — offline experiment runner for framework sweeps, null baselines, ablations, and seed sweeps.
 3. **Present:** `tests/consciousness-kernel.test.ts` and `tests/consciousness-lab.test.ts` — seed replay, ablation, null baseline, and no-sentience-claim tests.
 4. **Present:** `src/sim/consciousness-adapters.ts` — plant, creature, shoggoth, puppeteer, Mechalogodrom, apex, pantheon, glyph, and Archon profiles feed bandwidth-scaled `FrameworkSignals`.
-5. **Present:** `scripts/gen-consciousness-lab-data.ts` and `lab/consciousness-data.json` — deterministic JSON output for entity snapshots, framework scores, lab ablations, event windows, seed, and source docs.
-6. **Present:** `lab/consciousness.html` plus `/lab/consciousness` and Pages copy support — first public dashboard with metric braid, framework heatmap, ablation waterfall, falsifier ledger, and honesty banner.
-7. **Next:** wire live world entities into the same adapters instead of the deterministic representative profiles.
-8. **Next:** add preregistration and negative-results docs so failed consciousness hypotheses remain visible.
+5. **Present:** `src/sim/sentience-lab.ts` — headless mass-run analytics over the same indicator kernel, producing seed summaries, framework aggregates, entity telemetry traces, and graph edges.
+6. **Present:** `scripts/gen-consciousness-lab-data.ts`, `lab/consciousness-data.json`, and `lab/sentience-data.json` — deterministic JSON output for both static evidence pages.
+7. **Present:** `lab/consciousness.html` plus `/lab/consciousness` and Pages copy support — first public dashboard with metric braid, framework heatmap, ablation waterfall, falsifier ledger, and honesty banner.
+8. **Present:** `lab/sentience.html` plus `/lab/sentience`, `/api/sentience-lab`, and Pages copy support — second public dashboard for renderer-free seed sweeps, null controls, entity traces, and CSV/JSON export.
+9. **Next:** wire live world entities into the same adapters instead of the deterministic representative profiles.
+10. **Next:** add preregistration and negative-results docs so failed consciousness hypotheses remain visible.
 
 ## Final Doctrine
 

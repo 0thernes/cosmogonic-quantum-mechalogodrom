@@ -131,12 +131,16 @@ The report corpus directly supports the new implementation spine now present in 
 | `src/sim/consciousness-kernel.ts`                             | Present | Ten-framework metadata, coupling matrix, score statuses, indicator-only snapshots.     |
 | `src/sim/consciousness-lab.ts`                                | Present | Offline Kuramoto-style convergence runner, null shuffle, ablation, seed sweep.         |
 | `src/sim/consciousness-adapters.ts`                           | Present | Entity-class adapters from plant through Archon into `FrameworkSignals`.               |
-| `scripts/gen-consciousness-lab-data.ts`                       | Present | Deterministic JSON feed generator for static Pages and local server use.               |
+| `src/sim/sentience-lab.ts`                                    | Present | Headless mass-run analytics: seed summaries, framework aggregates, entity traces.      |
+| `scripts/gen-consciousness-lab-data.ts`                       | Present | Deterministic JSON feed generator for both static Pages labs and local server use.     |
 | `lab/consciousness-data.json`                                 | Present | Tracked entity/lab/feed snapshot for GitHub Pages.                                     |
 | `lab/consciousness.html`                                      | Present | Static Consciousness Lab dashboard with metric braid, heatmap, ablation, falsifiers.   |
+| `lab/sentience-data.json`                                     | Present | Tracked headless sweep/feed snapshot for GitHub Pages and AI/report analysis.          |
+| `lab/sentience.html`                                          | Present | Static Sentience Lab dashboard with seed sweeps, entity traces, exports, no renderer.  |
 | `tests/consciousness-kernel.test.ts`                          | Present | Metadata, coupling, bounded scores, determinism, no absent-framework inflation.        |
 | `tests/consciousness-lab.test.ts`                             | Present | Determinism, emergence, singularity/null separation, ablation, cross-seed robustness.  |
 | `tests/consciousness-adapters.test.ts`                        | Present | Entity coverage, plant low-bandwidth boundary, apex full contract, deterministic feed. |
+| `tests/sentience-lab.test.ts`                                 | Present | Headless feed determinism, bounded sweep stats, framework/entity coverage.             |
 | `docs/CONSCIOUSNESS-LAB-MASTER-2026-07-03.md`                 | Updated | Canonical doctrine and Pages plan.                                                     |
 | `docs/CONSCIOUSNESS-LAB-DEEP-RESEARCH-2026-07-03.md`          | Present | First-ten defensibility, falsifiers, visuals, source ledger.                           |
 | `docs/CONSCIOUSNESS-LAB-FRONTIER-OUTLIER-STACK-2026-07-03.md` | Present | Harder outlier stack and frontier visuals.                                             |
@@ -165,16 +169,18 @@ The public page should be ordered like a lab, not a legend.
 6. Negative results ledger: failed hypotheses remain visible.
 7. Entity adapters: plant, creature, shoggoth, puppeteer, Mechalogodrom, apex, pantheon, glyph, Archon.
 8. Downloadable JSON: framework scores, ablations, event windows, seed, and source receipts.
+9. Headless sentience analytics page: multi-seed sweeps, convergence/reward null separation, framework-load aggregates, sampled
+   entity telemetry traces, and CSV export without the Dome renderer.
 
 ## Next Engineering Moves
 
-| Priority | Move                                                                                     | Why                                                                              |
-| -------- | ---------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
-| 1        | Wire live world entities into the existing adapter functions.                            | Converts representative static profiles into per-frame world telemetry.          |
-| 2        | Add preregistration and negative-result docs folders.                                    | Implements the report-corpus adversarial standard.                               |
-| 3        | Add OA/criticality/IWMT auxiliary assays as report-only panels before runtime promotion. | Captures the strongest extra report ideas without inflating the core ten.        |
-| 4        | Add event-window downloads and seed-sweep comparison artifacts.                          | Makes convergence claims easier to replay and independently inspect.             |
-| 5        | Add live Pages charts for null panels and causal spine as the JSON schema grows.         | Moves the page from first static dashboard toward full adversarial lab evidence. |
+| Priority | Move                                                                                           | Why                                                                         |
+| -------- | ---------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| 1        | Wire live world entities into the existing adapter functions.                                  | Converts representative static profiles into per-frame world telemetry.     |
+| 2        | Add preregistration and negative-result docs folders.                                          | Implements the report-corpus adversarial standard.                          |
+| 3        | Add OA/criticality/IWMT auxiliary assays as report-only panels before runtime promotion.       | Captures the strongest extra report ideas without inflating the core ten.   |
+| 4        | Add event-window downloads and seed-sweep comparison artifacts.                                | Makes convergence claims easier to replay and independently inspect.        |
+| 5        | Wire `/lab/sentience` charts to future live-world telemetry once adapters read real loop data. | Keeps the headless proof surface aligned with the Dome instead of drifting. |
 
 ## Final Consolidated Doctrine
 

@@ -1,0 +1,665 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#081017" />
+    <title>Sentience Lab - Headless Analytics</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23071017'/%3E%3Cpath d='M5 23 L12 8 L20 25 L27 6' fill='none' stroke='%23e2b55f' stroke-width='2'/%3E%3Ccircle cx='12' cy='8' r='3' fill='%2336d7d4'/%3E%3Ccircle cx='20' cy='25' r='3' fill='%23e06b84'/%3E%3C/svg%3E"
+    />
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #071017;
+        --panel: #0e1820;
+        --panel-2: #13222c;
+        --line: #2d4650;
+        --text: #e6f1f1;
+        --muted: #9bb3b4;
+        --cyan: #36d7d4;
+        --gold: #e2b55f;
+        --rose: #e06b84;
+        --leaf: #7dbf8e;
+        --violet: #a885e6;
+        --blue: #82b6f0;
+        --ink: #05090d;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background:
+          linear-gradient(180deg, rgba(7, 16, 23, 0.94), rgba(5, 9, 13, 0.98)),
+          repeating-linear-gradient(
+            90deg,
+            rgba(54, 215, 212, 0.035) 0,
+            rgba(54, 215, 212, 0.035) 1px,
+            transparent 1px,
+            transparent 42px
+          ),
+          #05090d;
+        color: var(--text);
+        font-family:
+          Inter,
+          ui-sans-serif,
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          'Segoe UI',
+          sans-serif;
+        letter-spacing: 0;
+      }
+
+      a,
+      button {
+        color: var(--cyan);
+      }
+
+      a {
+        text-decoration: none;
+      }
+
+      button {
+        border: 1px solid var(--line);
+        background: rgba(14, 24, 32, 0.88);
+        padding: 8px 10px;
+        font: inherit;
+        cursor: pointer;
+      }
+
+      a:focus-visible,
+      button:focus-visible {
+        outline: 2px solid var(--gold);
+        outline-offset: 3px;
+      }
+
+      .shell {
+        width: min(1480px, calc(100vw - 28px));
+        margin: 0 auto;
+        padding: 18px 0 42px;
+      }
+
+      header {
+        position: sticky;
+        top: 0;
+        z-index: 4;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 16px;
+        align-items: center;
+        padding: 14px 0;
+        background: rgba(5, 9, 13, 0.82);
+        backdrop-filter: blur(16px);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-width: 0;
+      }
+
+      .mark {
+        width: 38px;
+        height: 38px;
+        border: 1px solid var(--line);
+        background:
+          linear-gradient(135deg, rgba(226, 181, 95, 0.34), transparent 48%),
+          linear-gradient(315deg, rgba(54, 215, 212, 0.22), transparent 52%), var(--panel);
+        box-shadow: inset 0 0 24px rgba(226, 181, 95, 0.12);
+      }
+
+      h1,
+      h2,
+      h3,
+      p {
+        margin: 0;
+      }
+
+      h1 {
+        font-size: clamp(1.25rem, 1.55vw + 0.8rem, 2.2rem);
+        line-height: 1.05;
+        letter-spacing: 0;
+      }
+
+      h2 {
+        font-size: 1rem;
+        text-transform: uppercase;
+      }
+
+      h3 {
+        font-size: 0.95rem;
+      }
+
+      .subtitle,
+      .muted {
+        color: var(--muted);
+      }
+
+      .subtitle {
+        margin-top: 5px;
+        font-size: 0.92rem;
+      }
+
+      nav {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: 8px;
+      }
+
+      nav a,
+      .action-link {
+        border: 1px solid var(--line);
+        padding: 8px 10px;
+        background: rgba(14, 24, 32, 0.85);
+        color: var(--text);
+        font-size: 0.86rem;
+      }
+
+      nav a[aria-current='page'] {
+        border-color: var(--gold);
+        color: var(--gold);
+      }
+
+      main {
+        display: grid;
+        gap: 14px;
+        padding-top: 16px;
+      }
+
+      .band,
+      .tile,
+      .panel,
+      .row {
+        border: 1px solid var(--line);
+        background: rgba(14, 24, 32, 0.9);
+      }
+
+      .band {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 16px;
+        align-items: center;
+        padding: 14px;
+      }
+
+      .claim {
+        color: var(--gold);
+        font-weight: 760;
+      }
+
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: 8px;
+      }
+
+      .kpis {
+        display: grid;
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .tile {
+        min-height: 104px;
+        padding: 12px;
+      }
+
+      .metric {
+        color: var(--muted);
+        font-size: 0.76rem;
+        text-transform: uppercase;
+      }
+
+      .value {
+        margin-top: 8px;
+        font-size: clamp(1.2rem, 1.8vw, 2rem);
+        font-weight: 780;
+        line-height: 1;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.05fr) minmax(380px, 0.95fr);
+        gap: 14px;
+      }
+
+      .panel {
+        padding: 14px;
+        min-width: 0;
+      }
+
+      .panel-head {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        align-items: baseline;
+        margin-bottom: 12px;
+      }
+
+      canvas {
+        display: block;
+        width: 100%;
+        height: 300px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: #071017;
+      }
+
+      .table {
+        display: grid;
+        gap: 6px;
+      }
+
+      .row {
+        display: grid;
+        grid-template-columns: minmax(150px, 0.7fr) repeat(4, minmax(70px, 0.32fr)) minmax(
+            110px,
+            0.5fr
+          );
+        gap: 10px;
+        align-items: center;
+        padding: 9px 10px;
+        font-size: 0.84rem;
+      }
+
+      .row strong {
+        color: var(--text);
+      }
+
+      .mono {
+        font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Consolas, monospace;
+      }
+
+      .bar {
+        height: 7px;
+        margin-top: 6px;
+        background: #17252c;
+        overflow: hidden;
+      }
+
+      .bar > span {
+        display: block;
+        height: 100%;
+        background: linear-gradient(90deg, var(--leaf), var(--cyan), var(--gold));
+      }
+
+      .error {
+        border: 1px solid var(--rose);
+        padding: 14px;
+        background: rgba(224, 107, 132, 0.12);
+      }
+
+      @media (max-width: 1040px) {
+        header,
+        .band,
+        .grid {
+          grid-template-columns: 1fr;
+        }
+
+        nav,
+        .actions {
+          justify-content: flex-start;
+        }
+
+        .kpis {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+
+      @media (max-width: 680px) {
+        .shell {
+          width: min(100vw - 18px, 1480px);
+        }
+
+        .kpis,
+        .row {
+          grid-template-columns: 1fr;
+        }
+
+        canvas {
+          height: 240px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <header>
+        <div class="brand">
+          <div class="mark" aria-hidden="true"></div>
+          <div>
+            <h1>Sentience Lab</h1>
+            <p class="subtitle">headless mass-run analytics for consciousness indicators</p>
+          </div>
+        </div>
+        <nav aria-label="Satellite pages">
+          <a href="/">Dome</a>
+          <a href="/docs">Docs</a>
+          <a href="/spec">Spec</a>
+          <a href="/lab">Quantum Lab</a>
+          <a href="/lab/consciousness">Consciousness</a>
+          <a href="/lab/sentience" aria-current="page">Sentience</a>
+        </nav>
+      </header>
+
+      <main id="app">
+        <section class="band">
+          <div>
+            <p class="claim">computational indicators only</p>
+            <p class="muted">
+              Headless seed sweeps, null controls, ablation load, and entity telemetry without the
+              visual Dome renderer.
+            </p>
+          </div>
+          <div class="actions">
+            <a class="action-link" href="./sentience-data.json">JSON</a>
+            <button id="csv-runs" type="button">Runs CSV</button>
+            <button id="csv-entities" type="button">Entities CSV</button>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script>
+      const COLORS = [
+        '#36d7d4',
+        '#e2b55f',
+        '#e06b84',
+        '#7dbf8e',
+        '#a885e6',
+        '#82b6f0',
+        '#f08d58',
+        '#c6d76b',
+        '#d98ed7',
+      ];
+      const pct = (value) => {
+        const v = Math.max(0, Math.min(1, Number(value) || 0));
+        return `${Math.round(v * 100)}%`;
+      };
+      const num = (value, digits = 3) => Number(value || 0).toFixed(digits);
+
+      async function loadData() {
+        const candidates = [
+          './sentience-data.json',
+          '../sentience-data.json',
+          '/lab/sentience-data.json',
+          '/api/sentience-lab',
+        ];
+        for (const url of candidates) {
+          try {
+            const res = await fetch(url, { cache: 'no-store' });
+            if (res.ok) return res.json();
+          } catch {
+            /* try next candidate */
+          }
+        }
+        throw new Error('sentience-data.json unavailable');
+      }
+
+      function kpi(label, value, note) {
+        return `<article class="tile"><div class="metric">${label}</div><div class="value">${value}</div><p class="muted">${note}</p></article>`;
+      }
+
+      function bestEntity(data) {
+        return data.entityTelemetry.reduce((best, e) => (e.meanIndex > best.meanIndex ? e : best));
+      }
+
+      function renderKpis(data) {
+        const sweep = data.sweep;
+        const best = bestEntity(data);
+        return `<section class="kpis" aria-label="Sentience lab summary">
+          ${kpi('runs', String(sweep.runs), 'deterministic seeds')}
+          ${kpi('singularity', pct(sweep.singularityRate), 'structured beats null')}
+          ${kpi('ablation', pct(sweep.ablationRate), 'load-bearing stack')}
+          ${kpi('emergence', pct(sweep.emergenceRate), 'coupling above baseline')}
+          ${kpi('conv gap', num(sweep.meanConvergenceGap), 'structured minus shuffled')}
+          ${kpi('top entity', best.kind, num(best.meanIndex) + ' mean index')}
+        </section>`;
+      }
+
+      function renderEntityTable(data) {
+        const rows = data.entityTelemetry
+          .map(
+            (e) => `<div class="row">
+              <strong>${e.label}<span class="muted"> - ${e.kind}</span></strong>
+              <span class="mono">${num(e.meanIndex)}</span>
+              <span class="mono">${num(e.peakIndex)}</span>
+              <span class="mono">${num(e.slope)}</span>
+              <span>${e.dominantFramework}</span>
+              <div class="bar" aria-hidden="true"><span style="width:${pct(e.meanIndex)}"></span></div>
+            </div>`,
+          )
+          .join('');
+        return `<section class="panel">
+          <div class="panel-head"><h2>Entity Telemetry</h2><span class="muted">mean / peak / slope / dominant</span></div>
+          <div class="table">${rows}</div>
+        </section>`;
+      }
+
+      function renderFrameworkTable(data) {
+        const rows = data.frameworkAggregates
+          .map(
+            (f) => `<div class="row">
+              <strong>${f.id}<span class="muted"> - ${f.bucket}</span></strong>
+              <span class="mono">${num(f.meanAblationLoss)}</span>
+              <span class="mono">${num(f.meanNullSeparation)}</span>
+              <span class="mono">${num(f.meanCausalEffect)}</span>
+              <span class="mono">${pct(f.loadBearingRate)}</span>
+              <div class="bar" aria-hidden="true"><span style="width:${pct(f.meanAblationLoss * 8)}"></span></div>
+            </div>`,
+          )
+          .join('');
+        return `<section class="panel">
+          <div class="panel-head"><h2>Framework Load</h2><span class="muted">ablation / null / causal / rate</span></div>
+          <div class="table">${rows}</div>
+        </section>`;
+      }
+
+      function chartSetup(canvas) {
+        const dpr = Math.min(2, window.devicePixelRatio || 1);
+        const w = canvas.clientWidth;
+        const h = canvas.clientHeight;
+        canvas.width = Math.floor(w * dpr);
+        canvas.height = Math.floor(h * dpr);
+        const ctx = canvas.getContext('2d');
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        ctx.clearRect(0, 0, w, h);
+        ctx.fillStyle = '#071017';
+        ctx.fillRect(0, 0, w, h);
+        ctx.strokeStyle = 'rgba(255,255,255,.08)';
+        ctx.lineWidth = 1;
+        for (let y = 34; y < h; y += 44) {
+          ctx.beginPath();
+          ctx.moveTo(0, y);
+          ctx.lineTo(w, y);
+          ctx.stroke();
+        }
+        return { ctx, w, h };
+      }
+
+      function drawSweep(canvas, data) {
+        const { ctx, w, h } = chartSetup(canvas);
+        const runs = data.runSummaries;
+        const step = (w - 36) / Math.max(1, runs.length - 1);
+        const y = (v) => h - 22 - Math.max(0, Math.min(1, v)) * (h - 50);
+        ctx.lineWidth = 2;
+        [
+          ['structuredIndex', '#36d7d4'],
+          ['nullIndex', '#e06b84'],
+          ['convergenceGap', '#e2b55f'],
+        ].forEach(([key, color]) => {
+          ctx.strokeStyle = color;
+          ctx.beginPath();
+          runs.forEach((r, i) => {
+            const x = 18 + i * step;
+            const yy = y(r[key]);
+            if (i === 0) ctx.moveTo(x, yy);
+            else ctx.lineTo(x, yy);
+          });
+          ctx.stroke();
+        });
+        ctx.fillStyle = '#9bb3b4';
+        ctx.font = '12px system-ui';
+        ctx.fillText('structured / null / convergence gap', 14, 18);
+      }
+
+      function drawEntityTraces(canvas, data) {
+        const { ctx, w, h } = chartSetup(canvas);
+        const maxTick = Math.max(
+          ...data.entityTelemetry.flatMap((e) => e.trace.map((p) => p.tick)),
+        );
+        data.entityTelemetry.forEach((entity, i) => {
+          ctx.strokeStyle = COLORS[i % COLORS.length];
+          ctx.lineWidth = entity.kind === 'archon' || entity.kind === 'apex' ? 2.4 : 1.6;
+          ctx.beginPath();
+          entity.trace.forEach((p, j) => {
+            const x = 18 + (p.tick / Math.max(1, maxTick)) * (w - 36);
+            const y = h - 22 - p.index * (h - 50);
+            if (j === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+          });
+          ctx.stroke();
+        });
+        ctx.fillStyle = '#9bb3b4';
+        ctx.font = '12px system-ui';
+        ctx.fillText('entity index traces', 14, 18);
+      }
+
+      function drawFrameworkLoad(canvas, data) {
+        const { ctx, w, h } = chartSetup(canvas);
+        const stats = data.frameworkAggregates;
+        const max = Math.max(0.001, ...stats.map((f) => f.meanAblationLoss));
+        const rowH = (h - 38) / stats.length;
+        stats.forEach((f, i) => {
+          const y = 25 + i * rowH;
+          const width = (f.meanAblationLoss / max) * (w - 150);
+          ctx.fillStyle = COLORS[i % COLORS.length];
+          ctx.fillRect(130, y, width, Math.max(5, rowH - 5));
+          ctx.fillStyle = '#cbd5e1';
+          ctx.font = '11px system-ui';
+          ctx.fillText(f.id.slice(0, 14), 12, y + rowH * 0.65);
+        });
+      }
+
+      function renderCharts() {
+        return `<section class="grid">
+          <section class="panel">
+            <div class="panel-head"><h2>Seed Sweep</h2><span class="muted">structured vs shuffled null</span></div>
+            <canvas id="sweep" aria-label="Seed sweep structured, null, and null-gap traces"></canvas>
+          </section>
+          <section class="panel">
+            <div class="panel-head"><h2>Entity Traces</h2><span class="muted">renderer-free telemetry</span></div>
+            <canvas id="traces" aria-label="Entity index traces across sampled ticks"></canvas>
+          </section>
+        </section>
+        <section class="panel">
+          <div class="panel-head"><h2>Ablation Load</h2><span class="muted">framework effect size</span></div>
+          <canvas id="load" aria-label="Framework ablation load bars"></canvas>
+        </section>`;
+      }
+
+      function csv(data, kind) {
+        if (kind === 'runs') {
+          const head =
+            'seed,structuredIndex,nullIndex,nullGap,structuredConvergence,nullConvergence,convergenceGap,rewardGap,events,singularityProven,ablationProven,emergenceProven';
+          return [head]
+            .concat(
+              data.runSummaries.map((r) =>
+                [
+                  r.seed,
+                  r.structuredIndex,
+                  r.nullIndex,
+                  r.nullGap,
+                  r.structuredConvergence,
+                  r.nullConvergence,
+                  r.convergenceGap,
+                  r.rewardGap,
+                  r.events,
+                  r.singularityProven,
+                  r.ablationProven,
+                  r.emergenceProven,
+                ].join(','),
+              ),
+            )
+            .join('\n');
+        }
+        const head =
+          'id,kind,label,meanIndex,peakIndex,finalIndex,volatility,slope,eventCount,dominantFramework';
+        return [head]
+          .concat(
+            data.entityTelemetry.map((e) =>
+              [
+                e.id,
+                e.kind,
+                JSON.stringify(e.label),
+                e.meanIndex,
+                e.peakIndex,
+                e.finalIndex,
+                e.volatility,
+                e.slope,
+                e.eventCount,
+                e.dominantFramework,
+              ].join(','),
+            ),
+          )
+          .join('\n');
+      }
+
+      function download(name, text) {
+        const blob = new Blob([text], { type: 'text/csv;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = name;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+      }
+
+      function render(data) {
+        const app = document.getElementById('app');
+        app.insertAdjacentHTML(
+          'beforeend',
+          `${renderKpis(data)}
+          ${renderCharts()}
+          <section class="grid">${renderEntityTable(data)}${renderFrameworkTable(data)}</section>
+          <section class="band"><p class="muted">${data.proofBoundary}</p><span class="mono muted">${data.version}</span></section>`,
+        );
+        const paint = () => {
+          drawSweep(document.getElementById('sweep'), data);
+          drawEntityTraces(document.getElementById('traces'), data);
+          drawFrameworkLoad(document.getElementById('load'), data);
+        };
+        paint();
+        window.addEventListener('resize', paint, { passive: true });
+        document.getElementById('csv-runs').addEventListener('click', () => {
+          download('sentience-runs.csv', csv(data, 'runs'));
+        });
+        document.getElementById('csv-entities').addEventListener('click', () => {
+          download('sentience-entities.csv', csv(data, 'entities'));
+        });
+      }
+
+      loadData()
+        .then(render)
+        .catch((error) => {
+          document
+            .getElementById('app')
+            .insertAdjacentHTML(
+              'beforeend',
+              `<section class="error"><strong>Data feed unavailable.</strong><p>${error.message}</p></section>`,
+            );
+        });
+    </script>
+  </body>
+</html>

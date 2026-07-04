@@ -8,6 +8,8 @@
  *                       file (deliberately NOT bundled — it is CDN-only by design)
  * - `/lab/consciousness` and `/api/consciousness-lab`
  *                     → static consciousness-indicator dashboard + deterministic JSON feed
+ * - `/lab/sentience` and `/api/sentience-lab`
+ *                     → headless mass-run sentience analytics dashboard + deterministic JSON feed
  * - `GET  /api/health`→ JSON `{ ok, uptime, version }`
  * - `GET  /api/audit` → HTML fragment (`<ol>` of recent audit entries, newest first)
  *                       polled by the HTMX audit panel every 5s
@@ -432,6 +434,30 @@ if (import.meta.main) {
         GET(req) {
           logRequest(req, 200);
           return new Response(Bun.file(new URL('./lab/consciousness-data.json', import.meta.url)), {
+            headers: { 'Content-Type': 'application/json; charset=utf-8' },
+          });
+        },
+      }),
+      '/lab/sentience': secured({
+        GET(req) {
+          logRequest(req, 200);
+          return new Response(Bun.file(new URL('./lab/sentience.html', import.meta.url)), {
+            headers: { 'Content-Type': 'text/html; charset=utf-8' },
+          });
+        },
+      }),
+      '/lab/sentience-data.json': secured({
+        GET(req) {
+          logRequest(req, 200);
+          return new Response(Bun.file(new URL('./lab/sentience-data.json', import.meta.url)), {
+            headers: { 'Content-Type': 'application/json; charset=utf-8' },
+          });
+        },
+      }),
+      '/api/sentience-lab': secured({
+        GET(req) {
+          logRequest(req, 200);
+          return new Response(Bun.file(new URL('./lab/sentience-data.json', import.meta.url)), {
             headers: { 'Content-Type': 'application/json; charset=utf-8' },
           });
         },
