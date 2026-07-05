@@ -293,9 +293,9 @@ HTML and the native engine (`native/src/` — 5 files, no unsafe C calls).
   genuinely exercises the code — it is not a hollow green.
 - **`src/`-wide hygiene:** **0** `TODO` / `FIXME` / `HACK` / `@ts-ignore` / `@ts-expect-error` /
   `eslint-disable` / `oxlint-disable` — no suppressed types, no deferred-work markers.
-- **Doc-vs-code re-verified on the current tip:** FILE-MAP "195 modules" = 195 actual `src/**/*.ts`;
-  `package.json` `0.18.0`; `bun run sync:check` green (all surfaces match `v0.18.0 · 1,984 tests ·
-92.13/89.66`); 0 broken relative links; all 90 md/xml/html surfaces codepoint-clean.
+- **Doc-vs-code re-verified on the current tip:** FILE-MAP module counts match `src/**/*.ts`;
+  version/test/coverage receipts match `package.json` + `scripts/canonical-receipts.ts`;
+  `bun run sync:check` green; 0 broken relative links; all md/xml/html surfaces codepoint-clean.
 
 Net: the repo is **true, accurate, current, and defensible**. Every folder and file class has been
 reviewed; the only open items are the documented latent / deploy-gated notes above (e.g. per-IP audit

@@ -468,7 +468,7 @@ a:focus-visible {
   border: 1px solid rgba(120, 160, 220, 0.35);
   border-radius: 10px;
   padding: 8px 12px;
-  max-width: min(210px, 44vw);
+  max-width: min(320px, 52vw);
   user-select: none;
   backdrop-filter: blur(12px);
   box-shadow: 0 4px 18px rgba(0, 0, 0, 0.45);
@@ -522,6 +522,12 @@ a:focus-visible {
   opacity: 0.92;
   font-weight: 600;
   letter-spacing: 0.04em;
+}
+#perf-hud .perf-hud-metrics {
+  margin-top: 4px;
+  font: 600 11px/1.35 var(--font-mono, ui-monospace, monospace);
+  color: rgba(200, 220, 255, 0.88);
+  letter-spacing: 0.01em;
 }
 
 /* ── Panel collapse ─────────────────────────────────────────────

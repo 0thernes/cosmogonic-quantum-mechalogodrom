@@ -214,6 +214,13 @@ function syncVersion(s: string): string {
       .replace(/\*\*Build:\*\* v0\.[0-9]+\.[0-9]+/g, `**Build:** v${VERSION}`)
       .replace(/\*\*v0\.[0-9]+\.[0-9]+\*\*,/g, `**v${VERSION}**,`)
       .replace(/\*\*v0\.[0-9]+\.[0-9]+\*\* · `main`/g, `**v${VERSION}** · \`main\``)
+      .replace(/Canonical receipts: v0\.[0-9]+\.[0-9]+/g, `Canonical receipts: v${VERSION}`)
+      .replace(/stands today: v0\.[0-9]+\.[0-9]+/g, `stands today: v${VERSION}`)
+      .replace(/\(v0\.[0-9]+\.[0-9]+\)(?=.*(?:manifesto|NHSI|0thernes))/gi, `(v${VERSION})`)
+      .replace(/> v0\.[0-9]+\.[0-9]+ ·/g, `> v${VERSION} ·`)
+      .replace(/Bun [^,]+, v0\.[0-9]+\.[0-9]+/g, (m) =>
+        m.replace(/v0\.[0-9]+\.[0-9]+/, `v${VERSION}`),
+      )
   );
 }
 

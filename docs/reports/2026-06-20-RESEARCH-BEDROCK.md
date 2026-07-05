@@ -15,7 +15,7 @@ is and where Cosmogonic (v0.20.0, gate green) actually sits on it.
 > indicators; it _is_ none of them. The hard problem of consciousness is untouched.
 
 > **What this report is grounded against (measured on `origin/main`, Bun 1.3.14):**
-> v0.18.0 · `bun run check` green · 1,984 tests (published floor) / 0 fail / 2,912,102 `expect()` calls
+> v0.20.0 · `bun run check` green · 1,984 tests (published floor) / 0 fail / 2,912,102 `expect()` calls
 > across 231 files · 83.95 % line / 81.57 % function coverage (canonical; ±6pp
 > gate tolerance). Consciousness scorecard: **8/14 met + 6/14 partial** on the Butlin et
 > al. 2023 indicators — _computational indicators, not sentience._ No quantum advantage is

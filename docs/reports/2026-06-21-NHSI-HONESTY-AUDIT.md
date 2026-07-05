@@ -7,7 +7,7 @@
 This is the canonical honesty scorecard for the project's NHSI / consciousness
 claims: **what is genuinely WIRED vs. what the headline numbers claim.** It is
 current as of today — every figure below is measured on `origin/main` (`2233488`,
-Bun 1.3.14, v0.18.0, full `bun run check` green). The honest frame is unchanged
+Bun 1.3.14, v0.20.0, full `bun run check` green). The honest frame is unchanged
 and load-bearing: **Butlin et al. (2023) indicators sit at 8/14 met + 6/14
 partial, and computational indicators are not sentience.**
 

@@ -1,11 +1,11 @@
 /**
- * STAGE 1 — perf HUD (render / UI layer — NOT src/sim, NOT src/math).
+ * STAGE 1+ — perf HUD (render / UI layer — NOT src/sim, NOT src/math).
  *
- * A tiny always-on chip (bottom-left) showing live FPS, the frame monitor's locked-full quality level,
- * and the active tier, plus one-tap tier switching (sets `?tier=` and reloads).
+ * Always-on chip showing live FPS, frame timing, population, connectome density, worker pool
+ * utilization, memory, and tier — plus one-tap tier switching (`?tier=` reload).
  *
- * DETERMINISM-SAFE: reads only render-layer signals (the rAF dt → FPS, the governor level), never sim
- * state/RNG; uses no Math.random/Date.now. Headless-safe: with no DOM it returns a no-op updater.
+ * DETERMINISM-SAFE: reads only render-layer + read-only sim telemetry; never mutates sim/RNG.
+ * Headless-safe: with no DOM it returns a no-op updater.
  */
 import { Level } from '../core/frame-governor';
 
@@ -30,12 +30,72 @@ const BUCKET_COLOR: Record<'good' | 'ok' | 'bad', string> = {
   bad: '#ff6b6b',
 };
 
+/** Read-only sim telemetry surfaced in the HUD (from World.getPerfSnapshot). */
+export interface PerfHudWorldMetrics {
+  entities: number;
+  maxEntities: number;
+  connectomeLinks: number;
+  wildernessEntities: number;
+  workerTotal: number;
+  workerActive: number;
+  workersReady: boolean;
+  hardwareCores: number;
+  simFrame: number;
+}
+
+/** Full HUD update payload — pure formatters consume this. */
+export interface PerfHudSnapshot {
+  fps: number;
+  level: Level;
+  frameMs: number;
+  p95Ms: number;
+  heapMb: number;
+  tier: string;
+  world: PerfHudWorldMetrics;
+}
+
+/** Format the timing row: `16 ms · p95 22 ms · 412 MB`. Pure. */
+export function formatTimingLine(frameMs: number, p95Ms: number, heapMb: number): string {
+  const ms = `${Math.round(frameMs)} ms`;
+  const p95 = p95Ms > 0 ? ` · p95 ${Math.round(p95Ms)} ms` : '';
+  const heap = heapMb > 0 ? ` · ${Math.round(heapMb)} MB` : '';
+  return ms + p95 + heap;
+}
+
+/** Format the population row: `n 10,000/50,000 · links 40,120 · wild 640`. Pure. */
+export function formatPopulationLine(w: PerfHudWorldMetrics): string {
+  const n = `${w.entities.toLocaleString()}/${w.maxEntities.toLocaleString()}`;
+  const links = w.connectomeLinks.toLocaleString();
+  const wild = w.wildernessEntities > 0 ? ` · wild ${w.wildernessEntities.toLocaleString()}` : '';
+  return `n ${n} · links ${links}${wild}`;
+}
+
+/** Format worker/cpu row: `cpu 16c · workers 16 (2 act)`. Pure. */
+export function formatWorkerLine(w: PerfHudWorldMetrics): string {
+  const cores = `${w.hardwareCores}c`;
+  if (!w.workersReady || w.workerTotal === 0) return `cpu ${cores} · workers off`;
+  const act = w.workerActive > 0 ? ` (${w.workerActive} act)` : '';
+  return `cpu ${cores} · workers ${w.workerTotal}${act}`;
+}
+
 export interface PerfHud {
-  /** Update the readout from this frame's FPS + the governor level. O(1) text writes only. */
-  update(fps: number, level: Level): void;
+  /** Update the readout. O(1) text writes only. */
+  update(snapshot: PerfHudSnapshot): void;
 }
 
 const NOOP: PerfHud = { update: () => undefined };
+
+const EMPTY_WORLD: PerfHudWorldMetrics = {
+  entities: 0,
+  maxEntities: 0,
+  connectomeLinks: 0,
+  wildernessEntities: 0,
+  workerTotal: 0,
+  workerActive: 0,
+  workersReady: false,
+  hardwareCores: 1,
+  simFrame: 0,
+};
 
 /**
  * Mount the perf chip into the document and return an updater. Headless-safe: returns a no-op updater
@@ -58,6 +118,13 @@ export function mountPerfHud(currentTier: string): PerfHud {
   line1.appendChild(document.createTextNode(' · '));
   line1.appendChild(qEl);
 
+  const timingEl = document.createElement('div');
+  timingEl.className = 'perf-hud-metrics';
+  const popEl = document.createElement('div');
+  popEl.className = 'perf-hud-metrics';
+  const workerEl = document.createElement('div');
+  workerEl.className = 'perf-hud-metrics';
+
   const tierRow = document.createElement('div');
   tierRow.className = 'perf-hud-row';
   for (const t of TIERS) {
@@ -73,23 +140,30 @@ export function mountPerfHud(currentTier: string): PerfHud {
     tierRow.appendChild(b);
   }
 
-  // Stage 2: surface the (already-built) free-fly camera — it works in the default 'free' view but
-  // was undiscoverable. drag = look, scroll = zoom, WASD/arrows = fly.
   const hint = document.createElement('div');
   hint.className = 'perf-hud-hint';
   hint.textContent = 'fly: drag · scroll · WASD';
 
   el.appendChild(line1);
+  el.appendChild(timingEl);
+  el.appendChild(popEl);
+  el.appendChild(workerEl);
   el.appendChild(tierRow);
   el.appendChild(hint);
   mountParent.appendChild(el);
 
   return {
-    update(fps: number, level: Level): void {
-      const bucket = fpsBucket(fps);
-      fpsEl.textContent = `${Math.round(fps)} fps`;
+    update(snapshot: PerfHudSnapshot): void {
+      const bucket = fpsBucket(snapshot.fps);
+      fpsEl.textContent = `${Math.round(snapshot.fps)} fps`;
       fpsEl.style.color = BUCKET_COLOR[bucket];
-      qEl.textContent = `q: ${qualityLabel(level)}`;
+      qEl.textContent = `q: ${qualityLabel(snapshot.level)} · ${snapshot.tier}`;
+      timingEl.textContent = formatTimingLine(snapshot.frameMs, snapshot.p95Ms, snapshot.heapMb);
+      popEl.textContent = formatPopulationLine(snapshot.world);
+      workerEl.textContent = formatWorkerLine(snapshot.world);
     },
   };
 }
+
+/** Headless default for tests importing format helpers. */
+export { EMPTY_WORLD };

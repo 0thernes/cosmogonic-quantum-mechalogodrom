@@ -3652,6 +3652,39 @@ export class World {
   }
 
   /**
+   * Read-only perf telemetry for the render-layer HUD. Draws no rng; allocation-free.
+   * Wilderness + worker pool stats are best-effort (ADR 0010 — not in the golden).
+   */
+  getPerfSnapshot(): {
+    entities: number;
+    maxEntities: number;
+    connectomeLinks: number;
+    wildernessEntities: number;
+    workerTotal: number;
+    workerActive: number;
+    workersReady: boolean;
+    hardwareCores: number;
+    simFrame: number;
+  } {
+    const wp = this.workerPool?.getStats();
+    const nav =
+      typeof navigator !== 'undefined'
+        ? (navigator as Navigator & { hardwareConcurrency?: number })
+        : undefined;
+    return {
+      entities: this.entities.list.length,
+      maxEntities: this.quality.maxEntities,
+      connectomeLinks: this.connectome.links,
+      wildernessEntities: this.wilderness.getEntityCount(),
+      workerTotal: wp?.totalWorkers ?? 0,
+      workerActive: wp?.activeTasks ?? 0,
+      workersReady: (wp?.totalWorkers ?? 0) > 0,
+      hardwareCores: Math.max(1, Math.floor(nav?.hardwareConcurrency ?? 8)),
+      simFrame: this.state.frame,
+    };
+  }
+
+  /**
    * F-NHI: launch a user-controlled non-human-intelligence being ~45u in front of the camera — a
    * buoyant, fast, age-immortal, consumption-immune entity that flies and floats through the world
    * with "Matrix" powers. Returns 1 on success, 0 at the population cap. Draws rng (a user event,

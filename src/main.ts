@@ -8,6 +8,8 @@ import { detectQuality } from './core/quality';
 import { Engine } from './core/engine';
 import { RenderGovernor } from './core/frame-governor';
 import { mountPerfHud } from './ui/perf-hud';
+import type { PerfHudWorldMetrics } from './ui/perf-hud';
+import { PerformanceMonitor } from './core/perf-monitor';
 import { MemoryStore } from './memory/store';
 import { AuditTrail } from './logging/audit';
 import { createLogger } from './logging/logger';
@@ -212,6 +214,7 @@ async function boot(): Promise<void> {
   // Stage 1: a tiny render-layer perf chip — live FPS + locked-full quality + tier switch.
   // Render-only ⇒ determinism-safe; headless-safe (no-op without a DOM).
   const perfHud = mountPerfHud(quality.tier);
+  const perfMonitor = new PerformanceMonitor(120, 1000);
   let fpsEma = 60;
   let perfFrame = 0;
   // rAF-timestamp delta; world.step clamps to 50ms so tab-switch gaps are safe. dt floored at 0.
@@ -223,6 +226,7 @@ async function boot(): Promise<void> {
     last = now;
     governor.observe(dt);
     if (engine) governor.apply(engine);
+    perfMonitor.recordFrame();
     world?.step(dt);
     // V121: the first rendered world frame retires the boot loader (FIRST LIGHT = total ms from
     // script start to a presented cosmos — the honest end-to-end boot figure).
@@ -236,7 +240,30 @@ async function boot(): Promise<void> {
     // Render-layer FPS EMA (capped) → throttled HUD update (every 12 frames, no per-frame DOM thrash).
     const fps = dt > 0 ? Math.min(1 / dt, 240) : fpsEma;
     fpsEma += (fps - fpsEma) * 0.1;
-    if (++perfFrame % 12 === 0) perfHud.update(fpsEma, governor.level);
+    if (++perfFrame % 12 === 0) {
+      const metrics = perfMonitor.getMetrics();
+      const w = world?.getPerfSnapshot();
+      const worldMetrics: PerfHudWorldMetrics = w ?? {
+        entities: 0,
+        maxEntities: quality.maxEntities,
+        connectomeLinks: 0,
+        wildernessEntities: 0,
+        workerTotal: 0,
+        workerActive: 0,
+        workersReady: false,
+        hardwareCores: Math.max(1, navigator.hardwareConcurrency ?? 8),
+        simFrame: 0,
+      };
+      perfHud.update({
+        fps: fpsEma,
+        level: governor.level,
+        frameMs: governor.emaMs > 0 ? governor.emaMs : metrics.avgFrameTime,
+        p95Ms: metrics.p95FrameTime,
+        heapMb: metrics.memoryMB,
+        tier: quality.tier,
+        world: worldMetrics,
+      });
+    }
   }
   rafId = requestAnimationFrame(frame);
   // ROBUSTNESS: the deferred click-to-open panels (⛓ ACCESS / ◈ STAGE II / 🗒 AUDIT toggles, copilot,

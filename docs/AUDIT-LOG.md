@@ -11,6 +11,33 @@ dated / historical / "superseded snapshot" copies (per the binding "Living docs,
 
 ---
 
+## 2026-07-05 (pass 3) — Total audit: perf HUD metrics + doc consolidation + full-core workers (v0.20.0)
+
+Owner brief: comprehensive audit pass — stale markdown, perf observability, device utilization (never
+lowering visual fidelity).
+
+### Code
+
+- **`src/ui/perf-hud.ts`** — expanded HUD: frame ms, p95, heap MB, entity/link/wilderness counts, worker
+  pool utilization, hardware cores; pure format helpers + tests.
+- **`src/main.ts`** — wires `PerformanceMonitor` + `World.getPerfSnapshot()` into HUD (render-layer only).
+- **`src/world.ts`** — `getPerfSnapshot()` read-only telemetry for HUD.
+- **`src/core/worker-pool.ts`** — use all reported `hardwareConcurrency` cores on capable tiers (wilderness
+  offload is best-effort per ADR 0010; core golden unchanged).
+
+### Docs
+
+- **`AGENTS-2026-06-26.md`** — reduced to pointer stub; **`CLAUDE.md`** remains canonical steering.
+- **`scripts/sync-surfaces.ts`** — additional present-tense version patterns (`Canonical receipts:`,
+  `stands today:`, manifesto `(vX)`, RESEARCH-BEDROCK blockquote).
+- **`docs/VERIFICATION-ANALYTICAL-DATA.md`** — §9 closure no longer cites stale `0.18.0` / `92.13%`.
+
+### Gate
+
+- `bun run sync` then `bun run check`.
+
+---
+
 ## 2026-07-05 (pass 2) — Receipt drift sweep + worker pool + test index (v0.20.0)
 
 Second audit pass: living reports still carried `1,477` / `92.13%` / `v0.18.0` tokens after the first consolidation.
