@@ -1,36 +1,20 @@
 /**
  * STAGE 1 — perf HUD (render / UI layer — NOT src/sim, NOT src/math).
  *
- * A tiny always-on chip (bottom-left) showing live FPS, the frame-governor's current quality level
- * (full → dpr-shed → fx-off → shadows-off), and the active tier, plus one-tap tier switching (sets
- * `?tier=` and reloads). It makes the Stage-0 crash-proofing VISIBLE — you can watch the governor
- * shed/restore under load — and CONTROLLABLE without hand-editing the URL.
+ * A tiny always-on chip (bottom-left) showing live FPS, the frame monitor's locked-full quality level,
+ * and the active tier, plus one-tap tier switching (sets `?tier=` and reloads).
  *
  * DETERMINISM-SAFE: reads only render-layer signals (the rAF dt → FPS, the governor level), never sim
  * state/RNG; uses no Math.random/Date.now. Headless-safe: with no DOM it returns a no-op updater.
  */
 import { Level } from '../core/frame-governor';
 
-// V123 (USER #6): the six-rung ladder — everyone BOOTS phone (fast first load); this switcher is
-// the one-tap way UP (sets ?tier= and reloads).
+// Six-rung population ladder. The active tier may change population scale, never visual fidelity.
 const TIERS = ['phone', 'tablet', 'laptop', 'desktop', 'ultra', 'mega'] as const;
 
-/** Governor level → short human label. Pure. */
-export function qualityLabel(level: Level): string {
-  switch (level) {
-    case Level.FULL:
-      return 'full';
-    case Level.DPR_85:
-      return 'dpr 85%';
-    case Level.DPR_65:
-      return 'dpr 65%';
-    case Level.FX_OFF:
-      return 'fx off';
-    case Level.SHADOWS_OFF:
-      return 'shadows off';
-    default:
-      return '—';
-  }
+/** Governor level → short human label. Pure. Runtime monitor is locked full. */
+export function qualityLabel(_level: Level): string {
+  return 'full';
 }
 
 /** FPS → status bucket (drives the readout colour). Pure. */

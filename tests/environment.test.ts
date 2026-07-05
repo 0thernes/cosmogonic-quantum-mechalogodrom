@@ -19,6 +19,7 @@ import { createMorphotypes } from '../src/sim/morphotypes';
 import { createPhyla } from '../src/sim/phyla';
 import { EnvironmentSystem } from '../src/sim/environment';
 import { LoreEngine } from '../src/sim/lore';
+import { getQuantizationConfig } from '../src/math/quantization';
 import type { AuditTrail } from '../src/logging/audit';
 import type { Entity, SimContext } from '../src/types';
 
@@ -43,6 +44,8 @@ function makeCtx(seed: number, chaos: number): SimContext {
       maxLinks: 100,
       shadows: false,
       starCount: 5,
+      quantization: getQuantizationConfig('phone'),
+      simRate: 15,
     },
     rng,
     grid: new SpatialHash<Entity>(GRID_CELL),

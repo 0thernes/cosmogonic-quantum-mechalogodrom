@@ -482,7 +482,7 @@ export const HELP_KB: readonly HelpEntry[] = [
       'render',
       'fidelity',
     ],
-    body: 'Singularity geometry detail scales with quality tier: at mega/ultra, sphere segments jump to 96/64, torus segments to 128/96, and icosahedron detail to 4/3 — vs 32/24/1 at default. Particle counts scale from 350 (default) to 6200 (mega). No GPU render guardrails — frustumCulled is false on every mesh so they always render at full fidelity. YOLO mode: the weakling tiers get dumbed down, but ultra and mega get the full death-of-a-singularity spectacle.',
+    body: 'Singularity visuals are quality-locked: geometry, color, post-FX, shadows, DPR, and simulation cadence are not lowered by the tier system. Tiers may scale population budgets, but the singularity remains a full-fidelity spectacle wherever it appears. The renderer keeps its meshes uncropped for the effect volume so a far-away singularity still reads as detailed instead of popping or flattening.',
     see: ['src/sim/singularities.ts'],
   },
   {

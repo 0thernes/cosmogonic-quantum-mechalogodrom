@@ -10,6 +10,7 @@ import * as THREE from 'three';
 import { mulberry32 } from '../src/math/rng';
 import { SpatialHash } from '../src/math/spatial-hash';
 import { Viz3DSystem } from '../src/sim/viz3d';
+import { getQuantizationConfig } from '../src/math/quantization';
 import type { Viz3DLedgerRow, Viz3DSnapshot } from '../src/sim/viz3d';
 import type { AuditTrail } from '../src/logging/audit';
 import type { Entity, QualityTier, SimContext } from '../src/types';
@@ -35,6 +36,7 @@ function makeCtx(tier: QualityTier, maxEntities: number, seed = 1): SimContext {
       maxLinks: 10,
       shadows: false,
       starCount: 10,
+      quantization: getQuantizationConfig('desktop'),
     },
     rng: mulberry32(seed),
     grid: new SpatialHash<Entity>(),

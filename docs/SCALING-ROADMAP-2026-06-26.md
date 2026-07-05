@@ -56,10 +56,122 @@ shippable, gate-green, pushed increment that builds on the last.
 
 ## Stage 5 — WebGPU compute (effort: XL — the ceiling-raiser)
 
-- Move neighbour queries + brain eval + reaction-diffusion onto the GPU as compute shaders (GPUs flock 1M+ agents in real time).
+- **Dual-Graphics API Fallback:** Attempt WebGPU initialization first; fall back to WebGL2 if unavailable (ensures mobile compatibility). WebGPU provides native GPU compute for massive parallelism; WebGL2 is the universal fallback supported by 100% of modern browsers.
+- **GPU Compute Shaders:** Move neighbour queries + brain eval + reaction-diffusion onto the GPU as compute shaders (GPUs flock 1M+ agents in real time).
+- **Transform Feedback / Unified Buffer Storage:** For WebGL2, use Transform Feedback to compute neural states and save them directly into VRAM buffers, then feed them back into the rendering pipeline without CPU round-trip.
+- **Off-Screen Canvas Rendering:** Move the rendering loop to an OffscreenCanvas in a dedicated Web Worker to decouple GPU draw commands from DOM updates and UI event listeners.
 - Do this **after** Workers — not instead of.
 - Care needed: GPU float determinism (ties to the Stage 4 fork).
 - **Payoff:** 100k–1M creatures + large shared param banks on a basic laptop. The real "100× everything."
+
+---
+
+## Comprehensive Performance Analysis (2026-07-03 Deep Dive)
+
+### Current Architecture Assessment vs Gemini 3.1 Pro High Recommendations
+
+**Rendering Architecture:**
+
+- ✅ **WebGL2 Implementation:** Current engine uses Three.js with WebGL2 renderer (not WebGPU yet)
+- ✅ **Instanced Rendering:** Fully implemented via `InstancedEntityRenderer` - single draw calls for 50k entities
+- ✅ **Frame Governor:** Adaptive quality system sheds DPR → post-FX → shadows under load
+- ⚠️ **WebGPU Migration:** Planned for Stage 5; currently WebGL2-only (no compute shaders yet)
+- ⚠️ **Off-Screen Canvas:** Not implemented; rendering on main thread
+- ⚠️ **Transform Feedback:** Not implemented; CPU-GPU round-trip for neural states
+
+**WebAssembly & Native Integration:**
+
+- ✅ **Native C++ Reliquary:** Sibling C++20 engine exists in `native/` for ray-marched gallery (separate from browser sim)
+- ❌ **WebAssembly in Browser:** No Wasm compilation for main simulation - all logic in TypeScript
+- ❌ **SIMD Optimization:** No SIMD128 usage in browser code
+- ❌ **Emscripten Integration:** Native C++ code is standalone, not compiled to Wasm for browser use
+
+**Multi-Threading Strategy:**
+
+- ✅ **ADR 0010 Architecture:** Hybrid model designed - deterministic core + streamed wilderness
+- ✅ **Worker Harness Contract:** Designed with sync executor + async worker executor + typed protocol
+- ⚠️ **Worker Implementation:** Harness designed but NOT yet implemented (Stage 3 pending)
+- ⚠️ **SharedArrayBuffer:** Planned for zero-copy where COOP/COEP headers allow
+- ⚠️ **Current Reality:** All simulation runs on single JavaScript thread (the documented bottleneck)
+
+**Mathematical Optimizations:**
+
+- ✅ **Typed Arrays:** Extensive use of Float32Array/Float64Array for neural weights and state
+- ✅ **Allocation-Free Hot Paths:** Preallocated scratch buffers, no per-frame allocations
+- ✅ **Round-Robin Brain Processing:** 8-slice cohort system bounds 50k brain eval cost
+- ⚠️ **FP16/INT8 Quantization:** Not implemented - all weights stored as FP32
+- ⚠️ **Batch Tensor Contraction:** Individual agent brains evaluated separately (no global tensor batching)
+- ⚠️ **Sparse Activation:** No stochastic pruning - all 70 brain parameters evaluated per tick
+
+**Mobile Fallback Strategy:**
+
+- ✅ **Quality Tier Ladder:** 6-tier system (phone 1k → tablet 2k → laptop 5k → desktop 10k → ultra 25k → mega 50k)
+- ✅ **Hardware Detection:** Auto-detects cores, memory, touch input, viewport size
+- ✅ **Graceful Degradation:** Phone tier uses per-mesh rendering, no shadows, capped DPR
+- ✅ **Boot Optimization:** Everyone boots phone tier for fast first paint, then tier switcher available
+- ⚠️ **WebGPU Fallback:** Not yet implemented - will need WebGL2 fallback for mobile
+- ⚠️ **SharedArrayBuffer Fallback:** Planned for mobile Safari COOP/COEP restrictions
+
+**Temporal/Perceptual Optimizations:**
+
+- ✅ **Suspended Animation:** V121 - organisms stay alive in place while paused (shader-based uTime)
+- ✅ **Visual Clock Separation:** Sim clock vs visual clock for frozen inspection
+- ⚠️ **GPU Motion Interpolation:** Not implemented - positions updated every frame
+- ⚠️ **Shader State Interpolation:** Not implemented - consciousness indicators uploaded every frame
+- ⚠️ **Imposter Billboarding:** Not implemented - full meshes at all distances
+- ⚠️ **Perceptual Priority Cascades:** Not implemented - all entities evaluated equally
+
+**Consciousness Indicators (Butlin/Thaler):**
+
+- ✅ **Butlin 8/14 Met + 6/14 Partial:** GWT-1/3/4, PP, HOT-1/2, AE-1, IIT, AST-1, recurrence proxies
+- ✅ **Thaler Creativity Machine:** Full mini CM implemented (6→6→4 MLP, perturbational ideation)
+- ✅ **Lazy Evaluation:** Consciousness kernel uses coupled dynamical system (emergence metric)
+- ⚠️ **Screen-Space GWT Buffering:** Not implemented - GWT computed on CPU
+- ⚠️ **GPU Noise Fields:** Not implemented - Thaler perturbations use CPU RNG
+- ⚠️ **Macro-Brain Aggregation:** Not implemented - individual brains only
+
+**Rust/Bend Migration Feasibility:**
+
+- ✅ **TypeScript Foundation:** Clean allocation-free architecture suitable for Rust port
+- ✅ **Deterministic RNG:** Seeded mulberry32 easy to port
+- ⚠️ **Rust-to-Wasm Path:** Feasible but requires significant refactoring
+- ⚠️ **Bend Limitation:** Bend does not support WebAssembly yet (native-only)
+- ⚠️ **Current Recommendation:** Rust-to-Wasm viable for browser; Bend for native desktop only
+
+### Critical Gap Analysis
+
+**Immediate Performance Bottlenecks:**
+
+1. **Single-Thread Simulation:** 50k agents on one JS thread despite multi-core hardware
+2. **No GPU Compute:** All neural evaluation on CPU despite RTX 5070 Ti availability
+3. **CPU-GPU Round-Trip:** Neural states computed on CPU, uploaded to GPU every frame
+4. **FP32 Storage:** 50k × 70 params = 3.5M FP32 values (~14 MB) - could be FP16/INT8
+
+**High-Impact Optimizations (Gemini Recommendations):**
+
+1. **WebGPU Compute Shaders:** Move brain eval to GPU (Stage 5) - 10-100x speedup
+2. **Web Workers with SharedArrayBuffer:** Parallelize simulation (Stage 3) - use idle cores
+3. **Dual-API Fallback:** WebGPU → WebGL2 for mobile compatibility
+4. **Off-Screen Canvas:** Decouple rendering from main thread
+5. **FP16 Quantization:** Halve memory bandwidth, double cache efficiency
+6. **GPU Transform Feedback:** Eliminate CPU-GPU round-trip for neural states
+
+**Medium-Impact Optimizations:**
+
+1. **Batch Tensor Contraction:** Evaluate 50k brains as single tensor operation
+2. **Sparse Activation:** Only evaluate top 1-5% of neural pathways per frame
+3. **GPU Motion Interpolation:** Sim at 10-15 Hz, render at 60 Hz via GPU tweening
+4. **Imposter Billboarding:** Use 2D billboards for distant entities
+5. **Perceptual Priority:** Full brains near camera, cheap updates far away
+
+**Architecture Strengths:**
+
+1. **Excellent Determinism:** Seeded RNG, golden receipts, reproducible simulations
+2. **Allocation-Free Hot Paths:** Preallocated buffers, no GC pressure
+3. **Instanced Rendering:** Single draw calls for massive entity counts
+4. **Adaptive Quality:** Frame governor gracefully degrades under load
+5. **Mobile-First Design:** Quality tier ladder ensures universal compatibility
+6. **Comprehensive Testing:** 2336 tests, 92.75% line coverage
 
 ## Stage 6 — Biomes + verticality (effort: M)
 

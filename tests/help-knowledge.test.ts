@@ -44,11 +44,24 @@ describe('help knowledge', () => {
     expect(findHelp('zzzqqq nonsense xyzzy')).toEqual([]);
   });
 
-  test('the corpus is safe: no secret/credential-shaped content', () => {
+  test('the corpus is safe and never describes quality tiers as visual downgrades', () => {
     const corpus = HELP_KB.map((e) => e.body + ' ' + e.keywords.join(' '))
       .join(' ')
       .toLowerCase();
-    for (const bad of ['password', 'api key', 'secret key', 'private key', 'token=', 'bearer ']) {
+    for (const bad of [
+      'password',
+      'api key',
+      'secret key',
+      'private key',
+      'token=',
+      'bearer ',
+      'weakling',
+      'dumbed down',
+      'detail scales with quality tier',
+      'dpr 65',
+      'shadows off',
+      'fx off',
+    ]) {
       expect(corpus).not.toContain(bad);
     }
   });

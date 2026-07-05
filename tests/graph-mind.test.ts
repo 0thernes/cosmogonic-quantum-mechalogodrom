@@ -5,6 +5,7 @@ import { SpatialHash } from '../src/math/spatial-hash';
 import { BEHAVIORS } from '../src/sim/constants';
 import { Connectome } from '../src/sim/connectome';
 import { GraphMind } from '../src/sim/graph-mind';
+import { getQuantizationConfig } from '../src/math/quantization';
 import type { EntityManager } from '../src/sim/entities';
 import type { Entity, MorphType, SimContext } from '../src/types';
 
@@ -56,6 +57,8 @@ function makeCtx(seed: number): SimContext {
       maxLinks: 64,
       shadows: false,
       starCount: 0,
+      quantization: getQuantizationConfig('laptop'),
+      simRate: 15,
     },
     rng: mulberry32(seed),
     grid: new SpatialHash<Entity>(),

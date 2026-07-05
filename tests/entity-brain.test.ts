@@ -1,13 +1,14 @@
 /**
  * PER-ENTITY NEURAL CONTROLLER (V42) — the genome's 70-param brain steering each organism. Pins:
  * determinism (same seed ⇒ same brains ⇒ same steer), per-entity diversity, bounded authority,
- * round-robin coverage of the whole population, NHI exemption, and NaN-freedom.
+ * full-population thinking, NHI exemption, and NaN-freedom.
  */
 import { describe, expect, test } from 'bun:test';
 import * as THREE from 'three';
 import { mulberry32 } from '../src/math/rng';
+import { getQuantizationConfig } from '../src/math/quantization';
 import { EntityBrainField } from '../src/sim/entity-brain';
-import { GENOME_LEN } from '../src/sim/genome';
+import { GENOME_LEN, TRAIT_GENES } from '../src/sim/genome';
 import type { Entity, EntityData } from '../src/types';
 
 /** A minimal fake organism carrying only the fields the brain reads. */
@@ -48,6 +49,40 @@ describe('EntityBrainField (V42)', () => {
     }
   });
 
+  test('quality-tier quantization enabled for high tiers (Phase 1.1 optimization)', () => {
+    const fp32 = new EntityBrainField(64, mulberry32(7), {
+      useFp16: false,
+      useInt8: false,
+      int8MaxError: 0.01,
+    });
+    const fp16 = new EntityBrainField(64, mulberry32(7), getQuantizationConfig('desktop'));
+    const int8 = new EntityBrainField(64, mulberry32(7), getQuantizationConfig('phone'));
+    expect(fp32.genomeStorageKind()).toBe('fp32');
+    // High tiers (desktop/ultra/mega) use FP16 for 50% memory reduction
+    expect(fp16.genomeStorageKind()).toBe('fp16');
+    // Low tiers (phone/tablet/laptop) use FP32 for full precision
+    expect(int8.genomeStorageKind()).toBe('fp32');
+    expect(fp32.genomeStorageBytes()).toBe(64 * GENOME_LEN * 4);
+    // FP16 uses half the storage (2 bytes per float instead of 4)
+    expect(fp16.genomeStorageBytes()).toBe(64 * GENOME_LEN * 2);
+    expect(int8.genomeStorageBytes()).toBe(64 * GENOME_LEN * 4);
+  });
+
+  test('explicit packed storage still mutates the real predator brain during devour', () => {
+    const field = new EntityBrainField(8, mulberry32(17), {
+      useFp16: true,
+      useInt8: false,
+      int8MaxError: 0.01,
+    });
+    const before = Array.from(field.genomeAt(2).subarray(TRAIT_GENES));
+    const prey = field.genomeAt(3).subarray(TRAIT_GENES);
+    const result = field.devourBrain(2, prey, 0.25);
+    const after = Array.from(field.genomeAt(2).subarray(TRAIT_GENES));
+    expect(result.mindDistance).toBeGreaterThan(0);
+    expect(result.transfer).toBeGreaterThan(0);
+    expect(after).not.toEqual(before);
+  });
+
   test('entities steer DIFFERENTLY — distinct brains, not one shared rule', () => {
     const field = new EntityBrainField(64, mulberry32(11));
     const list = fakeList(64);
@@ -66,12 +101,27 @@ describe('EntityBrainField (V42)', () => {
     }
   });
 
-  test('round-robin covers the WHOLE population over SLICES frames (each thinks once)', () => {
+  test('full-quality thinking covers the WHOLE population every frame', () => {
     const field = new EntityBrainField(50, mulberry32(1));
     const list = fakeList(50);
-    let total = 0;
-    for (let f = 0; f < 8; f++) total += field.think(list, 2, f / 60);
-    expect(total).toBe(50); // every entity thought exactly once across the 8-frame cycle
+    const total = field.think(list, 2, 0);
+    expect(total).toBe(50);
+  });
+
+  test('priority-selected brains use original entity slots, not compact list order', () => {
+    const fullField = new EntityBrainField(16, mulberry32(13));
+    const priorityField = new EntityBrainField(16, mulberry32(13));
+    const fullList = Array.from({ length: 16 }, (_, i) => fakeEntity(i, i !== 8));
+    const priorityList = Array.from({ length: 16 }, (_, i) => fakeEntity(i, i !== 8));
+
+    const fullThought = fullField.think(fullList, 4, 0);
+    const priorityThought = priorityField.thinkIndices(priorityList, [8], 4, 0);
+
+    expect(fullThought).toBe(1);
+    expect(priorityThought).toBe(1);
+    expect(priorityList[8]!.userData.vel.x).toBeCloseTo(fullList[8]!.userData.vel.x, 10);
+    expect(priorityList[8]!.userData.vel.y).toBeCloseTo(fullList[8]!.userData.vel.y, 10);
+    expect(priorityList[8]!.userData.vel.z).toBeCloseTo(fullList[8]!.userData.vel.z, 10);
   });
 
   test('launched NHIs are exempt (they fly their own deep mind)', () => {
@@ -82,6 +132,23 @@ describe('EntityBrainField (V42)', () => {
       const moved = list[i]!.userData.vel.lengthSq() > 0;
       if (i % 4 === 0) expect(moved).toBe(false); // NHI untouched
     }
+  });
+
+  test('priority-selected thinking skips invalid slots, missing entities, and NHIs', () => {
+    const field = new EntityBrainField(4, mulberry32(23));
+    const list: Array<Entity | undefined> = [
+      fakeEntity(0),
+      undefined,
+      fakeEntity(2, true),
+      fakeEntity(3),
+    ];
+
+    const thought = field.thinkIndices(list, [-1, 1, 2, 3, 4, 1.5], 5, 0);
+
+    expect(thought).toBe(1);
+    expect(list[0]!.userData.vel.lengthSq()).toBe(0);
+    expect(list[2]!.userData.vel.lengthSq()).toBe(0);
+    expect(list[3]!.userData.vel.lengthSq()).toBeGreaterThan(0);
   });
 
   test('velocities stay finite under sustained thinking (no NaN)', () => {

@@ -10,12 +10,12 @@ import { qualityLabel, fpsBucket, mountPerfHud } from '../src/ui/perf-hud';
 import { Level } from '../src/core/frame-governor';
 
 describe('perf HUD — pure readout helpers', () => {
-  test('qualityLabel maps every governor level', () => {
+  test('qualityLabel stays locked to full for every governor level', () => {
     expect(qualityLabel(Level.FULL)).toBe('full');
-    expect(qualityLabel(Level.DPR_85)).toBe('dpr 85%');
-    expect(qualityLabel(Level.DPR_65)).toBe('dpr 65%');
-    expect(qualityLabel(Level.FX_OFF)).toBe('fx off');
-    expect(qualityLabel(Level.SHADOWS_OFF)).toBe('shadows off');
+    expect(qualityLabel(Level.DPR_85)).toBe('full');
+    expect(qualityLabel(Level.DPR_65)).toBe('full');
+    expect(qualityLabel(Level.FX_OFF)).toBe('full');
+    expect(qualityLabel(Level.SHADOWS_OFF)).toBe('full');
   });
 
   test('fpsBucket buckets by health (good >= 50, ok >= 25, else bad)', () => {

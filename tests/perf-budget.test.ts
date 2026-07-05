@@ -33,6 +33,7 @@ import { LoreEngine } from '../src/sim/lore';
 import type { AuditTrail } from '../src/logging/audit';
 import type { Entity, SimContext, SimState } from '../src/types';
 import { SuperMind } from '../src/sim/super-mind';
+import { getQuantizationConfig } from '../src/math/quantization';
 import type { SuperPercept } from '../src/sim/super-creature';
 
 /** High population for the stress frame — the ultra-class regime where the cliff lived. */
@@ -111,6 +112,8 @@ function makeCtx(seed: number, maxEntities: number): SimContext {
       maxLinks: 6000,
       shadows: true,
       starCount: 10,
+      quantization: getQuantizationConfig('ultra'),
+      simRate: 15,
     },
     rng,
     grid: new SpatialHash<Entity>(maxEntities > 5000 ? ULTRA_GRID_CELL : GRID_CELL),

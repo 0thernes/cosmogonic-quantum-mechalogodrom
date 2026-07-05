@@ -28,6 +28,7 @@ import {
   PORTAL_RESPAWN_DELAY,
   type PortalCullable,
 } from '../src/sim/portal-death-fauna';
+import { getQuantizationConfig } from '../src/math/quantization';
 import type { AuditTrail } from '../src/logging/audit';
 import type { Entity, SimContext, SimState } from '../src/types';
 
@@ -73,6 +74,8 @@ function makeCtx(seed: number, maxEntities: number): SimContext {
       maxLinks: 100,
       shadows: false,
       starCount: 10,
+      quantization: getQuantizationConfig('phone'),
+      simRate: 8,
     },
     rng,
     grid: new SpatialHash<Entity>(8),

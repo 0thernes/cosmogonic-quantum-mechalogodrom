@@ -24,11 +24,9 @@ import { PostFx, postFxMode } from './postfx';
  */
 /**
  * Pure render-gating rule (exported for tests): with the post-FX composer present, should it render
- * THIS frame? Yes when post-FX is NOT governor-suspended, OR a singularity's gravitational lens is
- * active — the lens is one cheap full-screen pass and the singularity's signature visual, so it
- * survives the render governor's FX shed while the heavy bloom (and DPR/shadows) are still dropped.
- * Keeping this pure makes the "a singularity never loses its warp under load" contract falsifiable
- * without a WebGL context. O(1).
+ * THIS frame? Yes when post-FX is not explicitly suspended, OR a singularity's gravitational lens is
+ * active. The frame monitor no longer suspends FX, but keeping this pure preserves the "a singularity
+ * never loses its warp" contract without a WebGL context. O(1).
  */
 export function postFxShouldRender(fxSuspended: boolean, lensActive: boolean): boolean {
   return !fxSuspended || lensActive;
@@ -161,10 +159,8 @@ export class Engine {
    */
   render(): void {
     if (this.contextLost) return;
-    // Run the post-FX composer when it is NOT governor-suspended OR a singularity's gravitational lens
-    // is active. The lens is one cheap full-screen pass and the singularity's signature visual, so it
-    // survives the FX shed (the heavy bloom is dropped via setPostFxSuspended → fx.setHeavySuspended);
-    // with no singularity active the suspended composer is fully skipped for the plain render below.
+    // Run the post-FX composer when it is not explicitly suspended OR a singularity's gravitational
+    // lens is active. In normal runtime the frame monitor keeps this unsuspended at full fidelity.
     const fx = this.fx;
     if (fx && postFxShouldRender(this.fxSuspended, fx.lensActive)) {
       try {
@@ -197,13 +193,12 @@ export class Engine {
   }
 
   /**
-   * Render-side governor knobs (driven by {@link RenderGovernor} in main.ts). DETERMINISM-SAFE: these
-   * touch ONLY renderer settings, never sim state/RNG — so a degraded frame is byte-identical in the
-   * sim, just cheaper to draw. They exist so the governor can shed GPU load before a frame gets heavy
-   * enough to trip the driver watchdog (TDR / black-screen freeze). All O(1).
+   * Render-side monitor knobs (driven by {@link RenderGovernor} in main.ts). DETERMINISM-SAFE: these
+   * touch ONLY renderer settings, never sim state/RNG. The monitor applies full-fidelity settings only;
+   * these methods remain as explicit renderer controls for tests and emergency/manual callers. All O(1).
    */
 
-  /** Scale the effective device-pixel-ratio (1 = full, &lt;1 = a cheaper backbuffer). O(1). */
+  /** Scale the effective device-pixel-ratio (1 = full; runtime monitor always uses 1). O(1). */
   setPixelRatioScale(scale: number): void {
     this.dprScale = scale;
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, this.dprCap) * scale);
@@ -212,16 +207,15 @@ export class Engine {
   }
 
   /**
-   * Suspend/restore the post-FX pass (honored in {@link render}). Also sheds the EXPENSIVE bloom pass
-   * inside the composer, so that when a singularity's lens keeps the composer alive under load (see
-   * {@link render}), only the cheap lens runs — never the heavy bloom. O(1).
+   * Suspend/restore the post-FX pass (honored in {@link render}). The runtime monitor never calls this
+   * with `true`; it exists for explicit/manual fallback paths and tests. O(1).
    */
   setPostFxSuspended(suspended: boolean): void {
     this.fxSuspended = suspended;
     this.fx?.setHeavySuspended(suspended);
   }
 
-  /** Enable/disable shadows at runtime — only re-enables if the boot tier had shadows at all. O(1). */
+  /** Enable/disable shadows at runtime — runtime monitor keeps this enabled on full-fidelity tiers. O(1). */
   setShadowsEnabled(on: boolean): void {
     const want = on && this.bootShadows;
     if (this.renderer.shadowMap.enabled === want) return;

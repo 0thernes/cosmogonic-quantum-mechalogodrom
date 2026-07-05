@@ -1,5 +1,8 @@
 /**
- * RENDER-SIDE FRAME-TIME GOVERNOR (render layer — NOT src/sim, NOT src/math).
+ * RENDER-SIDE FRAME MONITOR (render layer — NOT src/sim, NOT src/math).
+ *
+ * Hard quality contract: this module may observe frame time for the HUD, but it must not lower
+ * DPR, post-FX, shadows, color, detail or simulation quality on any tier.
  */
 import type { Engine } from './engine';
 
@@ -32,7 +35,7 @@ export const DEFAULT_CONFIG: GovernorConfig = {
   outlierMs: 500,
   shedDwellFrames: 18,
   restoreDwellFrames: 180,
-  dprScale: [1.0, 0.85, 0.65, 0.65, 0.65],
+  dprScale: [1.0, 1.0, 1.0, 1.0, 1.0],
 };
 
 export interface GovernorState {
@@ -46,8 +49,8 @@ export function initialState(level: Level = Level.FULL): GovernorState {
   return { level, ema: 0, dwell: 0, initialized: false };
 }
 
-export function deriveMaxLevel(bootShadows: boolean): Level {
-  return bootShadows ? Level.SHADOWS_OFF : Level.FX_OFF;
+export function deriveMaxLevel(_bootShadows: boolean): Level {
+  return Level.FULL;
 }
 
 export interface LevelPlan {
@@ -57,14 +60,14 @@ export interface LevelPlan {
 }
 
 export function planForLevel(
-  level: Level,
+  _level: Level,
   bootShadows: boolean,
-  cfg: GovernorConfig = DEFAULT_CONFIG,
+  _cfg: GovernorConfig = DEFAULT_CONFIG,
 ): LevelPlan {
   return {
-    dprScale: cfg.dprScale[level] ?? 1.0,
-    fxOn: level < Level.FX_OFF,
-    shadowsOn: bootShadows && level < Level.SHADOWS_OFF,
+    dprScale: 1.0,
+    fxOn: true,
+    shadowsOn: bootShadows,
   };
 }
 
@@ -72,38 +75,21 @@ export function decideLevel(
   state: GovernorState,
   dtMs: number,
   cfg: GovernorConfig = DEFAULT_CONFIG,
-  maxLevel: Level = Level.SHADOWS_OFF,
+  _maxLevel: Level = Level.SHADOWS_OFF,
 ): GovernorState {
   if (!Number.isFinite(dtMs) || dtMs < 0) {
-    return { ...state, dwell: 0 };
+    return { ...state, level: Level.FULL, dwell: 0 };
   }
   if (dtMs >= cfg.tabGapMs) {
-    return { ...state, dwell: 0 };
+    return { ...state, level: Level.FULL, dwell: 0 };
   }
   if (!state.initialized) {
     const seed = Math.min(dtMs, cfg.outlierMs);
-    return { level: state.level, ema: seed, dwell: 0, initialized: true };
+    return { level: Level.FULL, ema: seed, dwell: 0, initialized: true };
   }
   const clamped = Math.min(dtMs, cfg.outlierMs);
   const ema = state.ema + cfg.alpha * (clamped - state.ema);
-  if (dtMs >= cfg.panicMs && state.level < maxLevel) {
-    return { level: (state.level + 1) as Level, ema, dwell: 0, initialized: true };
-  }
-  if (ema > cfg.shedMs && state.level < maxLevel) {
-    const dwell = state.dwell + 1;
-    if (dwell >= cfg.shedDwellFrames) {
-      return { level: (state.level + 1) as Level, ema, dwell: 0, initialized: true };
-    }
-    return { level: state.level, ema, dwell, initialized: true };
-  }
-  if (ema < cfg.restoreMs && state.level > Level.FULL) {
-    const dwell = state.dwell + 1;
-    if (dwell >= cfg.restoreDwellFrames) {
-      return { level: (state.level - 1) as Level, ema, dwell: 0, initialized: true };
-    }
-    return { level: state.level, ema, dwell, initialized: true };
-  }
-  return { level: state.level, ema, dwell: 0, initialized: true };
+  return { level: Level.FULL, ema, dwell: 0, initialized: true };
 }
 
 export class RenderGovernor {

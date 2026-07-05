@@ -1,0 +1,170 @@
+/**
+ * Phase 2.1: Graphics Abstraction Layer
+ *
+ * Unified interface for graphics operations supporting both WebGPU and WebGL2.
+ * Provides capability detection, context initialization, and quality-tier-specific
+ * API selection for progressive enhancement.
+ *
+ * Architecture:
+ * - GraphicsBackend: Enum for supported backends (WebGPU, WebGL2)
+ * - GraphicsCapabilities: Detected capabilities of the current backend
+ * - GraphicsContext: Unified context interface
+ * - WebGPUContext: WebGPU-specific implementation
+ * - WebGL2Context: WebGL2-specific implementation
+ */
+import * as THREE from 'three';
+
+export enum GraphicsBackend {
+  WebGPU = 'webgpu',
+  WebGL2 = 'webgl2',
+}
+
+export interface GraphicsCapabilities {
+  backend: GraphicsBackend;
+  computeShaders: boolean;
+  transformFeedback: boolean;
+  maxTextureSize: number;
+  maxUniformBufferBindings: number;
+  maxStorageBufferBindings: number;
+  timestampQuery: boolean;
+}
+
+export interface GraphicsContext {
+  readonly backend: GraphicsBackend;
+  readonly capabilities: GraphicsCapabilities;
+  readonly renderer: THREE.WebGLRenderer | THREE.WebGPURenderer;
+  dispose(): void;
+}
+
+/**
+ * Detect available graphics capabilities and select the best backend
+ */
+export function detectGraphicsCapabilities(): GraphicsCapabilities {
+  // Check for WebGPU support
+  let webgpuAvailable = false;
+  if (typeof navigator !== 'undefined' && 'gpu' in navigator) {
+    webgpuAvailable = true;
+  }
+
+  // Check for WebGL2 support
+  let webgl2Available = false;
+  if (typeof WebGL2RenderingContext !== 'undefined') {
+    const canvas = document.createElement('canvas');
+    webgl2Available = !!canvas.getContext('webgl2');
+  }
+
+  // Select backend based on availability
+  const backend = webgpuAvailable ? GraphicsBackend.WebGPU : GraphicsBackend.WebGL2;
+
+  // Return capabilities based on backend
+  if (backend === GraphicsBackend.WebGPU) {
+    return {
+      backend: GraphicsBackend.WebGPU,
+      computeShaders: true,
+      transformFeedback: false, // WebGPU uses compute shaders instead
+      maxTextureSize: 16384, // Typical WebGPU limit
+      maxUniformBufferBindings: 16,
+      maxStorageBufferBindings: 16,
+      timestampQuery: true,
+    };
+  } else {
+    return {
+      backend: GraphicsBackend.WebGL2,
+      computeShaders: false,
+      transformFeedback: true, // WebGL2 supports transform feedback
+      maxTextureSize: 16384, // Typical WebGL2 limit
+      maxUniformBufferBindings: 16,
+      maxStorageBufferBindings: 0, // WebGL2 doesn't have storage buffers
+      timestampQuery: false,
+    };
+  }
+}
+
+/**
+ * Create a graphics context based on quality tier and detected capabilities
+ */
+export function createGraphicsContext(
+  canvas: HTMLCanvasElement,
+  qualityTier: 'phone' | 'tablet' | 'laptop' | 'desktop' | 'ultra' | 'mega',
+  preferredBackend?: GraphicsBackend,
+): GraphicsContext {
+  const capabilities = detectGraphicsCapabilities();
+
+  // Quality-tier-specific backend selection
+  let selectedBackend: GraphicsBackend;
+  if (preferredBackend) {
+    selectedBackend = preferredBackend;
+  } else {
+    // Default tier preferences
+    switch (qualityTier) {
+      case 'desktop':
+      case 'ultra':
+      case 'mega':
+        // Desktop: WebGPU preferred, WebGL2 fallback
+        selectedBackend = capabilities.backend === GraphicsBackend.WebGPU
+          ? GraphicsBackend.WebGPU
+          : GraphicsBackend.WebGL2;
+        break;
+      case 'tablet':
+        // Tablet: WebGL2 preferred (more stable)
+        selectedBackend = GraphicsBackend.WebGL2;
+        break;
+      case 'phone':
+      case 'laptop':
+        // Mobile/laptop: WebGL2 only (conservative)
+        selectedBackend = GraphicsBackend.WebGL2;
+        break;
+    }
+  }
+
+  // Create context based on selected backend
+  if (selectedBackend === GraphicsBackend.WebGPU && capabilities.backend === GraphicsBackend.WebGPU) {
+    return new WebGPUContext(canvas, capabilities);
+  } else {
+    return new WebGL2Context(canvas, capabilities);
+  }
+}
+
+/**
+ * WebGPU-specific context implementation
+ */
+class WebGPUContext implements GraphicsContext {
+  readonly backend = GraphicsBackend.WebGPU;
+  readonly capabilities: GraphicsCapabilities;
+  readonly renderer: THREE.WebGPURenderer;
+
+  constructor(canvas: HTMLCanvasElement, capabilities: GraphicsCapabilities) {
+    this.capabilities = capabilities;
+    this.renderer = new THREE.WebGPURenderer({
+      canvas,
+      antialias: true,
+      alpha: true,
+    });
+  }
+
+  dispose(): void {
+    this.renderer.dispose();
+  }
+}
+
+/**
+ * WebGL2-specific context implementation
+ */
+class WebGL2Context implements GraphicsContext {
+  readonly backend = GraphicsBackend.WebGL2;
+  readonly capabilities: GraphicsCapabilities;
+  readonly renderer: THREE.WebGLRenderer;
+
+  constructor(canvas: HTMLCanvasElement, capabilities: GraphicsCapabilities) {
+    this.capabilities = capabilities;
+    this.renderer = new THREE.WebGLRenderer({
+      canvas,
+      antialias: true,
+      alpha: true,
+    });
+  }
+
+  dispose(): void {
+    this.renderer.dispose();
+  }
+}

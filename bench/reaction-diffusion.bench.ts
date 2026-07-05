@@ -16,6 +16,7 @@ import * as THREE from 'three';
 import { mulberry32 } from '../src/math/rng';
 import { SpatialHash } from '../src/math/spatial-hash';
 import { ReactionDiffusionSystem } from '../src/sim/reaction-diffusion';
+import { getQuantizationConfig } from '../src/math/quantization';
 import type { AuditTrail } from '../src/logging/audit';
 import type { Entity, SimContext } from '../src/types';
 
@@ -33,8 +34,10 @@ function makeCtx(seed: number): SimContext {
       targetEntities: 10,
       quantumCount: 10,
       maxLinks: 10,
+      quantization: getQuantizationConfig('laptop'),
       shadows: false,
       starCount: 10,
+      simRate: 15,
     },
     rng: mulberry32(seed),
     grid: new SpatialHash<Entity>(),

@@ -20,6 +20,7 @@ import {
   RNG_DRAW_COUNT_FIXED,
 } from '../src/sim/atmosphere';
 import { WEATHERS } from '../src/sim/constants';
+import { getQuantizationConfig } from '../src/math/quantization';
 import type { AtmosphereBands } from '../src/sim/atmosphere';
 import type { AuditTrail } from '../src/logging/audit';
 import type { SimContext, SimState } from '../src/types';
@@ -67,6 +68,8 @@ function makeCtx(seed: number, maxEntities: number, state: SimState = makeState(
       maxLinks: 100,
       shadows: false,
       starCount: 100,
+      quantization: getQuantizationConfig('laptop'),
+      simRate: 15,
     },
     rng: mulberry32(seed),
     grid: null as unknown as SimContext['grid'],

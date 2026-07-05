@@ -24,6 +24,7 @@ import type { Entity, EntityData, SimContext } from '../src/types';
 import { mulberry32 } from '../src/math/rng';
 import { SpatialHash } from '../src/math/spatial-hash';
 import { AuditTrail } from '../src/logging/audit';
+import { getQuantizationConfig } from '../src/math/quantization';
 
 const PHI = 0.61803398875;
 const ASCENT_SCALE = 8;
@@ -126,6 +127,8 @@ describe('packVitals3 wired into InstancedEntityRenderer.sync', () => {
         maxLinks: 100,
         shadows: false,
         starCount: 5,
+        quantization: getQuantizationConfig('desktop'),
+        simRate: 15,
       },
       rng,
       grid: new SpatialHash<Entity>(8),

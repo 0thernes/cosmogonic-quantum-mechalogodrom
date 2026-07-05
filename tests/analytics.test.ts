@@ -8,6 +8,7 @@
 import { describe, expect, test } from 'bun:test';
 import { AnalyticsSystem } from '../src/sim/analytics';
 import { mulberry32 } from '../src/math/rng';
+import { getQuantizationConfig } from '../src/math/quantization';
 import type { AuditTrail } from '../src/logging/audit';
 import type { QualityProfile, SimContext, SimState } from '../src/types';
 
@@ -65,6 +66,8 @@ function makeFixture(): Fixture {
     maxLinks: 4000,
     shadows: true,
     starCount: 3000,
+    quantization: getQuantizationConfig('laptop'),
+    simRate: 15,
   };
   const ctx: SimContext = {
     scene: null as unknown as SimContext['scene'],

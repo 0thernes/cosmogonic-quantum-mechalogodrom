@@ -21,6 +21,7 @@ import { applyBehavior, type BehaviorEnv } from '../src/sim/behaviors';
 import { BEHAVIORS } from '../src/sim/constants';
 import type { AuditTrail } from '../src/logging/audit';
 import type { Entity, SimContext, SimState } from '../src/types';
+import { getQuantizationConfig } from '../src/math/quantization';
 
 function makeState(): SimState {
   return {
@@ -58,8 +59,10 @@ function makeCtx(seed: number): SimContext {
       targetEntities: 400,
       quantumCount: 10,
       maxLinks: 100,
+      quantization: getQuantizationConfig('phone'),
       shadows: false,
       starCount: 10,
+      simRate: 8,
     },
     rng,
     grid: new SpatialHash<Entity>(8),

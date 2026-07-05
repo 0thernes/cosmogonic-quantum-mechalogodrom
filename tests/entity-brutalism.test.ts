@@ -22,6 +22,7 @@ import { SpatialHash } from '../src/math/spatial-hash';
 import { createGeometryCache } from '../src/sim/geometry-cache';
 import { createMorphotypes } from '../src/sim/morphotypes';
 import { EntityManager } from '../src/sim/entities';
+import { getQuantizationConfig } from '../src/math/quantization';
 import type { AuditTrail } from '../src/logging/audit';
 import type { Entity, SimContext, SimState } from '../src/types';
 
@@ -50,10 +51,11 @@ function makeCtx(seed: number, instanced: boolean): SimContext {
   const rng = mulberry32(seed);
   const geos = createGeometryCache();
   const auditNoop = { record: () => undefined, entries: () => [] };
+  const tier = instanced ? 'desktop' : 'phone';
   return {
     scene: new THREE.Scene(),
     quality: {
-      tier: instanced ? 'desktop' : 'phone',
+      tier,
       isMobile: !instanced,
       instanced,
       dprCap: 1.25,
@@ -63,6 +65,7 @@ function makeCtx(seed: number, instanced: boolean): SimContext {
       maxLinks: 100,
       shadows: false,
       starCount: 10,
+      quantization: getQuantizationConfig('phone'),
     },
     rng,
     grid: new SpatialHash<Entity>(8),

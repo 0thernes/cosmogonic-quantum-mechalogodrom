@@ -19,6 +19,7 @@ import { GRID_CELL } from '../src/sim/constants';
 import { createGeometryCache } from '../src/sim/geometry-cache';
 import { createMorphotypes } from '../src/sim/morphotypes';
 import { SINGULARITY_KINDS, SingularitySystem } from '../src/sim/singularities';
+import { getQuantizationConfig } from '../src/math/quantization';
 import type { EntityManager } from '../src/sim/entities';
 import type { AuditTrail } from '../src/logging/audit';
 import type { Entity, QualityTier, SimContext, SimState } from '../src/types';
@@ -57,6 +58,7 @@ function makeCtx(tier: QualityTier): SimContext {
       instanced: false,
       dprCap: 1.25,
       maxEntities: 2000,
+      quantization: getQuantizationConfig('desktop'),
       targetEntities: 2000,
       quantumCount: 10,
       maxLinks: 100,

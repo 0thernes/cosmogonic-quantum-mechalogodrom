@@ -34,10 +34,12 @@ describe('QUALITY_LADDER', () => {
     expect(QUALITY_LADDER.mega.maxEntities).toBe(50000);
   });
 
-  test('only the phone tier keeps the per-mesh path', () => {
-    expect(QUALITY_LADDER.phone.instanced).toBeFalse();
-    for (const t of ['tablet', 'laptop', 'desktop', 'ultra', 'mega'] as const) {
+  test('every tier keeps full render fidelity', () => {
+    for (const t of ['phone', 'tablet', 'laptop', 'desktop', 'ultra', 'mega'] as const) {
       expect(QUALITY_LADDER[t].instanced).toBeTrue();
+      expect(QUALITY_LADDER[t].shadows).toBeTrue();
+      expect(QUALITY_LADDER[t].dprCap).toBe(Number.POSITIVE_INFINITY);
+      expect(QUALITY_LADDER[t].simRate).toBe(60);
     }
   });
 

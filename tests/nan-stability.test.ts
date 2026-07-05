@@ -22,6 +22,7 @@ import { createGeometryCache } from '../src/sim/geometry-cache';
 import { createMorphotypes } from '../src/sim/morphotypes';
 import { EntityManager } from '../src/sim/entities';
 import { CHAOS_MAX } from '../src/sim/constants';
+import { getQuantizationConfig } from '../src/math/quantization';
 import type { AuditTrail } from '../src/logging/audit';
 import type { Entity, SimContext, SimState } from '../src/types';
 
@@ -68,6 +69,8 @@ function makeCtx(seed: number, maxEntities: number): SimContext {
       maxLinks: 100,
       shadows: false,
       starCount: 10,
+      quantization: getQuantizationConfig('phone'),
+      simRate: 8,
     },
     rng,
     grid: new SpatialHash<Entity>(8),

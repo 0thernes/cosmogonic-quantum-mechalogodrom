@@ -12,6 +12,7 @@ import { describe, expect, test } from 'bun:test';
 import * as THREE from 'three';
 import { mulberry32 } from '../src/math/rng';
 import { QuantumCloud } from '../src/sim/quantum';
+import { getQuantizationConfig } from '../src/math/quantization';
 import type { AuditTrail } from '../src/logging/audit';
 import type { SimContext, SimState } from '../src/types';
 
@@ -60,6 +61,8 @@ function makeCtx(quantumCount: number): SimContext {
       maxLinks: 100,
       shadows: false,
       starCount: 10,
+      quantization: getQuantizationConfig('phone'),
+      simRate: 8,
     },
     rng: mulberry32(7),
     grid: null as unknown as SimContext['grid'],

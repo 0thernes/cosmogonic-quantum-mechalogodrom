@@ -1,13 +1,8 @@
 /**
- * RENDER-SIDE FRAME-TIME GOVERNOR — pure decision-logic tests.
+ * RENDER-SIDE FRAME MONITOR — pure decision-logic tests.
  *
- * The governor watches wall-clock frame time and, when frames get dangerously slow, sheds render
- * quality (DPR → post-FX → shadows) so the GPU never gets a frame heavy enough to trip the driver
- * watchdog (the TDR black-screen freeze under apocalypse / CHAOS spam at 50k). It restores quality
- * when frames recover. The decision logic ({@link decideLevel}/{@link planForLevel}) is PURE — no
- * renderer, no DOM, no clock — so it is fully unit-testable headlessly. The engine-application side
- * (setPixelRatioScale / setPostFxSuspended / setShadowsEnabled) touches ONLY renderer settings and so
- * never perturbs the seeded, deterministic sim.
+ * Hard owner contract: frame monitoring may expose FPS, but it must never shed DPR, post-FX,
+ * shadows, color, detail or sim cadence. If performance is poor, fix the real bottleneck.
  */
 import { describe, expect, test } from 'bun:test';
 import {
@@ -25,29 +20,31 @@ function run(samplesMs: number[], state = initialState(), maxLevel: Level = Leve
   return state;
 }
 
-describe('frame governor — render-side load shedding (determinism-safe)', () => {
-  test('sustained slow frames shed quality up to the max level', () => {
+describe('frame governor — monitor-only quality lock', () => {
+  test('sustained slow frames never shed quality', () => {
     const s = run(arr(200, 50)); // 50ms/frame >> shedMs(33)
-    expect(s.level).toBe(Level.SHADOWS_OFF); // climbs to the cap (boot shadows allowed)
+    expect(s.level).toBe(Level.FULL);
+    expect(s.ema).toBeGreaterThan(33);
   });
 
-  test('the shed cap respects boot shadows — a no-shadow tier caps at FX_OFF', () => {
+  test('the shed cap is locked to FULL for every boot tier', () => {
     const s = run(arr(300, 200), initialState(), deriveMaxLevel(false));
-    expect(s.level).toBe(Level.FX_OFF);
-    expect(deriveMaxLevel(true)).toBe(Level.SHADOWS_OFF);
+    expect(s.level).toBe(Level.FULL);
+    expect(deriveMaxLevel(false)).toBe(Level.FULL);
+    expect(deriveMaxLevel(true)).toBe(Level.FULL);
   });
 
-  test('sustained fast frames restore quality back to full', () => {
-    const hot = run(arr(300, 200)); // drive it to the cap
-    expect(hot.level).toBe(Level.SHADOWS_OFF);
-    const cool = run(arr(2000, 8), hot); // 8ms/frame << restoreMs(20)
+  test('sustained fast frames keep quality full', () => {
+    const hot = run(arr(300, 200));
+    expect(hot.level).toBe(Level.FULL);
+    const cool = run(arr(2000, 8), hot);
     expect(cool.level).toBe(Level.FULL);
   });
 
-  test('a single panic frame sheds immediately, no dwell wait', () => {
+  test('a single panic frame does not shed', () => {
     const warm = run(arr(10, 16)); // settled at FULL
     const panic = decideLevel(warm, 350, DEFAULT_CONFIG); // >= panicMs(320), < tabGapMs(1000)
-    expect(panic.level).toBe(Level.DPR_85);
+    expect(panic.level).toBe(Level.FULL);
   });
 
   test('a tab-switch gap is ignored — no shed, dwell reset', () => {
@@ -61,9 +58,27 @@ describe('frame governor — render-side load shedding (determinism-safe)', () =
     expect(run(arr(120, 40))).toEqual(run(arr(120, 40)));
   });
 
-  test('planForLevel maps levels to render settings correctly', () => {
+  test('planForLevel keeps full visual settings for every nominal level', () => {
     expect(planForLevel(Level.FULL, true)).toEqual({ dprScale: 1.0, fxOn: true, shadowsOn: true });
-    expect(planForLevel(Level.FX_OFF, true).fxOn).toBe(false);
-    expect(planForLevel(Level.SHADOWS_OFF, true).shadowsOn).toBe(false);
+    expect(planForLevel(Level.DPR_85, true)).toEqual({
+      dprScale: 1.0,
+      fxOn: true,
+      shadowsOn: true,
+    });
+    expect(planForLevel(Level.DPR_65, true)).toEqual({
+      dprScale: 1.0,
+      fxOn: true,
+      shadowsOn: true,
+    });
+    expect(planForLevel(Level.FX_OFF, true)).toEqual({
+      dprScale: 1.0,
+      fxOn: true,
+      shadowsOn: true,
+    });
+    expect(planForLevel(Level.SHADOWS_OFF, true)).toEqual({
+      dprScale: 1.0,
+      fxOn: true,
+      shadowsOn: true,
+    });
   });
 });

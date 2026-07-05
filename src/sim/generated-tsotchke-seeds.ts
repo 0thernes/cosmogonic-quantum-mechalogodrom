@@ -4,7 +4,7 @@
 // This file makes Cosmogonic actually BUILD WITH the Tsotchke Repo Folder.
 
 export const TSOTCHKE_HARVEST = {
-  eskCount: 1436,
+  eskCount: 1365,
   eskSamples: [
     'Eshkol/eshkol_repo/benchmarks/activation_bench.esk',
     'Eshkol/eshkol_repo/benchmarks/conv2d_bench.esk',
@@ -15,8 +15,8 @@ export const TSOTCHKE_HARVEST = {
     'Eshkol/eshkol_repo/examples/consciousness.esk',
     'Eshkol/eshkol_repo/examples/differentiable_physics.esk',
   ],
-  totalScanned: 3096,
-  timestamp: 'corpus:1436esk/3096files',
+  totalScanned: 2507,
+  timestamp: 'corpus:1365esk/2507files',
   note: 'Harvested directly from local Tsotchke Repo Folder at build time. Eshkol .esk programs are the heritable substrate for digital biologics sentience. All other Tsotchke mirrors (moonlab, libirrep, QGT, spin, quake, etc.) provide the additional physics/geometry/order kernels.',
 } as const;
 

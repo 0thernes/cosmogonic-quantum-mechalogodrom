@@ -23,8 +23,9 @@
  * Pool sizing: lazily constructed at `initialPoolCapacity` (uniform share ×
  * HEADROOM) and grown ×2 (event-driven, never per-frame churn) up to
  * `maxEntities` — a mutate-all collapsing the population into one pool is the
- * worst case and stays bounded. Rebuild is full each frame: O(2n) passes, zero
- * allocation in steady state, uploads clipped to the live instance range.
+ * worst case and stays bounded. Once pools are warm, sync is one pass over the
+ * population; construction/growth falls back to the full census path. Both paths
+ * write the same per-instance attributes and upload clipped live ranges.
  *
  * Shadows: instanced pools cast none (the legacy path only ever shadowed the
  * first 120 organisms; at 5,000+ the map would drown). Environment shadows are
@@ -97,6 +98,17 @@ interface Pool {
    * (phylum), y = species hue (morphotype), z = ascent (vel.y), w = girth (scale). By {@link packVitals3}.
    */
   vitals3: THREE.InstancedBufferAttribute;
+  /**
+   * Phase 1.2: GPU Motion Interpolation — vec3 per instance: previous position for temporal interpolation.
+   * Used by the GPU to interpolate between simulation ticks for smooth motion at higher render rates.
+   */
+  prevPos: THREE.InstancedBufferAttribute;
+  /**
+   * Phase 1.2: GPU Motion Interpolation — float per instance: simulation tick timestamp.
+   * Records when this entity's position was last updated by the simulation. Used to compute
+   * the interpolation factor in the GPU shader.
+   */
+  simTick: THREE.InstancedBufferAttribute;
   capacity: number;
   /** Live instances written this frame (reset each sync). */
   used: number;
@@ -124,6 +136,10 @@ interface ShaderUniforms {
   uMorphWave: { value: number };
   /** V122: the press counter seeding each wave's palette so every press looks different. */
   uMorphSeed: { value: number };
+  /** Phase 1.2: GPU Motion Interpolation — simulation tick rate in Hz. */
+  uSimRate: { value: number };
+  /** Phase 1.2: GPU Motion Interpolation — current render time in seconds. */
+  uRenderTime: { value: number };
 }
 
 /** Speed→exertion normalizer: a damped-velocity magnitude of ~0.125 saturates the exertion lane. */
@@ -275,10 +291,12 @@ function patchPoolMaterial(
     shader.uniforms['uSuspendT'] = uniforms.uSuspendT;
     shader.uniforms['uMorphWave'] = uniforms.uMorphWave;
     shader.uniforms['uMorphSeed'] = uniforms.uMorphSeed;
+    shader.uniforms['uSimRate'] = uniforms.uSimRate;
+    shader.uniforms['uRenderTime'] = uniforms.uRenderTime;
     shader.vertexShader = shader.vertexShader
       .replace(
         '#include <common>',
-        '#include <common>\nattribute vec4 instEmissive;\nattribute vec4 instVitals;\nattribute vec4 instVitals2;\nattribute vec4 instVitals3;\nvarying vec4 vInstEmissive;\nvarying vec4 vVitals;\nvarying vec4 vVit2;\nvarying vec4 vVit3;\nvarying vec3 vObjPos;\nvarying float vInstId;\nuniform float uTime;\nuniform float uNightmare;\nuniform float uSuspend;\nuniform float uSuspendT;\nuniform float uMorphWave;\nuniform float uMorphSeed;',
+        '#include <common>\nattribute vec4 instEmissive;\nattribute vec4 instVitals;\nattribute vec4 instVitals2;\nattribute vec4 instVitals3;\nattribute vec3 instPrevPos;\nattribute float instSimTick;\nvarying vec4 vInstEmissive;\nvarying vec4 vVitals;\nvarying vec4 vVit2;\nvarying vec4 vVit3;\nvarying vec3 vObjPos;\nvarying float vInstId;\nuniform float uTime;\nuniform float uNightmare;\nuniform float uSuspend;\nuniform float uSuspendT;\nuniform float uMorphWave;\nuniform float uMorphSeed;\nuniform float uSimRate;\nuniform float uRenderTime;',
       )
       .replace(
         '#include <begin_vertex>',
@@ -291,14 +309,22 @@ function patchPoolMaterial(
           // gl_InstanceID is a VERTEX-only built-in; hoist it to a varying so the fragment shader
           // (LIVING HUE DRIFT) can read the per-instance id without an illegal fragment reference.
           'vInstId = float(gl_InstanceID);\n' +
+          '// Phase 1.2: GPU Motion Interpolation — interpolate between simulation ticks\n' +
+          'vec3 interpolatedPos = position;\n' +
+          'if (uSimRate > 0.0 && instSimTick > 0.0) {\n' +
+          '  float simDelta = uRenderTime - instSimTick;\n' +
+          '  float simPeriod = 1.0 / uSimRate;\n' +
+          '  float alpha = clamp(simDelta / simPeriod, 0.0, 1.0);\n' +
+          '  interpolatedPos = mix(instPrevPos, position, alpha);\n' +
+          '}\n' +
           'if (uNightmare > 0.0) {\n' +
           '  float ph = float(gl_InstanceID) * 0.6180339887;\n' +
-          '  float warp = sin(position.y * 8.0 + uTime * 3.0 + ph) * 0.5 + sin(position.x * 6.0 - uTime * 2.0 + ph) * 0.5;\n' +
+          '  float warp = sin(interpolatedPos.y * 8.0 + uTime * 3.0 + ph) * 0.5 + sin(interpolatedPos.x * 6.0 - uTime * 2.0 + ph) * 0.5;\n' +
           '  transformed += objectNormal * (uNightmare * warp * 0.18);\n' +
           '}\n' +
           '// SHARDWARP (neural firing, vVitals.z): a firing body bristles with tiny shards along its\n' +
           '// normal; amplitude scales with real activation, so an idle organism is byte-identical.\n' +
-          'transformed += objectNormal * (instVitals.z * sin(position.x * 31.0 + position.y * 27.0 - uTime * 11.0) * 0.04);\n' +
+          'transformed += objectNormal * (instVitals.z * sin(interpolatedPos.x * 31.0 + interpolatedPos.y * 27.0 - uTime * 11.0) * 0.04);\n' +
           '// V121 SUSPENDED ANIMATION (USER): while the dome pauses, every organism keeps LIVING IN\n' +
           '// PLACE — spinning on its own axis, twining/bobbing, and orbiting its frozen locus on the\n' +
           '// pause clock. Render-only (entity state untouched, no rng ⇒ golden intact); uSuspend eases\n' +
@@ -319,7 +345,7 @@ function patchPoolMaterial(
           '  float mph = fract(float(gl_InstanceID) * 0.1618 + uMorphSeed * 0.377);\n' +
           '  float spasm = sin(uTime * 9.0 + mph * 6.2831853);\n' +
           '  transformed *= 1.0 + uMorphWave * 0.22 * spasm;\n' +
-          '  transformed += objectNormal * (uMorphWave * 0.28 * sin(position.y * 14.0 + uTime * 11.0 + mph * 9.0));\n' +
+          '  transformed += objectNormal * (uMorphWave * 0.28 * sin(interpolatedPos.y * 14.0 + uTime * 11.0 + mph * 9.0));\n' +
           '}',
       );
     shader.fragmentShader = shader.fragmentShader
@@ -732,6 +758,8 @@ export class InstancedEntityRenderer {
     uSuspendT: { value: 0 },
     uMorphWave: { value: 0 },
     uMorphSeed: { value: 0 },
+    uSimRate: { value: 60 }, // Phase 1.2: default to 60 Hz (no interpolation)
+    uRenderTime: { value: 0 }, // Phase 1.2: current render time
   };
 
   /** Stores references and builds the geometry-id lookup. No pools yet. O(geos). */
@@ -769,11 +797,16 @@ export class InstancedEntityRenderer {
   }
 
   /**
-   * Mirror the logical population into the pools. Two O(n) passes (count, then
-   * write), event-driven pool construction/growth only, GPU uploads clipped to
-   * each pool's live range. Call once per frame after all entity mutations.
+   * Mirror the logical population into the pools. Steady-state frames use one O(n)
+   * pass; frames that need pool construction/growth fall back to the original
+   * count-then-write path. Call once per frame after all entity mutations.
    */
-  sync(list: readonly Entity[], mode: RenderMode, frame: InstanceFrame = ZERO_FRAME): void {
+  sync(
+    list: readonly Entity[],
+    mode: RenderMode,
+    frame: InstanceFrame = ZERO_FRAME,
+    simRate: number = 60,
+  ): void {
     // Drive the shared shader uniforms (V7-beyond) — one write reaches every pool. At N1
     // (nightmare 0) the GPU melt branch is skipped, so the scene is byte-identical.
     this.shaderUniforms.uTime.value = frame.t;
@@ -781,6 +814,11 @@ export class InstancedEntityRenderer {
     this.shaderUniforms.uChaos.value = frame.chaos;
     this.shaderUniforms.uBass.value = frame.bass;
     this.shaderUniforms.uMode.value = RENDER_MODES.indexOf(mode);
+    // Phase 1.2: GPU Motion Interpolation — set simulation rate and render time
+    this.shaderUniforms.uSimRate.value = simRate;
+    this.shaderUniforms.uRenderTime.value = frame.t;
+    if (this.trySyncWarm(list, mode, frame)) return;
+
     const counts = this.counts;
     const cursors = this.cursors;
     counts.fill(0);
@@ -820,82 +858,126 @@ export class InstancedEntityRenderer {
       const slot = cursors[k] ?? 0;
       if (slot >= pool.capacity) continue; // capacity clamp (growth hit maxEntities)
       cursors[k] = slot + 1;
-      e.updateMatrix();
-      pool.mesh.setMatrixAt(slot, e.matrix);
-      const c = e.material.color;
-      const em = e.material.emissive;
-      const eI = e.material.emissiveIntensity;
-      const a = pool.emissive.array as Float32Array;
-      const o = slot * 4;
-      if (night > 0) {
-        // Inverted, channel-permuted ("glitched") colour: target = vec3(1) − c.bgr, then a
-        // per-instance 3-way channel rotation by (i % 3) so the inversion is non-uniform. Mix
-        // toward it by `night`. Pure arithmetic on the existing colour — no rng.
-        const ir = 1 - c.b;
-        const ig = 1 - c.g;
-        const ib = 1 - c.r;
-        const rot = i % 3;
-        const tr = rot === 0 ? ir : rot === 1 ? ig : ib;
-        const tg = rot === 0 ? ig : rot === 1 ? ib : ir;
-        const tb = rot === 0 ? ib : rot === 1 ? ir : ig;
-        NIGHT_COL.setRGB(
-          c.r + (tr - c.r) * night,
-          c.g + (tg - c.g) * night,
-          c.b + (tb - c.b) * night,
-        );
-        pool.mesh.setColorAt(slot, NIGHT_COL);
-        // Emissive inverted + hotter, so the glow goes wrong too.
-        const eIn = eI * (1 + 0.6 * night);
-        a[o] = (em.r + (1 - em.b - em.r) * night) * eIn;
-        a[o + 1] = (em.g + (1 - em.g - em.g) * night) * eIn;
-        a[o + 2] = (em.b + (1 - em.r - em.b) * night) * eIn;
-      } else {
-        pool.mesh.setColorAt(slot, c);
-        a[o] = em.r * eI;
-        a[o + 1] = em.g * eI;
-        a[o + 2] = em.b * eI;
-      }
-      a[o + 3] = e.material.transparent ? Math.max(e.material.opacity, MIN_ALPHA) : 1;
-      // V-VITALS: pack this organism's REAL state into the per-instance vitals lane that drives the
-      // GPU effect suite. Defensive — a bare data-mesh lacking full EntityData packs zeros, never NaN.
-      const ud = e.userData;
-      const vel = ud.vel as THREE.Vector3 | undefined;
-      packVitals(
-        pool.vitals.array as Float32Array,
-        o,
-        ud.energy,
-        ud.age,
-        ud.life,
-        ud.act,
-        vel ? vel.length() : 0,
-      );
-      packVitals2(
-        pool.vitals2.array as Float32Array,
-        o,
-        ud.strategy,
-        ud.payoff,
-        ud.setGroup,
-        ud.qP,
-      );
-      packVitals3(
-        pool.vitals3.array as Float32Array,
-        o,
-        ud.phylum,
-        ud.mi,
-        vel ? vel.y : 0,
-        e.scale.x, // the market-driven render scale (girth = wealth made geometric)
-      );
+      this.writeEntityToPool(e, i, pool, slot, night, frame);
     }
 
     // Publish: live counts, clipped uploads, render mode (V7.3). Per-instance colour/emissive/
     // alpha already came from each entity material above; only the pool-level flags
     // (wireframe/metalness/roughness) need pushing, and only when the mode changes.
+    this.publish(mode);
+  }
+
+  /**
+   * Steady-state fast path: pools already exist and have enough capacity, so a single pass can write
+   * each pool slot directly. If any pool needs construction/growth, return false and let `sync` run
+   * the full census path. Partial writes are harmless because the fallback rewrites from slot zero.
+   */
+  private trySyncWarm(list: readonly Entity[], mode: RenderMode, frame: InstanceFrame): boolean {
+    const cursors = this.cursors;
+    const night = frame.nightmare;
+    cursors.fill(0);
+    for (let i = 0; i < list.length; i++) {
+      const e = list[i];
+      if (!e) continue;
+      const gi = this.geoIndex.get(e.geometry.id);
+      if (gi === undefined) continue;
+      const k = poolKey(gi, e.material.transparent);
+      const pool = this.pools[k];
+      if (!pool) return false;
+      const slot = cursors[k] ?? 0;
+      if (slot >= pool.capacity) return false;
+      cursors[k] = slot + 1;
+      this.writeEntityToPool(e, i, pool, slot, night, frame);
+    }
+    this.publish(mode);
+    return true;
+  }
+
+  /** Write one logical entity into one instanced pool slot. Shared by warm and census sync paths. */
+  private writeEntityToPool(
+    e: Entity,
+    listIndex: number,
+    pool: Pool,
+    slot: number,
+    night: number,
+    frame: InstanceFrame,
+  ): void {
+    e.updateMatrix();
+    pool.mesh.setMatrixAt(slot, e.matrix);
+    const c = e.material.color;
+    const em = e.material.emissive;
+    const eI = e.material.emissiveIntensity;
+    const a = pool.emissive.array as Float32Array;
+    const o = slot * 4;
+    if (night > 0) {
+      // Inverted, channel-permuted ("glitched") colour: target = vec3(1) - c.bgr, then a
+      // per-instance 3-way channel rotation by (listIndex % 3) so the inversion is non-uniform.
+      const ir = 1 - c.b;
+      const ig = 1 - c.g;
+      const ib = 1 - c.r;
+      const rot = listIndex % 3;
+      const tr = rot === 0 ? ir : rot === 1 ? ig : ib;
+      const tg = rot === 0 ? ig : rot === 1 ? ib : ir;
+      const tb = rot === 0 ? ib : rot === 1 ? ir : ig;
+      NIGHT_COL.setRGB(
+        c.r + (tr - c.r) * night,
+        c.g + (tg - c.g) * night,
+        c.b + (tb - c.b) * night,
+      );
+      pool.mesh.setColorAt(slot, NIGHT_COL);
+      // Emissive inverted + hotter, so the glow goes wrong too.
+      const eIn = eI * (1 + 0.6 * night);
+      a[o] = (em.r + (1 - em.b - em.r) * night) * eIn;
+      a[o + 1] = (em.g + (1 - em.g - em.g) * night) * eIn;
+      a[o + 2] = (em.b + (1 - em.r - em.b) * night) * eIn;
+    } else {
+      pool.mesh.setColorAt(slot, c);
+      a[o] = em.r * eI;
+      a[o + 1] = em.g * eI;
+      a[o + 2] = em.b * eI;
+    }
+    a[o + 3] = e.material.transparent ? Math.max(e.material.opacity, MIN_ALPHA) : 1;
+    // Phase 1.2: GPU Motion Interpolation — pack current position as previous position for next frame
+    // and store the current simulation tick timestamp. The GPU will interpolate between these.
+    const prevPosArr = pool.prevPos.array as Float32Array;
+    const simTickArr = pool.simTick.array as Float32Array;
+    const p = slot * 3;
+    prevPosArr[p] = e.position.x;
+    prevPosArr[p + 1] = e.position.y;
+    prevPosArr[p + 2] = e.position.z;
+    simTickArr[slot] = frame.t;
+    // V-VITALS: pack this organism's REAL state into the per-instance vitals lane that drives the
+    // GPU effect suite. Defensive — a bare data-mesh lacking full EntityData packs zeros, never NaN.
+    const ud = e.userData;
+    const vel = ud.vel as THREE.Vector3 | undefined;
+    packVitals(
+      pool.vitals.array as Float32Array,
+      o,
+      ud.energy,
+      ud.age,
+      ud.life,
+      ud.act,
+      vel ? vel.length() : 0,
+    );
+    packVitals2(pool.vitals2.array as Float32Array, o, ud.strategy, ud.payoff, ud.setGroup, ud.qP);
+    packVitals3(
+      pool.vitals3.array as Float32Array,
+      o,
+      ud.phylum,
+      ud.mi,
+      vel ? vel.y : 0,
+      e.scale.x, // the market-driven render scale (girth = wealth made geometric)
+    );
+  }
+
+  /** Publish live counts and clipped GPU upload ranges after either sync path writes pool slots. */
+  private publish(mode: RenderMode): void {
     const modeChanged = mode !== this.mode;
     this.mode = mode;
     for (let k = 0; k < this.pools.length; k++) {
       const pool = this.pools[k];
       if (!pool) continue;
-      const used = cursors[k] ?? 0;
+      const used = this.cursors[k] ?? 0;
       pool.used = used;
       pool.mesh.count = used;
       if (used > 0) {
@@ -920,6 +1002,12 @@ export class InstancedEntityRenderer {
         pool.vitals3.clearUpdateRanges();
         pool.vitals3.addUpdateRange(0, used * 4);
         pool.vitals3.needsUpdate = true;
+        pool.prevPos.clearUpdateRanges();
+        pool.prevPos.addUpdateRange(0, used * 3);
+        pool.prevPos.needsUpdate = true;
+        pool.simTick.clearUpdateRanges();
+        pool.simTick.addUpdateRange(0, used);
+        pool.simTick.needsUpdate = true;
       }
       if (modeChanged) {
         this.applyModeToPool(pool.mesh.material as THREE.MeshStandardMaterial);
@@ -987,6 +1075,12 @@ export class InstancedEntityRenderer {
     // vec4 per-instance IDENTITY + KINETIC signals (V-VITALS3) — same lifecycle as the lanes above.
     const vitals3 = new THREE.InstancedBufferAttribute(new Float32Array(capacity * 4), 4);
     vitals3.setUsage(THREE.DynamicDrawUsage);
+    // Phase 1.2: GPU Motion Interpolation — vec3 per instance: previous position
+    const prevPos = new THREE.InstancedBufferAttribute(new Float32Array(capacity * 3), 3);
+    prevPos.setUsage(THREE.DynamicDrawUsage);
+    // Phase 1.2: GPU Motion Interpolation — float per instance: simulation tick timestamp
+    const simTick = new THREE.InstancedBufferAttribute(new Float32Array(capacity), 1);
+    simTick.setUsage(THREE.DynamicDrawUsage);
     // The pool renders a per-pool CLONE of the cached geometry so the
     // `instEmissive` attribute never leaks onto the shared cache entry (entity
     // geometries are tiny — ≤80 small clones, boot/growth-time only). The clone
@@ -996,13 +1090,15 @@ export class InstancedEntityRenderer {
     instGeo.setAttribute('instVitals', vitals);
     instGeo.setAttribute('instVitals2', vitals2);
     instGeo.setAttribute('instVitals3', vitals3);
+    instGeo.setAttribute('instPrevPos', prevPos);
+    instGeo.setAttribute('instSimTick', simTick);
     mesh.geometry = instGeo;
     // Force instanceColor allocation now so sync() can assume it exists.
     mesh.setColorAt(0, WHITE);
     const ic = mesh.instanceColor;
     if (ic) ic.setUsage(THREE.DynamicDrawUsage);
     this.scene.add(mesh);
-    return { mesh, emissive, vitals, vitals2, vitals3, capacity, used: 0 };
+    return { mesh, emissive, vitals, vitals2, vitals3, prevPos, simTick, capacity, used: 0 };
   }
 
   /** Replace a pool with a doubled-capacity successor (event-driven, rare). */

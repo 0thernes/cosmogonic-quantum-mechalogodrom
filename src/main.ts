@@ -6,7 +6,7 @@ import 'htmx.org';
 import * as THREE from 'three';
 import { detectQuality } from './core/quality';
 import { Engine } from './core/engine';
-import { RenderGovernor, Level } from './core/frame-governor';
+import { RenderGovernor } from './core/frame-governor';
 import { mountPerfHud } from './ui/perf-hud';
 import { MemoryStore } from './memory/store';
 import { AuditTrail } from './logging/audit';
@@ -91,7 +91,7 @@ if (!(canvas instanceof HTMLCanvasElement)) {
   throw new Error('boot failure: #c canvas element is missing');
 }
 
-const quality = detectQuality();
+const quality = await detectQuality();
 
 /**
  * A friendly full-screen card shown when the WebGL context can't be created — so the app degrades to a
@@ -206,17 +206,14 @@ async function boot(): Promise<void> {
     };
   }
 
-  // V-GOV: render-side frame-time governor — sheds DPR → post-FX → shadows under sustained slow frames
-  // so the GPU never gets a frame heavy enough to trip the driver watchdog (the TDR black-screen freeze
-  // under apocalypse / CHAOS spam at 50k), then restores quality when it recovers. RENDER-ONLY, so the
-  // seeded sim stays bit-deterministic; the boot tier's shadow capability bounds how far it may shed.
+  // V-GOV: render-side frame monitor. It reports FPS/quality to the HUD but never drops DPR,
+  // post-FX, shadows, color, detail or sim cadence. Performance fixes must preserve fidelity.
   const governor = new RenderGovernor(quality.shadows);
-  // Stage 1: a tiny render-layer perf chip — live FPS + the governor's quality level + tier switch.
+  // Stage 1: a tiny render-layer perf chip — live FPS + locked-full quality + tier switch.
   // Render-only ⇒ determinism-safe; headless-safe (no-op without a DOM).
   const perfHud = mountPerfHud(quality.tier);
   let fpsEma = 60;
   let perfFrame = 0;
-  let lastGovernorLevel: Level | null = null;
   // rAF-timestamp delta; world.step clamps to 50ms so tab-switch gaps are safe. dt floored at 0.
   let last = performance.now();
   let firstLight = false;
@@ -240,11 +237,6 @@ async function boot(): Promise<void> {
     const fps = dt > 0 ? Math.min(1 / dt, 240) : fpsEma;
     fpsEma += (fps - fpsEma) * 0.1;
     if (++perfFrame % 12 === 0) perfHud.update(fpsEma, governor.level);
-    // Surface quality changes to the user so the world getting blurrier is not a mystery.
-    if (lastGovernorLevel !== null && lastGovernorLevel !== governor.level) {
-      world?.showQualityNotice(governor.level);
-    }
-    lastGovernorLevel = governor.level;
   }
   rafId = requestAnimationFrame(frame);
   // ROBUSTNESS: the deferred click-to-open panels (⛓ ACCESS / ◈ STAGE II / 🗒 AUDIT toggles, copilot,

@@ -16,6 +16,9 @@ import './quantum-classical.bench';
 import './reaction-diffusion.bench';
 import './super-mind.bench';
 import './eshkol-ad.bench';
+import './quantization.bench';
+import './motion-interpolation.bench';
+import './perceptual-priority.bench';
 import { run } from 'mitata';
 
 await run();

@@ -113,8 +113,7 @@ const GRAVITATIONAL_LENS_SHADER: THREE.ShaderMaterialParameters & {
 export class PostFx {
   private readonly composer: EffectComposer;
   private readonly lens: ShaderPass;
-  /** The cinematic bloom pass (`?fx=1` only; null on the default 'lens' pipeline) — the one EXPENSIVE
-   * post-FX pass, shed by the render governor under load while the cheap lens keeps running. */
+  /** The cinematic bloom pass (`?fx=1` only; null on the default 'lens' pipeline). */
   private readonly bloom: UnrealBloomPass | null;
   // Captured once from the lens pass's cloned uniform set so the per-frame setLens()/setSize() paths
   // mutate stable IUniform objects without index-signature `| undefined` noise (noUncheckedIndexedAccess).
@@ -177,19 +176,17 @@ export class PostFx {
 
   /**
    * True while the gravitational lens is actually bending the screen — i.e. a singularity is summoned
-   * and on-screen (signed strength ≠ 0). The {@link Engine} keeps the composer running for this even
-   * when the render governor has otherwise suspended post-FX, so a singularity NEVER loses its
-   * signature warp under load (the lens is one cheap full-screen pass; the heavy {@link setHeavySuspended}
-   * bloom is shed instead). O(1).
+   * and on-screen (signed strength ≠ 0). The {@link Engine} keeps the composer running for this so a
+   * singularity NEVER loses its signature warp under load. O(1).
    */
   get lensActive(): boolean {
     return this.uStrength.value !== 0;
   }
 
   /**
-   * Render-governor hook: shed the EXPENSIVE post-FX (the cinematic UnrealBloom pass) under sustained
-   * slow frames, while the cheap, physics-critical gravitational lens keeps running. A no-op on the
-   * default 'lens' pipeline (no bloom built). Render-only — no sim state touched, determinism-safe. O(1).
+   * Explicit bloom toggle. The runtime frame monitor keeps this enabled; this exists for manual fallback
+   * paths/tests and is a no-op on the default 'lens' pipeline (no bloom built). Render-only — no sim state
+   * touched, determinism-safe. O(1).
    */
   setHeavySuspended(suspended: boolean): void {
     if (this.bloom) this.bloom.enabled = !suspended;

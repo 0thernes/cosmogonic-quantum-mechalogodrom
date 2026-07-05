@@ -16,6 +16,7 @@ import type { Entity, SimContext } from '../src/types';
 import { mulberry32 } from '../src/math/rng';
 import { SpatialHash } from '../src/math/spatial-hash';
 import { AuditTrail } from '../src/logging/audit';
+import { getQuantizationConfig } from '../src/math/quantization';
 
 describe('pool sizing math', () => {
   test('initialPoolCapacity: uniform share × headroom, floored at 16', () => {
@@ -55,6 +56,8 @@ function makeCtx(maxEntities: number, geos: THREE.BufferGeometry[]): SimContext 
       maxLinks: 0,
       shadows: false,
       starCount: 0,
+      quantization: getQuantizationConfig('ultra'),
+      simRate: 15,
     },
     rng: mulberry32(7),
     grid: new SpatialHash<Entity>(16),

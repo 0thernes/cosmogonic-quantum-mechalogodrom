@@ -24,6 +24,7 @@ import type { Entity, EntityData, SimContext } from '../src/types';
 import { mulberry32 } from '../src/math/rng';
 import { SpatialHash } from '../src/math/spatial-hash';
 import { AuditTrail } from '../src/logging/audit';
+import { getQuantizationConfig } from '../src/math/quantization';
 
 const PHI = 0.61803398875;
 const INV_TAU = 1 / (Math.PI * 2);
@@ -104,6 +105,8 @@ function makeCtx(geos: THREE.BufferGeometry[]): SimContext {
       maxLinks: 0,
       shadows: false,
       starCount: 0,
+      quantization: getQuantizationConfig('ultra'),
+      simRate: 15,
     },
     rng: mulberry32(7),
     grid: new SpatialHash<Entity>(16),

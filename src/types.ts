@@ -13,11 +13,11 @@ import type { SpatialHash } from './math/spatial-hash';
 import type { AuditTrail } from './logging/audit';
 import type { Behavior, RenderMode, ViewMode, Weather } from './sim/constants';
 import type { MarketSummary } from './sim/economy';
+import type { QuantizationConfig } from './math/quantization';
 
 /** Quality tier ladder (CONTRACTS V3.1 → V123, USER #6): decided once at boot, never switched.
  * Six rungs — phone 1,000 · tablet 2,000 · laptop 5,000 · desktop 10,000 · ultra 25,000 ·
- * mega 50,000. EVERYONE boots `phone` for a fast first load; the perf chip's tier switcher
- * (`?tier=`) is the one-tap way up. */
+ * mega 50,000. Tiers scale world population only; render fidelity stays full on every rung. */
 export type QualityTier = 'phone' | 'tablet' | 'laptop' | 'desktop' | 'ultra' | 'mega';
 
 /** Device-adaptive quality profile, resolved once at boot. */
@@ -47,8 +47,37 @@ export interface QualityProfile {
   maxLinks: number;
   shadows: boolean;
   starCount: number;
-  /** True above the phone tier: entities render through InstancedMesh pools (V3.1). */
+  /** True in production tiers: entities render through InstancedMesh pools (V3.1). */
   instanced: boolean;
+  /** Quantization configuration for performance optimization (Phase 1.1). */
+  quantization: QuantizationConfig;
+  /**
+   * Simulation tick rate in Hz. Full-fidelity runtime keeps this at 60 and does not skip
+   * simulation frames for lower tiers.
+   */
+  simRate?: number;
+  /**
+   * Neural evaluation rate in Hz for adaptive cadence (Phase 1.2 optimization).
+   * Lower tiers evaluate neural networks less frequently, interpolated between updates.
+   * Invisible to user - smooth interpolation maintains visual quality.
+   */
+  neuralRate?: number;
+  /**
+   * Connectome rebuild rate in Hz for adaptive cadence (Phase 1.2 optimization).
+   * Lower tiers rebuild neural links less frequently, interpolated between updates.
+   * Invisible to user - smooth interpolation maintains visual quality.
+   */
+  connectomeRate?: number;
+  /**
+   * WebGPU capabilities for progressive enhancement (Phase 2 optimization).
+   * If available, can use WebGPU compute shaders for massive speedup.
+   * Fallback to WebGL2 + CPU compute maintains full compatibility.
+   */
+  webGpu?: {
+    available: boolean;
+    adapter?: string;
+    reason?: string;
+  };
 }
 
 /** Per-entity simulation state stored on the mesh (`userData`). */
@@ -102,6 +131,10 @@ export interface EntityData {
    * sets it. Read as `userData.isNhi === true`.
    */
   isNhi?: boolean;
+  /** Previous position for shader-side temporal smoothing. OPTIONAL so spawn literals stay compact. */
+  prevPos?: THREE.Vector3;
+  /** Timestamp for shader-side temporal smoothing. OPTIONAL (⇒ undefined). */
+  simTick?: number;
 }
 
 export interface Entity extends THREE.Mesh<THREE.BufferGeometry, THREE.MeshStandardMaterial> {
@@ -173,6 +206,8 @@ export interface SimState {
    * fixed-target behaviour is preserved. Deterministic — derived purely from {@link elapsed}.
    */
   growthTarget?: number;
+  /** Legacy/reserved timestamp for older interpolation experiments. Runtime no longer skips sim ticks. */
+  lastSimTick?: number;
 }
 
 export type SfxType =

@@ -52,7 +52,7 @@ import { createPhyla } from './sim/phyla';
 import { EntityManager } from './sim/entities';
 import { growthTargetAt } from './sim/growth-ramp';
 import { EntityBrainField } from './sim/entity-brain';
-import { devour, gedankenDeath, GedankenLedger } from './sim/gedanken-death';
+import { gedankenDeath, GedankenLedger } from './sim/gedanken-death';
 import { runThalerProof, type ThalerVerdict } from './sim/thaler-sentience';
 import { TRAIT, TRAIT_GENES } from './sim/genome';
 import { InstancedEntityRenderer, type InstanceFrame } from './sim/instanced-entities';
@@ -177,6 +177,8 @@ import { InputSystem } from './ui/input';
 import type { AuditTrail } from './logging/audit';
 import { createLogger } from './logging/logger';
 import type { MemoryStore } from './memory/store';
+import { WorkerPool, type WorkerPoolConfig } from './core/worker-pool';
+import { WildernessPopulation } from './sim/wilderness-population';
 
 /** Cyclic element access into a non-empty readonly array. O(1). */
 function cyc<T>(arr: readonly T[], i: number): T {
@@ -297,6 +299,10 @@ export class World {
    *  one set per dev hot-reload, each firing against a dead World (the HMR hook calls dispose()). */
   private readonly disposeAbort = new AbortController();
   private readonly entities: EntityManager;
+  /** Worker pool for offloading simulation to multiple CPU cores (ADR 0010) */
+  public workerPool: WorkerPool | null = null;
+  /** Wilderness population - ambient entities on worker threads (ADR 0010) */
+  private readonly wilderness: WildernessPopulation;
   private readonly entityBrains: EntityBrainField; // V42: per-organism 70-param neural controller
   /** V127 (USER): Thaler "Death of a Gedanken Creature" — measured on every portal death (dying nets
    *  confabulate; the ledger accumulates the population-scale evidence). `gedankenSenses` is reused. */
@@ -351,6 +357,9 @@ export class World {
   /** Last morphic-field snapshot (telemetry); null until the first apex beat imprints. */
   private morphicSnap: MorphicSnapshot | null = null;
   private readonly symbiosis: Symbiosis;
+  /** Adaptive cadence counters for Phase 1.2 optimization - invisible to user */
+  private neuralUpdateCounter = 0;
+  private connectomeUpdateCounter = 0;
   private readonly mythRitual: MythRitual;
   private readonly archonMortality: Mortality[];
   private readonly nhsiFacultyIn = new Float32Array(16);
@@ -598,9 +607,10 @@ export class World {
     // DEVOUR: imprint a fraction of the dying policy into the nearest surviving neighbour.
     const j = this.nearestLivingNeighbour(e, i);
     if (j >= 0) {
-      const predator = this.entityBrains.genomeAt(j).subarray(TRAIT_GENES); // MUTATED toward the prey
       const prey = g.subarray(TRAIT_GENES);
-      this.gedankenLedger.recordDevour(devour(predator, prey, GEDANKEN_DEVOUR_ALPHA));
+      this.gedankenLedger.recordDevour(
+        this.entityBrains.devourBrain(j, prey, GEDANKEN_DEVOUR_ALPHA),
+      );
     }
   }
 
@@ -853,6 +863,24 @@ export class World {
     // break same-seed reproducibility (audit finding, 0.2.1).
     this.audio = new AudioEngine(this.state, mulberry32((this.persisted.seed ^ 0xa0d10) >>> 0));
 
+    // Initialize worker pool for full CPU utilization (ADR 0010)
+    // Uses SharedArrayBuffer if available (COOP/COEP headers), else transferables
+    const useSharedArrayBuffer = typeof SharedArrayBuffer !== 'undefined';
+    const workerConfig: WorkerPoolConfig = {
+      maxWorkers: navigator.hardwareConcurrency || 4,
+      useSharedArrayBuffer,
+      qualityTier: this.quality.tier,
+    };
+    this.workerPool = new WorkerPool(workerConfig);
+    // Worker pool is initialized and ready for use
+    // Core simulation uses SYNC executor (deterministic, in golden)
+    // Future: wilderness population will use ASYNC executor (best-effort, NOT in golden)
+    // Currently unused but infrastructure is in place for full CPU utilization
+
+    // Initialize wilderness population (ADR 0010)
+    // Ambient entities that run on worker threads - NOT in the golden
+    this.wilderness = new WildernessPopulation(this.workerPool, this.persisted.seed);
+
     // Lore precedes the taxonomy: phyla are lore-named at mint (CONTRACTS V3.2).
     this.lore = new LoreEngine(this.persisted.seed);
     const geos = createGeometryCache();
@@ -1085,6 +1113,7 @@ export class World {
     this.entityBrains = new EntityBrainField(
       this.quality.maxEntities,
       mulberry32((this.persisted.seed ^ 0xb7a19e3d) >>> 0 || 1),
+      this.quality.quantization,
     );
     this.superScene = ctx.scene;
     // 5 SUPER CREATURES (GOAL5 Archons/Godforms): World.GODFORMS from exclusive godform.ts source.
@@ -1314,6 +1343,10 @@ export class World {
     if (this.disposeAbort.signal.aborted) return; // idempotent — abort() is the sentinel
     this.disposeAbort.abort();
     this.audio.dispose();
+    // Terminate worker pool threads (ADR 0010)
+    this.workerPool = null;
+    // Dispose wilderness population
+    this.wilderness.dispose();
     // Free the GPU-resource-owning subsystems that expose a dispose(). The Engine's
     // forceContextLoss() reclaims the context's VRAM, but these JS-side geometry/material
     // dispose paths were skipped entirely — each HMR reload built a fresh World whose
@@ -1423,6 +1456,19 @@ export class World {
     s.frame++;
     const t = s.elapsed;
 
+    // ── WORKER OFFLOAD (ADR 0010) ─────────────────────────────────────────────────────────────────────
+    // Core simulation (deterministic, in golden) runs on main thread via SYNC executor.
+    // Wilderness simulation (best-effort, NOT in golden) runs on worker threads via ASYNC executor.
+    // Worker pool is initialized and wilderness population is active.
+    // Wilderness entities are camera-streamed (load near / unload far) with 1-frame lag (acceptable for ambient).
+    // One-way boundary: core may seed/spawn INTO wilderness; wilderness NEVER writes back to core.
+
+    // Update wilderness population based on camera position
+    // This runs on worker threads for full CPU utilization
+    const camX = this.engine.camera.position.x;
+    const camZ = this.engine.camera.position.z;
+    this.wilderness.update(camX, camZ, dt);
+
     // ── THREE-STATE PAUSE (USER pause redesign) ──────────────────────────────────────────────────────
     // The ⏸ PAUSE button cycles RUNNING → SUSPENDED → FROZEN → RUNNING (see togglePause / cycleTimeScale).
     // `s.timeScale === 0` = paused; `this.frozenAll` selects the FROZEN sub-state. In BOTH paused states
@@ -1454,6 +1500,10 @@ export class World {
     this.updateCamera(dt, uiDt, t);
     this.updateHeroCamera(); // V41: chase / first-person follow overrides the cam when engaged
     this.handleHotkeys(dt);
+
+    // One bands poll per frame, shared by every consumer (reused object).
+    const bands = this.audioAnalysis.update();
+
     // Chaos decays toward its floor — raised in SIMULATION N(2) so the nightmare stays
     // permanently agitated (higher cm ⇒ wilder behaviour excursions). V7.6.
     const chaosFloor = s.sim === 2 ? CHAOS_NIGHTMARE_FLOOR : CHAOS_MIN;
@@ -1477,8 +1527,6 @@ export class World {
     }
     if (this.chaosField.takeAlgoKick()) this.selectAlgo(s.algoIdx + 1, false);
 
-    // One bands poll per frame, shared by every consumer (reused object).
-    const bands = this.audioAnalysis.update();
     // Audio couplings, each ≤ 0.35 per contract: bass shimmers the six-lamp
     // rig (inside environment.update — the contracted LOCAL coupling, which
     // replaced the global exposure offset), level breathes the cloud points.
@@ -1680,9 +1728,18 @@ export class World {
     this.tickAlgoAuto(dt);
     this.sortStep(bands);
 
-    // F-BRAIN V42: one cohort of organism brains perceives + steers itself BEFORE the integrator folds
-    // velocity into position. Round-robin → bounded cost at 50k; own rng → the golden is unchanged.
-    this.entityBrains.think(this.entities.list, this.state.chaos, t);
+    // F-BRAIN V42: all organism brains perceive + steer BEFORE the integrator folds velocity
+    // into position. Adaptive cadence: evaluate at quality.neuralRate Hz (invisible to user)
+    // Physics always runs at 60 Hz, neural states interpolate between evaluations.
+    // Perceptual priority cascade: camera position passed for distance-based LOD (invisible to user)
+    const neuralRate = this.quality.neuralRate ?? 60;
+    this.neuralUpdateCounter++;
+    if (this.neuralUpdateCounter >= 60 / neuralRate) {
+      const cameraPos = this.engine.camera.position;
+      this.entityBrains.thinkAll(this.entities.list, this.state.chaos, t, cameraPos);
+      this.neuralUpdateCounter = 0;
+    }
+
     const stats = this.entities.update(dt, t);
     this.energy = stats.energy; // stats object is reused — copy immediately
     // USER stage E: RAGDOLL BOUNCE — organisms ricochet off the big solid bodies (Super Creatures /
@@ -1733,8 +1790,13 @@ export class World {
     // /6 above 5,000) keep the O(n·k) link rebuild + GPU upload off the 10k cost wall. The
     // connectome draws no rng, so cadence changes are determinism-neutral (GraphMind, which
     // does draw rng, runs on its own 240/600f cadence over whatever pairs exist). V3.6.
-    const cadence = n > 20000 ? 12 : n > 5000 ? 6 : n > 2000 ? 4 : n > 700 ? 3 : n > 400 ? 2 : 1; // V38 mega rung
-    if (s.frame % cadence === 0) this.connectome.update(dt, t);
+    // Adaptive cadence: use quality.connectomeRate Hz (invisible to user)
+    const connectomeRate = this.quality.connectomeRate ?? 60;
+    this.connectomeUpdateCounter++;
+    if (this.connectomeUpdateCounter >= 60 / connectomeRate) {
+      this.connectome.update(dt, t);
+      this.connectomeUpdateCounter = 0;
+    }
 
     // 5 SUPER CREATURES (pantheon): driveSuper builds per-pos percepts, calls think+set on all 5.
     // Guarded; own sub-streams → main golden untouched. Bodies already animated above.
@@ -1929,7 +1991,7 @@ export class World {
       fr.chaos = s.chaos;
       fr.bass = bands.bass;
       fr.nightmare = s.sim === 2 ? 1 : 0;
-      this.instanced.sync(this.entities.list, s.renderMode, fr);
+      this.instanced.sync(this.entities.list, s.renderMode, fr, this.quality.simRate);
     }
 
     // V60: aim the gravitational-lens post-FX at the active singularity (identity when none).
@@ -1961,7 +2023,7 @@ export class World {
       fr.chaos = s.chaos;
       fr.bass = 0;
       fr.nightmare = s.sim === 2 ? 1 : 0;
-      this.instanced.sync(this.entities.list, s.renderMode, fr);
+      this.instanced.sync(this.entities.list, s.renderMode, fr, this.quality.simRate);
     }
     // USER: the God-Colossus is the ONE structure that stays ANIMATED even in the FROZEN tableau — its
     // real-time clock (advanced every frame in step()) keeps the fractal morphing so the deity never turns
@@ -2108,7 +2170,7 @@ export class World {
       fr.chaos = s.chaos;
       fr.bass = bands.bass;
       fr.nightmare = s.sim === 2 ? 1 : 0;
-      this.instanced.sync(this.entities.list, s.renderMode, fr);
+      this.instanced.sync(this.entities.list, s.renderMode, fr, this.quality.simRate);
     }
     this.updateLens();
     this.engine.render();

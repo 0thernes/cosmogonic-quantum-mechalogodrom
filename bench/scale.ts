@@ -13,6 +13,7 @@ import { createGeometryCache } from '../src/sim/geometry-cache';
 import { createMorphotypes } from '../src/sim/morphotypes';
 import { EntityManager } from '../src/sim/entities';
 import { SINGULARITY_FIELD, SingularitySystem } from '../src/sim/singularities';
+import { getQuantizationConfig } from '../src/math/quantization';
 import type { AuditTrail } from '../src/logging/audit';
 import type { Entity, SimContext, SimState } from '../src/types';
 
@@ -53,8 +54,10 @@ function makeCtx(seed: number, maxEntities: number): SimContext {
       targetEntities: maxEntities,
       quantumCount: 10,
       maxLinks: 100,
+      quantization: getQuantizationConfig('ultra'),
       shadows: false,
       starCount: 10,
+      simRate: 15,
     },
     rng,
     grid: new SpatialHash<Entity>(8),

@@ -45,11 +45,7 @@ import type { PairHistory } from '../math/games';
 import type { SimContext } from '../types';
 import type { EntityManager } from './entities';
 import type { SingularitySystem } from './singularities';
-import {
-  PORTAL_RESPAWN_DELAY,
-  portalReappearSpot,
-  type PortalCullable,
-} from './portal-death-fauna';
+import { PORTAL_RESPAWN_DELAY, portalReappearSpot } from './portal-death-fauna';
 import type { DomeFeeder } from './dome-feeding';
 
 /** Number of titans: 10 territorial colossi + 10 central social/procreative colossi. */
@@ -674,7 +670,7 @@ export class TitanSystem implements DomeFeeder {
   /**
    * PORTAL DEATH (USER "everything else DIES"): blast any titan inside the portal kill-cylinder, hide it
    * (body + its own point light), and re-enter it ELSEWHERE {@link PORTAL_RESPAWN_DELAY} s later.
-   * Determinism-neutral (no rng, post-ascension only). See {@link PortalCullable}. O(titans).
+   * Determinism-neutral (no rng, post-ascension only). O(titans).
    */
   portalCull(
     ax: number,

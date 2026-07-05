@@ -86,6 +86,56 @@ rewrite (3 loads per species per cell, bit-identical results) brought it to
 Note: two Bun installs exist on PATH (bare `bun` = 1.3.11, `bun run` = 1.3.14);
 receipts above cite the version that executed them.
 
+### Quantized entity-brain storage (added 2026-07-05, Bun 1.3.14 x64-win32, same CPU)
+
+`EntityBrainField` now supports real packed genome storage. A 50,000-entity field
+contains `50,000 × 80 = 4,000,000` genes:
+
+| Storage mode | Backing array  | Direct genome bytes | Construction avg/iter | Forward-pass note                                      |
+| ------------ | -------------- | ------------------: | --------------------: | ------------------------------------------------------ |
+| FP32         | `Float32Array` |          16,000,000 |               9.51 ms | 100 `think()` calls: 228.96 ms                         |
+| FP16         | `Uint16Array`  |           8,000,000 |              36.25 ms | 100 `think()` calls: 377.91 ms due JS half decode cost |
+| INT8         | `Uint8Array`   |           4,000,000 |              67.96 ms | reserved for low tiers; decode cost must stay measured |
+
+Conversion benches over the same 4,000,000-gene fixture:
+
+| Benchmark                         | avg/iter |
+| --------------------------------- | -------: |
+| FP32 → packed FP16                | 23.82 ms |
+| packed FP16 → FP32 scratch decode |  6.11 ms |
+| FP32 → INT8                       | 33.58 ms |
+| INT8 → FP32 allocation decode     |  9.24 ms |
+| INT8 → FP32 scratch decode        | 34.47 ms |
+
+Interpretation: quantization is now **storage-real** and byte-measurable, but CPU
+decode is not free in JavaScript. Keep it tier-gated and benchmarked; do not claim
+an unconditional frame-time win from packed storage alone. Reproduce with
+`bun bench/quantization.bench.ts`.
+
+### Perceptual priority cascade (added 2026-07-05, Bun 1.3.14 x64-win32, same CPU)
+
+The cascade now carries original entity indices through the distance sort instead
+of recovering them with post-sort `indexOf`, and `world.ts` feeds those indices to
+`EntityBrainField.thinkIndices` so prioritized evaluation keeps each entity paired
+with its own genome slot.
+
+Focused benchmark, with seeded fixtures and forced resort work each iteration:
+
+| Benchmark                              |     avg/iter |
+| -------------------------------------- | -----------: |
+| update priorities, 1,000 entities      |   116-117 µs |
+| update priorities, 5,000 entities      |   731-791 µs |
+| update priorities, 10,000 entities     | 1.67-1.78 ms |
+| get entities to evaluate, frame 0      |     65.56 µs |
+| get entities to evaluate, frame 5      |     33.86 µs |
+| get entities to evaluate, frame 30     |     58.06 µs |
+| apply hive mind, 10,000-entity fixture |    542.16 µs |
+
+Interpretation: the priority cascade is now **slot-correct** and measured under a
+real resort workload. These are CPU receipts only; browser visual smoke is still
+required before raising/lowering tier capacities or claiming perceptual equivalence.
+Reproduce with `bun bench/perceptual-priority.bench.ts`.
+
 ## Ultra-tier 10k optimization (added 2026-06-10, Bun 1.3.11 x64-win32, same CPU)
 
 The 10× scale-up to the ultra tier (10,000-entity cap, CONTRACTS V3.1) exposed a
