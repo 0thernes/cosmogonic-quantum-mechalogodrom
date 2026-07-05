@@ -128,6 +128,19 @@ assignment (ulg/logo-lab).
 - **Do NOT wire:** `quantum-quake` (GPL-2.0 — legal hard-stop) into this proprietary build.
 - **Stay fenced (by design):** gpt2-basic, llm-arbitrator (non-LLM mandate); SolanaQuantumFlux (proprietary).
 
+## Integration waves (complete — 2026-06-26)
+
+Waves 1–4 from the former corpus integration report are **done** in code:
+
+| Wave | Scope                                          | Status     |
+| ---- | ---------------------------------------------- | ---------- |
+| 1    | Eshkol AD + GWT + `.esk` DNA harvest           | ✅ Shipped |
+| 2    | Moonlab tensor / MPO / Clifford reflex         | ✅ Shipped |
+| 3    | QGT / spin / libirrep / quake / ulg facades    | ✅ Shipped |
+| 4    | Registry depth field + tsotchke-registry tests | ✅ Shipped |
+
+This map is the **only** Tsotchke wiring ledger; redundant audit/plan copies were removed (see `docs/AUDIT-LOG.md`).
+
 ---
 
 _Companion to `THIRD-PARTY-NOTICES.md` (binding "On Tsotchke" + per-primitive attribution),

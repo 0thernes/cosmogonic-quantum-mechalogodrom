@@ -10,7 +10,7 @@ adversarial verification of every finding). It is deliberately **not** all-green
 a scorecard is where it is red.
 
 > Read every claim against [`2026-06-26-CURRENT-TRUTH-BASELINE.md`](./2026-06-26-CURRENT-TRUTH-BASELINE.md).
-> Current receipts: **v0.18.0 · 1,984 tests** (published floor; `2104` measured) **· 92.13% line / 89.66%
+> Current receipts: **v0.20.0 · 1,984 tests** (published floor; `2104` measured) **· 92.13% line / 89.66%
 > function · Butlin 8/14 met + 6/14 partial · not sentient.**
 
 ## Bottom line

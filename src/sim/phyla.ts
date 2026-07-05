@@ -21,7 +21,7 @@
  *
  * TSOTCHKE CORPUS 10x (Ralph loop): libirrep symmetry (reps, clebsch from mirrors/libirrep) conceptually informs
  * phylum "irrep bands" for morph family equivariance; Eshkol/Moonlab/QGT influence the lore + geo bias wiring in world.
- * See docs/TSOTCHKE-CORPUS-RALPH-WIRING-AUDIT-2026-06-19.md + full local Z:\[Vibe Coded (AI)]\(Tsotchke).
+ * See docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md + full local Z:\[Vibe Coded (AI)]\(Tsotchke).
  */
 import * as THREE from 'three';
 import type { Rng } from '../math/rng';

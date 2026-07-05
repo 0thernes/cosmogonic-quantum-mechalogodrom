@@ -148,7 +148,7 @@ mind-field/stigmergy, whole-dome criticality, adversarial selection, Eshkol
 program evolution, cross-strain recombination, higher-order collective
 emergence). A further **5 god-scale release moments are events** — discrete
 triggered set-pieces, not additional emergence angles. Never inflate this to
-"12–19 emergence angles".
+"12–10 emergence angles".
 
 **But:** `tests/coupling-audit.test.ts` measures and asserts the honest regime —
 `meanAbsCoupling` and `density` are bounded below the strong-coupling threshold.

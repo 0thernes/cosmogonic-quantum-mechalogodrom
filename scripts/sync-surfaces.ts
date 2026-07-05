@@ -57,23 +57,21 @@ const SURFACES = [
   'docs/ARCHITECTURE-2026-06-26.md',
   'docs/SUPER-CREATURE-RESEARCH-2026-06-26.md',
   'docs/BENCHMARKS-2026-06-26.md',
-  'docs/CORPUS_INTEGRATION_REPORT-2026-06-26.md',
-  'docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md',
-  // Canonical docs that publish the CURRENT gate figure (single "Gate:" line, no historical
-  // receipts to clobber). Their slash-form "LINE% / FUNC%" was drifting unseen until added here.
   'docs/ERD-2026-06-26.md',
   'docs/KANBAN-2026-06-26.md',
-  // Binding contract whose present-tense "...ERA (vX)" header stamps the current version (synced below).
   'docs/MODULE-CONTRACTS-2026-06-26.md',
+  'docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md',
   'bible.html',
-  // The two DESIGNATED current-truth reports. docs/reports/* is otherwise a living-but-unsynced zone
-  // (verify:facts deliberately excludes reports/20*, and these were NOT surfaces) — so their single
-  // headline receipt line silently froze two canon-generations back (1771 · 94.77/91.97) while the
-  // canon moved to 1984 · 92.13/89.66 (mega-audit 2026-07-01). Both carry exactly ONE current-receipt
-  // line in the sync-anchored phrasing ("N,NNN tests · LINE% line / FUNC% function"); their NHSI prose
-  // uses the hyphen/framing forms syncNHSI never touches. Adding them here makes the drift impossible.
   'docs/reports/README.md',
   'docs/reports/2026-06-26-CURRENT-TRUTH-BASELINE.md',
+  'docs/reports/2026-06-21-NHSI-HONESTY-AUDIT.md',
+  'docs/reports/2026-06-20-RESEARCH-BEDROCK.md',
+  'docs/reports/2026-06-21-NHSI-MANIFESTO-0THERNES-CORP.md',
+  'docs/reports/2026-06-26-ALIFE-COMPARATIVE-AUDIT.md',
+  'docs/reports/2026-07-01-25-POINT-SCRUTINY-SCORECARD.md',
+  'docs/reports/2026-06-20-SUPER-REPORT-PATH-TO-NHSI-AND-SENTIENCE.md',
+  'HANDOFF-2026-06-26.md',
+  'research_receipts-2026-06-26.md',
 ];
 
 /** Apply receipts (test count + coverage) propagation. */
@@ -153,6 +151,28 @@ function syncVersion(s: string): string {
       .replace(
         /((?:&rarr;|→)\s*)v?0\.[0-9]+\.[0-9]+(,\s*Tsotchke Petri full, current)/g,
         `$1${VERSION}$2`,
+      )
+      // Living present-tense version stamps (reports, dashboard, docs.html gate line).
+      .replace(/\*\*v0\.[0-9]+\.[0-9]+ ·/g, `**v${VERSION} ·`)
+      .replace(/\| Repo package\s+\|\s+`v0\.[0-9]+\.[0-9]+`/g, `| Repo package  | \`v${VERSION}\``)
+      .replace(
+        /Technical Specification · v0\.[0-9]+\.[0-9]+ ·/g,
+        `Technical Specification · v${VERSION} ·`,
+      )
+      .replace(/· v0\.[0-9]+\.[0-9]+ · Butlin/g, `· v${VERSION} · Butlin`)
+      .replace(/· \*\*v0\.[0-9]+\.[0-9]+ —/g, `· **v${VERSION} —`)
+      .replace(/\*\*Version:\*\* `v0\.[0-9]+\.[0-9]+`/g, `**Version:** \`v${VERSION}\``)
+      .replace(
+        /Cosmogonic \(v0\.[0-9]+\.[0-9]+, gate green\)/g,
+        `Cosmogonic (v${VERSION}, gate green)`,
+      )
+      .replace(/current as of v0\.[0-9]+\.[0-9]+ \(/g, `current as of v${VERSION} (`)
+      .replace(/Build Health \(v0\.[0-9]+\.[0-9]+\)/g, `Build Health (v${VERSION})`)
+      .replace(/\*\*Repo:\*\* `v0\.[0-9]+\.[0-9]+`/g, `**Repo:** \`v${VERSION}\``)
+      .replace(/as of 2026-06-26 \(v0\.[0-9]+\.[0-9]+\)/g, `as of 2026-06-26 (v${VERSION})`)
+      .replace(
+        /\*\*Edition:\*\* v4[^·]*· \*\*Repo:\*\* `v0\.[0-9]+\.[0-9]+`/g,
+        `**Edition:** v4 (113-system expansion, 2026-07-02) · **Repo:** \`v${VERSION}\``,
       )
   );
 }

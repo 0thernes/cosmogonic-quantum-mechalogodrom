@@ -607,7 +607,7 @@ Full detail in docs/.
   **the current, canonical status report**: a 15-agent adversarial code audit measuring the REAL wiring
   depth of every NHSI claim by `file:line` (~30 deep-wired faculties · 5 individuated archons + 20
   light-echo · ~16 of 20 Tsotchke wired · Butlin 8/14 met + 6/14 partial · the measured coupling work).
-- **[docs/reports/](./docs/reports/)** — restored reports archive with a
+- **[docs/reports/](./docs/reports/)** — living technical reports (rewritten in place, not an archive) with a
   [current truth baseline](./docs/reports/2026-06-26-CURRENT-TRUTH-BASELINE.md), the
   [A-Life comparative audit](./docs/reports/2026-06-26-ALIFE-COMPARATIVE-AUDIT.md), and earlier
   state-of-the-art frontier assessments:

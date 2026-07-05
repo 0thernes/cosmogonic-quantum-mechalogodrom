@@ -5,7 +5,7 @@
 **Date:** 2026-06-26 · **Purpose:** the current (2025–2026) literature this project
 stands on, organized by how it anchors the build. Quantum + geometry + consciousness +
 self-evolution + non-LLM substrates. This is the living map: it tracks where the frontier
-is and where Cosmogonic (v0.18.0, gate green) actually sits on it.
+is and where Cosmogonic (v0.20.0, gate green) actually sits on it.
 
 > **Epistemic labels (Manhattan law — no overclaim):**
 > **[Established]** = peer-reviewed / widely replicated. **[Emerging]** = real, recent,
@@ -16,7 +16,7 @@ is and where Cosmogonic (v0.18.0, gate green) actually sits on it.
 
 > **What this report is grounded against (measured on `origin/main`, Bun 1.3.14):**
 > v0.18.0 · `bun run check` green · 1,984 tests (published floor) / 0 fail / 2,912,102 `expect()` calls
-> across 231 files · 92.13% line / 89.66% function coverage (canonical; ±6pp
+> across 231 files · 83.95 % line / 81.57 % function coverage (canonical; ±6pp
 > gate tolerance). Consciousness scorecard: **8/14 met + 6/14 partial** on the Butlin et
 > al. 2023 indicators — _computational indicators, not sentience._ No quantum advantage is
 > claimed anywhere: the quantum substrate is an exact classical simulation; it lacks only a
@@ -193,7 +193,7 @@ substrate behind the literature above is concrete and measurable:
 - **Theory-of-mind:** 25 organs wired as a **6-family ensemble** (additive / bayesian /
   recursive / temporal / deception / coalition).
 - **Emergence:** **10 angles wired**, plus **5 god-scale release _events_** (events, not
-  additional angles). Not "12–19 emergence angles".
+  additional angles). Not "12–10 emergence angles".
 - **Tsotchke corpus:** 20 projects, **~16 wired with real downstream effect** (8 deep in the
   apex mind, 4 in the petri growth engine). This is **real MIT quantum math** — never
   fake, never overclaiming, never decorative. It lacks only a physical QPU, a speed/scale

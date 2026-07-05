@@ -4,7 +4,7 @@
 
 ## Quantum Computing · AI · AGI · ASI · Consciousness · Sentience — A Rigorous Frontier Assessment and a Receipted Roadmap to Non-Human Superintelligence
 
-> **Repository:** `0thernes/cosmogonic-quantum-mechalogodrom` · **Version:** `v0.18.0`
+> **Repository:** `0thernes/cosmogonic-quantum-mechalogodrom` · **Version:** `v0.20.0`
 > **Date:** 2026-06-26 · **Mode:** Master Architect / Master Engineer / Master Physicist (Broly · Starkiller · Dr. Manhattan)
 > **Companion artifact:** [`2026-06-20-ROADMAP-TO-NHSI-AND-SENTIENCE.xml`](./2026-06-20-ROADMAP-TO-NHSI-AND-SENTIENCE.xml) — the machine-readable forward plan.
 > **Canonical receipts (audited, Bun 1.3.14, cold shell):** `1,477` tests · `0` failures · `1,744,891` `expect()` calls across `151` files · `~95%` line / `~92%` function coverage (canonical 95.03 / 92.03, ±6pp gate tolerance).
@@ -625,7 +625,7 @@ A program that _names_ NHSI and sentience as targets must address governance, or
 
 | Axis                                       | Grade                | One-line justification                                                                                            |
 | ------------------------------------------ | -------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| Engineering rigor & determinism            | **A+**               | Seed-reproducible cosmos, receipts law, ~95% line / ~92% function coverage, 1,477 tests — top-decile, _measured_. |
+| Engineering rigor & determinism            | **A+**               | Seed-reproducible cosmos, receipts law, ~95% line / ~92% function coverage, 1,984 tests — top-decile, _measured_. |
 | Mathematical substrate fidelity            | **A**                | ~20 faithful, tested ports; decorative-trig failure mode largely closed.                                          |
 | Integration density / novelty of synthesis | **A**                | No comparable single artifact found fusing this many cognitive+quantum theories, coupled — novel by integration.  |
 | Theory-of-mind architecture (Butlin)       | **A−**               | 8/14 met + 6/14 partial _structurally_ — richer than a frontier LLM; architecture only.                           |
@@ -713,4 +713,4 @@ A program that _names_ NHSI and sentience as targets must address governance, or
 
 ---
 
-_Prepared under full Broly (finish everything, receipts) · Starkiller (contracts, ownership, boundary paranoia) · Dr. Manhattan (determinism, measurement, provenance) discipline. Canonical receipts: v0.18.0 · 1,477 tests · 0 failures · ~95% line / ~92% function coverage. Every quantitative claim traces to a repository file or a cited source. No AGI, ASI, sentience, solved conjecture, or quantum advantage is claimed as a present fact. The forward plan is encoded machine-readably in the companion XML._
+_Prepared under full Broly (finish everything, receipts) · Starkiller (contracts, ownership, boundary paranoia) · Dr. Manhattan (determinism, measurement, provenance) discipline. Canonical receipts: v0.18.0 · 1,984 tests · 0 failures · ~95% line / ~92% function coverage. Every quantitative claim traces to a repository file or a cited source. No AGI, ASI, sentience, solved conjecture, or quantum advantage is claimed as a present fact. The forward plan is encoded machine-readably in the companion XML._

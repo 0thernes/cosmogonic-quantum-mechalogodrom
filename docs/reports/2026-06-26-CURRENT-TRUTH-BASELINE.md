@@ -13,7 +13,7 @@ when the numbers change it is rewritten in place.
 
 | Fact          | Value                                                                                                                    |
 | ------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| Repo package  | `v0.18.0`                                                                                                                |
+| Repo package  | `v0.20.0`                                                                                                                |
 | Full gate     | `bun run check` green (2026-07-01)                                                                                       |
 | Gate stages   | `format:check`, `typecheck`, `lint`, `verify:receipts` (test+coverage), `sync:check`, `verify:facts`, `build`            |
 | Tests         | `1,984 tests` (published floor) · measured cold run `2104 pass / 0 fail` · `2,912,102 expect() calls` · `231` test files |

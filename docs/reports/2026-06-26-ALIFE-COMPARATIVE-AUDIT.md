@@ -2,7 +2,7 @@
 
 # A-Life Comparative Audit — Cosmogonic Quantum Mechalogodrom vs 112 Known Systems
 
-**Date:** 2026-06-26 · **Edition:** v4 (113-system expansion, 2026-07-02) · **Repo:** `v0.18.0`
+**Date:** 2026-06-26 · **Edition:** v4 (113-system expansion, 2026-07-02) · **Repo:** `v0.20.0`
 **Scope:** the current repo (`origin/main`) plus a sourced, adversarially re-verified survey of **112**
 well-known Artificial-Life / open-ended-evolution / digital-organism / neuroevolution / agent-based
 systems — spanning cellular automata, digital evolution, evolutionary robotics, quality-diversity,
@@ -624,7 +624,7 @@ bun scripts/alife-codeground-sensitivity.ts
 #   all three read docs/reports/2026-06-26-alife-comparison-matrix.csv (deterministic; identical CSV -> identical bytes)
 
 # Re-confirm the live gate receipts:
-bun test --coverage        # -> 2104 pass / 0 fail ; 92.13% line / 89.66% func (floor 1,984)
+bun test --coverage        # -> 2104 pass / 0 fail ; 83.95% line / 81.57% func (floor 1,984)
 bun run check              # full gate
 ```
 

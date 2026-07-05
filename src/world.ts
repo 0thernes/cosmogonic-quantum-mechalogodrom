@@ -1126,7 +1126,7 @@ export class World {
       const mindSeed = (master + i * 0x9e3779b1) >>> 0 || 1 + i;
       const bias = getFullTsotchkeBias(i); // full corpus extension (Eshkol/Moonlab/Quake factors) // per-Archon (clifford/generative/chaos/narrative/color) — used in world percepts + mind ctor (godform exclusive)
       // Tsotchke corpus wiring 10x: Moonlab tensor/MPO for 5-Archon group entanglement (mirrors/moonlab), Eshkol AD/GWT for percept bias, libirrep symmetry, ulg/quantum-quake hybrid aliveness (ulgHandoff, gwtBroadcast, hybridAliv).
-      // Full local: Z:\[Vibe Coded (AI)]\(Tsotchke) — see TSOTCHKE-CORPUS-RALPH-WIRING-AUDIT-2026-06-19.md
+      // Full local: Z:\[Vibe Coded (AI)]\(Tsotchke) — see docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md
       // Ralph 10x continue: quakeQge, mpo, gwt used in econ, pull, spawn for corpus aliveness.
       const pulse = getCorpusPulseForArchon(i, mindSeed); // 10x heartbeat: quantum-quake aliveness wired from corpus to world for this Archon
       const quakeLife = pulse.quakeAliveness; // corpus quake-aliveness; feeds econ vitality + hybrid aliveness below (deterministic from seed)

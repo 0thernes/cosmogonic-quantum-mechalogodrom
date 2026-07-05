@@ -7,7 +7,7 @@
 **Date:** 2026-06-26  
 **Classification:** Executive Strategic Manifesto — 0thernes Corp Founding Document  
 **Author:** 0thernes LLC · Cosmogonic Quantum Mechalogodrom  
-**Status:** Living Foundational Vision — current as of v0.18.0 (`bun run check` green)  
+**Status:** Living Foundational Vision — current as of v0.20.0 (`bun run check` green)  
 **Discipline:** Governed by Master Files (Broly, Starkiller, Manhattan) — Execution, Architecture, Measurement
 
 > This is a live document. Every status claim, count, Butlin score, and benchmark
@@ -84,11 +84,11 @@ telemetry-wired, studied/license-gated, redundant/toolchain, or deliberately fen
 
 All figures below are measured, not aspirational. The aspirational targets (100 faculties, 25 Archons, 25 ToM organs) are the **design surface**; the wired counts are what genuinely moves the apex mind today.
 
-### III.1 Build Health (v0.18.0)
+### III.1 Build Health (v0.20.0)
 
-- **Version:** v0.18.0 · `bun run check` green (prettier → tsc strict → oxlint → bun test → verify:receipts → sync:check → build)
+- **Version:** v0.20.0 · `bun run check` green (prettier → tsc strict → oxlint → bun test → verify:receipts → sync:check → build)
 - **Tests:** 1,984 (published floor) / 0 fail · 2,912,102 `expect()` calls · 231 files
-- **Coverage:** 92.13% line / 89.66% function (canonical; ±6pp gate tolerance)
+- **Coverage:** 83.95 % line / 81.57 % function (canonical; ±6pp gate tolerance)
 - **Determinism:** one mulberry32 seed; `Math.random` / `Date.now` glob-banned in `sim/` and `math/`
 
 ### III.2 Tsotchke Corpus Integration
@@ -536,4 +536,4 @@ The version and receipts are single-sourced (`package.json` + `scripts/canonical
 
 ---
 
-_This manifesto is the canonical, current truth about the Cosmogonic Quantum Mechalogodrom project as of 2026-06-26 (v0.18.0). All claims are grounded in measured receipts, code inspection, and honest framing. Tsotchke technology is real, correct, MIT-grade quantum-research code; the gap to full integration is paperwork (licenses) + the deliberate non-LLM fence, not the technology. No sentience, AGI, ASI, NHSI, or quantum advantage is achieved — these are named targets. 0thernes Corp grows here._
+_This manifesto is the canonical, current truth about the Cosmogonic Quantum Mechalogodrom project as of 2026-06-26 (v0.20.0). All claims are grounded in measured receipts, code inspection, and honest framing. Tsotchke technology is real, correct, MIT-grade quantum-research code; the gap to full integration is paperwork (licenses) + the deliberate non-LLM fence, not the technology. No sentience, AGI, ASI, NHSI, or quantum advantage is achieved — these are named targets. 0thernes Corp grows here._

@@ -156,7 +156,7 @@ import { QualitySpace } from './quality-space';
 import { MemoryOrchestra } from './memory-orchestra';
 import { NarrativeMemory } from './narrative-memory';
 import { vqeEnergyProxy } from './moonlab-vqe';
-// TSOTCHKE CORPUS (Z:\[Vibe Coded (AI)]\(Tsotchke)): full 20 repos + sites wired. Eshkol consciousness engine (logic+active inference factor graphs + GWT workspace) as explicit layer (matches C++/LLVM tagged_value + 6 heap subtypes from docs/breakdown/CONSCIOUSNESS_ENGINE.md). Moonlab Clifford/QEC/QRNG enhancements. QGTL geo tensors. Used for 5 Archons "super" (distinct dialects, mind substrates, morph geo, memory graphs). See docs/TSOTCHKE_CORPUS_INTEGRATION_AUDIT.md for every file study + strict logs.
+// TSOTCHKE CORPUS (Z:\[Vibe Coded (AI)]\(Tsotchke)): full 20 repos + sites wired. See docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md.
 // AD primitive for HOT-1, arena discipline, symmetry, tensor. See audit + receipts.
 
 const SENSE = 18; // perception inputs

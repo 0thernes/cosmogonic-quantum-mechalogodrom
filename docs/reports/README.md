@@ -7,7 +7,7 @@ current, continuously-rewritten document — not a dated snapshot and not an arc
 change, the report is **rewritten in place** to the current truth. No historical duplicates, no
 "superseded" copies, no per-version forks. One source per topic.
 
-Every load-bearing number is the live measured value: **v0.18.0 · 1,984 tests · 83.95 % line / 81.57 % function ·
+Every load-bearing number is the live measured value: **v0.20.0 · 1,984 tests · 83.95 % line / 81.57 % function ·
 Butlin 8/14 met + 6/14 partial · not sentient**. The canonical numbers come from
 `scripts/canonical-receipts.ts` + `package.json`, propagated by `scripts/sync-surfaces.ts` and
 gate-enforced (`bun run sync:check`). The one-glance reference is

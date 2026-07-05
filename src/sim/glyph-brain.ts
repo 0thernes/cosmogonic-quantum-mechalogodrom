@@ -258,7 +258,7 @@ const ZERO_GLYPH_PERCEPT = new Float32Array(8);
 export class GlyphBrainBatch {
   private readonly brains: GlyphBrain[] = [];
   /** Reused result vector — avoids per-beat `map()` allocation. */
-  private readonly scratch: GlyphBrainSnapshot[] = new Array(100);
+  private readonly scratch: GlyphBrainSnapshot[] = Array.from({ length: 100 });
 
   constructor(worldSeed: number) {
     for (let i = 0; i < 100; i++) {

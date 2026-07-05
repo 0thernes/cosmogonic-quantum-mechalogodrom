@@ -11,62 +11,42 @@ dated / historical / "superseded snapshot" copies (per the binding "Living docs,
 
 ---
 
-## 2026-07-03 — Documentation Cleanup & Technical Debt Removal (v0.20.0)
+---
 
-Comprehensive codebase audit and cleanup addressing stale content, duplicate documentation, and broken references.
+## 2026-07-05 — Living-docs consolidation + sync-surface expansion (v0.20.0)
 
-### AUDIT FINDINGS
+Owner brief: total repo audit — stale/redundant markdown, duplicate Tsotchke audit trails, broken links,
+and receipt drift across living surfaces. Completes and supersedes the partial 2026-07-03 doc cleanup
+(incorrect upstream receipt counts discarded; canonical = 1984 tests · 83.95% line / 81.57% func).
 
-**Code Quality Assessment:** A+ (exceptional hygiene)
+### Consolidation (deleted — content folded into canonical living docs)
 
-- 0 TODO/FIXME/HACK markers in production code
-- 0 console.log debugging statements
-- 1 legitimate @ts-ignore (Bun-specific type difference)
-- Test coverage: 92.13% line / 89.66% function
-- 2409 tests passing, 0 failures
+| Removed | Superseded by |
+| --- | --- |
+| `docs/BLEEDING-EDGE-NOVEL-CONTRIBUTIONS-AND-SCIENTIFIC-IMPACT-2026-06-26.md` | `docs/NOVELTY-SCIENTIFIC-EDGE-AND-CONTRIBUTIONS-2026-06-26.md` |
+| `docs/CORPUS_INTEGRATION_REPORT-2026-06-26.md` | `docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md` |
+| `docs/TSOTCHKE-CORPUS-INTEGRATION-PLAN-2026-06-26.md` | integration waves table in `TSOTCHKE-INTEGRATION-MAP` |
+| `docs/TSOTCHKE-CORPUS-RALPH-WIRING-AUDIT-2026-06-19.md` | `GOAL5-RESEARCH-RECEIPTS` (historical wave log) |
+| `docs/TSOTCHKE_CORPUS_INTEGRATION_AUDIT-2026-06-26.md` | `TSOTCHKE-INTEGRATION-MAP` |
+| `docs/TSOTCHKE-ULTIMATE-COMPREHENSIVE-AUDIT-REPORT-ASSESSMENT-2026-06-20.md` | `TSOTCHKE-INTEGRATION-MAP` + `NOVELTY-SCIENTIFIC-EDGE` |
+| `docs/PERFORMANCE-BASELINE-2026-07-03.md` | `docs/PERFORMANCE-OPTIMIZATION-ROADMAP-2026-07-03.md` |
+| `docs/PERFORMANCE-IMPLEMENTATION-PLAN-2026-07-03.md` | same roadmap (single living perf doc) |
+| `docs/archive/` stub | removed — GOAL5 wave logs restored to `docs/` (living docs, no archives) |
+| `docs/reference/math-libs-catalog-2026-06-26.md` | orphaned reference removed (upstream 2026-07-03) |
 
-**Documentation Issues Identified:**
+### Link + surface repairs
 
-- Version drift: VERIFICATION-ANALYTICAL-DATA.md showed 0.18.0 (should be 0.20.0)
-- Tsotchke repo count: KANBAN showed 19 (should be 20)
-- 3 redundant Tsotchke audit files (superseded by INTEGRATION-MAP)
-- 2 historical handoff docs (archived to docs/archive/)
-- 1 orphaned reference file (docs/reference/math-libs-catalog-2026-06-26.md)
-- 2 broken links to deleted math-libs-catalog file
+- `scripts/sync-surfaces.ts` — expanded `SURFACES` (NHSI dashboard, key reports, HANDOFF, research_receipts) + additional version/receipt patterns.
+- `README.md`, `docs/BOOK-2026-06-26.md` — broken math-libs-catalog links removed (upstream 2026-07-03).
+- `docs/VERIFICATION-ANALYTICAL-DATA.md` — version 0.20.0; BLEEDING-EDGE / CORPUS_INTEGRATION refs → canonical names.
+- `docs/KANBAN-2026-06-26.md` — Tsotchke repo count 20 (upstream 2026-07-03).
+- `docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md` — integration waves table refreshed.
+- `docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md`, `src/ui/help-knowledge.ts` — canonical doc refs.
+- `docs/reports/assets/audit-coverage-2026-06-26.csv` — removed rows for deleted docs.
 
-### CLEANUP ACTIONS
+### Gate
 
-**Critical Fixes (P0):**
-
-1. ✅ Updated VERIFICATION-ANALYTICAL-DATA.md: 0.18.0 → 0.20.0
-2. ✅ Fixed KANBAN Tsotchke count: 19 → 20
-3. ✅ Fixed broken links in BOOK-2026-06-26.md and README.md (removed math-libs-catalog references)
-
-**Documentation Consolidation (P1):**
-
-1. ✅ Deleted 3 redundant Tsotchke audit files:
-   - TSOTCHKE-CORPUS-RALPH-WIRING-AUDIT-2026-06-19.md
-   - TSOTCHKE_CORPUS_INTEGRATION_AUDIT-2026-06-26.md
-   - TSOTCHKE-ULTIMATE-COMPREHENSIVE-AUDIT-REPORT-ASSESSMENT-2026-06-20.md
-2. ✅ Archived 2 historical handoff docs to docs/archive/:
-   - GOAL5-RESEARCH-RECEIPTS-2026-06-26.md
-   - GOAL5-SWARM-HANDOFF-2026-06-19.md
-3. ✅ Deleted orphaned reference file:
-   - docs/reference/math-libs-catalog-2026-06-26.md
-
-**Gate Enforcement:**
-
-- ✅ Ran `bun run sync` to propagate version changes
-- ✅ All 2409 tests passing
-- ✅ Full gate: `bun run check` passed (format, typecheck, lint, verify:receipts, sync:check, verify:facts, build)
-
-### RESULTS
-
-- Documentation reduced from 70+ to 67 active files
-- Single source of truth for Tsotchke integration: TSOTCHKE-INTEGRATION-MAP-2026-06-26.md
-- Historical docs properly archived in docs/archive/
-- All canonical facts now consistent across surfaces
-- Zero broken links in documentation
+- `bun run sync` then `bun run check` — green (1984 tests · 83.95% / 81.57%).
 
 ---
 
@@ -1685,7 +1665,7 @@ the current truth baseline supersedes conflicting old counts or overclaims.
 - **Comprehensive assessment:** [`reports/2026-06-17-STATE-OF-THE-ART-COMBINED.md`](./reports/2026-06-17-STATE-OF-THE-ART-COMBINED.md) (+ `-WHOLE-REPO`, `-SUPER-CREATURE`).
 - **NHSI:** [`reports/2026-06-21-NHSI-HONESTY-AUDIT.md`](./reports/2026-06-21-NHSI-HONESTY-AUDIT.md) (honesty scorecard — gate-referenced) · [`reports/2026-06-21-NHSI-MANIFESTO-0THERNES-CORP.md`](./reports/2026-06-21-NHSI-MANIFESTO-0THERNES-CORP.md) · [`reports/2026-06-20-RESEARCH-BEDROCK.md`](./reports/2026-06-20-RESEARCH-BEDROCK.md) · [`reports/2026-06-20-SUPER-REPORT-PATH-TO-NHSI-AND-SENTIENCE.md`](./reports/2026-06-20-SUPER-REPORT-PATH-TO-NHSI-AND-SENTIENCE.md) · [`reports/2026-06-20-ROADMAP-TO-NHSI-AND-SENTIENCE.xml`](./reports/2026-06-20-ROADMAP-TO-NHSI-AND-SENTIENCE.xml).
 - **A-Life:** [`reports/2026-06-26-ALIFE-COMPARATIVE-AUDIT.md`](./reports/2026-06-26-ALIFE-COMPARATIVE-AUDIT.md) · [`reports/2026-06-26-alife-comparison-matrix.csv`](./reports/2026-06-26-alife-comparison-matrix.csv).
-- **Tsotchke:** living map [`TSOTCHKE-INTEGRATION-MAP-2026-06-26.md`](./TSOTCHKE-INTEGRATION-MAP-2026-06-26.md) · plan [`TSOTCHKE-CORPUS-INTEGRATION-PLAN-2026-06-26.md`](./TSOTCHKE-CORPUS-INTEGRATION-PLAN-2026-06-26.md) · source-provenance audits still cited from code (`TSOTCHKE-CORPUS-RALPH-WIRING-AUDIT-2026-06-19.md`, `TSOTCHKE_CORPUS_INTEGRATION_AUDIT-2026-06-26.md`, `TSOTCHKE-ULTIMATE-COMPREHENSIVE-AUDIT-REPORT-ASSESSMENT-2026-06-20.md`).
+- **Tsotchke:** living map [`TSOTCHKE-INTEGRATION-MAP-2026-06-26.md`](./TSOTCHKE-INTEGRATION-MAP-2026-06-26.md) · novelty/scientific edge [`NOVELTY-SCIENTIFIC-EDGE-AND-CONTRIBUTIONS-2026-06-26.md`](./NOVELTY-SCIENTIFIC-EDGE-AND-CONTRIBUTIONS-2026-06-26.md) · wave receipts in [`GOAL5-RESEARCH-RECEIPTS-2026-06-26.md`](./GOAL5-RESEARCH-RECEIPTS-2026-06-26.md).
 
 ## 2026-06-26 — Roadmap Fulfillment: P1 Harness + Coupling Scaffold
 

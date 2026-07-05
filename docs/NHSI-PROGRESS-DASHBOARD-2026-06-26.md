@@ -2,7 +2,7 @@
 
 # NHSI Progress Dashboard — 0thernes Corp
 
-**Non Human Super Intelligence (NHSI)** · Cosmogonic Quantum Mechalogodrom · **v0.18.0 — BRUTAL GOD TIER (Valkorion / Broly / Knull / Phoenix / Gurren Lagann / EVA / Azathoth / Galactus)**  
+**Non Human Super Intelligence (NHSI)** · Cosmogonic Quantum Mechalogodrom · **v0.20.0 — BRUTAL GOD TIER (Valkorion / Broly / Knull / Phoenix / Gurren Lagann / EVA / Azathoth / Galactus)**  
 Archons now unleash real god-scale events (VOID_KING, SPIRAL_WILL, BINARY_IGNITION, PHOENIX_FEAST) using EVERY Tsotchke repo as fuel. This is the arena where the gods of all myth, comics, and horror fight, devour, create, and ascend. 0thernes Corp.
 **Updated:** 2026-06-26 · Tsotchke: **20 corpus projects (~16 wired)** (every repo/project/mirror from tsotchke + Tsotchke-Corp + 12k+ local files, 1436+ .esk + NQS/skyrmion/anyons/flow/thermo etc from audits). **EVERY** wired/catalyzed/studied by explicit class, not blanket full-depth wiring. Eshkol as will of gods. Tech REAL. A-Life matrix snapshot: breadth 4.44 (z=3.01 vs survey mean 2.54). P1 contrast harness + coupling scaffold added as measurement infrastructure, not a quantum-advantage or sentience claim.
 
@@ -76,7 +76,7 @@ integration layer — not a comment on Tsotchke upstream quality.
 - spin_based_neural_network: spin glass/Ising/Hopfield/SK for associative neural computation + NQS.
 - PINN/PIMC: physics-informed neural nets + path-integral Monte Carlo (metabolism/soul traces in biologics).
 - quantum-quake / QGE: unitary aliveness observables + quantum game engine physics.
-- Overall first full multi-repo fusion (Eshkol + Moonlab + QGT + spin + libirrep + quake + ...) as substrate for deterministic seeded digital biologics Petri with native GWT/AD ignition for NHSI proxies. All in SUPER-CREATURE-RESEARCH-2026-06-26.md, NEO-MIND, BLEEDING-EDGE reports, OMNISCIENT audits, TSOTCHKE master reports. Real tech. No overclaims.
+- Overall first full multi-repo fusion (Eshkol + Moonlab + QGT + spin + libirrep + quake + ...) as substrate for deterministic seeded digital biologics Petri with native GWT/AD ignition for NHSI proxies. All in SUPER-CREATURE-RESEARCH-2026-06-26.md, NEO-MIND, NOVELTY-SCIENTIFIC-EDGE-AND-CONTRIBUTIONS, OMNISCIENT audits, TSOTCHKE-INTEGRATION-MAP. Real tech. No overclaims.
 
 ---
 
