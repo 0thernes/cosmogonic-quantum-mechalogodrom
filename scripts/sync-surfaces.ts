@@ -70,6 +70,10 @@ const SURFACES = [
   'docs/reports/2026-06-26-ALIFE-COMPARATIVE-AUDIT.md',
   'docs/reports/2026-07-01-25-POINT-SCRUTINY-SCORECARD.md',
   'docs/reports/2026-06-20-SUPER-REPORT-PATH-TO-NHSI-AND-SENTIENCE.md',
+  'docs/reports/2026-06-17-STATE-OF-THE-ART-COMBINED.md',
+  'docs/VERIFICATION-ANALYTICAL-DATA.md',
+  'docs/TEST-STRATEGY-2026-07-02.md',
+  'docs/PRD-2026-07-02.md',
   'HANDOFF-2026-06-26.md',
   'research_receipts-2026-06-26.md',
 ];
@@ -123,6 +127,38 @@ function syncReceipts(s: string): string {
       .replace(/Line coverage: [0-9]{2}\.[0-9]{2}%/g, `Line coverage: ${LINE}%`)
       .replace(/Function coverage: [0-9]{2}\.[0-9]{2}%/g, `Function coverage: ${FUNC}%`)
       .replace(/Test count: \d+/g, `Test count: ${TEST}`)
+      // Backtick / bold receipt tokens in living reports (`1,477` tests, **1,477** tests)
+      .replace(/`([0-9],[0-9]{3})`\s+tests/g, `\`${TEST_COMMA}\` tests`)
+      .replace(/\*\*([0-9],[0-9]{3})\*\*\s+tests/g, `**${TEST_COMMA}** tests`)
+      .replace(/\*\*1,477\b/g, `**${TEST_COMMA}`)
+      .replace(/`1,477`/g, `\`${TEST_COMMA}\``)
+      // Canonical coverage shorthand in reports (~95% line / ~92% function)
+      .replace(/~95%\s*line\s*\/\s*~92%\s*function/g, `~${LINE}% line / ~${FUNC}% function`)
+      .replace(/~95\s*%\s+line\s*\/\s*~92\s*%\s+function/g, `~${LINE} % line / ~${FUNC} % function`)
+      .replace(
+        /`[0-9]{2}\.[0-9]{2}%`\s+line\s*\/\s*`[0-9]{2}\.[0-9]{2}%`\s+func/g,
+        `\`${LINE}%\` line / \`${FUNC}%\` func`,
+      )
+      .replace(/(\| Line coverage\s+\|\s+`)[0-9]{2}\.[0-9]{2}(%`\s+\|)/g, `$1${LINE}$2`)
+      .replace(/(\| Function coverage\s+\|\s+`)[0-9]{2}\.[0-9]{2}(%`\s+\|)/g, `$1${FUNC}$2`)
+      .replace(
+        /Current canon: \*\*[0-9]{2}\.[0-9]{2}% line \/ [0-9]{2}\.[0-9]{2}% function\*\*/g,
+        `Current canon: **${LINE}% line / ${FUNC}% function**`,
+      )
+      .replace(
+        /canonical [0-9]{2}\.[0-9]{2}\s*\/\s*[0-9]{2}\.[0-9]{2}/g,
+        `canonical ${LINE} / ${FUNC}`,
+      )
+      .replace(
+        /canonical [0-9]{2}\.[0-9]{2}% line \/ [0-9]{2}\.[0-9]{2}% func/g,
+        `canonical ${LINE}% line / ${FUNC}% func`,
+      )
+      .replace(
+        /canonical [0-9]{2}\.[0-9]{2} line \/ [0-9]{2}\.[0-9]{2} function/g,
+        `canonical ${LINE} line / ${FUNC} function`,
+      )
+      .replace(/\b1,477-test\b/g, `${TEST_COMMA}-test`)
+      .replace(/\*\*~95 \/ ~92\*\*/g, `**~${LINE} / ~${FUNC}**`)
   );
 }
 
@@ -174,6 +210,10 @@ function syncVersion(s: string): string {
         /\*\*Edition:\*\* v4[^·]*· \*\*Repo:\*\* `v0\.[0-9]+\.[0-9]+`/g,
         `**Edition:** v4 (113-system expansion, 2026-07-02) · **Repo:** \`v${VERSION}\``,
       )
+      .replace(/against `v0\.[0-9]+\.[0-9]+`/g, `against \`v${VERSION}\``)
+      .replace(/\*\*Build:\*\* v0\.[0-9]+\.[0-9]+/g, `**Build:** v${VERSION}`)
+      .replace(/\*\*v0\.[0-9]+\.[0-9]+\*\*,/g, `**v${VERSION}**,`)
+      .replace(/\*\*v0\.[0-9]+\.[0-9]+\*\* · `main`/g, `**v${VERSION}** · \`main\``)
   );
 }
 

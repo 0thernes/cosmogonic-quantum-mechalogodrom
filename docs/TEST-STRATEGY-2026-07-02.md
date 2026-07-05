@@ -17,7 +17,7 @@ measured** — the number in every doc is propagated from canon by `sync-surface
   working tree, so a file-rich checkout measures more (2,104 on 2026-07-01). The gate floors against
   `min(canon, PORTABLE_TEST_FLOOR=1400)` so a lean CI checkout can never red on count.
 - **Coverage** is enforced within an explicit **±6 pp** band (Bun instruments a slightly different file
-  set locally vs CI). Current canon: **92.13% line / 89.66% function**. No bare float `===`.
+  set locally vs CI). Current canon: **83.95 % line / 81.57 % function**. No bare float `===`.
 
 ## 2 · Test taxonomy
 

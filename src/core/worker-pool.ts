@@ -180,6 +180,16 @@ export class WorkerPool {
       };
     }
 
+    if (this.workers.length === 0) {
+      return {
+        id: task.id,
+        type: task.type,
+        data: new Float32Array(0),
+        success: false,
+        error: 'Worker pool not initialized',
+      };
+    }
+
     // Check if SharedArrayBuffer is available
     if (this.config.useSharedArrayBuffer && typeof SharedArrayBuffer !== 'undefined') {
       return this.executeWithSharedArrayBuffer(task);

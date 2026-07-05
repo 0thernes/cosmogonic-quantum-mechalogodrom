@@ -53,7 +53,7 @@ thing standing between "a strong pile of faculties" and "emergence" is
 
 **Where the project stands today (`bun run check` green):** v0.18.0 · 1,984 tests
 (published floor) / 0 fail (2,912,102 `expect()` calls across 231 files) · ~92% line / ~90%
-function coverage (canonical 92.13 / 89.66, ±6pp gate tolerance). The SuperMind
+function coverage (canonical 83.95 / 81.57, ±6pp gate tolerance). The SuperMind
 `think()` costs ~3.34 ms in the full bench suite (~8.85 ms focused) — this is a
 real, non-trivial per-call cost, not a sub-millisecond freebie (see §8). World
 ceiling: 50,000 agents (10,000 @ 60 fps on an iGPU), ~3.5M params (~14 MB

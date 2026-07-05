@@ -872,7 +872,7 @@ export class World {
       qualityTier: this.quality.tier,
     };
     this.workerPool = new WorkerPool(workerConfig);
-    // Worker pool is initialized and ready for use
+    void this.initWorkerPoolAsync();
     // Core simulation uses SYNC executor (deterministic, in golden)
     // Future: wilderness population will use ASYNC executor (best-effort, NOT in golden)
     // Currently unused but infrastructure is in place for full CPU utilization
@@ -1333,6 +1333,18 @@ export class World {
     return Math.max(120, Math.min(World.BOOT_POP, this.quality.targetEntities));
   }
 
+  /** Best-effort worker spawn for wilderness offload (ADR 0010 — NOT in golden). */
+  private async initWorkerPoolAsync(): Promise<void> {
+    const pool = this.workerPool;
+    if (!pool) return;
+    try {
+      const url = new URL('./workers/simulation-worker.ts', import.meta.url);
+      await pool.initialize(url.href);
+    } catch {
+      // Wilderness falls back to main-thread sync when workers unavailable.
+    }
+  }
+
   /**
    * Lifecycle teardown for the dev HMR hook (`main.ts` calls `world.dispose?.()` before a hot-replace).
    * Drops the global hero-event listeners and tears the audio engine down (timers + context); without
@@ -1344,6 +1356,7 @@ export class World {
     this.disposeAbort.abort();
     this.audio.dispose();
     // Terminate worker pool threads (ADR 0010)
+    this.workerPool?.dispose();
     this.workerPool = null;
     // Dispose wilderness population
     this.wilderness.dispose();

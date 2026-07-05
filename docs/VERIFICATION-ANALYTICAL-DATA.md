@@ -21,8 +21,8 @@ Rewritten in place when the facts change (per the binding "Living docs, no archi
 | ------------------- | ------------------------- | ------------------------------------------------------------------------------------ | ----------------------- |
 | Package version     | `0.20.0`                  | `package.json` `version`                                                             | `sync-surfaces.ts`      |
 | Test count (floor)  | `1984`                    | `scripts/canonical-receipts.ts`                                                      | `sync-surfaces.ts`      |
-| Line coverage       | `92.13%`                  | `scripts/canonical-receipts.ts`                                                      | `sync-surfaces.ts`      |
-| Function coverage   | `89.66%`                  | `scripts/canonical-receipts.ts`                                                      | `sync-surfaces.ts`      |
+| Line coverage       | `83.95%`                  | `scripts/canonical-receipts.ts`                                                      | `sync-surfaces.ts`      |
+| Function coverage   | `81.57%`                  | `scripts/canonical-receipts.ts`                                                      | `sync-surfaces.ts`      |
 | Faculties (design)  | `100` (~30 deep-wired)    | `CANONICAL_FACULTIES`                                                                | `sync-surfaces.ts`      |
 | Archon pantheon     | `25` (5 apex + 20 light)  | `CANONICAL_ARCHONS`                                                                  | `sync-surfaces.ts`      |
 | Theory-of-mind orgs | `25`                      | `CANONICAL_TOM_ORGANS`                                                               | `sync-surfaces.ts`      |
@@ -38,7 +38,7 @@ Rewritten in place when the facts change (per the binding "Living docs, no archi
 ### Measured reality (this audit, 2026-07-01, Bun 1.3.14)
 
 - `bun test --coverage` → **2104 pass / 0 fail** · **2,912,102 expect() calls** · **231 test files** · coverage
-  **92.13% line / 89.66% func** (measured; canonical synced floor is **1984** tests · **92.13% line / 89.66% func**
+  **83.95% line / 81.57% func** (measured; canonical synced floor is **1984** tests · **83.95% line / 81.57% func**
   from `canonical-receipts.ts`). The 2104 vs 1984 gap is expected: `CANONICAL_TEST_COUNT` is a documented
   **floor**; a file-rich checkout measures every `*.test.ts` in the working tree. Gate-enforced
   `verify:receipts` floors against the canonical ledger — any count ≥ floor with matching canon is green.
@@ -97,7 +97,7 @@ outside sim logic). Only fidelity caveat = Finding H above.
 
 Consistency that **passed** verification (no drift found): Butlin `8/14 met + 6/14 partial` (every
 current surface; the only `14/14` hits are in `legacy/` verbatim-preserved files + append-only CHANGELOG
-history with the correction logged), version `0.18.0` (all current markers), entity `50,000`, bioforms
+history with the correction logged), version `0.20.0` (all current markers), entity `50,000`, bioforms
 `26`, faculty/Archon/ToM/emergence counts, Tsotchke `20`.
 
 ---
@@ -338,7 +338,7 @@ verify:facts` = 0 drift / 80 surfaces, 0 git-conflict-markers tree-wide, 100% of
 | `src/ui/**`                                                                       | 20    | subsystems agent                                         | clean (3 cosmetic Low: DPR-on-monitor-move)                                                      |
 | `src/core,audio,server,memory,logging` + `main/types/docs-page` + `server.ts`     | ~14   | subsystems agent                                         | clean; security exceptionally hardened                                                           |
 | `src/styles/app.css`                                                              | 1     | front-end agent                                          | clean                                                                                            |
-| `tests/**`                                                                        | 153   | gate (1,489 pass) + tooling agent                        | healthy, 0 disabled, all assert                                                                  |
+| `tests/**`                                                                        | 153   | gate (1,984 pass) + tooling agent                        | healthy, 0 disabled, all assert                                                                  |
 | `scripts/**`                                                                      | 16    | scripts/tooling agents                                   | sound; **CI sync:check gap FIXED**, dead `.sync-receipts.cjs` removed                            |
 | `bench/**`                                                                        | 13    | tooling agent                                            | clean; aggregate now includes the P1 quantum-classical bench                                     |
 | `.github/workflows/*.yml` + issue/PR templates                                    | 8+    | CI agent                                                 | SHA-pinned, least-priv; `master`->`main` URLs FIXED; **gate now runs sync:check + verify:facts** |

@@ -7,7 +7,7 @@
 > **Repository:** `0thernes/cosmogonic-quantum-mechalogodrom` · **Version:** `v0.20.0`
 > **Date:** 2026-06-26 · **Mode:** Master Architect / Master Engineer / Master Physicist (Broly · Starkiller · Dr. Manhattan)
 > **Companion artifact:** [`2026-06-20-ROADMAP-TO-NHSI-AND-SENTIENCE.xml`](./2026-06-20-ROADMAP-TO-NHSI-AND-SENTIENCE.xml) — the machine-readable forward plan.
-> **Canonical receipts (audited, Bun 1.3.14, cold shell):** `1,477` tests · `0` failures · `1,744,891` `expect()` calls across `151` files · `~95%` line / `~92%` function coverage (canonical 95.03 / 92.03, ±6pp gate tolerance).
+> **Canonical receipts (audited, Bun 1.3.14, cold shell):** `1,984` tests · `0` failures · `1,744,891` `expect()` calls across `151` files · `~95%` line / `~92%` function coverage (canonical 83.95 / 81.57, ±6pp gate tolerance).
 > Source of truth: [`scripts/canonical-receipts.ts`](../../scripts/canonical-receipts.ts), policed by `tests/docs-receipts-law.test.ts`.
 > **Usage & license:** © 2026 0thernes — **non-commercial research & play**: study, run, modify, and share it freely for non-commercial use; keep the attribution (don't claim it as your own) and don't use it for profit. See [LICENSE](../../LICENSE).
 
@@ -108,8 +108,8 @@ Rigor begins with refusing to let the words do undeserved work. The tribunal wil
 | Determinism                  | one `mulberry32`/seeded `Rng`; `Math.random`/`Date.now` **GLOB-banned + CI-enforced**                          | `tests/determinism-law.test.ts`                          |
 | Math kernels                 | **27** modules in `src/math/`                                                                                  | `src/math/*.ts`                                          |
 | Simulation modules           | **90+** modules in `src/sim/`                                                                                  | `src/sim/*.ts`                                           |
-| Test suite                   | **1,477** tests, **0** failures, **1,744,891** `expect()` calls across **151** files                           | `scripts/canonical-receipts.ts`                          |
-| Coverage                     | **~95%** line / **~92%** function (canonical 95.03 / 92.03, ±6pp gate tolerance)                               | `scripts/canonical-receipts.ts`                          |
+| Test suite                   | **1,984** tests, **0** failures, **1,744,891** `expect()` calls across **151** files                           | `scripts/canonical-receipts.ts`                          |
+| Coverage                     | **~95%** line / **~92%** function (canonical 83.95 / 81.57, ±6pp gate tolerance)                               | `scripts/canonical-receipts.ts`                          |
 
 > **Honesty flag (volatility):** the test count is a _moving_ receipt — it varies across Bun versions and development sessions. The number is real _at its measurement stamp_; it is not a stable constant. The receipts law exists precisely to keep the _published_ number equal to the _measured_ one, and the sync surfaces (`scripts/sync-surfaces.ts`, gate-enforced by `sync:check`) propagate the single source of truth to every document. This is a feature (provenance), reported as a feature.
 
@@ -335,7 +335,7 @@ The word "quantum" is the most abused token in this corpus's vocabulary. Here is
 
 A formal argument, stated so the tribunal can check validity, not just rhetoric.
 
-**P1 (🟢, measured):** The Cosmogonic apex exhibits multi-step GOAP planning, PAD affect, opponent modeling (ToM), empowerment-seeking (Blahut–Arimoto channel capacity), active inference, and self-replication — at **≈37,225 parameters**, verified by **1,477** CI-passing tests (**1,744,891** `expect()` assertions across **151** files), replayable bit-for-bit from a **32-bit seed**.
+**P1 (🟢, measured):** The Cosmogonic apex exhibits multi-step GOAP planning, PAD affect, opponent modeling (ToM), empowerment-seeking (Blahut–Arimoto channel capacity), active inference, and self-replication — at **≈37,225 parameters**, verified by **1,984** CI-passing tests (**1,744,891** `expect()` assertions across **151** files), replayable bit-for-bit from a **32-bit seed**.
 
 **P2 (🟢, published):** GPT-3 encodes vastly superior _language-domain_ capability at **≈175,000,000,000** parameters — a factor of **≈4.7 × 10⁶** larger.
 
@@ -379,7 +379,7 @@ The tribunal demands separation of _genuinely novel synthesis_ from _faithful re
 
 | Claim                                                                   | Why it's hard / rare                                             | Honest status                                                                                                                                                                        |
 | ----------------------------------------------------------------------- | ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **~20 cited theories fused under one determinism law, coupled, tested** | Each is a project on its own; coupling is assumed unmaintainable | **Novelty = the composition + rigor**, not new theory. No academic system found fusing this many cognitive+quantum faculties in one seed-deterministic, 1,477-test artifact.         |
+| **~20 cited theories fused under one determinism law, coupled, tested** | Each is a project on its own; coupling is assumed unmaintainable | **Novelty = the composition + rigor**, not new theory. No academic system found fusing this many cognitive+quantum faculties in one seed-deterministic, 1,984-test artifact.         |
 | **Eshkol AD-as-compiler-primitive used as heritable DNA**               | AD is normally a _library_ (JAX/PyTorch/Zygote)                  | Not a world-_first concept_ (cf. Pearlmutter–Siskind Stalingrad; Zygote source-to-source AD), but a genuinely novel _system_: AD-native, GWT-native language as evolutionary genome. |
 | **Build-time harvest of a live research corpus as genetic material**    | Most projects vendor/snapshot                                    | `harvest-tsotchke-corpus.ts` walks the real folder → fingerprints 1000s of `.esk` → seeds strains. Uncommon engineering pattern.                                                     |
 | **Mechanically-enforced "receipts law"** (CI fails on number drift)     | Almost no research/hobby code measures-or-dies                   | Genuinely Tier-1-grade provenance discipline; rare in solo work.                                                                                                                     |
@@ -499,7 +499,7 @@ The honest framing: **axes matter.** On _capability, scale, and scientific valid
 
 - A **reproducible, determinism-enforced, multi-theory cognitive-architecture testbed** — the kind of instrument the post-Cogitate field explicitly needs.
 - A **clean, tested reference implementation** corpus: ~20 algorithms from quantum info, condensed matter, and cognitive science, _interoperating_ and _seed-replayable_ (most ML/A-Life code is neither).
-- An **engineering case study** in applying high-energy-physics-grade provenance (determinism + receipts + contracts + ~95% line / ~92% function coverage) to A-Life/consciousness modeling.
+- An **engineering case study** in applying high-energy-physics-grade provenance (determinism + receipts + contracts + ~83.95% line / ~81.57% function coverage) to A-Life/consciousness modeling.
 
 🔴 **Potential (the three falsifiable headline results that would earn renown):**
 
@@ -623,17 +623,17 @@ A program that _names_ NHSI and sentience as targets must address governance, or
 
 ### 17.1 · The scorecard
 
-| Axis                                       | Grade                | One-line justification                                                                                            |
-| ------------------------------------------ | -------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| Engineering rigor & determinism            | **A+**               | Seed-reproducible cosmos, receipts law, ~95% line / ~92% function coverage, 1,984 tests — top-decile, _measured_. |
-| Mathematical substrate fidelity            | **A**                | ~20 faithful, tested ports; decorative-trig failure mode largely closed.                                          |
-| Integration density / novelty of synthesis | **A**                | No comparable single artifact found fusing this many cognitive+quantum theories, coupled — novel by integration.  |
-| Theory-of-mind architecture (Butlin)       | **A−**               | 8/14 met + 6/14 partial _structurally_ — richer than a frontier LLM; architecture only.                           |
-| Generative-art / instrument quality        | **A**                | World-class as a reproducible scientific instrument and as art.                                                   |
-| Quantum-physics claims                     | **B (honest)**       | Faithful _simulation_; no advantage, no hardware — correctly never claimed.                                       |
-| Novel scientific _result_                  | **C / Incomplete**   | No published, externally-validated, ablation-controlled result **yet**. The gap.                                  |
-| Capability vs. AGI/ASI                     | **Not on the scale** | Proto-agency at ~37k params; orthogonal to frontier capability.                                                   |
-| Sentience / phenomenal consciousness       | **Not claimed**      | ~1/10; the hard problem is untouched and, by science, untouchable today.                                          |
+| Axis                                       | Grade                | One-line justification                                                                                                  |
+| ------------------------------------------ | -------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| Engineering rigor & determinism            | **A+**               | Seed-reproducible cosmos, receipts law, ~83.95% line / ~81.57% function coverage, 1,984 tests — top-decile, _measured_. |
+| Mathematical substrate fidelity            | **A**                | ~20 faithful, tested ports; decorative-trig failure mode largely closed.                                                |
+| Integration density / novelty of synthesis | **A**                | No comparable single artifact found fusing this many cognitive+quantum theories, coupled — novel by integration.        |
+| Theory-of-mind architecture (Butlin)       | **A−**               | 8/14 met + 6/14 partial _structurally_ — richer than a frontier LLM; architecture only.                                 |
+| Generative-art / instrument quality        | **A**                | World-class as a reproducible scientific instrument and as art.                                                         |
+| Quantum-physics claims                     | **B (honest)**       | Faithful _simulation_; no advantage, no hardware — correctly never claimed.                                             |
+| Novel scientific _result_                  | **C / Incomplete**   | No published, externally-validated, ablation-controlled result **yet**. The gap.                                        |
+| Capability vs. AGI/ASI                     | **Not on the scale** | Proto-agency at ~37k params; orthogonal to frontier capability.                                                         |
+| Sentience / phenomenal consciousness       | **Not claimed**      | ~1/10; the hard problem is untouched and, by science, untouchable today.                                                |
 
 ### 17.2 · The verdict, in the language of the tribunal
 
@@ -713,4 +713,4 @@ A program that _names_ NHSI and sentience as targets must address governance, or
 
 ---
 
-_Prepared under full Broly (finish everything, receipts) · Starkiller (contracts, ownership, boundary paranoia) · Dr. Manhattan (determinism, measurement, provenance) discipline. Canonical receipts: v0.18.0 · 1,984 tests · 0 failures · ~95% line / ~92% function coverage. Every quantitative claim traces to a repository file or a cited source. No AGI, ASI, sentience, solved conjecture, or quantum advantage is claimed as a present fact. The forward plan is encoded machine-readably in the companion XML._
+_Prepared under full Broly (finish everything, receipts) · Starkiller (contracts, ownership, boundary paranoia) · Dr. Manhattan (determinism, measurement, provenance) discipline. Canonical receipts: v0.18.0 · 1,984 tests · 0 failures · ~83.95% line / ~81.57% function coverage. Every quantitative claim traces to a repository file or a cited source. No AGI, ASI, sentience, solved conjecture, or quantum advantage is claimed as a present fact. The forward plan is encoded machine-readably in the companion XML._

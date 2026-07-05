@@ -43,7 +43,7 @@
 
 **Files affected:** src/sim/memory-orchestra.ts (no-alloc), quality-space.ts (real snap), super-panel.ts (5 list), godform/world/mind (verified exclusive/wired), docs/\* (receipts/KANBAN).
 
-**Next (Ralph loop):** full cold `bun run check` after more wirings. Full local corpus (Z:\[Vibe Coded (AI)]\(Tsotchke)) studied + wired "everywhere" (Eshkol AD/arena/HoTT/consciousness, Moonlab tensor/MPO/CA-MPS/QRNG/open-reg, libirrep symmetry, ulg/quantum-quake hybrids). See new docs/TSOTCHKE-CORPUS-RALPH-WIRING-AUDIT-2026-06-19.md + updates to super-mind/topdown/godform/world/ui + all docs. Strict audit/log maintained. Determinism/contracts held. Loop continues until unequivocal full integration + gates.
+**Next (Ralph loop):** full cold `bun run check` after more wirings. Full local corpus (Z:\[Vibe Coded (AI)]\(Tsotchke)) studied + wired "everywhere" (Eshkol AD/arena/HoTT/consciousness, Moonlab tensor/MPO/CA-MPS/QRNG/open-reg, libirrep symmetry, ulg/quantum-quake hybrids). See `docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md` + updates to super-mind/topdown/godform/world/ui + all docs. Strict audit/log maintained. Determinism/contracts held. Loop continues until unequivocal full integration + gates.
 
 ## 2026-06-19 Refresh (final integrator sweep)
 
@@ -86,7 +86,7 @@ Wired into Cosmogonic everywhere for 5 Super Creatures:
 - Memory-orchestra/narrative: factor graph belief propagation from Eshkol active inference wired for better regime/consolidation.
 - Super-body/morph: QGT/geo tensors from corpus for extreme combinatronics/curvature.
 - Telemetry (super-panel/world): Eshkol engine state + 5 Archon consciousness per.
-- Docs: updated AI-SUBSYSTEM, receipts, new strict TSOTCHKE_CORPUS_INTEGRATION_AUDIT-2026-06-26.md with logs/audits/assessments (every file studied: CORPUS.md, consciousness engine.md, moonlab clifford.h, etc.).
+- Docs: updated AI-SUBSYSTEM, receipts, integration map (`docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md`) with logs/audits/assessments (every file studied: CORPUS.md, consciousness engine.md, moonlab clifford.h, etc.).
 - Strict: no alloc hot (prealloc), det (Rng), disclaimers, reports kept (this + audit + handoff updates).
 - Upstream upgrades integrated: Eshkol tensor dtype + consciousness enhancements (recent 2026); Moonlab more QEC/GPU ideas for reflex; QGTL geo for morph.
   Study: Eshkol formalisms (AD primitive, HoTT, arena, consciousness engine with unification/factor graphs/GWT) + Moonlab sim depth + all 20 repos/websites deep dived via tools. All wired for 5 everywhere (mind, body, memory, quantum, docs, telemetry).

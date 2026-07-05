@@ -130,6 +130,17 @@ describe('Phase 3.1: Worker Pool', () => {
     expect(asyncResult.success).toBe(false);
     expect(asyncResult.error).toContain('wilderness-only');
 
+    const wildernessTask: WorkerTask = {
+      id: 'test-wilderness-uninit',
+      type: 'wilderness',
+      data: new Float32Array(8),
+      seed: 12345,
+      chunkId: '0,0',
+    };
+    const uninitResult = await pool.executeAsync(wildernessTask);
+    expect(uninitResult.success).toBe(false);
+    expect(uninitResult.error).toContain('not initialized');
+
     pool.dispose();
   });
 

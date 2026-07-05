@@ -11,6 +11,23 @@ dated / historical / "superseded snapshot" copies (per the binding "Living docs,
 
 ---
 
+## 2026-07-05 (pass 2) — Receipt drift sweep + worker pool + test index (v0.20.0)
+
+Second audit pass: living reports still carried `1,477` / `92.13%` / `v0.18.0` tokens after the first consolidation.
+
+### Fixes
+
+- **`scripts/sync-surfaces.ts`** — added STATE-OF-THE-ART, VERIFICATION ledger, TEST-STRATEGY, PRD to `SURFACES`; expanded receipt patterns (backtick counts, tilde coverage, canonical table rows, `1,477-test`).
+- **`docs/VERIFICATION-ANALYTICAL-DATA.md`** — canonical coverage table aligned to `83.95% / 81.57%`.
+- **`src/core/worker-pool.ts`** — `executeAsync` returns immediately when pool not initialized (prevents wilderness hang).
+- **`src/world.ts`** — lazy `initWorkerPoolAsync()` + proper `dispose()` on worker pool.
+- **`tests/README.md`** — test index pointing at TEST-STRATEGY + layout table.
+- **`docs/GOAL5-RESEARCH-RECEIPTS-2026-06-26.md`** — deleted audit doc refs → integration map.
+
+### Gate
+
+- `bun run sync` then `bun run check`.
+
 ---
 
 ## 2026-07-05 — Living-docs consolidation + sync-surface expansion (v0.20.0)
@@ -21,18 +38,18 @@ and receipt drift across living surfaces. Completes and supersedes the partial 2
 
 ### Consolidation (deleted — content folded into canonical living docs)
 
-| Removed | Superseded by |
-| --- | --- |
-| `docs/BLEEDING-EDGE-NOVEL-CONTRIBUTIONS-AND-SCIENTIFIC-IMPACT-2026-06-26.md` | `docs/NOVELTY-SCIENTIFIC-EDGE-AND-CONTRIBUTIONS-2026-06-26.md` |
-| `docs/CORPUS_INTEGRATION_REPORT-2026-06-26.md` | `docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md` |
-| `docs/TSOTCHKE-CORPUS-INTEGRATION-PLAN-2026-06-26.md` | integration waves table in `TSOTCHKE-INTEGRATION-MAP` |
-| `docs/TSOTCHKE-CORPUS-RALPH-WIRING-AUDIT-2026-06-19.md` | `GOAL5-RESEARCH-RECEIPTS` (historical wave log) |
-| `docs/TSOTCHKE_CORPUS_INTEGRATION_AUDIT-2026-06-26.md` | `TSOTCHKE-INTEGRATION-MAP` |
-| `docs/TSOTCHKE-ULTIMATE-COMPREHENSIVE-AUDIT-REPORT-ASSESSMENT-2026-06-20.md` | `TSOTCHKE-INTEGRATION-MAP` + `NOVELTY-SCIENTIFIC-EDGE` |
-| `docs/PERFORMANCE-BASELINE-2026-07-03.md` | `docs/PERFORMANCE-OPTIMIZATION-ROADMAP-2026-07-03.md` |
-| `docs/PERFORMANCE-IMPLEMENTATION-PLAN-2026-07-03.md` | same roadmap (single living perf doc) |
-| `docs/archive/` stub | removed — GOAL5 wave logs restored to `docs/` (living docs, no archives) |
-| `docs/reference/math-libs-catalog-2026-06-26.md` | orphaned reference removed (upstream 2026-07-03) |
+| Removed                                                                      | Superseded by                                                            |
+| ---------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| `docs/BLEEDING-EDGE-NOVEL-CONTRIBUTIONS-AND-SCIENTIFIC-IMPACT-2026-06-26.md` | `docs/NOVELTY-SCIENTIFIC-EDGE-AND-CONTRIBUTIONS-2026-06-26.md`           |
+| `docs/CORPUS_INTEGRATION_REPORT-2026-06-26.md`                               | `docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md`                            |
+| `docs/TSOTCHKE-CORPUS-INTEGRATION-PLAN-2026-06-26.md`                        | integration waves table in `TSOTCHKE-INTEGRATION-MAP`                    |
+| `docs/TSOTCHKE-CORPUS-RALPH-WIRING-AUDIT-2026-06-19.md`                      | `GOAL5-RESEARCH-RECEIPTS` (historical wave log)                          |
+| `docs/TSOTCHKE_CORPUS_INTEGRATION_AUDIT-2026-06-26.md`                       | `TSOTCHKE-INTEGRATION-MAP`                                               |
+| `docs/TSOTCHKE-ULTIMATE-COMPREHENSIVE-AUDIT-REPORT-ASSESSMENT-2026-06-20.md` | `TSOTCHKE-INTEGRATION-MAP` + `NOVELTY-SCIENTIFIC-EDGE`                   |
+| `docs/PERFORMANCE-BASELINE-2026-07-03.md`                                    | `docs/PERFORMANCE-OPTIMIZATION-ROADMAP-2026-07-03.md`                    |
+| `docs/PERFORMANCE-IMPLEMENTATION-PLAN-2026-07-03.md`                         | same roadmap (single living perf doc)                                    |
+| `docs/archive/` stub                                                         | removed — GOAL5 wave logs restored to `docs/` (living docs, no archives) |
+| `docs/reference/math-libs-catalog-2026-06-26.md`                             | orphaned reference removed (upstream 2026-07-03)                         |
 
 ### Link + surface repairs
 

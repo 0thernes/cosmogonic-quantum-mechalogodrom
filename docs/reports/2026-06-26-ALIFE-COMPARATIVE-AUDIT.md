@@ -28,7 +28,7 @@ adversarially verified against the same 9-axis rubric.
 > [Sensitivity](#sensitivity-how-much-the-conclusion-moves-under-honest-re-scoring) sections quantify
 > exactly how much. Read every claim against
 > [`2026-06-26-CURRENT-TRUTH-BASELINE.md`](./2026-06-26-CURRENT-TRUTH-BASELINE.md); the baseline wins on
-> any conflict. Current receipts: `1,984` tests (published floor; `2104` measured), `0` failures, `92.13%` line / `89.66%` function coverage,
+> any conflict. Current receipts: `1,984` tests (published floor; `2104` measured), `0` failures, `83.95%` line / `81.57%` function coverage,
 > sync clean, build clean.
 
 ---
