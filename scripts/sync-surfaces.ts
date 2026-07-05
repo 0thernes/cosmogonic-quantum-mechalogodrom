@@ -74,6 +74,8 @@ const SURFACES = [
   'docs/VERIFICATION-ANALYTICAL-DATA.md',
   'docs/TEST-STRATEGY-2026-07-02.md',
   'docs/PRD-2026-07-02.md',
+  'docs/MEGA-MASTER-DEEP-DIVE-RESEARCH-REPORT-2026-06-27.md',
+  'docs/BOOK-2026-06-26.md',
   'HANDOFF-2026-06-26.md',
   'research_receipts-2026-06-26.md',
 ];
@@ -158,6 +160,19 @@ function syncReceipts(s: string): string {
         `canonical ${LINE} line / ${FUNC} function`,
       )
       .replace(/\b1,477-test\b/g, `${TEST_COMMA}-test`)
+      .replace(/\b[0-9],[0-9]{3} passing tests\b/g, `${TEST_COMMA} passing tests`)
+      .replace(/\b[0-9],[0-9]{3} \(0 failing\)/g, `${TEST_COMMA} (0 failing)`)
+      .replace(/bun test \([0-9],[0-9]{3} tests\)/g, `bun test (${TEST_COMMA} tests)`)
+      .replace(/"([0-9],[0-9]{3}) tests, 0 failing"/g, `"${TEST_COMMA} tests, 0 failing"`)
+      .replace(/"([0-9]{2}\.[0-9]{2})% line coverage"/g, `"${LINE}% line coverage"`)
+      .replace(
+        /Coverage line ≥ 0\.90\s+\|\s+✅ [0-9]{2}\.[0-9]{2}%/g,
+        `Coverage line ≥ 0.90                   | ✅ ${LINE}%`,
+      )
+      .replace(
+        /Coverage func ≥ 0\.85\s+\|\s+✅ [0-9]{2}\.[0-9]{2}%/g,
+        `Coverage func ≥ 0.85                   | ✅ ${FUNC}%`,
+      )
       .replace(/\*\*~95 \/ ~92\*\*/g, `**~${LINE} / ~${FUNC}**`)
   );
 }

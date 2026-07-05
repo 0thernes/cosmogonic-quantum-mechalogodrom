@@ -1749,12 +1749,11 @@ export class World {
     // F-BRAIN V42: all organism brains perceive + steer BEFORE the integrator folds velocity
     // into position. Adaptive cadence: evaluate at quality.neuralRate Hz (invisible to user)
     // Physics always runs at 60 Hz, neural states interpolate between evaluations.
-    // Perceptual priority cascade: camera position passed for distance-based LOD (invisible to user)
     const neuralRate = this.quality.neuralRate ?? 60;
     this.neuralUpdateCounter++;
     if (this.neuralUpdateCounter >= 60 / neuralRate) {
-      const cameraPos = this.engine.camera.position;
-      this.entityBrains.thinkAll(this.entities.list, this.state.chaos, t, cameraPos);
+      // Full 70-param brain for every entity — no distance LOD (quality contract: never degrade near-field fidelity).
+      this.entityBrains.thinkAll(this.entities.list, this.state.chaos, t);
       this.neuralUpdateCounter = 0;
     }
 

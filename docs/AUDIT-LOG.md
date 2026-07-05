@@ -11,6 +11,32 @@ dated / historical / "superseded snapshot" copies (per the binding "Living docs,
 
 ---
 
+## 2026-07-05 (pass 5) — MEGA-MASTER receipt sync + BOOK module truth + full-quality brains (v0.20.0)
+
+Owner brief: finish deferred doc debt from pass 4; never lower visual/cognitive fidelity.
+
+### Code
+
+- **`src/world.ts`** — stop passing camera position into `thinkAll`; every entity gets the full
+  70-param brain every neural tick (distance LOD in `entity-brain.ts` no longer active in live world).
+- **`PerceptualPriorityCascade`** remains disabled (all near-tier); wilderness + workers unchanged.
+
+### Docs / sync
+
+- **`scripts/sync-surfaces.ts`** — MEGA-MASTER + BOOK added to `SURFACES`; extra receipt patterns
+  (`passing tests`, `(0 failing)`, gauge rows, quoted coverage claims).
+- **`docs/MEGA-MASTER-DEEP-DIVE-RESEARCH-REPORT-2026-06-27.md`** — measured-state receipts + module
+  count (250 TS) synced; stale 91% prose fixed.
+- **`docs/BOOK-2026-06-26.md`** — module inventory points at FILE-MAP (no stale "77 modules").
+- **`docs/FRONTEND-ACTION-PLAN.md`** — pass 4–5 landed items (connectome, wilderness render, perf HUD,
+  full-quality brains).
+
+### Gate
+
+- `bun run sync` then `bun run check`.
+
+---
+
 ## 2026-07-05 (pass 4) — Wilderness render + worker kernel fix + doc pointers (v0.20.0)
 
 Owner brief: finish ADR 0010 Stage 3b ambient layer (visible, not just computed), fix worker stride

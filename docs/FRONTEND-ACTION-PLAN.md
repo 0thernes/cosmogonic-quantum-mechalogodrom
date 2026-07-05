@@ -25,6 +25,10 @@ Living backlog for UI/UX, visual fidelity, and front-end wiring. Rewrite in plac
 | 12    | BIBLE depth                                        | **Ongoing**                    | `bible.html`, `scripts/gen-bible-corpus.ts`, BOOK index                                |
 | 13    | 100 glyphs + APEX wild like super creatures        | **Improved (pass 2026-06-28)** | `alphabet-pantheon-render.ts` motor orbit + apex travel                                |
 | 14    | 25k / 100k→5M params in UI                         | **Partial**                    | `docs/BRAIN-PARAMETER-SCALE-PLAN.md`, architecture panel                               |
+| 15    | Connectome full-blast (always on, 8× entity cap)   | **Done (pass 2026-07-05)**     | `src/core/quality.ts`, `src/sim/connectome.ts`                                         |
+| 16    | Wilderness ambient render (ADR 0010 Stage 3b)      | **Done (pass 2026-07-05)**     | `src/sim/wilderness-render.ts`, `src/world.ts`                                         |
+| 17    | Perf HUD (frame ms, p95, heap, workers, wild)      | **Done (pass 2026-07-05)**     | `src/ui/perf-hud.ts`, `src/world.ts` `getPerfSnapshot()`                               |
+| 18    | Entity brains: full 70-param every frame           | **Done (pass 2026-07-05)**     | `world.ts` — distance LOD disabled; perceptual cascade remains off                     |
 | BONUS | Peer-review paper + outreach                       | **Started**                    | `docs/PEER-REVIEW-META-ANALYSIS.md`                                                    |
 
 ---

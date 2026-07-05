@@ -190,7 +190,7 @@ export class EntityBrainField {
 
   /**
    * Explicit full-quality alias: no slicing, no prioritization - every entity gets full brain evaluation.
-   * Optional cameraPos enables perceptual priority cascades (distance-based LOD) for invisible optimization.
+   * Optional cameraPos enables distance-based LOD in thinkSlot (disabled in live world — quality contract).
    */
   thinkAll(
     list: ReadonlyArray<Entity | undefined>,
