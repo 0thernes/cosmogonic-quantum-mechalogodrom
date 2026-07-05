@@ -49,6 +49,12 @@ describe('QUALITY_LADDER', () => {
     }
   });
 
+  test('maxLinks scales 4× with maxEntities on every tier (population-proportional neural web)', () => {
+    for (const tier of ['phone', 'tablet', 'laptop', 'desktop', 'ultra', 'mega'] as const) {
+      expect(QUALITY_LADDER[tier].maxLinks).toBe(QUALITY_LADDER[tier].maxEntities * 4);
+    }
+  });
+
   test('ambience + entity budgets are monotone up the six-rung ladder', () => {
     const tiers = ['phone', 'tablet', 'laptop', 'desktop', 'ultra', 'mega'] as const;
     for (let i = 1; i < tiers.length; i++) {

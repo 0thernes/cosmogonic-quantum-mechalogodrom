@@ -76,7 +76,7 @@ export class Connectome {
   readonly pairs: Uint32Array;
   private readonly ctx: SimContext;
   private readonly entities: EntityManager;
-  /** Link capacity (quality.maxLinks; legacy MNN: 2200 mobile / 4000 desktop). */
+  /** Link capacity (quality.maxLinks ≈ 4× maxEntities — scales with population). */
   private readonly maxLinks: number;
   private readonly positions: Float32Array;
   private readonly colors: Float32Array;
@@ -218,12 +218,12 @@ export class Connectome {
   }
 
   /**
-   * Rebuild links from scratch (legacy 798-821): every 2nd entity queries the grid for
+   * Rebuild links from scratch (legacy 798-821): every entity queries the grid for
    * neighbors within 8u; pairs closer than 8 get a segment, activation propagation
    * (`eb.act += ea.act * nw * 0.01`), and an HSL color from the pair's mean neural weight
    * (hue from the tribe palette when a community lookup is installed, time hue otherwise).
    * Each link is also recorded as an entity-list index pair in `pairs` for GraphMind.
-   * O(n·k + n) where n = entities (stride 2; + an O(n) id→index refill) and k = neighbors per
+   * O(n·k + n) where n = entities (+ an O(n) id→index refill) and k = neighbors per
    * query; allocation-free (the grid query's shared buffer is consumed before the next query).
    *
    * `mutateAct` (default true) gates the ONLY entity-state write in this method — the activation
@@ -253,7 +253,7 @@ export class Connectome {
     }
     let wI = 0;
     let pc = 0;
-    for (let ni = 0; ni < list.length && wI < max; ni += 2) {
+    for (let ni = 0; ni < list.length && wI < max; ni++) {
       const ea = list[ni];
       if (!ea) continue; // noUncheckedIndexedAccess: ni < length
       const ap = ea.position;

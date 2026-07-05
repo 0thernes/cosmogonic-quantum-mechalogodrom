@@ -24,10 +24,11 @@ import { detectWebGpu } from './webgpu-detect';
  * tier (the earlier ultra 6,500 adaptive throttle was retired in 0.5.0 — history in
  * the "Ultra-tier 10k optimization" note in docs/BENCHMARKS-2026-06-26.md and CHANGELOG 0.5.0).
  *
- * quantum/links/stars scale sublinearly with the entity budget (they are ambience
- * layers, not the population). Tiers scale amount of world only: DPR, shadows,
- * instancing, color/post-FX and simulation cadence stay full-fidelity on every tier.
- * The tier is decided ONCE at boot — no runtime switching.
+ * quantum/stars scale sublinearly with the entity budget (ambience layers). Connectome
+ * `maxLinks` scales WITH population (~4× `maxEntities`) so the neural web is never
+ * artificially capped at a fixed 3k/8k ceiling while the world fills. Tiers scale amount
+ * of world only: DPR, shadows, instancing, color/post-FX and simulation cadence stay
+ * full-fidelity on every tier. The tier is decided ONCE at boot — no runtime switching.
  */
 export const QUALITY_LADDER: Readonly<
   Record<QualityTier, Omit<QualityProfile, 'tier' | 'isMobile' | 'quantization' | 'webGpu'>>
@@ -38,7 +39,7 @@ export const QUALITY_LADDER: Readonly<
     maxEntities: 1000,
     targetEntities: 1000,
     quantumCount: 3500,
-    maxLinks: 2200,
+    maxLinks: 4000,
     shadows: true,
     starCount: 2000,
     instanced: true,
@@ -49,7 +50,7 @@ export const QUALITY_LADDER: Readonly<
     maxEntities: 2000,
     targetEntities: 2000,
     quantumCount: 4500,
-    maxLinks: 3000,
+    maxLinks: 8000,
     shadows: true,
     starCount: 3000,
     instanced: true,
@@ -60,7 +61,7 @@ export const QUALITY_LADDER: Readonly<
     maxEntities: 5000,
     targetEntities: 5000,
     quantumCount: 6000,
-    maxLinks: 4000,
+    maxLinks: 20000,
     shadows: true,
     starCount: 4500,
     instanced: true,
@@ -74,7 +75,7 @@ export const QUALITY_LADDER: Readonly<
     // (docs/BENCHMARKS-2026-06-26.md) keep sim-CPU smooth at 10k.
     targetEntities: 10000,
     quantumCount: 8000,
-    maxLinks: 6000,
+    maxLinks: 40000,
     shadows: true,
     starCount: 6000,
     instanced: true,
@@ -86,7 +87,7 @@ export const QUALITY_LADDER: Readonly<
     maxEntities: 25000,
     targetEntities: 25000,
     quantumCount: 9000,
-    maxLinks: 7000,
+    maxLinks: 100000,
     shadows: true,
     starCount: 7000,
     instanced: true,
@@ -100,7 +101,7 @@ export const QUALITY_LADDER: Readonly<
     maxEntities: 50000,
     targetEntities: 50000,
     quantumCount: 10000,
-    maxLinks: 8000,
+    maxLinks: 200000,
     shadows: true,
     starCount: 8000,
     instanced: true,
@@ -109,16 +110,17 @@ export const QUALITY_LADDER: Readonly<
 };
 
 /**
- * Adaptive cadence rates for neural evaluation and connectome rebuild (Phase 1.2 optimization).
- * These are tier-specific and invisible to user - smooth interpolation maintains visual quality.
+ * Neural + connectome cadence — full 60 Hz on every tier. The entity neural web is always ON
+ * (Settings → ⎔ Neural only hides the visual layer); throttling it made the axon field feel
+ * sparse/capped at population scale.
  */
 const ADAPTIVE_CADENCE: Record<QualityTier, { neuralRate: number; connectomeRate: number }> = {
-  phone: { neuralRate: 30, connectomeRate: 30 },
-  tablet: { neuralRate: 30, connectomeRate: 30 },
-  laptop: { neuralRate: 30, connectomeRate: 20 },
-  desktop: { neuralRate: 30, connectomeRate: 20 },
-  ultra: { neuralRate: 20, connectomeRate: 15 },
-  mega: { neuralRate: 15, connectomeRate: 10 },
+  phone: { neuralRate: 60, connectomeRate: 60 },
+  tablet: { neuralRate: 60, connectomeRate: 60 },
+  laptop: { neuralRate: 60, connectomeRate: 60 },
+  desktop: { neuralRate: 60, connectomeRate: 60 },
+  ultra: { neuralRate: 60, connectomeRate: 60 },
+  mega: { neuralRate: 60, connectomeRate: 60 },
 };
 
 /**
