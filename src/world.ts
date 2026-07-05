@@ -301,6 +301,8 @@ export class World {
   private readonly entities: EntityManager;
   /** Worker pool for offloading simulation to multiple CPU cores (ADR 0010) */
   public workerPool: WorkerPool | null = null;
+  /** Entity neural-net axon web (proximity links, activation propagation, GraphMind writer). */
+  public readonly connectome: Connectome;
   /** Wilderness population - ambient entities on worker threads (ADR 0010) */
   private readonly wilderness: WildernessPopulation;
   private readonly entityBrains: EntityBrainField; // V42: per-organism 70-param neural controller
@@ -312,7 +314,6 @@ export class World {
   private readonly puppets: PuppetMasterSystem;
   private readonly weather: WeatherSystem;
   private readonly quantum: QuantumCloud;
-  private readonly connectome: Connectome;
   private readonly environment: EnvironmentSystem;
   /** Alien vegetal ground ecology — 10k plants / 50 species seated on the dunes (read-only coupling). */
   private readonly alienFlora: AlienFlora;
@@ -4723,6 +4724,14 @@ export class World {
         this.hud.showSector('EXPOSURE · ' + exp.toFixed(2));
         this.audit.record('exposure', { value: exp });
         return exp;
+      },
+      toggleConnectomeWeb: (): boolean => {
+        this.unlock();
+        const on = !this.connectome.webVisible;
+        this.connectome.setWebVisible(on);
+        this.hud.showSector(on ? 'NEURAL WEB · ON' : 'NEURAL WEB · OFF');
+        this.audit.record('connectome-web', { visible: on });
+        return on;
       },
     };
   }

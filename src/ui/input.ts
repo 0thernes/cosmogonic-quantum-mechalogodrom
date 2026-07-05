@@ -120,6 +120,7 @@ const TOOLBAR_MAP: Readonly<Record<string, keyof UiActions>> = {
   nhi: 'launchNhi', // F-NHI: launch an NHI being in front of the camera
   space: 'cycleSpace', // F-SPACE: dilate the camera field-of-view
   exposure: 'cycleExposure', // V116: master scene brightness
+  neuralweb: 'toggleConnectomeWeb', // entity connectome axon web (proximity neural links)
   focusColossus: 'focusColossus', // ◎ GOD: fly the camera to frame the God-Colossus fractal deity
 };
 

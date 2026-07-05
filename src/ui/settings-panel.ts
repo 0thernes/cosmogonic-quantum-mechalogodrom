@@ -72,6 +72,7 @@ const GROUPS = [
       { action: 'space', label: '⬡ Space' },
       { action: 'weather', label: '☁ Weather' },
       { action: 'exposure', label: '◑ Bright' },
+      { action: 'neuralweb', label: '⎔ Neural' },
     ],
   },
   {

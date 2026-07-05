@@ -121,38 +121,35 @@ export class Connectome {
       new THREE.LineBasicMaterial({
         vertexColors: true,
         transparent: true,
-        opacity: 0.55,
+        opacity: 0.62,
         depthWrite: false,
-        depthTest: false,
+        depthTest: true,
         blending: THREE.AdditiveBlending,
       }),
     );
     const lines = this.lines;
     // USER (always-visible connectome): the axon web spans the WHOLE dome and its vertices are
-    // rebuilt every frame, but three computes the geometry bounding sphere ONCE (lazily) and never
+    // rebuilt every frame, but three.js computes the geometry bounding sphere ONCE (lazily) and never
     // again — so as creatures roam, the stale sphere drifts out of the frustum and the ENTIRE web
     // flickers out at certain camera angles/distances (the "sometimes I can't see it close or far"
-    // trigger). Disable frustum culling so it is drawn unconditionally at every angle + distance;
-    // `depthTest: false` above also keeps the additive lines from being occluded/washed out when the
-    // camera is right on top of a bright body. Rendered on top of a big transparent render order so
-    // the neural net always reads over the population.
+    // trigger). Disable frustum culling so it is drawn unconditionally at every angle + distance.
+    // depthTest:true keeps links BETWEEN bodies (not smeared ON TOP of every skin — the V127 eyesore).
+    // Additive blending + V109/V110 dynamic HSL + waving polylines = the living neural net the user sees.
     lines.frustumCulled = false;
-    lines.renderOrder = 3;
-    // USER (V127): "get rid of the wireframing nonsense now — you have skins and better framing." The
-    // axon-web draws with depthTest:false (always ON TOP of every solid body), so it read as an ugly
-    // white wireframe OUTLINE smeared over all 100 Pantheons (and the mecha / megaliths / everything the
-    // camera saw through it). It is the ENTITY neural net, not a per-creature element — so hiding the
-    // ONE web strips the wireframe off everything at once. The graph is still fully COMPUTED every frame
-    // (pairs + activation propagation feed GraphMind + the entities' `act`), so nothing downstream
-    // changes; only the eyesore render is switched off. Re-enable via {@link setWebVisible} for wire debug.
-    lines.visible = false;
+    lines.renderOrder = 2;
+    lines.visible = true;
     ctx.scene.add(lines);
   }
 
-  /** Show/hide the axon-web render (default HIDDEN per USER V127 — skins only). The graph keeps computing
+  /** Show/hide the axon-web render (default ON — the entity neural net). The graph keeps computing
    *  regardless; this only toggles the visual layer. O(1). */
   setWebVisible(show: boolean): void {
     this.lines.visible = show;
+  }
+
+  /** Whether the axon-web LineSegments are currently drawn. */
+  get webVisible(): boolean {
+    return this.lines.visible;
   }
 
   /** Links built by the last update (legacy `connLinks`, telemetry #v3 + sparkline #g3). */
@@ -360,9 +357,7 @@ export class Connectome {
     this.linkCount = wI;
     this.pairTotal = pc;
     if (wI > 0 && this.lines.visible) {
-      // Skip the GPU upload entirely while the web is HIDDEN (USER V127 default) — the graph still
-      // computes pairs + activation above; only the (unseen) vertex/colour upload is elided, saving
-      // ~200 KB/frame of pointless bandwidth. On re-show, the next update() uploads the current range.
+      // Skip the GPU upload while HIDDEN (toggle via setWebVisible) — pairs + activation still compute.
       // Known Bug 13 fix: upload only the populated range, not all maxLinks*LINK_FLOATS floats.
       this.posAttr.clearUpdateRanges();
       this.posAttr.addUpdateRange(0, wI * LINK_FLOATS);

@@ -114,4 +114,13 @@ describe('Connectome — bounded link graph + finite activation, deterministic r
     expect(a.conn.links).toBe(b.conn.links);
     expect(actTrace(b.entities)).toEqual(actTrace(a.entities));
   });
+
+  test('axon web renders by default and setWebVisible toggles the layer', () => {
+    const { conn } = makeWorld(0x4400aa);
+    expect(conn.webVisible).toBe(true);
+    conn.setWebVisible(false);
+    expect(conn.webVisible).toBe(false);
+    conn.setWebVisible(true);
+    expect(conn.webVisible).toBe(true);
+  });
 });
