@@ -1,4 +1,13 @@
-# EXECUTION PLAN — VP/COO DevOps Program/Product/Project Manager
+# EXECUTION PLAN — VP/COO Polish 25 Items (pointer)
+
+**Canonical living backlog:** [FRONTEND-ACTION-PLAN.md](FRONTEND-ACTION-PLAN.md)
+
+This file retains the 2026-06-30 VP/COO execution matrix. New work and status updates go in
+**FRONTEND-ACTION-PLAN** (rewrite in place). Gate before commit: `bun run check`.
+
+---
+
+<!-- Historical VP/COO execution notes preserved below for traceability. -->
 
 **Cosmogonic Quantum Mechalogodrom — Targeted Polish for User-Requested Items (3,4,5,7a/b,10-18 + cross)**  
 Date: 2026-06-30 | Branch: phase0-ui-shell | Mandate: MAX ACCEL + ZERO BULLSHIT | Master Trinity: Broly/Starkiller/Manhattan + Contracts + Philosophy binding.

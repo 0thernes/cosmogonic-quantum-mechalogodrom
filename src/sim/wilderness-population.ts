@@ -49,8 +49,8 @@ export class WildernessPopulation {
   private readonly rng: () => number;
   private readonly chunkSize = 100; // World units per chunk
   private frameCounter = 0; // Frame counter for timestamps (determinism-safe)
-  private readonly maxChunks = 16; // Maximum active chunks
-  private readonly entitiesPerChunk = 50; // Entities per chunk
+  private readonly maxChunks = 32; // Camera-streamed active chunks (ADR 0010 — not golden)
+  private readonly entitiesPerChunk = 64; // Entities per chunk
   private nextEntityId = 0;
   /** Pre-allocated worker task buffers — one per max active chunk (parallel-safe). */
   private readonly taskBuffers: Float32Array[];
@@ -79,7 +79,7 @@ export class WildernessPopulation {
     const chunkZ = Math.floor(cameraZ / this.chunkSize);
 
     // Load nearby chunks
-    const loadRadius = 2; // Load chunks within 2 chunks of camera
+    const loadRadius = 3; // Load chunks within 3 chunks of camera (denser ambient field)
     for (let dx = -loadRadius; dx <= loadRadius; dx++) {
       for (let dz = -loadRadius; dz <= loadRadius; dz++) {
         const cx = chunkX + dx;
@@ -272,6 +272,20 @@ export class WildernessPopulation {
       // type and seed don't change
     }
     chunk.lastUpdate = this.frameCounter;
+  }
+
+  /**
+   * Iterate every live wilderness entity (render + telemetry). O(n) over ambient count only.
+   */
+  forEachEntity(fn: (entity: WildernessEntity) => void): void {
+    for (const chunk of this.chunks.values()) {
+      for (const e of chunk.entities) fn(e);
+    }
+  }
+
+  /** Active chunk count (telemetry). */
+  getActiveChunkCount(): number {
+    return this.chunks.size;
   }
 
   /**

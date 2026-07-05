@@ -1,4 +1,12 @@
-# Plan — 2026-06-30 UI/Simulation/Audio Polish (VP/COO execution plan)
+# Plan — 2026-06-30 UI/Simulation/Audio Polish (pointer)
+
+**Canonical living backlog:** [FRONTEND-ACTION-PLAN.md](FRONTEND-ACTION-PLAN.md)
+
+New work and status updates go in **FRONTEND-ACTION-PLAN** (rewrite in place). Gate before commit: `bun run check`.
+
+---
+
+<!-- Historical Phase A/B/C notes preserved below for traceability. -->
 
 Status: **Phase A complete, Phase B in progress (B1, B12 landed)**. Each phase is gated by `bun run check` (typecheck, lint, format, 1970+ tests, coverage receipts, surface sync, canonical facts, build). No phase ships without a regression test or a verifiable functional audit where a test is impossible (visual-only WebGL changes require Playwright screenshot evidence).
 

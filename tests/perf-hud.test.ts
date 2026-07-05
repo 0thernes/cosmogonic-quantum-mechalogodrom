@@ -36,7 +36,7 @@ describe('perf HUD — pure readout helpers', () => {
     expect(formatTimingLine(16.4, 22.1, 412.5)).toBe('16 ms · p95 22 ms · 413 MB');
   });
 
-  test('formatPopulationLine shows entity budget and connectome links', () => {
+  test('formatPopulationLine shows entity budget, links, and wilderness chunks', () => {
     expect(
       formatPopulationLine({
         ...EMPTY_WORLD,
@@ -44,8 +44,9 @@ describe('perf HUD — pure readout helpers', () => {
         maxEntities: 50000,
         connectomeLinks: 40120,
         wildernessEntities: 640,
+        wildernessChunks: 12,
       }),
-    ).toBe('n 10,000/50,000 · links 40,120 · wild 640');
+    ).toBe('n 10,000/50,000 · links 40,120 · wild 640 (12 ch)');
   });
 
   test('formatWorkerLine shows cores and worker pool state', () => {

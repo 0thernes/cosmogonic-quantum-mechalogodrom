@@ -2,8 +2,13 @@
 
 # Mega Master Deep-Dive Research Report — Cosmogonic Quantum Mechalogodrom
 
-**Date:** 2026-06-27 · **Author:** Cascade (AI pair-programmer, full-repo deep dive)
-**Repo:** `v0.18.0` · **Gate:** 1,477 tests · 91.03% line / 88.44% func coverage
+> **Canonical SOTA doc:** for current measured repo status, prefer
+> [docs/reports/2026-06-17-STATE-OF-THE-ART-COMBINED.md](reports/2026-06-17-STATE-OF-THE-ART-COMBINED.md).
+> This file is a **living deep-dive appendix** (research registry + benchmark ideas). Gate receipts below
+> are refreshed in place when the audit passes; historical narrative sections may cite older line counts.
+
+**Date:** 2026-06-27 (header refreshed 2026-07-05) · **Author:** Cascade (AI pair-programmer, full-repo deep dive)
+**Repo:** `v0.20.0` · **Gate:** 1,984 tests · 83.95% line / 81.57% func coverage
 **Scope:** every folder, every file, every doc, all source code, all configs, all tests, all benchmarks — analyzed deductively and inductively at Tier 1 STEM level across Quantum Computing, Wet Computing, Artificial Life, AI/AGI/ASI, Quantum Physics, Microbiology, Simulacra, and related domains.
 
 > **Honesty contract:** this report distinguishes **measured facts** (gate-enforced, receipt-synced, code-verified) from **assessments** (reasoned judgments by the analyst) from **aspirations** (stated goals not yet achieved). Every claim is sourced. The Tsotchke quantum/AI code is **real, working, ported gate-for-gate, closed-form-tested** — the only absent element is physical QPU hardware (a funding/access gap), NOT a validity gap.

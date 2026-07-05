@@ -179,6 +179,7 @@ import { createLogger } from './logging/logger';
 import type { MemoryStore } from './memory/store';
 import { WorkerPool, type WorkerPoolConfig } from './core/worker-pool';
 import { WildernessPopulation } from './sim/wilderness-population';
+import { WildernessRenderer } from './sim/wilderness-render';
 
 /** Cyclic element access into a non-empty readonly array. O(1). */
 function cyc<T>(arr: readonly T[], i: number): T {
@@ -305,6 +306,7 @@ export class World {
   public readonly connectome: Connectome;
   /** Wilderness population - ambient entities on worker threads (ADR 0010) */
   private readonly wilderness: WildernessPopulation;
+  private readonly wildernessRender: WildernessRenderer;
   private readonly entityBrains: EntityBrainField; // V42: per-organism 70-param neural controller
   /** V127 (USER): Thaler "Death of a Gedanken Creature" — measured on every portal death (dying nets
    *  confabulate; the ledger accumulates the population-scale evidence). `gedankenSenses` is reused. */
@@ -880,6 +882,7 @@ export class World {
     // Initialize wilderness population (ADR 0010)
     // Ambient entities that run on worker threads - NOT in the golden
     this.wilderness = new WildernessPopulation(this.workerPool, this.persisted.seed);
+    this.wildernessRender = new WildernessRenderer(this.engine.scene);
 
     // Lore precedes the taxonomy: phyla are lore-named at mint (CONTRACTS V3.2).
     this.lore = new LoreEngine(this.persisted.seed);
@@ -1360,6 +1363,7 @@ export class World {
     this.workerPool = null;
     // Dispose wilderness population
     this.wilderness.dispose();
+    this.wildernessRender.dispose();
     // Free the GPU-resource-owning subsystems that expose a dispose(). The Engine's
     // forceContextLoss() reclaims the context's VRAM, but these JS-side geometry/material
     // dispose paths were skipped entirely — each HMR reload built a fresh World whose
@@ -1481,6 +1485,7 @@ export class World {
     const camX = this.engine.camera.position.x;
     const camZ = this.engine.camera.position.z;
     this.wilderness.update(camX, camZ, dt);
+    this.wildernessRender.sync(this.wilderness, t);
 
     // ── THREE-STATE PAUSE (USER pause redesign) ──────────────────────────────────────────────────────
     // The ⏸ PAUSE button cycles RUNNING → SUSPENDED → FROZEN → RUNNING (see togglePause / cycleTimeScale).
@@ -2117,6 +2122,7 @@ export class World {
     // (mutateAct=false) from the frozen grid on the advancing visual clock — no rng, no neural-state
     // decay, so the seeded golden is untouched while the axons stay alive for inspection.
     this.connectome.update(0, vt, false);
+    this.wildernessRender.sync(this.wilderness, vt);
     this.artifacts.update(uiDt, vt);
     this.monolithTemple.setEnvironment({
       chaos: chaosN,
@@ -3660,6 +3666,7 @@ export class World {
     maxEntities: number;
     connectomeLinks: number;
     wildernessEntities: number;
+    wildernessChunks: number;
     workerTotal: number;
     workerActive: number;
     workersReady: boolean;
@@ -3676,6 +3683,7 @@ export class World {
       maxEntities: this.quality.maxEntities,
       connectomeLinks: this.connectome.links,
       wildernessEntities: this.wilderness.getEntityCount(),
+      wildernessChunks: this.wilderness.getActiveChunkCount(),
       workerTotal: wp?.totalWorkers ?? 0,
       workerActive: wp?.activeTasks ?? 0,
       workersReady: (wp?.totalWorkers ?? 0) > 0,

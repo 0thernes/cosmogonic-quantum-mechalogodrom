@@ -36,6 +36,7 @@ export interface PerfHudWorldMetrics {
   maxEntities: number;
   connectomeLinks: number;
   wildernessEntities: number;
+  wildernessChunks: number;
   workerTotal: number;
   workerActive: number;
   workersReady: boolean;
@@ -66,7 +67,10 @@ export function formatTimingLine(frameMs: number, p95Ms: number, heapMb: number)
 export function formatPopulationLine(w: PerfHudWorldMetrics): string {
   const n = `${w.entities.toLocaleString()}/${w.maxEntities.toLocaleString()}`;
   const links = w.connectomeLinks.toLocaleString();
-  const wild = w.wildernessEntities > 0 ? ` · wild ${w.wildernessEntities.toLocaleString()}` : '';
+  const wild =
+    w.wildernessEntities > 0
+      ? ` · wild ${w.wildernessEntities.toLocaleString()} (${w.wildernessChunks} ch)`
+      : '';
   return `n ${n} · links ${links}${wild}`;
 }
 
@@ -90,6 +94,7 @@ const EMPTY_WORLD: PerfHudWorldMetrics = {
   maxEntities: 0,
   connectomeLinks: 0,
   wildernessEntities: 0,
+  wildernessChunks: 0,
   workerTotal: 0,
   workerActive: 0,
   workersReady: false,

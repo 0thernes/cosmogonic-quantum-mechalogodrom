@@ -1,5 +1,11 @@
 # UI/UX Deep-Dive Audit — 2nd + 3rd + 4th + 5th + 6th + 7th + 8th + 9th Pass
 
+> **Pass 10 status (2026-07-05):** several findings below are **resolved or improved** since the
+> 2026-06-28 audit — perf HUD expanded (frame ms, p95, heap, workers, wilderness), settings owns sim
+> controls, connectome full-blast restored, worker pool uses all cores, wilderness ambient layer now
+> **renders** (ADR 0010 Stage 3b). Living backlog: [FRONTEND-ACTION-PLAN.md](FRONTEND-ACTION-PLAN.md).
+> Receipts: [docs/AUDIT-LOG.md](AUDIT-LOG.md) passes 2–4.
+
 **Scope:** Full frontend visual audit of the simulation shell, dynamically mounted inspector panels, controls, static satellite pages (Docs/Spec/Lab), and the Super Creature / Access-Puzzle flow.  
 **Date:** 2026-06-28 (2nd + 3rd + 4th + 5th + 6th + 7th + 8th + 9th pass)  
 **Sources reviewed:** `index.html`, `site/index.html`, `site/docs.html`, `site/specs.html`, `site/lab/index.html`, `src/styles/app.css`, `src/main.ts`, `src/core/quality.ts`, `src/core/frame-governor.ts`, `src/memory/store.ts`, `src/world.ts`, `scripts/build-pages.ts`, `scripts/build.ts`, `scripts/sync-surfaces.ts`, `scripts/canonical-receipts.ts`, `.github/workflows/pages.yml`, `.githooks/pre-commit`, `.gitignore`, `README.md`, `src/ui/*.ts` (copilot, help-system, market-ticker, nhi-observatory, super-neural, super-panel, pantheon-architecture-panel, access-puzzle, superhero-hud, center-hud, **panel-dock**, audit-dock, perf-hud, input, hud, observatory, graphs, panels).  

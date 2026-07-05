@@ -37,23 +37,23 @@ export interface WorkerResponse {
  */
 function simulateWilderness(data: Float32Array, seed: number, chunkId: string): Float32Array {
   const rng = mulberry32(seed ^ hashSeed(chunkId));
+  const STRIDE = 8;
+  const dt = 1 / 60;
 
-  for (let i = 0; i < data.length; i += 3) {
-    const rngValue = rng();
-    const x = data[i] || 0;
-    data[i] = x + (rngValue - 0.5) * 0.1;
-
-    if (i + 1 < data.length) {
-      const rngValue2 = rng();
-      const y = data[i + 1] || 0;
-      data[i + 1] = y + (rngValue2 - 0.5) * 0.1;
-    }
-
-    if (i + 2 < data.length) {
-      const rngValue3 = rng();
-      const z = data[i + 2] || 0;
-      data[i + 2] = z + (rngValue3 - 0.5) * 0.1;
-    }
+  for (let i = 0; i + STRIDE <= data.length; i += STRIDE) {
+    let vx = data[i + 3] ?? 0;
+    let vy = data[i + 4] ?? 0;
+    let vz = data[i + 5] ?? 0;
+    const pulse = rng();
+    vx += (pulse - 0.5) * 0.04;
+    vy += (rng() - 0.5) * 0.02;
+    vz += (rng() - 0.5) * 0.04;
+    data[i] = (data[i] ?? 0) + vx * dt;
+    data[i + 1] = (data[i + 1] ?? 0) + vy * dt;
+    data[i + 2] = (data[i + 2] ?? 0) + vz * dt;
+    data[i + 3] = vx * 0.985;
+    data[i + 4] = vy * 0.985;
+    data[i + 5] = vz * 0.985;
   }
 
   return data;

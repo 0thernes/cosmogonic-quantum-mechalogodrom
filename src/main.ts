@@ -248,6 +248,7 @@ async function boot(): Promise<void> {
         maxEntities: quality.maxEntities,
         connectomeLinks: 0,
         wildernessEntities: 0,
+        wildernessChunks: 0,
         workerTotal: 0,
         workerActive: 0,
         workersReady: false,

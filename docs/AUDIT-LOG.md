@@ -11,6 +11,38 @@ dated / historical / "superseded snapshot" copies (per the binding "Living docs,
 
 ---
 
+## 2026-07-05 (pass 4) — Wilderness render + worker kernel fix + doc pointers (v0.20.0)
+
+Owner brief: finish ADR 0010 Stage 3b ambient layer (visible, not just computed), fix worker stride
+bug, scale chunk density, consolidate polish-plan docs.
+
+### Code
+
+- **`src/sim/wilderness-render.ts`** (new) — additive `THREE.Points` renderer (4096 cap), shimmer
+  vertex colors, sync from population each frame; NOT in golden.
+- **`src/sim/wilderness-population.ts`** — `maxChunks` 32, `entitiesPerChunk` 64, `loadRadius` 3;
+  `forEachEntity()`, `getActiveChunkCount()` for render + telemetry.
+- **`src/workers/simulation-worker.ts`** — kernel stride fixed 3→8 (matches entity layout); velocity
+  integration + jitter on worker path.
+- **`src/world.ts`** — construct/dispose `WildernessRenderer`; sync in running + suspended loops;
+  `getPerfSnapshot()` adds `wildernessChunks`.
+- **`src/ui/perf-hud.ts`** / **`src/main.ts`** — wild line shows `wild N (M ch)`.
+- **`tests/wilderness.test.ts`** (new) — population + renderer smoke tests.
+
+### Docs
+
+- **`docs/PLAN-2026-06-30-UI-SIM-POLISH.md`** — pointer stub + historical Phase A/B/C preserved.
+- **`docs/EXECUTION-PLAN-2026-06-30-POLISH-25-ITEMS-VP-COO.md`** — pointer stub + historical matrix
+  preserved.
+- **`docs/MEGA-MASTER-DEEP-DIVE-RESEARCH-REPORT-2026-06-27.md`** — header receipts refreshed.
+- **`docs/UI-UX-DEEP-DIVE-AUDIT-2026-06-27.md`** — Pass 10 status banner (wilderness render landed).
+
+### Gate
+
+- `bun run sync` then `bun run check`.
+
+---
+
 ## 2026-07-05 (pass 3) — Total audit: perf HUD metrics + doc consolidation + full-core workers (v0.20.0)
 
 Owner brief: comprehensive audit pass — stale markdown, perf observability, device utilization (never
