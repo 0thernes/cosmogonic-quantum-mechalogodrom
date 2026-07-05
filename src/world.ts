@@ -360,7 +360,6 @@ export class World {
   private readonly symbiosis: Symbiosis;
   /** Adaptive cadence counters for Phase 1.2 optimization - invisible to user */
   private neuralUpdateCounter = 0;
-  private connectomeUpdateCounter = 0;
   private readonly mythRitual: MythRitual;
   private readonly archonMortality: Mortality[];
   private readonly nhsiFacultyIn = new Float32Array(16);
@@ -1799,18 +1798,15 @@ export class World {
     if (this.nhiEntities.size > 0) this.steerNhiBeings(t);
 
     const n = this.entities.list.length;
-    // Connectome rebuild cadence by live population. Legacy ladder 1/2/3 at ≤400/≤700/>700
-    // is preserved exactly through the desktop tier; the ultra-class rungs (/4 above 2,000,
-    // /6 above 5,000) keep the O(n·k) link rebuild + GPU upload off the 10k cost wall. The
-    // connectome draws no rng, so cadence changes are determinism-neutral (GraphMind, which
-    // does draw rng, runs on its own 240/600f cadence over whatever pairs exist). V3.6.
-    // Adaptive cadence: use quality.connectomeRate Hz (invisible to user)
-    const connectomeRate = this.quality.connectomeRate ?? 60;
-    this.connectomeUpdateCounter++;
-    if (this.connectomeUpdateCounter >= 60 / connectomeRate) {
-      this.connectome.update(dt, t);
-      this.connectomeUpdateCounter = 0;
+    // Fresh spatial index immediately before connectome rebuild — entities moved this frame.
+    this.grid.clear();
+    const connList = this.entities.list;
+    for (let i = 0; i < connList.length; i++) {
+      const e = connList[i];
+      if (e) this.grid.insert(e);
     }
+    // Full 60 Hz connectome: every frame rebuilds links, propagates activation, uploads GPU geometry.
+    this.connectome.update(dt, t);
 
     // 5 SUPER CREATURES (pantheon): driveSuper builds per-pos percepts, calls think+set on all 5.
     // Guarded; own sub-streams → main golden untouched. Bodies already animated above.

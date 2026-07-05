@@ -32,6 +32,8 @@ import {
 
 /** Steering authority: the brain nudges velocity by at most ~this per think (a flavour, not a takeover). */
 const STEER_GAIN = 0.045;
+/** Matches connectome ACT_MAX — brain excitation feeds the same activation field. */
+const ACT_MAX = 4;
 const DEFAULT_QUANTIZATION: QuantizationConfig = {
   useFp16: false,
   useInt8: false,
@@ -266,6 +268,10 @@ export class EntityBrainField {
     ud.vel.x += (o[0] ?? 0) * gain;
     ud.vel.z += (o[1] ?? 0) * gain;
     ud.vel.y += (o[2] ?? 0) * gain * 0.5; // gentler vertical
+    // Couple brain excitation into the shared activation field the connectome reads + renders.
+    const excite = (o[3] ?? 0) + 1;
+    ud.act += excite * excite * 0.022;
+    if (ud.act > ACT_MAX) ud.act = ACT_MAX;
     return true;
   }
 

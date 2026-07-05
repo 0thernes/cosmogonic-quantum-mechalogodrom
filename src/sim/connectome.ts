@@ -23,13 +23,23 @@ const TRIBE_HUE_STEP = 1 / 8;
 /** Within-tribe neural-weight shimmer — half a palette step so tribes stay distinguishable. */
 const TRIBE_NW_JITTER = TRIBE_HUE_STEP / 2;
 /**
- * Hard bound on the neural activation accumulator. The link pass below is a positive-feedback
- * web (every link pumps a's `act` into b at gain `nw · 0.01`), against which the only decay is
- * entities.ts's per-frame `act *= 0.95`. Linearized, a dense mutual cluster of ~21+ entities
- * inside the 8u link radius at the every-frame cadence rung out-gains the decay and `act`
- * diverges to Infinity. ±4 is far above the |act| ≲ 1 a healthy web produces, so the clamp is
- * invisible in normal play; the `!(<)` comparison form below also seals NaN (audit fix, 0.6.x).
+ * Hard bound on the neural activation accumulator. The link pass is a positive-feedback
+ * web (every link pumps a's `act` into b at gain `nw · ACT_PROP_GAIN · dt·60`), against
+ * which entities.ts decay + brain excitation compete. ±4 is far above normal play; the
+ * `!(<)` comparison form below also seals NaN (audit fix, 0.6.x).
  */
+/**
+ * Activation propagation gain along each link — scales with sim dt so firing rate is
+ * frame-rate independent. The legacy 0.01 at 60 Hz was too weak to read as live neurons.
+ */
+const ACT_PROP_GAIN = 0.045;
+/** Visual pulse frequencies (rad/s) — tuned for ~8–15 Hz apparent firing, not ~0.5 Hz. */
+const FIRE_HZ = 38;
+const RETRACT_HZ = 16;
+const HUE_DRIFT_HZ = 5.5;
+const WAVE1_HZ = 22;
+const WAVE2_HZ = 17;
+/** Hard clamp on the activation accumulator (see update loop). */
 const ACT_MAX = 4;
 
 // Module-level scratch color — reused for every link (keeps update() allocation-free).
@@ -76,7 +86,7 @@ export class Connectome {
   readonly pairs: Uint32Array;
   private readonly ctx: SimContext;
   private readonly entities: EntityManager;
-  /** Link capacity (quality.maxLinks ≈ 4× maxEntities — scales with population). */
+  /** Link capacity (quality.maxLinks ≈ 8× maxEntities — scales with population). */
   private readonly maxLinks: number;
   private readonly positions: Float32Array;
   private readonly colors: Float32Array;
@@ -121,7 +131,7 @@ export class Connectome {
       new THREE.LineBasicMaterial({
         vertexColors: true,
         transparent: true,
-        opacity: 0.62,
+        opacity: 0.88,
         depthWrite: false,
         depthTest: true,
         blending: THREE.AdditiveBlending,
@@ -218,12 +228,12 @@ export class Connectome {
   }
 
   /**
-   * Rebuild links from scratch (legacy 798-821): every 2nd entity queries the grid for
-   * neighbors within 8u; pairs closer than 8 get a segment, activation propagation
-   * (`eb.act += ea.act * nw * 0.01`), and an HSL color from the pair's mean neural weight
+   * Rebuild links from scratch (legacy 798-821): every entity queries the grid for
+   * neighbors within 8u; undirected pairs emit once (`ni < bi`). Activation propagation
+   * (`eb.act += ea.act * nw * ACT_PROP_GAIN * dt·60`), and an HSL color from the pair's mean neural weight
    * (hue from the tribe palette when a community lookup is installed, time hue otherwise).
    * Each link is also recorded as an entity-list index pair in `pairs` for GraphMind.
-   * O(n·k + n) where n = entities (stride 2; + an O(n) id→index refill) and k = neighbors per
+   * O(n·k + n) where n = entities (+ an O(n) id→index refill) and k = neighbors per
    * query; allocation-free (the grid query's shared buffer is consumed before the next query).
    *
    * `mutateAct` (default true) gates the ONLY entity-state write in this method — the activation
@@ -232,7 +242,7 @@ export class Connectome {
    * decaying the seeded neural state (USER: the neural net stays alive-in-place while paused). At the
    * default `true` the output is byte-identical to the pre-flag behaviour.
    */
-  update(_dt: number, t: number, mutateAct = true): void {
+  update(dt: number, t: number, mutateAct = true): void {
     const grid = this.ctx.grid;
     const list = this.entities.list;
     const pos = this.positions;
@@ -240,6 +250,7 @@ export class Connectome {
     const pairs = this.pairs;
     const communityOf = this.communityOf;
     const max = this.maxLinks;
+    const actStep = mutateAct ? ACT_PROP_GAIN * Math.min(1, dt * 60) : 0;
     // Advance the lookup generation (uint32 wrap ≈ 2.2 years of 60 fps updates; on the wrap,
     // stamps are zeroed so a slot from 2^32 updates ago can never alias the new generation).
     this.idxGen = (this.idxGen + 1) >>> 0;
@@ -253,7 +264,7 @@ export class Connectome {
     }
     let wI = 0;
     let pc = 0;
-    for (let ni = 0; ni < list.length && wI < max; ni += 2) {
+    for (let ni = 0; ni < list.length && wI < max; ni++) {
       const ea = list[ni];
       if (!ea) continue; // noUncheckedIndexedAccess: ni < length
       const ap = ea.position;
@@ -269,6 +280,8 @@ export class Connectome {
         if (nd2 < LINK_REACH2) {
           const nd = Math.sqrt(nd2);
           const bi = this.idxFind(eb.id);
+          // Undirected dedup: one segment per pair (both endpoints query at full population).
+          if (bi >= 0 && ni >= bi) continue;
           if (bi >= 0) {
             pairs[pc * 2] = ni;
             pairs[pc * 2 + 1] = bi;
@@ -278,20 +291,23 @@ export class Connectome {
           const nw = (ea.userData.nW + eb.userData.nW) * 0.5;
           // Bounded activation propagation: `!(< ACT_MAX)` routes both overflow AND NaN to
           // the cap, the symmetric branch floors the (rare) negative side. O(1), no allocation.
-          const act = eb.userData.act + ea.userData.act * nw * 0.01;
+          const act = eb.userData.act + ea.userData.act * nw * actStep;
           if (mutateAct) {
             eb.userData.act = !(act < ACT_MAX) ? ACT_MAX : act > -ACT_MAX ? act : -ACT_MAX;
           }
           // V109 colour: one dynamic hue/saturation + firing/retracting brightness per link.
           const actPulse = (ea.userData.act + eb.userData.act) * 0.5;
-          const fire = 0.5 + 0.5 * Math.sin(t * 3.2 + nw * 12.0 + ni * 0.7);
-          const retract = 0.25 + 0.75 * Math.sin(t * 1.1 + nd * 0.55 + ni * 0.3);
+          const fire = 0.5 + 0.5 * Math.sin(t * FIRE_HZ + nw * 12.0 + ni * 0.7);
+          const retract = 0.25 + 0.75 * Math.sin(t * RETRACT_HZ + nd * 0.55 + ni * 0.3);
           const hue = communityOf
-            ? ((communityOf(ni) & 7) * TRIBE_HUE_STEP + nw * TRIBE_NW_JITTER + t * 0.04) % 1
-            : (t * 0.09 + nw * 0.6 + actPulse * 0.22) % 1;
-          const sat = 0.92 + 0.08 * Math.sin(t * 1.8 + nw * 8.0);
-          const lit = 0.22 + nI * 0.42 + nw * 0.32 + actPulse * 0.35 * fire * retract;
-          TMP_COLOR.setHSL(hue, sat, Math.min(0.78, lit));
+            ? ((communityOf(ni) & 7) * TRIBE_HUE_STEP +
+                nw * TRIBE_NW_JITTER +
+                t * HUE_DRIFT_HZ * 0.04) %
+              1
+            : (t * HUE_DRIFT_HZ * 0.09 + nw * 0.6 + actPulse * 0.38) % 1;
+          const sat = 0.94 + 0.06 * Math.sin(t * RETRACT_HZ * 1.1 + nw * 8.0);
+          const lit = 0.28 + nI * 0.48 + nw * 0.38 + actPulse * 0.55 * fire * retract;
+          TMP_COLOR.setHSL(hue, sat, Math.min(0.92, lit));
           const cr = TMP_COLOR.r;
           const cg = TMP_COLOR.g;
           const cb = TMP_COLOR.b;
@@ -325,8 +341,8 @@ export class Connectome {
           for (let k = 0; k <= LINK_SEG; k++) {
             const u = LINK_U[k]!;
             const envAmp = amp * LINK_ENV[k]!;
-            const w1 = Math.sin(LINK_ANG1[k]! + t * 2.3 + phase) * envAmp;
-            const w2 = Math.cos(LINK_ANG2[k]! + t * 1.8 + phase * 1.3) * envAmp * 0.6;
+            const w1 = Math.sin(LINK_ANG1[k]! + t * WAVE1_HZ + phase) * envAmp;
+            const w2 = Math.cos(LINK_ANG2[k]! + t * WAVE2_HZ + phase * 1.3) * envAmp * 0.6;
             const o = k * 3;
             TMP_PT[o] = ap.x + (bp.x - ap.x) * u + p1x * w1 + p2x * w2;
             TMP_PT[o + 1] = ap.y + (bp.y - ap.y) * u + p1y * w1 + p2y * w2;

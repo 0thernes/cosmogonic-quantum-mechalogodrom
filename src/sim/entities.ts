@@ -624,9 +624,9 @@ export class EntityManager {
       }
       this.applyFloraComfort(e, i, frame, dt);
 
-      // Neural activation decay (legacy lines 766-768).
-      u.act *= 0.95;
-      u.act += cm * 0.01 * sinWF;
+      // Neural activation decay — slower decay so connectome + brain firing reads as sustained live activity.
+      u.act *= 0.975;
+      u.act += cm * 0.028 * sinWF;
       if (u.act > 1) {
         e.material.emissiveIntensity = Math.min(e.material.emissiveIntensity + 0.1, emiCap);
       } else {
