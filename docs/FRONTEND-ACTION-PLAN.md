@@ -66,6 +66,17 @@ Alternative: Center HUD → **ARCHITECTURE** (⟁) → brain mode cycle in panth
 - [ ] Institution outreach table: 50 labs (SFI, MIT CSAIL, ELSI, etc.) with contact scaffold.
 - [ ] Pre-register hypotheses on Zenodo / OSF (optional).
 
+### Sprint E — Performance architecture (Gemini audit synthesis, 2026-07-05)
+
+- [ ] **Stage 3 scaffold:** deterministic Worker partition for `entity-brain` round-robin slices (no SharedArrayBuffer on latent — learn from SuperMind removal).
+- [ ] **GPU motion-vector tween:** vertex shader interpolates position between sim ticks (render-only, 10–15 Hz sim / 60 Hz visual).
+- [ ] **Distance-sorted brain cadence:** extend existing CPU throttles with camera prominence tiers.
+- [ ] **GWT consciousness texture:** render-to-texture broadcast buffer for Global Workspace indicator (lazy Butlin eval).
+- [ ] **Instanced pool frustum cull:** GPU-side or CPU cheap cull without breaking population contract.
+- [ ] Profile 275HX + 5070 Ti at `?tier=mega` with perf HUD; record in `BENCHMARKS-2026-06-26.md`.
+
+See [SCALING-ROADMAP-2026-06-26.md](./SCALING-ROADMAP-2026-06-26.md) § "External perf audit crosswalk" for the full Gemini-vs-codebase matrix.
+
 ---
 
 ## Do-not-break contracts

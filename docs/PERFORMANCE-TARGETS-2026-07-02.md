@@ -38,8 +38,7 @@ not 25 full minds every frame.
 
 ## 3 · Entity & memory budget
 
-- **Entity tiers:** desktop cap 1,000 live-detailed; integrated/V3 tier 10,000; mega ceiling **50,000**
-  (`src/core/quality.ts` `resolveTier`). The 50k tier is a ceiling, not a benchmarked steady state.
+- **Entity tiers (six-rung ladder, `src/core/quality.ts`):** phone **1,000** (per-mesh) · tablet **2,000** · laptop **5,000** · desktop **10,000** · ultra **25,000** · mega ceiling **50,000** (instanced). Everyone **boots phone** for fast first paint (V123); the perf HUD tier chip or `?tier=` selects higher rungs. `resolveTier(cores, mem)` maps capable hardware to `mega` but is guidance only — not the boot default.
 - **Neural mass:** apex ≈ 10,081 weights; whole-world ≈ 3.5 M params ≈ 14 MB Float32, one CPU thread.
 - **Allocation discipline:** hot loops must be allocation-free (shared result buffers; spatial-hash
   `query` reuses one array). Per-beat `new Float32Array`/`{}`/`[]` in a frame path is a tracked regression.

@@ -9,10 +9,11 @@
 ## Context
 
 The single hard scaling bottleneck is the **one JavaScript thread**: neighbour queries +
-per-creature brains + behaviours for up to 50,000 agents all run on it. The quality tier
-auto-selects `mega` on a ≥16-core box, but the sim can only use **one** core — so the
-hardware that _qualifies_ for 50k cannot _run_ it smoothly. Stage 0 made it crash-proof
-(spawn-budget + the render governor), not fast.
+per-creature brains + behaviours for up to 50,000 agents all run on it. Capable hardware maps
+to `mega` via `resolveTier` (≥16 cores + ≥8 GB), but **everyone boots `phone`** for fast first
+paint (V123); the perf HUD or `?tier=mega` selects 50k. The sim can only use **one** core until
+Workers ship — so the hardware that _qualifies_ for 50k cannot _run_ it smoothly yet. Stage 0 made
+it crash-proof (spawn-budget + the render governor), not fast.
 
 Two facts collide:
 

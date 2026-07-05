@@ -11,6 +11,38 @@ dated / historical / "superseded snapshot" copies (per the binding "Living docs,
 
 ---
 
+## 2026-07-05 — Gemini 3.1 Pro perf audit crosswalk + living-doc freshness (v0.20.0)
+
+Owner forwarded a Gemini 3.1 Pro High browser-performance assessment (Wasm workers, WebGPU compute,
+FP16, instancing, tier scaling) after observing ~3 FPS on Intel 275HX + RTX 5070 Ti at high entity
+counts. Full comparative reconciliation against the **actual codebase** (not aspirational docs).
+
+### FINDINGS
+
+- **Many Gemini items already shipped:** InstancedMesh pools, six-rung quality ladder, frame governor,
+  sim cadence throttles, √N mega scaling, 5+20 apex mind tiering, perf HUD tier switcher.
+- **Stale docs corrected:** `PERFORMANCE-TARGETS` claimed "desktop cap 1,000" (actual: **10,000**);
+  `KANBAN`/`SCALING-ROADMAP` claimed `mega` auto-boot (V123: everyone boots **phone** for fast paint).
+- **Real bottleneck confirmed:** single JS thread for 50k sim — `resolveTier` maps capable HW to
+  `mega` but Workers (ADR-0010 Stage 3) are not shipped; prior SharedArrayBuffer worker was **removed**
+  for determinism races.
+- **Gemini overclaims vs repo:** not "50k params per agent" (70-param TinyMLP + ~10k apex); Bend/Rust
+  desktop paths irrelevant to GitHub Pages; WebGPU before Workers is wrong sequence per SCALING-ROADMAP.
+
+### SHIPPED (docs)
+
+- `SCALING-ROADMAP-2026-06-26.md` — new § "External perf audit crosswalk" with 360° quadrant matrix +
+  16-row recommendation verdict table + ordered action queue.
+- `PERFORMANCE-TARGETS-2026-07-02.md` — corrected entity tier ladder; phone boot default documented.
+- `KANBAN-2026-06-26.md` — V123 boot behavior; Worker Stage 3 as remaining 50k@60fps path.
+- `FRONTEND-ACTION-PLAN.md` — Sprint C performance architecture backlog from synthesis.
+
+### VERIFIED GREEN
+
+`bun run check` · 2270 pass / 0 fail · 85.29% line / 82.76% func · sync:check · verify:facts · smoke OK.
+
+---
+
 ## 2026-07-05 — Comprehensive freshness audit: receipts realignment + living-doc lift + lint hygiene
 
 Full deep-dive audit pass (comparative contrast across gate stages, canonical facts, and living surfaces).
