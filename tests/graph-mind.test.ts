@@ -200,10 +200,10 @@ describe('Connectome.pairs (V2 amendment)', () => {
     ctx.grid.clear();
     for (const e of list) ctx.grid.insert(e);
     conn.update(0.016, 0.016);
-    // Survivors at their NEW indices: index 2 (x=14) links index 1 (x=12).
+    // Survivors at their NEW indices: index 1 (x=12) links index 2 (x=14).
     expect(conn.pairCount).toBe(1);
-    expect(at(conn.pairs, 0)).toBe(2);
-    expect(at(conn.pairs, 1)).toBe(1);
+    expect(at(conn.pairs, 0)).toBe(1);
+    expect(at(conn.pairs, 1)).toBe(2);
   });
 });
 
