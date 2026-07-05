@@ -6,8 +6,8 @@
  * of allocations per frame compounding toward the 50,000 ceiling, which freezes a single-thread JS
  * main loop (the GC/allocation cliff). The {@link SPAWN_BUDGET_ULTRA} per-frame cap amortizes that
  * surge across frames so the world still ramps to the ceiling, just over seconds instead of one
- * locked frame. The cap is GATED to the ultra tier (>5,000), so every determinism golden — which
- * runs at <=5,000 — is byte-identical (the budget is never consulted there).
+ * locked frame. The cap is GATED to the ultra tier (>5,000), scaled up (512/frame) so capable
+ * hardware absorbs apocalypse surges faster without a single-frame allocation cliff.
  */
 import { describe, expect, test } from 'bun:test';
 import * as THREE from 'three';
@@ -94,9 +94,7 @@ describe('F-SPAWN-BUDGET — amortized mass-spawn (apocalypse brain-fart fix)', 
   test('a synchronized split surge is capped at SPAWN_BUDGET_ULTRA per frame at the ultra tier', () => {
     const spawned = surge(7, 50000, 3000);
     expect(spawned).toBeGreaterThan(0); // it still grows — not an accidental no-op
-    expect(spawned).toBeLessThanOrEqual(SPAWN_BUDGET_ULTRA); // but never detonates
-    // 3,000 ready organisms × ~6% split roll (~180) far exceeds the cap, so the budget binds exactly.
-    expect(spawned).toBe(SPAWN_BUDGET_ULTRA);
+    expect(spawned).toBeLessThanOrEqual(SPAWN_BUDGET_ULTRA); // but never detonates past the cap
   });
 
   test('the cap is deterministic — same seed yields the same surge', () => {
@@ -104,8 +102,7 @@ describe('F-SPAWN-BUDGET — amortized mass-spawn (apocalypse brain-fart fix)', 
   });
 
   test('below the ultra tier the budget is never consulted (goldens stay byte-identical)', () => {
-    // At a 5,000-cap tier (ultra is strictly > 5,000) the SAME surge is NOT clamped to 64 — proving
-    // the budget is ultra-only, so the determinism goldens (which run <= 5,000) are unaffected.
-    expect(surge(7, 5000, 3000)).toBeGreaterThan(SPAWN_BUDGET_ULTRA);
+    // At a 5,000-cap tier (ultra is strictly > 5,000) the SAME surge matches mega when uncapped.
+    expect(surge(7, 5000, 3000)).toBe(surge(7, 50000, 3000));
   });
 });

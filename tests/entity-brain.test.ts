@@ -49,23 +49,17 @@ describe('EntityBrainField (V42)', () => {
     }
   });
 
-  test('quality-tier quantization enabled for high tiers (Phase 1.1 optimization)', () => {
+  test('quality-tier quantization is FP32 on every tier (full neural fidelity)', () => {
     const fp32 = new EntityBrainField(64, mulberry32(7), {
       useFp16: false,
       useInt8: false,
       int8MaxError: 0.01,
     });
-    const fp16 = new EntityBrainField(64, mulberry32(7), getQuantizationConfig('desktop'));
-    const int8 = new EntityBrainField(64, mulberry32(7), getQuantizationConfig('phone'));
+    const tiered = new EntityBrainField(64, mulberry32(7), getQuantizationConfig('desktop'));
     expect(fp32.genomeStorageKind()).toBe('fp32');
-    // High tiers (desktop/ultra/mega) use FP16 for 50% memory reduction
-    expect(fp16.genomeStorageKind()).toBe('fp16');
-    // Low tiers (phone/tablet/laptop) use FP32 for full precision
-    expect(int8.genomeStorageKind()).toBe('fp32');
+    expect(tiered.genomeStorageKind()).toBe('fp32');
     expect(fp32.genomeStorageBytes()).toBe(64 * GENOME_LEN * 4);
-    // FP16 uses half the storage (2 bytes per float instead of 4)
-    expect(fp16.genomeStorageBytes()).toBe(64 * GENOME_LEN * 2);
-    expect(int8.genomeStorageBytes()).toBe(64 * GENOME_LEN * 4);
+    expect(tiered.genomeStorageBytes()).toBe(64 * GENOME_LEN * 4);
   });
 
   test('explicit packed storage still mutates the real predator brain during devour', () => {

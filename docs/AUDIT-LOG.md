@@ -11,6 +11,30 @@ dated / historical / "superseded snapshot" copies (per the binding "Living docs,
 
 ---
 
+## 2026-07-05 (pass 6) — Zero-degradation mandate: full neural/visual fidelity + all-core workers (v0.20.0)
+
+Owner brief: nothing may degrade graphics, color, rendering detail, or neural intelligence; utilize all
+CPU cores (wilderness workers) without lowering fidelity.
+
+### Code
+
+- **`getQuantizationConfig`** — FP32 genome storage on **every** tier (removed FP16 brain weights).
+- **`entity-brain.ts`** — removed distance-based brain LOD + `forwardSimplified` path entirely.
+- **`world.ts`** — entity brains, archon `driveSuper`, and NHI `tick` run **every frame**; RD every
+  frame; graph-mind cadence no longer scales down at high population.
+- **`entities.ts`** — ultra theory/flock cadence throttle removed (full behavior re-eval every frame).
+- **`quality.ts`** — connectome `maxLinks` 8× → **12×** `maxEntities` per tier.
+- **`worker-pool.ts`** — all tiers use full `hardwareConcurrency` workers for wilderness.
+- **`wilderness-*`** — 64 chunks × 128 entities, 16k point render cap, opacity 0.88.
+- **`viz3d.ts`** — full phylum tower ring on all tiers (no low-detail halving).
+- **`SPAWN_BUDGET_ULTRA`** — 64 → 512 (faster apocalypse ramp without single-frame cliff).
+
+### Gate
+
+- `bun run check`.
+
+---
+
 ## 2026-07-05 (pass 5) — MEGA-MASTER receipt sync + BOOK module truth + full-quality brains (v0.20.0)
 
 Owner brief: finish deferred doc debt from pass 4; never lower visual/cognitive fidelity.

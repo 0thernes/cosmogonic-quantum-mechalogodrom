@@ -49,9 +49,9 @@ describe('QUALITY_LADDER', () => {
     }
   });
 
-  test('maxLinks scales 8× with maxEntities on every tier (population-proportional neural web)', () => {
+  test('maxLinks scales 12× with maxEntities on every tier (population-proportional neural web)', () => {
     for (const tier of ['phone', 'tablet', 'laptop', 'desktop', 'ultra', 'mega'] as const) {
-      expect(QUALITY_LADDER[tier].maxLinks).toBe(QUALITY_LADDER[tier].maxEntities * 8);
+      expect(QUALITY_LADDER[tier].maxLinks).toBe(QUALITY_LADDER[tier].maxEntities * 12);
     }
   });
 

@@ -79,24 +79,8 @@ export class WorkerPool {
    * Get worker count based on quality tier
    */
   private getWorkerCount(): number {
-    const hardwareConcurrency = Math.max(1, navigator.hardwareConcurrency || 4);
-
-    // Use every reported core — wilderness offload is best-effort (ADR 0010), not golden-bound.
-    switch (this.config.qualityTier) {
-      case 'mega':
-      case 'ultra':
-        return hardwareConcurrency;
-      case 'desktop':
-        return Math.max(4, hardwareConcurrency);
-      case 'laptop':
-        return Math.max(2, hardwareConcurrency);
-      case 'tablet':
-        return Math.max(2, hardwareConcurrency);
-      case 'phone':
-        return Math.max(1, Math.min(hardwareConcurrency, 4));
-      default:
-        return hardwareConcurrency;
-    }
+    // Every reported core — wilderness offload is best-effort (ADR 0010), not golden-bound.
+    return Math.max(1, navigator.hardwareConcurrency || 4);
   }
 
   /**

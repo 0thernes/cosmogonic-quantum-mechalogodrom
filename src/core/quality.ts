@@ -25,8 +25,8 @@ import { detectWebGpu } from './webgpu-detect';
  * the "Ultra-tier 10k optimization" note in docs/BENCHMARKS-2026-06-26.md and CHANGELOG 0.5.0).
  *
  * quantum/stars scale sublinearly with the entity budget (ambience layers). Connectome
- * `maxLinks` scales WITH population (~8× `maxEntities`) so the neural web is never
- * artificially capped at a fixed 3k/8k ceiling while the world fills. Tiers scale amount
+ * `maxLinks` scales WITH population (~12× `maxEntities`) so the neural web is never
+ * artificially capped while the world fills. Tiers scale amount
  * of world only: DPR, shadows, instancing, color/post-FX and simulation cadence stay
  * full-fidelity on every tier. The tier is decided ONCE at boot — no runtime switching.
  */
@@ -39,7 +39,7 @@ export const QUALITY_LADDER: Readonly<
     maxEntities: 1000,
     targetEntities: 1000,
     quantumCount: 3500,
-    maxLinks: 8000,
+    maxLinks: 12000,
     shadows: true,
     starCount: 2000,
     instanced: true,
@@ -50,7 +50,7 @@ export const QUALITY_LADDER: Readonly<
     maxEntities: 2000,
     targetEntities: 2000,
     quantumCount: 4500,
-    maxLinks: 16000,
+    maxLinks: 24000,
     shadows: true,
     starCount: 3000,
     instanced: true,
@@ -61,7 +61,7 @@ export const QUALITY_LADDER: Readonly<
     maxEntities: 5000,
     targetEntities: 5000,
     quantumCount: 6000,
-    maxLinks: 40000,
+    maxLinks: 60000,
     shadows: true,
     starCount: 4500,
     instanced: true,
@@ -75,7 +75,7 @@ export const QUALITY_LADDER: Readonly<
     // (docs/BENCHMARKS-2026-06-26.md) keep sim-CPU smooth at 10k.
     targetEntities: 10000,
     quantumCount: 8000,
-    maxLinks: 80000,
+    maxLinks: 120000,
     shadows: true,
     starCount: 6000,
     instanced: true,
@@ -87,7 +87,7 @@ export const QUALITY_LADDER: Readonly<
     maxEntities: 25000,
     targetEntities: 25000,
     quantumCount: 9000,
-    maxLinks: 200000,
+    maxLinks: 300000,
     shadows: true,
     starCount: 7000,
     instanced: true,
@@ -101,7 +101,7 @@ export const QUALITY_LADDER: Readonly<
     maxEntities: 50000,
     targetEntities: 50000,
     quantumCount: 10000,
-    maxLinks: 400000,
+    maxLinks: 600000,
     shadows: true,
     starCount: 8000,
     instanced: true,

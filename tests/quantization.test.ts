@@ -229,40 +229,13 @@ describe('Quantization utilities', () => {
       }
     });
 
-    test('high tiers use FP16 config for 50% memory reduction (Phase 1.1 optimization)', () => {
-      // High tiers (desktop/ultra/mega) use FP16 for invisible performance gain
-      const desktopConfig = getQuantizationConfig('desktop');
-      expect(desktopConfig.useFp16).toBe(true);
-      expect(desktopConfig.useInt8).toBe(false);
-      expect(desktopConfig.int8MaxError).toBe(0.01);
-
-      const ultraConfig = getQuantizationConfig('ultra');
-      expect(ultraConfig.useFp16).toBe(true);
-      expect(ultraConfig.useInt8).toBe(false);
-      expect(ultraConfig.int8MaxError).toBe(0.01);
-
-      const megaConfig = getQuantizationConfig('mega');
-      expect(megaConfig.useFp16).toBe(true);
-      expect(megaConfig.useInt8).toBe(false);
-      expect(megaConfig.int8MaxError).toBe(0.01);
-    });
-
-    test('low tiers use FP32 config for full precision', () => {
-      // Low tiers (phone/tablet/laptop) use FP32 to maintain quality
-      const phoneConfig = getQuantizationConfig('phone');
-      expect(phoneConfig.useFp16).toBe(false);
-      expect(phoneConfig.useInt8).toBe(false);
-      expect(phoneConfig.int8MaxError).toBe(0.0);
-
-      const tabletConfig = getQuantizationConfig('tablet');
-      expect(tabletConfig.useFp16).toBe(false);
-      expect(tabletConfig.useInt8).toBe(false);
-      expect(tabletConfig.int8MaxError).toBe(0.0);
-
-      const laptopConfig = getQuantizationConfig('laptop');
-      expect(laptopConfig.useFp16).toBe(false);
-      expect(laptopConfig.useInt8).toBe(false);
-      expect(laptopConfig.int8MaxError).toBe(0.0);
+    test('every tier uses FP32 config — full neural genome precision (quality contract)', () => {
+      for (const tier of ['phone', 'tablet', 'laptop', 'desktop', 'ultra', 'mega']) {
+        const config = getQuantizationConfig(tier);
+        expect(config.useFp16).toBe(false);
+        expect(config.useInt8).toBe(false);
+        expect(config.int8MaxError).toBe(0.0);
+      }
     });
   });
 

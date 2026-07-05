@@ -6,7 +6,7 @@
 import * as THREE from 'three';
 import type { WildernessPopulation } from './wilderness-population';
 
-const MAX_POINTS = 4096;
+const MAX_POINTS = 16384;
 const TMP = new THREE.Color();
 
 export class WildernessRenderer {
@@ -31,7 +31,7 @@ export class WildernessRenderer {
         size: 2.8,
         vertexColors: true,
         transparent: true,
-        opacity: 0.72,
+        opacity: 0.88,
         blending: THREE.AdditiveBlending,
         depthWrite: false,
         depthTest: true,

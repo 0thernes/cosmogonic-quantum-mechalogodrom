@@ -322,21 +322,12 @@ export interface QuantizationConfig {
 /**
  * Get quantization configuration for a quality tier.
  *
- * Phase 1.1 optimization: tier-specific quantization for invisible performance gains.
- * - FP16 for desktop/ultra/mega: 50% memory reduction, minimal quality impact
- * - FP32 for phone/tablet/laptop: maintain full precision for smaller populations
- * All tiers maintain buttery smooth quality, high detail, and vibrant colors.
+ * Quality contract: FP32 genome storage on every tier — no half-precision brain weights.
+ * Memory is traded for full neural fidelity; wilderness workers absorb parallel CPU load.
  *
  * @param tier - Quality tier
  * @returns Quantization configuration for the tier
  */
-export function getQuantizationConfig(tier: string): QuantizationConfig {
-  // FP16 for high-tier devices (desktop/ultra/mega) - 50% memory reduction
-  // FP32 for lower tiers (phone/tablet/laptop) - full precision maintained
-  // This is invisible to user - visual quality preserved
-  if (tier === 'mega' || tier === 'ultra' || tier === 'desktop') {
-    return { useFp16: true, useInt8: false, int8MaxError: 0.01 };
-  }
-  // FP32 for lower tiers - full precision
+export function getQuantizationConfig(_tier: string): QuantizationConfig {
   return { useFp16: false, useInt8: false, int8MaxError: 0.0 };
 }

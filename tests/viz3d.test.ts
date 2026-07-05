@@ -1,6 +1,6 @@
 /**
  * Pins the Viz3D (CONTRACTS V4.2) contract: the holographic-sculpture system builds headless
- * (three's Scene/geometry are pure JS under bun), the tower count gates on the phone tier,
+ * (three's Scene/geometry are pure JS under bun), full phylum tower ring on every tier (quality contract),
  * heights stay finite and ease MONOTONICALLY toward their data targets, the war-network draw
  * range tracks the non-truce relations, and construction draws nothing from the rng (so the
  * integrator can place it anywhere in the boot stream).
@@ -120,17 +120,17 @@ describe('construction', () => {
   });
 });
 
-describe('tier gating: phone halves the tower count', () => {
-  test('phone tier (650 entities) sets lowDetail and builds 5 towers', () => {
+describe('tier gating: full tower ring on every tier', () => {
+  test('phone tier builds the full 10 towers (lowDetail off)', () => {
     const viz = new Viz3DSystem(makeCtx('phone', 650));
-    expect(viz.lowDetail).toBeTrue();
-    expect(viz.towersBuilt).toBe(PHYLA / 2);
+    expect(viz.lowDetail).toBeFalse();
+    expect(viz.towersBuilt).toBe(PHYLA);
     // Obelisks are NOT halved — only the phylum towers.
     expect(viz.obelisksBuilt).toBe(TITANS);
   });
 
-  test('lowDetail is derived from maxEntities<=650 regardless of the tier label', () => {
-    expect(new Viz3DSystem(makeCtx('laptop', 650)).lowDetail).toBeTrue();
+  test('lowDetail is always false regardless of maxEntities', () => {
+    expect(new Viz3DSystem(makeCtx('laptop', 650)).lowDetail).toBeFalse();
     expect(new Viz3DSystem(makeCtx('laptop', 651)).lowDetail).toBeFalse();
   });
 });

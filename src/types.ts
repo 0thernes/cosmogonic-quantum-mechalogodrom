@@ -57,15 +57,11 @@ export interface QualityProfile {
    */
   simRate?: number;
   /**
-   * Neural evaluation rate in Hz for adaptive cadence (Phase 1.2 optimization).
-   * Lower tiers evaluate neural networks less frequently, interpolated between updates.
-   * Invisible to user - smooth interpolation maintains visual quality.
+   * Neural evaluation rate in Hz — locked at 60 on every tier (full brain cadence).
    */
   neuralRate?: number;
   /**
-   * Connectome rebuild rate in Hz for adaptive cadence (Phase 1.2 optimization).
-   * Lower tiers rebuild neural links less frequently, interpolated between updates.
-   * Invisible to user - smooth interpolation maintains visual quality.
+   * Connectome rebuild rate in Hz — locked at 60 on every tier (full neural web cadence).
    */
   connectomeRate?: number;
   /**

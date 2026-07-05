@@ -361,7 +361,6 @@ export class World {
   private morphicSnap: MorphicSnapshot | null = null;
   private readonly symbiosis: Symbiosis;
   /** Adaptive cadence counters for Phase 1.2 optimization - invisible to user */
-  private neuralUpdateCounter = 0;
   private readonly mythRitual: MythRitual;
   private readonly archonMortality: Mortality[];
   private readonly nhsiFacultyIn = new Float32Array(16);
@@ -1747,15 +1746,8 @@ export class World {
     this.sortStep(bands);
 
     // F-BRAIN V42: all organism brains perceive + steer BEFORE the integrator folds velocity
-    // into position. Adaptive cadence: evaluate at quality.neuralRate Hz (invisible to user)
-    // Physics always runs at 60 Hz, neural states interpolate between evaluations.
-    const neuralRate = this.quality.neuralRate ?? 60;
-    this.neuralUpdateCounter++;
-    if (this.neuralUpdateCounter >= 60 / neuralRate) {
-      // Full 70-param brain for every entity — no distance LOD (quality contract: never degrade near-field fidelity).
-      this.entityBrains.thinkAll(this.entities.list, this.state.chaos, t);
-      this.neuralUpdateCounter = 0;
-    }
+    // into position — full 70-param evaluation every frame (quality contract: no neural LOD).
+    this.entityBrains.thinkAll(this.entities.list, this.state.chaos, t);
 
     const stats = this.entities.update(dt, t);
     this.energy = stats.energy; // stats object is reused — copy immediately
@@ -1786,10 +1778,8 @@ export class World {
     }
     this.morphCount = stats.morphCount;
 
-    // F-NHI V10: drive the launched super-minds on a slow beat (≈3/sec). GUARDED — a fault in an
-    // NHI decision can never freeze the world loop; it just skips that beat. No-op (draws no rng)
-    // until an NHI is launched, so the seeded golden is unchanged for a never-launched world.
-    if (this.nhi.count > 0 && s.frame % 18 === 0) {
+    // F-NHI V10: drive launched super-minds every frame at full cadence.
+    if (this.nhi.count > 0) {
       try {
         this.nhi.tick(this.rng, this.nhiWorld);
       } catch {
@@ -1812,9 +1802,8 @@ export class World {
     // Full 60 Hz connectome: every frame rebuilds links, propagates activation, uploads GPU geometry.
     this.connectome.update(dt, t);
 
-    // 5 SUPER CREATURES (pantheon): driveSuper builds per-pos percepts, calls think+set on all 5.
-    // Guarded; own sub-streams → main golden untouched. Bodies already animated above.
-    if (s.frame % 4 === 0) this.driveSuper(bands.bass, bands.level, t, n);
+    // 5 SUPER CREATURES (pantheon): driveSuper every frame — full archon mind cadence.
+    this.driveSuper(bands.bass, bands.level, t, n);
 
     // ── V2 cadences (ARCHITECTURE-2026-06-26.md frame pipeline) ──
     if (s.frame % 30 === 0) {
@@ -1841,11 +1830,9 @@ export class World {
 
     this.quantum.update(dt, t);
 
-    if (s.frame % 2 === 1) this.rd.step(); // offset 1 from the grid rebuild
+    this.rd.step();
     this.titans.drainPerturb(); // route any pending waste scar AFTER the RD step
-    // Graph passes double their period above 2,500 entities — louvain over a
-    // 10k-node mirror would spike the budget at the V2 cadence (V3.6 note).
-    const gmScale = n > 20000 ? 4 : n > 2500 ? 2 : 1; // V38 mega rung
+    const gmScale = 1;
     if (s.frame % (240 * gmScale) === 0) this.graphMind.updateCommunities();
     // Offset 300 provably never collides with the communities cadence above.
     if (s.frame % (600 * gmScale) === 300) this.graphMind.updateRank();

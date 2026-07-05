@@ -86,7 +86,7 @@ export class Connectome {
   readonly pairs: Uint32Array;
   private readonly ctx: SimContext;
   private readonly entities: EntityManager;
-  /** Link capacity (quality.maxLinks ≈ 8× maxEntities — scales with population). */
+  /** Link capacity (quality.maxLinks ≈ 12× maxEntities — scales with population). */
   private readonly maxLinks: number;
   private readonly positions: Float32Array;
   private readonly colors: Float32Array;

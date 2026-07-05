@@ -193,7 +193,7 @@ const FLORA_CAMO = new THREE.Color(0x7ea88a);
  * keep their ready timer and retry next frame, so the world still ramps to the ceiling — over a
  * few seconds, not a single locked frame. Deterministic (a frame-local COUNTER, not wall-clock).
  */
-export const SPAWN_BUDGET_ULTRA = 64;
+export const SPAWN_BUDGET_ULTRA = 512;
 /** Distinct-morphotype scratch set — cleared at the top of every `update()` call. */
 const MORPHS_SEEN = new Set<number>();
 /** Reused stats instance returned by `update()` — copy the fields if you need to retain them. */
@@ -539,25 +539,15 @@ export class EntityManager {
     env.dt = dt;
     env.t = t;
     env.cm = cm;
-    // Ultra-tier neighbor-query throttle (CONTRACTS V3.6 — calibration in
-    // docs/BENCHMARKS-2026-06-26.md "Ultra-tier 10k optimization"). The five theory behaviors and
-    // 'flock' dominate the per-frame cost wall at 10k (≈292k neighbor visits/frame, with
-    // theory at ~205k and flock alone at ~88k). For maxEntities ≤ 5,000 (phone/laptop/
-    // desktop) this resolves to the LEGACY stride 2 and flock-every-frame — byte-identical
-    // streams and visuals, so every existing test and determinism property is untouched.
-    // Above 5,000 (ultra only) the theory stride widens to 3 and flock staggers to every
-    // other frame, cutting the dominant neighbor work ~⅓ and ~½ respectively. The forces
-    // are identical; only an entity's re-evaluation cadence changes (exactly how the legacy
-    // theory stagger has always worked). Neither gate touches the rng draw count at ≤5,000.
-    const ultra = maxEntities > 5000;
-    const theoryStride = ultra ? 3 : 2;
-    const flockEvery = ultra ? 2 : 1;
+    // Full-rate behavior re-evaluation on every tier — no ultra cadence throttle (quality contract).
+    const theoryStride = 2;
+    const flockEvery = 1;
     // F-SPAWN-BUDGET: cap NEW organisms per frame at the ultra tier so a synchronized auto-split
     // surge (apocalypse maxes chaos → every split timer drains 3× → the whole population turns
     // split-ready at once) RAMPS over ~seconds instead of allocating thousands of entities in one
     // frame (the "brain-fart" freeze + GC cliff). Infinity at ≤5,000 ⇒ the budget is never
     // consulted below ultra, so every golden + determinism property stays byte-identical.
-    const spawnBudget = ultra ? SPAWN_BUDGET_ULTRA : Infinity;
+    const spawnBudget = maxEntities > 5000 ? SPAWN_BUDGET_ULTRA : Infinity;
     this.spawnsThisFrame = 0;
     // Adaptive steady-state target: ORGANIC growth (auto-split, sparse respawn) stops here so
     // an idle ultra world settles below the 10k ceiling. Equals maxEntities on every other tier
@@ -599,9 +589,9 @@ export class EntityManager {
       env.sp2 = sp2;
       env.sinWF = sinWF;
       env.cosWF = cosWF;
-      // Theory-behavior stagger (legacy line 707, stride 2 ≤ 5,000 entities; stride 3 ultra).
+      // Theory-behavior stagger (stride 2 — full-rate on every tier).
       env.doTheory = (frame + i) % theoryStride === 0;
-      // Flock stagger: every frame ≤ 5,000 (legacy), every other frame at ultra.
+      // Flock: every frame on every tier.
       env.doFlock = flockEvery === 1 || (frame + i) % flockEvery === 0;
       // V3.2 OUTLIER blend: a wildcard with a second behavior runs it on the odd
       // TWO-FRAME block (((frame+i) >> 1) & 1) — temporal 50/50 blending,

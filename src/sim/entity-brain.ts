@@ -189,32 +189,20 @@ export class EntityBrainField {
   }
 
   /**
-   * Explicit full-quality alias: no slicing, no prioritization - every entity gets full brain evaluation.
-   * Optional cameraPos enables distance-based LOD in thinkSlot (disabled in live world — quality contract).
+   * Explicit full-quality alias: every entity gets the full 70-param brain every evaluation.
    */
-  thinkAll(
-    list: ReadonlyArray<Entity | undefined>,
-    chaos: number,
-    t: number,
-    cameraPos?: { x: number; y: number; z: number },
-  ): number {
+  thinkAll(list: ReadonlyArray<Entity | undefined>, chaos: number, t: number): number {
     const chaosN = clamp01(chaos / 10);
     const n = Math.min(list.length, this.capacity);
     let thought = 0;
     for (let i = 0; i < n; i++) {
       const e = list[i];
-      if (e && this.thinkSlot(e, i, chaosN, t, cameraPos)) thought++;
+      if (e && this.thinkSlot(e, i, chaosN, t)) thought++;
     }
     return thought;
   }
 
-  private thinkSlot(
-    e: Entity,
-    slot: number,
-    chaosN: number,
-    t: number,
-    cameraPos?: { x: number; y: number; z: number },
-  ): boolean {
+  private thinkSlot(e: Entity, slot: number, chaosN: number, t: number): boolean {
     const ud = e.userData;
     if (ud.isNhi) return false; // launched NHIs fly their own mind
     const base = slot * GENOME_LEN;
@@ -231,37 +219,9 @@ export class EntityBrainField {
       : this.getGene(base + TRAIT.curiosity);
     s[4] = Number.isFinite(curiosity) ? curiosity : 0.5; // stable personality bias (diversity)
     s[5] = Math.sin(ud.ph + t * 0.6); // a phase clock (-1..1)
-    // ── PERCEPTUAL PRIORITY CASCADE (Phase 1.2 optimization) ──
-    // Distance-based LOD: distant entities get simplified brain evaluation
-    // Invisible to user - distant entities are visually small anyway
-    let useFullBrain = true;
-    if (cameraPos) {
-      const dx = e.position.x - cameraPos.x;
-      const dy = e.position.y - cameraPos.y;
-      const dz = e.position.z - cameraPos.z;
-      const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
-      // Near (0-50): full 70-param brain
-      // Mid (50-200): simplified 35-param brain (skip hidden layer)
-      // Far (200+): minimal 10-param brain (direct sense→action)
-      if (dist > 200) {
-        useFullBrain = false;
-        // Minimal brain: direct sense→action mapping (no hidden layer)
-        const o = this.out;
-        o[0] = s[0] * 0.5 + s[1] * 0.3 + s[2] * 0.2; // forward/back
-        o[1] = s[3] * 0.5 + s[4] * 0.5; // left/right
-        o[2] = s[5] * 0.5; // up/down
-        o[3] = s[0] * 0.5; // excitation
-      } else if (dist > 50) {
-        useFullBrain = false;
-        // Simplified brain: single hidden layer with fewer neurons
-        this.forwardSimplified(base + TRAIT_GENES);
-      }
-    }
     // ── COGNITION (70-param brain, inline allocation-free forward) ──
-    if (useFullBrain) {
-      if (fp32) this.forwardFp32(base + TRAIT_GENES, fp32);
-      else this.forward(base + TRAIT_GENES);
-    }
+    if (fp32) this.forwardFp32(base + TRAIT_GENES, fp32);
+    else this.forward(base + TRAIT_GENES);
     const o = this.out;
     // ── ACTION: a small, bounded steer; out[3] is an excitation that scales the authority ──
     const gain = STEER_GAIN * (0.5 + 0.75 * ((o[3] ?? 0) + 1) * 0.5);
@@ -289,25 +249,6 @@ export class EntityBrainField {
     for (let o = 0; o < BRAIN_OUT; o++) {
       let acc = this.getGene(w++); // bias
       for (let h = 0; h < BRAIN_HIDDEN; h++) acc += this.getGene(w++) * (hid[h] ?? 0);
-      out[o] = Math.tanh(acc);
-    }
-  }
-
-  /** Simplified forward pass for mid-distance entities (perceptual priority cascade). */
-  private forwardSimplified(base: number): void {
-    const s = this.senses;
-    const out = this.out;
-    // Single hidden layer with 3 neurons instead of 6 (50% reduction)
-    const hid = this.hidden;
-    let w = base;
-    for (let h = 0; h < 3; h++) {
-      let acc = this.getGene(w++); // bias
-      for (let i = 0; i < BRAIN_IN; i++) acc += this.getGene(w++) * (s[i] ?? 0);
-      hid[h] = Math.tanh(acc);
-    }
-    for (let o = 0; o < BRAIN_OUT; o++) {
-      let acc = this.getGene(w++); // bias
-      for (let h = 0; h < 3; h++) acc += this.getGene(w++) * (hid[h] ?? 0);
       out[o] = Math.tanh(acc);
     }
   }

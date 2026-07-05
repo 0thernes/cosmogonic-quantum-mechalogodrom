@@ -176,7 +176,7 @@ export class Viz3DSystem {
   constructor(ctx: SimContext) {
     // Phone tier (650-entity legacy mesh path) halves the tower count; derive from maxEntities
     // since there is no dedicated low-detail flag on QualityProfile.
-    this.lowDetail = ctx.quality.maxEntities <= 650;
+    this.lowDetail = false;
     this.towerCount = this.lowDetail ? PHYLA / 2 : PHYLA;
 
     const root = new THREE.Group();
