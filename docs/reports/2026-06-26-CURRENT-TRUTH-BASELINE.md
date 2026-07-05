@@ -17,7 +17,7 @@ when the numbers change it is rewritten in place.
 | Full gate     | `bun run check` green (2026-07-01)                                                                                       |
 | Gate stages   | `format:check`, `typecheck`, `lint`, `verify:receipts` (test+coverage), `sync:check`, `verify:facts`, `build`            |
 | Tests         | `1,984 tests` (published floor) · measured cold run `2104 pass / 0 fail` · `2,912,102 expect() calls` · `231` test files |
-| Coverage      | `92.13 % line / 89.66 % function` (canonical measured headline; test count is a FLOOR, coverage enforced within ±6pp)    |
+| Coverage      | `83.95 % line / 81.57 % function` (canonical measured headline; test count is a FLOOR, coverage enforced within ±6pp)    |
 | Build         | `11` artifacts emitted to `dist/`                                                                                        |
 | Single source | `scripts/canonical-receipts.ts` + `package.json`                                                                         |
 

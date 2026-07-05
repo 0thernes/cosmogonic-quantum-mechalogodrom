@@ -52,12 +52,18 @@ export class WildernessPopulation {
   private readonly maxChunks = 16; // Maximum active chunks
   private readonly entitiesPerChunk = 50; // Entities per chunk
   private nextEntityId = 0;
+  /** Pre-allocated worker task buffers — one per max active chunk (parallel-safe). */
+  private readonly taskBuffers: Float32Array[];
 
   constructor(workerPool: WorkerPool | null, baseSeed: number) {
     this.workerPool = workerPool;
     // Wilderness uses its OWN seeded sub-stream (ADR 0010)
     // so it's reproducible-ish per chunk but explicitly excluded from the global golden
     this.rng = mulberry32((baseSeed ^ 0x77777777) >>> 0 || 1);
+    this.taskBuffers = Array.from(
+      { length: this.maxChunks },
+      () => new Float32Array(this.entitiesPerChunk * 8),
+    );
   }
 
   /**
@@ -150,53 +156,66 @@ export class WildernessPopulation {
   }
 
   /**
-   * Update chunks on worker threads
+   * Update chunks on worker threads (parallel dispatch — all active chunks at once).
    */
-  private async updateChunksOnWorkers(dt: number): Promise<void> {
+  private updateChunksOnWorkers(dt: number): void {
     if (!this.workerPool) {
-      // No worker pool, run synchronously (fallback)
       this.updateChunksSync(dt);
       return;
     }
 
-    // Update each chunk on workers
+    const jobs: Promise<void>[] = [];
+    let bi = 0;
     for (const [chunkId, chunk] of this.chunks) {
       if (!chunk.active) continue;
+      const bufIndex = bi % this.taskBuffers.length;
+      bi++;
+      jobs.push(this.updateChunkOnWorker(chunkId, chunk, dt, bufIndex));
+    }
+    void Promise.all(jobs);
+  }
 
-      // Prepare task data
-      const data = new Float32Array(chunk.entities.length * 8); // 8 values per entity
-      for (let i = 0; i < chunk.entities.length; i++) {
-        const e = chunk.entities[i];
-        if (!e) continue;
-        data[i * 8 + 0] = e.x;
-        data[i * 8 + 1] = e.y;
-        data[i * 8 + 2] = e.z;
-        data[i * 8 + 3] = e.vx;
-        data[i * 8 + 4] = e.vy;
-        data[i * 8 + 5] = e.vz;
-        data[i * 8 + 6] = e.type;
-        data[i * 8 + 7] = e.seed;
+  private async updateChunkOnWorker(
+    chunkId: string,
+    chunk: WildernessChunk,
+    dt: number,
+    bufIndex: number,
+  ): Promise<void> {
+    const n = chunk.entities.length;
+    let data = this.taskBuffers[bufIndex]!;
+    if (data.buffer.byteLength === 0) {
+      data = new Float32Array(this.entitiesPerChunk * 8);
+      this.taskBuffers[bufIndex] = data;
+    }
+    for (let i = 0; i < n; i++) {
+      const e = chunk.entities[i];
+      if (!e) continue;
+      data[i * 8 + 0] = e.x;
+      data[i * 8 + 1] = e.y;
+      data[i * 8 + 2] = e.z;
+      data[i * 8 + 3] = e.vx;
+      data[i * 8 + 4] = e.vy;
+      data[i * 8 + 5] = e.vz;
+      data[i * 8 + 6] = e.type;
+      data[i * 8 + 7] = e.seed;
+    }
+
+    const task: WorkerTask = {
+      id: `wilderness-${chunkId}-${this.frameCounter}`,
+      type: 'wilderness',
+      data: data.subarray(0, n * 8),
+      seed: chunk.entities[0]?.seed ?? 0,
+      chunkId,
+    };
+
+    try {
+      const result = await this.workerPool!.executeAsync(task);
+      if (result.success) {
+        this.updateEntitiesFromResult(chunk, result.data);
       }
-
-      const task: WorkerTask = {
-        id: `wilderness-${chunkId}-${this.frameCounter}`,
-        type: 'wilderness',
-        data,
-        seed: chunk.entities[0]?.seed ?? 0,
-        chunkId,
-      };
-
-      try {
-        const result = await this.workerPool.executeAsync(task);
-        if (result.success) {
-          // Update entities from worker result
-          this.updateEntitiesFromResult(chunk, result.data);
-        }
-      } catch (error) {
-        console.error('Wilderness worker error:', error);
-        // Fallback to sync update
-        this.updateChunkSync(chunk, dt);
-      }
+    } catch (error) {
+      console.error('Wilderness worker error:', error);
+      this.updateChunkSync(chunk, dt);
     }
   }
 

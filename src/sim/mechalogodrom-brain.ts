@@ -80,21 +80,19 @@ function makeSubnet(inp: number, hid: number, out: number, rng: Rng): Subnet {
   return { w1, b1, w2, b2, params: w1.length + b1.length + w2.length + b2.length };
 }
 
-function forward(net: Subnet, inp: Float32Array, scratch: Float32Array): Float32Array {
+function forward(net: Subnet, inp: Float32Array, scratch: Float32Array, out: Float32Array): void {
   const hid = net.b1.length;
-  const out = net.b2.length;
+  const outLen = net.b2.length;
   for (let j = 0; j < hid; j++) {
     let sum = net.b1[j]!;
     for (let i = 0; i < inp.length; i++) sum += net.w1[j * inp.length + i]! * inp[i]!;
     scratch[j] = Math.tanh(sum);
   }
-  const result = new Float32Array(out);
-  for (let j = 0; j < out; j++) {
+  for (let j = 0; j < outLen; j++) {
     let sum = net.b2[j]!;
     for (let i = 0; i < hid; i++) sum += net.w2[j * hid + i]! * scratch[i]!;
-    result[j] = Math.tanh(sum);
+    out[j] = Math.tanh(sum);
   }
-  return result;
 }
 
 export interface MechalogodromBrainPercept {
@@ -154,6 +152,11 @@ export class MechalogodromBrain {
   private readonly scratch = new Float32Array(FUSION_DIM);
   private readonly latent = new Float32Array(FUSION_DIM);
   private readonly senses = new Float32Array(PERCEPT_DIM);
+  /** Reused variant outputs — zero alloc per `tick()`. */
+  private readonly variantOuts: Float32Array[];
+  private readonly variantAct = new Float32Array(VARIANT_COUNT);
+  private readonly fusionIn = new Float32Array(LATENT_DIM * VARIANT_COUNT);
+  private readonly fusionOut = new Float32Array(FUSION_DIM);
   private beat = 0;
   // STDP state: a plastic gain per variant→fusion synapse, + nearest-neighbour spike times (beats).
   private readonly gain = new Float32Array(VARIANT_COUNT).fill(1);
@@ -169,6 +172,7 @@ export class MechalogodromBrain {
     this.fusion = makeSubnet(LATENT_DIM * VARIANT_COUNT, FUSION_DIM, FUSION_DIM, rng);
     this.liveParams =
       this.variants.reduce((s, v) => s + v.params, 0) + this.fusion.params + this.latent.length;
+    this.variantOuts = Array.from({ length: VARIANT_COUNT }, () => new Float32Array(LATENT_DIM));
   }
 
   tick(p: MechalogodromBrainPercept): MechalogodromBrainSnapshot {
@@ -182,17 +186,15 @@ export class MechalogodromBrain {
     this.senses[6] = p.apexTranscendence;
     this.senses[7] = p.apexAgony;
 
-    const variantOuts: Float32Array[] = [];
-    const variantAct = new Float32Array(VARIANT_COUNT);
     let dom = 0;
     let domAct = -1;
     let actMean = 0;
     for (let v = 0; v < VARIANT_COUNT; v++) {
-      const out = forward(this.variants[v]!, this.senses, this.scratch);
-      variantOuts.push(out);
+      const out = this.variantOuts[v]!;
+      forward(this.variants[v]!, this.senses, this.scratch, out);
       let act = 0;
       for (let i = 0; i < out.length; i++) act += Math.abs(out[i]!);
-      variantAct[v] = act;
+      this.variantAct[v] = act;
       actMean += act;
       if (act > domAct) {
         domAct = act;
@@ -202,17 +204,16 @@ export class MechalogodromBrain {
     actMean /= VARIANT_COUNT;
 
     // Gate each variant's contribution to the cortex by its STDP-learned gain (previous beats' plasticity).
-    const fusionIn = new Float32Array(LATENT_DIM * VARIANT_COUNT);
     for (let v = 0; v < VARIANT_COUNT; v++) {
       const g = this.gain[v]!;
-      const o = variantOuts[v]!;
+      const o = this.variantOuts[v]!;
       const base = v * LATENT_DIM;
-      for (let i = 0; i < LATENT_DIM; i++) fusionIn[base + i] = o[i]! * g;
+      for (let i = 0; i < LATENT_DIM; i++) this.fusionIn[base + i] = o[i]! * g;
     }
 
-    const fused = forward(this.fusion, fusionIn, this.scratch);
+    forward(this.fusion, this.fusionIn, this.scratch, this.fusionOut);
     for (let i = 0; i < FUSION_DIM; i++) {
-      this.latent[i] = this.latent[i]! * 0.55 + fused[i]! * 0.45;
+      this.latent[i] = this.latent[i]! * 0.55 + this.fusionOut[i]! * 0.45;
     }
 
     let actSum = 0;
@@ -224,7 +225,7 @@ export class MechalogodromBrain {
     // Bi–Poo window, gains clamped. Deterministic (no rng) → same seed + percepts ⇒ identical gains.
     const beat = this.beat;
     for (let v = 0; v < VARIANT_COUNT; v++) {
-      if (variantAct[v]! > actMean * STDP_PRE_REL) {
+      if (this.variantAct[v]! > actMean * STDP_PRE_REL) {
         // a variant fires NOW (pre): depress vs the most recent post (post-before-pre, Δt<0)
         if (beat - this.lastPostBeat <= STDP_WINDOW) {
           this.gain[v] = clampRange(

@@ -49,24 +49,25 @@ function makeSubnet(inp: number, hid: number, out: number, rng: Rng): Subnet {
   return { w1, b1, w2, b2, params: w1.length + b1.length + w2.length + b2.length };
 }
 
-function forwardSubnet(net: Subnet, inp: Float32Array, scratch: Float32Array): Float32Array {
+function forwardSubnet(
+  net: Subnet,
+  inp: Float32Array,
+  scratch: Float32Array,
+  out: Float32Array,
+): void {
   const { w1, b1, w2, b2 } = net;
   const hid = b1.length;
-  const out = b2.length;
-  // hidden = tanh(w1 . inp + b1)
+  const outLen = b2.length;
   for (let j = 0; j < hid; j++) {
     let sum = b1[j]!;
     for (let i = 0; i < inp.length; i++) sum += w1[j * inp.length + i]! * inp[i]!;
     scratch[j] = Math.tanh(sum);
   }
-  // out = tanh(w2 . hidden + b2)
-  const result = new Float32Array(out);
-  for (let j = 0; j < out; j++) {
+  for (let j = 0; j < outLen; j++) {
     let sum = b2[j]!;
     for (let i = 0; i < hid; i++) sum += w2[j * hid + i]! * scratch[i]!;
-    result[j] = Math.tanh(sum);
+    out[j] = Math.tanh(sum);
   }
-  return result;
 }
 
 // ── Constants ──────────────────────────────────────────────────────────────────────────────────
@@ -125,6 +126,13 @@ export class GlyphBrain {
   private readonly scratch = new Float32Array(128);
   private readonly noise = new Float32Array(NOISE_DIM);
   private readonly senses = new Float32Array(SENSORY_DIM);
+  /** Reused motor output — avoids per-beat slice on the hot path. */
+  private readonly motorOut = new Float32Array(4);
+  /** Ping-pong forward outputs — zero alloc per `think()`. */
+  private readonly outA = new Float32Array(64);
+  private readonly outB = new Float32Array(64);
+  private readonly organOut = new Float32Array(4);
+  private readonly imgIn = new Float32Array(LATENT_DIM + NOISE_DIM);
   private beat = 0;
 
   constructor(index: number, seed: number) {
@@ -171,50 +179,40 @@ export class GlyphBrain {
     for (let i = 0; i < SENSORY_DIM; i++) {
       this.senses[i] = percept[i] ?? 0;
     }
-    const newLatent = forwardSubnet(this.cortex, this.senses, this.scratch);
+    forwardSubnet(this.cortex, this.senses, this.scratch, this.outA);
 
-    // 2) ATOM OF THOUGHT — organ-nets process 4-dim slices
     let organSum = 0;
     for (let k = 0; k < ORGAN_COUNT; k++) {
       const off = (k * 4) % LATENT_DIM;
-      const slice = newLatent.subarray(off, off + 4);
-      const o = forwardSubnet(this.organs[k]!, slice, this.scratch);
-      organSum += o[0]! + o[1]!;
+      forwardSubnet(this.organs[k]!, this.outA.subarray(off, off + 4), this.scratch, this.organOut);
+      organSum += this.organOut[0]! + this.organOut[1]!;
     }
 
-    // 3) IMAGINE — Creativity Machine (latent ⊕ noise → imagined)
     for (let i = 0; i < NOISE_DIM; i++) {
       this.noise[i] = Math.sin(this.beat * 0.13 + i * 1.7) * 0.5;
     }
-    const imgIn = new Float32Array(LATENT_DIM + NOISE_DIM);
-    imgIn.set(newLatent);
-    imgIn.set(this.noise, LATENT_DIM);
-    const imagined = forwardSubnet(this.imagitron, imgIn, this.scratch);
+    this.imgIn.set(this.outA.subarray(0, LATENT_DIM));
+    this.imgIn.set(this.noise, LATENT_DIM);
+    forwardSubnet(this.imagitron, this.imgIn, this.scratch, this.outB);
 
-    // 4) PERCEPTOR — score novelty
-    const noveltyOut = forwardSubnet(this.perceptor, imagined, this.scratch);
-    const novelty = Math.abs(noveltyOut[0] ?? 0);
+    forwardSubnet(this.perceptor, this.outB.subarray(0, LATENT_DIM), this.scratch, this.organOut);
+    const novelty = Math.abs(this.organOut[0] ?? 0);
 
-    // 5) REASON — distil the winning branch
-    const reasoned = forwardSubnet(this.reasoner, imagined, this.scratch);
+    forwardSubnet(this.reasoner, this.outB.subarray(0, LATENT_DIM), this.scratch, this.outA);
 
-    // 6) PREDICT — world model (error → surprise, but we don't use it for world state)
-    const _predicted = forwardSubnet(this.predictor, this.latent, this.scratch);
-    void forwardSubnet(this.memory, reasoned, this.scratch);
-    void _predicted;
+    forwardSubnet(this.predictor, this.latent, this.scratch, this.organOut);
+    forwardSubnet(this.memory, this.outA.subarray(0, LATENT_DIM), this.scratch, this.organOut);
 
-    // 7) AFFECT — emotion from senses
-    const aff = forwardSubnet(this.affect, this.senses, this.scratch);
-    const valence = aff[0] ?? 0;
+    forwardSubnet(this.affect, this.senses, this.scratch, this.organOut);
+    const valence = this.organOut[0] ?? 0;
 
-    // 8) MOTOR — visual motion vector
-    const mot = forwardSubnet(this.motor, reasoned, this.scratch);
+    forwardSubnet(this.motor, this.outA.subarray(0, LATENT_DIM), this.scratch, this.motorOut);
 
     // 9) Hebbian plastic overlay (light, within-life)
     for (let i = 0; i < LATENT_DIM; i++) {
       for (let j = 0; j < LATENT_DIM; j++) {
         const idx = i * LATENT_DIM + j;
-        const ri = reasoned[i]!;
+        const ri = this.outA[i]!;
         const lj = this.latent[j]!;
         this.plastic[idx] = this.plastic[idx]! + 0.001 * ri * lj;
         const pv = this.plastic[idx]!;
@@ -224,7 +222,7 @@ export class GlyphBrain {
 
     // Update latent (blend old + new for temporal continuity)
     for (let i = 0; i < LATENT_DIM; i++) {
-      this.latent[i] = (this.latent[i] ?? 0) * 0.6 + (reasoned[i] ?? 0) * 0.4;
+      this.latent[i] = (this.latent[i] ?? 0) * 0.6 + (this.outA[i] ?? 0) * 0.4;
     }
 
     // Activity = mean |latent| + organ contribution
@@ -238,17 +236,19 @@ export class GlyphBrain {
       index: this.index,
       designedParams: PANTHEON_GLYPH_BRAIN_PARAMS,
       liveParams: this.paramCount,
-      latent: this.latent.slice(),
+      latent: this.latent,
       activity,
       novelty,
       valence,
-      motor: mot.slice(),
+      motor: this.motorOut,
       spiking,
     };
   }
 }
 
 // ── Batch: all 100 glyph brains ────────────────────────────────────────────────────────────────
+
+const ZERO_GLYPH_PERCEPT = new Float32Array(8);
 
 /**
  * Manages all 100 pantheon glyph brains. Each gets a deterministic seed derived from the world seed.
@@ -257,16 +257,22 @@ export class GlyphBrain {
  */
 export class GlyphBrainBatch {
   private readonly brains: GlyphBrain[] = [];
+  /** Reused result vector — avoids per-beat `map()` allocation. */
+  private readonly scratch: GlyphBrainSnapshot[] = new Array(100);
 
   constructor(worldSeed: number) {
     for (let i = 0; i < 100; i++) {
       this.brains.push(new GlyphBrain(i, worldSeed));
+      this.scratch[i] = this.brains[i]!.think(ZERO_GLYPH_PERCEPT);
     }
   }
 
   /** Think all 100 brains and return snapshots. Visual-only — no world writes. */
   thinkAll(percept: Float32Array): GlyphBrainSnapshot[] {
-    return this.brains.map((b) => b.think(percept));
+    for (let i = 0; i < this.brains.length; i++) {
+      this.scratch[i] = this.brains[i]!.think(percept);
+    }
+    return this.scratch;
   }
 
   /** Think a single brain by index. */

@@ -36,37 +36,27 @@ export interface WorkerResponse {
  * position updates to demonstrate the worker infrastructure.
  */
 function simulateWilderness(data: Float32Array, seed: number, chunkId: string): Float32Array {
-  // Simple simulation: update positions based on seed
-  const result = new Float32Array(data.length);
-
-  // Copy input data
-  for (let i = 0; i < data.length; i++) {
-    result[i] = data[i] || 0;
-  }
-
-  // Apply simple deterministic update based on seed
   const rng = mulberry32(seed ^ hashSeed(chunkId));
 
-  // Update positions (assuming x,y,z triplets)
   for (let i = 0; i < data.length; i += 3) {
     const rngValue = rng();
     const x = data[i] || 0;
-    result[i] = x + (rngValue - 0.5) * 0.1; // x
+    data[i] = x + (rngValue - 0.5) * 0.1;
 
     if (i + 1 < data.length) {
       const rngValue2 = rng();
       const y = data[i + 1] || 0;
-      result[i + 1] = y + (rngValue2 - 0.5) * 0.1; // y
+      data[i + 1] = y + (rngValue2 - 0.5) * 0.1;
     }
 
     if (i + 2 < data.length) {
       const rngValue3 = rng();
       const z = data[i + 2] || 0;
-      result[i + 2] = z + (rngValue3 - 0.5) * 0.1; // z
+      data[i + 2] = z + (rngValue3 - 0.5) * 0.1;
     }
   }
 
-  return result;
+  return data;
 }
 
 /**

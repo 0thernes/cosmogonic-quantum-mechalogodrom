@@ -53,6 +53,8 @@ export class WorkerPool {
   private readonly pendingResults = new Map<string, WorkerResult>();
   private readonly config: WorkerPoolConfig;
   private workerScriptUrl: string | null = null;
+  /** Reused SharedArrayBuffers keyed by byte length (SAB path only). */
+  private readonly sabPool = new Map<number, SharedArrayBuffer>();
 
   constructor(config: WorkerPoolConfig) {
     this.config = config;
@@ -198,8 +200,12 @@ export class WorkerPool {
 
     this.activeTasks.set(task.id, worker);
 
-    // Create SharedArrayBuffer for zero-copy
-    const buffer = new SharedArrayBuffer(task.data.byteLength);
+    const byteLen = task.data.byteLength;
+    let buffer = this.sabPool.get(byteLen);
+    if (!buffer) {
+      buffer = new SharedArrayBuffer(byteLen);
+      this.sabPool.set(byteLen, buffer);
+    }
     const sharedArray = new Float32Array(buffer);
     sharedArray.set(task.data);
 
