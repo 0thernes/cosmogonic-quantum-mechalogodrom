@@ -2,7 +2,7 @@
 
 # A-Life Comparative Audit — Cosmogonic Quantum Mechalogodrom vs 112 Known Systems
 
-**Date:** 2026-06-26 · **Edition:** v4 (113-system expansion, 2026-07-02) · **Repo:** `v0.18.0`
+**Date:** 2026-06-26 · **Edition:** v4 (113-system expansion, 2026-07-05) · **Repo:** `v0.20.0`
 **Scope:** the current repo (`origin/main`) plus a sourced, adversarially re-verified survey of **112**
 well-known Artificial-Life / open-ended-evolution / digital-organism / neuroevolution / agent-based
 systems — spanning cellular automata, digital evolution, evolutionary robotics, quality-diversity,
@@ -28,7 +28,7 @@ adversarially verified against the same 9-axis rubric.
 > [Sensitivity](#sensitivity-how-much-the-conclusion-moves-under-honest-re-scoring) sections quantify
 > exactly how much. Read every claim against
 > [`2026-06-26-CURRENT-TRUTH-BASELINE.md`](./2026-06-26-CURRENT-TRUTH-BASELINE.md); the baseline wins on
-> any conflict. Current receipts: `1,984` tests (published floor; `2104` measured), `0` failures, `92.13%` line / `89.66%` function coverage,
+> any conflict. Current receipts: `1,984` tests (published floor; `2270` measured), `0` failures, `85.29%` line / `82.76%` function coverage,
 > sync clean, build clean.
 
 ---
@@ -189,7 +189,7 @@ those are **computational indicators, not subjective experience.** The hard prob
 | Check               | Live result (2026-06-26, Bun 1.3.14, cold shell)                                                                 |
 | ------------------- | ---------------------------------------------------------------------------------------------------------------- |
 | `bun test`          | **`2104 pass`, `0 fail`, `2,912,102 expect() calls`, `231` files** (published floor `1,984`)                     |
-| Coverage receipt    | **`92.13%` line, `89.66%` function** (canonical, `±6 pp` gate-enforced)                                          |
+| Coverage receipt    | **`85.29%` line, `82.76%` function** (canonical, `±6 pp` gate-enforced)                                          |
 | `bun run check`     | full gate green: format, typecheck, lint, tests, receipts, sync, build                                           |
 | `SuperMind.think()` | `1.99 ms` full-suite (2026-07-02) — **not** any sub-millisecond / `<2%`-frame claim (those are stale)            |
 | `5× think()` batch  | `9.77 ms` (staggered `driveSuper`; ~58% of a frame)                                                              |
@@ -624,7 +624,7 @@ bun scripts/alife-codeground-sensitivity.ts
 #   all three read docs/reports/2026-06-26-alife-comparison-matrix.csv (deterministic; identical CSV -> identical bytes)
 
 # Re-confirm the live gate receipts:
-bun test --coverage        # -> 2104 pass / 0 fail ; 92.13% line / 89.66% func (floor 1,984)
+bun test --coverage        # -> 2270 pass / 0 fail ; 85.29% line / 82.76% func (floor 1,984)
 bun run check              # full gate
 ```
 

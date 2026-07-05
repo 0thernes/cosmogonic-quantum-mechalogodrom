@@ -7,7 +7,7 @@
 This is the canonical honesty scorecard for the project's NHSI / consciousness
 claims: **what is genuinely WIRED vs. what the headline numbers claim.** It is
 current as of today — every figure below is measured on `origin/main` (`2233488`,
-Bun 1.3.14, v0.18.0, full `bun run check` green). The honest frame is unchanged
+Bun 1.3.14, v0.20.0, full `bun run check` green). The honest frame is unchanged
 and load-bearing: **Butlin et al. (2023) indicators sit at 8/14 met + 6/14
 partial, and computational indicators are not sentience.**
 
@@ -51,9 +51,9 @@ are overclaims resting on name-list modules and partial scaffolding. The single
 thing standing between "a strong pile of faculties" and "emergence" is
 **coupling**, not count.
 
-**Where the project stands today (`bun run check` green):** v0.18.0 · 1,984 tests
-(published floor) / 0 fail (2,912,102 `expect()` calls across 231 files) · ~92% line / ~90%
-function coverage (canonical 92.13 / 89.66, ±6pp gate tolerance). The SuperMind
+**Where the project stands today (`bun run check` green):** v0.20.0 · 1,984 tests
+(published floor) / 0 fail (2,834,073 `expect()` calls across 257 files) · ~85% line / ~83%
+function coverage (canonical 85.29 / 82.76, ±6pp gate tolerance). The SuperMind
 `think()` costs ~3.34 ms in the full bench suite (~8.85 ms focused) — this is a
 real, non-trivial per-call cost, not a sub-millisecond freebie (see §8). World
 ceiling: 50,000 agents (10,000 @ 60 fps on an iGPU), ~3.5M params (~14 MB

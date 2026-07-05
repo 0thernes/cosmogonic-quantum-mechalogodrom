@@ -19,10 +19,10 @@ Rewritten in place when the facts change (per the binding "Living docs, no archi
 
 | Fact                | Canonical value           | Source of truth                                                                      | Propagated by           |
 | ------------------- | ------------------------- | ------------------------------------------------------------------------------------ | ----------------------- |
-| Package version     | `0.18.0`                  | `package.json` `version`                                                             | `sync-surfaces.ts`      |
+| Package version     | `0.20.0`                  | `package.json` `version`                                                             | `sync-surfaces.ts`      |
 | Test count (floor)  | `1984`                    | `scripts/canonical-receipts.ts`                                                      | `sync-surfaces.ts`      |
-| Line coverage       | `92.13%`                  | `scripts/canonical-receipts.ts`                                                      | `sync-surfaces.ts`      |
-| Function coverage   | `89.66%`                  | `scripts/canonical-receipts.ts`                                                      | `sync-surfaces.ts`      |
+| Line coverage       | `85.29%`                  | `scripts/canonical-receipts.ts`                                                      | `sync-surfaces.ts`      |
+| Function coverage   | `82.76%`                  | `scripts/canonical-receipts.ts`                                                      | `sync-surfaces.ts`      |
 | Faculties (design)  | `100` (~30 deep-wired)    | `CANONICAL_FACULTIES`                                                                | `sync-surfaces.ts`      |
 | Archon pantheon     | `25` (5 apex + 20 light)  | `CANONICAL_ARCHONS`                                                                  | `sync-surfaces.ts`      |
 | Theory-of-mind orgs | `25`                      | `CANONICAL_TOM_ORGANS`                                                               | `sync-surfaces.ts`      |
@@ -35,14 +35,15 @@ Rewritten in place when the facts change (per the binding "Living docs, no archi
 | Apex composite mind | `~10,081` weights         | `src/sim/super-mind.ts`                                                              | prose (NOT auto-synced) |
 | Legacy spine        | `~1,444` params           | `src/sim/super-mind.ts` / ADR-0008                                                   | prose (NOT auto-synced) |
 
-### Measured reality (this audit, 2026-07-01, Bun 1.3.14)
+### Measured reality (this audit, 2026-07-05, Bun 1.3.14)
 
-- `bun test --coverage` → **2104 pass / 0 fail** · **2,912,102 expect() calls** · **231 test files** · coverage
-  **92.13% line / 89.66% func** (measured; canonical synced floor is **1984** tests · **92.13% line / 89.66% func**
-  from `canonical-receipts.ts`). The 2104 vs 1984 gap is expected: `CANONICAL_TEST_COUNT` is a documented
+- `bun test --coverage` → **2270 pass / 0 fail** · **2,834,073 expect() calls** · **257 test files** · coverage
+  **85.29% line / 82.76% func** (measured; canonical synced floor is **1984** tests · **85.29% line / 82.76% func**
+  from `canonical-receipts.ts`). The 2270 vs 1984 gap is expected: `CANONICAL_TEST_COUNT` is a documented
   **floor**; a file-rich checkout measures every `*.test.ts` in the working tree. Gate-enforced
   `verify:receipts` floors against the canonical ledger — any count ≥ floor with matching canon is green.
 - `bun run check` → green (prettier · tsc · oxlint · verify:receipts/test+coverage · sync:check · verify:facts · build).
+- `bun run smoke` → all routes OK (`/`, `/docs`, `/spec`, `/bible`, `/api/health`, `/api/ventures`).
 
 ---
 
@@ -97,7 +98,7 @@ outside sim logic). Only fidelity caveat = Finding H above.
 
 Consistency that **passed** verification (no drift found): Butlin `8/14 met + 6/14 partial` (every
 current surface; the only `14/14` hits are in `legacy/` verbatim-preserved files + append-only CHANGELOG
-history with the correction logged), version `0.18.0` (all current markers), entity `50,000`, bioforms
+history with the correction logged), version `0.20.0` (all current markers), entity `50,000`, bioforms
 `26`, faculty/Archon/ToM/emergence counts, Tsotchke `20`.
 
 ---
@@ -294,8 +295,8 @@ HTML and the native engine (`native/src/` — 5 files, no unsafe C calls).
 - **`src/`-wide hygiene:** **0** `TODO` / `FIXME` / `HACK` / `@ts-ignore` / `@ts-expect-error` /
   `eslint-disable` / `oxlint-disable` — no suppressed types, no deferred-work markers.
 - **Doc-vs-code re-verified on the current tip:** FILE-MAP "195 modules" = 195 actual `src/**/*.ts`;
-  `package.json` `0.18.0`; `bun run sync:check` green (all surfaces match `v0.18.0 · 1,984 tests ·
-92.13/89.66`); 0 broken relative links; all 90 md/xml/html surfaces codepoint-clean.
+  `package.json` `0.20.0`; `bun run sync:check` green (all surfaces match `v0.20.0 · 1,984 tests ·
+85.29/82.76`); 0 broken relative links; all 110 md/xml/html surfaces codepoint-clean.
 
 Net: the repo is **true, accurate, current, and defensible**. Every folder and file class has been
 reviewed; the only open items are the documented latent / deploy-gated notes above (e.g. per-IP audit

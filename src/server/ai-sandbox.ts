@@ -401,7 +401,7 @@ function validateCommand(raw: string): { ok: true; argv: string[] } | { ok: fals
           // grep's directory-handling option OUTRIGHT: its safe default (`-d read`, skip dirs) needs no
           // flag and no read-only search needs `-d`. Closes the reopened audit-CRITICAL secret leak
           // (`grep -d recurse KEY .` recursed root, exposing .env/.git/legacy past the sandbox).
-          (bin === 'grep' && (/^--directories(=|$)/.test(a) || /^-d/.test(a)))),
+          (bin === 'grep' && (/^--directories(=|$)/.test(a) || a.startsWith('-d')))),
     );
     if (recursive) {
       return {

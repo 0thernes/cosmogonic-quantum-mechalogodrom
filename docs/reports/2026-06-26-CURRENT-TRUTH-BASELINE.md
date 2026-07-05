@@ -2,7 +2,7 @@
 
 # Current Facts — Cosmogonic Quantum Mechalogodrom
 
-**Date:** 2026-07-01 · canonical one-glance quick-reference.
+**Date:** 2026-07-05 · canonical one-glance quick-reference.
 
 Every report and doc in this repo reflects these measured values. They are propagated from
 `scripts/canonical-receipts.ts` + `package.json` by `scripts/sync-surfaces.ts` and gate-enforced
@@ -13,11 +13,11 @@ when the numbers change it is rewritten in place.
 
 | Fact          | Value                                                                                                                    |
 | ------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| Repo package  | `v0.18.0`                                                                                                                |
-| Full gate     | `bun run check` green (2026-07-01)                                                                                       |
+| Repo package  | `v0.20.0`                                                                                                                |
+| Full gate     | `bun run check` green (2026-07-05)                                                                                       |
 | Gate stages   | `format:check`, `typecheck`, `lint`, `verify:receipts` (test+coverage), `sync:check`, `verify:facts`, `build`            |
-| Tests         | `1,984 tests` (published floor) · measured cold run `2104 pass / 0 fail` · `2,912,102 expect() calls` · `231` test files |
-| Coverage      | `92.13 % line / 89.66 % function` (canonical measured headline; test count is a FLOOR, coverage enforced within ±6pp)    |
+| Tests         | `1,984 tests` (published floor) · measured cold run `2270 pass / 0 fail` · `2,834,073 expect() calls` · `257` test files |
+| Coverage      | `85.29 % line / 82.76 % function` (canonical measured headline; test count is a FLOOR, coverage enforced within ±6pp)    |
 | Build         | `11` artifacts emitted to `dist/`                                                                                        |
 | Single source | `scripts/canonical-receipts.ts` + `package.json`                                                                         |
 

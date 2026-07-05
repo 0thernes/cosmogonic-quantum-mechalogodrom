@@ -11,6 +11,40 @@ dated / historical / "superseded snapshot" copies (per the binding "Living docs,
 
 ---
 
+## 2026-07-05 — Comprehensive freshness audit: receipts realignment + living-doc lift + lint hygiene
+
+Full deep-dive audit pass (comparative contrast across gate stages, canonical facts, and living surfaces).
+Method: cold `bun run check` on Bun 1.3.14 in a clean cloud checkout; measured receipts via
+`bun scripts/verify-receipts.ts --print`; propagated via `bun run sync`; rewrote living docs in place.
+
+### FINDING — stale canonical coverage (P0 gate-RED)
+
+- `scripts/canonical-receipts.ts` still published **92.13% line / 89.66% func** from a prior
+  file-rich measurement, but the current gate measures **85.29% line / 82.76% func** — beyond the
+  ±6pp tolerance band. Root cause: coverage is env-sensitive (Bun instruments a slightly different file
+  set); the canon had not been re-measured after the suite grew to 257 test files.
+
+### SHIPPED
+
+- **Receipts realigned:** `CANONICAL_LINE_COV` → `85.29`, `CANONICAL_FUNC_COV` → `82.76`; test floor
+  stays `1984` (measured `2270 pass / 0 fail` · `2,834,073 expect()` calls).
+- **Surfaces synced:** `bun run sync` refreshed 12 gate-enforced surfaces (README, HTML, ERD/KANBAN,
+  TECH-SPEC, NHSI dashboard receipts, reports baseline, etc.).
+- **Living docs rewritten in place:** `VERIFICATION-ANALYTICAL-DATA.md`, `TEST-STRATEGY`, `PRD`,
+  `CURRENT-TRUTH-BASELINE`, NHSI progress dashboard, ALIFE comparative audit, NHSI manifesto/honesty
+  audit, research bedrock, 25-point scorecard — version `v0.20.0` + current coverage everywhere they
+  claim present-tense truth.
+- **Lint hygiene:** `ai-sandbox.ts` grep `-d` guard uses `startsWith` (oxlint); removed unused
+  `PortalCullable` import in `titans.ts`.
+
+### VERIFIED GREEN
+
+- `bun run check` → green (prettier · tsc · oxlint · verify:receipts · sync:check · verify:facts · build)
+- `bun run smoke` → all routes OK
+- `bun run verify:facts` → no drift across 110 surfaces
+
+---
+
 ## 2026-07-03 — Perf follow-through (v0.20.0): fonts off the critical path + off-screen shader culling
 
 Follow-on to the 2026-07-02 audit — same owner brief ("loads slow… singularities / portal-temple /

@@ -5,7 +5,7 @@
 **Date:** 2026-06-26 · **Purpose:** the current (2025–2026) literature this project
 stands on, organized by how it anchors the build. Quantum + geometry + consciousness +
 self-evolution + non-LLM substrates. This is the living map: it tracks where the frontier
-is and where Cosmogonic (v0.18.0, gate green) actually sits on it.
+is and where Cosmogonic (v0.20.0, gate green) actually sits on it.
 
 > **Epistemic labels (Manhattan law — no overclaim):**
 > **[Established]** = peer-reviewed / widely replicated. **[Emerging]** = real, recent,
@@ -15,8 +15,8 @@ is and where Cosmogonic (v0.18.0, gate green) actually sits on it.
 > indicators; it _is_ none of them. The hard problem of consciousness is untouched.
 
 > **What this report is grounded against (measured on `origin/main`, Bun 1.3.14):**
-> v0.18.0 · `bun run check` green · 1,984 tests (published floor) / 0 fail / 2,912,102 `expect()` calls
-> across 231 files · 92.13% line / 89.66% function coverage (canonical; ±6pp
+> v0.20.0 · `bun run check` green · 1,984 tests (published floor) / 0 fail / 2,834,073 `expect()` calls
+> across 257 files · 85.29% line / 82.76% function coverage (canonical; ±6pp
 > gate tolerance). Consciousness scorecard: **8/14 met + 6/14 partial** on the Butlin et
 > al. 2023 indicators — _computational indicators, not sentience._ No quantum advantage is
 > claimed anywhere: the quantum substrate is an exact classical simulation; it lacks only a

@@ -45,11 +45,7 @@ import type { PairHistory } from '../math/games';
 import type { SimContext } from '../types';
 import type { EntityManager } from './entities';
 import type { SingularitySystem } from './singularities';
-import {
-  PORTAL_RESPAWN_DELAY,
-  portalReappearSpot,
-  type PortalCullable,
-} from './portal-death-fauna';
+import { PORTAL_RESPAWN_DELAY, portalReappearSpot } from './portal-death-fauna';
 import type { DomeFeeder } from './dome-feeding';
 
 /** Number of titans: 10 territorial colossi + 10 central social/procreative colossi. */

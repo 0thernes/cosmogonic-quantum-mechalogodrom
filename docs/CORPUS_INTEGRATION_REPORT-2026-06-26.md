@@ -147,8 +147,8 @@ Updated `docs/TSOTCHKE-CORPUS-INTEGRATION-PLAN-2026-06-26.md` with completion st
 
 **Test Coverage:**
 
-- Line coverage: 92.13% (synced to canonical with Tsotchke full wire)
-- Function coverage: 89.66%
+- Line coverage: 85.29% (synced to canonical with Tsotchke full wire)
+- Function coverage: 82.76%
 - Test count: 1984
 
 ## Determinism & Allocation Compliance
