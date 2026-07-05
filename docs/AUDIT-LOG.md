@@ -11,6 +11,27 @@ dated / historical / "superseded snapshot" copies (per the binding "Living docs,
 
 ---
 
+## 2026-07-05 — Runtime capability probe + tier-scaled brain cadence (Gemini synthesis, code)
+
+Follow-on to the Gemini crosswalk doc pass — this ships **code**, not only the matrix.
+
+### SHIPPED
+
+- **`src/core/runtime-capability.ts`** — probes `hardwareConcurrency`, `deviceMemory`, `SharedArrayBuffer`
+  availability, recommended worker count, graphics API (`webgpu` if `navigator.gpu` else `webgl2`), and
+  `hardwareTier` via `resolveTier`. Headless-safe; tested in `tests/runtime-capability.test.ts`.
+- **`QualityProfile.hardwareTier`** — capability tier distinct from boot tier (V123 boots `phone`); perf HUD
+  shows `hw: mega — tap tier ↑ for full power` when they differ (fixes the "why is my 5070 Ti at 3 FPS on
+  boot?" discoverability gap — user was still on the 1k phone rung).
+- **`brainSlicesForTier`** — mega 16 · ultra 12 · desktop 10 · else 8 round-robin slices; halves per-frame
+  brain work at 50k without touching determinism within a tier (Gemini perceptual priority cascade, CPU side).
+
+### VERIFIED GREEN
+
+`bun run check` after implementation.
+
+---
+
 ## 2026-07-05 — Gemini 3.1 Pro perf audit crosswalk + living-doc freshness (v0.20.0)
 
 Owner forwarded a Gemini 3.1 Pro High browser-performance assessment (Wasm workers, WebGPU compute,

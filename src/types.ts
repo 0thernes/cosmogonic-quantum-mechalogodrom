@@ -49,6 +49,12 @@ export interface QualityProfile {
   starCount: number;
   /** True above the phone tier: entities render through InstancedMesh pools (V3.1). */
   instanced: boolean;
+  /**
+   * Hardware capability tier (`resolveTier` from cores/memory/viewport). May exceed {@link tier}
+   * when V123 boots everyone on `phone` for fast first paint — the perf HUD surfaces this so a
+   * 275HX + 5070 Ti box knows to tap `mega`.
+   */
+  hardwareTier?: QualityTier;
 }
 
 /** Per-entity simulation state stored on the mesh (`userData`). */

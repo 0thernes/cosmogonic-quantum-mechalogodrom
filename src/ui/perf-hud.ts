@@ -57,7 +57,7 @@ const NOOP: PerfHud = { update: () => undefined };
  * Mount the perf chip into the document and return an updater. Headless-safe: returns a no-op updater
  * when there is no DOM (e.g. under `bun test`), so importing/calling this never throws off-browser.
  */
-export function mountPerfHud(currentTier: string): PerfHud {
+export function mountPerfHud(currentTier: string, hardwareTier?: string): PerfHud {
   if (typeof document === 'undefined' || !document.body) return NOOP;
 
   const mountParent = document.getElementById('perf-slot') ?? document.body;
@@ -95,9 +95,19 @@ export function mountPerfHud(currentTier: string): PerfHud {
   hint.className = 'perf-hud-hint';
   hint.textContent = 'fly: drag · scroll · WASD';
 
+  const hwHint = document.createElement('div');
+  hwHint.className = 'perf-hud-hint';
+  if (hardwareTier && hardwareTier !== currentTier) {
+    hwHint.textContent = `hw: ${hardwareTier} — tap tier ↑ for full power`;
+  } else {
+    hwHint.textContent = '';
+    hwHint.style.display = 'none';
+  }
+
   el.appendChild(line1);
   el.appendChild(tierRow);
   el.appendChild(hint);
+  if (hwHint.textContent) el.appendChild(hwHint);
   mountParent.appendChild(el);
 
   return {

@@ -6,7 +6,8 @@
 surfaces (MD · HTML · XML · code), its **single source of truth**, and where each surface restates it —
 so a drift between the README, the dashboard, a master XML, or a spec page is caught at a glance.
 Rewritten in place when the facts change (per the binding "Living docs, no archives" law in
-[CLAUDE.md](../CLAUDE.md)). Last reconciled by a full-repo audit pass on **2026-06-27** (§14).
+[CLAUDE.md](../CLAUDE.md)). Last reconciled by full-repo audit passes on **2026-07-05** (receipts +
+Gemini perf crosswalk + runtime capability probe).
 
 > **How the numbers stay honest:** the version (`package.json`) and the measured receipts +
 > NHSI design counts (`scripts/canonical-receipts.ts`) are the ONLY places those facts are edited.
@@ -32,6 +33,8 @@ Rewritten in place when the facts change (per the binding "Living docs, no archi
 | Butlin scorecard    | `8/14 met + 6/14 partial` | measured 2026-06-21 adversarial code audit                                           | prose (NOT auto-synced) |
 | Tsotchke corpus     | `20 projects, ~16 wired`  | [TSOTCHKE-INTEGRATION-MAP-2026-06-26.md](./TSOTCHKE-INTEGRATION-MAP-2026-06-26.md)   | prose (NOT auto-synced) |
 | Entity ceiling      | `50,000` (mega tier)      | `src/core/quality.ts` `resolveTier`                                                  | prose (NOT auto-synced) |
+| Per-entity brain    | `70-param TinyMLP`        | `src/sim/entity-brain.ts` / `genome.ts`                                              | tier-scaled round-robin |
+| Runtime capability  | SAB · workers · hw tier   | `src/core/runtime-capability.ts`                                                     | perf HUD + Stage 3 gate |
 | Apex composite mind | `~10,081` weights         | `src/sim/super-mind.ts`                                                              | prose (NOT auto-synced) |
 | Legacy spine        | `~1,444` params           | `src/sim/super-mind.ts` / ADR-0008                                                   | prose (NOT auto-synced) |
 
@@ -44,6 +47,9 @@ Rewritten in place when the facts change (per the binding "Living docs, no archi
   `verify:receipts` floors against the canonical ledger — any count ≥ floor with matching canon is green.
 - `bun run check` → green (prettier · tsc · oxlint · verify:receipts/test+coverage · sync:check · verify:facts · build).
 - `bun run smoke` → all routes OK (`/`, `/docs`, `/spec`, `/bible`, `/api/health`, `/api/ventures`).
+- **Perf architecture:** `src/core/runtime-capability.ts` probes SAB/workers/hw-tier; perf HUD shows
+  `hw:mega` when boot tier < capability; `brainSlicesForTier` scales round-robin at mega (16) / ultra (12).
+  Full Gemini crosswalk: [SCALING-ROADMAP-2026-06-26.md](./SCALING-ROADMAP-2026-06-26.md).
 
 ---
 

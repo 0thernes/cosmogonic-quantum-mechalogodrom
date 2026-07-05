@@ -51,7 +51,7 @@ import { createMorphotypes } from './sim/morphotypes';
 import { createPhyla } from './sim/phyla';
 import { EntityManager } from './sim/entities';
 import { growthTargetAt } from './sim/growth-ramp';
-import { EntityBrainField } from './sim/entity-brain';
+import { EntityBrainField, brainSlicesForTier } from './sim/entity-brain';
 import { devour, gedankenDeath, GedankenLedger } from './sim/gedanken-death';
 import { runThalerProof, type ThalerVerdict } from './sim/thaler-sentience';
 import { TRAIT, TRAIT_GENES } from './sim/genome';
@@ -1682,7 +1682,12 @@ export class World {
 
     // F-BRAIN V42: one cohort of organism brains perceives + steers itself BEFORE the integrator folds
     // velocity into position. Round-robin → bounded cost at 50k; own rng → the golden is unchanged.
-    this.entityBrains.think(this.entities.list, this.state.chaos, t);
+    this.entityBrains.think(
+      this.entities.list,
+      this.state.chaos,
+      t,
+      brainSlicesForTier(this.quality.tier),
+    );
     const stats = this.entities.update(dt, t);
     this.energy = stats.energy; // stats object is reused — copy immediately
     // USER stage E: RAGDOLL BOUNCE — organisms ricochet off the big solid bodies (Super Creatures /

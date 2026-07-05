@@ -6,7 +6,7 @@
 import { describe, expect, test } from 'bun:test';
 import * as THREE from 'three';
 import { mulberry32 } from '../src/math/rng';
-import { EntityBrainField } from '../src/sim/entity-brain';
+import { EntityBrainField, brainSlicesForTier } from '../src/sim/entity-brain';
 import { GENOME_LEN } from '../src/sim/genome';
 import type { Entity, EntityData } from '../src/types';
 
@@ -66,12 +66,21 @@ describe('EntityBrainField (V42)', () => {
     }
   });
 
-  test('round-robin covers the WHOLE population over SLICES frames (each thinks once)', () => {
+  test('round-robin covers the WHOLE population over cohort frames (each thinks once)', () => {
     const field = new EntityBrainField(50, mulberry32(1));
     const list = fakeList(50);
+    const slices = 8;
     let total = 0;
-    for (let f = 0; f < 8; f++) total += field.think(list, 2, f / 60);
-    expect(total).toBe(50); // every entity thought exactly once across the 8-frame cycle
+    for (let f = 0; f < slices; f++) total += field.think(list, 2, f / 60, slices);
+    expect(total).toBe(50); // every entity thought exactly once across the cycle
+  });
+
+  test('tier-scaled slices widen the round-robin at mega (fewer thinks per frame)', () => {
+    expect(brainSlicesForTier('mega')).toBe(16);
+    const field = new EntityBrainField(64, mulberry32(2));
+    const list = fakeList(64);
+    const perFrame = field.think(list, 3, 0, 16);
+    expect(perFrame).toBe(4); // 64 / 16 cohort
   });
 
   test('launched NHIs are exempt (they fly their own deep mind)', () => {

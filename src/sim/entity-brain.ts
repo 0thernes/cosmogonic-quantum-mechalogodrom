@@ -16,7 +16,7 @@
  * No `Math.random` / `Date.now`. Leaf module (depends only on `genome`, `Rng`, and the entity type).
  */
 import type { Rng } from '../math/rng';
-import type { Entity } from '../types';
+import type { Entity, QualityTier } from '../types';
 import {
   randomGenome,
   BRAIN_IN,
@@ -28,7 +28,27 @@ import {
 } from './genome';
 
 /** Cohort count — every entity thinks once per this many frames (bounds the 50k cost). */
-const SLICES = 8;
+const SLICES_DEFAULT = 8;
+
+/** Tier-scaled round-robin depth — higher tiers think fewer entities per frame (Gemini #13 cadence). Pure. */
+export function brainSlicesForTier(tier: QualityTier): number {
+  switch (tier) {
+    case 'mega':
+      return 16;
+    case 'ultra':
+      return 12;
+    case 'desktop':
+      return 10;
+    case 'laptop':
+    case 'tablet':
+    case 'phone':
+      return SLICES_DEFAULT;
+    default: {
+      const _exhaustive: never = tier;
+      return _exhaustive;
+    }
+  }
+}
 /** Steering authority: the brain nudges velocity by at most ~this per think (a flavour, not a takeover). */
 const STEER_GAIN = 0.045;
 
@@ -79,14 +99,20 @@ export class EntityBrainField {
    * w.r.t. the world rng (touches only entity velocity); allocation-free. Launched NHIs are skipped
    * (they carry their own deep mind). `chaos` is the world disorder, `t` the sim clock (seconds).
    */
-  think(list: ReadonlyArray<Entity | undefined>, chaos: number, t: number): number {
+  think(
+    list: ReadonlyArray<Entity | undefined>,
+    chaos: number,
+    t: number,
+    slices = SLICES_DEFAULT,
+  ): number {
     const n = Math.min(list.length, this.capacity);
     if (n === 0) return 0;
-    const start = this.cursor % SLICES;
+    const cohort = Math.max(1, Math.floor(slices));
+    const start = this.cursor % cohort;
     const s = this.senses;
     const chaosN = clamp01(chaos / 10);
     let thought = 0;
-    for (let i = start; i < n; i += SLICES) {
+    for (let i = start; i < n; i += cohort) {
       const e = list[i];
       if (!e) continue;
       const ud = e.userData;

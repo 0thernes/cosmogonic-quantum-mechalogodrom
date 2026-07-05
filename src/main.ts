@@ -213,7 +213,7 @@ async function boot(): Promise<void> {
   const governor = new RenderGovernor(quality.shadows);
   // Stage 1: a tiny render-layer perf chip — live FPS + the governor's quality level + tier switch.
   // Render-only ⇒ determinism-safe; headless-safe (no-op without a DOM).
-  const perfHud = mountPerfHud(quality.tier);
+  const perfHud = mountPerfHud(quality.tier, quality.hardwareTier);
   let fpsEma = 60;
   let perfFrame = 0;
   let lastGovernorLevel: Level | null = null;

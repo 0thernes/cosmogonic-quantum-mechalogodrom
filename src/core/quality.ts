@@ -1,4 +1,5 @@
 import type { QualityProfile, QualityTier } from '../types';
+import { probeRuntimeCapability } from './runtime-capability';
 
 /**
  * Quality tier ladder (CONTRACTS V3.1, PANTHEON).
@@ -138,13 +139,21 @@ export function detectQuality(): QualityProfile {
     forced === 'ultra' ||
     forced === 'mega'
   ) {
-    return { tier: forced, isMobile: forced === 'phone', ...QUALITY_LADDER[forced] };
+    const isMobileForced = forced === 'phone';
+    const cap = probeRuntimeCapability({ isMobile: isMobileForced });
+    return {
+      tier: forced,
+      isMobile: isMobileForced,
+      hardwareTier: cap.hardwareTier,
+      ...QUALITY_LADDER[forced],
+    };
   }
   const isTouch = window.matchMedia('(hover:none),(pointer:coarse)').matches;
   const isSmall = window.innerWidth < 600 || window.innerHeight < 600;
   const isMobile = isTouch || isSmall;
+  const cap = probeRuntimeCapability({ isMobile });
   // V123 (USER #6): EVERYONE boots the phone rung — the world paints in a couple of seconds
   // instead of a 5+ second 10k build, and the perf chip's tier switcher is one tap away for the
   // full ladder. `?tier=` (above) remains the direct door to any rung.
-  return { tier: 'phone', isMobile, ...QUALITY_LADDER.phone };
+  return { tier: 'phone', isMobile, hardwareTier: cap.hardwareTier, ...QUALITY_LADDER.phone };
 }
