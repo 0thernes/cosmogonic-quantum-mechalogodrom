@@ -596,8 +596,6 @@ Full detail in docs/.
 - [docs/BENCHMARKS-2026-06-26.md](./docs/BENCHMARKS-2026-06-26.md) — measured mitata results for the
   deterministic core (RNG, scalar math, spatial hash, sort steps, quantum
   gates, reaction-diffusion step)
-- [docs/reference/](./docs/reference/math-libs-catalog-2026-06-26.md) — the imported
-  20-domain math-library catalog + per-domain adoption status CSV
 - ADRs: [0001 Bun runtime](./docs/adr/0001-bun-runtime-2026-06-26.md) ·
   [0002 three.js rendering](./docs/adr/0002-threejs-rendering-2026-06-26.md) ·
   [0003 HTMX + Tailwind UI](./docs/adr/0003-htmx-tailwind-ui-2026-06-26.md) ·
