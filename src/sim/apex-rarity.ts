@@ -1,6 +1,6 @@
 /**
  * APEX SCIENTIFIC RARITY MATRIX — the "1-of-1 by combination" proof (Wave E of the APEX doctrine,
- * [docs/APEX-ABOMINATION-NOVELTY-DOCTRINE-2026-06-26.md], §"1-of-1 Scientific Differentiator" +
+ * [docs/APEX-1B-SUBSTRATE-ARCHITECTURE-2026-07-01.md], §"1-of-1 Scientific Differentiator" +
  * Experiment 5 "Scientific Rarity Matrix").
  *
  * The doctrine's central, DEFENSIBLE claim is NOT a component claim ("first quantum AI", "first

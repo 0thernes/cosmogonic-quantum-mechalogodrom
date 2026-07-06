@@ -11,6 +11,36 @@ dated / historical / "superseded snapshot" copies (per the binding "Living docs,
 
 ---
 
+## 2026-07-06 (pass 12) — Master plan Stages 0–5: truth repair + doc compress + test merge (v0.20.0)
+
+Owner brief: implement consolidation master plan — fewer files/lines, fix stale receipts, worker hygiene.
+
+### Code
+
+- **`src/core/worker-pool.ts`** — `getWorkerCount()` honors `maxWorkers` (capped at hardware concurrency).
+- **`tests/worker-pool.test.ts`** — maxWorkers cap tests.
+- **Deleted** extensionless orphan `src/core/graphics-ab` (canonical: `graphics-abstraction.ts`).
+- **`tests/wilderness.test.ts`** — safe Points guard (oxlint).
+- **`tests/docs-truth-law.test.ts`** — markdown glob integrity guard.
+
+### Docs
+
+- **`scripts/canonical-receipts.ts`** → **2,319 / 84.35% / 82.05%** (Linux gate floor); `bun run sync`.
+- **`docs/500-POINT-INSPECTION`** — compressed to section index.
+- **`docs/reports/README.md`** — historical snapshot policy; removed links to deleted reports.
+- Rebased atop remote **24-file delete** pass (APEX/NHSI reports already removed upstream).
+- KANBAN/TECH-SPEC/VERIFICATION measured counts aligned.
+
+### Tests merged (where not already upstream)
+
+- Remote already merged wingmen/qubits selfopt; kept upstream test hygiene.
+
+### Gate
+
+- `bun run check` green.
+
+---
+
 ## 2026-07-06 (pass 11) — Local↔GitHub sync + CI receipts fix (v0.20.0)
 
 Owner brief: make Local match GitHub reliably; fix Windows CI receipts failure.

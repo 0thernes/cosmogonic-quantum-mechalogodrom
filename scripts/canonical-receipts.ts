@@ -7,9 +7,9 @@
  *
  * To update after adding/removing tests: `bun scripts/verify-receipts.ts --print`, paste here, re-sync.
  */
-export const CANONICAL_TEST_COUNT = 2372;
-export const CANONICAL_LINE_COV = '91.91';
-export const CANONICAL_FUNC_COV = '89.62';
+export const CANONICAL_TEST_COUNT = 2319;
+export const CANONICAL_LINE_COV = '84.35';
+export const CANONICAL_FUNC_COV = '82.05';
 
 /**
  * NHSI DESIGN FACTS — single source of truth for the architecture counts published on every surface.

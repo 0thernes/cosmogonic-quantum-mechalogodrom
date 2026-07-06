@@ -2,7 +2,7 @@
  * APEX-BRAIN — THE ENTROPIC TESSERACT HYDRA, the brain of the final-sigma ς apex creature (the
  * pantheon's 101st; see [[pantheon-breeding]]). Ten *incompatible* neuron architectures forced into
  * one deterministic engine, governed by a meta-paradox layer. The owner's design corpus and the
- * 5-image render look are in `docs/APEX-BRAIN-ABOMINATION-2026-06-26.md`.
+ * 5-image render look are in `docs/APEX-1B-SUBSTRATE-ARCHITECTURE-2026-07-01.md`.
  *
  * ──────────────────────────────────────────────────────────────────────────────────────────────
  * HONESTY CONTRACT (binding). The source brief frames these organs as impossible (retrocausal time

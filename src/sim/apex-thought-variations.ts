@@ -6,7 +6,7 @@
  * and growth-stage rotation, not literal sentience claims (honesty contract: Level 3-4 conjunction,
  * never Level 5).
  *
- * @see docs/APEX-ABOMINATION-NOVELTY-DOCTRINE-2026-06-26.md
+ * @see docs/APEX-1B-SUBSTRATE-ARCHITECTURE-2026-07-01.md
  * @see docs/APEX-BRAIN-CORPUS-100-PAPERS-2026-06-26.md
  */
 export type ThoughtFamily =

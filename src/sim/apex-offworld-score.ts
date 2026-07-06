@@ -17,7 +17,7 @@
  * 3-4). Deterministic, DOM-free.
  *
  * @see src/sim/apex-substrate-driver.ts
- * @see docs/APEX-ABOMINATION-NOVELTY-DOCTRINE-2026-06-26.md  (Experiment 2 — Offworld Umwelt Score)
+ * @see docs/APEX-1B-SUBSTRATE-ARCHITECTURE-2026-07-01.md  (Experiment 2 — Offworld Umwelt Score)
  */
 
 import { mulberry32 } from '../math/rng';
