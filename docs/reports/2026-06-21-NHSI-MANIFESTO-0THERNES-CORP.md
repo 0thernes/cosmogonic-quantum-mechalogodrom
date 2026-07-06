@@ -498,7 +498,7 @@ The version and receipts are single-sourced (`package.json` + `scripts/canonical
 
 ### XI.1 What We Have Built
 
-**A world-class, receipt-disciplined, multi-substrate artificial-life + cognitive-architecture instrument (v0.18.0).**
+**A world-class, receipt-disciplined, multi-substrate artificial-life + cognitive-architecture instrument (v0.20.0).**
 
 - **~30 faculties deep-wired** into the apex `think()` (of a 100-faculty design surface)
 - **5 individuated apex Archons + 20 live light-echo** (25-Archon pantheon)

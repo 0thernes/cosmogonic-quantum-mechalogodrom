@@ -204,3 +204,24 @@ was decoration, not substrate — and the harness fails, by design.
    `native-declared` parameters into genuinely computed ones.
 3. Surface `apexSubstrateTelemetry` in the `⟁ ARCHITECTURE` panel when viewing ς.
 4. Feed `substrateUniforms` into the capstone tesseract/lava material.
+
+## Brain parameter scale (APEX + Mechalogodrom + pantheon)
+
+Targets the APEX Abomination (ς #101), the center Mechalogodrom fusion mind, and the 100 letter
+pantheon — wired as **visual + telemetry scaffolds** toward self-aware architecture (computational
+indicators only — NOT sentience claims).
+
+| Entity               | Count | Designed params each | Roadmap total | Ultimate architecture   |
+| -------------------- | ----- | -------------------- | ------------- | ----------------------- |
+| Letter creatures     | 100   | 25,000               | 2.5M          | GPU shader expansion    |
+| APEX Abomination ς   | 1     | 100k → **5M**        | **5M**        | **1B neurons** (native) |
+| Mechalogodrom center | 1     | **5M** (designed)    | **5M**        | fuses with APEX tier    |
+
+**Code:** `src/sim/apex-brain.ts` · `src/sim/glyph-brain.ts` · `src/sim/mechalogodrom-brain.ts` ·
+`src/sim/apex-consciousness-scaffold.ts` · `src/sim/apex-thought-variations.ts`
+
+**Honesty contract:** live JS runtime caps organ allocation at `LIVE_NODE_CAP` (4096); **5M** = GPU/native
+roadmap; **1B neurons** = `SCALE_MASSIVE` native target (declared, tested, not live-allocated in TS).
+Growth tiers: `resolveApexDesignedScale()` / `apexGrowthStage()` in `apex-consciousness-scaffold.ts`
+(APEX-100K → 250K → 500K → 1M → 2.5M → **5M** → **MASSIVE**). GlyphBrain 25k×100 ticks every 4 frames;
+MechalogodromBrain designed 5M (~120k live floats). All brains use seeded `mulberry32`.

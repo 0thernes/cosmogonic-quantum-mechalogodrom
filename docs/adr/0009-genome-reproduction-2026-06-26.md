@@ -61,7 +61,7 @@ the 300-frame population golden pins. Specifically:
   symmetry, `.esk` fingerprint, generation) is derived from the inherited genome. A founder
   fallback preserves the legacy fresh-roll only when no living co-parent exists.
 - Because this lives entirely on `soupRng`, the entity-population golden (`tests/determinism.test.ts`)
-  is **untouched** — the full suite (1771 tests) stays green with no re-baseline required. This
+  is **untouched** — the full suite (published floor 1,984 tests) stays green with no re-baseline required. This
   realizes the heredity goal without the golden migration that Option A feared on the entity path.
 
 **Entity-path wave (2026-06-24, same day).** Heredity now also runs on the organism/NHI path:
@@ -89,6 +89,6 @@ moot; **C (reserve)** is superseded; the entity-path follow-up is now DONE.
   child, offspring-resembles-lineage, clamping under mutation).
 - `primordial-soup.ts` carries per-slot genomes and breeds reborn slots from living parents.
 - The 300-frame entity golden is **unchanged** (soup runs on its own sub-stream); the full suite is
-  green (1771 tests) with no re-baseline.
+  green (published floor 1,984 tests) with no re-baseline.
 - Follow-up (tracked): wire heredity into the entity/NHI spawn path on a dedicated `genomeRng` with a
   deliberate golden re-baseline, per the original Option A on the entity path.

@@ -89,7 +89,6 @@ docs/SCALING-ROADMAP-2026-06-26.md,docs,.md,99,doc-consistency agent + verify:fa
 docs/SUPER-CREATURE-RESEARCH.md,docs,.md,264,doc-consistency agent + verify:facts (0 drift),audited (date-current)
 docs/TECHNICAL-SPECIFICATION.md,docs,.md,376,doc-consistency agent + verify:facts (0 drift),audited (date-current)
 docs/TSOTCHKE-INTEGRATION-MAP.md,docs,.md,125,doc-consistency agent + verify:facts (0 drift),audited (date-current)
-docs/TSOTCHKE-LICENSE-UNBLOCK-PLAN-2026-06-26.md,docs,.md,158,doc-consistency agent + verify:facts (0 drift),audited (date-current)
 docs/VERIFICATION-ANALYTICAL-DATA.md,docs,.md,343,doc-consistency agent + verify:facts (0 drift),audited (date-current)
 docs/WIREFRAMES-2026-06-26.md,docs,.md,194,doc-consistency agent + verify:facts (0 drift),audited (date-current)
 docs/adr/0001-bun-runtime.md,docs/adr,.md,58,doc-consistency agent + verify:facts (0 drift),audited (date-current)
@@ -386,7 +385,6 @@ tests/belief-propagation.test.ts,tests,.ts,81,gate (1;489 pass) + tooling agent,
 tests/brains.test.ts,tests,.ts,206,gate (1;489 pass) + tooling agent,audited-healthy
 tests/butlin-indicators.test.ts,tests,.ts,97,gate (1;489 pass) + tooling agent,audited-healthy
 tests/chaos-field.test.ts,tests,.ts,169,gate (1;489 pass) + tooling agent,audited-healthy
-tests/classical-contrast-perceptron.test.ts,tests,.ts,67,gate (1;489 pass) + tooling agent,audited-healthy
 tests/classical-contrast.test.ts,tests,.ts,80,gate (1;489 pass) + tooling agent,audited-healthy
 tests/clifford-tableau.test.ts,tests,.ts,110,gate (1;489 pass) + tooling agent,audited-healthy
 tests/cognition.test.ts,tests,.ts,140,gate (1;489 pass) + tooling agent,audited-healthy
@@ -477,7 +475,6 @@ tests/quantum-magic.test.ts,tests,.ts,79,gate (1;489 pass) + tooling agent,audit
 tests/quantum-natural-gradient.test.ts,tests,.ts,185,gate (1;489 pass) + tooling agent,audited-healthy
 tests/quantum-qrng-full.test.ts,tests,.ts,31,gate (1;489 pass) + tooling agent,audited-healthy
 tests/quantum-quake-physics.test.ts,tests,.ts,61,gate (1;489 pass) + tooling agent,audited-healthy
-tests/quantum-quake-qge-geometry.test.ts,tests,.ts,166,gate (1;489 pass) + tooling agent,audited-healthy
 tests/quantum-reservoir.test.ts,tests,.ts,112,gate (1;489 pass) + tooling agent,audited-healthy
 tests/quantum.test.ts,tests,.ts,463,gate (1;489 pass) + tooling agent,audited-healthy
 tests/reaction-diffusion.test.ts,tests,.ts,274,gate (1;489 pass) + tooling agent,audited-healthy

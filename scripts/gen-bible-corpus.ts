@@ -91,8 +91,8 @@ const EXTRA: Entry[] = [
     tier: 'Research',
   },
   {
-    title: 'BRAIN-PARAMETER-SCALE-PLAN',
-    href: '/docs/BRAIN-PARAMETER-SCALE-PLAN.md',
+    title: 'APEX brain parameter scale',
+    href: '/docs/APEX-1B-SUBSTRATE-ARCHITECTURE-2026-07-01.md#brain-parameter-scale-apex--mechalogodrom--pantheon',
     blurb: '25k glyph · 100k→5M apex · Mechalogodrom roadmap.',
     tier: 'Architecture',
   },

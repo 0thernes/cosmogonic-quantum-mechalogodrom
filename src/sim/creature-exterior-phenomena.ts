@@ -6,7 +6,7 @@
  * Intelligence remains in Tsotchke + sim brains; this catalog names what the body *does* visually.
  *
  * @see docs/APEX-BRAIN-ABOMINATION-2026-06-26.md
- * @see docs/BRAIN-PARAMETER-SCALE-PLAN.md
+ * @see docs/APEX-1B-SUBSTRATE-ARCHITECTURE-2026-07-01.md §Brain parameter scale
  */
 
 export const PHENOMENON_KINDS = [

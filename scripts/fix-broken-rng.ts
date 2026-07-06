@@ -5,12 +5,12 @@
 import { readFileSync, writeFileSync } from 'fs';
 
 const files = [
-  'tests/entity-vitals2.test.ts',
-  'tests/entity-vitals3.test.ts',
+  'tests/entity-vitals.test.ts',
+  'tests/entity-vitals.test.ts',
   'tests/environment.test.ts',
   'tests/feature-determinism.test.ts',
   'tests/graph-mind.test.ts',
-  'tests/portal-death-fauna.test.ts',
+  'tests/portal-death.test.ts',
   'tests/portal-death.test.ts',
   'tests/puppet-masters.test.ts',
   'tests/qcircuit.test.ts',

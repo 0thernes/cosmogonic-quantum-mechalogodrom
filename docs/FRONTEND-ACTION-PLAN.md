@@ -14,25 +14,25 @@ Living backlog for UI/UX, visual fidelity, and front-end wiring. Rewrite in plac
 
 ## Priority matrix
 
-| ID    | Item                                               | Status                         | Where to look                                                                          |
-| ----- | -------------------------------------------------- | ------------------------------ | -------------------------------------------------------------------------------------- |
-| 2     | Super Creature HUD fits without scrollbar          | **Done (pass 2026-06-28)**     | `src/ui/superhero-hud.ts` — `fitHeroBox`, no `overflow-x`                              |
-| 3     | Sim controls in SET/Settings only                  | **Done**                       | `src/ui/settings-panel.ts`, `#pad-sim` hidden in `app.css`                             |
-| 4     | Fullscreen laptop HUD clips above screen           | **Improved**                   | `src/ui/center-hud.ts` `fitHud` top inset + `--cqm-hud-max-height`                     |
-| 5     | DOCS/SPEC SVGs start zoomed top-left               | **Fixed (pass 2026-06-28)**    | `src/alife-metrics-gallery.ts` — intrinsic img size + fit                              |
-| 6     | WildBeyond Lorenz/Rössler blank on mobile          | **Fixed (pass 2026-06-28)**    | `lab/quantum-wildbeyond.html` — `attractorCamZ` / compact scale                        |
-| 7     | Entities too white — darker saturated rainbow      | **Fixed (pass 2026-06-28)**    | `src/sim/entities.ts` `paintVibrant` — lower L + emissive cap                          |
-| 9     | AUTO sort feels decorative                         | **Improved**                   | `world.ts` 4s cycle, `#algo-active` countdown, flash on advance                        |
-| 11    | MEGA 4D brain visible + Architect/Neural in window | **In progress**                | `super-neural.ts` tab IV + cycle btn; `super-panel.ts` respects `--cqm-hud-max-height` |
-| 12    | BIBLE depth                                        | **Ongoing**                    | `bible.html`, `scripts/gen-bible-corpus.ts`, BOOK index                                |
-| 13    | 100 glyphs + APEX wild like super creatures        | **Improved (pass 2026-06-28)** | `alphabet-pantheon-render.ts` motor orbit + apex travel                                |
-| 14    | 25k / 100k→5M params in UI                         | **Partial**                    | `docs/BRAIN-PARAMETER-SCALE-PLAN.md`, architecture panel                               |
-| 15    | Connectome full-blast (always on, 12× entity cap)  | **Done (pass 2026-07-05)**     | `src/core/quality.ts`, `src/sim/connectome.ts`                                         |
-| 16    | Wilderness ambient render (ADR 0010 Stage 3b)      | **Done (pass 2026-07-05)**     | `src/sim/wilderness-render.ts`, `src/world.ts`                                         |
-| 17    | Perf HUD (frame ms, p95, heap, workers, wild)      | **Done (pass 2026-07-05)**     | `src/ui/perf-hud.ts`, `src/world.ts` `getPerfSnapshot()`                               |
-| 18    | Entity brains: full 70-param every frame           | **Done (pass 2026-07-05)**     | `entity-brain.ts` — FP32 all tiers; LOD removed                                        |
-| 19    | Zero-degradation mandate (pass 6)                  | **Done (pass 2026-07-05)**     | archon/NHI/RD every frame; all-core workers; wilderness scale-up                       |
-| BONUS | Peer-review paper + outreach                       | **Started**                    | `docs/PEER-REVIEW-META-ANALYSIS.md`                                                    |
+| ID    | Item                                               | Status                         | Where to look                                                                                  |
+| ----- | -------------------------------------------------- | ------------------------------ | ---------------------------------------------------------------------------------------------- |
+| 2     | Super Creature HUD fits without scrollbar          | **Done (pass 2026-06-28)**     | `src/ui/superhero-hud.ts` — `fitHeroBox`, no `overflow-x`                                      |
+| 3     | Sim controls in SET/Settings only                  | **Done**                       | `src/ui/settings-panel.ts`, `#pad-sim` hidden in `app.css`                                     |
+| 4     | Fullscreen laptop HUD clips above screen           | **Improved**                   | `src/ui/center-hud.ts` `fitHud` top inset + `--cqm-hud-max-height`                             |
+| 5     | DOCS/SPEC SVGs start zoomed top-left               | **Fixed (pass 2026-06-28)**    | `src/alife-metrics-gallery.ts` — intrinsic img size + fit                                      |
+| 6     | WildBeyond Lorenz/Rössler blank on mobile          | **Fixed (pass 2026-06-28)**    | `lab/quantum-wildbeyond.html` — `attractorCamZ` / compact scale                                |
+| 7     | Entities too white — darker saturated rainbow      | **Fixed (pass 2026-06-28)**    | `src/sim/entities.ts` `paintVibrant` — lower L + emissive cap                                  |
+| 9     | AUTO sort feels decorative                         | **Improved**                   | `world.ts` 4s cycle, `#algo-active` countdown, flash on advance                                |
+| 11    | MEGA 4D brain visible + Architect/Neural in window | **In progress**                | `super-neural.ts` tab IV + cycle btn; `super-panel.ts` respects `--cqm-hud-max-height`         |
+| 12    | BIBLE depth                                        | **Ongoing**                    | `bible.html`, `scripts/gen-bible-corpus.ts`, BOOK index                                        |
+| 13    | 100 glyphs + APEX wild like super creatures        | **Improved (pass 2026-06-28)** | `alphabet-pantheon-render.ts` motor orbit + apex travel                                        |
+| 14    | 25k / 100k→5M params in UI                         | **Partial**                    | `docs/APEX-1B-SUBSTRATE-ARCHITECTURE-2026-07-01.md` §Brain parameter scale, architecture panel |
+| 15    | Connectome full-blast (always on, 12× entity cap)  | **Done (pass 2026-07-05)**     | `src/core/quality.ts`, `src/sim/connectome.ts`                                                 |
+| 16    | Wilderness ambient render (ADR 0010 Stage 3b)      | **Done (pass 2026-07-05)**     | `src/sim/wilderness-render.ts`, `src/world.ts`                                                 |
+| 17    | Perf HUD (frame ms, p95, heap, workers, wild)      | **Done (pass 2026-07-05)**     | `src/ui/perf-hud.ts`, `src/world.ts` `getPerfSnapshot()`                                       |
+| 18    | Entity brains: full 70-param every frame           | **Done (pass 2026-07-05)**     | `entity-brain.ts` — FP32 all tiers; LOD removed                                                |
+| 19    | Zero-degradation mandate (pass 6)                  | **Done (pass 2026-07-05)**     | archon/NHI/RD every frame; all-core workers; wilderness scale-up                               |
+| BONUS | Peer-review paper + outreach                       | **Started**                    | `docs/PEER-REVIEW-META-ANALYSIS.md`                                                            |
 
 ---
 

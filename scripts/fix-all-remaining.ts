@@ -8,7 +8,7 @@ const files = [
   'tests/entity-metabolic-luminance.test.ts',
   'tests/environment.test.ts',
   'tests/feature-determinism.test.ts',
-  'tests/portal-death-fauna.test.ts',
+  'tests/portal-death.test.ts',
   'tests/portal-death.test.ts',
   'tests/puppet-masters.test.ts',
   'tests/qcircuit.test.ts',

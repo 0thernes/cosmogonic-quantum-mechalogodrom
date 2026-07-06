@@ -202,7 +202,7 @@ const VITAL_GIRTH_RANGE = 1.6;
  *
  * Every lane is finite and in `[0, 1]`: non-finite inputs and a negative community pack 0, and the
  * cyclic lanes wrap. Pure, no rng — the spectacle is a deterministic function of state. O(1). See
- * tests/entity-vitals2.test.ts.
+ * tests/entity-vitals.test.ts.
  */
 export function packVitals2(
   out: Float32Array,
