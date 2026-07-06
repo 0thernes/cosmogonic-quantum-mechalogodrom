@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.21.3] — 2026-07-06
+
+Release dispatch permission patch.
+
+- Added the required `actions: write` permission to `auto-tag.yml` so the workflow can dispatch `release.yml` after pushing a new semver tag with `GITHUB_TOKEN`.
+- Cut a fresh patch version so the GitHub Release, tag, CI, Pages deploy, and public truth surfaces resolve to the same final commit.
+
 ## [0.21.2] — 2026-07-06
 
 Release automation patch.

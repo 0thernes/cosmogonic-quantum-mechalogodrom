@@ -13,6 +13,7 @@ on:
 
 permissions:
   contents: write # push the new tag
+  actions: write # dispatch release.yml after the GITHUB_TOKEN-created tag is pushed
 
 concurrency:
   group: auto-tag-${{ github.sha }}
