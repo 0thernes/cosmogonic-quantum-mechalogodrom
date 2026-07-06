@@ -79,8 +79,9 @@ describe('WildernessRenderer', () => {
     pop.update(120, 120, 1 / 60);
     render.sync(pop, 1.5);
     const pts = scene.children.find((c) => c instanceof THREE.Points) as THREE.Points | undefined;
-    expect(pts?.visible).toBe(true);
-    expect((pts?.geometry as THREE.BufferGeometry).drawRange.count).toBeGreaterThan(0);
+    expect(pts).toBeDefined();
+    expect(pts!.visible).toBe(true);
+    expect((pts!.geometry as THREE.BufferGeometry).drawRange.count).toBeGreaterThan(0);
     render.dispose();
     pop.dispose();
   });

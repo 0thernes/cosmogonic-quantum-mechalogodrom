@@ -11,6 +11,8 @@
  * - Supports SharedArrayBuffer for zero-copy where available
  */
 
+import { mulberry32, hashSeed } from '../math/rng';
+
 export interface WorkerMessage {
   id: string;
   type: 'simulation' | 'wilderness';
@@ -57,31 +59,6 @@ function simulateWilderness(data: Float32Array, seed: number, chunkId: string): 
   }
 
   return data;
-}
-
-/**
- * Mulberry32 PRNG for deterministic wilderness simulation
- */
-function mulberry32(a: number): () => number {
-  return function () {
-    let t = (a += 0x6d2b79f5);
-    t = Math.imul(t ^ (t >>> 15), t | 1);
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-    return ((t ^ ((t >>> 14) * (t | 1))) >>> 0) / 4294967296;
-  };
-}
-
-/**
- * Simple hash function for chunk seeding
- */
-function hashSeed(str: string): number {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    const char = str.charCodeAt(i);
-    hash = (hash << 5) - hash + char;
-    hash = hash & hash; // Convert to 32bit integer
-  }
-  return Math.abs(hash);
 }
 
 /**

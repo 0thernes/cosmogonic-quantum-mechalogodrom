@@ -35,9 +35,9 @@ Rewritten in place when the facts change (per the binding "Living docs, no archi
 | Apex composite mind | `~10,081` weights         | `src/sim/super-mind.ts`                                                              | prose (NOT auto-synced) |
 | Legacy spine        | `~1,444` params           | `src/sim/super-mind.ts` / ADR-0008                                                   | prose (NOT auto-synced) |
 
-### Measured reality (this audit, 2026-07-05, Bun 1.3.14)
+### Measured reality (this audit, 2026-07-06, Bun 1.3.14)
 
-- `bun test --coverage` → **2372 pass / 0 fail** · **2,866,572 expect() calls** · **254 test files** · coverage
+- `bun test --coverage` → **2372 pass / 0 fail** · **2,866,572 expect() calls** · **250 test files** · coverage
   **91.91% line / 89.62% func** (measured; canonical synced floor is **2372** tests · **91.91% line / 89.62% func**
   from `canonical-receipts.ts`). `CANONICAL_TEST_COUNT` is a documented
   **floor**; a file-rich checkout measures every `*.test.ts` in the working tree. Gate-enforced
@@ -335,7 +335,7 @@ verify:facts` = 0 drift / 80 surfaces, 0 git-conflict-markers tree-wide, 100% of
 | `src/ui/**`                                                                       | 20    | subsystems agent                                         | clean (3 cosmetic Low: DPR-on-monitor-move)                                                      |
 | `src/core,audio,server,memory,logging` + `main/types/docs-page` + `server.ts`     | ~14   | subsystems agent                                         | clean; security exceptionally hardened                                                           |
 | `src/styles/app.css`                                                              | 1     | front-end agent                                          | clean                                                                                            |
-| `tests/**`                                                                        | 153   | gate (2,372 pass) + tooling agent                        | healthy, 0 disabled, all assert                                                                  |
+| `tests/**`                                                                        | 250   | gate (2,372 pass) + tooling agent                        | healthy, 0 disabled, all assert                                                                  |
 | `scripts/**`                                                                      | 16    | scripts/tooling agents                                   | sound; **CI sync:check gap FIXED**, dead `.sync-receipts.cjs` removed                            |
 | `bench/**`                                                                        | 13    | tooling agent                                            | clean; aggregate now includes the P1 quantum-classical bench                                     |
 | `.github/workflows/*.yml` + issue/PR templates                                    | 8+    | CI agent                                                 | SHA-pinned, least-priv; `master`->`main` URLs FIXED; **gate now runs sync:check + verify:facts** |

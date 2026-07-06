@@ -2,16 +2,11 @@
 
 # Reports
 
-Living technical reports and audits for Cosmogonic Quantum Mechalogodrom. **Each file here is a single,
-current, continuously-rewritten document — not a dated snapshot and not an archive.** When the facts
-change, the report is **rewritten in place** to the current truth. No historical duplicates, no
-"superseded" copies, no per-version forks. One source per topic.
-
-Every load-bearing number is the live measured value: **v0.20.0 · 2,372 tests · 91.91 % line / 89.62 % function ·
-Butlin 8/14 met + 6/14 partial · not sentient**. The canonical numbers come from
-`scripts/canonical-receipts.ts` + `package.json`, propagated by `scripts/sync-surfaces.ts` and
-gate-enforced (`bun run sync:check`). The one-glance reference is
-[VERIFICATION-ANALYTICAL-DATA.md](../VERIFICATION-ANALYTICAL-DATA.md) §1.
+Technical reports and audits for Cosmogonic Quantum Mechalogodrom. The dated reports are
+**historical worldline snapshots**: they preserve the evidence, scores, and receipt language that
+existed when each report was written. Current operating truth lives in
+[VERIFICATION-ANALYTICAL-DATA.md](../VERIFICATION-ANALYTICAL-DATA.md), with receipt constants in
+`scripts/canonical-receipts.ts` and propagation handled by `scripts/sync-surfaces.ts`.
 
 ## Reports
 
@@ -46,6 +41,5 @@ gate-enforced (`bun run sync:check`). The one-glance reference is
 
 ## Rule
 
-**Rewrite, don't accumulate.** Update a report in place to the current truth; never fork a new dated or
-"historical" copy. No archives. Filenames carry a creation date for ordering only — the content is always
-the current, measured truth.
+Do not treat old receipt numbers inside dated reports as current claims. When a report must become a
+living surface, first promote it into the receipt/fact gates and then update its prose in the same pass.

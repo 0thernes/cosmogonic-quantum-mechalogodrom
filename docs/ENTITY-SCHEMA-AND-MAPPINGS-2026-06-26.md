@@ -156,7 +156,7 @@ The Tsotchke corpus (Eshkol as consciousness language with native AD/GWT/inferen
 - `BIOLOGIC` feeds back into `ENTITY`, phyla, evolution, super minds.
 - Super Creature is the origin spark; the soup grows independent forms.
 
-See README, ARCHITECTURE-2026-06-26.md, reports/2026-06-20-*, and tsotchke-*.ts for details.
+See README, ARCHITECTURE-2026-06-26.md, `reports/2026-06-20-*`, and `tsotchke-*.ts` for details.
 
 ---
 

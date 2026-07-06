@@ -11,7 +11,7 @@
  * These tests focus on the SYNC executor path and pool management.
  */
 import { describe, expect, test } from 'bun:test';
-import { createWorkerPool, type WorkerTask } from '../src/core/worker-pool';
+import { createWorkerPool, WorkerPool, type WorkerTask } from '../src/core/worker-pool';
 import type { QualityTier } from '../src/types';
 
 describe('Phase 3.1: Worker Pool', () => {
@@ -167,5 +167,89 @@ describe('Phase 3.1: Worker Pool', () => {
     expect(result).toEqual(largeData);
 
     pool.dispose();
+  });
+
+  test('WorkerPool honors maxWorkers while capping to hardware concurrency', async () => {
+    const originalWorker = globalThis.Worker;
+    const originalNavigator = globalThis.navigator;
+    const workers: { terminate: () => void }[] = [];
+
+    class FakeWorker {
+      onmessage: ((event: MessageEvent) => void) | null = null;
+      onerror: ((event: ErrorEvent) => void) | null = null;
+      constructor(_url: string, _options?: WorkerOptions) {
+        workers.push(this);
+      }
+      postMessage(): void {}
+      terminate(): void {}
+    }
+
+    Object.defineProperty(globalThis, 'Worker', {
+      configurable: true,
+      value: FakeWorker,
+    });
+    Object.defineProperty(globalThis, 'navigator', {
+      configurable: true,
+      value: { hardwareConcurrency: 8 },
+    });
+
+    const pool = new WorkerPool({
+      maxWorkers: 3,
+      useSharedArrayBuffer: false,
+      qualityTier: 'desktop',
+    });
+    await pool.initialize('/fake-worker.js');
+    expect(pool.getStats().totalWorkers).toBe(3);
+    pool.dispose();
+
+    Object.defineProperty(globalThis, 'navigator', {
+      configurable: true,
+      value: { hardwareConcurrency: 2 },
+    });
+    const capped = new WorkerPool({
+      maxWorkers: 9,
+      useSharedArrayBuffer: false,
+      qualityTier: 'desktop',
+    });
+    await capped.initialize('/fake-worker.js');
+    expect(capped.getStats().totalWorkers).toBe(2);
+    capped.dispose();
+
+    // Missing navigator fallback
+    Object.defineProperty(globalThis, 'navigator', {
+      configurable: true,
+      value: undefined,
+    });
+    const noNav = new WorkerPool({
+      maxWorkers: 4,
+      useSharedArrayBuffer: false,
+      qualityTier: 'desktop',
+    });
+    await noNav.initialize('/fake-worker.js');
+    expect(noNav.getStats().totalWorkers).toBe(4);
+    noNav.dispose();
+
+    // Undefined hardwareConcurrency fallback
+    Object.defineProperty(globalThis, 'navigator', {
+      configurable: true,
+      value: {},
+    });
+    const noCores = new WorkerPool({
+      maxWorkers: 5,
+      useSharedArrayBuffer: false,
+      qualityTier: 'desktop',
+    });
+    await noCores.initialize('/fake-worker.js');
+    expect(noCores.getStats().totalWorkers).toBe(5);
+    noCores.dispose();
+
+    Object.defineProperty(globalThis, 'navigator', {
+      configurable: true,
+      value: originalNavigator,
+    });
+    Object.defineProperty(globalThis, 'Worker', {
+      configurable: true,
+      value: originalWorker,
+    });
   });
 });

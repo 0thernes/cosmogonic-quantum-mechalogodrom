@@ -132,7 +132,6 @@ const NHSI_SURFACES = [
   'AGENTS-2026-06-26.md',
   'docs/ENTITY-SCHEMA-AND-MAPPINGS-2026-06-26.md',
   'docs/PHILOSOPHY-2026-06-26.md',
-  'docs/CONSCIOUSNESS-LAB-MASTER-2026-07-03.md',
   'masters/LEGENDARY-SUPER-SAIYAN-BROLY-MANIFESTO.xml',
   'masters/GALAXOGONIC-WARHAMMER-POWER-MODE-DR-MANHATTAN.xml',
   'masters/ORACLE-ARCHITECT-OF-THE-DARKSIDE-STARKILLER.xml',
@@ -303,4 +302,30 @@ describe('docs truth law — no unresolved git conflict markers', () => {
     }
     expect(offenders).toEqual([]);
   }, 30_000);
+});
+
+describe('docs truth law — consolidation hygiene', () => {
+  test('the entity schema preserves literal wildcard references', async () => {
+    const text = await Bun.file('docs/ENTITY-SCHEMA-AND-MAPPINGS-2026-06-26.md').text();
+    expect(text).toContain('reports/2026-06-20-*');
+    expect(text).toContain('tsotchke-*.ts');
+    expect(text).not.toContain('reports/2026-06-20-_');
+    expect(text).not.toContain('tsotchke-_.ts');
+  });
+
+  test('no extensionless TypeScript-like source duplicates are tracked', async () => {
+    const offenders: string[] = [];
+    for (const rel of await conflictScanFiles()) {
+      if (!rel.startsWith('src/') || BINARY_EXT.test(rel)) continue;
+      const leaf = rel.split('/').pop() ?? rel;
+      if (leaf.includes('.')) continue;
+      const sibling = Bun.file(`${rel}.ts`);
+      if (!(await sibling.exists())) continue;
+      const text = await Bun.file(rel).text();
+      if (/\b(?:import|export|interface|class|type|enum|const|let)\b/.test(text)) {
+        offenders.push(rel);
+      }
+    }
+    expect(offenders).toEqual([]);
+  });
 });

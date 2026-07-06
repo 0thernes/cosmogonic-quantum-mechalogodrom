@@ -32,6 +32,7 @@ export interface WorkerResult {
 }
 
 export interface WorkerPoolConfig {
+  /** Upper bound for spawned workers. The pool caps this to available hardware cores and at least one. */
   maxWorkers: number;
   useSharedArrayBuffer: boolean;
   qualityTier: QualityTier;
@@ -75,12 +76,13 @@ export class WorkerPool {
     }
   }
 
-  /**
-   * Get worker count based on quality tier
-   */
+  /** Get worker count from config, capped by available cores and floored to one. */
   private getWorkerCount(): number {
-    // Every reported core — wilderness offload is best-effort (ADR 0010), not golden-bound.
-    return Math.max(1, navigator.hardwareConcurrency || 4);
+    const configured = Math.floor(this.config.maxWorkers);
+    const requested = Number.isFinite(configured) && configured > 0 ? configured : 1;
+    const nav = globalThis.navigator as Navigator | undefined;
+    const cores = Math.max(1, Math.floor(nav?.hardwareConcurrency ?? requested));
+    return Math.max(1, Math.min(requested, cores));
   }
 
   /**
@@ -307,9 +309,10 @@ export class WorkerPool {
 export function createWorkerPool(qualityTier: QualityTier): WorkerPool {
   // Check for SharedArrayBuffer support
   const useSharedArrayBuffer = typeof SharedArrayBuffer !== 'undefined';
+  const nav = globalThis.navigator as Navigator | undefined;
 
   return new WorkerPool({
-    maxWorkers: navigator.hardwareConcurrency || 4,
+    maxWorkers: nav?.hardwareConcurrency || 4,
     useSharedArrayBuffer,
     qualityTier,
   });

@@ -32,15 +32,15 @@ seed**.
 These figures are **measured, not pinned** — line counts move every commit, so they are a dated
 snapshot rather than a gate-enforced receipt. Refresh them with `bun run metrics`
 ([`scripts/codebase-metrics.ts`](../scripts/codebase-metrics.ts), deterministic over `git ls-files`).
-Snapshot: **2026-07-02**. (Coverage + passing-test counts ARE SSOT-synced — see §1's last two rows.)
+Snapshot: **2026-07-06**. (Coverage + passing-test counts ARE SSOT-synced — see §1's last two rows.)
 
 | Metric                                  | Value                                                                 |
 | --------------------------------------- | --------------------------------------------------------------------- |
-| Total tracked authored files            | **702**                                                               |
-| Total tracked authored lines            | **179,521**                                                           |
-| App source (`src/`)                     | 85,651 lines · 251 files                                              |
-| Tests (`tests/`)                        | 29,319 lines · 231 files                                              |
-| Native C++ engine (`native/`, ADR-0007) | 1,769 lines · 12 files                                                |
+| Total tracked authored files            | **757**                                                               |
+| Total tracked authored lines            | **192,506**                                                           |
+| App source (`src/`)                     | 91,191 lines · 287 files                                              |
+| Tests (`tests/`)                        | 30,770 lines · 250 files                                              |
+| Native C++ engine (`native/`, ADR-0007) | 1,604 lines · 12 files                                                |
 | Test : source ratio                     | 0.34 → **91.91% line / 89.62% func** coverage (`bun test --coverage`) |
 | Passing tests                           | **2,372** (floor; 0 failing)                                          |
 
@@ -51,39 +51,38 @@ Snapshot: **2026-07-02**. (Coverage + passing-test counts ARE SSOT-synced — se
 
 | Type                | Files | Lines   | Share   |
 | ------------------- | ----- | ------- | ------- |
-| TypeScript          | 518   | 118,159 | 65.82 % |
-| Markdown            | 107   | 30,007  | 16.72 % |
-| HTML                | 6     | 11,312  | 6.30 %  |
-| PNG (shots)         | 4     | 9,552   | 5.32 %  |
-| JSON                | 9     | 2,869   | 1.60 %  |
-| CSS (Tailwind)      | 1     | 2,419   | 1.35 %  |
-| C/C++ hdr (`.h`)    | 4     | 934     | 0.52 %  |
-| XML (masters)       | 4     | 708     | 0.39 %  |
-| C++ (`.cpp`)        | 3     | 393     | 0.22 %  |
-| YAML · lock · other | 46    | ~2,869  | ~1.6 %  |
+| TypeScript          | 585   | 126,610 | 65.77 % |
+| PNG (shots)         | 4     | 18,716  | 9.72 %  |
+| Markdown            | 89    | 17,837  | 9.27 %  |
+| HTML                | 8     | 12,396  | 6.44 %  |
+| JSON                | 11    | 9,706   | 5.04 %  |
+| CSS (Tailwind)      | 2     | 2,394   | 1.24 %  |
+| C/C++ hdr (`.h`)    | 4     | 861     | 0.45 %  |
+| CSV                 | 3     | 658     | 0.34 %  |
+| XML (masters)       | 4     | 647     | 0.34 %  |
+| YAML · lock · other | 47    | ~2,681  | ~1.4 %  |
 
-**Code (TS + C++ + HTML + CSS) ≈ 133,200 lines ≈ 74 %**; documentation + config + assets ≈ 26 %.
+**Code (TS + C++ + HTML + CSS) ≈ 142,600 lines ≈ 74 %**; documentation + config + assets ≈ 26 %.
 
 ### 1.2 Lines by area
 
 | Area                                  | Files | Lines  |
 | ------------------------------------- | ----- | ------ |
-| `src/` (application)                  | 251   | 85,651 |
-| `tests/`                              | 231   | 29,319 |
-| `docs/`                               | 103   | 28,162 |
-| repo root (README, LICENSE, configs)  | 30    | 11,070 |
-| `lab/` (self-contained artifact)      | 1     | 5,050  |
-| `scripts/`                            | 24    | 4,546  |
-| `legacy/` (preserved origin)          | 7     | 2,100  |
-| `native/` (C++ engine, ADR-0007)      | 12    | 1,769  |
-| `bench/`                              | 13    | 782    |
-| `.github/`                            | 12    | 713    |
-| `masters/` (3 governing XML personas) | 3     | 478    |
+| `src/` (application)                  | 287   | 91,191 |
+| `tests/`                              | 250   | 30,770 |
+| `output/` (tracked visual receipts)   | 3     | 18,715 |
+| `docs/`                               | 89    | 17,496 |
+| `lab/` (self-contained artifact)      | 5     | 12,809 |
+| repo root (README, LICENSE, configs)  | 28    | 10,347 |
+| `scripts/`                            | 34    | 5,541  |
+| `native/` (C++ engine, ADR-0007)      | 12    | 1,604  |
+| `legacy/` (preserved origin)          | 6     | 1,433  |
+| `bench/`                              | 17    | 1,184  |
+| `.github/`                            | 11    | 685    |
+| `masters/` (3 governing XML personas) | 3     | 437    |
 
-`src/` subsystems: `sim/` 52,411 (166 files) · `ui/` 14,303 (31 files) · `math/` 6,135 (30 files) ·
-src-root composition (`world.ts` · `types.ts` · `main.ts` · `docs-page.ts` + 4 more) 5,717 (8 files) ·
-`styles/` 2,419 (1) · `audio/` 1,757 (3) · `server/` 1,637 (4) · `core/` 839 (4) · `logging/` 234 (2) ·
-`memory/` 185 (1) · `generated/` 14 (1).
+Detailed `src/` subsystem counts are intentionally generated on demand by `bun run metrics`; this
+section records only the current high-level measured areas to avoid stale hand-maintained internals.
 
 ---
 

@@ -93,6 +93,13 @@ const aspects = (ent: number, sup = 0): number[] => {
 const LATENT = [
   0.3, -0.5, 0.7, -0.2, 0.9, -0.8, 0.1, 0.6, -0.4, 0.5, -0.7, 0.2, 0.8, -0.1, 0.4, -0.6,
 ];
+const selfOptDrive = (): number[] => {
+  const a = Array.from({ length: 10 }, () => 0.3);
+  a[0] = 0.4;
+  a[1] = 0.4;
+  a[4] = 0;
+  return a;
+};
 
 describe('QuantumMind (V75) — the simulated-qubit cognition layer', () => {
   test('snapshot telemetry is well-formed + bounded; probabilities sum to 1', () => {
@@ -285,5 +292,55 @@ describe('QuantumMind (V75) — the simulated-qubit cognition layer', () => {
     expect(sa.magicNorm).toBeLessThanOrEqual(1);
     expect(typeof sa.stabilizer).toBe('boolean');
     expect(sa.magic).toBe(b.snapshot().magic); // pure function of the amplitudes ⇒ deterministic
+  });
+});
+
+describe('QuantumMind (V93) — quantum natural-gradient self-optimization', () => {
+  test('selfOpt telemetry is well-formed + bounded', () => {
+    const m = new QuantumMind(mulberry32(1));
+    m.evolve(selfOptDrive(), LATENT);
+    const so = m.snapshot().selfOpt;
+    expect(so.target).toBeGreaterThanOrEqual(0);
+    expect(so.target).toBeLessThan(1 << QMIND_QUBITS);
+    expect(so.targetBits).toHaveLength(QMIND_QUBITS);
+    for (const v of [so.pTarget, so.improve]) {
+      expect(v).toBeGreaterThanOrEqual(0);
+      expect(v).toBeLessThanOrEqual(1);
+    }
+    expect(so.gradNorm).toBeGreaterThanOrEqual(0);
+    expect(so.natNorm).toBeGreaterThanOrEqual(0);
+    expect(Math.abs(so.biasSup)).toBeLessThanOrEqual(0.35 + 1e-9);
+    expect(Math.abs(so.biasEnt)).toBeLessThanOrEqual(0.35 + 1e-9);
+  });
+
+  test('same seed + drivers => identical self-optimization trajectory (deterministic)', () => {
+    const a = new QuantumMind(mulberry32(42));
+    const b = new QuantumMind(mulberry32(42));
+    for (let i = 0; i < 16; i++) {
+      a.evolve(selfOptDrive(), LATENT);
+      b.evolve(selfOptDrive(), LATENT);
+    }
+    expect(JSON.stringify(a.snapshot().selfOpt)).toBe(JSON.stringify(b.snapshot().selfOpt));
+  });
+
+  test('it learns: the natural-gradient bias engages and raises the intended thought', () => {
+    const m = new QuantumMind(mulberry32(7));
+    m.evolve(selfOptDrive(), LATENT);
+    const first = m.snapshot().selfOpt.pTarget;
+    for (let i = 0; i < 40; i++) m.evolve(selfOptDrive(), LATENT);
+    const so = m.snapshot().selfOpt;
+    expect(Math.abs(so.biasSup) + Math.abs(so.biasEnt)).toBeGreaterThan(1e-4);
+    expect(so.pTarget).toBeGreaterThanOrEqual(first - 1e-9);
+  });
+
+  test('the self-optimization draws no rng, so the Born stream stays in lockstep', () => {
+    const x = new QuantumMind(mulberry32(99));
+    const y = new QuantumMind(mulberry32(99));
+    x.evolve(selfOptDrive(), LATENT);
+    x.snapshot();
+    y.evolve(selfOptDrive(), LATENT);
+    x.evolve(selfOptDrive(), LATENT);
+    y.evolve(selfOptDrive(), LATENT);
+    expect(x.lastSample).toBe(y.lastSample);
   });
 });
