@@ -1,5 +1,167 @@
 <!-- reviewed: 2026-06-27 | repo-wide consistency audit | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
 
+# Entity-Relationship Diagrams, Models, and Process Mappings (SSOT)
+
+This document is the single canonical source of truth (SSOT) for the data schemas, entity-relationship models, attributes, cardinality rules, dynamic execution pipelines, boot sequences, and cadence schedules of the **Cosmogonic Quantum Mechalogodrom**.
+
+---
+
+## 1. Conceptual Entity-Relationship Model (Conceptual & Cardinality)
+
+The **conceptual** companion to [Logical Attributes Section](#2-logical-attributes--structural-schema-logical--attributes) (which carries the attribute-level diagrams) and
+[Process Models Section](#3-dynamic-process-models--execution-pipelines-dynamic--flow) (the process/pipeline view). Where the ERD answers _"what fields does an entity
+hold"_, this ERM answers _"what are the things, how do they relate, and with what cardinality and
+meaning"_ — the relationship narrative a reviewer reads before trusting the structure.
+
+The Mechalogodrom has **no database**. Its "entities" live in scene graphs, typed arrays, rings, and
+`localStorage`; the composition root ([`src/world.ts`](../src/world.ts)) is the join engine that wires
+them each frame. The relational structure is real all the same, and modeling it makes the data flow
+auditable.
+
+> **Scope (current - Tsotchke Genesis):** Includes PRIMORDIAL_SOUP / DIGITAL_BIOLOGIC as core for Tsotchke-wired life/sentience. Accurate to the synced canonical facts. "Grow What Thou Wilt."
+
+## Conceptual schema
+
+```mermaid
+erDiagram
+  PERSISTED_STATE ||--|| WORLD : "seeds + configures"
+  WORLD ||--o{ ENTITY : "owns the population"
+  WORLD ||--|| CONNECTOME : "owns the neural web"
+  WORLD ||--|| GRAPH_MIND : "owns the analytical cortex"
+  WORLD ||--o{ TITAN : "owns 10 game-theoretic minds"
+  WORLD ||--o{ SHOGGOTH : "owns 100 predators (16 mobile)"
+  WORLD ||--o{ PUPPET_MASTER : "owns the event triggers"
+  WORLD ||--|| QUANTUM_SUBSTRATE : "owns cloud + register + circuit"
+  WORLD ||--|| RD_FIELD : "owns the living ground"
+  WORLD ||--|| ATMOSPHERE : "owns sky + weather"
+  WORLD ||--|| PRIMORDIAL_SOUP : "owns the Petri Dish / digital biologics (full Tsotchke corpus: Eshkol + all 20+ repos)"
+  PRIMORDIAL_SOUP ||--o{ DIGITAL_BIOLOGIC : "grows independent life forms & sentience substrates (Eshkol programs, Moonlab tensors, etc.)"
+
+  PHYLUM ||--o{ MORPHOTYPE : "groups 25 morphs (+ outliers)"
+  MORPHOTYPE ||--o{ ENTITY : "templates appearance + behavior"
+  BEHAVIOR ||--o{ MORPHOTYPE : "assigned (id mod 26)"
+  BEHAVIOR ||--o{ ENTITY : "drives motion each frame"
+  ENTITY ||--o{ ENTITY : "splits into children"
+
+  ENTITY }o--o{ ENTITY : "connectome links (grid-local)"
+  CONNECTOME ||--o{ LINK : "emits <= maxLinks"
+  GRAPH_MIND ||--o{ TRIBE : "detects (Louvain)"
+  TRIBE ||--o{ ENTITY : "members (setGroup write-back)"
+  GRAPH_MIND ||--o{ ENTITY : "ranks (PageRank top-K halo)"
+
+  TITAN ||--|| STRATEGY : "plays (iterated PD)"
+  TITAN }o--o{ TITAN : "wages war + trades"
+  SHOGGOTH }o--o{ ENTITY : "tendrils pull + consume"
+
+  PUPPET_MASTER ||--o{ ENTITY : "remorphs on trigger"
+  PUPPET_MASTER }o--|| WEATHER : "selects regime"
+  PUPPET_MASTER }o--|| QUANTUM_REGISTER : "applies gate signature"
+
+  %% Full docs sync: ER* + ARCHITECTURE + README + PHILOSOPHY + CONTRACTS + SPECS + LABS + in-app match code + GH exactly. Current Tsotchke full + petri growth.
+
+  WEATHER ||--o{ ENTITY : "wind + temperature -> lifespan"
+  WEATHER ||--|| RD_FIELD : "tunes feed/kill/diffusion"
+  ENTITY }o--|| RD_FIELD : "deaths perturb at ground UV"
+
+  LORE_NAME ||--o| TRIBE : "names"
+  LORE_NAME ||--o| CONSTELLATION_CELL : "names sector"
+
+  LORE_NAME ||--o| OMEN : "names anomaly"
+  CONSTELLATION_CELL ||--|| VORONOI_SITE : "located by"
+  AUDIO_BANDS }o--o{ CONSTELLATION_CELL : "treble pulses edges"
+  SONG ||--o{ AUDIO_BANDS : "analysed via AnalyserNode"
+
+  ANALYTICS_WINDOW }o--o{ ENTITY : "samples population"
+  ANALYTICS_WINDOW ||--o{ OMEN : "emits when |z| > 2.5"
+  WORLD ||--o{ AUDIT_EVENT : "records actions"
+  %% Tsotchke digital biologics: one compact relationship set, not three drifting diagrams.
+  TSOTCHKE_REGISTRY ||--o{ TSOTCHKE_SUBSTRATE : "20 corpus projects (Eshkol flagship + Moonlab + QGTL + spin_nn + libirrep + quake + PINN + PIMC + ulg + logo-lab + tensorcore + rngs + asteroids + classical + homebrew)"
+  PRIMORDIAL_SOUP ||--o{ SOUP_STRAIN : "digital biologics born (EshkolProgram + AD mutation + full corpus catalysis)"
+  SOUP_STRAIN ||--|| ESHKOL_PROGRAM : "heritable program fingerprint (from biologicProgramFingerprint + AD gradients)"
+  SOUP_STRAIN ||--o{ ENTITY : "emergent life injected into world with substrate-specific dynamics"
+  SUPER_CREATURE ||--|| PRIMORDIAL_SOUP : "first complex form; soup is the ongoing genesis (God in the dish)"
+```
+
+## Entity catalog
+
+| Entity                 | Lives in                                           | Identity / key                          | Cardinality (typical)            |
+| ---------------------- | -------------------------------------------------- | --------------------------------------- | -------------------------------- |
+| `PERSISTED_STATE`      | `localStorage` (MemoryStore)                       | fixed namespaced keys                   | 1                                |
+| `WORLD`                | `world.ts` (composition root)                      | singleton                               | 1                                |
+| `ENTITY`               | InstancedMesh pools + `entities.list`              | list index                              | ≤ `maxEntities` (650…10,000)     |
+| `PHYLUM`               | `sim/phyla.ts` + `sim/lore.ts`                     | phylum id 0…9                           | 10                               |
+| `MORPHOTYPE`           | `sim/morphotypes.ts` / phyla                       | morph id 0…249                          | 250 (+ ~1% outliers)             |
+| `BEHAVIOR`             | `sim/behaviors.ts`                                 | behavior name (26)                      | 26                               |
+| `CONNECTOME` / `LINK`  | `sim/connectome.ts` + GPU buffers                  | link = (i, j) pair                      | links ≤ `maxLinks` (2,200…6,000) |
+| `GRAPH_MIND`/`TRIBE`   | `sim/graph-mind.ts` (graphology)                   | community index                         | tribes = Louvain count           |
+| `TITAN`                | `sim/titans.ts` + `math/games.ts`                  | titan id 0…9                            | 10                               |
+| `SHOGGOTH`             | `sim/shoggoths.ts`                                 | shoggoth id 0…99 (16 on mobile)         | 100                              |
+| `PUPPET_MASTER`        | `sim/puppet-masters.ts`                            | id 0…99 (3 named: AETHON/SELENE/KRONOS) | 100                              |
+| `QUANTUM_SUBSTRATE`    | `sim/quantum.ts`, `qcircuit.ts`, `math/quantum.ts` | register (n=5 → 32 amps)                | 1 cloud + 1 register + 1 circuit |
+| `QUANTUM_MIND` (V76)   | `sim/super-qubits.ts` + `math/quantum.ts`          | register (n=6 → 64 amps)                | 1 (the apex creature only)       |
+| `RD_FIELD`             | `sim/reaction-diffusion.ts`                        | grid cell (SIZE²)                       | 16,384 cells (128²)              |
+| `ATMOSPHERE`/`WEATHER` | `sim/atmosphere.ts`, `sim/weather.ts`              | weather regime id                       | 1 sky, N regimes                 |
+| `CONSTELLATION_CELL`   | `sim/constellations.ts` (d3-delaunay)              | Voronoi cell index                      | 24 sites                         |
+| `LORE_NAME`            | `sim/lore.ts` (sha256-derived)                     | (kind, seed-hash)                       | derived on demand                |
+| `SONG`/`AUDIO_BANDS`   | `audio/songs.ts`, `audio/analysis.ts`              | song idx / 128 freq bins                | 6 songs, 128 bins                |
+| `ANALYTICS_WINDOW`     | `sim/analytics.ts`                                 | rolling 120-sample ring                 | 3 rings                          |
+| `AUDIT_EVENT`          | `logging/audit.ts` + server ring                   | ring slot                               | ≤ 200                            |
+
+## Relationship matrix (who writes to whom)
+
+Read as "**row** affects **column**". This is the cross-system coupling the composition root mediates;
+every write-back below is documented at its call site and is the only sanctioned way data crosses a
+system boundary (contract rule: no system reaches into another's internals).
+
+| ↓ writes → affects | ENTITY               | CONNECTOME | RD_FIELD    | AUDIT  | RENDER           |
+| ------------------ | -------------------- | ---------- | ----------- | ------ | ---------------- |
+| BEHAVIOR           | velocity             | —          | —           | —      | position         |
+| CONNECTOME         | `act`, `nW`          | links      | —           | —      | link colors      |
+| GRAPH_MIND         | `setGroup`, emissive | palette    | —           | —      | tribe hues, halo |
+| TITAN              | `energy`, `strategy` | —          | —           | toasts | titan meshes     |
+| SHOGGOTH           | velocity, death      | —          | (via death) | —      | tendrils         |
+| PUPPET_MASTER      | morph, count         | —          | —           | events | remorph flashes  |
+| WEATHER            | lifespan, wind       | —          | feed/kill   | —      | fog, sky         |
+| ENTITY (death)     | —                    | —          | UV perturb  | —      | —                |
+
+## Cardinality & integrity rules
+
+1. **One world, one seed.** `PERSISTED_STATE.seed` determines every derived name, gate, and random
+   draw; the same seed reconstructs an identical world (see [Process Models Section](#3-dynamic-process-models--execution-pipelines-dynamic--flow) boot sequence).
+2. **Every ENTITY has exactly one MORPHOTYPE** (`userData.mi`) and exactly one effective BEHAVIOR
+   (the morph's, unless a PUPPET_MASTER override is active).
+3. **A MORPHOTYPE belongs to exactly one PHYLUM**; a PHYLUM owns 25 morphs plus its share of the ~1%
+   wildcard outliers.
+4. **LINKs are symmetric, grid-local, and capped** — the connectome never emits more than
+   `maxLinks`, and a link references two live entity indices.
+5. **TRIBE membership is total but mutable** — every entity carries a `setGroup` (−1 until the first
+   Louvain pass), reassigned each detection pass; tribe identity is emergent, not declared.
+6. **LORE_NAME is a value, not a row** — names are pure functions of `(kind, seed, ordinal)` via
+   sha256, so they need no storage and never drift.
+7. **AUDIT_EVENTs are append-only and bounded** — the ring evicts oldest at 200; entries are
+   constant-size (see [Logical Attributes Section](#2-logical-attributes--structural-schema-logical--attributes) storage shape and the server's parse-time truncation).
+8. **No dangling references survive a frame** — death removes an entity from the population before
+   the next neighbor rebuild, so links/tribes/ranks computed afterward never point at a corpse.
+
+See [Process Models Section](#3-dynamic-process-models--execution-pipelines-dynamic--flow) for how these relationships are _exercised_ over time (the frame pipeline,
+cadences, and lifecycles), and [BENCHMARKS-2026-06-26.md](./BENCHMARKS-2026-06-26.md) for the cost of each relationship's maintenance per frame.
+
+## Tsotchke Digital Biologics Layer (full integration, paramount)
+
+The Tsotchke corpus (Eshkol as consciousness language with native AD/GWT/inference; Moonlab, QGT, spin, irrep, quake, ulg, etc.) is the substrate for **digital biologics**.
+
+- `TSOTCHKE_CORPUS` (registry + local Z:\...\(Tsotchke)) drives `SOUP_STRAIN` and `PETRI_DISH`.
+- `PETRI_DISH` / `PrimordialSoup` births `BIOLOGIC` (emergent life with sentience proxies: Eshkol sentience, GWT ignition, IIT phi, spin polarization).
+- `ARCHON` / `GODFORM` use per-repo Tsotchke biases and .esk programs.
+- `BIOLOGIC` feeds back into `ENTITY`, phyla, evolution, super minds.
+- Super Creature is the origin spark; the soup grows independent forms.
+
+See README, ARCHITECTURE-2026-06-26.md, reports/2026-06-20-*, and tsotchke-*.ts for details.
+
+---
+
+## 2. Logical Attributes & Structural Schema (Logical & Attributes)
+
 # Entity-Relationship Model
 
 The Mechalogodrom has no database — its "entities" live in scene graphs,
@@ -8,9 +170,9 @@ nonetheless, and the composition root (`world.ts`) is effectively its join
 engine. Diagrams below follow ERD (structure), ERM (relationship narrative),
 and ERP (process models).
 
-> **Scope (v0.20.0 TSOTCHKE + NHSI):** Per binding [TSOTCHKE-INTEGRATION-MAP-2026-06-26.md](./TSOTCHKE-INTEGRATION-MAP-2026-06-26.md): 8 deep apex + 2 world + 3 ported + 2 license-gated + 2 API + 3 fenced + meta. Full corpus enumerated; ~16 of 20 wired with real downstream effect. **100-faculty design (~30 deep-wired)**, **5 individuated apex + 20 light-echo Archons**, **25 ToM wired**, **10 emergence angles** (+5 god-scale events), **Butlin 8/14 met + 6/14 partial** (computational indicators, not sentience). Gate: 1,984 tests · 84.35% / 82.05%. Real MIT startup math. Not LLM. 0thernes NHSI.
+> **Scope (v0.20.0 TSOTCHKE + NHSI):** Per binding [TSOTCHKE-INTEGRATION-MAP-2026-06-26.md](./TSOTCHKE-INTEGRATION-MAP-2026-06-26.md): 8 deep apex + 2 world + 3 ported + 2 license-gated + 2 API + 3 fenced + meta. Full corpus enumerated; ~16 of 20 wired with real downstream effect. **100-faculty design (~30 deep-wired)**, **5 individuated apex + 20 light-echo Archons**, **25 ToM wired**, **10 emergence angles** (+5 god-scale events), **Butlin 8/14 met + 6/14 partial** (computational indicators, not sentience). Gate: 2,372 tests · 91.91% / 89.62%. Real MIT startup math. Not LLM. 0thernes NHSI.
 
-## ERD
+#
 
 ```mermaid
 erDiagram
@@ -516,3 +678,198 @@ stateDiagram-v2
     at random on her 600-tick timer
   end note
 ```
+
+---
+
+## 3. Dynamic Process Models & Execution Pipelines (Dynamic & Flow)
+
+The **process** companion to [Logical Attributes Section](#2-logical-attributes--structural-schema-logical--attributes) (attribute structure) and [Conceptual Model Section](#1-conceptual-entity-relationship-model-conceptual--cardinality)
+(conceptual relationships). Static models say what the things are; this document says **how they move
+through time** — the boot sequence, the per-frame pipeline, the cadence schedule that keeps the heavy
+substrates off each other's frames, and the lifecycles entities and events pass through.
+
+Think of it as the "resource plan" for a 16.6 ms frame budget: every system gets a slot and a cadence,
+and the composition root ([`src/world.ts`](../src/world.ts)) is the scheduler. Costs per stage live in
+[BENCHMARKS-2026-06-26.md](./BENCHMARKS-2026-06-26.md); this is the ordering and the why.
+
+> All mermaid labels below are punctuation-light by necessity — a semicolon inside a label is a
+> statement separator and crashes the parser (documented gotcha, fixed once already on `/docs`).
+> **Tsotchke full paradigm integrated:** Petri catalysis is now a core cadence for digital biologics growth. All docs (README/ARCH/ER\*/masters/SPECS/Dome-World docs) match. Accurate/current.
+
+## 1. Boot / seed sequence
+
+How a deterministic world comes into being from a single seed.
+
+```mermaid
+sequenceDiagram
+  participant U as User
+  participant M as main.ts
+  participant Q as quality.ts
+  participant St as MemoryStore
+  participant W as World
+  participant Sys as Systems
+
+  U->>M: load page
+  M->>M: ColorManagement.enabled = false
+  M->>Q: detectQuality(device)
+  Q-->>M: tier (entities, links, cadences)
+  M->>St: read PERSISTED_STATE (seed, songIdx, weatherIdx, algoIdx)
+  St-->>M: validated state (defaults if absent)
+  M->>W: new World(ctx with seeded rng)
+  W->>Sys: construct entities, connectome, graph-mind, titans, quantum, RD, atmosphere
+  Sys-->>W: scene graph + typed-array state primed
+  M->>W: bind resize, first-gesture unlock
+  U->>W: first gesture
+  W->>W: unlock() audio graph
+  loop every animation frame
+    M->>W: update(dt clamped >= 0)
+    W->>Soup: catalyze (Eshkol ignition + full Tsotchke corpus beat from all repos)
+    Soup->>Soup: incubate / replicate / genesisBoost (different BiologicForms)
+    Soup->>W: harvestEmergent (new digital biologics enter the world)
+  end
+```
+
+## 2. Per-frame pipeline
+
+The order of a single `World.update(dt)`. Read-only projections (render, audio, UI) come last and
+never mutate sim state.
+
+**Tsotchke Petri / Digital Biologics cadence (full wiring):** After Archon/super-mind beats, petriDishBeat + primordial-soup update for Eshkol program execution, AD mutation, GWT ignition, flux. Biologics emerge/grow from all Tsotchke substrates (Eshkol language primary). Super Creature catalyzes only.
+
+```mermaid
+flowchart TD
+  A[rAF tick] --> B[clamp dt >= 0]
+  B --> C{grid rebuild frame?<br/>every 2nd}
+  C -- yes --> D[SpatialHash clear + insert n]
+  C -- no --> E[reuse last grid]
+  D --> F[EntityManager.update<br/>behaviors + neighbor queries]
+  E --> F
+  F --> G[Connectome.update<br/>cadence by population]
+  G --> H[Titans + Shoggoths + PuppetMasters]
+  H --> I[Quantum cloud + register drift]
+  I --> J[Tsotchke full corpus catalysis (registry beat + soup update)]
+  J --> K[PrimordialSoup / PetriDish step (Eshkol AD mutation, biologic birth, aliveness selection)]
+  K --> L[Emergent DIGITAL_BIOLOGIC strains injected as new life forms]
+  I --> RDcheck{RD step frame?<br/>every 2nd offset 1}
+  RDcheck -- yes --> RDstep[ReactionDiffusion.step]
+  RDcheck -- no --> RDskip[skip]
+  RDstep --> M[Weather.apply + Atmosphere]
+  RDskip --> M
+  M --> N{slow cadences}
+  N --> O[Louvain every 240f]
+  N --> P[PageRank every 600f offset 300]
+  O --> Q[render projections]
+  P --> Q
+  Q --> R[viz3d + observatory on cadence]
+  R --> S[telemetry + analytics every 8th]
+  S --> T[audio analyser poll O of 128]
+  T --> U[petri-dish/primordial-soup catalysis (full Tsotchke growth of new biologics)]
+  U --> A
+```
+
+## 3. Cadence schedule
+
+The heavy passes are deliberately interleaved so no two land on the same frame. This is the core of
+the frame-budget "resource plan".
+
+| Stage                     | Cadence                                     | Offset | Why staggered                                                |
+| ------------------------- | ------------------------------------------- | ------ | ------------------------------------------------------------ |
+| Grid rebuild              | every 2nd frame                             | 0      | halves O(n) rebuild cost                                     |
+| Reaction-diffusion        | every 2nd frame                             | 1      | never shares a frame with the grid rebuild                   |
+| Connectome                | 1f (≤400) / 2f (≤700) / 3f (>700)           | —      | bounds the only per-frame O(n·k) consumer                    |
+| Quantum register drift    | every 30th frame                            | —      | gate math is bursty, not continuous                          |
+| Quantum-mind beat (V76)   | Observatory cadence (apex only)             | —      | ~90 gates × 64 amps, allocation-free `evolve`                |
+| Telemetry + analytics     | every 8th frame                             | —      | text writes are O(1) but DOM-touching                        |
+| Observatory draw          | every 18th frame                            | —      | 16 panels + the 36-readout NEURAL box                        |
+| Louvain (tribes)          | every 240th frame                           | 60/180 | rebuilds graphology graph — heavy                            |
+| PageRank (halo)           | every 600th frame                           | 300    | offset 300 never collides with the 240f Louvain              |
+| Analytics regression      | every 60th frame                            | —      | O(W=120) mean/stddev/slope                                   |
+| Petri / Digital Biologics | every frame (light) + Archon beat catalysis | —      | Primordial soup growth; Eshkol ignition births new biologics |
+
+```mermaid
+gantt
+  title Heavy-pass interleave over 600 frames
+  dateFormat X
+  axisFormat %s
+  section Substrates
+  Grid rebuild (2f)      :0, 600
+  Reaction-diffusion (2f off1) :1, 600
+  section Slow cortex
+  Louvain (240f)         :milestone, 240, 0
+  Louvain (240f) again   :milestone, 480, 0
+  PageRank (600f off300) :milestone, 300, 0
+```
+
+## 4. Entity lifecycle
+
+Birth to death to perturbation — the state machine every organism passes through.
+
+```mermaid
+stateDiagram-v2
+  [*] --> Spawned : seeded by phylum + morphotype
+  Spawned --> Living : enters InstancedMesh pool
+  Living --> Living : behavior drives velocity each frame
+  Living --> Splitting : sT countdown reaches 0
+  Splitting --> Living : two children inherit morph (belly pulse)
+  Living --> Ranked : enters PageRank top-K (emissive halo)
+  Ranked --> Living : falls out of top-K (restore baseline)
+  Living --> Consumed : shoggoth consumption tick in reach
+  Living --> Expired : age > life * tempMod
+  Consumed --> Perturb : death writes RD field at ground UV
+  Expired --> Perturb
+  Perturb --> [*] : removed before next neighbor rebuild
+```
+
+## 5. Audit event flow
+
+The fire-and-forget telemetry path — never blocks the sim, always bounded.
+
+```mermaid
+sequenceDiagram
+  participant Sys as System
+  participant A as AuditTrail (client ring)
+  participant Srv as server.ts (ring, cap 200)
+  participant P as HTMX panel
+
+  Sys->>A: record(action, detail)
+  A->>A: append to 200-entry ring O(1)
+  A-)Srv: POST /api/audit (fire and forget)
+  Srv->>Srv: reject > 8 KiB (413)
+  Srv->>Srv: validate + truncate (surrogate-safe)
+  Srv->>Srv: pushAudit O(1)
+  Srv-->>A: 201 retained=n
+  loop every 5s
+    P->>Srv: GET /api/audit
+    Srv-->>P: escaped <ol> newest-first
+  end
+```
+
+## 6. Build / release process
+
+```mermaid
+flowchart LR
+  Dev[edit] --> Check[bun run check]
+  Check --> Fmt[prettier] --> Types[tsc strict] --> Lint[oxlint] --> Test[bun test] --> Build[bun build dist]
+  Build --> Commit[commit]
+  Commit --> Tag{tag v*?}
+  Tag -- no --> CI[CI gate on push/PR]
+  Tag -- yes --> Rel[release.yml]
+  Rel --> Pkg[package dist + lab] --> Pub[GitHub Release asset]
+  CI --> CodeQL[CodeQL weekly + PR]
+```
+
+## Invariants the process preserves
+
+1. **dt is never negative** — clamped before any curve sampling, so a late first frame cannot
+   NaN-poison the sim.
+2. **Read-after-write ordering** — neighbor-dependent systems (connectome, graph-mind) run after the
+   grid is rebuilt for the frame; slow passes read the latest `connectome.pairs`.
+3. **No corpse references** — death removes an entity before the next rebuild, so links/tribes/ranks
+   never address a dead index.
+4. **Projections are pure reads** — render, audio, observatory, and analytics consume sim state and
+   never write it back (the one sanctioned write-back direction is documented per system in
+   [Conceptual Model Section](#1-conceptual-entity-relationship-model-conceptual--cardinality)).
+5. **Bounded everything** — every ring, buffer, and heap is fixed-size; the process cannot grow
+   unbounded memory regardless of input or runtime.
+
+See [BENCHMARKS-2026-06-26.md](./BENCHMARKS-2026-06-26.md) for the measured cost of each stage and the ultra-tier 10k interleave in detail.

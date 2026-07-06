@@ -7,7 +7,7 @@
 > **Repository:** `0thernes/cosmogonic-quantum-mechalogodrom` · **Version:** `v0.20.0`
 > **Date:** 2026-06-26 · **Mode:** Master Architect / Master Engineer / Master Physicist (Broly · Starkiller · Dr. Manhattan)
 > **Companion artifact:** [`2026-06-20-ROADMAP-TO-NHSI-AND-SENTIENCE.xml`](./2026-06-20-ROADMAP-TO-NHSI-AND-SENTIENCE.xml) — the machine-readable forward plan.
-> **Canonical receipts (audited, Bun 1.3.14, cold shell):** `1,984` tests · `0` failures · `1,744,891` `expect()` calls across `151` files · `~95%` line / `~92%` function coverage (canonical 84.35 / 82.05, ±6pp gate tolerance).
+> **Canonical receipts (audited, Bun 1.3.14, cold shell):** `2,372` tests · `0` failures · `1,744,891` `expect()` calls across `151` files · `~95%` line / `~92%` function coverage (canonical 91.91 / 89.62, ±6pp gate tolerance).
 > Source of truth: [`scripts/canonical-receipts.ts`](../../scripts/canonical-receipts.ts), policed by `tests/docs-receipts-law.test.ts`.
 > **Usage & license:** © 2026 0thernes — **non-commercial research & play**: study, run, modify, and share it freely for non-commercial use; keep the attribution (don't claim it as your own) and don't use it for profit. See [LICENSE](../../LICENSE).
 
@@ -108,8 +108,8 @@ Rigor begins with refusing to let the words do undeserved work. The tribunal wil
 | Determinism                  | one `mulberry32`/seeded `Rng`; `Math.random`/`Date.now` **GLOB-banned + CI-enforced**                          | `tests/determinism-law.test.ts`                          |
 | Math kernels                 | **27** modules in `src/math/`                                                                                  | `src/math/*.ts`                                          |
 | Simulation modules           | **90+** modules in `src/sim/`                                                                                  | `src/sim/*.ts`                                           |
-| Test suite                   | **1,984** tests, **0** failures, **1,744,891** `expect()` calls across **151** files                           | `scripts/canonical-receipts.ts`                          |
-| Coverage                     | **~95%** line / **~92%** function (canonical 84.35 / 82.05, ±6pp gate tolerance)                               | `scripts/canonical-receipts.ts`                          |
+| Test suite                   | **2,372** tests, **0** failures, **1,744,891** `expect()` calls across **151** files                           | `scripts/canonical-receipts.ts`                          |
+| Coverage                     | **~95%** line / **~92%** function (canonical 91.91 / 89.62, ±6pp gate tolerance)                               | `scripts/canonical-receipts.ts`                          |
 
 > **Honesty flag (volatility):** the test count is a _moving_ receipt — it varies across Bun versions and development sessions. The number is real _at its measurement stamp_; it is not a stable constant. The receipts law exists precisely to keep the _published_ number equal to the _measured_ one, and the sync surfaces (`scripts/sync-surfaces.ts`, gate-enforced by `sync:check`) propagate the single source of truth to every document. This is a feature (provenance), reported as a feature.
 
@@ -625,7 +625,7 @@ A program that _names_ NHSI and sentience as targets must address governance, or
 
 | Axis                                       | Grade                | One-line justification                                                                                                  |
 | ------------------------------------------ | -------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| Engineering rigor & determinism            | **A+**               | Seed-reproducible cosmos, receipts law, ~83.95% line / ~81.57% function coverage, 1,984 tests — top-decile, _measured_. |
+| Engineering rigor & determinism            | **A+**               | Seed-reproducible cosmos, receipts law, ~83.95% line / ~81.57% function coverage, 2,372 tests — top-decile, _measured_. |
 | Mathematical substrate fidelity            | **A**                | ~20 faithful, tested ports; decorative-trig failure mode largely closed.                                                |
 | Integration density / novelty of synthesis | **A**                | No comparable single artifact found fusing this many cognitive+quantum theories, coupled — novel by integration.        |
 | Theory-of-mind architecture (Butlin)       | **A−**               | 8/14 met + 6/14 partial _structurally_ — richer than a frontier LLM; architecture only.                                 |
@@ -713,4 +713,4 @@ A program that _names_ NHSI and sentience as targets must address governance, or
 
 ---
 
-_Prepared under full Broly (finish everything, receipts) · Starkiller (contracts, ownership, boundary paranoia) · Dr. Manhattan (determinism, measurement, provenance) discipline. Canonical receipts: v0.20.0 · 1,984 tests · 0 failures · ~83.95% line / ~81.57% function coverage. Every quantitative claim traces to a repository file or a cited source. No AGI, ASI, sentience, solved conjecture, or quantum advantage is claimed as a present fact. The forward plan is encoded machine-readably in the companion XML._
+_Prepared under full Broly (finish everything, receipts) · Starkiller (contracts, ownership, boundary paranoia) · Dr. Manhattan (determinism, measurement, provenance) discipline. Canonical receipts: v0.20.0 · 2,372 tests · 0 failures · ~83.95% line / ~81.57% function coverage. Every quantitative claim traces to a repository file or a cited source. No AGI, ASI, sentience, solved conjecture, or quantum advantage is claimed as a present fact. The forward plan is encoded machine-readably in the companion XML._

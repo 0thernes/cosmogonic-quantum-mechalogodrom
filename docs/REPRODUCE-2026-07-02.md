@@ -33,7 +33,7 @@ receipt:
 | ------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Determinism** — same seed ⇒ bit-identical cognition         | same fingerprint twice on your machine; same fingerprint across machines at the same commit                                                                                |
 | **Coupling measurement is real** — not a hand-asserted number | your `meanAbsCoupling` equals ours and sits inside the gate band                                                                                                           |
-| **The test/coverage receipts are real**                       | `bun run check` — the full gate (format → tsc → lint → 1,984-test floor + coverage → sync → facts → build)                                                                 |
+| **The test/coverage receipts are real**                       | `bun run check` — the full gate (format → tsc → lint → 2,372-test floor + coverage → sync → facts → build)                                                                 |
 | Consciousness / sentience / AGI                               | **NOTHING here proves these.** The indicators are computational proxies; the hard problem is untouched. A matching hash validates _reproducibility_, not _interpretation_. |
 
 The fingerprint is a **per-commit** value: it legitimately changes whenever the apex cognition evolves.

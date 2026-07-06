@@ -3,7 +3,7 @@
 # Test Strategy
 
 **Living document.** How this repo tests, what "covered" means, and where the edges are — so the
-`1,984`-test suite is a designed thing, not an accretion. Canonical receipts live in
+`2,372`-test suite is a designed thing, not an accretion. Canonical receipts live in
 [VERIFICATION-ANALYTICAL-DATA.md](./VERIFICATION-ANALYTICAL-DATA.md); this is the _approach_.
 
 ## 1 · The receipts law (the spine)
@@ -13,11 +13,11 @@ If it is not measured, it is not real. `scripts/verify-receipts.ts` parses the r
 (the single source of truth). It is **impossible to ship a test-count or coverage figure that was not
 measured** — the number in every doc is propagated from canon by `sync-surfaces.ts`.
 
-- **Test count** is a **FLOOR** (`1,984`), not an exact pin: `bun test` runs every `*.test.ts` in the
-  working tree, so a file-rich checkout measures more (2,104 on 2026-07-01). The gate floors against
+- **Test count** is a **FLOOR** (`2,372`), not an exact pin: `bun test` runs every `*.test.ts` in the
+  working tree, so a file-rich checkout can measure more than lean CI (2,372 on 2026-07-05). The gate floors against
   `min(canon, PORTABLE_TEST_FLOOR=1400)` so a lean CI checkout can never red on count.
 - **Coverage** is enforced within an explicit **±6 pp** band (Bun instruments a slightly different file
-  set locally vs CI). Current canon: **84.35 % line / 82.05 % function**. No bare float `===`.
+  set locally vs CI). Current canon: **91.91 % line / 89.62 % function**. No bare float `===`.
 
 ## 2 · Test taxonomy
 

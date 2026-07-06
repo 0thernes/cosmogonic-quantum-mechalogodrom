@@ -7,7 +7,7 @@
 > **Architecture:** [ARCHITECTURE-2026-06-26.md](ARCHITECTURE-2026-06-26.md) ·
 > **Consciousness:** [CONSCIOUSNESS-LAB-MASTER-2026-07-03.md](CONSCIOUSNESS-LAB-MASTER-2026-07-03.md)
 
-**Date:** 2026-06-27 (gutted 2026-07-06) · **Repo:** `v0.20.0` · **Gate:** 1,984 tests · 84.35% line / 82.05% func
+**Date:** 2026-06-27 (gutted 2026-07-06) · **Repo:** `v0.20.0` · **Gate:** 2,372 tests · 91.91% line / 89.62% func
 
 Pass 8 consolidation removed duplicate narrative sections (architecture, quantum, A-life, consciousness,
 Tsotchke deep-dives, CI plans, and passes 2–9) — those topics live in the canonical docs above. This file
@@ -853,13 +853,13 @@ Measures 25 CI/CD gate stage metrics.
 | 1     | prettier --check                       | ✅ Green  | Status light (green) |
 | 2     | tsc --noEmit (strict)                  | ✅ Green  | Status light (green) |
 | 3     | oxlint                                 | ✅ Green  | Status light (green) |
-| 4     | bun test (1,984 tests)                 | ✅ Green  | Status light (green) |
+| 4     | bun test (2,372 tests)                 | ✅ Green  | Status light (green) |
 | 5     | verify:receipts                        | ✅ Green  | Status light (green) |
 | 6     | sync:check                             | ✅ Green  | Status light (green) |
 | 7     | build (7 artifacts)                    | ✅ Green  | Status light (green) |
 | 8     | verify:facts (0 drift)                 | ✅ Green  | Status light (green) |
-| 9     | Coverage line ≥ 0.90                   | ✅ 84.35% | Gauge (green)        |
-| 10    | Coverage func ≥ 0.85                   | ✅ 82.05% | Gauge (green)        |
+| 9     | Coverage line ≥ 0.90                   | ✅ 91.91% | Gauge (green)        |
+| 10    | Coverage func ≥ 0.85                   | ✅ 89.62% | Gauge (green)        |
 | 11    | Cross-platform matrix (ubuntu+windows) | ✅ Green  | Status light (green) |
 | 12    | SHA-pinned actions                     | ✅ Green  | Status light (green) |
 | 13    | Least-priv permissions                 | ✅ Green  | Status light (green) |

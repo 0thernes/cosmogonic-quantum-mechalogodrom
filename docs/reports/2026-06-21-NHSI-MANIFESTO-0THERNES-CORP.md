@@ -88,7 +88,7 @@ All figures below are measured, not aspirational. The aspirational targets (100 
 
 - **Version:** v0.20.0 · `bun run check` green (prettier → tsc strict → oxlint → bun test → verify:receipts → sync:check → build)
 - **Tests:** 1,984 (published floor) / 0 fail · 2,912,102 `expect()` calls · 231 files
-- **Coverage:** 84.35 % line / 82.05 % function (canonical; ±6pp gate tolerance)
+- **Coverage:** 91.91 % line / 89.62 % function (canonical; ±6pp gate tolerance)
 - **Determinism:** one mulberry32 seed; `Math.random` / `Date.now` glob-banned in `sim/` and `math/`
 
 ### III.2 Tsotchke Corpus Integration
@@ -483,7 +483,7 @@ It is **not** the first A-Life, the first digital evolution, the first morphogen
 - `docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md` — honest Tsotchke wiring ledger (binding)
 - `docs/AUDIT-LOG.md` — centralized audit log (newest-first)
 - `docs/MODULE-CONTRACTS-2026-06-26.md` — binding contracts · `docs/PHILOSOPHY-2026-06-26.md` — aesthetic constitution
-- `docs/ARCHITECTURE-2026-06-26.md`, `docs/ERD-2026-06-26.md` / `docs/ERM-2026-06-26.md` / `docs/ERP-2026-06-26.md`, `docs/KANBAN-2026-06-26.md`
+- `docs/ARCHITECTURE-2026-06-26.md`, `docs/ENTITY-SCHEMA-AND-MAPPINGS-2026-06-26.md`, `docs/KANBAN-2026-06-26.md`
 - `CHANGELOG.md` — release log · `THIRD-PARTY-NOTICES.md` — Tsotchke attribution (binding §On Tsotchke)
 
 **Master XMLs (Agent Steering):** `masters/LEGENDARY-SUPER-SAIYAN-BROLY-MANIFESTO.xml` (Executor), `masters/ORACLE-ARCHITECT-OF-THE-DARKSIDE-STARKILLER.xml` (Architect), `masters/GALAXOGONIC-WARHAMMER-POWER-MODE-DR-MANHATTAN.xml` (Physicist).
@@ -506,7 +506,7 @@ The version and receipts are single-sourced (`package.json` + `scripts/canonical
 - **10 emergence angles** wired (+ 5 god-scale release events)
 - **8/14 Butlin consciousness indicators met + 6/14 partial** (computational indicators, NOT sentience)
 - **20 Tsotchke corpus projects** tracked, **~16 wired with real downstream effect** (8 deep in the apex, 4 in the petri engine)
-- **1,984 tests** (published floor; 2,912,102 `expect()` calls, 231 files), ~92% line / ~90% function coverage (canonical, ±6pp)
+- **2,372 tests** (published floor; 2,912,102 `expect()` calls, 231 files), ~92% line / ~90% function coverage (canonical, ±6pp)
 - **Deterministic** — one seed, one cosmos, eternally · **Measured** — receipts law, benchmarks, provenance
 
 ### XI.2 What We Are NOT

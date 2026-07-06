@@ -399,7 +399,7 @@ and a CycloneDX SBOM shipped). The audit is re-run before each tagged release; d
 
 ## 17. Testing & Coverage
 
-321. ✅ 211 test files, **1,984 tests**, 2,931,364 `expect()` assertions — substantial coverage.
+321. ✅ 254 test files, **2,372 tests**, 2,866,572 `expect()` assertions — substantial coverage.
 322. ✅ Every `src/math/` primitive has a dedicated test (rng, scalar, spatial-hash, quantum, heap).
 323. ✅ Every major sim system has a test (entities, phyla, titans/games, connectome/graph-mind, quantum, RD, singularities, weather, atmosphere).
 324. ✅ Determinism is golden-tested at the integrated population layer (`tests/determinism.test.ts`).
@@ -451,7 +451,7 @@ and a CycloneDX SBOM shipped). The audit is re-run before each tagged release; d
 364. ✅ COMPLEXITY-2026-06-26.md is a single-source Big-O budget matching each module's JSDoc.
 365. ✅ BENCHMARKS-2026-06-26.md records methodology and the ultra-tier optimization.
 366. ✅ DESIGN-SYSTEM-2026-06-26.md defines tokens, color, type, and layout rules.
-367. ✅ ERD-2026-06-26.md + the new ERM-2026-06-26.md + ERP-2026-06-26.md cover structure, relationships, and processes.
+367. ✅ ENTITY-SCHEMA-AND-MAPPINGS-2026-06-26.md covers ERD structure, ERM relationships, and ERP processes.
 368. ✅ WIREFRAMES-2026-06-26.md documents the UI layout intent.
 369. ✅ PHILOSOPHY-2026-06-26.md states the design principles the code is held to.
 370. ✅ Five ADRs record the load-bearing decisions (Bun, three.js, HTMX+Tailwind, deterministic RNG, math stack).

@@ -86,7 +86,7 @@ branches, or forks. If a push is rejected (non-fast-forward), `git pull --rebase
   legacy constant or visual behavior.
 - If a change alters a module's public surface, update
   `docs/MODULE-CONTRACTS-2026-06-26.md` and the diagrams in `docs/ARCHITECTURE-2026-06-26.md` /
-  `docs/ERD-2026-06-26.md` in the same commit.
+  `docs/ENTITY-SCHEMA-AND-MAPPINGS-2026-06-26.md` in the same commit.
 - Add a `CHANGELOG.md` entry under `[Unreleased]` (Keep a Changelog format).
 
 ## Contributions & ownership

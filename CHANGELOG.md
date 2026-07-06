@@ -1846,10 +1846,10 @@ standing 500-point quality audit.
   and repo **governance**: a PR template (gate checklist), bug/feature issue
   templates, and CODEOWNERS. (Complements the existing CI gate, tagged-release CD,
   and grouped Dependabot.)
-- **Data-model documentation set**: `docs/ERM-2026-06-26.md` (conceptual relationship model
-  with cardinality rules + a cross-system write-back matrix) and `docs/ERP-2026-06-26.md`
-  (process view — boot sequence, per-frame pipeline, cadence schedule, entity
-  lifecycle, audit flow), complementing the existing `docs/ERD-2026-06-26.md`.
+- **Data-model documentation set**: `docs/ENTITY-SCHEMA-AND-MAPPINGS-2026-06-26.md`
+  consolidates the ERD/ERM/ERP material into one source of truth: attributes,
+  cardinality rules, cross-system write-back matrix, boot sequence, frame
+  pipeline, cadence schedule, entity lifecycle, and audit flow.
 - **`docs/500-POINT-INSPECTION-2026-06-26.md`** — a standing audit: 25 sections × 20
   checkpoints (480 PASS / 20 WARN / 0 FAIL), each with a verdict and concrete
   evidence (file, symbol, test, or measured fact).
@@ -2020,7 +2020,7 @@ the world visibly come alive. Landed in six gated waves (see
   bright whiteout; RAIN a moody blue-grey downpour drift. Faster onset so a
   weather switch is felt immediately. Exposure stays weather-owned; no rng (the
   lightning is a deterministic function of time). (`src/sim/weather.ts`,
-  `docs/ERD-2026-06-26.md`, `tests/weather.test.ts`.)
+  `docs/ENTITY-SCHEMA-AND-MAPPINGS-2026-06-26.md`, `tests/weather.test.ts`.)
 
 ### Fixed
 

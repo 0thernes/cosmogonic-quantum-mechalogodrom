@@ -51,8 +51,8 @@ are overclaims resting on name-list modules and partial scaffolding. The single
 thing standing between "a strong pile of faculties" and "emergence" is
 **coupling**, not count.
 
-**Where the project stands today (`bun run check` green):** v0.20.0 · 1,984 tests
-(published floor) / 0 fail · 84.35 % line / 82.05 % function coverage (canonical receipts). The SuperMind
+**Where the project stands today (`bun run check` green):** v0.20.0 · 2,372 tests
+(published floor) / 0 fail · 91.91 % line / 89.62 % function coverage (canonical receipts). The SuperMind
 `think()` costs ~3.34 ms in the full bench suite (~8.85 ms focused) — this is a
 real, non-trivial per-call cost, not a sub-millisecond freebie (see §8). World
 ceiling: 50,000 agents (10,000 @ 60 fps on an iGPU), ~3.5M params (~14 MB

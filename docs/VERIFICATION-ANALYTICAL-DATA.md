@@ -20,9 +20,9 @@ Rewritten in place when the facts change (per the binding "Living docs, no archi
 | Fact                | Canonical value           | Source of truth                                                                      | Propagated by           |
 | ------------------- | ------------------------- | ------------------------------------------------------------------------------------ | ----------------------- |
 | Package version     | `0.20.0`                  | `package.json` `version`                                                             | `sync-surfaces.ts`      |
-| Test count (floor)  | `1984`                    | `scripts/canonical-receipts.ts`                                                      | `sync-surfaces.ts`      |
-| Line coverage       | `84.35%`                  | `scripts/canonical-receipts.ts`                                                      | `sync-surfaces.ts`      |
-| Function coverage   | `82.05%`                  | `scripts/canonical-receipts.ts`                                                      | `sync-surfaces.ts`      |
+| Test count (floor)  | `2372`                    | `scripts/canonical-receipts.ts`                                                      | `sync-surfaces.ts`      |
+| Line coverage       | `91.91%`                  | `scripts/canonical-receipts.ts`                                                      | `sync-surfaces.ts`      |
+| Function coverage   | `89.62%`                  | `scripts/canonical-receipts.ts`                                                      | `sync-surfaces.ts`      |
 | Faculties (design)  | `100` (~30 deep-wired)    | `CANONICAL_FACULTIES`                                                                | `sync-surfaces.ts`      |
 | Archon pantheon     | `25` (5 apex + 20 light)  | `CANONICAL_ARCHONS`                                                                  | `sync-surfaces.ts`      |
 | Theory-of-mind orgs | `25`                      | `CANONICAL_TOM_ORGANS`                                                               | `sync-surfaces.ts`      |
@@ -35,11 +35,11 @@ Rewritten in place when the facts change (per the binding "Living docs, no archi
 | Apex composite mind | `~10,081` weights         | `src/sim/super-mind.ts`                                                              | prose (NOT auto-synced) |
 | Legacy spine        | `~1,444` params           | `src/sim/super-mind.ts` / ADR-0008                                                   | prose (NOT auto-synced) |
 
-### Measured reality (this audit, 2026-07-01, Bun 1.3.14)
+### Measured reality (this audit, 2026-07-05, Bun 1.3.14)
 
-- `bun test --coverage` → **2104 pass / 0 fail** · **2,912,102 expect() calls** · **231 test files** · coverage
-  **84.35% line / 82.05% func** (measured; canonical synced floor is **1984** tests · **84.35% line / 82.05% func**
-  from `canonical-receipts.ts`). The 2104 vs 1984 gap is expected: `CANONICAL_TEST_COUNT` is a documented
+- `bun test --coverage` → **2372 pass / 0 fail** · **2,866,572 expect() calls** · **254 test files** · coverage
+  **91.91% line / 89.62% func** (measured; canonical synced floor is **2372** tests · **91.91% line / 89.62% func**
+  from `canonical-receipts.ts`). `CANONICAL_TEST_COUNT` is a documented
   **floor**; a file-rich checkout measures every `*.test.ts` in the working tree. Gate-enforced
   `verify:receipts` floors against the canonical ledger — any count ≥ floor with matching canon is green.
 - `bun run check` → green (prettier · tsc · oxlint · verify:receipts/test+coverage · sync:check · verify:facts · build).
@@ -56,7 +56,7 @@ Rewritten in place when the facts change (per the binding "Living docs, no archi
 | Consciousness    | `docs/CONSCIOUSNESS-LAB-MASTER-2026-07-03.md`, `docs/reports/2026-06-21-NHSI-HONESTY-AUDIT.md`                                   |
 | HTML surfaces    | `index.html`, `docs.html`, `specs.html` (+ `lab/`)                                                                               |
 | Tsotchke         | `docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md` (authoritative), `THIRD-PARTY-NOTICES.md`                                          |
-| Diagrams         | `docs/ERD-2026-06-26.md`, `docs/ERM-2026-06-26.md`, `docs/ERP-2026-06-26.md`, `docs/ARCHITECTURE-2026-06-26.md`                  |
+| Diagrams         | `docs/ENTITY-SCHEMA-AND-MAPPINGS-2026-06-26.md`, `docs/ARCHITECTURE-2026-06-26.md`                                               |
 
 ---
 
@@ -65,7 +65,7 @@ Rewritten in place when the facts change (per the binding "Living docs, no archi
 | #   | Severity                   | Where                                                      | Issue                                                                                                                                                                                          | Resolution                                                                                                       |
 | --- | -------------------------- | ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
 | A   | **P0 gate-RED**            | `.github/copilot-instructions-2026-06-26.md`               | markdown tables collapsed by the external `hacklm-memory` tool → fails `prettier --check` (first gate stage) in the working tree                                                               | `prettier --write` (re-pad tables)                                                                               |
-| B   | reconciled (not a bug)     | `scripts/canonical-receipts.ts`                            | `CANONICAL_TEST_COUNT` is a floor (1477→1771→1984 as suites grew) vs a file-rich measured count (2104 on 2026-07-01)                                                                           | floor semantics confirmed correct; the published headline floor is now **1984** (`--print` never auto-raises it) |
+| B   | reconciled (not a bug)     | `scripts/canonical-receipts.ts`                            | `CANONICAL_TEST_COUNT` is a floor (1477→1771→1984→2372 as suites grew) vs file-rich measured counts                                                                                            | floor semantics confirmed correct; the published headline floor is now **2372** (`--print` never auto-raises it) |
 | C   | **P0 gate-RED**            | `CHANGELOG.md`, `docs/KANBAN-2026-06-26.md`                | 3 dead relative links into the deleted `docs/audit-2026-06-15/` folder (consolidated into AUDIT-LOG by `e51a376`)                                                                              | repoint to `docs/AUDIT-LOG.md`                                                                                   |
 | C2  | P1 test-hygiene            | `tests/doc-links.test.ts`                                  | `SKIP` set omitted `.claude/` → the test scanned nested worktree copies and false-failed                                                                                                       | add `.claude`, `legacy`, `site`, `coverage` to `SKIP`                                                            |
 | D   | P1 doc-rot                 | `docs/KANBAN-2026-06-26.md`                                | mojibake: `×11/`×7/``×1 (orphaned-emoji fragments), `—`×34 used as `—`, plus `¦`/`–`/`©º`— slipped the encoding gate (orphaned fragments aren't double-encoding;`U+201D` is a legit codepoint) | byte-precise normalize: drop corrupted emoji prefixes, restore `—`/`–` separators                                |
@@ -335,7 +335,7 @@ verify:facts` = 0 drift / 80 surfaces, 0 git-conflict-markers tree-wide, 100% of
 | `src/ui/**`                                                                       | 20    | subsystems agent                                         | clean (3 cosmetic Low: DPR-on-monitor-move)                                                      |
 | `src/core,audio,server,memory,logging` + `main/types/docs-page` + `server.ts`     | ~14   | subsystems agent                                         | clean; security exceptionally hardened                                                           |
 | `src/styles/app.css`                                                              | 1     | front-end agent                                          | clean                                                                                            |
-| `tests/**`                                                                        | 153   | gate (1,984 pass) + tooling agent                        | healthy, 0 disabled, all assert                                                                  |
+| `tests/**`                                                                        | 153   | gate (2,372 pass) + tooling agent                        | healthy, 0 disabled, all assert                                                                  |
 | `scripts/**`                                                                      | 16    | scripts/tooling agents                                   | sound; **CI sync:check gap FIXED**, dead `.sync-receipts.cjs` removed                            |
 | `bench/**`                                                                        | 13    | tooling agent                                            | clean; aggregate now includes the P1 quantum-classical bench                                     |
 | `.github/workflows/*.yml` + issue/PR templates                                    | 8+    | CI agent                                                 | SHA-pinned, least-priv; `master`->`main` URLs FIXED; **gate now runs sync:check + verify:facts** |

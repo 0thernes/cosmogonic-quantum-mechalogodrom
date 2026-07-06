@@ -28,7 +28,7 @@ adversarially verified against the same 9-axis rubric.
 > [Sensitivity](#sensitivity-how-much-the-conclusion-moves-under-honest-re-scoring) sections quantify
 > exactly how much. Read every claim against
 > [`VERIFICATION-ANALYTICAL-DATA.md`](../VERIFICATION-ANALYTICAL-DATA.md) §1; verification wins on
-> any conflict. Current receipts: `1,984` tests (published floor; `2104` measured), `0` failures, `84.35%` line / `82.05%` function coverage,
+> any conflict. Current receipts: `2,372` tests (published floor; `2104` measured), `0` failures, `91.91%` line / `89.62%` function coverage,
 > sync clean, build clean.
 
 ---
@@ -176,7 +176,7 @@ morphogenesis/self-organization, adaptation, emergent collective dynamics.
 | Morphogenesis          | `reaction-diffusion.ts` live PDE, morphotypes; `super-body.ts` is cosmetic shader displacement          | Real RD substrate; body morphology is rendering only                      |
 | Cognition              | `super-creature.ts` active-inference/GOAP loop, reservoir, empowerment, metacognition                   | Strong as functional models                                               |
 | Open-endedness         | one real GA (`emergence-angles.ts`); `super-evolution.ts` is a handcrafted arc                          | **Weak — below field mean code-grounded**                                 |
-| Scientific measurement | seeded RNG, 1,984 tests (floor), coverage, benchmarks, receipts, analytics regression                   | Strong                                                                    |
+| Scientific measurement | seeded RNG, 2,372 tests (floor), coverage, benchmarks, receipts, analytics regression                   | Strong                                                                    |
 
 Deductively: **this is a real A-Life testbed** — and a cognitive-theory sandbox — but **not** a conscious or
 sentient entity. The repo's own honesty audit grades the Butlin-style status at **`8/14 met + 6/14 partial`**;
@@ -464,7 +464,7 @@ cannot be fully excluded — confidence is moderate-high, not absolute.
 
 1. **"This is Artificial Life."** Valid — synthetic ecology with populations, heredity, mutation, selection,
    morphogenesis, emergent telemetry, all code-grounded.
-2. **"This is not just an A-Life toy."** Mostly valid — strict TypeScript, deterministic seeded RNG, 1,984 tests (floor),
+2. **"This is not just an A-Life toy."** Mostly valid — strict TypeScript, deterministic seeded RNG, 2,372 tests (floor),
    coverage, benchmark harness, module contracts, adversarial honesty docs.
 3. **"This is world-first Artificial Life."** **False** — Conway's Life, Boids, Core War, Tierra, Avida, Polyworld,
    Framsticks, Sims, Creatures, Sugarscape predate it by decades.
@@ -624,7 +624,7 @@ bun scripts/alife-codeground-sensitivity.ts
 #   all three read docs/reports/2026-06-26-alife-comparison-matrix.csv (deterministic; identical CSV -> identical bytes)
 
 # Re-confirm the live gate receipts:
-bun test --coverage        # -> 2104 pass / 0 fail ; 84.35% line / 82.05% func (floor 1,984)
+bun test --coverage        # -> 2104 pass / 0 fail ; 91.91% line / 89.62% func (floor 1,984)
 bun run check              # full gate
 ```
 

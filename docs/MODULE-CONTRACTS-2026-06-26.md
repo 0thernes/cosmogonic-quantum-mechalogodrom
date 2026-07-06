@@ -525,7 +525,7 @@ mermaid digest, repo layout tree, links to all docs, license/legal section), LIC
 simplex-noise/MIT, Inter & JetBrains Mono/OFL-1.1, bun runtime note), SECURITY.md, CONTRIBUTING.md
 (bun workflow, `bun run check` gate), CHANGELOG.md (Keep-a-Changelog, 0.1.0), docs/ARCHITECTURE-2026-06-26.md
 (mermaid `graph TD` of modules matching this contract + data-flow + frame pipeline),
-docs/ERD-2026-06-26.md (mermaid `erDiagram`: ENTITY, MORPHOTYPE, BEHAVIOR, SHOGGOTH, PUPPET_MASTER, WEATHER,
+docs/ENTITY-SCHEMA-AND-MAPPINGS-2026-06-26.md (mermaid `erDiagram`: ENTITY, MORPHOTYPE, BEHAVIOR, SHOGGOTH, PUPPET_MASTER, WEATHER,
 SONG, AUDIT_EVENT, PERSISTED_STATE + relationship narrative (ERM) + `sequenceDiagram`/`stateDiagram`
 process models (ERP)), docs/WIREFRAMES-2026-06-26.md (ASCII wireframes desktop/mobile + typography scale +
 spacing/color tokens), docs/COMPLEXITY-2026-06-26.md (per-hot-path big-O table: spatial hash, behaviors,
@@ -1572,7 +1572,7 @@ Copilot are constructed boot-stream-neutral and never write sim state, so the go
 
 ### V9 acceptance
 
-Full `bun run check` green: prettier → tsc strict → oxlint → 1984 tests (0 fail, 300-frame golden
+Full `bun run check` green: prettier → tsc strict → oxlint → 2372 tests (0 fail, 300-frame golden
 included) → build. The Copilot sandbox verified live (allow: `git log`, file reads; deny:
 path-escape, `git push`, `legacy/`, shell redirection).
 
