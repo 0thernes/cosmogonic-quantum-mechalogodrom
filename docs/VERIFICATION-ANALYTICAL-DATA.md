@@ -21,8 +21,8 @@ Rewritten in place when the facts change (per the binding "Living docs, no archi
 | ------------------- | ------------------------- | ------------------------------------------------------------------------------------ | ----------------------- |
 | Package version     | `0.20.0`                  | `package.json` `version`                                                             | `sync-surfaces.ts`      |
 | Test count (floor)  | `1984`                    | `scripts/canonical-receipts.ts`                                                      | `sync-surfaces.ts`      |
-| Line coverage       | `83.95%`                  | `scripts/canonical-receipts.ts`                                                      | `sync-surfaces.ts`      |
-| Function coverage   | `81.57%`                  | `scripts/canonical-receipts.ts`                                                      | `sync-surfaces.ts`      |
+| Line coverage       | `84.35%`                  | `scripts/canonical-receipts.ts`                                                      | `sync-surfaces.ts`      |
+| Function coverage   | `82.05%`                  | `scripts/canonical-receipts.ts`                                                      | `sync-surfaces.ts`      |
 | Faculties (design)  | `100` (~30 deep-wired)    | `CANONICAL_FACULTIES`                                                                | `sync-surfaces.ts`      |
 | Archon pantheon     | `25` (5 apex + 20 light)  | `CANONICAL_ARCHONS`                                                                  | `sync-surfaces.ts`      |
 | Theory-of-mind orgs | `25`                      | `CANONICAL_TOM_ORGANS`                                                               | `sync-surfaces.ts`      |
@@ -38,7 +38,7 @@ Rewritten in place when the facts change (per the binding "Living docs, no archi
 ### Measured reality (this audit, 2026-07-01, Bun 1.3.14)
 
 - `bun test --coverage` → **2104 pass / 0 fail** · **2,912,102 expect() calls** · **231 test files** · coverage
-  **83.95% line / 81.57% func** (measured; canonical synced floor is **1984** tests · **83.95% line / 81.57% func**
+  **84.35% line / 82.05% func** (measured; canonical synced floor is **1984** tests · **84.35% line / 82.05% func**
   from `canonical-receipts.ts`). The 2104 vs 1984 gap is expected: `CANONICAL_TEST_COUNT` is a documented
   **floor**; a file-rich checkout measures every `*.test.ts` in the working tree. Gate-enforced
   `verify:receipts` floors against the canonical ledger — any count ≥ floor with matching canon is green.

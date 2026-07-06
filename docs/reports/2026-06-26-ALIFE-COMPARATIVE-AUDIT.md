@@ -28,7 +28,7 @@ adversarially verified against the same 9-axis rubric.
 > [Sensitivity](#sensitivity-how-much-the-conclusion-moves-under-honest-re-scoring) sections quantify
 > exactly how much. Read every claim against
 > [`VERIFICATION-ANALYTICAL-DATA.md`](../VERIFICATION-ANALYTICAL-DATA.md) §1; verification wins on
-> any conflict. Current receipts: `1,984` tests (published floor; `2104` measured), `0` failures, `83.95%` line / `81.57%` function coverage,
+> any conflict. Current receipts: `1,984` tests (published floor; `2104` measured), `0` failures, `84.35%` line / `82.05%` function coverage,
 > sync clean, build clean.
 
 ---
@@ -624,7 +624,7 @@ bun scripts/alife-codeground-sensitivity.ts
 #   all three read docs/reports/2026-06-26-alife-comparison-matrix.csv (deterministic; identical CSV -> identical bytes)
 
 # Re-confirm the live gate receipts:
-bun test --coverage        # -> 2104 pass / 0 fail ; 83.95% line / 81.57% func (floor 1,984)
+bun test --coverage        # -> 2104 pass / 0 fail ; 84.35% line / 82.05% func (floor 1,984)
 bun run check              # full gate
 ```
 

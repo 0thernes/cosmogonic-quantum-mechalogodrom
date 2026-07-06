@@ -88,7 +88,7 @@ All figures below are measured, not aspirational. The aspirational targets (100 
 
 - **Version:** v0.20.0 · `bun run check` green (prettier → tsc strict → oxlint → bun test → verify:receipts → sync:check → build)
 - **Tests:** 1,984 (published floor) / 0 fail · 2,912,102 `expect()` calls · 231 files
-- **Coverage:** 83.95 % line / 81.57 % function (canonical; ±6pp gate tolerance)
+- **Coverage:** 84.35 % line / 82.05 % function (canonical; ±6pp gate tolerance)
 - **Determinism:** one mulberry32 seed; `Math.random` / `Date.now` glob-banned in `sim/` and `math/`
 
 ### III.2 Tsotchke Corpus Integration

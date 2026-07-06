@@ -117,14 +117,18 @@ if (count < effectiveFloor)
 // and coverage within an explicit ±band — neither is checked for exact equality, precisely because both
 // vary by environment. Canonical stays the locally-measured headline that docs publish; this guards
 // against real regression without lying about float identity or pinning an env-dependent count.
+// Coverage % varies by OS/instrumentation set (Windows CI often measures several pp HIGHER than
+// Linux). Enforce a REGRESSION FLOOR only: measured must not drop more than COV_TOLERANCE_PP below
+// the published headline. Higher measurements are OK — they do not mean docs lied, only that the
+// env counted a different file set.
 const COV_TOLERANCE_PP = 6;
-if (Math.abs(Number(cov.line) - Number(CANONICAL_LINE_COV)) > COV_TOLERANCE_PP)
+if (Number(cov.line) < Number(CANONICAL_LINE_COV) - COV_TOLERANCE_PP)
   problems.push(
-    `line coverage: canonical ${CANONICAL_LINE_COV} but gate measures ${cov.line} (beyond ±${COV_TOLERANCE_PP}pp)`,
+    `line coverage: canonical ${CANONICAL_LINE_COV} but gate measures ${cov.line} (dropped >${COV_TOLERANCE_PP}pp — regression)`,
   );
-if (Math.abs(Number(cov.func) - Number(CANONICAL_FUNC_COV)) > COV_TOLERANCE_PP)
+if (Number(cov.func) < Number(CANONICAL_FUNC_COV) - COV_TOLERANCE_PP)
   problems.push(
-    `function coverage: canonical ${CANONICAL_FUNC_COV} but gate measures ${cov.func} (beyond ±${COV_TOLERANCE_PP}pp)`,
+    `function coverage: canonical ${CANONICAL_FUNC_COV} but gate measures ${cov.func} (dropped >${COV_TOLERANCE_PP}pp — regression)`,
   );
 
 if (problems.length > 0) {

@@ -223,13 +223,12 @@ function gitOk(args: string[]): boolean {
   }
 }
 
-/** True iff a rebase is interrupted (a rebase-merge/rebase-apply dir or REBASE_HEAD is present). */
+/** True iff a rebase is interrupted (rebase-merge/rebase-apply dir present).
+ *  Do NOT key off REBASE_HEAD alone — that ref can linger after a completed rebase and
+ *  falsely blocks `bun run guard` / `bun dev` on an otherwise clean checkout. */
 function inProgressRebase(): boolean {
   const gp = (n: string): string | null => tryGit(['rev-parse', '--git-path', n]);
-  return (
-    tryGit(['rev-parse', '--verify', '-q', 'REBASE_HEAD']) !== null ||
-    [gp('rebase-merge'), gp('rebase-apply')].some((p) => p !== null && existsSync(p))
-  );
+  return [gp('rebase-merge'), gp('rebase-apply')].some((p) => p !== null && existsSync(p));
 }
 
 /** True iff the working tree has no uncommitted changes. */

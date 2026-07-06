@@ -7,7 +7,7 @@
 > **Repository:** `0thernes/cosmogonic-quantum-mechalogodrom` · **Version:** `v0.20.0`
 > **Date:** 2026-06-26 · **Mode:** Master Architect / Master Engineer / Master Physicist (Broly · Starkiller · Dr. Manhattan)
 > **Companion artifact:** [`2026-06-20-ROADMAP-TO-NHSI-AND-SENTIENCE.xml`](./2026-06-20-ROADMAP-TO-NHSI-AND-SENTIENCE.xml) — the machine-readable forward plan.
-> **Canonical receipts (audited, Bun 1.3.14, cold shell):** `1,984` tests · `0` failures · `1,744,891` `expect()` calls across `151` files · `~95%` line / `~92%` function coverage (canonical 83.95 / 81.57, ±6pp gate tolerance).
+> **Canonical receipts (audited, Bun 1.3.14, cold shell):** `1,984` tests · `0` failures · `1,744,891` `expect()` calls across `151` files · `~95%` line / `~92%` function coverage (canonical 84.35 / 82.05, ±6pp gate tolerance).
 > Source of truth: [`scripts/canonical-receipts.ts`](../../scripts/canonical-receipts.ts), policed by `tests/docs-receipts-law.test.ts`.
 > **Usage & license:** © 2026 0thernes — **non-commercial research & play**: study, run, modify, and share it freely for non-commercial use; keep the attribution (don't claim it as your own) and don't use it for profit. See [LICENSE](../../LICENSE).
 
@@ -109,7 +109,7 @@ Rigor begins with refusing to let the words do undeserved work. The tribunal wil
 | Math kernels                 | **27** modules in `src/math/`                                                                                  | `src/math/*.ts`                                          |
 | Simulation modules           | **90+** modules in `src/sim/`                                                                                  | `src/sim/*.ts`                                           |
 | Test suite                   | **1,984** tests, **0** failures, **1,744,891** `expect()` calls across **151** files                           | `scripts/canonical-receipts.ts`                          |
-| Coverage                     | **~95%** line / **~92%** function (canonical 83.95 / 81.57, ±6pp gate tolerance)                               | `scripts/canonical-receipts.ts`                          |
+| Coverage                     | **~95%** line / **~92%** function (canonical 84.35 / 82.05, ±6pp gate tolerance)                               | `scripts/canonical-receipts.ts`                          |
 
 > **Honesty flag (volatility):** the test count is a _moving_ receipt — it varies across Bun versions and development sessions. The number is real _at its measurement stamp_; it is not a stable constant. The receipts law exists precisely to keep the _published_ number equal to the _measured_ one, and the sync surfaces (`scripts/sync-surfaces.ts`, gate-enforced by `sync:check`) propagate the single source of truth to every document. This is a feature (provenance), reported as a feature.
 

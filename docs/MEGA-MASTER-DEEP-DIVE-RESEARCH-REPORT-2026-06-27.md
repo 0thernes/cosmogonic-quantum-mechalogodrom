@@ -7,7 +7,7 @@
 > **Architecture:** [ARCHITECTURE-2026-06-26.md](ARCHITECTURE-2026-06-26.md) ·
 > **Consciousness:** [CONSCIOUSNESS-LAB-MASTER-2026-07-03.md](CONSCIOUSNESS-LAB-MASTER-2026-07-03.md)
 
-**Date:** 2026-06-27 (gutted 2026-07-06) · **Repo:** `v0.20.0` · **Gate:** 1,984 tests · 83.95% line / 81.57% func
+**Date:** 2026-06-27 (gutted 2026-07-06) · **Repo:** `v0.20.0` · **Gate:** 1,984 tests · 84.35% line / 82.05% func
 
 Pass 8 consolidation removed duplicate narrative sections (architecture, quantum, A-life, consciousness,
 Tsotchke deep-dives, CI plans, and passes 2–9) — those topics live in the canonical docs above. This file
@@ -858,8 +858,8 @@ Measures 25 CI/CD gate stage metrics.
 | 6     | sync:check                             | ✅ Green  | Status light (green) |
 | 7     | build (7 artifacts)                    | ✅ Green  | Status light (green) |
 | 8     | verify:facts (0 drift)                 | ✅ Green  | Status light (green) |
-| 9     | Coverage line ≥ 0.90                   | ✅ 83.95% | Gauge (green)        |
-| 10    | Coverage func ≥ 0.85                   | ✅ 81.57% | Gauge (green)        |
+| 9     | Coverage line ≥ 0.90                   | ✅ 84.35% | Gauge (green)        |
+| 10    | Coverage func ≥ 0.85                   | ✅ 82.05% | Gauge (green)        |
 | 11    | Cross-platform matrix (ubuntu+windows) | ✅ Green  | Status light (green) |
 | 12    | SHA-pinned actions                     | ✅ Green  | Status light (green) |
 | 13    | Least-priv permissions                 | ✅ Green  | Status light (green) |

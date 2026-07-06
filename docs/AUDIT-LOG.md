@@ -11,6 +11,26 @@ dated / historical / "superseded snapshot" copies (per the binding "Living docs,
 
 ---
 
+## 2026-07-06 (pass 11) — Local↔GitHub sync + CI receipts fix (v0.20.0)
+
+Owner brief: make Local match GitHub reliably; fix Windows CI receipts failure.
+
+### Code
+
+- **`scripts/sync-guard.ts`** — stop treating stale `REBASE_HEAD` as stuck rebase (false-positive blocked `bun dev`).
+- **`scripts/verify-receipts.ts`** — coverage law is regression-floor only (Windows CI measures higher; no longer fails CI).
+- **`scripts/canonical-receipts.ts`** — refreshed to Linux-measured **84.35% / 82.05%** (was 83.95/81.57).
+
+### Docs
+
+- **`docs/RUNBOOK-2026-06-26.md`** — Local↔GitHub sync playbook + GitHub repo hygiene section.
+
+### Gate
+
+- `bun run check` green · Windows CI receipts law unblocked.
+
+---
+
 ## 2026-07-06 (pass 10) — Large-doc compress + singularities test merge (v0.20.0)
 
 Owner brief: continue consolidation — **fewer lines**, no new files.
