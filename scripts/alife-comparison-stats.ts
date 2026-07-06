@@ -3,7 +3,7 @@
  * alife-comparison-stats.ts — the MEASUREMENT engine behind the A-Life comparative audit.
  *
  * Dr. Manhattan's law applied to the comparison: every statistic and every chart in
- * `docs/reports/2026-06-26-ALIFE-COMPARATIVE-AUDIT.md` is COMPUTED here from the single source CSV
+ * `docs/reports/2026-07-01-25-POINT-SCRUTINY-SCORECARD.md` is COMPUTED here from the single source CSV
  * (`docs/reports/2026-06-26-alife-comparison-matrix.csv`) — never hand-asserted. Re-run to regenerate:
  *
  *   bun scripts/alife-comparison-stats.ts            # print the stats block + (re)write charts/JSON

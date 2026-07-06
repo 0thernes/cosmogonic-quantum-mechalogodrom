@@ -98,4 +98,4 @@ path; they run the wilderness, which is explicitly outside the golden.
 - **3c** — camera-streamed chunks: the world grows (load near / freeze far).
 - **5** — move the wilderness kernels to WebGPU compute for 100k–1M.
 
-See also: ADR 0004 (deterministic RNG), ADR 0002 (three.js rendering), `docs/PERFORMANCE-OPTIMIZATION-ROADMAP-2026-07-03.md`.
+See also: ADR 0004 (deterministic RNG), ADR 0002 (three.js rendering), `docs/BENCHMARKS-2026-06-26.md`.

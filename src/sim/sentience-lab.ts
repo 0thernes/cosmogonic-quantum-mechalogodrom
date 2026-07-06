@@ -266,7 +266,7 @@ export function generateSentienceLabData(rootSeed = 0x20260704, seedCount = 32):
       'Headless mass-run analytics over computational consciousness indicators; evidence of load-bearing mechanisms, not proof of phenomenal sentience.',
     rootSeed,
     seedBatch,
-    sourceDocs: Object.freeze(['docs/CONSCIOUSNESS-LAB-MASTER-2026-07-03.md']),
+    sourceDocs: Object.freeze(['docs/SUPER-CREATURE-RESEARCH-2026-06-26.md']),
     sweep: {
       runs: reports.length,
       singularityRate: round(reports.filter((r) => r.singularityProven).length / runCount),

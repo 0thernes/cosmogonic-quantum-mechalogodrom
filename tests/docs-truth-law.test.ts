@@ -204,7 +204,7 @@ describe('docs truth law — no false NHSI achievement overclaims', () => {
         'Public surfaces claim an NHSI achievement the code does not support. Use the verified numbers ' +
           '(100-faculty design ~30 deep-wired · 5 individuated archons + 20 light-echo · 25 ToM wired · ' +
           '10 emergence angles · Butlin 8/14 met + 6/14 partial) or "path/target" framing. See ' +
-          'docs/reports/2026-06-21-NHSI-HONESTY-AUDIT.md:\n  - ' +
+          'docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md:\n  - ' +
           offenders.join('\n  - '),
       );
     }

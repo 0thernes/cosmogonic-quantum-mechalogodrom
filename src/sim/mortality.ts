@@ -28,7 +28,7 @@
  * - Death as an evolutionary driver
  * - Legacy and cultural transmission
  *
- * This is emergence angle #8 from NEO-MIND-ARCHITECTURE-2026-06-26.md.
+ * This is emergence angle #8 from SUPER-CREATURE-RESEARCH-2026-06-26.md.
  *
  * Pure leaf: deterministic (seeded lifespans), allocation-free apart from working arrays.
  */

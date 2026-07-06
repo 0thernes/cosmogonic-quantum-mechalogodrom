@@ -5,8 +5,8 @@
  * These drive the PHYSICAL OUTSIDE of the three super-creatures in Three.js — NOT brain/HUD panels.
  * Intelligence remains in Tsotchke + sim brains; this catalog names what the body *does* visually.
  *
- * @see docs/APEX-1B-SUBSTRATE-ARCHITECTURE-2026-07-01.md
- * @see docs/APEX-1B-SUBSTRATE-ARCHITECTURE-2026-07-01.md §Brain parameter scale
+ * @see docs/ARCHITECTURE-2026-06-26.md
+ * @see docs/ARCHITECTURE-2026-06-26.md §Brain parameter scale
  */
 
 export const PHENOMENON_KINDS = [

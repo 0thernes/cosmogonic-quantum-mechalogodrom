@@ -27,7 +27,7 @@
  * - Parasitic manipulation (Poulin)
  * - Multi-level selection theory
  *
- * This is emergence angle #9 from NEO-MIND-ARCHITECTURE-2026-06-26.md.
+ * This is emergence angle #9 from SUPER-CREATURE-RESEARCH-2026-06-26.md.
  *
  * Pure leaf: deterministic (seeded relationships), allocation-free apart from working arrays.
  */

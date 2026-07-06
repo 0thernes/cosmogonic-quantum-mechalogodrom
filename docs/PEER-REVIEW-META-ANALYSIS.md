@@ -2,7 +2,7 @@
 
 **Purpose:** A falsifiable, defensible academic framework comparing this repository’s artificial-life stack against the broader A-Life / complex-systems / cognitive-architecture field. This is a **living scaffold** — expand each checkpoint with measured citations and repo line receipts (`file:line`).
 
-**Honesty clause (binding):** Computational indicators of integration ≠ sentience, consciousness, or sentience claims. NHSI / Butlin-path language in-repo is explicitly non-sentience per `docs/reports/2026-06-21-NHSI-HONESTY-AUDIT.md`.
+**Honesty clause (binding):** Computational indicators of integration ≠ sentience, consciousness, or sentience claims. NHSI / Butlin-path language in-repo is explicitly non-sentience per `docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md`.
 
 ---
 

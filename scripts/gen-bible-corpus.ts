@@ -74,13 +74,13 @@ const EXTRA: Entry[] = [
   },
   {
     title: 'VENTURES — product horizon',
-    href: '/docs/VENTURES-2026-06-26.md',
+    href: '/docs/ROADMAP-2026-06-26.md',
     blurb: 'Multiplayer, accounts, outreach (aspirational).',
     tier: 'Research',
   },
   {
     title: 'FRONTEND-ACTION-PLAN — UI/UX backlog',
-    href: '/docs/FRONTEND-ACTION-PLAN.md',
+    href: '/docs/UI-UX-DEEP-DIVE-AUDIT-2026-06-27.md',
     blurb: 'Living plan for HUD, brain viz, pantheon, BIBLE depth.',
     tier: 'Research',
   },
@@ -92,7 +92,7 @@ const EXTRA: Entry[] = [
   },
   {
     title: 'APEX brain parameter scale',
-    href: '/docs/APEX-1B-SUBSTRATE-ARCHITECTURE-2026-07-01.md#brain-parameter-scale-apex--mechalogodrom--pantheon',
+    href: '/docs/ARCHITECTURE-2026-06-26.md#brain-parameter-scale-apex--mechalogodrom--pantheon',
     blurb: '25k glyph · 100k→5M apex · Mechalogodrom roadmap.',
     tier: 'Architecture',
   },

@@ -53,7 +53,7 @@ Rewritten in place when the facts change (per the binding "Living docs, no archi
 | Root MD          | `README.md`, `ROADMAP-2026-06-26.md`, `CHANGELOG.md`, `CLAUDE.md`, `AGENTS-2026-06-26.md`, …                                     |
 | Steering         | `CLAUDE.md`, `AGENTS-2026-06-26.md`, `masters/*.xml` (3), `docs/PHILOSOPHY-2026-06-26.md`, `docs/MODULE-CONTRACTS-2026-06-26.md` |
 | Progress / truth | `docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md`, `docs/VERIFICATION-ANALYTICAL-DATA.md` (this file)                                 |
-| Consciousness    | `docs/CONSCIOUSNESS-LAB-MASTER-2026-07-03.md`, `docs/reports/2026-06-21-NHSI-HONESTY-AUDIT.md`                                   |
+| Consciousness    | `docs/SUPER-CREATURE-RESEARCH-2026-06-26.md`, `docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md`                                       |
 | HTML surfaces    | `index.html`, `docs.html`, `specs.html` (+ `lab/`)                                                                               |
 | Tsotchke         | `docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md` (authoritative), `THIRD-PARTY-NOTICES.md`                                          |
 | Diagrams         | `docs/ENTITY-SCHEMA-AND-MAPPINGS-2026-06-26.md`, `docs/ARCHITECTURE-2026-06-26.md`                                               |
@@ -134,7 +134,7 @@ the filename; the remaining 20 are name-pinned (below).** Each renamed doc also 
   `index.html` / `docs.html` / `specs.html` (GitHub Pages), `.github/**`, `.memory/**` (hacklm tool).
 - **Hardcoded in scripts / gates** (`sync-surfaces.ts`, `docs-truth-law.test.ts`, `gen-filemap`):
   `ARCHITECTURE`, `KANBAN`, `ERD`/`ERM`/`ERP`, `MODULE-CONTRACTS`, `FILE-MAP`, `TECHNICAL-SPECIFICATION`,
-  `PHILOSOPHY`, `NHSI-PROGRESS-DASHBOARD`, `CONSCIOUSNESS-LAB-MASTER-2026-07-03.md`, `SUPER-CREATURE-RESEARCH`, `BENCHMARKS`,
+  `PHILOSOPHY`, `NHSI-PROGRESS-DASHBOARD`, `SUPER-CREATURE-RESEARCH-2026-06-26.md`, `SUPER-CREATURE-RESEARCH`, `BENCHMARKS`,
   `TSOTCHKE-INTEGRATION-MAP` — renaming reds the gate / breaks the live sync machinery.
 - **Convention-critical / heavily-linked**: `AUDIT-LOG.md`, this ledger, `TSOTCHKE-INTEGRATION-MAP-2026-06-26.md`.
 - **Numbered ADRs** (`docs/adr/000X-*`, referenced as "ADR-0009"), **legacy/** (verbatim), and

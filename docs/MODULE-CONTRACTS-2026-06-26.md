@@ -507,7 +507,7 @@ ring (cap 200), 404 fallback. Port `Number(process.env.PORT) || 3000`. Log reque
   Scripts: `<script type="module" src="./src/main.ts">`. Stylesheet `./src/styles/app.css`.
   Inline SVG favicon data URI. OG/description meta from legacy 6-9.
 - Styling: Tailwind utilities; glassmorphic panels (backdrop-blur, translucent slate/cyan borders);
-  typography per docs/WIREFRAMES-2026-06-26.md type scale — `Inter Variable` for UI labels (uppercase,
+  typography per docs/DESIGN-SYSTEM-2026-06-26.md type scale — `Inter Variable` for UI labels (uppercase,
   tracking-widest, 10-11px), `JetBrains Mono` for numerals/telemetry (tabular-nums). Custom theme
   tokens via `@theme` in app.css (colors: void #030612, accent #0ef, warn #fa0).
 - `app.css`: `@import 'tailwindcss';` + `@theme` tokens + the few non-utility rules (panel collapse
@@ -527,7 +527,7 @@ simplex-noise/MIT, Inter & JetBrains Mono/OFL-1.1, bun runtime note), SECURITY.m
 (mermaid `graph TD` of modules matching this contract + data-flow + frame pipeline),
 docs/ENTITY-SCHEMA-AND-MAPPINGS-2026-06-26.md (mermaid `erDiagram`: ENTITY, MORPHOTYPE, BEHAVIOR, SHOGGOTH, PUPPET_MASTER, WEATHER,
 SONG, AUDIT_EVENT, PERSISTED_STATE + relationship narrative (ERM) + `sequenceDiagram`/`stateDiagram`
-process models (ERP)), docs/WIREFRAMES-2026-06-26.md (ASCII wireframes desktop/mobile + typography scale +
+process models (ERP)), docs/DESIGN-SYSTEM-2026-06-26.md (ASCII wireframes desktop/mobile + typography scale +
 spacing/color tokens), docs/COMPLEXITY-2026-06-26.md (per-hot-path big-O table: spatial hash, behaviors,
 connectome, quantum, sort step, with n/k definitions), docs/adr/0001-bun-runtime-2026-06-26.md,
 0002-threejs-rendering-2026-06-26.md, 0003-htmx-tailwind-ui-2026-06-26.md, 0004-deterministic-rng-2026-06-26.md (context/decision/
@@ -799,7 +799,7 @@ measurement events; params: particle count, collapse rate, field blend, trail
 fade, palette shift. Seeded via randomSeed/noiseSeed. p5 from CDN only.
 The server.ts `/lab` route is the INTEGRATOR's job — do not touch server.ts.
 
-## Design system (writer: design) — owns index.html, src/styles/app.css, src/ui/panels.ts, src/ui/hud.ts, docs/WIREFRAMES-2026-06-26.md
+## Design system (writer: design) — owns index.html, src/styles/app.css, src/ui/panels.ts, src/ui/hud.ts, docs/DESIGN-SYSTEM-2026-06-26.md
 
 1. Produce docs/DESIGN-SYSTEM-2026-06-26.md: full audit per the /design-system skill format
    (summary + score; naming consistency; token-coverage table counting hardcoded

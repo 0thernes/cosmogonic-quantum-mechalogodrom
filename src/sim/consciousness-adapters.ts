@@ -527,7 +527,7 @@ export function generateConsciousnessDashboardData(seed = 0x20260703): Conscious
     generatedAt: '2026-07-03T00:00:00.000Z',
     seed,
     claim: 'indicatorOnly',
-    sourceDocs: Object.freeze(['docs/CONSCIOUSNESS-LAB-MASTER-2026-07-03.md']),
+    sourceDocs: Object.freeze(['docs/SUPER-CREATURE-RESEARCH-2026-06-26.md']),
     frameworks: FRAMEWORK_IDS.map((id) => {
       const meta = FRAMEWORKS[id];
       return {

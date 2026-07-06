@@ -11,7 +11,7 @@
  * Every uniform is load-bearing (an ablation of the substrate changes the look), honest (log-scaled so
  * the billion reads as "near full" without lying that it is literally resident), and bounded to `[0,1]`.
  *
- * @see docs/APEX-1B-SUBSTRATE-ARCHITECTURE-2026-07-01.md  (§ The look → substrate mapping)
+ * @see docs/ARCHITECTURE-2026-06-26.md  (§ The look → substrate mapping)
  */
 
 import { APEX_BILLION, type ManifoldSnapshot } from './apex-parameter-manifold';

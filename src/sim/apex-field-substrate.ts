@@ -15,7 +15,7 @@
  * DOM/THREE-free — the render layer imports the shader strings; the sim imports the reference.
  *
  * @see src/sim/apex-parameter-manifold.ts  (the resident-field tier)
- * @see docs/APEX-1B-SUBSTRATE-ARCHITECTURE-2026-07-01.md
+ * @see docs/ARCHITECTURE-2026-06-26.md
  */
 
 import { mulberry32 } from '../math/rng';

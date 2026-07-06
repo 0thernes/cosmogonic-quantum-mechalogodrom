@@ -11,7 +11,7 @@
  * Deterministic: seeded mulberry32, no Math.random / Date.now.
  *
  * @see src/sim/mechalogodrom.ts (visual fusion spectacle)
- * @see docs/APEX-1B-SUBSTRATE-ARCHITECTURE-2026-07-01.md §Brain parameter scale
+ * @see docs/ARCHITECTURE-2026-06-26.md §Brain parameter scale
  */
 import { mulberry32, type Rng } from '../math/rng';
 import {

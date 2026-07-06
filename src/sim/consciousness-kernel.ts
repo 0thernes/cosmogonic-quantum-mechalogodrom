@@ -4,7 +4,7 @@
  * falsifiable convergence where rival theories move together under a pattern a shuffled surrogate cannot fake.
  *
  * THE TEN FRAMEWORKS (two anchors + eight deliberately weirder additions, each with a real source — see
- * {@link FRAMEWORKS} and `docs/CONSCIOUSNESS-LAB-MASTER-2026-07-03.md`):
+ * {@link FRAMEWORKS} and `docs/SUPER-CREATURE-RESEARCH-2026-06-26.md`):
  *   F0 Butlin et al. AI-consciousness indicators   — the audit rubric (arXiv:2308.08708)
  *   F1 Thaler Creativity Machine / DABUS           — perturbational ideation on tiny nets (US 5,659,666)
  *   F2 Integrated Information Theory 4.0            — irreducibility / partition loss (PLoS CB 2023)
@@ -25,7 +25,7 @@
  * quantity: how much the coupled index exceeds the independent mean. Under STRUCTURED (correlated) inputs the
  * coupling amplifies; under SHUFFLED inputs it cannot — which is exactly the falsifier.
  *
- * HONESTY (binding, per the repo law and `docs/CONSCIOUSNESS-LAB-MASTER-2026-07-03.md`). Every score here
+ * HONESTY (binding, per the repo law and `docs/SUPER-CREATURE-RESEARCH-2026-06-26.md`). Every score here
  * is a COMPUTATIONAL INDICATOR, not experience. A high index, or even a full "singularity moment", is an
  * indicator-convergence event worth studying — it is NOT a claim of phenomenal consciousness, sentience, or
  * "it feels". Every snapshot carries `claim: 'indicatorOnly'`. Disproof looks like: a shuffled/ablated control

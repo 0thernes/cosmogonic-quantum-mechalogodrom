@@ -21,7 +21,7 @@
  *
  * What matching hashes PROVE: the determinism claim and the coupling measurement are real and
  * reproducible by anyone, with no trust in this repo's own CI. What they do NOT prove: consciousness,
- * sentience, or scientific validity of the interpretations — see docs/REPRODUCE-2026-07-02.md.
+ * sentience, or scientific validity of the interpretations — see docs/RUNBOOK-2026-06-26.md.
  *
  * PURE math only: no Math.random, no Date.now, no network, no DOM. Exported functions are test-covered
  * (tests/reproduce.test.ts) without pinning a golden hash (the hash changes whenever the apex evolves —
@@ -164,7 +164,7 @@ if (import.meta.main) {
     '  To replicate: same commit + same command on any machine must print the SAME fingerprint.',
   );
   console.log(
-    '  Full gate receipts: `bun run check`. Methodology + claims scope: docs/REPRODUCE-2026-07-02.md',
+    '  Full gate receipts: `bun run check`. Methodology + claims scope: docs/RUNBOOK-2026-06-26.md',
   );
   if (!deterministic) process.exit(1);
 }

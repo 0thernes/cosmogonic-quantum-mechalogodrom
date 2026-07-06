@@ -12,7 +12,7 @@
  * grids own their buffers; `sense` reuses a module scratch object).
  *
  * @see src/sim/apex-field-substrate.ts  (the grids + stencils + GLSL)
- * @see docs/APEX-1B-SUBSTRATE-ARCHITECTURE-2026-07-01.md
+ * @see docs/ARCHITECTURE-2026-06-26.md
  */
 
 import { APEX_FIELDS, ApexFieldGrid } from './apex-field-substrate';

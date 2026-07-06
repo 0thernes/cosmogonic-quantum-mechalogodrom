@@ -19,7 +19,7 @@
  * sentience claim — a Hilbert-dimension reach claim (doctrine Level 3-4).
  *
  * @see src/sim/apex-parameter-manifold.ts  (the quantum-effective tier)
- * @see docs/APEX-1B-SUBSTRATE-ARCHITECTURE-2026-07-01.md
+ * @see docs/ARCHITECTURE-2026-06-26.md
  */
 
 import { mulberry32, type Rng } from '../math/rng';

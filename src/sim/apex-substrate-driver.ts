@@ -12,7 +12,7 @@
  * billion is coupled to behaviour, not merely counted.
  *
  * @see src/sim/apex-parameter-manifold.ts · src/sim/apex-quantum-substrate.ts · src/sim/apex-field-organs.ts
- * @see docs/APEX-1B-SUBSTRATE-ARCHITECTURE-2026-07-01.md
+ * @see docs/ARCHITECTURE-2026-06-26.md
  */
 
 import type { ApexScale } from './apex-brain';

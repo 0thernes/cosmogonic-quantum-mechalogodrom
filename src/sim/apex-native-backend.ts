@@ -21,7 +21,7 @@
  * Deterministic (seeded {@link Rng}; no `Math.random`/`Date.now`), DOM-free, allocation-light.
  *
  * @see native/apex/README.md  (the C/C++ side of this contract)
- * @see docs/APEX-1B-SUBSTRATE-ARCHITECTURE-2026-07-01.md
+ * @see docs/ARCHITECTURE-2026-06-26.md
  */
 
 import { mulberry32 } from '../math/rng';

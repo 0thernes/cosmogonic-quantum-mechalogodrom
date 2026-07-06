@@ -34,8 +34,8 @@
  * `residentParams` (actually materialised, bounded by the device budget). NOT a sentience claim; a
  * scaling-substrate claim (doctrine Level 3-4). Deterministic, DOM-free, allocation-aware.
  *
- * @see docs/APEX-1B-SUBSTRATE-ARCHITECTURE-2026-07-01.md
- * @see docs/APEX-1B-SUBSTRATE-ARCHITECTURE-2026-07-01.md
+ * @see docs/ARCHITECTURE-2026-06-26.md
+ * @see docs/ARCHITECTURE-2026-06-26.md
  */
 
 import { mulberry32 } from '../math/rng';

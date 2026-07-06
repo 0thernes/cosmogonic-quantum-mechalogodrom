@@ -1,6 +1,6 @@
 /**
  * APEX SCIENTIFIC HARNESS — Wave E of the APEX doctrine
- * ([docs/APEX-1B-SUBSTRATE-ARCHITECTURE-2026-07-01.md]). This is the machinery that turns the Entropic
+ * ([docs/ARCHITECTURE-2026-06-26.md]). This is the machinery that turns the Entropic
  * Tesseract Hydra from an "abomination" into a DEFENSIBLE scientific artifact: it proves, by
  * ablation, that every organ is LOAD-BEARING — "if a substrate can be removed with no downstream
  * effect, it was decoration, not biology." It also pins the determinism axiom (same seed ⇒ same

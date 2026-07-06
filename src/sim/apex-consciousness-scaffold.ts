@@ -205,7 +205,7 @@ export interface ApexSubstrateTelemetry {
  * multi-physics sensorium, and the fused behavioural modulation. Driven by {@link ApexSubstrateDriver}
  * so panel and world see the same numbers. NOT a sentience claim. O(bounded).
  *
- * @see docs/APEX-1B-SUBSTRATE-ARCHITECTURE-2026-07-01.md
+ * @see docs/ARCHITECTURE-2026-06-26.md
  */
 export function apexSubstrateTelemetry(
   scale: ApexScale,

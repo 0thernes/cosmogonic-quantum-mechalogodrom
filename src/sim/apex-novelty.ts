@@ -1,6 +1,6 @@
 /**
  * APEX NOVELTY ARCHIVE — the open-endedness instrument (Wave E of the APEX doctrine,
- * [docs/APEX-1B-SUBSTRATE-ARCHITECTURE-2026-07-01.md] §"Wave E" + Experiment 3 "Internal Civil
+ * [docs/ARCHITECTURE-2026-06-26.md] §"Wave E" + Experiment 3 "Internal Civil
  * War Stability"; Layer 5 "Open-Ended Evolution: historical archive distance / anti-monoculture").
  *
  * Novelty search keeps an ARCHIVE of behaviourally-distinct trajectories: a new run is admitted only
