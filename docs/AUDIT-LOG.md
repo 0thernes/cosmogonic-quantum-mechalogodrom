@@ -19,7 +19,7 @@ Owner brief: make Local match GitHub reliably; fix Windows CI receipts failure.
 
 - **`scripts/sync-guard.ts`** — stop treating stale `REBASE_HEAD` as stuck rebase (false-positive blocked `bun dev`).
 - **`scripts/verify-receipts.ts`** — coverage law is regression-floor only (Windows CI measures higher; no longer fails CI).
-- **`scripts/canonical-receipts.ts`** — refreshed to Linux-measured **84.35% / 82.05%** (was 83.95/81.57).
+- **`scripts/canonical-receipts.ts`** — refreshed to live Windows-measured **2,372 tests · 91.91% / 89.62%** (replaces the interim Linux 84.35/82.05 receipt).
 
 ### Docs
 
