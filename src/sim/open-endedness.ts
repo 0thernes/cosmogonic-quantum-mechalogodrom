@@ -1,7 +1,7 @@
 /**
  * OPEN-ENDEDNESS INSTRUMENTATION — measuring whether the soup actually evolves.
  *
- * Applies the research bedrock (docs/reports/2026-06-20-RESEARCH-BEDROCK.md): Bedau-Packard
+ * Applies the research bedrock (docs/NHSI-RESEARCH-PAPERS-LEDGER-2026-06-26.md): Bedau-Packard
  * EVOLUTIONARY ACTIVITY statistics (Bedau, Snyder & Packard 1998, "A classification of long-term
  * evolutionary dynamics") + a historical-novelty + contemporary-diversity open-endedness template
  * (cf. Lehman & Stanley 2011, novelty search). These turn "is it growing open-endedly or just

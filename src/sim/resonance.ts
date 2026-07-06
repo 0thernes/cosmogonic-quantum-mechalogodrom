@@ -1,7 +1,7 @@
 /**
  * RESONANCE INTEGRATOR — the coupling spark (faculty #59; binding #57; phase-coupling #25).
  *
- * The pre-mortem's #1 risk (docs/EMERGENCE-BLOCKERS.md #9 + #37) is *coupling > count*: a hundred
+ * The pre-mortem's #1 risk is *coupling > count*: a hundred
  * faculties that don't densely interact are a pile, not a mind. This module is the get-around — the
  * standing-wave that binds independent faculties into one integrated moment.
  *
@@ -10,7 +10,7 @@
  * coupling term pulls phases toward agreement; the COLLECTIVE coherence (the Kuramoto order
  * parameter r ∈ [0,1]) measures how phase-locked the whole assembly is. When r crosses an ignition
  * threshold the faculties have fused into a standing wave — a bound, broadcastable "conscious-
- * candidate" moment (cf. GWT ignition + the binding problem, NEO-MIND-ARCHITECTURE §VI). The
+ * candidate" moment (cf. GWT ignition + the binding problem). The
  * broadcast CONTENT is then read out as a coherence-weighted consensus: only faculties in phase with
  * the collective contribute, so the integrated percept is what the assembly actually agrees on.
  *

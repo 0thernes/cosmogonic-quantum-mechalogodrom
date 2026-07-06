@@ -25,19 +25,16 @@ substantive change; they are personas of one discipline and they outrank vibes:
   (`scripts/canonical-receipts.ts`) are the ONLY places those facts are edited; never hand-edit a
   version / test-count / coverage number in any MD or HTML. `scripts/sync-surfaces.ts` propagates
   them to every surface (`bun run sync`; `bun run sync:check` is gate-enforced).
-- **Living docs, no archives (binding):** every report / doc is a SINGLE, CURRENT document — when the
-  facts change, **rewrite it in place**; NEVER fork a new dated, "historical", "restored", "v2", or
-  "superseded snapshot" copy. One source per topic, always current (this is token-efficient and the only
-  sane shape for a one-person repo). The `docs/reports/` files are living, continuously-rewritten reports
-  (see [docs/reports/README.md](docs/reports/README.md)); record audits / reviews / fix-passes by
-  **rewriting the relevant report** or as a dated entry in the single
-  [docs/AUDIT-LOG.md](docs/AUDIT-LOG.md) (one file, newest-first) — NOT as new standalone files. Stale
-  numbers and "this is a historical snapshot, see the baseline" framing are tech debt: fix them at the
-  source, never by piling on another copy. **Point-in-time exceptions** (keep their historical numbers
-  by policy — exactly the `verify-canonical-facts.ts` EXCLUDE list): `CHANGELOG.md`, `docs/AUDIT-LOG.md`
-  entries, `docs/DAILY_RUNS/*` session logs, `docs/ln/*`, and `docs/MEGA-MASTER-*`. Everything else —
-  including the dated-name root file `AGENTS-2026-06-26.md` and all of
-  `docs/reports/` — is LIVING: the date in a filename is a creation stamp, not an archive marker.
+- **Living docs + bounded history (binding):** active docs are rewritten in place when facts change;
+  never fork a new dated, "restored", "v2", or "superseded snapshot" copy for the same topic. The
+  authoritative current facts live in [docs/VERIFICATION-ANALYTICAL-DATA.md](docs/VERIFICATION-ANALYTICAL-DATA.md)
+  and the sync-managed surfaces. The dated files under `docs/reports/` are historical worldline
+  snapshots unless their README explicitly promotes one to current; they may keep old measurements, but
+  must not be cited as today's receipt truth. Record audits / reviews / fix-passes as newest-first
+  entries in the single [docs/AUDIT-LOG.md](docs/AUDIT-LOG.md), not as new standalone reports. Stale
+  current-tense numbers outside the point-in-time surfaces are tech debt: fix them at the source.
+  **Point-in-time exceptions**: `CHANGELOG.md`, `docs/AUDIT-LOG.md` entries, `docs/reports/*`,
+  `docs/DAILY_RUNS/*` session logs, and `docs/ln/*`.
 - **Seamless local↔GitHub:** `core.hooksPath=.githooks` (wired by the `prepare` script on install).
   pre-commit auto-syncs surfaces + normalizes encoding; post-commit auto-pushes **HEAD to
   `origin/main`** (NOT the local branch — per the no-PR/work-on-main law, every commit from any

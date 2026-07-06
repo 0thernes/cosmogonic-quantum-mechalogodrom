@@ -91,7 +91,7 @@ describe('SuperMind composite consciousness (V45)', () => {
       lastHomeo = r.homeostat;
     }
     // A genuine dynamical variable (binds AND unbinds) that crosses into bound moments — not a
-    // decorative constant (EMERGENCE-BLOCKERS #14).
+    // decorative constant.
     expect(mx - mn).toBeGreaterThan(0.3);
     expect(mx).toBeGreaterThan(0.6);
     expect(ignitedEver).toBe(true);

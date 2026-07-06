@@ -1,5 +1,5 @@
 /**
- * COUPLING AUDIT — measuring whether the faculties actually INTERACT (EMERGENCE-BLOCKERS #10 + #14).
+ * COUPLING AUDIT — measuring whether the faculties actually INTERACT.
  *
  * The project's thesis is COUPLING > COUNT: a hundred faculties that don't densely interact are a pile,
  * not a mind. The pre-mortem names two failure modes this instrument is built to catch — #10 "faculties

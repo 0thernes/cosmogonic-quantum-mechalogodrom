@@ -3,8 +3,7 @@
 # The AI Subsystem (V84) — pre-transformer minds, a quantum register, ported Tsotchke primitives, + the read-only Copilot
 
 > How "intelligence" works in the Cosmogonic Quantum Mechalogodrom, and why it is split in two.
-> Consolidates the former `PRE-2016-AI-2026-06-26.md` technique index (pre-transformer
-> technique index) and [MODULE-CONTRACTS-2026-06-26.md](MODULE-CONTRACTS-2026-06-26.md). Every
+> Consolidates the pre-transformer technique index and [MODULE-CONTRACTS-2026-06-26.md](MODULE-CONTRACTS-2026-06-26.md). Every
 > module named here is pure, seeded, allocation-disciplined, and unit-tested.
 
 ## The two halves, and the hard line between them
@@ -211,7 +210,7 @@ enforced in the server process, so a fully-compromised model still cannot escape
 
 ## Provenance
 
-Research → design: this AI subsystem index now owns the former `PRE-2016-AI-2026-06-26.md` material.
+Research → design: this AI subsystem index owns the pre-transformer technique index material.
 Apex minds (5× GOAL5): [ADR-0008](adr/0008-super-creature-deep-mind-2026-06-26.md) + MODULE-CONTRACTS GOAL5. Modules + tests: `src/sim/ai/brains.ts`,
 `src/sim/genome.ts`, `src/sim/lineage.ts`, `src/sim/factions.ts`, `src/sim/super-mind.ts`,
 `src/sim/super-qubits.ts`, `src/math/quantum.ts`, `src/server/{copilot,ai-sandbox}.ts`,

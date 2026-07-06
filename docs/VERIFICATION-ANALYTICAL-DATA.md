@@ -5,8 +5,8 @@
 **Living index** (not an archive). One place that records every fact duplicated across the repo's
 surfaces (MD · HTML · XML · code), its **single source of truth**, and where each surface restates it —
 so a drift between the README, the dashboard, a master XML, or a spec page is caught at a glance.
-Rewritten in place when the facts change (per the binding "Living docs, no archives" law in
-[CLAUDE.md](../CLAUDE.md)). Last reconciled by a full-repo audit pass on **2026-06-27** (§14).
+Rewritten in place when the facts change (per the binding living-doc law in
+[CLAUDE.md](../CLAUDE.md)). Last reconciled by a full-repo audit pass on **2026-07-06** (§14).
 
 > **How the numbers stay honest:** the version (`package.json`) and the measured receipts +
 > NHSI design counts (`scripts/canonical-receipts.ts`) are the ONLY places those facts are edited.
@@ -37,7 +37,7 @@ Rewritten in place when the facts change (per the binding "Living docs, no archi
 
 ### Measured reality (Linux gate host, 2026-07-06, Bun 1.3.14)
 
-- `bun test --coverage` → **2,295 pass / 0 fail** · **254 test files** · coverage
+- `bun test --coverage` → **2,295 pass / 0 fail** · **250 tracked test files** · coverage
   **84.41% line / 82.11% func** (measured; canonical synced floor is **2,295** tests · **84.41% line / 82.11% func**
   from `canonical-receipts.ts`). `CANONICAL_TEST_COUNT` is a documented
   **floor**; env-dependent totals may differ (Windows CI has measured higher). Gate-enforced
@@ -48,31 +48,31 @@ Rewritten in place when the facts change (per the binding "Living docs, no archi
 
 ## 2 · Surface inventory (where shared facts are published)
 
-| Class            | Surfaces                                                                                                 |
-| ---------------- | -------------------------------------------------------------------------------------------------------- |
-| Root MD          | `README.md`, `ROADMAP-2026-06-26.md`, `CHANGELOG.md`, `CLAUDE.md`, …                                     |
-| Steering         | `CLAUDE.md`, `masters/*.xml` (3), `docs/PHILOSOPHY-2026-06-26.md`, `docs/MODULE-CONTRACTS-2026-06-26.md` |
-| Progress / truth | `docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md`, `docs/VERIFICATION-ANALYTICAL-DATA.md` (this file)         |
-| Consciousness    | `docs/SUPER-CREATURE-RESEARCH-2026-06-26.md`, `docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md`               |
-| HTML surfaces    | `index.html`, `docs.html`, `specs.html` (+ `lab/`)                                                       |
-| Tsotchke         | `docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md` (authoritative), `THIRD-PARTY-NOTICES.md`                  |
-| Diagrams         | `docs/ENTITY-SCHEMA-AND-MAPPINGS-2026-06-26.md`, `docs/ARCHITECTURE-2026-06-26.md`                       |
+| Class            | Surfaces                                                                                                                                    |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| Root MD          | `README.md`, `ROADMAP-2026-06-26.md`, `CHANGELOG.md`, `CLAUDE.md`, …                                                                        |
+| Steering         | `CLAUDE.md`, `.github/copilot-instructions.md`, `masters/*.xml` (3), `docs/PHILOSOPHY-2026-06-26.md`, `docs/MODULE-CONTRACTS-2026-06-26.md` |
+| Progress / truth | `docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md`, `docs/VERIFICATION-ANALYTICAL-DATA.md` (this file)                                            |
+| Consciousness    | `docs/SUPER-CREATURE-RESEARCH-2026-06-26.md`, `docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md`                                                  |
+| HTML surfaces    | `index.html`, `docs.html`, `specs.html` (+ `lab/`)                                                                                          |
+| Tsotchke         | `docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md` (authoritative), `THIRD-PARTY-NOTICES.md`                                                     |
+| Diagrams         | `docs/ENTITY-SCHEMA-AND-MAPPINGS-2026-06-26.md`, `docs/ARCHITECTURE-2026-06-26.md`                                                          |
 
 ---
 
 ## 3 · Audit findings (2026-06-26)
 
-| #   | Severity                   | Where                                                      | Issue                                                                                                                                                                                          | Resolution                                                                                                                      |
-| --- | -------------------------- | ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| A   | **P0 gate-RED**            | `.github/copilot-instructions-2026-06-26.md`               | markdown tables collapsed by the external `hacklm-memory` tool → fails `prettier --check` (first gate stage) in the working tree                                                               | `prettier --write` (re-pad tables)                                                                                              |
-| B   | reconciled (not a bug)     | `scripts/canonical-receipts.ts`                            | `CANONICAL_TEST_COUNT` is a floor (1477→1771→1984→2295 as suites grew) vs file-rich measured counts                                                                                            | floor semantics confirmed correct; the published headline floor tracks `canonical-receipts.ts` (`--print` never auto-raises it) |
-| C   | **P0 gate-RED**            | `CHANGELOG.md`, `docs/KANBAN-2026-06-26.md`                | 3 dead relative links into the deleted `docs/audit-2026-06-15/` folder (consolidated into AUDIT-LOG by `e51a376`)                                                                              | repoint to `docs/AUDIT-LOG.md`                                                                                                  |
-| C2  | P1 test-hygiene            | `tests/doc-links.test.ts`                                  | `SKIP` set omitted `.claude/` → the test scanned nested worktree copies and false-failed                                                                                                       | add `.claude`, `legacy`, `site`, `coverage` to `SKIP`                                                                           |
-| D   | P1 doc-rot                 | `docs/KANBAN-2026-06-26.md`                                | mojibake: `×11/`×7/``×1 (orphaned-emoji fragments), `—`×34 used as `—`, plus `¦`/`–`/`©º`— slipped the encoding gate (orphaned fragments aren't double-encoding;`U+201D` is a legit codepoint) | byte-precise normalize: drop corrupted emoji prefixes, restore `—`/`–` separators                                               |
-| E   | P2 count-drift             | `docs/KANBAN-2026-06-26.md:17`                             | "ALL **19** Tsotchke repos" — only outlier vs the canonical "20 corpus projects" everywhere                                                                                                    | `19 → 20`                                                                                                                       |
-| F   | **RESOLVED (2026-07-06)**  | `HANDOFF-2026-06-26.md`, `research_receipts-2026-06-26.md` | stale present-tense continuity artifacts (942–1172 tests) duplicated AUDIT-LOG + VERIFICATION                                                                                                  | deleted; history preserved in AUDIT-LOG + CHANGELOG                                                                             |
-| G   | flag (cleanliness)         | repo root                                                  | stray debug logs tracked at root (`.gate.log`, `.gate.baseline.log`, `.audit-gate.log`, `law.log`, `law_error.txt`, `tsc.log`, `tscout.txt`, `receipts_print.txt`)                             | noted for cleanup                                                                                                               |
-| H   | flag (fidelity, not a bug) | `src/math/curvature-aware-qng.ts`                          | `computeChristoffelSymbols` sets `dg=0`, so the general N×N "curvature-aware" path reduces to ordinary QNG                                                                                     | honestly documented as a simplification; no NaN / wrong shape; noted so the caveat is visible                                   |
+| #   | Severity                   | Where                                                      | Issue                                                                                                                                                                                          | Resolution                                                                                                       |
+| --- | -------------------------- | ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| A   | **P0 gate-RED**            | `.github/copilot-instructions-2026-06-26.md`               | markdown tables collapsed by the external `hacklm-memory` tool → fails `prettier --check` (first gate stage) in the working tree                                                               | `prettier --write` (re-pad tables)                                                                               |
+| B   | reconciled (not a bug)     | `scripts/canonical-receipts.ts`                            | `CANONICAL_TEST_COUNT` is a floor (1477→1771→1984→2372→2295 portable Linux floor as suites and hosts changed) vs file-rich measured counts                                                     | floor semantics confirmed correct; the published headline floor is now **2295** (`--print` never auto-raises it) |
+| C   | **P0 gate-RED**            | `CHANGELOG.md`, `docs/KANBAN-2026-06-26.md`                | 3 dead relative links into the deleted `docs/audit-2026-06-15/` folder (consolidated into AUDIT-LOG by `e51a376`)                                                                              | repoint to `docs/AUDIT-LOG.md`                                                                                   |
+| C2  | P1 test-hygiene            | `tests/doc-links.test.ts`                                  | `SKIP` set omitted `.claude/` → the test scanned nested worktree copies and false-failed                                                                                                       | add `.claude`, `legacy`, `site`, `coverage` to `SKIP`                                                            |
+| D   | P1 doc-rot                 | `docs/KANBAN-2026-06-26.md`                                | mojibake: `×11/`×7/``×1 (orphaned-emoji fragments), `—`×34 used as `—`, plus `¦`/`–`/`©º`— slipped the encoding gate (orphaned fragments aren't double-encoding;`U+201D` is a legit codepoint) | byte-precise normalize: drop corrupted emoji prefixes, restore `—`/`–` separators                                |
+| E   | P2 count-drift             | `docs/KANBAN-2026-06-26.md:17`                             | "ALL **19** Tsotchke repos" — only outlier vs the canonical "20 corpus projects" everywhere                                                                                                    | `19 → 20`                                                                                                        |
+| F   | **RESOLVED (2026-07-06)**  | `HANDOFF-2026-06-26.md`, `research_receipts-2026-06-26.md` | stale present-tense continuity artifacts (942–1172 tests) duplicated AUDIT-LOG + VERIFICATION                                                                                                  | deleted; history preserved in AUDIT-LOG + CHANGELOG                                                              |
+| G   | flag (cleanliness)         | repo root                                                  | stray debug logs tracked at root (`.gate.log`, `.gate.baseline.log`, `.audit-gate.log`, `law.log`, `law_error.txt`, `tsc.log`, `tscout.txt`, `receipts_print.txt`)                             | noted for cleanup                                                                                                |
+| H   | flag (fidelity, not a bug) | `src/math/curvature-aware-qng.ts`                          | `computeChristoffelSymbols` sets `dg=0`, so the general N×N "curvature-aware" path reduces to ordinary QNG                                                                                     | honestly documented as a simplification; no NaN / wrong shape; noted so the caveat is visible                    |
 
 **Finding D2 — master governance XML mojibake (root cause + fix).** All three `masters/*.xml` files
 (the EXECUTOR / ARCHITECT / PHYSICIST steering docs read before every change) each carried ~150
@@ -130,7 +130,7 @@ the filename; the remaining 20 are name-pinned (below).** Each renamed doc also 
 
 - **GitHub / agent-special** (read by exact name): `README.md` (front-page render), `CHANGELOG.md`,
   `LICENSE`, `NOTICE.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md`, `CONTRIBUTING.md`, `THIRD-PARTY-NOTICES.md`,
-  `CLAUDE.md` (loaded by the agent harness), `ROADMAP-2026-06-26.md`, sub-dir `README.md`s,
+  `CLAUDE.md` + `.github/copilot-instructions.md` (loaded by the agent harness), `ROADMAP-2026-06-26.md`, sub-dir `README.md`s,
   `index.html` / `docs.html` / `specs.html` (GitHub Pages), `.github/**`, `.memory/**` (hacklm tool).
 - **Hardcoded in scripts / gates** (`sync-surfaces.ts`, `docs-truth-law.test.ts`, `gen-filemap`):
   `ARCHITECTURE`, `KANBAN`, `ERD`/`ERM`/`ERP`, `MODULE-CONTRACTS`, `FILE-MAP`, `TECHNICAL-SPECIFICATION`,
@@ -138,7 +138,7 @@ the filename; the remaining 20 are name-pinned (below).** Each renamed doc also 
   `TSOTCHKE-INTEGRATION-MAP` — renaming reds the gate / breaks the live sync machinery.
 - **Convention-critical / heavily-linked**: `AUDIT-LOG.md`, this ledger, `TSOTCHKE-INTEGRATION-MAP-2026-06-26.md`.
 - **Numbered ADRs** (`docs/adr/000X-*`, referenced as "ADR-0009"), **legacy/** (verbatim), and
-  **already-dated** files (`docs/reports/2026-*`, `docs/DAILY_RUNS/*`, the `-2026-06-1x/20` audits) whose
+  **already-dated** files (`docs/reports/2026-*`, the `-2026-06-1x/20` audits) whose
   filename date is their meaningful point-in-time record.
 
 For the kept set, the in-content `reviewed: 2026-06-27` stamp supplies the current date without breaking
@@ -271,7 +271,7 @@ faculties, Archons, ToM) and flags any occurrence stating a non-canonical value.
 (version/tests/coverage/NHSI counts) are already gate-policed by `sync-surfaces` + `docs-receipts-law`;
 this covers the **prose** facts those don't. It reports for human triage (prose carries legitimate
 multi-framings — `5 apex` / `25 pantheon`, `~20 active` / `100 design` — which are allow-listed) and
-excludes point-in-time records (`reports/2026-*`, `ln/`, `DAILY_RUNS/`, `CHANGELOG`, `AUDIT-LOG`).
+excludes point-in-time records (`reports/2026-*`, `ln/`, `CHANGELOG`, `AUDIT-LOG`).
 
 **Current result: 0 drift across all 80 surfaces.** Building it surfaced one real bug —
 `MODULE-CONTRACTS-2026-06-26.md:1597` said "all **1.1** faculties" (the Super-Creature _version_ mis-rendered as a
@@ -335,7 +335,7 @@ verify:facts` = 0 drift / 80 surfaces, 0 git-conflict-markers tree-wide, 100% of
 | `src/ui/**`                                                                       | 20    | subsystems agent                                         | clean (3 cosmetic Low: DPR-on-monitor-move)                                                      |
 | `src/core,audio,server,memory,logging` + `main/types/docs-page` + `server.ts`     | ~14   | subsystems agent                                         | clean; security exceptionally hardened                                                           |
 | `src/styles/app.css`                                                              | 1     | front-end agent                                          | clean                                                                                            |
-| `tests/**`                                                                        | 252   | gate (2,295 pass) + tooling agent                        | healthy, 0 disabled, all assert                                                                  |
+| `tests/**`                                                                        | 250   | gate (2,295 pass) + tooling agent                        | healthy, 0 disabled, all assert                                                                  |
 | `scripts/**`                                                                      | 16    | scripts/tooling agents                                   | sound; **CI sync:check gap FIXED**, dead `.sync-receipts.cjs` removed                            |
 | `bench/**`                                                                        | 13    | tooling agent                                            | clean; aggregate now includes the P1 quantum-classical bench                                     |
 | `.github/workflows/*.yml` + issue/PR templates                                    | 8+    | CI agent                                                 | SHA-pinned, least-priv; `master`->`main` URLs FIXED; **gate now runs sync:check + verify:facts** |
@@ -343,7 +343,7 @@ verify:facts` = 0 drift / 80 surfaces, 0 git-conflict-markers tree-wide, 100% of
 | `native/**` (C++/Jolt: `.cpp`/`.h`/CMake)                                         | 6     | C++ engine agent                                         | no UB/leak/off-by-one; README claims match the build                                             |
 | HTML surfaces (`index/docs/specs/lab`)                                            | 5     | front-end agent                                          | dead NEO-MIND link + Voronoi legend FIXED; SSOT facts match                                      |
 | `masters/*.xml`                                                                   | 3     | steering agent                                           | well-formed; the two "14/14" are negated "not complete"                                          |
-| docs `*.md` (83 non-legacy)                                                       | 83    | doc-consistency agent + `verify:facts`                   | 0 drift; ERM/COMPLEXITY/COPILOT/SECURITY/ADR + Butlin F1 FIXED; 100% date-current                |
+| tracked Markdown (`*.md`, 60 non-legacy / 63 total)                               | 63    | doc-consistency agent + `verify:facts`                   | current truth surfaces reconciled; historical reports kept as worldline snapshots                |
 | assets (`.svg`/`.json`/`.csv`/`.docx`/lockfile)                                   | misc  | generated/data                                           | build artifacts + data, out of correctness scope                                                 |
 
 Per-file manifest (every tracked file + its audit mechanism + status): `docs/reports/assets/audit-coverage-2026-06-26.csv` (reproducible).

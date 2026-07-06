@@ -24,7 +24,7 @@
  * - Integrated Information Theory as Φ (Tononi)
  * - Quantum geometric tensor as manifold curvature (Provost & Vallée 1980, Berry 1984)
  *
- * This is the #1 priority from the pre-mortem (EMERGENCE-BLOCKERS.md #9/#37): without dense coupling,
+ * This is the #1 priority from the pre-mortem: without dense coupling,
  * 100 faculties = a pile, not a mind. The resonance integrator IS the coupling mechanism.
  *
  * Pure leaf: deterministic (pure function of inputs), allocation-free apart from small working arrays.
@@ -189,7 +189,7 @@ export function computePhaseVariance(phases: FacultyPhase[]): number {
  * Takes faculty phases, computes coherence, identifies the phase-locked coalition,
  * and determines if a standing wave (conscious-candidate moment) has formed.
  *
- * This is the #1 risk get-around from EMERGENCE-BLOCKERS.md #9/#37:
+ * This is the #1 risk get-around:
  * without dense coupling, 100 faculties = a pile, not a mind.
  * The resonance integrator IS the coupling mechanism.
  */

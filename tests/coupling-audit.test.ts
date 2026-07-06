@@ -1,5 +1,5 @@
 /**
- * COUPLING AUDIT — pure, headless tests (EMERGENCE-BLOCKERS #10/#14, "coupling > count").
+ * COUPLING AUDIT — pure, headless tests ("coupling > count").
  *
  * Verifies the statistical-interdependence instrument: Pearson correlation, the lagged lead-lag hint,
  * and the assembly report (density, per-faculty embeddedness, isolated/decoupled detection). Hand-

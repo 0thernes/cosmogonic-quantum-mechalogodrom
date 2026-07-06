@@ -207,15 +207,15 @@ erDiagram
   GODFORM ||--o{ TSOTCHKE_SUBSTRATE : "biases + pulses (all 20+ repos)"
   PRIMORDIAL_SOUP ||--o{ BIOLOGIC_STRAIN : "grows Eshkol/Moonlab/Irrep/Quake/PINN life"
   BIOLOGIC_STRAIN ||--o{ ENTITY : "harvestEmergent to world (new forms)"
-  ESHKOL_ENGINE ||--|| BIOLOGIC_STRAIN : "KB + factor-graph + GWT sentience"
-  TSOTCHKE_SUBSTRATE ||--|| BIOLOGIC_STRAIN : "full corpus substrates (Eshkol prime language)"
+  ESHKOL_ENGINE ||--|| BIOLOGIC_STRAIN : "KB + factor-graph + GWT sentience markers"
+  TSOTCHKE_SUBSTRATE ||--|| BIOLOGIC_STRAIN : "wired corpus substrates (Eshkol prime language)"
   PRIMORDIAL_SOUP ||--o{ LORE_NAME : "biologic epithets"
 
-  %% Tsotchke Full Digital Biologics (Eshkol language + all repos, Petri as God dish)
+  %% Tsotchke Digital Biologics (Eshkol language + depth-ledger repos, Petri as God dish)
   WORLD ||--o{ PETRI_DISH : "per-Archon (Super Creature initial spark)"
   PETRI_DISH ||--o{ SOUP_STRAIN : "EshkolProgram + vitality/flux"
-  SOUP_STRAIN ||--o{ BIOLOGIC : "emergent forms (Eshkol sentients, Moonlab quantum lives...)"
-  TSOTCHKE_REGISTRY ||--|| BIOLOGIC : "full wiring all repos (Eshkol/Moonlab/QGT/spin/libirrep/quake...)"
+  SOUP_STRAIN ||--o{ BIOLOGIC : "emergent forms (Eshkol agents, Moonlab quantum-life proxies...)"
+  TSOTCHKE_REGISTRY ||--|| BIOLOGIC : "depth-ledger wiring (Eshkol/Moonlab/QGT/spin/libirrep/quake...)"
   BIOLOGIC ||--o{ BRUTAL_GOD : "VOID_AZATHOTH (Azathoth/Knull), PHOENIX_DARK (Phoenix/Broly/EVA), DEVOUR_GALACTUS (Galactus/Frieza), CHAOS_WARHAMMER (Chaos/Joker/Pennywise/Griffith), REALITY_MXY (Mxyzptlk/Jaspers/DrM), BRUTAL_ZOD (Zod/Vergil/Dante/Alucard/Starkiller/Riddick), SPIRAL_GURREN (Gurren/Simon/Gilgamesh), VOID_KNIGHT (Knull/Joker) + BRUTALISM power (devour/rage/void/warp/chaos/spiral)"
   BRUTAL_GOD ||--|| ARCHON : "brutalGodPower from godform pulse (QGT warp, spin chaos, Eshkol will, irrep form, Moonlab scale) -- the full list: Valkorion Tenebrae, Thanos, Captain Marvel, Scarlet Witch, Dr Manhattan, Galactus, Jean Grey Dark Phoenix, Broly, Frieza, Azathoth, Warhammer Chaos, Shuma-Gorath, Mad Jim Jaspers, Pennywise, Anti-Monitor, Knull, Mr Mxyzptlk, Joker, General Zod, Gilgamesh, Alucard, Griffith Femto, EVA-01, Simon Gurren Lagann, Sephiroth, Asura/Wyzen, Vergil, Dante, Starkiller, Riddick"
   BIOLOGIC ||--o{ AUDIT_EVENT : "sentience proxy events"
@@ -380,7 +380,7 @@ erDiagram
 
   GODFORM ||--|| SUPER_MIND : "1:1 archetype bias (clifford/generative/chaos/narrative)"
 
-  %% Digital Biologics / Tsotchke Petri Genesis (full wiring - all repos)
+  %% Digital Biologics / Tsotchke Petri Genesis (depth-ledger wiring)
   TSOTCHKE_REGISTRY {
     string[] userRepos "eshkol, moonlab, quantum_geometric_tensor..."
     string[] orgRepos "ulg, logo-lab, quantum-quake..."
@@ -723,7 +723,7 @@ sequenceDiagram
   W->>W: unlock() audio graph
   loop every animation frame
     M->>W: update(dt clamped >= 0)
-    W->>Soup: catalyze (Eshkol ignition + full Tsotchke corpus beat from all repos)
+    W->>Soup: catalyze (Eshkol ignition + Tsotchke depth-ledger corpus beat)
     Soup->>Soup: incubate / replicate / genesisBoost (different BiologicForms)
     Soup->>W: harvestEmergent (new digital biologics enter the world)
   end

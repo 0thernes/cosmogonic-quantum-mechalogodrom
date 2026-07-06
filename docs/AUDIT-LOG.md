@@ -3,30 +3,32 @@
 # Audit Log (centralized)
 
 **One place for the project's audit history.** New audits, reviews, and fix-passes append a dated
-entry HERE (newest first). Dated reports under [`docs/reports/`](./reports/) are **historical
-snapshots** when present — they preserve evidence from their authoring pass and must not be read as
-current gate receipts. **Living truth** is [VERIFICATION-ANALYTICAL-DATA.md](./VERIFICATION-ANALYTICAL-DATA.md)
-§1 + `scripts/canonical-receipts.ts`, propagated by `scripts/sync-surfaces.ts`. This log records what
+entry HERE (newest first). Active docs are rewritten in place for current truth; dated reports under
+[`docs/reports/`](./reports/) are historical snapshots unless explicitly promoted by their README.
+Living receipt truth is [VERIFICATION-ANALYTICAL-DATA.md](./VERIFICATION-ANALYTICAL-DATA.md) §1 +
+`scripts/canonical-receipts.ts`, propagated by `scripts/sync-surfaces.ts`. This log records what
 changed and why.
 
 ---
 
-## 2026-07-06 (pass 13) — Post-consolidation MD audit: stale receipts + deleted-doc refs (v0.20.0)
+## 2026-07-06 (pass 13) — Full Markdown truth audit + governance cleanup (v0.20.0)
 
-Full markdown audit after the 24-file delete + pass 12 link repair.
+Owner brief: review all tracked Markdown after the 24-file delete + pass 12 link repair, then remove
+stale current-tense receipt, path, and Tsotchke overclaim drift without changing runtime quality.
 
-### Fixes
-
-- **`scripts/sync-surfaces.ts`** — deduped `SURFACES`; removed deleted report paths; added RUNBOOK/DESIGN-SYSTEM; new receipt patterns for floor table + `N-test floor` tokens.
-- **Living docs** — repointed deleted owners (FRONTEND-ACTION-PLAN → UI-UX audit; NEO-MIND / NHSI-HONESTY / CONSCIOUSNESS-LAB → survivors; PERFORMANCE-ROADMAP → BENCHMARKS).
-- **`docs/AUDIT-LOG.md`** — reports policy aligned with `docs/reports/README.md` (historical snapshots).
-- **`docs/VERIFICATION-ANALYTICAL-DATA.md`** — removed deleted `AGENTS-2026-06-26.md` from surface inventory; floor chain → 2295.
-
-### Gate
-
-- `bun run sync` + `bun run check` green.
-
----
+- **Receipt truth:** `README`, `RUNBOOK`, `DESIGN-SYSTEM`, `TECHNICAL-SPECIFICATION`,
+  `VERIFICATION-ANALYTICAL-DATA`, `docs/reports/README`, and the scrutiny scorecard now distinguish the
+  **2,295-test canonical floor / 84.41% / 82.11%** from higher local Windows receipt measurements.
+- **`scripts/sync-surfaces.ts`:** deduped `SURFACES`, removed deleted report paths, retained current
+  living docs and promoted reports, and added receipt patterns for floor table + `N-test floor` tokens.
+- **Governance conflict:** `CLAUDE.md` + this log now match `docs/reports/README.md`: active docs are
+  current truth, dated reports are historical snapshots unless explicitly promoted.
+- **Dead owners:** removed or repointed references to deleted `CONSCIOUSNESS-LAB-MASTER`,
+  `PERFORMANCE-OPTIMIZATION-ROADMAP`, `TEST-STRATEGY`, and deleted AGENTS-era steering files.
+- **Overclaim cleanup:** Tsotchke prose now says `20` projects with `~16` wired and fenced repos
+  provenance-only, instead of blanket "all repos / every system fully wired" claims.
+- **Doc hygiene:** removed duplicate legend / ledger lines and refreshed measured codebase metrics.
+- **Gate:** `bun run sync` + `bun run check` green.
 
 ## 2026-07-06 (pass 12) — Master plan Stages 0–5: truth repair + doc compress + test merge (v0.20.0)
 
@@ -42,7 +44,7 @@ Owner brief: implement consolidation master plan — fewer files/lines, fix stal
 
 ### Docs
 
-- **`scripts/canonical-receipts.ts`** → **2,295 / 84.41% / 82.11%** (Linux gate floor); `bun run sync`.
+- **`scripts/canonical-receipts.ts`** → **2,295 / 84.41% / 82.11%** (portable Linux gate floor); `bun run sync`.
 - **`docs/500-POINT-INSPECTION`** — compressed to section index.
 - **`docs/reports/README.md`** — historical snapshot policy; removed links to deleted reports.
 - Rebased atop remote **24-file delete** pass (APEX/NHSI reports already removed upstream).
@@ -78,114 +80,20 @@ Owner brief: make Local match GitHub reliably; fix Windows CI receipts failure.
 
 ---
 
-## 2026-07-06 (pass 10) — Large-doc compress + singularities test merge (v0.20.0)
+## 2026-07-05–06 (passes 6–10) — Consolidation index (v0.20.0)
 
-Owner brief: continue consolidation — **fewer lines**, no new files.
-
-### Docs rewritten in place
-
-- **`docs/PRE-2016-AI-2026-06-26.md`** — 865 → ~70 lines: technique index + master table; B/C/D → AI-SUBSYSTEM / COPILOT-PROVIDERS / KANBAN pointers.
-- **`docs/MODULE-CONTRACTS-2026-06-26.md`** — deduped Tsotchke preamble + removed redundant FULL TSOTCHKE amendment block.
-- **`docs/BOOK-2026-06-26.md`** — fixed AUDIT-LOG + PRE-2016 descriptions.
-
-### Tests
-
-- `singularities-fidelity.test.ts` → **`tests/singularities.test.ts`**.
-
----
-
-## 2026-07-06 (pass 9) — Receipt fixes + doc folds + test merges (v0.20.0)
-
-Owner brief: continue consolidation — **fewer files**, **fewer lines**, fix stale receipts.
-
-### Docs rewritten / deleted
-
-- Stale **v0.18.0** / **~92%** in NHSI honesty + manifesto → **v0.20.0** / **83.95% / 81.57%**.
-- ADRs 0007–0009: **1771 tests** → published floor **1,984**.
-- `docs/BRAIN-PARAMETER-SCALE-PLAN.md` → folded into `APEX-1B-SUBSTRATE-ARCHITECTURE` §Brain parameter scale.
-- `docs/TSOTCHKE-LICENSE-UNBLOCK-PLAN-2026-06-26.md` → folded into `TSOTCHKE-INTEGRATION-MAP` §License unblock steps.
-- **`docs/AUDIT-LOG.md`** — July 2026 verbose entries compressed to index (this file, pass 9).
-
-### Tests merged
-
-- `entity-vitals{2,3}.test.ts` → `tests/entity-vitals.test.ts`
-- `portal-death-fauna.test.ts` → `tests/portal-death.test.ts`
-- `classical-contrast-perceptron.test.ts` → `tests/classical-contrast.test.ts`
-- `creature-exterior-phenomena.test.ts` → `tests/creature-exterior-layers.test.ts`
-- `quantum-quake-qge-geometry.test.ts` → `tests/quantum-quake-physics.test.ts`
-
----
-
-## 2026-07-06 (pass 8) — Large-doc trim + test merge (v0.20.0)
-
-Owner brief: continue consolidation — **fewer lines**, no new files.
-
-### Docs rewritten in place
-
-- **`docs/UI-UX-DEEP-DIVE-AUDIT-2026-06-27.md`** — 1,071 → ~90 lines: living index + twelve-issue status table;
-  open work now lives in that index; verbose pass narrative removed.
-- **`docs/MEGA-MASTER-DEEP-DIVE-RESEARCH-REPORT-2026-06-27.md`** — 3,252 → ~940 lines: retained §10 (25
-  benchmark specs) + §11 (bug registry) only; architecture/consciousness/pass-2–9 narrative removed
-  (canonical docs linked in header).
-- **`docs/AUDIT-LOG.md`** — June 2026 entries compressed to index table (this file, pass 8).
-- **`docs/reports/2026-06-26-ALIFE-COMPARATIVE-AUDIT.md`** — stale 92.13% coverage → 83.95% / 81.57%.
-
-### Tests
-
-- `glyph-exterior-{signature,palette,geometry}.test.ts` → **`tests/glyph-exterior.test.ts`** (one file).
-
----
-
-## 2026-07-06 (pass 7) — Doc/test consolidation: fewer files, fewer lines (v0.20.0)
-
-Owner brief: deep audit of markdown + tests + workers — merge redundant docs, delete stale duplicates,
-fix receipt drift, net **fewer** files and lines.
-
-### Deleted markdown (merged or superseded)
-
-- `HANDOFF-2026-06-26.md`, `research_receipts-2026-06-26.md` → history in AUDIT-LOG + VERIFICATION
-- `docs/GOAL5-SWARM-HANDOFF-2026-06-19.md`, `docs/GOAL5-RESEARCH-RECEIPTS-2026-06-26.md` → TSOTCHKE-INTEGRATION-MAP
-- `docs/PLAN-2026-06-30-UI-SIM-POLISH.md`, `docs/EXECUTION-PLAN-2026-06-30-POLISH-25-ITEMS-VP-COO.md` → UI-UX-DEEP-DIVE-AUDIT
-- `docs/reports/2026-06-26-CURRENT-TRUTH-BASELINE.md` → VERIFICATION-ANALYTICAL-DATA §1
-- `docs/PERFORMANCE-TARGETS-2026-07-02.md`, `docs/SCALING-ROADMAP-2026-06-26.md` → PERFORMANCE-OPTIMIZATION-ROADMAP
-- Consciousness cluster (6 files) → `docs/CONSCIOUSNESS-LAB-MASTER-2026-07-03.md`
-- `tests/README.md` → `docs/TEST-STRATEGY-2026-07-02.md` §7
-
-### Deleted orphans (not run by Bun)
-
-- `tests/worker-pool`, `tests/graphics-abstraction.test`, `tests/transform-feedback` (extensionless dupes)
-- `src/core/worker` (orphan duplicate of worker-pool)
-- `tests/wilderness-chunks.test.ts` → merged into `tests/wilderness.test.ts`
-
-### Reference + receipt fixes
-
-- `scripts/sync-surfaces.ts` — removed HANDOFF, research_receipts, CURRENT-TRUTH-BASELINE from SURFACES
-- Stale **92.13%** coverage in PRD + scrutiny scorecard → canonical **83.95% / 81.57%**
-- Cross-links repointed across BOOK, README, reports, ADR 0010, NHSI dashboard, lab JSON, consciousness kernel
-
----
-
-## 2026-07-05 (pass 6) — Zero-degradation mandate: full neural/visual fidelity + all-core workers (v0.20.0)
-
-Owner brief: nothing may degrade graphics, color, rendering detail, or neural intelligence; utilize all
-CPU cores (wilderness workers) without lowering fidelity.
-
-### Code
-
-- **`getQuantizationConfig`** — FP32 genome storage on **every** tier (removed FP16 brain weights).
-- **`entity-brain.ts`** — removed distance-based brain LOD + `forwardSimplified` path entirely.
-- **`world.ts`** — entity brains, archon `driveSuper`, and NHI `tick` run **every frame**; RD every
-  frame; graph-mind cadence no longer scales down at high population.
-- **`entities.ts`** — ultra theory/flock cadence throttle removed (full behavior re-eval every frame).
-- **`quality.ts`** — connectome `maxLinks` 8× → **12×** `maxEntities` per tier.
-- **`worker-pool.ts`** — all tiers use full `hardwareConcurrency` workers for wilderness.
-- **`wilderness-*`** — 64 chunks × 128 entities, 16k point render cap, opacity 0.88.
-- **`viz3d.ts`** — full phylum tower ring on all tiers (no low-detail halving).
-- **`SPAWN_BUDGET_ULTRA`** — 64 → 512 (faster apocalypse ramp without single-frame cliff).
-
-### Gate
-
-- `bun run check`.
+- **Pass 10:** compressed the former pre-transformer AI dossier into `AI-SUBSYSTEM`, deduped Tsotchke
+  contract prose, and merged singularities fidelity coverage into `tests/singularities.test.ts`.
+- **Pass 9:** folded brain-scale/license plans into canonical owners and merged small duplicate tests
+  (`entity-vitals`, `portal-death`, `classical-contrast`, `creature-exterior-layers`,
+  `quantum-quake-physics`).
+- **Pass 8:** reduced UI/UX and mega-master reports to compact indexes; merged glyph exterior tests.
+- **Pass 7:** deleted redundant handoff/research/plan/baseline/test-index docs, removed extensionless
+  orphan tests/source files, and repointed performance/test strategy ownership to BENCHMARKS,
+  VERIFICATION, and RUNBOOK.
+- **Pass 6:** enforced the zero-degradation mandate: FP32 genome storage, no distance brain LOD, every-frame
+  entity/archon/NHI/RD cadence, denser connectome budgets, all-core wilderness workers, richer wilderness
+  render caps, and faster apocalypse ramp. Gate: `bun run check`.
 
 ---
 
@@ -201,7 +109,7 @@ Owner brief: finish deferred doc debt from pass 4; never lower visual/cognitive 
 
 ### Docs / sync
 
-- **`scripts/sync-surfaces.ts`** — MEGA-MASTER + BOOK added to `SURFACES`; extra receipt patterns
+- **`scripts/sync-surfaces.ts`** — former MEGA-MASTER + BOOK added to `SURFACES`; extra receipt patterns
   (`passing tests`, `(0 failing)`, gauge rows, quoted coverage claims).
 - **`docs/MEGA-MASTER-DEEP-DIVE-RESEARCH-REPORT-2026-06-27.md`** — measured-state receipts + module
   count (250 TS) synced; stale 91% prose fixed.
@@ -280,11 +188,11 @@ Second audit pass: living reports still carried `1,477` / `92.13%` / `v0.18.0` t
 
 ### Fixes
 
-- **`scripts/sync-surfaces.ts`** — added STATE-OF-THE-ART, VERIFICATION ledger, TEST-STRATEGY, PRD to `SURFACES`; expanded receipt patterns (backtick counts, tilde coverage, canonical table rows, `1,477-test`).
+- **`scripts/sync-surfaces.ts`** — added then-current state-of-the-art, VERIFICATION ledger, former TEST-STRATEGY, and PRD surfaces; expanded receipt patterns (backtick counts, tilde coverage, canonical table rows, `1,477-test`).
 - **`docs/VERIFICATION-ANALYTICAL-DATA.md`** — canonical coverage table aligned to `83.95% / 81.57%`.
 - **`src/core/worker-pool.ts`** — `executeAsync` returns immediately when pool not initialized (prevents wilderness hang).
 - **`src/world.ts`** — lazy `initWorkerPoolAsync()` + proper `dispose()` on worker pool.
-- **`tests/README.md`** — test index pointing at TEST-STRATEGY + layout table.
+- **`tests/README.md`** — former test index later consolidated into VERIFICATION + RUNBOOK.
 - **`docs/GOAL5-RESEARCH-RECEIPTS-2026-06-26.md`** — deleted audit doc refs → integration map.
 
 ### Gate
@@ -323,7 +231,7 @@ Pre–pass-8 July entries compressed 2026-07-06. Full narrative removed; outcome
 ## June 2026 index (compressed — pass 8)
 
 Pre-July entries compressed 2026-07-06. Full narrative removed; outcomes indexed. Point-in-time session
-logs remain in `docs/DAILY_RUNS/*`.
+logs deleted per living docs policy (no archives).
 
 | Date       | Entry (short)                                        | Outcome                                                               |
 | ---------- | ---------------------------------------------------- | --------------------------------------------------------------------- |

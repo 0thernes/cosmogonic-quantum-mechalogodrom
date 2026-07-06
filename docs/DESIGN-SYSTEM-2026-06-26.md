@@ -4,8 +4,7 @@
 
 Audit + token reference + component documentation for the void/cyan glass UI.
 Sources of truth: `src/styles/app.css` (`@theme static` tokens) and
-`index.html` (utility classes). Layout anchors live in
-the former `WIREFRAMES-2026-06-26.md` layout notes. The audit below was run against the v1 UI
+`index.html` (utility classes). The audit below was run against the v1 UI
 (pre-remediation); the **Remediation record** documents what the V2 pass fixed.
 
 ---
@@ -94,7 +93,7 @@ default/active/focus/collapsed as applicable.
   scale (`text-2xs/3xs/4xs`, `text-display`), radius/shadow/motion tokens,
   telemetry rows `#v9 #v10 #v11`, `#lore` line, `/lab` toolbar nav link.
 - Verified: `bun run build` compiles every token utility (checked in
-  `dist/*.css`); 2,295 tests pass; prettier/oxlint/tsc clean.
+  `dist/*.css`); the 2,295-test canonical floor passes; prettier/oxlint/tsc clean.
 
 ### Remediation record (0.2.x controls + color pass)
 
@@ -203,7 +202,7 @@ tokens. Steps in use: `0.5`(2px) `1`(4px) `1.25`(5px) `1.5`(6px — global
 gutter) `2`(8px) `2.5`(10px) `3.5`(14px) `6.5`(26px — toolbar button
 min-height) `7`(28px — control key height) `7.25`/`7.5`(joystick knob)
 `22`(88px — joystick pad). Safe-area: `env(safe-area-inset-top/bottom)`
-calc() anchors (see WIREFRAMES placement table).
+calc() anchors (see layout documentation).
 
 ### Radii
 
@@ -332,8 +331,7 @@ Top-center pill (orange family, `backdrop-blur-md text-shadow-toast`),
 Bottom-left violet glass card: `#a-name` (text-3xs, white, semibold),
 `#a-step` (text-4xs mono, purple-200, `step N ⇄`), and V2 `#lore` (text-4xs
 ui, uppercase, purple-300/80) — the Voronoi sub-sector lore name, written by
-`Hud.setLore` only on change. Position flips with pointer media (see
-WIREFRAMES). Display-only, `pointer-events-none`.
+`Hud.setLore` only on change. Position flips with pointer media. Display-only, `pointer-events-none`.
 
 ### Sparkline (`#g0..#g3`)
 

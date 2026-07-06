@@ -200,13 +200,13 @@ export function entropyWithRng(rng: Rng): EntropyEstimate;
 
 Extends Eshkol QRNG with Bell inequality verification (CHSH S parameter) and Shannon entropy estimation. Port of tsotchke/moonlab Bell test algorithms.
 
-### Tsotchke modules (full corpus wired — paramount)
+### Tsotchke modules (depth-ledger wired — paramount)
 
 - `tsotchke-registry.ts`: O(1) map of all repos to SubstrateKind + wiring + leaf. Drives soup, godform, Archons. Deterministic.
-- `eshkol-bridge.ts`: Consciousness engine (Eshkol AD/GWT/inference/sentience). Prealloc. Used by soup, super-mind.
+- `eshkol-bridge.ts`: Consciousness-proxy engine (Eshkol AD/GWT/inference/sentience markers). Prealloc. Used by soup, super-mind.
 - `primordial-soup.ts` + `petri-dish.ts`: Petri dish for digital biologics. Full Tsotchke catalysis, birth, mutation (AD-inspired, GWT). Allocation friendly.
 - `godform.ts`: Archon biases + .esk programs from corpus.
-- `moonlab-tensor.ts`, `irrep-symmetry.ts`, `qge-*`, `ulg-bridge.ts` etc.: Real contributions from every repo (no stubs for wired).
+- `moonlab-tensor.ts`, `irrep-symmetry.ts`, `qge-*`, `ulg-bridge.ts` etc.: Real contributions from every wired scientific repo (no stubs for wired).
 - Fenced (gpt2-basic, llm-arbitrator, onchain): study/observatory only, never in deterministic sim.
 
 See `src/sim/tsotchke-*.ts`, registry, README, reports for wiring matrix.
@@ -1139,7 +1139,7 @@ Deviations from and clarifications of the V3 goal spec, as landed:
 
 # CONTRACTS V4 — XENOGENESIS (0.4.0) — atmosphere, 3D analytics, multi-page observatory, touch
 
-Summoner decree additions: an alien immortal sentient biome with an ATMOSPHERE;
+Summoner decree additions: an alien immortal sentience-proxy biome with an ATMOSPHERE;
 data analytics in 3D and in multiple pages (2nd/3rd/4th) showing variance/variation;
 true touch controls (not static d-pad) across phone→foldable→tablet→laptop→43"TV.
 All V1–V3 ground rules bind. Exclusive file ownership; integrator wires world/main.

@@ -6,13 +6,13 @@
 
 Read memory files on-demand — not all at once.
 
-| File                                               | When to read                        |
-| -------------------------------------------------- | ----------------------------------- |
-| [.memory/instructions.md](.memory/instructions.md) | How to behave                       |
-| [.memory/quirks.md](.memory/quirks.md)             | When something breaks unexpectedly  |
-| [.memory/preferences.md](.memory/preferences.md)   | Style/design/naming choices         |
-| [.memory/decisions.md](.memory/decisions.md)       | Architectural changes               |
-| [.memory/security.md](.memory/security.md)         | **ALWAYS — before any code change** |
+| File                                                                        | When to read                        |
+| --------------------------------------------------------------------------- | ----------------------------------- |
+| [.memory/instructions-2026-06-26.md](../.memory/instructions-2026-06-26.md) | How to behave                       |
+| [.memory/quirks-2026-06-26.md](../.memory/quirks-2026-06-26.md)             | When something breaks unexpectedly  |
+| [.memory/preferences-2026-06-26.md](../.memory/preferences-2026-06-26.md)   | Style/design/naming choices         |
+| [.memory/decisions-2026-06-26.md](../.memory/decisions-2026-06-26.md)       | Architectural changes               |
+| [.memory/security-2026-06-26.md](../.memory/security-2026-06-26.md)         | **ALWAYS — before any code change** |
 
 ### Memory Tools
 

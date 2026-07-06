@@ -475,7 +475,7 @@ if (import.meta.main) {
             ok: true,
             version: VERSION,
             horizon: 'ventures',
-            doc: '/docs/ROADMAP-2026-06-26.md',
+            doc: '/ROADMAP-2026-06-26.md',
             milestones: [
               'hosted-deploy',
               'waitlist',

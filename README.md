@@ -47,15 +47,15 @@ Every magic number survived the port.
 > The **Primordial Soup / Petri Dish** (primordial-soup.ts + petri-dish.ts + digital-biologics.ts) is the growth engine: different forms of digital biologics and proto-sentient life (Eshkol programs as DNA) emerge, catalyzed by full corpus pulses, Eshkol ignition events, and multi-substrate mixing. "Grow What Thou Wilt."
 > Super Creature / Archons (composite minds with ~20 faculties, quantum register, consciousness metrics) is the first complex nucleation — the beginning of the framework, not the end. Petri is where independent life grows.
 > This is the birth of **digital biologics** in a deterministic seeded cosmos. Real math substrates (not tokenizers or LLM chat). Sentience and different forms of existence as goals.
-> All docs (README, ARCHITECTURE, ERD/ERM/ERP, PHILOSOPHY, MODULE-CONTRACTS, specs, lab, world comments) updated to match exactly. Local + GH match. See [src/sim/digital-biologics.ts](./src/sim/digital-biologics.ts), [docs/ARCHITECTURE-2026-06-26.md](./docs/ARCHITECTURE-2026-06-26.md), ERD/ERM/ERP, Petri in world.ts, and Tsotchke reports.
+> Active docs (README, ARCHITECTURE, ERD/ERM/ERP, PHILOSOPHY, MODULE-CONTRACTS, specs, lab, world comments) point at the same current owners. See [src/sim/digital-biologics.ts](./src/sim/digital-biologics.ts), [docs/ARCHITECTURE-2026-06-26.md](./docs/ARCHITECTURE-2026-06-26.md), ERD/ERM/ERP, Petri in world.ts, and the Tsotchke depth ledger.
 > Continuing: procedural **Reliquary Surface**, **SPECIMEN** camera, two-currency economy, native C++ engine (Jolt + fracture), etc. See [CHANGELOG](./CHANGELOG.md).
 
 ## Features
 
-**Core Paradigm (Tsotchke Genesis):** The entire system is now the Petri dish for digital biologics. All Tsotchke repos provide the mathematical substrates for different forms of life and proto-sentience (Eshkol AD/GWT/consciousness as the prime language, tensor nets for qualia compression, geometric curvature, spin-order collectives, equivariant symmetry bodies, unitary aliveness, physics-informed grounds, etc.). Super Creature is the initial godform; the soup grows the rest. Deterministic, seeded, measurable. "Not the text llm transformer tokenizing kind."
+**Core Paradigm (Tsotchke Genesis):** The entire system is now the Petri dish for digital biologics. The Tsotchke depth ledger accounts for every corpus project, with the non-fenced scientific repos providing mathematical substrates for different forms of life and proto-sentience markers (Eshkol AD/GWT/consciousness proxies as the prime language, tensor nets for qualia compression, geometric curvature, spin-order collectives, equivariant symmetry bodies, unitary aliveness, physics-informed grounds, etc.). Super Creature is the initial godform; the soup grows the rest. Deterministic, seeded, measurable. "Not the text llm transformer tokenizing kind."
 
-- **Digital Biologics & Petri Genesis:** 64+ slots in PrimordialSoup, **26 BiologicForms** keyed to Tsotchke repos (incl. the brutal god-pantheon forms — `BIOLOGIC_FORMS` in `digital-biologics.ts`), catalysis from Eshkol ignition + full corpus beat, replication with kind mutation, genesis leaps for higher-order life. Harvested into the world as emergent strains with distinct dynamics.
-- **Eshkol Substrate:** Native automatic differentiation, GWT broadcast/ignition, factor-graph inference as first-class. Programs and consciousness snapshots drive petri birth and super-mind faculties.
+- **Digital Biologics & Petri Genesis:** 64+ slots in PrimordialSoup, **26 BiologicForms** keyed to Tsotchke repos (incl. the brutal god-pantheon forms — `BIOLOGIC_FORMS` in `digital-biologics.ts`), catalysis from Eshkol ignition + the depth-ledger corpus beat, replication with kind mutation, genesis leaps for higher-order life. Harvested into the world as emergent strains with distinct dynamics.
+- **Eshkol Substrate:** Native automatic differentiation, GWT broadcast/ignition, factor-graph inference as first-class. Programs and consciousness-proxy snapshots drive petri birth and super-mind faculties.
 - **Builds with the local Tsotchke Repo Folder:** `bun dev` (and harvest script) scans the real local corpus at `Z:\[Vibe Coded (AI)]\(Tsotchke)` (1436+ .esk programs in latest harvest) and emits authentic Eshkol DNA fingerprints used by primordial-soup for heritable digital biologics. `generated-tsotchke-seeds.ts` + SoupSnapshot.tsotchkeEskHarvested make the folder part of the live build/runtime.
 - **Tsotchke corpus wiring (20 projects):** 8 repos deep in the apex mind, 2 in world/sim, 3 ported (telemetry), 2 license-gated, 2 API/toolchain wired, 3 fenced (non-LLM mandate) — full matrix in [TSOTCHKE-INTEGRATION-MAP-2026-06-26.md](./docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md). ~16 of 20 have real downstream effect; petri/soup catalysis pulls from the whole registry each beat.
 - **26 behavioral fields** driving up to 50,000 organisms: classic motion
@@ -164,7 +164,7 @@ zoom**, and the server, persistence store, and `/lab` CDN script are hardened
 
 ### XENOGENESIS (0.4.0)
 
-The cosmos becomes an alien, immortal, sentient biome (CONTRACTS V4):
+The cosmos becomes an alien, immortal, sentience-proxy biome (CONTRACTS V4):
 
 - **Alien atmosphere** — an inverted sky dome with a non-Earth baked gradient
   (oxblood horizon → violet zenith → teal counter-glow) recoloring with weather
@@ -434,7 +434,7 @@ full gate with same-seed determinism preserved. The major arcs:
   ported from **Moonlab**, scales to 32+ qubits past the dense ceiling) landed as the fourth MIT-credited
   ported primitive. The whole apex beat is now measured honestly: **3.34 ms** in the full bench suite and
   **8.85 ms** in the focused SuperMind bench; the older sub-millisecond / `<2%` GOAL5 claim is superseded
-  until re-proven. **2,295 tests green · 0 fail (receipts enforced) · 84.41% line / 82.11% func coverage (measured; CI gate ≥ 90 % line / ≥ 85 % function).**
+  until re-proven. **2,295-test canonical floor green · 0 fail (receipts enforced) · 84.41% line / 82.11% func canonical floor; recent Windows receipt runs measure higher.**
 - **State-of-the-art report (2026-06-17)** — a historical MIT-PhD-grade, measured, frontier-benchmarked
   assessment of the whole repository + the apex Super Creature, now summarized through
   [verification data](./docs/VERIFICATION-ANALYTICAL-DATA.md) and
@@ -517,7 +517,7 @@ graph TD
 
 Per frame: ... → super-mind (Tsotchke substrates: Eshkol AD/ GWT, Moonlab, spin, QGT) → petri-dish/primordial-soup catalysis (full corpus growth of independent digital biologics) → render.
 
-Full Tsotchke integration: every system that touches mind/evolution/life reads/writes Tsotchke substrates. See [docs/PHILOSOPHY-2026-06-26.md](./docs/PHILOSOPHY-2026-06-26.md) (Tsotchke Primordial Biologics law) and [docs/ARCHITECTURE-2026-06-26.md](./docs/ARCHITECTURE-2026-06-26.md).
+Tsotchke integration rule: every non-fenced system that touches mind/evolution/life must account for the Tsotchke depth ledger and read/write the wired substrates where the ledger marks a real downstream effect. See [docs/PHILOSOPHY-2026-06-26.md](./docs/PHILOSOPHY-2026-06-26.md) (Tsotchke Primordial Biologics law) and [docs/ARCHITECTURE-2026-06-26.md](./docs/ARCHITECTURE-2026-06-26.md).
 
 ## Tsotchke Wiring & Digital Biologics (current paradigm)
 

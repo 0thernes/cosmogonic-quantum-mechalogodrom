@@ -2,7 +2,7 @@
 
 # Tsotchke Corpus → Cosmogonic — Integration Map (living)
 
-The full **Tsotchke** corpus is **EVERY repo and project** (tsotchke user + Tsotchke-Corporation org + Eshkol flagship + all mirrors + subprojects + sites from full local Z:\[Vibe Coded (AI)]\(Tsotchke) 12,444 files +AUDIT-LOG.md). Tech is real, correct, MIT-grade (or equivalent) quantum/scientific research code that runs deterministically today. Physical QPU adds scale/speed, not correctness or validity. Startup doing world-class foundational work; no overclaims whatsoever (independent deep dives confirm completeness and lack of hype). We use ALL of it.
+The full **Tsotchke** corpus is **EVERY repo and project** (tsotchke user + Tsotchke-Corporation org + Eshkol flagship + all mirrors + subprojects + sites from full local Z:\[Vibe Coded (AI)]\(Tsotchke) 12,444 files +AUDIT-LOG.md). Tech is real, correct, MIT-grade (or equivalent) quantum/scientific research code that runs deterministically today. Physical QPU adds scale/speed, not correctness or validity. Startup doing world-class foundational work; this ledger accounts for all of it, wires the non-fenced scientific pieces with real downstream effect, and keeps fenced LLM/onchain pieces provenance-only until unblock criteria are met.
 
 - the `Eshkol/` language is in `Eshkol/eshkol_repo/` (not mirrors/). The tech is **real, correct, MIT-grade quantum-research code** that runs as exact
   deterministic simulation — see `THIRD-PARTY-NOTICES.md` → "On Tsotchke (binding)". This file is the honest
@@ -138,8 +138,6 @@ Waves 1–4 from the former corpus integration report are **done** in code:
 | 2    | Moonlab tensor / MPO / Clifford reflex         | ✅ Shipped |
 | 3    | QGT / spin / libirrep / quake / ulg facades    | ✅ Shipped |
 | 4    | Registry depth field + tsotchke-registry tests | ✅ Shipped |
-
-This map is the **only** Tsotchke wiring ledger; redundant audit/plan copies were removed (see `docs/AUDIT-LOG.md`).
 
 This map is the **only** Tsotchke wiring ledger; redundant audit/plan copies were removed (see `docs/AUDIT-LOG.md`).
 

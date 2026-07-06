@@ -7,7 +7,6 @@
  * never Level 5).
  *
  * @see docs/ARCHITECTURE-2026-06-26.md
- * @see docs/APEX-BRAIN-CORPUS-100-PAPERS-2026-06-26.md
  */
 export type ThoughtFamily =
   | 'psychology'

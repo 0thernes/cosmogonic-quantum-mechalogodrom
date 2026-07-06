@@ -567,7 +567,7 @@ export class SuperMind {
    *  Kuramoto dynamics) that binds the consciousness assembly into a standing wave across beats, with an
    *  ADAPTIVE-COUPLING HOMEOSTAT self-tuning K to the responsive regime of the synchronization transition
    *  (so binding is maximally sensitive to faculty agreement — never frozen, never dead; cf. the
-   *  responsiveness goal behind EMERGENCE-BLOCKERS #41, distinct from the branching-ratio SOC in
+   *  responsiveness goal, distinct from the branching-ratio SOC in
    *  criticality.ts). */
   private readonly resonanceField = new ResonanceField(
     RESONANCE_FACULTIES,
@@ -1626,7 +1626,7 @@ export class SuperMind {
     });
 
     // ── #59 · RESONANCE INTEGRATOR ── bind the consciousness assembly by SYNCHRONY (the coupling spark;
-    // EMERGENCE-BLOCKERS #9/#37, coupling > count). The twelve integration faculties — GWT ignition, IIT
+    // coupling > count). The twelve integration faculties — GWT ignition, IIT
     // Φ, quantum Φ, Eshkol workspace, deliberation coherence, empowerment, criticality, metacog
     // confidence, FEP prediction-confirmation (1−surprise), HOT qualia tone, reservoir + quantum-reservoir
     // novelty — drive a persistent bank of coupled Kuramoto oscillators. When they AGREE the bank

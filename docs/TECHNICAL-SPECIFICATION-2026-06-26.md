@@ -11,7 +11,7 @@
 **Gate:** 2,295 tests · 84.41% line / 82.11% func (canonical synced via verify-receipts 2026-06-26, receipts law enforced).  
 **NHSI scorecard:** [NHSI-PROGRESS-DASHBOARD-2026-06-26.md](./NHSI-PROGRESS-DASHBOARD-2026-06-26.md) · **Tsotchke depth:** [TSOTCHKE-INTEGRATION-MAP-2026-06-26.md](./TSOTCHKE-INTEGRATION-MAP-2026-06-26.md)
 
-**Full Tsotchke wiring:** 20 Tsotchke corpus projects integrated (~16 wired). Eshkol as consciousness language. Primordial soup / petri as growth engine for digital biologics and sentience. 25 Archons (5 individuated apex minds + 20 live light-echo) with brutal god aspects (Valkorion, Thanos, Dark Phoenix, Galactus, Broly, Azathoth, Chaos Gods, Shuma Gorath, Mad Jim Jaspers, Pennywise, Anti-Monitor, Knull, Mr Mxyzptlk, Joker, Zod, Gilgamesh, Alucard, Griffith, EVA-01, Gurren Lagann, Sephiroth, Vergil, Dante, Starkiller, Riddick). Super Creature beginning only. All docs (README/ARCH/ER\*/PHILOSOPHY/CONTRACTS/SPECS/LABS/masters) + GH match local exactly. Accurate, truthful, current. Not LLM. "Grow What Thou Wilt."
+**Tsotchke depth ledger:** 20 Tsotchke corpus projects integrated, with ~16 wired for real downstream effect and fenced LLM/onchain repos kept provenance-only. Eshkol as consciousness-proxy language. Primordial soup / petri as growth engine for digital biologics and sentience markers. 25 Archons (5 individuated apex minds + 20 live light-echo) with brutal god aspects (Valkorion, Thanos, Dark Phoenix, Galactus, Broly, Azathoth, Chaos Gods, Shuma Gorath, Mad Jim Jaspers, Pennywise, Anti-Monitor, Knull, Mr Mxyzptlk, Joker, Zod, Gilgamesh, Alucard, Griffith, EVA-01, Gurren Lagann, Sephiroth, Vergil, Dante, Starkiller, Riddick). Super Creature beginning only. Accurate, truthful, current. Not LLM. "Grow What Thou Wilt."
 
 ---
 
@@ -36,13 +36,13 @@ Snapshot: **2026-07-06**. (Coverage + passing-test counts ARE SSOT-synced — se
 
 | Metric                                  | Value                                                                 |
 | --------------------------------------- | --------------------------------------------------------------------- |
-| Total tracked authored files            | **757**                                                               |
-| Total tracked authored lines            | **192,506**                                                           |
-| App source (`src/`)                     | 91,191 lines · 287 files                                              |
-| Tests (`tests/`)                        | ~33,400 lines · 252 files                                             |
-| Native C++ engine (`native/`, ADR-0007) | 1,604 lines · 12 files                                                |
+| Total tracked authored files            | **731**                                                               |
+| Total tracked authored lines            | **190,001**                                                           |
+| App source (`src/`)                     | 96,920 lines · 287 files                                              |
+| Tests (`tests/`)                        | 33,495 lines · 250 files                                              |
+| Native C++ engine (`native/`, ADR-0007) | 1,769 lines · 12 files                                                |
 | Test : source ratio                     | 0.34 → **84.41% line / 82.11% func** coverage (`bun test --coverage`) |
-| Passing tests                           | **2,295** (floor; 0 failing)                                          |
+| Passing tests                           | **2,295** (canonical floor; 0 failing)                                |
 
 (Excludes the vendored `node_modules/`, generated `dist/` · `coverage/` · `native/build/`, and nested
 `.claude/worktrees/` checkouts.)
@@ -340,7 +340,7 @@ Complexity classes are catalogued in [COMPLEXITY-2026-06-26.md](COMPLEXITY-2026-
 The single gate — `bun run check` — must pass before every commit:
 
 `prettier --check` → `tsc --noEmit` (strict) → `oxlint` → `bun test` (**2,295 tests, 0 fail**) →
-`bun scripts/build.ts`. Coverage gate: line ≥ 0.90, function ≥ 0.85 (measured 84.41% line / 82.11% func, `bun test --coverage`).
+`bun scripts/build.ts`. Receipt regression guard: coverage must stay within the `verify:receipts` tolerance from the canonical **84.41% line / 82.11% func** floor; local Windows receipt runs may measure higher.
 Three governing "master" personas (`masters/*.xml`) encode the discipline: **the Executor** (finish
 everything, full gates), **the Architect** (contracts before code, exclusive ownership), **the
 Physicist** (determinism, measurement, frame budgets, provenance).
@@ -352,8 +352,8 @@ Physicist** (determinism, measurement, frame budgets, provenance).
 A full per-file roster is generated, not hand-kept — run `bun run metrics`
 ([`scripts/codebase-metrics.ts`](../scripts/codebase-metrics.ts)) for the current per-area / per-type
 breakdown, or `bun run filemap` for the file tree. Below is a dated snapshot of the **heaviest files**
-(where the weight sits); refresh on demand. Snapshot: **2026-07-02** (matches §1 — the two snapshots
-were previously taken on different days and contradicted each other; they are now refreshed together).
+(where the weight sits); refresh on demand. Snapshot: **2026-07-02** (older than §1; refresh before using
+these per-file weights as current hot-file truth).
 
 ### `src/` — heaviest files (251 files · 85,651 lines total; top of the list)
 
@@ -387,7 +387,7 @@ atmosphere 276 · reaction-diffusion 273 · phyla 264 · analytics 252 · econom
 
 ## 13 · Positioning
 
-This is a ~69k-line TypeScript (+ optional C++/Jolt native engine) browser-native simulation that
+This is a ~96.9k-line TypeScript (+ optional C++/Jolt native engine) browser-native simulation that
 renders **up to 50,000 agents** (10,000 at 60 fps on a laptop iGPU with zero AI accelerator), is
 **bit-reproducible from one seed**, ships through a **full CI/CD gate** (2,295 tests, 84.41% line / 82.11% func coverage),
 and whose entire emergent intelligence weighs **≈ 14 MB — 1/50,000th of GPT-3** at the mega ceiling. It

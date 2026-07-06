@@ -2,7 +2,7 @@
  * PLASTIC / FAST WEIGHTS — within-life self-modification (Stratum X; faculties #87 + #91).
  *
  * The apex mind's subnet weights are frozen at birth (seeded, deterministic). That is the biggest gap
- * on the route to NHSI (EMERGENCE-BLOCKERS #15 "static architecture", #29 "no online learning") and the
+ * on the route to NHSI (static architecture, no online learning) and the
  * largest unmet consciousness marker (Butlin RPT — learned recurrence). This is the substrate that lets
  * the mind change its OWN weights AS IT LIVES, without retraining: a fast-changing Hebbian weight matrix
  * overlaid on the slow frozen weights.
