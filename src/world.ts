@@ -488,6 +488,9 @@ export class World {
   private readonly genomeRng: Rng;
   /** Live NHI entities keyed by mind id; pruned when an NHI dies (leaves entities.list). */
   private readonly nhiEntities = new Map<number, Entity>();
+  /** Pre-allocated scratch for nhiLiveIds() to avoid Set construction per call. */
+  private readonly nhiEntitySetScratch = new Set<Entity>();
+  private readonly nhiLiveScratch: number[] = [];
   /** Monotonic NHI mind id — a stable key across the shifting entities.list. */
   private nhiNextId = 0;
   /** Thin facade the NhiSystem reaches the world through (delegates to the methods below). */
@@ -1319,7 +1322,7 @@ export class World {
       sim: this.state.sim,
     });
     if (typeof window !== 'undefined') {
-      (window as any).world = this;
+      window.world = this;
     }
   }
 
@@ -3740,13 +3743,19 @@ export class World {
    * matters when the owner has launched many NHIs against the 50k-entity list.
    */
   private nhiLiveIds(): number[] {
-    const out: number[] = [];
-    const live = new Set<Entity>(this.entities.list);
-    for (const [id, e] of this.nhiEntities) {
-      if (live.has(e)) out.push(id);
-      else this.nhiEntities.delete(id);
+    this.nhiEntitySetScratch.clear();
+    this.nhiLiveScratch.length = 0;
+    for (const e of this.entities.list) {
+      if (e) this.nhiEntitySetScratch.add(e);
     }
-    return out;
+    for (const [id, e] of this.nhiEntities) {
+      if (this.nhiEntitySetScratch.has(e)) {
+        this.nhiLiveScratch.push(id);
+      } else {
+        this.nhiEntities.delete(id);
+      }
+    }
+    return this.nhiLiveScratch.slice();
   }
 
   /** The percept NHI `id` senses this beat, from its entity vitality + world crowding/chaos. */
@@ -4692,12 +4701,11 @@ export class World {
         this.unlock();
         // Leverage existing copilot + panels infrastructure. Broadcast for UI to expand relevant docks.
         try {
-          (window as any).dispatchEvent?.(new CustomEvent('cqm:open-master-panel'));
+          window.dispatchEvent(new CustomEvent('cqm:open-master-panel'));
         } catch {}
         // Fallback: focus observatory + show sector + open copilot if available
         this.hud.showSector('PANEL: COPILOT | AUDIT | ARCHON | APEX | NHI | MARKET');
-        const cop = (window as any).cqmCopilot;
-        if (cop && typeof cop.toggle === 'function') cop.toggle(true);
+        window.cqmCopilot?.toggle(true);
         this.audit.record('master-panel-open', {});
         return true;
       },

@@ -227,6 +227,8 @@ class AcousticMeatDrum {
   private readonly c2: number;
   private readonly dt: number;
   private readonly damping: number;
+  private readonly cosTable: Float64Array; // Precomputed cosine for DFT (V123 optimization)
+  private readonly sinTable: Float64Array; // Precomputed sine for DFT (V123 optimization)
 
   constructor(m = 128, opts?: { damping?: number }) {
     this.m = m;
@@ -236,6 +238,17 @@ class AcousticMeatDrum {
     this.c2 = 1; // wave speed²
     this.dt = 0.2; // c·dt = 0.2 < 1 → below the CFL stability limit
     this.damping = opts?.damping ?? 0;
+    // Precompute cosine/sine tables for DFT (V123 optimization)
+    const K = Math.min(16, m >> 1);
+    this.cosTable = new Float64Array(K * m);
+    this.sinTable = new Float64Array(K * m);
+    for (let k = 1; k <= K; k++) {
+      for (let i = 0; i < m; i++) {
+        const ph = (TAU * k * i) / m;
+        this.cosTable[(k - 1) * m + i] = Math.cos(ph);
+        this.sinTable[(k - 1) * m + i] = Math.sin(ph);
+      }
+    }
   }
 
   /** Excite a standing mode (for tests + boot): u = A·sin(2π k x / M). */
@@ -289,10 +302,10 @@ class AcousticMeatDrum {
     for (let k = 1; k <= K; k++) {
       let re = 0;
       let im = 0;
+      const offset = (k - 1) * this.m;
       for (let i = 0; i < this.m; i++) {
-        const ph = (TAU * k * i) / this.m;
-        re += this.u[i]! * Math.cos(ph);
-        im -= this.u[i]! * Math.sin(ph);
+        re += this.u[i]! * this.cosTable[offset + i]!;
+        im -= this.u[i]! * this.sinTable[offset + i]!;
       }
       const p = re * re + im * im;
       if (p > bestP) {

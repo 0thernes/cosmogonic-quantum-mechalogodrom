@@ -20,7 +20,7 @@ Rewritten in place when the facts change (per the binding living-doc law in
 | Fact                | Canonical value           | Source of truth                                                                      | Propagated by           |
 | ------------------- | ------------------------- | ------------------------------------------------------------------------------------ | ----------------------- |
 | Package version     | `0.20.0`                  | `package.json` `version`                                                             | `sync-surfaces.ts`      |
-| Test count (floor)  | `2295`                    | `scripts/canonical-receipts.ts`                                                      | `sync-surfaces.ts`      |
+| Test count (floor)  | `2360`                    | `scripts/canonical-receipts.ts`                                                      | `sync-surfaces.ts`      |
 | Line coverage       | `84.41%`                  | `scripts/canonical-receipts.ts`                                                      | `sync-surfaces.ts`      |
 | Function coverage   | `82.11%`                  | `scripts/canonical-receipts.ts`                                                      | `sync-surfaces.ts`      |
 | Faculties (design)  | `100` (~30 deep-wired)    | `CANONICAL_FACULTIES`                                                                | `sync-surfaces.ts`      |
@@ -35,12 +35,12 @@ Rewritten in place when the facts change (per the binding living-doc law in
 | Apex composite mind | `~10,081` weights         | `src/sim/super-mind.ts`                                                              | prose (NOT auto-synced) |
 | Legacy spine        | `~1,444` params           | `src/sim/super-mind.ts` / ADR-0008                                                   | prose (NOT auto-synced) |
 
-### Measured reality (Linux gate host, 2026-07-06, Bun 1.3.14)
+### Latest local receipt (Windows, 2026-07-06, Bun 1.3.14)
 
-- `bun test --coverage` → **2,295 pass / 0 fail** · **250 tracked test files** · coverage
-  **84.41% line / 82.11% func** (measured; canonical synced floor is **2,295** tests · **84.41% line / 82.11% func**
-  from `canonical-receipts.ts`). `CANONICAL_TEST_COUNT` is a documented
-  **floor**; env-dependent totals may differ (Windows CI has measured higher). Gate-enforced
+- `bun run verify:receipts` → **2,360 pass / 0 fail** · **255 test files** · **2,866,429**
+  `expect()` calls · **92.02% line / 89.65% func** on this Windows checkout. The synced portable
+  canonical floor remains **2,360 tests · 84.41% line / 82.11% func** from `canonical-receipts.ts`.
+  `CANONICAL_TEST_COUNT` is a documented **floor**; env-dependent totals may differ. Gate-enforced
   `verify:receipts` floors against the canonical ledger — regression beyond ±6 pp coverage fails CI.
 - `bun run check` → green (prettier · tsc · oxlint · verify:receipts/test+coverage · sync:check · verify:facts · build).
 
@@ -65,7 +65,7 @@ Rewritten in place when the facts change (per the binding living-doc law in
 | #   | Severity                   | Where                                                      | Issue                                                                                                                                                                                          | Resolution                                                                                                       |
 | --- | -------------------------- | ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
 | A   | **P0 gate-RED**            | `.github/copilot-instructions.md`                          | markdown tables collapsed by the external `hacklm-memory` tool → fails `prettier --check` (first gate stage) in the working tree                                                               | `prettier --write` (re-pad tables)                                                                               |
-| B   | reconciled (not a bug)     | `scripts/canonical-receipts.ts`                            | `CANONICAL_TEST_COUNT` is a floor (1477→1771→1984→2372→2295 portable Linux floor as suites and hosts changed) vs file-rich measured counts                                                     | floor semantics confirmed correct; the published headline floor is now **2295** (`--print` never auto-raises it) |
+| B   | reconciled (not a bug)     | `scripts/canonical-receipts.ts`                            | `CANONICAL_TEST_COUNT` is a floor (1477→1771→1984→2372→2295→2360 portable floor as suites and hosts changed) vs file-rich measured counts                                                      | floor semantics confirmed correct; the published headline floor is now **2360** (`--print` never auto-raises it) |
 | C   | **P0 gate-RED**            | `CHANGELOG.md`, `docs/KANBAN-2026-06-26.md`                | 3 dead relative links into the deleted `docs/audit-2026-06-15/` folder (consolidated into AUDIT-LOG by `e51a376`)                                                                              | repoint to `docs/AUDIT-LOG.md`                                                                                   |
 | C2  | P1 test-hygiene            | `tests/doc-links.test.ts`                                  | `SKIP` set omitted `.claude/` → the test scanned nested worktree copies and false-failed                                                                                                       | add `.claude`, `legacy`, `site`, `coverage` to `SKIP`                                                            |
 | D   | P1 doc-rot                 | `docs/KANBAN-2026-06-26.md`                                | mojibake: `×11/`×7/``×1 (orphaned-emoji fragments), `—`×34 used as `—`, plus `¦`/`–`/`©º`— slipped the encoding gate (orphaned fragments aren't double-encoding;`U+201D` is a legit codepoint) | byte-precise normalize: drop corrupted emoji prefixes, restore `—`/`–` separators                                |
@@ -335,7 +335,7 @@ verify:facts` = 0 drift / 80 surfaces, 0 git-conflict-markers tree-wide, 100% of
 | `src/ui/**`                                                                       | 20    | subsystems agent                                         | clean (3 cosmetic Low: DPR-on-monitor-move)                                                      |
 | `src/core,audio,server,memory,logging` + `main/types/docs-page` + `server.ts`     | ~14   | subsystems agent                                         | clean; security exceptionally hardened                                                           |
 | `src/styles/app.css`                                                              | 1     | front-end agent                                          | clean                                                                                            |
-| `tests/**`                                                                        | 250   | gate (2,295 pass) + tooling agent                        | healthy, 0 disabled, all assert                                                                  |
+| `tests/**`                                                                        | 255   | gate (2,360 pass) + tooling agent                        | healthy, 0 disabled, all assert                                                                  |
 | `scripts/**`                                                                      | 16    | scripts/tooling agents                                   | sound; **CI sync:check gap FIXED**, dead `.sync-receipts.cjs` removed                            |
 | `bench/**`                                                                        | 13    | tooling agent                                            | clean; aggregate now includes the P1 quantum-classical bench                                     |
 | `.github/workflows/*.yml` + issue/PR templates                                    | 8+    | CI agent                                                 | SHA-pinned, least-priv; `master`->`main` URLs FIXED; **gate now runs sync:check + verify:facts** |

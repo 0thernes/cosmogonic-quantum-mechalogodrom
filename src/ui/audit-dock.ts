@@ -21,6 +21,30 @@ const AUDIT_KEY = 'cqm.audit.v1';
 /** Client-render cadence (ms) — cheap (≤200 bounded entries), feels real-time. */
 const RENDER_MS = 1500;
 
+interface AuditEconomySummary {
+  totalWealth?: number;
+  gini?: number;
+  dominant?: string;
+}
+
+interface AuditDockWorld {
+  state?: { frame?: number; mutations?: number; chaos?: number };
+  quality?: { tier?: string };
+  entities?: { list?: ArrayLike<unknown> };
+  connectome?: { links?: number };
+  snap?: { sentience?: number; econ?: AuditEconomySummary | null };
+  gedanken?: {
+    deaths?: number;
+    meanVividness?: number;
+    meanLucidBand?: number;
+    meanNoveltyPeak?: number;
+    devours?: number;
+    meanTransfer?: number;
+  };
+  thaler?: { markersMet?: number; markersRobust?: number; totalMarkers?: number };
+  economy?: { summary(): AuditEconomySummary };
+}
+
 const STYLE = `
 #cqm-aud-toggle.on{background:rgba(20,40,50,.95);border-color:rgba(120,200,230,.8);color:#e6f7ff}
 /* V71: the directive's "Audit 50/50 — just organizes it better". When open, widen the overlay and
@@ -237,7 +261,8 @@ function renderDashboard(doc: Document, list: unknown[]): void {
   const dash = doc.getElementById('cqm-audit-dashboard');
   if (!dash) return;
 
-  const world = (window as any).world;
+  const world =
+    typeof window === 'undefined' ? undefined : (window.world as AuditDockWorld | undefined);
   const now = Date.now();
 
   let liveFps = 60;

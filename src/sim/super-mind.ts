@@ -630,6 +630,9 @@ export class SuperMind {
   private readonly srValue = new Float32Array(SUPER_PLANS.length); // SR plan values
   private readonly attentionSalience = new Float32Array(SUPER_PLANS.length); // GWT-4 plan salience scratch
   private readonly qObs = new Float64Array(3 * QMIND_QUBITS); // V1.2: register Bloch observables → QRC
+  // Pre-allocated scratch arrays for tensor operations (avoid .slice() allocations)
+  private readonly tensorScratch1 = new Float32Array(4);
+  private readonly tensorScratch2 = new Float32Array(4);
   // V96 · ONLINE LEARNING — the Stratum-X adaptation channel: a seeded, bounded, reward-reinforced
   // per-plan bias. ON by default (the apex mind LEARNS at runtime); setLearning(false) freezes it back to
   // the byte-identical frozen-weight mind. Deterministic (no rng) + bounded (|bias| ≤ 0.5). O(plans).
@@ -1010,7 +1013,9 @@ export class SuperMind {
       (x) => Math.abs(x - (this.imagined[0] ?? 0.5)),
       this.pred[0] ?? 0,
     );
-    const tPred = moonlabTensorContract(this.pred.slice(0, 4), this.imagined.slice(0, 4), 4);
+    this.tensorScratch1.set(this.pred.subarray(0, 4));
+    this.tensorScratch2.set(this.imagined.subarray(0, 4));
+    const tPred = moonlabTensorContract(this.tensorScratch1, this.tensorScratch2, 4);
     // Wire Moonlab VQE energy proxy for quantum parameter optimization
     const vqeEnergy = vqeEnergyProxy(this.pred[0] ?? 0, this.imagined[0] ?? 0, 1);
     this.cons.surprise = clamp01(
@@ -1169,7 +1174,9 @@ export class SuperMind {
     const q = this.quantum.forward(this.latent);
     for (let i = 0; i < SUPER_QUANTUM; i++) this.quantumOut[i] = unit(q[i] ?? 0);
     // Moonlab tensor contract on quantum aspects (VQE-like optimization proxy from corpus tensor/MPO) for 5 Archons
-    const tQ = moonlabTensorContract(this.quantumOut.slice(0, 4), this.quantumOut.slice(4, 8), 4);
+    this.tensorScratch1.set(this.quantumOut.subarray(0, 4));
+    this.tensorScratch2.set(this.quantumOut.subarray(4, 8));
+    const tQ = moonlabTensorContract(this.tensorScratch1, this.tensorScratch2, 4);
     if (tQ > 0) {
       const q0 = this.quantumOut[0] ?? 0;
       this.quantumOut[0] = clamp01(q0 + tQ * 0.01);
@@ -1181,7 +1188,9 @@ export class SuperMind {
     const ulgQ = ulgHandoff(this.quantumOut[8] ?? 0.5, this.quantumOut[9] ?? 0.5);
     this.quantumOut[8] = clamp01((this.quantumOut[8] ?? 0) + ulgQ * 0.01);
     // additional Moonlab tensor on quantum aspects + Eshkol AD for "tape" in delib (more corpus everywhere in mind)
-    const tQ2 = moonlabTensorContract(this.quantumOut.slice(2, 6), this.quantumOut.slice(6, 10), 3);
+    this.tensorScratch1.set(this.quantumOut.subarray(2, 6));
+    this.tensorScratch2.set(this.quantumOut.subarray(6, 10));
+    const tQ2 = moonlabTensorContract(this.tensorScratch1, this.tensorScratch2, 3);
     const adQ2 = eshkolADGradient((x) => Math.abs(x), this.quantumOut[5] ?? 0.5);
     this.quantumOut[5] = clamp01((this.quantumOut[5] ?? 0) + tQ2 * 0.005 + adQ2 * 0.01);
     let mi = 0;
@@ -1470,7 +1479,9 @@ export class SuperMind {
     }
     this.successor.lookahead(this.srReward, this.srValue);
     // more tensor/AD in successor for Tsotchke (Moonlab/Eshkol)
-    const srT = moonlabTensorContract(this.srValue.slice(0, 4), this.quantumOut.slice(0, 4), 3);
+    this.tensorScratch1.set(this.srValue.subarray(0, 4));
+    this.tensorScratch2.set(this.quantumOut.subarray(0, 4));
+    const srT = moonlabTensorContract(this.tensorScratch1, this.tensorScratch2, 3);
     const srAd = eshkolADGradient((x) => x, this.srValue[0] ?? 0);
     // blend lightly
     this.srValue[0] = clamp01((this.srValue[0] ?? 0) + srT * 0.005 + srAd * 0.01);
@@ -1495,8 +1506,9 @@ export class SuperMind {
       const empPlan = SUPER_PLANS[empBest];
       if (empPlan) {
         // use moonlabTensorContract (Tsotchke Moonlab) + eshkolAD for more tensor/AD in empowerment vote (deeper wiring into mind)
+        this.tensorScratch1.set(this.quantumOut.subarray(0, 3));
         const empT = moonlabTensorContract(
-          this.quantumOut.slice(0, 3),
+          this.tensorScratch1,
           [this.empowerment.empowerment, 0.5, 0.3],
           2,
         );
@@ -1518,11 +1530,8 @@ export class SuperMind {
       if (hp) drives[hp] += HRR_GAIN * this.holographic.confidence;
     }
     // Moonlab tensor + AD on holographic for more corpus in recall (Tsotchke wiring deeper)
-    const hrrT = moonlabTensorContract(
-      [this.holographic.confidence, 0.5],
-      this.quantumOut.slice(0, 2),
-      2,
-    );
+    this.tensorScratch1.set(this.quantumOut.subarray(0, 2));
+    const hrrT = moonlabTensorContract([this.holographic.confidence, 0.5], this.tensorScratch1, 2);
     const hrrAd = eshkolADGradient((x) => x, this.holographic.confidence);
     if (hrrPlan >= 0) {
       const hp = SUPER_PLANS[hrrPlan];
@@ -1776,7 +1785,6 @@ export class SuperMind {
     this.phi += PHI_TAU * (phiBlend - this.phi);
     // Additional: Eshkol AD/Moonlab tensor for 5 Archons. Continue.
     // Eshkol AD dual for phi (from corpus AUTODIFF).
-    // const _phiDual = { primal: this.phi, tangent: (pr - 1 / M) * 0.1 }; // wired. (commented to avoid unused in check)
     this.cons.phi = this.phi;
 
     // GOAL5 HOT-4: project to sparse-smooth qualia tone (uses attn conf + other state)

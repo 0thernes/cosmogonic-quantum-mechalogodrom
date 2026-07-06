@@ -210,7 +210,7 @@ export class PantheonArchitecturePanel {
 
   constructor(doc: Document = document) {
     if (typeof window !== 'undefined') {
-      (window as any).pantheonArchitecturePanel = this;
+      window.pantheonArchitecturePanel = this;
     }
     doc.getElementById('cqm-arch-toggle')?.remove();
     doc.getElementById('cqm-arch-panel')?.remove();

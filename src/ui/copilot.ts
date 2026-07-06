@@ -904,6 +904,16 @@ function mount(): void {
     }
   };
 
+  if (typeof window !== 'undefined') {
+    window.cqmCopilot = {
+      toggle(open?: boolean): void {
+        const shouldOpen = open ?? !panel.classList.contains('open');
+        if (shouldOpen) openPanel();
+        else closePanel();
+      },
+    };
+  }
+
   toggle.addEventListener('click', () => {
     if (panel.classList.contains('open')) closePanel();
     else openPanel();

@@ -90,6 +90,7 @@ describe('persistent dock controls (owner-critical)', () => {
     const index = src('index.html');
     const world = src('src/world.ts');
     const centerHud = src('src/ui/center-hud.ts');
+    const copilot = src('src/ui/copilot.ts');
     expect(index).toContain('data-action="panel"');
     expect(input).toMatch(/panel:\s*'openMasterPanel'/);
     expect(world).toContain('openMasterPanel:');
@@ -97,6 +98,10 @@ describe('persistent dock controls (owner-critical)', () => {
     // The button was DEAD because nothing handled the event — seal that the center HUD now listens.
     expect(centerHud).toContain("'cqm:open-master-panel'");
     expect(centerHud).toContain('onOpenMasterPanel');
+    // And the explicit Copilot fallback handle that world.openMasterPanel calls must exist.
+    expect(world).toContain('window.cqmCopilot?.toggle(true)');
+    expect(copilot).toContain('window.cqmCopilot =');
+    expect(copilot).toContain('toggle(open?: boolean)');
   });
 
   test('pause action is wired to a true freeze (timeScale -> 0)', () => {

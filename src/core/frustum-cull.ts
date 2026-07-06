@@ -33,6 +33,11 @@ export function isPointInFrustum(camera: THREE.Camera, point: THREE.Vector3): bo
   return isSphereInFrustum(camera, point, 0);
 }
 
+const batchFrustum = new THREE.Frustum();
+const batchProjScreenMatrix = new THREE.Matrix4();
+const batchTempSphere = new THREE.Sphere();
+const batchTempVec = new THREE.Vector3();
+
 /**
  * Batch frustum culling for multiple entities.
  * Returns an array of indices for entities that are visible.
@@ -47,13 +52,9 @@ export function cullEntities(
   const visible: number[] = [];
   if (maxDistance < 0) return visible;
 
-  const frustum = new THREE.Frustum();
-  const projScreenMatrix = new THREE.Matrix4();
-  projScreenMatrix.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
-  frustum.setFromProjectionMatrix(projScreenMatrix);
+  batchProjScreenMatrix.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
+  batchFrustum.setFromProjectionMatrix(batchProjScreenMatrix);
 
-  const tempSphere = new THREE.Sphere();
-  const tempVec = new THREE.Vector3();
   const maxDistanceSq = maxDistance * maxDistance;
 
   for (let i = 0; i < positions.length / 3; i++) {
@@ -63,20 +64,20 @@ export function cullEntities(
     const z = positions[idx + 2];
     if (x === undefined || y === undefined || z === undefined) continue;
 
-    tempVec.set(x, y, z);
+    batchTempVec.set(x, y, z);
 
     // Skip if beyond max render distance
-    if (tempVec.distanceToSquared(camera.position) > maxDistanceSq) {
+    if (batchTempVec.distanceToSquared(camera.position) > maxDistanceSq) {
       continue;
     }
 
     const radius = radii[i];
     if (radius === undefined) continue;
 
-    tempSphere.center.copy(tempVec);
-    tempSphere.radius = radius;
+    batchTempSphere.center.copy(batchTempVec);
+    batchTempSphere.radius = radius;
 
-    if (frustum.intersectsSphere(tempSphere)) {
+    if (batchFrustum.intersectsSphere(batchTempSphere)) {
       visible.push(i);
     }
   }

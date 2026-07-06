@@ -127,8 +127,9 @@ export class MemoryTracker {
    * Returns 0 if memory API is not available.
    */
   getCurrentMemoryMB(): number {
-    if (typeof performance !== 'undefined' && 'memory' in performance) {
-      const memory = (performance as any).memory;
+    if (typeof performance !== 'undefined') {
+      const memory = performance.memory;
+      if (!memory) return 0;
       return memory.usedJSHeapSize / (1024 * 1024);
     }
     return 0;
@@ -139,8 +140,9 @@ export class MemoryTracker {
    * Returns 0 if memory API is not available.
    */
   getMemoryLimitMB(): number {
-    if (typeof performance !== 'undefined' && 'memory' in performance) {
-      const memory = (performance as any).memory;
+    if (typeof performance !== 'undefined') {
+      const memory = performance.memory;
+      if (!memory) return 0;
       return memory.jsHeapSizeLimit / (1024 * 1024);
     }
     return 0;

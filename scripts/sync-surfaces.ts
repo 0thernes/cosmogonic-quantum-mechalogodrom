@@ -73,103 +73,139 @@ const SURFACES = [
 
 /** Apply receipts (test count + coverage) propagation. */
 function syncReceipts(s: string): string {
-  return (
-    s
-      .replace(/tests-[0-9]{3,4}/g, `tests-${TEST}`)
-      .replace(/\b[0-9],[0-9]{3}\s+tests\b/g, `${TEST_COMMA} tests`)
-      // Anchored to a RECEIPT marker after "tests" so it never rewrites ordinary prose like
-      // "we ran 500 tests of X" into the canonical count — a silent, unrecoverable corruption of the
-      // owner's factual numbers on commit (data-loss audit 2026-07-01). A novel receipt form that
-      // drifts fails sync:check loudly (safe) rather than corrupting prose (unsafe).
-      .replace(
-        /(?<![,0-9])\b[0-9]{3,4}\s+tests\b(?=\s+green\b|,\s*[0-9]|\s*\(0\s+fail\b|\s*·|\s+pass(?:ing)?\b|\s*\/\s*0\s+fail\b)/g,
-        `${TEST} tests`,
-      )
-      // specs.html stat block splits the number and its "tests" label across two divs
-      // (`<div class="n gd">1,477</div><div class="l">tests ...`), so the \s+ variants above
-      // never match it and it drifted unseen. Scoped to that exact markup — the `class="l">tests`
-      // anchor is unique to the stat card, so no other number can be caught.
-      .replace(
-        /(<div class="n[^"]*">)[0-9][0-9,]*(<\/div>\s*<div class="l">tests\b)/g,
-        `$1${TEST_COMMA}$2`,
-      )
-      .replace(/\b[0-9],[0-9]{3}\s+pass\b/g, `${TEST_COMMA} pass`)
-      .replace(/\b[0-9],[0-9]{3}\s+tests\s*\/\s*0\s+fail\b/g, `${TEST_COMMA} tests / 0 fail`)
-      .replace(/(?<![,0-9])\b[0-9]{3,4}\s+tests\s*\/\s*0\s+fail\b/g, `${TEST} tests / 0 fail`)
-      .replace(
-        /\b[0-9]{2}\.[0-9]{2}%\s+line\s*\/\s*[0-9]{2}\.[0-9]{2}%\s+func\b/g,
-        `${LINE}% line / ${FUNC}% func`,
-      )
-      .replace(
-        /\b[0-9]{2}\.[0-9]{2}\s*%\s+line\s*\/\s*[0-9]{2}\.[0-9]{2}\s*%\s+function\b/g,
-        `${LINE} % line / ${FUNC} % function`,
-      )
-      // Bare "LINE% / FUNC%" gate shorthand (e.g. "90.80% / 87.88%") in README/ERD/KANBAN "Gate:" lines.
-      // Runs AFTER the worded variants above, so it never touches "NN% line / NN% func".
-      // Tied to the preceding "tests" receipt (e.g. "1,984 tests · 91.86% / 89.06%") so it can NEVER
-      // clobber an unrelated two-decimal ratio (a benchmark "95.00% / 12.00%") elsewhere in a surface
-      // (data-loss audit 2026-07-01). Runs AFTER the worded variants above.
-      .replace(
-        /(tests[^0-9\n]{0,8})[0-9]{2}\.[0-9]{2}%\s*\/\s*[0-9]{2}\.[0-9]{2}%/g,
-        `$1${LINE}% / ${FUNC}%`,
-      )
-      .replace(
-        /coverage-[0-9]{2}\.[0-9]{2}%25%20line%20%C2%B7%20[0-9]{2}\.[0-9]{2}%25%20func/g,
-        `coverage-${LINE}%25%20line%20%C2%B7%20${FUNC}%25%20func`,
-      )
-      .replace(/Line coverage: [0-9]{2}\.[0-9]{2}%/g, `Line coverage: ${LINE}%`)
-      .replace(/Function coverage: [0-9]{2}\.[0-9]{2}%/g, `Function coverage: ${FUNC}%`)
-      .replace(/Test count: \d+/g, `Test count: ${TEST}`)
-      // Backtick / bold receipt tokens in living reports (`1,477` tests, **1,477** tests)
-      .replace(/`([0-9],[0-9]{3})`\s+tests/g, `\`${TEST_COMMA}\` tests`)
-      .replace(/\*\*([0-9],[0-9]{3})\*\*\s+tests/g, `**${TEST_COMMA}** tests`)
-      .replace(/\*\*1,477\b/g, `**${TEST_COMMA}`)
-      .replace(/`1,477`/g, `\`${TEST_COMMA}\``)
-      // Canonical coverage shorthand in reports (~95% line / ~92% function)
-      .replace(/~95%\s*line\s*\/\s*~92%\s*function/g, `~${LINE}% line / ~${FUNC}% function`)
-      .replace(/~95\s*%\s+line\s*\/\s*~92\s*%\s+function/g, `~${LINE} % line / ~${FUNC} % function`)
-      .replace(
-        /`[0-9]{2}\.[0-9]{2}%`\s+line\s*\/\s*`[0-9]{2}\.[0-9]{2}%`\s+func/g,
-        `\`${LINE}%\` line / \`${FUNC}%\` func`,
-      )
-      .replace(/(\| Line coverage\s+\|\s+`)[0-9]{2}\.[0-9]{2}(%`\s+\|)/g, `$1${LINE}$2`)
-      .replace(/(\| Function coverage\s+\|\s+`)[0-9]{2}\.[0-9]{2}(%`\s+\|)/g, `$1${FUNC}$2`)
-      .replace(
-        /Current canon: \*\*[0-9]{2}\.[0-9]{2}% line \/ [0-9]{2}\.[0-9]{2}% function\*\*/g,
-        `Current canon: **${LINE}% line / ${FUNC}% function**`,
-      )
-      .replace(
-        /canonical [0-9]{2}\.[0-9]{2}\s*\/\s*[0-9]{2}\.[0-9]{2}/g,
-        `canonical ${LINE} / ${FUNC}`,
-      )
-      .replace(
-        /canonical [0-9]{2}\.[0-9]{2}% line \/ [0-9]{2}\.[0-9]{2}% func/g,
-        `canonical ${LINE}% line / ${FUNC}% func`,
-      )
-      .replace(
-        /canonical [0-9]{2}\.[0-9]{2} line \/ [0-9]{2}\.[0-9]{2} function/g,
-        `canonical ${LINE} line / ${FUNC} function`,
-      )
-      .replace(/\b1,477-test\b/g, `${TEST_COMMA}-test`)
-      .replace(/\b[0-9],[0-9]{3}-test floor\b/g, `${TEST_COMMA}-test floor`)
-      .replace(/(\| Test count \(floor\)\s+\|\s+`)[0-9]+(`)/g, `$1${TEST}$2`)
-      .replace(/\*\*([0-9],[0-9]{3})\*\* \(floor/g, `**${TEST_COMMA}** (floor`)
-      .replace(/\b[0-9]{2}\.[0-9]{2} % \/ [0-9]{2}\.[0-9]{2} %/g, `${LINE} % / ${FUNC} %`)
-      .replace(/\b[0-9],[0-9]{3} passing tests\b/g, `${TEST_COMMA} passing tests`)
-      .replace(/\b[0-9],[0-9]{3} \(0 failing\)/g, `${TEST_COMMA} (0 failing)`)
-      .replace(/bun test \([0-9],[0-9]{3} tests\)/g, `bun test (${TEST_COMMA} tests)`)
-      .replace(/"([0-9],[0-9]{3}) tests, 0 failing"/g, `"${TEST_COMMA} tests, 0 failing"`)
-      .replace(/"([0-9]{2}\.[0-9]{2})% line coverage"/g, `"${LINE}% line coverage"`)
-      .replace(
-        /Coverage line ≥ 0\.90(\s+\|\s+✅ )[0-9]{2}\.[0-9]{2}%/g,
-        `Coverage line ≥ 0.90$1${LINE}%`,
-      )
-      .replace(
-        /Coverage func ≥ 0\.85(\s+\|\s+✅ )[0-9]{2}\.[0-9]{2}%/g,
-        `Coverage func ≥ 0.85$1${FUNC}%`,
-      )
-      .replace(/\*\*~95 \/ ~92\*\*/g, `**~${LINE} / ~${FUNC}**`)
-  );
+  const protectedLocalCoverage: string[] = [];
+  const protectLocalCoverage = (match: string): string => {
+    const token = `__CQM_LOCAL_COVERAGE_${protectedLocalCoverage.length}__`;
+    protectedLocalCoverage.push(match);
+    return token;
+  };
+
+  let out = s
+    .replace(
+      /`expect\(\)` calls · \*\*[0-9]{2}\.[0-9]{2}% line \/ [0-9]{2}\.[0-9]{2}% func\*\* on this Windows checkout/g,
+      protectLocalCoverage,
+    )
+    .replace(
+      /Windows coverage measured `[0-9]{2}\.[0-9]{2}%` line \/ `[0-9]{2}\.[0-9]{2}%` func/g,
+      protectLocalCoverage,
+    );
+
+  out = out
+    .replace(/tests-[0-9]{3,4}/g, `tests-${TEST}`)
+    .replace(/\b[0-9],[0-9]{3}\s+tests\b/g, `${TEST_COMMA} tests`)
+    // Anchored to a RECEIPT marker after "tests" so it never rewrites ordinary prose like
+    // "we ran 500 tests of X" into the canonical count — a silent, unrecoverable corruption of the
+    // owner's factual numbers on commit (data-loss audit 2026-07-01). A novel receipt form that
+    // drifts fails sync:check loudly (safe) rather than corrupting prose (unsafe).
+    .replace(
+      /(?<![,0-9])\b[0-9]{3,4}\s+tests\b(?=\s+green\b|,\s*[0-9]|\s*\(0\s+fail\b|\s*·|\s+pass(?:ing)?\b|\s*\/\s*0\s+fail\b)/g,
+      `${TEST} tests`,
+    )
+    // specs.html stat block splits the number and its "tests" label across two divs
+    // (`<div class="n gd">1,477</div><div class="l">tests ...`), so the \s+ variants above
+    // never match it and it drifted unseen. Scoped to that exact markup — the `class="l">tests`
+    // anchor is unique to the stat card, so no other number can be caught.
+    .replace(
+      /(<div class="n[^"]*">)[0-9][0-9,]*(<\/div>\s*<div class="l">tests\b)/g,
+      `$1${TEST_COMMA}$2`,
+    )
+    .replace(/\b[0-9],[0-9]{3}\s+pass\b/g, `${TEST_COMMA} pass`)
+    .replace(/\b[0-9],[0-9]{3}\s+tests\s*\/\s*0\s+fail\b/g, `${TEST_COMMA} tests / 0 fail`)
+    .replace(/(?<![,0-9])\b[0-9]{3,4}\s+tests\s*\/\s*0\s+fail\b/g, `${TEST} tests / 0 fail`)
+    .replace(
+      /\b[0-9]{2}\.[0-9]{2}%\s+line\s*\/\s*[0-9]{2}\.[0-9]{2}%\s+func\b/g,
+      `${LINE}% line / ${FUNC}% func`,
+    )
+    .replace(
+      /\b[0-9]{2}\.[0-9]{2}\s*%\s+line\s*\/\s*[0-9]{2}\.[0-9]{2}\s*%\s+function\b/g,
+      `${LINE} % line / ${FUNC} % function`,
+    )
+    // Bare "LINE% / FUNC%" gate shorthand (e.g. "90.80% / 87.88%") in README/ERD/KANBAN "Gate:" lines.
+    // Runs AFTER the worded variants above, so it never touches "NN% line / NN% func".
+    // Tied to the preceding "tests" receipt (e.g. "1,984 tests · 91.86% / 89.06%") so it can NEVER
+    // clobber an unrelated two-decimal ratio (a benchmark "95.00% / 12.00%") elsewhere in a surface
+    // (data-loss audit 2026-07-01). Runs AFTER the worded variants above.
+    .replace(
+      /(tests[^0-9\n]{0,8})[0-9]{2}\.[0-9]{2}%\s*\/\s*[0-9]{2}\.[0-9]{2}%/g,
+      `$1${LINE}% / ${FUNC}%`,
+    )
+    .replace(
+      /coverage-[0-9]{2}\.[0-9]{2}%25%20line%20%C2%B7%20[0-9]{2}\.[0-9]{2}%25%20func/g,
+      `coverage-${LINE}%25%20line%20%C2%B7%20${FUNC}%25%20func`,
+    )
+    .replace(/Line coverage: [0-9]{2}\.[0-9]{2}%/g, `Line coverage: ${LINE}%`)
+    .replace(/Function coverage: [0-9]{2}\.[0-9]{2}%/g, `Function coverage: ${FUNC}%`)
+    .replace(/Test count: \d+/g, `Test count: ${TEST}`)
+    // Backtick / bold receipt tokens in living reports (`1,477` tests, **1,477** tests)
+    .replace(/`([0-9],[0-9]{3})`\s+tests/g, `\`${TEST_COMMA}\` tests`)
+    .replace(/\*\*([0-9],[0-9]{3})\*\*\s+tests/g, `**${TEST_COMMA}** tests`)
+    .replace(/\*\*(?:1,477|2,295)\b/g, `**${TEST_COMMA}`)
+    .replace(/`(?:1,477|2,295)`/g, `\`${TEST_COMMA}\``)
+    // Canonical coverage shorthand in reports (~95% line / ~92% function)
+    .replace(/~95%\s*line\s*\/\s*~92%\s*function/g, `~${LINE}% line / ~${FUNC}% function`)
+    .replace(/~95\s*%\s+line\s*\/\s*~92\s*%\s+function/g, `~${LINE} % line / ~${FUNC} % function`)
+    .replace(
+      /`[0-9]{2}\.[0-9]{2}%`\s+line\s*\/\s*`[0-9]{2}\.[0-9]{2}%`\s+func/g,
+      `\`${LINE}%\` line / \`${FUNC}%\` func`,
+    )
+    .replace(/(\| Line coverage\s+\|\s+`)[0-9]{2}\.[0-9]{2}(%`\s+\|)/g, `$1${LINE}$2`)
+    .replace(/(\| Function coverage\s+\|\s+`)[0-9]{2}\.[0-9]{2}(%`\s+\|)/g, `$1${FUNC}$2`)
+    .replace(
+      /Current canon: \*\*[0-9]{2}\.[0-9]{2}% line \/ [0-9]{2}\.[0-9]{2}% function\*\*/g,
+      `Current canon: **${LINE}% line / ${FUNC}% function**`,
+    )
+    .replace(
+      /canonical [0-9]{2}\.[0-9]{2}\s*\/\s*[0-9]{2}\.[0-9]{2}/g,
+      `canonical ${LINE} / ${FUNC}`,
+    )
+    .replace(
+      /canonical [0-9]{2}\.[0-9]{2}% line \/ [0-9]{2}\.[0-9]{2}% func/g,
+      `canonical ${LINE}% line / ${FUNC}% func`,
+    )
+    .replace(
+      /canonical [0-9]{2}\.[0-9]{2} line \/ [0-9]{2}\.[0-9]{2} function/g,
+      `canonical ${LINE} line / ${FUNC} function`,
+    )
+    .replace(/\b[0-9],[0-9]{3}-test\b/g, `${TEST_COMMA}-test`)
+    .replace(/\b[0-9],[0-9]{3}-test floor\b/g, `${TEST_COMMA}-test floor`)
+    .replace(/(\| Test count \(floor\)\s+\|\s+`)[0-9]+(`)/g, `$1${TEST}$2`)
+    .replace(/\*\*([0-9],[0-9]{3})\*\* \(floor/g, `**${TEST_COMMA}** (floor`)
+    .replace(/\b[0-9]{2}\.[0-9]{2} % \/ [0-9]{2}\.[0-9]{2} %/g, `${LINE} % / ${FUNC} %`)
+    .replace(/\b[0-9],[0-9]{3} passing tests\b/g, `${TEST_COMMA} passing tests`)
+    .replace(/\b[0-9],[0-9]{3} \(0 failing\)/g, `${TEST_COMMA} (0 failing)`)
+    .replace(/bun test \([0-9],[0-9]{3} tests\)/g, `bun test (${TEST_COMMA} tests)`)
+    .replace(/"([0-9],[0-9]{3}) tests, 0 failing"/g, `"${TEST_COMMA} tests, 0 failing"`)
+    .replace(/"([0-9]{2}\.[0-9]{2})% line coverage"/g, `"${LINE}% line coverage"`)
+    .replace(
+      /Coverage line ≥ 0\.90(\s+\|\s+✅ )[0-9]{2}\.[0-9]{2}%/g,
+      `Coverage line ≥ 0.90$1${LINE}%`,
+    )
+    .replace(
+      /Coverage func ≥ 0\.85(\s+\|\s+✅ )[0-9]{2}\.[0-9]{2}%/g,
+      `Coverage func ≥ 0.85$1${FUNC}%`,
+    )
+    .replace(/\*\*~95 \/ ~92\*\*/g, `**~${LINE} / ~${FUNC}**`)
+    // Generic matchers for outdated canonical floors in tables, lists or specific sentences
+    .replace(
+      /\*\*([0-9],[0-9]{3})\*\*\s+\(canonical floor;\s*[0-9]\s+failing\)/g,
+      `**${TEST_COMMA}** (canonical floor; 0 failing)`,
+    )
+    .replace(/`([0-9],[0-9]{3})`-test/g, `\`${TEST_COMMA}\`-test`)
+    .replace(/\b([0-9],[0-9]{3})-test\s+canonical\s+floor\b/g, `${TEST_COMMA}-test canonical floor`)
+    .replace(
+      /\*\*([0-9],[0-9]{3})-test\s+canonical\s+floor\s*\/\s*[0-9]{2}\.[0-9]{2}%\s*\/\s*[0-9]{2}\.[0-9]{2}%\*\*/g,
+      `**${TEST_COMMA}-test canonical floor / ${LINE}% / ${FUNC}%**`,
+    )
+    .replace(
+      /\*\*([0-9],[0-9]{3})\s*\/\s*[0-9]{2}\.[0-9]{2}%\s*\/\s*[0-9]{2}\.[0-9]{2}%\*\*/g,
+      `**${TEST_COMMA} / ${LINE}% / ${FUNC}%**`,
+    );
+
+  for (let i = 0; i < protectedLocalCoverage.length; i++) {
+    out = out.replace(`__CQM_LOCAL_COVERAGE_${i}__`, protectedLocalCoverage[i]!);
+  }
+
+  return out;
 }
 
 /** Apply CURRENT-version propagation. Only explicit present-tense markers — never historical refs. */

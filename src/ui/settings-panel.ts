@@ -187,7 +187,7 @@ class SettingsPanel {
     wireClose(this.modal, () => this.close());
 
     if (typeof window !== 'undefined' && doc === document) {
-      (window as any).cqmToggleSettings = () => this.toggle();
+      window.cqmToggleSettings = () => this.toggle();
     }
   }
 

@@ -5,51 +5,41 @@
  */
 
 /**
- * Simple LRU cache for math calculations.
- * Cache size is limited to prevent memory bloat.
+ * Zero-allocation LRU cache for math calculations.
+ * Uses Map insertion order for O(1) recency updates and oldest-entry eviction.
  */
 class MathCache<T> {
-  private cache = new Map<string, { value: T; lastAccess: number }>();
+  private cache = new Map<string, T>();
   private readonly maxSize: number;
-  private accessCounter = 0;
 
   constructor(maxSize = 64) {
     this.maxSize = maxSize;
   }
 
   get(key: string): T | undefined {
-    const entry = this.cache.get(key);
-    if (entry) {
-      entry.lastAccess = this.accessCounter++;
-      return entry.value;
+    const value = this.cache.get(key);
+    if (value !== undefined) {
+      this.cache.delete(key);
+      this.cache.set(key, value);
+      return value;
     }
     return undefined;
   }
 
   set(key: string, value: T): void {
-    // Evict oldest entry if cache is full
-    if (this.cache.size >= this.maxSize) {
-      let oldestKey: string | undefined;
-      let oldestAccess = Infinity;
-
-      for (const [k, v] of this.cache.entries()) {
-        if (v.lastAccess < oldestAccess) {
-          oldestAccess = v.lastAccess;
-          oldestKey = k;
-        }
-      }
-
-      if (oldestKey) {
+    if (this.cache.has(key)) {
+      this.cache.delete(key);
+    } else if (this.cache.size >= this.maxSize) {
+      const oldestKey = this.cache.keys().next().value;
+      if (oldestKey !== undefined) {
         this.cache.delete(oldestKey);
       }
     }
-
-    this.cache.set(key, { value, lastAccess: this.accessCounter++ });
+    this.cache.set(key, value);
   }
 
   clear(): void {
     this.cache.clear();
-    this.accessCounter = 0;
   }
 }
 

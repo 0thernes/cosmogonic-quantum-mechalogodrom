@@ -16,6 +16,11 @@ const MAX_LEAN = 0.45;
 
 const TAU = Math.PI * 2;
 
+type VegetationUniforms = { uTime: { value: number } };
+type VegetationMaterial = THREE.MeshStandardMaterial & {
+  userData: { uniforms: VegetationUniforms };
+};
+
 function hash11(n: number): number {
   const x = Math.sin(n * 12.9898 + 78.233) * 43758.5453;
   return x - Math.floor(x);
@@ -27,7 +32,7 @@ function hash12(i: number, j: number): number {
 
 interface PlantSpecies {
   readonly geo: THREE.BufferGeometry;
-  readonly mat: THREE.MeshStandardMaterial;
+  readonly mat: VegetationMaterial;
   readonly mesh: THREE.InstancedMesh;
   readonly maxHeight: number;
   readonly stiffness: number;
@@ -151,10 +156,10 @@ function buildSpecies(seed: number, maxCount: number): PlantSpecies {
     metalness: 0.12,
     emissive: baseColor,
     emissiveIntensity: 0.18,
-  });
-  (mat as any).userData = { uniforms: { uTime: { value: 0 } } };
+  }) as VegetationMaterial;
+  mat.userData = { uniforms: { uTime: { value: 0 } } };
   mat.onBeforeCompile = (shader) => {
-    shader.uniforms.uTime = (mat as any).userData.uniforms.uTime;
+    shader.uniforms.uTime = mat.userData.uniforms.uTime;
     shader.vertexShader = `
       uniform float uTime;
       varying vec3 vWorldPos;
@@ -300,9 +305,7 @@ export class Vegetation {
   update(t: number, _dt: number): void {
     this.windTime = t * WIND_SPEED * (1 + this.chaos * 2.5);
     for (const s of this.species) {
-      if ((s.mat as any).userData?.uniforms) {
-        (s.mat as any).userData.uniforms.uTime.value = t;
-      }
+      s.mat.userData.uniforms.uTime.value = t;
     }
     for (let i = 0; i < this.plants.length; i++) {
       const p = this.plants[i]!;
