@@ -21,8 +21,8 @@ Rewritten in place when the facts change (per the binding "Living docs, no archi
 | ------------------- | ------------------------- | ------------------------------------------------------------------------------------ | ----------------------- |
 | Package version     | `0.20.0`                  | `package.json` `version`                                                             | `sync-surfaces.ts`      |
 | Test count (floor)  | `2372`                    | `scripts/canonical-receipts.ts`                                                      | `sync-surfaces.ts`      |
-| Line coverage       | `91.91%`                  | `scripts/canonical-receipts.ts`                                                      | `sync-surfaces.ts`      |
-| Function coverage   | `89.62%`                  | `scripts/canonical-receipts.ts`                                                      | `sync-surfaces.ts`      |
+| Line coverage       | `84.41%`                  | `scripts/canonical-receipts.ts`                                                      | `sync-surfaces.ts`      |
+| Function coverage   | `82.11%`                  | `scripts/canonical-receipts.ts`                                                      | `sync-surfaces.ts`      |
 | Faculties (design)  | `100` (~30 deep-wired)    | `CANONICAL_FACULTIES`                                                                | `sync-surfaces.ts`      |
 | Archon pantheon     | `25` (5 apex + 20 light)  | `CANONICAL_ARCHONS`                                                                  | `sync-surfaces.ts`      |
 | Theory-of-mind orgs | `25`                      | `CANONICAL_TOM_ORGANS`                                                               | `sync-surfaces.ts`      |
@@ -37,8 +37,8 @@ Rewritten in place when the facts change (per the binding "Living docs, no archi
 
 ### Measured reality (Linux gate host, 2026-07-06, Bun 1.3.14)
 
-- `bun test --coverage` → **2,372 pass / 0 fail** · **254 test files** · coverage
-  **91.91% line / 89.62% func** (measured; canonical synced floor is **2,372** tests · **91.91% line / 89.62% func**
+- `bun test --coverage` → **2,295 pass / 0 fail** · **254 test files** · coverage
+  **84.41% line / 82.11% func** (measured; canonical synced floor is **2,295** tests · **84.41% line / 82.11% func**
   from `canonical-receipts.ts`). `CANONICAL_TEST_COUNT` is a documented
   **floor**; env-dependent totals may differ (Windows CI has measured higher). Gate-enforced
   `verify:receipts` floors against the canonical ledger — regression beyond ±6 pp coverage fails CI.
@@ -335,7 +335,7 @@ verify:facts` = 0 drift / 80 surfaces, 0 git-conflict-markers tree-wide, 100% of
 | `src/ui/**`                                                                       | 20    | subsystems agent                                         | clean (3 cosmetic Low: DPR-on-monitor-move)                                                      |
 | `src/core,audio,server,memory,logging` + `main/types/docs-page` + `server.ts`     | ~14   | subsystems agent                                         | clean; security exceptionally hardened                                                           |
 | `src/styles/app.css`                                                              | 1     | front-end agent                                          | clean                                                                                            |
-| `tests/**`                                                                        | 252   | gate (2,372 pass) + tooling agent                        | healthy, 0 disabled, all assert                                                                  |
+| `tests/**`                                                                        | 252   | gate (2,295 pass) + tooling agent                        | healthy, 0 disabled, all assert                                                                  |
 | `scripts/**`                                                                      | 16    | scripts/tooling agents                                   | sound; **CI sync:check gap FIXED**, dead `.sync-receipts.cjs` removed                            |
 | `bench/**`                                                                        | 13    | tooling agent                                            | clean; aggregate now includes the P1 quantum-classical bench                                     |
 | `.github/workflows/*.yml` + issue/PR templates                                    | 8+    | CI agent                                                 | SHA-pinned, least-priv; `master`->`main` URLs FIXED; **gate now runs sync:check + verify:facts** |

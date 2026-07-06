@@ -10,7 +10,7 @@ adversarial verification of every finding). It is deliberately **not** all-green
 a scorecard is where it is red.
 
 > Read every claim against [`VERIFICATION-ANALYTICAL-DATA.md`](../VERIFICATION-ANALYTICAL-DATA.md) §1.
-> Current receipts: **v0.20.0 · 2,372 tests · 91.91 % line / 89.62 % function**
+> Current receipts: **v0.20.0 · 2,295 tests · 84.41 % line / 82.11 % function**
 
 ## Bottom line
 
@@ -37,7 +37,7 @@ Grade key: **A** ≥ 9 · **A−** 8–9 · **B+** 7.5–8 · **B** 6.5–7.5 ·
 | --- | ------------------------- | ----- | ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | 1   | Determinism integrity     | 9.5   | A     | No `Math.random`/`Date.now`/`performance.now` in sim/math; all randomness via seeded `Rng` (`src/math/rng.ts`). Only UI-seed exceptions in `src/main.ts`.                      |
 | 2   | Type safety & lint        | 9.5   | A     | `tsc --strict` + `oxlint`; **0** `TODO`/`FIXME`/`@ts-ignore`/`eslint-disable` across `src/`. Gate-enforced.                                                                    |
-| 3   | Test rigor & coverage     | 9.0   | A     | `1,984`-test floor (`2104` measured), `2,912,102` `expect()` calls, `91.91%` line / `89.62%` func; receipts law (`verify-receipts.ts`) makes an unmeasured number unshippable. |
+| 3   | Test rigor & coverage     | 9.0   | A     | `1,984`-test floor (`2104` measured), `2,912,102` `expect()` calls, `84.41%` line / `82.11%` func; receipts law (`verify-receipts.ts`) makes an unmeasured number unshippable. |
 | 4   | Time complexity / scaling | 8.5   | A−    | Entity update is `O(n·k)` on a spatial grid (`ctx.grid`), not `O(n²)`; ultra-tier LOD ≥ 5k; 50k ceiling. Stagger gates never gate RNG draws (determinism-safe).                |
 | 5   | GPU resource discipline   | 8.0   | A−    | Recurring leak class (per-instance `THREE.*` outside cache) — but caught: `World.dispose()` sweep landed `bf1a405d`/2026-07-01, spy-verified `count→0` + idempotent.           |
 
