@@ -11,9 +11,6 @@ changed and why.
 
 ---
 
-<<<<<<< HEAD
-## 2026-07-06 (pass 13) — Full Markdown truth audit + governance cleanup (v0.20.0)
-=======
 ## 2026-07-06 (pass 14) — Worker pool correctness + wilderness buffer safety (v0.20.0)
 
 Full-repo debug pass: gates green; fixed two ADR-0010 worker-path bugs without touching render/sim quality.
@@ -33,8 +30,7 @@ Full-repo debug pass: gates green; fixed two ADR-0010 worker-path bugs without t
 
 ---
 
-## 2026-07-06 (pass 13) — Post-consolidation MD audit: stale receipts + deleted-doc refs (v0.20.0)
->>>>>>> 359b64b (fix(workers): settle errors, guard pooled buffers, drop polling)
+## 2026-07-06 (pass 13) — Full Markdown truth audit + governance cleanup (v0.20.0)
 
 Owner brief: review all tracked Markdown after the 24-file delete + pass 12 link repair, then remove
 stale current-tense receipt, path, and Tsotchke overclaim drift without changing runtime quality.
