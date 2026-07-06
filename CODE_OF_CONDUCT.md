@@ -1,4 +1,4 @@
-<!-- reviewed: 2026-07-06 | V123 optimization sweep | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+<!-- reviewed: 2026-07-06 | v0.21.1 truth-surface sweep | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
 
 # Code of Conduct
 

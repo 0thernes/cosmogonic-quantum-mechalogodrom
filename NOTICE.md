@@ -1,4 +1,4 @@
-<!-- reviewed: 2026-06-27 | repo-wide consistency audit | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+<!-- reviewed: 2026-07-06 | v0.21.1 truth-surface sweep | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
 
 # NOTICE
 
@@ -46,18 +46,26 @@ The standalone lab artifact `lab/quantum-wildbeyond.html` loads
 bundled, vendored, or redistributed by this project; it remains under its own
 license.
 
-## Ported / adapted algorithms (source-level)
+## Ported / adapted algorithms and research substrates (source-level)
 
-The quantum-mind layer adapts specific algorithms — at the source level, re-implemented in TypeScript —
-from the **Tsotchke** quantum research repositories. The original works are MIT-licensed, © 2024–2026
-tsotchke; the MIT permission notice is retained here as required, and our derivative implementations
-remain governed by this project's proprietary license while honoring the upstream MIT terms.
+The quantum-mind, petri, and lab layers adapt or reimplement selected algorithms at the source level from
+the **Tsotchke** quantum research repositories. The original MIT-licensed works are © 2024–2026 tsotchke;
+the MIT permission notice is retained in [THIRD-PARTY-NOTICES.md](./THIRD-PARTY-NOTICES.md), and this
+project's derivative implementations remain governed by this project's proprietary license while honoring
+the upstream MIT terms. The authoritative depth ledger is
+[docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md](./docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md); this table
+is provenance-oriented and does not mean every listed domain has equal runtime depth.
 
-| Adapted algorithm                              | Ported into                                                            | Upstream source                                                               | License                |
-| ---------------------------------------------- | ---------------------------------------------------------------------- | ----------------------------------------------------------------------------- | ---------------------- |
-| Quantum Geometric Tensor / Fubini–Study metric | `src/math/quantum-geometry.ts` (consumed by `src/sim/super-qubits.ts`) | Tsotchke `quantum_geometric_tensor` (QGTL) + Moonlab `quantum_geometry/qgt.c` | MIT © 2024–26 tsotchke |
-| Seeded quantum phase-noise qubit-RNG           | `src/math/eshkol-qrng.ts`                                              | Tsotchke `Eshkol/eshkol_repo/lib/quantum/quantum_rng.{c,h}`                   | MIT © 2024–26 tsotchke |
-| Hopfield/Ising spin-glass associative instinct | `src/sim/spin-glass.ts`                                                | Tsotchke `spin_based_neural_network` (`ising_model.c`, `nqs_gradient.c`)      | MIT © 2024–26 tsotchke |
+| Adapted algorithm                              | Ported into                                                                                                             | Upstream source                                                               | License                |
+| ---------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- | ---------------------- |
+| Quantum Geometric Tensor / Fubini–Study metric | `src/math/quantum-geometry.ts` (consumed by `src/sim/super-qubits.ts`)                                                  | Tsotchke `quantum_geometric_tensor` (QGTL) + Moonlab `quantum_geometry/qgt.c` | MIT © 2024–26 tsotchke |
+| Seeded quantum phase-noise qubit-RNG           | `src/math/eshkol-qrng.ts`                                                                                               | Tsotchke `Eshkol/eshkol_repo/lib/quantum/quantum_rng.{c,h}`                   | MIT © 2024–26 tsotchke |
+| Eshkol automatic differentiation / VM bridge   | `src/math/eshkol-ad.ts`, `src/sim/eshkol-vm-bytecode.ts`                                                                | Tsotchke `Eshkol` compiler/runtime material                                   | MIT © 2024–26 tsotchke |
+| Clifford/tableau and stabilizer reflexes       | `src/math/clifford-tableau.ts`, `src/sim/super-mind.ts`                                                                 | Tsotchke `Moonlab` Clifford / stabilizer material                             | MIT © 2024–26 tsotchke |
+| Tensor/MPS/VQE substrates                      | `src/math/mps-svd.ts`, `src/sim/moonlab-tensor.ts`, `src/sim/moonlab-vqe.ts`                                            | Tsotchke `Moonlab` tensor and VQE material                                    | MIT © 2024–26 tsotchke |
+| Hopfield/Ising spin-glass associative instinct | `src/sim/spin-glass.ts`                                                                                                 | Tsotchke `spin_based_neural_network` (`ising_model.c`, `nqs_gradient.c`)      | MIT © 2024–26 tsotchke |
+| SO(3) / representation utilities               | `src/math/irrep.ts`, `src/math/so3.ts`                                                                                  | Tsotchke `libirrep` representation and symmetry material                      | MIT © 2024–26 tsotchke |
+| Facade / scaffold integrations                 | `src/sim/tensorcore-facade.ts`, `src/sim/pinn-residual.ts`, `src/sim/pimc-paths.ts`, `src/sim/quantum-quake-physics.ts` | Tsotchke tensorcore / PINN / PIMC / quantum-quake materials                   | Mixed; see ledger      |
 
 Academic references for the geometric tensor: Provost & Vallée, _Riemannian structure on manifolds of
 quantum states_ (1980); Berry, _Quantal phase factors_ (1984); Fukui–Hatsugai–Suzuki (2005). The

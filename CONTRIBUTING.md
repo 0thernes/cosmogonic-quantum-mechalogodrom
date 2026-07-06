@@ -1,4 +1,4 @@
-<!-- reviewed: 2026-07-06 | V123 optimization sweep | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+<!-- reviewed: 2026-07-06 | v0.21.1 truth-surface sweep | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
 
 # Contributing
 
@@ -19,13 +19,13 @@ bun install        # install dependencies
 bun dev            # hot-reloading server at http://localhost:3000
 bun test           # unit tests
 bun run bench      # mitata micro-benchmarks
-bun run check      # THE gate: format:check + typecheck + lint + test + verify:receipts + sync:check + build
+bun run check      # THE gate: format:check + typecheck + lint + verify:receipts + sync:check + verify:facts + build
 ```
 
 `bun run check` must pass before any change lands on `main` (this repo commits
-straight to `main` — no pull requests). CI re-runs the same gate as a superset
-(it uses `test --coverage` for the coverage threshold and adds `verify:facts`),
-so running `check` locally is the fastest feedback you can get.
+straight to `main` — no pull requests). `verify:receipts` runs the coverage
+receipt, and `verify:facts` checks public truth surfaces, so running `check`
+locally is the fastest feedback you can get.
 
 ## Ground rules
 
@@ -64,6 +64,11 @@ touching module boundaries.
    under `bun test` with no DOM and must not import `src/types.ts` at runtime
    (`import type` is fine).
 8. **JSDoc every export.** Hot-path functions state their big-O.
+9. **Truth surfaces.** README, specs, docs, issue templates, release notes, and
+   lab pages must distinguish current facts from historical reports. Consciousness
+   and sentience language is proxy-only unless a specific file, test, route, data
+   feed, and falsifier prove a stronger claim. Tsotchke work must state whether a
+   domain is directly ported, harvested/adapted, scaffolded, or fenced.
 
 ## Tests and benchmarks
 

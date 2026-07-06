@@ -6,7 +6,7 @@ body:
     id: problem
     attributes:
       label: Problem / motivation
-      description: What gap or idea is this? Tie it to the living-biome vision where relevant.
+      description: What gap or idea is this? Tie it to the living-biome, lab, Tsotchke, or report vision where relevant.
     validations:
       required: true
   - type: textarea
@@ -16,6 +16,33 @@ body:
       description: What should it do? Note any determinism, performance, or contract implications.
     validations:
       required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Simulation / determinism
+        - Rendering / graphics / color / visual fidelity
+        - Lab / consciousness / sentience telemetry
+        - Tsotchke integration / provenance
+        - A-Life report / generated SVG or JSON
+        - Docs / specs / bible / release surface
+        - Security / governance
+        - Build / tooling / CI
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence and falsifiability
+      description: What files, tests, routes, assets, measurements, or papers should prove this is real? What would show it failed?
+      placeholder: |
+        - Source/provenance:
+        - Proposed test or metric:
+        - Performance/quality budget:
+        - Falsifier:
+    validations:
+      required: false
   - type: textarea
     id: alternatives
     attributes:

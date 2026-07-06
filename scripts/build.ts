@@ -110,7 +110,7 @@ try {
   /* public/textures optional in minimal checkouts — pantheon falls back to data texture */
 }
 
-// PERF/LOAD (v0.20.0): lift the fonts OFF the render-blocking critical path.
+// PERF/LOAD (v0.20+): lift the fonts OFF the render-blocking critical path.
 //
 // Bun's HTML bundler merges every in-page <link rel=stylesheet> (app.css + fonts.css) into ONE chunk
 // and inlines each woff2 as a base64 `data:` URI (~257 KB / 210 KB gzip of Latin-subset faces) — bytes

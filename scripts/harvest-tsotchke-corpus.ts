@@ -10,7 +10,7 @@
  * key kernel markers from the mirrors, then emits a generated module that
  * primordial-soup + digital-biologics can import for authentic seeding.
  *
- * This is NOT LLM/token bullshit. This is using the actual Eshkol + Moonlab +
+ * This is not an LLM/tokenizer path. This is using the actual Eshkol + Moonlab +
  * QGT + spin + libirrep + ... corpus to grow different forms of life.
  *
  * "Grow What Thou Wilt." — Aleister Crowley

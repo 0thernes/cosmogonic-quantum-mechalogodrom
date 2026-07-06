@@ -15,9 +15,11 @@ body:
       label: Steps to reproduce
       description: Exact steps. For sim defects, include the seed and tier if known.
       placeholder: |
-        1. Open the app at the `ultra` tier
-        2. Select algorithm …
-        3. Observe …
+        1. Open the route (`/`, `/docs`, `/spec`, `/bible`, `/lab`, `/lab/consciousness`, `/lab/sentience`, or API path)
+        2. Set seed/tier/settings if relevant
+        3. Open the app at the `ultra` tier
+        4. Select algorithm …
+        5. Observe …
     validations:
       required: true
   - type: dropdown
@@ -29,6 +31,10 @@ body:
         - Rendering (three.js / WebGL)
         - Audio
         - UI / Observatory / controls
+        - Lab / consciousness / sentience telemetry
+        - Tsotchke integration / provenance
+        - A-Life report / generated SVG or JSON
+        - Security / public route
         - Build / tooling / CI
         - Docs
     validations:
@@ -38,6 +44,18 @@ body:
     attributes:
       label: Environment
       placeholder: 'OS, browser + version, GPU, display (e.g. Win11, Chrome 124, RTX 5070 Ti, 4K)'
+    validations:
+      required: false
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence / falsifier
+      description: For docs/lab/AI/consciousness/Tsotchke issues, cite the exact file, route, test, generated asset, or claim that proves the problem.
+      placeholder: |
+        - Route or file:
+        - Seed/tier:
+        - Expected invariant:
+        - What would falsify the claim:
     validations:
       required: false
   - type: textarea

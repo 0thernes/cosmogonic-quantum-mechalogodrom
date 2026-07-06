@@ -216,6 +216,7 @@ function syncVersion(s: string): string {
       .replace(/Package\s+v?0\.[0-9]+\.[0-9]+/g, `Package v${VERSION}`)
       .replace(/v?0\.[0-9]+\.[0-9]+\s+@\s+current/g, `v${VERSION} @ current`)
       .replace(/version-0\.[0-9]+\.[0-9]+/g, `version-${VERSION}`)
+      .replace(/(\| Package version\s+\|\s+`)0\.[0-9]+\.[0-9]+(`)/g, `$1${VERSION}$2`)
       // TECH-SPEC / spec-header "**Version:** vX.Y.Z" — the one current-version marker this missed,
       // which left TECHNICAL-SPECIFICATION-2026-06-26.md stuck a version behind until hand-reconciled. Now durable.
       .replace(/(\*\*Version:\*\*\s+)v?0\.[0-9]+\.[0-9]+/g, `$1v${VERSION}`)

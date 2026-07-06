@@ -1,4 +1,4 @@
-<!-- reviewed: 2026-07-06 | V123 optimization sweep | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+<!-- reviewed: 2026-07-06 | v0.21.1 truth-surface sweep | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
 
 # Security Policy
 
@@ -23,14 +23,18 @@ assessment. Please do **not** open a public issue for security reports.
 This is a client-side WebGL simulation fronted by a deliberately tiny Bun
 server. Know the surface before deploying it anywhere public:
 
-| Surface                 | Notes                                                                                                                                                                                                                |
-| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `GET /` and `GET /docs` | Static, bundled HTML. No templating of user input.                                                                                                                                                                   |
-| `GET /api/health`       | Returns `{ ok, uptime, version }`. No secrets.                                                                                                                                                                       |
-| `POST /api/audit`       | Unauthenticated. Appends `{ action, detail?, ts }` to an in-memory ring capped at 200 entries; body-capped (8 KB → 413) and token-bucket rate-limited (60-burst / 30 per s → 429). Nothing is persisted server-side. |
-| `GET /api/audit`        | Returns an **HTML fragment** rendered from ring entries for HTMX polling. Entries originate from `POST /api/audit`, so all fields MUST be HTML-escaped at render time to prevent stored XSS.                         |
-| `localStorage`          | Keys `cqm.state` (preferences + RNG seed) and `cqm.audit.v1` (local audit ring). No credentials, no PII. Loads are versioned and corrupt-tolerant (`load()` never throws).                                           |
-| Cookies / auth / PII    | None. The app has no accounts and collects nothing.                                                                                                                                                                  |
+| Surface                                        | Notes                                                                                                                                                                                                                  |
+| ---------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET /`, `/docs`, `/spec`, `/bible`, `/lab`    | Static, bundled HTML. No templating of user input.                                                                                                                                                                     |
+| `GET /lab/consciousness`, `/lab/sentience`     | Static lab dashboards that load deterministic JSON feeds. They are proxy telemetry surfaces, not medical/psychological or sentience claims.                                                                            |
+| `GET /api/health`                              | Returns `{ ok, uptime, version }`. No secrets.                                                                                                                                                                         |
+| `GET /api/consciousness-lab`, `/sentience-lab` | Returns deterministic lab JSON. No credentials or PII.                                                                                                                                                                 |
+| `GET /api/ventures`, `/api/waitlist`           | Public JSON/demo surfaces. Treat as untrusted input/output boundaries if extended beyond the current demo behavior.                                                                                                    |
+| `POST /api/audit`                              | Unauthenticated. Appends `{ action, detail?, ts }` to an in-memory ring capped at 200 entries; body-capped (8 KB -> 413) and token-bucket rate-limited (60-burst / 30 per s -> 429). Nothing is persisted server-side. |
+| `GET /api/audit`                               | Returns an **HTML fragment** rendered from ring entries for HTMX polling. Entries originate from `POST /api/audit`, so all fields MUST be HTML-escaped at render time to prevent stored XSS.                           |
+| Optional Copilot/chat/tool APIs                | Provider-mediated surfaces. Keep production availability, keys, prompts, and third-party requests explicit; do not paste secrets into public side-chat paths.                                                          |
+| `localStorage`                                 | Keys `cqm.state` (preferences + RNG seed) and `cqm.audit.v1` (local audit ring). No credentials, no PII. Loads are versioned and corrupt-tolerant (`load()` never throws).                                             |
+| Cookies / auth / PII                           | None. The app has no accounts and collects nothing.                                                                                                                                                                    |
 
 ## Hardening checklist for public deployments
 

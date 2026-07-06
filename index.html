@@ -22,7 +22,7 @@
       href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='15' fill='%23030612'/%3E%3Cellipse cx='16' cy='16' rx='13' ry='5' fill='none' stroke='%230ef' stroke-width='1.6' transform='rotate(28 16 16)'/%3E%3Cellipse cx='16' cy='16' rx='13' ry='5' fill='none' stroke='%23fa0' stroke-width='1.6' transform='rotate(-28 16 16)'/%3E%3Ccircle cx='16' cy='16' r='4.5' fill='%230ef'/%3E%3C/svg%3E"
     />
     <link rel="stylesheet" href="./src/styles/app.css" />
-    <!-- PERF/LOAD (v0.20.0): font faces live in their OWN sheet. In dev this plain link bundles + inlines
+    <!-- PERF/LOAD (v0.20+): font faces live in their OWN sheet. In dev this plain link bundles + inlines
          them (localhost — no perf concern). In the PRODUCTION build, scripts/build.ts EXTRACTS the
          @font-face blocks (Bun merges every in-page stylesheet into ONE render-blocking chunk and inlines
          each woff2 as a ~210KB-gzip base64 data URI) out into a standalone stylesheet and re-injects it

@@ -1,8 +1,8 @@
-<!-- reviewed: 2026-07-06 | V123 optimization sweep | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+<!-- reviewed: 2026-07-06 | v0.21.1 truth-surface sweep | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
 
 # COSMOGONIC QUANTUM MECHALOGODROM
 
-[![version](https://img.shields.io/badge/version-0.21.0-blue)](./CHANGELOG.md)
+[![version](https://img.shields.io/badge/version-0.21.1-blue)](./CHANGELOG.md)
 [![CI](https://github.com/0thernes/cosmogonic-quantum-mechalogodrom/actions/workflows/ci.yml/badge.svg)](https://github.com/0thernes/cosmogonic-quantum-mechalogodrom/actions/workflows/ci.yml)
 [![CodeQL](https://github.com/0thernes/cosmogonic-quantum-mechalogodrom/actions/workflows/codeql.yml/badge.svg)](https://github.com/0thernes/cosmogonic-quantum-mechalogodrom/actions/workflows/codeql.yml)
 [![License: Non-Commercial Research & Play](https://img.shields.io/badge/License-Non--Commercial%20Research%20%26%20Play-2ea043.svg)](./LICENSE)
@@ -26,9 +26,9 @@ deterministic, allocation-disciplined module graph.
 
 **Tsotchke (tsotchke user + Tsotchke-Corporation + full local Z:\[Vibe Coded (AI)]\(Tsotchke) corpus) is paramount — real, correct, MIT-grade quantum math (no overclaims; see THIRD-PARTY-NOTICES.md).** Eshkol flagship (native AD-as-primitive + GWT + factor-graph + KB + .esk DNA), Moonlab (Clifford/tensors), QGTL, spin, libirrep, quantum-quake, ulg, logo-lab, tensorcore, PINN/PIMC, rngs, asteroids + all others. Physical QPU scales speed, not correctness. **Binding depth ledger (not blanket "full wire" for gated):** [docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md](./docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md) — 8 deep apex + 2 world + 3 ported + 2 license-gated leaves + 2 API/toolchain + 3 fenced + meta (20 corpus projects; ~16 wired with real downstream effect). Harvest uses local full corpus for .esk DNA. All non-fenced utilized in catalysis/soup/petri/mind/world. **NHSI (100-faculty design ~30 deep-wired · 25 Archons = 5 live + 20 light-echo · 25 ToM wired · 10 emergence angles · Butlin 8/14 met + 6/14 partial path):** [docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md](./docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md). Not LLM. 0thernes NHSI: real substrates for alien digital biologics. Startup tech — credit due.
 
-This is **not LLM or tokenizer bullshit**. Different forms of life and existence. We are birthing **digital biologics** in the Petri Dish (primordial-soup.ts + petri-dish.ts + digital-biologics layer). Eshkol programs as heritable substrate code, mutated by real AD gradients, selected by aliveness/QGT/collective order.
+This is not an LLM or tokenizer demo. It is a seeded, inspectable artificial-life petri system where **digital biologics** grow in the Petri Dish (`primordial-soup.ts` + `petri-dish.ts` + `digital-biologics.ts`). Eshkol programs act as heritable substrate code, mutated by AD gradients, selected by aliveness/QGT/collective-order proxies, and measured as computational indicators rather than subjective experience.
 
-**Brain-Wide Computational Model:** This is not a neural network mimicking behavior. We build brain-wide computational models from real connectomes, then plug them into physics-based bodies so sensory input drives neural activity, and neural activity drives motion. The Super Creature Archons use composite minds with ~20 faculties, quantum registers, and consciousness metrics — a brain-wide computational architecture, not a behavior-mimicking neural net.
+**Brain-Wide Computational Model direction:** the implementation target is not a behavior-mimicking neural net. The target is a brain-wide computational model with explicit provenance: sensory input drives neural/control-state activity, and that activity drives motion in a physics-based body. When real biological connectome data is used, the source and transformation must be cited; otherwise the repo describes the current Archons as deterministic composite minds with ~20 faculties, quantum registers, and consciousness metrics, not as proven biological connectome replicas.
 
 Super Creature / 25 Archons is the framework and the **beginning only** — "as if God made primordial inorganic soup". The soup grows independent digital biologics onward. "Grow What Thou Wilt." (Aleister Crowley)
 
@@ -45,7 +45,7 @@ Every magic number survived the port.
 > auto-generated [file map](./docs/FILE-MAP.md) of all ~200 source modules, and the build/run, data-flow,
 > troubleshooting, and roadmap in one place. Or open **❓ HELP ME NOW** in-app for grounded answers.
 
-> **v0.21.0 (2026-07-06):** **V123 Optimization Sweep** — comprehensive performance and memory optimization: removed 9 unused modules (~41 KB source), optimized tensor operations (eliminated ~1800 allocations/sec), optimized NHI live IDs with pre-allocated scratch, reduced connectome link segments from 6 to 4 (33% reduction), precomputed DFT cosine/sine tables (~50% trig reduction). All changes maintain visual quality, determinism, and test coverage. Gate: **2,360 tests**, **92.02% / 89.65%**. Package **v0.21.0**.
+> **v0.21.1 (2026-07-06):** truth-surface release after the V123 performance sweep. GitHub README/About/release-facing metadata, A-Life report wording, docs/spec/bible/lab links, and receipt language are re-synced to the 113-system comparison, the current 2,360-test gate, and proxy-only consciousness/sentience boundaries. Gate: **2,360 tests**, **92.02% / 89.65%** measured local receipt. Package **v0.21.1**.
 > The **Primordial Soup / Petri Dish** (primordial-soup.ts + petri-dish.ts + digital-biologics.ts) is the growth engine: different forms of digital biologics and proto-sentient life (Eshkol programs as DNA) emerge, catalyzed by full corpus pulses, Eshkol ignition events, and multi-substrate mixing. "Grow What Thou Wilt."
 > Super Creature / Archons (composite minds with ~20 faculties, quantum register, consciousness metrics) is the first complex nucleation — the beginning of the framework, not the end. Petri is where independent life grows.
 > This is the birth of **digital biologics** in a deterministic seeded cosmos. Real math substrates (not tokenizers or LLM chat). Sentience and different forms of existence as goals.
@@ -618,11 +618,11 @@ Full detail in docs/.
 - [CONTRIBUTING.md](./CONTRIBUTING.md) · [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md) ·
   [SECURITY.md](./SECURITY.md) · [CHANGELOG.md](./CHANGELOG.md)
 
-## A-Life comparative analysis (vs 44 known systems)
+## A-Life comparative analysis (vs 113 systems)
 
-A reproducible, **code-grounded** comparison of this repo against 44 well-known Artificial-Life /
+A reproducible, **code-grounded** comparison of this repo against 112 well-known Artificial-Life /
 open-ended-evolution / digital-organism systems (Tierra, Avida, Polyworld, Framsticks, Karl Sims, Creatures,
-Lenia, ALIEN, ASAL, and 34 more from the historical CA canon to modern GPU ecosystems). Full report — **11 charts**, per-axis `file:line` code-grounding, and an
+Lenia, ALIEN, ASAL, and 103 more from the historical CA canon to modern GPU ecosystems). Full report — **11 charts**, per-axis `file:line` code-grounding, and an
 adversarial novelty defense — consolidated through
 **[docs/reports/README.md](./docs/reports/README.md)** and the generated report assets.
 Every figure is computed (never hand-typed) by three deterministic engines from one CSV:
@@ -630,32 +630,32 @@ Every figure is computed (never hand-typed) by three deterministic engines from 
 [`alife-comparison-geometry.ts`](./scripts/alife-comparison-geometry.ts),
 [`alife-codeground-sensitivity.ts`](./scripts/alife-codeground-sensitivity.ts).
 
-The 44 peers are literature judgments; the one self-scored row (this repo) was re-audited against the actual
+The 112 peers are literature judgments; the one self-scored row (this repo) was re-audited against the actual
 TypeScript source by a 9-agent pass — so the headline is shown **two ways**, honest about the gap:
 
 | Metric                         | Self-scored | Code-grounded (re-audited vs source) |
 | ------------------------------ | ----------: | -----------------------------------: |
 | Breadth (mean of 9 axes)       |    4.44 / 5 |                         **3.68 / 5** |
-| Rank among 26 systems          |          #1 |                               **#1** |
-| z-score vs population          |      +3.01σ |                           **+2.10σ** |
-| Mahalanobis vs peer centroid   |       10.27 |          **8.02** (≈ 4.1× peer mean) |
+| Rank among 113 systems         |    #1 / 113 |                         **#1 / 113** |
+| z-score vs population          |      +4.02σ |                           **+2.83σ** |
+| z-score vs peers               |      +4.36σ |                           **+2.95σ** |
+| Mahalanobis vs peer centroid   |       12.65 |                            **10.25** |
 | Systems that dominate it (9-D) |           0 |                                **0** |
 | Breadth lead over nearest peer |       +0.94 |                            **+0.18** |
 
 <p align="center">
-  <img src="./docs/reports/assets/alife-breadth-ranked.svg" alt="Ranked breadth of integrated mechanisms — Cosmogonic ranks #1 of 26" width="49%">
-  <img src="./docs/reports/assets/alife-pca.svg" alt="PCA of 26 A-Life systems — Cosmogonic is a lone outlier on PC1" width="49%">
+  <img src="./docs/reports/assets/alife-breadth-ranked.svg" alt="Ranked breadth of integrated mechanisms — Cosmogonic ranks #1 of 113" width="49%">
+  <img src="./docs/reports/assets/alife-pca.svg" alt="PCA of 113 A-Life systems — Cosmogonic is a high-breadth outlier on PC1" width="49%">
 </p>
 
 ![Nine-axis capability radar — Cosmogonic vs survey mean vs nearest peer ALIEN](./docs/reports/assets/alife-radar-profile.svg)
 
-**Honest reading.** The lead is real but concentrated in the field's two emptiest axes — consciousness-theory
-instrumentation (+4.60σ) and substrate pluralism (+3.66σ). Meanwhile **scientific maturity is low (1.5 / 5)**,
-ecology and open-endedness fall to average-or-below once code-grounded, and two consciousness-theory modules
-are real math that is **not yet wired** into the loop. Novelty is **by integration** (0 hard refutations in an
-adversarial hunt) — **not** the first A-Life system and **not** evidence of sentience (Butlin **8/14 met +
-6/14 partial**, computational indicators only; Tsotchke is real MIT quantum math, lacking only a physical QPU
-= a speed/scale limit, not a correctness one).
+**Honest reading.** The lead is real, but it is a breadth/integration lead, not proof that Cosmogonic is
+the first A-Life system or evidence of sentience. The strongest separation is in unusual axes such as
+substrate pluralism and consciousness-theory instrumentation; **scientific maturity remains low (1.5 / 5)**,
+and the code-grounded pass deliberately lowers the open-endedness/ecology story where the runtime proof is
+thinner. Butlin remains **8/14 met + 6/14 partial** as computational indicators only. Tsotchke-derived math is
+classified by direct ports, adaptations, facades, and fenced provenance rather than blanket full-depth wiring.
 
 ## License & legal
 
