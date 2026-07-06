@@ -11,7 +11,21 @@ changed and why.
 
 ---
 
-## 2026-07-06 (pass 18) — v0.21.7 truth-surface nav polish
+## 2026-07-06 (pass 19) — MEGA-MASTER brain/consciousness assessment Pass 1 of 3
+
+Synthesized five prior agent reports (Gemini Antigravity ×2, Composer 2.5, Devin SWE 1.6, Codex GPT 5.5) plus the NHSI Progress Dashboard into a unified mega-assessment at `docs/MEGA-MASTER-CONSCIOUSNESS-BRAIN-SENTIENCE-ASSESSMENT-PASS-1-2026-07-06.md`.
+
+### Content
+
+- Reconciled version/breadth/Butlin/coupling conflicts against `VERIFICATION-ANALYTICAL-DATA.md` (v0.21.7, 4.44/5 A-Life breadth, 8/14+6 partial).
+- Unified 12-substrate brain inventory, full consciousness theory matrix, Tsotchke per-repo wiring, multi-perspective reasoning grid, academic scrutiny ladder, folder inventory, wired-vs-scaffolded ledger, P0–P8 roadmap, and Pass 2/3 preview.
+- NHSI dashboard now links the mega report as primary assessment surface.
+
+### Claim boundary
+
+- Explicitly `indicatorOnly`; no phenomenal sentience claims.
+
+---
 
 Follow-up to the `v0.21.6` clean release-tag repair: no code-path changes, only public-surface alignment.
 
