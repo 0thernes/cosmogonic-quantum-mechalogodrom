@@ -36,6 +36,7 @@ body:
         - A-Life report / generated SVG or JSON
         - Security / public route
         - Build / tooling / CI
+        - Consciousness / Sentience Lab
         - Docs
     validations:
       required: true

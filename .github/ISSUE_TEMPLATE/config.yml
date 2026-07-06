@@ -3,6 +3,9 @@ contact_links:
   - name: 📐 Architecture & contracts
     url: https://github.com/0thernes/cosmogonic-quantum-mechalogodrom/blob/main/docs/MODULE-CONTRACTS-2026-06-26.md
     about: Read the binding module contracts and complexity budget before proposing structural changes.
+  - name: 🧠 Consciousness Lab
+    url: https://0thernes.github.io/cosmogonic-quantum-mechalogodrom/lab/consciousness
+    about: Ten-framework consciousness-indicator dashboard (computational correlates, not sentience claims).
   - name: 🔒 Security policy
     url: https://github.com/0thernes/cosmogonic-quantum-mechalogodrom/blob/main/SECURITY.md
     about: Please report security issues privately per the policy rather than opening a public issue.

@@ -11,6 +11,25 @@ changed and why.
 
 ---
 
+## 2026-07-06 (pass 16) — 113-system A-Life truth surfaces (v0.21.1)
+
+On top of v0.21.0 V123 perf sweep: doc/deploy truth refresh only.
+
+### A-Life
+
+- Survey prose **25/44 → 113 systems** in README, docs.html, specs.html, NHSI dashboard.
+- Regenerated **11 SVG charts** + embed; fixed geometry `chartPca` nSystems param.
+
+### Surfaces
+
+- Consciousness + Sentience Lab URLs; issue template contact links; CHANGELOG 0.21.1.
+
+### Gate
+
+- `bun run check` green — **2308** test floor · **84.64% / 82.21%**.
+
+---
+
 ## 2026-07-06 (pass 15) — Native leak + worker wait queue + truth surfaces (v0.20.0)
 
 Full-repo debug pass: gates green; performance hygiene only — no render/sim/faculty reductions.
