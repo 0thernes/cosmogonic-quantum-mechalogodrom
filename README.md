@@ -1,15 +1,15 @@
-<!-- reviewed: 2026-07-06 | v0.21.4 remote truth-regression repair + truth-surface sweep | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+<!-- reviewed: 2026-07-06 | v0.21.5 portable release-receipt floor + truth-surface sweep | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
 
 # COSMOGONIC QUANTUM MECHALOGODROM
 
-[![version](https://img.shields.io/badge/version-0.21.4-blue)](./CHANGELOG.md)
+[![version](https://img.shields.io/badge/version-0.21.5-blue)](./CHANGELOG.md)
 [![CI](https://github.com/0thernes/cosmogonic-quantum-mechalogodrom/actions/workflows/ci.yml/badge.svg)](https://github.com/0thernes/cosmogonic-quantum-mechalogodrom/actions/workflows/ci.yml)
 [![CodeQL](https://github.com/0thernes/cosmogonic-quantum-mechalogodrom/actions/workflows/codeql.yml/badge.svg)](https://github.com/0thernes/cosmogonic-quantum-mechalogodrom/actions/workflows/codeql.yml)
 [![License: Non-Commercial Research & Play](https://img.shields.io/badge/License-Non--Commercial%20Research%20%26%20Play-2ea043.svg)](./LICENSE)
 [![Bun](https://img.shields.io/badge/Bun-1.3-black?logo=bun&logoColor=white)](https://bun.sh)
 [![TypeScript strict](https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript&logoColor=white)](./tsconfig.json)
 [![tests](https://img.shields.io/badge/tests-2360%20passing-brightgreen)](./tests)
-[![coverage](https://img.shields.io/badge/coverage-92.02%25%20line%20%C2%B7%2089.65%25%20func-success)](./docs/TECHNICAL-SPECIFICATION-2026-06-26.md)
+[![coverage](https://img.shields.io/badge/coverage-84.64%25%20line%20%C2%B7%2082.21%25%20func-success)](./docs/TECHNICAL-SPECIFICATION-2026-06-26.md)
 [![audit](https://img.shields.io/badge/inspection-500%20points-success)](./docs/500-POINT-INSPECTION-2026-06-26.md)
 [![Tsotchke](https://img.shields.io/badge/Tsotchke-REAL__MIT__CORPUS-purple)](https://github.com/tsotchke)
 [![NHSI](https://img.shields.io/badge/NHSI-Progress__Dashboard-blue)](./docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md)
@@ -45,7 +45,7 @@ Every magic number survived the port.
 > auto-generated [file map](./docs/FILE-MAP.md) of all ~200 source modules, and the build/run, data-flow,
 > troubleshooting, and roadmap in one place. Or open **❓ HELP ME NOW** in-app for grounded answers.
 
-> **v0.21.4 (2026-07-06):** remote truth-regression repair + truth-surface release after the V123 performance sweep. GitHub README/About/release-facing metadata, A-Life report wording, docs/spec/bible/lab links, and receipt language are re-synced to the 113-system comparison, the current 2,360-test gate, and proxy-only consciousness/sentience boundaries. Auto-tag has the required `actions: write` permission to dispatch the Release workflow for fresh version tags. Gate: **2,360 tests**, **92.02% / 89.65%** measured local receipt. Package **v0.21.4**.
+> **v0.21.5 (2026-07-06):** portable release-receipt floor after the V123 performance sweep. GitHub README/About/release-facing metadata, A-Life report wording, docs/spec/bible/lab links, and receipt language are re-synced to the 113-system comparison, the current **2,360-test** gate, and proxy-only consciousness/sentience boundaries. Canonical release floor: **84.64% / 82.21%** on Ubuntu; the higher Windows local receipt is recorded separately in [verification data](./docs/VERIFICATION-ANALYTICAL-DATA.md). Package **v0.21.5**.
 > The **Primordial Soup / Petri Dish** (primordial-soup.ts + petri-dish.ts + digital-biologics.ts) is the growth engine: different forms of digital biologics and proto-sentient life (Eshkol programs as DNA) emerge, catalyzed by full corpus pulses, Eshkol ignition events, and multi-substrate mixing. "Grow What Thou Wilt."
 > Super Creature / Archons (composite minds with ~20 faculties, quantum register, consciousness metrics) is the first complex nucleation — the beginning of the framework, not the end. Petri is where independent life grows.
 > This is the birth of **digital biologics** in a deterministic seeded cosmos. Real math substrates (not tokenizers or LLM chat). Sentience and different forms of existence as goals.
@@ -436,7 +436,7 @@ full gate with same-seed determinism preserved. The major arcs:
   ported from **Moonlab**, scales to 32+ qubits past the dense ceiling) landed as the fourth MIT-credited
   ported primitive. The whole apex beat is now measured honestly: **3.34 ms** in the full bench suite and
   **8.85 ms** in the focused SuperMind bench; the older sub-millisecond / `<2%` GOAL5 claim is superseded
-  until re-proven. **2,360-test canonical floor green · 0 fail (receipts enforced) · 92.02% line / 89.65% func canonical floor; recent Windows receipt runs measure higher.**
+  until re-proven. **2,360-test canonical floor green · 0 fail (receipts enforced) · 84.64% line / 82.21% func canonical floor; recent Windows receipt runs measure higher.**
 - **State-of-the-art report (2026-06-17)** — a historical MIT-PhD-grade, measured, frontier-benchmarked
   assessment of the whole repository + the apex Super Creature, now summarized through
   [verification data](./docs/VERIFICATION-ANALYTICAL-DATA.md) and

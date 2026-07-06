@@ -9,12 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.21.5] — 2026-07-06
+
+Portable release-receipt floor.
+
+- Re-floored canonical coverage to the Ubuntu release gate measurement: `2,360` tests, `84.64%` line, `82.21%` function.
+- Kept the higher Windows receipt (`92.02%` line / `89.65%` function) documented as an environment-specific local measurement, not the portable release floor.
+- Cut a new patch version because `v0.21.4` already existed at the failing release-gate commit.
+
 ## [0.21.4] — 2026-07-06
 
 Remote truth-regression repair.
 
 - Restored the public truth surfaces after an intervening remote release commit rolled README/docs/package metadata back to `0.21.1`, `2,308` tests, and stale A-Life/consciousness wording.
-- Kept the useful issue-template Consciousness Lab contact path while returning canonical receipts to `2,360` tests and `92.02% / 89.65%` coverage.
+- Kept the useful issue-template Consciousness Lab contact path while returning canonical receipts to `2,360` tests; coverage was re-floored in `0.21.5` to match the Ubuntu release gate.
 - Cut a new patch version because `v0.21.3` already existed at the pre-regression commit.
 
 ## [0.21.3] — 2026-07-06

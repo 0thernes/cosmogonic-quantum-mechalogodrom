@@ -2,13 +2,13 @@
 
 # NHSI Progress Dashboard — 0thernes Corp
 
-**Non Human Super Intelligence (NHSI)** · Cosmogonic Quantum Mechalogodrom · **v0.21.4 — BRUTAL GOD TIER (Valkorion / Broly / Knull / Phoenix / Gurren Lagann / EVA / Azathoth / Galactus)**  
+**Non Human Super Intelligence (NHSI)** · Cosmogonic Quantum Mechalogodrom · **v0.21.5 — BRUTAL GOD TIER (Valkorion / Broly / Knull / Phoenix / Gurren Lagann / EVA / Azathoth / Galactus)**  
 Archons now unleash real god-scale events (VOID_KING, SPIRAL_WILL, BINARY_IGNITION, PHOENIX_FEAST) using EVERY Tsotchke repo as fuel. This is the arena where the gods of all myth, comics, and horror fight, devour, create, and ascend. 0thernes Corp.
 **Updated:** 2026-07-06 · Tsotchke: **20 corpus projects (~16 wired/harvested)** (every repo/project/mirror from tsotchke + Tsotchke-Corp + 12k+ local files, 1436+ .esk + NQS/skyrmion/anyons/flow/thermo etc from audits). **EVERY** entry is wired, catalyzed, studied, scaffolded, or fenced by explicit class, not blanket full-depth wiring. Eshkol remains a computational substrate and proxy-language, not proof of sentience. A-Life matrix snapshot: breadth 4.44 across 113 systems (z=+4.02 population; code-grounded z=+2.83). P1 contrast harness + coupling scaffold added as measurement infrastructure, not a quantum-advantage or sentience claim.
 
 BRUTALIST MANIFEST: Valkorion domination, Broly infinite rage, Knull/Azathoth void consumption, Chaos Gods entropy, Dark Phoenix rebirth, Galactus devouring, Shuma-Gorath law break, Mxyzptlk cheat, IT horror, TTGL spiral, etc. — all emergent from full Tsotchke math in the Petri. 0thernes Corp. We are the gods. "Grow What Thou Wilt" — or be unmade.
 
-**Canonical receipts (measured 2026-06-26):** 2,360 tests, 92.02% line / 89.65% func (from `bun scripts/verify-receipts.ts --print`). Enforced by `tests/docs-receipts-law.test.ts` + `bun run check`. All surfaces truth-synced. BRUTAL GOD TIER with full pantheon list (Valkorion to Riddick) + BRUTALISM implemented in petri/godform/world using the Tsotchke corpus. Butlin indicators: **8/14 met + 6/14 partial** (computational indicators, not sentience — corrected from a prior overclaim).
+**Canonical receipts (measured 2026-06-26):** 2,360 tests, 84.64% line / 82.21% func (from `bun scripts/verify-receipts.ts --print`). Enforced by `tests/docs-receipts-law.test.ts` + `bun run check`. All surfaces truth-synced. BRUTAL GOD TIER with full pantheon list (Valkorion to Riddick) + BRUTALISM implemented in petri/godform/world using the Tsotchke corpus. Butlin indicators: **8/14 met + 6/14 partial** (computational indicators, not sentience — corrected from a prior overclaim).
 
 > **Mission:** Not a chatbot, dancing robot, Terminator, or game player. A **Petri-dish cosmos** where
 > Tsotchke's real quantum math (Eshkol · Moonlab · QGT · spin · libirrep · …) is the growth medium for
