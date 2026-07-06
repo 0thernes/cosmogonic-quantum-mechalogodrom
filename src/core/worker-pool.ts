@@ -52,6 +52,8 @@ export class WorkerPool {
   private readonly availableWorkers: Worker[] = [];
   private readonly activeTasks = new Map<string, Worker>();
   private readonly pendingResults = new Map<string, WorkerResult>();
+  /** Event-driven waiters — avoids 1 ms polling in waitForResult. */
+  private readonly pendingWaits = new Map<string, (result: WorkerResult) => void>();
   private readonly config: WorkerPoolConfig;
   private workerScriptUrl: string | null = null;
   /** Reused SharedArrayBuffers keyed by byte length (SAB path only). */
@@ -113,30 +115,53 @@ export class WorkerPool {
    * Handle worker message
    */
   private handleWorkerMessage(worker: Worker, result: WorkerResult): void {
-    // Mark worker as available
-    const index = this.activeTasks.get(result.id);
-    if (index === worker) {
+    if (this.activeTasks.get(result.id) === worker) {
       this.activeTasks.delete(result.id);
       this.availableWorkers.push(worker);
     }
 
-    // Store result
-    this.pendingResults.set(result.id, result);
+    this.deliverResult(result);
   }
 
   /**
-   * Handle worker error
+   * Handle worker error — must settle any in-flight task or waitForResult hangs forever.
    */
   private handleWorkerError(worker: Worker, error: ErrorEvent): void {
     console.error('Worker error:', error);
-    // Mark worker as available
-    const workerIndex = this.workers.indexOf(worker);
-    if (workerIndex !== -1) {
-      const availableIndex = this.availableWorkers.indexOf(worker);
-      if (availableIndex === -1) {
-        this.availableWorkers.push(worker);
+
+    let taskId: string | undefined;
+    for (const [id, activeWorker] of this.activeTasks) {
+      if (activeWorker === worker) {
+        taskId = id;
+        break;
       }
     }
+
+    if (taskId !== undefined) {
+      this.activeTasks.delete(taskId);
+      this.deliverResult({
+        id: taskId,
+        type: 'wilderness',
+        data: new Float32Array(0),
+        success: false,
+        error: error.message || 'Worker error',
+      });
+    }
+
+    if (!this.availableWorkers.includes(worker)) {
+      this.availableWorkers.push(worker);
+    }
+  }
+
+  /** Resolve a registered waiter or stash for a late poll. */
+  private deliverResult(result: WorkerResult): void {
+    const waiter = this.pendingWaits.get(result.id);
+    if (waiter) {
+      this.pendingWaits.delete(result.id);
+      waiter(result);
+      return;
+    }
+    this.pendingResults.set(result.id, result);
   }
 
   /**
@@ -233,17 +258,20 @@ export class WorkerPool {
 
     this.activeTasks.set(task.id, worker);
 
+    // Copy before transfer so caller-owned pooled buffers (wilderness taskBuffers) are not detached.
+    const payload = new Float32Array(task.data);
+
     // Send task to worker with transferable buffer
     worker.postMessage(
       {
         id: task.id,
         type: task.type,
-        data: task.data,
+        data: payload,
         seed: task.seed,
         chunkId: task.chunkId,
         useSharedArrayBuffer: false,
       },
-      [task.data.buffer],
+      [payload.buffer],
     );
 
     // Wait for result
@@ -260,16 +288,18 @@ export class WorkerPool {
   }
 
   /**
-   * Wait for task result
+   * Wait for task result (event-driven; no busy polling).
    */
-  private async waitForResult(taskId: string): Promise<WorkerResult> {
-    while (!this.pendingResults.has(taskId)) {
-      await new Promise((resolve) => setTimeout(resolve, 1));
+  private waitForResult(taskId: string): Promise<WorkerResult> {
+    const cached = this.pendingResults.get(taskId);
+    if (cached) {
+      this.pendingResults.delete(taskId);
+      return Promise.resolve(cached);
     }
 
-    const result = this.pendingResults.get(taskId)!;
-    this.pendingResults.delete(taskId);
-    return result;
+    return new Promise((resolve) => {
+      this.pendingWaits.set(taskId, resolve);
+    });
   }
 
   /**
@@ -300,6 +330,7 @@ export class WorkerPool {
     this.availableWorkers.length = 0;
     this.activeTasks.clear();
     this.pendingResults.clear();
+    this.pendingWaits.clear();
   }
 }
 

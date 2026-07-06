@@ -54,6 +54,8 @@ export class WildernessPopulation {
   private nextEntityId = 0;
   /** Pre-allocated worker task buffers — one per max active chunk (parallel-safe). */
   private readonly taskBuffers: Float32Array[];
+  /** Serializes worker frames so pooled buffers are not reused while a transfer is in flight. */
+  private pendingWorkerFrame: Promise<void> = Promise.resolve();
 
   constructor(workerPool: WorkerPool | null, baseSeed: number) {
     this.workerPool = workerPool;
@@ -164,6 +166,10 @@ export class WildernessPopulation {
       return;
     }
 
+    this.pendingWorkerFrame = this.pendingWorkerFrame.then(() => this.runWorkerUpdates(dt));
+  }
+
+  private async runWorkerUpdates(dt: number): Promise<void> {
     const jobs: Promise<void>[] = [];
     let bi = 0;
     for (const [chunkId, chunk] of this.chunks) {
@@ -172,7 +178,7 @@ export class WildernessPopulation {
       bi++;
       jobs.push(this.updateChunkOnWorker(chunkId, chunk, dt, bufIndex));
     }
-    void Promise.all(jobs);
+    await Promise.all(jobs);
   }
 
   private async updateChunkOnWorker(

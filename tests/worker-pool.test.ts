@@ -252,4 +252,114 @@ describe('Phase 3.1: Worker Pool', () => {
       value: originalWorker,
     });
   });
+
+  test('executeWithTransferable does not detach caller-owned buffer views', async () => {
+    const originalWorker = globalThis.Worker;
+    const originalNavigator = globalThis.navigator;
+
+    class TransferWorker {
+      onmessage: ((event: MessageEvent) => void) | null = null;
+      onerror: ((event: ErrorEvent) => void) | null = null;
+      postMessage(msg: WorkerTask & { useSharedArrayBuffer: boolean }): void {
+        const out = new Float32Array(msg.data);
+        for (let i = 0; i < out.length; i++) out[i] = (out[i] ?? 0) + 1;
+        this.onmessage?.({
+          data: { id: msg.id, type: msg.type, data: out, success: true },
+        } as MessageEvent);
+      }
+      terminate(): void {}
+    }
+
+    Object.defineProperty(globalThis, 'Worker', {
+      configurable: true,
+      value: TransferWorker,
+    });
+    Object.defineProperty(globalThis, 'navigator', {
+      configurable: true,
+      value: { hardwareConcurrency: 2 },
+    });
+
+    const pool = new WorkerPool({
+      maxWorkers: 1,
+      useSharedArrayBuffer: false,
+      qualityTier: 'desktop',
+    });
+    await pool.initialize('/fake-worker.js');
+
+    const owned = new Float32Array([1, 2, 3, 4]);
+    const task: WorkerTask = {
+      id: 'detach-guard',
+      type: 'wilderness',
+      data: owned,
+      seed: 99,
+      chunkId: '0,0',
+    };
+
+    const result = await pool.executeAsync(task);
+    expect(result.success).toBe(true);
+    expect(owned.byteLength).toBe(16);
+    expect(owned[0]).toBe(1);
+
+    pool.dispose();
+    Object.defineProperty(globalThis, 'navigator', {
+      configurable: true,
+      value: originalNavigator,
+    });
+    Object.defineProperty(globalThis, 'Worker', {
+      configurable: true,
+      value: originalWorker,
+    });
+  });
+
+  test('worker onerror settles the in-flight task (no hung waitForResult)', async () => {
+    const originalWorker = globalThis.Worker;
+    const originalNavigator = globalThis.navigator;
+
+    class ErrorWorker {
+      onmessage: ((event: MessageEvent) => void) | null = null;
+      onerror: ((event: ErrorEvent) => void) | null = null;
+      postMessage(): void {
+        this.onerror?.({ message: 'boom' } as ErrorEvent);
+      }
+      terminate(): void {}
+    }
+
+    Object.defineProperty(globalThis, 'Worker', {
+      configurable: true,
+      value: ErrorWorker,
+    });
+    Object.defineProperty(globalThis, 'navigator', {
+      configurable: true,
+      value: { hardwareConcurrency: 1 },
+    });
+
+    const pool = new WorkerPool({
+      maxWorkers: 1,
+      useSharedArrayBuffer: false,
+      qualityTier: 'desktop',
+    });
+    await pool.initialize('/fake-worker.js');
+
+    const result = await pool.executeAsync({
+      id: 'error-task',
+      type: 'wilderness',
+      data: new Float32Array(4),
+      seed: 1,
+      chunkId: '0,0',
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('boom');
+    expect(pool.getStats().activeTasks).toBe(0);
+
+    pool.dispose();
+    Object.defineProperty(globalThis, 'navigator', {
+      configurable: true,
+      value: originalNavigator,
+    });
+    Object.defineProperty(globalThis, 'Worker', {
+      configurable: true,
+      value: originalWorker,
+    });
+  });
 });
