@@ -96,7 +96,7 @@ export class SuccessorRepresentation {
    * This is the discounted future reward the creature expects if it commits to plan p now — the quantity
    * that biases the myopic drive argmax toward model-based choices. Allocation-free; O(K²).
    */
-  lookahead(reward: ArrayLike<number>, out: number[]): void {
+  lookahead(reward: ArrayLike<number>, out: number[] | Float32Array): void {
     const K = SR_STATES;
     for (let p = 0; p < K; p++) {
       const row = p * K;

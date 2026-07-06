@@ -91,10 +91,10 @@ export function stepSync(net: HopfieldNet, s: readonly number[]): number[] {
  */
 export function recall(
   net: HopfieldNet,
-  probe: readonly number[],
+  probe: readonly number[] | Float32Array,
   maxSweeps = 50,
 ): { state: number[]; sweeps: number; converged: boolean } {
-  const s = probe.slice();
+  const s = Array.from(probe);
   for (let sweep = 1; sweep <= maxSweeps; sweep++) {
     let changed = false;
     for (let i = 0; i < net.n; i++) {

@@ -64,6 +64,7 @@ export class DarkEnergy {
   private beatCount = 0;
   private readonly tA = new Float32Array(4);
   private readonly tB = new Float32Array(4);
+  private readonly mpoField = new Float32Array(4);
 
   /** Step the dark-energy field one sim beat. */
   step(energyDensity: number, matterDensity: number): void {
@@ -116,8 +117,11 @@ export class DarkEnergy {
     this.expansionRate = clamp01(this.expansionRate + ((sym % 3) - 1) * 0.002);
 
     // MPO: compress Λ field across bond-dim (time-series compression)
-    const scratchField = new Float32Array([this.lambda, this.phi, this.w + 1, this.hubble]);
-    const mpoOut = moonlabMpoStep(scratchField, 2, 4);
+    this.mpoField[0] = this.lambda;
+    this.mpoField[1] = this.phi;
+    this.mpoField[2] = this.w + 1;
+    this.mpoField[3] = this.hubble;
+    const mpoOut = moonlabMpoStep(this.mpoField, 2, 4);
     this.lambda = clamp01(this.lambda + Math.abs(mpoOut) * 0.001);
 
     // quakePerturb: vacuum quantum fluctuations

@@ -107,7 +107,12 @@ export class EligibilityLearner {
    * Mutates both `this.trace` and `weights` in place. Returns the L1 norm of the trace (telemetry).
    * Deterministic, bounded, O(n), no alloc.
    */
-  step(weights: number[], input: readonly number[], reward: number, cfg: LearnConfig): number {
+  step(
+    weights: number[] | Float32Array,
+    input: readonly number[] | Float32Array,
+    reward: number,
+    cfg: LearnConfig,
+  ): number {
     const n = weights.length < this.trace.length ? weights.length : this.trace.length;
     const r = Number.isFinite(reward) ? reward : 0;
     const step = cfg.rate * r;

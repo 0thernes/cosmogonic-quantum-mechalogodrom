@@ -616,18 +616,18 @@ export class SuperMind {
   private readonly organSum = new Float32Array(4);
   private readonly metaIn = new Float32Array(LATENT * 3 + 4 + SUPER_QUANTUM + 3 + 4); // 69
   private readonly affIn = new Float32Array(12);
-  private readonly quantumOut: number[] = Array.from({ length: SUPER_QUANTUM }, () => 0);
+  private readonly quantumOut = new Float32Array(SUPER_QUANTUM);
   private readonly latent: Float32Array;
   private readonly imagined = new Float32Array(LATENT);
   private readonly spinField = new Float32Array(SPIN_SIZE); // situational drive into the instinct lattice
   /** Bipolar probe buffer for Hopfield recall (no per-beat allocation). */
-  private readonly hopProbe = Array.from({ length: SPIN_SIZE }, () => 0);
+  private readonly hopProbe = new Float32Array(SPIN_SIZE);
   private readonly phiMods = new Float32Array(8); // V89: the 8 named module-summary scalars for the Φ proxy
   private readonly pcObs = new Float32Array(4); // V103: clamped sensory layer for hierarchical PC
   private readonly aifObs = new Float32Array(AIF_OBS); // V1.1: observation vector fed to the free-energy core
-  private readonly aifG: number[] = Array.from({ length: SUPER_PLANS.length }, () => 0); // per-plan EFE
+  private readonly aifG = new Float32Array(SUPER_PLANS.length); // per-plan EFE
   private readonly srReward = new Float32Array(SUPER_PLANS.length); // V1.1: per-plan drive → SR look-ahead
-  private readonly srValue: number[] = Array.from({ length: SUPER_PLANS.length }, () => 0); // SR plan values
+  private readonly srValue = new Float32Array(SUPER_PLANS.length); // SR plan values
   private readonly attentionSalience = new Float32Array(SUPER_PLANS.length); // GWT-4 plan salience scratch
   private readonly qObs = new Float64Array(3 * QMIND_QUBITS); // V1.2: register Bloch observables → QRC
   // V96 · ONLINE LEARNING — the Stratum-X adaptation channel: a seeded, bounded, reward-reinforced
@@ -635,8 +635,8 @@ export class SuperMind {
   // the byte-identical frozen-weight mind. Deterministic (no rng) + bounded (|bias| ≤ 0.5). O(plans).
   private learnEnabled = true;
   private learnRate = 0.02;
-  private readonly planBias: number[] = Array.from({ length: SUPER_PLANS.length }, () => 0);
-  private readonly planOneHot: number[] = Array.from({ length: SUPER_PLANS.length }, () => 0);
+  private readonly planBias = new Float32Array(SUPER_PLANS.length);
+  private readonly planOneHot = new Float32Array(SUPER_PLANS.length);
   private readonly planLearner = new EligibilityLearner(SUPER_PLANS.length, 0.85);
 
   private readonly memory = new MemoryRing(48);
@@ -1807,7 +1807,7 @@ export class SuperMind {
       wantsSpawn: spawnDesire > 0.8 && this.offspring < SUPER_MAX_OFFSPRING && s[0] > 0.5,
       plan: best,
       consciousness: this.cons,
-      quantum: this.quantumOut.slice(),
+      quantum: Array.from(this.quantumOut),
     };
   }
 
@@ -1861,7 +1861,7 @@ export class SuperMind {
       plan: this.plan,
       emotion: { valence: this.valence, arousal: this.arousal, dominance: this.dominance },
       consciousness: this.cons,
-      quantum: this.quantumOut.slice(),
+      quantum: Array.from(this.quantumOut),
       latent: Array.from(this.latent),
       imagined: Array.from(this.imagined),
       qubits: this.qmind.snapshot(),

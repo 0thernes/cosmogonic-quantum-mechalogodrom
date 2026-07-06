@@ -362,4 +362,93 @@ describe('Phase 3.1: Worker Pool', () => {
       value: originalWorker,
     });
   });
+
+  test('WorkerPool async path with event-driven resolution and queuing', async () => {
+    const originalWorker = globalThis.Worker;
+    const originalNavigator = globalThis.navigator;
+
+    class FakeWorker {
+      onmessage: ((event: MessageEvent) => void) | null = null;
+      onerror: ((event: ErrorEvent) => void) | null = null;
+      constructor(_url: string, _options?: WorkerOptions) {}
+      postMessage(msg: any): void {
+        // Mock processing the message and replying asynchronously
+        setTimeout(() => {
+          if (this.onmessage) {
+            this.onmessage({
+              data: {
+                id: msg.id,
+                type: msg.type,
+                data: msg.data,
+                success: true,
+              },
+            } as MessageEvent);
+          }
+        }, 10);
+      }
+      terminate(): void {}
+    }
+
+    Object.defineProperty(globalThis, 'Worker', {
+      configurable: true,
+      value: FakeWorker,
+    });
+    Object.defineProperty(globalThis, 'navigator', {
+      configurable: true,
+      value: { hardwareConcurrency: 1 }, // exactly 1 worker
+    });
+
+    const pool = new WorkerPool({
+      maxWorkers: 1,
+      useSharedArrayBuffer: false,
+      qualityTier: 'desktop',
+    });
+    await pool.initialize('/fake-worker.js');
+
+    const task1: WorkerTask = {
+      id: 'async-task-1',
+      type: 'wilderness',
+      data: new Float32Array([10, 20]),
+      seed: 99,
+    };
+
+    const promise = pool.executeAsync(task1);
+    const result = await promise;
+    expect(result.success).toBe(true);
+    expect(result.id).toBe('async-task-1');
+    expect(result.data).toEqual(new Float32Array([10, 20]));
+
+    const task2: WorkerTask = {
+      id: 'queued-task-1',
+      type: 'wilderness',
+      data: new Float32Array([10]),
+      seed: 1,
+    };
+    const task3: WorkerTask = {
+      id: 'queued-task-2',
+      type: 'wilderness',
+      data: new Float32Array([20]),
+      seed: 2,
+    };
+
+    const p1 = pool.executeAsync(task2);
+    const p2 = pool.executeAsync(task3);
+
+    const [r1, r2] = await Promise.all([p1, p2]);
+    expect(r1.success).toBe(true);
+    expect(r1.id).toBe('queued-task-1');
+    expect(r2.success).toBe(true);
+    expect(r2.id).toBe('queued-task-2');
+
+    pool.dispose();
+
+    Object.defineProperty(globalThis, 'navigator', {
+      configurable: true,
+      value: originalNavigator,
+    });
+    Object.defineProperty(globalThis, 'Worker', {
+      configurable: true,
+      value: originalWorker,
+    });
+  });
 });

@@ -22,6 +22,7 @@ import { ESK_SAMPLE_PROGRAMS, getEshkolProgramFingerprint } from './generated-ts
 import { homebrewEshkolBeat } from './homebrew-eshkol'; // EVERY Tsotchke: homebrew for ancient/forbidden god DNA in brutal forms
 // qrngApiDraw from quantum-rng-api (Tsotchke) used for Mxy/Jaspers chaos in catalysis - referenced in tsotchke-facade
 const clamp01 = (v: number): number => (v > 0 ? (v < 1 ? v : 1) : 0);
+const WORKSPACE_SUBSTRATE = new Float32Array(3);
 
 /** Digital biologic forms from full Tsotchke corpus - different substrates yield different life. */
 export const BIOLOGIC_FORMS = [
@@ -83,7 +84,10 @@ export interface Biologic {
 export function birthBiologic(archon: number, tick: number): Biologic {
   const cat = (corpusBeatForArchon(archon, tick) + archon * 0.1) % 1;
   const beat = corpusBeatForArchon(archon, tick);
-  const ws = eshkolWorkspaceTick(new Float32Array([0.4 + beat * 0.3, cat, 0.5]), beat);
+  WORKSPACE_SUBSTRATE[0] = 0.4 + beat * 0.3;
+  WORKSPACE_SUBSTRATE[1] = cat;
+  WORKSPACE_SUBSTRATE[2] = 0.5;
+  const ws = eshkolWorkspaceTick(WORKSPACE_SUBSTRATE, beat);
 
   // Determine form based on corpus beat and archon
   const formIdx = Math.floor((cat * 100 + archon * 7 + beat * 10) % BIOLOGIC_FORMS.length);

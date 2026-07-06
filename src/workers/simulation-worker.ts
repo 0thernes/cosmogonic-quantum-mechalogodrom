@@ -13,6 +13,10 @@
 
 import { mulberry32, hashSeed } from '../math/rng';
 
+const workerSelf = self as unknown as {
+  postMessage(message: WorkerResponse, transfer?: Transferable[]): void;
+};
+
 export interface WorkerMessage {
   id: string;
   type: 'simulation' | 'wilderness';
@@ -90,8 +94,8 @@ self.onmessage = (event: MessageEvent<WorkerMessage>) => {
       self.postMessage(response);
     } else {
       // Transferable: transfer buffer ownership
-      // @ts-ignore - Bun's Transferable type differs from Web standard
-      self.postMessage(response, [result.buffer]);
+      const transfer = result.buffer instanceof ArrayBuffer ? [result.buffer] : undefined;
+      workerSelf.postMessage(response, transfer);
     }
   } catch (error) {
     const response: WorkerResponse = {

@@ -236,6 +236,8 @@ import {
   type AlphabetArchetype,
 } from './alphabet-pantheon';
 
+const GODFORM_MPO_INPUT = new Float32Array(2);
+
 export function getFullTsotchkeBias(i: number): GodformBias & {
   quakeFactor: number;
   adGradient: number;
@@ -252,7 +254,9 @@ export function getFullTsotchkeBias(i: number): GodformBias & {
   const ulg = ulgHandoff(extra.quakeFactor, extra.eshkolLogic);
   const gwt = gwtBroadcast([extra.eshkolInference, extra.tensorChi / 10], [0.7, 0.5]);
   // mpo (Moonlab from Tsotchke) in godform for tensor net bias
-  const mpo = moonlabMpoStep(new Float32Array([extra.adDepth, extra.quakeFactor]), 2);
+  GODFORM_MPO_INPUT[0] = extra.adDepth;
+  GODFORM_MPO_INPUT[1] = extra.quakeFactor;
+  const mpo = moonlabMpoStep(GODFORM_MPO_INPUT, 2);
   // use libirrepSymmetry (Tsotchke) for more symmetry modulation in godform bias
   const irBias = libirrepSymmetry(extra.irrepDegree, 2);
   // quakeQgeFactor for more quantum-quake in godform

@@ -1333,6 +1333,7 @@ const TESS_EDGES: readonly (readonly [number, number])[] = [
   [6, 14],
   [7, 15],
 ];
+const DEFAULT_SIGNAL = new Float32Array([0.5]);
 const drawMegaBrain: Drawer = (ctx, w, h, s, t) => {
   ctx.fillStyle = '#03010a';
   ctx.fillRect(0, 0, w, h);
@@ -1351,8 +1352,8 @@ const drawMegaBrain: Drawer = (ctx, w, h, s, t) => {
   const axw = t * 0.18;
   const ayw = t * 0.13;
   const axy = t * 0.09;
-  const latent = s.latent.length ? s.latent : new Float32Array([0.5]);
-  const quantum = s.quantum.length ? s.quantum : new Float32Array([0.5]);
+  const latent = s.latent.length ? s.latent : DEFAULT_SIGNAL;
+  const quantum = s.quantum.length ? s.quantum : DEFAULT_SIGNAL;
   const k = s.consciousness;
   const glob =
     0.25 * (k.dreaming ?? 0) +

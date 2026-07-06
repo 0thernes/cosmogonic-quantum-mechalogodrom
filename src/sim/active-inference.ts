@@ -188,7 +188,10 @@ export class ActiveInference {
    * A LOWER G is a better policy. Writes G into `out`; also records the chosen (min-G) policy's
    * epistemic + pragmatic value for telemetry. Pure look-ahead — does NOT mutate the belief.
    */
-  expectedFreeEnergy(predicted: ReadonlyArray<ArrayLike<number>>, out: number[]): void {
+  expectedFreeEnergy(
+    predicted: ReadonlyArray<ArrayLike<number>>,
+    out: number[] | Float32Array,
+  ): void {
     const K = this.situations;
     const hNow = this.entropyOf(this.belief, K);
     let bestG = Infinity;

@@ -45,6 +45,12 @@ export class QualitySpace {
   // Moonlab tensor scratch prealloc (alloc-free for contract)
   private readonly tensorA = new Float32Array(4);
   private readonly tensorB = new Float32Array(4);
+  private readonly qualiaInput = [0, 0, 0];
+  private readonly mpoInput = new Float32Array(2);
+  private readonly gwtContent = [0, 0];
+  private readonly gwtSalience = [0.4, 0.3];
+  private readonly toneGwtContent = [0, 0];
+  private readonly toneGwtSalience = [0.5, 0.5];
 
   constructor() {
     // deterministic fill (simple LCG from seed, no Rng dependency)
@@ -97,15 +103,22 @@ export class QualitySpace {
       }
       if (d === 5) {
         // moonlabTensorQualia (extended tensor contraction for qualia manifold from corpus)
-        acc += 0.03 * moonlabTensorQualia([state[0] ?? 0, state[2] ?? 0, state[4] ?? 0], 8); // Moonlab qualia tensor from Tsotchke corpus
+        this.qualiaInput[0] = state[0] ?? 0;
+        this.qualiaInput[1] = state[2] ?? 0;
+        this.qualiaInput[2] = state[4] ?? 0;
+        acc += 0.03 * moonlabTensorQualia(this.qualiaInput, 8); // Moonlab qualia tensor from Tsotchke corpus
         // more libirrep + quake in another dim for sym/alive qualia
         acc += 0.01 * libirrepSymmetry(2, 1);
         acc += 0.005 * (quakePerturb(0.7, 9, 0.05) - 1);
       }
       // mpo + gwt in quality for more corpus in HOT-4
       if (d === 3) {
-        acc += 0.02 * Math.abs(moonlabMpoStep(new Float32Array([state[0] || 0, state[1] || 0]), 2));
-        const g = gwtBroadcast([acc, state[4] || 0], [0.4, 0.3]);
+        this.mpoInput[0] = state[0] || 0;
+        this.mpoInput[1] = state[1] || 0;
+        acc += 0.02 * Math.abs(moonlabMpoStep(this.mpoInput, 2));
+        this.gwtContent[0] = acc;
+        this.gwtContent[1] = state[4] || 0;
+        const g = gwtBroadcast(this.gwtContent, this.gwtSalience);
         acc += (g[0] || 0) * 0.01;
       }
       // wire libirrepSymmetry + quakePerturb (Tsotchke corpus) into quality manifold for sym/ aliveness effect on Archon qualia
@@ -131,7 +144,9 @@ export class QualitySpace {
 
     // actively use mpo + gwt (Tsotchke Moonlab/Eshkol GWT) in tone calc for deeper HOT-4 qualia manifold wiring (instead of void ref)
     const mpoAdj = moonlabMpoStep(this.lastCode, 2, 4);
-    const gwtAdj = gwtBroadcast([tone, toneGrad || 0], [0.5, 0.5]);
+    this.toneGwtContent[0] = tone;
+    this.toneGwtContent[1] = toneGrad || 0;
+    const gwtAdj = gwtBroadcast(this.toneGwtContent, this.toneGwtSalience);
     const adjTone = Math.max(
       0,
       Math.min(1, tone + Math.abs(mpoAdj) * 0.01 + (gwtAdj[0] || 0) * 0.01),

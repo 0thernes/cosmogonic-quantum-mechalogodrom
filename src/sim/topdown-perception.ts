@@ -32,6 +32,9 @@ const BIAS_DIMS = 4;
 
 export class TopDownPerception {
   private readonly bias = new Float32Array(BIAS_DIMS);
+  private readonly mpoInput = new Float32Array(2);
+  private readonly gwtContent = [0, 0];
+  private readonly gwtSalience = [0.5, 0.6];
   private lastError = 0;
 
   constructor() {
@@ -68,8 +71,12 @@ export class TopDownPerception {
     const tq = moonlabTensorQualia([imaginedLatent[0] ?? 0, novelty, imaginedLatent[2] ?? 0], 6);
     this.bias[2] = 0.12 * (imaginedLatent[2] ?? 0) + 0.02 * tq; // light + tensor
     // gwtBroadcast + moonlabMpoStep (Tsotchke Eshkol GWT + Moonlab) for richer HOT-1 bias
-    const gwtB = gwtBroadcast([this.bias[0] || 0, novelty], [0.5, 0.6]);
-    const mpoB = moonlabMpoStep(new Float32Array([imaginedLatent[0] || 0, novelty]), 2);
+    this.gwtContent[0] = this.bias[0] || 0;
+    this.gwtContent[1] = novelty;
+    const gwtB = gwtBroadcast(this.gwtContent, this.gwtSalience);
+    this.mpoInput[0] = imaginedLatent[0] || 0;
+    this.mpoInput[1] = novelty;
+    const mpoB = moonlabMpoStep(this.mpoInput, 2);
     this.bias[0] += ((gwtB[0] || 0) + Math.abs(mpoB)) * 0.005;
     this.bias[3] = eshkolApplyAD(0.06 * (imaginedLatent[3] ?? 0) + 0.03 * novelty, adGrad, 0.02); // sound + more AD/tape from Eshkol
     // mpoB + gwt for Moonlab/Eshkol in sound bias too

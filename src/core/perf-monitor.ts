@@ -9,35 +9,48 @@
  * Tracks frame times and provides statistics.
  */
 export class FrameTimeTracker {
-  private frameTimes: number[] = [];
+  private readonly frameTimes: Float64Array;
+  private readonly percentileScratch: Float64Array;
   private readonly maxSamples: number;
-  private lastFrameTime = performance.now();
+  private sampleCount = 0;
+  private nextSample = 0;
+  private frameTimeSum = 0;
+  private lastFrameTime: number;
+  private readonly now: () => number;
 
-  constructor(maxSamples = 60) {
-    this.maxSamples = maxSamples;
+  constructor(maxSamples = 60, now: () => number = () => performance.now()) {
+    this.maxSamples = Math.max(1, Math.floor(maxSamples));
+    this.frameTimes = new Float64Array(this.maxSamples);
+    this.percentileScratch = new Float64Array(this.maxSamples);
+    this.now = now;
+    this.lastFrameTime = this.now();
   }
 
   /**
    * Record a frame time in milliseconds.
    */
   recordFrame(): void {
-    const now = performance.now();
+    const now = this.now();
     const frameTime = now - this.lastFrameTime;
     this.lastFrameTime = now;
 
-    this.frameTimes.push(frameTime);
-    if (this.frameTimes.length > this.maxSamples) {
-      this.frameTimes.shift();
+    if (this.sampleCount < this.maxSamples) {
+      this.sampleCount++;
+    } else {
+      this.frameTimeSum -= this.frameTimes[this.nextSample] ?? 0;
     }
+
+    this.frameTimes[this.nextSample] = frameTime;
+    this.frameTimeSum += frameTime;
+    this.nextSample = (this.nextSample + 1) % this.maxSamples;
   }
 
   /**
    * Get the average frame time in milliseconds.
    */
   getAverageFrameTime(): number {
-    if (this.frameTimes.length === 0) return 0;
-    const sum = this.frameTimes.reduce((a, b) => a + b, 0);
-    return sum / this.frameTimes.length;
+    if (this.sampleCount === 0) return 0;
+    return this.frameTimeSum / this.sampleCount;
   }
 
   /**
@@ -52,41 +65,48 @@ export class FrameTimeTracker {
    * Get the minimum frame time in milliseconds.
    */
   getMinFrameTime(): number {
-    if (this.frameTimes.length === 0) return 0;
-    return Math.min(...this.frameTimes);
+    if (this.sampleCount === 0) return 0;
+    let min = Infinity;
+    for (let i = 0; i < this.sampleCount; i++) min = Math.min(min, this.frameTimes[i] ?? Infinity);
+    return min;
   }
 
   /**
    * Get the maximum frame time in milliseconds.
    */
   getMaxFrameTime(): number {
-    if (this.frameTimes.length === 0) return 0;
-    return Math.max(...this.frameTimes);
+    if (this.sampleCount === 0) return 0;
+    let max = -Infinity;
+    for (let i = 0; i < this.sampleCount; i++) max = Math.max(max, this.frameTimes[i] ?? -Infinity);
+    return max;
   }
 
   /**
    * Get the 95th percentile frame time (removes outliers).
    */
   getPercentile95FrameTime(): number {
-    if (this.frameTimes.length === 0) return 0;
-    const sorted = [...this.frameTimes].sort((a, b) => a - b);
-    const index = Math.floor(sorted.length * 0.95);
-    return sorted[index] || 0;
+    if (this.sampleCount === 0) return 0;
+    for (let i = 0; i < this.sampleCount; i++) this.percentileScratch[i] = this.frameTimes[i] ?? 0;
+    const sorted = this.percentileScratch.subarray(0, this.sampleCount).sort();
+    const index = Math.min(sorted.length - 1, Math.floor(sorted.length * 0.95));
+    return sorted[index] ?? 0;
   }
 
   /**
    * Reset the tracker.
    */
   reset(): void {
-    this.frameTimes = [];
-    this.lastFrameTime = performance.now();
+    this.sampleCount = 0;
+    this.nextSample = 0;
+    this.frameTimeSum = 0;
+    this.lastFrameTime = this.now();
   }
 
   /**
    * Get the number of samples recorded.
    */
   getSampleCount(): number {
-    return this.frameTimes.length;
+    return this.sampleCount;
   }
 }
 

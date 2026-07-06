@@ -54,6 +54,8 @@ export class WorkerPool {
   private readonly pendingResults = new Map<string, WorkerResult>();
   /** Event-driven waiters — avoids 1 ms polling in waitForResult. */
   private readonly pendingWaits = new Map<string, (result: WorkerResult) => void>();
+  /** Event-driven waiters for saturated pools — avoids 10 ms polling for an available worker. */
+  private readonly workerAvailableWaits: (() => void)[] = [];
   private readonly config: WorkerPoolConfig;
   private workerScriptUrl: string | null = null;
   /** Reused SharedArrayBuffers keyed by byte length (SAB path only). */
@@ -104,7 +106,6 @@ export class WorkerPool {
     };
 
     worker.onerror = (error) => {
-      console.error('Worker error:', error);
       this.handleWorkerError(worker, error);
     };
 
@@ -118,6 +119,7 @@ export class WorkerPool {
     if (this.activeTasks.get(result.id) === worker) {
       this.activeTasks.delete(result.id);
       this.availableWorkers.push(worker);
+      this.notifyWorkerAvailable();
     }
 
     this.deliverResult(result);
@@ -150,6 +152,7 @@ export class WorkerPool {
 
     if (!this.availableWorkers.includes(worker)) {
       this.availableWorkers.push(worker);
+      this.notifyWorkerAvailable();
     }
   }
 
@@ -162,6 +165,12 @@ export class WorkerPool {
       return;
     }
     this.pendingResults.set(result.id, result);
+  }
+
+  /** Wake one task that is waiting for a worker slot. */
+  private notifyWorkerAvailable(): void {
+    const waiter = this.workerAvailableWaits.shift();
+    if (waiter) waiter();
   }
 
   /**
@@ -281,10 +290,13 @@ export class WorkerPool {
   /**
    * Wait for an available worker
    */
-  private async waitForAvailableWorker(): Promise<void> {
-    while (this.availableWorkers.length === 0) {
-      await new Promise((resolve) => setTimeout(resolve, 10));
+  private waitForAvailableWorker(): Promise<void> {
+    if (this.availableWorkers.length > 0) {
+      return Promise.resolve();
     }
+    return new Promise<void>((resolve) => {
+      this.workerAvailableWaits.push(resolve);
+    });
   }
 
   /**
@@ -331,6 +343,7 @@ export class WorkerPool {
     this.activeTasks.clear();
     this.pendingResults.clear();
     this.pendingWaits.clear();
+    this.workerAvailableWaits.length = 0;
   }
 }
 

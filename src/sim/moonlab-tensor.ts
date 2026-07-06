@@ -77,7 +77,7 @@ export function moonlabTensorContract(
  * S = −Σ pₖ ln pₖ / ln(k) of the bond-χ-limited Schmidt coefficients
  * pₖ = σₖ²/Σσ² — 0 for a product (rank-1) state, 1 for a maximally entangled one.
  */
-export function moonlabTensorQualia(v: number[], chi: number): number {
+export function moonlabTensorQualia(v: ArrayLike<number>, chi: number): number {
   // Pack into at least a 2x2 (packMatrix zero-pads) so length-3 inputs form a real [[v0,v1],[v2,0]]
   // and yield genuine entropy. The old `if (d < 2) return 0` made every length-<4 call return 0 — and
   // all 5 production call sites pass length-3 arrays, so the 'qualia tensor' coupling was inert (always

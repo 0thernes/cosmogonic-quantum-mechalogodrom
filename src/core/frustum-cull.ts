@@ -5,6 +5,10 @@
  */
 import * as THREE from 'three';
 
+const singleFrustum = new THREE.Frustum();
+const singleProjScreenMatrix = new THREE.Matrix4();
+const singleSphere = new THREE.Sphere();
+
 /**
  * Check if a sphere is within the camera frustum.
  * Returns true if the sphere is visible, false if it's off-screen.
@@ -14,14 +18,11 @@ export function isSphereInFrustum(
   center: THREE.Vector3,
   radius: number,
 ): boolean {
-  // Get camera frustum planes
-  const frustum = new THREE.Frustum();
-  const projScreenMatrix = new THREE.Matrix4();
-  projScreenMatrix.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
-  frustum.setFromProjectionMatrix(projScreenMatrix);
+  singleProjScreenMatrix.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
+  singleFrustum.setFromProjectionMatrix(singleProjScreenMatrix);
+  singleSphere.set(center, radius);
 
-  // Test sphere against frustum
-  return frustum.intersectsSphere(new THREE.Sphere(center, radius));
+  return singleFrustum.intersectsSphere(singleSphere);
 }
 
 /**
@@ -44,6 +45,8 @@ export function cullEntities(
   maxDistance: number,
 ): number[] {
   const visible: number[] = [];
+  if (maxDistance < 0) return visible;
+
   const frustum = new THREE.Frustum();
   const projScreenMatrix = new THREE.Matrix4();
   projScreenMatrix.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
@@ -51,6 +54,7 @@ export function cullEntities(
 
   const tempSphere = new THREE.Sphere();
   const tempVec = new THREE.Vector3();
+  const maxDistanceSq = maxDistance * maxDistance;
 
   for (let i = 0; i < positions.length / 3; i++) {
     const idx = i * 3;
@@ -62,7 +66,7 @@ export function cullEntities(
     tempVec.set(x, y, z);
 
     // Skip if beyond max render distance
-    if (tempVec.distanceTo(camera.position) > maxDistance) {
+    if (tempVec.distanceToSquared(camera.position) > maxDistanceSq) {
       continue;
     }
 
@@ -89,5 +93,7 @@ export function isWithinRenderDistance(
   position: THREE.Vector3,
   maxDistance: number,
 ): boolean {
-  return position.distanceTo(camera.position) <= maxDistance;
+  return (
+    maxDistance >= 0 && position.distanceToSquared(camera.position) <= maxDistance * maxDistance
+  );
 }

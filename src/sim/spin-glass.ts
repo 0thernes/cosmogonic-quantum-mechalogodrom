@@ -164,7 +164,7 @@ export class SpinGlass {
   }
 
   /** Copy current spins into caller buffer (length ≥ size). Allocation-free. O(N). */
-  spinsInto(out: number[]): void {
+  spinsInto(out: number[] | Float32Array): void {
     for (let i = 0; i < this.size; i++) out[i] = this.spins[i] ?? 0;
   }
 

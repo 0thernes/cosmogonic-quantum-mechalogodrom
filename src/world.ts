@@ -1156,7 +1156,9 @@ export class World {
       const irPos = libirrepClebsch(1, i % 3, 0);
       // Ralph loop continue 10x more: use quakeQgeFactor + mpo for more quantum-quake/Moonlab tensor effect on super aliveness in world
       const qge = quakeQgeFactor(quakeLife, 0.3);
-      const mpoW = moonlabMpoStep(new Float32Array([quakeLife, hybridAliv]), 2);
+      this.superMpoInput[0] = quakeLife;
+      this.superMpoInput[1] = hybridAliv;
+      const mpoW = moonlabMpoStep(this.superMpoInput, 2);
       // feed hybrid into econ for corpus aliveness effect (deterministic)
       const econBoost =
         1 + hybridAliv * 0.1 + (irPos % 2) * 0.01 + qge * 0.05 + Math.abs(mpoW) * 0.02;
