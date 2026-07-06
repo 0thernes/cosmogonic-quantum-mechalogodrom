@@ -1,4 +1,4 @@
-<!-- reviewed: 2026-06-27 | repo-wide consistency audit | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
+<!-- reviewed: 2026-07-06 | V123 optimization sweep | canonical facts: docs/VERIFICATION-ANALYTICAL-DATA.md -->
 
 # Security Policy
 
@@ -6,8 +6,8 @@
 
 | Version | Supported |
 | ------- | --------- |
-| 0.18.x  | Yes       |
-| < 0.18  | No        |
+| 0.21.x  | Yes       |
+| < 0.21  | No        |
 
 ## Reporting a vulnerability
 

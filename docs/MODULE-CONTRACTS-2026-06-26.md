@@ -2,7 +2,7 @@
 
 # Module Contracts
 
-**TSOTCHKE MASTER WIRE ERA (v0.20.0):** Tsotchke corpus is the substrate for digital biologics (see `docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md`). Eshkol AD/GWT + scientific kernels are wired; LLM repos fenced. Canonical facts: `docs/VERIFICATION-ANALYTICAL-DATA.md`.
+**TSOTCHKE MASTER WIRE ERA (v0.21.0):** Tsotchke corpus is the substrate for digital biologics (see `docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md`). Eshkol AD/GWT + scientific kernels are wired; LLM repos fenced. Canonical facts: `docs/VERIFICATION-ANALYTICAL-DATA.md`.
 
 Binding spec for every module in this repo. Writer agents and humans MUST conform exactly —
 `world.ts`/`main.ts` (the composition root) are written against these signatures, sight unseen.

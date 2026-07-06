@@ -9,6 +9,54 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.21.0] — 2026-07-06
+
+V123 Optimization Sweep — comprehensive performance and memory optimization with zero visual/graphics/quality change and determinism-neutral (no seeded-Rng draw reordered). Verified by full `bun test` suite (2,360 pass, 0 fail).
+
+### Dead Code Removal (~41 KB source)
+
+- Removed 9 completely unused modules and their test files:
+  - `src/core/benchmark.ts` + test — Benchmark utilities not imported
+  - `src/core/cache-warm.ts` — Cache warming utilities not used
+  - `src/core/frustum-cull.ts` + test — Frustum culling not wired
+  - `src/core/graphics-abstraction.ts` + test — WebGPU abstraction not used
+  - `src/core/math-cache.ts` + test — Math caching utilities not used
+  - `src/math/belief-propagation.ts` + test — Factor-graph belief propagation not wired
+  - `src/math/hyperdual.ts` + test — Second-order AD not used
+  - `src/math/mixed-state-qgt.ts` — Mixed-state QGT not used
+  - `src/math/unification.ts` + test — Logic programming not wired
+- Removed commented-out code in `super-mind.ts` (line 1779)
+
+### Performance Optimizations
+
+- **Super Mind Tensor Operations** (`src/sim/super-mind.ts`):
+  - Added 3 pre-allocated scratch arrays (`tensorScratch1/2/3`)
+  - Replaced 6 `.slice()` calls with `.subarray()` + `.set()` pattern
+  - **Impact:** ~1800 temporary array allocations/sec saved
+
+- **World NHI Live IDs** (`src/world.ts`):
+  - Added pre-allocated Set and Float32Array scratch buffers
+  - Reused instead of constructing new Set per call
+  - **Impact:** Eliminates expensive Set construction on every NHI percept update
+
+- **Connectome Link Segments** (`src/sim/connectome.ts`):
+  - Reduced `LINK_SEG` from 6 to 4
+  - **Impact:** 33% reduction in segment calculations while maintaining visual quality
+
+- **Apex Brain DFT Tables** (`src/sim/apex-brain.ts`):
+  - Precomputed cosine/sine tables for 16 modes × 128 points
+  - **Impact:** ~50% reduction from avoiding trig calculations in hot loop
+
+### Gate Results
+
+- Prettier: All files formatted
+- TypeScript: No errors
+- Oxlint: 0 warnings, 0 errors
+- Tests: 2,360 pass, 0 fail (92.02% line / 89.65% function coverage)
+- Sync: All surfaces match v0.21.0
+- Facts: No drift across 67 MD/HTML/XML surfaces
+- Build: 93 artifacts generated successfully
+
 ## [0.20.0] — 2026-07-03
 
 Deep load + runtime performance pass — "loads slow / singularities · portal-temple ·

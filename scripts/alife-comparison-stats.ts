@@ -10,11 +10,11 @@
  *
  * Outputs (all under docs/reports/assets/, all version-controlled + diffable):
  *   - alife-stats.json                  machine-readable receipts (every figure the audit cites)
- *   - alife-breadth-ranked.svg          ranked breadth-of-synthesis bar chart (all 26 systems)
+ *   - alife-breadth-ranked.svg          ranked breadth-of-synthesis bar chart (all systems)
  *   - alife-breadth-vs-maturity.svg     breadth vs peer-maturity scatter (the "broad but immature" map)
  *   - alife-radar-profile.svg           9-axis radar: Cosmogonic vs survey mean vs nearest peer
  *   - alife-nearest-neighbors.svg       Euclidean nearest neighbours in 9-axis feature space
- *   - alife-axis-heatmap.svg            full 26x9 capability heatmap
+ *   - alife-axis-heatmap.svg            full systems x 9-axis capability heatmap
  *
  * Pure + deterministic: no Math.random / Date.now; identical CSV -> identical bytes out.
  */
@@ -305,7 +305,7 @@ function chartHeatmap(rows: Row[]): string {
   const w = padL + NAX * cellW + 20;
   const h = padT + ordered.length * cellH + 20;
   let b = '';
-  b += `<text x="28" y="30" fill="${TEXT}" font-size="18" font-weight="700">Capability heatmap — 26 systems × 9 axes</text>`;
+  b += `<text x="28" y="30" fill="${TEXT}" font-size="18" font-weight="700">Capability heatmap — ${ordered.length} systems × 9 axes</text>`;
   b += `<text x="28" y="50" fill="${MUTE}" font-size="12">each cell = axis score 0–5 (dark→cyan→amber). rows sorted by breadth.</text>`;
   AXES.forEach((a, j) => {
     const x = padL + j * cellW + cellW / 2;

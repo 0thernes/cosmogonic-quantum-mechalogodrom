@@ -8,12 +8,12 @@
  *
  *   - PCA (correlation-matrix eigendecomposition via Jacobi rotation): 2D projection + loadings +
  *     explained-variance spectrum.
- *   - Full 26×26 Euclidean distance matrix (9-axis feature space).
+ *   - Full n×n Euclidean distance matrix (9-axis feature space).
  *   - Agglomerative hierarchical clustering (average linkage, Lance–Williams) → dendrogram + flat cuts.
  *   - Pareto frontier in (breadth ↑, peer-maturity ↑) + 9-D dominance counts for Cosmogonic.
- *   - Capability-profile Shannon evenness + Gini (generalist↔specialist index) for all 26 systems.
+ *   - Capability-profile Shannon evenness + Gini (generalist↔specialist index) for all systems.
  *   - 9×9 axis co-occurrence correlation matrix (which capabilities travel together in the field).
- *   - Mahalanobis distance of Cosmogonic from the 25-peer centroid (ridge-regularized Σ⁻¹).
+ *   - Mahalanobis distance of Cosmogonic from the peer centroid (ridge-regularized Σ⁻¹).
  *
  * Pure + deterministic: no Math.random / Date.now; identical CSV -> identical bytes out.
  * Outputs under docs/reports/assets/ (version-controlled, diffable):
@@ -313,7 +313,7 @@ function chartPca(p: ReturnType<typeof pca>): string {
   const Y = (v: number): number =>
     padT + (h - padT - padB) - ((v - ymin) / (ymax - ymin || 1)) * (h - padT - padB);
   let b = '';
-  b += `<text x="28" y="30" fill="${TEXT}" font-size="18" font-weight="700">PCA of the 26 systems (9-axis correlation-matrix eigenbasis)</text>`;
+  b += `<text x="28" y="30" fill="${TEXT}" font-size="18" font-weight="700">PCA of ${p.scores.length} A-Life systems (9-axis correlation-matrix eigenbasis)</text>`;
   b += `<text x="28" y="50" fill="${MUTE}" font-size="12">PC1 ${(p.explained[0]! * 100).toFixed(1)}% var · PC2 ${(p.explained[1]! * 100).toFixed(1)}% var · together ${((p.explained[0]! + p.explained[1]!) * 100).toFixed(1)}%. amber = this repo.</text>`;
   // axes through 0
   if (xmin < 0 && xmax > 0)
@@ -607,7 +607,7 @@ function chartAxisCorr(M: number[][]): string {
   const h = padT + NAX * cell + 20;
   let b = '';
   b += `<text x="28" y="30" fill="${TEXT}" font-size="18" font-weight="700">Axis co-occurrence correlation (which capabilities travel together)</text>`;
-  b += `<text x="28" y="50" fill="${MUTE}" font-size="12">Pearson r across all 26 systems. cyan = co-occur · red = trade off · slate = independent.</text>`;
+  b += `<text x="28" y="50" fill="${MUTE}" font-size="12">Pearson r across all rows. cyan = co-occur · red = trade off · slate = independent.</text>`;
   AXES.forEach((a, j) => {
     b += `<text x="${padL - 8}" y="${padT + j * cell + cell / 2 + 3}" fill="${TEXT}" font-size="9" text-anchor="end">${esc(a)}</text>`;
     const tx = padL + j * cell + cell / 2;
