@@ -11,6 +11,21 @@ changed and why.
 
 ---
 
+## 2026-07-06 (pass 18) — v0.21.7 truth-surface nav polish
+
+Follow-up to the `v0.21.6` clean release-tag repair: no code-path changes, only public-surface alignment.
+
+### Surfaces
+
+- Satellite nav on **docs / spec / bible** now links `/lab/consciousness` alongside `/lab/sentience`.
+- README GitHub Pages bullet lists Bible + both lab URLs; governance review stamps bumped to `v0.21.7`.
+
+### Gate
+
+- `bun run check` green on Ubuntu portable receipts (`2,360` tests · `84.64%` line · `82.21%` func).
+
+---
+
 ## 2026-07-06 (pass 17) — clean release-tag repair + v0.21.6
 
 On top of the v0.21.0 V123 perf sweep: doc/deploy truth refresh only. A concurrent `v0.21.5` tag drift

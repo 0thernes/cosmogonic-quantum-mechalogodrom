@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.21.7] — 2026-07-06
+
+Truth-surface nav polish.
+
+- Added **Consciousness Lab** links to the satellite nav on `docs.html`, `specs.html`, and `bible.html` (Sentience was already present on spec/bible; docs now lists both labs in header crumbs).
+- Bumped governance review stamps (`SECURITY`, `CONTRIBUTING`, `CODE_OF_CONDUCT`, `NOTICE`) to the `v0.21.7` truth surface.
+- README GitHub Pages bullet now names Bible + both lab surfaces explicitly.
+
 ## [0.21.6] — 2026-07-06
 
 Clean release-tag repair.
