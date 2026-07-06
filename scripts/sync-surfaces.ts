@@ -53,6 +53,7 @@ const SURFACES = [
   'docs.html',
   'specs.html',
   'index.html',
+  'bible.html',
   'docs/TECHNICAL-SPECIFICATION-2026-06-26.md',
   'docs/ARCHITECTURE-2026-06-26.md',
   'docs/SUPER-CREATURE-RESEARCH-2026-06-26.md',
@@ -61,20 +62,13 @@ const SURFACES = [
   'docs/KANBAN-2026-06-26.md',
   'docs/MODULE-CONTRACTS-2026-06-26.md',
   'docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md',
-  'bible.html',
-  'docs/reports/README.md',
-  'docs/NHSI-PROGRESS-DASHBOARD-2026-06-26.md',
-  'docs/reports/2026-06-20-RESEARCH-BEDROCK.md',
-  'docs/reports/2026-06-21-NHSI-MANIFESTO-0THERNES-CORP.md',
-  'docs/reports/2026-07-01-25-POINT-SCRUTINY-SCORECARD.md',
-  'docs/reports/2026-07-01-25-POINT-SCRUTINY-SCORECARD.md',
-  'docs/reports/2026-06-20-SUPER-REPORT-PATH-TO-NHSI-AND-SENTIENCE.md',
-  'docs/SUPER-CREATURE-RESEARCH-2026-06-26.md',
   'docs/VERIFICATION-ANALYTICAL-DATA.md',
-  'docs/TECHNICAL-SPECIFICATION-2026-06-26.md',
-  'docs/RISK-REGISTER-2026-07-02.md',
-  'docs/BENCHMARKS-2026-06-26.md',
   'docs/BOOK-2026-06-26.md',
+  'docs/RISK-REGISTER-2026-07-02.md',
+  'docs/RUNBOOK-2026-06-26.md',
+  'docs/DESIGN-SYSTEM-2026-06-26.md',
+  'docs/reports/README.md',
+  'docs/reports/2026-07-01-25-POINT-SCRUTINY-SCORECARD.md',
 ];
 
 /** Apply receipts (test count + coverage) propagation. */
@@ -157,6 +151,10 @@ function syncReceipts(s: string): string {
         `canonical ${LINE} line / ${FUNC} function`,
       )
       .replace(/\b1,477-test\b/g, `${TEST_COMMA}-test`)
+      .replace(/\b[0-9],[0-9]{3}-test floor\b/g, `${TEST_COMMA}-test floor`)
+      .replace(/(\| Test count \(floor\)\s+\|\s+`)[0-9]+(`)/g, `$1${TEST}$2`)
+      .replace(/\*\*([0-9],[0-9]{3})\*\* \(floor/g, `**${TEST_COMMA}** (floor`)
+      .replace(/\b[0-9]{2}\.[0-9]{2} % \/ [0-9]{2}\.[0-9]{2} %/g, `${LINE} % / ${FUNC} %`)
       .replace(/\b[0-9],[0-9]{3} passing tests\b/g, `${TEST_COMMA} passing tests`)
       .replace(/\b[0-9],[0-9]{3} \(0 failing\)/g, `${TEST_COMMA} (0 failing)`)
       .replace(/bun test \([0-9],[0-9]{3} tests\)/g, `bun test (${TEST_COMMA} tests)`)

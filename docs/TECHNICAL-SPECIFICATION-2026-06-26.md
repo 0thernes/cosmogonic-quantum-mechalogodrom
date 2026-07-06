@@ -42,7 +42,7 @@ Snapshot: **2026-07-06**. (Coverage + passing-test counts ARE SSOT-synced — se
 | Tests (`tests/`)                        | ~33,400 lines · 252 files                                             |
 | Native C++ engine (`native/`, ADR-0007) | 1,604 lines · 12 files                                                |
 | Test : source ratio                     | 0.34 → **84.41% line / 82.11% func** coverage (`bun test --coverage`) |
-| Passing tests                           | **2,372** (floor; 0 failing)                                          |
+| Passing tests                           | **2,295** (floor; 0 failing)                                          |
 
 (Excludes the vendored `node_modules/`, generated `dist/` · `coverage/` · `native/build/`, and nested
 `.claude/worktrees/` checkouts.)

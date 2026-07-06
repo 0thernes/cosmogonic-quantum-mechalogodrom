@@ -5,7 +5,7 @@
 Technical reports and audits for Cosmogonic Quantum Mechalogodrom. Dated filenames (`2026-*`) are
 **historical worldline snapshots** when present — they preserve evidence from their authoring pass.
 **Current** gate receipts: [VERIFICATION-ANALYTICAL-DATA.md](../VERIFICATION-ANALYTICAL-DATA.md) §1 ·
-`scripts/canonical-receipts.ts` (v0.20.0 · **2,372-test floor** · **91.91 % / 89.62 %** coverage).
+`scripts/canonical-receipts.ts` (v0.20.0 · **2,295-test floor** · **84.41 % / 82.11 %** coverage).
 
 ## Reports
 

@@ -6,7 +6,7 @@ How Copilot / AI collaborators should behave in this project.
 
 ## Before you change anything
 
-1. Read `AGENTS-2026-06-26.md` / `CLAUDE.md` (operating contract) and the relevant `docs/adr/*`.
+1. Read `CLAUDE.md` (operating contract) and the relevant `docs/adr/*`.
 2. Treat the **2026-06-21 NHSI HONESTY-AUDIT** as the canonical status of record. When a doc and the
    audit disagree on a number, the audit wins.
 3. Run the gate locally before claiming done: `bun run check`

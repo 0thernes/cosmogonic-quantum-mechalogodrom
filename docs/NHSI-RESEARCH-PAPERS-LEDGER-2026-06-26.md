@@ -4,8 +4,7 @@
 
 The deep-dive corpus behind Cosmogonic's apex mind, with an honest status per paper:
 **APPLIED** = real math wired into `src/`; **STUDIED** = informs the design / validation frame; **ASPIRATIONAL**
-= found, not yet implemented (the build queue). Companion to `docs/reports/2026-06-20-RESEARCH-BEDROCK.md`
-and `docs/EMERGENCE-BLOCKERS-2026-06-26.md`. No consciousness/sentience is claimed — these operationalize functional
+= found, not yet implemented (the build queue). Companions: [SUPER-CREATURE-RESEARCH-2026-06-26.md](./SUPER-CREATURE-RESEARCH-2026-06-26.md) and this ledger. No consciousness/sentience is claimed — these operationalize functional
 markers (see `THIRD-PARTY-NOTICES.md` honesty frame).
 
 ## A · Consciousness theory — APPLIED in code

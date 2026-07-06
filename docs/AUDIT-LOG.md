@@ -3,11 +3,28 @@
 # Audit Log (centralized)
 
 **One place for the project's audit history.** New audits, reviews, and fix-passes append a dated
-entry HERE (newest first). The dated reports under [`docs/reports/`](./reports/) are **living,
-continuously-rewritten current documents** — rewritten in place to current truth, never forked into
-dated / historical / "superseded snapshot" copies (per the binding "Living docs, no archives" law in
-[CLAUDE.md](../CLAUDE.md)). Live facts (version, test/coverage receipts) are propagated automatically by
-`scripts/sync-surfaces.ts`. This log records what changed and why.
+entry HERE (newest first). Dated reports under [`docs/reports/`](./reports/) are **historical
+snapshots** when present — they preserve evidence from their authoring pass and must not be read as
+current gate receipts. **Living truth** is [VERIFICATION-ANALYTICAL-DATA.md](./VERIFICATION-ANALYTICAL-DATA.md)
+§1 + `scripts/canonical-receipts.ts`, propagated by `scripts/sync-surfaces.ts`. This log records what
+changed and why.
+
+---
+
+## 2026-07-06 (pass 13) — Post-consolidation MD audit: stale receipts + deleted-doc refs (v0.20.0)
+
+Full markdown audit after the 24-file delete + pass 12 link repair.
+
+### Fixes
+
+- **`scripts/sync-surfaces.ts`** — deduped `SURFACES`; removed deleted report paths; added RUNBOOK/DESIGN-SYSTEM; new receipt patterns for floor table + `N-test floor` tokens.
+- **Living docs** — repointed deleted owners (FRONTEND-ACTION-PLAN → UI-UX audit; NEO-MIND / NHSI-HONESTY / CONSCIOUSNESS-LAB → survivors; PERFORMANCE-ROADMAP → BENCHMARKS).
+- **`docs/AUDIT-LOG.md`** — reports policy aligned with `docs/reports/README.md` (historical snapshots).
+- **`docs/VERIFICATION-ANALYTICAL-DATA.md`** — removed deleted `AGENTS-2026-06-26.md` from surface inventory; floor chain → 2295.
+
+### Gate
+
+- `bun run sync` + `bun run check` green.
 
 ---
 
@@ -25,7 +42,7 @@ Owner brief: implement consolidation master plan — fewer files/lines, fix stal
 
 ### Docs
 
-- **`scripts/canonical-receipts.ts`** → **2,319 / 84.35% / 82.05%** (Linux gate floor); `bun run sync`.
+- **`scripts/canonical-receipts.ts`** → **2,295 / 84.41% / 82.11%** (Linux gate floor); `bun run sync`.
 - **`docs/500-POINT-INSPECTION`** — compressed to section index.
 - **`docs/reports/README.md`** — historical snapshot policy; removed links to deleted reports.
 - Rebased atop remote **24-file delete** pass (APEX/NHSI reports already removed upstream).
