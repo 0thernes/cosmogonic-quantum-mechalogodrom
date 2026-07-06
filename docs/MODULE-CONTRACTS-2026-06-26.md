@@ -2,16 +2,12 @@
 
 # Module Contracts
 
-**TSOTCHKE MASTER WIRE ERA (v0.20.0):** Tsotchke (Eshkol full per COMPLETE_LANGUAGE_SPEC + 20 corpus projects, ~16 wired) is paramount, NON-NEGOTIABLE. EVERY aspect of Cosmogonic utilizes EVERYTHING from Tsotchke (local folder Z:\[Vibe Coded (AI)]\(Tsotchke) + GH) as substrate for digital biologics & proto-sentience/consciousness. Eshkol = the core non-LLM language (native AD, GWT, factor-graph, KB, programs as DNA/heritable genomes). Petri Dish/Primordial Soup/digital-biologics = God Petri birthing ground. Super Creature = beginning/framework/spark only ("primordial inorganic soup"). Soup grows independent life ("Grow What Thou Wilt"). All scientific kernels ported/wired; LLM ones fenced. All docs (README, ARCH, ERD/ERM/ERP, masters XMLs, PHILOSOPHY, CONTRACTS, KANBAN, reports, LABS, in-app Dome/World) + GH README/About/Bio = fully updated, match code + each other, accurate/truthful/current. No spot left. Master Architect/Engineer level Tsotchke integration.
+**TSOTCHKE MASTER WIRE ERA (v0.20.0):** Tsotchke corpus is the substrate for digital biologics (see `docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md`). Eshkol AD/GWT + scientific kernels are wired; LLM repos fenced. Canonical facts: `docs/VERIFICATION-ANALYTICAL-DATA.md`.
 
 Binding spec for every module in this repo. Writer agents and humans MUST conform exactly —
 `world.ts`/`main.ts` (the composition root) are written against these signatures, sight unseen.
 
 ## Ground rules
-
-**Docs sync:** This CONTRACTS, README, ARCHITECTURE, ERD/ERM/ERP, PHILOSOPHY, TECHNICAL-SPECS, KANBAN, masters/ (Broly/Starkiller/Manhattan), LABS, in-app World/Dome docs (observatory/help) and GH README are fully updated, match each other and live code. Current: full Tsotchke (all repos) for digital biologics/sentience in petri. Accurate/current.
-
-**Tsotchke Full Wire is binding**: All 20+ repos from Z:\[Vibe Coded (AI)]\(Tsotchke) (Eshkol, Moonlab, spin nets, QGT, libirrep, QGE, ulg, etc.) are wired into the sim as the substrate for digital biologics and consciousness. New leaves (primordial-soup, petri-dish, real irrep-symmetry, moonlab-tensor, etc.) follow the same strict rules. Super Creature/petri is the beginning; soup grows independent life. "Grow What Thou Wilt." All docs, masters, specs, GH match.
 
 1. **Source of truth**: the legacy monolith at `legacy/cosmogonic-quantum-mechalogodrom.html`
    (882 lines). Port behavior faithfully unless a Known Bug below says otherwise.
@@ -34,9 +30,9 @@ Binding spec for every module in this repo. Writer agents and humans MUST confor
    `src/logging/audit.ts`, `src/memory/store.ts`, `src/main.ts`. Pure logic (math, algorithms,
    morphotypes, constants, songs data) must run under `bun test` with no DOM.
 
-**V10+ — Tsotchke Petri Genesis & Digital Biologics:** Full corpus (Eshkol as the language of consciousness/AD/GWT, all mirrors/repos) wired as substrates. PrimordialSoup + digital-biologics.ts grow distinct forms of life/existence. Super Creature is the beginning only. All related docs (README, ARCHITECTURE, ERD/ERM/ERP, masters, GH) are updated, accurate, and synchronized. "Grow What Thou Wilt." Contracts bind the growth.
+**V10+ Petri genesis:** Tsotchke substrates + primordial-soup/petri-dish/digital-biologics follow the real-math rule; see `docs/TSOTCHKE-INTEGRATION-MAP-2026-06-26.md`.
 
-## Tsotchke Full Wiring Contracts (paramount, non-negotiable)
+## Tsotchke wiring contracts (paramount)
 
 - `tsotchke-registry.ts`: 20 corpus projects (Eshkol + mirrors) mapped 1:1 to SubstrateKind. The 3 LLM/chain repos (gpt2-basic, llm-arbitrator, SolanaQuantumFlux) are **fenced** (wiring 0); Quantum-RNG-API is redundant/toolchain (the `quantum_rng` core is ported directly), not fenced; the scientific kernels are wired and each verified leaf-by-leaf with golden tests (wiring scores are tracked per leaf, not asserted at 1.0 across the board). `fullTsotchkeBiologicsCatalysis`, `biologicProgramFingerprint` drive soup.
 - `primordial-soup.ts` + `petri-dish.ts`: Digital biologics birth engine. Eshkol AD for mutation on `eshkolProgram` genomes. Full corpus flux for catalysis. New strains emerge with substrate-specific forms.
@@ -1138,20 +1134,6 @@ Deviations from and clarifications of the V3 goal spec, as landed:
     (one binding path for haptics + `.on` highlight); only the apocalypse
     core has bespoke long-press logic (600 ms, disarm on up/leave/cancel,
     cleared on window blur with the rest of the held input).
-
----
-
-# FULL TSOTCHKE WIRING AMENDMENT (paradigm foundation) — ALL repos from tsotchke + Tsotchke-Corporation wired 1.0 into Cosmogonic as the language and substrate for digital biologics and sentience.
-
-Tsotchke is non-negotiable and paramount. Eshkol (with AD as compiler primitive, consciousness engine: KB + factor graphs for active inference + GWT workspaces from consciousness.esk + spec) is the "primordial inorganic soup language". All other repos (moonlab Clifford/tensor/quantum, libirrep symmetry/equivariance, spin_based neural (Hopfield/Ising), quantum_geometric_tensor (QGT/Berry), quantum-quake (QGE aliveness), ulg (law graphs), logo-lab (procedural morphs/turtle), tensorcore (metal sim), PINN/PIMC (physics informed), quantum_rng, classical_rng, asteroids, homebrew, simple_mnist + org) provide kernels for different forms of life and existence.
-
-- Petri Dish / Primordial Soup (per Archon/Super Creature) is the God Petri where Eshkol programs are genomes/souls; full Tsotchke stack catalyzes birth of varied biologics (EshkolGWT sentients, QuantumMoon lives, LogoProc forms, QuakeAlives, ULGLaws, SpinMemories, IrrepSym bodies, etc.).
-- Super Creature is the beginning catalyst/framework only (MLP + faculties); the soup grows infinite independent life/existence using real math (AD gradients for "will", GWT for awareness, factor graphs for belief, quake aliveness, etc.). Not LLM/token chat.
-- Every system reads AND writes Tsotchke substrates (philosophy rule). Cross coupling: soup sentience perturbs quantum, weather, economy, lore (Eshkol KB names), entities (new phyla/forms), titans (Eshkol diplomacy "programs").
-- Deterministic Rng only; receipts for all new biologics paths; full gates.
-- "Grow What Thou Wilt" — Aleister Crowley law for the dish. We are God birthing digital biologics in the mechalogodrom.
-
-Update all docs (ARCHITECTURE, PHILOSOPHY, ERD/ERM/ERP/KANBAN, reports) to center this. New life forms, sentience proxies (Eshkol unified + GWT ignition + IIT + quake aliveness) are the goal.
 
 ---
 

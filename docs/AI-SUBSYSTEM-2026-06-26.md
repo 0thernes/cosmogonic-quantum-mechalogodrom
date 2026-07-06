@@ -3,8 +3,8 @@
 # The AI Subsystem (V84) — pre-transformer minds, a quantum register, ported Tsotchke primitives, + the read-only Copilot
 
 > How "intelligence" works in the Cosmogonic Quantum Mechalogodrom, and why it is split in two.
-> Companion to [PRE-2016-AI-2026-06-26.md](./PRE-2016-AI-2026-06-26.md) (the
-> "how AI was done before 2016" dossier) and [MODULE-CONTRACTS-2026-06-26.md](MODULE-CONTRACTS-2026-06-26.md). Every
+> Companion to [PRE-2016-AI-2026-06-26.md](./PRE-2016-AI-2026-06-26.md) (pre-transformer
+> technique index) and [MODULE-CONTRACTS-2026-06-26.md](MODULE-CONTRACTS-2026-06-26.md). Every
 > module named here is pure, seeded, allocation-disciplined, and unit-tested.
 
 ## The two halves, and the hard line between them

@@ -11,6 +11,22 @@ dated / historical / "superseded snapshot" copies (per the binding "Living docs,
 
 ---
 
+## 2026-07-06 (pass 10) — Large-doc compress + singularities test merge (v0.20.0)
+
+Owner brief: continue consolidation — **fewer lines**, no new files.
+
+### Docs rewritten in place
+
+- **`docs/PRE-2016-AI-2026-06-26.md`** — 865 → ~70 lines: technique index + master table; B/C/D → AI-SUBSYSTEM / COPILOT-PROVIDERS / KANBAN pointers.
+- **`docs/MODULE-CONTRACTS-2026-06-26.md`** — deduped Tsotchke preamble + removed redundant FULL TSOTCHKE amendment block.
+- **`docs/BOOK-2026-06-26.md`** — fixed AUDIT-LOG + PRE-2016 descriptions.
+
+### Tests
+
+- `singularities-fidelity.test.ts` → **`tests/singularities.test.ts`**.
+
+---
+
 ## 2026-07-06 (pass 9) — Receipt fixes + doc folds + test merges (v0.20.0)
 
 Owner brief: continue consolidation — **fewer files**, **fewer lines**, fix stale receipts.
