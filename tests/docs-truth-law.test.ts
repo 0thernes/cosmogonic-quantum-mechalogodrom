@@ -242,7 +242,7 @@ const CONFLICT_OPEN = '<'.repeat(7) + ' ';
 const CONFLICT_CLOSE = '>'.repeat(7) + ' ';
 const BINARY_EXT =
   /\.(png|jpe?g|gif|ico|webp|svg|woff2?|ttf|otf|eot|mp[34]|wav|bmp|pdf|zip|gz|lock|wasm)$/i;
-const ROOT = process.cwd();
+const ROOT = resolve(import.meta.dir, '..');
 const FALLBACK_SKIP_DIRS = new Set([
   '.agents',
   '.codex',
@@ -277,7 +277,7 @@ async function listRepoFilesFallback(dir = ROOT): Promise<string[]> {
 
 async function conflictScanFiles(): Promise<string[]> {
   try {
-    const stdout = Bun.spawnSync(['git', 'ls-files']).stdout.toString();
+    const stdout = Bun.spawnSync(['git', '-C', ROOT, 'ls-files']).stdout.toString();
     const tracked = stdout
       .split('\n')
       .map((s) => s.trim())

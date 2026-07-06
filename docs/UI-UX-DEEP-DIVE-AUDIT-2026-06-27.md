@@ -1,4 +1,4 @@
-<!-- reviewed: 2026-07-06 | living UI/UX index | backlog: docs/FRONTEND-ACTION-PLAN.md -->
+<!-- reviewed: 2026-07-06 | living UI/UX index | backlog: this document -->
 
 # UI/UX Deep-Dive Audit (living index)
 
@@ -10,7 +10,7 @@ Access-Puzzle flow, static a11y. **Method:** static code review (`index.html`, `
 `src/ui/*`, build pipeline) — no Playwright pixel gate in CI.
 
 **Last deep pass:** 2026-06-28 (passes 2–9, ~1,070 lines). **Pass 10 refresh:** 2026-07-06 — verbose
-pass narrative removed; open items tracked only here and in FRONTEND-ACTION-PLAN.
+pass narrative removed; open items tracked here.
 
 ---
 
@@ -55,7 +55,7 @@ bottom-band density, satellite brand unity, first-run onboarding, systematic red
 
 ---
 
-## Open work (ordered — see FRONTEND-ACTION-PLAN sprints)
+## Open work (ordered)
 
 1. **Sprint A:** Playwright smoke screenshots (SVG fit, WildBeyond, MEGA 4D tab IV)
 2. **Panel tokenization:** migrate super-neural / super-panel / pantheon / market bodies to shared tokens

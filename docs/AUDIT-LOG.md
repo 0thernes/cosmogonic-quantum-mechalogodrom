@@ -106,7 +106,7 @@ Owner brief: continue consolidation — **fewer lines**, no new files.
 ### Docs rewritten in place
 
 - **`docs/UI-UX-DEEP-DIVE-AUDIT-2026-06-27.md`** — 1,071 → ~90 lines: living index + twelve-issue status table;
-  open work points at FRONTEND-ACTION-PLAN; verbose pass narrative removed.
+  open work now lives in that index; verbose pass narrative removed.
 - **`docs/MEGA-MASTER-DEEP-DIVE-RESEARCH-REPORT-2026-06-27.md`** — 3,252 → ~940 lines: retained §10 (25
   benchmark specs) + §11 (bug registry) only; architecture/consciousness/pass-2–9 narrative removed
   (canonical docs linked in header).
@@ -128,7 +128,7 @@ fix receipt drift, net **fewer** files and lines.
 
 - `HANDOFF-2026-06-26.md`, `research_receipts-2026-06-26.md` → history in AUDIT-LOG + VERIFICATION
 - `docs/GOAL5-SWARM-HANDOFF-2026-06-19.md`, `docs/GOAL5-RESEARCH-RECEIPTS-2026-06-26.md` → TSOTCHKE-INTEGRATION-MAP
-- `docs/PLAN-2026-06-30-UI-SIM-POLISH.md`, `docs/EXECUTION-PLAN-2026-06-30-POLISH-25-ITEMS-VP-COO.md` → FRONTEND-ACTION-PLAN
+- `docs/PLAN-2026-06-30-UI-SIM-POLISH.md`, `docs/EXECUTION-PLAN-2026-06-30-POLISH-25-ITEMS-VP-COO.md` → UI-UX-DEEP-DIVE-AUDIT
 - `docs/reports/2026-06-26-CURRENT-TRUTH-BASELINE.md` → VERIFICATION-ANALYTICAL-DATA §1
 - `docs/PERFORMANCE-TARGETS-2026-07-02.md`, `docs/SCALING-ROADMAP-2026-06-26.md` → PERFORMANCE-OPTIMIZATION-ROADMAP
 - Consciousness cluster (6 files) → `docs/CONSCIOUSNESS-LAB-MASTER-2026-07-03.md`
@@ -189,8 +189,8 @@ Owner brief: finish deferred doc debt from pass 4; never lower visual/cognitive 
 - **`docs/MEGA-MASTER-DEEP-DIVE-RESEARCH-REPORT-2026-06-27.md`** — measured-state receipts + module
   count (250 TS) synced; stale 91% prose fixed.
 - **`docs/BOOK-2026-06-26.md`** — module inventory points at FILE-MAP (no stale "77 modules").
-- **`docs/FRONTEND-ACTION-PLAN.md`** — pass 4–5 landed items (connectome, wilderness render, perf HUD,
-  full-quality brains).
+- **former FRONTEND-ACTION-PLAN** — pass 4–5 landed items (connectome, wilderness render, perf HUD,
+  full-quality brains), later folded into `docs/UI-UX-DEEP-DIVE-AUDIT-2026-06-27.md`.
 
 ### Gate
 

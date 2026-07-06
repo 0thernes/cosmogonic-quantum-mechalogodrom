@@ -79,7 +79,7 @@ const EXTRA: Entry[] = [
     tier: 'Research',
   },
   {
-    title: 'FRONTEND-ACTION-PLAN — UI/UX backlog',
+    title: 'UI-UX-DEEP-DIVE-AUDIT — UI/UX backlog',
     href: '/docs/UI-UX-DEEP-DIVE-AUDIT-2026-06-27.md',
     blurb: 'Living plan for HUD, brain viz, pantheon, BIBLE depth.',
     tier: 'Research',
