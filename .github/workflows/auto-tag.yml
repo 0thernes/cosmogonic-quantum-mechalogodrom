@@ -49,6 +49,8 @@ jobs:
 
       - name: Create and push tag
         if: steps.check.outputs.exists == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           TAG="${{ steps.pkg.outputs.version }}"
           git config user.name  "github-actions[bot]"
@@ -56,3 +58,5 @@ jobs:
           git tag "$TAG" HEAD
           git push origin "$TAG"
           echo "Created and pushed tag: $TAG"
+          gh workflow run release.yml -f version="$TAG"
+          echo "Dispatched Release workflow for: $TAG"

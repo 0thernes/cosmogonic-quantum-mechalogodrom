@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.21.2] — 2026-07-06
+
+Release automation patch.
+
+- Fixed the release path after discovering `Auto-tag on version bump` created tags with `GITHUB_TOKEN`, which does not recursively trigger the tag-push `Release` workflow.
+- Updated `auto-tag.yml` to dispatch `release.yml` after creating a new tag.
+- Updated `release.yml` manual dispatch so it can publish an already-created tag when that tag points at the dispatch commit.
+
 ## [0.21.1] — 2026-07-06
 
 Truth-surface and release metadata patch after the V123 performance sweep.

@@ -52,14 +52,26 @@ jobs:
           fi
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
-      - name: Check tag does not already exist
+      - name: Check tag state
+        id: tagstate
         run: |
-          if git ls-remote --tags origin "${{ steps.set.outputs.version }}" | grep -q .; then
-            echo "::error::Tag ${{ steps.set.outputs.version }} already exists — aborting."
-            exit 1
+          TAG="${{ steps.set.outputs.version }}"
+          EXISTING_SHA="$(git ls-remote --tags origin "$TAG" | awk '{print $1}' | head -n 1)"
+          HEAD_SHA="$(git rev-parse HEAD)"
+          if [ -n "$EXISTING_SHA" ]; then
+            if [ "$EXISTING_SHA" != "$HEAD_SHA" ]; then
+              echo "::error::Tag $TAG already exists at $EXISTING_SHA, not current HEAD $HEAD_SHA."
+              exit 1
+            fi
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "Tag $TAG already exists at current HEAD; release job will publish it."
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+            echo "Tag $TAG does not exist; creating it."
           fi
 
       - name: Create and push tag
+        if: steps.tagstate.outputs.exists == 'false'
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"

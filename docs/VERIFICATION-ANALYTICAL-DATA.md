@@ -19,7 +19,7 @@ Rewritten in place when the facts change (per the binding living-doc law in
 
 | Fact                | Canonical value           | Source of truth                                                                      | Propagated by           |
 | ------------------- | ------------------------- | ------------------------------------------------------------------------------------ | ----------------------- |
-| Package version     | `0.21.1`                  | `package.json` `version`                                                             | `sync-surfaces.ts`      |
+| Package version     | `0.21.2`                  | `package.json` `version`                                                             | `sync-surfaces.ts`      |
 | Test count (floor)  | `2360`                    | `scripts/canonical-receipts.ts`                                                      | `sync-surfaces.ts`      |
 | Line coverage       | `92.02%`                  | `scripts/canonical-receipts.ts`                                                      | `sync-surfaces.ts`      |
 | Function coverage   | `89.65%`                  | `scripts/canonical-receipts.ts`                                                      | `sync-surfaces.ts`      |
