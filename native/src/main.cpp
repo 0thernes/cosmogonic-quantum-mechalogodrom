@@ -110,7 +110,11 @@ GLuint compileShader(GLenum type, const char* src, const char* label) {
 GLuint buildProgram() {
   GLuint vs = compileShader(GL_VERTEX_SHADER, kVertexSrc, "vertex");
   GLuint fs = compileShader(GL_FRAGMENT_SHADER, kFragmentSrc, "fragment");
-  if (!vs || !fs) return 0;
+  if (!vs || !fs) {
+    if (vs) glDeleteShader(vs);
+    if (fs) glDeleteShader(fs);
+    return 0;
+  }
   GLuint prog = glCreateProgram();
   glAttachShader(prog, vs);
   glAttachShader(prog, fs);

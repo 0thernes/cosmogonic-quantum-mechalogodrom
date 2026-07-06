@@ -372,7 +372,7 @@ Bun 1.3.11 x64-win32, Intel Core Ultra 9 275HX (~3.45 GHz). Port of tsotchke/Esh
 | `adBackward` (gradient propagation, 10 nodes) | 308 ns   | reverse-mode gradient accumulation  |
 | Complex expression `sin(x*y) + x` (gradient)  | 604 ns   | 5-node tape + backward pass         |
 
-**Finding:** Eshkol AD operations are sub-microsecond per node; even complex expressions with gradient backpropagation stay under 1 µs. The Wengert tape is allocation-friendly (pre-allocated node pool) and deterministic — no stochastic elements. At the GOAL5 cadence (5 minds every 4 frames), the per-mind AD cost is negligible against the 1.875% frame budget.
+**Finding:** Eshkol AD operations are sub-microsecond per node; even complex expressions with gradient backpropagation stay under 1 µs. The Wengert tape is allocation-friendly (pre-allocated node pool) and deterministic — no stochastic elements. At the GOAL5 cadence (5 minds every 4 frames), the per-mind AD cost is negligible against the measured `5× think()` batch (~9.77 ms); the retired `<2% / 1.875%` frame-budget shorthand does not apply to AD alone.
 
 Reproduce: `bun bench/eshkol-ad.bench.ts`.
 

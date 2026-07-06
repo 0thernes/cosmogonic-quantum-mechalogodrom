@@ -316,7 +316,8 @@ describe('docs truth law — consolidation hygiene', () => {
   test('no extensionless TypeScript-like source duplicates are tracked', async () => {
     const offenders: string[] = [];
     for (const rel of await conflictScanFiles()) {
-      if (!rel.startsWith('src/') || BINARY_EXT.test(rel)) continue;
+      if (BINARY_EXT.test(rel)) continue;
+      if (!rel.startsWith('src/') && !rel.startsWith('bench/')) continue;
       const leaf = rel.split('/').pop() ?? rel;
       if (leaf.includes('.')) continue;
       const sibling = Bun.file(`${rel}.ts`);

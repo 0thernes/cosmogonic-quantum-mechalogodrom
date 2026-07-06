@@ -11,6 +11,34 @@ changed and why.
 
 ---
 
+## 2026-07-06 (pass 15) — Native leak + worker wait queue + truth surfaces (v0.20.0)
+
+Full-repo debug pass: gates green; performance hygiene only — no render/sim/faculty reductions.
+
+### Code
+
+- **`native/src/main.cpp`** — `buildProgram()` deletes partial-compile shaders (`vs`/`fs`) on failure (GL leak fix).
+- **`src/core/worker-pool.ts`** — event-driven `waitForAvailableWorker` queue (replaces 10 ms polling when pool saturated).
+- **`src/world.ts`** — reuses `superMpoInput` in Archon spawn loop (avoids per-spawn `Float32Array` alloc).
+
+### Docs / surfaces
+
+- **`docs.html`** — forest tree: dated DESIGN-SYSTEM/COMPLEXITY paths, `reports/` (not deleted `diagrams/`), **250** test files.
+- **`specs.html`** — measured 2026-07-06 line counts (src 94,494/285, tests 33,605/250, docs 9,237/43, native 1,327/7).
+- **`docs/BENCHMARKS-2026-06-26.md`** — retired stale `1.875%` AD budget claim; cites measured `5× think()` (~9.77 ms).
+- **`docs/VERIFICATION-ANALYTICAL-DATA.md`** — `.github/copilot-instructions.md` path fix.
+
+### Hygiene
+
+- **`bench/perceptual-p`** — deleted (extensionless duplicate of `bench/perceptual-priority.bench.ts`).
+- **`tests/docs-truth-law.test.ts`** — extensionless-duplicate scan now includes `bench/`.
+
+### Gate
+
+- `bun run check` green — **2297** tests pass (receipt floor **2295** unchanged).
+
+---
+
 ## 2026-07-06 (pass 14) — Worker pool correctness + wilderness buffer safety (v0.20.0)
 
 Full-repo debug pass: gates green; fixed two ADR-0010 worker-path bugs without touching render/sim quality.

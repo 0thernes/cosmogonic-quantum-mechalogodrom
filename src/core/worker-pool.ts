@@ -156,6 +156,12 @@ export class WorkerPool {
     }
   }
 
+  /** Wake one task that is waiting for a worker slot. */
+  private notifyWorkerAvailable(): void {
+    const waiter = this.workerAvailableWaits.shift();
+    if (waiter) waiter();
+  }
+
   /** Resolve a registered waiter or stash for a late poll. */
   private deliverResult(result: WorkerResult): void {
     const waiter = this.pendingWaits.get(result.id);
@@ -165,12 +171,6 @@ export class WorkerPool {
       return;
     }
     this.pendingResults.set(result.id, result);
-  }
-
-  /** Wake one task that is waiting for a worker slot. */
-  private notifyWorkerAvailable(): void {
-    const waiter = this.workerAvailableWaits.shift();
-    if (waiter) waiter();
   }
 
   /**
@@ -288,7 +288,7 @@ export class WorkerPool {
   }
 
   /**
-   * Wait for an available worker
+   * Wait for an available worker (event-driven; no timed polling).
    */
   private waitForAvailableWorker(): Promise<void> {
     if (this.availableWorkers.length > 0) {
