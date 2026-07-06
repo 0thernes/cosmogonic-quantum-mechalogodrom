@@ -9,21 +9,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.21.4] — 2026-07-06
+
+Remote truth-regression repair.
+
+- Restored the public truth surfaces after an intervening remote release commit rolled README/docs/package metadata back to `0.21.1`, `2,308` tests, and stale A-Life/consciousness wording.
+- Kept the useful issue-template Consciousness Lab contact path while returning canonical receipts to `2,360` tests and `92.02% / 89.65%` coverage.
+- Cut a new patch version because `v0.21.3` already existed at the pre-regression commit.
+
+## [0.21.3] — 2026-07-06
+
+Release dispatch permission patch.
+
+- Added the required `actions: write` permission to `auto-tag.yml` so the workflow can dispatch `release.yml` after pushing a new semver tag with `GITHUB_TOKEN`.
+- Cut a fresh patch version so the GitHub Release, tag, CI, Pages deploy, and public truth surfaces resolve to the same final commit.
+
+## [0.21.2] — 2026-07-06
+
+Release automation patch.
+
+- Fixed the release path after discovering `Auto-tag on version bump` created tags with `GITHUB_TOKEN`, which does not recursively trigger the tag-push `Release` workflow.
+- Updated `auto-tag.yml` to dispatch `release.yml` after creating a new tag.
+- Updated `release.yml` manual dispatch so it can publish an already-created tag when that tag points at the dispatch commit.
+
 ## [0.21.1] — 2026-07-06
 
-Truth-surface refresh for GitHub About/README/Pages (no sim/render reductions):
+Truth-surface and release metadata patch after the V123 performance sweep.
 
-- **A-Life:** prose updated to **113-system** survey; regenerated **11 SVG charts** with correct labels.
-- **README/docs/specs:** Consciousness + Sentience Lab URLs, connectome-brain research frontier.
-- **Issue templates:** Consciousness Lab contact link.
+- Bumped package/release metadata to `0.21.1` so GitHub can create a fresh tag and release after the existing `v0.21.0` tag.
+- Updated README/About-facing copy to use defensible proxy-only consciousness and sentience wording, including connectome provenance boundaries.
+- Re-synced the A-Life comparative report language from old 25/26/44-system wording to the current 113-system data set.
+- Updated report metrics: self-scored breadth `4.44 / 5`, code-grounded breadth `3.68 / 5`, rank `#1 / 113`, population z `+4.02 -> +2.83`, peer z `+4.36 -> +2.95`, and Mahalanobis `12.65 -> 10.25`.
+- Kept the 2,360-test receipt surface and `92.02%` line / `89.65%` function local measurement visible while preserving the "computational indicators, not sentience" boundary.
 
 ## [0.21.0] — 2026-07-06
 
 V123 Optimization Sweep — comprehensive performance and memory optimization with zero visual/graphics/quality change and determinism-neutral (no seeded-Rng draw reordered). Verified by full `bun test` suite (2,360 pass, 0 fail).
 
-### Dead Code Removal (~41 KB source)
+### Dead Code Audit / Quarantine Candidates
 
-- Removed 9 completely unused modules and their test files:
+- Audited 9 unused-or-unwired module families as cleanup candidates. They are retained unless a later exact-scope deletion commit removes them behind the full gate:
   - `src/core/benchmark.ts` + test — Benchmark utilities not imported
   - `src/core/cache-warm.ts` — Cache warming utilities not used
   - `src/core/frustum-cull.ts` + test — Frustum culling not wired
@@ -33,7 +58,7 @@ V123 Optimization Sweep — comprehensive performance and memory optimization wi
   - `src/math/hyperdual.ts` + test — Second-order AD not used
   - `src/math/mixed-state-qgt.ts` — Mixed-state QGT not used
   - `src/math/unification.ts` + test — Logic programming not wired
-- Removed commented-out code in `super-mind.ts` (line 1779)
+- Removed commented-out code in `super-mind.ts` (line 1779).
 
 ### Performance Optimizations
 

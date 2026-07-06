@@ -11,9 +11,11 @@ changed and why.
 
 ---
 
-## 2026-07-06 (pass 16) — 113-system A-Life truth surfaces (v0.21.1)
+## 2026-07-06 (pass 16) — 113-system A-Life truth surfaces + v0.21.4 repair
 
-On top of v0.21.0 V123 perf sweep: doc/deploy truth refresh only.
+On top of the v0.21.0 V123 perf sweep: doc/deploy truth refresh only. A later remote release commit
+temporarily regressed public metadata to v0.21.1 and an older receipt floor; v0.21.4 restored the living
+surfaces to the current canonical receipts.
 
 ### A-Life
 
@@ -22,11 +24,11 @@ On top of v0.21.0 V123 perf sweep: doc/deploy truth refresh only.
 
 ### Surfaces
 
-- Consciousness + Sentience Lab URLs; issue template contact links; CHANGELOG 0.21.1.
+- Consciousness + Sentience Lab URLs; issue template contact links; CHANGELOG through 0.21.4.
 
 ### Gate
 
-- `bun run check` green — **2308** test floor · **84.64% / 82.21%**.
+- `bun run check` green — **2,360** test floor · **92.02% / 89.65%**.
 
 ---
 
